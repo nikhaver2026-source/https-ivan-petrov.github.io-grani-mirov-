@@ -1121,13 +1121,17 @@ const UI={blip(f=880,d=0.08,v=0.12){AE.ensure();const t=AE.ctx.currentTime,o=AE.
   o.type="sine";o.frequency.value=f;o.connect(g);g.connect(AE.fx);
   g.gain.setValueAtTime(0.0001,t);g.gain.linearRampToValueAtTime(v,t+0.01);
   g.gain.exponentialRampToValueAtTime(0.0001,t+d);o.start(t);o.stop(t+d+0.05);},
- click(){this.blip(700,0.06,0.06);},open(){this.blip(520,0.1,0.1);setTimeout(()=>this.blip(780,0.1,0.1),90);},
- close(){this.blip(600,0.08,0.09);setTimeout(()=>this.blip(400,0.1,0.09),80);},
- pickup(){this.blip(1200,0.07,0.1);setTimeout(()=>this.blip(1600,0.09,0.1),80);},
- empty(){this.blip(260,0.16,0.09);setTimeout(()=>this.blip(180,0.20,0.08),110);},
- drink(){this.blip(300,0.12,0.12);setTimeout(()=>this.blip(220,0.14,0.12),140);},
- hit(){this.blip(120,0.2,0.2);},
- fanfare(){[523,659,784,1047].forEach((f,i)=>setTimeout(()=>this.blip(f,0.18,0.12),i*130));}};
+ /* nat() — натуральная запись из банка; при её отсутствии остаётся синтез. */
+ nat(role,gain){try{return !!(typeof UI_BANK!=="undefined"&&UI_BANK[role]&&Bank.enabled&&
+  Bank.file(UI_BANK[role],{gain:gain||0.7,maxSec:3}));}catch(_){return false;}},
+ click(){if(this.nat("ui_select",0.5))return;this.blip(700,0.06,0.06);},
+ open(){if(this.nat("ui_open",0.6))return;this.blip(520,0.1,0.1);setTimeout(()=>this.blip(780,0.1,0.1),90);},
+ close(){if(this.nat("ui_close",0.6))return;this.blip(600,0.08,0.09);setTimeout(()=>this.blip(400,0.1,0.09),80);},
+ pickup(){if(this.nat("b_pickup",0.7))return;this.blip(1200,0.07,0.1);setTimeout(()=>this.blip(1600,0.09,0.1),80);},
+ empty(){if(this.nat("ui_error",0.6))return;this.blip(260,0.16,0.09);setTimeout(()=>this.blip(180,0.20,0.08),110);},
+ drink(){if(this.nat("b_heal",0.6))return;this.blip(300,0.12,0.12);setTimeout(()=>this.blip(220,0.14,0.12),140);},
+ hit(){if(this.nat("b_hit",0.75))return;this.blip(120,0.2,0.2);},
+ fanfare(){if(this.nat("b_levelup",0.8))return;[523,659,784,1047].forEach((f,i)=>setTimeout(()=>this.blip(f,0.18,0.12),i*130));}};
 
 /* ════════ МУЗЫКА: ПРОЛОГ / ЛОКАЦИИ / БОЙ (генеративная, высококачественная) ════════ */
 const Music={sfx:null,timers:[],current:null,
@@ -1465,6 +1469,13 @@ const BEACONS={
    n2.connect(f2);f2.connect(g2);g2.connect(s.out());f2.frequency.exponentialRampToValueAtTime(800,t2+0.25);
    g2.gain.setValueAtTime(0.0001,t2);g2.gain.linearRampToValueAtTime(0.07,t2+0.03);g2.gain.exponentialRampToValueAtTime(0.0001,t2+0.28);n2.start(t2);});}};
 function beacon(id,pan=0,dist=0){if(!settings.effects)return;AE.ensure();
+ /* Натуральная запись, если она есть для этого маяка и её можно развести
+    по сторонам; иначе — прежний синтез, он панораму умеет всегда. */
+ try{
+  const nat=(typeof BEACON_SAMPLE!=="undefined")&&BEACON_SAMPLE[id];
+  if(nat&&Bank.enabled&&Bank.canPan()&&
+     Bank.panned(nat,{pan,gain:Math.max(0.15,1-dist*0.08)}))return;
+ }catch(_){}
  const b=BEACONS[id];if(!b)return;
  const s=new SFX();b(s);
  const g=Math.max(0.15,1-dist*0.08);
@@ -1533,7 +1544,7 @@ const touchGate={lastUiTap:0,lastUiEl:null,suppressClickUntil:0};
 function gameActive(){const el=document.getElementById('screen-game');return !!(el&&!el.hidden&&entered);}
 function safeFn(fn,fb=null){try{return typeof fn==='function'?fn():fb;}catch(e){try{console.warn('[Safe]',e);}catch(_){}return fb;}}
 function touchDirection(dx,dy){return Math.abs(dx)>=Math.abs(dy)?(dx>=0?'E':'W'):(dy>=0?'S':'N');}
-function resetGesture(){gesture={count:0,maxCount:0,id:null,x:0,y:0,t:0,moved:false,dir:null,target:null,ui:null,runArmed:false};}
+function resetGesture(){gesture={count:0,maxCount:0,id:null,x:0,y:0,t:0,moved:false,dir:null,target:null,ui:null,runArmed:false,fast:false,speed:0,lastX:null,lastY:null,lastT:0};}
 /* ── ОЗВУЧИВАНИЕ КАК В VOICEOVER: новый элемент немедленно обрывает речь предыдущего ── */
 function speakTextOf(el){try{const text=el?.dataset?.speak||el?.getAttribute?.('aria-label')||(el?.textContent||'').trim().replace(/\s+/g,' ');if(!text)return;
  const same=(text===lastAnnounced&&el===lastExploreEl&&Date.now()-lastAnnouncedAt<250);
@@ -1543,12 +1554,44 @@ function speakTextOf(el){try{const text=el?.dataset?.speak||el?.getAttribute?.('
  vib(10);}catch(_) {}}
 /* Текстовые поля намеренно исключены: фокус на них поднимает экранную клавиатуру
    прямо во время ощупывания. Флажки, ползунки, кнопки и списки — безопасны. */
+/* ════════════════════════════════════════════════════════════════════════
+   КУРСОР ОТКРЫТОГО ОКНА
+   Раньше «текущим» элементом считался то последний, которого коснулся палец,
+   то тот, на ком стоял фокус браузера, и эти двое расходились: свайп по списку
+   успевал «ощупать» по пути пять пунктов, каждый обрывал предыдущего, курсор
+   уезжал не туда, а двойное касание активировало не то, что игрок только что
+   услышал. Теперь текущий пункт один — uiCursor. Его двигают: свайп (ровно на
+   один пункт), ощупывание (на тот пункт, где палец оторвался) и активация.
+   ════════════════════════════════════════════════════════════════════════ */
+let uiCursor=null,uiCursorLayer=null,pendingCursor=null;
+function cursorItems(layer){return visibleInteractive(layer||activeLayer());}
+function ensureCursor(layer){
+ const lay=layer||activeLayer();
+ if(!lay)return null;
+ if(uiCursorLayer!==lay||!uiCursor||!lay.contains(uiCursor)||uiCursor.hidden||uiCursor.disabled){
+  const items=cursorItems(lay);
+  uiCursor=items[0]||null;uiCursorLayer=lay;}
+ return uiCursor;
+}
+/* Поставить курсор на элемент: он же получает фокус браузера, он же озвучивается. */
+function setCursor(el,speak){
+ if(!el)return null;
+ const lay=activeLayer();
+ uiCursor=el;uiCursorLayer=lay;
+ safeFn(()=>el.focus({preventScroll:true}));
+ safeFn(()=>el.scrollIntoView({block:"center"}));
+ if(speak!==false)speakTextOf(el);
+ return el;
+}
+/* Смена окна начинает выбор заново, с первого пункта. */
+function resetCursor(){uiCursor=null;uiCursorLayer=null;pendingCursor=null;touchGate.lastUiTap=0;touchGate.lastUiEl=null;}
 function focusableForExplore(el){try{return !!(el&&el.matches&&el.matches('button,a[href],select,[role="button"],[tabindex],input[type="checkbox"],input[type="radio"],input[type="range"]')&&!el.disabled);}catch(_){return false;}}
 function explorePoint(x,y){if(!settings.explore)return;try{const el=document.elementFromPoint(x,y),t=el?.closest?.('[data-speak],button,a,input,select,textarea,[role="button"],[data-cmd],[data-magic-index]');
  if(t&&t!==lastExploreEl){lastExploreEl=t;speakTextOf(t);
-  /* Фокус следует за пальцем: тогда «двойное касание где угодно» и свайп-перелистывание
-     работают с одним и тем же текущим элементом, а не расходятся между собой. */
-  if(focusableForExplore(t))safeFn(()=>t.focus({preventScroll:true}));}
+  /* Палец только называет пункт; текущим он станет, когда палец на нём оторвётся
+     (см. touchend). Так свайп по списку больше не сдвигает выбор туда, где палец
+     случайно прошёл по дороге. */
+  if(focusableForExplore(t))pendingCursor=t;}
  else if(!t&&lastExploreEl){lastExploreEl=null;} /* палец ушёл с элементов — готовы озвучить следующий сразу же */
 }catch(_) {}}
 function activeLayer(){try{for(const id of ['magicPanel','actionMenu','guideOverlay','lootOverlay']){const m=document.getElementById(id);if(m&&!m.hidden)return m;}if(Array.isArray(modalStack))for(let i=modalStack.length-1;i>=0;i--){const m=modalStack[i];if(m&&!m.hidden)return m;}}catch(_){}return null;}
@@ -1559,6 +1602,7 @@ function activeLayer(){try{for(const id of ['magicPanel','actionMenu','guideOver
 function visibleInteractive(layer){try{return [...(layer||document).querySelectorAll('button,input,select,a,[role="button"],[data-cmd],[tabindex]:not([tabindex="-1"])')].filter(x=>!x.hidden&&!x.disabled&&x.getAttribute('aria-hidden')!=='true');}catch(_){return[];}}
 function activateElement(el){if(!el||el.disabled)return false;try{
  touchGate.lastUiTap=0;touchGate.lastUiEl=null;
+ safeFn(()=>UI.nat("ui_activate",0.55));
  el.focus?.({preventScroll:true});
  let handled=false;
  if(el.dataset?.cmd){const parts=el.dataset.cmd.split(':');const fn=CMD[parts[0]];
@@ -1573,6 +1617,8 @@ function activateElement(el){if(!el||el.disabled)return false;try{
     происходило, будто «перехвачено» первым касанием. Теперь окно защищает только от
     настоящего отложенного «призрачного» клика браузера после реального касания на устройстве. */
  touchGate.suppressClickUntil=Date.now()+700; /* 300 мс не хватало: отложенный клик браузера приходил позже и команда выполнялась второй раз */
+ /* Список мог перестроиться от самого действия — выбор начинаем заново. */
+ safeFn(()=>{uiCursor=null;uiCursorLayer=null;pendingCursor=null;});
  return true;
 }catch(e){return false;}}
 /* closeTopUI объявлен ниже единственный раз — прежний дубликат здесь только сбивал с толку: правки в нём не действовали, так как одноимённое объявление ниже перекрывало его. */
@@ -1659,29 +1705,47 @@ function handleFourFingerTap(){if(!gameActive())return;
 function cancelMagicHold(){if(magicHold.timer)clearTimeout(magicHold.timer);magicHold={timer:null,target:null,fired:false};}
 function armMagicHold(target){cancelMagicHold();magicHold={timer:setTimeout(()=>{if(magicHold.target!==target||gesture.moved||gesture.maxCount!==1)return;magicHold.fired=true;safeFn(()=>castSpell(Number(target.dataset.magicIndex)));touchGate.suppressClickUntil=Date.now()+300;safeFn(()=>UI.blip(1180,.13,.22));},560),target,fired:false};}
 function stopRun(){if(runState.hold){clearTimeout(runState.hold);runState.hold=null;}if(runState.iv){clearInterval(runState.iv);runState.iv=null;}if(runState.active){runState.active=false;runState.dir=null;}}
-function startRun(dir){if(!gameActive()||!dir||G.weaponDrawn||activeLayer()||G.inCombat)return false;stopRun();runState.active=true;runState.dir=dir;safeFn(()=>move(dir));runState.iv=setInterval(()=>{if(!gameActive()||activeLayer()||G.inCombat||G.weaponDrawn){stopRun();return;}safeFn(()=>move(runState.dir));},300);return true;}
-function swipeNav(dir){const layer=activeLayer();if(!layer)return false;const items=visibleInteractive(layer);if(!items.length)return false;
- let i=items.indexOf(document.activeElement);i=dir==='next'?(i<0?0:Math.min(items.length-1,i+1)):Math.max(0,i<0?0:i-1);
- items[i].focus({preventScroll:true});
- /* Окно само подводит выбранный пункт под палец: в длинных списках (каталог из 45
-    народов, пантеон, политика) выбранный свайпом пункт иначе оставался за краем
-    экрана — его нельзя было ни увидеть, ни нащупать, ни коснуться дважды. */
- safeFn(()=>items[i].scrollIntoView({block:'center'}));
- speakTextOf(items[i]);safeFn(()=>UI.blip(760,.08,.1));return true;}
+/* Бег: шаги идут вдвое чаще прежнего (300 мс были заметно вязкими). */
+const RUN_INTERVAL=160;
+function startRun(dir){if(!gameActive()||!dir||G.weaponDrawn||activeLayer()||G.inCombat)return false;stopRun();runState.active=true;runState.dir=dir;safeFn(()=>move(dir));runState.iv=setInterval(()=>{if(!gameActive()||activeLayer()||G.inCombat||G.weaponDrawn){stopRun();return;}safeFn(()=>move(runState.dir));},RUN_INTERVAL);return true;}
+function swipeNav(dir){
+ const layer=activeLayer();if(!layer)return false;
+ const items=cursorItems(layer);if(!items.length)return false;
+ ensureCursor(layer);
+ let i=items.indexOf(uiCursor);
+ if(i<0)i=dir==='next'?-1:0;
+ i=dir==='next'?Math.min(items.length-1,i+1):Math.max(0,i-1);
+ const el=items[i];
+ /* Свайп всегда сдвигает выбор ровно на один пункт и называет его — ни больше,
+    ни меньше. Ощупывание, случившееся по дороге, в счёт не идёт. */
+ pendingCursor=null;lastExploreEl=el;
+ touchGate.lastUiTap=0;touchGate.lastUiEl=null;   /* свайп прерывает начатое двойное касание */
+ setCursor(el,true);
+ safeFn(()=>{if(!UI.nat("ui_next",0.45))UI.blip(760,.08,.1);});
+ return true;}
+/* Касание в окне: первое называет пункт, второе — по нему же — активирует.
+   Попадать дважды в одну точку не нужно: важно, чтобы пункт был тем самым,
+   который игра только что назвала. */
+function tapInLayer(el){
+ const lay=activeLayer();
+ const target=(el&&lay&&lay.contains(el))?el:ensureCursor(lay);
+ if(!target){narrate("В этом окне нечего выбирать.");return;}
+ if(settings.fastTap){setCursor(target,false);activateElement(target);return;}
+ const now=Date.now();
+ if(uiCursor===target&&touchGate.lastUiEl===target&&now-touchGate.lastUiTap<800){
+  touchGate.lastUiTap=0;touchGate.lastUiEl=null;
+  activateElement(target);
+  return;}
+ touchGate.lastUiTap=now;touchGate.lastUiEl=target;
+ setCursor(target,true);
+}
 function handleSingleTap(el,x,y){
- if(!el){
-  /* Двойное касание по пустому месту активирует текущий (ощупанный или выбранный свайпом)
-     элемент открытого окна — как в экранных дикторах. Раньше повторным касанием нужно было
-     попасть ровно в тот же пункт: варианты диалогов, кнопки услуг и пункты меню то и дело
-     «не нажимались», хотя игра их только что назвала. */
-  const lay=activeLayer();
-  if(lay){
-   const act=document.activeElement;
-   const cand=(lastExploreEl&&lay.contains(lastExploreEl))?lastExploreEl
-    :(act&&act!==document.body&&lay.contains(act)?act:null);
-   if(cand&&!cand.disabled&&!cand.hidden)el=cand;
-  }
- }
+ /* Добыча после победы собирается касанием в любом месте: окно добычи — тоже
+    активный слой, но выбирать в нём нечего, а собрать нужно. */
+ if(G.loot&&Array.isArray(G.loot)&&G.loot.length&&gameActive()&&!(el&&el.dataset&&el.dataset.cmd)){
+  if(safeFn(()=>takeLoot(),false))return;}
+ /* В открытом окне выбором заведует курсор: см. tapInLayer. */
+ if(activeLayer()){tapInLayer(el||null);return;}
  if(el){
   if(settings.fastTap){activateElement(el);return;} /* быстрая активация: без ожидания второго касания */
   const now=Date.now();
@@ -1708,7 +1772,7 @@ document.addEventListener('touchstart',e=>{safeFn(()=>AE.ensure());const n=e.tou
  if(n>4){resetGesture();cancelMagicHold();return;}
  const t=e.touches[0];if(!t)return;
  const ui=e.target?.closest?.('button,a,input,select,textarea,[role="button"],[data-cmd],[data-magic-index]');
- gesture={count:n,maxCount:Math.max(gesture.maxCount||0,n),id:t.identifier,x:t.clientX,y:t.clientY,t:Date.now(),moved:false,dir:null,target:e.target,ui,runArmed:false};
+ gesture={count:n,maxCount:Math.max(gesture.maxCount||0,n),id:t.identifier,x:t.clientX,y:t.clientY,t:Date.now(),moved:false,dir:null,target:e.target,ui,runArmed:false,fast:false,speed:0,lastX:t.clientX,lastY:t.clientY,lastT:Date.now()};
  if(n!==1){cancelMagicHold();stopRun();e.preventDefault();return;}
  const mt=e.target?.closest?.('#magicPanel [data-magic-index]');
  if(mt){armMagicHold(mt);e.preventDefault();return;}
@@ -1726,10 +1790,19 @@ document.addEventListener('touchmove',e=>{
  /* Для многопальцевых тапов порог мягче: пальцы неизбежно «перекатываются», пока их ставят. */
  if(d>(gesture.maxCount>1?45:16)){gesture.moved=true;cancelMagicHold();gesture.dir=touchDirection(dx,dy);}
  if(gesture.maxCount!==1){e.preventDefault();return;}
+ /* Скорость пальца отличает ощупывание от свайпа: медленно ведём — игра называет
+    всё под пальцем; быстро проводим — это перелистывание, и по дороге она молчит,
+    иначе один свайп обрывал сам себя пятью недочитанными названиями. */
+ const now=Date.now(),dtm=Math.max(1,now-(gesture.lastT||gesture.t));
+ const step=Math.hypot(t.clientX-(gesture.lastX!=null?gesture.lastX:gesture.x),
+                       t.clientY-(gesture.lastY!=null?gesture.lastY:gesture.y));
+ gesture.speed=step/dtm;
+ gesture.lastX=t.clientX;gesture.lastY=t.clientY;gesture.lastT=now;
+ if(gesture.speed>0.55)gesture.fast=true;
  /* Ощупывание одним пальцем (доступность): озвучиваем элемент под пальцем НЕПРЕРЫВНО,
     пока палец скользит — как touch-explore в VoiceOver. Смена элемента сразу обрывает
     предыдущую фразу (см. speakTextOf/Speech.say interrupt:true). */
- if(!G.weaponDrawn)explorePoint(t.clientX,t.clientY);
+ if(!G.weaponDrawn&&!(gesture.fast&&activeLayer()))explorePoint(t.clientX,t.clientY);
  if(activeLayer()){if(d>20)e.preventDefault();return;}
  /* Удержание свайпа = бег: таймер взводится ОДИН раз при первом пересечении порога
     и больше не сбрасывается на каждое микро-движение пальца — раньше из-за этого
@@ -1737,9 +1810,10 @@ document.addEventListener('touchmove',e=>{
  if(d>25&&!G.weaponDrawn&&!G.inCombat&&!gesture.runArmed){
   gesture.runArmed=true;
   runState.pendingDir=gesture.dir;
+  /* Бег начинается вдвое раньше: 320 мс ожидания ощущались как задержка. */
   runState.hold=setTimeout(()=>{
    if(runState.pendingDir&&!G.weaponDrawn&&!activeLayer()&&!G.inCombat)startRun(runState.pendingDir);
-  },320);
+  },170);
  }else if(gesture.runArmed&&gesture.dir){
   runState.pendingDir=gesture.dir; /* направление можно уточнять на ходу, не сбрасывая отсчёт */
  }
@@ -1791,7 +1865,19 @@ document.addEventListener('touchend',e=>{
  const layer=activeLayer();
  if(layer){
   e.preventDefault();
-  if(swipe){swipeNav((dir==='E'||dir==='S')?'next':'prev');return;}
+  /* Свайп — только быстрое движение: оно листает список ровно на один пункт.
+     Медленное ведение — это ощупывание: текущим становится тот пункт, на котором
+     палец оторвался, и ничего не активируется. Касание без движения — выбор,
+     повторное касание того же пункта — активация. */
+  if(swipe&&(g.fast||dt<=420)){swipeNav((dir==='E'||dir==='S')?'next':'prev');return;}
+  if(g.moved){
+   if(pendingCursor&&layer.contains(pendingCursor)){
+    touchGate.lastUiTap=Date.now();touchGate.lastUiEl=pendingCursor;
+    setCursor(pendingCursor,false);}
+   pendingCursor=null;
+   return;}
+  /* Через общий обработчик: он сначала отдаёт добычу, если она лежит под ногами,
+     и только потом передаёт выбор курсору окна. */
   if(tap)handleSingleTap(g.ui||null,t.clientX,t.clientY);
   return;
  }
@@ -1886,7 +1972,7 @@ function amAvailable(cmd){
  }catch(_){return true;}
 }
 function openActionMenu(){lastFocused=document.activeElement;
- safeFn(()=>Bank.play("menu_select",{gain:0.5}));
+ safeFn(()=>{resetCursor();Bank.play("menu_select",{gain:0.5});});
  const m=document.getElementById("actionMenu"); if(!m)return; m.hidden=false; m.setAttribute("aria-hidden","false");
  const list=document.getElementById("amList");if(!list){narrate("Меню действий временно недоступно.");return;}list.innerHTML="";
  let count=0;
@@ -1912,7 +1998,7 @@ function openActionMenu(){lastFocused=document.activeElement;
  const first=m.querySelector("button");if(first)first.focus();
  narrate(`Меню действий: ${count} пунктов${G.place?", вы внутри: "+placeTitle():""}. Свайп — листать, двойное касание — выбрать.`);}
 function closeActionMenu(){const m=document.getElementById("actionMenu");
- if(!m)return; if(m.hidden)return;m.hidden=true;m.setAttribute("aria-hidden","true");UI.close();
+ if(!m)return; if(m.hidden)return;m.hidden=true;m.setAttribute("aria-hidden","true");UI.close();safeFn(()=>resetCursor());
  if(lastFocused&&lastFocused.focus)lastFocused.focus();}
 
 /* ════════ ПАНЕЛЬ МАГИИ ════════ */
@@ -1945,6 +2031,7 @@ const GUIDE=[
 {title:"Глава 2. Жесты",body:[
  "Жесты разложены по числу пальцев, и это главное правило: один палец — движение и предметы, два — места и меню, три — бой и сведения, четыре — магия. Запомнив это, остальное вспоминается само.",
  "ОДИН ПАЛЕЦ. Ведение пальцем, не отрывая, — ощупывание: игра называет то, чего вы касаетесь, и сразу обрывает предыдущую фразу. Двойное касание — активировать. Свайп — шаг в сторону. Свайп с удержанием — бег. Долгое касание без движения — действие «здесь»: войти в дверь, спуститься по лестнице, открыть сундук, добыть жилу, помолиться у алтаря, собрать добычу.",
+ "В ОКНАХ И МЕНЮ есть текущий пункт — тот, который игра назвала последним. Свайп двигает его ровно на один пункт и называет только его: по дороге игра молчит, даже если палец прошёл над десятком строк. Медленное ведение пальцем — наоборот, называет всё под пальцем и делает текущим тот пункт, где палец оторвался. Двойное касание активирует текущий пункт, и попадать дважды в одну точку не нужно.",
  "ДВА ПАЛЬЦА. Касание — меню действий или закрытие окна. Свайп вниз — войти внутрь или спуститься на уровень ниже. Свайп вверх — подняться или выйти наружу. Свайп вбок — эхо-скан: игра перечислит объекты вокруг и проиграет их маяки с той стороны, где они стоят.",
  "ТРИ ПАЛЬЦА. Касание — вынуть или убрать оружие. Свайп — сводка «где я»: место, уровень подземелья, координаты, здоровье, мана, золото, день, час и ближайшее задание.",
  "ЧЕТЫРЕ ПАЛЬЦА. Касание — открыть или закрыть панель заклинаний.",
@@ -3125,7 +3212,8 @@ const SOUND_BANK={
  clanhall:{f:["places/clanhall_01.mp3","places/clanhall_02.mp3"],d:"Зал клана"},
  caravan:{f:["places/caravan_01.mp3","places/caravan_02.mp3"],d:"Обоз на дороге"}};const Bank={
  base:"sounds/",
- enabled:true,          /* выключается после первой неудачной загрузки */
+ enabled:true,          /* выключается, только если ни одна запись так и не загрузилась */
+ fails:0,plays:0,       /* счётчики: банк «отсутствует», лишь когда всё подряд не читается */
  checked:false,
  loops:new Map(),       /* канал → элемент, звучащий по кругу */
  shots:[],              /* короткие проигрывания */
@@ -3143,11 +3231,22 @@ const SOUND_BANK={
   try{
    const a=new Audio(this.url(file));
    a.loop=!!loop;a.preload="auto";a.volume=Math.max(0,Math.min(1,volume));
-   a.addEventListener("error",()=>{this.enabled=false;},{once:true});
+   /* Раньше одна осечка выключала весь банк — и, что хуже, осечку вызывала сама
+      игра: остановка записи через src="" порождает событие ошибки. Из-за этого
+      натуральные звуки замолкали через несколько нажатий, и оставался синтез.
+      Теперь считаем только настоящие неудачи загрузки и выключаем банк, лишь
+      если не загрузилось вообще ничего — то есть папки со звуками рядом нет. */
+   a.addEventListener("error",()=>{
+    if(a.__stopped)return;
+    this.fails++;
+    if(this.plays===0&&this.fails>=4)this.enabled=false;},{once:true});
+   a.addEventListener("loadeddata",()=>{this.plays++;this.fails=0;},{once:true});
    const pr=a.play();
    if(pr&&pr.catch)pr.catch(()=>{});
    return a;
-  }catch(e){this.enabled=false;return null;}},
+  }catch(e){if(this.plays===0)this.enabled=false;return null;}},
+ /* Остановить запись так, чтобы это не считалось ошибкой загрузки. */
+ kill(el){try{if(!el)return;el.__stopped=true;el.pause();el.removeAttribute("src");el.load();}catch(_){}},
  /* Фон места: один канал — одна непрерывная запись. */
  loop(channel,role,{seed=0,gain=1,kind="music"}={}){
   if(!this.enabled||!this.has(role))return null;
@@ -3159,19 +3258,39 @@ const SOUND_BANK={
   if(el)this.loops.set(channel,{el,file,gain,kind});
   return el;},
  stop(channel){const cur=this.loops.get(channel);
-  if(cur){try{cur.el.pause();cur.el.src="";}catch(_){}}
+  if(cur)this.kill(cur.el);
   this.loops.delete(channel);},
  stopAll(){[...this.loops.keys()].forEach(k=>this.stop(k));
-  this.shots.forEach(a=>{try{a.pause();a.src="";}catch(_){}});this.shots=[];},
+  this.shots.forEach(a=>this.kill(a));this.shots=[];},
+ /* Можно ли развести запись по сторонам: для этого её нужно пропустить через
+    звуковую шину, а браузер разрешает это только для страницы, открытой по сети.
+    Открытой одним файлом игре остаётся синтез — он панораму умеет всегда. */
+ canPan(){try{return location.protocol!=="file:"&&!!(AE.ensure()&&AE.ctx&&AE.ctx.createMediaElementSource);}catch(_){return false;}},
+ /* Запись с панорамой и затуханием по расстоянию — для маяков. */
+ panned(path,{pan=0,gain=1,maxSec=3}={}){
+  if(!this.enabled||!path||!settings.effects)return null;
+  try{
+   const el=new Audio(this.url(path));
+   el.addEventListener("error",()=>{this.enabled=false;},{once:true});
+   const ctx=AE.ctx;
+   const src=ctx.createMediaElementSource(el);
+   const g=ctx.createGain();g.gain.value=Math.max(0,Math.min(1,gain));
+   let node=src;
+   if(ctx.createStereoPanner){const pn=ctx.createStereoPanner();pn.pan.value=Math.max(-1,Math.min(1,pan));node.connect(pn);node=pn;}
+   node.connect(g);g.connect(AE.fx||ctx.destination);
+   const pr=el.play();if(pr&&pr.catch)pr.catch(()=>{});
+   if(maxSec>0)setTimeout(()=>{try{el.pause();src.disconnect();g.disconnect();}catch(_){}},maxSec*1000);
+   return el;
+  }catch(e){return null;}},
  /* Запись по прямому пути: реплики чудовищ разложены по видам, а не по ролям. */
  file(path,{gain=1,kind="fx",maxSec=0}={}){
   if(!this.enabled||!path)return null;
   const el=this.make(path,this.vol(kind)*gain,false);
   if(!el)return null;
   this.shots.push(el);
-  if(this.shots.length>4){const old=this.shots.shift();try{old.pause();old.src="";}catch(_){}}
+  if(this.shots.length>4)this.kill(this.shots.shift());
   el.addEventListener("ended",()=>{this.shots=this.shots.filter(x=>x!==el);},{once:true});
-  if(maxSec>0)setTimeout(()=>{try{el.pause();el.src="";}catch(_){}
+  if(maxSec>0)setTimeout(()=>{this.kill(el);
    this.shots=this.shots.filter(x=>x!==el);},maxSec*1000);
   return el;},
  /* Короткая запись поверх фона: событие, заклинание, голос бога. */
@@ -3180,9 +3299,9 @@ const SOUND_BANK={
   const el=this.make(this.pick(role,seed),this.vol(kind)*gain,false);
   if(!el)return null;
   this.shots.push(el);
-  if(this.shots.length>4){const old=this.shots.shift();try{old.pause();old.src="";}catch(_){}}
+  if(this.shots.length>4)this.kill(this.shots.shift());
   el.addEventListener("ended",()=>{this.shots=this.shots.filter(x=>x!==el);},{once:true});
-  if(maxSec>0)setTimeout(()=>{try{el.pause();el.src="";}catch(_){}
+  if(maxSec>0)setTimeout(()=>{this.kill(el);
    this.shots=this.shots.filter(x=>x!==el);},maxSec*1000);
   return el;},
  /* Громкость подхватывается сразу после смены настроек. */
@@ -3240,6 +3359,55 @@ function bankMonsterCue(m,cue,vol){
   return Bank.file(file,{gain:vol||0.85,maxSec:6});
  }catch(_){return null;}
 }
+
+/* ── НАТУРАЛЬНЫЕ ЗАПИСИ ВМЕСТО СИНТЕЗА ──
+   Тридцать три записи (общественное достояние, CC0, пакет uisfx) заменяют
+   синтезированные «пики» интерфейса и часть маяков: нажатие, открытие и
+   закрытие окна, выбор, ошибка, дверь, ворота, лестницы, сундук, тупик,
+   колодец, алтарь, рынок, горн, монеты, находка, удар, лечение, портал.
+   Синтез остаётся запасным вариантом: если папки со звуками рядом нет,
+   игра звучит по-прежнему и ничего не ломается. */
+const UI_BANK={
+ b_altar:"ui/b_altar.mp3",
+ b_chest:"ui/b_chest.mp3",
+ b_coin:"ui/b_coin.mp3",
+ b_craft:"ui/b_craft.mp3",
+ b_defeat:"ui/b_defeat.mp3",
+ b_door:"ui/b_door.mp3",
+ b_drop:"ui/b_drop.mp3",
+ b_forge:"ui/b_forge.mp3",
+ b_gate:"ui/b_gate.mp3",
+ b_heal:"ui/b_heal.mp3",
+ b_hit:"ui/b_hit.mp3",
+ b_levelup:"ui/b_levelup.mp3",
+ b_market:"ui/b_market.mp3",
+ b_pickup:"ui/b_pickup.mp3",
+ b_portal:"ui/b_portal.mp3",
+ b_quest:"ui/b_quest.mp3",
+ b_stairs_down:"ui/b_stairs_down.mp3",
+ b_stairs_up:"ui/b_stairs_up.mp3",
+ b_temple:"ui/b_temple.mp3",
+ b_wall:"ui/b_wall.mp3",
+ b_warn:"ui/b_warn.mp3",
+ b_well:"ui/b_well.mp3",
+ ui_activate:"ui/ui_activate.mp3",
+ ui_back:"ui/ui_back.mp3",
+ ui_close:"ui/ui_close.mp3",
+ ui_error:"ui/ui_error.mp3",
+ ui_focus:"ui/ui_focus.mp3",
+ ui_next:"ui/ui_next.mp3",
+ ui_open:"ui/ui_open.mp3",
+ ui_select:"ui/ui_select.mp3",
+ ui_success:"ui/ui_success.mp3",
+ ui_toggle_off:"ui/ui_toggle_off.mp3",
+ ui_toggle_on:"ui/ui_toggle_on.mp3"};
+/* Маяк → натуральная запись. Направление важнее тембра, поэтому запись
+   проигрывается через звуковую шину с панорамой, а не простым элементом. */
+const BEACON_SAMPLE={
+ door:UI_BANK.b_door, gate:UI_BANK.b_gate, stairs_down:UI_BANK.b_stairs_down,
+ stairs_up:UI_BANK.b_stairs_up, chest:UI_BANK.b_chest, wall:UI_BANK.b_wall,
+ well:UI_BANK.b_well, altar:UI_BANK.b_altar, market:UI_BANK.b_market,
+ forge:UI_BANK.b_forge, temple:UI_BANK.b_temple, portal:UI_BANK.b_portal};
 
 /* Роль фона для места, где находится игрок. */
 function bankAmbientRole(){
@@ -4252,7 +4420,7 @@ const G={hp:100,hpMax:100,str:10,agi:10,mind:10,cha:10,mana:10,manaMax:10,
  /* Плавание: судно, на котором идёт игрок, и рейсы у причала. */
  ship:null,harborShips:null,
  /* Рыбалка: снасть в воде, поклёвка и подсечка. */
- fishing:null};
+ fishing:null,stepFoot:0};
 const xpNeed=l=>l*l*50;
 /* Дар Хронара и ткачей судьбы: опыт течёт быстрее. Через эту функцию проходит
    ВСЯ прибавка опыта, поэтому дар работает и в бою, и в заданиях. */
@@ -4677,9 +4845,12 @@ function moveInside(dir){
   narrate("Городские ворота открыты. Шагните ещё раз: наружу или внутрь.");
   return false;}
  p.x=nx;p.y=ny;
- G.hour+=runState.active?0.08:0.12;
+ G.hour+=runState.active?0.06:0.09;
  if(G.hour>=24){G.hour-=24;G.day++;}
- safeFn(()=>{if(settings.effects){const s=new SFX();s.footstep(0,p.depth>0?"cave":"stone");setTimeout(()=>s.stop(0.2),700);}});
+ /* Внутри тоже один шаг — один звук. */
+ safeFn(()=>{if(!settings.effects)return;
+  if(Bank.enabled&&Bank.play("step_dirt",{seed:p.x*7+p.y*13+Math.floor(Math.random()*10),gain:0.5,maxSec:0.9}))return;
+  const s=new SFX();s.footstep(0,p.depth>0?"cave":"stone");setTimeout(()=>s.stop(0.15),330);});
  const cur=tileAt(lvl,p.x,p.y);
  if(cur==="G"&&p.kind==="city"){leavePlace();return true;}
  if(cur==="M"){startInsideCombat(p.x,p.y);return true;}
@@ -4833,7 +5004,7 @@ function move(dir){
  G.x=Math.max(0,Math.min(WORLD-1,G.x+DIRV[dir][0]));
  G.y=Math.max(0,Math.min(WORLD-1,G.y+DIRV[dir][1]));
  if(G.x===oldX&&G.y===oldY){narrate(`Край мира. Дальше на ${DIRN[dir]} идти нельзя.`);return;}
- G.hour+=runState.active?0.15:0.25;
+ G.hour+=runState.active?0.1:0.18;   /* шаг и бег стали быстрее, время идёт соразмерно */
  if(G.hour>=24){G.hour-=24;G.day++;
   for(const k in G.depleted){if(G.depleted[k].day<G.day)delete G.depleted[k];}}
  if(settings.effects)stepSound();
@@ -4845,13 +5016,15 @@ function stepSound(){AE.ensure();
     и для случая, когда папки со звуками рядом нет. */
  if(Bank.enabled&&Math.random()<0.7){
   const role=surface==="water"?"step_water":surface==="grass"||surface==="dirt"?"step_dirt":null;
-  if(role&&Bank.play(role,{seed:G.x*7+G.y*13+Math.floor(Math.random()*10),gain:0.55}))return;}
- const gap=runState.active?185:280; /* бег — короче и легче, ходьба — размереннее */
- const vol=runState.active?0.85:1;
+  if(role&&Bank.play(role,{seed:G.x*7+G.y*13+Math.floor(Math.random()*10),gain:0.55,maxSec:0.9}))return;}
+ /* Раньше на каждый шаг игры звучала ПАРА шагов — левая и правая — и растягивалась
+    на 280–840 мс. Отклик от этого казался вязким: игрок делал свайп, а игра ещё
+    дотаптывала предыдущий. Теперь один шаг — один звук, а нога чередуется, чтобы
+    ходьба всё равно слышалась как ходьба. */
+ G.stepFoot=G.stepFoot?0:1;
  const s=new SFX();
- s.footstep(-0.22,surface);
- s.after(gap,()=>{s.footstep(0.22,surface);});
- setTimeout(()=>s.stop(0.2),gap+560*vol);}
+ s.footstep(G.stepFoot?0.2:-0.2,surface);
+ setTimeout(()=>s.stop(0.15),runState.active?240:340);}
 function dirBetween(dx,dy){
  const ns=dy<0?"север":dy>0?"юг":"";const ew=dx>0?"восток":dx<0?"запад":"";
  if(ns&&ew)return `${ns}о-${ew}`;return ns||ew;}
@@ -5860,9 +6033,10 @@ function completeQuest(id){const q=G.quests.find(qq=>qq.id===id);
 /* ════════ РЕНДЕР ПАНЕЛЕЙ ════════ */
 function openModal(id){const m=document.getElementById(id);if(!m||!m.hidden)return;
  lastFocused=document.activeElement;m.hidden=false;modalStack.push(m);UI.open();
+ safeFn(()=>resetCursor());
  safeFn(()=>Bank.play("inventory_open",{seed:modalStack.length,gain:0.45}));
  const cb=m.querySelector('[data-cmd="close"]');if(cb)cb.focus();}
-function closeModal(m){if(!m)return;m.hidden=true;UI.close();
+function closeModal(m){if(!m)return;m.hidden=true;UI.close();safeFn(()=>resetCursor());
  const i=modalStack.indexOf(m);if(i>=0)modalStack.splice(i,1);
  if(lastFocused&&lastFocused.focus)lastFocused.focus();}
 function renderInventory(){
@@ -6102,12 +6276,14 @@ function renderGestures(){
  document.getElementById("gestBody").innerHTML=[
   "<b>ОДИН ПАЛЕЦ — движение, предметы, кнопки</b>",
   "🤚 Касание и ведение пальцем (не отрывая) — ощупывание: игра называет элемент под пальцем, как в экранных дикторах. Смена элемента сразу обрывает предыдущую фразу.",
-  "👆👆 Двойное касание — активировать: кнопку, звук, вариант диалога. Можно коснуться дважды прямо по элементу, а можно сначала найти его пальцем или свайпом, а потом дважды коснуться в любом месте окна. (В настройках есть «Быстрая активация» — тогда хватит одного касания.)",
+  "👆👆 Двойное касание — активировать <b>текущий пункт</b>: тот, который игра назвала последним. Попадать дважды в одну точку не нужно: коснитесь, услышьте название, коснитесь ещё раз — сработает именно он. (В настройках есть «Быстрая активация» — тогда хватит одного касания.)",
+  "↕️ В окнах и меню есть <b>текущий пункт</b>. Его двигают три вещи: свайп (ровно на один пункт вперёд или назад), ощупывание (текущим становится тот пункт, на котором палец оторвался) и само открытие окна (выбор начинается с первого пункта).",
+  "🐢 Медленное ведение пальцем — ощупывание: игра называет всё, чего касается палец, и ничего не активирует. Быстрый свайп — перелистывание: по дороге игра молчит и называет только тот пункт, на который вы перешли. Раньше эти два жеста мешали друг другу, и выбор уезжал не туда.",
   "👉 Свайп — шаг: вверх север, вниз юг, влево запад, вправо восток. Внутри здания и подземелья тем же свайпом идёте по коридорам.",
   "🏃 Свайп и удержание пальца — бег в эту сторону. Отпустите палец — остановка.",
   "🎣 Во время поклёвки любое касание или свайп — <b>подсечка</b>: игра сама скажет «Клюёт!» и подаст звук, а у вас будет около двух секунд.",
   "✋ Долгое касание (палец не двигается) — <b>действие здесь</b>: войти в дверь или ворота, спуститься по лестнице, открыть сундук, добыть жилу, помолиться у алтаря, заговорить с жителем, собрать добычу.",
-  "↔️ Свайп в окнах и меню — перелистывание пунктов, включая длинные списки народов и богов.",
+  "↔️ Свайп в окнах и меню — перелистывание пунктов на один шаг, включая длинные списки народов и богов. Свайп между двумя касаниями отменяет начатую активацию, чтобы не сработало лишнее.",
   "<b>ДВА ПАЛЬЦА — места и меню</b>",
   "✌️ Касание двумя пальцами — открыть меню действий, где собраны все кнопки игры. Если окно уже открыто — закрыть его.",
   "⬇️ Свайп двумя пальцами вниз — <b>войти внутрь или спуститься</b>: в город через ворота, в дом, в подземелье, на уровень ниже. Если лестницы под ногами нет, игра скажет, где она, и проиграет её маяк.",
