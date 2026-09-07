@@ -1785,6 +1785,8 @@ document.addEventListener('touchend',e=>{
     спуститься по лестнице, открыть сундук, добыть жилу, помолиться у алтаря,
     заговорить с жителем. Раньше долгое касание на игровом экране не делало ничего. */
  const hold=d<38&&dt>=700;
+ /* Поклёвка: подсекает любое касание или свайп — важна скорость, а не точность. */
+ if(G.fishing&&G.fishing.active&&G.fishing.bite&&!activeLayer()){e.preventDefault();safeFn(()=>hookFish());return;}
  if(runState.active){stopRun();e.preventDefault();return;}
  const layer=activeLayer();
  if(layer){
@@ -1839,6 +1841,7 @@ const AM_GROUPS=[
   ["trade","🐫 Рынки, маршруты и караваны"],
   ["harbor","⚓ Причал: корабли и рейсы"],
   ["sail","🚢 Идти дальше морем"],
+  ["fish","🎣 Рыбачить"],
   ["look","👁️ Осмотреться"],
   ["map","🗺️ Карта места"]]],
  ["Персонаж",[
@@ -1874,6 +1877,7 @@ function amAvailable(cmd){
   if(cmd==="ascend")return !!G.place;
   if(cmd==="harbor")return !G.ship&&!!(c.structure&&c.structure.type==="port");
   if(cmd==="sail")return !!G.ship;
+  if(cmd==="fish")return !!fishingSpot();
   if(cmd==="descend")return !!G.place||!!(c.structure&&PLACE_KIND[c.structure.type]);
   if(cmd==="interact")return !G.place&&!!(c.structure||c.res);
   if(cmd==="gather")return G.place?true:!!c.res;
@@ -2023,31 +2027,40 @@ const GUIDE=[
  "При встрече с пиратами четыре пути: принять абордаж, откупиться золотом, отдать груз и сохранить остальное или уходить на всех парусах. Шанс уйти зависит от судна: быстрый скиф уходит почти всегда, тяжёлый неф — редко. Неудачное бегство кончается залпом в корму и абордажем.",
  "В воюющих водах пиратов и тварей заметно больше, а в шторм море злее. Зато и плата за такие рейсы выше.",
  "Все морские твари и ватаги записаны в бестиарии: там можно прослушать их голоса, прочитать происхождение и узнать, кто из народов с ними уживается."]},
-{title:"Глава 17. Сорок пять народов",body:[
+{title:"Глава 17. Морская торговля грузами и рыбалка",body:[
+ "У причала берут не поштучно, а партиями: пять единиц дешевле на десятую часть, десять — почти на пятую. Рядом с каждой партией игра говорит, в каком порту этот товар берут дороже всего.",
+ "Трюм не резиновый. У каждого судна своя вместимость: быстрый скиф берёт шестнадцать единиц и дорого просит за проезд, тяжёлый неф — восемьдесят и дёшево, купеческий коч — сорок. С лишним грузом на борт не пустят, поэтому выбор судна и есть выбор дела: возить мало и быстро или много и медленно.",
+ "Морские подряды дают там же, у складов: доставить столько-то груза в названный порт к сроку. Успели — полная плата, опоздали — половина. Больше одного подряда одновременно не берут.",
+ "В шторм часть палубного груза может уйти за борт, а пираты предложат отдать трюм целиком. Это цена морской дороги: она короче сухопутной, но берёт своё.",
+ "РЫБАЛКА. Нужна снасть: удочка (дерево и трава) или сеть (трава и дерево) — обе делаются в мастерской. Рыбачить можно с берега, с причала, в топях и с борта судна в открытом море.",
+ "Заброс — пункт «Рыбачить» в меню действий. Дальше слушайте: когда клюнет, игра скажет «Клюёт!» и подаст звук. Подсекайте любым касанием или свайпом — важна скорость, а не точность. Подсечёте раньше времени — снасть придётся забрасывать заново, опоздаете на пару секунд — добыча уйдёт.",
+ "Что ловится, зависит от воды, снасти и времени суток: у берега салака, треска и морской окунь, в открытом море скумбрия и тунец, на глубине кальмар, ночью берут угорь и кальмар, а сеть иногда приносит сразу двух рыб, скатов и жемчужницу.",
+ "Улов — обычный груз: он занимает место в трюме, продаётся в портах по местным ценам и годится для морских подрядов. А крупная добыча в открытом море привлекает внимание снизу: на кровь в воде приходят те, кто живёт под килем."]},
+{title:"Глава 18. Сорок пять народов",body:[
  "Мир Грани населяют сорок пять народов, и каждый имеет ранг: Обычный, Необычный, Редкий, Эпический, Легендарный или Божественный. Ранг — это не сила бойца, а место народа в мире: обычные народы держат поля и рудники, божественные держат саму Грань.",
  "У каждого народа есть история, родные земли, ресурсы, хозяйство, политический строй, предметы торговли, войны, клан и бог-покровитель, а также собственный миф о своём происхождении.",
  "Откройте «Народы Грани» в меню действий. Свайп листает карточки, ощупывание читает досье целиком, кнопки вверху отбирают народы по рангу.",
  "У каждого народа есть малые ветви — родственные племена, которые встречаются среди жителей. Ветвь наследует досье своего народа: коснитесь кнопки «О народе» в карточке жителя, и игра расскажет всё о его роде.",
  "Ваше собственное происхождение выбирается в окне персонажа или прямо в каталоге народов. Оно даёт наследие — постоянный дар бога вашего народа, тем сильнее, чем выше ранг."]},
-{title:"Глава 18. Двенадцать богов",body:[
+{title:"Глава 19. Двенадцать богов",body:[
  "Пантеон Грани — двенадцать богов: Аурис Зарний (заря и клятвы), Морах Кузнец (огонь и ремесло), Селена Ликоносная (луна и сны), Таур Громовержец (бури и война), Нерея Глубинная (моря), Виридис Древняя (леса и урожай), Кальдер Пепельный (вулканы и драконы), Умбра Безликая (тени и договоры), Хронар Вечный (время и память), Тарх Подгорный (горы и руны), Мортана Тихая (смерть и предки), Виа Странница (дороги и торговля).",
  "У каждого бога своя область, символ, священный день, миф, дар последователям, запрет и бог-соперник. Двенадцать кланов мира тоже разделены между богами — по одному на каждого.",
  "Каждый храм в мире посвящён одному из двенадцати. Молитва бесплатна и доступна раз в день в каждом храме: она лечит и повышает благосклонность бога.",
  "Приняв покровительство, вы получаете дар: исцеление, силу удара, защиту, щедрый сбор, дешёвые сделки, лёгкий побег, быстрый опыт, милость при поражении и другие. Дар растёт вместе с благосклонностью.",
  "Смена покровителя возможна, но часть благосклонности прежнего теряется — боги Грани помнят."]},
-{title:"Глава 19. Политика, войны и торговля",body:[
+{title:"Глава 20. Политика, войны и торговля",body:[
  "Восемь держав живут своей жизнью: у каждой свой главный народ, строй, хозяйство, бог и список того, что она вывозит и что ввозит.",
  "Отношения держав меняются каждые пять дней. Они бывают союзом, дружбой, нейтралитетом, напряжением и войной. Идущая война поднимает цены на металл, камень и кость.",
  "Открывайте «Политика, войны и рынок» в меню действий: там показаны все войны с причинами, союзы, досье держав и текущие цены на ресурсы в той земле, где вы находитесь.",
  "Торговля живёт на разнице цен: покупайте там, где ресурс вывозят, продавайте там, где его ввозят. У любого торговца есть раздел «Продать ресурсы» — цена зависит от державы, войны, вашей репутации у его народа и даров богов.",
  "Помогая жителям державы, вы улучшаете её отношения с соседями и поднимаете свою репутацию у их народа: цены для вас снижаются, а разговоры становятся теплее."]},
-{title:"Глава 20. Озвученная карта",body:[
+{title:"Глава 21. Озвученная карта",body:[
  "В меню действий выберите «Карта локации». Сетка 7 на 7 вокруг вас: касание клетки озвучивает объект, направление и расстояние в шагах, а также проигрывает его маяк.",
  "Кнопка «Озвучить объекты по расстоянию» перечислит всё важное поблизости."]},
-{title:"Глава 21. Звуковые маяки",body:[
+{title:"Глава 22. Звуковые маяки",body:[
  "Каждый объект мира имеет уникальный короткий звук: замок, таверна, школа, кланхолл, храм, рынок, кузница, башня, руины, деревья, камни, руда, травы, кристаллы, правитель, стражник, торговец и монстры.",
  "Маяки панорамируются по сторонам света: восток справа, запад слева."]},
-{title:"Глава 22. Горячие клавиши и советы",body:[
+{title:"Глава 23. Горячие клавиши и советы",body:[
  "Стрелки — ходьба. Контрол или Альт плюс G — руководство. Контрол или Альт плюс M — меню действий. Альт плюс S — тишина. Эскейп — закрыть.",
  "Играйте в наушниках — стерео-маяки помогут ориентироваться. Удачной охоты, Странник!"]}];
 let chIndex=0;
@@ -2679,7 +2692,8 @@ const CLANS=CLAN_DB.map(c=>c.n);
 const CLAN_BY_NAME=Object.fromEntries(CLAN_DB.map(c=>[c.n,c]));
 
 /* ════════ ЭКОНОМИКА: базовая стоимость ресурсов ════════ */
-const RES_BASE={"дерево":6,"трава":5,"ягоды":6,"камень":7,"руда":14,"кристалл":30,"ракушка":10,"грибы":7,"кость":9};
+const RES_BASE={"дерево":6,"трава":5,"ягоды":6,"камень":7,"руда":14,"кристалл":30,"ракушка":10,"грибы":7,"кость":9,
+ "салака":7,"треска":12,"скумбрия":16,"угорь":22,"тунец":34,"кальмар":26,"скат":30,"жемчужница":70,"морской окунь":14};
 
 /* ════════ ПОЛИТИКА МИРА: отношения, войны, эпохи ════════
    Политика выводится из номера дня детерминированной функцией: мир живёт сам,
@@ -2750,7 +2764,8 @@ function buyModifier(npc){
    По дорогам между городами ходят караваны — их можно встретить, у них можно
    купить и им можно продать, а ещё наняться охраной до места назначения.
    ════════════════════════════════════════════════════════════════════════ */
-const TRADE_GOODS=["дерево","трава","ягоды","камень","руда","кристалл","ракушка","грибы","кость"];
+const TRADE_GOODS=["дерево","трава","ягоды","камень","руда","кристалл","ракушка","грибы","кость",
+ "салака","треска","скумбрия","тунец","кальмар"];
 const CITY_SPEC=["рудничный","хлебный","лесной","рыбацкий","ремесленный","караванный","храмовый","пастуший"];
 const cityScanCache=new Map();
 /* Быстрый поиск городов: правило рождения замка и деревни повторено без сборки
@@ -3258,12 +3273,13 @@ function bankUpdateAmbient(){
    воду, скрип корпуса и штормовой ветер, встречает морские события и
    сходит на берег в порту назначения.
    ════════════════════════════════════════════════════════════════════════ */
+/* hold — сколько единиц груза берёт трюм: быстрые суда берут мало, тяжёлые много. */
 const SHIP_KIND=[
- {id:"koch",n:"Купеческий коч",speed:1.0,fare:1.0,hold:"зерно и ткани"},
- {id:"nef",n:"Тяжёлый неф",speed:0.8,fare:0.85,hold:"руда и камень"},
- {id:"skif",n:"Быстрый скиф",speed:1.5,fare:1.35,hold:"почта и пряности"},
- {id:"galley",n:"Боевая галера",speed:1.2,fare:1.2,hold:"оружие и припасы"},
- {id:"barque",n:"Рыбацкая барка",speed:0.9,fare:0.7,hold:"рыба и соль"}];
+ {id:"koch",n:"Купеческий коч",speed:1.0,fare:1.0,hold:40,cargoName:"зерно и ткани"},
+ {id:"nef",n:"Тяжёлый неф",speed:0.8,fare:0.85,hold:80,cargoName:"руда и камень"},
+ {id:"skif",n:"Быстрый скиф",speed:1.5,fare:1.35,hold:16,cargoName:"почта и пряности"},
+ {id:"galley",n:"Боевая галера",speed:1.2,fare:1.2,hold:30,cargoName:"оружие и припасы"},
+ {id:"barque",n:"Рыбацкая барка",speed:0.9,fare:0.7,hold:24,cargoName:"рыба и соль"}];
 const PORT_A=["Соль","Якор","Штиль","Прибой","Чайк","Мачт","Волн","Бухт"];
 const PORT_B=["ная Гавань","ный Причал","ное Устье","ная Пристань","ный Порт"];
 function portNameAt(x,y){
@@ -3324,18 +3340,41 @@ function openHarbor(){
   🚢 Рейсов сегодня: ${ships.length}. Плата берётся при посадке, груз плывёт с вами.</div>`;
  html+=`<h3>Рейсы от причала</h3>`;
  html+=ships.length?ships.map((sh,i)=>{
-  const speak=`${sh.name} в ${sh.to.name}. Плата ${sh.fare} золота, переходов ${sh.legs}, отход в ${sh.departHour} часов. В трюме ${sh.kind.hold}. Там дорого берут ${sh.goods.join(", ")}. ${sh.war?"Рейс идёт через воюющие воды.":""}`;
+  const speak=`${sh.name} в ${sh.to.name}. Плата ${sh.fare} золота, переходов ${sh.legs}, отход в ${sh.departHour} часов. Трюм берёт ${sh.kind.hold} единиц груза: ${sh.kind.cargoName}. Там дорого берут ${sh.goods.join(", ")}. ${sh.war?"Рейс идёт через воюющие воды.":""}`;
   return `<div class="list-line" tabindex="0" data-speak="${speak.replace(/"/g,"&quot;")}">
    🚢 <b>${sh.name}</b> → «${sh.to.name}»<br>
-   Плата ${sh.fare} золота · переходов ${sh.legs} · отход в ${sh.departHour}:00 · трюм: ${sh.kind.hold}<br>
+   Плата ${sh.fare} золота · переходов ${sh.legs} · отход в ${sh.departHour}:00 · трюм ${sh.kind.hold} ед. (${sh.kind.cargoName})<br>
    📈 Там дорого берут: ${sh.goods.join(", ")}${sh.war?" · ⚔️ через воюющие воды":""}
    <button data-cmd="board:${i}" data-speak="Взойти на борт: ${sh.name} до ${sh.to.name} за ${sh.fare} золота.">⚓ Взойти на борт (${sh.fare})</button></div>`;}).join("")
   :`<div class="list-line">Сегодня от причала никто не отходит. Загляните завтра.</div>`;
+ /* Грузовые партии: опт дешевле розницы, но нужен трюм. */
+ const pf2=cityProfile(port);
+ const lots=[...new Set([...pf2.surplus,...(port.emp.exports||[])])].filter(r=>RESICON[r]).slice(0,4);
+ html+=`<h3>Грузовые партии со склада</h3>`;
+ html+=`<div class="list-line">Оптом дешевле розницы: партия из 5 — на десятую часть, из 10 — почти на пятую. В трюме сейчас: <b>${cargoUnits()}</b> ед.${G.ship?` из ${shipHold()}`:""}</div>`;
+ html+=lots.length?lots.map(r=>{
+  const p5=lotPrice(r,port,G.day,5),p10=lotPrice(r,port,G.day,10);
+  const where=bestRoutes(port.x,port.y,G.day,6).find(x=>x.res===r);
+  return `<div class="list-line" tabindex="0" data-speak="${`${r}: партия из пяти за ${p5}, из десяти за ${p10}. ${where?`Дороже всего берут в ${where.to.name}: ${where.sell} за штуку.`:""}`.replace(/"/g,"&quot;")}">
+   ${RESICON[r]||""} <b>${r}</b> · 5 шт. — ${p5} · 10 шт. — ${p10}${where?`<br>📈 Везти в «${where.to.name}»: ${where.sell} за штуку`:""}
+   <button data-cmd="lot5:${r}" data-speak="Взять партию из пяти ${r} за ${p5} золота.">📦 Партия 5 (${p5})</button>
+   <button data-cmd="lot10:${r}" data-speak="Взять партию из десяти ${r} за ${p10} золота.">📦 Партия 10 (${p10})</button></div>`;}).join("")
+  :`<div class="list-line">Склад пуст: сегодня оптом не отпускают.</div>`;
+ /* Морские подряды: доставка груза в другой порт к сроку. */
+ const fr=freightOffers(port,G.day);
+ const haveFr=(G.quests||[]).find(q=>q.type==="freight"&&!q.done);
+ html+=`<h3>Морские подряды</h3>`;
+ html+=haveFr?`<div class="list-line">У вас уже есть подряд: ${haveFr.need} шт. «${haveFr.res}» в «${haveFr.city}» до ${haveFr.due}-го дня.</div>`
+  :(fr.length?fr.map((o,i)=>`<div class="list-line" tabindex="0" data-speak="${`Подряд: ${o.need} штук ${o.res} в порт ${o.to.name}, ${o.dist} шагов морем, срок ${o.days} дней, плата ${o.pay} золота.`.replace(/"/g,"&quot;")}">
+   📜 <b>${o.need} шт. «${o.res}»</b> → «${o.to.name}»<br>Плата ${o.pay} золота · срок ${o.days} дн. · ${o.dist} шагов морем
+   <button data-cmd="freight:${i}" data-speak="Взять подряд: ${o.need} штук ${o.res} в порт ${o.to.name} за ${o.pay} золота.">📜 Взять подряд</button></div>`).join("")
+  :`<div class="list-line">Подрядов сегодня нет.</div>`);
+ html+=`<button class="item" data-cmd="fish" data-speak="Рыбачить с причала.">🎣 Рыбачить с причала</button>`;
  html+=`<button class="item" data-cmd="seatalk" data-speak="Расспросить капитанов о морях, ценах и штормах.">🗣️ Расспросить капитанов</button>`;
  html+=`<div class="row"><button data-cmd="close">✖️ Отойти от причала</button></div>`;
  body.innerHTML=html;
  G.harborShips=ships.map(s=>({id:s.id,name:s.name,fare:s.fare,legs:s.legs,tox:s.to.x,toy:s.to.y,
-  toName:s.to.name,war:s.war,kind:s.kind.id,speed:s.kind.speed}));
+  toName:s.to.name,war:s.war,kind:s.kind.id,speed:s.kind.speed,hold:s.kind.hold}));
  openModal("modal-harbor");
  safeFn(()=>{beacon("port",0,0);Bank.play("port",{seed:port.x+port.y,gain:0.6,maxSec:8});});
  narrate(`${port.name}. Рейсов от причала: ${ships.length}. ${ships.map(s=>`${s.name} в «${s.to.name}» за ${s.fare} золота`).join("; ")}.`);
@@ -3349,6 +3388,175 @@ function seaTalk(){
   `В море шторм приходит без спроса: держите трюм сухим, а руку — на снастях».`);
  safeFn(()=>Bank.play("sea_calm",{seed:G.day,gain:0.5,maxSec:7}));
 }
+/* ════════════════════════════════════════════════════════════════════════
+   МОРСКАЯ ТОРГОВЛЯ ГРУЗАМИ И РЫБАЛКА
+   Груз возят партиями: в порту берут оптом дешевле розницы, а трюм судна
+   ограничивает, сколько можно увезти за раз. Быстрый скиф берёт мало и
+   дорого, тяжёлый неф — много и дёшево: выбор судна и есть выбор дела.
+   Рыбалка кормит, продаётся в портах и требует снасти — удочки или сети.
+   ════════════════════════════════════════════════════════════════════════ */
+/* Рыба и прочая морская добыча: товар наравне с рудой и деревом. */
+const FISH=[
+ {n:"салака",  icon:"🐟",where:["coast","port","sea"],rare:0.30,price:7,gear:"any",  d:"Мелкая стайная рыба у берега"},
+ {n:"треска",  icon:"🐟",where:["coast","sea"],       rare:0.22,price:12,gear:"any", d:"Крепкая холодноводная рыба"},
+ {n:"скумбрия",icon:"🐠",where:["sea"],               rare:0.16,price:16,gear:"any", d:"Быстрая рыба открытой воды"},
+ {n:"угорь",   icon:"🐍",where:["coast","swamp"],     rare:0.10,price:22,gear:"rod", d:"Ночная добыча: берёт в темноте"},
+ {n:"тунец",   icon:"🐟",where:["sea","deep"],        rare:0.08,price:34,gear:"rod", d:"Крупный ход: тянет так, что гнётся удилище"},
+ {n:"кальмар", icon:"🦑",where:["sea","deep"],        rare:0.09,price:26,gear:"net", d:"Берётся сетью, ночью чаще"},
+ {n:"скат",    icon:"🐡",where:["coast","sea"],       rare:0.07,price:30,gear:"net", d:"Донный житель отмелей"},
+ {n:"жемчужница",icon:"🦪",where:["coast","deep"],    rare:0.04,price:70,gear:"net", d:"Раковина с жемчугом: редкая удача"},
+ {n:"морской окунь",icon:"🐟",where:["coast","port"], rare:0.18,price:14,gear:"any", d:"Держится у причалов и камней"}];
+const FISH_BY_NAME=Object.fromEntries(FISH.map(f=>[f.n,f]));
+/* Снасти делаются в мастерской и хранятся в предметах. */
+const TACKLE={rod:"Удочка",net:"Рыболовная сеть"};
+function hasTackle(kind){
+ try{const items=G.items||[];
+  if(kind==="any")return items.includes(TACKLE.rod)||items.includes(TACKLE.net);
+  return items.includes(TACKLE[kind]);}catch(_){return false;}}
+function bestTackle(){return hasTackle("net")?"net":hasTackle("rod")?"rod":null;}
+/* Где сейчас можно рыбачить и какой это водоём. */
+function fishingSpot(){
+ if(G.ship)return G.ship.left<=Math.max(1,Math.floor(G.ship.legs/2))?"deep":"sea";
+ if(G.place)return G.place.stype==="port"&&G.place.depth===0?"port":null;
+ const c=cellContent(G.x,G.y);
+ if(c.structure&&c.structure.type==="port")return "port";
+ if(c.terrain[0]==="coast")return "coast";
+ if(c.terrain[0]==="swamp")return "swamp";
+ return null;
+}
+function fishingSpotName(spot){
+ return {coast:"берег",port:"причал",sea:"открытое море",deep:"глубокая вода",swamp:"топи"}[spot]||"вода";
+}
+/* Улов зависит от водоёма, снасти, времени суток и милости Нереи. */
+function rollCatch(spot,tackle){
+ const night=isNight();
+ const pool=FISH.filter(f=>f.where.includes(spot)&&(f.gear==="any"||f.gear===tackle));
+ if(!pool.length)return null;
+ const luck=1+0.12*fxLevel("water")+0.08*fxLevel("gather")+(tackle==="net"?0.15:0);
+ let best=null;
+ for(const f of pool){
+  let p=f.rare*luck*(night&&["угорь","кальмар"].includes(f.n)?2.2:1)*(spot==="deep"?1.25:1);
+  if(Math.random()<p&&(!best||f.price>best.price))best=f;}
+ return best;
+}
+/* ── Заброс: игра ждёт поклёвки, игрок подсекает на слух ── */
+function startFishing(){
+ if(G.inCombat){narrate("Не время: сначала закончите бой.");return false;}
+ const spot=fishingSpot();
+ if(!spot){narrate("Здесь не рыбачат. Нужен берег, причал, топи или борт судна в море.");return false;}
+ const tackle=bestTackle();
+ if(!tackle){narrate("Нет снасти. Сделайте удочку или рыболовную сеть в мастерской: они делаются из дерева и травы.");return false;}
+ if(G.fishing&&G.fishing.active){narrate("Снасть уже в воде. Ждите поклёвки.");return false;}
+ G.fishing={active:true,spot,tackle,bite:false,castAt:Date.now()};
+ safeFn(()=>{Bank.play("step_water",{seed:Date.now(),gain:0.7});beacon("well",0,0);});
+ narrate(`Заброс: ${fishingSpotName(spot)}, снасть — ${tackle==="net"?"сеть":"удочка"}. Слушайте: как клюнет, подсекайте одним касанием.`);
+ const wait=1200+Math.floor(Math.random()*4200);
+ G.fishing.timer=setTimeout(()=>{
+  if(!G.fishing||!G.fishing.active)return;
+  const fish=rollCatch(spot,tackle);
+  G.fishing.fish=fish;G.fishing.bite=true;
+  if(!fish){
+   /* Пустая поклёвка: сорвалось или зацеп. */
+   safeFn(()=>{beacon("well",0,0);});
+   narrate("Дёрнуло и отпустило. Пусто.");
+   endFishing();return;}
+  safeFn(()=>{Bank.play("step_water",{seed:Date.now(),gain:0.9});UI.blip(1240,.09,.2);vib(25);});
+  narrate("Клюёт! Подсекайте!",{interrupt:true});
+  G.fishing.window=setTimeout(()=>{
+   if(G.fishing&&G.fishing.bite){
+    narrate(`Сорвалось: ${G.fishing.fish?G.fishing.fish.n:"добыча"} ушла. Забрасывайте снова.`);
+    endFishing();}},2300);
+ },wait);
+ G.hour+=0.3;if(G.hour>=24){G.hour-=24;G.day++;}
+ refresh();
+ return true;
+}
+function endFishing(){
+ if(!G.fishing)return;
+ if(G.fishing.timer)clearTimeout(G.fishing.timer);
+ if(G.fishing.window)clearTimeout(G.fishing.window);
+ G.fishing=null;
+ refresh();
+}
+/* Подсечка: успевает тот, кто среагировал на звук поклёвки. */
+function hookFish(){
+ if(!G.fishing||!G.fishing.active){narrate("Снасть не в воде. Забросьте сначала.");return false;}
+ if(!G.fishing.bite){
+  narrate("Рано: поклёвки ещё не было. Снасть придётся забросить заново.");
+  endFishing();return false;}
+ const fish=G.fishing.fish,spot=G.fishing.spot,tackle=G.fishing.tackle;
+ endFishing();
+ if(!fish)return false;
+ const qty=tackle==="net"&&Math.random()<0.45?2:1;
+ G.inv[fish.n]=(Number(G.inv[fish.n])||0)+qty;
+ safeFn(()=>{UI.pickup();Bank.play("gold",{seed:fish.price,gain:0.6});});
+ narrate(`Есть! ${fish.n}${qty>1?` ×${qty}`:""}. ${fish.d}. В портах за неё дают около ${fish.price} золота.`);
+ journal(`Улов: ${fish.n}${qty>1?" ×"+qty:""}.`);
+ /* Крупная добыча в открытом море привлекает внимание снизу. */
+ if(G.ship&&fish.price>=26&&Math.random()<0.3){
+  const src=seaFoeByHash(Math.floor(H(G.x+G.day,G.y+fish.price,540)*1000));
+  announceSeaFoe(src,`Кровь в воде привлекла гостя: ${src.n} поднимается к борту!`);
+  startCombat({x:G.x,y:G.y,monster:makeSeaFoe(src,0)});}
+ refresh();saveGame(true);
+ return true;
+}
+
+/* ── ГРУЗОВЫЕ ПАРТИИ И ТРЮМ ── */
+function cargoUnits(){
+ try{return Object.keys(RESICON).reduce((n,r)=>n+(Number(G.inv[r])||0),0);}catch(_){return 0;}}
+function shipHold(){return G.ship?(Number(G.ship.hold)||20):0;}
+/* Оптовая цена партии: чем крупнее, тем дешевле за единицу. */
+function lotPrice(res,city,day,qty){
+ const unit=citySellPrice(res,city,day);
+ const disc=qty>=10?0.82:qty>=5?0.9:1;
+ return Math.max(1,Math.round(unit*disc*qty));
+}
+function buyLot(res,qty){
+ const port=portHere()||(G.place&&G.place.stype==="port"?isPortAt(G.place.bx,G.place.by):null);
+ if(!port){narrate("Партии берут только в порту, у складов.");return false;}
+ const n=Math.max(1,Number(qty)||1);
+ const total=lotPrice(res,port,G.day,n);
+ if(G.gold<total){narrate(`Партия ${res} ×${n} стоит ${total} золота, у вас ${G.gold}.`);return false;}
+ G.gold-=total;
+ G.inv[res]=(Number(G.inv[res])||0)+n;
+ safeFn(()=>{UI.pickup();Bank.play("gold",{seed:total,gain:0.8});});
+ const where=bestRoutes(port.x,port.y,G.day,6).find(r=>r.res===res);
+ narrate(`Взято оптом: ${res} ×${n} за ${total} золота (по ${Math.round(total/n)} за штуку).`+
+  (where?` Дороже всего берут в «${where.to.name}»: ${where.sell} за штуку.`:"")+
+  ` В трюме сейчас ${cargoUnits()} единиц груза.`);
+ journal(`Партия: ${res} ×${n} за ${total}.`);
+ saveGame(true);refresh();openHarbor();
+ return true;
+}
+/* Морской подряд: довезти груз в названный порт к сроку. */
+function freightOffers(port,day){
+ const others=findPorts(port.x,port.y,60,6).filter(p=>p.x!==port.x||p.y!==port.y);
+ return others.slice(0,3).map((to,i)=>{
+  const pt=cityProfile(to);
+  const res=pt.demand[i%pt.demand.length]||pt.demand[0];
+  const need=4+Math.floor(H(port.x+i,to.y,550)*8);
+  const dist=Math.round(Math.hypot(to.x-port.x,to.y-port.y));
+  const pay=Math.round(cityBuyPrice(res,to,day)*need*1.35+dist*2);
+  return {id:`fr${port.x}_${port.y}_${i}`,res,need,to,pay,dist,days:3+Math.ceil(dist/12)};});
+}
+function takeFreight(i){
+ const port=portHere()||(G.place&&G.place.stype==="port"?isPortAt(G.place.bx,G.place.by):null);
+ if(!port){narrate("Подряды дают в порту.");return false;}
+ const off=freightOffers(port,G.day)[Number(i)];
+ if(!off){narrate("Этот подряд уже разобрали.");return false;}
+ if((G.quests||[]).some(q=>q.type==="freight"&&!q.done)){narrate("У вас уже есть морской подряд. Сначала сдайте его.");return false;}
+ const q={id:off.id+"_"+G.day,npc:`Складчик «${port.name}»`,type:"freight",res:off.res,need:off.need,
+  tx:off.to.x,ty:off.to.y,city:off.to.name,due:G.day+off.days,done:false,race:off.to.emp.race,
+  text:`Морской подряд: доставить ${off.need} шт. «${off.res}» в порт «${off.to.name}» (${off.to.x}; ${off.to.y}) до ${G.day+off.days}-го дня. Плата ${off.pay} золота.`,
+  reward:{gold:off.pay,xp:40+off.dist*2}};
+ G.quests.push(q);
+ safeFn(()=>UI.fanfare());
+ narrate(`Подряд принят: ${off.need} шт. «${off.res}» в порт «${off.to.name}», срок — до ${q.due}-го дня. Плата ${off.pay} золота.`);
+ journal(`Морской подряд: ${off.res} ×${off.need} в ${off.to.name}.`);
+ saveGame(true);openHarbor();
+ return true;
+}
+
 /* ════════════════════════════════════════════════════════════════════════
    МОРСКИЕ ТВАРИ И ПИРАТЫ
    В море у игрока другой бестиарий: то, что живёт под килем, и то, что
@@ -3487,14 +3695,19 @@ function boardShip(i){
  const sh=list[Number(i)];
  if(!sh){narrate("Этот рейс уже отошёл.");return false;}
  if(G.gold<sh.fare){narrate(`Плата за проезд ${sh.fare} золота, у вас ${G.gold}.`);return false;}
+ /* Трюм не резиновый: с лишним грузом на борт не пускают. */
+ const load=cargoUnits(),hold=Number(sh.hold)||20;
+ if(load>hold){
+  narrate(`Трюм не вместит: у вас ${load} единиц груза, а «${sh.name}» берёт ${hold}. Продайте лишнее или ищите судно побольше.`);
+  return false;}
  G.gold-=sh.fare;
- G.ship={name:sh.name,kind:sh.kind,speed:Number(sh.speed)||1,tox:sh.tox,toy:sh.toy,toName:sh.toName,
+ G.ship={name:sh.name,kind:sh.kind,speed:Number(sh.speed)||1,hold:Number(sh.hold)||20,tox:sh.tox,toy:sh.toy,toName:sh.toName,
   legs:sh.legs,left:sh.legs,leg:0,war:sh.war,storm:false,fare:sh.fare};
  const m=document.getElementById("modal-harbor");if(m&&!m.hidden)safeFn(()=>closeModal(m));
  safeFn(()=>{beacon("port_horn",0,0);Bank.play("ship_depart",{seed:sh.tox,gain:0.8,maxSec:8});});
  safeFn(()=>{Play.stopKey("amb0");Play.stopKey("amb1");Music.start("coast");bankUpdateAmbient();});
  G.hour+=1;if(G.hour>=24){G.hour-=24;G.day++;}
- narrate(`Вы на борту: ${sh.name}, курс на «${sh.toName}». Переходов до порта: ${sh.legs}. Свайп в любую сторону — идти дальше, свайп двумя пальцами вверх — спросить капитана.`);
+ narrate(`Вы на борту: ${sh.name}, курс на «${sh.toName}». Переходов до порта: ${sh.legs}. Груза в трюме ${load} из ${hold}. Свайп в любую сторону — идти дальше, свайп двумя пальцами вверх — спросить капитана.`);
  journal(`Отплытие: ${sh.name} в ${sh.toName}.`);
  refresh();saveGame(true);
  return true;
@@ -3514,7 +3727,15 @@ function sailLeg(){
   safeFn(()=>{beacon("wall",0,1);Bank.play("sea_storm",{seed:s.leg,gain:0.75,maxSec:9});});
   const dmg=4+Math.floor(Math.random()*6);
   G.hp=Math.max(1,G.hp-dmg);
-  narrate(`Шторм! Палубу заливает, судно кладёт на борт. Вы ушиблись: −${dmg} здоровья. Осталось переходов: ${s.left}.`);
+  /* В сильную волну часть палубного груза уходит за борт. */
+  let lost="";
+  if(Math.random()<0.35){
+   const carried=Object.keys(RESICON).filter(r=>(Number(G.inv[r])||0)>0);
+   if(carried.length){const r=carried[Math.floor(Math.random()*carried.length)];
+    G.inv[r]=Math.max(0,(Number(G.inv[r])||0)-1);
+    if(!G.inv[r])delete G.inv[r];
+    lost=` Волной смыло за борт: ${r} ×1.`;}}
+  narrate(`Шторм! Палубу заливает, судно кладёт на борт. Вы ушиблись: −${dmg} здоровья.${lost} Осталось переходов: ${s.left}.`);
  }else{
   narrate(`Судно идёт${r>0.75?" ровно, ветер попутный":""}. Осталось переходов до «${s.toName}»: ${s.left}.`);
  }
@@ -3648,7 +3869,11 @@ const MONSTER_LORE={
  bandit:{god:"road",myth:"Виа говорит: дорога кормит идущего. Некоторые поняли это слишком буквально.",who:"Гильдия Долгой Дороги платит за головы разбойников больше, чем стража."}};
 const RESBYT={forest:["дерево","трава","ягоды"],plains:["камень","трава"],mountains:["камень","руда"],
  cave:["руда","кристалл"],coast:["ракушка","камень"],swamp:["трава","грибы"],desert:["камень","кость"],road:[]};
-const RESICON={дерево:"🌳",трава:"🌿",ягоды:"🫐",камень:"🪨",руда:"⛏️",кристалл:"💠",ракушка:"🐚",грибы:"🍄",кость:"🦴"};
+/* Собираемые в мире ресурсы: только они попадают в клетки и в квесты на сбор. */
+const LAND_RES=["дерево","трава","ягоды","камень","руда","кристалл","ракушка","грибы","кость"];
+const RESICON={дерево:"🌳",трава:"🌿",ягоды:"🫐",камень:"🪨",руда:"⛏️",кристалл:"💠",ракушка:"🐚",грибы:"🍄",кость:"🦴",
+ /* Улов — такой же груз: его возят, продают в портах и берут в подряды. */
+ салака:"🐟",треска:"🐟",скумбрия:"🐠",угорь:"🐍",тунец:"🐟",кальмар:"🦑",скат:"🐡",жемчужница:"🦪","морской окунь":"🐟"};
 const RESBEACON={дерево:"res_tree",трава:"res_herbs",ягоды:"res_berry",камень:"res_stone",руда:"res_ore",кристалл:"res_crystal",ракушка:"res_shell",грибы:"res_herbs",кость:"res_bone"};
 /* ── Внутренняя защита кода: статические таблицы мира не должны меняться в рантайме.
    Заморозка ловит случайные опечатки-присваивания на этапе разработки и не даёт
@@ -3997,7 +4222,7 @@ function questFor(npc){
  const martial=["Стражник","Правитель","Советник","Глава клана","Воин клана"].includes(npc.prof);
  if(holy&&h<0.55)return godQuestFor(npc,H(x,y,63));
  if(martial&&empireAtWar(idx,G.day)&&h<0.6)return warQuestFor(npc,H(x,y,65),idx);
- if(h<0.3){const pool=Object.keys(RESICON),res=pool[Math.floor(H(x,y,61)*pool.length)],need=2+npc.tier,d=resourceDestination(npc,res);
+ if(h<0.3){const pool=LAND_RES,res=pool[Math.floor(H(x,y,61)*pool.length)],need=2+npc.tier,d=resourceDestination(npc,res);
   return {id,npc:npc.name,type:'fetch',res,need,tx:d.tx,ty:d.ty,location:`роща или участок возле (${d.tx}; ${d.ty})`,text:`Принеси мне ${need} шт. «${res}». Ищи их в районе (${d.tx}; ${d.ty}), там почва влажнее и этот ресурс встречается чаще. Когда соберёшь всё, возвращайся ко мне.`,reward:{gold:20*npc.tier+need*5,xp:25*npc.tier+need*8}};}
  if(h<0.5){const need=1+Math.ceil(npc.tier/2);return {id,npc:npc.name,type:'kill',need,text:`Очисти округу: убей ${need} монстров. Иди на ${DIRN[Math.floor(H(x,y,64)*4)]}, держись примерно ${4+npc.tier} переходов от поселения и возвращайся, когда услышишь, что цель выполнена.`,reward:{gold:30*npc.tier,xp:35*npc.tier}};}
  if(h<0.75){
@@ -4025,7 +4250,9 @@ const G={hp:100,hpMax:100,str:10,agi:10,mind:10,cha:10,mana:10,manaMax:10,
     выработанные жилы и убитые в подземелье монстры. */
  place:null,marks:{},dungeonKills:0,altarPrayed:null,metCaravan:null,
  /* Плавание: судно, на котором идёт игрок, и рейсы у причала. */
- ship:null,harborShips:null};
+ ship:null,harborShips:null,
+ /* Рыбалка: снасть в воде, поклёвка и подсечка. */
+ fishing:null};
 const xpNeed=l=>l*l*50;
 /* Дар Хронара и ткачей судьбы: опыт течёт быстрее. Через эту функцию проходит
    ВСЯ прибавка опыта, поэтому дар работает и в бою, и в заданиях. */
@@ -4120,9 +4347,9 @@ function refresh(){
   const sh=G.ship;
   hud.innerHTML=
    `❤️ <b>${G.hp}</b> 💪 <b>${G.str}</b> 🏃 <b>${G.agi}</b> 🧠 <b>${G.mind}</b> 💬 <b>${G.cha}</b> ✨ <b>${G.mana}</b> 💧 <b>${G.water}</b> 💰 <b>${G.gold}</b><br>`+
-   `🚢 ${sh.name} · курс на «${sh.toName}» · переходов осталось ${sh.left} из ${sh.legs}${sh.storm?" · ⛈️ шторм":""}<br>`+
+   `🚢 ${sh.name} · курс на «${sh.toName}» · переходов ${sh.left} из ${sh.legs} · 📦 трюм ${cargoUnits()}/${sh.hold||20}${sh.storm?" · ⛈️ шторм":""}<br>`+
    `⭐ Уровень ${G.level} · Опыт ${G.xp}/${xpNeed(G.level)} · 🗡️ ${atk()} 🛡️ ${def()}`;
-  hud.dataset.speak=`Здоровье ${G.hp} из ${G.hpMax}. На борту: ${sh.name}, курс на ${sh.toName}. Осталось переходов: ${sh.left} из ${sh.legs}.${sh.storm?" Идёт шторм.":""} Золото ${G.gold}. Свайп — идти дальше.`;
+  hud.dataset.speak=`Здоровье ${G.hp} из ${G.hpMax}. На борту: ${sh.name}, курс на ${sh.toName}. Осталось переходов: ${sh.left} из ${sh.legs}. Груза в трюме ${cargoUnits()} из ${sh.hold||20}.${sh.storm?" Идёт шторм.":""} Золото ${G.gold}. Свайп — идти дальше.`;
   return;}
  if(G.place){
   /* Внутри здания или подземелья строка состояния говорит о месте, а не о рельефе. */
@@ -5068,6 +5295,11 @@ const CMD={
  board(i){boardShip(i);},
  seatalk(){seaTalk();},
  pir(what){resolvePirates(what);},
+ /* Грузы и рыбалка. */
+ lot5(res){buyLot(res,5);},
+ lot10(res){buyLot(res,10);},
+ freight(i){takeFreight(i);},
+ fish(){if(G.fishing&&G.fishing.active)hookFish();else startFishing();},
  seavoice(id){const src=SEA_MONSTERS.find(m=>m.id===id)||PIRATE_CREWS.find(c=>c.id===id);
   if(!src){narrate("Голос не найден.");return;}
   narrate(src.n);
@@ -5555,6 +5787,8 @@ function openNPC(key,silent){const n=getNPCByKey(key);
 function qProgressText(q){
  if(q.type==="god_altar")return q.doneFlag?"молитва принята, вернитесь к заказчику":"алтарь ещё не найден: спуститесь на второй уровень подземелья и глубже";
  if(q.type==="god_relic"){const g=GOD_BY_ID[q.godId];return (G.items||[]).includes(`Реликвия: ${g?g.n:""}`)?"реликвия у вас, вернитесь к заказчику":"реликвия ещё не найдена: ищите в подземных сундуках";}
+ if(q.type==="freight"){const have=Number(G.inv[q.res])||0,d=Math.max(Math.abs(G.x-q.tx),Math.abs(G.y-q.ty));
+  return `${Math.min(have,q.need)} из ${q.need} «${q.res}» в порт «${q.city}», до срока ${Math.max(0,q.due-G.day)} дн., идти ${d} ${plural(d,"шаг","шага","шагов")}`;}
  if(q.type==="escort")return q.done?"обоз доведён":`идите к городу «${q.city}» на клетке (${q.tx}; ${q.ty})`;
  if(q.type==="delivery"){const have=Number(G.inv[q.res])||0;const d=Math.max(Math.abs(G.x-q.tx),Math.abs(G.y-q.ty));
   return `${Math.min(have,q.need)} из ${q.need} «${q.res}», до города «${q.city}» ${d} ${plural(d,"шаг","шага","шагов")}`;}
@@ -5575,6 +5809,14 @@ function completeQuest(id){const q=G.quests.find(qq=>qq.id===id);
   if((q.have||0)<q.need){narrate(`Квест не выполнен: цель «${q.monsterName}» ещё не выслежена (${q.have||0} из ${q.need}).`);return;}}
  else if(q.type==="visit"){
   if(!q.doneFlag){narrate(`Квест не выполнен: сначала дойдите до отметки (${q.tx}; ${q.ty}).`);return;}}
+ else if(q.type==="freight"){
+  const have=Number(G.inv[q.res])||0;
+  const d=Math.max(Math.abs(G.x-q.tx),Math.abs(G.y-q.ty));
+  if(d>1){narrate(`Подряд не сдан: груз ждут в порту «${q.city}» — до него ${d} ${plural(d,"шаг","шага","шагов")}.`);return;}
+  if(have<q.need){narrate(`Подряд не сдан: нужно ${q.need} шт. «${q.res}», у вас ${have}.`);return;}
+  if(G.day>q.due){narrate(`Срок вышел: подряд ждали до ${q.due}-го дня, сейчас ${G.day}-й. Складчик берёт груз за половину цены.`);
+   q.reward={gold:Math.round(q.reward.gold*0.5),xp:q.reward.xp};}
+  G.inv[q.res]=have-q.need;if(G.inv[q.res]<=0)delete G.inv[q.res];}
  else if(q.type==="delivery"){
   const have=Number(G.inv[q.res])||0;
   const d=Math.max(Math.abs(G.x-q.tx),Math.abs(G.y-q.ty));
@@ -5835,18 +6077,23 @@ function renderBestiary(){
   🏴‍☠️ «${c.creed}»<br>💰 ${c.demand?`Выкуп: около ${Math.round(c.demand*100)}% вашего золота`:"Выкупа не берут: им нужно другое"}
   <button data-cmd="seavoice:${c.id}" data-speak="Прослушать голос ватаги: ${c.n}.">🔊 Прослушать голос</button></div>`;}).join("");}
 function renderCraft(){
- const RECIPES=[["Каменное копьё",{камень:2,дерево:1}],["Травяной отвар",{трава:2,ягоды:1}],["Факел",{дерево:1,трава:1}]];
+ const RECIPES=[["Каменное копьё",{камень:2,дерево:1}],["Травяной отвар",{трава:2,ягоды:1}],["Факел",{дерево:1,трава:1}],
+  ["Удочка",{дерево:1,трава:2}],["Рыболовная сеть",{трава:3,дерево:1}]];
  document.getElementById("craftList").innerHTML=RECIPES.map((r,i)=>{
   const need=Object.entries(r[1]).map(([k,v])=>`${k}×${v}`).join(", ");
   return `<div class="list-line"><b>${r[0]}</b> — нужно: ${need}
    <button data-cmd="craftdo:${i}" data-speak="Создать ${r[0]}.">🔨 Создать</button></div>`;}).join("");}
-CMD.craftdo=i=>{const R=[[["камень",2],["дерево",1]],[["трава",2],["ягоды",1]],[["дерево",1],["трава",1]]];
- const names=["Каменное копьё","Травяной отвар","Факел"];
+CMD.craftdo=i=>{const R=[[["камень",2],["дерево",1]],[["трава",2],["ягоды",1]],[["дерево",1],["трава",1]],
+  [["дерево",1],["трава",2]],[["трава",3],["дерево",1]]];
+ const names=["Каменное копьё","Травяной отвар","Факел","Удочка","Рыболовная сеть"];
  for(const[k,v]of R[i])if((G.inv[k]||0)<v){narrate(`Не хватает: ${k}.`);return;}
  for(const[k,v]of R[i])G.inv[k]-=v;
  if(i===0){G.str+=2;journal("Крафт: Каменное копьё.");}
  if(i===1){G.hp=Math.min(G.hpMax,G.hp+30);}
  if(i===2){G.items.push("Факел");}
+ /* Снасти: с ними открывается рыбалка на берегу, у причала и в море. */
+ if(i===3&&!G.items.includes("Удочка")){G.items.push("Удочка");}
+ if(i===4&&!G.items.includes("Рыболовная сеть")){G.items.push("Рыболовная сеть");}
  AE.ensure();const s=new SFX();s.clang(200);setTimeout(()=>s.stop(0.2),1200);
  narrate(`Создано: ${names[i]}.`);refresh();renderCraft();};
 function renderGestures(){
@@ -5858,6 +6105,7 @@ function renderGestures(){
   "👆👆 Двойное касание — активировать: кнопку, звук, вариант диалога. Можно коснуться дважды прямо по элементу, а можно сначала найти его пальцем или свайпом, а потом дважды коснуться в любом месте окна. (В настройках есть «Быстрая активация» — тогда хватит одного касания.)",
   "👉 Свайп — шаг: вверх север, вниз юг, влево запад, вправо восток. Внутри здания и подземелья тем же свайпом идёте по коридорам.",
   "🏃 Свайп и удержание пальца — бег в эту сторону. Отпустите палец — остановка.",
+  "🎣 Во время поклёвки любое касание или свайп — <b>подсечка</b>: игра сама скажет «Клюёт!» и подаст звук, а у вас будет около двух секунд.",
   "✋ Долгое касание (палец не двигается) — <b>действие здесь</b>: войти в дверь или ворота, спуститься по лестнице, открыть сундук, добыть жилу, помолиться у алтаря, заговорить с жителем, собрать добычу.",
   "↔️ Свайп в окнах и меню — перелистывание пунктов, включая длинные списки народов и богов.",
   "<b>ДВА ПАЛЬЦА — места и меню</b>",
@@ -6146,7 +6394,12 @@ window.addEventListener("beforeunload",()=>{try{stopRun();saveGame(true);}catch(
   G.x=clamp(Math.round(num(G.x,1000)),0,1999);
   G.y=clamp(Math.round(num(G.y,1000)),0,1999);
   G.day=clamp(Math.round(num(G.day,1)),1,999999);
-  G.hour=clamp(Math.round(num(G.hour,8)),0,23);
+  /* Час — дробная величина: шаг стоит 0.12–0.25 часа, заброс снасти 0.3, переход
+     морем 3 часа. Округление до целого (как было раньше) на каждом проходе стража
+     целостности каждые шесть секунд то съедало, то дарило до получаса, и время
+     могло идти назад: срок подряда, расписание обозов и кораблей, смена дня и ночи
+     дёргались. Теперь дробная часть сохраняется, а диапазон по-прежнему стережётся. */
+  G.hour=clamp(num(G.hour,8),0,23.999);
   if(!Array.isArray(G.quests))G.quests=[];
   if(!Array.isArray(G.gear))G.gear=[];
   if(!Array.isArray(G.inventory))G.inventory=[];
