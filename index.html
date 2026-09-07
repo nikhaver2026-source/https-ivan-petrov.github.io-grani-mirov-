@@ -62,7 +62,7 @@ select{font:inherit;color:var(--txt);background:var(--panel);border:2px solid va
 .cb-player .cb-hpbar span{background:var(--ok);}
 @media (max-width:360px){.cb-col h3{font-size:.88em;}.cb-col .list-line{font-size:.82em;}}
 .overlay{position:fixed;inset:0;background:rgba(4,7,20,.98);z-index:60;overflow:auto;padding:14px;}
-#guideOverlay{z-index:65;}#combatOverlay{z-index:70;}
+#guideOverlay{z-index:65;}#lootOverlay{z-index:70;}
 .overlay .sheet{border-color:var(--acc);}
 .toc-btn{display:block;width:100%;text-align:left;margin:7px 0;}
 .chapter p{background:var(--panel2);border-radius:12px;padding:11px 13px;}
@@ -105,6 +105,18 @@ h3{color:var(--acc2);margin:14px 0 6px;font-size:1.05rem;}
 <!-- ИГРА (без кнопок — всё в меню действий) -->
 <div id="screen-game" class="screen" hidden>
  <div id="hud" role="status"></div>
+ <!-- Боевая сводка встроена прямо в игровой экран. Это НЕ окно и НЕ диалог: раньше бой
+      открывал модальный combatOverlay, который считался «активным слоем», и свайпы
+      уходили в перелистывание пунктов окна вместо ударов — бой был непроходим жестами. -->
+ <div id="combatBar" hidden>
+  <div id="cbTitle" class="list-line" role="status" tabindex="0">⚔️ Бой</div>
+  <div class="cb-stats-row" id="cbStatsRow">
+   <div class="cb-col cb-enemy" id="cbEnemyCol" role="group" aria-label="Параметры противника" tabindex="0"></div>
+   <div class="cb-col cb-player" id="cbPlayerCol" role="group" aria-label="Параметры персонажа" tabindex="0"></div>
+  </div>
+  <div id="cbLog" class="list-line" aria-live="polite" aria-atomic="true"></div>
+  <p class="hint">Свайп при вынутом оружии — удар. Касание тремя пальцами — вынуть или убрать оружие. Двумя — меню действий.</p>
+ </div>
  <p class="hint" style="text-align:center;">Свайп: ⬆️ север · ⬇️ юг · ⬅️ запад · ➡️ восток.<br>
  Свайп и удержание — <b>бег</b>. Касание двумя пальцами — <b>меню действий</b>, где собраны все кнопки игры.</p>
 </div>
@@ -235,16 +247,10 @@ h3{color:var(--acc2);margin:14px 0 6px;font-size:1.05rem;}
  <div id="amList"></div>
 </div></div>
 
-<!-- БОЙ -->
-<div id="combatOverlay" class="overlay" role="dialog" aria-modal="true" aria-label="Бой" hidden><div class="sheet">
- <h2 id="cbTitle">⚔️ Бой</h2>
- <div class="cb-stats-row" id="cbStatsRow">
-  <div class="cb-col cb-enemy" id="cbEnemyCol" role="group" aria-label="Параметры противника" tabindex="0"></div>
-  <div class="cb-col cb-player" id="cbPlayerCol" role="group" aria-label="Параметры персонажа" tabindex="0"></div>
- </div>
- <div id="cbResult" class="list-line" hidden></div>
- <p class="hint">Боевой режим управляется жестами: вынутое оружие — свайп в сторону для удара. Магические действия доступны через меню и систему заклинаний. Кнопки «Атаковать», «Бежать» и другие старые боевые кнопки отключены.</p>
- <div id="cbLog" class="list-line" aria-live="polite" aria-atomic="true"></div>
+<!-- ДОБЫЧА ПОСЛЕ ПОБЕДЫ (в начале боя окно больше не открывается) -->
+<div id="lootOverlay" class="overlay" role="dialog" aria-modal="true" aria-label="Добыча" hidden><div class="sheet">
+ <h2 id="lootTitle">🏆 Победа</h2>
+ <div id="cbResult" class="list-line"></div>
 </div></div>
 
 <!-- РУКОВОДСТВО -->
@@ -1332,14 +1338,14 @@ function buildBeaconGrid(){const grid=document.getElementById("beaconGrid");if(!
 
 /* CANONICAL GESTURE CORE V9 — единый сенсорный шлюз (исправлены бег и озвучивание при ощупывании) */
 let lastExploreEl=null,lastAnnounced="",lastAnnouncedAt=0;
-let gesture={count:0,x:0,y:0,t:0,moved:false,dir:null,target:null,ui:null,runArmed:false};
+let gesture={count:0,maxCount:0,id:null,x:0,y:0,t:0,moved:false,dir:null,target:null,ui:null,runArmed:false};
 const runState={active:false,dir:null,iv:null,hold:null,pendingDir:null};
 let magicHold={timer:null,target:null,fired:false};
 const touchGate={lastUiTap:0,lastUiEl:null,suppressClickUntil:0};
 function gameActive(){const el=document.getElementById('screen-game');return !!(el&&!el.hidden&&entered);}
 function safeFn(fn,fb=null){try{return typeof fn==='function'?fn():fb;}catch(e){try{console.warn('[Safe]',e);}catch(_){}return fb;}}
 function touchDirection(dx,dy){return Math.abs(dx)>=Math.abs(dy)?(dx>=0?'E':'W'):(dy>=0?'S':'N');}
-function resetGesture(){gesture={count:0,x:0,y:0,t:0,moved:false,dir:null,target:null,ui:null,runArmed:false};}
+function resetGesture(){gesture={count:0,maxCount:0,id:null,x:0,y:0,t:0,moved:false,dir:null,target:null,ui:null,runArmed:false};}
 /* ── ОЗВУЧИВАНИЕ КАК В VOICEOVER: новый элемент немедленно обрывает речь предыдущего ── */
 function speakTextOf(el){try{const text=el?.dataset?.speak||el?.getAttribute?.('aria-label')||(el?.textContent||'').trim().replace(/\s+/g,' ');if(!text)return;
  const same=(text===lastAnnounced&&el===lastExploreEl&&Date.now()-lastAnnouncedAt<250);
@@ -1347,13 +1353,20 @@ function speakTextOf(el){try{const text=el?.dataset?.speak||el?.getAttribute?.('
  lastAnnounced=text;lastAnnouncedAt=Date.now();
  Speech.say(text,{interrupt:true}); /* interrupt:true обрывает недочитанный предыдущий элемент немедленно */
  vib(10);}catch(_) {}}
-function explorePoint(x,y){if(!settings.explore)return;try{const el=document.elementFromPoint(x,y),t=el?.closest?.('[data-speak],button,a,input,select,textarea,[role="button"],[data-cmd]');
- if(t&&t!==lastExploreEl){lastExploreEl=t;speakTextOf(t);}
+/* Текстовые поля намеренно исключены: фокус на них поднимает экранную клавиатуру
+   прямо во время ощупывания. Флажки, ползунки, кнопки и списки — безопасны. */
+function focusableForExplore(el){try{return !!(el&&el.matches&&el.matches('button,a[href],select,[role="button"],[tabindex],input[type="checkbox"],input[type="radio"],input[type="range"]')&&!el.disabled);}catch(_){return false;}}
+function explorePoint(x,y){if(!settings.explore)return;try{const el=document.elementFromPoint(x,y),t=el?.closest?.('[data-speak],button,a,input,select,textarea,[role="button"],[data-cmd],[data-magic-index]');
+ if(t&&t!==lastExploreEl){lastExploreEl=t;speakTextOf(t);
+  /* Фокус следует за пальцем: тогда «двойное касание где угодно» и свайп-перелистывание
+     работают с одним и тем же текущим элементом, а не расходятся между собой. */
+  if(focusableForExplore(t))safeFn(()=>t.focus({preventScroll:true}));}
  else if(!t&&lastExploreEl){lastExploreEl=null;} /* палец ушёл с элементов — готовы озвучить следующий сразу же */
 }catch(_) {}}
-function activeLayer(){try{for(const id of ['magicPanel','actionMenu','guideOverlay','combatOverlay']){const m=document.getElementById(id);if(m&&!m.hidden)return m;}if(Array.isArray(modalStack))for(let i=modalStack.length-1;i>=0;i--){const m=modalStack[i];if(m&&!m.hidden)return m;}}catch(_){}return null;}
+function activeLayer(){try{for(const id of ['magicPanel','actionMenu','guideOverlay','lootOverlay']){const m=document.getElementById(id);if(m&&!m.hidden)return m;}if(Array.isArray(modalStack))for(let i=modalStack.length-1;i>=0;i--){const m=modalStack[i];if(m&&!m.hidden)return m;}}catch(_){}return null;}
 function visibleInteractive(layer){try{return [...(layer||document).querySelectorAll('button,input,select,a,[role="button"],[data-cmd]')].filter(x=>!x.hidden&&!x.disabled&&x.getAttribute('aria-hidden')!=='true');}catch(_){return[];}}
-function activateElement(el){if(!el)return false;try{
+function activateElement(el){if(!el||el.disabled)return false;try{
+ touchGate.lastUiTap=0;touchGate.lastUiEl=null;
  el.focus?.({preventScroll:true});
  let handled=false;
  if(el.dataset?.cmd){const parts=el.dataset.cmd.split(':');const fn=CMD[parts[0]];
@@ -1367,10 +1380,10 @@ function activateElement(el){if(!el)return false;try{
     касание как бы срабатывало (activateElement возвращал true), а реального действия не
     происходило, будто «перехвачено» первым касанием. Теперь окно защищает только от
     настоящего отложенного «призрачного» клика браузера после реального касания на устройстве. */
- touchGate.suppressClickUntil=Date.now()+300;
+ touchGate.suppressClickUntil=Date.now()+700; /* 300 мс не хватало: отложенный клик браузера приходил позже и команда выполнялась второй раз */
  return true;
 }catch(e){return false;}}
-function closeTopUI(){try{const magic=document.getElementById('magicPanel');if(magic&&!magic.hidden){safeFn(()=>closeMagicPanel());return true;}const action=document.getElementById('actionMenu');if(action&&!action.hidden){safeFn(()=>closeActionMenu());return true;}const guide=document.getElementById('guideOverlay');if(guide&&!guide.hidden){safeFn(()=>closeGuide());return true;}if(Array.isArray(modalStack))for(let i=modalStack.length-1;i>=0;i--){const m=modalStack[i];if(m&&!m.hidden){safeFn(()=>typeof closeModal==='function'?closeModal(m):m.hidden=true);return true;}}return false;}catch(_){return false;}}
+/* closeTopUI объявлен ниже единственный раз — прежний дубликат здесь только сбивал с толку: правки в нём не действовали, так как одноимённое объявление ниже перекрывало его. */
 /* ── Жесты нескольких пальцев: один чёткий тап N пальцами = действие N (без повторов).
    Так надёжнее и быстрее, чем прежнее «тройное касание», которое было и медленным,
    и трудновоспроизводимым тремя-четырьмя пальцами одновременно. ── */
@@ -1398,39 +1411,68 @@ function handleFourFingerTap(){if(!gameActive())return;
  if(m&&!m.hidden){safeFn(()=>closeMagicPanel());safeFn(()=>UI.blip(520,.08,.12));return;}
  safeFn(()=>safeOpenMagicPanel());safeFn(()=>UI.blip(1260,.11,.22));}
 function cancelMagicHold(){if(magicHold.timer)clearTimeout(magicHold.timer);magicHold={timer:null,target:null,fired:false};}
-function armMagicHold(target){cancelMagicHold();magicHold={timer:setTimeout(()=>{if(magicHold.target!==target||gesture.moved)return;magicHold.fired=true;safeFn(()=>castSpell(Number(target.dataset.magicIndex)));touchGate.suppressClickUntil=Date.now()+300;safeFn(()=>UI.blip(1180,.13,.22));},560),target,fired:false};}
+function armMagicHold(target){cancelMagicHold();magicHold={timer:setTimeout(()=>{if(magicHold.target!==target||gesture.moved||gesture.maxCount!==1)return;magicHold.fired=true;safeFn(()=>castSpell(Number(target.dataset.magicIndex)));touchGate.suppressClickUntil=Date.now()+300;safeFn(()=>UI.blip(1180,.13,.22));},560),target,fired:false};}
 function stopRun(){if(runState.hold){clearTimeout(runState.hold);runState.hold=null;}if(runState.iv){clearInterval(runState.iv);runState.iv=null;}if(runState.active){runState.active=false;runState.dir=null;}}
 function startRun(dir){if(!gameActive()||!dir||G.weaponDrawn||activeLayer()||G.inCombat)return false;stopRun();runState.active=true;runState.dir=dir;safeFn(()=>move(dir));runState.iv=setInterval(()=>{if(!gameActive()||activeLayer()||G.inCombat||G.weaponDrawn){stopRun();return;}safeFn(()=>move(runState.dir));},300);return true;}
 function swipeNav(dir){const layer=activeLayer();if(!layer)return false;const items=visibleInteractive(layer);if(!items.length)return false;let i=items.indexOf(document.activeElement);i=dir==='next'?(i<0?0:Math.min(items.length-1,i+1)):Math.max(0,i<0?0:i-1);items[i].focus({preventScroll:true});speakTextOf(items[i]);safeFn(()=>UI.blip(760,.08,.1));return true;}
 function handleSingleTap(el,x,y){
+ if(!el){
+  /* Двойное касание по пустому месту активирует текущий (ощупанный или выбранный свайпом)
+     элемент открытого окна — как в экранных дикторах. Раньше повторным касанием нужно было
+     попасть ровно в тот же пункт: варианты диалогов, кнопки услуг и пункты меню то и дело
+     «не нажимались», хотя игра их только что назвала. */
+  const lay=activeLayer();
+  if(lay){
+   const act=document.activeElement;
+   const cand=(lastExploreEl&&lay.contains(lastExploreEl))?lastExploreEl
+    :(act&&act!==document.body&&lay.contains(act)?act:null);
+   if(cand&&!cand.disabled&&!cand.hidden)el=cand;
+  }
+ }
  if(el){
   if(settings.fastTap){activateElement(el);return;} /* быстрая активация: без ожидания второго касания */
   const now=Date.now();
-  if(now-touchGate.lastUiTap<450&&touchGate.lastUiEl===el){touchGate.lastUiTap=0;touchGate.lastUiEl=null;activateElement(el);}
+  /* 450 мс было слишком строго для незрячих игроков: второе касание часто «не успевало». */
+  if(now-touchGate.lastUiTap<650&&touchGate.lastUiEl===el){touchGate.lastUiTap=0;touchGate.lastUiEl=null;activateElement(el);}
   else{touchGate.lastUiTap=now;touchGate.lastUiEl=el;speakTextOf(el);}
   return;}
  if(!gameActive())return;
- /* Экран победы показывает подсказку «одинарное касание — собрать добычу», но сам
-    combatOverlay считается «активным слоем» — из-за чего проверка activeLayer()
-    ниже раньше обрывала обработчик ДО того, как код доходил до takeLoot(), и
-    добыча (сверх золота, добавляемого в этой же функции) была физически
-    недостижима тапом. Проверяем добычу раньше общей проверки слоя. */
+ /* Окно добычи после победы — активный слой, поэтому проверку добычи делаем РАНЬШЕ
+    общей проверки слоя: иначе обработчик обрывался до takeLoot() и добыча (сверх
+    золота) была недостижима касанием. */
  if(G.loot&&Array.isArray(G.loot)&&G.loot.length){if(safeFn(()=>takeLoot(),false))return;}
  if(activeLayer())return;
  safeFn(()=>gatherCurrent('tap'));}
-document.addEventListener('touchstart',e=>{safeFn(()=>AE.ensure());const n=e.touches.length;if(![1,2,3,4].includes(n)){resetGesture();cancelMagicHold();return;}const t=e.touches[0];const ui=t&&e.target?.closest?.('button,a,input,select,textarea,[role="button"],[data-cmd],[data-magic-index]');gesture={count:n,x:t.clientX,y:t.clientY,t:Date.now(),moved:false,dir:null,target:e.target,ui,runArmed:false};if(n===1){const mt=e.target?.closest?.('#magicPanel [data-magic-index]');if(mt&&!activeLayer())return;if(mt){armMagicHold(mt);e.preventDefault();return;}
+/* ── МНОГОПАЛЬЦЕВЫЕ ЖЕСТЫ ──
+   gesture.maxCount хранит МАКСИМУМ одновременно коснувшихся пальцев, а gesture.id —
+   «якорный» палец, по которому и только по которому измеряется смещение. Раньше жест
+   описывался текущим числом точек, и при отрыве пальцев по очереди (а одновременно их
+   почти никто не отрывает) остальные касания давали touchmove с другим количеством точек;
+   код помечал жест как «сдвинутый» и отменял тап. Именно поэтому касание тремя пальцами
+   (вынуть или убрать оружие), двумя (меню действий) и четырьмя (заклинания) срабатывало
+   через раз или не срабатывало вовсе. */
+document.addEventListener('touchstart',e=>{safeFn(()=>AE.ensure());const n=e.touches.length;
+ if(n>4){resetGesture();cancelMagicHold();return;}
+ const t=e.touches[0];if(!t)return;
+ const ui=e.target?.closest?.('button,a,input,select,textarea,[role="button"],[data-cmd],[data-magic-index]');
+ gesture={count:n,maxCount:Math.max(gesture.maxCount||0,n),id:t.identifier,x:t.clientX,y:t.clientY,t:Date.now(),moved:false,dir:null,target:e.target,ui,runArmed:false};
+ if(n!==1){cancelMagicHold();stopRun();e.preventDefault();return;}
+ const mt=e.target?.closest?.('#magicPanel [data-magic-index]');
+ if(mt){armMagicHold(mt);e.preventDefault();return;}
  /* Ощупывание одним пальцем должно работать ВЕЗДЕ, включая открытые окна и экран боя —
     иначе первое касание элемента (без последующего протягивания пальца) внутри боя,
-    инвентаря или любого другого оверлея просто молчит. Раньше здесь стояла проверка
-    !activeLayer(), которая гасила именно это — узнать здоровье и характеристики
-    противника и игрока касанием верхней панели во время боя было невозможно. */
- if(gameActive()&&!ui)explorePoint(t.clientX,t.clientY);}else e.preventDefault();},{passive:false,capture:true});
+    инвентаря или любого другого оверлея просто молчит. */
+ if(gameActive()&&!ui)explorePoint(t.clientX,t.clientY);},{passive:false,capture:true});
 document.addEventListener('touchmove',e=>{
- if(!gesture.count)return;
- if(e.touches.length!==gesture.count){gesture.moved=true;cancelMagicHold();return;}
- const t=e.touches[0],dx=t.clientX-gesture.x,dy=t.clientY-gesture.y,d=Math.hypot(dx,dy);
- if(d>16){gesture.moved=true;cancelMagicHold();gesture.dir=touchDirection(dx,dy);}
- if(gesture.count!==1){e.preventDefault();return;}
+ if(!gesture.maxCount)return;
+ /* Снятие пальца — это не «сдвиг» жеста, а лишь изменение числа точек: просто запоминаем его. */
+ gesture.count=e.touches.length;
+ const t=[...e.touches].find(x=>x.identifier===gesture.id);
+ if(!t){if(gesture.maxCount>1)e.preventDefault();return;}
+ const dx=t.clientX-gesture.x,dy=t.clientY-gesture.y,d=Math.hypot(dx,dy);
+ /* Для многопальцевых тапов порог мягче: пальцы неизбежно «перекатываются», пока их ставят. */
+ if(d>(gesture.maxCount>1?45:16)){gesture.moved=true;cancelMagicHold();gesture.dir=touchDirection(dx,dy);}
+ if(gesture.maxCount!==1){e.preventDefault();return;}
  /* Ощупывание одним пальцем (доступность): озвучиваем элемент под пальцем НЕПРЕРЫВНО,
     пока палец скользит — как touch-explore в VoiceOver. Смена элемента сразу обрывает
     предыдущую фразу (см. speakTextOf/Speech.say interrupt:true). */
@@ -1450,8 +1492,64 @@ document.addEventListener('touchmove',e=>{
  }
  if(G.weaponDrawn)e.preventDefault();
 },{passive:false,capture:true});
-document.addEventListener('touchend',e=>{if(!gesture.count||e.touches.length>0)return;const g={...gesture},wasMagic=magicHold.target,magicFired=magicHold.fired;resetGesture();if(runState.hold){clearTimeout(runState.hold);runState.hold=null;}runState.pendingDir=null;if(g.count===1&&wasMagic){cancelMagicHold();if(magicFired){e.preventDefault();return;}}if(g.count===4){if(!g.moved&&Date.now()-g.t<800)handleFourFingerTap();return;}if(g.count===3){if(!g.moved&&Date.now()-g.t<800)handleThreeFingerTap();return;}if(g.count===2){if(!g.moved&&Date.now()-g.t<800)handleTwoFingerTap();return;}if(g.count!==1)return;const t=e.changedTouches[0];if(!t)return;const dx=t.clientX-g.x,dy=t.clientY-g.y,d=Math.hypot(dx,dy),dt=Date.now()-g.t,dir=g.dir||touchDirection(dx,dy),quick=d>=38&&dt<=900;if(runState.active){stopRun();e.preventDefault();return;}const layer=activeLayer();if(layer){if(quick){e.preventDefault();swipeNav((dir==='E'||dir==='S')?'next':'prev');return;}if(d<28){e.preventDefault();handleSingleTap(g.ui||null,t.clientX,t.clientY);}return;}if(G.weaponDrawn&&gameActive()&&quick){safeFn(()=>weaponSwing(dir));e.preventDefault();return;}if(quick&&gameActive()&&!G.inCombat){safeFn(()=>move(dir));e.preventDefault();return;}if(d<28&&dt<900&&gameActive()&&!G.inCombat){e.preventDefault();handleSingleTap(g.ui||null,t.clientX,t.clientY);}}, {passive:false,capture:true});
-document.addEventListener('click',e=>{if(Date.now()<touchGate.suppressClickUntil){e.preventDefault();e.stopPropagation();return;}const t=e.target?.closest?.('[data-cmd],[data-magic-index]');if(!t)return;const parts=(t.dataset.cmd||'').split(':');const fn=parts[0]&&CMD[parts[0]];if(fn)safeFn(()=>fn(parts.slice(1).join(':'),t));},{capture:true});
+/* Порог свайпа и «окно тапа» разведены так, чтобы между ними не оставалось мёртвой зоны:
+   раньше касание со смещением 28–38 пикселей (обычный дребезг пальца) не обрабатывалось
+   вообще, браузер досылал по нему собственный клик — и кнопка срабатывала без двойного
+   касания, да ещё и дважды. Теперь любое короткое касание — тап, любое длинное — свайп,
+   и оба варианта гасят родной клик через preventDefault. */
+document.addEventListener('touchend',e=>{
+ if(!gesture.maxCount)return;
+ if(e.touches.length>0){gesture.count=e.touches.length;return;} /* пальцы поднимают по очереди — ждём последний */
+ const g={...gesture},wasMagic=magicHold.target,magicFired=magicHold.fired;
+ resetGesture();
+ if(runState.hold){clearTimeout(runState.hold);runState.hold=null;}
+ runState.pendingDir=null;
+ const fingers=g.maxCount||g.count;
+ if(fingers===1&&wasMagic){cancelMagicHold();if(magicFired){e.preventDefault();return;}}
+ if(fingers>1){
+  cancelMagicHold();
+  e.preventDefault();
+  /* Многопальцевый тап: важна только длительность, «сдвиг» меряется по якорному пальцу
+     с мягким порогом (см. touchmove). 800 мс не хватало, чтобы вслепую поставить три пальца. */
+  if(!g.moved&&Date.now()-g.t<1400){
+   if(fingers===2)handleTwoFingerTap();
+   else if(fingers===3)handleThreeFingerTap();
+   else if(fingers===4)handleFourFingerTap();
+  }
+  return;
+ }
+ const t=e.changedTouches[0];if(!t)return;
+ const dx=t.clientX-g.x,dy=t.clientY-g.y,d=Math.hypot(dx,dy),dt=Date.now()-g.t;
+ const dir=g.dir||touchDirection(dx,dy);
+ const swipe=d>=38&&dt<=1200,tap=d<38&&dt<1200;
+ if(runState.active){stopRun();e.preventDefault();return;}
+ const layer=activeLayer();
+ if(layer){
+  e.preventDefault();
+  if(swipe){swipeNav((dir==='E'||dir==='S')?'next':'prev');return;}
+  if(tap)handleSingleTap(g.ui||null,t.clientX,t.clientY);
+  return;
+ }
+ if(!gameActive())return;
+ if(G.weaponDrawn&&swipe){e.preventDefault();safeFn(()=>weaponSwing(dir));return;}
+ if(G.inCombat){
+  /* Бой больше не открывает окно, поэтому шаг в сторону здесь невозможен: подсказываем,
+     чем бить, вместо прежнего молчания. */
+  if(swipe){e.preventDefault();safeFn(()=>narrate(G.weaponDrawn?'Взмах не распознан. Проведите пальцем чётче в сторону удара.':'Оружие в ножнах. Касание тремя пальцами — вынуть оружие, затем свайп в сторону — удар.'));}
+  return;
+ }
+ if(swipe){e.preventDefault();safeFn(()=>move(dir));return;}
+ if(tap){e.preventDefault();handleSingleTap(g.ui||null,t.clientX,t.clientY);}
+},{passive:false,capture:true});
+document.addEventListener('click',e=>{
+ if(Date.now()<touchGate.suppressClickUntil){e.preventDefault();e.stopPropagation();return;}
+ const t=e.target?.closest?.('[data-cmd]');if(!t||t.disabled)return;
+ const parts=(t.dataset.cmd||'').split(':');const fn=parts[0]&&CMD[parts[0]];
+ if(!fn)return;
+ /* Команда выполняется ровно один раз: гасим дальнейшее распространение, чтобы ни один
+    другой обработчик (в том числе прежний дубликат ниже по файлу) не повторил её. */
+ e.preventDefault();e.stopPropagation();
+ safeFn(()=>fn(parts.slice(1).join(':'),t));},{capture:true});
 document.addEventListener('focusin',e=>{const t=e.target.closest&&e.target.closest('[data-speak],[aria-label],button,input,select,a,[data-cmd],[data-magic-index]');if(t)speakTextOf(t);});
 function magicTap(){if(Play.active.size>0)Play.stopAll();
  else if(Play.lastMain){Play.start("main",Play.lastMain,{announceEnd:true});
@@ -1491,7 +1589,10 @@ const AM_ITEMS=[
 function openActionMenu(){lastFocused=document.activeElement;
  const m=document.getElementById("actionMenu"); if(!m)return; m.hidden=false; m.setAttribute("aria-hidden","false");
  const list=document.getElementById("amList");if(!list){narrate("Меню действий временно недоступно.");return;}list.innerHTML="";
- AM_ITEMS.forEach(([cmd,label])=>{
+ /* В бою старых кнопок нет, а сбежать чем-то надо: пункт побега добавляется в меню
+    действий (касание двумя пальцами) только на время боя. */
+ const items=G.inCombat?[["flee","🏃 Попытаться сбежать"],...AM_ITEMS]:AM_ITEMS;
+ items.forEach(([cmd,label])=>{
   const b=document.createElement("button");b.type="button";b.className="item";
   b.dataset.cmd="am:"+cmd;
   if(cmd==="interact"){const c=cellContent(G.x,G.y);
@@ -1581,7 +1682,7 @@ const GUIDE=[
  "Правители дают важные задания, стража просит очистить дороги, жители — принести ресурсы."]},
 {title:"Глава 11. Монстры и бой",body:[
  "Монстра слышно заранее: его звук и маяк звучат при приближении.",
- "В бою старые кнопки атаки и побега отключены. Выньте оружие и используйте свайпы для ударов; магия управляется отдельными жестами и слотами заклинаний. Победа даёт опыт, золото и добычу.",
+ "Бой не открывает окон и ничем не перекрывает экран: сводка о противнике и о себе появляется прямо на игровом экране, её можно ощупать пальцем. Выньте оружие касанием тремя пальцами и бейте свайпами в сторону удара; магия управляется панелью заклинаний (касание четырьмя пальцами). Побег — в меню действий (касание двумя пальцами) или клавиша Эскейп. Победа даёт опыт, золото и добычу.",
  "Поражение возвращает в столицу ближайшей империи."]},
 {title:"Глава 12. Озвученная карта",body:[
  "В меню действий выберите «Карта локации». Сетка 7 на 7 вокруг вас: касание клетки озвучивает объект, направление и расстояние в шагах, а также проигрывает его маяк.",
@@ -2052,9 +2153,10 @@ function playRealMonsterCue(m,cue,vol=0.7){
 }
 function startCombat(c){
  const m=c.monster;G.weaponDrawn=!!G.weaponDrawn; /* бой никогда сам не вытаскивает оружие */ G.inCombat=true;G.combat={m,hp:m.hp,key:c.x+","+c.y,ai:monsterAIProfile(m)};
- document.getElementById("combatOverlay").hidden=false;
- document.getElementById("cbStatsRow").hidden=false;
- document.getElementById("cbResult").hidden=true;
+ /* Бой больше НЕ открывает модальное окно: оно перекрывало экран, считалось активным
+    слоем и забирало себе все свайпы, из-за чего ударить в бою жестом было невозможно.
+    Сводка о противнике и о себе показана прямо на игровом экране и доступна ощупыванием. */
+ const bar=document.getElementById("combatBar");if(bar)bar.hidden=false;
  safeFn(()=>playMonsterSound(m));
  safeFn(()=>playRealMonsterCue(m,"emerge",0.65));
  document.getElementById("cbTitle").textContent=`⚔️ ${m.n}, уровень ${m.lvl}`;
@@ -2066,9 +2168,9 @@ function startCombat(c){
  Music.start("battle");
  vib([50,60,50]);sub(`⚔️ ${m.n}!`);
  updateCombat();
- narrate(`Бой! ${m.n} ${m.lvl} уровня преграждает путь. Оружие не вынимается автоматически. Выберите оружие сами.`);
- document.getElementById("cbTitle").focus();}
-function updateCombat(){const cb=G.combat,m=cb.m;
+ narrate(`Бой! ${m.n} ${m.lvl} уровня преграждает путь. Оружие не вынимается автоматически: касание тремя пальцами — вынуть оружие, затем свайп в сторону — удар. Касание двумя пальцами — меню действий, там же попытка побега.`);
+ safeFn(()=>document.getElementById("cbTitle").focus({preventScroll:true}));}
+function updateCombat(){const cb=G.combat;if(!cb||!document.getElementById("cbTitle"))return;const m=cb.m;
  const eHp=Math.max(0,cb.hp),eMax=Math.max(1,m.hp),ePct=Math.round(100*eHp/eMax);
  const pHp=Math.max(0,G.hp),pMax=Math.max(1,G.hpMax),pPct=Math.round(100*pHp/pMax);
  const weaponName=G.equip.weapon?G.equip.weapon.name:"нет оружия";
@@ -2095,7 +2197,7 @@ function updateCombat(){const cb=G.combat,m=cb.m;
    <div class="list-line">Мана: ${G.mana} / ${G.manaMax}</div>
    <div class="list-line">Сила ${G.str} · Ловкость ${G.agi} · Разум ${G.mind} · Харизма ${G.cha}</div>
    <div class="list-line">${weaponName}${G.weaponDrawn?" (в руках)":" (в ножнах)"}</div>`;}
-function cbLog(t){document.getElementById("cbLog").textContent=t;}
+function cbLog(t){const el=document.getElementById("cbLog");if(el)el.textContent=t;}
 function monsterAIProfile(m){const id=String(m?.id||'');if(['wolf','goblin','troll','ogre'].includes(id))return {aggressive:true,chase:0.78};if(['dragon','harpy'].includes(id))return {aggressive:true,chase:0.58};if(['ghost','spider','snake'].includes(id))return {aggressive:false,chase:0.28};return {aggressive:false,chase:0.18};}
 function playMonsterSound(m){try{AE.ensure();if(!AE.ctx)return null;const s=new SFX();const map={wolf:'wolfCall',goblin:'goblinCall',troll:'trollCall',ogre:'ogreCall',dragon:'dragonRoar',harpy:'harpyScreech',spider:'hiss',serpent:'serpentHiss',wraith:'wail',golem:'golemCall',wyvern:'wyvernCall',direbear:'direBearGrowl',sandworm:'sandwormCall',treant:'treantCall',kraken:'krakenCall',bandit:'banditShout'};const fn=map[m?.id]||m?.fx||'growl';if(typeof s[fn]==='function')s[fn]();else s.growl();setTimeout(()=>{try{s.stop(.3);}catch(e){}},3600);return s;}catch(e){try{console.warn('[MonsterSFX]',m?.id,e);}catch(_){}return null;}}
 function playWeaponCombatSfx(hit,dir="N",dmg=6){try{AE.ensure();const s=new SFX();
@@ -2109,7 +2211,8 @@ function playWeaponCombatSfx(hit,dir="N",dmg=6){try{AE.ensure();const s=new SFX(
  setTimeout(()=>{try{s.stop(.2);}catch(e){}},1100);}catch(e){}}
 function playWoundSfx(dmg=6){try{AE.ensure();const s=new SFX();const heavy=Math.max(0.6,Math.min(1.5,0.6+(Number(dmg)||6)/14));s.wound(heavy);setTimeout(()=>{try{s.stop(.2);}catch(e){}},650);}catch(e){}}
 function endCombat(){if(G.combat&&G.combat.monsterTimer)clearTimeout(G.combat.monsterTimer);G.inCombat=false;G.combat=null;
- document.getElementById("combatOverlay").hidden=true;}
+ const bar=document.getElementById("combatBar");if(bar)bar.hidden=true;
+ const log=document.getElementById("cbLog");if(log)log.textContent="";}
 function fight(a){const cb=G.combat;if(!cb)return;const m=cb.m;
  if(a==="atk"){const dmg=atk()+Math.floor(Math.random()*5);
   cb.hp-=dmg;playWeaponCombatSfx(true,(G.combat&&G.combat.lastDir)||"N",dmg);
@@ -2133,7 +2236,7 @@ function fight(a){const cb=G.combat;if(!cb)return;const m=cb.m;
  narrate(` ${m.n} бьёт вас: −${mdmg}.`);
  updateCombat();refresh();
  if(G.hp<=0)defeat();}
-function cbLog2text(){return document.getElementById("cbLog").textContent;}
+function cbLog2text(){const el=document.getElementById("cbLog");return el?el.textContent:"";}
 function questMonsterProgress(monster){
  try{
   let changed=false;
@@ -2186,15 +2289,9 @@ function victory(){const cb=G.combat,m=cb.m;
  openLootView(txt);
 }
 function openLootView(txt){
- const ov=document.getElementById("combatOverlay");
- if(!ov)return;
- ov.hidden=false;
- document.getElementById("cbStatsRow").hidden=true;
- document.getElementById("cbTitle").textContent="🏆 Победа";
- const res=document.getElementById("cbResult");
- res.hidden=false;
- res.innerHTML=`${txt}<br><span class="loot-hint">👆 Одинарное касание по игровой области — собрать всю добычу.</span>`;
- document.getElementById("cbLog").textContent="";
+ const ov=document.getElementById("lootOverlay"),res=document.getElementById("cbResult");
+ if(res)res.innerHTML=`${txt}<br><span class="loot-hint">👆 Одинарное касание по игровой области — собрать всю добычу.</span>`;
+ if(ov)ov.hidden=false;
  narrate(txt);
  checkLevelUp();
 }
@@ -2211,7 +2308,7 @@ function takeLoot(){
   const mats=loot.filter(l=>l.type==="mat").map(l=>l.name);
   const gearItems=loot.filter(l=>l.type==="gear"&&l.item).map(l=>l.item);
   G.loot=null;
-  const ov=document.getElementById("combatOverlay");if(ov)ov.hidden=true;
+  const ov=document.getElementById("lootOverlay");if(ov)ov.hidden=true;
   normalizeWeaponState();
   safeFn(()=>UI.pickup());
   safeFn(()=>{AE.ensure();if(!AE.ctx||!settings.effects)return;const s=new SFX();s.sample("chest_open",0,0.55);setTimeout(()=>{try{s.stop(.2);}catch(e){}},1600);});
@@ -2279,10 +2376,8 @@ function findArtifact(){const ART=["Осколок Зари","Шёпот Вет�
 
 /* ════════ ЕДИНЫЙ ОБРАБОТЧИК КОМАНД (исправление кнопок) ════════ */
 const modalStack=[];
-document.addEventListener("click",e=>{
- const t=e.target.closest("[data-cmd]");if(!t)return;
- const parts=t.dataset.cmd.split(":"),cmd=parts[0],arg=parts.slice(1).join(":");
- if(CMD[cmd])CMD[cmd](arg,t);});
+/* Второй обработчик кликов по [data-cmd] удалён: он дублировал перехватчик сенсорного
+   шлюза, и каждая кнопка выполняла свою команду дважды. */
 function closeTopUI(){
  try{
   const magic=document.getElementById("magicPanel");
@@ -2292,22 +2387,14 @@ function closeTopUI(){
   const guide=document.getElementById("guideOverlay");
   if(guide && !guide.hidden){ closeGuide(); return true; }
   if(modalStack.length){ closeModal(modalStack[modalStack.length-1]); return true; }
-  const combat=document.getElementById("combatOverlay");
-  if(combat && !combat.hidden){ combat.hidden=true; UI.close(); return true; }
+  const loot=document.getElementById("lootOverlay");
+  if(loot && !loot.hidden){ loot.hidden=true; UI.close(); return true; }
  }catch(err){ try{console.error("closeTopUI",err);}catch(_){} }
  return false;
 }
 function announceClosed(){ try{ UI.blip(520,0.07,0.12); narrate("Окно закрыто.",{interrupt:true}); }catch(_){} }
 
 const CMD={
- am(cmd){
-  try{
-   const fn=CMD[cmd];
-   if(typeof fn!=="function" || cmd==="am"){narrate("Это действие сейчас недоступно.");return;}
-   fn();
-   if(cmd!=="close"){const m=document.getElementById("actionMenu");if(m&&!m.hidden){m.hidden=true;m.setAttribute("aria-hidden","true");UI.close();}}
-  }catch(err){try{console.error("Action command",cmd,err);narrate("Не удалось выполнить действие. Игра продолжает работать.");}catch(e){}}
- },
  close(){closeTopUI();},
  check(){AE.ensure();chime();narrate("Звук работает. Озвучивание работает.");},
  fs(){if(!document.fullscreenElement)document.documentElement.requestFullscreen&&
@@ -2338,11 +2425,20 @@ const CMD={
   if(settings.music&&gameActive()&&!G.inCombat){Music.start(cellContent(G.x,G.y).terrain[0]);}
   else Music.stop();
   narrate(settings.music?"Музыка включена.":"Музыка выключена.");},
- am(act){closeActionMenu();
-  if(act==="close")return;
-  if(act==="interact"){interactHere();return;}
-  if(act.indexOf("move:")===0){move(act.slice(5));return;}
-  if(CMD[act])CMD[act]();},
+ /* Единственный обработчик пунктов меню действий (раньше ключ am был объявлен в этом
+    объекте дважды, и правки в первом объявлении молча не работали). */
+ am(act){
+  try{
+   closeActionMenu();
+   if(act==="close")return;
+   if(act==="interact"){interactHere();return;}
+   if(act.indexOf("move:")===0){move(act.slice(5));return;}
+   const fn=CMD[act];
+   if(typeof fn!=="function"||act==="am"){narrate("Это действие сейчас недоступно.");return;}
+   fn();
+  }catch(err){try{console.error("Action command",act,err);narrate("Не удалось выполнить действие. Игра продолжает работать.");}catch(e){}}
+ },
+ flee(){if(!G.inCombat){narrate("Вы не в бою.");return;}fight("flee");},
  interact(){interactHere();},
  listen(id){Play.start("main",id,{announceEnd:true});},
  npc(key){openNPC(key);},
@@ -2689,14 +2785,15 @@ CMD.craftdo=i=>{const R=[[["камень",2],["дерево",1]],[["трава",
 function renderGestures(){
  document.getElementById("gestBody").innerHTML=[
   "🤚 Касание и ведение пальцем (не отрывая) — ощупывание: игра называет элемент под пальцем, как в экранных дикторах (VoiceOver/TalkBack). Смена элемента сразу обрывает предыдущую фразу.",
-  "👆👆 Двойное касание элемента — активировать: кнопку, звук, объект. (Можно включить «Быстрая активация» в настройках — тогда достаточно одного касания.)",
+  "👆👆 Двойное касание — активировать: кнопку, звук, объект. Можно коснуться дважды прямо по элементу, а можно сначала найти его пальцем или свайпом, а потом дважды коснуться в любом месте окна — сработает последний названный игрой элемент. (В настройках есть «Быстрая активация» — тогда достаточно одного касания.)",
   "👉 Свайп одним пальцем на игровом экране — шаг: вверх север, вниз юг, влево запад, вправо восток.",
   "🏃 Свайп и удержание пальца (не отрывая, направление уже определилось) — бег в эту сторону. Отпустите палец — остановка.",
   "↔️ Свайп в окнах и меню — перелистывание пунктов.",
   "✌️ Касание двумя пальцами — открыть меню действий (или закрыть текущее окно, если оно уже открыто).",
   "🤟 Касание тремя пальцами — вынуть оружие, если оно убрано, либо убрать, если уже в руках.",
   "🖐️ Касание четырьмя пальцами — открыть или закрыть панель заклинаний.",
-  "⚔️ Свайп одним пальцем при вынутом оружии — боевой взмах в направлении свайпа. В бою — удар со звуком попадания.",
+  "⚔️ Свайп одним пальцем при вынутом оружии — боевой взмах в направлении свайпа. В бою — удар со звуком попадания. Бой не открывает никаких окон: сводка о противнике и о себе показана прямо на игровом экране, её можно ощупать пальцем.",
+  "🏃 Побег из боя: касание двумя пальцами — меню действий — «Попытаться сбежать» (или Эскейп на клавиатуре).",
   "✨ В открытой панели заклинаний: свайп влево/вправо — выбрать слот, двойное касание — применить заклинание.",
   "⌨️ Клавиатура: стрелки — ходьба, Таб — перебор элементов, Энтер — действие, Эскейп — закрыть окно или побег из боя, Альт+S — тишина."]
  .map(t=>`<div class="list-line">${t}</div>`).join("");}
@@ -2865,7 +2962,8 @@ function enterGame(){if(entered){showScreen("screen-game");normalizeWeaponState(
  refresh();saveGame(true);}
 document.addEventListener("keydown",e=>{
  if(e.key==="Escape"){
-  if(!document.getElementById("combatOverlay").hidden){fight("flee");return;}
+  if(G.loot&&Array.isArray(G.loot)&&G.loot.length){takeLoot();return;}
+  if(G.inCombat){fight("flee");return;}
   if(!document.getElementById("screen-intro").hidden){enterGame();return;}
   if(modalStack.length){closeModal(modalStack[modalStack.length-1]);return;}
   if(!document.getElementById("guideOverlay").hidden){closeGuide();return;}
