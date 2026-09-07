@@ -1,6 +1,6 @@
 # Натуральные записи (общественное достояние, CC0 1.0)
 
-Сорок четыре записи в этой папке — живые, не синтезированные звуки:
+Семьдесят девять записей в этой папке — живые, не синтезированные звуки:
 удары, свисты клинка, двери, колокола, лавочный колокольчик, шаги,
 гулы подземелья, хор, органные аккорды, ворон, вода, магический шелест.
 
@@ -44,3 +44,22 @@ https://creativecommons.org/publicdomain/zero/1.0/
 | step_soft_01..03 | шаги стражи и тварей | tabla_dhec, tabla_na, tabla_te1 |
 | chime_01..04 | лестница, ориентир | elec_chime, elec_bell, elec_triangle, elec_ping |
 | blip_01..05 | отметки и подсказки | elec_blip, elec_blip2, elec_pop, elec_bong, elec_twang |
+
+## Вторая подборка (те же условия, CC0 1.0)
+
+| Файл | Роль в игре | Исходный сэмпл |
+|---|---|---|
+| clash_01..03 | звон стали, парирование | drum_cymbal_open/hard/closed |
+| stomp_01..03 | тяжёлая поступь громады | drum_tom_lo_hard, drum_tom_mid_hard, drum_bass_hard |
+| clink_01..03 | монеты, замок, мелкий металл | hat_metal, hat_zap, hat_raw |
+| curse_01..03 | порча, сглаз, сбой чар | glitch_perc1, glitch_perc3, glitch_robot1 |
+| hiss_01..02 | ветер, шипение, помеха | vinyl_hiss, vinyl_scratch |
+| dread_01..03 | предчувствие беды, обвал | bass_drop_c, bass_hit_c, bass_thick_c |
+| drone_02..03 | гул глубины | loop_garzul, loop_drone_g_97 |
+| mechanism_01..02 | механизм, ловушка, ворот | loop_3d_printer, mehackit_robot3 |
+| vent_01 | пар из трещины | ambi_sauna |
+| wild_01 | глушь, дальнее зверьё | loop_safari |
+| step_stone_01..04 | шаги по камню подземелья | tabla_ghe1, tabla_ke1, tabla_re, tabla_tas1 |
+| hit_snap_01..02 | резкий удар | sn_generic, sn_dub |
+| mystic_01..02 | мистический отзвук | guit_e_slide, guit_e_fifths |
+| tick_01..04 | отметки интерфейса | elec_flip, elec_tick, elec_plip, elec_twip |
