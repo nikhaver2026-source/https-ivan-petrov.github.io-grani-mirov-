@@ -197,6 +197,12 @@ h3{color:var(--acc2);margin:14px 0 6px;font-size:1.05rem;}
  <h3>📰 Последние события</h3><div id="wNews"></div>
 </div></div>
 
+<!-- ПИРАТЫ В МОРЕ -->
+<div class="modal" id="modal-pirate" role="dialog" aria-modal="true" aria-label="Пираты" hidden><div class="sheet">
+ <header><h2 id="pirateTitle">🏴‍☠️ Пираты</h2></header>
+ <div id="pirateBody"></div>
+</div></div>
+
 <!-- ПРИЧАЛ: КОРАБЛИ И РЕЙСЫ -->
 <div class="modal" id="modal-harbor" role="dialog" aria-modal="true" aria-label="Причал" hidden><div class="sheet">
  <header><h2 id="harborTitle">⚓ Причал</h2><button type="button" data-cmd="close">✖️ Отойти</button></header>
@@ -1475,7 +1481,13 @@ const BEACON_INFO={
 };
 /* Карточки записей банка: по одной на роль, с описанием и числом вариантов. */
 const BANK_CATS={sea:"🌊 Море, порты и корабли",ambience:"🌍 Земли и погода",dungeon:"🕳️ Подземелья по глубине",
- magic:"✨ Школы магии",gods:"🕯️ Боги, алтари и знамения",events:"⚡ События",places:"🏛️ Места и ремёсла"};
+ magic:"✨ Школы магии",gods:"🕯️ Боги, алтари и знамения",events:"⚡ События",places:"🏛️ Места и ремёсла",
+ fantasy:"🎲 Игровые звуки: монеты, ловушки, заклинания, голоса",steps:"👣 Шаги по земле и воде"};
+const MONSTER_VOICE_NAMES={bat:"Летучая тварь: писк и хлопки крыльев",behemoth:"Громада: тяжёлый рёв и поступь",
+ dragon:"Дракон: рык и пламя",ghost:"Призрак: стон и шелест",hornet:"Рой: гудение и жала",
+ orc:"Орочья глотка: рык, крик, брань",slime:"Слизь и глубинное: чавканье и всплеск",spider:"Паук: щёлканье жвал"};
+const MONSTER_CUE_NAMES={emerge:"появление",attack:"удар",damage:"боль",death:"смерть",step:"шаг",
+ sonic_special:"звуковая атака",netshot_special:"выстрел паутиной"};
 function buildBankGrid(){
  const grid=document.getElementById("bankGrid");if(!grid)return;grid.innerHTML="";
  const hint=document.getElementById("bankHint");
@@ -1495,6 +1507,19 @@ function buildBankGrid(){
     const el=Bank.play(r,{seed:Date.now(),gain:0.8,maxSec:10});
     if(!el)narrate("Запись недоступна: папка со звуками не найдена рядом с игрой. Игра продолжает звучать синтезированными маяками.",{interrupt:false});});
    grid.appendChild(btn);});});
+ /* Голоса чудовищ: восемь существ, у каждого свои реплики. */
+ const h=document.createElement("h3");h.textContent="👹 Голоса чудовищ";h.setAttribute("aria-hidden","true");grid.appendChild(h);
+ Object.keys(MONSTER_BANK).forEach(sp=>{
+  const cues=Object.keys(MONSTER_BANK[sp]);
+  const who=Object.keys(MONSTER_VOICE).filter(id=>MONSTER_VOICE[id]===sp);
+  const btn=document.createElement("button");btn.type="button";btn.className="sound-card";
+  const name=MONSTER_VOICE_NAMES[sp]||sp;
+  btn.dataset.speak=`${name}. Реплики: ${cues.map(c=>MONSTER_CUE_NAMES[c]||c).join(", ")}. Этим голосом говорят: ${who.length} видов. Двойное касание — прослушать появление.`;
+  btn.innerHTML=`<span>👹</span><b>${name}</b><span>реплик: ${cues.length} · видов: ${who.length}</span>`;
+  btn.addEventListener("click",()=>{narrate(name);
+   if(!Bank.file(MONSTER_BANK[sp].emerge||MONSTER_BANK[sp].attack,{gain:0.85,maxSec:8}))
+    narrate("Запись недоступна: папка со звуками не найдена рядом с игрой.",{interrupt:false});});
+  grid.appendChild(btn);});
 }
 function buildBeaconGrid(){const grid=document.getElementById("beaconGrid");if(!grid)return;grid.innerHTML="";
  Object.keys(BEACONS).forEach(id=>{const info=BEACON_INFO[id]||[id,"Звуковой маяк объекта"];const b=document.createElement("button");b.type="button";b.className="sound-card";b.dataset.speak=`Маяк: ${info[0]}. ${info[1]}. Двойное касание — прослушать.`;b.innerHTML=`<span>📡</span><b>${info[0]}</b><span>${info[1]}</span>`;b.addEventListener("click",()=>{if(!settings.effects)return;narrate(`Маяк: ${info[0]}. ${info[1]}`);beacon(id,0,0);});grid.appendChild(b);});}
@@ -1857,6 +1882,7 @@ function amAvailable(cmd){
  }catch(_){return true;}
 }
 function openActionMenu(){lastFocused=document.activeElement;
+ safeFn(()=>Bank.play("menu_select",{gain:0.5}));
  const m=document.getElementById("actionMenu"); if(!m)return; m.hidden=false; m.setAttribute("aria-hidden","false");
  const list=document.getElementById("amList");if(!list){narrate("Меню действий временно недоступно.");return;}list.innerHTML="";
  let count=0;
@@ -1991,31 +2017,37 @@ const GUIDE=[
  "Море живёт своей жизнью: шторм бьёт судно и отнимает здоровье, штиль крадёт часы, встречный купеческий флот платит за помощь на снастях, сети приносят добычу, а из воды может подняться кракен. Рейсы через воюющие воды опаснее, но иногда это единственный короткий путь.",
  "Груз плывёт с вами: корабль — это способ довезти товар до дальнего порта, где за него дадут больше. Порты показаны в окне «Рынки, маршруты и караваны» вместе с рейсами и ценами.",
  "Всё звучит: причал отвечает волной о доски и корабельным колоколом, отход — портовым рогом, палуба — скрипом корпуса, шторм — рвущим ветром, швартовка — гомоном пристани."]},
-{title:"Глава 16. Сорок пять народов",body:[
+{title:"Глава 16. Морские твари и пираты",body:[
+ "В море свой бестиарий. Из-под киля поднимаются кракен глубин, морской змей, стая акул, утопленники, сирена отмелей, рой жгучих медуз, рыба-остров и штормовой вирм. У каждой твари свой голос: игра называет её только после того, как вы услышите, кто именно поднимается из воды.",
+ "Пять пиратских ватаг ходят под своими флагами: Корсары Соляного Ветра берут долю и отпускают, Красные Паруса не торгуются, Работорговцы Барханного Берега берут не только груз, Призрачная эскадра не берёт золота вовсе, а Вольная ватага сегодня грабит, завтра нанимается в охрану.",
+ "При встрече с пиратами четыре пути: принять абордаж, откупиться золотом, отдать груз и сохранить остальное или уходить на всех парусах. Шанс уйти зависит от судна: быстрый скиф уходит почти всегда, тяжёлый неф — редко. Неудачное бегство кончается залпом в корму и абордажем.",
+ "В воюющих водах пиратов и тварей заметно больше, а в шторм море злее. Зато и плата за такие рейсы выше.",
+ "Все морские твари и ватаги записаны в бестиарии: там можно прослушать их голоса, прочитать происхождение и узнать, кто из народов с ними уживается."]},
+{title:"Глава 17. Сорок пять народов",body:[
  "Мир Грани населяют сорок пять народов, и каждый имеет ранг: Обычный, Необычный, Редкий, Эпический, Легендарный или Божественный. Ранг — это не сила бойца, а место народа в мире: обычные народы держат поля и рудники, божественные держат саму Грань.",
  "У каждого народа есть история, родные земли, ресурсы, хозяйство, политический строй, предметы торговли, войны, клан и бог-покровитель, а также собственный миф о своём происхождении.",
  "Откройте «Народы Грани» в меню действий. Свайп листает карточки, ощупывание читает досье целиком, кнопки вверху отбирают народы по рангу.",
  "У каждого народа есть малые ветви — родственные племена, которые встречаются среди жителей. Ветвь наследует досье своего народа: коснитесь кнопки «О народе» в карточке жителя, и игра расскажет всё о его роде.",
  "Ваше собственное происхождение выбирается в окне персонажа или прямо в каталоге народов. Оно даёт наследие — постоянный дар бога вашего народа, тем сильнее, чем выше ранг."]},
-{title:"Глава 17. Двенадцать богов",body:[
+{title:"Глава 18. Двенадцать богов",body:[
  "Пантеон Грани — двенадцать богов: Аурис Зарний (заря и клятвы), Морах Кузнец (огонь и ремесло), Селена Ликоносная (луна и сны), Таур Громовержец (бури и война), Нерея Глубинная (моря), Виридис Древняя (леса и урожай), Кальдер Пепельный (вулканы и драконы), Умбра Безликая (тени и договоры), Хронар Вечный (время и память), Тарх Подгорный (горы и руны), Мортана Тихая (смерть и предки), Виа Странница (дороги и торговля).",
  "У каждого бога своя область, символ, священный день, миф, дар последователям, запрет и бог-соперник. Двенадцать кланов мира тоже разделены между богами — по одному на каждого.",
  "Каждый храм в мире посвящён одному из двенадцати. Молитва бесплатна и доступна раз в день в каждом храме: она лечит и повышает благосклонность бога.",
  "Приняв покровительство, вы получаете дар: исцеление, силу удара, защиту, щедрый сбор, дешёвые сделки, лёгкий побег, быстрый опыт, милость при поражении и другие. Дар растёт вместе с благосклонностью.",
  "Смена покровителя возможна, но часть благосклонности прежнего теряется — боги Грани помнят."]},
-{title:"Глава 18. Политика, войны и торговля",body:[
+{title:"Глава 19. Политика, войны и торговля",body:[
  "Восемь держав живут своей жизнью: у каждой свой главный народ, строй, хозяйство, бог и список того, что она вывозит и что ввозит.",
  "Отношения держав меняются каждые пять дней. Они бывают союзом, дружбой, нейтралитетом, напряжением и войной. Идущая война поднимает цены на металл, камень и кость.",
  "Открывайте «Политика, войны и рынок» в меню действий: там показаны все войны с причинами, союзы, досье держав и текущие цены на ресурсы в той земле, где вы находитесь.",
  "Торговля живёт на разнице цен: покупайте там, где ресурс вывозят, продавайте там, где его ввозят. У любого торговца есть раздел «Продать ресурсы» — цена зависит от державы, войны, вашей репутации у его народа и даров богов.",
  "Помогая жителям державы, вы улучшаете её отношения с соседями и поднимаете свою репутацию у их народа: цены для вас снижаются, а разговоры становятся теплее."]},
-{title:"Глава 19. Озвученная карта",body:[
+{title:"Глава 20. Озвученная карта",body:[
  "В меню действий выберите «Карта локации». Сетка 7 на 7 вокруг вас: касание клетки озвучивает объект, направление и расстояние в шагах, а также проигрывает его маяк.",
  "Кнопка «Озвучить объекты по расстоянию» перечислит всё важное поблизости."]},
-{title:"Глава 20. Звуковые маяки",body:[
+{title:"Глава 21. Звуковые маяки",body:[
  "Каждый объект мира имеет уникальный короткий звук: замок, таверна, школа, кланхолл, храм, рынок, кузница, башня, руины, деревья, камни, руда, травы, кристаллы, правитель, стражник, торговец и монстры.",
  "Маяки панорамируются по сторонам света: восток справа, запад слева."]},
-{title:"Глава 21. Горячие клавиши и советы",body:[
+{title:"Глава 22. Горячие клавиши и советы",body:[
  "Стрелки — ходьба. Контрол или Альт плюс G — руководство. Контрол или Альт плюс M — меню действий. Альт плюс S — тишина. Эскейп — закрыть.",
  "Играйте в наушниках — стерео-маяки помогут ориентироваться. Удачной охоты, Странник!"]}];
 let chIndex=0;
@@ -2916,7 +2948,7 @@ function caravanBuy(res,qty){
  const total=price*n;
  if(G.gold<total){narrate(`Нужно ${total} золота, у вас ${G.gold}.`);return;}
  G.gold-=total;G.inv[res]=(Number(G.inv[res])||0)+n;
- safeFn(()=>UI.pickup());
+ safeFn(()=>{UI.pickup();Bank.play("gold",{seed:total,gain:0.7});});
  narrate(`Куплено у обоза: ${res} ×${n} за ${total} золота. Везите туда, где этого не хватает.`);
  journal(`У каравана куплено: ${res} ×${n} за ${total}.`);
  saveGame(true);refresh();meetCaravan(car);
@@ -2930,7 +2962,7 @@ function caravanSell(res,all){
  const qty=all?have:1,total=price*qty;
  G.inv[res]=have-qty;if(G.inv[res]<=0)delete G.inv[res];
  G.gold+=total;
- safeFn(()=>UI.pickup());
+ safeFn(()=>{UI.pickup();Bank.play("gold",{seed:total,gain:0.8});});
  narrate(`Продано обозу: ${res} ×${qty} по ${price} — всего ${total} золота. Золота: ${G.gold}.`);
  journal(`Каравану продано: ${res} ×${qty} за ${total}.`);
  saveGame(true);refresh();meetCaravan(car);
@@ -3116,6 +3148,17 @@ const SOUND_BANK={
   this.loops.delete(channel);},
  stopAll(){[...this.loops.keys()].forEach(k=>this.stop(k));
   this.shots.forEach(a=>{try{a.pause();a.src="";}catch(_){}});this.shots=[];},
+ /* Запись по прямому пути: реплики чудовищ разложены по видам, а не по ролям. */
+ file(path,{gain=1,kind="fx",maxSec=0}={}){
+  if(!this.enabled||!path)return null;
+  const el=this.make(path,this.vol(kind)*gain,false);
+  if(!el)return null;
+  this.shots.push(el);
+  if(this.shots.length>4){const old=this.shots.shift();try{old.pause();old.src="";}catch(_){}}
+  el.addEventListener("ended",()=>{this.shots=this.shots.filter(x=>x!==el);},{once:true});
+  if(maxSec>0)setTimeout(()=>{try{el.pause();el.src="";}catch(_){}
+   this.shots=this.shots.filter(x=>x!==el);},maxSec*1000);
+  return el;},
  /* Короткая запись поверх фона: событие, заклинание, голос бога. */
  play(role,{seed=0,gain=1,kind="fx",maxSec=0}={}){
   if(!this.enabled||!this.has(role))return null;
@@ -3130,13 +3173,66 @@ const SOUND_BANK={
  /* Громкость подхватывается сразу после смены настроек. */
  refresh(){this.loops.forEach(c=>{try{c.el.volume=Math.max(0,Math.min(1,this.vol(c.kind)*c.gain));}catch(_){}});}
 };
+
+/* ── ВТОРАЯ ПОСТАВКА ЗАПИСЕЙ ──
+   Fantasy Sound Library: короткие игровые звуки с говорящими именами —
+   заклинания, монеты, ловушки, голоса гоблинов, драконий рык, победные и
+   проигрышные фразы, шаги по земле и воде, глубокая пещера.
+   Classic Monster Sounds (автор Coucassi): восемь существ, у каждого свои
+   реплики появления, удара, боли, смерти и шага. Голос подбирается по виду
+   чудовища, поэтому болотная тварь звучит не так, как каменный великан. */
+Object.assign(SOUND_BANK,{
+ cave_deep:{f:["fantasy/cave_deep_01.mp3"],d:"Глубокая пещера: долгий подземный фон"},
+ dragon_growl:{f:["fantasy/dragon_growl_01.mp3","fantasy/dragon_growl_02.mp3"],d:"Драконий рык вблизи"},
+ step_dirt:{f:["steps/step_dirt_01.mp3","steps/step_dirt_02.mp3","steps/step_dirt_03.mp3","steps/step_dirt_04.mp3","steps/step_dirt_05.mp3","steps/step_dirt_06.mp3","steps/step_dirt_07.mp3","steps/step_dirt_08.mp3","steps/step_dirt_09.mp3","steps/step_dirt_10.mp3"],d:"Шаг по земле и траве"},
+ step_water:{f:["steps/step_water_01.mp3","steps/step_water_02.mp3","steps/step_water_03.mp3","steps/step_water_04.mp3","steps/step_water_05.mp3","steps/step_water_06.mp3","steps/step_water_07.mp3","steps/step_water_08.mp3"],d:"Шаг по воде и мокрым доскам"},
+ goblin_voice:{f:["fantasy/goblin_voice_01.mp3","fantasy/goblin_voice_02.mp3","fantasy/goblin_voice_03.mp3","fantasy/goblin_voice_04.mp3","fantasy/goblin_voice_05.mp3"],d:"Голоса гоблинов и разбойников"},
+ inventory_open:{f:["fantasy/inventory_open_01.mp3","fantasy/inventory_open_02.mp3"],d:"Открытие окна и сумки"},
+ jingle_achievement:{f:["fantasy/jingle_achievement_01.mp3"],d:"Достижение: новый уровень, артефакт"},
+ jingle_lose:{f:["fantasy/jingle_lose_01.mp3"],d:"Проигрышная фраза"},
+ jingle_win:{f:["fantasy/jingle_win_01.mp3"],d:"Победная фраза"},
+ menu_select:{f:["fantasy/menu_select_01.mp3"],d:"Выбор пункта меню"},
+ gold:{f:["fantasy/gold_01.mp3","fantasy/gold_02.mp3","fantasy/gold_03.mp3","fantasy/gold_04.mp3","fantasy/gold_05.mp3"],d:"Звон монет: продажа, добыча, находка"},
+ spell_arcane:{f:["fantasy/spell_arcane_01.mp3","fantasy/spell_arcane_02.mp3","fantasy/spell_arcane_03.mp3","fantasy/spell_arcane_04.mp3","fantasy/spell_arcane_05.mp3"],d:"Сотворение заклинания: короткий чёткий всплеск силы"},
+ trap:{f:["fantasy/trap_01.mp3","fantasy/trap_02.mp3","fantasy/trap_03.mp3"],d:"Ловушка сработала: щелчок механизма и удар"}});
+const MONSTER_BANK={
+ bat:{attack:"monsters/Bat_Attack.wav",damage:"monsters/Bat_Damage.wav",death:"monsters/Bat_Death.wav",emerge:"monsters/Bat_Emerge.wav",sonic_special:"monsters/Bat_Sonic_Special.wav",step:"monsters/Bat_Step.wav"},
+ behemoth:{attack:"monsters/Behemoth_Attack.wav",damage:"monsters/Behemoth_Damage.wav",death:"monsters/Behemoth_Death.wav",emerge:"monsters/Behemoth_Emerge.wav",step:"monsters/Behemoth_Step.wav"},
+ dragon:{attack:"monsters/Dragon_Attack.wav",damage:"monsters/Dragon_Damage.wav",death:"monsters/Dragon_Death.wav",emerge:"monsters/Dragon_Emerge.wav",step:"monsters/Dragon_Step.wav"},
+ ghost:{attack:"monsters/Ghost_Attack.wav",damage:"monsters/Ghost_Damage.wav",death:"monsters/Ghost_Death.wav",emerge:"monsters/Ghost_Emerge.wav",step:"monsters/Ghost_Step.wav"},
+ hornet:{attack:"monsters/Hornet_Attack.wav",damage:"monsters/Hornet_Damage.wav",death:"monsters/Hornet_Death.wav",emerge:"monsters/Hornet_Emerge.wav",step:"monsters/Hornet_Step.wav"},
+ orc:{attack:"monsters/Orc_Attack.wav",damage:"monsters/Orc_Damage.wav",death:"monsters/Orc_Death.wav",emerge:"monsters/Orc_Emerge.wav",step:"monsters/Orc_Step.wav"},
+ slime:{attack:"monsters/Slime_Attack.wav",damage:"monsters/Slime_Damage.wav",death:"monsters/Slime_Death.wav",emerge:"monsters/Slime_Emerge.wav",step:"monsters/Slime_Step.wav"},
+ spider:{attack:"monsters/Spider_Attack.wav",damage:"monsters/Spider_Damage.wav",death:"monsters/Spider_Death.wav",emerge:"monsters/Spider_Emerge.wav",netshot_special:"monsters/Spider_Netshot_Special.wav",step:"monsters/Spider_Step.wav"}};
+/* Какой из восьми голосов принадлежит этому чудовищу. */
+const MONSTER_VOICE={
+ wolf:"behemoth", spider:"spider", goblin:"orc", serpent:"slime", harpy:"bat",
+ troll:"behemoth", wraith:"ghost", ogre:"behemoth", golem:"behemoth", dragon:"dragon",
+ basilisk:"slime", wyvern:"dragon", banshee:"ghost", direbear:"behemoth",
+ sandworm:"slime", treant:"behemoth", kraken:"slime", bandit:"orc",
+ /* морские твари и пираты */
+ seaserpent:"slime", sharks:"hornet", drowned:"ghost", siren:"ghost",
+ isleFish:"behemoth", stormwyrm:"dragon", jellyswarm:"hornet",
+ pirate:"orc", ghostpirate:"ghost", slaver:"orc"};
+/* Реплика чудовища из банка: появление, удар, боль, смерть, шаг. */
+function bankMonsterCue(m,cue,vol){
+ try{
+  const v=MONSTER_VOICE[m&&m.id]||(m&&m.voice);
+  const set=v&&MONSTER_BANK[v];
+  if(!set)return null;
+  const file=set[cue]||set.attack;
+  if(!file)return null;
+  return Bank.file(file,{gain:vol||0.85,maxSec:6});
+ }catch(_){return null;}
+}
+
 /* Роль фона для места, где находится игрок. */
 function bankAmbientRole(){
  try{
   if(G.place){
    if(G.place.depth>0)return "deep_"+Math.min(5,Math.max(1,G.place.depth));
    if(G.place.kind==="city")return "amb_city";
-   return "amb_cave";}
+   return "cave_deep";}
   if(G.ship)return G.ship.storm?"sea_storm":"sea_open";
   const c=cellContent(G.x,G.y);
   if(c.structure&&c.structure.type==="port")return "port";
@@ -3253,6 +3349,138 @@ function seaTalk(){
   `В море шторм приходит без спроса: держите трюм сухим, а руку — на снастях».`);
  safeFn(()=>Bank.play("sea_calm",{seed:G.day,gain:0.5,maxSec:7}));
 }
+/* ════════════════════════════════════════════════════════════════════════
+   МОРСКИЕ ТВАРИ И ПИРАТЫ
+   В море у игрока другой бестиарий: то, что живёт под килем, и то, что
+   ходит под чужим флагом. Каждая тварь и каждая ватага имеют свой голос
+   из банка записей, свою мифологию и свою добычу.
+   ════════════════════════════════════════════════════════════════════════ */
+const SEA_MONSTERS=[
+ {id:"kraken",n:"Кракен глубин",voice:"slime",min:5,max:14,gold:1.4,
+  myth:"Дитя левиафана, выброшенное на мелководье и не простившее этого. Берёт судно в кольцо и ждёт, пока люди устанут грести.",
+  who:"Соль и Глубина откупается от кракенов рыбой; Вольные Острова — залпами."},
+ {id:"seaserpent",n:"Морской змей",voice:"slime",min:4,max:12,gold:1.2,
+  myth:"Нерея свернула первую реку в кольцо, но один виток вырвался и ушёл в солёную воду. С тех пор он ищет, где река кончается.",
+  who:"Наги называют его старшим родичем и не позволяют на него охотиться."},
+ {id:"sharks",n:"Стая акул",voice:"hornet",min:3,max:10,gold:0.7,
+  myth:"Акулы приходят на кровь и на шум вёсел. Моряки говорят: пока их слышно — они ещё не решились.",
+  who:"Рыбацкие барки бросают им улов, чтобы отвести от бортов."},
+ {id:"drowned",n:"Утопленники",voice:"ghost",min:4,max:12,gold:1.0,
+  myth:"Те, чьё имя Мортана произнесла над водой, а море не отдало тела. Они поднимаются к борту и просят их назвать.",
+  who:"Костяные шаманы упокаивают их бесплатно — это долг Тихого Порога."},
+ {id:"siren",n:"Сирена отмелей",voice:"ghost",min:5,max:13,gold:1.5,
+  myth:"Селена отдала голос за право видеть завтрашний день. Сирены подобрали то, что она обронила, и поют чужими голосами.",
+  who:"Русалки отрицают родство с ними, но в шторм поют так же."},
+ {id:"jellyswarm",n:"Рой жгучих медуз",voice:"hornet",min:2,max:8,gold:0.5,
+  myth:"Живой туман под водой. Их не видно, пока не станет поздно.",
+  who:"Ныряльщики Соли и Глубины уходят на дно, чтобы переждать рой."},
+ {id:"isleFish",n:"Рыба-остров",voice:"behemoth",min:7,max:15,gold:2.0,
+  myth:"На её спине растут деревья, и не одна команда ставила там лагерь. Просыпается она редко, но всегда не вовремя.",
+  who:"Эфирные странники утверждают, что таких рыб в мире ровно двенадцать."},
+ {id:"stormwyrm",n:"Штормовой вирм",voice:"dragon",min:8,max:16,gold:2.2,
+  myth:"Таур свернул свой самый громкий крик в кольцо и выпустил летать над водой. Вирм и есть этот крик.",
+  who:"Республика Вольных Островов платит вирмам ветровую подать, чтобы бури обходили гавани."}];
+const PIRATE_CREWS=[
+ {id:"pirate",n:"Корсары Соляного Ветра",voice:"orc",min:3,max:11,gold:1.3,demand:0.35,
+  creed:"Берут долю и отпускают: живой купец вернётся с новым грузом."},
+ {id:"pirate",n:"Красные Паруса",voice:"orc",min:5,max:14,gold:1.6,demand:0.5,
+  creed:"Не торгуются. Их флаг узнают по цвету, а не по имени."},
+ {id:"slaver",n:"Работорговцы Барханного Берега",voice:"orc",min:4,max:13,gold:1.5,demand:0.45,
+  creed:"Берут не только груз. Откупаться от них дороже, чем драться."},
+ {id:"ghostpirate",n:"Призрачная эскадра",voice:"ghost",min:6,max:15,gold:1.8,demand:0.0,
+  creed:"Мёртвым не нужно золото. Им нужно, чтобы кто-то помнил их имена."},
+ {id:"pirate",n:"Вольная ватага",voice:"orc",min:2,max:9,gold:1.0,demand:0.25,
+  creed:"Полупираты-полукупцы: сегодня грабят, завтра нанимаются в охрану."}];
+/* Противник из морского списка под уровень игрока. */
+function makeSeaFoe(src,bonus){
+ const lvl=Math.max(src.min,Math.min(src.max,G.level+(Number(bonus)||0)+Math.floor(Math.random()*3)));
+ return {id:src.id,n:src.n,voice:src.voice,lvl,
+  hp:24+lvl*9,dmg:4+lvl*2,xp:26+lvl*12,gold:Math.round((10+lvl*6)*(src.gold||1)),
+  snd:"mroar",fx:"growl",biomes:["coast"]};
+}
+function seaFoeByHash(seed){
+ return SEA_MONSTERS[Math.floor(Math.abs(seed)%SEA_MONSTERS.length)];
+}
+/* Голос твари звучит раньше её имени: игрок слышит, кто поднимается из воды. */
+function announceSeaFoe(src,text){
+ safeFn(()=>bankMonsterCue({id:src.id,voice:src.voice},"emerge",0.9));
+ narrate(text);
+}
+/* ── Встреча с пиратами: бой, откуп, груз или бегство ── */
+let curPirates=null;
+function meetPirates(crew){
+ const s=G.ship;if(!s)return false;
+ curPirates=crew;
+ const body=document.getElementById("pirateBody"),title=document.getElementById("pirateTitle");
+ const toll=Math.max(20,Math.round(G.gold*crew.demand));
+ const cargo=Object.keys(RESICON).filter(r=>(Number(G.inv[r])||0)>0);
+ const cargoVal=cargo.reduce((n,r)=>n+(Number(G.inv[r])||0)*(RES_BASE[r]||5),0);
+ const speed=Number(s.speed)||1;
+ const escape=Math.round(Math.min(85,35+speed*25+fxLevel("deal")*8));
+ if(!body||!title){narrate(`${crew.n} берут вас на абордаж!`);curPirates=null;return false;}
+ title.textContent="🏴‍☠️ "+crew.n;
+ body.innerHTML=`<div class="list-line" tabindex="0" data-speak="${`${crew.n}. ${crew.creed} Требуют ${toll} золота. Шанс уйти ${escape} процентов.`.replace(/"/g,"&quot;")}">
+  🏴‍☠️ <b>${crew.n}</b> заходят с наветренной стороны и бросают крючья.<br>
+  «${crew.creed}»<br>
+  Требуют: <b>${toll} золота</b>${crew.demand?"":" — или ничего, кроме памяти"}.<br>
+  Ваш груз: ${cargo.length?cargo.map(r=>`${r} ×${G.inv[r]}`).join(", "):"пуст"}${cargoVal?` (около ${cargoVal} золота)`:""}.<br>
+  Шанс уйти на этом судне: около ${escape}%.</div>`+
+  `<button class="item" data-cmd="pir:fight" data-speak="Принять абордаж и драться.">⚔️ Принять абордаж</button>`+
+  (crew.demand?`<button class="item" data-cmd="pir:pay" data-speak="Откупиться: отдать ${toll} золота.">🪙 Откупиться (${toll})</button>`:"")+
+  (cargo.length?`<button class="item" data-cmd="pir:cargo" data-speak="Отдать весь груз и сохранить золото и жизнь.">📦 Отдать груз</button>`:"")+
+  `<button class="item" data-cmd="pir:run" data-speak="Уходить на всех парусах. Шанс около ${escape} процентов.">🏃 Уходить на всех парусах (${escape}%)</button>`;
+ openModal("modal-pirate");
+ safeFn(()=>{Bank.play("danger",{seed:Date.now(),gain:0.75,maxSec:6});
+  bankMonsterCue({id:crew.id,voice:crew.voice},"emerge",0.85);});
+ narrate(`Пираты! ${crew.n}. ${crew.creed} Требуют ${toll} золота. Вариантов: ${cargo.length?4:3}.`);
+ return true;
+}
+function resolvePirates(what){
+ const crew=curPirates,s=G.ship;
+ const m=document.getElementById("modal-pirate");
+ if(!crew){narrate("Пираты уже ушли.");return;}
+ curPirates=null;
+ if(m&&!m.hidden)safeFn(()=>closeModal(m));
+ if(!s){narrate("Вы уже не в море.");return;}
+ const toll=Math.max(20,Math.round(G.gold*crew.demand));
+ if(what==="fight"){
+  const foe=makeSeaFoe({...crew,id:crew.id},1);
+  foe.n=crew.id==="ghostpirate"?"Мертвец с призрачной эскадры":"Пиратский боцман";
+  narrate(`Крючья впились в борт. ${foe.n} идёт первым!`);
+  startCombat({x:G.x,y:G.y,monster:foe});
+  return;}
+ if(what==="pay"){
+  if(G.gold<toll){narrate("Столько золота у вас нет. Пираты берут всё, что нашли, и уходят.");
+   G.gold=Math.max(0,Math.floor(G.gold*0.5));refresh();saveGame(true);return;}
+  G.gold-=toll;
+  safeFn(()=>Bank.play("gold",{seed:toll,gain:0.8}));
+  narrate(`Вы отдали ${toll} золота. Капитан пиратов кивает и отпускает судно.`);
+  journal(`Откуп пиратам: ${toll} золота.`);
+  refresh();saveGame(true);return;}
+ if(what==="cargo"){
+  const taken=[];
+  Object.keys(RESICON).forEach(r=>{const q=Number(G.inv[r])||0;if(q>0){taken.push(`${r} ×${q}`);delete G.inv[r];}});
+  narrate(taken.length?`Груз перегружен на пиратский борт: ${taken.join(", ")}. Золото и жизнь при вас.`
+   :"Отдавать нечего. Пираты обыскивают трюм и уходят ни с чем.");
+  journal("Груз отдан пиратам.");
+  refresh();saveGame(true);return;}
+ /* Бегство: быстрое судно уходит чаще, тяжёлое — реже. */
+ const speed=Number(s.speed)||1;
+ const chance=Math.min(0.85,0.35+speed*0.25+fxLevel("deal")*0.08);
+ if(Math.random()<chance){
+  safeFn(()=>Bank.play("ship_creak",{seed:Date.now(),gain:0.7,maxSec:5}));
+  G.hour+=2;if(G.hour>=24){G.hour-=24;G.day++;}
+  narrate("Паруса взяли ветер, и погоня отстала. Два часа потеряно на крюке в сторону.");
+  refresh();saveGame(true);return;}
+ const dmg=6+Math.floor(Math.random()*8);
+ G.hp=Math.max(1,G.hp-dmg);
+ safeFn(()=>{UI.hit();vib([50,60,50]);});
+ narrate(`Уйти не вышло: залп в корму, щепки по палубе. −${dmg} здоровья. Пираты берут вас на абордаж!`);
+ const foe=makeSeaFoe({...crew,id:crew.id},1);
+ foe.n=crew.id==="ghostpirate"?"Мертвец с призрачной эскадры":"Пиратский боцман";
+ startCombat({x:G.x,y:G.y,monster:foe});
+}
+
 /* ── Плавание: игрок на борту, переходы, море и события ── */
 function boardShip(i){
  const list=G.harborShips||[];
@@ -3260,7 +3488,7 @@ function boardShip(i){
  if(!sh){narrate("Этот рейс уже отошёл.");return false;}
  if(G.gold<sh.fare){narrate(`Плата за проезд ${sh.fare} золота, у вас ${G.gold}.`);return false;}
  G.gold-=sh.fare;
- G.ship={name:sh.name,kind:sh.kind,tox:sh.tox,toy:sh.toy,toName:sh.toName,
+ G.ship={name:sh.name,kind:sh.kind,speed:Number(sh.speed)||1,tox:sh.tox,toy:sh.toy,toName:sh.toName,
   legs:sh.legs,left:sh.legs,leg:0,war:sh.war,storm:false,fare:sh.fare};
  const m=document.getElementById("modal-harbor");if(m&&!m.hidden)safeFn(()=>closeModal(m));
  safeFn(()=>{beacon("port_horn",0,0);Bank.play("ship_depart",{seed:sh.tox,gain:0.8,maxSec:8});});
@@ -3310,33 +3538,40 @@ function arriveShip(){
  refresh();saveGame(true);
  return true;
 }
-/* Морские события: пираты, купеческий флот, штиль, кит, спасённый пловец. */
+/* ── Морские события: твари из-под киля, пираты, флот, погода ──
+   Чем дальше от берега и чем ближе воюющие воды, тем чаще встреча. */
 function maybeSeaEvent(){
  if(!G.ship||G.inCombat||activeLayer())return false;
- if(Math.random()>0.3)return false;
  const s=G.ship;
+ const danger=0.3+(s.war?0.12:0)+(s.storm?0.08:0);
+ if(Math.random()>danger)return false;
  const r=Math.random();
- if(r<0.3){
-  safeFn(()=>Bank.play("danger",{seed:s.leg,gain:0.7,maxSec:7}));
-  const m0=MONSTERS.find(m=>m.id==="kraken")||MONSTERS[0];
-  const lv=Math.max(2,G.level+1);
-  narrate("Из воды поднимаются щупальца — кракен взял судно в кольцо!");
-  startCombat({x:G.x,y:G.y,monster:{...m0,n:"Прибрежный кракен",lvl:lv,hp:26+lv*9,dmg:5+lv*2,xp:35+lv*12,gold:20+lv*6}});
+ /* Пираты — четверть всех встреч, в воюющих водах чаще. */
+ if(r<(s.war?0.34:0.24)){
+  const crew=PIRATE_CREWS[Math.floor(H(G.x+s.leg,G.y+G.day,530)*PIRATE_CREWS.length)];
+  return meetPirates(crew);}
+ /* Морская тварь: голос раздаётся раньше имени. */
+ if(r<0.5){
+  const src=seaFoeByHash(Math.floor(H(s.tox+s.leg,s.toy+G.day,531)*1000));
+  const foe=makeSeaFoe(src,s.storm?1:0);
+  announceSeaFoe(src,`${src.n}! ${src.myth.split(".")[0]}. Судно кренится — бой на палубе!`);
+  startCombat({x:G.x,y:G.y,monster:foe});
   return true;}
- if(r<0.55){
+ if(r<0.68){
   const gold=15+Math.floor(Math.random()*25);
   G.gold+=gold;
-  safeFn(()=>Bank.play("sea_calm",{seed:s.leg,gain:0.6,maxSec:6}));
+  safeFn(()=>{Bank.play("sea_calm",{seed:s.leg,gain:0.6,maxSec:6});Bank.play("gold",{seed:gold,gain:0.7});});
   narrate(`Встречный купеческий флот. Капитан обменялся почтой и отдал вам долю за помощь на снастях: +${gold} золота.`);
   return true;}
- if(r<0.75){
+ if(r<0.82){
   const res=["ракушка","кость","кристалл"][Math.floor(Math.random()*3)];
   G.inv[res]=(Number(G.inv[res])||0)+1;
   safeFn(()=>{beacon("res_shell",0,0);UI.pickup();});
   narrate(`Матросы вытянули сеть: в ней ${res}. Добыча ваша.`);
   return true;}
- if(r<0.9){
+ if(r<0.92){
   G.water=Math.min(200,(Number(G.water)||0)+30);
+  safeFn(()=>Bank.play("step_water",{seed:s.leg,gain:0.6}));
   narrate("Дождевой шквал прошёл стороной, но бочки полны: запас воды пополнен.");
   return true;}
  G.hour+=2;if(G.hour>=24){G.hour-=24;G.day++;}
@@ -4276,6 +4511,13 @@ function openChest(x,y){
  setPlaceMark(x,y,"open");
  const p=G.place,r=H(p.bx+x*3,p.by+y*5,800+p.depth);
  safeFn(()=>beacon("chest",0,0));
+ /* Часть сундуков в глубине с секретом: механизм срабатывает при открытии. */
+ const trapped=p.depth>=2&&H(x*7,y*11,806)<0.22;
+ if(trapped){
+  const dmg=4+Math.floor(H(x,y,807)*6)+p.depth*2;
+  G.hp=Math.max(1,G.hp-dmg);
+  safeFn(()=>{Bank.play("trap",{seed:x+y,gain:0.9});UI.hit();vib([40,60,40]);});
+  narrate(`Ловушка! Крышка была на взводе: −${dmg} здоровья.`,{interrupt:true});}
  safeFn(()=>Bank.play("treasure",{seed:x+y,gain:0.7,maxSec:6}));
  const gold=10+Math.floor(r*40)+p.depth*15;
  G.gold+=gold;
@@ -4372,6 +4614,11 @@ function move(dir){
  arrive(dir);}
 function stepSound(){AE.ensure();
  const c=cellContent(G.x,G.y),surface=TERRAIN_SURFACE[c.terrain[0]]||"dirt";
+ /* Живые шаги из банка: по земле и по воде. Синтез остаётся для прочих поверхностей
+    и для случая, когда папки со звуками рядом нет. */
+ if(Bank.enabled&&Math.random()<0.7){
+  const role=surface==="water"?"step_water":surface==="grass"||surface==="dirt"?"step_dirt":null;
+  if(role&&Bank.play(role,{seed:G.x*7+G.y*13+Math.floor(Math.random()*10),gain:0.55}))return;}
  const gap=runState.active?185:280; /* бег — короче и легче, ходьба — размереннее */
  const vol=runState.active?0.85:1;
  const s=new SFX();
@@ -4499,11 +4746,16 @@ const REAL_MONSTER_SFX={
 };
 function playRealMonsterCue(m,cue,vol=0.7){
  try{
-  const set=m&&REAL_MONSTER_SFX[m.id];if(!set||!set[cue])return null;
-  AE.ensure();if(!AE.ctx||!settings.effects)return null;
-  const s=new SFX();s.sample(set[cue],0,vol);
-  setTimeout(()=>{try{s.stop(.25);}catch(e){}},4200);
-  return s;
+  const set=m&&REAL_MONSTER_SFX[m.id];
+  if(set&&set[cue]){
+   AE.ensure();if(!AE.ctx||!settings.effects)return null;
+   const s=new SFX();s.sample(set[cue],0,vol);
+   setTimeout(()=>{try{s.stop(.25);}catch(e){}},4200);
+   return s;}
+  /* Для остальных чудовищ голос берётся из банка по виду: волк и медведь
+     ревут по-звериному, призрак стонет, слизь чавкает, дракон рычит. */
+  if(!settings.effects)return null;
+  return bankMonsterCue(m,cue,vol+0.1);
  }catch(e){return null;}
 }
 function startCombat(c){
@@ -4554,7 +4806,11 @@ function updateCombat(){const cb=G.combat;if(!cb||!document.getElementById("cbTi
    <div class="list-line">${weaponName}${G.weaponDrawn?" (в руках)":" (в ножнах)"}</div>`;}
 function cbLog(t){const el=document.getElementById("cbLog");if(el)el.textContent=t;}
 function monsterAIProfile(m){const id=String(m?.id||'');if(['wolf','goblin','troll','ogre'].includes(id))return {aggressive:true,chase:0.78};if(['dragon','harpy'].includes(id))return {aggressive:true,chase:0.58};if(['ghost','spider','snake'].includes(id))return {aggressive:false,chase:0.28};return {aggressive:false,chase:0.18};}
-function playMonsterSound(m){try{AE.ensure();if(!AE.ctx)return null;const s=new SFX();const map={wolf:'wolfCall',goblin:'goblinCall',troll:'trollCall',ogre:'ogreCall',dragon:'dragonRoar',harpy:'harpyScreech',spider:'hiss',serpent:'serpentHiss',wraith:'wail',golem:'golemCall',wyvern:'wyvernCall',direbear:'direBearGrowl',sandworm:'sandwormCall',treant:'treantCall',kraken:'krakenCall',bandit:'banditShout'};const fn=map[m?.id]||m?.fx||'growl';if(typeof s[fn]==='function')s[fn]();else s.growl();setTimeout(()=>{try{s.stop(.3);}catch(e){}},3600);return s;}catch(e){try{console.warn('[MonsterSFX]',m?.id,e);}catch(_){}return null;}}
+function playMonsterSound(m){try{
+ /* У гоблинов, разбойников и драконов есть живые голоса из банка. */
+ if(m&&["goblin","bandit"].includes(m.id)&&Math.random()<0.6&&Bank.play("goblin_voice",{seed:Date.now(),gain:0.8}))return null;
+ if(m&&["dragon","wyvern"].includes(m.id)&&Math.random()<0.6&&Bank.play("dragon_growl",{seed:Date.now(),gain:0.8}))return null;
+ AE.ensure();if(!AE.ctx)return null;const s=new SFX();const map={wolf:'wolfCall',goblin:'goblinCall',troll:'trollCall',ogre:'ogreCall',dragon:'dragonRoar',harpy:'harpyScreech',spider:'hiss',serpent:'serpentHiss',wraith:'wail',golem:'golemCall',wyvern:'wyvernCall',direbear:'direBearGrowl',sandworm:'sandwormCall',treant:'treantCall',kraken:'krakenCall',bandit:'banditShout'};const fn=map[m?.id]||m?.fx||'growl';if(typeof s[fn]==='function')s[fn]();else s.growl();setTimeout(()=>{try{s.stop(.3);}catch(e){}},3600);return s;}catch(e){try{console.warn('[MonsterSFX]',m?.id,e);}catch(_){}return null;}}
 function playWeaponCombatSfx(hit,dir="N",dmg=6){try{AE.ensure();const s=new SFX();
  const w=G.equip&&G.equip.weapon;const wt=w&&w.type;
  const SWING_REAL={"Меч":"sword_attack","Лук":"bow_attack"};
@@ -4632,7 +4888,7 @@ function questMonsterProgress(monster){
 }
 function victory(){const cb=G.combat,m=cb.m;
  safeFn(()=>playRealMonsterCue(m,"death",0.75));
- safeFn(()=>Bank.play("victory",{seed:G.level+(G.xp||0),gain:0.75,maxSec:8}));
+ safeFn(()=>{Bank.play("jingle_win",{gain:0.8});Bank.play("victory",{seed:G.level+(G.xp||0),gain:0.55,maxSec:8});});
  UI.fanfare();journal(`Побеждён «${m.n}» ${m.lvl} уровня.`);
  /* Логово в подземелье после победы пустеет и больше не нападает. */
  if(G.place&&G.place.pendingKill){const k=G.place.pendingKill;G.place.pendingKill=null;
@@ -4667,6 +4923,7 @@ function takeLoot(){
    else if(l?.type==="mat")G.inv[l.name]=(Number(G.inv[l.name])||0)+1;
    else if(l?.type==="gear"&&l.item){G.gear.push(l.item);}
   }
+  safeFn(()=>Bank.play("gold",{seed:Date.now(),gain:0.85}));
   const gold=loot.filter(l=>l.type==="gold").reduce((n,l)=>n+(Number(l.amount)||0),0);
   const mats=loot.filter(l=>l.type==="mat").map(l=>l.name);
   const gearItems=loot.filter(l=>l.type==="gear"&&l.item).map(l=>l.item);
@@ -4691,7 +4948,7 @@ function takeLoot(){
  }catch(e){try{console.error("takeLoot",e);}catch(_){}return false;}
 }
 function defeat(){endCombat();Music.stop();
- safeFn(()=>Bank.play("defeat",{seed:G.day,gain:0.8,maxSec:9}));
+ safeFn(()=>{Bank.play("jingle_lose",{gain:0.8});Bank.play("defeat",{seed:G.day,gain:0.55,maxSec:9});});
  const emp=empireAt(G.x,G.y);G.x=emp.cap.x;G.y=emp.cap.y;
  /* Милость Мортаны Тихой: поражение обходится дешевле её последователям. */
  const mercy=Math.min(0.09,0.03*fxLevel("mercy"));
@@ -4701,7 +4958,7 @@ function defeat(){endCombat();Music.stop();
 function checkLevelUp(){let leveled=false;
  while(G.xp>=xpNeed(G.level)){G.xp-=xpNeed(G.level);G.level++;leveled=true;
   G.hpMax+=10;G.hp=G.hpMax;G.str++;G.agi++;G.mind++;G.cha++;G.manaMax+=5;G.mana=G.manaMax;}
- if(leveled){UI.fanfare();vib([60,80,60]);safeFn(()=>Bank.play("levelup",{seed:G.level,gain:0.8,maxSec:8}));
+ if(leveled){UI.fanfare();vib([60,80,60]);safeFn(()=>{Bank.play("jingle_achievement",{gain:0.85});Bank.play("levelup",{seed:G.level,gain:0.5,maxSec:8});});
   narrate(`Новый уровень! Теперь вы ${G.level} уровня. Здоровье и характеристики выросли.`);
   journal(`Уровень ${G.level}!`);}}
 
@@ -4740,7 +4997,7 @@ function gatherCurrent(source="tap"){
 function findArtifact(){const ART=["Осколок Зари","Шёпот Ветра","Слеза Дракона","Сердце Бури","Песнь Грани"];
  const n=ART[Math.floor(Math.random()*ART.length)]+" "+(100+Math.random()*900|0);
  G.artifacts.push(n);G.manaMax+=5;G.mana=G.manaMax;
- UI.fanfare();safeFn(()=>Bank.play("artifact",{seed:G.artifacts.length,gain:0.85,maxSec:9}));if(settings.effects)Play.start("ev","magic",{dur:6});
+ UI.fanfare();safeFn(()=>{Bank.play("jingle_achievement",{gain:0.8});Bank.play("artifact",{seed:G.artifacts.length,gain:0.6,maxSec:9});});if(settings.effects)Play.start("ev","magic",{dur:6});
  sub("✨ Найден артефакт!");
  narrate(`Найден артефакт: ${n}. Максимальная мана +5.`);
  journal(`Артефакт: ${n}.`);refresh();}
@@ -4810,6 +5067,12 @@ const CMD={
  harbor(){openHarbor();},
  board(i){boardShip(i);},
  seatalk(){seaTalk();},
+ pir(what){resolvePirates(what);},
+ seavoice(id){const src=SEA_MONSTERS.find(m=>m.id===id)||PIRATE_CREWS.find(c=>c.id===id);
+  if(!src){narrate("Голос не найден.");return;}
+  narrate(src.n);
+  if(!bankMonsterCue({id:src.id,voice:src.voice},"emerge",0.9))
+   narrate("Запись недоступна: папка со звуками не найдена рядом с игрой.",{interrupt:false});},
  sail(){if(G.ship)sailLeg();else narrate("Вы не на борту. Найдите порт на побережье.");},
  carbuy(res){caravanBuy(res,1);},
  carbuy5(res){caravanBuy(res,5);},
@@ -5146,7 +5409,7 @@ function castSpell(i){const sp=SPELLS[i];
  if(!G.spells.includes(sp.n)){narrate("Заклинание не изучено.");return;}
  if(G.mana<sp.cost){narrate(`Нужно ${sp.cost} маны, у вас ${G.mana}.`);return;}
  G.mana-=sp.cost;
- safeFn(()=>Bank.play(spellBankRole(sp),{seed:i,gain:0.7,maxSec:7}));
+ safeFn(()=>{Bank.play("spell_arcane",{seed:i,gain:0.85});Bank.play(spellBankRole(sp),{seed:i,gain:0.5,maxSec:7});});
  if(sp.n==="Исцеление"){G.hp=Math.min(G.hpMax,G.hp+25);UI.drink();}
  else if(settings.effects)Play.start("ev",sp.n==="Огненный шар"?"magic":sp.n==="Зов дождя"?"rain":sp.n==="Ветер странника"?"wind":"magic",{dur:4});
  narrate(`Заклинание «${sp.n}» сотворено.`);journal("Заклинание: "+sp.n);
@@ -5166,7 +5429,7 @@ function buyItem(key,i){const n=getNPCByKey(key);
  if(item.gear)G.gear.push(item.gear);
  else G.inv[item.n]=(G.inv[item.n]||0)+1;
  safeFn(()=>addRep(n.race,1)); /* постоянные покупатели становятся своими */
- UI.pickup();narrate(`Куплено: ${item.gear?lootDesc(item.gear):item.n}. Осталось золота: ${G.gold}.`);
+ UI.pickup();safeFn(()=>Bank.play("gold",{seed:item.price,gain:0.7}));narrate(`Куплено: ${item.gear?lootDesc(item.gear):item.n}. Осталось золота: ${G.gold}.`);
  openNPC(key,true);}
 /* ════════ ПРОДАЖА РЕСУРСОВ ════════
    Цена зависит от державы (что она вывозит — дёшево, что ввозит — дорого),
@@ -5188,7 +5451,7 @@ function sellResource(key,res,all){
  const total=unit*qty;
  G.gold+=total;
  safeFn(()=>addRep(n.race,1));
- safeFn(()=>UI.pickup());
+ safeFn(()=>{UI.pickup();Bank.play("gold",{seed:total,gain:0.8});});
  narrate(`Продано: ${res} — ${qty} шт. по ${unit} золота. Получено ${total}. Всего золота: ${G.gold}.`);
  journal(`Продажа: ${res} ×${qty} за ${total} золота.`);
  saveGame(true);refresh();openNPC(key,true);}
@@ -5355,6 +5618,7 @@ function completeQuest(id){const q=G.quests.find(qq=>qq.id===id);
 /* ════════ РЕНДЕР ПАНЕЛЕЙ ════════ */
 function openModal(id){const m=document.getElementById(id);if(!m||!m.hidden)return;
  lastFocused=document.activeElement;m.hidden=false;modalStack.push(m);UI.open();
+ safeFn(()=>Bank.play("inventory_open",{seed:modalStack.length,gain:0.45}));
  const cb=m.querySelector('[data-cmd="close"]');if(cb)cb.focus();}
 function closeModal(m){if(!m)return;m.hidden=true;UI.close();
  const i=modalStack.indexOf(m);if(i>=0)modalStack.splice(i,1);
@@ -5557,7 +5821,19 @@ function renderBestiary(){
   const speak=`${m.n}. Уровни ${m.min}–${m.max}. Местности: ${m.biomes.map(b=>TERR[b]?TERR[b][1]:b).join(", ")}. Область бога: ${g?g.n:"неизвестна"}. Происхождение: ${L.myth||"неизвестно"} ${L.who||""}`;
   return `<div class="list-line" tabindex="0" data-speak="${speak.replace(/"/g,"&quot;")}"><b>${m.n}</b> (уровни ${m.min}–${m.max}). Местности: ${m.biomes.map(b=>TERR[b]?TERR[b][1]:b).join(", ")}.<br>
   🕯️ Область бога: ${g?g.n:"—"}<br>✨ Происхождение: ${L.myth||"—"}<br>🧬 Народы: ${L.who||"—"}
-  <button data-cmd="listen:${m.snd}" data-speak="Прослушать звук: ${m.n}.">🔊 Прослушать</button></div>`;}).join("");}
+  <button data-cmd="listen:${m.snd}" data-speak="Прослушать звук: ${m.n}.">🔊 Прослушать</button></div>`;}).join("")
+ +`<h3>🌊 Морские твари</h3>`
+ +SEA_MONSTERS.map(m=>{
+  const speak=`${m.n}. Уровни ${m.min}–${m.max}. Встречается в открытом море. Происхождение: ${m.myth} ${m.who}`;
+  return `<div class="list-line" tabindex="0" data-speak="${speak.replace(/"/g,"&quot;")}"><b>${m.n}</b> (уровни ${m.min}–${m.max}). Встречается в открытом море, во время плавания.<br>
+  ✨ Происхождение: ${m.myth}<br>🧬 Народы: ${m.who}
+  <button data-cmd="seavoice:${m.id}" data-speak="Прослушать голос: ${m.n}.">🔊 Прослушать голос</button></div>`;}).join("")
+ +`<h3>🏴‍☠️ Пиратские ватаги</h3>`
+ +PIRATE_CREWS.map((c,i)=>{
+  const speak=`${c.n}. Уровни ${c.min}–${c.max}. Устав: ${c.creed} ${c.demand?`Требуют выкуп около ${Math.round(c.demand*100)} процентов золота.`:"Выкупа не берут."}`;
+  return `<div class="list-line" tabindex="0" data-speak="${speak.replace(/"/g,"&quot;")}"><b>${c.n}</b> (уровни ${c.min}–${c.max})<br>
+  🏴‍☠️ «${c.creed}»<br>💰 ${c.demand?`Выкуп: около ${Math.round(c.demand*100)}% вашего золота`:"Выкупа не берут: им нужно другое"}
+  <button data-cmd="seavoice:${c.id}" data-speak="Прослушать голос ватаги: ${c.n}.">🔊 Прослушать голос</button></div>`;}).join("");}
 function renderCraft(){
  const RECIPES=[["Каменное копьё",{камень:2,дерево:1}],["Травяной отвар",{трава:2,ягоды:1}],["Факел",{дерево:1,трава:1}]];
  document.getElementById("craftList").innerHTML=RECIPES.map((r,i)=>{
