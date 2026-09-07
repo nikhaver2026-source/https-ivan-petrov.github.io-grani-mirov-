@@ -2252,7 +2252,61 @@ const AMB={forest:["forest"],plains:["birds"],mountains:["wind"],coast:["sea"],c
 /* Тип поверхности под ногами для каждого рельефа — используется для реалистичных шагов */
 const TERRAIN_SURFACE={forest:"grass",plains:"grass",mountains:"stone",coast:"sand",cave:"cave",swamp:"water",desert:"sand",road:"stone"};
 const isRoad=(x,y)=>x%29===0||y%29===0;
-function terrainAt(x,y){if(isRoad(x,y))return TERR.road;
+const isCrossroads=(x,y)=>x%29===0&&y%29===0;
+/* ── ДОРОГИ, СЪЕЗДЫ И ПЕРЕКРЁСТКИ ──
+   Через мир идут большие тракты — каждые двадцать девять клеток на север и
+   на восток; там, где они встречаются, стоит перекрёсток с указателем.
+   От каждого селения к ближнему тракту протоптан свой съезд, поэтому до
+   деревни или цитадели можно дойти по дороге, не блуждая по полям.
+   Съезд выводится из тех же чисел, что и селение, — карта у всех одна. */
+function settlementSeed(x,y){
+ /* Проверка селения без обращения к рельефу: иначе дорога и рельеф
+    начали бы спрашивать друг друга по кругу. */
+ if(x<0||y<0||x>=WORLD||y>=WORLD)return null;
+ const emp=empireAt(x,y);
+ if(x===emp.cap.x&&y===emp.cap.y)return "castle";
+ if(!isRoad(x,y)&&H(x,y,3)<0.0035)return "village";
+ return null;}
+/* К какому тракту жмётся селение: к ближайшему из четырёх. */
+function spurTarget(cx,cy){
+ const sx=Math.floor(cx/29),sy=Math.floor(cy/29);
+ const dl=cx-sx*29,dr=(sx+1)*29-cx,du=cy-sy*29,dd=(sy+1)*29-cy;
+ const m=Math.min(dl,dr,du,dd);
+ if(m===dl)return {axis:"x",v:sx*29};
+ if(m===dr)return {axis:"x",v:(sx+1)*29};
+ if(m===du)return {axis:"y",v:sy*29};
+ return {axis:"y",v:(sy+1)*29};}
+const spurCache=new Map();
+function spurLine(kind,line,seg){
+ const key=kind+line+","+seg;
+ if(spurCache.has(key))return spurCache.get(key);
+ const a=seg*29,set=new Set();
+ for(let i=a+1;i<a+29;i++){
+  const cx=kind==="r"?i:line,cy=kind==="r"?line:i;
+  if(!settlementSeed(cx,cy))continue;
+  const t=spurTarget(cx,cy);
+  if(t.axis!==(kind==="r"?"x":"y"))continue;
+  const from=kind==="r"?cx:cy,lo=Math.min(from,t.v),hi=Math.max(from,t.v);
+  for(let v=lo;v<=hi;v++)set.add(v);}
+ if(spurCache.size>600)spurCache.clear();
+ spurCache.set(key,set);
+ return set;}
+function isSpur(x,y){
+ if(x<0||y<0||x>=WORLD||y>=WORLD)return false;
+ if(spurLine("r",y,Math.floor(x/29)).has(x))return true;
+ return spurLine("c",x,Math.floor(y/29)).has(y);}
+/* Дорога под ногами: тракт или съезд к селению. */
+function roadAt(x,y){return isRoad(x,y)||isSpur(x,y);}
+/* Куда ведут дороги от перекрёстка: ближние селения по сторонам света. */
+function signpostAt(x,y){
+ const out=[];
+ for(const c of findCities(x,y,26,10)){
+  if(c.x===x&&c.y===y)continue;
+  out.push({name:c.name,d:Math.max(Math.abs(c.x-x),Math.abs(c.y-y)),
+   dir:dirBetween(c.x-x,c.y-y),type:c.type});}
+ out.sort((a,b)=>a.d-b.d);
+ return out.slice(0,4);}
+function terrainAt(x,y){if(roadAt(x,y))return TERR.road;
  const emp=empireAt(x,y),n=H(x,y,1);
  let t=emp.terrains[Math.floor(n*emp.terrains.length)];
  if(t==="road")t="plains";return TERR[t];}
@@ -3210,7 +3264,38 @@ const SOUND_BANK={
  forge:{f:["places/forge_01.mp3","places/forge_02.mp3"],d:"Кузница и горн"},
  tavern:{f:["places/tavern_01.mp3","places/tavern_02.mp3"],d:"Таверна: очаг и разговоры"},
  clanhall:{f:["places/clanhall_01.mp3","places/clanhall_02.mp3"],d:"Зал клана"},
- caravan:{f:["places/caravan_01.mp3","places/caravan_02.mp3"],d:"Обоз на дороге"}};const Bank={
+ caravan:{f:["places/caravan_01.mp3","places/caravan_02.mp3"],d:"Обоз на дороге"},
+ /* ── Натуральные записи (CC0, sounds/nat): удары, шаги, двери, колокола,
+    гулы подземелья, магия и голоса мира. Живой звук вместо синтеза. ── */
+ hit_light:{f:["nat/hit_light_01.flac"],d:"Лёгкий удар: короткий сухой шлепок"},
+ hit_heavy:{f:["nat/hit_heavy_01.flac","nat/hit_heavy_02.flac","nat/hit_heavy_03.flac"],d:"Тяжёлый удар: глухой обвал силы"},
+ swing:{f:["nat/swing_01.flac","nat/swing_02.flac"],d:"Взмах оружия: воздух под клинком"},
+ whip:{f:["nat/whip_01.flac"],d:"Хлёсткий удар: щелчок"},
+ parry:{f:["nat/parry_01.flac"],d:"Блок: удар в сталь"},
+ boom:{f:["nat/boom_01.flac"],d:"Гибель, обвал, конец схватки"},
+ alarm_drum:{f:["nat/alarm_drum_01.flac"],d:"Тревога стражи: барабанная дробь"},
+ magic_woosh:{f:["nat/magic_woosh_01.flac"],d:"Заклинание: тёмный воздушный ход"},
+ magic_shimmer:{f:["nat/magic_shimmer_01.flac","nat/magic_shimmer_02.flac"],d:"Чары: стеклянный перезвон"},
+ magic_hum:{f:["nat/magic_hum_01.flac"],d:"Накопление силы: ровный гул"},
+ portal_deep:{f:["nat/portal_deep_01.flac"],d:"Портал: глубокий переход"},
+ artifact_hum:{f:["nat/artifact_hum_01.flac"],d:"Артефакт: поющее стекло"},
+ dungeon_drone:{f:["nat/dungeon_drone_01.flac"],d:"Подземелье: низкий гул камня"},
+ dungeon_haunt:{f:["nat/dungeon_haunt_01.flac"],d:"Глубина: чужое присутствие"},
+ forge_work:{f:["nat/forge_work_01.flac"],d:"Работа горна: железо и меха"},
+ choir:{f:["nat/choir_01.flac"],d:"Хор под сводами храма"},
+ temple_piano:{f:["nat/temple_piano_01.flac"],d:"Святилище: одинокая нота"},
+ god_chord:{f:["nat/god_chord_01.flac"],d:"Знамение бога: струнный аккорд"},
+ crow:{f:["nat/crow_01.flac"],d:"Ворон над дорогой"},
+ gurgle:{f:["nat/gurgle_01.flac"],d:"Утробный звук твари"},
+ water_swash:{f:["nat/water_swash_01.flac"],d:"Вода: плеск и всплеск"},
+ door_wood:{f:["nat/door_wood_01.flac"],d:"Деревянная дверь на петлях"},
+ bell_big:{f:["nat/bell_big_01.flac"],d:"Большой колокол: ворота города"},
+ bell_small:{f:["nat/bell_small_01.flac"],d:"Малый колокол: алтарь"},
+ shop_till:{f:["nat/shop_till_01.flac"],d:"Лавка: касса и монеты"},
+ knock:{f:["nat/knock_01.flac","nat/knock_02.flac","nat/knock_03.flac"],d:"Стук: ступень, дерево, камень"},
+ step_soft:{f:["nat/step_soft_01.flac","nat/step_soft_02.flac","nat/step_soft_03.flac"],d:"Мягкий шаг: стража и твари в переходах"},
+ chime:{f:["nat/chime_01.flac","nat/chime_02.flac","nat/chime_03.flac","nat/chime_04.flac"],d:"Перезвон: лестница и ориентиры"},
+ blip:{f:["nat/blip_01.flac","nat/blip_02.flac","nat/blip_03.flac","nat/blip_04.flac","nat/blip_05.flac"],d:"Короткие отметки и подсказки"}};const Bank={
  base:"sounds/",
  enabled:true,          /* выключается, только если ни одна запись так и не загрузилась */
  fails:0,plays:0,       /* счётчики: банк «отсутствует», лишь когда всё подряд не читается */
@@ -3404,10 +3489,15 @@ const UI_BANK={
 /* Маяк → натуральная запись. Направление важнее тембра, поэтому запись
    проигрывается через звуковую шину с панорамой, а не простым элементом. */
 const BEACON_SAMPLE={
- door:UI_BANK.b_door, gate:UI_BANK.b_gate, stairs_down:UI_BANK.b_stairs_down,
- stairs_up:UI_BANK.b_stairs_up, chest:UI_BANK.b_chest, wall:UI_BANK.b_wall,
- well:UI_BANK.b_well, altar:UI_BANK.b_altar, market:UI_BANK.b_market,
- forge:UI_BANK.b_forge, temple:UI_BANK.b_temple, portal:UI_BANK.b_portal};
+ door:"nat/door_wood_01.flac", gate:"nat/bell_big_01.flac", stairs_down:"nat/knock_01.flac",
+ stairs_up:"nat/chime_01.flac", chest:UI_BANK.b_chest, wall:"nat/knock_03.flac",
+ well:"nat/water_swash_01.flac", altar:"nat/bell_small_01.flac", market:"nat/shop_till_01.flac",
+ forge:"nat/forge_work_01.flac", temple:"nat/choir_01.flac", portal:"nat/portal_deep_01.flac",
+ /* маяки живого мира и подземелья */
+ dungeon:"nat/dungeon_drone_01.flac", torch:"nat/knock_02.flac",
+ guard:"nat/step_soft_01.flac", roamer:"nat/gurgle_01.flac",
+ artifact:"nat/artifact_hum_01.flac", crossroads:"nat/chime_03.flac",
+ signpost:"nat/knock_01.flac", trader_deep:"nat/shop_till_01.flac"};
 
 /* Роль фона для места, где находится игрок. */
 function bankAmbientRole(){
@@ -4060,7 +4150,7 @@ function cellContent(x,y){const key=x+","+y;
   if(r3<0.0035&&!isRoad(x,y)){
    const nm=VILL_A[Math.floor(H(x,y,13)*VILL_A.length)]+VILL_B[Math.floor(H(x,y,14)*VILL_B.length)];
    c.structure={type:"village",name:`Деревня ${nm}`,beacon:"village"};}
-  else if(isRoad(x,y)&&H(x,y,4)<0.01){
+  else if(roadAt(x,y)&&H(x,y,4)<0.01){
    const nm=`${TAV_A[Math.floor(H(x,y,15)*TAV_A.length)]} ${TAV_B[Math.floor(H(x,y,16)*TAV_B.length)]}`;
    c.structure={type:"tavern",name:`Таверна «${nm}»`,beacon:"tavern",inn:true};}
   else if(H(x,y,5)<0.0008)c.structure={type:"clanhall",name:`Кланхолл «${CLANS[Math.floor(H(x,y,17)*CLANS.length)]}»`,beacon:"clanhall"};
@@ -4074,7 +4164,10 @@ function cellContent(x,y){const key=x+","+y;
    c.structure={type:"cave_entrance",name:H(x,y,11)<0.5?"Пещерный зев":"Провал в скале",beacon:"cave_entrance"};
   else if(r3>0.997&&c.terrain[0]!=="road")c.structure={type:"temple",name:"Храм тихого света",beacon:"temple"};}
  if(!c.structure){
-  if(H(x,y,21)<0.004&&isRoad(x,y)){
+  if(isCrossroads(x,y)){
+   /* Перекрёсток двух трактов: столб с указателем на ближние селения. */
+   c.structure={type:"crossroads",name:"Перекрёсток дорог",beacon:"crossroads"};}
+  else if(H(x,y,21)<0.004&&roadAt(x,y)){
    c.structure={type:"traveler",name:"Странник у дороги",beacon:"traveler"};}
   else{
    const pool=RESBYT[c.terrain[0]];
@@ -4608,7 +4701,9 @@ const TILE={
  "S":{n:"лавка",b:"market"},
  "F":{n:"горн",b:"forge"},
  "W":{n:"колодец",b:"well"},
- "T":{n:"факел",b:"torch"}};
+ "T":{n:"факел",b:"torch"},
+ "P":{n:"торговец",b:"market"},
+ "B":{n:"пост стражи",b:"npc_guard"}};
 /* Какие строения куда ведут: город (улицы с воротами), дом или подземелье. */
 const PLACE_KIND={castle:"city",village:"city",port:"city",tavern:"house",clanhall:"house",tower:"house",
  temple:"house",ruins:"dungeon",traveler:null,cave_entrance:"dungeon"};
@@ -4626,44 +4721,109 @@ function genLevel(bx,by,depth,stype){
  if(levelCache.has(key))return levelCache.get(key);
  const R=i=>H(bx*31+depth*7+i*3,by*17+depth*13+i*5,700+i);
  const kind=depth>0?"dungeon":(PLACE_KIND[stype]||"house");
- const w=kind==="city"?27:21+Math.floor(R(1)*8);
- const h=kind==="city"?19:15+Math.floor(R(2)*6);
+ /* Улицы стали шире, кварталы — просторнее, поэтому и город больше:
+    цитадель крупнее порта, порт крупнее деревни. */
+ const BLOCKW=stype==="castle"?8:stype==="port"?7:6;
+ const NC=3,NR=2;
+ const w=kind==="city"?4+NC*(2+BLOCKW)+1:21+Math.floor(R(1)*8);
+ const h=kind==="city"?4+NR*(2+BLOCKW)+1:15+Math.floor(R(2)*6);
  const g=[];for(let y=0;y<h;y++)g.push(new Array(w).fill("#"));
  const rooms=[];
  const put=(x,y,c)=>{if(x>0&&y>0&&x<w-1&&y<h-1)g[y][x]=c;};
  const carveRoom=(rx,ry,rw,rh)=>{for(let y=ry;y<ry+rh;y++)for(let x=rx;x<rx+rw;x++)put(x,y,".");
   rooms.push({x:rx,y:ry,w:rw,h:rh,cx:rx+(rw>>1),cy:ry+(rh>>1)});};
  if(kind==="city"){
-  /* Город: крепостная стена с четырьмя воротами, прямые улицы и кварталы, в
-     каждом из которых стоит своя постройка со своей дверью на улицу.
-     Так по городу можно ходить: улица — дверь — комната — обратно на улицу. */
-  const streetsX=[3,9,15,21].filter(x=>x<w-2),streetsY=[3,9,15].filter(y=>y<h-2);
-  for(let y=2;y<h-2;y++)for(let x=2;x<w-2;x++)g[y][x]="#";           /* кварталы */
-  streetsY.forEach(sy=>{for(let x=2;x<w-2;x++)g[sy][x]=".";});        /* улицы вдоль */
-  streetsX.forEach(sx=>{for(let y=2;y<h-2;y++)g[y][sx]=".";});        /* улицы поперёк */
-  const midY=streetsY[Math.floor(streetsY.length/2)],midX=streetsX[Math.floor(streetsX.length/2)];
-  g[midY][1]="G";g[midY][w-2]="G";g[1][midX]="G";g[h-2][midX]="G";    /* четверо ворот */
-  g[midY][2]=".";g[midY][w-3]=".";g[2][midX]=".";g[h-3][midX]=".";
-  /* Кварталы: между соседними улицами — постройка с комнатой и дверью. */
+  /* ── ГОРОД: ШИРОКИЕ УЛИЦЫ, КВАРТАЛЫ И КОМНАТЫ ──
+     Внутри стены — сетка улиц: обычные в две клетки шириной, главные (вдоль
+     и поперёк) в три, чтобы по ним можно было идти, не задевая стен и не
+     теряя направления. Между улицами стоят кварталы: у каждого своя наружная
+     стена, дверь на улицу и две-четыре комнаты внутри, разделённые
+     перегородками с внутренними дверями. На пересечении главных улиц — рыночная
+     площадь с колодцем, торговыми рядами и постом стражи. ── */
+  for(let y=1;y<h-1;y++)for(let x=1;x<w-1;x++)g[y][x]="#";
+  const cols=[],rows=[];
+  for(let x=2;x+2<=w-3;x+=2+BLOCKW)cols.push(x);
+  for(let y=2;y+2<=h-3;y+=2+BLOCKW)rows.push(y);
+  const mainX=cols[cols.length>>1],mainY=rows[rows.length>>1];
+  const colW=c=>c===mainX?3:2, rowW=r=>r===mainY?3:2;
+  const streetX=x=>cols.some(c=>x>=c&&x<c+colW(c));
+  const streetY=y=>rows.some(r=>y>=r&&y<r+rowW(r));
+  for(let y=1;y<h-1;y++)for(let x=1;x<w-1;x++)if(streetX(x)||streetY(y))g[y][x]=".";
+  /* Кварталы — сплошные куски застройки между улицами. */
+  const runs=(n,isStreet)=>{const out=[];let a=null;
+   for(let i=1;i<n-1;i++){
+    if(!isStreet(i)){if(a===null)a=i;}
+    else{if(a!==null){out.push([a,i-1]);a=null;}}}
+   if(a!==null)out.push([a,n-2]);
+   return out;};
+  const runX=runs(w,streetX),runY=runs(h,streetY);
   const blocks=[];
-  for(let bi=0;bi+1<streetsX.length;bi++)for(let bj=0;bj+1<streetsY.length;bj++){
-   const x0=streetsX[bi]+1,x1=streetsX[bi+1]-1,y0=streetsY[bj]+1,y1=streetsY[bj+1]-1;
-   if(x1-x0<2||y1-y0<2)continue;
-   for(let y=y0+1;y<y1;y++)for(let x=x0+1;x<x1;x++)g[y][x]=".";       /* комната внутри */
-   const dx=x0+Math.floor((x1-x0)/2);
-   g[y0][dx]="+";                                                     /* дверь на улицу */
-   blocks.push({x0,x1,y0,y1,cx:dx,cy:y0+1+Math.floor((y1-y0-1)/2)});}
-  /* Городские постройки: лавка, горн, храм с алтарём, казарма-склад, дома жителей. */
-  const inside=["S","F","A","N","N","C"];
-  blocks.forEach((b,i)=>{const c=inside[i%inside.length];if(g[b.cy][b.cx]===".")g[b.cy][b.cx]=c;});
-  if(blocks.length){const b=blocks[blocks.length-1];
-   /* Спуск в подземелье под городом — в дальнем квартале. */
-   if(g[b.cy][b.cx+1]===".")g[b.cy][b.cx+1]=">";else if(g[b.cy][b.cx]===".")g[b.cy][b.cx]=">";}
-  if(stype==="castle"&&blocks[0]){const b=blocks[0];if(g[b.cy][b.cx-1]===".")g[b.cy][b.cx-1]="C";}
-  /* Колодец и факелы на перекрёстках улиц. */
-  if(streetsX[1]&&streetsY[0])g[streetsY[0]][streetsX[1]]="W";
-  streetsX.forEach((sx,i)=>{const sy=streetsY[i%streetsY.length];if(g[sy][sx]===".")g[sy][sx]="T";});
- }else{
+  runX.forEach(([x0,x1])=>runY.forEach(([y0,y1])=>{
+   if(x1-x0<2||y1-y0<2)return;
+   blocks.push({x0,x1,y0,y1});}));
+  /* Каждый квартал — здание: наружная стена остаётся, внутри комнаты. */
+  blocks.forEach((b,bi)=>{
+   for(let y=b.y0+1;y<b.y1;y++)for(let x=b.x0+1;x<b.x1;x++)g[y][x]=".";
+   const iw=b.x1-b.x0-1,ih=b.y1-b.y0-1;
+   b.rooms=[{x0:b.x0+1,x1:b.x1-1,y0:b.y0+1,y1:b.y1-1}];
+   /* Перегородка вдоль длинной стороны — две комнаты, дальше ещё раз. */
+   const split=(r,depthSplit)=>{
+    if(depthSplit>1)return [r];
+    const rw=r.x1-r.x0+1,rh=r.y1-r.y0+1;
+    if(rw>=5&&rw>=rh){
+     const mx=r.x0+((rw-1)>>1);
+     for(let y=r.y0;y<=r.y1;y++)g[y][mx]="#";
+     const dy=r.y0+((r.y1-r.y0)>>1);g[dy][mx]="+";
+     return split({x0:r.x0,x1:mx-1,y0:r.y0,y1:r.y1},depthSplit+1)
+      .concat(split({x0:mx+1,x1:r.x1,y0:r.y0,y1:r.y1},depthSplit+1));}
+    if(rh>=5){
+     const my=r.y0+((rh-1)>>1);
+     for(let x=r.x0;x<=r.x1;x++)g[my][x]="#";
+     const dx=r.x0+((r.x1-r.x0)>>1);g[my][dx]="+";
+     return split({x0:r.x0,x1:r.x1,y0:r.y0,y1:my-1},depthSplit+1)
+      .concat(split({x0:r.x0,x1:r.x1,y0:my+1,y1:r.y1},depthSplit+1));}
+    return [r];};
+   b.rooms=split(b.rooms[0],0);
+   /* Дверь с улицы — в стене квартала, напротив прохода. */
+   const doorRoom=b.rooms[0];
+   const dxs=doorRoom.x0+((doorRoom.x1-doorRoom.x0)>>1);
+   if(b.y0>1&&g[doorRoom.y0][dxs]==="."){g[b.y0][dxs]="+";}
+   else if(b.x0>1){const dys=doorRoom.y0+((doorRoom.y1-doorRoom.y0)>>1);g[dys][b.x0]="+";}
+   else {const dys=doorRoom.y0+((doorRoom.y1-doorRoom.y0)>>1);g[dys][b.x1]="+";}
+   /* Вторая дверь у больших кварталов — со двора напротив. */
+   if(b.rooms.length>2&&b.y1<h-2){
+    const last=b.rooms[b.rooms.length-1];
+    const dx2=last.x0+((last.x1-last.x0)>>1);
+    if(g[last.y1][dx2]===".")g[b.y1][dx2]="+";}
+   /* Назначение квартала: лавка, горн, храм, склад, казарма, жильё. */
+   const purpose=["S","F","A","C","B","N","S","N"][bi%8];
+   const r0=b.rooms[0],cxr=r0.x0+((r0.x1-r0.x0)>>1),cyr=r0.y0+((r0.y1-r0.y0)>>1);
+   if(g[cyr][cxr]===".")g[cyr][cxr]=purpose;
+   b.rooms.slice(1).forEach((r,ri)=>{
+    const x=r.x0+((r.x1-r.x0)>>1),y=r.y0+((r.y1-r.y0)>>1);
+    if(g[y][x]!==".")return;
+    g[y][x]=ri===0?"N":(R(200+bi*5+ri)<0.45?"C":"T");});});
+  /* Ворота: по одной паре на каждой стене, ровно напротив главных улиц. */
+  const gy=mainY+ (rowW(mainY)>>1), gx=mainX+(colW(mainX)>>1);
+  g[gy][1]="G";g[gy][w-2]="G";g[1][gx]="G";g[h-2][gx]="G";
+  g[gy][2]=".";g[gy][w-3]=".";g[2][gx]=".";g[h-3][gx]=".";
+  /* Рыночная площадь на пересечении главных улиц. */
+  for(let y=mainY-1;y<=mainY+rowW(mainY);y++)for(let x=mainX-1;x<=mainX+colW(mainX);x++)
+   if(x>1&&y>1&&x<w-2&&y<h-2&&g[y][x]==="#")g[y][x]=".";
+  const sqx=mainX+1,sqy=mainY+1;
+  if(g[sqy][sqx]===".")g[sqy][sqx]="W";
+  [[-1,0,"S"],[1,0,"S"],[0,-1,"P"],[0,1,"B"],[1,1,"T"],[-1,-1,"T"]].forEach(([dx,dy,ch])=>{
+   const x=sqx+dx*2,y=sqy+dy*2;
+   if(x>1&&y>1&&x<w-2&&y<h-2&&g[y][x]===".")g[y][x]=ch;});
+  /* Спуск в подземелье под городом — в дальнем квартале. */
+  if(blocks.length){const b=blocks[blocks.length-1],r=b.rooms[b.rooms.length-1];
+   const x=r.x0,y=r.y0;
+   if(g[y][x]===".")g[y][x]=">";else if(g[r.y1][r.x1]===".")g[r.y1][r.x1]=">";}
+  if(stype==="castle"&&blocks[0]){const b=blocks[0],r=b.rooms[0];
+   const x=r.x1,y=r.y1;if(g[y][x]===".")g[y][x]="C";}
+  /* Факелы вдоль главных улиц: ориентиры на слух через равные промежутки. */
+  for(let x=3;x<w-3;x+=6)if(g[mainY][x]===".")g[mainY][x]="T";
+  }else{
   /* Дом и подземелье: от четырёх до семи комнат, соединённых коридорами. */
   const n=4+Math.floor(R(3)*4);
   for(let i=0;i<n;i++){
@@ -4685,7 +4845,7 @@ function genLevel(bx,by,depth,stype){
  const place=(c,i)=>{const p=pick(i);if(g[p.y][p.x]===".")g[p.y][p.x]=c;return p;};
  let entry=null;
  if(kind==="city"){
-  /* Игрок появляется сразу за западными воротами, на улице. */
+  /* Игрок появляется сразу за западными воротами, на главной улице. */
   const gy=[];for(let y=1;y<h-1;y++)if(g[y][1]==="G")gy.push(y);
   const ey=gy.length?gy[0]:Math.floor(h/2);
   entry={x:2,y:ey};
@@ -4711,8 +4871,52 @@ function genLevel(bx,by,depth,stype){
   for(let i=0;i<3;i++)place("T",110+i);
   if(depth>=2&&R(74)<0.8)place("A",120);   /* подземное святилище бога */
   if(depth>=3&&R(75)<0.5)place("W",121);
+  /* Подземный торг: старьёвщик у костра, контрабандист, скупщик руды.
+     Такие торгуют дороже городских, зато прямо на глубине. */
+  if(R(76)<(depth===1?0.5:0.72))place("P",122);
+  if(depth>=3&&R(77)<0.4)place("P",123);
  }
- const lvl={w,h,g,kind,depth,stype,entry:entry||{x:1,y:1},bx,by};
+ /* ── Ни одной отрезанной комнаты ──
+    Перегородки и коридоры иногда запирают угол здания: дверь одной комнаты
+    приходится ровно на стену другой. Слепому игроку такой тупик стоит долгих
+    блужданий, поэтому уровень проверяется целиком: от входа расходится волна,
+    и к каждому отрезанному куску пробивается ход — по кратчайшему пути через
+    стены, дверью там, где это стена дома. ── */
+ const e0=entry||{x:1,y:1};
+ const idx=(x,y)=>y*w+x;
+ for(let guard=0;guard<60;guard++){
+  const seen=new Uint8Array(w*h),q=[[e0.x,e0.y]];seen[idx(e0.x,e0.y)]=1;
+  while(q.length){const [x,y]=q.pop();
+   for(const [dx,dy] of [[0,1],[0,-1],[1,0],[-1,0]]){
+    const nx=x+dx,ny=y+dy;
+    if(nx<1||ny<1||nx>=w-1||ny>=h-1)continue;
+    if(g[ny][nx]==="#"||seen[idx(nx,ny)])continue;
+    seen[idx(nx,ny)]=1;q.push([nx,ny]);}}
+  let lost=null;
+  for(let y=1;y<h-1&&!lost;y++)for(let x=1;x<w-1;x++)
+   if(g[y][x]!=="#"&&!seen[idx(x,y)]){lost={x,y};break;}
+  if(!lost)break;
+  /* Кратчайший ход от отрезанной клетки к уже достижимой — сквозь стены. */
+  const prev=new Int32Array(w*h).fill(-1),vis=new Uint8Array(w*h);
+  const bq=[[lost.x,lost.y]];vis[idx(lost.x,lost.y)]=1;
+  let hit=null;
+  while(bq.length&&!hit){
+   const [x,y]=bq.shift();
+   for(const [dx,dy] of [[0,1],[0,-1],[1,0],[-1,0]]){
+    const nx=x+dx,ny=y+dy;
+    if(nx<1||ny<1||nx>=w-1||ny>=h-1)continue;
+    if(vis[idx(nx,ny)])continue;
+    vis[idx(nx,ny)]=1;prev[idx(nx,ny)]=idx(x,y);
+    if(seen[idx(nx,ny)]){hit=[nx,ny];break;}
+    bq.push([nx,ny]);}}
+  if(!hit)break;
+  let cur=idx(hit[0],hit[1]);
+  while(cur>=0){
+   const cx=cur%w,cy=(cur-cx)/w;
+   if(g[cy][cx]==="#")g[cy][cx]=kind==="city"?"+":".";
+   cur=prev[cur];}
+ }
+ const lvl={w,h,g,kind,depth,stype,entry:e0,bx,by};
  if(levelCache.size>40)levelCache.clear();
  levelCache.set(key,lvl);
  return lvl;
@@ -4746,6 +4950,7 @@ function enterPlace(c){
  safeFn(()=>beacon(kind==="city"?"city":kind==="dungeon"?"dungeon":"house",0,0));
  safeFn(()=>Music.start(kind==="dungeon"?"cave":"prologue"));
  safeFn(()=>bankUpdateAmbient());
+ safeFn(()=>Actors.ensure());
  journal(`Вход: ${c.structure.name}.`);
  narrate(`Вы вошли: ${placeTitle()}. ${describeHere(true)}`);
  pingSurroundings(3,3);
@@ -4756,6 +4961,7 @@ function enterPlace(c){
 function leavePlace(){
  if(!G.place)return false;
  const name=G.place.name;
+ safeFn(()=>Actors.stop());
  G.place=null;
  safeFn(()=>UI.close());
  const c=cellContent(G.x,G.y);
@@ -4776,6 +4982,7 @@ function changeDepth(delta){
  if(nd>0&&p.kind!=="dungeon")p.kind="dungeon";
  if(nd===0)p.kind=PLACE_KIND[p.stype]||"house";
  safeFn(()=>beacon(delta>0?"stairs_down":"stairs_up",0,0));
+ safeFn(()=>Actors.ensure());
  safeFn(()=>{if(nd>0)Music.start("cave");});
  safeFn(()=>bankUpdateAmbient());
  G.hour+=0.3;if(G.hour>=24){G.hour-=24;G.day++;}
@@ -4803,6 +5010,10 @@ function describeHere(full){
   const near=nearFeatures(4);
   if(near.length)parts.push("Рядом: "+near.slice(0,4).map(o=>`${o.name}, ${o.d} ${plural(o.d,"шаг","шага","шагов")}, ${o.dir}`).join("; ")+".");
  }
+ /* Живые важнее камня: их слышно первыми. */
+ const alive=safeFn(()=>Actors.near(full?6:3),[])||[];
+ if(alive.length)parts.push("Движение: "+alive.slice(0,3).map(o=>
+  `${o.a.name}, ${o.d} ${plural(o.d,"шаг","шага","шагов")}, ${o.dir||"вплотную"}`).join("; ")+".");
  return parts.join(" ");
 }
 function nearFeatures(rad){
@@ -4831,7 +5042,16 @@ function moveInside(dir){
  const lvl=curLevel();if(!lvl)return false;
  if(!DIRV[dir])return false;
  if(G.inCombat){narrate("Сначала завершите бой!");return false;}
- const p=G.place,nx=p.x+DIRV[dir][0],ny=p.y+DIRV[dir][1];
+ const p=G.place;
+ /* Подтверждение шагом: стоя на ступенях или в воротах, второй шаг в ту же
+    сторону уводит вниз, наверх или наружу — игрок спускается и поднимается
+    сам, ногами, а не командой из меню. */
+ if(p.arm&&p.arm.x===p.x&&p.arm.y===p.y&&p.arm.dir===dir){
+  const a=p.arm;p.arm=null;
+  if(a.t===">")return changeDepth(1);
+  if(a.t==="<")return p.depth>0?changeDepth(-1):leavePlace();
+  if(a.t==="G")return leavePlace();}
+ const nx=p.x+DIRV[dir][0],ny=p.y+DIRV[dir][1];
  const t=tileAt(lvl,nx,ny);
  if(t==="#"){safeFn(()=>beacon("wall",DIRV[dir][0],0));narrate(`Стена на ${DIRN[dir].split(",")[0]}е.`);return false;}
  if(t==="+"&&placeMark(nx,ny)!=="open"){
@@ -4842,7 +5062,7 @@ function moveInside(dir){
  if(t==="G"&&p.kind==="city"&&placeMark(nx,ny)!=="open"){
   setPlaceMark(nx,ny,"open");
   safeFn(()=>beacon("gate",DIRV[dir][0],0));
-  narrate("Городские ворота открыты. Шагните ещё раз: наружу или внутрь.");
+  narrate("Створки городских ворот разошлись. Шагните ещё раз в ту же сторону — встанете в воротах.");
   return false;}
  p.x=nx;p.y=ny;
  G.hour+=runState.active?0.06:0.09;
@@ -4852,14 +5072,168 @@ function moveInside(dir){
   if(Bank.enabled&&Bank.play("step_dirt",{seed:p.x*7+p.y*13+Math.floor(Math.random()*10),gain:0.5,maxSec:0.9}))return;
   const s=new SFX();s.footstep(0,p.depth>0?"cave":"stone");setTimeout(()=>s.stop(0.15),330);});
  const cur=tileAt(lvl,p.x,p.y);
- if(cur==="G"&&p.kind==="city"){leavePlace();return true;}
  if(cur==="M"){startInsideCombat(p.x,p.y);return true;}
  if(cur!=="."&&tileBeacon(cur))safeFn(()=>beacon(tileBeacon(cur),0,0));
- narrate(describeHere(false),{interrupt:true});
+ /* Ступени и ворота под ногами: игрок стоит на них и решает сам. */
+ if(cur===">"||cur==="<"||cur==="G"){
+  p.arm={x:p.x,y:p.y,dir,t:cur};
+  const what=cur===">"?"Ступени уходят вниз":cur==="<"?(p.depth>0?"Ступени ведут наверх":"Порог наружу"):"Вы в городских воротах";
+  const act=cur===">"?"спуститесь на уровень ниже":cur==="<"?(p.depth>0?"подниметесь выше":"выйдете наружу"):"выйдете за стену";
+  narrate(`${what}. Шагните ещё раз на ${DIRN[dir].split(",")[0]} — ${act}.`,{interrupt:true});
+ }else{
+  p.arm=null;
+  narrate(describeHere(false),{interrupt:true});}
  pingSurroundings(2,2);
+ safeFn(()=>{Actors.ensure();Actors.tick();});
  refresh();
  safeFn(()=>maybeEvent("step"));
  return true;
+}
+
+/* ════════════════════════════════════════════════════════════════════════
+   ЖИВОЙ МИР: ДВИЖЕНИЕ СТРАЖИ, ЖИТЕЛЕЙ И ТВАРЕЙ
+   Раньше внутри стен и под землёй всё стояло на месте: пока игрок не шёл,
+   мир молчал. Теперь по улицам ходит стража и горожане, а в подземельях
+   бродят твари — каждый своим шагом, со своим звуком и своей стороной.
+   Слышно их панорамой: шаги справа, рычание за спиной, оклик патруля рядом.
+   Всё это живёт, пока игрок внутри; снаружи — дозоры у стен поселений.
+   ════════════════════════════════════════════════════════════════════════ */
+const ACTOR_WALK=new Set([".","+","T","W"]);
+const GUARD_LINES=["Ходи да оглядывайся.","Порядок на улицах — моя забота.","Ночью держись освещённых улиц.",
+ "Проходи, не задерживайся у ворот.","Слышал шум у дальнего квартала? Проверю."];
+const FOLK_LINES=["Доброго пути.","Опять подорожало зерно.","К вечеру обещали дождь.",
+ "У колодца сегодня очередь.","Слыхал, обоз пришёл с востока."];
+const Actors={
+ key:null,list:[],iv:null,lastSay:0,
+ stop(){if(this.iv){clearInterval(this.iv);this.iv=null;}this.key=null;this.list=[];},
+ /* Набор жителей уровня выводится из тех же чисел, что и сам уровень. */
+ ensure(){
+  if(!G.place){this.stop();return;}
+  const k=placeKey(G.place.bx,G.place.by,G.place.depth);
+  if(k===this.key&&this.iv)return;
+  this.spawn(k);},
+ free(lvl,x,y){
+  if(x<1||y<1||x>=lvl.w-1||y>=lvl.h-1)return false;
+  return ACTOR_WALK.has(tileAt(lvl,x,y));},
+ spawn(k){
+  const lvl=curLevel();if(!lvl)return;
+  if(this.iv){clearInterval(this.iv);this.iv=null;}
+  this.key=k;this.list=[];
+  const p=G.place,R=i=>H(p.bx*13+i*7,p.by*19+p.depth*11,930+i);
+  const spots=[];
+  for(let y=1;y<lvl.h-1;y++)for(let x=1;x<lvl.w-1;x++)if(this.free(lvl,x,y))spots.push({x,y});
+  if(!spots.length)return;
+  const take=i=>spots[Math.floor(R(i)*spots.length)];
+  if(p.depth>0){
+   /* Подземелье: бродячие твари того же уровня, что и логова вокруг. */
+   const n=2+Math.floor(R(1)*2)+Math.floor(p.depth/2);
+   for(let i=0;i<n;i++){
+    const sp=take(10+i);if(!sp)continue;
+    const pool=MONSTERS.filter(m=>m.biomes.includes("cave"));
+    const m0=(pool.length?pool:MONSTERS)[Math.floor(R(20+i)*(pool.length||MONSTERS.length))];
+    this.list.push({id:i,kind:"mob",x:sp.x,y:sp.y,m:m0,name:m0.n,seen:false});}
+  }else{
+   /* Город и дом: стража на обходе и горожане по своим делам. */
+   const guards=p.kind==="city"?2+Math.floor(R(2)*3):1;
+   const folk=p.kind==="city"?2+Math.floor(R(3)*3):1;
+   for(let i=0;i<guards;i++){const sp=take(30+i);if(!sp)continue;
+    this.list.push({id:i,kind:"guard",x:sp.x,y:sp.y,name:"Стражник",seen:false});}
+   for(let i=0;i<folk;i++){const sp=take(50+i);if(!sp)continue;
+    this.list.push({id:100+i,kind:"folk",x:sp.x,y:sp.y,name:"Горожанин",seen:false});}}
+  this.iv=setInterval(()=>safeFn(()=>Actors.tick()),1500);},
+ /* Один ход всех живых: шаг, звук, встреча. */
+ tick(){
+  if(!G.place){this.stop();return;}
+  /* Пока открыто окно, идёт бой или игра свёрнута — мир замирает: лишние
+     шаги за спиной только сбивают, когда слушаешь меню. */
+  if(G.inCombat||activeLayer())return;
+  if(typeof document!=="undefined"&&document.hidden)return;
+  const lvl=curLevel();if(!lvl)return;
+  const p=G.place;
+  let nearest=null;
+  for(const a of this.list){
+   const d0=Math.max(Math.abs(a.x-p.x),Math.abs(a.y-p.y));
+   /* Твари идут на игрока, если чуют; стража и горожане ходят своими путями. */
+   let dx=0,dy=0;
+   if(a.kind==="mob"&&d0<=7){dx=Math.sign(p.x-a.x);dy=Math.sign(p.y-a.y);
+    if(dx&&dy){if(Math.random()<0.5)dy=0;else dx=0;}}
+   else{const dirs=[[1,0],[-1,0],[0,1],[0,-1]];
+    const d=dirs[Math.floor(Math.random()*4)];dx=d[0];dy=d[1];}
+   if(this.free(lvl,a.x+dx,a.y+dy)){a.x+=dx;a.y+=dy;}
+   const d=Math.max(Math.abs(a.x-p.x),Math.abs(a.y-p.y));
+   if(!nearest||d<nearest.d)nearest={a,d};
+   if(a.kind==="mob"&&d===0){this.attack(a);return;}}
+  if(nearest&&nearest.d<=8)this.sound(nearest.a,nearest.d);
+  if(nearest&&nearest.d<=2&&Date.now()-this.lastSay>7000){
+   this.lastSay=Date.now();
+   const a=nearest.a,dir=dirBetween(a.x-p.x,a.y-p.y)||"вплотную";
+   if(a.kind==="mob")narrate(`Рядом кто-то движется: ${a.name}, ${nearest.d} ${plural(nearest.d,"шаг","шага","шагов")}, ${dir}.`,{interrupt:false});
+   else if(a.kind==="guard")narrate(`Стража проходит мимо, ${dir}: «${GUARD_LINES[Math.floor(Math.random()*GUARD_LINES.length)]}»`,{interrupt:false});
+   else narrate(`Горожанин рядом, ${dir}: «${FOLK_LINES[Math.floor(Math.random()*FOLK_LINES.length)]}»`,{interrupt:false});}},
+ /* Шаг живого слышен со своей стороны и со своей громкости. */
+ sound(a,d){
+  if(!settings.effects)return;
+  const p=G.place,pan=Math.max(-1,Math.min(1,(a.x-p.x)/4)),gain=Math.max(0.12,0.75-d*0.08);
+  if(Math.random()>0.6)return;
+  try{
+   if(Bank.enabled&&Bank.canPan()){
+    if(a.kind==="mob"){
+     const v=MONSTER_VOICE[a.m&&a.m.id],set=v&&MONSTER_BANK[v];
+     const f=(set&&(set.step||set.emerge))||"nat/gurgle_01.flac";
+     if(Bank.panned(f,{pan,gain}))return;}
+    else if(Bank.panned("nat/step_soft_0"+(1+(a.id%3))+".flac",{pan,gain}))return;}
+  }catch(_){}
+  beacon(a.kind==="mob"?"npc_common":"npc_guard",pan,d);},
+ /* Тварь дошла до игрока — начинается бой прямо там, где стоят оба. */
+ attack(a){
+  this.list=this.list.filter(o=>o!==a);
+  const p=G.place;
+  const lvlNo=Math.max(1,G.level+p.depth-1);
+  const m={...a.m,lvl:lvlNo,hp:22+lvlNo*9,dmg:4+lvlNo*2,xp:20+lvlNo*12,gold:8+lvlNo*5};
+  safeFn(()=>{Bank.play("danger",{seed:p.x+p.y,gain:0.8,maxSec:4});vib([50,40,50]);});
+  narrate(`${a.name} настиг вас в темноте!`,{interrupt:true});
+  startCombat({x:G.x,y:G.y,monster:m});},
+ /* Кто из живых рядом — для описания места и эхо-скана. */
+ near(rad){
+  if(!G.place)return [];
+  const p=G.place;
+  return this.list.map(a=>({a,d:Math.max(Math.abs(a.x-p.x),Math.abs(a.y-p.y)),
+   dir:dirBetween(a.x-p.x,a.y-p.y)}))
+   .filter(o=>o.d<=rad).sort((x,y)=>x.d-y.d);}
+};
+/* ── Зверьё в глуши: кто-то ходит рядом, но пока не нападает ── */
+function maybeWildlife(c){
+ if(G.place||G.ship||G.inCombat||activeLayer())return;
+ if(!c||c.structure)return;
+ const night=isNight();
+ if(Math.random()>(night?0.09:0.05))return;
+ const cand=MONSTERS.filter(m=>m.biomes.includes(c.terrain[0]));
+ if(!cand.length)return;
+ const m=cand[Math.floor(Math.random()*cand.length)];
+ const pan=Math.random()*2-1,d=2+Math.floor(Math.random()*4);
+ safeFn(()=>{
+  if(!settings.effects)return;
+  const v=MONSTER_VOICE[m.id],set=v&&MONSTER_BANK[v];
+  const f=(set&&(set.step||set.emerge))||"nat/step_soft_03.flac";
+  if(Bank.enabled&&Bank.canPan()&&Bank.panned(f,{pan,gain:Math.max(0.2,0.7-d*0.08)}))return;
+  beacon("npc_common",pan,d);});
+ narrate(`${night?"В темноте":"В стороне"} кто-то движется: похоже на «${m.n}», ${dirBetween(Math.round(pan),0)||"рядом"}, шагах в ${d}.`,{interrupt:false});
+}
+/* ── Дозоры снаружи: стража поселений ходит по дорогам вокруг стен ── */
+function maybeGuardPatrol(){
+ if(G.place||G.ship||G.inCombat||activeLayer())return;
+ const near=findCities(G.x,G.y,6,3).filter(c=>c.d<=5);
+ if(!near.length)return;
+ if(Math.random()>0.12)return;
+ const c=near[0],pan=Math.max(-1,Math.min(1,(c.x-G.x)/4));
+ safeFn(()=>{
+  if(Bank.enabled&&Bank.canPan()&&Bank.panned("nat/step_soft_02.flac",{pan,gain:0.6}))return;
+  beacon("npc_guard",pan,c.d);});
+ const dir=dirBetween(c.x-G.x,c.y-G.y)||"рядом";
+ if(isNight())
+  narrate(`Ночной дозор «${c.name}» идёт с фонарём, ${dir}. «Поздно бродишь. Назови себя или ступай своей дорогой.»`,{interrupt:false});
+ else
+  narrate(`Дозор «${c.name}»: стражники идут вдоль дороги, ${dir}. «${GUARD_LINES[Math.floor(Math.random()*GUARD_LINES.length)]}»`,{interrupt:false});
 }
 /* ── Бой в подземелье: логово превращается в противника этого уровня ── */
 function startInsideCombat(x,y){
@@ -4893,7 +5267,7 @@ function useHere(){
   case "C":return openChest(p.x,p.y);
   case "R":return mineVein(p.x,p.y);
   case "A":return useAltar(p.x,p.y);
-  case "S":case "F":case "N":return talkInside(t,p.x,p.y);
+  case "S":case "F":case "N":case "P":case "B":return talkInside(t,p.x,p.y);
   case "W":{G.water=Math.min(200,(Number(G.water)||0)+40);safeFn(()=>beacon("well",0,0));
    narrate("Вы набрали воды из колодца. Запас воды пополнен.");refresh();saveGame(true);return true;}
   case "T":{safeFn(()=>beacon("torch",0,0));narrate("Настенный факел. Он потрескивает и служит ориентиром.");return true;}
@@ -4980,13 +5354,23 @@ function useAltar(x,y){
 /* ── Житель, лавка или горн внутри постройки ── */
 function talkInside(t,x,y){
  const p=G.place;
- const profForced=t==="S"?"Торговец":t==="F"?"Кузнец":null;
- safeFn(()=>Bank.play(t==="S"?"market":t==="F"?"forge":"tavern",{seed:x+y,gain:0.55,maxSec:6}));
+ /* Лавка, горн, житель, подземный торговец и пост стражи — каждый со своим
+    ремеслом. Торговцы в подземелье такие же настоящие, как городские:
+    у них свой запас, свои цены и свой разговор. */
+ const profForced=t==="S"?"Торговец":t==="F"?"Кузнец":t==="P"?"Торговец":t==="B"?"Стражник":null;
+ const role=t==="S"?"market":t==="F"?"forge":t==="P"?"shop_till":t==="B"?"step_soft":"tavern";
+ safeFn(()=>Bank.play(role,{seed:x+y,gain:0.55,maxSec:6}));
  const npc=getNPC(p.bx,p.by,(x+y)%3,profForced);
- safeFn(()=>beacon(t==="S"?"market":t==="F"?"forge":"npc_common",0,0));
+ safeFn(()=>beacon(t==="S"?"market":t==="F"?"forge":t==="P"?"trader_deep":t==="B"?"npc_guard":"npc_common",0,0));
+ if(t==="P"&&p.depth>0)narrate(`У стены горит маленький костёр: ${DEEP_TRADER[Math.floor(H(p.bx+x,p.by+y,940)*DEEP_TRADER.length)]}. Здесь торгуют прямо на глубине — дорого, зато не надо подниматься наверх.`,{interrupt:false});
+ if(t==="B")narrate("Пост стражи: двое у жаровни, копья прислонены к стене.",{interrupt:false});
  openNPC(npc.key);
  return true;
 }
+/* Кто держит торг под землёй. */
+const DEEP_TRADER=["старьёвщик с мешком чужих находок","контрабандист из вольного города",
+ "скупщик руды с весами на коленях","отшельник, что менял хлеб на кости уже двадцать лет",
+ "гном-оценщик с лупой из горного стекла","бывший каторжник, торгующий верёвкой и факелами"];
 /* ════════ ДВИЖЕНИЕ ════════ */
 const DIRN={N:"север, вперёд",S:"юг, назад",W:"запад, влево",E:"восток, вправо"};
 const DIRV={N:[0,-1],S:[0,1],W:[-1,0],E:[1,0]};
@@ -5000,6 +5384,13 @@ function move(dir){
  /* Внутри здания, города или подземелья ходьба идёт по клеткам уровня. */
  if(G.place)return moveInside(dir);
  if(G.inCombat){narrate("Сначала завершите бой!");return;}
+ /* Вход своим ходом: игрок стоит у ворот или двери и делает ещё один шаг в
+    ту же сторону — тогда он входит сам, а не через меню. Случайно пройти
+    мимо нельзя, и случайно ввалиться внутрь на бегу тоже. */
+ if(G.atDoor&&G.atDoor.x===G.x&&G.atDoor.y===G.y&&G.atDoor.dir===dir){
+  const cd=cellContent(G.x,G.y);
+  G.atDoor=null;
+  if(cd.structure&&PLACE_KIND[cd.structure.type]){stopRun();return enterPlace(cd);}}
  const oldX=G.x,oldY=G.y;
  G.x=Math.max(0,Math.min(WORLD-1,G.x+DIRV[dir][0]));
  G.y=Math.max(0,Math.min(WORLD-1,G.y+DIRV[dir][1]));
@@ -5075,6 +5466,18 @@ function arrive(dir){
  if(c.structure){structureDoorSfx(c.structure.beacon);beacon(c.structure.beacon,0,0);}
  else if(c.res){const d=G.depleted[G.x+","+G.y];
   if(!d||d.left>0)beacon(c.res.beacon,0,0);}
+ /* У построек со входом игрок останавливается на пороге: следующий шаг в ту
+    же сторону вводит его внутрь. Это и есть «войти самому». */
+ if(c.structure&&PLACE_KIND[c.structure.type]){
+  G.atDoor={x:G.x,y:G.y,dir};
+  stopRun();
+  safeFn(()=>beacon(PLACE_KIND[c.structure.type]==="dungeon"?"stairs_down":"door",0,0));
+  narrate(`${c.structure.name}: вы у входа. Шагните ещё раз на ${DIRN[dir].split(",")[0]} — войдёте внутрь.`,{interrupt:false});
+ }else G.atDoor=null;
+ /* Дозор у стен поселения: стража ходит своими путями и попадается навстречу.
+    В глуши в это же время слышно, как ходит зверьё. */
+ safeFn(()=>maybeGuardPatrol());
+ safeFn(()=>maybeWildlife(c));
  scanNearbyBeacons();refresh();
  for(const q of G.quests)if(q.type==="visit"&&!q.doneFlag&&q.tx===G.x&&q.ty===G.y){
   q.doneFlag=true;narrate("Квестовая отметка достигнута! Вернитесь к заказчику и завершите квест.");}
@@ -5211,7 +5614,23 @@ function playMonsterSound(m){try{
  if(m&&["goblin","bandit"].includes(m.id)&&Math.random()<0.6&&Bank.play("goblin_voice",{seed:Date.now(),gain:0.8}))return null;
  if(m&&["dragon","wyvern"].includes(m.id)&&Math.random()<0.6&&Bank.play("dragon_growl",{seed:Date.now(),gain:0.8}))return null;
  AE.ensure();if(!AE.ctx)return null;const s=new SFX();const map={wolf:'wolfCall',goblin:'goblinCall',troll:'trollCall',ogre:'ogreCall',dragon:'dragonRoar',harpy:'harpyScreech',spider:'hiss',serpent:'serpentHiss',wraith:'wail',golem:'golemCall',wyvern:'wyvernCall',direbear:'direBearGrowl',sandworm:'sandwormCall',treant:'treantCall',kraken:'krakenCall',bandit:'banditShout'};const fn=map[m?.id]||m?.fx||'growl';if(typeof s[fn]==='function')s[fn]();else s.growl();setTimeout(()=>{try{s.stop(.3);}catch(e){}},3600);return s;}catch(e){try{console.warn('[MonsterSFX]',m?.id,e);}catch(_){}return null;}}
-function playWeaponCombatSfx(hit,dir="N",dmg=6){try{AE.ensure();const s=new SFX();
+/* Живая запись со стороны удара: если она звучит, синтез для этого звука
+   не нужен. Возвращает true, когда запись пошла. */
+function natShot(role,pan=0,gain=0.8){
+ try{
+  if(!settings.effects||!Bank.enabled)return false;
+  const f=Bank.pick(role,Math.floor(Math.random()*97));
+  if(!f)return false;
+  if(Bank.canPan()&&Bank.panned(f,{pan,gain}))return true;
+  return !!Bank.play(role,{seed:Math.floor(Math.random()*97),gain,maxSec:5});
+ }catch(_){return false;}}
+function playWeaponCombatSfx(hit,dir="N",dmg=6){try{AE.ensure();
+ /* Взмах и попадание — настоящими записями; синтез остаётся, если банка нет. */
+ const pan=dir==="E"?0.35:dir==="W"?-0.35:0;
+ const natSwing=natShot("swing",pan,0.7);
+ const natHit=hit&&natShot((Number(dmg)||6)>=12?"hit_heavy":"hit_light",pan,0.85);
+ if(natSwing&&(!hit||natHit))return;
+ const s=new SFX();
  const w=G.equip&&G.equip.weapon;const wt=w&&w.type;
  const SWING_REAL={"Меч":"sword_attack","Лук":"bow_attack"};
  const rid=SWING_REAL[wt];
@@ -5220,7 +5639,9 @@ function playWeaponCombatSfx(hit,dir="N",dmg=6){try{AE.ensure();const s=new SFX(
  if(hit){const heavy=Math.max(0.55,Math.min(1.6,0.55+(Number(dmg)||6)/16));
   s.after(140+Math.random()*20,()=>s.impactFlesh(dir==="E"?0.35:dir==="W"?-0.35:0,heavy,wt));}
  setTimeout(()=>{try{s.stop(.2);}catch(e){}},1100);}catch(e){}}
-function playWoundSfx(dmg=6){try{AE.ensure();const s=new SFX();const heavy=Math.max(0.6,Math.min(1.5,0.6+(Number(dmg)||6)/14));s.wound(heavy);setTimeout(()=>{try{s.stop(.2);}catch(e){}},650);}catch(e){}}
+function playWoundSfx(dmg=6){try{AE.ensure();
+ safeFn(()=>natShot("hit_light",0,0.6));
+ const s=new SFX();const heavy=Math.max(0.6,Math.min(1.5,0.6+(Number(dmg)||6)/14));s.wound(heavy);setTimeout(()=>{try{s.stop(.2);}catch(e){}},650);}catch(e){}}
 function endCombat(){if(G.combat&&G.combat.monsterTimer)clearTimeout(G.combat.monsterTimer);G.inCombat=false;G.combat=null;
  const bar=document.getElementById("combatBar");if(bar)bar.hidden=true;
  const log=document.getElementById("cbLog");if(log)log.textContent="";}
@@ -5235,6 +5656,7 @@ function fight(a){const cb=G.combat;if(!cb)return;const m=cb.m;
   cbLog(crit?`Сокрушительный удар: −${dmg}!`:`Вы ударили: −${dmg}.`);}
  else if(a==="magic"){if(G.mana<8){narrate("Недостаточно маны. Нужно 8.");return;}
   G.mana-=8;const dmg=G.mind*2+G.level*2+Math.floor(Math.random()*6);cb.hp-=dmg;
+  safeFn(()=>{if(!natShot("magic_woosh",0,0.8))natShot("magic_shimmer",0,0.7);});
   Play.start("ev","magic",{dur:3});cbLog(`Магия: −${dmg}.`);}
  else if(a==="potion"){if(G.water<20){narrate("Нет воды для зелья.");return;}
   G.water-=20;G.hp=Math.min(G.hpMax,G.hp+15);UI.drink();cbLog("Зелье: +15 здоровья.");}
@@ -5288,6 +5710,8 @@ function questMonsterProgress(monster){
 }
 function victory(){const cb=G.combat,m=cb.m;
  safeFn(()=>playRealMonsterCue(m,"death",0.75));
+ /* Тяжёлый обвал в конце схватки: тварь падает по-настоящему. */
+ safeFn(()=>setTimeout(()=>safeFn(()=>natShot("boom",0,0.6)),260));
  safeFn(()=>{Bank.play("jingle_win",{gain:0.8});Bank.play("victory",{seed:G.level+(G.xp||0),gain:0.55,maxSec:8});});
  UI.fanfare();journal(`Побеждён «${m.n}» ${m.lvl} уровня.`);
  /* Логово в подземелье после победы пустеет и больше не нападает. */
@@ -5397,7 +5821,8 @@ function gatherCurrent(source="tap"){
 function findArtifact(){const ART=["Осколок Зари","Шёпот Ветра","Слеза Дракона","Сердце Бури","Песнь Грани"];
  const n=ART[Math.floor(Math.random()*ART.length)]+" "+(100+Math.random()*900|0);
  G.artifacts.push(n);G.manaMax+=5;G.mana=G.manaMax;
- UI.fanfare();safeFn(()=>{Bank.play("jingle_achievement",{gain:0.8});Bank.play("artifact",{seed:G.artifacts.length,gain:0.6,maxSec:9});});if(settings.effects)Play.start("ev","magic",{dur:6});
+ UI.fanfare();safeFn(()=>{Bank.play("jingle_achievement",{gain:0.8});Bank.play("artifact",{seed:G.artifacts.length,gain:0.6,maxSec:9});
+  Bank.play("artifact_hum",{seed:G.artifacts.length,gain:0.5,maxSec:8});});if(settings.effects)Play.start("ev","magic",{dur:6});
  sub("✨ Найден артефакт!");
  narrate(`Найден артефакт: ${n}. Максимальная мана +5.`);
  journal(`Артефакт: ${n}.`);refresh();}
@@ -5539,6 +5964,13 @@ const CMD={
  cast(i){castSpell(+i);},
  fight(a){if(a==="atk"||a==="magic"||a==="potion"||a==="flee")fight(a);},
  mapscan(){scanSpeak();},
+ signread(){
+  /* Столб с указателем на перекрёстке читается вслух целиком. */
+  const ways=signpostAt(G.x,G.y);
+  safeFn(()=>beacon("signpost",0,0));
+  narrate(ways.length
+   ?`Указатель на перекрёстке. ${ways.map(w=>`${w.name} — ${w.dir}, ${w.d} ${plural(w.d,"шаг","шага","шагов")}`).join(". ")}.`
+   :"Доски указателя пусты: ближних селений отсюда не видно.");},
  maplegend(){narrate("Легенда: вы — компас в центре. Замок, деревня — дома, таверна — кружка, кузница — молот, храм, школа, кланхолл — щит, башня, руины, странник. Ресурсы: дерево, камень, руда, травы, кристалл. Монстры — черепа. Каждая клетка озвучивает объект, направление и расстояние в шагах.");},
  mapcell(arg){const [dx,dy]=arg.split(",").map(Number);
   const x=G.x+dx,y=G.y+dy;
@@ -5631,6 +6063,15 @@ function openBuilding(c){const s=c.structure;
    `<button class="item" data-cmd="joinclan">🛡️ ${G.clan?`Вы в клане «${G.clan}»`:`Вступить в клан «${cl.n}»`}</button>`;}
  if(s.type==="tower"){
   html+=`<button class="item" data-cmd="svc:teachTower">🔮 Уроки магии</button>`;}
+ if(s.type==="crossroads"){
+  /* Указатель читает вслух, куда ведут дороги: имя, сторона света, расстояние. */
+  const ways=signpostAt(c.x,c.y);
+  safeFn(()=>beacon("signpost",0,0));
+  html+=`<h3>Доски указателя</h3>`;
+  html+=ways.length?ways.map(w=>`<div class="list-line" data-speak="${w.name}, ${w.dir}, ${w.d} ${plural(w.d,"шаг","шага","шагов")}">
+   ${iconFor(w.type)} <b>${w.name}</b> — ${w.dir}, ${w.d} ${plural(w.d,"шаг","шага","шагов")}</div>`).join("")
+   :`<div class="list-line">Доски сбиты и пусты: до ближних селений отсюда далеко.</div>`;
+  html+=`<button class="item" data-cmd="signread" data-speak="Прочитать указатель вслух целиком.">📖 Прочитать указатель</button>`;}
  if(s.type==="ruins"){
   html+=`<button class="item" data-cmd="searchruins">🔦 Обыскать руины</button>`;}
  /* Причал: рейсы к другим портам. */
@@ -5652,7 +6093,7 @@ function openBuilding(c){const s=c.structure;
  beacon(s.beacon,0,0);
  openModal("modal-building");
  narrate(`${s.name}. ${bldDesc(s.type)} Внутри ${npcs.length?npcs.length+" жителей":"никого нет"}. Меню услуг доступно кнопками.`);}
-function iconFor(t){return{castle:"🏰",village:"🏘️",tavern:"🍺",clanhall:"🛡️",tower:"🗼",ruins:"🏚️",temple:"⛩️",traveler:"🚶",cave_entrance:"🕳️",port:"⚓"}[t]||"🏠";}
+function iconFor(t){return{castle:"🏰",village:"🏘️",tavern:"🍺",clanhall:"🛡️",tower:"🗼",ruins:"🏚️",temple:"⛩️",traveler:"🚶",cave_entrance:"🕳️",port:"⚓",crossroads:"🛣️"}[t]||"🏠";}
 function bldDesc(t){return{castle:"Серые стены, штандарты империи, стража у ворот. За воротами — улицы, кварталы и спуск в подземелье.",
  cave_entrance:"Тёмный ход уходит вниз. Оттуда тянет холодом и слышно капли.",
  port:"Причалы, мокрое дерево, крики чаек и хлопки парусов. Отсюда уходят корабли в другие порты.",
@@ -5662,7 +6103,8 @@ function bldDesc(t){return{castle:"Серые стены, штандарты и�
  tower:"Винтовая лестница уходит в полумрак, пахнет травами и воском.",
  ruins:"Обломки древних стен. Что-то блестит в тени.",
  temple:"Тихий свет свечей и запах ладана.",
- traveler:"Усталый путник греется у маленького костра."}[t]||"";}
+ traveler:"Усталый путник греется у маленького костра.",
+ crossroads:"Два тракта сходятся крест-накрест. У обочины врыт столб с досками-указателями; ветер поворачивает их и они скрипят."}[t]||"";}
 function tavernService(s){const c=cellContent(G.x,G.y);
  if(s==="food"){if(G.gold<10){narrate("Не хватает золота. Нужно 10.");return;}
   G.gold-=10;G.hp=Math.min(G.hpMax,G.hp+15);UI.drink();
@@ -5861,8 +6303,14 @@ function sellResource(key,res,all){
  journal(`Продажа: ${res} ×${qty} за ${total} золота.`);
  saveGame(true);refresh();openNPC(key,true);}
 function stockFor(n){const out=[];
+ /* Под землёй торгуют тем, что нужно под землёй, и берут за это своё. */
+ const deep=!!(G.place&&G.place.depth>0);
  out.push({n:"Зелье здоровья",price:15});
  out.push({n:"Еда в дорогу",price:8});
+ if(deep){
+  out.push({n:"Факел",price:6});
+  out.push({n:"Верёвка",price:12});
+  out.push({n:"Зелье здоровья",price:15});}
  /* Город продаёт свой избыток по своей цене; вне города — то, что вывозит держава. */
  const idx=empireIndexAt(n.x,n.y),emp=EMPIRES[idx]||EMPIRES[0];
  const city=isCityAt(n.x,n.y);
@@ -5870,7 +6318,9 @@ function stockFor(n){const out=[];
   p.surplus.forEach(r=>{if(RESICON[r])out.push({n:r,res:true,price:citySellPrice(r,city,G.day)});});}
  else (emp.exports||[]).slice(0,2).forEach(r=>{if(RESICON[r])out.push({n:r,res:true,price:Math.max(2,Math.round(marketPrice(r,idx,G.day)*1.15))});});
  for(let k=0;k<3;k++)out.push({gear:genLoot(n.x,n.y,Math.floor(H(n.x,n.y,80+k)*9999),G.level+n.tier),price:0});
- const km=buyModifier(n);
+ /* Наверху цена своя, в подземелье — с надбавкой за глубину: сюда всё
+    приходится нести на себе. */
+ const km=buyModifier(n)*(deep?1.25+0.08*Math.max(0,(G.place.depth||1)-1):1);
  out.forEach(o=>{if(o.gear)o.price=Math.max(10,Math.round(o.gear.price*(1-n.tier*0.05)));
   o.price=Math.max(1,Math.round(o.price*km));});
  return out;}
@@ -6282,7 +6732,8 @@ function renderGestures(){
   "👉 Свайп — шаг: вверх север, вниз юг, влево запад, вправо восток. Внутри здания и подземелья тем же свайпом идёте по коридорам.",
   "🏃 Свайп и удержание пальца — бег в эту сторону. Отпустите палец — остановка.",
   "🎣 Во время поклёвки любое касание или свайп — <b>подсечка</b>: игра сама скажет «Клюёт!» и подаст звук, а у вас будет около двух секунд.",
-  "✋ Долгое касание (палец не двигается) — <b>действие здесь</b>: войти в дверь или ворота, спуститься по лестнице, открыть сундук, добыть жилу, помолиться у алтаря, заговорить с жителем, собрать добычу.",
+  "✋ Долгое касание (палец не двигается) — <b>действие здесь</b>: войти в дверь или ворота, спуститься по лестнице, открыть сундук, добыть жилу, помолиться у алтаря, заговорить с жителем или торговцем, собрать добычу.",
+  "🚪 <b>Вход своим ходом.</b> Дойдя до города, дома или пещеры, вы встаёте на пороге — игра говорит: «вы у входа». Шагните ещё раз в ту же сторону, и вы войдёте сами. Внутри так же: встали на ступени — шаг в ту же сторону спускает вас ниже или поднимает выше; встали в воротах — шаг наружу выводит из города. Меню действий по-прежнему работает, но ходить теперь можно ногами.",
   "↔️ Свайп в окнах и меню — перелистывание пунктов на один шаг, включая длинные списки народов и богов. Свайп между двумя касаниями отменяет начатую активацию, чтобы не сработало лишнее.",
   "<b>ДВА ПАЛЬЦА — места и меню</b>",
   "✌️ Касание двумя пальцами — открыть меню действий, где собраны все кнопки игры. Если окно уже открыто — закрыть его.",
@@ -6299,6 +6750,8 @@ function renderGestures(){
   "<b>ЗВУКИ ОРИЕНТИРОВАНИЯ</b>",
   "🔉 Внутри зданий и подземелий каждый объект звучит по-своему: стена — глухой удар, дверь — скрип петель, ворота — лязг цепи, лестница вниз — нисходящие ступени, лестница вверх — восходящие, сундук — звон монет, алтарь — храмовый аккорд, факел — потрескивание, колодец — капли.",
   "🎧 После каждого шага внутри ближайшие объекты сами подают голос слева или справа — по той стороне, где они стоят.",
+  "🚶 <b>Мир живёт.</b> По улицам ходит стража и горожане, в подземельях бродят твари: их шаги слышны с той стороны, где они идут, и становятся громче по мере приближения. Тварь, дошедшая до вас, нападает сама. Снаружи у стен поселений встречаются дозоры.",
+  "🛣️ <b>Дороги.</b> Большие тракты идут через весь мир, от каждого селения к ближнему тракту протоптан съезд. Там, где тракты пересекаются, стоит перекрёсток со столбом-указателем: он называет ближние города, сторону света и расстояние в шагах.",
   "⌨️ Клавиатура: стрелки — ходьба, Таб — перебор элементов, Энтер — действие, Эскейп — закрыть окно или побег из боя, Альт+S — тишина."].map(t=>`<div class="list-line">${t}</div>`).join("");}
 function renderMap(){
  const g=document.getElementById("mapGrid");g.innerHTML="";
