@@ -1,6 +1,6 @@
 # Натуральные записи (общественное достояние, CC0 1.0)
 
-Семьдесят девять записей в этой папке — живые, не синтезированные звуки:
+Сто шесть записей в этой папке — живые, не синтезированные звуки:
 удары, свисты клинка, двери, колокола, лавочный колокольчик, шаги,
 гулы подземелья, хор, органные аккорды, ворон, вода, магический шелест.
 
@@ -63,3 +63,23 @@ https://creativecommons.org/publicdomain/zero/1.0/
 | hit_snap_01..02 | резкий удар | sn_generic, sn_dub |
 | mystic_01..02 | мистический отзвук | guit_e_slide, guit_e_fifths |
 | tick_01..04 | отметки интерфейса | elec_flip, elec_tick, elec_plip, elec_twip |
+
+## Третья подборка (те же условия, CC0 1.0)
+
+| Файл | Роль в игре | Исходный сэмпл |
+|---|---|---|
+| pad_01..04 | атмосферный слой глубины и чар | tbd_pad_1..4 |
+| pad_bed_01 | подложка события | tbd_fxbed_loop |
+| voice_far_01 | далёкий голос в темноте | tbd_voctone |
+| shine_01 | блик находки | tbd_highkey_c4 |
+| curse_04..06 | порча, сглаз, наваждение | glitch_perc2, glitch_perc4, glitch_robot2 |
+| signal_01..02 | сигнал древнего механизма | mehackit_phone1..2 |
+| weird_01..02 | морок, чужое место | loop_weirdo, loop_compus |
+| dread_04..05 | предчувствие, провал | bass_voxy_hit_c, elec_fuzz_tom |
+| bell_field_01 | било в поле, тревога у стен | drum_cowbell |
+| clink_04..05 | мелочь, застёжка, ключ | hat_gump, hat_sci |
+| clash_04..05 | скользящий звон стали | ride_tri, ride_via |
+| hit_snap_03..04 | резкий удар | sn_zome, elec_hi_snare |
+| step_stone_05..06 | шаги по камню | tabla_ghe5, tabla_tun1 |
+| gurgle_02 | утробный звук твари | misc_burp |
+| blip_06 | отметка | elec_blup |
