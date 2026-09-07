@@ -153,6 +153,9 @@ h3{color:var(--acc2);margin:14px 0 6px;font-size:1.05rem;}
   <span id="testStatus" role="status" aria-live="polite" style="color:var(--ok);font-weight:700;align-self:center;"></span>
  </div>
  <div id="soundGrid" class="grid"></div>
+ <h3>🎼 Записи звукового банка</h3>
+ <p class="hint" id="bankHint">Отдельная коллекция записей, разложенная по ролям: море и корабли, земли, глубина подземелий, школы магии, боги, события и места. Двойное касание карточки — прослушать.</p>
+ <div id="bankGrid" class="grid"></div>
  <h3>📡 Все звуковые маяки</h3>
  <p class="hint">Маяки помогают определить тип объекта и его направление. Нажмите «Прослушать», чтобы услышать пример.</p>
  <div id="beaconGrid" class="grid"></div>
@@ -194,6 +197,12 @@ h3{color:var(--acc2);margin:14px 0 6px;font-size:1.05rem;}
  <h3>📰 Последние события</h3><div id="wNews"></div>
 </div></div>
 
+<!-- ПРИЧАЛ: КОРАБЛИ И РЕЙСЫ -->
+<div class="modal" id="modal-harbor" role="dialog" aria-modal="true" aria-label="Причал" hidden><div class="sheet">
+ <header><h2 id="harborTitle">⚓ Причал</h2><button type="button" data-cmd="close">✖️ Отойти</button></header>
+ <div id="harborBody"></div>
+</div></div>
+
 <!-- ВСТРЕЧА С КАРАВАНОМ -->
 <div class="modal" id="modal-caravan" role="dialog" aria-modal="true" aria-label="Караван" hidden><div class="sheet">
  <header><h2 id="caravanTitle">🐫 Караван</h2><button type="button" data-cmd="close">✖️ Пропустить</button></header>
@@ -206,6 +215,7 @@ h3{color:var(--acc2);margin:14px 0 6px;font-size:1.05rem;}
  <p class="hint" id="tradeHint"></p>
  <h3>🏙️ Города поблизости</h3><div id="tradeCities"></div>
  <h3>🧭 Куда что везти</h3><div id="tradeRoutes"></div>
+ <h3>⚓ Порты и морские рейсы</h3><div id="tradePorts"></div>
  <h3>🐫 Обозы в пути</h3><div id="tradeCaravans"></div>
 </div></div>
 
@@ -476,7 +486,8 @@ const AE={ctx:null,master:null,fx:null,musicBus:null,dry:null,convolver:null,cac
   this.applyVolumes();return this.ctx;},
  applyVolumes(){if(!this.ctx)return;
   this.fx.gain.setTargetAtTime(settings.effects?settings.fxVol:0,this.ctx.currentTime,0.05);
-  this.musicBus.gain.setTargetAtTime(settings.music?settings.musicVol:0,this.ctx.currentTime,0.05);},
+  this.musicBus.gain.setTargetAtTime(settings.music?settings.musicVol:0,this.ctx.currentTime,0.05);
+  try{if(typeof Bank!=="undefined")Bank.refresh();}catch(_){}},
  impulse(sec,decay){const rate=this.ctx.sampleRate,len=rate*sec,buf=this.ctx.createBuffer(2,len,rate);
   for(let c=0;c<2;c++){const d=buf.getChannelData(c);for(let i=0;i<len;i++)d[i]=(Math.random()*2-1)*Math.pow(1-i/len,decay);}return buf;},
  getNoise(type,sec=2){const key=type+sec;if(sec>=1&&this.cache[key])return this.cache[key];
@@ -1410,6 +1421,21 @@ const BEACONS={
   s.clang(200);s.after(230,()=>s.clang(240));},
  throne:s=>{ /* тронный зал: фанфара из двух нот */
   s.note(392,0,0.3,"sawtooth",0.08);s.note(523,0.22,0.5,"sawtooth",0.08);},
+ port:s=>{ /* порт: удар волны о причал, снасти и корабельный колокол */
+  const t=s.ctx.currentTime,n=s.noise("brown",1.1,true),f=s.filter("lowpass",700,1),g=s.gain(0);
+  n.connect(f);f.connect(g);g.connect(s.out());s.send(g,0.7);
+  g.gain.setValueAtTime(0.0001,t);g.gain.linearRampToValueAtTime(0.09,t+0.25);g.gain.exponentialRampToValueAtTime(0.0001,t+1.1);
+  n.start(t);n.stop(t+1.2);
+  s.after(260,()=>s.note(880,0,0.5,"sine",0.08));s.after(520,()=>s.tink());},
+ ship:s=>{ /* судно: скрип корпуса и хлопок паруса */
+  const t=s.ctx.currentTime,o=s.osc("sawtooth",180),f=s.filter("bandpass",700,5),g=s.gain(0);
+  o.connect(f);f.connect(g);g.connect(s.out());s.send(g,0.5);
+  o.frequency.setValueAtTime(150,t);o.frequency.linearRampToValueAtTime(230,t+0.45);
+  g.gain.setValueAtTime(0.0001,t);g.gain.linearRampToValueAtTime(0.06,t+0.08);g.gain.exponentialRampToValueAtTime(0.0001,t+0.5);
+  o.start(t);o.stop(t+0.55);
+  s.after(520,()=>{const n=s.noise("white",0.3,false),f2=s.filter("bandpass",1400,1.5),g2=s.gain(0);
+   n.connect(f2);f2.connect(g2);g2.connect(s.out());const t2=s.ctx.currentTime;
+   g2.gain.setValueAtTime(0.0001,t2);g2.gain.linearRampToValueAtTime(0.07,t2+0.05);g2.gain.exponentialRampToValueAtTime(0.0001,t2+0.3);n.start(t2);});},
  caravan:s=>{ /* обоз: скрип колёс, бубенцы упряжи и шаг животных */
   s.thump(-0.2,0.2);s.after(150,()=>s.tink());s.after(240,()=>s.tink());
   const t=s.ctx.currentTime,o=s.osc("triangle",150),f=s.filter("lowpass",600,1),g=s.gain(0);
@@ -1443,8 +1469,33 @@ function beacon(id,pan=0,dist=0){if(!settings.effects)return;AE.ensure();
 
 const BEACON_INFO={
  castle:["Замок","Крепость или резиденция правителя"], village:["Деревня","Небольшое поселение"], tavern:["Таверна","Таверна или постоялый двор"], forge:["Кузница","Кузница и работа кузнеца"], temple:["Храм","Святилище"], market:["Рынок","Торговая площадь"], school:["Школа","Школа магии или знаний"], clanhall:["Кланхолл","Дом или зал клана"], tower:["Башня","Башня мага или дозорная башня"], ruins:["Руины","Заброшенное строение"], traveler:["Путник","Странствующий на дороге"], res_tree:["Дерево","Природный ресурс: дерево"], res_stone:["Камень","Природный ресурс: камень"], res_ore:["Руда","Рудная жила"], res_herbs:["Травы","Лекарственные растения"], res_crystal:["Кристалл","Магический кристалл"], res_shell:["Ракушки","Природный ресурс: побережье"], res_bone:["Кости","Природный ресурс: останки"], res_berry:["Ягоды","Природный ресурс: ягодник"], npc_ruler:["Правитель","Маяк правителя"], npc_guard:["Стражник","Маяк стражника"], npc_merchant:["Торговец","Маяк торговца"], npc_scholar:["Учёный","Маяк учёного"], npc_bartender:["Трактирщик","Маяк трактирщика"], npc_common:["Житель","Обычный житель"], npc_elder:["Старейшина","Маяк старейшины"], npc_farmer:["Крестьянин","Маяк крестьянина"], npc_healer:["Целитель","Маяк целителя"], npc_clanlead:["Глава клана","Маяк главы клана"], npc_warrior:["Воин клана","Маяк воина клана"], npc_apprentice:["Ученик мага","Маяк ученика-заклинателя"], npc_traveler:["Странник","Маяк странствующего NPC"], portal:["Портал","Магический портал"],
- door:["Дверь","Дверь здания или комнаты: скрип петель"], gate:["Ворота","Городские ворота: лязг цепи и засова"], stairs_down:["Лестница вниз","Ступени, ведущие на нижний уровень"], stairs_up:["Лестница вверх","Ступени наверх или выход наружу"], chest:["Сундук","Запертый сундук с добычей"], altar:["Алтарь","Алтарь бога в святилище или подземелье"], torch:["Факел","Настенный факел — ориентир в темноте"], well:["Колодец","Колодец или источник воды"], city:["Город","Городская площадь: гул голосов и колокол"], dungeon:["Подземелье","Гул камня и капли в глубине"], wall:["Стена","Тупик: глухой удар в камень"], house:["Дом","Жилой дом внутри поселения"], barracks:["Казарма","Оружейные стойки и стража"], throne:["Тронный зал","Зал правителя"], caravan:["Караван","Обоз в пути: колёса, бубенцы и шаг животных"], cave_entrance:["Вход в пещеру","Тяга воздуха и эхо подземелья"]
+ door:["Дверь","Дверь здания или комнаты: скрип петель"], gate:["Ворота","Городские ворота: лязг цепи и засова"], stairs_down:["Лестница вниз","Ступени, ведущие на нижний уровень"], stairs_up:["Лестница вверх","Ступени наверх или выход наружу"], chest:["Сундук","Запертый сундук с добычей"], altar:["Алтарь","Алтарь бога в святилище или подземелье"], torch:["Факел","Настенный факел — ориентир в темноте"], well:["Колодец","Колодец или источник воды"], city:["Город","Городская площадь: гул голосов и колокол"], dungeon:["Подземелье","Гул камня и капли в глубине"], wall:["Стена","Тупик: глухой удар в камень"], house:["Дом","Жилой дом внутри поселения"], barracks:["Казарма","Оружейные стойки и стража"], throne:["Тронный зал","Зал правителя"], caravan:["Караван","Обоз в пути: колёса, бубенцы и шаг животных"],
+ port:["Порт","Причалы: волна о доски, снасти и корабельный колокол"],
+ ship:["Корабль","Судно: скрип корпуса и хлопок паруса"], cave_entrance:["Вход в пещеру","Тяга воздуха и эхо подземелья"]
 };
+/* Карточки записей банка: по одной на роль, с описанием и числом вариантов. */
+const BANK_CATS={sea:"🌊 Море, порты и корабли",ambience:"🌍 Земли и погода",dungeon:"🕳️ Подземелья по глубине",
+ magic:"✨ Школы магии",gods:"🕯️ Боги, алтари и знамения",events:"⚡ События",places:"🏛️ Места и ремёсла"};
+function buildBankGrid(){
+ const grid=document.getElementById("bankGrid");if(!grid)return;grid.innerHTML="";
+ const hint=document.getElementById("bankHint");
+ const total=Object.values(SOUND_BANK).reduce((n,b)=>n+b.f.length,0);
+ if(hint)hint.textContent=`Коллекция из ${total} записей в ${Object.keys(SOUND_BANK).length} ролях: море и корабли, земли, глубина подземелий, школы магии, боги, события и места. Двойное касание карточки — прослушать. Если папки со звуками рядом нет, игра звучит синтезированными маяками.`;
+ Object.keys(BANK_CATS).forEach(cat=>{
+  const roles=Object.keys(SOUND_BANK).filter(r=>(SOUND_BANK[r].f[0]||"").split("/")[0]===cat);
+  if(!roles.length)return;
+  const h=document.createElement("h3");h.textContent=BANK_CATS[cat];h.setAttribute("aria-hidden","true");grid.appendChild(h);
+  roles.forEach(r=>{
+   const b=SOUND_BANK[r];
+   const btn=document.createElement("button");btn.type="button";btn.className="sound-card";
+   btn.dataset.speak=`${b.d}. Вариантов: ${b.f.length}. Двойное касание — прослушать.`;
+   btn.innerHTML=`<span>🎼</span><b>${b.d}</b><span>вариантов: ${b.f.length}</span>`;
+   btn.addEventListener("click",()=>{
+    narrate(b.d);
+    const el=Bank.play(r,{seed:Date.now(),gain:0.8,maxSec:10});
+    if(!el)narrate("Запись недоступна: папка со звуками не найдена рядом с игрой. Игра продолжает звучать синтезированными маяками.",{interrupt:false});});
+   grid.appendChild(btn);});});
+}
 function buildBeaconGrid(){const grid=document.getElementById("beaconGrid");if(!grid)return;grid.innerHTML="";
  Object.keys(BEACONS).forEach(id=>{const info=BEACON_INFO[id]||[id,"Звуковой маяк объекта"];const b=document.createElement("button");b.type="button";b.className="sound-card";b.dataset.speak=`Маяк: ${info[0]}. ${info[1]}. Двойное касание — прослушать.`;b.innerHTML=`<span>📡</span><b>${info[0]}</b><span>${info[1]}</span>`;b.addEventListener("click",()=>{if(!settings.effects)return;narrate(`Маяк: ${info[0]}. ${info[1]}`);beacon(id,0,0);});grid.appendChild(b);});}
 
@@ -1517,8 +1568,14 @@ function activateElement(el){if(!el||el.disabled)return false;try{
    ════════════════════════════════════════════════════════════════════ */
 function handleTwoFingerSwipe(dir){
  if(!gameActive())return;
+ if(G.ship){ /* на борту: вниз — идти дальше, вверх — спросить капитана */
+  if(dir==="S"){sailLeg();return;}
+  narrate(`«${G.ship.name}» идёт на «${G.ship.toName}». Осталось переходов: ${G.ship.left} из ${G.ship.legs}.${G.ship.storm?" Шторм, держитесь крепче." : ""} Свайп — идти дальше.`);
+  safeFn(()=>Bank.play("ship_creak",{seed:G.ship.leg,gain:0.5,maxSec:4}));
+  return;}
  if(dir==="S"){ /* вниз: войти внутрь или спуститься по лестнице */
   if(!G.place){const c=cellContent(G.x,G.y);
+   if(c.structure&&c.structure.type==="port"&&!G.place){openHarbor();return;}
    if(c.structure&&PLACE_KIND[c.structure.type]){enterPlace(c);return;}
    narrate("Здесь нет входа вниз. Встаньте на постройку или пещерный зев.");return;}
   const lvl=curLevel(),t=tileAt(lvl,G.place.x,G.place.y);
@@ -1544,7 +1601,8 @@ function handleTwoFingerSwipe(dir){
 function handleThreeFingerSwipe(){
  if(!gameActive())return;
  const q=(G.quests||[]).filter(x=>!x.done);
- const where=G.place?placeTitle()+`, клетка ${G.place.x} на ${G.place.y}`
+ const where=G.ship?`на борту судна «${G.ship.name}», курс на «${G.ship.toName}», осталось переходов ${G.ship.left} из ${G.ship.legs}${G.ship.storm?", идёт шторм":""}`
+  :G.place?placeTitle()+`, клетка ${G.place.x} на ${G.place.y}`
   :`${cellContent(G.x,G.y).terrain[1]}, ${cellContent(G.x,G.y).empire.name}, координаты ${G.x} и ${G.y}`;
  narrate(`Вы здесь: ${where}. Здоровье ${G.hp} из ${G.hpMax}, мана ${G.mana} из ${G.manaMax}, золото ${G.gold}. `+
   `День ${G.day}, ${Math.floor(G.hour%24)} часов. Оружие ${G.weaponDrawn?"в руках":"в ножнах"}. `+
@@ -1736,7 +1794,7 @@ function magicTap(){if(Play.active.size>0)Play.stopAll();
  else if(Play.lastMain){Play.start("main",Play.lastMain,{announceEnd:true});
   narrate(`Возобновлено: ${SOUNDS[Play.lastMain].name}.`);}
  else narrate("Сейчас ничего не играет.");}
-function stopEverything(){Play.stopAll(false);Music.stop();Speech.stop();
+function stopEverything(){Play.stopAll(false);Music.stop();Speech.stop();safeFn(()=>Bank.stopAll());
  Speech.say("Тишина. Все звуки и речь остановлены.");vib([40,60,40]);}
 /* ════════ МЕНЮ ДЕЙСТВИЙ (сюда вынесены ВСЕ кнопки, включая шаги) ════════ */
 let lastFocused=null;
@@ -1754,6 +1812,8 @@ const AM_GROUPS=[
   ["gather","📦 Собрать ресурс"],
   ["echo","🔊 Эхо-скан: маяки вокруг"],
   ["trade","🐫 Рынки, маршруты и караваны"],
+  ["harbor","⚓ Причал: корабли и рейсы"],
+  ["sail","🚢 Идти дальше морем"],
   ["look","👁️ Осмотреться"],
   ["map","🗺️ Карта места"]]],
  ["Персонаж",[
@@ -1787,6 +1847,8 @@ function amAvailable(cmd){
  try{
   const c=cellContent(G.x,G.y);
   if(cmd==="ascend")return !!G.place;
+  if(cmd==="harbor")return !G.ship&&!!(c.structure&&c.structure.type==="port");
+  if(cmd==="sail")return !!G.ship;
   if(cmd==="descend")return !!G.place||!!(c.structure&&PLACE_KIND[c.structure.type]);
   if(cmd==="interact")return !G.place&&!!(c.structure||c.res);
   if(cmd==="gather")return G.place?true:!!c.res;
@@ -1867,6 +1929,7 @@ const GUIDE=[
  "Скорость и громкость озвучки, громкость эффектов и музыки, выбор голоса.",
  "Режим ощупывания и тактильный отклик — в разделе доступности. Настройки сохраняются."]},
 {title:"Глава 5. Полное руководство по звукам (87 штук)",body:[
+ "Кроме синтезированных звуков у игры есть звуковой банк — коллекция записей, разложенная по ролям: море и корабли, земли и погода, глубина подземелий, школы магии, голоса двенадцати богов, события и места. Записи лежат в папке sounds рядом с игрой и подгружаются по мере надобности; если папки нет, игра целиком работает на синтезированных звуках. Весь банк можно послушать в энциклопедии звуков.",
  "Энциклопедия теперь содержит 87 звуков вместо прежних 24 — гораздо больше видов, и все они синтезируются самим браузером без интернета: остановка сети или отсутствие звуковых файлов ничего не сломает.",
  "Именные монстры (18): волк, гоблин-налётчик, тролль, огр-громила, рунный голем, молодой дракон, ледяной василиск, дикий виверн, стенающая банши, медведь-старейшина, песчаный червь-исполин, разгневанный энт, прибрежный кракен, дорожный разбойник, паук-тенетник, песчаный змей, гарпия-охотница, призрак пустоши — у каждого свой рык, вой, шипение или клич.",
  "Оружие (4): меч, кинжал, посох и лук — у каждого свой звук взмаха и попадания. Кинжал звучит быстро и легко, посох — тяжело и с магическим призвуком, лук — натяжением и срывом тетивы.",
@@ -1920,31 +1983,39 @@ const GUIDE=[
  "Наём охраной — это плата по прибытии: дойдите до города назначения сами, обоз идёт своим ходом. Если маршрут пересекает линию войны, платят в полтора раза больше, но и засады случаются чаще. Бросить обоз в засаде можно — но плату вы потеряете, и Гильдия Долгой Дороги это запомнит.",
  "Торговцы и трактирщики дают подряды на доставку: привезти товар в названный город. Это тот же торговый маршрут, только с наградой сверху.",
  "Война меняет всё: цены на металл и камень растут, маршруты через линию фронта опаснее, а войсковые обозы платят щедрее прочих. Покровительство Виа Странницы и клан «Гильдия Долгой Дороги» поднимают выручку с каждой сделки."]},
-{title:"Глава 15. Сорок пять народов",body:[
+{title:"Глава 15. Морские порты и корабли",body:[
+ "На побережье стоят порты — города с причалами. В порт можно войти как в любой город (свайп двумя пальцами вниз), торговать там по городским ценам и, главное, взойти на корабль.",
+ "Причал открывается кнопкой «Причал: корабли и рейсы» в окне порта, пунктом меню действий или свайпом двумя пальцами вниз, когда вы стоите на порту. Там перечислены рейсы: куда идёт судно, сколько стоит проезд, сколько переходов до места, что в трюме и что дорого берут в порту назначения.",
+ "Пять видов судов: купеческий коч, тяжёлый неф, быстрый скиф, боевая галера и рыбацкая барка. Быстрые берут дороже, тяжёлые — дешевле, но идут дольше.",
+ "В море каждый свайп — это переход. Строка состояния и жест «где я» говорят курс и сколько переходов осталось. Свайп двумя пальцами вверх — спросить капитана.",
+ "Море живёт своей жизнью: шторм бьёт судно и отнимает здоровье, штиль крадёт часы, встречный купеческий флот платит за помощь на снастях, сети приносят добычу, а из воды может подняться кракен. Рейсы через воюющие воды опаснее, но иногда это единственный короткий путь.",
+ "Груз плывёт с вами: корабль — это способ довезти товар до дальнего порта, где за него дадут больше. Порты показаны в окне «Рынки, маршруты и караваны» вместе с рейсами и ценами.",
+ "Всё звучит: причал отвечает волной о доски и корабельным колоколом, отход — портовым рогом, палуба — скрипом корпуса, шторм — рвущим ветром, швартовка — гомоном пристани."]},
+{title:"Глава 16. Сорок пять народов",body:[
  "Мир Грани населяют сорок пять народов, и каждый имеет ранг: Обычный, Необычный, Редкий, Эпический, Легендарный или Божественный. Ранг — это не сила бойца, а место народа в мире: обычные народы держат поля и рудники, божественные держат саму Грань.",
  "У каждого народа есть история, родные земли, ресурсы, хозяйство, политический строй, предметы торговли, войны, клан и бог-покровитель, а также собственный миф о своём происхождении.",
  "Откройте «Народы Грани» в меню действий. Свайп листает карточки, ощупывание читает досье целиком, кнопки вверху отбирают народы по рангу.",
  "У каждого народа есть малые ветви — родственные племена, которые встречаются среди жителей. Ветвь наследует досье своего народа: коснитесь кнопки «О народе» в карточке жителя, и игра расскажет всё о его роде.",
  "Ваше собственное происхождение выбирается в окне персонажа или прямо в каталоге народов. Оно даёт наследие — постоянный дар бога вашего народа, тем сильнее, чем выше ранг."]},
-{title:"Глава 16. Двенадцать богов",body:[
+{title:"Глава 17. Двенадцать богов",body:[
  "Пантеон Грани — двенадцать богов: Аурис Зарний (заря и клятвы), Морах Кузнец (огонь и ремесло), Селена Ликоносная (луна и сны), Таур Громовержец (бури и война), Нерея Глубинная (моря), Виридис Древняя (леса и урожай), Кальдер Пепельный (вулканы и драконы), Умбра Безликая (тени и договоры), Хронар Вечный (время и память), Тарх Подгорный (горы и руны), Мортана Тихая (смерть и предки), Виа Странница (дороги и торговля).",
  "У каждого бога своя область, символ, священный день, миф, дар последователям, запрет и бог-соперник. Двенадцать кланов мира тоже разделены между богами — по одному на каждого.",
  "Каждый храм в мире посвящён одному из двенадцати. Молитва бесплатна и доступна раз в день в каждом храме: она лечит и повышает благосклонность бога.",
  "Приняв покровительство, вы получаете дар: исцеление, силу удара, защиту, щедрый сбор, дешёвые сделки, лёгкий побег, быстрый опыт, милость при поражении и другие. Дар растёт вместе с благосклонностью.",
  "Смена покровителя возможна, но часть благосклонности прежнего теряется — боги Грани помнят."]},
-{title:"Глава 17. Политика, войны и торговля",body:[
+{title:"Глава 18. Политика, войны и торговля",body:[
  "Восемь держав живут своей жизнью: у каждой свой главный народ, строй, хозяйство, бог и список того, что она вывозит и что ввозит.",
  "Отношения держав меняются каждые пять дней. Они бывают союзом, дружбой, нейтралитетом, напряжением и войной. Идущая война поднимает цены на металл, камень и кость.",
  "Открывайте «Политика, войны и рынок» в меню действий: там показаны все войны с причинами, союзы, досье держав и текущие цены на ресурсы в той земле, где вы находитесь.",
  "Торговля живёт на разнице цен: покупайте там, где ресурс вывозят, продавайте там, где его ввозят. У любого торговца есть раздел «Продать ресурсы» — цена зависит от державы, войны, вашей репутации у его народа и даров богов.",
  "Помогая жителям державы, вы улучшаете её отношения с соседями и поднимаете свою репутацию у их народа: цены для вас снижаются, а разговоры становятся теплее."]},
-{title:"Глава 18. Озвученная карта",body:[
+{title:"Глава 19. Озвученная карта",body:[
  "В меню действий выберите «Карта локации». Сетка 7 на 7 вокруг вас: касание клетки озвучивает объект, направление и расстояние в шагах, а также проигрывает его маяк.",
  "Кнопка «Озвучить объекты по расстоянию» перечислит всё важное поблизости."]},
-{title:"Глава 19. Звуковые маяки",body:[
+{title:"Глава 20. Звуковые маяки",body:[
  "Каждый объект мира имеет уникальный короткий звук: замок, таверна, школа, кланхолл, храм, рынок, кузница, башня, руины, деревья, камни, руда, травы, кристаллы, правитель, стражник, торговец и монстры.",
  "Маяки панорамируются по сторонам света: восток справа, запад слева."]},
-{title:"Глава 20. Горячие клавиши и советы",body:[
+{title:"Глава 21. Горячие клавиши и советы",body:[
  "Стрелки — ходьба. Контрол или Альт плюс G — руководство. Контрол или Альт плюс M — меню действий. Альт плюс S — тишина. Эскейп — закрыть.",
  "Играйте в наушниках — стерео-маяки помогут ориентироваться. Удачной охоты, Странник!"]}];
 let chIndex=0;
@@ -2656,6 +2727,8 @@ function isCityAt(x,y){
  if(x<0||y<0||x>=WORLD||y>=WORLD)return null;
  const emp=empireAt(x,y);
  if(x===emp.cap.x&&y===emp.cap.y)return {x,y,type:"castle",name:`Цитадель ${emp.short}а`,emp,size:3};
+ if(terrainAt(x,y)[0]==="coast"&&!isRoad(x,y)&&H(x,y,502)<0.02)
+  return {x,y,type:"port",name:portNameAt(x,y),emp,size:2};
  if(!isRoad(x,y)&&H(x,y,3)<0.0035){
   const nm=VILL_A[Math.floor(H(x,y,13)*VILL_A.length)]+VILL_B[Math.floor(H(x,y,14)*VILL_B.length)];
   return {x,y,type:"village",name:`Деревня ${nm}`,emp,size:1};}
@@ -2798,6 +2871,7 @@ function caravanTitle(car){return `${car.name}: ${car.from.name} → ${car.to.na
 function meetCaravan(car){
  if(!car)return false;
  curCaravan=car;
+ safeFn(()=>Bank.play("caravan",{seed:car.x+car.y,gain:0.6,maxSec:7}));
  const body=document.getElementById("caravanBody"),title=document.getElementById("caravanTitle");
  const day=G.day;
  const buy=car.goods.carry.map(r=>({r,price:Math.max(2,Math.round(citySellPrice(r,car.from,day)*car.kind.mult*0.95))}));
@@ -2917,6 +2991,18 @@ function renderTrade(){
    🧭 <b>${r.res}</b>: «${r.from.name}» → «${r.to.name}»<br>
    Купить ${r.buy} · продать ${r.sell} · <b>прибыль ${r.profit}</b> за штуку · путь ${r.dist} ${plural(r.dist,"шаг","шага","шагов")}${r.war?" · ⚔️ через войну":""}</div>`;}).join("")
   :`<div class="list-line">Выгодных направлений рядом не видно: цены в соседних городах сошлись.</div>`;
+ /* Порты и рейсы: морем возят дальше и дороже, чем по суше. */
+ const pv=document.getElementById("tradePorts");
+ const ports=findPorts(G.x,G.y,45,6);
+ if(pv)pv.innerHTML=ports.length?ports.map(pt=>{
+  const pp=cityProfile(pt),ships=portShips(pt,day);
+  const speak=`${pt.name}, ${pt.d} шагов, ${dirBetween(pt.x-G.x,pt.y-G.y)||"здесь"}. Порт ${pp.spec}. Дорого берут ${pp.demand.join(", ")}. Рейсов: ${ships.length}: ${ships.map(sh=>`${sh.name} в ${sh.to.name} за ${sh.fare} золота`).join("; ")}.`;
+  return `<div class="list-line" tabindex="0" data-speak="${speak.replace(/"/g,"&quot;")}">
+   ⚓ <b>${pt.name}</b> · ${pt.d} ${plural(pt.d,"шаг","шага","шагов")}, ${dirBetween(pt.x-G.x,pt.y-G.y)||"здесь"} · порт ${pp.spec}<br>
+   📈 Дорого берут: ${pp.demand.join(", ")}<br>
+   🚢 Рейсы: ${ships.map(sh=>`«${sh.to.name}» за ${sh.fare} (${sh.legs} переходов)`).join(" · ")||"сегодня нет"}
+   <button data-cmd="citybeacon:${pt.x}:${pt.y}" data-speak="Проиграть маяк порта с его стороны.">🔊 Маяк порта</button></div>`;}).join("")
+  :`<div class="list-line">Портов поблизости нет: они стоят на побережье.</div>`;
  const cv=document.getElementById("tradeCaravans");
  const cars=caravansNear(G.x,G.y,day,G.hour,25);
  if(cv)cv.innerHTML=cars.length?cars.map(c=>{
@@ -2931,6 +3017,331 @@ function renderTrade(){
  if(hint)hint.textContent=`День ${day}. Городов рядом: ${cities.length}. Обозов в пути: ${cars.filter(c=>c.moving).length}.`;
  narrate(`Рынки и караваны. Городов рядом: ${cities.length}. Выгодных направлений: ${routes.length}. Обозов слышно: ${cars.length}.`+
   (routes.length?` Лучшее сейчас: ${routes[0].res} из «${routes[0].from.name}» в «${routes[0].to.name}», прибыль ${routes[0].profit} за штуку.`:""));
+}
+
+
+/* ════════════════════════════════════════════════════════════════════════
+   ЗВУКОВОЙ БАНК: 134 записи, разложенные по ролям
+   Файлы лежат рядом с игрой, в папке sounds, и разобраны по смыслу:
+   sea — море, порты и корабли; ambience — земли; dungeon — глубина;
+   magic — школы заклинаний; gods — боги, алтари и знамения;
+   events — победа, поражение, находки и тревога; places — рынок, кузница,
+   таверна, зал клана, обоз.
+   Записи подгружаются по требованию: игра берёт только то, что звучит
+   сейчас. Если папки рядом нет (игру открыли одним файлом), банк молча
+   отключается, и всё продолжает звучать прежними синтезированными
+   маяками и эффектами — ни одна функция игры от этого не ломается.
+   ════════════════════════════════════════════════════════════════════════ */
+const SOUND_BANK={
+ sea_open:{f:["sea/sea_open_01.mp3","sea/sea_open_02.mp3","sea/sea_open_03.mp3","sea/sea_open_04.mp3","sea/sea_open_05.mp3","sea/sea_open_06.mp3","sea/sea_open_07.mp3"],d:"Открытое море: ход волны и ветер над водой"},
+ sea_storm:{f:["sea/sea_storm_01.mp3","sea/sea_storm_02.mp3","sea/sea_storm_03.mp3"],d:"Шторм: тяжёлая вода и рвущий ветер"},
+ sea_calm:{f:["sea/sea_calm_01.mp3","sea/sea_calm_02.mp3"],d:"Штиль: ровная зыбь и скрип снастей"},
+ port:{f:["sea/port_01.mp3","sea/port_02.mp3","sea/port_03.mp3","sea/port_04.mp3","sea/port_05.mp3"],d:"Порт: причалы, снасти, голоса на пирсе"},
+ ship_creak:{f:["sea/ship_creak_01.mp3","sea/ship_creak_02.mp3","sea/ship_creak_03.mp3"],d:"Корабельный корпус: скрип дерева и снастей"},
+ ship_depart:{f:["sea/ship_depart_01.mp3","sea/ship_depart_02.mp3"],d:"Отплытие: рог, шкоты и удар волны о борт"},
+ ship_arrive:{f:["sea/ship_arrive_01.mp3","sea/ship_arrive_02.mp3"],d:"Швартовка: канаты, сходни, гомон причала"},
+ port_horn:{f:["sea/port_horn_01.mp3","sea/port_horn_02.mp3"],d:"Портовый рог: низкий протяжный сигнал"},
+ amb_forest:{f:["ambience/amb_forest_01.mp3","ambience/amb_forest_02.mp3","ambience/amb_forest_03.mp3","ambience/amb_forest_04.mp3","ambience/amb_forest_05.mp3","ambience/amb_forest_06.mp3","ambience/amb_forest_07.mp3"],d:"Лес: кроны, шорохи, дальние птицы"},
+ amb_mountain:{f:["ambience/amb_mountain_01.mp3","ambience/amb_mountain_02.mp3","ambience/amb_mountain_03.mp3","ambience/amb_mountain_04.mp3","ambience/amb_mountain_05.mp3"],d:"Горы: свист ветра в ущельях"},
+ amb_desert:{f:["ambience/amb_desert_01.mp3","ambience/amb_desert_02.mp3","ambience/amb_desert_03.mp3"],d:"Пустыня: песок под ветром, дальний зной"},
+ amb_swamp:{f:["ambience/amb_swamp_01.mp3","ambience/amb_swamp_02.mp3","ambience/amb_swamp_03.mp3"],d:"Топи: булькающая вода и стрёкот"},
+ amb_plains:{f:["ambience/amb_plains_01.mp3","ambience/amb_plains_02.mp3","ambience/amb_plains_03.mp3","ambience/amb_plains_04.mp3","ambience/amb_plains_05.mp3","ambience/amb_plains_06.mp3"],d:"Равнина: травы и открытый ветер"},
+ amb_road:{f:["ambience/amb_road_01.mp3","ambience/amb_road_02.mp3"],d:"Дорога: утоптанный тракт, дальние повозки"},
+ amb_city:{f:["ambience/amb_city_01.mp3","ambience/amb_city_02.mp3","ambience/amb_city_03.mp3","ambience/amb_city_04.mp3","ambience/amb_city_05.mp3"],d:"Город: гул улиц за стенами"},
+ amb_cave:{f:["ambience/amb_cave_01.mp3","ambience/amb_cave_02.mp3","ambience/amb_cave_03.mp3","ambience/amb_cave_04.mp3","ambience/amb_cave_05.mp3"],d:"Пещеры: сырость, эхо, дальние капли"},
+ deep_1:{f:["dungeon/deep_1_01.mp3"],d:"Первый уровень подземелья"},
+ deep_2:{f:["dungeon/deep_2_01.mp3"],d:"Второй уровень: камень отвечает глуше"},
+ deep_3:{f:["dungeon/deep_3_01.mp3"],d:"Третий уровень: гул в основании горы"},
+ deep_4:{f:["dungeon/deep_4_01.mp3"],d:"Четвёртый уровень: что-то дышит в темноте"},
+ deep_5:{f:["dungeon/deep_5_01.mp3"],d:"Пятый уровень: корни мира"},
+ lair:{f:["dungeon/lair_01.mp3","dungeon/lair_02.mp3","dungeon/lair_03.mp3"],d:"Логово: рык и возня в темноте"},
+ spell_cast:{f:["magic/spell_cast_01.mp3","magic/spell_cast_02.mp3","magic/spell_cast_03.mp3","magic/spell_cast_04.mp3","magic/spell_cast_05.mp3","magic/spell_cast_06.mp3"],d:"Сотворение заклинания"},
+ spell_fire:{f:["magic/spell_fire_01.mp3","magic/spell_fire_02.mp3"],d:"Огненная школа"},
+ spell_ice:{f:["magic/spell_ice_01.mp3","magic/spell_ice_02.mp3"],d:"Ледяная школа"},
+ spell_light:{f:["magic/spell_light_01.mp3","magic/spell_light_02.mp3"],d:"Свет и исцеление"},
+ spell_dark:{f:["magic/spell_dark_01.mp3","magic/spell_dark_02.mp3"],d:"Тень и проклятие"},
+ portal:{f:["magic/portal_01.mp3","magic/portal_02.mp3"],d:"Портал и переход"},
+ god:{f:["gods/god_01.mp3","gods/god_02.mp3","gods/god_03.mp3","gods/god_04.mp3","gods/god_05.mp3","gods/god_06.mp3","gods/god_07.mp3","gods/god_08.mp3","gods/god_09.mp3","gods/god_10.mp3","gods/god_11.mp3","gods/god_12.mp3","gods/god_13.mp3","gods/god_14.mp3"],d:"Голос бога у алтаря"},
+ altar:{f:["gods/altar_01.mp3","gods/altar_02.mp3"],d:"Алтарь принимает приношение"},
+ temple:{f:["gods/temple_01.mp3","gods/temple_02.mp3"],d:"Храмовый неф"},
+ omen:{f:["gods/omen_01.mp3","gods/omen_02.mp3","gods/omen_03.mp3"],d:"Знамение покровителя"},
+ levelup:{f:["events/levelup_01.mp3","events/levelup_02.mp3"],d:"Новый уровень"},
+ victory:{f:["events/victory_01.mp3","events/victory_02.mp3"],d:"Победа в бою"},
+ defeat:{f:["events/defeat_01.mp3","events/defeat_02.mp3"],d:"Поражение"},
+ artifact:{f:["events/artifact_01.mp3","events/artifact_02.mp3"],d:"Найден артефакт"},
+ treasure:{f:["events/treasure_01.mp3","events/treasure_02.mp3"],d:"Сундук с добычей"},
+ quest:{f:["events/quest_01.mp3","events/quest_02.mp3"],d:"Задание принято или выполнено"},
+ danger:{f:["events/danger_01.mp3","events/danger_02.mp3","events/danger_03.mp3","events/danger_04.mp3","events/danger_05.mp3"],d:"Тревога: засада, война, погоня"},
+ market:{f:["places/market_01.mp3","places/market_02.mp3"],d:"Рынок и торговые ряды"},
+ forge:{f:["places/forge_01.mp3","places/forge_02.mp3"],d:"Кузница и горн"},
+ tavern:{f:["places/tavern_01.mp3","places/tavern_02.mp3"],d:"Таверна: очаг и разговоры"},
+ clanhall:{f:["places/clanhall_01.mp3","places/clanhall_02.mp3"],d:"Зал клана"},
+ caravan:{f:["places/caravan_01.mp3","places/caravan_02.mp3"],d:"Обоз на дороге"}};const Bank={
+ base:"sounds/",
+ enabled:true,          /* выключается после первой неудачной загрузки */
+ checked:false,
+ loops:new Map(),       /* канал → элемент, звучащий по кругу */
+ shots:[],              /* короткие проигрывания */
+ has(role){return !!(SOUND_BANK[role]&&SOUND_BANK[role].f.length);},
+ /* Вариант выбирается по семени, поэтому одно и то же место звучит одинаково. */
+ pick(role,seed){const b=SOUND_BANK[role];if(!b||!b.f.length)return null;
+  const i=Math.abs(Math.floor(Number(seed)||0))%b.f.length;return b.f[i];},
+ url(file){return this.base+file;},
+ vol(kind){
+  try{
+   if(kind==="music")return settings.music?Math.min(1,Number(settings.musicVol)||0.5):0;
+   return settings.effects?Math.min(1,Number(settings.fxVol)||0.7):0;
+  }catch(_){return 0.5;}},
+ make(file,volume,loop){
+  try{
+   const a=new Audio(this.url(file));
+   a.loop=!!loop;a.preload="auto";a.volume=Math.max(0,Math.min(1,volume));
+   a.addEventListener("error",()=>{this.enabled=false;},{once:true});
+   const pr=a.play();
+   if(pr&&pr.catch)pr.catch(()=>{});
+   return a;
+  }catch(e){this.enabled=false;return null;}},
+ /* Фон места: один канал — одна непрерывная запись. */
+ loop(channel,role,{seed=0,gain=1,kind="music"}={}){
+  if(!this.enabled||!this.has(role))return null;
+  const file=this.pick(role,seed);
+  const cur=this.loops.get(channel);
+  if(cur&&cur.file===file){cur.el.volume=Math.max(0,Math.min(1,this.vol(kind)*gain));return cur.el;}
+  this.stop(channel);
+  const el=this.make(file,this.vol(kind)*gain,true);
+  if(el)this.loops.set(channel,{el,file,gain,kind});
+  return el;},
+ stop(channel){const cur=this.loops.get(channel);
+  if(cur){try{cur.el.pause();cur.el.src="";}catch(_){}}
+  this.loops.delete(channel);},
+ stopAll(){[...this.loops.keys()].forEach(k=>this.stop(k));
+  this.shots.forEach(a=>{try{a.pause();a.src="";}catch(_){}});this.shots=[];},
+ /* Короткая запись поверх фона: событие, заклинание, голос бога. */
+ play(role,{seed=0,gain=1,kind="fx",maxSec=0}={}){
+  if(!this.enabled||!this.has(role))return null;
+  const el=this.make(this.pick(role,seed),this.vol(kind)*gain,false);
+  if(!el)return null;
+  this.shots.push(el);
+  if(this.shots.length>4){const old=this.shots.shift();try{old.pause();old.src="";}catch(_){}}
+  el.addEventListener("ended",()=>{this.shots=this.shots.filter(x=>x!==el);},{once:true});
+  if(maxSec>0)setTimeout(()=>{try{el.pause();el.src="";}catch(_){}
+   this.shots=this.shots.filter(x=>x!==el);},maxSec*1000);
+  return el;},
+ /* Громкость подхватывается сразу после смены настроек. */
+ refresh(){this.loops.forEach(c=>{try{c.el.volume=Math.max(0,Math.min(1,this.vol(c.kind)*c.gain));}catch(_){}});}
+};
+/* Роль фона для места, где находится игрок. */
+function bankAmbientRole(){
+ try{
+  if(G.place){
+   if(G.place.depth>0)return "deep_"+Math.min(5,Math.max(1,G.place.depth));
+   if(G.place.kind==="city")return "amb_city";
+   return "amb_cave";}
+  if(G.ship)return G.ship.storm?"sea_storm":"sea_open";
+  const c=cellContent(G.x,G.y);
+  if(c.structure&&c.structure.type==="port")return "port";
+  return {forest:"amb_forest",mountains:"amb_mountain",desert:"amb_desert",swamp:"amb_swamp",
+   plains:"amb_plains",road:"amb_road",coast:"sea_calm",cave:"amb_cave"}[c.terrain[0]]||"amb_plains";
+ }catch(_){return "amb_plains";}
+}
+/* Фон обновляется при каждом переходе: земля, город, глубина, палуба корабля. */
+function bankUpdateAmbient(){
+ try{
+  if(!Bank.enabled)return;
+  const role=bankAmbientRole();
+  const seed=G.place?(G.place.bx+G.place.by+G.place.depth):(G.ship?G.ship.leg:(G.x+G.y));
+  Bank.loop("place",role,{seed,gain:0.55,kind:"music"});
+ }catch(_){}
+}
+
+/* ════════════════════════════════════════════════════════════════════════
+   МОРСКИЕ ПОРТЫ И КОРАБЛИ
+   На побережье стоят порты — это города с причалами: в них можно войти,
+   торговать по городским ценам и взойти на корабль. Корабли ходят между
+   портами по расписанию; в море игрок идёт переходами, слышит открытую
+   воду, скрип корпуса и штормовой ветер, встречает морские события и
+   сходит на берег в порту назначения.
+   ════════════════════════════════════════════════════════════════════════ */
+const SHIP_KIND=[
+ {id:"koch",n:"Купеческий коч",speed:1.0,fare:1.0,hold:"зерно и ткани"},
+ {id:"nef",n:"Тяжёлый неф",speed:0.8,fare:0.85,hold:"руда и камень"},
+ {id:"skif",n:"Быстрый скиф",speed:1.5,fare:1.35,hold:"почта и пряности"},
+ {id:"galley",n:"Боевая галера",speed:1.2,fare:1.2,hold:"оружие и припасы"},
+ {id:"barque",n:"Рыбацкая барка",speed:0.9,fare:0.7,hold:"рыба и соль"}];
+const PORT_A=["Соль","Якор","Штиль","Прибой","Чайк","Мачт","Волн","Бухт"];
+const PORT_B=["ная Гавань","ный Причал","ное Устье","ная Пристань","ный Порт"];
+function portNameAt(x,y){
+ return `Порт ${PORT_A[Math.floor(H(x,y,500)*PORT_A.length)]}${PORT_B[Math.floor(H(x,y,501)*PORT_B.length)]}`;
+}
+/* Порты стоят только на побережье и достаточно редко, чтобы плавание имело смысл. */
+function isPortAt(x,y){
+ if(x<0||y<0||x>=WORLD||y>=WORLD)return null;
+ if(isRoad(x,y))return null;
+ if(terrainAt(x,y)[0]!=="coast")return null;
+ if(H(x,y,502)>=0.02)return null;
+ return {x,y,type:"port",name:portNameAt(x,y),emp:empireAt(x,y),size:2};
+}
+function findPorts(cx,cy,rad=45,limit=8){
+ const key="p"+Math.round(cx/12)+","+Math.round(cy/12)+","+rad;
+ if(cityScanCache.has(key))return cityScanCache.get(key);
+ const out=[];
+ for(let y=cy-rad;y<=cy+rad;y++)for(let x=cx-rad;x<=cx+rad;x++){
+  const p=isPortAt(x,y);
+  if(p){p.d=Math.max(Math.abs(x-cx),Math.abs(y-cy));out.push(p);}}
+ out.sort((a,b)=>a.d-b.d);
+ const res=out.slice(0,limit);
+ if(cityScanCache.size>24)cityScanCache.clear();
+ cityScanCache.set(key,res);
+ return res;
+}
+/* Рейсы этого порта: куда, на чём, за сколько и когда отходит. */
+function portShips(port,day){
+ const others=findPorts(port.x,port.y,60,7).filter(p=>p.x!==port.x||p.y!==port.y);
+ return others.slice(0,4).map((to,i)=>{
+  const kind=SHIP_KIND[Math.floor(H(port.x+to.x,port.y+to.y,510+i)*SHIP_KIND.length)];
+  const dist=Math.round(Math.hypot(to.x-port.x,to.y-port.y));
+  const legs=Math.max(2,Math.round(dist/(6*kind.speed)));
+  const fare=Math.max(15,Math.round((12+dist*1.6)*kind.fare));
+  const departHour=Math.floor(H(port.x,to.y,511+i)*24);
+  const ia=Math.max(0,EMPIRES.indexOf(port.emp)),ib=Math.max(0,EMPIRES.indexOf(to.emp));
+  return {id:`${port.x},${port.y}>${to.x},${to.y}`,kind,name:kind.n,from:port,to,dist,legs,fare,departHour,
+   war:ia!==ib&&atWar(ia,ib,day),
+   goods:cityProfile(to).demand,surplus:cityProfile(port).surplus};});
+}
+function portHere(){
+ if(G.place||G.ship)return null;
+ const c=cellContent(G.x,G.y);
+ return c.structure&&c.structure.type==="port"?isPortAt(G.x,G.y):null;
+}
+/* ── Окно порта: рейсы, посадка, разговор с капитаном ── */
+function openHarbor(){
+ const port=portHere()||(G.place&&G.place.stype==="port"?isPortAt(G.place.bx,G.place.by):null);
+ if(!port){narrate("Причалов рядом нет. Порты стоят на побережье.");return false;}
+ const ships=portShips(port,G.day);
+ const body=document.getElementById("harborBody"),title=document.getElementById("harborTitle");
+ if(!body||!title){narrate("Причал недоступен.");return false;}
+ title.textContent="⚓ "+port.name;
+ const pf=cityProfile(port);
+ let html=`<div class="list-line" tabindex="0" data-speak="${`${port.name}, держава ${port.emp.short}. Порт ${pf.spec}. Дёшево: ${pf.surplus.join(", ")}. Дорого берут: ${pf.demand.join(", ")}. Рейсов сегодня: ${ships.length}.`.replace(/"/g,"&quot;")}">
+  ⚓ <b>${port.name}</b> · ${port.emp.short} · порт ${pf.spec}<br>
+  📉 Дёшево: ${pf.surplus.join(", ")} · 📈 Дорого берут: ${pf.demand.join(", ")}<br>
+  🚢 Рейсов сегодня: ${ships.length}. Плата берётся при посадке, груз плывёт с вами.</div>`;
+ html+=`<h3>Рейсы от причала</h3>`;
+ html+=ships.length?ships.map((sh,i)=>{
+  const speak=`${sh.name} в ${sh.to.name}. Плата ${sh.fare} золота, переходов ${sh.legs}, отход в ${sh.departHour} часов. В трюме ${sh.kind.hold}. Там дорого берут ${sh.goods.join(", ")}. ${sh.war?"Рейс идёт через воюющие воды.":""}`;
+  return `<div class="list-line" tabindex="0" data-speak="${speak.replace(/"/g,"&quot;")}">
+   🚢 <b>${sh.name}</b> → «${sh.to.name}»<br>
+   Плата ${sh.fare} золота · переходов ${sh.legs} · отход в ${sh.departHour}:00 · трюм: ${sh.kind.hold}<br>
+   📈 Там дорого берут: ${sh.goods.join(", ")}${sh.war?" · ⚔️ через воюющие воды":""}
+   <button data-cmd="board:${i}" data-speak="Взойти на борт: ${sh.name} до ${sh.to.name} за ${sh.fare} золота.">⚓ Взойти на борт (${sh.fare})</button></div>`;}).join("")
+  :`<div class="list-line">Сегодня от причала никто не отходит. Загляните завтра.</div>`;
+ html+=`<button class="item" data-cmd="seatalk" data-speak="Расспросить капитанов о морях, ценах и штормах.">🗣️ Расспросить капитанов</button>`;
+ html+=`<div class="row"><button data-cmd="close">✖️ Отойти от причала</button></div>`;
+ body.innerHTML=html;
+ G.harborShips=ships.map(s=>({id:s.id,name:s.name,fare:s.fare,legs:s.legs,tox:s.to.x,toy:s.to.y,
+  toName:s.to.name,war:s.war,kind:s.kind.id,speed:s.kind.speed}));
+ openModal("modal-harbor");
+ safeFn(()=>{beacon("port",0,0);Bank.play("port",{seed:port.x+port.y,gain:0.6,maxSec:8});});
+ narrate(`${port.name}. Рейсов от причала: ${ships.length}. ${ships.map(s=>`${s.name} в «${s.to.name}» за ${s.fare} золота`).join("; ")}.`);
+ return true;
+}
+function seaTalk(){
+ const routes=bestRoutes(G.x,G.y,G.day,3);
+ const ports=findPorts(G.x,G.y,60,6);
+ narrate(`Капитан говорит: «Портов на этом побережье ${ports.length}: ${ports.slice(0,3).map(p=>p.name).join(", ")}. `+
+  (routes.length?`На берегу выгодно везти ${routes[0].res} из «${routes[0].from.name}» в «${routes[0].to.name}». `:"")+
+  `В море шторм приходит без спроса: держите трюм сухим, а руку — на снастях».`);
+ safeFn(()=>Bank.play("sea_calm",{seed:G.day,gain:0.5,maxSec:7}));
+}
+/* ── Плавание: игрок на борту, переходы, море и события ── */
+function boardShip(i){
+ const list=G.harborShips||[];
+ const sh=list[Number(i)];
+ if(!sh){narrate("Этот рейс уже отошёл.");return false;}
+ if(G.gold<sh.fare){narrate(`Плата за проезд ${sh.fare} золота, у вас ${G.gold}.`);return false;}
+ G.gold-=sh.fare;
+ G.ship={name:sh.name,kind:sh.kind,tox:sh.tox,toy:sh.toy,toName:sh.toName,
+  legs:sh.legs,left:sh.legs,leg:0,war:sh.war,storm:false,fare:sh.fare};
+ const m=document.getElementById("modal-harbor");if(m&&!m.hidden)safeFn(()=>closeModal(m));
+ safeFn(()=>{beacon("port_horn",0,0);Bank.play("ship_depart",{seed:sh.tox,gain:0.8,maxSec:8});});
+ safeFn(()=>{Play.stopKey("amb0");Play.stopKey("amb1");Music.start("coast");bankUpdateAmbient();});
+ G.hour+=1;if(G.hour>=24){G.hour-=24;G.day++;}
+ narrate(`Вы на борту: ${sh.name}, курс на «${sh.toName}». Переходов до порта: ${sh.legs}. Свайп в любую сторону — идти дальше, свайп двумя пальцами вверх — спросить капитана.`);
+ journal(`Отплытие: ${sh.name} в ${sh.toName}.`);
+ refresh();saveGame(true);
+ return true;
+}
+/* Один переход по морю: ход судна, погода, события и прибытие. */
+function sailLeg(){
+ if(!G.ship)return false;
+ const s=G.ship;
+ s.leg++;s.left=Math.max(0,s.left-1);
+ G.hour+=3;if(G.hour>=24){G.hour-=24;G.day++;}
+ /* Погода меняется в море: штиль, ход волны, шторм. */
+ const r=H(s.tox+s.leg,s.toy+G.day,520+s.leg);
+ s.storm=r<(s.war?0.28:0.2);
+ safeFn(()=>Bank.play("ship_creak",{seed:s.leg,gain:0.5,maxSec:5}));
+ safeFn(()=>bankUpdateAmbient());
+ if(s.storm){
+  safeFn(()=>{beacon("wall",0,1);Bank.play("sea_storm",{seed:s.leg,gain:0.75,maxSec:9});});
+  const dmg=4+Math.floor(Math.random()*6);
+  G.hp=Math.max(1,G.hp-dmg);
+  narrate(`Шторм! Палубу заливает, судно кладёт на борт. Вы ушиблись: −${dmg} здоровья. Осталось переходов: ${s.left}.`);
+ }else{
+  narrate(`Судно идёт${r>0.75?" ровно, ветер попутный":""}. Осталось переходов до «${s.toName}»: ${s.left}.`);
+ }
+ if(s.left<=0)return arriveShip();
+ safeFn(()=>maybeSeaEvent());
+ refresh();saveGame(true);
+ return true;
+}
+function arriveShip(){
+ const s=G.ship;if(!s)return false;
+ G.x=Math.max(0,Math.min(WORLD-1,s.tox));G.y=Math.max(0,Math.min(WORLD-1,s.toy));
+ const name=s.toName;
+ G.ship=null;
+ safeFn(()=>{beacon("port_horn",0,0);Bank.play("ship_arrive",{seed:G.x,gain:0.8,maxSec:8});});
+ safeFn(()=>{const c=cellContent(G.x,G.y);
+  Play.stopKey("amb0");if(settings.effects)Play.start("amb0",(AMB[c.terrain[0]]||["sea"])[0],{loop:true});
+  Music.start(c.terrain[0]);bankUpdateAmbient();});
+ narrate(`Швартовка: «${name}». Сходни спущены, вы на берегу. Порт торгует по своим ценам — загляните к торговцу.`);
+ journal(`Прибытие морем: ${name}.`);
+ safeFn(()=>{checkEscortArrival();checkQuestProgress();});
+ refresh();saveGame(true);
+ return true;
+}
+/* Морские события: пираты, купеческий флот, штиль, кит, спасённый пловец. */
+function maybeSeaEvent(){
+ if(!G.ship||G.inCombat||activeLayer())return false;
+ if(Math.random()>0.3)return false;
+ const s=G.ship;
+ const r=Math.random();
+ if(r<0.3){
+  safeFn(()=>Bank.play("danger",{seed:s.leg,gain:0.7,maxSec:7}));
+  const m0=MONSTERS.find(m=>m.id==="kraken")||MONSTERS[0];
+  const lv=Math.max(2,G.level+1);
+  narrate("Из воды поднимаются щупальца — кракен взял судно в кольцо!");
+  startCombat({x:G.x,y:G.y,monster:{...m0,n:"Прибрежный кракен",lvl:lv,hp:26+lv*9,dmg:5+lv*2,xp:35+lv*12,gold:20+lv*6}});
+  return true;}
+ if(r<0.55){
+  const gold=15+Math.floor(Math.random()*25);
+  G.gold+=gold;
+  safeFn(()=>Bank.play("sea_calm",{seed:s.leg,gain:0.6,maxSec:6}));
+  narrate(`Встречный купеческий флот. Капитан обменялся почтой и отдал вам долю за помощь на снастях: +${gold} золота.`);
+  return true;}
+ if(r<0.75){
+  const res=["ракушка","кость","кристалл"][Math.floor(Math.random()*3)];
+  G.inv[res]=(Number(G.inv[res])||0)+1;
+  safeFn(()=>{beacon("res_shell",0,0);UI.pickup();});
+  narrate(`Матросы вытянули сеть: в ней ${res}. Добыча ваша.`);
+  return true;}
+ if(r<0.9){
+  G.water=Math.min(200,(Number(G.water)||0)+30);
+  narrate("Дождевой шквал прошёл стороной, но бочки полны: запас воды пополнен.");
+  return true;}
+ G.hour+=2;if(G.hour>=24){G.hour-=24;G.day++;}
+ narrate("Штиль. Паруса обвисли, судно ползёт. Два часа потеряно.");
+ return true;
 }
 
 /* ════════ ВЕРА: покровитель, благосклонность, дары богов ════════ */
@@ -3028,6 +3439,9 @@ function cellContent(x,y){const key=x+","+y;
   else if(H(x,y,6)<0.0006)c.structure={type:"tower",name:"Башня мага-отшельника",beacon:"tower"};
   else if(H(x,y,9)<0.0009)c.structure={type:"ruins",name:"Древние руины",beacon:"ruins"};
   /* Вход вниз прямо в мире: провал в горах или пещерный зев — начало подземелья. */
+  /* Морской порт: причалы на побережье, ворота в море. */
+  else if(c.terrain[0]==="coast"&&H(x,y,502)<0.02)
+   c.structure={type:"port",name:portNameAt(x,y),beacon:"port"};
   else if(H(x,y,10)<0.0022&&(c.terrain[0]==="cave"||c.terrain[0]==="mountains"))
    c.structure={type:"cave_entrance",name:H(x,y,11)<0.5?"Пещерный зев":"Провал в скале",beacon:"cave_entrance"};
   else if(r3>0.997&&c.terrain[0]!=="road")c.structure={type:"temple",name:"Храм тихого света",beacon:"temple"};}
@@ -3055,6 +3469,7 @@ function isNight(){const h=G.hour%24;return h>=21||h<6;}
 /* ════════ НИПИ ════════ */
 const PROFS={castle:["Правитель","Стражник","Советник"],village:["Старейшина","Фермер","Целительница"],
  cave_entrance:["Странник"],
+ port:["Капитан","Торговец","Грузчик"],
  tavern:["Трактирщик","Посетитель"],clanhall:["Глава клана","Воин клана"],school:["Магистр","Ученик"],
  temple:["Жрец"],forge:["Кузнец"],market:["Торговец"],tower:["Маг-отшельник"],traveler:["Странник"]};
 const TIERP={"Правитель":5,"Магистр":4,"Глава клана":4,"Маг-отшельник":4,"Советник":3,"Старейшина":3,
@@ -3080,7 +3495,7 @@ function getNPC(x,y,i,profForced){
   beacon:NPCBEACON[prof]||"npc_common",
   trade:["Торговец","Кузнец","Трактирщик"].includes(prof)};}
 function npcsFor(c){if(!c.structure)return[];
- const counts={castle:3,village:3,tavern:2,clanhall:2,temple:1,tower:1,traveler:1,ruins:0,cave_entrance:0};
+ const counts={castle:3,village:3,port:3,tavern:2,clanhall:2,temple:1,tower:1,traveler:1,ruins:0,cave_entrance:0};
  const n=counts[c.structure.type]||1,out=[];
  for(let i=0;i<n;i++)out.push(getNPC(c.x,c.y,i));return out;}
 
@@ -3292,6 +3707,8 @@ function maybeEvent(trigger){
   let r=Math.random()*total,pick=pool[0];
   for(const e of pool){r-=(e.w||1);if(r<=0){pick=e;break;}}
   G.lastEventAt=now;
+  if(["patrol","ambush","warband","danger"].includes(pick.id))safeFn(()=>Bank.play("danger",{seed:now,gain:0.7,maxSec:7}));
+  else safeFn(()=>Bank.play("omen",{seed:now,gain:0.6,maxSec:8}));
   openEvent(pick,c);
   return true;
  }catch(e){try{console.error("maybeEvent",e);}catch(_){}return false;}
@@ -3371,7 +3788,9 @@ const G={hp:100,hpMax:100,str:10,agi:10,mind:10,cha:10,mana:10,manaMax:10,
  /* Объёмный мир: place — здание, город или подземелье, в котором находится
     игрок (null — под открытым небом); marks — открытые двери, пустые сундуки,
     выработанные жилы и убитые в подземелье монстры. */
- place:null,marks:{},dungeonKills:0,altarPrayed:null,metCaravan:null};
+ place:null,marks:{},dungeonKills:0,altarPrayed:null,metCaravan:null,
+ /* Плавание: судно, на котором идёт игрок, и рейсы у причала. */
+ ship:null,harborShips:null};
 const xpNeed=l=>l*l*50;
 /* Дар Хронара и ткачей судьбы: опыт течёт быстрее. Через эту функцию проходит
    ВСЯ прибавка опыта, поэтому дар работает и в бою, и в заданиях. */
@@ -3461,6 +3880,15 @@ function refresh(){
  const h=Math.floor(G.hour%24);
  const hud=document.getElementById("hud");
  if(!hud)return;
+ if(G.ship){
+  /* На борту строка состояния говорит о курсе и о том, сколько идти. */
+  const sh=G.ship;
+  hud.innerHTML=
+   `❤️ <b>${G.hp}</b> 💪 <b>${G.str}</b> 🏃 <b>${G.agi}</b> 🧠 <b>${G.mind}</b> 💬 <b>${G.cha}</b> ✨ <b>${G.mana}</b> 💧 <b>${G.water}</b> 💰 <b>${G.gold}</b><br>`+
+   `🚢 ${sh.name} · курс на «${sh.toName}» · переходов осталось ${sh.left} из ${sh.legs}${sh.storm?" · ⛈️ шторм":""}<br>`+
+   `⭐ Уровень ${G.level} · Опыт ${G.xp}/${xpNeed(G.level)} · 🗡️ ${atk()} 🛡️ ${def()}`;
+  hud.dataset.speak=`Здоровье ${G.hp} из ${G.hpMax}. На борту: ${sh.name}, курс на ${sh.toName}. Осталось переходов: ${sh.left} из ${sh.legs}.${sh.storm?" Идёт шторм.":""} Золото ${G.gold}. Свайп — идти дальше.`;
+  return;}
  if(G.place){
   /* Внутри здания или подземелья строка состояния говорит о месте, а не о рельефе. */
   const lvl=curLevel(),t=lvl?tileAt(lvl,G.place.x,G.place.y):".";
@@ -3552,7 +3980,7 @@ const TILE={
  "W":{n:"колодец",b:"well"},
  "T":{n:"факел",b:"torch"}};
 /* Какие строения куда ведут: город (улицы с воротами), дом или подземелье. */
-const PLACE_KIND={castle:"city",village:"city",tavern:"house",clanhall:"house",tower:"house",
+const PLACE_KIND={castle:"city",village:"city",port:"city",tavern:"house",clanhall:"house",tower:"house",
  temple:"house",ruins:"dungeon",traveler:null,cave_entrance:"dungeon"};
 const MAX_DEPTH=5;
 const levelCache=new Map();
@@ -3687,6 +4115,7 @@ function enterPlace(c){
  G.place={kind,bx:c.x,by:c.y,stype,name:c.structure.name,depth,x:lvl.entry.x,y:lvl.entry.y};
  safeFn(()=>beacon(kind==="city"?"city":kind==="dungeon"?"dungeon":"house",0,0));
  safeFn(()=>Music.start(kind==="dungeon"?"cave":"prologue"));
+ safeFn(()=>bankUpdateAmbient());
  journal(`Вход: ${c.structure.name}.`);
  narrate(`Вы вошли: ${placeTitle()}. ${describeHere(true)}`);
  pingSurroundings(3,3);
@@ -3702,7 +4131,7 @@ function leavePlace(){
  const c=cellContent(G.x,G.y);
  safeFn(()=>{Play.stopKey("amb0");Play.stopKey("amb1");
   if(settings.effects)Play.start("amb0",(AMB[c.terrain[0]]||["wind"])[0],{loop:true});
-  Music.start(c.terrain[0]);});
+  Music.start(c.terrain[0]);bankUpdateAmbient();});
  narrate(`Вы вышли наружу: ${name} остаётся позади. ${c.terrain[1]}, ${c.empire.name}.`);
  refresh();saveGame(true);
  return true;
@@ -3718,6 +4147,7 @@ function changeDepth(delta){
  if(nd===0)p.kind=PLACE_KIND[p.stype]||"house";
  safeFn(()=>beacon(delta>0?"stairs_down":"stairs_up",0,0));
  safeFn(()=>{if(nd>0)Music.start("cave");});
+ safeFn(()=>bankUpdateAmbient());
  G.hour+=0.3;if(G.hour>=24){G.hour-=24;G.day++;}
  narrate(`${delta>0?"Вы спустились":"Вы поднялись"}: ${placeTitle()}. ${describeHere(true)}`);
  journal(`${delta>0?"Спуск":"Подъём"}: ${placeTitle()}.`);
@@ -3800,6 +4230,7 @@ function moveInside(dir){
 }
 /* ── Бой в подземелье: логово превращается в противника этого уровня ── */
 function startInsideCombat(x,y){
+ safeFn(()=>Bank.play("lair",{seed:x+y,gain:0.7,maxSec:6}));
  const p=G.place,lvl=curLevel();
  const pool=MONSTERS.filter(m=>m.biomes.includes(p.depth>0?"cave":"road")).length?
   MONSTERS.filter(m=>m.biomes.includes(p.depth>0?"cave":"road")):MONSTERS;
@@ -3845,6 +4276,7 @@ function openChest(x,y){
  setPlaceMark(x,y,"open");
  const p=G.place,r=H(p.bx+x*3,p.by+y*5,800+p.depth);
  safeFn(()=>beacon("chest",0,0));
+ safeFn(()=>Bank.play("treasure",{seed:x+y,gain:0.7,maxSec:6}));
  const gold=10+Math.floor(r*40)+p.depth*15;
  G.gold+=gold;
  const bits=[`золото ${gold}`];
@@ -3887,6 +4319,7 @@ function altarGod(x,y){const p=G.place;return PANTHEON[Math.floor(H(p.bx+x*7,p.b
 function useAltar(x,y){
  const g=altarGod(x,y);
  safeFn(()=>beacon("altar",0,0));
+ safeFn(()=>Bank.play("altar",{seed:x+y,gain:0.7,maxSec:8}));
  const rel=`Реликвия: ${g.n}`;
  const hasRel=G.items.indexOf(rel);
  if(hasRel>=0){
@@ -3908,6 +4341,7 @@ function useAltar(x,y){
 function talkInside(t,x,y){
  const p=G.place;
  const profForced=t==="S"?"Торговец":t==="F"?"Кузнец":null;
+ safeFn(()=>Bank.play(t==="S"?"market":t==="F"?"forge":"tavern",{seed:x+y,gain:0.55,maxSec:6}));
  const npc=getNPC(p.bx,p.by,(x+y)%3,profForced);
  safeFn(()=>beacon(t==="S"?"market":t==="F"?"forge":"npc_common",0,0));
  openNPC(npc.key);
@@ -3921,6 +4355,8 @@ function move(dir){
  if(!gameActive())return false;
  if(activeLayer())return false;
  if(!DIRV[dir])return false;
+ /* На борту корабля шаг превращается в морской переход: судно идёт своим курсом. */
+ if(G.ship)return sailLeg();
  /* Внутри здания, города или подземелья ходьба идёт по клеткам уровня. */
  if(G.place)return moveInside(dir);
  if(G.inCombat){narrate("Сначала завершите бой!");return;}
@@ -3971,7 +4407,7 @@ function arrive(dir){
   if(settings.effects){Play.start("amb0",a[0],{loop:true});
    if(a[1])Play.start("amb1",a[1],{loop:true});}
   const empChanged=lastEmp!==c.empire.name;
-  Music.start(c.terrain[0]);lastEmp=c.empire.name;
+  Music.start(c.terrain[0]);safeFn(()=>bankUpdateAmbient());lastEmp=c.empire.name;
   /* Пересекая границу, игрок узнаёт, чья это земля, чьи народы её населяют,
      кому здесь молятся и с кем эта держава воюет. */
   if(empChanged)safeFn(()=>{const e=c.empire,i=Math.max(0,EMPIRES.indexOf(e)),g=GOD_BY_ID[e.god];
@@ -4196,6 +4632,7 @@ function questMonsterProgress(monster){
 }
 function victory(){const cb=G.combat,m=cb.m;
  safeFn(()=>playRealMonsterCue(m,"death",0.75));
+ safeFn(()=>Bank.play("victory",{seed:G.level+(G.xp||0),gain:0.75,maxSec:8}));
  UI.fanfare();journal(`Побеждён «${m.n}» ${m.lvl} уровня.`);
  /* Логово в подземелье после победы пустеет и больше не нападает. */
  if(G.place&&G.place.pendingKill){const k=G.place.pendingKill;G.place.pendingKill=null;
@@ -4254,6 +4691,7 @@ function takeLoot(){
  }catch(e){try{console.error("takeLoot",e);}catch(_){}return false;}
 }
 function defeat(){endCombat();Music.stop();
+ safeFn(()=>Bank.play("defeat",{seed:G.day,gain:0.8,maxSec:9}));
  const emp=empireAt(G.x,G.y);G.x=emp.cap.x;G.y=emp.cap.y;
  /* Милость Мортаны Тихой: поражение обходится дешевле её последователям. */
  const mercy=Math.min(0.09,0.03*fxLevel("mercy"));
@@ -4263,7 +4701,7 @@ function defeat(){endCombat();Music.stop();
 function checkLevelUp(){let leveled=false;
  while(G.xp>=xpNeed(G.level)){G.xp-=xpNeed(G.level);G.level++;leveled=true;
   G.hpMax+=10;G.hp=G.hpMax;G.str++;G.agi++;G.mind++;G.cha++;G.manaMax+=5;G.mana=G.manaMax;}
- if(leveled){UI.fanfare();vib([60,80,60]);
+ if(leveled){UI.fanfare();vib([60,80,60]);safeFn(()=>Bank.play("levelup",{seed:G.level,gain:0.8,maxSec:8}));
   narrate(`Новый уровень! Теперь вы ${G.level} уровня. Здоровье и характеристики выросли.`);
   journal(`Уровень ${G.level}!`);}}
 
@@ -4302,7 +4740,7 @@ function gatherCurrent(source="tap"){
 function findArtifact(){const ART=["Осколок Зари","Шёпот Ветра","Слеза Дракона","Сердце Бури","Песнь Грани"];
  const n=ART[Math.floor(Math.random()*ART.length)]+" "+(100+Math.random()*900|0);
  G.artifacts.push(n);G.manaMax+=5;G.mana=G.manaMax;
- UI.fanfare();if(settings.effects)Play.start("ev","magic",{dur:6});
+ UI.fanfare();safeFn(()=>Bank.play("artifact",{seed:G.artifacts.length,gain:0.85,maxSec:9}));if(settings.effects)Play.start("ev","magic",{dur:6});
  sub("✨ Найден артефакт!");
  narrate(`Найден артефакт: ${n}. Максимальная мана +5.`);
  journal(`Артефакт: ${n}.`);refresh();}
@@ -4368,6 +4806,11 @@ const CMD={
  evt(i){resolveEvent(i);},
  /* Торговля между городами и караваны. */
  trade(){openModal("modal-trade");renderTrade();},
+ /* Порты и корабли. */
+ harbor(){openHarbor();},
+ board(i){boardShip(i);},
+ seatalk(){seaTalk();},
+ sail(){if(G.ship)sailLeg();else narrate("Вы не на борту. Найдите порт на побережье.");},
  carbuy(res){caravanBuy(res,1);},
  carbuy5(res){caravanBuy(res,5);},
  carsell(res){caravanSell(res,false);},
@@ -4387,10 +4830,10 @@ const CMD={
     разбираем строку по последнему двоеточию. */
  sell(arg){const i=String(arg).lastIndexOf(":");sellResource(String(arg).slice(0,i),String(arg).slice(i+1),false);},
  sellall(arg){const i=String(arg).lastIndexOf(":");sellResource(String(arg).slice(0,i),String(arg).slice(i+1),true);},
- encyc(){openModal("modal-encyclopedia");buildSoundGrid();buildBeaconGrid();},
+ encyc(){openModal("modal-encyclopedia");buildSoundGrid();buildBankGrid();buildBeaconGrid();},
  guide(){openGuide();},
  settings(){openModal("modal-settings");},
- testall(){openModal("modal-encyclopedia");buildSoundGrid();buildBeaconGrid();testAllSounds();},
+ testall(){openModal("modal-encyclopedia");buildSoundGrid();buildBankGrid();buildBeaconGrid();testAllSounds();},
  silence(){stopEverything();},
  save(){saveGame();},
  music(){settings.music=settings.music?0:1;saveSettings();AE.applyVolumes();
@@ -4501,6 +4944,7 @@ function openBuilding(c){const s=c.structure;
  if(s.type==="temple"){
   /* Каждый храм посвящён одному из двенадцати богов. */
   const tg=templeGod(c.x,c.y);
+  safeFn(()=>Bank.play("temple",{seed:c.x+c.y,gain:0.55,maxSec:7}));
   html+=`<div class="list-line" data-speak="Храм посвящён: ${tg.n}, ${tg.ep}. Область: ${tg.dom}. Дар: ${tg.boon}">
    🕯️ Храм посвящён: <b>${tg.n}</b>, ${tg.ep}.<br>Область: ${tg.dom}. Символ: ${tg.sym}. Священный день: ${tg.day}-й.<br>
    Миф: ${tg.myth}<br>Дар: ${tg.boon} Запрет: ${tg.taboo} Соперник: ${GOD_BY_ID[tg.rival]?GOD_BY_ID[tg.rival].n:"нет"}.<br>
@@ -4512,6 +4956,7 @@ function openBuilding(c){const s=c.structure;
    `<button class="item" data-cmd="svc:bless">✨ Благословение (30 золота, +2 к разуму)</button>`;}
  if(s.type==="clanhall"){
   const cl=clanAt(c.x,c.y),cg=GOD_BY_ID[cl.god];
+  safeFn(()=>Bank.play("clanhall",{seed:c.x+c.y,gain:0.55,maxSec:6}));
   html+=`<div class="list-line" data-speak="Кланхолл клана ${cl.n}. ${cl.hist} Устав: ${cl.creed}">
    🛡️ Зал клана <b>«${cl.n}»</b>. Основа — народ ${cl.race}. Покровитель: ${cg?cg.n:"—"}.<br>
    ${cl.hist}<br>Устав: ${cl.creed} Соперник: ${cl.foe}.</div>`+
@@ -4520,6 +4965,9 @@ function openBuilding(c){const s=c.structure;
   html+=`<button class="item" data-cmd="svc:teachTower">🔮 Уроки магии</button>`;}
  if(s.type==="ruins"){
   html+=`<button class="item" data-cmd="searchruins">🔦 Обыскать руины</button>`;}
+ /* Причал: рейсы к другим портам. */
+ if(s.type==="port"){
+  html+=`<button class="item" data-cmd="harbor" data-speak="Открыть причал: рейсы к другим портам, посадка на корабль.">🚢 Причал: корабли и рейсы</button>`;}
  /* Вход в объёмную постройку: город за воротами, дом или подземелье. */
  if(PLACE_KIND[s.type]){
   const kind=PLACE_KIND[s.type];
@@ -4536,9 +4984,10 @@ function openBuilding(c){const s=c.structure;
  beacon(s.beacon,0,0);
  openModal("modal-building");
  narrate(`${s.name}. ${bldDesc(s.type)} Внутри ${npcs.length?npcs.length+" жителей":"никого нет"}. Меню услуг доступно кнопками.`);}
-function iconFor(t){return{castle:"🏰",village:"🏘️",tavern:"🍺",clanhall:"🛡️",tower:"🗼",ruins:"🏚️",temple:"⛩️",traveler:"🚶",cave_entrance:"🕳️"}[t]||"🏠";}
+function iconFor(t){return{castle:"🏰",village:"🏘️",tavern:"🍺",clanhall:"🛡️",tower:"🗼",ruins:"🏚️",temple:"⛩️",traveler:"🚶",cave_entrance:"🕳️",port:"⚓"}[t]||"🏠";}
 function bldDesc(t){return{castle:"Серые стены, штандарты империи, стража у ворот. За воротами — улицы, кварталы и спуск в подземелье.",
  cave_entrance:"Тёмный ход уходит вниз. Оттуда тянет холодом и слышно капли.",
+ port:"Причалы, мокрое дерево, крики чаек и хлопки парусов. Отсюда уходят корабли в другие порты.",
  village:"Дымки над крышами, пахнет хлебом и скотиной.",
  tavern:"Тепло очага, звон кружек и чей-то смех.",
  clanhall:"Знамена клана, стойки с оружием, запах кожи и стали.",
@@ -4559,7 +5008,8 @@ function tavernService(s){const c=cellContent(G.x,G.y);
   Play.start("ev","fire",{dur:8});
   narrate("Вы выспались. Здоровье и мана восстановлены. Наступило утро.");
   journal("Отдых на постоялом дворе.");refresh();return;}
- if(s==="rumor"){const r=rumor();narrate(`Трактирщик наклоняется ближе: «${r}»`);return;}
+ if(s==="rumor"){const r=rumor();safeFn(()=>Bank.play("tavern",{seed:G.day,gain:0.5,maxSec:6}));
+  narrate(`Трактирщик наклоняется ближе: «${r}»`);return;}
  if(s==="audience"){const npc=getNPC(G.x,G.y,0,"Правитель");openNPC(npc.key);return;}
  if(s==="bless"){if(G.gold<30){narrate("Нужно 30 золота.");return;}
   G.gold-=30;G.mind+=2;Play.start("ev","magic",{dur:4});
@@ -4610,6 +5060,8 @@ function prayToGod(id){
  if(g.fx==="water"){const w=Math.round(20+10*fxLevel("water"));G.water=Math.min(200,G.water+w);extra=` Вода +${w}.`;}
  if(g.fx==="trade"){const c=Math.round(5+5*fxLevel("trade"));G.gold+=c;extra=` Подорожные +${c} золота.`;}
  safeFn(()=>{if(settings.effects)Play.start("ev","magic",{dur:3});});
+ /* У каждого из двенадцати богов свой голос из звукового банка. */
+ safeFn(()=>Bank.play("god",{seed:PANTHEON.findIndex(x=>x.id===id),gain:0.8,maxSec:9}));
  safeFn(()=>UI.blip(880+PANTHEON.findIndex(x=>x.id===id)*40,.12,.2));
  narrate(`Молитва услышана. ${g.n}, ${g.ep}. Здоровье +${heal}.${extra} Благосклонность: ${G.faith[id]}, вы для него — ${faithTitle(id)}.`);
  journal(`Молитва: ${g.n}.`);
@@ -4681,11 +5133,20 @@ function learnSpell(i){const sp=SPELLS[i];
 const SPELLS=[{n:"Искра",cost:5,price:0},{n:"Ветер странника",cost:8,price:50},
  {n:"Зов дождя",cost:10,price:80},{n:"Огненный шар",cost:12,price:120},
  {n:"Исцеление",cost:10,price:100}];
+/* Школа заклинания по его действию: свет, огонь, лёд, тень или общий зов. */
+function spellBankRole(sp){
+ const n=String(sp&&sp.n||"").toLowerCase();
+ if(/лечен|исцел|свет|заря/.test(n))return "spell_light";
+ if(/огн|пламя|искр|жар/.test(n))return "spell_fire";
+ if(/лёд|лед|мороз|стуж/.test(n))return "spell_ice";
+ if(/тень|мрак|прокл|тьм/.test(n))return "spell_dark";
+ return "spell_cast";}
 function castSpell(i){const sp=SPELLS[i];
  if(!sp){narrate(`Слот ${i+1} пока пуст.`);return;}
  if(!G.spells.includes(sp.n)){narrate("Заклинание не изучено.");return;}
  if(G.mana<sp.cost){narrate(`Нужно ${sp.cost} маны, у вас ${G.mana}.`);return;}
  G.mana-=sp.cost;
+ safeFn(()=>Bank.play(spellBankRole(sp),{seed:i,gain:0.7,maxSec:7}));
  if(sp.n==="Исцеление"){G.hp=Math.min(G.hpMax,G.hp+25);UI.drink();}
  else if(settings.effects)Play.start("ev",sp.n==="Огненный шар"?"magic":sp.n==="Зов дождя"?"rain":sp.n==="Ветер странника"?"wind":"magic",{dur:4});
  narrate(`Заклинание «${sp.n}» сотворено.`);journal("Заклинание: "+sp.n);
@@ -4883,6 +5344,7 @@ function completeQuest(id){const q=G.quests.find(qq=>qq.id===id);
   if(q.faith&&q.godId){if(!G.faith)G.faith={};G.faith[q.godId]=godFavor(q.godId)+q.faith;}
   if(q.diplo)nudgeDiplo(empireIndexAt(G.x,G.y),q.diplo);});
  UI.fanfare();
+ safeFn(()=>Bank.play("quest",{seed:G.quests.length,gain:0.7,maxSec:7}));
  narrate(`Квест выполнен! Награда: ${gold} золота, ${xp} опыта.`+
   (q.faith&&q.godId?` Благосклонность ${GOD_BY_ID[q.godId]?GOD_BY_ID[q.godId].n:"бога"} +${q.faith}.`:"")+
   (q.diplo?" Держава запомнит вашу службу.":"")+
@@ -5335,7 +5797,7 @@ function enterGame(){if(entered){showScreen("screen-game");normalizeWeaponState(
  G.weather=rollWeather();Weather.set(G.weather);
  const c=cellContent(G.x,G.y);
  if(settings.effects)Play.start("amb0",(AMB[c.terrain[0]]||["wind"])[0],{loop:true});
- Music.start(c.terrain[0]);lastEmp=c.empire.name;lastArrive=c;
+ Music.start(c.terrain[0]);safeFn(()=>bankUpdateAmbient());lastEmp=c.empire.name;lastArrive=c;
  narrate(`Вы вошли в мир. ${c.terrain[1]}, ${c.empire.name}. Погода: ${G.weather}. Управление: свайп — шаг, свайп и удержание — бег, касание двумя пальцами — меню действий, где собраны все кнопки.`);
  refresh();saveGame(true);}
 document.addEventListener("keydown",e=>{
