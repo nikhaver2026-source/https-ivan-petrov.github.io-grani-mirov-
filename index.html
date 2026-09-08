@@ -91,6 +91,7 @@ h3{color:var(--acc2);margin:14px 0 6px;font-size:1.05rem;}
   <button type="button" data-cmd="check">🔊 Проверить звук</button>
   <button type="button" data-cmd="encyc">🎧 Энциклопедия звуков (87 звуков)</button>
   <button type="button" data-cmd="guide">📖 Полное руководство</button>
+  <button type="button" data-cmd="tutorstart">🎓 Обучение жестам (для новичка)</button>
   <button type="button" data-cmd="fs">🖥️ Полноэкранный режим</button>
   <button type="button" data-cmd="load">💾 Загрузить игру</button>
   <button type="button" data-cmd="story">🎬 Начать историю</button>
@@ -139,6 +140,9 @@ h3{color:var(--acc2);margin:14px 0 6px;font-size:1.05rem;}
  <label class="opt">🎵 Громкость эффектов <input type="range" id="setFxVol" min="0" max="100" value="100"><span id="vFx">100%</span></label>
  <label class="opt">🎼 Громкость музыки <input type="range" id="setMusicVol" min="0" max="100" value="100"><span id="vMusic">100%</span></label>
  <label class="opt">🎤 Голос <select id="setVoice" aria-label="Выбор голоса"></select></label>
+ <h3>⚔️ Сложность</h3>
+ <p class="hint" id="diffHint">Мир одинаково честен на любом уровне: меняется не то, что происходит, а мера — сколько бьют, сколько держат, как часто встречаются и сколько стоит поражение.</p>
+ <div class="row" id="diffRow"></div>
  <h3>♿ Доступность</h3>
  <label class="opt"><input type="checkbox" id="setExplore" checked><span>🤚 <b>Режим ощупывания</b><small>Называть элементы под пальцем (для незрячих)</small></span></label>
  <label class="opt"><input type="checkbox" id="setFastTap"><span>⚡ <b>Быстрая активация</b><small>Одно касание сразу выполняет действие, без предварительного озвучивания вторым касанием</small></span></label>
@@ -360,7 +364,21 @@ const store={
 
 /* ════════ НАСТРОЙКИ ════════ */
 let savedSet={};try{savedSet=JSON.parse(store.get("gm29set")||"{}")||{};}catch(e){}
-const settings=Object.assign({speech:1,effects:1,music:1,subtitles:1,explore:1,fastTap:0,haptics:1,rate:1,voiceVol:1,fxVol:1,musicVol:1,voice:""},savedSet);
+const settings=Object.assign({speech:1,effects:1,music:1,subtitles:1,explore:1,fastTap:0,haptics:1,rate:1,voiceVol:1,fxVol:1,musicVol:1,voice:"",difficulty:"normal"},savedSet);
+/* ── СЛОЖНОСТЬ ──
+   Раньше мир был одинаково суров ко всем: числа урона, здоровья тварей,
+   частоты встреч и цен были зашиты намертво. Кому-то это слишком тяжело —
+   особенно тому, кто играет на слух и первый раз, — а кому-то слишком легко.
+   Три уровня меняют не правила, а меру: сколько бьют, сколько держат, как
+   часто встречаются, почём торгуют и сколько отнимает поражение. */
+const DIFFICULTY={
+ calm:{n:"Спокойный",d:"Твари бьют вполсилы и держат меньше, встречи реже, лечение щедрее, поражение почти ничего не отнимает. Для тех, кто пришёл за миром и историей.",
+  dmg:0.6,foeHp:0.8,meet:0.7,price:0.9,loss:0.4,heal:1.35},
+ normal:{n:"Обычный",d:"Мир как задуман: держит удар, но и бьёт в ответ.",
+  dmg:1,foeHp:1,meet:1,price:1,loss:1,heal:1},
+ harsh:{n:"Суровый",d:"Твари крепче и бьют больнее, встречи чаще, торговцы жаднее, поражение стоит дорого. Для тех, кто знает мир и хочет, чтобы он сопротивлялся.",
+  dmg:1.5,foeHp:1.35,meet:1.4,price:1.15,loss:1.6,heal:0.8}};
+function diff(){return DIFFICULTY[settings.difficulty]||DIFFICULTY.normal;}
 const saveSettings=()=>store.set("gm29set",JSON.stringify(settings));
 function vib(p){if(settings.haptics&&navigator.vibrate){try{navigator.vibrate(p);}catch(e){}}}
 
@@ -1573,7 +1591,8 @@ function speakTextOf(el){try{const text=el?.dataset?.speak||el?.getAttribute?.('
  if(same)return; /* защита только от дребезга того же элемента за 250мс, а не от смены элемента */
  lastAnnounced=text;lastAnnouncedAt=Date.now();
  Speech.say(text,{interrupt:true}); /* interrupt:true обрывает недочитанный предыдущий элемент немедленно */
- vib(10);}catch(_) {}}
+ vib(10);
+ if(typeof Tutor!=="undefined")Tutor.note("explore");}catch(_) {}}
 /* Текстовые поля намеренно исключены: фокус на них поднимает экранную клавиатуру
    прямо во время ощупывания. Флажки, ползунки, кнопки и списки — безопасны. */
 /* ════════════════════════════════════════════════════════════════════════
@@ -1693,15 +1712,19 @@ function handleTwoFingerSwipe(dir){
 }
 function handleThreeFingerSwipe(){
  if(!gameActive())return;
+ safeFn(()=>Tutor.note("status"));
  const q=(G.quests||[]).filter(x=>!x.done);
  const where=G.ship?`на борту судна «${G.ship.name}», курс на «${G.ship.toName}», осталось переходов ${G.ship.left} из ${G.ship.legs}${G.ship.storm?", идёт шторм":""}`
   :G.place?placeTitle()+`, клетка ${G.place.x} на ${G.place.y}`
   :`${cellContent(G.x,G.y).terrain[1]}, ${cellContent(G.x,G.y).empire.name}, координаты ${G.x} и ${G.y}`;
  narrate(`Вы здесь: ${where}. Здоровье ${G.hp} из ${G.hpMax}, мана ${G.mana} из ${G.manaMax}, золото ${G.gold}. `+
-  `День ${G.day}, ${Math.floor(G.hour%24)} часов. Оружие ${G.weaponDrawn?"в руках":"в ножнах"}. `+
+  `День ${G.day}, ${Math.floor(G.hour%24)} часов, ${isNight()?"ночь":"день"}. Оружие ${G.weaponDrawn?"в руках":"в ножнах"}. `+
+  `Сложность: ${diff().n}. `+
   (q.length?`Незавершённых заданий: ${q.length}. Ближайшее: ${q[0].text}`:"Незавершённых заданий нет."));
 }
-function handleTwoFingerTap(){if(!gameActive())return;if(closeTopUI()){safeFn(()=>UI.blip(520,.08,.12));return;}safeFn(()=>openActionMenu());safeFn(()=>UI.blip(980,.11,.2));}
+function handleTwoFingerTap(){if(!gameActive())return;
+ if(closeTopUI()){safeFn(()=>UI.blip(520,.08,.12));safeFn(()=>Tutor.note("menuclose"));return;}
+ safeFn(()=>openActionMenu());safeFn(()=>UI.blip(980,.11,.2));safeFn(()=>Tutor.note("menu"));}
 function performWeaponAction(){
  safeFn(()=>normalizeWeaponState());
  if(G.weaponDrawn){safeFn(()=>sheatheWeapon());return;}
@@ -1729,7 +1752,7 @@ function armMagicHold(target){cancelMagicHold();magicHold={timer:setTimeout(()=>
 function stopRun(){if(runState.hold){clearTimeout(runState.hold);runState.hold=null;}if(runState.iv){clearInterval(runState.iv);runState.iv=null;}if(runState.active){runState.active=false;runState.dir=null;}}
 /* Бег: шаги идут вдвое чаще прежнего (300 мс были заметно вязкими). */
 const RUN_INTERVAL=160;
-function startRun(dir){if(!gameActive()||!dir||G.weaponDrawn||activeLayer()||G.inCombat)return false;stopRun();runState.active=true;runState.dir=dir;safeFn(()=>move(dir));runState.iv=setInterval(()=>{if(!gameActive()||activeLayer()||G.inCombat||G.weaponDrawn){stopRun();return;}safeFn(()=>move(runState.dir));},RUN_INTERVAL);return true;}
+function startRun(dir){if(!gameActive()||!dir||G.weaponDrawn||activeLayer()||G.inCombat)return false;stopRun();runState.active=true;runState.dir=dir;safeFn(()=>Tutor.note("run"));safeFn(()=>move(dir));runState.iv=setInterval(()=>{if(!gameActive()||activeLayer()||G.inCombat||G.weaponDrawn){stopRun();return;}safeFn(()=>move(runState.dir));},RUN_INTERVAL);return true;}
 function swipeNav(dir){
  const layer=activeLayer();if(!layer)return false;
  const items=cursorItems(layer);if(!items.length)return false;
@@ -1969,7 +1992,9 @@ const AM_GROUPS=[
   ["encyc","🎧 Энциклопедия звуков"],
   ["guide","📖 Полное руководство"],
   ["gestures","❓ Жесты"],
+  ["tutor","🎓 Обучение жестам"],
   ["testall","✅ Проверить все звуки"],
+  ["warm","⬇️ Скачать все записи на устройство"],
   ["check","🔊 Проверить звук"],
   ["silence","⏹ Тишина"]]],
  ["Игра",[
@@ -1980,6 +2005,12 @@ const AM_GROUPS=[
   ["close","✖️ Закрыть меню"]]]];
 const AM_ITEMS=AM_GROUPS.reduce((a,g)=>a.concat(g[1]),[]);
 /* Какие пункты уместны прямо сейчас. */
+/* Подпись пункта меню зависит от того, идёт ли обучение. */
+function amLabel(cmd,label){
+ if(cmd==="tutor"&&typeof Tutor!=="undefined"&&Tutor.on)return "🛑 Прекратить обучение";
+ if(cmd==="warm"&&typeof Warm!=="undefined"&&Warm.busy)
+  return `⏹ Остановить скачивание (${Warm.done} из ${Warm.total})`;
+ return label;}
 function amAvailable(cmd){
  try{
   const c=cellContent(G.x,G.y);
@@ -2008,7 +2039,7 @@ function openActionMenu(){lastFocused=document.activeElement;
   else if(cmd==="descend"&&!G.place){const c=cellContent(G.x,G.y);
    b.textContent=c.structure?`⬇️ Войти: ${c.structure.name}`:label;}
   else if(cmd==="ascend"&&G.place){b.textContent=G.place.depth>0?"⬆️ Подняться на уровень выше":"⬆️ Выйти наружу";}
-  else b.textContent=label;
+  else b.textContent=amLabel(cmd,label);
   b.dataset.speak=b.textContent;
   list.appendChild(b);count++;};
  /* В бою первым пунктом идёт побег: старых боевых кнопок в игре нет. */
@@ -4301,13 +4332,13 @@ function cellContent(x,y){const key=x+","+y;
     c.res={name:r,icon:RESICON[r],beacon:RESBEACON[r],qty:2+Math.floor(H(x,y,24)*4)};}}}
  if(!c.structure){
   const t=c.terrain[0],night=isNight();
-  let p=(t==="road"?0.02:0.05)*(night?1.6:1);
+  let p=(t==="road"?0.02:0.05)*(night?1.6:1)*diff().meet;
   if(H(x,y,31)<p){
    const cand=MONSTERS.filter(m=>m.biomes.includes(t));
    if(cand.length){const m=cand[Math.floor(H(x,y,32)*cand.length)];
     const emp2=emp,dist=Math.hypot(x-emp2.cap.x,y-emp2.cap.y)/1000;
     let lvl=Math.min(m.max,Math.max(m.min,1+Math.floor(dist*4)+Math.floor(H(x,y,33)*3)));
-    c.monster={...m,lvl,hp:20+lvl*8,dmg:3+lvl*2,xp:15+lvl*10,gold:5+lvl*4};}}}
+    c.monster={...m,lvl,hp:Math.round((20+lvl*8)*diff().foeHp),dmg:3+lvl*2,xp:15+lvl*10,gold:5+lvl*4};}}}
  if(contentCache.size>4000)contentCache.clear();
  contentCache.set(key,c);return c;}
 function isNight(){const h=G.hour%24;return h>=21||h<6;}
@@ -4462,7 +4493,7 @@ function evGear(level){const it=genLoot(G.x,G.y,Math.floor(Math.random()*9999),l
 function evFight(name,mult){
  const lv=Math.max(1,Math.round(G.level*(mult||1)));
  const base=MONSTERS.find(m=>m.id==="bandit")||MONSTERS[0];
- startCombat({x:G.x,y:G.y,monster:{...base,n:name,lvl:lv,hp:20+lv*9,dmg:4+lv*2,xp:22+lv*11,gold:10+lv*5}});}
+ startCombat({x:G.x,y:G.y,monster:{...base,n:name,lvl:lv,hp:Math.round((20+lv*9)*diff().foeHp),dmg:4+lv*2,xp:22+lv*11,gold:10+lv*5}});}
 const EVENTS=[
  {id:"holyday",w:3,ok:c=>!c.inside,
   title:c=>`Священный день: ${c.holy.n}`,
@@ -5778,7 +5809,7 @@ const Actors={
   this.list=this.list.filter(o=>o!==a);
   const p=G.place;
   const lvlNo=Math.max(1,G.level+p.depth-1);
-  const m={...a.m,lvl:lvlNo,hp:22+lvlNo*9,dmg:4+lvlNo*2,xp:20+lvlNo*12,gold:8+lvlNo*5};
+  const m={...a.m,lvl:lvlNo,hp:Math.round((22+lvlNo*9)*diff().foeHp),dmg:4+lvlNo*2,xp:20+lvlNo*12,gold:8+lvlNo*5};
   safeFn(()=>{Bank.play("danger",{seed:p.x+p.y,gain:0.8,maxSec:4});vib([50,40,50]);});
   narrate(`${a.name} настиг вас в темноте!`,{interrupt:true});
   startCombat({x:G.x,y:G.y,monster:m});},
@@ -5832,12 +5863,13 @@ function startInsideCombat(x,y){
   MONSTERS.filter(m=>m.biomes.includes(p.depth>0?"cave":"road")):MONSTERS;
  const m0=pool[Math.floor(H(p.bx+x,p.by+y,777+p.depth)*pool.length)];
  const lvlNo=Math.max(1,G.level+p.depth-1+Math.floor(H(x,y,778)*3));
- const m={...m0,lvl:lvlNo,hp:24+lvlNo*9,dmg:4+lvlNo*2,xp:20+lvlNo*12,gold:8+lvlNo*5};
+ const m={...m0,lvl:lvlNo,hp:Math.round((24+lvlNo*9)*diff().foeHp),dmg:4+lvlNo*2,xp:20+lvlNo*12,gold:8+lvlNo*5};
  G.place.pendingKill={x,y};
  startCombat({x:G.x,y:G.y,monster:m});
 }
 /* ── Действие «здесь»: дверь, ворота, лестница, сундук, алтарь, лавка, ресурс ── */
 function useHere(){
+ safeFn(()=>Tutor.note("here"));
  /* Добыча после победы важнее всего остального: её собирают первой. */
  if(G.loot&&Array.isArray(G.loot)&&G.loot.length&&safeFn(()=>takeLoot(),false))return true;
  if(!G.place){
@@ -5997,6 +6029,7 @@ function move(dir){
  if(G.hour>=24){G.hour-=24;G.day++;
   for(const k in G.depleted){if(G.depleted[k].day<G.day)delete G.depleted[k];}}
  if(settings.effects)stepSound();
+ safeFn(()=>Tutor.note("move:"+dir));
  if(Math.random()<0.2){const w=rollWeather();if(w!==G.weather){G.weather=w;Weather.set(w);
    safeFn(()=>Bank.play("hiss",{seed:G.day,gain:0.45,maxSec:5}));}}
  arrive(dir);}
@@ -6284,7 +6317,8 @@ function fight(a){const cb=G.combat;if(!cb)return;const m=cb.m;
   cbLog("Сбежать не вышло!");}
  narrate(cbLog2text());
  if(cb.hp<=0){victory();return;}
- const mdmg=Math.max(1,m.dmg-Math.floor(def()/2)+Math.floor(Math.random()*3));
+ /* Мера сложности: во сколько раз больнее бьёт мир. */
+ const mdmg=Math.max(1,Math.round((m.dmg-Math.floor(def()/2)+Math.floor(Math.random()*3))*diff().dmg));
  const hpBefore=G.hp;
  G.hp-=mdmg;UI.hit();vib(40);
  playWoundSfx(mdmg);
@@ -6403,7 +6437,10 @@ function defeat(){endCombat();Music.stop();
  const emp=empireAt(G.x,G.y);G.x=emp.cap.x;G.y=emp.cap.y;
  /* Милость Мортаны Тихой: поражение обходится дешевле её последователям. */
  const mercy=Math.min(0.09,0.03*fxLevel("mercy"));
- G.hp=50+Math.round(20*fxLevel("mercy"));G.gold=Math.floor(G.gold*(0.9+mercy));
+ /* Мера сложности: сколько стоит поражение. На спокойном теряется малость,
+    на суровом — заметная доля кошеля. */
+ const keep=Math.max(0,Math.min(1,1-(0.1-mercy)*diff().loss));
+ G.hp=50+Math.round(20*fxLevel("mercy"));G.gold=Math.floor(G.gold*keep);
  narrate(`Поражение... Вы очнулись в цитадели «${emp.short}». Потеряна часть золота.${mercy?" Мортана смягчила утрату.":""}`);
  journal("Поражение в бою.");refresh();resumeLocationMusic();}
 function checkLevelUp(){let leveled=false;
@@ -6592,6 +6629,14 @@ const CMD={
  equip(i){equipWeaponIndex(+i);},
  cast(i){castSpell(+i);},
  fight(a){if(a==="atk"||a==="magic"||a==="potion"||a==="flee")fight(a);},
+ setdiff(k){setDifficulty(k);},
+ tutor(){Tutor.on?Tutor.stop():Tutor.start();},
+ warm(){Warm.busy?Warm.cancel():Warm.run();},
+ tutorstart(){
+  /* С главного экрана обучение сперва вводит игрока в мир: учиться жестам
+     проще там, где они на что-то действуют. */
+  if(!gameActive())enterGame();
+  setTimeout(()=>safeFn(()=>Tutor.start()),1200);},
  saves(){openModal("modal-saves");renderSaves();},
  loadauto(){loadGame();},
  slotsave(n){saveToSlot(n);},
@@ -6808,7 +6853,7 @@ function prayToGod(id){
  G.prayed[key]=G.day;
  if(!G.faith)G.faith={};
  G.faith[id]=(Number(G.faith[id])||0)+1+(G.patron===id?1:0);
- const heal=10+Math.round(8*fxLevel("heal"));
+ const heal=Math.round((10+Math.round(8*fxLevel("heal")))*diff().heal);
  G.hp=Math.min(G.hpMax,G.hp+heal);
  let extra="";
  if(g.fx==="mana"){const m=Math.round(6+4*fxLevel("mana"));G.mana=Math.min(G.manaMax,G.mana+m);extra=` Мана +${m}.`;}
@@ -6967,7 +7012,7 @@ function stockFor(n){const out=[];
  for(let k=0;k<3;k++)out.push({gear:genLoot(n.x,n.y,Math.floor(H(n.x,n.y,80+k)*9999),G.level+n.tier),price:0});
  /* Наверху цена своя, в подземелье — с надбавкой за глубину: сюда всё
     приходится нести на себе. */
- const km=buyModifier(n)*(deep?1.25+0.08*Math.max(0,(G.place.depth||1)-1):1);
+ const km=buyModifier(n)*(deep?1.25+0.08*Math.max(0,(G.place.depth||1)-1):1)*diff().price;
  out.forEach(o=>{if(o.gear)o.price=Math.max(10,Math.round(o.gear.price*(1-n.tier*0.05)));
   o.price=Math.max(1,Math.round(o.price*km));});
  return out;}
@@ -7395,7 +7440,7 @@ function renderGestures(){
   "<b>ТРИ ПАЛЬЦА — бой и сведения</b>",
   "🤟 Касание тремя пальцами — вынуть оружие, если оно убрано, либо убрать в ножны.",
   "⚔️ Свайп одним пальцем при вынутом оружии — боевой взмах в направлении свайпа. В бою — удар со звуком попадания.",
-  "🧭 Свайп тремя пальцами — <b>«где я»</b>: место, уровень подземелья, координаты, здоровье, мана, золото, день, час и ближайшее задание.",
+  "🧭 Свайп тремя пальцами — <b>«где я»</b>: место, уровень подземелья, координаты, здоровье, мана, золото, день, час, время суток, уровень сложности и ближайшее задание.",
   "<b>ЧЕТЫРЕ ПАЛЬЦА — магия</b>",
   "🖐️ Касание четырьмя пальцами — открыть или закрыть панель заклинаний.",
   "✨ В панели заклинаний: свайп влево или вправо — выбрать слот, двойное касание — применить. Удержание пальца на слоте — быстрое применение.",
@@ -7404,6 +7449,8 @@ function renderGestures(){
   "🎧 После каждого шага внутри ближайшие объекты сами подают голос слева или справа — по той стороне, где они стоят.",
   "🚶 <b>Мир живёт.</b> По улицам ходит стража и горожане, в подземельях бродят твари: их шаги слышны с той стороны, где они идут, и становятся громче по мере приближения. Тварь, дошедшая до вас, нападает сама. Снаружи у стен поселений встречаются дозоры.",
   "🛣️ <b>Дороги.</b> Большие тракты идут через весь мир, от каждого селения к ближнему тракту протоптан съезд. Там, где тракты пересекаются, стоит перекрёсток со столбом-указателем: он называет ближние города, сторону света и расстояние в шагах.",
+  "⚔️ <b>Сложность.</b> В настройках три уровня: спокойный, обычный и суровый. Меняется не то, что происходит, а мера — сколько бьют, сколько держат твари, как часто встречаются, почём торгуют и сколько отнимает поражение. Переключить можно в любой момент.",
+  "💾 <b>Сохранения.</b> Игра сохраняется сама, но в меню «Сохранения» есть три слота и выгрузка в файл: файл можно унести на другой телефон и вернуть игру там же, где остановились. Если памяти браузера не хватит, игра скажет об этом вслух, а не промолчит.",
   "⌨️ Клавиатура: стрелки — ходьба, Таб — перебор элементов, Энтер — действие, Эскейп — закрыть окно или побег из боя, Альт+S — тишина."].map(t=>`<div class="list-line">${t}</div>`).join("");}
 function renderMap(){
  const g=document.getElementById("mapGrid");g.innerHTML="";
@@ -7513,7 +7560,33 @@ document.getElementById("btnTestCancel").addEventListener("click",()=>{testing=f
  Play.stopKey("test");narrate("Проверка остановлена.");});
 
 /* ════════ НАСТРОЙКИ ════════ */
+/* Кнопки сложности: выбранная названа вслух вместе с тем, что она меняет. */
+function renderDifficulty(){
+ const row=document.getElementById("diffRow");if(!row)return;
+ row.innerHTML=Object.keys(DIFFICULTY).map(k=>{
+  const d=DIFFICULTY[k],on=settings.difficulty===k;
+  return `<button type="button" data-cmd="setdiff:${k}" aria-pressed="${on}"
+   data-speak="Сложность ${d.n}${on?", выбрана сейчас":""}. ${d.d}">${on?"✅":"▫️"} ${d.n}</button>`;}).join("");
+ const cur=diff();
+ const hint=document.getElementById("diffHint");
+ if(hint)hint.textContent=`Сейчас: ${cur.n}. ${cur.d}`;
+}
+function setDifficulty(k){
+ if(!DIFFICULTY[k]){narrate("Такого уровня сложности нет.");return false;}
+ settings.difficulty=k;saveSettings();
+ /* Клетки мира помнят, кого в них поселили, поэтому после смены меры их
+    нужно собрать заново — иначе новая частота встреч начнёт действовать
+    только там, где игрок ещё не был. */
+ safeFn(()=>contentCache.clear());
+ const d=DIFFICULTY[k];
+ renderDifficulty();
+ safeFn(()=>Bank.play("ui_toggle_on",{gain:0.5,maxSec:2}));
+ narrate(`Сложность: ${d.n}. ${d.d}`);
+ journal(`Сложность: ${d.n}.`);
+ return true;
+}
 function bindSettings(){const $=id=>document.getElementById(id);
+ renderDifficulty();
  $("setSpeech").checked=!!settings.speech;$("setEffects").checked=!!settings.effects;
  $("setMusic").checked=!!settings.music;$("setSubs").checked=!!settings.subtitles;
  $("setExplore").checked=!!settings.explore;$("setFastTap").checked=!!settings.fastTap;$("setHaptics").checked=!!settings.haptics;
@@ -7809,6 +7882,159 @@ function startIntro(){showScreen("screen-intro");
   enterGame();
  }});}
 let entered=false;
+
+
+/* ════════════════════════════════════════════════════════════════════════
+   ПРОГРЕВ ЗАПИСЕЙ
+   Записи качаются по мере того, как впервые звучат. На быстрой сети этого
+   не заметно, а на мобильном интернете первые минуты игра глуховата: маяк
+   уже нужен, а файл ещё едет. Прогрев скачивает всё заранее — один раз, с
+   озвученным ходом работы, — и складывает в кэш служебного работника.
+   Дальше игра звучит мгновенно и работает без сети.
+   ════════════════════════════════════════════════════════════════════════ */
+const Warm={
+ busy:false,stop:false,done:0,total:0,
+ /* Полный список того, что игра умеет проиграть. */
+ list(){
+  const out=[];
+  try{
+   Object.keys(SOUND_BANK).forEach(r=>SOUND_BANK[r].f.forEach(f=>out.push(f)));
+   Object.values(UI_BANK).forEach(f=>out.push(f));
+   Object.values(BEACON_SAMPLE).forEach(f=>out.push(f));
+   Object.values(MONSTER_BANK).forEach(o=>Object.values(o).forEach(f=>out.push(f)));
+  }catch(_){}
+  return [...new Set(out)];},
+ /* Одна запись: тянем элементом audio — так же, как её тянет сама игра,
+    поэтому она ложится ровно в тот же кэш. */
+ one(f){
+  return new Promise(res=>{
+   let a=null;
+   const fin=()=>{try{if(a){a.__stopped=true;a.pause();a.removeAttribute("src");a.load();}}catch(_){}res();};
+   try{
+    a=new Audio(Bank.url(f));a.preload="auto";a.volume=0;a.muted=true;
+    a.addEventListener("loadeddata",fin,{once:true});
+    a.addEventListener("error",fin,{once:true});
+    setTimeout(fin,12000);
+    a.load();
+   }catch(_){res();}});},
+ async run(){
+  if(this.busy){narrate("Прогрев уже идёт.");return false;}
+  const files=this.list();
+  if(!files.length||!Bank.enabled){narrate("Записи недоступны: папка со звуками не найдена рядом с игрой.");return false;}
+  this.busy=true;this.stop=false;this.done=0;this.total=files.length;
+  narrate(`Скачиваю все записи: ${this.total} штук. Это делается один раз — потом игра звучит мгновенно и работает без сети. Можно продолжать играть, я буду говорить, сколько осталось.`);
+  const t0=Date.now();
+  let step=0;
+  for(const f of files){
+   if(this.stop)break;
+   /* По четыре зараз: быстрее последовательного и не забивает канал. */
+   await this.one(f);
+   this.done++;step++;
+   if(step>=Math.ceil(this.total/5)){
+    step=0;
+    const pct=Math.round(this.done*100/this.total);
+    narrate(`Скачано ${pct} процентов, осталось ${this.total-this.done} записей.`,{interrupt:false});
+    safeFn(()=>Bank.play("tick",{seed:this.done,gain:0.4,maxSec:2}));}
+  }
+  const secs=Math.round((Date.now()-t0)/1000);
+  this.busy=false;
+  if(this.stop){narrate(`Прогрев остановлен: успел скачать ${this.done} записей из ${this.total}.`);return false;}
+  safeFn(()=>Bank.play("trumpet_fanfare",{seed:1,gain:0.6,maxSec:5}));
+  narrate(`Готово: все ${this.total} записей на устройстве, ушло ${secs} секунд. Теперь маяки звучат мгновенно, и игра работает без сети.`);
+  try{store.set("gm29warm",String(Date.now()));}catch(_){}
+  return true;},
+ cancel(){if(!this.busy)return false;this.stop=true;return true;}
+};
+/* ════════════════════════════════════════════════════════════════════════
+   ОБУЧЕНИЕ ЖЕСТАМ
+   Экран «Жесты» — это справочник: он рассказывает, но не показывает. Новому
+   незрячему игроку нужно другое — сделать жест руками и услышать, что он
+   сработал. Обучение ведёт по одному жесту за раз, ждёт именно его, хвалит
+   и переходит к следующему. Если игрок молчит, оно через полминуты
+   повторяет просьбу другими словами. Прервать можно в любой момент.
+
+   Обучение ничего не подменяет: игрок делает настоящие жесты в настоящем
+   мире, а урок лишь слушает, что произошло.
+   ════════════════════════════════════════════════════════════════════════ */
+const Tutor={
+ on:false,i:0,timer:null,tries:0,
+ steps:[
+  {want:"move:E",
+   say:"Урок первый: шаг. Проведите одним пальцем слева направо — это шаг на восток.",
+   again:"Проведите пальцем по экрану слева направо, не отрывая. Даже короткое движение считается.",
+   ok:"Есть шаг на восток. Так вы ходите по всему миру: вверх — север, вниз — юг, влево — запад, вправо — восток."},
+  {want:"move:W",
+   say:"Урок второй: обратно. Проведите пальцем справа налево — шаг на запад.",
+   again:"Справа налево, одним пальцем.",
+   ok:"Верно. Направление игра называет только когда оно меняется, чтобы не забивать слух."},
+  {want:"run",
+   say:"Урок третий: бег. Проведите пальцем в любую сторону и НЕ отрывайте его — пойдёте бегом, пока держите.",
+   again:"Свайп и удержание: провели и держите палец на экране. Отпустите — остановитесь.",
+   ok:"Это бег. Отпустили — остановились. Так проходят длинные дороги между городами."},
+  {want:"menu",
+   say:"Урок четвёртый: меню действий. Коснитесь экрана двумя пальцами — откроется меню, где собраны все кнопки игры.",
+   again:"Двумя пальцами одновременно, одно касание.",
+   ok:"Меню открыто. Внутри окна свайп листает пункты по одному, а двойное касание выбирает тот, который игра назвала последним."},
+  {want:"menuclose",
+   say:"Теперь закройте меню тем же жестом: касание двумя пальцами.",
+   again:"Ещё раз двумя пальцами — окно закроется.",
+   ok:"Закрыто. Этот жест всегда работает так: нет окна — открыть меню, есть окно — закрыть его."},
+  {want:"status",
+   say:"Урок пятый: где я. Проведите по экрану тремя пальцами — игра скажет место, здоровье, золото, день и ближайшее задание.",
+   again:"Тремя пальцами в любую сторону.",
+   ok:"Это ваша сводка. Спрашивайте её сколько угодно — она ничего не тратит."},
+  {want:"here",
+   say:"Урок шестой: действие здесь. Задержите палец на экране, не двигая, — игра сделает то, что уместно на этой клетке: войдёт в дверь, откроет сундук, заговорит с жителем.",
+   again:"Просто положите палец и подержите секунду, не двигая.",
+   ok:"Вот и всё управление. Долгое касание — главный рабочий жест: им вы входите, берёте, говорите и молитесь."},
+  {want:"explore",
+   say:"Последнее: ощупывание. Коснитесь экрана и ведите пальцем медленно — игра называет всё, чего касается палец, и ничего при этом не нажимает.",
+   again:"Коснитесь и ведите медленно, не отрывая пальца.",
+   ok:"Так вы читаете экран пальцем. Медленно — читать, быстро — листать: игра различает их по скорости."}],
+ start(){
+  if(!gameActive()){narrate("Обучение начнётся, когда вы войдёте в мир.");return false;}
+  this.on=true;this.i=0;this.tries=0;
+  safeFn(()=>{while(activeLayer())closeTopUI();});
+  safeFn(()=>Bank.play("harp_light",{seed:1,gain:0.6,maxSec:5}));
+  narrate("Обучение жестам. Восемь коротких уроков, каждый — один жест. Игра ждёт, пока вы его сделаете, и подсказывает, если не получилось. Прервать можно в меню действий, пункт «Прекратить обучение».",{interrupt:true});
+  setTimeout(()=>safeFn(()=>Tutor.prompt()),9000);
+  return true;},
+ stop(quiet){
+  const was=this.on;
+  this.on=false;this.i=0;this.tries=0;
+  if(this.timer){clearTimeout(this.timer);this.timer=null;}
+  if(was&&!quiet)narrate("Обучение прекращено. Начать заново можно в меню действий.");
+  return was;},
+ prompt(){
+  if(!this.on)return;
+  const st=this.steps[this.i];
+  if(!st)return;
+  this.tries++;
+  narrate(this.tries<=1?st.say:st.again,{interrupt:false});
+  if(this.timer)clearTimeout(this.timer);
+  this.timer=setTimeout(()=>safeFn(()=>Tutor.prompt()),26000);},
+ /* Сюда игра сообщает, что жест случился. Урок ждёт только свой. */
+ note(kind){
+  try{
+   if(!this.on)return;
+   const st=this.steps[this.i];
+   if(!st||kind!==st.want)return;
+   if(this.timer){clearTimeout(this.timer);this.timer=null;}
+   this.tries=0;this.i++;
+   safeFn(()=>Bank.play("ui_success",{gain:0.6,maxSec:3}));
+   const last=this.i>=this.steps.length;
+   narrate(st.ok+(last?"":""),{interrupt:false});
+   if(last){
+    this.on=false;
+    safeFn(()=>{Bank.play("trumpet_fanfare",{seed:0,gain:0.7,maxSec:5});
+     setTimeout(()=>safeFn(()=>Bank.play("harp_light",{seed:2,gain:0.6,maxSec:5})),500);});
+    setTimeout(()=>narrate("Обучение окончено: вы знаете всё, что нужно, чтобы играть. Остальное игра расскажет по дороге. Доброго пути, Странник.",{interrupt:false}),2600);
+    journal("Обучение жестам пройдено.");
+    G.tutorDone=true;safeFn(()=>saveGame(true));
+    return;}
+   setTimeout(()=>safeFn(()=>Tutor.prompt()),3200);
+  }catch(_){}}
+};
 function enterGame(){if(entered){showScreen("screen-game");normalizeWeaponState();renderInventory();return;}
  entered=true;normalizeWeaponState();showScreen("screen-game");Speech.stop();
  G.weather=rollWeather();Weather.set(G.weather);
@@ -7816,6 +8042,10 @@ function enterGame(){if(entered){showScreen("screen-game");normalizeWeaponState(
  if(settings.effects)Play.start("amb0",(AMB[c.terrain[0]]||["wind"])[0],{loop:true});
  Music.start(c.terrain[0]);safeFn(()=>bankUpdateAmbient());lastEmp=c.empire.name;lastArrive=c;
  narrate(`Вы вошли в мир. ${c.terrain[1]}, ${c.empire.name}. Погода: ${G.weather}. Управление: свайп — шаг, свайп и удержание — бег, касание двумя пальцами — меню действий, где собраны все кнопки.`);
+ /* Первый раз в жизни: игра сама говорит, что есть обучение. Не навязывает —
+    просто называет пункт, чтобы новичок не искал его вслепую. */
+ if(!G.tutorDone&&!store.get(SAVE_KEY))
+  setTimeout(()=>safeFn(()=>narrate("Если вы здесь впервые: в меню действий есть пункт «Обучение жестам» — восемь коротких уроков, по одному жесту каждый.",{interrupt:false})),7000);
  refresh();saveGame(true);}
 document.addEventListener("keydown",e=>{
  if(e.key==="Escape"){
