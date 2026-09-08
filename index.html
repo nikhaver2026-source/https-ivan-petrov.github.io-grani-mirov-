@@ -2944,6 +2944,30 @@ function sellPrice(res,idx,day,npc){
  p*=1+Math.min(0.2,repOf(npc&&npc.race)*0.01);          /* репутация у народа */
  return Math.max(1,Math.round(p));
 }
+/* ════════════════════════════════════════════════════════════════════════
+   ОТНОШЕНИЕ НАРОДА
+   Репутация росла и падала, но мир на неё почти не отвечал: цена менялась
+   на проценты, и всё. Теперь отношение — это то, что слышно: свой платит
+   меньше и слышит об этом, чужому набавляют, а тому, кто перешёл черту,
+   попросту не продают. Клановая вражда работает так же: у народа-соперника
+   вашего клана к вам холоднее.
+   ════════════════════════════════════════════════════════════════════════ */
+const ATTITUDE=[
+ {min:12,id:"friend",n:"свой",priceK:0.85,say:"Для своих — своя цена."},
+ {min:5,id:"warm",n:"расположены",priceK:0.94,say:"Вам тут рады."},
+ {min:-4,id:"plain",n:"почти не знают",priceK:1,say:""},
+ {min:-9,id:"cold",n:"не рады",priceK:1.2,say:"Цена для чужака."},
+ {min:-99,id:"hostile",n:"не желают иметь дела",priceK:1.5,say:"С вами тут не торгуют."}];
+function attitudeOf(race){
+ let r=repOf(race);
+ /* Соперник вашего клана помнит, чей вы человек. */
+ try{
+  const my=G.clan&&CLAN_BY_NAME[G.clan];
+  if(my&&my.foe&&CLAN_BY_NAME[my.foe]&&CLAN_BY_NAME[my.foe].race===race)r-=6;
+ }catch(_){}
+ const a=ATTITUDE.find(x=>r>=x.min)||ATTITUDE[ATTITUDE.length-1];
+ return {...a,rep:r,refuses:a.id==="hostile"};
+}
 function buyModifier(npc){
  let k=1-0.05*fxLevel("deal")-0.03*fxLevel("trade");
  k-=Math.min(0.15,repOf(npc&&npc.race)*0.01);
@@ -5303,6 +5327,9 @@ const TILE={
  "P":{n:"торговец",b:"market"},
  "B":{n:"пост стражи",b:"npc_guard"}};
 /* Какие строения куда ведут: город (улицы с воротами), дом или подземелье. */
+/* Имена кварталов по их назначению: город перестаёт быть безымянной сеткой. */
+const BLOCK_NAMES={S:"торговый квартал",F:"кузнечный квартал",A:"храмовый квартал",
+ C:"складской квартал",B:"квартал стражи",N:"жилой квартал"};
 const PLACE_KIND={castle:"city",village:"city",port:"city",tavern:"house",clanhall:"house",tower:"house",
  temple:"house",ruins:"dungeon",traveler:null,cave_entrance:"dungeon"};
 const MAX_DEPTH=5;
@@ -5327,6 +5354,9 @@ function genLevel(bx,by,depth,stype){
  const h=kind==="city"?4+NR*(2+BLOCKW)+1:15+Math.floor(R(2)*6);
  const g=[];for(let y=0;y<h;y++)g.push(new Array(w).fill("#"));
  const rooms=[];
+ /* Кварталы города переживают выход из своей области: по ним игра называет,
+    в каком квартале стоит игрок. */
+ let cityBlocks=[];
  const put=(x,y,c)=>{if(x>0&&y>0&&x<w-1&&y<h-1)g[y][x]=c;};
  const carveRoom=(rx,ry,rw,rh)=>{for(let y=ry;y<ry+rh;y++)for(let x=rx;x<rx+rw;x++)put(x,y,".");
   rooms.push({x:rx,y:ry,w:rw,h:rh,cx:rx+(rw>>1),cy:ry+(rh>>1)});};
@@ -5355,7 +5385,7 @@ function genLevel(bx,by,depth,stype){
    if(a!==null)out.push([a,n-2]);
    return out;};
   const runX=runs(w,streetX),runY=runs(h,streetY);
-  const blocks=[];
+  const blocks=cityBlocks;
   runX.forEach(([x0,x1])=>runY.forEach(([y0,y1])=>{
    if(x1-x0<2||y1-y0<2)return;
    blocks.push({x0,x1,y0,y1});}));
@@ -5393,8 +5423,10 @@ function genLevel(bx,by,depth,stype){
     const last=b.rooms[b.rooms.length-1];
     const dx2=last.x0+((last.x1-last.x0)>>1);
     if(g[last.y1][dx2]===".")g[b.y1][dx2]="+";}
-   /* Назначение квартала: лавка, горн, храм, склад, казарма, жильё. */
+   /* Назначение квартала и его имя: по имени незрячий игрок понимает, где
+      он стоит, не пересчитывая повороты. */
    const purpose=["S","F","A","C","B","N","S","N"][bi%8];
+   b.name=BLOCK_NAMES[purpose]||BLOCK_NAMES.N;
    const r0=b.rooms[0],cxr=r0.x0+((r0.x1-r0.x0)>>1),cyr=r0.y0+((r0.y1-r0.y0)>>1);
    if(g[cyr][cxr]===".")g[cyr][cxr]=purpose;
    b.rooms.slice(1).forEach((r,ri)=>{
@@ -5514,7 +5546,7 @@ function genLevel(bx,by,depth,stype){
    if(g[cy][cx]==="#")g[cy][cx]=kind==="city"?"+":".";
    cur=prev[cur];}
  }
- const lvl={w,h,g,kind,depth,stype,entry:e0,bx,by};
+ const lvl={w,h,g,kind,depth,stype,entry:e0,bx,by,blocks:cityBlocks};
  if(levelCache.size>40)levelCache.clear();
  levelCache.set(key,lvl);
  return lvl;
@@ -5529,12 +5561,33 @@ function tileAt(lvl,x,y){if(!lvl||x<0||y<0||x>=lvl.w||y>=lvl.h)return "#";
 function tileName(t){return (TILE[t]||TILE["."]).n;}
 function tileBeacon(t){return (TILE[t]||{}).b;}
 
+/* ── Где именно в городе стоит игрок ──
+   Раньше внутри стен всё называлось одинаково: «улицы за воротами». Пройдя
+   десяток шагов, незрячий игрок терял, в какой он части города. Теперь у
+   каждого квартала есть имя, и оно называется при входе в него. */
+function blockAt(x,y){
+ const lvl=curLevel();
+ if(!lvl||!lvl.blocks||!lvl.blocks.length)return null;
+ return lvl.blocks.find(b=>x>=b.x0&&x<=b.x1&&y>=b.y0&&y<=b.y1)||null;
+}
+function whereInCity(x,y){
+ const lvl=curLevel();
+ if(!lvl||lvl.kind!=="city")return null;
+ const b=blockAt(x,y);
+ if(b)return b.name;
+ /* Не в квартале — значит на улице; главные шире прочих. */
+ const t=tileAt(lvl,x,y);
+ if(t==="G")return "городские ворота";
+ const wide=(tileAt(lvl,x,y-1)!=="#"&&tileAt(lvl,x,y+1)!=="#"&&tileAt(lvl,x-1,y)!=="#"&&tileAt(lvl,x+1,y)!=="#");
+ return wide?"главная улица":"улица";
+}
 /* ── Названия мест ── */
 function placeTitle(){
  if(!G.place)return "";
  const p=G.place;
  if(p.depth>0)return `${p.name}: подземелье, уровень ${p.depth}`;
- if(p.kind==="city")return `${p.name}: улицы за воротами`;
+ if(p.kind==="city"){const z=safeFn(()=>whereInCity(p.x,p.y),null);
+  return `${p.name}: ${z||"улицы за воротами"}`;}
  return `${p.name}: внутри`;
 }
 /* ── Вход, выход, спуск, подъём ── */
@@ -5554,6 +5607,13 @@ function enterPlace(c){
   if(tone)setTimeout(()=>safeFn(()=>Bank.play(tone,{seed:c.x+c.y,gain:0.55,maxSec:6})),380);});
  safeFn(()=>Music.start(kind==="dungeon"?"cave":"prologue"));
  safeFn(()=>bankUpdateAmbient());
+ /* Встреча по славе: народ этой земли помнит, кто вы ему. */
+ safeFn(()=>{
+  const race=(EMPIRES[empireIndexAt(c.x,c.y)]||EMPIRES[0]).race;
+  const a=attitudeOf(race);
+  if(a.id==="friend")setTimeout(()=>narrate(`Вас узнают: народ «${race}» считает вас своим. Здесь помогут и уступят в цене.`,{interrupt:false}),1800);
+  else if(a.id==="hostile")setTimeout(()=>narrate(`Разговоры стихают, когда вы проходите: народ «${race}» вас не жалует. Здесь вам не продадут, пока не заслужите иначе.`,{interrupt:false}),1800);
+  else if(a.id==="cold")setTimeout(()=>narrate(`На вас смотрят косо: народ «${race}» вам не рад, и цены это покажут.`,{interrupt:false}),1800);});
  safeFn(()=>Actors.ensure());
  journal(`Вход: ${c.structure.name}.`);
  narrate(`Вы вошли: ${placeTitle()}. ${describeHere(true)}`);
@@ -5694,7 +5754,12 @@ function moveInside(dir){
   narrate(`${what}. Шагните ещё раз на ${DIRN[dir].split(",")[0]} — ${act}.`,{interrupt:true});
  }else{
   p.arm=null;
-  narrate(describeHere(false),{interrupt:true});}
+  /* Переход в другой квартал или с улицы во двор называется отдельно —
+     это главный ориентир внутри стен. */
+  const zone=safeFn(()=>whereInCity(p.x,p.y),null);
+  const changed=zone&&zone!==p.zone;
+  if(changed)p.zone=zone;
+  narrate((changed?`${zone[0].toUpperCase()+zone.slice(1)}. `:"")+describeHere(false),{interrupt:true});}
  pingSurroundings(2,2);
  safeFn(()=>{Actors.ensure();Actors.tick();});
  safeFn(()=>dayPhaseCue());
@@ -5786,7 +5851,13 @@ const Actors={
    if(a.kind==="mob"){
     safeFn(()=>Bank.play("contrabass_dread",{gain:0.6,maxSec:5}));
     narrate(`Рядом кто-то движется: ${a.name}, ${nearest.d} ${plural(nearest.d,"шаг","шага","шагов")}, ${dir}.`,{interrupt:false});}
-   else if(a.kind==="guard")narrate(`Стража проходит мимо, ${dir}: «${GUARD_LINES[Math.floor(Math.random()*GUARD_LINES.length)]}»`,{interrupt:false});
+   else if(a.kind==="guard"){
+    const race=safeFn(()=>(EMPIRES[empireIndexAt(G.place.bx,G.place.by)]||EMPIRES[0]).race,null);
+    const att=race?safeFn(()=>attitudeOf(race),null):null;
+    const line=att&&att.id==="friend"?"Доброго дня. Если что — зовите."
+     :att&&(att.id==="cold"||att.id==="hostile")?"Я тебя запомнил. Веди себя тихо."
+     :GUARD_LINES[Math.floor(Math.random()*GUARD_LINES.length)];
+    narrate(`Стража проходит мимо, ${dir}: «${line}»`,{interrupt:false});}
    else narrate(`Горожанин рядом, ${dir}: «${FOLK_LINES[Math.floor(Math.random()*FOLK_LINES.length)]}»`,{interrupt:false});}},
  /* Шаг живого слышен со своей стороны и со своей громкости. */
  sound(a,d){
@@ -6962,6 +7033,8 @@ function castSpell(i){const sp=SPELLS[i];
    именно weaponList() и ничего не удаляет из G.gear — оружие просто помечается
    активным, а не «перекладывается» между массивами. */
 function buyItem(key,i){const n=getNPCByKey(key);
+ const att=safeFn(()=>attitudeOf(n.race),{refuses:false});
+ if(att.refuses){narrate(`${n.name} убирает товар: с вами здесь не торгуют. Народ «${n.race}» вас не жалует.`);return;}
  const stock=stockFor(n);const item=stock[+i];if(!item)return;
  if(G.gold<item.price){narrate(`Нужно ${item.price} золота, у вас ${G.gold}.`);return;}
  G.gold-=item.price;
@@ -6976,6 +7049,8 @@ function buyItem(key,i){const n=getNPCByKey(key);
 function sellResource(key,res,all){
  const n=getNPCByKey(key);
  if(!n||!n.trade){narrate("Этот житель не торгует.");return;}
+ if(safeFn(()=>attitudeOf(n.race).refuses,false)){
+  narrate(`${n.name} не берёт у вас ничего: народ «${n.race}» вас не жалует.`);return;}
  const have=Number(G.inv[res])||0;
  if(have<=0){narrate(`У вас нет ресурса «${res}».`);return;}
  const idx=empireIndexAt(n.x,n.y);
@@ -7012,7 +7087,8 @@ function stockFor(n){const out=[];
  for(let k=0;k<3;k++)out.push({gear:genLoot(n.x,n.y,Math.floor(H(n.x,n.y,80+k)*9999),G.level+n.tier),price:0});
  /* Наверху цена своя, в подземелье — с надбавкой за глубину: сюда всё
     приходится нести на себе. */
- const km=buyModifier(n)*(deep?1.25+0.08*Math.max(0,(G.place.depth||1)-1):1)*diff().price;
+ const km=buyModifier(n)*(deep?1.25+0.08*Math.max(0,(G.place.depth||1)-1):1)*diff().price
+  *safeFn(()=>attitudeOf(n.race).priceK,1);
  out.forEach(o=>{if(o.gear)o.price=Math.max(10,Math.round(o.gear.price*(1-n.tier*0.05)));
   o.price=Math.max(1,Math.round(o.price*km));});
  return out;}
@@ -7050,17 +7126,143 @@ function tellNPCStory(n){if(!n)return;
  const extra=about[Math.floor(H(n.x,n.y,150+idx)*about.length)]||about[0];
  narrate(`${n.name}, ${R.n}, ${n.prof}: ${lines[idx]} ${extra}`);
 }
+
+/* ════════════════════════════════════════════════════════════════════════
+   ЦЕПОЧКИ ЗАДАНИЙ
+   Прежде каждое поручение жило само по себе: принеси, убей, дойди — и всё
+   заново, у следующего встречного. Мир от этого не складывался в историю.
+   Теперь у части заданий есть продолжение: сдал первое — заказчик тут же
+   даёт второе, из того же дела, и рассказывает, зачем это было. Три шага —
+   и получается маленькая история клана, храма, войны или торгового дома,
+   с наградой на последнем шаге заметно больше обычной.
+
+   Цепочка не изобретает новых правил: каждый её шаг — обычное задание
+   знакомого вида, поэтому проверка выполнения, прогресс и озвучка работают
+   для них ровно так же, как раньше.
+   ════════════════════════════════════════════════════════════════════════ */
+const CHAIN_DB={
+ temple:{n:"Долг перед храмом",
+  intro:"Жрец говорит вполголоса: у этого дела будет продолжение.",
+  steps:[
+   c=>({type:"god_altar",godId:c.god.id,need:1,have:0,
+    text:`Шаг первый: спустись в подземелье и соверши молитву у алтаря ${c.god.n}. Алтари стоят со второго уровня и глубже.`,
+    reward:{gold:50*c.tier,xp:60*c.tier},faith:3}),
+   c=>({type:"god_relic",godId:c.god.id,need:1,have:0,
+    text:`Шаг второй: найди в подземных сундуках реликвию ${c.god.n} и принеси мне.`,
+    reward:{gold:80*c.tier,xp:90*c.tier},faith:5}),
+   c=>({type:"fetch",res:"кристалл",need:2,
+    text:`Шаг третий, последний: два кристалла на оправу для реликвии — и святыня вернётся на своё место.`,
+    reward:{gold:140*c.tier,xp:150*c.tier},faith:8})]},
+ clan:{n:"Дело клана",
+  intro:"Он оглядывается по сторонам, прежде чем говорить: дело клановое.",
+  steps:[
+   c=>({type:"fetch",res:"руда",need:3,
+    text:"Шаг первый: три руды на клинки — клан вооружается, и не спрашивай зачем.",
+    reward:{gold:45*c.tier,xp:55*c.tier}}),
+   c=>({type:"war_raid",need:3,have:0,base:Number(G.dungeonKills)||0,
+    text:"Шаг второй: спустись под землю и убей троих. Мы должны знать, что там внизу нас не ждут.",
+    reward:{gold:75*c.tier,xp:95*c.tier}}),
+   c=>({type:"kill",need:4,have:0,
+    text:"Шаг третий, последний: четверо наверху. После этого дороги клана будут чистыми, и ты станешь своим.",
+    reward:{gold:150*c.tier,xp:170*c.tier}})]},
+ war:{n:"Военный долг",
+  intro:"Он говорит коротко, как привык на службе: это только начало.",
+  steps:[
+   c=>({type:"war_supply",res:(c.emp.imports||["руда"])[0],need:3,foe:c.foeName,
+    text:`Шаг первый: три «${(c.emp.imports||["руда"])[0]}» на укрепления. Война с державой «${c.foeName}» не ждёт.`,
+    reward:{gold:60*c.tier,xp:70*c.tier},diplo:2}),
+   c=>({type:"war_raid",need:4,have:0,base:Number(G.dungeonKills)||0,foe:c.foeName,
+    text:"Шаг второй: подземелья кишат. Очисти четыре логова, пока они не вышли нам в тыл.",
+    reward:{gold:95*c.tier,xp:110*c.tier},diplo:3}),
+   c=>({type:"visit",tx:c.emp.cap.x,ty:c.emp.cap.y,
+    text:`Шаг третий, последний: донеси доклад в цитадель на клетке (${c.emp.cap.x}; ${c.emp.cap.y}). Дальше решать будут те, кто выше.`,
+    reward:{gold:180*c.tier,xp:200*c.tier},diplo:5})]},
+ trade:{n:"Торговый дом",
+  intro:"Он раскладывает счётные палочки: если справишься, будет и второе дело.",
+  steps:[
+   c=>({type:"fetch",res:"дерево",need:4,
+    text:"Шаг первый: четыре дерева на бочки. С этого начинается любой торговый дом.",
+    reward:{gold:40*c.tier,xp:45*c.tier}}),
+   c=>({type:"delivery",res:"камень",need:3,city:c.cityName,tx:c.cityX,ty:c.cityY,
+    text:`Шаг второй: три камня довезти в «${c.cityName}» на клетке (${c.cityX}; ${c.cityY}). Там ждут.`,
+    reward:{gold:90*c.tier,xp:100*c.tier}}),
+   c=>({type:"visit",tx:c.cityX,ty:c.cityY,
+    text:`Шаг третий, последний: вернись в «${c.cityName}» и заверши сделку. Дом откроет там своё дело, а твоё имя будет в бумагах.`,
+    reward:{gold:200*c.tier,xp:180*c.tier}})]}};
+/* Какая цепочка уместна для этого жителя: жрец ведёт храмовую, клановый —
+   клановую, служилый — военную, торговый люд — торговую. */
+function chainForNPC(n){
+ const prof=n.prof||"";
+ if(["Жрец","Магистр","Маг-отшельник"].includes(prof))return "temple";
+ if(["Глава клана","Воин клана"].includes(prof))return "clan";
+ if(["Правитель","Советник","Стражник"].includes(prof))return "war";
+ if(["Торговец","Кузнец","Трактирщик"].includes(prof))return "trade";
+ return null;
+}
+function chainContext(n){
+ const idx=empireIndexAt(n.x,n.y),emp=EMPIRES[idx]||EMPIRES[0];
+ const wars=warsAt(G.day).filter(w=>w.a===idx||w.b===idx);
+ const foe=wars.length?EMPIRES[wars[0].a===idx?wars[0].b:wars[0].a]:null;
+ const city=(safeFn(()=>findCities(n.x,n.y,30,3),[])||[]).find(c=>c.x!==n.x||c.y!==n.y)
+  ||{name:emp.name,x:emp.cap.x,y:emp.cap.y};
+ return {god:GOD_BY_ID[godOfRace(n.race).id]||PANTHEON[0],tier:Math.max(1,n.tier||1),
+  emp,idx,foeName:foe?foe.short:"соседей",
+  cityName:city.name,cityX:city.x,cityY:city.y};
+}
+/* Сборка шага цепочки в обычное задание. */
+function makeChainQuest(n,chainId,step){
+ const ch=CHAIN_DB[chainId];if(!ch||!ch.steps[step])return null;
+ const q=ch.steps[step](chainContext(n));
+ q.id=n.key+"q";q.npc=n.name;q.have=q.have||0;q.done=false;
+ q.race=n.race;q.god=godOfRace(n.race).id;
+ q.chain=chainId;q.chainStep=step;q.chainOf=ch.steps.length;q.chainName=ch.n;
+ q.npcKey=n.key;
+ return q;
+}
+/* После сдачи шага заказчик тут же даёт следующий. */
+function advanceChain(q){
+ try{
+  if(!q||!q.chain)return false;
+  const ch=CHAIN_DB[q.chain];if(!ch)return false;
+  const next=(Number(q.chainStep)||0)+1;
+  if(next>=ch.steps.length){
+   narrate(`Цепочка «${ch.n}» завершена целиком. Такое помнят долго.`,{interrupt:false});
+   journal(`Цепочка завершена: ${ch.n}.`);
+   safeFn(()=>{Bank.play("trumpet_fanfare",{seed:1,gain:0.75,maxSec:6});
+    setTimeout(()=>safeFn(()=>Bank.play("harp_light",{seed:2,gain:0.6,maxSec:5})),600);});
+   G.chainsDone=(Number(G.chainsDone)||0)+1;
+   return false;}
+  const n=safeFn(()=>getNPCByKey(q.npcKey||q.id.replace(/q$/,"")),null);
+  if(!n)return false;
+  const nq=makeChainQuest(n,q.chain,next);
+  if(!nq)return false;
+  G.quests.push(nq);
+  journal(`Продолжение «${ch.n}», шаг ${next+1}: ${nq.text}`);
+  safeFn(()=>Bank.play("quest",{seed:next,gain:0.6,maxSec:5}));
+  narrate(`У дела есть продолжение. ${ch.n}, шаг ${next+1} из ${ch.steps.length}: ${nq.text}`,{interrupt:false});
+  return true;
+ }catch(_){return false;}
+}
 function takeNPCQuest(n){
  if(!n)return;
  if(G.quests.find(q=>q.id===n.key+'q'&&!q.done)){narrate('Этот квест уже у вас.');return;}
- const q=questFor(n);q.have=q.have||0;q.done=false;q.race=n.race;q.god=godOfRace(n.race).id;
+ /* У жреца, клановых, служилых и торговых людей дело начинается цепочкой:
+    первый шаг — обычное задание, но у него будет продолжение. */
+ const chainId=safeFn(()=>chainForNPC(n),null);
+ const chained=chainId&&!(G.chainTaken&&G.chainTaken[chainId])&&H(n.x,n.y,960)<0.55
+  ?safeFn(()=>makeChainQuest(n,chainId,0),null):null;
+ const q=chained||questFor(n);
+ if(chained){if(!G.chainTaken)G.chainTaken={};G.chainTaken[chainId]=true;}
+ q.have=q.have||0;q.done=false;q.race=n.race;q.god=godOfRace(n.race).id;
  if(q.type==="war_raid")q.base=Number(G.dungeonKills)||0; /* рейд считается с момента, когда задание взято */
  G.quests.push(q);journal(`Квест от ${n.name}: ${q.text}`);
  const details=q.type==='fetch'?` Нужно принести ${q.need} «${q.res}». Ищи их в районе (${q.tx}; ${q.ty}).`
   :q.type==='kill'?` Нужно уничтожить ${q.need} монстров. Направление поиска: ${q.text.match(/Иди на ([А-Яа-яЁё]+)/)?.[1]||'округа'}.`
   :q.type==='hunt'?` Нужно выследить именно «${q.monsterName}» (${q.need} шт.). Обычные монстры не подходят.`
   :` Цель находится в точке (${q.tx}; ${q.ty}).`;
- narrate(`${n.name} берёт тебя за плечо и объясняет поручение. ${q.text}${details} После выполнения возвращайся ко мне.`);safeFn(()=>UI.fanfare());saveGame(true);openNPC(n.key);
+ const chainWord=q.chain&&CHAIN_DB[q.chain]
+  ?` ${CHAIN_DB[q.chain].intro} Это шаг ${(q.chainStep||0)+1} из ${q.chainOf}, цепочка «${q.chainName}».`:"";
+ narrate(`${n.name} берёт тебя за плечо и объясняет поручение. ${q.text}${details}${chainWord} После выполнения возвращайся ко мне.`);safeFn(()=>UI.fanfare());saveGame(true);openNPC(n.key);
 }
 function openNPC(key,silent){const n=getNPCByKey(key);
  document.getElementById("npcTitle").textContent=`🧑 ${n.name}`;
@@ -7069,8 +7271,9 @@ function openNPC(key,silent){const n=getNPCByKey(key);
  const branch=RACE_BRANCH[n.race]?` (ветвь народа «${RACE_BRANCH[n.race]}»)`:"";
  const idx=empireIndexAt(n.x,n.y),emp=EMPIRES[idx]||EMPIRES[0];
  const wars=warsAt(G.day).filter(w=>w.a===idx||w.b===idx);
- const rep=repOf(n.race);
- const repWord=rep>=12?"вас здесь считают своим":rep>=5?"к вам расположены":rep<=-5?"вам здесь не рады":"вас почти не знают";
+ const att=safeFn(()=>attitudeOf(n.race),{n:"почти не знают",rep:0,refuses:false,say:""});
+ const rep=att.rep;
+ const repWord=att.n;
  let html=`<div class="list-line"><b>${n.name}</b> — ${n.prof}, ${n.race}${branch}. Уровень влияния ${n.tier}.<br>
   Народ: ${R.n}, ранг ${rank}. Бог народа: ${god?god.n:"—"}. Клан: ${R.clan||"нет"}.<br>
   Держава: ${emp.name}. ${wars.length?`Идёт война с державами: ${wars.map(w=>`${EMPIRES[w.a===idx?w.b:w.a].short} — ${w.cause}`).join("; ")}.`:"Держава ни с кем не воюет."}<br>
@@ -7079,10 +7282,16 @@ function openNPC(key,silent){const n=getNPCByKey(key);
  html+=`<button class="item" data-cmd="npctalk:${n.key}" data-speak="Поговорить с ${n.name}.">💬 Поговорить</button>`;
  html+=`<button class="item" data-cmd="raceinfo:${R.id}" data-speak="Узнать о народе ${R.n}: история, хозяйство, политика, войны и миф.">🧬 О народе «${R.n}»</button>`;
  if(!q)html+=`<button class="item" data-cmd="qtake:${n.key}" data-speak="Взять квест у ${n.name}.">📜 Взять квест</button>`;
- else{html+=`<div class="list-line">📜 Квест: ${q.text}<br>Прогресс: ${qProgressText(q)}</div>`;
+ else{html+=`<div class="list-line">📜 Квест: ${q.text}<br>${q.chain?`Цепочка «${q.chainName}», шаг ${(q.chainStep||0)+1} из ${q.chainOf}.<br>`:""}Прогресс: ${qProgressText(q)}</div>`;
   html+=`<button class="item" data-cmd="qdone:${q.id}" data-speak="Завершить квест ${q.text}.">✅ Завершить квест</button>`;}
- if(n.trade){
+ if(n.trade&&att.refuses){
+  /* Черта перейдена: торга нет, и об этом говорят прямо. */
+  html+=`<div class="list-line" data-speak="${n.name} отказывается торговать: репутация у народа ${n.race} слишком низкая, ${rep}. Помогайте этому народу, и отношение исправится.">
+   🚫 <b>С вами здесь не торгуют.</b> Народ «${n.race}» вас не жалует (репутация ${rep}).<br>
+   Помогите кому-нибудь из этого народа — заданием, обозом, защитой — и лавки снова откроются.</div>`;}
+ if(n.trade&&!att.refuses){
   html+=`<h3>Товары</h3>`;
+  if(att.say)html+=`<div class="list-line" data-speak="${att.say}">💬 ${att.say}</div>`;
   stockFor(n).forEach((s,i)=>{html+=`<div class="list-line">${s.gear?lootDesc(s.gear):s.n} — ${s.price} золота
    <button data-cmd="buy:${n.key}:${i}" data-speak="Купить ${s.gear?s.gear.name:s.n} за ${s.price} золота.">🪙 Купить</button></div>`;});
   /* Продажа: цена своя в каждой державе — на этом и держится торговля между ними. */
@@ -7173,6 +7382,9 @@ function completeQuest(id){const q=G.quests.find(qq=>qq.id===id);
   (q.diplo?" Держава запомнит вашу службу.":"")+
   (q.race?` Народ «${q.race}» это запомнит.`:""));
  journal(`Квест выполнен: ${q.npc}.`);
+ /* Продолжение цепочки выдаётся сразу: заказчик уже здесь и уже говорит. */
+ safeFn(()=>advanceChain(q));
+ if(G.chainTaken&&q.chain&&(Number(q.chainStep)||0)+1>=(Number(q.chainOf)||1))delete G.chainTaken[q.chain];
  checkLevelUp();refresh();renderQuests();}
 
 /* ════════ РЕНДЕР ПАНЕЛЕЙ ════════ */
@@ -7228,7 +7440,7 @@ function renderCharacter(){
 function renderQuests(){
  document.getElementById("questList").innerHTML=G.quests.length?
   G.quests.map(q=>`<div class="list-line">${q.done?"✅":"📜"} От: ${q.npc}<br>${q.text}<br>
-   Прогресс: ${q.done?"выполнен":qProgressText(q)}<br>Награда: ${q.reward.gold} золота, ${q.reward.xp} опыта.
+   ${q.chain?`Цепочка «${q.chainName}», шаг ${(q.chainStep||0)+1} из ${q.chainOf}.<br>`:""}Прогресс: ${q.done?"выполнен":qProgressText(q)}<br>Награда: ${q.reward.gold} золота, ${q.reward.xp} опыта.
    ${q.done?"":`<button data-cmd="qdone:${q.id}" data-speak="Завершить квест.">✅ Завершить</button>`}</div>`).join(""):
   `<div class="list-line">Квестов нет. Поговорите с жителями — у каждого есть задание.</div>`;}
 function renderJournal(){
