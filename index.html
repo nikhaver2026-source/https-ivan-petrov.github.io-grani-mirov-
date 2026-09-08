@@ -2009,8 +2009,10 @@ const AM_ITEMS=AM_GROUPS.reduce((a,g)=>a.concat(g[1]),[]);
 /* Подпись пункта меню зависит от того, идёт ли обучение. */
 function amLabel(cmd,label){
  if(cmd==="tutor"&&typeof Tutor!=="undefined"&&Tutor.on)return "🛑 Прекратить обучение";
- if(cmd==="warm"&&typeof Warm!=="undefined"&&Warm.busy)
-  return `⏹ Остановить скачивание (${Warm.done} из ${Warm.total})`;
+ if(cmd==="warm"&&typeof Warm!=="undefined"){
+  if(Warm.busy)return `⏹ Остановить скачивание (${Warm.done} из ${Warm.total})`;
+  const was=Warm.doneBefore();
+  if(was&&was.n>=Warm.list().length)return `✅ Записи уже на устройстве (${was.n}) — скачать заново`;}
  return label;}
 function amAvailable(cmd){
  try{
@@ -2939,12 +2941,38 @@ function marketPrice(res,idx,day){
  if(empireAtWar(idx,day)&&["руда","камень","кость","кристалл"].includes(res))k+=0.3; /* война поднимает цену металла */
  return Math.max(2,Math.round(base*Math.max(0.35,k)));
 }
+/* ════════════════════════════════════════════════════════════════════════
+   ДВЕ СТОРОНЫ ТОРГА
+   Мера сложности и отношение народа влияли только на то, что игрок ПЛАТИТ,
+   и только у отдельного торговца. Всё остальное — городские лавки, обозы,
+   причалы, продажа собственного добра — считалось как раньше. Получалось
+   криво: на суровом уровне покупка дорожала на пятнадцатую часть, а продажа
+   не менялась вовсе, и половина мира вообще не знала, что сложность
+   переключили. Свой человек получал скидку при покупке, но за своё добро
+   ему платили как чужому.
+
+   Теперь у торга два множителя и оба живут здесь: сколько игрок платит и
+   сколько платят ему. Через них проходят все цены мира — и лавка, и город,
+   и обоз, и причал. Суровый мир одинаково дорого продаёт и дёшево скупает,
+   спокойный — наоборот; свой человек выигрывает в обе стороны.
+   ════════════════════════════════════════════════════════════════════════ */
+function tradeBuyK(race){
+ const a=race?safeFn(()=>attitudeOf(race),null):null;
+ return safeFn(()=>diff().price,1)*(a?a.priceK:1);
+}
+function tradeSellK(race){
+ const a=race?safeFn(()=>attitudeOf(race),null):null;
+ return (1/safeFn(()=>diff().price,1))*(a?1/a.priceK:1);
+}
 function sellPrice(res,idx,day,npc){
  let p=marketPrice(res,idx,day)*0.8;                    /* доля торговца */
  p*=1+0.08*fxLevel("trade");                            /* покровительство Виа */
  p*=1+0.05*fxLevel("deal");                             /* умение торговаться */
- p*=1+Math.min(0.2,repOf(npc&&npc.race)*0.01);          /* репутация у народа */
- return Math.max(1,Math.round(p));
+ p*=tradeSellK(npc&&npc.race);                          /* отношение народа и мера мира */
+ /* И здесь торговец не платит больше, чем сам просит за то же самое. */
+ const ask=Math.max(2,Math.round(marketPrice(res,idx,day)*1.15
+  *safeFn(()=>buyModifier(npc),1)*tradeBuyK(npc&&npc.race)));
+ return capBid(p,ask);
 }
 /* ════════════════════════════════════════════════════════════════════════
    ОТНОШЕНИЕ НАРОДА
@@ -2971,8 +2999,12 @@ function attitudeOf(race){
  return {...a,rep:r,refuses:a.id==="hostile"};
 }
 function buyModifier(npc){
+ /* Здесь остаются только умения и клановое родство. Репутация переехала в
+    отношение народа и считается там: пока она была в обоих местах, скидка
+    своему человеку накладывалась дважды, прилавок дешевел сильнее, чем
+    полагалось, и утягивал за собой цену скупки — свой продавал дешевле
+    чужого. */
  let k=1-0.05*fxLevel("deal")-0.03*fxLevel("trade");
- k-=Math.min(0.15,repOf(npc&&npc.race)*0.01);
  if(G.clan&&npc&&npc.race&&CLAN_BY_NAME[G.clan]&&CLAN_BY_NAME[G.clan].race===npc.race)k-=0.05;
  return Math.max(0.6,k);
 }
@@ -3037,13 +3069,35 @@ function cityPriceOf(res,c,day){
  if(empireAtWar(idx,day))k+=0.12;                     /* война поднимает цены */
  return Math.max(2,Math.round(marketPrice(res,idx,day)*Math.max(0.4,k)));
 }
-function cityBuyPrice(res,c,day){ /* сколько город платит вам */
- const p=cityProfile(c);
- return Math.max(1,Math.round(cityPriceOf(res,c,day)*(0.82-p.tax)*(1+0.08*fxLevel("trade")+0.05*fxLevel("deal"))));
+/* ════════════════════════════════════════════════════════════════════════
+   ДОЛЯ ТОРГОВЦА
+   Скидки складывались без всякого предела: дары Виа Странницы, умение
+   торговаться, высокая репутация и спокойная мера мира тянули цену покупки
+   вниз, а цену продажи вверх — каждая со своей стороны. На высокой дружбе
+   они встречались и расходились в другую сторону: город просил за руду
+   десять, а платил за неё семнадцать. Из этого делались бесконечные деньги
+   нажатием двух кнопок в одной лавке, и вся экономика теряла смысл.
+
+   Правило простое и вечное: торговец не платит больше, чем просит. Между
+   его «прошу» и «плачу» всегда остаётся его доля — не меньше десятой части.
+   Заработать по-прежнему можно, но так, как и задумано: купить там, где
+   дёшево, и довезти туда, где дорого. ── */
+const TRADER_CUT=0.9;
+function capBid(bid,ask){
+ return Math.max(1,Math.min(Math.round(bid),Math.floor(ask*TRADER_CUT)));
 }
 function citySellPrice(res,c,day){ /* сколько город просит с вас */
  const p=cityProfile(c);
- return Math.max(2,Math.round(cityPriceOf(res,c,day)*(1+p.tax)*(1-0.05*fxLevel("deal")-0.03*fxLevel("trade"))));
+ return Math.max(2,Math.round(cityPriceOf(res,c,day)*(1+p.tax)
+  *(1-0.05*fxLevel("deal")-0.03*fxLevel("trade"))
+  *tradeBuyK(c&&c.emp&&c.emp.race)));
+}
+function cityBuyPrice(res,c,day){ /* сколько город платит вам */
+ const p=cityProfile(c);
+ const bid=cityPriceOf(res,c,day)*(0.82-p.tax)
+  *(1+0.08*fxLevel("trade")+0.05*fxLevel("deal"))
+  *tradeSellK(c&&c.emp&&c.emp.race);
+ return capBid(bid,citySellPrice(res,c,day));
 }
 /* Лучшие направления: где купить, куда везти и сколько это даст с единицы. */
 function bestRoutes(cx,cy,day,limit=6){
@@ -5327,7 +5381,8 @@ const TILE={
  "W":{n:"колодец",b:"well"},
  "T":{n:"факел",b:"torch"},
  "P":{n:"торговец",b:"market"},
- "B":{n:"пост стражи",b:"npc_guard"}};
+ "B":{n:"пост стражи",b:"npc_guard"},
+ "L":{n:"голубиная почта",b:"traveler"}};
 /* Какие строения куда ведут: город (улицы с воротами), дом или подземелье. */
 /* ════════════════════════════════════════════════════════════════════════
    КВАРТАЛЫ ГОРОДОВ
@@ -5366,7 +5421,7 @@ const SPECIAL_QUARTERS=[
   lore:"Резчики по кости работают у самых окон, чтобы ловить свет. Отходы их работы годятся и вам."},
  {n:"Тюремный двор",what:"тюрьма и ключник",tile:"C",
   lore:"Глухая стена без окон, запах сырого камня и лязг где-то внизу. Ключник берёт мзду и отворачивается — в углу стоит чей-то невостребованный сундук."},
- {n:"Голубиная башня",what:"голубиная почта державы",tile:"T",
+ {n:"Голубиная башня",what:"голубиная почта державы",tile:"L",
   lore:"Отсюда уходят вести во все города державы. Под крышей гремят крыльями сотни голубей, и весь квартал живёт этим шумом."},
  {n:"Портовый затон",what:"лодки, сети и ракушки",tile:"R",res:"ракушка",
   lore:"Лодки вытащены на сушу, сети сохнут на кольях. Пахнет смолой, рыбой и водорослями; под ногами хрустят ракушки."},
@@ -6100,6 +6155,7 @@ function useHere(){
   case "R":return mineVein(p.x,p.y);
   case "A":return useAltar(p.x,p.y);
   case "S":case "F":case "N":case "P":case "B":return talkInside(t,p.x,p.y);
+  case "L":return pigeonPost();
   case "W":{G.water=Math.min(200,(Number(G.water)||0)+40);safeFn(()=>beacon("well",0,0));
    narrate("Вы набрали воды из колодца. Запас воды пополнен.");refresh();saveGame(true);return true;}
   case "T":{safeFn(()=>beacon("torch",0,0));narrate("Настенный факел. Он потрескивает и служит ориентиром.");return true;}
@@ -6108,6 +6164,40 @@ function useHere(){
    if(near.length){narrate(`Под ногами пусто. Рядом: ${near.map(o=>`${o.name} на ${o.dir}е`).join("; ")}.`);pingSurroundings(1,3);return false;}
    narrate("Здесь пусто. Идите дальше или осмотритесь двумя пальцами в сторону.");
    return false;}}
+}
+/* ── Голубиная почта ──
+   Особый квартал должен не только звучать иначе, но и давать то, чего нет в
+   других. Башня с голубями держит связь со всей державой, поэтому здесь
+   узнают раньше всех: с кем воюют, чего не хватает ближним городам и что
+   там сейчас дают за товар. Для торговца и для незрячего игрока это лучшая
+   находка в городе: разом и новости, и торговый расклад, без беготни. ── */
+function pigeonPost(){
+ const p=G.place;
+ safeFn(()=>{beacon("traveler",0,0);Bank.play("crow",{seed:p.x+p.y,gain:0.6,maxSec:5});});
+ const idx=empireIndexAt(p.bx,p.by),emp=EMPIRES[idx]||EMPIRES[0];
+ const wars=warsAt(G.day).filter(w=>w.a===idx||w.b===idx);
+ const parts=[`Голубиная башня «${p.name}». Под крышей гремят крыльями сотни птиц; отсюда вести уходят во все города державы «${emp.short}».`];
+ parts.push(wars.length
+  ?`Война: держава воюет с ${wars.map(w=>`«${EMPIRES[w.a===idx?w.b:w.a].short}» — ${w.cause}`).join("; ")}.`
+  :"Война: держава ни с кем не воюет, дороги спокойны.");
+ /* Торговый расклад ближних городов — то, ради чего сюда и заходят. */
+ const cities=safeFn(()=>findCities(p.bx,p.by,26,4),[])||[];
+ const near=cities.filter(c=>c.x!==p.bx||c.y!==p.by).slice(0,3);
+ if(near.length){
+  parts.push("Вести из ближних городов: "+near.map(c=>{
+   const pr=safeFn(()=>cityProfile(c),null);
+   const d=Math.max(Math.abs(c.x-p.bx),Math.abs(c.y-p.by));
+   const need=pr&&pr.demand&&pr.demand.length?pr.demand[0]:null;
+   const price=need?safeFn(()=>cityBuyPrice(need,c,G.day),null):null;
+   return `${c.name}, ${dirBetween(c.x-p.bx,c.y-p.by)}, ${d} ${plural(d,"шаг","шага","шагов")}`+
+    (need?`: не хватает «${need}»${price?`, дают ${price} за штуку`:""}`:"");}).join("; ")+".");
+ }else parts.push("Ближних городов голуби отсюда не достают: кругом пусто.");
+ /* Свои дела тоже напомнят: письма приходят и на ваше имя. */
+ const q=(G.quests||[]).filter(x=>!x.done);
+ parts.push(q.length?`На ваше имя есть письмо: ${q[0].text}`:"На ваше имя писем нет.");
+ narrate(parts.join(" "));
+ journal(`Голубиная почта: ${p.name}.`);
+ return true;
 }
 /* ── Сундук: золото, снаряжение, реликвии богов и материалы для крафта ── */
 function openChest(x,y){
@@ -7191,6 +7281,23 @@ function buyItem(key,i){const n=getNPCByKey(key);
 /* ════════ ПРОДАЖА РЕСУРСОВ ════════
    Цена зависит от державы (что она вывозит — дёшево, что ввозит — дорого),
    от идущей войны, от вашей репутации у народа торговца и от даров богов. */
+/* ════════════════════════════════════════════════════════════════════════
+   ЦЕНА ПРОДАЖИ — ОДНА НА ВСЕХ
+   Карточка торговца показывала цену державы, а продажа в городе шла по
+   городской цене: игрок слышал «по 10 золота», нажимал и получал 17. Или
+   наоборот — и тогда это было обманом. Для зрячего это досадная мелочь,
+   для того, кто планирует торговый путь на слух, — испорченный расчёт.
+   Теперь и надпись, и сама сделка спрашивают одно и то же число здесь.
+   ════════════════════════════════════════════════════════════════════════ */
+function sellUnit(n,res){
+ if(!n)return 1;
+ const city=safeFn(()=>isCityAt(n.x,n.y),null);
+ const bid=city?cityBuyPrice(res,city,G.day)
+               :sellPrice(res,empireIndexAt(n.x,n.y),G.day,n);
+ /* Последнее слово за правилом доли: этот торговец не платит больше, чем
+    сам просит за то же самое — иначе на его прилавке делаются деньги. */
+ return capBid(bid,npcAsk(n,res));
+}
 function sellResource(key,res,all){
  const n=getNPCByKey(key);
  if(!n||!n.trade){narrate("Этот житель не торгует.");return;}
@@ -7198,12 +7305,10 @@ function sellResource(key,res,all){
   narrate(`${n.name} не берёт у вас ничего: народ «${n.race}» вас не жалует.`);return;}
  const have=Number(G.inv[res])||0;
  if(have<=0){narrate(`У вас нет ресурса «${res}».`);return;}
- const idx=empireIndexAt(n.x,n.y);
- /* В городе действуют его собственные цены: на разнице между городами и
-    держится вся торговля между ними. Вне города — общая цена державы. */
- const city=isCityAt(n.x,n.y);
- const unit=city?Math.max(1,Math.round(cityBuyPrice(res,city,G.day)*(1+Math.min(0.2,repOf(n.race)*0.01))))
-                :sellPrice(res,idx,G.day,n);
+ /* В городе действуют его собственные цены, вне города — общая цена
+    державы; и то и другое решает sellUnit — одно число на карточку и на
+    саму сделку. */
+ const unit=sellUnit(n,res);
  const qty=all?have:1;
  G.inv[res]=have-qty;
  if(G.inv[res]<=0)delete G.inv[res];
@@ -7214,6 +7319,23 @@ function sellResource(key,res,all){
  narrate(`Продано: ${res} — ${qty} шт. по ${unit} золота. Получено ${total}. Всего золота: ${G.gold}.`);
  journal(`Продажа: ${res} ×${qty} за ${total} золота.`);
  saveGame(true);refresh();openNPC(key,true);}
+/* Надбавка за глубину: под землю всё приходится нести на себе. */
+function deepMarkup(){
+ return (G.place&&G.place.depth>0)?1.25+0.08*Math.max(0,(G.place.depth||1)-1):1;
+}
+/* ── Сколько ЭТОТ торговец просит за единицу товара ──
+   Одна формула и для прилавка, и для ограничителя цены скупки. Раньше цена
+   города уже несла в себе отношение народа и меру мира, а прилавок умножал
+   на них второй раз: на высокой дружбе прилавок дешевел вдвое, а скупка
+   оставалась щедрой, и в одной лавке можно было купить за тринадцать и
+   тут же продать за двадцать три. Считаем один раз и в одном месте. */
+function npcAsk(n,res){
+ const city=safeFn(()=>isCityAt(n.x,n.y),null);
+ const idx=empireIndexAt(n.x,n.y);
+ const base=city?citySellPrice(res,city,G.day)
+  :Math.max(2,Math.round(marketPrice(res,idx,G.day)*1.15*tradeBuyK(n&&n.race)));
+ return Math.max(1,Math.round(base*safeFn(()=>buyModifier(n),1)*deepMarkup()));
+}
 function stockFor(n){const out=[];
  /* Под землёй торгуют тем, что нужно под землёй, и берут за это своё. */
  const deep=!!(G.place&&G.place.depth>0);
@@ -7223,18 +7345,18 @@ function stockFor(n){const out=[];
   out.push({n:"Факел",price:6});
   out.push({n:"Верёвка",price:12});
   out.push({n:"Зелье здоровья",price:15});}
- /* Город продаёт свой избыток по своей цене; вне города — то, что вывозит держава. */
+ /* Город продаёт свой избыток по своей цене; вне города — то, что вывозит держава.
+    Цена ресурса уже полная: её считает npcAsk, второй раз множить нельзя. */
  const idx=empireIndexAt(n.x,n.y),emp=EMPIRES[idx]||EMPIRES[0];
  const city=isCityAt(n.x,n.y);
  if(city){const p=cityProfile(city);
-  p.surplus.forEach(r=>{if(RESICON[r])out.push({n:r,res:true,price:citySellPrice(r,city,G.day)});});}
- else (emp.exports||[]).slice(0,2).forEach(r=>{if(RESICON[r])out.push({n:r,res:true,price:Math.max(2,Math.round(marketPrice(r,idx,G.day)*1.15))});});
+  p.surplus.forEach(r=>{if(RESICON[r])out.push({n:r,res:true,full:true,price:npcAsk(n,r)});});}
+ else (emp.exports||[]).slice(0,2).forEach(r=>{if(RESICON[r])out.push({n:r,res:true,full:true,price:npcAsk(n,r)});});
  for(let k=0;k<3;k++)out.push({gear:genLoot(n.x,n.y,Math.floor(H(n.x,n.y,80+k)*9999),G.level+n.tier),price:0});
- /* Наверху цена своя, в подземелье — с надбавкой за глубину: сюда всё
-    приходится нести на себе. */
- const km=buyModifier(n)*(deep?1.25+0.08*Math.max(0,(G.place.depth||1)-1):1)*diff().price
-  *safeFn(()=>attitudeOf(n.race).priceK,1);
- out.forEach(o=>{if(o.gear)o.price=Math.max(10,Math.round(o.gear.price*(1-n.tier*0.05)));
+ const km=buyModifier(n)*deepMarkup()*tradeBuyK(n.race);
+ out.forEach(o=>{
+  if(o.full)return;                                     /* уже посчитано целиком */
+  if(o.gear)o.price=Math.max(10,Math.round(o.gear.price*(1-n.tier*0.05)));
   o.price=Math.max(1,Math.round(o.price*km));});
  return out;}
 
@@ -7442,7 +7564,7 @@ function openNPC(key,silent){const n=getNPCByKey(key);
   /* Продажа: цена своя в каждой державе — на этом и держится торговля между ними. */
   const mine=Object.keys(RESICON).filter(r=>(Number(G.inv[r])||0)>0);
   html+=`<h3>Продать ресурсы</h3>`;
-  html+=mine.length?mine.map(r=>{const price=sellPrice(r,idx,G.day,n),have=Number(G.inv[r])||0;
+  html+=mine.length?mine.map(r=>{const price=sellUnit(n,r),have=Number(G.inv[r])||0;
    return `<div class="list-line">${RESICON[r]||""} ${r}: ${have} шт., по ${price} золота
     <button data-cmd="sell:${n.key}:${r}" data-speak="Продать одну единицу ресурса ${r} за ${price} золота.">🪙 Продать 1</button>
     <button data-cmd="sellall:${n.key}:${r}" data-speak="Продать весь ресурс ${r}: ${have} штук за ${price*have} золота.">💰 Продать всё (${price*have})</button></div>`;}).join("")
@@ -8299,9 +8421,13 @@ const Warm={
   if(this.stop){narrate(`Прогрев остановлен: успел скачать ${this.done} записей из ${this.total}.`);return false;}
   safeFn(()=>Bank.play("trumpet_fanfare",{seed:1,gain:0.6,maxSec:5}));
   narrate(`Готово: все ${this.total} записей на устройстве, ушло ${secs} секунд. Теперь маяки звучат мгновенно, и игра работает без сети.`);
-  try{store.set("gm29warm",String(Date.now()));}catch(_){}
+  try{store.set("gm29warm",JSON.stringify({at:Date.now(),n:this.total}));}catch(_){}
   return true;},
- cancel(){if(!this.busy)return false;this.stop=true;return true;}
+ cancel(){if(!this.busy)return false;this.stop=true;return true;},
+ /* Когда и сколько записей уже скачано — чтобы не предлагать сделанное. */
+ doneBefore(){
+  try{const d=JSON.parse(store.get("gm29warm")||"null");
+   return d&&d.at?d:null;}catch(_){return null;}}
 };
 /* ════════════════════════════════════════════════════════════════════════
    ОБУЧЕНИЕ ЖЕСТАМ
