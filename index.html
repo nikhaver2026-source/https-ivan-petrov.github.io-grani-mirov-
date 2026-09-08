@@ -1580,13 +1580,69 @@ let lastExploreEl=null,lastAnnounced="",lastAnnouncedAt=0;
 let gesture={count:0,maxCount:0,id:null,x:0,y:0,t:0,moved:false,dir:null,target:null,ui:null,runArmed:false};
 const runState={active:false,dir:null,iv:null,hold:null,pendingDir:null};
 let magicHold={timer:null,target:null,fired:false};
+/* Отложенное называние того, чего коснулся палец: ждёт, окажется ли это
+   ощупыванием или началом свайпа. */
+let exploreHold=null;
+function cancelExploreHold(){if(exploreHold){clearTimeout(exploreHold);exploreHold=null;}}
 const touchGate={lastUiTap:0,lastUiEl:null,suppressClickUntil:0};
 function gameActive(){const el=document.getElementById('screen-game');return !!(el&&!el.hidden&&entered);}
 function safeFn(fn,fb=null){try{return typeof fn==='function'?fn():fb;}catch(e){try{console.warn('[Safe]',e);}catch(_){}return fb;}}
 function touchDirection(dx,dy){return Math.abs(dx)>=Math.abs(dy)?(dx>=0?'E':'W'):(dy>=0?'S':'N');}
 function resetGesture(){gesture={count:0,maxCount:0,id:null,x:0,y:0,t:0,moved:false,dir:null,target:null,ui:null,runArmed:false,fast:false,speed:0,lastX:null,lastY:null,lastT:0};}
 /* ── ОЗВУЧИВАНИЕ КАК В VOICEOVER: новый элемент немедленно обрывает речь предыдущего ── */
-function speakTextOf(el){try{const text=el?.dataset?.speak||el?.getAttribute?.('aria-label')||(el?.textContent||'').trim().replace(/\s+/g,' ');if(!text)return;
+/* ── ЧТО СКАЗАТЬ ОБ ЭЛЕМЕНТЕ ──
+   У кнопки текст есть внутри неё самой, а у флажка, ползунка и списка —
+   нет: подпись лежит рядом, в объемлющем ярлыке. Из-за этого окно настроек
+   молчало на двенадцати пунктах из семнадцати: игрок вёл по ним свайпом и
+   слышал тишину, не понимая, включена озвучка или нет. Теперь подпись
+   берётся из ярлыка, а к ней добавляется состояние самого органа: включено
+   или выключено, какое значение, что выбрано. */
+function controlState(el){
+ try{
+  if(!el||!el.tagName)return "";
+  const t=(el.getAttribute("type")||"").toLowerCase();
+  if(el.tagName==="INPUT"&&(t==="checkbox"||t==="radio"))return el.checked?"включено":"выключено";
+  if(el.tagName==="INPUT"&&t==="range"){
+   const max=Number(el.max)||100,val=Number(el.value)||0;
+   return max===100?`значение ${val} из 100`:`значение ${val}`;}
+  if(el.tagName==="SELECT"){const o=el.options&&el.options[el.selectedIndex];
+   return o?`выбрано: ${o.text}`:"";}
+  if(el.tagName==="INPUT")return el.value?`сейчас: ${el.value}`:"";
+  return "";
+ }catch(_){return "";}}
+function labelTextOf(el){
+ try{
+  const lab=el&&el.closest&&el.closest("label");
+  if(!lab)return "";
+  /* Подпись у таких пунктов состоит из частей: крупное имя и мелкое
+     пояснение под ним. Взятые подряд, они слипались в «ОзвучкаГолосовое
+     озвучивание» — одно слово из двух. Собираем по кускам и разделяем
+     точкой, а одинокий значок приклеиваем к следующему куску, чтобы он не
+     читался отдельной фразой. */
+  const parts=[];
+  const walk=node=>{
+   node.childNodes.forEach(ch=>{
+    if(ch.nodeType===3){const t=(ch.textContent||"").trim();if(t)parts.push(t);}
+    else if(ch.nodeType===1){
+     if(ch===el)return;
+     if(["B","SMALL","SPAN","DIV","STRONG","EM"].includes(ch.tagName))walk(ch);
+     else{const t=(ch.textContent||"").trim();if(t)parts.push(t);}}});};
+  walk(lab);
+  const out=[];
+  for(const part of parts){
+   const слово=/[\p{L}\p{N}]/u.test(part);
+   if(!слово&&out.length===0){out.push(part);continue;}      /* значок в начале */
+   if(!слово){out[out.length-1]+=" "+part;continue;}          /* значок в хвосте */
+   if(out.length&&!/[\p{L}\p{N}]/u.test(out[out.length-1])){out[out.length-1]+=" "+part;continue;}
+   out.push(part);}
+  return out.join(". ").replace(/\s+/g," ").trim();
+ }catch(_){return "";}}
+function speakTextOf(el){try{
+ let text=el?.dataset?.speak||el?.getAttribute?.('aria-label')||(el?.textContent||'').trim().replace(/\s+/g,' ');
+ if(!text)text=labelTextOf(el);
+ const st=controlState(el);
+ if(st)text=text?`${text}. ${st}`:st;
+ if(!text)return;
  const same=(text===lastAnnounced&&el===lastExploreEl&&Date.now()-lastAnnouncedAt<250);
  if(same)return; /* защита только от дребезга того же элемента за 250мс, а не от смены элемента */
  lastAnnounced=text;lastAnnouncedAt=Date.now();
@@ -1824,7 +1880,16 @@ document.addEventListener('touchstart',e=>{safeFn(()=>AE.ensure());const n=e.tou
  /* Ощупывание одним пальцем должно работать ВЕЗДЕ, включая открытые окна и экран боя —
     иначе первое касание элемента (без последующего протягивания пальца) внутри боя,
     инвентаря или любого другого оверлея просто молчит. */
- if(gameActive()&&!ui)explorePoint(t.clientX,t.clientY);},{passive:false,capture:true});
+ /* Раньше палец, едва коснувшись, тут же называл элемент под собой. Если
+    игрок начинал свайп, он слышал два названия подряд: сначала то, откуда
+    свайп начался, потом то, куда пришёл, — и первое обрывалось на полуслове.
+    Теперь голос выжидает малую долю секунды: не двинулся палец — это
+    ощупывание, называем; двинулся — это свайп, и говорить будет он. */
+ if(gameActive()&&!ui){
+  const ex=t.clientX,ey=t.clientY;
+  cancelExploreHold();
+  exploreHold=setTimeout(()=>{exploreHold=null;safeFn(()=>explorePoint(ex,ey));},110);
+ }},{passive:false,capture:true});
 document.addEventListener('touchmove',e=>{
  if(!gesture.maxCount)return;
  /* Снятие пальца — это не «сдвиг» жеста, а лишь изменение числа точек: просто запоминаем его. */
@@ -1833,7 +1898,7 @@ document.addEventListener('touchmove',e=>{
  if(!t){if(gesture.maxCount>1)e.preventDefault();return;}
  const dx=t.clientX-gesture.x,dy=t.clientY-gesture.y,d=Math.hypot(dx,dy);
  /* Для многопальцевых тапов порог мягче: пальцы неизбежно «перекатываются», пока их ставят. */
- if(d>(gesture.maxCount>1?45:16)){gesture.moved=true;cancelMagicHold();gesture.dir=touchDirection(dx,dy);}
+ if(d>(gesture.maxCount>1?45:16)){gesture.moved=true;cancelMagicHold();cancelExploreHold();gesture.dir=touchDirection(dx,dy);}
  if(gesture.maxCount!==1){e.preventDefault();return;}
  /* Скорость пальца отличает ощупывание от свайпа: медленно ведём — игра называет
     всё под пальцем; быстро проводим — это перелистывание, и по дороге она молчит,
@@ -6991,7 +7056,15 @@ const CMD={
  qtake(key){takeNPCQuest(getNPCByKey(key));},
  qdone(id){completeQuest(id);},
  qdrop(id){dropQuest(id);},
- buy(key,i){buyItem(key,+i);},
+ /* Разбор команды отдаёт всё после имени одной строкой, а вторым доводом —
+    сам элемент. Эта команда принимала два довода и потому получала вместо
+    номера товара кнопку: номер выходил «не числом», товар не находился, и
+    кнопка «Купить» в карточке жителя молча не работала — ни касанием, ни
+    мышью, ни с клавиатуры. Ключ жителя сам содержит двоеточия, поэтому
+    номер отделяется по последнему, как и в командах продажи. */
+ buy(arg){const i=String(arg).lastIndexOf(":");
+  if(i<0){narrate("Не удалось разобрать, что покупать.");return;}
+  buyItem(String(arg).slice(0,i),Number(String(arg).slice(i+1)));},
  svc(s){tavernService(s);},
  cards(bet){playCards(+bet);},
  pray(){pray();},
