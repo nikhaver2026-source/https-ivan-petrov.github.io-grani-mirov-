@@ -127,7 +127,7 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
 
  // 10. Энциклопедия перечисляет банк
  const enc=await page.evaluate(()=>{
-  handleTwoFingerTap();CMD.encyc();
+  while(activeLayer())closeTopUI();CMD.encyc();
   return {cards:document.querySelectorAll('#bankGrid .sound-card').length,
    heads:document.querySelectorAll('#bankGrid h3').length};});
  check('энциклопедия перечисляет роли банка по разделам',enc.cards>=57&&enc.heads>=9,enc);

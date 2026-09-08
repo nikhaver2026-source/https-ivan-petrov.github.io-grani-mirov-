@@ -39,7 +39,7 @@ const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(e!==undefined?' :
   await page.waitForTimeout(120);
   const opened=await page.evaluate(()=>!!activeLayer());
   const closed=await page.evaluate(()=>{ /* закрытие двумя пальцами */ return true;});
-  await page.evaluate(()=>handleTwoFingerTap());
+  await page.evaluate(()=>handleTwoFingerTap());   /* два пальца закрывают открытое окно */
   await page.waitForTimeout(120);
   const afterClose=await page.evaluate(()=>!!activeLayer());
   check('окно «'+s+'» открывается и закрывается',opened&&!afterClose,{opened,afterClose});

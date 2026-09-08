@@ -78,8 +78,8 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   steps:Tutor.steps.length,
   full:Tutor.steps.every(s=>s.want&&s.say&&s.again&&s.ok),
   kinds:Tutor.steps.map(s=>s.want)}));
- check('в обучении восемь уроков, у каждого просьба, подсказка и похвала',
-  tut.steps===8&&tut.full===true,tut.kinds);
+ check('в обучении девять уроков, у каждого просьба, подсказка и похвала',
+  tut.steps===9&&tut.full===true&&tut.kinds.includes("gather"),tut.kinds);
 
  const flow=await page.evaluate(async()=>{
   const said=[];const o=Speech.say;Speech.say=t=>said.push(t);
@@ -93,18 +93,19 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   const after1=Tutor.i;
   move("W");calm();                // урок 2
   startRun("N");stopRun();calm();  // урок 3
-  handleTwoFingerTap();            // урок 4: открыть меню
-  handleTwoFingerTap();            // урок 5: закрыть
-  handleThreeFingerSwipe();        // урок 6
-  useHere();calm();                // урок 7
-  Tutor.note("explore");           // урок 8
-  const done=!Tutor.on&&Tutor.i>=8;
+  handleThreeFingerSwipe("N");     // урок 4: открыть меню свайпом тремя пальцами вверх
+  handleTwoFingerTap();            // урок 5: закрыть двумя пальцами
+  handleTwoFingerTap();calm();     // урок 6: сбор двумя пальцами
+  handleThreeFingerSwipe("S");     // урок 7: где я
+  useHere();calm();                // урок 8: действие здесь
+  Tutor.note("explore");           // урок 9
+  const done=!Tutor.on&&Tutor.i>=9;
   Speech.say=o;
   while(activeLayer())closeTopUI();
   return {started,after1,i:Tutor.i,done,tutorDone:!!G.tutorDone,
-   praised:said.filter(t=>/Есть шаг|Верно|Это бег|Меню открыто|Закрыто|сводка|Вот и всё|читаете экран/.test(t)).length};});
+   praised:said.filter(t=>/Есть шаг|Верно|Это бег|Меню открыто|Закрыто|собирают|сводка|Вот и всё|читаете экран/.test(t)).length};});
  check('обучение начинается и слушает настоящие жесты игры',flow.started===true&&flow.after1===1,flow);
- check('все восемь уроков проходятся действиями игрока',flow.i>=8&&flow.done===true,{урок:flow.i,завершено:flow.done});
+ check('все девять уроков проходятся действиями игрока',flow.i>=9&&flow.done===true,{урок:flow.i,завершено:flow.done});
  check('на каждый жест игра отвечает похвалой',flow.praised>=7,{похвал:flow.praised});
  check('пройденное обучение запоминается в сохранении',flow.tutorDone===true);
 

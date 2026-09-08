@@ -65,7 +65,7 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
 
  /* ── 1. Ни в одном окне свайп не встречает невидимых пунктов ── */
  const WINDOWS=[
-  ["меню действий",()=>{handleTwoFingerTap();}],
+  ["меню действий",()=>{toggleActionMenu();}],
   ["карточка жителя",()=>{const n=getNPC(G.x,G.y,0,"Торговец");openNPC(n.key,true);}],
   ["настройки",()=>CMD.settings()],
   ["сохранения",()=>CMD.saves()],
@@ -163,16 +163,17 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
  await clear();
  await page.evaluate(()=>{G.gold=0;G.inv={};G.gear=[];
   G.loot=[{type:"gold",amount:50},{type:"mat",name:"руда"}];
-  openLootView("Победа!");window.__said=[];});
+  openLootView("Победа!");resetCursor();window.__said=[];});
+ const lootItems=await page.evaluate(()=>cursorItems(activeLayer()).map(x=>(x.textContent||'').trim()));
  await fwd();
  const lootSwipe=await said();
- await tap(195,600);
- await page.waitForTimeout(300);
+ await doubleTap();
  const collected=await page.evaluate(()=>({золото:G.gold,руда:G.inv["руда"]||0,
   окно:activeLayer()&&activeLayer().id,добыча:G.loot}));
- check('в окне добычи свайп не молчит, а подсказывает, что делать',
-  lootSwipe.length>=1&&/касан/i.test(lootSwipe.join(' ')),lootSwipe.slice(0,2));
- check('одно касание собирает всю добычу и закрывает окно',
+ check('в окне добычи есть настоящая кнопка сбора, и свайп её называет',
+  lootItems.length===1&&/добыч/i.test(lootItems[0])&&lootSwipe.length>=1,
+  {пункты:lootItems,сказано:lootSwipe.slice(0,2)});
+ check('двойное касание собирает всю добычу и закрывает окно',
   collected.золото===50&&collected.руда===1&&!collected.окно&&!collected.добыча,collected);
 
  /* ── 8. Меню действий посреди боя: ощупывание работает и с вынутым оружием ── */
@@ -181,7 +182,7 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   G.agi=50; /* побег должен удаться наверняка, иначе проверка зависит от броска кости */
   G.hp=G.hpMax;
   const c={x:G.x,y:G.y,monster:{n:"Волк",lvl:2,hp:30,dmg:7,xp:10,gold:5}};
-  startCombat(c);G.weaponDrawn=true;handleTwoFingerTap();
+  startCombat(c);G.weaponDrawn=true;toggleActionMenu();
   const lay=activeLayer();resetCursor();ensureCursor(lay);
   const items=cursorItems(lay);
   window.__said=[];lastExploreEl=null;

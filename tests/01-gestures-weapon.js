@@ -41,6 +41,19 @@ function check(name,cond,extra){results.push((cond?'PASS':'FAIL')+' — '+name+(
   }
   await page.waitForTimeout(150);
  }
+ /* Свайп несколькими пальцами: меню действий переехало на три пальца вверх,
+    чтобы одно касание двумя пальцами могло собирать ресурсы. */
+ async function multiSwipe(n,dx,dy,steps=6,stepMs=16){
+  const x=100,y=430;
+  const pts=k=>Array.from({length:n},(_,i)=>({x:x+i*45+Math.round(dx*k/steps),y:y+Math.round(dy*k/steps),id:i}));
+  await cdp.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:pts(0)});
+  await page.waitForTimeout(stepMs);
+  for(let k=1;k<=steps;k++){
+   await cdp.send('Input.dispatchTouchEvent',{type:'touchMove',touchPoints:pts(k)});
+   await page.waitForTimeout(stepMs);}
+  await cdp.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});
+  await page.waitForTimeout(250);
+ }
  async function swipe(fromX,fromY,toX,toY,steps=6){
   await cdp.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[{x:fromX,y:fromY,id:0}]});
   for(let i=1;i<=steps;i++){
@@ -63,11 +76,22 @@ function check(name,cond,extra){results.push((cond?'PASS':'FAIL')+' — '+name+(
  await multiTap(3);
  check('3 пальца повторно убирают оружие', await page.evaluate(()=>G.weaponDrawn===false));
 
- // 2. два пальца → меню действий, ещё два → закрытие
- await multiTap(2);
- check('2 пальца открывают меню действий', await page.evaluate(()=>!document.getElementById('actionMenu').hidden));
+ // 2. три пальца вверх → меню действий, два пальца → закрытие
+ await multiSwipe(3,0,-170);
+ check('свайп тремя пальцами вверх открывает меню действий', await page.evaluate(()=>!document.getElementById('actionMenu').hidden));
  await multiTap(2);
  check('2 пальца закрывают меню действий', await page.evaluate(()=>document.getElementById('actionMenu').hidden));
+
+ // 2б. два пальца на игровом поле собирают ресурс под ногами
+ const res=await page.evaluate(()=>{
+  for(let r=0;r<4000;r++){const x=1000+(r%60),y=1000+Math.floor(r/60);
+   const c=cellContent(x,y);
+   if(c.res&&!c.structure&&!c.monster){G.x=x;G.y=y;G.place=null;G.inv={};G.depleted={};
+    return c.res.name;}}
+  return null;});
+ await multiTap(2);
+ check('касание двумя пальцами собирает ресурс под ногами',
+  await page.evaluate(n=>(G.inv[n]||0)===1,res),{ресурс:res, запас:await page.evaluate(()=>({...G.inv}))});
 
  // 3. четыре пальца → панель магии
  await multiTap(4);
@@ -91,7 +115,7 @@ function check(name,cond,extra){results.push((cond?'PASS':'FAIL')+' — '+name+(
  check('свайп при вынутом оружии наносит удар',hpAfter<hpBefore,{hpBefore,hpAfter});
 
  // 6. побег доступен из меню действий во время боя
- await multiTap(2);
+ await multiSwipe(3,0,-170);
  const hasFlee=await page.evaluate(()=>[...document.querySelectorAll('#amList button')].some(b=>b.dataset.cmd==='am:flee'));
  check('в бою в меню действий есть пункт побега',hasFlee);
  await page.evaluate(()=>closeActionMenu());

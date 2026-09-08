@@ -50,7 +50,7 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
 
  /* ── Окна игры: как открыть и что в них должно быть ── */
  const WINDOWS=[
-  ["меню действий",()=>{handleTwoFingerTap();}],
+  ["меню действий",()=>{toggleActionMenu();}],
   ["карточка жителя",()=>{const n=getNPC(G.x,G.y,0,"Торговец");openNPC(n.key,true);}],
   ["постройка",()=>{const c={x:G.x,y:G.y,structure:{type:"village",name:"Деревня",beacon:"village"},
     terrain:terrainAt(G.x,G.y),empire:empireAt(G.x,G.y)};openBuilding(c);}],

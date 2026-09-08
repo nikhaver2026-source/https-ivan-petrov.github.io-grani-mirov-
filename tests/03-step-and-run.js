@@ -53,15 +53,17 @@ const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(e!==undefined?' :
  const stopped=await until(()=>runState.active===false,1500);
  check('после отрыва пальца бег остановлен',stopped);
 
- // добыча после победы собирается одиночным касанием
+ // добыча после победы собирается двойным касанием — как и всё остальное в игре
  await page.evaluate(()=>{G.gold=0;G.inCombat=true;G.combat={m:{id:'wolf',n:'Волк',lvl:1,hp:5,dmg:1,xp:5,gold:17},hp:1,key:G.x+','+G.y,ai:{}};victory();});
  await page.waitForTimeout(300);
  check('после победы открыто окно добычи', await page.evaluate(()=>!document.getElementById('lootOverlay').hidden));
- await cdp.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[{x:195,y:700,id:0}]});
- await page.waitForTimeout(30);
- await cdp.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[{x:195,y:700,id:0}]});
+ for(let i=0;i<2;i++){
+  await cdp.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[{x:195,y:700,id:0}]});
+  await page.waitForTimeout(30);
+  await cdp.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[{x:195,y:700,id:0}]});
+  await page.waitForTimeout(120);}
  const taken=await until(()=>G.gold===17&&document.getElementById('lootOverlay').hidden&&!G.loot,2000);
- check('одиночное касание собирает добычу',taken, await page.evaluate(()=>[G.gold,document.getElementById('lootOverlay').hidden]));
+ check('двойное касание собирает добычу',taken, await page.evaluate(()=>[G.gold,document.getElementById('lootOverlay').hidden]));
 
  // клавиатура: Escape в бою = побег, Enter по кнопке = одна команда
  await page.evaluate(()=>{window.__c=0;const o=CMD.check;CMD.check=(...a)=>{window.__c++;return o(...a);};

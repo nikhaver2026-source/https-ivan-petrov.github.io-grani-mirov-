@@ -21,7 +21,18 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
    const rest=pts.slice(0,k).map((p,idx)=>({x:p.x+2,y:p.y+1,id:idx}));
    if(rest.length){await cdp.send('Input.dispatchTouchEvent',{type:'touchMove',touchPoints:rest});await page.waitForTimeout(20);}}
   await page.waitForTimeout(150);}
-
+ /* Меню действий переехало на свайп тремя пальцами вверх: одно касание двумя
+    пальцами теперь собирает ресурсы. */
+ async function multiSwipe(n,dx,dy,steps=6,stepMs=16){
+  const x=100,y=430;
+  const pts=k=>Array.from({length:n},(_,i)=>({x:x+i*45+Math.round(dx*k/steps),y:y+Math.round(dy*k/steps),id:i}));
+  await cdp.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:pts(0)});
+  await page.waitForTimeout(stepMs);
+  for(let k=1;k<=steps;k++){
+   await cdp.send('Input.dispatchTouchEvent',{type:'touchMove',touchPoints:pts(k)});
+   await page.waitForTimeout(stepMs);}
+  await cdp.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});
+  await page.waitForTimeout(250);}
 
  async function emptyPoint(){
   return await page.evaluate(()=>{
@@ -29,8 +40,8 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
     const el=document.elementFromPoint(x,y);
     if(el&&!el.closest('button,[data-cmd],a,input,select')&&activeLayer()&&activeLayer().contains(el))return {x,y};}
    return {x:8,y:8};});}
- // Меню действий двумя пальцами содержит новые пункты
- await multiTap(2);
+ // Меню действий (свайп тремя пальцами вверх) содержит новые пункты
+ await multiSwipe(3,0,-170);
  const items=await page.evaluate(()=>[...document.querySelectorAll('#amList button')].map(b=>b.dataset.cmd));
  check('в меню действий есть народы, пантеон и политика',
   ['am:races','am:pantheon','am:politics'].every(c=>items.includes(c)),items.length);
