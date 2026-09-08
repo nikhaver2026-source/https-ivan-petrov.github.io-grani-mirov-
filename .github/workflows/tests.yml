@@ -1,0 +1,61 @@
+# Проверки «Грани Миров» на каждый толчок в main и на каждый запрос слияния.
+# Прогон поднимает локальный сервер по тому же подпути, что и GitHub Pages,
+# и запускает все наборы из папки tests в настоящем браузере.
+name: Проверки игры
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Забрать репозиторий
+        uses: actions/checkout@v4
+
+      - name: Поставить Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Поставить Playwright и браузер
+        run: |
+          npm install --no-audit --no-fund
+          npx playwright install --with-deps chromium
+
+      - name: Синтаксис игры и служебного работника
+        run: |
+          node - <<'JS'
+          const fs=require('fs'),vm=require('vm');
+          const html=fs.readFileSync('index.html','utf8');
+          const parts=[...html.matchAll(/<script(?![^>]*\bsrc=)[^>]*>([\s\S]*?)<\/script>/g)].map(m=>m[1]);
+          if(!parts.length)throw new Error('в index.html не найдено ни одного скрипта');
+          parts.forEach((code,i)=>{try{new vm.Script(code,{filename:`index.html:script${i+1}`});}
+            catch(e){console.error(`Скрипт ${i+1}: ${e.message}`);process.exit(1);}});
+          console.log(`Скриптов проверено: ${parts.length} — синтаксис в порядке`);
+          JS
+          node --check sw.js
+          node -e "JSON.parse(require('fs').readFileSync('manifest.json','utf8'));console.log('manifest.json валиден')"
+
+      - name: Все записи на месте
+        run: |
+          node - <<'JS'
+          const fs=require('fs'),path=require('path');
+          const html=fs.readFileSync('index.html','utf8');
+          const refs=new Set([...html.matchAll(/"((?:sea|ambience|dungeon|magic|gods|events|places|fantasy|steps|ui|monsters|nat|inst)\/[^"]+\.(?:mp3|wav|flac|ogg))"/g)].map(m=>m[1]));
+          const missing=[...refs].filter(f=>!fs.existsSync(path.join('sounds',f)));
+          const walk=d=>fs.readdirSync(d,{withFileTypes:true}).flatMap(e=>e.isDirectory()?walk(path.join(d,e.name)):[path.join(d,e.name)]);
+          const have=walk('sounds').filter(f=>/\.(mp3|wav|flac|ogg)$/.test(f)).map(f=>path.relative('sounds',f));
+          const unused=have.filter(f=>!refs.has(f));
+          console.log(`Ссылок на записи: ${refs.size}, файлов: ${have.length}`);
+          if(missing.length){console.error('Нет файлов: '+missing.join(', '));process.exit(1);}
+          if(unused.length){console.error('Не используются: '+unused.join(', '));process.exit(1);}
+          console.log('Все записи на месте и все задействованы');
+          JS
+
+      - name: Прогон всех наборов
+        run: npm test
