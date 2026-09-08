@@ -185,6 +185,14 @@ h3{color:var(--acc2);margin:14px 0 6px;font-size:1.05rem;}
 </div></div>
 
 <!-- ЖУРНАЛ -->
+<!-- СОХРАНЕНИЯ: слоты, файл, состояние хранилища -->
+<div class="modal" id="modal-saves" role="dialog" aria-modal="true" aria-label="Сохранения" hidden><div class="sheet">
+ <header><h2>💾 Сохранения</h2><button type="button" data-cmd="close">✖️ Закрыть</button></header>
+ <p class="hint" id="savesHint">Три слота и автосохранение. Игру можно выгрузить в файл и перенести на другое устройство.</p>
+ <div id="savesBody"></div>
+ <input type="file" id="saveFile" accept=".json,application/json" hidden>
+</div></div>
+
 <div class="modal" id="modal-journal" role="dialog" aria-modal="true" aria-label="Журнал" hidden><div class="sheet">
  <header><h2>📔 Журнал</h2><button type="button" data-cmd="close">✖️ Закрыть</button></header>
  <div id="journalList"></div>
@@ -343,7 +351,12 @@ h3{color:var(--acc2);margin:14px 0 6px;font-size:1.05rem;}
 /* ════════ БЕЗОПАСНОЕ ХРАНИЛИЩЕ (WebView, приватный режим, упаковка в приложение) ════════ */
 const store={
  get(k){try{return localStorage.getItem(k);}catch(e){return null;}},
- set(k,v){try{localStorage.setItem(k,v);return true;}catch(e){return false;}}};
+ /* Возвращает true только при настоящей записи. Раньше провал (переполненное
+    хранилище, приватный режим) молча выдавался за успех, и игра продолжала
+    говорить «Сохранено», ничего не сохраняя. */
+ set(k,v){try{localStorage.setItem(k,v);return true;}catch(e){return false;}},
+ del(k){try{localStorage.removeItem(k);return true;}catch(e){return false;}},
+ keys(){try{return Object.keys(localStorage);}catch(e){return [];}}};
 
 /* ════════ НАСТРОЙКИ ════════ */
 let savedSet={};try{savedSet=JSON.parse(store.get("gm29set")||"{}")||{};}catch(e){}
@@ -1962,6 +1975,7 @@ const AM_GROUPS=[
  ["Игра",[
   ["settings","⚙️ Настройки"],
   ["save","💾 Сохранить игру"],
+  ["saves","🗄️ Сохранения: слоты и файл"],
   ["music","🎼 Музыка: вкл/выкл"],
   ["close","✖️ Закрыть меню"]]]];
 const AM_ITEMS=AM_GROUPS.reduce((a,g)=>a.concat(g[1]),[]);
@@ -6578,6 +6592,20 @@ const CMD={
  equip(i){equipWeaponIndex(+i);},
  cast(i){castSpell(+i);},
  fight(a){if(a==="atk"||a==="magic"||a==="potion"||a==="flee")fight(a);},
+ saves(){openModal("modal-saves");renderSaves();},
+ loadauto(){loadGame();},
+ slotsave(n){saveToSlot(n);},
+ slotload(n){loadFromSlot(n);},
+ slotdel(n){deleteSlot(n);},
+ savefile(){exportSaveFile();},
+ loadfile(){
+  /* Выбор файла — единственный способ вернуть игру с другого устройства.
+     Окно выбора открывает сам браузер, поэтому кнопка просто нажимает
+     скрытое поле. */
+  const f=document.getElementById("saveFile");
+  if(!f){narrate("Загрузка из файла недоступна.");return;}
+  narrate("Открываю выбор файла. Найдите файл сохранения «Грани Миров».");
+  safeFn(()=>f.click());},
  mapscan(){scanSpeak();},
  signread(){
   /* Столб с указателем на перекрёстке читается вслух целиком. */
@@ -7523,31 +7551,243 @@ function bindSettings(){const $=id=>document.getElementById(id);
  $("btnSpeechSample").addEventListener("click",()=>narrate("Это образец озвучивания. Грань Миров говорит с вами."));}
 
 /* ════════ СОХРАНЕНИЕ ════════ */
-function saveGame(silent){try{
- const s={...G};delete s.combat;delete s.inCombat;s.inCombat=false;
- store.set("gm29save",JSON.stringify(s));}catch(e){}
- if(!silent){narrate("Игра сохранена.");UI.blip(880,0.15,0.1);}}
+/* ════════════════════════════════════════════════════════════════════════
+   СОХРАНЕНИЯ
+   Прежде игра писала одну строку в хранилище браузера и никогда не проверяла,
+   записалась ли она. А писать было что: следы мира — открытые сундуки,
+   выработанные жилы, убитые в подземельях твари, зачищенные клетки — копились
+   без предела. Рано или поздно хранилище переполнялось, запись начинала
+   молча проваливаться, а игра всё так же бодро говорила «Сохранено». Игрок
+   узнавал правду, только потеряв всё.
+
+   Теперь так: перед записью состояние подрезается (следы мира хранятся в
+   разумном количестве, самые старые уходят), запись проверяется, и если она
+   не удалась — игра подрезает жёстче и пробует снова, а если и это не
+   помогло, говорит об этом вслух, а не делает вид, что всё хорошо.
+   Кроме автосохранения есть три слота и выгрузка в файл: сохранение можно
+   унести на другое устройство и вернуть обратно.
+   ════════════════════════════════════════════════════════════════════════ */
+const SAVE_KEY="gm29save";
+const SAVE_SLOTS=3;
+const slotKey=n=>"gm29slot"+n;
+/* Сколько следов мира держим. Эти числа — компромисс: игрок почти никогда не
+   возвращается в подземелье, которое зачистил десять часов назад, но открытый
+   сундук в соседнем городе должен оставаться открытым. */
+const KEEP={marks:3000,cleared:1500,prayed:400,visited:1500,journal:60};
+const KEEP_HARD={marks:600,cleared:300,prayed:120,visited:300,journal:20};
+/* Обрезка словаря по числу ключей: остаются последние — они же самые свежие,
+   потому что порядок ключей в объекте — порядок их появления. */
+function trimDict(o,keep){
+ if(!o||typeof o!=="object")return o;
+ const k=Object.keys(o);
+ if(k.length<=keep)return o;
+ const out={};
+ for(const key of k.slice(k.length-keep))out[key]=o[key];
+ return out;
+}
+function pruneState(hard){
+ try{
+  const lim=hard?KEEP_HARD:KEEP;
+  G.marks=trimDict(G.marks,lim.marks);
+  G.cleared=trimDict(G.cleared,lim.cleared);
+  G.visited=trimDict(G.visited,lim.visited);
+  /* Молитвы помнятся только «сегодня»: старше суток они не значат ничего. */
+  if(G.prayed&&typeof G.prayed==="object"){
+   const day=Number(G.day)||1,fresh={};
+   for(const k of Object.keys(G.prayed))if(Number(G.prayed[k])>=day-1)fresh[k]=G.prayed[k];
+   G.prayed=trimDict(fresh,lim.prayed);}
+  if(Array.isArray(G.journal)&&G.journal.length>lim.journal)G.journal.length=lim.journal;
+  /* Выработанные ресурсы живут один день — их чистит смена суток. */
+  return true;
+ }catch(_){return false;}
+}
+/* Строка сохранения: без боя, без открытых окон, без временных подпорок. */
+function serializeSave(){
+ const s={...G};
+ delete s.combat;delete s.loot;delete s.harborShips;
+ s.inCombat=false;
+ s.savedAt=Date.now();s.savedVer=2;
+ return JSON.stringify(s);
+}
+/* Короткое описание сохранения — для слота и для чтения вслух. */
+function saveMeta(raw){
+ try{
+  const d=typeof raw==="string"?JSON.parse(raw):raw;
+  if(!d||typeof d!=="object")return null;
+  const place=d.place?(d.place.depth>0?`${d.place.name}, глубина ${d.place.depth}`:d.place.name)
+   :(d.ship?"в море":`клетка ${d.x} на ${d.y}`);
+  return {day:Number(d.day)||1,hour:Math.floor(Number(d.hour)||0),level:Number(d.level)||1,
+   gold:Number(d.gold)||0,race:d.race||"?",place,
+   at:d.savedAt?new Date(d.savedAt):null,bytes:(typeof raw==="string"?raw.length:0)};
+ }catch(_){return null;}
+}
+function metaText(m){
+ if(!m)return "пусто";
+ const t=m.at?`${String(m.at.getDate()).padStart(2,"0")}.${String(m.at.getMonth()+1).padStart(2,"0")} ${String(m.at.getHours()).padStart(2,"0")}:${String(m.at.getMinutes()).padStart(2,"0")}`:"";
+ return `день ${m.day}, ${String(m.hour).padStart(2,"0")} часов, уровень ${m.level}, золота ${m.gold}, ${m.place}${t?`; записано ${t}`:""}`;
+}
+/* Запись с проверкой: не получилось — подрезаем и пробуем ещё раз. */
+function writeSave(key,silent){
+ pruneState(false);
+ let raw=serializeSave();
+ if(store.set(key,raw)){G.saveBroken=false;return raw;}
+ /* Первый провал: чистим жёстче — это возвращает несколько сотен килобайт. */
+ pruneState(true);
+ raw=serializeSave();
+ if(store.set(key,raw)){
+  G.saveBroken=false;
+  if(!silent)narrate("Память браузера почти заполнена: старые следы мира стёрты, игра сохранена.",{interrupt:false});
+  return raw;}
+ /* Второй провал: возможно, место занимают прежние слоты. Освобождаем самый старый. */
+ const others=[];
+ for(let i=1;i<=SAVE_SLOTS;i++){const k=slotKey(i);const v=store.get(k);if(v&&k!==key)others.push([k,saveMeta(v)]);}
+ others.sort((a,b)=>((a[1]&&a[1].at?a[1].at.getTime():0)-(b[1]&&b[1].at?b[1].at.getTime():0)));
+ if(others.length&&store.del(others[0][0])&&store.set(key,raw)){
+  narrate(`Места не хватало: пришлось стереть самый старый слот. Игра сохранена.`,{interrupt:false});
+  return raw;}
+ /* Не вышло. Об этом нужно сказать вслух — молчать здесь нельзя. */
+ if(!G.saveBroken){
+  G.saveBroken=true;
+  narrate("Сохранить не удалось: память браузера заполнена. Откройте «Сохранения» и выгрузите игру в файл, иначе прогресс будет потерян.",{interrupt:true});
+  safeFn(()=>{UI.blip(180,0.25,0.3);Bank.play("ui_error",{gain:0.8,maxSec:3});vib([60,40,60]);});
+ }
+ return null;
+}
+function saveGame(silent){
+ const raw=safeFn(()=>writeSave(SAVE_KEY,silent),null);
+ if(!silent){
+  if(raw){narrate("Игра сохранена.");UI.blip(880,0.15,0.1);}
+  else narrate("Игра НЕ сохранена: нет места в памяти браузера. Выгрузите игру в файл через меню «Сохранения».");
+ }
+ return !!raw;
+}
+/* ── Слоты ── */
+function saveToSlot(n){
+ n=Math.max(1,Math.min(SAVE_SLOTS,Number(n)||1));
+ const raw=safeFn(()=>writeSave(slotKey(n),false),null);
+ if(raw){
+  safeFn(()=>{UI.pickup();Bank.play("xylo_coin",{gain:0.5,maxSec:3});});
+  narrate(`Слот ${n}: игра записана. ${metaText(saveMeta(raw))}.`);
+  journal(`Сохранение в слот ${n}.`);
+ }else narrate(`Слот ${n}: записать не удалось, память браузера заполнена.`);
+ renderSaves();
+ return !!raw;
+}
+function loadFromSlot(n){
+ n=Math.max(1,Math.min(SAVE_SLOTS,Number(n)||1));
+ const raw=store.get(slotKey(n));
+ if(!raw){narrate(`Слот ${n} пуст.`);return false;}
+ return applySave(raw,`слот ${n}`);
+}
+function deleteSlot(n){
+ n=Math.max(1,Math.min(SAVE_SLOTS,Number(n)||1));
+ if(!store.get(slotKey(n))){narrate(`Слот ${n} и так пуст.`);return false;}
+ store.del(slotKey(n));
+ narrate(`Слот ${n} очищен.`);
+ renderSaves();
+ return true;
+}
+/* Общая посадка сохранения в игру — и для слотов, и для файла, и для автосейва. */
+function applySave(raw,whence){
+ let d=null;
+ try{d=JSON.parse(raw);}catch(e){}
+ if(!d||typeof d!=="object"||Array.isArray(d)){
+  narrate(`Не удалось прочитать сохранение (${whence}): файл повреждён или это не сохранение «Грани Миров».`);
+  return false;}
+ if(typeof d.x!=="number"||typeof d.y!=="number"||typeof d.hp!=="number"){
+  narrate(`Это не похоже на сохранение «Грани Миров» (${whence}).`);
+  return false;}
+ safeMergeState(G,d);
+ normalizeWeaponState();
+ G.weaponDrawn=!!G.weaponDrawn;G.inCombat=false;G.combat=null;G.loot=null;
+ safeFn(()=>Actors.stop());
+ entered=true;
+ showScreen("screen-game");
+ safeFn(()=>{while(activeLayer())closeTopUI();});
+ narrate(`Игра загружена (${whence}).`);
+ setTimeout(()=>{
+  if(G.place){
+   safeFn(()=>Music.start(G.place.depth>0?"cave":"prologue"));
+   safeFn(()=>Actors.ensure());
+   narrate(`Вы вернулись: ${placeTitle()}. ${describeHere(true)} Уровень ${G.level}.`);
+   safeFn(()=>pingSurroundings(3,3));refresh();return;}
+  const c=cellContent(G.x,G.y);
+  safeFn(()=>{Play.start("amb0",(AMB[c.terrain[0]]||["wind"])[0],{loop:true});
+   Music.start(c.terrain[0]);bankUpdateAmbient();});
+  narrate(`Вы вернулись: ${c.terrain[1]}, ${c.empire.name}. Уровень ${G.level}.`);refresh();},600);
+ return true;
+}
+/* ── Файл: выгрузка и загрузка ── */
+function exportSaveFile(){
+ try{
+  pruneState(false);
+  const raw=serializeSave();
+  /* Имя файла — латиницей: кириллицу часть браузеров и файловых систем
+     заменяет на «download», и найти файл потом труднее. */
+  const name=`gran-mirov-day${G.day}-lvl${G.level}.json`;
+  const blob=new Blob([raw],{type:"application/json"});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement("a");
+  a.href=url;a.download=name;a.style.display="none";
+  document.body.appendChild(a);a.click();
+  setTimeout(()=>{try{document.body.removeChild(a);URL.revokeObjectURL(url);}catch(_){}},1500);
+  safeFn(()=>{UI.pickup();Bank.play("xylo_coin",{gain:0.5,maxSec:3});});
+  narrate(`Игра выгружена в файл «${name}», размер ${Math.round(raw.length/1024)} килобайт. Ищите его в папке загрузок: день ${G.day}, уровень ${G.level}.`);
+  journal("Сохранение выгружено в файл.");
+  return true;
+ }catch(e){
+  narrate("Выгрузить в файл не удалось. Скопируйте сохранение как текст — кнопка ниже.");
+  return false;}
+}
+function importSaveFile(file){
+ if(!file){narrate("Файл не выбран.");return;}
+ try{
+  const r=new FileReader();
+  r.onload=()=>{safeFn(()=>applySave(String(r.result||""),"файл «"+file.name+"»"));};
+  r.onerror=()=>narrate("Файл не читается.");
+  r.readAsText(file);
+ }catch(e){narrate("Файл не читается.");}
+}
+/* ── Окно сохранений ── */
+function renderSaves(){
+ const body=document.getElementById("savesBody");if(!body)return;
+ const auto=saveMeta(store.get(SAVE_KEY));
+ const used=safeFn(()=>{
+  let n=0;for(const k of store.keys())n+=(store.get(k)||"").length;
+  return Math.round(n/1024);},0);
+ let html=`<div class="list-line" data-speak="Автосохранение: ${auto?metaText(auto):"пусто"}. Занято в памяти браузера ${used} килобайт.">
+  💾 <b>Автосохранение</b> — ${auto?metaText(auto):"пусто"}<br>
+  Занято в памяти браузера: ${used} КБ${G.saveBroken?" — <b>записать не удаётся, память заполнена</b>":""}</div>`;
+ html+=`<div class="row"><button data-cmd="save" data-speak="Сохранить сейчас в автосохранение.">💾 Сохранить сейчас</button>
+  <button data-cmd="loadauto" data-speak="Загрузить автосохранение.">📂 Загрузить автосохранение</button></div>`;
+ html+=`<h3>Слоты</h3>`;
+ for(let i=1;i<=SAVE_SLOTS;i++){
+  const m=saveMeta(store.get(slotKey(i)));
+  html+=`<div class="list-line" data-speak="Слот ${i}: ${m?metaText(m):"пусто"}">🗄️ <b>Слот ${i}</b> — ${m?metaText(m):"пусто"}</div>
+   <div class="row">
+    <button data-cmd="slotsave:${i}" data-speak="Записать игру в слот ${i}.">💾 Записать</button>
+    ${m?`<button data-cmd="slotload:${i}" data-speak="Загрузить слот ${i}: ${metaText(m)}.">📂 Загрузить</button>
+        <button data-cmd="slotdel:${i}" data-speak="Очистить слот ${i}.">🗑️ Очистить</button>`:""}
+   </div>`;
+ }
+ html+=`<h3>Перенос на другое устройство</h3>
+  <div class="list-line">Файл сохранения можно унести на другой телефон или компьютер: выгрузите его, перенесите любым способом и загрузите обратно.</div>
+  <div class="row">
+   <button data-cmd="savefile" data-speak="Выгрузить игру в файл.">⬇️ Выгрузить в файл</button>
+   <button data-cmd="loadfile" data-speak="Загрузить игру из файла.">⬆️ Загрузить из файла</button>
+  </div>`;
+ body.innerHTML=html;
+}
 function safeMergeState(target,src){
  /* Защита от подмены прототипов через отредактированное вручную сохранение в localStorage */
  if(!src||typeof src!=="object"||Array.isArray(src))return;
  for(const k of Object.keys(src)){
   if(k==="__proto__"||k==="constructor"||k==="prototype")continue;
   target[k]=src[k];}}
-function loadGame(){let d=null;try{d=JSON.parse(store.get("gm29save"));}catch(e){}
- if(!d||typeof d!=="object"){narrate("Сохранение не найдено. Начните новую историю.");return;}
- safeMergeState(G,d);normalizeWeaponState();G.weaponDrawn=!!G.weaponDrawn;G.inCombat=false;entered=true;
- showScreen("screen-game");
- narrate("Игра загружена.");
- setTimeout(()=>{
-  if(G.place){
-   /* Игрок сохранился внутри здания или подземелья — возвращаем его туда же. */
-   safeFn(()=>Music.start(G.place.depth>0?"cave":"prologue"));
-   narrate(`Вы вернулись: ${placeTitle()}. ${describeHere(true)} Уровень ${G.level}.`);
-   safeFn(()=>pingSurroundings(3,3));refresh();return;}
-  const c=cellContent(G.x,G.y);
-  Play.start("amb0",(AMB[c.terrain[0]]||["wind"])[0],{loop:true});
-  Music.start(c.terrain[0]);
-  narrate(`Вы вернулись: ${c.terrain[1]}, ${c.empire.name}. Уровень ${G.level}.`);refresh();},600);}
+function loadGame(){
+ const raw=store.get(SAVE_KEY);
+ if(!raw){narrate("Сохранение не найдено. Начните новую историю.");return;}
+ applySave(raw,"автосохранение");}
 
 /* ════════ ЭКРАНЫ / КЛАВИАТУРА / СТАРТ ════════ */
 const PROSE=["Между мирами пролегла Грань — тонкая, как лезвие, и глубокая, как вечность.",
@@ -7601,6 +7841,15 @@ window.addEventListener("beforeunload",()=>{try{stopRun();saveGame(true);}catch(
 (function boot(){
  try{Speech.init();}catch(e){try{console.error("Speech.init",e);}catch(_){}}
  try{bindSettings();}catch(e){try{console.error("bindSettings",e);}catch(_){}}
+ /* Поле выбора файла живёт всё время: через него возвращают игру с другого
+    устройства. Само поле скрыто — его нажимает кнопка «Загрузить из файла». */
+ try{
+  const f=document.getElementById("saveFile");
+  if(f)f.addEventListener("change",()=>{
+   const file=f.files&&f.files[0];
+   f.value="";
+   safeFn(()=>importSaveFile(file));});
+ }catch(e){}
  /* Регистрация service worker — безопасный no-op при открытии как file://;
     на настоящем http(s)-хостинге (GitHub Pages) он кэширует страницу и записи,
     поэтому игра запускается без сети, а маяки звучат мгновенно. Раньше рядом не
