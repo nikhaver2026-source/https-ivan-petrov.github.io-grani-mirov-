@@ -3,3 +3,7 @@ package-lock.json
 test-results/
 playwright-report/
 .DS_Store
+
+# Черновые скрипты проверок, которые пишутся рядом с игрой на время работы
+*-tmp.js
+*-tmp.py
