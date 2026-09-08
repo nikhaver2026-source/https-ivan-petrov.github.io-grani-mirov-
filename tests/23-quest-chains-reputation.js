@@ -52,6 +52,52 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
  check('завершение цепочки отмечается и объявляется',flow.завершено===1&&flow.сказано>=3,
   {завершено:flow.завершено,реплик:flow.сказано});
 
+ // Цепочка проходится целиком, каждый шаг платит ровно обещанное,
+ // а повторная сдача не платит ничего
+ const full=await page.evaluate(()=>{
+  const satisfy=q=>{
+   q.doneFlag=true;q.have=q.need||1;
+   if(q.res)G.inv[q.res]=(q.need||1)+9;
+   if(q.tx!=null){G.x=q.tx;G.y=q.ty;}
+   if(q.type==="god_relic"){const g=GOD_BY_ID[q.godId];G.items.push("Реликвия: "+g.n);}
+   if(q.type==="god_altar"){G.place={kind:"dungeon",bx:1,by:1,depth:2,x:1,y:1,stype:"ruins",name:"п"};G.altarPrayed=q.godId;}
+   if(q.type==="war_raid"){q.base=0;G.dungeonKills=(q.need||1)+5;q.have=q.need;}};
+  const out={};
+  for(const chain of Object.keys(CHAIN_DB)){
+   G.quests=[];G.chainTaken={};G.gold=0;G.items=[];G.inv={};G.chainsDone=0;G.place=null;
+   const n={key:"2,2,0",x:1000,y:1000,name:"Заказчик",race:"Люди",prof:"Жрец",tier:1};
+   G.quests.push(makeChainQuest(n,chain,0));
+   const steps=[];
+   for(let i=0;i<5;i++){
+    const q=G.quests.find(x=>!x.done);
+    if(!q)break;
+    satisfy(q);
+    const g=G.gold,want=questPay(q).gold;
+    completeQuest(q.id);
+    steps.push({шаг:q.chainStep,выплата:G.gold-g,обещано:want,сдан:!!q.done});
+    G.place=null;}
+   /* повторная сдача уже сданного не должна платить */
+   const done=G.quests.find(x=>x.done);
+   const g2=G.gold;
+   if(done)completeQuest(done.id);
+   out[chain]={шагов:steps.length,ровно:steps.every(s=>s.сдан&&s.выплата===s.обещано),
+    заданий:G.quests.length,завершена:G.chainsDone===1,повтор:G.gold-g2};}
+  return out;});
+ const chainsOk=Object.values(full);
+ check('каждая цепочка проходится все три шага подряд',
+  chainsOk.length===4&&chainsOk.every(c=>c.шагов===3&&c.заданий===3&&c.завершена),full);
+ check('каждый шаг платит ровно то, что обещал, и ни монетой больше',
+  chainsOk.every(c=>c.ровно),full);
+ check('повторная сдача уже сданного не платит ничего',
+  chainsOk.every(c=>c.повтор===0),Object.fromEntries(Object.entries(full).map(([k,v])=>[k,v.повтор])));
+
+ // У шагов цепочки разные номера — иначе сдача находит не то задание
+ const ids=await page.evaluate(()=>{
+  const n={key:"3,3,0",x:1000,y:1000,name:"З",race:"Люди",prof:"Жрец",tier:1};
+  const list=CHAIN_DB.temple.steps.map((_,i)=>makeChainQuest(n,"temple",i).id);
+  return {list,разных:new Set(list).size};});
+ check('у шагов одной цепочки номера разные',ids.разных===ids.list.length,ids.list);
+
  // ── Отношение народа ──
  const att=await page.evaluate(()=>{
   const probe=r=>{G.rep={};G.clan=null;addRep("Люди",r);const a=attitudeOf("Люди");

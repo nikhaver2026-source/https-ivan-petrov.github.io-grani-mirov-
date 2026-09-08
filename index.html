@@ -6441,14 +6441,29 @@ function arrive(dir){
    if(G.metCaravan!==key){G.metCaravan=key;stopRun();meetCaravan(car);}}});
  saveGame(true);}
 /* Прибытие охраны каравана в город назначения. */
+/* ════════════════════════════════════════════════════════════════════════
+   НАГРАДА — ОДНО ЧИСЛО
+   В списке заданий и в карточке жителя стояла голая цифра из поручения, а
+   при сдаче к ней прибавлялись дары Виа Странницы и умение торговаться:
+   обещали 75 золота, выдавали 105. Игрок получал больше — и всё же это была
+   неправда, а по ней он выбирал, за какое дело браться. Теперь награда
+   считается в одном месте, и оно же показывает её заранее.
+   Две выплаты (обычная сдача и приход обоза) считали по-разному: у обоза
+   не учитывалось умение торговаться. Теперь у них общий счёт.
+   ════════════════════════════════════════════════════════════════════════ */
+function questPay(q){
+ const g=Number(q&&q.reward&&q.reward.gold)||0;
+ const x=Number(q&&q.reward&&q.reward.xp)||0;
+ return {gold:Math.round(g*(1+0.1*fxLevel("trade")+0.05*fxLevel("deal"))),
+         xp:xpGain(x)};
+}
 function checkEscortArrival(){
  let paid=false;
  for(const q of (G.quests||[])){
   if(q.type!=="escort"||q.done)continue;
   if(Math.max(Math.abs(G.x-q.tx),Math.abs(G.y-q.ty))>1)continue;
   q.done=true;paid=true;
-  const gold=Math.round(q.reward.gold*(1+0.1*fxLevel("trade")));
-  const xp=xpGain(q.reward.xp);
+  const {gold,xp}=questPay(q);
   G.gold+=gold;G.xp+=xp;
   safeFn(()=>{addRep(q.race,3);nudgeDiplo(empireIndexAt(G.x,G.y),2);UI.fanfare();});
   narrate(`Обоз дошёл до «${q.city}». Плата охране: ${gold} золота, опыт ${xp}.`);
@@ -7480,7 +7495,12 @@ function chainContext(n){
 function makeChainQuest(n,chainId,step){
  const ch=CHAIN_DB[chainId];if(!ch||!ch.steps[step])return null;
  const q=ch.steps[step](chainContext(n));
- q.id=n.key+"q";q.npc=n.name;q.have=q.have||0;q.done=false;
+ /* У каждого шага свой номер. Пока все шаги носили один и тот же номер
+    жителя, сдача второго шага находила в списке первый — уже выполненный, —
+    платила за него ещё раз и снова выдавала второй шаг. Цепочка не двигалась
+    дальше первого звена, а золото можно было получать сколько угодно раз. */
+ q.id=n.key+"q"+(step?"@"+step:"");
+ q.npc=n.name;q.have=q.have||0;q.done=false;
  q.race=n.race;q.god=godOfRace(n.race).id;
  q.chain=chainId;q.chainStep=step;q.chainOf=ch.steps.length;q.chainName=ch.n;
  q.npcKey=n.key;
@@ -7512,7 +7532,7 @@ function advanceChain(q){
 }
 function takeNPCQuest(n){
  if(!n)return;
- if(G.quests.find(q=>q.id===n.key+'q'&&!q.done)){narrate('Этот квест уже у вас.');return;}
+ if(G.quests.find(q=>!q.done&&(q.npcKey===n.key||q.id===n.key+'q'))){narrate('Этот квест уже у вас.');return;}
  /* У жреца, клановых, служилых и торговых людей дело начинается цепочкой:
     первый шаг — обычное задание, но у него будет продолжение. */
  const chainId=safeFn(()=>chainForNPC(n),null);
@@ -7521,6 +7541,7 @@ function takeNPCQuest(n){
  const q=chained||questFor(n);
  if(chained){if(!G.chainTaken)G.chainTaken={};G.chainTaken[chainId]=true;}
  q.have=q.have||0;q.done=false;q.race=n.race;q.god=godOfRace(n.race).id;
+ if(!q.npcKey)q.npcKey=n.key;
  if(q.type==="war_raid")q.base=Number(G.dungeonKills)||0; /* рейд считается с момента, когда задание взято */
  G.quests.push(q);journal(`Квест от ${n.name}: ${q.text}`);
  const details=q.type==='fetch'?` Нужно принести ${q.need} «${q.res}». Ищи их в районе (${q.tx}; ${q.ty}).`
@@ -7533,7 +7554,9 @@ function takeNPCQuest(n){
 }
 function openNPC(key,silent){const n=getNPCByKey(key);
  document.getElementById("npcTitle").textContent=`🧑 ${n.name}`;
- const q=G.quests.find(qq=>qq.id===n.key+"q"&&!qq.done);
+ /* Задание этого жителя ищется по нему самому: у шагов цепочки номера
+    разные, а житель один. Старый способ оставлен для прежних сохранений. */
+ const q=G.quests.find(qq=>!qq.done&&(qq.npcKey===n.key||qq.id===n.key+"q"));
  const R=raceInfo(n.race),god=GOD_BY_ID[R.god],rank=RANKS[R.rank];
  const branch=RACE_BRANCH[n.race]?` (ветвь народа «${RACE_BRANCH[n.race]}»)`:"";
  const idx=empireIndexAt(n.x,n.y),emp=EMPIRES[idx]||EMPIRES[0];
@@ -7589,8 +7612,12 @@ function qProgressText(q){
  if(q.type==="kill")return `${Math.min(q.have||0,q.need)} из ${q.need} монстров`;
  if(q.type==="hunt")return `${Math.min(q.have||0,q.need)} из ${q.need} — «${q.monsterName}»`;
  return q.doneFlag?"цель достигнута, вернитесь к заказчику":"идите к отметке ("+q.tx+"; "+q.ty+")";}
-function completeQuest(id){const q=G.quests.find(qq=>qq.id===id);
+function completeQuest(id){
+ /* Незавершённое — вперёд: даже если в списке остался старый однофамилец,
+    награда не должна выдаваться за уже сданное. */
+ const q=G.quests.find(qq=>qq.id===id&&!qq.done)||G.quests.find(qq=>qq.id===id);
  if(!q){narrate("Квест не найден.");return;}
+ if(q.done){narrate("Это задание уже сдано.");return;}
  if(q.type==="fetch"){
   if((G.inv[q.res]||0)<q.need){narrate(`Квест не выполнен: нужно ${q.need} «${q.res}», у вас ${G.inv[q.res]||0}.`);return;}
   G.inv[q.res]-=q.need;}
@@ -7631,8 +7658,7 @@ function completeQuest(id){const q=G.quests.find(qq=>qq.id===id);
   const have=Math.max(0,(Number(G.dungeonKills)||0)-(Number(q.base)||0));
   if(have<q.need){narrate(`Рейд не завершён: ${have} из ${q.need} тварей подземелья.`);return;}}
  q.done=true;
- const gold=Math.round(q.reward.gold*(1+0.1*fxLevel("trade")+0.05*fxLevel("deal")));
- const xp=xpGain(q.reward.xp);
+ const {gold,xp}=questPay(q);
  G.gold+=gold;G.xp+=xp;
  /* Помощь жителю поднимает вашу репутацию у его народа и смягчает политику его державы.
     Задания богов добавляют благосклонность, военные — сдвигают отношения держав. */
@@ -7707,7 +7733,7 @@ function renderCharacter(){
 function renderQuests(){
  document.getElementById("questList").innerHTML=G.quests.length?
   G.quests.map(q=>`<div class="list-line">${q.done?"✅":"📜"} От: ${q.npc}<br>${q.text}<br>
-   ${q.chain?`Цепочка «${q.chainName}», шаг ${(q.chainStep||0)+1} из ${q.chainOf}.<br>`:""}Прогресс: ${q.done?"выполнен":qProgressText(q)}<br>Награда: ${q.reward.gold} золота, ${q.reward.xp} опыта.
+   ${q.chain?`Цепочка «${q.chainName}», шаг ${(q.chainStep||0)+1} из ${q.chainOf}.<br>`:""}Прогресс: ${q.done?"выполнен":qProgressText(q)}<br>Награда: ${questPay(q).gold} золота, ${questPay(q).xp} опыта.
    ${q.done?"":`<button data-cmd="qdone:${q.id}" data-speak="Завершить квест.">✅ Завершить</button>`}</div>`).join(""):
   `<div class="list-line">Квестов нет. Поговорите с жителями — у каждого есть задание.</div>`;}
 function renderJournal(){
