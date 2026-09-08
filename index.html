@@ -1577,9 +1577,8 @@ function buildBeaconGrid(){const grid=document.getElementById("beaconGrid");if(!
 
 /* CANONICAL GESTURE CORE V9 — единый сенсорный шлюз (исправлены бег и озвучивание при ощупывании) */
 let lastExploreEl=null,lastAnnounced="",lastAnnouncedAt=0;
-let gesture={count:0,maxCount:0,id:null,x:0,y:0,t:0,moved:false,dir:null,target:null,ui:null,runArmed:false};
+let gesture={count:0,maxCount:0,id:null,x:0,y:0,t:0,moved:false,dir:null,target:null,ui:null,runArmed:false,slowT:0};
 const runState={active:false,dir:null,iv:null,hold:null,pendingDir:null};
-let magicHold={timer:null,target:null,fired:false};
 /* Отложенное называние того, чего коснулся палец: ждёт, окажется ли это
    ощупыванием или началом свайпа. */
 let exploreHold=null;
@@ -1588,7 +1587,7 @@ const touchGate={lastUiTap:0,lastUiEl:null,suppressClickUntil:0};
 function gameActive(){const el=document.getElementById('screen-game');return !!(el&&!el.hidden&&entered);}
 function safeFn(fn,fb=null){try{return typeof fn==='function'?fn():fb;}catch(e){try{console.warn('[Safe]',e);}catch(_){}return fb;}}
 function touchDirection(dx,dy){return Math.abs(dx)>=Math.abs(dy)?(dx>=0?'E':'W'):(dy>=0?'S':'N');}
-function resetGesture(){gesture={count:0,maxCount:0,id:null,x:0,y:0,t:0,moved:false,dir:null,target:null,ui:null,runArmed:false,fast:false,speed:0,lastX:null,lastY:null,lastT:0};}
+function resetGesture(){gesture={count:0,maxCount:0,id:null,x:0,y:0,t:0,moved:false,dir:null,target:null,ui:null,runArmed:false,fast:false,speed:0,lastX:null,lastY:null,lastT:0,slowT:0};}
 /* ── ОЗВУЧИВАНИЕ КАК В VOICEOVER: новый элемент немедленно обрывает речь предыдущего ── */
 /* ── ЧТО СКАЗАТЬ ОБ ЭЛЕМЕНТЕ ──
    У кнопки текст есть внутри неё самой, а у флажка, ползунка и списка —
@@ -1696,7 +1695,13 @@ function activeLayer(){try{for(const id of ['magicPanel','actionMenu','guideOver
    tabindex="0" (досье народов, боги, державы, чудовища): иначе свайп в каталоге
    перескакивал прямо с одной кнопки на другую, и сами тексты нельзя было
    услышать перелистыванием — только нащупать пальцем. */
-function visibleInteractive(layer){try{return [...(layer||document).querySelectorAll('button,input,select,a,[role="button"],[data-cmd],[tabindex]:not([tabindex="-1"])')].filter(x=>!x.hidden&&!x.disabled&&x.getAttribute('aria-hidden')!=='true');}catch(_){return[];}}
+/* Пункт считается доступным, только если он ВИДЕН. Одного его собственного
+   hidden мало: у руководства оглавление и открытая глава лежат в двух соседних
+   разделах, и скрывается целиком раздел, а не каждая кнопка внутри. Из-за этого
+   свайп внутри главы проходил ещё и через двадцать три невидимые главы
+   оглавления, а в самом оглавлении — через пять кнопок листания несуществующей
+   главы: игрок вслепую утыкался в пункты, которых на экране нет. */
+function visibleInteractive(layer){try{return [...(layer||document).querySelectorAll('button,input,select,a,[role="button"],[data-cmd],[tabindex]:not([tabindex="-1"])')].filter(x=>!x.hidden&&!x.disabled&&x.getAttribute('aria-hidden')!=='true'&&!x.closest('[hidden]')&&!x.closest('[aria-hidden="true"]')&&x.getClientRects().length>0);}catch(_){return[];}}
 function activateElement(el){if(!el||el.disabled)return false;try{
  touchGate.lastUiTap=0;touchGate.lastUiEl=null;
  safeFn(()=>UI.nat("ui_activate",0.55));
@@ -1803,15 +1808,26 @@ function handleFourFingerTap(){if(!gameActive())return;
  const m=document.getElementById('magicPanel');
  if(m&&!m.hidden){safeFn(()=>closeMagicPanel());safeFn(()=>UI.blip(520,.08,.12));return;}
  safeFn(()=>safeOpenMagicPanel());safeFn(()=>UI.blip(1260,.11,.22));}
-function cancelMagicHold(){if(magicHold.timer)clearTimeout(magicHold.timer);magicHold={timer:null,target:null,fired:false};}
-function armMagicHold(target){cancelMagicHold();magicHold={timer:setTimeout(()=>{if(magicHold.target!==target||gesture.moved||gesture.maxCount!==1)return;magicHold.fired=true;safeFn(()=>castSpell(Number(target.dataset.magicIndex)));touchGate.suppressClickUntil=Date.now()+300;safeFn(()=>UI.blip(1180,.13,.22));},560),target,fired:false};}
+/* Прежде палец, задержавшийся на слоте заклинания дольше полусекунды, применял
+   его сам. Для незрячего игрока это и есть обычное ощупывание: он ведёт пальцем,
+   останавливается, слушает — и заклинание уходило вместе с маной, без всякого
+   подтверждения. Панель магии теперь живёт по общему правилу игры: касание
+   называет слот, двойное касание применяет. */
 function stopRun(){if(runState.hold){clearTimeout(runState.hold);runState.hold=null;}if(runState.iv){clearInterval(runState.iv);runState.iv=null;}if(runState.active){runState.active=false;runState.dir=null;}}
 /* Бег: шаги идут вдвое чаще прежнего (300 мс были заметно вязкими). */
 const RUN_INTERVAL=160;
 function startRun(dir){if(!gameActive()||!dir||G.weaponDrawn||activeLayer()||G.inCombat)return false;stopRun();runState.active=true;runState.dir=dir;safeFn(()=>Tutor.note("run"));safeFn(()=>move(dir));runState.iv=setInterval(()=>{if(!gameActive()||activeLayer()||G.inCombat||G.weaponDrawn){stopRun();return;}safeFn(()=>move(runState.dir));},RUN_INTERVAL);return true;}
 function swipeNav(dir){
  const layer=activeLayer();if(!layer)return false;
- const items=cursorItems(layer);if(!items.length)return false;
+ const items=cursorItems(layer);
+ /* Окно добычи — единственное, в котором выбирать нечего: она собирается одним
+    касанием. Раньше свайп в нём молчал, и незрячий игрок оставался без ответа —
+    окно как будто зависало. Теперь игра говорит, что здесь делать. */
+ if(!items.length){
+  safeFn(()=>narrate(G.loot&&G.loot.length
+   ?"Добыча под ногами. Одно касание в любом месте — собрать всё."
+   :"В этом окне нечего выбирать."));
+  return false;}
  ensureCursor(layer);
  let i=items.indexOf(uiCursor);
  if(i<0)i=dir==='next'?-1:0;
@@ -1870,13 +1886,11 @@ function handleSingleTap(el,x,y){
    (вынуть или убрать оружие), двумя (меню действий) и четырьмя (заклинания) срабатывало
    через раз или не срабатывало вовсе. */
 document.addEventListener('touchstart',e=>{safeFn(()=>AE.ensure());const n=e.touches.length;
- if(n>4){resetGesture();cancelMagicHold();return;}
+ if(n>4){resetGesture();return;}
  const t=e.touches[0];if(!t)return;
  const ui=e.target?.closest?.('button,a,input,select,textarea,[role="button"],[data-cmd],[data-magic-index]');
- gesture={count:n,maxCount:Math.max(gesture.maxCount||0,n),id:t.identifier,x:t.clientX,y:t.clientY,t:Date.now(),moved:false,dir:null,target:e.target,ui,runArmed:false,fast:false,speed:0,lastX:t.clientX,lastY:t.clientY,lastT:Date.now()};
- if(n!==1){cancelMagicHold();stopRun();e.preventDefault();return;}
- const mt=e.target?.closest?.('#magicPanel [data-magic-index]');
- if(mt){armMagicHold(mt);e.preventDefault();return;}
+ gesture={count:n,maxCount:Math.max(gesture.maxCount||0,n),id:t.identifier,x:t.clientX,y:t.clientY,t:Date.now(),moved:false,dir:null,target:e.target,ui,runArmed:false,fast:false,speed:0,lastX:t.clientX,lastY:t.clientY,lastT:Date.now(),slowT:0};
+ if(n!==1){stopRun();e.preventDefault();return;}
  /* Ощупывание одним пальцем должно работать ВЕЗДЕ, включая открытые окна и экран боя —
     иначе первое касание элемента (без последующего протягивания пальца) внутри боя,
     инвентаря или любого другого оверлея просто молчит. */
@@ -1898,7 +1912,7 @@ document.addEventListener('touchmove',e=>{
  if(!t){if(gesture.maxCount>1)e.preventDefault();return;}
  const dx=t.clientX-gesture.x,dy=t.clientY-gesture.y,d=Math.hypot(dx,dy);
  /* Для многопальцевых тапов порог мягче: пальцы неизбежно «перекатываются», пока их ставят. */
- if(d>(gesture.maxCount>1?45:16)){gesture.moved=true;cancelMagicHold();cancelExploreHold();gesture.dir=touchDirection(dx,dy);}
+ if(d>(gesture.maxCount>1?45:16)){gesture.moved=true;cancelExploreHold();gesture.dir=touchDirection(dx,dy);}
  if(gesture.maxCount!==1){e.preventDefault();return;}
  /* Скорость пальца отличает ощупывание от свайпа: медленно ведём — игра называет
     всё под пальцем; быстро проводим — это перелистывание, и по дороге она молчит,
@@ -1909,10 +1923,21 @@ document.addEventListener('touchmove',e=>{
  gesture.speed=step/dtm;
  gesture.lastX=t.clientX;gesture.lastY=t.clientY;gesture.lastT=now;
  if(gesture.speed>0.55)gesture.fast=true;
+ /* «Быстро» отмечается раз и навсегда — иначе одно резкое движение в начале
+    свайпа сбивало бы отсчёт. Но палец часто разгоняется, а потом переходит на
+    ощупывание, не отрываясь от стекла; раньше всё оставшееся ведение молчало,
+    будто экран умер. Поэтому считаем, сколько палец уже идёт медленно: четверть
+    секунды спокойного ведения возвращает голос, а короткий взмах до неё не
+    доживает и остаётся перелистыванием. */
+ if(gesture.speed<0.25){if(!gesture.slowT)gesture.slowT=now;}else gesture.slowT=0;
+ const settled=gesture.slowT&&now-gesture.slowT>=250;
  /* Ощупывание одним пальцем (доступность): озвучиваем элемент под пальцем НЕПРЕРЫВНО,
     пока палец скользит — как touch-explore в VoiceOver. Смена элемента сразу обрывает
     предыдущую фразу (см. speakTextOf/Speech.say interrupt:true). */
- if(!G.weaponDrawn&&!(gesture.fast&&activeLayer()))explorePoint(t.clientX,t.clientY);
+ /* Внутри открытого окна ощупывание доступно всегда, даже когда оружие вынуто:
+    иначе меню действий, вызванное посреди боя (а там и находится «Побег»),
+    нельзя было прощупать пальцем — оно отвечало только на свайпы. */
+ if(activeLayer()?(!gesture.fast||settled):!G.weaponDrawn)explorePoint(t.clientX,t.clientY);
  if(activeLayer()){if(d>20)e.preventDefault();return;}
  /* Удержание свайпа = бег: таймер взводится ОДИН раз при первом пересечении порога
     и больше не сбрасывается на каждое микро-движение пальца — раньше из-за этого
@@ -1937,14 +1962,12 @@ document.addEventListener('touchmove',e=>{
 document.addEventListener('touchend',e=>{
  if(!gesture.maxCount)return;
  if(e.touches.length>0){gesture.count=e.touches.length;return;} /* пальцы поднимают по очереди — ждём последний */
- const g={...gesture},wasMagic=magicHold.target,magicFired=magicHold.fired;
+ const g={...gesture};
  resetGesture();
  if(runState.hold){clearTimeout(runState.hold);runState.hold=null;}
  runState.pendingDir=null;
  const fingers=g.maxCount||g.count;
- if(fingers===1&&wasMagic){cancelMagicHold();if(magicFired){e.preventDefault();return;}}
  if(fingers>1){
-  cancelMagicHold();
   e.preventDefault();
   /* Многопальцевый тап: важна только длительность, «сдвиг» меряется по якорному пальцу
      с мягким порогом (см. touchmove). 800 мс не хватало, чтобы вслепую поставить три пальца. */
@@ -8112,7 +8135,7 @@ function renderGestures(){
   "🧭 Свайп тремя пальцами — <b>«где я»</b>: место, уровень подземелья, координаты, здоровье, мана, золото, день, час, время суток, уровень сложности и ближайшее задание.",
   "<b>ЧЕТЫРЕ ПАЛЬЦА — магия</b>",
   "🖐️ Касание четырьмя пальцами — открыть или закрыть панель заклинаний.",
-  "✨ В панели заклинаний: свайп влево или вправо — выбрать слот, двойное касание — применить. Удержание пальца на слоте — быстрое применение.",
+  "✨ В панели заклинаний: свайп влево или вправо — выбрать слот, двойное касание — применить. Палец, лежащий на слоте, только называет заклинание и его цену в мане: само оно не применится, пока вы не подтвердите двойным касанием.",
   "<b>ЗВУКИ ОРИЕНТИРОВАНИЯ</b>",
   "🔉 Внутри зданий и подземелий каждый объект звучит по-своему: стена — глухой удар, дверь — скрип петель, ворота — лязг цепи, лестница вниз — нисходящие ступени, лестница вверх — восходящие, сундук — звон монет, алтарь — храмовый аккорд, факел — потрескивание, колодец — капли.",
   "🎧 После каждого шага внутри ближайшие объекты сами подают голос слева или справа — по той стороне, где они стоят.",
