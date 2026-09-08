@@ -322,6 +322,40 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
  check('два касания с большой паузой не считаются двойным',afterSlow==="normal",{стало:afterSlow});
  await page.evaluate(()=>{while(activeLayer())closeTopUI();});
 
+ /* ══ Заглавное меню и пролог: первое, что встречает игрок ══
+    Это не окна, а экраны, и свайп по ним раньше не работал вовсе: девять
+    кнопок начала игры приходилось искать пальцем вслепую. ══ */
+ await page.evaluate(()=>{while(activeLayer())closeTopUI();
+  showScreen("screen-title");resetCursor();window.__said=[];});
+ const title=await page.evaluate(()=>({слой:navLayer()&&navLayer().id,
+  пунктов:navLayer()?cursorItems(navLayer()).length:0}));
+ await page.evaluate(()=>{ensureCursor(navLayer());window.__said=[];});
+ const titleTarget=await page.evaluate(()=>cursorItems(navLayer()).findIndex(x=>x.dataset.cmd==="settings"));
+ for(let i=0;i<titleTarget;i++)await swipe(120,600,330,600);
+ const onTitle=await page.evaluate(()=>uiCursor&&uiCursor.dataset.cmd);
+ const titleNames=(await said()).length;
+ const tp=await page.evaluate(()=>{for(let y=80;y<760;y+=8)for(const x of [6,384]){
+  const el=document.elementFromPoint(x,y);if(el&&!el.closest('button'))return {x,y};}return {x:6,y:96};});
+ await tap(tp.x,tp.y);await tap(tp.x,tp.y);
+ await page.waitForTimeout(400);
+ const opened=await page.evaluate(()=>activeLayer()&&activeLayer().id);
+ check('в заглавном меню есть по чему ходить свайпом',
+  title.слой==="screen-title"&&title.пунктов>=9,title);
+ check('свайп доводит до нужной кнопки заглавного меню и называет по одной',
+  onTitle==="settings"&&titleNames===titleTarget,{курсор:onTitle,свайпов:titleTarget,названий:titleNames});
+ check('двойное касание в заглавном меню открывает выбранное',
+  opened==="modal-settings",{окно:opened});
+ await page.evaluate(()=>{while(activeLayer())closeTopUI();});
+
+ // Пролог: та же кнопка пропуска должна доставаться свайпом.
+ await page.evaluate(()=>{showScreen("screen-intro");resetCursor();window.__said=[];});
+ const intro=await page.evaluate(()=>({слой:navLayer()&&navLayer().id,
+  пунктов:navLayer()?cursorItems(navLayer()).length:0,
+  курсор:(ensureCursor(navLayer())||{}).dataset&&ensureCursor(navLayer()).dataset.cmd}));
+ check('в прологе кнопка пропуска доступна выбором',
+  intro.слой==="screen-intro"&&intro.пунктов>=1&&intro.курсор==="enter",intro);
+ await page.evaluate(()=>{showScreen("screen-game");resetCursor();});
+
  console.log(results.join('\n'));
  console.log('Окон проверено: '+ok.length);
  console.log('ИТОГО: '+results.filter(r=>r.startsWith('PASS')).length+' из '+results.length);

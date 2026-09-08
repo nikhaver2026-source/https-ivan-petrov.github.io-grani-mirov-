@@ -1660,9 +1660,21 @@ function speakTextOf(el){try{
    один пункт), ощупывание (на тот пункт, где палец оторвался) и активация.
    ════════════════════════════════════════════════════════════════════════ */
 let uiCursor=null,uiCursorLayer=null,pendingCursor=null;
-function cursorItems(layer){return visibleInteractive(layer||activeLayer());}
+function cursorItems(layer){return visibleInteractive(layer||navLayer());}
+/* Первое, что встречает незрячий игрок, — заглавное меню из девяти кнопок. Оно
+   не окно, поэтому свайп по нему не работал вовсе: кнопки приходилось искать
+   пальцем вслепую по всему экрану. Теперь выбор ходит и по нему, и по прологу
+   точно так же, как по любому окну игры: свайп — следующий пункт, двойное
+   касание — подтверждение. */
+function navLayer(){
+ const a=activeLayer();if(a)return a;
+ if(typeof gameActive==='function'&&gameActive())return null;
+ try{for(const id of ['screen-intro','screen-title']){
+  const el=document.getElementById(id);
+  if(el&&!el.hidden&&visibleInteractive(el).length)return el;}}catch(_){}
+ return null;}
 function ensureCursor(layer){
- const lay=layer||activeLayer();
+ const lay=layer||navLayer();
  if(!lay)return null;
  if(uiCursorLayer!==lay||!uiCursor||!lay.contains(uiCursor)||uiCursor.hidden||uiCursor.disabled){
   const items=cursorItems(lay);
@@ -1672,7 +1684,7 @@ function ensureCursor(layer){
 /* Поставить курсор на элемент: он же получает фокус браузера, он же озвучивается. */
 function setCursor(el,speak){
  if(!el)return null;
- const lay=activeLayer();
+ const lay=navLayer();
  uiCursor=el;uiCursorLayer=lay;
  safeFn(()=>el.focus({preventScroll:true}));
  safeFn(()=>el.scrollIntoView({block:"center"}));
@@ -1818,7 +1830,7 @@ function stopRun(){if(runState.hold){clearTimeout(runState.hold);runState.hold=n
 const RUN_INTERVAL=160;
 function startRun(dir){if(!gameActive()||!dir||G.weaponDrawn||activeLayer()||G.inCombat)return false;stopRun();runState.active=true;runState.dir=dir;safeFn(()=>Tutor.note("run"));safeFn(()=>move(dir));runState.iv=setInterval(()=>{if(!gameActive()||activeLayer()||G.inCombat||G.weaponDrawn){stopRun();return;}safeFn(()=>move(runState.dir));},RUN_INTERVAL);return true;}
 function swipeNav(dir){
- const layer=activeLayer();if(!layer)return false;
+ const layer=navLayer();if(!layer)return false;
  const items=cursorItems(layer);
  /* Окно добычи — единственное, в котором выбирать нечего: она собирается одним
     касанием. Раньше свайп в нём молчал, и незрячий игрок оставался без ответа —
@@ -1844,7 +1856,7 @@ function swipeNav(dir){
    Попадать дважды в одну точку не нужно: важно, чтобы пункт был тем самым,
    который игра только что назвала. */
 function tapInLayer(el){
- const lay=activeLayer();
+ const lay=navLayer();
  const target=(el&&lay&&lay.contains(el))?el:ensureCursor(lay);
  if(!target){narrate("В этом окне нечего выбирать.");return;}
  if(settings.fastTap){setCursor(target,false);activateElement(target);return;}
@@ -1861,8 +1873,8 @@ function handleSingleTap(el,x,y){
     активный слой, но выбирать в нём нечего, а собрать нужно. */
  if(G.loot&&Array.isArray(G.loot)&&G.loot.length&&gameActive()&&!(el&&el.dataset&&el.dataset.cmd)){
   if(safeFn(()=>takeLoot(),false))return;}
- /* В открытом окне выбором заведует курсор: см. tapInLayer. */
- if(activeLayer()){tapInLayer(el||null);return;}
+ /* В открытом окне — и в заглавном меню — выбором заведует курсор: см. tapInLayer. */
+ if(navLayer()){tapInLayer(el||null);return;}
  if(el){
   if(settings.fastTap){activateElement(el);return;} /* быстрая активация: без ожидания второго касания */
   const now=Date.now();
@@ -1941,8 +1953,8 @@ document.addEventListener('touchmove',e=>{
  /* Внутри открытого окна ощупывание доступно всегда, даже когда оружие вынуто:
     иначе меню действий, вызванное посреди боя (а там и находится «Побег»),
     нельзя было прощупать пальцем — оно отвечало только на свайпы. */
- if(activeLayer()?(!gesture.fast||settled):!G.weaponDrawn)explorePoint(t.clientX,t.clientY);
- if(activeLayer()){if(d>20)e.preventDefault();return;}
+ if(navLayer()?(!gesture.fast||settled):!G.weaponDrawn)explorePoint(t.clientX,t.clientY);
+ if(navLayer()){if(d>20)e.preventDefault();return;}
  /* Удержание свайпа = бег: таймер взводится ОДИН раз при первом пересечении порога
     и больше не сбрасывается на каждое микро-движение пальца — раньше из-за этого
     бег почти никогда не успевал включиться при живом (не идеально неподвижном) свайпе. */
@@ -2003,7 +2015,7 @@ document.addEventListener('touchend',e=>{
  /* Поклёвка: подсекает любое касание или свайп — важна скорость, а не точность. */
  if(G.fishing&&G.fishing.active&&G.fishing.bite&&!activeLayer()){e.preventDefault();safeFn(()=>hookFish());return;}
  if(runState.active){stopRun();e.preventDefault();return;}
- const layer=activeLayer();
+ const layer=navLayer();
  if(layer){
   e.preventDefault();
   /* Свайп — только быстрое движение: оно листает список ровно на один пункт.
@@ -8124,6 +8136,7 @@ function renderGestures(){
   "<b>ОДИН ПАЛЕЦ — движение, предметы, кнопки</b>",
   "🤚 Касание и ведение пальцем (не отрывая) — ощупывание: игра называет элемент под пальцем, как в экранных дикторах. Смена элемента сразу обрывает предыдущую фразу.",
   "👆👆 Двойное касание — активировать <b>текущий пункт</b>: тот, который игра назвала последним. Попадать дважды в одну точку не нужно: коснитесь, услышьте название, коснитесь ещё раз — сработает именно он. (В настройках есть «Быстрая активация» — тогда хватит одного касания.)",
+  "🏁 Заглавное меню и пролог слушаются тех же жестов, что и любое окно игры: свайп ведёт по кнопкам начала игры одну за другой, двойное касание подтверждает выбранную. Искать их пальцем по экрану больше не нужно.",
   "↕️ В окнах и меню есть <b>текущий пункт</b>. Его двигают три вещи: свайп (ровно на один пункт вперёд или назад), ощупывание (текущим становится тот пункт, на котором палец оторвался) и само открытие окна (выбор начинается с первого пункта).",
   "🐢 Медленное ведение пальцем — ощупывание: игра называет всё, чего касается палец, и ничего не активирует. Быстрый свайп — перелистывание: по дороге игра молчит и называет только тот пункт, на который вы перешли. Раньше эти два жеста мешали друг другу, и выбор уезжал не туда.",
   "👉 Свайп — шаг: вверх север, вниз юг, влево запад, вправо восток. Внутри здания и подземелья тем же свайпом идёте по коридорам.",
