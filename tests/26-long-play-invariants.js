@@ -36,6 +36,17 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
    if((G.quests||[]).length>400)bad.push({step,act,закон:"список заданий растёт без предела",v:G.quests.length});
    if(G.place&&!curLevel())bad.push({step,act,закон:"игрок внутри места без уровня"});
    if(G.ship&&G.place)bad.push({step,act,закон:"одновременно на корабле и в здании"});
+   if(G.ship){
+    if(!num(G.ship.left)||G.ship.left<0)bad.push({step,act,закон:"переходы до порта",v:G.ship.left});
+    if(!num(G.ship.hold)||G.ship.hold<=0)bad.push({step,act,закон:"трюм",v:G.ship.hold});
+    if(cargoUnits()>shipHold())bad.push({step,act,закон:"груза больше, чем берёт трюм",v:[cargoUnits(),shipHold()]});}
+   if(G.equip){
+    for(const slot of ["weapon","armor","acc"]){
+     const it=G.equip[slot];
+     if(it&&(typeof it!=="object"||it.slot!==slot||!num(Number(it.val))))
+      bad.push({step,act,закон:"испорченное снаряжение в слоте "+slot,v:it&&it.name});}}
+   if(!Array.isArray(G.gear))bad.push({step,act,закон:"снаряжение перестало быть списком"});
+   if(!Array.isArray(G.artifacts))bad.push({step,act,закон:"артефакты перестали быть списком"});
   };
   const acts=[
    ["шаг",()=>move(["N","E","S","W"][Math.floor(Math.random()*4)])],
@@ -49,8 +60,9 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
    ["бой: побег",()=>{if(G.inCombat)fight("flee");}],
    ["сохранение",()=>saveGame(true)],
    ["сложность",()=>setDifficulty(["calm","normal","harsh"][Math.floor(Math.random()*3)])],
-   ["крафт",()=>{G.inv["камень"]=(G.inv["камень"]||0)+2;G.inv["дерево"]=(G.inv["дерево"]||0)+2;
-    G.inv["трава"]=(G.inv["трава"]||0)+3;G.inv["ягоды"]=(G.inv["ягоды"]||0)+1;
+   ["крафт",()=>{
+    /* Материалы кладём через ту же дверь, что и игра: с оглядкой на трюм. */
+    ["камень","дерево","трава","ягоды"].forEach(r=>evGive(r,2));
     CMD.craftdo(Math.floor(Math.random()*5));}],
    ["торг: взять квест",()=>{const n=getNPC(G.x,G.y,0,null);takeNPCQuest(n);}],
    ["торг: сдать квест",()=>{const q=(G.quests||[]).find(x=>!x.done);if(q)completeQuest(q.id);}],
@@ -62,6 +74,30 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
    ["событие",()=>{G.lastEventAt=0;maybeEvent("step");
     if(curEvent)resolveEvent(Math.floor(Math.random()*curEvent.choices.length));}],
    ["живые",()=>{if(G.place){Actors.ensure();Actors.tick();}}],
+   ["в море",()=>{
+    if(G.ship){sailLeg();return;}
+    /* садимся на первый попавшийся рейс из ближнего порта */
+    const port=findCities(G.x,G.y,40,6).find(c=>c.type==="port");
+    if(!port)return;
+    G.place=null;G.x=port.x;G.y=port.y;
+    openHarbor();
+    const list=G.harborShips||[];
+    if(list.length){G.gold+=list[0].fare+50;boardShip(0);}
+    while(activeLayer())closeTopUI();}],
+   ["рыбалка",()=>{
+    if(!G.items.includes("Удочка"))G.items.push("Удочка");
+    startFishing();
+    if(G.fishing){G.fishing.bite=true;G.fishing.fish=FISH[0];hookFish&&hookFish();}}],
+   ["заклинание",()=>{G.mana=G.manaMax;castSpell(Math.floor(Math.random()*(SPELLS.length||1)));}],
+   ["снаряжение",()=>{const list=weaponList();if(list.length)equipWeaponIndex(Math.floor(Math.random()*list.length));}],
+   ["груз",()=>{
+    const port=findCities(G.x,G.y,40,6).find(c=>c.type==="port");
+    if(!port)return;
+    G.place=null;G.x=port.x;G.y=port.y;G.gold+=500;
+    buyLot(["руда","камень","дерево"][Math.floor(Math.random()*3)],[1,5,10][Math.floor(Math.random()*3)]);
+    while(activeLayer())closeTopUI();}],
+   ["план города",()=>{if(G.place&&G.place.kind==="city")cityPlan();}],
+   ["сохранение в слот",()=>{saveToSlot(1+Math.floor(Math.random()*3));while(activeLayer())closeTopUI();}],
   ];
   /* Игрок то и дело заходит куда-нибудь и выходит обратно. */
   const wander=i=>{

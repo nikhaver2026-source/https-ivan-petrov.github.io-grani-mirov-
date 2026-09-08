@@ -3980,6 +3980,10 @@ function hookFish(){
  endFishing();
  if(!fish)return false;
  const qty=tackle==="net"&&Math.random()<0.45?2:1;
+ /* С борта рыбачат, пока есть куда класть: в полный трюм улов не идёт. */
+ if(!cargoFits(qty,`Улов «${fish.n}»`)){
+  narrate(`${fish.n} пришлось отпустить обратно в воду: класть некуда.`,{interrupt:false});
+  return false;}
  G.inv[fish.n]=(Number(G.inv[fish.n])||0)+qty;
  safeFn(()=>{UI.pickup();Bank.play("gold",{seed:fish.price,gain:0.6});Bank.play("xylo_coin",{seed:fish.price,gain:0.45,maxSec:3});});
  narrate(`Есть! ${fish.n}${qty>1?` ×${qty}`:""}. ${fish.d}. В портах за неё дают около ${fish.price} золота.`);
@@ -3997,6 +4001,23 @@ function hookFish(){
 function cargoUnits(){
  try{return Object.keys(RESICON).reduce((n,r)=>n+(Number(G.inv[r])||0),0);}catch(_){return 0;}}
 function shipHold(){return G.ship?(Number(G.ship.hold)||20):0;}
+/* ── Сколько ещё войдёт в трюм ──
+   Трюм проверялся только при посадке: дальше можно было рыбачить с борта
+   и брать партии в порту, куда судно зашло, — и увезти вдвое больше, чем
+   берёт судно. Выбор судна переставал быть выбором. Теперь трюм спрашивают
+   всякий раз, когда груз прибывает, и лишнее просто не берут на борт. */
+function cargoRoom(){
+ if(!G.ship)return Infinity;
+ return Math.max(0,shipHold()-cargoUnits());
+}
+function cargoFits(n,what){
+ const room=cargoRoom();
+ if(room===Infinity||room>=n)return true;
+ narrate(room>0
+  ?`Трюм почти полон: влезет ещё ${room} ${plural(room,"единица","единицы","единиц")} груза, а тут ${n}. ${what||"Груз"} придётся оставить.`
+  :`Трюм полон: ${cargoUnits()} из ${shipHold()}. ${what||"Груз"} на борт не влезет — продайте что-нибудь в порту.`);
+ return false;
+}
 /* Оптовая цена партии: чем крупнее, тем дешевле за единицу. */
 function lotPrice(res,city,day,qty){
  const unit=citySellPrice(res,city,day);
@@ -4009,6 +4030,7 @@ function buyLot(res,qty){
  const n=Math.max(1,Number(qty)||1);
  const total=lotPrice(res,port,G.day,n);
  if(G.gold<total){narrate(`Партия ${res} ×${n} стоит ${total} золота, у вас ${G.gold}.`);return false;}
+ if(!cargoFits(n,`Партия «${res}» ×${n}`))return false;
  G.gold-=total;
  G.inv[res]=(Number(G.inv[res])||0)+n;
  safeFn(()=>{UI.pickup();Bank.play("gold",{seed:total,gain:0.8});});
@@ -4565,7 +4587,13 @@ function eventContext(){
   atCity:!inside&&!!isCityAt(G.x,G.y)};
 }
 /* Короткая помощь событиям: положить вещь, ресурс, снять и добавить. */
-function evGive(res,n){G.inv[res]=(Number(G.inv[res])||0)+n;}
+function evGive(res,n){
+ /* На борту подарок события тоже должен куда-то поместиться. */
+ const room=cargoRoom();
+ const fit=room===Infinity?n:Math.max(0,Math.min(n,room));
+ if(fit<n)narrate(`Трюм полон: из ${n} ${plural(n,"единицы","единиц","единиц")} «${res}» удалось взять только ${fit}.`,{interrupt:false});
+ if(fit>0)G.inv[res]=(Number(G.inv[res])||0)+fit;
+ return fit;}
 function evTake(res,n){const h=Number(G.inv[res])||0;const t=Math.min(h,n);
  if(t<=0)return 0;G.inv[res]=h-t;if(G.inv[res]<=0)delete G.inv[res];return t;}
 function evGear(level){const it=genLoot(G.x,G.y,Math.floor(Math.random()*9999),level||G.level);
@@ -5792,6 +5820,9 @@ function placeTitle(){
 }
 /* ── Вход, выход, спуск, подъём ── */
 function enterPlace(c){
+ /* Последний рубеж: в здание не входят с палубы, чем бы это ни было
+    вызвано — жестом, меню или событием. */
+ if(G.ship){narrate("Сначала сойдите на берег: судно в море.");return false;}
  const stype=c.structure&&c.structure.type;
  const kind=PLACE_KIND[stype];
  if(!kind){narrate("Сюда нельзя войти: это не постройка со входом.");return false;}
@@ -6147,6 +6178,12 @@ function useHere(){
  safeFn(()=>Tutor.note("here"));
  /* Добыча после победы важнее всего остального: её собирают первой. */
  if(G.loot&&Array.isArray(G.loot)&&G.loot.length&&safeFn(()=>takeLoot(),false))return true;
+ if(G.ship){
+  /* Под килем вода: пока идёт переход, входить некуда. Раньше «действие
+     здесь» смотрело на клетку мира под судном и заводило игрока в замок
+     прямо с палубы — он оказывался и на корабле, и в здании сразу. */
+  narrate(`Вы на борту: «${G.ship.name}», курс на «${G.ship.toName}», осталось переходов ${G.ship.left}. Сойти на берег можно только в порту. Свайп — идти дальше, рыбалка с борта доступна.`);
+  return false;}
  if(!G.place){
   /* Снаружи: вход в постройку под ногами. */
   const c=cellContent(G.x,G.y);
@@ -6731,9 +6768,13 @@ function takeLoot(){
  try{
   if(!G.loot||!Array.isArray(G.loot)||!G.loot.length)return false;
   const loot=G.loot.slice();
+  const left=[];
   for(const l of loot){
    if(l?.type==="gold")G.gold+=(Number(l.amount)||0);
-   else if(l?.type==="mat")G.inv[l.name]=(Number(G.inv[l.name])||0)+1;
+   else if(l?.type==="mat"){
+    /* На борту добыча кладётся в трюм, а он не резиновый. */
+    if(cargoRoom()>0||!G.ship)G.inv[l.name]=(Number(G.inv[l.name])||0)+1;
+    else {left.push(l.name);continue;}}
    else if(l?.type==="gear"&&l.item){G.gear.push(l.item);}
   }
   safeFn(()=>Bank.play("gold",{seed:Date.now(),gain:0.85}));
@@ -6749,6 +6790,7 @@ function takeLoot(){
      фактически добавлялись в инвентарь, но игрок об этом не узнавал и решал,
      что «помимо золота ничего не подбирается». Теперь перечисляем всё явно. */
   let txt=`Добыча собрана. Золото +${gold}`;
+  if(left.length)txt+=`. В трюме нет места, за бортом осталось: ${left.join(", ")}`;
   if(mats.length)txt+=`, материалы: ${mats.join(", ")}`;
   if(gearItems.length)txt+=`, снаряжение: ${gearItems.map(g=>g.name).join(", ")}`;
   txt+=".";
@@ -7012,6 +7054,7 @@ function getNPCByKey(key){
  const prof=parts[3]?decodeURIComponent(parts[3]):null;   /* профессия, заданная зданием */
  return getNPC(Number(parts[0]),Number(parts[1]),Number(parts[2]),prof);}
 function interactHere(){
+ if(G.ship){useHere();return;}
  if(G.place){useHere();return;}
  const c=cellContent(G.x,G.y);
  /* У построек со входом сначала предлагается войти внутрь — окно услуг доступно
@@ -7297,6 +7340,7 @@ function buyItem(key,i){const n=getNPCByKey(key);
  if(att.refuses){narrate(`${n.name} убирает товар: с вами здесь не торгуют. Народ «${n.race}» вас не жалует.`);return;}
  const stock=stockFor(n);const item=stock[+i];if(!item)return;
  if(G.gold<item.price){narrate(`Нужно ${item.price} золота, у вас ${G.gold}.`);return;}
+ if(item.res&&!cargoFits(1,`«${item.n}»`))return;
  G.gold-=item.price;
  if(item.gear)G.gear.push(item.gear);
  else G.inv[item.n]=(G.inv[item.n]||0)+1;
