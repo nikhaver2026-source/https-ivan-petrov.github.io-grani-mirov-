@@ -6994,8 +6994,17 @@ function gatherCurrent(source="tap"){
  try{
   if(!gameActive()){return false;}
   if(G.inCombat){return false;}
-  /* Внутри постройки собирается то, что лежит под ногами: жила, сундук, алтарь. */
-  if(G.place)return useHere();
+  /* Внутри постройки жест сбора собирает — и только. Раньше он звал «действие
+     здесь», и стоя на лестнице игрок вместо горсти руды проваливался этажом
+     ниже, а стоя в воротах выходил из города: жест обещал одно, а делал другое.
+     Лестницы, ворота, алтари и жители остались за двойным касанием. */
+  if(G.place){
+   const lvl=curLevel(),t=lvl&&tileAt(lvl,G.place.x,G.place.y);
+   if(t==="C")return openChest(G.place.x,G.place.y);
+   if(t==="R")return mineVein(G.place.x,G.place.y);
+   if(source==="tap"){resourceEmptyFeedback();
+    narrate("Здесь нечего собирать. Двойное касание — действие здесь.");}
+   return false;}
   const c=cellContent(G.x,G.y);
   if(!c||!c.res){if(source==="tap"){resourceEmptyFeedback(); narrate("На этой клетке ресурсов нет.");}return false;}
   const key=G.x+","+G.y;

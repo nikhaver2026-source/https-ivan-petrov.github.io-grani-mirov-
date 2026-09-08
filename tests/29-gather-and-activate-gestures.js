@@ -188,6 +188,30 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   fight.бой===true&&inFight.бой===true&&Object.keys(inFight.запас).length===0&&!inFight.окно,inFight);
  await page.evaluate(()=>{endCombat();});
 
+ // ── 10. Внутри постройки жест сбора собирает, а не уводит по лестнице ──
+ const inside=await page.evaluate(()=>{
+  while(activeLayer())closeTopUI();
+  G.inCombat=false;G.combat=null;G.inv={};
+  /* Встаём в постройку и переносим игрока прямо на лестницу вниз. */
+  for(let r=0;r<8000;r++){const x=1000+(r%90),y=1000+Math.floor(r/90);
+   const c=cellContent(x,y);
+   if(c.structure&&PLACE_KIND[c.structure.type]){
+    G.x=x;G.y=y;enterPlace(c);
+    const lvl=curLevel();if(!lvl)return null;
+    for(let ty=0;ty<lvl.h;ty++)for(let tx=0;tx<lvl.w;tx++)
+     if(tileAt(lvl,tx,ty)===">"){G.place.x=tx;G.place.y=ty;
+      return {место:placeTitle(),глубина:G.place.depth,клетка:">"};}
+    return {место:placeTitle(),глубина:G.place.depth,клетка:null};}}
+  return null;});
+ if(inside&&inside.клетка===">"){
+  await multiTap(2);
+  const after=await page.evaluate(()=>({глубина:G.place&&G.place.depth,внутри:!!G.place}));
+  check('внутри постройки сбор двумя пальцами не спускает по лестнице',
+   after.внутри===true&&after.глубина===inside.глубина,{было:inside.глубина,стало:after.глубина});
+  await page.evaluate(()=>{while(activeLayer())closeTopUI();leavePlace();});
+ } else check('внутри постройки сбор двумя пальцами не спускает по лестнице',
+   false,{постройка:inside});
+
  check('игра не выбрасывала ошибок за весь прогон',errors.length===0,errors.slice(0,3));
 
  console.log(results.join('\n'));
