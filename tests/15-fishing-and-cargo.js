@@ -167,6 +167,48 @@ const sleep=ms=>new Promise(r=>setTimeout(r,ms));
   return {ok,caught,spot:"sea",time:(G.hour+G.day*24)-h0,inv:Object.keys(G.inv)};});
  check('с борта судна тоже ловится',atSea.ok&&atSea.time>0,atSea);
 
+ /* Морские встречи тоже кладут добычу в трюм. Раньше сеть матросов делала это,
+    не спрашивая места, и груз переваливал за вместимость судна: случайный
+    прогон ловил это лишь изредка, поэтому проверяем прямо. */
+ const net=await page.evaluate(()=>{
+  if(G.inCombat)endCombat();
+  while(activeLayer())closeTopUI();
+  if(G.fishing)endFishing();
+  if(!G.ship)return {нет:"нет судна"};
+  const hold=shipHold();
+  G.inv={};G.inv["руда"]=hold;          /* трюм забит под завязку */
+  const before=cargoUnits();
+  let сеть=0,попыток=0;
+  /* Гоняем морское событие, пока не выпадет именно сеть с находкой. */
+  const origRandom=Math.random;
+  try{
+   for(let i=0;i<200&&сеть===0;i++){
+    попыток++;
+    let k=0;
+    Math.random=()=>{k++;return k===1?0:k===2?0.75:0.5;}; /* встреча случилась, выпала сеть */
+    if(maybeSeaEvent())сеть++;
+   }
+  }finally{Math.random=origRandom;}
+  return {трюм:hold,было:before,стало:cargoUnits(),сеть,попыток,бой:G.inCombat,
+   окно:activeLayer()&&activeLayer().id,судно:!!G.ship};});
+ /* С борта нельзя «собрать» ресурс с клетки суши под килем: так трюм набивался
+    сверх вместимости в обход всех проверок груза. */
+ const deck=await page.evaluate(()=>{
+  while(activeLayer())closeTopUI();
+  if(G.fishing)endFishing();
+  if(G.inCombat)endCombat();
+  if(!G.ship)return {нет:"нет судна"};
+  G.inv={};
+  const c=cellContent(G.x,G.y);
+  const было=cargoUnits();
+  const ответ=gatherCurrent("tap");
+  return {ресурсПодКилем:!!(c&&c.res),собрано:ответ,было,стало:cargoUnits()};});
+ check('с палубы нельзя собирать ресурсы суши',
+  !deck.нет&&deck.собрано===false&&deck.стало===deck.было,deck);
+
+ check('находка морской сети не выходит за пределы трюма',
+  !net.нет&&net.сеть>0&&net.стало<=net.трюм&&net.стало===net.было,net);
+
  console.log(results.join('\n'));
  console.log('\nОшибки страницы: '+(errors.length?errors.slice(0,5).join('\n'):'нет'));
  await browser.close();

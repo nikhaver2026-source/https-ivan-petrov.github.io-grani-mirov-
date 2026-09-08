@@ -208,6 +208,14 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   const after=await page.evaluate(()=>({глубина:G.place&&G.place.depth,внутри:!!G.place}));
   check('внутри постройки сбор двумя пальцами не спускает по лестнице',
    after.внутри===true&&after.глубина===inside.глубина,{было:inside.глубина,стало:after.глубина});
+  /* И меню не предлагает пункт сбора там, где собирать нечего. */
+  const menuOnStairs=await page.evaluate(()=>{
+   while(activeLayer())closeTopUI();openActionMenu();
+   const items=[...document.querySelectorAll('#amList button')].map(b=>b.dataset.cmd);
+   closeActionMenu();
+   return {сбор:items.includes("am:gather"),спуск:items.includes("am:descend")};});
+  check('на лестнице меню не предлагает сбор, но предлагает спуск',
+   menuOnStairs.сбор===false&&menuOnStairs.спуск===true,menuOnStairs);
   await page.evaluate(()=>{while(activeLayer())closeTopUI();leavePlace();});
  } else check('внутри постройки сбор двумя пальцами не спускает по лестнице',
    false,{постройка:inside});

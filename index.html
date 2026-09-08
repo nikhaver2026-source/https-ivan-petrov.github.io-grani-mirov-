@@ -2187,7 +2187,13 @@ function amAvailable(cmd){
   if(cmd==="fish")return !!fishingSpot();
   if(cmd==="descend")return !!G.place||!!(c.structure&&PLACE_KIND[c.structure.type]);
   if(cmd==="interact")return !G.place&&!!(c.structure||c.res);
-  if(cmd==="gather")return G.place?true:!!c.res;
+  /* Пункт сбора показывается, только когда собирать действительно есть что:
+     внутри постройки это сундук или жила, снаружи — ресурс на клетке. Раньше
+     внутри он предлагался на каждой клетке и отвечал отказом. */
+  if(cmd==="gather"){
+   if(!G.place)return !!c.res;
+   const lvl=curLevel(),t=lvl&&tileAt(lvl,G.place.x,G.place.y);
+   return t==="C"||t==="R";}
   if(cmd==="cityplan")return !!(G.place&&G.place.kind==="city");
   if(cmd==="echo"||cmd==="look"||cmd==="map"||cmd==="usehere")return true;
   return true;
@@ -4467,6 +4473,12 @@ function maybeSeaEvent(){
   return true;}
  if(r<0.82){
   const res=["ракушка","кость","кристалл"][Math.floor(Math.random()*3)];
+  /* Трюм не резиновый и здесь. Раньше сеть матросов клала добычу на борт, не
+     спрашивая места, и груз переваливал за вместимость судна: выбор корабля
+     переставал что-то значить, а буря, смывающая палубный груз, теряла смысл. */
+  if(!cargoFits(1,`Находка «${res}»`)){
+   narrate(`Матросы вытянули сеть: в ней ${res}, но класть некуда — трюм полон. Находку отпустили обратно в море.`);
+   return true;}
   G.inv[res]=(Number(G.inv[res])||0)+1;
   safeFn(()=>{beacon("res_shell",0,0);UI.pickup();});
   narrate(`Матросы вытянули сеть: в ней ${res}. Добыча ваша.`);
@@ -4841,7 +4853,7 @@ const EVENTS=[
    {l:"🕯️ Восстановить алтарь",run:()=>{const g=PANTHEON[Math.floor(Math.random()*PANTHEON.length)];
     G.faith[g.id]=godFavor(g.id)+3;G.xp+=xpGain(40);
     narrate(`Вы сложили камни обратно. ${g.n} отвечает: благосклонность +3.`);}},
-   {l:"⛏️ Забрать оставшиеся камни",run:()=>{G.inv["кристалл"]=(Number(G.inv["кристалл"])||0)+2;
+   {l:"⛏️ Забрать оставшиеся камни",run:()=>{if(!evGive("кристалл",2))return;
     const p=patronGod();if(p){G.faith[p.id]=Math.max(0,godFavor(p.id)-2);}
     narrate("Вы забрали два кристалла. Покровитель этого не одобрил: благосклонность убыла.");}}]},
  {id:"warband",w:3,ok:c=>c.inside&&c.depth>=2,
@@ -5182,7 +5194,8 @@ const EVENTS=[
     safeFn(()=>Bank.play("shop_till",{gain:0.6,maxSec:3}));
     narrate("Кристалл лёг в мешок. Такой наверху стоит куда дороже сорока.");}},
    {l:"🦴 Обменять кость на зелье",run:()=>{if((Number(G.inv["кость"])||0)<1){narrate("Кости у вас нет — менять нечего.");return;}
-    evTake("кость",1);G.inv["Зелье здоровья"]=(Number(G.inv["Зелье здоровья"])||0)+1;
+    if(!evGive("Зелье здоровья",1)){narrate("Взять зелье некуда: трюм полон.");return;}
+    evTake("кость",1);
     narrate("Кость ушла в мешок под плащом, к вам — зелье здоровья. Оба довольны.");}},
    {l:"🗣️ Спросить, кто он",run:()=>{
     safeFn(()=>Bank.play("voice_far",{gain:0.6,maxSec:5}));
@@ -6994,6 +7007,13 @@ function gatherCurrent(source="tap"){
  try{
   if(!gameActive()){return false;}
   if(G.inCombat){return false;}
+  /* С палубы траву не рвут. Под килем идёт вода, а клетка мира под судном —
+     это берег где-то далеко внизу: собирая с борта, игрок набивал трюм сверх
+     всякой вместимости, минуя все проверки груза. */
+  if(G.ship){
+   if(source==="tap"){resourceEmptyFeedback();
+    narrate(`Вы на борту: «${G.ship.name}». Собирать с палубы нечего — рыбалка доступна, а ресурсы ждут на берегу.`);}
+   return false;}
   /* Внутри постройки жест сбора собирает — и только. Раньше он звал «действие
      здесь», и стоя на лестнице игрок вместо горсти руды проваливался этажом
      ниже, а стоя в воротах выходил из города: жест обещал одно, а делал другое.
