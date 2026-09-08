@@ -83,3 +83,29 @@ https://creativecommons.org/publicdomain/zero/1.0/
 | step_stone_05..06 | шаги по камню | tabla_ghe5, tabla_tun1 |
 | gurgle_02 | утробный звук твари | misc_burp |
 | blip_06 | отметка | elec_blup |
+
+## Добавлено позже: ударные и гулы мира (тоже CC0)
+
+Двадцать четыре записи из того же набора Sonic Pi, добавленные, чтобы мир
+звучал живее: базарные и караванные барабаны, глухие удары в глубине,
+сердце подземелья, барабан строя стражи, четыре вида лязга металла,
+три гула места и два звука разлома Грани.
+
+| Файл | Роль в игре | Исходный сэмпл |
+|---|---|---|
+| bazaar_drum_01..03 | базарный барабан | tabla_ghe3, tabla_ghe6, tabla_tun2 |
+| caravan_drum_01..02 | барабан каравана | tabla_na_o, tabla_te_ne |
+| bazaar_loop_01 | ритм базара | loop_tabla |
+| market_perc_01..02 | перкуссия рынка | loop_perc1, loop_perc2 |
+| deep_thud_01..04 | глухой удар в глубине | drum_tom_lo_soft, drum_tom_mid_soft, drum_tom_hi_soft, drum_tom_hi_hard |
+| dungeon_heart_01 | сердце подземелья | drum_bass_soft |
+| guard_march_01..02 | строй стражи | drum_snare_soft, drum_snare_hard |
+| clang_soft_01 | тихий лязг | drum_cymbal_closed |
+| clang_hard_01 | резкий лязг | drum_cymbal_hard |
+| clang_pedal_01 | затухающий лязг | drum_cymbal_pedal |
+| clang_splash_01 | всплеск металла | drum_splash_hard |
+| drone_calm_01 | спокойный гул | tbd_pad_2 |
+| drone_dark_01 | тёмный гул | tbd_pad_3 |
+| drone_deep_01 | глубинный гул | tbd_pad_4 |
+| rift_bass_01 | низ разлома | glitch_bass_g |
+| rift_tick_01 | тик разлома | glitch_perc5 |

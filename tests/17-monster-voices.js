@@ -136,11 +136,16 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
 
  // 10. Энциклопедия перечисляет пополненный банк
  const enc=await page.evaluate(()=>{
-  G.place=null;while(activeLayer())handleTwoFingerTap();
+  G.place=null;while(activeLayer())closeTopUI();
   CMD.encyc();
-  return {cards:document.querySelectorAll('#bankGrid .sound-card').length,
-   heads:document.querySelectorAll('#bankGrid h3').length};});
- check('энциклопедия перечисляет все роли банка',enc.cards>=57&&enc.heads>=9,enc);
+  const btns=[...document.querySelectorAll('#encycCats .sound-card')];
+  const i=btns.findIndex(b=>/Голоса чудовищ: записи/.test(b.textContent));
+  if(i>=0)btns[i].click();
+  return {разделов:btns.length,
+   голосов:document.querySelectorAll('#encycOneGrid .sound-card').length,
+   заголовок:document.getElementById('encycOneTitle').textContent};});
+ check('в энциклопедии есть раздел записанных голосов чудовищ',
+  enc.разделов>=20&&/Голоса чудовищ/.test(enc.заголовок)&&enc.голосов===8,enc);
 
  console.log(results.join('\n'));
  console.log('\nЗапрошено файлов звука: '+reqs.length+' (например '+reqs.slice(0,3).join(', ')+')');

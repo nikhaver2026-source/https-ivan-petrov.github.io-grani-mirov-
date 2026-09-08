@@ -89,7 +89,7 @@ h3{color:var(--acc2);margin:14px 0 6px;font-size:1.05rem;}
  <p class="sub">Полная хроника I–V · Alpha 2.0.1 — Единый живой мир · Карта 2000×2000</p>
  <div class="menu">
   <button type="button" data-cmd="check">🔊 Проверить звук</button>
-  <button type="button" data-cmd="encyc">🎧 Энциклопедия звуков (87 звуков)</button>
+  <button type="button" data-cmd="encyc" id="btnEncyc">🎧 Энциклопедия звуков</button>
   <button type="button" data-cmd="guide">📖 Полное руководство</button>
   <button type="button" data-cmd="tutorstart">🎓 Обучение жестам (для новичка)</button>
   <button type="button" data-cmd="fs">🖥️ Полноэкранный режим</button>
@@ -153,19 +153,27 @@ h3{color:var(--acc2);margin:14px 0 6px;font-size:1.05rem;}
 <!-- ЭНЦИКЛОПЕДИЯ ЗВУКОВ -->
 <div class="modal" id="modal-encyclopedia" role="dialog" aria-modal="true" aria-label="Энциклопедия звуков" hidden><div class="sheet">
  <header><h2>🎧 Энциклопедия звуков</h2><button type="button" data-cmd="close">✖️ Закрыть</button></header>
- <p class="hint">Касание — игра назовёт звук. Двойное касание — воспроизвести/остановить. Все 87 звуков синтезируются браузером и всегда работают, даже без интернета.</p>
+ <p class="hint" id="encycHint">Касание — игра назовёт раздел. Двойное касание — открыть его.</p>
  <div class="row">
   <button type="button" id="btnTestAll">✅ Проверить все звуки</button>
   <button type="button" id="btnTestCancel" hidden>⏹ Остановить проверку</button>
   <span id="testStatus" role="status" aria-live="polite" style="color:var(--ok);font-weight:700;align-self:center;"></span>
  </div>
- <div id="soundGrid" class="grid"></div>
- <h3>🎼 Записи звукового банка</h3>
- <p class="hint" id="bankHint">Отдельная коллекция записей, разложенная по ролям: море и корабли, земли, глубина подземелий, школы магии, боги, события и места. Двойное касание карточки — прослушать.</p>
- <div id="bankGrid" class="grid"></div>
- <h3>📡 Все звуковые маяки</h3>
- <p class="hint">Маяки помогают определить тип объекта и его направление. Нажмите «Прослушать», чтобы услышать пример.</p>
- <div id="beaconGrid" class="grid"></div>
+ <!-- Первый уровень: только категории. Звуков в игре больше семисот, и одним
+      списком их не обойти: свайп по нему занимал бы минуты. Игрок выбирает
+      раздел, слушает его и возвращается назад. -->
+ <div id="encycCats" class="grid"></div>
+ <!-- Указание авторства для записей под лицензией с обязательной ссылкой:
+      оно должно быть видно в самой игре, а не только в файлах. -->
+ <p class="hint" id="encycCredits"></p>
+ <!-- Второй уровень: звуки одной выбранной категории. -->
+ <div id="encycOne" hidden>
+  <div class="row"><button type="button" id="encycBack">⬅️ Ко всем разделам</button></div>
+  <h3 id="encycOneTitle" tabindex="-1"></h3>
+  <p class="hint" id="encycOneHint"></p>
+  <div id="encycOneGrid" class="grid"></div>
+  <div class="row"><button type="button" id="encycBack2">⬅️ Ко всем разделам</button></div>
+ </div>
 </div></div>
 
 <!-- ИНВЕНТАРЬ -->
@@ -1507,7 +1515,9 @@ function beacon(id,pan=0,dist=0){if(!settings.effects)return;AE.ensure();
  /* Натуральная запись, если она есть для этого маяка и её можно развести
     по сторонам; иначе — прежний синтез, он панораму умеет всегда. */
  try{
-  const nat=(typeof BEACON_SAMPLE!=="undefined")&&BEACON_SAMPLE[id];
+  let nat=(typeof BEACON_SAMPLE!=="undefined")&&BEACON_SAMPLE[id];
+  const role=(typeof BEACON_ROLE!=="undefined")&&BEACON_ROLE[id];
+  if(role&&Bank.enabled){const f=Bank.pick(role,Math.floor(Math.random()*97));if(f)nat=f;}
   /* Дальний маяк звучит короче ближнего: в эхо-скане маяки идут очередью
      через четыре десятых секунды, и длинная нота инструмента наложилась бы
      на следующую. Вблизи ноте дают отзвучать. */
@@ -1534,47 +1544,164 @@ const BANK_CATS={sea:"🌊 Море, порты и корабли",ambience:"�
  magic:"✨ Школы магии",gods:"🕯️ Боги, алтари и знамения",events:"⚡ События",places:"🏛️ Места и ремёсла",
  fantasy:"🎲 Игровые звуки: монеты, ловушки, заклинания, голоса",steps:"👣 Шаги по земле и воде",
  nat:"🌿 Живые записи мира: удары, двери, колокола, шаги, гул",
- inst:"🎻 Живые инструменты: боги, места, фанфары, предвестия"};
+ inst:"🎻 Живые инструменты: боги, места, фанфары, предвестия",
+ orch:"🎺 Оркестр мира: война, храм, народы, чары и стихии"};
 const MONSTER_VOICE_NAMES={bat:"Летучая тварь: писк и хлопки крыльев",behemoth:"Громада: тяжёлый рёв и поступь",
  dragon:"Дракон: рык и пламя",ghost:"Призрак: стон и шелест",hornet:"Рой: гудение и жала",
  orc:"Орочья глотка: рык, крик, брань",slime:"Слизь и глубинное: чавканье и всплеск",spider:"Паук: щёлканье жвал"};
 const MONSTER_CUE_NAMES={emerge:"появление",attack:"удар",damage:"боль",death:"смерть",step:"шаг",
  sonic_special:"звуковая атака",netshot_special:"выстрел паутиной"};
-function buildBankGrid(){
- const grid=document.getElementById("bankGrid");if(!grid)return;grid.innerHTML="";
- const hint=document.getElementById("bankHint");
- const total=Object.values(SOUND_BANK).reduce((n,b)=>n+b.f.length,0);
- if(hint)hint.textContent=`Коллекция из ${total} записей в ${Object.keys(SOUND_BANK).length} ролях: море и корабли, земли, глубина подземелий, школы магии, боги, события, места, живые записи мира и живые инструменты. Двойное касание карточки — прослушать. Если папки со звуками рядом нет, игра звучит синтезированными маяками. Источники записей: Neo HQ Mystic Sounds, Fantasy Sound Library, Classic Monster Sounds (автор Coucassi), пакет uisfx (CC0), сэмплы Sonic Pi с freesound.org (общественное достояние, CC0 1.0) и живые инструменты проекта tonejs-instruments (Creative Commons Attribution 3.0) — указание авторства обязательно, и оно здесь дано.`;
+/* Прежние построители трёх длинных сеток удалены: энциклопедия теперь
+   двухуровневая, и всё строится в buildEncycCats и openEncycCat. */
+/* ════════ ЭНЦИКЛОПЕДИЯ ЗВУКОВ ПО РАЗДЕЛАМ ════════
+   Звуков в игре больше семисот: восемьдесят восемь синтезированных сцен,
+   сто сорок семь ролей звукового банка с пятьюстами семьюдесятью шестью
+   записями, восемь голосов чудовищ и десять маяков построек. Одним списком
+   это не обойти — свайп по нему занимал бы минуты, а найти нужное было
+   нельзя. Поэтому энциклопедия устроена в два уровня: сперва разделы, потом
+   звуки выбранного раздела и кнопка «ко всем разделам». ── */
+const SCENE_CATS=[
+ ["Стихии и погода","🌦️",["forest","thunder","birds","rain","wind","fire","stream","sea","crickets",
+  "plains","mountains_amb","swamp","desert_amb","snow_weather","fog","storm","cave"]],
+ ["Птицы и звери","🦉",["owl","crow","seagull","wolves"]],
+ ["Голоса чудовищ (общие)","👹",["mgrowl","mroar","mhiss","mscreech","mstomp","mwail"]],
+ ["Именные чудовища","🐉",["wolf_named","goblin_named","troll_named","ogre_named","golem_named",
+  "dragon_named","basilisk_named","wyvern_named","banshee_named","direbear_named","sandworm_named",
+  "treant_named","kraken_named","bandit_named","spider_named","serpent_named","harpy_named","wraith_named"]],
+ ["Оружие и бой","⚔️",["sword","dagger","staff","bow"]],
+ ["Ресурсы под ногами","📦",["res_tree_s","res_stone_s","res_ore_s","res_herbs_s","res_crystal_s",
+  "res_shell_s","res_bone_s","res_berry_s"]],
+ ["Голоса жителей","🧑",["npc_ruler_s","npc_guard_s","npc_merchant_s","npc_scholar_s","npc_bartender_s",
+  "npc_common_s","npc_elder_s","npc_farmer_s","npc_healer_s","npc_clanlead_s","npc_warrior_s",
+  "npc_apprentice_s","npc_traveler_s"]],
+ ["Постройки и места","🏛️",["castle","village","tavern","temple","market","school","clanhall","tower",
+  "ruins","traveler_beacon","portal"]],
+ ["Предметы и ремесло","🔨",["forge","door","chest","coins","magic","footsteps","crowd"]],
+];
+/* Сцена, не попавшая ни в один раздел, всё равно должна быть доступна. */
+function sceneCats(){
+ const взято=new Set();SCENE_CATS.forEach(([,,ids])=>ids.forEach(i=>взято.add(i)));
+ const прочие=Object.keys(SOUNDS).filter(i=>!взято.has(i));
+ return прочие.length?SCENE_CATS.concat([["Прочие сцены","🎚️",прочие]]):SCENE_CATS;
+}
+let encycOpen=null;   /* какой раздел сейчас раскрыт */
+
+/* Карточка одного звука: единый вид для всех разделов. */
+function soundCard(icon,title,sub,speak,play){
+ const b=document.createElement("button");b.type="button";b.className="sound-card";
+ b.dataset.speak=speak;
+ b.innerHTML=`<span aria-hidden="true">${icon}</span><b>${title}</b><span class="st" aria-hidden="true">${sub||""}</span>`;
+ b.addEventListener("click",play);
+ return b;}
+
+/* ── Первый уровень: разделы ── */
+/* Кнопка заглавного меню называет столько звуков, сколько их есть на самом
+   деле. Раньше число было вписано в разметку и устарело при первом же
+   пополнении банка: кнопка обещала 87, а звуков было под семьсот. */
+function soundTotals(){
+ const сцены=Object.keys(SOUNDS).length;
+ const записи=Object.values(SOUND_BANK).reduce((k,e)=>k+e.f.length,0)
+  +Object.values(MONSTER_BANK).reduce((k,v)=>k+Object.keys(v).length,0);
+ return {сцены,записи,всего:сцены+записи};}
+function refreshEncycButton(){
+ try{const b=document.getElementById("btnEncyc");if(!b)return;
+  const t=soundTotals();
+  b.textContent=`🎧 Энциклопедия звуков (${t.всего})`;
+  b.dataset.speak=`Энциклопедия звуков. Всего ${t.всего}: ${t.сцены} синтезированных сцен и ${t.записи} живых записей, разложенных по разделам. Двойное касание — открыть.`;
+ }catch(_){}}
+function buildEncycCats(){
+ const grid=document.getElementById("encycCats");if(!grid)return;
+ grid.innerHTML="";encycOpen=null;
+ const one=document.getElementById("encycOne");if(one)one.hidden=true;
+ grid.hidden=false;
+ const add=(key,icon,title,count,what)=>{
+  const b=document.createElement("button");b.type="button";b.className="sound-card";
+  b.dataset.speak=`Раздел: ${title}. Звуков: ${count}. ${what} Двойное касание — открыть.`;
+  b.innerHTML=`<span aria-hidden="true">${icon}</span><b>${title}</b><span class="st" aria-hidden="true">звуков: ${count}</span>`;
+  b.addEventListener("click",()=>openEncycCat(key,title));
+  grid.appendChild(b);};
+ sceneCats().forEach(([title,icon,ids],i)=>
+  add("scene:"+i,icon,title,ids.filter(id=>SOUNDS[id]).length,"Синтезированные сцены: работают всегда, даже без интернета."));
  Object.keys(BANK_CATS).forEach(cat=>{
   const roles=Object.keys(SOUND_BANK).filter(r=>(SOUND_BANK[r].f[0]||"").split("/")[0]===cat);
   if(!roles.length)return;
-  const h=document.createElement("h3");h.textContent=BANK_CATS[cat];h.setAttribute("aria-hidden","true");grid.appendChild(h);
-  roles.forEach(r=>{
-   const b=SOUND_BANK[r];
-   const btn=document.createElement("button");btn.type="button";btn.className="sound-card";
-   btn.dataset.speak=`${b.d}. Вариантов: ${b.f.length}. Двойное касание — прослушать.`;
-   btn.innerHTML=`<span>🎼</span><b>${b.d}</b><span>вариантов: ${b.f.length}</span>`;
-   btn.addEventListener("click",()=>{
-    narrate(b.d);
-    const el=Bank.play(r,{seed:Date.now(),gain:0.8,maxSec:10});
-    if(!el)narrate("Запись недоступна: папка со звуками не найдена рядом с игрой. Игра продолжает звучать синтезированными маяками.",{interrupt:false});});
-   grid.appendChild(btn);});});
- /* Голоса чудовищ: восемь существ, у каждого свои реплики. */
- const h=document.createElement("h3");h.textContent="👹 Голоса чудовищ";h.setAttribute("aria-hidden","true");grid.appendChild(h);
- Object.keys(MONSTER_BANK).forEach(sp=>{
-  const cues=Object.keys(MONSTER_BANK[sp]);
-  const who=Object.keys(MONSTER_VOICE).filter(id=>MONSTER_VOICE[id]===sp);
-  const btn=document.createElement("button");btn.type="button";btn.className="sound-card";
-  const name=MONSTER_VOICE_NAMES[sp]||sp;
-  btn.dataset.speak=`${name}. Реплики: ${cues.map(c=>MONSTER_CUE_NAMES[c]||c).join(", ")}. Этим голосом говорят: ${who.length} видов. Двойное касание — прослушать появление.`;
-  btn.innerHTML=`<span>👹</span><b>${name}</b><span>реплик: ${cues.length} · видов: ${who.length}</span>`;
-  btn.addEventListener("click",()=>{narrate(name);
-   if(!Bank.file(MONSTER_BANK[sp].emerge||MONSTER_BANK[sp].attack,{gain:0.85,maxSec:8}))
-    narrate("Запись недоступна: папка со звуками не найдена рядом с игрой.",{interrupt:false});});
-  grid.appendChild(btn);});
+  const files=roles.reduce((k,r)=>k+SOUND_BANK[r].f.length,0);
+  add("bank:"+cat,BANK_CATS[cat].slice(0,2).trim()||"🎼",BANK_CATS[cat].replace(/^\S+\s/,""),
+   files,`Живые записи, ${roles.length} ${plural(roles.length,"роль","роли","ролей")}.`);});
+ add("voices","👹","Голоса чудовищ: записи",
+  Object.keys(MONSTER_BANK).reduce((k,sp)=>k+Object.keys(MONSTER_BANK[sp]).length,0),
+  "Появление, удар, боль, смерть и шаг для восьми существ.");
+ add("beacons","📡","Звуковые маяки построек",Object.keys(BEACONS).length,
+  "По ним узнают, что за здание стоит рядом и с какой стороны.");
+ const hint=document.getElementById("encycHint");
+ const t=soundTotals();
+ if(hint)hint.textContent=`Разделов: ${grid.children.length}. Всего звуков: ${t.всего} — ${t.сцены} синтезированных сцен и ${t.записи} живых записей. Касание называет раздел, двойное касание открывает его. Внутри раздела — те же жесты, а кнопка «Ко всем разделам» возвращает обратно.`;
+ const cr=document.getElementById("encycCredits");
+ if(cr)cr.textContent="Источники записей: Neo HQ Mystic Sounds, Fantasy Sound Library, Classic Monster Sounds (автор Coucassi), пакет uisfx (CC0), сэмплы Sonic Pi с freesound.org (общественное достояние, CC0 1.0), живые инструменты проекта tonejs-instruments (Creative Commons Attribution 3.0) и оркестр из звукового шрифта FluidR3_GM автора Frank Wen, изданного проектом MIDI.js Soundfonts (Creative Commons Attribution 3.0). Указание авторства обязательно, и оно здесь дано.";
 }
-function buildBeaconGrid(){const grid=document.getElementById("beaconGrid");if(!grid)return;grid.innerHTML="";
- Object.keys(BEACONS).forEach(id=>{const info=BEACON_INFO[id]||[id,"Звуковой маяк объекта"];const b=document.createElement("button");b.type="button";b.className="sound-card";b.dataset.speak=`Маяк: ${info[0]}. ${info[1]}. Двойное касание — прослушать.`;b.innerHTML=`<span>📡</span><b>${info[0]}</b><span>${info[1]}</span>`;b.addEventListener("click",()=>{if(!settings.effects)return;narrate(`Маяк: ${info[0]}. ${info[1]}`);beacon(id,0,0);});grid.appendChild(b);});}
+
+/* ── Второй уровень: звуки одного раздела ── */
+function openEncycCat(key,title){
+ const cats=document.getElementById("encycCats"),one=document.getElementById("encycOne"),
+  grid=document.getElementById("encycOneGrid"),head=document.getElementById("encycOneTitle"),
+  hint=document.getElementById("encycOneHint");
+ if(!cats||!one||!grid)return;
+ encycOpen=key;grid.innerHTML="";
+ cats.hidden=true;one.hidden=false;
+ head.textContent=title;
+ let подпись="";
+ if(key.startsWith("scene:")){
+  const [,icon,ids]=sceneCats()[Number(key.split(":")[1])];
+  подпись="Синтезированные сцены: их строит сам браузер, интернет не нужен.";
+  ids.filter(id=>SOUNDS[id]).forEach(id=>{
+   const d=SOUNDS[id];
+   const card=soundCard(d.icon,d.name,d.desc,
+    `${d.name}. ${d.desc} Двойное касание — воспроизвести или остановить.`,
+    ()=>{const cur=Play.active.get("main");
+     if(cur&&cur.id===id){Play.stopKey("main");narrate(`Остановлено: ${d.name}.`);}
+     else{["amb0","amb1","w1","w2","ev"].forEach(k=>Play.stopKey(k));
+      Play.start("main",id,{announceEnd:true});vib(25);
+      narrate(`Воспроизводится: ${d.name}. ${d.desc}`);}});
+   card.dataset.scene=id;grid.appendChild(card);});
+ }else if(key.startsWith("bank:")){
+  const cat=key.slice(5);
+  подпись="Живые записи. Если папки со звуками рядом нет, игра звучит синтезированными маяками.";
+  Object.keys(SOUND_BANK).filter(r=>(SOUND_BANK[r].f[0]||"").split("/")[0]===cat).forEach(r=>{
+   const b=SOUND_BANK[r];
+   grid.appendChild(soundCard("🎼",b.d,`вариантов: ${b.f.length}`,
+    `${b.d}. Вариантов: ${b.f.length}. Двойное касание — прослушать.`,
+    ()=>{narrate(b.d);
+     if(!Bank.play(r,{seed:Date.now(),gain:0.8,maxSec:10}))
+      narrate("Запись недоступна: папка со звуками не найдена рядом с игрой.",{interrupt:false});}));});
+ }else if(key==="voices"){
+  подпись="Восемь существ, у каждого свой набор реплик.";
+  Object.keys(MONSTER_BANK).forEach(sp=>{
+   const cues=Object.keys(MONSTER_BANK[sp]);
+   const who=Object.keys(MONSTER_VOICE).filter(id=>MONSTER_VOICE[id]===sp);
+   const name=MONSTER_VOICE_NAMES[sp]||sp;
+   grid.appendChild(soundCard("👹",name,`реплик: ${cues.length} · видов: ${who.length}`,
+    `${name}. Реплики: ${cues.map(c=>MONSTER_CUE_NAMES[c]||c).join(", ")}. Этим голосом говорят ${who.length} ${plural(who.length,"вид","вида","видов")}. Двойное касание — прослушать появление.`,
+    ()=>{narrate(name);
+     if(!Bank.file(MONSTER_BANK[sp].emerge||MONSTER_BANK[sp].attack,{gain:0.85,maxSec:8}))
+      narrate("Запись недоступна: папка со звуками не найдена рядом с игрой.",{interrupt:false});}));});
+ }else if(key==="beacons"){
+  подпись="Маяк говорит, что за объект рядом и с какой стороны он стоит.";
+  Object.keys(BEACONS).forEach(id=>{
+   const info=BEACON_INFO[id]||[id,"Звуковой маяк объекта"];
+   grid.appendChild(soundCard("📡",info[0],info[1],
+    `Маяк: ${info[0]}. ${info[1]}. Двойное касание — прослушать.`,
+    ()=>{if(!settings.effects)return;narrate(`Маяк: ${info[0]}. ${info[1]}`);beacon(id,0,0);}));});
+ }
+ hint.textContent=`${подпись} Звуков в разделе: ${grid.children.length}.`;
+ narrate(`${title}. Звуков: ${grid.children.length}. ${подпись} Свайп — листать, двойное касание — прослушать. Кнопка «Ко всем разделам» возвращает назад.`);
+ safeFn(()=>resetCursor());
+ safeFn(()=>head.focus({preventScroll:true}));
+}
+function closeEncycCat(){
+ buildEncycCats();
+ narrate("Все разделы звуков.");
+ safeFn(()=>resetCursor());
+}
 
 /* CANONICAL GESTURE CORE V9 — единый сенсорный шлюз (исправлены бег и озвучивание при ощупывании) */
 let lastExploreEl=null,lastAnnounced="",lastAnnouncedAt=0;
@@ -2274,9 +2401,11 @@ const GUIDE=[
  "Озвучка — голос читает всё. Эффекты — звуки мира и маяки. Музыка — фон локаций, пролога и боя. Субтитры звуков — подписи для слабослышащих.",
  "Скорость и громкость озвучки, громкость эффектов и музыки, выбор голоса.",
  "Режим ощупывания и тактильный отклик — в разделе доступности. Настройки сохраняются."]},
-{title:"Глава 5. Полное руководство по звукам (87 штук)",body:[
+{title:"Глава 5. Полное руководство по звукам",body:[
  "Кроме синтезированных звуков у игры есть звуковой банк — коллекция записей, разложенная по ролям: море и корабли, земли и погода, глубина подземелий, школы магии, голоса двенадцати богов, события и места. Записи лежат в папке sounds рядом с игрой и подгружаются по мере надобности; если папки нет, игра целиком работает на синтезированных звуках. Весь банк можно послушать в энциклопедии звуков.",
- "Энциклопедия теперь содержит 87 звуков вместо прежних 24 — гораздо больше видов, и все они синтезируются самим браузером без интернета: остановка сети или отсутствие звуковых файлов ничего не сломает.",
+ "Звуки в игре двух родов. Синтезированные сцены строит сам браузер: они работают всегда, даже без интернета и без папки со звуками. Живые записи лежат в папке sounds рядом с игрой и подгружаются по мере надобности; если папки нет, игра целиком переходит на синтез и ничего не ломается.",
+ "Энциклопедия звуков устроена в два уровня, потому что звуков стало слишком много для одного списка. Сначала игра называет разделы: стихии и погода, птицы и звери, голоса чудовищ, именные чудовища, оружие и бой, ресурсы под ногами, голоса жителей, постройки и места, предметы и ремесло, а за ними разделы живых записей — море и корабли, земли и погода, подземелья по глубине, школы магии, боги и знамения, события, места и ремёсла, игровые звуки, шаги, живые записи мира, живые инструменты, оркестр мира, голоса чудовищ и звуковые маяки построек. Свайп ведёт по разделам, двойное касание открывает выбранный, кнопка «Ко всем разделам» возвращает обратно. Так до нужного звука доходишь за десяток свайпов, а не за две сотни.",
+ "Точное число звуков игра называет сама при открытии энциклопедии — оно растёт с каждым пополнением, и держать его в тексте руководства значило бы врать при первом же обновлении.",
  "Именные монстры (18): волк, гоблин-налётчик, тролль, огр-громила, рунный голем, молодой дракон, ледяной василиск, дикий виверн, стенающая банши, медведь-старейшина, песчаный червь-исполин, разгневанный энт, прибрежный кракен, дорожный разбойник, паук-тенетник, песчаный змей, гарпия-охотница, призрак пустоши — у каждого свой рык, вой, шипение или клич.",
  "Оружие (4): меч, кинжал, посох и лук — у каждого свой звук взмаха и попадания. Кинжал звучит быстро и легко, посох — тяжело и с магическим призвуком, лук — натяжением и срывом тетивы.",
  "Локации и погода (11): лес, равнина, горы, болото, пустыня, пещера, море — и отдельно дождь, снегопад, туман, буря, гром, ветер.",
@@ -2375,8 +2504,20 @@ const GUIDE=[
  "Кнопка «Озвучить объекты по расстоянию» перечислит всё важное поблизости."]},
 {title:"Глава 22. Звуковые маяки",body:[
  "Каждый объект мира имеет уникальный короткий звук: замок, таверна, школа, кланхолл, храм, рынок, кузница, башня, руины, деревья, камни, руда, травы, кристаллы, правитель, стражник, торговец и монстры.",
+ "Ресурс под ногами теперь отзывается живой записью, а не синтезом: дерево — шорохом, камень — глухим ударом, руда — резким лязгом, трава и грибы — маримбой поляны, ягоды — колокольчиками, кристалл — кристальным звоном, ракушка — накатом волны, кость — осыпью. У каждой роли по несколько вариантов, поэтому одна и та же жила звучит каждый раз чуть иначе.",
  "Маяки панорамируются по сторонам света: восток справа, запад слева."]},
-{title:"Глава 23. Горячие клавиши и советы",body:[
+{title:"Глава 23. Чем звучит мир",body:[
+ "Мир отвечает звуком на всё, что в нём происходит, и по этим ответам можно читать обстановку, не видя её.",
+ "Земли. У каждой местности свой голос поверх ровного фона: лес отвечает маримбой, топи — калимбой, берег — накатом волны, пещера — низким томом, горы — дальней флейтой, пустыня — сухой струной, равнина — пастушьей свирелью, тракт — банджо. Голос звучит один раз, когда местность сменилась.",
+ "Державы. Пересекая границу, вы слышите рог заставы, а за ним — напев здешней земли: горские волынки, свирель полей, пустынная зурна, островные бочки, придворный клавесин, деревенская дудка, банджо тракта или кото дальних берегов. Восемь держав — восемь голосов.",
+ "Кварталы города. Войдя в квартал, вы слышите, чем здесь заняты, ещё до того как игра назовёт имя: торг звенит колокольцем и цимбалами, кузнечная слобода стучит и лязгает, храмовый конец отвечает колоколом и хором, склады перекликаются мелкой перкуссией, караульный вал идёт под барабан строя, ремесленный конец постукивает верстаками.",
+ "Глубина. Первый ярус подземелья гудит ровно, второй и третий — темнее, четвёртый и ниже — глубинным гулом, и там же начинает биться редкий низкий удар, сердце подземелья. На самом дне слышно Грань: низ разлома, сбой и чужой ветер — три звука, которых нет больше нигде в мире.",
+ "Бой. Крупный противник выходит под литавры, а если земля с кем-то воюет — под набат похода. Нежить приводит с собой хор без тел, громада ступает так, что слышно землю. Четверть здоровья отмечается тёмным роялем, дрожью струн и гулом дурного места. Победа закрывается ударом судьбы.",
+ "Погода. Дождь приходит пеленой, гроза — ветром разлома и литаврами на каждый удар грома, туман и снег — дымкой чар.",
+ "Люди и дороги. Дозор слышно по барабану строя, обоз — по барабану каравана и струне дороги, площадь и турнир — по гулу толпы. Тварь в темноте выдаёт себя раньше, чем покажется: дыханием, крадущимся шагом или шорохом подземной нечисти.",
+ "Магия и находки. У каждой школы свой второй слой: свет вспыхивает благословением, тьма густеет дымкой, лёд звенит колокольчиком, огонь рассыпается искрами. Артефакт отзывается кристаллом и звуком открытой тайны, молитва у алтаря — хором и ореолом бога, новый уровень — фанфарами и одобрительным гулом.",
+ "Ловушки и работа. Ловушка звучит на два такта: щелчок механизма, а за ним осыпь. Кирка по жиле бьёт по-разному: наверху сухой лязг, в глубине — тяжёлый с отзвуком."]},
+{title:"Глава 24. Горячие клавиши и советы",body:[
  "Стрелки — ходьба. Контрол или Альт плюс G — руководство. Контрол или Альт плюс M — меню действий. Альт плюс S — тишина. Эскейп — закрыть.",
  "Играйте в наушниках — стерео-маяки помогут ориентироваться. Удачной охоты, Странник!"]}];
 let chIndex=0;
@@ -2466,6 +2607,12 @@ const EMPIRES=[
 const EMPIRE_BY_SHORT=Object.fromEntries(EMPIRES.map((e,i)=>[e.short,{e,i}]));
 /* Территория империи определяется по ближайшей столице (диаграмма Вороного) —
    так можно добавлять сколько угодно империй без переписывания геометрии карты. */
+/* Голос державы. Пересекая границу, игрок слышит не только рог заставы, но и
+   напев здешних земель: горский волынщик, пустынная зурна, островные бочки,
+   придворный клавесин, деревенская дудка, свирель полей, банджо тракта и
+   струна дальних берегов. Восемь держав — восемь узнаваемых голосов. */
+const EMPIRE_VOICE=["clan_pipes","field_pipe","desert_reed","isle_market",
+ "court_harpsi","village_pipe","road_banjo","far_koto"];
 function empireAt(x,y){let best=EMPIRES[0],bestD=Infinity;
  for(const e of EMPIRES){const dx=x-e.cap.x,dy=y-e.cap.y,d=dx*dx+dy*dy;if(d<bestD){bestD=d;best=e;}}
  return best;}
@@ -3365,7 +3512,10 @@ function meetCaravan(car){
  if(!car)return false;
  curCaravan=car;
  safeFn(()=>{Bank.play("caravan",{seed:car.x+car.y,gain:0.6,maxSec:7});
-  setTimeout(()=>safeFn(()=>Bank.play("clarinet_market",{gain:0.5,maxSec:5})),260);});
+  setTimeout(()=>safeFn(()=>Bank.play("clarinet_market",{gain:0.5,maxSec:5})),260);
+  /* Обоз слышно по шагу: барабан каравана и струна дороги. */
+  setTimeout(()=>safeFn(()=>Bank.play("caravan_drum",{seed:car.x,gain:0.5,maxSec:5})),520);
+  setTimeout(()=>safeFn(()=>Bank.play("caravan_sitar",{seed:car.y,gain:0.45,maxSec:6})),900);});
  const body=document.getElementById("caravanBody"),title=document.getElementById("caravanTitle");
  const day=G.day;
  const buy=car.goods.carry.map(r=>({r,price:Math.max(2,Math.round(citySellPrice(r,car.from,day)*car.kind.mult*0.95))}));
@@ -3664,7 +3814,87 @@ const SOUND_BANK={
  shine:{f:["nat/shine_01.flac"],d:"Блик находки"},
  signal:{f:["nat/signal_01.flac","nat/signal_02.flac"],d:"Сигнал древнего механизма"},
  weird:{f:["nat/weird_01.flac","nat/weird_02.flac"],d:"Морок: чужое место"},
- bell_field:{f:["nat/bell_field_01.flac"],d:"Било в поле: тревога у стен"}};const Bank={
+ bell_field:{f:["nat/bell_field_01.flac"],d:"Било в поле: тревога у стен"},
+/* ── ОРКЕСТРОВЫЙ БАНК И НОВЫЕ УДАРНЫЕ ──
+   Сто пятьдесят шесть записей, добавленных, чтобы мир звучал не только
+   синтезом: литавры и набат войны, храмовый колокол, орган и хор, свирели
+   и волынки народов, базарные барабаны, гулы разлома и стихии. Оркестровая
+   часть — Creative Commons Attribution 3.0 (FluidR3_GM), ударные и гулы —
+   общественное достояние CC0. Указание авторства дано в энциклопедии и в
+   файлах sounds/orch/CREDITS.md и sounds/nat/CREDITS.md. ── */
+ beast_breath:{f:["orch/beast_breath_01.mp3","orch/beast_breath_02.mp3"],d:"Дыхание твари: воздух сквозь пасть"},
+ caravan_sitar:{f:["orch/caravan_sitar_01.mp3","orch/caravan_sitar_02.mp3"],d:"Ситар каравана: дорога через пески"},
+ charm_bell:{f:["orch/charm_bell_01.mp3","orch/charm_bell_02.mp3"],d:"Колокольчик чар: тонкий звон заклятья"},
+ charm_celesta:{f:["orch/charm_celesta_01.mp3","orch/charm_celesta_02.mp3","orch/charm_celesta_03.mp3"],d:"Челеста чар: хрустальная россыпь магии"},
+ chase_tremolo:{f:["orch/chase_tremolo_01.mp3","orch/chase_tremolo_02.mp3","orch/chase_tremolo_03.mp3"],d:"Тремоло погони: дрожь струн в тревоге"},
+ clan_pipes:{f:["orch/clan_pipes_01.mp3","orch/clan_pipes_02.mp3"],d:"Клановые волынки: горный марш"},
+ collapse:{f:["orch/collapse_01.mp3","orch/collapse_02.mp3"],d:"Обвал: резкий удар и осыпь"},
+ court_harpsi:{f:["orch/court_harpsi_01.mp3","orch/court_harpsi_02.mp3","orch/court_harpsi_03.mp3"],d:"Клавесин двора: замковая учтивость"},
+ craft_knock:{f:["orch/craft_knock_01.mp3","orch/craft_knock_02.mp3"],d:"Стук ремесла: деревянный щелчок верстака"},
+ crowd_cheer:{f:["orch/crowd_cheer_01.mp3","orch/crowd_cheer_02.mp3"],d:"Гул толпы: площадь, турнир, ликование"},
+ dawn_birds:{f:["orch/dawn_birds_01.mp3","orch/dawn_birds_02.mp3"],d:"Рассветные птицы: первый голос утра"},
+ deep_tom:{f:["orch/deep_tom_01.mp3","orch/deep_tom_02.mp3","orch/deep_tom_03.mp3"],d:"Подземный удар: гулкий том в толще камня"},
+ desert_reed:{f:["orch/desert_reed_01.mp3","orch/desert_reed_02.mp3"],d:"Пустынная зурна: пронзительный напев"},
+ dream_vibe:{f:["orch/dream_vibe_01.mp3","orch/dream_vibe_02.mp3","orch/dream_vibe_03.mp3"],d:"Вибрафон снов: сонное марево"},
+ epic_strings:{f:["orch/epic_strings_01.mp3","orch/epic_strings_02.mp3","orch/epic_strings_03.mp3"],d:"Струнный ансамбль: широкое дыхание мира"},
+ far_flute:{f:["orch/far_flute_01.mp3","orch/far_flute_02.mp3"],d:"Флейта дальних земель: сякухати"},
+ far_koto:{f:["orch/far_koto_01.mp3","orch/far_koto_02.mp3"],d:"Кото чужих берегов: щипок далёкой струны"},
+ far_shamisen:{f:["orch/far_shamisen_01.mp3","orch/far_shamisen_02.mp3"],d:"Сямисэн чужих берегов: сухой перебор"},
+ fate_hit:{f:["orch/fate_hit_01.mp3","orch/fate_hit_02.mp3"],d:"Удар судьбы: оркестровый акцент поворота"},
+ field_pipe:{f:["orch/field_pipe_01.mp3","orch/field_pipe_02.mp3","orch/field_pipe_03.mp3"],d:"Пастушья свирель: поля и стада"},
+ fx_blessing:{f:["orch/fx_blessing_01.mp3","orch/fx_blessing_02.mp3"],d:"Благословение: светлая вспышка"},
+ fx_crystal:{f:["orch/fx_crystal_01.mp3","orch/fx_crystal_02.mp3"],d:"Кристальный звон: жила и артефакт"},
+ fx_echo:{f:["orch/fx_echo_01.mp3","orch/fx_echo_02.mp3"],d:"Эхо: отклик пустого пространства"},
+ fx_haze:{f:["orch/fx_haze_01.mp3","orch/fx_haze_02.mp3"],d:"Дымка чар: воздух густеет"},
+ fx_lurk:{f:["orch/fx_lurk_01.mp3","orch/fx_lurk_02.mp3"],d:"Нечисть рядом: крадущийся шорох подземелья"},
+ fx_omen:{f:["orch/fx_omen_01.mp3","orch/fx_omen_02.mp3"],d:"Знамение: далёкая тема судьбы"},
+ fx_rain:{f:["orch/fx_rain_01.mp3","orch/fx_rain_02.mp3"],d:"Дождевая пелена: магия воды"},
+ fx_rift:{f:["orch/fx_rift_01.mp3","orch/fx_rift_02.mp3"],d:"Разлом Грани: чужой звук из-за края"},
+ gate_fanfare:{f:["orch/gate_fanfare_01.mp3","orch/gate_fanfare_02.mp3","orch/gate_fanfare_03.mp3"],d:"Фанфары ворот: медь встречает гостя"},
+ ghost_choir:{f:["orch/ghost_choir_01.mp3","orch/ghost_choir_02.mp3","orch/ghost_choir_03.mp3"],d:"Призрачный хор: голоса без тел"},
+ giant_step:{f:["orch/giant_step_01.mp3","orch/giant_step_02.mp3"],d:"Поступь громады: шаг тяжёлой твари"},
+ glade_marimba:{f:["orch/glade_marimba_01.mp3","orch/glade_marimba_02.mp3","orch/glade_marimba_03.mp3"],d:"Маримба поляны: тёплое дерево леса"},
+ guard_whistle:{f:["orch/guard_whistle_01.mp3","orch/guard_whistle_02.mp3"],d:"Свисток стражи: сигнал по улице"},
+ isle_market:{f:["orch/isle_market_01.mp3","orch/isle_market_02.mp3","orch/isle_market_03.mp3"],d:"Островной торг: стальные бочки причала"},
+ market_agogo:{f:["orch/market_agogo_01.mp3","orch/market_agogo_02.mp3"],d:"Рыночный колокольчик: зазывный перезвон"},
+ market_dulcimer:{f:["orch/market_dulcimer_01.mp3","orch/market_dulcimer_02.mp3"],d:"Цимбалы рынка: перезвон меняльных рядов"},
+ omen_swell:{f:["orch/omen_swell_01.mp3","orch/omen_swell_02.mp3"],d:"Предвестие: нарастающий шелест перед знамением"},
+ pad_dread:{f:["orch/pad_dread_01.mp3","orch/pad_dread_02.mp3"],d:"Дурное место: смычковый гул тревоги"},
+ pad_halo:{f:["orch/pad_halo_01.mp3","orch/pad_halo_02.mp3"],d:"Ореол бога: светлый купол звука"},
+ pad_hearth:{f:["orch/pad_hearth_01.mp3","orch/pad_hearth_02.mp3"],d:"Тепло очага: гул обжитого дома"},
+ pad_rift:{f:["orch/pad_rift_01.mp3","orch/pad_rift_02.mp3"],d:"Ветер Грани: протяжный переход"},
+ pad_sanctum:{f:["orch/pad_sanctum_01.mp3","orch/pad_sanctum_02.mp3"],d:"Святилище: хоровая подложка"},
+ road_banjo:{f:["orch/road_banjo_01.mp3","orch/road_banjo_02.mp3"],d:"Банджо тракта: попутная песня"},
+ ruin_ocarina:{f:["orch/ruin_ocarina_01.mp3","orch/ruin_ocarina_02.mp3"],d:"Окарина руин: пустой ветер камня"},
+ rustle:{f:["orch/rustle_01.mp3","orch/rustle_02.mp3"],d:"Шорох: пальцы по струне, ткань, листва"},
+ secret_box:{f:["orch/secret_box_01.mp3","orch/secret_box_02.mp3"],d:"Музыкальная шкатулка: спрятанная тайна"},
+ shore_wash:{f:["orch/shore_wash_01.mp3","orch/shore_wash_02.mp3"],d:"Накат на берег: прибой у самой кромки"},
+ sneak_pizz:{f:["orch/sneak_pizz_01.mp3","orch/sneak_pizz_02.mp3"],d:"Пиццикато крадущегося: шаг на цыпочках"},
+ spark_glock:{f:["orch/spark_glock_01.mp3","orch/spark_glock_02.mp3","orch/spark_glock_03.mp3"],d:"Искры магии: колокольчики заклинания"},
+ swamp_kalimba:{f:["orch/swamp_kalimba_01.mp3","orch/swamp_kalimba_02.mp3"],d:"Калимба топей: капли по железным язычкам"},
+ tavern_fiddle:{f:["orch/tavern_fiddle_01.mp3","orch/tavern_fiddle_02.mp3","orch/tavern_fiddle_03.mp3"],d:"Скрипка таверны: пляска у очага"},
+ temple_bell:{f:["orch/temple_bell_01.mp3","orch/temple_bell_02.mp3","orch/temple_bell_03.mp3"],d:"Храмовый колокол: трубчатый звон святыни"},
+ temple_choir:{f:["orch/temple_choir_01.mp3","orch/temple_choir_02.mp3","orch/temple_choir_03.mp3"],d:"Хор храма: живые голоса под куполом"},
+ temple_organ:{f:["orch/temple_organ_01.mp3","orch/temple_organ_02.mp3","orch/temple_organ_03.mp3"],d:"Орган храма: полный аккорд под сводами"},
+ village_pipe:{f:["orch/village_pipe_01.mp3","orch/village_pipe_02.mp3"],d:"Деревенская дудка: простой напев"},
+ war_taiko:{f:["orch/war_taiko_01.mp3","orch/war_taiko_02.mp3","orch/war_taiko_03.mp3"],d:"Набат войны: тяжёлый барабан похода"},
+ war_timpani:{f:["orch/war_timpani_01.mp3","orch/war_timpani_02.mp3","orch/war_timpani_03.mp3"],d:"Литавры битвы: раскат перед сшибкой"},
+ bazaar_drum:{f:["nat/bazaar_drum_01.flac","nat/bazaar_drum_02.flac","nat/bazaar_drum_03.flac"],d:"Базарный барабан: ладонь по коже"},
+ bazaar_loop:{f:["nat/bazaar_loop_01.flac"],d:"Ритм базара: непрерывный табла-ход"},
+ caravan_drum:{f:["nat/caravan_drum_01.flac","nat/caravan_drum_02.flac"],d:"Барабан каравана: шаг верблюжьего хода"},
+ clang_hard:{f:["nat/clang_hard_01.flac"],d:"Резкий лязг: удар по щиту"},
+ clang_pedal:{f:["nat/clang_pedal_01.flac"],d:"Затухающий лязг: тарелка под ногой"},
+ clang_soft:{f:["nat/clang_soft_01.flac"],d:"Тихий лязг: металл о металл"},
+ clang_splash:{f:["nat/clang_splash_01.flac"],d:"Всплеск металла: широкий удар"},
+ deep_thud:{f:["nat/deep_thud_01.flac","nat/deep_thud_02.flac","nat/deep_thud_03.flac","nat/deep_thud_04.flac"],d:"Глухой удар в глубине: камень о камень"},
+ drone_calm:{f:["nat/drone_calm_01.flac"],d:"Спокойный гул: ровное место"},
+ drone_dark:{f:["nat/drone_dark_01.flac"],d:"Тёмный гул: место с недоброй памятью"},
+ drone_deep:{f:["nat/drone_deep_01.flac"],d:"Глубинный гул: нижние уровни"},
+ dungeon_heart:{f:["nat/dungeon_heart_01.flac"],d:"Сердце подземелья: редкий низкий удар"},
+ guard_march:{f:["nat/guard_march_01.flac","nat/guard_march_02.flac"],d:"Строй стражи: барабан на марше"},
+ market_perc:{f:["nat/market_perc_01.flac","nat/market_perc_02.flac"],d:"Перкуссия рынка: россыпь мелких ударов"},
+ rift_bass:{f:["nat/rift_bass_01.flac"],d:"Низ разлома: бас из-за Грани"},
+ rift_tick:{f:["nat/rift_tick_01.flac"],d:"Тик разлома: сбой в ткани мира"},};const Bank={
  base:"sounds/",
  enabled:true,          /* выключается, только если ни одна запись так и не загрузилась */
  fails:0,plays:0,       /* счётчики: банк «отсутствует», лишь когда всё подряд не читается */
@@ -3885,6 +4115,15 @@ const BEACON_SAMPLE={
  cave_entrance:"inst/bassoon_ruins_01.mp3", port:"inst/contrabass_deep_01.mp3",
  traveler:"inst/violin_road_01.mp3", city:"inst/horn_castle_01.mp3",
  caravan:"inst/clarinet_market_01.mp3", school:"inst/harp_light_01.mp3"};
+/* Маяк по РОЛИ, а не по одному файлу: у роли несколько записей, и объект
+   звучит каждый раз чуть иначе — мир перестаёт быть шарманкой. Роль ищется
+   раньше одиночного файла, поэтому здесь живут те маяки, у которых записей
+   несколько. Ресурсы под ногами до сих пор звучали только синтезом: теперь
+   у каждого своя живая запись. */
+const BEACON_ROLE={
+ res_tree:"rustle", res_stone:"deep_thud", res_ore:"clang_hard",
+ res_herbs:"glade_marimba", res_berry:"spark_glock", res_crystal:"fx_crystal",
+ res_shell:"shore_wash", res_bone:"collapse"};
 
 /* ── ГОЛОСА ДВЕНАДЦАТИ БОГОВ ──
    У каждого бога теперь своя живая нота: арфа зари, туба горна, флейта луны,
@@ -4634,6 +4873,8 @@ function dayPhaseCue(){
   if(!settings.effects&&!settings.speech)return;
   if(phase==="day"){
    safeFn(()=>Bank.play("flute_dawn",{gain:0.6,maxSec:6}));
+   /* Утро начинается с птиц: их слышно раньше, чем игра назовёт день. */
+   safeFn(()=>Bank.play("dawn_birds",{seed:G.day,gain:0.5,maxSec:6}));
    narrate(`Рассвет. Пошёл ${G.day}-й день пути.`,{interrupt:false});
   }else{
    safeFn(()=>Bank.play("bassoon_dusk",{gain:0.6,maxSec:6}));
@@ -5320,6 +5561,9 @@ function maybeEvent(trigger){
 }
 function openEvent(e,c){
  curEvent={e,c,choices:e.choices(c)};
+ /* Предвестие: мир набирает воздух перед тем, как что-то случится. */
+ safeFn(()=>{Bank.play("omen_swell",{seed:Date.now(),gain:0.5,maxSec:5});
+  setTimeout(()=>safeFn(()=>Bank.play("fx_omen",{seed:Date.now(),gain:0.4,maxSec:6})),450);});
  const body=document.getElementById("eventBody");
  const title=document.getElementById("eventTitle");
  if(!body||!title){/* окна нет — событие просто рассказывается */ narrate(e.text(c));curEvent=null;return;}
@@ -5327,7 +5571,8 @@ function openEvent(e,c){
  body.innerHTML=`<div class="list-line" tabindex="0" data-speak="${(e.title(c)+". "+e.text(c)).replace(/"/g,"&quot;")}">${e.text(c)}</div>`+
   curEvent.choices.map((ch,i)=>`<button class="item" data-cmd="evt:${i}" data-speak="${String(ch.l).replace(/"/g,"&quot;")}">${ch.l}</button>`).join("");
  openModal("modal-event");
- safeFn(()=>{beacon("portal",0,0);UI.open();});
+ safeFn(()=>{beacon("portal",0,0);UI.open();
+  Bank.play("pad_rift",{seed:Date.now(),gain:0.5,maxSec:7});});
  narrate(`${e.title(c)}. ${e.text(c)} Вариантов: ${curEvent.choices.length}. Свайп — листать, двойное касание — выбрать.`);
 }
 function resolveEvent(i){
@@ -5622,6 +5867,13 @@ const QUARTER_DB={
  B:["Караульный вал","Копейный двор","Дозорная слобода","Оружная башня","Заставный конец","Щитовой ряд","Сторожевой посад"],
  N:["Ткацкая слобода","Гончарный конец","Рыбацкий посад","Кожевенный ряд","Пекарный двор","Бондарная слобода","Плотницкий вал"]};
 /* Чем этот квартал занят — для описания и для эхо-скана. */
+/* Голос квартала: войдя в него, игрок слышит, чем здесь заняты, ещё до того
+   как игра назовёт имя. Торг звенит колокольцем и цимбалами, кузня стучит,
+   храм отвечает колоколом, склады перекликаются мелкой перкуссией, караул
+   идёт под барабан, ремесленный конец постукивает верстаками. */
+const QUARTER_SOUND={S:["market_agogo","market_dulcimer"],F:["craft_knock","clang_hard"],
+ A:["temple_bell","temple_choir"],C:["market_perc","bazaar_drum"],
+ B:["guard_march","guard_whistle"],N:["craft_knock","market_perc"]};
 const QUARTER_TRADE={S:"торг",F:"кузнечное дело",A:"храмовое служение",
  C:"склады и подвалы",B:"стража",N:"ремёсла и жильё"};
 /* Особый квартал: один на город, со своим делом и своей находкой. */
@@ -6008,6 +6260,10 @@ function enterPlace(c){
  const lvl=genLevel(c.x,c.y,depth,stype);
  G.place={kind,bx:c.x,by:c.y,stype,name:c.structure.name,depth,x:lvl.entry.x,y:lvl.entry.y};
  safeFn(()=>beacon(kind==="city"?"city":kind==="dungeon"?"dungeon":"house",0,0));
+ /* Порог слышен: город встречает медью ворот, подземелье — глухим гулом,
+    жилой дом — теплом очага. */
+ safeFn(()=>Bank.play(kind==="city"?"gate_fanfare":kind==="dungeon"?"drone_dark":"pad_hearth",
+  {seed:c.x+c.y,gain:0.5,maxSec:6}));
  /* Порог каждого места звучит по-своему: в таверне берут струну, в храме
     вступает орган, в руинах отзывается фагот. */
  safeFn(()=>{const tone={tavern:"lute_tavern",temple:"organ_temple",clanhall:"trombone_war",
@@ -6052,6 +6308,18 @@ function changeDepth(delta){
  if(nd>MAX_DEPTH){narrate("Глубже хода нет: дальше сплошной камень.");return false;}
  const lvl=genLevel(p.bx,p.by,nd,p.stype);
  p.depth=nd;p.x=lvl.entry.x;p.y=lvl.entry.y;
+ /* Глубину слышно: верх — ровный гул, середина — тёмный, низ — глубинный,
+    и там же начинает биться редкий низкий удар, «сердце подземелья». */
+ safeFn(()=>{const d=p.depth;
+  if(d>0)Bank.play(d>=4?"drone_deep":d>=2?"drone_dark":"drone_calm",{seed:d,gain:0.5,maxSec:9});
+  if(d>=3)setTimeout(()=>safeFn(()=>Bank.play("dungeon_heart",{seed:d,gain:0.45,maxSec:6})),1200);
+  /* На самом дне Грань близко: сквозь камень пробивается то, что за краем.
+     Низ, сбой и чужой ветер — три звука, которых нет больше нигде в мире. */
+  if(d>=MAX_DEPTH){
+   setTimeout(()=>safeFn(()=>Bank.play("rift_bass",{seed:d,gain:0.5,maxSec:6})),1800);
+   setTimeout(()=>safeFn(()=>Bank.play("rift_tick",{seed:d,gain:0.4,maxSec:4})),2600);
+   setTimeout(()=>safeFn(()=>Bank.play("fx_rift",{seed:d,gain:0.45,maxSec:7})),3200);
+   narrate("Здесь Грань совсем близко: камень отвечает не своим голосом.",{interrupt:false});}});
  if(nd>0&&p.kind!=="dungeon")p.kind="dungeon";
  if(nd===0)p.kind=PLACE_KIND[p.stype]||"house";
  safeFn(()=>beacon(delta>0?"stairs_down":"stairs_up",0,0));
@@ -6170,6 +6438,10 @@ function moveInside(dir){
   if(changed)p.zone=zone;
   narrate((changed?`${zone[0].toUpperCase()+zone.slice(1)}. `:"")+describeHere(false),{interrupt:true});
   if(changed){
+   /* Голос квартала звучит раньше рассказа о нём. */
+   safeFn(()=>{const b=blockAt(p.x,p.y);
+    const set=b&&QUARTER_SOUND[b.purpose];
+    if(set)Bank.play(set[Math.floor(Math.random()*set.length)],{seed:p.x+p.y,gain:0.5,maxSec:6});});
    const lore=safeFn(()=>quarterLore(p.x,p.y),null);
    if(lore){safeFn(()=>Bank.play("shine",{gain:0.5,maxSec:4}));
     setTimeout(()=>narrate(lore,{interrupt:false}),900);}}}
@@ -6263,8 +6535,15 @@ const Actors={
    const a=nearest.a,dir=dirBetween(a.x-p.x,a.y-p.y)||"вплотную";
    if(a.kind==="mob"){
     safeFn(()=>Bank.play("contrabass_dread",{gain:0.6,maxSec:5}));
+    /* Тварь выдаёт себя раньше, чем покажется: дыхание, крадущийся шаг,
+       шорох подземной нечисти. Что именно — решает случай, чтобы
+       предупреждение не превратилось в один заученный сигнал. */
+    safeFn(()=>{const cue=["beast_breath","sneak_pizz","fx_lurk"][Math.floor(Math.random()*3)];
+     setTimeout(()=>safeFn(()=>Bank.play(cue,{seed:a.x+a.y,gain:0.5,maxSec:5})),320);});
     narrate(`Рядом кто-то движется: ${a.name}, ${nearest.d} ${plural(nearest.d,"шаг","шага","шагов")}, ${dir}.`,{interrupt:false});}
    else if(a.kind==="guard"){
+    /* Дозор слышно по шагу строя, а не только по голосу. */
+    safeFn(()=>Bank.play("guard_march",{seed:a.x+a.y,gain:0.45,maxSec:4}));
     const race=safeFn(()=>(EMPIRES[empireIndexAt(G.place.bx,G.place.by)]||EMPIRES[0]).race,null);
     const att=race?safeFn(()=>attitudeOf(race),null):null;
     const line=att&&att.id==="friend"?"Доброго дня. Если что — зовите."
@@ -6377,7 +6656,8 @@ function useHere(){
   case "G":return leavePlace();
   case "C":return openChest(p.x,p.y);
   case "R":return mineVein(p.x,p.y);
-  case "A":return useAltar(p.x,p.y);
+  case "A":safeFn(()=>Bank.play("pad_sanctum",{seed:p.x+p.y,gain:0.4,maxSec:8}));
+   return useAltar(p.x,p.y);
   case "S":case "F":case "N":case "P":case "B":return talkInside(t,p.x,p.y);
   case "L":return pigeonPost();
   case "W":{G.water=Math.min(200,(Number(G.water)||0)+40);safeFn(()=>beacon("well",0,0));
@@ -6434,7 +6714,10 @@ function openChest(x,y){
  if(trapped){
   const dmg=4+Math.floor(H(x,y,807)*6)+p.depth*2;
   G.hp=Math.max(1,G.hp-dmg);
-  safeFn(()=>{Bank.play("trap",{seed:x+y,gain:0.9});Bank.play("mechanism",{seed:x+y,gain:0.6,maxSec:4});UI.hit();vib([40,60,40]);});
+  safeFn(()=>{Bank.play("trap",{seed:x+y,gain:0.9});Bank.play("mechanism",{seed:x+y,gain:0.6,maxSec:4});
+   /* За щелчком идёт осыпь: ловушка звучит на два такта. */
+   setTimeout(()=>safeFn(()=>Bank.play("collapse",{seed:x+y,gain:0.6,maxSec:4})),260);
+   UI.hit();vib([40,60,40]);});
   narrate(`Ловушка! Крышка была на взводе: −${dmg} здоровья.`,{interrupt:true});}
  safeFn(()=>{Bank.play("treasure",{seed:x+y,gain:0.7,maxSec:6});
   setTimeout(()=>safeFn(()=>Bank.play("shine",{gain:0.5,maxSec:4})),260);});
@@ -6464,6 +6747,9 @@ function openChest(x,y){
 function mineVein(x,y){
  if(placeMark(x,y)==="empty"){narrate("Жила выработана.");return false;}
  const p=G.place;
+ /* Кирка бьёт по-разному: наверху сухой лязг, в глубине — тяжёлый с отзвуком. */
+ safeFn(()=>Bank.play(p.depth>=3?"clang_splash":p.depth>0?"clang_pedal":"clang_soft",
+  {seed:x+y,gain:0.55,maxSec:4}));
  const pool=p.depth>0?["руда","кристалл","камень","кость"]:["камень","дерево","трава"];
  /* Особый квартал города кладёт свою жилу: у стеклодувов кристалл, у
     лекарей травы, у костерезов кость. Такая жила знает, чем она богата. */
@@ -6485,6 +6771,9 @@ function useAltar(x,y){
  const g=altarGod(x,y);
  safeFn(()=>beacon("altar",0,0));
  safeFn(()=>Bank.play("altar",{seed:x+y,gain:0.7,maxSec:8}));
+ /* Живые голоса под сводом: хор отвечает молитве, ореол бога держит ноту. */
+ safeFn(()=>{Bank.play("temple_choir",{seed:x+y,gain:0.55,maxSec:8});
+  setTimeout(()=>safeFn(()=>Bank.play("pad_halo",{seed:x+y,gain:0.4,maxSec:8})),700);});
  /* Под землёй у святилища низкий гул: свод давит, и звук идёт иначе. */
  if(G.place&&G.place.depth>0)safeFn(()=>Bank.play("harmonium_low",{seed:x+y,gain:0.5,maxSec:8}));
  /* Алтарь отвечает голосом того бога, которому он посвящён. */
@@ -6515,6 +6804,11 @@ function talkInside(t,x,y){
  const profForced=t==="S"?"Торговец":t==="F"?"Кузнец":t==="P"?"Торговец":t==="B"?"Стражник":null;
  const role=t==="S"?"market":t==="F"?"forge":t==="P"?"shop_till":t==="B"?"step_soft":"tavern";
  safeFn(()=>Bank.play(role,{seed:x+y,gain:0.55,maxSec:6}));
+ /* Второй слой места: очаг таверны отвечает скрипкой, пост стражи — свистком,
+    горн — стуком верстака, лавка — цимбалами меняльного ряда. */
+ safeFn(()=>{const extra=t==="S"?"market_dulcimer":t==="F"?"craft_knock":
+  t==="P"?"market_perc":t==="B"?"guard_whistle":"tavern_fiddle";
+  setTimeout(()=>safeFn(()=>Bank.play(extra,{seed:x+y,gain:0.45,maxSec:5})),420);});
  /* Живой инструмент места поверх шума: лавка — кларнет, горн — туба,
     жилая комната — лютня, подземный торг — кларнет теней. */
  const tone=t==="S"?"clarinet_market":t==="F"?"tuba_forge":t==="P"?"clarinet_shadow":t==="B"?null:"lute_tavern";
@@ -6605,12 +6899,22 @@ function arrive(dir){
   const a=AMB[c.terrain[0]]||["wind"];
   if(settings.effects){Play.start("amb0",a[0],{loop:true});
    if(a[1])Play.start("amb1",a[1],{loop:true});}
+  /* У каждой местности свой живой голос поверх ровного фона: лес отвечает
+     маримбой, топи — калимбой, берег — накатом, пещера — глубинным томом,
+     горы — эхом, пустыня — сухой флейтой, равнина — свирелью полей. */
+  if(terrChanged)safeFn(()=>{const v={forest:"glade_marimba",swamp:"swamp_kalimba",
+   coast:"shore_wash",cave:"deep_tom",mountains:"far_flute",desert:"far_shamisen",
+   plains:"field_pipe",road:"road_banjo"}[c.terrain[0]];
+   if(v)setTimeout(()=>safeFn(()=>Bank.play(v,{seed:G.x+G.y,gain:0.45,maxSec:6})),400);});
   const empChanged=lastEmp!==c.empire.name;
   Music.start(c.terrain[0]);safeFn(()=>bankUpdateAmbient());lastEmp=c.empire.name;
   /* Пересекая границу, игрок узнаёт, чья это земля, чьи народы её населяют,
      кому здесь молятся и с кем эта держава воюет. */
   /* Пересечение границы объявляется валторной, как рог заставы. */
   if(empChanged)safeFn(()=>Bank.play("horn_gate",{gain:0.6,maxSec:6}));
+  if(empChanged)safeFn(()=>{const i=Math.max(0,EMPIRES.indexOf(c.empire));
+   setTimeout(()=>safeFn(()=>Bank.play(EMPIRE_VOICE[i%EMPIRE_VOICE.length],
+    {seed:i,gain:0.5,maxSec:6})),700);});
   if(empChanged)safeFn(()=>{const e=c.empire,i=Math.max(0,EMPIRES.indexOf(e)),g=GOD_BY_ID[e.god];
    const w=warsAt(G.day).filter(x=>x.a===i||x.b===i);
    narrate(`Земли: ${e.name}. Народы: ${(e.races||[e.race]).slice(0,4).join(", ")}. Здесь чтут: ${g?g.n:"разных богов"}. `+
@@ -6716,11 +7020,16 @@ function rollWeather(){const r=Math.random();
  return r<0.4?"Ясно":r<0.55?"Облачно":r<0.75?"Дождь":r<0.9?"Ветрено":"Гроза";}
 const Weather={cur:null,timer:null,
  set(w){this.clear();this.cur=w;
+  /* Живая запись поверх синтеза: погода перестала быть ровным шумом. */
+  safeFn(()=>{const r={"Дождь":"fx_rain","Гроза":"pad_rift","Туман":"fx_haze",
+   "Снег":"fx_haze","Ветрено":"pad_rift"}[w];
+   if(r)Bank.play(r,{seed:Date.now(),gain:0.45,maxSec:9});});
   if(w==="Дождь")Play.start("w1","rain",{loop:true});
   if(w==="Ветрено")Play.start("w1","wind",{loop:true});
   if(w==="Гроза"){Play.start("w1","rain",{loop:true});Play.start("w2","wind",{loop:true});
    const strike=()=>{if(this.cur!=="Гроза")return;
-    Play.start("ev","thunder",{dur:6});vib(60);sub("⛈️ Удар грома");
+    Play.start("ev","thunder",{dur:6});safeFn(()=>Bank.play("war_timpani",{seed:Date.now(),gain:0.55,maxSec:5}));
+    vib(60);sub("⛈️ Удар грома");
     this.timer=setTimeout(strike,8000+Math.random()*14000);};
    this.timer=setTimeout(strike,2500);}},
  clear(){clearTimeout(this.timer);["w1","w2"].forEach(k=>Play.stopKey(k));}};
@@ -6759,12 +7068,24 @@ function startCombat(c){
  const bar=document.getElementById("combatBar");if(bar)bar.hidden=false;
  safeFn(()=>playMonsterSound(m));
  safeFn(()=>playRealMonsterCue(m,"emerge",0.65));
+ /* Нежить приходит с голосами без тел. */
+ if(["wraith","banshee","ghost"].includes(m.id))
+  safeFn(()=>setTimeout(()=>safeFn(()=>Bank.play("ghost_choir",{seed:m.lvl,gain:0.5,maxSec:6})),320));
+ /* Громада ступает так, что слышно землю. */
+ if(["golem","troll","ogre","treant","direbear"].includes(m.id))
+  safeFn(()=>setTimeout(()=>safeFn(()=>Bank.play("giant_step",{seed:m.lvl,gain:0.55,maxSec:4})),260));
  /* Чем крупнее противник, тем ниже голос, которым мир его объявляет:
     туба для громад, виолончель для опасных, ничего лишнего для мелочи. */
  safeFn(()=>{const big=(Number(m.lvl)||1)>=Math.max(6,G.level+3);
   const mid=(Number(m.lvl)||1)>=G.level;
   if(big)setTimeout(()=>safeFn(()=>Bank.play("tuba_boss",{seed:m.lvl,gain:0.75,maxSec:6})),200);
-  else if(mid)setTimeout(()=>safeFn(()=>Bank.play("cello_danger",{gain:0.55,maxSec:5})),240);});
+  else if(mid)setTimeout(()=>safeFn(()=>Bank.play("cello_danger",{gain:0.55,maxSec:5})),240);
+  /* Литавры на крупного противника; в воюющей земле — набат похода. */
+  if(big)setTimeout(()=>safeFn(()=>Bank.play("war_timpani",{seed:m.lvl,gain:0.6,maxSec:5})),420);
+  /* «Воюющая земля» — та, у которой хоть с одним соседом война. */
+  const war=safeFn(()=>{const i=empireIndexAt(G.x,G.y);
+   return EMPIRES.some((_,j)=>j!==i&&relationWord(relationAt(i,j,G.day))==="война");},false);
+  if(war)setTimeout(()=>safeFn(()=>Bank.play("war_taiko",{seed:G.day,gain:0.5,maxSec:5})),640);});
  document.getElementById("cbTitle").textContent=`⚔️ ${m.n}, уровень ${m.lvl}`;
  if(G.combat)G.combat.monsterTimer=setTimeout(function pulse(){
   if(!G.inCombat||!G.combat)return;
@@ -6870,6 +7191,8 @@ function fight(a){const cb=G.combat;if(!cb)return;const m=cb.m;
     в непрерывный набат, но услышать её важно — дальше только бегство. */
  safeFn(()=>{const q=Math.max(1,Math.round(G.hpMax*0.25));
   if(hpBefore>q&&G.hp<=q){Bank.play("piano_dark",{gain:0.7,maxSec:6});
+   setTimeout(()=>safeFn(()=>Bank.play("chase_tremolo",{gain:0.55,maxSec:5})),300);
+   setTimeout(()=>safeFn(()=>Bank.play("pad_dread",{gain:0.45,maxSec:6})),800);
    narrate("Здоровье на исходе: четверть и меньше. Зелье или бегство.",{interrupt:false});}});
  if(!safeFn(()=>playRealMonsterCue(m,"attack",0.7),false))playMonsterSound(m);
   if(cb.ai?.chase&&Math.random()<cb.ai.chase){sub(`${m.n} преследует вас.`);}
@@ -6930,6 +7253,7 @@ function victory(){const cb=G.combat,m=cb.m;
  G.loot=loot;
  endCombat();
  const lootNames=loot.filter(l=>l.type==="mat").map(l=>l.name).join(", ");
+ safeFn(()=>Bank.play("fate_hit",{seed:m.lvl,gain:0.55,maxSec:4}));
  let txt=`Победа! Опыт +${m.xp}. Добыча лежит на вашей клетке: золото ${m.gold}, ${lootNames}`;
  if(loot.find(l=>l.type==="gear"))txt+=", предмет экипировки";
  txt+='. Двойное касание одним пальцем соберёт всю добычу.';
@@ -6997,7 +7321,10 @@ function checkLevelUp(){let leveled=false;
   G.hpMax+=10;G.hp=G.hpMax;G.str++;G.agi++;G.mind++;G.cha++;G.manaMax+=5;G.mana=G.manaMax;}
  if(leveled){UI.fanfare();vib([60,80,60]);safeFn(()=>{Bank.play("jingle_achievement",{gain:0.85});Bank.play("levelup",{seed:G.level,gain:0.5,maxSec:8});
    /* Арфа поднимается тремя нотами — слышно, что вырос именно уровень. */
-   [0,220,440].forEach((d,i)=>setTimeout(()=>safeFn(()=>Bank.play("harp_light",{seed:i,gain:0.7,maxSec:4})),d));});
+   [0,220,440].forEach((d,i)=>setTimeout(()=>safeFn(()=>Bank.play("harp_light",{seed:i,gain:0.7,maxSec:4})),d));
+   /* Мир отзывается на рост: медь и одобрительный гул. */
+   setTimeout(()=>safeFn(()=>Bank.play("gate_fanfare",{seed:G.level,gain:0.6,maxSec:6})),300);
+   setTimeout(()=>safeFn(()=>Bank.play("crowd_cheer",{seed:G.level,gain:0.4,maxSec:5})),900);});
   narrate(`Новый уровень! Теперь вы ${G.level} уровня. Здоровье и характеристики выросли.`);
   journal(`Уровень ${G.level}!`);}}
 
@@ -7052,6 +7379,9 @@ function gatherCurrent(source="tap"){
 function findArtifact(){const ART=["Осколок Зари","Шёпот Ветра","Слеза Дракона","Сердце Бури","Песнь Грани"];
  const n=ART[Math.floor(Math.random()*ART.length)]+" "+(100+Math.random()*900|0);
  G.artifacts.push(n);G.manaMax+=5;G.mana=G.manaMax;
+ /* Артефакт отзывается кристаллом, а за ним — звук открытой тайны. */
+ safeFn(()=>{Bank.play("fx_crystal",{seed:G.artifacts.length,gain:0.6,maxSec:6});
+  setTimeout(()=>safeFn(()=>Bank.play("secret_box",{seed:G.artifacts.length,gain:0.5,maxSec:6})),600);});
  UI.fanfare();safeFn(()=>{Bank.play("jingle_achievement",{gain:0.8});Bank.play("artifact",{seed:G.artifacts.length,gain:0.6,maxSec:9});
   Bank.play("artifact_hum",{seed:G.artifacts.length,gain:0.5,maxSec:8});});if(settings.effects)Play.start("ev","magic",{dur:6});
  sub("✨ Найден артефакт!");
@@ -7155,10 +7485,10 @@ const CMD={
     разбираем строку по последнему двоеточию. */
  sell(arg){const i=String(arg).lastIndexOf(":");sellResource(String(arg).slice(0,i),String(arg).slice(i+1),false);},
  sellall(arg){const i=String(arg).lastIndexOf(":");sellResource(String(arg).slice(0,i),String(arg).slice(i+1),true);},
- encyc(){openModal("modal-encyclopedia");buildSoundGrid();buildBankGrid();buildBeaconGrid();},
+ encyc(){openModal("modal-encyclopedia");buildEncycCats();},
  guide(){openGuide();},
  settings(){openModal("modal-settings");},
- testall(){openModal("modal-encyclopedia");buildSoundGrid();buildBankGrid();buildBeaconGrid();testAllSounds();},
+ testall(){openModal("modal-encyclopedia");buildEncycCats();testAllSounds();},
  silence(){stopEverything();},
  save(){saveGame();},
  music(){settings.music=settings.music?0:1;saveSettings();AE.applyVolumes();
@@ -7358,6 +7688,11 @@ function openBuilding(c){const s=c.structure;
  html+=`<div class="row"><button data-cmd="close">✖️ Закрыть</button></div>`;
  b.innerHTML=html;
  beacon(s.beacon,0,0);
+ /* Второй слой постройки: руины отзываются окариной, храм — органом,
+    башня — вибрафоном снов, зал клана — волынками, замок — струнами. */
+ safeFn(()=>{const v={ruins:"ruin_ocarina",temple:"temple_organ",tower:"dream_vibe",
+  clanhall:"clan_pipes",castle:"epic_strings",city:"bazaar_loop",port:"isle_market"}[s.type];
+  if(v)setTimeout(()=>safeFn(()=>Bank.play(v,{seed:c.x+c.y,gain:0.5,maxSec:7})),500);});
  openModal("modal-building");
  narrate(`${s.name}. ${bldDesc(s.type)} Внутри ${npcs.length?npcs.length+" жителей":"никого нет"}. Меню услуг доступно кнопками.`);}
 function iconFor(t){return{castle:"🏰",village:"🏘️",tavern:"🍺",clanhall:"🛡️",tower:"🗼",ruins:"🏚️",temple:"⛩️",traveler:"🚶",cave_entrance:"🕳️",port:"⚓",crossroads:"🛣️"}[t]||"🏠";}
@@ -7525,7 +7860,13 @@ function castSpell(i){const sp=SPELLS[i];
  if(!G.spells.includes(sp.n)){narrate("Заклинание не изучено.");return;}
  if(G.mana<sp.cost){narrate(`Нужно ${sp.cost} маны, у вас ${G.mana}.`);return;}
  G.mana-=sp.cost;
- safeFn(()=>{Bank.play("spell_arcane",{seed:i,gain:0.85});Bank.play(spellBankRole(sp),{seed:i,gain:0.5,maxSec:7});});
+ safeFn(()=>{Bank.play("spell_arcane",{seed:i,gain:0.85});Bank.play(spellBankRole(sp),{seed:i,gain:0.5,maxSec:7});
+  /* Второй слой школы: свет — вспышка благословения, тьма — дымка,
+     лёд и молния — звон колокольчика чар, всё прочее — челеста. */
+  const role=spellBankRole(sp);
+  const layer=role==="spell_light"?"fx_blessing":role==="spell_dark"?"fx_haze":
+   role==="spell_ice"?"charm_bell":role==="spell_fire"?"spark_glock":"charm_celesta";
+  setTimeout(()=>safeFn(()=>Bank.play(layer,{seed:i,gain:0.5,maxSec:6})),260);});
  if(sp.n==="Исцеление"){G.hp=Math.min(G.hpMax,G.hp+25);UI.drink();}
  else if(settings.effects)Play.start("ev",sp.n==="Огненный шар"?"magic":sp.n==="Зов дождя"?"rain":sp.n==="Ветер странника"?"wind":"magic",{dur:4});
  narrate(`Заклинание «${sp.n}» сотворено.`);journal("Заклинание: "+sp.n);
@@ -8300,6 +8641,8 @@ async function scanSpeak(){
   /* Внутри постройки скан перечисляет двери, лестницы, сундуки и жилы,
      а затем проигрывает их маяки с панорамой по направлению. */
   const near=nearFeatures(8);
+  /* Скан начинается откликом: слышно, велико ли пространство вокруг. */
+  safeFn(()=>Bank.play("fx_echo",{seed:G.place.x+G.place.y,gain:0.45,maxSec:5}));
   if(!near.length){narrate("Вокруг только стены и пол.");return;}
   narrate(`${placeTitle()}. Объекты вокруг: `+near.slice(0,8).map(o=>`${o.name}, ${o.d} ${plural(o.d,"шаг","шага","шагов")}, ${o.dir}`).join("; ")+".");
   const list=near.slice(0,6);
@@ -8328,20 +8671,6 @@ async function scanSpeak(){
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 
 /* ════════ ЭНЦИКЛОПЕДИЯ + ТЕСТ ════════ */
-function buildSoundGrid(){const grid=document.getElementById("soundGrid");grid.innerHTML="";
- Object.entries(SOUNDS).forEach(([id,d])=>{
-  const b=document.createElement("button");b.type="button";b.className="sound-card";
-  b.dataset.id=id;b.setAttribute("aria-pressed","false");b.setAttribute("aria-label",d.name);
-  b.dataset.speak=`${d.name}. ${d.desc} Двойное касание — воспроизвести или остановить.`;
-  b.innerHTML=`<span aria-hidden="true">${d.icon}</span><b>${d.name}</b><span class="st" aria-hidden="true"></span>`;
-  b.dataset.cmd="";
-  b.addEventListener("click",()=>{
-   const cur=Play.active.get("main");
-   if(cur&&cur.id===id){Play.stopKey("main");narrate(`Остановлено: ${d.name}.`);}
-   else{["amb0","amb1","w1","w2","ev"].forEach(k=>Play.stopKey(k));
-    Play.start("main",id,{announceEnd:true});vib(25);
-    narrate(`Воспроизводится: ${d.name}. ${d.desc}`);}
-  });grid.appendChild(b);});}
 let testing=false;
 async function testAllSounds(){if(testing)return;testing=true;
  const btn=document.getElementById("btnTestAll"),cancel=document.getElementById("btnTestCancel"),
@@ -8349,17 +8678,23 @@ async function testAllSounds(){if(testing)return;testing=true;
  btn.hidden=true;cancel.hidden=false;
  narrate("Начинаю проверку всех звуков.");
  const ids=Object.keys(SOUNDS);let ok=0;
+ /* Проверка идёт по всем сценам сразу, независимо от того, какой раздел
+    энциклопедии сейчас открыт: отметка ставится на карточку, если она видна. */
+ const mark=(id,t)=>{const el=document.querySelector(`#encycOneGrid [data-scene="${id}"] .st`);
+  if(el)el.textContent=t;};
  for(const id of ids){if(!testing)break;const d=SOUNDS[id];
   narrate(`${d.name}.`);
-  document.querySelector(`#soundGrid [data-id="${id}"] .st`).textContent="▶…";
+  mark(id,"▶…");
   Play.start("test",id);await sleep(Math.min(d.dur,3)*1000);Play.stopKey("test");
-  document.querySelector(`#soundGrid [data-id="${id}"] .st`).textContent="✓ работает";
+  mark(id,"✓ работает");
   ok++;status.textContent=`Проверено: ${ok} из ${ids.length}`;}
  testing=false;btn.hidden=false;cancel.hidden=true;
  if(ok===ids.length){status.textContent=`✅ Все звуки исправны: ${ok} из ${ids.length}`;
   narrate(`Проверка завершена. Все ${ok} звуков работают исправно.`);}
  else narrate("Проверка остановлена.");}
 document.getElementById("btnTestAll").addEventListener("click",testAllSounds);
+["encycBack","encycBack2"].forEach(id=>{const b=document.getElementById(id);
+ if(b)b.addEventListener("click",()=>safeFn(()=>closeEncycCat()));});
 document.getElementById("btnTestCancel").addEventListener("click",()=>{testing=false;
  Play.stopKey("test");narrate("Проверка остановлена.");});
 
@@ -8883,6 +9218,8 @@ window.addEventListener("beforeunload",()=>{try{stopRun();saveGame(true);}catch(
 (function boot(){
  try{Speech.init();}catch(e){try{console.error("Speech.init",e);}catch(_){}}
  try{bindSettings();}catch(e){try{console.error("bindSettings",e);}catch(_){}}
+ /* Кнопка энциклопедии называет настоящее число звуков, а не вписанное руками. */
+ safeFn(()=>refreshEncycButton());
  /* Поле выбора файла живёт всё время: через него возвращают игру с другого
     устройства. Само поле скрыто — его нажимает кнопка «Загрузить из файла». */
  try{

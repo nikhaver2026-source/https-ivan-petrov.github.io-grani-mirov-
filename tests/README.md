@@ -53,6 +53,8 @@ GitHub Pages** (`/https-ivan-petrov.github.io-grani-mirov-/`). Это важно
 | 27-accessibility-all-windows | Доступность всех окон: свайп, называние, двойное касание |
 | 28-accessibility-special-layers | Магия, руководство, добыча и бой: те же жесты, свои правила |
 | 29-gather-and-activate-gestures | Сбор двумя пальцами и подтверждение двойным касанием |
+| 30-world-consistency | Боги, кланы, народы, державы, чудовища и задания сходятся |
+| 31-sound-catalog-and-world | Каталог звуков по разделам и звучание мира |
 
 ## Как устроен набор
 

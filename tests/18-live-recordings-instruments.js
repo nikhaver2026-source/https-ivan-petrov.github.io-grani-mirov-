@@ -69,16 +69,22 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
 
  // 6. Каталог звуков показывает новые разделы
  const cat=await page.evaluate(()=>{
-  CMD.sounds?CMD.sounds():null;
-  buildBankGrid();
-  const grid=document.getElementById("bankGrid");
-  const heads=[...grid.querySelectorAll("h3")].map(h=>h.textContent);
-  const hint=document.getElementById("bankHint").textContent;
-  return {heads,cards:grid.querySelectorAll("button").length,
-   attribution:/tonejs-instruments/.test(hint)&&/Attribution/.test(hint)};});
- check('в каталоге есть разделы живых записей и инструментов',
-  cat.heads.some(h=>/Живые записи/.test(h))&&cat.heads.some(h=>/инструменты/.test(h)),cat.heads);
- check('указание авторства CC BY видно в игре',cat.attribution===true);
+  while(activeLayer())closeTopUI();
+  CMD.encyc();
+  const heads=[...document.querySelectorAll('#encycCats .sound-card b')].map(x=>x.textContent);
+  const credits=document.getElementById("encycCredits").textContent;
+  /* Открываем раздел живых инструментов и считаем карточки внутри. */
+  const btns=[...document.querySelectorAll('#encycCats .sound-card')];
+  const i=btns.findIndex(b=>/Живые инструменты/.test(b.textContent));
+  if(i>=0)btns[i].click();
+  return {heads,инструментов:document.querySelectorAll('#encycOneGrid .sound-card').length,
+   attribution:/tonejs-instruments/.test(credits)&&/Attribution/.test(credits),
+   флюид:/FluidR3_GM/.test(credits)};});
+ check('в каталоге есть разделы живых записей, инструментов и оркестра',
+  cat.heads.some(h=>/Живые записи/.test(h))&&cat.heads.some(h=>/Живые инструменты/.test(h))
+  &&cat.heads.some(h=>/Оркестр мира/.test(h)),cat.heads);
+ check('раздел живых инструментов не пуст',cat.инструментов>=10,cat.инструментов);
+ check('указание авторства CC BY видно в игре',cat.attribution===true&&cat.флюид===true,cat);
 
  // 7. Ни одного битого запроса к звукам и ни одной ошибки
  await page.waitForTimeout(400);
