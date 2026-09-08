@@ -5225,9 +5225,18 @@ function normalizeWeaponState(){
      (например, из-за старого сохранения до введения уникальных id у добычи). */
   {const seen=new Set(),dedup=[];for(const it of G.gear){const key=it.id||it.name+':'+it.slot+':'+it.val;if(seen.has(key))continue;seen.add(key);dedup.push(it);}G.gear=dedup;}
   if(!G.gear.some(x=>x.id===DEFAULT_WEAPON.id)) G.gear.unshift({...DEFAULT_WEAPON});
-  if(!G.inv.__weaponRegistry||typeof G.inv.__weaponRegistry!=="object") G.inv.__weaponRegistry={};
-  G.inv.__weaponRegistry[DEFAULT_WEAPON.id]=1;
-  G.inv[DEFAULT_WEAPON.id]=Math.max(1,Number(G.inv[DEFAULT_WEAPON.id])||0);
+  /* Учёт оружия живёт отдельно от запасов. Раньше он лежал прямо в G.inv —
+     вместе с рудой и травами, — и туда же клался счётчик стартового меча.
+     В итоге игрок слышал в списке запасов строку «starter-steel-sword: 1 шт.»:
+     служебное имя на чужом языке посреди русского перечня. Всё, что не
+     ресурс и не предмет, вынесено из запасов; из старых сохранений мусор
+     вычищается при первой же проверке состояния. */
+  if(!G.weaponReg||typeof G.weaponReg!=="object"||Array.isArray(G.weaponReg))G.weaponReg={};
+  if(G.inv.__weaponRegistry&&typeof G.inv.__weaponRegistry==="object"){
+   Object.assign(G.weaponReg,G.inv.__weaponRegistry);
+   delete G.inv.__weaponRegistry;}
+  delete G.inv[DEFAULT_WEAPON.id];
+  G.weaponReg[DEFAULT_WEAPON.id]=1;
   /* Если экипированное оружие повреждено (не объект / нет слота-«weapon» / нет
      числового бонуса) — не позволяем игре остаться без оружия молча: откатываемся
      на стартовый меч вместо того, чтобы атака считалась от несуществующего предмета. */
@@ -6939,6 +6948,7 @@ const CMD={
  npctalk(key){tellNPCStory(getNPCByKey(key));},
  qtake(key){takeNPCQuest(getNPCByKey(key));},
  qdone(id){completeQuest(id);},
+ qdrop(id){dropQuest(id);},
  buy(key,i){buyItem(key,+i);},
  svc(s){tavernService(s);},
  cards(bet){playCards(+bet);},
@@ -7530,8 +7540,35 @@ function advanceChain(q){
   return true;
  }catch(_){return false;}
 }
+/* ════════════════════════════════════════════════════════════════════════
+   СКОЛЬКО ДЕЛ МОЖНО ВЗЯТЬ
+   Предела не было: жителей в мире бесконечно, и брать поручения можно было
+   без конца. Долгая игра набирала четыре десятка незакрытых дел — список
+   переставал быть списком, зачитывать его вслух становилось мучением, а
+   каждое подземное событие пересчитывало их все. Восемь дел одновременно —
+   столько, сколько человек держит в голове; шаги цепочки места не занимают
+   сверх уже начатого. Отказаться от дела можно всегда — заказчик этого не
+   забудет, но и держать игрока в тупике игра не станет.
+   ════════════════════════════════════════════════════════════════════════ */
+const QUEST_LIMIT=8;
+function openQuests(){return (G.quests||[]).filter(q=>!q.done);}
+function dropQuest(id){
+ const q=(G.quests||[]).find(x=>x.id===id&&!x.done);
+ if(!q){narrate("Такого незакрытого дела нет.");return false;}
+ G.quests=G.quests.filter(x=>x!==q);
+ if(q.chain&&G.chainTaken)delete G.chainTaken[q.chain];
+ safeFn(()=>addRep(q.race,-2));
+ safeFn(()=>Bank.play("ui_error",{gain:0.5,maxSec:2}));
+ narrate(`Вы отказались от дела: ${q.text} Заказчик из народа «${q.race||"неизвестного"}» это запомнит: репутация −2.`);
+ journal(`Отказ от дела: ${q.npc}.`);
+ refresh();renderQuests();saveGame(true);
+ return true;
+}
 function takeNPCQuest(n){
  if(!n)return;
+ if(openQuests().length>=QUEST_LIMIT){
+  narrate(`У вас уже ${openQuests().length} незакрытых дел — больше человек не удержит в голове. Закончите начатое или откажитесь от чего-нибудь в списке заданий.`);
+  return;}
  if(G.quests.find(q=>!q.done&&(q.npcKey===n.key||q.id===n.key+'q'))){narrate('Этот квест уже у вас.');return;}
  /* У жреца, клановых, служилых и торговых людей дело начинается цепочкой:
     первый шаг — обычное задание, но у него будет продолжение. */
@@ -7698,7 +7735,11 @@ function renderInventory(){
    `<div class="list-line">⚔️ Оружие: ${eq.weapon?lootDesc(eq.weapon):"не экипировано"}</div>`+
    `<div class="list-line">🛡️ Броня: ${eq.armor?lootDesc(eq.armor):"нет"}</div>`+
    `<div class="list-line">💍 Аксессуар: ${eq.acc?lootDesc(eq.acc):"нет"}</div>`;
-  const res=Object.entries(G.inv).filter(([k,v])=>k!=="__weaponRegistry"&&Number(v)>0).map(([k,v])=>`<div class="list-line">${k}: ${v} шт.</div>`).join("");
+  /* В запасах показываем только то, что запас: ресурсы, улов и вещи с
+     человеческими именами. Служебные ключи сюда не попадают. */
+  const res=Object.entries(G.inv)
+   .filter(([k,v])=>Number(v)>0&&!/^__/.test(k)&&!/^[a-z0-9-]+$/.test(k))
+   .map(([k,v])=>`<div class="list-line">${RESICON[k]?RESICON[k]+" ":""}${k}: ${v} шт.</div>`).join("");
   const itemHtml=res+G.items.map(i=>`<div class="list-line">🎁 ${typeof i==='string'?i:(i&&i.name)||'Предмет'}</div>`).join("");
   if(itemsEl)itemsEl.innerHTML=itemHtml||`<div class="list-line">🎒 В инвентаре пока нет ресурсов и предметов.</div>`;
   const weapons=weaponList();
@@ -7734,8 +7775,14 @@ function renderQuests(){
  document.getElementById("questList").innerHTML=G.quests.length?
   G.quests.map(q=>`<div class="list-line">${q.done?"✅":"📜"} От: ${q.npc}<br>${q.text}<br>
    ${q.chain?`Цепочка «${q.chainName}», шаг ${(q.chainStep||0)+1} из ${q.chainOf}.<br>`:""}Прогресс: ${q.done?"выполнен":qProgressText(q)}<br>Награда: ${questPay(q).gold} золота, ${questPay(q).xp} опыта.
-   ${q.done?"":`<button data-cmd="qdone:${q.id}" data-speak="Завершить квест.">✅ Завершить</button>`}</div>`).join(""):
-  `<div class="list-line">Квестов нет. Поговорите с жителями — у каждого есть задание.</div>`;}
+   ${q.done?"":`<button data-cmd="qdone:${q.id}" data-speak="Завершить квест: ${String(q.text).replace(/"/g,"&quot;").slice(0,80)}">✅ Завершить</button>
+   <button data-cmd="qdrop:${q.id}" data-speak="Отказаться от дела: ${String(q.text).replace(/"/g,"&quot;").slice(0,80)}. Репутация у народа упадёт на два.">🚫 Отказаться</button>`}</div>`).join(""):
+  `<div class="list-line">Квестов нет. Поговорите с жителями — у каждого есть задание.</div>`;
+ const hint=document.getElementById("questList");
+ if(hint&&G.quests.length){
+  const open=openQuests().length;
+  hint.insertAdjacentHTML("afterbegin",
+   `<div class="list-line" data-speak="Незакрытых дел ${open} из ${QUEST_LIMIT}.">📋 Незакрытых дел: <b>${open}</b> из ${QUEST_LIMIT}</div>`);}}
 function renderJournal(){
  document.getElementById("journalList").innerHTML=G.journal.length?
   G.journal.slice(0,15).map(j=>`<div class="list-line">${j}</div>`).join(""):
