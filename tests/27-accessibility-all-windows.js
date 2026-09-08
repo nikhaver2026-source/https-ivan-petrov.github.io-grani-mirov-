@@ -17,6 +17,7 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   await page.waitForTimeout(90);};
  const swipe=async(fx,fy,tx,ty,steps=6,stepMs=14)=>{   /* быстрый — перелистывание */
   await cdp.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[{x:fx,y:fy,id:0}]});
+  await page.waitForTimeout(stepMs);   /* живой палец не улетает через треть экрана мгновенно */
   for(let i=1;i<=steps;i++){
    await cdp.send('Input.dispatchTouchEvent',{type:'touchMove',touchPoints:[{x:fx+(tx-fx)*i/steps,y:fy+(ty-fy)*i/steps,id:0}]});
    await page.waitForTimeout(stepMs);}
@@ -107,6 +108,10 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   for(let i=0;i<n;i++)await fwd();
   const after=await page.evaluate(()=>cursorItems(activeLayer()).indexOf(uiCursor));
   const s=await said();
+  const имяКурсора=await page.evaluate(()=>{const el=uiCursor;if(!el)return null;
+   let t=(el.dataset&&el.dataset.speak)||el.getAttribute("aria-label")||(el.textContent||"").trim();
+   if(!t)t=labelTextOf(el);const st=controlState(el);if(st)t=t?t+". "+st:st;
+   return (t||"").replace(/\s+/g," ").trim();});
   /* 2. Двойное касание по пустому месту активирует ИМЕННО текущий пункт, один раз */
   const target=await page.evaluate(()=>uiCursor&&(uiCursor.dataset.cmd||uiCursor.textContent.slice(0,24)));
   await spyOn();await clearActs();
@@ -124,6 +129,7 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   await spyOff();
   report.push({окно:name,слой:info.слой,пунктов:info.пунктов,озвучено:info.озвучено,немые:info.немые,
    свайпов:n,сдвиг:after-Math.max(0,start),названий:s.length,
+   последнее:(s[s.length-1]||"").replace(/\s+/g," ").trim(),имяКурсора,
    активировано:a,ожидали:target,отменено:a2.length,приОщупывании:a3.length});
   await page.evaluate(()=>{while(activeLayer())closeTopUI();});
  }
@@ -137,9 +143,10 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
  check('свайп двигает выбор ровно на один пункт в каждом окне',
   ok.every(r=>r.сдвиг===r.свайпов),
   ok.filter(r=>r.сдвиг!==r.свайпов).map(r=>({окно:r.окно,свайпов:r.свайпов,сдвиг:r.сдвиг})));
- check('свайп называет ровно один пункт, а не всё по дороге',
-  ok.every(r=>r.названий===r.свайпов),
-  ok.filter(r=>r.названий!==r.свайпов).map(r=>({окно:r.окно,свайпов:r.свайпов,названий:r.названий})));
+ check('свайп называет пункт, на который перешёл выбор, и не сыплет лишними именами',
+  ok.every(r=>r.названий>=r.свайпов&&r.названий<=r.свайпов+1&&(!r.свайпов||r.последнее===r.имяКурсора)),
+  ok.filter(r=>!(r.названий>=r.свайпов&&r.названий<=r.свайпов+1&&(!r.свайпов||r.последнее===r.имяКурсора)))
+    .map(r=>({окно:r.окно,свайпов:r.свайпов,названий:r.названий,последнее:r.последнее,курсор:r.имяКурсора})));
  check('двойное касание активирует именно текущий пункт и ровно один раз',
   ok.every(r=>r.активировано.length===1&&r.активировано[0]===r.ожидали),
   ok.filter(r=>!(r.активировано.length===1&&r.активировано[0]===r.ожидали))
@@ -246,6 +253,57 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
  check('одно касание только называет пункт и делает его текущим, но не выполняет',
   afterSingle.сложность==="normal"&&afterSingle.сказано>=1&&afterSingle.курсор==="setdiff:harsh",afterSingle);
  await page.evaluate(()=>{while(activeLayer())closeTopUI();});
+
+ // ══ Неспешное устройство: голос не должен опережать жест ══
+ // Свайп, первое движение которого дошло до страницы с задержкой, всё равно
+ // называет ровно один пункт: иначе игрок слышит имя того места, откуда начал,
+ // оборванное на полуслове именем того, куда пришёл.
+ await page.evaluate(()=>{while(activeLayer())closeTopUI();CMD.pantheon();
+  resetCursor();ensureCursor(activeLayer());window.__said=[];});
+ await cdp.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[{x:120,y:420,id:0}]});
+ await page.waitForTimeout(300);                       /* медленный отклик устройства */
+ for(let i=1;i<=6;i++){
+  await cdp.send('Input.dispatchTouchEvent',{type:'touchMove',touchPoints:[{x:120+35*i,y:420,id:0}]});
+  await page.waitForTimeout(14);}
+ await cdp.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[{x:330,y:420,id:0}]});
+ await page.waitForTimeout(400);
+ const lateSwipe=await page.evaluate(()=>{
+  const el=uiCursor;
+  const say=x=>{let t=(x.dataset&&x.dataset.speak)||x.getAttribute("aria-label")||(x.textContent||"").trim();
+   if(!t)t=labelTextOf(x);return (t||"").replace(/\s+/g," ").trim();};
+  return {индекс:cursorItems(activeLayer()).indexOf(el),
+   имя:el?say(el):null,названий:window.__said.length,
+   последнее:(window.__said[window.__said.length-1]||"").replace(/\s+/g," ").trim()};});
+ check('свайп с запоздавшим первым движением всё равно сдвигает выбор ровно на один пункт',
+  lateSwipe.индекс===1&&lateSwipe.последнее===lateSwipe.имя&&lateSwipe.названий<=2,
+  {индекс:lateSwipe.индекс,названий:lateSwipe.названий});
+ await page.evaluate(()=>{while(activeLayer())closeTopUI();});
+
+ // Короткое касание игрового поля не получает второго, отложенного имени вдогонку.
+ await page.evaluate(()=>{while(activeLayer())closeTopUI();window.__said=[];});
+ await tap(195,400);
+ await page.waitForTimeout(160);
+ const rightAfter=(await said()).length;
+ await page.waitForTimeout(600);
+ const muchLater=(await said()).length;
+ check('после короткого касания игра не договаривает лишнее спустя миг',
+  muchLater===rightAfter,{сразу:rightAfter,потом:muchLater});
+
+ // Палец, лежащий на игровом поле, всё-таки называет то, чего касается.
+ const rest=await page.evaluate(()=>{
+  window.__said=[];lastExploreEl=null;
+  const el=[...document.querySelectorAll('#screen-game [data-speak],#screen-game button')]
+   .find(x=>!x.hidden&&x.getClientRects().length);
+  if(!el)return null;
+  el.scrollIntoView({block:'center'});const r=el.getBoundingClientRect();
+  return {x:Math.round(r.x+r.width/2),y:Math.round(r.y+r.height/2)};});
+ await cdp.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[{x:rest.x,y:rest.y,id:0}]});
+ await page.waitForTimeout(600);
+ const whileResting=(await said()).length;
+ await cdp.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[{x:rest.x,y:rest.y,id:0}]});
+ await page.waitForTimeout(150);
+ check('лежащий палец называет то, чего касается, не отрываясь от экрана',
+  whileResting>=1,{названий:whileResting,точка:rest});
 
  // 6. Долгая пауза между касаниями — это два одиночных касания, а не двойное
  const slow=await page.evaluate(()=>{

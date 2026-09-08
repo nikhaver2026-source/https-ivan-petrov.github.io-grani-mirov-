@@ -1897,12 +1897,16 @@ document.addEventListener('touchstart',e=>{safeFn(()=>AE.ensure());const n=e.tou
  /* Раньше палец, едва коснувшись, тут же называл элемент под собой. Если
     игрок начинал свайп, он слышал два названия подряд: сначала то, откуда
     свайп начался, потом то, куда пришёл, — и первое обрывалось на полуслове.
-    Теперь голос выжидает малую долю секунды: не двинулся палец — это
-    ощупывание, называем; двинулся — это свайп, и говорить будет он. */
+    Теперь голос выжидает: не двинулся палец — это ощупывание, называем;
+    двинулся — это свайп, и говорить будет он.
+    Четверть секунды вместо прежней десятой доли: на неспешном устройстве
+    первое движение пальца доходит до страницы с задержкой, и голос успевал
+    заговорить раньше, чем игра узнавала о начавшемся свайпе. Для лежащего
+    пальца разница неощутима, а свайп больше не спорит с ощупыванием. */
  if(gameActive()&&!ui){
   const ex=t.clientX,ey=t.clientY;
   cancelExploreHold();
-  exploreHold=setTimeout(()=>{exploreHold=null;safeFn(()=>explorePoint(ex,ey));},110);
+  exploreHold=setTimeout(()=>{exploreHold=null;safeFn(()=>explorePoint(ex,ey));},250);
  }},{passive:false,capture:true});
 document.addEventListener('touchmove',e=>{
  if(!gesture.maxCount)return;
@@ -1962,6 +1966,10 @@ document.addEventListener('touchmove',e=>{
 document.addEventListener('touchend',e=>{
  if(!gesture.maxCount)return;
  if(e.touches.length>0){gesture.count=e.touches.length;return;} /* пальцы поднимают по очереди — ждём последний */
+ /* Палец уже оторвался — ждать, «не ощупывание ли это», больше нечего: иначе
+    отложенное называние срабатывало уже после короткого касания и добавляло
+    второе, никем не спрошенное имя поверх ответа на само касание. */
+ cancelExploreHold();
  const g={...gesture};
  resetGesture();
  if(runState.hold){clearTimeout(runState.hold);runState.hold=null;}
