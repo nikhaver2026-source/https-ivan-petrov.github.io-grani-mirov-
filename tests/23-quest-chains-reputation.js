@@ -124,8 +124,12 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   Speech.say=o;
   const zoneSaid=said.filter(t=>/^(Торговый|Кузнечный|Храмовый|Складской|Жилой|Главная|Улица|Городские|Квартал)/.test(t)).length;
   return {кварталов:names.length,имена:names,зон:[...zones],названо:zoneSaid};});
+ /* Кварталы теперь носят собственные имена города («Оружейный двор»), а не
+    общие «торговый квартал», поэтому проверяем по списку кварталов уровня. */
  check('в городе есть названные кварталы, улицы и ворота',
-  city.кварталов>=4&&city.зон.some(z=>/квартал/.test(z))&&city.зон.includes("улица"),city.зон);
+  city.кварталов>=4&&city.имена.filter(n=>city.зон.includes(n)).length>=3
+  &&city.зон.includes("улица")&&city.зон.includes("городские ворота"),
+  {кварталов:city.кварталов,найдено:city.имена.filter(n=>city.зон.includes(n)).length,зоны:city.зон.slice(0,4)});
  check('на ходу игра называет, в какую часть города вы вошли',city.названо>=2,{реплик:city.названо});
 
  check('ни одной ошибки страницы',errors.length===0,errors.slice(0,3));

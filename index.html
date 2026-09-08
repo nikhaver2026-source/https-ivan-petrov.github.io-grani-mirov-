@@ -1969,6 +1969,7 @@ const AM_GROUPS=[
   ["interact","🤝 Взаимодействовать"],
   ["gather","📦 Собрать ресурс"],
   ["echo","🔊 Эхо-скан: маяки вокруг"],
+  ["cityplan","🏙️ План города: кварталы и площадь"],
   ["trade","🐫 Рынки, маршруты и караваны"],
   ["harbor","⚓ Причал: корабли и рейсы"],
   ["sail","🚢 Идти дальше морем"],
@@ -2021,6 +2022,7 @@ function amAvailable(cmd){
   if(cmd==="descend")return !!G.place||!!(c.structure&&PLACE_KIND[c.structure.type]);
   if(cmd==="interact")return !G.place&&!!(c.structure||c.res);
   if(cmd==="gather")return G.place?true:!!c.res;
+  if(cmd==="cityplan")return !!(G.place&&G.place.kind==="city");
   if(cmd==="echo"||cmd==="look"||cmd==="map"||cmd==="usehere")return true;
   return true;
  }catch(_){return true;}
@@ -5327,7 +5329,65 @@ const TILE={
  "P":{n:"торговец",b:"market"},
  "B":{n:"пост стражи",b:"npc_guard"}};
 /* Какие строения куда ведут: город (улицы с воротами), дом или подземелье. */
-/* Имена кварталов по их назначению: город перестаёт быть безымянной сеткой. */
+/* ════════════════════════════════════════════════════════════════════════
+   КВАРТАЛЫ ГОРОДОВ
+   Сначала кварталы назывались по делу: торговый, кузнечный, храмовый. Это
+   помогало не заблудиться, но все города звучали одинаково — а по именам
+   мест человек и запоминает дорогу. Теперь у каждого города имена свои:
+   в одном Соляной ряд и Молотовый конец, в другом Гостиный двор и Литейная
+   слобода. Имя выводится из координат города, поэтому оно у него навсегда
+   одно и то же, а у соседа — другое.
+
+   Сверх того в каждом городе есть один особый квартал, какого нет у соседей:
+   Стеклодувный двор, Сад лекарей, Двор менял, Костяной ряд, Тюремный двор,
+   Голубиная башня, Портовый затон или Сиротский двор. Он не только звучит
+   иначе — в нём есть чего нет в других кварталах: своя жила, свой торговец,
+   свой сундук. И при первом входе он рассказывает о себе.
+   ════════════════════════════════════════════════════════════════════════ */
+const QUARTER_DB={
+ S:["Гостиный двор","Соляной ряд","Меновый посад","Ярмарочный конец","Весовая слобода","Пряный ряд","Сукновальный двор"],
+ F:["Кузнечная слобода","Молотовый конец","Горновой посад","Оружейный двор","Углевой ряд","Наковальный вал","Литейная слобода"],
+ A:["Свечной конец","Пресветлая слобода","Клятвенный двор","Тихое подворье","Колокольный ряд","Поминный вал","Обетный посад"],
+ C:["Амбарный ряд","Соляные погреба","Купеческие клети","Бочарный двор","Житный конец","Ларёчная слобода","Мучной посад"],
+ B:["Караульный вал","Копейный двор","Дозорная слобода","Оружная башня","Заставный конец","Щитовой ряд","Сторожевой посад"],
+ N:["Ткацкая слобода","Гончарный конец","Рыбацкий посад","Кожевенный ряд","Пекарный двор","Бондарная слобода","Плотницкий вал"]};
+/* Чем этот квартал занят — для описания и для эхо-скана. */
+const QUARTER_TRADE={S:"торг",F:"кузнечное дело",A:"храмовое служение",
+ C:"склады и подвалы",B:"стража",N:"ремёсла и жильё"};
+/* Особый квартал: один на город, со своим делом и своей находкой. */
+const SPECIAL_QUARTERS=[
+ {n:"Стеклодувный двор",what:"стеклодувы, печи и кристалл",tile:"R",res:"кристалл",
+  lore:"Печи гудят день и ночь, воздух дрожит от жара. В отвалах у стены попадается годный кристалл — стеклодувы отбирают только чистый."},
+ {n:"Сад лекарей",what:"лекарские травы",tile:"R",res:"трава",
+  lore:"За низкой оградой ровными грядами растут травы, которых не найти в поле. Пахнет мятой, полынью и чем-то горьким."},
+ {n:"Двор менял",what:"менялы и мена всего на всё",tile:"P",
+  lore:"Столы под навесом, весы на цепочках и вечный спор о пробе. Здесь меняют всё на всё и никогда не спрашивают, откуда."},
+ {n:"Костяной ряд",what:"резчики по кости",tile:"R",res:"кость",
+  lore:"Резчики по кости работают у самых окон, чтобы ловить свет. Отходы их работы годятся и вам."},
+ {n:"Тюремный двор",what:"тюрьма и ключник",tile:"C",
+  lore:"Глухая стена без окон, запах сырого камня и лязг где-то внизу. Ключник берёт мзду и отворачивается — в углу стоит чей-то невостребованный сундук."},
+ {n:"Голубиная башня",what:"голубиная почта державы",tile:"T",
+  lore:"Отсюда уходят вести во все города державы. Под крышей гремят крыльями сотни голубей, и весь квартал живёт этим шумом."},
+ {n:"Портовый затон",what:"лодки, сети и ракушки",tile:"R",res:"ракушка",
+  lore:"Лодки вытащены на сушу, сети сохнут на кольях. Пахнет смолой, рыбой и водорослями; под ногами хрустят ракушки."},
+ {n:"Сиротский двор",what:"приют для оставшихся одних",tile:"N",
+  lore:"За стеной детский гомон. Здесь кормят тех, кого война и мор оставили одних, и всякий прохожий тут — гость."}];
+/* Имя квартала выводится из города и номера квартала: у каждого города своё. */
+/* Числовой ключ мира построен на синусе, и на круглых координатах он даёт
+   похожие числа: у городов на клетках, кратных сотне, второй квартал выходил
+   с одним и тем же именем. Для имён взят целочисленный ключ — он перемешивает
+   разряды и не знает такой слабости. Мир от этого не меняется: ключ живёт
+   только здесь и отвечает лишь за названия. */
+function hashName(a,b,c){
+ let h=Math.imul(a|0,374761393)+Math.imul(b|0,668265263)+Math.imul(c|0,2246822519);
+ h=(h^(h>>>13))>>>0;
+ h=Math.imul(h,1274126177)>>>0;
+ return ((h^(h>>>16))>>>0)/4294967296;
+}
+function quarterName(bx,by,bi,purpose){
+ const pool=QUARTER_DB[purpose]||QUARTER_DB.N;
+ return pool[Math.floor(hashName(bx,by,bi*31+7)*pool.length)%pool.length];
+}
 const BLOCK_NAMES={S:"торговый квартал",F:"кузнечный квартал",A:"храмовый квартал",
  C:"складской квартал",B:"квартал стражи",N:"жилой квартал"};
 const PLACE_KIND={castle:"city",village:"city",port:"city",tavern:"house",clanhall:"house",tower:"house",
@@ -5357,6 +5417,10 @@ function genLevel(bx,by,depth,stype){
  /* Кварталы города переживают выход из своей области: по ним игра называет,
     в каком квартале стоит игрок. */
  let cityBlocks=[];
+ /* Жилы с заранее известной добычей: их кладут особые кварталы. */
+ const veins={};
+ /* Где у города площадь — нужно и для имени, и для плана города. */
+ let sqx0=0,sqy0=0;
  const put=(x,y,c)=>{if(x>0&&y>0&&x<w-1&&y<h-1)g[y][x]=c;};
  const carveRoom=(rx,ry,rw,rh)=>{for(let y=ry;y<ry+rh;y++)for(let x=rx;x<rx+rw;x++)put(x,y,".");
   rooms.push({x:rx,y:ry,w:rw,h:rh,cx:rx+(rw>>1),cy:ry+(rh>>1)});};
@@ -5389,6 +5453,8 @@ function genLevel(bx,by,depth,stype){
   runX.forEach(([x0,x1])=>runY.forEach(([y0,y1])=>{
    if(x1-x0<2||y1-y0<2)return;
    blocks.push({x0,x1,y0,y1});}));
+  /* Какой из кварталов станет особым — решается один раз на город. */
+  const specialAt=blocks.length?Math.floor(hashName(bx,by,975)*blocks.length)%blocks.length:-1;
   /* Каждый квартал — здание: наружная стена остаётся, внутри комнаты. */
   blocks.forEach((b,bi)=>{
    for(let y=b.y0+1;y<b.y1;y++)for(let x=b.x0+1;x<b.x1;x++)g[y][x]=".";
@@ -5423,10 +5489,24 @@ function genLevel(bx,by,depth,stype){
     const last=b.rooms[b.rooms.length-1];
     const dx2=last.x0+((last.x1-last.x0)>>1);
     if(g[last.y1][dx2]===".")g[b.y1][dx2]="+";}
-   /* Назначение квартала и его имя: по имени незрячий игрок понимает, где
-      он стоит, не пересчитывая повороты. */
+   /* Назначение квартала, его собственное имя и, у одного из них, особое
+      дело: по имени незрячий игрок запоминает город, а не пересчитывает
+      повороты. */
    const purpose=["S","F","A","C","B","N","S","N"][bi%8];
-   b.name=BLOCK_NAMES[purpose]||BLOCK_NAMES.N;
+   b.purpose=purpose;
+   b.kindName=BLOCK_NAMES[purpose]||BLOCK_NAMES.N;
+   b.trade=QUARTER_TRADE[purpose]||QUARTER_TRADE.N;
+   b.name=quarterName(bx,by,bi,purpose);
+   b.cx=b.x0+((b.x1-b.x0)>>1);b.cy=b.y0+((b.y1-b.y0)>>1);
+   if(bi===specialAt){
+    const sp=SPECIAL_QUARTERS[Math.floor(hashName(bx,by,980)*SPECIAL_QUARTERS.length)%SPECIAL_QUARTERS.length];
+    b.name=sp.n;b.special=sp.n;b.lore=sp.lore;b.trade=sp.what||b.trade;
+    /* Особое дело квартала — не только слова: в нём есть то, чего нет в
+       других кварталах этого города. */
+    const rr=b.rooms[b.rooms.length-1];
+    const sx=rr.x0+((rr.x1-rr.x0)>>1),sy=rr.y0+((rr.y1-rr.y0)>>1);
+    if(g[sy][sx]==="."){g[sy][sx]=sp.tile;
+     if(sp.res)veins[sx+","+sy]=sp.res;}}
    const r0=b.rooms[0],cxr=r0.x0+((r0.x1-r0.x0)>>1),cyr=r0.y0+((r0.y1-r0.y0)>>1);
    if(g[cyr][cxr]===".")g[cyr][cxr]=purpose;
    b.rooms.slice(1).forEach((r,ri)=>{
@@ -5441,6 +5521,7 @@ function genLevel(bx,by,depth,stype){
   for(let y=mainY-1;y<=mainY+rowW(mainY);y++)for(let x=mainX-1;x<=mainX+colW(mainX);x++)
    if(x>1&&y>1&&x<w-2&&y<h-2&&g[y][x]==="#")g[y][x]=".";
   const sqx=mainX+1,sqy=mainY+1;
+  sqx0=sqx;sqy0=sqy;
   if(g[sqy][sqx]===".")g[sqy][sqx]="W";
   [[-1,0,"S"],[1,0,"S"],[0,-1,"P"],[0,1,"B"],[1,1,"T"],[-1,-1,"T"]].forEach(([dx,dy,ch])=>{
    const x=sqx+dx*2,y=sqy+dy*2;
@@ -5546,7 +5627,15 @@ function genLevel(bx,by,depth,stype){
    if(g[cy][cx]==="#")g[cy][cx]=kind==="city"?"+":".";
    cur=prev[cur];}
  }
- const lvl={w,h,g,kind,depth,stype,entry:e0,bx,by,blocks:cityBlocks};
+ /* Главная улица и площадь — те же ориентиры, что и кварталы, и им тоже
+    нужны имена: «вышли на Оружейную улицу» понятнее, чем «главная улица». */
+ const STREETS=["Оружейная","Соборная","Мостовая","Кузнечная","Купеческая","Дозорная","Тележная","Колодезная"];
+ const SQUARES=["площадь Трёх Колодцев","Торговая площадь","Соборная площадь","Оружная площадь",
+  "площадь Клятв","Ярмарочная площадь","Ратушная площадь","площадь Старого Вяза"];
+ const lvl={w,h,g,kind,depth,stype,entry:e0,bx,by,blocks:cityBlocks,veins,
+  street:kind==="city"?STREETS[Math.floor(hashName(bx,by,990)*STREETS.length)%STREETS.length]+" улица":null,
+  square:kind==="city"?SQUARES[Math.floor(hashName(bx,by,991)*SQUARES.length)%SQUARES.length]:null,
+  squareAt:kind==="city"?{x:sqx0,y:sqy0}:null};
  if(levelCache.size>40)levelCache.clear();
  levelCache.set(key,lvl);
  return lvl;
@@ -5575,11 +5664,56 @@ function whereInCity(x,y){
  if(!lvl||lvl.kind!=="city")return null;
  const b=blockAt(x,y);
  if(b)return b.name;
- /* Не в квартале — значит на улице; главные шире прочих. */
  const t=tileAt(lvl,x,y);
  if(t==="G")return "городские ворота";
+ /* Площадь — там, где сходятся главные улицы: у неё своё имя. */
+ if(lvl.squareAt&&Math.abs(x-lvl.squareAt.x)<=2&&Math.abs(y-lvl.squareAt.y)<=2)
+  return lvl.square||"площадь";
+ /* Не в квартале и не на площади — улица; главная шире прочих и названа. */
  const wide=(tileAt(lvl,x,y-1)!=="#"&&tileAt(lvl,x,y+1)!=="#"&&tileAt(lvl,x-1,y)!=="#"&&tileAt(lvl,x+1,y)!=="#");
- return wide?"главная улица":"улица";
+ return wide?(lvl.street||"главная улица"):"улица";
+}
+/* Первый заход в особый квартал: он рассказывает о себе — но только раз. */
+function quarterLore(x,y){
+ try{
+  const b=blockAt(x,y);
+  if(!b||!b.lore)return null;
+  const key=markKey(G.place.bx,G.place.by,0,b.x0,b.y0)+":lore";
+  if((G.marks||{})[key])return null;
+  if(!G.marks)G.marks={};
+  G.marks[key]=1;
+  return b.lore;
+ }catch(_){return null;}}
+/* ── План города ──
+   Имена кварталов помогают, только если известно, где они. Раньше это можно
+   было выяснить одним способом — обойти город целиком. План перечисляет все
+   кварталы разом: имя, чем живёт, в какой стороне и сколько до него шагов, —
+   и подаёт маяк с той стороны, где квартал стоит. Слепой игрок получает то
+   же, что зрячий получает от взгляда на площадь. */
+function cityPlan(){
+ const lvl=curLevel(),p=G.place;
+ if(!lvl||!p||lvl.kind!=="city"){narrate("План города читается только внутри городских стен.");return false;}
+ const list=(lvl.blocks||[]).map(b=>{
+  const dx=b.cx-p.x,dy=b.cy-p.y;
+  return {name:b.name,trade:b.trade,special:!!b.special,
+   d:Math.max(Math.abs(dx),Math.abs(dy)),dx,dy,dir:dirBetween(dx,dy)||"здесь же"};})
+  .sort((a,b)=>a.d-b.d);
+ if(!list.length){narrate("Здесь нет кварталов: это не город, а укрепление.");return false;}
+ const here=safeFn(()=>whereInCity(p.x,p.y),null);
+ const sq=lvl.squareAt?{d:Math.max(Math.abs(lvl.squareAt.x-p.x),Math.abs(lvl.squareAt.y-p.y)),
+  dir:dirBetween(lvl.squareAt.x-p.x,lvl.squareAt.y-p.y)||"здесь же"}:null;
+ const say=`${p.name}. Вы стоите: ${here||"улицы"}. `+
+  (lvl.street&&here!==lvl.street?`Главная улица: ${lvl.street}. `:"")+
+  (sq&&lvl.square?`${lvl.square}: ${sq.dir}, ${sq.d} ${plural(sq.d,"шаг","шага","шагов")}. `:"")+
+  `Кварталов ${list.length}: `+
+  list.map(o=>`${o.name}${o.special?", особый квартал города":""}, ${o.trade}, ${o.dir}, ${o.d} ${plural(o.d,"шаг","шага","шагов")}`).join("; ")+".";
+ narrate(say);
+ /* Маяки кварталов по очереди, каждый со своей стороны. */
+ list.slice(0,6).forEach((o,i)=>setTimeout(()=>safeFn(()=>{
+  const bid=o.special?"artifact":o.trade==="торг"?"market":o.trade==="кузнечное дело"?"forge"
+   :o.trade==="храмовое служение"?"temple":o.trade==="стража"?"npc_guard":"house";
+  beacon(bid,Math.max(-1,Math.min(1,o.dx/4)),Math.min(9,o.d));}),700+i*520));
+ return true;
 }
 /* ── Названия мест ── */
 function placeTitle(){
@@ -5587,7 +5721,9 @@ function placeTitle(){
  const p=G.place;
  if(p.depth>0)return `${p.name}: подземелье, уровень ${p.depth}`;
  if(p.kind==="city"){const z=safeFn(()=>whereInCity(p.x,p.y),null);
-  return `${p.name}: ${z||"улицы за воротами"}`;}
+  const lvl=safeFn(()=>curLevel(),null);
+  const q=lvl&&lvl.blocks?lvl.blocks.length:0;
+  return `${p.name}: ${z||"улицы за воротами"}${q?`, кварталов ${q}`:""}`;}
  return `${p.name}: внутри`;
 }
 /* ── Вход, выход, спуск, подъём ── */
@@ -5759,7 +5895,11 @@ function moveInside(dir){
   const zone=safeFn(()=>whereInCity(p.x,p.y),null);
   const changed=zone&&zone!==p.zone;
   if(changed)p.zone=zone;
-  narrate((changed?`${zone[0].toUpperCase()+zone.slice(1)}. `:"")+describeHere(false),{interrupt:true});}
+  narrate((changed?`${zone[0].toUpperCase()+zone.slice(1)}. `:"")+describeHere(false),{interrupt:true});
+  if(changed){
+   const lore=safeFn(()=>quarterLore(p.x,p.y),null);
+   if(lore){safeFn(()=>Bank.play("shine",{gain:0.5,maxSec:4}));
+    setTimeout(()=>narrate(lore,{interrupt:false}),900);}}}
  pingSurroundings(2,2);
  safeFn(()=>{Actors.ensure();Actors.tick();});
  safeFn(()=>dayPhaseCue());
@@ -6011,7 +6151,11 @@ function mineVein(x,y){
  if(placeMark(x,y)==="empty"){narrate("Жила выработана.");return false;}
  const p=G.place;
  const pool=p.depth>0?["руда","кристалл","камень","кость"]:["камень","дерево","трава"];
- const res=pool[Math.floor(H(p.bx+x,p.by+y,810)*pool.length)];
+ /* Особый квартал города кладёт свою жилу: у стеклодувов кристалл, у
+    лекарей травы, у костерезов кость. Такая жила знает, чем она богата. */
+ const lvl=curLevel();
+ const forced=lvl&&lvl.veins&&lvl.veins[x+","+y];
+ const res=forced||pool[Math.floor(H(p.bx+x,p.by+y,810)*pool.length)];
  const left=(Number(placeMark(x,y))||3)-1;
  setPlaceMark(x,y,left<=0?"empty":left);
  G.inv[res]=(Number(G.inv[res])||0)+1;
@@ -6700,6 +6844,7 @@ const CMD={
  equip(i){equipWeaponIndex(+i);},
  cast(i){castSpell(+i);},
  fight(a){if(a==="atk"||a==="magic"||a==="potion"||a==="flee")fight(a);},
+ cityplan(){cityPlan();},
  setdiff(k){setDifficulty(k);},
  tutor(){Tutor.on?Tutor.stop():Tutor.start();},
  warm(){Warm.busy?Warm.cancel():Warm.run();},
@@ -7660,6 +7805,7 @@ function renderGestures(){
   "🔉 Внутри зданий и подземелий каждый объект звучит по-своему: стена — глухой удар, дверь — скрип петель, ворота — лязг цепи, лестница вниз — нисходящие ступени, лестница вверх — восходящие, сундук — звон монет, алтарь — храмовый аккорд, факел — потрескивание, колодец — капли.",
   "🎧 После каждого шага внутри ближайшие объекты сами подают голос слева или справа — по той стороне, где они стоят.",
   "🚶 <b>Мир живёт.</b> По улицам ходит стража и горожане, в подземельях бродят твари: их шаги слышны с той стороны, где они идут, и становятся громче по мере приближения. Тварь, дошедшая до вас, нападает сама. Снаружи у стен поселений встречаются дозоры.",
+  "🏙️ <b>Кварталы.</b> У каждого города свои кварталы со своими именами — Соляной ряд, Молотовый конец, Свечной конец, — и один особый, какого нет у соседей: Стеклодувный двор, Сад лекарей, Двор менял, Тюремный двор. В особом квартале есть то, чего нет в других: своя жила, свой торговец, свой сундук; при первом заходе он рассказывает о себе. Пункт меню «План города» перечисляет все кварталы с их делом, стороной света и расстоянием и подаёт маяк с той стороны, где квартал стоит.",
   "🛣️ <b>Дороги.</b> Большие тракты идут через весь мир, от каждого селения к ближнему тракту протоптан съезд. Там, где тракты пересекаются, стоит перекрёсток со столбом-указателем: он называет ближние города, сторону света и расстояние в шагах.",
   "⚔️ <b>Сложность.</b> В настройках три уровня: спокойный, обычный и суровый. Меняется не то, что происходит, а мера — сколько бьют, сколько держат твари, как часто встречаются, почём торгуют и сколько отнимает поражение. Переключить можно в любой момент.",
   "💾 <b>Сохранения.</b> Игра сохраняется сама, но в меню «Сохранения» есть три слота и выгрузка в файл: файл можно унести на другой телефон и вернуть игру там же, где остановились. Если памяти браузера не хватит, игра скажет об этом вслух, а не промолчит.",
