@@ -914,6 +914,272 @@ class SFX{
 
 /* ════════ 24 ЗВУКА ЭНЦИКЛОПЕДИИ ════════ */
 const SOUNDS={
+ /* ══════════════════════════════════════════════════════════════════════
+    МИР НА СЛУХ, СИНТЕЗИРОВАННЫЙ
+    Записей на весь мир не хватает, и там, где записи нет, звук строит сам
+    браузер. Ниже — не музыка, а именно мир: скотный двор и лес, крики
+    людей, подземные текстуры, оружие в руках, торговые ряды и трактир,
+    вещи с силой и работа чар. Эти сцены звучат всегда, даже без папки со
+    звуками, и все они разложены по разделам энциклопедии.
+    ══════════════════════════════════════════════════════════════════════ */
+ /* ── Животные ── */
+ horse:{name:"Лошадь",icon:"🐴",dur:4,desc:"Ржание и переступ копыт у коновязи.",
+  build(s){const t=s.ctx.currentTime,o=s.osc("sawtooth",320),g=s.gain(0),f=s.filter("bandpass",900,2.2);
+   o.connect(f);f.connect(g);g.connect(s.out());s.send(g,0.5);
+   o.frequency.setValueAtTime(360,t);o.frequency.exponentialRampToValueAtTime(210,t+0.9);
+   s.lfo(17,26,o.frequency);
+   g.gain.setValueAtTime(0.0001,t);g.gain.linearRampToValueAtTime(0.16,t+0.08);
+   g.gain.exponentialRampToValueAtTime(0.0001,t+1.0);o.start(t);o.stop(t+1.1);
+   [0,180,520,700].forEach((d,i)=>s.after(1200+d,()=>s.thump(i%2?0.25:-0.25,0.35)));}},
+ dogs:{name:"Псы",icon:"🐕",dur:5,desc:"Лай дворовых собак: близко и в отдалении.",
+  build(s){const bark=(pan,vol,base)=>{const t=s.ctx.currentTime,o=s.osc("square",base),
+    f=s.filter("bandpass",base*2.2,3),g=s.gain(0);let dest=s.out();
+   if(s.ctx.createStereoPanner){const p=s.ctx.createStereoPanner();p.pan.value=pan;p.connect(s.out());dest=p;}
+   o.connect(f);f.connect(g);g.connect(dest);
+   o.frequency.setValueAtTime(base*1.5,t);o.frequency.exponentialRampToValueAtTime(base*0.7,t+0.13);
+   g.gain.setValueAtTime(0.0001,t);g.gain.linearRampToValueAtTime(vol,t+0.015);
+   g.gain.exponentialRampToValueAtTime(0.0001,t+0.16);o.start(t);o.stop(t+0.18);};
+   bark(-0.3,0.16,280);s.after(200,()=>bark(-0.3,0.13,300));
+   s.every(700,1600,()=>bark(Math.random()*1.4-0.7,0.05+Math.random()*0.1,220+Math.random()*160));}},
+ livestock:{name:"Скот",icon:"🐄",dur:7,desc:"Коровы и козы у деревенской изгороди.",
+  build(s){const moo=(base,dur,vol)=>{const t=s.ctx.currentTime,o=s.osc("sawtooth",base),
+    f=s.filter("lowpass",700,1.2),g=s.gain(0);o.connect(f);f.connect(g);g.connect(s.out());s.send(g,0.4);
+   o.frequency.setValueAtTime(base,t);o.frequency.linearRampToValueAtTime(base*0.8,t+dur);
+   g.gain.setValueAtTime(0.0001,t);g.gain.linearRampToValueAtTime(vol,t+0.15);
+   g.gain.exponentialRampToValueAtTime(0.0001,t+dur);o.start(t);o.stop(t+dur+0.1);};
+   moo(120,1.4,0.15);
+   s.every(1400,3000,()=>{if(Math.random()<0.5)moo(110+Math.random()*30,1.1+Math.random(),0.1);
+    else{const t=s.ctx.currentTime,o=s.osc("sawtooth",330),g=s.gain(0),f=s.filter("bandpass",800,2);
+     o.connect(f);f.connect(g);g.connect(s.out());s.lfo(22,40,o.frequency);
+     g.gain.setValueAtTime(0.0001,t);g.gain.linearRampToValueAtTime(0.08,t+0.05);
+     g.gain.exponentialRampToValueAtTime(0.0001,t+0.5);o.start(t);o.stop(t+0.55);}});}},
+ chickens:{name:"Птичий двор",icon:"🐓",dur:6,desc:"Куры копошатся и вскрикивают.",
+  build(s){s.every(180,600,()=>{const t=s.ctx.currentTime,o=s.osc("square",700+Math.random()*500),
+    f=s.filter("bandpass",1800,4),g=s.gain(0);o.connect(f);f.connect(g);g.connect(s.out());
+   o.frequency.exponentialRampToValueAtTime(400+Math.random()*300,t+0.09);
+   g.gain.setValueAtTime(0.0001,t);g.gain.linearRampToValueAtTime(0.05+Math.random()*0.04,t+0.01);
+   g.gain.exponentialRampToValueAtTime(0.0001,t+0.11);o.start(t);o.stop(t+0.13);});
+   s.every(2200,4200,()=>{const t=s.ctx.currentTime;[900,1200,1000,700].forEach((f0,i)=>
+    s.note(f0,i*0.13,0.16,"sawtooth",0.07));});}},
+ rats:{name:"Крысы",icon:"🐀",dur:6,desc:"Писк и коготки по камню в темноте.",
+  build(s){s.every(120,420,()=>{const t=s.ctx.currentTime,n=s.noise("white",0.02,false),
+    f=s.filter("highpass",5000,1.4),g=s.gain(0.035);
+   n.connect(f);f.connect(g);g.connect(s.out());g.gain.exponentialRampToValueAtTime(0.0001,t+0.02);n.start(t);});
+   s.every(600,1800,()=>{const t=s.ctx.currentTime,o=s.osc("square",2600+Math.random()*900),g=s.gain(0);
+    o.connect(g);g.connect(s.out());o.frequency.exponentialRampToValueAtTime(3900,t+0.06);
+    g.gain.setValueAtTime(0.0001,t);g.gain.linearRampToValueAtTime(0.05,t+0.01);
+    g.gain.exponentialRampToValueAtTime(0.0001,t+0.08);o.start(t);o.stop(t+0.1);});}},
+ bats_wings:{name:"Крылья в темноте",icon:"🦇",dur:5,desc:"Кожистые крылья и ультразвуковой щелчок.",
+  build(s){s.every(300,900,()=>{const t=s.ctx.currentTime,n=s.noise("brown",0.22,false),
+    f=s.filter("bandpass",420,1.1),g=s.gain(0);let dest=s.out();
+   if(s.ctx.createStereoPanner){const p=s.ctx.createStereoPanner();p.pan.value=Math.random()*1.6-0.8;p.connect(s.out());dest=p;}
+   n.connect(f);f.connect(g);g.connect(dest);s.lfo(11,0.5,g.gain);
+   g.gain.setValueAtTime(0.0001,t);g.gain.linearRampToValueAtTime(0.1,t+0.04);
+   g.gain.exponentialRampToValueAtTime(0.0001,t+0.24);n.start(t);});
+   s.every(400,1100,()=>s.tink());}},
+ frogs:{name:"Лягушки",icon:"🐸",dur:8,desc:"Кваканье на топях после дождя.",
+  build(s){const croak=(base,pan)=>{const t=s.ctx.currentTime,o=s.osc("sawtooth",base),
+    f=s.filter("bandpass",base*3,6),g=s.gain(0);let dest=s.out();
+   if(s.ctx.createStereoPanner){const p=s.ctx.createStereoPanner();p.pan.value=pan;p.connect(s.out());dest=p;}
+   o.connect(f);f.connect(g);g.connect(dest);s.lfo(28,50,o.frequency);
+   g.gain.setValueAtTime(0.0001,t);g.gain.linearRampToValueAtTime(0.09,t+0.03);
+   g.gain.exponentialRampToValueAtTime(0.0001,t+0.28);o.start(t);o.stop(t+0.3);};
+   croak(180,-0.4);s.every(250,900,()=>croak(140+Math.random()*140,Math.random()*1.6-0.8));}},
+ boar:{name:"Кабан",icon:"🐗",dur:4,desc:"Хрип, топот и треск подлеска.",
+  build(s){s.growl(120,0.5,20,0.24);
+   s.after(260,()=>s.growl(150,0.35,26,0.18));
+   [0,140,300,460].forEach(d=>s.after(500+d,()=>s.thump(Math.random()*0.6-0.3,0.4)));
+   s.after(700,()=>{for(let i=0;i<6;i++)s.after(i*60,()=>s.crackle());});}},
+ /* ── Крики людей ── */
+ scream:{name:"Крик",icon:"😱",dur:3,desc:"Человеческий крик ужаса, оборванный на вдохе.",
+  build(s){const t=s.ctx.currentTime,o=s.osc("sawtooth",520),f=s.filter("bandpass",1500,3.5),g=s.gain(0);
+   o.connect(f);f.connect(g);g.connect(s.out());s.send(g,0.6);s.grit(f,0.5);
+   o.frequency.setValueAtTime(430,t);o.frequency.exponentialRampToValueAtTime(980,t+0.25);
+   o.frequency.exponentialRampToValueAtTime(660,t+1.1);
+   s.lfo(6.5,22,o.frequency);
+   g.gain.setValueAtTime(0.0001,t);g.gain.linearRampToValueAtTime(0.2,t+0.06);
+   g.gain.setValueAtTime(0.2,t+0.9);g.gain.exponentialRampToValueAtTime(0.0001,t+1.2);
+   o.start(t);o.stop(t+1.3);}},
+ battle_cry:{name:"Боевой клич",icon:"🗣️",dur:4,desc:"Строй кричит перед сшибкой.",
+  build(s){const voice=(base,delay,vol,pan)=>s.after(delay,()=>{
+    const t=s.ctx.currentTime,o=s.osc("sawtooth",base),f=s.filter("bandpass",base*2.6,2),g=s.gain(0);
+    let dest=s.out();
+    if(s.ctx.createStereoPanner){const p=s.ctx.createStereoPanner();p.pan.value=pan;p.connect(s.out());dest=p;}
+    o.connect(f);f.connect(g);g.connect(dest);s.send(g,0.7);s.grit(f,0.35);
+    o.frequency.setValueAtTime(base*0.8,t);o.frequency.linearRampToValueAtTime(base,t+0.1);
+    o.frequency.linearRampToValueAtTime(base*0.75,t+0.7);
+    g.gain.setValueAtTime(0.0001,t);g.gain.linearRampToValueAtTime(vol,t+0.08);
+    g.gain.exponentialRampToValueAtTime(0.0001,t+0.8);o.start(t);o.stop(t+0.85);});
+   voice(150,0,0.14,-0.5);voice(170,40,0.13,0.5);voice(130,80,0.12,0);
+   s.after(900,()=>{for(let i=0;i<8;i++)s.after(i*95,()=>s.thump(i%2?0.3:-0.3,0.3));});}},
+ market_shout:{name:"Зазывала",icon:"📣",dur:4,desc:"Торговец выкликает товар над рядами.",
+  build(s){[[300,0],[360,240],[280,520],[400,760]].forEach(([f0,d])=>s.after(d,()=>{
+    const t=s.ctx.currentTime,o=s.osc("sawtooth",f0),f=s.filter("bandpass",f0*3,2.4),g=s.gain(0);
+    o.connect(f);f.connect(g);g.connect(s.out());s.send(g,0.5);
+    o.frequency.setValueAtTime(f0,t);o.frequency.linearRampToValueAtTime(f0*1.25,t+0.12);
+    o.frequency.linearRampToValueAtTime(f0*0.85,t+0.3);
+    g.gain.setValueAtTime(0.0001,t);g.gain.linearRampToValueAtTime(0.12,t+0.04);
+    g.gain.exponentialRampToValueAtTime(0.0001,t+0.34);o.start(t);o.stop(t+0.36);}));}},
+ guard_shout:{name:"Оклик стражи",icon:"🛡️",dur:3,desc:"«Стой! Кто идёт?» — и лязг древка о камень.",
+  build(s){[[190,0],[220,200],[170,420]].forEach(([f0,d])=>s.after(d,()=>{
+    const t=s.ctx.currentTime,o=s.osc("square",f0),f=s.filter("bandpass",f0*3.2,2),g=s.gain(0);
+    o.connect(f);f.connect(g);g.connect(s.out());s.send(g,0.7);s.grit(f,0.3);
+    g.gain.setValueAtTime(0.0001,t);g.gain.linearRampToValueAtTime(0.13,t+0.03);
+    g.gain.exponentialRampToValueAtTime(0.0001,t+0.22);o.start(t);o.stop(t+0.24);}));
+   s.after(700,()=>s.clang(150));s.after(760,()=>s.thump(0,0.4));}},
+ crowd_panic:{name:"Паника в толпе",icon:"🏃",dur:5,desc:"Толпа бросается врассыпную.",
+  build(s){const n=s.noise("pink",5),bp=s.filter("bandpass",700,0.8),g=s.gain(0.1);
+   n.connect(bp);bp.connect(g);g.connect(s.out());s.send(g,0.6);s.start(n);
+   s.lfo(0.9,0.05,g.gain);
+   s.every(70,220,()=>s.footstep(Math.random()*1.6-0.8,"stone"));
+   s.every(600,1500,()=>{const t=s.ctx.currentTime,o=s.osc("sawtooth",520+Math.random()*300),
+    f=s.filter("bandpass",1600,3),gg=s.gain(0);o.connect(f);f.connect(gg);gg.connect(s.out());
+    o.frequency.exponentialRampToValueAtTime(900,t+0.2);
+    gg.gain.setValueAtTime(0.0001,t);gg.gain.linearRampToValueAtTime(0.08,t+0.04);
+    gg.gain.exponentialRampToValueAtTime(0.0001,t+0.4);o.start(t);o.stop(t+0.42);});}},
+ /* ── Подземелья ── */
+ dungeon_drip:{name:"Капель подземелья",icon:"💧",dur:10,desc:"Редкие капли в каменной пустоте.",
+  build(s){const n=s.noise("brown",4),lp=s.filter("lowpass",220,0.7),g=s.gain(0.06);
+   n.connect(lp);lp.connect(g);g.connect(s.out());s.send(g,0.9);s.start(n);
+   s.every(700,2600,()=>{s.drop();s.send(s.out(),0.9);});}},
+ chains:{name:"Цепи",icon:"⛓️",dur:5,desc:"Ржавая цепь тянется по камню и замирает.",
+  build(s){s.every(90,260,()=>{const t=s.ctx.currentTime,n=s.noise("white",0.05,false),
+    f=s.filter("bandpass",2400+Math.random()*1800,7),g=s.gain(0.06);
+   n.connect(f);f.connect(g);g.connect(s.out());s.send(g,0.8);
+   g.gain.exponentialRampToValueAtTime(0.0001,t+0.05);n.start(t);});
+   s.after(2600,()=>{s.clang(240);s.after(120,()=>s.clang(180));});}},
+ bone_pile:{name:"Костяная осыпь",icon:"🦴",dur:4,desc:"Кости под ногой съезжают и стучат.",
+  build(s){for(let i=0;i<22;i++)s.after(i*70+Math.random()*50,()=>{
+    const t=s.ctx.currentTime,o=s.osc("triangle",340+Math.random()*520),g=s.gain(0);
+    let dest=s.out();
+    if(s.ctx.createStereoPanner){const p=s.ctx.createStereoPanner();p.pan.value=Math.random()*1.2-0.6;p.connect(s.out());dest=p;}
+    o.connect(g);g.connect(dest);
+    g.gain.setValueAtTime(0.0001,t);g.gain.linearRampToValueAtTime(0.05,t+0.005);
+    g.gain.exponentialRampToValueAtTime(0.0001,t+0.09);o.start(t);o.stop(t+0.1);});}},
+ rusty_gate:{name:"Ржавая решётка",icon:"🚧",dur:5,desc:"Решётка ползёт вверх на скрипучем вороте.",
+  build(s){const t=s.ctx.currentTime,n=s.noise("white",2.6,false),f=s.filter("bandpass",1100,9),g=s.gain(0);
+   n.connect(f);f.connect(g);g.connect(s.out());s.send(g,0.8);
+   f.frequency.setValueAtTime(800,t);f.frequency.linearRampToValueAtTime(2100,t+2.2);
+   g.gain.setValueAtTime(0.0001,t);g.gain.linearRampToValueAtTime(0.09,t+0.2);
+   g.gain.setValueAtTime(0.09,t+2.0);g.gain.exponentialRampToValueAtTime(0.0001,t+2.5);n.start(t);
+   s.after(2500,()=>{s.thump(0,0.7);s.after(60,()=>s.clang(120));});}},
+ shaft_wind:{name:"Ветер в шахте",icon:"🕳️",dur:10,desc:"Тяга из глубины гудит в стволе шахты.",
+  build(s){const n=s.noise("brown",5),bp=s.filter("bandpass",180,3.5),g=s.gain(0.2);
+   n.connect(bp);bp.connect(g);g.connect(s.out());s.send(g,1);s.start(n);
+   s.lfo(0.09,60,bp.frequency);s.lfo(0.13,0.07,g.gain);
+   const o=s.osc("sine",42),og=s.gain(0.07);o.connect(og);og.connect(s.out());o.start();
+   s.lfo(0.06,4,o.frequency);}},
+ far_scream:{name:"Крик вдалеке",icon:"🔊",dur:6,desc:"Кто-то кричал глубоко внизу — и замолчал.",
+  build(s){s.after(1400,()=>{const t=s.ctx.currentTime,o=s.osc("sawtooth",470),
+    f=s.filter("lowpass",900,1.6),g=s.gain(0);
+   o.connect(f);f.connect(g);g.connect(s.out());s.send(g,1);
+   o.frequency.setValueAtTime(400,t);o.frequency.exponentialRampToValueAtTime(760,t+0.3);
+   o.frequency.exponentialRampToValueAtTime(520,t+1.0);
+   g.gain.setValueAtTime(0.0001,t);g.gain.linearRampToValueAtTime(0.055,t+0.12);
+   g.gain.exponentialRampToValueAtTime(0.0001,t+1.4);o.start(t);o.stop(t+1.5);});}},
+ /* ── Оружие в руках ── */
+ blade_draw:{name:"Клинок из ножен",icon:"🗡️",dur:2,desc:"Сталь выходит из ножен и звенит на конце.",
+  build(s){const t=s.ctx.currentTime,n=s.noise("white",0.5,false),f=s.filter("bandpass",1800,5),g=s.gain(0);
+   n.connect(f);f.connect(g);g.connect(s.out());s.send(g,0.6);
+   f.frequency.setValueAtTime(900,t);f.frequency.exponentialRampToValueAtTime(4200,t+0.34);
+   g.gain.setValueAtTime(0.0001,t);g.gain.linearRampToValueAtTime(0.13,t+0.06);
+   g.gain.exponentialRampToValueAtTime(0.0001,t+0.4);n.start(t);
+   s.after(340,()=>s.tink());s.after(380,()=>s.tink());}},
+ arrow_hit:{name:"Стрела в цель",icon:"🎯",dur:2,desc:"Свист и глухой удар древка в дерево.",
+  build(s){const t=s.ctx.currentTime,n=s.noise("pink",0.3,false),f=s.filter("bandpass",2200,3),g=s.gain(0);
+   n.connect(f);f.connect(g);g.connect(s.out());
+   f.frequency.setValueAtTime(3200,t);f.frequency.exponentialRampToValueAtTime(1100,t+0.26);
+   g.gain.setValueAtTime(0.0001,t);g.gain.linearRampToValueAtTime(0.1,t+0.03);
+   g.gain.exponentialRampToValueAtTime(0.0001,t+0.28);n.start(t);
+   s.after(280,()=>{s.thump(0,0.5);s.note(220,0,0.16,"triangle",0.09);});}},
+ shield_bash:{name:"Удар в щит",icon:"🛡️",dur:2,desc:"Окованный край принимает удар и гудит.",
+  build(s){s.thump(0,0.8);s.after(20,()=>s.clang(140));
+   s.after(40,()=>{const t=s.ctx.currentTime,n=s.noise("brown",0.4,false),
+    f=s.filter("lowpass",500,1.4),g=s.gain(0.2);
+   n.connect(f);f.connect(g);g.connect(s.out());s.send(g,0.7);
+   g.gain.exponentialRampToValueAtTime(0.0001,t+0.4);n.start(t);});}},
+ anvil:{name:"Молот и наковальня",icon:"🔨",dur:5,desc:"Кузнец бьёт по заготовке в три удара.",
+  build(s){[0,520,900,1600,2100,2500].forEach((d,i)=>s.after(d,()=>{
+    s.clang(i%2?260:200);s.thump(0,0.4);}));
+   s.after(3100,()=>{const t=s.ctx.currentTime,n=s.noise("white",1.4,false),
+    f=s.filter("bandpass",4200,1.4),g=s.gain(0.1);
+   n.connect(f);f.connect(g);g.connect(s.out());
+   g.gain.exponentialRampToValueAtTime(0.0001,t+1.3);n.start(t);});}},
+ /* ── Рынок и трактир ── */
+ market_babble:{name:"Гомон рядов",icon:"🏺",dur:10,desc:"Торг, спор о цене и звон мелочи.",
+  build(s){const n=s.noise("pink",5),bp=s.filter("bandpass",520,0.7),g=s.gain(0.09);
+   n.connect(bp);bp.connect(g);g.connect(s.out());s.send(g,0.5);s.start(n);
+   s.lfo(0.4,80,bp.frequency);
+   s.every(400,1200,()=>{const t=s.ctx.currentTime,o=s.osc("sawtooth",220+Math.random()*260),
+    f=s.filter("bandpass",900,2),gg=s.gain(0);let dest=s.out();
+    if(s.ctx.createStereoPanner){const p=s.ctx.createStereoPanner();p.pan.value=Math.random()*1.4-0.7;p.connect(s.out());dest=p;}
+    o.connect(f);f.connect(gg);gg.connect(dest);
+    o.frequency.linearRampToValueAtTime(180+Math.random()*200,t+0.3);
+    gg.gain.setValueAtTime(0.0001,t);gg.gain.linearRampToValueAtTime(0.05,t+0.05);
+    gg.gain.exponentialRampToValueAtTime(0.0001,t+0.32);o.start(t);o.stop(t+0.34);});
+   s.every(1200,3000,()=>s.tink());}},
+ tavern_room:{name:"Общий зал",icon:"🍺",dur:10,desc:"Кружки, смех и треск огня в очаге.",
+  build(s){const n=s.noise("pink",5),bp=s.filter("bandpass",420,0.6),g=s.gain(0.08);
+   n.connect(bp);bp.connect(g);g.connect(s.out());s.send(g,0.4);s.start(n);
+   s.every(220,700,()=>s.crackle());
+   s.every(900,2400,()=>{s.clang(320+Math.random()*160);s.after(60,()=>s.thump(Math.random()*0.6-0.3,0.3));});
+   s.every(1800,4200,()=>{[240,300,270].forEach((f0,i)=>s.note(f0,i*0.12,0.18,"sawtooth",0.05));});}},
+ pouring:{name:"Кружка эля",icon:"🍻",dur:4,desc:"Льётся из кувшина, пена оседает.",
+  build(s){const t=s.ctx.currentTime,n=s.noise("white",2.2,false),f=s.filter("bandpass",1400,2.4),g=s.gain(0);
+   n.connect(f);f.connect(g);g.connect(s.out());
+   f.frequency.setValueAtTime(1800,t);f.frequency.linearRampToValueAtTime(700,t+1.9);
+   g.gain.setValueAtTime(0.0001,t);g.gain.linearRampToValueAtTime(0.09,t+0.15);
+   g.gain.exponentialRampToValueAtTime(0.0001,t+2.1);n.start(t);
+   s.every(60,180,()=>{if(Math.random()<0.6)s.tink();});
+   s.after(2200,()=>s.thump(0,0.35));}},
+ dice:{name:"Кости на столе",icon:"🎲",dur:3,desc:"Кости катятся по доске и останавливаются.",
+  build(s){for(let i=0;i<14;i++)s.after(i*(60+Math.random()*40),()=>{
+    const t=s.ctx.currentTime,o=s.osc("triangle",620+Math.random()*420),g=s.gain(0);
+    o.connect(g);g.connect(s.out());
+    g.gain.setValueAtTime(0.0001,t);g.gain.linearRampToValueAtTime(0.045,t+0.004);
+    g.gain.exponentialRampToValueAtTime(0.0001,t+0.06);o.start(t);o.stop(t+0.07);});
+   s.after(1200,()=>s.thump(0,0.2));}},
+ /* ── Вещи с силой ── */
+ artifact_pulse:{name:"Пульс артефакта",icon:"💎",dur:8,desc:"Вещь бьётся, как сердце, и тянет ноту.",
+  build(s){const o=s.osc("sine",220),g=s.gain(0);o.connect(g);g.connect(s.out());s.send(g,1);
+   o.start();s.lfo(0.7,0.05,g.gain);
+   const t=s.ctx.currentTime;g.gain.setValueAtTime(0.0001,t);g.gain.linearRampToValueAtTime(0.07,t+1.2);
+   s.every(900,1400,()=>{s.note(880,0,0.4,"sine",0.05);s.note(1320,0.05,0.3,"sine",0.03);});}},
+ seal_break:{name:"Печать сорвана",icon:"🔓",dur:3,desc:"Древняя печать трескается и выпускает воздух.",
+  build(s){s.after(0,()=>{const t=s.ctx.currentTime,n=s.noise("white",0.12,false),
+    f=s.filter("highpass",3000,1.6),g=s.gain(0.14);
+   n.connect(f);f.connect(g);g.connect(s.out());s.send(g,0.8);
+   g.gain.exponentialRampToValueAtTime(0.0001,t+0.12);n.start(t);});
+   s.after(140,()=>{const t=s.ctx.currentTime,n=s.noise("pink",1.6,false),
+    f=s.filter("bandpass",900,1.2),g=s.gain(0);
+   n.connect(f);f.connect(g);g.connect(s.out());s.send(g,1);
+   f.frequency.setValueAtTime(1400,t);f.frequency.exponentialRampToValueAtTime(280,t+1.4);
+   g.gain.setValueAtTime(0.0001,t);g.gain.linearRampToValueAtTime(0.12,t+0.08);
+   g.gain.exponentialRampToValueAtTime(0.0001,t+1.5);n.start(t);});
+   s.after(200,()=>{[660,880,1100].forEach((f0,i)=>s.note(f0,i*0.08,0.5,"sine",0.05));});}},
+ /* ── Работа чар ── */
+ cast_charge:{name:"Набор силы",icon:"🔵",dur:4,desc:"Заклинание собирается: гул растёт и звенит.",
+  build(s){const t=s.ctx.currentTime,o=s.osc("sine",90),g=s.gain(0);
+   o.connect(g);g.connect(s.out());s.send(g,0.9);
+   o.frequency.setValueAtTime(90,t);o.frequency.exponentialRampToValueAtTime(420,t+2.4);
+   g.gain.setValueAtTime(0.0001,t);g.gain.linearRampToValueAtTime(0.13,t+2.2);
+   g.gain.exponentialRampToValueAtTime(0.0001,t+2.8);o.start(t);o.stop(t+2.9);
+   s.every(120,320,()=>s.tink());}},
+ spell_release:{name:"Разряд",icon:"⚡",dur:3,desc:"Слово сказано — сила уходит вперёд.",
+  build(s){const t=s.ctx.currentTime,n=s.noise("white",1.2,false),f=s.filter("bandpass",2600,2),g=s.gain(0);
+   n.connect(f);f.connect(g);g.connect(s.out());s.send(g,0.8);
+   f.frequency.setValueAtTime(4200,t);f.frequency.exponentialRampToValueAtTime(300,t+0.9);
+   g.gain.setValueAtTime(0.0001,t);g.gain.linearRampToValueAtTime(0.18,t+0.03);
+   g.gain.exponentialRampToValueAtTime(0.0001,t+1.0);n.start(t);
+   const o=s.osc("sawtooth",900),og=s.gain(0.09);o.connect(og);og.connect(s.out());
+   o.frequency.exponentialRampToValueAtTime(120,t+0.7);
+   og.gain.exponentialRampToValueAtTime(0.0001,t+0.8);o.start(t);o.stop(t+0.9);}},
+ ward_shimmer:{name:"Оберег",icon:"🛡️",dur:5,desc:"Защитный круг стоит и тихо мерцает.",
+  build(s){const o=s.osc("triangle",520),g=s.gain(0.05);o.connect(g);g.connect(s.out());
+   s.send(g,1);o.start();s.lfo(4.5,14,o.frequency);s.lfo(0.8,0.025,g.gain);
+   const o2=s.osc("sine",780),g2=s.gain(0.03);o2.connect(g2);g2.connect(s.out());o2.start();
+   s.lfo(3.1,9,o2.frequency);
+   s.every(500,1200,()=>s.tink());}},
  forest:{name:"Лес",icon:"🌲",dur:12,desc:"Шелест листвы, ветер и птицы.",
   build(s){const n=s.noise("pink",4),lp=s.filter("lowpass",850,0.6),g=s.gain(0.16);
    n.connect(lp);lp.connect(g);g.connect(s.out());s.start(n);s.lfo(0.12,0.05,g.gain);
@@ -1587,12 +1853,17 @@ const MONSTER_CUE_NAMES={emerge:"появление",attack:"удар",damage:"�
 const SCENE_CATS=[
  ["Стихии и погода","🌦️",["forest","thunder","birds","rain","wind","fire","stream","sea","crickets",
   "plains","mountains_amb","swamp","desert_amb","snow_weather","fog","storm","cave"]],
- ["Птицы и звери","🦉",["owl","crow","seagull","wolves"]],
- ["Голоса чудовищ (общие)","👹",["mgrowl","mroar","mhiss","mscreech","mstomp","mwail"]],
- ["Именные чудовища","🐉",["wolf_named","goblin_named","troll_named","ogre_named","golem_named",
+ ["Птицы и звери","🦉",["owl","crow","seagull","wolves","horse","dogs","livestock",
+  "chickens","rats","bats_wings","frogs","boar"]],
+ ["Голоса людей и крики","😱",["scream","battle_cry","market_shout","guard_shout","crowd_panic"]],
+ ["Подземные текстуры","🕳️",["dungeon_drip","chains","bone_pile","rusty_gate","shaft_wind","far_scream"]],
+
+ ["Вещи с силой и работа чар","💎",["artifact_pulse","seal_break","cast_charge","spell_release","ward_shimmer"]],
+ ["Голоса чудовищ","👹",["mgrowl","mroar","mhiss","mscreech","mstomp","mwail",
+  "wolf_named","goblin_named","troll_named","ogre_named","golem_named",
   "dragon_named","basilisk_named","wyvern_named","banshee_named","direbear_named","sandworm_named",
   "treant_named","kraken_named","bandit_named","spider_named","serpent_named","harpy_named","wraith_named"]],
- ["Оружие и бой","⚔️",["sword","dagger","staff","bow"]],
+ ["Оружие и бой","⚔️",["sword","dagger","staff","bow","blade_draw","arrow_hit","shield_bash","anvil"]],
  ["Ресурсы под ногами","📦",["res_tree_s","res_stone_s","res_ore_s","res_herbs_s","res_crystal_s",
   "res_shell_s","res_bone_s","res_berry_s"]],
  ["Голоса жителей","🧑",["npc_ruler_s","npc_guard_s","npc_merchant_s","npc_scholar_s","npc_bartender_s",
@@ -1600,7 +1871,8 @@ const SCENE_CATS=[
   "npc_apprentice_s","npc_traveler_s"]],
  ["Постройки и места","🏛️",["castle","village","tavern","temple","market","school","clanhall","tower",
   "ruins","traveler_beacon","portal"]],
- ["Предметы и ремесло","🔨",["forge","door","chest","coins","magic","footsteps","crowd"]],
+ ["Ремёсла, торг и трактир","🔨",["forge","door","chest","coins","magic","footsteps","crowd",
+  "market_babble","tavern_room","pouring","dice"]],
 ];
 /* Сцена, не попавшая ни в один раздел, всё равно должна быть доступна. */
 function sceneCats(){
@@ -2666,7 +2938,15 @@ const GUIDE=[
  "Чары. Каст слышен в три захода: набор силы арфой, слово школы и разряд, а следом — короткий откат. Свет поёт напевом, тьма отвечает порчей, лёд чертит руну, огонь бьёт разрядом.",
  "Места. Порог каждого места звучит трижды: общий тон, голос постройки и то, чем место занято. Рынок гудит рядами и мехами, кузня бьёт молотом, таверна наигрывает, храм поёт, цитадель держит строй, порт тянет гармонику, школа перебирает клавиши, руины молчат подземным гулом.",
  "Находки. Клад слышен трижды: щелчок замка, блеск находки и голос самой вещи. Артефакт после этого поёт отдельно."]},
-{title:"Глава 29. Горячие клавиши и советы",body:[
+{title:"Глава 29. Мир, которого нет в записях",body:[
+ "Записей на всё не хватает, и там, где их нет, звук строит сам браузер. Эти сцены звучат всегда — даже если папку со звуками не скачали, — и все они есть в энциклопедии, где их можно послушать отдельно.",
+ "Двор и деревня. Скотный двор мычит и блеет, псы лают у изгороди, куры копошатся, кони переступают у коновязи в цитадели. В лесу ломает подлесок кабан, на ночных топях квакают лягушки.",
+ "Люди. Крик ужаса, боевой клич перед сшибкой, зазывала над рядами, оклик стражи, паника в толпе — пять человеческих голосов, каждый на своём месте.",
+ "Подземелья. Наверху бегают крысы и капает вода, ниже гремит цепь и осыпаются кости, ещё ниже тянет из шахты и кто-то кричит далеко внизу. Ржавая решётка ползёт вверх на скрипучем вороте.",
+ "Оружие в руках. Клинок выходит из ножен и звенит на конце, стрела свистит и бьёт древком в дерево, окованный край щита принимает удар, молот бьёт по наковальне.",
+ "Рынок и трактир. Гомон рядов со спором о цене, общий зал с кружками и очагом, льющийся эль, кости на столе.",
+ "Вещи с силой и работа чар. Артефакт бьётся, как сердце; древняя печать трескается и выпускает воздух; заклинание собирает силу, разряжается вперёд, а защитное встаёт кругом и тихо мерцает."]},
+{title:"Глава 30. Горячие клавиши и советы",body:[
  "Стрелки — ходьба. Контрол или Альт плюс G — руководство. Контрол или Альт плюс M — меню действий. Альт плюс S — тишина. Эскейп — закрыть.",
  "Играйте в наушниках — стерео-маяки помогут ориентироваться. Удачной охоты, Странник!"]}];
 let chIndex=0;
@@ -4684,6 +4964,37 @@ function bankAmbientRole(){
  }catch(_){return "amb_plains";}
 }
 /* Фон обновляется при каждом переходе: земля, город, глубина, палуба корабля. */
+/* ════════════════════════════════════════════════════════════════════════
+   ГОЛОСА МЕСТА БЕЗ ЗАПИСЕЙ
+   Записей на всё не хватает, и там, где их нет, звучит синтез. Эти сцены —
+   не подложка: они выходят изредка и говорят, где вы. Деревня — скотный
+   двор и псы, цитадель — кони и оклик стражи, рынок — гомон рядов и
+   зазывала, таверна — общий зал, кузня — молот. Под землёй наверху бегают
+   крысы и капает вода, ниже гремят цепи и осыпаются кости, ещё ниже тянет
+   из шахты и кто-то кричит далеко внизу. В лесу ломает подлесок кабан, на
+   ночных топях квакают лягушки.
+   ════════════════════════════════════════════════════════════════════════ */
+const PLACE_SCENES={village:["livestock","dogs","chickens"],castle:["horse","guard_shout"],
+ market:["market_babble","market_shout"],tavern:["tavern_room","pouring","dice"],
+ forge:["anvil"],port:["market_babble"],clanhall:["battle_cry"],
+ ruins:["dungeon_drip","bone_pile"],cave_entrance:["bats_wings","dungeon_drip"]};
+const DEPTH_SCENES=[[],["rats","dungeon_drip"],["rats","chains"],["chains","bone_pile"],
+ ["shaft_wind","far_scream"],["far_scream","shaft_wind"]];
+function livingScene(){
+ try{
+  if(!settings.effects||Math.random()>0.22)return;
+  const p=G.place;let набор=null;
+  if(p&&p.depth>0)набор=DEPTH_SCENES[Math.min(DEPTH_SCENES.length-1,p.depth)];
+  else if(p)набор=PLACE_SCENES[p.stype];
+  else if(!G.ship){
+   const t=cellContent(G.x,G.y).terrain[0];
+   if(t==="swamp"&&isNight())набор=["frogs"];
+   else if(t==="forest")набор=["boar"];
+   else if(t==="cave")набор=["bats_wings","dungeon_drip"];}
+  if(!набор||!набор.length)return;
+  const id=набор[Math.floor(Math.random()*набор.length)];
+  if(SOUNDS[id])Play.start("living",id,{dur:Math.min(6,SOUNDS[id].dur)});
+ }catch(_){}}
 function bankUpdateAmbient(){
  try{
   if(!Bank.enabled)return;
@@ -4691,6 +5002,7 @@ function bankUpdateAmbient(){
   const seed=G.place?(G.place.bx+G.place.by+G.place.depth):(G.ship?G.ship.leg:(G.x+G.y));
   Bank.loop("place",role,{seed,gain:0.55,kind:"music"});
   safeFn(()=>placeColour(seed));
+  safeFn(()=>livingScene());
  }catch(_){}
 }
 /* ── КРАСКА МЕСТА ──
@@ -6126,7 +6438,7 @@ const EVENTS=[
      narrate(`Он нырнул в подворотню и исчез: −${lost} золота и разбитое о поворот плечо.`);}}},
    {l:"📣 Крикнуть стражу",run:()=>{
     const lost=Math.min(G.gold,10+Math.floor(Math.random()*15));G.gold-=lost;addRep(c.emp.race,1);
-    safeFn(()=>Bank.play("bell_field",{gain:0.6,maxSec:4}));
+    safeFn(()=>{Bank.play("bell_field",{gain:0.6,maxSec:4});Play.start("ev","crowd_panic",{dur:4});});
     narrate(`Стража подняла крик и перекрыла переулок. Часть денег вернули, часть ушла с вором: −${lost} золота. Порядок в городе вас запомнил.`);}},
    {l:"🤷 Махнуть рукой",run:()=>{const lost=Math.min(G.gold,25+Math.floor(Math.random()*25));G.gold-=lost;
     G.faith.road=godFavor("road")+1;
@@ -6584,7 +6896,7 @@ function drawWeapon(){
  G.weaponDrawn=true; AE.ensure();
  try{
   const bladed=["Меч","Кинжал"].includes(G.equip.weapon&&G.equip.weapon.type);
-  if(bladed){playSample("swordDraw",0.9);}
+  if(bladed){playSample("swordDraw",0.9);Play.start("ev","blade_draw",{dur:2});}
   else{const s=new SFX(); s.clang(300); setTimeout(()=>{try{s.stop(.18);}catch(e){}},500);}
  }catch(e){}
  vib([25,40,25]); narrate(`Вынуто оружие: ${weaponName()}. Готовы к взмаху.`); refresh(); return true;
@@ -7336,7 +7648,8 @@ function moveInside(dir){
   return false;}
  if(t==="G"&&p.kind==="city"&&placeMark(nx,ny)!=="open"){
   setPlaceMark(nx,ny,"open");
-  safeFn(()=>{beacon("gate",DIRV[dir][0],0);Bank.play("ram_door",{seed:nx+ny,gain:0.5,maxSec:3});});
+  safeFn(()=>{beacon("gate",DIRV[dir][0],0);Bank.play("ram_door",{seed:nx+ny,gain:0.5,maxSec:3});
+   Play.start("ev","rusty_gate",{dur:4});});
   narrate("Створки городских ворот разошлись. Шагните ещё раз в ту же сторону — встанете в воротах.");
   return false;}
  p.x=nx;p.y=ny;
@@ -8100,6 +8413,9 @@ function playRealMonsterCue(m,cue,vol=0.7){
 }
 function startCombat(c){
  const m=c.monster;G.weaponDrawn=!!G.weaponDrawn; /* бой никогда сам не вытаскивает оружие */ G.inCombat=true;G.combat={m,hp:m.hp,key:c.x+","+c.y,ai:monsterAIProfile(m)};
+ /* Схватка с тем, кто заметно сильнее, начинается с клича: игрок слышит,
+    во что ввязался, раньше, чем прочтёт уровень противника. */
+ safeFn(()=>{if((Number(m.lvl)||1)>=(Number(G.level)||1)+2)Play.start("ev","battle_cry",{dur:4});});
  /* Бой больше НЕ открывает модальное окно: оно перекрывало экран, считалось активным
     слоем и забирало себе все свайпы, из-за чего ударить в бою жестом было невозможно.
     Сводка о противнике и о себе показана прямо на игровом экране и доступна ощупыванием. */
@@ -8196,6 +8512,8 @@ function playWeaponCombatSfx(hit,dir="N",dmg=6){try{AE.ensure();
  /* Взмах и попадание — настоящими записями; синтез остаётся, если банка нет. */
  const pan=dir==="E"?0.35:dir==="W"?-0.35:0;
  safeFn(()=>Bank.play(weaponVoiceRole(),{seed:Math.floor(Math.random()*97),gain:0.45,maxSec:2.5}));
+ /* Стрела попадает в цель иначе, чем клинок: свист и глухой удар древка. */
+ if(hit&&weaponVoiceRole()==="bow_release")safeFn(()=>Play.start("ev","arrow_hit",{dur:2}));
  if(hit)setTimeout(()=>safeFn(()=>Bank.play((Number(dmg)||6)>=12?"metal_hit":"dull_hit",
   {seed:Math.floor(Math.random()*97),gain:0.5,maxSec:2})),150);
  const natSwing=natShot("swing",pan,0.7);
@@ -8238,7 +8556,7 @@ function fight(a){const cb=G.combat;if(!cb)return;const m=cb.m;
  else if(a==="flee"){if(Math.random()<0.4+G.agi*0.02+0.12*fxLevel("deal")){
    endCombat();narrate("Вы сбежали!");journal(`Побег от «${m.n}».`);refresh();resumeLocationMusic();return;}
   cbLog("Сбежать не вышло!");
-  safeFn(()=>Bank.play("shield_block",{seed:G.hp,gain:0.45,maxSec:3}));}
+  safeFn(()=>{Bank.play("shield_block",{seed:G.hp,gain:0.45,maxSec:3});Play.start("ev","shield_bash",{dur:2});});}
  narrate(cbLog2text());
  if(cb.hp<=0){victory();return;}
  /* Мера сложности: во сколько раз больнее бьёт мир. */
@@ -8379,6 +8697,7 @@ function defeat(){endCombat();Music.stop();
   setTimeout(()=>safeFn(()=>Bank.play("cello_defeat",{gain:0.7,maxSec:7})),380);
   /* Поражение договаривают глубина и плач: удар о землю, стон, гобой. */
   Bank.play("body_fall",{seed:G.day,gain:0.55,maxSec:3});
+  Play.start("ev","scream",{dur:3});
   setTimeout(()=>safeFn(()=>Bank.play("moan_deep",{seed:G.day,gain:0.45,maxSec:5})),700);
   setTimeout(()=>safeFn(()=>Bank.play("lament_oboe",{seed:G.day,gain:0.5,maxSec:7})),1300);});
  const emp=empireAt(G.x,G.y);G.x=emp.cap.x;G.y=emp.cap.y;
@@ -8457,7 +8776,9 @@ function findArtifact(){const ART=["Осколок Зари","Шёпот Вет�
  safeFn(()=>{Bank.play("fx_crystal",{seed:G.artifacts.length,gain:0.6,maxSec:6});
   setTimeout(()=>safeFn(()=>Bank.play("secret_box",{seed:G.artifacts.length,gain:0.5,maxSec:6})),600);
   /* Найденная вещь подаёт голос сама: это уже не звук находки, а звук вещи. */
-  setTimeout(()=>safeFn(()=>Bank.play("relic_sing",{seed:G.artifacts.length,gain:0.5,maxSec:6})),1100);});
+  setTimeout(()=>safeFn(()=>Bank.play("relic_sing",{seed:G.artifacts.length,gain:0.5,maxSec:6})),1100);
+  Play.start("ev","seal_break",{dur:3});
+  setTimeout(()=>safeFn(()=>Play.start("ev","artifact_pulse",{dur:6})),1600);});
  UI.fanfare();safeFn(()=>{Bank.play("jingle_achievement",{gain:0.8});Bank.play("artifact",{seed:G.artifacts.length,gain:0.6,maxSec:9});
   Bank.play("artifact_hum",{seed:G.artifacts.length,gain:0.5,maxSec:8});});if(settings.effects)Play.start("ev","magic",{dur:6});
  sub("✨ Найден артефакт!");
@@ -8952,6 +9273,11 @@ function castSpell(i){const sp=SPELLS[i];
    role==="spell_ice"?"rune_square":role==="spell_fire"?"spell_bolt":"charm_chiff";
   setTimeout(()=>safeFn(()=>Bank.play(бросок,{seed:i,gain:0.5,maxSec:5})),520);
   setTimeout(()=>safeFn(()=>Bank.play("magic_rewind",{seed:i,gain:0.35,maxSec:3})),900);});
+ /* Синтез договаривает то, чего нет в записях: набор силы, разряд и — для
+    защитных заклинаний — стоящий круг оберега. */
+ safeFn(()=>{Play.start("ev2","cast_charge",{dur:2.2});
+  setTimeout(()=>safeFn(()=>Play.start("ev2",
+   /щит|оберег|защит|исцел/i.test(sp.n)?"ward_shimmer":"spell_release",{dur:3})),1200);});
  if(sp.n==="Исцеление"){G.hp=Math.min(G.hpMax,G.hp+25);UI.drink();}
  else if(settings.effects)Play.start("ev",sp.n==="Огненный шар"?"magic":sp.n==="Зов дождя"?"rain":sp.n==="Ветер странника"?"wind":"magic",{dur:4});
  narrate(`Заклинание «${sp.n}» сотворено.`);journal("Заклинание: "+sp.n);

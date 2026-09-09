@@ -232,6 +232,48 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
  check('у каждого рода оружия свой голос, и голоса разные',
   !voices.нетРоли.length&&voices.разных>=4,voices.оружие);
 
+ /* ── 5. Мир, которого нет в записях: синтезированные сцены ── */
+ const scenes=await page.evaluate(()=>{
+  const нужны=["horse","dogs","livestock","chickens","rats","bats_wings","frogs","boar",
+   "scream","battle_cry","market_shout","guard_shout","crowd_panic",
+   "dungeon_drip","chains","bone_pile","rusty_gate","shaft_wind","far_scream",
+   "blade_draw","arrow_hit","shield_bash","anvil",
+   "market_babble","tavern_room","pouring","dice",
+   "artifact_pulse","seal_break","cast_charge","spell_release","ward_shimmer"];
+  const нет=нужны.filter(id=>!SOUNDS[id]);
+  const неполные=нужны.filter(id=>SOUNDS[id]&&
+   (!SOUNDS[id].name||!SOUNDS[id].desc||!SOUNDS[id].icon||typeof SOUNDS[id].build!=="function"||!(SOUNDS[id].dur>0)));
+  /* Каждая сцена должна попасть в какой-нибудь раздел энциклопедии. */
+  const взято=new Set();sceneCats().forEach(([,,ids])=>ids.forEach(i=>взято.add(i)));
+  const внеРазделов=нужны.filter(id=>!взято.has(id));
+  return {нет,неполные,внеРазделов,всего:Object.keys(SOUNDS).length};});
+ check('все новые сцены мира на месте и построены',
+  !scenes.нет.length&&!scenes.неполные.length,{нет:scenes.нет,неполные:scenes.неполные});
+ check('ни одна новая сцена не осталась вне разделов',!scenes.внеРазделов.length,scenes.внеРазделов);
+ check('синтезированных сцен стало больше сотни',scenes.всего>=120,scenes.всего);
+
+ /* Сцены должны действительно строиться в браузере, а не только числиться. */
+ const built=await page.evaluate(()=>{
+  const плохие=[];
+  ["horse","dogs","livestock","chickens","rats","bats_wings","frogs","boar",
+   "scream","battle_cry","market_shout","guard_shout","crowd_panic",
+   "dungeon_drip","chains","bone_pile","rusty_gate","shaft_wind","far_scream",
+   "blade_draw","arrow_hit","shield_bash","anvil",
+   "market_babble","tavern_room","pouring","dice",
+   "artifact_pulse","seal_break","cast_charge","spell_release","ward_shimmer"].forEach(id=>{
+   try{AE.ensure();const s=new SFX();SOUNDS[id].build(s);setTimeout(()=>{try{s.stop(0.05);}catch(_){}},50);}
+   catch(err){плохие.push(id+": "+err.message);}});
+  return плохие;});
+ check('каждая новая сцена строится в настоящем браузере без ошибок',!built.length,built.slice(0,4));
+
+ const living=await page.evaluate(()=>{
+  const плохие=[];
+  Object.entries(PLACE_SCENES).forEach(([k,ids])=>ids.forEach(id=>{if(!SOUNDS[id])плохие.push(k+"→"+id);}));
+  DEPTH_SCENES.forEach((ids,d)=>ids.forEach(id=>{if(!SOUNDS[id])плохие.push("глубина "+d+"→"+id);}));
+  return {плохие,мест:Object.keys(PLACE_SCENES).length,глубин:DEPTH_SCENES.length};});
+ check('у каждой постройки и каждой глубины свои живые сцены, и все они существуют',
+  !living.плохие.length&&living.мест>=8&&living.глубин>=6,living);
+
  check('игра не выбрасывала ошибок за весь прогон',errors.length===0,errors.slice(0,3));
 
  console.log(results.join('\n'));
