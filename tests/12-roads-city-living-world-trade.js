@@ -116,9 +116,17 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   moveInside("E");
   const onStair=G.place.x===sp.x&&G.place.y===sp.y,armed=!!G.place.arm,depthMid=G.place.depth;
   moveInside("E");
-  return {d0,onStair,armed,depthMid,depthAfter:G.place.depth};});
+  /* Второй шаг не роняет вниз, а выводит на марш: ярусы теперь разделяет
+     лестница, и её проходят ногами. */
+  const марш=G.flight?{n:G.flight.n,i:G.flight.i,d:G.flight.d}:null;
+  const depthOnFlight=G.place.depth;
+  let шагов=0;while(G.flight&&шагов<40){moveInside("E");шагов++;}
+  return {d0,onStair,armed,depthMid,depthOnFlight,марш,шагов,depthAfter:G.place.depth};});
  check('шаг на ступени не роняет вниз сразу',stairs.skip||(stairs.onStair===true&&stairs.armed===true&&stairs.depthMid===stairs.d0),stairs);
- check('второй шаг в ту же сторону спускает на уровень ниже',stairs.skip||stairs.depthAfter===stairs.d0+1,stairs);
+ check('второй шаг в ту же сторону выводит на лестничный марш',
+  stairs.skip||(!!stairs.марш&&stairs.марш.n>=6&&stairs.depthOnFlight===stairs.d0),stairs);
+ check('марш, пройденный до конца, спускает на уровень ниже',
+  stairs.skip||(stairs.depthAfter===stairs.d0+1&&stairs.шагов===stairs.марш.n),stairs);
 
  // 7. Живой мир: стража и твари движутся
  const live=await page.evaluate(async()=>{

@@ -77,21 +77,55 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   return {skip:true};});
  check('дверь сначала открывается, затем пропускает',door.skip||(door.first===false&&door.opened&&door.second===true),door);
 
- // 5. Лестницы: спуск и подъём
+ // 5. Лестницы: между ярусами лежит марш, и его проходят ногами
  const stairs=await page.evaluate(()=>{
+  /* Пройти марш до конца: шаг в ту же сторону, пока марш не кончится. */
+  const пройти=(dir)=>{let n=0;while(G.flight&&n<40){moveInside(dir);n++;}return n;};
   const c=cellContent(G.x,G.y);
   G.place=null;enterPlace(c);
   const l=curLevel();let f=null;
   for(let y=0;y<l.h;y++)for(let x=0;x<l.w;x++)if(l.g[y][x]===">")f={x,y};
   if(!f)return {skip:true};
   G.place.x=f.x;G.place.y=f.y;
-  const d0=G.place.depth;const down=useHere();const d1=G.place.depth;
+  const d0=G.place.depth;
+  const down=useHere();
+  const маршВниз=G.flight?{n:G.flight.n,d:G.flight.d}:null;
+  const шаговВниз=пройти("N");
+  const d1=G.place.depth;
   const l2=curLevel();let up=null;
   for(let y=0;y<l2.h;y++)for(let x=0;x<l2.w;x++)if(l2.g[y][x]==="<")up={x,y};
   if(up){G.place.x=up.x;G.place.y=up.y;}
-  const back=useHere();const d2=G.place?G.place.depth:null;
-  return {d0,d1,d2,down,back};});
+  const back=useHere();
+  const маршВверх=G.flight?{n:G.flight.n,d:G.flight.d}:null;
+  пройти("N");
+  const d2=G.place?G.place.depth:null;
+  return {d0,d1,d2,down,back,маршВниз,маршВверх,шаговВниз};});
  check('лестница вниз и вверх работают',stairs.skip||(stairs.d1===stairs.d0+1&&stairs.d2===stairs.d0),stairs);
+ check('между ярусами лежит марш из нескольких ступеней',
+  stairs.skip||(stairs.маршВниз&&stairs.маршВниз.n>=6&&stairs.маршВниз.n<=18&&stairs.маршВниз.d===1),stairs.маршВниз);
+ check('марш проходится ногами, а не одним шагом',
+  stairs.skip||(stairs.шаговВниз>1&&stairs.шаговВниз===stairs.маршВниз.n),
+  {шагов:stairs.шаговВниз,ступеней:stairs.маршВниз&&stairs.маршВниз.n});
+ check('подъём тоже идёт маршем',
+  stairs.skip||!stairs.маршВверх||(stairs.маршВверх.n>=6&&stairs.маршВверх.d===-1),stairs.маршВверх);
+
+ // 5б. С марша можно вернуться назад, не дойдя до конца
+ const назад=await page.evaluate(()=>{
+  const c=cellContent(G.x,G.y);
+  G.place=null;enterPlace(c);
+  const l=curLevel();let f=null;
+  for(let y=0;y<l.h;y++)for(let x=0;x<l.w;x++)if(l.g[y][x]===">")f={x,y};
+  if(!f)return {skip:true};
+  G.place.x=f.x;G.place.y=f.y;
+  const d0=G.place.depth;
+  useHere();                      /* «N» — марш начат ходом на север */
+  if(!G.flight)return {skip:true};
+  moveInside("N");moveInside("N");
+  const наМарше=G.flight?G.flight.i:null;
+  let n=0;while(G.flight&&n<40){moveInside("S");n++;}
+  return {d0,после:G.place.depth,наМарше,марш:!!G.flight,шагов:n};});
+ check('с марша можно повернуть назад и вернуться на прежний ярус',
+  назад.skip||(назад.после===назад.d0&&назад.марш===false&&назад.наМарше===2),назад);
 
  // 6. Подземелье: сундук, жила, алтарь, логово
  const dung=await page.evaluate(()=>{

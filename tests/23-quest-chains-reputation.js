@@ -23,12 +23,14 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   const rewardsGrow=ids.every(id=>{
    const r=CHAIN_DB[id].steps.map((f,i)=>makeChainQuest(n,id,i).reward.gold);
    return r[0]<r[r.length-1];});
-  return {ids,bad,rewardsGrow,кому:["Жрец","Глава клана","Правитель","Торговец","Фермер"].map(p=>chainForNPC({prof:p}))};});
- check('четыре цепочки, каждый шаг собирается в настоящее задание',
-  chains.ids.length===4&&chains.bad.length===0,chains.bad.slice(0,4));
+  return {ids,bad,rewardsGrow,кому:["Жрец","Глава клана","Правитель","Торговец","Магистр","Ученик","Фермер"].map(p=>chainForNPC({prof:p}))};});
+ check('пять цепочек, каждый шаг собирается в настоящее задание',
+  chains.ids.length===5&&chains.bad.length===0,{цепочек:chains.ids,плохие:chains.bad.slice(0,4)});
  check('награда на последнем шаге больше, чем на первом',chains.rewardsGrow===true);
  check('цепочку даёт тот, кому она к лицу',
-  JSON.stringify(chains.кому)===JSON.stringify(["temple","clan","war","trade",null]),chains.кому);
+  JSON.stringify(chains.кому)===JSON.stringify(["temple","clan","war","trade","net","net",null]),chains.кому);
+ check('опись сети ведёт к вратам чужой державы',
+  chains.ids.includes("net"),chains.ids);
 
  const flow=await page.evaluate(()=>{
   G.quests=[];G.chainTaken={};G.chainsDone=0;
@@ -85,7 +87,7 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   return out;});
  const chainsOk=Object.values(full);
  check('каждая цепочка проходится все три шага подряд',
-  chainsOk.length===4&&chainsOk.every(c=>c.шагов===3&&c.заданий===3&&c.завершена),full);
+  chainsOk.length===5&&chainsOk.every(c=>c.шагов===3&&c.заданий===3&&c.завершена),full);
  check('каждый шаг платит ровно то, что обещал, и ни монетой больше',
   chainsOk.every(c=>c.ровно),full);
  check('повторная сдача уже сданного не платит ничего',

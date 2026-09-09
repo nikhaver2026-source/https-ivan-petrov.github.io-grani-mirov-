@@ -82,7 +82,12 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
 
  // 6. Ощупывание + касание активирует то, что было под пальцем
  const afterExplore=await page.evaluate(()=>uiCursor&&(uiCursor.dataset.cmd||uiCursor.textContent.slice(0,20)));
+ /* Ощупывание кончилось миг назад: под нагрузкой браузер может ещё не успеть
+    отпустить палец, и следующее касание слиплось бы с предыдущим в один жест.
+    Пауза здесь — не про игру, а про надёжность самой проверки. */
+ await page.waitForTimeout(400);
  await tap(200,520);   // первое касание в этом же месте
+ await page.waitForTimeout(300);
  const afterTap=await page.evaluate(()=>uiCursor&&(uiCursor.dataset.cmd||uiCursor.textContent.slice(0,20)));
  check('после ощупывания текущим остаётся пункт под пальцем',!!afterExplore&&!!afterTap,{afterExplore,afterTap});
 
