@@ -2957,7 +2957,7 @@ function portalTravel(key){
   setTimeout(()=>safeFn(()=>Bank.play("fx_rift",{seed:to.y,gain:0.5,maxSec:6})),450);});
  safeFn(()=>journal(`Переход сетью: ${from.name} → ${to.name} за ${f.gold} золота.`));
  const c=cellContent(G.x,G.y);
- narrate(`Переход. ${to.name}, держава ${to.emp.short}. Заплачено ${f.gold} золота, ушло часов: ${f.hours}. ${c.terrain[1]}. Золота осталось ${G.gold}.`);
+ narrate(`Переход. ${to.name}${to.kind==="gate"?"":`, земли «${to.emp.short}»`}. Заплачено ${f.gold} золота, ушло часов: ${f.hours}. ${c.terrain[1]}. Золота осталось ${G.gold}.`);
  safeFn(()=>{refresh();arrive();saveGame(true);});
  return true;}
 
@@ -2975,7 +2975,7 @@ function openPortalNet(){
   .sort((a,b)=>(a.f.open===b.f.open)?(a.f.gold-b.f.gold):(a.f.open?-1:1));
  const merit=portalMerit();
  let html=`<div class="list-line" tabindex="0" data-speak="${
-  `${here.name}, ${here.kind==="gate"?"врата державы":"стоячий камень"}, держава ${here.emp.short}. Открыто узлов: ${portalsKnown().length}. Ваши заслуги перед сетью: ${Math.round(merit)}. Чем они выше, тем дешевле переход.`.replace(/"/g,"&quot;")}">
+  `${here.name}${here.kind==="gate"?"":`, стоячий камень в землях «${here.emp.short}»`}. Открыто узлов: ${portalsKnown().length}. Ваши заслуги перед сетью: ${Math.round(merit)}. Чем они выше, тем дешевле переход.`.replace(/"/g,"&quot;")}">
   🌀 <b>${here.name}</b> · ${here.kind==="gate"?"врата державы":"стоячий камень"} · ${here.emp.short}<br>
   Открыто узлов: ${portalsKnown().length} · заслуги перед сетью: ${Math.round(merit)}<br>
   Плата зависит от расстояния, заслуг, репутации, политики, экономики и войны.</div>`;
@@ -2986,9 +2986,12 @@ function openPortalNet(){
   html+=строки.map(({nd,f})=>{
    const разбор=f.parts.map(p=>`${p.что}: ${p.сколько>0?"плюс "+p.сколько:p.сколько<0?"минус "+(-p.сколько):"без изменений"} (${p.как})`).join("; ");
    if(!f.open)
-    return `<div class="list-line" tabindex="0" data-speak="${`${nd.name}, держава ${nd.emp.short}. Переход закрыт. ${f.reason}`.replace(/"/g,"&quot;")}">
+    return `<div class="list-line" tabindex="0" data-speak="${`${nd.name}${nd.kind==="gate"?"":`, земли «${nd.emp.short}»`}. Переход закрыт. ${f.reason}`.replace(/"/g,"&quot;")}">
      🚫 <b>${nd.name}</b> · ${nd.emp.short}<br>${f.reason}</div>`;
-   const speak=`${nd.name}, держава ${nd.emp.short}. Плата ${f.gold} золота, времени ${f.hours} ${plural(f.hours,"час","часа","часов")}. Разбор платы: ${разбор}. Двойное касание — перейти.`;
+   /* Имя врат уже называет державу: повторять её второй раз — лишний слог
+      в каждой строке списка. У камня держава называется, её в имени нет. */
+   const где=nd.kind==="gate"?"":`, земли «${nd.emp.short}»`;
+   const speak=`${nd.name}${где}. Плата ${f.gold} золота, времени ${f.hours} ${plural(f.hours,"час","часа","часов")}. Разбор платы: ${разбор}. Двойное касание — перейти.`;
    return `<div class="list-line" tabindex="0" data-speak="${speak.replace(/"/g,"&quot;")}">
     🌀 <b>${nd.name}</b> · ${nd.emp.short} · ${f.d} ${plural(f.d,"клетка","клетки","клеток")}<br>
     💰 ${f.gold} золота · ⏳ ${f.hours} ${plural(f.hours,"час","часа","часов")} · 🏛️ ${f.слово}<br>
