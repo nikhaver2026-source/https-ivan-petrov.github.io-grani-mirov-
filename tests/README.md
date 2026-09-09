@@ -55,6 +55,7 @@ GitHub Pages** (`/https-ivan-petrov.github.io-grani-mirov-/`). Это важно
 | 29-gather-and-activate-gestures | Сбор двумя пальцами и подтверждение двойным касанием |
 | 30-world-consistency | Боги, кланы, народы, державы, чудовища и задания сходятся |
 | 31-sound-catalog-and-world | Каталог звуков по разделам и звучание мира |
+| 32-single-tap-never-acts | Одно касание только называет, выполняет только двойное |
 
 ## Как устроен набор
 

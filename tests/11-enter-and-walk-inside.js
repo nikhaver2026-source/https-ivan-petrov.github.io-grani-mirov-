@@ -29,6 +29,11 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
    const rest=pts.slice(0,k).map((p,idx)=>({x:p.x+2,y:p.y+1,id:idx}));
    if(rest.length){await cdp.send('Input.dispatchTouchEvent',{type:'touchMove',touchPoints:rest});await page.waitForTimeout(20);}}
   await page.waitForTimeout(200);}
+ async function tap(){
+  await cdp.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[{x:200,y:400,id:0}]});
+  await page.waitForTimeout(40);
+  await cdp.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[{x:200,y:400,id:0}]});
+  await page.waitForTimeout(120);}
  async function hold(ms){
   await cdp.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[{x:200,y:400,id:0}]});
   await page.waitForTimeout(ms);
@@ -61,10 +66,16 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
  await multi(2,'N');
  check('свайп двумя пальцами вверх выводит наружу', await page.evaluate(()=>G.place===null));
 
- // 4. Долгое касание — действие «здесь» (вход)
+ // 4. Двойное касание — действие «здесь» (вход). Долгое касание больше ничего
+ //    не выполняет: одиночное касание в игре только называет.
  await hold(900);
+ const послеУдержания=await page.evaluate(()=>!!G.place);
+ check('долгое касание само по себе никуда не входит',послеУдержания===false,
+  {вошли:послеУдержания});
+ await tap();await tap();
+ await page.waitForTimeout(300);
  const held=await page.evaluate(()=>!!G.place);
- check('долгое касание входит в постройку под ногами',held);
+ check('двойное касание входит в постройку под ногами',held);
 
  // 5. Свайп тремя пальцами — «где я»
  const said=await page.evaluate(()=>{window.__said=[];const o=Speech.say;Speech.say=t=>{window.__said.push(t);o&&null;};window.__restore=()=>Speech.say=o;return true;});
