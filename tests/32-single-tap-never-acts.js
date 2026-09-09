@@ -239,6 +239,68 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   дальше===4,{стало:дальше});
  await clean();
 
+ /* ── Заглавное меню: то же правило до входа в мир ── */
+ await clean();
+ const заг=await page.evaluate(()=>{
+  showScreen("screen-title");resetCursor();
+  const el=[...cursorItems(navLayer())].find(x=>x.dataset&&x.dataset.cmd==="settings");
+  el.scrollIntoView({block:"center"});const r=el.getBoundingClientRect();
+  window.__acts=[];window.__cmds=[];window.__said=[];
+  return {x:Math.round(r.x+r.width/2),y:Math.round(r.y+r.height/2)};});
+ await tap(заг.x,заг.y);
+ const послеЗаг=await page.evaluate(()=>({окно:activeLayer()&&activeLayer().id,
+  акт:window.__acts.slice(),кмд:window.__cmds.slice(),сказано:window.__said.length,
+  курсор:uiCursor&&uiCursor.dataset.cmd}));
+ check('в заглавном меню одно касание только называет кнопку',
+  !послеЗаг.окно&&!послеЗаг.акт.length&&!послеЗаг.кмд.length
+  &&послеЗаг.сказано>=1&&послеЗаг.курсор==="settings",послеЗаг);
+ await tap(заг.x,заг.y);await tap(заг.x,заг.y);
+ await page.waitForTimeout(300);
+ const открыли=await page.evaluate(()=>activeLayer()&&activeLayer().id);
+ check('в заглавном меню двойное касание открывает выбранное',
+  открыли==="modal-settings",{окно:открыли});
+ await page.evaluate(()=>{while(activeLayer())closeTopUI();showScreen("screen-game");resetCursor();});
+
+ /* ── Второй уровень энциклопедии: касание по звуку его не проигрывает ── */
+ await clean();
+ const энц=await page.evaluate(()=>{
+  CMD.encyc();
+  document.querySelectorAll('#encycCats .sound-card')[0].click();
+  resetCursor();
+  const el=document.querySelectorAll('#encycOneGrid .sound-card')[1];
+  el.scrollIntoView({block:"center"});const r=el.getBoundingClientRect();
+  window.__said=[];window.__acts=[];
+  Play.stopAll&&Play.stopAll(false);
+  return {x:Math.round(r.x+r.width/2),y:Math.round(r.y+r.height/2),
+   играло:Play.active.size};});
+ await tap(энц.x,энц.y);
+ const послеЭнц=await page.evaluate(()=>({играет:Play.active.size,
+  акт:window.__acts.slice(),сказано:window.__said.length}));
+ check('в каталоге звуков одно касание называет звук, но не включает его',
+  послеЭнц.играет===энц.играло&&!послеЭнц.акт.length&&послеЭнц.сказано>=1,
+  {было:энц.играло,...послеЭнц});
+ await page.evaluate(()=>{while(activeLayer())closeTopUI();});
+
+ /* ── Игровое поле: касание по клетке ничего не делает ── */
+ await clean();
+ const поле=await page.evaluate(()=>{
+  /* Встаём на клетку с ресурсом: там одно касание раньше собирало. */
+  for(let r=0;r<6000;r++){const x=1000+(r%80),y=1000+Math.floor(r/80);
+   const c=cellContent(x,y);
+   if(c.res&&!c.structure&&!c.monster){G.x=x;G.y=y;G.inv={};G.depleted={};
+    window.__said=[];window.__acts=[];window.__cmds=[];
+    return {ресурс:c.res.name};}}
+  return null;});
+ const доПоля=await snap();
+ await tap(195,520);
+ const послеПоля=await snap();
+ const полеR=await page.evaluate(()=>({акт:window.__acts.slice(),кмд:window.__cmds.slice(),
+  сказано:window.__said.slice()}));
+ check('на игровом поле одно касание только рассказывает, что под ногами',
+  доПоля===послеПоля&&!полеR.акт.length&&!полеR.кмд.length
+  &&полеR.сказано.some(t=>new RegExp(поле.ресурс).test(t)),
+  {ресурс:поле.ресурс,изменилось:доПоля!==послеПоля,...полеR});
+
  /* ── Ползунок: касание не двигает, двойное касание шагает и называет ── */
  await clean();
  const пол=await page.evaluate(()=>{
