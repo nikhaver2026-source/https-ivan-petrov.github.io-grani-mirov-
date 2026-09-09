@@ -59,6 +59,7 @@ GitHub Pages** (`/https-ivan-petrov.github.io-grani-mirov-/`). Это важно
 | 33-roads-and-portal-network | Тракты с именами, перекрёстки и цена перехода по сети |
 | 34-surfaces-stairs-and-chronicle | Поверхности под ногой, лестничные марши, хроника войн и званий |
 | 35-books-and-knowledge | Реестр знаний, изучение книг, навыки, свитки и обстановка |
+| 36-fantasy-sound-library | Живые записи Flare и 0 A.D.: файлы, авторство, разделы, музыка |
 
 ## Как устроен набор
 

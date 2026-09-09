@@ -1480,11 +1480,29 @@ const UI={blip(f=880,d=0.08,v=0.12){AE.ensure();const t=AE.ctx.currentTime,o=AE.
  fanfare(){if(this.nat("b_levelup",0.8))return;[523,659,784,1047].forEach((f,i)=>setTimeout(()=>this.blip(f,0.18,0.12),i*130));}};
 
 /* ════════ МУЗЫКА: ПРОЛОГ / ЛОКАЦИИ / БОЙ (генеративная, высококачественная) ════════ */
-const Music={sfx:null,timers:[],current:null,
+/* ── Настоящая музыка вместо синтеза ──
+   Двенадцать тем игры Flare (CC BY-SA 3.0, Clint Bellanger) закрывают то,
+   ради чего музыка в игре и нужна: заглавие, город, дорога, лес, пещеры,
+   подземелье, бой, бой с сильным, чары, затишье, смута и пустой ветер.
+   Синтез остаётся запасным вариантом: если папки со звуками рядом нет,
+   игра звучит как раньше и ничего не ломается. */
+const MUSIC_TRACK={
+ prologue:"score_title",title:"score_title",
+ plains:"score_road",road:"score_road",desert:"score_road",
+ forest:"score_forest",swamp:"score_forest",
+ mountains:"score_wind",coast:"score_wind",
+ cave:"score_cave",dungeon:"score_dungeon",
+ battle:"score_battle",boss:"score_boss",
+ town:"score_town",magic:"score_magic",safe:"score_safe",war:"score_unrest"};
+const Music={sfx:null,timers:[],current:null,track:null,
  start(terrain){
-  if(this.current===terrain&&this.sfx)return;
+  if(this.current===terrain&&(this.sfx||this.track))return;
   this.stop();
   if(!settings.music)return;
+  /* Сперва настоящая запись; синтез — если её нет. */
+  const role=MUSIC_TRACK[terrain];
+  if(role&&Bank.enabled&&Bank.has(role)&&Bank.loop("score",role,{seed:0,gain:0.55,kind:"music"})){
+   this.current=terrain;this.track=role;return;}
   if(!AE.ensure())return;
   this.current=terrain;
   const s=new SFX(AE.musicBus);this.sfx=s;
@@ -1492,6 +1510,7 @@ const Music={sfx:null,timers:[],current:null,
   else if(terrain==="battle")this.buildBattle(s);
   else this.buildLocation(s,terrain);},
  stop(){this.timers.forEach(t=>clearInterval(t));this.timers=[];
+  if(this.track){safeFn(()=>Bank.stop("score"));this.track=null;}
   if(this.sfx){this.sfx.stop(1.2);this.sfx=null;}
   this.current=null;},
  pad(s,freq,when,dur,vol,cut){
@@ -1860,7 +1879,51 @@ const BANK_CATS={sea:"🌊 Море, порты и корабли",ambience:"�
  relic:"💎 Находки, артефакты и клады",
  depth:"⛰️ Глубина, земля и дурные места",
  folk:"🪗 Люд, рынок, таверны и праздники",
- mood:"🎻 Судьба: заслуги, звания, репутация, день и ночь"};
+ mood:"🎻 Судьба: заслуги, звания, репутация, день и ночь",
+ arte:"💎 Артефакты, вещи и находки",
+ deep:"🕯️ Подземелья: лестницы, двери, камень",
+ foe:"👹 Твари: удары, боль, гибель",
+ cast:"🔮 Заклинания и чары",
+ hero:"🧍 Герой: удары, шаги, вехи",
+ wild:"🌿 Природа, вода и очаг",
+ trade:"🪙 Торговцы и зазывалы",
+ score:"🎼 Музыка мира",
+ battle:"⚔️ Оружие и удары боя",
+ siege:"🏰 Война: осада, тревога, вести",
+ craft:"🔨 Ремёсла, добыча и стройка",
+ beasts:"🐎 Звери и птицы",
+ throng:"🗣️ Люди: крики, кличи, голоса",
+ tread:"👣 Шаги по поверхностям",
+ sky:"🌦️ Погода, вода и день",
+ hall:"🏛️ Здания, рынок, порт, подворье"};
+/* ── Разделы энциклопедии ──
+   Папок с записями стало сорок, и списком в сорок строк первый уровень
+   энциклопедии перестал быть проходимым: до последнего раздела сорок свайпов.
+   Поэтому папки сведены в тематические разделы: раздел на экране один, а
+   внутри — записи всех своих папок. Каждая папка обязана попасть хотя бы в
+   один раздел, и это проверяется набором. */
+const BANK_GROUPS=[
+ {n:"Море, порты и корабли",  icon:"🌊", dirs:["sea"]},
+ {n:"Земли, погода и день",   icon:"🌍", dirs:["ambience","sky"]},
+ {n:"Подземелья и тьма",      icon:"🕳️", dirs:["dungeon","dark","deep","depth"]},
+ {n:"Магия, чары и касты",    icon:"🔮", dirs:["magic","spell","cast"]},
+ {n:"Боги, храмы и знамения", icon:"🕯️", dirs:["gods"]},
+ {n:"События и повороты судьбы",icon:"⚡", dirs:["events","mood"]},
+ {n:"Места, здания и постройки",icon:"🏛️", dirs:["places","hall","folk"]},
+ {n:"Шаги и поверхности",     icon:"👣", dirs:["steps","surf","tread"]},
+ {n:"Оружие, удары и война",  icon:"⚔️", dirs:["blow","arms","troop","battle","siege"]},
+ {n:"Твари, звери и птицы",   icon:"🐉", dirs:["beast","foe","beasts"]},
+ {n:"Люди, рынок и торг",     icon:"🗣️", dirs:["bazaar","throng","trade"]},
+ {n:"Находки, вещи и артефакты",icon:"💎", dirs:["relic","arte"]},
+ {n:"Ремёсла, добыча и стройка",icon:"🔨", dirs:["craft"]},
+ {n:"Герой и природа вокруг", icon:"🧍", dirs:["hero","wild"]},
+ {n:"Игровые звуки и голос игры",icon:"🎲", dirs:["fantasy"]},
+ {n:"Живые инструменты и оркестр",icon:"🎻", dirs:["nat","inst","orch"]},
+ {n:"Музыка мира",            icon:"🎼", dirs:["score"]}];
+/* Роли банка, лежащие в этих папках. */
+function bankRolesIn(dirs){
+ const set=new Set(dirs);
+ return Object.keys(SOUND_BANK).filter(r=>set.has((SOUND_BANK[r].f[0]||"").split("/")[0]));}
 const MONSTER_VOICE_NAMES={bat:"Летучая тварь: писк и хлопки крыльев",behemoth:"Громада: тяжёлый рёв и поступь",
  dragon:"Дракон: рык и пламя",ghost:"Призрак: стон и шелест",hornet:"Рой: гудение и жала",
  orc:"Орочья глотка: рык, крик, брань",slime:"Слизь и глубинное: чавканье и всплеск",spider:"Паук: щёлканье жвал"};
@@ -1943,12 +2006,12 @@ function buildEncycCats(){
   grid.appendChild(b);};
  sceneCats().forEach(([title,icon,ids],i)=>
   add("scene:"+i,icon,title,ids.filter(id=>SOUNDS[id]).length,"Синтезированные сцены: работают всегда, даже без интернета."));
- Object.keys(BANK_CATS).forEach(cat=>{
-  const roles=Object.keys(SOUND_BANK).filter(r=>(SOUND_BANK[r].f[0]||"").split("/")[0]===cat);
+ BANK_GROUPS.forEach((g,i)=>{
+  const roles=bankRolesIn(g.dirs);
   if(!roles.length)return;
   const files=roles.reduce((k,r)=>k+SOUND_BANK[r].f.length,0);
-  add("bank:"+cat,BANK_CATS[cat].slice(0,2).trim()||"🎼",BANK_CATS[cat].replace(/^\S+\s/,""),
-   files,`Живые записи, ${roles.length} ${plural(roles.length,"роль","роли","ролей")}.`);});
+  add("bank:"+i,g.icon,g.n,files,
+   `Живые записи, ${roles.length} ${plural(roles.length,"роль","роли","ролей")}.`);});
  add("voices","👹","Голоса чудовищ: записи",
   Object.keys(MONSTER_BANK).reduce((k,sp)=>k+Object.keys(MONSTER_BANK[sp]).length,0),
   "Появление, удар, боль, смерть и шаг для восьми существ.");
@@ -1958,7 +2021,7 @@ function buildEncycCats(){
  const t=soundTotals();
  if(hint)hint.textContent=`Разделов: ${grid.children.length}. Всего звуков: ${t.всего} — ${t.сцены} синтезированных сцен и ${t.записи} живых записей. Касание называет раздел, двойное касание открывает его. Внутри раздела — те же жесты, а кнопка «Ко всем разделам» возвращает обратно.`;
  const cr=document.getElementById("encycCredits");
- if(cr)cr.textContent="Разделы разложены по назначению: сперва мир на слух — поверхности под ногой, удары и оружие, строй и сигналы, рынок, голоса из тьмы; затем оркестр, который отмечает события — войну, чары, тварей, находки, глубину, люд и повороты судьбы. Источники записей: Neo HQ Mystic Sounds, Fantasy Sound Library, Classic Monster Sounds (автор Coucassi), пакет uisfx (CC0), сэмплы Sonic Pi с freesound.org (общественное достояние, CC0 1.0), живые инструменты проекта tonejs-instruments (Creative Commons Attribution 3.0) и оркестр из звукового шрифта FluidR3_GM автора Frank Wen, изданного проектом MIDI.js Soundfonts (Creative Commons Attribution 3.0). Указание авторства обязательно, и оно здесь дано.";
+ if(cr)cr.textContent="Живая фэнтезийная библиотека взята из двух свободных игр. Flare (Free/Libre Action Roleplaying Engine), автор Clint Bellanger и участники проекта, flarerpg.org — артефакты и вещи, подземелья и лестницы, твари, заклинания, голос героя, природа, торговцы и двенадцать тем музыки мира. 0 A.D. (Empires Ascendant), автор Wildfire Games, play0ad.com — оружие и удары боя, осада, тревога и вести войны, ремёсла и стройка, звери, людские крики и кличи, шаги по поверхностям, погода и вода, здания, рынок и порт. Обе — под лицензией Creative Commons Attribution-ShareAlike 3.0 (CC BY-SA 3.0): указание авторства обязательно и дано здесь, записи остаются под той же лицензией. Разделы разложены по назначению: сперва мир на слух — поверхности под ногой, удары и оружие, строй и сигналы, рынок, голоса из тьмы; затем оркестр, который отмечает события — войну, чары, тварей, находки, глубину, люд и повороты судьбы. Источники записей: Neo HQ Mystic Sounds, Fantasy Sound Library, Classic Monster Sounds (автор Coucassi), пакет uisfx (CC0), сэмплы Sonic Pi с freesound.org (общественное достояние, CC0 1.0), живые инструменты проекта tonejs-instruments (Creative Commons Attribution 3.0) и оркестр из звукового шрифта FluidR3_GM автора Frank Wen, изданного проектом MIDI.js Soundfonts (Creative Commons Attribution 3.0). Указание авторства обязательно, и оно здесь дано.";
 }
 
 /* ── Второй уровень: звуки одного раздела ── */
@@ -1985,11 +2048,12 @@ function openEncycCat(key,title){
       narrate(`Воспроизводится: ${d.name}. ${d.desc}`);}});
    card.dataset.scene=id;grid.appendChild(card);});
  }else if(key.startsWith("bank:")){
-  const cat=key.slice(5);
+  const g=BANK_GROUPS[Number(key.slice(5))];
   подпись="Живые записи. Если папки со звуками рядом нет, игра звучит синтезированными маяками.";
-  Object.keys(SOUND_BANK).filter(r=>(SOUND_BANK[r].f[0]||"").split("/")[0]===cat).forEach(r=>{
+  bankRolesIn(g?g.dirs:[]).forEach(r=>{
    const b=SOUND_BANK[r];
-   grid.appendChild(soundCard("🎼",b.d,`вариантов: ${b.f.length}`,
+   const пап=(b.f[0]||"").split("/")[0];
+   grid.appendChild(soundCard((BANK_CATS[пап]||"🎼").slice(0,2).trim()||"🎼",b.d,`вариантов: ${b.f.length}`,
     `${b.d}. Вариантов: ${b.f.length}. Двойное касание — прослушать.`,
     ()=>{narrate(b.d);
      if(!Bank.play(r,{seed:Date.now(),gain:0.8,maxSec:10}))
@@ -2985,7 +3049,14 @@ const GUIDE=[
  "СТОЛ — на нём остатки чужой работы. СТОЙКА С ОРУЖИЕМ — поправить своё; чужое брать не стоит. МАГИЧЕСКИЙ КРУГ — восстанавливает четверть предельной маны. ХРУСТАЛЬНЫЙ ШАР — показывает то, чего иначе не узнать: ближний открытый узел сети, сколько в мире войн и куда ведёт ваше ближайшее дело. ЗЕРКАЛО — называет итог: народ, уровень, звание и все ваши навыки.",
  "ЖАРОВНЯ и ОЧАГ — согревают и лечат, у очага ещё и пополняют воду. АЛХИМИЧЕСКИЙ ЧАН — принимает траву, грибы или ягоды и возвращает здоровье и ману. ТКАЦКИЙ СТАНОК, БОЧКИ, ЛЕЖАНКА, НАКОВАЛЬНЯ, ЧАША С ВОДОЙ, БИЛО, СТАТУЯ и ДОСКА ОБЪЯВЛЕНИЙ — каждая со своим делом: лежанка даёт отдых на два часа, статуя называет бога и его круг, доска говорит, объявлена ли война и о чём судачат в державе.",
  "Что где стоит, зависит от места: в кузне наковальня и жаровня, в таверне стол, очаг и бочки, в башне мага шар и круг, в храме статуя и било, в подземелье — брошенная жаровня, забытый круг и старая статуя."]},
-{title:"Глава 32. Горячие клавиши и советы",body:[
+{title:"Глава 32. Кто написал эти звуки",body:[
+ "Записи в игре не сделаны нами. Они взяты из свободных проектов, и лицензии этих проектов требуют назвать авторов. Здесь они названы; те же имена стоят в файлах CREDITS.md рядом с самими записями и в энциклопедии звуков.",
+ "FLARE — Free/Libre Action Roleplaying Engine, одиночная фэнтезийная ролевая игра. Автор: Clint Bellanger и участники проекта (contributors retain copyrights to their original contributions). Сайт: flarerpg.org. Отсюда взяты артефакты и вещи, лестницы и двери подземелий, голоса тварей, заклинания, голос героя, природа и очаг, торговцы и все двенадцать тем музыки мира. Лицензия художественной части: Creative Commons Attribution-ShareAlike 3.0 (CC BY-SA 3.0).",
+ "0 A.D. — Empires Ascendant, историческая стратегия о войнах древности. Автор: Wildfire Games. Сайт: play0ad.com. Отсюда взяты оружие и удары боя, осада, тревога и вести войны, ремёсла, добыча и стройка, звери и птицы, людские крики и кличи, шаги по поверхностям, погода, вода и день, здания, рынок, порт и подворье. Лицензия художественной части: Creative Commons Attribution-ShareAlike 3.0 (CC BY-SA 3.0).",
+ "Что означает эта лицензия. Записи можно свободно слушать, копировать, распространять и изменять, в том числе в коммерческих целях, при двух условиях: назвать автора и оставить изменённые записи под той же лицензией. Оба условия соблюдены. Полный текст лицензии лежит рядом с записями в файле LICENSE-CC-BY-SA-3.0.txt, а его краткое изложение — на creativecommons.org/licenses/by-sa/3.0/.",
+ "Остальные источники, названные раньше: сэмплы Sonic Pi с freesound.org (общественное достояние, CC0 1.0), живые инструменты проекта tonejs-instruments и оркестр из звукового шрифта FluidR3_GM автора Frank Wen, изданного проектом MIDI.js Soundfonts (обе — Creative Commons Attribution 3.0), пакет uisfx (CC0), Neo HQ Mystic Sounds, Fantasy Sound Library и Classic Monster Sounds (автор Coucassi).",
+ "Всё, что не покрыто записями, игра строит сама: сто двадцать синтезированных сцен работают всегда, даже если папку со звуками не скачали."]},
+{title:"Глава 33. Горячие клавиши и советы",body:[
  "Стрелки — ходьба. Контрол или Альт плюс G — руководство. Контрол или Альт плюс M — меню действий. Альт плюс S — тишина. Эскейп — закрыть.",
  "Играйте в наушниках — стерео-маяки помогут ориентироваться. Удачной охоты, Странник!"]}];
 let chIndex=0;
@@ -4215,6 +4286,9 @@ function meetCaravan(car){
  safeFn(()=>{Bank.play("caravan",{seed:car.x+car.y,gain:0.6,maxSec:7});
   setTimeout(()=>safeFn(()=>Bank.play("clarinet_market",{gain:0.5,maxSec:5})),260);
   /* Обоз слышно по шагу: барабан каравана и струна дороги. */
+  /* Обоз слышен копытами и скрипом раньше, чем барабаном. */
+  Bank.play("tread_hoof",{seed:car.x,gain:0.55,maxSec:4});
+  setTimeout(()=>safeFn(()=>Bank.play("beasts_horse",{seed:car.y,gain:0.5,maxSec:4})),300);
   setTimeout(()=>safeFn(()=>Bank.play("caravan_drum",{seed:car.x,gain:0.5,maxSec:5})),520);
   setTimeout(()=>safeFn(()=>Bank.play("caravan_sitar",{seed:car.y,gain:0.45,maxSec:6})),900);});
  const body=document.getElementById("caravanBody"),title=document.getElementById("caravanTitle");
@@ -4715,6 +4789,194 @@ const SOUND_BANK={
  frost_keys:{f:["mood/frost_keys_01.mp3","mood/frost_keys_02.mp3"],d:"Морозные клавиши"},
  mist_keys:{f:["mood/mist_keys_01.mp3","mood/mist_keys_02.mp3"],d:"Туманные клавиши"},
  pad_dream:{f:["mood/pad_dream_01.mp3","mood/pad_dream_02.mp3"],d:"Сон и морок"},
+
+ /* ── Живая фэнтезийная библиотека ─────────────────────────────────────
+    Двести семьдесят восемь записей из двух свободных игр под лицензией
+    CC BY-SA 3.0: Flare (Clint Bellanger, flarerpg.org) — артефакты,
+    подземелья, твари, чары, герой, природа, торговцы и музыка мира;
+    0 A.D. (Wildfire Games, play0ad.com) — оружие и удары боя, осада и
+    тревога, ремёсла и стройка, звери, людские крики и кличи, шаги по
+    поверхностям, погода и вода, здания и рынок. Авторство и лицензия
+    указаны в CREDITS.md рядом с записями и в энциклопедии звуков. */
+ arte_book:{f:["arte/arte_book_01.ogg"],d:"Книга в руках"},
+ arte_cloth:{f:["arte/arte_cloth_01.ogg"],d:"Ткань"},
+ arte_coins:{f:["arte/arte_coins_01.ogg"],d:"Горсть монет"},
+ arte_find:{f:["arte/arte_find_01.ogg"],d:"Находка взлетает в руки"},
+ arte_gem:{f:["arte/arte_gem_01.ogg"],d:"Самоцвет"},
+ arte_heavy:{f:["arte/arte_heavy_01.ogg"],d:"Тяжёлая вещь"},
+ arte_leather:{f:["arte/arte_leather_01.ogg"],d:"Кожаная вещь"},
+ arte_maille:{f:["arte/arte_maille_01.ogg"],d:"Кольчужное звено"},
+ arte_metal:{f:["arte/arte_metal_01.ogg"],d:"Металлическая вещь"},
+ arte_object:{f:["arte/arte_object_01.ogg"],d:"Вещь в сумке"},
+ arte_page:{f:["arte/arte_page_01.ogg"],d:"Лист пергамента"},
+ arte_potion:{f:["arte/arte_potion_01.ogg"],d:"Склянка со снадобьем"},
+ arte_wood:{f:["arte/arte_wood_01.ogg"],d:"Деревянная вещь"},
+ battle_arrowfly:{f:["battle/battle_arrowfly_01.ogg","battle/battle_arrowfly_02.ogg","battle/battle_arrowfly_03.ogg"],d:"Стрела в полёте"},
+ battle_arrowhit:{f:["battle/battle_arrowhit_01.ogg","battle/battle_arrowhit_02.ogg","battle/battle_arrowhit_03.ogg"],d:"Стрела попала"},
+ battle_bow:{f:["battle/battle_bow_01.ogg","battle/battle_bow_02.ogg","battle/battle_bow_03.ogg","battle/battle_bow_04.ogg"],d:"Тетива спущена"},
+ battle_jav:{f:["battle/battle_jav_01.ogg","battle/battle_jav_02.ogg","battle/battle_jav_03.ogg"],d:"Дротик брошен"},
+ battle_pike:{f:["battle/battle_pike_01.ogg","battle/battle_pike_02.ogg","battle/battle_pike_03.ogg","battle/battle_pike_04.ogg"],d:"Копьё бьёт"},
+ battle_shield:{f:["battle/battle_shield_01.ogg","battle/battle_shield_02.ogg"],d:"Щит принял удар"},
+ battle_sling:{f:["battle/battle_sling_01.ogg","battle/battle_sling_02.ogg","battle/battle_sling_03.ogg"],d:"Праща"},
+ battle_stab:{f:["battle/battle_stab_01.ogg","battle/battle_stab_02.ogg"],d:"Клинок вошёл"},
+ battle_stone:{f:["battle/battle_stone_01.ogg","battle/battle_stone_02.ogg","battle/battle_stone_03.ogg"],d:"Удар по камню"},
+ battle_sword:{f:["battle/battle_sword_01.ogg","battle/battle_sword_02.ogg","battle/battle_sword_03.ogg","battle/battle_sword_04.ogg"],d:"Клинок бьёт"},
+ battle_wood:{f:["battle/battle_wood_01.ogg","battle/battle_wood_02.ogg","battle/battle_wood_03.ogg"],d:"Удар по дереву"},
+ beasts_camel:{f:["beasts/beasts_camel_01.ogg"],d:"Верблюд"},
+ beasts_cattle:{f:["beasts/beasts_cattle_01.ogg"],d:"Скот мычит"},
+ beasts_fowl:{f:["beasts/beasts_fowl_01.ogg"],d:"Птичий двор"},
+ beasts_giant:{f:["beasts/beasts_giant_01.ogg","beasts/beasts_giant_02.ogg"],d:"Громадный зверь"},
+ beasts_horse:{f:["beasts/beasts_horse_01.ogg","beasts/beasts_horse_02.ogg","beasts/beasts_horse_03.ogg"],d:"Конь фыркает"},
+ beasts_lion:{f:["beasts/beasts_lion_01.ogg","beasts/beasts_lion_02.ogg"],d:"Хищник бросается"},
+ beasts_pig:{f:["beasts/beasts_pig_01.ogg","beasts/beasts_pig_02.ogg"],d:"Свиньи"},
+ beasts_sheep:{f:["beasts/beasts_sheep_01.ogg"],d:"Овцы"},
+ cast_arrows:{f:["cast/cast_arrows_01.ogg"],d:"Стена стрел"},
+ cast_block:{f:["cast/cast_block_01.ogg"],d:"Удар отражён"},
+ cast_burn:{f:["cast/cast_burn_01.ogg"],d:"Пламя охватывает"},
+ cast_fire:{f:["cast/cast_fire_01.ogg"],d:"Огненный шар"},
+ cast_heal:{f:["cast/cast_heal_01.ogg"],d:"Исцеление"},
+ cast_ice:{f:["cast/cast_ice_01.ogg"],d:"Лёд сковывает"},
+ cast_potion:{f:["cast/cast_potion_01.ogg"],d:"Снадобье выпито"},
+ cast_quake:{f:["cast/cast_quake_01.ogg"],d:"Земля вздрагивает"},
+ cast_shield:{f:["cast/cast_shield_01.ogg"],d:"Щит встаёт"},
+ cast_shock:{f:["cast/cast_shock_01.ogg"],d:"Разряд"},
+ cast_shoot:{f:["cast/cast_shoot_01.ogg"],d:"Снаряд сорвался"},
+ cast_spikes:{f:["cast/cast_spikes_01.ogg"],d:"Шипы из земли"},
+ cast_teleport:{f:["cast/cast_teleport_01.ogg"],d:"Перенос"},
+ cast_thunder:{f:["cast/cast_thunder_01.ogg"],d:"Гром заклинания"},
+ cast_timestop:{f:["cast/cast_timestop_01.ogg"],d:"Время замирает"},
+ cast_warcry:{f:["cast/cast_warcry_01.ogg"],d:"Боевой клич"},
+ craft_axe:{f:["craft/craft_axe_01.ogg","craft/craft_axe_02.ogg","craft/craft_axe_03.ogg","craft/craft_axe_04.ogg"],d:"Топор по дереву"},
+ craft_berry:{f:["craft/craft_berry_01.ogg","craft/craft_berry_02.ogg","craft/craft_berry_03.ogg"],d:"Ягоды в короб"},
+ craft_field:{f:["craft/craft_field_01.ogg","craft/craft_field_02.ogg","craft/craft_field_03.ogg"],d:"Серп по колосу"},
+ craft_hide:{f:["craft/craft_hide_01.ogg","craft/craft_hide_02.ogg"],d:"Шкуру снимают"},
+ craft_ore:{f:["craft/craft_ore_01.ogg","craft/craft_ore_02.ogg","craft/craft_ore_03.ogg","craft/craft_ore_04.ogg"],d:"Кирка по руде"},
+ craft_quarry:{f:["craft/craft_quarry_01.ogg","craft/craft_quarry_02.ogg","craft/craft_quarry_03.ogg","craft/craft_quarry_04.ogg"],d:"Кирка по камню"},
+ craft_saw:{f:["craft/craft_saw_01.ogg","craft/craft_saw_02.ogg","craft/craft_saw_03.ogg"],d:"Пила по бревну"},
+ craft_stone:{f:["craft/craft_stone_01.ogg","craft/craft_stone_02.ogg","craft/craft_stone_03.ogg"],d:"Камень кладут"},
+ craft_wood:{f:["craft/craft_wood_01.ogg","craft/craft_wood_02.ogg","craft/craft_wood_03.ogg"],d:"Плотницкая работа"},
+ deep_cart:{f:["deep/deep_cart_01.ogg"],d:"Рудничная вагонетка"},
+ deep_door:{f:["deep/deep_door_01.ogg"],d:"Дверь открывается"},
+ deep_drip:{f:["deep/deep_drip_01.ogg"],d:"Капель в пещере"},
+ deep_portal:{f:["deep/deep_portal_01.ogg"],d:"Переход портала"},
+ deep_rocks:{f:["deep/deep_rocks_01.ogg"],d:"Осыпь камней"},
+ deep_stairs:{f:["deep/deep_stairs_01.ogg"],d:"Шаги по каменным ступеням"},
+ deep_stone:{f:["deep/deep_stone_01.ogg"],d:"Каменная плита отходит"},
+ deep_wind:{f:["deep/deep_wind_01.ogg"],d:"Сквозняк в подземелье"},
+ deep_wood:{f:["deep/deep_wood_01.ogg"],d:"Деревянная створка"},
+ foe_bone_die:{f:["foe/foe_bone_die_01.ogg","foe/foe_bone_die_02.ogg"],d:"Костяк рассыпается"},
+ foe_bone_hit:{f:["foe/foe_bone_hit_01.ogg"],d:"Костяк бьёт"},
+ foe_bone_pain:{f:["foe/foe_bone_pain_01.ogg"],d:"Костяку больно"},
+ foe_brute_die:{f:["foe/foe_brute_die_01.ogg","foe/foe_brute_die_02.ogg"],d:"Громада падает"},
+ foe_brute_hit:{f:["foe/foe_brute_hit_01.ogg"],d:"Громада бьёт"},
+ foe_brute_pain:{f:["foe/foe_brute_pain_01.ogg"],d:"Громаде больно"},
+ foe_burrow_die:{f:["foe/foe_burrow_die_01.ogg","foe/foe_burrow_die_02.ogg"],d:"Подземная тварь падает"},
+ foe_burrow_hit:{f:["foe/foe_burrow_hit_01.ogg"],d:"Подземная тварь бьёт"},
+ foe_burrow_pain:{f:["foe/foe_burrow_pain_01.ogg"],d:"Подземной твари больно"},
+ foe_goblin_cast:{f:["foe/foe_goblin_cast_01.ogg"],d:"Гоблин колдует"},
+ foe_goblin_die:{f:["foe/foe_goblin_die_01.ogg"],d:"Гоблин падает"},
+ foe_goblin_hit:{f:["foe/foe_goblin_hit_01.ogg"],d:"Гоблин бьёт"},
+ foe_goblin_pain:{f:["foe/foe_goblin_pain_01.ogg"],d:"Гоблину больно"},
+ foe_grave_die:{f:["foe/foe_grave_die_01.ogg"],d:"Могильная тварь упокоена"},
+ foe_grave_hit:{f:["foe/foe_grave_hit_01.ogg"],d:"Могильная тварь бьёт"},
+ foe_grave_pain:{f:["foe/foe_grave_pain_01.ogg"],d:"Могильной твари больно"},
+ foe_undead_cast:{f:["foe/foe_undead_cast_01.ogg"],d:"Нежить шепчет"},
+ foe_undead_die:{f:["foe/foe_undead_die_01.ogg","foe/foe_undead_die_02.ogg"],d:"Нежить упокоена"},
+ foe_undead_hit:{f:["foe/foe_undead_hit_01.ogg"],d:"Нежить бьёт"},
+ foe_undead_pain:{f:["foe/foe_undead_pain_01.ogg"],d:"Нежити больно"},
+ foe_wyrm_cast:{f:["foe/foe_wyrm_cast_01.ogg"],d:"Крылатая тварь дышит силой"},
+ foe_wyrm_die:{f:["foe/foe_wyrm_die_01.ogg"],d:"Крылатая тварь падает"},
+ foe_wyrm_hit:{f:["foe/foe_wyrm_hit_01.ogg"],d:"Крылатая тварь бьёт"},
+ foe_wyrm_pain:{f:["foe/foe_wyrm_pain_01.ogg"],d:"Крылатой твари больно"},
+ hall_barracks:{f:["hall/hall_barracks_01.ogg"],d:"Казарма поставлена"},
+ hall_center:{f:["hall/hall_center_01.ogg"],d:"Цитадель поставлена"},
+ hall_dock:{f:["hall/hall_dock_01.ogg"],d:"Причал поставлен"},
+ hall_farm:{f:["hall/hall_farm_01.ogg","hall/hall_farm_02.ogg"],d:"Хозяйский двор"},
+ hall_forge:{f:["hall/hall_forge_01.ogg"],d:"Кузница поставлена"},
+ hall_fort:{f:["hall/hall_fort_01.ogg"],d:"Крепость поставлена"},
+ hall_gate:{f:["hall/hall_gate_01.ogg"],d:"Ворота поставлены"},
+ hall_house:{f:["hall/hall_house_01.ogg"],d:"Дом поставлен"},
+ hall_market:{f:["hall/hall_market_01.ogg","hall/hall_market_02.ogg","hall/hall_market_03.ogg","hall/hall_market_04.ogg"],d:"Торговые ряды"},
+ hall_port:{f:["hall/hall_port_01.ogg","hall/hall_port_02.ogg"],d:"Причалы"},
+ hall_temple:{f:["hall/hall_temple_01.ogg"],d:"Храм поставлен"},
+ hero_die_f:{f:["hero/hero_die_f_01.ogg"],d:"Героиня падает"},
+ hero_die_m:{f:["hero/hero_die_m_01.ogg"],d:"Герой падает"},
+ hero_heart:{f:["hero/hero_heart_01.ogg"],d:"Сердце у края"},
+ hero_levelup:{f:["hero/hero_levelup_01.ogg"],d:"Новый уровень"},
+ hero_nomana:{f:["hero/hero_nomana_01.ogg"],d:"Силы не хватает"},
+ hero_pain_f:{f:["hero/hero_pain_f_01.ogg"],d:"Героине больно"},
+ hero_pain_m:{f:["hero/hero_pain_m_01.ogg"],d:"Герою больно"},
+ hero_step_cloth:{f:["hero/hero_step_cloth_01.ogg","hero/hero_step_cloth_02.ogg"],d:"Шаг в лёгком"},
+ hero_step_echo:{f:["hero/hero_step_echo_01.ogg","hero/hero_step_echo_02.ogg"],d:"Шаг с эхом"},
+ hero_step_leather:{f:["hero/hero_step_leather_01.ogg","hero/hero_step_leather_02.ogg"],d:"Шаг в коже"},
+ hero_step_metal:{f:["hero/hero_step_metal_01.ogg","hero/hero_step_metal_02.ogg"],d:"Шаг в железе"},
+ hero_swing:{f:["hero/hero_swing_01.ogg"],d:"Замах героя"},
+ score_battle:{f:["score/score_battle_01.ogg"],d:"Бой"},
+ score_boss:{f:["score/score_boss_01.ogg"],d:"Бой с сильным"},
+ score_cave:{f:["score/score_cave_01.ogg"],d:"Пещеры"},
+ score_dungeon:{f:["score/score_dungeon_01.ogg"],d:"Подземелье"},
+ score_forest:{f:["score/score_forest_01.ogg"],d:"Лес"},
+ score_magic:{f:["score/score_magic_01.ogg"],d:"Чары и башня"},
+ score_road:{f:["score/score_road_01.ogg"],d:"Дорога и открытый мир"},
+ score_safe:{f:["score/score_safe_01.ogg"],d:"Затишье и привал"},
+ score_title:{f:["score/score_title_01.ogg"],d:"Заглавная тема"},
+ score_town:{f:["score/score_town_01.ogg"],d:"Город и селение"},
+ score_unrest:{f:["score/score_unrest_01.ogg"],d:"Смута и война"},
+ score_wind:{f:["score/score_wind_01.ogg"],d:"Пустой ветер"},
+ siege_alarm_city:{f:["siege/siege_alarm_city_01.ogg"],d:"Тревога: город под ударом"},
+ siege_alarm_raid:{f:["siege/siege_alarm_raid_01.ogg"],d:"Тревога: набег"},
+ siege_alarm_war:{f:["siege/siege_alarm_war_01.ogg"],d:"Тревога: война"},
+ siege_ballista:{f:["siege/siege_ballista_01.ogg"],d:"Баллиста стреляет"},
+ siege_defeat:{f:["siege/siege_defeat_01.ogg"],d:"Поражение объявлено"},
+ siege_fire:{f:["siege/siege_fire_01.ogg","siege/siege_fire_02.ogg"],d:"Огонь по стенам"},
+ siege_garrison:{f:["siege/siege_garrison_01.ogg"],d:"Гарнизон в стенах"},
+ siege_herodead:{f:["siege/siege_herodead_01.ogg"],d:"Герой пал"},
+ siege_herojoin:{f:["siege/siege_herojoin_01.ogg"],d:"Герой примкнул"},
+ siege_onager:{f:["siege/siege_onager_01.ogg","siege/siege_onager_02.ogg"],d:"Камнемёт бьёт"},
+ siege_phase:{f:["siege/siege_phase_01.ogg"],d:"Держава переходит в новую пору"},
+ siege_ram:{f:["siege/siege_ram_01.ogg","siege/siege_ram_02.ogg"],d:"Таран бьёт в ворота"},
+ siege_victory:{f:["siege/siege_victory_01.ogg"],d:"Победа объявлена"},
+ sky_day:{f:["sky/sky_day_01.ogg","sky/sky_day_02.ogg"],d:"День в умеренных землях"},
+ sky_falls:{f:["sky/sky_falls_01.ogg"],d:"Водопад"},
+ sky_gust:{f:["sky/sky_gust_01.ogg"],d:"Порыв ветра"},
+ sky_leaves:{f:["sky/sky_leaves_01.ogg"],d:"Ветер в листве"},
+ sky_rain:{f:["sky/sky_rain_01.ogg"],d:"Дождь стеной"},
+ sky_river:{f:["sky/sky_river_01.ogg","sky/sky_river_02.ogg"],d:"Тихая река"},
+ sky_snow:{f:["sky/sky_snow_01.ogg"],d:"Метель"},
+ sky_storm:{f:["sky/sky_storm_01.ogg"],d:"Буря"},
+ sky_thunder:{f:["sky/sky_thunder_01.ogg","sky/sky_thunder_02.ogg"],d:"Раскат грома"},
+ sky_wave:{f:["sky/sky_wave_01.ogg","sky/sky_wave_02.ogg"],d:"Волна о берег"},
+ sky_wind:{f:["sky/sky_wind_01.ogg"],d:"Ветер"},
+ throng_build:{f:["throng/throng_build_01.ogg"],d:"За работу"},
+ throng_coming:{f:["throng/throng_coming_01.ogg"],d:"Иду"},
+ throng_cry:{f:["throng/throng_cry_01.ogg","throng/throng_cry_02.ogg","throng/throng_cry_03.ogg"],d:"Клич воина"},
+ throng_die_f:{f:["throng/throng_die_f_01.ogg","throng/throng_die_f_02.ogg","throng/throng_die_f_03.ogg"],d:"Крик умирающей"},
+ throng_die_m:{f:["throng/throng_die_m_01.ogg","throng/throng_die_m_02.ogg","throng/throng_die_m_03.ogg","throng/throng_die_m_04.ogg"],d:"Крик умирающего"},
+ throng_fight:{f:["throng/throng_fight_01.ogg"],d:"В бой"},
+ throng_hail_f:{f:["throng/throng_hail_f_01.ogg"],d:"Приветствие"},
+ throng_hail_m:{f:["throng/throng_hail_m_01.ogg"],d:"Приветствие"},
+ throng_lord:{f:["throng/throng_lord_01.ogg"],d:"Обращение к старшему"},
+ throng_march:{f:["throng/throng_march_01.ogg"],d:"Строй идёт"},
+ throng_retreat:{f:["throng/throng_retreat_01.ogg"],d:"Отход"},
+ throng_yes:{f:["throng/throng_yes_01.ogg"],d:"Слушаюсь"},
+ trade_f:{f:["trade/trade_f_01.ogg","trade/trade_f_02.ogg","trade/trade_f_03.ogg","trade/trade_f_04.ogg","trade/trade_f_05.ogg","trade/trade_f_06.ogg"],d:"Торговка зазывает"},
+ trade_m:{f:["trade/trade_m_01.ogg","trade/trade_m_02.ogg","trade/trade_m_03.ogg","trade/trade_m_04.ogg"],d:"Торговец зазывает"},
+ tread_grass:{f:["tread/tread_grass_01.ogg","tread/tread_grass_02.ogg","tread/tread_grass_03.ogg"],d:"Шаг: трава"},
+ tread_gravel:{f:["tread/tread_gravel_01.ogg","tread/tread_gravel_02.ogg","tread/tread_gravel_03.ogg"],d:"Шаг: гравий"},
+ tread_hoof:{f:["tread/tread_hoof_01.ogg","tread/tread_hoof_02.ogg","tread/tread_hoof_03.ogg"],d:"Копыта"},
+ tread_rock:{f:["tread/tread_rock_01.ogg","tread/tread_rock_02.ogg","tread/tread_rock_03.ogg"],d:"Шаг: камень"},
+ tread_sand:{f:["tread/tread_sand_01.ogg","tread/tread_sand_02.ogg","tread/tread_sand_03.ogg"],d:"Шаг: песок"},
+ tread_snow:{f:["tread/tread_snow_01.ogg","tread/tread_snow_02.ogg","tread/tread_snow_03.ogg"],d:"Шаг: снег"},
+ tread_wood:{f:["tread/tread_wood_01.ogg","tread/tread_wood_02.ogg","tread/tread_wood_03.ogg"],d:"Шаг: доски"},
+ wild_anvil:{f:["wild/wild_anvil_01.ogg"],d:"Молот в кузнице"},
+ wild_birds:{f:["wild/wild_birds_01.ogg"],d:"Птичий пересвист"},
+ wild_fire:{f:["wild/wild_fire_01.ogg"],d:"Костёр занялся"},
+ wild_hearth:{f:["wild/wild_hearth_01.ogg"],d:"Огонь в очаге"},
+ wild_owl:{f:["wild/wild_owl_01.ogg"],d:"Сова в лесу"},
+ wild_rain:{f:["wild/wild_rain_01.ogg"],d:"Дождь"},
+ wild_raven:{f:["wild/wild_raven_01.ogg"],d:"Вороньё"},
+ wild_river:{f:["wild/wild_river_01.ogg"],d:"Река"},
+ wild_wind:{f:["wild/wild_wind_01.ogg"],d:"Ветер в поле"},
  rift_tick:{f:["nat/rift_tick_01.flac"],d:"Тик разлома: сбой в ткани мира"},};const Bank={
  base:"sounds/",
  enabled:true,          /* выключается, только если ни одна запись так и не загрузилась */
@@ -4877,9 +5139,38 @@ const MONSTER_LAYER={
  seaserpent:"serpent_horn",sharks:"hiss_high",drowned:"wraith_voice",siren:"spirit_voice",
  isleFish:"deep_call",stormwyrm:"beast_roar",jellyswarm:"hiss_high",
  pirate:"howl_low",ghostpirate:"wraith_voice",slaver:"howl_low"};
+/* Живые голоса тварей из Flare: у каждого рода свой набор «бьёт — больно —
+   гибнет». Ложатся третьим слоем поверх общего голоса и оркестровой краски. */
+const FOE_VOICE={
+ goblin:"foe_goblin",bandit:"foe_goblin",kobold:"foe_goblin",
+ skeleton:"foe_bone",wraith:"foe_undead",banshee:"foe_undead",ghost:"foe_undead",
+ zombie:"foe_undead",drowned:"foe_undead",ghostpirate:"foe_undead",
+ troll:"foe_brute",ogre:"foe_brute",golem:"foe_brute",direbear:"foe_brute",treant:"foe_brute",
+ dragon:"foe_wyrm",wyvern:"foe_wyrm",harpy:"foe_wyrm",stormwyrm:"foe_wyrm",
+ sandworm:"foe_burrow",spider:"foe_burrow",serpent:"foe_burrow",basilisk:"foe_burrow",
+ kraken:"foe_grave",seaserpent:"foe_grave",jellyswarm:"foe_grave",isleFish:"foe_grave"};
+function foeVoice(m,cue,vol){
+ try{
+  if(!settings.effects)return;
+  const base=FOE_VOICE[m&&m.id];if(!base)return;
+  /* Имена ролей перечислены прямо: так их видно и проверке звуков, и
+     читателю, а не только тому, кто разберёт сложение строк. */
+  const набор={
+   foe_goblin:{death:"foe_goblin_die",damage:"foe_goblin_pain",emerge:"foe_goblin_cast",attack:"foe_goblin_hit"},
+   foe_bone:{death:"foe_bone_die",damage:"foe_bone_pain",emerge:"foe_bone_hit",attack:"foe_bone_hit"},
+   foe_undead:{death:"foe_undead_die",damage:"foe_undead_pain",emerge:"foe_undead_cast",attack:"foe_undead_hit"},
+   foe_brute:{death:"foe_brute_die",damage:"foe_brute_pain",emerge:"foe_brute_hit",attack:"foe_brute_hit"},
+   foe_wyrm:{death:"foe_wyrm_die",damage:"foe_wyrm_pain",emerge:"foe_wyrm_cast",attack:"foe_wyrm_hit"},
+   foe_burrow:{death:"foe_burrow_die",damage:"foe_burrow_pain",emerge:"foe_burrow_hit",attack:"foe_burrow_hit"},
+   foe_grave:{death:"foe_grave_die",damage:"foe_grave_pain",emerge:"foe_grave_hit",attack:"foe_grave_hit"}}[base];
+  if(!набор)return;
+  const role=набор[cue]||набор.attack;
+  Bank.play(role,{seed:Math.floor(Math.random()*97),gain:Math.min(0.9,(vol||0.7)+0.1),maxSec:4});
+ }catch(_){}}
 function monsterLayer(m,cue,vol){
  try{
   if(!settings.effects)return;
+  safeFn(()=>foeVoice(m,cue,vol));
   const role=MONSTER_LAYER[m&&m.id];if(!role)return;
   const задержка=cue==="death"?320:cue==="emerge"?0:180;
   const тише=cue==="step"?0.25:cue==="damage"?0.4:0.55;
@@ -5020,8 +5311,50 @@ const PLACE_SCENES={village:["livestock","dogs","chickens"],castle:["horse","gua
  ruins:["dungeon_drip","bone_pile"],cave_entrance:["bats_wings","dungeon_drip"]};
 const DEPTH_SCENES=[[],["rats","dungeon_drip"],["rats","chains"],["chains","bone_pile"],
  ["shaft_wind","far_scream"],["far_scream","shaft_wind"]];
+/* Живые записи мест и зверей: подворье мычит, птичий двор копошится, кони у
+   коновязи, стража перекликается, торговцы зазывают. Ложатся вперемешку с
+   синтезированными сценами — так двор не повторяется. */
+const LIVE_SCENE={
+ village:["beasts_cattle","beasts_fowl","beasts_sheep","beasts_pig","throng_build"],
+ castle:["beasts_horse","throng_march","throng_lord","siege_garrison","hall_fort"],
+ clanhall:["throng_cry","throng_fight","throng_march","battle_sword","throng_retreat"],
+ market:["trade_m","trade_f","hall_market","throng_hail_m","battle_wood"],
+ tavern:["trade_f","throng_hail_f","throng_yes","wild_hearth","wild_fire"],
+ port:["hall_dock","sky_wave","throng_coming","hall_gate"],
+ forge:["craft_saw","craft_wood","wild_anvil","battle_metal"],
+ temple:["hall_temple","throng_lord"],
+ school:["arte_book","arte_page"],
+ tower:["cast_teleport","deep_portal"],
+ ruins:["deep_rocks","deep_wood","foe_bone_hit","foe_bone_pain"],
+ cave_entrance:["deep_drip","beasts_lion","deep_rocks","deep_cart"]};
+const LIVE_DEEP=[[],["deep_drip","deep_cart","foe_goblin_hit"],
+ ["deep_rocks","deep_wood","foe_bone_hit","foe_goblin_cast"],
+ ["deep_wind","foe_undead_cast","foe_undead_hit","battle_stone"],
+ ["deep_rocks","foe_burrow_hit","foe_brute_hit","siege_fire"],
+ ["deep_wind","foe_grave_hit","foe_wyrm_cast","foe_wyrm_hit"]];
+function liveScene(){
+ try{
+  if(!settings.effects||!Bank.enabled||Math.random()>0.3)return false;
+  const p=G.place;let набор=null;
+  if(p&&p.depth>0)набор=LIVE_DEEP[Math.min(LIVE_DEEP.length-1,p.depth)];
+  else if(p)набор=LIVE_SCENE[p.stype];
+  else if(!G.ship){
+   const t=cellContent(G.x,G.y).terrain[0];
+   набор={forest:["wild_owl","beasts_bird","beasts_giant"],
+    plains:["beasts_sheep","wild_wind","beasts_pig"],
+    mountains:["sky_gust","beasts_lion","sky_falls"],
+    coast:["sky_wave","sky_falls","hall_dock"],
+    swamp:["sky_river","wild_raven","beasts_fowl"],
+    desert:["beasts_camel","sky_day","battle_sling"],
+    cave:["deep_drip","deep_rocks","foe_burrow_pain"],
+    road:["tread_hoof","beasts_horse","throng_coming"]}[t];}
+  if(!набор||!набор.length)return false;
+  const r=набор[Math.floor(Math.random()*набор.length)];
+  return !!Bank.play(r,{seed:Math.floor(Math.random()*97),gain:0.45,maxSec:7});
+ }catch(_){return false;}}
 function livingScene(){
  try{
+  if(safeFn(()=>liveScene(),false))return;
   if(!settings.effects||Math.random()>0.22)return;
   const p=G.place;let набор=null;
   if(p&&p.depth>0)набор=DEPTH_SCENES[Math.min(DEPTH_SCENES.length-1,p.depth)];
@@ -5043,8 +5376,34 @@ function bankUpdateAmbient(){
   Bank.loop("place",role,{seed,gain:0.55,kind:"music"});
   safeFn(()=>placeColour(seed));
   safeFn(()=>livingScene());
+  safeFn(()=>liveAmbient(seed));
  }catch(_){}
 }
+/* ── ЖИВОЙ ФОН ──
+   Поверх синтезированного фона ложится настоящая запись той земли, где вы
+   стоите: птичий пересвист в лесу, сова и вороньё к ночи, река у воды, ветер
+   в горах, дождь в грозу, огонь в очаге под крышей, гул рядов на рынке.
+   Записи из Flare и 0 A.D. (обе — CC BY-SA 3.0). */
+function liveAmbient(seed){
+ try{
+  if(!settings.effects||!Bank.enabled)return;
+  let role=null;
+  const p=G.place;
+  if(p&&p.depth>0)role="deep_wind";
+  else if(p)role={market:"hall_market",port:"hall_port",forge:"wild_anvil",
+   tavern:"wild_hearth",village:"hall_farm",castle:"hall_center",
+   temple:"hall_temple",clanhall:"hall_barracks"}[p.stype]||(p.kind==="city"?"hall_market":"wild_hearth");
+  else if(G.ship)role="sky_wave";
+  else{
+   const t=cellContent(G.x,G.y).terrain[0];
+   if(G.weather==="Гроза")role="sky_thunder";
+   else if(G.weather==="Дождь")role="wild_rain";
+   else if(isNight())role=t==="forest"?"wild_owl":"wild_raven";
+   else role={forest:"wild_birds",plains:"wild_wind",mountains:"sky_wind",
+    coast:"sky_wave",swamp:"wild_river",desert:"sky_day",cave:"deep_drip",
+    road:"wild_birds"}[t]||"wild_wind";}
+  if(role)Bank.loop("live",role,{seed:Number(seed)||0,gain:0.32,kind:"music"});
+ }catch(_){}}
 /* ── КРАСКА МЕСТА ──
    Фон под ногами один на весь рельеф, и земли сливались: лес звучал как
    равнина, топи — как побережье. Поверх фона ложится один голос, редкий и
@@ -5533,7 +5892,7 @@ function boardShip(i){
   legs:sh.legs,left:sh.legs,leg:0,war:sh.war,storm:false,fare:sh.fare};
  const m=document.getElementById("modal-harbor");if(m&&!m.hidden)safeFn(()=>closeModal(m));
  safeFn(()=>{beacon("port_horn",0,0);Bank.play("ship_depart",{seed:sh.tox,gain:0.8,maxSec:8});});
- safeFn(()=>{Play.stopKey("amb0");Play.stopKey("amb1");Music.start("coast");bankUpdateAmbient();});
+ safeFn(()=>{Play.stopKey("amb0");Play.stopKey("amb1");Bank.stop("live");Music.start("coast");bankUpdateAmbient();});
  G.hour+=1;if(G.hour>=24){G.hour-=24;G.day++;}
  narrate(`Вы на борту: ${sh.name}, курс на «${sh.toName}». Переходов до порта: ${sh.legs}. Груза в трюме ${load} из ${hold}. Свайп в любую сторону — идти дальше, свайп двумя пальцами вверх — спросить капитана.`);
  journal(`Отплытие: ${sh.name} в ${sh.toName}.`);
@@ -5833,16 +6192,23 @@ function renownRank(){
  return {i,n:RENOWN[i].n,m};}
 function renownWatch(){
  try{
+  /* Держава переходит в новую пору раз в эпоху: об этом говорит свой сигнал. */
+  safeFn(()=>{const э=Math.floor(G.day/40);
+   if(G.__epoch===undefined){G.__epoch=э;return;}
+   if(э===G.__epoch)return;
+   G.__epoch=э;
+   Bank.play("siege_phase",{seed:э,gain:0.55,maxSec:6});
+   narrate(`Держава вступает в новую пору: пошёл ${э+1}-й круг сорока дней. Цены, войны и дороги пересчитаны заново.`,{interrupt:false});});
   const r=renownRank();
   if(G.__rank===undefined){G.__rank=r.i;return;}
   if(r.i===G.__rank)return;
   const вверх=r.i>G.__rank;G.__rank=r.i;
   if(вверх){
-   eventFanfare(["gate_fanfare","herald_trumpet","crowd_cheer"],0.6);
+   eventFanfare(["siege_herojoin","gate_fanfare","herald_trumpet","crowd_cheer"],0.6);
    narrate(`Новое звание: ${r.n}. Заслуги ваши теперь ${Math.round(r.m)} — в державах об этом узнают раньше вас.`,{interrupt:false});
    journal(`Звание: ${r.n}.`);
   }else{
-   eventFanfare(["lament_oboe","muffled_snare"],0.5);
+   eventFanfare(["siege_herodead","lament_oboe","muffled_snare"],0.5);
    narrate(`Имя ваше потускнело: теперь вы ${r.n}.`,{interrupt:false});
    journal(`Звание понижено: ${r.n}.`);}
  }catch(_){}}
@@ -5865,17 +6231,27 @@ function warWatch(){
   const имя=k=>{const [a,b]=k.split(":").map(Number);
    return `«${(EMPIRES[a]||{}).short||"?"}» и «${(EMPIRES[b]||{}).short||"?"}»`;};
   начались.slice(0,2).forEach((k,i)=>setTimeout(()=>safeFn(()=>{
-   eventFanfare(["siege_horn","drill_snare","war_brass"],0.55);
+   eventFanfare(["siege_alarm_war","siege_horn","drill_snare","war_brass"],0.55);
+   safeFn(()=>setTimeout(()=>safeFn(()=>Bank.play("throng_march",{gain:0.5,maxSec:5})),1600));
    narrate(`Война объявлена: ${имя(k)} сошлись оружием. На дорогах между ними станет опасно, а металл подорожает.`,{interrupt:false});
    journal(`Война: ${имя(k)}.`);}),i*2600));
   кончились.slice(0,2).forEach((k,i)=>setTimeout(()=>safeFn(()=>{
-   eventFanfare(["temple_bell","chapel_organ","crowd_cheer"],0.5);
+   eventFanfare(["siege_victory","temple_bell","chapel_organ","crowd_cheer"],0.5);
    narrate(`Замирение: ${имя(k)} сложили оружие. Дороги между ними открылись, а плата за переход упадёт.`,{interrupt:false});
    journal(`Мир: ${имя(k)}.`);}),1300+i*2600));
+  /* Осада города слышна отдельно: набат, баллиста, камнемёт и огонь по
+     стенам. Такое случается редко и потому запоминается. */
+  if(!начались.length&&стало.length&&G.day%7===0)
+   safeFn(()=>{Bank.play("siege_alarm_city",{seed:G.day,gain:0.55,maxSec:6});
+    setTimeout(()=>safeFn(()=>Bank.play("siege_ballista",{seed:G.day,gain:0.5,maxSec:5})),1200);
+    setTimeout(()=>safeFn(()=>Bank.play("siege_onager",{seed:G.day,gain:0.5,maxSec:5})),2100);
+    setTimeout(()=>safeFn(()=>Bank.play("siege_fire",{seed:G.day,gain:0.45,maxSec:5})),3000);
+    narrate("Где-то далеко бьют в набат: город под осадой. Слышны баллиста, камнемёт и огонь по стенам.",{interrupt:false});});
   /* Затяжная война слышна и без новостей: раз в несколько дней с той стороны
      доносится дальний барабан. */
   if(!начались.length&&!кончились.length&&стало.length&&G.day%3===0)
-   safeFn(()=>Bank.play("distant_snare",{seed:G.day,gain:0.4,maxSec:5}));
+   safeFn(()=>{Bank.play("distant_snare",{seed:G.day,gain:0.4,maxSec:5});
+    setTimeout(()=>safeFn(()=>Bank.play("siege_alarm_raid",{seed:G.day,gain:0.35,maxSec:5})),900);});
  }catch(_){}}
 /* Одна проверка на все часы мира: её зовёт строка состояния. */
 function worldWatch(){safeFn(()=>warWatch());safeFn(()=>renownWatch());}
@@ -7643,7 +8019,9 @@ function studyKnowledge(x,y){
  const опыт=xpGain(12+(Number(G.place&&G.place.depth)||0)*6)*(hasSkill("bookman")?2:1);
  G.xp+=опыт;
  safeFn(()=>{Bank.play("relic_xylo",{seed:k.n,gain:0.5,maxSec:4});
-  setTimeout(()=>safeFn(()=>Bank.play("spark_glock",{seed:k.n,gain:0.45,maxSec:4})),320);});
+  setTimeout(()=>safeFn(()=>Bank.play("spark_glock",{seed:k.n,gain:0.45,maxSec:4})),320);
+  /* Книгу слышно как книгу: переплёт, страница, сухой шелест. */
+  Bank.play(/пергамент|скрижаль|том/i.test(k.obj.n)?"arte_page":"arte_book",{seed:k.n,gain:0.6,maxSec:3});});
  let награда="";
  if(k.reward.type==="skill"){
   const кандидаты=SKILLS.filter(s=>!hasSkill(s.id));
@@ -7963,6 +8341,7 @@ function equipWeaponIndex(i){
   const list=weaponList(); const w=list[Number(i)];
   if(!w){narrate("Оружие не найдено.");return false;}
   G.equip.weapon=w; G.weaponDrawn=false; normalizeWeaponState();
+  safeFn(()=>Bank.play(itemVoice(w),{seed:1,gain:0.6,maxSec:3}));
   saveGame(true); refresh();
   safeFn(()=>UI.open());safeFn(()=>renderInventory());
   narrate(`Экипировано оружие: ${w.name}.`); return true;
@@ -7981,6 +8360,21 @@ function genLoot(sx,sy,seed,level){
     (Map по id||name), из-за чего второй такой предмет выглядел «не экипируемым». */
  return {id:`loot_${sx}_${sy}_${seed}_${level}`,name:`${QUAL[q]} ${MAT[rank]} ${t[0].toLowerCase()}`,type:t[0],slot:t[1],rank,qual:q,val,
   price:Math.round(RANKPRICE[rank]*(1+q*0.3))};}
+/* Голос вещи по её роду: сталь звенит, кольчуга шуршит, кожа мягко скрипит,
+   ткань шелестит, дерево стучит, склянка булькает. Пригождается всюду, где
+   вещь берут в руки: находка, покупка, надевание, продажа. */
+function itemVoice(it){
+ const t=String((it&&(it.type||it.n||it.name))||it||"").toLowerCase();
+ if(/меч|клинок|топор|секир|копь|молот|булав|кинжал|алебард|жезл/.test(t))return "arte_metal";
+ if(/кольчуг|чешуй|латы|панцир/.test(t))return "arte_maille";
+ if(/кожан|кожа|сапог|пояс|перчат/.test(t))return "arte_leather";
+ if(/плащ|ткан|мантия|роба|капюшон|шёлк/.test(t))return "arte_cloth";
+ if(/лук|посох|древ|щит|дерев/.test(t))return "arte_wood";
+ if(/зель|склян|настой|снадоб|фляг/.test(t))return "arte_potion";
+ if(/кристал|самоцвет|камен|амулет|кольц|перстен/.test(t))return "arte_gem";
+ if(/книг|свит|том|пергамент/.test(t))return "arte_book";
+ if(/щит|броня|шлем|наплеч/.test(t))return "arte_heavy";
+ return "arte_object";}
 function lootDesc(i){return `${i.name}: ранг ${RANKS[i.rank]}, качество ${QUAL[i.qual]}, бонус +${i.val}.`;}
 function journal(t){G.journal.unshift(`Д${G.day} ${String(Math.floor(G.hour)).padStart(2,"0")}:00 — ${t}`);
  if(G.journal.length>60)G.journal.pop();}
@@ -8029,7 +8423,8 @@ function drawWeapon(){
  G.weaponDrawn=true; AE.ensure();
  try{
   const bladed=["Меч","Кинжал"].includes(G.equip.weapon&&G.equip.weapon.type);
-  if(bladed){playSample("swordDraw",0.9);Play.start("ev","blade_draw",{dur:2});}
+  if(bladed){playSample("swordDraw",0.9);Play.start("ev","blade_draw",{dur:2});
+   safeFn(()=>Bank.play("arte_metal",{seed:2,gain:0.5,maxSec:2}));}
   else{const s=new SFX(); s.clang(300); setTimeout(()=>{try{s.stop(.18);}catch(e){}},500);}
  }catch(e){}
  vib([25,40,25]); narrate(`Вынуто оружие: ${weaponName()}. Готовы к взмаху.`); refresh(); return true;
@@ -8615,6 +9010,17 @@ function enterPlace(c){
    cave_entrance:["cave_bass","cave_drip"]}[stype];
   if(!дело)return;
   дело.forEach((r,i)=>setTimeout(()=>safeFn(()=>Bank.play(r,{seed:c.x+c.y+i,gain:0.42,maxSec:6})),700+i*520));});
+ /* Живой голос места: рынок гудит рядами, порт работает, кузня бьёт молотом,
+    подворье живёт скотом, крепость держит гарнизон. */
+ safeFn(()=>{
+  const живое={market:["hall_market","trade_m"],port:["hall_port","hall_dock"],
+   forge:["wild_anvil","hall_forge"],castle:["hall_center","siege_garrison"],
+   clanhall:["hall_barracks","throng_march"],temple:["hall_temple"],
+   village:["hall_farm","beasts_cattle"],tavern:["hall_market","trade_f"],
+   school:["hall_house"],tower:["hall_house"],
+   ruins:["deep_wind"],cave_entrance:["deep_drip"]}[stype];
+  if(!живое)return;
+  живое.forEach((r,i)=>setTimeout(()=>safeFn(()=>Bank.play(r,{seed:c.x+c.y+i,gain:0.5,maxSec:8})),1100+i*900));});
  safeFn(()=>Music.start(kind==="dungeon"?"cave":"prologue"));
  safeFn(()=>bankUpdateAmbient());
  /* Встреча по славе: народ этой земли помнит, кто вы ему. */
@@ -8763,6 +9169,8 @@ function startFlight(delta,dir){
  const p=G.place;if(!p)return false;
  const n=flightLen(delta);
  G.flight={d:delta,i:0,n,md:dir,x:p.x,y:p.y};
+ /* Марш начинается настоящим звуком каменных ступеней. */
+ safeFn(()=>Bank.play("deep_stairs",{seed:n,gain:0.6,maxSec:4}));
  safeFn(()=>Bank.play("stair_step",{seed:1,gain:0.55,maxSec:1.4}));
  safeFn(()=>beacon(delta>0?"stairs_down":"stairs_up",0,0));
  narrate(`Марш лестницы: ${n} ${plural(n,"ступень","ступени","ступеней")} ${delta>0?"вниз":"вверх"}. Идите на ${DIRN[dir].split(",")[0]}; шаг в обратную сторону вернёт вас обратно.`);
@@ -8795,8 +9203,10 @@ function flightStep(dir){
  if(f.i>=f.n){
   const d=f.d;G.flight=null;
   safeFn(()=>Bank.play("stair_step",{seed:3,gain:0.6,maxSec:1.4}));
+  safeFn(()=>Bank.play("deep_wind",{seed:f.n,gain:0.4,maxSec:6}));
   return changeDepth(d);}
  safeFn(()=>Bank.play("stair_step",{seed:f.i*5,gain:0.5,maxSec:1.4}));
+ if(f.i%3===0)safeFn(()=>Bank.play("deep_drip",{seed:f.i,gain:0.3,maxSec:3}));
  /* Площадка каждые пять ступеней: там дают осмотреться и послушать. */
  const площадка=f.i%5===0;
  let текст=`Ступень ${f.i} из ${f.n}.`;
@@ -8828,12 +9238,14 @@ function moveInside(dir){
  if(t==="#"){safeFn(()=>beacon("wall",DIRV[dir][0],0));narrate(`Стена на ${DIRN[dir].split(",")[0]}е.`);return false;}
  if(t==="+"&&placeMark(nx,ny)!=="open"){
   setPlaceMark(nx,ny,"open");
-  safeFn(()=>{beacon("door",DIRV[dir][0],0);Bank.play("soft_thud",{seed:nx+ny,gain:0.4,maxSec:2});});
+  safeFn(()=>{beacon("door",DIRV[dir][0],0);Bank.play("soft_thud",{seed:nx+ny,gain:0.4,maxSec:2});
+   Bank.play(G.place&&G.place.depth>0?"deep_stone":"deep_door",{seed:nx+ny,gain:0.6,maxSec:3});});
   narrate("Дверь открыта. Шагните ещё раз, чтобы пройти.");
   return false;}
  if(t==="G"&&p.kind==="city"&&placeMark(nx,ny)!=="open"){
   setPlaceMark(nx,ny,"open");
   safeFn(()=>{beacon("gate",DIRV[dir][0],0);Bank.play("ram_door",{seed:nx+ny,gain:0.5,maxSec:3});
+   Bank.play("siege_ram",{seed:nx+ny,gain:0.5,maxSec:4});
    Play.start("ev","rusty_gate",{dur:4});});
   narrate("Створки городских ворот разошлись. Шагните ещё раз в ту же сторону — встанете в воротах.");
   return false;}
@@ -8844,8 +9256,19 @@ function moveInside(dir){
  safeFn(()=>{if(!settings.effects)return;
   /* Под землёй шаг звучит по камню, наверху — по утоптанной земле. */
   const seed=p.x*7+p.y*13+Math.floor(Math.random()*10);
-  const свой=SURF_ROLE[indoorSurface()];
+  const пов=indoorSurface();
+  /* Внутри слышно и то, во что герой одет: железо гремит, кожа скрипит,
+     ткань шуршит, а в пустом зале шаг отдаётся эхом. */
+  safeFn(()=>{const a=G.equip&&G.equip.armor;
+   const t=String((a&&(a.type||a.n))||"").toLowerCase();
+   const role=/лат|кольчуг|чешуй|панцир|железн/.test(t)?"hero_step_metal"
+    :/кожан|кожа/.test(t)?"hero_step_leather"
+    :p.depth>0?"hero_step_echo":"hero_step_cloth";
+   if(Math.random()<0.5)Bank.play(role,{seed,gain:0.35,maxSec:1.2});});
+  const свой=SURF_ROLE[пов];
   if(Bank.enabled&&свой&&Bank.play(свой,{seed,gain:0.55,maxSec:1.2}))return;
+  const зап=SURF_FALLBACK[пов];
+  if(Bank.enabled&&зап&&Bank.play(зап,{seed,gain:0.55,maxSec:1.2}))return;
   const role=p.depth>0?"step_stone":"step_dirt";
   if(Bank.enabled&&Bank.play(role,{seed,gain:0.55,maxSec:1.2}))return;
   const s=new SFX();s.footstep(0,p.depth>0?"cave":"stone");setTimeout(()=>s.stop(0.15),330);});
@@ -8977,11 +9400,15 @@ const Actors={
      if(isNight())Bank.play("watch_call",{seed:a.x+a.y,gain:0.5,maxSec:3});});
     const race=safeFn(()=>(EMPIRES[empireIndexAt(G.place.bx,G.place.by)]||EMPIRES[0]).race,null);
     const att=race?safeFn(()=>attitudeOf(race),null):null;
+    /* Стража окликает живым голосом, а не только барабаном строя. */
+    safeFn(()=>Bank.play(isNight()?"throng_lord":"throng_hail_m",{seed:a.x+a.y,gain:0.5,maxSec:3}));
     const line=att&&att.id==="friend"?"Доброго дня. Если что — зовите."
      :att&&(att.id==="cold"||att.id==="hostile")?"Я тебя запомнил. Веди себя тихо."
      :GUARD_LINES[Math.floor(Math.random()*GUARD_LINES.length)];
     narrate(`Стража проходит мимо, ${dir}: «${line}»`,{interrupt:false});}
-   else narrate(`Горожанин рядом, ${dir}: «${FOLK_LINES[Math.floor(Math.random()*FOLK_LINES.length)]}»`,{interrupt:false});}},
+   else{
+    safeFn(()=>Bank.play(Math.random()<0.5?"throng_hail_f":"throng_yes",{seed:a.x+a.y,gain:0.45,maxSec:3}));
+    narrate(`Горожанин рядом, ${dir}: «${FOLK_LINES[Math.floor(Math.random()*FOLK_LINES.length)]}»`,{interrupt:false});}}},
  /* Шаг живого слышен со своей стороны и со своей громкости. */
  sound(a,d){
   if(!settings.effects)return;
@@ -9160,6 +9587,8 @@ function openChest(x,y){
   setTimeout(()=>safeFn(()=>Bank.play("shine",{gain:0.5,maxSec:4})),260);
   /* Клад слышен трижды: щелчок замка, блеск находки и голос самой вещи. */
   Bank.play("lock_click",{seed:x+y,gain:0.5,maxSec:2});
+  Bank.play("arte_find",{seed:x+y,gain:0.55,maxSec:3});
+  setTimeout(()=>safeFn(()=>Bank.play("arte_coins",{seed:x+y,gain:0.5,maxSec:3})),200);
   setTimeout(()=>safeFn(()=>Bank.play("treasure_spark",{seed:x+y,gain:0.5,maxSec:5})),420);
   setTimeout(()=>safeFn(()=>Bank.play(p.depth>=3?"relic_organ":"relic_xylo",{seed:x+y,gain:0.45,maxSec:5})),780);});
  const gold=10+Math.floor(r*40)+p.depth*15;
@@ -9203,6 +9632,8 @@ function openChest(x,y){
 }
 /* ── Жила ресурса: добыча для крафта, продажи и заданий ── */
 function mineVein(x,y){
+ safeFn(()=>Bank.play(G.place&&G.place.depth>0?"craft_ore":"craft_quarry",
+  {seed:x*7+y,gain:0.6,maxSec:4}));
  if(placeMark(x,y)==="empty"){narrate("Жила выработана.");return false;}
  const p=G.place;
  /* Кирка бьёт по-разному: наверху сухой лязг, в глубине — тяжёлый с отзвуком. */
@@ -9328,10 +9759,13 @@ function move(dir){
    металл кузни, камень улиц, гравий верхних ярусов, кости средних и
    кристалл на дне.
    ════════════════════════════════════════════════════════════════════════ */
-const SURF_ROLE={grass:"step_grass",dirt:"step_dust",stone:"step_flag",sand:"step_sand",
- water:"step_shallow",cave:"step_gravel",snow:"step_snow",ice:"step_ice",leaves:"step_leaves",
- mud:"step_mud",plank:"step_plank",straw:"step_straw",marble:"step_marble",bone:"step_bone",
- crystal:"step_crystal",metal:"step_metal",gravel:"step_gravel",ash:"step_ash",bridge:"step_bridge"};
+const SURF_ROLE={grass:"tread_grass",dirt:"step_dust",stone:"tread_rock",sand:"tread_sand",
+ water:"step_shallow",cave:"tread_gravel",snow:"tread_snow",ice:"step_ice",leaves:"step_leaves",
+ mud:"step_mud",plank:"tread_wood",straw:"step_straw",marble:"step_marble",bone:"step_bone",
+ crystal:"step_crystal",metal:"step_metal",gravel:"tread_gravel",ash:"step_ash",bridge:"step_bridge"};
+/* Прежние роли остались запасными: если живой записи нет, звучит старая. */
+const SURF_FALLBACK={grass:"step_grass",stone:"step_flag",sand:"step_sand",cave:"step_gravel",
+ snow:"step_snow",plank:"step_plank",gravel:"step_gravel"};
 const SURF_NAME={grass:"трава",dirt:"утоптанная земля",stone:"каменная плита",sand:"песок",
  water:"мелкая вода",cave:"пещерный щебень",snow:"снег",ice:"лёд",leaves:"палая листва",
  mud:"грязь",plank:"доски",straw:"солома",marble:"мрамор",bone:"кости",crystal:"кристалл",
@@ -9374,8 +9808,11 @@ function stepSound(){AE.ensure();
     и для случая, когда папки со звуками рядом нет. */
  if(Bank.enabled&&Math.random()<0.85){
   const seed=G.x*7+G.y*13+Math.floor(Math.random()*10);
-  const свой=SURF_ROLE[outdoorSurface()];
+  const пов=outdoorSurface();
+  const свой=SURF_ROLE[пов];
   if(свой&&Bank.play(свой,{seed,gain:0.55,maxSec:0.9}))return;
+  const зап=SURF_FALLBACK[пов];
+  if(зап&&Bank.play(зап,{seed,gain:0.55,maxSec:0.9}))return;
   const role=surface==="water"?"step_water":surface==="grass"||surface==="dirt"?"step_dirt":null;
   if(role&&Bank.play(role,{seed,gain:0.55,maxSec:0.9}))return;}
  /* Раньше на каждый шаг игры звучала ПАРА шагов — левая и правая — и растягивалась
@@ -9588,6 +10025,11 @@ const Weather={cur:null,timer:null,
   safeFn(()=>{const r={"Дождь":"fx_rain","Гроза":"pad_rift","Туман":"fx_haze",
    "Снег":"fx_haze","Ветрено":"pad_rift"}[w];
    if(r)Bank.play(r,{seed:Date.now(),gain:0.45,maxSec:9});
+   /* Живая погода поверх синтеза: дождь, гром, ветер, метель. */
+   const живая={"Дождь":"sky_rain","Гроза":"sky_thunder","Ветрено":"sky_gust",
+    "Снег":"sky_snow","Туман":"sky_leaves","Облачно":"sky_wind"}[w];
+   if(живая)Bank.play(живая,{seed:Date.now(),gain:0.5,maxSec:9});
+   if(w==="Гроза")setTimeout(()=>safeFn(()=>Bank.play("sky_storm",{gain:0.45,maxSec:8})),1400);
    /* Гроза начинается дальним громом: он приходит раньше, чем дождь. */
    if(w==="Гроза"){Bank.play("boom_far",{seed:Date.now(),gain:0.55,maxSec:5});
     setTimeout(()=>safeFn(()=>Bank.play("gust_low",{seed:Date.now(),gain:0.45,maxSec:5})),900);}});
@@ -9663,7 +10105,8 @@ function startCombat(c){
   try{playMonsterSound(G.combat.m);}catch(e){}
   G.combat.monsterTimer=setTimeout(pulse,4200+Math.random()*3600);
  },2800+Math.random()*2200);
- Music.start("battle");
+ /* Схватка с тем, кто много сильнее, идёт под свою тему. */
+ Music.start((Number(m.lvl)||1)>=(Number(G.level)||1)+3?"boss":"battle");
  vib([50,60,50]);sub(`⚔️ ${m.n}!`);
  updateCombat();
  narrate(`Бой! ${m.n} ${m.lvl} уровня преграждает путь. Оружие не вынимается автоматически: касание тремя пальцами — вынуть оружие, затем свайп в сторону — удар. Свайп тремя пальцами вверх — меню действий, там же попытка побега.`);
@@ -9729,8 +10172,21 @@ function playWeaponCombatSfx(hit,dir="N",dmg=6){try{AE.ensure();
  /* Взмах и попадание — настоящими записями; синтез остаётся, если банка нет. */
  const pan=dir==="E"?0.35:dir==="W"?-0.35:0;
  safeFn(()=>Bank.play(weaponVoiceRole(),{seed:Math.floor(Math.random()*97),gain:0.45,maxSec:2.5}));
+ /* Живой замах героя и живой удар оружия поверх прочего. */
+ safeFn(()=>Bank.play("hero_swing",{seed:Math.floor(Math.random()*97),gain:0.5,maxSec:2}));
+ if(hit)setTimeout(()=>safeFn(()=>{
+  const w=weaponVoiceRole();
+  const r=w==="bow_release"?"battle_arrowhit":w==="axe_chop"?"battle_stab":
+   w==="spear_thrust"?"battle_pike":"battle_sword";
+  Bank.play(r,{seed:Math.floor(Math.random()*97),gain:0.5,maxSec:2});
+  setTimeout(()=>safeFn(()=>Bank.play("battle_flesh",{seed:Math.floor(Math.random()*97),gain:0.45,maxSec:2})),90);}),140);
  /* Стрела попадает в цель иначе, чем клинок: свист и глухой удар древка. */
- if(hit&&weaponVoiceRole()==="bow_release")safeFn(()=>Play.start("ev","arrow_hit",{dur:2}));
+ if(weaponVoiceRole()==="bow_release")safeFn(()=>{
+  /* Выстрел из лука слышен в три такта: тетива, полёт, попадание. */
+  Bank.play("battle_bow",{seed:Math.floor(Math.random()*97),gain:0.6,maxSec:2});
+  setTimeout(()=>safeFn(()=>Bank.play("battle_arrowfly",{seed:Math.floor(Math.random()*97),gain:0.45,maxSec:2})),120);
+  if(hit)Play.start("ev","arrow_hit",{dur:2});});
+ if(weaponVoiceRole()==="spear_thrust")safeFn(()=>Bank.play("battle_jav",{seed:Math.floor(Math.random()*97),gain:0.5,maxSec:2}));
  if(hit)setTimeout(()=>safeFn(()=>Bank.play((Number(dmg)||6)>=12?"metal_hit":"dull_hit",
   {seed:Math.floor(Math.random()*97),gain:0.5,maxSec:2})),150);
  const natSwing=natShot("swing",pan,0.7);
@@ -9745,8 +10201,16 @@ function playWeaponCombatSfx(hit,dir="N",dmg=6){try{AE.ensure();
  if(hit){const heavy=Math.max(0.55,Math.min(1.6,0.55+(Number(dmg)||6)/16));
   s.after(140+Math.random()*20,()=>s.impactFlesh(dir==="E"?0.35:dir==="W"?-0.35:0,heavy,wt));}
  setTimeout(()=>{try{s.stop(.2);}catch(e){}},1100);}catch(e){}}
+/* Женский или мужской голос у героя: решается один раз по имени народа и
+   больше не меняется — иначе герой стонал бы то так, то этак. */
+function heroVoiceFemale(){
+ try{return hashName((G.race||"Люди").length,(G.race||"Л").charCodeAt(0),670)<0.5;}catch(_){return false;}}
 function playWoundSfx(dmg=6){try{AE.ensure();
  safeFn(()=>natShot("hit_light",0,0.6));
+ /* Живой голос героя: ему больно, и это слышно. */
+ /* Голос героя выбирается по народу и остаётся тем же всю игру. */
+ safeFn(()=>Bank.play(heroVoiceFemale()?"hero_pain_f":"hero_pain_m",{seed:dmg,gain:0.55,maxSec:2}));
+ safeFn(()=>Bank.play("battle_shield",{seed:dmg,gain:0.4,maxSec:2}));
  /* Доспех отвечает на удар: лязг и глухой толчок в щит. */
  safeFn(()=>Bank.play((Number(dmg)||6)>=12?"shield_hit":"armor_clank",
   {seed:Math.floor(Math.random()*97),gain:0.45,maxSec:2}));
@@ -9760,6 +10224,7 @@ function fight(a){const cb=G.combat;if(!cb)return;const m=cb.m;
   const critChance=0.10*fxLevel("crit")+(hasSkill("steady")?0.12:0); /* удар Таура и твёрдая рука */
   const crit=critChance>0&&Math.random()<critChance;
   if(crit){dmg*=2;safeFn(()=>{UI.blip(1320,.12,.25);Bank.play("clash",{seed:dmg,gain:0.7,maxSec:3});
+   Bank.play("cast_warcry",{seed:dmg,gain:0.5,maxSec:3});
    setTimeout(()=>safeFn(()=>Bank.play("clash_blades",{seed:dmg,gain:0.6,maxSec:3})),120);});}
   cb.hp-=dmg;playWeaponCombatSfx(true,(G.combat&&G.combat.lastDir)||"N",dmg);
   setTimeout(()=>safeFn(()=>playRealMonsterCue(m,"damage",0.6)),120);
@@ -9788,6 +10253,9 @@ function fight(a){const cb=G.combat;if(!cb)return;const m=cb.m;
   {seed:mdmg,gain:0.5,maxSec:3}));
  /* Черта в четверть здоровья: её слышно один раз, чтобы не превращать бой
     в непрерывный набат, но услышать её важно — дальше только бегство. */
+ /* Сердце у края слышно один раз: дальше только бегство. */
+ safeFn(()=>{if(G.hp<=Math.round(G.hpMax*0.25)&&hpBefore>Math.round(G.hpMax*0.25))
+  setTimeout(()=>safeFn(()=>Bank.play("hero_heart",{gain:0.65,maxSec:6})),300);});
  safeFn(()=>{const q=Math.max(1,Math.round(G.hpMax*0.25));
   if(hpBefore>q&&G.hp<=q){Bank.play("piano_dark",{gain:0.7,maxSec:6});
    setTimeout(()=>safeFn(()=>Bank.play("chase_tremolo",{gain:0.55,maxSec:5})),300);
@@ -9835,6 +10303,9 @@ function questMonsterProgress(monster){
 }
 function victory(){const cb=G.combat,m=cb.m;
  safeFn(()=>playRealMonsterCue(m,"death",0.75));
+ /* Разбойники и корсары — люди, и умирают они по-человечески. */
+ safeFn(()=>{if(["bandit","pirate","slaver"].includes(m.id))
+  Bank.play(Math.random()<0.5?"throng_die_m":"throng_die_f",{seed:m.lvl,gain:0.6,maxSec:4});});
  /* Тяжёлый обвал в конце схватки: тварь падает по-настоящему. */
  safeFn(()=>setTimeout(()=>safeFn(()=>natShot("boom",0,0.6)),260));
  safeFn(()=>setTimeout(()=>safeFn(()=>Bank.play("trumpet_victory",{gain:0.7,maxSec:5})),520));
@@ -9844,7 +10315,7 @@ function victory(){const cb=G.combat,m=cb.m;
     отзывается толпа. Обычный бой закрывается коротким телом на земле. */
  safeFn(()=>{
    const значимо=(Number(m.lvl)||1)>=(Number(G.level)||1)+3;
-   if(значимо)eventFanfare(["war_brass","wide_strings","crowd_cheer"],0.6);
+   if(значимо)eventFanfare(["siege_victory","war_brass","wide_strings","crowd_cheer"],0.6);
    else setTimeout(()=>safeFn(()=>Bank.play("body_fall",{seed:m.lvl,gain:0.45,maxSec:2})),300);});
  UI.fanfare();journal(`Побеждён «${m.n}» ${m.lvl} уровня.`);
  /* Логово в подземелье после победы пустеет и больше не нападает. */
@@ -9923,6 +10394,8 @@ function defeat(){endCombat();Music.stop();
   setTimeout(()=>safeFn(()=>Bank.play("cello_defeat",{gain:0.7,maxSec:7})),380);
   /* Поражение договаривают глубина и плач: удар о землю, стон, гобой. */
   Bank.play("body_fall",{seed:G.day,gain:0.55,maxSec:3});
+  Bank.play(heroVoiceFemale()?"hero_die_f":"hero_die_m",{seed:G.day,gain:0.7,maxSec:4});
+  setTimeout(()=>safeFn(()=>Bank.play("siege_defeat",{gain:0.6,maxSec:6})),700);
   Play.start("ev","scream",{dur:3});
   setTimeout(()=>safeFn(()=>Bank.play("moan_deep",{seed:G.day,gain:0.45,maxSec:5})),700);
   setTimeout(()=>safeFn(()=>Bank.play("lament_oboe",{seed:G.day,gain:0.5,maxSec:7})),1300);});
@@ -9938,7 +10411,7 @@ function defeat(){endCombat();Music.stop();
 function checkLevelUp(){let leveled=false;
  while(G.xp>=xpNeed(G.level)){G.xp-=xpNeed(G.level);G.level++;leveled=true;
   G.hpMax+=10;G.hp=G.hpMax;G.str++;G.agi++;G.mind++;G.cha++;G.manaMax+=5;G.mana=G.manaMax;}
- if(leveled){UI.fanfare();vib([60,80,60]);safeFn(()=>{Bank.play("jingle_achievement",{gain:0.85});Bank.play("levelup",{seed:G.level,gain:0.5,maxSec:8});
+ if(leveled){UI.fanfare();vib([60,80,60]);safeFn(()=>{Bank.play("hero_levelup",{gain:0.8,maxSec:6});Bank.play("jingle_achievement",{gain:0.85});Bank.play("levelup",{seed:G.level,gain:0.5,maxSec:8});
    /* Арфа поднимается тремя нотами — слышно, что вырос именно уровень. */
    [0,220,440].forEach((d,i)=>setTimeout(()=>safeFn(()=>Bank.play("harp_light",{seed:i,gain:0.7,maxSec:4})),d));
    /* Мир отзывается на рост: медь и одобрительный гул. */
@@ -9990,6 +10463,13 @@ function gatherCurrent(source="tap"){
   else if(зелёное&&hasSkill("herbal")){bounty+=1;навык=" Травничество: лишняя единица.";}
   G.inv[c.res.name]=(G.inv[c.res.name]||0)+bounty;
   if(bounty>1)safeFn(()=>UI.blip(1040,.09,.16));
+  /* Ремесло слышно по инструменту: кирка по руде, топор по дереву, серп
+     по траве, короб по ягодам. */
+  safeFn(()=>{const r=c.res.name;
+   const role=r==="руда"?"craft_ore":r==="камень"||r==="кристалл"?"craft_quarry":
+    r==="дерево"?"craft_axe":r==="ягоды"||r==="грибы"?"craft_berry":
+    r==="трава"?"craft_field":r==="кость"?"craft_hide":"craft_stone";
+   Bank.play(role,{seed:G.x*3+G.y,gain:0.6,maxSec:4});});
   UI.pickup();beacon(c.res.beacon,0,0);window.__lastCollectedResourceKey=key;
   sub(`📦 Собрано: ${c.res.name}`);
   let extra="";
@@ -10010,6 +10490,7 @@ function findArtifact(){const ART=["Осколок Зари","Шёпот Вет�
   setTimeout(()=>safeFn(()=>Bank.play("secret_box",{seed:G.artifacts.length,gain:0.5,maxSec:6})),600);
   /* Найденная вещь подаёт голос сама: это уже не звук находки, а звук вещи. */
   setTimeout(()=>safeFn(()=>Bank.play("relic_sing",{seed:G.artifacts.length,gain:0.5,maxSec:6})),1100);
+  Bank.play("arte_gem",{seed:G.artifacts.length,gain:0.6,maxSec:3});
   Play.start("ev","seal_break",{dur:3});
   setTimeout(()=>safeFn(()=>Play.start("ev","artifact_pulse",{dur:6})),1600);});
  UI.fanfare();safeFn(()=>{Bank.play("jingle_achievement",{gain:0.8});Bank.play("artifact",{seed:G.artifacts.length,gain:0.6,maxSec:9});
@@ -10508,7 +10989,8 @@ function itogTish(){
 function castSpell(i){const sp=SPELLS[i];
  if(!sp){narrate(`Слот ${i+1} пока пуст.`);return;}
  if(!G.spells.includes(sp.n)){narrate("Заклинание не изучено.");return;}
- if(G.mana<sp.cost){narrate(`Нужно ${sp.cost} маны, у вас ${G.mana}.`);return;}
+ if(G.mana<sp.cost){safeFn(()=>Bank.play("hero_nomana",{gain:0.6,maxSec:3}));
+  narrate(`Нужно ${sp.cost} маны, у вас ${G.mana}.`);return;}
  G.mana-=sp.cost;
  safeFn(()=>{Bank.play("spell_arcane",{seed:i,gain:0.85});Bank.play(spellBankRole(sp),{seed:i,gain:0.5,maxSec:7});
   /* Второй слой школы: свет — вспышка благословения, тьма — дымка,
@@ -10520,6 +11002,14 @@ function castSpell(i){const sp=SPELLS[i];
   /* Каст слышен в три захода: набор силы, слово и разряд. Школа выбирает
      третий слой — свет поёт арфой, тьма отвечает порчей, прочее бьёт. */
   safeFn(()=>Bank.play("spell_harp",{seed:i,gain:0.45,maxSec:4}));
+  /* Живая запись школы поверх оркестрового слоя. */
+  const живой={"Исцеление":"cast_heal","Свет зари":"cast_heal","Каменная кожа":"cast_shield",
+   "Ледяная игла":"cast_ice","Искра глубин":"cast_shock","Покров тени":"cast_teleport",
+   "Слово тишины":"cast_timestop","Зов ветра":"cast_arrows","Огненный шар":"cast_fire",
+   "Искра":"cast_shock","Зов дождя":"cast_thunder","Ветер странника":"cast_teleport"}[sp.n]
+   ||(role==="spell_fire"?"cast_fire":role==="spell_ice"?"cast_ice":
+      role==="spell_light"?"cast_heal":role==="spell_dark"?"cast_burn":"cast_shoot");
+  Bank.play(живой,{seed:i,gain:0.7,maxSec:6});
   const бросок=role==="spell_light"?"chant_calliope":role==="spell_dark"?"hex_charang":
    role==="spell_ice"?"rune_square":role==="spell_fire"?"spell_bolt":"charm_chiff";
   setTimeout(()=>safeFn(()=>Bank.play(бросок,{seed:i,gain:0.5,maxSec:5})),520);
@@ -10533,9 +11023,12 @@ function castSpell(i){const sp=SPELLS[i];
     не исключение. Иначе свиток превращается в строчку в списке. */
  let итог="";
  switch(sp.n){
-  case "Исцеление":G.hp=Math.min(G.hpMax,G.hp+25);UI.drink();итог=" Раны затянулись.";break;
+  case "Исцеление":G.hp=Math.min(G.hpMax,G.hp+25);UI.drink();
+   safeFn(()=>Bank.play("cast_potion",{gain:0.6,maxSec:3}));итог=" Раны затянулись.";break;
   case "Свет зари":G.hp=Math.min(G.hpMax,G.hp+40);UI.drink();итог=" Свет прошёл насквозь: здоровье выросло заметно.";break;
   case "Каменная кожа":G.hp=Math.min(G.hpMax,G.hp+Math.round(G.hpMax*0.2));
+   safeFn(()=>{Bank.play("cast_block",{gain:0.6,maxSec:3});
+    setTimeout(()=>safeFn(()=>Bank.play("cast_quake",{gain:0.5,maxSec:4})),300);});
    итог=" Кожа отвердела: удары пройдут хуже.";break;
   case "Ледяная игла":
    if(G.inCombat&&G.combat){const d=10+G.level*2;G.combat.hp-=d;
@@ -10543,6 +11036,7 @@ function castSpell(i){const sp=SPELLS[i];
     if(G.combat.hp<=0){narrate(`Заклинание «${sp.n}» сотворено.${итог}`);victory();return;}}
    else итог=" Игла ушла в пустоту.";break;
   case "Искра глубин":
+   safeFn(()=>Bank.play("cast_spikes",{gain:0.55,maxSec:4}));
    if(G.inCombat&&G.combat){const d=16+G.level*3;G.combat.hp-=d;
     итог=` Разряд из-под земли: −${d} твари.`;safeFn(()=>updateCombat());
     if(G.combat.hp<=0){narrate(`Заклинание «${sp.n}» сотворено.${итог}`);victory();return;}}
@@ -10578,7 +11072,9 @@ function buyItem(key,i){const n=getNPCByKey(key);
  else G.inv[item.n]=(G.inv[item.n]||0)+1;
  safeFn(()=>addRep(n.race,1)); /* постоянные покупатели становятся своими */
  UI.pickup();safeFn(()=>{Bank.play("gold",{seed:item.price,gain:0.7});Bank.play("xylo_coin",{seed:item.price,gain:0.5,maxSec:3});
-  Bank.play("market_tap",{seed:item.price,gain:0.45,maxSec:3});});narrate(`Куплено: ${item.gear?lootDesc(item.gear):item.n}. Осталось золота: ${G.gold}.`);
+  Bank.play("market_tap",{seed:item.price,gain:0.45,maxSec:3});
+  Bank.play(itemVoice(item.gear||item.n),{seed:item.price,gain:0.55,maxSec:3});
+  setTimeout(()=>safeFn(()=>Bank.play("arte_coins",{seed:item.price,gain:0.5,maxSec:3})),180);});narrate(`Куплено: ${item.gear?lootDesc(item.gear):item.n}. Осталось золота: ${G.gold}.`);
  openNPC(key,true);}
 /* ════════ ПРОДАЖА РЕСУРСОВ ════════
    Цена зависит от державы (что она вывозит — дёшево, что ввозит — дорого),

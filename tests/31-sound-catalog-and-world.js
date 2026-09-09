@@ -54,8 +54,8 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
  check('первый уровень короткий: по нему реально дойти свайпом',
   cats.пунктов<=40,{пунктов:cats.пунктов});
  check('в каталоге есть и синтезированные сцены, и живые записи, и оркестр',
-  cats.имена.some(t=>/Стихии/.test(t))&&cats.имена.some(t=>/Живые записи/.test(t))
-  &&cats.имена.some(t=>/Оркестр мира/.test(t))&&cats.имена.some(t=>/маяки/.test(t)),cats.имена);
+  cats.имена.some(t=>/Стихии/.test(t))&&cats.имена.some(t=>/Живые инструменты и оркестр/.test(t))
+  &&cats.имена.some(t=>/Музыка мира/.test(t))&&cats.имена.some(t=>/маяки/.test(t)),cats.имена);
 
  // ── 2. Ни один звук не потерялся между уровнями ──
  const покрытие=await page.evaluate(()=>{
@@ -75,7 +75,7 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
  // ── 3. Раздел открывается двойным касанием и закрывается кнопкой ──
  await page.evaluate(()=>{resetCursor();ensureCursor(activeLayer());});
  const цель=await page.evaluate(()=>cursorItems(activeLayer())
-  .findIndex(x=>/Оркестр мира/.test(x.textContent||"")));
+  .findIndex(x=>/Живые инструменты и оркестр/.test(x.textContent||"")));
  for(let i=0;i<цель;i++)await fwd();
  const наРазделе=await page.evaluate(()=>(uiCursor.textContent||"").slice(0,20));
  await doubleTap();
@@ -84,7 +84,7 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   разделыСкрыты:document.getElementById('encycCats').hidden,
   пунктов:cursorItems(activeLayer()).length}));
  check('свайп доводит до раздела, двойное касание его открывает',
-  /Оркестр/.test(наРазделе)&&/Оркестр/.test(внутри.заголовок)&&внутри.звуков>=50
+  /Живые инструменты/.test(наРазделе)&&/оркестр/i.test(внутри.заголовок)&&внутри.звуков>=50
   &&внутри.разделыСкрыты===true,{курсор:наРазделе,...внутри});
 
  // возврат кнопкой «Ко всем разделам»

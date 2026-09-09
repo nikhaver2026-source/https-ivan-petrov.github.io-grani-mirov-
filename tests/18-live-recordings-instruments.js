@@ -80,9 +80,13 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   return {heads,инструментов:document.querySelectorAll('#encycOneGrid .sound-card').length,
    attribution:/tonejs-instruments/.test(credits)&&/Attribution/.test(credits),
    флюид:/FluidR3_GM/.test(credits)};});
+ /* Папки записей сведены в тематические разделы, поэтому раздел зовётся не
+    по папке, а по делу: «Живые инструменты и оркестр» держит и nat, и inst,
+    и orch, а музыка мира стоит своим разделом. */
  check('в каталоге есть разделы живых записей, инструментов и оркестра',
-  cat.heads.some(h=>/Живые записи/.test(h))&&cat.heads.some(h=>/Живые инструменты/.test(h))
-  &&cat.heads.some(h=>/Оркестр мира/.test(h)),cat.heads);
+  cat.heads.some(h=>/Живые инструменты и оркестр/.test(h))
+  &&cat.heads.some(h=>/Музыка мира/.test(h))
+  &&cat.heads.some(h=>/Шаги и поверхности/.test(h)),cat.heads);
  check('раздел живых инструментов не пуст',cat.инструментов>=10,cat.инструментов);
  check('указание авторства CC BY видно в игре',cat.attribution===true&&cat.флюид===true,cat);
 
