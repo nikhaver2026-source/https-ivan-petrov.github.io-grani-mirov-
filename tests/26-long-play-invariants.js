@@ -67,7 +67,11 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
    ["торг: взять квест",()=>{const n=getNPC(G.x,G.y,0,null);takeNPCQuest(n);}],
    ["торг: сдать квест",()=>{const q=(G.quests||[]).find(x=>!x.done);if(q)completeQuest(q.id);}],
    ["покупка",()=>{const n=getNPC(G.x,G.y,0,"Торговец");G.gold+=200;buyItem(n.key,0);}],
-   ["продажа",()=>{const n=getNPC(G.x,G.y,0,"Торговец");G.inv["руда"]=(G.inv["руда"]||0)+3;
+   ["продажа",()=>{const n=getNPC(G.x,G.y,0,"Торговец");
+    /* Руду для продажи кладём через ту же дверь, что и игра: прямая запись в
+       запасы обходила трюм и сама же нарушала закон, который проверяется
+       ниже. На корабле продавать всё равно некому — торговец стоит в доме. */
+    evGive("руда",3);
     sellResource(n.key,"руда",Math.random()<0.5);}],
    ["отказ от дела",()=>{const q=openQuests()[0];if(q&&Math.random()<0.5)dropQuest(q.id);}],
    ["молитва",()=>prayToGod(PANTHEON[Math.floor(Math.random()*PANTHEON.length)].id)],

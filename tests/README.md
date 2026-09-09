@@ -58,6 +58,7 @@ GitHub Pages** (`/https-ivan-petrov.github.io-grani-mirov-/`). Это важно
 | 32-single-tap-never-acts | Одно касание только называет, выполняет только двойное |
 | 33-roads-and-portal-network | Тракты с именами, перекрёстки и цена перехода по сети |
 | 34-surfaces-stairs-and-chronicle | Поверхности под ногой, лестничные марши, хроника войн и званий |
+| 35-books-and-knowledge | Реестр знаний, изучение книг, навыки, свитки и обстановка |
 
 ## Как устроен набор
 

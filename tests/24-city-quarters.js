@@ -47,11 +47,15 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
    const l=genLevel(311+i*97,407+i*61,0,"castle");
    const b=l.blocks.find(x=>x.special);
    if(!b)continue;
-   /* Особая клетка обязана стоять внутри своего квартала. */
+   /* Особая клетка обязана стоять внутри своего квартала — и это должна быть
+      именно та клетка, которую квартал объявил своей. Прежде искали любую из
+      «RPC», и проверка проходила по случайному сундуку из соседней комнаты,
+      а не по особой клетке. */
+   const sp=SPECIAL_QUARTERS.find(s=>s.n===b.special);
+   const нужна=sp?sp.tile:null;
    let tile=null,at=null;
    for(let y=b.y0;y<=b.y1&&!tile;y++)for(let x=b.x0;x<=b.x1;x++){
-    const t=l.g[y][x];
-    if("RPC".includes(t)||(t==="T"&&b.special==="Голубиная башня")||(t==="N"&&b.special==="Сиротский двор")){tile=t;at={x,y};break;}}
+    if(нужна&&l.g[y][x]===нужна){tile=l.g[y][x];at={x,y};break;}}
    found.push({имя:b.special,лор:(b.lore||"").length,клетка:tile,
     жила:at?(l.veins||{})[at.x+","+at.y]||null:null});}
   return found;});
