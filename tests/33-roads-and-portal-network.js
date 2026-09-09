@@ -242,6 +242,36 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   JSON.stringify(сохранение.было)===JSON.stringify(сохранение.стало)&&сохранение.стало.length===2,
   сохранение);
 
+ /* ── Сводка «где я» ведёт к сети и называет дорогу ── */
+ const сводка=await page.evaluate(()=>{
+  while(activeLayer())closeTopUI();
+  G.place=null;G.ship=null;G.portals=[];
+  window.__said=[];if(!window.__origSay)window.__origSay=Speech.say;
+  Speech.say=t=>{window.__said.push(String(t));};
+  /* Без открытых узлов сводка честно говорит, что их нет. */
+  G.x=1000;G.y=1000;
+  handleThreeFingerSwipe("S");
+  const без=window.__said.slice(-1)[0]||"";
+  /* С открытым узлом — называет его, расстояние и сторону света. */
+  const nd=portalNodeAt(EMPIRES[0].cap.x,EMPIRES[0].cap.y);
+  discoverPortal(nd);
+  window.__said=[];
+  handleThreeFingerSwipe("S");
+  const с=window.__said.slice(-1)[0]||"";
+  /* Стоя на тракте, сводка называет его имя. */
+  G.x=29*4;G.y=100;
+  window.__said=[];
+  handleThreeFingerSwipe("S");
+  const наТракте=window.__said.slice(-1)[0]||"";
+  return {без,с,наТракте,имяТракта:roadNameAt(29*4,100)};});
+ check('сводка «где я» честно говорит, что узлов сети ещё нет',
+  /Узлов портальной сети пока не открыто/.test(сводка.без),сводка.без.slice(-90));
+ check('сводка «где я» ведёт к ближайшему открытому узлу сети',
+  /Ближайший открытый узел сети/.test(сводка.с)&&/шаг/.test(сводка.с),сводка.с.slice(-120));
+ check('сводка «где я» называет дорогу, по которой идёт игрок',
+  сводка.наТракте.includes(сводка.имяТракта),
+  {ждали:сводка.имяТракта,сказано:сводка.наТракте.slice(0,110)});
+
  check('игра не выбрасывала ошибок за весь прогон',errors.length===0,errors.slice(0,3));
 
  console.log(results.join('\n'));

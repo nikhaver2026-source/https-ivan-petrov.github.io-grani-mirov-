@@ -1978,13 +1978,28 @@ function handleThreeFingerSwipe(dir){
  if(dir==="N"){safeFn(()=>toggleActionMenu());return;}
  safeFn(()=>Tutor.note("status"));
  const q=(G.quests||[]).filter(x=>!x.done);
+ /* Дорога под ногами называется по имени: «иду Соляным трактом» — это
+    ориентир, а «дорога» — нет. */
+ const дорога=(!G.place&&!G.ship)?safeFn(()=>roadNameAt(G.x,G.y),null):null;
  const where=G.ship?`на борту судна «${G.ship.name}», курс на «${G.ship.toName}», осталось переходов ${G.ship.left} из ${G.ship.legs}${G.ship.storm?", идёт шторм":""}`
   :G.place?placeTitle()+`, клетка ${G.place.x} на ${G.place.y}`
-  :`${cellContent(G.x,G.y).terrain[1]}, ${cellContent(G.x,G.y).empire.name}, координаты ${G.x} и ${G.y}`;
+  :`${cellContent(G.x,G.y).terrain[1]}${дорога?`, ${дорога}`:""}, ${cellContent(G.x,G.y).empire.name}, координаты ${G.x} и ${G.y}`;
+ /* Куда идти за сетью: ближайший открытый узел с направлением и расстоянием.
+    Без этого сеть пришлось бы искать вслепую по всей карте. */
+ const сеть=(!G.place&&!G.ship)?safeFn(()=>{
+  const узлы=portalsKnown().map(portalNodeByKey).filter(Boolean)
+   .map(nd=>({nd,d:Math.max(Math.abs(nd.x-G.x),Math.abs(nd.y-G.y))}))
+   .sort((a,b)=>a.d-b.d);
+  if(!узлы.length)return "Узлов портальной сети пока не открыто: их находят, встав на них.";
+  const б=узлы[0];
+  if(б.d===0)return `Вы стоите на узле сети: ${б.nd.name}.`;
+  return `Ближайший открытый узел сети: ${б.nd.name}, ${б.d} ${plural(б.d,"шаг","шага","шагов")}, ${dirBetween(б.nd.x-G.x,б.nd.y-G.y)}. Всего открыто: ${portalsKnown().length}.`;
+ },null):null;
  narrate(`Вы здесь: ${where}. Здоровье ${G.hp} из ${G.hpMax}, мана ${G.mana} из ${G.manaMax}, золото ${G.gold}. `+
   `День ${G.day}, ${Math.floor(G.hour%24)} часов, ${isNight()?"ночь":"день"}. Оружие ${G.weaponDrawn?"в руках":"в ножнах"}. `+
   `Сложность: ${diff().n}. `+
-  (q.length?`Незавершённых заданий: ${q.length}. Ближайшее: ${q[0].text}`:"Незавершённых заданий нет."));
+  (q.length?`Незавершённых заданий: ${q.length}. Ближайшее: ${q[0].text}. `:"Незавершённых заданий нет. ")+
+  (сеть||""));
 }
 /* Меню действий: открыть, а если оно (или любое другое окно) открыто — закрыть. */
 function toggleActionMenu(){if(!gameActive())return;
