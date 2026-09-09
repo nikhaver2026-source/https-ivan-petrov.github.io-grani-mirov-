@@ -93,9 +93,14 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   window.__said=[];
   move("E");
   const atDoor=!!G.atDoor,insideAfterFirst=!!G.place;
+  /* Шаг на порог может вытянуть случайное событие мира, а окно события
+     блокирует ходьбу — это правильно для игры и мешает только здесь.
+     Проверяется вход в поселение, поэтому окно закрывается и шаг делается. */
+  let событие=false;
+  while(activeLayer()){событие=true;closeTopUI();}
   move("E");
   const inside=!!G.place;
-  return {atDoor,insideAfterFirst,inside,kind:G.place&&G.place.kind,said:window.__said.slice()};});
+  return {atDoor,insideAfterFirst,inside,событие,kind:G.place&&G.place.kind,said:window.__said.slice()};});
  check('первый шаг ставит на порог, а не вводит внутрь',enter.atDoor===true&&enter.insideAfterFirst===false,enter);
  check('второй шаг в ту же сторону вводит внутрь',enter.inside===true&&enter.kind==="city",{kind:enter.kind});
 
