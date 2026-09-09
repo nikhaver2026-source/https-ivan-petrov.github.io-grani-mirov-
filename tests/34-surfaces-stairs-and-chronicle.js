@@ -274,6 +274,55 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
  check('у каждой постройки и каждой глубины свои живые сцены, и все они существуют',
   !living.плохие.length&&living.мест>=8&&living.глубин>=6,living);
 
+ /* ── 6. Постройки объёмны, и в них всё достижимо ──
+    Дом без подвала, кузня без горна и руины без спуска — это не строгость
+    ради строгости: игрок ходит по этим клеткам ногами, и то, чего нет,
+    он ищет вслепую до конца игры. Проверяется каждый вид постройки на
+    двадцати пяти разных местах карты. ── */
+ const объём=await page.evaluate(()=>{
+  const types=["castle","village","port","tavern","temple","forge","market","school",
+   "clanhall","tower","ruins","cave_entrance"];
+  const need={castle:["G",">","N"],village:[">","N"],port:[">","N"],tavern:[">","N"],
+   temple:["A",">"],forge:["F",">"],market:["S",">"],school:["N",">"],
+   clanhall:[">","N"],tower:[">","N"],ruins:[">","C"],cave_entrance:[">"]};
+  const out={};const плохо=[];
+  types.forEach((t,ti)=>{
+   let минКомнат=99,минПлощадь=9999,несвязных=0,размеры=null;
+   for(let s=0;s<25;s++){
+    /* Разные места карты для разных построек: у уровней общий кэш по
+       координатам, и на одной клетке все виды дали бы один и тот же дом. */
+    const x=200+s*61+ti*911,y=300+s*37+ti*577;
+    let l;try{l=genLevel(x,y,PLACE_KIND[t]==="dungeon"?1:0,t);}
+    catch(e){плохо.push(t+": "+e.message);break;}
+    const есть=ch=>{for(let yy=0;yy<l.h;yy++)for(let xx=0;xx<l.w;xx++)if(l.g[yy][xx]===ch)return true;return false;};
+    (need[t]||[]).forEach(ch=>{if(!есть(ch))плохо.push(`${t} семя ${s}: нет «${ch}»`);});
+    const пол=ch=>ch!=="#";
+    const seen=new Set([l.entry.x+","+l.entry.y]);const q=[[l.entry.x,l.entry.y]];
+    while(q.length){const [cx,cy]=q.pop();
+     for(const [dx,dy] of [[1,0],[-1,0],[0,1],[0,-1]]){
+      const nx=cx+dx,ny=cy+dy;if(nx<0||ny<0||nx>=l.w||ny>=l.h)continue;
+      const k=nx+","+ny;if(seen.has(k)||!пол(l.g[ny][nx]))continue;
+      seen.add(k);q.push([nx,ny]);}}
+    let всего=0;for(let yy=0;yy<l.h;yy++)for(let xx=0;xx<l.w;xx++)if(пол(l.g[yy][xx]))всего++;
+    несвязных+=всего-seen.size;
+    минПлощадь=Math.min(минПлощадь,всего);
+    минКомнат=Math.min(минКомнат,(l.rooms||[]).length||(l.blocks||[]).length||0);
+    размеры=l.w+"×"+l.h;}
+   out[t]={размеры,минПлощадь,минКомнат,несвязных};});
+  return {out,плохо};});
+ check('в каждой постройке есть всё, что ей положено: вход, спуск, люди, горн, алтарь',
+  !объём.плохо.length,объём.плохо.slice(0,5));
+ check('ни одна клетка постройки не отрезана от входа',
+  Object.values(объём.out).every(o=>o.несвязных===0),
+  Object.entries(объём.out).filter(([,o])=>o.несвязных).map(([k,o])=>k+":"+o.несвязных));
+ check('в каждой постройке не меньше четырёх комнат',
+  Object.values(объём.out).every(o=>o.минКомнат>=4),
+  Object.entries(объём.out).map(([k,o])=>k+":"+o.минКомнат));
+ check('дома не вырождаются в чулан, а города просторнее домов',
+  Object.values(объём.out).every(o=>o.минПлощадь>=50)&&
+  объём.out.castle.минПлощадь>объём.out.tavern.минПлощадь,
+  Object.entries(объём.out).map(([k,o])=>k+":"+o.минПлощадь+" "+o.размеры));
+
  check('игра не выбрасывала ошибок за весь прогон',errors.length===0,errors.slice(0,3));
 
  console.log(results.join('\n'));
