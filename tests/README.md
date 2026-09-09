@@ -56,6 +56,7 @@ GitHub Pages** (`/https-ivan-petrov.github.io-grani-mirov-/`). Это важно
 | 30-world-consistency | Боги, кланы, народы, державы, чудовища и задания сходятся |
 | 31-sound-catalog-and-world | Каталог звуков по разделам и звучание мира |
 | 32-single-tap-never-acts | Одно касание только называет, выполняет только двойное |
+| 33-roads-and-portal-network | Тракты с именами, перекрёстки и цена перехода по сети |
 
 ## Как устроен набор
 

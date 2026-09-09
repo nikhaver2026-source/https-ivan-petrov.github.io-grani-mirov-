@@ -238,6 +238,12 @@ h3{color:var(--acc2);margin:14px 0 6px;font-size:1.05rem;}
  <div id="harborBody"></div>
 </div></div>
 
+<!-- ПОРТАЛЬНАЯ СЕТЬ -->
+<div class="modal" id="modal-portal" role="dialog" aria-modal="true" aria-label="Портальная сеть" hidden><div class="sheet">
+ <header><h2 id="portalTitle">🌀 Портальная сеть</h2><button type="button" data-cmd="close">✖️ Отойти</button></header>
+ <div id="portalBody"></div>
+</div></div>
+
 <!-- ВСТРЕЧА С КАРАВАНОМ -->
 <div class="modal" id="modal-caravan" role="dialog" aria-modal="true" aria-label="Караван" hidden><div class="sheet">
  <header><h2 id="caravanTitle">🐫 Караван</h2><button type="button" data-cmd="close">✖️ Пропустить</button></header>
@@ -2337,6 +2343,7 @@ const AM_GROUPS=[
   ["cityplan","🏙️ План города: кварталы и площадь"],
   ["trade","🐫 Рынки, маршруты и караваны"],
   ["harbor","⚓ Причал: корабли и рейсы"],
+  ["portal","🌀 Портальная сеть"],
   ["sail","🚢 Идти дальше морем"],
   ["fish","🎣 Рыбачить"],
   ["look","👁️ Осмотреться"],
@@ -2384,6 +2391,8 @@ function amAvailable(cmd){
   const c=cellContent(G.x,G.y);
   if(cmd==="ascend")return !!G.place;
   if(cmd==="harbor")return !G.ship&&!!(c.structure&&c.structure.type==="port");
+  /* Сеть доступна только у самого камня: издали в неё не войти. */
+  if(cmd==="portal")return !G.ship&&!G.place&&!!portalNodeAt(G.x,G.y);
   if(cmd==="sail")return !!G.ship;
   if(cmd==="fish")return !!fishingSpot();
   if(cmd==="descend")return !!G.place||!!(c.structure&&PLACE_KIND[c.structure.type]);
@@ -2581,7 +2590,15 @@ const GUIDE=[
  "Каждый объект мира имеет уникальный короткий звук: замок, таверна, школа, кланхолл, храм, рынок, кузница, башня, руины, деревья, камни, руда, травы, кристаллы, правитель, стражник, торговец и монстры.",
  "Ресурс под ногами теперь отзывается живой записью, а не синтезом: дерево — шорохом, камень — глухим ударом, руда — резким лязгом, трава и грибы — маримбой поляны, ягоды — колокольчиками, кристалл — кристальным звоном, ракушка — накатом волны, кость — осыпью. У каждой роли по несколько вариантов, поэтому одна и та же жила звучит каждый раз чуть иначе.",
  "Маяки панорамируются по сторонам света: восток справа, запад слева."]},
-{title:"Глава 23. Чем звучит мир",body:[
+{title:"Глава 23. Дороги, перекрёстки и портальная сеть",body:[
+ "Через мир идут большие тракты — каждые двадцать девять клеток на север и на восток. У каждого тракта своё имя: Соляной тракт, Медный шлях, Хлебный прогон. Имя не выдумывается заново — оно выведено из номера линии, поэтому один и тот же тракт зовётся так же с любого конца мира.",
+ "Там, где два тракта встречаются, стоит перекрёсток. Он называет оба тракта и указывает на ближние селения по сторонам света с расстоянием в шагах. От каждого селения к ближнему тракту протоптан съезд, поэтому до деревни или цитадели можно дойти по дороге, не блуждая по полям. На дороге меньше чудовищ, чем в поле.",
+ "ПОРТАЛЬНАЯ СЕТЬ. Мир — две тысячи клеток на две тысячи, и пешком его не обойти. Сеть стоячих камней связывает дальние концы Грани. Узлы двух родов: врата державы у цитадели каждой из восьми держав и стоячие камни на части перекрёстков трактов. Поэтому идти по дороге выгодно вдвойне: перекрёстки — это не только указатели.",
+ "Узел надо открыть, побывав на нём: игра скажет об этом сама, как только вы на него встанете. Перейти можно только между открытыми узлами — карта сети есть то, что вы прошли ногами.",
+ "Плата за переход у каждого своя и складывается из шести слагаемых. Расстояние: сеть берёт за разрыв, а не за вёрсты, поэтому дальний переход дороже ближнего, но не во столько же раз. Заслуги: уровень, найденные артефакты, закрытые дела, слава клана и благосклонность богов дают скидку до сорока частей из ста. Репутация: как относится к вам народ той земли, куда идёт переход. Политика: отношения державы отправления с державой назначения — в своей земле дешевле всего, у союзника дешевле, при напряжении дороже. Экономика: пошлина и достаток города назначения. Война: если земля назначения с кем-то воюет, за риск берут пятую часть сверху.",
+ "Переход бывает закрыт. Между воюющими державами камни друг друга не слышат вовсе. Народ, который вас не принимает, не пустит к своему камню. И, разумеется, нельзя перейти, если не хватает золота: игра скажет, сколько просят и сколько у вас есть.",
+ "Разбор платы читается вслух для каждого направления: слышно, сколько добавило расстояние, сколько сняли заслуги, что сделали репутация и политика. Открывается сеть у самого камня — пункт «Портальная сеть» в меню действий. Переход отнимает часы, но много меньше, чем дорога."]},
+{title:"Глава 24. Чем звучит мир",body:[
  "Мир отвечает звуком на всё, что в нём происходит, и по этим ответам можно читать обстановку, не видя её.",
  "Земли. У каждой местности свой голос поверх ровного фона: лес отвечает маримбой, топи — калимбой, берег — накатом волны, пещера — низким томом, горы — дальней флейтой, пустыня — сухой струной, равнина — пастушьей свирелью, тракт — банджо. Голос звучит один раз, когда местность сменилась.",
  "Державы. Пересекая границу, вы слышите рог заставы, а за ним — напев здешней земли: горские волынки, свирель полей, пустынная зурна, островные бочки, придворный клавесин, деревенская дудка, банджо тракта или кото дальних берегов. Восемь держав — восемь голосов.",
@@ -2592,7 +2609,7 @@ const GUIDE=[
  "Люди и дороги. Дозор слышно по барабану строя, обоз — по барабану каравана и струне дороги, площадь и турнир — по гулу толпы. Тварь в темноте выдаёт себя раньше, чем покажется: дыханием, крадущимся шагом или шорохом подземной нечисти.",
  "Магия и находки. У каждой школы свой второй слой: свет вспыхивает благословением, тьма густеет дымкой, лёд звенит колокольчиком, огонь рассыпается искрами. Артефакт отзывается кристаллом и звуком открытой тайны, молитва у алтаря — хором и ореолом бога, новый уровень — фанфарами и одобрительным гулом.",
  "Ловушки и работа. Ловушка звучит на два такта: щелчок механизма, а за ним осыпь. Кирка по жиле бьёт по-разному: наверху сухой лязг, в глубине — тяжёлый с отзвуком."]},
-{title:"Глава 24. Горячие клавиши и советы",body:[
+{title:"Глава 25. Горячие клавиши и советы",body:[
  "Стрелки — ходьба. Контрол или Альт плюс G — руководство. Контрол или Альт плюс M — меню действий. Альт плюс S — тишина. Эскейп — закрыть.",
  "Играйте в наушниках — стерео-маяки помогут ориентироваться. Удачной охоты, Странник!"]}];
 let chIndex=0;
@@ -2748,6 +2765,29 @@ function isSpur(x,y){
  return spurLine("c",x,Math.floor(y/29)).has(y);}
 /* Дорога под ногами: тракт или съезд к селению. */
 function roadAt(x,y){return isRoad(x,y)||isSpur(x,y);}
+/* ── ИМЕНА ТРАКТОВ ──
+   Дорога без имени — просто полоса под ногами. С именем она становится
+   ориентиром: «иду по Соляному тракту на восток» звучит как место, а не как
+   координата. Имя выводится из номера линии, поэтому у одного и того же
+   тракта оно всегда одно и то же, в любой стороне мира. */
+const TRACT_A=["Соляной","Медный","Хлебный","Царский","Пепельный","Ольховый","Каменный",
+ "Заревой","Волчий","Стеклянный","Пряный","Оловянный","Тихий","Гончий","Лунный","Кремнёвый"];
+const TRACT_B=["тракт","путь","шлях","волок","прогон"];
+function tractName(kind,line){
+ const seg=Math.floor(line/29);
+ const ось=kind==="r"?1:2;
+ const a=TRACT_A[Math.floor(hashName(ось,seg,701)*TRACT_A.length)];
+ const b=TRACT_B[Math.floor(hashName(ось,seg,702)*TRACT_B.length)];
+ return `${a} ${b}`;}
+/* Как называется дорога под ногами: тракт с востока на запад, тракт с севера
+   на юг, перекрёсток двух или безымянный съезд к селению. */
+function roadNameAt(x,y){
+ if(!roadAt(x,y))return null;
+ const гор=y%29===0,вер=x%29===0;
+ if(гор&&вер)return `перекрёсток: ${tractName("r",y)} и ${tractName("c",x)}`;
+ if(гор)return tractName("r",y);
+ if(вер)return tractName("c",x);
+ return "съезд к селению";}
 /* Куда ведут дороги от перекрёстка: ближние селения по сторонам света. */
 function signpostAt(x,y){
  const out=[];
@@ -2757,6 +2797,210 @@ function signpostAt(x,y){
    dir:dirBetween(c.x-x,c.y-y),type:c.type});}
  out.sort((a,b)=>a.d-b.d);
  return out.slice(0,4);}
+/* ════════════════════════════════════════════════════════════════════════
+   ПОРТАЛЬНАЯ СЕТЬ
+
+   Мир — две тысячи клеток на две тысячи, и пешком его не обойти. Сеть
+   стоячих камней связывает дальние концы Грани, но не бесплатно и не для
+   всякого: за переход берут плату, и она у каждого своя.
+
+   Узлы сети двух родов:
+     Врата державы — у цитадели каждой из восьми держав, всегда на месте;
+     Стоячий камень — на некоторых перекрёстках трактов, вдали от столиц.
+   Поэтому перекрёсток теперь не только указатель: часть из них — вход в сеть.
+
+   Узел надо ОТКРЫТЬ, побывав на нём. Переход возможен только между
+   открытыми узлами: карта сети — это то, что игрок прошёл ногами.
+
+   Цена перехода складывается из шести слагаемых, и каждое можно услышать
+   в разборе платы:
+     расстояние  — чем дальше, тем дороже, но не пропорционально: сеть берёт
+                   за разрыв, а не за вёрсты;
+     заслуги     — уровень, артефакты, закрытые дела и слава клана дают скидку;
+     репутация   — как относится народ той земли, куда идёт переход;
+     политика    — отношения державы отправления с державой назначения;
+     экономика   — пошлина и достаток города назначения;
+     война       — надбавка за риск, а между воюющими державами перехода нет.
+   ════════════════════════════════════════════════════════════════════════ */
+const PORTAL_STONE_A=["Стоячий","Косой","Седой","Гулкий","Расколотый","Полый","Чёрный",
+ "Белый","Кривой","Певчий","Спящий","Мшистый"];
+const PORTAL_STONE_B=["камень","столб","перст","обелиск","дольмен"];
+/* Стоячие камни стоят не на каждом перекрёстке: одна двадцатая, зато на все
+   стороны света. Столицы порталы имеют всегда — там врата державы. */
+function portalNodeAt(x,y){
+ if(x<0||y<0||x>=WORLD||y>=WORLD)return null;
+ const emp=empireAt(x,y);
+ if(x===emp.cap.x&&y===emp.cap.y)
+  /* Родительный падеж от коротких имён держав вышел бы уродливым
+     («Серебряные Рекиа»), поэтому имя державы берётся в кавычки как есть. */
+  return {x,y,kind:"gate",name:`Врата державы «${emp.short}»`,emp};
+ if(isCrossroads(x,y)&&hashName(x,y,911)<0.05){
+  const a=PORTAL_STONE_A[Math.floor(hashName(x,y,912)*PORTAL_STONE_A.length)];
+  const b=PORTAL_STONE_B[Math.floor(hashName(x,y,913)*PORTAL_STONE_B.length)];
+  return {x,y,kind:"stone",name:`${a} ${b}`,emp};}
+ return null;}
+const portalKey=(x,y)=>x+","+y;
+function portalsKnown(){return Array.isArray(G.portals)?G.portals:(G.portals=[]);}
+function portalKnown(x,y){return portalsKnown().includes(portalKey(x,y));}
+/* Узел открывается тем, что игрок на нём постоял. */
+function discoverPortal(node){
+ if(!node)return false;
+ const k=portalKey(node.x,node.y);
+ if(portalsKnown().includes(k))return false;
+ portalsKnown().push(k);
+ safeFn(()=>{Bank.play("pad_rift",{seed:node.x+node.y,gain:0.55,maxSec:7});
+  setTimeout(()=>safeFn(()=>Bank.play("fx_rift",{seed:node.x,gain:0.5,maxSec:6})),500);});
+ safeFn(()=>journal(`Открыт узел сети: ${node.name}.`));
+ narrate(`${node.name}. Узел портальной сети открыт: теперь сюда можно перейти из любого другого открытого узла. Всего открыто узлов: ${portalsKnown().length}.`,{interrupt:false});
+ return true;}
+/* Разбор узла из ключа «x,y» обратно в узел сети. */
+function portalNodeByKey(k){
+ const [x,y]=String(k).split(",").map(Number);
+ if(!Number.isFinite(x)||!Number.isFinite(y))return null;
+ return portalNodeAt(x,y);}
+
+/* ── ЗАСЛУГИ ──
+   Чем игрок известнее сети, тем меньше она с него берёт: уровень, найденные
+   артефакты, закрытые дела, слава клана и благосклонность богов. */
+function portalMerit(){
+ let m=Number(G.level)||1;
+ m+=(G.artifacts||[]).length*2;
+ m+=(G.quests||[]).filter(q=>q.done).length;
+ m+=Math.max(0,Math.min(10,(Number(G.clanRep)||0)/10));
+ try{m+=Math.min(6,Object.values(G.faith||{}).reduce((a,b)=>a+Math.max(0,Number(b)||0),0)/6);}catch(_){}
+ return m;}
+
+/* ── ЦЕНА ПЕРЕХОДА ──
+   Возвращает и цену, и её разбор: игрок должен слышать, за что платит. */
+function portalFare(from,to){
+ const parts=[];
+ if(!from||!to)return {open:false,reason:"Узел не найден.",gold:0,hours:0,parts};
+ if(from.x===to.x&&from.y===to.y)return {open:false,reason:"Вы уже здесь.",gold:0,hours:0,parts};
+ const d=Math.max(Math.abs(to.x-from.x),Math.abs(to.y-from.y));
+ /* Сеть берёт за разрыв, а не за вёрсты: корень расстояния, а не само оно. */
+ let gold=Math.round(14+Math.sqrt(d)*7);
+ parts.push({что:"расстояние",сколько:gold,как:`${d} ${plural(d,"клетка","клетки","клеток")} пути`});
+
+ const i=Math.max(0,EMPIRES.indexOf(from.emp)),j=Math.max(0,EMPIRES.indexOf(to.emp));
+ const rel=relationAt(i,j,G.day),слово=relationWord(rel);
+ /* Война между державами закрывает переход наглухо: камни воюющих земель
+    друг друга не слышат. */
+ if(i!==j&&слово==="война")
+  return {open:false,reason:`Между «${from.emp.short}» и «${to.emp.short}» война: камни друг друга не слышат.`,
+   gold:0,hours:0,parts,rel,слово};
+
+ const merit=portalMerit();
+ const скидкаЗаслуг=Math.min(0.4,merit*0.012);
+ const заслуги=-Math.round(gold*скидкаЗаслуг);
+ gold+=заслуги;
+ parts.push({что:"заслуги",сколько:заслуги,
+  как:`${Math.round(скидкаЗаслуг*100)}% за уровень, артефакты, закрытые дела и славу`});
+
+ const att=safeFn(()=>attitudeOf(to.emp.race),null);
+ if(att&&att.refuses)
+  return {open:false,reason:`${to.emp.race} вас не принимают: у их камня переход закрыт.`,
+   gold:0,hours:0,parts,rel,слово};
+ const kРеп=att?(1-Math.max(-0.25,Math.min(0.25,(att.rep||0)*0.012))):1;
+ const реп=Math.round(gold*(kРеп-1));
+ gold+=реп;
+ parts.push({что:"репутация",сколько:реп,как:att?`${to.emp.race}: ${att.n||att.id}`:"неизвестно"});
+
+ /* Политика: союз дешевле, напряжение дороже, своя земля почти даром. */
+ const kПол=i===j?0.75:rel>=60?0.85:rel>=25?0.95:rel>=-24?1:1.3;
+ const пол=Math.round(gold*(kПол-1));
+ gold+=пол;
+ parts.push({что:"политика",сколько:пол,
+  как:i===j?"своя держава":`${from.emp.short} и ${to.emp.short}: ${слово}`});
+
+ /* Экономика: пошлина города назначения и его достаток. */
+ const город=safeFn(()=>isCityAt(to.x,to.y),null);
+ const пошлина=город?safeFn(()=>cityProfile(город).tax,0.05):0.05;
+ const эк=Math.round(gold*пошлина);
+ gold+=эк;
+ parts.push({что:"экономика",сколько:эк,
+  как:`пошлина ${Math.round(пошлина*100)}% ${город?"города "+город.name:"вольного узла"}`});
+
+ /* Война: если земля назначения с кем-то воюет, за риск берут больше. */
+ const воюет=safeFn(()=>EMPIRES.some((_,k)=>k!==j&&relationWord(relationAt(j,k,G.day))==="война"),false);
+ const война=воюет?Math.round(gold*0.2):0;
+ gold+=война;
+ if(воюет)parts.push({что:"война",сколько:война,как:`${to.emp.short} воюет: надбавка за риск`});
+
+ /* Дар Виа Странницы: дороги — её след, и сеть это помнит. */
+ const дар=Math.round(gold*-Math.min(0.2,0.07*fxLevel("trade")));
+ if(дар){gold+=дар;parts.push({что:"дар Виа Странницы",сколько:дар,как:"покровительство дорог"});}
+
+ gold=Math.max(5,Math.round(gold));
+ /* Переход не мгновенен: сеть отнимает время, но много меньше дороги. */
+ const hours=Math.max(1,Math.round(1+Math.sqrt(d)/6));
+ return {open:true,gold,hours,parts,rel,слово,d,merit};}
+
+/* ── ПЕРЕХОД ── */
+function portalTravel(key){
+ const from=portalNodeAt(G.x,G.y);
+ if(!from){narrate("Вы не у портального узла.");return false;}
+ const to=portalNodeByKey(key);
+ if(!to){narrate("Такого узла нет.");return false;}
+ if(!portalKnown(to.x,to.y)){narrate(`${to.name} ещё не открыт: до него нужно дойти ногами.`);return false;}
+ const f=portalFare(from,to);
+ if(!f.open){narrate(f.reason);safeFn(()=>UI.empty());return false;}
+ if(G.gold<f.gold){
+  narrate(`За переход в «${to.name}» просят ${f.gold} золота, у вас ${G.gold}.`);
+  safeFn(()=>UI.empty());return false;}
+ if(G.ship){narrate("С палубы в сеть не войти: сначала сойдите на берег.");return false;}
+ G.gold-=f.gold;
+ G.x=to.x;G.y=to.y;G.place=null;
+ G.hour+=f.hours;while(G.hour>=24){G.hour-=24;G.day++;}
+ safeFn(()=>{while(activeLayer())closeTopUI();});
+ safeFn(()=>{beacon("portal",0,0);
+  Bank.play("pad_rift",{seed:to.x,gain:0.6,maxSec:7});
+  setTimeout(()=>safeFn(()=>Bank.play("fx_rift",{seed:to.y,gain:0.5,maxSec:6})),450);});
+ safeFn(()=>journal(`Переход сетью: ${from.name} → ${to.name} за ${f.gold} золота.`));
+ const c=cellContent(G.x,G.y);
+ narrate(`Переход. ${to.name}, держава ${to.emp.short}. Заплачено ${f.gold} золота, ушло часов: ${f.hours}. ${c.terrain[1]}. Золота осталось ${G.gold}.`);
+ safeFn(()=>{refresh();arrive();saveGame(true);});
+ return true;}
+
+/* ── ОКНО СЕТИ ── */
+function openPortalNet(){
+ const here=portalNodeAt(G.x,G.y);
+ if(!here){narrate("Портального узла здесь нет. Врата стоят у столиц держав, стоячие камни — на перекрёстках трактов.");return false;}
+ discoverPortal(here);
+ const body=document.getElementById("portalBody"),title=document.getElementById("portalTitle");
+ if(!body||!title){narrate("Портальная сеть недоступна.");return false;}
+ title.textContent="🌀 "+here.name;
+ const узлы=portalsKnown().map(portalNodeByKey).filter(Boolean)
+  .filter(nd=>!(nd.x===here.x&&nd.y===here.y));
+ const строки=узлы.map(nd=>({nd,f:portalFare(here,nd)}))
+  .sort((a,b)=>(a.f.open===b.f.open)?(a.f.gold-b.f.gold):(a.f.open?-1:1));
+ const merit=portalMerit();
+ let html=`<div class="list-line" tabindex="0" data-speak="${
+  `${here.name}, ${here.kind==="gate"?"врата державы":"стоячий камень"}, держава ${here.emp.short}. Открыто узлов: ${portalsKnown().length}. Ваши заслуги перед сетью: ${Math.round(merit)}. Чем они выше, тем дешевле переход.`.replace(/"/g,"&quot;")}">
+  🌀 <b>${here.name}</b> · ${here.kind==="gate"?"врата державы":"стоячий камень"} · ${here.emp.short}<br>
+  Открыто узлов: ${portalsKnown().length} · заслуги перед сетью: ${Math.round(merit)}<br>
+  Плата зависит от расстояния, заслуг, репутации, политики, экономики и войны.</div>`;
+ if(!строки.length){
+  html+=`<div class="list-line">Других открытых узлов нет. Врата стоят у столиц восьми держав, стоячие камни — на перекрёстках трактов: дойдите до них ногами, и сеть их запомнит.</div>`;
+ }else{
+  html+=`<h3>Куда можно перейти</h3>`;
+  html+=строки.map(({nd,f})=>{
+   const разбор=f.parts.map(p=>`${p.что}: ${p.сколько>0?"плюс "+p.сколько:p.сколько<0?"минус "+(-p.сколько):"без изменений"} (${p.как})`).join("; ");
+   if(!f.open)
+    return `<div class="list-line" tabindex="0" data-speak="${`${nd.name}, держава ${nd.emp.short}. Переход закрыт. ${f.reason}`.replace(/"/g,"&quot;")}">
+     🚫 <b>${nd.name}</b> · ${nd.emp.short}<br>${f.reason}</div>`;
+   const speak=`${nd.name}, держава ${nd.emp.short}. Плата ${f.gold} золота, времени ${f.hours} ${plural(f.hours,"час","часа","часов")}. Разбор платы: ${разбор}. Двойное касание — перейти.`;
+   return `<div class="list-line" tabindex="0" data-speak="${speak.replace(/"/g,"&quot;")}">
+    🌀 <b>${nd.name}</b> · ${nd.emp.short} · ${f.d} ${plural(f.d,"клетка","клетки","клеток")}<br>
+    💰 ${f.gold} золота · ⏳ ${f.hours} ${plural(f.hours,"час","часа","часов")} · 🏛️ ${f.слово}<br>
+    <span class="hint">${разбор}</span>
+    <button data-cmd="portalgo:${portalKey(nd.x,nd.y)}" data-speak="Перейти в ${nd.name} за ${f.gold} золота.">🌀 Перейти (${f.gold})</button></div>`;}).join("");
+ }
+ html+=`<div class="row"><button data-cmd="close">✖️ Отойти от камня</button></div>`;
+ body.innerHTML=html;
+ safeFn(()=>{beacon("portal",0,0);Bank.play("portal",{seed:here.x+here.y,gain:0.6,maxSec:6});});
+ openModal("modal-portal");
+ narrate(`${here.name}. Открытых узлов сети: ${portalsKnown().length}. Свайп — листать направления, двойное касание — перейти.`);
+ return true;}
 function terrainAt(x,y){if(roadAt(x,y))return TERR.road;
  const emp=empireAt(x,y),n=H(x,y,1);
  let t=emp.terrains[Math.floor(n*emp.terrains.length)];
@@ -3419,7 +3663,9 @@ const cityScanCache=new Map();
 function isCityAt(x,y){
  if(x<0||y<0||x>=WORLD||y>=WORLD)return null;
  const emp=empireAt(x,y);
- if(x===emp.cap.x&&y===emp.cap.y)return {x,y,type:"castle",name:`Цитадель ${emp.short}а`,emp,size:3};
+ /* Короткие имена держав не склоняются: «Цитадель Хладная Стужаа» — не имя,
+    а опечатка вслух. Держава берётся в кавычки как есть. */
+ if(x===emp.cap.x&&y===emp.cap.y)return {x,y,type:"castle",name:`Цитадель «${emp.short}»`,emp,size:3};
  if(terrainAt(x,y)[0]==="coast"&&!isRoad(x,y)&&H(x,y,502)<0.02)
   return {x,y,type:"port",name:portNameAt(x,y),emp,size:2};
  if(!isRoad(x,y)&&H(x,y,3)<0.0035){
@@ -4893,7 +5139,7 @@ function cellContent(x,y){const key=x+","+y;
  if(contentCache.has(key))return contentCache.get(key);
  const c={x,y,terrain:terrainAt(x,y),empire:empireAt(x,y),structure:null,res:null,monster:null};
  const emp=c.empire;
- if(x===emp.cap.x&&y===emp.cap.y)c.structure={type:"castle",name:`Цитадель ${emp.short}а`,beacon:"castle"};
+ if(x===emp.cap.x&&y===emp.cap.y)c.structure={type:"castle",name:`Цитадель «${emp.short}»`,beacon:"castle"};
  else{
   const r3=H(x,y,3);
   if(r3<0.0035&&!isRoad(x,y)){
@@ -4914,8 +5160,11 @@ function cellContent(x,y){const key=x+","+y;
   else if(r3>0.997&&c.terrain[0]!=="road")c.structure={type:"temple",name:"Храм тихого света",beacon:"temple"};}
  if(!c.structure){
   if(isCrossroads(x,y)){
-   /* Перекрёсток двух трактов: столб с указателем на ближние селения. */
-   c.structure={type:"crossroads",name:"Перекрёсток дорог",beacon:"crossroads"};}
+   /* Перекрёсток двух трактов: столб с указателем на ближние селения.
+      У каждого тракта своё имя, поэтому перекрёсток называется как место,
+      а не как безликая точка на карте. */
+   const имя=safeFn(()=>`Перекрёсток: ${tractName("r",y)} и ${tractName("c",x)}`,"Перекрёсток дорог");
+   c.structure={type:"crossroads",name:имя,beacon:"crossroads"};}
   else if(H(x,y,21)<0.004&&roadAt(x,y)){
    c.structure={type:"traveler",name:"Странник у дороги",beacon:"traveler"};}
   else{
@@ -5706,6 +5955,8 @@ const G={hp:100,hpMax:100,str:10,agi:10,mind:10,cha:10,mana:10,manaMax:10,
  water:100,gold:100,x:1000,y:1000,day:1,hour:8,weather:"Ясно",
  xp:0,level:1,inv:{},items:[],gear:[],equip:{weapon:null,armor:null,acc:null},
  artifacts:[],quests:[],questKills:0,spells:["Искра"],clan:null,journal:[],weaponDrawn:false,
+ /* Открытые узлы портальной сети: сеть помнит того, кто до неё дошёл. */
+ portals:[],
  depleted:{},visited:{},cleared:{},prayed:{},inCombat:false,combat:null,loot:null,
  /* Народ игрока, покровитель из двенадцати богов, благосклонность богов,
     репутация у народов и след, который игрок оставил в политике держав. */
@@ -6951,6 +7202,10 @@ function dirBetween(dx,dy){
  if(ns&&ew)return `${ns}о-${ew}`;return ns||ew;}
 function cellDesc(c){const parts=[];
  if(c.structure)parts.push(c.structure.name);
+ /* Узел портальной сети виден в описании клетки: открытый — как ход отсюда,
+    неоткрытый — как находка. */
+ safeFn(()=>{const nd=portalNodeAt(c.x,c.y);
+  if(nd)parts.push(portalKnown(nd.x,nd.y)?`узел сети «${nd.name}»`:`${nd.name}: узел сети`);});
  if(c.res){const d=G.depleted[c.x+","+c.y];
   if(!d||d.left>0)parts.push(`ресурс: ${c.res.name}`);}
  if(c.monster&&!G.cleared[c.x+","+c.y])parts.push(`опасность: ${c.monster.n}`);
@@ -6995,6 +7250,12 @@ function arrive(dir){
    narrate(`Земли: ${e.name}. Народы: ${(e.races||[e.race]).slice(0,4).join(", ")}. Здесь чтут: ${g?g.n:"разных богов"}. `+
     (w.length?`Идёт война с державами: ${w.map(x=>EMPIRES[x.a===i?x.b:x.a].short).join(", ")}.`:"Держава ни с кем не воюет."),{interrupt:false});});}
  lastArrive=c;
+ /* Портальный узел под ногами открывается сам: сеть запоминает того, кто до
+    неё дошёл. Дорога и сеть связаны — стоячие камни стоят на перекрёстках
+    трактов, поэтому идти по дороге выгодно вдвойне. */
+ safeFn(()=>{const nd=portalNodeAt(G.x,G.y);
+  if(nd&&!portalKnown(nd.x,nd.y))discoverPortal(nd);
+  else if(nd)narrate(`${nd.name}: узел сети. Меню действий, «Портальная сеть».`,{interrupt:false});});
  G.stepCount=(G.stepCount||0)+1;
  const isNewDir=dir!==lastMoveDir;lastMoveDir=dir;
  /* Направление озвучивается только при смене направления (первый шаг в эту
@@ -7493,6 +7754,8 @@ const CMD={
  enter(){enterGame();},
  move(d){move(d);},
  look(){look();},
+ portal(){openPortalNet();},
+ portalgo(key){portalTravel(key);},
  gather(){gatherCurrent();},
  takeloot(){if(!safeFn(()=>takeLoot(),false))narrate("Собирать нечего.");},
  map(){openModal("modal-map");renderMap();},
@@ -8653,6 +8916,7 @@ function renderGestures(){
   "↔️ Свайп в окнах и меню — перелистывание пунктов на один шаг, включая длинные списки народов и богов. Свайп между двумя касаниями отменяет начатую активацию, чтобы не сработало лишнее.",
   "<b>ДВА ПАЛЬЦА — места и меню</b>",
   "📦 Касание двумя пальцами — <b>собрать ресурс</b> под ногами: руду, травы, дерево, камень, кристаллы. Если открыто окно — тот же жест его закрывает.",
+  "🌀 Стоя у портального узла, откройте меню действий и выберите «Портальная сеть»: она перечислит открытые узлы, плату за каждый переход и разбор этой платы. Узел открывается сам, когда вы на него встаёте.",
   "📋 Свайп тремя пальцами вверх — <b>меню действий</b>, где собраны все кнопки игры. Закрывается касанием двумя пальцами или клавишей Эскейп.",
   "⬇️ Свайп двумя пальцами вниз — <b>войти внутрь или спуститься</b>: в город через ворота, в дом, в подземелье, на уровень ниже. Если лестницы под ногами нет, игра скажет, где она, и проиграет её маяк.",
   "⬆️ Свайп двумя пальцами вверх — <b>подняться или выйти наружу</b>: на уровень выше, из здания, из города через ворота.",
