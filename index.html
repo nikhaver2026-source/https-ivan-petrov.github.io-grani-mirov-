@@ -153,6 +153,9 @@ h3{color:var(--acc2);margin:14px 0 6px;font-size:1.05rem;}
  <label class="opt"><input type="checkbox" id="setExplore" checked><span>🤚 <b>Режим ощупывания</b><small>Называть элементы под пальцем (для незрячих)</small></span></label>
  <label class="opt"><input type="checkbox" id="setFastTap"><span>⚡ <b>Быстрая активация</b><small>Одно касание сразу выполняет действие, без предварительного озвучивания вторым касанием</small></span></label>
  <label class="opt"><input type="checkbox" id="setHaptics" checked><span>📳 <b>Тактильный отклик</b><small>Вибрация при касаниях</small></span></label>
+ <h3>🎧 Позиционный звук</h3>
+ <label class="opt"><input type="checkbox" id="setHrtf" checked><span>🧭 <b>Объёмный звук</b><small>Слышно сторону, расстояние и высоту источника: тварь слева и сзади, ступени под ногами. Лучше всего в наушниках. Выключите, если одно ухо слышит хуже другого — тогда останется простая панорама</small></span></label>
+ <label class="opt"><input type="checkbox" id="setScape" checked><span>🌍 <b>Живая звуковая картина</b><small>Мир сам подаёт голос с тех сторон, где что-то стоит или ходит: угроза напоминает о себе часто, постройка редко. Выключите, если хотите тишину между действиями</small></span></label>
  <div class="row"><button type="button" id="btnSpeechSample">📢 Тест озвучки</button></div>
 </div></div>
 
@@ -410,7 +413,12 @@ const store={
 
 /* ════════ НАСТРОЙКИ ════════ */
 let savedSet={};try{savedSet=JSON.parse(store.get("gm29set")||"{}")||{};}catch(e){}
-const settings=Object.assign({speech:1,effects:1,music:1,subtitles:1,explore:1,fastTap:0,haptics:1,rate:1,voiceVol:1,fxVol:1,musicVol:1,voice:"",difficulty:"normal"},savedSet);
+const settings=Object.assign({speech:1,effects:1,music:1,subtitles:1,explore:1,fastTap:0,haptics:1,
+ /* hrtf — позиционный звук: сторона, расстояние и высота источника считаются
+    свёрткой с откликом головы. scape — живая звуковая картина вокруг: мир
+    сам подаёт голос с тех сторон, где что-то стоит или ходит. */
+ hrtf:1,scape:1,
+ rate:1,voiceVol:1,fxVol:1,musicVol:1,voice:"",difficulty:"normal"},savedSet);
 /* ── СЛОЖНОСТЬ ──
    Раньше мир был одинаково суров ко всем: числа урона, здоровья тварей,
    частоты встреч и цен были зашиты намертво. Кому-то это слишком тяжело —
@@ -1833,6 +1841,21 @@ const BEACONS={
   s.after(20,()=>{const t2=s.ctx.currentTime,n2=s.noise("white",0.3,false),f2=s.filter("highpass",4000,1),g2=s.gain(0);
    n2.connect(f2);f2.connect(g2);g2.connect(s.out());f2.frequency.exponentialRampToValueAtTime(800,t2+0.25);
    g2.gain.setValueAtTime(0.0001,t2);g2.gain.linearRampToValueAtTime(0.07,t2+0.03);g2.gain.exponentialRampToValueAtTime(0.0001,t2+0.28);n2.start(t2);});}};
+/* Маяк, у которого есть МЕСТО, а не только доля влево-вправо. dx — на восток,
+   dy — на юг, dz — вверх по ярусам. Если позиционный звук выключен или не
+   получился, звучит прежний плоский маяк — ни один вызов не пропадает. */
+function beaconAt(id,dx,dy,dz,dist){
+ if(!settings.effects)return;
+ const d=(dist===undefined||dist===null)?Math.max(Math.abs(Number(dx)||0),Math.abs(Number(dy)||0)):dist;
+ try{
+  if(Spatial.on()){
+   const role=(typeof BEACON_ROLE!=="undefined")&&BEACON_ROLE[id];
+   const path=role?Bank.pick(role,Math.floor(Math.random()*97))
+    :((typeof BEACON_SAMPLE!=="undefined")&&BEACON_SAMPLE[id]);
+   if(path&&Spatial.at(path,dx,dy,{dz,gain:0.9,maxSec:d>0?1.6:2.6}))return;}
+ }catch(_){}
+ /* Запасной путь: прежняя панорама по горизонтали. */
+ beacon(id,Math.max(-1,Math.min(1,(Number(dx)||0)/3)),d);}
 function beacon(id,pan=0,dist=0){if(!settings.effects)return;AE.ensure();
  /* Натуральная запись, если она есть для этого маяка и её можно развести
     по сторонам; иначе — прежний синтез, он панораму умеет всегда. */
@@ -1862,7 +1885,8 @@ const BEACON_INFO={
  ship:["Корабль","Судно: скрип корпуса и хлопок паруса"], cave_entrance:["Вход в пещеру","Тяга воздуха и эхо подземелья"]
 };
 /* Карточки записей банка: по одной на роль, с описанием и числом вариантов. */
-const BANK_CATS={sea:"🌊 Море, порты и корабли",ambience:"🌍 Земли и погода",dungeon:"🕳️ Подземелья по глубине",
+const BANK_CATS={mg:"🐲 Фэнтезийный мир: твари, чары, ремёсла и погода",
+ sea:"🌊 Море, порты и корабли",ambience:"🌍 Земли и погода",dungeon:"🕳️ Подземелья по глубине",
  magic:"✨ Школы магии",gods:"🕯️ Боги, алтари и знамения",events:"⚡ События",places:"🏛️ Места и ремёсла",
  fantasy:"🎲 Игровые звуки: монеты, ловушки, заклинания, голоса",steps:"👣 Шаги по земле и воде",
  nat:"🌿 Живые записи мира: удары, двери, колокола, шаги, гул",
@@ -1919,7 +1943,8 @@ const BANK_GROUPS=[
  {n:"Герой и природа вокруг", icon:"🧍", dirs:["hero","wild"]},
  {n:"Игровые звуки и голос игры",icon:"🎲", dirs:["fantasy"]},
  {n:"Живые инструменты и оркестр",icon:"🎻", dirs:["nat","inst","orch"]},
- {n:"Музыка мира",            icon:"🎼", dirs:["score"]}];
+ {n:"Музыка мира",            icon:"🎼", dirs:["score"]},
+ {n:"Фэнтезийный мир: твари, чары и ремёсла",icon:"🐲", dirs:["mg"]}];
 /* Роли банка, лежащие в этих папках. */
 function bankRolesIn(dirs){
  const set=new Set(dirs);
@@ -3104,10 +3129,23 @@ const GUIDE=[
  "Записи в игре не сделаны нами. Они взяты из свободных проектов, и лицензии этих проектов требуют назвать авторов. Здесь они названы; те же имена стоят в файлах CREDITS.md рядом с самими записями и в энциклопедии звуков.",
  "FLARE — Free/Libre Action Roleplaying Engine, одиночная фэнтезийная ролевая игра. Автор: Clint Bellanger и участники проекта (contributors retain copyrights to their original contributions). Сайт: flarerpg.org. Отсюда взяты артефакты и вещи, лестницы и двери подземелий, голоса тварей, заклинания, голос героя, природа и очаг, торговцы и все двенадцать тем музыки мира. Лицензия художественной части: Creative Commons Attribution-ShareAlike 3.0 (CC BY-SA 3.0).",
  "0 A.D. — Empires Ascendant, историческая стратегия о войнах древности. Автор: Wildfire Games. Сайт: play0ad.com. Отсюда взяты оружие и удары боя, осада, тревога и вести войны, ремёсла, добыча и стройка, звери и птицы, людские крики и кличи, шаги по поверхностям, погода, вода и день, здания, рынок, порт и подворье. Лицензия художественной части: Creative Commons Attribution-ShareAlike 3.0 (CC BY-SA 3.0).",
+ "MEGAGLEST — стратегия в фэнтезийном мире, где сражаются техника, магия, индейцы, персы, египтяне и норманны. Автор: проект MegaGlest и его участники. Сайт: megaglest.org. Лицензия художественной части: Creative Commons Attribution-ShareAlike 3.0. Отсюда взяты двести шестьдесят шесть записей: рык дракона и демона, шаг голема и исполина, стон призрачного доспеха, шипение змея, волчий вой, крики хищных птиц, чары архимага и боевого мага, призыв, исцеление, наковальня, кирка по руде, топор по дереву, стройка, осадные машины, зов с башни, живность двора и погода — дождь, ветер, день, ночь, пустыня и бездна.",
  "Что означает эта лицензия. Записи можно свободно слушать, копировать, распространять и изменять, в том числе в коммерческих целях, при двух условиях: назвать автора и оставить изменённые записи под той же лицензией. Оба условия соблюдены. Полный текст лицензии лежит рядом с записями в файле LICENSE-CC-BY-SA-3.0.txt, а его краткое изложение — на creativecommons.org/licenses/by-sa/3.0/.",
  "Остальные источники, названные раньше: сэмплы Sonic Pi с freesound.org (общественное достояние, CC0 1.0), живые инструменты проекта tonejs-instruments и оркестр из звукового шрифта FluidR3_GM автора Frank Wen, изданного проектом MIDI.js Soundfonts (обе — Creative Commons Attribution 3.0), пакет uisfx (CC0), Neo HQ Mystic Sounds, Fantasy Sound Library и Classic Monster Sounds (автор Coucassi).",
  "Всё, что не покрыто записями, игра строит сама: сто двадцать синтезированных сцен работают всегда, даже если папку со звуками не скачали."]},
-{title:"Глава 33. Горячие клавиши и советы",body:[
+{title:"Глава 33. Объёмный звук: сторона, даль и высота",body:[
+ "Раньше у звука была только панорама — доля влево или вправо. Слышно было «левее» и «правее», но не «впереди», не «за спиной», не «под ногами» и не «как далеко». Теперь у каждого источника есть МЕСТО.",
+ "Как это работает. Звук проходит через свёртку с откликом человеческой головы — по-английски HRTF. Игра не просто делает левое ухо громче: она воспроизводит то, как звук огибает череп и ушную раковину, и ухо само считает угол. Поэтому слышно не «левее», а «слева и чуть сзади, шагах в четырёх».",
+ "Стороны абсолютные, как и всё в этой игре: слушатель всегда смотрит на СЕВЕР. Что звучит впереди — то на севере, что за спиной — на юге, справа — восток, слева — запад. Поворачиваться не нужно: карта в голове не крутится.",
+ "Высота слышна тоже. Лестница вниз звучит из-под ног, лестница вверх — сверху. Ярусом ниже гудит глубина. Это самый быстрый способ понять, куда ведёт ход, не делая ни шага.",
+ "Играйте в наушниках. Объёмный звук строится на разнице между ушами, и колонки эту разницу смазывают. В наушниках разница слышна целиком.",
+ "Если одно ухо слышит хуже другого, объёмный звук можно выключить в настройках — останется простая панорама слева направо, как было раньше. Ничего не пропадёт: всякий звук, который не удалось разместить, звучит прежним способом.",
+ "ЖИВАЯ ЗВУКОВАЯ КАРТИНА. Мир не ждёт, пока его спросят. Пока вы стоите и слушаете, вокруг сами собой подают голос те, кто рядом: тварь урчит с юго-востока в четырёх шагах, кузня бьёт молотом западнее, жила руды позвякивает под рукой, ступени тянут сквозняком снизу. Отойдёте — голос отодвинется и стихнет, подойдёте — придвинется.",
+ "Так и отслеживают чужое движение: тварь, которая ходит по подземелью, звучит каждый раз с нового места. По этому и выбирают миг для удара или обхода — слышно, приближается она или уходит.",
+ "У каждого своя частота. Угроза напоминает о себе часто, постройка редко, ресурс совсем редко, факел почти не подаёт голоса. Дальний ждёт дольше ближнего. Одновременно звучит не больше четырёх источников: больше на слух всё равно не разобрать. Картину можно выключить отдельной настройкой, если между действиями хочется тишины.",
+ "АКУСТИКА МЕСТ. Второй слой — отзвук. У пещеры длинный тёмный хвост, у таверны короткий и яркий шлепок от близких стен, у храма и тронного зала гулкое эхо, в лесу отражений почти нет и съеден верх, в чистом поле нет ничего. Один и тот же шаг в поле, в таверне и в пещере звучит по-разному — и по этому одному уже понятно, где вы.",
+ "Отзвук не взят со стороны, а считается на месте из размеров того самого уровня, по которому вы идёте: чем больше комната, тем длиннее хвост. Поэтому подвал таверны и подвал цитадели звучат по-разному, хотя оба — подвалы. Всего видов акустики семнадцать: поле, лес, горы, вода, пустыня, топь, дом, таверна, кузница, храм, замковый зал, городская улица, пещера, подземелье, глубина, палуба и лестничный марш."]},
+{title:"Глава 34. Горячие клавиши и советы",body:[
  "Стрелки — ходьба. Контрол или Альт плюс G — руководство. Контрол или Альт плюс M — меню действий. Альт плюс S — тишина. Эскейп — закрыть.",
  "Играйте в наушниках — стерео-маяки помогут ориентироваться. Удачной охоты, Странник!"]}];
 let chIndex=0;
@@ -4584,7 +4622,6 @@ const SOUND_BANK={
  curse:{f:["nat/curse_01.flac","nat/curse_02.flac","nat/curse_03.flac","nat/curse_04.flac","nat/curse_05.flac","nat/curse_06.flac"],d:"Порча и сбой чар"},
  hiss:{f:["nat/hiss_01.flac","nat/hiss_02.flac"],d:"Ветер и шипение"},
  dread:{f:["nat/dread_01.flac","nat/dread_02.flac","nat/dread_03.flac","nat/dread_04.flac","nat/dread_05.flac"],d:"Предчувствие беды: низкий провал"},
- drone_deep:{f:["nat/drone_02.flac","nat/drone_03.flac"],d:"Гул глубины"},
  mechanism:{f:["nat/mechanism_01.flac","nat/mechanism_02.flac"],d:"Механизм: ворот, ловушка, привод"},
  vent:{f:["nat/vent_01.flac"],d:"Пар из трещины в камне"},
  wild:{f:["nat/wild_01.flac"],d:"Глушь: дальнее зверьё"},
@@ -4715,7 +4752,9 @@ const SOUND_BANK={
  deep_thud:{f:["nat/deep_thud_01.flac","nat/deep_thud_02.flac","nat/deep_thud_03.flac","nat/deep_thud_04.flac"],d:"Глухой удар в глубине: камень о камень"},
  drone_calm:{f:["nat/drone_calm_01.flac"],d:"Спокойный гул: ровное место"},
  drone_dark:{f:["nat/drone_dark_01.flac"],d:"Тёмный гул: место с недоброй памятью"},
- drone_deep:{f:["nat/drone_deep_01.flac"],d:"Глубинный гул: нижние уровни"},
+ /* Роль объявлялась дважды, и второе объявление молча перекрывало первое:
+    две записи из трёх не звучали никогда. Сведены в одну. */
+ drone_deep:{f:["nat/drone_deep_01.flac","nat/drone_02.flac","nat/drone_03.flac"],d:"Глубинный гул: нижние уровни"},
  dungeon_heart:{f:["nat/dungeon_heart_01.flac"],d:"Сердце подземелья: редкий низкий удар"},
  guard_march:{f:["nat/guard_march_01.flac","nat/guard_march_02.flac"],d:"Строй стражи: барабан на марше"},
  market_perc:{f:["nat/market_perc_01.flac","nat/market_perc_02.flac"],d:"Перкуссия рынка: россыпь мелких ударов"},
@@ -5134,6 +5173,241 @@ const SOUND_BANK={
  refresh(){this.loops.forEach(c=>{try{c.el.volume=Math.max(0,Math.min(1,this.vol(c.kind)*c.gain));}catch(_){}});}
 };
 
+/* ════════════════════════════════════════════════════════════════════════
+   ПОЗИЦИОННЫЙ ЗВУК (HRTF) И АКУСТИКА МЕСТ
+
+   До сих пор мир звучал плоско: у каждого звука была только панорама —
+   доля влево или вправо — и приглушение по дальности. На слух это давало
+   «левее» и «правее», но не давало ни «впереди», ни «за спиной», ни «под
+   ногами», ни настоящего расстояния. Для зрячего это мелочь. Для того, кто
+   играет вслепую, это разница между картой и списком.
+
+   Теперь у каждого источника есть МЕСТО. Звук проходит через узел panner в
+   режиме HRTF — это свёртка с откликом человеческой головы: браузер знает,
+   как звук огибает череп и ушную раковину, и по разнице между ушами ухо само
+   считает угол. Слышно не «левее», а «слева и чуть сзади, шагах в четырёх».
+
+   СИСТЕМА КООРДИНАТ. Направление в игре всегда absolute: север — это север,
+   а не «куда повёрнут герой». Поэтому слушатель стоит в начале координат и
+   всегда смотрит на СЕВЕР, а источники размещаются относительно него:
+     X — восток (плюс) и запад (минус);
+     Z — юг (плюс, то есть за спиной) и север (минус, впереди);
+     Y — верх и низ: ярус выше звучит сверху, лестница вниз — из-под ног.
+   Одна клетка мира равна CELL единицам. Дальше MAXCELL клеток источник
+   считается неслышным и не занимает места в звуковой картине.
+
+   АКУСТИКА МЕСТ. Второй слой — отзвук. У пещеры длинный тёмный хвост, у
+   таверны короткий и яркий шлепок от близких стен, у тронного зала — гулкое
+   эхо с металлическим призвуком, в лесу почти нет отражений и съеден верх,
+   в чистом поле нет ничего. Отклик помещения (impulse response) не скачан со
+   стороны, а СЧИТАЕТСЯ на месте из размеров того самого уровня, по которому
+   идёт игрок: чем больше комната, тем длиннее хвост. Поэтому подвал таверны
+   и подвал цитадели звучат по-разному, хотя оба — подвалы.
+
+   ПОЧЕМУ ОТКЛИК СЧИТАЕТСЯ, А НЕ СКАЧАН. Готовые записи откликов — это чужая
+   акустика чужих залов: одна и та же на все двадцать шесть видов мест. А
+   здесь отклик выводится из ширины, высоты и вида уровня, и меняется вместе
+   с ними. Это и точнее, и не стоит ни байта в поставке.
+
+   Всё это можно выключить: настройка «Позиционный звук». Некоторым слышнее
+   плоская панорама — например, если одно ухо слышит хуже другого.
+   ════════════════════════════════════════════════════════════════════════ */
+
+/* Одна клетка мира в единицах звуковой сцены и предел слышимости. */
+const CELL=1.7, MAXCELL=14;
+
+/* Акустика по виду места: длина отзвука, крутизна затухания, доля отзвука в
+   общем звуке и «цвет» — частота, выше которой отражения съедены. */
+const ROOM={
+ field:   {sec:0.35,decay:5.0,wet:0.05,damp:9000, n:"открытое место"},
+ forest:  {sec:0.50,decay:4.2,wet:0.10,damp:2400, n:"лес"},
+ mountain:{sec:1.90,decay:2.2,wet:0.20,damp:5200, n:"горы"},
+ water:   {sec:0.75,decay:3.6,wet:0.09,damp:7000, n:"вода"},
+ desert:  {sec:0.25,decay:6.0,wet:0.03,damp:8000, n:"пустыня"},
+ swamp:   {sec:0.60,decay:4.6,wet:0.08,damp:1800, n:"топь"},
+ house:   {sec:0.55,decay:3.4,wet:0.26,damp:4200, n:"дом"},
+ tavern:  {sec:0.70,decay:3.0,wet:0.30,damp:3600, n:"таверна"},
+ forge:   {sec:0.90,decay:2.6,wet:0.34,damp:6500, n:"кузница"},
+ temple:  {sec:2.60,decay:1.7,wet:0.42,damp:5000, n:"храм"},
+ castle:  {sec:2.10,decay:1.9,wet:0.40,damp:5600, n:"замковый зал"},
+ city:    {sec:1.10,decay:3.0,wet:0.18,damp:5000, n:"городская улица"},
+ cave:    {sec:3.20,decay:1.5,wet:0.46,damp:1500, n:"пещера"},
+ dungeon: {sec:2.40,decay:1.8,wet:0.40,damp:2000, n:"подземелье"},
+ deep:    {sec:4.20,decay:1.3,wet:0.52,damp:1100, n:"глубина"},
+ ship:    {sec:0.45,decay:4.0,wet:0.12,damp:3000, n:"палуба"},
+ stairs:  {sec:1.80,decay:2.2,wet:0.38,damp:2600, n:"лестничный марш"},
+};
+/* Вид акустики для места, где игрок стоит сейчас. */
+function roomKind(){
+ try{
+  if(G.ship)return "ship";
+  if(G.flight)return "stairs";
+  if(G.place){
+   const d=Number(G.place.depth)||0;
+   if(d>=4)return "deep";
+   if(d>0)return G.place.stype==="cave_entrance"?"cave":"dungeon";
+   const k=G.place.kind,st=G.place.stype;
+   if(k==="city")return st==="castle"?"castle":"city";
+   if(st==="temple")return "temple";
+   if(st==="forge")return "forge";
+   if(st==="tavern"||st==="market")return "tavern";
+   return "house";}
+  const t=(cellContent(G.x,G.y).terrain||[])[0]||"plains";
+  if(t==="forest")return "forest";
+  if(t==="mountains"||t==="cave")return "mountain";
+  if(t==="water"||t==="coast"||t==="sea")return "water";
+  if(t==="desert")return "desert";
+  if(t==="swamp")return "swamp";
+  return "field";
+ }catch(_){return "field";}}
+
+/* ── ОТЗВУК ПОМЕЩЕНИЯ ──
+   Отклик строится как шум, гаснущий по степени, с одним полюсом сверху
+   (тот самый «цвет») и с ранними отражениями для тесных твёрдых комнат —
+   именно они на слух и читаются как стены рядом. Каналы расходятся, иначе
+   отзвук слипается в точку посередине головы. */
+const Room={
+ kind:null,conv:null,wet:null,dry:null,cache:new Map(),size:1,
+ impulse(sec,decay,damp,early){
+  const ctx=AE.ctx,rate=ctx.sampleRate,len=Math.max(1,Math.floor(rate*sec));
+  const buf=ctx.createBuffer(2,len,rate);
+  /* Коэффициент однополюсного сглаживания по частоте среза. */
+  const a=Math.exp(-2*Math.PI*Math.max(200,damp)/rate);
+  for(let c=0;c<2;c++){
+   const d=buf.getChannelData(c);let z=0;
+   for(let i=0;i<len;i++){
+    const w=Math.random()*2-1;
+    z=w*(1-a)+z*a;                                   /* съедаем верх */
+    d[i]=z*Math.pow(1-i/len,decay);
+   }
+   /* Ранние отражения: несколько отдельных всплесков в первые полсекунды.
+      Их слышно как близкие стены, а не как «баня». */
+   if(early>0){
+    for(let k=1;k<=early;k++){
+     const t=Math.floor(rate*(0.008*k*(1+0.35*c)+0.004*k*k));
+     if(t<len)d[t]+=(k%2?1:-1)*0.55/Math.sqrt(k);}
+   }
+  }
+  return buf;},
+ /* Отклик кэшируется по виду места и его размеру: пересчёт стоит дорого. */
+ buffer(kind,size){
+  const key=kind+":"+size.toFixed(2);
+  if(this.cache.has(key))return this.cache.get(key);
+  const r=ROOM[kind]||ROOM.field;
+  /* Размер уровня растягивает хвост: большой зал гудит дольше тесной каморки. */
+  const sec=Math.max(0.12,Math.min(6,r.sec*size));
+  const early=/tavern|house|forge|castle|city|ship|stairs/.test(kind)?6:0;
+  const buf=this.impulse(sec,r.decay,r.damp,early);
+  if(this.cache.size>24)this.cache.clear();
+  this.cache.set(key,buf);
+  return buf;},
+ /* Насколько это место просторнее обычного — по площади самого уровня. */
+ measure(){
+  try{
+   if(!G.place)return 1;
+   const lvl=curLevel();if(!lvl)return 1;
+   return Math.max(0.55,Math.min(2.2,Math.sqrt((lvl.w*lvl.h)/420)));
+  }catch(_){return 1;}},
+ ensure(){
+  if(this.conv)return true;
+  const ctx=AE.ensure();if(!ctx)return false;
+  this.conv=ctx.createConvolver();
+  this.wet=ctx.createGain();this.wet.gain.value=0;
+  this.dry=ctx.createGain();this.dry.gain.value=1;
+  this.conv.connect(this.wet);
+  this.wet.connect(AE.fx);this.dry.connect(AE.fx);
+  return true;},
+ /* Сменить акустику. Хвост подменяется, доля отзвука наезжает плавно —
+    резкая смена слышна как щелчок и сбивает с толку. */
+ set(kind,force){
+  try{
+   kind=kind||roomKind();
+   const size=this.measure();
+   if(!force&&kind===this.kind&&Math.abs(size-this.size)<0.08)return kind;
+   if(!this.ensure())return kind;
+   this.kind=kind;this.size=size;
+   this.conv.buffer=this.buffer(kind,size);
+   const r=ROOM[kind]||ROOM.field;
+   const t=AE.ctx.currentTime;
+   this.wet.gain.setTargetAtTime(r.wet,t,0.35);
+   this.dry.gain.setTargetAtTime(1-r.wet*0.45,t,0.35);
+   return kind;
+  }catch(_){return kind;}},
+ name(){const r=ROOM[this.kind];return r?r.n:"открытое место";}
+};
+
+/* ── ИСТОЧНИКИ ЗВУКА В ПРОСТРАНСТВЕ ── */
+const Spatial={
+ on(){try{return settings.hrtf!==0&&settings.effects&&location.protocol!=="file:";}catch(_){return false;}},
+ live:[],                 /* что звучит прямо сейчас — чтобы не разрастаться */
+ listenerSet:false,
+ ensure(){
+  const ctx=AE.ensure();if(!ctx)return null;
+  if(!Room.ensure())return null;
+  if(!this.listenerSet){
+   /* Слушатель в начале координат, лицом на север, макушкой вверх. */
+   const L=ctx.listener;
+   try{
+    if(L.positionX){
+     L.positionX.value=0;L.positionY.value=0;L.positionZ.value=0;
+     L.forwardX.value=0;L.forwardY.value=0;L.forwardZ.value=-1;
+     L.upX.value=0;L.upY.value=1;L.upZ.value=0;
+    }else{L.setPosition(0,0,0);L.setOrientation(0,0,-1,0,1,0);}
+   }catch(_){}
+   this.listenerSet=true;}
+  return ctx;},
+ /* Узел размещения: dx — на восток, dy — на юг, dz — вверх по ярусам. */
+ node(dx,dy,dz,roll){
+  const ctx=AE.ctx,p=ctx.createPanner();
+  try{p.panningModel="HRTF";}catch(_){}
+  p.distanceModel="inverse";
+  p.refDistance=CELL;p.maxDistance=CELL*MAXCELL;p.rolloffFactor=roll||1.1;
+  const X=(Number(dx)||0)*CELL,Z=(Number(dy)||0)*CELL,Y=(Number(dz)||0)*CELL*0.8;
+  try{
+   if(p.positionX){p.positionX.value=X;p.positionY.value=Y;p.positionZ.value=Z;}
+   else p.setPosition(X,Y,Z);
+  }catch(_){}
+  return p;},
+ /* Убрать самые старые источники, если их стало слишком много. */
+ trim(max){
+  while(this.live.length>max){const o=this.live.shift();try{o.stop();}catch(_){}}},
+ /* Проиграть запись в точке пространства. Возвращает true, если получилось:
+    вызывающий тогда не дублирует звук плоским способом. */
+ at(path,dx,dy,{dz=0,gain=1,maxSec=3,roll=1.1}={}){
+  if(!this.on()||!path)return false;
+  const dist=Math.hypot(Number(dx)||0,Number(dy)||0);
+  if(dist>MAXCELL)return false;
+  try{
+   const ctx=this.ensure();if(!ctx)return false;
+   const el=new Audio(Bank.url(path));
+   el.addEventListener("error",()=>{if(el.__stopped)return;Bank.fails++;
+    if(Bank.plays===0&&Bank.fails>=4)Bank.enabled=false;},{once:true});
+   el.addEventListener("loadeddata",()=>{Bank.plays++;Bank.fails=0;},{once:true});
+   const src=ctx.createMediaElementSource(el);
+   const g=ctx.createGain();g.gain.value=Math.max(0,Math.min(1,Bank.vol("fx")*gain));
+   const pan=this.node(dx,dy,dz,roll);
+   src.connect(pan);pan.connect(g);
+   /* Сухой путь и путь через отзвук помещения — доля второго задана акустикой. */
+   g.connect(Room.dry);g.connect(Room.conv);
+   const rec={el,src,g,pan,stop(){try{this.el.__stopped=true;this.el.pause();
+     this.src.disconnect();this.pan.disconnect();this.g.disconnect();}catch(_){}}};
+   this.live.push(rec);this.trim(10);
+   const pr=el.play();if(pr&&pr.catch)pr.catch(()=>{});
+   const life=Math.max(0.4,maxSec||3);
+   const fade=Math.min(0.3,life*0.3);
+   setTimeout(()=>{try{g.gain.setTargetAtTime(0.0001,ctx.currentTime,fade/3);}catch(_){}},
+    Math.max(0,(life-fade)*1000));
+   setTimeout(()=>{rec.stop();this.live=this.live.filter(x=>x!==rec);},life*1000+150);
+   return true;
+  }catch(_){return false;}},
+ /* То же, но по роли банка: вариант выбирается семенем. */
+ role(role,dx,dy,opts={}){
+  if(!Bank.enabled||!Bank.has(role))return false;
+  const f=Bank.pick(role,opts.seed||Math.floor(Math.random()*97));
+  return f?this.at(f,dx,dy,opts):false;},
+ stopAll(){this.live.forEach(o=>{try{o.stop();}catch(_){}});this.live=[];}
+};
+
 /* ── ВТОРАЯ ПОСТАВКА ЗАПИСЕЙ ──
    Fantasy Sound Library: короткие игровые звуки с говорящими именами —
    заклинания, монеты, ловушки, голоса гоблинов, драконий рык, победные и
@@ -5141,6 +5415,85 @@ const SOUND_BANK={
    Classic Monster Sounds (автор Coucassi): восемь существ, у каждого свои
    реплики появления, удара, боли, смерти и шага. Голос подбирается по виду
    чудовища, поэтому болотная тварь звучит не так, как каменный великан. */
+/* ── ТРЕТЬЯ ПОСТАВКА ЗАПИСЕЙ: MEGAGLEST ──
+   Твари фэнтезийного мира, чары, ремёсла, осада, живность и погода. Всё под
+   CC BY-SA 3.0, авторы названы в sounds/mg/CREDITS.md и в главе руководства
+   «Кто написал эти звуки». Одноканальные: позиционному звуку нужен именно
+   моно-источник — стороны и расстояние ему считает HRTF, а готовая стереопара
+   в записи этому только мешала бы. */
+Object.assign(SOUND_BANK,{
+ amb_abyss:{f:["mg/amb_abyss_01.ogg"],d:"Бездна"},
+ amb_day:{f:["mg/amb_day_01.ogg","mg/amb_day_02.ogg"],d:"День"},
+ mg_desert:{f:["mg/amb_desert_01.ogg"],d:"Пустыня: полдневный зной"},
+ amb_fire:{f:["mg/amb_fire_01.ogg"],d:"Огонь"},
+ amb_night:{f:["mg/amb_night_01.ogg","mg/amb_night_02.ogg"],d:"Ночь"},
+ amb_rain:{f:["mg/amb_rain_01.ogg"],d:"Дождь"},
+ amb_water:{f:["mg/amb_water_01.ogg","mg/amb_water_02.ogg","mg/amb_water_03.ogg","mg/amb_water_04.ogg","mg/amb_water_05.ogg","mg/amb_water_06.ogg"],d:"Вода"},
+ amb_wind:{f:["mg/amb_wind_01.ogg"],d:"Ветер"},
+ anvil:{f:["mg/anvil_01.ogg","mg/anvil_02.ogg","mg/anvil_03.ogg","mg/anvil_04.ogg"],d:"Наковальня"},
+ beast_bees:{f:["mg/beast_bees_01.ogg","mg/beast_bees_02.ogg","mg/beast_bees_03.ogg","mg/beast_bees_04.ogg"],d:"Пчелиный рой"},
+ beast_bull:{f:["mg/beast_bull_01.ogg","mg/beast_bull_02.ogg","mg/beast_bull_03.ogg","mg/beast_bull_04.ogg"],d:"Бык"},
+ beast_cow:{f:["mg/beast_cow_01.ogg","mg/beast_cow_02.ogg","mg/beast_cow_03.ogg"],d:"Корова"},
+ beast_fowl:{f:["mg/beast_fowl_01.ogg","mg/beast_fowl_02.ogg","mg/beast_fowl_03.ogg"],d:"Птица двора"},
+ beast_pig:{f:["mg/beast_pig_01.ogg","mg/beast_pig_02.ogg","mg/beast_pig_03.ogg","mg/beast_pig_04.ogg"],d:"Кабан"},
+ beast_sheep:{f:["mg/beast_sheep_01.ogg","mg/beast_sheep_02.ogg","mg/beast_sheep_03.ogg","mg/beast_sheep_04.ogg","mg/beast_sheep_05.ogg"],d:"Овца"},
+ bird_hawk:{f:["mg/bird_hawk_01.ogg"],d:"Ястреб в небе"},
+ bird_owl:{f:["mg/bird_owl_01.ogg"],d:"Сова в ночи"},
+ bird_rooster:{f:["mg/bird_rooster_01.ogg"],d:"Петух на рассвете"},
+ blade_die:{f:["mg/blade_die_01.ogg","mg/blade_die_02.ogg","mg/blade_die_03.ogg","mg/blade_die_04.ogg","mg/blade_die_05.ogg","mg/blade_die_06.ogg"],d:"Гибель мечника"},
+ blade_swing:{f:["mg/blade_swing_01.ogg","mg/blade_swing_02.ogg","mg/blade_swing_03.ogg","mg/blade_swing_04.ogg","mg/blade_swing_05.ogg","mg/blade_swing_06.ogg","mg/blade_swing_07.ogg","mg/blade_swing_08.ogg"],d:"Взмах клинка"},
+ brute_die:{f:["mg/brute_die_01.ogg","mg/brute_die_02.ogg","mg/brute_die_03.ogg","mg/brute_die_04.ogg"],d:"Исполин: гибель"},
+ brute_roar:{f:["mg/brute_roar_01.ogg","mg/brute_roar_02.ogg","mg/brute_roar_03.ogg","mg/brute_roar_04.ogg","mg/brute_roar_05.ogg","mg/brute_roar_06.ogg"],d:"Исполин: рёв"},
+ brute_step:{f:["mg/brute_step_01.ogg","mg/brute_step_02.ogg"],d:"Исполин: шаг"},
+ build_magic:{f:["mg/build_magic_01.ogg","mg/build_magic_02.ogg","mg/build_magic_03.ogg"],d:"Возведение чарами"},
+ build_work:{f:["mg/build_work_01.ogg","mg/build_work_02.ogg","mg/build_work_03.ogg"],d:"Стройка"},
+ fiend_die:{f:["mg/fiend_die_01.ogg","mg/fiend_die_02.ogg","mg/fiend_die_03.ogg","mg/fiend_die_04.ogg"],d:"Демон: гибель"},
+ fiend_roar:{f:["mg/fiend_roar_01.ogg","mg/fiend_roar_02.ogg","mg/fiend_roar_03.ogg","mg/fiend_roar_04.ogg","mg/fiend_roar_05.ogg","mg/fiend_roar_06.ogg"],d:"Демон: рык"},
+ golem_die:{f:["mg/golem_die_01.ogg","mg/golem_die_02.ogg","mg/golem_die_03.ogg"],d:"Голем: рассыпается"},
+ golem_hit:{f:["mg/golem_hit_01.ogg","mg/golem_hit_02.ogg"],d:"Голем: удар"},
+ golem_step:{f:["mg/golem_step_01.ogg","mg/golem_step_02.ogg"],d:"Голем: тяжёлый шаг"},
+ guard_shout:{f:["mg/guard_shout_01.ogg","mg/guard_shout_02.ogg","mg/guard_shout_03.ogg","mg/guard_shout_04.ogg","mg/guard_shout_05.ogg","mg/guard_shout_06.ogg","mg/guard_shout_07.ogg","mg/guard_shout_08.ogg"],d:"Клич стражника"},
+ hall_fall:{f:["mg/hall_fall_01.ogg","mg/hall_fall_02.ogg","mg/hall_fall_03.ogg","mg/hall_fall_04.ogg","mg/hall_fall_05.ogg"],d:"Здание рушится"},
+ harvest:{f:["mg/harvest_01.ogg","mg/harvest_02.ogg","mg/harvest_03.ogg","mg/harvest_04.ogg"],d:"Сбор урожая"},
+ hit_air:{f:["mg/hit_air_01.ogg","mg/hit_air_02.ogg","mg/hit_air_03.ogg","mg/hit_air_04.ogg"],d:"Удар в воздухе"},
+ hit_arrow:{f:["mg/hit_arrow_01.ogg","mg/hit_arrow_02.ogg","mg/hit_arrow_03.ogg","mg/hit_arrow_04.ogg","mg/hit_arrow_05.ogg"],d:"Стрела попала"},
+ hit_firearrow:{f:["mg/hit_firearrow_01.ogg","mg/hit_firearrow_02.ogg","mg/hit_firearrow_03.ogg","mg/hit_firearrow_04.ogg"],d:"Огненная стрела попала"},
+ hit_ground:{f:["mg/hit_ground_01.ogg","mg/hit_ground_02.ogg","mg/hit_ground_03.ogg","mg/hit_ground_04.ogg"],d:"Удар оземь"},
+ hit_knife:{f:["mg/hit_knife_01.ogg","mg/hit_knife_02.ogg","mg/hit_knife_03.ogg","mg/hit_knife_04.ogg"],d:"Нож"},
+ horse_step:{f:["mg/horse_step_01.ogg","mg/horse_step_02.ogg","mg/horse_step_03.ogg"],d:"Конский шаг"},
+ minaret:{f:["mg/minaret_01.ogg","mg/minaret_02.ogg","mg/minaret_03.ogg","mg/minaret_04.ogg","mg/minaret_05.ogg"],d:"Зов с башни"},
+ mine_deep:{f:["mg/mine_deep_01.ogg","mg/mine_deep_02.ogg","mg/mine_deep_03.ogg","mg/mine_deep_04.ogg"],d:"Глубокая выработка"},
+ mine_pick:{f:["mg/mine_pick_01.ogg","mg/mine_pick_02.ogg","mg/mine_pick_03.ogg","mg/mine_pick_04.ogg","mg/mine_pick_05.ogg","mg/mine_pick_06.ogg"],d:"Кирка по руде"},
+ mummy_die:{f:["mg/mummy_die_01.ogg","mg/mummy_die_02.ogg","mg/mummy_die_03.ogg","mg/mummy_die_04.ogg"],d:"Мумия: гибель"},
+ mummy_hit:{f:["mg/mummy_hit_01.ogg","mg/mummy_hit_02.ogg","mg/mummy_hit_03.ogg","mg/mummy_hit_04.ogg","mg/mummy_hit_05.ogg"],d:"Мумия: удар"},
+ raptor_cry:{f:["mg/raptor_cry_01.ogg","mg/raptor_cry_02.ogg","mg/raptor_cry_03.ogg","mg/raptor_cry_04.ogg"],d:"Хищная птица: крик"},
+ raptor_wing:{f:["mg/raptor_wing_01.ogg"],d:"Хищная птица: крылья"},
+ serpent_hiss:{f:["mg/serpent_hiss_01.ogg","mg/serpent_hiss_02.ogg","mg/serpent_hiss_03.ogg","mg/serpent_hiss_04.ogg","mg/serpent_hiss_05.ogg"],d:"Змей: шипение"},
+ siege_roll:{f:["mg/siege_roll_01.ogg","mg/siege_roll_02.ogg","mg/siege_roll_03.ogg","mg/siege_roll_04.ogg"],d:"Осадная машина катится"},
+ siege_shot:{f:["mg/siege_shot_01.ogg","mg/siege_shot_02.ogg"],d:"Выстрел камнемёта"},
+ mg_spear:{f:["mg/spear_thrust_01.ogg","mg/spear_thrust_02.ogg","mg/spear_thrust_03.ogg","mg/spear_thrust_04.ogg","mg/spear_thrust_05.ogg","mg/spear_thrust_06.ogg"],d:"Выпад копья"},
+ spell_arch:{f:["mg/spell_arch_01.ogg","mg/spell_arch_02.ogg","mg/spell_arch_03.ogg","mg/spell_arch_04.ogg","mg/spell_arch_05.ogg","mg/spell_arch_06.ogg","mg/spell_arch_07.ogg","mg/spell_arch_08.ogg"],d:"Чары архимага"},
+ spell_battle:{f:["mg/spell_battle_01.ogg","mg/spell_battle_02.ogg","mg/spell_battle_03.ogg","mg/spell_battle_04.ogg","mg/spell_battle_05.ogg","mg/spell_battle_06.ogg"],d:"Боевые чары"},
+ spell_genie:{f:["mg/spell_genie_01.ogg","mg/spell_genie_02.ogg","mg/spell_genie_03.ogg","mg/spell_genie_04.ogg"],d:"Джинн"},
+ spell_heal:{f:["mg/spell_heal_01.ogg"],d:"Исцеление"},
+ spell_initiate:{f:["mg/spell_initiate_01.ogg","mg/spell_initiate_02.ogg","mg/spell_initiate_03.ogg","mg/spell_initiate_04.ogg","mg/spell_initiate_05.ogg","mg/spell_initiate_06.ogg"],d:"Чары послушника"},
+ spell_summon:{f:["mg/spell_summon_01.ogg","mg/spell_summon_02.ogg","mg/spell_summon_03.ogg","mg/spell_summon_04.ogg"],d:"Призыв из-за грани"},
+ spell_ward:{f:["mg/spell_ward_01.ogg"],d:"Оберег"},
+ tower_fall:{f:["mg/tower_fall_01.ogg","mg/tower_fall_02.ogg","mg/tower_fall_03.ogg","mg/tower_fall_04.ogg","mg/tower_fall_05.ogg"],d:"Башня рушится"},
+ tower_hit:{f:["mg/tower_hit_01.ogg","mg/tower_hit_02.ogg","mg/tower_hit_03.ogg"],d:"Попадание по башне"},
+ tower_shot:{f:["mg/tower_shot_01.ogg","mg/tower_shot_02.ogg","mg/tower_shot_03.ogg","mg/tower_shot_04.ogg","mg/tower_shot_05.ogg","mg/tower_shot_06.ogg"],d:"Выстрел с башни"},
+ warrior_shout:{f:["mg/warrior_shout_01.ogg","mg/warrior_shout_02.ogg","mg/warrior_shout_03.ogg","mg/warrior_shout_04.ogg","mg/warrior_shout_05.ogg","mg/warrior_shout_06.ogg","mg/warrior_shout_07.ogg","mg/warrior_shout_08.ogg"],d:"Клич воина"},
+ wolf_howl:{f:["mg/wolf_howl_01.ogg"],d:"Волчий вой"},
+ wood_axe:{f:["mg/wood_axe_01.ogg","mg/wood_axe_02.ogg","mg/wood_axe_03.ogg"],d:"Топор по дереву"},
+ work_done:{f:["mg/work_done_01.ogg","mg/work_done_02.ogg","mg/work_done_03.ogg"],d:"Работа окончена"},
+ wraith_die:{f:["mg/wraith_die_01.ogg","mg/wraith_die_02.ogg","mg/wraith_die_03.ogg","mg/wraith_die_04.ogg","mg/wraith_die_05.ogg"],d:"Призрак развеян"},
+ wraith_moan:{f:["mg/wraith_moan_01.ogg","mg/wraith_moan_02.ogg","mg/wraith_moan_03.ogg","mg/wraith_moan_04.ogg","mg/wraith_moan_05.ogg","mg/wraith_moan_06.ogg"],d:"Призрачный доспех: стон"},
+ wyrm_dark:{f:["mg/wyrm_dark_01.ogg","mg/wyrm_dark_02.ogg","mg/wyrm_dark_03.ogg","mg/wyrm_dark_04.ogg"],d:"Чёрный дракон: рык"},
+ wyrm_die:{f:["mg/wyrm_die_01.ogg","mg/wyrm_die_02.ogg"],d:"Дракон: гибель"},
+ wyrm_pain:{f:["mg/wyrm_pain_01.ogg","mg/wyrm_pain_02.ogg","mg/wyrm_pain_03.ogg","mg/wyrm_pain_04.ogg"],d:"Дракон: боль"},
+ wyrm_roar:{f:["mg/wyrm_roar_01.ogg","mg/wyrm_roar_02.ogg","mg/wyrm_roar_03.ogg","mg/wyrm_roar_04.ogg"],d:"Дракон: рык атаки"},
+ wyrm_wing:{f:["mg/wyrm_wing_01.ogg"],d:"Крылья дракона"},
+});
 Object.assign(SOUND_BANK,{
  cave_deep:{f:["fantasy/cave_deep_01.mp3"],d:"Глубокая пещера: долгий подземный фон"},
  dragon_growl:{f:["fantasy/dragon_growl_01.mp3","fantasy/dragon_growl_02.mp3"],d:"Драконий рык вблизи"},
@@ -5200,6 +5553,30 @@ const FOE_VOICE={
  dragon:"foe_wyrm",wyvern:"foe_wyrm",harpy:"foe_wyrm",stormwyrm:"foe_wyrm",
  sandworm:"foe_burrow",spider:"foe_burrow",serpent:"foe_burrow",basilisk:"foe_burrow",
  kraken:"foe_grave",seaserpent:"foe_grave",jellyswarm:"foe_grave",isleFish:"foe_grave"};
+/* Голос твари для живой звуковой картины: не удар и не гибель, а само её
+   присутствие — рык, шипение, вой, стон. Берётся по виду; для тех, у кого
+   своего голоса нет, звучит общий знак опасности. */
+const SCAPE_FOE={
+ wolf:"wolf_howl",direbear:"brute_roar",troll:"brute_roar",ogre:"brute_roar",
+ treant:"brute_roar",cyclops:"brute_roar",ashgiant:"brute_roar",
+ golem:"golem_step",crystallid:"golem_step",
+ dragon:"wyrm_roar",wyvern:"wyrm_roar",stormwyrm:"wyrm_dark",drake:"wyrm_dark",
+ spider:"serpent_hiss",serpent:"serpent_hiss",basilisk:"serpent_hiss",
+ sandworm:"serpent_hiss",snake:"serpent_hiss",
+ wraith:"wraith_moan",banshee:"wraith_moan",ghost:"wraith_moan",
+ zombie:"mummy_hit",drowned:"mummy_hit",desecrated:"mummy_hit",
+ skeleton:"wraith_die",boneshaman:"wraith_die",
+ goblin:"fiend_roar",kobold:"fiend_roar",imp:"fiend_roar",
+ harpy:"raptor_cry",aarakocra:"raptor_cry",
+ bandit:"guard_shout",cutpurse:"guard_shout",
+};
+function bankFoeRole(m){
+ try{
+  const id=m&&m.id;
+  if(id&&SCAPE_FOE[id]&&Bank.has(SCAPE_FOE[id]))return SCAPE_FOE[id];
+  /* Своего голоса нет — пусть хотя бы звучит как угроза. */
+  return Bank.has("danger")?"danger":null;
+ }catch(_){return null;}}
 function foeVoice(m,cue,vol){
  try{
   if(!settings.effects)return;
@@ -8475,6 +8852,10 @@ function refresh(){
     и тускнеет. Проверка стоит здесь — строка состояния обновляется после
     каждого действия, а значит ни один поворот не будет пропущен. */
  safeFn(()=>worldWatch());
+ /* Акустика места и живая звуковая картина держатся на этом же такте: строка
+    состояния обновляется после каждого действия, значит ни один переход —
+    вход, спуск, выход, смена земли под ногами — не будет пропущен. */
+ safeFn(()=>{Room.set();Scape.start();Scape.bed();});
  const hud=document.getElementById("hud");
  if(!hud)return;
  if(G.ship){
@@ -9081,6 +9462,8 @@ function enterPlace(c){
  const depth=kind==="dungeon"?1:0;
  const lvl=genLevel(c.x,c.y,depth,stype);
  G.place={kind,bx:c.x,by:c.y,stype,name:c.structure.name,depth,x:lvl.entry.x,y:lvl.entry.y};
+ /* Стены сомкнулись: акустика меняется сразу, ещё до первого шага внутри. */
+ safeFn(()=>{Room.set();Scape.stop();});
  safeFn(()=>beacon(kind==="city"?"city":kind==="dungeon"?"dungeon":"house",0,0));
  /* Порог слышен: город встречает медью ворот, подземелье — глухим гулом,
     жилой дом — теплом очага. */
@@ -9142,6 +9525,7 @@ function leavePlace(){
  if(!G.place)return false;
  G.flight=null;
  const name=G.place.name;
+ safeFn(()=>{Scape.stop();});
  safeFn(()=>Actors.stop());
  G.place=null;
  safeFn(()=>UI.close());
@@ -9161,6 +9545,8 @@ function changeDepth(delta){
  if(nd>MAX_DEPTH){narrate("Глубже хода нет: дальше сплошной камень.");return false;}
  const lvl=genLevel(p.bx,p.by,nd,p.stype);
  p.depth=nd;p.x=lvl.entry.x;p.y=lvl.entry.y;
+ /* Ярусом ниже отзвук длиннее и темнее — глубину слышно по самому эху. */
+ safeFn(()=>{Room.set();Scape.stop();});
  /* Глубину слышно: верх — ровный гул, середина — тёмный, низ — глубинный,
     и там же начинает биться редкий низкий удар, «сердце подземелья». */
  safeFn(()=>{const d=p.depth;
@@ -9245,7 +9631,10 @@ function pingSurroundings(rad=3,max=4){
  /* Навык «Картограф»: скан достаёт дальше и называет больше. */
  if(hasSkill("cartogr")){rad+=2;max+=3;}
  const near=nearFeatures(rad).slice(0,max);
- near.forEach((o,i)=>setTimeout(()=>{safeFn(()=>beacon(o.bid||"wall",Math.max(-1,Math.min(1,o.dx/3)),o.d));},i*420));
+ /* У каждого отклика теперь своё место, а не доля влево-вправо: ступени вниз
+    звучат из-под ног, дверь — с той стороны, где она и стоит. */
+ near.forEach((o,i)=>setTimeout(()=>{safeFn(()=>
+  beaconAt(o.bid||"wall",o.dx,o.dy,o.t===">"?-1:o.t==="<"?1:0,o.d));},i*420));
  return near.length;
 }
 /* ════════════════════════════════════════════════════════════════════════
@@ -9418,6 +9807,175 @@ const GUARD_LINES=["Ходи да оглядывайся.","Порядок на 
  "Проходи, не задерживайся у ворот.","Слышал шум у дальнего квартала? Проверю."];
 const FOLK_LINES=["Доброго пути.","Опять подорожало зерно.","К вечеру обещали дождь.",
  "У колодца сегодня очередь.","Слыхал, обоз пришёл с востока."];
+
+/* ════════════════════════════════════════════════════════════════════════
+   ЖИВАЯ ЗВУКОВАЯ КАРТИНА
+
+   Мир не ждёт, пока его спросят. Пока игрок стоит и слушает, вокруг сами
+   собой подают голос те, кто рядом: тварь урчит с юго-востока в четырёх
+   шагах, кузня бьёт молотом западнее, жила руды позвякивает под рукой,
+   ступени тянут сквозняком снизу. Отойдёшь — голос отодвинется и стихнет,
+   подойдёшь — придвинется. Так и слышно, где что стоит и куда оно движется.
+
+   Каждому виду источника свой срок между откликами: угроза напоминает о себе
+   часто, постройка редко, ресурс совсем редко. Дальний ждёт дольше ближнего:
+   иначе десяток дальних объектов слился бы в кашу. Одновременно звучит не
+   больше SCAPE_MAX источников — на слух больше и не разобрать.
+
+   Отдельно идёт ПОСТОЯННЫЙ ФОН места: он не позиционный, он вокруг. Его
+   задаёт вид места и время суток, и он меняется, когда игрок входит внутрь,
+   спускается глубже или выходит наружу.
+   ════════════════════════════════════════════════════════════════════════ */
+
+/* Сколько источников подаёт голос за один такт. Больше двух — уже каша: у
+   каждого свой срок молчания, но вокруг их бывает под сорок, и без общего
+   предела картина затараторила бы по три звука в секунду. */
+const SCAPE_MAX=2;
+/* И общий промежуток между любыми двумя откликами картины. */
+const SCAPE_GAP=700;
+const SCAPE_RAD=7;          /* докуда слышно, в клетках */
+
+/* Что и как часто подаёт голос. period — секунды между откликами вблизи;
+   дальние ждут дольше. */
+const SCAPE_VOICE={
+ monster:  {role:null,           period:3.2, gain:1.00, prio:3},
+ lair:     {role:"lair",         period:5.0, gain:0.85, prio:3},
+ stairs_dn:{role:"stairs_down",  period:7.0, gain:0.60, prio:2, dz:-1},
+ stairs_up:{role:"stairs_up",    period:7.0, gain:0.60, prio:2, dz:1},
+ door:     {role:"door",         period:9.0, gain:0.45, prio:1},
+ gate:     {role:"gate",         period:9.0, gain:0.55, prio:1},
+ chest:    {role:"chest",        period:8.0, gain:0.55, prio:2},
+ vein:     {role:"res_ore",      period:8.0, gain:0.50, prio:1},
+ altar:    {role:"altar",        period:9.0, gain:0.55, prio:1},
+ torch:    {role:"torch",        period:6.0, gain:0.35, prio:0},
+ well:     {role:"well",         period:9.0, gain:0.45, prio:0},
+ npc:      {role:"npc_common",   period:7.0, gain:0.45, prio:1},
+ forge:    {role:"anvil",        period:5.0, gain:0.60, prio:1},
+ shop:     {role:"trade_deal",   period:8.0, gain:0.45, prio:1},
+ books:    {role:"arte_page",    period:9.0, gain:0.40, prio:0},
+ prop:     {role:"knock_soft",   period:10.0,gain:0.35, prio:0},
+ pigeon:   {role:"bird_hawk",    period:8.0, gain:0.45, prio:0},
+ structure:{role:null,           period:7.0, gain:0.55, prio:2},
+ res:      {role:null,           period:8.0, gain:0.45, prio:1},
+ caravan:  {role:"caravan",      period:6.0, gain:0.55, prio:2},
+};
+/* Плитка интерьера → голос звуковой картины. */
+const SCAPE_TILE={">":"stairs_dn","<":"stairs_up","+":"door","G":"gate","C":"chest",
+ "R":"vein","A":"altar","T":"torch","W":"well","N":"npc","F":"forge","S":"shop",
+ "K":"books","X":"prop","L":"pigeon","M":"lair","P":"npc","B":"npc"};
+
+const Scape={
+ last:new Map(),      /* ключ источника → когда он в последний раз звучал */
+ lastAny:0,           /* когда картина подавала голос в последний раз вообще */
+ bedKind:null,        /* какой фон играет сейчас */
+ on(){try{return !!(settings.effects&&settings.scape&&gameActive()&&!activeLayer());}catch(_){return false;}},
+ /* Перечислить, что слышно вокруг, с настоящими смещениями по клеткам. */
+ around(){
+  const out=[];
+  try{
+   if(G.ship)return out;
+   if(G.place){
+    const lvl=curLevel();if(!lvl)return out;
+    const p=G.place;
+    for(let y=Math.max(0,p.y-SCAPE_RAD);y<Math.min(lvl.h,p.y+SCAPE_RAD+1);y++)
+     for(let x=Math.max(0,p.x-SCAPE_RAD);x<Math.min(lvl.w,p.x+SCAPE_RAD+1);x++){
+      const t=tileAt(lvl,x,y);
+      const kind=SCAPE_TILE[t];if(!kind)continue;
+      const dx=x-p.x,dy=y-p.y;if(!dx&&!dy)continue;
+      out.push({key:"t"+x+","+y,kind,dx,dy,d:Math.max(Math.abs(dx),Math.abs(dy)),
+       role:SCAPE_VOICE[kind].role,seed:x*31+y});}
+    /* Твари, что бродят по уровню, звучат сами по себе и на ходу. */
+    safeFn(()=>{(Actors&&Actors.list||[]).forEach((a,i)=>{
+     const dx=a.x-p.x,dy=a.y-p.y,d=Math.max(Math.abs(dx),Math.abs(dy));
+     if(d>SCAPE_RAD)return;
+     out.push({key:"a"+i,kind:"monster",dx,dy,d,
+      role:safeFn(()=>bankFoeRole(a.m),"danger")||"danger",seed:a.x+a.y});});});
+    return out;}
+   /* Снаружи: постройки, ресурсы, твари и обозы вокруг. */
+   for(let dy=-SCAPE_RAD;dy<=SCAPE_RAD;dy++)for(let dx=-SCAPE_RAD;dx<=SCAPE_RAD;dx++){
+    if(!dx&&!dy)continue;
+    const x=G.x+dx,y=G.y+dy;
+    if(x<0||y<0||x>=WORLD||y>=WORLD)continue;
+    const d=Math.max(Math.abs(dx),Math.abs(dy));
+    const c=cellContent(x,y);
+    if(c.monster&&!G.cleared[x+","+y]){
+     out.push({key:"m"+x+","+y,kind:"monster",dx,dy,d,
+      role:safeFn(()=>bankFoeRole(c.monster),"danger")||"danger",seed:x+y});continue;}
+    if(c.structure){
+     out.push({key:"s"+x+","+y,kind:"structure",dx,dy,d,
+      role:null,bid:c.structure.beacon,seed:x*7+y});continue;}
+    if(c.res){const dep=G.depleted[x+","+y];
+     if(!dep||dep.left>0)out.push({key:"r"+x+","+y,kind:"res",dx,dy,d,
+      role:null,bid:c.res.beacon,seed:x*13+y});}
+   }
+   safeFn(()=>{caravansNear(G.x,G.y,G.day,G.hour,SCAPE_RAD).forEach((c,i)=>{
+    if(!c.d)return;
+    out.push({key:"c"+i,kind:"caravan",dx:c.dx,dy:c.dy,d:c.d,
+     role:SCAPE_VOICE.caravan.role,seed:i});});});
+  }catch(_){}
+  return out;},
+ /* Один проход: кому пора — тот и звучит. */
+ tick(){
+  if(!this.on()||!Spatial.on())return 0;
+  const now=Date.now();
+  const list=this.around();
+  if(!list.length){if(this.last.size>64)this.last.clear();return 0;}
+  /* Ближе и важнее — раньше. */
+  list.sort((a,b)=>{
+   const pa=SCAPE_VOICE[a.kind].prio,pb=SCAPE_VOICE[b.kind].prio;
+   return pb-pa||a.d-b.d;});
+  let сказано=0;
+  for(const o of list){
+   if(сказано>=SCAPE_MAX)break;
+   /* Общий промежуток: даже когда вокруг толпа, отклики идут по одному. */
+   if(Date.now()-this.lastAny<SCAPE_GAP)break;
+   const v=SCAPE_VOICE[o.kind];if(!v)continue;
+   /* Дальний ждёт дольше: вдвое дольше на краю слышимости. */
+   const срок=v.period*1000*(1+o.d/SCAPE_RAD);
+   const был=this.last.get(o.key)||0;
+   if(now-был<срок)continue;
+   /* Разброс, чтобы источники не били в такт. */
+   this.last.set(o.key,now-Math.floor(Math.random()*срок*0.25));
+   const dz=v.dz||0;
+   const gain=v.gain*Math.max(0.25,1-o.d/(SCAPE_RAD+3));
+   let ok=false;
+   if(o.role)ok=Spatial.role(o.role,o.dx,o.dy,{dz,gain,maxSec:2.4,seed:o.seed});
+   if(!ok&&o.bid)safeFn(()=>beaconAt(o.bid,o.dx,o.dy,dz,o.d));
+   else if(!ok&&!o.role)safeFn(()=>beaconAt("wall",o.dx,o.dy,dz,o.d));
+   this.lastAny=Date.now();
+   сказано++;
+  }
+  if(this.last.size>256)this.last.clear();
+  return сказано;},
+ /* Постоянный фон места — он вокруг, а не с какой-то стороны. */
+ bed(){
+  try{
+   if(!settings.effects||!Bank.enabled)return;
+   const kind=roomKind();
+   const ночь=safeFn(()=>isNight(),false);
+   const role=
+    kind==="deep"?"amb_abyss":
+    kind==="cave"||kind==="dungeon"?"drone_low":
+    kind==="desert"?"amb_desert":
+    kind==="forest"?(ночь?"amb_night":"amb_day"):
+    kind==="water"||kind==="ship"?"amb_water":
+    kind==="mountain"?"amb_wind":
+    kind==="field"?(ночь?"amb_night":"amb_day"):null;
+   const key=role?kind+":"+role+":"+(ночь?"n":"d"):null;
+   if(key===this.bedKind)return;
+   this.bedKind=key;
+   if(!role){Bank.stop("scape");return;}
+   Bank.loop("scape",role,{seed:G.x+G.y,gain:0.20,kind:"fx"});
+  }catch(_){}},
+ stop(){safeFn(()=>Bank.stop("scape"));this.bedKind=null;this.last.clear();
+  safeFn(()=>Spatial.stopAll());},
+ /* Часы звуковой картины: один удар в полторы секунды. Чаще незачем —
+    у самого частого голоса срок больше трёх секунд. */
+ timer:null,
+ start(){if(this.timer)return;
+  this.timer=setInterval(()=>safeFn(()=>{this.tick();this.bed();}),1500);},
+};
+
 const Actors={
  key:null,list:[],iv:null,lastSay:0,
  stop(){if(this.iv){clearInterval(this.iv);this.iv=null;}this.key=null;this.list=[];},
@@ -10738,7 +11296,7 @@ const CMD={
   narrate(`Город: ${d} ${plural(d,"шаг","шага","шагов")}, ${dirBetween(x-G.x,y-G.y)||"здесь"}.`);},
  carbeacon(arg){const [x,y]=String(arg).split(":").map(Number);
   const d=Math.max(Math.abs(x-G.x),Math.abs(y-G.y));
-  safeFn(()=>beacon("caravan",Math.max(-1,Math.min(1,(x-G.x)/8)),d));
+  safeFn(()=>beaconAt("caravan",x-G.x,y-G.y,0,d));
   narrate(`Обоз: ${d} ${plural(d,"шаг","шага","шагов")}, ${dirBetween(x-G.x,y-G.y)||"здесь"}.`);},
  echo(){scanSpeak();},
  /* data-cmd="sell:x,y,i:ресурс" — ключ НИПИ сам содержит запятые, поэтому
@@ -10839,9 +11397,9 @@ const CMD={
   const dirTxt=(dx||dy)?`${dirBetween(dx,dy)}, ${d} ${plural(d,"шаг","шага","шагов")}`:"ваше положение";
   const desc=c.structure?c.structure.name:(c.res?`Ресурс: ${c.res.name}`:(c.monster&&!G.cleared[x+","+y]?`Монстр: ${c.monster.n}`:c.terrain[1]));
   narrate(`${dirTxt}: ${desc}.`);
-  if(c.structure)beacon(c.structure.beacon,dx*0.4,d);
-  else if(c.res)beacon(c.res.beacon,dx*0.4,d);
-  else if(c.monster)beacon("npc_guard",dx*0.4,d);}};
+  if(c.structure)beaconAt(c.structure.beacon,dx,dy,0,d);
+  else if(c.res)beaconAt(c.res.beacon,dx,dy,0,d);
+  else if(c.monster)beaconAt("npc_guard",dx,dy,0,d);}};
 function plural(n,a,b,c){const m=n%100;if(m>=11&&m<=14)return c;
  const m1=n%10;return m1===1?a:(m1>=2&&m1<=4?b:c);}
 function rumor(){
@@ -12080,7 +12638,7 @@ async function scanSpeak(){
   const list=near.slice(0,6);
   for(let i=0;i<list.length;i++){const o=list[i];
    await new Promise(r=>setTimeout(r,520));
-   safeFn(()=>beacon(o.bid||"wall",Math.max(-1,Math.min(1,o.dx/3)),o.d));}
+   safeFn(()=>beaconAt(o.bid||"wall",o.dx,o.dy,o.t===">"?-1:o.t==="<"?1:0,o.d));}
   return;}
  const objs=[];
  for(let dx=-6;dx<=6;dx++)for(let dy=-6;dy<=6;dy++){
@@ -12172,6 +12730,15 @@ function bindSettings(){const $=id=>document.getElementById(id);
  $("setSpeech").checked=!!settings.speech;$("setEffects").checked=!!settings.effects;
  $("setMusic").checked=!!settings.music;$("setSubs").checked=!!settings.subtitles;
  $("setExplore").checked=!!settings.explore;$("setFastTap").checked=!!settings.fastTap;$("setHaptics").checked=!!settings.haptics;
+ $("setHrtf").checked=!!settings.hrtf;$("setScape").checked=!!settings.scape;
+ $("setHrtf").addEventListener("change",e=>{settings.hrtf=e.target.checked?1:0;saveSettings();
+  safeFn(()=>Spatial.stopAll());
+  narrate(settings.hrtf
+   ?`Объёмный звук включён. Акустика места: ${Room.name()}.`
+   :"Объёмный звук выключен: остаётся простая панорама слева направо.");});
+ $("setScape").addEventListener("change",e=>{settings.scape=e.target.checked?1:0;saveSettings();
+  if(!settings.scape)safeFn(()=>Scape.stop());
+  narrate(settings.scape?"Живая звуковая картина включена.":"Живая звуковая картина выключена.");});
  $("setRate").value=settings.rate;$("vRate").textContent=(+settings.rate).toFixed(1)+"×";
  $("setVoiceVol").value=settings.voiceVol*100;$("vVoice").textContent=settings.voiceVol*100+"%";
  $("setFxVol").value=settings.fxVol*100;$("vFx").textContent=settings.fxVol*100+"%";

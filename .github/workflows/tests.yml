@@ -46,7 +46,7 @@ jobs:
           node - <<'JS'
           const fs=require('fs'),path=require('path');
           const html=fs.readFileSync('index.html','utf8');
-          const refs=new Set([...html.matchAll(/"((?:sea|ambience|dungeon|magic|gods|events|places|fantasy|steps|ui|monsters|nat|inst|orch|surf|blow|troop|bazaar|dark|arms|spell|beast|relic|depth|folk|mood|arte|deep|foe|cast|hero|wild|trade|score|battle|siege|craft|beasts|throng|tread|sky|hall)\/[^"]+\.(?:mp3|wav|flac|ogg))"/g)].map(m=>m[1]));
+          const refs=new Set([...html.matchAll(/"((?:sea|ambience|dungeon|magic|gods|events|places|fantasy|steps|ui|monsters|nat|inst|orch|surf|blow|troop|bazaar|dark|arms|spell|beast|relic|depth|folk|mood|arte|deep|foe|cast|hero|wild|trade|score|battle|siege|craft|beasts|throng|tread|sky|hall|mg)\/[^"]+\.(?:mp3|wav|flac|ogg))"/g)].map(m=>m[1]));
           const missing=[...refs].filter(f=>!fs.existsSync(path.join('sounds',f)));
           const walk=d=>fs.readdirSync(d,{withFileTypes:true}).flatMap(e=>e.isDirectory()?walk(path.join(d,e.name)):[path.join(d,e.name)]);
           const have=walk('sounds').filter(f=>/\.(mp3|wav|flac|ogg)$/.test(f)).map(f=>path.relative('sounds',f));
