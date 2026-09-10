@@ -2392,7 +2392,8 @@ function handleTwoFingerSwipe(dir){
   if(t===">"){startFlight(1,"S");return;}
   const near=nearFeatures(6).filter(o=>o.t===">");
   narrate(near.length?`Лестница вниз: ${near[0].d} ${plural(near[0].d,"шаг","шага","шагов")}, ${near[0].dir}.`:"На этом уровне спуска нет.");
-  if(near.length)safeFn(()=>beacon("stairs_down",Math.max(-1,Math.min(1,near[0].dx/3)),near[0].d));
+  /* Ступени вниз слышны из-под ног, а не просто «левее». */
+  if(near.length)safeFn(()=>beaconAt("stairs_down",near[0].dx,near[0].dy,-1,near[0].d));
   return;}
  if(dir==="N"){ /* вверх: подняться по лестнице или выйти наружу */
   if(!G.place){narrate("Вы и так под открытым небом.");return;}
@@ -2400,11 +2401,12 @@ function handleTwoFingerSwipe(dir){
   if(t==="<"||t==="G"){useHere();return;}
   if(G.place.depth>0){const near=nearFeatures(8).filter(o=>o.t==="<");
    narrate(near.length?`Лестница вверх: ${near[0].d} ${plural(near[0].d,"шаг","шага","шагов")}, ${near[0].dir}.`:"Подъёма поблизости нет.");
-   if(near.length)safeFn(()=>beacon("stairs_up",Math.max(-1,Math.min(1,near[0].dx/3)),near[0].d));
+   if(near.length)safeFn(()=>beaconAt("stairs_up",near[0].dx,near[0].dy,1,near[0].d));
    return;}
   const near=nearFeatures(8).filter(o=>o.t==="<"||o.t==="G");
   narrate(near.length?`Выход: ${near[0].name}, ${near[0].d} ${plural(near[0].d,"шаг","шага","шагов")}, ${near[0].dir}.`:"Выход не найден.");
-  if(near.length)safeFn(()=>beacon(near[0].bid,Math.max(-1,Math.min(1,near[0].dx/3)),near[0].d));
+  if(near.length)safeFn(()=>beaconAt(near[0].bid,near[0].dx,near[0].dy,
+   near[0].t==="<"?1:0,near[0].d));
   return;}
  safeFn(()=>scanSpeak()); /* вбок: эхо-скан маяками */
 }
@@ -9429,7 +9431,7 @@ function cityPlan(){
  list.slice(0,6).forEach((o,i)=>setTimeout(()=>safeFn(()=>{
   const bid=o.special?"artifact":o.trade==="торг"?"market":o.trade==="кузнечное дело"?"forge"
    :o.trade==="храмовое служение"?"temple":o.trade==="стража"?"npc_guard":"house";
-  beacon(bid,Math.max(-1,Math.min(1,o.dx/4)),Math.min(9,o.d));}),700+i*520));
+  beaconAt(bid,o.dx,o.dy,0,Math.min(9,o.d));}),700+i*520));
  return true;
 }
 /* ── Названия мест ── */
@@ -9724,16 +9726,17 @@ function moveInside(dir){
  if(G.flight)return flightStep(dir);
  const nx=p.x+DIRV[dir][0],ny=p.y+DIRV[dir][1];
  const t=tileAt(lvl,nx,ny);
- if(t==="#"){safeFn(()=>beacon("wall",DIRV[dir][0],0));narrate(`Стена на ${DIRN[dir].split(",")[0]}е.`);return false;}
+ if(t==="#"){safeFn(()=>beaconAt("wall",DIRV[dir][0],DIRV[dir][1],0,1));
+  narrate(`Стена на ${DIRN[dir].split(",")[0]}е.`);return false;}
  if(t==="+"&&placeMark(nx,ny)!=="open"){
   setPlaceMark(nx,ny,"open");
-  safeFn(()=>{beacon("door",DIRV[dir][0],0);Bank.play("soft_thud",{seed:nx+ny,gain:0.4,maxSec:2});
+  safeFn(()=>{beaconAt("door",DIRV[dir][0],DIRV[dir][1],0,1);Bank.play("soft_thud",{seed:nx+ny,gain:0.4,maxSec:2});
    Bank.play(G.place&&G.place.depth>0?"deep_stone":"deep_door",{seed:nx+ny,gain:0.6,maxSec:3});});
   narrate("Дверь открыта. Шагните ещё раз, чтобы пройти.");
   return false;}
  if(t==="G"&&p.kind==="city"&&placeMark(nx,ny)!=="open"){
   setPlaceMark(nx,ny,"open");
-  safeFn(()=>{beacon("gate",DIRV[dir][0],0);Bank.play("ram_door",{seed:nx+ny,gain:0.5,maxSec:3});
+  safeFn(()=>{beaconAt("gate",DIRV[dir][0],DIRV[dir][1],0,1);Bank.play("ram_door",{seed:nx+ny,gain:0.5,maxSec:3});
    Bank.play("siege_ram",{seed:nx+ny,gain:0.5,maxSec:4});
    Play.start("ev","rusty_gate",{dur:4});});
   narrate("Створки городских ворот разошлись. Шагните ещё раз в ту же сторону — встанете в воротах.");
@@ -10070,7 +10073,11 @@ const Actors={
  /* Шаг живого слышен со своей стороны и со своей громкости. */
  sound(a,d){
   if(!settings.effects)return;
-  const p=G.place,pan=Math.max(-1,Math.min(1,(a.x-p.x)/4)),gain=Math.max(0.12,0.75-d*0.08);
+  const p=G.place,gain=Math.max(0.12,0.75-d*0.08);
+  /* Настоящее смещение по клеткам, а не доля влево-вправо: живой стоит там,
+     где стоит, и слышно это вместе с расстоянием. */
+  const dx=a.x-p.x,dy=a.y-p.y;
+  const pan=Math.max(-1,Math.min(1,dx/4));
   if(Math.random()>0.6)return;
   try{
    if(Bank.enabled&&Bank.canPan()){
@@ -10079,10 +10086,14 @@ const Actors={
      /* Громады ступают тяжело: их шаг слышно раньше голоса. */
      const heavy=["behemoth","dragon"].includes(v);
      const f=heavy?Bank.pick("stomp",a.id):((set&&(set.step||set.emerge))||"nat/gurgle_01.flac");
+     if(Spatial.at(f,dx,dy,{gain,maxSec:2.4}))return;
      if(Bank.panned(f,{pan,gain}))return;}
-    else if(Bank.panned("nat/step_soft_0"+(1+(a.id%3))+".flac",{pan,gain}))return;}
+    else{
+     const f="nat/step_soft_0"+(1+(a.id%3))+".flac";
+     if(Spatial.at(f,dx,dy,{gain,maxSec:2}))return;
+     if(Bank.panned(f,{pan,gain}))return;}}
   }catch(_){}
-  beacon(a.kind==="mob"?"npc_common":"npc_guard",pan,d);},
+  beaconAt(a.kind==="mob"?"npc_common":"npc_guard",dx,dy,0,d);},
  /* Тварь дошла до игрока — начинается бой прямо там, где стоят оба. */
  attack(a){
   this.list=this.list.filter(o=>o!==a);
@@ -10109,14 +10120,22 @@ function maybeWildlife(c){
  const cand=MONSTERS.filter(m=>m.biomes.includes(c.terrain[0]));
  if(!cand.length)return;
  const m=cand[Math.floor(Math.random()*cand.length)];
- const pan=Math.random()*2-1,d=2+Math.floor(Math.random()*4);
+ /* Место выбирается по-настоящему, а не одной долей влево-вправо: неизвестный
+    стоит на своей клетке, и голос приходит именно оттуда — вместе со
+    словами о том, где он. */
+ const d=2+Math.floor(Math.random()*4);
+ const уг=Math.random()*Math.PI*2;
+ const dx=Math.round(Math.cos(уг)*d),dy=Math.round(Math.sin(уг)*d);
+ const pan=Math.max(-1,Math.min(1,dx/4));
  safeFn(()=>{
   if(!settings.effects)return;
   const v=MONSTER_VOICE[m.id],set=v&&MONSTER_BANK[v];
   const f=(set&&(set.step||set.emerge))||"nat/step_soft_03.flac";
-  if(Bank.enabled&&Bank.canPan()&&Bank.panned(f,{pan,gain:Math.max(0.2,0.7-d*0.08)}))return;
-  beacon("npc_common",pan,d);});
- narrate(`${night?"В темноте":"В стороне"} кто-то движется: похоже на «${m.n}», ${dirBetween(Math.round(pan),0)||"рядом"}, шагах в ${d}.`,{interrupt:false});
+  const gain=Math.max(0.2,0.7-d*0.08);
+  if(Spatial.at(f,dx,dy,{gain,maxSec:2.4}))return;
+  if(Bank.enabled&&Bank.canPan()&&Bank.panned(f,{pan,gain}))return;
+  beaconAt("npc_common",dx,dy,0,d);});
+ narrate(`${night?"В темноте":"В стороне"} кто-то движется: похоже на «${m.n}», ${dirBetween(dx,dy)||"рядом"}, шагах в ${d}.`,{interrupt:false});
 }
 /* ── Дозоры снаружи: стража поселений ходит по дорогам вокруг стен ── */
 function maybeGuardPatrol(){
@@ -10124,10 +10143,12 @@ function maybeGuardPatrol(){
  const near=findCities(G.x,G.y,6,3).filter(c=>c.d<=5);
  if(!near.length)return;
  if(Math.random()>0.12)return;
- const c=near[0],pan=Math.max(-1,Math.min(1,(c.x-G.x)/4));
+ const c=near[0],dx=c.x-G.x,dy=c.y-G.y;
+ const pan=Math.max(-1,Math.min(1,dx/4));
  safeFn(()=>{
+  if(Spatial.at("nat/step_soft_02.flac",dx,dy,{gain:0.6,maxSec:2}))return;
   if(Bank.enabled&&Bank.canPan()&&Bank.panned("nat/step_soft_02.flac",{pan,gain:0.6}))return;
-  beacon("npc_guard",pan,c.d);});
+  beaconAt("npc_guard",dx,dy,0,c.d);});
  const dir=dirBetween(c.x-G.x,c.y-G.y)||"рядом";
  if(isNight())
   narrate(`Ночной дозор «${c.name}» идёт с фонарём, ${dir}. «Поздно бродишь. Назови себя или ступай своей дорогой.»`,{interrupt:false});
@@ -10679,8 +10700,7 @@ function scanNearbyBeacons(){
   const last=recentBeacons.get(key);
   if(last&&now-last<25000)continue;
   recentBeacons.set(key,now);
-  const pan=dx*0.8,g=dy<0?0.6:1;
-  beacon(bid,pan,1);
+  beaconAt(bid,dx,dy,0,1);
   narrate(`Рядом, ${dirBetween(dx,dy)}: ${obj}.`,{interrupt:false});}}
 function rollWeather(){const r=Math.random();
  return r<0.4?"Ясно":r<0.55?"Облачно":r<0.75?"Дождь":r<0.9?"Ветрено":"Гроза";}
@@ -11292,7 +11312,7 @@ const CMD={
  carnews(){caravanNews();},
  citybeacon(arg){const [x,y]=String(arg).split(":").map(Number);
   const d=Math.max(Math.abs(x-G.x),Math.abs(y-G.y));
-  safeFn(()=>beacon("city",Math.max(-1,Math.min(1,(x-G.x)/8)),d));
+  safeFn(()=>beaconAt("city",x-G.x,y-G.y,0,d));
   narrate(`Город: ${d} ${plural(d,"шаг","шага","шагов")}, ${dirBetween(x-G.x,y-G.y)||"здесь"}.`);},
  carbeacon(arg){const [x,y]=String(arg).split(":").map(Number);
   const d=Math.max(Math.abs(x-G.x),Math.abs(y-G.y));
@@ -12600,7 +12620,9 @@ function renderMap(){
    b.textContent=me?"🧭":icon;
    const nm=me?`вы здесь, ${tileLabel(t,x,y)}`:`${tileLabel(t,x,y)}, ${dirBetween(dx,dy)||"здесь"}, ${Math.max(Math.abs(dx),Math.abs(dy))} шаг.`;
    b.dataset.speak=nm;b.setAttribute("aria-label",nm);
-   b.addEventListener("click",()=>{narrate(nm);const bid=tileBeacon(t);if(bid)safeFn(()=>beacon(bid,Math.max(-1,Math.min(1,dx/3)),Math.max(Math.abs(dx),Math.abs(dy))));});
+   b.addEventListener("click",()=>{narrate(nm);const bid=tileBeacon(t);
+    if(bid)safeFn(()=>beaconAt(bid,dx,dy,t===">"?-1:t==="<"?1:0,
+     Math.max(Math.abs(dx),Math.abs(dy))));});
    g.appendChild(b);}
   const info=document.getElementById("mapInfo");
   if(info)info.textContent=`${placeTitle()}. Клетка (${p.x};${p.y}).`;
@@ -12646,18 +12668,20 @@ async function scanSpeak(){
   if(x<0||y<0||x>=WORLD||y>=WORLD)continue;
   const c=cellContent(x,y),d=Math.max(Math.abs(dx),Math.abs(dy));
   if(!d)continue;
-  if(c.structure)objs.push({d,dir:dirBetween(dx,dy),name:c.structure.name,bid:c.structure.beacon});
+  if(c.structure)objs.push({d,dx,dy,dir:dirBetween(dx,dy),name:c.structure.name,bid:c.structure.beacon});
   else if(c.res){const dep=G.depleted[x+","+y];
-   if(!dep||dep.left>0)objs.push({d,dir:dirBetween(dx,dy),name:"ресурс "+c.res.name,bid:c.res.beacon});}}
+   if(!dep||dep.left>0)objs.push({d,dx,dy,dir:dirBetween(dx,dy),name:"ресурс "+c.res.name,bid:c.res.beacon});}}
  /* Обозы на дорогах слышно наравне с постройками: они движутся и звучат. */
  safeFn(()=>{caravansNear(G.x,G.y,G.day,G.hour,6).forEach(c=>{
-  if(c.d)objs.push({d:c.d,dir:dirBetween(c.dx,c.dy),name:`${c.name} в «${c.to.name}»`,bid:"caravan"});});});
+  if(c.d)objs.push({d:c.d,dx:c.dx,dy:c.dy,dir:dirBetween(c.dx,c.dy),name:`${c.name} в «${c.to.name}»`,bid:"caravan"});});});
  objs.sort((a,b)=>a.d-b.d);
  const top=objs.slice(0,8);
  if(!top.length){narrate("В радиусе шести шагов значимых объектов нет.");return;}
  narrate("Объекты поблизости, по расстоянию: "+
   top.map(o=>`${o.name}, ${o.d} ${plural(o.d,"шаг","шага","шагов")}, ${o.dir}`).join(". ")+".");
- if(settings.effects){for(const o of top.slice(0,3)){beacon(o.bid,0,o.d);await sleep(900);}}}
+ /* Маяки сводки звучат каждый со своей стороны, а не все из середины. */
+ if(settings.effects){for(const o of top.slice(0,3)){
+  beaconAt(o.bid,o.dx||0,o.dy||0,0,o.d);await sleep(900);}}}
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 
 /* ════════ ЭНЦИКЛОПЕДИЯ + ТЕСТ ════════ */

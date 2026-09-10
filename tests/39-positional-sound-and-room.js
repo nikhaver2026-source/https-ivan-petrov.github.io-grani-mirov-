@@ -241,6 +241,67 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
  check('каждая роль банка попала в раздел энциклопедии, а каждая папка названа',
   охват.вне.length===0&&охват.папокБезИмени.length===0,охват);
 
+ /* ── 15. Источники мира попадают ровно туда, где стоят ──
+    Подменяем сам узел размещения и смотрим, какие смещения игра ему даёт. */
+ const точкиМест=await page.evaluate(async()=>{
+  const пауза=ms=>new Promise(z=>setTimeout(z,ms));
+  settings.effects=1;settings.hrtf=1;
+  AE.ensure();Spatial.ensure();
+  const было=Spatial.node.bind(Spatial);
+  const точки=[];
+  Spatial.node=(dx,dy,dz,roll)=>{точки.push({dx,dy,dz});return было(dx,dy,dz,roll);};
+  const out={};
+  /* бродящая тварь на уровне */
+  G.place={kind:"dungeon",bx:1500,by:1500,stype:"ruins",name:"п",depth:2,x:5,y:5};
+  точки.length=0;
+  Actors.sound({kind:"mob",id:1,x:9,y:3,m:{id:"wolf",n:"Волк"}},4);
+  await пауза(100);out.тварь=точки.slice(-1)[0]||null;
+  /* стена, в которую упёрся шаг */
+  const lvl=curLevel();
+  outer:for(let y=1;y<lvl.h-1;y++)for(let x=1;x<lvl.w-1;x++)
+   if(tileAt(lvl,x,y)==="."&&tileAt(lvl,x+1,y)==="#"){G.place.x=x;G.place.y=y;break outer;}
+  точки.length=0;moveInside("E");
+  await пауза(100);out.стена=точки.slice(-1)[0]||null;
+  /* подсказка о лестнице вниз */
+  точки.length=0;handleTwoFingerSwipe("S");
+  await пауза(180);out.лестница=точки.slice(-1)[0]||null;
+  /* соседняя клетка мира */
+  G.place=null;
+  outer2:for(let r=1;r<120;r++){const x=1000+r,y=1000;
+   for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++)
+    if(cellContent(x+dx,y+dy).structure){G.x=x;G.y=y;break outer2;}}
+  recentBeacons.clear();точки.length=0;scanNearbyBeacons();
+  await пауза(120);out.рядом=точки.slice();
+  Spatial.node=было;Spatial.stopAll();G.place=null;
+  return out;});
+ check('бродящая тварь звучит с той клетки, где она стоит',
+  точкиМест.тварь&&точкиМест.тварь.dx===4&&точкиМест.тварь.dy===-2,точкиМест.тварь);
+ check('стена, в которую упёрся шаг, звучит ровно с той стороны',
+  точкиМест.стена&&точкиМест.стена.dx===1&&точкиМест.стена.dy===0,точкиМест.стена);
+ check('подсказка о лестнице вниз приходит из-под ног',
+  точкиМест.лестница&&точкиМест.лестница.dz===-1&&(точкиМест.лестница.dx||точкиМест.лестница.dy),точкиМест.лестница);
+ check('объекты в соседних клетках звучат каждый со своей стороны',
+  точкиМест.рядом&&точкиМест.рядом.length>0&&точкиМест.рядом.every(o=>o.dx||o.dy),точкиМест.рядом);
+
+ /* ── 16. Не осталось маяков, которые знают сторону, но звучат плоско ──
+    beacon(id,pan,dist) умеет только «левее-правее». Если довод панорамы
+    выведен из координат — значит место известно, и звать надо beaconAt. */
+ const плоские=await page.evaluate(()=>{
+  const тело=[...document.querySelectorAll("script")].map(s=>s.textContent).join("\n");
+  const плохо=[];
+  const rx=/(?<!beaconAt|citybeacon|carbeacon)\bbeacon\(([^;]{0,160}?)\)\s*[;,)]/g;
+  let m;
+  while((m=rx.exec(тело))){
+   const доводы=m[1];
+   /* Внутри самой функции beacon и её объявления — не в счёт. */
+   if(/^id\s*,/.test(доводы))continue;
+   /* Панорама, выведенная из координат: dx, DIRV, деление на 3-8. */
+   if(/\bdx\b|DIRV\[|\.dx\b|\/\s*[3-8]\s*\)/.test(доводы))плохо.push(доводы.slice(0,70));
+  }
+  return плохо;});
+ check('ни один маяк, знающий сторону, не звучит плоско — все идут через место',
+  плоские.length===0,плоские.slice(0,5));
+
  check('игра не выбрасывала ошибок за весь прогон',errors.length===0,errors.slice(0,3));
 
  console.log(results.join('\n'));
