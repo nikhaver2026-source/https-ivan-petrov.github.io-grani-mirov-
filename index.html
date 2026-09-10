@@ -2959,7 +2959,8 @@ const GUIDE=[
 {title:"Глава 11. Монстры и бой",body:[
  "Монстра слышно заранее: его звук и маяк звучат при приближении.",
  "Бой не открывает окон и ничем не перекрывает экран: сводка о противнике и о себе появляется прямо на игровом экране, её можно ощупать пальцем. Выньте оружие касанием тремя пальцами и бейте свайпами в сторону удара; магия управляется панелью заклинаний (касание четырьмя пальцами). Побег — в меню действий (свайп тремя пальцами вверх) или клавиша Эскейп. Победа даёт опыт, золото и добычу.",
- "Поражение возвращает в столицу ближайшей империи."]},
+ "Поражение возвращает в столицу ближайшей империи.",
+ "Убитая тварь мертва окончательно. Клетка, где она стояла, освобождается: можно спокойно оставить оружие в руке, взмахнуть ещё раз, уйти и вернуться — тварь не поднимется. Это верно и для логова в подземелье: после победы оно становится обычным полом. Раньше победа над зверем не оставляла в мире никакого следа, и взмах оружием на той же клетке начинал бой заново — с тем же зверем, с тем же опытом и той же добычей."]},
 {title:"Глава 12. Города, здания и подземелья",body:[
  "Постройки мира объёмные: в них можно войти и ходить внутри теми же свайпами. Встаньте на постройку и сделайте свайп двумя пальцами вниз (или двойное касание, или пункт «Войти или спуститься» в меню действий).",
  "Город за воротами — это крепостная стена, четверо ворот, улицы и кварталы: лавка, горн, храм с алтарём, дома жителей, колодец на площади и спуск в подземелье под городом. Выйти можно через любые ворота.",
@@ -8337,8 +8338,37 @@ function def(){return Math.floor(G.agi/3)+(G.equip.armor?G.equip.armor.val:0)+Ma
 const RANKS=["Обычный","Необычный","Редкий","Эпический","Легендарный","Божественный"];
 const QUAL=["Грубое","Простое","Добротное","Отличное","Превосходное","Благословенное"];
 const MAT=["кожаный","железный","стальной","серебряный","мифриловый","драконий"];
-const ITYPES=[["Меч","weapon"],["Кинжал","weapon"],["Посох","weapon"],["Щит","armor"],
- ["Кольчуга","armor"],["Шлем","armor"],["Плащ","acc"],["Кольцо","acc"],["Амулет","acc"]];
+/* ── ИМЯ ВЕЩИ СОГЛАСУЕТСЯ С САМОЙ ВЕЩЬЮ ──
+   Имя собиралось как «качество + материал + род вещи», и все три слова брались
+   в мужском или среднем роде без разбора: игрок слышал «Простое стальной
+   кольцо», «Грубое кожаный кольчуга», «Отличное серебряный шлем». В игре, где
+   каждое слово произносится вслух, это слышно на каждой находке, покупке и
+   примерке. Поэтому у каждого рода вещи указан свой род, а качество и материал
+   склоняются по нему. Третий столбец в ITYPES — род: «м», «ж» или «с». */
+const QUAL_R={м:["Грубый","Простой","Добротный","Отличный","Превосходный","Благословенный"],
+ ж:["Грубая","Простая","Добротная","Отличная","Превосходная","Благословенная"],
+ с:["Грубое","Простое","Добротное","Отличное","Превосходное","Благословенное"]};
+const MAT_R={м:["кожаный","железный","стальной","серебряный","мифриловый","драконий"],
+ ж:["кожаная","железная","стальная","серебряная","мифриловая","драконья"],
+ с:["кожаное","железное","стальное","серебряное","мифриловое","драконье"]};
+const ITYPES=[["Меч","weapon","м"],["Кинжал","weapon","м"],["Посох","weapon","м"],["Щит","armor","м"],
+ ["Кольчуга","armor","ж"],["Шлем","armor","м"],["Плащ","acc","м"],["Кольцо","acc","с"],["Амулет","acc","м"]];
+/* Имя вещи по роду, качеству и материалу. Род берётся из ITYPES, а если вещь
+   пришла из старого сохранения без рода — по окончанию названия. */
+function itemGender(тип){
+ try{
+  const t=ITYPES.find(x=>x[0]===тип);
+  if(t&&t[2])return t[2];
+  const n=String(тип||"").toLowerCase();
+  if(/[ое]$/.test(n))return "с";
+  if(/[аяь]$/.test(n))return "ж";
+  return "м";
+ }catch(_){return "м";}}
+function itemName(тип,качество,материал){
+ const р=itemGender(тип);
+ const к=(QUAL_R[р]||QUAL_R.м)[качество]||QUAL[качество]||"";
+ const м=(MAT_R[р]||MAT_R.м)[материал]||MAT[материал]||"";
+ return `${к} ${м} ${String(тип||"").toLowerCase()}`.replace(/\s+/g," ").trim();}
 const RANKPRICE=[30,80,220,600,1600,5000];
 /* ════════ КАНОНИЧЕСКОЕ ОРУЖИЕ: стартовый стальной меч ════════ */
 const DEFAULT_WEAPON={id:"starter-steel-sword",name:"Простой стальной меч",type:"Меч",slot:"weapon",rank:0,qual:1,val:5,price:60};
@@ -8413,7 +8443,7 @@ function genLoot(sx,sy,seed,level){
  /* Уникальный id — без него два предмета с одинаковым именем (частое совпадение
     ранга/качества/типа при генерации) схлопывались бы в один в списке экипировки
     (Map по id||name), из-за чего второй такой предмет выглядел «не экипируемым». */
- return {id:`loot_${sx}_${sy}_${seed}_${level}`,name:`${QUAL[q]} ${MAT[rank]} ${t[0].toLowerCase()}`,type:t[0],slot:t[1],rank,qual:q,val,
+ return {id:`loot_${sx}_${sy}_${seed}_${level}`,name:itemName(t[0],q,rank),type:t[0],slot:t[1],rank,qual:q,val,
   price:Math.round(RANKPRICE[rank]*(1+q*0.3))};}
 /* Голос вещи по её роду: сталь звенит, кольчуга шуршит, кожа мягко скрипит,
    ткань шелестит, дерево стучит, склянка булькает. Пригождается всюду, где
@@ -8430,7 +8460,10 @@ function itemVoice(it){
  if(/книг|свит|том|пергамент/.test(t))return "arte_book";
  if(/щит|броня|шлем|наплеч/.test(t))return "arte_heavy";
  return "arte_object";}
-function lootDesc(i){return `${i.name}: ранг ${RANKS[i.rank]}, качество ${QUAL[i.qual]}, бонус +${i.val}.`;}
+function lootDesc(i){
+ /* «качество Простое» — здесь слово стоит само по себе, при существительном
+    «качество», и остаётся средним родом: так оно и правильно. */
+ return `${i.name}: ранг ${RANKS[i.rank]}, качество ${QUAL[i.qual]}, бонус +${i.val}.`;}
 function journal(t){G.journal.unshift(`Д${G.day} ${String(Math.floor(G.hour)).padStart(2,"0")}:00 — ${t}`);
  if(G.journal.length>60)G.journal.pop();}
 
@@ -8507,9 +8540,21 @@ function weaponSwing(dir){
    s[fn](dir);
    setTimeout(()=>{try{s.stop(.12);}catch(e){}},700);
  }catch(e){}
- vib(18); narrate(`Взмах ${weaponName()} ${labels[dir]}.`,{interrupt:false});
+ /* Было «Взмах Простой стальной меч вправо» — три слова подряд без падежа.
+    Ставить имя вещи в творительный пришлось бы склонением всего словаря;
+    вместо этого имя вынесено отдельной частью и стоит в своём именительном. */
+ vib(18); narrate(`Взмах ${labels[dir]}: ${weaponName().toLowerCase()}.`,{interrupt:false});
  if(G.inCombat){ G.combat.lastDir=dir; setTimeout(()=>{if(G.inCombat){try{fight("atk");}catch(e){}}},90); }
- else { try{ const c=cellContent(G.x,G.y); if(c.monster){startCombat(c); setTimeout(()=>{if(G.inCombat){try{fight("atk");}catch(e){}}},100);}}catch(e){} }
+ else if(!G.place&&!G.ship){
+  /* Взмах по пустому месту сам начинал бой, если на клетке числилась тварь, —
+     и был единственным местом в игре, где не спрашивали G.cleared. Убитая
+     тварь от такого взмаха оживала. Теперь условие то же, что у шага, у
+     осмотра, у карты и у сводки: тварь есть И клетка не очищена.
+     Внутри постройки и на борту корабля взмах вообще не должен смотреть на
+     клетку мира под ногами — там свои противники. */
+  try{ const c=cellContent(G.x,G.y);
+   if(c.monster&&!G.cleared[G.x+","+G.y]){startCombat(c);
+    setTimeout(()=>{if(G.inCombat){try{fight("atk");}catch(e){}}},100);}}catch(e){} }
  return true;
 }
 
@@ -9575,6 +9620,13 @@ function useHere(){
    return useAltar(p.x,p.y);
   case "S":case "F":case "N":case "P":case "B":return talkInside(t,p.x,p.y);
   case "L":return pigeonPost();
+  /* Живое логово под ногами. Бой с ним начинался только на приходе (см.
+     moveInside), а «действие здесь» отвечало «под ногами пусто» — и это про
+     ту самую клетку, которую и обзор, и сводка, и карта называют логовом.
+     Игрок, сбежавший из схватки и оставшийся стоять на логове, слышал, что
+     он на пустом месте. Мёртвое логово сюда не попадает: tileAt отдаёт по
+     нему обычный пол. */
+  case "M":return startInsideCombat(p.x,p.y);
   case "W":{G.water=Math.min(200,(Number(G.water)||0)+40);safeFn(()=>beacon("well",0,0));
    narrate("Вы набрали воды из колодца. Запас воды пополнен.");refresh();saveGame(true);return true;}
   case "T":{safeFn(()=>beacon("torch",0,0));narrate("Настенный факел. Он потрескивает и служит ориентиром.");return true;}
@@ -10126,7 +10178,14 @@ function playRealMonsterCue(m,cue,vol=0.7){
  }catch(e){return null;}
 }
 function startCombat(c){
- const m=c.monster;G.weaponDrawn=!!G.weaponDrawn; /* бой никогда сам не вытаскивает оружие */ G.inCombat=true;G.combat={m,hp:m.hp,key:c.x+","+c.y,ai:monsterAIProfile(m)};
+ const m=c.monster;G.weaponDrawn=!!G.weaponDrawn; /* бой никогда сам не вытаскивает оружие */
+ /* Чья это тварь. Хозяйка клетки мира — та, которую выводит на этих
+    координатах сам генератор; её смерть освобождает клетку навсегда.
+    Гость случайного события, житель подземелья и морская тварь клетке не
+    принадлежат: их гибель ничего в мире не освобождает, иначе одна победа
+    над разбойником в дороге разгоняла бы и настоящего зверя с того же места. */
+ const своя=!G.place&&!G.ship&&safeFn(()=>cellContent(c.x,c.y).monster===m,false);
+ G.inCombat=true;G.combat={m,hp:m.hp,key:c.x+","+c.y,own:своя,ai:monsterAIProfile(m)};
  /* Схватка с тем, кто заметно сильнее, начинается с клича: игрок слышит,
     во что ввязался, раньше, чем прочтёт уровень противника. */
  safeFn(()=>{if((Number(m.lvl)||1)>=(Number(G.level)||1)+2)Play.start("ev","battle_cry",{dur:4});});
@@ -10273,6 +10332,14 @@ function playWoundSfx(dmg=6){try{AE.ensure();
   {seed:Math.floor(Math.random()*97),gain:0.45,maxSec:2}));
  const s=new SFX();const heavy=Math.max(0.6,Math.min(1.5,0.6+(Number(dmg)||6)/14));s.wound(heavy);setTimeout(()=>{try{s.stop(.2);}catch(e){}},650);}catch(e){}}
 function endCombat(){if(G.combat&&G.combat.monsterTimer)clearTimeout(G.combat.monsterTimer);G.inCombat=false;G.combat=null;
+ /* Отметка «этот бой идёт за такое-то логово» ставится в startInsideCombat и
+    снималась ТОЛЬКО победой. После побега она оставалась висеть: игрок
+    спускался на уровень ниже, побеждал там кого угодно — и мёртвым
+    помечалось логово с теми же координатами на НОВОЙ глубине, которого он
+    и не видел, а настоящее оставалось живым. Теперь отметка живёт ровно
+    столько, сколько сам бой: победа успевает её прочитать раньше (см.
+    victory), а побег и поражение уносят её с собой. */
+ if(G.place&&G.place.pendingKill)G.place.pendingKill=null;
  const bar=document.getElementById("combatBar");if(bar)bar.hidden=true;
  const log=document.getElementById("cbLog");if(log)log.textContent="";}
 function fight(a){const cb=G.combat;if(!cb)return;const m=cb.m;
@@ -10393,6 +10460,22 @@ function victory(){const cb=G.combat,m=cb.m;
  loot.push({type:"mat",name:mats[Math.floor(Math.random()*mats.length)]});
  if(Math.random()<0.35+G.level*0.02)loot.push({type:"gear",item:genLoot(G.x,G.y,Math.floor(Math.random()*999),m.lvl)});
  G.loot=loot;
+ /* ── УБИТАЯ ТВАРЬ БОЛЬШЕ НЕ СТОИТ НА КЛЕТКЕ ──
+    Раньше её не убирал никто. cellContent выводит тварь из координат заново
+    при каждом обращении, а G.cleared по-настоящему помечал только обысканные
+    руины — победа над зверем в мире не оставляла в игре ни следа. Стоило
+    после победы и сбора добычи, не убирая оружия, взмахнуть ещё раз в любую
+    сторону — и та же тварь дралась снова, как будто и не умирала: снова
+    полный бой, снова опыт, снова добыча. То же случалось при возвращении на
+    клетку. Теперь запись держится в двух местах: в самой клетке — чтобы
+    подействовало сейчас же, и в G.cleared — чтобы пережило и очистку кэша
+    клеток, и перезагрузку страницы. */
+ if(cb.own&&cb.key)safeFn(()=>{
+  G.cleared[cb.key]=true;
+  const [кх,ку]=String(cb.key).split(",").map(Number);
+  if(Number.isFinite(кх)&&Number.isFinite(ку)){
+   const клетка=cellContent(кх,ку);
+   if(клетка)клетка.monster=null;}});
  endCombat();
  const lootNames=loot.filter(l=>l.type==="mat").map(l=>l.name).join(", ");
  safeFn(()=>Bank.play("fate_hit",{seed:m.lvl,gain:0.55,maxSec:4}));
@@ -10677,6 +10760,11 @@ const CMD={
  am(act){
   try{
    closeActionMenu();
+   /* Пункт без имени: раньше на нём же и спотыкались — act.indexOf у
+      неопределённого значения. Ошибку ловил внешний перехват, но игрок
+      слышал «не удалось выполнить действие» вместо внятного ответа. */
+   act=(act===undefined||act===null)?"":String(act);
+   if(!act){narrate("Пункт меню не распознан.");return;}
    if(act==="close")return;
    if(act==="interact"){interactHere();return;}
    if(act.indexOf("move:")===0){move(act.slice(5));return;}
@@ -10914,7 +11002,16 @@ function tavernService(s){const c=cellContent(G.x,G.y);
  /* деревенские под-здания → разговоры с профильными НИПИ */
  const profMap={tavernV:"Трактирщик",marketV:"Торговец",forgeV:"Кузнец",schoolV:"Магистр"};
  const prof=profMap[s];if(prof){const npc=getNPC(G.x,G.y,8,prof);openNPC(npc.key);}}
-function playCards(bet){if(G.gold<bet){narrate(`Нужно ${bet} золота для ставки.`);return;}
+function playCards(bet){
+ /* Ставку раньше принимали любую. Кнопка из прежнего сохранения или сбитый
+    довод давали не-число: сравнение «золота меньше ставки» с ним всегда
+    ложно, игра снимала со счёта NaN, и весь кошель превращался в ничто —
+    а страж целостности через шесть секунд молча заменял его нулём. Игрок
+    терял всё золото и не слышал ни слова о том, почему. */
+ const ставка=Math.floor(Number(bet));
+ if(!Number.isFinite(ставка)||ставка<=0){narrate("Такую ставку принять нельзя.");return;}
+ bet=ставка;
+ if(G.gold<bet){narrate(`Нужно ${bet} золота для ставки.`);return;}
  G.gold-=bet;AE.ensure();
  const s=new SFX();for(let i=0;i<5;i++)s.after(i*90,()=>s.crackle());setTimeout(()=>s.stop(0.2),700);
  const you=2+Math.floor(Math.random()*13),foe=2+Math.floor(Math.random()*13);
@@ -11126,6 +11223,9 @@ function castSpell(i){const sp=SPELLS[i];
    именно weaponList() и ничего не удаляет из G.gear — оружие просто помечается
    активным, а не «перекладывается» между массивами. */
 function buyItem(key,i){const n=getNPCByKey(key);
+ /* Устаревшая кнопка лавки: ключ жителя уже ни на кого не указывает. Раньше
+    это роняло покупку на первом же обращении к товару. */
+ if(!n){narrate("Этот торговец здесь больше не стоит.");return;}
  const att=safeFn(()=>attitudeOf(n.race),{refuses:false});
  if(att.refuses){narrate(`${n.name} убирает товар: с вами здесь не торгуют. Народ «${n.race}» вас не жалует.`);return;}
  const stock=stockFor(n);const item=stock[+i];if(!item)return;

@@ -251,6 +251,43 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
  check('меню действий и панель магии отчитываются о закрытии',
   закрытия.меню.some(t=>/закрыт/i.test(t))&&закрытия.магия.some(t=>/закрыт/i.test(t)),закрытия);
 
+ /* ── 8в. Ни одна команда не превращает числа героя в «не число» ──
+    Ставку в карты принимали любую. Кнопка из прежнего сохранения давала
+    не-число: сравнение «золота меньше ставки» с ним всегда ложно, игра
+    снимала со счёта NaN, и весь кошель обращался в ничто — а страж
+    целостности через шесть секунд молча заменял его нулём. Игрок терял всё
+    золото, не услышав ни слова. Здесь через каждую команду прогоняются
+    заведомо негодные доводы, и после каждого вызова числа героя обязаны
+    остаться числами. */
+ const числа=await page.evaluate(async()=>{
+  const ключи=["gold","hp","hpMax","mana","manaMax","xp","level","str","agi","mind","cha","day","hour","x","y","water"];
+  const плохие=()=>ключи.filter(k=>!Number.isFinite(G[k]));
+  const out={порча:[],вызовов:0,команд:0};
+  const доводы=["","0","1","99","-1","мусор","мусор:мусор","1,1","x,y",":","::",undefined,null,"NaN","1e9"];
+  const сброс=()=>{G.place=null;G.ship=null;G.inCombat=false;G.loot=null;
+   G.x=1000;G.y=1000;G.gold=100;G.hp=G.hpMax=100;G.mana=G.manaMax=50;
+   G.xp=0;G.level=1;G.str=5;G.agi=5;G.mind=5;G.cha=5;G.day=1;G.hour=8;G.water=100;};
+  const имена=Object.keys(CMD).filter(n=>!/^(testall|silence|music)$/.test(n));
+  out.команд=имена.length;
+  for(const имя of имена){
+   for(const arg of доводы){
+    сброс();
+    try{while(activeLayer())closeTopUI();}catch(_){}
+    out.вызовов++;
+    try{CMD[имя](arg);}catch(e){out.порча.push({команда:имя,довод:String(arg),сбой:String(e).slice(0,70)});}
+    const п=плохие();
+    if(п.length)out.порча.push({команда:имя,довод:String(arg),
+     поля:п.map(k=>k+"="+String(G[k]))});
+    try{while(activeLayer())closeTopUI();}catch(_){}
+   }
+   await new Promise(z=>setTimeout(z,1));
+  }
+  сброс();
+  return out;});
+ check('ни одна команда с негодным доводом не роняет игру и не портит числа героя',
+  числа.порча.length===0&&числа.вызовов>1200,
+  {команд:числа.команд,вызовов:числа.вызовов,порча:числа.порча.slice(0,6)});
+
  /* ── 9. Отнятое системой касание обнуляет жест ── */
  const отмена=await page.evaluate(()=>{
   gesture={count:2,maxCount:2,id:7,x:10,y:10,t:Date.now(),moved:false,dir:null,target:null,ui:null};
