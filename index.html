@@ -2272,6 +2272,36 @@ function stepControl(el){
    return true;}
  }catch(_){}
  return false;}
+/* Пункт-справка: до него достаёт курсор, ему есть что сказать, но своего
+   действия у него нет — это не кнопка, не ссылка и не поле ввода. */
+function isInfoCard(el){
+ try{
+  if(!el||!el.tagName)return false;
+  if(/^(BUTTON|A|INPUT|SELECT|TEXTAREA|SUMMARY)$/.test(el.tagName))return false;
+  if(el.dataset&&(el.dataset.cmd||el.dataset.magicIndex!==undefined))return false;
+  const r=el.getAttribute&&el.getAttribute("role");
+  if(r==="button"||r==="link"||r==="checkbox"||r==="tab"||r==="menuitem")return false;
+  if(el.closest&&el.closest("button,a,[data-cmd],[role=\"button\"]"))return false;
+  return !!infoCardText(el);
+ }catch(_){return false;}}
+/* Полный текст такого пункта: сперва то, что игра и так о нём говорит,
+   потом — видимый текст без вложенных кнопок. */
+function infoCardText(el){
+ try{
+  const s=el.dataset&&el.dataset.speak;
+  if(s&&s.trim())return s.trim();
+  const c=el.cloneNode(true);
+  c.querySelectorAll&&c.querySelectorAll("button,a,input,select,textarea").forEach(x=>x.remove());
+  return (c.textContent||"").trim().replace(/\s+/g," ");
+ }catch(_){return "";}}
+function readInfoCard(el){
+ const t=infoCardText(el);
+ if(!t)return false;
+ /* Читаем заново и целиком, даже если это же самое только что называл свайп:
+    в том и смысл — свайп обрывается, а здесь игрок попросил дослушать. */
+ safeFn(()=>{lastAnnounced="";lastAnnouncedEl=null;});
+ narrate(t,{interrupt:true});
+ return true;}
 function activateElement(el){if(!el||el.disabled)return false;try{
  touchGate.lastUiTap=0;touchGate.lastUiEl=null;
  safeFn(()=>UI.nat("ui_activate",0.55));
@@ -2281,6 +2311,17 @@ function activateElement(el){if(!el||el.disabled)return false;try{
  if(el.dataset?.cmd){const parts=el.dataset.cmd.split(':');const fn=CMD[parts[0]];
   if(typeof fn==='function'){fn(parts.slice(1).join(':'),el);handled=true;}}
  if(!handled&&el.dataset?.magicIndex!==undefined){castSpell(Number(el.dataset.magicIndex));handled=true;}
+ /* ── Карточка-справка тоже должна отвечать на двойное касание ──
+    В окнах держав, политики, народов, богов, бестиария и в карточке героя
+    полторы сотни пунктов — это не кнопки, а досье: <div> с tabindex и
+    data-speak. Свайп их называл, а двойное касание не делало НИЧЕГО: click
+    по такому <div> некому слушать. Для незрячего игрока это прямое нарушение
+    главного правила игры — «двойное касание выполняет названный пункт».
+    Досье длинное, свайп его обрывает на середине, и услышать целиком было
+    нельзя никак. Теперь у такого пункта есть своё действие: прочитать себя
+    полностью, не листая. Кнопки, ссылки и поля ввода это не затрагивает —
+    у них своё дело, и они его делают как раньше. */
+ if(!handled&&isInfoCard(el)){readInfoCard(el);handled=true;}
  if(!handled)el.click?.();
  /* Окно подавления клика ставим ПОСЛЕ выполнения действия, а не до — иначе глобальный
     перехватчик click (ниже, с capture:true) гасит ещё и наш же собственный синтетический
@@ -2828,7 +2869,11 @@ function openActionMenu(){lastFocused=document.activeElement;
  narrate(`Меню действий: ${count} пунктов${G.place?", вы внутри: "+placeTitle():""}. Свайп — листать, двойное касание — выбрать.`);}
 function closeActionMenu(){const m=document.getElementById("actionMenu");
  if(!m)return; if(m.hidden)return;m.hidden=true;m.setAttribute("aria-hidden","true");UI.close();safeFn(()=>resetCursor());
- if(lastFocused&&lastFocused.focus)lastFocused.focus();}
+ if(lastFocused&&lastFocused.focus){silentFocus=true;safeFn(()=>lastFocused.focus());silentFocus=false;}
+ /* Пункт «Закрыть» в меню действий был единственным во всей игре, который на
+    двойное касание не отвечал ничем: меню исчезало молча, и игрок не знал,
+    закрылось оно или касание не дошло. */
+ safeFn(()=>narrate("Меню действий закрыто. Игровое поле.",{interrupt:true}));}
 
 /* ════════ ПАНЕЛЬ МАГИИ ════════ */
 function safeOpenMagicPanel(){
@@ -2849,7 +2894,10 @@ function safeOpenMagicPanel(){
   m.hidden=false;m.setAttribute('aria-hidden','false');UI.open();const first=list.querySelector('button');if(first)first.focus();narrate('Панель магии открыта. Свайп влево или вправо — выбрать слот. Двойное касание — применить.');
  }catch(e){try{console.error('Magic panel recovery',e);narrate('Панель магии временно недоступна.');}catch(x){}}
 }
-function closeMagicPanel(){const m=document.getElementById('magicPanel');if(!m)return;m.hidden=true;m.setAttribute('aria-hidden','true');UI.close();}
+function closeMagicPanel(){const m=document.getElementById('magicPanel');if(!m)return;
+ if(m.hidden)return;
+ m.hidden=true;m.setAttribute('aria-hidden','true');UI.close();
+ safeFn(()=>narrate("Панель магии закрыта.",{interrupt:true}));}
 
 /* ════════ РУКОВОДСТВО ════════ */
 const GUIDE=[
@@ -2862,6 +2910,8 @@ const GUIDE=[
  "ОДИН ПАЛЕЦ. Ведение пальцем, не отрывая, — ощупывание: игра называет то, чего вы касаетесь, и сразу обрывает предыдущую фразу. Одно касание — назвать пункт или клетку и больше ничего: никакое одиночное касание в игре ничего не выполняет, сколько бы палец ни лежал на месте. Двойное касание — активировать названное: пункт окна, а на игровом поле — действие здесь (войти в дверь, спуститься по лестнице, открыть сундук, помолиться у алтаря, собрать добычу). Свайп — шаг в сторону. Свайп с удержанием — бег.",
  "Ползунок настраивается тем же двойным касанием: оно прибавляет десятую часть шкалы и называет новое значение, а дойдя до края, возвращает к началу. Касание по ползунку его не двигает.",
  "В ОКНАХ И МЕНЮ есть текущий пункт — тот, который игра назвала последним. Свайп двигает его ровно на один пункт и называет только его: по дороге игра молчит, даже если палец прошёл над десятком строк. Медленное ведение пальцем — наоборот, называет всё под пальцем и делает текущим тот пункт, где палец оторвался. Двойное касание активирует текущий пункт, и попадать дважды в одну точку не нужно.",
+ "Открытое окно называет себя само: «Окно „Живой мир“. Выбрано: Закрыть». Закрытое отчитывается, куда вы вернулись: «Окно „Живой мир“ закрыто. Игровое поле». Прежде окно на открытии произносило одно слово — «Закрыть», — и по нему нельзя было понять ни куда вы попали, ни закрылось ли оно потом.",
+ "Двойное касание отвечает на ЛЮБОМ пункте, до которого достаёт курсор. У части строк своего действия нет — это справки: строка досье народа, бога, зверя, державы. Такая строка на двойное касание читает себя целиком, и в окнах не остаётся пунктов, которые молчат.",
  "ДВА ПАЛЬЦА. Касание — собрать ресурс под ногами: руду, травы, дерево, камень, кристаллы. Если открыто окно, то же касание его закрывает — собирать всё равно нечего, пока окно на экране. Свайп вниз — войти внутрь или спуститься на уровень ниже. Свайп вверх — подняться или выйти наружу. Свайп вбок — эхо-скан: игра перечислит объекты вокруг и проиграет их маяки с той стороны, где они стоят.",
  "ТРИ ПАЛЬЦА. Касание — вынуть или убрать оружие. Свайп вверх — меню действий, где собраны все кнопки игры. Свайп вниз или вбок — сводка «где я»: место, уровень подземелья, координаты, здоровье, мана, золото, день, час и ближайшее задание.",
  "Почему сбор переехал на два пальца. Раньше ресурс собирался одним касанием одного пальца — тем самым, которым игра называет пункты. Игрок, привыкший подтверждать выбор двумя касаниями, на игровом поле собирал ресурс дважды и слышал два ответа подряд. Теперь правило одно для всего: одно касание называет, двойное выполняет, а сбор — отдельный жест двумя пальцами.",
@@ -5260,7 +5310,10 @@ const BEACON_SAMPLE={
 const BEACON_ROLE={
  res_tree:"rustle", res_stone:"deep_thud", res_ore:"clang_hard",
  res_herbs:"glade_marimba", res_berry:"spark_glock", res_crystal:"fx_crystal",
- res_shell:"shore_wash", res_bone:"collapse"};
+ res_shell:"shore_wash", res_bone:"collapse",
+ /* Портовый рог: отход и приход корабля звали маяк «port_horn», а такого
+    маяка нигде не было — сигнал молчал. Роль в банке для него есть давно. */
+ port_horn:"port_horn"};
 
 /* ── ГОЛОСА ДВЕНАДЦАТИ БОГОВ ──
    У каждого бога теперь своя живая нота: арфа зари, туба горна, флейта луны,
@@ -5321,7 +5374,9 @@ const LIVE_SCENE={
  market:["trade_m","trade_f","hall_market","throng_hail_m","battle_wood"],
  tavern:["trade_f","throng_hail_f","throng_yes","wild_hearth","wild_fire"],
  port:["hall_dock","sky_wave","throng_coming","hall_gate"],
- forge:["craft_saw","craft_wood","wild_anvil","battle_metal"],
+ /* «battle_metal» здесь была опечаткой: такой роли в банке нет, и кузница
+    теряла один голос из четырёх. Молот по наковальне — forge_hammer. */
+ forge:["craft_saw","craft_wood","wild_anvil","forge_hammer"],
  temple:["hall_temple","throng_lord"],
  school:["arte_book","arte_page"],
  tower:["cast_teleport","deep_portal"],
@@ -10178,8 +10233,10 @@ function playWeaponCombatSfx(hit,dir="N",dmg=6){try{AE.ensure();
   const w=weaponVoiceRole();
   const r=w==="bow_release"?"battle_arrowhit":w==="axe_chop"?"battle_stab":
    w==="spear_thrust"?"battle_pike":"battle_sword";
-  Bank.play(r,{seed:Math.floor(Math.random()*97),gain:0.5,maxSec:2});
-  setTimeout(()=>safeFn(()=>Bank.play("battle_flesh",{seed:Math.floor(Math.random()*97),gain:0.45,maxSec:2})),90);}),140);
+  Bank.play(r,{seed:Math.floor(Math.random()*97),gain:0.5,maxSec:2});}),140);
+ /* Здесь стоял ещё один слой — «battle_flesh». Такой роли в банке нет и не
+    было, поэтому слой все эти дни молчал. Глухой удар по телу и так звучит
+    ниже (dull_hit / metal_hit), второй раз он не нужен. */
  /* Стрела попадает в цель иначе, чем клинок: свист и глухой удар древка. */
  if(weaponVoiceRole()==="bow_release")safeFn(()=>{
   /* Выстрел из лука слышен в три такта: тетива, полёт, попадание. */
@@ -10686,7 +10743,8 @@ const CMD={
    ?`Указатель на перекрёстке. ${ways.map(w=>`${w.name} — ${w.dir}, ${w.d} ${plural(w.d,"шаг","шага","шагов")}`).join(". ")}.`
    :"Доски указателя пусты: ближних селений отсюда не видно.");},
  maplegend(){narrate("Легенда: вы — компас в центре. Замок, деревня — дома, таверна — кружка, кузница — молот, храм, школа, кланхолл — щит, башня, руины, странник. Ресурсы: дерево, камень, руда, травы, кристалл. Монстры — черепа. Каждая клетка озвучивает объект, направление и расстояние в шагах.");},
- mapcell(arg){const [dx,dy]=arg.split(",").map(Number);
+ mapcell(arg){const [dx,dy]=String(arg).split(",").map(Number);
+  if(!Number.isFinite(dx)||!Number.isFinite(dy)){narrate("Эта клетка карты больше не читается.");return;}
   const x=G.x+dx,y=G.y+dy;
   if(x<0||y<0||x>=WORLD||y>=WORLD){narrate("Край мира.");return;}
   const c=cellContent(x,y),d=Math.max(Math.abs(dx),Math.abs(dy));
@@ -10705,7 +10763,11 @@ function rumor(){
 function getNPCByKey(key){
  const parts=String(key).split(",");
  const prof=parts[3]?decodeURIComponent(parts[3]):null;   /* профессия, заданная зданием */
- return getNPC(Number(parts[0]),Number(parts[1]),Number(parts[2]),prof);}
+ const x=Number(parts[0]),y=Number(parts[1]),i=Number(parts[2]);
+ /* Кнопка могла остаться от прежнего сохранения или от другого окна: ключ
+    разбирается в «не число», и раньше это роняло генератор молча. */
+ if(!Number.isFinite(x)||!Number.isFinite(y)||!Number.isFinite(i))return null;
+ return getNPC(x,y,i,prof);}
 function interactHere(){
  if(G.ship){useHere();return;}
  if(G.place){useHere();return;}
@@ -10737,7 +10799,8 @@ function look(){
  narrate(`${c.terrain[1]}. ${c.terrain[2]} ${extra}`);}
 
 /* ════════ ЗДАНИЯ ════════ */
-function openBuilding(c){const s=c.structure;
+function openBuilding(c){const s=c&&c.structure;
+ if(!s){narrate("Здесь нет постройки.");return;}
  document.getElementById("bldTitle").textContent=iconFor(s.type)+" "+s.name;
  const b=document.getElementById("bldBody");let html=`<div class="list-line">${bldDesc(s.type)}</div>`;
  if(s.type==="village"){
@@ -10959,6 +11022,7 @@ function searchRuins(){const key=G.x+","+G.y;
   const c=cellContent(G.x,G.y);c.monster=m;startCombat(c);return;}
  narrate("Пусто. Только пыль и эхо.");}
 function learnSpell(i){const sp=SPELLS[i];
+ if(!sp){narrate("Такому заклинанию здесь не учат.");return;}
  if(G.spells.includes(sp.n)){narrate("Это заклинание уже изучено.");return;}
  if(G.gold<sp.price){narrate(`Нужно ${sp.price} золота.`);return;}
  G.gold-=sp.price;G.spells.push(sp.n);UI.fanfare();
@@ -11391,6 +11455,7 @@ function takeNPCQuest(n){
  narrate(`${n.name} берёт тебя за плечо и объясняет поручение. ${q.text}${details}${chainWord} После выполнения возвращайся ко мне.`);safeFn(()=>UI.fanfare());saveGame(true);openNPC(n.key);
 }
 function openNPC(key,silent){const n=getNPCByKey(key);
+ if(!n){narrate("Этого жителя здесь больше нет.");return;}
  document.getElementById("npcTitle").textContent=`🧑 ${n.name}`;
  /* Задание этого жителя ищется по нему самому: у шагов цепочки номера
     разные, а житель один. Старый способ оставлен для прежних сохранений. */
@@ -11521,14 +11586,48 @@ function completeQuest(id){
  checkLevelUp();refresh();renderQuests();}
 
 /* ════════ РЕНДЕР ПАНЕЛЕЙ ════════ */
+/* Имя окна: сначала подпись для чтеца, затем заголовок в шапке. Нужно и при
+   открытии, и при закрытии — незрячий игрок обязан знать, куда он попал и
+   откуда вышел. */
+function modalTitleText(m){
+ try{
+  if(!m)return "";
+  const lab=m.getAttribute&&m.getAttribute("aria-label");
+  if(lab&&lab.trim())return lab.trim();
+  const h=m.querySelector&&m.querySelector("h2,h3");
+  if(!h)return "";
+  const c=h.cloneNode(true);
+  c.querySelectorAll&&c.querySelectorAll("button,a").forEach(x=>x.remove());
+  return (c.textContent||"").trim().replace(/\s+/g," ");
+ }catch(_){return "";}}
 function openModal(id){const m=document.getElementById(id);if(!m||!m.hidden)return;
  lastFocused=document.activeElement;m.hidden=false;modalStack.push(m);UI.open();
  safeFn(()=>resetCursor());
  safeFn(()=>Bank.play("inventory_open",{seed:modalStack.length,gain:0.45}));
- const cb=m.querySelector('[data-cmd="close"]');if(cb)cb.focus();}
-function closeModal(m){if(!m)return;m.hidden=true;UI.close();safeFn(()=>resetCursor());
+ /* Раньше открытое окно называло ровно одно слово — «Закрыть»: фокус садился
+    на крестик, и обработчик focusin читал его. Игрок не знал, куда попал.
+    Теперь окно представляется само: имя и то, на чём стоит выбор, — одной
+    фразой, чтобы имя окна не обрывало название пункта и наоборот. */
+ const cb=m.querySelector('[data-cmd="close"]');
+ if(cb){silentFocus=true;safeFn(()=>cb.focus());silentFocus=false;}
+ /* Число пунктов здесь не называется намеренно: содержимое многих окон
+    рисуется уже ПОСЛЕ openModal, и счёт вышел бы то верным, то нулевым. */
+ safeFn(()=>{
+  const имя=modalTitleText(m);
+  const пункт=cb?((cb.dataset&&cb.dataset.speak)||(cb.textContent||"").trim().replace(/\s+/g," ")):"";
+  if(!имя&&!пункт)return;
+  narrate(имя?`Окно «${имя}». Выбрано: ${пункт||"первый пункт"}.`:`Выбрано: ${пункт}.`,{interrupt:true});});}
+function closeModal(m){if(!m)return;
+ const имя=safeFn(()=>modalTitleText(m),"");
+ m.hidden=true;UI.close();safeFn(()=>resetCursor());
  const i=modalStack.indexOf(m);if(i>=0)modalStack.splice(i,1);
- if(lastFocused&&lastFocused.focus)lastFocused.focus();}
+ if(lastFocused&&lastFocused.focus){silentFocus=true;safeFn(()=>lastFocused.focus());silentFocus=false;}
+ /* Закрытое окно тоже обязано отчитаться: иначе игрок жмёт «Закрыть» и
+    слышит тишину — по ней не понять, закрылось ли окно вообще. */
+ safeFn(()=>{
+  const низ=modalStack[modalStack.length-1];
+  const куда=низ?`Окно «${modalTitleText(низ)}»`:"Игровое поле";
+  narrate(имя?`Окно «${имя}» закрыто. ${куда}.`:`${куда}.`,{interrupt:true});});}
 function renderInventory(){
  try{
   normalizeWeaponState();
@@ -11775,6 +11874,7 @@ function renderCraft(){
 CMD.craftdo=i=>{const R=[[["камень",2],["дерево",1]],[["трава",2],["ягоды",1]],[["дерево",1],["трава",1]],
   [["дерево",1],["трава",2]],[["трава",3],["дерево",1]]];
  const names=["Каменное копьё","Травяной отвар","Факел","Удочка","Рыболовная сеть"];
+ if(!R[i]){narrate("Такого рецепта нет.");return;}
  for(const[k,v]of R[i])if((G.inv[k]||0)<v){narrate(`Не хватает: ${k}.`);return;}
  for(const[k,v]of R[i])G.inv[k]-=v;
  if(i===0){G.str+=2;journal("Крафт: Каменное копьё.");}
@@ -12574,9 +12674,15 @@ window.addEventListener("beforeunload",()=>{try{stopRun();saveGame(true);}catch(
  document.addEventListener('visibilitychange',()=>{
   if(document.hidden){haltActivity();persist();}
   else safe(()=>{if(typeof AE!=='undefined'&&AE.ensure)AE.ensure();},null,'resume');});
+ /* Система может отобрать касание у страницы (звонок, шторка, «назад» краем
+    экрана). Тогда touchend не придёт вовсе, а незавершённый жест остался бы
+    висеть: следующий отрыв пальца читался как хвост прежнего свайпа. Здесь всё
+    и обнуляется — сам жест, отложенный голос ощупывания и любое движение.
+    Раньше на этом месте звался cancelMagicHold, которого в игре нет. */
  document.addEventListener('touchcancel',()=>safe(()=>{
-  if(typeof runState!=='undefined')haltActivity();
-  if(typeof cancelMagicHold==='function')cancelMagicHold();},null,'touchcancel'),{passive:true});
+  if(typeof haltActivity==='function')haltActivity();
+  if(typeof cancelExploreHold==='function')cancelExploreHold();
+  if(typeof resetGesture==='function')resetGesture();},null,'touchcancel'),{passive:true});
 
  setInterval(()=>safe(repairState,null,'interval'),6000);
  setTimeout(()=>safe(()=>{repairState();if(typeof normalizeWeaponState==='function')normalizeWeaponState();if(typeof refresh==='function')refresh();},null,'init'),0);

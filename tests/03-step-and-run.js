@@ -45,7 +45,12 @@ const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(e!==undefined?' :
  const until=async(fn,ms=2000)=>{const t=Date.now();
   while(Date.now()-t<ms){if(await page.evaluate(fn))return true;await page.waitForTimeout(50);}
   return false;};
- const startY=p1[1];
+ /* Шаг мог поднять случайное событие мира, и его окно забрало бы свайп себе:
+    открытый слой в игре — это список, по нему свайп листает пункты, а не
+    бежит. Закрываем всё, что всплыло, иначе проверка бега мерила бы не бег. */
+ await page.evaluate(()=>{let n=0;while(activeLayer()&&n++<8)closeTopUI();});
+ await page.waitForTimeout(120);
+ const startY=(await page.evaluate(()=>[G.x,G.y]))[1];
  await swipe(200,400,200,250,6,900);
  const moved=await until(new Function('return G.y<'+startY),2000);
  const p2=await page.evaluate(()=>[G.x,G.y]);

@@ -60,6 +60,7 @@ GitHub Pages** (`/https-ivan-petrov.github.io-grani-mirov-/`). Это важно
 | 34-surfaces-stairs-and-chronicle | Поверхности под ногой, лестничные марши, хроника войн и званий |
 | 35-books-and-knowledge | Реестр знаний, изучение книг, навыки, свитки и обстановка |
 | 36-fantasy-sound-library | Живые записи Flare и 0 A.D.: файлы, авторство, разделы, музыка |
+| 37-gestures-crashes-and-mute-items | Двойное касание отвечает на каждом пункте, сбор двумя пальцами, испорченные вызовы не роняют игру |
 
 ## Как устроен набор
 
