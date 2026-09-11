@@ -168,6 +168,44 @@ const NEW_DIRS=["arte","deep","foe","cast","hero","wild","trade","score",
  check('запись из каждой новой папки проигрывается браузером',
   !игра.плохие.length&&игра.проверено===NEW_DIRS.length,игра);
 
+ /* ── SuperTuxKart: сорок записей с пофайловым авторством ──
+    Библиотека росла четвёртый раз, и каждый раз одни и те же грабли: роль
+    объявили, а файла нет; файл положили, а роль никуда не подключили; папку
+    добавили, а в каталог энциклопедии не внесли — и раздел пропал из свода.
+    Здесь всё это проверяется разом, включая то, ради чего записи и брались:
+    что они и вправду звучат в игре, а не лежат мёртвым грузом. */
+ const стк=await page.evaluate(async()=>{
+  const роли=Object.keys(SOUND_BANK).filter(k=>SOUND_BANK[k].f.some(f=>f.startsWith("stk/")));
+  const файлы=[...new Set(роли.flatMap(k=>SOUND_BANK[k].f).filter(f=>f.startsWith("stk/")))];
+  const битые=[];
+  for(const f of файлы){
+   const ок=await new Promise(res=>{const a=new Audio(Bank.url(f));a.preload="metadata";
+    const t=setTimeout(()=>res(false),8000);
+    a.addEventListener("loadedmetadata",()=>{clearTimeout(t);res(a.duration>0.05);},{once:true});
+    a.addEventListener("error",()=>{clearTimeout(t);res(false);},{once:true});});
+   if(!ок)битые.push(f);}
+  /* Папка обязана быть в каталоге разделов и в группе энциклопедии. */
+  const вКаталоге=!!BANK_CATS["stk"];
+  const вГруппе=BANK_GROUPS.some(g=>(g.dirs||[]).includes("stk"));
+  /* Каждая тема мира указывает на существующую роль. */
+  const темыНет=Object.entries(MUSIC_TRACK).filter(([,v])=>!SOUND_BANK[v]).map(([k,v])=>k+"→"+v);
+  /* Роли не лежат мёртвым грузом: игра их зовёт. */
+  const исходник=document.documentElement.outerHTML;
+  /* Объявление роли в банке идёт без кавычек (stk_river:{...}), а всякий её
+     вызов — в кавычках. Значит, роль зовут, если имя в кавычках встречается
+     хоть раз. */
+  const мёртвые=роли.filter(r=>исходник.indexOf('"'+r+'"')<0);
+  return {ролей:роли.length,файлов:файлы.length,битые,вКаталоге,вГруппе,темыНет,мёртвые,
+   темМира:Object.keys(MUSIC_TRACK).length};});
+ check('сорок записей SuperTuxKart на месте и читаются браузером',
+  стк.файлов>=40&&стк.битые.length===0,{файлов:стк.файлов,битые:стк.битые.slice(0,5)});
+ check('их папка внесена и в каталог разделов, и в группу энциклопедии',
+  стк.вКаталоге&&стк.вГруппе,{каталог:стк.вКаталоге,группа:стк.вГруппе});
+ check('ни одна новая роль не лежит мёртвым грузом: игра зовёт каждую',
+  стк.мёртвые.length===0,стк.мёртвые.slice(0,6));
+ check('оркестр мира вырос, и каждая тема указывает на существующую запись',
+  стк.темМира>=29&&стк.темыНет.length===0,{тем:стк.темМира,нет:стк.темыНет});
+
  check('игра не выбрасывала ошибок за весь прогон',errors.length===0,errors.slice(0,3));
 
  console.log(results.join('\n'));
