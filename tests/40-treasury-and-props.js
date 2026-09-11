@@ -328,8 +328,13 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
     G.place={bx,by,stype,depth:глубина,name:"м",x,y};
     const pr=safeFn(()=>propAt(x,y),null);if(pr)выпало.add(pr.id);}
    const надо=new Set(PROPS_BY_PLACE[место]);
+   /* Промысел места добавляет к обстановке своё: в гадальной таверне зеркало,
+      в костянике башни — кости. Это тоже «своё» для такого места. */
+   const промысловые=new Set();
+   ((typeof PLACE_TRAITS!=="undefined"&&PLACE_TRAITS[stype])||[])
+    .forEach(t=>(t.вещи||[]).forEach(v=>промысловые.add(v)));
    for(const id of надо)if(!выпало.has(id))промахи.push(`${место}: «${id}» не выпадает`);
-   for(const id of выпало)if(!надо.has(id))промахи.push(`${место}: чужой «${id}»`);}
+   for(const id of выпало)if(!надо.has(id)&&!промысловые.has(id))промахи.push(`${место}: чужой «${id}»`);}
   return {дубли,беды,промахи};
  });
 
