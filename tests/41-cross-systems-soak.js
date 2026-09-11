@@ -50,6 +50,22 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
    if(G.inCombat&&!G.combat)б.push("бой без противника");
    if(G.combat&&!G.inCombat)б.push("противник без боя");
    if(G.place&&G.ship)б.push("одновременно в здании и на корабле");
+   /* ── Законы неба ──
+      Высота живёт по своим правилам, и нарушить их — значит выбросить игрока
+      из игры молча: летящий внутри постройки, летящий бескрылым народом,
+      высота выше потолка своего народа или крыло, устающее без конца. */
+   const в=Number(G.alt);
+   if(!Number.isFinite(в)||в<0)б.push(`высота ${G.alt}`);
+   else if(в>ALT_MAX)б.push(`высота ${в} выше предела мира ${ALT_MAX}`);
+   else if(в>0){
+    if(G.place)б.push("летит внутри постройки");
+    if(G.ship)б.push("летит с палубы");
+    const пот=safeFn(()=>wingSpan(),0);
+    if(!пот)б.push(`летит бескрылым народом «${G.race}»`);
+    else if(в>пот)б.push(`высота ${в} выше потолка народа (${пот})`);}
+   const уст=Number(G.wingTired);
+   if(!Number.isFinite(уст)||уст<0)б.push(`усталость крыла ${G.wingTired}`);
+   else if(уст>WING_LIMIT+2)б.push(`усталость крыла ${уст} сверх предела`);
    if(G.place){
     const p=G.place;
     for(const k of ["bx","by","x","y","depth"])
@@ -76,6 +92,7 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   const было=[];
   let шагов=0,ответов=0,сбылось=0;
   const немые=[];
+  const высоты=new Set([0]);
   const R=()=>Math.random();
   const сторона=()=>["N","S","E","W"][Math.floor(R()*4)];
   const тихо=f=>{try{return f();}catch(e){беды.push("сломалось: "+(e&&e.message||e));return null;}};
@@ -117,6 +134,19 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
    ["продать всё",()=>CMD.sellall&&CMD.sellall()],
    ["летопись",()=>окно("modal-journal",()=>CMD.journal())],
    ["мир",()=>окно("modal-world",()=>CMD.world())],
+   /* ── Небо в общей мешанине ──
+      Крыло, снижение и посадка бросаются вперемешку со всем остальным: именно
+      так и вскрываются сочетания вроде «взлетел, вошёл в дом, сохранился». */
+   ["взлёт",()=>{if(!canTakeOff()||(Number(G.alt)||0)>=wingSpan())return false;takeOff();}],
+   ["снижение",()=>{if(!inFlight())return false;descend();}],
+   ["посадка",()=>{if(!inFlight())return false;
+     const a=Number(G.alt)||0;for(let i=0;i<a;i++)descend();}],
+   ["сменить народ",()=>{const н=ALL_RACE_NAMES[Math.floor(R()*ALL_RACE_NAMES.length)];
+     if(!н||н===G.race)return false;
+     /* Смена народа на лету не имеет права оставить героя выше своего потолка. */
+     G.race=н;const пот=wingSpan();
+     if((Number(G.alt)||0)>пот){const a=Number(G.alt)||0;for(let i=0;i<a-пот;i++)descend();}
+     return false;}],
    ["настройки",()=>{settings.hrtf=R()<0.5?1:0;settings.scape=R()<0.5?1:0;return false;}],
    ["окно",()=>{const ид=["modal-inventory","modal-character","modal-map","modal-quests",
      "modal-saves","modal-settings","modal-world","modal-journal"];
@@ -143,6 +173,7 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
     сбылось++;
     if(window.__said.join("").trim())ответов++;
     else немые.push(имя);}
+   высоты.add(Number(G.alt)||0);
    const б=window.__законы();
    if(б.length){беды.push(`${имя}: ${б.join("; ")}`);
     /* чиним, чтобы дальше проверять новое, а не то же самое */
@@ -171,6 +202,7 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   const отвечаетШаг=!!window.__said.join("").trim()||сдвинулся;
   const счёт={};for(const н of немые)счёт[н]=(счёт[н]||0)+1;
   return {шагов,ответов,сбылось,беды,было,отвечаетДействие,отвечаетШаг,
+   летал:высоты.size>1,высоты:[...высоты].sort(),
    немые:Object.entries(счёт).sort((a,b)=>b[1]-a[1]).slice(0,8),
    доляОтветов:Math.round(100*ответов/Math.max(1,сбылось))};
  });
@@ -228,6 +260,12 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
       if(cc.monster&&!cc.structure){G.x=1000+dx;G.y=1000+dy;return cc;}}return null;},null);
     if(c)safeFn(()=>startCombat(c));},
    "с открытым окном":()=>{базово();safeFn(()=>openModal("modal-inv"));},
+   /* ── Небо: три положения, в которых игра обязана вести себя разумно ── */
+   "на крыле, низко":()=>{базово();G.race="Пегасы";safeFn(()=>takeOff());},
+   "на крыле, под потолком":()=>{базово();G.race="Драконы-прародители";
+    for(let i=0;i<ALT_MAX+2;i++)safeFn(()=>takeOff());},
+   "на крыле с пустым крылом":()=>{базово();G.race="Гарпии";safeFn(()=>takeOff());
+    G.wingTired=WING_LIMIT-0.5;},
   };
   const команды=Object.keys(CMD);
   const доводы={mapcell:[1,1],craftdo:[0],cast:[0],readpage:[0],slotsave:[1],slotload:[1],
@@ -392,6 +430,8 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
  check('после трёх тысяч случайных шагов шаг в сторону отвечает словом или движением',
   прогон.отвечаетШаг===true,прогон);
 
+ check('за весь смешанный прогон игра побывала и в небе',
+  прогон.летал===true,{летал:прогон.летал,высоты:прогон.высоты});
  check('крест состояний и команд пройден целиком',
   крест.вызовов>=500,крест.вызовов);
  check('ни одна команда не ломается ни в одном положении героя',
