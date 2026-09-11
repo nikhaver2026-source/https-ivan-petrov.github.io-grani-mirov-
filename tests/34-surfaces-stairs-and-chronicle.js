@@ -45,20 +45,42 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   surf.тракт==="gravel"&&surf.перекрёсток==="stone",surf);
  check('в грозу земля раскисает',surf.гроза==="mud",surf.гроза);
 
+ /* Пол внутри — не одна поверхность на всё место, а СМЕСЬ: у каждого вида
+    построек и у каждой глубины своя, а какая под ногой именно здесь, решают
+    координаты клетки. Прежде тут проверялось одно значение на постройку, и
+    три разных подвала звучали совершенно одинаково. Теперь проверяется то,
+    что и должно: смесь узнаваема (в ней есть подпись места), места
+    различаются между собой, и внутри одного места пол не однообразен. */
  const surfIn=await page.evaluate(()=>{
-  const out={};
-  const проба=(stype,depth)=>{G.place={kind:depth?"dungeon":(PLACE_KIND[stype]||"house"),
-   bx:600,by:600,stype,name:"Проба",depth,x:1,y:1};return indoorSurface();};
-  out.храм=проба("temple",0);out.кузня=проба("forge",0);out.рынок=проба("market",0);
-  out.таверна=проба("tavern",0);out.порт=проба("port",0);
-  out.верх=проба("ruins",1);out.середина=проба("ruins",3);out.дно=проба("ruins",5);
+  const набор=(stype,depth)=>{
+   G.place={kind:depth?"dungeon":(PLACE_KIND[stype]||"house"),
+    bx:600,by:600,stype,name:"Проба",depth,x:1,y:1};
+   const s=new Set();
+   for(let x=1;x<18;x++)for(let y=1;y<12;y++){G.place.x=x;G.place.y=y;s.add(indoorSurface());}
+   return [...s].sort();};
+  const out={храм:набор("temple",0),кузня:набор("forge",0),рынок:набор("market",0),
+   таверна:набор("tavern",0),порт:набор("port",0),
+   верх:набор("ruins",1),середина:набор("ruins",3),дно:набор("ruins",5)};
+  /* Два разных подвала одной глубины раскладывают смесь по-своему. */
+  const ряд=(bx,by)=>{G.place={kind:"dungeon",bx,by,stype:"ruins",name:"м",depth:2,x:1,y:1};
+   const r=[];for(let x=1;x<14;x++){G.place.x=x;G.place.y=5;r.push(indoorSurface());}return r.join(",");};
+  out.подвалА=ряд(1,1);out.подвалБ=ряд(9,2);
   G.place=null;
   return out;});
- check('внутри поверхность зависит от постройки',
-  surfIn.храм==="marble"&&surfIn.кузня==="metal"&&surfIn.рынок==="straw"&&
-  surfIn.таверна==="plank"&&surfIn.порт==="bridge",surfIn);
- check('глубина слышна по шагу: щебень, кости, кристалл',
-  surfIn.верх==="gravel"&&surfIn.середина==="bone"&&surfIn.дно==="crystal",surfIn);
+ check('пол внутри узнаётся по смеси: у каждой постройки своя подпись',
+  surfIn.храм.includes("marble")&&surfIn.кузня.includes("metal")&&
+  surfIn.рынок.includes("straw")&&surfIn.таверна.includes("plank")&&
+  surfIn.порт.includes("bridge"),surfIn);
+ check('разные постройки различаются полом, а не звучат одинаково',
+  new Set([surfIn.храм.join(),surfIn.кузня.join(),surfIn.рынок.join(),
+   surfIn.таверна.join(),surfIn.порт.join()]).size===5,surfIn);
+ check('внутри одного места пол не однообразен',
+  surfIn.храм.length>=2&&surfIn.кузня.length>=2&&surfIn.верх.length>=2,surfIn);
+ check('глубина слышна по шагу: щебень наверху, кости в середине, хрусталь на дне',
+  surfIn.верх.includes("gravel")&&surfIn.середина.includes("bone")&&
+  surfIn.дно.includes("crystal")&&!surfIn.верх.includes("crystal"),surfIn);
+ check('два подвала одной глубины звучат по-разному',
+  surfIn.подвалА!==surfIn.подвалБ,{а:surfIn.подвалА.slice(0,40),б:surfIn.подвалБ.slice(0,40)});
 
  const surfSay=await page.evaluate(()=>{
   const плохие=[];

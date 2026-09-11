@@ -9816,10 +9816,10 @@ function genLevel(bx,by,depth,stype){
   [[-1,0,"S"],[1,0,"S"],[0,-1,"P"],[0,1,"B"],[1,1,"T"],[-1,-1,"T"]].forEach(([dx,dy,ch])=>{
    const x=sqx+dx*2,y=sqy+dy*2;
    if(x>1&&y>1&&x<w-2&&y<h-2&&g[y][x]===".")g[y][x]=ch;});
-  /* Спуск в подземелье под городом — в дальнем квартале. */
-  if(blocks.length){const b=blocks[blocks.length-1],r=b.rooms[b.rooms.length-1];
-   const x=r.x0,y=r.y0;
-   if(g[y][x]===".")g[y][x]=">";else if(g[r.y1][r.x1]===".")g[r.y1][r.x1]=">";}
+  /* Спуск в подземелье под городом — верхний конец шахты, чтобы подземелье
+     легло ровно под ним, а не «где-то там». */
+  {const низ=shaftSpot(bx,by,depth);
+   put(низ.x,низ.y,">");}
   if(stype==="castle"&&blocks[0]){const b=blocks[0],r=b.rooms[0];
    const x=r.x1,y=r.y1;if(g[y][x]===".")g[y][x]="C";}
   /* Городская книжность: у площади всегда есть где почитать и что потрогать,
@@ -9869,6 +9869,18 @@ function genLevel(bx,by,depth,stype){
   if(g[ey][2]!==".")g[ey][2]=".";
  }else if(kind==="house"){
   const st=rooms[0]||{cx:2,cy:2};g[st.cy][st.cx]="<";entry={x:st.cx,y:st.cy};
+  /* ── Ход в подвал ставится ПЕРВЫМ ──
+     Верхний конец шахты: подвал ложится ровно под ним. Клетка занимается до
+     всего остального нарочно. Когда шахта прорубалась последней, она затирала
+     то, что уже стояло на этой клетке, — и в одном храме из полусотни пропадал
+     алтарь. Теперь всё прочее раскладывается по свободному полу и шахту
+     обходит само. */
+  {const низ=shaftSpot(bx,by,depth);
+   /* Изредка шахта приходится ровно на порог дома. Тогда ход в подвал кладётся
+      по-старому, где найдётся пол: подвал в таком доме ляжет не отвесно, и это
+      честнее, чем дом вовсе без спуска. Переход по глубине такой случай знает
+      и ставит игрока на вход яруса. */
+   if(низ.x!==st.cx||низ.y!==st.cy)put(низ.x,низ.y,">");else place(">",11);}
   place("N",1);place("C",2);place("T",3);
   if(stype==="temple")place("A",4);
   if(stype==="tavern"){place("N",5);place("S",6);}
@@ -9893,11 +9905,18 @@ function genLevel(bx,by,depth,stype){
      три из пяти, и две постройки из пяти оказывались плоскими: вошёл, обошёл
      одну комнату — и всё. Теперь любая постройка объёмная: наземный ярус и
      хотя бы один подземный. */
-  place(">",11);
+
  }else{
-  const st=rooms[0]||{cx:2,cy:2};g[st.cy][st.cx]="<";entry={x:st.cx,y:st.cy};
+  /* Подъём наверх — это верхний конец шахты, пришедшей с яруса выше; на самом
+     верхнем ярусе он же выход наружу и стоит в первой комнате. Спуск — нижний
+     конец шахты, уходящей ниже. Обе клетки прорубаются насильно: связность
+     уровня чинится ниже по коду, и она к ним ход пробьёт. */
+  const верх=depth>0?shaftSpot(bx,by,depth-1):(rooms[0]||{cx:2,cy:2});
+  const вх={x:depth>0?верх.x:верх.cx,y:depth>0?верх.y:верх.cy};
+  put(вх.x,вх.y,"<");entry={x:вх.x,y:вх.y};
   const deeper=depth<MAX_DEPTH;
-  if(deeper)place(">",1);
+  if(deeper){const низ=shaftSpot(bx,by,depth);
+   if(низ.x!==вх.x||низ.y!==вх.y)put(низ.x,низ.y,">");}
   const mobs=2+Math.floor(R(71)*3)+Math.floor(depth/2);
   for(let i=0;i<mobs;i++)place("M",80+i);
   const chests=1+Math.floor(R(72)*2)+(depth>=3?1:0);
@@ -10278,7 +10297,20 @@ function changeDepth(delta){
  if(nd<0){narrate("Выше подниматься некуда.");return false;}
  if(nd>MAX_DEPTH){narrate("Глубже хода нет: дальше сплошной камень.");return false;}
  const lvl=genLevel(p.bx,p.by,nd,p.stype);
- p.depth=nd;p.x=lvl.entry.x;p.y=lvl.entry.y;
+ /* ── ГДЕ ИГРОК ОКАЗЫВАЕТСЯ ──
+    Прежде его переносило на «вход яруса» — клетку, никак не связанную с
+    лестницей, по которой он шёл, и мир переставал быть местом. Шахта
+    вертикальна: сойдя с клетки (x,y), игрок встаёт на (x,y) яруса ниже, где
+    его ждёт подъём наверх; поднявшись, он вернётся на ту же клетку. Если по
+    какой-то причине там не лестница, отступаем на вход яруса — но это уже
+    крайний случай, а не правило. */
+ const шахта=safeFn(()=>shaftSpot(p.bx,p.by,delta>0?p.depth:nd),null);
+ p.depth=nd;
+ const годится=шахта&&safeFn(()=>{
+  const t=lvl.g[шахта.y]&&lvl.g[шахта.y][шахта.x];
+  return t===(delta>0?"<":">");},false);
+ if(годится){p.x=шахта.x;p.y=шахта.y;}
+ else{p.x=lvl.entry.x;p.y=lvl.entry.y;}
  /* Ярусом ниже отзвук длиннее и темнее — глубину слышно по самому эху. */
  safeFn(()=>{Room.set();Scape.stop();});
  /* Глубину слышно: верх — ровный гул, середина — тёмный, низ — глубинный,
@@ -10384,6 +10416,31 @@ function pingSurroundings(rad=3,max=4){
 const FLIGHT_OPP={N:"S",S:"N",W:"E",E:"W"};
 /* Длина марша постоянна для этой лестницы: одна и та же лестница всегда
    одной длины, и игрок её запоминает. */
+/* ── ЛЕСТНИЧНАЯ ШАХТА ──
+   Лестницы были ненастоящими. Марш считал ступени, а внизу игрока переносило
+   на «вход яруса» — клетку, никак не связанную с той лестницей, по которой он
+   шёл. Спустился и сразу поднялся — и оказался в другом конце уровня. Мир от
+   этого переставал быть местом: лестница вела не вниз, а «куда игра решит».
+
+   Теперь между ярусами есть ШАХТА — одна и та же клетка на обоих. Спуск с
+   клетки (x,y) яруса d выводит ровно на (x,y) яруса d+1, где стоит подъём
+   наверх; поднявшись, вы вернётесь на ту же клетку, с которой ушли. Клетка
+   выведена из координат постройки и глубины, поэтому у каждой шахты своё
+   место, и оно не меняется никогда.
+
+   Клетка держится в пределах 3..17 по ширине и 3..11 по высоте: самый узкий
+   ярус в игре — двадцать одна на пятнадцать, и в него шахта попадает всегда,
+   какой бы ярус ни сгенерировался ниже. */
+function shaftSpot(bx,by,d){
+ const сырая=(k)=>({x:3+Math.floor(H(bx*13+k*29,by*7+k*11,4100+k)*15),
+                    y:3+Math.floor(H(bx*5+k*17,by*23+k*3,4200+k)*9)});
+ const s=сырая(d);
+ /* Шахта вниз не имеет права встать на ту же клетку, что шахта сверху: тогда
+    ярус остался бы без спуска, и подземелье кончалось бы тупиком. Развод
+    выведен из тех же чисел, поэтому оба яруса считают его одинаково. */
+ if(d>0){const в=сырая(d-1);
+  if(s.x===в.x&&s.y===в.y){s.x=3+((s.x-3+7)%15);s.y=3+((s.y-3+4)%9);}}
+ return s;}
 function flightLen(delta){
  const p=G.place;if(!p)return 8;
  const слой=delta>0?p.depth:p.depth-1;
@@ -10396,7 +10453,9 @@ function startFlight(delta,dir){
  safeFn(()=>Bank.play("deep_stairs",{seed:n,gain:0.6,maxSec:4}));
  safeFn(()=>Bank.play("stair_step",{seed:1,gain:0.55,maxSec:1.4}));
  safeFn(()=>beacon(delta>0?"stairs_down":"stairs_up",0,0));
- narrate(`Марш лестницы: ${n} ${plural(n,"ступень","ступени","ступеней")} ${delta>0?"вниз":"вверх"}. Идите на ${DIRN[dir].split(",")[0]}; шаг в обратную сторону вернёт вас обратно.`);
+ /* Шахта вертикальна, и это стоит сказать: игрок должен знать, что вернётся
+    ровно сюда же, а не «куда-нибудь». */
+ narrate(`Марш лестницы: ${n} ${plural(n,"ступень","ступени","ступеней")} ${delta>0?"вниз":"вверх"}. Шахта идёт отвесно: выйдете ровно под этой клеткой${delta>0?"":", то есть там, откуда спускались"}. Идите на ${DIRN[dir].split(",")[0]}; шаг в обратную сторону вернёт вас обратно.`);
  return true;}
 /* Что слышно на марше: чем ниже, тем меньше живого и больше камня. */
 function flightFlavour(){
@@ -10428,8 +10487,30 @@ function flightStep(dir){
   safeFn(()=>Bank.play("stair_step",{seed:3,gain:0.6,maxSec:1.4}));
   safeFn(()=>Bank.play("deep_wind",{seed:f.n,gain:0.4,maxSec:6}));
   return changeDepth(d);}
- safeFn(()=>Bank.play("stair_step",{seed:f.i*5,gain:0.5,maxSec:1.4}));
- if(f.i%3===0)safeFn(()=>Bank.play("deep_drip",{seed:f.i,gain:0.3,maxSec:3}));
+ /* ── МАРШ СЛЫШЕН ПО ВЫСОТЕ ──
+    Ступени звучали плоско: один и тот же щелчок, и по нему нельзя было
+    понять, далеко ли ещё. Теперь у марша есть верх и низ. Ярус, который вы
+    покинули, отдаляется вверх; ярус, к которому идёте, приближается снизу —
+    и наоборот при подъёме. Доля пути слышна как соотношение: чем ниже гул
+    впереди и тише отзвук позади, тем ближе конец. Сам шаг ставится чуть выше
+    или ниже уха, по направлению движения. */
+ safeFn(()=>{
+  const доля=f.i/Math.max(1,f.n);
+  const вниз=f.d>0;
+  /* Шаг: слышен под ногой, с лёгким наклоном по ходу движения. */
+  if(!Spatial.role("stair_step",0,0,{dz:вниз?-0.4:0.4,gain:0.5,maxSec:1.4,seed:f.i*5}))
+   Bank.play("stair_step",{seed:f.i*5,gain:0.5,maxSec:1.4});
+  /* Позади — то, что покинули; впереди — то, куда идёте. */
+  const позадиZ=(вниз?1:-1)*(0.6+доля*2.4);
+  const впередиZ=(вниз?-1:1)*(0.6+(1-доля)*2.4);
+  if(f.i%2===0)Spatial.role(вниз?"hall_house":"drone_dark",0,0,
+   {dz:позадиZ,gain:Math.max(0.12,0.34*(1-доля)),maxSec:3,seed:f.i});
+  if(f.i%2===1)Spatial.role(вниз?"drone_dark":"hall_house",0,0,
+   {dz:впередиZ,gain:Math.max(0.12,0.34*доля),maxSec:3,seed:f.i+1});});
+ if(f.i%3===0)safeFn(()=>{
+  const вниз=f.d>0,доля=f.i/Math.max(1,f.n);
+  Spatial.role("deep_drip",0,0,{dz:(вниз?-1:1)*(1+доля*2),gain:0.3,maxSec:3,seed:f.i})
+   ||Bank.play("deep_drip",{seed:f.i,gain:0.3,maxSec:3});});
  /* Площадка каждые пять ступеней: там дают осмотреться и послушать. */
  const площадка=f.i%5===0;
  let текст=`Ступень ${f.i} из ${f.n}.`;
@@ -10955,8 +11036,10 @@ function useHere(){
   return false;}
  const lvl=curLevel(),p=G.place,t=tileAt(lvl,p.x,p.y);
  switch(t){
-  case ">":return startFlight(1,"N");
-  case "<":return p.depth>0?startFlight(-1,"N"):leavePlace();
+  /* Направление марша — то, куда игрок шёл последним: «идите на север» после
+     касания посреди коридора звучало произволом. */
+  case ">":return startFlight(1,lastMoveDir||"N");
+  case "<":return p.depth>0?startFlight(-1,lastMoveDir||"N"):leavePlace();
   case "G":return leavePlace();
   case "C":return openChest(p.x,p.y);
   case "K":return studyKnowledge(p.x,p.y);
@@ -11362,21 +11445,55 @@ function outdoorSurface(){
   if(t==="cave")return "gravel";
   return "dirt";
  }catch(_){return "dirt";}}
+/* ── ПОД НОГОЙ ──
+   Поверхностей было мало, и они повторялись: весь верхний ярус подземелья —
+   гравий, вся середина — кости, всё дно — кристалл, а из построек шесть видов
+   на двенадцать. Идя по трём разным подвалам, игрок слышал одно и то же, и
+   пол переставал быть сведением о месте.
+
+   Теперь пол меняется не только с глубиной, но и ОТ КЛЕТКИ К КЛЕТКЕ: у
+   каждого яруса своя смесь из трёх-четырёх поверхностей, а какая под ногой
+   именно здесь — выводится из координат клетки. Смесь постоянна для места,
+   поэтому один и тот же подвал всегда звучит одинаково, а соседний — иначе.
+   Так шаг снова становится сведением: по нему слышно и глубину, и то, что
+   это другое место, и то, что вы сместились. */
+const DEPTH_MIX=[
+ /* 0 — не подземелье, сюда не попадаем */ null,
+ ["gravel","dirt","stone"],                    /* первый ярус: обжитой камень */
+ ["gravel","mud","stone","plank"],             /* второй: сырость и старая крепь */
+ ["bone","gravel","ash"],                      /* третий: кости и пепел */
+ ["bone","ash","crystal","stone"],             /* четвёртый: пепел и первый хрусталь */
+ ["crystal","bone","ice"],                     /* пятый: дно, где камень звенит */
+];
+const PLACE_MIX={
+ castle:["marble","stone","plank"],
+ temple:["marble","stone","straw"],
+ tower:["plank","stone","crystal"],
+ school:["plank","marble","straw"],
+ clanhall:["plank","stone","metal"],
+ tavern:["plank","straw","dirt"],
+ village:["dirt","straw","plank"],
+ market:["straw","dirt","plank","stone"],
+ forge:["metal","stone","ash"],
+ port:["bridge","plank","stone"],
+ ruins:["gravel","stone","bone"],
+ cave_entrance:["gravel","mud","stone"],
+ eyrie:["gravel","bone","stone"],
+ peakshrine:["marble","stone","ice"],
+};
+/* Городская мостовая тоже не сплошная: улицы камень, дворы утоптаны, у воды
+   доски настила. */
+const CITY_MIX=["stone","dirt","plank"];
 function indoorSurface(){
  const p=G.place;if(!p)return "stone";
- if(p.depth>=5)return "crystal";
- if(p.depth>=3)return "bone";
- if(p.depth>0)return "gravel";
- const st=p.stype;
- /* Порт — тоже город, но под ногой у него не мостовая, а причальные мостки:
-    поэтому он проверяется раньше общего городского камня. */
- if(st==="port")return "bridge";
- if(p.kind==="city")return "stone";
- if(st==="temple"||st==="castle")return "marble";
- if(st==="forge")return "metal";
- if(st==="market")return "straw";
- if(st==="ruins")return "gravel";
- return "plank";}
+ const смесь=p.depth>0
+  ?(DEPTH_MIX[Math.min(DEPTH_MIX.length-1,p.depth)]||["gravel"])
+  :(PLACE_MIX[p.stype]||(p.kind==="city"?CITY_MIX:["plank","dirt"]));
+ if(!смесь.length)return "stone";
+ /* Какая именно клетка — решают её координаты вместе с местом: смесь одна и
+    та же, но раскладка своя у каждого подвала и каждого дома. */
+ const h=safeFn(()=>hashName(p.bx*7+p.x*3+p.depth*11,p.by*5+p.y*13+p.depth*3,4300),0.5);
+ return смесь[Math.floor(h*смесь.length)%смесь.length];}
 /* Как называется то, по чему идёшь: попадает в описание места. */
 function surfaceName(){
  return SURF_NAME[G.place?indoorSurface():outdoorSurface()]||"земля";}
