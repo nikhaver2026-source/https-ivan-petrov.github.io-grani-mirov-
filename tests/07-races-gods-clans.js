@@ -29,7 +29,7 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   monsterLore:MONSTERS.filter(m=>!MONSTER_LORE[m.id]).map(m=>m.id),
   empFields:EMPIRES.filter(e=>!e.gov||!e.econ||!e.god||!(e.exports||[]).length||!(e.imports||[]).length).map(e=>e.short)
  }));
- check('45 народов в каталоге',d.races===45,d.races);
+ check('46 народов в каталоге',d.races===46,d.races);
  check('12 богов в пантеоне',d.gods===12,d.gods);
  check('12 кланов — по одному на бога',d.clans===12,d.clans);
  check('народы есть в каждом ранге от Обычного до Божественного',d.byRank.every(x=>x>0),d.byRank);

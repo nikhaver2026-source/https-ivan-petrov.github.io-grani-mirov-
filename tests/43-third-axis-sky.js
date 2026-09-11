@@ -1,0 +1,319 @@
+/* ════════════════════════════════════════════════════════════════════════
+   ТРЕТЬЯ КООРДИНАТА: НЕБО, КРЫЛО И ОБЪЁМНЫЙ ЗВУК
+
+   У мира было два измерения на поверхности и глубина ярусами под землёй.
+   Вверх вела только лестница, и «высота» существовала лишь как отметка в
+   звуке. Теперь высота — такая же координата, как север и восток: её набирают
+   крылом, теряют от усталости, слышат и используют в бою.
+
+   Проверяется всё, на чём такая правка обычно ломается.
+
+   Кто летает: девять народов с крылом и свой потолок у каждого; бескрылому
+   игра отказывает словами, а не молчанием.
+
+   Звук: высота игрока вычитается из КАЖДОГО источника в одном месте — в узле
+   размещения, — поэтому объёмным становится весь мир разом, а не тридцать
+   мест, из которых половину забыли бы. С крыла земля звучит снизу, ветер
+   сверху, и расстояние считается объёмно: поднявшись, вы и вправду удалились
+   от земли.
+
+   Правила неба: с крыла не собрать, не войти, не спуститься; зато топь, вода
+   и хребет крылу не помеха. Крыло устаёт и само сажает — но не убивает.
+
+   Твари неба: их слышно сверху, пеший до них не достаёт и они до него; клинок
+   работает только в пределах клетки по высоте, а чары летят всегда.
+   ════════════════════════════════════════════════════════════════════════ */
+const {chromium}=require('playwright');
+const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(e!==undefined?' :: '+JSON.stringify(e):''));
+(async()=>{
+ const browser=await chromium.launch({args:['--autoplay-policy=no-user-gesture-required']});
+ const ctx=await browser.newContext({hasTouch:true,isMobile:true,viewport:{width:390,height:780}});
+ const page=await ctx.newPage();
+ const errors=[];page.on('pageerror',e=>errors.push(String(e)));
+ page.on('console',m=>{if(m.type()==='error'&&!/fetching the script|ServiceWorker/i.test(m.text()))errors.push('console: '+m.text());});
+ await page.goto(process.argv[2]);await page.waitForTimeout(700);
+ await page.evaluate(()=>enterGame());await page.waitForTimeout(300);
+ await page.evaluate(()=>{settings.effects=0;settings.music=0;
+  window.__said=[];if(!window.__origSay)window.__origSay=Speech.say;
+  Speech.say=t=>{window.__said.push(String(t));};
+  window.речь=()=>window.__said.join(' ');
+  window.наЗемлю=()=>{G.place=null;G.ship=null;G.inCombat=false;G.combat=null;
+   G.alt=0;G.wingTired=0;G.x=1000;G.y=1000;G.hp=G.hpMax=800;G.mana=G.manaMax=300;
+   G.flight=null;G.loot=null;safeFn(()=>{for(let i=0;i<20&&activeLayer();i++)closeTopUI();});};});
+
+ /* ── 1. Народы с крылом ── */
+ const крылья=await page.evaluate(()=>{
+  const летают=RACES_DB.filter(r=>r.fly).map(r=>({id:r.id,n:r.n,fly:r.fly}));
+  const плохие=летают.filter(r=>!(r.fly>=1&&r.fly<=ALT_MAX));
+  const потолки={};
+  for(const r of RACES_DB){G.race=r.n;потолки[r.n]=wingSpan();}
+  G.race="Люди";
+  const бескрылых=Object.values(потолки).filter(v=>v===0).length;
+  return {летают,плохие,бескрылых,всего:RACES_DB.length,
+   пегас:RACE_BY_NAME["Пегасы"]||null};});
+ check('в мире появились крылатые народы, и у каждого свой потолок',
+  крылья.летают.length>=9&&крылья.плохие.length===0,
+  {летают:крылья.летают.length,плохие:крылья.плохие});
+ check('пегасы — полноценный народ со своим досье и крылом',
+  !!крылья.пегас&&крылья.пегас.fly>=3&&!!крылья.пегас.hist&&!!крылья.пегас.myth&&
+  !!крылья.пегас.econ&&!!крылья.пегас.pol&&!!крылья.пегас.war&&!!крылья.пегас.tr,
+  крылья.пегас&&{fly:крылья.пегас.fly,ранг:крылья.пегас.rank});
+ check('бескрылых народов по-прежнему большинство: небо — не общее место',
+  крылья.бескрылых>крылья.летают.length,
+  {бескрылых:крылья.бескрылых,крылатых:крылья.летают.length});
+
+ /* ── 2. Взлёт, потолок, отказ бескрылому ── */
+ const подъём=await page.evaluate(()=>{
+  const из={};
+  наЗемлю();G.race="Люди";window.__said=[];
+  takeOff();
+  из.бескрылому={alt:G.alt,сказано:речь()};
+  наЗемлю();G.race="Пегасы";
+  из.потолок=wingSpan();
+  window.__said=[];takeOff();
+  из.первыйВзмах={alt:G.alt,сказано:речь()};
+  for(let i=0;i<8;i++)takeOff();
+  из.выше={alt:G.alt,потолок:wingSpan()};
+  window.__said=[];takeOff();
+  из.вышеПотолка={alt:G.alt,сказано:речь()};
+  /* снижение по клетке и посадка */
+  const путь=[];
+  while(G.alt>0){descend();путь.push(G.alt);}
+  из.снижение=путь;
+  из.наЗемле=G.alt===0&&G.wingTired===0;
+  /* под крышей и на борту крыло не берёт */
+  наЗемлю();G.race="Пегасы";
+  G.place={bx:1,by:1,stype:"tavern",depth:0,name:"Таверна",x:2,y:2};
+  window.__said=[];takeOff();из.подКрышей={alt:G.alt,сказано:речь().slice(0,40)};
+  наЗемлю();G.race="Пегасы";G.ship={name:"Ладья",toName:"Порт",left:3,legs:5};
+  window.__said=[];takeOff();из.наБорту={alt:G.alt,сказано:речь().slice(0,40)};
+  наЗемлю();
+  return из;});
+ check('бескрылому народу игра отказывает словами, а не молчанием',
+  подъём.бескрылому.alt===0&&/бескрыл/i.test(подъём.бескрылому.сказано),подъём.бескрылому);
+ check('крыло берёт с земли и поднимает по клетке',
+  подъём.первыйВзмах.alt===1&&/крыл/i.test(подъём.первыйВзмах.сказано),подъём.первыйВзмах);
+ check('выше потолка своего народа не подняться',
+  подъём.выше.alt===подъём.выше.потолок&&подъём.вышеПотолка.alt===подъём.выше.потолок&&
+  /потолок|выше не/i.test(подъём.вышеПотолка.сказано),подъём);
+ check('снижение идёт по клетке и кончается посадкой',
+  подъём.снижение.length===подъём.потолок&&подъём.наЗемле===true,подъём.снижение);
+ check('под крышей и с палубы крыло не берёт, и это объясняется',
+  подъём.подКрышей.alt===0&&подъём.наБорту.alt===0&&
+  подъём.подКрышей.сказано.length>0&&подъём.наБорту.сказано.length>0,
+  {подКрышей:подъём.подКрышей,наБорту:подъём.наБорту});
+
+ /* ── 3. Высота слышна: она вычитается из КАЖДОГО источника ── */
+ const звук=await page.evaluate(()=>{
+  наЗемлю();G.race="Пегасы";
+  const из={};
+  /* Подменяем узел размещения и смотрим, какие высоты игра ему даёт. */
+  const поймано=[];
+  const ориг=Spatial.node.bind(Spatial);
+  Spatial.node=(dx,dy,dz,roll)=>{поймано.push({dx,dy,dz,alt:Number(G.alt)||0});return ориг(dx,dy,dz,roll);};
+  из.слушательНаЗемле=listenerAlt();
+  G.alt=3;из.слушательВНебе=listenerAlt();
+  /* Тот же источник с земли и с высоты должен уехать вниз ровно на высоту */
+  const узел=(alt,dz)=>{G.alt=alt;const p=Spatial.node(2,0,dz||0,1.1);
+   const y=p.positionY?p.positionY.value:0;try{p.disconnect();}catch(_){}
+   return Math.round(y*1000)/1000;};
+  из.земляСЗемли=узел(0,0);
+  из.земляСВысоты1=узел(1,0);
+  из.земляСВысоты3=узел(3,0);
+  /* Своя высота у источника отсчитывается от земли */
+  из.тварьНаДвух_сЗемли=узел(0,2);
+  из.тварьНаДвух_сДвух=узел(2,2);
+  G.alt=0;Spatial.node=ориг;
+  return из;});
+ check('высота игрока вычитается из источника в одном месте — в узле размещения',
+  звук.земляСЗемли===0&&звук.земляСВысоты1<звук.земляСЗемли&&
+  звук.земляСВысоты3<звук.земляСВысоты1,звук);
+ check('подъём на три клетки опускает землю ровно втрое против одной',
+  Math.abs(звук.земляСВысоты3-3*звук.земляСВысоты1)<0.001,звук);
+ check('своя высота источника отсчитывается от земли, а не от уха',
+  звук.тварьНаДвух_сЗемли>0&&Math.abs(звук.тварьНаДвух_сДвух)<0.001,звук);
+ check('высота слушателя равна высоте игрока',
+  звук.слушательНаЗемле===0&&звук.слушательВНебе===3,звук);
+
+ /* ── 4. Дальность считается объёмно ── */
+ const даль=await page.evaluate(()=>{
+  наЗемлю();
+  const ориг=Spatial.on.bind(Spatial);
+  Spatial.on=()=>true;
+  const дошло=[];
+  const оригAt=Spatial.at.bind(Spatial);
+  /* Слышно ли источник на таком-то удалении с такой-то высоты. */
+  const слышно=(шагов,alt)=>Math.hypot(шагов,0,(0-alt)*0.8)<=MAXCELL;
+  /* Существует удаление, на котором подъём и вправду уводит землю за предел:
+     это и значит, что расстояние считается объёмно, а не по плоскости. */
+  let граница=null;
+  for(let d=1;d<=MAXCELL;d+=0.1)
+   if(слышно(d,0)&&!слышно(d,4)){граница=Math.round(d*10)/10;break;}
+  const из={наЗемле:слышно(13,0),сЧетырёх:граница!==null&&!слышно(граница,4),
+   граница,ростДальности:Math.round((Math.hypot(10,0,3.2)-10)*1000)/1000};
+  G.alt=0;Spatial.on=ориг;
+  return из;});
+ check('расстояние объёмное: с высоты дальняя земля уходит за предел слышимости',
+  даль.наЗемле===true&&даль.сЧетырёх===true&&даль.граница!==null&&
+  даль.ростДальности>0,даль);
+
+ /* ── 5. Правила неба ── */
+ const правила=await page.evaluate(()=>{
+  const из={};
+  наЗемлю();G.race="Пегасы";takeOff();takeOff();
+  window.__said=[];gatherCurrent("tap");
+  из.сбор={сказано:речь(),запас:Object.keys(G.inv||{}).length};
+  window.__said=[];useHere();
+  из.действие={сказано:речь().slice(0,60),alt:G.alt};
+  /* шаг по небу идёт и не вводит в постройку */
+  наЗемлю();G.race="Пегасы";
+  /* встанем на постройку */
+  outer: for(let r=1;r<80;r++)for(let dx=-r;dx<=r;dx++)for(let dy=-r;dy<=r;dy++){
+   if(Math.max(Math.abs(dx),Math.abs(dy))!==r)continue;
+   const c=cellContent(1000+dx,1000+dy);
+   if(c.structure&&PLACE_KIND[c.structure.type]){G.x=1000+dx;G.y=1000+dy;break outer;}}
+  takeOff();
+  const до={x:G.x,y:G.y};
+  window.__said=[];move("E");
+  из.шаг={сдвинулся:G.x!==до.x||G.y!==до.y,вПостройке:!!G.place,
+   наПороге:!!G.atDoor,сказано:речь().slice(0,70)};
+  наЗемлю();
+  return из;});
+ check('с крыла не собрать, и игра говорит почему',
+  /не дотянуться|сесть/i.test(правила.сбор.сказано)&&правила.сбор.запас===0,правила.сбор);
+ check('«действие здесь» в небе означает посадку',
+  правила.действие.alt===0&&правила.действие.сказано.length>0,правила.действие);
+ check('шаг по небу идёт и не втягивает в постройку и не ставит на порог',
+  правила.шаг.сдвинулся&&!правила.шаг.вПостройке&&!правила.шаг.наПороге,правила.шаг);
+
+ /* ── 6. Крыло устаёт и само сажает, но не убивает ── */
+ const усталость=await page.evaluate(()=>{
+  наЗемлю();G.race="Пегасы";G.hp=G.hpMax=60;
+  takeOff();takeOff();takeOff();
+  let шагов=0;
+  while(G.alt>0&&шагов<400){move(["N","E","S","W"][шагов%4]);шагов++;}
+  const пегас={шагов,alt:G.alt,жив:G.hp>0};
+  наЗемлю();G.race="Гарпии";G.hp=G.hpMax=60;
+  takeOff();takeOff();
+  let ш2=0;
+  while(G.alt>0&&ш2<400){move(["N","E","S","W"][ш2%4]);ш2++;}
+  наЗемлю();
+  return {пегас,гарпия:{шагов:ш2}};});
+ check('крыло кончается и само сажает, не убивая героя',
+  усталость.пегас.alt===0&&усталость.пегас.жив===true&&
+  усталость.пегас.шагов>5&&усталость.пегас.шагов<400,усталость.пегас);
+ check('дар пегаса настоящий: их крыло держит дольше прочих',
+  усталость.пегас.шагов>усталость.гарпия.шагов,усталость);
+
+ /* ── 7. Твари неба ── */
+ const твари=await page.evaluate(()=>{
+  const летают=MONSTERS.filter(m=>m.fly);
+  const безЛора=летают.filter(m=>!MONSTER_LORE[m.id]).map(m=>m.id);
+  наЗемлю();
+  const из={всего:MONSTERS.length,летают:летают.length,безЛора};
+  /* высота выводится из клетки и постоянна для клетки */
+  const m=летают.find(x=>x.fly>=3);
+  const a1=foeAlt(m),a2=foeAlt(m);
+  из.высотаПостоянна=a1===a2&&a1>=1&&a1<=m.fly;
+  /* пеший не достаёт до высокой твари, и она до него */
+  G.alt=0;из.снизуНеДостать=!foeReachable({fly:4,alt:4});
+  G.alt=4;из.скрылаДостать=foeReachable({fly:4,alt:4});
+  G.alt=0;
+  return из;});
+ check('в небе завелась своя живность, и у каждой твари есть миф',
+  твари.летают>=9&&твари.безЛора.length===0,твари);
+ check('высота твари постоянна для клетки, а не пляшет от вызова к вызову',
+  твари.высотаПостоянна===true,твари);
+ check('пеший и высоко летящая тварь друг друга не достают',
+  твари.снизуНеДостать===true&&твари.скрылаДостать===true,твари);
+
+ /* ── 8. Бой на разной высоте ── */
+ const бой=await page.evaluate(()=>{
+  наЗемлю();
+  const m={id:"rocbird",n:"Скальный рух",lvl:5,hp:200,dmg:4,xp:10,gold:5,fly:3,alt:3,snd:"mscreech",fx:"screech"};
+  startCombat({monster:{...m},x:G.x,y:G.y});
+  const из={высотаБоя:G.combat.alt};
+  const было=G.combat.hp;
+  window.__said=[];fight("atk");
+  из.клинокСнизу={урон:было-G.combat.hp,сказано:речь().slice(0,80)};
+  window.__said=[];fight("magic");
+  из.чары={урон:было-G.combat.hp};
+  /* поднимаемся навстречу — клинок начинает доставать */
+  G.race="Пегасы";G.alt=3;
+  const б2=G.combat.hp;
+  fight("atk");
+  из.клинокВровень={урон:б2-G.combat.hp};
+  G.alt=0;G.inCombat=false;G.combat=null;наЗемлю();
+  return из;});
+ check('клинком снизу до высокой твари не достать, и это сказано вслух',
+  бой.клинокСнизу.урон===0&&/пустоту|высот|поднимитесь/i.test(бой.клинокСнизу.сказано),бой.клинокСнизу);
+ check('чары высоте не подчиняются и достают всегда',бой.чары.урон>0,бой.чары);
+ check('поднявшись навстречу, клинок достаёт',бой.клинокВровень.урон>0,бой.клинокВровень);
+
+ /* ── 9. Высота переживает запись и не ломает числа ── */
+ const запись=await page.evaluate(()=>{
+  наЗемлю();G.race="Пегасы";takeOff();takeOff();
+  const до={alt:G.alt,tired:G.wingTired};
+  const raw=serializeSave();
+  Object.keys(G).forEach(k=>{delete G[k];});
+  Object.assign(G,JSON.parse(raw));
+  const после={alt:G.alt,tired:G.wingTired};
+  const беды=[];
+  for(const k of ["hp","hpMax","gold","alt","wingTired","x","y","hour","day"]){
+   const v=G[k];
+   if(!Number.isFinite(v))беды.push(`${k}=${v}`);
+   else if(v<0)беды.push(`${k} в минусе (${v})`);}
+  if(G.alt>ALT_MAX)беды.push(`высота ${G.alt} выше предела`);
+  наЗемлю();
+  return {до,после,беды};});
+ check('высота и усталость крыла переживают запись',
+  запись.до.alt===запись.после.alt&&запись.до.tired===запись.после.tired,запись);
+ check('небо не портит чисел героя',запись.беды.length===0,запись.беды);
+
+ /* ── 10. Меню действий знает про небо ── */
+ const меню=await page.evaluate(()=>{
+  наЗемлю();G.race="Пегасы";
+  openActionMenu();
+  const земля=[...document.querySelectorAll('#amList button')].map(b=>b.dataset.cmd);
+  closeActionMenu();
+  takeOff();
+  openActionMenu();
+  const небо=[...document.querySelectorAll('#amList button')].map(b=>b.dataset.cmd);
+  const подписи=[...document.querySelectorAll('#amList button')]
+   .filter(b=>/takeoff|flydown|land/.test(b.dataset.cmd||''))
+   .map(b=>(b.textContent||'').trim());
+  closeActionMenu();
+  наЗемлю();G.race="Люди";
+  openActionMenu();
+  const бескрылый=[...document.querySelectorAll('#amList button')].map(b=>b.dataset.cmd);
+  closeActionMenu();наЗемлю();
+  return {земля,небо,подписи,бескрылый};});
+ check('на земле крылатому предлагают подняться, а снизиться и сесть — нет',
+  меню.земля.includes('am:takeoff')&&!меню.земля.includes('am:flydown')&&
+  !меню.земля.includes('am:land'),меню.земля.filter(c=>/takeoff|flydown|land/.test(c)));
+ check('в небе доступны все три действия высоты и подписаны состоянием',
+  меню.небо.includes('am:takeoff')&&меню.небо.includes('am:flydown')&&
+  меню.небо.includes('am:land')&&меню.подписи.every(t=>t.length>10),меню.подписи);
+ check('бескрылому народу пункты неба не предлагаются вовсе',
+  !меню.бескрылый.some(c=>/takeoff|flydown|land/.test(c||'')),
+  меню.бескрылый.filter(c=>/takeoff|flydown|land/.test(c||'')));
+
+ /* ── 11. Свод правил рассказывает о небе ── */
+ const свод=await page.evaluate(()=>{
+  const гл=GUIDE.find(g=>/Третья координата/i.test(g.title));
+  const номера=GUIDE.map(g=>(g.title.match(/Глава (\d+)/)||[])[1]);
+  return {есть:!!гл,строк:гл?гл.body.length:0,
+   дубли:номера.filter((v,i,a)=>a.indexOf(v)!==i),
+   пегасы:!!гл&&гл.body.some(t=>/Пегас/i.test(t)),
+   ветер:!!гл&&гл.body.some(t=>/ветер/i.test(t))};});
+ check('в своде правил есть глава о третьей координате',
+  свод.есть&&свод.строк>=8&&свод.пегасы&&свод.ветер,свод);
+ check('нумерация глав по-прежнему без повторов',свод.дубли.length===0,свод.дубли);
+
+ check('игра не выбрасывала ошибок за весь прогон',errors.length===0,errors.slice(0,3));
+
+ console.log(results.join('\n'));
+ console.log('ИТОГО: '+results.filter(r=>r.startsWith('PASS')).length+' из '+results.length);
+ await browser.close();
+ process.exit(results.some(r=>r.startsWith('FAIL'))?1:0);
+})();
