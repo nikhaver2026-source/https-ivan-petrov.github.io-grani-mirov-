@@ -183,6 +183,7 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
    G.x=1000;G.y=1000;G.hp=G.hpMax=300;G.mp=G.mpMax=120;G.gold=2000;
    G.level=12;G.str=30;G.agi=30;G.mind=30;G.food=150;G.water=150;
    G.items=[];G.inv={};G.equip={weapon:null,armor:null};G.marks={};G.vaults={};
+   G.alt=0;G.wingTired=0;
    safeFn(()=>{if(Actors&&Actors.list)Actors.list.length=0;});
    /* closeModal без довода — пустой вызов: закрываем настоящим путём игрока,
       пока сверху вообще что-нибудь есть. */

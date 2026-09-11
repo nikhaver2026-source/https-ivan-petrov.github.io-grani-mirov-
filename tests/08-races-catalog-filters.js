@@ -24,11 +24,11 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   check('окно «'+name+'» открывается и заполнено',ok);
   await page.evaluate(()=>handleTwoFingerTap());await page.waitForTimeout(120);
  }
- // 2. Каталог показывает все 45 и фильтрует по рангу
+ // 2. Каталог показывает все 46 и фильтрует по рангу
  await page.evaluate(()=>CMD.races());
  await page.waitForTimeout(250);
  const cards=await page.evaluate(()=>document.querySelectorAll('#raceList .list-line').length);
- check('в каталоге 45 карточек народов',cards===45,cards);
+ check('в каталоге 46 карточек народов',cards===46,cards);
  await page.evaluate(()=>CMD.racefilter('5'));
  await page.waitForTimeout(200);
  const divine=await page.evaluate(()=>document.querySelectorAll('#raceList .list-line').length);

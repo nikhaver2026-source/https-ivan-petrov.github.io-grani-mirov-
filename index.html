@@ -3906,7 +3906,7 @@ const RACES_DB=[
  war:"Не вступают в наземные войны, но продают сведения обеим сторонам — и это считают нейтралитетом.",
  myth:"Таур поспорил со звёздами, кто выше, и послал аракокр проверить.",
  tr:"Видят карту дальше и точнее.",br:[]},
-{id:"pegasus",n:"Пегасы",rank:1,fly:3,home:["plains","mountains","forest"],god:"storm",emp:"Вольные Ветра",clan:"Гроза Открытых Небес",
+{id:"pegasus",n:"Пегасы",rank:1,fly:3,home:["plains","mountains","forest"],god:"storm",emp:"вне держав",clan:"Гроза Открытых Небес",
  hist:"Крылатый народ высоких лугов: с виду кони, но с руками ветра и речью. Не знают ни седла, ни узды — за попытку надеть их и то и другое отвечают копытом. Города строят на плоскогорьях без дорог: снизу к ним не подняться, а сверху видно всякого, кто идёт. Счёт ведут не годам, а перелётам: жизнь меряется тем, сколько раз ты пересёк Грань от края до края.",
  res:["трава","ягоды","кристалл"],
  econ:"Ветровая: почта через хребты, разведка троп, вывоз раненых из мест, куда нет дороги. Берут не золотом, а обещанием — и помнят обещания дольше, чем люди помнят долги.",
@@ -5696,7 +5696,10 @@ const MONSTER_VOICE={
  /* морские твари и пираты */
  seaserpent:"slime", sharks:"hornet", drowned:"ghost", siren:"ghost",
  isleFish:"behemoth", stormwyrm:"dragon", jellyswarm:"hornet",
- pirate:"orc", ghostpirate:"ghost", slaver:"orc"};
+ pirate:"orc", ghostpirate:"ghost", slaver:"orc",
+ /* твари неба: рух и ястреб — крылатые, скат — слизь глубины, поднявшаяся
+    выше пара, мотыльница — лунная родня призраков, а не плоть */
+ rocbird:"bat", stormhawk:"bat", cloudray:"slime", nightmoth:"ghost"};
 /* Реплика чудовища из банка: появление, удар, боль, смерть, шаг. */
 /* ── ВТОРОЙ ГОЛОС ТВАРИ ──
    Восемь общих голосов на три десятка чудовищ — мало: волк и медведь ревели
@@ -5721,6 +5724,9 @@ const FOE_VOICE={
  zombie:"foe_undead",drowned:"foe_undead",ghostpirate:"foe_undead",
  troll:"foe_brute",ogre:"foe_brute",golem:"foe_brute",direbear:"foe_brute",treant:"foe_brute",
  dragon:"foe_wyrm",wyvern:"foe_wyrm",harpy:"foe_wyrm",stormwyrm:"foe_wyrm",
+ /* Твари неба: рух и ястреб кричат по-птичьи, скат шипит как глубина,
+    мотыльница стонет — она из лунной родни, а не из плоти. */
+ rocbird:"foe_wyrm",stormhawk:"foe_wyrm",cloudray:"foe_grave",nightmoth:"foe_undead",
  sandworm:"foe_burrow",spider:"foe_burrow",serpent:"foe_burrow",basilisk:"foe_burrow",
  kraken:"foe_grave",seaserpent:"foe_grave",jellyswarm:"foe_grave",isleFish:"foe_grave"};
 /* Голос твари для живой звуковой картины: не удар и не гибель, а само её
@@ -5738,6 +5744,10 @@ const SCAPE_FOE={
  skeleton:"wraith_die",boneshaman:"wraith_die",
  goblin:"fiend_roar",kobold:"fiend_roar",imp:"fiend_roar",
  harpy:"raptor_cry",aarakocra:"raptor_cry",
+ /* Живой голос неба: рух и ястреб — крик хищной птицы, скат — шип глубины,
+    мотыльница — лунный стон. Их слышно СВЕРХУ, с их собственной высоты. */
+ rocbird:"raptor_cry",stormhawk:"raptor_cry",pegasus:"raptor_cry",
+ cloudray:"serpent_hiss",nightmoth:"wraith_moan",
  bandit:"guard_shout",cutpurse:"guard_shout",
 };
 function bankFoeRole(m){
@@ -10496,15 +10506,21 @@ const Scape={
      out.push({key:"a"+i,kind:"monster",dx,dy,d,
       role:safeFn(()=>bankFoeRole(a.m),"danger")||"danger",seed:a.x+a.y});});});
     return out;}
-   /* Снаружи: постройки, ресурсы, твари и обозы вокруг. */
-   for(let dy=-SCAPE_RAD;dy<=SCAPE_RAD;dy++)for(let dx=-SCAPE_RAD;dx<=SCAPE_RAD;dx++){
+   /* Снаружи: постройки, ресурсы, твари и обозы вокруг. С крыла круг
+      слышимости шире: с высоты голос доносится оттуда, куда с земли не
+      докричишься. */
+   const рад=SCAPE_RAD+Math.min(6,(Number(G.alt)||0)*2);
+   for(let dy=-рад;dy<=рад;dy++)for(let dx=-рад;dx<=рад;dx++){
     if(!dx&&!dy)continue;
     const x=G.x+dx,y=G.y+dy;
     if(x<0||y<0||x>=WORLD||y>=WORLD)continue;
     const d=Math.max(Math.abs(dx),Math.abs(dy));
     const c=cellContent(x,y);
     if(c.monster&&!G.cleared[x+","+y]){
+     /* Крылатая тварь звучит с ТОЙ высоты, на которой идёт: пеший слышит её
+        над собой, а поднявшийся — вровень. Ради этого небо и затевалось. */
      out.push({key:"m"+x+","+y,kind:"monster",dx,dy,d,
+      dz:safeFn(()=>foeAlt(c.monster),0),
       role:safeFn(()=>bankFoeRole(c.monster),"danger")||"danger",seed:x+y});continue;}
     if(c.structure){
      out.push({key:"s"+x+","+y,kind:"structure",dx,dy,d,
@@ -10541,7 +10557,9 @@ const Scape={
    if(now-был<срок)continue;
    /* Разброс, чтобы источники не били в такт. */
    this.last.set(o.key,now-Math.floor(Math.random()*срок*0.25));
-   const dz=v.dz||0;
+   /* У источника может быть СВОЯ высота (летящая тварь) — она главнее общей
+      для вида: та задаёт, где вещь стоит обычно, а эта — где она сейчас. */
+   const dz=(o.dz!==undefined&&o.dz!==null)?o.dz:(v.dz||0);
    const gain=v.gain*Math.max(0.25,1-o.d/(SCAPE_RAD+3));
    let ok=false;
    if(o.role)ok=Spatial.role(o.role,o.dx,o.dy,{dz,gain,maxSec:2.4,seed:o.seed});
