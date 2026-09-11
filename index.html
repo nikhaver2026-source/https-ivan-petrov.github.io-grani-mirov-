@@ -11285,15 +11285,16 @@ function move(dir){
    металл кузни, камень улиц, гравий верхних ярусов, кости средних и
    кристалл на дне.
    ════════════════════════════════════════════════════════════════════════ */
-/* Доски под ногой — свой звук: деревянный настил дома, причала и моста ни на
-   камень, ни на землю не похож. */
-const SURF_ROLE={wood:"stk_bridge",grass:"tread_grass",dirt:"step_dust",stone:"tread_rock",sand:"tread_sand",
+const SURF_ROLE={grass:"tread_grass",dirt:"step_dust",stone:"tread_rock",sand:"tread_sand",
  water:"step_shallow",cave:"tread_gravel",snow:"tread_snow",ice:"step_ice",leaves:"step_leaves",
  mud:"step_mud",plank:"tread_wood",straw:"step_straw",marble:"step_marble",bone:"step_bone",
- crystal:"step_crystal",metal:"step_metal",gravel:"tread_gravel",ash:"step_ash",bridge:"step_bridge"};
+ crystal:"step_crystal",metal:"step_metal",gravel:"tread_gravel",ash:"step_ash",
+ /* Мостки: настил причала и переброшенного через реку моста. Прежняя роль
+    остаётся запасной — она ниже, в SURF_FALLBACK. */
+ bridge:"stk_bridge"};
 /* Прежние роли остались запасными: если живой записи нет, звучит старая. */
 const SURF_FALLBACK={grass:"step_grass",stone:"step_flag",sand:"step_sand",cave:"step_gravel",
- snow:"step_snow",plank:"step_plank",gravel:"step_gravel"};
+ snow:"step_snow",plank:"step_plank",gravel:"step_gravel",bridge:"step_bridge"};
 const SURF_NAME={grass:"трава",dirt:"утоптанная земля",stone:"каменная плита",sand:"песок",
  water:"мелкая вода",cave:"пещерный щебень",snow:"снег",ice:"лёд",leaves:"палая листва",
  mud:"грязь",plank:"доски",straw:"солома",marble:"мрамор",bone:"кости",crystal:"кристалл",
