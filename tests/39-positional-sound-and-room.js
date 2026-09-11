@@ -254,8 +254,12 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   /* бродящая тварь на уровне */
   G.place={kind:"dungeon",bx:1500,by:1500,stype:"ruins",name:"п",depth:2,x:5,y:5};
   точки.length=0;
-  Actors.sound({kind:"mob",id:1,x:9,y:3,m:{id:"wolf",n:"Волк"}},4);
-  await пауза(100);out.тварь=точки.slice(-1)[0]||null;
+  /* Голос живого нарочно звучит не на каждом шаге — примерно в трёх случаях
+     из пяти. Зовём, пока не отзовётся: проверяем МЕСТО, а не частоту. */
+  for(let i=0;i<40&&!точки.length;i++){
+   Actors.sound({kind:"mob",id:1,x:9,y:3,m:{id:"wolf",n:"Волк"}},4);
+   await пауза(10);}
+  out.тварь=точки.slice(-1)[0]||null;
   /* стена, в которую упёрся шаг */
   const lvl=curLevel();
   outer:for(let y=1;y<lvl.h-1;y++)for(let x=1;x<lvl.w-1;x++)
@@ -301,6 +305,71 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   return плохо;});
  check('ни один маяк, знающий сторону, не звучит плоско — все идут через место',
   плоские.length===0,плоские.slice(0,5));
+
+ /* ── 17. «Тишина» гасит всё, включая позиционные источники ──
+    Они живут мимо Play и Bank, и обещание «все звуки остановлены» было
+    неправдой: мир продолжал говорить с четырёх сторон. */
+ const тишина=await page.evaluate(async()=>{
+  const пауза=ms=>new Promise(z=>setTimeout(z,ms));
+  settings.effects=1;settings.hrtf=1;settings.scape=1;
+  while(activeLayer())closeTopUI();
+  G.place=null;G.ship=null;G.inCombat=false;
+  Spatial.stopAll();
+  Spatial.at("mg/wyrm_roar_01.ogg",3,-2,{gain:0.3,maxSec:6});
+  Spatial.at("mg/wolf_howl_01.ogg",-4,1,{gain:0.3,maxSec:6});
+  await пауза(150);
+  const было=Spatial.live.length;
+  stopEverything();
+  await пауза(150);
+  return {было,стало:Spatial.live.length};});
+ check('«тишина» гасит и позиционные источники, а не только прежние каналы',
+  тишина.было>0&&тишина.стало===0,тишина);
+
+ /* ── 18. Свёрнутая страница молчит ──
+    Заблокированный телефон или переключение приложений: такт бил каждые
+    полторы секунды и создавал источники — лишний шум и разряд батареи. */
+ const свёрнута=await page.evaluate(async()=>{
+  const пауза=ms=>new Promise(z=>setTimeout(z,ms));
+  settings.effects=1;settings.hrtf=1;settings.scape=1;
+  while(activeLayer())closeTopUI();
+  G.place=null;G.ship=null;G.inCombat=false;
+  Scape.last.clear();Scape.lastAny=0;Spatial.stopAll();
+  const наЭкране={жива:Scape.on(),прозвучало:Scape.tick()};
+  Object.defineProperty(document,"hidden",{configurable:true,get:()=>true});
+  Object.defineProperty(document,"visibilityState",{configurable:true,get:()=>"hidden"});
+  document.dispatchEvent(new Event("visibilitychange"));
+  await пауза(60);
+  Scape.last.clear();Scape.lastAny=0;
+  const свёрнуто={жива:Scape.on(),прозвучало:Scape.tick()};
+  Object.defineProperty(document,"hidden",{configurable:true,get:()=>false});
+  Object.defineProperty(document,"visibilityState",{configurable:true,get:()=>"visible"});
+  document.dispatchEvent(new Event("visibilitychange"));
+  Spatial.stopAll();
+  return {наЭкране,свёрнуто};});
+ check('свёрнутая страница молчит: картина не бьёт тактом в кармане',
+  свёрнута.наЭкране.жива&&свёрнута.наЭкране.прозвучало>0&&
+  !свёрнута.свёрнуто.жива&&свёрнута.свёрнуто.прозвучало===0,свёрнута);
+
+ /* ── 19. Долгий прогон не копит источники ── */
+ const прогонДолгий=await page.evaluate(async()=>{
+  const пауза=ms=>new Promise(z=>setTimeout(z,ms));
+  settings.effects=1;settings.hrtf=1;settings.scape=1;
+  while(activeLayer())closeTopUI();
+  G.place=null;G.ship=null;G.inCombat=false;
+  Scape.last.clear();Scape.lastAny=0;Spatial.stopAll();
+  let тактов=0;
+  for(let i=0;i<60;i++){Scape.lastAny=0;тактов+=Scape.tick();await пауза(25);}
+  const наПике=Spatial.live.length;
+  await пауза(3200);
+  const послеОтдыха=Spatial.live.length;
+  /* и кэш откликов не растёт без предела */
+  for(let i=0;i<60;i++)Room.buffer("dungeon",0.5+i*0.03);
+  return {тактов,наПике,послеОтдыха,кэш:Room.cache.size};});
+ check('долгий прогон не копит источники: их число ограничено и спадает',
+  прогонДолгий.тактов>0&&прогонДолгий.наПике<=10&&прогонДолгий.послеОтдыха<=2,
+  прогонДолгий);
+ check('кэш откликов помещений не растёт без предела',
+  прогонДолгий.кэш<=24,прогонДолгий);
 
  check('игра не выбрасывала ошибок за весь прогон',errors.length===0,errors.slice(0,3));
 
