@@ -108,7 +108,11 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
     (ch||[]).forEach((c,i)=>{if(!c.l||typeof c.run!=="function")события.сломанныеВыборы.push(e.id+"["+i+"]");});
    }catch(err){события.сломанныеВыборы.push(e.id+": "+err.message);}});
 
-  const ctx0={god:PANTHEON[0],tier:1,race:"Люди",clan:CLANS[0],emp:EMPIRES[0],
+  /* Обстановка шага: столько же сведений, сколько даёт chainContext живому
+     жителю, — иначе проверка мерит не то, что бывает в игре. */
+  const ctx0={god:PANTHEON[0],tier:1,race:"Люди",clan:CLANS[0],emp:EMPIRES[0],idx:0,
+   netEmp:EMPIRES[1],foeName:EMPIRES[2].short,
+   cityName:"Проба",cityX:1000,cityY:1000,
    npc:{race:"Люди",prof:"Жрец",key:"k"},city:null};
   const цепочки={всего:Object.keys(CHAIN_DB).length,плохиеШаги:[]};
   Object.entries(CHAIN_DB).forEach(([k,ch])=>{
