@@ -2949,6 +2949,8 @@ const AM_GROUPS=[
   ["char","👤 Персонаж и опыт"],
   ["quests","📜 Квесты"],
   ["school","🎓 Школы и умения"],
+  ["mount","🐎 Позвать скакуна"],
+  ["unmount","🚶 Отпустить скакуна"],
   ["craft","🔨 Крафт"],
   ["journal","📔 Журнал"]]],
  ["Мир",[
@@ -2989,6 +2991,8 @@ function amAvailable(cmd){
  try{
   const c=cellContent(G.x,G.y);
   if(cmd==="ascend")return !!G.place;
+  if(cmd==="mount")return (G.mounts||[]).length>0;
+  if(cmd==="unmount")return !!G.mount;
   if(cmd==="takeoff")return canTakeOff()&&(Number(G.alt)||0)<wingSpan();
   if(cmd==="flydown")return inFlight();
   if(cmd==="land")return inFlight();
@@ -3373,7 +3377,13 @@ const GUIDE=[
  "Их тринадцать. Долг перед храмом, Дело клана, Военный долг, Торговый дом, Опись сети — и восемь новых: Поветрие у целительницы, Заказ мастера у кузнеца, Затонувшее у трактирщика, Зверь тракта у стражи, Двойная книга у советника, Звёздная нить у магистра, Дорога паломника у странника, Испытание школы.",
  "У ремесла не одна цепочка. Какая достанется — решают координаты жителя: магистр в одних землях ведёт опись сети, в других — звёздную нить, в третьих устраивает испытание школы. Поэтому цепочки встречаются по всему миру, а не в первом же городе.",
  "Последний шаг платит не золотом. Заказ мастера кончается именным клинком и зовом горна, Поветрие — последним обрядом, Затонувшее — голосом глубины, Зверь тракта — меткой охотника, Двойная книга — шагом в тень, Звёздная нить — взглядом за Грань, Дорога паломника — чутьём тракта, Испытание школы — скорым чтением и печатью школы. Это те самые умения, которым иначе учат только школы, — и ещё один способ их получить."]},
-{title:"Глава 42. Горячие клавиши и советы",body:[
+{title:"Глава 42. Тайные ходы, палаты и скакуны",body:[
+ "У каждой вещи обстановки есть своя тайна. Примерно одна из двадцати скрывает ход: за статуей, за алтарным камнем, за зеркалом, за очагом, за троном — чаще всего; за бочкой и мешками — почти никогда.",
+ "Как найти. Единственный способ — трогать всё подряд. Тронули вещь, она рассказала своё — и вдруг под рукой щёлкает плита. Игра скажет, что открылся ход, и опишет, что видно внутри. Тронете эту вещь ещё раз — войдёте.",
+ "Что внутри. Тайная палата, собранная из координат: сухая крипта, затопленная по щиколотку, комната с колодцем, галерея с двенадцатью нишами — двенадцать видов и восемь стражей. Двух одинаковых палат в мире нет.",
+ "Что лежит. Награда шести родов: артефакт, заклинание, умение, навык, именное оружие и скакун. Плюс золото россыпью. Палату опустошают один раз: вернувшись, вы найдёте пустой камень.",
+ "Скакуны. Их восемь, и купить их нельзя нигде — только найти. Пепельная кобылица вдвое сокращает шаг, каменный жук везёт добычу, туманный олень уводит от встреч, грозовой рух поднимает на крыло даже бескрылого, костяной баран бьёт с разбега, приливный конь укорачивает морские переходы, угольный пёс чует дальше, стеклянная рысь видит в темноте. Позвать и отпустить скакуна можно из меню действий или из окна «Школы и умения»."]},
+{title:"Глава 43. Горячие клавиши и советы",body:[
  "Стрелки — ходьба. Контрол или Альт плюс G — руководство. Контрол или Альт плюс M — меню действий. Альт плюс S — тишина. Эскейп — закрыть.",
  "Играйте в наушниках — стерео-маяки помогут ориентироваться. Удачной охоты, Странник!"]}];
 let chIndex=0;
@@ -6691,7 +6701,7 @@ function boardShip(i){
   return false;}
  G.gold-=sh.fare;
  G.ship={name:sh.name,kind:sh.kind,speed:Number(sh.speed)||1,hold:Number(sh.hold)||20,tox:sh.tox,toy:sh.toy,toName:sh.toName,
-  legs:sh.legs,left:sh.legs,leg:0,war:sh.war,storm:false,fare:sh.fare};
+  legs:sh.legs,left:safeFn(()=>mountSeaCut(sh.legs),sh.legs),leg:0,war:sh.war,storm:false,fare:sh.fare};
  const m=document.getElementById("modal-harbor");if(m&&!m.hidden)safeFn(()=>closeModal(m));
  safeFn(()=>{beacon("port_horn",0,0);Bank.play("ship_depart",{seed:sh.tox,gain:0.8,maxSec:8});});
  safeFn(()=>{Play.stopKey("amb0");Play.stopKey("amb1");Bank.stop("live");Music.start("coast");bankUpdateAmbient();});
@@ -9398,6 +9408,219 @@ function useProp(x,y){
  const прежняя=propCell;
  propCell={x,y};
  try{safeFn(()=>pr.use());}finally{propCell=прежняя;}
+ /* И только после того, как вещь рассказала своё, под ней может щёлкнуть
+    рычаг. Это единственный способ найти тайный ход: трогать всё подряд. */
+ safeFn(()=>revealSecret(x,y));
+ return true;}
+/* ════════════════════════════════════════════════════════════════════════
+   ТАЙНЫЕ ХОДЫ, ТАЙНЫЕ ПАЛАТЫ И ТО, ЧТО В НИХ ЛЕЖИТ
+
+   Обстановка мира что-то рассказывала и что-то давала, но всё это было
+   поверхностью: тронул статую — услышал про статую. Ни одна вещь не скрывала
+   ничего. Между тем ровно так и устроены настоящие тайники: рычаг за
+   алтарём, кнопка под столешницей, плита, которая проседает под жаровней.
+
+   Теперь у каждой вещи обстановки есть свои координаты, а у координат —
+   своя тайна. Примерно одна вещь из четырнадцати скрывает ход. Найти его
+   можно только одним способом: трогать всё подряд. Раз найденный, ход
+   остаётся открытым навсегда.
+
+   За ходом — тайная палата. Она не повторяется: её вид, страж, испытание и
+   награда собираются из координат, а награда берётся из шести разных
+   родов — артефакт, заклинание, умение, навык, именное оружие, скакун.
+   Скакунов иначе не достать нигде.
+   ════════════════════════════════════════════════════════════════════════ */
+
+/* ── СКАКУНЫ ──
+   Только из тайных палат. У каждого своя польза и свой голос. */
+const MOUNTS=[
+ {id:"ashmare", n:"Пепельная кобылица",  b:"beasts_horse",
+  d:"Шаг по земле отнимает вдвое меньше времени: она идёт, пока другие собираются.",
+  дар:{шаг:0.5}},
+ {id:"stonebeetle",n:"Каменный жук",     b:"deep_rocks",
+  d:"Везёт на себе поклажу: с ним вы берёте с жил на две единицы больше.",
+  дар:{добыча:2}},
+ {id:"mistelk", n:"Туманный олень",      b:"beasts_cattle",
+  d:"Идёт тише всех: случайные встречи в дороге почти не случаются.",
+  дар:{скрытность:0.5}},
+ {id:"stormroc",n:"Грозовой рух",        b:"raptor_cry",
+  d:"Крылатый: поднимает на крыло даже бескрылого и держит потолок в три клетки.",
+  дар:{крыло:3}},
+ {id:"boneram", n:"Костяной баран",      b:"beasts_sheep",
+  d:"Бьёт с разбега: ваш урон в бою выше на четверть, пока он рядом.",
+  дар:{урон:1.25}},
+ {id:"tidehorse",n:"Приливный конь",     b:"sea_open",
+  d:"Ходит по воде: морские переходы вдвое короче, а рыба идёт лучше.",
+  дар:{море:0.5}},
+ {id:"emberhound",n:"Угольный пёс",      b:"brute_roar",
+  d:"Чует жилы и тайники: эхо-скан достаёт дальше и называет больше.",
+  дар:{скан:3}},
+ {id:"glasslynx",n:"Стеклянная рысь",    b:"fx_crystal",
+  d:"Видит ночью и в темноте подземелий: ночь для вас становится днём.",
+  дар:{ночь:1}},
+];
+const MOUNT_BY_ID=Object.fromEntries(MOUNTS.map(m=>[m.id,m]));
+function hasMount(id){try{return (G.mounts||[]).indexOf(id)>=0;}catch(_){return false;}}
+function mountNow(){try{return G.mount?MOUNT_BY_ID[G.mount]||null:null;}catch(_){return null;}}
+function mountGift(k){const m=mountNow();return m&&m.дар&&m.дар[k]!==undefined?m.дар[k]:null;}
+function takeMount(id){
+ const m=MOUNT_BY_ID[id];if(!m)return false;
+ if(!Array.isArray(G.mounts))G.mounts=[];
+ if(!hasMount(id))G.mounts.push(id);
+ G.mount=id;
+ return true;}
+function callMount(id){
+ if(!id){ /* переключение по кругу */
+  const мои=(G.mounts||[]).filter(x=>MOUNT_BY_ID[x]);
+  if(!мои.length){narrate("Скакуна у вас нет: их находят только в тайных палатах.");return false;}
+  const i=мои.indexOf(G.mount);
+  id=мои[(i+1)%мои.length];}
+ if(!hasMount(id)){narrate("Такого скакуна у вас нет.");return false;}
+ const m=MOUNT_BY_ID[id];
+ G.mount=id;
+ safeFn(()=>Bank.play(m.b,{gain:0.6,maxSec:4}));
+ narrate(`С вами ${m.n}. ${m.d}`);
+ safeFn(()=>{renderSchool();refresh();saveGame(true);});
+ return true;}
+function dismissMount(){
+ if(!G.mount){narrate("Вы и так пешком.");return false;}
+ const m=mountNow();G.mount=null;
+ narrate(`${m?m.n:"Скакун"} отходит в сторону и ждёт. Вы пешком.`);
+ safeFn(()=>{renderSchool();refresh();saveGame(true);});
+ return true;}
+
+/* ── ЧТО ЛЕЖИТ В ТАЙНОЙ ПАЛАТЕ ──
+   Шесть родов награды. Что именно — решают координаты палаты, поэтому две
+   палаты рядом не повторяются, а одна и та же палата всегда та же. */
+const SECRET_ARTIFACTS=[
+ "Ключ без замка","Зеркало, в котором не вы","Сердце горы","Слеза Селены",
+ "Печать спящего прародителя","Компас, указывающий на Грань","Колокол без языка",
+ "Перо, которое пишет само","Кость первого зверя","Уголь Пепельного года",
+ "Соль последнего моря","Нить, что держит узор"];
+const SECRET_BLADES=[
+ "Клинок тихого шага","Молот сорванной печати","Копьё двенадцати имён",
+ "Топор пепельной кузни","Серп лунной жатвы","Кинжал двойной книги",
+ "Меч, выкованный из ключа","Посох корневого хода"];
+const SECRET_KINDS=["артефакт","заклинание","умение","навык","оружие","скакун"];
+/* Облик палаты: вид, страж и испытание — тоже из координат. */
+const SECRET_LOOK=["сухая каменная палата","затопленная по щиколотку крипта",
+ "круглая комната с колодцем посередине","низкий ход, где приходится идти пригнувшись",
+ "зал с обрушенным сводом и небом в проломе","хранилище с полками до потолка",
+ "молельня без алтаря","мастерская, брошенная посреди работы",
+ "костница, выложенная узором","ледяной карман в породе",
+ "комната, где стены исписаны одной и той же строкой","галерея с двенадцатью нишами"];
+const SECRET_WARD=["сторож на цепи, давно мёртвый","печать, которую надо тронуть трижды",
+ "плита, проседающая под весом","занавес пыли, стоящий столбом",
+ "тишина такая, что слышно кровь","старая ловушка, уже сработавшая",
+ "надпись, требующая назвать имя","круг соли, не тронутый временем"];
+function secretKey(bx,by){return "s"+bx+","+by;}
+/* Есть ли в этой клетке обстановки скрытый рычаг. */
+/* За чем прячут ход. За статуей и алтарным камнем — чаще всего: их не
+   двигают веками, и плита под ними успевает стать дверью. За шкафом,
+   зеркалом, очагом и троном — тоже. За бочкой — почти никогда. */
+const SECRET_BEHIND={statue:0.09,mirror:0.08,hearth:0.07,bookcase:0.07,
+ brazier:0.06,throne:0.08,fountain:0.06,tapestry:0.07,censer:0.06,
+ anvil:0.05,scrollcase:0.05,chandelier:0.05,gong:0.06,basin:0.05};
+function propHidesSwitch(bx,by,depth,x,y,propId){
+ try{
+  const h=hashName(bx*7+x*13+depth*29,by*11+y*17+depth*5,4700);
+  let порог=0.04;
+  if(propId===undefined){
+   /* Спросили без вещи — значит, интересует само место: берём среднюю меру. */
+   порог=0.06;
+  }else if(propId&&SECRET_BEHIND[propId]!==undefined)порог=SECRET_BEHIND[propId];
+  return h<порог;
+ }catch(_){return false;}}
+/* Тайная палата, к которой ведёт этот ход: всё её содержимое — из координат. */
+function secretVault(bx,by,x,y){
+ const seed=(a)=>hashName(bx*3+x*7+a,by*5+y*11+a*3,4800+a);
+ const род=SECRET_KINDS[Math.floor(seed(1)*SECRET_KINDS.length)%SECRET_KINDS.length];
+ const вид=SECRET_LOOK[Math.floor(seed(2)*SECRET_LOOK.length)%SECRET_LOOK.length];
+ const страж=SECRET_WARD[Math.floor(seed(3)*SECRET_WARD.length)%SECRET_WARD.length];
+ let приз=null,словом="";
+ if(род==="артефакт"){
+  приз={вид:"артефакт",что:SECRET_ARTIFACTS[Math.floor(seed(4)*SECRET_ARTIFACTS.length)%SECRET_ARTIFACTS.length]};
+  словом=`артефакт «${приз.что}»`;}
+ else if(род==="оружие"){
+  приз={вид:"оружие",что:SECRET_BLADES[Math.floor(seed(5)*SECRET_BLADES.length)%SECRET_BLADES.length]};
+  словом=`именное оружие «${приз.что}»`;}
+ else if(род==="скакун"){
+  приз={вид:"скакун",что:MOUNTS[Math.floor(seed(6)*MOUNTS.length)%MOUNTS.length].id};
+  словом=`скакун «${MOUNT_BY_ID[приз.что].n}»`;}
+ else if(род==="умение"){
+  приз={вид:"умение",что:ABILITIES[Math.floor(seed(7)*ABILITIES.length)%ABILITIES.length].id};
+  словом=`умение «${ABILITY_BY_ID[приз.что].n}»`;}
+ else if(род==="навык"){
+  приз={вид:"навык",что:SKILLS[Math.floor(seed(8)*SKILLS.length)%SKILLS.length].id};
+  словом=`навык «${SKILL_BY_ID[приз.что].n}»`;}
+ else{
+  приз={вид:"заклинание",что:SPELLS[Math.floor(seed(9)*SPELLS.length)%SPELLS.length].n};
+  словом=`заклинание «${приз.что}»`;}
+ const золото=60+Math.floor(seed(10)*240);
+ return {вид,страж,приз,словом,золото,ключ:secretKey(bx*100+x,by*100+y)};}
+/* Открыт ли уже этот ход и взята ли палата. */
+function secretFound(k){try{return !!(G.secrets&&G.secrets[k]);}catch(_){return false;}}
+function secretTaken(k){try{return (G.secrets&&G.secrets[k])==="взято";}catch(_){return false;}}
+function secretMark(k,как){try{if(!G.secrets||typeof G.secrets!=="object")G.secrets={};G.secrets[k]=как;}catch(_){}}
+/* Найти ход: это делает сама вещь, когда её трогают. */
+function revealSecret(x,y,propId){
+ const p=G.place;if(!p)return false;
+ if(propId===undefined)propId=safeFn(()=>{const pr=propAt(x,y);return pr&&pr.id;},undefined);
+ if(!propHidesSwitch(p.bx,p.by,p.depth,x,y,propId))return false;
+ const v=secretVault(p.bx,p.by,x,y);
+ if(secretTaken(v.ключ))return false;
+ if(!secretFound(v.ключ)){
+  secretMark(v.ключ,"найден");
+  safeFn(()=>{Bank.play("lock_click",{gain:0.7,maxSec:3});
+   setTimeout(()=>safeFn(()=>Bank.play("hall_gate",{gain:0.6,maxSec:5})),320);
+   setTimeout(()=>safeFn(()=>beaconAt("stairs_down",0,0,-1,1)),700);});
+  narrate(`Что-то щёлкнуло под рукой${propId&&PROP_BY_ID[propId]?` — за ${PROP_BY_ID[propId].n} подалась плита`:""}. Открывается ход: ${v.вид}. Внутри ${v.страж}. Тронь${"те"} эту вещь ещё раз — войдёте.`,{interrupt:false});
+  journal("Найден тайный ход.");
+  safeFn(()=>saveGame(true));
+  return true;}
+ /* Ход уже открыт: значит, входим. */
+ return takeSecret(x,y,propId);}
+/* Войти в открытую палату и взять то, что в ней лежит. */
+function takeSecret(x,y,propId){
+ const p=G.place;if(!p)return false;
+ if(propId===undefined)propId=safeFn(()=>{const pr=propAt(x,y);return pr&&pr.id;},undefined);
+ if(!propHidesSwitch(p.bx,p.by,p.depth,x,y,propId))return false;
+ const v=secretVault(p.bx,p.by,x,y);
+ if(secretTaken(v.ключ)){
+  narrate("Тайная палата за этой вещью уже пуста: вы здесь были.");
+  return true;}
+ secretMark(v.ключ,"взято");
+ G.gold+=v.золото;
+ let дар="";
+ const пр=v.приз;
+ if(пр.вид==="артефакт"){
+  if(!Array.isArray(G.artifacts))G.artifacts=[];
+  G.artifacts.push(пр.что);
+  дар=`Артефакт: «${пр.что}».`;}
+ else if(пр.вид==="оружие"){
+  if(!Array.isArray(G.items))G.items=[];
+  G.items.push(пр.что);
+  дар=`Именное оружие: «${пр.что}». Оно ляжет в сумку.`;}
+ else if(пр.вид==="скакун"){
+  const m=MOUNT_BY_ID[пр.что];
+  takeMount(пр.что);
+  дар=`Скакун: ${m.n}. ${m.d} Его нельзя ни купить, ни выменять — только найти.`;}
+ else if(пр.вид==="умение"){
+  const a=ABILITY_BY_ID[пр.что];
+  дар=learnAbility(пр.что)?`Умение: «${a.n}». ${a.d}`:`Умение «${a.n}» вам уже знакомо.`;}
+ else if(пр.вид==="навык"){
+  const sk=SKILL_BY_ID[пр.что];
+  дар=safeFn(()=>learnSkill(пр.что),false)?`Навык: «${sk.n}». ${sk.d}`:`Навык «${sk.n}» у вас уже есть.`;}
+ else{
+  if(!Array.isArray(G.spells))G.spells=[];
+  дар=G.spells.indexOf(пр.что)<0?(G.spells.push(пр.что),`Заклинание: «${пр.что}».`)
+   :`Заклинание «${пр.что}» вы уже знаете.`;}
+ safeFn(()=>{UI.fanfare();
+  Bank.play("relic_sing",{gain:0.7,maxSec:6})||Bank.play("gate_fanfare",{gain:0.7,maxSec:5});
+  setTimeout(()=>safeFn(()=>Bank.play("arte_coins",{gain:0.6,maxSec:4})),400);});
+ journal(`Тайная палата: ${v.словом}.`);
+ narrate(`Вы протискиваетесь в ход. ${v.вид[0].toUpperCase()+v.вид.slice(1)}; ${v.страж}. На камне лежит ваша находка. ${дар} И ${v.золото} золота россыпью.`);
+ safeFn(()=>{refresh();saveGame(true);});
  return true;}
 /* ── Собрание: всё, что игрок прочёл ──
    Двухуровневое, как энциклопедия звуков: сперва полки, потом страницы
@@ -9634,7 +9857,9 @@ const G={hp:100,hpMax:100,str:10,agi:10,mind:10,cha:10,mana:10,manaMax:10,
  known:{},
  /* Школы: выученные умения, ступени пройденных школ, временные дары и то,
     что можно делать раз в день. */
- abilities:[],schools:{},buffs:{},daily:{}};
+ abilities:[],schools:{},buffs:{},daily:{},
+ /* Тайные ходы: найденные и опустошённые; скакуны, найденные в палатах. */
+ secrets:{},mounts:[],mount:null};
 const xpNeed=l=>l*l*50;
 /* Дар Хронара и ткачей судьбы: опыт течёт быстрее. Через эту функцию проходит
    ВСЯ прибавка опыта, поэтому дар работает и в бою, и в заданиях. */
@@ -10855,6 +11080,16 @@ function renderSchool(){
   html+=`<div class="list-line" data-speak="${строка.replace(/"/g,"'")}">${a.вид==="деяние"?"✨":"🌿"} <b>${a.n}</b> — ${a.вид==="деяние"?цена:"дар"}<br>${a.d}${держится}`+
    (a.вид==="деяние"?` <button data-cmd="ability:${a.id}" data-speak="Применить умение ${a.n}.">${занято?"⌛ Сегодня уже применяли":"✨ Применить"}</button>`:"")+
    `</div>`;});
+ /* Скакуны: их не купишь, они только из тайных палат. */
+ const кони=(G.mounts||[]).map(id=>MOUNT_BY_ID[id]).filter(Boolean);
+ html+=`<h3>Скакуны (${кони.length} из ${MOUNTS.length})</h3>`;
+ if(!кони.length)html+=`<div class="list-line" data-speak="Скакунов нет. Их не продают: каждый лежит в своей тайной палате, а ходы к палатам находят, трогая обстановку.">🐎 Скакунов нет. Их не продают: каждый ждёт в своей тайной палате.</div>`;
+ кони.forEach(m=>{
+  const сейчас=G.mount===m.id;
+  html+=`<div class="list-line" data-speak="${(m.n+". "+m.d+(сейчас?" Сейчас с вами.":"")).replace(/"/g,"'")}">${сейчас?"🐎":"🐴"} <b>${m.n}</b>${сейчас?" — с вами":""}<br>${m.d}`+
+   (сейчас?` <button data-cmd="unmount" data-speak="Отпустить скакуна.">🚶 Отпустить</button>`
+          :` <button data-cmd="mount:${m.id}" data-speak="Позвать: ${m.n}.">🐎 Позвать</button>`)+
+   `</div>`;});
  /* Где искать остальное. */
  html+=`<h3>Школы мира (${SCHOOL_DB.length})</h3>`;
  SCHOOL_DB.forEach(x=>{
@@ -10918,6 +11153,10 @@ function abilityRootWalk(){
  safeFn(()=>{Bank.play("wood_creak",{gain:0.6,maxSec:4})||Bank.play("cast_teleport",{gain:0.6,maxSec:4});});
  safeFn(()=>arrive("N"));
  return `Корни вынесли вас за ${цель.d} ${plural(цель.d,"клетку","клетки","клеток")}: ${cellDesc(cellContent(G.x,G.y))}.`;}
+/* Приливный конь укорачивает морские переходы сам, без всякого умения. */
+function mountSeaCut(n){
+ const д=safeFn(()=>mountGift("море"),null);
+ return д?Math.max(1,Math.ceil(n*д)):n;}
 function abilitySeaCalm(){
  if(!G.ship)return "Голос глубины нужен в море: сейчас вы на суше.";
  const было=Number(G.ship.left)||0;
@@ -11403,6 +11642,8 @@ function pingSurroundings(rad=3,max=4){
  /* Школьные дары достают дальше: чутьё руды видит жилы, ночная метка — тварей. */
  if(hasAbility("oresense")){rad+=2;max+=2;}
  if(safeFn(()=>buffActive("nightmark"),false)){rad+=3;max+=3;}
+ const нюх=safeFn(()=>mountGift("скан"),null);
+ if(нюх){rad+=нюх;max+=нюх;}
  const near=nearFeatures(rad).slice(0,max);
  /* У каждого отклика теперь своё место, а не доля влево-вправо: ступени вниз
     звучат из-под ног, дверь — с той стороны, где она и стоит. */
@@ -12424,7 +12665,8 @@ function move(dir){
   safeFn(()=>wingBeat());
   safeFn(()=>Tutor.note("move:"+dir));
   return arriveSky(dir);}
- G.hour+=(runState.active?0.1:0.18)*(hasSkill("stamina")?0.75:1)*(hasAbility("roadsense")?0.85:1);   /* шаг и бег; «Дыхание дороги» и «Чутьё тракта» экономят время */
+ G.hour+=(runState.active?0.1:0.18)*(hasSkill("stamina")?0.75:1)*(hasAbility("roadsense")?0.85:1)
+  *(safeFn(()=>mountGift("шаг"),null)||1);   /* шаг и бег; «Дыхание дороги» и «Чутьё тракта» экономят время */
  if(G.hour>=24){G.hour-=24;G.day++;
   for(const k in G.depleted){if(G.depleted[k].day<G.day)delete G.depleted[k];}}
  if(settings.effects)stepSound();
@@ -12556,6 +12798,9 @@ function wingSpan(){
      у кого его нет вовсе. */
   if(f>0&&hasAbility("windfeath"))f+=1;
   if(f<=0&&safeFn(()=>buffActive("skycall"),false))f=2;
+  /* Крылатый скакун поднимает и бескрылого, и поднимает выше. */
+  const крыло=safeFn(()=>mountGift("крыло"),null);
+  if(крыло)f=Math.max(f,крыло);
   return Math.max(0,Math.min(ALT_MAX,f));
  }catch(_){return 0;}}
 function inFlight(){return (Number(G.alt)||0)>0;}
@@ -12964,6 +13209,9 @@ function arrive(dir){
   if(hasSkill("tracker"))скрытность+=0.3;
   /* Шаг в тень тратится на одну встречу и уводит от неё целиком. */
   if(safeFn(()=>buffActive("shadowstep"),false)){скрытность=1;safeFn(()=>{delete G.buffs.shadowstep;});}
+  const тихо=safeFn(()=>mountGift("скрытность"),null);
+  if(тихо)скрытность+=тихо;
+  if(safeFn(()=>mountGift("ночь"),null))скрытность+=0.2;
   if(hasSkill("nightsee")&&isNight())скрытность+=0.3;
   if(скрытность&&Math.random()<скрытность){
    stopRun();
@@ -13333,6 +13581,9 @@ function fight(a){const cb=G.combat;if(!cb)return;const m=cb.m;
  if(a==="atk"){let dmg=atk()+Math.floor(Math.random()*5);
   dmg+=Math.round(3*fxLevel("slay"));                       /* пламя Кальдера: урон по чудовищам */
   let critChance=0.10*fxLevel("crit")+(hasSkill("steady")?0.12:0); /* удар Таура и твёрдая рука */
+  /* Скакун, который бьёт с разбега, прибавляет к удару. */
+  const разбег=safeFn(()=>mountGift("урон"),null);
+  if(разбег)dmg=Math.round(dmg*разбег);
   /* Зов горна тратится на один удар и делает его сокрушительным наверняка. */
   if(safeFn(()=>buffActive("forgecall"),false)){critChance=1;
    safeFn(()=>{delete G.buffs.forgecall;});}
@@ -13614,6 +13865,8 @@ function gatherCurrent(source="tap"){
   /* Школьные дары ложатся сверх навыков: гномья штольня чует руду, роща Круга
      берёт с травы больше. */
   if(рудное&&hasAbility("oresense")){bounty+=1;навык+=" Чутьё руды: ещё одна.";}
+  const вьюк=safeFn(()=>mountGift("добыча"),null);
+  if(вьюк){bounty+=вьюк;навык+=` ${mountNow().n} везёт ещё ${вьюк}.`;}
   if(зелёное&&hasAbility("greenhand")){bounty+=1;навык+=" Зелёная рука: ещё одна.";}
   G.inv[c.res.name]=(G.inv[c.res.name]||0)+bounty;
   if(bounty>1)safeFn(()=>UI.blip(1040,.09,.16));
@@ -13826,6 +14079,8 @@ const CMD={
  school(){openModal("modal-school");renderSchool();},
  train(id){safeFn(()=>trainSchool(id));},
  ability(id){safeFn(()=>useAbility(id));},
+ mount(id){safeFn(()=>callMount(id||null));},
+ unmount(){safeFn(()=>dismissMount());},
  known(){openModal("modal-known");renderKnown();},
  knownping(x,y){safeFn(()=>pingKnown(Number(x),Number(y)));},
  npctalk(key){const n=getNPCByKey(key);
@@ -16070,6 +16325,12 @@ window.addEventListener("beforeunload",()=>{try{stopRun();saveGame(true);}catch(
   G.hour=clamp(num(G.hour,8),0,23.999);
   if(!Array.isArray(G.quests))G.quests=[];
   if(!G.known||typeof G.known!=='object'||Array.isArray(G.known))G.known={};
+  if(!G.secrets||typeof G.secrets!=='object'||Array.isArray(G.secrets))G.secrets={};
+  if(!Array.isArray(G.mounts))G.mounts=[];
+  if(G.mount&&!G.mounts.includes(G.mount))G.mount=null;
+  if(!Array.isArray(G.abilities))G.abilities=[];
+  if(!G.schools||typeof G.schools!=='object'||Array.isArray(G.schools))G.schools={};
+  if(!G.buffs||typeof G.buffs!=='object'||Array.isArray(G.buffs))G.buffs={};
   if(!Array.isArray(G.gear))G.gear=[];
   if(!Array.isArray(G.inventory))G.inventory=[];
   if(!Array.isArray(G.items))G.items=[];
