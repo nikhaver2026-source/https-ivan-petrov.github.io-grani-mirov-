@@ -61,6 +61,9 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   ["народы",()=>{CMD.races();raceFilterRank=0;renderRaces();}],
   ["пантеон",()=>CMD.pantheon()],
   ["бестиарий",()=>CMD.best()],
+  ["школы и умения",()=>{const e=EMPIRES[0].cap;G.place=null;G.abilities=["forgecall"];
+    G.gold=5000;G.level=12;
+    enterPlace({x:e.x,y:e.y,structure:{type:"forge",name:"Горн",beacon:"forge"}});CMD.school();}],
   ["молва о землях",()=>{G.known={};notePlace(G.x+4,G.y-3,"village","Ольховка","был");
     notePlace(G.x-7,G.y+5,"forge","Три искры","молва");CMD.known();}],
   ["инвентарь",()=>{G.inv={"руда":4};CMD.inv();}],
