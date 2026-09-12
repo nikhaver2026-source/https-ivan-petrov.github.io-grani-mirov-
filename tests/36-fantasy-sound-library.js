@@ -206,6 +206,51 @@ const NEW_DIRS=["arte","deep","foe","cast","hero","wild","trade","score",
  check('оркестр мира вырос, и каждая тема указывает на существующую запись',
   стк.темМира>=29&&стк.темыНет.length===0,{тем:стк.темМира,нет:стк.темыНет});
 
+ /* ── Три новые библиотеки: Luanti, OpenDungeons и Endless Sky ──
+    Проверяется то же, что и у SuperTuxKart, и сверх того — авторство:
+    каждая папка обязана нести свой CREDITS.md, иначе запись в игре есть, а
+    сказать, чья она, нечем. */
+ const новые=await page.evaluate(async()=>{
+  const пачки=["mtg","od","es"];
+  const итог={};
+  for(const пап of пачки){
+   const роли=Object.keys(SOUND_BANK).filter(k=>SOUND_BANK[k].f.some(f=>f.startsWith(пап+"/")));
+   const файлы=[...new Set(роли.flatMap(k=>SOUND_BANK[k].f).filter(f=>f.startsWith(пап+"/")))];
+   const битые=[];
+   for(const f of файлы.slice(0,40)){
+    const ок=await new Promise(res=>{const a=new Audio(Bank.url(f));a.preload="metadata";
+     const t=setTimeout(()=>res(false),8000);
+     a.addEventListener("loadedmetadata",()=>{clearTimeout(t);res(a.duration>0.03);},{once:true});
+     a.addEventListener("error",()=>{clearTimeout(t);res(false);},{once:true});});
+    if(!ок)битые.push(f);}
+   const исходник=document.documentElement.outerHTML;
+   итог[пап]={ролей:роли.length,файлов:файлы.length,битые,
+    вКаталоге:!!BANK_CATS[пап],
+    вГруппе:BANK_GROUPS.some(g=>(g.dirs||[]).includes(пап)),
+    мёртвые:роли.filter(r=>исходник.indexOf('"'+r+'"')<0)};}
+  return итог;});
+ for(const [пап,и] of Object.entries(новые)){
+  check(`записи «${пап}» на месте, читаются браузером и подключены ролями`,
+   и.файлов>=60&&и.битые.length===0&&и.ролей>=14,
+   {папка:пап,файлов:и.файлов,ролей:и.ролей,битые:и.битые.slice(0,4)});
+  check(`папка «${пап}» внесена в каталог и в группу энциклопедии, и ни одна её роль не мертва`,
+   и.вКаталоге&&и.вГруппе&&и.мёртвые.length===0,
+   {папка:пап,каталог:и.вКаталоге,группа:и.вГруппе,мёртвые:и.мёртвые.slice(0,5)});}
+ /* Авторство: у каждой заимствованной папки свой список авторов и лицензий.
+    Читаем с диска, а не из страницы: игре запрещены сетевые запросы, и это
+    правильно — но проверке нужен сам файл. */
+ const титры={};
+ for(const пап of ["stk","mtg","od","es"]){
+  const f=path.join(__dirname,"..","sounds",пап,"CREDITS.md");
+  try{
+   const t=fs.readFileSync(f,"utf8");
+   титры[пап]={есть:true,строк:t.split("\n").length,
+    лицензия:/CC|обществен/i.test(t),ссылка:/http/.test(t),
+    авторы:/[Аа]втор/.test(t)};
+  }catch(e){титры[пап]={есть:false,ошибка:String(e).slice(0,40)};}}
+ check('у каждой заимствованной библиотеки есть свои титры: авторы, лицензия и ссылка',
+  Object.values(титры).every(x=>x.есть&&x.лицензия&&x.ссылка&&x.авторы&&x.строк>10),титры);
+
  check('игра не выбрасывала ошибок за весь прогон',errors.length===0,errors.slice(0,3));
 
  console.log(results.join('\n'));

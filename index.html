@@ -1922,6 +1922,8 @@ const BEACON_INFO={
 /* Карточки записей банка: по одной на роль, с описанием и числом вариантов. */
 const BANK_CATS={mg:"🐲 Фэнтезийный мир: твари, чары, ремёсла и погода",
  mtg:"🪓 Ремесло и стихии Luanti: шаги, двери, огонь, лава, взрыв",
+ od:"🏰 Подземный мир OpenDungeons: голоса владыки, нежить, копка, обвалы",
+ es:"💥 Взрывы, гулы и переходы Endless Sky",
  stk:"⛰️ Стихии и дали: гром, вода, птицы, ремесло и шестнадцать тем",
  sea:"🌊 Море, порты и корабли",ambience:"🌍 Земли и погода",dungeon:"🕳️ Подземелья по глубине",
  magic:"✨ Школы магии",gods:"🕯️ Боги, алтари и знамения",events:"⚡ События",places:"🏛️ Места и ремёсла",
@@ -1968,6 +1970,8 @@ const BANK_GROUPS=[
  {n:"Земли, погода и день",   icon:"🌍", dirs:["ambience","sky"]},
  {n:"Стихии, дали и темы мира",icon:"⛰️", dirs:["stk"]},
  {n:"Ремесло, огонь и камень",icon:"🪓", dirs:["mtg"]},
+ {n:"Подземный мир и тёмные голоса",icon:"🏰", dirs:["od"]},
+ {n:"Взрывы, гулы и переходы",  icon:"💥", dirs:["es"]},
  {n:"Подземелья и тьма",      icon:"🕳️", dirs:["dungeon","dark","deep","depth"]},
  {n:"Магия, чары и касты",    icon:"🔮", dirs:["magic","spell","cast"]},
  {n:"Боги, храмы и знамения", icon:"🕯️", dirs:["gods"]},
@@ -3324,7 +3328,11 @@ const GUIDE=[
  "Авторы записей SuperTuxKart поимённо: 0zone0ne, Krobonil (Chris Leutwyler), Claude Werner под именем bollen, DJHelium, Kalsan, Marianne «Auria» Gagnon, Mike Koenig, The Audio Monkey, Daniel Simion и BlastwaveFx, Adam Newns, Leonard «VKProduktion» Graf, James «swiftoid» Swift, Magne «Arthur-D» Djupvik, Fritz Schlüter, ZAQraven, aust_paul, Alcappuccino, mpfeiffer, snottyboi, Tomlija, dADDoiT, kerri, Stephan, 7by7, Natalie, legoluft. Полный список с указанием, кто что сделал, лежит в файле CREDITS.md рядом с записями.",
  "Что означает эта лицензия. Записи можно свободно слушать, копировать, распространять и изменять, в том числе в коммерческих целях, при двух условиях: назвать автора и оставить изменённые записи под той же лицензией. Оба условия соблюдены. Полный текст лицензии лежит рядом с записями в файле LICENSE-CC-BY-SA-3.0.txt, а его краткое изложение — на creativecommons.org/licenses/by-sa/3.0/.",
  "Остальные источники, названные раньше: сэмплы Sonic Pi с freesound.org (общественное достояние, CC0 1.0), живые инструменты проекта tonejs-instruments и оркестр из звукового шрифта FluidR3_GM автора Frank Wen, изданного проектом MIDI.js Soundfonts (обе — Creative Commons Attribution 3.0), пакет uisfx (CC0), Neo HQ Mystic Sounds, Fantasy Sound Library и Classic Monster Sounds (автор Coucassi).",
- "Всё, что не покрыто записями, игра строит сама: сто двадцать синтезированных сцен работают всегда, даже если папку со звуками не скачали."]},
+ "Всё, что не покрыто записями, игра строит сама: сто двадцать синтезированных сцен работают всегда, даже если папку со звуками не скачали.",
+ "Три библиотеки добавились последними. Записи Luanti (Minetest Game) — девяносто семь: шаги по девяти поверхностям, двери и калитки, огонь, лава, стекло, металл, копка и взрыв; лицензия CC BY-SA 3.0, авторы — коллектив Minetest Game, полный список в sounds/mtg/CREDITS.md.",
+ "Записи OpenDungeons — сто восемь: голоса владыки подземелья, хрипы нежити, копка породы, обвалы, лечебные чары, звон ссыпаемого золота, удар клинка по клинку и три темы. Лицензии CC BY-SA 3.0, CC BY 3.0 и CC0; авторы — Svenskmand, eugeneloza, remaxim, artisticdude, DoKashiteru, jalastram, Pal Zoltan Illes, Matthew Pablo, yd. Список — sounds/od/CREDITS.md.",
+ "Записи Endless Sky — семьдесят две: взрывы всех размеров, удары, гулы, переходы, тревога и копка. Папка их звуков объявлена общественным достоянием, отдельные записи идут под CC BY-SA 3.0 (Mike Koenig, 18hiltc). Список — sounds/es/CREDITS.md. За Гранью они звучат как обряд, разрыв Грани и голос пустоты.",
+ "Библиотеку Veloren в игру не брали, хотя она больше всех перечисленных: их звуковые записи идут под GPL-3, а музыка — под CC BY-NC-SA 4.0 с прямой оговоркой «не использовать в других играх». Ни то, ни другое не совместимо с собранием «Грани Миров»."]},
 {title:"Глава 34. Объёмный звук: сторона, даль и высота",body:[
  "Раньше у звука была только панорама — доля влево или вправо. Слышно было «левее» и «правее», но не «впереди», не «за спиной», не «под ногами» и не «как далеко». Теперь у каждого источника есть МЕСТО.",
  "Как это работает. Звук проходит через свёртку с откликом человеческой головы — по-английски HRTF. Игра не просто делает левое ухо громче: она воспроизводит то, как звук огибает череп и ушную раковину, и ухо само считает угол. Поэтому слышно не «левее», а «слева и чуть сзади, шагах в четырёх».",
@@ -5870,6 +5878,47 @@ Object.assign(SOUND_BANK,{
    пороховая дорожка и взрыв, лава, стекло, металл, копка и укладка камня.
    Здесь они держат тёмные земли: обряд, костницу, яму, шпиль и торжище.
    Полный список с авторами — sounds/mtg/CREDITS.md. */
+/* ── ЗАПИСИ OPENDUNGEONS, CC BY-SA 3.0 / CC BY 3.0 / CC0 ──
+   Сто восемь записей подземельного мира: голоса владыки, хрипы нежити,
+   копка породы, обвалы, лечебные чары, звон ссыпаемого золота, удар клинка
+   по клинку и три темы. Они держат тёмные земли и сто ярусов глубины.
+   Авторы и лицензии пофайлово — sounds/od/CREDITS.md. */
+ od_keeper_word:{f:["od/keeper_neutral_allydefeated1.ogg","od/keeper_neutral_allydefeated2.ogg","od/keeper_neutral_allydefeated3.ogg","od/keeper_neutral_allydefeated4.ogg","od/keeper_neutral_creaturebed1.ogg","od/keeper_neutral_creaturebed2v1.ogg","od/keeper_neutral_creaturebed2v2.ogg","od/keeper_neutral_creaturehungry1.ogg","od/keeper_neutral_creaturehungry3.ogg","od/keeper_neutral_creaturenew1.ogg","od/keeper_neutral_creaturenew2.ogg","od/keeper_neutral_creaturenew3.ogg","od/keeper_neutral_defeat1.ogg","od/keeper_neutral_defeat2.ogg","od/keeper_neutral_defeat3.ogg","od/keeper_neutral_objectivefailed1.ogg","od/keeper_neutral_objectivefailed2.ogg","od/keeper_neutral_objectivemet1.ogg","od/keeper_neutral_objectivemet2.ogg","od/keeper_neutral_victory1.ogg","od/keeper_neutral_victory2.ogg","od/keeper_neutral_victory3.ogg","od/keeper_neutral_weareunderattack1v1.ogg","od/keeper_neutral_weareunderattack1v2.ogg","od/keeper_neutral_weareunderattack2.ogg","od/keeper_neutral_weareunderattack3.ogg"],d:"Голос владыки подземелья: весть"},
+ od_keeper_groan:{f:["od/keeper_groan_defeat1.ogg","od/keeper_groan_defeat2.ogg"],d:"Стон владыки"},
+ od_undead:{f:["od/zombie_1.ogg","od/zombie_10.ogg","od/zombie_11.ogg","od/zombie_12.ogg","od/zombie_13.ogg","od/zombie_14.ogg","od/zombie_15.ogg","od/zombie_16.ogg","od/zombie_17.ogg","od/zombie_18.ogg","od/zombie_19.ogg","od/zombie_2.ogg","od/zombie_20.ogg","od/zombie_21.ogg","od/zombie_22.ogg","od/zombie_23.ogg","od/zombie_24.ogg","od/zombie_3.ogg","od/zombie_4.ogg","od/zombie_5.ogg","od/zombie_6.ogg","od/zombie_7.ogg","od/zombie_8.ogg","od/zombie_9.ogg"],d:"Хрип нежити"},
+ od_dig:{f:["od/digging01.ogg","od/digging02.ogg","od/digging03.ogg","od/digging04.ogg","od/digging05.ogg","od/digging06.ogg","od/digging07.ogg","od/digging08.ogg","od/digging09.ogg","od/digging10.ogg","od/digging11.ogg","od/digging12.ogg","od/digging13.ogg","od/digging14.ogg","od/digging15.ogg","od/digging16.ogg","od/digging17.ogg","od/digging18.ogg"],d:"Копка породы"},
+ od_rocks:{f:["od/rocksfalling01.ogg","od/rocksfalling02.ogg","od/rocksfalling03.ogg","od/rocksfalling04.ogg","od/rocksfalling05.ogg","od/rocksfalling06.ogg","od/rocksfalling07.ogg"],d:"Обвал в подземелье"},
+ od_gold:{f:["od/depositgold1.ogg","od/depositgold2.ogg","od/depositgold3.ogg","od/depositgold4.ogg","od/depositgold5.ogg"],d:"Ссыпаемое золото"},
+ od_heal:{f:["od/healspell1.ogg","od/healspell1_2.ogg","od/healspell1_3.ogg","od/healspell1_4.ogg","od/healspell2.ogg","od/healspell3.ogg"],d:"Лечебные чары"},
+ od_blade:{f:["od/swordblock01.ogg","od/swordblock02.ogg","od/swordblock03.ogg","od/swordblock04.ogg","od/swordblock05.ogg","od/swordblock06.ogg","od/swordblock07.ogg"],d:"Клинок принял удар"},
+ od_die:{f:["od/die1.ogg","od/die1_2.ogg"],d:"Предсмертный крик"},
+ od_take:{f:["od/inventory1.ogg","od/inventory2.ogg"],d:"Вещь берут в руки"},
+ od_claim:{f:["od/claim01.ogg"],d:"Земля признала хозяина"},
+ od_build:{f:["od/default_build_room.ogg","od/default_build_trap.ogg"],d:"Палату отстроили"},
+ od_cannon:{f:["od/cannon_firing.ogg"],d:"Залп"},
+ od_fall:{f:["od/falling1.ogg"],d:"Падение тела"},
+ od_theme_dark:{f:["od/thedarkamulet_mp.ogg"],d:"Тема: Тёмный амулет"},
+ od_theme_deep:{f:["od/opendungeonsmaintheme_pzi.ogg"],d:"Тема: подземелья"},
+ od_theme_search:{f:["od/searching_yd.ogg"],d:"Тема: поиск"},
+/* ── ЗАПИСИ ENDLESS SKY, общественное достояние и CC BY-SA 3.0 ──
+   Семьдесят две записи: взрывы всех размеров, удары, гулы, переходы,
+   тревога и копка. За Гранью они звучат как обряд, разрыв Грани и голос
+   пустоты. Авторы и лицензии — sounds/es/CREDITS.md. */
+ es_boom:{f:["es/explosion_huge.ogg","es/explosion_large.ogg","es/explosion_medium.ogg","es/explosion_nuke.ogg","es/explosion_small.ogg","es/explosion_tiny.ogg"],d:"Взрыв"},
+ es_boom_last:{f:["es/final_explosion_large.ogg","es/final_explosion_medium.ogg","es/final_explosion_small.ogg"],d:"Последний взрыв"},
+ es_crunch:{f:["es/asteroid_crunch_large.ogg","es/asteroid_crunch_medium.ogg","es/asteroid_crunch_small.ogg","es/crunch.ogg"],d:"Камень крошится"},
+ es_hit:{f:["es/bludgeon_impact.ogg","es/ember_tear_hit.ogg","es/firelight_hit.ogg","es/firestorm_hit.ogg","es/heaver_shard_hit.ogg","es/heavy_rocket_hit.ogg","es/ion_impact.ogg","es/missile_hit.ogg","es/torpedo_hit.ogg"],d:"Тяжёлое попадание"},
+ es_gate:{f:["es/archonteleport.ogg","es/hyperdrive.ogg","es/hyperdrive_in.ogg","es/hyperdrive_out.ogg"],d:"Переход: гул и разрыв"},
+ es_jump:{f:["es/harmonic_jump.ogg","es/jump_drive.ogg","es/jump_in.ogg","es/jump_out.ogg"],d:"Прыжок сквозь"},
+ es_organ:{f:["es/organ_drive.ogg","es/organ_drive_in.ogg","es/organ_drive_out.ogg"],d:"Органный гул"},
+ es_alarm:{f:["es/acuit.ogg","es/alarm.ogg","es/astuit.ogg","es/nuke_alarm.ogg"],d:"Тревога"},
+ es_drill:{f:["es/drill.ogg","es/excavator.ogg","es/korath_digger.ogg","es/mining_laser.ogg"],d:"Бур и землеройка"},
+ es_ion:{f:["es/ion_huge.ogg","es/ion_large.ogg","es/ion_medium.ogg","es/ion_rain.ogg","es/ion_small.ogg","es/ion_tiny.ogg"],d:"Ионный гул: голос пустоты"},
+ es_plasma:{f:["es/plasma_huge.ogg","es/plasma_large.ogg","es/plasma_medium.ogg","es/plasma_small.ogg"],d:"Плазменный гул: жила под камнем"},
+ es_magic:{f:["es/dragonflame.ogg","es/fate_fire.ogg","es/magic_am.ogg","es/magic_weapon.ogg"],d:"Чары"},
+ es_beam:{f:["es/moonbeam.ogg","es/stagnation_beam.ogg","es/sunbeam.ogg"],d:"Луч"},
+ es_abyss:{f:["es/astral_attack.ogg","es/astral_cetacean.ogg","es/gravity_well.ogg","es/nucleolysis.ogg","es/pwave.ogg"],d:"Голос бездны"},
+ es_meteor:{f:["es/meteor.ogg","es/star_tail.ogg"],d:"Метеор и звёздный след"},
  mtg_glass:{f:["mtg/break_glass_1.ogg","mtg/break_glass_2.ogg","mtg/break_glass_3.ogg"],d:"Бой стекла"},
  mtg_chest_open:{f:["mtg/chest_open.ogg"],d:"Крышка сундука открывается"},
  mtg_chest_close:{f:["mtg/chest_close.ogg"],d:"Крышка сундука закрывается"},
@@ -6234,7 +6283,7 @@ const LIVE_SCENE={
  port:["hall_dock","sky_wave","throng_coming","hall_gate"],
  /* «battle_metal» здесь была опечаткой: такой роли в банке нет, и кузница
     теряла один голос из четырёх. Молот по наковальне — forge_hammer. */
- forge:["craft_saw","craft_wood","wild_anvil","forge_hammer"],
+ forge:["craft_saw","craft_wood","wild_anvil","forge_hammer","mtg_furnace"],
  temple:["hall_temple","throng_lord"],
  school:["arte_book","arte_page"],
  tower:["cast_teleport","deep_portal"],
@@ -6242,13 +6291,13 @@ const LIVE_SCENE={
  /* Тёмные места звучат своим: святилище — огнём и кресалом, костница —
     костью и стеклом, яма — обвалом, шпиль — металлом, торжище — торгом,
     притон — дверью и огнём, оплот — воротами и строем. */
- shrine:["mtg_fire","mtg_flint","temple_choir","mtg_smoke"],
- ossuary:["mtg_glass","mtg_rubble","foe_bone_hit","mtg_crumble"],
- pit:["mtg_rubble","mtg_dig_gravel","deep_rocks","mtg_stone_hit"],
- spire:["mtg_metal_hit","mtg_place","cast_teleport","mtg_steel_door"],
- bazaar:["trade_m","trade_f","mtg_chest_open","hall_market"],
- den:["mtg_door_open","mtg_fire","throng_hail_f","lute_tavern"],
- hold:["mtg_gate","throng_march","siege_garrison","mtg_metal_hit"],
+ shrine:["mtg_fire","mtg_flint","temple_choir","od_heal","es_magic"],
+ ossuary:["od_undead","mtg_glass","od_die","foe_bone_hit","od_keeper_groan"],
+ pit:["od_dig","od_rocks","es_crunch","mtg_rubble","es_drill"],
+ spire:["es_organ","es_ion","mtg_metal_hit","cast_teleport","es_beam"],
+ bazaar:["trade_m","trade_f","od_gold","od_take","hall_market"],
+ den:["mtg_door_open","mtg_fire","od_keeper_word","throng_hail_f"],
+ hold:["mtg_gate","od_keeper_word","throng_march","od_blade","siege_garrison"],
  cave_entrance:["deep_drip","beasts_lion","deep_rocks","deep_cart"]};
 const LIVE_DEEP=[[],["deep_drip","deep_cart","foe_goblin_hit"],
  ["deep_rocks","deep_wood","foe_bone_hit","foe_goblin_cast"],
@@ -7461,9 +7510,9 @@ function enterDark(){
  G.lightAt={x:G.x,y:G.y};
  G.dark=true;
  safeFn(()=>{contentCache.clear();});
- safeFn(()=>{Bank.play("fx_rift",{gain:0.8,maxSec:8});
-  setTimeout(()=>safeFn(()=>Bank.play("rift_bass",{gain:0.6,maxSec:7})),500);
-  setTimeout(()=>safeFn(()=>Bank.play("rift_tick",{gain:0.5,maxSec:5})),1100);});
+ safeFn(()=>{Bank.play("es_gate",{gain:0.8,maxSec:8})||Bank.play("fx_rift",{gain:0.8,maxSec:8});
+  setTimeout(()=>safeFn(()=>Bank.play("es_jump",{gain:0.7,maxSec:7})||Bank.play("rift_bass",{gain:0.6,maxSec:7})),500);
+  setTimeout(()=>safeFn(()=>Bank.play("es_alarm",{gain:0.5,maxSec:5})||Bank.play("rift_tick",{gain:0.5,maxSec:5})),1100);});
  const r=darkRealmAt(G.x,G.y);
  journal("Шаг за Грань: тёмные земли.");
  narrate(`Вы шагнули в разлом. Тёмные земли: ${darkTerrainAt(G.x,G.y)[1]}. Владение ${r.god.n} — ${r.god.dom}. Здесь нет держав и караванов; здесь платят кровью, временем, памятью и клятвой. Ворота обратно стоят там же, где вы вошли.`);
@@ -9466,7 +9515,7 @@ function readLegendScroll(name){
   setTimeout(()=>safeFn(()=>Bank.play("fx_crystal",{gain:0.5,maxSec:5})),300);});
  safeFn(()=>sp.run());
  const снял=hasSkill("scribe")&&Math.random()<0.35;
- if(!снял)G.items.splice(i,1);
+ if(!снял){G.items.splice(i,1);safeFn(()=>setTimeout(()=>safeFn(()=>spentSound()),600));}
  else narrate("Переписчик в вас успел снять список: свиток уцелел.",{interrupt:false});
  journal(`Свиток прочитан: ${name}.`);
  refresh();renderCharacter();saveGame(true);
@@ -9985,6 +10034,8 @@ let propCell=null;
    час мира за раз. Час двигает сутки, голод и жажду, ночь и день, поэтому
    лечиться без конца становится нечем — время само себя и ограничивает. */
 function propRest(часов){
+ /* Огонь, у которого грелись, оседает: короткий выдох углей. */
+ safeFn(()=>setTimeout(()=>safeFn(()=>Bank.play("mtg_fire_out",{gain:0.4,maxSec:3})),1200));
  const ч=Math.max(0.25,Number(часов)||1);
  G.hour=(Number(G.hour)||0)+ч;
  while(G.hour>=24){G.hour-=24;G.day++;
@@ -10175,6 +10226,7 @@ function revealSecret(x,y,propId){
  if(secretTaken(v.ключ))return false;
  if(!secretFound(v.ключ)){
   secretMark(v.ключ,"найден");
+  safeFn(()=>setTimeout(()=>safeFn(()=>Bank.play("mtg_place",{gain:0.5,maxSec:3})),1400));
   safeFn(()=>{Bank.play("lock_click",{gain:0.7,maxSec:3});
    setTimeout(()=>safeFn(()=>Bank.play("hall_gate",{gain:0.6,maxSec:5})),320);
    setTimeout(()=>safeFn(()=>beaconAt("stairs_down",0,0,-1,1)),700);});
@@ -10221,7 +10273,9 @@ function takeSecret(x,y,propId){
    :`Заклинание «${пр.что}» вы уже знаете.`;}
  safeFn(()=>{UI.fanfare();
   Bank.play("relic_sing",{gain:0.7,maxSec:6})||Bank.play("gate_fanfare",{gain:0.7,maxSec:5});
-  setTimeout(()=>safeFn(()=>Bank.play("arte_coins",{gain:0.6,maxSec:4})),400);});
+  setTimeout(()=>safeFn(()=>Bank.play("od_gold",{gain:0.6,maxSec:4})||Bank.play("arte_coins",{gain:0.6,maxSec:4})),400);
+  /* Плита за спиной садится на место: глухой разрыв в камне. */
+  setTimeout(()=>safeFn(()=>Bank.play("es_boom_last",{gain:0.45,maxSec:5})),900);});
  journal(`Тайная палата: ${v.словом}.`);
  narrate(`Вы протискиваетесь в ход. ${v.вид[0].toUpperCase()+v.вид.slice(1)}; ${v.страж}. На камне лежит ваша находка. ${дар} И ${v.золото} золота россыпью.`);
  safeFn(()=>{refresh();saveGame(true);});
@@ -11275,16 +11329,16 @@ const DARK_MAX_DEPTH=100;
 function maxDepthHere(){return G.dark?DARK_MAX_DEPTH:MAX_DEPTH;}
 /* Круг глубины: десять ярусов — один круг, у каждого своё имя и лицо. */
 const DARK_CIRCLES=[
- {n:"Верхние ходы",    порода:"gravel",  голос:"drone_calm", беда:"здесь ещё пахнет поверхностью"},
- {n:"Костяные ярусы",  порода:"bone",    голос:"drone_dark", беда:"стены выложены не камнем"},
- {n:"Пепельные ярусы", порода:"ash",     голос:"drone_deep", беда:"пепел лежит по колено и тёплый"},
- {n:"Жильные ярусы",   порода:"stone",   голос:"dungeon_heart",беда:"камень пульсирует в такт вашему сердцу"},
- {n:"Зеркальные ярусы",порода:"crystal", голос:"fx_crystal", беда:"вас здесь двое, и второй идёт впереди"},
- {n:"Утопшие ярусы",   порода:"water",   голос:"cave_drip",  беда:"вода стоит выше пояса и не холодная"},
- {n:"Гнилые ярусы",    порода:"mud",     голос:"stk_goo",    беда:"своды дышат"},
- {n:"Ярусы шва",       порода:"metal",   голос:"rift_bass",  беда:"Грань зашита прямо над головой"},
- {n:"Ярусы пустоты",   порода:"ice",     голос:"fx_rift",    беда:"здесь нет эха: звук уходит и не возвращается"},
- {n:"Дно",             порода:"crystal", голос:"rift_tick",  беда:"дальше некуда, и это слышно"}];
+ {n:"Верхние ходы",    порода:"gravel",  голос:"od_dig",       беда:"здесь ещё пахнет поверхностью"},
+ {n:"Костяные ярусы",  порода:"bone",    голос:"od_undead",    беда:"стены выложены не камнем"},
+ {n:"Пепельные ярусы", порода:"ash",     голос:"drone_deep",   беда:"пепел лежит по колено и тёплый"},
+ {n:"Жильные ярусы",   порода:"stone",   голос:"es_plasma",    беда:"камень пульсирует в такт вашему сердцу"},
+ {n:"Зеркальные ярусы",порода:"crystal", голос:"es_beam",      беда:"вас здесь двое, и второй идёт впереди"},
+ {n:"Утопшие ярусы",   порода:"water",   голос:"cave_drip",    беда:"вода стоит выше пояса и не холодная"},
+ {n:"Гнилые ярусы",    порода:"mud",     голос:"stk_goo",      беда:"своды дышат"},
+ {n:"Ярусы шва",       порода:"metal",   голос:"es_organ",     беда:"Грань зашита прямо над головой"},
+ {n:"Ярусы пустоты",   порода:"ice",     голос:"es_ion",       беда:"здесь нет эха: звук уходит и не возвращается"},
+ {n:"Дно",             порода:"crystal", голос:"es_abyss",     беда:"дальше некуда, и это слышно"}];
 function darkCircle(depth){
  const i=Math.max(0,Math.min(DARK_CIRCLES.length-1,Math.floor((Math.max(1,depth)-1)/10)));
  return Object.assign({круг:i+1},DARK_CIRCLES[i]);}
@@ -12542,8 +12596,14 @@ function darkRiteHere(){
  G.darkDeeds[ключ]=1;
  const платой=payDarkPrice(d.плата.id);
  const дар=giveDarkPrize(d.награда);
- safeFn(()=>{Bank.play("hex_charang",{gain:0.7,maxSec:6})||Bank.play("spell_dark",{gain:0.7,maxSec:6});
-  setTimeout(()=>safeFn(()=>Bank.play("fx_haze",{gain:0.6,maxSec:5})),400);});
+ safeFn(()=>{Bank.play("es_magic",{gain:0.7,maxSec:6})||Bank.play("hex_charang",{gain:0.7,maxSec:6});
+  setTimeout(()=>safeFn(()=>Bank.play("od_heal",{gain:0.6,maxSec:5})||Bank.play("fx_haze",{gain:0.6,maxSec:5})),400);
+  setTimeout(()=>safeFn(()=>Bank.play("od_keeper_word",{gain:0.5,maxSec:5})),900);});
+ safeFn(()=>{
+  setTimeout(()=>safeFn(()=>smokeSound()),700);
+  setTimeout(()=>safeFn(()=>Bank.play("od_claim",{gain:0.6,maxSec:4})),1300);
+  setTimeout(()=>safeFn(()=>Bank.play("od_build",{gain:0.5,maxSec:4})),1800);
+  setTimeout(()=>safeFn(()=>Bank.play("es_boom",{gain:0.55,maxSec:5})),2300);});
  journal(`Обряд: ${r.god.обряд}.`);
  narrate(`${r.god.обряд[0].toUpperCase()+r.god.обряд.slice(1)} именем ${r.god.n}. ${платой} ${дар}`.replace(/\s+/g," ").trim());
  safeFn(()=>{refresh();saveGame(true);});
@@ -12651,6 +12711,11 @@ function enterPlace(c){
  return true;
 }
 function leavePlace(){
+ /* Дверь за спиной: тяжёлая — в оплоте и цитадели, обычная — в прочих домах. */
+ safeFn(()=>{const st=G.place&&G.place.stype;
+  if(!st)return;
+  Bank.play(["castle","hold","clanhall"].indexOf(st)>=0?"mtg_steel_door":"mtg_door_close",
+   {gain:0.5,maxSec:3});});
  if(!G.place)return false;
  G.flight=null;
  const name=G.place.name;
@@ -12706,6 +12771,8 @@ function changeDepth(delta){
   if(d>=3)setTimeout(()=>safeFn(()=>Bank.play("dungeon_heart",{seed:d,gain:0.45,maxSec:6})),1200);
   /* На самом дне Грань близко: сквозь камень пробивается то, что за краем.
      Низ, сбой и чужой ветер — три звука, которых нет больше нигде в мире. */
+  if(G.dark&&d>=61&&Math.random()<0.25)
+   setTimeout(()=>safeFn(()=>Bank.play("od_cannon",{seed:d,gain:0.45,maxSec:4})),2600);
   if(d>=MAX_DEPTH){
    setTimeout(()=>safeFn(()=>Bank.play("rift_bass",{seed:d,gain:0.5,maxSec:6})),1800);
    setTimeout(()=>safeFn(()=>Bank.play("rift_tick",{seed:d,gain:0.4,maxSec:4})),2600);
@@ -12728,6 +12795,10 @@ function changeDepth(delta){
   if(т.звук)setTimeout(()=>safeFn(()=>Bank.play(т.звук,{seed:nd,gain:0.5,maxSec:6})),900);
   if(т.низ)setTimeout(()=>safeFn(()=>narrate(т.низ,{interrupt:false})),2000);});
  safeFn(()=>{if(nd>0)Music.start("cave");});
+ /* Тема глубины за Гранью: чем ниже, тем темнее музыка. */
+ if(G.dark&&nd>0)safeFn(()=>{
+  const роль=nd>=70?"od_theme_dark":nd>=30?"od_theme_deep":"od_theme_search";
+  setTimeout(()=>safeFn(()=>Bank.play(роль,{seed:nd,gain:0.4,maxSec:40})),2200);});
  safeFn(()=>bankUpdateAmbient());
  G.hour+=0.3;if(G.hour>=24){G.hour-=24;G.day++;}
  narrate(`${delta>0?"Вы спустились":"Вы поднялись"}: ${placeTitle()}. ${describeHere(true)}`);
@@ -13582,13 +13653,28 @@ function openVault(x,y){
  narrate(`Дверь сокровищницы заперта наглухо. Вы навалились плечом — окована железом, не поддалась. −${цена} здоровья. Нужен ключ: он в одном из сундуков этого яруса. Можно попробовать ещё раз.`,{interrupt:true});
  refresh();
  return false;}
+/* Крышка сундука: настоящая запись поверх прежнего синтеза. */
+/* Одноразовое рассыпается в руках: сухой треск сработавшей вещи. */
+function spentSound(){safeFn(()=>Bank.play("mtg_tool_break",{gain:0.55,maxSec:3}));}
+/* Дымок над потухшим: короткий выдох там, где что-то догорело. */
+function smokeSound(){safeFn(()=>Bank.play("mtg_smoke",{gain:0.4,maxSec:2}));}
+function chestLidSound(open){
+ safeFn(()=>Bank.play(open?"mtg_chest_open":"mtg_chest_close",{gain:0.6,maxSec:3}));}
 function openChest(x,y){
+ safeFn(()=>chestLidSound(true));
+ /* Ловушка в глубине: сперва дорожка, потом разрыв. */
+ safeFn(()=>{const d=Number(G.place&&G.place.depth)||0;
+  if(d>=3&&hashName(x,y,4890)<0.18){
+   setTimeout(()=>safeFn(()=>Bank.play("mtg_fuse",{seed:x+y,gain:0.55,maxSec:3})),300);
+   setTimeout(()=>safeFn(()=>Bank.play("mtg_explode",{seed:x+y,gain:0.6,maxSec:4})),1100);}});
+ setTimeout(()=>safeFn(()=>chestLidSound(false)),2600);
  if(placeMark(x,y)==="open"){safeFn(()=>Bank.play("hollow_thud",{seed:x+y,gain:0.45,maxSec:2}));
   narrate("Этот сундук уже пуст.");return false;}
  setPlaceMark(x,y,"open");
  const p=G.place,r=H(p.bx+x*3,p.by+y*5,800+p.depth);
  safeFn(()=>beacon("chest",0,0));
- /* Часть сундуков в глубине с секретом: механизм срабатывает при открытии. */
+ /* Часть сундуков в глубине с секретом: механизм срабатывает при открытии,
+    и это слышно — щелчок, шипение дорожки и разрыв. */
  const trapped=p.depth>=2&&H(x*7,y*11,806)<0.22;
  if(trapped){
   const dmg=4+Math.floor(H(x,y,807)*6)+p.depth*2;
@@ -14162,13 +14248,29 @@ function wingBeat(){
  if(осталось<=4&&Math.random()<0.5)
   safeFn(()=>narrate(`Крыло тяжелеет: хватит ещё на ${Math.round(осталось/wingCost())} ${plural(Math.round(осталось/wingCost()),"взмах","взмаха","взмахов")}.`,{interrupt:false}));
  if(Math.random()<0.35)safeFn(()=>skyVoice());}
+/* ── ШАГ ЗА ГРАНЬЮ ──
+   Тёмные земли ходят по-своему: у них своя палитра шагов, отдельная от
+   здешней. Пепел, кость, гниль и зеркало звучат записями Luanti, и по одному
+   шагу слышно, что вы не дома. */
+const DARK_STEP_ROLE={
+ ash:"mtg_step_dirt",bone:"mtg_step_gravel",mud:"mtg_step_water",
+ crystal:"mtg_step_glass",stone:"mtg_step_hard",water:"mtg_step_water",
+ gravel:"mtg_step_gravel",metal:"mtg_step_metal",ice:"mtg_step_ice",
+ dirt:"mtg_step_dirt",grass:"mtg_step_grass",sand:"mtg_step_sand",
+ snow:"mtg_step_snow",plank:"mtg_step_wood",marble:"mtg_step_hard",
+ straw:"mtg_step_grass",leaves:"mtg_step_grass",bridge:"mtg_step_wood",
+ cave:"mtg_step_gravel"};
 function stepSound(){AE.ensure();
  const c=cellContent(G.x,G.y),surface=TERRAIN_SURFACE[c.terrain[0]]||"dirt";
  /* Живые шаги из банка: по земле и по воде. Синтез остаётся для прочих поверхностей
     и для случая, когда папки со звуками рядом нет. */
  if(Bank.enabled&&Math.random()<0.85){
   const seed=G.x*7+G.y*13+Math.floor(Math.random()*10);
-  const пов=outdoorSurface();
+  const пов=G.place?safeFn(()=>indoorSurface(),outdoorSurface()):outdoorSurface();
+  /* За Гранью — своя палитра шагов. */
+  if(G.dark){
+   const тёмный=DARK_STEP_ROLE[пов];
+   if(тёмный&&Bank.play(тёмный,{seed,gain:0.55,maxSec:0.9}))return;}
   const свой=SURF_ROLE[пов];
   if(свой&&Bank.play(свой,{seed,gain:0.55,maxSec:0.9}))return;
   const зап=SURF_FALLBACK[пов];
@@ -14350,6 +14452,7 @@ function arrive(dir){
        ||Bank.play("sky_gust",{gain:0.7,maxSec:3});
       Bank.play(в>=3?"wyrm_wing":"raptor_wing",{gain:0.8,maxSec:3});}),420);
      vib([50,40,70]);});
+    safeFn(()=>{Bank.play(G.dark?"es_meteor":"od_fall",{gain:0.6,maxSec:4});});
     narrate(`Крик наверху — и свист: ${c.monster.n} падает на вас с высоты! Бой на земле.`,{interrupt:true});
     /* Тварь спустилась НА ЭТУ СХВАТКУ, а не навсегда. Прежде здесь стояло
        c.monster.alt=0 — и это меняло тварь прямо в памяти мира: клетки
@@ -14770,6 +14873,8 @@ function fight(a){const cb=G.combat;if(!cb)return;const m=cb.m;
  /* Мера сложности: во сколько раз больнее бьёт мир. */
  let mdmg=Math.max(1,Math.round((m.dmg-Math.floor(def()/2)+Math.floor(Math.random()*3))*diff().dmg));
  if(hasSkill("warded"))mdmg=Math.max(1,Math.round(mdmg*0.8));  /* навык «Оберег» держит удар */
+ /* Удар по игроку слышен: за Гранью тяжелее, на Грани — короче. */
+ safeFn(()=>Bank.play(G.dark?"es_hit":"mtg_hurt",{gain:0.55,maxSec:3}));
  /* Школьные дары в защите: стальное сердце тупит удар, стена щитов гасит
     первый удар боя, оберег света ополовинивает нежить. */
  if(safeFn(()=>buffActive("steelheart"),false))mdmg=Math.max(1,Math.round(mdmg*0.67));
@@ -15025,6 +15130,17 @@ function gatherCurrent(source="tap"){
   else if(зелёное&&hasSkill("herbal")){bounty+=1;навык=" Травничество: лишняя единица.";}
   /* Школьные дары ложатся сверх навыков: гномья штольня чует руду, роща Круга
      берёт с травы больше. */
+  /* Голос добычи: дерево рубят, камень бьют, руду выбирают, а на жильных
+     ярусах тёмных земель под киркой шипит остывающая порода. */
+  safeFn(()=>{
+   const дерево=/дерев/i.test(res.name),камень=/камень|руда|кристалл|жильн/i.test(res.name);
+   const пов=G.place?safeFn(()=>indoorSurface(),null):safeFn(()=>outdoorSurface(),null);
+   if(пов==="gravel"||пов==="ash")Bank.play("mtg_dig_gravel",{gain:0.5,maxSec:3});
+   else if(пов==="ice"||пов==="crystal")Bank.play("mtg_ice_break",{gain:0.5,maxSec:3});
+   else if(дерево)Bank.play("mtg_chop",{gain:0.55,maxSec:3});
+   else if(камень)Bank.play(G.dark&&(Number(G.place&&G.place.depth)||0)>=31?"mtg_lava":"mtg_stone_hit",
+    {gain:0.55,maxSec:3});
+   else Bank.play("mtg_crumble",{gain:0.5,maxSec:2});});
   if(рудное&&hasAbility("oresense")){bounty+=1;навык+=" Чутьё руды: ещё одна.";}
   const вьюк=safeFn(()=>mountGift("добыча"),null);
   if(вьюк){bounty+=вьюк;навык+=` ${mountNow().n} везёт ещё ${вьюк}.`;}
