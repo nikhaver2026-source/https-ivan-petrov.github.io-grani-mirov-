@@ -297,6 +297,52 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   наряды.плата);
  check('плата за поручение зависит от державы',наряды.наградыРазные===true,наряды);
 
+ /* ── 8. Лицо подземелья идёт вниз вместе с игроком ── */
+ const глубь=await page.evaluate(()=>{
+  const беды=[];let подземных=0;
+  for(const st of ["ruins","cave_entrance"])
+   for(const t of PLACE_TRAITS[st]){подземных++;
+    if(!t.твари||!t.твари.length)беды.push(st+"/"+t.id+": некому жить");
+    (t.твари||[]).forEach(id=>{if(!MONSTERS.some(m=>m.id===id))беды.push(st+"/"+t.id+": нет твари "+id);});
+    if(!t.низ||t.низ.length<30)беды.push(st+"/"+t.id+": глубина не описана");}
+  /* Обстановка промысла попадается и под землёй, и живут там свои твари. */
+  const родня={},вещиНесут=[];
+  for(let i=0;i<8;i++){
+   G.place=null;
+   enterPlace({x:1200+i*61,y:800+i*47,structure:{type:"ruins",name:"Руины",beacon:"ruins"}});
+   G.place.depth=2;
+   const т=safeFn(()=>hereTrait(),null);
+   if(!т)continue;
+   const базовый=MONSTERS.filter(m=>m.biomes.includes("cave"));
+   const pool=safeFn(()=>dungeonPool(базовый),базовый);
+   const доля=pool.filter(m=>(т.твари||[]).indexOf(m.id)>=0).length/pool.length;
+   родня[т.n]=+доля.toFixed(2);
+   const вещи=new Set();
+   for(let x=1;x<18;x++)for(let y=1;y<12;y++){G.place.x=x;G.place.y=y;
+    const pr=safeFn(()=>propAt(x,y),null);if(pr)вещи.add(pr.id);}
+   вещиНесут.push((т.вещи||[]).every(v=>вещи.has(v)));
+   while(activeLayer())closeTopUI();G.place=null;}
+  /* Спуск объявляет, куда именно спустились. */
+  G.place=null;
+  enterPlace({x:1500,y:900,structure:{type:"cave_entrance",name:"Пещера",beacon:"cave_entrance"}});
+  window.__said=[];
+  safeFn(()=>changeDepth(1));
+  const т=safeFn(()=>hereTrait(),null);
+  const сказано=речь();
+  while(activeLayer())closeTopUI();G.place=null;
+  return {подземных,беды,родня,вещиНесут,
+   промыселГлубины:!!(т&&т.низ),назвался:!!(т&&сказано.includes(т.n))};});
+ check('у каждого подземелья есть, кто в нём живёт и как выглядит его глубина',
+  глубь.подземных===8&&глубь.беды.length===0,{подземных:глубь.подземных,беды:глубь.беды.slice(0,5)});
+ check('свои твари водятся чаще прочих, но чужие не исчезают',
+  Object.values(глубь.родня).length>0&&
+  Object.values(глубь.родня).every(д=>д>0.15&&д<0.8),глубь.родня);
+ check('обстановка промысла попадается и под землёй',
+  глубь.вещиНесут.length>0&&глубь.вещиНесут.every(Boolean),
+  {мест:глубь.вещиНесут.length,несут:глубь.вещиНесут.filter(Boolean).length});
+ check('спуск говорит, куда именно спустились',
+  глубь.промыселГлубины===true&&глубь.назвался===true,глубь);
+
  check('игра не выбрасывала ошибок за весь прогон',errors.length===0,errors.slice(0,3));
 
  console.log(results.join('\n'));
