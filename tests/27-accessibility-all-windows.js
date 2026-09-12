@@ -61,6 +61,8 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   ["народы",()=>{CMD.races();raceFilterRank=0;renderRaces();}],
   ["пантеон",()=>CMD.pantheon()],
   ["бестиарий",()=>CMD.best()],
+  ["молва о землях",()=>{G.known={};notePlace(G.x+4,G.y-3,"village","Ольховка","был");
+    notePlace(G.x-7,G.y+5,"forge","Три искры","молва");CMD.known();}],
   ["инвентарь",()=>{G.inv={"руда":4};CMD.inv();}],
   ["крафт",()=>CMD.craft()],
   ["мир",()=>CMD.world()],

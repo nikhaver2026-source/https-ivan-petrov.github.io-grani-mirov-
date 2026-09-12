@@ -205,6 +205,12 @@ h3{color:var(--acc2);margin:14px 0 6px;font-size:1.05rem;}
  <div id="questList"></div>
 </div></div>
 
+<!-- МОЛВА О ЗЕМЛЯХ: что игрок знает о мире -->
+<div class="modal" id="modal-known" role="dialog" aria-modal="true" aria-label="Молва о землях" hidden><div class="sheet">
+ <header><h2>🧭 Молва о землях</h2><button type="button" data-cmd="close">✖️ Закрыть</button></header>
+ <div id="knownList"></div>
+</div></div>
+
 <!-- ЖУРНАЛ -->
 <!-- СОХРАНЕНИЯ: слоты, файл, состояние хранилища -->
 <div class="modal" id="modal-saves" role="dialog" aria-modal="true" aria-label="Сохранения" hidden><div class="sheet">
@@ -2940,9 +2946,10 @@ const AM_GROUPS=[
   ["journal","📔 Журнал"]]],
  ["Мир",[
   ["world","🌍 Живой мир"],
-  ["races","🧬 Народы Грани (45)"],
+  ["races","🧬 Народы Грани (46)"],
   ["pantheon","🕯️ Пантеон двенадцати богов"],
   ["politics","⚔️ Политика, войны и рынок"],
+  ["known","🧭 Молва о землях"],
   ["best","📖 Бестиарий"],
   ["art","💎 Артефакты"]]],
  ["Звук и справка",[
@@ -3342,7 +3349,13 @@ const GUIDE=[
  "Кроме обычных просьб жителей есть поручения самой державы, и у каждой из восьми оно своё: наряд палаты мастерских на Драконьем Пике, подряд речных гильдий в Серебряных Реках, уговор схода кланов в Землях Туманов, договор Круга Имён в Золотой Заре, ледниковая роспись в Хладной Стуже, доля с киля на Вольных Островах, слово Кулака Орды в Кровавых Пиках, решение Круга рощ в Вечной Чаще.",
  "Их дают те, кто говорит от имени палаты: правитель, советник, стража, старейшина, магистр, торговец, глава клана. Поручение всегда называет державу и повод — почему это нужно именно здесь и именно сейчас.",
  "Платят за них по-своему. Кроме золота и опыта держава закрывает наряд собственным товаром: рудой на Пике, ягодами в Реках, грибами в Туманах, кристаллом в Заре, костью в Стуже, ракушкой на Островах, камнем в Пиках, деревом в Чаще. И служба запоминается: держава становится к вам мягче."]},
-{title:"Глава 39. Горячие клавиши и советы",body:[
+{title:"Глава 39. Молва о землях",body:[
+ "Мир велик, и держать его в голове невозможно. Поэтому у вас есть молва — запись того, что вы знаете о землях: где какая постройка, чем она живёт, чем там торгуют, сколько до неё шагов и в какой стороне.",
+ "Как она наполняется. Двумя путями. Первый — ногами: вошли в постройку, и она записана как виденная своими глазами, вместе с промыслом. Второй — расспросом: трактирщик, странник, торговец, старейшина, стража, советник и крестьянин расскажут о ближнем месте, которого вы ещё не знаете. Кузнец или целительница о дальних землях не говорят — не их дело.",
+ "Расспрос. Откройте карточку жителя и выберите «Расспросить о землях». Он назовёт место, его промысел и сторону; маяк подскажет направление, а запись останется в молве. Дважды об одном и том же вам не расскажут: житель называет только то, чего вы не знаете.",
+ "Окно «Молва о землях» в разделе «Мир». Места идут от ближнего к дальнему; у каждого сказано, видели вы его сами или знаете по слуху, и есть кнопка «Показать сторону» — маяк прозвучит оттуда, где место стоит.",
+ "Зачем это нужно. Промысел решает, где что дёшево: рыбацкая деревня продаёт ракушку дешевле соседей, углежоги — дерево, рудничная пещера — руду. Узнав такое место однажды, вы будете возвращаться к нему нарочно. Молва переживает запись и загрузку: мир, который вы узнали, остаётся вашим."]},
+{title:"Глава 40. Горячие клавиши и советы",body:[
  "Стрелки — ходьба. Контрол или Альт плюс G — руководство. Контрол или Альт плюс M — меню действий. Альт плюс S — тишина. Эскейп — закрыть.",
  "Играйте в наушниках — стерео-маяки помогут ориентироваться. Удачной охоты, Странник!"]}];
 let chIndex=0;
@@ -9461,7 +9474,14 @@ const G={hp:100,hpMax:100,str:10,agi:10,mind:10,cha:10,mana:10,manaMax:10,
     крылатые твари; wingTired — усталость крыла, из-за неё в небе не живут. */
  /* airLand — клетка, на которую сели с крыла. По ней гнездовье и кумирня
     отличают прилетевшего от пришедшего; уход с клетки её обесценивает. */
- alt:0,wingTired:0,airLand:null};
+ alt:0,wingTired:0,airLand:null,
+ /* ── МОЛВА О ЗЕМЛЯХ ──
+    Мир был огромен и совершенно безымянен: игрок помнил дорогу только
+    ногами, а места, о которых ему рассказали, не помнил вовсе. known — то,
+    что он знает о землях: где какая постройка, чем она живёт, был он там
+    сам или только слышал. Это и есть «встраивание в мир»: знание собирается,
+    остаётся в записи и даёт повод вернуться. */
+ known:{}};
 const xpNeed=l=>l*l*50;
 /* Дар Хронара и ткачей судьбы: опыт течёт быстрее. Через эту функцию проходит
    ВСЯ прибавка опыта, поэтому дар работает и в бою, и в заданиях. */
@@ -10558,6 +10578,120 @@ function placeTitle(){
   return `${p.name}${пром?`, ${пром.n}`:""}: ${z||"улицы за воротами"}${q?`, кварталов ${q}`:""}`;}
  return `${p.name}${пром?`, ${пром.n}`:""}: внутри`;
 }
+/* ════════ МОЛВА О ЗЕМЛЯХ ════════
+   Одна запись — одно место: где стоит, что это, чем живёт, был ли игрок
+   там сам. Слышанное и виденное различаются нарочно: услышать про
+   гончарную деревню и дойти до неё — разные достижения, и в списке они
+   выглядят по-разному. */
+/* Два места мира стоят вне справочника маяков: до них не доходят ногами. */
+const KIND_WORD={eyrie:"Гнездовье",peakshrine:"Кумирня на вершине"};
+function knownKey(x,y){return x+","+y;}
+function notePlace(x,y,stype,name,how){
+ try{
+  if(!G.known||typeof G.known!=="object"||Array.isArray(G.known))G.known={};
+  const k=knownKey(x,y),было=G.known[k]||null;
+  const t=safeFn(()=>placeTrait(x,y,stype),null);
+  const был=how==="был"?1:(было&&было.v)||0;
+  const новое=!было||(был&&!(было&&было.v));
+  G.known[k]={t:stype,n:name||(было&&было.n)||"безымянное место",
+   tr:t?t.id:(было&&было.tr)||null,v:был,d:Number(G.day)||1};
+  return новое;
+ }catch(_){return false;}}
+/* Известно ли уже это место. */
+function placeKnown(x,y){
+ try{return !!(G.known&&G.known[knownKey(x,y)]);}catch(_){return false;}}
+/* Что игрок знает о землях — списком, от ближнего к дальнему. */
+function knownList(){
+ const out=[];
+ try{
+  for(const k of Object.keys(G.known||{})){
+   const [sx,sy]=k.split(",");const x=Number(sx),y=Number(sy);
+   if(!Number.isFinite(x)||!Number.isFinite(y))continue;
+   const z=G.known[k]||{};
+   const d=Math.max(Math.abs(x-G.x),Math.abs(y-G.y));
+   const т=z.tr&&PLACE_TRAITS[z.t]?PLACE_TRAITS[z.t].find(p=>p.id===z.tr):null;
+   out.push({x,y,d,был:!!z.v,день:z.d||1,name:z.n||"место",stype:z.t,
+    вид:KIND_WORD[z.t]||(BEACON_INFO[z.t]&&BEACON_INFO[z.t][0])||z.t||"постройка",
+    промысел:т?т.n:null,товар:т&&т.товар&&т.товар.length?т.товар.join(", "):null,
+    dir:dirBetween(x-G.x,y-G.y)||"здесь"});}
+  out.sort((a,b)=>a.d-b.d);
+ }catch(_){}
+ return out;}
+/* Словом: одна строка про одно место — её читает и список, и молва. */
+function knownLine(z){
+ return `${z.name}${z.промысел?`, ${z.промысел}`:""} — ${z.вид}. `+
+  (z.d===0?"Вы здесь. ":`Отсюда ${z.d} ${plural(z.d,"шаг","шага","шагов")}, ${z.dir}. `)+
+  (z.товар?`Берут и продают: ${z.товар}. `:"")+
+  (z.был?"Вы там были.":"Знаете по молве.");}
+/* Кто рассказывает о землях: те, мимо кого проходит мир. Кузнец знает свою
+   наковальню, а трактирщик, странник, торговец, старейшина и стража слышат
+   всё, что несут по дорогам. */
+const LANDS_TELLERS=["Трактирщик","Странник","Торговец","Старейшина","Стражник","Советник","Крестьянин"];
+function tellsLands(n){return !!n&&LANDS_TELLERS.indexOf(n.prof)>=0;}
+/* Что этот житель может рассказать: ближайшая постройка, которой игрок ещё
+   не знает. Свой круг — сорок клеток: дальше молва уже не доходит. */
+function landsRumour(n){
+ try{
+  if(!n)return null;
+  const R=40,шаг=2;
+  let лучшее=null;
+  for(let dy=-R;dy<=R;dy+=шаг)for(let dx=-R;dx<=R;dx+=шаг){
+   const x=n.x+dx,y=n.y+dy;
+   if(x<0||y<0||x>=WORLD||y>=WORLD)continue;
+   if(x===n.x&&y===n.y)continue;
+   const c=safeFn(()=>cellContent(x,y),null);
+   if(!c||!c.structure)continue;
+   if(safeFn(()=>placeKnown(x,y),false))continue;
+   const d=Math.max(Math.abs(x-G.x),Math.abs(y-G.y));
+   if(!лучшее||d<лучшее.d)лучшее={x,y,d,st:c.structure};}
+  return лучшее;
+ }catch(_){return null;}}
+/* Рассказ о землях: житель называет место, его промысел и сторону, а игрок
+   запоминает — с этого мига место есть в молве и к нему можно вернуться. */
+function askAboutLands(key){
+ const n=getNPCByKey(key);
+ if(!n){narrate("Этого жителя здесь уже нет.");return false;}
+ if(!tellsLands(n)){narrate(`${n.name} о дальних землях не рассказывает: не его дело.`);return false;}
+ if(safeFn(()=>attitudeOf(n.race).refuses,false)){
+  narrate(`${n.name} не станет с вами говорить о землях: народ «${n.race}» вас не жалует.`);return false;}
+ const r=safeFn(()=>landsRumour(n),null);
+ if(!r){
+  narrate(`${n.name} разводит руками: «Про здешние места вы, похоже, знаете не меньше моего».`);
+  return false;}
+ notePlace(r.x,r.y,r.st.type,r.st.name,"молва");
+ const z=knownList().find(o=>o.x===r.x&&o.y===r.y);
+ safeFn(()=>Bank.play("trade_f",{seed:r.x+r.y,gain:0.5,maxSec:3}));
+ safeFn(()=>beaconAt(r.st.beacon||"village",Math.sign(r.x-G.x)*2,Math.sign(r.y-G.y)*2,0,2));
+ journal(`Молва: ${z?z.name:r.st.name} — ${z?z.dir:"где-то рядом"}.`);
+ /* Строка молвы уже кончается точкой — второй здесь не место. */
+ narrate(`${n.name} рассказывает: ${z?knownLine(z):r.st.name+"."} Это место записано в молву — откройте «Молва о землях», чтобы вспомнить дорогу.`);
+ safeFn(()=>saveGame(true));
+ return true;}
+/* Список того, что игрок знает о землях. Ближние впереди: список нужен в
+   дороге, а не для красоты. */
+function renderKnown(){
+ const box=document.getElementById("knownList");if(!box)return;
+ const список=safeFn(()=>knownList(),[]);
+ if(!список.length){
+  box.innerHTML=`<div class="list-line" data-speak="Молва пуста. Заходите в постройки и расспрашивайте жителей о ближних землях — узнанное запишется сюда.">🧭 <b>Молва пуста.</b><br>Заходите в постройки и расспрашивайте жителей о ближних землях: узнанное запишется сюда и не забудется.</div>`;
+  narrate("Молва о землях пуста. Заходите в постройки и расспрашивайте жителей: узнанное запишется сюда.");
+  return;}
+ const был=список.filter(z=>z.был).length;
+ box.innerHTML=
+  `<div class="list-line" data-speak="Известно мест: ${список.length}. Из них своими глазами видели ${был}.">📖 Известно мест: <b>${список.length}</b>, из них видели сами: <b>${был}</b></div>`+
+  список.map(z=>`<div class="list-line">${z.был?"👣":"👂"} <b>${z.name}</b>${z.промысел?`, ${z.промысел}`:""} — ${z.вид}<br>
+   ${z.d===0?"вы здесь":`${z.d} ${plural(z.d,"шаг","шага","шагов")}, ${z.dir}`}${z.товар?`; берут и продают: ${z.товар}`:""}
+   <button data-cmd="knownping:${z.x}:${z.y}" data-speak="${knownLine(z)} Двойное касание — подать маяк с той стороны.">🔔 Показать сторону</button></div>`).join("");
+ narrate(`Молва о землях: известно мест ${список.length}, из них видели сами ${был}. Свайп — листать, двойное касание — маяк с той стороны.`);}
+/* Маяк в сторону известного места: слышно, куда идти. */
+function pingKnown(x,y){
+ const z=safeFn(()=>knownList(),[]).find(o=>o.x===x&&o.y===y);
+ if(!z){narrate("Такого места в молве нет.");return false;}
+ const st=safeFn(()=>cellContent(x,y).structure,null);
+ const dx=Math.max(-6,Math.min(6,x-G.x)),dy=Math.max(-6,Math.min(6,y-G.y));
+ safeFn(()=>beaconAt((st&&st.beacon)||"village",dx,dy,0,Math.min(MAXCELL-1,z.d)));
+ narrate(knownLine(z));
+ return true;}
 /* ── Вход, выход, спуск, подъём ── */
 function enterPlace(c){
  /* Последний рубеж: в здание не входят с палубы, чем бы это ни было
@@ -10578,6 +10712,9 @@ function enterPlace(c){
  const depth=kind==="dungeon"?1:0;
  const lvl=genLevel(c.x,c.y,depth,stype);
  G.place={kind,bx:c.x,by:c.y,stype,name:c.structure.name,depth,x:lvl.entry.x,y:lvl.entry.y};
+ /* Побывал — значит знает: место попадает в молву как виденное своими
+    глазами, вместе с промыслом, который здесь ведут. */
+ safeFn(()=>notePlace(c.x,c.y,stype,c.structure.name,"был"));
  /* Стены сомкнулись: акустика меняется сразу, ещё до первого шага внутри. */
  safeFn(()=>{Room.set();Scape.stop();});
  safeFn(()=>beacon(kind==="city"?"city":kind==="dungeon"?"dungeon":"house",0,0));
@@ -13172,6 +13309,9 @@ const CMD={
  /* Жителя может уже не быть там, где его застала кнопка: он ушёл, наступила
     ночь, сменился день. Раньше в ответ была тишина — теперь игра говорит,
     что собеседник пропал, а не молчит, будто её и не касались. */
+ lands(key){safeFn(()=>askAboutLands(key));},
+ known(){openModal("modal-known");renderKnown();},
+ knownping(x,y){safeFn(()=>pingKnown(Number(x),Number(y)));},
  npctalk(key){const n=getNPCByKey(key);
   if(!n){narrate("Этого жителя здесь уже нет: разговор не с кем начинать. Осмотритесь — рядом могут быть другие.");return;}
   tellNPCStory(n);},
@@ -14055,6 +14195,7 @@ function openNPC(key,silent){const n=getNPCByKey(key);
   Отношение к вам: ${repWord} (репутация ${rep}).<br>
   История: ${n.life}. Взгляд: «${n.view}».</div>`;
  html+=`<button class="item" data-cmd="npctalk:${n.key}" data-speak="Поговорить с ${n.name}.">💬 Поговорить</button>`;
+ if(tellsLands(n))html+=`<button class="item" data-cmd="lands:${n.key}" data-speak="Расспросить ${n.name} о ближних землях: что где стоит и чем живёт.">🧭 Расспросить о землях</button>`;
  html+=`<button class="item" data-cmd="raceinfo:${R.id}" data-speak="Узнать о народе ${R.n}: история, хозяйство, политика, войны и миф.">🧬 О народе «${R.n}»</button>`;
  if(!q)html+=`<button class="item" data-cmd="qtake:${n.key}" data-speak="Взять квест у ${n.name}.">📜 Взять квест</button>`;
  else{html+=`<div class="list-line">📜 Квест: ${q.text}<br>${q.chain?`Цепочка «${q.chainName}», шаг ${(q.chainStep||0)+1} из ${q.chainOf}.<br>`:""}Прогресс: ${qProgressText(q)}</div>`;
@@ -14765,6 +14906,15 @@ function pruneState(hard){
    for(const k of Object.keys(G.prayed))if(Number(G.prayed[k])>=day-1)fresh[k]=G.prayed[k];
    G.prayed=trimDict(fresh,lim.prayed);}
   if(Array.isArray(G.journal)&&G.journal.length>lim.journal)G.journal.length=lim.journal;
+  /* Молва: место, где игрок был сам, помнится всегда; услышанное — до
+     четырёх сотен записей, дальше уходит самое старое. */
+  if(G.known&&typeof G.known==="object"&&!Array.isArray(G.known)){
+   const ключи=Object.keys(G.known);
+   if(ключи.length>500){
+    const слух=ключи.filter(k=>!(G.known[k]&&G.known[k].v))
+     .sort((a,b)=>(Number(G.known[a].d)||0)-(Number(G.known[b].d)||0));
+    let лишних=ключи.length-500;
+    for(const k of слух){if(лишних<=0)break;delete G.known[k];лишних--;}}}
   /* Выработанные ресурсы живут один день — их чистит смена суток. */
   return true;
  }catch(_){return false;}
@@ -15255,6 +15405,7 @@ window.addEventListener("beforeunload",()=>{try{stopRun();saveGame(true);}catch(
      дёргались. Теперь дробная часть сохраняется, а диапазон по-прежнему стережётся. */
   G.hour=clamp(num(G.hour,8),0,23.999);
   if(!Array.isArray(G.quests))G.quests=[];
+  if(!G.known||typeof G.known!=='object'||Array.isArray(G.known))G.known={};
   if(!Array.isArray(G.gear))G.gear=[];
   if(!Array.isArray(G.inventory))G.inventory=[];
   if(!Array.isArray(G.items))G.items=[];
