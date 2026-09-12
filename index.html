@@ -1921,6 +1921,7 @@ const BEACON_INFO={
 };
 /* Карточки записей банка: по одной на роль, с описанием и числом вариантов. */
 const BANK_CATS={mg:"🐲 Фэнтезийный мир: твари, чары, ремёсла и погода",
+ mtg:"🪓 Ремесло и стихии Luanti: шаги, двери, огонь, лава, взрыв",
  stk:"⛰️ Стихии и дали: гром, вода, птицы, ремесло и шестнадцать тем",
  sea:"🌊 Море, порты и корабли",ambience:"🌍 Земли и погода",dungeon:"🕳️ Подземелья по глубине",
  magic:"✨ Школы магии",gods:"🕯️ Боги, алтари и знамения",events:"⚡ События",places:"🏛️ Места и ремёсла",
@@ -1966,6 +1967,7 @@ const BANK_GROUPS=[
  {n:"Море, порты и корабли",  icon:"🌊", dirs:["sea"]},
  {n:"Земли, погода и день",   icon:"🌍", dirs:["ambience","sky"]},
  {n:"Стихии, дали и темы мира",icon:"⛰️", dirs:["stk"]},
+ {n:"Ремесло, огонь и камень",icon:"🪓", dirs:["mtg"]},
  {n:"Подземелья и тьма",      icon:"🕳️", dirs:["dungeon","dark","deep","depth"]},
  {n:"Магия, чары и касты",    icon:"🔮", dirs:["magic","spell","cast"]},
  {n:"Боги, храмы и знамения", icon:"🕯️", dirs:["gods"]},
@@ -3403,7 +3405,16 @@ const GUIDE=[
  "Восемь тёмных умений, которым не учат нигде на Грани: кровный уговор, чтение по плоти, плетение ворот, хождение во сне, счёт костей, пепельный облик, зеркальный шаг и последнее слово. И двое скакунов: червь-ходок и пепельный волк.",
  "Обряд. Стоя у престола бога, можно провести его обряд: плата берётся сразу, дар даётся сразу. Второй раз на том же месте бог не слушает.",
  "Обратно. Ворота разлома стоят по тёмную сторону и звучат как портал; они выведут вас ровно на ту клетку, с которой вы ушли. Пока вы не шагнули в разлом, мир Грани ничего о тёмных землях не знает — и не меняется от того, что вы там были."]},
-{title:"Глава 44. Горячие клавиши и советы",body:[
+{title:"Глава 44. Империи, небо и глубина тёмных земель",body:[
+ "Власть за Гранью держат восемь империй: Костяной Синод, Кровавый Престол, Зеркальная Диархия, Гнилая Корона, Тлеющий Ковен, Утопший Союз, Голодная Орда и Последний Конклав. Владения богов — это вера; империи — это войско.",
+ "Войны здесь злее. Их втрое больше, чем на Грани, причин двенадцать — от спора о праве первой раны до съеденного посольства, — а побеждённый платит не землями, а данью: кровью, костью, именами, выводком, углём, дыханием, сроками. Союзы заключают, но держатся они до первой добычи, и срок известен заранее.",
+ "Дела за Гранью бывают пяти уровней и пяти направлений: война, обряд, интрига, счёт и торг. Кто даёт дело, видно по ремеслу: служка — мелочь, надсмотрщик — поход, шепчущий — интригу, обрядчик — обряд. Если империя воюет, дело прямо об этом говорит: с кем, из-за чего и какая дань.",
+ "Кланы и притоны. Десять тёмных кланов — Первая Рана, Долгая Опись, Отражённые, Ход Под Всем, Медленный Уголь, Соляные Вдовы, Пустое Чрево, Назначенный Срок, Сброшенное Перо, Многие Глаза. У них свои оплоты, а в притонах сидят те, кто вернулся.",
+ "Шесть тёмных школ учат не за золото, а за долю: цена в золоте — только видимая её часть, вторую берут кровью, и выйти из доли нельзя. Три ступени, как везде; дают тёмные умения и навыки.",
+ "Небо. За Гранью оно населено плотнее земли: тридцать летающих тварей, у каждой своя высота и своя школа чар из семнадцати — пепел, кость, сумрак, отражение, кровь, гниль, утопление, уголь, крик, сон, боль, пустота, жила, клятва, шов, пророчество, выводок. По удару слышно, чья школа. Летающих народов двадцать, и среди них пепельные пегасы — единственные, кого за Гранью не запрягли.",
+ "Глубина. Подземелья Грани кончаются на пятом ярусе; за Гранью их сто, и они разбиты на десять кругов: Верхние ходы, Костяные, Пепельные, Жильные, Зеркальные, Утопшие, Гнилые, ярусы Шва, ярусы Пустоты и Дно. У каждого круга свой пол под ногой, свой отклик и своё слово при спуске. Чем ниже, тем злее твари и богаче добыча: на сотом ярусе вес глубины всемеро больше, чем на первом.",
+ "Звук. У каждого тёмного места своя акустика: пепельное поле глушит, зеркальная равнина отражает дважды, костница гремит сухо, яма отвечает снизу, шпиль звенит, а на ярусах Пустоты эха нет вовсе — и это самое страшное, что здесь можно услышать."]},
+{title:"Глава 45. Горячие клавиши и советы",body:[
  "Стрелки — ходьба. Контрол или Альт плюс G — руководство. Контрол или Альт плюс M — меню действий. Альт плюс S — тишина. Эскейп — закрыть.",
  "Играйте в наушниках — стерео-маяки помогут ориентироваться. Удачной охоты, Странник!"]}];
 let chIndex=0;
@@ -5511,12 +5522,46 @@ const ROOM={
  deep:    {sec:4.20,decay:1.3,wet:0.52,damp:1100, n:"глубина"},
  ship:    {sec:0.45,decay:4.0,wet:0.12,damp:3000, n:"палуба"},
  stairs:  {sec:1.80,decay:2.2,wet:0.38,damp:2600, n:"лестничный марш"},
+ /* ── АКУСТИКА ТЁМНЫХ ЗЕМЕЛЬ ──
+    За Гранью звук ведёт себя иначе: пепельное поле глушит, зеркальная
+    равнина отражает всё дважды, костница гремит сухо, яма отвечает снизу,
+    шпиль звенит, а на ярусах пустоты эха нет вовсе — и это самое страшное,
+    что тут можно услышать. */
+ d_ash:   {sec:0.30,decay:6.5,wet:0.04,damp:900,  n:"пепельное поле"},
+ d_bone:  {sec:1.45,decay:2.6,wet:0.30,damp:7200, n:"костяное поле"},
+ d_rot:   {sec:0.58,decay:4.4,wet:0.12,damp:1200, n:"гнилая чаща"},
+ d_mirror:{sec:3.60,decay:1.4,wet:0.55,damp:9000, n:"зеркальная равнина"},
+ d_vein:  {sec:2.25,decay:1.9,wet:0.36,damp:2600, n:"жильная порода"},
+ d_drown: {sec:1.15,decay:3.2,wet:0.24,damp:800,  n:"утопшие низины"},
+ d_scar:  {sec:5.00,decay:1.2,wet:0.58,damp:1000, n:"Шрам"},
+ d_shrine:{sec:3.00,decay:1.6,wet:0.48,damp:4200, n:"тёмное святилище"},
+ d_ossu:  {sec:2.65,decay:1.7,wet:0.44,damp:6800, n:"костница"},
+ d_pit:   {sec:3.40,decay:1.5,wet:0.50,damp:1400, n:"яма"},
+ d_spire: {sec:2.80,decay:1.6,wet:0.46,damp:8200, n:"шпиль"},
+ d_bazaar:{sec:1.25,decay:2.8,wet:0.26,damp:3400, n:"торжище отверженных"},
+ d_den:   {sec:0.65,decay:3.2,wet:0.32,damp:3000, n:"притон"},
+ d_hold:  {sec:2.05,decay:2.0,wet:0.38,damp:5200, n:"оплот клана"},
+ d_void:  {sec:0.12,decay:9.0,wet:0.02,damp:400,  n:"ярусы пустоты: эха нет"},
+ d_bottom:{sec:6.00,decay:1.1,wet:0.62,damp:700,  n:"дно"},
 };
 /* Вид акустики для места, где игрок стоит сейчас. */
 function roomKind(){
  try{
   if(G.ship)return "ship";
   if(G.flight)return "stairs";
+  /* За Гранью свои отклики: и у земли, и у построек, и у кругов глубины. */
+  if(G.dark){
+   if(G.place){
+    const d=Number(G.place.depth)||0;
+    if(d>=90)return "d_bottom";
+    if(d>=81)return "d_void";
+    if(d>0)return ({1:"d_pit",2:"d_bone",3:"d_ash",4:"d_vein",5:"d_mirror",
+                    6:"d_drown",7:"d_rot",8:"d_scar"})[Math.min(8,Math.ceil(d/10))]||"d_pit";
+    return ({shrine:"d_shrine",ossuary:"d_ossu",pit:"d_pit",spire:"d_spire",
+             bazaar:"d_bazaar",den:"d_den",hold:"d_hold"})[G.place.stype]||"d_shrine";}
+   const t=(safeFn(()=>cellContent(G.x,G.y).terrain,[])||[])[0]||"ash";
+   return ({ash:"d_ash",bone:"d_bone",rot:"d_rot",mirror:"d_mirror",
+            vein:"d_vein",drown:"d_drown",scar:"d_scar"})[t]||"d_ash";}
   if(G.place){
    const d=Number(G.place.depth)||0;
    if(d>=4)return "deep";
@@ -5819,6 +5864,48 @@ Object.assign(SOUND_BANK,{
  stk_dark:{f:["stk/stk_dark_01.ogg"],d:"Тьма: низкий гул подземелья"},
  stk_goo:{f:["stk/stk_goo_01.ogg"],d:"Слизь: вязкий хлюп"},
  stk_ward:{f:["stk/stk_ward_01.ogg"],d:"Оберег: гудение защитных чар"},
+/* ── ЗАПИСИ LUANTI (MINETEST GAME), CC BY-SA 3.0 ──
+   Девяносто семь записей под той же лицензией, что и сама игра: шаги по
+   девяти поверхностям, двери и калитки, огонь и его гашение, кресало,
+   пороховая дорожка и взрыв, лава, стекло, металл, копка и укладка камня.
+   Здесь они держат тёмные земли: обряд, костницу, яму, шпиль и торжище.
+   Полный список с авторами — sounds/mtg/CREDITS.md. */
+ mtg_glass:{f:["mtg/break_glass_1.ogg","mtg/break_glass_2.ogg","mtg/break_glass_3.ogg"],d:"Бой стекла"},
+ mtg_chest_open:{f:["mtg/chest_open.ogg"],d:"Крышка сундука открывается"},
+ mtg_chest_close:{f:["mtg/chest_close.ogg"],d:"Крышка сундука закрывается"},
+ mtg_lava:{f:["mtg/cool_lava_1.ogg","mtg/cool_lava_2.ogg","mtg/cool_lava_3.ogg"],d:"Лава остывает и шипит"},
+ mtg_chop:{f:["mtg/dig_choppy_1.ogg","mtg/dig_choppy_2.ogg","mtg/dig_choppy_3.ogg"],d:"Рубка дерева"},
+ mtg_stone_hit:{f:["mtg/dig_cracky_1.ogg","mtg/dig_cracky_2.ogg","mtg/dig_cracky_3.ogg"],d:"Удар по камню"},
+ mtg_crumble:{f:["mtg/dig_crumbly.ogg","mtg/dig_dig_immediate.ogg","mtg/dig_oddly_breakable_by_hand.ogg","mtg/dig_snappy.ogg"],d:"Хруст рыхлого и ломкого"},
+ mtg_metal_hit:{f:["mtg/dig_metal.ogg","mtg/dug_metal_1.ogg","mtg/dug_metal_2.ogg"],d:"Удар по металлу"},
+ mtg_rubble:{f:["mtg/dug_node_1.ogg","mtg/dug_node_2.ogg","mtg/gravel_dug_1.ogg","mtg/gravel_dug_2.ogg","mtg/gravel_dug_3.ogg"],d:"Обломки осыпаются"},
+ mtg_dig_gravel:{f:["mtg/gravel_dig_1.ogg","mtg/gravel_dig_2.ogg"],d:"Копка гравия"},
+ mtg_ice_break:{f:["mtg/ice_dig_1.ogg","mtg/ice_dig_2.ogg","mtg/ice_dig_3.ogg","mtg/ice_dug.ogg"],d:"Скол льда"},
+ mtg_step_dirt:{f:["mtg/dirt_footstep_1.ogg","mtg/dirt_footstep_2.ogg"],d:"Шаг по земле"},
+ mtg_step_grass:{f:["mtg/grass_footstep_1.ogg","mtg/grass_footstep_2.ogg","mtg/grass_footstep_3.ogg"],d:"Шаг по траве"},
+ mtg_step_gravel:{f:["mtg/gravel_footstep_1.ogg","mtg/gravel_footstep_2.ogg","mtg/gravel_footstep_3.ogg","mtg/gravel_footstep_4.ogg"],d:"Шаг по гравию"},
+ mtg_step_hard:{f:["mtg/hard_footstep_1.ogg","mtg/hard_footstep_2.ogg","mtg/hard_footstep_3.ogg"],d:"Шаг по камню"},
+ mtg_step_ice:{f:["mtg/ice_footstep_1.ogg","mtg/ice_footstep_2.ogg","mtg/ice_footstep_3.ogg"],d:"Шаг по льду"},
+ mtg_step_metal:{f:["mtg/metal_footstep_1.ogg","mtg/metal_footstep_2.ogg","mtg/metal_footstep_3.ogg"],d:"Шаг по металлу"},
+ mtg_step_sand:{f:["mtg/sand_footstep_1.ogg","mtg/sand_footstep_2.ogg","mtg/sand_footstep_3.ogg"],d:"Шаг по песку"},
+ mtg_step_snow:{f:["mtg/snow_footstep_1.ogg","mtg/snow_footstep_2.ogg","mtg/snow_footstep_3.ogg","mtg/snow_footstep_4.ogg","mtg/snow_footstep_5.ogg"],d:"Шаг по снегу"},
+ mtg_step_water:{f:["mtg/water_footstep_1.ogg","mtg/water_footstep_2.ogg","mtg/water_footstep_3.ogg"],d:"Шаг по воде"},
+ mtg_step_wood:{f:["mtg/wood_footstep_1.ogg","mtg/wood_footstep_2.ogg"],d:"Шаг по доскам"},
+ mtg_step_glass:{f:["mtg/glass_footstep.ogg"],d:"Шаг по стеклу"},
+ mtg_door_open:{f:["mtg/door_open.ogg","mtg/glass_door_open.ogg"],d:"Дверь открывается"},
+ mtg_door_close:{f:["mtg/door_close.ogg","mtg/glass_door_close.ogg"],d:"Дверь закрывается"},
+ mtg_steel_door:{f:["mtg/steel_door_open.ogg","mtg/steel_door_close.ogg"],d:"Стальная дверь"},
+ mtg_gate:{f:["mtg/fencegate_open.ogg","mtg/fencegate_close.ogg"],d:"Калитка"},
+ mtg_fire:{f:["mtg/fire_1.ogg","mtg/fire_2.ogg","mtg/fire_3.ogg","mtg/small.ogg","mtg/large.ogg"],d:"Огонь"},
+ mtg_fire_out:{f:["mtg/extinguish_flame_1.ogg","mtg/extinguish_flame_2.ogg","mtg/extinguish_flame_3.ogg"],d:"Огонь гаснет"},
+ mtg_flint:{f:["mtg/flint_and_steel.ogg"],d:"Кресало"},
+ mtg_furnace:{f:["mtg/furnace_active.ogg"],d:"Печь гудит"},
+ mtg_fuse:{f:["mtg/gunpowder_burning.ogg","mtg/ignite.ogg"],d:"Горит пороховая дорожка"},
+ mtg_explode:{f:["mtg/explode.ogg"],d:"Взрыв"},
+ mtg_place:{f:["mtg/place_node_1.ogg","mtg/place_node_2.ogg","mtg/place_node_3.ogg","mtg/place_node_hard_1.ogg","mtg/place_node_hard_2.ogg","mtg/place_node_metal_1.ogg","mtg/place_node_metal_2.ogg"],d:"Камень ложится на место"},
+ mtg_tool_break:{f:["mtg/tool_breaks_1.ogg","mtg/tool_breaks_2.ogg","mtg/tool_breaks_3.ogg"],d:"Инструмент ломается"},
+ mtg_hurt:{f:["mtg/player_damage.ogg"],d:"Удар по человеку"},
+ mtg_smoke:{f:["mtg/item_smoke.ogg"],d:"Дымок"},
  stk_bridge:{f:["stk/stk_bridge_01.ogg"],d:"Деревянный мост под ногой"},
  stk_flute:{f:["stk/stk_flute_01.ogg"],d:"Флейта: короткий наигрыш"},
  stk_inn:{f:["stk/stk_inn_01.ogg"],d:"Трактир: гомон и посуда"},
@@ -6152,6 +6239,16 @@ const LIVE_SCENE={
  school:["arte_book","arte_page"],
  tower:["cast_teleport","deep_portal"],
  ruins:["deep_rocks","deep_wood","foe_bone_hit","foe_bone_pain"],
+ /* Тёмные места звучат своим: святилище — огнём и кресалом, костница —
+    костью и стеклом, яма — обвалом, шпиль — металлом, торжище — торгом,
+    притон — дверью и огнём, оплот — воротами и строем. */
+ shrine:["mtg_fire","mtg_flint","temple_choir","mtg_smoke"],
+ ossuary:["mtg_glass","mtg_rubble","foe_bone_hit","mtg_crumble"],
+ pit:["mtg_rubble","mtg_dig_gravel","deep_rocks","mtg_stone_hit"],
+ spire:["mtg_metal_hit","mtg_place","cast_teleport","mtg_steel_door"],
+ bazaar:["trade_m","trade_f","mtg_chest_open","hall_market"],
+ den:["mtg_door_open","mtg_fire","throng_hail_f","lute_tavern"],
+ hold:["mtg_gate","throng_march","siege_garrison","mtg_metal_hit"],
  cave_entrance:["deep_drip","beasts_lion","deep_rocks","deep_cart"]};
 const LIVE_DEEP=[[],["deep_drip","deep_cart","foe_goblin_hit"],
  ["deep_rocks","deep_wood","foe_bone_hit","foe_goblin_cast"],
@@ -6956,6 +7053,125 @@ const RESBEACON={дерево:"res_tree",трава:"res_herbs",ягоды:"res_
  PANTHEON,RACES_DB,CLAN_DB,RES_BASE,WAR_CAUSE,PEACE_NOTE,
  TERR,AMB,TERRAIN_SURFACE,RESBYT,RESICON,RESBEACON,BEACON_INFO].forEach(o=>{try{Object.freeze(o);}catch(e){}});
 const contentCache=new Map();
+/* ════════════════════════════════════════════════════════════════════════
+   ВОСЕМЬ ТЁМНЫХ ИМПЕРИЙ
+
+   Владения богов — это вера, а не власть. Власть за Гранью держат восемь
+   империй, и держат так, как здесь принято: чужой престол берут, союз
+   заключают до первой добычи, а посольство отправляют вместе с ядом.
+
+   Их войны считаются не потерями, а данью: побеждённый платит кровью,
+   именами и выводком. Мир Грани воюет за перевалы и пошлины; здесь воюют за
+   право первой раны, за право считать чужие кости и за право называть.
+   ════════════════════════════════════════════════════════════════════════ */
+const DARK_EMPIRES=[
+ {id:"kost",  n:"Костяной Синод",      short:"Синод",   god:"molgur",
+  cap:{x:300,y:300},  cvet:"перепись мёртвых",
+  gov:"Синод счётчиков: правит тот, чья опись длиннее.",
+  econ:"Кость, перепись, наследство мёртвых.",
+  war:"Войну объявляют переписью: сперва считают ваших мёртвых, потом делают их.",
+  дань:["кость","имена"]},
+ {id:"krov",  n:"Кровавый Престол",    short:"Престол", god:"kharg",
+  cap:{x:1500,y:320}, cvet:"право первой раны",
+  gov:"Престол сильнейшего: держит тот, кто ранил первым и выжил.",
+  econ:"Добыча, выкуп, кровные уговоры.",
+  war:"Война здесь начинается без объявления и кончается без договора.",
+  дань:["кровь","выводок"]},
+ {id:"zerk",  n:"Зеркальная Диархия",  short:"Диархия", god:"selune",
+  cap:{x:320,y:1500}, cvet:"двойники и подмены",
+  gov:"Двое на одном троне, и никто не знает, который настоящий.",
+  econ:"Подмены, отражения, чужие лица.",
+  war:"Воюют подменой: сперва подменяют посла, потом полководца.",
+  дань:["имена","отражения"]},
+ {id:"gnil",  n:"Гнилая Корона",       short:"Корона",  god:"vermis",
+  cap:{x:1520,y:1520},cvet:"ходы под чужой землёй",
+  gov:"Корона, проросшая в череп: снимается только вместе с головой.",
+  econ:"Червоточины, перевалка, гниль на продажу.",
+  war:"Осад не ведут: подкапываются и выходят внутри.",
+  дань:["ходы","гниль"]},
+ {id:"tlen",  n:"Тлеющий Ковен",       short:"Ковен",   god:"ysolde",
+  cap:{x:900,y:180},  cvet:"медленный огонь",
+  gov:"Ковен тлеющих: решение принимают, пока горит уголь.",
+  econ:"Уголь, одержимость, тлеющее оружие.",
+  war:"Сжигают не города, а годы: их война длится поколениями.",
+  дань:["уголь","годы"]},
+ {id:"utop",  n:"Утопший Союз",        short:"Союз",    god:"vidra",
+  cap:{x:180,y:900},  cvet:"тишина под водой",
+  gov:"Союз затопленных городов: голос имеет тот, кто дольше не дышит.",
+  econ:"Соль, утопленники, поднятое со дна.",
+  war:"Топят. Всё остальное — переговоры.",
+  дань:["дыхание","соль"]},
+ {id:"golod", n:"Голодная Орда",       short:"Орда",    god:"nekros",
+  cap:{x:1820,y:900}, cvet:"пустое чрево",
+  gov:"Орда пустотелых: вождь тот, кто дольше не ел и не упал.",
+  econ:"Поглощение. Своего у них нет ничего.",
+  war:"Не завоёвывают — съедают, и после них не остаётся даже названия.",
+  дань:["голод","всё"]},
+ {id:"posl",  n:"Последний Конклав",   short:"Конклав", god:"omenos",
+  cap:{x:900,y:1820},cvet:"день, который назначен",
+  gov:"Конклав провозвестников: всякое решение уже принято, осталось дожить.",
+  econ:"Пророчества, сроки, назначенные смерти.",
+  war:"Воюют по расписанию и не отменяют его даже ради победы.",
+  дань:["сроки","пророчества"]},
+];
+const DARK_EMPIRE_BY_ID=Object.fromEntries(DARK_EMPIRES.map(e=>[e.id,e]));
+/* Чья это земля за Гранью: ближайший престол империи. */
+function darkEmpireAt(x,y){
+ let лучшая=DARK_EMPIRES[0],d0=Infinity;
+ for(const e of DARK_EMPIRES){
+  const d=(e.cap.x-x)*(e.cap.x-x)+(e.cap.y-y)*(e.cap.y-y);
+  if(d<d0){d0=d;лучшая=e;}}
+ return лучшая;}
+function darkEmpireIndexAt(x,y){return DARK_EMPIRES.indexOf(darkEmpireAt(x,y));}
+/* ── ВОЙНЫ И СОЮЗЫ ЗА ГРАНЬЮ ──
+   Считаются так же от дня, как войны Грани, но короче и злее: эпоха здесь
+   вдвое быстрее, войн вдвое больше, а союзы держатся ровно до первой добычи. */
+const DARK_WAR_CAUSE=[
+ "спор о праве первой раны","чужая перепись мёртвых","подменённый посол",
+ "выводок, отданный не тому","уголь, потушенный чужой рукой","затопленный караван душ",
+ "съеденное посольство","нарушенный срок пророчества","украденное имя престола",
+ "костница, вскрытая без спроса","ход, прорытый под чужим троном","долг кровью, отданный гнилью"];
+const DARK_PEACE_NOTE=[
+ "обмен заложниками из выводка","общая жатва","съеденный общий враг",
+ "брак двойников","срок, назначенный обоим","доля в переписи"];
+function darkEpoch(day){return Math.floor((Number(day)||1)/3);}
+function darkRelationAt(i,j,day){
+ if(i===j)return 5;
+ const e=darkEpoch(day);
+ const h=hashName(Math.min(i,j)*17+e*7,Math.max(i,j)*23+e*11,5100);
+ /* За Гранью отношения смещены во вражду: мир здесь — редкость. */
+ return Math.round(-4+h*9);}
+function darkWarsAt(day){
+ const out=[];
+ for(let i=0;i<DARK_EMPIRES.length;i++)for(let j=i+1;j<DARK_EMPIRES.length;j++){
+  const r=darkRelationAt(i,j,day);
+  if(r<=-2){
+   const h=hashName(i*13+j*29,darkEpoch(day)*31,5101);
+   out.push({a:i,b:j,cause:DARK_WAR_CAUSE[Math.floor(h*DARK_WAR_CAUSE.length)%DARK_WAR_CAUSE.length],
+    /* Цена войны за Гранью считается не землями, а данью. */
+    дань:DARK_EMPIRES[i].дань[Math.floor(h*2)%2]});}}
+ return out;}
+function darkPactsAt(day){
+ const out=[];
+ for(let i=0;i<DARK_EMPIRES.length;i++)for(let j=i+1;j<DARK_EMPIRES.length;j++){
+  const r=darkRelationAt(i,j,day);
+  if(r>=3){
+   const h=hashName(i*7+j*19,darkEpoch(day)*13,5102);
+   out.push({a:i,b:j,note:DARK_PEACE_NOTE[Math.floor(h*DARK_PEACE_NOTE.length)%DARK_PEACE_NOTE.length],
+    /* Союз держится до первой добычи: срок известен заранее. */
+    доКонца:1+Math.floor(h*3)});}}
+ return out;}
+function darkEmpireAtWar(i,day){return darkWarsAt(day).some(w=>w.a===i||w.b===i);}
+/* Словом: что сейчас творится между империями. */
+function darkPoliticsText(day){
+ const w=darkWarsAt(day),p=darkPactsAt(day);
+ const части=[];
+ части.push(`За Гранью восемь империй. Войн сейчас ${w.length}, союзов ${p.length}.`);
+ w.slice(0,4).forEach(x=>части.push(
+  `${DARK_EMPIRES[x.a].n} против ${DARK_EMPIRES[x.b].n}: ${x.cause}. Дань побеждённого — ${x.дань}.`));
+ p.slice(0,3).forEach(x=>части.push(
+  `${DARK_EMPIRES[x.a].n} и ${DARK_EMPIRES[x.b].n} держат союз: ${x.note}. Осталось ${x.доКонца} ${plural(x.доКонца,"эпоху","эпохи","эпох")} — потом делить добычу.`));
+ return части.join(" ");}
 /* ── ЧТО СТОИТ В ТЁМНЫХ ЗЕМЛЯХ ──
    Пять видов мест, и ни одного знакомого: святилище тёмного бога, костница,
    яма, шпиль и торжище отверженных. Плюс ворота обратно. */
@@ -6964,13 +7180,22 @@ const DARK_PLACES={
  ossuary:{n:"Костница",    beacon:"ruins",    kind:"dungeon"},
  pit:    {n:"Яма",         beacon:"cave_entrance",kind:"dungeon"},
  spire:  {n:"Шпиль",       beacon:"tower",    kind:"house"},
- bazaar: {n:"Торжище отверженных",beacon:"market",kind:"house"}};
+ bazaar: {n:"Торжище отверженных",beacon:"market",kind:"house"},
+ /* Притон — тёмная таверна: там сидят те, кто вернулся, и берут долю с тех,
+    кто ещё пойдёт. Оплот — дом тёмного клана. */
+ den:    {n:"Притон",      beacon:"tavern",   kind:"house"},
+ hold:   {n:"Оплот клана", beacon:"clanhall", kind:"house"}};
 const DARK_PLACE_NAME={
  shrine:["Святилище Немого","Святилище Порога","Святилище Пепла","Святилище Обратной Луны","Святилище Первой Раны"],
  ossuary:["Костница Счётчиков","Костница Девяти","Костница Долгого Списка","Костница Безымянных"],
  pit:["Яма Голодных","Яма Червоточин","Яма Утопших","Яма Снятой Кожи","Яма Последнего Дня"],
  spire:["Шпиль Шёпота","Шпиль Многих Рук","Шпиль Тлеющих","Шпиль Провозвестников"],
- bazaar:["Торжище Отверженных","Торжище Клятв","Торжище Имён","Торжище Костей"]};
+ bazaar:["Торжище Отверженных","Торжище Клятв","Торжище Имён","Торжище Костей"],
+ den:["Притон «Тихий Порог»","Притон «Кость и Соль»","Притон «Второе Отражение»",
+  "Притон «Медленный Уголь»","Притон «Пустая Чаша»","Притон «Сброшенное Перо»",
+  "Притон «Долгая Опись»","Притон «Назначенный Срок»"],
+ hold:["Оплот Первой Раны","Оплот Долгой Описи","Оплот Отражённых","Оплот Хода Под Всем",
+  "Оплот Медленного Угля","Оплот Соляных Вдов","Оплот Пустого Чрева","Оплот Назначенного Срока"]};
 /* Что тут добывают: ресурсы свои, и в мире Грани их не бывает. */
 const DARK_RES=[
  {name:"пепел",   b:"res_stone"},
@@ -6987,8 +7212,9 @@ function darkCell(x,y){
  const key="d"+x+","+y;
  if(darkCache.has(key))return darkCache.get(key);
  const r=darkRealmAt(x,y);
- const c={x,y,terrain:darkTerrainAt(x,y),empire:darkEmpireShim(r),structure:null,res:null,monster:null,
-  dark:true,realm:r};
+ const imp=darkEmpireAt(x,y);
+ const c={x,y,terrain:darkTerrainAt(x,y),empire:darkEmpireShim(r,imp),structure:null,res:null,monster:null,
+  dark:true,realm:r,imperium:imp};
  /* Престол владения — святилище самого бога. */
  if(x===r.throne.x&&y===r.throne.y)
   c.structure={type:"shrine",name:`Престол: ${r.god.n}`,beacon:"temple",dark:true,god:r.god.id};
@@ -6996,7 +7222,7 @@ function darkCell(x,y){
   const h=H(x,y,4910);
   if(darkGateAt(x,y))c.structure={type:"gate",name:"Врата разлома",beacon:"portal",dark:true};
   else if(h<0.004){
-   const k=["shrine","ossuary","pit","spire","bazaar"][Math.floor(H(x,y,4911)*5)%5];
+   const k=["shrine","ossuary","pit","spire","bazaar","den","hold"][Math.floor(H(x,y,4911)*7)%7];
    const имена=DARK_PLACE_NAME[k];
    c.structure={type:k,dark:true,god:r.god.id,
     name:имена[Math.floor(H(x,y,4912)*имена.length)%имена.length],
@@ -7006,19 +7232,56 @@ function darkCell(x,y){
   if(hr<0.16){const d=DARK_RES[Math.floor(H(x,y,4914)*DARK_RES.length)%DARK_RES.length];
    c.res={name:d.name,beacon:d.b};}
   const hm=H(x,y,4915);
-  if(hm<0.22)c.monster=darkMonsterAt(x,y);}
+  if(hm<0.22)c.monster=darkMonsterAt(x,y);
+  /* Небо за Гранью населено плотнее земли: над каждой пятой клеткой кто-то
+     идёт на крыле, и снизу его слышно сверху. */
+  else if(hm<0.42)c.monster=safeFn(()=>darkSkyMonsterAt(x,y),null)||null;}
  if(darkCache.size>4000)darkCache.clear();
  darkCache.set(key,c);
  return c;}
 /* Владение притворяется державой ровно настолько, чтобы всё остальное в игре
    не спрашивало «а где я». Ни войн, ни пошлин, ни экспорта у него нет. */
-function darkEmpireShim(r){
- return {name:`Владение ${r.god.n}`,short:r.god.n.split(" ")[0],cap:{x:r.throne.x,y:r.throne.y},
+function darkEmpireShim(r,imp){
+ imp=imp||DARK_EMPIRES[0];
+ return {name:`${imp.n} (владение ${r.god.n})`,short:imp.short,cap:{x:imp.cap.x,y:imp.cap.y},
   terrains:DARK_TERR_LIST,race:DARK_RACE_NAMES[0],races:DARK_RACE_NAMES,god:r.god.id,
-  gov:`Владение ${r.god.n}: ${r.god.dom}.`,econ:"Обряд вместо торга.",
-  exports:[],imports:[],hist:r.god.ep,dark:true};}
+  gov:imp.gov,econ:imp.econ,exports:[],imports:[],hist:imp.war,dark:true,imperium:imp.id};}
 /* Кто здесь водится: тёмные твари, и уровень их растёт к престолу. */
 const DARK_MONSTERS=[
+ /* ── ТРИДЦАТЬ ТВАРЕЙ ТЁМНОГО НЕБА ──
+    Небо за Гранью населено плотнее земли: у каждой твари своя высота, и на
+    крыле игрок встречает не тех, кого встретил бы пешком. fly — высота, на
+    которой тварь держится; magic — школа тёмных чар, которыми она бьёт. */
+ {id:"df_ashkite",  n:"Пепельный змей",      snd:"mhiss",  fx:"hiss",   min:3,max:10,fly:2,magic:"ash"},
+ {id:"df_bonewing", n:"Костяное крыло",      snd:"mscreech",fx:"screech",min:4,max:11,fly:2,magic:"bone"},
+ {id:"df_gloomhawk",n:"Сумеречный ястреб",   snd:"mscreech",fx:"screech",min:3,max:10,fly:3,magic:"gloom"},
+ {id:"df_mirrorjay",n:"Зеркальная сойка",    snd:"mhiss",  fx:"hiss",   min:2,max:9, fly:2,magic:"mirror"},
+ {id:"df_bloodbat", n:"Кровавая мышь",       snd:"mscreech",fx:"screech",min:2,max:9, fly:1,magic:"blood"},
+ {id:"df_rotmoth",  n:"Гнилая мотыльница",   snd:"mwail",  fx:"wail",   min:3,max:10,fly:1,magic:"rot"},
+ {id:"df_saltgull", n:"Соляная чайка",       snd:"mscreech",fx:"screech",min:3,max:11,fly:2,magic:"drown"},
+ {id:"df_emberkite",n:"Угольный коршун",     snd:"mroar",  fx:"roar",   min:4,max:12,fly:3,magic:"ember"},
+ {id:"df_shriek",   n:"Визгунья",            snd:"mwail",  fx:"wail",   min:4,max:12,fly:2,magic:"scream"},
+ {id:"df_nightmare",n:"Ночной конь",         snd:"mroar",  fx:"roar",   min:6,max:14,fly:3,magic:"dream"},
+ {id:"df_flayerwing",n:"Крыло терзающих",    snd:"mscreech",fx:"screech",min:6,max:14,fly:3,magic:"pain"},
+ {id:"df_hollowbird",n:"Пустотелая птица",   snd:"mgrowl", fx:"growl",  min:5,max:13,fly:2,magic:"void"},
+ {id:"df_veinwyrm", n:"Жильный вирм",        snd:"mroar",  fx:"roar",   min:7,max:15,fly:4,magic:"vein"},
+ {id:"df_dreamray", n:"Сонный скат",         snd:"mhiss",  fx:"hiss",   min:5,max:13,fly:4,magic:"dream"},
+ {id:"df_oathcrow", n:"Ворон клятв",         snd:"mscreech",fx:"screech",min:4,max:12,fly:2,magic:"oath"},
+ {id:"df_scarhawk", n:"Ястреб Шрама",        snd:"mscreech",fx:"screech",min:6,max:14,fly:3,magic:"scar"},
+ {id:"df_wailer",   n:"Плакальщица неба",    snd:"mwail",  fx:"wail",   min:5,max:13,fly:2,magic:"scream"},
+ {id:"df_swarm",    n:"Выводок на крыле",    snd:"mscreech",fx:"screech",min:3,max:11,fly:1,magic:"brood"},
+ {id:"df_ashroc",   n:"Пепельный рух",       snd:"mroar",  fx:"roar",   min:8,max:16,fly:4,magic:"ash"},
+ {id:"df_bonelord", n:"Костяной владыка",    snd:"mroar",  fx:"roar",   min:9,max:17,fly:3,magic:"bone"},
+ {id:"df_mirrorlord",n:"Отражённый владыка", snd:"mwail",  fx:"wail",   min:9,max:17,fly:3,magic:"mirror"},
+ {id:"df_drownwing",n:"Утопшее крыло",       snd:"mwail",  fx:"wail",   min:7,max:15,fly:2,magic:"drown"},
+ {id:"df_emberlord",n:"Владыка углей",       snd:"mroar",  fx:"roar",   min:10,max:18,fly:4,magic:"ember"},
+ {id:"df_voidmaw",  n:"Пасть в небе",        snd:"mroar",  fx:"roar",   min:11,max:19,fly:4,magic:"void"},
+ {id:"df_heraldwing",n:"Крыло провозвестника",snd:"mwail", fx:"wail",   min:9,max:17,fly:3,magic:"omen"},
+ {id:"df_bloodheir",n:"Крылатый наследник",  snd:"mroar",  fx:"roar",   min:11,max:19,fly:3,magic:"blood"},
+ {id:"df_lunarwing",n:"Лунное крыло",        snd:"mwail",  fx:"wail",   min:10,max:18,fly:4,magic:"mirror"},
+ {id:"df_wormflyer",n:"Летучий червеход",    snd:"mhiss",  fx:"hiss",   min:6,max:14,fly:2,magic:"rot"},
+ {id:"df_lastwing", n:"Крыло Последних",     snd:"mroar",  fx:"roar",   min:12,max:20,fly:4,magic:"omen"},
+ {id:"df_pegasus_dark",n:"Пепельный пегас",  snd:"mgrowl", fx:"growl",  min:5,max:13,fly:4,magic:"ash"},
  {id:"d_gnawer", n:"Грызущий пепел",   snd:"mgrowl", fx:"growl",  min:2,max:8},
  {id:"d_wormling",n:"Червеход",        snd:"mhiss",  fx:"hiss",   min:2,max:9},
  {id:"d_skinless",n:"Освежёванный",    snd:"mwail",  fx:"wail",   min:3,max:10},
@@ -7044,6 +7307,9 @@ const DARK_MONSTERS=[
  {id:"d_scarwalk",n:"Шагающий по шву", snd:"mstomp", fx:"stomp",  min:7,max:15},
  {id:"d_veinborn",n:"Жильнорождённый", snd:"mhiss",  fx:"hiss",   min:6,max:14}];
 const DARK_MONSTER_BY_ID=Object.fromEntries(DARK_MONSTERS.map(m=>[m.id,m]));
+/* На крыле за Гранью встречается небесная тварь, а не наземная. */
+function darkAirMonsterAt(x,y){
+ return safeFn(()=>darkSkyMonsterAt(x,y),null);}
 function darkMonsterAt(x,y){
  const r=darkRealmAt(x,y);
  const d=Math.max(Math.abs(x-r.throne.x),Math.abs(y-r.throne.y));
@@ -7055,6 +7321,137 @@ function darkMonsterAt(x,y){
  return {...m0,lvl,hp:Math.round((30+lvl*11)*safeFn(()=>diff().foeHp,1)),
   dmg:5+lvl*2,xp:26+lvl*14,gold:10+lvl*6,dark:true};}
 
+/* ── ОБЩЕСТВО ТЁМНЫХ ЗЕМЕЛЬ ──
+   Кланы, притоны и школы. Здесь не учат за золото: здесь берут в долю, и
+   выйти из доли нельзя. */
+const DARK_CLANS=[
+ {id:"pervaya",n:"Первая Рана",     god:"kharg", дело:"кровные уговоры и охота на своих"},
+ {id:"opis",   n:"Долгая Опись",    god:"molgur",дело:"перепись мёртвых и торговля местами в ней"},
+ {id:"otrazh", n:"Отражённые",      god:"selune",дело:"подмены, двойники и чужие лица"},
+ {id:"hod",    n:"Ход Под Всем",    god:"vermis",дело:"ходы под чужой землёй и то, что по ним возят"},
+ {id:"ugol",   n:"Медленный Уголь", god:"ysolde",дело:"тление, одержимость и долгая месть"},
+ {id:"solyan", n:"Соляные Вдовы",   god:"vidra", дело:"утопленники, соль и имена"},
+ {id:"pustoe", n:"Пустое Чрево",    god:"nekros",дело:"поглощение и всё, что за ним"},
+ {id:"srok",   n:"Назначенный Срок",god:"omenos",дело:"пророчества, сроки и назначенные смерти"},
+ {id:"pero",   n:"Сброшенное Перо", god:"aeron", дело:"небо, крыло и падение"},
+ {id:"glaz",   n:"Многие Глаза",    god:"sarkis",дело:"надзор, донос и цена молчания"},
+];
+const DARK_CLAN_BY_ID=Object.fromEntries(DARK_CLANS.map(c=>[c.id,c]));
+const DARK_CLAN_NAMES=DARK_CLANS.map(c=>c.n);
+/* ── ШЕСТЬ ТЁМНЫХ ШКОЛ ──
+   Три ступени, как у школ Грани, но плата иная: доля, кровь и срок. */
+const DARK_SCHOOLS=[
+ {id:"d_blood",n:"Школа Первой Раны",клан:"pervaya",дом:"pit",
+  слово:"Учат одному: ударить первым и не думать об этом после.",
+  ступени:[{n:"Порезанный",цена:120,треб:{level:4},даёт:{умение:"bloodpact"}},
+           {n:"Кровник",   цена:340,треб:{level:8},даёт:{навык:"steady"}},
+           {n:"Первая Рана",цена:800,треб:{level:12},даёт:{умение:"lastword"}}]},
+ {id:"d_count",n:"Школа Долгой Описи",клан:"opis",дом:"ossuary",
+  слово:"Учат считать. Сперва кости, потом дни, потом своих.",
+  ступени:[{n:"Списчик костей",цена:110,треб:{level:4},даёт:{умение:"bonecount"}},
+           {n:"Счётчик",       цена:320,треб:{level:8},даёт:{навык:"bookman"}},
+           {n:"Голос Описи",   цена:780,треб:{level:12},даёт:{умение:"fleshread"}}]},
+ {id:"d_mirror",n:"Школа Второго Отражения",клан:"otrazh",дом:"spire",
+  слово:"Учат быть кем-то другим — так долго, что обратно уже не хочется.",
+  ступени:[{n:"Отражённый",цена:130,треб:{level:5},даёт:{умение:"mirrorstep"}},
+           {n:"Двойник",   цена:360,треб:{level:9},даёт:{навык:"nightsee"}},
+           {n:"Тот, кого нет",цена:840,треб:{level:13},даёт:{умение:"ashform"}}]},
+ {id:"d_gate",n:"Школа Хода Под Всем",клан:"hod",дом:"shrine",
+  слово:"Учат проходить там, где прохода нет. Обратно — как получится.",
+  ступени:[{n:"Копающий",цена:125,треб:{level:5},даёт:{навык:"deepsense"}},
+           {n:"Ходок",   цена:350,треб:{level:9},даёт:{умение:"gateweave"}},
+           {n:"Ход Под Всем",цена:820,треб:{level:13},даёт:{умение:"dreamwalk"}}]},
+ {id:"d_ember",n:"Школа Медленного Угля",клан:"ugol",дом:"bazaar",
+  слово:"Учат ждать. Месть, которую подали горячей, здесь считают неудавшейся.",
+  ступени:[{n:"Тлеющий",цена:115,треб:{level:4},даёт:{навык:"warded"}},
+           {n:"Углежог",цена:330,треб:{level:8},даёт:{умение:"steelheart"}},
+           {n:"Медленный Уголь",цена:790,треб:{level:12},даёт:{умение:"forgecall"}}]},
+ {id:"d_omen",n:"Школа Назначенного Срока",клан:"srok",дом:"spire",
+  слово:"Учат знать свой день. Половина учеников после этого не доучивается.",
+  ступени:[{n:"Ждущий",цена:140,треб:{level:6},даёт:{навык:"linguist"}},
+           {n:"Провозвестник",цена:380,треб:{level:10},даёт:{умение:"soulsight"}},
+           {n:"Назначенный Срок",цена:900,треб:{level:14},даёт:{умение:"dreamwalk"}}]},
+];
+const DARK_SCHOOL_BY_ID=Object.fromEntries(DARK_SCHOOLS.map(x=>[x.id,x]));
+/* Школа этого тёмного дома: как и на Грани, решает сама постройка. */
+function darkSchoolAt(bx,by,stype){
+ const годные=DARK_SCHOOLS.filter(sc=>sc.дом===stype);
+ if(!годные.length)return null;
+ if(годные.length===1)return годные[0];
+ const h=safeFn(()=>hashName(bx*13+7,by*19+3,5300),0);
+ return годные[Math.floor(h*годные.length)%годные.length];}
+/* Ремёсла тёмных земель дают дела разного уровня: чем выше ремесло, тем
+   тяжелее и дороже дело. */
+const DARK_PROF_LEVEL={"Служка":1,"Отверженный":1,"Надсмотрщик":3,"Счётчик костей":3,
+ "Меняла клятв":3,"Обрядчик":4,"Шепчущий":4,"Владыка":5};
+/* ── ДЕЛА ПО УРОВНЯМ И НАПРАВЛЕНИЯМ ──
+   Служка даёт мелочь, обрядчик — обряд, шепчущий — интригу. Уровень дела
+   виден сразу: по тому, кто его даёт, и по тому, чем платят. */
+const DARK_DIRECTIONS=[
+ {id:"war",   n:"война",     кто:["Надсмотрщик"],     что:"поход, набег и дань"},
+ {id:"rite",  n:"обряд",     кто:["Обрядчик","Служка"],что:"обряд и всё, что для него нужно"},
+ {id:"intrig",n:"интрига",   кто:["Шепчущий"],        что:"подмена, донос и чужой срок"},
+ {id:"count", n:"счёт",      кто:["Счётчик костей"],  что:"перепись, кости и наследство"},
+ {id:"trade", n:"торг",      кто:["Меняла клятв","Отверженный"],что:"клятва за клятву и долг вперёд"}];
+function darkDirectionFor(prof){
+ return DARK_DIRECTIONS.find(d=>d.кто.indexOf(prof)>=0)||DARK_DIRECTIONS[1];}
+/* Уровень дела: от ремесла заказчика и от того, как глубоко или далеко он
+   сидит. Первый — мелочь у входа, пятый — дело империи. */
+function darkDeedLevel(npc){
+ const б=DARK_PROF_LEVEL[npc&&npc.prof]||2;
+ const глубь=Math.min(3,Math.floor((Number(G.place&&G.place.depth)||0)/12));
+ const трон=safeFn(()=>{const r=darkRealmAt(npc.x,npc.y);
+  return Math.max(Math.abs(npc.x-r.throne.x),Math.abs(npc.y-r.throne.y))<20?1:0;},0);
+ return Math.max(1,Math.min(5,б+глубь+трон));}
+/* Дело империи: у него есть сторона, враг и дань — и оно жёстче обычного. */
+function darkImperialDeed(npc){
+ const imp=safeFn(()=>darkEmpireAt(npc.x,npc.y),null);
+ if(!imp)return null;
+ const i=DARK_EMPIRES.indexOf(imp);
+ const войны=safeFn(()=>darkWarsAt(G.day),[]);
+ const моя=войны.find(w=>w.a===i||w.b===i);
+ if(!моя)return null;
+ const враг=DARK_EMPIRES[врагПо(моя,i)];
+ return {imp,враг,cause:моя.cause,дань:моя.дань};}
+function врагПо(w,i){return w.a===i?w.b:w.a;}
+/* ── ПЯТНАДЦАТЬ ШКОЛ ТЁМНОЙ И БОЕВОЙ МАГИИ ──
+   Ими бьют тёмные твари, и по удару слышно, чья школа. У каждой свой голос,
+   свой урон и своё последствие. */
+const DARK_MAGIC=[
+ {id:"ash",   n:"пепел",     удар:1.1,звук:"spell_fire", след:"ожог: урон ещё день"},
+ {id:"bone",  n:"кость",     удар:1.2,звук:"cast_block", след:"перелом: удары слабее"},
+ {id:"gloom", n:"сумрак",    удар:1.0,звук:"spell_dark", след:"слепота: тварей слышно хуже"},
+ {id:"mirror",n:"отражение", удар:1.15,звук:"cast_teleport",след:"ваш же удар возвращается"},
+ {id:"blood", n:"кровь",     удар:1.3,звук:"cast_burn",  след:"кровотечение"},
+ {id:"rot",   n:"гниль",     удар:1.05,звук:"stk_goo",   след:"гниль: лечение вполсилы"},
+ {id:"drown", n:"утопление", удар:1.1,звук:"cast_ice",   след:"вода в лёгких: шаг тяжелее"},
+ {id:"ember", n:"уголь",     удар:1.25,звук:"cast_fire", след:"тление: горит и после боя"},
+ {id:"scream",n:"крик",      удар:1.0,звук:"hex_charang",след:"оглушение: следующий ход мимо"},
+ {id:"dream", n:"сон",       удар:0.9,звук:"charm_celesta",след:"дрёма: мана тает"},
+ {id:"pain",  n:"боль",      удар:1.35,звук:"cast_shock",след:"боль: урон по вам выше"},
+ {id:"void",  n:"пустота",   удар:1.2,звук:"fx_rift",    след:"пустота съедает ману"},
+ {id:"vein",  n:"жила",      удар:1.15,звук:"cast_quake",след:"камень в жилах: защита ниже"},
+ {id:"oath",  n:"клятва",    удар:1.0,звук:"chant_calliope",след:"связан словом: бежать нельзя"},
+ {id:"scar",  n:"шов",       удар:1.4,звук:"rift_bass",  след:"шов расходится: рана не закрывается"},
+ {id:"omen",  n:"пророчество",удар:1.3,звук:"rift_tick", след:"назначенный срок: следующий удар сильнее"},
+ {id:"brood", n:"выводок",   удар:1.1,звук:"beast_breath",след:"их становится больше"},
+];
+const DARK_MAGIC_BY_ID=Object.fromEntries(DARK_MAGIC.map(m=>[m.id,m]));
+/* Летающие твари тёмного неба: те, у кого есть высота. */
+function darkFliers(){return DARK_MONSTERS.filter(m=>(Number(m.fly)||0)>0);}
+/* Кто летит над этой клеткой и на какой высоте. */
+function darkSkyMonsterAt(x,y){
+ const пул=darkFliers();
+ if(!пул.length)return null;
+ const r=darkRealmAt(x,y);
+ const d=Math.max(Math.abs(x-r.throne.x),Math.abs(y-r.throne.y));
+ const близко=d<12?12:d<30?7:0;
+ const годные=пул.filter(m=>m.min<=Math.max(3,близко+7));
+ const m0=(годные.length?годные:пул)[Math.floor(H(x,y,5200)*(годные.length||пул.length))];
+ const lvl=Math.max(1,Math.round(m0.min+близко*0.4+H(x,y,5201)*3));
+ return {...m0,lvl,hp:Math.round((32+lvl*12)*safeFn(()=>diff().foeHp,1)),
+  dmg:Math.round((6+lvl*2)*(DARK_MAGIC_BY_ID[m0.magic]?DARK_MAGIC_BY_ID[m0.magic].удар:1)),
+  xp:30+lvl*15,gold:12+lvl*7,dark:true,alt:Number(m0.fly)||1};}
 /* ── ВХОД И ВЫХОД ──
    Разлом стоит в мире Грани; ворота — на той же клетке тёмных земель. */
 function enterDark(){
@@ -8237,10 +8634,23 @@ function empireQuestFor(npc){
  }catch(_){return null;}}
 
 function questFor(npc){
- /* За Гранью просят не о том и не так: дело собирается из тёмных частей. */
+ /* За Гранью просят не о том и не так: дело собирается из тёмных частей,
+    и у него есть уровень, направление и — если империя воюет — сторона. */
  if(G.dark){
   const d=safeFn(()=>darkDeedAt(npc.x,npc.y),null);
-  if(d)return safeFn(()=>darkDeedQuest(d,0,npc),null);}
+  if(!d)return null;
+  const q=safeFn(()=>darkDeedQuest(d,0,npc),null);
+  if(!q)return null;
+  safeFn(()=>{
+   const ур=darkDeedLevel(npc),напр=darkDirectionFor(npc.prof);
+   q.уровень=ур;q.направление=напр.id;
+   q.reward={gold:Math.round(q.reward.gold*(0.7+ур*0.3)),
+             xp:Math.round(q.reward.xp*(0.7+ур*0.3))};
+   const имп=darkImperialDeed(npc);
+   q.text=`Дело ${ур}-го уровня, ${напр.n}: ${напр.что}. `+q.text+
+    (имп?` Это дело империи: ${имп.imp.n} воюет с ${имп.враг.n} — ${имп.cause}. Побеждённый платит: ${имп.дань}.`:"");
+   if(имп){q.империя=имп.imp.id;q.враг=имп.враг.id;}});
+  return q;}
  const x=npc.x,y=npc.y,h=H(x,y,60+npc.tier),id=npc.key+'q';
  /* Жрецы и старейшины дают поручения богов, стража и правители — военные,
     и только если их держава действительно воюет прямо сейчас. */
@@ -9537,6 +9947,8 @@ const PROPS_BY_PLACE={
  pit:["bones","cage","chains","mushbed","stalag","brazier","rope","barrels"],
  spire:["orb","circle","mirror","cauldron","bookcase","candle","hourglass","bones"],
  bazaar:["table","crates","sacks","scales","cage","chains","barrels","mirror"],
+ den:["table","hearth","barrels","bed","bones","candle","dresser","mirror","chains"],
+ hold:["rack","shields","table","hearth","bones","tapestry","anvil","whetstone","chains","board"],
  ruins:["statue","brazier","mirror","circle","bones","chains","stalag","tapestry","candle","cage"],
  cave_entrance:["brazier","barrels","statue","bones","mushbed","stalag","rope","chains"],
  dungeon:["brazier","statue","circle","mirror","cauldron","barrels","bones","chains","cage","mushbed","stalag","rope","candle","crates","scrollcase","bookcase"]};
@@ -10096,6 +10508,30 @@ const DARK_GODS=[
   обряд:"обряд многих рук",      плата:"палец",  дар:"мастерство"},
  {id:"omenos",n:"Оменос Последний",   ep:"Тот, кто придёт в конце",   dom:"конец, пророчество, покой",
   обряд:"обряд последнего дня",  плата:"год жизни",дар:"пророчество"},
+ /* ── ЕЩЁ ДЕСЯТЬ ──
+    Первые семнадцать держат владения. Эти десять владений не держат: они
+    приходят к тем, кто позвал, и берут больше. Их обряды — на крыле, в
+    небе и на глубине. */
+ {id:"aeron", n:"Аэрон Крылатый",     ep:"Тот, кто сбросил небо",     dom:"крыло, высота, падение",
+  обряд:"обряд сброшенного пера",плата:"перо",   дар:"крыло"},
+ {id:"stygos",n:"Стигос Глубинный",   ep:"Тот, кто под сотым ярусом", dom:"глубина, давление, счёт ярусов",
+  обряд:"обряд сотого яруса",    плата:"год жизни",дар:"дно"},
+ {id:"vespra",n:"Веспра Сумеречная",  ep:"Та, что между двумя светами",dom:"сумерки, порог, нерешённое",
+  обряд:"обряд двух светов",     плата:"выбор",  дар:"порог"},
+ {id:"orkhan",n:"Орхан Ломающий",     ep:"Тот, кто ломает строй",     dom:"война, строй, перелом",
+  обряд:"обряд сломанного строя",плата:"кость",  дар:"перелом"},
+ {id:"maleth",n:"Малет Ядовитая",     ep:"Та, что в чаше",            dom:"яд, терпение, наследство",
+  обряд:"обряд полной чаши",     плата:"глоток", дар:"яд"},
+ {id:"sarkis",n:"Саркис Многоглазый", ep:"Тот, кто видит все ходы",   dom:"надзор, интрига, донос",
+  обряд:"обряд многих глаз",     плата:"тайна",  дар:"взгляд"},
+ {id:"quorra",n:"Куорра Разрывная",   ep:"Та, что рвёт связи",        dom:"разрыв, измена, свобода",
+  обряд:"обряд разорванной нити",плата:"связь",  дар:"свобода"},
+ {id:"belzur",n:"Бельзур Торговый",   ep:"Тот, кто берёт вперёд",     dom:"долг, залог, процент",
+  обряд:"обряд взятого вперёд",  плата:"долг",   дар:"залог"},
+ {id:"irenna",n:"Иренна Тихая",       ep:"Та, что молчит за всех",    dom:"молчание, согласие, забвение",
+  обряд:"обряд общего молчания", плата:"голос",  дар:"тишина"},
+ {id:"zaruth",n:"Зарут Восходящий",   ep:"Тот, кто ещё не пришёл",    dom:"обещание, ожидание, восход",
+  обряд:"обряд не пришедшего",   плата:"ожидание",дар:"обещание"},
 ];
 const DARK_GOD_BY_ID=Object.fromEntries(DARK_GODS.map(g=>[g.id,g]));
 
@@ -10137,8 +10573,34 @@ const DARK_RACES=[
  {id:"nasledniki",n:"Наследники Харга",rank:4,god:"kharg",черта:"кровь бога в них не разбавлена"},
  {id:"lunnye",  n:"Лунные обратные", rank:4,god:"selune",черта:"их отражение живёт отдельно"},
  {id:"poslednie",n:"Последние",      rank:4,god:"omenos",черта:"их всего семеро, и седьмой ещё не родился"},
+ /* ── ДВАДЦАТЬ ЛЕТАЮЩИХ НАРОДОВ ──
+    fly — потолок крыла в клетках. Крылатые за Гранью живут выше земли и
+    говорят с теми, кто пришёл по воздуху, иначе, чем с пешими. */
+ {id:"pepelokryl",n:"Пепелокрылые",   rank:1,god:"grimm", fly:2,черта:"крылья осыпаются и отрастают за ночь"},
+ {id:"kostokryl", n:"Костокрылые",    rank:1,god:"molgur",fly:2,черта:"крыло из чужих рёбер"},
+ {id:"zerkalnye", n:"Зеркальные птицы",rank:1,god:"selune",fly:3,черта:"в полёте их двое"},
+ {id:"krovostrig",n:"Кровострижи",    rank:0,god:"kharg", fly:1,черта:"пьют на лету"},
+ {id:"gnilokryl", n:"Гнилокрылые",    rank:0,god:"vermis",fly:1,черта:"пахнут раньше, чем видны"},
+ {id:"solyanye_k",n:"Соляные крачки", rank:1,god:"vidra", fly:2,черта:"садятся только на воду"},
+ {id:"uglekryl",  n:"Углекрылые",     rank:2,god:"ysolde",fly:3,черта:"тлеют в полёте и не гаснут"},
+ {id:"sonnye_k",  n:"Сонные скаты",   rank:2,god:"lamash",fly:4,черта:"спят на крыле"},
+ {id:"shepotkryl",n:"Шёпотокрылые",   rank:1,god:"thessa",fly:2,черта:"их слышно раньше, чем видно"},
+ {id:"mnogokryl", n:"Многокрылые",    rank:2,god:"tarrog",fly:3,черта:"шесть крыльев и ни одного лишнего"},
+ {id:"provozvest",n:"Провозвестники неба",rank:3,god:"omenos",fly:3,черта:"знают, когда упадут"},
+ {id:"pustokryl", n:"Пустокрылые",    rank:2,god:"nekros",fly:2,черта:"внутри крыла ничего нет"},
+ {id:"terzakryl", n:"Терзающие в небе",rank:3,god:"skarn",fly:3,черта:"снимают кожу на лету"},
+ {id:"drevnekryl",n:"Древние крылатые",rank:3,god:"drakon",fly:4,черта:"старше самого неба"},
+ {id:"aeronidy",  n:"Аэрониды",       rank:2,god:"aeron", fly:4,черта:"дети сброшенного неба"},
+ {id:"sumerechn", n:"Сумеречники",    rank:1,god:"vespra",fly:2,черта:"летают только между светами"},
+ {id:"yadokryl",  n:"Ядокрылые",      rank:2,god:"maleth",fly:2,черта:"их тень оставляет ожог"},
+ {id:"mnogoglaz", n:"Многоглазые вестники",rank:2,god:"sarkis",fly:3,черта:"видят все ходы разом"},
+ {id:"pegasy_t",  n:"Пепельные пегасы",rank:4,god:"aeron",fly:4,черта:"единственные, кого за Гранью не запрягли"},
+ {id:"posledn_k", n:"Последние крылья",rank:4,god:"zaruth",fly:4,черта:"их крылья ещё не раскрылись"},
 ];
 const DARK_RACE_BY_ID=Object.fromEntries(DARK_RACES.map(r=>[r.id,r]));
+/* Крылатые народы тёмных земель: у них есть потолок. */
+const DARK_FLY_RACES=DARK_RACES.filter(r=>(Number(r.fly)||0)>0);
+const DARK_RACE_BY_NAME=Object.fromEntries(DARK_RACES.map(r=>[r.n,r]));
 const DARK_RACE_NAMES=DARK_RACES.map(r=>r.n);
 
 /* ── ЗЕМЛЯ ПОД НОГОЙ ──
@@ -10158,7 +10620,10 @@ const DARK_AMB={ash:["wind"],bone:["cave"],rot:["swamp"],mirror:["cave"],vein:["
 
 /* ── СЕМНАДЦАТЬ ВЛАДЕНИЙ ──
    Владение определяется ближайшим престолом, как держава — столицей. */
-const DARK_THRONES=DARK_GODS.map((g,i)=>({
+/* Владения держат только первые семнадцать: остальные десять богов земли не
+   имеют — они приходят к тем, кто позвал. */
+const DARK_THRONE_GODS=DARK_GODS.slice(0,17);
+const DARK_THRONES=DARK_THRONE_GODS.map((g,i)=>({
  god:g.id,
  x:Math.round(200+((i*7)%17)*100+((i%3)*37)),
  y:Math.round(180+((i*11)%17)*100+((i%5)*23))}));
@@ -10787,7 +11252,8 @@ function hereTrait(){
  return safeFn(()=>placeTrait(p.bx,p.by,p.stype),null);}
 const PLACE_KIND={
  /* Тёмные земли: пять своих видов мест и врата, в которые не входят. */
- shrine:"house",ossuary:"dungeon",pit:"dungeon",spire:"house",bazaar:"house",gate:null,rift:null,
+ shrine:"house",ossuary:"dungeon",pit:"dungeon",spire:"house",bazaar:"house",
+ den:"house",hold:"house",gate:null,rift:null,
  castle:"city",village:"city",port:"city",tavern:"house",clanhall:"house",tower:"house",
  temple:"house",ruins:"dungeon",traveler:null,cave_entrance:"dungeon",
  /* Кузница, торговый двор и школа — такие же дома, как таверна: вход, комнаты,
@@ -10799,6 +11265,33 @@ const PLACE_KIND={
 /* Куда нельзя дойти ногами. */
 function airOnly(st){return st==="eyrie"||st==="peakshrine";}
 const MAX_DEPTH=5;
+/* ── СТО ЯРУСОВ ТЁМНЫХ ЗЕМЕЛЬ ──
+   Подземелья Грани кончаются на пятом ярусе: глубже сплошной камень. За
+   Гранью камня нет — там сто ярусов, и каждый десятый меняет всё: породу,
+   тварей, добычу и голос глубины. Чем ниже, тем страшнее и богаче: урон
+   тварей, их уровень и цена добычи растут с глубиной, а на последних ярусах
+   лежит то, чего нет нигде больше. */
+const DARK_MAX_DEPTH=100;
+function maxDepthHere(){return G.dark?DARK_MAX_DEPTH:MAX_DEPTH;}
+/* Круг глубины: десять ярусов — один круг, у каждого своё имя и лицо. */
+const DARK_CIRCLES=[
+ {n:"Верхние ходы",    порода:"gravel",  голос:"drone_calm", беда:"здесь ещё пахнет поверхностью"},
+ {n:"Костяные ярусы",  порода:"bone",    голос:"drone_dark", беда:"стены выложены не камнем"},
+ {n:"Пепельные ярусы", порода:"ash",     голос:"drone_deep", беда:"пепел лежит по колено и тёплый"},
+ {n:"Жильные ярусы",   порода:"stone",   голос:"dungeon_heart",беда:"камень пульсирует в такт вашему сердцу"},
+ {n:"Зеркальные ярусы",порода:"crystal", голос:"fx_crystal", беда:"вас здесь двое, и второй идёт впереди"},
+ {n:"Утопшие ярусы",   порода:"water",   голос:"cave_drip",  беда:"вода стоит выше пояса и не холодная"},
+ {n:"Гнилые ярусы",    порода:"mud",     голос:"stk_goo",    беда:"своды дышат"},
+ {n:"Ярусы шва",       порода:"metal",   голос:"rift_bass",  беда:"Грань зашита прямо над головой"},
+ {n:"Ярусы пустоты",   порода:"ice",     голос:"fx_rift",    беда:"здесь нет эха: звук уходит и не возвращается"},
+ {n:"Дно",             порода:"crystal", голос:"rift_tick",  беда:"дальше некуда, и это слышно"}];
+function darkCircle(depth){
+ const i=Math.max(0,Math.min(DARK_CIRCLES.length-1,Math.floor((Math.max(1,depth)-1)/10)));
+ return Object.assign({круг:i+1},DARK_CIRCLES[i]);}
+/* Насколько глубина злее поверхности: множитель для твари и для добычи. */
+function darkDepthWeight(depth){
+ const d=Math.max(0,Number(depth)||0);
+ return 1+d*0.06;}
 const levelCache=new Map();
 function placeKey(bx,by,depth){return bx+","+by+","+depth;}
 function markKey(bx,by,depth,x,y){return bx+","+by+","+depth+":"+x+","+y;}
@@ -11056,7 +11549,7 @@ function genLevel(bx,by,depth,stype){
   const верх=depth>0?shaftSpot(bx,by,depth-1):(rooms[0]||{cx:2,cy:2});
   const вх={x:depth>0?верх.x:верх.cx,y:depth>0?верх.y:верх.cy};
   put(вх.x,вх.y,"<");entry={x:вх.x,y:вх.y};
-  const deeper=depth<MAX_DEPTH;
+  const deeper=depth<(G.dark?DARK_MAX_DEPTH:MAX_DEPTH);
   if(deeper){const низ=shaftSpot(bx,by,depth);
    if(низ.x!==вх.x||низ.y!==вх.y)put(низ.x,низ.y,">");}
   const mobs=2+Math.floor(R(71)*3)+Math.floor(depth/2);
@@ -11432,6 +11925,21 @@ function askAboutLands(key){
 function renderSchool(){
  const box=document.getElementById("schoolList");if(!box)return;
  let html="",голос=[];
+ const тьма=safeFn(()=>darkSchoolHere(),null);
+ if(тьма){
+  const шаг=darkSchoolStep(тьма.id);
+  html+=`<h3>Здесь берут в долю</h3>`;
+  html+=`<div class="list-line" data-speak="Тёмная школа «${тьма.n}». ${тьма.слово} Взято ступеней: ${шаг} из ${тьма.ступени.length}.">🩸 <b>${тьма.n}</b><br>${тьма.слово}<br>Взято ступеней: <b>${шаг}</b> из ${тьма.ступени.length}</div>`;
+  тьма.ступени.forEach((ст,i)=>{
+   const взята=i<шаг,следующая=i===шаг;
+   const беды=следующая?darkSchoolBlockers(тьма):[];
+   const дар=stepGift(ст);
+   const строка=`Ступень ${i+1}: ${ст.n}. Даёт ${дар} Цена ${ст.цена} золота и кровь.`+
+    (взята?" Взята.":следующая?(беды.length?` Не хватает: ${беды.join("; ")}.`:" Можно взять сейчас."):" Откроется после предыдущей.");
+   html+=`<div class="list-line" data-speak="${строка.replace(/"/g,"'")}">${взята?"✅":следующая?(беды.length?"🔒":"▶️"):"⬜"} <b>${ст.n}</b> — ${ст.цена} золота и кровь<br>${дар}${беды.length?`<br>Не хватает: ${беды.join("; ")}`:""}`+
+    (следующая&&!беды.length?` <button data-cmd="darktrain:${тьма.id}" data-speak="Взять ступень ${ст.n}: ${ст.цена} золота и кровь.">🩸 Взять ступень</button>`:"")+
+    `</div>`;});
+  голос.push(`Здесь тёмная школа «${тьма.n}», взято ступеней ${шаг} из ${тьма.ступени.length}.`);}
  const sc=safeFn(()=>schoolHere(),null);
  if(sc){
   const шаг=schoolStep(sc.id);
@@ -11447,7 +11955,7 @@ function renderSchool(){
     (следующая&&!беды.length?` <button data-cmd="train:${sc.id}" data-speak="Пройти ступень ${ст.n} за ${ст.цена} золота.">🎓 Пройти ступень</button>`:"")+
     `</div>`;});
   голос.push(`Здесь школа «${sc.n}», пройдено ступеней ${шаг} из ${sc.ступени.length}.`);
- }else{
+ }else if(!тьма){
   html+=`<div class="list-line" data-speak="Здесь не учат: школы стоят в кузнях, башнях, храмах, школах, кланхоллах, тавернах и портах своих земель. Список школ мира ниже.">🚪 <b>Здесь не учат.</b> Школы стоят в своих домах: кузня, башня, храм, школа, кланхолл, таверна, порт — каждая в своих землях.</div>`;
   голос.push("Здесь не учат.");}
  /* Умения игрока. */
@@ -11744,6 +12252,61 @@ function schoolAt(bx,by,stype){
  if(годные.length===1)return годные[0];
  const h=safeFn(()=>hashName(bx*11+5,by*23+9,4500),0);
  return годные[Math.floor(h*годные.length)%годные.length];}
+/* Школа тёмных земель, в доме которой стоит игрок. Учат здесь не за золото:
+   цена та же цифрой, но платят долей, кровью и сроком — это сказано словами
+   при каждой ступени. */
+function darkSchoolHere(){
+ try{
+  if(!G.dark)return null;
+  const p=G.place;if(!p)return null;
+  /* Яма и костница — подземелья: их «дом» — первый ярус, а не порог.
+     Поэтому тёмная школа находится и на первом ярусе тоже. */
+  if(p.depth>1)return null;
+  return darkSchoolAt(p.bx,p.by,p.stype);
+ }catch(_){return null;}}
+function darkSchoolStep(id){try{return Math.max(0,Number(G.schools&&G.schools[id])||0);}catch(_){return 0;}}
+function darkSchoolBlockers(sc){
+ const беды=[];
+ try{
+  const шаг=darkSchoolStep(sc.id);
+  if(шаг>=sc.ступени.length)return ["пройдено"];
+  const ст=sc.ступени[шаг],т=ст.треб||{};
+  if(т.level&&(Number(G.level)||1)<т.level)беды.push(`уровень ${т.level} (у вас ${G.level})`);
+  if((Number(G.gold)||0)<ст.цена)беды.push(`${ст.цена} золота (у вас ${G.gold})`);
+  /* Кровь берут не в долг: на первую ступень нужно быть целым хотя бы наполовину. */
+  if((Number(G.hp)||0)<Math.round((Number(G.hpMax)||1)*0.5))беды.push("здоровья хотя бы наполовину");
+ }catch(_){}
+ return беды;}
+function trainDarkSchool(id){
+ const sc=DARK_SCHOOL_BY_ID[id];
+ if(!sc){narrate("Такой школы нет.");return false;}
+ if(darkSchoolHere()!==sc){narrate(`«${sc.n}» берёт в долю только в своём доме.`);return false;}
+ const шаг=darkSchoolStep(sc.id);
+ if(шаг>=sc.ступени.length){narrate(`«${sc.n}» вас уже взяла целиком. Выйти из доли нельзя.`);return false;}
+ const ст=sc.ступени[шаг];
+ const беды=darkSchoolBlockers(sc);
+ if(беды.length){narrate(`Ступень «${ст.n}» пока не по вам: нужно ${беды.join("; ")}.`);return false;}
+ G.gold-=ст.цена;
+ /* Плата тёмной школы: золото — только видимая её часть. */
+ const кровь=Math.max(1,Math.round((Number(G.hpMax)||100)*0.12));
+ G.hp=Math.max(1,(Number(G.hp)||1)-кровь);
+ if(!G.schools||typeof G.schools!=="object")G.schools={};
+ G.schools[sc.id]=шаг+1;
+ const g=ст.даёт||{};
+ let дар="";
+ if(g.навык){safeFn(()=>learnSkill(g.навык));const sk=SKILL_BY_ID[g.навык];дар=`Навык «${sk?sk.n:g.навык}».`;}
+ else if(g.умение){learnAbility(g.умение);const a=ABILITY_BY_ID[g.умение];дар=`Умение «${a?a.n:g.умение}». ${a?a.d:""}`;}
+ safeFn(()=>{Bank.play("hex_charang",{seed:шаг,gain:0.65,maxSec:5})||Bank.play("spell_dark",{gain:0.65,maxSec:5});
+  setTimeout(()=>safeFn(()=>Bank.play("mtg_fuse",{seed:шаг,gain:0.5,maxSec:4})),380);});
+ journal(`Тёмная школа «${sc.n}»: ступень «${ст.n}».`);
+ narcareDark(sc,ст,шаг,дар,кровь);
+ safeFn(()=>{renderSchool();refresh();saveGame(true);});
+ return true;}
+function narcareDark(sc,ст,шаг,дар,кровь){
+ narrate(`Ступень взята: «${ст.n}» в школе «${sc.n}». С вас взяли ${ст.цена} золота и ${кровь} крови. ${дар} `+
+  (шаг+1<sc.ступени.length
+   ?`Следующая ступень: «${sc.ступени[шаг+1].n}», ${sc.ступени[шаг+1].цена} золота и снова кровь.`
+   :"Школа взяла вас целиком. Выйти из доли нельзя."));}
 function schoolHere(){
  try{
   if(G.dark)return null;   /* школы Грани за Гранью не стоят */
@@ -12108,7 +12671,10 @@ function changeDepth(delta){
  G.flight=null;
  const p=G.place,nd=p.depth+delta;
  if(nd<0){narrate("Выше подниматься некуда.");return false;}
- if(nd>MAX_DEPTH){narrate("Глубже хода нет: дальше сплошной камень.");return false;}
+ if(nd>safeFn(()=>maxDepthHere(),MAX_DEPTH)){
+  narrate(G.dark?"Дно. Ниже сотого яруса нет ничего — и это единственное «ничего», которое можно потрогать."
+   :"Глубже хода нет: дальше сплошной камень.");
+  return false;}
  const lvl=genLevel(p.bx,p.by,nd,p.stype);
  /* ── ГДЕ ИГРОК ОКАЗЫВАЕТСЯ ──
     Прежде его переносило на «вход яруса» — клетку, никак не связанную с
@@ -12129,7 +12695,14 @@ function changeDepth(delta){
  /* Глубину слышно: верх — ровный гул, середина — тёмный, низ — глубинный,
     и там же начинает биться редкий низкий удар, «сердце подземелья». */
  safeFn(()=>{const d=p.depth;
-  if(d>0)Bank.play(d>=4?"drone_deep":d>=2?"drone_dark":"drone_calm",{seed:d,gain:0.5,maxSec:9});
+  if(G.dark&&d>0){
+   /* За Гранью глубину слышно кругами: каждый десятый ярус звучит иначе. */
+   const кр=darkCircle(d);
+   Bank.play(кр.голос,{seed:d,gain:0.55,maxSec:9});
+   setTimeout(()=>safeFn(()=>narrate(
+    `${кр.n}, ярус ${d} из ${DARK_MAX_DEPTH}. ${кр.беда[0].toUpperCase()+кр.беда.slice(1)}.`,
+    {interrupt:false})),1500);}
+  else if(d>0)Bank.play(d>=4?"drone_deep":d>=2?"drone_dark":"drone_calm",{seed:d,gain:0.5,maxSec:9});
   if(d>=3)setTimeout(()=>safeFn(()=>Bank.play("dungeon_heart",{seed:d,gain:0.45,maxSec:6})),1200);
   /* На самом дне Грань близко: сквозь камень пробивается то, что за краем.
      Низ, сбой и чужой ветер — три звука, которых нет больше нигде в мире. */
@@ -13330,7 +13903,17 @@ const PLACE_MIX={
 /* Городская мостовая тоже не сплошная: улицы камень, дворы утоптаны, у воды
    доски настила. */
 const CITY_MIX=["stone","dirt","plank"];
+/* Пол тёмных ярусов: своя порода у каждого круга глубины. */
+function darkFloorSurface(){
+ try{
+  const p=G.place;if(!p||!G.dark)return null;
+  if(p.depth>0)return darkCircle(p.depth).порода;
+  return ({shrine:"marble",ossuary:"bone",pit:"gravel",spire:"crystal",
+   bazaar:"plank",den:"plank",hold:"stone"})[p.stype]||"stone";
+ }catch(_){return null;}}
 function indoorSurface(){
+ const тёмный=safeFn(()=>darkFloorSurface(),null);
+ if(тёмный)return тёмный;
  const p=G.place;if(!p)return "stone";
  const смесь=p.depth>0
   ?(DEPTH_MIX[Math.min(DEPTH_MIX.length-1,p.depth)]||["gravel"])
@@ -14656,6 +15239,7 @@ const CMD={
  lands(key){safeFn(()=>askAboutLands(key));},
  school(){openModal("modal-school");renderSchool();},
  train(id){safeFn(()=>trainSchool(id));},
+ darktrain(id){safeFn(()=>trainDarkSchool(id));},
  ability(id){safeFn(()=>useAbility(id));},
  mount(id){safeFn(()=>callMount(id||null));},
  enterdark(){safeFn(()=>enterDark());},
