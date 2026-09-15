@@ -251,6 +251,30 @@ const NEW_DIRS=["arte","deep","foe","cast","hero","wild","trade","score",
  check('у каждой заимствованной библиотеки есть свои титры: авторы, лицензия и ссылка',
   Object.values(титры).every(x=>x.есть&&x.лицензия&&x.ссылка&&x.авторы&&x.строк>10),титры);
 
+ /* ── ОПИСЬ ЗАПИСЕЙ: НИ ОДНОЙ ЛИШНЕЙ И НИ ОДНОЙ ПРОПАВШЕЙ ──
+    Эта же опись сводится в сборочных проверках, и она однажды разошлась с
+    игрой молча: восемь скачанных записей не были упомянуты в index.html ни
+    разу, местный прогон об этом не знал, а сборка падала. Дважды так быть
+    не должно — считаем здесь, вместе со всем остальным звуком. */
+ const опись=(()=>{
+  const корень=path.join(__dirname,"..");
+  const html=fs.readFileSync(path.join(корень,"index.html"),"utf8");
+  const re=/"((?:sea|ambience|dungeon|magic|gods|events|places|fantasy|steps|ui|monsters|nat|inst|orch|surf|blow|troop|bazaar|dark|arms|spell|beast|relic|depth|folk|mood|arte|deep|foe|cast|hero|wild|trade|score|battle|siege|craft|beasts|throng|tread|sky|hall|mg|stk|mtg|od|es)\/[^"]+\.(?:mp3|wav|flac|ogg))"/g;
+  const ссылки=new Set([...html.matchAll(re)].map(m=>m[1]));
+  const обход=d=>fs.readdirSync(d,{withFileTypes:true})
+   .flatMap(e=>e.isDirectory()?обход(path.join(d,e.name)):[path.join(d,e.name)]);
+  const файлы=обход(path.join(корень,"sounds"))
+   .filter(f=>/\.(mp3|wav|flac|ogg)$/.test(f))
+   .map(f=>path.relative(path.join(корень,"sounds"),f).split(path.sep).join("/"));
+  const нетФайла=[...ссылки].filter(f=>файлы.indexOf(f)<0);
+  const неЗвучат=файлы.filter(f=>!ссылки.has(f));
+  return {ссылок:ссылки.size,файлов:файлы.length,
+   нетФайла:нетФайла.slice(0,8),неЗвучат:неЗвучат.slice(0,8)};})();
+ check('каждая запись на диске где-то звучит: лишних файлов нет',
+  опись.неЗвучат.length===0,{файлов:опись.файлов,лишние:опись.неЗвучат});
+ check('каждая запись, на которую ссылается игра, лежит на диске',
+  опись.нетФайла.length===0,{ссылок:опись.ссылок,пропали:опись.нетФайла});
+
  check('игра не выбрасывала ошибок за весь прогон',errors.length===0,errors.slice(0,3));
 
  console.log(results.join('\n'));
