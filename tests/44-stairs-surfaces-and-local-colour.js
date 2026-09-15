@@ -68,6 +68,11 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   for(let y=0;y<lvl.h&&!вниз;y++)for(let x=0;x<lvl.w;x++)if(lvl.g[y][x]===">"){вниз={x,y};break;}
   if(!вниз)return {нет:true};
   G.place.x=вниз.x;G.place.y=вниз.y;G.place.arm=null;G.inCombat=false;G.hp=G.hpMax=9000;
+  /* Страж яруса стоит на шахте: пока он жив, вниз не пройти. Марш проверяем
+     после победы над ним — бой проверяется отдельным набором. */
+  const стражБыл=!!safeFn(()=>guardianHere(),null);
+  safeFn(()=>markGuardianDead(G.place.bx,G.place.by,G.place.depth));
+  safeFn(()=>markGuardianDead(G.place.bx,G.place.by,G.place.depth+1));
   const старт={x:G.place.x,y:G.place.y,d:G.place.depth};
   window.__said=[];safeFn(()=>useHere());
   const объявление=речь();
@@ -83,8 +88,10 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   let ш2=0;while(G.flight&&ш2<80){safeFn(()=>moveInside(G.flight.md));ш2++;}
   const назад={x:G.place.x,y:G.place.y,d:G.place.depth,
    плитка:safeFn(()=>tileAt(curLevel(),G.place.x,G.place.y),null)};
-  return {старт,после,назад,ступеней:ш,ступенейНазад:ш2,мартТам,неПрыгнул,
+  return {старт,после,назад,ступеней:ш,ступенейНазад:ш2,мартТам,неПрыгнул,стражБыл,
    объявление:объявление.slice(0,140)};});
+ check('на ярусе подземелья стоял страж, пока его не свалили',
+  марш.стражБыл===true,{стражБыл:марш.стражБыл});
  check('лестница требует шагов: игра не спускает сама',
   марш.мартТам===true&&марш.ступеней>=5&&марш.неПрыгнул===true,
   {марш:марш.мартТам,ступеней:марш.ступеней,неПрыгнул:марш.неПрыгнул});
@@ -106,6 +113,7 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   const lvl=curLevel();let вниз=null;
   for(let y=0;y<lvl.h&&!вниз;y++)for(let x=0;x<lvl.w;x++)if(lvl.g[y][x]===">"){вниз={x,y};break;}
   G.place.x=вниз.x;G.place.y=вниз.y;G.place.arm=null;
+  safeFn(()=>markGuardianDead(G.place.bx,G.place.by,G.place.depth));
   safeFn(()=>useHere());
   const начало=[],конец=[];let i=0;
   while(G.flight&&i<80){
@@ -325,6 +333,8 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   /* Спуск объявляет, куда именно спустились. */
   G.place=null;
   enterPlace({x:1500,y:900,structure:{type:"cave_entrance",name:"Пещера",beacon:"cave_entrance"}});
+  /* Ярусом ниже дорогу держит страж: сперва он, потом спуск. */
+  safeFn(()=>markGuardianDead(G.place.bx,G.place.by,G.place.depth));
   window.__said=[];
   safeFn(()=>changeDepth(1));
   const т=safeFn(()=>hereTrait(),null);
