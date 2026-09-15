@@ -317,19 +317,26 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   Spatial.at=(f,dx,dy,o)=>{точки.push({role:String(f).split('/').pop(),dx,dy,dz:(o&&o.dz)||0});return true;};
   Bank.play=(role,o)=>{плоско.push(role);return true;};
   settings.effects=1;settings.hrtf=1;
-  const out={плоско};
+  /* Плоско считаем ТОЛЬКО вокруг тех вызовов, которые здесь и проверяются.
+     Обстановка места (liveScene) выбирает запись случайно и звучит плоско
+     нарочно — это шум двора, а не чей-то голос; но часть её ролей носит те же
+     приставки, что и голоса («throng_build» на деревенском дворе, «foe_…» в
+     глубине), и попав в общий котёл, она валила проверку раз через раз. */
+  const плоскоГолоса=[];
+  const мерить=(f)=>{плоско.length=0;safeFn(f);плоскоГолоса.push(...плоско);плоско.length=0;};
+  const out={плоско:плоскоГолоса};
   try{
    while(activeLayer())closeTopUI();
    G.place=null;G.ship=null;G.alt=0;G.x=600;G.y=600;
    /* Тварь на соседней клетке к востоку. */
    G.inCombat=true;G.combat={m:MONSTERS[0],hp:10,key:(G.x+1)+","+G.y,own:false,alt:0};
    точки.length=0;
-   safeFn(()=>foeVoice(MONSTERS.find(m=>m.id==="goblin"),"attack",0.7));
+   мерить(()=>foeVoice(MONSTERS.find(m=>m.id==="goblin"),"attack",0.7));
    out.сбоку=точки.slice();
    /* Крылатая тварь держится выше игрока. */
    G.combat={m:MONSTERS[0],hp:10,key:G.x+","+G.y,own:false,alt:3};
    точки.length=0;lastMoveDir="N";
-   safeFn(()=>foeVoice(MONSTERS.find(m=>m.id==="dragon"),"attack",0.7));
+   мерить(()=>foeVoice(MONSTERS.find(m=>m.id==="dragon"),"attack",0.7));
    out.сверху=точки.slice();
    /* С крыла та же тварь ниже: высота слушателя вычитается размещением. */
    G.alt=4;out.скрыла=Spatial.node(foeSpot().dx,foeSpot().dy,foeSpot().dz,1.1).positionY.value;
@@ -339,8 +346,8 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
    enterPlace({x:700,y:700,structure:{type:"village",name:"Проба",beacon:"village"}});
    G.place.x=5;G.place.y=5;
    точки.length=0;
-   safeFn(()=>Actors.voice({x:9,y:5},"throng_hail_m",{gain:0.5}));
-   safeFn(()=>Actors.voice({x:5,y:1},"guard_march",{gain:0.5}));
+   мерить(()=>Actors.voice({x:9,y:5},"throng_hail_m",{gain:0.5}));
+   мерить(()=>Actors.voice({x:5,y:1},"guard_march",{gain:0.5}));
    out.живые=точки.slice();
    while(activeLayer())closeTopUI();G.place=null;
   }finally{Spatial.role=oR;Spatial.at=oA;Bank.play=oP;}
@@ -358,8 +365,7 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
     Вход в постройку, ворота и обстановка места — свои звуки, они у игрока
     под ногами и в стенах, а не в стороне. */
  check('в бою и рядом с живыми ни один голос не звучит плоско',
-  бой.плоско.filter(r=>/^(foe_|throng_|guard_|watch_|beast_breath|sneak_pizz|fx_lurk)/.test(r)).length===0,
-  бой.плоско);
+  бой.плоско.length===0,бой.плоско);
 
  /* ── 17. «Тишина» гасит всё, включая позиционные источники ──
     Они живут мимо Play и Bank, и обещание «все звуки остановлены» было
