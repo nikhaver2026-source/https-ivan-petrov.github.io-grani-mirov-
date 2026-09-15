@@ -117,6 +117,9 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   // встаём слева от лестницы и шагаем на неё
   if(tileAt(l,sp.x-1,sp.y)==="#")return {skip:true};
   G.place.x=sp.x-1;G.place.y=sp.y;G.place.arm=null;
+  /* На шахте стоит страж яруса: пока он жив, марш не начнётся. Сама лестница
+     проверяется здесь, бой со стражем — своим набором. */
+  safeFn(()=>markGuardianDead(G.place.bx,G.place.by,G.place.depth));
   const d0=G.place.depth;
   moveInside("E");
   const onStair=G.place.x===sp.x&&G.place.y===sp.y,armed=!!G.place.arm,depthMid=G.place.depth;

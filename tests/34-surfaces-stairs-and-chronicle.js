@@ -99,6 +99,9 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   for(let y=0;y<l.h&&!sp;y++)for(let x=0;x<l.w;x++)if(l.g[y][x]===">"){sp={x,y};break;}
   if(!sp)return {skip:true};
   G.place.x=sp.x;G.place.y=sp.y;G.place.arm=null;
+  /* Страж яруса стоит на шахте: пока он жив, марш никуда не приводит.
+     Здесь проверяется сама лестница, а страж — своим набором. */
+  safeFn(()=>markGuardianDead(G.place.bx,G.place.by,G.place.depth));
   const d0=G.place.depth;
   startFlight(1,"N");
   const марш={n:G.flight.n,i:G.flight.i,d:G.flight.d,md:G.flight.md};
