@@ -4752,14 +4752,22 @@ function capBid(bid,ask){
 }
 function citySellPrice(res,c,day){ /* сколько город просит с вас */
  const p=cityProfile(c);
+ /* ── ГОРОДСКОЙ ПРИЛАВОК ТОЖЕ ПОМНИТ УСЛУГИ ──
+    Заслуги перед державой считались только у отдельного торговца: в лавке
+    уступали, а в городской палате брали как с прохожего, хотя палата — это
+    и есть держава. Теперь обе стороны городского торга проходят через тот
+    же множитель заслуг, что и лавка; знакомство сюда не идёт — за прилавком
+    палаты стоит не человек, а очередь. */
  return Math.max(2,Math.round(cityPriceOf(res,c,day)*(1+p.tax)
   *(1-0.05*fxLevel("deal")-0.03*fxLevel("trade"))
+  *safeFn(()=>meritK(c.x,c.y),1)
   *tradeBuyK(c&&c.emp&&c.emp.race)));
 }
 function cityBuyPrice(res,c,day){ /* сколько город платит вам */
  const p=cityProfile(c);
  const bid=cityPriceOf(res,c,day)*(0.82-p.tax)
   *(1+0.08*fxLevel("trade")+0.05*fxLevel("deal"))
+  *(1+(1-safeFn(()=>meritK(c.x,c.y),1)))
   *tradeSellK(c&&c.emp&&c.emp.race);
  return capBid(bid,citySellPrice(res,c,day));
 }
