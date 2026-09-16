@@ -8793,11 +8793,14 @@ function cellContent(x,y){
     const r=pool[Math.floor(H(x,y,23)*pool.length)];
     c.res={name:r,icon:RESICON[r],beacon:RESBEACON[r],qty:2+Math.floor(H(x,y,24)*4)};}}}
  if(!c.structure){
-  const t=c.terrain[0],night=isNight();
-  let p=(t==="road"?0.02:0.05)*(night?1.6:1)*diff().meet;
-  if(H(x,y,31)<p){
-   const cand=MONSTERS.filter(m=>m.biomes.includes(t));
-   if(cand.length){const m=cand[Math.floor(H(x,y,32)*cand.length)];
+  const t=c.terrain[0];
+  /* Частота встреч осталась прежней; всё остальное — час, погода, пора года,
+     логово и водопой — решает beastAt. Ночная надбавка ушла туда же, чтобы
+     пора суток считалась в одном месте, а не в двух. */
+  const базоваяДоля=(t==="road"?0.02:0.05)*diff().meet;
+  {
+   const m=safeFn(()=>beastAt(x,y,c,базоваяДоля),null);
+   if(m){
     /* ── ОПАСНОСТЬ РАСТЁТ С УДАЛЕНИЕМ ОТ ПРЕСТОЛА ──
        Делитель был числом под старый мир: престолы стояли в тысяче клеток
        друг от друга, и тысяча же служила мерой «далеко». Когда мир вырос в
@@ -8812,9 +8815,196 @@ function cellContent(x,y){
        при любом размере карты. */
     const emp2=emp,dist=Math.hypot(x-emp2.cap.x,y-emp2.cap.y)/(WORLD/2);
     let lvl=Math.min(m.max,Math.max(m.min,1+Math.floor(dist*4)+Math.floor(H(x,y,33)*3)));
-    c.monster={...m,lvl,hp:Math.round((20+lvl*8)*diff().foeHp),dmg:3+lvl*2,xp:15+lvl*10,gold:5+lvl*4};}}}
+    const сколько=safeFn(()=>packSize(m,x,y),1)||1;
+    c.monster={...m,lvl,hp:Math.round((20+lvl*8)*diff().foeHp),dmg:3+lvl*2,
+     xp:15+lvl*10,gold:5+lvl*4,стаей:сколько,
+     логово:safeFn(()=>lairPull(m,x,y),0)>0.72};}}}
  if(contentCache.size>4000)contentCache.clear();
  contentCache.set(key,c);return c;}
+/* ════════════════════════════════════════════════════════════════════════
+   ЭКОСИСТЕМА: ПОВАДКИ, ЛОГОВА И СТАИ
+
+   Твари стояли на клетках. Появлялись они по одному правилу: пять сотых доли
+   на клетку, вдвое чаще ночью, и вид выбирался жребием из тех, кому подходит
+   базовый рельеф. Ни логова, ни стаи, ни часа, ни погоды — зверь был свойством
+   клетки, а не существом, которое где-то живёт.
+
+   ПОЧЕМУ ЭТО РЕШАЕТСЯ БЕЗ ХРАНЕНИЯ. Мира нет в памяти: ни одна клетка нигде не
+   лежит. Значит, и стадо нельзя «водить» по карте — его негде держать. Но это
+   не мешает миру жить: повадка выражается не хранением, а ЗАВИСИМОСТЬЮ. Кого
+   вы встретите на этой клетке, зависит от часа, погоды, времени года,
+   близости воды и близости логова. Мир меняется сам по себе, смотрит на него
+   игрок или нет, — и меняется одинаково для всех, кто придёт сюда в тот же
+   час того же дня.
+
+   ЧТО ИЗ ЭТОГО ВЫХОДИТ НА СЛУХ:
+     — волки держатся стаей и выходят в сумерки, а днём их не слыхать;
+     — змей лежит на жаре и пропадает в холод;
+     — грозовой ястреб появляется в бурю — в ясный день его нет;
+     — к водопою на рассвете и на закате зверьё тянется к рекам;
+     — у логова тварь встречается втрое чаще, чем на окраине её удела;
+     — мотыльница летит роем в шесть голов, а дракон всегда один.
+   ════════════════════════════════════════════════════════════════════════ */
+
+/* Повадки приписаны к тем же тварям, а не заведены отдельным зверинцем:
+   таблица склеивается с MONSTERS один раз, и дальше во всей игре тварь одна.
+   Поля необязательные: у кого их нет, тот ведёт себя как прежде. */
+const BEAST_ECO={
+ wolf:      {нрав:"хищник",  стая:[2,5],часы:"сумерки",вода:0.6,удел:260,
+             био:["conifer","broadleaf","ancient_forest","woodland","steppe","meadow","tundra"]},
+ spider:    {нрав:"засадник",стая:[1,3],часы:"ночь",   вода:0.1,удел:180,
+             био:["ancient_forest","jungle","karst","cavern","underdark","wet_forest"]},
+ goblin:    {нрав:"налётчик",стая:[2,6],часы:"ночь",   вода:0.3,удел:220,
+             био:["steppe","savanna","semidesert","stony_desert","woodland","plain"]},
+ serpent:   {нрав:"хищник",  стая:[1,1],часы:"день",   вода:0.2,удел:200,зной:true,
+             био:["desert","dunes","stony_desert","semidesert","mangrove","shore"]},
+ harpy:     {нрав:"хищник",  стая:[2,4],часы:"день",   вода:0.2,удел:300,
+             био:["ridge","highland","canyon","shore","reef","archipelago"]},
+ troll:     {нрав:"хищник",  стая:[1,2],часы:"ночь",   вода:0.6,удел:320,
+             био:["ridge","canyon","swamp","mire","fen"]},
+ wraith:    {нрав:"нежить",  стая:[1,2],часы:"ночь",   вода:0,  удел:260,туман:true,
+             био:["cavern","underdark","mire","lost_city","warfield","anomaly"]},
+ ogre:      {нрав:"хищник",  стая:[1,3],часы:null,     вода:0.4,удел:300,
+             био:["plain","steppe","semidesert","stony_desert","ridge","valley"]},
+ golem:     {нрав:"страж",   стая:[1,1],часы:null,     вода:0,  удел:400,
+             био:["ridge","highland","karst","cavern","lost_city","warfield"]},
+ dragon:    {нрав:"хищник",  стая:[1,1],часы:null,     вода:0.2,удел:900,
+             био:["volcano","ridge","highland","dunes","ashland","canyon"]},
+ basilisk:  {нрав:"хищник",  стая:[1,1],часы:null,     вода:0.1,удел:380,стужа:true,
+             био:["glacier","snow_ridge","ice_cave","cavern","tundra"]},
+ wyvern:    {нрав:"хищник",  стая:[1,2],часы:"день",   вода:0.3,удел:500,
+             био:["ridge","canyon","reef","archipelago","highland"]},
+ banshee:   {нрав:"нежить",  стая:[1,1],часы:"ночь",   вода:0,  удел:340,туман:true,
+             био:["mire","fen","cavern","lost_city","underdark"]},
+ direbear:  {нрав:"хищник",  стая:[1,2],часы:"сумерки",вода:0.7,удел:280,
+             био:["ancient_forest","conifer","broadleaf","ridge","woodland"]},
+ sandworm:  {нрав:"хищник",  стая:[1,1],часы:null,     вода:0,  удел:600,зной:true,
+             био:["desert","dunes","stony_desert"]},
+ treant:    {нрав:"страж",   стая:[1,1],часы:null,     вода:0.5,удел:350,
+             био:["ancient_forest","jungle","wet_forest","swamp","broadleaf"]},
+ kraken:    {нрав:"хищник",  стая:[1,1],часы:null,     вода:1,  удел:700,
+             био:["inner_sea","reef","archipelago","shore","river_mouth"]},
+ bandit:    {нрав:"налётчик",стая:[2,5],часы:"день",   вода:0.4,удел:240,
+             био:["steppe","plain","woodland","valley","savanna"]},
+ rocbird:   {нрав:"хищник",  стая:[1,2],часы:"день",   вода:0.2,удел:550,
+             био:["highland","ridge","canyon","dunes","snow_ridge"]},
+ stormhawk: {нрав:"хищник",  стая:[2,4],часы:null,     вода:0.3,удел:400,буря:true,
+             био:["plain","steppe","ridge","savanna","highland"]},
+ cloudray:  {нрав:"хищник",  стая:[1,2],часы:null,     вода:0.8,удел:600,
+             био:["shore","inner_sea","lakeland","archipelago","mire","river_mouth"]},
+ nightmoth: {нрав:"рой",     стая:[3,6],часы:"ночь",   вода:0.4,удел:200,
+             био:["ancient_forest","jungle","wet_forest","mire","cavern","lake"]}};
+safeFn(()=>MONSTERS.forEach(m=>{const э=BEAST_ECO[m.id];if(э)Object.assign(m,э);}));
+
+/* ── ВРЕМЕНА ГОДА ──
+   Их в игре не было вовсе: была погода, но не было поры, от которой погода
+   зависит. Без времени года «зимой» и «в зной» не значат ничего, а замысел
+   просит и того, и другого. Год делится на четыре поры по двадцать четыре
+   дня: восемьдесят шесть дней всего, чтобы смена поры заставала игрока не раз
+   за игру, а не однажды. */
+const SEASONS=[
+ {id:"spring",n:"Весна",о:"Земля отходит, вода прибывает, зверьё выводит потомство."},
+ {id:"summer",n:"Лето", о:"Зной стоит днём, ночи коротки, вода уходит из малых ручьёв."},
+ {id:"autumn",n:"Осень",о:"Дожди зачастили, зверьё нагуливает жир перед холодами."},
+ {id:"winter",n:"Зима", о:"Снег ложится, малая вода встаёт, живое уходит вниз и вглубь."}];
+const SEASON_DAYS=24;
+function seasonAt(day){
+ const d=Math.max(0,Math.floor(Number(day)||1)-1);
+ return SEASONS[Math.floor(d/SEASON_DAYS)%SEASONS.length];}
+function seasonNow(){return safeFn(()=>seasonAt(G.day),SEASONS[0]);}
+
+/* Пора суток словом: по ней твари и расходятся. */
+function dayPhase(hour){
+ const h=((Number(hour)||0)%24+24)%24;
+ if(h>=21||h<5)return "ночь";
+ if(h<8||h>=19)return "сумерки";
+ return "день";}
+
+/* Логово: у каждого вида свои угодья. Логова стоят решёткой с шагом в удел
+   вида и сдвинуты своей свёрткой, поэтому волчьи и троллиные земли не
+   совпадают. Возвращается доля 0..1: единица — у самого логова, ноль — на
+   краю удела и дальше. */
+function lairPull(m,x,y){
+ const удел=Math.max(60,Number(m.удел)||300);
+ const сид=1000+(m.id?m.id.charCodeAt(0)*7+m.id.length*13:0);
+ const кx=Math.floor(x/удел),кy=Math.floor(y/удел);
+ const лx=(кx+hashName(кx,кy,сид))*удел;
+ const лy=(кy+hashName(кx,кy,сид+1))*удел;
+ const d=Math.hypot(x-лx,y-лy)/удел;
+ return Math.max(0,1-d);}
+
+/* Водопой: на рассвете и на закате зверьё тянется к воде. Чем сильнее жажда
+   вида, тем заметнее. Вода — это берег, река, ручей или озеро, то есть всё,
+   у чего основа «coast». */
+function thirstPull(m,x,y,phase){
+ const жажда=Number(m.вода)||0;
+ if(жажда<=0||phase==="день")return 0;
+ for(let r=1;r<=3;r++)
+  for(let dy=-r;dy<=r;dy++)for(let dx=-r;dx<=r;dx++){
+   if(Math.max(Math.abs(dx),Math.abs(dy))!==r)continue;
+   const c=safeFn(()=>terrainAt(x+dx,y+dy),null);
+   if(c&&c[0]==="coast")return жажда*(1-(r-1)/3);}
+ return 0;}
+
+/* Насколько тварь деятельна сейчас: час, погода, время года.
+   Ноль означает «в эту пору её здесь не бывает» — и это не редкость, а
+   правило: змея не ищут в мороз, а грозового ястреба в ясный день. */
+function beastActive(m,phase,weather,season){
+ let k=1;
+ if(m.часы&&m.часы!==phase)k*= (m.часы==="сумерки"&&phase==="ночь")?0.5:0.22;
+ if(m.буря)k*= (weather==="Гроза"||weather==="Ветрено")?2.6:0.35;
+ if(m.туман)k*= (weather==="Туман"||weather==="Дождь")?2.2:0.7;
+ if(m.зной)k*= (season==="winter"||weather==="Снег")?0.18:(season==="summer"?1.5:1.15);
+ if(m.стужа)k*= (season==="winter"||weather==="Снег")?1.8:(season==="summer"?0.45:0.7);
+ if(m.нрав==="нежить"&&phase==="день")k*=0.35;
+ return k;}
+
+/* Сколько их разом. Стая — это не одна тварь с большим числом, а пометка о
+   числе: бой ведётся с вожаком, но игра называет, сколько их. */
+function packSize(m,x,y){
+ const с=m.стая;if(!с)return 1;
+ const [a,b]=с;if(b<=a)return a;
+ return a+Math.floor(hashName(x,y,777)*(b-a+1));}
+
+/* Кто здесь водится. Возвращает тварь или ничего — но выбор уже не жребий из
+   подходящих по рельефу, а взвешенный: биом, час, погода, пора года, логово
+   и водопой. */
+function beastAt(x,y,c,базоваяДоля){
+ const t=c.terrain[0];
+ const b=safeFn(()=>biomeAt(x,y),null);
+ const phase=dayPhase(G.hour);
+ const weather=G.weather,season=safeFn(()=>seasonNow().id,"spring");
+ /* Сперва те, кому подходит сам биом; если таких нет — старое правило по
+    базовому рельефу, чтобы ни одна земля не осталась пустой. */
+ let cand=b?MONSTERS.filter(m=>m.био&&m.био.indexOf(b.id)>=0):[];
+ if(!cand.length)cand=MONSTERS.filter(m=>m.biomes&&m.biomes.indexOf(t)>=0);
+ if(!cand.length)return null;
+ let лучшийУдел=0;
+ const веса=cand.map(m=>{
+  let w=beastActive(m,phase,weather,season);
+  const у=lairPull(m,x,y);
+  if(у>лучшийУдел)лучшийУдел=у;
+  w*=0.55+1.6*у;
+  w+=thirstPull(m,x,y,phase);
+  return Math.max(0,w);});
+ const сумма=веса.reduce((a,v)=>a+v,0);
+ if(сумма<=0)return null;
+ /* Общая частота встреч тоже слушается поры: ночью зверья больше, в бурю
+    меньше — кроме тех, кого буря как раз и поднимает. */
+ let доля=базоваяДоля*(phase==="ночь"?1.5:phase==="сумерки"?1.25:1);
+ if(weather==="Гроза")доля*=0.8;
+ /* ── ЛОГОВО ДЕЛАЕТ ЗЕМЛЮ ОБИТАЕМОЙ ──
+    Близость логова сперва меняла только КТО попадётся, но не попадётся ли
+    вообще: замер показал разницу в четверть — на слух её нет. Но удел на то и
+    удел, что он населён: у логова встречаешь кого-то чаще, а на окраине реже.
+    Доля подобрана так, чтобы средняя по миру осталась прежней — меняется не
+    общее число тварей, а их распределение: гуще у логов, пусто между. */
+ доля*=0.6+0.8*лучшийУдел;
+ if(hashName(x,y,31)>=доля)return null;
+ let бросок=hashName(x,y,32)*сумма,i=0;
+ while(i<веса.length-1&&бросок>веса[i]){бросок-=веса[i];i++;}
+ return cand[i];}
+
 function isNight(){const h=G.hour%24;return h>=21||h<6;}
 /* ════════════════════════════════════════════════════════════════════════
    МУЗЫКА ОТМЕЧАЕТ СОБЫТИЯ, А НЕ ИГРАЕТ ФОНОМ
