@@ -105,7 +105,7 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
  /* ── 6. Место игрока определяет акустику ── */
  const места=await page.evaluate(()=>{
   const было=[];
-  G.place=null;G.ship=null;G.flight=null;G.x=1000;G.y=1000;
+  G.place=null;G.ship=null;G.flight=null;G.x=WORLD>>1;G.y=WORLD>>1;
   const ставим=(f,имя)=>{f();было.push([имя,roomKind()]);};
   ставим(()=>{},"мир");
   ставим(()=>{G.place={kind:"house",bx:1000,by:1000,stype:"tavern",name:"т",depth:0,x:2,y:2};},"таверна");

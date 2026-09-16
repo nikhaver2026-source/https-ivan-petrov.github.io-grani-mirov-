@@ -181,7 +181,7 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   G.skills=["haggler"];const b1=buyModifier(null),s1=tradeSellK("Люди");
   out.торгПокупка=b1<b0;out.торгПродажа=s1>s0;
   /* Дыхание дороги: шаг отнимает меньше времени. */
-  const шаг=()=>{G.place=null;G.ship=null;G.x=1000;G.y=1000;const h=G.hour;move("E");return G.hour-h;};
+  const шаг=()=>{G.place=null;G.ship=null;G.x=WORLD>>1;G.y=WORLD>>1;const h=G.hour;move("E");return G.hour-h;};
   G.skills=[];const t0=шаг();G.skills=["stamina"];const t1=шаг();
   out.время=t1<t0;
   /* Глубокий колодец: предельная мана выросла. */

@@ -149,7 +149,7 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
  const кони=await page.evaluate(()=>{
   const out={};
   while(activeLayer())closeTopUI();
-  G.place=null;G.ship=null;G.alt=0;G.mounts=[];G.mount=null;G.x=1000;G.y=1000;
+  G.place=null;G.ship=null;G.alt=0;G.mounts=[];G.mount=null;G.x=WORLD>>1;G.y=WORLD>>1;
   /* ── Шаг ──
      Замер берётся ТОЛЬКО с того шага, который действительно состоялся: на
      дороге случается встреча, и тогда шаг не делается вовсе, а разница

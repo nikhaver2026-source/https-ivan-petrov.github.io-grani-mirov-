@@ -274,7 +274,7 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
  const дела=await page.evaluate(()=>{
   while(activeLayer())closeTopUI();
   G.npcMem={};G.rumors=[];G.standing={};G.axes={};G.day=3;G.liveDay=3;
-  G.x=1000;G.y=1000;G.level=10;G.gold=9000;G.inCombat=false;G.combat=null;
+  G.x=WORLD>>1;G.y=WORLD>>1;G.level=10;G.gold=9000;G.inCombat=false;G.combat=null;
   /* Победа над сильным рождает весть и известность. */
   const слуховДо=(G.rumors||[]).length,славаДо=axisOf("известность");
   G.combat={m:{id:"ogre",n:"Огр-громила",lvl:30,hp:1,dmg:1,xp:50,gold:20},own:false,key:null};
@@ -671,7 +671,7 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
  const рынок=await page.evaluate(()=>{
   while(activeLayer())closeTopUI();
   G.dark=false;G.place=null;G.market={};G.day=5;G.liveDay=5;G.weather="Ясно";
-  G.x=1000;G.y=1000;
+  G.x=WORLD>>1;G.y=WORLD>>1;
   const idx=empireIndexAt(1000,1000);
   const до=marketPrice("руда",idx,G.day);
   /* Разбитая на тракте ватага поднимает подвоз и роняет цену. */

@@ -212,7 +212,7 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   const беды=[],молчали=[];
   const базово=()=>{
    G.inCombat=false;G.combat=null;G.ship=null;G.place=null;G.flight=null;
-   G.x=1000;G.y=1000;G.hp=G.hpMax=300;G.mp=G.mpMax=120;G.gold=2000;
+   G.x=WORLD>>1;G.y=WORLD>>1;G.hp=G.hpMax=300;G.mp=G.mpMax=120;G.gold=2000;
    G.level=12;G.str=30;G.agi=30;G.mind=30;G.food=150;G.water=150;
    G.items=[];G.inv={};G.equip={weapon:null,armor:null};G.marks={};G.vaults={};
    G.alt=0;G.wingTired=0;
@@ -257,7 +257,7 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
    "в бою":()=>{базово();
     const c=safeFn(()=>{for(let r=1;r<200;r++)for(let dy=-r;dy<=r;dy++)for(let dx=-r;dx<=r;dx++){
       const cc=cellContent(1000+dx,1000+dy);
-      if(cc.monster&&!cc.structure){G.x=1000+dx;G.y=1000+dy;return cc;}}return null;},null);
+      if(cc.monster&&!cc.structure){G.x=(WORLD>>1)+dx;G.y=(WORLD>>1)+dy;return cc;}}return null;},null);
     if(c)safeFn(()=>startCombat(c));},
    "с открытым окном":()=>{базово();safeFn(()=>openModal("modal-inv"));},
    /* ── Небо: три положения, в которых игра обязана вести себя разумно ── */

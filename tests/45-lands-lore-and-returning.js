@@ -36,7 +36,7 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
  /* ── 1. Вход в постройку — это знание о ней ── */
  const вход=await page.evaluate(()=>{
   while(activeLayer())closeTopUI();
-  G.known={};G.place=null;G.ship=null;G.x=1000;G.y=1000;
+  G.known={};G.place=null;G.ship=null;G.x=WORLD>>1;G.y=WORLD>>1;
   enterPlace({x:1004,y:997,structure:{type:"village",name:"Ольховка",beacon:"village"}});
   while(activeLayer())closeTopUI();G.place=null;
   const z=knownList()[0]||null;
@@ -56,7 +56,7 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
  /* ── 2. Молва от жителя ── */
  const молва=await page.evaluate(()=>{
   while(activeLayer())closeTopUI();
-  G.known={};G.place=null;G.x=1000;G.y=1000;G.rep={};
+  G.known={};G.place=null;G.x=WORLD>>1;G.y=WORLD>>1;G.rep={};
   const teller=getNPC(G.x,G.y,0,"Трактирщик");
   const кузнец=getNPC(G.x,G.y,0,"Кузнец");
   window.__said=[];
@@ -82,7 +82,7 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
  /* ── 3. Молва не повторяется и не врёт ── */
  const повтор=await page.evaluate(()=>{
   while(activeLayer())closeTopUI();
-  G.known={};G.x=1000;G.y=1000;
+  G.known={};G.x=WORLD>>1;G.y=WORLD>>1;
   const teller=getNPC(G.x,G.y,0,"Трактирщик");
   const названные=[];
   for(let i=0;i<6;i++){
@@ -106,7 +106,7 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
  /* ── 4. Слышанное становится виденным, когда дошли ── */
  const дошли=await page.evaluate(()=>{
   while(activeLayer())closeTopUI();
-  G.known={};G.x=1000;G.y=1000;
+  G.known={};G.x=WORLD>>1;G.y=WORLD>>1;
   notePlace(1010,1010,"tavern","Кривой ковш","молва");
   const до=knownList()[0];
   enterPlace({x:1010,y:1010,structure:{type:"tavern",name:"Кривой ковш",beacon:"tavern"}});
@@ -119,7 +119,7 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
  /* ── 5. Окно молвы ── */
  const окно=await page.evaluate(()=>{
   while(activeLayer())closeTopUI();
-  G.known={};G.x=1000;G.y=1000;
+  G.known={};G.x=WORLD>>1;G.y=WORLD>>1;
   notePlace(1004,1000,"village","Ольховка","был");
   notePlace(1000,1030,"forge","Три искры","молва");
   notePlace(1000,1012,"temple","Тихий Порог","молва");

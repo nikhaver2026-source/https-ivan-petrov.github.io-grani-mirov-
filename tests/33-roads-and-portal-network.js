@@ -255,7 +255,7 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   window.__said=[];if(!window.__origSay)window.__origSay=Speech.say;
   Speech.say=t=>{window.__said.push(String(t));};
   /* Без открытых узлов сводка честно говорит, что их нет. */
-  G.x=1000;G.y=1000;
+  G.x=WORLD>>1;G.y=WORLD>>1;
   handleThreeFingerSwipe("S");
   const без=window.__said.slice(-1)[0]||"";
   /* С открытым узлом — называет его, расстояние и сторону света. */

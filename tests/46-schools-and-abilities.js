@@ -149,7 +149,7 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   while(activeLayer())closeTopUI();
   const out={};
   G.abilities=ABILITIES.map(a=>a.id);G.buffs={};G.daily={};
-  G.place=null;G.ship=null;G.alt=0;G.x=1000;G.y=1000;G.mana=999;G.hp=10;G.hpMax=100;
+  G.place=null;G.ship=null;G.alt=0;G.x=WORLD>>1;G.y=WORLD>>1;G.mana=999;G.hp=10;G.hpMax=100;
   /* Раз в день — только раз. */
   out.разВДень=[useAbility("lastrite"),useAbility("lastrite")];
   out.лечит=G.hp;
@@ -187,7 +187,7 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
  const дары=await page.evaluate(()=>{
   const out={};
   while(activeLayer())closeTopUI();
-  G.buffs={};G.place=null;G.x=1000;G.y=1000;
+  G.buffs={};G.place=null;G.x=WORLD>>1;G.y=WORLD>>1;
   /* Перо ветра: потолок и цена крыла. */
   G.race="Аракокры";G.abilities=[];
   const пБез=wingSpan(),цБез=wingCost();

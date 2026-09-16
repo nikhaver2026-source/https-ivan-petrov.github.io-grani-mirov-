@@ -38,7 +38,7 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   Speech.say=t=>{window.__said.push(String(t));};
   window.речь=()=>window.__said.join(' ');
   window.наЗемлю=()=>{G.place=null;G.ship=null;G.inCombat=false;G.combat=null;
-   G.alt=0;G.wingTired=0;G.x=1000;G.y=1000;G.hp=G.hpMax=800;G.mana=G.manaMax=300;
+   G.alt=0;G.wingTired=0;G.x=WORLD>>1;G.y=WORLD>>1;G.hp=G.hpMax=800;G.mana=G.manaMax=300;
    G.flight=null;G.loot=null;G.airLand=null;safeFn(()=>{for(let i=0;i<20&&activeLayer();i++)closeTopUI();});};});
 
  /* ── 1. Народы с крылом ── */
@@ -171,7 +171,7 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   outer: for(let r=1;r<80;r++)for(let dx=-r;dx<=r;dx++)for(let dy=-r;dy<=r;dy++){
    if(Math.max(Math.abs(dx),Math.abs(dy))!==r)continue;
    const c=cellContent(1000+dx,1000+dy);
-   if(c.structure&&PLACE_KIND[c.structure.type]){G.x=1000+dx;G.y=1000+dy;break outer;}}
+   if(c.structure&&PLACE_KIND[c.structure.type]){G.x=(WORLD>>1)+dx;G.y=(WORLD>>1)+dy;break outer;}}
   takeOff();
   const до={x:G.x,y:G.y};
   window.__said=[];move("E");

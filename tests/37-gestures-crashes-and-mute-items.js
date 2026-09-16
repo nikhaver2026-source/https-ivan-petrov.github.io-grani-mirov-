@@ -204,7 +204,7 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
    ["продажа несуществующему жителю",()=>CMD.sell("мусор:руда")],
    ["продажа всего несуществующему жителю",()=>CMD.sellall("мусор:руда")],
    ["заклинание вне списка",()=>CMD.learn(99)],
-   ["вступление в клан в чистом поле",()=>{G.place=null;G.x=1000;G.y=1000;G.clan=null;CMD.joinclan();}],
+   ["вступление в клан в чистом поле",()=>{G.place=null;G.x=WORLD>>1;G.y=WORLD>>1;G.clan=null;CMD.joinclan();}],
    ["клетка карты по испорченному ключу",()=>CMD.mapcell("мусор")],
    ["ремесло без рецепта",()=>CMD.craftdo()],
    ["ремесло вне списка",()=>CMD.craftdo(42)]];
@@ -268,7 +268,7 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   const out={порча:[],вызовов:0,команд:0};
   const доводы=["","0","1","99","-1","мусор","мусор:мусор","1,1","x,y",":","::",undefined,null,"NaN","1e9"];
   const сброс=()=>{G.place=null;G.ship=null;G.inCombat=false;G.loot=null;
-   G.x=1000;G.y=1000;G.gold=100;G.hp=G.hpMax=100;G.mana=G.manaMax=50;
+   G.x=WORLD>>1;G.y=WORLD>>1;G.gold=100;G.hp=G.hpMax=100;G.mana=G.manaMax=50;
    G.xp=0;G.level=1;G.str=5;G.agi=5;G.mind=5;G.cha=5;G.day=1;G.hour=8;G.water=100;};
   const имена=Object.keys(CMD).filter(n=>!/^(testall|silence|music)$/.test(n));
   out.команд=имена.length;

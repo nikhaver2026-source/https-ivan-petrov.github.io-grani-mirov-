@@ -43,7 +43,7 @@ const sleep=ms=>new Promise(r=>setTimeout(r,ms));
    const c=cellContent(p.x+dx,p.y+dy);
    if(c.terrain[0]==="coast"&&!c.structure){G.x=p.x+dx;G.y=p.y+dy;break outer;}}
   out.coast=fishingSpot();
-  G.x=1000;G.y=1000;
+  G.x=WORLD>>1;G.y=WORLD>>1;
   const c=cellContent(1000,1000);out.land=fishingSpot();out.landTerr=c.terrain[0];
   G.ship={left:1,legs:4};out.sea=fishingSpot();
   G.ship=null;

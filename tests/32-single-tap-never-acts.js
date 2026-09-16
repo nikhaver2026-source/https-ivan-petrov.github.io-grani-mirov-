@@ -59,7 +59,7 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   try{closeMagicPanel();closeGuide();}catch(_){}
   const ov=document.getElementById("lootOverlay");if(ov)ov.hidden=true;
   G.loot=null;G.place=null;G.ship=null;G.inCombat=false;G.combat=null;G.weaponDrawn=false;
-  G.x=1000;G.y=1000;resetCursor();});
+  G.x=WORLD>>1;G.y=WORLD>>1;resetCursor();});
 
  const WINDOWS=[
   ["меню действий",()=>{toggleActionMenu();}],
