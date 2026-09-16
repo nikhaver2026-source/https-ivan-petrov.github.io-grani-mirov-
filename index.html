@@ -5683,9 +5683,20 @@ function meetCaravan(car){
 function caravanBuy(res,qty){
  if(!curCaravan){narrate("Обоз ушёл.");return;}
  const car=curCaravan;
+ /* ── ОБОЗ ВЕЗЁТ НЕ ВСЁ ПОДРЯД ──
+    Спросить у обоза то, чего у него нет, — не сделка, а недоразумение. Без
+    этой проверки неизвестный товар давал цену «не число», а она молча делала
+    NaN из золота: сравнение «G.gold < NaN» ложно, поэтому вычитание
+    проходило, и счёт деньгам пропадал НАВСЕГДА — без единого слова игроку.
+    Тихая порча кошелька хуже отказа, поэтому здесь отказ. */
+ const везёт=((car.goods&&car.goods.carry)||[]).indexOf(res)>=0;
+ if(!везёт){narrate(`Этого обоз не везёт.`);return;}
  const price=Math.max(2,Math.round(citySellPrice(res,car.from,G.day)*car.kind.mult*0.95));
  const n=Math.max(1,Number(qty)||1);
  const total=price*n;
+ /* Последняя застава: даже если цена почему-то вышла не числом, кошелёк не
+    должен это принять. */
+ if(!Number.isFinite(total)){narrate("Цену этого товара обоз назвать не берётся.");return;}
  if(G.gold<total){narrate(`Нужно ${total} золота, у вас ${G.gold}.`);return;}
  G.gold-=total;G.inv[res]=(Number(G.inv[res])||0)+n;
  safeFn(()=>{UI.pickup();Bank.play("gold",{seed:total,gain:0.7});Bank.play("xylo_coin",{seed:total,gain:0.5,maxSec:3});});
@@ -5698,8 +5709,13 @@ function caravanSell(res,all){
  const car=curCaravan;
  const have=Number(G.inv[res])||0;
  if(have<=0){narrate(`У вас нет «${res}».`);return;}
+ /* Обоз скупает не всё: за чужой товар он не даёт цены, и без проверки та же
+    беда приходила бы с другой стороны — золото прибавлялось бы на NaN. */
+ if((((car.goods&&car.goods.wants)||[]).indexOf(res))<0){
+  narrate("Этого обоз не скупает.");return;}
  const price=Math.max(1,Math.round(cityBuyPrice(res,car.to,G.day)*car.kind.mult));
  const qty=all?have:1,total=price*qty;
+ if(!Number.isFinite(total)){narrate("Цену этого товара обоз назвать не берётся.");return;}
  G.inv[res]=have-qty;if(G.inv[res]<=0)delete G.inv[res];
  G.gold+=total;
  safeFn(()=>{UI.pickup();Bank.play("gold",{seed:total,gain:0.8});});
@@ -8782,7 +8798,19 @@ function cellContent(x,y){
   if(H(x,y,31)<p){
    const cand=MONSTERS.filter(m=>m.biomes.includes(t));
    if(cand.length){const m=cand[Math.floor(H(x,y,32)*cand.length)];
-    const emp2=emp,dist=Math.hypot(x-emp2.cap.x,y-emp2.cap.y)/1000;
+    /* ── ОПАСНОСТЬ РАСТЁТ С УДАЛЕНИЕМ ОТ ПРЕСТОЛА ──
+       Делитель был числом под старый мир: престолы стояли в тысяче клеток
+       друг от друга, и тысяча же служила мерой «далеко». Когда мир вырос в
+       двадцать пять раз, расстояния выросли вместе с ним, а мера осталась —
+       и мера перестала работать: ДЕВЯНОСТО ОДИН ПРОЦЕНТ тварей встал на
+       предельный уровень. Новичок, отойдя от околицы, встречал предельных
+       драконов почти везде, и ни одна проверка этого не видела: наборы
+       смотрят, что тварь есть и что бой работает, а не какого она уровня.
+
+       Мера берётся от размера мира, а не числом. В старом мире WORLD/2 — это
+       ровно прежняя тысяча, поэтому поведение воспроизводится буква в букву
+       при любом размере карты. */
+    const emp2=emp,dist=Math.hypot(x-emp2.cap.x,y-emp2.cap.y)/(WORLD/2);
     let lvl=Math.min(m.max,Math.max(m.min,1+Math.floor(dist*4)+Math.floor(H(x,y,33)*3)));
     c.monster={...m,lvl,hp:Math.round((20+lvl*8)*diff().foeHp),dmg:3+lvl*2,xp:15+lvl*10,gold:5+lvl*4};}}}
  if(contentCache.size>4000)contentCache.clear();
