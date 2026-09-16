@@ -226,6 +226,34 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
 
  check('игра не выбрасывала ошибок за весь прогон',errors.length===0,errors.slice(0,3));
 
+ /* ── Сбор обязан звучать ──
+    В блоке звука сбора стояло res.name, а такой переменной в той области нет —
+    есть c.res. Каждый сбор бросал ReferenceError, который тут же проглатывал
+    защитный safeFn, и ЗВУК СБОРА НЕ ЗВУЧАЛ НИ РАЗУ. Ни один набор этого не
+    ловил: проверяли, что ресурс попал в сумку и что сказаны слова. Для игры,
+    где мир передан звуком, немое действие — это действие, которого как будто
+    не было. */
+ const звукСбора=await page.evaluate(()=>{
+  const C=WORLD>>1;
+  let место=null;
+  outer: for(let r=0;r<200;r++)for(let dy=-r;dy<=r;dy++)for(let dx=-r;dx<=r;dx++){
+   if(Math.max(Math.abs(dx),Math.abs(dy))!==r)continue;
+   const c=safeFn(()=>cellContent(C+dx,C+dy),null);
+   if(c&&c.res&&!c.structure&&!c.monster){место={x:C+dx,y:C+dy,что:c.res.name};break outer;}}
+  if(!место)return {нетРесурса:true};
+  G.place=null;G.ship=null;G.alt=0;G.inCombat=false;
+  G.x=место.x;G.y=место.y;G.inv={};G.depleted={};
+  let звуков=0;const роли=[];
+  const bp=Bank.play.bind(Bank);
+  Bank.play=function(role){звуков++;роли.push(role);return bp.apply(null,arguments);};
+  const взято=safeFn(()=>gatherCurrent("tap"),false);
+  Bank.play=bp;
+  return {что:место.что,взято:взято!==false,звуков,роли:роли.slice(0,4),
+   всумке:Object.values(G.inv||{}).reduce((a,b)=>a+(Number(b)||0),0)};});
+ check('на клетке с ресурсом сбор состоялся',
+  !звукСбора.нетРесурса&&звукСбора.всумке>0,звукСбора);
+ check('сбор звучит, а не молчит',звукСбора.звуков>0,звукСбора);
+
  console.log(results.join('\n'));
  console.log('ИТОГО: '+results.filter(r=>r.startsWith('PASS')).length+' из '+results.length);
  await browser.close();

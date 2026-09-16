@@ -20443,7 +20443,11 @@ function gatherCurrent(source="tap"){
   /* Голос добычи: дерево рубят, камень бьют, руду выбирают, а на жильных
      ярусах тёмных земель под киркой шипит остывающая порода. */
   safeFn(()=>{
-   const дерево=/дерев/i.test(res.name),камень=/камень|руда|кристалл|жильн/i.test(res.name);
+   /* Здесь стояло res.name, а такой переменной в этой области нет — есть
+      c.res. Ошибка глохла в safeFn, и ЗВУК СБОРА НЕ ЗВУЧАЛ НИ РАЗУ: игрок
+      собирал и слышал только слова. В игре, где мир передан звуком, немое
+      действие — это действие, которого как будто не было. */
+   const дерево=/дерев/i.test(c.res.name),камень=/камень|руда|кристалл|жильн/i.test(c.res.name);
    const пов=G.place?safeFn(()=>indoorSurface(),null):safeFn(()=>outdoorSurface(),null);
    if(пов==="gravel"||пов==="ash")Bank.play("mtg_dig_gravel",{gain:0.5,maxSec:3});
    else if(пов==="ice"||пов==="crystal")Bank.play("mtg_ice_break",{gain:0.5,maxSec:3});
