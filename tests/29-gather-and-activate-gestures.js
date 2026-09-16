@@ -193,7 +193,11 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   while(activeLayer())closeTopUI();
   G.inCombat=false;G.combat=null;G.inv={};
   /* Встаём в постройку и переносим игрока прямо на лестницу вниз. */
-  for(let r=0;r<8000;r++){const x=1000+(r%90),y=1000+Math.floor(r/90);
+  /* Окно поиска стоит у середины мира, где стоит герой. Прежде здесь была
+     тысяча: в мире два на две тысячи это была середина, а в нынешнем — угол,
+     и в квадрате девяносто на девяносто построек могло не оказаться вовсе. */
+  const C=WORLD>>1;
+  for(let r=0;r<8000;r++){const x=C-45+(r%90),y=C-45+Math.floor(r/90);
    const c=cellContent(x,y);
    if(c.structure&&PLACE_KIND[c.structure.type]){
     G.x=x;G.y=y;enterPlace(c);

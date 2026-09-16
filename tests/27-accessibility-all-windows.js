@@ -76,7 +76,19 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   ["артефакты",()=>{G.artifacts=["Осколок Зари 101"];CMD.art();}],
   ["персонаж",()=>CMD.char()],
   ["событие",()=>{G.lastEventAt=0;const e=EVENTS.find(x=>x.id==="milestone");openEvent(e,eventContext());}],
-  ["причал",()=>{const port=findCities(G.x,G.y,60,8).find(c=>c.type==="port");
+  /* Круг расширяется, а не держится на шестидесяти клетках. Прежде шестидесяти
+     хватало по недоразумению: рельеф был шумом, и «побережье» попадалось
+     посреди материка. Мир стал связным, море собралось в берега, и ближайшая
+     пристань от середины мира — в семидесяти клетках. Это честное расстояние;
+     шестьдесят было произвольным числом. */
+  /* Причал ищется тем же способом, каким игра его открывает: openHarbor
+     спрашивает portHere(), то есть isPortAt на клетке под ногами, — а это
+     ЛЮБАЯ прибрежная клетка, выпавшая портом. findCities же ищет ГОРОД вида
+     «порт», и таких куда меньше: при связном мире их не нашлось и в девятиста
+     клетках, хотя пристань стоит в семидесяти. Круг расширяется, потому что
+     море собралось в берега и ближняя пристань честно дальше шестидесяти. */
+  ["причал",()=>{let port=null;
+    for(const r of [60,120,240,480]){port=findPorts(G.x,G.y,r,4)[0];if(port)break;}
     if(!port)return false;G.place=null;G.x=port.x;G.y=port.y;openHarbor();return true;}],
   ["обоз",()=>{const car=caravanHere&&caravanHere();
     const rt=(typeof caravanRoutes==="function")?caravanRoutes(G.x,G.y,G.day)[0]:null;
