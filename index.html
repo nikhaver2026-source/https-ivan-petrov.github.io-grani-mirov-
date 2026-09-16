@@ -4617,6 +4617,24 @@ function marketPrice(res,idx,day){
  /* Положение дел в державе: урожай, недород, обвал рудника, карантин. Оно
     касается только своих товаров и держится несколько дней. */
  k*=safeFn(()=>econK(res,idx,day),1);
+ /* ── ЖИВОЙ РЫНОК ──
+    Подвоз и спрос этой земли: их двигают события мира и поступки игрока.
+    Разбил ватагу на тракте — обозы пошли чаще, подвоз вырос, цена упала. */
+ k*=safeFn(()=>marketK(idx),1);
+ /* ── ПОГОДА И СЕЗОН ──
+    В бурю возить дороже, в вёдро дешевле; зимние месяцы года тяжелее
+    летних. Сезон считается от дня: год в двенадцать седмиц. */
+ k*=safeFn(()=>{
+  const п=String(G.weather||"");
+  if(/буря|метель|гроза|ливень/i.test(п))return 1.12;
+  if(/ясно|вёдро/i.test(п))return 0.97;
+  return 1;},1);
+ k*=safeFn(()=>{
+  const сезон=Math.floor(((Number(day)||1)%48)/12);   /* 0 весна … 3 зима */
+  const еда=["зерно","трава","ягоды","грибы"].indexOf(res)>=0;
+  if(сезон===3)return еда?1.18:1.05;                  /* зимой еда дорога */
+  if(сезон===2)return еда?0.88:1;                     /* осенью урожай */
+  return 1;},1);
  return Math.max(2,Math.round(base*Math.max(0.35,k)));
 }
 /* ════════════════════════════════════════════════════════════════════════
@@ -4652,9 +4670,15 @@ function sellPrice(res,idx,day,npc){
  p*=1+0.08*fxLevel("trade");                            /* покровительство Виа */
  p*=1+0.05*fxLevel("deal");                             /* умение торговаться */
  p*=tradeSellK(npc&&npc.race,npc);                      /* отношение народа, мера мира, знакомство */
- /* И здесь торговец не платит больше, чем сам просит за то же самое. */
+ /* ── ПОТОЛОК ВЫПЛАТЫ СЧИТАЕТСЯ ОТ РОВНОЙ ЦЕНЫ ──
+    Торговец не платит больше, чем просит, — это правило остаётся. Но потолок
+    нельзя брать от той цены, которую он просит ИМЕННО С ВАС: своему он
+    просит меньше, значит и потолок выплаты своему выходил ниже, и
+    расположение съедало само себя — свой продавал не дороже чужого, хотя
+    покупал дешевле. Потолок берётся от ровной цены, без скидки и без
+    надбавки за отношение: доля торговца от этого не зависит. */
  const ask=Math.max(2,Math.round(marketPrice(res,idx,day)*1.15
-  *safeFn(()=>buyModifier(npc),1)*tradeBuyK(npc&&npc.race)));
+  *safeFn(()=>buyModifier(npc),1)*safeFn(()=>diff().price,1)));
  return capBid(p,ask);
 }
 /* ════════════════════════════════════════════════════════════════════════
@@ -4694,6 +4718,25 @@ function buyModifier(npc){
     небольшие, но складываются с прочими и потому ограничены общим полом. */
  if(npc)k*=safeFn(()=>merchK(npc),1);
  if(npc)k*=safeFn(()=>meritK(npc.x,npc.y),1);
+ /* ── НРАВ ТОРГОВЦА ──
+    Один торгуется, другой не сбивает цену никогда, третий делает скидку
+    своим, четвёртый завышает новичкам, пятый обсчитывает. Это его лицо, и
+    оно входит в ту же долю, а не заводит вторую цену. */
+ if(npc)k*=safeFn(()=>{
+  const d=merchSoul(npc);
+  if(!d)return 1;
+  let m=d.нрав.k;
+  const r=(G.merch||{})[String(npc.key)];
+  const сделок=Number(r&&r.с)||0;
+  /* Новичку набавляют, пока он новичок. */
+  if(d.нрав.новичкам&&сделок<3)m*=d.нрав.новичкам;
+  /* Своим уступают: своим он считает того, кто у него уже брал. */
+  if(d.нрав.свои&&сделок>=5)m*=0.85;
+  /* За дело открывает лучшее и цену держит по-свойски. */
+  if(d.нрав.задело&&(Number(r&&r.д)||0)>0)m*=0.9;
+  /* Мастерство торга: чем он опытнее, тем труднее его сбить. */
+  m*=1+(d.уровень-3)*0.02;
+  return m;},1);
  return Math.max(0.5,k);
 }
 
@@ -8122,6 +8165,8 @@ function worldLiveTick(){
   if(!Number.isFinite(было)||было>день)return;
   const дней=Math.max(1,Math.min(30,день-было));
   for(let i=0;i<дней;i++)safeFn(()=>rumorTick());
+  /* Рынок ходит на том же такте: потоки понемногу возвращаются к норме. */
+  safeFn(()=>marketTick(дней));
   safeFn(()=>{
    if(!G.standing||typeof G.standing!=="object")return;
    for(const k of Object.keys(G.standing)){
@@ -13175,7 +13220,9 @@ const G={hp:100,hpMax:100,str:10,agi:10,mind:10,cha:10,mana:10,manaMax:10,
     свету, круги отношения и скрытые оси известности. */
  npcMem:{},rumors:[],standing:{},axes:{},liveDay:null,
  /* Связи между жителями, в которые вмешался игрок. */
- social:{}};
+ social:{},
+ /* Рыночная память земель: подвоз, спрос и достаток. */
+ market:{}};
 const xpNeed=l=>l*l*50;
 /* Дар Хронара и ткачей судьбы: опыт течёт быстрее. Через эту функцию проходит
    ВСЯ прибавка опыта, поэтому дар работает и в бою, и в заданиях. */
@@ -19026,6 +19073,16 @@ function victory(){const cb=G.combat,m=cb.m;
     Весть рождается там, где был бой, и дальше идёт без игрока. Мелкую драку
     никто не разносит: весть заводится только на том, что выше игрока или
     стоит на страже яруса. Известность растёт, и это отдельная ось. */
+ /* ── ДОРОГА СТАЛА БЕЗОПАСНЕЕ ──
+    Убитый на тракте разбойник — это не только опыт: обозы пойдут чаще,
+    подвоз вырастет, цены поползут вниз, земля разбогатеет. */
+ safeFn(()=>{
+  if(G.dark||G.place)return;
+  const ид=String(m&&m.id||"");
+  if(["bandit","pirate","slaver"].indexOf(ид)>=0)
+   marketDeed("разбой",empireIndexAt(G.x,G.y));
+  else if(safeFn(()=>roadAt(G.x,G.y),false))
+   marketDeed("тварь",empireIndexAt(G.x,G.y));});
  safeFn(()=>{
   const тяж=(Number(m.lvl)||1)-(Number(G.level)||1);
   if(!(m&&m.страж)&&тяж<2)return;
@@ -20157,6 +20214,9 @@ function buyItem(key,i){const n=getNPCByKey(key);
  if(item.res&&!cargoFits(1,`«${item.n}»`))return;
  G.gold-=item.price;
  if(item.gear)G.gear.push(item.gear);
+ else if(item.артефакт){
+  /* Артефакт с прилавка ложится в собрание тем же единственным входом. */
+  safeFn(()=>ART.grant({готовая:item.артефакт}));}
  else if(item.часть){
   /* Часть ложится в припас для гнёзд, а не в общий инвентарь: её считают
      штуками и тратят на артефакты. */
@@ -20198,6 +20258,11 @@ function sellUnit(n,res){
     сам просит за то же самое — иначе на его прилавке делаются деньги. */
  return capBid(bid,npcAsk(n,res));
 }
+/* ── ТОРГОВЕЦ ПЛАТИТ ИЗ СВОЕЙ КАЗНЫ ──
+   Прежде у него было бесконечно денег: можно было сдать ему тысячу мер руды
+   подряд. Теперь у каждого свой кошель: он тратится на ваши продажи и
+   восполняется со временем. Не хватило — берёт столько, на сколько хватает,
+   и говорит об этом. */
 function sellResource(key,res,all){
  const n=getNPCByKey(key);
  if(!n||!n.trade){narrate("Этот житель не торгует.");return;}
@@ -20245,6 +20310,251 @@ function npcAsk(n,res){
   ask=Math.max(1,Math.round(ask*0.7));
  return ask;
 }
+/* ════════════════════════════════════════════════════════════════════════
+   ТОРГОВЕЦ КАК ЧЕЛОВЕК, А НЕ КАК ПРИЛАВОК
+   ════════════════════════════════════════════════════════════════════════
+   Прилавок был один на весь мир: stockFor выдавал одно и то же зелье, ту же
+   еду и три случайные вещи. Кузнец в горах и меняла в порту торговали
+   одинаково.
+
+   Теперь у торговца есть СПЕЦИАЛИЗАЦИЯ (чем он вообще занимается), НРАВ
+   ТОРГА (как он себя ведёт за прилавком), КАЗНА (сколько у него денег),
+   ЗАПАС и УРОВЕНЬ ТОРГА. Всё выводится из его ключа, кроме того, что игрок
+   изменил сам, — и потому у каждого лавочника своё лицо, а сохранение не
+   пухнет.
+
+   Это НЕ второй прилавок поверх старого: stockFor остался единственным
+   местом, где собирается товар, — он просто начал спрашивать, кто перед
+   ним. */
+const MERCH_KINDS=[
+ {id:"mech",  n:"оружейник",      товар:["weapon"], руда:["руда","слиток"],
+  о:"кует и правит клинки, прочего не держит"},
+ {id:"bron",  n:"бронник",        товар:["armor"],  руда:["руда","кожа","камень"],
+  о:"кольчуги, шлемы и всё, что держит удар"},
+ {id:"redk",  n:"продавец редкого",товар:["weapon","armor","acc"], руда:["самоцвет","слиток"],
+  о:"держит мало, но такого, за чем едут"},
+ {id:"arte",  n:"собиратель артефактов",товар:["арт"], руда:["кристалл","самоцвет"],
+  о:"берёт и отдаёт то, что считается, а не куётся"},
+ {id:"star",  n:"старьёвщик",     товар:["weapon","armor","acc"], руда:["руда","дерево"],
+  о:"чинит выброшенное и продаёт вдвое дешевле"},
+ {id:"zapret",n:"тихий торг",     товар:["weapon","acc","запрет"], руда:["тёмная смола","чёрная соль"],
+  о:"торгует тем, за что берут под стражу, и не спрашивает имён"},
+ {id:"pripas",n:"лавочник",       товар:["припас"], руда:["зерно","трава","грибы","ягоды"],
+  о:"еда, верёвка, факелы — всё, что нужно в дорогу"},
+ {id:"knigi", n:"книжник",        товар:["том"],    руда:["кристалл"],
+  о:"тома, свитки и списки с них"},
+ {id:"snadob",n:"травник",        товар:["припас","часть"], руда:["трава","грибы"],
+  о:"настои, сборы и то, что кладут в гнёзда"},
+ {id:"instr", n:"скобяной ряд",   товар:["часть","припас"], руда:["руда","камень","дерево"],
+  о:"инструмент, части и железо на вес"},
+ {id:"kamni", n:"огранщик",       товар:["часть"],  руда:["кристалл","самоцвет"],
+  о:"кристаллы, руны и всё, что вкладывают"},
+ {id:"obshiy",n:"торговец всем понемногу",товар:["припас","weapon","armor"], руда:["руда","трава","дерево"],
+  о:"берёт что дают и продаёт что берут"}];
+const MERCH_KIND_BY_ID=Object.fromEntries(MERCH_KINDS.map(k=>[k.id,k]));
+/* Нрав торга: как он себя ведёт. Влияет на цену и на то, что вообще покажет. */
+const MERCH_TRAITS=[
+ {id:"torg",   n:"торгуется",            k:1.0,  уступ:0.85,
+  о:"любит поторговаться и уступит, если поспорить"},
+ {id:"tverdy", n:"цену не сбивает",      k:1.0,  уступ:1.0,
+  о:"называет цену один раз и больше к ней не возвращается"},
+ {id:"svoim",  n:"делает скидку своим",  k:1.0,  уступ:0.8, свои:true,
+  о:"со знакомых берёт по-свойски, с чужих — как со всех"},
+ {id:"novich", n:"завышает новичкам",    k:1.18, уступ:0.95, новичкам:1.25,
+  о:"по лицу видит, кто здесь впервые, и это отражается на цене"},
+ {id:"lukav",  n:"обсчитывает",          k:1.12, уступ:0.9, врёт:true,
+  о:"иногда ошибается в свою пользу и очень удивляется, когда замечают"},
+ {id:"zasluga",n:"открывает лучшее за дело",k:1.0,уступ:0.9, задело:true,
+  о:"хорошее держит под прилавком до тех, кто ему помог"},
+ {id:"kradeno",n:"берёт краденое",       k:0.95, уступ:0.9, краденое:true,
+  о:"покупает не глядя и платит меньше, чем стоит"},
+ {id:"pridira",n:"берёт только своё",    k:1.05, уступ:0.95, толькоСвоё:true,
+  о:"чужой товар не берёт вовсе: «это не по моей части»"}];
+const MERCH_TRAIT_BY_ID=Object.fromEntries(MERCH_TRAITS.map(t=>[t.id,t]));
+/* Лицо торговца. Выводится из ключа; казна и запас живут в сохранении
+   только у тех, с кем игрок уже торговал. */
+const merchSoulCache=new Map();
+function merchSoul(n){
+ try{
+  if(!n||!n.key||!n.trade)return null;
+  if(merchSoulCache.has(n.key))return merchSoulCache.get(n.key);
+  const S=k=>hashName((n.x|0)*7+k*13,(n.y|0)*11+k*5,7000+k);
+  /* Ремесло задаёт, чем он может торговать: кузнец не продаёт книги. */
+  const поРемеслу={"Кузнец":["mech","bron","instr","star"],
+   "Торговец":["pripas","obshiy","redk","knigi","kamni","star","zapret"],
+   "Трактирщик":["pripas","obshiy"],
+   "Целительница":["snadob"],
+   "Магистр":["knigi","kamni","arte"],
+   "Маг-отшельник":["arte","kamni","knigi"],
+   "Меняла клятв":["zapret","redk","arte"],
+   "Отверженный":["zapret","star"],
+   "Контрабандист":["zapret","redk"]}[n.prof]||["obshiy","pripas"];
+  const вид=MERCH_KIND_BY_ID[поРемеслу[Math.floor(S(1)*поРемеслу.length)%поРемеслу.length]]
+   ||MERCH_KINDS[MERCH_KINDS.length-1];
+  const нрав=MERCH_TRAITS[Math.floor(S(2)*MERCH_TRAITS.length)%MERCH_TRAITS.length];
+  const уровень=1+Math.floor(S(3)*5);          /* мастерство торга: 1..5 */
+  const казнаБаза=Math.round((150+S(4)*900)*(1+уровень*0.4));
+  const душа=safeFn(()=>npcSoul(n),null);
+  return сохрани({вид,нрав,уровень,
+   казнаБаза,
+   /* Любимый и дефицитный товар: на чём он поднимается и чего ему не хватает. */
+   любимый:(вид.руда||["руда"])[Math.floor(S(5)*(вид.руда||["руда"]).length)%(вид.руда||["руда"]).length],
+   дефицит:LAND_RES[Math.floor(S(6)*LAND_RES.length)%LAND_RES.length],
+   /* Поставщик: откуда идёт товар. От расстояния до него зависит цена. */
+   поставщик:{x:Math.max(0,Math.min(WORLD-1,(n.x|0)+Math.round((S(7)-0.5)*400))),
+              y:Math.max(0,Math.min(WORLD-1,(n.y|0)+Math.round((S(8)-0.5)*400)))},
+   жадность:душа?душа.нрав.торг:1});
+  function сохрани(d){merchSoulCache.set(n.key,d);return d;}
+ }catch(_){return null;}}
+/* Казна торговца: то, чем он может заплатить. Тратится, когда он у вас
+   покупает, и понемногу восполняется со временем. */
+function merchPurse(n){
+ try{
+  const d=merchSoul(n);if(!d)return 0;
+  const r=(G.merch||{})[String(n.key)];
+  if(!r||r.казна===undefined)return d.казнаБаза;
+  /* Восполнение: за каждый день торговец возвращает себе десятую часть. */
+  const дней=Math.max(0,(Number(G.day)||1)-(Number(r.казнаДень)||Number(G.day)||1));
+  const вернул=Math.round(d.казнаБаза*0.1*дней);
+  return Math.max(0,Math.min(d.казнаБаза,(Number(r.казна)||0)+вернул));
+ }catch(_){return 0;}}
+function merchSpend(n,сколько){
+ try{
+  const d=merchSoul(n);if(!d)return false;
+  if(!G.merch||typeof G.merch!=="object")G.merch={};
+  const k=String(n.key);
+  const r=G.merch[k]||{с:0,з:0,д:0,день:0};
+  r.казна=Math.max(0,merchPurse(n)-Math.max(0,Math.round(Number(сколько)||0)));
+  r.казнаДень=Number(G.day)||1;
+  G.merch[k]=r;
+  return true;
+ }catch(_){return false;}}
+/* ── СКРЫТЫЙ ТОВАР ──
+   Не всё лежит на виду. Условие всегда названо: игрок должен понимать, чего
+   ему не хватает, а не гадать. */
+const MERCH_HIDDEN=[
+ {id:"repa",  n:"для тех, кому здесь верят", о:"уважение в городе от тридцати",
+  когда:(n)=>{const c=safeFn(()=>isCityAt(n.x,n.y),null);return c&&standOf("city",c.name)>=30;}},
+ {id:"znak",  n:"для своих по народу",       о:"расположение народа от двенадцати",
+  когда:(n)=>safeFn(()=>repOf(n.race),0)>=12},
+ {id:"uroven",n:"для опытных",               о:"двадцатый уровень",
+  когда:()=>(Number(G.level)||1)>=20},
+ {id:"delo",  n:"для тех, кто ему помог",    о:"закрытое для него дело",
+  когда:(n)=>{const r=(G.merch||{})[String(n.key)];return (Number(r&&r.д)||0)>0;}},
+ {id:"postoy",n:"для постоянных",            о:"десять сделок у этого прилавка",
+  когда:(n)=>{const r=(G.merch||{})[String(n.key)];return (Number(r&&r.с)||0)>=10;}},
+ {id:"noch",  n:"после заката",              о:"ночной час",
+  когда:()=>safeFn(()=>isNight(),false)},
+ {id:"vor",   n:"для своих в преступном мире",о:"вес в преступном мире от двадцати",
+  когда:(n)=>{const e=EMPIRES[Math.max(0,safeFn(()=>empireIndexAt(n.x,n.y),0))];
+   return e&&standOf("crime",e.short)>=20;}},
+ {id:"strah", n:"для тех, кого опасаются",   о:"страх от тридцати",
+  когда:()=>axisOf("страх")>=30},
+ {id:"udacha",n:"для везучих",               о:"удача от вещей",
+  когда:()=>safeFn(()=>ART.sum("удача"),0)>0.1}];
+/* Какие двери у этого торговца открыты вам и какие нет. */
+function merchDoors(n){
+ return MERCH_HIDDEN.map(h=>({...h,открыто:!!safeFn(()=>h.когда(n),false)}));}
+/* ════════════════════════════════════════════════════════════════════════
+   ЖИВОЙ РЫНОК: ДОБЫЧА → ПЕРЕВОЗКА → ПРИЛАВОК
+   ════════════════════════════════════════════════════════════════════════
+   Положение дел в державе уже считается от дня (ECON_EVENTS): урожай,
+   недород, обвал рудника, карантин. Это мир сам по себе, и он не зависит от
+   игрока — так и должно быть.
+
+   Но есть второе, чего не хватало: то, что МЕНЯЕТ ИГРОК. Разбил ватагу на
+   тракте — обозы пошли чаще, подвоз вырос, цены упали, город богатеет.
+   Наоборот: не тронул разбойников, и дорога глохнет сама.
+
+   Это и есть рыночная память: G.market хранит по каждой земле подвоз,
+   спрос и достаток, и они ходят сами — каждый день понемногу возвращаются
+   к своему уровню, а поступки игрока и события их сдвигают. Цена берёт их
+   через тот же marketPrice, куда и так сходится вся торговля. */
+const MARKET_FLOWS=[
+ {id:"подвоз",  n:"подвоз",   норма:1.0, о:"сколько товара доходит до прилавков"},
+ {id:"спрос",   n:"спрос",    норма:1.0, о:"сколько его тут готовы взять"},
+ {id:"достаток",n:"достаток", норма:1.0, о:"насколько земля богата"}];
+function marketOf(idx){
+ try{
+  if(!G.market||typeof G.market!=="object")G.market={};
+  const k=String(Math.max(0,Number(idx)||0));
+  if(!G.market[k]||typeof G.market[k]!=="object")
+   G.market[k]={подвоз:1,спрос:1,достаток:1,день:Number(G.day)||1};
+  return G.market[k];
+ }catch(_){return {подвоз:1,спрос:1,достаток:1,день:1};}}
+function marketNudge(idx,поле,сколько,почему){
+ try{
+  const m=marketOf(idx);
+  const было=Number(m[поле])||1;
+  m[поле]=Math.max(0.4,Math.min(2.2,было+(Number(сколько)||0)));
+  m.день=Number(G.day)||1;
+  if(почему&&Math.abs(m[поле]-было)>=0.08){
+   const слово=m[поле]>было?"растёт":"падает";
+   safeFn(()=>journal(`Рынок: ${поле} ${слово} — ${почему}.`));}
+  return m[поле];
+ }catch(_){return 1;}}
+/* Ход рынка: каждый день потоки понемногу возвращаются к своему уровню.
+   Без этого один удачный день кормил бы землю вечно. */
+function marketTick(дней){
+ try{
+  if(!G.market||typeof G.market!=="object")return;
+  const д=Math.max(1,Math.min(30,Number(дней)||1));
+  for(const k of Object.keys(G.market)){
+   const m=G.market[k];
+   if(!m||typeof m!=="object"){delete G.market[k];continue;}
+   MARKET_FLOWS.forEach(f=>{
+    const v=Number(m[f.id]);
+    if(!Number.isFinite(v)){m[f.id]=f.норма;return;}
+    const шаг=0.03*д;
+    m[f.id]=v>f.норма?Math.max(f.норма,v-шаг):Math.min(f.норма,v+шаг);});
+   /* Достаток тянется за подвозом: где товар, там и деньги. */
+   const п=Number(m.подвоз)||1;
+   m.достаток=Math.max(0.4,Math.min(2.2,(Number(m.достаток)||1)+(п-1)*0.01*д));}
+ }catch(_){}}
+/* Что игрок сделал с дорогой. Один вход, чтобы поводы не разошлись. */
+const MARKET_DEEDS={
+ разбой:{n:"ватага на тракте разбита",подвоз:0.18,спрос:0,достаток:0.05,
+  о:"обозы пошли чаще, и на прилавках прибавилось"},
+ обоз:{n:"обоз доведён",подвоз:0.08,спрос:0,достаток:0.03,
+  о:"один обоз дошёл целым, и это заметно"},
+ тварь:{n:"дорога очищена от твари",подвоз:0.1,спрос:0,достаток:0.02,
+  о:"возчики перестали объезжать это место"},
+ казна:{n:"казна яруса вынесена",подвоз:0,спрос:0.12,достаток:0.08,
+  о:"золото пошло в оборот, и цены поползли"},
+ подряд:{n:"подряд закрыт",подвоз:0.05,спрос:0.05,достаток:0.04,
+  о:"держава расплатилась, и деньги разошлись"},
+ бунт:{n:"вмешательство на площади",подвоз:-0.1,спрос:-0.05,достаток:-0.06,
+  о:"стража перекрыла ряды, и торг встал"}};
+function marketDeed(id,idx,почему){
+ try{
+  const d=MARKET_DEEDS[id];if(!d)return false;
+  const i=Math.max(0,Number(idx)||0);
+  MARKET_FLOWS.forEach(f=>{
+   const v=Number(d[f.id])||0;
+   if(v)marketNudge(i,f.id,v,почему||d.о);});
+  return true;
+ }catch(_){return false;}}
+/* Множитель цены от рынка: много подвоза — дешевле, много спроса — дороже. */
+function marketK(idx){
+ try{
+  const m=marketOf(idx);
+  const п=Math.max(0.4,Number(m.подвоз)||1),с=Math.max(0.4,Number(m.спрос)||1);
+  return Math.max(0.55,Math.min(1.8,с/п));
+ }catch(_){return 1;}}
+/* Словами: что творится с рынком этой земли. */
+function marketLine(idx){
+ try{
+  const m=marketOf(idx);
+  const ч=[];
+  const п=Number(m.подвоз)||1,с=Number(m.спрос)||1,д=Number(m.достаток)||1;
+  if(п>1.12)ч.push("подвоз хороший: обозы идут одни за другими");
+  else if(п<0.88)ч.push("подвоз скудный: дороги глухие");
+  if(с>1.12)ч.push("спрос высокий: берут всё");
+  else if(с<0.88)ч.push("спрос вялый: брать некому");
+  if(д>1.12)ч.push("земля богатеет");
+  else if(д<0.88)ч.push("земля беднеет");
+  return ч.join("; ");
+ }catch(_){return "";}}
 function stockFor(n){const out=[];
  /* Под землёй торгуют тем, что нужно под землёй, и берут за это своё. */
  const deep=!!(G.place&&G.place.depth>0);
@@ -20293,7 +20603,38 @@ function stockFor(n){const out=[];
     reward:["lore","lore","spell","skill"][Math.floor(H(n.x,n.y,87+k)*4)%4],
     order:safeFn(()=>{const б=towerHere();return б?б.орден.id:null;},null)});
    out.push({n:т.n,том:т,price:т.цена});}});
- for(let k=0;k<3;k++)out.push({gear:genLoot(n.x,n.y,Math.floor(H(n.x,n.y,80+k)*9999),G.level+n.tier),price:0});
+ /* ── ЧЕМ ИМЕННО ОН ТОРГУЕТ ──
+    Прежде здесь было «три случайные вещи» у всех подряд. Теперь вещи
+    отбираются по специализации: оружейник держит клинки, бронник — доспех,
+    старьёвщик — дешёвое и подержанное, а тот, кто торгует тихо, — то, чего
+    на виду не держат. */
+ safeFn(()=>{
+  const д=merchSoul(n);
+  const слоты=д?(д.вид.товар||[]):null;
+  const сколько=д?Math.max(2,Math.min(6,1+д.уровень)):3;
+  for(let k=0;k<сколько;k++){
+   let it=genLoot(n.x,n.y,Math.floor(H(n.x,n.y,80+k)*9999),G.level+n.tier);
+   if(слоты&&слоты.length&&["weapon","armor","acc"].some(x=>слоты.indexOf(x)>=0)){
+    /* Подбираем вещь нужного рода: перебираем зерно, а не подменяем поле. */
+    for(let j=0;j<14&&слоты.indexOf(it.slot)<0;j++)
+     it=genLoot(n.x,n.y,Math.floor(H(n.x+j*7,n.y+j*3,80+k)*9999),G.level+n.tier);
+    if(слоты.indexOf(it.slot)<0)continue;}
+   /* Старьёвщик продаёт подержанное: дешевле, но и хуже. */
+   if(д&&д.вид.id==="star"){
+    it.name=`${it.name} (чиненый)`;
+    it.val=Math.max(1,Math.round(it.val*0.75));
+    it.price=Math.max(2,Math.round(it.price*0.5));}
+   out.push({gear:it,price:0});}
+  if(!д)return;
+  /* Артефакты держит только тот, кто ими занимается. */
+  if((д.вид.товар||[]).indexOf("арт")>=0){
+   const a=ART.make({дом:["mag","myst","run","elem"][Math.floor(H(n.x,n.y,84)*4)%4],
+    ранг:Math.min(4,1+Math.floor(H(n.x,n.y,85)*3)),кач:2,
+    seed:(n.x|0)*13+(n.y|0)*7,откуда:`с прилавка: ${n.name}`});
+   out.push({n:a.имя,артефакт:a,price:Math.round(ART.price(a)*1.2)});}
+ });
+ if(!safeFn(()=>merchSoul(n),null))
+  for(let k=0;k<3;k++)out.push({gear:genLoot(n.x,n.y,Math.floor(H(n.x,n.y,80+k)*9999),G.level+n.tier),price:0});
  const km=buyModifier(n)*deepMarkup()*tradeBuyK(n.race);
  out.forEach(o=>{
   if(o.full)return;                                     /* уже посчитано целиком */
@@ -20786,6 +21127,23 @@ function openNPC(key,silent){const n=getNPCByKey(key);
    🚫 <b>С вами здесь не торгуют.</b> Народ «${n.race}» вас не жалует (репутация ${rep}).<br>
    Помогите кому-нибудь из этого народа — заданием, обозом, защитой — и лавки снова откроются.</div>`;}
  if(n.trade&&!att.refuses){
+  /* ── ЛИЦО ПРИЛАВКА ──
+     Кто он, чем торгует, как себя ведёт, сколько у него денег и что у него
+     под прилавком. Скрытое всегда названо: игрок должен понимать, чего ему
+     не хватает, а не гадать. */
+  safeFn(()=>{
+   const d=merchSoul(n);
+   if(!d)return;
+   const кошель=merchPurse(n);
+   const сказ=`${d.вид.n[0].toUpperCase()+d.вид.n.slice(1)}: ${d.вид.о}. За прилавком ${d.нрав.n}: ${d.нрав.о}. Мастерство торга ${d.уровень} из пяти. В кошеле около ${кошель} золота — больше он за раз не заплатит. Любит брать «${d.любимый}», не хватает ему «${d.дефицит}».`;
+   html+=`<div class="list-line" tabindex="0" data-speak="${сказ.replace(/"/g,"&quot;")}">🏪 ${сказ}</div>`;
+   const двери=merchDoors(n);
+   const откр=двери.filter(x=>x.открыто),закр=двери.filter(x=>!x.открыто);
+   const дв=`Под прилавком: ${откр.length?`открыто вам — ${откр.map(x=>x.n).join(", ")}`:"пока ничего"}.`+
+    (закр.length?` Закрыто: ${закр.map(x=>`${x.n} (нужно: ${x.о})`).join("; ")}.`:"");
+   html+=`<div class="list-line" tabindex="0" data-speak="${дв.replace(/"/g,"&quot;")}">🔑 ${дв}</div>`;
+   const рын=marketLine(empireIndexAt(n.x,n.y));
+   if(рын)html+=`<div class="list-line" tabindex="0" data-speak="Рынок этой земли: ${рын}.">📉 Рынок: ${рын}</div>`;});
   html+=`<h3>Товары</h3>`;
   if(att.say)html+=`<div class="list-line" data-speak="${att.say}">💬 ${att.say}</div>`;
   stockFor(n).forEach((s,i)=>{html+=`<div class="list-line">${s.gear?lootDesc(s.gear):s.n} — ${s.price} золота
@@ -21595,6 +21953,7 @@ function pruneState(hard){
   if(G.npcMem&&typeof G.npcMem==="object")G.npcMem=trimDict(G.npcMem,hard?300:900);
   if(G.standing&&typeof G.standing==="object")G.standing=trimDict(G.standing,hard?200:600);
   if(G.social&&typeof G.social==="object")G.social=trimDict(G.social,hard?150:500);
+  if(G.market&&typeof G.market==="object")G.market=trimDict(G.market,EMPIRES.length+4);
   if(Array.isArray(G.rumors)&&G.rumors.length>60)G.rumors.splice(0,G.rumors.length-60);
   if(G.merit&&typeof G.merit==="object")G.merit=trimDict(G.merit,EMPIRES.length+4);
   if(G.tomes&&typeof G.tomes==="object")G.tomes=trimDict(G.tomes,300);
@@ -22138,6 +22497,13 @@ window.addEventListener("beforeunload",()=>{try{stopRun();saveGame(true);}catch(
   if(!G.standing||typeof G.standing!=='object'||Array.isArray(G.standing))G.standing={};
   if(!G.axes||typeof G.axes!=='object'||Array.isArray(G.axes))G.axes={};
   if(!G.social||typeof G.social!=='object'||Array.isArray(G.social))G.social={};
+  if(!G.market||typeof G.market!=='object'||Array.isArray(G.market))G.market={};
+  for(const k of Object.keys(G.market)){
+   const m=G.market[k];
+   if(!m||typeof m!=='object'||Array.isArray(m)){delete G.market[k];continue;}
+   ["подвоз","спрос","достаток"].forEach(f=>{
+    const v=Number(m[f]);
+    m[f]=Number.isFinite(v)?Math.max(0.4,Math.min(2.2,v)):1;});}
   for(const k of Object.keys(G.social))
    if(!SOC_TIE_BY_ID[G.social[k]])delete G.social[k];
   for(const k of Object.keys(G.standing))
