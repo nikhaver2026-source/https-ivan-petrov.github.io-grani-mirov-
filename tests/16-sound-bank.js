@@ -10,6 +10,18 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
  const reqs=[];page.on('request',r=>{if(/\/sounds\//.test(r.url()))reqs.push(r.url().split('/sounds/')[1]);});
  await page.goto(process.argv[2]);await page.waitForTimeout(700);
  await page.evaluate(()=>enterGame());await page.waitForTimeout(500);
+ /* Порт ищется с расширением круга, а не в жёстком радиусе шестидесяти клеток.
+    Прежде шестидесяти хватало по недоразумению: рельеф выбирался для каждой
+    клетки жребием, и «побережье» попадалось посреди материка. Мир стал связным,
+    море собралось в берега, а воду внутри материка держат реки: ближняя
+    пристань от середины мира теперь в семидесяти клетках. Это честное
+    расстояние, а шестьдесят было произвольным числом — и на нём набор не
+    проваливался, а ПАДАЛ, потому что findPorts возвращал пусто. */
+ await page.evaluate(()=>{window.__порт=()=>{
+  for(const r of [60,120,240,480,900]){
+   const p=findPorts(G.x,G.y,r,8)[0];
+   if(p)return p;}
+  return null;};});
 
  // 1. Банк: роли, файлы, отсутствие повторов
  const bank=await page.evaluate(()=>{
@@ -64,7 +76,11 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
 
  // 5. Порты в мире
  const ports=await page.evaluate(()=>{
-  const list=findPorts(G.x,G.y,60,8);
+  /* Список пристаней берётся с тем же расширением круга: шестьдесят клеток
+     держались на прежнем недоразумении, когда «побережье» попадалось посреди
+     материка. */
+  let list=[];
+  for(const r of [60,120,240,480,900]){list=findPorts(G.x,G.y,r,8);if(list.length)break;}
   const viaCell=[];
   for(const p of list.slice(0,3)){const c=cellContent(p.x,p.y);viaCell.push(c.structure&&c.structure.type);}
   return {n:list.length,names:list.slice(0,2).map(p=>p.name),viaCell,
@@ -73,7 +89,7 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
 
  // 6. Рейсы: назначение, плата, переходы
  const ships=await page.evaluate(()=>{
-  const p=findPorts(G.x,G.y,60,8)[0];
+  const p=__порт();
   if(!p)return {none:true};
   const list=portShips(p,G.day);
   return {port:p.name,n:list.length,
@@ -83,7 +99,7 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
 
  // 7. Посадка, плавание и прибытие
  const voyage=await page.evaluate(()=>{
-  const p=findPorts(G.x,G.y,60,8)[0];
+  const p=__порт();
   G.x=p.x;G.y=p.y;G.place=null;G.ship=null;G.gold=1000;G.hp=100;
   openHarbor();
   const btn=document.querySelector('[data-cmd^="board:"]');
@@ -103,7 +119,7 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
 
  // 8. Шторм и морские события не ломают состояние
  const sea=await page.evaluate(()=>{
-  const p=findPorts(G.x,G.y,60,8)[0];
+  const p=__порт();
   G.x=p.x;G.y=p.y;G.gold=1000;G.hp=100;G.ship=null;
   openHarbor();const btn=document.querySelector('[data-cmd^="board:"]');
   if(!btn)return {skip:true};

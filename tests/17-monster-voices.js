@@ -9,6 +9,18 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
  const reqs=[];page.on('request',r=>{if(/\/sounds\//.test(r.url()))reqs.push(r.url().split('/sounds/')[1]);});
  await page.goto(process.argv[2]);await page.waitForTimeout(700);
  await page.evaluate(()=>enterGame());await page.waitForTimeout(300);
+ /* Порт ищется с расширением круга, а не в жёстком радиусе шестидесяти клеток.
+    Прежде шестидесяти хватало по недоразумению: рельеф выбирался для каждой
+    клетки жребием, и «побережье» попадалось посреди материка. Мир стал связным,
+    море собралось в берега, а воду внутри материка держат реки: ближняя
+    пристань от середины мира теперь в семидесяти клетках. Это честное
+    расстояние, а шестьдесят было произвольным числом — и на нём набор не
+    проваливался, а ПАДАЛ, потому что findPorts возвращал пусто. */
+ await page.evaluate(()=>{window.__порт=()=>{
+  for(const r of [60,120,240,480,900]){
+   const p=findPorts(G.x,G.y,r,8)[0];
+   if(p)return p;}
+  return null;};});
 
  // 1. Банк вырос: новые роли и голоса чудовищ
  const b=await page.evaluate(()=>{
@@ -67,7 +79,7 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
 
  // 6. Встреча с пиратами: окно и все исходы
  const pir=await page.evaluate(()=>{
-  const p=findPorts(G.x,G.y,60,8)[0];G.x=p.x;G.y=p.y;G.place=null;G.gold=1000;G.hp=100;
+  const p=__порт();G.x=p.x;G.y=p.y;G.place=null;G.gold=1000;G.hp=100;
   openHarbor();const btn=document.querySelector('[data-cmd^="board:"]');CMD.board(btn.dataset.cmd.split(":")[1]);
   const crew=PIRATE_CREWS[0];
   meetPirates(crew);
@@ -99,7 +111,7 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
 
  // 7. Морские события порождают тварей
  const evs=await page.evaluate(()=>{
-  const p=findPorts(G.x,G.y,60,8)[0];G.x=p.x;G.y=p.y;G.gold=5000;G.hp=100;G.inCombat=false;
+  const p=__порт();G.x=p.x;G.y=p.y;G.gold=5000;G.hp=100;G.inCombat=false;
   openHarbor();const btn=document.querySelector('[data-cmd^="board:"]');CMD.board(btn.dataset.cmd.split(":")[1]);
   let fights=0,pirates=0,other=0,bad=0;
   for(let i=0;i<120;i++){
