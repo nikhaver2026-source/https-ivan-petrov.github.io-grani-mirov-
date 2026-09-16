@@ -143,8 +143,10 @@ h3{color:var(--acc2);margin:14px 0 6px;font-size:1.05rem;}
  <p class="hint">🎧 Пространственный эмбиент, многослойная реверберация, динамический ветер, дождь, толпа, стерео-маяки объектов и акустика локации. Аудио генерируется в реальном времени.</p>
  <label class="opt">🗣️ Скорость озвучки <input type="range" id="setRate" min="0.6" max="1.6" step="0.1" value="1"><span id="vRate">1.0×</span></label>
  <label class="opt">🔊 Громкость озвучки <input type="range" id="setVoiceVol" min="0" max="100" value="100"><span id="vVoice">100%</span></label>
- <label class="opt">🎵 Громкость эффектов <input type="range" id="setFxVol" min="0" max="100" value="100"><span id="vFx">100%</span></label>
+ <label class="opt">🎵 Громкость мира <input type="range" id="setFxVol" min="0" max="100" value="100"><span id="vFx">100%</span></label>
+ <label class="opt">🍃 Громкость фона <input type="range" id="setAmbVol" min="0" max="100" value="80"><span id="vAmb">80%</span></label>
  <label class="opt">🎼 Громкость музыки <input type="range" id="setMusicVol" min="0" max="100" value="100"><span id="vMusic">100%</span></label>
+ <label class="opt">🔔 Громкость меню <input type="range" id="setUiVol" min="0" max="100" value="90"><span id="vUi">90%</span></label>
  <label class="opt">🎤 Голос <select id="setVoice" aria-label="Выбор голоса"></select></label>
  <h3>⚔️ Сложность</h3>
  <p class="hint" id="diffHint">Мир одинаково честен на любом уровне: меняется не то, что происходит, а мера — сколько бьют, сколько держат, как часто встречаются и сколько стоит поражение.</p>
@@ -438,7 +440,13 @@ const settings=Object.assign({speech:1,effects:1,music:1,subtitles:1,explore:1,f
     свёрткой с откликом головы. scape — живая звуковая картина вокруг: мир
     сам подаёт голос с тех сторон, где что-то стоит или ходит. */
  hrtf:1,scape:1,
- rate:1,voiceVol:1,fxVol:1,musicVol:1,voice:"",difficulty:"normal"},savedSet);
+ /* ── ГРОМКОСТЬ ПО КАНАЛАМ ──
+    Ползунков было три: озвучка, «эффекты» и музыка. Под «эффектами» лежало
+    всё разом — шаги, твари, погода, ровный фон местности и писк меню, — и
+    приглушить надоевший фон, не оглушив при этом сигналы, было нельзя.
+    Каналов теперь пять: голос, мир, фон, музыка и меню. */
+ rate:1,voiceVol:1,fxVol:1,musicVol:1,ambVol:0.8,uiVol:0.9,
+ voice:"",difficulty:"normal"},savedSet);
 /* ── СЛОЖНОСТЬ ──
    Раньше мир был одинаково суров ко всем: числа урона, здоровья тварей,
    частоты встреч и цен были зашиты намертво. Кому-то это слишком тяжело —
@@ -455,6 +463,56 @@ const DIFFICULTY={
 function diff(){return DIFFICULTY[settings.difficulty]||DIFFICULTY.normal;}
 const saveSettings=()=>store.set("gm29set",JSON.stringify(settings));
 function vib(p){if(settings.haptics&&navigator.vibrate){try{navigator.vibrate(p);}catch(e){}}}
+
+/* ════════════════════════════════════════════════════════════════════════
+   ЖИЗНЕННЫЙ ЦИКЛ ЗВУКА
+
+   Игру держат в кармане: на неё приходит звонок, её сворачивают, гасят экран,
+   переключаются в мессенджер и возвращаются. Обработчиков на это не было
+   вовсе, и получалось скверно: свёрнутая игра продолжала шуметь лесом в
+   наушниках, речь договаривала фразу в пустоту, а на возврате браузер отдавал
+   приостановленный звуковой контекст — и мир замолкал совсем, пока игрок не
+   ткнёт в экран.
+
+   Здесь один распорядитель на все каналы. Уходя — глушим: петли ставятся на
+   ПАУЗУ, а не убиваются, речь обрывается. Возвращаясь — будим: контекст
+   поднимается, петли продолжают с того же места. Игрок слышит то же место, а
+   не тишину и не второй лес поверх первого.
+
+   Почему пауза, а не остановка: остановленную петлю пришлось бы заводить
+   заново, и место начиналось бы с начала записи — на слух это «меня
+   перенесли», хотя игрок никуда не уходил.
+   ════════════════════════════════════════════════════════════════════════ */
+const AudioLife={
+ hushed:false,
+ hush(){
+  if(this.hushed)return false;
+  this.hushed=true;
+  safeFn(()=>Bank.hush());
+  safeFn(()=>{if(window.speechSynthesis)speechSynthesis.cancel();});
+  safeFn(()=>{if(AE.ctx&&AE.ctx.state==="running"&&AE.ctx.suspend)AE.ctx.suspend();});
+  return true;},
+ wake(){
+  if(!this.hushed)return false;
+  this.hushed=false;
+  safeFn(()=>{if(AE.ctx&&AE.ctx.state==="suspended"&&AE.ctx.resume)AE.ctx.resume();});
+  safeFn(()=>Bank.wake());
+  return true;},
+ bind(){
+  if(this.bound)return;this.bound=true;
+  safeFn(()=>document.addEventListener("visibilitychange",()=>{
+   if(document.hidden)AudioLife.hush();else AudioLife.wake();}));
+  /* pagehide — уход со страницы совсем: и «назад», и закрытие вкладки, и
+     выгрузка в фон на iOS, где visibilitychange приходит не всегда. */
+  safeFn(()=>window.addEventListener("pagehide",()=>AudioLife.hush()));
+  /* pageshow с persisted — возврат из кэша «назад/вперёд»: страница та же,
+     но звук браузер уже погасил. */
+  safeFn(()=>window.addEventListener("pageshow",()=>AudioLife.wake()));
+  /* Звонок или будильник забирают звук у вкладки: контекст уходит в
+     «interrupted», и вернуть его можно только просьбой. */
+  safeFn(()=>window.addEventListener("focus",()=>{
+   if(!document.hidden)AudioLife.wake();}));}};
+safeFn(()=>AudioLife.bind());
 
 /* ════════ РЕЧЬ (очередь фраз, нарезка, защита от обрыва в 15 секунд) ════════ */
 const Speech={voice:null,queue:[],speaking:false,keepAlive:null,
@@ -489,6 +547,12 @@ const Speech={voice:null,queue:[],speaking:false,keepAlive:null,
   try{
    if(interrupt)this._pendingDone=null; /* сброс, чтобы обратный вызов от прошлой фразы не сработал не вовремя */
    if(!settings.speech||!("speechSynthesis" in window)){if(onDone)setTimeout(onDone,10);return;}
+   /* Свёрнутую игру не озвучиваем. Мир продолжает жить и сам по себе подаёт
+      голос — без этой проверки он наговаривал бы в наушники поверх того, чем
+      игрок сейчас занят. Обещание вызывающему всё равно исполняется: иначе
+      тот, кто ждал конца фразы, завис бы навсегда. */
+   if(typeof AudioLife!=="undefined"&&AudioLife.hushed){
+    if(onDone)setTimeout(onDone,10);return;}
    if(interrupt){this.queue=[];this.speaking=false;this._stopKeepAlive();
     try{speechSynthesis.cancel();}catch(e){}}
    if(onDone)this._pendingDone=onDone;
@@ -518,7 +582,11 @@ const Speech={voice:null,queue:[],speaking:false,keepAlive:null,
   const isChrome=/Chrome\//.test(navigator.userAgent)&&!/Edg\//.test(navigator.userAgent);
   if(!isChrome)return;
   this.keepAlive=setInterval(()=>{
-   try{if(speechSynthesis.speaking&&!speechSynthesis.paused){speechSynthesis.pause();speechSynthesis.resume();}}catch(e){}
+   /* Подпорка против обрыва на пятнадцатой секунде в Chrome. Пока игра
+      свёрнута, она молчит: иначе pause+resume будили бы речь, которую
+      распорядитель только что оборвал. */
+   try{if(typeof AudioLife!=="undefined"&&AudioLife.hushed)return;
+    if(speechSynthesis.speaking&&!speechSynthesis.paused){speechSynthesis.pause();speechSynthesis.resume();}}catch(e){}
   },9000);},
  _stopKeepAlive(){if(this.keepAlive){clearInterval(this.keepAlive);this.keepAlive=null;}},
  stop(){this.queue=[];this.speaking=false;this._pendingDone=null;this._stopKeepAlive();
@@ -1644,7 +1712,7 @@ const LIVE_BLIP=["hollow_thud","tick","blip","lock_click","signal_beep"];
 function liveBlip(f,v){
  try{
   const i=f<=300?0:f<=600?1:f<=900?2:f<=1200?3:4;
-  return safeFn(()=>Bank.play(LIVE_BLIP[i],{seed:Math.round(f),
+  return safeFn(()=>Bank.play(LIVE_BLIP[i],{seed:Math.round(f),kind:"ui",
    gain:Math.max(0.2,Math.min(0.8,(Number(v)||0.12)*3.5)),maxSec:2}),false);
  }catch(_){return false;}}
 /* ════════ ПЛЕЕР / СУБТИТРЫ / СИГНАЛЫ ════════ */
@@ -1697,7 +1765,7 @@ const Play={active:new Map(),lastMain:null,
    /* Банк сам узнаёт, что на этом канале уже звучит нужная запись, и не
       начинает её заново: смена местности не рвёт петлю на полуслове. */
    const el=safeFn(()=>Bank.loop(канал,роль,{seed:сид,
-    gain:opts.gain===undefined?0.5:opts.gain,kind:"fx"}),null);
+    gain:opts.gain===undefined?0.5:opts.gain,kind:"ambient"}),null);
    if(!el)return false;
    this.drop(key,канал);
    entry={id,name:имя,opts,timer:null,канал,
@@ -5999,11 +6067,35 @@ const SOUND_BANK={
  pick(role,seed){const b=SOUND_BANK[role];if(!b||!b.f.length)return null;
   const i=Math.abs(Math.floor(Number(seed)||0))%b.f.length;return b.f[i];},
  url(file){return this.base+file;},
+ /* ── ПЯТЬ КАНАЛОВ ──
+    Слово kind приходит сюда двумя разными путями: как имя канала («music»,
+    «ambient», «ui») и как вид источника из позиционного звука («house»,
+    «monster», «city» и прочие). Поэтому канал не угадывается, а берётся из
+    таблицы, а всё неизвестное честно считается миром: новый вид источника
+    зазвучит на общих правах, а не провалится в тишину. */
+ CHAN:{music:"music",score:"music",
+  ambient:"ambient",amb:"ambient",place:"ambient",
+  ui:"ui",menu:"ui",
+  fx:"world",world:"world"},
+ chanOf(kind){return this.CHAN[kind]||"world";},
  vol(kind){
   try{
-   if(kind==="music")return settings.music?Math.min(1,Number(settings.musicVol)||0.5):0;
-   return settings.effects?Math.min(1,Number(settings.fxVol)||0.7):0;
+   const c=this.chanOf(kind);
+   if(c==="music")return settings.music?Math.min(1,Number(settings.musicVol)||0.5):0;
+   if(!settings.effects)return 0;
+   if(c==="ambient")return Math.min(1,Number(settings.ambVol)===0?0:(Number(settings.ambVol)||0.8));
+   if(c==="ui")return Math.min(1,Number(settings.uiVol)===0?0:(Number(settings.uiVol)||0.9));
+   return Math.min(1,Number(settings.fxVol)||0.7);
   }catch(_){return 0.5;}},
+ /* ── ЗАТИШЬЕ И ПРОБУЖДЕНИЕ ──
+    Уход из игры не должен оставлять за спиной играющий лес. Петли ставятся на
+    паузу, а не убиваются: вернувшись, игрок слышит то же место, а не тишину и
+    не дубль поверх прежнего. */
+ hush(){
+  this.loops.forEach(c=>{try{c.el.pause();}catch(_){}});
+  this.shots.forEach(a=>{try{a.pause();}catch(_){}});},
+ wake(){
+  this.loops.forEach(c=>{try{const pr=c.el.play();if(pr&&pr.catch)pr.catch(()=>{});}catch(_){}});},
  make(file,volume,loop){
   try{
    const a=new Audio(this.url(file));
@@ -6983,7 +7075,7 @@ function bankUpdateAmbient(){
   if(!Bank.enabled)return;
   const role=bankAmbientRole();
   const seed=G.place?(G.place.bx+G.place.by+G.place.depth):(G.ship?G.ship.leg:(G.x+G.y));
-  Bank.loop("place",role,{seed,gain:0.55,kind:"music"});
+  Bank.loop("place",role,{seed,gain:0.55,kind:"ambient"});
   safeFn(()=>placeColour(seed));
   safeFn(()=>livingScene());
   safeFn(()=>liveAmbient(seed));
@@ -7012,7 +7104,7 @@ function liveAmbient(seed){
    else role={forest:"wild_birds",plains:"wild_wind",mountains:"sky_wind",
     coast:"sky_wave",swamp:"wild_river",desert:"sky_day",cave:"deep_drip",
     road:"wild_birds"}[t]||"wild_wind";}
-  if(role)Bank.loop("live",role,{seed:Number(seed)||0,gain:0.32,kind:"music"});
+  if(role)Bank.loop("live",role,{seed:Number(seed)||0,gain:0.32,kind:"ambient"});
  }catch(_){}}
 /* ── КРАСКА МЕСТА ──
    Фон под ногами один на весь рельеф, и земли сливались: лес звучал как
@@ -22224,6 +22316,8 @@ function bindSettings(){const $=id=>document.getElementById(id);
  $("setRate").value=settings.rate;$("vRate").textContent=(+settings.rate).toFixed(1)+"×";
  $("setVoiceVol").value=settings.voiceVol*100;$("vVoice").textContent=settings.voiceVol*100+"%";
  $("setFxVol").value=settings.fxVol*100;$("vFx").textContent=settings.fxVol*100+"%";
+ $("setAmbVol").value=Math.round(settings.ambVol*100);$("vAmb").textContent=Math.round(settings.ambVol*100)+"%";
+ $("setUiVol").value=Math.round(settings.uiVol*100);$("vUi").textContent=Math.round(settings.uiVol*100)+"%";
  $("setMusicVol").value=settings.musicVol*100;$("vMusic").textContent=settings.musicVol*100+"%";
  $("setSpeech").addEventListener("change",e=>{settings.speech=e.target.checked?1:0;saveSettings();
   if(settings.speech)narrate("Озвучка включена.");});
@@ -22249,6 +22343,12 @@ function bindSettings(){const $=id=>document.getElementById(id);
   $("vFx").textContent=e.target.value+"%";AE.applyVolumes();});
  $("setMusicVol").addEventListener("input",e=>{settings.musicVol=e.target.value/100;saveSettings();
   $("vMusic").textContent=e.target.value+"%";AE.applyVolumes();});
+ /* Фон и меню правятся на слух, прямо во время звучания: Bank.refresh
+    подхватывает новую громкость у петель, не начиная их заново. */
+ $("setAmbVol").addEventListener("input",e=>{settings.ambVol=e.target.value/100;saveSettings();
+  $("vAmb").textContent=e.target.value+"%";AE.applyVolumes();});
+ $("setUiVol").addEventListener("input",e=>{settings.uiVol=e.target.value/100;saveSettings();
+  $("vUi").textContent=e.target.value+"%";safeFn(()=>UI.blip(880,0.08,0.12));});
  $("setVoice").addEventListener("change",e=>{settings.voice=e.target.value;saveSettings();
   const vs=speechSynthesis.getVoices();Speech.voice=vs.find(v=>v.name===settings.voice)||null;
   narrate("Голос изменён. Здравствуйте, путник.");});
