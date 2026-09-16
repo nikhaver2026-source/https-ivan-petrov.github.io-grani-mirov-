@@ -150,12 +150,25 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   const out={};
   while(activeLayer())closeTopUI();
   G.place=null;G.ship=null;G.alt=0;G.mounts=[];G.mount=null;G.x=1000;G.y=1000;
-  /* Шаг. */
+  /* ── Шаг ──
+     Замер берётся ТОЛЬКО с того шага, который действительно состоялся: на
+     дороге случается встреча, и тогда шаг не делается вовсе, а разница
+     выходит нулевой — проверка падала не потому, что скакун перестал
+     сокращать путь, а потому, что до шага дело не дошло. Пробуем, пока шаг
+     не пройдёт, и бой при этом прекращаем. */
+  const замер=(dir)=>{
+   for(let i=0;i<20;i++){
+    safeFn(()=>{if(G.inCombat){G.inCombat=false;G.combat=null;}});
+    while(activeLayer())closeTopUI();
+    const ч=G.hour;safeFn(()=>move(dir));
+    const d=G.hour-ч;
+    if(d>0)return +d.toFixed(3);}
+   return 0;};
   takeMount("ashmare");
-  const ч1=G.hour;move("N");const сКонём=G.hour-ч1;
+  const сКонём=замер("N");
   dismissMount();
-  const ч2=G.hour;move("S");const пешком=G.hour-ч2;
-  out.шаг={сКонём:+сКонём.toFixed(3),пешком:+пешком.toFixed(3)};
+  const пешком=замер("S");
+  out.шаг={сКонём,пешком};
   /* Крыло у бескрылого народа. */
   G.race="Гномы";
   const безКрыла=wingSpan();
