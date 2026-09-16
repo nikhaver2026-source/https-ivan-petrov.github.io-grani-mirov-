@@ -256,7 +256,7 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
     G.ship={name:"Проверочная ладья",toName:"Дальний порт",toX:1050,toY:1050,left:4};},
    "в бою":()=>{базово();
     const c=safeFn(()=>{for(let r=1;r<200;r++)for(let dy=-r;dy<=r;dy++)for(let dx=-r;dx<=r;dx++){
-      const cc=cellContent(1000+dx,1000+dy);
+      const cc=cellContent((WORLD>>1)+dx,(WORLD>>1)+dy);
       if(cc.monster&&!cc.structure){G.x=(WORLD>>1)+dx;G.y=(WORLD>>1)+dy;return cc;}}return null;},null);
     if(c)safeFn(()=>startCombat(c));},
    "с открытым окном":()=>{базово();safeFn(()=>openModal("modal-inv"));},

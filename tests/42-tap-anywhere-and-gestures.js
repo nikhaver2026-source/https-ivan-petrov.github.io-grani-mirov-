@@ -177,7 +177,7 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   window.activateElement=window.__origActivate;
   for(let r=0;r<160;r++)for(let dy=-r;dy<=r;dy++)for(let dx=-r;dx<=r;dx++){
    if(Math.max(Math.abs(dx),Math.abs(dy))!==r)continue;
-   const c=cellContent(1000+dx,1000+dy);
+   const c=cellContent((WORLD>>1)+dx,(WORLD>>1)+dy);
    if(c.res&&!c.structure&&!c.monster){G.x=(WORLD>>1)+dx;G.y=(WORLD>>1)+dy;return;}}});
  await page.evaluate(()=>{G.inv={};G.depleted={};window.__said=[];});
  await пальцами(2,0);

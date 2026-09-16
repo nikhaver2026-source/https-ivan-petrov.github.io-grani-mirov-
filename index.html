@@ -5273,7 +5273,7 @@ const TRADER_CUT=0.9;
 function capBid(bid,ask){
  return Math.max(1,Math.min(Math.round(bid),Math.floor(ask*TRADER_CUT)));
 }
-function citySellPrice(res,c,day){ /* сколько город просит с вас */
+function citySellPrice(res,c,day,опц){ /* сколько город просит с вас */
  const p=cityProfile(c);
  /* ── ГОРОДСКОЙ ПРИЛАВОК ТОЖЕ ПОМНИТ УСЛУГИ ──
     Заслуги перед державой считались только у отдельного торговца: в лавке
@@ -5283,7 +5283,7 @@ function citySellPrice(res,c,day){ /* сколько город просит с 
     палаты стоит не человек, а очередь. */
  return Math.max(2,Math.round(cityPriceOf(res,c,day)*(1+p.tax)
   *(1-0.05*fxLevel("deal")-0.03*fxLevel("trade"))
-  *safeFn(()=>meritK(c.x,c.y),1)
+  *(опц&&опц.безЗаслуг?1:safeFn(()=>meritK(c.x,c.y),1))
   *tradeBuyK(c&&c.emp&&c.emp.race)));
 }
 function cityBuyPrice(res,c,day){ /* сколько город платит вам */
@@ -5292,7 +5292,14 @@ function cityBuyPrice(res,c,day){ /* сколько город платит ва
   *(1+0.08*fxLevel("trade")+0.05*fxLevel("deal"))
   *(1+(1-safeFn(()=>meritK(c.x,c.y),1)))
   *tradeSellK(c&&c.emp&&c.emp.race);
- return capBid(bid,citySellPrice(res,c,day));
+ /* ── ПОТОЛОК СЧИТАЕТСЯ ОТ ЧИСТОГО ЗАПРОСА ──
+    Заслуги поднимают предложение палаты и одновременно опускают её запрос.
+    Если потолок брать от уже подешевевшего запроса, одно гасит другое, и
+    заслуженному человеку платят ровно столько же, сколько прохожему: выгода
+    съедает сама себя. Потолок берётся от запроса БЕЗ заслуг — того, что
+    палата назвала бы незнакомцу. Та же ошибка была у отдельного торговца и
+    исправлена там же; в городской палате она оставалась. */
+ return capBid(bid,citySellPrice(res,c,day,{безЗаслуг:true}));
 }
 /* Лучшие направления: где купить, куда везти и сколько это даст с единицы. */
 function bestRoutes(cx,cy,day,limit=6){
