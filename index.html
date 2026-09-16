@@ -9370,6 +9370,185 @@ function renderPreacher(){
  ящик.innerHTML=html;
  /* Голос проповедника идёт от него, а не из середины головы. */
  safeFn(()=>{Spatial.role(pr.род.звук,0,0,{gain:0.5,maxSec:5})||Bank.play(pr.род.звук,{gain:0.5,maxSec:5});});}
+/* ════════════════════════════════════════════════════════════════════════
+   РАСПОРЯДОК ДНЯ И СОЦИАЛЬНЫЕ СВЯЗИ
+   ════════════════════════════════════════════════════════════════════════
+   Житель стоял на месте круглые сутки. В три часа ночи торговец был за
+   прилавком, а кузнец — у горна, и на вопрос «чем занят» ответить было
+   нечем.
+
+   Теперь у каждого есть день: он спит, встаёт, работает, идёт на торг,
+   обедает, отдыхает, бывает на службе, сидит вечером в таверне и снова
+   спит. Занятие выводится из ЧАСА и РЕМЕСЛА — и потому не хранится, но при
+   этом у каждого своё: у пекаря день начинается в четвёртом часу, у стражи
+   смена ночная, у жреца день размечен службами.
+
+   Распорядок сбивается тем, что происходит вокруг: война, праздник учения,
+   суд на площади, ваши собственные дела. Сбитый день слышен: житель говорит
+   не «я работаю», а «какая теперь работа».
+
+   Связи между жителями выводятся так же, из ключей обоих: кто кому родня,
+   кто с кем дружит, кто кому должен и кто кого не выносит. Игрок может в
+   это вмешаться — и тогда связь запоминается уже по-настоящему. */
+const DAY_PARTS=[
+ {id:"сон",    n:"спит",            от:0,  до:5,  звук:"pad_hearth",  тихо:true},
+ {id:"утро",   n:"только встал",    от:5,  до:7,  звук:"beasts_fowl"},
+ {id:"работа", n:"за работой",      от:7,  до:12, звук:"craft_knock"},
+ {id:"торг",   n:"на торгу",        от:9,  до:14, звук:"market"},
+ {id:"обед",   n:"обедает",         от:12, до:14, звук:"tavern"},
+ {id:"служба", n:"на службе в храме",от:14,до:16, звук:"temple_bell"},
+ {id:"дело",   n:"по своим делам",  от:14, до:19, звук:"throng_coming"},
+ {id:"вечер",  n:"отдыхает",        от:19, до:21, звук:"wild_hearth"},
+ {id:"таверна",n:"в таверне",       от:20, до:23, звук:"tavern"},
+ {id:"ночь",   n:"ложится",         от:23, до:24, звук:"pad_hearth", тихо:true}];
+const DAY_PART_BY_ID=Object.fromEntries(DAY_PARTS.map(d=>[d.id,d]));
+/* У ремесла свой день. Список — это порядок занятий по часам: первое
+   подходящее по времени и выигрывает. Добавить ремесло — дописать строку. */
+const CRAFT_DAY={
+ "Стражник":   ["сон","утро","работа","работа","дело","работа","таверна","работа"],
+ "Надсмотрщик":["сон","утро","работа","работа","дело","работа","таверна","работа"],
+ "Кузнец":     ["сон","утро","работа","работа","обед","работа","вечер","таверна"],
+ "Торговец":   ["сон","утро","торг","торг","обед","торг","вечер","таверна"],
+ "Трактирщик": ["сон","утро","работа","работа","работа","работа","таверна","таверна"],
+ "Фермер":     ["сон","утро","работа","работа","обед","работа","вечер","сон"],
+ "Жрец":       ["сон","утро","служба","служба","обед","служба","вечер","сон"],
+ "Целительница":["сон","утро","работа","работа","обед","дело","вечер","сон"],
+ "Магистр":    ["сон","утро","работа","работа","обед","работа","вечер","вечер"],
+ "Ученик":     ["сон","утро","работа","работа","обед","дело","таверна","таверна"],
+ "Правитель":  ["сон","утро","дело","дело","обед","дело","вечер","вечер"],
+ "Советник":   ["сон","утро","дело","дело","обед","дело","вечер","вечер"],
+ "Старейшина": ["сон","утро","дело","торг","обед","дело","вечер","сон"],
+ "Глава клана":["сон","утро","дело","дело","обед","работа","таверна","таверна"],
+ "Воин клана": ["сон","утро","работа","работа","обед","работа","таверна","таверна"],
+ "Маг-отшельник":["сон","сон","работа","работа","работа","работа","работа","работа"],
+ "Странник":   ["сон","утро","дело","дело","обед","дело","таверна","таверна"],
+ "Посетитель": ["сон","сон","таверна","таверна","обед","таверна","таверна","таверна"],
+ "Капитан":    ["сон","утро","работа","работа","обед","работа","таверна","таверна"],
+ "Грузчик":    ["сон","утро","работа","работа","обед","работа","таверна","сон"]};
+/* Что мешает жить по распорядку. Первое подошедшее и ломает день. */
+/* Порядок важен: побеждает первое подошедшее, и ближайшее объяснение должно
+   стоять раньше дальнего. В три часа ночи спят и в войну, и в мир. */
+const DAY_BREAKS=[
+ {id:"ночь",   n:"глухая ночь",о:"спят все, кто может себе это позволить",
+  когда:()=>{const ч=Math.floor(Number(G.hour)||0);return ч>=1&&ч<5;}},
+ {id:"суд",    n:"суд на площади",о:"все на площади, и работа стоит",
+  когда:()=>!!safeFn(()=>{const п=punishHere();return п&&!п.поздно&&!п.кончено;},false)},
+ {id:"война",  n:"война",     о:"не до работы: держава воюет, и это слышно во всём",
+  когда:()=>safeFn(()=>empireAtWar(empireIndexAt(G.x,G.y),G.day),false)},
+ {id:"непогода",n:"непогода", о:"в такую погоду со двора не выходят",
+  когда:()=>/гроза|буря|метель|ливень/i.test(String(G.weather||""))}];
+/* Чем этот житель занят прямо сейчас. */
+function npcDoing(n){
+ try{
+  const ч=Math.floor(Number(G.hour)||0);
+  const слом=DAY_BREAKS.find(b=>safeFn(()=>b.когда(),false));
+  const план=CRAFT_DAY[n&&n.prof]||CRAFT_DAY["Странник"];
+  /* Восемь долей суток по три часа: план читается по доле. */
+  const доля=Math.max(0,Math.min(7,Math.floor(ч/3)));
+  let part=DAY_PART_BY_ID[план[доля]]||DAY_PART_BY_ID["дело"];
+  /* Душа сдвигает распорядок: старый встаёт раньше, молодой сидит дольше. */
+  const d=safeFn(()=>npcSoul(n),null);
+  if(d){
+   if(d.возраст.id==="star"&&part.id==="таверна")part=DAY_PART_BY_ID["вечер"];
+   if(d.возраст.id==="мол"&&part.id==="вечер")part=DAY_PART_BY_ID["таверна"];
+   if(d.нрав.id==="fanat"&&(part.id==="таверна"||part.id==="вечер"))part=DAY_PART_BY_ID["служба"];
+   if(d.нрав.id==="zhad"&&part.id==="обед")part=DAY_PART_BY_ID["торг"];}
+  return {часть:part,слом:слом||null,
+   слова:слом?`${part.n}, но сегодня не до того: ${слом.о}`:part.n};
+ }catch(_){return {часть:DAY_PART_BY_ID["дело"],слом:null,слова:"по своим делам"};}}
+/* Занят ли он настолько, что говорить не станет. Спящего не будят. */
+function npcBusy(n){
+ const d=safeFn(()=>npcDoing(n),null);
+ return !!(d&&d.часть&&d.часть.тихо);}
+/* Голос занятия: слышно, чем человек занят, ещё до слов. */
+function npcDoingCue(n){
+ const d=safeFn(()=>npcDoing(n),null);
+ if(!d||!d.часть||!d.часть.звук)return false;
+ return npcCue(n,d.часть.звук,{gain:0.4,maxSec:4});}
+
+/* ── СВЯЗИ МЕЖДУ ЖИТЕЛЯМИ ──
+   Выводятся из ключей обоих сразу: связь между А и Б одна и та же, с какой
+   стороны ни спроси. Игрок может вмешаться, и тогда она записывается. */
+const SOC_TIES=[
+ {id:"родня",  n:"родня",        вес:3,  о:"одна кровь: ссорятся, но держатся вместе"},
+ {id:"друзья", n:"дружба",       вес:2,  о:"давние приятели"},
+ {id:"любовь", n:"любовь",       вес:4,  о:"и об этом знают все, кроме них самих"},
+ {id:"дело",   n:"общее дело",   вес:1,  о:"вместе торгуют или вместе работают"},
+ {id:"долг",   n:"долг",         вес:-1, о:"один должен другому и тянет с отдачей"},
+ {id:"вражда", n:"вражда",       вес:-3, о:"не здороваются и не забывают"},
+ {id:"соперн", n:"соперничество",вес:-2, о:"делят одно ремесло на двоих"},
+ {id:"предат", n:"старое предательство",вес:-4,о:"один когда-то не подал руки"}];
+const SOC_TIE_BY_ID=Object.fromEntries(SOC_TIES.map(t=>[t.id,t]));
+function socKey(a,b){const x=String(a),y=String(b);return x<y?x+"|"+y:y+"|"+x;}
+/* Какая связь между двумя жителями. Постоянна и симметрична. */
+function socTie(a,b){
+ try{
+  if(!a||!b||a.key===b.key)return null;
+  const k=socKey(a.key,b.key);
+  /* Записанное игроком перебивает выведенное: он вмешался, и это осталось. */
+  const своё=(G.social||{})[k];
+  if(своё&&SOC_TIE_BY_ID[своё])return {вид:SOC_TIE_BY_ID[своё],ключ:k,своё:true};
+  const h=hashName(k.length*7+(a.x|0),(b.y|0)+k.length*3,6900);
+  /* Не всякие двое связаны: примерно каждая четвёртая пара. */
+  if(h>=0.26)return null;
+  const t=SOC_TIES[Math.floor(hashName((a.x|0)+(b.x|0),(a.y|0)+(b.y|0),6901)*SOC_TIES.length)%SOC_TIES.length];
+  return {вид:t,ключ:k,своё:false};
+ }catch(_){return null;}}
+/* Вмешаться: помирить или рассорить. Стоит хода и что-то меняет. */
+function socSet(a,b,tieId){
+ try{
+  if(!SOC_TIE_BY_ID[tieId])return false;
+  if(!G.social||typeof G.social!=="object")G.social={};
+  G.social[socKey(a.key,b.key)]=tieId;
+  return true;
+ }catch(_){return false;}}
+/* Круг этого жителя: кто рядом с ним и кем ему приходится. */
+function socCircle(n){
+ try{
+  const out=[];
+  const c=safeFn(()=>cellContent(n.x,n.y),null);
+  const соседи=safeFn(()=>npcsFor(c),[])||[];
+  for(const m of соседи){
+   if(m.key===n.key)continue;
+   const t=socTie(n,m);
+   if(t)out.push({кто:m,вид:t.вид,своё:t.своё});}
+  return out;
+ }catch(_){return [];}}
+/* ── ВМЕШАТЬСЯ В ЧУЖИЕ ОТНОШЕНИЯ ──
+   Помирить или рассорить. Это не бесплатно: проверка идёт против обоих
+   сразу, удача записывает связь навсегда, неудача ссорит обоих с вами. */
+function socMeddle(keyA,keyB,tieId){
+ try{
+  const a=getNPCByKey(keyA),b=getNPCByKey(keyB);
+  if(!a||!b){narrate("Этих двоих здесь уже нет.");return false;}
+  if(!SOC_TIE_BY_ID[tieId]){narrate("Такой связи не бывает.");return false;}
+  const было=socTie(a,b);
+  if(было&&было.вид.id===tieId){
+   narrate(`${a.name} и ${b.name} и так ${было.вид.n}. Тут нечего менять.`);return false;}
+  /* Против обоих сразу: чем упрямее пара, тем тяжелее. */
+  const соп=Math.round((dlgResist(a,"упрямство")+dlgResist(b,"упрямство"))/2);
+  const сил=dlgPush("упрямство");
+  const успех=Math.random()<Math.max(0.05,Math.min(0.9,0.5+(сил-соп)/120));
+  const мир=tieId==="друзья"||tieId==="дело";
+  safeFn(()=>{npcVoice(a,успех?"да":"спор");
+   setTimeout(()=>safeFn(()=>npcVoice(b,успех?"да":"спор")),450);});
+  if(!успех){
+   safeFn(()=>{npcRemember(a,"нарушил","соц",4);npcRemember(b,"нарушил","соц",4);
+    addAxis("подозрение",4);});
+   narrate(`Не вышло. ${a.name} и ${b.name} сходятся в одном: лезть в их дела не следовало. Теперь оба смотрят на вас косо. (ваше ${сил} против их ${соп})`,{interrupt:true});
+   safeFn(()=>{refresh();saveGame(true);});
+   return false;}
+  socSet(a,b,tieId);
+  safeFn(()=>{
+   npcRemember(a,мир?"помог":"обманул","соц",5);
+   npcRemember(b,мир?"помог":"обманул","соц",5);
+   addAxis("влияние",мир?3:4);
+   if(мир)addAxis("благодарность",3);else addAxis("страх",3);
+   rumorSeed(мир?"добро":"суд",`${a.name} и ${b.name}`,a.x,a.y,true);});
+  narrate(`${мир?"Помирили":"Рассорили"}: теперь между ${a.name} и ${b.name} ${SOC_TIE_BY_ID[tieId].n} — ${SOC_TIE_BY_ID[tieId].о}. Об этом будут говорить. (ваше ${сил} против их ${соп})`,{interrupt:true});
+  safeFn(()=>{refresh();saveGame(true);});
+  return true;
+ }catch(_){narrate("Вмешаться не вышло.");return false;}}
 function npcsFor(c){if(!c.structure)return[];
  const counts={castle:3,village:3,port:3,tavern:2,clanhall:2,temple:1,tower:1,traveler:1,ruins:0,cave_entrance:0,
   /* Твердыня многолюдна, посад поменьше, схрон — трое, и все с разлома. */
@@ -12994,7 +13173,9 @@ const G={hp:100,hpMax:100,str:10,agi:10,mind:10,cha:10,mana:10,manaMax:10,
  artMax:{hp:0,mana:0},artTick:null,
  /* Живой мир: память жителей о встречах с игроком, вести, что ходят по
     свету, круги отношения и скрытые оси известности. */
- npcMem:{},rumors:[],standing:{},axes:{},liveDay:null};
+ npcMem:{},rumors:[],standing:{},axes:{},liveDay:null,
+ /* Связи между жителями, в которые вмешался игрок. */
+ social:{}};
 const xpNeed=l=>l*l*50;
 /* Дар Хронара и ткачей судьбы: опыт течёт быстрее. Через эту функцию проходит
    ВСЯ прибавка опыта, поэтому дар работает и в бою, и в заданиях. */
@@ -19394,6 +19575,11 @@ const CMD={
  darkrite(){safeFn(()=>darkRiteHere());},
  punish(){safeFn(()=>punishLook());},
  preacher(){openModal("modal-preacher");safeFn(()=>renderPreacher());},
+ /* Вмешаться в чужие отношения: довод «ключ~ключ~связь». */
+ soc(arg){const ч=String(arg).split("~");
+  if(ч.length<3){narrate("Не с кем и не о чем.");return;}
+  safeFn(()=>socMeddle(ч[0],ч[1],ч[2]));
+  safeFn(()=>{if(!G.inCombat)openNPC(ч[0],true);});},
  preach(k){safeFn(()=>preachDo(String(k)));safeFn(()=>renderPreacher());},
  punishransom(){safeFn(()=>punishRansom());},
  punishbreak(){safeFn(()=>punishBreak());},
@@ -19420,6 +19606,11 @@ const CMD={
   const key=s.slice(0,i),move=s.slice(i+1);
   const n=getNPCByKey(key);
   if(!n){narrate("Этого жителя здесь уже нет.");return;}
+  /* Спящего не будят: распорядок дня — это не украшение. */
+  if(safeFn(()=>npcBusy(n),false)){
+   safeFn(()=>npcCue(n,"pad_hearth",{gain:0.35}));
+   narrate(`${n.name} сейчас ${safeFn(()=>npcDoing(n).слова,"спит")}. Разговора не выйдет — приходите, когда встанут.`);
+   return;}
   safeFn(()=>dlgDo(n,move));
   safeFn(()=>{if(!G.inCombat)openNPC(key,true);});},
  npctalk(key){const n=getNPCByKey(key);
@@ -20541,6 +20732,22 @@ function openNPC(key,silent){const n=getNPCByKey(key);
   const пд=soulLine(n,true);
   html+=`<div class="list-line" tabindex="0" data-speak="${пд.replace(/"/g,"&quot;")}">
    🧑 ${пд}</div>`;}
+ /* ── ЧЕМ ЗАНЯТ И КТО ЕМУ КТО ──
+    Занятие выводится из часа и ремесла, круг — из ключей обоих. Слышно и
+    то, чем он занят: звук занятия идёт с его стороны. */
+ {const зан=safeFn(()=>npcDoing(n),null);
+  if(зан){
+   const сказ=`Сейчас: ${зан.слова}. Час ${Math.floor(Number(G.hour)||0)}.`;
+   html+=`<div class="list-line" tabindex="0" data-speak="${сказ.replace(/"/g,"&quot;")}">🕰️ ${сказ}</div>`;
+   safeFn(()=>npcDoingCue(n));}}
+ {const круг=safeFn(()=>socCircle(n),[]);
+  if(круг.length){
+   const сказ=`Круг: ${круг.map(c=>`${c.кто.name} (${c.кто.prof}) — ${c.вид.n}, ${c.вид.о}`).join("; ")}.`;
+   html+=`<div class="list-line" tabindex="0" data-speak="${сказ.replace(/"/g,"&quot;")}">👥 ${сказ}</div>`;
+   /* Вмешаться можно в любую связь: помирить или рассорить. */
+   круг.forEach((c,i)=>{
+    html+=`<button class="item" data-cmd="soc:${n.key}~${c.кто.key}~друзья" data-speak="Помирить ${n.name} и ${c.кто.name}: сделать их приятелями.">🤝 Помирить с ${c.кто.name}</button>`;
+    html+=`<button class="item" data-cmd="soc:${n.key}~${c.кто.key}~вражда" data-speak="Рассорить ${n.name} и ${c.кто.name}: сделать их врагами.">⚔️ Рассорить с ${c.кто.name}</button>`;});}}
  {const пам=safeFn(()=>npcRecallText(n),"");
   if(пам)html+=`<div class="list-line" tabindex="0" data-speak="${пам.replace(/"/g,"&quot;")}">🧠 ${пам}</div>`;}
  {const вести=safeFn(()=>rumorsHere(n.x,n.y),[]).filter(r=>npcKnowsRumor(n,r)).slice(0,3);
@@ -21387,6 +21594,7 @@ function pruneState(hard){
      каждой записью стоит поступок игрока. Вести и так стареют сами. */
   if(G.npcMem&&typeof G.npcMem==="object")G.npcMem=trimDict(G.npcMem,hard?300:900);
   if(G.standing&&typeof G.standing==="object")G.standing=trimDict(G.standing,hard?200:600);
+  if(G.social&&typeof G.social==="object")G.social=trimDict(G.social,hard?150:500);
   if(Array.isArray(G.rumors)&&G.rumors.length>60)G.rumors.splice(0,G.rumors.length-60);
   if(G.merit&&typeof G.merit==="object")G.merit=trimDict(G.merit,EMPIRES.length+4);
   if(G.tomes&&typeof G.tomes==="object")G.tomes=trimDict(G.tomes,300);
@@ -21929,6 +22137,9 @@ window.addEventListener("beforeunload",()=>{try{stopRun();saveGame(true);}catch(
    Number.isFinite(Number(r.x))&&Number.isFinite(Number(r.y)));
   if(!G.standing||typeof G.standing!=='object'||Array.isArray(G.standing))G.standing={};
   if(!G.axes||typeof G.axes!=='object'||Array.isArray(G.axes))G.axes={};
+  if(!G.social||typeof G.social!=='object'||Array.isArray(G.social))G.social={};
+  for(const k of Object.keys(G.social))
+   if(!SOC_TIE_BY_ID[G.social[k]])delete G.social[k];
   for(const k of Object.keys(G.standing))
    G.standing[k]=Math.max(-100,Math.min(100,Number(G.standing[k])||0));
   for(const k of Object.keys(G.axes)){
