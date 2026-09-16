@@ -1444,6 +1444,209 @@ const SOUNDS={
  portal:{name:"Портал",icon:"🌀",dur:1,desc:"Потусторонний свист с низким гулом.",build(s){BEACONS.portal(s);}}
 };
 
+/* ════════════════════════════════════════════════════════════════════════
+   СИНТЕЗ ЗАМЕНЁН ЖИВОЙ ЗАПИСЬЮ
+   ════════════════════════════════════════════════════════════════════════
+   Часть звуков игра рисовала осциллятором: огонь, чары, дождь, ветер, гром,
+   удар щита, срыв печати, крик, ворота, паника толпы, клинок из ножен,
+   боевой клич, пульс артефакта, попадание стрелы, наковальня, разряд чар и
+   круг оберега. Плюс двадцать один короткий сигнал интерфейса.
+
+   Синтез узнаётся на слух сразу: это не мир, это прибор. В игре, где мир
+   передан ЦЕЛИКОМ звуком, прибор на месте огня — подмена.
+
+   В банке уже лежит семьсот двадцать девять настоящих ролей, и на каждую
+   рисованную сцену нашлась живая запись, а чаще несколько. Здесь их карта.
+   Play.start и UI.blip оставлены как имена — их зовут из полусотни мест, —
+   но внутри они теперь берут запись из банка, а осциллятор остаётся лишь
+   последним запасом на случай, если записи почему-то нет вовсе. */
+const LIVE_INSTEAD={
+ fire:          ["amb_fire","wild_fire","siege_fire"],
+ magic:         ["spell_arcane","spell_harp","charm_celesta"],
+ rain:          ["stk_rain","sky_rain","wild_rain"],
+ wind:          ["sky_gust","wild_wind","deep_wind"],
+ cast_charge:   ["spell_arcane","charm_chiff"],
+ thunder:       ["stk_thunder","cast_thunder"],
+ shield_bash:   ["cast_block","impact_heavy"],
+ seal_break:    ["stk_break","shatter"],
+ scream:        ["throng_cry","throng_die_m"],
+ rusty_gate:    ["hall_gate","mtg_gate"],
+ crowd_panic:   ["throng_retreat","throng_cry"],
+ blade_draw:    ["blade_ring","blade_swing"],
+ battle_cry:    ["cast_warcry","throng_fight"],
+ artifact_pulse:["relic_sing","artifact_hum"],
+ arrow_hit:     ["cast_arrows","hit_knife"],
+ spell_release: ["spell_bolt","cast_shoot"],
+ ward_shimmer:  ["stk_ward","fx_blessing"],
+ anvil:         ["anvil"],
+
+ /* ── ЗВЕРЬЁ И ПТИЦА ──
+    Двор, лес и подземелье держатся на голосах живности. Рисованный конь —
+    это два осциллятора; настоящий конь фыркает и переступает. */
+ horse:         ["beasts_horse","tread_hoof"],
+ dogs:          ["beast_growl","howl_low"],
+ livestock:     ["beasts_cattle","beast_cow","beast_sheep"],
+ chickens:      ["beasts_fowl","beast_fowl","bird_rooster"],
+ rats:          ["fx_lurk","step_soft"],
+ bats_wings:    ["raptor_wing","wyrm_wing"],
+ frogs:         ["amb_swamp","stk_goo"],
+ boar:          ["beast_pig","beasts_pig"],
+ wolves:        ["wolf_howl","howl_low"],
+ owl:           ["bird_owl","wild_owl"],
+ crow:          ["crow","wild_raven"],
+ seagull:       ["raptor_cry","bird_hawk"],
+
+ /* ── ЗЕМЛИ ──
+    Те же записи, что ложатся петлёй под ноги в самом мире: каталог должен
+    учить игрока настоящему голосу земли, а не его рисованному подобию.
+    Иначе выученное в каталоге не узнаётся в пути — а узнавание здесь
+    заменяет карту. */
+ forest:        ["amb_forest","score_forest"],
+ birds:         ["wild_birds","stk_birds","dawn_birds"],
+ stream:        ["wild_river","stk_river","sky_river"],
+ sea:           ["sea_open","sky_wave","sea_calm"],
+ crickets:      ["amb_night"],
+ cave:          ["amb_cave","score_cave"],
+ swamp:         ["amb_swamp","stk_goo"],
+ plains:        ["amb_plains","wild_wind"],
+ mountains_amb: ["amb_mountain","sky_wind"],
+ desert_amb:    ["amb_desert","score_sands"],
+ snow_weather:  ["sky_snow","score_snowy"],
+
+ /* ── ЛЮДНЫЕ МЕСТА И РЕМЕСЛО ── */
+ crowd:         ["crowd_cheer","amb_city"],
+ market_babble: ["market_tap","market_dulcimer"],
+ tavern_room:   ["stk_inn","lute_tavern","tavern_fiddle"],
+ pouring:       ["arte_potion","stk_splash"],
+ forge:         ["forge_work","forge_hammer","wild_anvil"],
+
+ /* ── ПОДЗЕМЕЛЬЕ ── */
+ dungeon_drip:  ["deep_drip","cave_drip"],
+ shaft_wind:    ["deep_wind","sky_wind"],
+
+ /* ── ГОЛОСА ТВАРЕЙ ──
+    Общие голоса и поимённые: у каждого чудовища своя запись, потому что по
+    голосу его и узнают раньше, чем увидят. */
+ mgrowl:        ["beast_growl","lair"],
+ mhiss:         ["serpent_hiss","hiss"],
+ mscreech:      ["raptor_cry","beast_roar"],
+ mwail:         ["wraith_moan","wraith_voice"],
+ wolf_named:    ["wolf_howl","beast_growl"],
+ goblin_named:  ["foe_goblin_cast","foe_goblin_hit"],
+ troll_named:   ["brute_roar","foe_brute_hit"],
+ ogre_named:    ["foe_brute_hit","brute_roar"],
+ basilisk_named:["serpent_hiss","hiss"],
+ wyvern_named:  ["raptor_cry","wyrm_roar"],
+ banshee_named: ["wraith_voice","od_keeper_groan"],
+ direbear_named:["beast_roar","beast_growl"],
+ treant_named:  ["stk_break","deep_wood"],
+ kraken_named:  ["stk_deepsea","sea_storm"],
+ bandit_named:  ["throng_cry","throng_fight"],
+ spider_named:  ["serpent_hiss","fx_lurk"],
+ harpy_named:   ["raptor_cry","bird_hawk"],
+ wraith_named:  ["wraith_moan","od_undead"],
+
+ /* ── ОРУЖИЕ ── */
+ dagger:        ["hit_knife","battle_stab"],
+ staff:         ["hero_swing","magic_woosh"],
+
+ /* ── ДОБЫЧА ──
+    Звук добычи говорит, что именно взято, раньше слов. */
+ res_stone_s:   ["craft_quarry","stone_hit"],
+ res_ore_s:     ["craft_ore","mine_pick"],
+ res_crystal_s: ["fx_crystal","magic_shimmer"],
+ res_bone_s:    ["step_bone","relic_xylo"],
+ res_berry_s:   ["craft_berry","craft_field"],
+
+ /* ── ГОЛОСА ЛЮДЕЙ ──
+    Примета собеседника: по ней слышно, к кому подошёл, ещё до приветствия. */
+ npc_ruler_s:   ["throng_lord","horn_castle"],
+ npc_guard_s:   ["guard_shout","guard_whistle"],
+ npc_merchant_s:["market_tone","arte_coins"],
+ npc_scholar_s: ["arte_page","temple_piano"],
+ npc_bartender_s:["lute_tavern","tavern_honky"],
+ npc_common_s:  ["throng_hail_m","throng_hail_f"],
+ npc_elder_s:   ["cello_stone","throng_lord"],
+ npc_healer_s:  ["harp_light","spell_heal"],
+ npc_clanlead_s:["clan_pipes","army_horn"],
+ npc_warrior_s: ["clang_soft","throng_fight"],
+ npc_apprentice_s:["spell_initiate","charm_chiff"],
+
+ /* ── ПОСТРОЙКИ ──
+    Маяк здания в пути звучит записью; каталог обязан звучать той же. */
+ castle:        ["horn_castle","hall_center"],
+ tavern:        ["lute_tavern","stk_inn"],
+ temple:        ["temple_bell","bell_small"],
+ clanhall:      ["clan_pipes","hall_barracks"],
+ tower:         ["score_magic","magic_hum"],
+ ruins:         ["ruin_ocarina","hall_fall"],
+
+ /* ── ОТЛОЖЕННЫЙ СИНТЕЗ ──
+    Эти сцены рисовались не сразу, а по таймеру: осциллятор заводился через
+    четверть секунды после начала, и беглая проверка их не ловила. Сцену
+    выдавал не первый миг, а хвост — россыпь костей, перестук костяшек,
+    поступь голема. Здесь они тоже переведены на запись. */
+ market_shout:  ["market_tone","market_slap","market_agogo"],
+ guard_shout:   ["guard_shout","guard_whistle"],
+ chains:        ["stk_clang","clang_soft"],
+ bone_pile:     ["step_bone","foe_bone_die","relic_xylo"],
+ dice:          ["craft_knock","market_tap"],
+ coins:         ["arte_coins","clink","od_gold"],
+ mroar:         ["wyrm_roar","beast_roar"],
+ mstomp:        ["golem_step","deep_thud","foe_brute_hit"],
+ golem_named:   ["golem_step","golem_hit"],
+ dragon_named:  ["wyrm_dark","dragon_growl","wyrm_roar"],
+ sandworm_named:["foe_burrow_hit","deep_call","es_drill"],
+ serpent_named: ["serpent_hiss","hiss"],
+ bow:           ["battle_bow","battle_arrowfly","hit_arrow"],
+ fog:           ["fx_haze","drone_calm"],
+ storm:         ["sky_storm","sea_storm","stk_thunder"],
+ res_tree_s:    ["craft_axe","craft_saw"],
+ res_herbs_s:   ["craft_field","step_grass"],
+ res_shell_s:   ["stk_splash","sky_wave"],
+ npc_farmer_s:  ["hall_farm","craft_field"],
+ npc_traveler_s:["tread_gravel","amb_road"],
+ village:       ["flute_village","hall_farm","bird_rooster"],
+ market:        ["hall_market","market_dulcimer","bazaar_loop"],
+ school:        ["arte_page","bell_small"],
+ traveler_beacon:["tread_gravel","arte_coins"],
+ portal:        ["stk_portal","deep_portal"],
+ /* Крик снизу заводился через полторы секунды после начала сцены — дольше
+    всех прочих. Теперь это запись умирающего, а не пила осциллятора. */
+ far_scream:    ["od_die","throng_die_f","throng_die_m"],
+ /* «Меч и бой» был наполовину настоящим: взмах — вшитая запись, а удар по
+    цели и лязг дорисовывались. Полумера слышна: живой замах и рисованное
+    попадание в одной сцене выдают подделку вернее, чем сплошной синтез. */
+ sword:         ["battle_sword","blade_swing","hit_heavy"]};
+/* Зацикленные слои — фон местности и погода — тоже рисовались: ветер, птицы,
+   прибой, капель, сверчки, ручей, дождь, лес, топь. В банке на каждый из них
+   есть настоящая петля, и звучать она должна не поверх синтеза, а вместо. */
+const LIVE_LOOP={forest:"amb_forest",birds:"amb_plains",wind:"amb_wind",
+ sea:"sea_open",cave:"amb_cave",crickets:"amb_night",stream:"amb_water",
+ rain:"amb_rain",swamp:"amb_swamp"};
+/* Живая запись вместо рисованной сцены. Возвращает «нет», если банк молчит,
+   и только тогда зовущий имеет право вернуться к синтезу. */
+function liveInstead(id,opts){
+ try{
+  const роли=LIVE_INSTEAD[id];
+  if(!роли||!роли.length)return false;
+  const o=opts||{};
+  const сид=Number(o.seed)||((G.x|0)+(G.y|0)+(Number(G.day)||1));
+  const роль=роли[Math.abs(Math.floor(сид))%роли.length];
+  /* Возвращается сама запись, а не «да»: тогда её можно остановить по «Все
+     звуки остановлены», как останавливался синтезированный слой. */
+  return safeFn(()=>Bank.play(роль,{seed:сид,gain:o.gain===undefined?0.55:o.gain,
+   maxSec:o.dur||o.maxSec||5}),null)||false;
+ }catch(_){return false;}}
+/* Короткий сигнал интерфейса — тоже запись. Высота сигнала переводится в
+   выбор записи: низкий — глухой стук, высокий — звонкий. */
+const LIVE_BLIP=["hollow_thud","tick","blip","lock_click","signal_beep"];
+function liveBlip(f,v){
+ try{
+  const i=f<=300?0:f<=600?1:f<=900?2:f<=1200?3:4;
+  return safeFn(()=>Bank.play(LIVE_BLIP[i],{seed:Math.round(f),
+   gain:Math.max(0.2,Math.min(0.8,(Number(v)||0.12)*3.5)),maxSec:2}),false);
+ }catch(_){return false;}}
 /* ════════ ПЛЕЕР / СУБТИТРЫ / СИГНАЛЫ ════════ */
 let subTimer=null;
 function sub(text){const el=document.getElementById("subText");
@@ -1453,7 +1656,14 @@ function sub(text){const el=document.getElementById("subText");
 const Play={active:new Map(),lastMain:null,
  /* Возвращает «нет», если такой записи нет: тот, кто просил её послушать,
     должен получить ответ, а не тишину. */
- start(key,id,opts={}){AE.ensure();if(!SOUNDS[id])return false;
+ start(key,id,opts={}){
+  /* ── СПЕРВА ЖИВАЯ ЗАПИСЬ ──
+     Рисованная сцена остаётся только там, где записи нет вовсе. И одиночный
+     звук, и зацикленный слой заводятся через live() — тем же ключом и с той
+     же записью в active, поэтому каталог звуков, строка «сейчас играет» и
+     «остановить всё» работают с живой записью ровно так же, как с синтезом. */
+  if(safeFn(()=>this.live(key,id,opts),false))return true;
+  AE.ensure();if(!SOUNDS[id])return false;
   this.stopKey(key,true);
   const sfx=new SFX();SOUNDS[id].build(sfx);
   /* Плавное нарастание громкости зацикленных звуков (эмбиент/музыка) — вместе с 0.5с
@@ -1472,6 +1682,45 @@ const Play={active:new Map(),lastMain:null,
   },dur*1000);
   this.active.set(key,entry);if(key==="main")this.lastMain=id;
   sub(`🔊 ${SOUNDS[id].name}: ${SOUNDS[id].desc}`);refreshCards();return true;},
+ /* Живая запись как слой: заводится по тому же ключу, что и синтез, и так же
+    снимается. Возвращает «нет», если записи на эту сцену нет, — тогда зовущий
+    имеет право нарисовать её осциллятором. */
+ live(key,id,opts={}){
+  if(!SOUNDS[id])return false;
+  const имя=SOUNDS[id].name;
+  let entry=null;
+  if(opts.loop){
+   const роль=LIVE_LOOP[id];if(!роль)return false;
+   const канал="слой:"+key;
+   const сид=opts.seed!==undefined?Number(opts.seed)||0
+    :safeFn(()=>((G.x|0)+(G.y|0)),0);
+   /* Банк сам узнаёт, что на этом канале уже звучит нужная запись, и не
+      начинает её заново: смена местности не рвёт петлю на полуслове. */
+   const el=safeFn(()=>Bank.loop(канал,роль,{seed:сид,
+    gain:opts.gain===undefined?0.5:opts.gain,kind:"fx"}),null);
+   if(!el)return false;
+   this.drop(key,канал);
+   entry={id,name:имя,opts,timer:null,канал,
+    sfx:{stop(){safeFn(()=>Bank.stop(канал));}}};
+  }else{
+   const el=safeFn(()=>liveInstead(id,opts),false);
+   if(!el)return false;
+   this.drop(key,null);
+   entry={id,name:имя,opts,timer:null,
+    sfx:{stop(){safeFn(()=>Bank.kill(el));}}};
+   const dur=opts.dur||SOUNDS[id].dur||3;
+   entry.timer=setTimeout(()=>{
+    if(this.active.get(key)===entry){this.active.delete(key);refreshCards();
+     if(opts.announceEnd)safeFn(()=>narrate(`Звук завершён: ${имя}.`));}
+   },dur*1000);}
+  this.active.set(key,entry);if(key==="main")this.lastMain=id;
+  sub(`🔊 ${имя}: ${SOUNDS[id].desc}`);refreshCards();return true;},
+ /* Снять прежний слой этого ключа. Канал, который прямо сейчас переиспользован
+    банком, не трогаем: иначе только что подхваченная петля тут же оборвалась бы. */
+ drop(key,кроме){const e=this.active.get(key);if(!e)return;
+  clearTimeout(e.timer);
+  if(!(кроме&&e.канал===кроме))safeFn(()=>e.sfx.stop());
+  this.active.delete(key);},
  stopKey(key){const e=this.active.get(key);if(!e)return false;
   clearTimeout(e.timer);e.sfx.stop();this.active.delete(key);refreshCards();return true;},
  stopAll(announce=true){let any=false;
@@ -1487,13 +1736,20 @@ function refreshCards(){
  const names=[...Play.active.values()].map(e=>e.name);
  document.getElementById("nowPlaying").textContent=
   names.length?"▶️ Сейчас играет: "+names.join(", "):"🔇 Сейчас ничего не играет";}
-function chime(){AE.ensure();const ctx=AE.ctx,t=ctx.currentTime;
+function chime(){
+ /* Трезвучие рисовалось тремя осцилляторами. Теперь это арфа из банка. */
+ if(safeFn(()=>Bank.play("harp_light",{gain:0.6,maxSec:4}),false))return;
+ AE.ensure();const ctx=AE.ctx,t=ctx.currentTime;
  [523.25,659.25,783.99].forEach((f,i)=>{const o=ctx.createOscillator(),g=ctx.createGain();
   o.type="sine";o.frequency.value=f;o.connect(g);g.connect(AE.fx);
   g.gain.setValueAtTime(0.0001,t+i*0.12);g.gain.linearRampToValueAtTime(0.18,t+i*0.12+0.02);
   g.gain.exponentialRampToValueAtTime(0.0001,t+i*0.12+0.6);
   o.start(t+i*0.12);o.stop(t+i*0.12+0.7);});}
-const UI={blip(f=880,d=0.08,v=0.12){AE.ensure();const t=AE.ctx.currentTime,o=AE.ctx.createOscillator(),g=AE.ctx.createGain();
+const UI={blip(f=880,d=0.08,v=0.12){
+  /* Сигнал интерфейса — живая запись; осциллятор остаётся последним запасом
+     на случай, если банк ещё не поднялся (первые мгновения после запуска). */
+  if(safeFn(()=>liveBlip(f,v),false))return;
+  AE.ensure();const t=AE.ctx.currentTime,o=AE.ctx.createOscillator(),g=AE.ctx.createGain();
   o.type="sine";o.frequency.value=f;o.connect(g);g.connect(AE.fx);
   g.gain.setValueAtTime(0.0001,t);g.gain.linearRampToValueAtTime(v,t+0.01);
   g.gain.exponentialRampToValueAtTime(0.0001,t+d);o.start(t);o.stop(t+d+0.05);},
@@ -1529,7 +1785,7 @@ const MUSIC_TRACK={
  plains:"score_overworld",road:"score_road",desert:"score_sands",
  forest:"score_forest",swamp:"score_demonhill",
  mountains:"score_wind",coast:"score_bay",
- cave:"score_cave",dungeon:"score_dungeon",
+ cave:"score_cave",
  battle:"score_battle",boss:"score_boss",
  town:"score_town",magic:"score_magic",safe:"score_safe",war:"score_unrest",
  /* Небо: с крыла мир звучит иначе, чем с земли. */
@@ -1543,8 +1799,96 @@ const MUSIC_TRACK={
  pl_clanhall:"score_frontier", pl_temple:"score_garden",
  pl_school:"score_paradiso", pl_tower:"score_xeon",
  pl_market:"score_celtic", pl_forge:"score_lava",
- pl_village:"score_farm", pl_port:"score_bay",
- pl_ruins:"score_snowy", pl_cave_entrance:"score_cave"};
+ pl_village:"score_farm", pl_port:"harbor_harmonica",
+ pl_ruins:"score_snowy", pl_cave_entrance:"cave_deep",
+ /* ── ТЁМНЫЕ ЗЕМЛИ ──
+    За Гранью свои виды местности, и в MUSIC_TRACK их не было вовсе: музыка
+    не находила темы и рисовала её осциллятором. Семь земель — семь тем, и ни
+    одна не повторяет тему обычного мира: пепел отвечает валторной в низах,
+    кость — фаготом покоя предков, гниль — плачем гобоя, зеркало — туманными
+    клавишами, жила — металлом порчи, топь — призрачным хором, шрам — роялем
+    дурного предчувствия. */
+ ash:"horn_dark", bone:"bassoon_death", rot:"lament_oboe", mirror:"mist_keys",
+ vein:"pad_hex", drown:"ghost_choir", scar:"piano_dark",
+ /* ── ГЛУБИНА ──
+    В подземелье сто ярусов, и все они звучали одной пещерной темой: спуск не
+    слышался. Теперь глубина разбита на пояса, и переход между ними слышен
+    сменой темы — на слух это и есть «стало глубже». */
+ depth_1:"score_dungeon", depth_2:"bassoon_ruins", depth_3:"harmonium_low",
+ depth_4:"contrabass_deep", depth_5:"organ_eternal", depth_abyss:"pad_underworld"};
+/* ════════════════════════════════════════════════════════════════════════
+   МУЗЫКА СОБЫТИЙ: НАГРАДЫ, ДОСТИЖЕНИЯ, ОПЫТ
+
+   У места есть своя тема, а у события своей не было: одна и та же труба
+   звучала и когда сдан квест, и когда пройдена цепочка, и когда кончилось
+   обучение, и когда докачались записи. Для зрячего это мелочь — он видит,
+   что произошло. Для того, кто играет вслепую, звук события И ЕСТЬ
+   сообщение: если награда за цепочку в двадцать шагов звучит так же, как
+   выученный жест, разница между ними пропадает.
+
+   Здесь у каждого события свой голос, и ни один не повторяет другой. Тема
+   складывается из первого голоса и того, что вступает следом через
+   столько-то миллисекунд: труба и за ней арфа — не то же, что труба и за
+   ней хор.
+
+   Добавлять сюда новые события можно свободно: набор 56 следит, чтобы
+   первый голос ни у кого не совпал с чужим.
+   ════════════════════════════════════════════════════════════════════════ */
+const EVENT_THEME={
+ /* ── НАГРАДЫ ── */
+ reward_gold:   {роль:"xylo_coin",  следом:[["gold",260]],            о:"золото в кошель"},
+ reward_item:   {роль:"arte_find",  следом:[["arte_object",300]],     о:"вещь в сумку"},
+ reward_artifact:{роль:"harp_high", следом:[["fx_crystal",420],["artifact_hum",900]], о:"артефакт обретён"},
+ reward_tome:   {роль:"arte_book",  следом:[["secret_box",380]],      о:"книга или свиток"},
+ reward_recipe: {роль:"craft_knock",следом:[["spark_glock",320]],     о:"рецепт разобран"},
+ reward_title:  {роль:"gate_fanfare",следом:[["crowd_cheer",520]],    о:"титул или звание"},
+ reward_land:   {роль:"horn_gate",  следом:[["war_brass",560]],       о:"земля или владение"},
+ reward_ally:   {роль:"throng_yes", следом:[["violin_road",340]],     о:"спутник примкнул"},
+ /* ── ДОСТИЖЕНИЯ ── */
+ achieve:       {роль:"jingle_achievement",следом:[["harp_high",420]],о:"достижение"},
+ achieve_great: {роль:"trumpet_victory",следом:[["crowd_cheer",700]], о:"большое достижение"},
+ /* ── ОПЫТ И РОСТ ── */
+ levelup:       {роль:"hero_levelup",следом:[["harp_light",220],["gate_fanfare",520]], о:"новый уровень"},
+ skill_up:      {роль:"spark_glock",следом:[["harp_light",300]],      о:"навык поднялся"},
+ school_up:     {роль:"charm_celesta",следом:[["organ_temple",480]],  о:"школа чар поднялась"},
+ /* ── ЗАДАНИЯ ── */
+ quest_take:    {роль:"violin_road",следом:[["stk_horn",300]],        о:"задание принято"},
+ quest_done:    {роль:"trumpet_fanfare",следом:[["trumpet_fanfare",300]], о:"задание сдано"},
+ quest_fail:    {роль:"lament_oboe",следом:[["cello_defeat",420]],    о:"задание провалено"},
+ chain_done:    {роль:"epic_strings",следом:[["temple_choir",700],["crowd_cheer",1500]], о:"цепочка пройдена целиком"},
+ /* ── СОБЫТИЯ МИРА ── */
+ discovery:     {роль:"secret_box", следом:[["fx_crystal",400]],      о:"находка, тайник, проход"},
+ omen:          {роль:"omen_swell", следом:[["fx_omen",600]],         о:"знамение"},
+ bargain:       {роль:"market_dulcimer",следом:[["xylo_coin",280]],   о:"сделка заключена"},
+ standing_up:   {роль:"court_harpsi",следом:[["fx_blessing",380]],    о:"имя поднялось"},
+ standing_down: {роль:"trombone_alarm",следом:[["violin_tense",380]], о:"имя упало"},
+ /* ── ВНЕ МИРА ──
+    Обучение и загрузка записей — не события мира, и звучать миром они не
+    должны: у них свой, служебный голос. */
+ tutor_done:    {роль:"bard",       следом:[["dance_nylon",520]],     о:"обучение пройдено"},
+ warm_done:     {роль:"charm_bell", следом:[["charm_celesta",320]],   о:"записи загружены"}};
+/* Сыграть тему события. Возвращает «нет», если такого события нет в таблице,
+   чтобы опечатка в имени не проходила молча. */
+function eventTheme(id,opts){
+ const т=EVENT_THEME[id];if(!т)return false;
+ const o=opts||{};
+ const сид=o.seed===undefined?(Number(G.day)||1):Number(o.seed)||0;
+ const гр=o.gain===undefined?0.72:o.gain;
+ safeFn(()=>Bank.play(т.роль,{seed:сид,gain:гр,maxSec:o.maxSec||6}));
+ (т.следом||[]).forEach(([роль,через])=>setTimeout(()=>safeFn(()=>
+  Bank.play(роль,{seed:сид+1,gain:гр*0.85,maxSec:o.maxSec||6})),через));
+ return true;}
+
+/* Пояс глубины по ярусу: та же лестница, что у света и тьмы в описаниях. */
+function depthTrack(depth){
+ const d=Number(depth)||0;
+ if(d<=0)return "prologue";
+ if(d>=MAX_DEPTH)return "depth_abyss";
+ if(d<=10)return "depth_1";
+ if(d<=30)return "depth_2";
+ if(d<=55)return "depth_3";
+ if(d<=80)return "depth_4";
+ return "depth_5";}
 const Music={sfx:null,timers:[],current:null,track:null,
  start(terrain){
   if(this.current===terrain&&(this.sfx||this.track))return;
@@ -16518,7 +16862,7 @@ function enterPlace(c){
     этого вида темы нет, остаётся прежнее правило — пещера под землёй, пролог
     наверху. */
  safeFn(()=>{const своя="pl_"+stype;
-  Music.start(MUSIC_TRACK[своя]?своя:(kind==="dungeon"?"cave":"prologue"));});
+  Music.start(MUSIC_TRACK[своя]?своя:(kind==="dungeon"?depthTrack(G.place?G.place.depth:1):"prologue"));});
  safeFn(()=>bankUpdateAmbient());
  /* Встреча по славе: народ этой земли помнит, кто вы ему. */
  safeFn(()=>{
@@ -16648,7 +16992,7 @@ function changeDepth(delta){
   const т=hereTrait();if(!т)return;
   if(т.звук)setTimeout(()=>safeFn(()=>Bank.play(т.звук,{seed:nd,gain:0.5,maxSec:6})),900);
   if(т.низ)setTimeout(()=>safeFn(()=>narrate(т.низ,{interrupt:false})),2000);});
- safeFn(()=>{if(nd>0)Music.start("cave");});
+ safeFn(()=>{if(nd>0)Music.start(depthTrack(nd));});
  /* Тема глубины за Гранью: чем ниже, тем темнее музыка. */
  if(G.dark&&nd>0)safeFn(()=>{
   const роль=nd>=70?"od_theme_dark":nd>=30?"od_theme_deep":"od_theme_search";
@@ -19443,8 +19787,7 @@ function findArtifact(opts){
  if(кач<=1&&S(9)<0.25)a.нестаб=0.08+S(10)*0.14;
  ART.grant({готовая:a});
  safeFn(()=>{Bank.play("artifact",{seed:G.artifacts.length,gain:0.6,maxSec:9});
-  Bank.play("jingle_achievement",{gain:0.8});
-  Bank.play("artifact_hum",{seed:G.artifacts.length,gain:0.5,maxSec:8});
+  eventTheme("reward_artifact",{seed:G.artifacts.length,gain:0.8});
   Play.start("ev","seal_break",{dur:3});
   setTimeout(()=>safeFn(()=>Play.start("ev","artifact_pulse",{dur:6})),1600);});
  UI.fanfare();
@@ -20978,8 +21321,7 @@ function advanceChain(q){
   if(next>=ch.steps.length){
    narrate(`Цепочка «${ch.n}» завершена целиком. Такое помнят долго.`,{interrupt:false});
    journal(`Цепочка завершена: ${ch.n}.`);
-   safeFn(()=>{Bank.play("trumpet_fanfare",{seed:1,gain:0.75,maxSec:6});
-    setTimeout(()=>safeFn(()=>Bank.play("harp_light",{seed:2,gain:0.6,maxSec:5})),600);});
+   safeFn(()=>eventTheme("chain_done",{gain:0.75}));
    G.chainsDone=(Number(G.chainsDone)||0)+1;
    return false;}
   const n=safeFn(()=>getNPCByKey(q.npcKey||q.id.replace(/q$/,"")),null);
@@ -21280,8 +21622,7 @@ function completeQuest(id){
  UI.fanfare();
  safeFn(()=>Bank.play("quest",{seed:G.quests.length,gain:0.7,maxSec:7}));
  /* Труба на два голоса: задание сдано. */
- safeFn(()=>{Bank.play("trumpet_fanfare",{seed:0,gain:0.7,maxSec:5});
-  setTimeout(()=>safeFn(()=>Bank.play("trumpet_fanfare",{seed:1,gain:0.65,maxSec:5})),300);});
+ safeFn(()=>eventTheme("quest_done",{seed:0,gain:0.7}));
  narrate(`Квест выполнен! Награда: ${gold} золота, ${xp} опыта.`+даром+школьное+тёмное+
   (q.наряд?` ${q.наряд} закрыт.`:"")+
   (q.faith&&q.godId?` Благосклонность ${GOD_BY_ID[q.godId]?GOD_BY_ID[q.godId].n:"бога"} +${q.faith}.`:"")+
@@ -22093,7 +22434,7 @@ function applySave(raw,whence){
  narrate(`Игра загружена (${whence}).`);
  setTimeout(()=>{
   if(G.place){
-   safeFn(()=>Music.start(G.place.depth>0?"cave":"prologue"));
+   safeFn(()=>Music.start(G.place.depth>0?depthTrack(G.place.depth):"prologue"));
    safeFn(()=>Actors.ensure());
    narrate(`Вы вернулись: ${placeTitle()}. ${describeHere(true)} Уровень ${G.level}.`);
    safeFn(()=>pingSurroundings(3,3));refresh();return;}
@@ -22252,7 +22593,7 @@ const Warm={
   const secs=Math.round((Date.now()-t0)/1000);
   this.busy=false;
   if(this.stop){narrate(`Прогрев остановлен: успел скачать ${this.done} записей из ${this.total}.`);return false;}
-  safeFn(()=>Bank.play("trumpet_fanfare",{seed:1,gain:0.6,maxSec:5}));
+  safeFn(()=>eventTheme("warm_done",{gain:0.6}));
   narrate(`Готово: все ${this.total} записей на устройстве, ушло ${secs} секунд. Теперь маяки звучат мгновенно, и игра работает без сети.`);
   try{store.set("gm29warm",JSON.stringify({at:Date.now(),n:this.total}));}catch(_){}
   return true;},
@@ -22347,8 +22688,7 @@ const Tutor={
    narrate(st.ok+(last?"":""),{interrupt:false});
    if(last){
     this.on=false;
-    safeFn(()=>{Bank.play("trumpet_fanfare",{seed:0,gain:0.7,maxSec:5});
-     setTimeout(()=>safeFn(()=>Bank.play("harp_light",{seed:2,gain:0.6,maxSec:5})),500);});
+    safeFn(()=>eventTheme("tutor_done",{gain:0.7}));
     setTimeout(()=>narrate("Обучение окончено: вы знаете всё, что нужно, чтобы играть. Остальное игра расскажет по дороге. Доброго пути, Странник.",{interrupt:false}),2600);
     journal("Обучение жестам пройдено.");
     G.tutorDone=true;safeFn(()=>saveGame(true));
