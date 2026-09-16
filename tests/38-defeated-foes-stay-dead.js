@@ -31,9 +31,18 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   const out={};
   const силач=()=>{G.level=40;G.str=400;G.hp=G.hpMax=4000;
    G.equip.weapon={id:9,name:"Меч проверки",type:"Меч",val:200};G.weaponDrawn=true;};
-  const найтиТварь=()=>{for(let r=0;r<300;r++)for(let dy=-r;dy<=r;dy++)for(let dx=-r;dx<=r;dx++){
-    const x=1000+dx,y=1000+dy;const c=cellContent(x,y);
-    if(c.monster&&!c.structure&&!c.res)return {x,y};}return null;};
+  /* Ищем ЗЕМНУЮ тварь и от середины мира, где стоит герой.
+     Прежде брали первую попавшуюся у старой тысячи. Пока тварь выбиралась
+     жребием, земная попадалась почти всегда; теперь у каждого вида свои
+     угодья, и у леса под боком может жить скальный рух — а по летуну мечом
+     не попасть: «клинок бьёт в пустоту». Набор проверяет, что побеждённая
+     тварь не встаёт, а не то, достаёт ли меч до неба, — значит и цель нужна
+     та, которую меч достаёт. */
+  const найтиТварь=()=>{const C=WORLD>>1;
+   for(let r=0;r<300;r++)for(let dy=-r;dy<=r;dy++)for(let dx=-r;dx<=r;dx++){
+    if(Math.max(Math.abs(dx),Math.abs(dy))!==r)continue;
+    const x=C+dx,y=C+dy;const c=cellContent(x,y);
+    if(c.monster&&!c.monster.fly&&!c.structure&&!c.res)return {x,y};}return null;};
   const добить=async()=>{for(let i=0;i<25&&G.inCombat;i++){fight("atk");await new Promise(z=>setTimeout(z,15));}};
 
   /* ── Победа над хозяйкой клетки ── */
