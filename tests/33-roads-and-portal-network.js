@@ -56,7 +56,13 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
  const узлы=await page.evaluate(()=>{
   const врата=EMPIRES.map(e=>portalNodeAt(e.cap.x,e.cap.y));
   let камней=0,перекрёстков=0;
-  for(let x=0;x<WORLD;x+=29)for(let y=0;y<WORLD;y+=29){
+  /* Мир — пятьдесят тысяч клеток по стороне, и сплошной обход сеткой дал бы
+     три миллиона шагов вместо прежних пяти тысяч. Утверждение здесь
+     статистическое — «камни стоят на части перекрёстков, а не на всех», — и
+     оно проверяется на окне, которого с избытком хватает: сорок две тысячи
+     перекрёстков против прежних пяти тысяч. */
+  const ОКНО=Math.min(WORLD,6000);
+  for(let x=0;x<ОКНО;x+=29)for(let y=0;y<ОКНО;y+=29){
    if(!isCrossroads(x,y))continue;
    перекрёстков++;
    const nd=portalNodeAt(x,y);
