@@ -9,6 +9,18 @@ const sleep=ms=>new Promise(r=>setTimeout(r,ms));
  page.on('console',m=>{if(m.type()==='error'&&!/fetching the script|ServiceWorker/i.test(m.text()))errors.push('console: '+m.text());});
  await page.goto(process.argv[2]);await page.waitForTimeout(700);
  await page.evaluate(()=>enterGame());await page.waitForTimeout(300);
+ /* Порт ищется с расширением круга, а не в жёстком радиусе шестидесяти клеток.
+    Прежде шестидесяти хватало по недоразумению: рельеф выбирался для каждой
+    клетки жребием, и «побережье» попадалось посреди материка — в том числе
+    рядом с началом пути. Мир стал связным, море собралось в берега, а воду
+    внутри материка держат реки и озёра: ближайшая пристань от середины мира
+    теперь в семидесяти клетках. Это честное расстояние, а шестьдесят было
+    произвольным числом. Проверяем рыбалку и грузы, а не близость моря. */
+ await page.evaluate(()=>{window.__порт=()=>{
+  for(const r of [60,120,240,480,900]){
+   const p=findPorts(G.x,G.y,r,8)[0];
+   if(p)return p;}
+  return null;};});
 
  // 1. Рыба стала товаром: значки, базовые цены, рыночные цены
  const goods=await page.evaluate(()=>{
@@ -36,7 +48,7 @@ const sleep=ms=>new Promise(r=>setTimeout(r,ms));
  const spots=await page.evaluate(()=>{
   const out={};
   G.ship=null;G.place=null;
-  const p=findPorts(G.x,G.y,60,8)[0];
+  const p=__порт();
   G.x=p.x;G.y=p.y;out.port=fishingSpot();
   // берег рядом с портом
   outer: for(let r=1;r<12;r++)for(let dx=-r;dx<=r;dx++)for(let dy=-r;dy<=r;dy++){
@@ -53,7 +65,7 @@ const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 
  // 4. Полный цикл: заброс, поклёвка, подсечка
  const fishing=await page.evaluate(async()=>{
-  const p=findPorts(G.x,G.y,60,8)[0];G.x=p.x;G.y=p.y;G.ship=null;G.place=null;
+  const p=__порт();G.x=p.x;G.y=p.y;G.ship=null;G.place=null;
   G.items=["Удочка","Рыболовная сеть"];G.inv={};
   const log=[];const orig=Speech.say;Speech.say=t=>log.push(t);
   let caught=0,cast=0,early=0;
@@ -81,7 +93,7 @@ const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 
  // 5. Улов продаётся в порту
  const sell=await page.evaluate(()=>{
-  const p=findPorts(G.x,G.y,60,8)[0];G.x=p.x;G.y=p.y;
+  const p=__порт();G.x=p.x;G.y=p.y;
   const fishName=Object.keys(G.inv).find(k=>FISH_BY_NAME[k])||"треска";
   G.inv[fishName]=(Number(G.inv[fishName])||0)+3;G.gold=0;
   const npc=getNPC(p.x,p.y,8,"Торговец");
@@ -91,7 +103,7 @@ const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 
  // 6. Грузовые партии: опт дешевле розницы
  const lots=await page.evaluate(()=>{
-  const p=findPorts(G.x,G.y,60,8)[0];G.x=p.x;G.y=p.y;G.ship=null;G.place=null;G.gold=5000;G.inv={};
+  const p=__порт();G.x=p.x;G.y=p.y;G.ship=null;G.place=null;G.gold=5000;G.inv={};
   const pf=cityProfile(p);const res=pf.surplus[0];
   const unit=citySellPrice(res,p,G.day);
   const p5=lotPrice(res,p,G.day,5),p10=lotPrice(res,p,G.day,10);
@@ -104,7 +116,7 @@ const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 
  // 7. Трюм ограничивает погрузку
  const hold=await page.evaluate(()=>{
-  const p=findPorts(G.x,G.y,60,8)[0];G.x=p.x;G.y=p.y;G.gold=5000;
+  const p=__порт();G.x=p.x;G.y=p.y;G.gold=5000;
   G.inv={руда:200};                       /* заведомо больше любого трюма */
   openHarbor();
   const btns=[...document.querySelectorAll('[data-cmd^="board:"]')];
@@ -120,7 +132,7 @@ const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 
  // 8. Морской подряд: взятие, срок, сдача в порту
  const freight=await page.evaluate(()=>{
-  G.ship=null;const p=findPorts(G.x,G.y,60,8)[0];G.x=p.x;G.y=p.y;G.quests=[];G.gold=0;G.inv={};
+  G.ship=null;const p=__порт();G.x=p.x;G.y=p.y;G.quests=[];G.gold=0;G.inv={};
   openHarbor();
   const has=!!document.querySelector('[data-cmd^="freight:"]');
   CMD.freight(0);
@@ -136,7 +148,7 @@ const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 
  // 9. Шторм может смыть груз, но не ломает состояние
  const storm=await page.evaluate(()=>{
-  const p=findPorts(G.x,G.y,60,8)[0];G.x=p.x;G.y=p.y;G.gold=3000;G.hp=100;G.ship=null;G.quests=[];
+  const p=__порт();G.x=p.x;G.y=p.y;G.gold=3000;G.hp=100;G.ship=null;G.quests=[];
   G.inv={руда:10};
   openHarbor();const b=document.querySelector('[data-cmd^="board:"]');CMD.board(b.dataset.cmd.split(":")[1]);
   let bad=0,lost=0;const start=Number(G.inv["руда"])||0;
@@ -155,7 +167,7 @@ const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 
  // 10. Рыбалка с борта и голод по времени
  const atSea=await page.evaluate(async()=>{
-  const p=findPorts(G.x,G.y,60,8)[0];G.x=p.x;G.y=p.y;G.ship=null;G.gold=3000;G.inv={};G.items=["Рыболовная сеть"];
+  const p=__порт();G.x=p.x;G.y=p.y;G.ship=null;G.gold=3000;G.inv={};G.items=["Рыболовная сеть"];
   openHarbor();const b=document.querySelector('[data-cmd^="board:"]');CMD.board(b.dataset.cmd.split(":")[1]);
   const h0=G.hour+ (G.day*24);
   const ok=startFishing();
