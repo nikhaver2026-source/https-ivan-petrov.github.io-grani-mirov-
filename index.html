@@ -335,9 +335,13 @@ h3{color:var(--acc2);margin:14px 0 6px;font-size:1.05rem;}
  <header><h2>💎 Артефакты мира</h2><button type="button" data-cmd="close">✖️ Закрыть</button></header>
  <p>Ваших артефактов: <b id="artFound">0</b> · Направлений 13, рангов 7, качеств 6</p><div id="artList"></div>
 </div></div>
-<!-- ПРОПОВЕДНИК: кто он, во что верит и что может сделать -->
-<div class="overlay" id="modal-preacher" hidden><div class="sheet" role="dialog" aria-modal="true" aria-label="Проповедник">
- <h2>🕯️ Проповедник</h2><div id="preachBody"></div
+<!-- ПРОПОВЕДНИК: кто он, во что верит и что может сделать.
+     Разметка ровно та же, что у прочих окон: класс «modal», заголовок с
+     кнопкой закрытия внутри header. Иначе окно выпадает из общего порядка —
+     ни закрыть по образцу, ни пройти по нему свайпом. -->
+<div class="modal" id="modal-preacher" role="dialog" aria-modal="true" aria-label="Проповедник" hidden><div class="sheet">
+ <header><h2>🕯️ Проповедник</h2><button type="button" data-cmd="close">✖️ Закрыть</button></header>
+ <div id="preachBody"></div>
 </div></div>
 
 <!-- БЕСТИАРИЙ -->
@@ -9363,7 +9367,6 @@ function renderPreacher(){
   const d=PREACH_DEEDS[k];if(!d)return;
   const сказ=`${d.n}: ${d.о}.`;
   html+=`<button class="item" data-cmd="preach:${k}" data-speak="${сказ.replace(/"/g,"&quot;")}">🕯️ ${d.n}</button>`;});
- html+=`<div class="row"><button data-cmd="close">✖️ Закрыть</button></div>`;
  ящик.innerHTML=html;
  /* Голос проповедника идёт от него, а не из середины головы. */
  safeFn(()=>{Spatial.role(pr.род.звук,0,0,{gain:0.5,maxSec:5})||Bank.play(pr.род.звук,{gain:0.5,maxSec:5});});}
