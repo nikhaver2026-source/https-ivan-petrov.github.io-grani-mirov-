@@ -382,6 +382,144 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   окно.естьПамять===true&&окно.естьОтношение===true,окно);
  check('встреча засчитывается при открытии карточки',окно.встреч>=1,окно.встреч);
 
+ /* ── 13. Ходы разговора ── */
+ const ходы=await page.evaluate(()=>{
+  while(activeLayer())closeTopUI();
+  G.npcMem={};G.rumors=[];G.standing={};G.axes={};G.day=5;G.liveDay=5;
+  G.level=20;G.cha=25;G.mind=20;G.str=20;G.gold=5000;G.weaponDrawn=false;
+  G.inCombat=false;G.combat=null;G.quests=[];
+  const беды=[];
+  DLG_MOVES.forEach(m=>{
+   if(!m.n||!m.о||!m.против)беды.push("ход "+m.id);
+   if(typeof m.можно!=="function")беды.push("ход "+m.id+": нет условия");
+   if(!(m.риск>=0))беды.push("ход "+m.id+": нет меры риска");});
+  const n=getNPC(800,800,0,"Торговец");
+  /* Запугивать можно только с оружием в руке. */
+  const безОружия=dlgAvailable(n).some(m=>m.id==="zapugat");
+  G.weaponDrawn=true;
+  const сОружием=dlgAvailable(n).some(m=>m.id==="zapugat");
+  G.weaponDrawn=false;
+  /* Шантажировать — только зная тайну. */
+  const доТайны=dlgAvailable(n).some(m=>m.id==="shantazh");
+  npcLearnSecret(n,"проба");
+  const послеТайны=dlgAvailable(n).some(m=>m.id==="shantazh");
+  /* Сопротивление выводится из нрава: жадный упирается в торге сильнее. */
+  const жадный=SOUL_CHARS.find(c=>c.id==="zhad"),добрый=SOUL_CHARS.find(c=>c.id==="dobr");
+  /* Ход срабатывает и пишет след. */
+  const ok=dlgDo(n,"rassprosit");
+  /* Тот же ход дважды в день не проходит. */
+  const второй=dlgDo(n,"rassprosit");
+  /* Подкуп тратит золото. */
+  G.day=6;
+  const золДо=G.gold;
+  dlgDo(n,"podkup");
+  const золПосле=G.gold;
+  /* Ложь при удаче заводит ЛОЖНУЮ память. */
+  G.day=7;G.npcMem={};
+  const л=getNPC(805,805,0,"Фермер");
+  for(let i=0;i<30&&!((memOf(л.key)||{}).д||[]).some(z=>z.у===0);i++){G.day++;dlgDo(л,"obman");}
+  const ложная=((memOf(л.key)||{}).д||[]).some(z=>z.у===0);
+  /* Окно жителя показывает ходы. */
+  openNPC(n.key,true);
+  const тело=document.getElementById("npcBody");
+  const кнопок=тело?тело.querySelectorAll("[data-cmd^='dlg:']").length:0;
+  const немых=тело?[...тело.querySelectorAll("button[data-cmd^='dlg:']")]
+   .filter(e=>!e.getAttribute("data-speak")).length:0;
+  while(activeLayer())closeTopUI();
+  return {беды:беды.slice(0,4),ходов:DLG_MOVES.length,
+   безОружия,сОружием,доТайны,послеТайны,
+   жадноеУпрямство:жадный.торг>добрый.торг,
+   ok:typeof ok==="boolean",второй,
+   золото:золДо-золПосле,ложная,кнопок,немых};});
+ check('ходов разговора много, и все описаны',
+  ходы.ходов>=18&&ходы.беды.length===0,ходы.беды.length?ходы.беды:ходы.ходов);
+ check('запугивать можно только с оружием в руке',
+  ходы.безОружия===false&&ходы.сОружием===true,ходы);
+ check('шантажировать можно только зная, что человек скрывает',
+  ходы.доТайны===false&&ходы.послеТайны===true,ходы);
+ check('один и тот же ход дважды за день не проходит',ходы.второй===false,ходы);
+ check('подкуп стоит золота',ходы.золото>0,ходы.золото);
+ check('удачная ложь заводит ложную память: он верит в то, чего не было',
+  ходы.ложная===true,ходы);
+ check('ходы видны в окне жителя и каждый читается вслух',
+  ходы.кнопок>=8&&ходы.немых===0,ходы);
+
+ /* ── 14. Проповедники и учения ── */
+ const вера=await page.evaluate(()=>{
+  while(activeLayer())closeTopUI();
+  const беды=[];
+  const all=Object.keys(SOUND_BANK||{}).concat(Object.keys(BEACONS||{}));
+  PREACHERS.forEach(p=>{
+   if(!p.n||!p.о||p.о.length<20)беды.push("проповедник "+p.id);
+   if(all.indexOf(p.звук)<0)беды.push(p.id+": нет звука "+p.звук);
+   if(!(p.умеет||[]).length)беды.push(p.id+": ничего не умеет");
+   (p.умеет||[]).forEach(u=>{if(!PREACH_DEEDS[u])беды.push(p.id+": нет деяния "+u);});
+   if(!(p.место||[]).length)беды.push(p.id+": негде стоять");});
+  /* Учение выводится из бога, а не заводится заново. */
+  const веры=PANTHEON.map(g=>faithOf(g.id));
+  веры.forEach(v=>{
+   if(!v||!v.догмат||!v.обряд||!v.праздник||!v.святой||!v.знак||!v.чары||!v.чужие)
+    беды.push("учение "+(v&&v.id));
+   if(v&&v.круг!==v.бог.dom)беды.push("учение "+v.id+": круг разошёлся с богом");
+   if(v&&v.запрет!==v.бог.taboo)беды.push("учение "+v.id+": запрет разошёлся с богом");});
+  /* Имена богов склоняются, а не склеиваются. */
+  const падежи=PANTHEON.map(g=>godCase(g,"род"));
+  const склейки=падежи.filter(x=>/аяа|яа|ая$/.test(x)).length;
+  const все4=PANTHEON.every(g=>["род","дат","пред","твор"].every(k=>{
+   const v=godCase(g,k);return v&&v!==g.n;})||g.id==="wood"||g.id==="road");
+  /* Проповедники стоят в мире. */
+  G.dark=false;G.place=null;
+  let сколько=0,родов=new Set();
+  for(let x=200;x<1900&&сколько<200;x+=3)for(let y=200;y<1900;y+=53){
+   const c=cellContent(x,y);if(!c.structure)continue;
+   const pr=preacherAt(x,y,c.structure.type);
+   if(pr){сколько++;родов.add(pr.род.id);}}
+  return {беды:беды.slice(0,5),родов:PREACHERS.length,деяний:Object.keys(PREACH_DEEDS).length,
+   вер:веры.length,склейки,все4,вМире:сколько,разныхРодов:родов.size,
+   пример:godCase(GOD_BY_ID.moon,"род")};});
+ check('проповедников двенадцать родов, и у каждого своё дело и свой звук',
+  вера.родов===12&&вера.беды.length===0,вера.беды.length?вера.беды:вера.родов);
+ check('деяний проповедника много: не только текст',вера.деяний>=10,вера.деяний);
+ check('двенадцать учений выводятся из двенадцати богов и не спорят с ними',
+  вера.вер===12,вера);
+ check('имена богов склоняются, а не склеиваются с окончанием',
+  вера.склейки===0&&вера.пример==="Селены Ликоносной",вера.пример);
+ check('проповедники стоят в мире, и роды у них разные',
+  вера.вМире>=20&&вера.разныхРодов>=5,вера);
+
+ /* ── 15. Деяние проповедника меняет мир ── */
+ const деяние=await page.evaluate(()=>{
+  while(activeLayer())closeTopUI();
+  G.dark=false;G.faith={};G.standing={};G.axes={};G.rumors=[];
+  G.gold=9000;G.day=8;G.liveDay=8;
+  /* Ищем место с проповедником. */
+  let м=null;
+  for(let x=200;x<1900&&!м;x+=3)for(let y=200;y<1900;y+=53){
+   const c=cellContent(x,y);if(!c.structure)continue;
+   const pr=preacherAt(x,y,c.structure.type);
+   if(pr&&(pr.род.умеет||[]).indexOf("пожертвование")>=0){м={x,y,st:c.structure.type};break;}}
+  if(!м)return {нет:true};
+  G.x=м.x;G.y=м.y;
+  G.place={kind:"house",bx:м.x,by:м.y,stype:м.st,depth:0,name:"м",x:1,y:1};
+  const золДо=G.gold,слуховДо=(G.rumors||[]).length;
+  const ок=preachDo("пожертвование");
+  const золПосле=G.gold;
+  const вера=Object.values(G.faith||{}).reduce((a,b)=>a+(Number(b)||0),0);
+  const слуховПосле=(G.rumors||[]).length;
+  /* Чего проповедник не умеет — того и не делает. */
+  const pr=preacherHere();
+  const чужое=(Object.keys(PREACH_DEEDS).find(k=>(pr.род.умеет||[]).indexOf(k)<0));
+  window.__said=[];
+  const отказ=чужое?preachDo(чужое):false;
+  const словаОтказа=речь();
+  while(activeLayer())closeTopUI();G.place=null;
+  return {ок,золото:золДо-золПосле,вера,слухи:слуховПосле-слуховДо,
+   отказ,словаОтказа:словаОтказа.slice(0,90)};});
+ check('пожертвование стоит золота, поднимает веру и рождает весть',
+  !деяние.нет&&деяние.ок===true&&деяние.золото>0&&деяние.вера>0&&деяние.слухи>0,деяние);
+ check('чего этот проповедник не умеет, того он и не делает',
+  деяние.отказ===false&&/не занимается/i.test(деяние.словаОтказа||''),деяние.словаОтказа);
+
  check('игра не выбрасывала ошибок за весь прогон',errors.length===0,errors.slice(0,3));
 
  console.log(results.join('\n'));
