@@ -1815,7 +1815,21 @@ const MUSIC_TRACK={
     слышался. Теперь глубина разбита на пояса, и переход между ними слышен
     сменой темы — на слух это и есть «стало глубже». */
  depth_1:"score_dungeon", depth_2:"bassoon_ruins", depth_3:"harmonium_low",
- depth_4:"contrabass_deep", depth_5:"organ_eternal", depth_abyss:"pad_underworld"};
+ depth_4:"contrabass_deep", depth_5:"organ_eternal", depth_abyss:"pad_underworld",
+ /* ── ДВЕНАДЦАТЬ ОРДЕНОВ ──
+    Башни все считались одним видом постройки и звучали одной темой, хотя
+    орден у каждой свой и занимаются в них разным. Теперь орден слышен на
+    входе: пепел отвечает фаготом заката, стекло — вибрафоном снов, тихое
+    слово — светлым куполом, каменная мера — виолончелью недр, глубокая вода —
+    дождевой пеленой, семь ветров — флейтой дальних земель, сумеречный затвор —
+    кларнетом теней, стужа — морозными клавишами, утренняя ступень — флейтой
+    рассвета, корни — лютней роста, гром — ударом судьбы, шов — ветром Грани. */
+ tower_pepel:"bassoon_dusk",  tower_steklo:"dream_vibe",
+ tower_vetv:"pad_halo",       tower_kamen:"cello_stone",
+ tower_voda:"fx_rain",        tower_veter:"far_flute",
+ tower_tenb:"clarinet_shadow",tower_led:"frost_keys",
+ tower_zarya:"flute_dawn",    tower_korni:"lute_wood",
+ tower_grom:"fate_hit",       tower_shov:"pad_rift"};
 /* ════════════════════════════════════════════════════════════════════════
    МУЗЫКА СОБЫТИЙ: НАГРАДЫ, ДОСТИЖЕНИЯ, ОПЫТ
 
@@ -16861,7 +16875,12 @@ function enterPlace(c){
  /* Тема места: у таверны, замка, храма и рудничного зева она своя. Если для
     этого вида темы нет, остаётся прежнее правило — пещера под землёй, пролог
     наверху. */
- safeFn(()=>{const своя="pl_"+stype;
+ safeFn(()=>{
+  /* У башни тема не по виду постройки, а по ордену: две башни разных орденов
+     не звучат одинаково. */
+  const б=stype==="tower"?safeFn(()=>towerHere(),null):null;
+  const орд=б&&б.орден?"tower_"+б.орден.id:null;
+  const своя=орд&&MUSIC_TRACK[орд]?орд:"pl_"+stype;
   Music.start(MUSIC_TRACK[своя]?своя:(kind==="dungeon"?depthTrack(G.place?G.place.depth:1):"prologue"));});
  safeFn(()=>bankUpdateAmbient());
  /* Встреча по славе: народ этой земли помнит, кто вы ему. */
