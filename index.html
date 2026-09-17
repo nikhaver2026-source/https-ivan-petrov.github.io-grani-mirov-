@@ -381,6 +381,12 @@ h3{color:var(--acc2);margin:14px 0 6px;font-size:1.05rem;}
  <div id="bldBody"></div>
 </div></div>
 
+<!-- ОБЪЕКТЫ ВОКРУГ: выбор объекта, затем выбор действия -->
+<div class="modal" id="modal-object" role="dialog" aria-modal="true" aria-label="Объекты вокруг" hidden><div class="sheet">
+ <header><h2 id="objTitle">—</h2><button type="button" data-cmd="close">✖️ Закрыть</button></header>
+ <div id="objBody"></div>
+</div></div>
+
 <!-- НИПИ -->
 <div class="modal" id="modal-npc" role="dialog" aria-modal="true" aria-label="Разговор" hidden><div class="sheet">
  <header><h2 id="npcTitle">—</h2><button type="button" data-cmd="close">✖️ Закрыть</button></header>
@@ -3379,6 +3385,8 @@ const AM_GROUPS=[
   ["gather","📦 Собрать ресурс"],
   ["echo","🔊 Эхо-скан: маяки вокруг"],
   ["signs","🗺️ Приметы и клады"],
+  ["objects","🔎 Что вокруг: объекты и действия"],
+  ["mastery","🎓 Мастерства и ремёсла"],
   ["patrol","🛡️ Окликнуть разъезд"],
   ["cityplan","🏙️ План города: кварталы и площадь"],
   ["trade","🐫 Рынки, маршруты и караваны"],
@@ -3470,6 +3478,8 @@ function amAvailable(cmd){
   if(cmd==="descend")return !!G.place||!!(c.structure&&PLACE_KIND[c.structure.type]);
   if(cmd==="interact")return !G.place&&!!(c.structure||c.res||c.находка);
   if(cmd==="signs")return !G.place&&!G.dark;
+  if(cmd==="objects")return !G.ship&&!inFlight();
+  if(cmd==="mastery")return true;
   if(cmd==="patrol")return !!safeFn(()=>patrolHere(),null);
   /* Пункт сбора показывается, только когда собирать действительно есть что:
      внутри постройки это сундук или жила, снаружи — ресурс на клетке. Раньше
@@ -5890,6 +5900,105 @@ function patrolSafety(x,y){
  let d=99;
  for(const p of v){const dd=Math.max(Math.abs(p.x-x),Math.abs(p.y-y));if(dd<d)d=dd;}
  return d<=2?0.35:d<=4?0.55:d<=7?0.8:1;}
+/* ════════════════════════════════════════════════════════════════════════
+   НАБЕГИ: ВОЙНА ДОХОДИТ ДО ДЕРЕВЕНЬ
+
+   Война была в сводке и в цене, но не на земле. Державы воевали годами, а
+   деревня на границе стояла целёхонька и торговала как ни в чём не бывало:
+   «идёт война» было строкой в докладе, а не тем, что слышно.
+
+   Набег — это война, доведённая до клетки. Держава, что воюет, жжёт не
+   сердце чужой земли, а ПОГРАНИЧЬЕ: чем ближе деревня к чужому престолу
+   относительно своего, тем чаще к ней приходят. Набег выводится изо дня,
+   как война и как обоз, и нигде не хранится.
+
+   У набега четыре дня и четыре лица: в первый день его застают (крик, огонь,
+   набат), на второй и третий деревня разорена (гарь, вороньё, торговли нет),
+   на четвёртый её отстраивают (топоры, пила, дорого всё). Потом либо снова,
+   либо нет — как решит война.
+
+   Набег меняет землю вокруг, а не только слова: у разорённой деревни втрое
+   больше встреч — туда идут те, кто кормится чужой бедой.
+   ════════════════════════════════════════════════════════════════════════ */
+const RAID_PHASE=[
+ {id:"raid", n:"под набегом", звук:"siege_alarm_raid", след:"siege_fire",
+  о:"Над деревней стоит крик и дым: набег идёт прямо сейчас."},
+ {id:"burnt",n:"разорена",    звук:"wild_raven",       след:"amb_fire",
+  о:"Деревня выгорела: гарь, вороньё и ни одного целого забора."},
+ {id:"ash",  n:"выжжена",     звук:"wild_raven",       след:"sky_wind",
+  о:"От деревни остались печные трубы и дорожка золы поперёк улицы."},
+ {id:"mend", n:"отстраивается",звук:"craft_wood",      след:"wild_anvil",
+  о:"Деревню поднимают заново: стучат топоры, пахнет смолой и свежим тёсом."}];
+const RAID_BY_ID=Object.fromEntries(RAID_PHASE.map(p=>[p.id,p]));
+const RAID_DAYS=4;
+/* Насколько это пограничье: ноль в сердце своей земли, единица у чужой. */
+function borderPull(x,y,своя,чужая){
+ const d1=Math.hypot(x-своя.cap.x,y-своя.cap.y);
+ const d2=Math.hypot(x-чужая.cap.x,y-чужая.cap.y);
+ if(!(d1+d2))return 0;
+ return Math.max(0,Math.min(1,1-d2/(d1+d2)*2+0.5));}
+function raidAt(x,y,day){
+ if(G.dark)return null;
+ /* Жгут деревни: цитадель державы набегом не берут. */
+ if(safeFn(()=>settlementSeed(x,y),null)!=="village")return null;
+ const i=safeFn(()=>empireIndexAt(x,y),0);
+ const войны=safeFn(()=>warsAt(day).filter(w=>w.a===i||w.b===i),[]);
+ if(!войны.length)return null;
+ const вр=войны[Math.floor(hashName(x,y,791)*войны.length)%войны.length];
+ const чужая=EMPIRES[вр.a===i?вр.b:вр.a],своя=EMPIRES[i];
+ const у=safeFn(()=>borderPull(x,y,своя,чужая),0);
+ /* В сердце земли не жгут почти никогда, на границе — часто. */
+ const шанс=0.02+0.30*у;
+ const окно=Math.floor((Number(day)||1)/RAID_DAYS);
+ if(hashName(x+окно*7,y+окно*13,790)>=шанс)return null;
+ const фаза=RAID_PHASE[Math.min(RAID_PHASE.length-1,(Number(day)||1)%RAID_DAYS)];
+ return {фаза,чужая,своя,у:+у.toFixed(3),
+  день:((Number(day)||1)%RAID_DAYS)+1,всего:RAID_DAYS};}
+/* Набег рядом: чтобы беженцы шли по дорогам возле выжженного, а не всюду. */
+const raidBlockCache=new Map();
+/* ── ПОЧЕМУ КВАДРАТ МАЛЕНЬКИЙ ──
+   Сперва квадрат был тридцать два на тридцать два: на сплошном обходе округи
+   это дёшево — одна выборка на тысячу клеток. Но набор 58 меряет ДВАДЦАТЬ
+   ТЫСЯЧ РАЗБРОСАННЫХ по всему миру клеток, и там каждая попадает в свой
+   квадрат: выборка считается заново для каждой, и обход подорожал с секунды
+   до почти двух.
+   Отсюда правило: цена ПРОМАХА важнее цены попадания. Квадрат восемь на
+   восемь с полем в шесть клеток — это четыреста проверок на промах вместо
+   почти трёх тысяч, и по-прежнему шесть проверок на клетку при сплошном
+   обходе. Проверка при этом самая дешёвая из возможных: один хеш — примета
+   деревни, и только для трёх клеток из тысячи считается всё остальное. */
+function raidsNear(x,y,day,rad=6){
+ const k=(Number(day)||1)+":"+(x>>3)+":"+(y>>3);
+ let v=raidBlockCache.get(k);
+ if(v)return v;
+ v=[];
+ /* Нет войны ни у кого — нет и набегов: один вопрос вместо тысячи. */
+ if(!safeFn(()=>warsAt(day).length,0)){raidBlockCache.set(k,v);return v;}
+ const cx=((x>>3)<<3)+4,cy=((y>>3)<<3)+4,r=rad+4;
+ for(let ny=cy-r;ny<=cy+r;ny++)for(let nx=cx-r;nx<=cx+r;nx++){
+  if(nx<0||ny<0||nx>=WORLD||ny>=WORLD)continue;
+  /* Сначала один дешёвый хеш — примета деревни; всё остальное считается
+     лишь для трёх клеток из тысячи, а не для всего квадрата. */
+  if(H(nx,ny,3)>=0.0035)continue;
+  if(isRoad(nx,ny))continue;
+  const н=safeFn(()=>raidAt(nx,ny,day),null);
+  if(н)v.push({x:nx,y:ny,...н});}
+ if(raidBlockCache.size>6000)raidBlockCache.clear();
+ raidBlockCache.set(k,v);
+ return v;}
+function raidHere(){
+ if(G.place||G.dark||G.ship)return null;
+ return safeFn(()=>raidAt(G.x,G.y,G.day),null);}
+/* ── ЧТО НАБЕГ МЕНЯЕТ В ЗЕМЛЕ ВОКРУГ ──
+   У разорённой деревни кормятся те, кто приходит после войска: встреч там
+   больше, а не меньше. Это обратная сторона разъезда. */
+function raidDanger(x,y){
+ if(G.dark)return 1;
+ const бл=safeFn(()=>raidsNear(x,y,G.day,6),null);
+ if(!бл||!бл.length)return 1;
+ let d=99;
+ for(const н of бл){const dd=Math.max(Math.abs(н.x-x),Math.abs(н.y-y));if(dd<d)d=dd;}
+ return d<=2?2.2:d<=4?1.6:d<=6?1.25:1;}
 function caravanHere(){
  if(G.place)return null;
  const list=caravansNear(G.x,G.y,G.day,G.hour,1);
@@ -9473,7 +9582,11 @@ function cellContent(x,y){
   const r3=H(x,y,3);
   if(r3<0.0035&&!isRoad(x,y)){
    const nm=VILL_A[Math.floor(H(x,y,13)*VILL_A.length)]+VILL_B[Math.floor(H(x,y,14)*VILL_B.length)];
-   c.structure={type:"village",name:`Деревня ${nm}`,beacon:"village"};}
+   /* Война доходит до клетки: пограничную деревню жгут, и это слышно в самом
+      её имени, а не только в сводке о войне. */
+   const н=safeFn(()=>raidAt(x,y,G.day),null);
+   c.structure={type:"village",name:`Деревня ${nm}${н?` — ${н.фаза.n}`:""}`,
+    beacon:"village",набег:н||null};}
   else if(roadAt(x,y)&&H(x,y,4)<0.01){
    const nm=`${TAV_A[Math.floor(H(x,y,15)*TAV_A.length)]} ${TAV_B[Math.floor(H(x,y,16)*TAV_B.length)]}`;
    c.structure={type:"tavern",name:`Таверна «${nm}»`,beacon:"tavern",inn:true};}
@@ -9760,8 +9873,22 @@ function beastAt(x,y,c,базоваяДоля){
     Разъезд державы — не украшение тракта, а причина по нему идти: где он
     прошёл, встреч меньше втрое. Считается только под открытым небом и только
     рядом с трактом, поэтому в лесу и в горах ничего не меняется. */
+ /* ── ПОРЯДОК ПРОВЕРОК: СПЕРВА ЖРЕБИЙ, ПОТОМ ДОРОГИЕ МНОЖИТЕЛИ ──
+    Разъезд убавляет встречи, набег прибавляет. Считать их для КАЖДОЙ
+    спрошенной клетки нельзя: набор 58 меряет двадцать тысяч разбросанных по
+    миру клеток, и обход упёрся в секунду.
+    Между тем оба множителя лежат в известных границах: набег поднимает долю
+    не больше чем в 2,2 раза, разъезд только опускает. Значит, клетке, чей
+    жребий выше доли с самой щедрой надбавкой, не поможет никакой набег — её
+    можно отсеять, не считая ничего. Так дорогие проверки достаются одной
+    клетке из десяти, а ответ остаётся ТОЧНО ТЕМ ЖЕ: жребий один и тот же, и
+    множители те же, просто спрошены позже. */
+ const жребий=hashName(x,y,31);
+ if(жребий>=доля*2.2)return null;
+ доля*=safeFn(()=>raidDanger(x,y),1);
+ if(жребий>=доля)return null;
  доля*=safeFn(()=>patrolSafety(x,y),1);
- if(hashName(x,y,31)>=доля)return null;
+ if(жребий>=доля)return null;
  let бросок=hashName(x,y,32)*сумма,i=0;
  while(i<веса.length-1&&бросок>веса[i]){бросок-=веса[i];i++;}
  return cand[i];}
@@ -10319,7 +10446,12 @@ const RUMOR_LADDER={
  добро:["помог кому-то","вытащил человека из беды","спас двор от разорения",
   "спас селение","за него молятся в трёх землях"],
  суд:["был у помоста","вмешался в приговор","отбил осуждённого у стражи",
-  "поднял руку на стражу","объявлен вне закона в этой земле"]};
+  "поднял руку на стражу","объявлен вне закона в этой земле"],
+ /* Война была в сводке и в цене, но не в молве: набег на деревню заводит
+    весть, и дальше она идёт без игрока, как всякая другая. */
+ война:["на рубеже неспокойно","жгут деревни на границе",
+  "война перешла на нашу землю","деревень на рубеже больше нет",
+  "державы жгут друг друга до последнего двора"]};
 function rumorSeed(вид,что,x,y,правда){
  try{
   if(!RUMOR_LADDER[вид])return null;
@@ -14459,9 +14591,12 @@ function secretFound(k){try{return !!(G.secrets&&G.secrets[k]);}catch(_){return 
 function secretTaken(k){try{return (G.secrets&&G.secrets[k])==="взято";}catch(_){return false;}}
 function secretMark(k,как){try{if(!G.secrets||typeof G.secrets!=="object")G.secrets={};G.secrets[k]=как;}catch(_){}}
 /* Найти ход: это делает сама вещь, когда её трогают. */
-function revealSecret(x,y,propId){
+function revealSecret(x,y,propId,поМесту){
  const p=G.place;if(!p)return false;
- if(propId===undefined)propId=safeFn(()=>{const pr=propAt(x,y);return pr&&pr.id;},undefined);
+ /* «По месту» — это простукивание стены или пола, а не осмотр вещи: тогда
+    порог берётся средний, без оглядки на то, что тут стоит. Отдельной
+    такой же функции заводить нельзя — разошлись бы. */
+ if(propId===undefined&&!поМесту)propId=safeFn(()=>{const pr=propAt(x,y);return pr&&pr.id;},undefined);
  if(!propHidesSwitch(p.bx,p.by,p.depth,x,y,propId))return false;
  const v=secretVault(p.bx,p.by,x,y);
  if(secretTaken(v.ключ))return false;
@@ -14736,6 +14871,506 @@ function meetPatrol(){
  narrate(`${p.имя} на пути «${p.тракт}». ${p.вид.о} Вас окликнули, оглядели и пропустили. ${войны.length?`Старший говорит коротко: «Держава в войне с ${EMPIRES[войны[0].a===i?войны[0].b:войны[0].a].short}. Ночью по тракту не ходите».`:"«Дорога наша, идите спокойно»."} ${близко?`Ближнее жильё: ${близко}.`:""} ${тварь?`О звере они знают: ${тварь.m.n}, ${тварь.d} ${plural(тварь.d,"шаг","шага","шагов")}, ${тварь.dir}.`:"О звере поблизости они не слышали."} Пока разъезд рядом, на дороге тихо.`);
  safeFn(()=>{refresh();saveGame(true);});
  return true;}
+
+/* ════════════════════════════════════════════════════════════════════════
+   ЕДИНОЕ КОНТЕКСТНОЕ ВЗАИМОДЕЙСТВИЕ: ОБЪЕКТ → ВЫБОР → ДЕЙСТВИЯ
+
+   Взаимодействие в игре было устроено по правилу «объект — одно действие»:
+   касание по сундуку открывало сундук, по алтарю — молитву, по вещи —
+   единственный её отклик. Это удобно и быстро, но это не мир: у настоящего
+   сундука есть и осмотр, и простукивание, и поиск двойного дна; у стены —
+   проверка на пустоту; у жилы — определение породы прежде кирки.
+
+   И второе: если рядом НЕСКОЛЬКО объектов, выбирать за игрока нельзя. Для
+   зрячего это мелочь — он видит, на что нажал. Незрячий не видит, и «оно
+   сделало что-то» — худший из возможных ответов.
+
+   Здесь заведено одно дерево на всё:
+
+     ЧТО ВОКРУГ → ВЫБОР ОБЪЕКТА → ДЕЙСТВИЯ ЭТОГО ОБЪЕКТА → РЕЗУЛЬТАТ
+
+   Быстрый путь остаётся прежним: «Действие здесь» по-прежнему делает главное
+   действие того, что под ногами, одним касанием, и ни один старый жест не
+   меняется. Новое дерево — не замена ему, а то, чего не было: возможность
+   ОСМОТРЕТЬ, ВЫБРАТЬ и сделать не только главное.
+
+   Действия живут в одном реестре и делегируют уже написанному: openChest,
+   useProp, mineVein, useAltar, studyKnowledge, gatherCurrent, useFind. Второй
+   такой же разбор рядом был бы не второй возможностью, а вторым местом, где
+   заводятся расхождения.
+   ════════════════════════════════════════════════════════════════════════ */
+const IACT={};
+function iact(id,def){IACT[id]=Object.assign({id},def);}
+
+/* Осмотреть — есть у всего. Называет вещь, сторону, расстояние и состояние. */
+iact("look",{n:"Осмотреть",значок:"👁️",
+ делать:o=>{
+  safeFn(()=>{if(o.маяк)beaconAt(o.маяк,o.dx||0,o.dy||0,0,o.d||0);});
+  const где=o.d?`${o.d} ${plural(o.d,"шаг","шага","шагов")}, ${dirBetween(o.dx,o.dy)}`:"под ногами";
+  narrate(`${o.n}: ${где}.${o.о?` ${o.о}`:""}${o.состояние?` Состояние: ${o.состояние}.`:""}`);
+  return true;}});
+
+/* Прислушаться — объект отзывается своим маяком с той стороны, где стоит. */
+iact("listen",{n:"Прислушаться",значок:"👂",
+ можно:o=>!!o.маяк,
+ делать:o=>{
+  safeFn(()=>beaconAt(o.маяк,o.dx||0,o.dy||0,0,o.d||0));
+  narrate(`${o.n}: слушаете${o.d?`, ${dirBetween(o.dx,o.dy)}, ${o.d} ${plural(o.d,"шаг","шага","шагов")}`:" под ногами"}. ${o.звукО||"Звук идёт оттуда."}`,{interrupt:false});
+  return true;}});
+
+/* Постучать — по двери, стене, сундуку и бочке. Отвечает не описание, а звук:
+   за пустотой стук другой, и это первый признак скрытого хода. */
+iact("knock",{n:"Постучать",значок:"✊",
+ можно:o=>["+","G","#","C","Y","X"].indexOf(o.плитка)>=0,
+ делать:o=>{
+  safeFn(()=>Bank.play("knock_soft",{seed:o.x+o.y,gain:0.6,maxSec:3})
+   ||Bank.play("stone_hit",{gain:0.6,maxSec:3}));
+  const пусто=G.place&&safeFn(()=>propHidesSwitch(G.place.bx,G.place.by,G.place.depth,o.x,o.y,undefined),false);
+  narrate(пусто?`${o.n}: стук уходит вглубь и возвращается гулко. За этим местом пусто.`
+   :`${o.n}: стук глухой и короткий. За этим местом камень или земля.`,{interrupt:false});
+  return true;}});
+
+/* Проверить на пустоту — то же простукивание, доведённое до конца: если за
+   стеной ход, он открывается. Это и есть единственный способ найти его. */
+iact("hollow",{n:"Проверить на пустоту",значок:"🔍",
+ можно:o=>!!G.place&&["#","+","X","C","Y"].indexOf(o.плитка)>=0,
+ делать:o=>{
+  const было=safeFn(()=>revealSecret(o.x,o.y,undefined,true),false);
+  if(!было){
+   safeFn(()=>Bank.play("knock_soft",{seed:o.x+o.y,gain:0.5,maxSec:3}));
+   narrate(`${o.n}: вы прошли ладонью по кладке и простучали её. Ничего: сплошной камень.`,{interrupt:false});}
+  return true;}});
+
+/* Искать скрытый отсек — у вещи, а не у места: за статуей и шкафом прячут
+   чаще, за бочкой почти никогда. */
+iact("secret",{n:"Искать скрытый отсек",значок:"🕯️",
+ можно:o=>!!G.place&&o.плитка==="X",
+ делать:o=>{
+  const было=safeFn(()=>revealSecret(o.x,o.y),false);
+  if(!было){
+   safeFn(()=>Bank.play("knock_soft",{seed:o.x+o.y,gain:0.5,maxSec:3}));
+   narrate(`${o.n}: вы ощупали её со всех сторон. Двойного дна нет.`,{interrupt:false});}
+  return true;}});
+
+/* Определить породу — прежде кирки. Сорт у жилы и у ресурса уже есть, и
+   назвать его — отдельное знание, а не то же, что «собрать». */
+iact("assay",{n:"Определить породу",значок:"🔬",
+ можно:o=>o.вид==="res"||o.плитка==="R",
+ делать:o=>{
+  safeFn(()=>Bank.play("craft_stone",{seed:o.x+o.y,gain:0.5,maxSec:3}));
+  if(o.вид!=="res"){
+   const п=safeFn(()=>veinPool(),[])||[];
+   narrate(`${o.n}: по излому видно, что жила даёт: ${п.join(", ")}. Бить её придётся наугад.`,{interrupt:false});
+   return true;}
+  const имя=o.ресурс||null;
+  const с=имя?safeFn(()=>resSortAt(o.x,o.y,имя),null):null;
+  narrate(с?`${o.n}: порода определяется. Это ${с.n} — ${с.о} Вес добычи: ${с.вес}.${с.товар?` Из такой жилы берут и ${с.товар}.`:""}`
+   :`${o.n}: порода обычная, ничем не примечательная.${имя?` Возьмётся как ${имя}.`:""}`,{interrupt:false});
+  return true;}});
+
+/* Главное действие объекта: то же, что делает быстрый путь. */
+iact("use",{n:"Взяться",значок:"✋",
+ можно:o=>!!o.главное,
+ делать:o=>{safeFn(()=>o.главное());return true;}});
+
+/* ── Что вокруг ──
+   Под ногами и в четырёх соседних клетках. Дальше не смотрим: взаимодействие
+   рукой, а не взглядом. */
+const IOBJ_TILES={"+":"дверь","G":"ворота","C":"сундук","K":"книги и свитки",
+ "A":"алтарь","R":"жила ресурса","X":"обстановка","W":"колодец","T":"факел",
+ "F":"горн","S":"лавка","N":"житель","P":"торговец","B":"пост стражи",
+ "L":"голубиная почта","<":"лестница вверх",">":"лестница вниз",
+ "Y":"дверь сокровищницы","#":"стена"};
+function objectsHere(){
+ const out=[];
+ try{
+  if(G.ship||inFlight())return out;
+  if(G.place){
+   const lvl=curLevel(),p=G.place;if(!lvl)return out;
+   const кл=[[0,0],[0,-1],[0,1],[-1,0],[1,0]];
+   for(const [dx,dy] of кл){
+    const x=p.x+dx,y=p.y+dy;
+    if(x<0||y<0||x>=lvl.w||y>=lvl.h)continue;
+    const t=tileAt(lvl,x,y);
+    if(!IOBJ_TILES[t])continue;
+    /* Стена сама по себе не объект: она становится им только под рукой. */
+    if(t==="#"&&(dx||dy)&&Math.abs(dx)+Math.abs(dy)>1)continue;
+    const имя=safeFn(()=>tileLabel(t,x,y),IOBJ_TILES[t]);
+    const o={вид:"tile",плитка:t,n:имя,x,y,dx,dy,
+     d:Math.max(Math.abs(dx),Math.abs(dy)),
+     маяк:safeFn(()=>tileBeacon(t),null)};
+    /* Горн — станок сам по себе; обстановка становится станком по тому, что
+       это за вещь: наковальня, чан, круг, верстак, точило, очаг. */
+    if(t==="F")o.станок="forge";
+    if(t==="X"){const pr=safeFn(()=>propAt(x,y),null);
+     if(pr){o.вещь=pr.id;if(STANOK_NAME[pr.id])o.станок=pr.id;}}
+    /* Житель рядом — это возможный наставник, а не только собеседник. */
+    if(["N","S","P","B","F"].indexOf(t)>=0)
+     o.жилец=safeFn(()=>getNPC(p.bx,p.by,(x*7+y*13)%5,null),null);
+    o.главное=()=>{
+     const был={x:p.x,y:p.y};
+     p.x=x;p.y=y;
+     try{useHere();}finally{p.x=был.x;p.y=был.y;}};
+    out.push(o);}
+   return out;}
+  /* Под открытым небом: постройка, ресурс, находка, переправа, узел сети. */
+  const c=cellContent(G.x,G.y);
+  if(c.structure)out.push({вид:"structure",n:c.structure.name,x:G.x,y:G.y,dx:0,dy:0,d:0,
+   маяк:c.structure.beacon,о:safeFn(()=>bldDesc(c.structure.type),""),
+   главное:()=>interactHere()});
+  if(c.res)out.push({вид:"res",n:`Ресурс: ${c.res.name}`,ресурс:c.res.name,
+   x:G.x,y:G.y,dx:0,dy:0,d:0,маяк:c.res.beacon,
+   состояние:(G.depleted&&G.depleted[G.x+","+G.y])?"выработан на сегодня":"нетронут",
+   главное:()=>gatherCurrent()});
+  if(c.находка)out.push({вид:"find",n:c.находка.n,x:G.x,y:G.y,dx:0,dy:0,d:0,
+   маяк:c.находка.b,о:c.находка.о,
+   состояние:safeFn(()=>findTaken(G.x,G.y,"")?null:null,null),
+   главное:()=>useFind(G.x,G.y)});
+  safeFn(()=>{const пер=crossingAt(G.x,G.y);
+   if(пер)out.push({вид:"crossing",n:пер.n,x:G.x,y:G.y,dx:0,dy:0,d:0,
+    маяк:"well",о:пер.о});});
+  safeFn(()=>{const nd=portalNodeAt(G.x,G.y);
+   if(nd)out.push({вид:"node",n:nd.name,x:G.x,y:G.y,dx:0,dy:0,d:0,маяк:"portal",
+    состояние:portalKnown(nd.x,nd.y)?"узел открыт":"узел ещё не открыт",
+    главное:()=>openPortalNet()});});
+  /* Соседние клетки снаружи: только постройки — до них шаг, и это сведение. */
+  for(const [dx,dy] of [[0,-1],[0,1],[-1,0],[1,0]]){
+   const x=G.x+dx,y=G.y+dy;
+   if(x<0||y<0||x>=WORLD||y>=WORLD)continue;
+   const cc=safeFn(()=>cellContent(x,y),null);
+   if(cc&&cc.structure)out.push({вид:"structure",n:cc.structure.name,x,y,dx,dy,d:1,
+    маяк:cc.structure.beacon,о:"Шаг в эту сторону — и вы у порога."});}
+ }catch(_){}
+ return out;}
+/* Проситься в ученики — у того, кто и вправду умеет и умеет больше вас. */
+iact("apprentice",{n:"Проситься в ученики",значок:"🎓",
+ можно:o=>{
+  const t=o.жилец&&safeFn(()=>mastTeaches(o.жилец),null);
+  return !!(t&&t.some(z=>mastLevel(z.id)<z.до));},
+ делать:o=>{
+  const t=safeFn(()=>mastTeaches(o.жилец),null)||[];
+  const годные=t.filter(z=>mastLevel(z.id)<z.до);
+  if(!годные.length){narrate("Учить вас тут больше нечему.");return true;}
+  /* Берём то, в чём вы дальше всего от предела наставника: учиться выгоднее
+     тому, чего совсем не знаете. */
+  годные.sort((a,b)=>(a.до-mastLevel(a.id))<(b.до-mastLevel(b.id))?1:-1);
+  return safeFn(()=>mastAsk(o.жилец,годные[0].id),false);}});
+/* Какие действия доступны у этого объекта: только те, что и вправду можно.
+   К общим добавляются техники станка: у горна свои, у наковальни свои, и
+   показаны только те, до которых доросло мастерство. */
+function actionsFor(o){
+ const порядок=["look","listen","knock","hollow","secret","assay","apprentice","use"];
+ const общие=порядок.map(id=>IACT[id]).filter(a=>a&&(!a.можно||safeFn(()=>a.можно(o),false)));
+ const тех=(o&&o.станок)?safeFn(()=>techsAt(o.станок),[])||[]:[];
+ return общие.concat(тех.map(t=>({id:"tech:"+t.id,n:t.n,значок:t.значок,
+  о:`${t.о} Нужно: ${Object.entries(t.берёт||{}).map(([k,v])=>k+" ×"+v).join(", ")||"припас по разбору"}. Доля неудачи: ${Math.round(techRisk(t)*100)} из ста.`,
+  делать:()=>techDo(t,o.станок)})));}
+/* ── Окно: сперва объекты, потом действия выбранного ── */
+let objList=[],objPick=-1;
+function openObjects(){
+ objList=safeFn(()=>objectsHere(),[])||[];
+ objPick=-1;
+ const m=document.getElementById("modal-object");
+ if(!m){narrate("Окно объектов недоступно.");return false;}
+ document.getElementById("objTitle").textContent="🔎 Что вокруг";
+ const b=document.getElementById("objBody");
+ if(!objList.length){
+  b.innerHTML=`<div class="list-line">Рядом нет ничего, с чем можно что-то сделать.</div>`;
+  openModal("modal-object");
+  narrate("Рядом нет ничего, с чем можно что-то сделать.");
+  return true;}
+ b.innerHTML=objList.map((o,i)=>{
+  const где=o.d?`${o.d} ${plural(o.d,"шаг","шага","шагов")}, ${dirBetween(o.dx,o.dy)}`:"под ногами";
+  const действий=actionsFor(o).length;
+  const речь=`${o.n}, ${где}. Действий: ${действий}.`.replace(/"/g,"&quot;");
+  return `<button class="item" data-cmd="objpick:${i}" data-speak="${речь}">🔹 ${o.n} — ${где} (действий: ${действий})</button>`;}).join("");
+ openModal("modal-object");
+ narrate(`Вокруг ${objList.length} ${plural(objList.length,"объект","объекта","объектов")}: ${objList.map(o=>o.n).join(", ")}. Свайп — листать, двойное касание — выбрать.`);
+ return true;}
+function openObjActions(i){
+ i=Number(i);
+ const o=objList[i];
+ if(!o){narrate("Этого здесь уже нет.");return false;}
+ objPick=i;
+ const acts=actionsFor(o);
+ document.getElementById("objTitle").textContent="🔹 "+o.n;
+ const b=document.getElementById("objBody");
+ const где=o.d?`${o.d} ${plural(o.d,"шаг","шага","шагов")}, ${dirBetween(o.dx,o.dy)}`:"под ногами";
+ b.innerHTML=`<div class="list-line" data-speak="${(o.n+", "+где+". "+(o.о||"")).replace(/"/g,"&quot;")}">🔹 <b>${o.n}</b> — ${где}${o.о?`<br>${o.о}`:""}${o.состояние?`<br>Состояние: ${o.состояние}`:""}</div>`
+  +acts.map(a=>`<button class="item" data-cmd="objact:${i}:${a.id}" data-speak="${(a.n+". "+(a.о||"")).replace(/"/g,"&quot;")}">${a.значок} ${a.n}</button>`).join("")
+  +`<button class="item" data-cmd="objback" data-speak="Назад, к списку объектов вокруг.">↩️ Назад: что вокруг</button>`;
+ openModal("modal-object");
+ narrate(`${o.n}, ${где}. Действий: ${acts.length}: ${acts.map(a=>a.n).join(", ")}.`);
+ return true;}
+function doObjAction(i,id){
+ const o=objList[Number(i)];
+ /* Техники станка живут не в общем реестре, а при самом объекте: у горна
+    свои, у наковальни свои. Ищем среди того, что этому объекту доступно. */
+ const a=o?(safeFn(()=>actionsFor(o),[])||[]).find(z=>z.id===id)||IACT[id]:null;
+ if(!o||!a){narrate("Так не выйдет.");return false;}
+ if(a.можно&&!safeFn(()=>a.можно(o),false)){
+  narrate(`${a.n}: сейчас не выйдет.${a.нужно?` Нужно: ${a.нужно}.`:""}`);
+  return false;}
+ /* Действие, которое уводит в другое окно (вход, сундук, разговор), закрывает
+    это: иначе два окна встанут друг на друга и свайп потеряется. */
+ if(id==="use")safeFn(()=>closeTopUI());
+ safeFn(()=>a.делать(o));
+ if(id!=="use"&&document.getElementById("modal-object")
+   &&!document.getElementById("modal-object").hidden)safeFn(()=>openObjActions(i));
+ return true;}
+
+/* ════════════════════════════════════════════════════════════════════════
+   МАСТЕРСТВА, НАСТАВНИКИ И РАБОТА У СТАНКА
+
+   Ремесло в игре было одной кнопкой на пять рецептов: нажал — получил. Ни
+   учиться было нечему, ни ошибиться негде, ни станок был не нужен — рецепты
+   работали посреди поля. И что хуже всего, список рецептов был записан ДВАЖДЫ
+   — отдельно для показа и отдельно для исполнения, — так что расхождение
+   между обещанным и сделанным было делом времени.
+
+   Здесь заведено то, чего не было:
+
+     МАСТЕРСТВО — у каждого ремесла свой счёт: уровень, опыт и то, что на этом
+       уровне вообще возможно. Первый уровень НЕ ДАЁТСЯ за уровень героя: в
+       ученики надо проситься к тому, кто сам умеет. Дальше растит работа.
+     НАСТАВНИК — живой житель с ремеслом. Кузнец учит ковке и немного рунам,
+       магистр школы — артефакторике и зачарованию, целительница — травам.
+       Один мастер не знает всего и выше себя не научит.
+     СТАНОК — работа идёт у горна, наковальни, чана, круга, верстака и очага,
+       а не в воздухе. Что можно у этого станка, решают станок и уровень.
+     ОШИБКА — на низком уровне работа срывается, и припас уходит впустую.
+       Ремесло без риска — это выдача, а не ремесло.
+
+   Всё это делегирует уже написанному: части артефактов берутся из ART_PARTS
+   вместе с их «из» (из чего делается), добыча складывается в те же G.inv и
+   G.comps. Второй такой же склад рядом был бы не второй возможностью, а
+   вторым местом, где заводятся расхождения.
+   ════════════════════════════════════════════════════════════════════════ */
+const MAST_RANK=["не знаком","ученик","подмастерье","умелец","мастер","старший мастер"];
+const MASTERY=[
+ {id:"smith",  n:"кузнечное дело",   станки:["forge","anvil"],
+  о:"Порода, горн, молот и закалка: из руды выходит металл, из металла — вещь."},
+ {id:"jewel",  n:"камнерезное дело", станки:["bench","whetstone"],
+  о:"Огранка: из мутного желвака выходит грань, которая держит свет."},
+ {id:"alchemy",n:"алхимия",          станки:["cauldron","hearth"],
+  о:"Разбор веществ: измельчить, смешать, нагреть, отделить лишнее."},
+ {id:"runes",  n:"руническое дело",  станки:["bench","anvil"],
+  о:"Чтение и начертание знаков, которые держат свойство на вещи."},
+ {id:"arte",   n:"артефакторика",    станки:["circle","orb"],
+  о:"Разбор и сборка вещей с силой: ядро, свойства, насыщение."},
+ {id:"cook",   n:"стряпня",          станки:["hearth"],
+  о:"Огонь, вода и время: из припаса выходит еда, которая и вправду лечит."}];
+const MAST_BY_ID=Object.fromEntries(MASTERY.map(m=>[m.id,m]));
+/* Кто чему учит и до какого предела. Один мастер не знает всего. */
+const MAST_TEACH={
+ "Кузнец":{smith:4,runes:2,jewel:1},
+ "Магистр":{arte:4,ench:0,runes:3},
+ "Маг-отшельник":{arte:5,runes:3},
+ "Целительница":{alchemy:3,cook:2},
+ "Трактирщик":{cook:3},
+ "Жрец":{arte:1},
+ "Ученик":{arte:1,runes:1},
+ "Старейшина":{cook:1},
+ "Капитан":{cook:1},
+ "Советник":{arte:1}};
+function mastOf(id){
+ if(!G.mast||typeof G.mast!=="object")G.mast={};
+ const r=G.mast[id];
+ if(!r||typeof r!=="object")return {ур:0,оп:0,дел:0};
+ return {ур:Math.max(0,Math.min(5,Number(r.ур)||0)),
+  оп:Math.max(0,Number(r.оп)||0),дел:Math.max(0,Number(r.дел)||0)};}
+function mastLevel(id){return mastOf(id).ур;}
+function mastNeed(ур){return 20+ур*ур*22;}
+/* Опыт за работу. Уровень растёт только от сделанного, а не от уровня героя. */
+function mastGain(id,n){
+ if(!MAST_BY_ID[id])return false;
+ if(!G.mast||typeof G.mast!=="object")G.mast={};
+ const r=G.mast[id]||{ур:0,оп:0,дел:0};
+ if(!(Number(r.ур)||0))return false;             /* без первого урока опыт некуда класть */
+ r.оп=(Number(r.оп)||0)+(Number(n)||0);
+ r.дел=(Number(r.дел)||0)+1;
+ while(r.ур<5&&r.оп>=mastNeed(r.ур)){
+  r.оп-=mastNeed(r.ур);r.ур++;
+  const м=MAST_BY_ID[id];
+  safeFn(()=>{UI.fanfare();Bank.play("jingle_achievement",{gain:0.7,maxSec:5});
+   setTimeout(()=>safeFn(()=>Bank.play("harp_light",{seed:r.ур,gain:0.6,maxSec:4})),320);});
+  safeFn(()=>narrate(`Мастерство растёт: ${м.n} — ${MAST_RANK[r.ур]}. Открылось то, чего прежде не выходило.`,{interrupt:false}));
+  safeFn(()=>journal(`Мастерство: ${м.n}, ${MAST_RANK[r.ур]}.`));}
+ G.mast[id]=r;
+ safeFn(()=>saveGame(true));
+ return true;}
+/* Чему и до какого предела учит этот житель. */
+function mastTeaches(npc){
+ const t=(npc&&MAST_TEACH[npc.prof])||null;
+ if(!t)return null;
+ const out=[];
+ for(const id in t){if(!MAST_BY_ID[id])continue;if(t[id]<=0)continue;out.push({id,до:t[id]});}
+ return out.length?out:null;}
+/* Проситься в ученики: плата, отношение народа и предел наставника. */
+function mastAsk(npc,id){
+ const м=MAST_BY_ID[id];if(!м||!npc)return false;
+ const учит=(MAST_TEACH[npc.prof]||{})[id]||0;
+ const было=mastLevel(id);
+ if(!учит){narrate(`${npc.name} этому не учит: «Не моё ремесло».`);return false;}
+ if(было>=учит){
+  narrate(`${npc.name} разводит руками: «${м.n} вы знаете не хуже меня. Ищите того, кто выше».`);
+  return false;}
+ const цена=40+было*60;
+ if((Number(G.gold)||0)<цена){
+  narrate(`${npc.name} называет цену урока: ${цена} золота. В кошеле столько не набирается.`);
+  return false;}
+ const отн=safeFn(()=>repOf(npc.race),0);
+ if(отн<=-8){
+  narrate(`${npc.name} отказывает наотрез: «Вашему народу я не должен, а вам — тем более». Сперва поправьте отношения.`);
+  return false;}
+ G.gold-=цена;
+ if(!G.mast||typeof G.mast!=="object")G.mast={};
+ const r=G.mast[id]||{ур:0,оп:0,дел:0};
+ r.ур=Math.min(5,(Number(r.ур)||0)+1);r.оп=0;
+ G.mast[id]=r;
+ safeFn(()=>addRep(npc.race,1));
+ safeFn(()=>npcRemember(npc,"помог","урок",4));
+ safeFn(()=>{Bank.play("arte_page",{gain:0.6,maxSec:4});
+  setTimeout(()=>safeFn(()=>Bank.play("jingle_achievement",{gain:0.6,maxSec:5})),380);});
+ narrate(`${npc.name} берёт ${цена} золота и показывает дело руками, а не словами. ${м.о} Теперь вы ${MAST_RANK[r.ур]} в ремесле «${м.n}». Работать с этим надо у станка: ${м.станки.map(s=>STANOK_NAME[s]||s).join(", ")}.`);
+ safeFn(()=>journal(`Урок у наставника: ${м.n}, ${MAST_RANK[r.ур]}.`));
+ safeFn(()=>{refresh();saveGame(true);});
+ return true;}
+const STANOK_NAME={forge:"горн",anvil:"наковальня",cauldron:"чан алхимика",
+ circle:"магический круг",orb:"хрустальный шар",bench:"верстак",
+ whetstone:"точило",hearth:"очаг",loom:"ткацкий стан"};
+/* ── ТЕХНИКИ: что можно сделать у станка ──
+   У каждой свой станок, свой уровень, своя плата припасом и своя доля
+   неудачи. Неудача — не придирка: она и есть разница между ремеслом и
+   выдачей по кнопке. */
+const TECHS=[
+ {id:"melt",маст:"smith",ур:1,станки:["forge"],n:"Плавить руду",значок:"🔥",
+  берёт:{"руда":4},даёт:{"слиток":1},время:0.8,оп:3,
+  звук:"forge_work",след:"craft_ore",
+  о:"Четыре куска породы дают слиток; остальное уходит в шлак."},
+ {id:"blade",маст:"smith",ур:3,станки:["anvil"],n:"Отковать клинок",значок:"⚒️",
+  берёт:{"слиток":2,"дерево":1},время:2.0,оп:9,
+  звук:"wild_anvil",след:"arte_metal",
+  о:"Полоса, закалка, отпуск, заточка и рукоять: выходит именной клинок."},
+ {id:"cut",маст:"jewel",ур:1,станки:["bench","whetstone"],n:"Огранить кристалл",значок:"💎",
+  берёт:{"кристалл":3},даёт:{"самоцвет":1},время:1.0,оп:4,
+  звук:"craft_stone",след:"fx_crystal",
+  о:"Три мутных желвака дают одну грань, которая держит свет."},
+ {id:"brew",маст:"alchemy",ур:1,станки:["cauldron","hearth"],n:"Сварить отвар",значок:"🧪",
+  берёт:{"трава":3,"ягоды":1},время:0.7,оп:3,
+  звук:"arte_potion",след:"arte_potion",
+  о:"Отвар поднимает на ноги и возвращает силу — сразу и целиком."},
+ {id:"essence",маст:"alchemy",ур:2,станки:["cauldron"],n:"Отогнать эссенцию",значок:"⚗️",
+  род:"эссенция",время:1.2,оп:6,звук:"arte_potion",след:"fx_crystal",
+  о:"Из припаса отгоняется его суть: она ложится в гнездо вещи."},
+ {id:"inscribe",маст:"runes",ур:1,станки:["bench","anvil"],n:"Начертать руну",значок:"🪧",
+  род:"руна",время:1.0,оп:5,звук:"craft_stone",след:"rune_square",
+  о:"Знак режется по камню, кости или металлу и держит на вещи одно свойство."},
+ {id:"core",маст:"arte",ур:3,станки:["circle","orb"],n:"Собрать ядро",значок:"🔮",
+  род:"ядро",время:1.6,оп:8,звук:"fx_crystal",след:"pad_astral",
+  о:"Ядро — сердце вещи: без него свойства не держатся вместе."},
+ {id:"analyze",маст:"arte",ур:1,станки:["circle","orb"],n:"Разобрать вещь",значок:"🔎",
+  время:0.5,оп:2,звук:"arte_object",след:"pad_astral",
+  о:"Что в этой вещи и откуда она — видно только тому, кто умеет смотреть."},
+ {id:"stew",маст:"cook",ур:1,станки:["hearth"],n:"Сварить похлёбку",значок:"🍲",
+  берёт:{"ягоды":2,"грибы":2,"дерево":1},время:0.6,оп:2,
+  звук:"wild_hearth",след:"amb_fire",
+  о:"Горячее возвращает и здоровье, и воду — то, чего не даёт ни одно зелье."}];
+const TECH_BY_ID=Object.fromEntries(TECHS.map(t=>[t.id,t]));
+/* Часть, которую можно сделать этой техникой прямо сейчас: по роду, по
+   редкости (не выше уровня) и по тому, что лежит в котомке. */
+function techPart(t){
+ if(!t.род)return null;
+ const ур=mastLevel(t.маст);
+ const годные=ART_PARTS.filter(p=>p.род===t.род&&(Number(p.ред)||1)<=ур
+  &&(p.из||[]).some(r=>(Number(G.inv&&G.inv[r])||0)>=2));
+ if(!годные.length)return null;
+ const i=Math.floor(safeFn(()=>hashName(Number(G.day)||1,(Number(G.hour)||0)|0,6700),0)*годные.length)%годные.length;
+ return годные[i];}
+/* Хватает ли припаса. Возвращает чего не хватает — словами. */
+function techLacks(t){
+ const нет=[];
+ for(const k in (t.берёт||{})){
+  if((Number(G.inv&&G.inv[k])||0)<t.берёт[k])нет.push(`${k} ×${t.берёт[k]}`);}
+ if(t.род){
+  const p=techPart(t);
+  if(!p)нет.push(`припас на ${t.род}у нужного разбора`);}
+ return нет;}
+/* Доля неудачи: на своём уровне работа выходит почти всегда, на пределе — нет. */
+function techRisk(t){
+ const ур=mastLevel(t.маст);
+ const запас=ур-t.ур;
+ return Math.max(0.02,Math.min(0.45,0.30-запас*0.09));}
+/* Какие техники доступны у этого станка. */
+function techsAt(станок){
+ if(!станок)return [];
+ return TECHS.filter(t=>t.станки.indexOf(станок)>=0&&mastLevel(t.маст)>=t.ур);}
+/* Работа у станка. */
+function techDo(t,станок){
+ if(!t)return false;
+ if(mastLevel(t.маст)<t.ур){
+  narrate(`${t.n}: не выходит. Нужно мастерство «${MAST_BY_ID[t.маст].n}» ступени ${t.ур} — ${MAST_RANK[t.ур]}.`);
+  return false;}
+ const нет=techLacks(t);
+ if(нет.length){narrate(`${t.n}: не из чего. Не хватает: ${нет.join(", ")}.`);return false;}
+ safeFn(()=>{Bank.play(t.звук,{seed:(Number(G.day)||1)+(Number(G.hour)||0),gain:0.65,maxSec:6});
+  if(t.след)setTimeout(()=>safeFn(()=>Bank.play(t.след,{gain:0.55,maxSec:5})),420);});
+ safeFn(()=>propTime(t.время||0.5));
+ /* Припас уходит сразу: и при удаче, и при срыве. Так и бывает у горна. */
+ const часть=t.род?techPart(t):null;
+ for(const k in (t.берёт||{})){
+  G.inv[k]=(Number(G.inv[k])||0)-t.берёт[k];
+  if(G.inv[k]<=0)delete G.inv[k];}
+ if(часть){
+  const r=(часть.из||[]).find(x=>(Number(G.inv&&G.inv[x])||0)>=2)||(часть.из||[])[0];
+  if(r){G.inv[r]=(Number(G.inv[r])||0)-2;if(G.inv[r]<=0)delete G.inv[r];}}
+ if(Math.random()<techRisk(t)){
+  safeFn(()=>Bank.play("stk_break",{gain:0.6,maxSec:4}));
+  narrate(`${t.n}: не вышло. ${techFailWord(t)} Припас ушёл впустую. Мастерство от неудачи тоже растёт, но медленнее.`);
+  safeFn(()=>mastGain(t.маст,Math.max(1,Math.round((t.оп||3)*0.35))));
+  safeFn(()=>{refresh();saveGame(true);});
+  return true;}
+ let дар="";
+ for(const k in (t.даёт||{})){
+  G.inv[k]=(Number(G.inv[k])||0)+t.даёт[k];
+  дар+=`${дар?", ":""}${k} ×${t.даёт[k]}`;}
+ if(часть){safeFn(()=>artAddPart(часть.id,1));дар=`${часть.n} — ${часть.о}`;}
+ if(t.id==="blade"){
+  const имя=SECRET_BLADES[Math.floor(Math.random()*SECRET_BLADES.length)];
+  if(!Array.isArray(G.items))G.items=[];
+  G.items.push(имя);
+  дар=`клинок «${имя}» вашей работы`;}
+ if(t.id==="brew"){
+  const h=Math.min(G.hpMax,G.hp+Math.round(G.hpMax*0.4))-G.hp;
+  const m=Math.min(G.manaMax,G.mana+Math.round(G.manaMax*0.5))-G.mana;
+  G.hp+=h;G.mana+=m;
+  дар=`отвар выпит на месте: здоровья +${h}, силы +${m}`;}
+ if(t.id==="stew"){
+  const h=Math.min(G.hpMax,G.hp+Math.round(G.hpMax*0.3))-G.hp;
+  G.hp+=h;G.water=Math.min(200,(Number(G.water)||0)+60);
+  дар=`горячее съедено: здоровья +${h}, вода полна (${G.water})`;}
+ if(t.id==="analyze"){
+  const a=(G.artifacts||[]).find(x=>x&&typeof x==="object");
+  дар=a?`вещь разобрана: ${safeFn(()=>ART.describe(a,true),"свойства прочитаны")}`
+   :"разбирать нечего: ни одной вещи с силой при вас нет";}
+ narrate(`${t.n}: вышло. ${дар?дар[0].toUpperCase()+дар.slice(1)+"." :""} ${t.о}`);
+ safeFn(()=>mastGain(t.маст,t.оп||3));
+ safeFn(()=>{refresh();saveGame(true);});
+ return true;}
+const TECH_FAILS=["Перегрели, и пошла трещина.","Недогрели, и металл не взялся.",
+ "Рука дрогнула, и линия ушла вбок.","Состав свернулся раньше срока.",
+ "Пропорция не та, и всё осело на дно.","Держали дольше, чем следует."];
+function techFailWord(t){
+ return TECH_FAILS[Math.floor(Math.random()*TECH_FAILS.length)];}
+/* Расклад по мастерствам — вслух. */
+function openMastery(){
+ const строки=MASTERY.map(m=>{
+  const r=mastOf(m.id);
+  if(!r.ур)return `${m.n}: не знакомы. Учат: ${Object.keys(MAST_TEACH).filter(p=>(MAST_TEACH[p]||{})[m.id]).join(", ")||"никто"}.`;
+  return `${m.n}: ${MAST_RANK[r.ур]}, опыт ${r.оп} из ${mastNeed(r.ур)}, работ сделано ${r.дел}.`;});
+ const знаю=MASTERY.filter(m=>mastLevel(m.id)>0).length;
+ safeFn(()=>Bank.play("arte_page",{gain:0.5,maxSec:4}));
+ narrate(`Мастерства: знакомо ${знаю} из ${MASTERY.length}. ${строки.join(" ")} В ученики просятся у станка: наставник должен быть рядом.`);}
 
 /* ── Собрание: всё, что игрок прочёл ──
    Двухуровневое, как энциклопедия звуков: сперва полки, потом страницы
@@ -15181,7 +15816,10 @@ const G={hp:100,hpMax:100,str:10,agi:10,mind:10,cha:10,mana:10,manaMax:10,
     головни из кострища, короб из тайника. Без записи поваленное дерево
     стало бы бесконечной лесопилкой. */
  /* signs — подобранные приметы к кладам: сколько их и куда ведут. */
- depleted:{},visited:{},cleared:{},prayed:{},finds:{},signs:[],inCombat:false,combat:null,loot:null,
+ /* mast — мастерства по ремёслам: уровень, опыт и число сделанных работ.
+    Первый уровень не даётся за уровень героя: в ученики надо проситься. */
+ depleted:{},visited:{},cleared:{},prayed:{},finds:{},signs:[],mast:{},
+ inCombat:false,combat:null,loot:null,
  /* Народ игрока, покровитель из двенадцати богов, благосклонность богов,
     репутация у народов и след, который игрок оставил в политике держав. */
  race:"Люди",patron:null,faith:{},rep:{},diplo:{},clanRep:0,
@@ -19847,6 +20485,12 @@ function openChest(x,y){
  return true;
 }
 /* ── Жила ресурса: добыча для крафта, продажи и заданий ── */
+/* Что вообще берётся с жилы на этой глубине. Список один на двоих: по нему и
+   кирка берёт, и осмотр породы называет. Второй такой же список разошёлся бы
+   с первым, и осмотр обещал бы одно, а кирка давала другое. */
+function veinPool(){
+ const p=G.place;
+ return (p&&p.depth>0)?["руда","кристалл","камень","кость"]:["камень","дерево","трава"];}
 function mineVein(x,y){
  safeFn(()=>Bank.play(G.place&&G.place.depth>0?"craft_ore":"craft_quarry",
   {seed:x*7+y,gain:0.6,maxSec:4}));
@@ -19855,7 +20499,7 @@ function mineVein(x,y){
  /* Кирка бьёт по-разному: наверху сухой лязг, в глубине — тяжёлый с отзвуком. */
  safeFn(()=>Bank.play(p.depth>=3?"clang_splash":p.depth>0?"clang_pedal":"clang_soft",
   {seed:x+y,gain:0.55,maxSec:4}));
- const pool=p.depth>0?["руда","кристалл","камень","кость"]:["камень","дерево","трава"];
+ const pool=veinPool();
  /* Особый квартал города кладёт свою жилу: у стеклодувов кристалл, у
     лекарей травы, у костерезов кость. Такая жила знает, чем она богата. */
  const lvl=curLevel();
@@ -20560,6 +21204,16 @@ function arrive(dir){
    narrate(`${пер.n[0].toUpperCase()+пер.n.slice(1)}${имя?` на пути «${имя}»`:""}. ${пер.о}`,{interrupt:false});}
   else if(!пер&&было)
    narrate("Переправа позади: под ногами снова дорога.",{interrupt:false});});
+ /* ── ВОЙНА НА ЭТОЙ КЛЕТКЕ ──
+    Разорённую деревню слышно раньше, чем о ней скажут: набат и огонь в день
+    набега, вороньё и гарь после, топоры на отстройке. */
+ safeFn(()=>{
+  const н=c.structure&&c.structure.набег;
+  if(!н)return;
+  Bank.play(н.фаза.звук,{seed:G.x+G.y,gain:0.65,maxSec:6});
+  setTimeout(()=>safeFn(()=>Bank.play(н.фаза.след,{seed:G.y,gain:0.5,maxSec:6})),420);
+  narrate(`${c.structure.name}. ${н.фаза.о} Это война державы «${н.своя.short}» с «${н.чужая.short}»: день ${н.день} из ${н.всего}.`,{interrupt:false});
+  rumorSeed("война",`${н.своя.short} и ${н.чужая.short}`,G.x,G.y,true);});
  /* Портальный узел под ногами открывается сам: сеть запоминает того, кто до
     неё дошёл. Дорога и сеть связаны — стоячие камни стоят на перекрёстках
     трактов, поэтому идти по дороге выгодно вдвойне. */
@@ -21739,6 +22393,13 @@ const CMD={
  char(){openModal("modal-character");renderCharacter();},
  quests(){openModal("modal-quests");renderQuests();},
  signs(){openSigns();},
+ objects(){openObjects();},
+ mastery(){openMastery();},
+ objpick(i){openObjActions(i);},
+ /* У техники в имени двоеточие («tech:melt»), поэтому склеиваем обратно всё,
+    кроме первого куска: он — номер объекта. */
+ objact(arg){const p=String(arg).split(":");doObjAction(p[0],p.slice(1).join(":"));},
+ objback(){openObjects();},
  patrol(){meetPatrol();},
  journal(){openModal("modal-journal");renderJournal();},
  world(){openModal("modal-world");renderWorld();},
@@ -23867,19 +24528,31 @@ function renderBestiary(){
   return `<div class="list-line" tabindex="0" data-speak="${speak.replace(/"/g,"&quot;")}"><b>${c.n}</b> (уровни ${c.min}–${c.max})<br>
   🏴‍☠️ «${c.creed}»<br>💰 ${c.demand?`Выкуп: около ${Math.round(c.demand*100)}% вашего золота`:"Выкупа не берут: им нужно другое"}
   <button data-cmd="seavoice:${c.id}" data-speak="Прослушать голос ватаги: ${c.n}.">🔊 Прослушать голос</button></div>`;}).join("");}
+/* ── ОДИН СПИСОК ПРОСТЫХ РЕЦЕПТОВ НА ПОКАЗ И НА ДЕЛО ──
+   Список был записан ДВАЖДЫ: отдельно для окна и отдельно для исполнения. Два
+   списка одного и того же — это не запас, а обещание разойтись: поправишь
+   один, забудешь другой, и кнопка «Создать» начнёт брать не то, что написано.
+   Теперь он один. Эти пять — ручная работа без станка и без мастерства: их
+   делают у костра из подручного. Всё, что сложнее, идёт через станок. */
+const CRAFT_RECIPES=[
+ {n:"Каменное копьё",   из:{"камень":2,"дерево":1}},
+ {n:"Травяной отвар",   из:{"трава":2,"ягоды":1}},
+ {n:"Факел",            из:{"дерево":1,"трава":1}},
+ {n:"Удочка",           из:{"дерево":1,"трава":2}},
+ {n:"Рыболовная сеть",  из:{"трава":3,"дерево":1}}];
 function renderCraft(){
- const RECIPES=[["Каменное копьё",{камень:2,дерево:1}],["Травяной отвар",{трава:2,ягоды:1}],["Факел",{дерево:1,трава:1}],
-  ["Удочка",{дерево:1,трава:2}],["Рыболовная сеть",{трава:3,дерево:1}]];
- document.getElementById("craftList").innerHTML=RECIPES.map((r,i)=>{
-  const need=Object.entries(r[1]).map(([k,v])=>`${k}×${v}`).join(", ");
-  return `<div class="list-line"><b>${r[0]}</b> — нужно: ${need}
-   <button data-cmd="craftdo:${i}" data-speak="Создать ${r[0]}.">🔨 Создать</button></div>`;}).join("");}
-CMD.craftdo=i=>{const R=[[["камень",2],["дерево",1]],[["трава",2],["ягоды",1]],[["дерево",1],["трава",1]],
-  [["дерево",1],["трава",2]],[["трава",3],["дерево",1]]];
- const names=["Каменное копьё","Травяной отвар","Факел","Удочка","Рыболовная сеть"];
- if(!R[i]){narrate("Такого рецепта нет.");return;}
- for(const[k,v]of R[i])if((G.inv[k]||0)<v){narrate(`Не хватает: ${k}.`);return;}
- for(const[k,v]of R[i])G.inv[k]-=v;
+ document.getElementById("craftList").innerHTML=CRAFT_RECIPES.map((r,i)=>{
+  const need=Object.entries(r.из).map(([k,v])=>`${k}×${v}`).join(", ");
+  return `<div class="list-line"><b>${r.n}</b> — нужно: ${need}
+   <button data-cmd="craftdo:${i}" data-speak="Создать ${r.n}. Нужно: ${need}.">🔨 Создать</button></div>`;}).join("")
+  +`<div class="list-line">Работа посложнее идёт у станка: горн, наковальня, чан, круг, верстак и очаг. Что там доступно — решает мастерство. Меню действий, «Что вокруг».</div>`;}
+CMD.craftdo=i=>{
+ const r=CRAFT_RECIPES[Number(i)];
+ const names=CRAFT_RECIPES.map(x=>x.n);
+ if(!r){narrate("Такого рецепта нет.");return;}
+ for(const k in r.из)if((Number(G.inv[k])||0)<r.из[k]){narrate(`Не хватает: ${k}.`);return;}
+ for(const k in r.из)G.inv[k]-=r.из[k];
+ i=Number(i);
  if(i===0){G.str+=2;journal("Крафт: Каменное копьё.");}
  if(i===1){G.hp=Math.min(G.hpMax,G.hp+30);}
  if(i===2){G.items.push("Факел");}
@@ -24208,6 +24881,8 @@ function pruneState(hard){
   /* Приметы не режутся: их не больше трёх незакрытых, а закрытые помнят,
      что клад уже взят. Режем только совсем старый хвост. */
   if(Array.isArray(G.signs)&&G.signs.length>60)G.signs.splice(0,G.signs.length-60);
+  /* Мастерства не режутся вовсе: их ровно столько, сколько ремёсел, и за
+     каждым стоят уплаченные уроки и сделанные работы. */
   G.visited=trimDict(G.visited,lim.visited);
   /* Молитвы помнятся только «сегодня»: старше суток они не значат ничего. */
   if(G.prayed&&typeof G.prayed==="object"){
