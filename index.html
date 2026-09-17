@@ -3387,6 +3387,7 @@ const AM_GROUPS=[
   ["signs","🗺️ Приметы и клады"],
   ["objects","🔎 Что вокруг: объекты и действия"],
   ["mastery","🎓 Мастерства и ремёсла"],
+  ["alchbook","🧪 Записная книжка алхимика"],
   ["patrol","🛡️ Окликнуть разъезд"],
   ["cityplan","🏙️ План города: кварталы и площадь"],
   ["trade","🐫 Рынки, маршруты и караваны"],
@@ -3480,6 +3481,7 @@ function amAvailable(cmd){
   if(cmd==="signs")return !G.place&&!G.dark;
   if(cmd==="objects")return !G.ship&&!inFlight();
   if(cmd==="mastery")return true;
+  if(cmd==="alchbook")return mastLevel("alchemy")>0;
   if(cmd==="patrol")return !!safeFn(()=>patrolHere(),null);
   /* Пункт сбора показывается, только когда собирать действительно есть что:
      внутри постройки это сундук или жила, снаружи — ресурс на клетке. Раньше
@@ -9888,6 +9890,8 @@ function beastAt(x,y,c,базоваяДоля){
  доля*=safeFn(()=>raidDanger(x,y),1);
  if(жребий>=доля)return null;
  доля*=safeFn(()=>patrolSafety(x,y),1);
+ /* Морок иллюзиониста: вокруг идёт не тот, кто идёт, и встреч вдвое меньше. */
+ if(safeFn(()=>buffActive("морок"),false))доля*=0.5;
  if(жребий>=доля)return null;
  let бросок=hashName(x,y,32)*сумма,i=0;
  while(i<веса.length-1&&бросок>веса[i]){бросок-=веса[i];i++;}
@@ -13936,6 +13940,43 @@ function readingStep(d){
  openReading(соб[j],false);}
 
 /* ── Изучение ── */
+/* ── ЧТО ДАЁТ ИЗУЧЕННАЯ СТРАНИЦА ──
+   Прежде этот разбор стоял внутри чтения книги под ногами и никуда больше не
+   годился. Теперь ту же страницу можно взять с полки, выбрав её среди десятка
+   других, — и второй такой же разбор рядом был бы не второй возможностью, а
+   вторым местом, где заводятся расхождения: одна и та же страница давала бы
+   в двух местах разное. */
+function knowGrant(n,reward){
+ let награда="";
+ reward=reward||{type:"lore"};
+ if(reward.type==="skill"){
+  const кандидаты=SKILLS.filter(s=>!hasSkill(s.id));
+  if(кандидаты.length){
+   const s=кандидаты[Math.floor(hashName(n,7,651)*кандидаты.length)%кандидаты.length];
+   learnSkill(s.id);
+   safeFn(()=>{eventFanfare(["gate_fanfare","spark_glock"],0.55);});
+   награда=` Новый навык: «${s.n}». ${s.d}`;
+   journal(`Навык: ${s.n}.`);}
+  else награда=" Здесь описан навык, которым вы уже владеете.";
+ }else if(reward.type==="spell"){
+  const нет=SPELLS.filter(sp=>!(G.spells||[]).includes(sp.n));
+  if(нет.length){
+   const sp=нет[Math.floor(hashName(n,9,652)*нет.length)%нет.length];
+   G.spells.push(sp.n);
+   safeFn(()=>{eventFanfare(["spell_harp","charm_celesta"],0.55);});
+   награда=` Выучено заклинание «${sp.n}»: ${sp.cost} маны. Оно осталось у вас навсегда.`;
+   journal(`Заклинание: ${sp.n}.`);}
+  else награда=" Заклинание в этой книге вам уже знакомо.";
+ }else if(reward.type==="legend"){
+  const sp=LEGEND_SPELLS[Math.floor(hashName(n,11,653)*LEGEND_SPELLS.length)%LEGEND_SPELLS.length];
+  if(!Array.isArray(G.items))G.items=[];
+  G.items.push(legendItemName(sp.n));
+  safeFn(()=>{eventFanfare(["fx_crystal","relic_sing","gate_fanfare"],0.6);});
+  награда=` Со страницы сходит одноразовый свиток: «${sp.n}». ${sp.d} Он ляжет в сумку и сработает один раз.`;
+  journal(`Найден свиток: ${sp.n}.`);
+ }else{
+  награда=` Знание записано в собрание: страниц у вас ${knowRead().length}.`;}
+ return награда;}
 function studyKnowledge(x,y){
  const k=knowledgeAt(x,y);
  if(!k){narrate("Читать здесь нечего.");return false;}
@@ -13952,33 +13993,7 @@ function studyKnowledge(x,y){
   setTimeout(()=>safeFn(()=>Bank.play("spark_glock",{seed:k.n,gain:0.45,maxSec:4})),320);
   /* Книгу слышно как книгу: переплёт, страница, сухой шелест. */
   Bank.play(/пергамент|скрижаль|том/i.test(k.obj.n)?"arte_page":"arte_book",{seed:k.n,gain:0.6,maxSec:3});});
- let награда="";
- if(k.reward.type==="skill"){
-  const кандидаты=SKILLS.filter(s=>!hasSkill(s.id));
-  if(кандидаты.length){
-   const s=кандидаты[Math.floor(hashName(k.n,7,651)*кандидаты.length)%кандидаты.length];
-   learnSkill(s.id);
-   safeFn(()=>{eventFanfare(["gate_fanfare","spark_glock"],0.55);});
-   награда=` Новый навык: «${s.n}». ${s.d}`;
-   journal(`Навык: ${s.n}.`);}
-  else награда=" Здесь описан навык, которым вы уже владеете.";
- }else if(k.reward.type==="spell"){
-  const нет=SPELLS.filter(sp=>!(G.spells||[]).includes(sp.n));
-  if(нет.length){
-   const sp=нет[Math.floor(hashName(k.n,9,652)*нет.length)%нет.length];
-   G.spells.push(sp.n);
-   safeFn(()=>{eventFanfare(["spell_harp","charm_celesta"],0.55);});
-   награда=` Выучено заклинание «${sp.n}»: ${sp.cost} маны. Оно осталось у вас навсегда.`;
-   journal(`Заклинание: ${sp.n}.`);}
-  else награда=" Заклинание в этой книге вам уже знакомо.";
- }else if(k.reward.type==="legend"){
-  const sp=LEGEND_SPELLS[Math.floor(hashName(k.n,11,653)*LEGEND_SPELLS.length)%LEGEND_SPELLS.length];
-  G.items.push(legendItemName(sp.n));
-  safeFn(()=>{eventFanfare(["fx_crystal","relic_sing","gate_fanfare"],0.6);});
-  награда=` Со страницы сходит одноразовый свиток: «${sp.n}». ${sp.d} Он ляжет в сумку и сработает один раз.`;
-  journal(`Найден свиток: ${sp.n}.`);
- }else{
-  награда=` Знание записано в собрание: страниц у вас ${knowRead().length}.`;}
+ const награда=knowGrant(k.n,k.reward);
  /* Книга у чтения теперь есть имя, вид, редкость и цена: одна и та же
     полка в двух разных башнях держит разные книги, и слышно это сразу. */
  const том=safeFn(()=>tomeAt(x,y),null);
@@ -13989,6 +14004,314 @@ function studyKnowledge(x,y){
  refresh();saveGame(true);
  openReading(k.n,true);
  return true;}
+/* ════════════════════════════════════════════════════════════════════════
+   ПОДСКАЗКА В ТОТ МИГ, КОГДА ОНА НУЖНА
+
+   Обучение жестам — девять уроков в начале, и на этом оно кончалось. Всё, что
+   появилось в мире потом — станки, полки, ловушки, приметы, разъезды, — игрок
+   должен был найти сам, перебирая меню. Для зрячего это минута любопытства.
+   Незрячему меню читают вслух по пункту, и «перебрать всё» стоит куда дороже.
+
+   Поэтому здесь не второй курс уроков, а ОДНА строка в тот миг, когда новое
+   встречается впервые: подошли к горну — сказали про станки; спустились под
+   землю — сказали про пол; увидели полку — сказали, что книг там несколько.
+   Каждая говорится один раз за всю игру и помнится в сохранении.
+
+   Это не замена обучению жестам: то учит рукам, это — миру. Ни одна подсказка
+   не перебивает то, что игра говорит по делу: все они идут без перебоя.
+   ════════════════════════════════════════════════════════════════════════ */
+const HINTS={
+ find:"Под ногами не пусто: в мире лежат находки — колодцы, кострища, поваленные деревья, тайники. С ними можно что-то сделать: меню действий, «Что вокруг».",
+ station:"Рядом станок. У горна плавят руду, у наковальни куют, у чана варят, у круга собирают ядра. Но своими руками это выходит только у того, кто учился: проситься в ученики можно у мастера, который рядом.",
+ teacher:"Этот житель учит ремеслу. Встаньте рядом и выберите «Что вокруг», а в его действиях — «Проситься в ученики». Урок стоит золота, и выше себя он не научит.",
+ shelf:"Здесь не одна книга, а целая полка. «Что вокруг» — «Перебрать полку»: игра назовёт, сколько там книг и свитков, и вы выберете, что взять в руки.",
+ dungeon:"Вы под землёй. Тут половина опасности не в тварях, а в полу: плиты проседают, поперёк ходов натянуты жилы. Прежде шага стоит выбрать «Что вокруг» — «Пол под ногами» — «Проверить пол и стены».",
+ patrol:"По тракту идёт разъезд державы. Его можно окликнуть: меню действий, «Окликнуть разъезд». Он скажет, что впереди и далеко ли жильё, а пока он рядом, на дороге тихо.",
+ crossing:"Дорога подошла к переправе. Мост, брод и тоннель слышны под ногой раньше, чем их назовут: настил гудит, брод плещет, тоннель отзывается сводом. Что именно под ногами, в любой миг скажет меню действий, «Что вокруг».",
+ sign:"У вас на руках примета к кладу. Куда идти и что для этого нужно, в любой миг скажет меню действий, пункт «Приметы и клады».",
+ mastery:"Ремёсел в мире семь, и у каждого своя ступень. Что вы уже умеете и у кого учиться дальше — меню действий, «Мастерства и ремёсла»."};
+function hint(id){
+ try{
+  if(!HINTS[id])return false;
+  if(!G.hints||typeof G.hints!=="object")G.hints={};
+  if(G.hints[id])return false;
+  G.hints[id]=1;
+  /* Не Bank.play: «ui_success» лежит в UI-банке, а не в банке ролей, и
+     Bank.play на него отвечает молчанием. Это же место подвело обучение
+     жестам: его отклик на удачный урок не звучал ни разу. */
+  safeFn(()=>UI.nat("ui_success",0.5)||Bank.play("chime",{gain:0.4,maxSec:3}));
+  narrate(HINTS[id],{interrupt:false});
+  safeFn(()=>saveGame(true));
+  return true;
+ }catch(_){return false;}}
+/* Станок или наставник поблизости: подсказка ищет их сама, чтобы игрок не
+   искал вслепую. Смотрит только вокруг и только под крышей. */
+function hintAround(){
+ try{
+  const p=G.place;if(!p)return;
+  if((Number(p.depth)||0)>0)hint("dungeon");
+  const lvl=curLevel();if(!lvl)return;
+  for(const [dx,dy] of [[0,0],[0,-1],[0,1],[-1,0],[1,0]]){
+   const x=p.x+dx,y=p.y+dy;
+   if(x<0||y<0||x>=lvl.w||y>=lvl.h)continue;
+   const t=tileAt(lvl,x,y);
+   if(t==="K"){hint("shelf");continue;}
+   if(t==="F"){hint("station");continue;}
+   if(t==="X"){
+    const pr=safeFn(()=>propAt(x,y),null);
+    if(pr&&STANOK_NAME[pr.id]){if(pr.id==="bookcase"||pr.id==="scrollcase")hint("shelf");else hint("station");}
+    continue;}
+   if(["N","S","P","B"].indexOf(t)>=0){
+    const n=safeFn(()=>getNPC(p.bx,p.by,(x*7+y*13)%5,null),null);
+    if(n&&safeFn(()=>mastTeaches(n),null))hint("teacher");}}
+ }catch(_){}}
+
+/* ════════════════════════════════════════════════════════════════════════
+   ЛОВУШКИ ПОДЗЕМЕЛИЙ
+
+   Подземелье было опасно только тварями: пол под ногами не значил ничего, и
+   идти по нему можно было не глядя. Между тем половина страха подземелья —
+   именно в полу: в плите, которая проседает, в растяжке поперёк хода, в
+   рунном знаке, который ждал двести лет.
+
+   У ловушки есть: место, вид, состояние (не найдена, найдена, обезврежена,
+   сработала), звук в покое и звук срабатывания, способ обнаружения, способ
+   обезвреживания и последствие. Всё это помнится через отметку клетки, как
+   выработанная жила и пустой сундук: обезвреженная ловушка обезврежена
+   навсегда.
+
+   Найти ловушку можно двумя путями: наступить (дорого) или проверить пол
+   прежде шага — то самое «проверить ловушки» из общего дерева действий.
+   Чем глубже, тем их больше и тем они злее.
+   ════════════════════════════════════════════════════════════════════════ */
+const TRAPS=[
+ {id:"plate", n:"нажимная плита",      урон:8,  вид:"камень",
+  покой:"mechanism",сраб:"deep_rocks",
+  о:"Плита под ногой чуть ниже прочих, и края у неё слишком ровные.",
+  бьёт:"Плита ушла вниз, и свод ответил ударом камня."},
+ {id:"dart",  n:"стрелковый механизм", урон:10, вид:"железо",
+  покой:"craft_knock",сраб:"battle_arrowfly",
+  о:"В стене на уровне пояса — ровное отверстие, и в нём не темно, а блестит.",
+  бьёт:"Из стены ударил болт."},
+ {id:"snare", n:"растяжка",            урон:6,  вид:"верёвка",
+  покой:"arte_cloth",сраб:"stk_break",
+  о:"Поперёк хода на ладонь от пола натянута жила, старая, но тугая.",
+  бьёт:"Жила лопнула, и сверху рухнула связка камней."},
+ {id:"spike", n:"шипы из пола",        урон:12, вид:"железо",
+  покой:"craft_knock",сраб:"battle_stab",
+  о:"Между плитами щели шире обычного, и в них не пыль, а острия.",
+  бьёт:"Из щелей вышли шипы."},
+ {id:"rocks", n:"падающие камни",      урон:14, вид:"камень",
+  покой:"deep_stone",сраб:"stk_crash",
+  о:"Свод над этим местом подпёрт наспех, и подпорка держится на одном клине.",
+  бьёт:"Свод просыпался камнем."},
+ {id:"gas",   n:"ядовитый газ",        урон:9,  вид:"состав",яд:true,
+  покой:"stk_goo",сраб:"stk_goo",
+  о:"Из-под плиты тянет сладковатым, и воздух тут тяжелее, чем шагом раньше.",
+  бьёт:"Из-под пола пошёл тяжёлый сладкий дым."},
+ {id:"fire",  n:"огненная ловушка",    урон:13, вид:"чары",
+  покой:"rune_square",сраб:"wild_fire",
+  о:"Знак на полу тёплый, хотя вокруг холодный камень.",
+  бьёт:"Знак вспыхнул, и по ходу прошло пламя."},
+ {id:"ice",   n:"ледяная ловушка",     урон:11, вид:"чары",
+  покой:"rune_square",сраб:"sky_snow",
+  о:"Иней лежит ровным кругом там, где инею взяться неоткуда.",
+  бьёт:"Круг выдохнул стужей."},
+ {id:"curse", n:"проклятая руна",      урон:7,  вид:"чары",тьма:true,
+  покой:"stk_dark",сраб:"omen_swell",
+  о:"Знак вырезан поверх другого знака, и верхний моложе нижнего лет на сто.",
+  бьёт:"Руна отозвалась, и по спине прошло холодом."},
+ {id:"alarm", n:"звонковая тяга",      урон:0,  вид:"железо",зов:true,
+  покой:"craft_knock",сраб:"alarm_drum",
+  о:"От порога вдоль стены идёт проволока и уходит куда-то за поворот.",
+  бьёт:"Где-то в глубине ударил колокол."}];
+const TRAP_BY_ID=Object.fromEntries(TRAPS.map(t=>[t.id,t]));
+/* Есть ли на этой клетке ловушка. Только под землёй и только на проходе. */
+function trapAt(x,y){
+ const p=G.place;
+ if(!p||!(Number(p.depth)||0))return null;
+ const lvl=safeFn(()=>curLevel(),null);if(!lvl)return null;
+ const t=safeFn(()=>tileAt(lvl,x,y),null);
+ if(t!=="."&&t!=="C")return null;
+ /* Чем глубже, тем гуще: от одной клетки на полсотни до одной на двенадцать. */
+ const гл=Math.max(1,Number(p.depth)||1);
+ const порог=Math.min(0.085,0.018+гл*0.004);
+ const h=hashName(p.bx*23+x*7,p.by*19+y*11,6900+p.depth);
+ if(h>=порог)return null;
+ const в=TRAPS[Math.floor(hashName(p.bx+x*13,p.by+y*17,6901+p.depth)*TRAPS.length)%TRAPS.length];
+ const метка=safeFn(()=>placeMark(x,y),null);
+ return {...в,x,y,глубина:гл,
+  состояние:метка==="trap_off"?"обезврежена":метка==="trap_on"?"найдена":"не найдена",
+  урон:Math.round(в.урон*(1+гл*0.08))};}
+/* Насколько хорошо игрок видит и снимает ловушки. */
+function trapSkill(){
+ let k=0.35;
+ k+=0.04*(Number(G.agi)||10);
+ if(safeFn(()=>hasSkill("tracker"),false))k+=0.18;
+ if(safeFn(()=>hasSkill("deepsense"),false))k+=0.12;
+ k+=0.06*safeFn(()=>mastLevel("runes"),0);
+ k+=safeFn(()=>ART.sum("скрытность"),0);
+ return Math.max(0.1,Math.min(0.95,k));}
+/* Осмотреть пол и всё вокруг: ловушки, что рядом, становятся найденными. */
+function trapSearch(x,y){
+ const л=safeFn(()=>trapAt(x,y),null);
+ safeFn(()=>Bank.play("craft_knock",{seed:x+y,gain:0.5,maxSec:3}));
+ if(!л){narrate("Вы прошли ладонью по плитам и оглядели стены: здесь чисто.");return true;}
+ if(л.состояние==="обезврежена"){narrate(`${л.n}: уже обезврежена вами.`);return true;}
+ if(л.состояние==="найдена"){
+  narrate(`${л.n}: вы её уже нашли. ${л.о} Можно обезвредить или обойти.`);return true;}
+ const видно=Math.random()<trapSkill();
+ if(!видно){
+  narrate("Вы осмотрели пол и стены и ничего не нашли. Это не значит, что тут пусто.");
+  return true;}
+ safeFn(()=>setPlaceMark(x,y,"trap_on"));
+ safeFn(()=>{Bank.play(л.покой,{seed:x+y,gain:0.6,maxSec:4});
+  setTimeout(()=>safeFn(()=>beaconAt("chest",x-G.place.x,y-G.place.y,0,
+   Math.max(Math.abs(x-G.place.x),Math.abs(y-G.place.y)))),260);});
+ narrate(`Нашли: ${л.n}. ${л.о} Урон при срабатывании: около ${л.урон}. Можно попробовать обезвредить.`);
+ safeFn(()=>saveGame(true));
+ return true;}
+/* Обойти ладонью пол под ногами и в четырёх шагах вокруг: так и ищут.
+   Осматривать каждую клетку по отдельности было бы правильнее по букве, но
+   невыносимо на слух — а подземелье ощупывают именно так, кругом. */
+function trapProbe(){
+ const p=G.place;if(!p){narrate("Ловушки бывают под землёй, а не под небом.");return false;}
+ const кл=[[0,0],[0,-1],[0,1],[-1,0],[1,0]];
+ let нашли=0,было=0;
+ safeFn(()=>Bank.play("craft_knock",{seed:p.x+p.y,gain:0.5,maxSec:3}));
+ safeFn(()=>propTime(0.2));
+ const строки=[];
+ for(const [dx,dy] of кл){
+  const x=p.x+dx,y=p.y+dy;
+  const л=safeFn(()=>trapAt(x,y),null);
+  if(!л)continue;
+  if(л.состояние==="обезврежена")continue;
+  if(л.состояние==="найдена"){было++;
+   строки.push(`${л.n}${dx||dy?`, ${dirBetween(dx,dy)}`:" под ногами"} — уже найдена`);continue;}
+  if(Math.random()>=trapSkill())continue;
+  safeFn(()=>setPlaceMark(x,y,"trap_on"));
+  нашли++;
+  safeFn(()=>{Bank.play(л.покой,{seed:x+y,gain:0.6,maxSec:4});
+   setTimeout(()=>safeFn(()=>beaconAt("chest",dx,dy,0,Math.max(Math.abs(dx),Math.abs(dy)))),240);});
+  строки.push(`${л.n}${dx||dy?`, ${dirBetween(dx,dy)}`:" ПОД НОГАМИ"} — ${л.о} Урон около ${л.урон}`);}
+ if(!строки.length){
+  narrate("Вы прошли ладонью по плитам и оглядели стены вокруг: ничего. Это не значит, что тут пусто.");
+  return true;}
+ narrate(`Найдено: ${строки.join("; ")}. Обезвредить можно то, что рядом.`);
+ safeFn(()=>saveGame(true));
+ return true;}
+/* Ближняя найденная ловушка: её и снимают. */
+function trapFound(){
+ const p=G.place;if(!p)return null;
+ for(const [dx,dy] of [[0,0],[0,-1],[0,1],[-1,0],[1,0]]){
+  const л=safeFn(()=>trapAt(p.x+dx,p.y+dy),null);
+  if(л&&л.состояние==="найдена")return {...л,dx,dy};}
+ return null;}
+/* Снять ловушку. Промах — это срабатывание: за руки тут платят. */
+function trapDisarm(x,y){
+ const л=safeFn(()=>trapAt(x,y),null);
+ if(!л){narrate("Тут нечего обезвреживать.");return false;}
+ if(л.состояние==="обезврежена"){narrate(`${л.n}: уже снята.`);return true;}
+ if(л.состояние!=="найдена"){narrate(`Сперва надо её найти: проверьте пол.`);return false;}
+ safeFn(()=>Bank.play("lock_click",{seed:x+y,gain:0.6,maxSec:3}));
+ safeFn(()=>propTime(0.3));
+ const вышло=Math.random()<trapSkill()*0.85;
+ if(!вышло){
+  narrate(`${л.n}: рука сорвалась.`);
+  return trapFire(x,y,л);}
+ safeFn(()=>setPlaceMark(x,y,"trap_off"));
+ safeFn(()=>{Bank.play("mechanism",{seed:x+y,gain:0.6,maxSec:4});
+  setTimeout(()=>safeFn(()=>Bank.play("jingle_achievement",{gain:0.5,maxSec:4})),300);});
+ const оп=6+л.глубина;
+ G.xp+=оп;
+ safeFn(()=>mastGain("runes",2));
+ narrate(`${л.n} обезврежена. ${л.вид==="чары"?"Знак стёрт до камня":"Тяга снята, и механизм больше не взведён"}. Опыт растёт на ${оп}.`);
+ safeFn(()=>{checkLevelUp();refresh();saveGame(true);});
+ return true;}
+/* Сработала. */
+function trapFire(x,y,л){
+ л=л||safeFn(()=>trapAt(x,y),null);
+ if(!л)return false;
+ safeFn(()=>setPlaceMark(x,y,"trap_off"));
+ safeFn(()=>{Bank.play(л.сраб,{seed:x+y,gain:0.75,maxSec:5});
+  setTimeout(()=>safeFn(()=>Bank.play("hero_pain_m",{gain:0.5,maxSec:3})),260);});
+ let урон=Math.max(0,Math.round(л.урон*(1-Math.min(0.6,safeFn(()=>ART.sum(л.яд?"сопр_яд":"защита"),0)/100))));
+ /* Печать демонолога держит удар: шесть часов ловушки бьют вполсилы. */
+ if(safeFn(()=>buffActive("оберег"),false))урон=Math.round(урон/2);
+ if(л.зов)урон=0;
+ if(урон>0)G.hp=Math.max(1,G.hp-урон);
+ let хвост="";
+ if(л.зов){
+  хвост=" На звон уже идут: в глубине послышались шаги.";
+  safeFn(()=>rumorSeed("бой","звон в подземелье",G.x,G.y,true));}
+ if(л.яд)хвост+=` Дышать трудно: вода убыла.`,G.water=Math.max(0,(Number(G.water)||0)-20);
+ narrate(`${л.бьёт}${урон>0?` Урон: ${урон}, здоровья осталось ${G.hp}.`:" Обошлось без крови."}${хвост} Ловушка отработала и больше не взведена.`);
+ safeFn(()=>{refresh();saveGame(true);});
+ return true;}
+
+/* ════════════════════════════════════════════════════════════════════════
+   ПОЛКА: НЕ ОДНА КНИГА, А НЕСКОЛЬКО
+
+   Клетка с книгами отдавала РОВНО ОДНУ страницу: подошёл, коснулся — прочёл
+   то, что выпало. Выбора не было, и библиотека башни ничем не отличалась от
+   одинокого пюпитра в подвале.
+
+   Теперь на полке от трёх до десяти книг и свитков, у каждого своё имя, своя
+   полка собрания и свой язык. Игрок слышит «на полке семь книг и три свитка»
+   и выбирает, что взять в руки, — а не получает наугад выбранное.
+
+   Язык — это отдельное знание. Старое письмо, рунная строка и язык погибших
+   читаются только тем, кто учился древним языкам; иначе игроку так и говорят:
+   язык неизвестен. Это и есть «действие есть, но заблокировано условием»:
+   пункт виден, и названа причина.
+
+   Быстрый путь остаётся прежним: касание по клетке читает главную книгу
+   полки, как и раньше. Полка — то, чего не было.
+   ════════════════════════════════════════════════════════════════════════ */
+const BOOK_TONGUE=[
+ {id:"общий", n:"общий язык",    нужно:0, о:"писано так, как говорят на трактах"},
+ {id:"старый",n:"старое письмо", нужно:1, о:"буквы знакомы, но слова легли иначе"},
+ {id:"рунный",n:"рунная строка", нужно:2, о:"строка идёт знаками, а не буквами"},
+ {id:"древний",n:"язык погибших",нужно:3, о:"ни одной знакомой черты"}];
+const BOOK_TONGUE_BY_ID=Object.fromEntries(BOOK_TONGUE.map(t=>[t.id,t]));
+/* Что стоит на этой полке. Выводится из места, поэтому одна и та же полка в
+   одной и той же башне держит одни и те же книги. */
+function shelfAt(x,y){
+ const p=G.place;if(!p)return null;
+ const всего=safeFn(()=>knowTotal(),0);if(!всего)return null;
+ const сколько=3+Math.floor(hashName(p.bx*17+x*7,p.by*11+y*13,6800+p.depth)*8);
+ const out=[];
+ for(let i=0;i<сколько;i++){
+  const h=(k)=>hashName(p.bx+x*31+i*7,p.by+y*29+i*11,6820+k+p.depth);
+  const свиток=h(1)<0.32;
+  const стр=Math.floor(h(2)*всего)%всего;
+  const e=safeFn(()=>knowEntry(стр),null);if(!e)continue;
+  const яз=BOOK_TONGUE[Math.floor(h(3)*BOOK_TONGUE.length)%BOOK_TONGUE.length];
+  out.push({i:out.length,стр,вид:свиток?"свиток":"книга",
+   n:`${свиток?"свиток":"книга"} «${e.title}»`,тема:e.shelfName,язык:яз,
+   прочитана:safeFn(()=>knowHas(стр),false)});}
+ return out.length?out:null;}
+/* Понятен ли язык этой книги. */
+function bookReadable(it){
+ return (Number(it&&it.язык&&it.язык.нужно)||0)<=safeFn(()=>mastLevel("lang"),0);}
+/* Прочесть или изучить страницу — одним путём для книги под ногами и с полки. */
+function studyPage(n,глубина,заголовок){
+ if(knowHas(n)){
+  narrate(`${заголовок} Уже изучено. Перечитываю.`);
+  openReading(n,false);return true;}
+ knowRead().push(n);
+ const опыт=Math.round(xpGain(12+(Number(глубина)||0)*6)*(hasSkill("bookman")?2:1)*(hasAbility("quickread")?1.5:1));
+ G.xp+=опыт;
+ safeFn(()=>{Bank.play("relic_xylo",{seed:n,gain:0.5,maxSec:4});
+  setTimeout(()=>safeFn(()=>Bank.play("spark_glock",{seed:n,gain:0.45,maxSec:4})),320);
+  Bank.play("arte_book",{seed:n,gain:0.6,maxSec:3});});
+ const награда=knowGrant(n,safeFn(()=>knowReward(n,глубина),null));
+ narrate(`${заголовок} Изучено. Опыт растёт на ${опыт}.${награда}`);
+ safeFn(()=>checkLevelUp());
+ safeFn(()=>{refresh();saveGame(true);});
+ openReading(n,true);
+ return true;}
+
 /* ════════════════════════════════════════════════════════════════════════
    ОБСТАНОВКА, С КОТОРОЙ МОЖНО ЧТО-ТО СДЕЛАТЬ
    В комнатах стояли стены и пол. Теперь в них стоят вещи: стол, стойка с
@@ -14784,6 +15107,7 @@ function takeSign(x,y){
   narrate(`Тут припрятана ещё одна примета, но у вас уже ${SIGN_LIMIT} неразгаданных. Разберитесь с ними — эта никуда не денется.`,{interrupt:false});
   return false;}
  G.signs.push(z);
+ safeFn(()=>hint("sign"));
  safeFn(()=>{Bank.play("arte_page",{gain:0.55,maxSec:4});
   setTimeout(()=>safeFn(()=>Bank.play("secret_box",{gain:0.5,maxSec:4})),320);});
  journal("Найдена примета к кладу.");
@@ -14969,6 +15293,21 @@ iact("assay",{n:"Определить породу",значок:"🔬",
   return true;}});
 
 /* Главное действие объекта: то же, что делает быстрый путь. */
+/* Проверить пол — то, чем в подземелье живут. Доступно только под землёй:
+   в трактире плиты не проседают. */
+iact("trap",{n:"Проверить пол и стены",значок:"🔎",
+ можно:o=>!!(G.place&&(Number(G.place.depth)||0)>0&&o.вид==="floor"),
+ делать:()=>{trapProbe();return true;}});
+iact("disarm",{n:"Обезвредить ловушку",значок:"🧰",
+ можно:o=>!!(o.вид==="floor"&&safeFn(()=>trapFound(),null)),
+ делать:()=>{const л=safeFn(()=>trapFound(),null);
+  if(!л){narrate("Снимать нечего: найденных ловушек рядом нет.");return true;}
+  return trapDisarm(л.x,л.y);}});
+/* Перебрать полку — третий уровень дерева: полка, потом книга, потом её
+   действия. Случайную книгу за игрока не берут. */
+iact("shelf",{n:"Перебрать полку",значок:"📚",своё:true,
+ можно:o=>!!G.place&&(o.плитка==="K"||o.вещь==="bookcase"||o.вещь==="scrollcase"),
+ делать:o=>{openShelf(o);return true;}});
 iact("use",{n:"Взяться",значок:"✋",
  можно:o=>!!o.главное,
  делать:o=>{safeFn(()=>o.главное());return true;}});
@@ -15012,6 +15351,13 @@ function objectsHere(){
      p.x=x;p.y=y;
      try{useHere();}finally{p.x=был.x;p.y=был.y;}};
     out.push(o);}
+   /* Под землёй сам пол — объект: его проверяют прежде шага. Наверху плиты
+      не проседают, и лишней строки в списке быть не должно. */
+   if((Number(p.depth)||0)>0){
+    const н=safeFn(()=>trapFound(),null);
+    out.push({вид:"floor",n:"пол под ногами",x:p.x,y:p.y,dx:0,dy:0,d:0,маяк:null,
+     о:"Плиты, щели между ними и стены на расстоянии руки.",
+     состояние:н?`рядом найдена ловушка: ${н.n}`:null});}
    return out;}
   /* Под открытым небом: постройка, ресурс, находка, переправа, узел сети. */
   const c=cellContent(G.x,G.y);
@@ -15059,7 +15405,7 @@ iact("apprentice",{n:"Проситься в ученики",значок:"🎓",
    К общим добавляются техники станка: у горна свои, у наковальни свои, и
    показаны только те, до которых доросло мастерство. */
 function actionsFor(o){
- const порядок=["look","listen","knock","hollow","secret","assay","apprentice","use"];
+ const порядок=["look","listen","knock","hollow","secret","assay","trap","disarm","shelf","apprentice","use"];
  const общие=порядок.map(id=>IACT[id]).filter(a=>a&&(!a.можно||safeFn(()=>a.можно(o),false)));
  const тех=(o&&o.станок)?safeFn(()=>techsAt(o.станок),[])||[]:[];
  return общие.concat(тех.map(t=>({id:"tech:"+t.id,n:t.n,значок:t.значок,
@@ -15102,6 +15448,92 @@ function openObjActions(i){
  openModal("modal-object");
  narrate(`${o.n}, ${где}. Действий: ${acts.length}: ${acts.map(a=>a.n).join(", ")}.`);
  return true;}
+/* ── Полка и книга: два нижних уровня того же окна ── */
+let shelfObj=null,shelfItems=null;
+function openShelf(o){
+ shelfObj=o||shelfObj;
+ /* ── НИ ОДНА КОМАНДА НЕ МОЛЧИТ ──
+    «Назад: полка» вызывали и там, где полки нет, — из окна, открытого иначе,
+    или после того, как игрок ушёл с клетки. Прежде эта ветка возвращала
+    false молча, и незрячий игрок получал в ответ ничего: непонятно, дошло
+    касание или нет. Набор 41 это и поймал: он обходит каждую команду в
+    десяти положениях героя и требует, чтобы ни одна не отвечала тишиной. */
+ if(!shelfObj||!G.place){
+  narrate("Полки под рукой нет. Её выбирают в меню действий: «Что вокруг» — книжный шкаф или полка со свитками, — а потом «Перебрать полку».");
+  return false;}
+ shelfItems=safeFn(()=>shelfAt(shelfObj.x,shelfObj.y),null);
+ if(!shelfItems||!shelfItems.length){
+  narrate("Полка пуста: ни книги, ни свитка.");
+  return false;}
+ const книг=shelfItems.filter(it=>it.вид==="книга").length;
+ const свитков=shelfItems.length-книг;
+ /* Полка отзывается на руку раньше, чем её назовут: переплёт, холст и сухой
+    шелест пергамента. У всякого объекта свой звук — это не украшение, а то,
+    по чему незрячий узнаёт, что рука легла на нужное. */
+ safeFn(()=>{Bank.play("arte_cloth",{seed:shelfObj.x+shelfObj.y,gain:0.5,maxSec:3});
+  setTimeout(()=>safeFn(()=>Bank.play(книг>=свитков?"arte_book":"arte_page",
+   {seed:shelfObj.y,gain:0.55,maxSec:3})),240);});
+ document.getElementById("objTitle").textContent="📚 "+shelfObj.n;
+ const b=document.getElementById("objBody");
+ b.innerHTML=`<div class="list-line" data-speak="На полке ${книг} ${plural(книг,"книга","книги","книг")} и ${свитков} ${plural(свитков,"свиток","свитка","свитков")}.">📚 На полке: <b>${книг}</b> ${plural(книг,"книга","книги","книг")} и <b>${свитков}</b> ${plural(свитков,"свиток","свитка","свитков")}</div>`
+  +shelfItems.map((it,j)=>{
+   const сост=it.прочитана?"изучено":(bookReadable(it)?"не изучено":"язык неизвестен");
+   const речь=`${it.n}. Полка собрания: ${it.тема}. ${it.язык.n}. ${сост}.`.replace(/"/g,"&quot;");
+   return `<button class="item" data-cmd="sitem:${j}" data-speak="${речь}">${it.вид==="книга"?"📕":"📜"} ${it.n} — ${сост}</button>`;}).join("")
+  +`<button class="item" data-cmd="objback" data-speak="Назад, к списку объектов вокруг.">↩️ Назад: что вокруг</button>`;
+ openModal("modal-object");
+ narrate(`${shelfObj.n}. На полке ${книг} ${plural(книг,"книга","книги","книг")} и ${свитков} ${plural(свитков,"свиток","свитка","свитков")}. Свайп — листать, двойное касание — взять в руки.`);
+ return true;}
+function openShelfItem(j){
+ j=Number(j);
+ if(!shelfItems||!shelfItems[j]){narrate("Этого на полке нет.");return false;}
+ const it=shelfItems[j];
+ const читаем=bookReadable(it);
+ const ур=safeFn(()=>mastLevel("lang"),0);
+ document.getElementById("objTitle").textContent=(it.вид==="книга"?"📕 ":"📜 ")+it.n;
+ const b=document.getElementById("objBody");
+ const сост=it.прочитана?"изучено":"не изучено";
+ b.innerHTML=`<div class="list-line" data-speak="${(it.n+". Полка собрания: "+it.тема+". Письмо: "+it.язык.n+", "+it.язык.о+". "+сост+".").replace(/"/g,"&quot;")}">${it.вид==="книга"?"📕":"📜"} <b>${it.n}</b><br>Полка собрания: ${it.тема}<br>Письмо: ${it.язык.n} — ${it.язык.о}<br>Состояние: ${сост}</div>`
+  +`<button class="item" data-cmd="sact:${j}:look" data-speak="Осмотреть: вид, полка собрания и письмо.">👁️ Осмотреть</button>`
+  +`<button class="item" data-cmd="sact:${j}:tongue" data-speak="Определить язык: какое это письмо и что нужно, чтобы его прочесть.">🔤 Определить язык</button>`
+  +(читаем
+    ?`<button class="item" data-cmd="sact:${j}:read" data-speak="Прочитать вслух, не изучая.">📖 Прочитать</button>`
+     +`<button class="item" data-cmd="sact:${j}:study" data-speak="Изучить: знание ляжет в собрание.">🎓 Изучить</button>`
+    :`<button class="item" data-cmd="sact:${j}:tongue" data-speak="Прочитать нельзя: ${it.язык.n} требует древних языков ступени ${it.язык.нужно}, у вас ${ур}.">🚫 Прочитать нельзя: нужен ${it.язык.n} (ступень ${it.язык.нужно}, у вас ${ур})</button>`)
+  +`<button class="item" data-cmd="sback" data-speak="Назад, к полке.">↩️ Назад: полка</button>`;
+ openModal("modal-object");
+ narrate(`${it.n}. ${it.тема}. Письмо: ${it.язык.n}, ${it.язык.о}. ${сост}.${читаем?"":` Прочесть нельзя: нужны древние языки ступени ${it.язык.нужно}, у вас ${ур}.`}`);
+ return true;}
+function doShelfAction(j,act){
+ j=Number(j);
+ if(!shelfItems||!shelfItems[j]){narrate("Этого на полке нет.");return false;}
+ const it=shelfItems[j];
+ if(act==="look"){
+  safeFn(()=>Bank.play(it.вид==="книга"?"arte_book":"arte_page",{seed:it.стр,gain:0.55,maxSec:3}));
+  narrate(`${it.n}. Полка собрания: ${it.тема}. Письмо: ${it.язык.n} — ${it.язык.о}. ${it.прочитана?"Это вы уже изучали.":"Прежде вы этого не читали."}`);
+  return true;}
+ if(act==="tongue"){
+  safeFn(()=>Bank.play("arte_page",{seed:it.стр,gain:0.5,maxSec:3}));
+  const ур=safeFn(()=>mastLevel("lang"),0);
+  narrate(bookReadable(it)
+   ?`${it.язык.n}: ${it.язык.о}. Это письмо вам даётся — древние языки у вас ступени ${ур}.`
+   :`${it.язык.n}: ${it.язык.о}. Прочесть не выйдет: нужны древние языки ступени ${it.язык.нужно}, а у вас ${ур}. Учат этому магистр школы, маг-отшельник и советник.`);
+  return true;}
+ if(!bookReadable(it)){
+  safeFn(()=>Bank.play("lock_click",{gain:0.5,maxSec:3}));
+  narrate(`${it.n}: язык неизвестен. ${it.язык.n} требует древних языков ступени ${it.язык.нужно}.`);
+  return true;}
+ if(act==="read"){
+  safeFn(()=>Bank.play(it.вид==="книга"?"arte_book":"arte_page",{seed:it.стр,gain:0.6,maxSec:3}));
+  safeFn(()=>closeTopUI());
+  openReading(it.стр,false);
+  return true;}
+ if(act==="study"){
+  safeFn(()=>closeTopUI());
+  safeFn(()=>studyPage(it.стр,G.place&&G.place.depth,`${it.n} с полки.`));
+  return true;}
+ narrate("Так с книгой не поступают.");
+ return false;}
 function doObjAction(i,id){
  const o=objList[Number(i)];
  /* Техники станка живут не в общем реестре, а при самом объекте: у горна
@@ -15115,7 +15547,13 @@ function doObjAction(i,id){
     это: иначе два окна встанут друг на друга и свайп потеряется. */
  if(id==="use")safeFn(()=>closeTopUI());
  safeFn(()=>a.делать(o));
- if(id!=="use"&&document.getElementById("modal-object")
+ /* ── ДЕЙСТВИЕ, У КОТОРОГО СВОЁ ОКНО, НЕ ПЕРЕРИСОВЫВАЮТ ──
+    После обычного действия список действий обновляется: состояние объекта
+    могло измениться, и пункты должны отвечать новому. Но «Перебрать полку»
+    само показывает список книг — и обновление затирало его сразу же, ещё до
+    того, как игрок успевал выбрать. Набор 70 поймал это первым же прогоном:
+    полка называла пять книг вслух, а в окне не было ни одной. */
+ if(id!=="use"&&!a.своё&&document.getElementById("modal-object")
    &&!document.getElementById("modal-object").hidden)safeFn(()=>openObjActions(i));
  return true;}
 
@@ -15159,20 +15597,41 @@ const MASTERY=[
  {id:"arte",   n:"артефакторика",    станки:["circle","orb"],
   о:"Разбор и сборка вещей с силой: ядро, свойства, насыщение."},
  {id:"cook",   n:"стряпня",          станки:["hearth"],
-  о:"Огонь, вода и время: из припаса выходит еда, которая и вправду лечит."}];
+  о:"Огонь, вода и время: из припаса выходит еда, которая и вправду лечит."},
+ /* Язык — такое же ремесло, как ковка: без него половина полки нема. */
+ {id:"lang",   n:"древние языки",   станки:["bookcase","scrollcase"],
+  о:"Старое письмо, рунная строка и язык погибших: буквы те же, а читаются иначе."},
+ /* ── ЧЕТЫРЕ ТОНКИХ РЕМЕСЛА ──
+    Их не показывают в кузне и не спрашивают на рынке. Учат им поодиночке, и
+    каждое делает с миром то, чего не делает никакое другое: морок меняет,
+    кем вас считают; сосуд даёт спутника; печать держит удар; тяжесть и время
+    меняют саму меру шага. */
+ {id:"illus",  n:"иллюзии",         станки:["mirror","circle"],
+  о:"Морок лжёт не глазу, а уху и памяти: то, чего нет, слышно так же, как то, что есть."},
+ {id:"homun",  n:"гомункулы",       станки:["cauldron","circle"],
+  о:"Основа, ядро и воля: из них собирается то, что ходит само и слушается."},
+ {id:"demon",  n:"демонология",     станки:["circle","censer"],
+  о:"Печать, круг соли и точное имя: с тем, что за Гранью, говорят условиями."},
+ {id:"flux",   n:"тяжесть и время", станки:["orb","circle"],
+  о:"Вес, падение и ход часа — то, что все прочие считают неизменным."}];
 const MAST_BY_ID=Object.fromEntries(MASTERY.map(m=>[m.id,m]));
 /* Кто чему учит и до какого предела. Один мастер не знает всего. */
 const MAST_TEACH={
  "Кузнец":{smith:4,runes:2,jewel:1},
- "Магистр":{arte:4,ench:0,runes:3},
- "Маг-отшельник":{arte:5,runes:3},
+ "Магистр":{arte:4,runes:3,lang:3,illus:2,homun:2},
+ "Маг-отшельник":{arte:5,runes:3,lang:4,illus:3,flux:3},
  "Целительница":{alchemy:3,cook:2},
  "Трактирщик":{cook:3},
- "Жрец":{arte:1},
+ "Жрец":{arte:1,lang:1},
  "Ученик":{arte:1,runes:1},
  "Старейшина":{cook:1},
  "Капитан":{cook:1},
- "Советник":{arte:1}};
+ "Советник":{arte:1,lang:2},
+ /* За Гранью учат тому, чему по эту сторону не учат вовсе. */
+ "Шепчущий":{demon:4,illus:2},
+ "Обрядчик":{demon:3},
+ "Меняла клятв":{demon:1},
+ "Счётчик костей":{homun:2}};
 function mastOf(id){
  if(!G.mast||typeof G.mast!=="object")G.mast={};
  const r=G.mast[id];
@@ -15228,6 +15687,7 @@ function mastAsk(npc,id){
  const r=G.mast[id]||{ур:0,оп:0,дел:0};
  r.ур=Math.min(5,(Number(r.ур)||0)+1);r.оп=0;
  G.mast[id]=r;
+ safeFn(()=>hint("mastery"));
  safeFn(()=>addRep(npc.race,1));
  safeFn(()=>npcRemember(npc,"помог","урок",4));
  safeFn(()=>{Bank.play("arte_page",{gain:0.6,maxSec:4});
@@ -15236,9 +15696,100 @@ function mastAsk(npc,id){
  safeFn(()=>journal(`Урок у наставника: ${м.n}, ${MAST_RANK[r.ур]}.`));
  safeFn(()=>{refresh();saveGame(true);});
  return true;}
+/* ── У КАЖДОГО СТАНКА ДОЛЖНО БЫТЬ ИМЯ ВСЛУХ ──
+   Набор 69 поймал это, как только появились тонкие ремёсла: их станками стали
+   зеркало и кадильница, а имён для них не было — и игроку сказали бы
+   «работать надо у станка mirror». В игре, где всё читают голосом, безымянный
+   станок хуже, чем его отсутствие. */
 const STANOK_NAME={forge:"горн",anvil:"наковальня",cauldron:"чан алхимика",
  circle:"магический круг",orb:"хрустальный шар",bench:"верстак",
- whetstone:"точило",hearth:"очаг",loom:"ткацкий стан"};
+ whetstone:"точило",hearth:"очаг",loom:"ткацкий стан",
+ bookcase:"книжный шкаф",scrollcase:"полка со свитками",
+ mirror:"зеркало",censer:"кадильница"};
+/* ════════════════════════════════════════════════════════════════════════
+   АЛХИМИЯ КАК ИССЛЕДОВАНИЕ, А НЕ СПИСОК РЕЦЕПТОВ
+
+   Все прочие ремёсла знают наперёд, что выйдет: руда даёт слиток, кристалл —
+   грань. Алхимия так не работает. Её суть в том, что свойство ПАРЫ веществ
+   заранее неизвестно, и узнать его можно только опытом — иногда полезным,
+   иногда обжигающим.
+
+   Поэтому здесь нет списка рецептов. Есть мир, в котором у каждой пары
+   припасов своё постоянное свойство, выведенное из самих имён: в одном и том
+   же мире трава с грибами всегда дают одно и то же, и это можно запомнить,
+   передать и проверить. А узнаётся оно только тем, кто смешал.
+
+   Узнанное ложится в записную книжку и остаётся в сохранении. Дальше пару
+   можно смешивать сознательно — уже без риска неизвестного.
+   ════════════════════════════════════════════════════════════════════════ */
+const ALCH_EFFECTS=[
+ {id:"heal",  n:"целебный",   о:"затягивает раны на глазах",
+  дать:()=>{const h=Math.min(G.hpMax,G.hp+Math.round(G.hpMax*0.35))-G.hp;G.hp+=h;
+   return `здоровья +${h}`;}},
+ {id:"mana",  n:"силовой",    о:"по жилам идёт тепло",
+  дать:()=>{const m=Math.min(G.manaMax,G.mana+Math.round(G.manaMax*0.6))-G.mana;G.mana+=m;
+   return `силы +${m}`;}},
+ {id:"water", n:"утоляющий",  о:"вкус ключевой воды",
+  дать:()=>{const б=Number(G.water)||0;G.water=Math.min(200,б+70);
+   return `воды +${G.water-б}`;}},
+ {id:"speed", n:"скорый",     о:"ноги делаются чужими и лёгкими",
+  дать:()=>{safeFn(()=>buffSet("лёгкость",4));return "четыре часа шаг короче";}},
+ {id:"hide",  n:"скрытный",   о:"воздух вокруг густеет",
+  дать:()=>{safeFn(()=>buffSet("морок",3));return "три часа встреч меньше";}},
+ {id:"ward",  n:"охранный",   о:"кожа делается жёсткой",
+  дать:()=>{safeFn(()=>buffSet("оберег",5));return "пять часов ловушки бьют вполсилы";}},
+ {id:"bitter",n:"горький",    о:"сводит челюсть и ничего больше",
+  дать:()=>"ничего: состав пустой"},
+ {id:"toxic", n:"ядовитый",   о:"обжигает нутро", вред:true,
+  дать:()=>{const d=Math.max(3,Math.round(G.hpMax*0.12));G.hp=Math.max(1,G.hp-d);
+   G.water=Math.max(0,(Number(G.water)||0)-15);
+   return `здоровья −${d}, и во рту сухо`;}}];
+const ALCH_BY_ID=Object.fromEntries(ALCH_EFFECTS.map(e=>[e.id,e]));
+/* Пара веществ называется всегда одинаково, в каком порядке их ни возьми. */
+function alchPair(a,b){const p=[String(a||""),String(b||"")].sort();return p[0]+"+"+p[1];}
+/* Свойство пары выводится из имён: в одном мире оно всегда одно и то же. */
+function alchEffect(a,b){
+ const к=alchPair(a,b);
+ let h=0;
+ for(let i=0;i<к.length;i++)h=(h*31+к.charCodeAt(i))%100003;
+ return ALCH_EFFECTS[h%ALCH_EFFECTS.length];}
+function alchKnown(a,b){
+ try{return !!(G.alch&&G.alch[alchPair(a,b)]);}catch(_){return false;}}
+function alchLearn(a,b){
+ try{
+  if(!G.alch||typeof G.alch!=="object")G.alch={};
+  const к=alchPair(a,b);
+  if(G.alch[к])return false;
+  G.alch[к]=alchEffect(a,b).id;
+  return true;
+ }catch(_){return false;}}
+/* Что вообще можно смешивать: то, что лежит в котомке и годится в чан. */
+const ALCH_STOCK=["трава","грибы","ягоды","кость","кристалл","дерево","камень","руда","ракушка"];
+function alchHave(){
+ return ALCH_STOCK.filter(r=>(Number(G.inv&&G.inv[r])||0)>=1);}
+/* Пара для опыта: берётся ещё не изведанная, если такая есть. Изведанное
+   мешают сознательно, а опыт на то и опыт, что идёт в неизвестное. */
+function alchNextPair(нужнаНовая){
+ const есть=alchHave();
+ const пары=[];
+ for(let i=0;i<есть.length;i++)for(let j=i+1;j<есть.length;j++)пары.push([есть[i],есть[j]]);
+ if(!пары.length)return null;
+ const новые=пары.filter(p=>!alchKnown(p[0],p[1]));
+ if(нужнаНовая)return новые.length?новые[0]:null;
+ const знакомые=пары.filter(p=>alchKnown(p[0],p[1]));
+ return знакомые.length?знакомые[0]:null;}
+/* Записная книжка вслух. */
+function openAlchBook(){
+ const к=(G.alch&&typeof G.alch==="object")?Object.keys(G.alch):[];
+ safeFn(()=>Bank.play("arte_page",{gain:0.5,maxSec:4}));
+ if(!к.length){
+  narrate("Записная книжка алхимика пуста. Составы не вычитываются из книг: их узнают опытом у чана — «Что вокруг», чан алхимика, «Поставить опыт».");
+  return;}
+ const строки=к.slice(0,14).map(п=>{
+  const e=ALCH_BY_ID[G.alch[п]];
+  return `${п.replace("+"," и ")}: ${e?e.n:"неизвестный"} — ${e?e.о:""}`;});
+ narrate(`Записная книжка алхимика: изведано ${к.length} ${plural(к.length,"состав","состава","составов")}. ${строки.join("; ")}.`);}
+
 /* ── ТЕХНИКИ: что можно сделать у станка ──
    У каждой свой станок, свой уровень, своя плата припасом и своя доля
    неудачи. Неудача — не придирка: она и есть разница между ремеслом и
@@ -15260,6 +15811,12 @@ const TECHS=[
   берёт:{"трава":3,"ягоды":1},время:0.7,оп:3,
   звук:"arte_potion",след:"arte_potion",
   о:"Отвар поднимает на ноги и возвращает силу — сразу и целиком."},
+ {id:"assayer",маст:"alchemy",ур:1,станки:["cauldron"],n:"Поставить опыт",значок:"🧫",
+  время:0.8,оп:5,звук:"arte_potion",след:"stk_goo",опыт:true,
+  о:"Две ещё не сведённые вместе вещи кладут в чан и смотрят, что выйдет. Иногда выходит польза, иногда ожог — иначе это был бы не опыт."},
+ {id:"mix",маст:"alchemy",ур:2,станки:["cauldron"],n:"Смешать по записи",значок:"📖",
+  время:0.6,оп:3,звук:"arte_potion",след:"charm_celesta",смесь:true,
+  о:"Состав, чьё свойство уже изведано, мешают сознательно и без риска неизвестного."},
  {id:"essence",маст:"alchemy",ур:2,станки:["cauldron"],n:"Отогнать эссенцию",значок:"⚗️",
   род:"эссенция",время:1.2,оп:6,звук:"arte_potion",след:"fx_crystal",
   о:"Из припаса отгоняется его суть: она ложится в гнездо вещи."},
@@ -15272,6 +15829,36 @@ const TECHS=[
  {id:"analyze",маст:"arte",ур:1,станки:["circle","orb"],n:"Разобрать вещь",значок:"🔎",
   время:0.5,оп:2,звук:"arte_object",след:"pad_astral",
   о:"Что в этой вещи и откуда она — видно только тому, кто умеет смотреть."},
+ {id:"mirage",маст:"illus",ур:1,станки:["mirror","circle"],n:"Сплести морок",значок:"🌫️",
+  берёт:{"трава":2,"кристалл":1},время:0.6,оп:4,буфф:["морок",3],
+  звук:"pad_astral",след:"charm_celesta",
+  о:"На три часа вокруг вас идёт не тот, кто идёт: встреч становится вдвое меньше."},
+ {id:"unveil",маст:"illus",ур:2,станки:["mirror"],n:"Прочесть морок",значок:"🪞",
+  время:0.5,оп:5,звук:"fx_crystal",след:"pad_astral",
+  о:"Чужая ложь видна тому, кто плетёт свою: ловушка рядом перестаёт быть тайной."},
+ {id:"vessel",маст:"homun",ур:2,станки:["cauldron","circle"],n:"Собрать гомункула",значок:"🧫",
+  берёт:{"кость":2,"трава":3,"кристалл":1},время:2.2,оп:9,
+  звук:"arte_potion",след:"fx_crystal",
+  о:"Сосуд, основа и ядро: выходит спутник, который остаётся при вас как вещь с силой."},
+ {id:"ward",маст:"demon",ур:1,станки:["circle","censer"],n:"Начертать печать",значок:"🕯️",
+  берёт:{"кость":1,"камень":1},время:0.7,оп:4,буфф:["оберег",6],
+  звук:"rune_square",след:"stk_ward",
+  о:"Шесть часов печать держит удар: ловушки бьют вполсилы."},
+ {id:"pact",маст:"demon",ур:3,станки:["circle"],n:"Заключить договор",значок:"📛",
+  берёт:{"кость":3,"кристалл":2},время:1.5,оп:10,буфф:["договор",24],
+  звук:"stk_dark",след:"omen_swell",
+  о:"Сутки всё выученное идёт вдвое скорее. Платят за это кровью и именем."},
+ {id:"lighten",маст:"flux",ур:1,станки:["orb","circle"],n:"Убавить тяжесть",значок:"🪶",
+  берёт:{"кристалл":1},время:0.4,оп:3,буфф:["лёгкость",4],
+  звук:"fx_crystal",след:"sky_gust",
+  о:"Четыре часа шаг отнимает на четверть меньше времени: ноша будто чужая."},
+ {id:"still",маст:"flux",ур:3,станки:["orb","circle"],n:"Остановить час",значок:"⏳",
+  берёт:{"кристалл":3,"самоцвет":1},время:1.0,оп:11,буфф:["тихий час",2],
+  звук:"stk_clock",след:"pad_astral",
+  о:"Два часа мира стоят на месте: шаг не тратит времени вовсе. Дорого и редко."},
+ {id:"decipher",маст:"lang",ур:1,станки:["bookcase","scrollcase"],n:"Разобрать письмо",значок:"📜",
+  время:0.9,оп:4,звук:"arte_page",след:"relic_xylo",
+  о:"Строка за строкой чужое письмо укладывается в знакомые слова."},
  {id:"stew",маст:"cook",ур:1,станки:["hearth"],n:"Сварить похлёбку",значок:"🍲",
   берёт:{"ягоды":2,"грибы":2,"дерево":1},время:0.6,оп:2,
   звук:"wild_hearth",след:"amb_fire",
@@ -15316,6 +15903,34 @@ function techDo(t,станок){
  safeFn(()=>{Bank.play(t.звук,{seed:(Number(G.day)||1)+(Number(G.hour)||0),gain:0.65,maxSec:6});
   if(t.след)setTimeout(()=>safeFn(()=>Bank.play(t.след,{gain:0.55,maxSec:5})),420);});
  safeFn(()=>propTime(t.время||0.5));
+ /* ── У ОПЫТА РИСК В САМОМ ИСХОДЕ, А НЕ В СОРВАВШЕЙСЯ РУКЕ ──
+    Алхимия идёт своим путём и до общего жребия срыва: её опасность не в
+    том, что рука дрогнет, а в том, что выйдет ядовитое. Двойного риска тут
+    быть не должно — иначе опыт наполовину состоял бы из «не вышло», и
+    узнавать свойства пар стало бы вдвое дороже без всякой на то причины. */
+ if(t.опыт||t.смесь){
+  /* Опыт идёт в неизвестное, смесь — по записи. Обе берут по одной единице
+     каждого припаса и обе рассказывают, что вышло. */
+  const пара=safeFn(()=>alchNextPair(!!t.опыт),null);
+  if(!пара){
+   narrate(t.опыт
+    ?"Опыт ставить не над чем: всё, что лежит в котомке, вы уже сводили вместе. Нужны другие припасы."
+    :"Смешивать нечего: ни одного изведанного состава из того, что при вас, нет. Сперва поставьте опыт.");
+   return true;}
+  const [a,b]=пара;
+  G.inv[a]=(Number(G.inv[a])||0)-1;if(G.inv[a]<=0)delete G.inv[a];
+  G.inv[b]=(Number(G.inv[b])||0)-1;if(G.inv[b]<=0)delete G.inv[b];
+  const e=alchEffect(a,b);
+  const новое=alchLearn(a,b);
+  const итог=safeFn(()=>e.дать(),"ничего");
+  if(e.вред)safeFn(()=>Bank.play("stk_goo",{gain:0.6,maxSec:4}));
+  narrate(`${a} и ${b} в чану. ${e.n[0].toUpperCase()+e.n.slice(1)} состав: ${e.о}. ${итог}.`
+   +(новое?" Запись легла в книжку: теперь эту пару можно мешать сознательно."
+     :" Эту пару вы уже знали."));
+  safeFn(()=>mastGain(t.маст,(t.оп||3)+(новое?3:0)));
+  safeFn(()=>{refresh();saveGame(true);});
+  return true;}
+
  /* Припас уходит сразу: и при удаче, и при срыве. Так и бывает у горна. */
  const часть=t.род?techPart(t):null;
  for(const k in (t.берёт||{})){
@@ -15349,6 +15964,39 @@ function techDo(t,станок){
   const h=Math.min(G.hpMax,G.hp+Math.round(G.hpMax*0.3))-G.hp;
   G.hp+=h;G.water=Math.min(200,(Number(G.water)||0)+60);
   дар=`горячее съедено: здоровья +${h}, вода полна (${G.water})`;}
+ if(t.id==="decipher"){
+  /* Разбор письма — это не страница, а умение читать её: он растит мастерство
+     и открывает те книги, что были немы. Без полки под рукой разбирать нечего. */
+  const п=safeFn(()=>shelfAt(G.place.x,G.place.y),null);
+  const немых=(п||[]).filter(it=>!bookReadable(it)).length;
+  дар=п?`на этой полке ${немых} ${plural(немых,"книга","книги","книг")} ещё не даётся: ${немых?"строка не складывается":"всё прочитано"}`
+   :"полки под рукой нет, и разбирать нечего";}
+ if(t.буфф){
+  safeFn(()=>buffSet(t.буфф[0],t.буфф[1]));
+  дар=`${t.буфф[0]} держится ${t.буфф[1]} ${plural(t.буфф[1],"час","часа","часов")}`;}
+ if(t.id==="pact"){
+  /* За договор платят сразу: кровью и благосклонностью того бога, кому вы
+     до сих пор молились. Дар без цены — не договор. */
+  G.hp=Math.max(1,G.hp-Math.round(G.hpMax*0.15));
+  safeFn(()=>{const p=patronGod();if(p){G.faith=G.faith||{};
+   G.faith[p.id]=(Number(G.faith[p.id])||0)-3;}});
+  дар+=`; за это взято здоровье (осталось ${G.hp}) и благосклонность покровителя`;}
+ if(t.id==="vessel"){
+  const a=ART.make({дом:"myst",ранг:Math.min(5,2+Math.floor(mastLevel("homun")/2)),
+   кач:3,seed:(Number(G.day)||1)*17+(Number(G.hour)||0),
+   имя:"Сосуд с гомункулом",откуда:"собран своими руками"});
+  ART.grant({готовая:a});
+  дар=`Гомункул собран: ${safeFn(()=>ART.describe(a,true),"сосуд отзывается на хозяина")}`;}
+ if(t.id==="unveil"){
+  const н=safeFn(()=>{
+   const p=G.place;if(!p)return null;
+   for(const [dx,dy] of [[0,0],[0,-1],[0,1],[-1,0],[1,0]]){
+    const л=trapAt(p.x+dx,p.y+dy);
+    if(л&&л.состояние==="не найдена"){setPlaceMark(p.x+dx,p.y+dy,"trap_on");
+     return {л,dx,dy};}}
+   return null;},null);
+  дар=н?`морок спал: ${н.л.n}${н.dx||н.dy?`, ${dirBetween(н.dx,н.dy)}`:" под ногами"}`
+   :"ни одной чужой лжи рядом не нашлось";}
  if(t.id==="analyze"){
   const a=(G.artifacts||[]).find(x=>x&&typeof x==="object");
   дар=a?`вещь разобрана: ${safeFn(()=>ART.describe(a,true),"свойства прочитаны")}`
@@ -15818,7 +16466,9 @@ const G={hp:100,hpMax:100,str:10,agi:10,mind:10,cha:10,mana:10,manaMax:10,
  /* signs — подобранные приметы к кладам: сколько их и куда ведут. */
  /* mast — мастерства по ремёслам: уровень, опыт и число сделанных работ.
     Первый уровень не даётся за уровень героя: в ученики надо проситься. */
- depleted:{},visited:{},cleared:{},prayed:{},finds:{},signs:[],mast:{},
+ /* hints — какие подсказки о мире уже сказаны: каждая один раз за игру. */
+ /* alch — записная книжка алхимика: какие пары уже сведены и что вышло. */
+ depleted:{},visited:{},cleared:{},prayed:{},finds:{},signs:[],mast:{},hints:{},alch:{},
  inCombat:false,combat:null,loot:null,
  /* Народ игрока, покровитель из двенадцати богов, благосклонность богов,
     репутация у народов и след, который игрок оставил в политике держав. */
@@ -15889,7 +16539,10 @@ const G={hp:100,hpMax:100,str:10,agi:10,mind:10,cha:10,mana:10,manaMax:10,
 const xpNeed=l=>l*l*50;
 /* Дар Хронара и ткачей судьбы: опыт течёт быстрее. Через эту функцию проходит
    ВСЯ прибавка опыта, поэтому дар работает и в бою, и в заданиях. */
-function xpGain(n){return Math.max(1,Math.round((Number(n)||0)*(1+0.12*fxLevel("xp"))));}
+/* Договор с тем, что за Гранью: сутки всё выученное идёт вдвое скорее. Здесь
+   же и вся его выгода — цена взята при заключении. */
+function xpGain(n){return Math.max(1,Math.round((Number(n)||0)*(1+0.12*fxLevel("xp"))
+ *(safeFn(()=>buffActive("договор"),false)?2:1)));}
 /* Наследие народа (бог-покровитель расы игрока) и благосклонность его личного
    покровителя дают прибавки к бою — см. fxLevel(). */
 /* Удар и защита считаются в одном месте, и артефакты входят сюда же, а не
@@ -19593,6 +20246,16 @@ function moveInside(dir){
  p.x=nx;p.y=ny;
  G.hour+=runState.active?0.06:0.09;
  if(G.hour>=24){G.hour-=24;G.day++;}
+ /* Подсказка о новом — в тот миг, когда новое оказалось под рукой. */
+ safeFn(()=>hintAround());
+ /* ── ПЛИТА ПОД НОГОЙ ──
+    Ненайденная ловушка срабатывает от шага — в этом вся её суть. Найденную
+    игрок переступает сам: он знает, где она, и обходит или снимает. */
+ safeFn(()=>{
+  const л=trapAt(nx,ny);
+  if(л&&л.состояние==="не найдена")trapFire(nx,ny,л);
+  else if(л&&л.состояние==="найдена")
+   narrate(`Вы переступили через ${л.n}: она тут, и вы о ней помните.`,{interrupt:false});});
  /* Внутри тоже один шаг — один звук. */
  safeFn(()=>{if(!settings.effects)return;
   /* Под землёй шаг звучит по камню, наверху — по утоптанной земле. */
@@ -20644,9 +21307,13 @@ function move(dir){
  const дквид=G.dark?null:safeFn(()=>roadKindAt(G.x,G.y),null);
  const пквид=G.dark?null:safeFn(()=>crossingAt(G.x,G.y),null);
  const дорогаМнож=(дквид&&Number(дквид.шаг)||1)*(пквид&&Number(пквид.шаг)||1);
+ /* Тяжесть и время: убавленная тяжесть укорачивает шаг на четверть, а
+    остановленный час не даёт ему стоить времени вовсе. */
+ const лёгкость=safeFn(()=>buffActive("лёгкость"),false)?0.75:1;
+ const стоит=safeFn(()=>buffActive("тихий час"),false)?0:1;
  G.hour+=(runState.active?0.1:0.18)*(hasSkill("stamina")?0.75:1)*(hasAbility("roadsense")?0.85:1)
   *(1-Math.min(0.45,safeFn(()=>ART.sum("скорость"),0)))
-  *(safeFn(()=>mountGift("шаг"),null)||1)*дорогаМнож;   /* шаг и бег; «Дыхание дороги» и «Чутьё тракта» экономят время */
+  *(safeFn(()=>mountGift("шаг"),null)||1)*дорогаМнож*лёгкость*стоит;   /* шаг и бег; «Дыхание дороги» и «Чутьё тракта» экономят время */
  if(G.hour>=24){G.hour-=24;G.day++;
   for(const k in G.depleted){if(G.depleted[k].day<G.day)delete G.depleted[k];}}
  if(settings.effects)stepSound();
@@ -21214,6 +21881,12 @@ function arrive(dir){
   setTimeout(()=>safeFn(()=>Bank.play(н.фаза.след,{seed:G.y,gain:0.5,maxSec:6})),420);
   narrate(`${c.structure.name}. ${н.фаза.о} Это война державы «${н.своя.short}» с «${н.чужая.short}»: день ${н.день} из ${н.всего}.`,{interrupt:false});
   rumorSeed("война",`${н.своя.short} и ${н.чужая.short}`,G.x,G.y,true);});
+ /* Подсказки о новом: находка под ногами, переправа, разъезд на тракте.
+    Каждая говорится один раз за игру и не перебивает того, что важнее. */
+ safeFn(()=>{
+  if(c.находка)hint("find");
+  if(crossingAt(G.x,G.y))hint("crossing");
+  if(patrolsNear(G.x,G.y,G.day,G.hour,2).length)hint("patrol");});
  /* Портальный узел под ногами открывается сам: сеть запоминает того, кто до
     неё дошёл. Дорога и сеть связаны — стоячие камни стоят на перекрёстках
     трактов, поэтому идти по дороге выгодно вдвойне. */
@@ -22395,11 +23068,15 @@ const CMD={
  signs(){openSigns();},
  objects(){openObjects();},
  mastery(){openMastery();},
+ alchbook(){openAlchBook();},
  objpick(i){openObjActions(i);},
  /* У техники в имени двоеточие («tech:melt»), поэтому склеиваем обратно всё,
     кроме первого куска: он — номер объекта. */
  objact(arg){const p=String(arg).split(":");doObjAction(p[0],p.slice(1).join(":"));},
  objback(){openObjects();},
+ sitem(j){openShelfItem(j);},
+ sact(arg){const p=String(arg).split(":");doShelfAction(p[0],p.slice(1).join(":"));},
+ sback(){openShelf();},
  patrol(){meetPatrol();},
  journal(){openModal("modal-journal");renderJournal();},
  world(){openModal("modal-world");renderWorld();},
@@ -25258,7 +25935,12 @@ const Tutor={
    if(!st||kind!==st.want)return;
    if(this.timer){clearTimeout(this.timer);this.timer=null;}
    this.tries=0;this.i++;
-   safeFn(()=>Bank.play("ui_success",{gain:0.6,maxSec:3}));
+   /* ── ОТКЛИК НА УДАЧНЫЙ УРОК НЕ ЗВУЧАЛ НИ РАЗУ ──
+      «ui_success» лежит в UI-банке, а Bank.play ищет только в банке ролей
+      и на чужое имя молча отвечает пустотой. Урок засчитывался, слова
+      говорились, а звука успеха не было — в игре для незрячих это не
+      мелочь: отклик подтверждает, что жест принят. */
+   safeFn(()=>UI.nat("ui_success",0.6)||Bank.play("chime",{gain:0.5,maxSec:3}));
    const last=this.i>=this.steps.length;
    narrate(st.ok+(last?"":""),{interrupt:false});
    if(last){
