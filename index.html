@@ -3378,6 +3378,8 @@ const AM_GROUPS=[
   ["interact","🤝 Взаимодействовать"],
   ["gather","📦 Собрать ресурс"],
   ["echo","🔊 Эхо-скан: маяки вокруг"],
+  ["signs","🗺️ Приметы и клады"],
+  ["patrol","🛡️ Окликнуть разъезд"],
   ["cityplan","🏙️ План города: кварталы и площадь"],
   ["trade","🐫 Рынки, маршруты и караваны"],
   ["harbor","⚓ Причал: корабли и рейсы"],
@@ -3467,6 +3469,8 @@ function amAvailable(cmd){
   if(cmd==="fish")return !!fishingSpot();
   if(cmd==="descend")return !!G.place||!!(c.structure&&PLACE_KIND[c.structure.type]);
   if(cmd==="interact")return !G.place&&!!(c.structure||c.res||c.находка);
+  if(cmd==="signs")return !G.place&&!G.dark;
+  if(cmd==="patrol")return !!safeFn(()=>patrolHere(),null);
   /* Пункт сбора показывается, только когда собирать действительно есть что:
      внутри постройки это сундук или жила, снаружи — ресурс на клетке. Раньше
      внутри он предлагался на каждой клетке и отвечал отказом. */
@@ -5775,6 +5779,117 @@ function caravansNear(x,y,day,hour,rad=8){
  out.sort((a,b)=>a.d-b.d);
  return out;
 }
+/* ════════════════════════════════════════════════════════════════════════
+   РАЗЪЕЗДЫ НА ТРАКТАХ: ДЕРЖАВА ХОДИТ ПО СВОИМ ДОРОГАМ
+
+   Обозы по трактам ходили, а держава по ним не ходила вовсе: тракт был
+   дорогой без хозяина. Между тем дорога тем и отличается от тропы, что за
+   ней кто-то следит, — и для игрока это не украшение, а СВЕДЕНИЕ: там, где
+   прошёл разъезд, разбойник не стоит.
+
+   Разъезд выводится из дня и часа, как обоз, и нигде не хранится. Ходит он
+   вдоль своего тракта между двумя дальними перекрёстками — туда и обратно,
+   со своей скоростью и своим сдвигом по времени. Оттого встретить его можно
+   утром на одном конце отрезка, а к вечеру на другом.
+
+   Разъезды бывают не на всяком тракте: на заброшенном пути и на старой
+   дороге держава не держит никого, и это тоже сведение — по такой дороге
+   идти быстрее некому помочь.
+   ════════════════════════════════════════════════════════════════════════ */
+const PATROL_KIND=[
+ {id:"guard", n:"разъезд заставы",  людей:4, звук:"tread_hoof",  голос:"guard_shout",
+  о:"Четверо верхом, копья у стремени, знаки державы на щитах."},
+ {id:"march", n:"пеший дозор",      людей:6, звук:"guard_march", голос:"warrior_shout",
+  о:"Шестеро в пешем строю, шаг в шаг, и железо отзывается на каждом шаге."},
+ {id:"courier",n:"гонец с охраной", людей:2, звук:"beasts_horse",голос:"voice_far",
+  о:"Двое верхом, идут скоро и в разговоры не вступают без нужды."},
+ {id:"toll",  n:"объезд мытаря",    людей:3, звук:"horse_step",  голос:"guard_whistle",
+  о:"Мытарь с двумя провожатыми считает возы и берёт с них долю."}];
+const PATROL_BY_ID=Object.fromEntries(PATROL_KIND.map(p=>[p.id,p]));
+/* Отрезок тракта, за который отвечает один разъезд: шесть перегонов между
+   перекрёстками. Дальше начинается чужая ответственность. */
+const PATROL_SPAN=29*6;
+/* Тракты в пределах слышимости: только те, за которыми держава следит. */
+function patrolRoutes(cx,cy,rad){
+ const out=[];
+ for(let s=Math.floor((cy-rad)/29);s<=Math.floor((cy+rad)/29);s++){
+  const y=s*29;if(y<0||y>=WORLD||Math.abs(y-cy)>rad)continue;
+  const k=safeFn(()=>tractKind("r",y),null);
+  if(!k||k.id==="abandoned"||k.id==="old")continue;
+  out.push({kind:"r",line:y,вид:k});}
+ for(let s=Math.floor((cx-rad)/29);s<=Math.floor((cx+rad)/29);s++){
+  const x=s*29;if(x<0||x>=WORLD||Math.abs(x-cx)>rad)continue;
+  const k=safeFn(()=>tractKind("c",x),null);
+  if(!k||k.id==="abandoned"||k.id==="old")continue;
+  out.push({kind:"c",line:x,вид:k});}
+ return out;}
+/* Где сейчас разъезд номер n на этом тракте. Без державы и без имён: это
+   спрашивают на каждой клетке при расчёте встреч, и лишнего тут быть не
+   должно. */
+function patrolPos(rt,n,day,hour){
+ const ось=rt.kind==="r"?1:2,seg=Math.floor(rt.line/29);
+ /* На военном тракте разъезд почти всегда, на царской дороге часто, на
+    торговой через раз: держава бережёт своё по мере надобности. */
+ const порог=rt.вид.id==="military"?0.85:rt.вид.id==="royal"?0.65:0.42;
+ if(hashName(ось*1000+seg,n,781)>=порог)return null;
+ const a=n*PATROL_SPAN,b=a+PATROL_SPAN;
+ if(b<=0||a>=WORLD)return null;
+ const скорость=2.0+hashName(ось,n+seg,783)*1.6;
+ const период=Math.max(4,(b-a)*2/скорость);
+ let t=((Number(day)||1)*24+(Number(hour)||0)+hashName(ось,n,784)*период)%период;
+ const п=t<период/2?t/(период/2):1-(t-период/2)/(период/2);
+ const вдоль=Math.round(a+(b-a)*п);
+ const x=rt.kind==="r"?вдоль:rt.line,y=rt.kind==="r"?rt.line:вдоль;
+ if(x<0||y<0||x>=WORLD||y>=WORLD)return null;
+ return {x,y,n,rt};}
+/* Полный разъезд: с державой, видом и именем тракта — для встречи и рассказа. */
+function patrolFull(p){
+ if(!p)return null;
+ const ось=p.rt.kind==="r"?1:2;
+ const вид=PATROL_KIND[Math.floor(hashName(ось,p.n+Math.floor(p.rt.line/29),782)*PATROL_KIND.length)%PATROL_KIND.length];
+ const emp=safeFn(()=>empireAt(p.x,p.y),EMPIRES[0]);
+ const тракт=safeFn(()=>tractName(p.rt.kind,p.rt.line),"тракт");
+ return {...p,вид,emp,тракт,имя:`${вид.n} державы «${emp.short}»`};}
+function patrolsNear(x,y,day,hour,rad=8){
+ const out=[];
+ for(const rt of patrolRoutes(x,y,rad)){
+  const вдоль=rt.kind==="r"?x:y;
+  for(let n=Math.floor((вдоль-rad)/PATROL_SPAN);n<=Math.floor((вдоль+rad)/PATROL_SPAN);n++){
+   const p=patrolPos(rt,n,day,hour);
+   if(!p)continue;
+   const d=Math.max(Math.abs(p.x-x),Math.abs(p.y-y));
+   if(d<=rad)out.push({...p,d,dx:p.x-x,dy:p.y-y});}}
+ out.sort((a,b)=>a.d-b.d);
+ return out;}
+function patrolHere(){
+ if(G.place||G.dark||G.ship)return null;
+ const list=patrolsNear(G.x,G.y,G.day,G.hour,1);
+ return list.length?patrolFull(list[0]):null;}
+/* ── ЧТО РАЗЪЕЗД МЕНЯЕТ В МИРЕ ──
+   Не «встречу с ним», а саму землю вокруг: где прошёл разъезд, тварей и
+   разбойников меньше. Это и есть смысл держаться тракта. */
+/* Считается НЕ НА КАЖДОЙ КЛЕТКЕ, а на квадрат тридцать на тридцать два.
+   Встречи считаются для всякой клетки, которую спросили, а эхо-скан и поиск мест
+   спрашивают сотни тысяч за раз: считать разъезды заново на каждой из них было
+   бы дороже всего остального расчёта вместе взятого. В ключе стоит час мира,
+   поэтому с новым часом разъезд сдвигается, а память обновляется сама. */
+const patrolBlockCache=new Map();
+function patrolsBlock(x,y){
+ const ч=Math.floor((Number(G.day)||1)*24+(Number(G.hour)||0));
+ const bx=x>>5,by=y>>5,k=ч+":"+bx+":"+by;
+ let v=patrolBlockCache.get(k);
+ if(v)return v;
+ v=patrolsNear((bx<<5)+16,(by<<5)+16,G.day,G.hour,24);
+ if(patrolBlockCache.size>4000)patrolBlockCache.clear();
+ patrolBlockCache.set(k,v);
+ return v;}
+function patrolSafety(x,y){
+ if(G.dark)return 1;
+ const v=safeFn(()=>patrolsBlock(x,y),null);
+ if(!v||!v.length)return 1;
+ let d=99;
+ for(const p of v){const dd=Math.max(Math.abs(p.x-x),Math.abs(p.y-y));if(dd<d)d=dd;}
+ return d<=2?0.35:d<=4?0.55:d<=7?0.8:1;}
 function caravanHere(){
  if(G.place)return null;
  const list=caravansNear(G.x,G.y,G.day,G.hour,1);
@@ -9333,7 +9448,17 @@ function useFind(x,y){
  const f=safeFn(()=>findAt(x,y),null);
  if(!f){narrate("Здесь нечего трогать.");return false;}
  safeFn(()=>beacon(f.b,0,0));
+ /* Метка клада отвечает раньше самой находки: игрок пришёл сюда по примете,
+    и разбирать телегу ему сейчас незачем. */
+ if(safeFn(()=>signHere(x,y),null)&&safeFn(()=>takeTreasure(x,y),false))return true;
  safeFn(()=>f.use(x,y));
+ /* Одна находка из шести что-то помнит: примета лежит поверх её обычной
+    поживы, а не вместо неё. */
+ safeFn(()=>{
+  if(SIGN_SOURCES.indexOf(f.id)<0)return;
+  if(hashName(x,y,759)>=0.17)return;
+  if(!findOnce(x,y,"примета"))return;
+  takeSign(x,y);});
  return true;}
 
 function cellContent(x,y){
@@ -9631,6 +9756,11 @@ function beastAt(x,y,c,базоваяДоля){
     Доля подобрана так, чтобы средняя по миру осталась прежней — меняется не
     общее число тварей, а их распределение: гуще у логов, пусто между. */
  доля*=0.6+0.8*лучшийУдел;
+ /* ── ДОРОГА ПОД ПРИСМОТРОМ ──
+    Разъезд державы — не украшение тракта, а причина по нему идти: где он
+    прошёл, встреч меньше втрое. Считается только под открытым небом и только
+    рядом с трактом, поэтому в лесу и в горах ничего не меняется. */
+ доля*=safeFn(()=>patrolSafety(x,y),1);
  if(hashName(x,y,31)>=доля)return null;
  let бросок=hashName(x,y,32)*сумма,i=0;
  while(i<веса.length-1&&бросок>веса[i]){бросок-=веса[i];i++;}
@@ -14358,40 +14488,10 @@ function takeSecret(x,y,propId){
   return true;}
  secretMark(v.ключ,"взято");
  G.gold+=v.золото;
- let дар="";
  const пр=v.приз;
- if(пр.вид==="единственная"){
-  const дан=safeFn(()=>grantUnique(пр.что),null);
-  const u=UNIQUE_BY_ID[пр.что];
-  дар=дан?`${u.n}: ${u.д} Вещь единственная: второй такой в мире нет.`
-   :`${u?u.n:"Эта вещь"} уже у вас: второй такой не бывает.`;}
- else if(пр.вид==="артефакт"){
-  /* Имя из списка тайников остаётся именем, но вещь за ним теперь
-     настоящая: ранг от глубины палаты, направление — мистическое, ибо
-     лежала она за плитой. Выдаётся тем же единственным входом. */
-  const a=ART.make({дом:(p.depth>0?"myst":"run"),
-   ранг:Math.min(5,2+Math.floor((Number(p.depth)||0)/12)),
-   кач:3,seed:p.bx*13+p.by*7+x*3+y*5,имя:пр.что,откуда:"из тайной палаты"});
-  ART.grant({готовая:a});
-  дар=`Артефакт: ${ART.describe(a,true)}`;}
- else if(пр.вид==="оружие"){
-  if(!Array.isArray(G.items))G.items=[];
-  G.items.push(пр.что);
-  дар=`Именное оружие: «${пр.что}». Оно ляжет в сумку.`;}
- else if(пр.вид==="скакун"){
-  const m=MOUNT_BY_ID[пр.что];
-  takeMount(пр.что);
-  дар=`Скакун: ${m.n}. ${m.d} Его нельзя ни купить, ни выменять — только найти.`;}
- else if(пр.вид==="умение"){
-  const a=ABILITY_BY_ID[пр.что];
-  дар=learnAbility(пр.что)?`Умение: «${a.n}». ${a.d}`:`Умение «${a.n}» вам уже знакомо.`;}
- else if(пр.вид==="навык"){
-  const sk=SKILL_BY_ID[пр.что];
-  дар=safeFn(()=>learnSkill(пр.что),false)?`Навык: «${sk.n}». ${sk.d}`:`Навык «${sk.n}» у вас уже есть.`;}
- else{
-  if(!Array.isArray(G.spells))G.spells=[];
-  дар=G.spells.indexOf(пр.что)<0?(G.spells.push(пр.что),`Заклинание: «${пр.что}».`)
-   :`Заклинание «${пр.что}» вы уже знаете.`;}
+ const дар=grantPrize(пр,{дом:(p.depth>0?"myst":"run"),
+  ранг:Math.min(5,2+Math.floor((Number(p.depth)||0)/12)),
+  seed:p.bx*13+p.by*7+x*3+y*5,откуда:"из тайной палаты"});
  safeFn(()=>{UI.fanfare();
   Bank.play("relic_sing",{gain:0.7,maxSec:6})||Bank.play("gate_fanfare",{gain:0.7,maxSec:5});
   setTimeout(()=>safeFn(()=>Bank.play("od_gold",{gain:0.6,maxSec:4})||Bank.play("arte_coins",{gain:0.6,maxSec:4})),400);
@@ -14401,6 +14501,242 @@ function takeSecret(x,y,propId){
  narrate(`Вы протискиваетесь в ход. ${v.вид[0].toUpperCase()+v.вид.slice(1)}; ${v.страж}. На камне лежит ваша находка. ${дар} И ${v.золото} золота россыпью.`);
  safeFn(()=>{refresh();saveGame(true);});
  return true;}
+/* ── ВЫДАЧА НАГРАДЫ: ОДНО МЕСТО НА ВЕСЬ МИР ──
+   Раньше этот разбор — артефакт, оружие, скакун, умение, навык, заклинание,
+   единственная вещь — стоял внутри тайной палаты и никуда больше не годился.
+   Клады по приметам дают ровно то же самое, и второй такой же разбор рядом
+   был бы не второй возможностью, а вторым местом, где заводятся расхождения.
+   Поэтому выдача вынесена сюда, а палата зовёт её наравне со всеми. */
+function grantPrize(пр,опц){
+ опц=опц||{};
+ if(!пр||!пр.вид)return "";
+ if(пр.вид==="единственная"){
+  const дан=safeFn(()=>grantUnique(пр.что),null);
+  const u=UNIQUE_BY_ID[пр.что];
+  return дан?`${u.n}: ${u.д} Вещь единственная: второй такой в мире нет.`
+   :`${u?u.n:"Эта вещь"} уже у вас: второй такой не бывает.`;}
+ if(пр.вид==="артефакт"){
+  /* Имя из списка остаётся именем, но вещь за ним настоящая: ранг и
+     направление задаёт тот, кто награду выдаёт. */
+  const a=ART.make({дом:опц.дом||"run",ранг:опц.ранг||2,кач:опц.кач||3,
+   seed:опц.seed||0,имя:пр.что,откуда:опц.откуда||"из тайника"});
+  ART.grant({готовая:a});
+  return `Артефакт: ${ART.describe(a,true)}`;}
+ if(пр.вид==="оружие"){
+  if(!Array.isArray(G.items))G.items=[];
+  G.items.push(пр.что);
+  return `Именное оружие: «${пр.что}». Оно ляжет в сумку.`;}
+ if(пр.вид==="скакун"){
+  const m=MOUNT_BY_ID[пр.что];
+  takeMount(пр.что);
+  return `Скакун: ${m.n}. ${m.d} Его нельзя ни купить, ни выменять — только найти.`;}
+ if(пр.вид==="умение"){
+  const a=ABILITY_BY_ID[пр.что];
+  return learnAbility(пр.что)?`Умение: «${a.n}». ${a.d}`:`Умение «${a.n}» вам уже знакомо.`;}
+ if(пр.вид==="навык"){
+  const sk=SKILL_BY_ID[пр.что];
+  return safeFn(()=>learnSkill(пр.что),false)?`Навык: «${sk.n}». ${sk.d}`:`Навык «${sk.n}» у вас уже есть.`;}
+ if(!Array.isArray(G.spells))G.spells=[];
+ return G.spells.indexOf(пр.что)<0?(G.spells.push(пр.что),`Заклинание: «${пр.что}».`)
+  :`Заклинание «${пр.что}» вы уже знаете.`;}
+
+/* ════════════════════════════════════════════════════════════════════════
+   ПРИМЕТЫ И КЛАДЫ: ТАЙНА В НЕСКОЛЬКО ШАГОВ
+
+   Тайные ходы за обстановкой хороши, но одношаговы: тронул статую — открылся
+   ход, вошёл — взял. Всё случается на одной клетке, и искать нечего, кроме
+   как трогать всё подряд.
+
+   Примета устроена иначе, и в ней ЧЕТЫРЕ ступени:
+
+     1. НАЙТИ. Примету находят на находках мира — в золе кострища, на резьбе
+        межевого столба, под верхним камнем тура, в коробе охотничьего
+        тайника. Одна находка из шести что-то помнит.
+     2. ПРОЧЕСТЬ. Примета называет место не координатами, а приметами:
+        сторона света, сколько шагов, какая земля и у чего искать. Это и есть
+        карта для того, кто не видит: направление, расстояние, ориентир.
+     3. ДОЙТИ. Место отстоит на полсотни-две сотни шагов, и на нём стоит
+        своя находка — она и есть метка. Пока идёшь, примета жива в раскладе
+        и в меню, и до неё всегда можно спросить сторону и расстояние.
+     4. ВЫПОЛНИТЬ УСЛОВИЕ. Клад не отдаётся тому, кто просто пришёл: одни
+        берут ночью, другие в дождь, третьи зимой, четвёртые — положив взамен
+        кость или горсть золота. Условие написано в самой примете.
+
+   Награда — из общей выдачи: артефакт, именное оружие, умение, навык,
+   заклинание или скакун. А иногда — СЛЕДУЮЩАЯ ПРИМЕТА: тогда тайна идёт
+   цепочкой, и это единственный способ добраться до её конца.
+   ════════════════════════════════════════════════════════════════════════ */
+const SIGN_COND=[
+ {id:"night",о:"брать в темноте",  надо:"Надпись велит приходить в темноте, а сейчас светло.",
+  ок:()=>safeFn(()=>isNight(),false)},
+ {id:"day",  о:"брать при свете",  надо:"Надпись велит приходить при свете, а сейчас ночь.",
+  ок:()=>!safeFn(()=>isNight(),false)},
+ {id:"rain", о:"брать, когда идёт дождь", надо:"Надпись велит приходить в дождь, а небо сухое.",
+  ок:()=>["Дождь","Ливень","Гроза"].indexOf(G.weather)>=0},
+ {id:"snow", о:"брать, когда лежит снег", надо:"Надпись велит приходить по снегу, а снега нет.",
+  ок:()=>["Снег","Метель"].indexOf(G.weather)>=0},
+ {id:"winter",о:"брать зимой",     надо:"Надпись велит приходить зимой, а стоит другая пора.",
+  ок:()=>safeFn(()=>seasonNow().id,"")==="winter"},
+ {id:"summer",о:"брать летом",     надо:"Надпись велит приходить летом, а стоит другая пора.",
+  ок:()=>safeFn(()=>seasonNow().id,"")==="summer"},
+ {id:"bone", о:"положить кость взамен", надо:"Надпись требует оставить кость взамен, а кости у вас нет.",
+  ок:()=>(Number(G.inv&&G.inv["кость"])||0)>=1,
+  взять:()=>{G.inv["кость"]=(Number(G.inv["кость"])||0)-1;if(G.inv["кость"]<=0)delete G.inv["кость"];}},
+ {id:"gold", о:"положить двадцать золотых взамен", надо:"Надпись требует оставить двадцать золотых, а в кошеле их нет.",
+  ок:()=>(Number(G.gold)||0)>=20,взять:()=>{G.gold-=20;}},
+ {id:"crystal",о:"положить кристалл взамен", надо:"Надпись требует оставить кристалл, а кристалла у вас нет.",
+  ок:()=>(Number(G.inv&&G.inv["кристалл"])||0)>=1,
+  взять:()=>{G.inv["кристалл"]=(Number(G.inv["кристалл"])||0)-1;if(G.inv["кристалл"]<=0)delete G.inv["кристалл"];}}];
+const SIGN_COND_BY_ID=Object.fromEntries(SIGN_COND.map(c=>[c.id,c]));
+/* Кто оставил примету и какими словами. */
+const SIGN_WHO=["обозный возчик","беглый послушник","охотник за костью","землемер державы",
+ "старый проводник","гонец, не дошедший","травница","каменотёс","дезертир заставы","звонарь"];
+const SIGN_WHAT=["зола хранит выцарапанный по угольку знак","на камне процарапана строка",
+ "под верхним камнем лежит берестяной лоскут","в коробе поверх припаса свёрнута полоска коры",
+ "на обороте резьбы выбито мелко и наспех"];
+/* Находки, которые что-то помнят: не всякая, и не всякий раз. */
+const SIGN_SOURCES=["ashes","boundary","cairn","cache","wreck","millruin","wardstone"];
+/* Куда показывает примета, найденная на этой клетке. Место выводится из тех
+   же чисел, что и сама примета, поэтому одна и та же зола всегда показывает
+   в одну и ту же сторону. */
+function signTarget(x,y){
+ const у=hashName(x,y,760)*Math.PI*2;
+ const д=50+Math.floor(hashName(x,y,761)*150);
+ let tx=Math.round(x+Math.cos(у)*д),ty=Math.round(y+Math.sin(у)*д);
+ tx=Math.max(1,Math.min(WORLD-2,tx));ty=Math.max(1,Math.min(WORLD-2,ty));
+ /* На месте должна стоять метка — находка. Если ровно там её нет, берётся
+    ближняя: без метки клад пришлось бы искать вслепую по клетке. */
+ for(let r=0;r<=14;r++){
+  for(let d=-r;d<=r;d++)for(const [dx,dy] of (r?[[d,-r],[d,r],[-r,d],[r,d]]:[[0,0]])){
+   const nx=tx+dx,ny=ty+dy;
+   if(nx<1||ny<1||nx>=WORLD-1||ny>=WORLD-1)continue;
+   const c=safeFn(()=>cellContent(nx,ny),null);
+   if(c&&c.находка)return {x:nx,y:ny,метка:c.находка.id,имя:c.находка.n};}}
+ return null;}
+/* Сама примета: что написано, куда ведёт, что требует и что за это дают. */
+function signAt(x,y){
+ const цель=safeFn(()=>signTarget(x,y),null);
+ if(!цель)return null;
+ const s=(a)=>hashName(x+a*13,y+a*7,762+a);
+ const кто=SIGN_WHO[Math.floor(s(1)*SIGN_WHO.length)%SIGN_WHO.length];
+ const как=SIGN_WHAT[Math.floor(s(2)*SIGN_WHAT.length)%SIGN_WHAT.length];
+ const усл=SIGN_COND[Math.floor(s(3)*SIGN_COND.length)%SIGN_COND.length];
+ const д=Math.max(Math.abs(цель.x-x),Math.abs(цель.y-y));
+ const куда=dirBetween(цель.x-x,цель.y-y);
+ const земля=safeFn(()=>{const b=biomeAt(цель.x,цель.y);return b?b.n:null;},null);
+ const род=["артефакт","оружие","умение","навык","заклинание","скакун","примета"][Math.floor(s(4)*7)%7];
+ let приз=null;
+ if(род==="артефакт")приз={вид:"артефакт",что:SECRET_ARTIFACTS[Math.floor(s(5)*SECRET_ARTIFACTS.length)%SECRET_ARTIFACTS.length]};
+ else if(род==="оружие")приз={вид:"оружие",что:SECRET_BLADES[Math.floor(s(6)*SECRET_BLADES.length)%SECRET_BLADES.length]};
+ else if(род==="умение")приз={вид:"умение",что:ABILITIES[Math.floor(s(7)*ABILITIES.length)%ABILITIES.length].id};
+ else if(род==="навык")приз={вид:"навык",что:SKILLS[Math.floor(s(8)*SKILLS.length)%SKILLS.length].id};
+ else if(род==="заклинание")приз={вид:"заклинание",что:SPELLS[Math.floor(s(9)*SPELLS.length)%SPELLS.length].n};
+ else if(род==="скакун")приз={вид:"скакун",что:MOUNTS[Math.floor(s(10)*MOUNTS.length)%MOUNTS.length].id};
+ const текст=`${как}. Оставил её ${кто}. «Отсюда ${д} ${plural(д,"шаг","шага","шагов")} на ${куда}`+
+  `${земля?`, там ${земля}`:""}; искать у ${цель.имя}; ${усл.о}.»`;
+ return {ключ:"z"+x+","+y,от:{x,y},цель,усл:усл.id,приз,род,текст,
+  золото:40+Math.floor(s(11)*200)};}
+/* Приметы, которые игрок уже подобрал и ещё не закрыл. */
+function signsOpen(){return (Array.isArray(G.signs)?G.signs:[]).filter(z=>z&&!z.готово);}
+const SIGN_LIMIT=3;
+function signTaken(ключ){return (Array.isArray(G.signs)?G.signs:[]).some(z=>z&&z.ключ===ключ);}
+/* Подобрать примету с находки. */
+function takeSign(x,y){
+ if(!Array.isArray(G.signs))G.signs=[];
+ const z=safeFn(()=>signAt(x,y),null);
+ if(!z||signTaken(z.ключ))return false;
+ if(signsOpen().length>=SIGN_LIMIT){
+  narrate(`Тут припрятана ещё одна примета, но у вас уже ${SIGN_LIMIT} неразгаданных. Разберитесь с ними — эта никуда не денется.`,{interrupt:false});
+  return false;}
+ G.signs.push(z);
+ safeFn(()=>{Bank.play("arte_page",{gain:0.55,maxSec:4});
+  setTimeout(()=>safeFn(()=>Bank.play("secret_box",{gain:0.5,maxSec:4})),320);});
+ journal("Найдена примета к кладу.");
+ narrate(`Примета! ${z.текст} Меню действий, «Приметы и клады» — сторона и расстояние отсюда.`,{interrupt:false});
+ safeFn(()=>saveGame(true));
+ return true;}
+/* Примета, чьё место — эта клетка. */
+function signHere(x,y){
+ return signsOpen().find(z=>z.цель&&z.цель.x===x&&z.цель.y===y)||null;}
+/* Взять клад: сюда приходят с находки-метки. */
+function takeTreasure(x,y){
+ const z=signHere(x,y);
+ if(!z)return false;
+ const усл=SIGN_COND_BY_ID[z.усл];
+ if(усл&&!safeFn(()=>усл.ок(),false)){
+  safeFn(()=>Bank.play("lock_click",{gain:0.5,maxSec:3}));
+  narrate(`Место то самое: ${z.цель.имя}, и под ним пусто не зря. ${усл.надо} Примета остаётся при вас.`,{interrupt:false});
+  return true;}
+ if(усл&&усл.взять)safeFn(()=>усл.взять());
+ z.готово=true;
+ G.gold+=Number(z.золото)||0;
+ let дар="";
+ if(z.род==="примета"){
+  /* Цепочка: в кладе лежит следующая примета, и без первой её не найти. */
+  const дальше=safeFn(()=>signAt(z.цель.x,z.цель.y),null);
+  if(дальше&&!signTaken(дальше.ключ)){G.signs.push(дальше);
+   дар=`А поверх золота — новая примета, писанная той же рукой. ${дальше.текст}`;}
+  else дар="А поверх золота — истёршийся лоскут, на котором уже ничего не разобрать.";}
+ else дар=grantPrize(z.приз,{дом:"myst",ранг:3,кач:3,
+  seed:z.цель.x*13+z.цель.y*7,откуда:"из клада по примете"});
+ safeFn(()=>{UI.fanfare();
+  Bank.play("secret_box",{gain:0.7,maxSec:5});
+  setTimeout(()=>safeFn(()=>Bank.play("relic_sing",{gain:0.6,maxSec:6})),380);
+  setTimeout(()=>safeFn(()=>Bank.play("arte_coins",{gain:0.6,maxSec:4})),760);});
+ journal(`Клад по примете взят: ${z.род}.`);
+ narrate(`Земля под ${z.цель.имя} подаётся легко: здесь копали до вас. ${дар} И ${z.золото} золота россыпью.`);
+ safeFn(()=>{refresh();saveGame(true);});
+ return true;}
+/* Расклад по приметам: что найдено, куда идти и что нужно иметь при себе. */
+function openSigns(){
+ const список=signsOpen();
+ if(!список.length){
+  narrate("Неразгаданных примет нет. Их находят в золе кострищ, на межевых столбах, под камнями туров и в охотничьих тайниках — одна находка из шести что-то помнит.");
+  return;}
+ const строки=список.map((z,i)=>{
+  const д=Math.max(Math.abs(z.цель.x-G.x),Math.abs(z.цель.y-G.y));
+  const усл=SIGN_COND_BY_ID[z.усл];
+  return `${i+1}. ${z.текст} Отсюда: ${д} ${plural(д,"шаг","шага","шагов")}, ${dirBetween(z.цель.x-G.x,z.цель.y-G.y)||"вы на месте"}. Условие: ${усл?усл.о:"неизвестно"}${усл&&safeFn(()=>усл.ок(),false)?" — выполнено сейчас":""}.`;});
+ /* Ближняя примета зовёт маяком: направление слышно, а не только названо. */
+ safeFn(()=>{
+  const б=список.map(z=>({z,d:Math.max(Math.abs(z.цель.x-G.x),Math.abs(z.цель.y-G.y))}))
+   .sort((a,b)=>a.d-b.d)[0];
+  if(б)beaconAt("chest",б.z.цель.x-G.x,б.z.цель.y-G.y,0,б.d);});
+ narrate(`Приметы и клады: ${список.length} из ${SIGN_LIMIT}. ${строки.join(" ")}`);}
+
+/* ── ВСТРЕЧА С РАЗЪЕЗДОМ ──
+   Разъезд не окно с товаром, а разговор на дороге: он говорит, что впереди,
+   берёт пошлину или проверяет, кто идёт. Всё это — на слух и без окон. */
+function meetPatrol(){
+ const p=safeFn(()=>patrolHere(),null);
+ if(!p){narrate("Разъезда рядом нет. Их держат на военных трактах и царских дорогах — на заброшенных путях не встретишь никого.");return false;}
+ safeFn(()=>{Bank.play(p.вид.звук,{seed:p.x+p.y,gain:0.6,maxSec:5});
+  setTimeout(()=>safeFn(()=>Bank.play(p.вид.голос,{seed:p.y,gain:0.5,maxSec:4})),340);
+  setTimeout(()=>safeFn(()=>Bank.play("armor_clank",{seed:p.x,gain:0.4,maxSec:3})),620);});
+ const i=Math.max(0,EMPIRES.indexOf(p.emp));
+ const войны=safeFn(()=>warsAt(G.day).filter(w=>w.a===i||w.b===i),[]);
+ /* Разъезд знает свой отрезок: что впереди по тракту и далеко ли до жилья. */
+ const близко=safeFn(()=>{
+  const c=findCities(p.x,p.y,40,3)[0];
+  return c?`${c.name}, ${Math.max(Math.abs(c.x-G.x),Math.abs(c.y-G.y))} ${plural(Math.max(Math.abs(c.x-G.x),Math.abs(c.y-G.y)),"шаг","шага","шагов")}, ${dirBetween(c.x-G.x,c.y-G.y)}`:null;},null);
+ const тварь=safeFn(()=>{
+  for(let r=1;r<=10;r++)for(let d=-r;d<=r;d++)for(const [dx,dy] of [[d,-r],[d,r],[-r,d],[r,d]]){
+   const nx=G.x+dx,ny=G.y+dy;
+   if(nx<0||ny<0||nx>=WORLD||ny>=WORLD)continue;
+   const cc=cellContent(nx,ny);
+   if(cc.monster&&!G.cleared[nx+","+ny])return {m:cc.monster,d:r,dir:dirBetween(dx,dy)};}
+  return null;},null);
+ if(p.вид.id==="toll"&&(Number(G.gold)||0)>=5){
+  G.gold-=5;addRep(p.emp.race,1);
+  safeFn(()=>Bank.play("xylo_coin",{gain:0.5,maxSec:3}));
+  narrate(`${p.имя} на пути «${p.тракт}». ${p.вид.о} С пешего берут пять золотых дорожной доли — вы отдали. ${близко?`Мытарь кивает вперёд: ближнее жильё — ${близко}.`:"Жилья поблизости мытарь не знает."} ${тварь?`И добавляет: «${тварь.m.n} видели ${тварь.d} ${plural(тварь.d,"шаг","шага","шагов")}, ${тварь.dir}. Держитесь насыпи».`:"«Дорога чистая», — говорит он."}`);
+  safeFn(()=>{refresh();saveGame(true);});
+  return true;}
+ addRep(p.emp.race,1);
+ narrate(`${p.имя} на пути «${p.тракт}». ${p.вид.о} Вас окликнули, оглядели и пропустили. ${войны.length?`Старший говорит коротко: «Держава в войне с ${EMPIRES[войны[0].a===i?войны[0].b:войны[0].a].short}. Ночью по тракту не ходите».`:"«Дорога наша, идите спокойно»."} ${близко?`Ближнее жильё: ${близко}.`:""} ${тварь?`О звере они знают: ${тварь.m.n}, ${тварь.d} ${plural(тварь.d,"шаг","шага","шагов")}, ${тварь.dir}.`:"О звере поблизости они не слышали."} Пока разъезд рядом, на дороге тихо.`);
+ safeFn(()=>{refresh();saveGame(true);});
+ return true;}
+
 /* ── Собрание: всё, что игрок прочёл ──
    Двухуровневое, как энциклопедия звуков: сперва полки, потом страницы
    выбранной полки. Иначе по трёмстам прочитанным страницам не пройти
@@ -14844,7 +15180,8 @@ const G={hp:100,hpMax:100,str:10,agi:10,mind:10,cha:10,mana:10,manaMax:10,
  /* finds — то, что уже взято с находок мира: доски из разбитой лодки,
     головни из кострища, короб из тайника. Без записи поваленное дерево
     стало бы бесконечной лесопилкой. */
- depleted:{},visited:{},cleared:{},prayed:{},finds:{},inCombat:false,combat:null,loot:null,
+ /* signs — подобранные приметы к кладам: сколько их и куда ведут. */
+ depleted:{},visited:{},cleared:{},prayed:{},finds:{},signs:[],inCombat:false,combat:null,loot:null,
  /* Народ игрока, покровитель из двенадцати богов, благосклонность богов,
     репутация у народов и след, который игрок оставил в политике держав. */
  race:"Люди",patron:null,faith:{},rep:{},diplo:{},clanRep:0,
@@ -18754,6 +19091,9 @@ const SCAPE_VOICE={
  /* Находка зовёт тише ресурса и постройки: она не цель пути, а то, что
     попалось по дороге. Но молчать она не должна: иначе её никак не найти. */
  find:     {role:null,           period:9.0, gain:0.40, prio:0},
+ /* Разъезд слышно так же громко, как обоз: он движется, и знать, где он,
+    важнее, чем знать, где лежит валежник. */
+ patrol:   {role:"tread_hoof",   period:6.0, gain:0.55, prio:2},
  caravan:  {role:"caravan",      period:6.0, gain:0.55, prio:2},
  /* Запертая палата зовёт к себе: за ней слышно, что есть чем поживиться. */
  vault:    {role:"treasure",     period:8.0, gain:0.55, prio:2},
@@ -18826,6 +19166,10 @@ const Scape={
     if(!c.d)return;
     out.push({key:"c"+i,kind:"caravan",dx:c.dx,dy:c.dy,d:c.d,
      role:SCAPE_VOICE.caravan.role,seed:i});});});
+  safeFn(()=>{patrolsNear(G.x,G.y,G.day,G.hour,SCAPE_RAD).forEach((p,i)=>{
+    if(!p.d)return;
+    out.push({key:"p"+i,kind:"patrol",dx:p.dx,dy:p.dy,d:p.d,
+     role:SCAPE_VOICE.patrol.role,seed:p.x+p.y});});});
   }catch(_){}
   return out;},
  /* Один проход: кому пора — тот и звучит. */
@@ -21394,6 +21738,8 @@ const CMD={
  inv(){openModal("modal-inventory");renderInventory();},
  char(){openModal("modal-character");renderCharacter();},
  quests(){openModal("modal-quests");renderQuests();},
+ signs(){openSigns();},
+ patrol(){meetPatrol();},
  journal(){openModal("modal-journal");renderJournal();},
  world(){openModal("modal-world");renderWorld();},
  art(){openModal("modal-artifacts");renderArtifacts();},
@@ -23859,6 +24205,9 @@ function pruneState(hard){
   /* Взятое с находок режется с запасом: за каждой записью — разобранный
      остов или опустошённый тайник, и потерянная запись вернула бы их в мир. */
   if(G.finds&&typeof G.finds==="object")G.finds=trimDict(G.finds,hard?800:3000);
+  /* Приметы не режутся: их не больше трёх незакрытых, а закрытые помнят,
+     что клад уже взят. Режем только совсем старый хвост. */
+  if(Array.isArray(G.signs)&&G.signs.length>60)G.signs.splice(0,G.signs.length-60);
   G.visited=trimDict(G.visited,lim.visited);
   /* Молитвы помнятся только «сегодня»: старше суток они не значат ничего. */
   if(G.prayed&&typeof G.prayed==="object"){

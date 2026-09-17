@@ -151,6 +151,18 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   !условие.нет&&условие.второйРаз,условие);
 
  /* ── 7. Награда настоящая: артефакт, умение, навык, чары, оружие, скакун ── */
+ /* Условий девять, и половина из них исключает другую половину: ночь спорит
+    с днём, снег с летом. Первая сборка замера ставила ночь и ливень разом и
+    объявила артефакт «не отдающимся», хотя его примета требовала дня. Мир
+    приводится в нужное состояние ПО САМОЙ ПРИМЕТЕ, а не наугад. */
+ await page.evaluate(()=>{window.__подготовить=(усл)=>{
+  G.gold=5000;G.inv=Object.assign({},G.inv,{кость:5,кристалл:5});
+  G.hour=1;G.weather="Ясно";G.day=10;
+  if(усл==="day")G.hour=12;
+  if(усл==="rain")G.weather="Ливень";
+  if(усл==="snow")G.weather="Метель";
+  if(усл==="winter")G.day=SEASON_DAYS*3+2;
+  if(усл==="summer")G.day=SEASON_DAYS*1+2;};});
  const награда=await page.evaluate(()=>{
   const O=25000;const роды={};const итоги=[];
   for(let i=0;i<900&&Object.keys(роды).length<7;i++){
@@ -159,16 +171,21 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
    if(!z||роды[z.род])continue;
    роды[z.род]=1;
    G.dark=false;G.place=null;G.ship=null;G.signs=[z];
-   G.x=z.цель.x;G.y=z.цель.y;G.hour=1;G.weather="Ливень";
-   G.gold=5000;G.inv=Object.assign({},G.inv,{кость:5,кристалл:5});
+   G.x=z.цель.x;G.y=z.цель.y;
+   window.__подготовить(z.усл);
    /* Пустые сумы: иначе «уже знаете это заклинание» сошло бы за отсутствие
       награды — начальная Искра выпадает из списка чар как раз первой. */
    G.spells=[];G.skills=[];G.abilities=[];G.mounts=[];G.items=[];G.artifacts=[];
+   const ключиДо=signsOpen().map(o=>o.ключ).join("|");
    const до={арт:(G.artifacts||[]).length,умений:(G.abilities||[]).length,
     навыков:(G.skills||[]).length,чар:(G.spells||[]).length,
     вещей:(G.items||[]).length,коней:(G.mounts||[]).length,
     примет:signsOpen().length,золото:G.gold};
    takeTreasure(G.x,G.y);
+   const ключиПосле=signsOpen().map(o=>o.ключ).join("|");
+   /* Взятая примета закрывается, новая открывается — число не меняется.
+      Поэтому цепочка считается по ключам, а не по счёту. */
+   const новаяПримета=ключиПосле!==""&&ключиПосле!==ключиДо;
    const после={арт:(G.artifacts||[]).length,умений:(G.abilities||[]).length,
     навыков:(G.skills||[]).length,чар:(G.spells||[]).length,
     вещей:(G.items||[]).length,коней:(G.mounts||[]).length,
@@ -176,7 +193,7 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
    итоги.push({род:z.род,взято:z.готово===true,золотоРосло:после.золото>до.золото,
     чтоТо:после.арт>до.арт||после.умений>до.умений||после.навыков>до.навыков
      ||после.чар>до.чар||после.вещей>до.вещей||после.коней>до.коней
-     ||после.примет>до.примет,
+     ||новаяПримета,
     числа:Number.isFinite(после.золото)});}
   return {родов:Object.keys(роды),итоги,
    неВзято:итоги.filter(o=>!o.взято).map(o=>o.род),
@@ -199,13 +216,14 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
    if(п&&п.род==="примета")z=п;}
   if(!z)return {нет:true};
   G.dark=false;G.place=null;G.ship=null;G.signs=[z];
-  G.x=z.цель.x;G.y=z.цель.y;G.hour=1;G.weather="Ливень";
-  G.gold=5000;G.inv=Object.assign({},G.inv,{кость:5,кристалл:5});
-  const было=signsOpen().length;
+  G.x=z.цель.x;G.y=z.цель.y;
+  window.__подготовить(z.усл);
+  const ключДо=z.ключ;
   takeTreasure(G.x,G.y);
-  const стало=signsOpen().length;
-  const новая=signsOpen()[0]||null;
-  return {было,стало,цепь:стало>=было,
+  const открыты=signsOpen();
+  const новая=открыты[0]||null;
+  return {взято:z.готово===true,открытых:открыты.length,
+   цепь:!!новая&&новая.ключ!==ключДо,
    новаяВедётИнуда:!!новая&&(новая.цель.x!==z.цель.x||новая.цель.y!==z.цель.y)};});
  check('клад с приметой внутри продолжает цепочку',
   цепочка.нет||цепочка.цепь,цепочка);
