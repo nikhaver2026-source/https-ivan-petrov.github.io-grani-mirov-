@@ -2918,7 +2918,9 @@ function handleThreeFingerSwipe(dir){
  const q=(G.quests||[]).filter(x=>!x.done);
  /* Дорога под ногами называется по имени: «иду Соляным трактом» — это
     ориентир, а «дорога» — нет. */
- const дорога=(!G.place&&!G.ship)?safeFn(()=>roadNameAt(G.x,G.y),null):null;
+ /* Имени тракта мало: «Соляной тракт, торговый, каменный мост» — это уже
+    место, по которому можно свериться, туда ли идёшь. */
+ const дорога=(!G.place&&!G.ship)?safeFn(()=>roadFullName(G.x,G.y),null):null;
  const where=G.ship?`на борту судна «${G.ship.name}», курс на «${G.ship.toName}», осталось переходов ${G.ship.left} из ${G.ship.legs}${G.ship.storm?", идёт шторм":""}`
   :G.place?placeTitle()+`, клетка ${G.place.x} на ${G.place.y}`
   :`${cellContent(G.x,G.y).terrain[1]}${дорога?`, ${дорога}`:""}, ${cellContent(G.x,G.y).empire.name}, координаты ${G.x} и ${G.y}`;
@@ -3464,7 +3466,7 @@ function amAvailable(cmd){
   if(cmd==="sail")return !!G.ship;
   if(cmd==="fish")return !!fishingSpot();
   if(cmd==="descend")return !!G.place||!!(c.structure&&PLACE_KIND[c.structure.type]);
-  if(cmd==="interact")return !G.place&&!!(c.structure||c.res);
+  if(cmd==="interact")return !G.place&&!!(c.structure||c.res||c.находка);
   /* Пункт сбора показывается, только когда собирать действительно есть что:
      внутри постройки это сундук или жила, снаружи — ресурс на клетке. Раньше
      внутри он предлагался на каждой клетке и отвечал отказом. */
@@ -3486,7 +3488,7 @@ function openActionMenu(){lastFocused=document.activeElement;
   const b=document.createElement("button");b.type="button";b.className="item";
   b.dataset.cmd="am:"+cmd;
   if(cmd==="interact"){const c=cellContent(G.x,G.y);
-   const obj=c.structure?c.structure.name:(c.res?`Ресурс: ${c.res.name}`:"");
+   const obj=c.structure?c.structure.name:(c.res?`Ресурс: ${c.res.name}`:(c.находка?c.находка.n:""));
    b.textContent=obj?`🤝 Взаимодействовать: ${obj}`:"🤝 Взаимодействовать (рядом пусто)";}
   else if(cmd==="descend"&&!G.place){const c=cellContent(G.x,G.y);
    b.textContent=c.structure?`⬇️ Войти: ${c.structure.name}`:label;}
@@ -4120,6 +4122,145 @@ function roadNameAt(x,y){
  if(гор)return tractName("r",y);
  if(вер)return tractName("c",x);
  return "съезд к селению";}
+/* ── ВИДЫ ДОРОГ ──
+   Дорога была одна на весь мир: полоса гравия, одинаковая под ногой от
+   ледника до пустыни. Между тем дорога — это первое, что рассказывает о
+   земле: царскую плиту кладёт держава, у которой есть казна; военную насыпь
+   тянут туда, где ждут войны; заброшенный путь говорит, что здесь когда-то
+   ходили, а теперь нет. Незрячий игрок читает это шагом: плита, гравий,
+   утоптанная земля, трава поверх насыпи — четыре разных звука и четыре
+   разных вывода.
+   Вид тракта выводится из номера линии, поэтому один и тот же тракт остаётся
+   собой на всём протяжении; горы и лес перебивают его на месте — по хребту
+   царской дороги не проложишь, там тропа. */
+const ROAD_KINDS={
+ trade:    {id:"trade",    n:"торговый тракт",   пов:"gravel", шаг:0.88,
+            о:"Колея укатана колёсами: по этому пути ходят обозы."},
+ royal:    {id:"royal",    n:"царская дорога",   пов:"stone",  шаг:0.82,
+            о:"Плита к плите, и стыки считаются под ногой, как ступени."},
+ /* ── ПОЧЕМУ ЗДЕСЬ НЕ ТА ПОВЕРХНОСТЬ, КОТОРАЯ ПРОСИТСЯ ──
+    Сперва у заброшенного пути была трава, у лесной тропы листва, у горной
+    камень — то есть ровно то, что лежит на этой земле и без дороги. Набор 34
+    поймал это сразу: тракт зазвучал как поле. Для незрячего игрока шаг —
+    ГЛАВНЫЙ признак дороги: по нему он и понимает, что не сбился. Поэтому у
+    каждого вида дороги поверхность отличается от той, что звучала бы на этой
+    же земле без неё: заросшая насыпь — сухая трава (а не луг), лесная тропа —
+    сбитая до земли (а не листва), горная — осыпь (а не плита). Это ещё и
+    точнее по существу: осыпь и есть гравий, а не тёсаный камень. */
+ military: {id:"military", n:"военный тракт",    пов:"gravel", шаг:0.85,
+            о:"Насыпь широкая, обочина укреплена камнем: здесь проходят колонны."},
+ old:      {id:"old",      n:"старая дорога",    пов:"dirt",   шаг:0.97,
+            о:"Камень просел, и сквозь стыки пробилась трава."},
+ abandoned:{id:"abandoned",n:"заброшенный путь", пов:"straw",  шаг:1.08,
+            о:"Насыпь заросла сухой травой по пояс, и она ломается под ногой."},
+ mountain: {id:"mountain", n:"горная тропа",     пов:"gravel", шаг:1.14,
+            о:"Тропа жмётся к склону, и осыпь шуршит из-под ноги."},
+ forest:   {id:"forest",   n:"лесная тропа",     пов:"dirt",   шаг:1.02,
+            о:"Листву на тропе сбили до земли, и ветви сходятся над головой."},
+ spur:     {id:"spur",     n:"просёлок",         пов:"dirt",   шаг:0.95,
+            о:"Утоптанный съезд к селению, шириной в одну телегу."}};
+function tractKind(kind,line){
+ const seg=Math.floor(line/29),ось=kind==="r"?1:2;
+ const r=hashName(ось,seg,703);
+ return ROAD_KINDS[r<0.34?"trade":r<0.52?"royal":r<0.70?"military":r<0.88?"old":"abandoned"];}
+function roadKindAt(x,y){
+ if(!safeFn(()=>roadAt(x,y),false))return null;
+ const b=safeFn(()=>biomeAt(x,y),null);
+ if(b&&b.база==="mountains")return ROAD_KINDS.mountain;
+ const гор=y%29===0,вер=x%29===0;
+ if(!гор&&!вер)return (b&&b.база==="forest")?ROAD_KINDS.forest:ROAD_KINDS.spur;
+ return tractKind(гор?"r":"c",гор?y:x);}
+/* ── ПЕРЕПРАВЫ, ТОННЕЛИ И ПЕРЕВАЛЫ ──
+   В мире появились реки — и дорога пошла прямо по воде, будто её там нет.
+   Так не бывает: где тракт встречает реку, кто-то однажды перекинул мост,
+   или свёл дорогу к мелкому месту, или мост обвалился и река осталась
+   рекой. То же и с хребтом: его либо пробивают тоннелем, либо обходят
+   седловиной перевала.
+   Переправа решается не по клетке, а по отрезку дороги в шестнадцать
+   клеток: иначе на двух соседних клетках одной реки стоял бы каменный мост
+   и брод сразу. */
+const CROSSINGS={
+ wood_bridge: {id:"wood_bridge", n:"деревянный мост",пов:"bridge",звук:"stk_bridge",шаг:1.0,
+   о:"Брёвна настила гудят под шагом, а внизу идёт вода."},
+ stone_bridge:{id:"stone_bridge",n:"каменный мост", пов:"stone", звук:"stk_bridge",шаг:0.95,
+   о:"Мост сложен из тёсаного камня, и вода бьёт в быки под ним."},
+ rope_bridge: {id:"rope_bridge", n:"навесной мост", пов:"bridge",звук:"stk_bridge",шаг:1.3,
+   о:"Мост качается над провалом, и доски перекликаются с эхом каньона."},
+ ford:        {id:"ford",        n:"брод",          пов:"water", звук:"stk_splash",шаг:1.25,
+   о:"Дорога сходит в воду: здесь мелко, и дно выложено камнем."},
+ ruin_bridge: {id:"ruin_bridge", n:"разрушенный мост",пов:"water",звук:"wild_river",шаг:1.6,
+   о:"От моста остались быки да обломок настила: реку приходится переходить вброд."},
+ tunnel:      {id:"tunnel",      n:"тоннель",       пов:"cave",  звук:"deep_stone",шаг:0.9,
+   о:"Дорога уходит в прорубленный в хребте ход, и шаг отзывается сводом."},
+ pass:        {id:"pass",        n:"перевал",       пов:"stone", звук:"deep_wind",шаг:1.2,
+   о:"Дорога выходит на седловину хребта: ветер идёт здесь насквозь."}};
+/* Жребий переправы: постоянный вдоль отрезка дороги, а не от клетки к клетке.
+   Отрезок в тридцать две клетки взят по замеру: река под дорогой тянется в
+   среднем девять клеток, а в девяти случаях из десяти — не больше
+   восемнадцати, так что переправа выходит одна на одну реку. */
+function crossSeed(x,y,соль){
+ if(y%29===0)return hashName(1000+Math.floor(y/29),Math.floor(x/32),соль);
+ if(x%29===0)return hashName(2000+Math.floor(x/32),Math.floor(y/32),соль);
+ return hashName(Math.floor(x/32),Math.floor(y/32),соль);}
+/* ── ГОРНАЯ ПЕРЕПРАВА ──
+   С горами так не выходит: замер показал, что гряда под дорогой тянется в
+   среднем полтораста клеток, а местами и все двести шестьдесят. Раздай
+   переправу по коротким отрезкам — и на одном хребте выйдет десяток
+   перевалов, сменяющих друг друга каждые шестнадцать шагов. В горах так не
+   бывает: перевал один, и тоннель один.
+   Поэтому в горах решается не клетка, а отрезок дороги в сто двадцать
+   восемь клеток, и переправа занимает в нём короткое окно: у длинной гряды
+   есть одно место, где её переходят, а всё остальное — горная тропа.
+   Высоту для этого взять нельзя: замер по сорока трактам показал, что выше
+   КАРСТ плюс пять сотых мир не поднимается вовсе, и порог по высоте отсёк бы
+   все переправы разом. */
+function mountainCross(x,y,что,низ,верх){
+ const гор=y%29===0,вер=x%29===0;
+ if(!гор&&!вер)return null;                       /* съезды сквозь хребет не роют */
+ const вдоль=гор?x:y,линия=гор?1000+Math.floor(y/29):2000+Math.floor(x/29);
+ const блок=Math.floor(вдоль/128),r=hashName(линия,блок,708);
+ if(r<низ||r>=верх)return null;
+ const нач=блок*128+Math.floor(hashName(линия,блок,709)*110);
+ const длина=6+Math.floor(hashName(линия,блок,710)*14);
+ return (вдоль>=нач&&вдоль<нач+длина)?что:null;}
+/* Переправа спрашивается на КАЖДОМ обращении к клетке: terrainAt зовёт её
+   для всякой дорожной клетки, а cellContent зовут сотнями в каждом обходе
+   округи. Внутри — и roadAt со съездами, и биом; без памяти это ложится на
+   всё сразу, от эхо-скана до поиска ближней постройки. Память та же, что у
+   биома: ключ — клетка, предел — двенадцать тысяч. */
+const crossCache=new Map();
+function crossingAt(x,y){
+ const ck=x+","+y;
+ if(crossCache.has(ck))return crossCache.get(ck);
+ const ответ=crossingCalc(x,y);
+ if(crossCache.size>12000)crossCache.clear();
+ crossCache.set(ck,ответ);
+ return ответ;}
+function crossingCalc(x,y){
+ if(!safeFn(()=>roadAt(x,y),false))return null;
+ const b=safeFn(()=>biomeAt(x,y),null);if(!b)return null;
+ const k=safeFn(()=>roadKindAt(x,y),null),вид=k?k.id:"spur";
+ const бедная=(вид==="old"||вид==="abandoned"||вид==="spur"||вид==="forest");
+ const r=crossSeed(x,y,707);
+ if(b.id==="stream")return CROSSINGS.ford;
+ if(b.id==="river"||b.id==="waterfall"||b.id==="lake"){
+  if(вид==="abandoned"&&r<0.55)return CROSSINGS.ruin_bridge;
+  if(бедная)return r<0.45?CROSSINGS.ford:CROSSINGS.wood_bridge;
+  return ((вид==="royal"||вид==="military")&&r<0.62)?CROSSINGS.stone_bridge:CROSSINGS.wood_bridge;}
+ if(b.id==="canyon")
+  return бедная?null:mountainCross(x,y,CROSSINGS.rope_bridge,0,0.55);
+ if(b.id==="ridge"||b.id==="snow_ridge"||b.id==="glacier"){
+  /* Заброшенный путь и просёлок хребет не пробивают: там просто тропа. */
+  if(бедная)return null;
+  return mountainCross(x,y,CROSSINGS.tunnel,0,0.35)
+      || mountainCross(x,y,CROSSINGS.pass,0.35,0.75);}
+ return null;}
+/* Как называется дорога под ногами целиком: имя тракта, его вид и переправа. */
+function roadFullName(x,y){
+ const имя=safeFn(()=>roadNameAt(x,y),null);
+ if(!имя)return null;
+ const k=safeFn(()=>roadKindAt(x,y),null),c=safeFn(()=>crossingAt(x,y),null);
+ return имя+(k?`, ${k.n}`:"")+(c?`, ${c.n}`:"");}
 /* Куда ведут дороги от перекрёстка: ближние селения по сторонам света. */
 function signpostAt(x,y){
  const out=[];
@@ -4580,7 +4721,16 @@ function biomeHere(){
 function terrainAt(x,y){
  /* В тёмных землях нет ни дорог, ни здешнего рельефа. */
  if(G.dark)return safeFn(()=>darkTerrainAt(x,y),TERR.plains);
- if(roadAt(x,y))return TERR.road;
+ if(roadAt(x,y)){
+  /* Дорога перекрывает рельеф — но не там, где переправы нет. У обвалившегося
+     моста под ногами снова река, а внутри тоннеля — не дорога, а свод горы:
+     оттого и фон там пещерный, а не придорожный. */
+  const cr=safeFn(()=>crossingAt(x,y),null);
+  if(cr&&cr.id==="tunnel")return TERR.cave;
+  if(cr&&cr.id==="ruin_bridge"){
+   const bw=safeFn(()=>biomeAt(x,y),null);
+   if(bw&&TERR[bw.база])return TERR[bw.база];}
+  return TERR.road;}
  /* Рельеф берётся у биома, а не жребием из списка державы: тогда лес — это
     лес, по которому можно идти, а не отдельно взятая клетка. */
  const b=safeFn(()=>biomeAt(x,y),null);
@@ -8913,6 +9063,279 @@ function towerHere(){
   const c=cellContent(G.x,G.y);
   return c&&c.structure&&c.structure.type==="tower"?towerAt(c.x,c.y):null;
  }catch(_){return null;}}
+/* ════════════════════════════════════════════════════════════════════════
+   НАХОДКИ: ТО, ЧТО ПРОСТО ЛЕЖИТ В МИРЕ
+   В комнатах давно стоят вещи, с которыми можно что-то сделать, — стол,
+   наковальня, чаша, било. Под открытым небом не стояло ничего: клетка могла
+   быть постройкой, ресурсом, тварью или пустотой, и восемьдесят пять клеток
+   из ста были пустотой. Незрячий игрок шёл сквозь мир, в котором не к чему
+   протянуть руку.
+
+   Находка — это ЧЕТВЁРТЫЙ слой клетки: колодец у дороги, остывшее кострище,
+   поваленное дерево, тур на перевале, борть, разбитая лодка на отмели,
+   звериная тропа, тайник охотника. У каждой есть
+
+     СОСТОЯНИЕ   — нетронута или уже разобрана, и это помнится через запись;
+     ОПИСАНИЕ    — то, что слышно, пока стоишь рядом;
+     ДЕЙСТВИЕ    — то, что с ней делают, и последствие этого;
+     ЗВУК        — живая запись, а не название;
+     МЕСТО       — маяк, по которому её слышно с нескольких шагов.
+
+   Взять с находки можно ОДИН раз: ведро воды из колодца — хоть каждый день,
+   а доски из разбитой лодки — единожды. Иначе поваленное дерево стало бы
+   бесконечной лесопилкой, и ремесло потеряло бы смысл — ровно та же беда,
+   что уже была с обстановкой комнат.
+   ════════════════════════════════════════════════════════════════════════ */
+const FINDS=[
+ {id:"well",n:"придорожный колодец",b:"well",звук:"water_swash",вес:5,
+  где:["road","plains","forest","desert"],
+  о:"Сруб потемнел от дождей, ворот скрипит, ведро на цепи достаёт до воды.",
+  use(){safeFn(()=>Bank.play("water_swash",{gain:0.6,maxSec:4}));
+   /* Воду берут хоть каждый день: колодец на то и колодец. */
+   const было=Number(G.water)||0;
+   G.water=Math.min(200,было+45);
+   narrate(`Колодец. Ворот идёт туго, цепь гремит, ведро приходит полным и холодным. Запас воды: ${G.water} из двухсот${было>=200?" — брать было некуда":""}.`);
+   refresh();saveGame(true);}},
+ {id:"ashes",n:"остывшее кострище",b:"torch",звук:"stk_break",вес:6,
+  где:["road","plains","forest","mountains","desert","coast"],
+  о:"Круг закопчённых камней и зола в середине. Костёр гас без присмотра.",
+  use(x,y){safeFn(()=>Bank.play("stk_break",{gain:0.5,maxSec:3}));
+   const давно=Math.floor(hashName(x,y,721)*6)+1;
+   const кто=["обоз","охотники","дозор","бродячий сказитель","паломники","беглые"][Math.floor(hashName(x,y,722)*6)];
+   if(findOnce(x,y,"уголь")){const n=1+Math.floor(hashName(x,y,723)*2);evGive("дерево",n);
+    narrate(`Кострище. Зола холодная — жгли дней ${давно} назад, и жгли не одни: следов много, стояли тут ${кто}. Из круга вы выбрали недогоревшие головни: дерево ×${n}.`);}
+   else narrate(`Кострище. Зола холодная: жгли дней ${давно} назад, стояли тут ${кто}. Головни вы уже выбрали.`);
+   refresh();saveGame(true);}},
+ {id:"deadtree",n:"поваленное дерево",b:"res_tree",звук:"craft_wood",вес:6,
+  где:["forest","swamp"],
+  о:"Ствол лежит поперёк, вывернутый корень стоит стеной, кора отходит пластами.",
+  use(x,y){safeFn(()=>Bank.play("craft_wood",{gain:0.6,maxSec:4}));
+   if(findOnce(x,y,"дрова")){const n=2+Math.floor(hashName(x,y,724)*3);evGive("дерево",n);
+    propTime(0.6);
+    narrate(`Поваленное дерево. Сухая сторона идёт легко: дерево ×${n}. Под корой копошится жизнь, и слышно, как она расходится в стороны.`);}
+   else narrate("Поваленное дерево. Сухую сторону вы уже обобрали, остальное сырое и не пойдёт.");
+   refresh();saveGame(true);}},
+ {id:"cairn",n:"каменный тур",b:"ruins",звук:"stone_hit",вес:4,
+  где:["mountains"],
+  о:"Пирамидка из плоских камней по пояс высотой. Её сложили руками, и не для красоты.",
+  use(x,y){safeFn(()=>Bank.play("stone_hit",{gain:0.5,maxSec:3}));
+   const цель=safeFn(()=>{
+    for(let r=1;r<=60;r++)for(let d=-r;d<=r;d++){
+     for(const [dx,dy] of [[d,-r],[d,r],[-r,d],[r,d]]){
+      const nx=x+dx,ny=y+dy;
+      if(nx<0||ny<0||nx>=WORLD||ny>=WORLD)continue;
+      if(settlementSeed(nx,ny))return {dx,dy,d:Math.max(Math.abs(dx),Math.abs(dy))};}}
+    return null;},null);
+   narrate(`Каменный тур. Такие складывают те, кто прошёл здесь до вас, и верхний камень кладут на счастье. ${цель?`Тур смотрит на селение: ${цель.d} ${plural(цель.d,"шаг","шага","шагов")}, ${dirBetween(цель.dx,цель.dy)}.`:"Ближнего жилья отсюда не видно даже туру."} Вы положили сверху свой камень.`);}},
+ {id:"hive",n:"борть",b:"res_berry",звук:"wild_birds",вес:3,
+  где:["forest","plains"],
+  о:"В стволе выдолблено дупло и заложено летком. Гудение слышно за десяток шагов.",
+  use(x,y){safeFn(()=>Bank.play("wild_birds",{gain:0.5,maxSec:4}));
+   if(!findOnce(x,y,"мёд")){narrate("Борть. Гудение всё то же, но мёд из этой колоды уже взят: соты пустые.");return;}
+   const везёт=hashName(x,y,725)<0.72;
+   if(везёт){const n=1+Math.floor(hashName(x,y,726)*3);evGive("ягоды",n);
+    narrate(`Борть. Дым пустить нечем, и вы берёте наспех: ягоды ×${n} — соты с прошлогодней малиной. Пчёлы недовольны, но обошлось.`);}
+   else{G.hp=Math.max(1,G.hp-5);
+    safeFn(()=>Bank.play("hero_pain_m",{gain:0.4,maxSec:2}));
+    narrate("Борть. Рой поднялся весь разом: −5 здоровья, и до ближней воды вы бежите, не оглядываясь. Мёд остался в колоде.");}
+   refresh();saveGame(true);}},
+ {id:"wreck",n:"разбитая лодка",b:"port",звук:"ship_creak",вес:4,
+  где:["coast"],
+  о:"Днище кверху, борт проломлен, обшивка обросла ракушкой. Её выбросило не вчера.",
+  use(x,y){safeFn(()=>Bank.play("ship_creak",{gain:0.6,maxSec:4}));
+   if(!findOnce(x,y,"остов")){narrate("Разбитая лодка. Доски вы уже сняли, остался голый шпангоут.");return;}
+   const n=1+Math.floor(hashName(x,y,727)*3);evGive("дерево",n);
+   const рак=1+Math.floor(hashName(x,y,728)*2);evGive("ракушка",рак);
+   propTime(0.5);
+   if(hashName(x,y,729)<0.3){const g=10+Math.floor(hashName(x,y,730)*30);G.gold+=g;
+    narrate(`Разбитая лодка. Доски идут со скрипом: дерево ×${n}, ракушка ×${рак}. Под кормовой банкой — кошель, завязанный узлом рыбака: ${g} золота. Хозяину они больше не нужны.`);}
+   else narrate(`Разбитая лодка. Доски идут со скрипом: дерево ×${n}, ракушка ×${рак}. Больше в ней ничего.`);
+   refresh();saveGame(true);}},
+ {id:"trail",n:"звериная тропа",b:"res_bone",звук:"wild_owl",вес:5,
+  где:["forest","swamp","plains","mountains"],
+  о:"Полоса примятой травы уходит в сторону. По ней ходят и ходят давно.",
+  use(x,y){safeFn(()=>Bank.play("wild_owl",{gain:0.5,maxSec:4}));
+   /* Тропа — это сведение, а не пожива: она говорит, кто здесь ходит. */
+   /* Обход идёт КОЛЬЦОМ, а не квадратом с отсевом: квадрат на двенадцать
+      клеток вокруг — это семь с половиной тысяч зовов cellContent, а кэш держит
+      четыре тысячи: один щелчок по тропе выметал бы его целиком. */
+   const зверь=safeFn(()=>{
+    for(let r=1;r<=12;r++){
+     for(let d=-r;d<=r;d++)for(const [dx,dy] of [[d,-r],[d,r],[-r,d],[r,d]]){
+      const nx=x+dx,ny=y+dy;
+      if(nx<0||ny<0||nx>=WORLD||ny>=WORLD)continue;
+      const cc=cellContent(nx,ny);
+      if(cc.monster)return {m:cc.monster,dx,dy,d:r};}}
+    return null;},null);
+   narrate(`Звериная тропа. Следы вдавлены глубоко и наложены друг на друга: ходят тут постоянно. ${зверь?`След свежий и ведёт туда, где кто-то есть: ${зверь.m.n}, ${зверь.d} ${plural(зверь.d,"шаг","шага","шагов")}, ${dirBetween(зверь.dx,зверь.dy)}.`:"Следы старые: тот, кто их набил, ушёл далеко."}`);}},
+ {id:"cache",n:"тайник охотника",b:"chest",звук:"stk_break",вес:2,
+  где:["forest","mountains","swamp"],
+  о:"Между корнями лежит плоский камень, а под ним — не земля.",
+  use(x,y){safeFn(()=>Bank.play("stk_break",{gain:0.6,maxSec:4}));
+   if(!findOnce(x,y,"тайник")){narrate("Тайник охотника. Ниша пуста: вы её и опустошили.");return;}
+   const что=["кость","трава","грибы","ягоды"][Math.floor(hashName(x,y,731)*4)];
+   const n=1+Math.floor(hashName(x,y,732)*3);evGive(что,n);
+   const g=Math.floor(hashName(x,y,733)*25);
+   if(g>5)G.gold+=g;
+   narrate(`Тайник охотника. Под камнем — берестяной короб: ${что} ×${n}${g>5?`, и ${g} золота на дне`:""}. Хозяин или не вернулся, или забыл.`);
+   refresh();saveGame(true);}},
+ {id:"wardstone",n:"камень-оберег",b:"altar",звук:"bell_small",вес:4,
+  где:["road","plains","forest","mountains"],
+  о:"Валун с выбитым знаком, обвязанный полосами ткани. Ткань меняли недавно.",
+  use(x,y){safeFn(()=>Bank.play("bell_small",{gain:0.5,maxSec:4})||Bank.play("stone_hit",{gain:0.5,maxSec:3}));
+   const б=PANTHEON[Math.floor(hashName(x,y,734)*PANTHEON.length)];
+   safeFn(()=>{G.faith=G.faith||{};G.faith[б.id]=(Number(G.faith[б.id])||0)+1;});
+   narrate(`Камень-оберег. Знак на нём — ${б.sym}: камень поставлен во имя ${б.n}. Вы повязали свою полосу рядом с чужими. Благосклонность растёт.`);
+   refresh();saveGame(true);}},
+ {id:"millruin",n:"остов мельницы",b:"ruins",звук:"stk_break",вес:2,
+  где:["plains","road"],
+  о:"Четыре стойки, обломок вала и жёрнов, наполовину ушедший в землю.",
+  use(x,y){safeFn(()=>Bank.play("stk_break",{gain:0.6,maxSec:4}));
+   if(!findOnce(x,y,"мельница")){narrate("Остов мельницы. Всё, что можно было унести, вы унесли.");return;}
+   evGive("дерево",2);evGive("камень",1);propTime(0.7);
+   narrate("Остов мельницы. Стойки ещё держат, вал вынимается с треском: дерево ×2, камень ×1 — осколок жёрнова. Мельница стояла на ручье, которого больше нет.");
+   refresh();saveGame(true);}},
+ {id:"carcass",n:"кости зверя",b:"res_bone",звук:"deep_rocks",вес:5,
+  где:["desert","plains","mountains","swamp"],
+  о:"Скелет лежит целиком, выбеленный солнцем. Позвонки крупнее ладони.",
+  use(x,y){safeFn(()=>Bank.play("deep_rocks",{gain:0.5,maxSec:4}));
+   if(!findOnce(x,y,"кости")){narrate("Кости зверя. Целых уже не осталось: вы их и выбрали.");return;}
+   const n=1+Math.floor(hashName(x,y,735)*3);evGive("кость",n);
+   narrate(`Кости зверя. Рёбра ломаются, а бедро идёт целым: кость ×${n}. По зубам видно — он ел мясо, и ел долго.`);
+   refresh();saveGame(true);}},
+ {id:"spring",n:"родник",b:"well",звук:"wild_river",вес:4,
+  где:["mountains","forest"],
+  о:"Вода выходит из-под камня и уходит в мох, не оставляя ручья.",
+  use(){safeFn(()=>Bank.play("wild_river",{gain:0.55,maxSec:5}));
+   const было=Number(G.water)||0;
+   G.water=Math.min(200,было+60);
+   const лечит=G.hp<G.hpMax;
+   if(лечит)G.hp=Math.min(G.hpMax,G.hp+4);
+   narrate(`Родник. Вода ломит зубы и пахнет камнем. Запас воды: ${G.water} из двухсот.${лечит?` Умывшись, вы почувствовали себя лучше: здоровье ${G.hp} из ${G.hpMax}.`:""}`);
+   refresh();saveGame(true);}},
+ {id:"anthill",n:"муравейник",b:"res_herbs",звук:"sky_leaves",вес:3,
+  где:["forest"],
+  о:"Куча хвои в рост человека, и вся она шевелится.",
+  use(x,y){safeFn(()=>Bank.play("sky_leaves",{gain:0.5,maxSec:4}));
+   if(!findOnce(x,y,"муравьи")){narrate("Муравейник. Ветку вы уже клали: второй раз кислоты не наберёшь.");return;}
+   evGive("трава",1);
+   narrate("Муравейник. Вы положили сверху ветку, дождались и обмахнули её: муравьиная кислота — трава ×1 по счёту травника. Куча гудит громче прежнего.");
+   refresh();saveGame(true);}},
+ {id:"mushring",n:"ведьмин круг",b:"res_herbs",звук:"swamp_kalimba",вес:3,
+  где:["forest","swamp"],
+  о:"Грибы стоят ровным кольцом шагов в пять поперёк. Внутри кольца трава ниже.",
+  use(x,y){safeFn(()=>Bank.play("swamp_kalimba",{gain:0.5,maxSec:5}));
+   if(!findOnce(x,y,"круг")){narrate("Ведьмин круг. Кольцо стоит, но срезано: новые пойдут не скоро.");return;}
+   const ночь=safeFn(()=>isNight(),false);
+   const n=(ночь?2:1)+Math.floor(hashName(x,y,736)*3);evGive("грибы",n);
+   narrate(`Ведьмин круг. ${ночь?"Ночью шляпки отдают слабым светом, и рука находит их сама":"Днём кольцо видно только по траве"}: грибы ×${n}. Внутрь круга вы не заходили.`);
+   refresh();saveGame(true);}},
+ {id:"driftwood",n:"плавник",b:"res_tree",звук:"sky_wave",вес:4,
+  где:["coast"],
+  о:"Полоса выброшенного морем дерева тянется вдоль воды, обкатанная и сухая.",
+  use(x,y){safeFn(()=>Bank.play("sky_wave",{gain:0.5,maxSec:5}));
+   if(!findOnce(x,y,"плавник")){narrate("Плавник. Сухое вы выбрали, остальное море ещё не отдало.");return;}
+   const n=1+Math.floor(hashName(x,y,737)*3);evGive("дерево",n);
+   const р=hashName(x,y,738)<0.4?1:0;if(р)evGive("ракушка",1);
+   narrate(`Плавник. Дерево звенит от сухости: дерево ×${n}${р?", и ракушка ×1 из-под комля":""}. Соль въелась в него насквозь — гореть будет цветным пламенем.`);
+   refresh();saveGame(true);}},
+ {id:"boundary",n:"межевой столб",b:"crossroads",звук:"stone_hit",вес:3,
+  где:["road","plains","forest"],
+  о:"Замшелый столб с двумя гербами: по одному на каждую сторону.",
+  use(x,y){safeFn(()=>Bank.play("stone_hit",{gain:0.5,maxSec:3}));
+   const своя=empireAt(x,y);
+   const чужая=safeFn(()=>{
+    for(let r=6;r<=200;r+=6)for(const [dx,dy] of [[r,0],[-r,0],[0,r],[0,-r]]){
+     const nx=Math.max(0,Math.min(WORLD-1,x+dx)),ny=Math.max(0,Math.min(WORLD-1,y+dy));
+     const e=empireAt(nx,ny);if(e!==своя)return {e,dir:dirBetween(dx,dy),d:r};}
+    return null;},null);
+   const и=Math.max(0,EMPIRES.indexOf(своя));
+   const войны=safeFn(()=>warsAt(G.day).filter(w=>w.a===и||w.b===и),[]);
+   narrate(`Межевой столб. Здешний герб — «${своя.short}». ${чужая?`Второй герб чужой: «${чужая.e.short}», и граница отсюда ${чужая.d} ${plural(чужая.d,"шаг","шага","шагов")}, ${чужая.dir}.`:"Второй герб стёрт до гладкого."} ${войны.length?"Столб подновлён свежей краской — на границе неспокойно.":"Мох на нём не трогали годами: тут тихо."}`);}},
+ {id:"fumarole",n:"фумарола",b:"cave_entrance",звук:"wild_fire",вес:2,
+  где:["mountains"],
+  биом:["volcano"],
+  о:"Из трещины идёт пар, и камень вокруг тёплый даже ночью.",
+  use(x,y){safeFn(()=>Bank.play("wild_fire",{gain:0.5,maxSec:5}));
+   if(!findOnce(x,y,"сера")){narrate("Фумарола. Налёт вы уже соскоблили, новый нарастёт нескоро.");return;}
+   evGive("камень",1);
+   const жжёт=hashName(x,y,739)<0.3;
+   if(жжёт)G.hp=Math.max(1,G.hp-3);
+   narrate(`Фумарола. По краям трещины — жёлтый налёт, он крошится в руке: камень ×1, серный. ${жжёт?"Пар ударил в лицо: −3 здоровья, и дышать нечем." :"Пар идёт ровно, и вы успели отойти."}`);
+   refresh();saveGame(true);}},
+ {id:"icehole",n:"полынья",b:"well",звук:"sky_snow",вес:2,
+  где:["mountains"],
+  биом:["glacier","snow_ridge"],
+  о:"Во льду чёрное окно воды, и края у него обтаявшие: его держат открытым.",
+  use(x,y){safeFn(()=>Bank.play("sky_snow",{gain:0.5,maxSec:5}));
+   const было=Number(G.water)||0;
+   G.water=Math.min(200,было+35);
+   if(findOnce(x,y,"полынья")){evGive("кость",1);
+    narrate(`Полынья. Вода чёрная и тяжёлая: запас воды ${G.water} из двухсот. У края вмёрз рог — кость ×1. Кто-то приходил сюда пить и не ушёл.`);}
+   else narrate(`Полынья. Вода чёрная и тяжёлая: запас воды ${G.water} из двухсот.`);
+   refresh();saveGame(true);}},
+ {id:"saltflat",n:"солончак",b:"res_stone",звук:"sky_wind",вес:3,
+  где:["desert"],
+  о:"Корка соли хрустит под ногой и тянется до горизонта ровно, как стол.",
+  use(x,y){safeFn(()=>Bank.play("sky_wind",{gain:0.5,maxSec:5}));
+   if(!findOnce(x,y,"соль")){narrate("Солончак. Корку вы уже взломали: под ней мокрая глина.");return;}
+   const n=1+Math.floor(hashName(x,y,740)*2);evGive("камень",n);
+   G.water=Math.max(0,(Number(G.water)||0)-10);
+   narrate(`Солончак. Корка ломается пластами: камень ×${n} — соляной, и он в цене там, где солят рыбу. Во рту сухо: воды убыло.`);
+   refresh();saveGame(true);}},
+ {id:"stalag",n:"натёчный столб",b:"res_crystal",звук:"deep_drip",вес:3,
+  где:["cave"],
+  о:"Сталагмит в человеческий рост, мокрый и звонкий. Капель считает время.",
+  use(x,y){safeFn(()=>Bank.play("deep_drip",{gain:0.5,maxSec:5}));
+   if(!findOnce(x,y,"натёк")){narrate("Натёчный столб. Верхушку вы отбили, остальное трогать не стоит.");return;}
+   const крист=hashName(x,y,741)<0.35;
+   if(крист){evGive("кристалл",1);
+    narrate("Натёчный столб. В изломе блеснуло: кристалл ×1. Звон после удара идёт по всей пещере и долго не смолкает.");}
+   else{evGive("камень",2);
+    narrate("Натёчный столб. Верхушка откололась чисто: камень ×2. Звон идёт по всей пещере и долго не смолкает.");}
+   refresh();saveGame(true);}}];
+const FIND_BY_ID=Object.fromEntries(FINDS.map(f=>[f.id,f]));
+/* Находка помнит, что с неё взяли: запись живёт в сохранении. */
+function findOnce(x,y,tag){
+ if(!G.finds||typeof G.finds!=="object")G.finds={};
+ const k=x+","+y+":"+(tag||"");
+ if(G.finds[k])return false;
+ G.finds[k]=1;
+ return true;}
+function findTaken(x,y,tag){
+ return !!(G.finds&&G.finds[x+","+y+":"+(tag||"")]);}
+/* Время, потраченное у находки: разбор остова стоит часа, а не мгновения. */
+function propTime(ч){
+ G.hour+=Number(ч)||0;
+ while(G.hour>=24){G.hour-=24;G.day++;
+  for(const k in G.depleted){if(G.depleted[k].day<G.day)delete G.depleted[k];}}}
+/* Что может лежать на этой клетке: сперва то, что родит именно этот биом,
+   потом то, что вообще бывает на таком рельефе.
+   Списки считаются ОДИН РАЗ, а не на каждой клетке: cellContent зовут сотнями
+   в каждом обходе округи, и сборка списка из шестидесяти записей на каждый
+   зов обошлась бы дороже всего остального вместе взятого. */
+const FIND_POOL_T={},FIND_POOL_B={};
+safeFn(()=>{for(const f of FINDS){
+ const класть=(o,k)=>{const a=o[k]||(o[k]=[]);for(let i=0;i<(f.вес||1);i++)a.push(f);};
+ if(f.биом)for(const b of f.биом)класть(FIND_POOL_B,b);
+ else for(const t of f.где)класть(FIND_POOL_T,t);}});
+function findAt(x,y,рельеф){
+ if(G.dark||x<0||y<0||x>=WORLD||y>=WORLD)return null;
+ const бм=safeFn(()=>biomeAt(x,y),null);
+ const t=рельеф||safeFn(()=>terrainAt(x,y)[0],null);
+ const a=(бм&&FIND_POOL_B[бм.id])||null,b=(t&&FIND_POOL_T[t])||null;
+ const la=a?a.length:0,lb=b?b.length:0,всего=la+lb;
+ if(!всего)return null;
+ const i=Math.floor(hashName(x,y,742)*всего)%всего;
+ return i<la?a[i]:b[i-la];}
+/* Взаимодействие с находкой под ногами. */
+function useFind(x,y){
+ const f=safeFn(()=>findAt(x,y),null);
+ if(!f){narrate("Здесь нечего трогать.");return false;}
+ safeFn(()=>beacon(f.b,0,0));
+ safeFn(()=>f.use(x,y));
+ return true;}
+
 function cellContent(x,y){
  /* За Гранью — свой слой мира: та же карта координат, другое содержимое. */
  if(G.dark)return darkCell(x,y);
@@ -8995,7 +9418,11 @@ function cellContent(x,y){
     /* Сорт кладётся рядом с именем, а не вместо него: имя держит на себе
       торговлю, подряды и цены, а сорт добавляет, что именно здесь за руда. */
    c.res={name:r,icon:RESICON[r],beacon:RESBEACON[r],qty:2+Math.floor(H(x,y,24)*4),
-    сорт:safeFn(()=>resSortAt(x,y,r),null)};}}}
+    сорт:safeFn(()=>resSortAt(x,y,r),null)};}
+   /* Где нет ни постройки, ни ресурса — там может лежать находка. Раньше
+      восемьдесят пять клеток из ста были пустотой, и протянуть руку в мире
+      было не к чему. */
+   else if(H(x,y,743)<0.10)c.находка=safeFn(()=>findAt(x,y,c.terrain[0]),null);}}
  if(!c.structure){
   const t=c.terrain[0];
   /* Частота встреч осталась прежней; всё остальное — час, погода, пора года,
@@ -10837,6 +11264,10 @@ function eventContext(){
   city,dungeon:inside&&G.place.depth>0,house:inside&&G.place.kind==="house",
   night:isNight(),hour:Number(G.hour)||0,day,
   road:!inside&&roadAt(G.x,G.y),cross:!inside&&isCrossroads(G.x,G.y),
+  /* Событию на дороге нужно знать, по какой дороге идёт игрок и стоит ли он
+     на переправе: мостовщик сидит у моста, а не посреди поля. */
+  roadkind:!inside&&!G.ship?safeFn(()=>{const k=roadKindAt(G.x,G.y);return k?k.id:null;},null):null,
+  crossing:!inside&&!G.ship?safeFn(()=>{const cr=crossingAt(G.x,G.y);return cr?cr.id:null;},null):null,
   terr,weather:G.weather||"clear",ship:!!G.ship,
   clan:G.clan||null,level:Number(G.level)||1,gold:Number(G.gold)||0,
   escort:(G.quests||[]).some(q=>q.type==="escort"&&!q.done),
@@ -11155,7 +11586,11 @@ const EVENTS=[
     narrate("Камень поддался: камень ×2. Но руны раскололись, и Тарх этого не любит: благосклонность убыла.");}},
    {l:"🚶 Оставить как есть",run:()=>narrate("Вы обошли камень стороной. Он стоял до вас и будет стоять после.")}]},
 
- {id:"bridge_toll",w:3,snd:"water_swash",ok:c=>c.road&&!c.inside&&!c.night,
+ /* Мостовщик прежде вырастал на любой дороге, в том числе посреди сухой
+    степи, и брал пошлину за мост, которого не было. Теперь он сидит там, где
+    мост действительно стоит. */
+ {id:"bridge_toll",w:3,snd:"water_swash",
+  ok:c=>c.road&&!c.inside&&!c.night&&["wood_bridge","stone_bridge","rope_bridge"].includes(c.crossing),
   title:()=>"Мост и мостовщик",
   text:c=>`Через реку переброшен бревенчатый мост. У сходен сидит мостовщик державы «${c.emp.short}» и стучит палкой по перилам: пошлина — десять золотых с пешего.`,
   choices:c=>[
@@ -11172,6 +11607,103 @@ const EVENTS=[
     G.water=Math.max(0,(Number(G.water)||0)-15);G.hp=Math.max(1,G.hp-6);
     safeFn(()=>Bank.play("water_swash",{gain:0.8,maxSec:4}));
     narrate("Река по грудь и холодная: −6 здоровья, часть припасов подмокла. Зато десять золотых остались при вас.");}}]},
+
+ /* ── СОБЫТИЯ ПО ВИДУ ДОРОГИ ──
+    Дорога делится на виды — значит, и случаться на ней должно разное. На
+    военном тракте идут колонны, на царском стоят верстовые камни, на
+    заброшенном пути гниёт то, что бросили, а у брода вода решает сама. */
+ {id:"road_column",w:4,snd:"horn_gate",ok:c=>c.roadkind==="military"&&!c.inside&&!c.ship,
+  title:()=>"Колонна на военном тракте",
+  text:c=>`Насыпь гудит: навстречу идёт колонна державы «${c.emp.short}». Сотник поднимает руку — путников просят сойти на обочину.`,
+  choices:c=>[
+   {l:"🚶 Сойти на обочину и пропустить",run:()=>{
+    G.hour+=0.5;if(G.hour>=24){G.hour-=24;G.day++;}
+    addRep(c.emp.race,1);
+    safeFn(()=>Bank.play("tread_hoof",{gain:0.6,maxSec:5}));
+    narrate("Колонна идёт мимо полчаса: шаг в шаг, железо о железо. Сотник кивает на прощание — в этой державе вас запомнили с хорошей стороны.");}},
+   {l:"🗣️ Спросить, что впереди",run:()=>{
+    const бой=(c.wars||[]).length;
+    addRep(c.emp.race,1);G.hour+=0.3;if(G.hour>=24){G.hour-=24;G.day++;}
+    narrate(бой?`Сотник отвечает коротко: «Впереди застава, дальше — война. Ночью тракт не держим». Вы узнали, отчего колонна идёт так скоро.`
+     :`Сотник отвечает: «Впереди застава, дальше спокойно. Держитесь насыпи — с неё не сбиться».`);
+    safeFn(()=>Bank.play("horn_gate",{gain:0.5,maxSec:4}));}},
+   {l:"🌾 Обойти колонну полем",run:()=>{
+    G.hour+=1;if(G.hour>=24){G.hour-=24;G.day++;}
+    addRep(c.emp.race,-1);
+    narrate("Вы сошли с насыпи и обошли колонну по полю: час в грязи и косой взгляд сотника вслед.");}}]},
+
+ {id:"road_milestone",w:3,snd:"stone_hit",ok:c=>c.roadkind==="royal"&&!c.inside&&!c.ship,
+  title:()=>"Верстовой камень",
+  text:c=>`У края царской дороги стоит тёсаный столб. Под пальцами — резьба: герб державы «${c.emp.short}» и счёт вёрст.`,
+  choices:c=>[
+   {l:"✋ Прочесть резьбу пальцами",run:()=>{
+    const d=Math.round(Math.hypot(G.x-c.emp.cap.x,G.y-c.emp.cap.y));
+    safeFn(()=>Bank.play("stone_hit",{gain:0.5,maxSec:3}));
+    narrate(`Счёт вёрст сходится: до столицы державы «${c.emp.short}» отсюда около ${d} ${plural(d,"шага","шагов","шагов")}, направление ${dirBetween(c.emp.cap.x-G.x,c.emp.cap.y-G.y)}. Столб не врёт: его ставила казна.`);}},
+   {l:"🪙 Оставить монету у столба",run:()=>{
+    if(G.gold<1){narrate("В кошеле пусто: класть нечего.");return;}
+    G.gold-=1;addRep(c.emp.race,1);
+    safeFn(()=>Bank.play("xylo_coin",{gain:0.5,maxSec:3}));
+    narrate("Монета легла в выемку у основания — старый обычай дорожных людей. Следующий путник её не возьмёт, а дорога, говорят, отплатит.");}},
+   {l:"🚶 Идти дальше",run:()=>narrate("Столб остаётся за спиной. Вёрсты он считает и без вас.")}]},
+
+ {id:"road_wreck",w:4,snd:"stk_break",ok:c=>c.roadkind==="abandoned"&&!c.inside&&!c.ship,
+  title:()=>"Брошенная телега",
+  text:()=>"Поперёк заросшей насыпи лежит телега: ось переломлена, колесо ушло в дёрн. Бросили её давно — на спицах мох.",
+  choices:c=>[
+   {l:"🔎 Обыскать телегу",run:()=>{
+    safeFn(()=>Bank.play("stk_break",{gain:0.6,maxSec:4}));
+    if(Math.random()<0.55){const n=1+Math.floor(Math.random()*2);evGive("дерево",n);
+     narrate(`В телеге нашлись целые доски: дерево ×${n}. Остальное сгнило.`);}
+    else if(Math.random()<0.5){const g=8+Math.floor(Math.random()*20);G.gold+=g;
+     narrate(`Под сиденьем — кошель возчика, до сих пор завязанный: ${g} золота. Хозяин за ним не вернулся.`);}
+    else narrate("Телега пуста: всё ценное забрали до вас, и довольно давно.");}},
+   {l:"🔨 Разобрать на доски",run:()=>{
+    G.hour+=0.8;if(G.hour>=24){G.hour-=24;G.day++;}
+    const n=2+Math.floor(Math.random()*3);evGive("дерево",n);
+    safeFn(()=>Bank.play("craft_wood",{gain:0.6,maxSec:4}));
+    narrate(`Час работы — и телега стала грузом: дерево ×${n}. Насыпь освободилась, но по ней всё равно никто не ходит.`);}},
+   {l:"🚶 Обойти стороной",run:()=>narrate("Вы обходите телегу по траве. Заброшенный путь не любит, когда в нём копаются.")}]},
+
+ {id:"ford_current",w:4,snd:"stk_splash",ok:c=>c.crossing==="ford"&&!c.inside&&!c.ship,
+  title:()=>"Вода на броде",
+  text:()=>"Дорога сходит в воду. Брод выложен камнем, но после дождей река прибыла: вода идёт по колено и тянет вбок.",
+  choices:c=>[
+   {l:"🌊 Перейти прямо, держась камней",run:()=>{
+    safeFn(()=>Bank.play("stk_splash",{gain:0.7,maxSec:4}));
+    if(hasSkill("stamina")||Math.random()<0.7)
+     narrate("Нога находит камень за камнем. Сапоги полны воды, но переход обошёлся без потерь.");
+    else{G.hp=Math.max(1,G.hp-4);
+     narrate("Нога сорвалась с камня, и течение развернуло вас боком: −4 здоровья и мокрый заплечный мешок.");}}},
+   {l:"🪢 Искать место помельче",run:()=>{
+    G.hour+=0.6;if(G.hour>=24){G.hour-=24;G.day++;}
+    safeFn(()=>Bank.play("wild_river",{gain:0.5,maxSec:5}));
+    narrate("Вы прошли вдоль берега и нашли перекат выше по течению: лишние полчаса, зато сухо по пояс.");}},
+   {l:"🎣 Осмотреть дно брода",run:()=>{
+    safeFn(()=>Bank.play("water_swash",{gain:0.6,maxSec:4}));
+    if(Math.random()<0.45){const g=5+Math.floor(Math.random()*15);G.gold+=g;
+     narrate(`Между камнями брода лежит то, что обронили прежние: ${g} золота. Брод собирает чужие потери годами.`);}
+    else{const n=1+Math.floor(Math.random()*2);evGive("камень",n);
+     narrate(`Со дна вы подняли обкатанный водой камень: камень ×${n}.`);}}}]},
+
+ {id:"tunnel_dark",w:4,snd:"deep_stone",ok:c=>c.crossing==="tunnel"&&!c.inside&&!c.ship,
+  title:()=>"В тоннеле",
+  text:()=>"Свод забирает все звуки и возвращает их позже. Где-то впереди капает вода, и слышно, что ход не пуст: кто-то здесь уже стоял и, может быть, стоит сейчас.",
+  choices:c=>[
+   {l:"👂 Слушать свод",run:()=>{
+    safeFn(()=>Bank.play("deep_drip",{gain:0.6,maxSec:5}));
+    narrate("Вы стоите и слушаете. Эхо возвращается дважды: ход идёт ровно и выводит на ту сторону хребта — впереди никого. Это стоило минуты.");
+    G.hour+=0.2;if(G.hour>=24){G.hour-=24;G.day++;}}},
+   {l:"🔥 Пройти быстро, не останавливаясь",run:()=>{
+    safeFn(()=>Bank.play("hero_step_echo",{gain:0.6,maxSec:4}));
+    if(Math.random()<0.25){G.hp=Math.max(1,G.hp-3);
+     narrate("В темноте нога нашла выбоину: −3 здоровья. Зато хребет остался позади.");}
+    else narrate("Шаг отдаётся сводом, и через сотню шагов свет с той стороны. Тоннель короче перевала на полдня.");}},
+   {l:"⛏️ Осмотреть стены хода",run:()=>{
+    safeFn(()=>Bank.play("craft_stone",{gain:0.6,maxSec:4}));
+    if(Math.random()<0.5){const n=1+Math.floor(Math.random()*2);evGive("руда",n);
+     narrate(`В стене тоннеля — оставленная проходчиками жила: руда ×${n}. Пробивали ход и заодно брали, что попадалось.`);}
+    else narrate("Следы кирок идут ровными рядами. Ход рубили не наспех и не рабы: у державы были деньги и время.");}}]},
 
  {id:"bard_road",w:3,snd:"bard",ok:c=>!c.inside&&!c.ship,
   title:()=>"Бродячий сказитель",
@@ -14309,7 +14841,10 @@ const G={hp:100,hpMax:100,str:10,agi:10,mind:10,cha:10,mana:10,manaMax:10,
  lore:[],skills:[],
  /* Открытые узлы портальной сети: сеть помнит того, кто до неё дошёл. */
  portals:[],
- depleted:{},visited:{},cleared:{},prayed:{},inCombat:false,combat:null,loot:null,
+ /* finds — то, что уже взято с находок мира: доски из разбитой лодки,
+    головни из кострища, короб из тайника. Без записи поваленное дерево
+    стало бы бесконечной лесопилкой. */
+ depleted:{},visited:{},cleared:{},prayed:{},finds:{},inCombat:false,combat:null,loot:null,
  /* Народ игрока, покровитель из двенадцати богов, благосклонность богов,
     репутация у народов и след, который игрок оставил в политике держав. */
  race:"Люди",patron:null,faith:{},rep:{},diplo:{},clanRep:0,
@@ -18216,6 +18751,9 @@ const SCAPE_VOICE={
  pigeon:   {role:"bird_hawk",    period:8.0, gain:0.45, prio:0},
  structure:{role:null,           period:7.0, gain:0.55, prio:2},
  res:      {role:null,           period:8.0, gain:0.45, prio:1},
+ /* Находка зовёт тише ресурса и постройки: она не цель пути, а то, что
+    попалось по дороге. Но молчать она не должна: иначе её никак не найти. */
+ find:     {role:null,           period:9.0, gain:0.40, prio:0},
  caravan:  {role:"caravan",      period:6.0, gain:0.55, prio:2},
  /* Запертая палата зовёт к себе: за ней слышно, что есть чем поживиться. */
  vault:    {role:"treasure",     period:8.0, gain:0.55, prio:2},
@@ -18279,7 +18817,10 @@ const Scape={
       role:null,bid:c.structure.beacon,seed:x*7+y});continue;}
     if(c.res){const dep=G.depleted[x+","+y];
      if(!dep||dep.left>0)out.push({key:"r"+x+","+y,kind:"res",dx,dy,d,
-      role:null,bid:c.res.beacon,seed:x*13+y});}
+      role:null,bid:c.res.beacon,seed:x*13+y});
+     continue;}
+    if(c.находка)out.push({key:"f"+x+","+y,kind:"find",dx,dy,d,
+     role:null,bid:c.находка.b,seed:x*17+y});
    }
    safeFn(()=>{caravansNear(G.x,G.y,G.day,G.hour,SCAPE_RAD).forEach((c,i)=>{
     if(!c.d)return;
@@ -19109,9 +19650,15 @@ function move(dir){
   safeFn(()=>Tutor.note("move:"+dir));
   return arriveSky(dir);}
  /* Скорость артефактов укорачивает шаг тем же множителем, что и выносливость. */
+ /* Дорога теперь не только звучит, но и стоит разного времени: по царской
+    плите идут быстрее, чем по заросшей насыпи, а брод и обвалившийся мост
+    отнимают времени больше всего. Ради этого и выбирают путь. */
+ const дквид=G.dark?null:safeFn(()=>roadKindAt(G.x,G.y),null);
+ const пквид=G.dark?null:safeFn(()=>crossingAt(G.x,G.y),null);
+ const дорогаМнож=(дквид&&Number(дквид.шаг)||1)*(пквид&&Number(пквид.шаг)||1);
  G.hour+=(runState.active?0.1:0.18)*(hasSkill("stamina")?0.75:1)*(hasAbility("roadsense")?0.85:1)
   *(1-Math.min(0.45,safeFn(()=>ART.sum("скорость"),0)))
-  *(safeFn(()=>mountGift("шаг"),null)||1);   /* шаг и бег; «Дыхание дороги» и «Чутьё тракта» экономят время */
+  *(safeFn(()=>mountGift("шаг"),null)||1)*дорогаМнож;   /* шаг и бег; «Дыхание дороги» и «Чутьё тракта» экономят время */
  if(G.hour>=24){G.hour-=24;G.day++;
   for(const k in G.depleted){if(G.depleted[k].day<G.day)delete G.depleted[k];}}
  if(settings.effects)stepSound();
@@ -19144,6 +19691,21 @@ const SURF_NAME={grass:"трава",dirt:"утоптанная земля",stone
  water:"мелкая вода",cave:"пещерный щебень",snow:"снег",ice:"лёд",leaves:"палая листва",
  mud:"грязь",plank:"доски",straw:"солома",marble:"мрамор",bone:"кости",crystal:"кристалл",
  metal:"металл",gravel:"гравий",ash:"пепел",bridge:"мостки"};
+/* Что звучало бы на этой земле, не будь на ней дороги. */
+const NATURAL_SURF={forest:"leaves",plains:"grass",mountains:"stone",coast:"sand",
+ desert:"sand",swamp:"mud",cave:"gravel"};
+/* ── ДОРОГА ОБЯЗАНА ЗВУЧАТЬ НЕ ТАК, КАК ЗЕМЛЯ ПОД НЕЙ ──
+   Шаг — главный признак дороги для незрячего: по нему он и понимает, что не
+   сбился с тракта. Поверхности видов дорог подобраны так, чтобы отличаться
+   от природных, но совпадения всё равно всплывают там, где их не ждёшь:
+   торговый тракт через карст дал гравий, и гравием же отзывается сам карст.
+   Поэтому правило здесь не перечислением случаев, а общим: если поверхность
+   дороги совпала с природной, она сдвигается на соседнюю дорожную. */
+function roadSurfApart(пов){
+ const б=safeFn(()=>biomeAt(G.x,G.y),null);
+ const земля=б?NATURAL_SURF[б.база]:null;
+ if(!земля||пов!==земля)return пов;
+ return пов==="stone"?"gravel":пов==="gravel"?"stone":пов==="dirt"?"gravel":"dirt";}
 function outdoorSurface(){
  try{
   const c=cellContent(G.x,G.y),t=c.terrain[0];
@@ -19152,10 +19714,21 @@ function outdoorSurface(){
   /* Погода меняет то, по чему идёшь: ливень и гроза размывают землю, снег и
     метель ложатся поверх всего, кроме камня под крышей, а песчаная буря
     заносит песком даже тракт. */
+ const пер0=safeFn(()=>crossingAt(G.x,G.y),null);
+ if(пер0&&пер0.пов)return пер0.пов;
  if((G.weather==="Гроза"||G.weather==="Ливень")&&t!=="desert")return "mud";
  if(G.weather==="Метель"||G.weather==="Снег")return "snow";
  if(G.weather==="Песчаная буря")return "sand";
-  if(isRoad(G.x,G.y))return isCrossroads(G.x,G.y)?"stone":"gravel";
+  /* Переправа слышна раньше, чем называется: настил моста, плеск брода,
+    свод тоннеля. Она перебивает и погоду — на досках моста нет грязи. */
+ const пер=safeFn(()=>crossingAt(G.x,G.y),null);
+ if(пер&&пер.пов)return пер.пов;
+ /* У каждого вида дороги своя поверхность: плита царской, гравий торговой,
+    земля старой, сухая трава заброшенной, осыпь горной тропы. */
+ if(isCrossroads(G.x,G.y))return "stone";
+ const вд=safeFn(()=>roadKindAt(G.x,G.y),null);
+ if(вд&&вд.пов)return roadSurfApart(вд.пов);
+ if(isRoad(G.x,G.y))return roadSurfApart("gravel");
   if(t==="forest")return "leaves";
   if(t==="plains")return "grass";
   if(t==="mountains")return "stone";
@@ -19518,6 +20091,7 @@ function cellDesc(c){const parts=[];
   if(nd)parts.push(portalKnown(nd.x,nd.y)?`узел сети «${nd.name}»`:`${nd.name}: узел сети`);});
  if(c.res){const d=G.depleted[c.x+","+c.y];
   if(!d||d.left>0)parts.push(`ресурс: ${c.res.name}`);}
+ if(c.находка)parts.push(c.находка.n);
  if(c.monster&&!G.cleared[c.x+","+c.y])parts.push(`опасность: ${c.monster.n}`);
  return parts.length?parts.join(", "):"пусто";}
 /* реальный звук двери/ворот при входе в постройку (Free Fantasy SFX Pack) */
@@ -19627,6 +20201,21 @@ function arrive(dir){
    narrate(`Земли: ${e.name}. Народы: ${(e.races||[e.race]).slice(0,4).join(", ")}. Здесь чтут: ${g?g.n:"разных богов"}. `+
     (w.length?`Идёт война с державами: ${w.map(x=>EMPIRES[x.a===i?x.b:x.a].short).join(", ")}.`:"Держава ни с кем не воюет."),{interrupt:false});});}
  lastArrive=c;
+ /* ── ПЕРЕПРАВА ──
+    Мост, брод, тоннель и перевал — это места, а не клетки: игрок должен
+    услышать, что ступил на настил, и услышать, что сошёл с него. Объявляется
+    только смена: идя мостом в десять клеток, игрок слышит про мост один раз. */
+ safeFn(()=>{
+  const пер=G.dark?null:crossingAt(G.x,G.y);
+  const было=lastCrossing;
+  lastCrossing=пер?пер.id:null;
+  if(пер&&пер.id!==было){
+   if(settings.effects&&пер.звук)
+    Bank.play(пер.звук,{seed:G.x+G.y,gain:0.6,maxSec:5});
+   const имя=safeFn(()=>roadNameAt(G.x,G.y),null);
+   narrate(`${пер.n[0].toUpperCase()+пер.n.slice(1)}${имя?` на пути «${имя}»`:""}. ${пер.о}`,{interrupt:false});}
+  else if(!пер&&было)
+   narrate("Переправа позади: под ногами снова дорога.",{interrupt:false});});
  /* Портальный узел под ногами открывается сам: сеть запоминает того, кто до
     неё дошёл. Дорога и сеть связаны — стоячие камни стоят на перекрёстках
     трактов, поэтому идти по дороге выгодно вдвойне. */
@@ -19804,7 +20393,7 @@ function checkPortalRunArrival(){
  }
  if(paid)safeFn(()=>{refresh();renderQuests();saveGame(true);});
  return paid;}
-let lastArrive=null,lastEmp=null,lastMoveDir=null;
+let lastCrossing=null,lastArrive=null,lastEmp=null,lastMoveDir=null;
 function scanNearbyBeacons(){
  for(let dx=-1;dx<=1;dx++)for(let dy=-1;dy<=1;dy++){
   if(!dx&&!dy)continue;
@@ -21067,6 +21656,7 @@ function interactHere(){
     и снаружи, но настоящая жизнь теперь внутри стен. */
  if(c.structure){openBuilding(c);return;}
  if(c.res){gatherCurrent();return;}
+ if(c.находка){useFind(G.x,G.y);return;}
  narrate("Здесь нечего делать. Осмотритесь или идите дальше.");}
 function look(){
  /* С крыла осматриваются иначе: вниз и вдаль, а не по сторонам на шаг. */
@@ -21086,6 +21676,7 @@ function look(){
  let extra="";
  if(c.structure)extra=`Здесь: ${c.structure.name}. Откройте меню действий и выберите Взаимодействовать.`;
  else if(c.res)extra=`Здесь есть ресурс: ${c.res.name}. Его можно собрать.`;
+ else if(c.находка)extra=`Здесь: ${c.находка.n}. ${c.находка.о} Меню действий, «Взаимодействовать».`;
  else if(c.monster&&!G.cleared[G.x+","+G.y])extra=`Опасно: рядом ${c.monster.n}!`;
  else{const objs=[];
   for(let dx=-2;dx<=2;dx++)for(let dy=-2;dy<=2;dy++){
@@ -23265,6 +23856,9 @@ function pruneState(hard){
     if(Number.isFinite(д)&&д>=день-2)свежие[k]=G.punished[k];}
    G.punished=trimDict(свежие,200);}
   G.cleared=trimDict(G.cleared,lim.cleared);
+  /* Взятое с находок режется с запасом: за каждой записью — разобранный
+     остов или опустошённый тайник, и потерянная запись вернула бы их в мир. */
+  if(G.finds&&typeof G.finds==="object")G.finds=trimDict(G.finds,hard?800:3000);
   G.visited=trimDict(G.visited,lim.visited);
   /* Молитвы помнятся только «сегодня»: старше суток они не значат ничего. */
   if(G.prayed&&typeof G.prayed==="object"){

@@ -31,8 +31,29 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   G.place=null;G.ship=null;G.weather="Ясно";
   const out={};
   ["forest","plains","mountains","coast","desert","swamp"].forEach(t=>{out[t]=проба(t);});
-  /* Тракт и перекрёсток: у дороги свой ответ. */
+  /* ── ТРАКТ ДОЛЖЕН ЗВУЧАТЬ НЕ ТАК, КАК ЗЕМЛЯ ВОКРУГ ──
+     Раньше здесь стояло «гравий», потому что дорога была одна на весь мир.
+     Теперь у дороги восемь видов, и у каждого своя поверхность. Требование
+     от этого не изменилось, а стало строже: шаг — главный признак дороги для
+     незрячего, и поверхность дороги ОБЯЗАНА отличаться от той, что звучала бы
+     на этой же земле без неё. Именно на этом первая сборка и попалась:
+     заброшенный путь получил траву и стал неотличим от поля.
+     Клетки с переправой здесь пропускаются: мост, брод и тоннель проверяются
+     набором 62 — у них своё правило. */
   G.x=29*4;G.y=29*4;out.перекрёсток=outdoorSurface();
+  const ПРИРОДА={forest:"leaves",plains:"grass",mountains:"stone",coast:"sand",
+   desert:"sand",swamp:"mud",cave:"gravel"};
+  out.дороги=[];out.совпало=[];
+  for(let n=0;n<120&&out.дороги.length<8;n++){
+   const x=29*4+3,y=29*4+29*(n-60);
+   if(y<0||y>=WORLD)continue;
+   const k=safeFn(()=>roadKindAt(x,y),null);
+   if(!k||safeFn(()=>crossingAt(x,y),null))continue;
+   const б=safeFn(()=>biomeAt(x,y),null);
+   G.x=x;G.y=y;const пов=outdoorSurface();
+   const земля=б?ПРИРОДА[б.база]:null;
+   if(out.дороги.every(o=>o.вид!==k.id))out.дороги.push({вид:k.id,пов,земля});
+   if(земля&&пов===земля)out.совпало.push({x,y,вид:k.id,пов,земля});}
   G.x=29*4;G.y=29*4+3;out.тракт=outdoorSurface();
   /* Гроза раскисает под ногами. */
   G.weather="Гроза";G.x=29*4+1;G.y=29*4+1;out.гроза=outdoorSurface();
@@ -41,8 +62,13 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
  check('у каждой земли своя поверхность под ногой',
   surf.forest==="leaves"&&surf.plains==="grass"&&surf.mountains==="stone"&&
   surf.coast==="sand"&&surf.desert==="sand"&&surf.swamp==="mud",surf);
- check('тракт и перекрёсток слышны иначе, чем поле',
-  surf.тракт==="gravel"&&surf.перекрёсток==="stone",surf);
+ check('перекрёсток слышен камнем, и дорога вообще звучит по-дорожному',
+  surf.перекрёсток==="stone"
+  &&surf.дороги.length>0
+  &&surf.дороги.every(o=>["gravel","stone","dirt","straw","cave"].includes(o.пов)),
+  {перекрёсток:surf.перекрёсток,дороги:surf.дороги});
+ check('ни один вид дороги не звучит так же, как земля под ним',
+  surf.совпало.length===0,surf.совпало.slice(0,4));
  check('в грозу земля раскисает',surf.гроза==="mud",surf.гроза);
 
  /* Пол внутри — не одна поверхность на всё место, а СМЕСЬ: у каждого вида
