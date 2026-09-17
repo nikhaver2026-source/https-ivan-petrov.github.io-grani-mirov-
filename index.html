@@ -15796,6 +15796,309 @@ iact("attune",{n:"Прочесть наговор",значок:"🔯",
   safeFn(()=>{checkLevelUp();refresh();saveGame(true);});
   return true;}});
 
+
+/* ════════════════════════════════════════════════════════════════════════
+   АЛТАРЬ КАК ПОЛНОЦЕННЫЙ ОБЪЕКТ
+
+   Алтарь был кнопкой «помолиться» с одним исключением на реликвию. Он не
+   отличался от алтаря на соседнем ярусе, не помнил, кому посвящён, и не
+   замечал ни того, кто к нему подошёл, ни дня, в который подошли.
+
+   Теперь у алтаря есть ВИД — храмовый, клановый, рунный, погребальный,
+   жертвенник, стихийный камень, — и вид решает, что на нём можно. И есть
+   тринадцать условий, на которые он отзывается: свой ли бог у вашего народа,
+   ваш ли это покровитель, велика ли благосклонность, чтут ли вас его народы,
+   в ладу ли с державой, тот ли нынче день, знаете ли руны и обряды, есть ли
+   при вас артефакт и есть ли приношение, цела ли печать, то ли это место и
+   не связаны ли вы договором с тем, кого сюда не зовут.
+
+   «Проверить ауру» читает все условия вслух — какие сошлись, какие нет и
+   чего не хватает до благословения. Без этого незрячему пришлось бы гадать,
+   почему алтарь молчит.
+   ════════════════════════════════════════════════════════════════════════ */
+const ALTAR_KIND={
+ temple:{n:"храмовый алтарь",о:"Плита под сводом, вытертая ладонями до блеска.",
+  дела:["study","read","offer","bless","aura","artefact","rite","seal","mech"]},
+ clan:{n:"клановый камень",о:"Валун со знаком клана и зарубками по числу павших.",
+  дела:["study","read","offer","bless","aura","seal","mech"]},
+ rune:{n:"рунный алтарь",о:"Плита, сплошь покрытая знаками; часть стёрта до камня.",
+  дела:["study","read","aura","seal","artefact","rite","mech"]},
+ grave:{n:"погребальный алтарь",о:"Низкая плита над плитой: под ней лежат.",
+  дела:["study","read","offer","aura","seal","mech"]},
+ blood:{n:"жертвенник",о:"Камень с жёлобом по краю, и жёлоб не пуст.",
+  дела:["study","read","sacrifice","aura","rite","mech"]},
+ wild:{n:"стихийный камень",о:"Ничей: ни знака, ни имени — только след воды и ветра.",
+  дела:["study","offer","aura","bless"]}};
+/* Вид выводится из места и глубины: в храме храмовый, в клановом доме
+   клановый, в башне рунный, глубоко внизу погребальный, за Гранью жертвенник. */
+function altarKind(x,y){
+ const p=G.place;
+ if(!p)return "wild";
+ const d=Number(p.depth)||0;
+ if(G.dark||["shrine","ossuary","pit","spire"].indexOf(p.stype)>=0)return "blood";
+ if(p.stype==="temple")return "temple";
+ if(p.stype==="clanhall")return "clan";
+ if(["tower","school"].indexOf(p.stype)>=0)return "rune";
+ if(d>=8)return "grave";
+ if(d>0)return hashName(p.bx+x,p.by+y,8100)<0.5?"grave":"rune";
+ return "temple";}
+function altarAt(x,y){
+ const p=G.place;if(!p)return null;
+ const вид=altarKind(x,y);
+ const k=ALTAR_KIND[вид]||ALTAR_KIND.temple;
+ const g=safeFn(()=>altarGod(x,y),null)||PANTHEON[0];
+ const целаПоМиру=hashName(p.bx*7+x,p.by*3+y,8101)>=0.35;
+ const печать=(целаПоМиру||propMarked(x,y,"seal"))?"цела":"сломана";
+ const древний=hashName(p.bx+x*5,p.by+y*3,8102)<0.5;
+ return {вид,k,бог:g,печать,древний,x,y,глубина:Number(p.depth)||0};}
+/* Тринадцать условий, на которые отзывается алтарь. Каждое — со своим
+   объяснением: незрячему нужно знать не «нет», а «чего не хватает». */
+function altarConds(a){
+ if(!a)return [];
+ const g=a.бог;
+ const мойБог=safeFn(()=>godOfRace(G.race).id,null);
+ const день=((Number(G.day)||1)-1)%12+1;
+ const народы=RACES_DB.filter(r=>r.god===g.id).map(r=>r.n);
+ const чтут=народы.some(n=>safeFn(()=>repOf(n),0)>=3);
+ const держава=safeFn(()=>Number((G.diplo||{})[empireIndexAt(G.x,G.y)])||0,0);
+ const приношения=["ягоды","трава","кость","кристалл","самоцвет","слиток"];
+ const естьДар=приношения.some(r=>(Number(G.inv&&G.inv[r])||0)>0);
+ const договор=safeFn(()=>demonPact(),null);
+ return [
+  {id:"свой",   n:"бог вашего народа",      ок:мойБог===g.id,
+   надо:`этот алтарь посвящён «${g.n}», а ваш народ чтит другого`},
+  {id:"патрон", n:"ваш покровитель",        ок:G.patron===g.id,
+   надо:`примите покровительство «${g.n}» в храме`},
+  {id:"вера",   n:"благосклонность бога",   ок:safeFn(()=>godFavor(g.id),0)>=3,
+   надо:`благосклонность «${g.n}» должна быть от трёх, сейчас ${safeFn(()=>godFavor(g.id),0)}`},
+  {id:"народы", n:"уважение его народов",   ок:чтут,
+   надо:`его чтят ${народы.slice(0,3).join(", ")||"немногие"} — заслужите у них уважение от трёх`},
+  {id:"держава",n:"лад с державой",         ок:держава>=0,
+   надо:"здешняя палата к вам недобра: помиритесь с державой"},
+  {id:"день",   n:"священный день",         ок:день===g.day,
+   надо:`священный день «${g.n}» — ${g.day}-й, сегодня ${день}-й`},
+  {id:"руны",   n:"рунное знание",          ок:safeFn(()=>mastLevel("runes"),0)>=1,
+   надо:"нужен хотя бы первый урок рунического дела"},
+  {id:"обряд",  n:"обрядовое знание",       ок:safeFn(()=>mastLevel("arte"),0)>=1||safeFn(()=>mastLevel("demon"),0)>=1,
+   надо:"нужен хотя бы первый урок артефакторики или демонологии"},
+  {id:"вещь",   n:"артефакт при вас",       ок:(G.artifacts||[]).length>0,
+   надо:"при вас нет ни одной вещи с силой"},
+  {id:"дар",    n:"приношение при вас",     ок:естьДар,
+   надо:`кладут ягоды, траву, кость, кристалл, самоцвет или слиток — ничего этого нет`},
+  {id:"печать", n:"печать цела",            ок:a.печать==="цела",
+   надо:"печать разбита: её восстанавливают руной"},
+  {id:"место",  n:"подобающее место",       ок:a.вид!=="wild"||a.глубина===0,
+   надо:"этот камень стоит не там, где ему стоять"},
+  {id:"запрет", n:"запрет не нарушен",      ок:!договор,
+   надо:`пока на вас договор с «${договор?(DEMON_BY_ID[договор.кто]||{}).n||"незваным":""}», сюда не подходят`}];}
+function altarMet(a){return altarConds(a).filter(c=>c.ок).length;}
+const ALTAR_BLESS_NEED=6;
+/* Какие дела у этого алтаря. */
+function altarCan(a,дело){return !!(a&&a.k&&(a.k.дела||[]).indexOf(дело)>=0);}
+function altarHere(o){
+ if(!G.place||!o||o.плитка!=="A")return null;
+ return safeFn(()=>altarAt(o.x,o.y),null);}
+
+iact("altstudy",{n:"Исследовать алтарь",значок:"🔬",
+ можно:o=>{const a=altarHere(o);return !!(a&&altarCan(a,"study"));},
+ делать:o=>{
+  const a=altarHere(o);
+  safeFn(()=>{Bank.play("deep_stone",{seed:o.x+o.y,gain:0.55,maxSec:4});
+   setTimeout(()=>safeFn(()=>Bank.play("pad_sanctum",{seed:o.x,gain:0.45,maxSec:6})),340);});
+  safeFn(()=>propTime(0.4));
+  if(!propMarked(o.x,o.y,"studied")){
+   propMark(o.x,o.y,"studied");
+   const оп=10+a.глубина;G.xp+=оп;
+   safeFn(()=>{checkLevelUp();saveGame(true);});
+   narrate(`${a.k.n}. ${a.k.о} Посвящён: ${a.бог.n}, ${a.бог.ep}. Область — ${a.бог.dom}. Печать ${a.печать}. Сошлось условий: ${altarMet(a)} из ${altarConds(a).length}. Опыт растёт на ${оп}.`);
+  }else narrate(`${a.k.n}, ${a.бог.n}. Это вы уже разбирали. Печать ${a.печать}, сошлось условий ${altarMet(a)} из ${altarConds(a).length}.`,{interrupt:false});
+  return true;}});
+iact("altread",{n:"Прочитать надпись",значок:"📜",
+ можно:o=>{const a=altarHere(o);return !!(a&&altarCan(a,"read"));},
+ делать:o=>{
+  const a=altarHere(o);
+  safeFn(()=>Bank.play("arte_page",{seed:o.x+o.y,gain:0.5,maxSec:4}));
+  safeFn(()=>propTime(0.3));
+  if(a.древний&&safeFn(()=>mastLevel("lang"),0)<1){
+   narrate(`Надпись есть, и она не на общем языке: буквы знакомы, а слова нет. Нужен хотя бы первый урок древних языков.`);
+   return true;}
+  const усл=altarConds(a);
+  const просит=усл.filter(c=>!c.ок).slice(0,3);
+  narrate(`Надпись гласит: «${a.бог.myth}» Запрет его таков: ${a.бог.taboo} Дар его таков: ${a.бог.boon} `
+   +(просит.length?`И камень просит: ${просит.map(c=>c.n).join(", ")}.`:"И камень не просит ничего: всё при вас."));
+  return true;}});
+iact("altaura",{n:"Проверить ауру",значок:"🌀",
+ можно:o=>!!altarHere(o),
+ делать:o=>{
+  const a=altarHere(o);
+  if(safeFn(()=>mastLevel("arte"),0)<1&&safeFn(()=>mastLevel("runes"),0)<1){
+   safeFn(()=>Bank.play("pad_halo",{gain:0.4,maxSec:5}));
+   narrate("Что-то здесь есть, но разглядеть это без ремесла нельзя: нужен первый урок артефакторики или рун.");
+   return true;}
+  safeFn(()=>{Bank.play("pad_halo",{seed:o.x+o.y,gain:0.5,maxSec:6});
+   setTimeout(()=>safeFn(()=>Bank.play("bell_small",{seed:o.y,gain:0.45,maxSec:4})),320);});
+  const усл=altarConds(a);
+  const да=усл.filter(c=>c.ок),нет=усл.filter(c=>!c.ок);
+  narrate(`Аура ${a.k.n}а, ${a.бог.n}. Сошлось ${да.length} из ${усл.length}: ${да.map(c=>c.n).join(", ")||"ничего"}. `
+   +`Не сошлось: ${нет.map(c=>`${c.n} — ${c.надо}`).join("; ")||"ничего"}. `
+   +`Для благословения нужно ${ALTAR_BLESS_NEED} условий и целая печать.`);
+  return true;}});
+iact("altoffer",{n:"Положить приношение",значок:"🕯️",
+ можно:o=>{const a=altarHere(o);return !!(a&&altarCan(a,"offer"));},
+ делать:o=>{
+  const a=altarHere(o);
+  const цены={"ягоды":1,"трава":1,"кость":2,"кристалл":2,"самоцвет":3,"слиток":3};
+  const что=Object.keys(цены).find(r=>(Number(G.inv&&G.inv[r])||0)>0);
+  if(!что){
+   safeFn(()=>Bank.play("knock_soft",{gain:0.4,maxSec:3}));
+   narrate(`Класть нечего. На ${a.k.n} кладут ягоды, траву, кость, кристалл, самоцвет или слиток.`);
+   return true;}
+  G.inv[что]=(Number(G.inv[что])||0)-1;if(G.inv[что]<=0)delete G.inv[что];
+  const сила=цены[что];
+  safeFn(()=>{Bank.play("altar",{seed:o.x+o.y,gain:0.65,maxSec:6});
+   setTimeout(()=>safeFn(()=>Bank.play("chant_calliope",{seed:o.y,gain:0.5,maxSec:5})),380);});
+  safeFn(()=>{if(!G.faith)G.faith={};G.faith[a.бог.id]=(Number(G.faith[a.бог.id])||0)+сила;});
+  safeFn(()=>propTime(0.3));
+  narrate(`${что} лежит на камне, и камень принимает. Благосклонность «${a.бог.n}» растёт на ${сила}: теперь ${safeFn(()=>godFavor(a.бог.id),0)}.`);
+  safeFn(()=>{refresh();saveGame(true);});
+  return true;}});
+iact("altbless",{n:"Получить благословение",значок:"✨",
+ можно:o=>{const a=altarHere(o);return !!(a&&altarCan(a,"bless"));},
+ делать:o=>{
+  const a=altarHere(o);
+  const усл=altarConds(a),сошлось=усл.filter(c=>c.ок).length;
+  if(a.печать!=="цела"){
+   safeFn(()=>Bank.play("deep_stone",{gain:0.5,maxSec:4}));
+   narrate(`Печать разбита, и через неё ничего не проходит. Восстановите её руной.`);
+   return true;}
+  if(сошлось<ALTAR_BLESS_NEED){
+   safeFn(()=>Bank.play("pad_halo",{gain:0.45,maxSec:5}));
+   const нет=усл.filter(c=>!c.ок).slice(0,3);
+   narrate(`${a.бог.n} молчит: сошлось ${сошлось} условий из ${усл.length}, а нужно ${ALTAR_BLESS_NEED}. Ближе всего: ${нет.map(c=>c.надо).join("; ")}.`);
+   return true;}
+  if(propMarked(o.x,o.y,"blessed_"+(Number(G.day)||1))){
+   narrate("Сегодня этот алтарь уже благословил вас. Приходите завтра.");
+   return true;}
+  propMark(o.x,o.y,"blessed_"+(Number(G.day)||1));
+  const часов=4+Math.floor(сошлось/2);
+  safeFn(()=>buffSet("благословение",часов));
+  safeFn(()=>buffSet("оберег",часов));
+  const было=G.hp;
+  G.hp=Math.min(G.hpMax,G.hp+Math.round(G.hpMax*0.3));
+  G.mana=Math.min(G.manaMax,G.mana+Math.round(G.manaMax*0.3));
+  safeFn(()=>{if(!G.faith)G.faith={};G.faith[a.бог.id]=(Number(G.faith[a.бог.id])||0)+2;});
+  safeFn(()=>{UI.fanfare();Bank.play("fx_blessing",{gain:0.7,maxSec:6});
+   setTimeout(()=>safeFn(()=>Bank.play("temple_choir",{seed:o.x,gain:0.55,maxSec:7})),400);
+   setTimeout(()=>safeFn(()=>Bank.play("spell_harp",{gain:0.5,maxSec:5})),900);});
+  safeFn(()=>journal(`Благословение: ${a.бог.n}.`));
+  narrate(`${a.бог.n} отвечает. ${a.бог.boon} Здоровье ${было} стало ${G.hp}, сила полнее, и ${часов} ${plural(часов,"час","часа","часов")} удар будет доходить вполсилы. Благословение держится, пока держится час.`);
+  safeFn(()=>{refresh();saveGame(true);});
+  return true;}});
+iact("altseal",{n:"Восстановить печать",значок:"🔏",
+ можно:o=>{const a=altarHere(o);return !!(a&&altarCan(a,"seal")&&a.печать==="сломана");},
+ делать:o=>{
+  const a=altarHere(o);
+  if(safeFn(()=>mastLevel("runes"),0)<2){
+   safeFn(()=>Bank.play("rune_square",{gain:0.45,maxSec:3}));
+   narrate(`Печать чинят руной, а руну надо уметь класть: нужна вторая ступень рунического дела.`);
+   return true;}
+  if((Number(G.inv&&G.inv["камень"])||0)<2){
+   safeFn(()=>Bank.play("knock_soft",{gain:0.4,maxSec:3}));
+   narrate("Печать восстанавливают по камню, и камня нужно два.");
+   return true;}
+  G.inv["камень"]-=2;if(G.inv["камень"]<=0)delete G.inv["камень"];
+  propMark(o.x,o.y,"seal");
+  safeFn(()=>propTime(0.7));
+  safeFn(()=>{Bank.play("rune_square",{seed:o.x+o.y,gain:0.6,maxSec:5});
+   setTimeout(()=>safeFn(()=>Bank.play("stk_ward",{gain:0.55,maxSec:5})),360);});
+  safeFn(()=>mastGain("runes",6));
+  const оп=14;G.xp+=оп;
+  narrate(`Знак лёг в старую борозду, и камень отозвался гулом: печать цела. Рунное дело растёт, опыт на ${оп}. Теперь алтарь может дать благословение.`);
+  safeFn(()=>{checkLevelUp();refresh();saveGame(true);});
+  return true;}});
+iact("altartefact",{n:"Поместить артефакт",значок:"💠",
+ можно:o=>{const a=altarHere(o);return !!(a&&altarCan(a,"artefact")&&(G.artifacts||[]).length>0);},
+ делать:o=>{
+  const a=altarHere(o);
+  if(a.печать!=="цела"){
+   narrate("Класть вещь на разбитую печать нельзя: её вытянет, а не насытит.");
+   return true;}
+  if(propMarked(o.x,o.y,"charged")){
+   narrate(`${a.k.n} уже отдал всё, что мог: второй раз он не насыщает.`,{interrupt:false});
+   safeFn(()=>Bank.play("bell_small",{gain:0.4,maxSec:3}));
+   return true;}
+  const v=(G.artifacts||[]).find(z=>z&&typeof z==="object");
+  if(!v){narrate("Класть нечего: вещи с силой при вас нет.");return true;}
+  propMark(o.x,o.y,"charged");
+  safeFn(()=>propTime(0.8));
+  safeFn(()=>{Bank.play("relic_sing",{seed:o.x+o.y,gain:0.65,maxSec:6});
+   setTimeout(()=>safeFn(()=>Bank.play("spark_glock",{seed:o.y,gain:0.5,maxSec:4})),380);});
+  const былоК=Number(v.кач)||1,былоР=Number(v.ранг)||1;
+  v.кач=Math.min(5,былоК+1);
+  if(v.кач===былоК)v.ранг=Math.min(5,былоР+1);
+  safeFn(()=>mastGain("arte",7));
+  narrate(`Вещь легла на камень, и камень взял её на себя. ${safeFn(()=>ART.describe(v,true),"Она стала полнее")}. Качество ${былоК} стало ${v.кач}, ранг ${былоР} стал ${v.ранг}.`);
+  safeFn(()=>{refresh();saveGame(true);});
+  return true;}});
+iact("altrite",{n:"Провести обряд",значок:"🔔",
+ можно:o=>{const a=altarHere(o);return !!(a&&altarCan(a,"rite"));},
+ делать:o=>{
+  const a=altarHere(o);
+  const ур=Math.max(safeFn(()=>mastLevel("arte"),0),safeFn(()=>mastLevel("demon"),0));
+  if(ур<2){
+   safeFn(()=>Bank.play("pad_sanctum",{gain:0.45,maxSec:5}));
+   narrate("Обряд у алтаря ведут не с голыми руками: нужна вторая ступень артефакторики или демонологии.");
+   return true;}
+  if((Number(G.mana)||0)<20){
+   narrate(`Обряд берёт двадцать маны, у вас ${Math.round(Number(G.mana)||0)}.`);
+   return true;}
+  G.mana-=20;
+  safeFn(()=>propTime(1.2));
+  safeFn(()=>{Bank.play("altar",{seed:o.x+o.y,gain:0.7,maxSec:7});
+   setTimeout(()=>safeFn(()=>Bank.play(a.вид==="blood"?"ghost_choir":"temple_choir",{gain:0.55,maxSec:7})),420);
+   setTimeout(()=>safeFn(()=>Bank.play("harmonium_low",{gain:0.5,maxSec:7})),900);});
+  const сошлось=altarMet(a);
+  const сила=2+Math.floor(сошлось/3);
+  if(a.вид==="blood"){
+   G.hp=Math.max(1,G.hp-Math.round(G.hpMax*0.1));
+   safeFn(()=>{if(!G.darkFaith)G.darkFaith={};
+    G.darkFaith[a.бог.id]=(Number(G.darkFaith[a.бог.id])||0)+сила;});
+   safeFn(()=>buffSet("гнёт",сила*2));
+   narrate(`Жёлоб принял своё: здоровья убыло, осталось ${G.hp}. Взамен воздух вокруг вас загустел на ${сила*2} ${plural(сила*2,"час","часа","часов")} — чужой удар доходит вполсилы. За Гранью это зачтётся.`);
+  }else{
+   safeFn(()=>{if(!G.faith)G.faith={};G.faith[a.бог.id]=(Number(G.faith[a.бог.id])||0)+сила;});
+   safeFn(()=>buffSet("благословение",сила*2));
+   const было=G.hp;
+   G.hp=Math.min(G.hpMax,G.hp+Math.round(G.hpMax*0.2));
+   narrate(`Обряд проведён по правилу: свеча, вода и слово. Благосклонность «${a.бог.n}» растёт на ${сила}, здоровье ${было} стало ${G.hp}, и ${сила*2} ${plural(сила*2,"час","часа","часов")} вы под благословением.`);}
+  safeFn(()=>mastGain(safeFn(()=>mastLevel("arte"),0)>=2?"arte":"demon",8));
+  safeFn(()=>{refresh();saveGame(true);});
+  return true;}});
+iact("altsacrifice",{n:"Принести жертву",значок:"🩸",
+ можно:o=>{const a=altarHere(o);return !!(a&&altarCan(a,"sacrifice"));},
+ делать:o=>{
+  const a=altarHere(o);
+  const цена=Math.round(G.hpMax*0.15);
+  if(G.hp<=цена){
+   narrate(`Жертвенник просит ${цена} крови, а у вас её ${G.hp}. Столько отдавать нельзя.`);
+   return true;}
+  G.hp-=цена;
+  safeFn(()=>propTime(0.5));
+  safeFn(()=>{Bank.play("altar",{seed:o.x+o.y,gain:0.7,maxSec:6});
+   setTimeout(()=>safeFn(()=>Bank.play("ghost_choir",{gain:0.55,maxSec:6})),400);
+   setTimeout(()=>safeFn(()=>Bank.play("omen_swell",{gain:0.5,maxSec:6})),820);});
+  safeFn(()=>{if(!G.darkFaith)G.darkFaith={};
+   G.darkFaith[a.бог.id]=(Number(G.darkFaith[a.бог.id])||0)+4;});
+  safeFn(()=>{const p=patronGod();if(p&&p.id!==a.бог.id){G.faith=G.faith||{};
+   G.faith[p.id]=(Number(G.faith[p.id])||0)-2;}});
+  safeFn(()=>buffSet("ярость_камня",4));
+  narrate(`Кровь ушла в жёлоб: ${цена}, осталось ${G.hp}. Камень тёплый, и четыре часа рука ваша тяжелее. Ваш покровитель это заметил.`);
+  safeFn(()=>{refresh();saveGame(true);});
+  return true;}});
+iact("altmech",{n:"Поискать скрытый механизм",значок:"⚙️",
+ можно:o=>{const a=altarHere(o);return !!(a&&altarCan(a,"mech"));},
+ делать:o=>{stashSearch(o.x,o.y);return true;}});
+
 /* ── Что вокруг ──
    Под ногами и в четырёх соседних клетках. Дальше не смотрим: взаимодействие
    рукой, а не взглядом. */
@@ -15825,6 +16128,11 @@ function objectsHere(){
     /* Горн — станок сам по себе; обстановка становится станком по тому, что
        это за вещь: наковальня, чан, круг, верстак, точило, очаг. */
     if(t==="F")o.станок="forge";
+    /* Алтарь называет себя видом и состоянием печати: «алтарь» без этого —
+       двенадцать разных камней под одним словом. */
+    if(t==="A")safeFn(()=>{const a=altarAt(x,y);
+     if(a){o.n=`${a.k.n} (${a.бог.n})`;o.о=a.k.о;
+      o.состояние=`печать ${a.печать}, сошлось условий ${altarMet(a)} из ${altarConds(a).length}`;}});
     if(t==="X"){const pr=safeFn(()=>propAt(x,y),null);
      if(pr){o.вещь=pr.id;if(STANOK_NAME[pr.id])o.станок=pr.id;}
      /* Состояние вещи меняет и рассказ о ней, и список действий. Стол
@@ -15899,7 +16207,9 @@ iact("apprentice",{n:"Проситься в ученики",значок:"🎓",
    К общим добавляются техники станка: у горна свои, у наковальни свои, и
    показаны только те, до которых доросло мастерство. */
 function actionsFor(o){
- const порядок=["look","listen","knock","hollow","secret","stash","stashtake","repair","salvage","attune","assay","trap","disarm","shelf","apprentice","use"];
+ const порядок=["look","listen","knock","hollow","secret","stash","stashtake","repair","salvage","attune",
+  "altstudy","altread","altaura","altoffer","altbless","altseal","altartefact","altrite","altsacrifice","altmech",
+  "assay","trap","disarm","shelf","apprentice","use"];
  const общие=порядок.map(id=>IACT[id]).filter(a=>a&&(!a.можно||safeFn(()=>a.можно(o),false)));
  const тех=(o&&o.станок)?safeFn(()=>techsAt(o.станок),[])||[]:[];
  return общие.concat(тех.map(t=>({id:"tech:"+t.id,n:t.n,значок:t.значок,
