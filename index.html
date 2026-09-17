@@ -15390,14 +15390,83 @@ iact("assay",{n:"Определить породу",значок:"🔬",
 /* Главное действие объекта: то же, что делает быстрый путь. */
 /* Проверить пол — то, чем в подземелье живут. Доступно только под землёй:
    в трактире плиты не проседают. */
+/* Ловушки ставят и в сундуках, и у дверей, а проверка была только у пола:
+   игрок, который честно щупал сундук, всё равно открывал его вслепую. */
 iact("trap",{n:"Проверить пол и стены",значок:"🔎",
- можно:o=>!!(G.place&&(Number(G.place.depth)||0)>0&&o.вид==="floor"),
- делать:()=>{trapProbe();return true;}});
+ можно:o=>!!(G.place&&(Number(G.place.depth)||0)>0
+  &&(o.вид==="floor"||["C","+","G","Y"].indexOf(o.плитка)>=0)),
+ делать:o=>{
+  /* У сундука и двери щупают их самих, а не клетку под ногами. */
+  if(o&&o.вид!=="floor"&&Number.isFinite(o.x)&&Number.isFinite(o.y)){
+   safeFn(()=>trapSearch(o.x,o.y));return true;}
+  trapProbe();return true;}});
 iact("disarm",{n:"Обезвредить ловушку",значок:"🧰",
- можно:o=>!!(o.вид==="floor"&&safeFn(()=>trapFound(),null)),
+ можно:o=>!!((o.вид==="floor"||["C","+","G","Y"].indexOf(o.плитка)>=0)
+  &&safeFn(()=>trapFound(),null)),
  делать:()=>{const л=safeFn(()=>trapFound(),null);
   if(!л){narrate("Снимать нечего: найденных ловушек рядом нет.");return true;}
   return trapDisarm(л.x,л.y);}});
+/* ── ЯЩИК СТОЛА ──
+   Стол, конторка, комод и ящики — это вещи с ящиком, и ящик открывают.
+   Раньше их можно было только осмотреть: слово «стол» было и началом, и
+   концом разговора. Ящик даёт немного и один раз, но он даёт. */
+const DRAWER_PROPS=["table","desk","dresser","crates","barrels","sacks"];
+iact("drawer",{n:"Открыть ящик",значок:"🗄️",
+ можно:o=>!!(G.place&&o.плитка==="X"&&DRAWER_PROPS.indexOf(o.вещь)>=0),
+ делать:o=>{
+  if(propMarked(o.x,o.y,"drawer")){
+   safeFn(()=>Bank.play("craft_wood",{seed:o.x+o.y,gain:0.4,maxSec:3}));
+   narrate(`${o.n}: ящик уже выдвинут и пуст.`,{interrupt:false});
+   return true;}
+  propMark(o.x,o.y,"drawer");
+  safeFn(()=>propTime(0.2));
+  safeFn(()=>{Bank.play("craft_wood",{seed:o.x+o.y,gain:0.6,maxSec:3});
+   setTimeout(()=>safeFn(()=>Bank.play("arte_cloth",{seed:o.y,gain:0.5,maxSec:3})),260);});
+  const s=hashName(o.x*3,o.y*5,8200);
+  if(s<0.34){
+   const п=["трава","кость","камень","дерево","ягоды"];
+   const что=п[Math.floor(hashName(o.x,o.y,8201)*п.length)%п.length];
+   const n=1+Math.floor(hashName(o.x,o.y,8202)*3);
+   G.inv[что]=(Number(G.inv[что])||0)+n;
+   narrate(`Ящик идёт туго и открывается рывком. Внутри чужое, но нужное: ${что} ×${n}.`);
+  }else if(s<0.55){
+   const з=8+Math.floor(hashName(o.x,o.y,8203)*40);
+   G.gold=(Number(G.gold)||0)+з;
+   narrate(`Ящик идёт туго. На дне, под тряпицей, мелочь: ${з} золота.`);
+  }else if(s<0.72){
+   const i=Math.floor(hashName(o.x,o.y,8204)*safeFn(()=>knowTotal(),1))%Math.max(1,safeFn(()=>knowTotal(),1));
+   const k=safeFn(()=>knowEntry(i),null);
+   const оп=6;G.xp+=оп;
+   narrate(`В ящике лист, исписанный чужой рукой: «${k?k.title:"без заглавия"}». Прочитать целиком не выходит, но и по началу видно, о чём речь. Опыт растёт на ${оп}.`);
+   safeFn(()=>checkLevelUp());
+  }else narrate(`Ящик идёт туго и открывается рывком. Пусто: щепки, пыль и сухая муха.`);
+  safeFn(()=>{refresh();saveGame(true);});
+  return true;}});
+/* ── МЕХАНИЗМ ДВЕРИ ──
+   Дверь отвечала стуком и открывалась. Но у двери есть замок, петли и
+   иногда руна, и слепому важно знать это ДО того, как он навалится плечом. */
+iact("doormech",{n:"Проверить механизм",значок:"🔩",
+ можно:o=>!!(G.place&&["+","G","Y"].indexOf(o.плитка)>=0),
+ делать:o=>{
+  safeFn(()=>{Bank.play("lock_click",{seed:o.x+o.y,gain:0.5,maxSec:3});
+   setTimeout(()=>safeFn(()=>Bank.play("metal_hit",{seed:o.y,gain:0.4,maxSec:3})),240);});
+  safeFn(()=>propTime(0.15));
+  const сокровищница=o.плитка==="Y";
+  const открыта=safeFn(()=>o.плитка==="Y"?vaultIsOpen(o.x,o.y):placeMark(o.x,o.y)==="open",false);
+  const ключ=(G.items||[]).indexOf(VAULT_KEY)>=0;
+  const л=safeFn(()=>trapAt(o.x,o.y),null);
+  const руна=hashName(o.x*7,o.y*11,8210)<0.2;
+  narrate(`${o.n}. ${открыта?"Створка уже отошла: проходите."
+   :сокровищница?`Замок в два оборота, и без ключа его не взять руками. Ключ ${ключ?"у вас на поясе — он подойдёт":"не при вас: его кладут в один из обычных сундуков этого яруса. Без ключа остаётся плечо, и это стоит здоровья"}.`
+   :"Петли сухие, язычок ходит: такую открывают рукой."} `
+   +(л?`И ещё: механизм не один. ${л.состояние==="найдена"?`${л.n} — вы её уже нашли.`:trapHintWord()}`
+      :"Посторонних тяг не слышно.")
+   +(руна?" По косяку идёт рунная строка — старая, но целая: дверь помнит хозяина.":""));
+  return true;}});
+/* Слово о ненайденной ловушке: называть её до находки нельзя — это была бы
+   находка даром, — но и промолчать значит обмануть ухо. */
+function trapHintWord(){
+ return "под рукой что-то натянуто, и это не петля. Проверьте створку прежде, чем толкать.";}
 /* Перебрать полку — третий уровень дерева: полка, потом книга, потом её
    действия. Случайную книгу за игрока не берут. */
 iact("shelf",{n:"Перебрать полку",значок:"📚",своё:true,
@@ -16132,7 +16201,7 @@ function objectsHere(){
        двенадцать разных камней под одним словом. */
     if(t==="A")safeFn(()=>{const a=altarAt(x,y);
      if(a){o.n=`${a.k.n} (${a.бог.n})`;o.о=a.k.о;
-      o.состояние=`печать ${a.печать}, сошлось условий ${altarMet(a)} из ${altarConds(a).length}`;}});
+      o.состояние=`печать ${a.печать}`;}});
     if(t==="X"){const pr=safeFn(()=>propAt(x,y),null);
      if(pr){o.вещь=pr.id;if(STANOK_NAME[pr.id])o.станок=pr.id;}
      /* Состояние вещи меняет и рассказ о ней, и список действий. Стол
@@ -16207,7 +16276,7 @@ iact("apprentice",{n:"Проситься в ученики",значок:"🎓",
    К общим добавляются техники станка: у горна свои, у наковальни свои, и
    показаны только те, до которых доросло мастерство. */
 function actionsFor(o){
- const порядок=["look","listen","knock","hollow","secret","stash","stashtake","repair","salvage","attune",
+ const порядок=["look","listen","knock","hollow","secret","stash","stashtake","drawer","doormech","repair","salvage","attune",
   "altstudy","altread","altaura","altoffer","altbless","altseal","altartefact","altrite","altsacrifice","altmech",
   "assay","trap","disarm","shelf","apprentice","use"];
  const общие=порядок.map(id=>IACT[id]).filter(a=>a&&(!a.можно||safeFn(()=>a.можно(o),false)));
