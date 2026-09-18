@@ -259,7 +259,7 @@ const NEW_DIRS=["arte","deep","foe","cast","hero","wild","trade","score",
  const опись=(()=>{
   const корень=path.join(__dirname,"..");
   const html=fs.readFileSync(path.join(корень,"index.html"),"utf8");
-  const re=/"((?:sea|ambience|dungeon|magic|gods|events|places|fantasy|steps|ui|monsters|nat|inst|orch|surf|blow|troop|bazaar|dark|arms|spell|beast|relic|depth|folk|mood|arte|deep|foe|cast|hero|wild|trade|score|battle|siege|craft|beasts|throng|tread|sky|hall|mg|stk|mtg|od|es)\/[^"]+\.(?:mp3|wav|flac|ogg))"/g;
+  const re=/"((?:oc|ad|uh|lug|sea|ambience|dungeon|magic|gods|events|places|fantasy|steps|ui|monsters|nat|inst|orch|surf|blow|troop|bazaar|dark|arms|spell|beast|relic|depth|folk|mood|arte|deep|foe|cast|hero|wild|trade|score|battle|siege|craft|beasts|throng|tread|sky|hall|mg|stk|mtg|od|es)\/[^"]+\.(?:mp3|wav|flac|ogg))"/g;
   const ссылки=new Set([...html.matchAll(re)].map(m=>m[1]));
   const обход=d=>fs.readdirSync(d,{withFileTypes:true})
    .flatMap(e=>e.isDirectory()?обход(path.join(d,e.name)):[path.join(d,e.name)]);

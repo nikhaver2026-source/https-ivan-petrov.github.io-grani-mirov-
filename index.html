@@ -1885,7 +1885,7 @@ const MUSIC_TRACK={
  pl_clanhall:"score_frontier", pl_temple:"score_garden",
  pl_school:"score_paradiso", pl_tower:"score_xeon",
  pl_market:"score_celtic", pl_forge:"score_lava",
- pl_village:"score_farm", pl_port:"harbor_harmonica",
+ pl_village:"score_farm", pl_port:"score_settle",
  pl_ruins:"score_snowy", pl_cave_entrance:"cave_deep",
  /* ── ТЁМНЫЕ ЗЕМЛИ ──
     За Гранью свои виды местности, и в MUSIC_TRACK их не было вовсе: музыка
@@ -1895,12 +1895,12 @@ const MUSIC_TRACK={
     клавишами, жила — металлом порчи, топь — призрачным хором, шрам — роялем
     дурного предчувствия. */
  ash:"horn_dark", bone:"bassoon_death", rot:"lament_oboe", mirror:"mist_keys",
- vein:"pad_hex", drown:"ghost_choir", scar:"piano_dark",
+ vein:"score_newland", drown:"score_night", scar:"score_seafight",
  /* ── ГЛУБИНА ──
     В подземелье сто ярусов, и все они звучали одной пещерной темой: спуск не
     слышался. Теперь глубина разбита на пояса, и переход между ними слышен
     сменой темы — на слух это и есть «стало глубже». */
- depth_1:"score_dungeon", depth_2:"bassoon_ruins", depth_3:"harmonium_low",
+ depth_1:"score_dungeon", depth_2:"score_cavern", depth_3:"harmonium_low",
  depth_4:"contrabass_deep", depth_5:"organ_eternal", depth_abyss:"pad_underworld",
  /* ── ДВЕНАДЦАТЬ ОРДЕНОВ ──
     Башни все считались одним видом постройки и звучали одной темой, хотя
@@ -1910,7 +1910,7 @@ const MUSIC_TRACK={
     дождевой пеленой, семь ветров — флейтой дальних земель, сумеречный затвор —
     кларнетом теней, стужа — морозными клавишами, утренняя ступень — флейтой
     рассвета, корни — лютней роста, гром — ударом судьбы, шов — ветром Грани. */
- tower_pepel:"bassoon_dusk",  tower_steklo:"dream_vibe",
+ tower_pepel:"bassoon_dusk",  tower_steklo:"score_lucid",
  tower_vetv:"pad_halo",       tower_kamen:"cello_stone",
  tower_voda:"fx_rain",        tower_veter:"far_flute",
  tower_tenb:"clarinet_shadow",tower_led:"frost_keys",
@@ -2403,6 +2403,10 @@ const BANK_CATS={mg:"🐲 Фэнтезийный мир: твари, чары, �
  wild:"🌿 Природа, вода и очаг",
  trade:"🪙 Торговцы и зазывалы",
  score:"🎼 Музыка мира",
+ oc:"⚙️ OpenClonk: механизмы, ворота, сундуки, стекло, огонь, вода и ветер (CC BY 3.0)",
+ ad:"🌾 0 A.D.: ворота, обрушение, листва, мотыга, подворье, порт, реки и храм",
+ uh:"🏘️ Unknown Horizons: каменотёс, кузнец, мельница, часовня, трактир и площадь",
+ lug:"🔥 Lugaru: костёр, кусты, пустыня, ветер, шаги, лязг, клинки и звери",
  battle:"⚔️ Оружие и удары боя",
  siege:"🏰 Война: осада, тревога, вести",
  craft:"🔨 Ремёсла, добыча и стройка",
@@ -2439,7 +2443,9 @@ const BANK_GROUPS=[
  {n:"Игровые звуки и голос игры",icon:"🎲", dirs:["fantasy"]},
  {n:"Живые инструменты и оркестр",icon:"🎻", dirs:["nat","inst","orch"]},
  {n:"Музыка мира",            icon:"🎼", dirs:["score"]},
- {n:"Фэнтезийный мир: твари, чары и ремёсла",icon:"🐲", dirs:["mg"]}];
+ {n:"Фэнтезийный мир: твари, чары и ремёсла",icon:"🐲", dirs:["mg"]},
+ {n:"Механизмы, ворота, сундуки, огонь и вода",icon:"⚙️", dirs:["oc"]},
+ {n:"Подворье, мастерские, костёр, шаги и звери",icon:"🌾", dirs:["ad","uh","lug"]}];
 /* Роли банка, лежащие в этих папках. */
 function bankRolesIn(dirs){
  const set=new Set(dirs);
@@ -2541,7 +2547,7 @@ function buildEncycCats(){
  const t=soundTotals();
  if(hint)hint.textContent=`Разделов: ${grid.children.length}. Всего звуков: ${t.всего} — ${t.сцены} синтезированных сцен и ${t.записи} живых записей. Касание называет раздел, двойное касание открывает его. Внутри раздела — те же жесты, а кнопка «Ко всем разделам» возвращает обратно.`;
  const cr=document.getElementById("encycCredits");
- if(cr)cr.textContent="Живая фэнтезийная библиотека взята из двух свободных игр. Flare (Free/Libre Action Roleplaying Engine), автор Clint Bellanger и участники проекта, flarerpg.org — артефакты и вещи, подземелья и лестницы, твари, заклинания, голос героя, природа, торговцы и двенадцать тем музыки мира. 0 A.D. (Empires Ascendant), автор Wildfire Games, play0ad.com — оружие и удары боя, осада, тревога и вести войны, ремёсла и стройка, звери, людские крики и кличи, шаги по поверхностям, погода и вода, здания, рынок и порт. Обе — под лицензией Creative Commons Attribution-ShareAlike 3.0 (CC BY-SA 3.0): указание авторства обязательно и дано здесь, записи остаются под той же лицензией. Разделы разложены по назначению: сперва мир на слух — поверхности под ногой, удары и оружие, строй и сигналы, рынок, голоса из тьмы; затем оркестр, который отмечает события — войну, чары, тварей, находки, глубину, люд и повороты судьбы. Источники записей: Neo HQ Mystic Sounds, Fantasy Sound Library, Classic Monster Sounds (автор Coucassi), пакет uisfx (CC0), сэмплы Sonic Pi с freesound.org (общественное достояние, CC0 1.0), живые инструменты проекта tonejs-instruments (Creative Commons Attribution 3.0) и оркестр из звукового шрифта FluidR3_GM автора Frank Wen, изданного проектом MIDI.js Soundfonts (Creative Commons Attribution 3.0). Указание авторства обязательно, и оно здесь дано.";
+ if(cr)cr.textContent="Живая фэнтезийная библиотека взята из двух свободных игр. Flare (Free/Libre Action Roleplaying Engine), автор Clint Bellanger и участники проекта, flarerpg.org — артефакты и вещи, подземелья и лестницы, твари, заклинания, голос героя, природа, торговцы и двенадцать тем музыки мира. 0 A.D. (Empires Ascendant), автор Wildfire Games, play0ad.com — оружие и удары боя, осада, тревога и вести войны, ремёсла и стройка, звери, людские крики и кличи, шаги по поверхностям, погода и вода, здания, рынок и порт. Обе — под лицензией Creative Commons Attribution-ShareAlike 3.0 (CC BY-SA 3.0): указание авторства обязательно и дано здесь, записи остаются под той же лицензией. Разделы разложены по назначению: сперва мир на слух — поверхности под ногой, удары и оружие, строй и сигналы, рынок, голоса из тьмы; затем оркестр, который отмечает события — войну, чары, тварей, находки, глубину, люд и повороты судьбы. Источники записей: Neo HQ Mystic Sounds, Fantasy Sound Library, Classic Monster Sounds (автор Coucassi), пакет uisfx (CC0), сэмплы Sonic Pi с freesound.org (общественное достояние, CC0 1.0), живые инструменты проекта tonejs-instruments (Creative Commons Attribution 3.0) и оркестр из звукового шрифта FluidR3_GM автора Frank Wen, изданного проектом MIDI.js Soundfonts (Creative Commons Attribution 3.0). Указание авторства обязательно, и оно здесь дано. Вещи, с которыми игрок что-то делает, звучат живыми записями ещё четырёх свободных игр. OpenClonk (The OpenClonk Team and contributors, RedWolf Design GmbH, openclonk.org) — сундуки, петли, каменные ворота, цепи, дерево, камень, металл, стекло, чан, огонь, горн, древние механизмы, гром, дождь, ветер, птицы, лук и щит, две темы музыки; лицензия Creative Commons Attribution 3.0 Unported (CC BY 3.0). 0 A.D. (Wildfire Games) — каменные ворота, обрушение, листва, мотыга, треск огня, подворье, порт, торговые ряды, день, реки, волны и голоса под сводами храма (CC BY-SA 3.0). Unknown Horizons (The Unknown Horizons Team, unknown-horizons.org) — каменотёс, кузнец, дровосек, выгон, мельница, часовня, трактир, площадь, склад, корабельный колокол, страница и пять тем музыки (CC BY-SA 3.0). Lugaru (Wolfire Games, wolfire.com, и OSS Lugaru) — костёр, кусты, пустыня, ветер, шаги, лязг, удары, клинки и звери (CC BY-SA 3.0). Для каждой папки в sounds лежат CREDITS.md с таблицей исходных файлов и текст лицензии.";
 }
 
 /* ── Второй уровень: звуки одного раздела ── */
@@ -7413,6 +7419,173 @@ Object.assign(SOUND_BANK,{
  gold:{f:["fantasy/gold_01.mp3","fantasy/gold_02.mp3","fantasy/gold_03.mp3","fantasy/gold_04.mp3","fantasy/gold_05.mp3"],d:"Звон монет: продажа, добыча, находка"},
  spell_arcane:{f:["fantasy/spell_arcane_01.mp3","fantasy/spell_arcane_02.mp3","fantasy/spell_arcane_03.mp3","fantasy/spell_arcane_04.mp3","fantasy/spell_arcane_05.mp3"],d:"Сотворение заклинания: короткий чёткий всплеск силы"},
  trap:{f:["fantasy/trap_01.mp3","fantasy/trap_02.mp3","fantasy/trap_03.mp3"],d:"Ловушка сработала: щелчок механизма и удар"}});
+/* ── ПЯТАЯ ПОСТАВКА ЗАПИСЕЙ: ВЕЩИ ЗВУЧАТ КАК ВЕЩИ ──
+   Статуя отвечала светлым куполом синтезатора, алтарь — хоровой подложкой,
+   зеркало — челестой, трон — валторной. Для того, кто играет на слух, это
+   путало: вещь звучала как награда. Теперь у вещей, с которыми игрок что-то
+   делает, живые записи из четырёх свободных игр — OpenClonk (CC BY 3.0),
+   0 A.D., Unknown Horizons и Lugaru (все три — CC BY-SA 3.0): камень под
+   рукой, скрип петель, крышка сундука, цепь на вороте, стекло, кипящий чан,
+   огонёк свечи, каменные ворота, листва, мотыга, обрушение, подворье, порт,
+   рынок, каменотёс, кузнец, мельница, трактир, площадь, костёр, ветер.
+   Музыка и инструменты остались там, где им место: маяки построек, темы
+   мест, награды, опыт, уровни и события. Авторство и лицензии — в CREDITS.md
+   каждой папки и в титрах энциклопедии. */
+Object.assign(SOUND_BANK,{
+ oc_chest_open:{f:["oc/oc_chest_open_01.ogg"],d:"крышка сундука или ящика открывается"},
+ oc_hinge:{f:["oc/oc_hinge_01.ogg", "oc/oc_hinge_02.ogg", "oc/oc_hinge_03.ogg"],d:"скрип петель: дверца, клетка, комод"},
+ oc_gate_move:{f:["oc/oc_gate_move_01.ogg"],d:"каменные ворота сдвигаются"},
+ oc_gate_hit:{f:["oc/oc_gate_hit_01.ogg"],d:"ворота встали в упор"},
+ oc_chain:{f:["oc/oc_chain_01.ogg"],d:"цепь на вороте"},
+ oc_wood_creak:{f:["oc/oc_wood_creak_01.ogg", "oc/oc_wood_creak_02.ogg", "oc/oc_wood_creak_03.ogg"],d:"дерево скрипит: трон, лежанка, полка"},
+ oc_wood_hit:{f:["oc/oc_wood_hit_01.ogg", "oc/oc_wood_hit_02.ogg", "oc/oc_wood_hit_03.ogg"],d:"удар по дереву"},
+ oc_wood_dull:{f:["oc/oc_wood_dull_01.ogg", "oc/oc_wood_dull_02.ogg"],d:"глухой стук по дереву"},
+ oc_rock_hit:{f:["oc/oc_rock_hit_01.ogg", "oc/oc_rock_hit_02.ogg", "oc/oc_rock_hit_03.ogg"],d:"камень под рукой: статуя, сталагмит, кладка"},
+ oc_metal_dull:{f:["oc/oc_metal_dull_01.ogg", "oc/oc_metal_dull_02.ogg", "oc/oc_metal_dull_03.ogg"],d:"глухой металл: било, наковальня, кандалы"},
+ oc_metal_light:{f:["oc/oc_metal_light_01.ogg", "oc/oc_metal_light_02.ogg"],d:"лёгкий металл: весы, астролябия, цепочка"},
+ oc_glass_hit:{f:["oc/oc_glass_hit_01.ogg", "oc/oc_glass_hit_02.ogg"],d:"стекло: шар, колба, зеркало"},
+ oc_glass_break:{f:["oc/oc_glass_break_01.ogg", "oc/oc_glass_break_02.ogg"],d:"стекло разбилось"},
+ oc_bubble:{f:["oc/oc_bubble_01.ogg", "oc/oc_bubble_02.ogg", "oc/oc_bubble_03.ogg"],d:"пузырь в чане"},
+ oc_boiling:{f:["oc/oc_boiling_01.ogg"],d:"варево кипит"},
+ oc_sizzle:{f:["oc/oc_sizzle_01.ogg", "oc/oc_sizzle_02.ogg"],d:"шипение и дым: курильница, жертвенник"},
+ oc_pshsh:{f:["oc/oc_pshsh_01.ogg"],d:"пар вырвался, соль в огонь"},
+ oc_rain:{f:["oc/oc_rain_01.ogg"],d:"дождь по крыше и листве"},
+ oc_fire:{f:["oc/oc_fire_01.ogg"],d:"огонь в очаге и жаровне"},
+ oc_inflame:{f:["oc/oc_inflame_01.ogg"],d:"огонёк занялся: свеча, лампада"},
+ oc_cracker:{f:["oc/oc_cracker_01.ogg"],d:"треск искры"},
+ oc_fireball:{f:["oc/oc_fireball_01.ogg"],d:"огненный шар"},
+ oc_blast:{f:["oc/oc_blast_01.ogg", "oc/oc_blast_02.ogg", "oc/oc_blast_03.ogg", "oc/oc_blast_04.ogg"],d:"взрыв: колба, зелье, разлом"},
+ oc_furnace_start:{f:["oc/oc_furnace_start_01.ogg"],d:"горн разгорается"},
+ oc_furnace:{f:["oc/oc_furnace_01.ogg"],d:"горн гудит"},
+ oc_lift_start:{f:["oc/oc_lift_start_01.ogg"],d:"древний механизм тронулся"},
+ oc_lift_move:{f:["oc/oc_lift_move_01.ogg"],d:"механизм идёт: платформа, подъёмник"},
+ oc_lift_stop:{f:["oc/oc_lift_stop_01.ogg"],d:"механизм встал"},
+ oc_drill:{f:["oc/oc_drill_01.ogg"],d:"бур вгрызается в камень"},
+ oc_wheels:{f:["oc/oc_wheels_01.ogg"],d:"колёса и шестерни вращаются"},
+ oc_pumpjack:{f:["oc/oc_pumpjack_01.ogg"],d:"насос качает"},
+ oc_fan:{f:["oc/oc_fan_01.ogg"],d:"крыльчатка гудит"},
+ oc_steam:{f:["oc/oc_steam_01.ogg"],d:"паровая машина древних"},
+ oc_sawmill:{f:["oc/oc_sawmill_01.ogg"],d:"пила лесопилки"},
+ oc_pop:{f:["oc/oc_pop_01.ogg"],d:"выброс из механизма"},
+ oc_rustle:{f:["oc/oc_rustle_01.ogg", "oc/oc_rustle_02.ogg", "oc/oc_rustle_03.ogg", "oc/oc_rustle_04.ogg"],d:"шорох ткани и листвы"},
+ oc_step_hard:{f:["oc/oc_step_hard_01.ogg", "oc/oc_step_hard_02.ogg", "oc/oc_step_hard_03.ogg", "oc/oc_step_hard_04.ogg", "oc/oc_step_hard_05.ogg"],d:"шаг по твёрдому"},
+ oc_step_soft:{f:["oc/oc_step_soft_01.ogg", "oc/oc_step_soft_02.ogg", "oc/oc_step_soft_03.ogg", "oc/oc_step_soft_04.ogg", "oc/oc_step_soft_05.ogg", "oc/oc_step_soft_06.ogg"],d:"шаг по мягкому"},
+ oc_swim:{f:["oc/oc_swim_01.ogg", "oc/oc_swim_02.ogg", "oc/oc_swim_03.ogg"],d:"гребок пловца"},
+ oc_dive:{f:["oc/oc_dive_01.ogg", "oc/oc_dive_02.ogg", "oc/oc_dive_03.ogg"],d:"под водой: дыхание и толща"},
+ oc_munch:{f:["oc/oc_munch_01.ogg"],d:"кто-то жуёт"},
+ oc_group_attack:{f:["oc/oc_group_attack_01.ogg"],d:"толпа бросается"},
+ oc_hurt:{f:["oc/oc_hurt_01.ogg", "oc/oc_hurt_02.ogg"],d:"человек ранен"},
+ oc_die:{f:["oc/oc_die_01.ogg"],d:"человек пал"},
+ oc_electrical:{f:["oc/oc_electrical_01.ogg"],d:"потрескивание силы: магический круг, ядро, руны"},
+ oc_connect:{f:["oc/oc_connect_01.ogg"],d:"соединение сошлось"},
+ oc_line_snap:{f:["oc/oc_line_snap_01.ogg"],d:"верёвка лопнула"},
+ oc_diamond:{f:["oc/oc_diamond_01.ogg"],d:"кристалл выкопан"},
+ oc_warp:{f:["oc/oc_warp_01.ogg"],d:"переход: перенос, слепок времени"},
+ oc_waterfall:{f:["oc/oc_waterfall_01.ogg"],d:"водопад"},
+ oc_birds:{f:["oc/oc_birds_01.ogg"],d:"птицы в кронах"},
+ oc_wind:{f:["oc/oc_wind_01.ogg"],d:"ветер над землёй"},
+ oc_thunder:{f:["oc/oc_thunder_01.ogg", "oc/oc_thunder_02.ogg", "oc/oc_thunder_03.ogg", "oc/oc_thunder_04.ogg", "oc/oc_thunder_05.ogg"],d:"гром"},
+ oc_quake:{f:["oc/oc_quake_01.ogg", "oc/oc_quake_02.ogg"],d:"земля дрожит"},
+ oc_tree_crack:{f:["oc/oc_tree_crack_01.ogg", "oc/oc_tree_crack_02.ogg"],d:"дерево трещит и валится"},
+ oc_soft_touch:{f:["oc/oc_soft_touch_01.ogg", "oc/oc_soft_touch_02.ogg"],d:"касание: ткань, ладонь, мягкое"},
+ oc_soft_hit:{f:["oc/oc_soft_hit_01.ogg", "oc/oc_soft_hit_02.ogg"],d:"мягкий удар: вещь положена"},
+ oc_general_hit:{f:["oc/oc_general_hit_01.ogg", "oc/oc_general_hit_02.ogg"],d:"удар"},
+ oc_organic_hit:{f:["oc/oc_organic_hit_01.ogg", "oc/oc_organic_hit_02.ogg"],d:"удар по живому"},
+ oc_projectile_hit:{f:["oc/oc_projectile_hit_01.ogg", "oc/oc_projectile_hit_02.ogg"],d:"снаряд попал в живое"},
+ oc_bow_draw:{f:["oc/oc_bow_draw_01.ogg"],d:"лук натянут"},
+ oc_bow_shoot:{f:["oc/oc_bow_shoot_01.ogg", "oc/oc_bow_shoot_02.ogg", "oc/oc_bow_shoot_03.ogg"],d:"тетива спущена"},
+ oc_bow_arrow:{f:["oc/oc_bow_arrow_01.ogg", "oc/oc_bow_arrow_02.ogg"],d:"стрела из колчана"},
+ oc_bow_away:{f:["oc/oc_bow_away_01.ogg"],d:"лук убран за спину"},
+ oc_arrow_shoot:{f:["oc/oc_arrow_shoot_01.ogg", "oc/oc_arrow_shoot_02.ogg", "oc/oc_arrow_shoot_03.ogg"],d:"стрела в полёте"},
+ oc_arrow_ground:{f:["oc/oc_arrow_ground_01.ogg"],d:"стрела в землю"},
+ oc_javelin_throw:{f:["oc/oc_javelin_throw_01.ogg", "oc/oc_javelin_throw_02.ogg", "oc/oc_javelin_throw_03.ogg"],d:"дротик брошен"},
+ oc_javelin_draw:{f:["oc/oc_javelin_draw_01.ogg"],d:"дротик поднят"},
+ oc_javelin_ground:{f:["oc/oc_javelin_ground_01.ogg"],d:"дротик воткнулся"},
+ oc_shield_metal:{f:["oc/oc_shield_metal_01.ogg", "oc/oc_shield_metal_02.ogg", "oc/oc_shield_metal_03.ogg", "oc/oc_shield_metal_04.ogg"],d:"удар в железный щит"},
+ oc_shield_wood:{f:["oc/oc_shield_wood_01.ogg", "oc/oc_shield_wood_02.ogg", "oc/oc_shield_wood_03.ogg"],d:"удар в деревянный щит"},
+ oc_shield_block:{f:["oc/oc_shield_block_01.ogg"],d:"щит принял удар"},
+ oc_swing:{f:["oc/oc_swing_01.ogg", "oc/oc_swing_02.ogg", "oc/oc_swing_03.ogg"],d:"взмах оружия"},
+ oc_weapon_hit:{f:["oc/oc_weapon_hit_01.ogg", "oc/oc_weapon_hit_02.ogg", "oc/oc_weapon_hit_03.ogg"],d:"оружие попало"},
+ oc_catapult:{f:["oc/oc_catapult_01.ogg"],d:"катапульта"},
+ oc_gust:{f:["oc/oc_gust_01.ogg"],d:"порыв из меха"},
+ oc_zap:{f:["oc/oc_zap_01.ogg", "oc/oc_zap_02.ogg", "oc/oc_zap_03.ogg", "oc/oc_zap_04.ogg"],d:"разряд тварей"},
+ oc_fish_munch:{f:["oc/oc_fish_munch_01.ogg"],d:"рыба клюнула"},
+ oc_crystal_comm:{f:["oc/oc_crystal_comm_01.ogg", "oc/oc_crystal_comm_02.ogg", "oc/oc_crystal_comm_03.ogg", "oc/oc_crystal_comm_04.ogg", "oc/oc_crystal_comm_05.ogg"],d:"сигналы древнего устройства"},
+ score_cavern:{f:["oc/score_cavern_01.ogg"],d:"музыка: пещерная глубь"},
+ score_lucid:{f:["oc/score_lucid_01.ogg"],d:"музыка: ясный сон, астрал и морок"},
+ ad_gate_open:{f:["ad/ad_gate_open_01.ogg", "ad/ad_gate_open_02.ogg"],d:"каменные ворота открываются"},
+ ad_gate_close:{f:["ad/ad_gate_close_01.ogg", "ad/ad_gate_close_02.ogg"],d:"каменные ворота закрываются"},
+ ad_collapse:{f:["ad/ad_collapse_01.ogg", "ad/ad_collapse_02.ogg"],d:"обрушение кладки"},
+ ad_leaves:{f:["ad/ad_leaves_01.ogg", "ad/ad_leaves_02.ogg", "ad/ad_leaves_03.ogg", "ad/ad_leaves_04.ogg", "ad/ad_leaves_05.ogg", "ad/ad_leaves_06.ogg"],d:"листва под руками: травы, грибница, ягоды"},
+ ad_hoe:{f:["ad/ad_hoe_01.ogg", "ad/ad_hoe_02.ogg", "ad/ad_hoe_03.ogg", "ad/ad_hoe_04.ogg", "ad/ad_hoe_05.ogg"],d:"мотыга в земле: раскопать, закопать"},
+ ad_fire_crackle:{f:["ad/ad_fire_crackle_01.ogg", "ad/ad_fire_crackle_02.ogg", "ad/ad_fire_crackle_03.ogg", "ad/ad_fire_crackle_04.ogg"],d:"огонь трещит"},
+ ad_fire_sparks:{f:["ad/ad_fire_sparks_01.ogg", "ad/ad_fire_sparks_02.ogg", "ad/ad_fire_sparks_03.ogg"],d:"искры летят"},
+ ad_fire_sizzle:{f:["ad/ad_fire_sizzle_01.ogg", "ad/ad_fire_sizzle_02.ogg", "ad/ad_fire_sizzle_03.ogg"],d:"огонь шипит"},
+ ad_farm:{f:["ad/ad_farm_01.ogg", "ad/ad_farm_02.ogg", "ad/ad_farm_03.ogg"],d:"подворье: скот и работа"},
+ ad_port:{f:["ad/ad_port_01.ogg", "ad/ad_port_02.ogg", "ad/ad_port_03.ogg"],d:"причалы: снасти и голоса"},
+ ad_trade:{f:["ad/ad_trade_01.ogg", "ad/ad_trade_02.ogg"],d:"торговые ряды"},
+ ad_day:{f:["ad/ad_day_01.ogg", "ad/ad_day_02.ogg", "ad/ad_day_03.ogg"],d:"день в умеренных землях"},
+ ad_day_long:{f:["ad/ad_day_long_01.ogg"],d:"долгий день: поле и дорога"},
+ ad_tropic:{f:["ad/ad_tropic_01.ogg"],d:"жаркий день"},
+ ad_river_fast:{f:["ad/ad_river_fast_01.ogg"],d:"быстрая река"},
+ ad_river_med:{f:["ad/ad_river_med_01.ogg"],d:"река средней воды"},
+ ad_wave_rocky:{f:["ad/ad_wave_rocky_01.ogg"],d:"волны о скалы"},
+ ad_rain_long:{f:["ad/ad_rain_long_01.ogg"],d:"долгий дождь"},
+ ad_windleaves:{f:["ad/ad_windleaves_01.ogg"],d:"ветер в листве"},
+ ad_temple:{f:["ad/ad_temple_01.ogg", "ad/ad_temple_02.ogg"],d:"под сводами храма: голоса и тишина"},
+ ad_forge_sel:{f:["ad/ad_forge_sel_01.ogg"],d:"кузница за работой"},
+ ad_market_sel:{f:["ad/ad_market_sel_01.ogg"],d:"рынок: короткий гомон"},
+ ad_farmstead:{f:["ad/ad_farmstead_01.ogg"],d:"усадьба"},
+ ad_port_sel:{f:["ad/ad_port_sel_01.ogg"],d:"порт: короткий шум причала"},
+ ad_farm_sel:{f:["ad/ad_farm_sel_01.ogg"],d:"двор: короткий шум"},
+ uh_stonemason:{f:["uh/uh_stonemason_01.ogg"],d:"каменотёс за работой"},
+ uh_smith:{f:["uh/uh_smith_01.ogg"],d:"кузнец бьёт по железу"},
+ uh_lumberjack:{f:["uh/uh_lumberjack_01.ogg"],d:"топор дровосека"},
+ uh_lumber_long:{f:["uh/uh_lumber_long_01.ogg"],d:"лесосека: долгая работа"},
+ uh_sheep:{f:["uh/uh_sheep_01.ogg"],d:"овечий выгон"},
+ uh_windmill:{f:["uh/uh_windmill_01.ogg"],d:"мельница вращается"},
+ uh_chapel:{f:["uh/uh_chapel_01.ogg"],d:"часовня: тихий неф"},
+ uh_tavern:{f:["uh/uh_tavern_01.ogg"],d:"трактир: гомон и кружки"},
+ uh_square:{f:["uh/uh_square_01.ogg"],d:"площадь: люд и повозки"},
+ uh_warehouse:{f:["uh/uh_warehouse_01.ogg"],d:"склад: ящики и возня"},
+ uh_bell:{f:["uh/uh_bell_01.ogg"],d:"корабельный колокол"},
+ uh_page:{f:["uh/uh_page_01.ogg"],d:"страница перевёрнута"},
+ uh_build:{f:["uh/uh_build_01.ogg"],d:"доска поставлена"},
+ score_settle:{f:["uh/score_settle_01.ogg"],d:"музыка: поселение и хозяйство"},
+ score_night:{f:["uh/score_night_01.ogg"],d:"музыка: ночь и сон"},
+ score_newland:{f:["uh/score_newland_01.ogg"],d:"музыка: новые земли"},
+ score_seafight:{f:["uh/score_seafight_01.ogg"],d:"музыка: морской бой"},
+ lug_fire:{f:["lug/lug_fire_01.ogg"],d:"костёр горит"},
+ lug_fire_start:{f:["lug/lug_fire_start_01.ogg"],d:"костёр занялся"},
+ lug_bush:{f:["lug/lug_bush_01.ogg"],d:"куст шуршит"},
+ lug_desert:{f:["lug/lug_desert_01.ogg"],d:"пустыня: ветер и зной"},
+ lug_wind:{f:["lug/lug_wind_01.ogg"],d:"ветер на высоте"},
+ lug_step_grass:{f:["lug/lug_step_grass_01.ogg", "lug/lug_step_grass_02.ogg"],d:"шаг по траве"},
+ lug_step_snow:{f:["lug/lug_step_snow_01.ogg", "lug/lug_step_snow_02.ogg"],d:"шаг по снегу"},
+ lug_step_stone:{f:["lug/lug_step_stone_01.ogg", "lug/lug_step_stone_02.ogg"],d:"шаг по камню"},
+ lug_clank:{f:["lug/lug_clank_01.ogg", "lug/lug_clank_02.ogg", "lug/lug_clank_03.ogg", "lug/lug_clank_04.ogg"],d:"лязг металла"},
+ lug_thud:{f:["lug/lug_thud_01.ogg"],d:"глухой удар"},
+ lug_impact:{f:["lug/lug_impact_01.ogg"],d:"тяжёлый удар"},
+ lug_metal:{f:["lug/lug_metal_01.ogg"],d:"железо о железо"},
+ lug_break:{f:["lug/lug_break_01.ogg"],d:"дерево ломается"},
+ lug_broken:{f:["lug/lug_broken_01.ogg"],d:"обломок упал"},
+ lug_growl:{f:["lug/lug_growl_01.ogg", "lug/lug_growl_02.ogg"],d:"рык зверя"},
+ lug_snarl:{f:["lug/lug_snarl_01.ogg", "lug/lug_snarl_02.ogg"],d:"оскал"},
+ lug_bark:{f:["lug/lug_bark_01.ogg", "lug/lug_bark_02.ogg", "lug/lug_bark_03.ogg", "lug/lug_bark_04.ogg"],d:"лай и рык"},
+ lug_knife_draw:{f:["lug/lug_knife_draw_01.ogg"],d:"нож вынут"},
+ lug_knife_sheathe:{f:["lug/lug_knife_sheathe_01.ogg"],d:"нож в ножны"},
+ lug_knife_slice:{f:["lug/lug_knife_slice_01.ogg"],d:"нож режет"},
+ lug_whoosh:{f:["lug/lug_whoosh_01.ogg", "lug/lug_whoosh_02.ogg", "lug/lug_whoosh_03.ogg", "lug/lug_whoosh_04.ogg", "lug/lug_whoosh_05.ogg"],d:"свист взмаха"},
+ lug_whoosh_hit:{f:["lug/lug_whoosh_hit_01.ogg"],d:"взмах достиг цели"},
+ lug_land:{f:["lug/lug_land_01.ogg", "lug/lug_land_02.ogg", "lug/lug_land_03.ogg"],d:"приземление"},
+ lug_alarm:{f:["lug/lug_alarm_01.ogg"],d:"тревога"},
+ lug_sword:{f:["lug/lug_sword_01.ogg", "lug/lug_sword_02.ogg"],d:"клинок рубит"},
+ lug_staff:{f:["lug/lug_staff_01.ogg", "lug/lug_staff_02.ogg"],d:"посох бьёт"},
+ lug_staff_break:{f:["lug/lug_staff_break_01.ogg"],d:"посох сломан"},
+ lug_splatter:{f:["lug/lug_splatter_01.ogg"],d:"брызги"},
+ lug_claw:{f:["lug/lug_claw_01.ogg"],d:"коготь рвёт"},
+ lug_flesh:{f:["lug/lug_flesh_01.ogg", "lug/lug_flesh_02.ogg"],d:"клинок в плоть"},
+});
 const MONSTER_BANK={
  bat:{attack:"monsters/Bat_Attack.wav",damage:"monsters/Bat_Damage.wav",death:"monsters/Bat_Death.wav",emerge:"monsters/Bat_Emerge.wav",sonic_special:"monsters/Bat_Sonic_Special.wav",step:"monsters/Bat_Step.wav"},
  behemoth:{attack:"monsters/Behemoth_Attack.wav",damage:"monsters/Behemoth_Damage.wav",death:"monsters/Behemoth_Death.wav",emerge:"monsters/Behemoth_Emerge.wav",step:"monsters/Behemoth_Step.wav"},
@@ -7443,9 +7616,9 @@ const MONSTER_VOICE={
    утопленники и призраки стонут нечеловеческим голосом, змеи и слизь шипят,
    глубинное зовёт снизу. Слой не заменяет голос, а достраивает его. */
 const MONSTER_LAYER={
- wolf:"beast_growl",direbear:"beast_growl",spider:"hiss_high",goblin:"shriek",
- serpent:"serpent_horn",harpy:"shriek",troll:"beast_roar",wraith:"wraith_voice",
- ogre:"beast_roar",golem:"stone_low",dragon:"beast_roar",basilisk:"hiss_high",
+ wolf:"lug_bark",direbear:"beast_growl",spider:"hiss_high",goblin:"shriek",
+ serpent:"serpent_horn",harpy:"shriek",troll:"lug_growl",wraith:"wraith_voice",
+ ogre:"lug_snarl",golem:"stone_low",dragon:"beast_roar",basilisk:"hiss_high",
  wyvern:"shriek",banshee:"wraith_voice",sandworm:"moan_deep",treant:"moan_deep",
  kraken:"deep_call",bandit:"howl_low",
  seaserpent:"serpent_horn",sharks:"hiss_high",drowned:"wraith_voice",siren:"spirit_voice",
@@ -7698,15 +7871,15 @@ const DEPTH_SCENES=[[],["rats","dungeon_drip"],["rats","chains"],["chains","bone
    коновязи, стража перекликается, торговцы зазывают. Ложатся вперемешку с
    синтезированными сценами — так двор не повторяется. */
 const LIVE_SCENE={
- village:["beasts_cattle","beasts_fowl","beasts_sheep","beasts_pig","throng_build"],
- castle:["beasts_horse","throng_march","throng_lord","siege_garrison","hall_fort"],
+ village:["beasts_cattle","beasts_fowl","beasts_sheep","beasts_pig","throng_build","ad_farm_sel","ad_farmstead"],
+ castle:["beasts_horse","throng_march","throng_lord","siege_garrison","hall_fort","uh_stonemason"],
  clanhall:["throng_cry","throng_fight","throng_march","battle_sword","throng_retreat"],
- market:["trade_m","trade_f","hall_market","throng_hail_m","battle_wood"],
+ market:["trade_m","trade_f","hall_market","throng_hail_m","battle_wood","ad_market_sel"],
  tavern:["trade_f","throng_hail_f","throng_yes","wild_hearth","wild_fire"],
- port:["hall_dock","sky_wave","throng_coming","hall_gate"],
+ port:["hall_dock","sky_wave","throng_coming","hall_gate","ad_port_sel","uh_bell"],
  /* «battle_metal» здесь была опечаткой: такой роли в банке нет, и кузница
     теряла один голос из четырёх. Молот по наковальне — forge_hammer. */
- forge:["craft_saw","craft_wood","wild_anvil","forge_hammer","mtg_furnace"],
+ forge:["craft_saw","craft_wood","wild_anvil","forge_hammer","mtg_furnace","ad_forge_sel","oc_sawmill"],
  temple:["hall_temple","throng_lord"],
  school:["arte_book","arte_page"],
  tower:["cast_teleport","deep_portal"],
@@ -7716,11 +7889,11 @@ const LIVE_SCENE={
     притон — дверью и огнём, оплот — воротами и строем. */
  shrine:["mtg_fire","mtg_flint","temple_choir","od_heal","es_magic"],
  ossuary:["od_undead","mtg_glass","od_die","foe_bone_hit","od_keeper_groan"],
- pit:["od_dig","od_rocks","es_crunch","mtg_rubble","es_drill"],
- spire:["es_organ","es_ion","mtg_metal_hit","cast_teleport","es_beam"],
+ pit:["od_dig","od_rocks","es_crunch","mtg_rubble","es_drill","oc_drill","oc_pumpjack"],
+ spire:["es_organ","es_ion","mtg_metal_hit","cast_teleport","es_beam","oc_steam","oc_fan"],
  bazaar:["trade_m","trade_f","od_gold","od_take","hall_market"],
  den:["mtg_door_open","mtg_fire","od_keeper_word","throng_hail_f"],
- hold:["mtg_gate","od_keeper_word","throng_march","od_blade","siege_garrison"],
+ hold:["mtg_gate","od_keeper_word","throng_march","od_blade","siege_garrison","oc_group_attack"],
  cave_entrance:["deep_drip","beasts_lion","deep_rocks","deep_cart"]};
 const LIVE_DEEP=[[],["deep_drip","deep_cart","foe_goblin_hit"],
  ["deep_rocks","deep_wood","foe_bone_hit","foe_goblin_cast"],
@@ -7779,24 +7952,42 @@ function bankUpdateAmbient(){
    стоите: птичий пересвист в лесу, сова и вороньё к ночи, река у воды, ветер
    в горах, дождь в грозу, огонь в очаге под крышей, гул рядов на рынке.
    Записи из Flare и 0 A.D. (обе — CC BY-SA 3.0). */
+const LIVE_AMB_PLACE={
+ market:["hall_market","ad_trade","uh_square"], port:["hall_port","ad_port"],
+ forge:["wild_anvil","oc_furnace","uh_smith"], tavern:["wild_hearth","uh_tavern","lug_fire"],
+ village:["hall_farm","ad_farm","uh_sheep","uh_windmill","uh_lumber_long"], castle:["hall_center","oc_wind"],
+ temple:["hall_temple","uh_chapel","ad_temple"], clanhall:["hall_barracks","uh_warehouse"],
+ tower:["oc_electrical","oc_wind"], ruins:["oc_wind","deep_wind"],
+ cave_entrance:["deep_drip","deep_wind"], school:["uh_chapel","wild_hearth"],
+ city:["hall_market","uh_square","ad_trade"], house:["wild_hearth","oc_fire"]};
+const LIVE_AMB_LAND={
+ forest:["wild_birds","oc_birds","ad_day","ad_windleaves"], plains:["wild_wind","ad_day_long","oc_birds"],
+ mountains:["sky_wind","oc_wind","lug_wind"], coast:["sky_wave","ad_wave_rocky"],
+ swamp:["wild_river","ad_river_med","oc_waterfall","ad_river_fast"], desert:["sky_day","lug_desert","ad_tropic"],
+ cave:["deep_drip","deep_wind","oc_waterfall","stk_falls"], road:["wild_birds","ad_day","ad_day_long"],
+ /* Тёмные земли: пепел трещит огнём, кость свистит ветром, гниль булькает,
+    зеркало потрескивает силой и зовёт сигналами древних, жила гудит
+    механикой, утопь дышит толщей воды, шрам воет высотным ветром. */
+ ash:["ad_fire_crackle","oc_fire"], bone:["oc_wind","deep_wind"], rot:["oc_boiling","ad_river_med"],
+ mirror:["oc_electrical","oc_crystal_comm"], vein:["oc_fan","oc_steam"], drown:["oc_dive","ad_river_fast"],
+ scar:["lug_wind","oc_wind"]};
 function liveAmbient(seed){
  try{
   if(!settings.effects||!Bank.enabled)return;
   let role=null;
   const p=G.place;
-  if(p&&p.depth>0)role="deep_wind";
-  else if(p)role={market:"hall_market",port:"hall_port",forge:"wild_anvil",
-   tavern:"wild_hearth",village:"hall_farm",castle:"hall_center",
-   temple:"hall_temple",clanhall:"hall_barracks"}[p.stype]||(p.kind==="city"?"hall_market":"wild_hearth");
-  else if(G.ship)role="sky_wave";
+  /* У каждого места несколько живых фонов, и какой звучит — решает само место
+     (его семя), а не случай: вернувшись, слышишь ту же кузницу. */
+  const pick=arr=>arr[Math.abs(Math.floor(Number(seed)||0))%arr.length];
+  if(p&&p.depth>0)role=pick(["deep_wind","deep_drip","deep_wind"]);
+  else if(p)role=pick(LIVE_AMB_PLACE[p.stype]||(p.kind==="city"?LIVE_AMB_PLACE.city:LIVE_AMB_PLACE.house));
+  else if(G.ship)role=pick(["sky_wave","ad_wave_rocky"]);
   else{
    const t=cellContent(G.x,G.y).terrain[0];
    if(G.weather==="Гроза")role="sky_thunder";
-   else if(G.weather==="Дождь")role="wild_rain";
-   else if(isNight())role=t==="forest"?"wild_owl":"wild_raven";
-   else role={forest:"wild_birds",plains:"wild_wind",mountains:"sky_wind",
-    coast:"sky_wave",swamp:"wild_river",desert:"sky_day",cave:"deep_drip",
-    road:"wild_birds"}[t]||"wild_wind";}
+   else if(G.weather==="Дождь")role=pick(["wild_rain","ad_rain_long","oc_rain"]);
+   else if(isNight())role=t==="forest"?"wild_owl":(t==="desert"?"lug_desert":"wild_raven");
+   else role=pick(LIVE_AMB_LAND[t]||LIVE_AMB_LAND.plains);}
   if(role)Bank.loop("live",role,{seed:Number(seed)||0,gain:0.32,kind:"ambient"});
  }catch(_){}}
 /* ── КРАСКА МЕСТА ──
@@ -8029,7 +8220,7 @@ function startFishing(){
    safeFn(()=>{beacon("well",0,0);});
    narrate("Дёрнуло и отпустило. Пусто.");
    endFishing();return;}
-  safeFn(()=>{Bank.play("step_water",{seed:Date.now(),gain:0.9});Bank.play("xylo_bite",{gain:0.8,maxSec:3});UI.blip(1240,.09,.2);vib(25);});
+  safeFn(()=>{Bank.play("step_water",{seed:Date.now(),gain:0.9});Bank.play("oc_fish_munch",{gain:0.8,maxSec:2});UI.blip(1240,.09,.2);vib(25);});
   narrate("Клюёт! Подсекайте!",{interrupt:true});
   G.fishing.window=setTimeout(()=>{
    if(G.fishing&&G.fishing.bite){
@@ -9474,10 +9665,10 @@ const FINDS=[
    evGive("трава",1);
    narrate("Муравейник. Вы положили сверху ветку, дождались и обмахнули её: муравьиная кислота — трава ×1 по счёту травника. Куча гудит громче прежнего.");
    refresh();saveGame(true);}},
- {id:"mushring",n:"ведьмин круг",b:"res_herbs",звук:"swamp_kalimba",вес:3,
+ {id:"mushring",n:"ведьмин круг",b:"res_herbs",звук:"ad_leaves",вес:3,
   где:["forest","swamp"],
   о:"Грибы стоят ровным кольцом шагов в пять поперёк. Внутри кольца трава ниже.",
-  use(x,y){safeFn(()=>Bank.play("swamp_kalimba",{gain:0.5,maxSec:5}));
+  use(x,y){safeFn(()=>Bank.play("ad_leaves",{gain:0.5,maxSec:5}));
    if(!findOnce(x,y,"круг")){narrate("Ведьмин круг. Кольцо стоит, но срезано: новые пойдут не скоро.");return;}
    const ночь=safeFn(()=>isNight(),false);
    const n=(ночь?2:1)+Math.floor(hashName(x,y,736)*3);evGive("грибы",n);
@@ -10013,7 +10204,7 @@ function warWatch(){
   if(!начались.length&&стало.length&&G.day%7===0)
    safeFn(()=>{Bank.play("siege_alarm_city",{seed:G.day,gain:0.55,maxSec:6});
     setTimeout(()=>safeFn(()=>Bank.play("siege_ballista",{seed:G.day,gain:0.5,maxSec:5})),1200);
-    setTimeout(()=>safeFn(()=>Bank.play("siege_onager",{seed:G.day,gain:0.5,maxSec:5})),2100);
+    setTimeout(()=>safeFn(()=>Bank.play(G.day%2?"siege_onager":"oc_catapult",{seed:G.day,gain:0.5,maxSec:5})),2100);
     setTimeout(()=>safeFn(()=>Bank.play("siege_fire",{seed:G.day,gain:0.45,maxSec:5})),3000);
     narrate("Где-то далеко бьют в набат: город под осадой. Слышны баллиста, камнемёт и огонь по стенам.",{interrupt:false});});
   /* Затяжная война слышна и без новостей: раз в несколько дней с той стороны
@@ -12036,7 +12227,7 @@ const EVENTS=[
      G.faith.shadow=godFavor("shadow")+1;
      safeFn(()=>Bank.play("clink",{gain:0.6,maxSec:3}));
      narrate(`Вы сняли кошель с седельной сумки и растворились в темноте: ${g} золота. Умбра Безликая одобряет тихую работу.`);}
-    else{safeFn(()=>Bank.play("alarm_drum",{gain:0.8,maxSec:4}));
+    else{safeFn(()=>{Bank.play("lug_alarm",{gain:0.5,maxSec:3});Bank.play("alarm_drum",{gain:0.8,maxSec:4});});
      narrate("Лошадь всхрапнула, и оба вскочили с оружием. Разговора не будет!");
      evFight("Сторож у костра",1);}}}]},
 
@@ -12108,7 +12299,7 @@ const EVENTS=[
     narrate("Монета исчезла в перчатке. Копья разошлись без единого вопроса.");}},
    {l:"😠 Ответить дерзко",run:()=>{addRep(c.emp.race,-2);
     if(Math.random()<0.5){G.gold=Math.max(0,G.gold-25);
-     safeFn(()=>Bank.play("alarm_drum",{gain:0.8,maxSec:4}));
+     safeFn(()=>{Bank.play("lug_alarm",{gain:0.5,maxSec:3});Bank.play("alarm_drum",{gain:0.8,maxSec:4});});
      narrate("Вас отвели в караулку, обыскали и взяли штраф в 25 золотых. Могло быть хуже.");}
     else{safeFn(()=>Bank.play("trombone_alarm",{gain:0.8,maxSec:5}));
      narrate("Старший свистнул, и на свист прибежали ещё двое!");
@@ -12847,7 +13038,7 @@ function punishBreak(){
  const пн=safeFn(()=>punishHere(),null);
  if(!пн||пн.поздно||пн.кончено){narrate("Вмешиваться уже поздно.");return false;}
  safeFn(()=>markPunishDone());
- safeFn(()=>{Bank.play("alarm_drum",{gain:0.7,maxSec:4});
+ safeFn(()=>{Bank.play("lug_alarm",{gain:0.45,maxSec:3});Bank.play("alarm_drum",{gain:0.7,maxSec:4});
   setTimeout(()=>safeFn(()=>Bank.play("throng_fight",{gain:0.6,maxSec:4})),400);});
  /* Стража не разбирается: за помост дерутся все, кто при оружии. */
  const тяж=Number(пн.тяж)||1;
@@ -14066,7 +14257,7 @@ function studyKnowledge(x,y){
  safeFn(()=>{Bank.play("relic_xylo",{seed:k.n,gain:0.5,maxSec:4});
   setTimeout(()=>safeFn(()=>Bank.play("spark_glock",{seed:k.n,gain:0.45,maxSec:4})),320);
   /* Книгу слышно как книгу: переплёт, страница, сухой шелест. */
-  Bank.play(/пергамент|скрижаль|том/i.test(k.obj.n)?"arte_page":"arte_book",{seed:k.n,gain:0.6,maxSec:3});});
+  Bank.play("uh_page",{seed:k.n,gain:0.5,maxSec:1});Bank.play(/пергамент|скрижаль|том/i.test(k.obj.n)?"arte_page":"arte_book",{seed:k.n,gain:0.6,maxSec:3});});
  const награда=knowGrant(k.n,k.reward);
  /* Книга у чтения теперь есть имя, вид, редкость и цена: одна и та же
     полка в двух разных башнях держит разные книги, и слышно это сразу. */
@@ -14430,14 +14621,14 @@ const PROPS=[
       дало: с полной силой игрок просто послушал линии и пошёл дальше. */
    const час=дал?propRest(1):"";
    G.mana=Math.min(G.manaMax,G.mana+Math.max(4,Math.round(G.manaMax*0.25)));
-   safeFn(()=>{Bank.play("rune_square",{gain:0.55,maxSec:4});
-    setTimeout(()=>safeFn(()=>Bank.play("pad_astral",{gain:0.45,maxSec:6})),300);});
+   safeFn(()=>{Bank.play("oc_electrical",{gain:0.55,maxSec:4});
+    setTimeout(()=>safeFn(()=>Bank.play("magic_hum",{gain:0.45,maxSec:6})),300);});
    narrate(дал?`Магический круг. Вы встали в середину, и линии отозвались теплом: мана восстановлена до ${G.mana} из ${G.manaMax}. ${час}`
     :"Магический круг. Линии отозвались, но брать вам нечего: сила и так полна.");
    refresh();saveGame(true);}},
  {id:"orb",n:"хрустальный шар",b:"portal",
-  use:()=>{safeFn(()=>{Bank.play("fx_crystal",{gain:0.55,maxSec:5});
-    setTimeout(()=>safeFn(()=>Bank.play("charm_celesta",{gain:0.45,maxSec:5})),320);});
+  use:()=>{safeFn(()=>{Bank.play("oc_glass_hit",{gain:0.55,maxSec:5});
+    setTimeout(()=>safeFn(()=>Bank.play("magic_shimmer",{gain:0.45,maxSec:5})),320);});
    /* Шар показывает то, чего игрок иначе не узнает: ближний узел сети,
       состояние войны и ближайшую цель незакрытого дела. */
    const части=[];
@@ -14453,19 +14644,19 @@ const PROPS=[
    safeFn(()=>{const r=renownRank();части.push(`о вас говорят: ${r.n}`);});
    narrate(`Хрустальный шар. Внутри проясняется: ${части.join("; ")}. Дальше муть, и она не расходится.`);}},
  {id:"mirror",n:"зеркало в раме",b:"chest",
-  use:()=>{safeFn(()=>Bank.play("shatter",{gain:0.35,maxSec:3}));
+  use:()=>{safeFn(()=>Bank.play("oc_glass_break",{gain:0.35,maxSec:3}));
    const r=safeFn(()=>renownRank(),{n:"путник"});
    const нав=(G.skills||[]).map(id=>(SKILL_BY_ID[id]||{}).n).filter(Boolean);
    narrate(`Зеркало в раме. Оно старое и показывает не столько лицо, сколько итог: ${G.race}, уровень ${G.level}, ${r.n}. Навыков за вами ${нав.length}${нав.length?`: ${нав.join(", ")}`:""}. Отражение отвечает не сразу.`);}},
  {id:"brazier",n:"жаровня",b:"torch",
-  use:()=>{safeFn(()=>Play.start("ev","fire",{dur:4}));
+  use:()=>{safeFn(()=>{Play.start("ev","fire",{dur:4});Bank.play("ad_fire_crackle",{seed:2,gain:0.45,maxSec:4});setTimeout(()=>safeFn(()=>Bank.play("ad_fire_sparks",{gain:0.35,maxSec:3})),350);});
    const был=G.hp;
    const жарЧас=G.hp<G.hpMax?propRest(1):"";
    G.hp=Math.min(G.hpMax,G.hp+6);
    narrate(`Жаровня. Угли ещё живые: вы протянули руки и отогрелись. ${G.hp>был?`Здоровье ${G.hp} из ${G.hpMax}.`:"Греться дальше некуда."} ${жарЧас}`);
    refresh();saveGame(true);}},
  {id:"cauldron",n:"алхимический чан",b:"well",
-  use:()=>{safeFn(()=>Bank.play("magic_hum",{gain:0.5,maxSec:5}));
+  use:()=>{safeFn(()=>Bank.play("oc_boiling",{gain:0.5,maxSec:5}));
    const есть=["трава","грибы","ягоды"].filter(r=>(Number(G.inv[r])||0)>0);
    if(!есть.length){narrate("Алхимический чан. Он пуст и ждёт зелени: трав, грибов или ягод. У вас с собой ничего такого нет.");return;}
    /* Варить нечего, когда и лечить нечего: иначе игрок случайным касанием
@@ -14486,8 +14677,8 @@ const PROPS=[
    narrate(полная?"Бочки. Вы простучали их по очереди: три отзываются полно, одна пусто. В полных — вода на зиму, и трогать их без хозяина не годится."
     :"Бочки. Все отзываются пусто: их вымыли и поставили сохнуть. Внутри пахнет солью и деревом.");}},
  {id:"hearth",n:"очаг",b:"torch",
-  use:()=>{safeFn(()=>{Play.start("ev","fire",{dur:5});
-    setTimeout(()=>safeFn(()=>Bank.play("pad_hearth",{gain:0.4,maxSec:6})),400);});
+  use:()=>{safeFn(()=>{Play.start("ev","fire",{dur:5});Bank.play("lug_fire_start",{gain:0.5,maxSec:1});
+    setTimeout(()=>safeFn(()=>Bank.play("oc_fire",{gain:0.4,maxSec:6})),400);setTimeout(()=>safeFn(()=>Bank.play("ad_fire_sizzle",{gain:0.3,maxSec:3})),1000);});
    const надо=G.hp<G.hpMax||(Number(G.water)||0)<200;
    const час=надо?propRest(1):"";
    G.hp=Math.min(G.hpMax,G.hp+10);G.water=Math.min(200,(Number(G.water)||0)+15);
@@ -14498,7 +14689,7 @@ const PROPS=[
  {id:"statue",n:"статуя",b:"altar",
   use:()=>{const g=safeFn(()=>{const p=G.place;
     return PANTHEON[Math.floor(hashName(p.bx,p.by,662)*PANTHEON.length)%PANTHEON.length];},PANTHEON[0]);
-   safeFn(()=>{Bank.play("pad_halo",{gain:0.45,maxSec:6});godVoice(g.id,{gain:0.6,maxSec:5});});
+   safeFn(()=>{Bank.play("oc_rock_hit",{seed:g.id.length,gain:0.55,maxSec:2});setTimeout(()=>safeFn(()=>Bank.play("ad_temple",{seed:g.id.length,gain:0.4,maxSec:4})),320);});
    narrate(`Статуя. Это ${g.n}: ${g.ep}. Знак у подножия — ${g.sym}. Круг его: ${g.dom}. Камень холодный, а под ладонью почему-то нет.`);}},
  {id:"board",n:"доска объявлений",b:"traveler",
   use:()=>{safeFn(()=>Bank.play("craft_knock",{gain:0.45,maxSec:3}));
@@ -14507,7 +14698,7 @@ const PROPS=[
    const слухи=RUMORS[Math.floor(hashName(p.bx,p.by,663)*RUMORS.length)%RUMORS.length].replace(/\{е\}/g,emp.short);
    narrate(`Доска объявлений. Держава «${emp.short}». ${w.length?`Объявлен сбор: война с «${EMPIRES[w[0].a===idx?w[0].b:w[0].a].short}».`:"Войны не объявлено, и это на доске самая крупная строка."} Ниже гвоздями прибито: «${слухи}» И ещё десяток листков, которые никто не читает.`);}},
  {id:"bed",n:"лежанка",b:"house",
-  use:()=>{safeFn(()=>Bank.play("pad_dream",{gain:0.4,maxSec:6}));
+  use:()=>{safeFn(()=>Bank.play("oc_wood_creak",{gain:0.4,maxSec:6}));
    if(G.place&&G.place.depth>0){narrate("Лежанка. Спать под землёй — дурная мысль: тут ходят. Вы посидели и встали.");return;}
    /* Два часа сна — немалая цена. Отдавать её не за что, когда и здоровье, и
       сила полны: случайное касание не должно стоить игроку полдня. */
@@ -14518,7 +14709,7 @@ const PROPS=[
    narrate(`Лежанка. Вы прилегли на пару часов. Здоровье ${G.hp} из ${G.hpMax}, мана ${G.mana} из ${G.manaMax}. Сейчас ${Math.floor(G.hour%24)} часов.`);
    refresh();saveGame(true);}},
  {id:"anvil",n:"наковальня",b:"forge",
-  use:()=>{safeFn(()=>{Bank.play("stk_hammer",{gain:0.6,maxSec:4})||Bank.play("forge_hammer",{gain:0.6,maxSec:4});
+  use:()=>{safeFn(()=>{Bank.play("oc_furnace_start",{gain:0.4,maxSec:2});Bank.play("stk_hammer",{gain:0.6,maxSec:4})||Bank.play("forge_hammer",{gain:0.6,maxSec:4});
     setTimeout(()=>safeFn(()=>Play.start("ev","anvil",{dur:4})),200);});
    const w=G.equip&&G.equip.weapon;
    narrate(w?`Наковальня. Вы поправили своё оружие: «${w.n||w.type}». Заусенцы сняты, кромка выведена — рука это почувствует.`
@@ -14534,7 +14725,7 @@ const PROPS=[
     Здесь всё, что стоит по углам: свет, бумага, снасть, снедь, память.
     У каждого предмета своё дело, а не одно описание на всех. ── */
  {id:"candle",n:"подсвечник",b:"torch",
-  use:()=>{safeFn(()=>{Bank.play("spark_glock",{gain:0.5,maxSec:3});
+  use:()=>{safeFn(()=>{Bank.play("oc_inflame",{gain:0.5,maxSec:3});
     setTimeout(()=>safeFn(()=>Play.start("ev","fire",{dur:3})),200);});
    const было=(G.items||[]).includes("Свеча");
    if(!было)G.items.push("Свеча");
@@ -14543,8 +14734,8 @@ const PROPS=[
     :"Подсвечник. Три рожка, оплывший воск. Одну свечу вы вынули и убрали за пазуху: под землёй пригодится.");
    refresh();saveGame(true);}},
  {id:"chandelier",n:"канделябр под сводом",b:"torch",
-  use:()=>{safeFn(()=>{Bank.play("chime",{gain:0.5,maxSec:5});
-    setTimeout(()=>safeFn(()=>Bank.play("shine",{gain:0.45,maxSec:4})),260);});
+  use:()=>{safeFn(()=>{Bank.play("oc_chain",{gain:0.5,maxSec:5});
+    setTimeout(()=>safeFn(()=>Bank.play("oc_metal_light",{gain:0.45,maxSec:4})),260);});
    /* Свет сверху показывает всё вокруг разом — как эхо-скан, только глазами. */
    const n=safeFn(()=>pingSurroundings(4,6),0);
    narrate(`Канделябр под сводом. Вы подтянули цепь, и круг света раздался вширь: видно ${n?`${n} ${plural(n,"предмет","предмета","предметов")} вокруг`:"только голые стены"}.`);}},
@@ -14569,7 +14760,7 @@ const PROPS=[
    narrate(`Гобелен во всю стену. Под пальцами шерсть и потускневшая нить: шитьё рассказывает о державе «${emp.name}». ${g?`В середине — знак бога по имени ${g.n}: ${g.d||"его чтут здесь дольше всех"}.`:""} Внизу вытканы всадники, и у одного не хватает головы — моль или чей-то нож.`);}},
  {id:"dresser",n:"комод",b:"chest",
   use:()=>{const p=G.place,r=hashName(p.bx+p.x*3,p.by+p.y*5,662);
-   safeFn(()=>{Bank.play("arte_wood",{gain:0.5,maxSec:3});
+   safeFn(()=>{Bank.play("oc_hinge",{gain:0.5,maxSec:3});
     setTimeout(()=>safeFn(()=>Bank.play("lock_click",{gain:0.4,maxSec:2})),220);});
    if(r<0.45&&propOnce()){const мон=3+Math.floor(r*40);G.gold+=мон;
     narrate(`Комод. Три ящика, два заедают. В нижнем под тряпьём — ${мон} ${plural(мон,"монета","монеты","монет")}.`);
@@ -14586,7 +14777,7 @@ const PROPS=[
    refresh();saveGame(true);}},
  {id:"crates",n:"ящики",b:"chest",
   use:()=>{const p=G.place,r=hashName(p.bx+p.x*7,p.by+p.y*11,663);
-   safeFn(()=>{Bank.play("arte_wood",{gain:0.5,maxSec:3});
+   safeFn(()=>{Bank.play("oc_chest_open",{gain:0.5,maxSec:3});
     setTimeout(()=>safeFn(()=>Bank.play("hollow_thud",{gain:0.45,maxSec:2})),200);});
    if(r<0.4&&propOnce()){const что=["камень","руда","дерево","грибы"][Math.floor(r*10)%4];
     G.inv[что]=(Number(G.inv[что])||0)+1;
@@ -14607,12 +14798,12 @@ const PROPS=[
   use:()=>{safeFn(()=>Bank.play("mechanism",{gain:0.55,maxSec:4}));
    narrate("Рычаг в стене: железная рукоять на каменной оси, отполированная чужими ладонями. Тянуть её — отдельное дело: выберите «Что вокруг», рычаг и «Потянуть рычаг».");}},
  {id:"chains",n:"цепи и кандалы",b:"wall",
-  use:()=>{safeFn(()=>{Bank.play("metal_hit",{gain:0.55,maxSec:3});
+  use:()=>{safeFn(()=>{Bank.play("oc_chain",{gain:0.55,maxSec:3});
     setTimeout(()=>safeFn(()=>Bank.play("clang_hard",{gain:0.45,maxSec:3})),240);});
    narrate("Цепи и кандалы, вбитые в стену. Железо холодное и рыжее от ржавчины, у одного кольца перетёрта дужка — кто-то вышел отсюда сам. Ниже, на камне, ногтем процарапаны чёрточки: считали дни и сбились на четвёртом десятке.");}},
  {id:"cage",n:"клетка",b:"wall",
   use:()=>{const p=G.place,r=hashName(p.bx+p.x*13,p.by+p.y*3,664);
-   safeFn(()=>{Bank.play("metal_hit",{gain:0.5,maxSec:3});
+   safeFn(()=>{Bank.play("oc_hinge",{gain:0.5,maxSec:3});
     setTimeout(()=>safeFn(()=>Bank.play("parry_slide",{gain:0.45,maxSec:3})),200);});
    if(r<0.3&&propOnce()){const кость=1+Math.floor(r*6);
     G.inv["кость"]=(Number(G.inv["кость"])||0)+кость;
@@ -14630,7 +14821,7 @@ const PROPS=[
    narrate(`Груда костей у стены. Не в кучу свалены, а сложены — кто-то прибирал за собой. Взяли ${n} ${plural(n,"кость","кости","костей")}.`);
    refresh();saveGame(true);}},
  {id:"mushbed",n:"грибница",b:"res_herbs",
-  use:()=>{safeFn(()=>{Bank.play("rustle",{gain:0.5,maxSec:3});
+  use:()=>{safeFn(()=>{Bank.play("lug_bush",{gain:0.5,maxSec:3});
     setTimeout(()=>safeFn(()=>Bank.play("stk_goo",{gain:0.35,maxSec:3})),240);});
    if(!propOnce()){
     narrate("Грибница на сырой стене. Срезы ещё влажные: всё, что выросло, вы уже сняли. Новым шляпкам нужны недели.");return;}
@@ -14639,7 +14830,7 @@ const PROPS=[
    narrate(`Грибница на сырой стене. Шляпки светятся бледно-зелёным и гаснут, если тронуть. Срезали ${n} ${plural(n,"гриб","гриба","грибов")}; на срезе пахнет землёй и погребом.`);
    refresh();saveGame(true);}},
  {id:"stalag",n:"сталагмит",b:"res_stone",
-  use:()=>{safeFn(()=>{Bank.play("stone_hit",{gain:0.55,maxSec:3});
+  use:()=>{safeFn(()=>{Bank.play("oc_rock_hit",{gain:0.55,maxSec:3});
     setTimeout(()=>safeFn(()=>Bank.play("shatter",{gain:0.4,maxSec:3})),220);});
    if(!propOnce()){
     narrate("Обломок сталагмита. Верхушку вы уже отбили, остался пенёк со свежим сколом. Отбивать больше нечего — а расти он будет дольше вашей жизни.");return;}
@@ -14647,7 +14838,7 @@ const PROPS=[
    narrate("Сталагмит в пояс высотой. Растёт по капле в год, и вы отбили верхушку одним ударом: камень в мешок. Где-то наверху в такт капает вода — она его и построила.");
    refresh();saveGame(true);}},
  {id:"fountain",n:"фонтан",b:"well",
-  use:()=>{safeFn(()=>{Bank.play("stk_falls",{gain:0.5,maxSec:5})||Bank.play("amb_water",{gain:0.5,maxSec:5});
+  use:()=>{safeFn(()=>{Bank.play("oc_waterfall",{gain:0.5,maxSec:5})||Bank.play("amb_water",{gain:0.5,maxSec:5});
     setTimeout(()=>safeFn(()=>Bank.play("stk_splash",{gain:0.4,maxSec:4})||Bank.play("shore_wash",{gain:0.4,maxSec:4})),260);});
    const было=G.hp;
    const фонЧас=(G.hp<G.hpMax||(Number(G.water)||0)<200)?propRest(1):"";
@@ -14657,7 +14848,7 @@ const PROPS=[
    refresh();saveGame(true);}},
  {id:"scales",n:"торговые весы",b:"market",
   use:()=>{safeFn(()=>{Bank.play("arte_coins",{gain:0.5,maxSec:3});
-    setTimeout(()=>safeFn(()=>Bank.play("xylo_coin",{gain:0.45,maxSec:3})),240);});
+    setTimeout(()=>safeFn(()=>Bank.play("oc_metal_light",{gain:0.45,maxSec:3})),240);});
    const дер=safeFn(()=>Math.max(0,EMPIRES.indexOf(empireAt(G.x,G.y))),0);
    const строки=[];let всего=0,мер=0;
    for(const р of Object.keys(RESICON)){
@@ -14688,12 +14879,12 @@ const PROPS=[
     refresh();saveGame(true);return;}
    narrate(`Верстак. Тиски, стружка и чужая начатая работа. Чтобы собрать факел, нужны дерево и камень: у вас дерева ${дерево}, камня ${камень}.`);}},
  {id:"hourglass",n:"песочные часы",b:"chest",
-  use:()=>{safeFn(()=>{Bank.play("stk_clock",{gain:0.5,maxSec:5})||Bank.play("chime",{gain:0.5,maxSec:4});});
+  use:()=>{safeFn(()=>{Bank.play("stk_clock",{gain:0.5,maxSec:5})||Bank.play("oc_glass_hit",{gain:0.5,maxSec:2});});
    const ч=Math.floor(G.hour%24),м=Math.floor((G.hour%1)*60);
    narrate(`Песочные часы в бронзовой оправе. Вы перевернули их, и песок пошёл ровной струйкой. Сейчас день ${G.day}, ${ч} ${plural(ч,"час","часа","часов")} ${м} ${plural(м,"минута","минуты","минут")}. ${isNight()?"Ночь: под землёй это не видно, но наверху темно.":"День."}`);}},
  {id:"astrolabe",n:"астролябия",b:"portal",
-  use:()=>{safeFn(()=>{Bank.play("fx_crystal",{gain:0.5,maxSec:4});
-    setTimeout(()=>safeFn(()=>Bank.play("charm_celesta",{gain:0.4,maxSec:4})),240);});
+  use:()=>{safeFn(()=>{Bank.play("oc_metal_light",{gain:0.5,maxSec:4});
+    setTimeout(()=>safeFn(()=>Bank.play("oc_wheels",{gain:0.4,maxSec:4})),240);});
    const emp=empireAt(G.x,G.y);
    const города=safeFn(()=>findCities(G.x,G.y,40,1),[]);
    const б=города[0];
@@ -14712,13 +14903,13 @@ const PROPS=[
     ?`Карта на стене: кожа, выцветшие чернила, булавки по краям. По ней читается округа. ${рядом.slice(0,4).map(o=>`${o.n} — ${o.dir}, ${o.d} ${plural(o.d,"шаг","шага","шагов")}`).join("; ")}.`
     :"Карта на стене, но края её обгрызены и середина вытерта до дыр: ничего вокруг по ней не разобрать.");}},
  {id:"throne",n:"трон",b:"castle",
-  use:()=>{safeFn(()=>{Bank.play("horn_castle",{gain:0.5,maxSec:5});
-    setTimeout(()=>safeFn(()=>Bank.play("wide_strings",{gain:0.4,maxSec:5})),300);});
+  use:()=>{safeFn(()=>{Bank.play("oc_wood_creak",{gain:0.5,maxSec:5});
+    setTimeout(()=>safeFn(()=>Bank.play("oc_rustle",{gain:0.4,maxSec:5})),300);});
    const emp=empireAt(G.place?G.place.bx:G.x,G.place?G.place.by:G.y);
    narrate(`Трон. Камень, потемневшее дерево, подлокотники вытерты до блеска чужими руками. Сидеть на нём вам никто не позволил бы, но постоять рядом можно. Отсюда правят державой «${emp.name}»: ${emp.short||emp.name}. Спинка холодная, и по ней тянет сквозняком из бойницы за спиной.`);}},
  {id:"censer",n:"курильница",b:"altar",
-  use:()=>{safeFn(()=>{Bank.play("pad_astral",{gain:0.5,maxSec:6});
-    setTimeout(()=>safeFn(()=>Bank.play("magic_hum",{gain:0.4,maxSec:5})),280);});
+  use:()=>{safeFn(()=>{Bank.play("mtg_smoke",{gain:0.5,maxSec:6});
+    setTimeout(()=>safeFn(()=>Bank.play("oc_sizzle",{gain:0.4,maxSec:5})),280);});
    const было=G.mana;
    const курЧас=G.mana<G.manaMax?propRest(1):"";
    G.mana=Math.min(G.manaMax,G.mana+Math.max(3,Math.round(G.manaMax*0.15)));
@@ -14734,7 +14925,7 @@ const PROPS=[
    refresh();saveGame(true);}},
  {id:"millstone",n:"жёрнов",b:"forge",
   use:()=>{safeFn(()=>{Bank.play("stone_hit",{gain:0.5,maxSec:4});
-    setTimeout(()=>safeFn(()=>Bank.play("deep_thud",{gain:0.45,maxSec:3})),260);});
+    setTimeout(()=>safeFn(()=>Bank.play("oc_wheels",{gain:0.45,maxSec:3})),260);});
    const зерно=Number(G.inv["трава"])||0;
    if(зерно>0&&G.hp>=G.hpMax&&(Number(G.water)||0)>=200){
     narrate("Жёрнов. Трава при вас, камень стронется — но вы сыты и здоровы, и молоть впустую жалко и травы, и часа.");return;}
@@ -14745,14 +14936,14 @@ const PROPS=[
     refresh();saveGame(true);return;}
    narrate("Жёрнов в человеческий рост. Верхний камень стронуть можно, но молоть нечего: в мешке ни зерна, ни травы.");}},
  {id:"shields",n:"стойка со щитами",b:"npc_guard",
-  use:()=>{safeFn(()=>{Bank.play("battle_shield",{gain:0.55,maxSec:3});
+  use:()=>{safeFn(()=>{Bank.play("oc_shield_wood",{gain:0.55,maxSec:3});
     setTimeout(()=>safeFn(()=>Bank.play("stk_clang",{gain:0.4,maxSec:3})||Bank.play("metal_hit",{gain:0.4,maxSec:3})),240);});
    const a=G.equip&&G.equip.armor;
    narrate(`Стойка со щитами. Умбоны в вмятинах, у двух расколота кромка — этими закрывались всерьёз. ${a?`Ваша броня — ${a.name}: рядом с этими она смотрится целой.`:"Своей брони на вас нет, и на фоне этих щитов это особенно заметно."} Взять чужой щит со стойки нельзя: они наперечёт.`);}},
  {id:"gong",n:"било",b:"gate",
   use:()=>{safeFn(()=>{Bank.play("bell_big",{gain:0.6,maxSec:6});
-    setTimeout(()=>safeFn(()=>Bank.play("temple_bell",{gain:0.45,maxSec:6})),400);
-    setTimeout(()=>safeFn(()=>Bank.play("stk_horn",{gain:0.4,maxSec:5})),900);});
+    setTimeout(()=>safeFn(()=>Bank.play("oc_metal_dull",{gain:0.45,maxSec:6})),400);
+    setTimeout(()=>safeFn(()=>Bank.play("lug_clank",{gain:0.4,maxSec:5})),900);});
    narrate("Било. Вы ударили один раз, и звук пошёл по всему дому. Кто-то наверху перестал ходить, кто-то внизу, наоборот, зашевелился. Второй раз бить не стоит: за второй уже спрашивают.");}}];
 const PROP_BY_ID=Object.fromEntries(PROPS.map(p=>[p.id,p]));
 /* Где какая вещь уместна. */
@@ -15024,7 +15215,7 @@ function revealSecret(x,y,propId,поМесту){
   secretMark(v.ключ,"найден");
   safeFn(()=>setTimeout(()=>safeFn(()=>Bank.play("mtg_place",{gain:0.5,maxSec:3})),1400));
   safeFn(()=>{Bank.play("lock_click",{gain:0.7,maxSec:3});
-   setTimeout(()=>safeFn(()=>Bank.play("hall_gate",{gain:0.6,maxSec:5})),320);
+   setTimeout(()=>safeFn(()=>Bank.play("ad_gate_open",{gain:0.6,maxSec:5})),320);
    setTimeout(()=>safeFn(()=>beaconAt("stairs_down",0,0,-1,1)),700);});
   narrate(`Что-то щёлкнуло под рукой${propId&&PROP_BY_ID[propId]?` — за ${PROP_BY_ID[propId].n} подалась плита`:""}. Открывается ход: ${v.вид}. Внутри ${v.страж}. Тронь${"те"} эту вещь ещё раз — войдёте.`,{interrupt:false});
   journal("Найден тайный ход.");
@@ -15285,7 +15476,7 @@ function meetPatrol(){
   return null;},null);
  if(p.вид.id==="toll"&&(Number(G.gold)||0)>=5){
   G.gold-=5;addRep(p.emp.race,1);
-  safeFn(()=>Bank.play("xylo_coin",{gain:0.5,maxSec:3}));
+  safeFn(()=>Bank.play("arte_coins",{gain:0.5,maxSec:3}));
   narrate(`${p.имя} на пути «${p.тракт}». ${p.вид.о} С пешего берут пять золотых дорожной доли — вы отдали. ${близко?`Мытарь кивает вперёд: ближнее жильё — ${близко}.`:"Жилья поблизости мытарь не знает."} ${тварь?`И добавляет: «${тварь.m.n} видели ${тварь.d} ${plural(тварь.d,"шаг","шага","шагов")}, ${тварь.dir}. Держитесь насыпи».`:"«Дорога чистая», — говорит он."}`);
   safeFn(()=>{refresh();saveGame(true);});
   return true;}
@@ -15345,7 +15536,7 @@ iact("listen",{n:"Прислушаться",значок:"👂",
 iact("knock",{n:"Постучать",значок:"✊",
  можно:o=>["+","G","#","C","Y","X"].indexOf(o.плитка)>=0,
  делать:o=>{
-  safeFn(()=>Bank.play("knock_soft",{seed:o.x+o.y,gain:0.6,maxSec:3})
+  safeFn(()=>Bank.play(/стол|шкаф|полк|комод|бочк|ящик|лежанк|сундук|верстак|дерев|стойк|доск/i.test(String(o.n||""))?"oc_wood_hit":"knock_soft",{seed:o.x+o.y,gain:0.6,maxSec:3})
    ||Bank.play("stone_hit",{gain:0.6,maxSec:3}));
   const пусто=G.place&&safeFn(()=>propHidesSwitch(G.place.bx,G.place.by,G.place.depth,o.x,o.y,undefined),false);
   narrate(пусто?`${o.n}: стук уходит вглубь и возвращается гулко. За этим местом пусто.`
@@ -15418,12 +15609,12 @@ iact("drawer",{n:"Открыть ящик",значок:"🗄️",
  можно:o=>!!(G.place&&o.плитка==="X"&&DRAWER_PROPS.indexOf(o.вещь)>=0),
  делать:o=>{
   if(propMarked(o.x,o.y,"drawer")){
-   safeFn(()=>Bank.play("craft_wood",{seed:o.x+o.y,gain:0.4,maxSec:3}));
+   safeFn(()=>Bank.play("oc_hinge",{seed:o.x+o.y,gain:0.4,maxSec:2}));
    narrate(`${o.n}: ящик уже выдвинут и пуст.`,{interrupt:false});
    return true;}
   propMark(o.x,o.y,"drawer");
   safeFn(()=>propTime(0.2));
-  safeFn(()=>{Bank.play("craft_wood",{seed:o.x+o.y,gain:0.6,maxSec:3});
+  safeFn(()=>{Bank.play("oc_chest_open",{seed:o.x+o.y,gain:0.6,maxSec:2});
    setTimeout(()=>safeFn(()=>Bank.play("arte_cloth",{seed:o.y,gain:0.5,maxSec:3})),260);});
   const s=hashName(o.x*3,o.y*5,8200);
   if(s<0.34){
@@ -15451,7 +15642,7 @@ iact("drawer",{n:"Открыть ящик",значок:"🗄️",
 iact("doormech",{n:"Проверить механизм",значок:"🔩",
  можно:o=>!!(G.place&&["+","G","Y"].indexOf(o.плитка)>=0),
  делать:o=>{
-  safeFn(()=>{Bank.play("lock_click",{seed:o.x+o.y,gain:0.5,maxSec:3});
+  safeFn(()=>{Bank.play("lock_click",{seed:o.x+o.y,gain:0.5,maxSec:3});setTimeout(()=>safeFn(()=>Bank.play("oc_hinge",{seed:o.y,gain:0.45,maxSec:2})),300);
    setTimeout(()=>safeFn(()=>Bank.play("metal_hit",{seed:o.y,gain:0.4,maxSec:3})),240);});
   safeFn(()=>propTime(0.15));
   const сокровищница=o.плитка==="Y";
@@ -15488,8 +15679,8 @@ iact("pull",{n:"Потянуть рычаг",значок:"🎚️",
    return true;}
   propMark(o.x,o.y,"pulled");
   safeFn(()=>propTime(0.2));
-  safeFn(()=>{Bank.play("mechanism",{seed:o.x+o.y,gain:0.7,maxSec:4});
-   setTimeout(()=>safeFn(()=>Bank.play("stone_low",{seed:o.y,gain:0.55,maxSec:5})),320);});
+  safeFn(()=>{Bank.play("oc_lift_start",{seed:o.x+o.y,gain:0.6,maxSec:2});
+   setTimeout(()=>safeFn(()=>Bank.play("oc_chain",{seed:o.y,gain:0.5,maxSec:2})),320);});
   const вид=leverKind(o.x,o.y);
   if(вид==="палата"){
    const lvl=safeFn(()=>curLevel(),null);
@@ -15498,7 +15689,7 @@ iact("pull",{n:"Потянуть рычаг",значок:"🎚️",
     if(tileAt(lvl,x,y)==="Y"&&!safeFn(()=>vaultIsOpen(x,y),false))нашли=[x,y];
    if(нашли){
     safeFn(()=>{setPlaceMark(нашли[0],нашли[1],"open");markVaultOpen(нашли[0],нашли[1]);});
-    safeFn(()=>{Bank.play("hall_gate",{gain:0.7,maxSec:5});UI.fanfare();
+    safeFn(()=>{Bank.play("ad_gate_open",{gain:0.7,maxSec:5});UI.fanfare();
      beaconAt("gate",нашли[0]-G.place.x,нашли[1]-G.place.y,0,
       Math.max(Math.abs(нашли[0]-G.place.x),Math.abs(нашли[1]-G.place.y)));});
     const д=Math.max(Math.abs(нашли[0]-G.place.x),Math.abs(нашли[1]-G.place.y));
@@ -15509,11 +15700,12 @@ iact("pull",{n:"Потянуть рычаг",значок:"🎚️",
    for(const [dx,dy] of [[0,-1],[0,1],[-1,0],[1,0],[0,0]]){
     if(safeFn(()=>revealSecret(o.x+dx,o.y+dy,undefined,true),false)){открыли=true;break;}}
    safeFn(()=>Bank.play("deep_stone",{gain:0.6,maxSec:5}));
+   if(открыли)safeFn(()=>{Bank.play("oc_gate_move",{gain:0.55,maxSec:2});setTimeout(()=>safeFn(()=>Bank.play("oc_lift_move",{gain:0.45,maxSec:3})),300);setTimeout(()=>safeFn(()=>Bank.play("oc_gate_hit",{gain:0.5,maxSec:2})),600);setTimeout(()=>safeFn(()=>Bank.play("oc_lift_stop",{gain:0.4,maxSec:2})),1100);});
    narrate(открыли?"Рычаг пошёл вниз, и кладка рядом поехала в сторону: за ней ход."
     :"Рычаг пошёл вниз, камень вздрогнул, и где-то далеко что-то открылось. Здесь — ничего: ход не рядом.");
   }else if(вид==="ловушка"){
    const л=safeFn(()=>trapAt(G.place.x,G.place.y),null);
-   safeFn(()=>Bank.play("stk_crash",{gain:0.6,maxSec:4}));
+   safeFn(()=>{Bank.play("oc_pop",{gain:0.6,maxSec:1});Bank.play("lug_impact",{gain:0.55,maxSec:2});});
    if(л&&л.состояние!=="обезврежена"){
     narrate("Рычаг пошёл вниз слишком легко, и за стеной щёлкнуло. Это был не запор.");
     safeFn(()=>trapFire(G.place.x,G.place.y,л));
@@ -15523,6 +15715,7 @@ iact("pull",{n:"Потянуть рычаг",значок:"🎚️",
     narrate(`Рычаг пошёл вниз слишком легко, и из паза ударило крошкой: урон ${урон}, здоровья осталось ${G.hp}. Это был не запор, а сторож.`);}
   }else{
    safeFn(()=>Bank.play("metal_hit",{gain:0.5,maxSec:3}));
+   safeFn(()=>Bank.play("oc_line_snap",{gain:0.55,maxSec:2}));
    narrate("Рычаг подаётся с хрустом и остаётся внизу. Ничего. Тяга за стеной давно оборвана, и он не связан уже ни с чем.");}
   safeFn(()=>{refresh();saveGame(true);});
   return true;}});
@@ -15534,8 +15727,9 @@ iact("shove",{n:"Сдвинуть",значок:"🪨",
  можно:o=>!!(G.place&&o.плитка==="X"&&SHOVE_PROPS.indexOf(o.вещь)>=0),
  делать:o=>{
   safeFn(()=>propTime(0.4));
-  safeFn(()=>{Bank.play("stone_low",{seed:o.x+o.y,gain:0.65,maxSec:4});
-   setTimeout(()=>safeFn(()=>Bank.play("craft_stone",{seed:o.y,gain:0.5,maxSec:4})),320);});
+  safeFn(()=>{Bank.play("lug_thud",{seed:o.y,gain:0.5,maxSec:1});Bank.play("stone_low",{seed:o.x+o.y,gain:0.65,maxSec:4});
+   setTimeout(()=>safeFn(()=>Bank.play("craft_stone",{seed:o.y,gain:0.5,maxSec:4})),320);
+   setTimeout(()=>safeFn(()=>Bank.play("oc_general_hit",{seed:o.x,gain:0.5,maxSec:2})),700);});
   const т=safeFn(()=>stashAt(o.x,o.y),null);
   if(т&&т.состояние==="скрыт"){
    stashSet(т.ключ,"найден");
@@ -15591,21 +15785,21 @@ const STASH_WHERE=[
  {id:"picture", n:"картина на стене",       как:"заглянуть за раму",        звук:"arte_cloth", плитки:["#","X"],     сл:2},
  {id:"bookcase",n:"книжный шкаф",          как:"отодвинуть шкаф от стены",звук:"arte_book",  плитки:["K","X"],     сл:3},
  {id:"table",   n:"столешница снизу",       как:"пошарить под столешницей",звук:"craft_wood", плитки:["X"],         сл:1},
- {id:"board",   n:"половица",                как:"поддеть половицу",      звук:"tread_wood", плитки:["X","#"],     сл:2},
+ {id:"board",   n:"половица",                как:"поддеть половицу",      звук:"oc_wood_creak", плитки:["X","#"],     сл:2},
  {id:"wall",    n:"выемка в кладке",         как:"вынуть шатающийся камень",звук:"stone_hit", плитки:["#"],         сл:3},
  {id:"statue",  n:"статуя",                   как:"обойти статую и ощупать",звук:"deep_stone",плитки:["X","A"],     сл:3},
  {id:"chest",   n:"сундук",                   как:"перебрать содержимое до дна",звук:"mtg_chest_open",плитки:["C"],    сл:1},
- {id:"double",  n:"двойное дно",              как:"простучать дно",        звук:"knock_soft", плитки:["C"],         сл:4},
+ {id:"double",  n:"двойное дно",              как:"простучать дно",        звук:"oc_wood_dull", плитки:["C"],         сл:4},
  {id:"column",  n:"колонна",                  как:"простучать колонну",    звук:"stone_low",  плитки:["#","X"],     сл:3},
  {id:"hearth",  n:"камин",                    как:"пошарить в дымоходе",   звук:"wild_fire",  плитки:["X","F"],     сл:2},
  {id:"altar",   n:"алтарь",                   как:"сдвинуть верхнюю плиту",звук:"deep_stone",плитки:["A"],       сл:4},
- {id:"cellar",  n:"лаз в подпол",            как:"поднять лючину",       звук:"deep_door",  плитки:["X","#"],     сл:3},
- {id:"rubble",  n:"обрушенная стена",        как:"разобрать завал",       звук:"craft_stone",плитки:["#"],         сл:4},
- {id:"mech",    n:"древний механизм",        как:"вскрыть кожух",         звук:"mechanism",  плитки:["X","#"],     сл:5},
+ {id:"cellar",  n:"лаз в подпол",            как:"поднять лючину",       звук:"oc_hinge",  плитки:["X","#"],     сл:3},
+ {id:"rubble",  n:"обрушенная стена",        как:"разобрать завал",       звук:"ad_hoe",плитки:["#"],         сл:4},
+ {id:"mech",    n:"древний механизм",        как:"вскрыть кожух",         звук:"oc_lift_start",  плитки:["X","#"],     сл:5},
  {id:"water",   n:"вода в колодце",          как:"нырнуть и пошарить по дну",звук:"water_swash",плитки:["W"],     сл:4},
  {id:"beam",    n:"балка под потолком",      как:"дотянуться до балки",  звук:"arte_wood",  плитки:["X","#"],     сл:4},
- {id:"ledge",   n:"уступ над головой",        как:"влезть на уступ",       звук:"stone_hit",  плитки:["#"],         сл:5},
- {id:"cranny",  n:"щель, куда не лезет рука",как:"достать крюком",       звук:"metal_hit",  плитки:["#","X"],     сл:5}];
+ {id:"ledge",   n:"уступ над головой",        как:"влезть на уступ",       звук:"oc_rock_hit",  плитки:["#"],         сл:5},
+ {id:"cranny",  n:"щель, куда не лезет рука",как:"достать крюком",       звук:"oc_metal_light",  плитки:["#","X"],     сл:5}];
 const STASH_WHERE_BY_ID=Object.fromEntries(STASH_WHERE.map(w=>[w.id,w]));
 /* Что лежит. Каждая находка и вправду что-то даёт, иначе это не находка,
    а описание находки. Дать возвращает то, что скажут вслух. */
@@ -15904,8 +16098,8 @@ iact("repair",{n:"Починить",значок:"🔧",
   G.inv[надо[0]]=(Number(G.inv[надо[0]])||0)-надо[1];
   if(G.inv[надо[0]]<=0)delete G.inv[надо[0]];
   safeFn(()=>propTime(0.6));
-  safeFn(()=>{Bank.play("craft_wood",{seed:o.x+o.y,gain:0.6,maxSec:4});
-   setTimeout(()=>safeFn(()=>Bank.play("mechanism",{seed:o.x,gain:0.5,maxSec:3})),320);});
+  safeFn(()=>{Bank.play("uh_build",{seed:o.x+o.y,gain:0.6,maxSec:2});
+   setTimeout(()=>safeFn(()=>Bank.play("oc_connect",{seed:o.x,gain:0.5,maxSec:2})),320);});
   propMark(o.x,o.y,"fixed");
   const оп=8;G.xp+=оп;
   safeFn(()=>mastGain("smith",3));
@@ -15922,8 +16116,9 @@ iact("salvage",{n:"Поискать остатки припаса",значок:
    return true;}
   propMark(o.x,o.y,"salvaged");
   safeFn(()=>propTime(0.3));
-  safeFn(()=>{Bank.play("arte_cloth",{seed:o.x+o.y,gain:0.55,maxSec:4});
-   setTimeout(()=>safeFn(()=>Bank.play("arte_coins",{seed:o.y,gain:0.5,maxSec:3})),300);});
+  safeFn(()=>{Bank.play("lug_break",{seed:o.x,gain:0.5,maxSec:2});Bank.play("arte_cloth",{seed:o.x+o.y,gain:0.55,maxSec:4});
+   setTimeout(()=>safeFn(()=>Bank.play("arte_coins",{seed:o.y,gain:0.5,maxSec:3})),300);
+   setTimeout(()=>safeFn(()=>Bank.play("lug_broken",{seed:o.y,gain:0.4,maxSec:1})),650);});
   const пул=["трава","кристалл","кость","камень","дерево"];
   const что=пул[Math.floor(hashName(o.x,o.y,7951)*пул.length)%пул.length];
   const сколько=1+Math.floor(hashName(o.x,o.y,7952)*3);
@@ -15937,17 +16132,17 @@ iact("attune",{n:"Прочесть наговор",значок:"🔯",
  делать:o=>{
   const ур=Math.max(safeFn(()=>mastLevel("runes"),0),safeFn(()=>mastLevel("arte"),0));
   if(ур<1){
-   safeFn(()=>Bank.play("rune_square",{seed:o.x+o.y,gain:0.45,maxSec:3}));
+   safeFn(()=>Bank.play("oc_soft_touch",{seed:o.x+o.y,gain:0.45,maxSec:3}));
    narrate(`${o.n}: линии на ней что-то значат, но что — вам не разобрать. Нужен хоть первый урок рун или артефакторики.`);
    return true;}
   if(propMarked(o.x,o.y,"read")){
    narrate(`${o.n}: этот наговор вы уже разобрали.`,{interrupt:false});
-   safeFn(()=>Bank.play("rune_square",{seed:o.x,gain:0.4,maxSec:3}));
+   safeFn(()=>Bank.play("oc_soft_touch",{seed:o.x,gain:0.4,maxSec:3}));
    return true;}
   propMark(o.x,o.y,"read");
   safeFn(()=>propTime(0.5));
-  safeFn(()=>{Bank.play("rune_square",{seed:o.x+o.y,gain:0.6,maxSec:4});
-   setTimeout(()=>safeFn(()=>Bank.play("spark_glock",{seed:o.y,gain:0.5,maxSec:4})),320);});
+  safeFn(()=>{Bank.play("oc_electrical",{seed:o.x+o.y,gain:0.6,maxSec:4});
+   setTimeout(()=>safeFn(()=>Bank.play("magic_shimmer",{seed:o.y,gain:0.5,maxSec:4})),320);});
   safeFn(()=>mastGain("runes",5));
   const ч=safeFn(()=>artPartFor((G.place&&Number(G.place.depth))||0,o.x+o.y),null);
   if(ч)safeFn(()=>artAddPart(ч.id,1));
@@ -16065,7 +16260,7 @@ iact("altstudy",{n:"Исследовать алтарь",значок:"🔬",
  делать:o=>{
   const a=altarHere(o);
   safeFn(()=>{Bank.play("deep_stone",{seed:o.x+o.y,gain:0.55,maxSec:4});
-   setTimeout(()=>safeFn(()=>Bank.play("pad_sanctum",{seed:o.x,gain:0.45,maxSec:6})),340);});
+   setTimeout(()=>safeFn(()=>Bank.play("ad_temple",{seed:o.x,gain:0.45,maxSec:6})),340);});
   safeFn(()=>propTime(0.4));
   if(!propMarked(o.x,o.y,"studied")){
    propMark(o.x,o.y,"studied");
@@ -16093,10 +16288,10 @@ iact("altaura",{n:"Проверить ауру",значок:"🌀",
  делать:o=>{
   const a=altarHere(o);
   if(safeFn(()=>mastLevel("arte"),0)<1&&safeFn(()=>mastLevel("runes"),0)<1){
-   safeFn(()=>Bank.play("pad_halo",{gain:0.4,maxSec:5}));
+   safeFn(()=>Bank.play("oc_soft_touch",{gain:0.4,maxSec:5}));
    narrate("Что-то здесь есть, но разглядеть это без ремесла нельзя: нужен первый урок артефакторики или рун.");
    return true;}
-  safeFn(()=>{Bank.play("pad_halo",{seed:o.x+o.y,gain:0.5,maxSec:6});
+  safeFn(()=>{Bank.play("oc_rock_hit",{seed:o.x+o.y,gain:0.5,maxSec:6});
    setTimeout(()=>safeFn(()=>Bank.play("bell_small",{seed:o.y,gain:0.45,maxSec:4})),320);});
   const усл=altarConds(a);
   const да=усл.filter(c=>c.ок),нет=усл.filter(c=>!c.ок);
@@ -16116,8 +16311,8 @@ iact("altoffer",{n:"Положить приношение",значок:"🕯️
    return true;}
   G.inv[что]=(Number(G.inv[что])||0)-1;if(G.inv[что]<=0)delete G.inv[что];
   const сила=цены[что];
-  safeFn(()=>{Bank.play("altar",{seed:o.x+o.y,gain:0.65,maxSec:6});
-   setTimeout(()=>safeFn(()=>Bank.play("chant_calliope",{seed:o.y,gain:0.5,maxSec:5})),380);});
+  safeFn(()=>{Bank.play("oc_soft_hit",{seed:o.x+o.y,gain:0.65,maxSec:6});
+   setTimeout(()=>safeFn(()=>Bank.play("mtg_smoke",{seed:o.y,gain:0.5,maxSec:5})),380);});
   safeFn(()=>{if(!G.faith)G.faith={};G.faith[a.бог.id]=(Number(G.faith[a.бог.id])||0)+сила;});
   safeFn(()=>propTime(0.3));
   narrate(`${что} лежит на камне, и камень принимает. Благосклонность «${a.бог.n}» растёт на ${сила}: теперь ${safeFn(()=>godFavor(a.бог.id),0)}.`);
@@ -16133,7 +16328,7 @@ iact("altbless",{n:"Получить благословение",значок:"�
    narrate(`Печать разбита, и через неё ничего не проходит. Восстановите её руной.`);
    return true;}
   if(сошлось<ALTAR_BLESS_NEED){
-   safeFn(()=>Bank.play("pad_halo",{gain:0.45,maxSec:5}));
+   safeFn(()=>Bank.play("oc_soft_touch",{gain:0.45,maxSec:5}));
    const нет=усл.filter(c=>!c.ок).slice(0,3);
    narrate(`${a.бог.n} молчит: сошлось ${сошлось} условий из ${усл.length}, а нужно ${ALTAR_BLESS_NEED}. Ближе всего: ${нет.map(c=>c.надо).join("; ")}.`);
    return true;}
@@ -16149,8 +16344,8 @@ iact("altbless",{n:"Получить благословение",значок:"�
   G.mana=Math.min(G.manaMax,G.mana+Math.round(G.manaMax*0.3));
   safeFn(()=>{if(!G.faith)G.faith={};G.faith[a.бог.id]=(Number(G.faith[a.бог.id])||0)+2;});
   safeFn(()=>{UI.fanfare();Bank.play("fx_blessing",{gain:0.7,maxSec:6});
-   setTimeout(()=>safeFn(()=>Bank.play("temple_choir",{seed:o.x,gain:0.55,maxSec:7})),400);
-   setTimeout(()=>safeFn(()=>Bank.play("spell_harp",{gain:0.5,maxSec:5})),900);});
+   setTimeout(()=>safeFn(()=>Bank.play("choir",{seed:o.x,gain:0.55,maxSec:7})),400);
+   setTimeout(()=>safeFn(()=>Bank.play("bell_small",{gain:0.5,maxSec:5})),900);});
   safeFn(()=>journal(`Благословение: ${a.бог.n}.`));
   narrate(`${a.бог.n} отвечает. ${a.бог.boon} Здоровье ${было} стало ${G.hp}, сила полнее, и ${часов} ${plural(часов,"час","часа","часов")} удар будет доходить вполсилы. Благословение держится, пока держится час.`);
   safeFn(()=>{refresh();saveGame(true);});
@@ -16160,7 +16355,7 @@ iact("altseal",{n:"Восстановить печать",значок:"🔏",
  делать:o=>{
   const a=altarHere(o);
   if(safeFn(()=>mastLevel("runes"),0)<2){
-   safeFn(()=>Bank.play("rune_square",{gain:0.45,maxSec:3}));
+   safeFn(()=>Bank.play("oc_soft_touch",{gain:0.45,maxSec:3}));
    narrate(`Печать чинят руной, а руну надо уметь класть: нужна вторая ступень рунического дела.`);
    return true;}
   if((Number(G.inv&&G.inv["камень"])||0)<2){
@@ -16170,7 +16365,7 @@ iact("altseal",{n:"Восстановить печать",значок:"🔏",
   G.inv["камень"]-=2;if(G.inv["камень"]<=0)delete G.inv["камень"];
   propMark(o.x,o.y,"seal");
   safeFn(()=>propTime(0.7));
-  safeFn(()=>{Bank.play("rune_square",{seed:o.x+o.y,gain:0.6,maxSec:5});
+  safeFn(()=>{Bank.play("craft_stone",{seed:o.x+o.y,gain:0.6,maxSec:5});
    setTimeout(()=>safeFn(()=>Bank.play("stk_ward",{gain:0.55,maxSec:5})),360);});
   safeFn(()=>mastGain("runes",6));
   const оп=14;G.xp+=оп;
@@ -16192,8 +16387,8 @@ iact("altartefact",{n:"Поместить артефакт",значок:"💠",
   if(!v){narrate("Класть нечего: вещи с силой при вас нет.");return true;}
   propMark(o.x,o.y,"charged");
   safeFn(()=>propTime(0.8));
-  safeFn(()=>{Bank.play("relic_sing",{seed:o.x+o.y,gain:0.65,maxSec:6});
-   setTimeout(()=>safeFn(()=>Bank.play("spark_glock",{seed:o.y,gain:0.5,maxSec:4})),380);});
+  safeFn(()=>{Bank.play("oc_electrical",{seed:o.x+o.y,gain:0.65,maxSec:6});
+   setTimeout(()=>safeFn(()=>Bank.play("magic_shimmer",{seed:o.y,gain:0.5,maxSec:4})),380);});
   const былоК=Number(v.кач)||1,былоР=Number(v.ранг)||1;
   v.кач=Math.min(5,былоК+1);
   if(v.кач===былоК)v.ранг=Math.min(5,былоР+1);
@@ -16207,7 +16402,7 @@ iact("altrite",{n:"Провести обряд",значок:"🔔",
   const a=altarHere(o);
   const ур=Math.max(safeFn(()=>mastLevel("arte"),0),safeFn(()=>mastLevel("demon"),0));
   if(ур<2){
-   safeFn(()=>Bank.play("pad_sanctum",{gain:0.45,maxSec:5}));
+   safeFn(()=>Bank.play("oc_soft_touch",{gain:0.45,maxSec:5}));
    narrate("Обряд у алтаря ведут не с голыми руками: нужна вторая ступень артефакторики или демонологии.");
    return true;}
   if((Number(G.mana)||0)<20){
@@ -16215,9 +16410,9 @@ iact("altrite",{n:"Провести обряд",значок:"🔔",
    return true;}
   G.mana-=20;
   safeFn(()=>propTime(1.2));
-  safeFn(()=>{Bank.play("altar",{seed:o.x+o.y,gain:0.7,maxSec:7});
-   setTimeout(()=>safeFn(()=>Bank.play(a.вид==="blood"?"ghost_choir":"temple_choir",{gain:0.55,maxSec:7})),420);
-   setTimeout(()=>safeFn(()=>Bank.play("harmonium_low",{gain:0.5,maxSec:7})),900);});
+  safeFn(()=>{Bank.play("oc_inflame",{seed:o.x+o.y,gain:0.7,maxSec:7});
+   setTimeout(()=>safeFn(()=>Bank.play(a.вид==="blood"?"deep_call":"choir",{gain:0.55,maxSec:7})),420);
+   setTimeout(()=>safeFn(()=>Bank.play("oc_fire",{gain:0.5,maxSec:7})),900);});
   const сошлось=altarMet(a);
   const сила=2+Math.floor(сошлось/3);
   if(a.вид==="blood"){
@@ -16245,9 +16440,9 @@ iact("altsacrifice",{n:"Принести жертву",значок:"🩸",
    return true;}
   G.hp-=цена;
   safeFn(()=>propTime(0.5));
-  safeFn(()=>{Bank.play("altar",{seed:o.x+o.y,gain:0.7,maxSec:6});
-   setTimeout(()=>safeFn(()=>Bank.play("ghost_choir",{gain:0.55,maxSec:6})),400);
-   setTimeout(()=>safeFn(()=>Bank.play("omen_swell",{gain:0.5,maxSec:6})),820);});
+  safeFn(()=>{Bank.play("oc_organic_hit",{seed:o.x+o.y,gain:0.7,maxSec:6});
+   setTimeout(()=>safeFn(()=>Bank.play("deep_call",{gain:0.55,maxSec:6})),400);
+   setTimeout(()=>safeFn(()=>Bank.play("oc_sizzle",{gain:0.5,maxSec:6})),820);});
   safeFn(()=>{if(!G.darkFaith)G.darkFaith={};
    G.darkFaith[a.бог.id]=(Number(G.darkFaith[a.бог.id])||0)+4;});
   safeFn(()=>{const p=patronGod();if(p&&p.id!==a.бог.id){G.faith=G.faith||{};
@@ -16783,51 +16978,51 @@ const TECHS=[
   о:"Полоса, закалка, отпуск, заточка и рукоять: выходит именной клинок."},
  {id:"cut",маст:"jewel",ур:1,станки:["bench","whetstone"],n:"Огранить кристалл",значок:"💎",
   берёт:{"кристалл":3},даёт:{"самоцвет":1},время:1.0,оп:4,
-  звук:"craft_stone",след:"fx_crystal",
+  звук:"craft_stone",след:"oc_glass_hit",
   о:"Три мутных желвака дают одну грань, которая держит свет."},
  {id:"brew",маст:"alchemy",ур:1,станки:["cauldron","hearth"],n:"Сварить отвар",значок:"🧪",
   берёт:{"трава":3,"ягоды":1},время:0.7,оп:3,
   звук:"arte_potion",след:"arte_potion",
   о:"Отвар поднимает на ноги и возвращает силу — сразу и целиком."},
  {id:"assayer",маст:"alchemy",ур:1,станки:["cauldron"],n:"Поставить опыт",значок:"🧫",
-  время:0.8,оп:5,звук:"arte_potion",след:"stk_goo",опыт:true,
+  время:0.8,оп:5,звук:"arte_potion",след:"oc_bubble",опыт:true,
   о:"Две ещё не сведённые вместе вещи кладут в чан и смотрят, что выйдет. Иногда выходит польза, иногда ожог — иначе это был бы не опыт."},
  {id:"mix",маст:"alchemy",ур:2,станки:["cauldron"],n:"Смешать по записи",значок:"📖",
-  время:0.6,оп:3,звук:"arte_potion",след:"charm_celesta",смесь:true,
+  время:0.6,оп:3,звук:"arte_potion",след:"magic_shimmer",смесь:true,
   о:"Состав, чьё свойство уже изведано, мешают сознательно и без риска неизвестного."},
  {id:"essence",маст:"alchemy",ур:2,станки:["cauldron"],n:"Отогнать эссенцию",значок:"⚗️",
-  род:"эссенция",время:1.2,оп:6,звук:"arte_potion",след:"fx_crystal",
+  род:"эссенция",время:1.2,оп:6,звук:"arte_potion",след:"oc_glass_hit",
   о:"Из припаса отгоняется его суть: она ложится в гнездо вещи."},
  {id:"inscribe",маст:"runes",ур:1,станки:["bench","anvil"],n:"Начертать руну",значок:"🪧",
-  род:"руна",время:1.0,оп:5,звук:"craft_stone",след:"rune_square",
+  род:"руна",время:1.0,оп:5,звук:"craft_stone",след:"oc_electrical",
   о:"Знак режется по камню, кости или металлу и держит на вещи одно свойство."},
  {id:"core",маст:"arte",ур:3,станки:["circle","orb"],n:"Собрать ядро",значок:"🔮",
-  род:"ядро",время:1.6,оп:8,звук:"fx_crystal",след:"pad_astral",
+  род:"ядро",время:1.6,оп:8,звук:"oc_electrical",след:"magic_hum",
   о:"Ядро — сердце вещи: без него свойства не держатся вместе."},
  {id:"analyze",маст:"arte",ур:1,станки:["circle","orb"],n:"Разобрать вещь",значок:"🔎",
-  время:0.5,оп:2,звук:"arte_object",след:"pad_astral",
+  время:0.5,оп:2,звук:"arte_object",след:"oc_soft_touch",
   о:"Что в этой вещи и откуда она — видно только тому, кто умеет смотреть."},
  {id:"mirage",маст:"illus",ур:1,станки:["mirror","circle"],n:"Сплести морок",значок:"🌫️",
   берёт:{"трава":2,"кристалл":1},время:0.6,оп:4,буфф:["морок",3],
-  звук:"pad_astral",след:"charm_celesta",
+  звук:"oc_rustle",след:"magic_shimmer",
   о:"На три часа вокруг вас идёт не тот, кто идёт: встреч становится вдвое меньше."},
  {id:"unveil",маст:"illus",ур:2,станки:["mirror"],n:"Прочесть морок",значок:"🪞",
-  время:0.5,оп:5,звук:"fx_crystal",след:"pad_astral",
+  время:0.5,оп:5,звук:"oc_glass_hit",след:"magic_shimmer",
   о:"Чужая ложь видна тому, кто плетёт свою: ловушка рядом перестаёт быть тайной."},
  {id:"vessel",маст:"homun",ур:2,станки:["cauldron","circle"],n:"Собрать гомункула",значок:"🧫",
   время:0.2,оп:2,
-  звук:"arte_potion",след:"fx_crystal",
+  звук:"arte_potion",след:"oc_glass_hit",
   о:"Основа, ядро, источник силы и назначение: четыре решения — и выходит существо, которое растёт и учится. Припас уйдёт при сборке, по выбранным частям."},
  /* Две кнопки — печать и договор — были огрызками той же системы, что
     теперь стоит целиком. Две копии одного — обещание разойтись, поэтому у станка
     осталась одна запись — дверь в обряды, где всё семь требований проверяются честно. */
  {id:"rites",маст:"demon",ур:1,станки:["circle","censer"],n:"Обряды демонолога",значок:"🕯️",
   время:0.2,оп:2,
-  звук:"rune_square",след:"stk_dark",
+  звук:"oc_inflame",след:"stk_dark",
   о:"Шесть обрядов: разобрать след, исследовать сущность, начертать печать, призвать, заключить договор, изгнать. Компоненты и время берёт сам обряд."},
  {id:"lighten",маст:"flux",ур:1,станки:["orb","circle"],n:"Убавить тяжесть",значок:"🪶",
   берёт:{"кристалл":1},время:0.4,оп:3,буфф:["лёгкость",4],
-  звук:"fx_crystal",след:"sky_gust",
+  звук:"oc_warp",след:"sky_gust",
   о:"Четыре часа шаг отнимает на четверть меньше времени: ноша будто чужая."},
  /* ── ТЯЖЕСТЬ И ВРЕМЯ ──
     Спецификация просит редкого, затратного и ограниченного: поэтому у этих
@@ -16843,11 +17038,11 @@ const TECHS=[
   о:"Три часа воздух вокруг вас тяжёл: чужой удар доходит вполсилы."},
  {id:"haste",маст:"flux",ур:2,станки:["orb","circle"],n:"Ускорить свой час",значок:"💨",
   берёт:{"кристалл":2},время:0.5,оп:5,буфф:["скорость",3],
-  звук:"stk_clock",след:"fx_crystal",
+  звук:"stk_clock",след:"oc_glass_hit",
   о:"Три часа ваш час короче чужого: всякое дело отнимает меньше времени."},
  {id:"arch",маст:"flux",ур:4,станки:["orb","circle"],n:"Свести свод",значок:"🏛️",
   берёт:{"камень":3,"кристалл":2},время:1.2,оп:12,буфф:["свод",6],
-  звук:"deep_stone",след:"pad_astral",
+  звук:"deep_stone",след:"magic_hum",
   о:"Шесть часов над вами держится свод из ничего: тварей встречается вчетверо меньше."},
  {id:"throw",маст:"flux",ур:3,станки:["orb","circle"],n:"Толкнуть тяжесть",значок:"🌀",
   берёт:{"кристалл":1},время:0.4,оп:7,
@@ -16855,22 +17050,22 @@ const TECHS=[
   о:"Механизм разводит по частям, не касаясь его рукой: найденная ловушка снимается наверняка."},
  {id:"keep",маст:"flux",ур:3,станки:["orb"],n:"Снять слепок часа",значок:"⏱️",
   берёт:{"кристалл":2,"самоцвет":1},время:0.8,оп:9,
-  звук:"stk_clock",след:"pad_astral",
+  звук:"stk_clock",след:"magic_hum",
   о:"Час запоминается целиком: здоровье, сила и вода этой минуты. Слепок один."},
  {id:"recall",маст:"flux",ур:3,станки:["orb"],n:"Вернуть слепок",значок:"↩️",
   время:0.6,оп:6,
-  звук:"pad_astral",след:"stk_clock",
+  звук:"oc_warp",след:"stk_clock",
   о:"Тело возвращается в тот час, слепок которого снят. Слепок при этом тратится."},
  {id:"echoes",маст:"flux",ур:1,станки:["orb","circle"],n:"Прочесть след времени",значок:"🕰️",
   время:0.4,оп:4,
-  звук:"pad_astral",след:"relic_xylo",
+  звук:"oc_electrical",след:"stk_clock",
   о:"Что здесь уже случилось: кто пал, что вынуто и что открыто на этом ярусе."},
  {id:"still",маст:"flux",ур:3,станки:["orb","circle"],n:"Остановить час",значок:"⏳",
   берёт:{"кристалл":3,"самоцвет":1},время:1.0,оп:11,буфф:["тихий час",2],
-  звук:"stk_clock",след:"pad_astral",
+  звук:"stk_clock",след:"magic_hum",
   о:"Два часа мира стоят на месте: шаг не тратит времени вовсе. Дорого и редко."},
  {id:"decipher",маст:"lang",ур:1,станки:["bookcase","scrollcase"],n:"Разобрать письмо",значок:"📜",
-  время:0.9,оп:4,звук:"arte_page",след:"relic_xylo",
+  время:0.9,оп:4,звук:"arte_page",след:"stk_clock",
   о:"Строка за строкой чужое письмо укладывается в знакомые слова."},
  {id:"stew",маст:"cook",ур:1,станки:["hearth"],n:"Сварить похлёбку",значок:"🍲",
   берёт:{"ягоды":2,"грибы":2,"дерево":1},время:0.6,оп:2,
@@ -17340,7 +17535,7 @@ function homunMake(base,core,power,purpose){
  for(const k in надо){G.inv[k]=(Number(G.inv[k])||0)-надо[k];if(G.inv[k]<=0)delete G.inv[k];}
  safeFn(()=>propTime(2.2));
  safeFn(()=>{Bank.play("arte_potion",{gain:0.65,maxSec:6});
-  setTimeout(()=>safeFn(()=>Bank.play("fx_crystal",{gain:0.55,maxSec:5})),420);
+  setTimeout(()=>safeFn(()=>Bank.play("oc_boiling",{gain:0.55,maxSec:5})),420);
   setTimeout(()=>safeFn(()=>Bank.play("stk_goo",{gain:0.5,maxSec:4})),840);});
  /* Ядро из своей крови берёт своё сразу. */
  if(c.кровь)G.hp=Math.max(1,G.hp-Math.round(G.hpMax*0.12));
@@ -17382,7 +17577,7 @@ function homunFeed(){
   if(safeFn(()=>isNight(),false)){narrate(`${h.имя} кормится светом дня, а сейчас ночь. Дождитесь утра.`);return false;}}
  else if(p.платит==="час")safeFn(()=>propTime(p.цена));
  h.кормлен=(Number(G.day)||1)*24+(Number(G.hour)||0);
- safeFn(()=>{Bank.play("arte_potion",{gain:0.55,maxSec:4});
+ safeFn(()=>{Bank.play("oc_munch",{gain:0.55,maxSec:2});
   setTimeout(()=>safeFn(()=>Bank.play("stk_goo",{gain:0.45,maxSec:3})),280);});
  narrate(`${h.имя} накормлен: сытость полная. Источник силы — ${p.n}; ${p.платит==="мана"?`ушло ${p.цена} маны`
   :p.платит==="здоровье"?`ушло ${Math.max(1,Math.round(G.hpMax*p.цена))} здоровья`
@@ -17723,8 +17918,8 @@ function demonPossess(id,часов){
  const st=demonState();
  st.одержим={кто:id,до:(Number(G.day)||1)*24+(Number(G.hour)||0)+(Number(часов)||12),
   съел:(Number(G.day)||1)*24+(Number(G.hour)||0)};
- safeFn(()=>{Bank.play("pad_dread",{gain:0.6,maxSec:7});
-  setTimeout(()=>safeFn(()=>Bank.play("ghost_choir",{gain:0.5,maxSec:6})),400);});
+ safeFn(()=>{Bank.play("oc_quake",{gain:0.6,maxSec:7});
+  setTimeout(()=>safeFn(()=>Bank.play("deep_call",{gain:0.5,maxSec:6})),400);});
  return st.одержим;}
 function demonPossessed(){
  const st=demonState();
@@ -17745,7 +17940,7 @@ function demonUpkeep(){
  G.hp=Math.max(1,G.hp-урон);
  const d=DEMON_BY_ID[o.кто];
  safeFn(()=>narrate(`${d?d.n:"Незваный"} берёт своё: здоровья убыло на ${урон}, осталось ${G.hp}. Изгнать его можно обрядом у кадильницы.`,{interrupt:false}));
- safeFn(()=>Bank.play("ghost_choir",{gain:0.45,maxSec:5}));
+ safeFn(()=>Bank.play("deep_call",{gain:0.45,maxSec:5}));
  return урон;}
 /* Договор: дар держится сутки, цена берётся по окончании — и берётся всегда. */
 /* Дар договора — не слово, а действующая сила. Обещанное и неработающее —
@@ -17784,7 +17979,7 @@ function demonPactClose(досрочно){
  else if(p.цена==="имя"){safeFn(()=>{if(G.merit&&typeof G.merit==="object")
    for(const k in G.merit)G.merit[k]=Math.floor((Number(G.merit[k])||0)/2);});
   слово="Имя забрано: заслуги перед державами наполовину стёрты.";}
- safeFn(()=>{Bank.play("omen_swell",{gain:0.6,maxSec:6});
+ safeFn(()=>{Bank.play("oc_quake",{gain:0.6,maxSec:6});
   setTimeout(()=>safeFn(()=>Bank.play("stk_dark",{gain:0.5,maxSec:5})),400);});
  safeFn(()=>narrate(`Сутки вышли, и «${d?d.n:"незваный"}» пришёл за платой. ${d?d.ценаО:""} ${слово}`,{interrupt:false}));
  safeFn(()=>journal(`Договор закрыт: ${d?d.n:"незваный"} взял своё.`));
@@ -17804,12 +17999,12 @@ function riteDo(rite,demonId){
  for(const k in (r.берёт||{})){G.inv[k]=(Number(G.inv[k])||0)-r.берёт[k];if(G.inv[k]<=0)delete G.inv[k];}
  G.mana=Math.max(0,(Number(G.mana)||0)-r.мана);
  safeFn(()=>propTime(r.часы));
- safeFn(()=>{Bank.play("rune_square",{seed:r.часы*10,gain:0.6,maxSec:5});
+ safeFn(()=>{Bank.play("oc_inflame",{seed:r.часы*10,gain:0.6,maxSec:5});
   setTimeout(()=>safeFn(()=>Bank.play("stk_dark",{gain:0.5,maxSec:5})),420);});
  const сорвалось=Math.random()<riteRisk(rite,demonId);
  if(сорвалось){
-  safeFn(()=>{Bank.play("omen_swell",{gain:0.6,maxSec:6});
-   setTimeout(()=>safeFn(()=>Bank.play("pad_dread",{gain:0.55,maxSec:6})),380);});
+  safeFn(()=>{Bank.play("oc_quake",{gain:0.6,maxSec:6});
+   setTimeout(()=>safeFn(()=>Bank.play("deep_call",{gain:0.55,maxSec:6})),380);});
   /* Ошибка стоит по-настоящему, и цена растёт с рангом. */
   const ранг=(d&&d.ранг)||1;
   if(ранг>=4&&d){
@@ -17856,8 +18051,8 @@ function riteDo(rite,demonId){
   safeFn(()=>buffSet("званый",3));
   demonState().званый=d.id;
   safeFn(()=>mastGain("demon",6+d.ранг*2));
-  safeFn(()=>{Bank.play("ghost_choir",{gain:0.55,maxSec:6});
-   setTimeout(()=>safeFn(()=>Bank.play("fx_rift",{gain:0.5,maxSec:5})),420);});
+  safeFn(()=>{Bank.play("deep_call",{gain:0.55,maxSec:6});
+   setTimeout(()=>safeFn(()=>Bank.play("oc_warp",{gain:0.5,maxSec:5})),420);});
   narrate(`${d.n} пришёл и стоит в круге. Три часа он будет ждать. Говорить с ним — обряд «Заключить договор»; отпустить — «Изгнать».`);
   safeFn(()=>{refresh();saveGame(true);});
   return true;}
@@ -17873,7 +18068,7 @@ function riteDo(rite,demonId){
   safeFn(()=>{const з=PACT_MIRROR[d.дар];if(з)buffSet(з,24);});
   safeFn(()=>mastGain("demon",10+d.ранг*3));
   safeFn(()=>{UI.fanfare();Bank.play("stk_dark",{gain:0.6,maxSec:5});
-   setTimeout(()=>safeFn(()=>Bank.play("omen_swell",{gain:0.5,maxSec:5})),400);});
+   setTimeout(()=>safeFn(()=>Bank.play("oc_quake",{gain:0.5,maxSec:5})),400);});
   safeFn(()=>{const p=patronGod();if(p){G.faith=G.faith||{};
    G.faith[p.id]=(Number(G.faith[p.id])||0)-4;}});
   safeFn(()=>journal(`Договор: ${d.n}, дар «${d.дар}».`));
@@ -17889,7 +18084,7 @@ function riteDo(rite,demonId){
   safeFn(()=>{if(G.buffs)delete G.buffs["званый"];});st.званый=null;что.push("званый отпущен");}
  safeFn(()=>mastGain("demon",5));
  safeFn(()=>{Bank.play("stk_ward",{gain:0.6,maxSec:5});
-  setTimeout(()=>safeFn(()=>Bank.play("fx_blessing",{gain:0.5,maxSec:5})),380);});
+  setTimeout(()=>safeFn(()=>Bank.play("oc_pshsh",{gain:0.5,maxSec:5})),380);});
  narrate(что.length?`Дым, соль и имя. ${что.join(", ")}. В комнате снова пусто.`
   :"Дым, соль и имя. Изгонять было некого: ни одержимости, ни договора, ни званого. Обряд не пропал даром — рука помнит.");
  safeFn(()=>{refresh();saveGame(true);});
@@ -18507,8 +18702,8 @@ function equipWeaponIndex(i){
  try{
   const list=weaponList(); const w=list[Number(i)];
   if(!w){narrate("Оружие не найдено.");return false;}
-  G.equip.weapon=w; G.weaponDrawn=false; normalizeWeaponState();
-  safeFn(()=>Bank.play(itemVoice(w),{seed:1,gain:0.6,maxSec:3}));
+  G.equip.weapon=w; G.weaponDrawn=false; normalizeWeaponState();safeFn(()=>Bank.play(weaponKind()==="bow"?"oc_bow_away":"lug_knife_sheathe",{gain:0.4,maxSec:2}));
+  safeFn(()=>{Bank.play(itemVoice(w),{seed:1,gain:0.6,maxSec:3});const k=weaponKind();setTimeout(()=>safeFn(()=>Bank.play(k==="bow"?"oc_bow_arrow":k==="javelin"?"oc_javelin_draw":"lug_knife_draw",{seed:2,gain:0.5,maxSec:2})),220);});
   saveGame(true); refresh();
   safeFn(()=>UI.open());safeFn(()=>renderInventory());
   narrate(`Экипировано оружие: ${w.name}.`); return true;
@@ -18600,7 +18795,7 @@ function drawWeapon(){
  if(!gameActive()){narrate("Сначала войдите в мир.");return false;}
  if(G.weaponDrawn){narrate(`Оружие уже в руках: ${weaponName()}.`);return true;}
  if(!G.equip.weapon){narrate("Оружие не экипировано. Откройте инвентарь и наденьте оружие.");return false;}
- G.weaponDrawn=true; AE.ensure();
+ G.weaponDrawn=true; AE.ensure();safeFn(()=>Bank.play(weaponKind()==="bow"?"oc_bow_draw":"lug_knife_draw",{gain:0.5,maxSec:2}));
  try{
   const bladed=["Меч","Кинжал"].includes(G.equip.weapon&&G.equip.weapon.type);
   if(bladed){playSample("swordDraw",0.9);Play.start("ev","blade_draw",{dur:2});
@@ -21988,7 +22183,7 @@ function startFlight(delta,dir){
  const n=flightLen(delta);
  G.flight={d:delta,i:0,n,md:dir,x:p.x,y:p.y};
  /* Марш начинается настоящим звуком каменных ступеней. */
- safeFn(()=>Bank.play("deep_stairs",{seed:n,gain:0.6,maxSec:4}));
+ safeFn(()=>{Bank.play("deep_stairs",{seed:n,gain:0.6,maxSec:4});setTimeout(()=>safeFn(()=>Bank.play("lug_land",{seed:n,gain:0.45,maxSec:1})),700);});
  safeFn(()=>Bank.play("stair_step",{seed:1,gain:0.55,maxSec:1.4}));
  safeFn(()=>beacon(delta>0?"stairs_down":"stairs_up",0,0));
  /* Шахта вертикальна, и это стоит сказать: игрок должен знать, что вернётся
@@ -22243,7 +22438,7 @@ const SCAPE_VOICE={
  gate:     {role:"gate",         period:9.0, gain:0.55, prio:1},
  chest:    {role:"chest",        period:8.0, gain:0.55, prio:2},
  vein:     {role:"res_ore",      period:8.0, gain:0.50, prio:1},
- altar:    {role:"altar",        period:9.0, gain:0.55, prio:1},
+ altar:    {role:"bell_small",        period:9.0, gain:0.55, prio:1},
  torch:    {role:"torch",        period:6.0, gain:0.35, prio:0},
  well:     {role:"well",         period:9.0, gain:0.45, prio:0},
  npc:      {role:"npc_common",   period:7.0, gain:0.45, prio:1},
@@ -22881,7 +23076,7 @@ function openVault(x,y){
  return false;}
 /* Крышка сундука: настоящая запись поверх прежнего синтеза. */
 /* Одноразовое рассыпается в руках: сухой треск сработавшей вещи. */
-function spentSound(){safeFn(()=>Bank.play("mtg_tool_break",{gain:0.55,maxSec:3}));}
+function spentSound(){safeFn(()=>Bank.play(Math.random()<0.5?"mtg_tool_break":"lug_staff_break",{gain:0.55,maxSec:3}));}
 /* Дымок над потухшим: короткий выдох там, где что-то догорело. */
 function smokeSound(){safeFn(()=>Bank.play("mtg_smoke",{gain:0.4,maxSec:2}));}
 function chestLidSound(open){
@@ -22909,7 +23104,7 @@ function openChest(x,y){
    /* Механизм срабатывает с настоящим ударом, а не одним щелчком. */
    setTimeout(()=>safeFn(()=>Bank.play("stk_blast",{seed:x+y,gain:0.6,maxSec:4})),220);
    /* За щелчком идёт осыпь: ловушка звучит на два такта. */
-   setTimeout(()=>safeFn(()=>Bank.play("collapse",{seed:x+y,gain:0.6,maxSec:4})),260);
+   setTimeout(()=>safeFn(()=>{Bank.play("ad_collapse",{seed:x+y,gain:0.6,maxSec:5});Bank.play("collapse",{seed:x+y,gain:0.5,maxSec:4});}),260);
    setTimeout(()=>safeFn(()=>Bank.play("shatter",{seed:x+y,gain:0.5,maxSec:3})),420);
    setTimeout(()=>safeFn(()=>Bank.play("quake_low",{seed:x+y,gain:0.5,maxSec:4})),640);
    UI.hit();vib([40,60,40]);});
@@ -23197,6 +23392,12 @@ function move(dir){
    металл кузни, камень улиц, гравий верхних ярусов, кости средних и
    кристалл на дне.
    ════════════════════════════════════════════════════════════════════════ */
+/* Живые шаги-дублёры: каждый третий шаг по траве, снегу, камню, доскам и
+   мягкой земле берётся из записей Lugaru и OpenClonk — поступь перестаёт
+   быть одной и той же парой файлов. */
+const STEP_ALT={grass:"lug_step_grass",snow:"lug_step_snow",stone:"lug_step_stone",cave:"lug_step_stone",
+ marble:"oc_step_hard",plank:"oc_step_hard",dirt:"oc_step_soft",leaves:"oc_step_soft",mud:"oc_step_soft",
+ straw:"oc_step_soft",water:"oc_swim"};
 const SURF_ROLE={grass:"tread_grass",dirt:"step_dust",stone:"tread_rock",sand:"tread_sand",
  water:"step_shallow",cave:"tread_gravel",snow:"tread_snow",ice:"step_ice",leaves:"step_leaves",
  mud:"step_mud",plank:"tread_wood",straw:"step_straw",marble:"step_marble",bone:"step_bone",
@@ -23586,6 +23787,8 @@ function stepSound(){AE.ensure();
   if(G.dark){
    const тёмный=DARK_STEP_ROLE[пов];
    if(тёмный&&Bank.play(тёмный,{seed,gain:0.55,maxSec:0.9}))return;}
+  const живой=STEP_ALT[пов];
+  if(живой&&seed%3===0&&Bank.play(живой,{seed,gain:0.5,maxSec:0.9}))return;
   const свой=SURF_ROLE[пов];
   if(свой&&Bank.play(свой,{seed,gain:0.55,maxSec:0.9}))return;
   const зап=SURF_FALLBACK[пов];
@@ -24173,8 +24376,8 @@ const Weather={cur:null,timer:null,
   if(w==="Ветрено")Play.start("w1","wind",{loop:true});
   if(w==="Гроза"){Play.start("w1","rain",{loop:true});Play.start("w2","wind",{loop:true});
   safeFn(()=>{Bank.play("stk_rain",{gain:0.4,maxSec:8});
-   setTimeout(()=>safeFn(()=>Spatial.role("stk_thunder",0,0,{dz:3,gain:0.55,maxSec:6})
-    ||Bank.play("stk_thunder",{gain:0.55,maxSec:6})),900);});
+   setTimeout(()=>safeFn(()=>Spatial.role(G.day%2?"stk_thunder":"oc_thunder",0,0,{dz:3,gain:0.55,maxSec:6})
+    ||Bank.play(G.day%2?"stk_thunder":"oc_thunder",{gain:0.55,maxSec:6})),900);});
    const strike=()=>{if(this.cur!=="Гроза")return;
     Play.start("ev","thunder",{dur:6});safeFn(()=>Bank.play("war_timpani",{seed:Date.now(),gain:0.55,maxSec:5}));
     vib(60);sub("⛈️ Удар грома");
@@ -24368,7 +24571,7 @@ function playWoundSfx(dmg=6){try{AE.ensure();
  safeFn(()=>Bank.play(heroVoiceFemale()?"hero_pain_f":"hero_pain_m",{seed:dmg,gain:0.55,maxSec:2}));
  safeFn(()=>Bank.play("battle_shield",{seed:dmg,gain:0.4,maxSec:2}));
  /* Доспех отвечает на удар: лязг и глухой толчок в щит. */
- safeFn(()=>Bank.play((Number(dmg)||6)>=12?"shield_hit":"armor_clank",
+ safeFn(()=>Bank.play((Number(dmg)||6)>=12?"oc_shield_metal":((Number(dmg)||0)%2?"armor_clank":"lug_metal"),
   {seed:Math.floor(Math.random()*97),gain:0.45,maxSec:2}));
  const s=new SFX();const heavy=Math.max(0.6,Math.min(1.5,0.6+(Number(dmg)||6)/14));s.wound(heavy);setTimeout(()=>{try{s.stop(.2);}catch(e){}},650);}catch(e){}}
 function endCombat(){if(G.combat&&G.combat.monsterTimer)clearTimeout(G.combat.monsterTimer);G.inCombat=false;G.combat=null;
@@ -24382,6 +24585,29 @@ function endCombat(){if(G.combat&&G.combat.monsterTimer)clearTimeout(G.combat.mo
  if(G.place&&G.place.pendingKill)G.place.pendingKill=null;
  const bar=document.getElementById("combatBar");if(bar)bar.hidden=true;
  const log=document.getElementById("cbLog");if(log)log.textContent="";}
+/* ── ОРУЖИЕ НА СЛУХ ──
+   Удар звучал одинаково, что мечом, что посохом, что луком. Теперь род
+   оружия слышен: свист и рубящий клинок, глухой посох, тетива и стрела в
+   цель, брошенный дротик. Записи Lugaru и OpenClonk. */
+function weaponKind(){
+ try{const w=G.equip&&G.equip.weapon;const t=String((w&&(w.name||w.n||w.type))||"").toLowerCase();
+  if(/лук|арбалет/.test(t))return "bow";
+  if(/копь|дротик|пик/.test(t))return "javelin";
+  if(/посох|жезл|дубин|булав|молот/.test(t))return "staff";
+  if(/кинжал|нож|серп/.test(t))return "knife";
+  return "sword";}catch(_){return "sword";}}
+function weaponSwingSound(hit){
+ try{
+  const k=weaponKind(),seed=(Number(G.x)||0)*7+(Number(G.y)||0)*13+(Number(G.hp)||0);
+  if(k==="bow"){Bank.play("oc_bow_shoot",{seed,gain:0.6,maxSec:2});
+   setTimeout(()=>safeFn(()=>Bank.play("oc_arrow_shoot",{seed,gain:0.5,maxSec:2})),120);
+   setTimeout(()=>safeFn(()=>Bank.play(hit?"oc_projectile_hit":"oc_arrow_ground",{seed,gain:0.55,maxSec:2})),420);return true;}
+  if(k==="javelin"){Bank.play("oc_javelin_throw",{seed,gain:0.6,maxSec:2});
+   setTimeout(()=>safeFn(()=>Bank.play(hit?"oc_projectile_hit":"oc_javelin_ground",{seed,gain:0.55,maxSec:2})),380);return true;}
+  Bank.play(k==="staff"?"oc_swing":"lug_whoosh",{seed,gain:0.5,maxSec:1.5});
+  setTimeout(()=>safeFn(()=>Bank.play(!hit?"lug_whoosh_hit":k==="staff"?(seed%2?"lug_staff":"oc_weapon_hit"):k==="knife"?"lug_knife_slice":"lug_sword",{seed,gain:0.6,maxSec:2})),160);
+  if(hit&&k!=="staff")setTimeout(()=>safeFn(()=>Bank.play("lug_flesh",{seed,gain:0.4,maxSec:1.5})),260);
+  return true;}catch(_){return false;}}
 function fight(a){const cb=G.combat;if(!cb)return;const m=cb.m;
  /* ── Разрыв высот ──
     Клинком до того, кто идёт на две клетки выше, не достать — и это надо
@@ -24399,7 +24625,7 @@ function fight(a){const cb=G.combat;if(!cb)return;const m=cb.m;
   cbLog("Удар ушёл в пустоту: разная высота.");
   updateCombat();
   return;}
- if(a==="atk"){let dmg=atk()+Math.floor(Math.random()*5);
+ if(a==="atk"){safeFn(()=>weaponSwingSound(true));let dmg=atk()+Math.floor(Math.random()*5);
   dmg+=Math.round(3*fxLevel("slay"));                       /* пламя Кальдера: урон по чудовищам */
   let critChance=0.10*fxLevel("crit")+(hasSkill("steady")?0.12:0); /* удар Таура и твёрдая рука */
   /* Свойства глубинных вещей: острая чаще бьёт насмерть, тяжёлая — больнее. */
@@ -24429,7 +24655,7 @@ function fight(a){const cb=G.combat;if(!cb)return;const m=cb.m;
   if(safeFn(()=>buffActive("forgecall"),false)){critChance=1;
    safeFn(()=>{delete G.buffs.forgecall;});}
   const crit=critChance>0&&Math.random()<critChance;
-  if(crit){dmg*=2;safeFn(()=>{UI.blip(1320,.12,.25);Bank.play("clash",{seed:dmg,gain:0.7,maxSec:3});
+  if(crit){dmg*=2;safeFn(()=>{UI.blip(1320,.12,.25);Bank.play("lug_impact",{seed:dmg,gain:0.6,maxSec:2});Bank.play("clash",{seed:dmg,gain:0.7,maxSec:3});
    Bank.play("cast_warcry",{seed:dmg,gain:0.5,maxSec:3});
    setTimeout(()=>safeFn(()=>Bank.play("clash_blades",{seed:dmg,gain:0.6,maxSec:3})),120);});}
   cb.hp-=dmg;playWeaponCombatSfx(true,(G.combat&&G.combat.lastDir)||"N",dmg);
@@ -24450,14 +24676,14 @@ function fight(a){const cb=G.combat;if(!cb)return;const m=cb.m;
  else if(a==="flee"){if(Math.random()<0.4+G.agi*0.02+0.12*fxLevel("deal")){
    endCombat();narrate("Вы сбежали!");journal(`Побег от «${m.n}».`);refresh();resumeLocationMusic();return;}
   cbLog("Сбежать не вышло!");
-  safeFn(()=>{Bank.play("shield_block",{seed:G.hp,gain:0.45,maxSec:3});Play.start("ev","shield_bash",{dur:2});});}
+  safeFn(()=>{Bank.play("oc_shield_block",{seed:G.hp,gain:0.5,maxSec:2});Bank.play("shield_block",{seed:G.hp,gain:0.45,maxSec:3});Play.start("ev","shield_bash",{dur:2});});}
  narrate(cbLog2text());
  if(cb.hp<=0){victory();return;}
  /* Мера сложности: во сколько раз больнее бьёт мир. */
  let mdmg=Math.max(1,Math.round((m.dmg-Math.floor(def()/2)+Math.floor(Math.random()*3))*diff().dmg));
  if(hasSkill("warded"))mdmg=Math.max(1,Math.round(mdmg*0.8));  /* навык «Оберег» держит удар */
  /* Удар по игроку слышен: за Гранью тяжелее, на Грани — короче. */
- safeFn(()=>Bank.play(G.dark?"es_hit":"mtg_hurt",{gain:0.55,maxSec:3}));
+ safeFn(()=>Bank.play(G.dark?"es_hit":(/wolf|bear|spider|drake|harpy|cat|rat|волк|медвед|паук|кош|крыс/i.test(String(m.id||m.kind||m.n||""))?"lug_claw":((Number(mdmg)||0)%2?"mtg_hurt":"oc_hurt")),{gain:0.55,maxSec:3}));
  /* Школьные дары в защите: стальное сердце тупит удар, стена щитов гасит
     первый удар боя, оберег света ополовинивает нежить. */
  if(safeFn(()=>buffActive("steelheart"),false))mdmg=Math.max(1,Math.round(mdmg*0.67));
@@ -24567,7 +24793,7 @@ function victory(){const cb=G.combat,m=cb.m;
  safeFn(()=>{
    const значимо=(Number(m.lvl)||1)>=(Number(G.level)||1)+3;
    if(значимо)eventFanfare(["siege_victory","war_brass","wide_strings","crowd_cheer"],0.6);
-   else setTimeout(()=>safeFn(()=>Bank.play("body_fall",{seed:m.lvl,gain:0.45,maxSec:2})),300);});
+   else setTimeout(()=>safeFn(()=>{Bank.play("lug_splatter",{seed:m.lvl,gain:0.35,maxSec:1});Bank.play("body_fall",{seed:m.lvl,gain:0.45,maxSec:2});}),300);});
  UI.fanfare();journal(`Побеждён «${m.n}» ${m.lvl} уровня.`);
  /* Логово в подземелье после победы пустеет и больше не нападает. */
  /* ── СТРАЖ ПАЛ ──
@@ -24581,7 +24807,7 @@ function victory(){const cb=G.combat,m=cb.m;
   G.place.pendingGuard=null;стражПал=true;
   safeFn(()=>{
    Bank.play("es_boom_last",{gain:0.6,maxSec:5});
-   setTimeout(()=>safeFn(()=>Bank.play("hall_gate",{gain:0.6,maxSec:5})),500);
+   setTimeout(()=>safeFn(()=>Bank.play("ad_gate_close",{gain:0.6,maxSec:5})),500);
    setTimeout(()=>safeFn(()=>Spatial.role("stairs_down",0,0,{dz:-1,gain:0.7,maxSec:4})
     ||Bank.play("stairs_down",{gain:0.7,maxSec:4})),900);});}
  if(G.place&&G.place.pendingKill){const k=G.place.pendingKill;G.place.pendingKill=null;
@@ -24729,7 +24955,7 @@ function defeat(){endCombat();Music.stop();
  safeFn(()=>{Bank.play("jingle_lose",{gain:0.8});Bank.play("defeat",{seed:G.day,gain:0.55,maxSec:9});
   setTimeout(()=>safeFn(()=>Bank.play("cello_defeat",{gain:0.7,maxSec:7})),380);
   /* Поражение договаривают глубина и плач: удар о землю, стон, гобой. */
-  Bank.play("body_fall",{seed:G.day,gain:0.55,maxSec:3});
+  Bank.play("oc_die",{seed:G.day,gain:0.5,maxSec:2});Bank.play("body_fall",{seed:G.day,gain:0.55,maxSec:3});
   Bank.play(heroVoiceFemale()?"hero_die_f":"hero_die_m",{seed:G.day,gain:0.7,maxSec:4});
   setTimeout(()=>safeFn(()=>Bank.play("siege_defeat",{gain:0.6,maxSec:6})),700);
   Play.start("ev","scream",{dur:3});
@@ -24900,10 +25126,10 @@ function gatherCurrent(source="tap"){
    const пов=G.place?safeFn(()=>indoorSurface(),null):safeFn(()=>outdoorSurface(),null);
    if(пов==="gravel"||пов==="ash")Bank.play("mtg_dig_gravel",{gain:0.5,maxSec:3});
    else if(пов==="ice"||пов==="crystal")Bank.play("mtg_ice_break",{gain:0.5,maxSec:3});
-   else if(дерево)Bank.play("mtg_chop",{gain:0.55,maxSec:3});
-   else if(камень)Bank.play(G.dark&&(Number(G.place&&G.place.depth)||0)>=31?"mtg_lava":"mtg_stone_hit",
+   else if(дерево){Bank.play(Math.random()<0.5?"mtg_chop":"uh_lumberjack",{gain:0.55,maxSec:3});setTimeout(()=>safeFn(()=>Bank.play("oc_tree_crack",{gain:0.45,maxSec:2})),500);}
+   else if(камень)Bank.play(G.dark&&(Number(G.place&&G.place.depth)||0)>=31?"mtg_lava":(Math.random()<0.5?"mtg_stone_hit":"uh_stonemason"),
     {gain:0.55,maxSec:3});
-   else Bank.play("mtg_crumble",{gain:0.5,maxSec:2});});
+   else Bank.play(/трав|гриб|ягод/i.test(c.res.name)?(Math.random()<0.5?"ad_leaves":"lug_bush"):"mtg_crumble",{gain:0.5,maxSec:2});});
   if(рудное&&hasAbility("oresense")){bounty+=1;навык+=" Чутьё руды: ещё одна.";}
   const вьюк=safeFn(()=>mountGift("добыча"),null);
   if(вьюк){bounty+=вьюк;навык+=` ${mountNow().n} везёт ещё ${вьюк}.`;}
@@ -24918,7 +25144,7 @@ function gatherCurrent(source="tap"){
   if(сорт&&сорт.товар){
    сортДар=Math.max(1,Number(сорт.дар)||1);
    G.inv[сорт.товар]=(Number(G.inv[сорт.товар])||0)+сортДар;
-   safeFn(()=>Bank.play("fx_crystal",{seed:G.x+G.y,gain:0.55,maxSec:3}));}
+   safeFn(()=>{Bank.play("oc_diamond",{seed:G.x+G.y,gain:0.5,maxSec:1});Bank.play("oc_glass_hit",{seed:G.x+G.y,gain:0.55,maxSec:3});});}
   if(bounty>1)safeFn(()=>UI.blip(1040,.09,.16));
   /* Ремесло слышно по инструменту: кирка по руде, топор по дереву, серп
      по траве, короб по ягодам. */
@@ -25718,17 +25944,17 @@ function castSpell(i){const sp=SPELLS[i];
   setTimeout(()=>safeFn(()=>Bank.play(layer,{seed:i,gain:0.5,maxSec:6})),260);
   /* Каст слышен в три захода: набор силы, слово и разряд. Школа выбирает
      третий слой — свет поёт арфой, тьма отвечает порчей, прочее бьёт. */
-  safeFn(()=>Bank.play("spell_harp",{seed:i,gain:0.45,maxSec:4}));
+  safeFn(()=>Bank.play("oc_cracker",{seed:i,gain:0.45,maxSec:2}));
   /* Живая запись школы поверх оркестрового слоя. */
   const живой={"Исцеление":"cast_heal","Свет зари":"cast_heal","Каменная кожа":"cast_shield",
    "Ледяная игла":"cast_ice","Искра глубин":"cast_shock","Покров тени":"cast_teleport",
-   "Слово тишины":"cast_timestop","Зов ветра":"cast_arrows","Огненный шар":"cast_fire",
-   "Искра":"cast_shock","Зов дождя":"cast_thunder","Ветер странника":"cast_teleport"}[sp.n]
+   "Слово тишины":"cast_timestop","Зов ветра":"oc_gust","Огненный шар":"oc_fireball",
+   "Искра":"oc_zap","Зов дождя":"cast_thunder","Ветер странника":"cast_teleport"}[sp.n]
    ||(role==="spell_fire"?"cast_fire":role==="spell_ice"?"cast_ice":
       role==="spell_light"?"cast_heal":role==="spell_dark"?"cast_burn":"cast_shoot");
   Bank.play(живой,{seed:i,gain:0.7,maxSec:6});
-  const бросок=role==="spell_light"?"chant_calliope":role==="spell_dark"?"hex_charang":
-   role==="spell_ice"?"rune_square":role==="spell_fire"?"spell_bolt":"charm_chiff";
+  const бросок=role==="spell_light"?"magic_shimmer":role==="spell_dark"?"oc_sizzle":
+   role==="spell_ice"?"mtg_ice_break":role==="spell_fire"?"oc_blast":"oc_electrical";
   setTimeout(()=>safeFn(()=>Bank.play(бросок,{seed:i,gain:0.5,maxSec:5})),520);
   setTimeout(()=>safeFn(()=>Bank.play("magic_rewind",{seed:i,gain:0.35,maxSec:3})),900);});
  /* Синтез договаривает то, чего нет в записях: набор силы, разряд и — для
