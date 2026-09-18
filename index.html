@@ -16373,9 +16373,19 @@ function actionsFor(o){
   "assay","trap","disarm","shelf","apprentice","use"];
  const общие=порядок.map(id=>IACT[id]).filter(a=>a&&(!a.можно||safeFn(()=>a.можно(o),false)));
  const тех=(o&&o.станок)?safeFn(()=>techsAt(o.станок),[])||[]:[];
+ const выше=(o&&o.станок)?safeFn(()=>techsLocked(o.станок),[])||[]:[];
  return общие.concat(тех.map(t=>({id:"tech:"+t.id,n:t.n,значок:t.значок,
   о:`${t.о} Нужно: ${Object.entries(t.берёт||{}).map(([k,v])=>k+" ×"+v).join(", ")||"припас по разбору"}. Доля неудачи: ${Math.round(techRisk(t)*100)} из ста.`,
-  делать:()=>techDo(t,o.станок)})));}
+  делать:()=>techDo(t,o.станок)})))
+ .concat(выше.map(t=>{
+  const м=MAST_BY_ID[t.маст]||{n:t.маст};
+  const есть=mastLevel(t.маст);
+  return {id:"tech:"+t.id,n:`${t.n} — нужна ступень ${t.ур}, ${MAST_RANK[t.ур]}`,значок:"🔒",заблокировано:true,
+   о:`${t.о} Пока не по рукам: «${м.n}» у вас ${MAST_RANK[есть]}, а нужно ${MAST_RANK[t.ур]}.`,
+   делать:()=>{
+    safeFn(()=>Bank.play("knock_soft",{gain:0.4,maxSec:2}));
+    narrate(`${t.n}: пока не по рукам. Нужна ступень «${м.n}» ${t.ур} — ${MAST_RANK[t.ур]}, у вас ${MAST_RANK[есть]}. Дальше учат наставник и сама работа.`);
+    return true;}};}));}
 /* ── Окно: сперва объекты, потом действия выбранного ── */
 let objList=[],objPick=-1;
 function openObjects(){
@@ -16411,7 +16421,10 @@ function openObjActions(i){
   +acts.map(a=>`<button class="item" data-cmd="objact:${i}:${a.id}" data-speak="${(a.n+". "+(a.о||"")).replace(/"/g,"&quot;")}">${a.значок} ${a.n}</button>`).join("")
   +`<button class="item" data-cmd="objback" data-speak="Назад, к списку объектов вокруг.">↩️ Назад: что вокруг</button>`;
  openModal("modal-object");
- narrate(`${o.n}, ${где}. Действий: ${acts.length}: ${acts.map(a=>a.n).join(", ")}.`);
+ /* Вслух — сперва то, что можно, потом то, до чего ещё расти. */
+ const можно=acts.filter(a=>!a.заблокировано),выше=acts.filter(a=>a.заблокировано);
+ narrate(`${o.n}, ${где}. Действий: ${можно.length}: ${можно.map(a=>a.n).join(", ")}.`
+  +(выше.length?` Выше вашей ступени ещё ${выше.length}: ${выше.map(a=>a.n).join("; ")}.`:""));
  return true;}
 /* ── Полка и книга: два нижних уровня того же окна ── */
 let shelfObj=null,shelfItems=null;
@@ -16892,9 +16905,18 @@ function techRisk(t){
  if(safeFn(()=>pactGift("рука"),false))p-=0.15;
  return Math.max(0.02,Math.min(0.45,p));}
 /* Какие техники доступны у этого станка. */
-function techsAt(станок){
+function techsAt(станок,все){
  if(!станок)return [];
- return TECHS.filter(t=>t.станки.indexOf(станок)>=0&&mastLevel(t.маст)>=t.ур);}
+ return TECHS.filter(t=>t.станки.indexOf(станок)>=0&&(все||mastLevel(t.маст)>=t.ур));}
+/* ── ЛЕСТНИЦА РЕМЕСЛА ВИДНА ЦЕЛИКОМ ──
+   Работы выше вашей ступени прятались. Игрок, стоящий у наковальни с первой
+   ступенью, слышал две работы и не знал, что их семь: лестница была, а
+   ступеней на ней не видно. Спецификация просит иначе: если действие есть,
+   но закрыто условием, показать его с причиной. Показываются те, что выше
+   ступени ЗНАКОМОГО ремесла; чужое ремесло не показывается вовсе — без
+   первого урока у горна и вправду только осмотреть. */
+function techsLocked(станок){
+ return techsAt(станок,true).filter(t=>{const ур=mastLevel(t.маст);return ур>0&&ур<t.ур;});}
 /* Работа у станка. */
 function techDo(t,станок){
  if(!t)return false;
