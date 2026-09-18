@@ -14603,6 +14603,9 @@ const PROPS=[
    G.items.push("Верёвка");
    narrate("Бухта верёвки. Пенька в руку толщиной, сухая и крепкая. Смотали и забрали: под землёй верёвка стоит дороже меча.");
    refresh();saveGame(true);}},
+ {id:"lever",n:"рычаг в стене",b:"wall",
+  use:()=>{safeFn(()=>Bank.play("mechanism",{gain:0.55,maxSec:4}));
+   narrate("Рычаг в стене: железная рукоять на каменной оси, отполированная чужими ладонями. Тянуть её — отдельное дело: выберите «Что вокруг», рычаг и «Потянуть рычаг».");}},
  {id:"chains",n:"цепи и кандалы",b:"wall",
   use:()=>{safeFn(()=>{Bank.play("metal_hit",{gain:0.55,maxSec:3});
     setTimeout(()=>safeFn(()=>Bank.play("clang_hard",{gain:0.45,maxSec:3})),240);});
@@ -14777,9 +14780,9 @@ const PROPS_BY_PLACE={
  burg:["table","hearth","barrels","sacks","rack","board","chains","crates","brazier","bones"],
  /* В схроне всё на виду и всё готово к тому, чтобы исчезнуть за час. */
  smugglers:["crates","sacks","barrels","rope","table","candle","scales","dresser","hearth","board"],
- ruins:["statue","brazier","mirror","circle","bones","chains","stalag","tapestry","candle","cage"],
+ ruins:["statue","brazier","mirror","circle","bones","chains","stalag","tapestry","candle","cage","lever"],
  cave_entrance:["brazier","barrels","statue","bones","mushbed","stalag","rope","chains"],
- dungeon:["brazier","statue","circle","mirror","cauldron","barrels","bones","chains","cage","mushbed","stalag","rope","candle","crates","scrollcase","bookcase"]};
+ dungeon:["brazier","statue","circle","mirror","cauldron","barrels","bones","chains","cage","mushbed","stalag","rope","candle","crates","scrollcase","bookcase","lever"]};
 function propAt(x,y){
  const p=G.place;if(!p)return PROP_BY_ID.table;
  let pool=(p.depth>0?PROPS_BY_PLACE.dungeon:PROPS_BY_PLACE[p.stype])||["table","hearth","barrels"];
@@ -15463,6 +15466,95 @@ iact("doormech",{n:"Проверить механизм",значок:"🔩",
       :"Посторонних тяг не слышно.")
    +(руна?" По косяку идёт рунная строка — старая, но целая: дверь помнит хозяина.":""));
   return true;}});
+/* ── РЫЧАГ ──
+   Спецификация просит от подземелья не только стен и сундуков: рычаг тянут,
+   камень сдвигают, и под ними что-то есть. Рычаг связан не с воздухом: он
+   либо отпирает палату этого яруса, либо открывает ход за кладкой, либо
+   взводит то, что взводить не стоило. Что именно — выводится из клетки, и
+   один раз узнанное не меняется. */
+function leverKind(x,y){
+ const p=G.place;if(!p)return "мёртвый";
+ const h=hashName(p.bx*11+x,p.by*13+y,8300);
+ if(h<0.30)return "палата";
+ if(h<0.58)return "ход";
+ if(h<0.74)return "ловушка";
+ return "мёртвый";}
+iact("pull",{n:"Потянуть рычаг",значок:"🎚️",
+ можно:o=>!!(G.place&&o.плитка==="X"&&o.вещь==="lever"),
+ делать:o=>{
+  if(propMarked(o.x,o.y,"pulled")){
+   safeFn(()=>Bank.play("mechanism",{seed:o.x+o.y,gain:0.45,maxSec:3}));
+   narrate("Рычаг уже опущен и назад не идёт: своё он отработал.",{interrupt:false});
+   return true;}
+  propMark(o.x,o.y,"pulled");
+  safeFn(()=>propTime(0.2));
+  safeFn(()=>{Bank.play("mechanism",{seed:o.x+o.y,gain:0.7,maxSec:4});
+   setTimeout(()=>safeFn(()=>Bank.play("stone_low",{seed:o.y,gain:0.55,maxSec:5})),320);});
+  const вид=leverKind(o.x,o.y);
+  if(вид==="палата"){
+   const lvl=safeFn(()=>curLevel(),null);
+   let нашли=null;
+   if(lvl)for(let y=0;y<lvl.h&&!нашли;y++)for(let x=0;x<lvl.w&&!нашли;x++)
+    if(tileAt(lvl,x,y)==="Y"&&!safeFn(()=>vaultIsOpen(x,y),false))нашли=[x,y];
+   if(нашли){
+    safeFn(()=>{setPlaceMark(нашли[0],нашли[1],"open");markVaultOpen(нашли[0],нашли[1]);});
+    safeFn(()=>{Bank.play("hall_gate",{gain:0.7,maxSec:5});UI.fanfare();
+     beaconAt("gate",нашли[0]-G.place.x,нашли[1]-G.place.y,0,
+      Math.max(Math.abs(нашли[0]-G.place.x),Math.abs(нашли[1]-G.place.y)));});
+    const д=Math.max(Math.abs(нашли[0]-G.place.x),Math.abs(нашли[1]-G.place.y));
+    narrate(`Рычаг пошёл вниз тяжело, и где-то в стороне провернулся замок в два оборота. Дверь палаты отошла: идти ${д} ${plural(д,"шаг","шага","шагов")}, ${dirBetween(нашли[0]-G.place.x,нашли[1]-G.place.y)||"туда"}.`);
+   }else narrate("Рычаг пошёл вниз, и где-то далеко провернулся замок. Но палаты на этом ярусе нет: он отпер дверь, которой здесь не поставили.");
+  }else if(вид==="ход"){
+   let открыли=false;
+   for(const [dx,dy] of [[0,-1],[0,1],[-1,0],[1,0],[0,0]]){
+    if(safeFn(()=>revealSecret(o.x+dx,o.y+dy,undefined,true),false)){открыли=true;break;}}
+   safeFn(()=>Bank.play("deep_stone",{gain:0.6,maxSec:5}));
+   narrate(открыли?"Рычаг пошёл вниз, и кладка рядом поехала в сторону: за ней ход."
+    :"Рычаг пошёл вниз, камень вздрогнул, и где-то далеко что-то открылось. Здесь — ничего: ход не рядом.");
+  }else if(вид==="ловушка"){
+   const л=safeFn(()=>trapAt(G.place.x,G.place.y),null);
+   safeFn(()=>Bank.play("stk_crash",{gain:0.6,maxSec:4}));
+   if(л&&л.состояние!=="обезврежена"){
+    narrate("Рычаг пошёл вниз слишком легко, и за стеной щёлкнуло. Это был не запор.");
+    safeFn(()=>trapFire(G.place.x,G.place.y,л));
+   }else{
+    const урон=Math.max(1,Math.round(G.hpMax*0.08));
+    G.hp=Math.max(1,G.hp-урон);
+    narrate(`Рычаг пошёл вниз слишком легко, и из паза ударило крошкой: урон ${урон}, здоровья осталось ${G.hp}. Это был не запор, а сторож.`);}
+  }else{
+   safeFn(()=>Bank.play("metal_hit",{gain:0.5,maxSec:3}));
+   narrate("Рычаг подаётся с хрустом и остаётся внизу. Ничего. Тяга за стеной давно оборвана, и он не связан уже ни с чем.");}
+  safeFn(()=>{refresh();saveGame(true);});
+  return true;}});
+/* ── СДВИНУТЬ ──
+   Тяжёлое двигают, и под ним смотрят. Это не обыск: обыск ощупывает, а тут
+   надо упереться. Зато под сдвинутым находят наверняка. */
+const SHOVE_PROPS=["statue","stalag","bones","millstone","woodpile","crates","barrels"];
+iact("shove",{n:"Сдвинуть",значок:"🪨",
+ можно:o=>!!(G.place&&o.плитка==="X"&&SHOVE_PROPS.indexOf(o.вещь)>=0),
+ делать:o=>{
+  safeFn(()=>propTime(0.4));
+  safeFn(()=>{Bank.play("stone_low",{seed:o.x+o.y,gain:0.65,maxSec:4});
+   setTimeout(()=>safeFn(()=>Bank.play("craft_stone",{seed:o.y,gain:0.5,maxSec:4})),320);});
+  const т=safeFn(()=>stashAt(o.x,o.y),null);
+  if(т&&т.состояние==="скрыт"){
+   stashSet(т.ключ,"найден");
+   safeFn(()=>{Bank.play("secret_box",{seed:o.x,gain:0.6,maxSec:4});
+    beaconAt("chest",o.x-G.place.x,o.y-G.place.y,0,
+     Math.max(Math.abs(o.x-G.place.x),Math.abs(o.y-G.place.y)));});
+   narrate(`${o.n} идёт тяжело, в два приёма, и под ней открывается то, что прятали: ${т.где.n}. Осталось достать.`);
+   safeFn(()=>saveGame(true));
+   return true;}
+  if(т&&т.состояние!=="скрыт"){
+   narrate(`${o.n} вы уже двигали: под ней ${т.состояние==="взят"?"пусто":"тот самый тайник"}.`,{interrupt:false});
+   return true;}
+  /* Под тяжёлым может не быть тайника — но может быть ход. */
+  const ход=safeFn(()=>revealSecret(o.x,o.y,undefined,true),false);
+  narrate(ход?`${o.n} отходит в сторону, и за ней открывается ход.`
+   :`${o.n} идёт тяжело и встаёт на новом месте. Под ней голый камень и то, что натекло за годы. Полчаса ушло.`);
+  safeFn(()=>{refresh();saveGame(true);});
+  return true;}});
+
 /* Слово о ненайденной ловушке: называть её до находки нельзя — это была бы
    находка даром, — но и промолчать значит обмануть ухо. */
 function trapHintWord(){
@@ -16276,7 +16368,7 @@ iact("apprentice",{n:"Проситься в ученики",значок:"🎓",
    К общим добавляются техники станка: у горна свои, у наковальни свои, и
    показаны только те, до которых доросло мастерство. */
 function actionsFor(o){
- const порядок=["look","listen","knock","hollow","secret","stash","stashtake","drawer","doormech","repair","salvage","attune",
+ const порядок=["look","listen","knock","hollow","secret","stash","stashtake","drawer","pull","shove","doormech","repair","salvage","attune",
   "altstudy","altread","altaura","altoffer","altbless","altseal","altartefact","altrite","altsacrifice","altmech",
   "assay","trap","disarm","shelf","apprentice","use"];
  const общие=порядок.map(id=>IACT[id]).filter(a=>a&&(!a.можно||safeFn(()=>a.можно(o),false)));
