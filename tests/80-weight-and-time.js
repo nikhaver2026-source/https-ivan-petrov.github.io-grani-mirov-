@@ -196,6 +196,8 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   G.mast={flux:{ур:5,оп:0,дел:0}};
   G.place={kind:"dungeon",bx:1400,by:1400,stype:"ruins",name:"Низ",depth:5,x:2,y:2};
   G.marks={};G.stash={};
+  /* Жребий срыва у станка здесь ни при чём: читаем след, а не удачу руки. */
+  const rnd=Math.random;Math.random=()=>0.999;
   const n0=сказ.length;
   techDo(TECH_BY_ID.echoes,"orb");
   const наПустом=/след пуст/i.test(сказ.slice(n0).join(" "));
@@ -210,7 +212,7 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   const n2=сказ.length;
   techDo(TECH_BY_ID.echoes,"orb");
   const другой=/след пуст/i.test(сказ.slice(n2).join(" "));
-  Speech.say=был;G.place=null;
+  Math.random=rnd;Speech.say=был;G.place=null;
   return {наПустом,прочло:/пало 1/.test(т)&&/открыто 1/.test(т)
    &&/вынуто из тайников 1/.test(т)&&/ловушек снято 1/.test(т),текст:т.slice(0,180),другой};});
  check('на нетронутом ярусе след времени честно говорит, что следа нет',след.наПустом,след);

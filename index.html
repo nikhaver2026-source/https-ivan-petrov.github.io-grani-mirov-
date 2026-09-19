@@ -218,6 +218,18 @@ h3{color:var(--acc2);margin:14px 0 6px;font-size:1.05rem;}
  <div id="charStats"></div><h3>📜 Известные заклинания</h3><div id="spellList"></div>
 </div></div>
 
+<!-- ЗЕЛЬЯ -->
+<div class="modal" id="modal-potions" role="dialog" aria-modal="true" aria-label="Зелья" hidden><div class="sheet">
+ <header><h2>⚗️ Зелья</h2><button type="button" data-cmd="close">✖️ Закрыть</button></header>
+ <div id="potBody"></div>
+</div></div>
+
+<!-- СОСТАВИТЕЛЬ ЗАКЛИНАНИЙ -->
+<div class="modal" id="modal-spellforge" role="dialog" aria-modal="true" aria-label="Составитель заклинаний" hidden><div class="sheet">
+ <header><h2>🧪 Составитель заклинаний</h2><button type="button" data-cmd="close">✖️ Закрыть</button></header>
+ <div id="sfBody"></div>
+</div></div>
+
 <!-- КВЕСТЫ -->
 <div class="modal" id="modal-quests" role="dialog" aria-modal="true" aria-label="Квесты" hidden><div class="sheet">
  <header><h2>📜 Квесты</h2><button type="button" data-cmd="close">✖️ Закрыть</button></header>
@@ -3635,6 +3647,7 @@ const AM_GROUPS=[
   ["homun","🧫 Гомункул"],
   ["demonology","🕯️ Демонология"],
   ["alchbook","🧪 Записная книжка алхимика"],
+  ["potions","⚗️ Зелья: сварить и выпить"],
   ["patrol","🛡️ Окликнуть разъезд"],
   ["cityplan","🏙️ План города: кварталы и площадь"],
   ["trade","🐫 Рынки, маршруты и караваны"],
@@ -3642,6 +3655,8 @@ const AM_GROUPS=[
   ["portal","🌀 Портальная сеть"],
   ["sail","🚢 Идти дальше морем"],
   ["fish","🎣 Рыбачить"],
+  ["dive","🤿 Нырнуть"],
+  ["landisle","🏝️ Пристать к острову"],
   ["look","👁️ Осмотреться"],
   ["map","🗺️ Карта места"]]],
  ["Персонаж",[
@@ -3652,6 +3667,8 @@ const AM_GROUPS=[
   ["realms","🌀 Слои мира"],
   ["quests","📜 Квесты"],
   ["school","🎓 Школы и умения"],
+  ["spellforge","🧪 Составить заклинание"],
+  ["schools","📚 Школы заклинаний"],
   ["enterdark","⚫ Шагнуть в разлом"],
   ["darkrite","🩸 Провести обряд"],
   ["preacher","🕯️ Проповедник и учение"],
@@ -3671,7 +3688,9 @@ const AM_GROUPS=[
   ["politics","⚔️ Политика, войны и рынок"],
   ["known","🧭 Молва о землях"],
   ["best","📖 Бестиарий"],
-  ["art","💎 Артефакты, части и рецепты"]]],
+  ["art","💎 Артефакты, части и рецепты"],
+  ["plants","🌿 Травник: растения и грибы"],
+  ["seas","🌊 Моря, острова и глубины"]]],
  ["Звук и справка",[
   ["lore","📚 Собрание знаний"],
   ["encyc","🎧 Энциклопедия звуков"],
@@ -3706,6 +3725,7 @@ function amAvailable(cmd){
  try{
   const c=cellContent(G.x,G.y);
   if(cmd==="assimilate")return safeFn(()=>assimAvailable(),false);
+  if(cmd==="spellforge")return safeFn(()=>spellForgeAvailable(),false);
   if(cmd==="ascend")return !!G.place;
   if(cmd==="enterdark")return !G.dark&&!G.place&&!G.ship&&safeFn(()=>riftAt(G.x,G.y),false);
   if(cmd==="darkrite"){
@@ -3731,6 +3751,9 @@ function amAvailable(cmd){
   if(cmd==="portal")return !G.ship&&!G.place&&!!portalNodeAt(G.x,G.y);
   if(cmd==="sail")return !!G.ship;
   if(cmd==="fish")return !!fishingSpot();
+  if(cmd==="dive")return safeFn(()=>diveAvailable(),false);
+  if(cmd==="landisle")return !!(G.ship&&G.ship.island);
+  if(cmd==="potions")return mastLevel("alchemy")>0||(Array.isArray(G.potions)&&G.potions.length>0);
   if(cmd==="descend")return !!G.place||!!(c.structure&&PLACE_KIND[c.structure.type]);
   if(cmd==="interact")return !G.place&&!!(c.structure||c.res||c.находка);
   if(cmd==="signs")return !G.place&&!G.dark;
@@ -3809,7 +3832,8 @@ function safeOpenMagicPanel(){
   }
   const list=m.querySelector('#magicSlots'); list.innerHTML='';
   const known=Array.isArray(G.spells)?G.spells:[];
-  for(let i=0;i<12;i++){
+  safeFn(()=>registerCustomSpells());
+  for(let i=0;i<Math.max(12,SPELLS.length);i++){
    const sp=SPELLS[i]||{n:`Слот ${i+1}`,cost:0};const b=document.createElement('button');b.type='button';b.className='item';b.dataset.magicIndex=i;b.dataset.speak=`Слот ${i+1}: ${sp.n}. Мана ${sp.cost}.`;
    b.textContent=`${i+1}. ${sp.n}${known.includes(sp.n)?'':' (не изучено)'}`;
    b.addEventListener('click',()=>{try{castSpell(i);}catch(e){narrate('Не удалось применить заклинание.');}});list.appendChild(b);
@@ -8632,6 +8656,237 @@ function announceSeaFoe(src,text){
  safeFn(()=>bankMonsterCue({id:src.id,voice:src.voice},"emerge",0.9));
  narrate(text);
 }
+
+/* ════════ МОРЯ, ОСТРОВА И ПОДВОДНЫЙ МИР (§123) ════════
+   Море было одним: переход, шторм, встреча. Теперь у воды восемь родов —
+   внутреннее, штормовое, ледяное, тёплое мелководье, глубоководная впадина,
+   магическое, море туманов, море аномалий, — и род выводится из тепла и
+   высоты дна под судном; у каждого своя погода, свой голос и своя беда.
+   По курсу встают острова одиннадцати родов, к которым можно пристать.
+   Под водой у берегов и с борта — места десяти родов: кораллы, пещеры,
+   затонувшие руины, кораблекрушения, поля, хищники, гиганты, древние
+   механизмы, поселения и владыки глубин; глубина погружения — в тактах
+   дыхания, и тактов больше у того, кто пил зелье или усвоил жабры. */
+const SEA_TYPES=[
+ {id:"inner",n:"внутреннее море",род:"внутреннему морю",о:"вода без горизонта, берег виден с обеих сторон",шторм:0.8,урон:0.8,звук:"sea_calm"},
+ {id:"storm",n:"штормовое море",род:"штормовому морю",о:"волна идёт стеной, и небо низко",шторм:2.2,урон:1.3,звук:"sea_storm"},
+ {id:"ice",n:"ледяное море",род:"ледяному морю",о:"льдины стучат в борт, снасти в инее",шторм:1.0,урон:1.0,звук:"mtg_ice_break",стужа:true},
+ {id:"shallow",n:"тёплое мелководье",род:"тёплому мелководью",о:"дно видно сквозь воду, вода тёплая",шторм:0.3,урон:0.5,звук:"ad_wave_rocky",мелко:true},
+ {id:"trench",n:"глубоководная впадина",род:"глубоководной впадине",о:"вода чёрная, лот не достаёт дна",шторм:1.0,урон:1.0,звук:"stk_deepsea",глубь:true},
+ {id:"magic",n:"магическое море",род:"магическому морю",о:"вода светится и поёт под килем",шторм:0.7,урон:0.8,звук:"magic_shimmer",мана:true},
+ {id:"fog",n:"море туманов",род:"морю туманов",о:"в трёх шагах не видно носа судна",шторм:0.6,урон:0.7,звук:"mist_keys",туман:true},
+ {id:"anomaly",n:"море аномалий",род:"морю аномалий",о:"компас крутится, а время идёт рывками",шторм:1.2,урон:1.0,звук:"oc_electrical",аномалия:true}];
+const SEA_BY_ID=Object.fromEntries(SEA_TYPES.map(t=>[t.id,t]));
+function seaTypeAt(x,y){
+ try{
+  const cl=climateAt(x,y);
+  if(cl.тепло<CLIM.Т_ЛЁД)return SEA_BY_ID.ice;
+  if(cl.тепло>CLIM.Т_ЗНОЙ&&cl.высота>CLIM.БЕРЕГ*0.6)return SEA_BY_ID.shallow;
+  const r=H(Math.floor(x/40),Math.floor(y/40),9400);
+  if(cl.высота<CLIM.БЕРЕГ*0.5&&r<0.5)return SEA_BY_ID.trench;
+  return r<0.34?SEA_BY_ID.inner:r<0.50?SEA_BY_ID.storm:r<0.62?SEA_BY_ID.fog:r<0.72?SEA_BY_ID.magic:r<0.80?SEA_BY_ID.anomaly:r<0.86?SEA_BY_ID.trench:r<0.94?SEA_BY_ID.shallow:SEA_BY_ID.inner;
+ }catch(_){return SEA_BY_ID.inner;}}
+function shipPos(){
+ const s=G.ship;if(!s)return {x:G.x,y:G.y};
+ const k=Math.min(1,Math.max(0,(Number(s.leg)||0)/Math.max(1,Number(s.legs)||1)));
+ return {x:Math.round(G.x+(s.tox-G.x)*k),y:Math.round(G.y+(s.toy-G.y)*k)};}
+/* Род моря под килем на этом переходе: что изменилось и что случилось. Возвращает слова. */
+function seaLegEffect(s){
+ try{
+  const p=shipPos();const t=seaTypeAt(p.x,p.y);
+  const впервые=s.sea!==t.id;s.sea=t.id;
+  if(!G.seasSeen||typeof G.seasSeen!=="object")G.seasSeen={};
+  if(!G.seasSeen[t.id]){G.seasSeen[t.id]=1;journal(`Судно вошло в ${t.n}.`);}
+  safeFn(()=>Bank.play(t.звук,{seed:s.leg,gain:0.5,maxSec:8}));
+  let слова=впервые?` Судно идёт по ${t.род}: ${t.о}.`:"";
+  if(t.стужа&&!safeFn(()=>buffActive("тепло"),false)){const d=2;G.hp=Math.max(1,G.hp-d);слова+=` Стужа с воды: −${d} здоровья; зелье тепла уберегло бы.`;}
+  if(t.мана){const m=Math.min(G.manaMax,G.mana+6)-G.mana;G.mana+=m;if(m)слова+=` Вода отдаёт силу: мана +${m}.`;}
+  if(t.туман&&H(s.leg,G.day,9401)<0.25&&s.left>0){s.left+=1;слова+=" В тумане сбились с курса: переход впустую.";}
+  if(t.аномалия){const r=H(s.leg,G.day,9402);if(r<0.3){G.hour+=3;if(G.hour>=24){G.hour-=24;G.day++;}слова+=" Время дёрнулось: три часа пропали.";}else if(r<0.55){const m=Math.min(G.mana,5);G.mana-=m;слова+=` Аномалия выпила ману: −${m}.`;}}
+  return слова;
+ }catch(_){return "";}}
+/* ── Острова ── */
+const ISLAND_TYPES=[
+ {id:"trade",n:"торговый остров",о:"пристань, склады и чужие флаги",звук:"port",дар:"торг"},
+ {id:"pirate",n:"пиратский остров",о:"костры на берегу и вытащенные на песок лодки",звук:"horn_dark",дар:"пираты"},
+ {id:"military",n:"военный остров",о:"стены, дозорная башня и рог с берега",звук:"army_horn",дар:"застава"},
+ {id:"volcanic",n:"вулканический остров",о:"дым над вершиной и тёплый пепел на берегу",звук:"score_lava",дар:"пепел"},
+ {id:"forest",n:"лесной остров",о:"лес до самой воды и птицы в кронах",звук:"oc_birds",дар:"лес"},
+ {id:"ice",n:"ледяной остров",о:"белый берег и треск льда",звук:"mtg_ice_break",дар:"лёд"},
+ {id:"sunken",n:"затонувший остров",о:"крыши и шпили торчат из воды",звук:"oc_bubble",дар:"погружение"},
+ {id:"flying",n:"летающий остров",о:"тень идёт по воде, а земля висит над мачтами",звук:"sky_wind",дар:"небо"},
+ {id:"anomalous",n:"аномальный остров",о:"берег то есть, то нет",звук:"oc_warp",дар:"аномалия"},
+ {id:"desert",n:"необитаемый остров",о:"ни дыма, ни следа: только прибой",звук:"sea_calm",дар:"добыча"},
+ {id:"ancient",n:"остров древней цивилизации",о:"ступени в воду и колонны без крыши",звук:"oc_connect",дар:"древность"}];
+const ISLAND_BY_ID=Object.fromEntries(ISLAND_TYPES.map(t=>[t.id,t]));
+const ISLE_A=["Сол","Мор","Кам","Тум","Вет","Рыб","Чай","Кит","Пен","Гряд"],ISLE_B=["ний","ец","ор","ан","ель","ара","ун","ица","ань","ок"];
+function islandTypeByHash(x,y){
+ const r=H(Math.floor(x/16),Math.floor(y/16),9410);
+ const cl=safeFn(()=>climateAt(x,y),{тепло:0.5});
+ if(cl.тепло<CLIM.Т_ЛЁД&&r<0.6)return ISLAND_BY_ID.ice;
+ if(cl.тепло>CLIM.Т_ЗНОЙ&&r<0.25)return ISLAND_BY_ID.volcanic;
+ return ISLAND_TYPES[Math.floor(r*ISLAND_TYPES.length)%ISLAND_TYPES.length];}
+function islandName(x,y){const a=ISLE_A[Math.floor(H(Math.floor(x/16),Math.floor(y/16),9411)*ISLE_A.length)],b=ISLE_B[Math.floor(H(Math.floor(y/16),Math.floor(x/16),9412)*ISLE_B.length)];return a+b;}
+/* Остров на суше: клетка архипелага принадлежит острову своего рода. */
+function islandHere(){
+ try{
+  if(G.ship||G.place||G.dark)return null;
+  const b=safeFn(()=>biomeAt(G.x,G.y),null);const bid=b?String(b.id||b):"";
+  if(!/archipelago|reef/.test(bid))return null;
+  return {type:islandTypeByHash(G.x,G.y),name:islandName(G.x,G.y),key:Math.floor(G.x/16)+","+Math.floor(G.y/16)};
+ }catch(_){return null;}}
+function islandCheck(){
+ try{
+  const i=islandHere();
+  if(!G.isles||typeof G.isles!=="object")G.isles={now:null,seen:{}};
+  const key=i?i.key:null;
+  if(key===G.isles.now)return;
+  G.isles.now=key;
+  if(!i)return;
+  const впервые=!G.isles.seen[key];G.isles.seen[key]=i.type.id;
+  safeFn(()=>Bank.play(i.type.звук,{seed:G.x+G.y,gain:0.5,maxSec:6}));
+  if(впервые)journal(`Остров ${i.name}: ${i.type.n}.`);
+  narrate(`Остров ${i.name} — ${i.type.n}: ${i.type.о}.`,{pri:2,key:"isle",ttl:8000});
+ }catch(_){}}
+function islandEncounterK(){const i=islandHere();return i?(i.type.id==="pirate"?1.5:i.type.id==="desert"?0.6:i.type.id==="military"?0.5:1):1;}
+/* Остров по курсу: с борта видят, пристать можно до следующего перехода. */
+function islandSight(s){
+ try{
+  if(!s||s.island||s.storm)return false;
+  const p=shipPos();
+  if(H(p.x+s.leg,p.y+G.day,9420)>=0.22)return false;
+  const type=islandTypeByHash(p.x,p.y),name=islandName(p.x,p.y);
+  s.island={type:type.id,name,x:p.x,y:p.y};
+  safeFn(()=>Bank.play(type.звук,{seed:s.leg,gain:0.5,maxSec:6}));
+  narrate(`По курсу остров ${name} — ${type.n}: ${type.о}. «Пристать к острову» в меню действий — до следующего перехода.`,{pri:2,key:"isle"});
+  return true;
+ }catch(_){return false;}}
+function landIsland(){
+ try{
+  const s=G.ship;if(!s||!s.island){narrate("Приставать не к чему: остров не виден.");return false;}
+  if(G.inCombat){narrate("Не время: сначала бой.");return false;}
+  const isl=s.island;const t=ISLAND_BY_ID[isl.type]||ISLAND_TYPES[0];s.island=null;
+  if(!G.islesLanded||typeof G.islesLanded!=="object")G.islesLanded={};G.islesLanded[t.id]=(Number(G.islesLanded[t.id])||0)+1;
+  G.hour+=2;if(G.hour>=24){G.hour-=24;G.day++;}
+  safeFn(()=>{Bank.play("ship_arrive",{seed:isl.x,gain:0.6,maxSec:5});setTimeout(()=>safeFn(()=>Bank.play(t.звук,{seed:isl.y,gain:0.55,maxSec:6})),600);});
+  safeFn(()=>deed("places"));
+  let слова="";
+  const дать=(r,n)=>{G.inv[r]=(Number(G.inv[r])||0)+n;return `${r} ×${n}`;};
+  const rnd=H(isl.x,isl.y+G.day,9430);
+  switch(t.id){
+   case "trade":{const есть=Object.keys(RESICON).filter(r=>(Number(G.inv[r])||0)>0).sort((a,b)=>G.inv[b]-G.inv[a])[0];
+    if(есть){const n=Math.min(3,G.inv[есть]);const цена=Math.round((RES_BASE[есть]||10)*1.5)*n;G.inv[есть]-=n;if(G.inv[есть]<=0)delete G.inv[есть];G.gold+=цена;safeFn(()=>deed("deals"));слова=`Островные торговцы берут дорого: ${есть} ×${n} за ${цена} золота.`;}
+    else слова="Торговцы ждут товара, а трюм пуст: обменялись новостями.";break;}
+   case "pirate":{if(rnd<0.5){const п=Math.min(G.gold,Math.round(G.gold*0.1));G.gold-=п;слова=`Пираты берут плату за стоянку: −${п} золота, зато дали воды.`;G.water=Math.min(200,(Number(G.water)||0)+40);}
+    else{const crew=PIRATE_CREWS[Math.floor(rnd*PIRATE_CREWS.length)%PIRATE_CREWS.length];const foe=makeSeaFoe({...crew,id:crew.id},1);foe.n="Береговой пират";слова="На берегу вас встретили клинками!";setTimeout(()=>safeFn(()=>startCombat({x:G.x,y:G.y,monster:foe})),50);}break;}
+   case "military":{if(s.war){слова="Застава воюющей державы: к берегу не пустили, дали час у рейда и отправили дальше.";}
+    else{G.water=Math.min(200,(Number(G.water)||0)+50);const emp=safeFn(()=>EMPIRES[empireIndexAt(isl.x,isl.y)],null);if(emp)safeFn(()=>{addRep(emp.race||emp.short,1);deed("repGains");});слова="Гарнизон пополнил бочки водой и отметил вас в книге застав: имя у державы выросло.";}break;}
+   case "volcanic":{слова=`Тёплый пепел под ногами: ${дать("камень",2)}.`;const p=PLANT_BY_ID.pepelny;if(H(isl.x,isl.y,9431)<0.7)слова+=plantTake(p,isl.x,isl.y);break;}
+   case "forest":{слова=`Лес до воды: ${дать("дерево",3)}, ${дать("ягоды",2)}.`;const p=PLANT_BY_ID.ranovnik;if(H(isl.x,isl.y,9432)<0.7)слова+=plantTake(p,isl.x,isl.y);break;}
+   case "ice":{слова=`Белый берег: ${дать("кристалл",1)}.`;const p=PLANT_BY_ID.ineevy;if(H(isl.x,isl.y,9433)<0.7)слова+=plantTake(p,isl.x,isl.y);break;}
+   case "sunken":{слова="Крыши торчат из воды: здесь есть куда нырнуть."+safeFn(()=>diveRun({kind:"ruins",x:isl.x,y:isl.y}),"");break;}
+   case "flying":{слова="Земля висит над мачтами, и пристать к ней нельзя: только смотреть."+(safeFn(()=>canTakeOff(),false)?" Крылатый мог бы подняться — но не с палубы.":"");
+    if(!Array.isArray(G.signs))G.signs=[];G.signs.push({id:`isle_${isl.x}_${isl.y}`,цель:{x:isl.x,y:isl.y},откуда:"с борта: тень летающего острова",сила:1});слова+=" Примета записана.";break;}
+   case "anomalous":{if(rnd<0.5){G.hour+=3;if(G.hour>=24){G.hour-=24;G.day++;}слова="Берег то есть, то нет: три часа ушли неизвестно куда.";}else{const m=Math.min(G.manaMax,G.mana+15)-G.mana;G.mana+=m;слова=`Берег то есть, то нет, а в теле сила: мана +${m}.`;}safeFn(()=>adaptAdd("обряд",0.5));break;}
+   case "desert":{слова=`Никого: ${дать("ракушка",3)}, ${дать("дерево",2)}, ${дать("камень",1)}.`;break;}
+   case "ancient":{G.xp+=15;слова="Ступени уходят в воду, колонны без крыши; на камне письмена. Опыт +15.";
+    if(rnd<0.4){safeFn(()=>findArtifact({глубина:6,seed:isl.x*7+isl.y}));слова+=" Между плит лежала вещь.";}
+    else{const n=Math.floor(H(isl.x,isl.y,9434)*safeFn(()=>knowTotal(),1000));if(!safeFn(()=>knowHas(n),true)){knowRead().push(n);слова+=` Письмена прочитаны: «${(safeFn(()=>knowEntry(n),null)||{title:"страница"}).title}».`;}}break;}}
+  journal(`Пристали к острову ${isl.name} (${t.n}).`);
+  narrate(`Пристали к острову ${isl.name}, ${t.n}. ${слова} Через два часа судно снова в море.`,{pri:1,key:"isle"});
+  safeFn(()=>{refresh();saveGame(true);});
+  return true;
+ }catch(e){return false;}}
+/* ── Под водой ── */
+const DIVE_SITES=[
+ {id:"coral",n:"коралловая зона",о:"пёстрые ветви и рыбья мелочь",вес:20,звук:"oc_bubble"},
+ {id:"cave",n:"подводная пещера",о:"чёрный вход под нависшим камнем",вес:12,звук:"deep_wind"},
+ {id:"ruins",n:"затонувшие руины",о:"лестницы и арки под слоем ила",вес:10,звук:"oc_connect"},
+ {id:"wreck",n:"кораблекрушение",о:"рёбра судна и обросший якорь",вес:12,звук:"oc_wood_creak"},
+ {id:"field",n:"ресурсное поле",о:"дно усыпано раковинами и кристаллами",вес:15,звук:"oc_glass_hit"},
+ {id:"predators",n:"логово хищников",о:"тени ходят кругами",вес:12,звук:"beast_roar"},
+ {id:"giants",n:"проход гигантов",о:"толща дрожит от чужого хода",вес:5,звук:"deep_call"},
+ {id:"mechanism",n:"древний механизм",о:"под илом гудит и вертится",вес:5,звук:"oc_electrical"},
+ {id:"settlement",n:"подводное поселение",о:"огни в глубине и голоса на выдохе",вес:6,звук:"choir"},
+ {id:"boss",n:"логово владыки глубин",о:"тишина, какой не бывает",вес:3,звук:"stk_deepsea"}];
+const DIVE_BY_ID=Object.fromEntries(DIVE_SITES.map(d=>[d.id,d]));
+function diveSiteAt(x,y,force){
+ try{
+  if(!force){
+   const b=safeFn(()=>biomeAt(x,y),null);const bid=b?String(b.id||b):"";
+   if(!B_SEA.includes(bid))return null;
+   if(H(x,y,9440)>=0.35)return null;}
+  const сумма=DIVE_SITES.reduce((a,d)=>a+d.вес,0);
+  let r=H(x,y,9441)*сумма;
+  for(const d of DIVE_SITES){r-=d.вес;if(r<=0)return {kind:d.id,x,y};}
+  return {kind:DIVE_SITES[0].id,x,y};
+ }catch(_){return null;}}
+function diveSiteHere(){
+ if(G.ship){const s=G.ship;if(s.storm)return null;const p=shipPos();const t=seaTypeAt(p.x,p.y);
+  if(t.мелко)return {kind:H(p.x,p.y,9442)<0.6?"coral":"field",x:p.x,y:p.y};
+  if(t.глубь)return {kind:["giants","boss","cave","mechanism"][Math.floor(H(p.x,p.y,9443)*4)%4],x:p.x,y:p.y};
+  return H(p.x+s.leg,p.y,9444)<0.5?diveSiteAt(p.x,p.y,true):null;}
+ if(G.place||inFlight()||G.inCombat)return null;
+ return diveSiteAt(G.x,G.y);}
+function diveAvailable(){return !!diveSiteHere();}
+function breathTacts(){
+ return 1+(safeFn(()=>buffActive("дыхание"),false)?2:0)+safeFn(()=>Math.round(assimBonus("breath")),0)+(G.race==="Русалки"?2:0)+(safeFn(()=>hasSkill("swimmer"),false)?1:0);}
+function diveCheck(){
+ try{
+  if(G.ship||G.place)return;
+  const site=diveSiteAt(G.x,G.y);const key=site?site.x+","+site.y:null;
+  if(!G.diveSeen||typeof G.diveSeen!=="object")G.diveSeen={now:null};
+  if(key===G.diveSeen.now)return;G.diveSeen.now=key;
+  if(!site)return;
+  const d=DIVE_BY_ID[site.kind];
+  safeFn(()=>Bank.play("oc_bubble",{seed:G.x+G.y,gain:0.45,maxSec:3}));
+  narrate(`Под водой здесь ${d.n}: ${d.о}. «Нырнуть» — в меню действий.`,{pri:3,key:"dive",ttl:6000});
+ }catch(_){}}
+function diveHere(){
+ const site=diveSiteHere();
+ if(!site){narrate(G.ship?"С борта не нырнуть: под килем шторм или пустая вода.":"Нырять здесь некуда: нужна вода у берега, риф или архипелаг.");return false;}
+ return diveRun(site);}
+/* Само погружение: по тактам дыхания, каждый такт глубже и опаснее. */
+function diveRun(site){
+ try{
+  const d=DIVE_BY_ID[site.kind]||DIVE_SITES[0];
+  const T=breathTacts();
+  G.hour+=1;if(G.hour>=24){G.hour-=24;G.day++;}
+  safeFn(()=>{Bank.play("oc_dive",{seed:site.x,gain:0.65,maxSec:6});setTimeout(()=>safeFn(()=>Bank.play(d.звук,{seed:site.y,gain:0.5,maxSec:6})),900);});
+  safeFn(()=>deed("dives"));
+  if(!G.dives||typeof G.dives!=="object")G.dives={};G.dives[d.id]=(Number(G.dives[d.id])||0)+1;
+  const дать=(r,n)=>{G.inv[r]=(Number(G.inv[r])||0)+n;return `${r} ×${n}`;};
+  const шаги=[];let бой=null;
+  const такт=k=>{
+   safeFn(()=>Bank.play("oc_bubble",{seed:site.x+k,gain:0.4,maxSec:2}));
+   switch(d.id){
+    case "coral":if(k===1)return `Такт первый: ${дать("ракушка",2)}.`;if(k===2)return `Такт второй: ${дать("жемчуг",1)}.`;return "Такт третий: "+(plantTake(PLANT_BY_ID.morloza,site.x,site.y).trim());
+    case "cave":if(k===1)return `Такт первый: у входа ${дать("кристалл",1)}.`;if(k===2)return `Такт второй: в нише ${дать("водный кристалл",1)}.`;{safeFn(()=>adaptAdd("мутаген",1));return "Такт третий: тёмная вода в глубине пещеры давит на тело — "+plantTake(PLANT_BY_ID.trutnik,site.x,site.y).trim();}
+    case "ruins":if(k===1)return `Такт первый: обломки — ${дать("камень",2)}.`;if(k===2){G.xp+=10;if(!Array.isArray(G.signs))G.signs=[];G.signs.push({id:`dive_${site.x}_${site.y}`,цель:{x:site.x+7,y:site.y-5},откуда:"с плиты под водой",сила:1});return "Такт второй: на плите знак, примета записана, опыт +10.";}
+     safeFn(()=>findArtifact({глубина:10,seed:site.x*13+site.y}));return "Такт третий: в нише за аркой лежала вещь.";
+    case "wreck":if(k===1)return `Такт первый: ${дать("дерево",2)}.`;if(k===2){const g=20+Math.floor(H(site.x,site.y,9450)*40);G.gold+=g;safeFn(()=>Bank.play("gold",{gain:0.6}));return `Такт второй: сундук капитана — ${g} золота.`;}
+     if(!Array.isArray(G.items))G.items=[];G.items.push("Зелье здоровья");return "Такт третий: в каюте уцелела склянка — зелье здоровья.";
+    case "field":if(k===1)return `Такт первый: ${дать("ракушка",3)}.`;if(k===2)return `Такт второй: ${дать("кристалл",2)}.`;return "Такт третий: "+plantTake(PLANT_BY_ID.morloza,site.x,site.y).trim();
+    case "predators":{if(k===1)return "Такт первый: тени сошлись ближе.";const src=seaFoeByHash(site.x+site.y);бой=makeSeaFoe(src,k===3?1:0);return `Такт ${k===2?"второй":"третий"}: ${src.n} идёт на вас — бой на воде!`;}
+    case "giants":{if(k===1)return "Такт первый: толща дрожит.";if(k===2){const dm=6;G.hp=Math.max(1,G.hp-dm);G.xp+=8;return `Такт второй: гигант прошёл рядом, волной ударило о камень — −${dm} здоровья, опыт +8.`;}safeFn(()=>{assim().materials=(Number(assim().materials)||0)+1;});return "Такт третий: с его шкуры сошёл пласт — материал для поглощения.";}
+    case "mechanism":{if(k===1)return "Такт первый: под илом гудит.";if(k===2){safeFn(()=>{deed("mechanisms");mastGain("runes",3);});return `Такт второй: рычаг поддался, механизм отозвался — руны крепнут, ${дать("кристалл",1)}.`;}return `Такт третий: из сердцевины вынут ${дать("астральный кристалл",1)}.`;}
+    case "settlement":{if(k===1)return "Такт первый: огни ближе, голоса на выдохе.";if(k===2){const n=Math.min(3,Number(G.inv["ракушка"])||0);if(n){G.inv["ракушка"]-=n;if(G.inv["ракушка"]<=0)delete G.inv["ракушка"];const g=n*12;G.gold+=g;safeFn(()=>deed("deals"));return `Такт второй: подводный народ взял ракушку ×${n} за ${g} золота.`;}return "Такт второй: подводный народ берёт ракушку, а у вас её нет.";}safeFn(()=>{addRep("Русалки",1);deed("repGains");});return "Такт третий: вас запомнили — имя у русалок выросло.";}
+    case "boss":{if(k===1)return "Такт первый: тишина.";if(k===2)return "Такт второй: на дне лежит что-то величиной с судно. Ещё такт — и оно проснётся.";const src=seaFoeByHash(site.x*3+site.y);бой=makeSeaFoe(src,3);бой.n="Владыка глубин: "+src.n;бой.hp=Math.round(бой.hp*1.8);бой.xp=Math.round(бой.xp*2);бой.gold=Math.round(бой.gold*2);бой.boss=true;return `Такт третий: оно проснулось. ${src.n} — владыка глубин — поднимается!`;}}
+   return "";};
+  const n=Math.min(3,T);
+  for(let k=1;k<=n;k++){const t=такт(k);if(t)шаги.push(t);if(бой)break;}
+  const рано=n<3&&!бой?` Дыхание кончилось на ${n===1?"первом":"втором"} такте: глубже не пошли. Зелье дыхания или усвоенные жабры дали бы ещё.`:"";
+  safeFn(()=>Bank.play("oc_swim",{seed:site.y,gain:0.5,maxSec:3}));
+  journal(`Погружение: ${d.n}.`);
+  narrate(`Погружение: ${d.n} — ${d.о}. Тактов дыхания ${T}. ${шаги.join(" ")}${рано} Вы на поверхности.`,{pri:1,key:"dive"});
+  if(бой){const foe=бой;setTimeout(()=>safeFn(()=>{announceSeaFoe({id:foe.id,voice:foe.voice},`${foe.n}!`);startCombat({x:G.x,y:G.y,monster:foe});}),80);}
+  safeFn(()=>{refresh();saveGame(true);});
+  return true;
+ }catch(e){return false;}}
+function seasText(){
+ const seen=G.seasSeen||{},isl=G.isles&&G.isles.seen||{},land=G.islesLanded||{},dv=G.dives||{};
+ return `Морей ${SEA_TYPES.length} родов: ${SEA_TYPES.map(t=>t.n).join(", ")}; пройдено ${Object.keys(seen).length}. Островов ${ISLAND_TYPES.length} родов: ${ISLAND_TYPES.map(t=>t.n).join(", ")}; замечено ${Object.keys(isl).length}, пристали к ${Object.values(land).reduce((a,b)=>a+b,0)}. Под водой ${DIVE_SITES.length} родов мест: ${DIVE_SITES.map(d=>d.n).join(", ")}; погружений ${Object.values(dv).reduce((a,b)=>a+b,0)}. Тактов дыхания сейчас ${breathTacts()}.`;}
+
 /* ── Встреча с пиратами: бой, откуп, груз или бегство ── */
 let curPirates=null;
 function meetPirates(crew){
@@ -8738,12 +8993,14 @@ function sailLeg(){
  G.hour+=3;if(G.hour>=24){G.hour-=24;G.day++;}
  /* Погода меняется в море: штиль, ход волны, шторм. */
  const r=H(s.tox+s.leg,s.toy+G.day,520+s.leg);
- s.storm=r<(s.war?0.28:0.2);
+ const море=safeFn(()=>seaTypeAt(shipPos().x,shipPos().y),null)||{шторм:1,урон:1};
+ s.storm=r<(s.war?0.28:0.2)*(Number(море.шторм)||1);
  safeFn(()=>Bank.play("ship_creak",{seed:s.leg,gain:0.5,maxSec:5}));
  safeFn(()=>bankUpdateAmbient());
+ const проМоре=safeFn(()=>seaLegEffect(s),"")||"";
  if(s.storm){
   safeFn(()=>{beacon("wall",0,1);Bank.play("sea_storm",{seed:s.leg,gain:0.75,maxSec:9});});
-  const dmg=4+Math.floor(Math.random()*6);
+  const dmg=Math.max(1,Math.round((4+Math.floor(Math.random()*6))*(Number(море.урон)||1)));
   G.hp=Math.max(1,G.hp-dmg);
   /* В сильную волну часть палубного груза уходит за борт. */
   let lost="";
@@ -8753,14 +9010,14 @@ function sailLeg(){
     G.inv[r]=Math.max(0,(Number(G.inv[r])||0)-1);
     if(!G.inv[r])delete G.inv[r];
     lost=` Волной смыло за борт: ${r} ×1.`;}}
-  narrate(`Шторм! Палубу заливает, судно кладёт на борт. Вы ушиблись: −${dmg} здоровья.${lost} Осталось переходов: ${s.left}.`);
+  narrate(`Шторм! Палубу заливает, судно кладёт на борт. Вы ушиблись: −${dmg} здоровья.${lost}${проМоре} Осталось переходов: ${s.left}.`);
  }else{
-  narrate(`Судно идёт${r>0.75?" ровно, ветер попутный":""}. Осталось переходов до «${s.toName}»: ${s.left}.`);
+  narrate(`Судно идёт${r>0.75?" ровно, ветер попутный":""}.${проМоре} Осталось переходов до «${s.toName}»: ${s.left}.`);
  }
  if(s.left<=0)return arriveShip();
  /* Сначала морские встречи (пираты и твари), и только если их не было —
     события палубы: обломки на воде, огни под килем. */
- if(!safeFn(()=>maybeSeaEvent(),false))safeFn(()=>maybeEvent("sea"));
+ if(!safeFn(()=>maybeSeaEvent(),false)&&!safeFn(()=>islandSight(s),false))safeFn(()=>maybeEvent("sea"));
  refresh();saveGame(true);
  return true;
 }
@@ -9143,6 +9400,237 @@ const RESBEACON={дерево:"res_tree",трава:"res_herbs",ягоды:"res_
 /* ── Внутренняя защита кода: статические таблицы мира не должны меняться в рантайме.
    Заморозка ловит случайные опечатки-присваивания на этапе разработки и не даёт
    игровому состоянию непреднамеренно исказить справочные данные. ── */
+
+/* ════════ РАСТЕНИЯ, ГРИБЫ И ЗЕЛЬЯ ПО НИШЕ (§122) ════════
+   Трава была травой: одна строка в котомке на весь мир. Теперь у растений
+   восемнадцать ниш — лечебные, ядовитые, снотворные, стимулирующие,
+   катализаторы, растения света, тьмы, холода, жара, разломов, времени,
+   тяжести, подземные грибы, морские, болотные, высотные, редкие цветы и
+   древние семена, — и у каждого вида свой биом, пора, погода, час, соседи,
+   почва, редкость, способ сбора, опасность и рецепты. Растение берётся
+   вместе с обычной травой, если земля, час и погода сошлись, и называется
+   вслух. Из растений варят зелья восемнадцати родов, и у каждого зелья
+   качество, устойчивость, срок годности и риск побочного действия. */
+const PLANT_CATS=[
+ {id:"heal",n:"лечебные"},{id:"poison",n:"ядовитые"},{id:"sleep",n:"снотворные"},{id:"stim",n:"стимулирующие"},
+ {id:"catalyst",n:"магические катализаторы"},{id:"light",n:"растения света"},{id:"dark",n:"растения тьмы"},
+ {id:"cold",n:"растения холода"},{id:"heat",n:"растения жара"},{id:"rift",n:"растения разломов"},
+ {id:"time",n:"растения времени"},{id:"gravity",n:"растения тяжести"},{id:"fungi",n:"подземные грибы"},
+ {id:"sea",n:"морские растения"},{id:"marsh",n:"болотные растения"},{id:"alpine",n:"высотные растения"},
+ {id:"rare",n:"редкие цветы"},{id:"seed",n:"древние семена"}];
+const PLANT_CAT_BY_ID=Object.fromEntries(PLANT_CATS.map(c=>[c.id,c]));
+const B_WET=["mire","fen","swamp","mangrove","wet_forest","lakeland","river","stream","lake","river_mouth","waterfall"];
+const B_FOREST=["ancient_forest","conifer","broadleaf","jungle","wet_forest","woodland"];
+const B_OPEN=["plain","steppe","savanna","valley","meadow","woodland"];
+const B_HIGH=["ridge","highland","snow_ridge","canyon"];
+const B_COLD=["glacier","snow_ridge","tundra","ice_waste","ice_cave"];
+const B_HOT=["volcano","lava_tube","ashland","desert","dunes","stony_desert","semidesert"];
+const B_UNDER=["cavern","underdark","karst","ice_cave","lava_tube"];
+const B_SEA=["reef","archipelago","inner_sea","shore","river_mouth","lakeland"];
+const B_OLD=["lost_city","warfield","ancient_forest"];
+/* Поля вида: био — биомы или null (любая земля), «dark» — только за Гранью, «alt» — на крыле;
+   пора — сезоны; погода — имена погоды или «ясно»; час — день, ночь, заря; соседи — что должно
+   расти на соседней клетке; почва — поверхности под ногами; редкость 1–5; способ; опасность —
+   {вид,сила}; рецепты — зелья, куда идёт; звук — голос сбора. */
+const PLANTS=[
+ {id:"ranovnik",кат:"heal",n:"рановник",о:"широкий горький лист, который кладут на рану",пора:["spring","summer","autumn"],почва:["grass","leaves","dirt","mud"],редкость:1,способ:"срезать лист",рецепты:["heal","antidote"]},
+ {id:"tikhaya",кат:"heal",n:"тихая мята",о:"пахнет холодом и водой",био:B_WET,пора:["summer","autumn"],редкость:2,способ:"сорвать верхушку",рецепты:["heal","clean","energy"]},
+ {id:"durman",кат:"poison",n:"чёрный дурманник",о:"матовые ягоды на чёрном стебле: одна — сон, три — смерть",час:"ночь",редкость:2,способ:"срезать в перчатке",опасность:{вид:"яд",сила:2},рецепты:["antidote","mask","mutation"]},
+ {id:"vedmin",кат:"poison",n:"ведьмин корень",о:"узловатый корень с молочным соком",био:B_FOREST.concat(B_WET),соседи:["грибы"],редкость:3,способ:"выкопать",опасность:{вид:"яд",сила:1},рецепты:["antidote","trace"]},
+ {id:"sonnitsa",кат:"sleep",n:"сон-трава",о:"мохнатый колокольчик, закрытый до зари",био:B_OPEN.concat(B_FOREST),час:"заря",пора:["spring","summer"],редкость:2,способ:"сорвать цветок",рецепты:["energy","mask"]},
+ {id:"zhguchiy",кат:"stim",n:"жгучий корень",о:"тонкий корень, от которого немеет язык",био:B_HOT.concat(["steppe","savanna"]),час:"день",редкость:2,способ:"выкопать",опасность:{вид:"жар",сила:1},рецепты:["energy","speed","strength"]},
+ {id:"iskrovnik",кат:"catalyst",n:"искровник",о:"стебель с сухим треском в жилах",био:["anomaly","lost_city","highland","canyon"],соседи:["кристалл"],редкость:3,способ:"срезать у корня",рецепты:["mana","trace","craft"]},
+ {id:"zaryanitsa",кат:"light",n:"заряница",о:"цветок, что открывается вместе с небом",био:B_OPEN.concat(B_HIGH),час:"заря",погода:["ясно"],редкость:3,способ:"сорвать цветок",рецепты:["nightsight","heatguard","clean"]},
+ {id:"tenevik",кат:"dark",n:"теневик",о:"чёрный лист, холодный на ощупь",био:["dark","ancient_forest","underdark","cavern"],час:"ночь",редкость:3,способ:"сорвать в темноте",рецепты:["mask","voice","nightsight"]},
+ {id:"ineevy",кат:"cold",n:"инеевый лист",о:"лист, покрытый инеем и летом",био:B_COLD,редкость:3,способ:"отломить со льда",опасность:{вид:"стужа",сила:2},рецепты:["heatguard","resist"]},
+ {id:"pepelny",кат:"heat",n:"пепельный цвет",о:"цветок, растущий из тёплого пепла",био:B_HOT.slice(0,3),час:"день",редкость:3,способ:"сорвать щипцами",опасность:{вид:"жар",сила:2},рецепты:["coldguard","strength"]},
+ {id:"razlomnitsa",кат:"rift",n:"разломница",о:"стебель, растущий в обе стороны сразу",био:["dark","anomaly"],редкость:4,способ:"вырвать с корнем",опасность:{вид:"мутаген",сила:1},рецепты:["mutation","trace","resist"]},
+ {id:"chasolist",кат:"time",n:"часолист",о:"лист, который вянет и распускается за час",био:B_OLD,час:"заря",редкость:4,способ:"сорвать в нужный миг",рецепты:["sense","craft","speed"]},
+ {id:"tyazhets",кат:"gravity",n:"тяжец",о:"низкий куст с плодами тяжелее камня",био:B_HIGH,редкость:4,способ:"снять плод обеими руками",рецепты:["strength","resist"]},
+ {id:"trutnik",кат:"fungi",n:"глубинный трутник",о:"бледный гриб, растущий пластами по сырому камню",био:B_UNDER,редкость:2,способ:"снять споры",опасность:{вид:"споры",сила:1},рецепты:["nightsight","breath","mana"]},
+ {id:"svetogrib",кат:"fungi",n:"светогриб",о:"гриб с ровным зелёным светом в шляпке",био:B_UNDER,час:"ночь",редкость:3,способ:"снять споры",рецепты:["nightsight","trace"]},
+ {id:"morloza",кат:"sea",n:"морская лоза",о:"бурая плеть, пахнущая солью",био:B_SEA,почва:["sand","water"],редкость:2,способ:"вытянуть из воды",рецепты:["breath","coldguard","heal"]},
+ {id:"kvost",кат:"marsh",n:"топяной хвощ",о:"полый стебель с водой внутри",био:B_WET,погода:["Дождь","Ливень","Туман","Облачно","Ясно","Ветрено"],редкость:2,способ:"срезать у воды",рецепты:["antidote","clean","breath"]},
+ {id:"snezhzvezda",кат:"alpine",n:"снежная звезда",о:"пять лепестков на голом камне",био:["alt"].concat(B_HIGH),редкость:3,способ:"снять с камня",рецепты:["sense","coldguard","heal"]},
+ {id:"lunny",кат:"rare",n:"лунный цветок",о:"раскрывается раз в год и светится изнутри",био:B_FOREST,час:"ночь",пора:["summer"],погода:["ясно"],редкость:5,способ:"сорвать не дыша",рецепты:["mutation","trace","sense"]},
+ {id:"drevsemya",кат:"seed",n:"древнее семя",о:"твёрдое, как камень, и тёплое",био:B_OLD,соседи:["камень","кость"],редкость:5,способ:"выкопать из-под корней",рецепты:["mutation","craft","mana"]}];
+const PLANT_BY_ID=Object.fromEntries(PLANTS.map(p=>[p.id,p]));
+const PLANT_BY_NAME=Object.fromEntries(PLANTS.map(p=>[p.n,p]));
+Object.assign(SORT_GOODS,Object.fromEntries(PLANTS.map(p=>[p.n,{цена:8+p.редкость*12,знак:"🌿"}])));
+function plantHourOk(ч){
+ const h=Number(G.hour)%24;
+ if(!ч)return true;
+ if(ч==="ночь")return h>=21||h<6;
+ if(ч==="день")return h>=8&&h<19;
+ if(ч==="заря")return (h>=5&&h<9)||(h>=18&&h<21);
+ return true;}
+function plantWeatherOk(list){
+ if(!list)return true;
+ const w=String(G.weather||"Ясно");
+ if(list.includes("ясно"))return !/Дождь|Ливень|Гроза|Снег|Метель|Град|Песчаная/.test(w);
+ return list.includes(w);}
+function plantNeighborsOk(list,x,y){
+ if(!list)return true;
+ for(let dy=-1;dy<=1;dy++)for(let dx=-1;dx<=1;dx++){
+  if(!dx&&!dy)continue;
+  const c=safeFn(()=>cellContent(x+dx,y+dy),null);
+  if(c&&c.res&&list.includes(c.res.name))return true;}
+ return false;}
+/* Кто из видов может расти на этой клетке в этот час. */
+function plantCandidates(x,y,ctx){
+ ctx=ctx||{};
+ const b=ctx.biome||safeFn(()=>biomeAt(x,y),null);const bid=b?String(b.id||b):"";
+ const пора=safeFn(()=>seasonNow().id,"spring");
+ const surf=ctx.surf!==undefined?ctx.surf:safeFn(()=>outdoorSurface(),null);
+ return PLANTS.filter(p=>{
+  if(p.био){
+   const ok=p.био.some(id=>id==="dark"?!!G.dark:id==="alt"?(Number(G.alt)||0)>0:id===bid);
+   if(!ok)return false;}
+  if(p.пора&&!p.пора.includes(пора))return false;
+  if(!plantWeatherOk(p.погода))return false;
+  if(!plantHourOk(p.час))return false;
+  if(p.почва&&surf&&!p.почва.includes(surf))return false;
+  if(!plantNeighborsOk(p.соседи,x,y))return false;
+  return true;});}
+function plantAt(x,y,ctx){
+ const из=plantCandidates(x,y,ctx);if(!из.length)return null;
+ const сумма=из.reduce((a,p)=>a+(6-p.редкость),0);
+ let б=hashName(x,y,9200)*сумма;
+ for(const p of из){б-=(6-p.редкость);if(б<=0)return p;}
+ return из[из.length-1];}
+function plantProtected(p){
+ const o=p.опасность;if(!o)return true;
+ if(hasSkill("herbal")||safeFn(()=>mastLevel("alchemy"),0)>=2)return true;
+ if(o.вид==="стужа"&&safeFn(()=>buffActive("тепло"),false))return true;
+ if(o.вид==="жар"&&safeFn(()=>buffActive("прохлада"),false))return true;
+ if(o.вид==="яд"&&safeFn(()=>buffActive("стойкость"),false))return true;
+ return false;}
+function plantHarm(p){
+ const o=p.опасность;if(!o)return "";
+ const d=Math.max(2,o.сила*3);
+ G.hp=Math.max(1,G.hp-d);
+ if(o.вид==="мутаген"||o.вид==="споры")safeFn(()=>adaptAdd("мутаген",o.сила));
+ safeFn(()=>{UI.hit();Bank.play(o.вид==="жар"?"ad_fire_sizzle":o.вид==="стужа"?"mtg_ice_break":"stk_goo",{gain:0.5,maxSec:2});});
+ return ` ${o.вид==="яд"?"Сок обжёг пальцы":o.вид==="жар"?"Стебель обжёг ладонь":o.вид==="стужа"?"Лист прихватил пальцы стужей":o.вид==="споры"?"Споры попали в горло":"Стебель дёрнул тело изнутри"}: −${d} здоровья. Травник или алхимик второй ступени взял бы без вреда.`;}
+/* Сбор растения вместе с обычной травой, грибами или ягодами. Слова — для голоса. */
+function plantGather(c,x,y){
+ try{
+  if(!c||!c.res||!/трав|гриб|ягод/i.test(c.res.name))return "";
+  x=x===undefined?G.x:x;y=y===undefined?G.y:y;
+  const p=plantAt(x,y);if(!p)return "";
+  const шанс=Math.min(0.95,0.9/p.редкость+(hasSkill("herbal")?0.15:0)+safeFn(()=>mastLevel("alchemy"),0)*0.05);
+  if(hashName(x*3+1,y*5+2,9300+(Number(G.day)||1))>=шанс)return "";
+  /* С клетки берут одно растение в день: второй раз рвать нечего. */
+  if(!G.plantTaken||typeof G.plantTaken!=="object")G.plantTaken={};
+  const ключ=x+","+y;if(G.plantTaken[ключ]===(Number(G.day)||1))return "";
+  G.plantTaken[ключ]=Number(G.day)||1;
+  return plantTake(p,x,y);
+ }catch(_){return "";}}
+function plantTake(p,x,y){
+ const кат=PLANT_CAT_BY_ID[p.кат]||{n:"растения"};
+ G.inv[p.n]=(Number(G.inv[p.n])||0)+1;
+ if(!G.plantsSeen||typeof G.plantsSeen!=="object")G.plantsSeen={};
+ G.plantsSeen[p.id]=(Number(G.plantsSeen[p.id])||0)+1;
+ safeFn(()=>Bank.play(p.кат==="fungi"?"mtg_crumble":p.кат==="sea"?"oc_swim":/выкопать/.test(p.способ)?"od_dig":Math.random()<0.5?"ad_leaves":"lug_bush",{seed:x+y,gain:0.5,maxSec:2}));
+ const вред=plantProtected(p)?"":plantHarm(p);
+ safeFn(()=>deed("gathers"));
+ return ` Рядом ${p.n} (${кат.n}): ${p.о}. Способ: ${p.способ}. Взято: ${p.n} ×1.${вред}`;}
+function plantsText(){
+ const seen=G.plantsSeen||{};
+ const строки=PLANTS.filter(p=>seen[p.id]).map(p=>{
+  const где=p.био?p.био.map(id=>id==="dark"?"за Гранью":id==="alt"?"на крыле":((BIOME_BY_ID&&BIOME_BY_ID[id])||{n:id}).n).slice(0,3).join(", "):"на любой земле";
+  return `${p.n} — ${(PLANT_CAT_BY_ID[p.кат]||{}).n}: ${где}${p.пора?", "+p.пора.map(s=>(SEASONS.find(x=>x.id===s)||{n:s}).n.toLowerCase()).join(" и "):""}${p.час?", "+p.час:""}${p.погода?", погода: "+p.погода.join("/"):""}${p.соседи?", рядом "+p.соседи.join(" или "):""}; редкость ${p.редкость} из пяти; ${p.способ}${p.опасность?"; опасно: "+p.опасность.вид:""}; идёт в зелья: ${p.рецепты.map(id=>(POTION_BY_ID[id]||{n:id}).n).join(", ")}`;});
+ return `Травник. Ниш растений ${PLANT_CATS.length}: ${PLANT_CATS.map(c=>c.n).join(", ")}. Видов ${PLANTS.length}, встречено ${строки.length}. ${строки.length?строки.join(". ")+".":"Пока ни одного: растения берутся вместе с травой, грибами и ягодами, когда земля, час и погода сошлись."}`;}
+
+/* ── ЗЕЛЬЯ ── Каждое из двух ниш растений. Качество — от ступени алхимика и
+   редкости трав; устойчивость — доля, с которой состав срабатывает как задуман;
+   срок — дни, после которых он выдыхается; риск — доля побочного действия. */
+const POTIONS=[
+ {id:"heal",n:"лечебное",из:["heal","marsh"],срок:12,стаб:0.75,о:"затягивает раны",дать:q=>{const h=Math.min(G.hpMax,G.hp+Math.round(G.hpMax*0.3*q))-G.hp;G.hp+=h;return `здоровья +${h}`;}},
+ {id:"mana",n:"восстанавливающее ману",из:["catalyst","fungi"],срок:10,стаб:0.7,о:"по жилам идёт тепло",дать:q=>{const m=Math.min(G.manaMax,G.mana+Math.round(G.manaMax*0.5*q))-G.mana;G.mana+=m;return `маны +${m}`;}},
+ {id:"energy",n:"восстанавливающее силы",из:["stim","sleep"],срок:8,стаб:0.7,о:"тело отпускает",дать:q=>{safeFn(()=>adaptRest(Math.round(8*q)));G.water=Math.min(200,(Number(G.water)||0)+30);return "тело отдохнуло, жажда утолена";}},
+ {id:"resist",n:"сопротивлений",из:["cold","gravity"],срок:14,стаб:0.65,о:"кожа делается плотной",дать:q=>{buffSet("стойкость",Math.round(4*q));return `${Math.round(4*q)} ч защита выше на два, яд трав не берёт`;}},
+ {id:"speed",n:"скорости",из:["stim","time"],срок:8,стаб:0.6,о:"ноги делаются чужими и лёгкими",дать:q=>{buffSet("лёгкость",Math.round(4*q));return `${Math.round(4*q)} ч шаг короче`;}},
+ {id:"strength",n:"силы",из:["gravity","heat"],срок:10,стаб:0.65,о:"плечи наливаются",дать:q=>{buffSet("мощь",Math.round(3*q));return `${Math.round(3*q)} ч удар сильнее на три`;}},
+ {id:"sense",n:"восприятия",из:["time","alpine"],срок:8,стаб:0.6,о:"дальнее слышно как близкое",дать:q=>{buffSet("чутьё",Math.round(3*q));return `${Math.round(3*q)} ч звуковая картина шире на два шага`;}},
+ {id:"breath",n:"дыхания под водой",из:["sea","fungi"],срок:6,стаб:0.7,о:"грудь не просит воздуха",дать:q=>{buffSet("дыхание",Math.round(4*q));return `${Math.round(4*q)} ч под водой два лишних такта`;}},
+ {id:"nightsight",n:"ночного зрения",из:["light","dark"],срок:10,стаб:0.65,о:"ночь делается серой, а не чёрной",дать:q=>{buffSet("ночное зрение",Math.round(6*q));return `${Math.round(6*q)} ч ночью встреч меньше`;}},
+ {id:"coldguard",n:"защиты от холода",из:["heat","sea"],срок:14,стаб:0.7,о:"внутри разгорается печка",дать:q=>{buffSet("тепло",Math.round(6*q));return `${Math.round(6*q)} ч стужа не вредит`;}},
+ {id:"heatguard",n:"защиты от жара",из:["cold","light"],срок:14,стаб:0.7,о:"в груди ровный холодок",дать:q=>{buffSet("прохлада",Math.round(6*q));return `${Math.round(6*q)} ч жар не вредит`;}},
+ {id:"clean",n:"очищения",из:["heal","light"],срок:10,стаб:0.75,о:"из тела выходит всё лишнее",дать:q=>{safeFn(()=>adaptRest(Math.round(20*q)));if(G.buffs)delete G.buffs["яд"];G.hp=Math.min(G.hpMax,G.hp+5);return "нагрузка с тела снята";}},
+ {id:"mask",n:"маскировки",из:["dark","sleep"],срок:8,стаб:0.6,о:"воздух вокруг густеет",дать:q=>{buffSet("морок",Math.round(3*q));return `${Math.round(3*q)} ч встреч меньше`;}},
+ {id:"voice",n:"изменения голоса",из:["dark","poison"],срок:8,стаб:0.55,о:"голос делается чужим",дать:q=>{buffSet("чужой голос",Math.round(4*q));return `${Math.round(4*q)} ч настороженные отвечают охотно`;}},
+ {id:"trace",n:"магического следа",из:["catalyst","rift"],срок:6,стаб:0.6,о:"чары вокруг делаются слышны",дать:q=>{buffSet("магический след",Math.round(3*q));const s=(G.signs||[]).find(x=>x&&x.цель);let слово="";if(s){const dx=s.цель.x-G.x,dy=s.цель.y-G.y;слово=`; след ведёт ${dy<0?"на север":dy>0?"на юг":""}${dx<0?" на запад":dx>0?" на восток":""}, ${Math.max(Math.abs(dx),Math.abs(dy))} шагов`;}return `${Math.round(3*q)} ч чары слышны${слово}`;}},
+ {id:"craft",n:"твёрдой руки",из:["catalyst","time"],срок:10,стаб:0.65,о:"пальцы не дрожат",дать:q=>{buffSet("твёрдая рука",Math.round(4*q));return `${Math.round(4*q)} ч работа у станка срывается реже`;}},
+ {id:"antidote",n:"противоядие",из:["poison","marsh"],срок:14,стаб:0.8,о:"жар уходит из крови",дать:q=>{if(G.buffs)delete G.buffs["яд"];safeFn(()=>adaptRest(6));G.hp=Math.min(G.hpMax,G.hp+8);G.water=Math.min(200,(Number(G.water)||0)+10);return "яд выведен, здоровья +8";}},
+ {id:"mutation",n:"мутационный состав",из:["rift","rare"],срок:4,стаб:0.4,о:"тело меняется, и неизвестно во что",редкое:true,дать:q=>{const r=Math.random();const ст=["str","agi","mind"][Math.floor(Math.random()*3)];const имя={str:"сила",agi:"ловкость",mind:"разум"}[ст];if(r<0.45){G[ст]=(Number(G[ст])||0)+1;return `${имя} выросла на единицу — навсегда`;}if(r<0.8){safeFn(()=>adaptAdd("мутаген",3));const d=Math.round(G.hpMax*0.1);G.hp=Math.max(1,G.hp-d);return `тело приняло мутаген: −${d} здоровья, нагрузка выросла`;}G[ст]=Math.max(1,(Number(G[ст])||1)-1);return `${имя} упала на единицу: состав вышел боком`;}}];
+const POTION_BY_ID=Object.fromEntries(POTIONS.map(p=>[p.id,p]));
+function potionsOf(){if(!Array.isArray(G.potions))G.potions=[];return G.potions;}
+/* Растение нужной ниши из котомки: берётся самое частое. */
+function plantInPouch(cat){
+ const из=PLANTS.filter(p=>p.кат===cat&&(Number(G.inv&&G.inv[p.n])||0)>0).sort((a,b)=>(G.inv[b.n]||0)-(G.inv[a.n]||0));
+ return из[0]||null;}
+function potionCanBrew(pt){return pt.из.map(plantInPouch);}
+function potionQualityWord(q){return q>=1.3?"отличное":q>=1.05?"хорошее":q>=0.85?"обычное":"слабое";}
+function brewPotion(id){
+ try{
+  const pt=POTION_BY_ID[id];if(!pt){narrate("Такого зелья нет.");return false;}
+  const ур=safeFn(()=>mastLevel("alchemy"),0);
+  if(ур<1){narrate("Зелья варит тот, кто знает хоть первый урок алхимии.");return false;}
+  if(pt.редкое&&ур<3){narrate(`«${pt.n}» — редкий состав: нужна третья ступень алхимии.`);return false;}
+  const [a,b]=potionCanBrew(pt);
+  if(!a||!b){narrate(`Для зелья «${pt.n}» нужны ${(PLANT_CAT_BY_ID[pt.из[0]]||{}).n} и ${(PLANT_CAT_BY_ID[pt.из[1]]||{}).n}: не хватает ${!a?(PLANT_CAT_BY_ID[pt.из[0]]||{}).n:(PLANT_CAT_BY_ID[pt.из[1]]||{}).n}.`);return false;}
+  for(const p of [a,b]){G.inv[p.n]=(Number(G.inv[p.n])||0)-1;if(G.inv[p.n]<=0)delete G.inv[p.n];}
+  const q=+Math.min(1.6,0.7+0.15*ур+0.05*(a.редкость+b.редкость)).toFixed(2);
+  const риск=Math.max(0.03,0.25-0.06*ур);
+  const изъян=Math.random()<риск;
+  const стаб=+Math.max(0.2,Math.min(0.95,pt.стаб+0.08*ур-(изъян?0.25:0))).toFixed(2);
+  const rec={id:pt.id,q,стаб,день:Number(G.day)||1,срок:pt.срок,изъян};
+  potionsOf().push(rec);
+  safeFn(()=>{Bank.play("oc_boiling",{gain:0.55,maxSec:3});setTimeout(()=>safeFn(()=>Bank.play(изъян?"stk_goo":"arte_potion",{gain:0.5,maxSec:2})),700);});
+  safeFn(()=>mastGain("alchemy",3+(pt.редкое?3:0)));safeFn(()=>deedTech({маст:"alchemy",id:"potion"}));
+  journal(`Сварено зелье: ${pt.n}.`);
+  narrate(`Сварено: зелье ${pt.n}; в чану были ${a.n} и ${b.n}. Качество ${potionQualityWord(q)}, устойчивость ${Math.round(стаб*100)} из ста, годно ${pt.срок} дней${изъян?". Состав вышел с изъяном: устойчивость ниже":""}. Выпить — в списке зелий.`,{pri:1,key:"potion"});
+  safeFn(()=>{renderPotions();refresh();saveGame(true);});
+  return true;
+ }catch(e){return false;}}
+function potionExpired(rec){return (Number(G.day)||1)>(Number(rec.день)||1)+(Number(rec.срок)||0);}
+function drinkPotion(i){
+ try{
+  const list=potionsOf();const rec=list[Number(i)];
+  if(!rec){narrate("Такого зелья в сумке нет.");return false;}
+  const pt=POTION_BY_ID[rec.id];if(!pt){list.splice(Number(i),1);return false;}
+  list.splice(Number(i),1);
+  let q=Number(rec.q)||1,стаб=Number(rec.стаб)||0.5,слова="";
+  if(potionExpired(rec)){q*=0.5;стаб-=0.3;слова=" Зелье выдохлось: сработало вполсилы.";}
+  const сбой=Math.random()>стаб;
+  safeFn(()=>{UI.drink();Bank.play("cast_potion",{gain:0.55,maxSec:3});});
+  let итог=safeFn(()=>pt.дать(сбой?q*0.5:q),"ничего");
+  if(сбой){
+   const d=Math.max(2,Math.round(G.hpMax*0.05));G.hp=Math.max(1,G.hp-d);safeFn(()=>adaptAdd("мутаген",1));
+   safeFn(()=>Bank.play("stk_goo",{gain:0.55,maxSec:3}));
+   слова+=` Состав оказался нестабилен: подействовал вполсилы, а побочно — −${d} здоровья и нагрузка на тело.`;}
+  narrate(`Выпито: зелье ${pt.n}. ${pt.о[0].toUpperCase()+pt.о.slice(1)}: ${итог}.${слова}`);
+  safeFn(()=>{renderPotions();refresh();saveGame(true);});
+  return true;
+ }catch(e){return false;}}
+function openPotions(){openModal("modal-potions");renderPotions();return true;}
+function renderPotions(){
+ const box=document.getElementById("potBody");if(!box)return;
+ const ур=safeFn(()=>mastLevel("alchemy"),0);
+ const list=potionsOf();
+ let html=`<div class="list-line" tabindex="0" data-speak="Зелья. Ступень алхимии ${ур}. В сумке ${list.length}. Варят у чана или очага из двух растений разных ниш.">⚗️ Ступень алхимии ${ур}. Зелий в сумке: ${list.length}.</div>`;
+ html+=`<h3>В сумке</h3>`+(list.length?list.map((rec,i)=>{const pt=POTION_BY_ID[rec.id]||{n:rec.id};const exp=potionExpired(rec);
+  const speak=`Зелье ${pt.n}: качество ${potionQualityWord(rec.q)}, устойчивость ${Math.round(rec.стаб*100)} из ста, ${exp?"выдохлось":"годно до "+(rec.день+rec.срок)+"-го дня"}.`;
+  return `<button class="item" data-cmd="drinkpotion:${i}" data-speak="${speak} Выпить.">🧪 ${pt.n} — ${potionQualityWord(rec.q)}, ${Math.round(rec.стаб*100)}/100${exp?", выдохлось":""}</button>`;}).join(""):`<div class="list-line">Пусто.</div>`);
+ html+=`<h3>Сварить</h3>`+POTIONS.map(pt=>{const [a,b]=potionCanBrew(pt);const можно=a&&b&&ур>=1&&(!pt.редкое||ур>=3);
+  const нужно=pt.из.map(id=>(PLANT_CAT_BY_ID[id]||{}).n).join(" и ");
+  return `<button class="item" data-cmd="brewpotion:${pt.id}" data-speak="Зелье ${pt.n}: ${pt.о}. Нужны ${нужно}. ${можно?"Можно сварить.":a&&b?"Нужна ступень выше.":"Не хватает растений."}">${можно?"✅":"▫️"} ${pt.n} — ${нужно}</button>`;}).join("");
+ box.innerHTML=html;}
+function potionsText(){
+ const list=potionsOf();
+ return `Зелий ${POTIONS.length} родов: ${POTIONS.map(p=>p.n).join(", ")}. В сумке ${list.length}${list.length?": "+list.map(r=>`${(POTION_BY_ID[r.id]||{}).n} (${potionQualityWord(r.q)})`).join(", "):""}.`;}
+
 /* Цены и значки редких сортов подмешиваются здесь: RES_BASE и RESICON уже
    объявлены, а заморозка — следующей же строкой. Позже было бы поздно: список
    ниже каменеет целиком, и новый товар остался бы без цены и без значка. */
@@ -10351,6 +10839,8 @@ function beastAt(x,y,c,базоваяДоля){
  доля*=safeFn(()=>patrolSafety(x,y),1);
  /* Морок иллюзиониста: вокруг идёт не тот, кто идёт, и встреч вдвое меньше. */
  if(safeFn(()=>buffActive("морок")||buffActive("астрал"),false))доля*=0.5;
+ if(safeFn(()=>buffActive("ночное зрение")&&isNight(),false))доля*=0.7;
+ доля*=safeFn(()=>islandEncounterK(),1);
  if(safeFn(()=>assimBonus("beast")>0,false))доля*=0.67;
  /* Сведённый свод держит над головой пустоту: под ним почти никто не ходит. */
  if(safeFn(()=>buffActive("свод"),false))доля*=0.25;
@@ -14150,6 +14640,105 @@ function knowLayout(){
 function knowTotal(){return knowLayout().total;}
 /* Один текст реестра по его номеру. Номер — единственное, что хранится в
    сохранении: сам текст собирается заново и потому ничего не весит. */
+/* ════════ РОДЫ КНИГ И ЗНАНИЕ В РАЗГОВОРЕ (§119) ════════
+   Страница реестра была одной и той же вещью в любом переплёте. Теперь у
+   каждой свой род — дневник, трактат, учебник, полевой журнал, рецептурник,
+   карта, летопись, запрещённый текст, — и род решает, что даёт чтение сверх
+   опыта: рецептурник открывает пару веществ, карта называет ближний клад,
+   учебник растит ремесло, полевой журнал подсказывает тварей, летопись
+   заводит правдивую весть, запрещённый текст растит демонологию и давит на
+   тело. Прочитанное меняет и разговор: житель, о чьём народе, боге или
+   державе вы читали, отвечает на вопрос по книге — и это отдельный ход. */
+const BOOK_KINDS=[
+ {id:"diary",n:"дневник",о:"чужая рука, чужие дни: о людях и их тайнах"},
+ {id:"treatise",n:"трактат",о:"учёный разбор: опыт от него полнее"},
+ {id:"textbook",n:"учебник",о:"урок ремесла: страница растит мастерство"},
+ {id:"fieldlog",n:"полевой журнал",о:"записи охотника: где какая тварь и чем опасна"},
+ {id:"recipes",n:"рецептурник",о:"составы: пара веществ и что из неё выходит"},
+ {id:"map",n:"карта",о:"наброски дорог с пометкой, где лежит чужое"},
+ {id:"chronicle",n:"летопись",о:"события по годам: из неё расходятся вести"},
+ {id:"forbidden",n:"запрещённый текст",о:"то, что переписчику стоило бы руки: тёмное знание"}];
+const BOOK_KIND_BY_ID=Object.fromEntries(BOOK_KINDS.map(k=>[k.id,k]));
+const BOOK_SHELF_KINDS={god:["treatise","chronicle","forbidden","diary"],race:["diary","chronicle","treatise"],
+ emp:["chronicle","treatise","map"],clan:["diary","chronicle"],mon:["fieldlog","fieldlog","textbook"],
+ res:["textbook","recipes","recipes"],terr:["map","fieldlog","treatise"],road:["map","diary"],vill:["diary","chronicle","map"],
+ tav:["diary","recipes"],port:["map","chronicle"],depth:["fieldlog","forbidden","map"],ship:["map","diary"],
+ net:["treatise","forbidden"],spell:["textbook","treatise","forbidden"]};
+function bookKind(n){
+ try{
+  const e=typeof n==="object"?n:knowEntry(n);if(!e)return BOOK_KINDS[0];
+  const пул=BOOK_SHELF_KINDS[e.shelf]||["treatise","diary"];
+  const h=hashName((Number(e.n)||0)*7+3,(Number(e.n)||0)*11+5,6900);
+  return BOOK_KIND_BY_ID[пул[Math.floor(h*пул.length)%пул.length]]||BOOK_KINDS[0];
+ }catch(_){return BOOK_KINDS[0];}}
+/* Что даёт род книги сверх опыта. Возвращает слова для голоса. */
+function bookKindGrant(n,e){
+ try{
+  const k=bookKind(e||n);const num=Number(n)||0;
+  if(!G.bookGifts||typeof G.bookGifts!=="object")G.bookGifts={};
+  if(G.bookGifts[num])return "";
+  G.bookGifts[num]=k.id;
+  const h=hashName(num*3,num*5+1,6901);
+  if(k.id==="recipes"){
+   const st=ALCH_STOCK;const a=st[Math.floor(h*st.length)%st.length],b=st[Math.floor(hashName(num,7,6902)*st.length)%st.length];
+   if(a!==b&&safeFn(()=>alchLearn(a,b),false))return ` Рецепт из книги: ${a} и ${b} дают ${alchEffect(a,b).n} состав.`;
+   return " Рецепт из книги вам уже знаком.";}
+  if(k.id==="textbook"){
+   const m=e&&e.shelf==="spell"?"runes":e&&e.shelf==="mon"?"alchemy":["smith","jewel","alchemy","runes","arte","cook","lang"][Math.floor(h*7)%7];
+   const было=safeFn(()=>mastLevel(m),0);
+   if(!было)return ` Учебник по ремеслу «${(MAST_BY_ID[m]||{n:m}).n}», но без первого урока строки не ложатся.`;
+   safeFn(()=>mastGain(m,6));return ` Учебник: «${(MAST_BY_ID[m]||{n:m}).n}» растёт от прочитанного.`;}
+  if(k.id==="map"){
+   const dx=Math.floor(h*61)-30,dy=Math.floor(hashName(num,9,6903)*61)-30;
+   const x=Math.max(0,Math.min(WORLD-1,(Number(G.x)||0)+dx)),y=Math.max(0,Math.min(WORLD-1,(Number(G.y)||0)+dy));
+   if(!Array.isArray(G.signs))G.signs=[];
+   G.signs.push({id:`map_${num}`,цель:{x,y},откуда:"из карты в книге",сила:1});
+   return ` На полях карта: чужое лежит в точке (${x}; ${y}). Примета записана.`;}
+  if(k.id==="fieldlog"){
+   const m=MONSTERS[Math.floor(h*MONSTERS.length)%MONSTERS.length];
+   if(!G.beastNotes||typeof G.beastNotes!=="object")G.beastNotes={};G.beastNotes[m.id]=1;
+   return ` Полевой журнал: «${m.n}» — ${knBiomes?knBiomes(m):"водится в своих землях"}, от ${m.min}-го уровня. Теперь вы узнаете его раньше.`;}
+  if(k.id==="chronicle"){
+   safeFn(()=>rumorSeed("добро","прочёл летопись",G.x,G.y,true));return " Летопись: старая весть пошла по миру заново, и на этот раз правдивая.";}
+  if(k.id==="forbidden"){
+   safeFn(()=>{if(mastLevel("demon"))mastGain("demon",5);adaptAdd("обряд",0.5);});
+   return " Запрещённый текст: строки жгут, тело помнит прочитанное, а демонология крепнет — если есть чем.";}
+  if(k.id==="treatise"){G.xp+=4;return " Трактат: разбор полный, опыт от него щедрее.";}
+  return " Дневник: чужая жизнь между строк — с людьми будет о чём говорить.";
+ }catch(_){return "";}}
+/* Темы для разговора: о чём из прочитанного можно спросить этого жителя. */
+function bookTopicsFor(n){
+ try{
+  const out=[];const читал=knowRead();if(!читал.length||!n)return out;
+  const L=knowLayout();
+  const emp=safeFn(()=>EMPIRES[empireIndexAt(n.x,n.y)],null);
+  const god=safeFn(()=>godOfRace(n.race),null);
+  const хочу=[["race",s=>s&&s.n===n.race],["god",s=>s&&god&&s.id===god.id],["emp",s=>s&&emp&&s.short===emp.short]];
+  for(const num of читал){
+   const e=safeFn(()=>knowEntry(num),null);if(!e)continue;
+   for(const [shelf,ok] of хочу){
+    if(e.shelf!==shelf)continue;
+    const row=L.rows.find(r=>r.sh.id===shelf);if(!row)continue;
+    let i=((num%L.total)+L.total)%L.total;for(const r of L.rows){if(r===row)break;i-=r.n;}
+    const subj=row.subj[Math.floor(i/row.sh.asp.length)];
+    if(ok(subj)&&!out.some(t=>t.shelf===shelf))out.push({shelf,num,title:e.title,kind:bookKind(e).n,text:(e.body||[])[0]||""});}}
+  return out;
+ }catch(_){return [];}}
+function npcAskBook(key,num){
+ try{
+  const n=getNPCByKey(key);if(!n){narrate("Спрашивать некого: житель ушёл.");return false;}
+  const t=bookTopicsFor(n).find(x=>x.num===Number(num));
+  if(!t){narrate(`${n.name} пожимает плечами: об этом вы не читали, и спросить не о чем.`);return false;}
+  const d=safeFn(()=>npcSoul(n),null);
+  if(!G.asked||typeof G.asked!=="object")G.asked={};
+  const k=`${n.key}|${t.num}`;const впервые=!G.asked[k];G.asked[k]=1;
+  const тон=safeFn(()=>buffActive("чужой голос"),false)?"охотно":d&&d.кЧужим<0?"настороженно":d&&d.кЧужим>0?"охотно":"ровно";
+  const ответ=d&&d.кЧужим<0&&t.shelf==="race"?`«Чужие книги про нас пишут криво», — говорит ${n.name} ${тон}, но поправляет: ${t.text}`:`${n.name} отвечает ${тон}: «${t.text}»`;
+  if(впервые){safeFn(()=>addRep(n.race,1));safeFn(()=>npcRemember(n,"спросил",t.title,4));}
+  safeFn(()=>Bank.play("uh_page",{seed:t.num,gain:0.45,maxSec:1}));
+  narrate(`${ответ}${впервые?" Разговор по книге сближает: имя у народа выросло.":""}`);
+  return true;
+ }catch(_){return false;}}
 function knowEntry(n){
  const L=knowLayout();
  if(!L.total)return null;
@@ -14415,9 +15004,9 @@ function openReading(n,первый){
  const e=knowEntry(n);if(!e)return false;
  const m=document.getElementById("modal-read");if(!m)return false;
  readIndex=n;
- document.getElementById("readTitle").textContent=`${e.icon} ${e.title}`;
+ document.getElementById("readTitle").textContent=`${e.icon} ${bookKind(e).n.charAt(0).toUpperCase()+bookKind(e).n.slice(1)}: ${e.title}`;
  const body=document.getElementById("readBody");body.innerHTML="";
- const строки=[`${e.shelfName}. ${e.title}.`].concat(e.body);
+ const строки=[`${e.shelfName}. ${bookKind(e).n.charAt(0).toUpperCase()+bookKind(e).n.slice(1)}: ${e.title}. ${bookKind(e).о}.`].concat(e.body);
  строки.forEach((t,i)=>{
   const b=document.createElement("button");b.type="button";b.className="item";
   b.textContent=t;b.dataset.speak=t;
@@ -14828,8 +15417,9 @@ function studyPage(n,глубина,заголовок){
   setTimeout(()=>safeFn(()=>Bank.play("spark_glock",{seed:n,gain:0.45,maxSec:4})),320);
   Bank.play("arte_book",{seed:n,gain:0.6,maxSec:3});});
  const награда=knowGrant(n,safeFn(()=>knowReward(n,глубина),null));
+ const дарРода=safeFn(()=>bookKindGrant(n,safeFn(()=>knowEntry(n),null)),"");
  safeFn(()=>questWorldTick("study"));
- narrate(`${заголовок} Изучено. Опыт растёт на ${опыт}.${награда}`);
+ narrate(`${заголовок} Изучено. Опыт растёт на ${опыт}.${награда}${дарРода}`);
  safeFn(()=>checkLevelUp());
  safeFn(()=>{refresh();saveGame(true);});
  openReading(n,true);
@@ -17317,6 +17907,9 @@ const TECHS=[
   берёт:{"слиток":2,"дерево":1},время:2.0,оп:9,
   звук:"wild_anvil",след:"arte_metal",
   о:"Полоса, закалка, отпуск, заточка и рукоять: выходит именной клинок."},
+ {id:"mend",маст:"smith",ур:2,станки:["anvil","forge"],n:"Починить артефакт",значок:"🩹",
+  берёт:{"руда":1},время:0.7,оп:4,звук:"uh_smith",след:"oc_metal_dull",
+  о:"Стёртая вещь даёт меньше, чем могла. Руда, огонь и час у наковальни возвращают ей целость."},
  {id:"cut",маст:"jewel",ур:1,станки:["bench","whetstone"],n:"Огранить кристалл",значок:"💎",
   берёт:{"кристалл":3},даёт:{"самоцвет":1},время:1.0,оп:4,
   звук:"craft_stone",след:"oc_glass_hit",
@@ -17325,6 +17918,9 @@ const TECHS=[
   берёт:{"трава":3,"ягоды":1},время:0.7,оп:3,
   звук:"arte_potion",след:"arte_potion",
   о:"Отвар поднимает на ноги и возвращает силу — сразу и целиком."},
+ {id:"potion",маст:"alchemy",ур:1,станки:["cauldron","hearth"],n:"Сварить зелье",значок:"⚗️",
+  время:0.6,оп:2,звук:"oc_boiling",след:"arte_potion",
+  о:"Из двух растений разных ниш выходит зелье восемнадцати родов: с качеством, устойчивостью и сроком."},
  {id:"assayer",маст:"alchemy",ур:1,станки:["cauldron"],n:"Поставить опыт",значок:"🧫",
   время:0.8,оп:5,звук:"arte_potion",след:"oc_bubble",опыт:true,
   о:"Две ещё не сведённые вместе вещи кладут в чан и смотрят, что выйдет. Иногда выходит польза, иногда ожог — иначе это был бы не опыт."},
@@ -17443,6 +18039,7 @@ function techRisk(t){
  let p=0.30-запас*0.09;
  /* Дар «рука»: сутки работа почти не срывается. */
  if(safeFn(()=>pactGift("рука"),false))p-=0.15;
+ if(safeFn(()=>buffActive("твёрдая рука"),false))p-=0.12;
  return Math.max(0.02,Math.min(0.45,p));}
 /* Какие техники доступны у этого станка. */
 function techsAt(станок,все){
@@ -17482,6 +18079,11 @@ function techDo(t,станок){
  if(t.id==="rites"){
   safeFn(()=>mastGain(t.маст,t.оп||2));safeFn(()=>deedTech(t));
   safeFn(()=>openDemon());
+  return true;}
+ /* Зелье, как сосуд и обряд, — разговор с окном: растения уходят там, а не здесь. */
+ if(t.id==="potion"){
+  safeFn(()=>mastGain(t.маст,t.оп||2));safeFn(()=>deedTech(t));
+  safeFn(()=>openPotions());
   return true;}
  if(t.опыт||t.смесь){
   /* Опыт идёт в неизвестное, смесь — по записи. Обе берут по одной единице
@@ -17552,6 +18154,7 @@ function techDo(t,станок){
  if(t.буфф){
   safeFn(()=>buffSet(t.буфф[0],t.буфф[1]));
   дар=`${t.буфф[0]} держится ${t.буфф[1]} ${plural(t.буфф[1],"час","часа","часов")}`;}
+ if(t.id==="mend")дар=artMend();
  if(t.id==="throw"){
   /* Движение вещей: механизм разводит по частям, не касаясь его. Чары так
      не берутся — их стирают рукой, а не тяжестью. */
@@ -19292,9 +19895,9 @@ function realmsText(){
  return `Сейчас: ${now.n} — ${now.о}. Слоёв открыто ${были.length} из ${REALMS.length}${были.length?`: ${были.map(r=>r.n).join(", ")}`:""}. `+
   (нет.length?`Не открыты: ${нет.map(r=>`${r.n} — ${r.порог}`).join("; ")}.`:"Открыты все слои.");}
 function atk(){return G.str+(G.equip.weapon?G.equip.weapon.val:0)+Math.round(2*fxLevel("atk"))
- +safeFn(()=>ART.sum("сила"),0);}
+ +safeFn(()=>ART.sum("сила"),0)+(safeFn(()=>buffActive("мощь"),false)?3:0);}
 function def(){return Math.floor(G.agi/3)+(G.equip.armor?G.equip.armor.val:0)+Math.round(2*fxLevel("def"))
- +safeFn(()=>ART.sum("защита"),0)+safeFn(()=>Math.round(assimBonus("def")+adaptBonus("def")),0)-(safeFn(()=>anomalyIs("gravity"),false)?1:0);}
+ +safeFn(()=>ART.sum("защита"),0)+safeFn(()=>Math.round(assimBonus("def")+adaptBonus("def")),0)-(safeFn(()=>anomalyIs("gravity"),false)?1:0)+(safeFn(()=>buffActive("стойкость"),false)?2:0);}
 const RANKS=["Обычный","Необычный","Редкий","Эпический","Легендарный","Божественный"];
 const QUAL=["Грубое","Простое","Добротное","Отличное","Превосходное","Благословенное"];
 const MAT=["кожаный","железный","стальной","серебряный","мифриловый","драконий"];
@@ -19429,7 +20032,7 @@ function journal(t){G.journal.unshift(`Д${G.day} ${String(Math.floor(G.hour)).p
 
 /* ════════ HUD ════════ */
 function refresh(){
- safeFn(()=>realmCheck());safeFn(()=>anomalyCheck());
+ safeFn(()=>realmCheck());safeFn(()=>anomalyCheck());safeFn(()=>islandCheck());safeFn(()=>diveCheck());
  const c=cellContent(G.x,G.y);
  const h=Math.floor(G.hour%24);
  /* Мир живёт своим чередом: войны начинаются и кончаются, имя игрока растёт
@@ -21966,6 +22569,46 @@ function artMood(a){
    и редкость выводятся заново при каждом обращении — поэтому изменение
    таблицы сразу меняет все вещи в мире и в чужих сохранениях, и поэтому
    ничто не может разойтись само с собой. */
+/* ════════ РОДОСЛОВНАЯ, ИЗНОС И ПОЧИНКА АРТЕФАКТА (§121) ════════
+   У вещи были ранг, качество, свойства и гнёзда, но не было прошлого и не
+   было износа. Теперь у каждого артефакта — происхождение, создатель,
+   история и материал, выведенные из его семени; каждый бой стирает вещь,
+   и потёртая даёт девять десятых, изношенная — три четверти, ветхая —
+   половину; чинит её кузнец у наковальни за руду, и это слышно. Голос вещи
+   — по направлению, и он тот же, что при находке. */
+const ART_ORIGINS=["найдена в кладе","снята с павшего","выкуплена у торговца","поднята из глубины","получена за дело","вынесена из-за Грани","собрана в мастерской"];
+const ART_MAKERS=["безымянный мастер гильдии","кузнец державы, чьё клеймо стёрто","затворник башни","цеховой старшина","мастер из-за моря","древние, чей счёт годам утрачен","подмастерье, превзошедший учителя"];
+const ART_HISTORY=["переходила из рук в руки трижды","лежала в земле дольше, чем стоит ближний город","была заложена и не выкуплена","спасла хозяина один раз и подвела другой","о ней спорили два клана","её прятали от сборщиков податей","её считали потерянной"];
+const ART_MATERIALS=["чёрная бронза","звёздное железо","кость древнего зверя","морёный дуб","стекло разлома","серебро с чернью","рог и кожа"];
+const ART_WEAR=[[0,"целая",1],[12,"потёртая",0.9],[30,"изношенная",0.75],[60,"ветхая",0.5]];
+function artLore(a){
+ try{
+  if(!a)return null;
+  const seed=Math.abs(Number(String(a.id||"").replace(/\D/g,"").slice(-6))||1)+String(a.имя||"").length;
+  const S=k=>hashName(seed*13+k*7,seed*5+k*11,6300+k);
+  const pick=(arr,k)=>arr[Math.floor(S(k)*arr.length)%arr.length];
+  const w=Number(a.износ)||0;let сост=ART_WEAR[0];for(const row of ART_WEAR)if(w>=row[0])сост=row;
+  return {происхождение:a.откуда&&a.откуда!=="находка"?a.откуда:pick(ART_ORIGINS,1),создатель:pick(ART_MAKERS,2),
+   история:pick(ART_HISTORY,3),материал:pick(ART_MATERIALS,4),износ:w,состояние:сост[1],доля:сост[2],
+   уровень:(ART_RANKS[a.ранг]||ART_RANKS[0]).уровень,голос:artVoice(a)};
+ }catch(_){return null;}}
+function artWearFactor(a){try{const l=artLore(a);return l?l.доля:1;}catch(_){return 1;}}
+function artVoice(a){try{const дом=ART_DIR_BY_ID[a&&a.дом]||{};return дом.звук||"artifact_hum";}catch(_){return "artifact_hum";}}
+/* Бой стирает вещи: каждая работающая — на единицу. */
+function artWearAll(n){
+ try{let k=0;(G.artifacts||[]).forEach(a=>{if(a&&typeof a==="object"&&ART.works(a)){const было=artLore(a).состояние;a.износ=(Number(a.износ)||0)+(Number(n)||1);
+   const стало=artLore(a).состояние;if(стало!==было){k++;narrate(`${a.имя}: теперь ${стало}.`,{pri:3,key:"wear:"+a.id,ttl:8000});}}});return k;}catch(_){return 0;}}
+function artLoreText(a){
+ const l=artLore(a);if(!l)return "";
+ return `Происхождение: ${l.происхождение}; создатель — ${l.создатель}; материал — ${l.материал}; ${l.история}. Состояние: ${l.состояние}${l.доля<1?`, даёт ${Math.round(l.доля*100)} из ста`:""}. Уровень вещи ${l.уровень}.`;}
+function artMend(){
+ try{
+  const worn=(G.artifacts||[]).filter(a=>a&&(Number(a.износ)||0)>0).sort((a,b)=>(Number(b.износ)||0)-(Number(a.износ)||0));
+  if(!worn.length)return "чинить нечего: все вещи целы";
+  const a=worn[0];const было=artLore(a).состояние;a.износ=0;
+  safeFn(()=>Bank.play("uh_smith",{gain:0.55,maxSec:2}));
+  return `${a.имя} починена: была ${было}, стала целая`;
+ }catch(_){return "починка не удалась";}}
 const ART={
  /* ── Сборка записи ──
     Направление, ранг и качество обязательны; всё прочее выводится. Имя
@@ -22047,7 +22690,7 @@ const ART={
    const статы={};
    for(const k of Object.keys(сум)){
     const st=ART_STAT_BY_ID[k];if(!st)continue;
-    let v=сум[k];
+    let v=сум[k]*artWearFactor(a);
     v=Math.max(-st.предел,Math.min(st.предел,v));
     v=st.ед==="доля"?Math.round(v*1000)/1000:Math.round(v);
     if(v!==0)статы[k]=v;}
@@ -22111,6 +22754,7 @@ const ART={
     const v=статы[k];
     return st.ед==="доля"?`${st.n} ${v>0?"+":""}${Math.round(v*100)}%`:`${st.n} ${v>0?"+":""}${v}`;});
    const шапка=`${a.имя}: ${R.n} артефакт, ${дом.n}, ${Q.n} изготовление.`;
+   const родословная=safeFn(()=>artLoreText(a),"");
    if(кратко)return `${шапка} ${строки.join(", ")||"без свойств"}. Цена ${ART.price(a)}.`;
    const гн=ART.slots(a);
    const части=(a.части||[]).map(id=>(ART_PART_BY_ID[id]||{}).n).filter(Boolean);
@@ -22127,7 +22771,7 @@ const ART={
     a.нрав?`У вещи свой нрав: ${(ART_MIND_BY_ID[a.нрав]||{}).о||""}`:"",
     a.нестаб?`Нестабильна: ${Math.round(a.нестаб*100)} из ста, что подведёт в решающий миг.`:"",
     нет.length?`Не работает: нужно ${нет.join(", ")}.`:"",
-    `Откуда: ${a.откуда}. Цена ${ART.price(a)} золота.`].filter(Boolean).join(" ");
+    `Откуда: ${a.откуда}. Цена ${ART.price(a)} золота.`,родословная].filter(Boolean).join(" ");
   }catch(_){return (a&&a.имя)||"артефакт";}},
  /* ── СУММА ПО ВСЕМ ВЕЩАМ В РУКАХ ──
     Бой, ходьба и чары спрашивают отсюда. Считается по тем, что РАБОТАЮТ:
@@ -23110,7 +23754,7 @@ const SCAPE_MAX=2;
 /* И общий промежуток между любыми двумя откликами картины. */
 const SCAPE_GAP=700;
 const SCAPE_RAD=7;          /* докуда слышно, в клетках */
-function scapeRad(){return SCAPE_RAD+safeFn(()=>Math.round(assimBonus("ear")),0)+(safeFn(()=>propActive("astrolabe"),false)?2:0);}
+function scapeRad(){return SCAPE_RAD+safeFn(()=>Math.round(assimBonus("ear")),0)+(safeFn(()=>propActive("astrolabe"),false)?2:0)+(safeFn(()=>buffActive("чутьё"),false)?2:0);}
 
 /* Что и как часто подаёт голос. period — секунды между откликами вблизи;
    дальние ждут дольше. */
@@ -25509,7 +26153,7 @@ function victory(){const cb=G.combat,m=cb.m;
  if(G.place&&G.place.pendingKill){const k=G.place.pendingKill;G.place.pendingKill=null;
   safeFn(()=>{setPlaceMark(k.x,k.y,"dead");G.dungeonKills=(Number(G.dungeonKills)||0)+1;checkQuestProgress();});}
  G.xp+=xpGain(m.xp);
- safeFn(()=>{G.lastKill={id:m.id,n:m.n,lvl:m.lvl,fx:m.fx,когда:(Number(G.day)||1)*24+(Number(G.hour)||0)};deed("kills");});
+ safeFn(()=>{G.lastKill={id:m.id,n:m.n,lvl:m.lvl,fx:m.fx,когда:(Number(G.day)||1)*24+(Number(G.hour)||0)};deed("kills");artWearAll(1);});
  /* ── О ПОБЕДЕ УЗНАЮТ ──
     Весть рождается там, где был бой, и дальше идёт без игрока. Мелкую драку
     никто не разносит: весть заводится только на том, что выше игрока или
@@ -25860,7 +26504,8 @@ function gatherCurrent(source="tap"){
      и «простая руда» — разные находки, и разницу надо слышать, а не угадывать. */
   const проСорт=сорт?` Это ${сорт.n}: ${сорт.о}`:"";
   const проДар=сортДар?` Сверх того взято: ${сорт.товар} ×${сортДар}.`:"";
-  narrate(`Собрано: ${c.res.name}${bounty>1?` — ${bounty} за раз`:""}. Осталось здесь: ${left-1}.${проСорт}${проДар}${навык}${extra}`);
+  const проРаст=safeFn(()=>plantGather(c,G.x,G.y),"")||"";
+  narrate(`Собрано: ${c.res.name}${bounty>1?` — ${bounty} за раз`:""}. Осталось здесь: ${left-1}.${проСорт}${проДар}${проРаст}${навык}${extra}`);
   journal(`Собрано: ${c.res.name}.`);
   refresh();
   try{saveGame(true);}catch(e){}
@@ -25977,6 +26622,12 @@ const CMD={
  bodystate(){Speech.request(adaptText()+" "+assimText(),{key:"body"});},
  realms(){Speech.request(realmsText(),{key:"realms"});},
  assimilate(){assimilateRemains();},
+ spellforge(){spellForgeOpen();},
+ schools(){Speech.request(schoolsText(),{key:"schools"});},
+ sfschool(id){spellForgePick("school",id);},
+ sfform(id){spellForgePick("form",id);},
+ sfmod(id){spellForgePick("mod",id);},
+ sfbuild(){spellForgeBuild();},
  quests(){openModal("modal-quests");renderQuests();},
  signs(){openSigns();},
  stashes(){safeFn(()=>openStashes());},
@@ -26050,6 +26701,13 @@ const CMD={
  lot10(res){buyLot(res,10);},
  freight(i){takeFreight(i);},
  fish(){if(G.fishing&&G.fishing.active)hookFish();else startFishing();},
+ dive(){diveHere();},
+ landisle(){landIsland();},
+ potions(){openPotions();},
+ brewpotion(id){brewPotion(id);},
+ drinkpotion(i){drinkPotion(Number(i));},
+ plants(){narrate(plantsText());},
+ seas(){narrate(seasText());},
  seavoice(id){const src=SEA_MONSTERS.find(m=>m.id===id)||PIRATE_CREWS.find(c=>c.id===id);
   if(!src){narrate("Голос не найден.");return;}
   narrate(src.n);
@@ -26173,6 +26831,7 @@ const CMD={
    return;}
   safeFn(()=>dlgDo(n,move));
   safeFn(()=>{if(!G.inCombat)openNPC(key,true);});},
+ npcask(arg){const i=String(arg).lastIndexOf("~");npcAskBook(String(arg).slice(0,i),Number(String(arg).slice(i+1)));},
  npctalk(key){const n=getNPCByKey(key);
   if(!n){narrate("Этого жителя здесь уже нет: разговор не с кем начинать. Осмотритесь — рядом могут быть другие.");return;}
   tellNPCStory(n);},
@@ -26569,6 +27228,187 @@ function learnSpell(i){const sp=SPELLS[i];
 /* Двенадцать заклинаний по числу слотов панели. Пять первых знали и раньше;
    семь остальных не продаются ни в одной лавке — им учат только книги и
    свитки, найденные в мире. */
+/* ════════ ШКОЛЫ И СОСТАВИТЕЛЬ ЗАКЛИНАНИЙ (§120) ════════
+   Заклинаний было двенадцать, и у каждого — имя и цена. Теперь у чар есть
+   двадцать семь школ, и каждая — со своим семейством, стихией и голосом;
+   каждое заклинание описывается как запись: школа, ранг, уровень,
+   стоимость, дальность, форма, радиус, время подготовки и восстановления,
+   компоненты, условия, противодействие, сопротивление, побочный эффект,
+   звуковая и слышимая сигнатура, точка источника. Составитель собирает новое
+   заклинание из школы, формы и усиления — и отвергает бессмысленное:
+   исцеляющей стрелы не бывает, как и тихой школы звука. Составленное
+   заклинание — настоящее: оно в списке, его творят, оно действует, у него
+   есть перезарядка, и оно переживает сохранение. */
+const SPELL_FAMILIES={урон:"урон",защита:"защита",исцеление:"исцеление",скрытность:"скрытность",контроль:"контроль"};
+const SCHOOLS=[
+ {id:"fire",n:"Огонь",род:"огня",сем:"урон",k:1.15,звук:"spell_fire",голос:"oc_fireball"},
+ {id:"water",n:"Вода",род:"воды",сем:"исцеление",k:0.95,звук:"spell_cast",голос:"oc_bubble"},
+ {id:"earth",n:"Земля",род:"земли",сем:"защита",k:1.0,звук:"spell_cast",голос:"oc_rock_hit"},
+ {id:"air",n:"Воздух",род:"воздуха",сем:"контроль",k:0.9,звук:"spell_cast",голос:"oc_gust"},
+ {id:"light",n:"Свет",род:"света",сем:"исцеление",k:1.1,звук:"spell_light",голос:"magic_shimmer"},
+ {id:"dark",n:"Тьма",род:"тьмы",сем:"урон",k:1.1,звук:"spell_dark",голос:"oc_sizzle"},
+ {id:"order",n:"Порядок",род:"порядка",сем:"защита",k:1.05,звук:"spell_light",голос:"oc_connect"},
+ {id:"chaos",n:"Хаос",род:"хаоса",сем:"урон",k:1.25,звук:"spell_dark",голос:"oc_blast"},
+ {id:"aether",n:"Эфир",род:"эфира",сем:"скрытность",k:0.9,звук:"spell_cast",голос:"oc_electrical"},
+ {id:"ash",n:"Пепел",род:"пепла",сем:"урон",k:1.1,звук:"spell_fire",голос:"ad_fire_sizzle"},
+ {id:"sound",n:"Звук",род:"звука",сем:"урон",k:1.0,звук:"spell_cast",голос:"oc_thunder"},
+ {id:"crystal",n:"Кристалл",род:"кристалла",сем:"урон",k:1.05,звук:"spell_ice",голос:"oc_glass_hit"},
+ {id:"plants",n:"Растения",род:"растений",сем:"исцеление",k:0.9,звук:"spell_cast",голос:"lug_bush"},
+ {id:"blood",n:"Кровь",род:"крови",сем:"урон",k:1.3,звук:"spell_dark",голос:"oc_organic_hit"},
+ {id:"spirit",n:"Дух",род:"духа",сем:"исцеление",k:1.0,звук:"spell_light",голос:"choir"},
+ {id:"mind",n:"Разум",род:"разума",сем:"контроль",k:1.0,звук:"spell_cast",голос:"oc_electrical"},
+ {id:"gravity",n:"Гравитация",род:"тяжести",сем:"контроль",k:1.1,звук:"spell_cast",голос:"oc_quake"},
+ {id:"time",n:"Время",род:"времени",сем:"контроль",k:1.2,звук:"spell_cast",голос:"stk_clock"},
+ {id:"space",n:"Пространство",род:"пространства",сем:"скрытность",k:1.1,звук:"spell_cast",голос:"oc_warp"},
+ {id:"barrier",n:"Барьер",род:"барьера",сем:"защита",k:1.0,звук:"spell_light",голос:"oc_shield_block"},
+ {id:"summon",n:"Призыв",род:"призыва",сем:"контроль",k:1.15,звук:"spell_dark",голос:"deep_call"},
+ {id:"illusion",n:"Иллюзия",род:"иллюзии",сем:"скрытность",k:0.95,звук:"spell_cast",голос:"oc_rustle"},
+ {id:"runes",n:"Руны",род:"рун",сем:"защита",k:1.0,звук:"spell_cast",голос:"craft_stone"},
+ {id:"artefact",n:"Артефактная магия",род:"артефакта",сем:"контроль",k:1.05,звук:"spell_cast",голос:"artifact_hum"},
+ {id:"mystic",n:"Мистицизм",род:"мистики",сем:"исцеление",k:1.05,звук:"spell_light",голос:"bell_small"},
+ {id:"demon",n:"Демонология",род:"демонов",сем:"урон",k:1.3,звук:"spell_dark",голос:"deep_call"},
+ {id:"alch",n:"Алхимическая магия",род:"алхимии",сем:"исцеление",k:1.0,звук:"spell_cast",голос:"oc_boiling"}];
+const MSCHOOL_BY_ID=Object.fromEntries(SCHOOLS.map(x=>[x.id,x]));
+const SPELL_SCHOOL={"Искра":"aether","Ветер странника":"air","Зов дождя":"water","Огненный шар":"fire","Исцеление":"light",
+ "Ледяная игла":"crystal","Покров тени":"dark","Свет зари":"light","Каменная кожа":"earth","Зов ветра":"air","Слово тишины":"sound","Искра глубин":"crystal"};
+function spellSchool(sp){try{const id=sp&&(sp.school||SPELL_SCHOOL[sp.n]);return MSCHOOL_BY_ID[id]||null;}catch(_){return null;}}
+const SPELL_FORMS=[
+ {id:"bolt",n:"стрела",имя:"Стрела",род:"стрелы",дальность:6,радиус:0,подготовка:0.2,откат:0,база:9,сем:["урон","контроль"],о:"бьёт одну тварь"},
+ {id:"wave",n:"волна",имя:"Волна",род:"волны",дальность:2,радиус:2,подготовка:0.4,откат:1,база:7,сем:["урон","защита","исцеление","контроль"],о:"расходится вокруг"},
+ {id:"ward",n:"щит",имя:"Щит",род:"щита",дальность:0,радиус:0,подготовка:0.3,откат:2,база:8,сем:["защита","исцеление","скрытность","контроль"],о:"держится на теле"},
+ {id:"mark",n:"метка",имя:"Метка",род:"метки",дальность:3,радиус:1,подготовка:0.5,откат:1,база:6,сем:["урон","защита","скрытность","контроль"],о:"ложится на место"},
+ {id:"call",n:"зов",имя:"Зов",род:"зова",дальность:0,радиус:3,подготовка:0.6,откат:3,база:10,сем:["урон","исцеление","скрытность","контроль"],о:"зовёт силу школы"}];
+const FORM_BY_ID=Object.fromEntries(SPELL_FORMS.map(x=>[x.id,x]));
+const SPELL_MODS=[
+ {id:"none",n:"без усиления",k:1,цена:1,о:"как есть"},
+ {id:"quick",n:"быстрое",k:1,цена:1.2,подготовка:0.5,о:"вдвое короче подготовка, на пятую часть дороже"},
+ {id:"silent",n:"тихое",k:1,цена:1.1,о:"без слышимой сигнатуры: твари не насторожатся"},
+ {id:"far",n:"дальнее",k:1,цена:1.15,дальность:2,о:"дальность вдвое"},
+ {id:"lasting",n:"стойкое",k:1.3,цена:1.3,откат:2,о:"на треть сильнее, перезарядка вдвое дольше"}];
+const MOD_BY_ID=Object.fromEntries(SPELL_MODS.map(x=>[x.id,x]));
+/* Совместимость: почему сочетание не имеет смысла. Пусто — значит можно. */
+function spellIncompat(schoolId,formId,modId){
+ const sc=MSCHOOL_BY_ID[schoolId],f=FORM_BY_ID[formId],m=MOD_BY_ID[modId||"none"];
+ if(!sc||!f||!m)return "не хватает школы, формы или усиления";
+ if(!f.сем.includes(sc.сем))return `${f.n} ${sc.род} не имеет смысла: школа ${sc.сем.replace(/е$/,"я")}, а такая форма ей чужда`;
+ if(m.id==="silent"&&sc.id==="sound")return "тихого звука не бывает";
+ if(m.id==="far"&&f.id==="ward")return "щит не бывает дальним: он держится на теле";
+ if(m.id==="quick"&&f.id==="call")return "зов не торопят: быстрого зова не бывает";
+ if(m.id==="lasting"&&f.id==="bolt")return "стрела не бывает стойкой: она либо попала, либо нет";
+ return "";}
+function composeSpell(schoolId,formId,modId,ур){
+ const why=spellIncompat(schoolId,formId,modId);if(why)return {ошибка:why};
+ const sc=MSCHOOL_BY_ID[schoolId],f=FORM_BY_ID[formId],m=MOD_BY_ID[modId||"none"];
+ ур=Math.max(1,Number(ур)||1);
+ const n=`${f.имя} ${sc.род}${m.id==="none"?"":" ("+m.n+")"}`;
+ const cost=Math.max(3,Math.round(f.база*sc.k*m.цена+ур*1.5));
+ const rec={id:`cs_${sc.id}_${f.id}_${m.id}`,n,custom:true,school:sc.id,форма:f.id,усиление:m.id,
+  ранг:ур,уровень:ур*3,cost,price:0,дальность:f.дальность*(m.дальность||1),радиус:f.радиус,
+  подготовка:+(f.подготовка*(m.подготовка||1)).toFixed(2),откат:f.откат*(m.откат||1),
+  компоненты:["кристалл"],условия:f.id==="bolt"||f.id==="wave"?"в бою":"в любое время",
+  противодействие:sc.сем==="урон"?"щит противной школы":sc.сем==="защита"?"стрела хаоса":"тишина",
+  сопротивление:sc.сем==="урон"?`сопротивление ${sc.род}`:"нет",
+  побочное:sc.сем==="урон"?"тело копит нагрузку от чар":sc.сем==="контроль"?"мана после отката возвращается медленнее":"нет",
+  звук:sc.звук,голос:m.id==="silent"?null:sc.голос,вид:`${sc.n.toLowerCase()} в форме ${f.род}`,источник:"игрок",сила:m.k};
+ return rec;}
+function registerCustomSpells(){
+ try{
+  const книга=Array.isArray(G.spellbook)?G.spellbook:(G.spellbook=[]);
+  for(const rec of книга){if(!SPELLS.some(sp=>sp.n===rec.n))SPELLS.push(Object.assign({},rec));
+   if(Array.isArray(G.spells)&&!G.spells.includes(rec.n))G.spells.push(rec.n);}
+ }catch(_){}}
+function spellCooling(sp){try{const cd=G.spellCD&&G.spellCD[sp.id];const now=(Number(G.day)||1)*24+(Number(G.hour)||0);return cd&&cd>now?Math.ceil(cd-now):0;}catch(_){return 0;}}
+function spellForgeAvailable(){
+ try{return !!(G.place&&["tower","school","temple"].includes(G.place.stype)&&(safeFn(()=>mastLevel("runes"),0)>=1||safeFn(()=>mastLevel("arte"),0)>=1));}catch(_){return false;}}
+const SF={school:null,form:null,mod:"none"};
+function spellForgeOpen(){
+ if(!spellForgeAvailable()){
+  narrate(G.place&&["tower","school","temple"].includes(G.place.stype)?"Составлять заклинания может тот, кто знает хоть первый урок рун или артефакторики.":"Заклинания составляют в башне, школе или храме.");
+  return false;}
+ openModal("modal-spellforge");spellForgeRender();return true;}
+function spellForgeRender(){
+ const box=document.getElementById("sfBody");if(!box)return;
+ const ур=Math.max(safeFn(()=>mastLevel("runes"),0),safeFn(()=>mastLevel("arte"),0));
+ let html=`<div class="list-line" tabindex="0" data-speak="Составитель: выберите школу, форму и усиление, потом соберите. Ступень ${ур}. Стоит кристалл и пятнадцать маны.">🧪 Школа → форма → усиление → собрать. Ступень ${ур}.</div>`;
+ const проба=SF.school&&SF.form?composeSpell(SF.school,SF.form,SF.mod,ур):null;
+ const итог=!SF.school||!SF.form?"Выбрано: "+(SF.school?MSCHOOL_BY_ID[SF.school].n:"школа не выбрана")+", "+(SF.form?FORM_BY_ID[SF.form].n:"форма не выбрана")+", "+MOD_BY_ID[SF.mod].n+"."
+  :проба.ошибка?`Несовместимо: ${проба.ошибка}.`:`Выйдет «${проба.n}»: ${проба.вид}, мана ${проба.cost}, дальность ${проба.дальность}, радиус ${проба.радиус}, подготовка ${проба.подготовка}, перезарядка ${проба.откат} ч. ${проба.условия}.`;
+ html+=`<div class="list-line" tabindex="0" data-speak="${итог.replace(/"/g,"&quot;")}">${проба&&!проба.ошибка?"✅":"ℹ️"} ${итог}</div>`;
+ html+=`<h3>Школа</h3>`+SCHOOLS.map(sc=>`<button class="item" data-cmd="sfschool:${sc.id}" data-speak="Школа ${sc.n}: ${sc.сем}. ${SF.school===sc.id?"Выбрана.":""}">${SF.school===sc.id?"✔ ":""}${sc.n} — ${sc.сем}</button>`).join("");
+ html+=`<h3>Форма</h3>`+SPELL_FORMS.map(f=>`<button class="item" data-cmd="sfform:${f.id}" data-speak="Форма ${f.n}: ${f.о}. ${SF.form===f.id?"Выбрана.":""}">${SF.form===f.id?"✔ ":""}${f.n} — ${f.о}</button>`).join("");
+ html+=`<h3>Усиление</h3>`+SPELL_MODS.map(m=>`<button class="item" data-cmd="sfmod:${m.id}" data-speak="Усиление ${m.n}: ${m.о}. ${SF.mod===m.id?"Выбрано.":""}">${SF.mod===m.id?"✔ ":""}${m.n} — ${m.о}</button>`).join("");
+ html+=`<button class="item" data-cmd="sfbuild" data-speak="Собрать заклинание.">🔮 Собрать</button>`;
+ box.innerHTML=html;}
+function spellForgePick(what,id){
+ const есть=what==="school"?MSCHOOL_BY_ID[id]:what==="form"?FORM_BY_ID[id]:MOD_BY_ID[id];
+ if(!есть){narrate(what==="school"?"Такой школы нет.":what==="form"?"Такой формы нет.":"Такого усиления нет.");return false;}
+ if(what==="school"&&MSCHOOL_BY_ID[id])SF.school=id;
+ if(what==="form"&&FORM_BY_ID[id])SF.form=id;
+ if(what==="mod"&&MOD_BY_ID[id])SF.mod=id;
+ spellForgeRender();
+ const ур=Math.max(safeFn(()=>mastLevel("runes"),0),safeFn(()=>mastLevel("arte"),0));
+ const проба=SF.school&&SF.form?composeSpell(SF.school,SF.form,SF.mod,ур):null;
+ safeFn(()=>Bank.play("oc_ui_select"in SOUND_BANK?"oc_ui_select":"knock_soft",{gain:0.4,maxSec:1}));
+ narrate(проба?(проба.ошибка?`Несовместимо: ${проба.ошибка}.`:`Выйдет «${проба.n}», мана ${проба.cost}.`):`Выбрано: ${what==="school"?MSCHOOL_BY_ID[id].n:what==="form"?FORM_BY_ID[id].n:MOD_BY_ID[id].n}.`,{key:"sf"});
+ return true;}
+function spellForgeBuild(){
+ try{
+  const ур=Math.max(safeFn(()=>mastLevel("runes"),0),safeFn(()=>mastLevel("arte"),0));
+  if(!SF.school||!SF.form){narrate("Сперва выберите школу и форму.");return false;}
+  const rec=composeSpell(SF.school,SF.form,SF.mod,ур);
+  if(rec.ошибка){safeFn(()=>Bank.play("oc_pshsh",{gain:0.5,maxSec:1}));narrate(`Несовместимо: ${rec.ошибка}.`);return false;}
+  if(SPELLS.some(sp=>sp.n===rec.n)&&G.spells.includes(rec.n)){narrate(`«${rec.n}» у вас уже есть.`);return false;}
+  if((Number(G.inv&&G.inv["кристалл"])||0)<1){narrate("Нужен кристалл: он держит составленное заклинание.");return false;}
+  if((Number(G.mana)||0)<15){narrate(`Нужно пятнадцать маны, у вас ${Math.round(Number(G.mana)||0)}.`);return false;}
+  G.inv["кристалл"]-=1;if(G.inv["кристалл"]<=0)delete G.inv["кристалл"];G.mana-=15;
+  if(!Array.isArray(G.spellbook))G.spellbook=[];
+  G.spellbook.push(rec);registerCustomSpells();
+  safeFn(()=>mastGain("runes",5));safeFn(()=>deed("casts"));
+  safeFn(()=>{Bank.play("oc_electrical",{gain:0.55,maxSec:3});setTimeout(()=>safeFn(()=>Bank.play(rec.голос||"magic_shimmer",{gain:0.5,maxSec:3})),500);});
+  journal(`Составлено заклинание: ${rec.n}.`);
+  narrate(`Составлено: «${rec.n}» — ${rec.вид}. Мана ${rec.cost}, ${rec.условия}, перезарядка ${rec.откат} ч. Оно в списке заклинаний.`,{pri:1,key:"sf"});
+  safeFn(()=>{spellForgeRender();refresh();saveGame(true);});
+  return true;
+ }catch(e){return false;}}
+/* Действие составленного заклинания — по семейству школы и форме. */
+function castCustomEffect(sp){
+ try{
+  const sc=MSCHOOL_BY_ID[sp.school]||SCHOOLS[0],f=FORM_BY_ID[sp.форма]||SPELL_FORMS[0],k=Number(sp.сила)||1;
+  const now=(Number(G.day)||1)*24+(Number(G.hour)||0);
+  if(!G.spellCD||typeof G.spellCD!=="object")G.spellCD={};
+  if(sp.откат)G.spellCD[sp.id]=now+sp.откат;
+  if(sp.голос)safeFn(()=>Bank.play(sp.голос,{seed:sp.n.length,gain:0.55,maxSec:4}));
+  const бой=G.inCombat&&G.combat;
+  const удар=d=>{G.combat.hp-=d;safeFn(()=>updateCombat());if(G.combat.hp<=0){narrate(`Заклинание «${sp.n}» сотворено. −${d} твари: она пала.`);victory();return " ";}return ` −${d} твари.`;};
+  if(sc.сем==="урон"){
+   if(f.id==="bolt")return бой?удар(Math.round((10+G.level*2)*sc.k*k)):" Стрела ушла в пустоту: бить было некого.";
+   if(f.id==="wave")return бой?удар(Math.round((6+G.level)*sc.k*k)):" Волна прокатилась по пустому месту.";
+   if(f.id==="mark"){const л=safeFn(()=>trapFound(),null);if(бой){G.combat.marked=true;return " Метка легла на тварь: следующий удар пройдёт вернее.";}return л?` Метка легла на ${л.n}.`:" Метка легла на камень и погасла.";}
+   if(f.id==="call"){adaptAdd("энергия",1);return бой?удар(Math.round((14+G.level*2)*sc.k*k)):` Зов ${sc.род} отозвался, но звать было незачем: тело приняло нагрузку.`;}}
+  if(sc.сем==="защита"){
+   if(f.id==="ward"){safeFn(()=>buffSet("оберег",Math.round(3*k)));G.hp=Math.min(G.hpMax,G.hp+Math.round(G.hpMax*0.1));return ` Щит ${sc.род} лёг на плечи: оберег на ${Math.round(3*k)} ч, здоровье немного выросло.`;}
+   if(f.id==="wave"){safeFn(()=>buffSet("оберег",Math.round(2*k)));return бой?удар(Math.round((4+G.level)*sc.k*k))+" Оберег на два часа.":` Волна ${sc.род} укрыла вас: оберег на два часа.`;}
+   if(f.id==="mark"){const л=safeFn(()=>trapFound(),null);if(л){safeFn(()=>setPlaceMark(л.x,л.y,"trap_off"));return ` Метка ${sc.род} запечатала ${л.n}.`;}return " Метка легла, но печатать было нечего.";}}
+  if(sc.сем==="исцеление"){
+   const h=Math.round((12+G.level*2)*sc.k*k);
+   if(f.id==="ward"){G.hp=Math.min(G.hpMax,G.hp+h);safeFn(()=>adaptRest(4));return ` Здоровье плюс ${h}, тело отдыхает.`;}
+   if(f.id==="wave"){G.hp=Math.min(G.hpMax,G.hp+Math.round(h*0.7));G.water=Math.min(200,(Number(G.water)||0)+20);return ` Здоровье плюс ${Math.round(h*0.7)}, жажда утолена.`;}
+   if(f.id==="call"){G.hp=Math.min(G.hpMax,G.hp+h);G.mana=Math.min(G.manaMax,G.mana+Math.round(h/2));return ` Зов ${sc.род}: здоровье плюс ${h}, мана плюс ${Math.round(h/2)}.`;}}
+  if(sc.сем==="скрытность"){
+   if(f.id==="ward"||f.id==="mark"){safeFn(()=>buffSet("морок",Math.round(3*k)));return бой?(endCombat(),safeFn(()=>{refresh();resumeLocationMusic();})," Вы ушли из чужого внимания: бой прекратился."):` Морок на ${Math.round(3*k)} ч: встреч меньше.`;}
+   if(f.id==="call"){safeFn(()=>buffSet("астрал",2));return " Зов открыл астральный слой на два часа.";}}
+  if(sc.сем==="контроль"){
+   if(f.id==="bolt"||f.id==="wave")return бой?удар(Math.round((7+G.level)*sc.k*k)):` ${f.имя} ${sc.род} ушла в пустоту.`;
+   if(f.id==="ward"){safeFn(()=>buffSet("лёгкость",Math.round(3*k)));return ` Лёгкость на ${Math.round(3*k)} ч: шаг короче.`;}
+   if(f.id==="mark"){safeFn(()=>{if(typeof echoScan==="function")echoScan();});return " Метка разошлась по округе: слышно, что где стоит.";}
+   if(f.id==="call"){G.mana=Math.min(G.manaMax,G.mana+8);return " Зов вернул восемь маны.";}}
+  return " Чары прошли, и ничего не изменилось.";
+ }catch(e){return " Чары сорвались.";}}
+function schoolsText(){
+ const known=(G.spells||[]);
+ const rows=SCHOOLS.map(sc=>({sc,n:SPELLS.filter(sp=>known.includes(sp.n)&&spellSchool(sp)&&spellSchool(sp).id===sc.id).length}));
+ const есть=rows.filter(r=>r.n>0);
+ return `Школ заклинаний ${SCHOOLS.length}: ${SCHOOLS.map(sc=>sc.n).join(", ")}. Известны чары ${есть.length} школ: ${есть.map(r=>`${r.sc.n} — ${r.n}`).join("; ")||"пока ни одной"}. Составить новое можно в башне, школе или храме.`;}
 const SPELLS=[{n:"Искра",cost:5,price:0},{n:"Ветер странника",cost:8,price:50},
  {n:"Зов дождя",cost:10,price:80},{n:"Огненный шар",cost:12,price:120},
  {n:"Исцеление",cost:10,price:100},
@@ -26638,6 +27478,7 @@ function itogTish(){
 function castSpell(i){const sp=SPELLS[i];
  if(!sp){narrate(`Слот ${i+1} пока пуст.`);return;}
  if(!G.spells.includes(sp.n)){narrate("Заклинание не изучено.");return;}
+ if(sp.custom){const ч=spellCooling(sp);if(ч){safeFn(()=>Bank.play("hero_nomana",{gain:0.5,maxSec:2}));narrate(`«${sp.n}» ещё перезаряжается: ${ч} ч.`);return;}}
  if(G.mana<sp.cost){safeFn(()=>Bank.play("hero_nomana",{gain:0.6,maxSec:3}));
   narrate(`Нужно ${sp.cost} маны, у вас ${G.mana}.`);return;}
  G.mana-=Math.max(1,Math.round(sp.cost*(1+safeFn(()=>adaptBonus("spellCost"),0))));safeFn(()=>{deed("casts");deed("manaSpent",sp.cost);adaptAdd("чары",1);});
@@ -26671,7 +27512,8 @@ function castSpell(i){const sp=SPELLS[i];
  /* Каждое заклинание должно что-то делать: семь новых, выученных по книгам,
     не исключение. Иначе свиток превращается в строчку в списке. */
  let итог="";
- switch(sp.n){
+ if(sp.custom){итог=castCustomEffect(sp);if(итог===" ")return;}
+ else switch(sp.n){
   case "Исцеление":G.hp=Math.min(G.hpMax,G.hp+25);UI.drink();
    safeFn(()=>Bank.play("cast_potion",{gain:0.6,maxSec:3}));итог=" Раны затянулись.";break;
   case "Свет зари":G.hp=Math.min(G.hpMax,G.hp+40);UI.drink();итог=" Свет прошёл насквозь: здоровье выросло заметно.";break;
@@ -27613,6 +28455,10 @@ function openNPC(key,silent){const n=getNPCByKey(key);
  {const ст=safeFn(()=>standText(n),"");
   if(ст)html+=`<div class="list-line" tabindex="0" data-speak="${ст.replace(/"/g,"&quot;")}">⚖️ ${ст}</div>`;}
  html+=`<button class="item" data-cmd="npctalk:${n.key}" data-speak="Поговорить с ${n.name}.">💬 Поговорить</button>`;
+ /* Прочитанное меняет разговор: о народе, боге и державе жителя, про которых
+    вы читали, можно спросить — и услышать ответ по книге. */
+ safeFn(()=>bookTopicsFor(n).forEach(t=>{
+  html+=`<button class="item" data-cmd="npcask:${n.key}~${t.num}" data-speak="Спросить ${n.name} о прочитанном: ${t.kind} «${t.title}».">📖 Спросить: ${t.title}</button>`;}));
  /* ── ХОДЫ РАЗГОВОРА ──
     Прежнее «Поговорить» осталось на месте: оно рассказывает о человеке.
     Ходы стоят рядом — это попытки чего-то добиться, и у каждой свой исход.
