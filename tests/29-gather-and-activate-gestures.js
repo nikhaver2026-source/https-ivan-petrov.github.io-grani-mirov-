@@ -75,8 +75,8 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
  await clr();
  await tap();
  const one=await page.evaluate(()=>({запас:{...G.inv},сказано:window.__said.slice()}));
- check('одно касание одним пальцем не собирает ресурс, а называет клетку',
-  Object.keys(one.запас).length===0&&one.сказано.length===1&&new RegExp(spot.ресурс).test(one.сказано[0]),
+ check('одно касание одним пальцем не собирает ресурс и молчит',
+  Object.keys(one.запас).length===0&&one.сказано.length===0,
   {запас:one.запас,сказано:one.сказано});
 
  // ── 2. Одно касание двумя пальцами собирает ровно одну единицу ──
@@ -96,7 +96,7 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
  const dbl=await page.evaluate(()=>({запас:{...G.inv},сказано:window.__said.slice()}));
  check('двойное касание одним пальцем выполняет действие здесь ровно один раз',
   (dbl.запас[spot.ресурс]||0)===1&&dbl.сказано.filter(t=>/Собрано/.test(t)).length===1
-  &&/^Здесь/.test(dbl.сказано[0]||"")&&/Собрано/.test(dbl.сказано[1]||""),dbl);
+  &&/Собрано/.test(dbl.сказано[0]||""),dbl);
 
  // ── 3б. Многопальцевый жест отменяет начатое двойное касание ──
  await standOnResource();
@@ -107,7 +107,7 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
  await tap();                 /* это снова ПЕРВОЕ касание, а не подтверждение */
  const stray=await page.evaluate(()=>({запас:{...G.inv},сказано:window.__said.slice()}));
  check('касание двумя пальцами между двумя касаниями отменяет двойное касание',
-  JSON.stringify(stray.запас)===JSON.stringify(beforeStray)&&/^Здесь/.test(stray.сказано[0]||""),
+  JSON.stringify(stray.запас)===JSON.stringify(beforeStray)&&stray.сказано.length===0,
   {было:beforeStray,стало:stray.запас,сказано:stray.сказано});
 
  // ── 4. На пустой клетке сбор честно говорит, что брать нечего ──

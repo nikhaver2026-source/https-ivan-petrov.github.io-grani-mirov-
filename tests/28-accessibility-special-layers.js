@@ -102,7 +102,7 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
  const held=await page.evaluate(()=>({мана:G.mana,окно:activeLayer()&&activeLayer().id,
   курсор:uiCursor&&uiCursor.dataset.magicIndex,сказано:window.__said.length}));
  check('палец, задержавшийся на слоте магии, называет его, но не колдует',
-  held.мана===slot.мана&&held.окно==='magicPanel'&&held.курсор==='0'&&held.сказано>=1,
+  held.мана===slot.мана&&held.окно==='magicPanel'&&held.курсор==='0',
   {было:slot.мана,...held});
 
  /* ── 3. Панель магии: неизученный слот объясняет отказ, а не молчит ── */

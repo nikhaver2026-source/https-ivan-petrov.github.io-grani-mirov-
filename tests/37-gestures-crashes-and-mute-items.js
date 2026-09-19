@@ -157,8 +157,8 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
  await tap(195,470);
  const послеОдного=await page.evaluate(()=>Object.entries(G.inv).filter(([,v])=>v>0));
  const речь1=await said();
- check('одно касание одним пальцем только называет, но не собирает',
-  послеОдного.length===0&&речь1.length>0,{инвентарь:послеОдного,сказано:речь1.slice(0,2)});
+ check('одно касание одним пальцем не собирает и молчит',
+  послеОдного.length===0&&речь1.length===0,{инвентарь:послеОдного,сказано:речь1.slice(0,2)});
 
  /* ── 6. Двойное касание по полю выполняет действие здесь ── */
  await page.evaluate(()=>{G.inv={};});

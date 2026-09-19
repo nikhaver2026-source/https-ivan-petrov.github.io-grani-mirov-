@@ -141,7 +141,7 @@ h3{color:var(--acc2);margin:14px 0 6px;font-size:1.05rem;}
  <label class="opt"><input type="checkbox" id="setSubs" checked><span>💬 <b>Субтитры звуков</b><small>Для слабослышащих игроков</small></span></label>
  <h3>Громкость и скорость</h3>
  <p class="hint">🎧 Пространственный эмбиент, многослойная реверберация, динамический ветер, дождь, толпа, стерео-маяки объектов и акустика локации. Аудио генерируется в реальном времени.</p>
- <label class="opt">🗣️ Скорость озвучки <input type="range" id="setRate" min="0.6" max="1.6" step="0.1" value="1"><span id="vRate">1.0×</span></label>
+ <label class="opt">🗣️ Скорость озвучки <input type="range" id="setRate" min="0.6" max="6" step="0.2" data-tap-step="0.2" value="1"><span id="vRate">1.0×</span></label>
  <label class="opt">🔊 Громкость озвучки <input type="range" id="setVoiceVol" min="0" max="100" value="100"><span id="vVoice">100%</span></label>
  <label class="opt">🎵 Громкость мира <input type="range" id="setFxVol" min="0" max="100" value="100"><span id="vFx">100%</span></label>
  <label class="opt">🍃 Громкость фона <input type="range" id="setAmbVol" min="0" max="100" value="80"><span id="vAmb">80%</span></label>
@@ -151,6 +151,9 @@ h3{color:var(--acc2);margin:14px 0 6px;font-size:1.05rem;}
  <h3>⚔️ Сложность</h3>
  <p class="hint" id="diffHint">Мир одинаково честен на любом уровне: меняется не то, что происходит, а мера — сколько бьют, сколько держат, как часто встречаются и сколько стоит поражение.</p>
  <div class="row" id="diffRow"></div>
+ <h3>💾 Сохранения</h3>
+ <p class="hint">Игра сохраняется сама после каждого шага и дела. Здесь — записать сейчас и открыть слоты с выгрузкой в файл.</p>
+ <div class="row"><button type="button" data-cmd="am:save">💾 Сохранить сейчас</button><button type="button" data-cmd="am:saves">🗄️ Слоты и файл</button></div>
  <h3>♿ Доступность</h3>
  <label class="opt"><input type="checkbox" id="setExplore" checked><span>🤚 <b>Режим ощупывания</b><small>Называть элементы под пальцем (для незрячих)</small></span></label>
  <label class="opt"><input type="checkbox" id="setFastTap"><span>⚡ <b>Быстрая активация</b><small>Одно касание сразу выполняет действие, без предварительного озвучивания вторым касанием</small></span></label>
@@ -1786,7 +1789,7 @@ const LIVE_INSTEAD={
  crowd_panic:   ["throng_retreat","throng_cry"],
  blade_draw:    ["blade_ring","blade_swing"],
  battle_cry:    ["cast_warcry","throng_fight"],
- artifact_pulse:["relic_sing","artifact_hum"],
+ artifact_pulse:["magic_hum","artifact_hum"],
  arrow_hit:     ["cast_arrows","hit_knife"],
  spell_release: ["spell_bolt","cast_shoot"],
  ward_shimmer:  ["stk_ward","cast_shield"],
@@ -1813,22 +1816,22 @@ const LIVE_INSTEAD={
     учить игрока настоящему голосу земли, а не его рисованному подобию.
     Иначе выученное в каталоге не узнаётся в пути — а узнавание здесь
     заменяет карту. */
- forest:        ["amb_forest","score_forest"],
+ forest:        ["amb_forest","wild_birds"],
  birds:         ["wild_birds","stk_birds","dawn_birds"],
  stream:        ["wild_river","stk_river","sky_river"],
  sea:           ["sea_open","sky_wave","sea_calm"],
  crickets:      ["amb_night"],
- cave:          ["amb_cave","score_cave"],
+ cave:          ["amb_cave","cave_drip"],
  swamp:         ["amb_swamp","stk_goo"],
  plains:        ["amb_plains","wild_wind"],
  mountains_amb: ["amb_mountain","sky_wind"],
- desert_amb:    ["amb_desert","score_sands"],
- snow_weather:  ["sky_snow","score_snowy"],
+ desert_amb:    ["amb_desert","lug_desert"],
+ snow_weather:  ["sky_snow","sky_snow"],
 
  /* ── ЛЮДНЫЕ МЕСТА И РЕМЕСЛО ── */
  crowd:         ["crowd_cheer","amb_city"],
- market_babble: ["market_tap","market_dulcimer"],
- tavern_room:   ["stk_inn","lute_tavern","tavern_fiddle"],
+ market_babble: ["market_tap","market_tap"],
+ tavern_room:   ["stk_inn","uh_tavern","throng_hail_f"],
  pouring:       ["arte_potion","stk_splash"],
  forge:         ["forge_work","forge_hammer","wild_anvil"],
 
@@ -1867,41 +1870,41 @@ const LIVE_INSTEAD={
  res_stone_s:   ["craft_quarry","stone_hit"],
  res_ore_s:     ["craft_ore","mine_pick"],
  res_crystal_s: ["fx_crystal","magic_shimmer"],
- res_bone_s:    ["step_bone","relic_xylo"],
+ res_bone_s:    ["step_bone","foe_bone_hit"],
  res_berry_s:   ["craft_berry","craft_field"],
 
  /* ── ГОЛОСА ЛЮДЕЙ ──
     Примета собеседника: по ней слышно, к кому подошёл, ещё до приветствия. */
- npc_ruler_s:   ["throng_lord","horn_castle"],
- npc_guard_s:   ["guard_shout","guard_whistle"],
+ npc_ruler_s:   ["throng_lord","hall_center"],
+ npc_guard_s:   ["guard_shout","guard_shout"],
  npc_merchant_s:["market_tone","arte_coins"],
- npc_scholar_s: ["arte_page","temple_piano"],
- npc_bartender_s:["lute_tavern","tavern_honky"],
+ npc_scholar_s: ["arte_page","uh_page"],
+ npc_bartender_s:["uh_tavern","stk_inn"],
  npc_common_s:  ["throng_hail_m","throng_hail_f"],
- npc_elder_s:   ["cello_stone","throng_lord"],
- npc_healer_s:  ["harp_light","spell_heal"],
- npc_clanlead_s:["clan_pipes","army_horn"],
+ npc_elder_s:   ["throng_lord","throng_lord"],
+ npc_healer_s:  ["cast_heal","spell_heal"],
+ npc_clanlead_s:["hall_barracks","guard_shout"],
  npc_warrior_s: ["clang_soft","throng_fight"],
- npc_apprentice_s:["spell_initiate","charm_chiff"],
+ npc_apprentice_s:["spell_initiate","magic_hum"],
 
  /* ── ПОСТРОЙКИ ──
     Маяк здания в пути звучит записью; каталог обязан звучать той же. */
- castle:        ["horn_castle","hall_center"],
- tavern:        ["lute_tavern","stk_inn"],
- temple:        ["temple_bell","bell_small"],
- clanhall:      ["clan_pipes","hall_barracks"],
- tower:         ["score_magic","magic_hum"],
- ruins:         ["ruin_ocarina","hall_fall"],
+ castle:        ["hall_center","hall_center"],
+ tavern:        ["uh_tavern","stk_inn"],
+ temple:        ["bell_big","bell_small"],
+ clanhall:      ["hall_barracks","hall_barracks"],
+ tower:         ["magic_hum","magic_hum"],
+ ruins:         ["hall_fall","hall_fall"],
 
  /* ── ОТЛОЖЕННЫЙ СИНТЕЗ ──
     Эти сцены рисовались не сразу, а по таймеру: осциллятор заводился через
     четверть секунды после начала, и беглая проверка их не ловила. Сцену
     выдавал не первый миг, а хвост — россыпь костей, перестук костяшек,
     поступь голема. Здесь они тоже переведены на запись. */
- market_shout:  ["market_tone","market_slap","market_agogo"],
- guard_shout:   ["guard_shout","guard_whistle"],
+ market_shout:  ["market_tone","market_slap","market_slap"],
+ guard_shout:   ["guard_shout","guard_shout"],
  chains:        ["stk_clang","clang_soft"],
- bone_pile:     ["step_bone","foe_bone_die","relic_xylo"],
+ bone_pile:     ["step_bone","foe_bone_die","foe_bone_hit"],
  dice:          ["craft_knock","market_tap"],
  coins:         ["arte_coins","clink","od_gold"],
  mroar:         ["wyrm_roar","beast_roar"],
@@ -1911,15 +1914,15 @@ const LIVE_INSTEAD={
  sandworm_named:["foe_burrow_hit","deep_call","es_drill"],
  serpent_named: ["serpent_hiss","hiss"],
  bow:           ["battle_bow","battle_arrowfly","hit_arrow"],
- fog:           ["fx_haze","drone_calm"],
+ fog:           ["amb_wind","deep_wind"],
  storm:         ["sky_storm","sea_storm","stk_thunder"],
  res_tree_s:    ["craft_axe","craft_saw"],
  res_herbs_s:   ["craft_field","step_grass"],
  res_shell_s:   ["stk_splash","sky_wave"],
  npc_farmer_s:  ["hall_farm","craft_field"],
  npc_traveler_s:["tread_gravel","amb_road"],
- village:       ["flute_village","hall_farm","bird_rooster"],
- market:        ["hall_market","market_dulcimer","bazaar_loop"],
+ village:       ["hall_farm","hall_farm","bird_rooster"],
+ market:        ["hall_market","market_tap","hall_market"],
  school:        ["arte_page","bell_small"],
  traveler_beacon:["tread_gravel","arte_coins"],
  portal:        ["stk_portal","deep_portal"],
@@ -2050,7 +2053,7 @@ function refreshCards(){
   names.length?"▶️ Сейчас играет: "+names.join(", "):"🔇 Сейчас ничего не играет";}
 function chime(){
  /* Трезвучие рисовалось тремя осцилляторами. Теперь это арфа из банка. */
- if(safeFn(()=>Bank.play("harp_light",{gain:0.6,maxSec:4}),false))return;
+ if(safeFn(()=>Bank.play("cast_heal",{gain:0.6,maxSec:4}),false))return;
  AE.ensure();const ctx=AE.ctx,t=ctx.currentTime;
  [523.25,659.25,783.99].forEach((f,i)=>{const o=ctx.createOscillator(),g=ctx.createGain();
   o.type="sine";o.frequency.value=f;o.connect(g);g.connect(AE.fx);
@@ -2127,7 +2130,7 @@ const MUSIC_TRACK={
     слышался. Теперь глубина разбита на пояса, и переход между ними слышен
     сменой темы — на слух это и есть «стало глубже». */
  depth_1:"score_dungeon", depth_2:"score_cavern", depth_3:"harmonium_low",
- depth_4:"contrabass_deep", depth_5:"organ_eternal", depth_abyss:"pad_underworld",
+ depth_4:"hall_port", depth_5:"organ_eternal", depth_abyss:"pad_underworld",
  /* ── ДВЕНАДЦАТЬ ОРДЕНОВ ──
     Башни все считались одним видом постройки и звучали одной темой, хотя
     орден у каждой свой и занимаются в них разным. Теперь орден слышен на
@@ -2137,10 +2140,10 @@ const MUSIC_TRACK={
     кларнетом теней, стужа — морозными клавишами, утренняя ступень — флейтой
     рассвета, корни — лютней роста, гром — ударом судьбы, шов — ветром Грани. */
  tower_pepel:"bassoon_dusk",  tower_steklo:"score_lucid",
- tower_vetv:"pad_halo",       tower_kamen:"cello_stone",
+ tower_vetv:"pad_halo",       tower_kamen:"throng_lord",
  tower_voda:"fx_rain",        tower_veter:"far_flute",
  tower_tenb:"clarinet_shadow",tower_led:"frost_keys",
- tower_zarya:"flute_dawn",    tower_korni:"lute_wood",
+ tower_zarya:"dawn_birds",    tower_korni:"lute_wood",
  tower_grom:"fate_hit",       tower_shov:"pad_rift"};
 /* ════════════════════════════════════════════════════════════════════════
    МУЗЫКА СОБЫТИЙ: НАГРАДЫ, ДОСТИЖЕНИЯ, ОПЫТ
@@ -2168,31 +2171,31 @@ const EVENT_THEME={
  reward_tome:   {роль:"arte_book",  следом:[["secret_box",380]],      о:"книга или свиток"},
  reward_recipe: {роль:"craft_knock",следом:[["spark_glock",320]],     о:"рецепт разобран"},
  reward_title:  {роль:"gate_fanfare",следом:[["crowd_cheer",520]],    о:"титул или звание"},
- reward_land:   {роль:"horn_gate",  следом:[["war_brass",560]],       о:"земля или владение"},
- reward_ally:   {роль:"throng_yes", следом:[["violin_road",340]],     о:"спутник примкнул"},
+ reward_land:   {роль:"hall_gate",  следом:[["war_brass",560]],       о:"земля или владение"},
+ reward_ally:   {роль:"throng_yes", следом:[["tread_gravel",340]],     о:"спутник примкнул"},
  /* ── ДОСТИЖЕНИЯ ── */
  achieve:       {роль:"jingle_achievement",следом:[["harp_high",420]],о:"достижение"},
  achieve_great: {роль:"trumpet_victory",следом:[["crowd_cheer",700]], о:"большое достижение"},
  /* ── ОПЫТ И РОСТ ── */
- levelup:       {роль:"hero_levelup",следом:[["harp_light",220],["gate_fanfare",520]], о:"новый уровень"},
- skill_up:      {роль:"spark_glock",следом:[["harp_light",300]],      о:"навык поднялся"},
- school_up:     {роль:"charm_celesta",следом:[["organ_temple",480]],  о:"школа чар поднялась"},
+ levelup:       {роль:"hero_levelup",следом:[["cast_heal",220],["gate_fanfare",520]], о:"новый уровень"},
+ skill_up:      {роль:"spark_glock",следом:[["cast_heal",300]],      о:"навык поднялся"},
+ school_up:     {роль:"magic_shimmer",следом:[["organ_temple",480]],  о:"школа чар поднялась"},
  /* ── ЗАДАНИЯ ── */
- quest_take:    {роль:"violin_road",следом:[["stk_horn",300]],        о:"задание принято"},
+ quest_take:    {роль:"tread_gravel",следом:[["stk_horn",300]],        о:"задание принято"},
  quest_done:    {роль:"trumpet_fanfare",следом:[["trumpet_fanfare",300]], о:"задание сдано"},
  quest_fail:    {роль:"lament_oboe",следом:[["cello_defeat",420],["pad_dread",900]],    о:"задание провалено"},
  chain_done:    {роль:"epic_strings",следом:[["temple_choir",700],["crowd_cheer",1500]], о:"цепочка пройдена целиком"},
  /* ── СОБЫТИЯ МИРА ── */
  discovery:     {роль:"secret_box", следом:[["fx_crystal",400]],      о:"находка, тайник, проход"},
- omen:          {роль:"omen_swell", следом:[["fx_omen",600],["chase_tremolo",1000]],         о:"знамение"},
- bargain:       {роль:"market_dulcimer",следом:[["xylo_coin",280],["caravan_sitar",600]],   о:"сделка заключена"},
- standing_up:   {роль:"court_harpsi",следом:[["fx_blessing",380]],    о:"имя поднялось"},
+ omen:          {роль:"omen_swell", следом:[["fx_omen",600],["chase_tremolo",1000],["beast_breath",1400]],         о:"знамение"},
+ bargain:       {роль:"market_tap",следом:[["xylo_coin",280],["caravan_sitar",600]],   о:"сделка заключена"},
+ standing_up:   {роль:"court_harpsi",следом:[["cast_shield",380]],    о:"имя поднялось"},
  standing_down: {роль:"trombone_alarm",следом:[["violin_tense",380],["sneak_pizz",800]], о:"имя упало"},
  /* ── ВНЕ МИРА ──
     Обучение и загрузка записей — не события мира, и звучать миром они не
     должны: у них свой, служебный голос. */
- tutor_done:    {роль:"bard",       следом:[["dance_nylon",520]],     о:"обучение пройдено"},
- warm_done:     {роль:"charm_bell", следом:[["charm_celesta",320]],   о:"записи загружены"}};
+ tutor_done:    {роль:"bard",       следом:[["dance_nylon",520],["stk_flute",1100]],     о:"обучение пройдено"},
+ warm_done:     {роль:"charm_bell", следом:[["magic_shimmer",320]],   о:"записи загружены"}};
 /* Сыграть тему события. Возвращает «нет», если такого события нет в таблице,
    чтобы опечатка в имени не проходила молча. */
 function eventTheme(id,opts){
@@ -3018,7 +3021,8 @@ function stepControl(el){
       двойными касаниями от нуля до края значило бы сто касаний. Берём десятую
       часть шкалы, но не мельче собственного шага ползунка. */
    const свой=+el.step||1;
-   const шаг=Math.max(свой,Math.round(((max-min)/10)/свой)*свой)||свой;
+   /* У ползунка может быть свой шаг для пальца: скорость речи идёт по две десятых. */
+   const шаг=el.dataset.tapStep?+el.dataset.tapStep:(Math.max(свой,Math.round(((max-min)/10)/свой)*свой)||свой);
    let v=+el.value+шаг;
    if(v>max+1e-9)v=min;
    /* Убираем хвосты вроде 1.3000000000000003 у дробных шагов. */
@@ -3345,7 +3349,9 @@ function tapInLayer(el){
  /* Если палец уже полежал на пункте и тот назвался, при отрыве имя не
     повторяется: курсор просто встаёт на место. Список при этом с места не
     трогаем, пока пункт виден: иначе он уедет из-под пальца до второго касания. */
- setCursor(target,!holdSpoke,онНаЭкране(target)?false:undefined);
+ /* Одиночное касание в окне лишь взводит двойное и ставит курсор молча:
+    называют пункт свайп и ощупывание, выполняет — двойное касание. */
+ setCursor(target,false,онНаЭкране(target)?false:undefined);
 }
 /* «Пункт» игрового поля: у клетки нет своей кнопки, но правило для неё то же, что
    и для любого пункта окна — первое касание называет, второе выполняет. Метка нужна,
@@ -3390,7 +3396,7 @@ function handleSingleTap(el,x,y){
     now-touchGate.lastUiTap<650&&document.contains(touchGate.lastUiEl)&&
     !touchGate.lastUiEl.hidden&&!touchGate.lastUiEl.disabled)?touchGate.lastUiEl:null;
   if(прилип){touchGate.lastUiTap=0;touchGate.lastUiEl=null;activateElement(прилип);}
-  else{touchGate.lastUiTap=now;touchGate.lastUiEl=el;if(!holdSpoke)speakTextOf(el);}
+  else{touchGate.lastUiTap=now;touchGate.lastUiEl=el;} /* одиночное касание молчит: оно лишь взводит двойное */
   return;}
  if(!gameActive())return;
  if(activeLayer())return;
@@ -3407,9 +3413,8 @@ function handleSingleTap(el,x,y){
   safeFn(()=>useHere());
   return;}
  touchGate.lastUiTap=now;touchGate.lastUiEl=FIELD_SPOT;
- /* На игровом поле палец, полежавший на объекте, уже назвал его: клетку
-    описываем только если ничего не прозвучало. */
- if(!holdSpoke)safeFn(()=>narrate(spotSummary()));}
+ /* Одиночное касание поля ничего не говорит и не делает: что под ногами,
+    называет палец, полежавший на месте, а выполняет — двойное касание. */}
 /* ── МНОГОПАЛЬЦЕВЫЕ ЖЕСТЫ ──
    gesture.maxCount хранит МАКСИМУМ одновременно коснувшихся пальцев, а gesture.id —
    «якорный» палец, по которому и только по которому измеряется смещение. Раньше жест
@@ -3896,12 +3901,12 @@ const GUIDE=[
  "Все кнопки игры собраны в меню действий: свайп тремя пальцами вверх."]},
 {title:"Глава 2. Жесты",body:[
  "Жесты разложены по числу пальцев, и это главное правило: один палец — движение и выбор, два — сбор и места, три — бой, сводка и меню, четыре — магия. Запомнив это, остальное вспоминается само.",
- "ОДИН ПАЛЕЦ. Ведение пальцем, не отрывая, — ощупывание: игра называет то, чего вы касаетесь, и сразу обрывает предыдущую фразу. Одно касание — назвать пункт или клетку и больше ничего: никакое одиночное касание в игре ничего не выполняет, сколько бы палец ни лежал на месте. Двойное касание — активировать названное: пункт окна, а на игровом поле — действие здесь (войти в дверь, спуститься по лестнице, открыть сундук, помолиться у алтаря, собрать добычу). Свайп — шаг в сторону. Свайп с удержанием — бег.",
+ "ОДИН ПАЛЕЦ. Ведение пальцем, не отрывая, — ощупывание: игра называет то, чего вы касаетесь, и сразу обрывает предыдущую фразу. Одиночное касание не делает ничего — ни действия, ни имени: оно лишь первое из двух. Назвать пункт или клетку — палец, полежавший на месте четверть секунды, или свайп в окне. Двойное касание — активировать названное: пункт окна, а на игровом поле — действие здесь (войти в дверь, спуститься по лестнице, открыть сундук, помолиться у алтаря, собрать добычу). Свайп — шаг в сторону. Свайп с удержанием — бег.",
  "Ползунок настраивается тем же двойным касанием: оно прибавляет десятую часть шкалы и называет новое значение, а дойдя до края, возвращает к началу. Касание по ползунку его не двигает.",
  "В ОКНАХ И МЕНЮ есть текущий пункт — тот, который игра назвала последним. Свайп двигает его ровно на один пункт и называет только его: по дороге игра молчит, даже если палец прошёл над десятком строк. Медленное ведение пальцем — наоборот, называет всё под пальцем и делает текущим тот пункт, где палец оторвался. Двойное касание активирует текущий пункт, и попадать дважды в одну точку не нужно.",
  "Открытое окно называет себя само: «Окно „Живой мир“. Выбрано: Закрыть». Закрытое отчитывается, куда вы вернулись: «Окно „Живой мир“ закрыто. Игровое поле». Прежде окно на открытии произносило одно слово — «Закрыть», — и по нему нельзя было понять ни куда вы попали, ни закрылось ли оно потом.",
  "Игра отвечает на всё. Нет такого касания, свайпа или пункта меню, после которого была бы тишина: если действие не подошло, вы услышите почему. Закрывать нечего — так и скажут. Бить некого — скажут и это. Жителя, который предлагал дело, уже нет на месте — вам сообщат, а не оставят гадать. Молчание в этой игре означает только одно: жест до неё не дошёл, и его стоит повторить чётче.",
- "ГДЕ КАСАТЬСЯ — НЕ ВАЖНО. В окне и в меню место касания не значит ничего: первое касание в любой точке экрана называет текущий пункт, второе его выполняет. Не нужно попадать пальцем в кнопку и не нужно знать, где она. Выбор двигают только два жеста, и оба намеренные: свайп — на пункт вперёд или назад, и ощупывание — палец, который ведут по экрану или держат на месте четверть секунды. Быстрое касание выбор не двигает никогда.",
+ "ГДЕ КАСАТЬСЯ — НЕ ВАЖНО. В окне и в меню место касания не значит ничего: двойное касание в любой точке экрана выполняет текущий пункт — тот, что назвал свайп или ощупывание. Не нужно попадать пальцем в кнопку и не нужно знать, где она. Выбор двигают только два жеста, и оба намеренные: свайп — на пункт вперёд или назад, и ощупывание — палец, который ведут по экрану или держат на месте четверть секунды. Быстрое касание выбор не двигает никогда.",
  "Двойное касание отвечает на ЛЮБОМ пункте, до которого достаёт курсор. У части строк своего действия нет — это справки: строка досье народа, бога, зверя, державы. Такая строка на двойное касание читает себя целиком, и в окнах не остаётся пунктов, которые молчат.",
  "ДВА ПАЛЬЦА. Касание — собрать ресурс под ногами: руду, травы, дерево, камень, кристаллы. Если открыто окно, то же касание его закрывает — собирать всё равно нечего, пока окно на экране. Свайп вниз — войти внутрь или спуститься на уровень ниже. Свайп вверх — подняться или выйти наружу. Свайп вбок — эхо-скан: игра перечислит объекты вокруг и проиграет их маяки с той стороны, где они стоят.",
  "Свайп тремя пальцами вверх открывает меню действий откуда угодно — и с поля, и в бою, и поверх любого открытого окна: одно движение закрывает всё лишнее и открывает меню. Тем же жестом меню и закрывается.",
@@ -4673,7 +4678,7 @@ function discoverPortal(node){
  if(portalsKnown().includes(k))return false;
  portalsKnown().push(k);
  safeFn(()=>{Bank.play("oc_warp",{seed:node.x+node.y,gain:0.55,maxSec:7});
-  setTimeout(()=>safeFn(()=>Bank.play("fx_rift",{seed:node.x,gain:0.5,maxSec:6})),500);});
+  setTimeout(()=>safeFn(()=>Bank.play("stk_portal",{seed:node.x,gain:0.5,maxSec:6})),500);});
  safeFn(()=>journal(`Открыт узел сети: ${node.name}.`));
  narrate(`${node.name}. Узел портальной сети открыт: теперь сюда можно перейти из любого другого открытого узла. Всего открыто узлов: ${portalsKnown().length}.`,{interrupt:false});
  return true;}
@@ -4778,7 +4783,7 @@ function portalTravel(key){
  safeFn(()=>{while(activeLayer())closeTopUI();});
  safeFn(()=>{beacon("portal",0,0);
   Bank.play("oc_warp",{seed:to.x,gain:0.6,maxSec:7});
-  setTimeout(()=>safeFn(()=>Bank.play("fx_rift",{seed:to.y,gain:0.5,maxSec:6})),450);});
+  setTimeout(()=>safeFn(()=>Bank.play("stk_portal",{seed:to.y,gain:0.5,maxSec:6})),450);});
  safeFn(()=>journal(`Переход сетью: ${from.name} → ${to.name} за ${f.gold} золота.`));
  const c=cellContent(G.x,G.y);
  narrate(`Переход. ${to.name}${to.kind==="gate"?"":`, земли «${to.emp.short}»`}. Заплачено ${f.gold} золота, ушло часов: ${f.hours}. ${c.terrain[1]}. Золота осталось ${G.gold}.`);
@@ -6214,7 +6219,7 @@ const PATROL_KIND=[
   о:"Шестеро в пешем строю, шаг в шаг, и железо отзывается на каждом шаге."},
  {id:"courier",n:"гонец с охраной", людей:2, звук:"beasts_horse",голос:"voice_far",
   о:"Двое верхом, идут скоро и в разговоры не вступают без нужды."},
- {id:"toll",  n:"объезд мытаря",    людей:3, звук:"horse_step",  голос:"guard_whistle",
+ {id:"toll",  n:"объезд мытаря",    людей:3, звук:"horse_step",  голос:"guard_shout",
   о:"Мытарь с двумя провожатыми считает возы и берёт с них долю."}];
 const PATROL_BY_ID=Object.fromEntries(PATROL_KIND.map(p=>[p.id,p]));
 /* Отрезок тракта, за который отвечает один разъезд: шесть перегонов между
@@ -6690,42 +6695,28 @@ const SOUND_BANK={
  harp_high:{f:["inst/harp_high_01.mp3"],d:"Арфа в верхнем регистре: артефакт"},
  organ_temple:{f:["inst/organ_temple_01.mp3","inst/organ_temple_02.mp3","inst/organ_temple_03.mp3"],d:"Орган: свод храма и алтарь"},
  organ_eternal:{f:["inst/organ_eternal_01.mp3"],d:"Орган: время и вечность"},
- horn_castle:{f:["inst/horn_castle_01.mp3"],d:"Валторна: замок и цитадель"},
  horn_gate:{f:["inst/horn_gate_01.mp3"],d:"Валторна: ворота и граница державы"},
  horn_dark:{f:["inst/horn_dark_01.mp3"],d:"Валторна в низах: пепел и драконы"},
  trumpet_fanfare:{f:["inst/trumpet_fanfare_01.mp3","inst/trumpet_fanfare_02.mp3"],d:"Труба: задание принято или исполнено"},
- trumpet_war:{f:["inst/trumpet_war_01.mp3"],d:"Труба: война и гром небес"},
  trumpet_victory:{f:["inst/trumpet_victory_01.mp3"],d:"Труба: победа в бою"},
- flute_village:{f:["inst/flute_village_01.mp3","inst/flute_village_02.mp3"],d:"Флейта: деревня и мирный двор"},
  flute_dawn:{f:["inst/flute_dawn_01.mp3"],d:"Флейта: рассвет"},
- flute_dream:{f:["inst/flute_dream_01.mp3"],d:"Флейта: луна, сны, пророчества"},
  violin_omen:{f:["inst/violin_omen_01.mp3","inst/violin_omen_02.mp3"],d:"Скрипка: знамение"},
- violin_road:{f:["inst/violin_road_01.mp3"],d:"Скрипка: дорога, торг, удача"},
  violin_tense:{f:["inst/violin_tense_01.mp3"],d:"Скрипка: тревога"},
  cello_stone:{f:["inst/cello_stone_01.mp3"],d:"Виолончель: горы, недра, руны"},
- cello_danger:{f:["inst/cello_danger_01.mp3","inst/cello_danger_02.mp3"],d:"Виолончель: опасность рядом"},
  cello_defeat:{f:["inst/cello_defeat_01.mp3"],d:"Виолончель: поражение"},
  contrabass_deep:{f:["inst/contrabass_deep_01.mp3","inst/contrabass_deep_02.mp3"],d:"Контрабас: глубина вод и камня"},
- contrabass_dread:{f:["inst/contrabass_dread_01.mp3"],d:"Контрабас: тварь вплотную"},
  bassoon_death:{f:["inst/bassoon_death_01.mp3"],d:"Фагот: смерть и покой предков"},
- bassoon_ruins:{f:["inst/bassoon_ruins_01.mp3"],d:"Фагот: руины и зев подземелья"},
  bassoon_dusk:{f:["inst/bassoon_dusk_01.mp3"],d:"Фагот: закат"},
- clarinet_market:{f:["inst/clarinet_market_01.mp3"],d:"Кларнет: рынок и обоз"},
  clarinet_shadow:{f:["inst/clarinet_shadow_01.mp3"],d:"Кларнет: тени и договоры"},
- lute_tavern:{f:["inst/lute_tavern_01.mp3","inst/lute_tavern_02.mp3"],d:"Лютня: таверна и очаг"},
  lute_wood:{f:["inst/lute_wood_01.mp3"],d:"Лютня: лес и рост"},
  xylo_coin:{f:["inst/xylo_coin_01.mp3","inst/xylo_coin_02.mp3"],d:"Ксилофон: монеты и сделка"},
- xylo_bite:{f:["inst/xylo_bite_01.mp3"],d:"Ксилофон: поклёвка"},
- tuba_boss:{f:["inst/tuba_boss_01.mp3","inst/tuba_boss_02.mp3"],d:"Туба: огромная тварь"},
  tuba_forge:{f:["inst/tuba_forge_01.mp3"],d:"Туба: горн и молот"},
  harmonium_drone:{f:["inst/harmonium_drone_01.mp3","inst/harmonium_drone_02.mp3"],d:"Фисгармония: обет и храмовый гул"},
  harmonium_low:{f:["inst/harmonium_low_01.mp3"],d:"Фисгармония в низах: подземное святилище"},
  trombone_war:{f:["inst/trombone_war_01.mp3","inst/trombone_war_02.mp3"],d:"Тромбон: война, осада, вербовщик"},
  trombone_alarm:{f:["inst/trombone_alarm_01.mp3"],d:"Тромбон: тревога в городе"},
  bard:{f:["inst/bard_01.mp3","inst/bard_02.mp3","inst/bard_03.mp3","inst/bard_04.mp3"],d:"Гитара сказителя: ярмарка и привал"},
- piano_time:{f:["inst/piano_time_01.mp3","inst/piano_time_02.mp3"],d:"Рояль: память, обет, ход времени"},
  piano_star:{f:["inst/piano_star_01.mp3"],d:"Рояль: звездопад"},
- piano_dark:{f:["inst/piano_dark_01.mp3"],d:"Рояль в низах: дурное предчувствие"},
  pad:{f:["nat/pad_01.flac","nat/pad_02.flac","nat/pad_03.flac","nat/pad_04.flac"],d:"Атмосферный слой: глубина и чары"},
  pad_bed:{f:["nat/pad_bed_01.flac"],d:"Подложка события"},
  voice_far:{f:["nat/voice_far_01.flac"],d:"Далёкий голос в темноте"},
@@ -6751,16 +6742,12 @@ const SOUND_BANK={
  craft_knock:{f:["orch/craft_knock_01.mp3","orch/craft_knock_02.mp3"],d:"Стук ремесла: деревянный щелчок верстака"},
  crowd_cheer:{f:["orch/crowd_cheer_01.mp3","orch/crowd_cheer_02.mp3"],d:"Гул толпы: площадь, турнир, ликование"},
  dawn_birds:{f:["orch/dawn_birds_01.mp3","orch/dawn_birds_02.mp3"],d:"Рассветные птицы: первый голос утра"},
- deep_tom:{f:["orch/deep_tom_01.mp3","orch/deep_tom_02.mp3","orch/deep_tom_03.mp3"],d:"Подземный удар: гулкий том в толще камня"},
  desert_reed:{f:["orch/desert_reed_01.mp3","orch/desert_reed_02.mp3"],d:"Пустынная зурна: пронзительный напев"},
- dream_vibe:{f:["orch/dream_vibe_01.mp3","orch/dream_vibe_02.mp3","orch/dream_vibe_03.mp3"],d:"Вибрафон снов: сонное марево"},
  epic_strings:{f:["orch/epic_strings_01.mp3","orch/epic_strings_02.mp3","orch/epic_strings_03.mp3"],d:"Струнный ансамбль: широкое дыхание мира"},
  far_flute:{f:["orch/far_flute_01.mp3","orch/far_flute_02.mp3"],d:"Флейта дальних земель: сякухати"},
  far_koto:{f:["orch/far_koto_01.mp3","orch/far_koto_02.mp3"],d:"Кото чужих берегов: щипок далёкой струны"},
- far_shamisen:{f:["orch/far_shamisen_01.mp3","orch/far_shamisen_02.mp3"],d:"Сямисэн чужих берегов: сухой перебор"},
  fate_hit:{f:["orch/fate_hit_01.mp3","orch/fate_hit_02.mp3"],d:"Удар судьбы: оркестровый акцент поворота"},
  field_pipe:{f:["orch/field_pipe_01.mp3","orch/field_pipe_02.mp3","orch/field_pipe_03.mp3"],d:"Пастушья свирель: поля и стада"},
- fx_blessing:{f:["orch/fx_blessing_01.mp3","orch/fx_blessing_02.mp3"],d:"Благословение: светлая вспышка"},
  fx_crystal:{f:["orch/fx_crystal_01.mp3","orch/fx_crystal_02.mp3"],d:"Кристальный звон: жила и артефакт"},
  fx_echo:{f:["orch/fx_echo_01.mp3","orch/fx_echo_02.mp3"],d:"Эхо: отклик пустого пространства"},
  fx_haze:{f:["orch/fx_haze_01.mp3","orch/fx_haze_02.mp3"],d:"Дымка чар: воздух густеет"},
@@ -6770,32 +6757,20 @@ const SOUND_BANK={
  fx_rift:{f:["orch/fx_rift_01.mp3","orch/fx_rift_02.mp3"],d:"Разлом Грани: чужой звук из-за края"},
  gate_fanfare:{f:["orch/gate_fanfare_01.mp3","orch/gate_fanfare_02.mp3","orch/gate_fanfare_03.mp3"],d:"Фанфары ворот: медь встречает гостя"},
  ghost_choir:{f:["orch/ghost_choir_01.mp3","orch/ghost_choir_02.mp3","orch/ghost_choir_03.mp3"],d:"Призрачный хор: голоса без тел"},
- giant_step:{f:["orch/giant_step_01.mp3","orch/giant_step_02.mp3"],d:"Поступь громады: шаг тяжёлой твари"},
- glade_marimba:{f:["orch/glade_marimba_01.mp3","orch/glade_marimba_02.mp3","orch/glade_marimba_03.mp3"],d:"Маримба поляны: тёплое дерево леса"},
  guard_whistle:{f:["orch/guard_whistle_01.mp3","orch/guard_whistle_02.mp3"],d:"Свисток стражи: сигнал по улице"},
  isle_market:{f:["orch/isle_market_01.mp3","orch/isle_market_02.mp3","orch/isle_market_03.mp3"],d:"Островной торг: стальные бочки причала"},
- market_agogo:{f:["orch/market_agogo_01.mp3","orch/market_agogo_02.mp3"],d:"Рыночный колокольчик: зазывный перезвон"},
- market_dulcimer:{f:["orch/market_dulcimer_01.mp3","orch/market_dulcimer_02.mp3"],d:"Цимбалы рынка: перезвон меняльных рядов"},
  omen_swell:{f:["orch/omen_swell_01.mp3","orch/omen_swell_02.mp3"],d:"Предвестие: нарастающий шелест перед знамением"},
  pad_dread:{f:["orch/pad_dread_01.mp3","orch/pad_dread_02.mp3"],d:"Дурное место: смычковый гул тревоги"},
  pad_halo:{f:["orch/pad_halo_01.mp3","orch/pad_halo_02.mp3"],d:"Ореол бога: светлый купол звука"},
- pad_hearth:{f:["orch/pad_hearth_01.mp3","orch/pad_hearth_02.mp3"],d:"Тепло очага: гул обжитого дома"},
  pad_rift:{f:["orch/pad_rift_01.mp3","orch/pad_rift_02.mp3"],d:"Ветер Грани: протяжный переход"},
- pad_sanctum:{f:["orch/pad_sanctum_01.mp3","orch/pad_sanctum_02.mp3"],d:"Святилище: хоровая подложка"},
  road_banjo:{f:["orch/road_banjo_01.mp3","orch/road_banjo_02.mp3"],d:"Банджо тракта: попутная песня"},
- ruin_ocarina:{f:["orch/ruin_ocarina_01.mp3","orch/ruin_ocarina_02.mp3"],d:"Окарина руин: пустой ветер камня"},
- rustle:{f:["orch/rustle_01.mp3","orch/rustle_02.mp3"],d:"Шорох: пальцы по струне, ткань, листва"},
  secret_box:{f:["orch/secret_box_01.mp3","orch/secret_box_02.mp3"],d:"Музыкальная шкатулка: спрятанная тайна"},
  shore_wash:{f:["orch/shore_wash_01.mp3","orch/shore_wash_02.mp3"],d:"Накат на берег: прибой у самой кромки"},
  sneak_pizz:{f:["orch/sneak_pizz_01.mp3","orch/sneak_pizz_02.mp3"],d:"Пиццикато крадущегося: шаг на цыпочках"},
  spark_glock:{f:["orch/spark_glock_01.mp3","orch/spark_glock_02.mp3","orch/spark_glock_03.mp3"],d:"Искры магии: колокольчики заклинания"},
- swamp_kalimba:{f:["orch/swamp_kalimba_01.mp3","orch/swamp_kalimba_02.mp3"],d:"Калимба топей: капли по железным язычкам"},
- tavern_fiddle:{f:["orch/tavern_fiddle_01.mp3","orch/tavern_fiddle_02.mp3","orch/tavern_fiddle_03.mp3"],d:"Скрипка таверны: пляска у очага"},
  temple_bell:{f:["orch/temple_bell_01.mp3","orch/temple_bell_02.mp3","orch/temple_bell_03.mp3"],d:"Храмовый колокол: трубчатый звон святыни"},
  temple_choir:{f:["orch/temple_choir_01.mp3","orch/temple_choir_02.mp3","orch/temple_choir_03.mp3"],d:"Хор храма: живые голоса под куполом"},
- temple_organ:{f:["orch/temple_organ_01.mp3","orch/temple_organ_02.mp3","orch/temple_organ_03.mp3"],d:"Орган храма: полный аккорд под сводами"},
  village_pipe:{f:["orch/village_pipe_01.mp3","orch/village_pipe_02.mp3"],d:"Деревенская дудка: простой напев"},
- war_taiko:{f:["orch/war_taiko_01.mp3","orch/war_taiko_02.mp3","orch/war_taiko_03.mp3"],d:"Набат войны: тяжёлый барабан похода"},
  war_timpani:{f:["orch/war_timpani_01.mp3","orch/war_timpani_02.mp3","orch/war_timpani_03.mp3"],d:"Литавры битвы: раскат перед сшибкой"},
  bazaar_drum:{f:["nat/bazaar_drum_01.flac","nat/bazaar_drum_02.flac","nat/bazaar_drum_03.flac"],d:"Базарный барабан: ладонь по коже"},
  bazaar_loop:{f:["nat/bazaar_loop_01.flac"],d:"Ритм базара: непрерывный табла-ход"},
@@ -6889,14 +6864,9 @@ const SOUND_BANK={
  spell_harp:{f:["spell/spell_harp_01.mp3","spell/spell_harp_02.mp3","spell/spell_harp_03.mp3"],d:"Арфа заклинания"},
  rune_square:{f:["spell/rune_square_01.mp3","spell/rune_square_02.mp3"],d:"Начертание руны"},
  spell_bolt:{f:["spell/spell_bolt_01.mp3","spell/spell_bolt_02.mp3"],d:"Боевой разряд"},
- chant_calliope:{f:["spell/chant_calliope_01.mp3","spell/chant_calliope_02.mp3"],d:"Напев чар"},
  charm_chiff:{f:["spell/charm_chiff_01.mp3","spell/charm_chiff_02.mp3"],d:"Дуновение чар"},
  hex_charang:{f:["spell/hex_charang_01.mp3","spell/hex_charang_02.mp3"],d:"Порча"},
- spirit_voice:{f:["spell/spirit_voice_01.mp3","spell/spirit_voice_02.mp3"],d:"Голос духа"},
- old_magic:{f:["spell/old_magic_01.mp3","spell/old_magic_02.mp3"],d:"Древние чары"},
- pad_astral:{f:["spell/pad_astral_01.mp3","spell/pad_astral_02.mp3"],d:"Астральная дымка"},
  pad_hex:{f:["spell/pad_hex_01.mp3","spell/pad_hex_02.mp3"],d:"Металл порчи"},
- spirit_choir:{f:["spell/spirit_choir_01.mp3","spell/spirit_choir_02.mp3"],d:"Хор духов"},
  beast_roar:{f:["beast/beast_roar_01.mp3","beast/beast_roar_02.mp3"],d:"Рёв твари"},
  beast_growl:{f:["beast/beast_growl_01.mp3","beast/beast_growl_02.mp3"],d:"Рык твари"},
  shriek:{f:["beast/shriek_01.mp3","beast/shriek_02.mp3"],d:"Визг"},
@@ -6904,33 +6874,13 @@ const SOUND_BANK={
  serpent_horn:{f:["beast/serpent_horn_01.mp3","beast/serpent_horn_02.mp3"],d:"Змеиный зов"},
  howl_low:{f:["beast/howl_low_01.mp3","beast/howl_low_02.mp3"],d:"Вой"},
  hiss_high:{f:["beast/hiss_high_01.mp3","beast/hiss_high_02.mp3"],d:"Шипение"},
- relic_xylo:{f:["relic/relic_xylo_01.mp3","relic/relic_xylo_02.mp3"],d:"Костяной перестук реликвии"},
- relic_organ:{f:["relic/relic_organ_01.mp3","relic/relic_organ_02.mp3"],d:"Гул реликвии"},
- treasure_spark:{f:["relic/treasure_spark_01.mp3","relic/treasure_spark_02.mp3"],d:"Блеск клада"},
  relic_sing:{f:["relic/relic_sing_01.mp3","relic/relic_sing_02.mp3"],d:"Реликвия поёт"},
  crypt_organ:{f:["relic/crypt_organ_01.mp3","relic/crypt_organ_02.mp3"],d:"Орган склепа"},
- cave_bass:{f:["depth/cave_bass_01.mp3","depth/cave_bass_02.mp3"],d:"Гул пещеры"},
- deep_cello:{f:["depth/deep_cello_01.mp3","depth/deep_cello_02.mp3"],d:"Глубина"},
  stone_low:{f:["depth/stone_low_01.mp3","depth/stone_low_02.mp3"],d:"Каменная толща"},
- moss_viola:{f:["depth/moss_viola_01.mp3","depth/moss_viola_02.mp3"],d:"Мох и травы"},
- mire_bass:{f:["depth/mire_bass_01.mp3","depth/mire_bass_02.mp3"],d:"Топь"},
- void_bass:{f:["depth/void_bass_01.mp3","depth/void_bass_02.mp3"],d:"Пустота Грани"},
- grim_bass:{f:["depth/grim_bass_01.mp3","depth/grim_bass_02.mp3"],d:"Дурное предчувствие"},
- bazaar_accordion:{f:["folk/bazaar_accordion_01.mp3","folk/bazaar_accordion_02.mp3"],d:"Меха базара"},
- harbor_harmonica:{f:["folk/harbor_harmonica_01.mp3","folk/harbor_harmonica_02.mp3"],d:"Губная гармоника в порту"},
- inn_tango:{f:["folk/inn_tango_01.mp3","folk/inn_tango_02.mp3"],d:"Наигрыш на постоялом дворе"},
- street_guitar:{f:["folk/street_guitar_01.mp3","folk/street_guitar_02.mp3"],d:"Уличная гитара"},
- hearth_piano:{f:["folk/hearth_piano_01.mp3","folk/hearth_piano_02.mp3"],d:"Дом и очаг"},
- tavern_honky:{f:["folk/tavern_honky_01.mp3","folk/tavern_honky_02.mp3"],d:"Разбитое пианино таверны"},
  chapel_organ:{f:["folk/chapel_organ_01.mp3","folk/chapel_organ_02.mp3"],d:"Часовня"},
  dance_nylon:{f:["folk/dance_nylon_01.mp3","folk/dance_nylon_02.mp3"],d:"Пляска на площади"},
- solo_violin:{f:["mood/solo_violin_01.mp3","mood/solo_violin_02.mp3"],d:"Одинокая скрипка"},
  wide_strings:{f:["mood/wide_strings_01.mp3","mood/wide_strings_02.mp3"],d:"Широкие струнные"},
- wind_strings:{f:["mood/wind_strings_01.mp3","mood/wind_strings_02.mp3"],d:"Ветреные струнные"},
  lament_oboe:{f:["mood/lament_oboe_01.mp3","mood/lament_oboe_02.mp3"],d:"Плач гобоя"},
- glade_clarinet:{f:["mood/glade_clarinet_01.mp3","mood/glade_clarinet_02.mp3"],d:"Кларнет поляны"},
- sly_sax:{f:["mood/sly_sax_01.mp3","mood/sly_sax_02.mp3"],d:"Хитрый мотив"},
- dusk_sax:{f:["mood/dusk_sax_01.mp3","mood/dusk_sax_02.mp3"],d:"Сумеречный напев"},
  frost_keys:{f:["mood/frost_keys_01.mp3","mood/frost_keys_02.mp3"],d:"Морозные клавиши"},
  mist_keys:{f:["mood/mist_keys_01.mp3","mood/mist_keys_02.mp3"],d:"Туманные клавиши"},
  pad_dream:{f:["mood/pad_dream_01.mp3","mood/pad_dream_02.mp3"],d:"Сон и морок"},
@@ -7986,10 +7936,10 @@ const MONSTER_VOICE={
 const MONSTER_LAYER={
  wolf:"lug_bark",direbear:"beast_growl",spider:"hiss_high",goblin:"shriek",
  serpent:"serpent_horn",harpy:"shriek",troll:"lug_growl",wraith:"wraith_voice",
- ogre:"lug_snarl",golem:"stone_low",dragon:"beast_roar",basilisk:"hiss_high",
+ ogre:"lug_snarl",golem:"deep_rocks",dragon:"beast_roar",basilisk:"hiss_high",
  wyvern:"shriek",banshee:"wraith_voice",sandworm:"moan_deep",treant:"moan_deep",
  kraken:"deep_call",bandit:"howl_low",
- seaserpent:"serpent_horn",sharks:"hiss_high",drowned:"wraith_voice",siren:"spirit_voice",
+ seaserpent:"serpent_horn",sharks:"hiss_high",drowned:"wraith_voice",siren:"moan_deep",
  isleFish:"deep_call",stormwyrm:"beast_roar",jellyswarm:"hiss_high",
  pirate:"howl_low",ghostpirate:"wraith_voice",slaver:"howl_low"};
 /* Живые голоса тварей из Flare: у каждого рода свой набор «бьёт — больно —
@@ -8163,11 +8113,11 @@ const BEACON_SAMPLE={
     храм — орган, рынок — кларнет, зал клана — валторна ворот, башня — арфа,
     руины и пещерный зев — фагот, порт — контрабас, странник — скрипка дорог.
     Постройку слышно издалека и узнаёшь по инструменту, а не по оттенку писка. */
- castle:"inst/horn_castle_01.mp3", village:"inst/flute_village_01.mp3",
- tavern:"inst/lute_tavern_01.mp3", clanhall:"inst/horn_gate_01.mp3",
- tower:"inst/harp_light_03.mp3", ruins:"inst/bassoon_ruins_01.mp3",
- cave_entrance:"inst/bassoon_ruins_01.mp3", port:"inst/contrabass_deep_01.mp3",
- traveler:"throng/throng_coming_01.ogg", city:"inst/horn_castle_01.mp3",
+ castle:"hall/hall_fort_01.ogg", village:"hall/hall_farm_01.ogg",
+ tavern:"uh/uh_tavern_01.ogg", clanhall:"hall/hall_barracks_01.ogg",
+ tower:"nat/magic_hum_01.flac", ruins:"mg/hall_fall_01.ogg",
+ cave_entrance:"surf/cave_drip_01.flac", port:"hall/hall_port_01.ogg",
+ traveler:"throng/throng_coming_01.ogg", city:"hall/hall_gate_01.ogg",
  caravan:"ad/ad_trade_01.ogg", school:"uh/uh_page_01.ogg"};
 /* Маяк по РОЛИ, а не по одному файлу: у роли несколько записей, и объект
    звучит каждый раз чуть иначе — мир перестаёт быть шарманкой. Роль ищется
@@ -8175,13 +8125,13 @@ const BEACON_SAMPLE={
    несколько. Ресурсы под ногами до сих пор звучали только синтезом: теперь
    у каждого своя живая запись. */
 const BEACON_ROLE={
- res_tree:"rustle", res_stone:"deep_thud", res_ore:"clang_hard",
+ res_tree:"oc_rustle", res_stone:"deep_thud", res_ore:"clang_hard",
  res_herbs:"ad_leaves", res_berry:"lug_bush", res_crystal:"oc_glass_hit",
- res_shell:"shore_wash", res_bone:"collapse",
+ res_shell:"sky_wave", res_bone:"mtg_rubble",
  /* Места, куда ведёт только крыло, узнаются по голосу: гнездовье отвечает
     птичьим криком с высоты, кумирня — колокольцем на ветру. Ни то, ни другое
     не спутать с руинами и храмом на земле. */
- eyrie:"raptor_cry", peakshrine:"temple_bell",
+ eyrie:"raptor_cry", peakshrine:"bell_big",
  /* Портовый рог: отход и приход корабля звали маяк «port_horn», а такого
     маяка нигде не было — сигнал молчал. Роль в банке для него есть давно. */
  port_horn:"port_horn"};
@@ -8193,9 +8143,9 @@ const BEACON_ROLE={
    алтарь, знамение и принятие покровительства звучат этим голосом, и бога
    можно узнать на слух, не читая имени. */
 const GOD_SOUND={
- zarya:"harp_light", forge:"tuba_forge", moon:"flute_dream", storm:"trumpet_war",
- deep:"contrabass_deep", wood:"lute_wood", ash:"horn_dark", shadow:"clarinet_shadow",
- time:"organ_eternal", stone:"cello_stone", death:"bassoon_death", road:"violin_road"};
+ zarya:"dawn_birds", forge:"anvil", moon:"wild_owl", storm:"stk_thunder",
+ deep:"stk_deepsea", wood:"ad_windleaves", ash:"ad_fire_crackle", shadow:"wraith_voice",
+ time:"stk_clock", stone:"oc_rock_hit", death:"moan_deep", road:"tread_gravel"};
 function godVoice(id,{gain=0.8,pan=0,maxSec=6}={}){
  try{
   const role=GOD_SOUND[id];
@@ -8370,17 +8320,17 @@ function placeColour(seed){
   if(!settings.effects||Math.random()>0.28)return;
   const p=G.place;
   let role=null;
-  if(p&&p.depth>=MAX_DEPTH)role="void_bass";
-  else if(p&&p.depth>=3)role="deep_cello";
-  else if(p&&p.depth>0)role="grim_bass";
+  if(p&&p.depth>=MAX_DEPTH)role="deep_wind";
+  else if(p&&p.depth>=3)role="cave_drip";
+  else if(p&&p.depth>0)role="deep_wind";
   else if(!p&&!G.ship){
    const t=cellContent(G.x,G.y).terrain[0];
-   if(isNight()&&isRoad(G.x,G.y))role="solo_violin";
-   else if(t==="forest")role="glade_clarinet";
-   else if(t==="plains")role="moss_viola";
-   else if(t==="swamp")role="mire_bass";
-   else if(t==="mountains")role="wind_strings";
-   else if(t==="desert")role="sly_sax";}
+   if(isNight()&&isRoad(G.x,G.y))role="wild_owl";
+   else if(t==="forest")role="wild_birds";
+   else if(t==="plains")role="ad_day";
+   else if(t==="swamp")role="amb_swamp";
+   else if(t==="mountains")role="sky_wind";
+   else if(t==="desert")role="lug_desert";}
   if(role)Bank.play(role,{seed:Number(seed)||0,gain:0.32,maxSec:7});
  }catch(_){}}
 
@@ -8784,7 +8734,7 @@ const SEA_TYPES=[
  {id:"shallow",n:"тёплое мелководье",род:"тёплому мелководью",о:"дно видно сквозь воду, вода тёплая",шторм:0.3,урон:0.5,звук:"ad_wave_rocky",мелко:true},
  {id:"trench",n:"глубоководная впадина",род:"глубоководной впадине",о:"вода чёрная, лот не достаёт дна",шторм:1.0,урон:1.0,звук:"stk_deepsea",глубь:true},
  {id:"magic",n:"магическое море",род:"магическому морю",о:"вода светится и поёт под килем",шторм:0.7,урон:0.8,звук:"magic_shimmer",мана:true},
- {id:"fog",n:"море туманов",род:"морю туманов",о:"в трёх шагах не видно носа судна",шторм:0.6,урон:0.7,звук:"mist_keys",туман:true},
+ {id:"fog",n:"море туманов",род:"морю туманов",о:"в трёх шагах не видно носа судна",шторм:0.6,урон:0.7,звук:"amb_wind",туман:true},
  {id:"anomaly",n:"море аномалий",род:"морю аномалий",о:"компас крутится, а время идёт рывками",шторм:1.2,урон:1.0,звук:"oc_electrical",аномалия:true}];
 const SEA_BY_ID=Object.fromEntries(SEA_TYPES.map(t=>[t.id,t]));
 function seaTypeAt(x,y){
@@ -10152,7 +10102,7 @@ const DARK_MAGIC=[
  {id:"scream",n:"крик",      удар:1.0,звук:"es_magic",след:"оглушение: следующий ход мимо"},
  {id:"dream", n:"сон",       удар:0.9,звук:"magic_shimmer",след:"дрёма: мана тает"},
  {id:"pain",  n:"боль",      удар:1.35,звук:"cast_shock",след:"боль: урон по вам выше"},
- {id:"void",  n:"пустота",   удар:1.2,звук:"fx_rift",    след:"пустота съедает ману"},
+ {id:"void",  n:"пустота",   удар:1.2,звук:"oc_warp",    след:"пустота съедает ману"},
  {id:"vein",  n:"жила",      удар:1.15,звук:"cast_quake",след:"камень в жилах: защита ниже"},
  {id:"oath",  n:"клятва",    удар:1.0,звук:"wraith_voice",след:"связан словом: бежать нельзя"},
  {id:"scar",  n:"шов",       удар:1.4,звук:"rift_bass",  след:"шов расходится: рана не закрывается"},
@@ -10184,7 +10134,7 @@ function enterDark(){
  G.lightAt={x:G.x,y:G.y};
  G.dark=true;
  safeFn(()=>{contentCache.clear();});
- safeFn(()=>{Bank.play("es_gate",{gain:0.8,maxSec:8})||Bank.play("fx_rift",{gain:0.8,maxSec:8});
+ safeFn(()=>{Bank.play("es_gate",{gain:0.8,maxSec:8})||Bank.play("oc_warp",{gain:0.8,maxSec:8});
   setTimeout(()=>safeFn(()=>Bank.play("es_jump",{gain:0.7,maxSec:7})||Bank.play("rift_bass",{gain:0.6,maxSec:7})),500);
   setTimeout(()=>safeFn(()=>Bank.play("es_alarm",{gain:0.5,maxSec:5})||Bank.play("rift_tick",{gain:0.5,maxSec:5})),1100);});
  const r=darkRealmAt(G.x,G.y);
@@ -11101,15 +11051,11 @@ function dayPhaseCue(){
   G.__phase=phase;
   if(!settings.effects&&!settings.speech)return;
   if(phase==="day"){
-   safeFn(()=>Bank.play("flute_dawn",{gain:0.6,maxSec:6}));
    /* Утро начинается с птиц: их слышно раньше, чем игра назовёт день. */
    safeFn(()=>Bank.play("dawn_birds",{seed:G.day,gain:0.5,maxSec:6}));
-   setTimeout(()=>safeFn(()=>Bank.play("frost_keys",{seed:G.day,gain:0.4,maxSec:6})),700);
    narrate(`Рассвет. Пошёл ${G.day}-й день пути.`,{interrupt:false});
   }else{
-   safeFn(()=>Bank.play("bassoon_dusk",{gain:0.6,maxSec:6}));
-   setTimeout(()=>safeFn(()=>Bank.play("dusk_sax",{seed:G.day,gain:0.4,maxSec:6})),700);
-   setTimeout(()=>safeFn(()=>Bank.play("mist_keys",{seed:G.day,gain:0.35,maxSec:6})),1400);
+   safeFn(()=>Bank.play("wild_owl",{seed:G.day,gain:0.6,maxSec:6}));
    narrate("Темнеет. Ночью на дорогах опаснее, а твари смелее.",{interrupt:false});
    /* С темнотой мир меняется: у ночи свои встречи. */
    safeFn(()=>setTimeout(()=>safeFn(()=>maybeEvent("night")),1200));}
@@ -11373,7 +11319,7 @@ function npcVoice(n,какой){
   :d.голос;
  npcCue(n,роль,{gain:d.статус.вес>=3?0.6:0.5});
  /* Положение слышно вторым слоем: у знатного за спиной медь, у низкого — нет. */
- if(d.статус.вес>=4)setTimeout(()=>safeFn(()=>npcCue(n,"horn_castle",{gain:0.35,maxSec:3})),260);
+ if(d.статус.вес>=4)setTimeout(()=>safeFn(()=>npcCue(n,"throng_lord",{gain:0.35,maxSec:3})),260);
  else if(d.статус.вес>=3)setTimeout(()=>safeFn(()=>npcCue(n,"throng_lord",{gain:0.3,maxSec:3})),260);
  return true;}
 /* ════════════════════════════════════════════════════════════════════════
@@ -11430,7 +11376,7 @@ function npcLearnSecret(n,как){
   if(m.тайна)return false;
   const d=safeFn(()=>npcSoul(n),null);
   m.тайна=(d&&d.тайна)||"что-то за ним есть";
-  safeFn(()=>{npcCue(n,"fx_haze",{gain:0.45});
+  safeFn(()=>{npcCue(n,"oc_rustle",{gain:0.45});
    narrate(`Теперь вы знаете, что ${n.name} скрывает: ${m.тайна}. ${
     как?`Узнано так: ${как}.`:""} Об этом можно напомнить — но такие разговоры даром не проходят.`,
     {interrupt:false});});
@@ -11906,7 +11852,7 @@ function dlgOutcome(n,move,успех,перевес){
     const t=rumorText(вести[0]);
     const п=safeFn(()=>rumorPerception(вести[0],n),null);
     o.слова=`${n.name} понижает голос: «${t.текст}» — ${t.откуда}. Слух ${t.род}${п&&п.слово?"; "+п.слово:""}.`;
-    o.звук="fx_haze";o.оси=[["доверие",1]];}
+    o.звук="oc_rustle";o.оси=[["доверие",1]];}
    else{o.слова=`${n.name} пожимает плечами: «Мало ли что болтают».`;o.звук="throng_retreat";}
    break;}
   case "ubedit": case "diplom":
@@ -11990,7 +11936,7 @@ function dlgOutcome(n,move,успех,перевес){
    break;
   case "shantazh":
    if(успех){o.слова=`${n.name} садится: «Чего вы хотите? Только тихо».`;
-    o.звук="fx_haze";o.круги=[["npc",null,-8]];
+    o.звук="oc_rustle";o.круги=[["npc",null,-8]];
     if(emp)o.круги.push(["crime",emp.short,6]);
     o.оси=[["страх",8],["влияние",4]];}
    else{o.слова=`${n.name} встаёт: «Рассказывайте кому хотите. Мне терять нечего». И теперь врагом.`;
@@ -12147,19 +12093,19 @@ const PREACHERS=[
  {id:"zhrec",   n:"жрец",                  место:["temple"],       звук:"choir",
   умеет:["дар","пожертвование","задание","обряд"], пыл:0.4,
   о:"служит при храме, знает всех в приходе и половину их тайн"},
- {id:"strann",  n:"странствующий проповедник",место:["traveler","crossroads","tavern","village"],звук:"flute_village",
+ {id:"strann",  n:"странствующий проповедник",место:["traveler","crossroads","tavern","village"],звук:"tread_gravel",
   умеет:["весть","паломничество","задание"], пыл:0.6,
   о:"идёт по трактам и говорит там, где его слушают"},
  {id:"fanat",   n:"фанатик",               место:["temple","village","market"],звук:"throng_cry",
   умеет:["спор","вербовка","ссора","мнение"], пыл:1.0,
   о:"не слышит возражений и считает это добродетелью"},
- {id:"eretik",  n:"еретик",                место:["ruins","cave_entrance","tavern"],звук:"fx_haze",
+ {id:"eretik",  n:"еретик",                место:["ruins","cave_entrance","tavern"],звук:"oc_rustle",
   умеет:["спор","весть","мнение"], пыл:0.8,
   о:"спорит со своими, и своим это не нравится"},
  {id:"missio",  n:"миссионер",             место:["market","port","village"],звук:"bell_small",
   умеет:["вербовка","пожертвование","весть"], пыл:0.7,
   о:"пришёл обращать чужих и не спешит уходить"},
- {id:"sluzh",   n:"храмовый служитель",    место:["temple"],       звук:"temple_bell",
+ {id:"sluzh",   n:"храмовый служитель",    место:["temple"],       звук:"bell_big",
   умеет:["обряд","пожертвование"], пыл:0.2,
   о:"метёт, зажигает и знает порядок службы наизусть"},
  {id:"prorok",  n:"пророк",                место:["temple","peakshrine","ruins"],звук:"ad_temple",
@@ -12177,7 +12123,7 @@ const PREACHERS=[
  {id:"filosof", n:"философ",               место:["school","tower","tavern"],звук:"arte_page",
   умеет:["спор","мнение"], пыл:0.5,
   о:"сомневается вслух и считает это честной работой"},
- {id:"reform",  n:"религиозный реформатор",место:["temple","school","castle"],звук:"horn_castle",
+ {id:"reform",  n:"религиозный реформатор",место:["temple","school","castle"],звук:"throng_lord",
   умеет:["спор","мнение","задание"], пыл:0.8,
   о:"носит с собой список того, что надо поменять в обряде"}];
 const PREACHER_BY_ID=Object.fromEntries(PREACHERS.map(p=>[p.id,p]));
@@ -12393,10 +12339,10 @@ function renderPreacher(){
 const DAY_PARTS=[
  {id:"сон",    n:"спит",            от:0,  до:5,  звук:"hall_house",  тихо:true},
  {id:"утро",   n:"только встал",    от:5,  до:7,  звук:"beasts_fowl"},
- {id:"работа", n:"за работой",      от:7,  до:12, звук:"craft_knock"},
+ {id:"работа", n:"за работой",      от:7,  до:12, звук:"oc_wood_hit"},
  {id:"торг",   n:"на торгу",        от:9,  до:14, звук:"market"},
  {id:"обед",   n:"обедает",         от:12, до:14, звук:"tavern"},
- {id:"служба", n:"на службе в храме",от:14,до:16, звук:"temple_bell"},
+ {id:"служба", n:"на службе в храме",от:14,до:16, звук:"bell_big"},
  {id:"дело",   n:"по своим делам",  от:14, до:19, звук:"throng_coming"},
  {id:"вечер",  n:"отдыхает",        от:19, до:21, звук:"wild_hearth"},
  {id:"таверна",n:"в таверне",       от:20, до:23, звук:"tavern"},
@@ -14989,8 +14935,8 @@ function readLegendScroll(name){
  if(!sp){narrate("Этот свиток не читается.");return false;}
  const i=(G.items||[]).indexOf(legendItemName(name));
  if(i<0){narrate("Такого свитка у вас нет.");return false;}
- safeFn(()=>{Bank.play("spell_arcane",{gain:0.8});Bank.play("spell_harp",{gain:0.5,maxSec:5});
-  setTimeout(()=>safeFn(()=>Bank.play("fx_crystal",{gain:0.5,maxSec:5})),300);});
+ safeFn(()=>{Bank.play("spell_arcane",{gain:0.8});Bank.play("arte_page",{gain:0.5,maxSec:3});
+  setTimeout(()=>safeFn(()=>Bank.play("oc_glass_hit",{gain:0.5,maxSec:3})),300);});
  safeFn(()=>sp.run());
  const снял=hasSkill("scribe")&&Math.random()<0.35;
  if(!снял){G.items.splice(i,1);safeFn(()=>setTimeout(()=>safeFn(()=>spentSound()),600));}
@@ -15176,7 +15122,7 @@ function openReading(n,первый){
  if(m.hidden)openModal("modal-read");
  const первыйПункт=body.querySelector("button");if(первыйПункт)первыйПункт.focus();
  safeFn(()=>resetCursor());
- safeFn(()=>Bank.play("secret_box",{seed:n,gain:0.45,maxSec:4}));
+ safeFn(()=>Bank.play("oc_hinge",{seed:n,gain:0.45,maxSec:3}));
  narrate(`${первый?"Вы прочли":"Страница"}: ${e.title}. ${e.body.join(" ")}`);
  return true;}
 function closeReading(){const m=document.getElementById("modal-read");if(!m||m.hidden)return false;
@@ -15351,7 +15297,7 @@ const TRAPS=[
   о:"Плита под ногой чуть ниже прочих, и края у неё слишком ровные.",
   бьёт:"Плита ушла вниз, и свод ответил ударом камня."},
  {id:"dart",  n:"стрелковый механизм", урон:10, вид:"железо",
-  покой:"craft_knock",сраб:"battle_arrowfly",
+  покой:"oc_wood_hit",сраб:"battle_arrowfly",
   о:"В стене на уровне пояса — ровное отверстие, и в нём не темно, а блестит.",
   бьёт:"Из стены ударил болт."},
  {id:"snare", n:"растяжка",            урон:6,  вид:"верёвка",
@@ -15359,7 +15305,7 @@ const TRAPS=[
   о:"Поперёк хода на ладонь от пола натянута жила, старая, но тугая.",
   бьёт:"Жила лопнула, и сверху рухнула связка камней."},
  {id:"spike", n:"шипы из пола",        урон:12, вид:"железо",
-  покой:"craft_knock",сраб:"battle_stab",
+  покой:"oc_wood_hit",сраб:"battle_stab",
   о:"Между плитами щели шире обычного, и в них не пыль, а острия.",
   бьёт:"Из щелей вышли шипы."},
  {id:"rocks", n:"падающие камни",      урон:14, вид:"камень",
@@ -15371,11 +15317,11 @@ const TRAPS=[
   о:"Из-под плиты тянет сладковатым, и воздух тут тяжелее, чем шагом раньше.",
   бьёт:"Из-под пола пошёл тяжёлый сладкий дым."},
  {id:"fire",  n:"огненная ловушка",    урон:13, вид:"чары",
-  покой:"rune_square",сраб:"wild_fire",
+  покой:"artifact_hum",сраб:"wild_fire",
   о:"Знак на полу тёплый, хотя вокруг холодный камень.",
   бьёт:"Знак вспыхнул, и по ходу прошло пламя."},
  {id:"ice",   n:"ледяная ловушка",     урон:11, вид:"чары",
-  покой:"rune_square",сраб:"sky_snow",
+  покой:"artifact_hum",сраб:"sky_snow",
   о:"Иней лежит ровным кругом там, где инею взяться неоткуда.",
   бьёт:"Круг выдохнул стужей."},
  {id:"curse", n:"проклятая руна",      урон:7,  вид:"чары",тьма:true,
@@ -15383,7 +15329,7 @@ const TRAPS=[
   о:"Знак вырезан поверх другого знака, и верхний моложе нижнего лет на сто.",
   бьёт:"Руна отозвалась, и по спине прошло холодом."},
  {id:"alarm", n:"звонковая тяга",      урон:0,  вид:"железо",зов:true,
-  покой:"craft_knock",сраб:"alarm_drum",
+  покой:"oc_wood_hit",сраб:"alarm_drum",
   о:"От порога вдоль стены идёт проволока и уходит куда-то за поворот.",
   бьёт:"Где-то в глубине ударил колокол."}];
 const TRAP_BY_ID=Object.fromEntries(TRAPS.map(t=>[t.id,t]));
@@ -15797,7 +15743,7 @@ const PROPS=[
    narrate(r<0.3?"Клетка из кованых прутьев. Кости из неё вы уже выбрали, осталась одна примятая солома."
     :"Клетка из кованых прутьев в рост человека. Дверца заперта снаружи и открыта настежь, петли смазаны недавно. Пусто — но солома внутри примята.");}},
  {id:"bones",n:"груда костей",b:"res_bone",
-  use:()=>{safeFn(()=>{Bank.play("collapse",{gain:0.5,maxSec:3});
+  use:()=>{safeFn(()=>{Bank.play("mtg_rubble",{gain:0.5,maxSec:3});
     setTimeout(()=>safeFn(()=>Bank.play("stk_dark",{gain:0.35,maxSec:4})||Bank.play("dull_hit",{gain:0.4,maxSec:2})),200);});
    if(!propOnce()){
     narrate("Груда костей у стены. Что годилось в дело, вы уже отобрали: осталась труха да рёбра, ломающиеся в пальцах.");return;}
@@ -15824,7 +15770,7 @@ const PROPS=[
    refresh();saveGame(true);}},
  {id:"fountain",n:"фонтан",b:"well",
   use:()=>{safeFn(()=>{Bank.play("oc_waterfall",{gain:0.5,maxSec:5})||Bank.play("amb_water",{gain:0.5,maxSec:5});
-    setTimeout(()=>safeFn(()=>Bank.play("stk_splash",{gain:0.4,maxSec:4})||Bank.play("shore_wash",{gain:0.4,maxSec:4})),260);});
+    setTimeout(()=>safeFn(()=>Bank.play("stk_splash",{gain:0.4,maxSec:4})||Bank.play("sky_wave",{gain:0.4,maxSec:4})||Bank.play("shore_wash",{gain:0.4,maxSec:4})),260);});
    const было=G.hp;
    const фонЧас=(G.hp<G.hpMax||(Number(G.water)||0)<200)?propRest(1):"";
    G.hp=Math.min(G.hpMax,G.hp+10);
@@ -16061,7 +16007,7 @@ const MOUNTS=[
  {id:"emberhound",n:"Угольный пёс",      b:"brute_roar",
   d:"Чует жилы и тайники: эхо-скан достаёт дальше и называет больше.",
   дар:{скан:3}},
- {id:"glasslynx",n:"Стеклянная рысь",    b:"fx_crystal",
+ {id:"glasslynx",n:"Стеклянная рысь",    b:"oc_glass_hit",
   d:"Видит ночью и в темноте подземелий: ночь для вас становится днём.",
   дар:{ночь:1}},
  /* Двое приходят только из тёмных земель. */
@@ -16382,7 +16328,7 @@ function takeSign(x,y){
  G.signs.push(z);
  safeFn(()=>hint("sign"));
  safeFn(()=>{Bank.play("arte_page",{gain:0.55,maxSec:4});
-  setTimeout(()=>safeFn(()=>Bank.play("secret_box",{gain:0.5,maxSec:4})),320);});
+  setTimeout(()=>safeFn(()=>Bank.play("oc_hinge",{gain:0.5,maxSec:3})),320);});
  journal("Найдена примета к кладу.");
  narrate(`Примета! ${z.текст} Меню действий, «Приметы и клады» — сторона и расстояние отсюда.`,{interrupt:false});
  safeFn(()=>saveGame(true));
@@ -16412,7 +16358,7 @@ function takeTreasure(x,y){
  else дар=grantPrize(z.приз,{дом:"myst",ранг:3,кач:3,
   seed:z.цель.x*13+z.цель.y*7,откуда:"из клада по примете"});
  safeFn(()=>{UI.fanfare();
-  Bank.play("secret_box",{gain:0.7,maxSec:5});
+  Bank.play("oc_chest_open",{gain:0.7,maxSec:4});
   setTimeout(()=>safeFn(()=>Bank.play("artifact_hum",{gain:0.6,maxSec:6})),380);
   setTimeout(()=>safeFn(()=>Bank.play("arte_coins",{gain:0.6,maxSec:4})),760);});
  journal(`Клад по примете взят: ${z.род}.`);
@@ -16718,7 +16664,7 @@ iact("shove",{n:"Сдвинуть",значок:"🪨",
  можно:o=>!!(G.place&&o.плитка==="X"&&SHOVE_PROPS.indexOf(o.вещь)>=0),
  делать:o=>{
   safeFn(()=>propTime(0.4));
-  safeFn(()=>{Bank.play("lug_thud",{seed:o.y,gain:0.5,maxSec:1});Bank.play("stone_low",{seed:o.x+o.y,gain:0.65,maxSec:4});
+  safeFn(()=>{Bank.play("lug_thud",{seed:o.y,gain:0.5,maxSec:1});Bank.play("deep_rocks",{seed:o.x+o.y,gain:0.65,maxSec:4});
    setTimeout(()=>safeFn(()=>Bank.play("craft_stone",{seed:o.y,gain:0.5,maxSec:4})),320);
    setTimeout(()=>safeFn(()=>Bank.play("oc_general_hit",{seed:o.x,gain:0.5,maxSec:2})),700);});
   const т=safeFn(()=>stashAt(o.x,o.y),null);
@@ -16781,7 +16727,7 @@ const STASH_WHERE=[
  {id:"statue",  n:"статуя",                   как:"обойти статую и ощупать",звук:"deep_stone",плитки:["X","A"],     сл:3},
  {id:"chest",   n:"сундук",                   как:"перебрать содержимое до дна",звук:"mtg_chest_open",плитки:["C"],    сл:1},
  {id:"double",  n:"двойное дно",              как:"простучать дно",        звук:"oc_wood_dull", плитки:["C"],         сл:4},
- {id:"column",  n:"колонна",                  как:"простучать колонну",    звук:"stone_low",  плитки:["#","X"],     сл:3},
+ {id:"column",  n:"колонна",                  как:"простучать колонну",    звук:"deep_rocks",  плитки:["#","X"],     сл:3},
  {id:"hearth",  n:"камин",                    как:"пошарить в дымоходе",   звук:"wild_fire",  плитки:["X","F"],     сл:2},
  {id:"altar",   n:"алтарь",                   как:"сдвинуть верхнюю плиту",звук:"deep_stone",плитки:["A"],       сл:4},
  {id:"cellar",  n:"лаз в подпол",            как:"поднять лючину",       звук:"oc_hinge",  плитки:["X","#"],     сл:3},
@@ -16824,7 +16770,7 @@ const STASH_WHAT=[
    if(G.items.includes(VAULT_KEY))return "Ещё один такой же ключ — он вам ни к чему: один уже на поясе.";
    G.items.push(VAULT_KEY);
    return `Ключ с двумя бородками: «${VAULT_KEY}». Таким отпирают палату яруса без шума и без крови.`;}},
- {id:"rune",n:"руна",звук:"rune_square",
+ {id:"rune",n:"руна",звук:"artifact_hum",
   дать:(т)=>{safeFn(()=>mastGain("runes",6+т.глубина));
    const ч=safeFn(()=>artPartFor(т.глубина,т.x+т.y),null);
    if(ч)safeFn(()=>artAddPart(ч.id,1));
@@ -18132,7 +18078,7 @@ const TECHS=[
     след времени». */
  {id:"press",маст:"flux",ур:2,станки:["orb","circle"],n:"Прибавить тяжести",значок:"🪨",
   берёт:{"камень":2},время:0.6,оп:5,буфф:["гнёт",3],
-  звук:"stone_low",след:"deep_stone",
+  звук:"deep_rocks",след:"deep_stone",
   о:"Три часа воздух вокруг вас тяжёл: чужой удар доходит вполсилы."},
  {id:"haste",маст:"flux",ур:2,станки:["orb","circle"],n:"Ускорить свой час",значок:"💨",
   берёт:{"кристалл":2},время:0.5,оп:5,буфф:["скорость",3],
@@ -20359,9 +20305,9 @@ const QUARTER_DB={
    как игра назовёт имя. Торг звенит колокольцем и цимбалами, кузня стучит,
    храм отвечает колоколом, склады перекликаются мелкой перкуссией, караул
    идёт под барабан, ремесленный конец постукивает верстаками. */
-const QUARTER_SOUND={S:["market_agogo","market_dulcimer"],F:["craft_knock","clang_hard"],
- A:["temple_bell","temple_choir"],C:["market_perc","bazaar_drum"],
- B:["guard_march","guard_whistle"],N:["craft_knock","stk_flute","market_perc"]};
+const QUARTER_SOUND={S:["market_slap","market_tap"],F:["craft_knock","clang_hard"],
+ A:["bell_big","choir"],C:["market_tap","hall_market"],
+ B:["guard_shout","hall_barracks"],N:["craft_knock","clang_hard","market_tap"]};
 const QUARTER_TRADE={S:"торг",F:"кузнечное дело",A:"храмовое служение",
  C:"склады и подвалы",B:"стража",N:"ремёсла и жильё"};
 /* Особый квартал: один на город, со своим делом и своей находкой. */
@@ -20417,9 +20363,9 @@ const BLOCK_NAMES={S:"торговый квартал",F:"кузнечный к�
    ══════════════════════════════════════════════════════════════════════════ */
 const PLACE_TRAITS={
  village:[
-  {id:"fish", n:"рыбацкая",   вещи:["barrels","crates"],  товар:["ракушка"],       звук:"shore_wash",
+  {id:"fish", n:"рыбацкая",   вещи:["barrels","crates"],  товар:["ракушка"],       звук:"sky_wave",
    слово:"Сети сохнут на кольях вдоль всей улицы, и пахнет речной тиной."},
-  {id:"bee",  n:"пасечная",   вещи:["sacks","loom"],      товар:["трава","ягоды"], звук:"glade_marimba",
+  {id:"bee",  n:"пасечная",   вещи:["sacks","loom"],      товар:["трава","ягоды"], звук:"beast_bees",
    слово:"Гудят колоды за плетнём: тут держат пчёл, и мёд здесь дешевле воска."},
   {id:"clay", n:"гончарная",  вещи:["millstone","crates"],товар:["камень"],        звук:"craft_knock",
    слово:"Круги скрипят под навесами, и во дворах сохнет непрожжённая глина."},
@@ -20443,21 +20389,21 @@ const PLACE_TRAITS={
    слово:"Жар от печи стоит стеной, и говорить приходится громче обычного."},
  ],
  tower:[
-  {id:"star", n:"звездочёта", вещи:["astrolabe","hourglass"],товар:["кристалл"],звук:"charm_celesta",
+  {id:"star", n:"звездочёта", вещи:["astrolabe","hourglass"],товар:["кристалл"],звук:"stk_clock",
    слово:"Крыша откинута, и в проём смотрит длинная труба на треноге."},
-  {id:"herb", n:"травницы",   вещи:["cauldron","mushbed"],  товар:["трава","грибы"],звук:"rustle",
+  {id:"herb", n:"травницы",   вещи:["cauldron","mushbed"],  товар:["трава","грибы"],звук:"oc_rustle",
    слово:"Пучки сохнут под потолком в три яруса, и дышать здесь горько."},
   {id:"bone", n:"костяника",  вещи:["bones","censer"],      товар:["кость"],   звук:"wraith_moan",
    слово:"Кости разложены по столу в порядке, которому лучше не искать смысла."},
   {id:"hour", n:"часовщика",  вещи:["hourglass","chandelier"],товар:["кристалл"],звук:"stk_clock",
    слово:"Песок сыплется в дюжине склянок разом, и все они показывают разное."},
-  {id:"elem", n:"стихийника", вещи:["circle","orb"],        товар:["кристалл"],звук:"rune_square",
+  {id:"elem", n:"стихийника", вещи:["circle","orb"],        товар:["кристалл"],звук:"artifact_hum",
    слово:"Круг на полу подновлён свежим мелом, и воздух над ним дрожит."},
  ],
  market:[
-  {id:"salt", n:"соляной",    вещи:["scales","sacks"],   товар:["камень"], звук:"market_agogo",
+  {id:"salt", n:"соляной",    вещи:["scales","sacks"],   товар:["камень"], звук:"market_slap",
    слово:"Соль лежит горами под навесами, и от неё белы все руки."},
-  {id:"spice",n:"пряный",     вещи:["scales","crates"],  товар:["трава"],  звук:"bazaar_drum",
+  {id:"spice",n:"пряный",     вещи:["scales","crates"],  товар:["трава"],  звук:"market_tap",
    слово:"Пахнет так, что слезятся глаза: перец, корень и что-то незнакомое."},
   {id:"cattle",n:"скотный",   вещи:["bench","sacks"],    товар:["кость"],  звук:"beasts_cattle",
    слово:"Ревёт скот в загонах, и торг идёт криком, а не словом."},
@@ -20467,11 +20413,11 @@ const PLACE_TRAITS={
    слово:"Лёд везут с гор телегами, и всё равно к полудню пахнет крепко."},
  ],
  temple:[
-  {id:"vow",  n:"обетный",    вещи:["statue","censer"],  товар:[], звук:"temple_choir",
+  {id:"vow",  n:"обетный",    вещи:["statue","censer"],  товар:[], звук:"choir",
    слово:"Стены исписаны обетами тех, кто дошёл, — снизу доверху."},
-  {id:"heal", n:"целительский",вещи:["basin","cauldron"],товар:["трава"],звук:"temple_bell",
+  {id:"heal", n:"целительский",вещи:["basin","cauldron"],товар:["трава"],звук:"bell_big",
    слово:"Лежанки стоят в два ряда, и кто-то тихо стонет за перегородкой."},
-  {id:"death",n:"поминальный",вещи:["candle","bones"],   товар:[], звук:"pad_sanctum",
+  {id:"death",n:"поминальный",вещи:["candle","bones"],   товар:[], звук:"uh_chapel",
    слово:"Свечей столько, что жарко, и у каждой своё имя на воске."},
   {id:"road", n:"странноприимный",вещи:["bed","hearth"], товар:[], звук:"hall_house",
    слово:"Пускают на ночь любого и не спрашивают имени — таков их обет."},
@@ -20479,7 +20425,7 @@ const PLACE_TRAITS={
  tavern:[
   {id:"inn",  n:"постоялый двор",вещи:["bed","dresser"],товар:[],звук:"stk_inn",
    слово:"Наверху скрипят половицы: комнаты заняты, и хозяин это знает."},
-  {id:"song", n:"певческая",  вещи:["bench","candle"],   товар:[], звук:"lute_tavern",
+  {id:"song", n:"певческая",  вещи:["bench","candle"],   товар:[], звук:"uh_tavern",
    слово:"Поют в три голоса и требуют, чтобы вы подтянули четвёртым."},
   {id:"dice", n:"игорная",    вещи:["table","hourglass"],товар:[], звук:"arte_coins",
    слово:"Кости стучат по столам без остановки, и на вас смотрят с интересом."},
@@ -20487,13 +20433,13 @@ const PLACE_TRAITS={
    слово:"Шкуры на стенах, и над очагом череп чего-то, чему вы не знаете имени."},
  ],
  school:[
-  {id:"rune", n:"рунная",     вещи:["bookcase","scrollcase"],товар:["кристалл"],звук:"rune_square",
+  {id:"rune", n:"рунная",     вещи:["bookcase","scrollcase"],товар:["кристалл"],звук:"artifact_hum",
    слово:"Ученики режут руны по дощечкам и стирают, если вышло криво."},
-  {id:"heal", n:"целительская",вещи:["cauldron","basin"], товар:["трава"],звук:"temple_bell",
+  {id:"heal", n:"целительская",вещи:["cauldron","basin"], товар:["трава"],звук:"bell_big",
    слово:"Пахнет уксусом и травой: тут учат руки прежде, чем слова."},
   {id:"war",  n:"боевая",     вещи:["rack","shields"],   товар:["руда"],  звук:"battle_shield",
    слово:"Во дворе бьют в столбы, и счёт ударов слышен через стену."},
-  {id:"seer", n:"прорицателей",вещи:["orb","mirror"],    товар:["кристалл"],звук:"pad_astral",
+  {id:"seer", n:"прорицателей",вещи:["orb","mirror"],    товар:["кристалл"],звук:"magic_hum",
    слово:"Говорят тихо и не договаривают: здесь верят, что слово сбывается."},
  ],
  clanhall:[
@@ -20511,7 +20457,7 @@ const PLACE_TRAITS={
    слово:"На причале сушатся кости чего-то огромного, и к ним привыкли."},
   {id:"trade",n:"торговый",   вещи:["crates","scales"],  товар:["ракушка"],звук:"hall_dock",
    слово:"Штабеля ящиков выше человека, и по ним лазают, как по лестницам."},
-  {id:"fish", n:"рыбацкий",   вещи:["barrels","rope"],   товар:["ракушка"],звук:"shore_wash",
+  {id:"fish", n:"рыбацкий",   вещи:["barrels","rope"],   товар:["ракушка"],звук:"sky_wave",
    слово:"Лодки уходят затемно и возвращаются к полудню; сейчас причал пуст."},
   {id:"navy", n:"военный",    вещи:["shields","wallmap"],товар:["руда"],   звук:"port_horn",
    слово:"Стоят под флагом и не пускают дальше второго причала."},
@@ -20523,7 +20469,7 @@ const PLACE_TRAITS={
  castle:[
   {id:"mint",  n:"монетный",   вещи:["scales","crates"],   товар:["руда"],     звук:"arte_coins",
    слово:"Во дворе считают и перевешивают: здесь чеканят монету всей округи."},
-  {id:"court", n:"судный",     вещи:["board","throne"],   товар:[],           звук:"court_harpsi",
+  {id:"court", n:"судный",     вещи:["board","throne"],   товар:[],           звук:"throng_lord",
    слово:"У ворот очередь с грамотами: тяжбы здесь слушают до темноты."},
   {id:"guard", n:"гарнизонный",вещи:["shields","rack"],   товар:["руда"],     звук:"siege_garrison",
    слово:"Двор вытоптан до камня: тут каждое утро строят и считают по головам."},
@@ -20538,7 +20484,7 @@ const PLACE_TRAITS={
     то же, что на четвёртом ярусе рудника. Теперь лицо места идёт вниз
     вместе с игроком. */
  ruins:[
-  {id:"temple",n:"храмовые",  вещи:["statue","candle"],  товар:[], звук:"temple_choir",
+  {id:"temple",n:"храмовые",  вещи:["statue","candle"],  товар:[], звук:"choir",
    твари:["wraith","banshee"],
    низ:"Ниже начинаются подпольные молельни: ниши, ниши и снова ниши, и в каждой кто-то стоял.",
    слово:"Свод обрушен, но алтарный камень цел и вытерт до блеска."},
@@ -22179,7 +22125,7 @@ const WORLD_BOSSES=[
   история:"Когда гора впервые выдохнула пепел, кто-то остался в нём стоять. Он не жжёт того, кто молчит, и жжёт всех, кто зовёт его по имени.",
   био:["volcano","ashland","lava_tube"],x:8250,y:36124,
   предвестники:["тёплый пепел на ветру","гул под ногами и запах серы","земля дрожит, воздух дрожит"],
-  звуки:{дальний:"score_lava",ближний:"oc_quake",голос:"tuba_boss",фаза:"mtg_lava",смерть:"es_boom_last"},
+  звуки:{дальний:"mtg_lava",ближний:"oc_quake",голос:"brute_roar",фаза:"mtg_lava",смерть:"es_boom_last"},
   фазы:[{n:"пламя",от:1,множ:1,о:"он идёт стеной жара"},
         {n:"пепельная буря",от:0.6,множ:1.3,погода:"Песчаная буря",о:"пепел встал стеной: удары тяжелее, и вода в цене"},
         {n:"ядро",от:0.25,множ:0.8,механика:"физика вполсилы",о:"он ушёл в ядро: клинок берёт вполсилы, чары — вполне"}],
@@ -22189,7 +22135,7 @@ const WORLD_BOSSES=[
   история:"Топь спит, и во сне у неё есть лицо. Кто заснул у воды, тот видел его — и наутро не помнил, чьё оно.",
   био:["mire","swamp","fen","mangrove"],x:30899,y:13550,
   предвестники:["лягушки смолкли разом","шёпот, которого никто не произносит","веки тяжелы: час прошёл незаметно"],
-  звуки:{дальний:"fx_haze",ближний:"oc_rustle",голос:"ghost_choir",фаза:"mist_keys",смерть:"moan_deep"},
+  звуки:{дальний:"amb_wind",ближний:"oc_rustle",голос:"ghost_choir",фаза:"amb_wind",смерть:"moan_deep"},
   фазы:[{n:"морок",от:1,множ:1,механика:"мимо",о:"её образ двоится: треть ударов уходит в морок"},
         {n:"отголоски",от:0.4,множ:1.4,погода:"Туман",о:"топь отвечает эхом: удары чаще и злее"},
         {n:"пробуждение",от:0.15,множ:0.5,о:"она просыпается — и слабеет: сон был её силой"}],
@@ -22209,7 +22155,7 @@ const WORLD_BOSSES=[
   история:"Хребет — это не горы, это спина. Когда она шевелится, сходит лавина; когда встаёт — идёт он.",
   био:["ridge","highland","snow_ridge","canyon"],x:14425,y:11250,
   предвестники:["камнепад без причины","шаг, от которого дрожит тропа","тень выше вершины"],
-  звуки:{дальний:"oc_rock_hit",ближний:"giant_step",голос:"tuba_boss",фаза:"oc_quake",смерть:"body_fall"},
+  звуки:{дальний:"oc_rock_hit",ближний:"brute_step",голос:"brute_roar",фаза:"oc_quake",смерть:"body_fall"},
   фазы:[{n:"шаг",от:1,множ:1,о:"каждый его шаг — удар"},
         {n:"лавина",от:0.5,множ:1.4,погода:"Метель",о:"он бьёт по склону: лавина и метель"},
         {n:"осыпь",от:0.2,множ:1.1,механика:"защита минус три",о:"склон осыпается: защита слабее"}],
@@ -22219,7 +22165,7 @@ const WORLD_BOSSES=[
   история:"В погибшем городе каждую полночь поют. Поющих не видно, слова не разобрать, а те, кто подпел, остаются петь.",
   био:["lost_city","warfield","ancient_forest"],x:25399,y:39424,
   предвестники:["далёкое пение без слов","хор ближе: слова почти разборчивы","вы понимаете слова — и лучше бы не понимали"],
-  звуки:{дальний:"choir",ближний:"ghost_choir",голос:"wraith_voice",фаза:"spirit_voice",смерть:"moan_deep"},
+  звуки:{дальний:"choir",ближний:"ghost_choir",голос:"wraith_voice",фаза:"moan_deep",смерть:"moan_deep"},
   фазы:[{n:"хор",от:1,множ:1,механика:"тянет ману",о:"хор тянет ману: пять за каждый ваш ход"},
         {n:"соло",от:0.5,множ:1.4,о:"один голос над всеми: удары злее"},
         {n:"тишина",от:0.2,множ:1,механика:"магия не берёт",о:"хор смолк: чары уходят в тишину, но клинок бьёт вдвое"}],
@@ -22615,7 +22561,7 @@ const ART_DIRS=[
   ремёсла:["мистика","ритуал"], звук:"fx_haze", слово:["Завеса","Шёпот","Морок","Тень","Знак"],
   о:"Вещь, о которой не говорят вслух: она работает тем вернее, чем меньше о ней знают."},
  {id:"run",   n:"руническое",      своё:["сила","защита","сопр_огонь","сопр_лёд","сопр_тьма"],
-  ремёсла:["кузня","зачар"], звук:"rune_square", слово:["Рунный камень","Резной обод","Ставка","Насечка","Ключ"],
+  ремёсла:["кузня","зачар"], звук:"artifact_hum", слово:["Рунный камень","Резной обод","Ставка","Насечка","Ключ"],
   о:"Вещь, на которой вырезано слово: сила её в резьбе, и резьбу можно перерезать."},
  {id:"war",   n:"воинское",        своё:["сила","крит","скорость"],
   ремёсла:["кузня","ритуал"], звук:"blade_ring", слово:["Клык","Клеймо","Гарда","Навершие","Кулак"],
@@ -22642,7 +22588,7 @@ const ART_DIRS=[
   ремёсла:["мистика","ритуал"], звук:"magic_rewind", слово:["Песочник","Отсрочка","Ход","Зарубка","Круг"],
   о:"Вещь, которая берёт взаймы у завтрашнего дня и однажды приходит за долгом."},
  {id:"fact",  n:"фракционное",     своё:["сила","защита","удача","шк_общ"],
-  ремёсла:["кузня","ритуал"], звук:"horn_castle", слово:["Знак","Гривна","Печатка","Перстень","Пайцза"],
+  ремёсла:["кузня","ритуал"], звук:"hall_center", слово:["Знак","Гривна","Печатка","Перстень","Пайцза"],
   о:"Вещь, которую дают своим: чужому в руках она мертва, и это видно сразу."},
  {id:"leg",   n:"легендарное",     своё:["сила","защита","здоровье","мана","крит","удача","шк_общ"],
   ремёсла:["ритуал"], звук:"artifact_hum", слово:["Наследие","Завет","Первое","Последнее","Имя"],
@@ -23539,30 +23485,30 @@ function enterPlace(c){safeFn(()=>deed("places"));
  safeFn(()=>beacon(kind==="city"?"city":kind==="dungeon"?"dungeon":"house",0,0));
  /* Порог слышен: город встречает медью ворот, подземелье — глухим гулом,
     жилой дом — теплом очага. */
- safeFn(()=>Bank.play(kind==="city"?"gate_fanfare":kind==="dungeon"?"drone_dark":"pad_hearth",
+ safeFn(()=>Bank.play(kind==="city"?"hall_gate":kind==="dungeon"?"deep_wind":"hall_house",
   {seed:c.x+c.y,gain:0.5,maxSec:6}));
  /* Порог каждого места звучит по-своему: в таверне берут струну, в храме
     вступает орган, в руинах отзывается фагот. */
- safeFn(()=>{const tone={tavern:"lute_tavern",temple:"organ_temple",clanhall:"trombone_war",
-  tower:"harp_light",ruins:"bassoon_ruins",cave_entrance:"bassoon_ruins",port:"contrabass_deep",
-  castle:"horn_castle",village:"flute_village"}[stype];
+ safeFn(()=>{const tone={tavern:"uh_tavern",temple:"uh_chapel",clanhall:"hall_barracks",
+  tower:"magic_hum",ruins:"hall_fall",cave_entrance:"cave_drip",port:"hall_dock",
+  castle:"hall_fort",village:"hall_farm"}[stype];
   if(tone)setTimeout(()=>safeFn(()=>Bank.play(tone,{seed:c.x+c.y,gain:0.55,maxSec:6})),380);});
  /* Третий слой — то, чем место занято: рынок гудит рядами, кузня бьёт
     молотом, таверна наигрывает, храм поёт, цитадель держит строй, порт
     тянет гармонику, школа перебирает клавиши, руины молчат подземным гулом. */
  safeFn(()=>{
-  const дело={market:["bazaar_tabla","market_slap","bazaar_accordion"],
-   forge:["forge_hammer","metal_hit","street_guitar"],
-   tavern:["tavern_honky","inn_tango","dance_nylon"],
-   temple:["chapel_organ","spirit_choir"],
-   castle:["march_low","drill_snare","army_horn"],
-   port:["harbor_harmonica","market_tone"],
-   school:["frost_keys","mist_keys"],
-   village:["hearth_piano","dance_nylon"],
-   clanhall:["war_brass","march_snare"],
-   tower:["pad_astral","old_magic"],
-   ruins:["drone_low","crypt_organ"],
-   cave_entrance:["cave_bass","cave_drip"]}[stype];
+  const дело={market:["market_slap","market_tap","ad_market_sel"],
+   forge:["forge_hammer","metal_hit","anvil"],
+   tavern:["uh_tavern","stk_inn","throng_hail_m"],
+   temple:["uh_chapel","choir"],
+   castle:["hall_fort","guard_shout","siege_garrison"],
+   port:["hall_dock","sky_wave"],
+   school:["uh_page","arte_page"],
+   village:["hall_farm","beasts_fowl"],
+   clanhall:["hall_barracks","throng_march"],
+   tower:["magic_hum","artifact_hum"],
+   ruins:["deep_wind","hall_fall"],
+   cave_entrance:["deep_wind","cave_drip"]}[stype];
   if(!дело)return;
   дело.forEach((r,i)=>setTimeout(()=>safeFn(()=>Bank.play(r,{seed:c.x+c.y+i,gain:0.42,maxSec:6})),700+i*520));});
  /* Живой голос места: рынок гудит рядами, порт работает, кузня бьёт молотом,
@@ -24963,7 +24909,7 @@ function talkInside(t,x,y){
  /* Второй слой места: очаг таверны отвечает скрипкой, пост стражи — свистком,
     горн — стуком верстака, лавка — цимбалами меняльного ряда. */
  safeFn(()=>{const extra=t==="S"?"market_tap":t==="F"?"craft_knock":
-  t==="P"?"market_perc":t==="B"?"guard_whistle":"tavern_fiddle";
+  t==="P"?"deep_cart":t==="B"?"guard_shout":"uh_tavern";
   setTimeout(()=>safeFn(()=>Bank.play(extra,{seed:x+y,gain:0.45,maxSec:5})),420);});
  /* Живой инструмент места поверх шума: лавка — кларнет, горн — туба,
     жилая комната — лютня, подземный торг — кларнет теней. */
@@ -25593,9 +25539,9 @@ function arrive(dir){
   /* У каждой местности свой живой голос поверх ровного фона: лес отвечает
      маримбой, топи — калимбой, берег — накатом, пещера — глубинным томом,
      горы — эхом, пустыня — сухой флейтой, равнина — свирелью полей. */
-  if(terrChanged)safeFn(()=>{const v={forest:"glade_marimba",swamp:"swamp_kalimba",
-   coast:"shore_wash",cave:"deep_tom",mountains:"far_flute",desert:"far_shamisen",
-   plains:"field_pipe",road:"road_banjo"}[c.terrain[0]];
+  if(terrChanged)safeFn(()=>{const v={forest:"wild_birds",swamp:"amb_swamp",
+   coast:"sky_wave",cave:"deep_wind",mountains:"sky_wind",desert:"lug_desert",
+   plains:"ad_day",road:"tread_gravel"}[c.terrain[0]];
    if(v)setTimeout(()=>safeFn(()=>Bank.play(v,{seed:G.x+G.y,gain:0.45,maxSec:6})),400);});
   const empChanged=lastEmp!==c.empire.name;
   Music.start(c.terrain[0]);safeFn(()=>bankUpdateAmbient());lastEmp=c.empire.name;
@@ -26066,7 +26012,7 @@ const Weather={cur:null,timer:null,
    setTimeout(()=>safeFn(()=>Spatial.role(G.day%2?"stk_thunder":"oc_thunder",0,0,{dz:3,gain:0.55,maxSec:6})
     ||Bank.play(G.day%2?"stk_thunder":"oc_thunder",{gain:0.55,maxSec:6})),900);});
    const strike=()=>{if(this.cur!=="Гроза")return;
-    Play.start("ev","thunder",{dur:6});safeFn(()=>Bank.play("war_timpani",{seed:Date.now(),gain:0.55,maxSec:5}));
+    Play.start("ev","thunder",{dur:6});safeFn(()=>Bank.play("stk_thunder",{seed:Date.now(),gain:0.55,maxSec:5}));
     vib(60);sub("⛈️ Удар грома");
     this.timer=setTimeout(strike,8000+Math.random()*14000);};
    this.timer=setTimeout(strike,2500);}},
@@ -26127,22 +26073,22 @@ function startCombat(c,opts){
  safeFn(()=>playRealMonsterCue(m,"emerge",0.65));
  /* Нежить приходит с голосами без тел. */
  if(["wraith","banshee","ghost"].includes(m.id))
-  safeFn(()=>setTimeout(()=>safeFn(()=>Bank.play("ghost_choir",{seed:m.lvl,gain:0.5,maxSec:6})),320));
+  safeFn(()=>setTimeout(()=>safeFn(()=>Bank.play("wraith_voice",{seed:m.lvl,gain:0.5,maxSec:6})),320));
  /* Громада ступает так, что слышно землю. */
  if(["golem","troll","ogre","treant","direbear"].includes(m.id))
-  safeFn(()=>setTimeout(()=>safeFn(()=>Bank.play("giant_step",{seed:m.lvl,gain:0.55,maxSec:4})),260));
+  safeFn(()=>setTimeout(()=>safeFn(()=>Bank.play("brute_step",{seed:m.lvl,gain:0.55,maxSec:4})),260));
  /* Чем крупнее противник, тем ниже голос, которым мир его объявляет:
     туба для громад, виолончель для опасных, ничего лишнего для мелочи. */
  safeFn(()=>{const big=(Number(m.lvl)||1)>=Math.max(6,G.level+3);
   const mid=(Number(m.lvl)||1)>=G.level;
-  if(big)setTimeout(()=>safeFn(()=>Bank.play("tuba_boss",{seed:m.lvl,gain:0.75,maxSec:6})),200);
-  else if(mid)setTimeout(()=>safeFn(()=>Bank.play("cello_danger",{gain:0.55,maxSec:5})),240);
+  if(big)setTimeout(()=>safeFn(()=>Bank.play("brute_roar",{seed:m.lvl,gain:0.75,maxSec:6})),200);
+  else if(mid)setTimeout(()=>safeFn(()=>Bank.play("beast_growl",{gain:0.55,maxSec:5})),240);
   /* Литавры на крупного противника; в воюющей земле — набат похода. */
-  if(big)setTimeout(()=>safeFn(()=>Bank.play("war_timpani",{seed:m.lvl,gain:0.6,maxSec:5})),420);
+  if(big)setTimeout(()=>safeFn(()=>Bank.play("throng_fight",{seed:m.lvl,gain:0.6,maxSec:5})),420);
   /* «Воюющая земля» — та, у которой хоть с одним соседом война. */
   const war=safeFn(()=>{const i=empireIndexAt(G.x,G.y);
    return EMPIRES.some((_,j)=>j!==i&&relationWord(relationAt(i,j,G.day))==="война");},false);
-  if(war)setTimeout(()=>safeFn(()=>Bank.play("war_taiko",{seed:G.day,gain:0.5,maxSec:5})),640);});
+  if(war)setTimeout(()=>safeFn(()=>Bank.play("throng_march",{seed:G.day,gain:0.5,maxSec:5})),640);});
  document.getElementById("cbTitle").textContent=`⚔️ ${m.n}, уровень ${m.lvl}`;
  if(G.combat)G.combat.monsterTimer=setTimeout(function pulse(){
   if(!G.inCombat||!G.combat)return;
@@ -26206,7 +26152,7 @@ const WEAPON_VOICE={"Меч":"blade_ring","Сабля":"blade_ring","Кинжа�
  "Топор":"axe_chop","Секира":"axe_chop","Молот":"axe_chop","Булава":"axe_chop",
  "Лук":"bow_release","Арбалет":"bow_release",
  "Копьё":"spear_thrust","Алебарда":"spear_thrust",
- "Посох":"old_magic","Жезл":"spell_bolt"};
+ "Посох":"magic_woosh","Жезл":"cast_shoot"};
 function weaponVoiceRole(){
  const w=G.equip&&G.equip.weapon;
  const t=(w&&(w.type||w.n))||"";
@@ -27362,7 +27308,7 @@ function openBuilding(c){const s=c&&c.structure;
   const tg=templeGod(c.x,c.y);
   safeFn(()=>{Bank.play("temple",{seed:c.x+c.y,gain:0.55,maxSec:7});
    setTimeout(()=>safeFn(()=>{const tg2=templeGod(c.x,c.y);
-    if(!godVoice(tg2.id,{gain:0.55,maxSec:6}))Bank.play("organ_temple",{seed:c.x,gain:0.55,maxSec:6});}),340);});
+    if(!godVoice(tg2.id,{gain:0.55,maxSec:6}))Bank.play("uh_chapel",{seed:c.x,gain:0.55,maxSec:6});}),340);});
   html+=`<div class="list-line" data-speak="Храм посвящён: ${tg.n}, ${tg.ep}. Область: ${tg.dom}. Дар: ${tg.boon}">
    🕯️ Храм посвящён: <b>${tg.n}</b>, ${tg.ep}.<br>Область: ${tg.dom}. Символ: ${tg.sym}. Священный день: ${tg.day}-й.<br>
    Миф: ${tg.myth}<br>Дар: ${tg.boon} Запрет: ${tg.taboo} Соперник: ${GOD_BY_ID[tg.rival]?GOD_BY_ID[tg.rival].n:"нет"}.<br>
@@ -27411,8 +27357,8 @@ function openBuilding(c){const s=c&&c.structure;
  beacon(s.beacon,0,0);
  /* Второй слой постройки: руины отзываются окариной, храм — органом,
     башня — вибрафоном снов, зал клана — волынками, замок — струнами. */
- safeFn(()=>{const v={ruins:"ruin_ocarina",temple:"temple_organ",tower:"dream_vibe",
-  clanhall:"clan_pipes",castle:"epic_strings",city:"bazaar_loop",port:"isle_market"}[s.type];
+ safeFn(()=>{const v={ruins:"hall_fall",temple:"uh_chapel",tower:"magic_hum",
+  clanhall:"hall_barracks",castle:"hall_center",city:"hall_market",port:"hall_port"}[s.type];
   if(v)setTimeout(()=>safeFn(()=>Bank.play(v,{seed:c.x+c.y,gain:0.5,maxSec:7})),500);});
  openModal("modal-building");
  narrate(`${s.name}. ${bldDesc(s.type)} Внутри ${npcs.length?npcs.length+" жителей":"никого нет"}. Меню услуг доступно кнопками.`);}
@@ -29612,7 +29558,7 @@ function renderGestures(){
   "👉 Свайп — шаг: вверх север, вниз юг, влево запад, вправо восток. Внутри здания и подземелья тем же свайпом идёте по коридорам.",
   "🏃 Свайп и удержание пальца — бег в эту сторону. Отпустите палец — остановка.",
   "🎣 Во время поклёвки любое касание или свайп — <b>подсечка</b>: игра сама скажет «Клюёт!» и подаст звук, а у вас будет около двух секунд.",
-  "👆 Одно касание игрового поля — <b>назвать, что под ногами</b>: вход, ресурс с остатком, житель, опасность. Ничего при этом не происходит.",
+  "👆 Одиночное касание одним пальцем не делает ничего — ни действия, ни имени. Что под ногами и что под пальцем, называют ощупывание и палец, полежавший на месте четверть секунды.",
   "👆👆 Двойное касание игрового поля — <b>действие здесь</b>: войти в дверь или ворота, спуститься по лестнице, открыть сундук, добыть жилу, помолиться у алтаря, заговорить с жителем или торговцем, собрать добычу.",
   "✋ Палец, лежащий на месте, через четверть секунды называет то, чего касается, — и только называет. Ни одно одиночное касание в игре ничего не выполняет: сколько бы палец ни лежал, при отрыве ничего не произойдёт.",
   "🚪 <b>Вход своим ходом.</b> Дойдя до города, дома или пещеры, вы встаёте на пороге — игра говорит: «вы у входа». Шагните ещё раз в ту же сторону, и вы войдёте сами. Внутри так же: встали на ступени — шаг в ту же сторону спускает вас ниже или поднимает выше; встали в воротах — шаг наружу выводит из города. Меню действий по-прежнему работает, но ходить теперь можно ногами.",
@@ -29687,7 +29633,7 @@ async function scanSpeak(){
      а затем проигрывает их маяки с панорамой по направлению. */
   const near=nearFeatures(8);
   /* Скан начинается откликом: слышно, велико ли пространство вокруг. */
-  safeFn(()=>Bank.play("fx_echo",{seed:G.place.x+G.place.y,gain:0.45,maxSec:5}));
+  safeFn(()=>Bank.play("deep_wind",{seed:G.place.x+G.place.y,gain:0.45,maxSec:5}));
   if(!near.length){narrate("Вокруг только стены и пол.");return;}
   narrate(`${placeTitle()}. Объекты вокруг: `+near.slice(0,8).map(o=>`${o.name}, ${o.d} ${plural(o.d,"шаг","шага","шагов")}, ${o.dir}`).join("; ")+".");
   const list=near.slice(0,6);
@@ -30286,8 +30232,8 @@ const Tutor={
    ok:"Это ваша сводка. Спрашивайте её сколько угодно — она ничего не тратит."},
   {want:"here",
    say:"Урок седьмой: действие здесь. Коснитесь игрового поля дважды одним пальцем — игра сделает то, что уместно на этой клетке: войдёт в дверь, откроет сундук, заговорит с жителем.",
-   again:"Два коротких касания одним пальцем подряд. Одно касание только называет — выполняет всегда второе.",
-   ok:"Вот и всё управление. Одно касание называет, двойное выполняет — так везде: и в окнах, и на игровом поле."},
+   again:"Два коротких касания одним пальцем подряд. Одиночное касание ничего не делает — выполняет только двойное.",
+   ok:"Вот и всё управление. Одиночное касание молчит, двойное выполняет — так везде: и в окнах, и на игровом поле."},
   {want:"explore",
    say:"Последнее: ощупывание. Коснитесь экрана и ведите пальцем медленно — игра называет всё, чего касается палец, и ничего при этом не нажимает.",
    again:"Коснитесь и ведите медленно, не отрывая пальца.",
