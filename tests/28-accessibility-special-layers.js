@@ -108,25 +108,25 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
  /* ── 3. Панель магии: неизученный слот объясняет отказ, а не молчит ── */
  await page.evaluate(()=>{G.spells=["Искра"];G.mana=G.manaMax=30;resetCursor();ensureCursor(activeLayer());
   window.__said=[];});
- await fwd();await fwd();                       /* слот 3 — заклинание не изучено */
- await doubleTap();
- const unknown=await page.evaluate(()=>({мана:G.mana,сказано:window.__said.slice(-1)[0]||""}));
+ await fwd();                                   /* свайп вправо одним пальцем — слот 2, заклинание не изучено */
+ await page.waitForTimeout(200);
+ const unknown=await page.evaluate(()=>({мана:G.mana,сказано:window.__said.join(" | ")}));
  check('неизученное заклинание не тратит ману и объясняет отказ',
   unknown.мана===30&&/не изучен/i.test(unknown.сказано),unknown);
 
- /* ── 4. Панель магии: свайп ведёт по слотам, двойное касание применяет ── */
- await page.evaluate(()=>{G.spells=SPELLS.map(s=>s.n);G.mana=G.manaMax=30;resetCursor();ensureCursor(activeLayer());});
+ /* ── 4. Панель магии: свайп творит слот по раскладке, двойное касание — слот под пальцем ── */
+ await page.evaluate(()=>{G.spells=SPELLS.map(s=>s.n);G.mana=G.manaMax=60;resetCursor();ensureCursor(activeLayer());});
  await clearSaid();
- await fwd();await fwd();
- const walked=await page.evaluate(()=>({индекс:cursorItems(activeLayer()).indexOf(uiCursor),
-  слот:uiCursor&&uiCursor.dataset.magicIndex,мана:G.mana}));
- const namesOnSwipe=(await said()).length;
- await doubleTap();
- const cast=await page.evaluate(()=>({мана:G.mana,заклинание:SPELLS[2]&&SPELLS[2].n,цена:SPELLS[2]&&SPELLS[2].cost}));
- check('в панели магии свайп ведёт по слотам по одному и называет ровно один',
-  walked.индекс===2&&walked.слот==='2'&&namesOnSwipe===2,{...walked,названий:namesOnSwipe});
- check('двойное касание применяет именно тот слот, на котором стоит выбор',
-  cast.мана===30-cast.цена,{ждали:30-cast.цена,стало:cast.мана,заклинание:cast.заклинание});
+ await fwd();
+ await page.waitForTimeout(200);
+ const swiped=await page.evaluate(()=>({мана:G.mana,цена:SPELLS[1].cost,имя:SPELLS[1].n,названий:window.__said.filter(t=>/^Слот \d/.test(t)).length,окно:activeLayer()&&activeLayer().id}));
+ check('в панели магии свайп вправо одним пальцем творит второй слот и называет ровно его',
+  swiped.мана===60-swiped.цена&&swiped.названий===1&&swiped.окно==='magicPanel',swiped);
+ await page.evaluate(()=>{G.mana=60;});
+ await tap(slot.x,slot.y);await tap(slot.x,slot.y);await page.waitForTimeout(280);
+ const cast=await page.evaluate(()=>({мана:G.mana,заклинание:SPELLS[0].n,цена:SPELLS[0].cost}));
+ check('двойное касание применяет именно тот слот, на котором стоит палец',
+  cast.мана===60-cast.цена,{ждали:60-cast.цена,стало:cast.мана,заклинание:cast.заклинание});
 
  /* ── 5. Руководство: свайпом до нужной главы, двойным касанием — открыть ── */
  await clear();
