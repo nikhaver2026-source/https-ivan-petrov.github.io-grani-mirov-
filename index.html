@@ -139,7 +139,8 @@ h3{color:var(--acc2);margin:14px 0 6px;font-size:1.05rem;}
  <label class="opt"><input type="checkbox" id="setEffects" checked><span>🎵 <b>Эффекты</b><small>Шаги, толпа, маяки и прочие звуки</small></span></label>
  <label class="opt"><input type="checkbox" id="setMusic" checked><span>🎼 <b>Музыка событий</b><small>Новый уровень, дела, награды, достижения, владыки. Музыка — событие, а не подложка</small></span></label>
  <label class="opt"><input type="checkbox" id="setBgMusic"><span>🎻 <b>Фоновая музыка мест</b><small>Темы местностей и глубин подложкой. По умолчанию выключено: место слышно звуками</small></span></label>
- <label class="opt"><input type="checkbox" id="setSubs" checked><span>💬 <b>Субтитры звуков</b><small>Для слабослышащих игроков</small></span></label>
+ <label class="opt">💬 Субтитры <select id="setSubMode" aria-label="Субтитры"><option value="off">Выключены</option><option value="important">Только важные события</option><option value="speech">Все реплики</option><option value="sounds" selected>Все игровые звуки с текстовым описанием</option></select></label>
+ <p class="hint">Субтитры не нужны для прохождения: игра целиком проходится звуком, речью, жестами и вибрацией. Они для тех, кто читает с экрана.</p>
  <h3>Громкость и скорость</h3>
  <p class="hint">🎧 Пространственный эмбиент, многослойная реверберация, динамический ветер, дождь, толпа, стерео-маяки объектов и акустика локации. Аудио генерируется в реальном времени.</p>
  <label class="opt">🗣️ Скорость озвучки <input type="range" id="setRate" min="0.6" max="6" step="0.2" data-tap-step="0.2" value="1"><span id="vRate">1.0×</span></label>
@@ -161,7 +162,8 @@ h3{color:var(--acc2);margin:14px 0 6px;font-size:1.05rem;}
  <div class="row"><button type="button" data-cmd="am:save">💾 Сохранить сейчас</button><button type="button" data-cmd="am:saves">🗄️ Слоты и файл</button></div>
  <h3>♿ Доступность</h3>
  <label class="opt"><input type="checkbox" id="setExplore" checked><span>🤚 <b>Режим ощупывания</b><small>Называть элементы под пальцем (для незрячих)</small></span></label>
- <label class="opt"><input type="checkbox" id="setHints" checked><span>🧭 <b>Подсказки, где что находится</b><small>Выключено — мир только звуками: проходы, двери, лестницы и вещи слышны с их стороны, а слова — по запросу (осмотреться: три пальца влево)</small></span></label>
+ <label class="opt">🧭 Подсказки расположения объектов <select id="setHintMode" aria-label="Подсказки расположения объектов"><option value="full" selected>Полные подсказки</option><option value="min">Минимальные подсказки</option><option value="sound">Только звуковая навигация</option></select></label>
+ <p class="hint">Полные — игра называет, что рядом, где оно и как подойти. Минимальные — только важное: имя места, опасность, первая фраза описания. Только звук — словесные подсказки о расположении выключены: проход слышен ветром, дверь — петлёй, ступени — камнем, вода — водой, кузница — молотом, храм — колоколом, таверна — посудой, тварь — шагом и дыханием со своей стороны; всё со стороной, расстоянием, высотой, затуханием и преградами.</p>
  <label class="opt"><input type="checkbox" id="setFastTap"><span>⚡ <b>Быстрая активация</b><small>Одно касание сразу выполняет действие, без предварительного озвучивания вторым касанием</small></span></label>
  <label class="opt"><input type="checkbox" id="setHaptics" checked><span>📳 <b>Тактильный отклик</b><small>Вибрация при касаниях</small></span></label>
  <h3>🎧 Позиционный звук</h3>
@@ -216,7 +218,7 @@ h3{color:var(--acc2);margin:14px 0 6px;font-size:1.05rem;}
 <!-- ИНВЕНТАРЬ -->
 <div class="modal" id="modal-inventory" role="dialog" aria-modal="true" aria-label="Инвентарь" hidden><div class="sheet">
  <header><h2>🎒 Инвентарь</h2><button type="button" data-cmd="close">✖️ Закрыть</button></header>
- <p class="hint">Двойное касание по вещи — краткая характеристика. Свайп одним пальцем вверх или вниз на выбранной вещи — действия с ней: осмотреть, надеть, выпить, продать, переплавить, возложить — по вещи и по месту.</p>
+ <p class="hint">Вещи разложены по двадцати разделам: оружие, щиты, броня, шлемы, перчатки, обувь, аксессуары, артефакты, магические предметы, свитки, книги, зелья, ресурсы, материалы, квестовые, инструменты, боеприпасы, еда, ингредиенты и прочее. Двойное касание по вещи — краткая карточка; свайп вверх или вниз на выбранной вещи — действия по вещи и по месту. Недоступное показано с причиной.</p>
  <div id="invSections"></div>
  <div id="invEquip" hidden></div><div id="invItems" hidden></div><div id="invGear" hidden></div>
 </div></div>
@@ -385,6 +387,12 @@ h3{color:var(--acc2);margin:14px 0 6px;font-size:1.05rem;}
  <h3>🏛️ Великие Дома в политике</h3><div id="polHouses"></div>
 </div></div>
 
+<!-- ТОРГОВЛЯ: КУПИТЬ И ПРОДАТЬ -->
+<div class="modal" id="modal-shop" role="dialog" aria-modal="true" aria-label="Торговля" hidden><div class="sheet">
+ <header><h2 id="shopTitle">🛒 Торговля</h2><button type="button" data-cmd="close">✖️ Закрыть</button></header>
+ <div id="shopBody"></div>
+</div></div>
+
 <!-- ВЕЛИКИЕ ДОМА -->
 <div class="modal" id="modal-houses" role="dialog" aria-modal="true" aria-label="Великие Дома" hidden><div class="sheet">
  <header><h2>🏛️ Великие Дома</h2><button type="button" data-cmd="close">✖️ Закрыть</button></header>
@@ -431,6 +439,7 @@ h3{color:var(--acc2);margin:14px 0 6px;font-size:1.05rem;}
  <header><h2>🗺️ Карта локации</h2><button type="button" data-cmd="close">✖️ Закрыть</button></header>
  <p class="hint">Вы — 🧭 в центре. Касание клетки — объект, направление и расстояние в шагах озвучиваются, звучит его маяк.</p>
  <div id="mapGrid"></div>
+ <h3>📌 Известные точки</h3><div id="mapPoints"></div>
  <div class="row">
   <button type="button" data-cmd="mapscan">📢 Озвучить объекты по расстоянию</button>
   <button type="button" data-cmd="maplegend">ℹ️ Легенда карты</button>
@@ -559,6 +568,16 @@ const saveSettings=()=>store.set("gm29set",JSON.stringify(settings));
    старые обработчики зовут его через Modules.get, не трогая внутренностей,
    а новые системы не спорят со старыми за имена. Список — Modules.list().
    ════════════════════════════════════════════════════════════════════════ */
+/* Режим подсказок и режим субтитров живут рядом со старыми переключателями и
+   выводят их: hints=0 только в режиме «только звук», subtitles=0 только когда
+   субтитры выключены. Старый код читает старые ключи и ничего не замечает. */
+if(!settings.hintMode)settings.hintMode=settings.hints===0?"sound":"full";
+settings.hints=settings.hintMode==="sound"?0:1;
+if(!settings.subMode)settings.subMode=settings.subtitles===0?"off":"sounds";
+settings.subtitles=settings.subMode==="off"?0:1;
+function setHintMode(mode){if(!["full","min","sound"].includes(mode))mode="full";settings.hintMode=mode;settings.hints=mode==="sound"?0:1;saveSettings();return mode;}
+function setSubMode(mode){if(!["off","important","speech","sounds"].includes(mode))mode="sounds";settings.subMode=mode;settings.subtitles=mode==="off"?0:1;saveSettings();
+ if(mode==="off"){const el=document.getElementById("subText");if(el)el.hidden=true;}return mode;}
 const Modules={reg:{},
  register(name,api){this.reg[name]=api;return api;},
  get(name){return this.reg[name]||null;},
@@ -699,6 +718,9 @@ const Speech={voice:null,keepAlive:null,
   return {pri,cat};},
  _shape(text,m){
   try{
+   /* Минимальные подсказки: описание места и пространственное сведение — первой фразой. */
+   if(settings.hintMode==="min"&&!m.user&&m.pri>=2&&(m.cat==="desc"||m.cat==="spatial"||m.cat==="object")){
+    const sents=text.match(/[^.!?…]+[.!?…]*/g)||[text];return (sents[0]||text).trim();}
    const v=settings.verbosity||"normal";
    if(m.user||m.pri<=1||v==="normal"||v==="full")return text;
    const sents=text.match(/[^.!?…]+[.!?…]*/g)||[text];
@@ -775,6 +797,8 @@ const Speech={voice:null,keepAlive:null,
    this._speak(m);return;}},
  _speak(m){
   const a=this._adapter();if(!a){this._finish(m,"FAILED");return;}
+  /* Субтитр реплики: важное — на уровне событий, прочее — на уровне реплик. */
+  safeFn(()=>sub(m.text,m.pri<=1?"important":"speech"));
   m.parts=this._chunk(m.text);m.gen=++this.gen;m.state="STARTING";
   this.current=m;this.speaking=true;this._duck(true);
   this._part(m,0);},
@@ -2017,10 +2041,21 @@ function liveBlip(f,v){
  }catch(_){return false;}}
 /* ════════ ПЛЕЕР / СУБТИТРЫ / СИГНАЛЫ ════════ */
 let subTimer=null;
-function sub(text){const el=document.getElementById("subText");
- if(!settings.subtitles){el.hidden=true;return;}
+/* Уровни субтитров: important — важные события, speech — всякая реплика игры,
+   sound — описание игрового звука. Режим настройки решает, до какого уровня
+   показывать. Субтитры никогда не обязательны: мир целиком слышен. */
+const SUB_RANK={important:1,speech:2,sound:3};
+const SUB_ALLOW={off:0,important:1,speech:2,sounds:3};
+let subLastSound=0;
+function sub(text,level){const el=document.getElementById("subText");if(!el)return false;
+ const mode=settings.subMode||(settings.subtitles?"sounds":"off");
+ const allow=SUB_ALLOW[mode]||0,rank=SUB_RANK[level||"sound"]||3;
+ if(!allow||rank>allow){if(!allow)el.hidden=true;return false;}
  el.textContent=text;el.hidden=false;clearTimeout(subTimer);
- subTimer=setTimeout(()=>el.hidden=true,4500);}
+ subTimer=setTimeout(()=>el.hidden=true,rank===1?6000:4500);return true;}
+/* Описание игрового звука — раз в девять десятых секунды, чтобы толпа записей не мигала строкой. */
+function subSound(role){try{if((settings.subMode||"")!=="sounds")return false;const now=Date.now();if(now-subLastSound<900)return false;
+ const b=SOUND_BANK[role];if(!b)return false;subLastSound=now;return sub(`🔊 ${b.d||String(role).replace(/_/g," ")}`,"sound");}catch(_){return false;}}
 const Play={active:new Map(),lastMain:null,
  /* Возвращает «нет», если такой записи нет: тот, кто просил её послушать,
     должен получить ответ, а не тишину. */
@@ -3315,6 +3350,40 @@ function activateElement(el){if(!el||el.disabled)return false;try{
               свайп — «где я»: место, уровень, здоровье, задания.
    4 пальца — магия: тап — открыть или закрыть панель заклинаний.
    ════════════════════════════════════════════════════════════════════ */
+/* ── КАРТА ЖЕСТОВ ──
+   Все касания приходят в один диспетчер (touchstart, touchmove, touchend ниже),
+   один обработчик кликов и один клавиатуры. Эта таблица — не второй
+   обработчик, а его опись: что делает жест, где он действует и чей приоритет
+   выше, когда двое просят одно и то же. Число пальцев решает первым: четыре
+   пальца — речь и чары, три — оружие, меню, инвентарь, осмотр и сводка, два —
+   сбор и окна мира, один — ощупывание, шаг и выбор. Внутри окна свайп одним
+   пальцем — список, а не шаг; при вынутом оружии — удар, а не шаг. */
+const GESTURE_MAP=[
+ {fingers:1,kind:"hold",n:"ощупывание: назвать то, что под пальцем",prio:1,где:"везде"},
+ {fingers:1,kind:"swipe",n:"шаг по полю; в окне — следующий или предыдущий пункт; при вынутом оружии — удар; в инвентаре вверх или вниз — действия с вещью",prio:2,где:"поле, окно, бой"},
+ {fingers:1,kind:"tap2",n:"выполнить названный пункт окна; поле на касания одним пальцем не отвечает",prio:2,где:"окно"},
+ {fingers:2,kind:"tap",n:"собрать ресурс; если открыто окно — закрыть его",prio:3,где:"поле, окно"},
+ {fingers:2,kind:"swipe",dir:"S",n:"взаимодействие: с объектом, выбранным при осмотре, или с тем, что под ногами",prio:3,где:"поле"},
+ {fingers:2,kind:"swipe",dir:"N",n:"повторить последнее сообщение; если речь идёт — оборвать её",prio:3,где:"везде"},
+ {fingers:2,kind:"swipe",dir:"W",n:"карта места; тем же жестом закрыть",prio:3,где:"везде"},
+ {fingers:2,kind:"swipe",dir:"E",n:"журнал дел; тем же жестом закрыть",prio:3,где:"везде"},
+ {fingers:3,kind:"tap2",n:"вынуть или убрать оружие",prio:4,где:"поле"},
+ {fingers:3,kind:"swipe",dir:"N",n:"меню действий, поверх любого окна",prio:4,где:"везде"},
+ {fingers:3,kind:"swipe",dir:"S",n:"инвентарь; тем же жестом закрыть",prio:4,где:"везде"},
+ {fingers:3,kind:"swipe",dir:"W",n:"осмотреться: объекты вокруг по сторонам от вас, выбор цели",prio:4,где:"поле"},
+ {fingers:3,kind:"swipe",dir:"E",n:"сводка «где я»",prio:4,где:"поле"},
+ {fingers:4,kind:"tap2",n:"панель магии: двенадцать слотов по свайпам",prio:5,где:"везде"},
+ {fingers:4,kind:"swipe",n:"речь: вниз — стоп, вверх — повтор, влево — состояние, вправо — очистить очередь",prio:5,где:"везде"}];
+const Gestures=Modules.register("GESTURES",{
+ map:GESTURE_MAP,
+ /* Один диспетчер на каждый род события: второго нет и быть не должно. */
+ handlers:{touchstart:1,touchmove:1,touchend:1,click:1,keydown:1},
+ word(g){const пальцы=g.fingers===1?"один палец":g.fingers===2?"два пальца":g.fingers===3?"три пальца":"четыре пальца";
+  const род=g.kind==="hold"?"удержание":g.kind==="tap"?"одно касание":g.kind==="tap2"?"двойное касание":g.dir?`свайп ${({N:"вверх",S:"вниз",W:"влево",E:"вправо"})[g.dir]}`:"свайп";
+  return `${пальцы}, ${род} — ${g.n}`;},
+ text(){return "Карта жестов. "+GESTURE_MAP.map(g=>this.word(g)).join(". ")+".";},
+ /* Два жеста спорят, если совпали пальцы, род и сторона; таблица обязана быть без споров. */
+ conflicts(){const seen=new Map(),out=[];GESTURE_MAP.forEach(g=>{const k=`${g.fingers}:${g.kind}:${g.dir||"*"}`;if(seen.has(k))out.push(k);seen.set(k,g);});return out;}});
 function handleTwoFingerSwipe(dir){
  if(!gameActive())return;
  /* Вверх — повторить последнее, а если речь идёт — оборвать её. */
@@ -3330,6 +3399,8 @@ function handleTwoFingerSwipe(dir){
  if(G.ship){sailLeg();return;}
  if(!G.place&&inFlight()){descend();return;}
  safeFn(()=>Tutor.note("here"));
+ /* Цель, выбранная при осмотре, — первая: к ней подводят или открывают её действия. */
+ if(safeFn(()=>Look.interact(),false))return;
  useHere();
 }
 /* Окно по жесту: открыть, а тем же жестом — закрыть. Поверх другого окна
@@ -3337,7 +3408,6 @@ function handleTwoFingerSwipe(dir){
 function toggleWindowGesture(id){
  const m=document.getElementById(id);if(!m)return false;
  if(!m.hidden){safeFn(()=>closeModal(m));safeFn(()=>UI.blip(520,.08,.12));return true;}
- if(id==="modal-map"&&!G.place){narrate("Карта места — внутри построек и подземелий. Под открытым небом осмотритесь: свайп тремя пальцами влево.");return false;}
  for(let i=0;i<25&&activeLayer();i++)safeFn(()=>closeTopUI());
  openModal(id);
  if(id==="modal-map")safeFn(()=>renderMap());
@@ -3354,7 +3424,7 @@ function handleThreeFingerSwipe(dir){
  if(dir==="N"){safeFn(()=>actionMenuGesture());return;}
  /* Вниз — инвентарь (тем же жестом закрывается), влево — осмотреться эхо-сканом, вправо — «где я». */
  if(dir==="S"){safeFn(()=>toggleWindowGesture("modal-inventory"));return;}
- if(dir==="W"){safeFn(()=>scanSpeak());return;}
+ if(dir==="W"){safeFn(()=>Look.open());return;}
  safeFn(()=>Tutor.note("status"));
  const q=(G.quests||[]).filter(x=>!x.done);
  /* Дорога под ногами называется по имени: «иду Соляным трактом» — это
@@ -3585,21 +3655,15 @@ function handleSingleTap(el,x,y){
   return;}
  if(!gameActive())return;
  if(activeLayer())return;
- /* Игровое поле живёт по общему правилу игры: первое касание называет, что под
-    ногами, второе — выполняет действие здесь (войти в дверь, спуститься, открыть
-    сундук, заговорить, собрать добычу). Раньше одно касание сразу СОБИРАЛО ресурс,
-    и это спорило с двойным касанием: игрок, привыкший подтверждать выбор двумя
-    касаниями, на поле выполнял сбор дважды и слышал два ответа подряд. Сбор
-    переехал на одно касание двумя пальцами. */
- if(settings.fastTap){safeFn(()=>useHere());return;}
- const now=Date.now();
- if(now-touchGate.lastUiTap<650&&touchGate.lastUiEl===FIELD_SPOT){
-  touchGate.lastUiTap=0;touchGate.lastUiEl=null;
-  safeFn(()=>useHere());
-  return;}
- touchGate.lastUiTap=now;touchGate.lastUiEl=FIELD_SPOT;
- /* Одиночное касание поля ничего не говорит и не делает: что под ногами,
-    называет палец, полежавший на месте, а выполняет — двойное касание. */}
+ /* Касание игрового поля одним пальцем — одиночное или двойное — НИЧЕГО не
+    выполняет. Прежде второе касание поля делало «действие здесь» и собирало
+    ресурс под ногами, и это спорило с двойным касанием по кнопке: палец,
+    не попавший вторым касанием точно в кнопку, попадал в поле, и вместо
+    кнопки срабатывал сбор. Теперь поле молчит совсем: что под ногами,
+    называет палец, полежавший на месте; собирает — одно касание двумя
+    пальцами; взаимодействует — свайп двумя пальцами вниз. Взведённое
+    первым касанием двойное по кнопке поле не сбивает. */
+ return;}
 /* ── МНОГОПАЛЬЦЕВЫЕ ЖЕСТЫ ──
    gesture.maxCount хранит МАКСИМУМ одновременно коснувшихся пальцев, а gesture.id —
    «якорный» палец, по которому и только по которому измеряется смещение. Раньше жест
@@ -3752,7 +3816,8 @@ document.addEventListener('touchend',e=>{
    if(fingers===3&&g.dir==="N"){safeFn(()=>actionMenuGesture());return;}
    /* Повтор речи, карта, журнал и инвентарь работают и поверх окна: они окна и открывают, и закрывают. */
    if(fingers===2&&g.dir!=="S"){safeFn(()=>handleTwoFingerSwipe(g.dir));return;}
-   if(fingers===3&&g.dir==="S"){safeFn(()=>handleThreeFingerSwipe("S"));return;}
+   /* Инвентарь и сводка «где я» — тоже поверх окна: сводка ничего не меняет, а знать, где ты, нужно всегда. */
+   if(fingers===3&&(g.dir==="S"||g.dir==="E")){safeFn(()=>handleThreeFingerSwipe(g.dir));return;}
    /* Речь останавливают откуда угодно, и поверх окна тоже. */
    if(fingers===4){safeFn(()=>handleFourFingerSwipe(g.dir));return;}
    if(слой){
@@ -3884,6 +3949,7 @@ const AM_GROUPS=[
   ["regions","🗺️ Область мира: где я и что рядом"],
   ["fort","🏯 Крепость: состояние и действия"],
   ["house","🏛️ Дом этих земель: положение и служба"],
+  ["shopnear","🛒 Торговля с ближним торговцем"],
   ["trade","🐫 Рынки, маршруты и караваны"],
   ["harbor","⚓ Причал: корабли и рейсы"],
   ["portal","🌀 Портальная сеть"],
@@ -4097,7 +4163,7 @@ const GUIDE=[
  "Все кнопки игры собраны в меню действий: свайп тремя пальцами вверх. Инвентарь — три пальца вниз, карта — два пальца влево, журнал дел — два пальца вправо."]},
 {title:"Глава 2. Жесты",body:[
  "Жесты разложены по числу пальцев, и это главное правило: один палец — движение и выбор, два — сбор и места, три — бой, сводка и меню, четыре — магия. Запомнив это, остальное вспоминается само.",
- "ОДИН ПАЛЕЦ. Ведение пальцем, не отрывая, — ощупывание: игра называет то, чего вы касаетесь, и сразу обрывает предыдущую фразу. Одиночное касание не делает ничего — ни действия, ни имени: оно лишь первое из двух. Назвать пункт или клетку — палец, полежавший на месте четверть секунды, или свайп в окне. Двойное касание — активировать названное: пункт окна, а на игровом поле — действие здесь (войти в дверь, спуститься по лестнице, открыть сундук, помолиться у алтаря, собрать добычу). Свайп — шаг в сторону. Свайп с удержанием — бег.",
+ "ОДИН ПАЛЕЦ. Ведение пальцем, не отрывая, — ощупывание: игра называет то, чего вы касаетесь, и сразу обрывает предыдущую фразу. Одиночное касание не делает ничего — ни действия, ни имени: оно лишь первое из двух. Назвать пункт или клетку — палец, полежавший на месте четверть секунды, или свайп в окне. Двойное касание — активировать названный пункт окна. Игровое поле на касания одним пальцем не отвечает вовсе: действие здесь — свайп двумя пальцами вниз, сбор — касание двумя пальцами. Свайп — шаг в сторону. Свайп с удержанием — бег.",
  "Ползунок настраивается тем же двойным касанием: оно прибавляет десятую часть шкалы и называет новое значение, а дойдя до края, возвращает к началу. Касание по ползунку его не двигает.",
  "В ОКНАХ И МЕНЮ есть текущий пункт — тот, который игра назвала последним. Свайп двигает его ровно на один пункт и называет только его: по дороге игра молчит, даже если палец прошёл над десятком строк. Медленное ведение пальцем — наоборот, называет всё под пальцем и делает текущим тот пункт, где палец оторвался. Двойное касание активирует текущий пункт, и попадать дважды в одну точку не нужно.",
  "Открытое окно называет себя само: «Окно „Живой мир“. Выбрано: Закрыть». Закрытое отчитывается, куда вы вернулись: «Окно „Живой мир“ закрыто. Игровое поле». Прежде окно на открытии произносило одно слово — «Закрыть», — и по нему нельзя было понять ни куда вы попали, ни закрылось ли оно потом.",
@@ -7479,6 +7545,7 @@ const Bank={
   const el=this.make(file,this.vol(kind)*gain,false,rate||Vary.rate(o));
   if(!el)return null;
   el.__role=role;el.__file=file;
+  safeFn(()=>subSound(role));
   return this._shot(el,kind,o,maxSec);},
  /* Громкость подхватывается сразу после смены настроек. */
  refresh(){this.loops.forEach(c=>{try{c.el.volume=Math.max(0,Math.min(1,this.vol(c.kind)*c.gain));}catch(_){}});}
@@ -18008,7 +18075,8 @@ iact("apprentice",{n:"Проситься в ученики",значок:"🎓",
    К общим добавляются техники станка: у горна свои, у наковальни свои, и
    показаны только те, до которых доросло мастерство. */
 function actionsFor(o){
- const порядок=["look","listen","knock","hollow","secret","stash","stashtake","drawer","close","put","mytake","lockpick","compare","toggle","pull","shove","doormech","repair","salvage","attune",
+ const порядок=["look","dopen","dclose","dunlock","dlock","dkey","dpick","dspell","eavesdrop","copen","cpeek","ctakeall","ckey","cpick","findbook","readbook","takebook","takeitem","readdocs","welldrink","wellcoin","welllisten","wellrope","rest","cook","lighttorch","statueread","circlestep","godown","goup","stairlisten","trade","prices","portalinfo","enter","services","gather","harbor","mountcall",
+  "listen","knock","hollow","secret","stash","stashtake","drawer","close","put","mytake","lockpick","compare","toggle","pull","shove","doormech","repair","salvage","attune",
   "altstudy","altread","altaura","altoffer","altbless","altseal","altartefact","altrite","altsacrifice","altmech",
   "assay","trap","disarm","shelf","apprentice","use"];
  const общие=порядок.map(id=>IACT[id]).filter(a=>a&&(!a.можно||safeFn(()=>a.можно(o),false)));
@@ -18026,6 +18094,206 @@ function actionsFor(o){
     safeFn(()=>Bank.play("knock_soft",{gain:0.4,maxSec:2}));
     narrate(`${t.n}: пока не по рукам. Нужна ступень «${м.n}» ${t.ур} — ${MAST_RANK[t.ур]}, у вас ${MAST_RANK[есть]}. Дальше учат наставник и сама работа.`);
     return true;}};}));}
+/* ════════ ЕДИНАЯ СИСТЕМА ИНТЕРАКТИВНЫХ ОБЪЕКТОВ ════════
+   Объект → его действия → меню → исполнитель. Объект (objectsHere) говорит,
+   что он такое и где стоит; реестр IACT знает, какие действия к нему
+   относятся, когда они доступны и ПОЧЕМУ нет; окно строится само; исполнитель
+   проверяет условие ещё раз и либо делает, либо называет причину. Ниже —
+   действия дверей, сундуков, шкафов, столов, полок, колодцев, очагов, кругов,
+   лестниц, прилавков, статуй, узлов сети и построек. Для незрячего игрока
+   важно одно: у всякой вещи мира есть свой список, и он читается вслух. */
+function objProp(o){return o&&o.плитка==="X"?String(o.вещь||""):"";}
+const DOOR_TILES=["+","G","Y"];
+function doorState(o){
+ try{
+  if(o.плитка==="Y")return safeFn(()=>vaultIsOpen(o.x,o.y),false)?"open":"locked";
+  const m=placeMark(o.x,o.y);
+  return m==="open"?"open":m==="locked"?"locked":"closed";
+ }catch(_){return "closed";}}
+function hasKey(){return (G.items||[]).some(n=>/^Ключ/.test(String(n)));}
+/* Что за дверью: живое в трёх клетках по прямой за створкой. */
+function behindDoor(o){
+ try{
+  const p=G.place;const lvl=curLevel();if(!lvl)return null;
+  const dx=Math.sign(o.x-p.x),dy=Math.sign(o.y-p.y);
+  const живые=(Actors&&Actors.list)||[];
+  for(let k=1;k<=3;k++){const x=o.x+dx*k,y=o.y+dy*k;
+   const a=живые.find(z=>z.x===x&&z.y===y);if(a)return {вид:a.m?"тварь":"житель",n:(a.m&&a.m.n)||a.n||"кто-то",d:k,m:a.m};
+   const t=tileAt(lvl,x,y);if(t==="M")return {вид:"тварь",n:"логово",d:k};if(["N","P","S","B","F"].includes(t))return {вид:"житель",n:IOBJ_TILES[t]||"житель",d:k};if(t==="#")break;}
+  return null;
+ }catch(_){return null;}}
+/* ── ДВЕРИ ── */
+iact("dopen",{n:"Открыть",значок:"🚪",своё:true,
+ можно:o=>!!G.place&&["+","G"].includes(o.плитка)&&doorState(o)==="closed",почему:o=>doorState(o)==="open"?"дверь уже открыта":doorState(o)==="locked"?"дверь заперта: нужен ключ, отмычка или чары":"это не дверь",
+ делать:o=>{setPlaceMark(o.x,o.y,"open");safeFn(()=>doorSound(doorKindHere(o.плитка),"open",{dx:o.dx,dy:o.dy}));
+  const з=behindDoor(o);narrate(`${o.n} открыта: створка отошла${з?`, и за ней ${з.вид==="тварь"?"кто-то дышит":"слышны шаги"}: ${з.n}, ${з.d} ${plural(з.d,"шаг","шага","шагов")}`:", за ней тихо"}. Шагните — пройдёте.`);return true;}});
+iact("dclose",{n:"Закрыть",значок:"🚪",
+ можно:o=>!!G.place&&["+","G"].includes(o.плитка)&&doorState(o)==="open"&&!(o.dx===0&&o.dy===0),почему:o=>o.dx===0&&o.dy===0?"вы стоите в проёме: сойдите с порога":"дверь и так закрыта",
+ делать:o=>{setPlaceMark(o.x,o.y,"closed");safeFn(()=>doorSound(doorKindHere(o.плитка),"close",{dx:o.dx,dy:o.dy}));narrate(`${o.n} закрыта. Акустика сомкнулась: звуки из-за створки глуше.`);return true;}});
+iact("dlock",{n:"Запереть",значок:"🔒",
+ можно:o=>!!G.place&&o.плитка==="+"&&doorState(o)==="closed"&&hasKey(),почему:o=>doorState(o)==="open"?"сперва закройте дверь":doorState(o)==="locked"?"уже заперта":"нужен ключ: их находят в казнах и у стражи",
+ делать:o=>{setPlaceMark(o.x,o.y,"locked");safeFn(()=>doorSound(doorKindHere(o.плитка),"lock",{dx:o.dx,dy:o.dy}));narrate(`${o.n} заперта на два оборота. За неё теперь не пройти без ключа.`);return true;}});
+iact("dunlock",{n:"Отпереть",значок:"🔓",
+ можно:o=>!!G.place&&o.плитка==="+"&&doorState(o)==="locked"&&hasKey(),почему:o=>doorState(o)!=="locked"?"дверь не заперта":"нужен ключ",
+ делать:o=>{setPlaceMark(o.x,o.y,"closed");safeFn(()=>doorSound(doorKindHere(o.плитка),"unlock",{dx:o.dx,dy:o.dy}));narrate(`${o.n} отперта. Теперь её можно открыть.`);return true;}});
+iact("dkey",{n:"Использовать ключ",значок:"🗝️",
+ можно:o=>!!G.place&&DOOR_TILES.includes(o.плитка)&&doorState(o)==="locked"&&hasKey(),почему:o=>doorState(o)!=="locked"?"замок не заперт":"ключа при вас нет",
+ делать:o=>{if(o.плитка==="Y"){safeFn(()=>{setPlaceMark(o.x,o.y,"open");markVaultOpen(o.x,o.y);});safeFn(()=>doorSound("iron","unlock",{dx:o.dx,dy:o.dy}));narrate("Ключ подошёл: дверь палаты отошла.");return true;}
+  setPlaceMark(o.x,o.y,"closed");safeFn(()=>doorSound(doorKindHere(o.плитка),"unlock",{dx:o.dx,dy:o.dy}));narrate(`Ключ повернулся дважды: ${o.n} отперта.`);return true;}});
+iact("dpick",{n:"Взломать",значок:"🪛",
+ можно:o=>!!G.place&&o.плитка==="+"&&doorState(o)==="locked",почему:o=>"замок не заперт: взламывать нечего",
+ делать:o=>{const шанс=0.35+Math.min(0.5,(Number(G.agi)||10)*0.02);const ок=hashName(o.x*3+(Number(G.hour)||0),o.y*7+(Number(G.day)||0),8400)<шанс;
+  safeFn(()=>doorSound(doorKindHere(o.плитка),"pick",{dx:o.dx,dy:o.dy}));safeFn(()=>propTime(0.3));
+  if(ок){setPlaceMark(o.x,o.y,"closed");narrate(`Язычок поддался: ${o.n} отперта. Шум был слышен всему ярусу.`);safeFn(()=>addStand("crime",(EMPIRES[Math.max(0,empireIndexAt(G.place.bx,G.place.by))]||{}).short,1,true));}
+  else narrate("Отмычка соскользнула, замок держит. Попробуйте ещё или ищите ключ.");return true;}});
+iact("dspell",{n:"Использовать заклинание",значок:"🔮",
+ можно:o=>!!G.place&&DOOR_TILES.includes(o.плитка)&&doorState(o)==="locked"&&(G.spells||[]).some(n=>/Каменн|Земл|Огн|Пламя|Молни|Искра/.test(n))&&(Number(G.mana)||0)>=5,
+ почему:o=>doorState(o)!=="locked"?"замок не заперт":(Number(G.mana)||0)<5?"нужно пять маны":"нужны чары земли, огня или молнии",
+ делать:o=>{G.mana-=5;if(o.плитка==="Y")safeFn(()=>{setPlaceMark(o.x,o.y,"open");markVaultOpen(o.x,o.y);});else setPlaceMark(o.x,o.y,"closed");
+  safeFn(()=>{Bank.play("cast_fire",{kind:"magic",gain:0.55,maxSec:3});setTimeout(()=>safeFn(()=>doorSound(doorKindHere(o.плитка),"break",{dx:o.dx,dy:o.dy})),400);});safeFn(()=>deed("casts"));
+  narrate(`Чары ударили в замок: металл вскрикнул, и ${o.n} отперта. Мана минус пять.`);return true;}});
+iact("eavesdrop",{n:"Подслушать",значок:"👂",
+ можно:o=>!!G.place&&DOOR_TILES.includes(o.плитка)&&doorState(o)!=="open",почему:o=>"дверь открыта: слушать нечего, всё слышно и так",
+ делать:o=>{const з=behindDoor(o);
+  if(з){safeFn(()=>{const role=з.m?safeFn(()=>bankFoeRole(з.m),"danger")||"danger":"npc_common";Spatial.role(role,o.dx*2,o.dy*2,{gain:0.4,maxSec:3})||Bank.play(role,{gain:0.4,maxSec:3});});
+   narrate(`За дверью ${з.вид==="тварь"?"кто-то тяжело дышит и ходит":"слышны голоса и шаги"}: ${з.n}, ${з.d} ${plural(з.d,"шаг","шага","шагов")} за створкой.`);}
+  else{safeFn(()=>Bank.play("deep_wind",{gain:0.3,maxSec:3}));narrate("За дверью тихо: только сквозняк и капель. Похоже, там никого.");}
+  return true;}});
+/* ── СУНДУКИ ── */
+function chestLocked(x,y){try{const p=G.place;if((Number(p.depth)||0)<3)return false;
+ /* Замок бывает только у настоящего сундука; палата заперта своей дверью,
+    и сундукам внутри второй замок не нужен. */
+ if(safeFn(()=>{const l=curLevel();return !l||tileAt(l,x,y)!=="C"||!!(l.vault&&вСокровищнице(l,x,y));},true))return false;
+ return hashName(p.bx+x*5,p.by+y*3,8410)<0.2&&!propMarked(x,y,"unlocked");}catch(_){return false;}}
+function chestPreview(x,y){
+ try{const p=G.place,r=H(p.bx+x*3,p.by+y*5,800+p.depth);
+  const что=r<0.3?"золото, судя по звону":r<0.55?"что-то из снаряжения: ткань и металл":r<0.75?"склянки и свёртки":r<0.9?"тяжёлое и холодное — святыня или камень":"почти пусто, но что-то шуршит на дне";
+  return `${placeMark(x,y)==="open"?"Сундук уже открыт и пуст.":`Сундук закрыт. Если качнуть, внутри ${что}.`}${chestLocked(x,y)?" Замок заперт.":""}${safeFn(()=>trapAt(x,y),null)?" По кромке чувствуется натяжка: проверьте прежде, чем открывать.":""}`;
+ }catch(_){return "Сундук.";}}
+iact("copen",{n:"Открыть",значок:"🧰",своё:true,
+ можно:o=>!!G.place&&o.плитка==="C"&&placeMark(o.x,o.y)!=="open"&&!chestLocked(o.x,o.y),почему:o=>placeMark(o.x,o.y)==="open"?"сундук уже открыт и пуст":"сундук заперт: ключ или взлом",
+ делать:o=>{const был={x:G.place.x,y:G.place.y};G.place.x=o.x;G.place.y=o.y;try{openChest(o.x,o.y);}finally{G.place.x=был.x;G.place.y=был.y;}return true;}});
+iact("cpeek",{n:"Осмотреть содержимое",значок:"👁️",можно:o=>!!G.place&&o.плитка==="C",
+ делать:o=>{safeFn(()=>chestSound("open",{gain:0.35,maxSec:2}));narrate(`${o.n}: ${chestPreview(o.x,o.y)}`,{interrupt:true});return true;}});
+iact("ctakeall",{n:"Забрать всё",значок:"🎒",можно:o=>!!G.place&&o.плитка==="C"&&placeMark(o.x,o.y)!=="open"&&!chestLocked(o.x,o.y),почему:o=>placeMark(o.x,o.y)==="open"?"брать нечего: пусто":"сундук заперт",
+ делать:o=>{const был={x:G.place.x,y:G.place.y};G.place.x=o.x;G.place.y=o.y;try{openChest(o.x,o.y);}finally{G.place.x=был.x;G.place.y=был.y;}return true;}});
+iact("ckey",{n:"Использовать ключ",значок:"🗝️",можно:o=>!!G.place&&o.плитка==="C"&&chestLocked(o.x,o.y)&&hasKey(),почему:o=>chestLocked(o.x,o.y)?"ключа при вас нет":"замок не заперт",
+ делать:o=>{propMark(o.x,o.y,"unlocked");safeFn(()=>chestSound("key",{gain:0.5,maxSec:3})||chestSound("open",{gain:0.4,maxSec:2}));narrate(`Ключ подошёл: ${o.n} отперт. Теперь его можно открыть.`);return true;}});
+iact("cpick",{n:"Взломать",значок:"🪛",можно:o=>!!G.place&&o.плитка==="C"&&chestLocked(o.x,o.y),почему:o=>"замок не заперт",
+ делать:o=>{const ок=hashName(o.x+(Number(G.hour)||0),o.y*11+(Number(G.day)||0),8411)<0.4+Math.min(0.5,(Number(G.agi)||10)*0.02);safeFn(()=>chestSound("pick",{gain:0.5,maxSec:3}));safeFn(()=>propTime(0.3));
+  if(ок){propMark(o.x,o.y,"unlocked");narrate(`Замок щёлкнул: ${o.n} отперт.`);}else narrate("Отмычка сорвалась. Замок держит; попробуйте ещё или ищите ключ.");return true;}});
+/* ── ШКАФЫ, ПОЛКИ, СТОЛЫ ── */
+const SHELF_LIKE=o=>!!G.place&&(o.плитка==="K"||["bookcase","scrollcase"].includes(objProp(o)));
+iact("findbook",{n:"Найти книгу",значок:"🔍",можно:SHELF_LIKE,
+ делать:o=>{const items=safeFn(()=>shelfAt(o.x,o.y),null)||[];const годная=items.find(it=>!it.прочитана&&bookReadable(it))||items[0];
+  safeFn(()=>Bank.play("arte_book",{gain:0.5,maxSec:3}));
+  if(!годная){narrate(`${o.n}: полка пуста.`);return true;}
+  narrate(`На полке нашлось: ${годная.n} — ${годная.тема}, ${годная.язык.n}${годная.прочитана?", уже изучена":bookReadable(годная)?", читается":", язык неизвестен"}. Перебрать полку — и выбрать.`,{interrupt:true});return true;}});
+iact("readbook",{n:"Читать",значок:"📖",можно:o=>SHELF_LIKE(o)&&(safeFn(()=>shelfAt(o.x,o.y),[])||[]).some(it=>bookReadable(it)),почему:o=>"на полке нет книги, которую вы могли бы прочесть",
+ делать:o=>{openShelf(o);const j=(shelfItems||[]).findIndex(it=>bookReadable(it));if(j>=0)safeFn(()=>doShelfAction(j,"read"));return true;}});
+iact("takebook",{n:"Взять книгу",значок:"📕",можно:o=>SHELF_LIKE(o)&&!propMarked(o.x,o.y,"booktaken")&&(safeFn(()=>shelfAt(o.x,o.y),[])||[]).length>0,почему:o=>propMarked(o.x,o.y,"booktaken")?"с этой полки книгу вы уже брали":"на полке нет книг",
+ делать:o=>{const items=safeFn(()=>shelfAt(o.x,o.y),[])||[];const it=items[0];propMark(o.x,o.y,"booktaken");
+  const т=safeFn(()=>makeTome({origin:tomeOriginHere(),seed:o.x*31+o.y*17+G.place.bx,depth:G.place.depth,reward:"lore"}),null);
+  const имя=т?т.n:`Книга «${it.n}»`;if(!Array.isArray(G.items))G.items=[];G.items.push(имя);if(!G.tomes||typeof G.tomes!=="object")G.tomes={};if(т)G.tomes[имя]=т;
+  safeFn(()=>{Bank.play("arte_book",{gain:0.55,maxSec:3});setTimeout(()=>safeFn(()=>Bank.play("arte_cloth",{gain:0.4,maxSec:2})),300);});
+  narrate(`Взято с полки: ${имя}. Лежит в суме, в разделе книг.`);safeFn(()=>saveGame(true));return true;}});
+const TABLE_LIKE=o=>!!G.place&&["table","desk","dresser"].includes(objProp(o));
+iact("takeitem",{n:"Взять предмет",значок:"🤏",можно:o=>(TABLE_LIKE(o)||(o.плитка==="X"&&["rack","shields"].includes(objProp(o))))&&!propMarked(o.x,o.y,"taken"),почему:o=>propMarked(o.x,o.y,"taken")?"вы уже всё взяли":"здесь нечего брать",
+ делать:o=>{propMark(o.x,o.y,"taken");const s=hashName(o.x*7,o.y*3,8420);
+  if(objProp(o)==="rack"||objProp(o)==="shields"){const it=genLoot(G.place.bx+o.x,G.place.by+o.y,4141,Math.max(1,G.level));it.сост=60+Math.floor(hashName(o.x,o.y,8421)*30);G.gear.push(it);safeFn(()=>Bank.play(itemVoice(it),{gain:0.5,maxSec:2}));narrate(`Со стойки снято: ${lootDesc(it)} Состояние ${it.сост} из ста.`);}
+  else if(s<0.4){const п=["Свеча","Факел","Верёвка"];const что=п[Math.floor(hashName(o.x,o.y,8422)*п.length)%п.length];G.items.push(что);safeFn(()=>Bank.play("arte_cloth",{gain:0.45,maxSec:2}));narrate(`Со стола взято: ${что}.`);}
+  else if(s<0.7){const з=3+Math.floor(hashName(o.x,o.y,8423)*12);G.gold+=з;safeFn(()=>Bank.play("gold",{gain:0.5,maxSec:2}));narrate(`На столе мелочь: ${з} золота.`);}
+  else{G.inv["трава"]=(Number(G.inv["трава"])||0)+1;safeFn(()=>Bank.play("arte_cloth",{gain:0.45,maxSec:2}));narrate("На столе пучок сухой травы: пригодится в чане.");}
+  safeFn(()=>{refresh();saveGame(true);});return true;}});
+iact("readdocs",{n:"Читать документы",значок:"📄",можно:TABLE_LIKE,
+ делать:o=>{safeFn(()=>Bank.play("arte_page",{gain:0.5,maxSec:3}));const s=hashName(o.x*5,o.y*9,8430);
+  const k=safeFn(()=>knowEntry(Math.floor(s*Math.max(1,knowTotal()))%Math.max(1,knowTotal())),null);
+  if(!propMarked(o.x,o.y,"docs")){propMark(o.x,o.y,"docs");G.xp=(Number(G.xp)||0)+5;safeFn(()=>checkLevelUp());}
+  const дело=(G.quests||[]).find(q=>!q.done);
+  narrate(`Бумаги на столе: ${k?`лист из «${k.title}»`:"счета и письма"}.${дело&&s<0.5?` Между ними записка о вашем деле: ${дело.text.slice(0,80)}…`:""}${s>0.8?" И карта с крестом — тайник где-то в этих стенах.":""} Опыт за чтение уже взят.`,{interrupt:true});return true;}});
+/* ── КОЛОДЕЦ ── */
+iact("welldrink",{n:"Набрать воды",значок:"🪣",своё:true,можно:o=>!!G.place&&o.плитка==="W",
+ делать:o=>{G.water=Math.min(200,(Number(G.water)||0)+40);safeFn(()=>{beaconAt("well",o.dx,o.dy,0,o.d);Bank.play("oc_waterdrop",{gain:0.5,maxSec:3});});narrate("Ведро поднято: запас воды пополнен.");refresh();saveGame(true);return true;}});
+iact("wellcoin",{n:"Бросить монету",значок:"🪙",можно:o=>!!G.place&&o.плитка==="W"&&(Number(G.gold)||0)>=1,почему:o=>"нет ни монеты",
+ делать:o=>{G.gold-=1;safeFn(()=>{Bank.play("xylo_coin",{gain:0.4,maxSec:1});setTimeout(()=>safeFn(()=>Bank.play("oc_waterdrop",{gain:0.5,maxSec:2})),700);});safeFn(()=>buffSet("удача",2));narrate("Монета летела долго и плеснула глубоко. Два часа удача на вашей стороне.");return true;}});
+iact("welllisten",{n:"Прислушаться к колодцу",значок:"👂",можно:o=>!!G.place&&o.плитка==="W",
+ делать:o=>{const s=hashName(o.x*3,o.y*7,8440);safeFn(()=>Bank.play(s<0.3?"deep_drip":s<0.6?"deep_wind":"oc_bubble",{gain:0.45,maxSec:4}));
+  narrate(s<0.3?"Внизу капель и далёкий гул: колодец глубок и сух на дне.":s<0.6?"Из глубины тянет сквозняком: колодец сообщается с ходом.":"Вода бурлит и что-то в ней движется. Спускаться не стоит.");return true;}});
+iact("wellrope",{n:"Спустить верёвку",значок:"🪢",можно:o=>!!G.place&&o.плитка==="W"&&(G.items||[]).includes("Верёвка")&&!propMarked(o.x,o.y,"roped"),почему:o=>propMarked(o.x,o.y,"roped")?"вы уже шарили на дне":"нужна верёвка",
+ делать:o=>{propMark(o.x,o.y,"roped");const s=hashName(o.x*11,o.y*5,8441);safeFn(()=>{Bank.play("oc_chain",{gain:0.45,maxSec:3});setTimeout(()=>safeFn(()=>Bank.play("oc_waterdrop",{gain:0.5,maxSec:2})),600);});
+  if(s<0.35){const it=genLoot(G.place.bx+o.x,G.place.by+o.y,4242,Math.max(1,G.level));it.сост=40;G.gear.push(it);narrate(`Верёвка зацепила на дне: ${lootDesc(it)} Мокрая и ржавая.`);}
+  else if(s<0.6){G.inv["ракушка"]=(Number(G.inv["ракушка"])||0)+2;narrate("На дне ил и ракушка: две штуки.");}
+  else narrate("Верёвка вернулась пустой: дно голое.");
+  safeFn(()=>{refresh();saveGame(true);});return true;}});
+/* ── ОЧАГ, ЖАРОВНЯ, КОСТЁР ── */
+const FIRE_LIKE=o=>!!G.place&&["hearth","brazier"].includes(objProp(o));
+iact("rest",{n:"Отдохнуть у огня",значок:"🔥",можно:o=>FIRE_LIKE(o)&&!G.inCombat,почему:o=>G.inCombat?"в бою не отдыхают":"огня рядом нет",
+ делать:o=>{const h=Math.min(G.hpMax,G.hp+15)-G.hp;G.hp+=h;G.hour+=1;if(G.hour>=24){G.hour-=24;G.day++;}safeFn(()=>{Bank.play("wild_hearth",{gain:0.5,maxSec:5});});narrate(`Час у огня: здоровье +${h}. Огонь потрескивает, тепло держится.`);refresh();saveGame(true);return true;}});
+iact("cook",{n:"Приготовить",значок:"🍲",можно:o=>FIRE_LIKE(o)&&safeFn(()=>mastLevel("cook"),0)>=1,почему:o=>"нужен первый урок стряпни: учат в тавернах",
+ делать:o=>{techDo(TECH_BY_ID.stew,"hearth");return true;}});
+iact("lighttorch",{n:"Зажечь факел",значок:"🕯️",можно:o=>FIRE_LIKE(o)&&(G.items||[]).includes("Факел")&&!buffActive("свет"),почему:o=>!(G.items||[]).includes("Факел")?"нужен факел":"факел уже горит",
+ делать:o=>{safeFn(()=>buffSet("свет",6));safeFn(()=>Bank.play("torch",{gain:0.5,maxSec:3}));narrate("Факел зажжён от огня: шесть часов света. Маяки в глубине слышны ближе.");return true;}});
+/* ── СТАТУЯ, КРУГ, ЛЕСТНИЦА, ПРИЛАВОК, СЕТЬ, ПОСТРОЙКА ── */
+iact("statueread",{n:"Прочитать надпись",значок:"🗿",можно:o=>!!G.place&&objProp(o)==="statue",
+ делать:o=>{const g=PANTHEON[Math.floor(hashName(o.x,o.y,8450)*PANTHEON.length)%PANTHEON.length];safeFn(()=>Bank.play("stone_hit",{gain:0.4,maxSec:2}));
+  if(!propMarked(o.x,o.y,"statue")){propMark(o.x,o.y,"statue");G.xp=(Number(G.xp)||0)+4;safeFn(()=>checkLevelUp());}
+  narrate(`На цоколе выбито: «${g.n}, ${g.ep}». ${g.sym[0].toUpperCase()+g.sym.slice(1)} — его знак. ${g.taboo}`,{interrupt:true});return true;}});
+iact("circlestep",{n:"Встать в круг",значок:"🌀",можно:o=>!!G.place&&objProp(o)==="circle"&&!(G.circleDay===G.day),почему:o=>"круг уже отдал силу сегодня",
+ делать:o=>{G.circleDay=G.day;G.mana=Math.min(G.manaMax,G.mana+5);safeFn(()=>Bank.play("magic_hum",{kind:"magic",gain:0.5,maxSec:4}));narrate("Круг гудит под ногами: мана +5. До завтра он молчит.");refresh();return true;}});
+iact("stairlisten",{n:"Послушать вниз",значок:"👂",можно:o=>!!G.place&&(o.плитка===">"||o.плитка==="<"),
+ делать:o=>{const вниз=o.плитка===">";const s=hashName(o.x*5,o.y*3,8460+(Number(G.place.depth)||0));
+  safeFn(()=>beaconAt(вниз?"stairs_down":"stairs_up",o.dx,o.dy,вниз?-1:1,o.d));
+  setTimeout(()=>safeFn(()=>Spatial.role(s<0.35?"deep_drip":s<0.65?"deep_wind":"lair",o.dx,o.dy,{dz:вниз?-2:2,gain:0.4,maxSec:3})),500);
+  narrate(вниз?(s<0.35?"Снизу капель и тишина: ярус спокоен.":s<0.65?"Снизу тянет холодным сквозняком: там просторно.":"Снизу что-то скребёт и дышит. Идите с оружием."):"Сверху доносится жизнь яруса выше: шаги и голоса.",{interrupt:true});return true;}});
+iact("godown",{n:"Спуститься",значок:"⬇️",своё:true,можно:o=>!!G.place&&o.плитка===">"&&o.d===0,почему:o=>"встаньте на ступени",делать:o=>{safeFn(()=>useHere());return true;}});
+iact("goup",{n:"Подняться",значок:"⬆️",своё:true,можно:o=>!!G.place&&o.плитка==="<"&&o.d===0,почему:o=>"встаньте на ступени",делать:o=>{safeFn(()=>useHere());return true;}});
+iact("trade",{n:"Торговать",значок:"🛒",своё:true,можно:o=>!!G.place&&["S","P"].includes(o.плитка),
+ делать:o=>{const был={x:G.place.x,y:G.place.y};G.place.x=o.x;G.place.y=o.y;try{talkInside(o.плитка,o.x,o.y);}finally{G.place.x=был.x;G.place.y=был.y;}
+  safeFn(()=>{if(o.жилец&&typeof openTrade==="function")openTrade(o.жилец.key,"buy");});return true;}});
+iact("prices",{n:"Спросить цены",значок:"📉",можно:o=>!!G.place&&["S","P"].includes(o.плитка),
+ делать:o=>{const t=safeFn(()=>marketLine(empireIndexAt(G.place.bx,G.place.by)),"");narrate(`Прилавок: ${t||"цены как везде в державе"}. ${o.жилец?`Торгует ${o.жилец.name}, ${o.жилец.prof}.`:""}`,{interrupt:true});return true;}});
+iact("portalinfo",{n:"Сведения об узле",значок:"🌀",можно:o=>o.вид==="node",
+ делать:o=>{const t=safeFn(()=>portalsKnown().length,0);safeFn(()=>beacon("portal",0,0));narrate(`${o.n}: узел портальной сети, ${o.состояние||""}. Открыто узлов ${t}. Взяться — открыть сеть.`,{interrupt:true});return true;}});
+iact("enter",{n:"Войти",значок:"🚪",своё:true,можно:o=>o.вид==="structure"&&o.d===0&&!!PLACE_KIND[(cellContent(o.x,o.y).structure||{}).type],
+ делать:o=>{safeFn(()=>enterPlace(cellContent(o.x,o.y)));return true;}});
+iact("services",{n:"Услуги и люди",значок:"🏠",можно:o=>o.вид==="structure"&&o.d===0,
+ делать:o=>{safeFn(()=>openBuilding(cellContent(o.x,o.y)));return true;}});
+iact("gather",{n:"Собрать",значок:"📦",своё:true,можно:o=>o.вид==="res"&&o.состояние!=="выработан на сегодня",почему:o=>"жила выработана на сегодня: приходите завтра",
+ делать:o=>{safeFn(()=>gatherCurrent("tap"));return true;}});
+iact("mountcall",{n:"Позвать скакуна",значок:"🐎",можно:o=>o.вид==="structure"&&!G.place&&typeof CMD.mount==="function"&&!!G.mount,почему:o=>"скакуна у вас нет: их дают за службу",
+ делать:o=>{safeFn(()=>CMD.mount());return true;}});
+iact("harbor",{n:"Причал: корабли и рейсы",значок:"⚓",можно:o=>o.вид==="structure"&&(cellContent(o.x,o.y).structure||{}).type==="port"&&o.d===0,
+ делать:o=>{safeFn(()=>CMD.harbor());return true;}});
+/* ── Реестр как модуль: объект → действия → меню → исполнитель ── */
+function actionsForAll(o){
+ const ok=safeFn(()=>actionsFor(o),[])||[];
+ const blocked=[];
+ try{
+  const ids=new Set(ok.map(a=>a.id));
+  Object.values(IACT).forEach(a=>{if(ids.has(a.id)||!a.почему||!a.можно)return;
+   if(safeFn(()=>a.можно(o),false))return;
+   const r=safeFn(()=>typeof a.почему==="function"?a.почему(o):a.почему,null);
+   if(!r)return;
+   /* Причина показывается только там, где действие вообще уместно: дверное — у двери. */
+   const уместно=IACT_SCOPE[a.id]?safeFn(()=>IACT_SCOPE[a.id](o),false):false;
+   if(уместно)blocked.push({id:a.id,n:a.n,значок:a.значок,почему:r});});
+ }catch(_){}
+ return {ok,blocked};}
+const IACT_SCOPE={
+ dopen:o=>["+","G"].includes(o.плитка),dclose:o=>["+","G"].includes(o.плитка),dlock:o=>o.плитка==="+",dunlock:o=>o.плитка==="+",dkey:o=>DOOR_TILES.includes(o.плитка),dpick:o=>o.плитка==="+",dspell:o=>DOOR_TILES.includes(o.плитка),eavesdrop:o=>DOOR_TILES.includes(o.плитка),
+ copen:o=>o.плитка==="C",ctakeall:o=>o.плитка==="C",ckey:o=>o.плитка==="C",cpick:o=>o.плитка==="C",
+ readbook:o=>o.плитка==="K"||["bookcase","scrollcase"].includes(objProp(o)),takebook:o=>o.плитка==="K"||["bookcase","scrollcase"].includes(objProp(o)),
+ takeitem:o=>["table","desk","dresser","rack","shields"].includes(objProp(o)),wellcoin:o=>o.плитка==="W",wellrope:o=>o.плитка==="W",
+ rest:o=>["hearth","brazier"].includes(objProp(o)),cook:o=>["hearth","brazier"].includes(objProp(o)),lighttorch:o=>["hearth","brazier"].includes(objProp(o)),
+ circlestep:o=>objProp(o)==="circle",godown:o=>o.плитка===">",goup:o=>o.плитка==="<",gather:o=>o.вид==="res",mountcall:o=>false};
+const Interact=Modules.register("INTERACTION",{
+ register:iact,registry:IACT,scope:IACT_SCOPE,
+ objects(){return safeFn(()=>objectsHere(),[])||[];},
+ describe(o){const где=o.d?`${o.d} ${plural(o.d,"шаг","шага","шагов")}, ${dirBetween(o.dx,o.dy)}`:"под ногами";return `${o.n}, ${где}.${o.о?` ${o.о}`:""}${o.состояние?` Состояние: ${o.состояние}.`:""}`;},
+ actions(o){return actionsForAll(o);},
+ menu(i){return openObjActions(i);},
+ run(i,id){return doObjAction(i,id);},
+ why(i,id){const o=objList[Number(i)];const a=IACT[id];if(!o||!a)return "Такого действия нет.";const r=a.можно&&!safeFn(()=>a.можно(o),false)?(typeof a.почему==="function"?a.почему(o):a.почему):null;return r?`${a.n} нельзя. ${String(r)[0].toUpperCase()+String(r).slice(1)}.`:`${a.n}: доступно.`;}});
 /* ── Окно: сперва объекты, потом действия выбранного ── */
 let objList=[],objPick=-1;
 function openObjects(){
@@ -18059,6 +18327,7 @@ function openObjActions(i){
  const где=o.d?`${o.d} ${plural(o.d,"шаг","шага","шагов")}, ${dirBetween(o.dx,o.dy)}`:"под ногами";
  b.innerHTML=`<div class="list-line" data-speak="${(o.n+", "+где+". "+(o.о||"")).replace(/"/g,"&quot;")}">🔹 <b>${o.n}</b> — ${где}${o.о?`<br>${o.о}`:""}${o.состояние?`<br>Состояние: ${o.состояние}`:""}</div>`
   +acts.map(a=>`<button class="item" data-cmd="objact:${i}:${a.id}" data-speak="${(a.n+". "+(a.о||"")).replace(/"/g,"&quot;")}">${a.значок} ${a.n}</button>`).join("")
+  +(()=>{const bl=safeFn(()=>actionsForAll(o).blocked,[])||[];return bl.length?`<h3>Недоступно сейчас</h3>`+bl.map(a=>`<button class="item" data-cmd="objwhy:${i}:${a.id}" data-speak="${(a.n+" — нельзя: "+a.почему).replace(/"/g,"&quot;")}">🔒 ${a.n} — ${a.почему}</button>`).join(""):"";})()
   +`<button class="item" data-cmd="objback" data-speak="Назад, к списку объектов вокруг.">↩️ Назад: что вокруг</button>`;
  openModal("modal-object");
  /* Вслух — сперва то, что можно, потом то, до чего ещё расти. */
@@ -18160,7 +18429,8 @@ function doObjAction(i,id){
  const a=o?(safeFn(()=>actionsFor(o),[])||[]).find(z=>z.id===id)||IACT[id]:null;
  if(!o||!a){narrate("Так не выйдет.");return false;}
  if(a.можно&&!safeFn(()=>a.можно(o),false)){
-  narrate(`${a.n}: сейчас не выйдет.${a.нужно?` Нужно: ${a.нужно}.`:""}`);
+  const почему=safeFn(()=>typeof a.почему==="function"?a.почему(o):a.почему,null);
+  narrate(почему?`${a.n} нельзя. ${String(почему)[0].toUpperCase()+String(почему).slice(1)}.`:`${a.n}: сейчас не выйдет.${a.нужно?` Нужно: ${a.нужно}.`:""}`);
   return false;}
  /* Действие, которое уводит в другое окно (вход, сундук, разговор), закрывает
     это: иначе два окна встанут друг на друга и свайп потеряется. */
@@ -23449,7 +23719,7 @@ const ART={
    if(т.дело&&!(G.quests||[]).some(q=>q.id===т.дело&&q.done))нет.push("закрытое дело, с которым она связана");
   }catch(_){}
   return нет;},
- works(a){return ART.lacks(a).length===0;},
+ works(a){if(a&&a.спит)return false;return ART.lacks(a).length===0;},
  /* ── СЛОВАМИ ──
     Всё, что о вещи можно сказать вслух, в одном месте: иначе описание
     разойдётся с делом. */
@@ -24350,6 +24620,10 @@ function moveInside(dir){
  const t=tileAt(lvl,nx,ny);
  if(t==="#"){safeFn(()=>beaconAt("wall",DIRV[dir][0],DIRV[dir][1],0,1));
   if(settings.hints!==0)narrate(`Стена на ${DIRN[dir].split(",")[0]}е.`);return false;}
+ if(t==="+"&&placeMark(nx,ny)==="locked"){
+  safeFn(()=>{beaconAt("door",DIRV[dir][0],DIRV[dir][1],0,1);doorSound(doorKindHere("+"),"locked",{dx:DIRV[dir][0],dy:DIRV[dir][1]});});
+  narrate(`Дверь на ${DIRN[dir].split(",")[0]}е заперта. Ключ, отмычка или чары — в действиях двери.`);
+  return false;}
  if(t==="+"&&placeMark(nx,ny)!=="open"){
   setPlaceMark(nx,ny,"open");
   safeFn(()=>{beaconAt("door",DIRV[dir][0],DIRV[dir][1],0,1);Bank.play("soft_thud",{seed:nx+ny,gain:0.4,maxSec:2});
@@ -25358,6 +25632,7 @@ function altarSound(state,opts){
  list.slice(1).forEach((r,i)=>setTimeout(()=>safeFn(()=>Bank.play(r,{gain:o.gain*0.7,maxSec:o.maxSec})),300+i*380));
  return true;}
 function openChest(x,y){
+ if(safeFn(()=>chestLocked(x,y),false)){safeFn(()=>chestSound("lock",{gain:0.5,maxSec:3})||chestSound("pick",{gain:0.5,maxSec:3}));narrate("Сундук заперт: замок в два оборота. Ключ или взлом — в действиях сундука.");return false;}
  safeFn(()=>chestSound(chestTier(x,y)));
  /* Ловушка в глубине: сперва дорожка, потом разрыв. */
  safeFn(()=>{const d=Number(G.place&&G.place.depth)||0;
@@ -26688,7 +26963,7 @@ function weatherWeights(x,y){
  /* Зной стоит в жару и не стоит нигде больше. */
  if(c.тепло>0.66&&холод<0.35)w["Зной"]=(c.тепло-0.66)*70*(пора==="summer"?1.8:0.8);
  /* Праздник малого бога тянет небо к своему. */
- safeFn(()=>Gods.weather(w));
+ safeFn(()=>Gods.weather(w,x,y));
  /* Ничего отрицательного и ничего неизвестного. */
  const итог={};
  WEATHER_KINDS.forEach(k=>{const v=Number(w[k.id])||0;if(v>0)итог[k.id]=v;});
@@ -26730,7 +27005,7 @@ const Weather={cur:null,timer:null,
     ||Bank.play(G.day%2?"stk_thunder":"oc_thunder",{gain:0.55,maxSec:6})),900);});
    const strike=()=>{if(this.cur!=="Гроза")return;
     Play.start("ev","thunder",{dur:6});safeFn(()=>Bank.play("stk_thunder",{seed:Date.now(),gain:0.55,maxSec:5}));
-    vib(60);sub("⛈️ Удар грома");
+    vib(60);sub("⛈️ Удар грома","sound");
     this.timer=setTimeout(strike,8000+Math.random()*14000);};
    this.timer=setTimeout(strike,2500);}},
  clear(){clearTimeout(this.timer);["w1","w2"].forEach(k=>Play.stopKey(k));}};
@@ -26816,7 +27091,7 @@ function startCombat(c,opts){
  },2800+Math.random()*2200);
  /* Схватка с тем, кто много сильнее, идёт под свою тему. */
  Music.start((Number(m.lvl)||1)>=(Number(G.level)||1)+3?"boss":"battle");
- vib([50,60,50]);sub(`⚔️ ${m.n}!`);
+ vib([50,60,50]);sub(`⚔️ ${m.n}!`,"important");
  updateCombat();
  narrate(`Бой! ${m.n} ${m.lvl} уровня преграждает путь. Оружие не вынимается автоматически: двойное касание тремя пальцами — вынуть оружие, затем свайп в сторону — удар. Свайп тремя пальцами вверх — меню действий, там же попытка побега.`);
  safeFn(()=>document.getElementById("cbTitle").focus({preventScroll:true}));}
@@ -27190,6 +27465,8 @@ function victory(){const cb=G.combat,m=cb.m;
   if(m&&m.взятие&&m.взятие.fort)setTimeout(()=>safeFn(()=>Forts._take(m.взятие.fort)),300);});
  /* Дома: вызов и засада; малые боги: табу праздника. */
  safeFn(()=>Houses.onVictory(m));safeFn(()=>Gods.onVictory(m));
+ /* Бой снимает состояние снаряжения; яд на клинке выгорает. */
+ safeFn(()=>gearWear());safeFn(()=>{const w=G.equip&&G.equip.weapon;if(w&&w.яд){w.яд-=1;if(w.яд<=0){delete w.яд;w.val=Math.max(0,(Number(w.val)||0)-2);narrate(`${w.name}: яд с клинка стёрся.`,{interrupt:false});}}});
  safeFn(()=>playRealMonsterCue(m,"death",0.75));
  safeFn(()=>setTimeout(()=>safeFn(()=>foeProfileCue(m,"death",{gain:0.6})),180));
  /* Разбойники и корсары — люди, и умирают они по-человечески. */
@@ -27687,7 +27964,9 @@ const CMD={
  story(){startIntro();},
  enter(){enterGame();},
  move(d){move(d);},
- look(){look();},
+ look(){Look.open();},
+ looksel(i){Look.select(i);},
+ lookagain(){narrate(Look.summary(Look.list),{interrupt:true});Look.beacons(Look.list.slice(0,6));},
  portal(){openPortalNet();},
  portalgo(key){portalTravel(key);},
  lore(){openLore();},
@@ -27699,6 +27978,7 @@ const CMD={
  inv(){openModal("modal-inventory");renderInventory();},
  invpick(arg){const i=String(arg).indexOf(":");invPick(String(arg).slice(0,i),String(arg).slice(i+1));},
  invact(){invActions();},
+ invwhy(arg){const p=String(arg).split(":");invWhy(p[0],p[1],p.slice(2).join(":"));},
  invdo(arg){const p=String(arg).split(":");invDo(p[0],p[1],p.slice(2).join(":"));},
  char(){openModal("modal-character");renderCharacter();},
  branches(){Speech.request(branchesText(),{key:"branches"});},
@@ -27744,6 +28024,7 @@ const CMD={
     кроме первого куска: он — номер объекта. */
  objact(arg){const p=String(arg).split(":");doObjAction(p[0],p.slice(1).join(":"));},
  objback(){openObjects();},
+ objwhy(arg){const p=String(arg).split(":");narrate(Interact.why(p[0],p.slice(1).join(":")),{interrupt:true});},
  sitem(j){openShelfItem(j);},
  sact(arg){const p=String(arg).split(":");doShelfAction(p[0],p.slice(1).join(":"));},
  sback(){openShelf();},
@@ -27963,6 +28244,14 @@ const CMD={
   else if(act==="besiege")Forts.besiege(id);else if(act==="defend")Forts.defend(id);else if(act==="capture")Forts.capture(id);
   else if(act==="restore")Forts.restore(id);else if(act==="modernize")Forts.modernize(id);else if(act==="transfer")Forts.transfer(id,p[2]);else if(act==="base")Forts.base(id);
   safeFn(()=>{const m=document.getElementById("modal-building");if(m&&!m.hidden){const c=cellContent(G.x,G.y);if(c.structure&&c.structure.type==="fortress")openBuilding(c);}});},
+ shop(arg){const p=String(arg||"").split("~");openTrade(p[0],p[1]||"buy");},
+ shopnear(){const ctx=invContext();if(!ctx.торговец){narrate("Торговца рядом нет: ищите лавку, торговца в городе или обоз на дороге.");return;}openTrade(ctx.торговец.key,"buy");},
+ shoptab(t){SHOP.tab=t==="sell"?"sell":"buy";SHOP.cat=null;SHOP.sel=null;renderShop();narrate(SHOP.tab==="buy"?"Раздел «Купить»: категории и товары.":"Раздел «Продать»: что торговец берёт из вашей сумы.",{interrupt:true});},
+ shopcat(c){SHOP.cat=c==="all"?null:c;SHOP.sel=null;renderShop();narrate(SHOP.cat?`Категория: ${(SHOP_CAT_BY_ID[SHOP.cat]||{}).n||c}.`:"Все категории.",{interrupt:true});},
+ shopitem(i){if(shopItemCard(i)===false&&!shopNpc())narrate("Окно торговли не открыто: подойдите к торговцу и откройте «Торговля».");},
+ shopask(arg){const p=String(arg).split(":");if(shopAsk(p[0],p[1])===false&&(!shopNpc()||!SHOP.sel))narrate(shopNpc()?"Сперва выберите товар в окне торговли.":"Окно торговли не открыто: подойдите к торговцу и откройте «Торговля».");},
+ shopyes(){shopYes();},
+ shopback(){SHOP.confirm=null;if(SHOP.sel){SHOP.sel=null;renderShop();narrate("Назад к списку.",{interrupt:true});}else{renderShop();narrate("Список товаров.",{interrupt:true});}},
  houses(){openModal("modal-houses");Houses.renderWindow();},
  house(arg){const p=String(arg||"").split("~");const act=p[0],id=p[1];
   if(!act){const h=Houses.here();narrate(h?Houses.status(h.id):"Домов здесь нет: в море Дома не властны.");return;}
@@ -28017,6 +28306,7 @@ const CMD={
    ?`Указатель на перекрёстке. ${ways.map(w=>`${w.name} — ${w.dir}, ${w.d} ${plural(w.d,"шаг","шага","шагов")}`).join(". ")}.`
    :"Доски указателя пусты: ближних селений отсюда не видно.");},
  maplegend(){narrate("Легенда: вы — компас в центре. Замок, деревня — дома, таверна — кружка, кузница — молот, храм, школа, кланхолл — щит, башня, руины, странник. Ресурсы: дерево, камень, руда, травы, кристалл. Монстры — черепа. Каждая клетка озвучивает объект, направление и расстояние в шагах.");},
+ mappt(i){mapPointGo(i);},
  mapcell(arg){const [dx,dy]=String(arg).split(",").map(Number);
   if(!Number.isFinite(dx)||!Number.isFinite(dy)){narrate("Эта клетка карты больше не читается.");return;}
   const x=G.x+dx,y=G.y+dy;
@@ -28052,6 +28342,111 @@ function interactHere(){
  if(c.res){gatherCurrent();return;}
  if(c.находка){useFind(G.x,G.y);return;}
  narrate("Здесь нечего делать. Осмотритесь или идите дальше.");}
+/* ════════ ОСМОТР: ЧТО ВОКРУГ ПО СТОРОНАМ ОТ ВАС, ВЫБОР ЦЕЛИ ════════
+   Осмотр учитывает, куда вы смотрите: сторона последнего шага — «перед
+   вами». Он находит объекты, жителей, двери, проходы, лестницы, ресурсы,
+   находки, звуковые источники и опасности; говорит коротко — что, сторона,
+   шаги; играет их маяки с их сторон. Выбранное становится ЦЕЛЬЮ: два пальца
+   вниз ведут к ней или открывают её действия, если она под рукой. */
+const LOOK_KIND={"+":"дверь","G":"ворота","Y":"дверь палаты","<":"лестница вверх",">":"лестница вниз","C":"сундук","A":"алтарь","N":"житель","P":"торговец","S":"лавка","F":"горн","B":"стража","K":"книги","W":"колодец","R":"жила","M":"логово","L":"голубятня","T":"факел","X":"обстановка","#":"стена"};
+const Look=Modules.register("LOOK",{
+ target:null,list:[],
+ facing(){return DIRV[lastMoveDir]?lastMoveDir:"N";},
+ /* Сторона объекта относительно взгляда: впереди, слева, справа, позади. */
+ sector(dx,dy){
+  const f=this.facing();const v=DIRV[f]||[0,-1];
+  const dot=dx*v[0]+dy*v[1];const cross=v[0]*dy-v[1]*dx;
+  if(Math.abs(dot)>=Math.abs(cross))return dot>0?"впереди":"позади";
+  return cross>0?"справа":"слева";},
+ scan(rad){
+  const out=[];
+  try{
+   if(G.ship)return out;
+   if(G.place){
+    const p=G.place,lvl=curLevel();if(!lvl)return out;
+    const R=rad||6;
+    nearFeatures(R).forEach(o=>{if(o.t==="#")return;
+     out.push({n:o.name,род:LOOK_KIND[o.t]||"объект",t:o.t,x:o.x,y:o.y,dx:o.dx,dy:o.dy,d:o.d,dir:o.dir,bid:o.bid,dz:o.t===">"?-1:o.t==="<"?1:0,опасно:o.t==="M"});});
+    safeFn(()=>{(Actors&&Actors.list||[]).forEach(a=>{const dx=a.x-p.x,dy=a.y-p.y,d=Math.max(Math.abs(dx),Math.abs(dy));if(!d||d>R)return;
+     out.push({n:(a.m&&a.m.n)||a.n||"живое существо",род:a.m?"тварь":"житель",x:a.x,y:a.y,dx,dy,d,dir:dirBetween(dx,dy),bid:a.m?"danger":"npc",живое:true,опасно:!!a.m});});});
+    safeFn(()=>{const л=trapFound();if(л)out.push({n:л.n,род:"ловушка",x:л.x,y:л.y,dx:л.x-p.x,dy:л.y-p.y,d:Math.max(Math.abs(л.x-p.x),Math.abs(л.y-p.y)),dir:dirBetween(л.x-p.x,л.y-p.y)||"здесь",bid:"danger",опасно:true});});
+    /* Проходы: открытые стороны на расстоянии шага — это тоже сведение. */
+    ["N","E","S","W"].forEach(d=>{const t=tileAt(lvl,p.x+DIRV[d][0],p.y+DIRV[d][1]);if(t==="."&&!out.some(o=>o.dx===DIRV[d][0]&&o.dy===DIRV[d][1]))out.push({n:"проход",род:"проход",x:p.x+DIRV[d][0],y:p.y+DIRV[d][1],dx:DIRV[d][0],dy:DIRV[d][1],d:1,dir:DIRN[d].split(",")[0],bid:null,проход:true});});
+   }else{
+    const R=rad||4;
+    for(let dx=-R;dx<=R;dx++)for(let dy=-R;dy<=R;dy++){const x=G.x+dx,y=G.y+dy;if(x<0||y<0||x>=WORLD||y>=WORLD)continue;
+     const c=safeFn(()=>cellContent(x,y),null);if(!c)continue;const d=Math.max(Math.abs(dx),Math.abs(dy));const dir=d?dirBetween(dx,dy):"здесь";
+     if(c.structure)out.push({n:c.structure.name,род:PLACE_KIND[c.structure.type]==="dungeon"?"подземелье":PLACE_KIND[c.structure.type]==="city"?"город":"постройка",x,y,dx,dy,d,dir,bid:c.structure.beacon});
+     if(c.res&&d<=2){const dep=G.depleted&&G.depleted[x+","+y];if(!dep||dep.left>0)out.push({n:`ресурс: ${c.res.name}`,род:"ресурс",x,y,dx,dy,d,dir,bid:c.res.beacon});}
+     if(c.находка&&d<=2)out.push({n:c.находка.n,род:"находка",x,y,dx,dy,d,dir,bid:c.находка.b});
+     if(c.monster&&!G.cleared[x+","+y])out.push({n:c.monster.n,род:"опасность",x,y,dx,dy,d,dir,bid:"danger",опасно:true,живое:true});}
+    safeFn(()=>caravansNear(G.x,G.y,G.day,G.hour,R).forEach(c=>{if(c.d)out.push({n:`${c.name} в «${c.to.name}»`,род:"обоз",x:G.x+c.dx,y:G.y+c.dy,dx:c.dx,dy:c.dy,d:c.d,dir:dirBetween(c.dx,c.dy),bid:"caravan",живое:true});}));
+    safeFn(()=>{const пер=crossingAt(G.x,G.y);if(пер)out.push({n:пер.n,род:"переправа",x:G.x,y:G.y,dx:0,dy:0,d:0,dir:"здесь",bid:"well"});});
+    safeFn(()=>{const nd=portalNodeAt(G.x,G.y);if(nd)out.push({n:nd.name,род:"узел сети",x:G.x,y:G.y,dx:0,dy:0,d:0,dir:"здесь",bid:"portal"});});
+   }
+   out.forEach(o=>{o.сектор=o.d?this.sector(o.dx,o.dy):"здесь";});
+   const вес=o=>(o.опасно?-100:0)+(o.сектор==="здесь"?-50:o.сектор==="впереди"?0:o.сектор==="слева"||o.сектор==="справа"?10:20)+o.d;
+   out.sort((a,b)=>вес(a)-вес(b));
+  }catch(_){}
+  return out;},
+ brief(o){return `${o.n}${o.d?`, ${o.d} ${plural(o.d,"шаг","шага","шагов")} ${o.dir}`:", под ногами"}`;},
+ /* Короткая сводка по сторонам: сперва опасное, потом то, что перед вами. */
+ summary(list){
+  const f=this.facing();
+  if(!list.length)return `Осмотр, лицом на ${DIRN[f].split(",")[0]}. Вокруг ничего заметного.`;
+  const по={};list.slice(0,8).forEach(o=>{(по[o.сектор]=по[o.сектор]||[]).push(this.brief(o));});
+  const части=[];["здесь","впереди","слева","справа","позади"].forEach(k=>{if(по[k])части.push(`${k[0].toUpperCase()+k.slice(1)}: ${по[k].join("; ")}.`);});
+  return `Осмотр, лицом на ${DIRN[f].split(",")[0]}. ${части.join(" ")}${list.length>8?` И ещё ${list.length-8}.`:""}`;},
+ open(){
+  try{
+   if(!gameActive())return false;
+   if(G.ship){narrate(`Вы на борту «${G.ship.name}»: вокруг вода и палуба. Осматриваться будет где — в порту.`);return false;}
+   if(inFlight()){look();return true;}
+   this.list=this.scan();
+   const m=document.getElementById("modal-object");if(!m){narrate(this.summary(this.list));return true;}
+   document.getElementById("objTitle").textContent="👁️ Осмотр";
+   const b=document.getElementById("objBody");
+   b.innerHTML=`<div class="list-line" tabindex="0" data-speak="${this.summary(this.list).replace(/"/g,"&quot;")}">👁️ ${this.summary(this.list)}</div>`
+    +this.list.map((o,i)=>`<button class="item" data-cmd="looksel:${i}" data-speak="${(this.brief(o)+", "+o.сектор+(o.опасно?". Опасность":"")).replace(/"/g,"&quot;")}. Двойное касание — выбрать целью.">${o.опасно?"⚠️":o.живое?"🧑":o.проход?"➡️":"🔹"} ${o.n} — ${o.d?`${o.dir}, ${o.d} ${plural(o.d,"шаг","шага","шагов")}`:"под ногами"} (${o.сектор})</button>`).join("")
+    +`<button class="item" data-cmd="lookagain" data-speak="Озвучить осмотр и маяки ещё раз.">📢 Ещё раз со звуком</button>`;
+   for(let i=0;i<25&&activeLayer()&&activeLayer().id!=="modal-object";i++)safeFn(()=>closeTopUI());
+   openModal("modal-object");
+   narrate(this.summary(this.list)+" Свайп — по объектам, двойное касание — выбрать целью.",{interrupt:true});
+   this.beacons(this.list.slice(0,6));
+   return true;
+  }catch(_){return false;}},
+ beacons(list){try{list.forEach((o,i)=>setTimeout(()=>safeFn(()=>{if(o.bid)beaconAt(o.bid,o.dx||0,o.dy||0,o.dz||0,o.d);else if(o.проход)Spatial.role("deep_wind",o.dx*2,o.dy*2,{gain:0.3,maxSec:1.5})||beaconAt("wall",o.dx,o.dy,0,1);}),400+i*450));}catch(_){}},
+ select(i){
+  const o=this.list[Number(i)];
+  if(!o){narrate("Этого здесь уже нет.");return false;}
+  this.target={...o,at:Date.now(),place:G.place?placeKey(G.place.bx,G.place.by,G.place.depth):null,px:G.place?G.place.x:G.x,py:G.place?G.place.y:G.y};
+  safeFn(()=>{if(o.bid)beaconAt(o.bid,o.dx||0,o.dy||0,o.dz||0,o.d);});
+  const рядом=this.adjacent(o.dx,o.dy);
+  if(рядом&&!o.живое&&!o.проход&&o.род!=="опасность"){
+   /* Под рукой: сразу действия. */
+   objList=safeFn(()=>objectsHere(),[])||[];const j=this.objectIndex(o);if(j>=0)return openObjActions(j);}
+  narrate(`Цель: ${this.brief(o)}, ${o.сектор}.${o.опасно?" Опасность.":""} Два пальца вниз — ${рядом?"взаимодействовать":"подойти: игра ведёт к цели"}.`,{interrupt:true});
+  return true;},
+ /* Под рукой — клетка под ногами или соседняя по прямой: по диагонали до вещи не дотянуться. */
+ adjacent(dx,dy){return (dx===0&&Math.abs(dy)<=1)||(dy===0&&Math.abs(dx)<=1);},
+ objectIndex(o){try{const list=objectsHere();return list.findIndex(z=>z.x===o.x&&z.y===o.y&&(z.вид!=="floor"));}catch(_){return -1;}},
+ /* Два пальца вниз с целью: под рукой — её действия, иначе — куда идти. */
+ interact(){
+  const t=this.target;if(!t)return false;
+  const место=G.place?placeKey(G.place.bx,G.place.by,G.place.depth):null;
+  if(t.place!==место){this.target=null;return false;}
+  const cx=G.place?G.place.x:G.x,cy=G.place?G.place.y:G.y;
+  const dx=t.x-cx,dy=t.y-cy,d=Math.max(Math.abs(dx),Math.abs(dy));
+  if(d>12){this.target=null;return false;}
+  if(this.adjacent(dx,dy)&&!t.живое&&!t.проход){
+   if(d===0&&!G.place){this.target=null;return false;}
+   objList=safeFn(()=>objectsHere(),[])||[];
+   const j=objList.findIndex(z=>z.x===t.x&&z.y===t.y&&z.вид!=="floor");
+   if(j>=0){this.target=null;return openObjActions(j);}
+   if(d===0)return false;}
+  safeFn(()=>{if(t.bid)beaconAt(t.bid,dx,dy,t.dz||0,d);});
+  narrate(`Цель: ${t.n}, ${d} ${plural(d,"шаг","шага","шагов")} ${dirBetween(dx,dy)}. ${t.живое?"Это живое: подойдите, и оно само отзовётся.":"Подойдите вплотную и повторите жест — откроются действия."}`,{interrupt:true});
+  return true;}});
 function look(){
  /* С крыла осматриваются иначе: вниз и вдаль, а не по сторонам на шаг. */
  if(inFlight()){
@@ -28895,8 +29290,19 @@ const Gods=Modules.register("GODS",{
   }catch(_){return false;}},
  /* Табу «не убивать»: победа в праздник такого бога стоит благосклонности. */
  onVictory(m){try{this.festivalToday().forEach(g=>{if(g.ключ==="kill"&&this.favor(g.id)>0){G.faithSmall[g.id]=this.favor(g.id)-1;narrate(`${g.n}: в праздник не проливают крови. Благосклонность ${this.favor(g.id)}.`,{interrupt:false});}});}catch(_){}},
- /* Погода праздника: бог тянет небо к своему. */
- weather(w){try{this.festivalToday().forEach(g=>{w[g.погода]=(Number(w[g.погода])||0)+40;});}catch(_){}},
+ /* Погода праздника: бог тянет небо к своему. Без координат — общий
+    жребий (+40 своему виду). С координатами — только в землях этого бога и
+    только в пределах возможного: зимой в лесу праздник дождя не льёт дождём,
+    а туман в полдень не встаёт гуще рассветного — вес лишь усиливается. */
+ weather(w,x,y){try{
+  const local=(x!=null&&y!=null);
+  this.festivalToday().forEach(g=>{
+   if(!local){w[g.погода]=(Number(w[g.погода])||0)+40;return;}
+   const свой=this.local(x,y);
+   if(!свой||свой.id!==g.id)return;
+   const было=Number(w[g.погода])||0;
+   if(было>0)w[g.погода]=было*2.5;
+  });}catch(_){}},
  priceK(res,day){try{let k=1;this.festivalOf(day==null?G.day:day).forEach(g=>{if(g.цена.res===res)k*=g.цена.k;});return k;}catch(_){return 1;}},
  manaDiscount(sp){try{const s=(sp&&(sp.школа||sp.school))||safeFn(()=>spellSchoolGuess(sp),"");return this.festivalToday().some(g=>g.школа===s)?1:0;}catch(_){return 0;}},
  truceToday(day){try{return this.festivalOf(day==null?G.day:day).some(g=>g.мир);}catch(_){return false;}},
@@ -29744,7 +30150,7 @@ function buyItem(key,i){const n=getNPCByKey(key);
   Bank.play("market_tap",{seed:item.price,gain:0.45,maxSec:3});
   Bank.play(itemVoice(item.gear||item.n),{seed:item.price,gain:0.55,maxSec:3});
   setTimeout(()=>safeFn(()=>Bank.play("arte_coins",{seed:item.price,gain:0.5,maxSec:3})),180);});narrate(`Куплено: ${item.gear?lootDesc(item.gear):item.n}. Осталось золота: ${G.gold}.`);
- openNPC(key,true);}
+ afterTrade(key);}
 /* ════════ ПРОДАЖА РЕСУРСОВ ════════
    Цена зависит от державы (что она вывозит — дёшево, что ввозит — дорого),
    от идущей войны, от вашей репутации у народа торговца и от даров богов. */
@@ -29794,7 +30200,7 @@ function sellResource(key,res,all){
  const контра=safeFn(()=>smuggleCheck(res,total),"")||"";
  narrate(`Продано: ${res} — ${qty} шт. по ${unit} золота. Получено ${total}. Всего золота: ${G.gold}. Цена сложилась так: ${почему}.${контра}`);
  journal(`Продажа: ${res} ×${qty} за ${total} золота.`);
- saveGame(true);refresh();openNPC(key,true);}
+ saveGame(true);refresh();afterTrade(key);}
 /* Надбавка за глубину: под землю всё приходится нести на себе. */
 function deepMarkup(){
  return (G.place&&G.place.depth>0)?1.25+0.08*Math.max(0,(G.place.depth||1)-1):1;
@@ -30153,6 +30559,148 @@ function stockFor(n){const out=[];
   o.price=Math.max(1,Math.round(o.price*km));});
  return out;}
 
+/* ════════ ТОРГОВЛЯ: КУПИТЬ И ПРОДАТЬ ПО КАТЕГОРИЯМ ════════
+   Разговор с торговцем открывает два раздела: КУПИТЬ — всё, что он продаёт,
+   и ПРОДАТЬ — то из вашего, что он согласен взять. Внутри — категории
+   (оружие, броня, щиты, аксессуары, артефакты, магические предметы, свитки,
+   книги, зелья, ресурсы, материалы, еда, инструменты, боеприпасы, прочее),
+   внутри категории — вещи, у вещи — карточка: имя, род, качество, ранг,
+   характеристики, состояние, цена, количество, доступность, требования,
+   описание. Сделка подтверждается словом; стопки продаются и покупаются
+   счётом. Ассортимент даёт stockFor (специализация, нрав, казна, скрытый
+   товар), согласие купить — merchantBuys: кузнец не берёт трав, книжник —
+   доспеха. */
+const SHOP_CATS=[
+ {id:"weapon",n:"Оружие",з:"🗡️"},{id:"armor",n:"Броня",з:"🥋"},{id:"shield",n:"Щиты",з:"🛡️"},{id:"acc",n:"Аксессуары",з:"💍"},{id:"artifact",n:"Артефакты",з:"💎"},
+ {id:"magic",n:"Магические предметы",з:"🔮"},{id:"scroll",n:"Свитки",з:"📜"},{id:"book",n:"Книги",з:"📕"},{id:"potion",n:"Зелья",з:"🧪"},{id:"res",n:"Ресурсы",з:"📦"},
+ {id:"material",n:"Материалы",з:"🧱"},{id:"food",n:"Еда",з:"🍞"},{id:"tool",n:"Инструменты",з:"🔧"},{id:"ammo",n:"Боеприпасы",з:"🏹"},{id:"other",n:"Прочее",з:"🎁"}];
+const SHOP_CAT_BY_ID=Object.fromEntries(SHOP_CATS.map(c=>[c.id,c]));
+function shopCatOf(invCat){return ({helm:"armor",gloves:"armor",boots:"armor",ingredient:"res",quest:null})[invCat]===undefined?(SHOP_CAT_BY_ID[invCat]?invCat:"other"):({helm:"armor",gloves:"armor",boots:"armor",ingredient:"res",quest:null})[invCat];}
+const SHOP={key:null,tab:"buy",cat:null,sel:null,confirm:null};
+/* Ряд прилавка: из stockFor, с категорией и карточкой. */
+function shopStockRows(n){
+ const out=[];
+ try{
+  stockFor(n).forEach((s,i)=>{
+   let cat="other",name=s.gear?s.gear.name:s.n,card="",count=null,треб="",доступно="доступно";
+   if(s.gear){cat=shopCatOf(gearCat(s.gear));const c=gearCat(s.gear);const слово=gearWordOf(c,s.gear);card=`${слово[0].toUpperCase()+слово.slice(1)}. ${c==="weapon"?"Урон":c==="acc"?"Бонус":"Защита"}: ${s.gear.val}. Состояние: ${itemCondition(s.gear)}%. Ранг: ${String(RANKS[s.gear.rank]||"обычный").toLowerCase()}, качество ${String(QUAL[s.gear.qual]||"простое").toLowerCase()}.`;
+    const тр=itemStrReq(s.gear);треб=`Требование силы ${тр}${(Number(G.str)||0)>=тр?"":" — вам не хватает"}.`;}
+   else if(s.артефакт){cat="artifact";card=ART.describe(s.артефакт,true);}
+   else if(s.часть){cat="material";card="Часть для гнёзд артефактов: вкладывается у верстака.";}
+   else if(s.том){cat="book";card=s.том.строка||"Книга.";}
+   else if(s.res){cat=shopCatOf(invCategoryOf({kind:PLANT_BY_NAME[s.n]?"plant":"res",key:s.n,name:s.n,it:s.n}));card=`${s.промысел?"Товар местного промысла, дешевле обычного. ":""}Цена за штуку; берётся счётом.`;count="счётом";}
+   else{cat=shopCatOf(invCategoryOf({kind:"item",key:"0",name:s.n,it:s.n}));card=/Зелье/.test(s.n)?"Зелье здоровья: пятнадцать здоровья.":/Еда/.test(s.n)?"Еда в дорогу: сытость и немного здоровья.":/Факел/.test(s.n)?"Факел: свет в глубине.":/Верёвка/.test(s.n)?"Верёвка: спуск и колодец.":"Товар прилавка.";count="счётом";}
+   if((Number(G.gold)||0)<s.price)доступно=`не хватает золота: нужно ${s.price}, у вас ${G.gold}`;
+   out.push({i,name,cat:cat||"other",price:s.price,card,count,треб,доступно,s});});
+ }catch(_){}
+ return out;}
+/* Ряд вашей сумы, который этот торговец готов взять. */
+function shopSellRows(n){
+ const out=[];
+ try{
+  invAll().forEach(row=>{if(row.kind==="equip"||row.cat==="quest")return;const b=merchantBuys(n,row);const cat=shopCatOf(row.cat);if(!cat)return;
+   out.push({row,name:row.name,cat,price:sellPriceOf(n,row),n:row.n||1,ок:b.ок,почему:b.почему||"",card:invBrief(row.kind,row.key)});});
+ }catch(_){}
+ return out;}
+function shopNpc(){return SHOP.key?getNPCByKey(SHOP.key):null;}
+function openTrade(key,tab){
+ const n=getNPCByKey(key);
+ if(!n||!n.trade){narrate("Здесь никто не торгует.");return false;}
+ if(safeFn(()=>attitudeOf(n.race).refuses,false)){narrate(`${n.name} с вами не торгует: народ «${n.race}» вас не жалует.`);return false;}
+ SHOP.key=key;SHOP.tab=tab==="sell"?"sell":"buy";SHOP.cat=null;SHOP.sel=null;SHOP.confirm=null;
+ safeFn(()=>Bank.play("market_tap",{gain:0.45,maxSec:2}));
+ openModal("modal-shop");renderShop();return true;}
+function renderShop(){
+ const n=shopNpc();const box=document.getElementById("shopBody");if(!box)return false;
+ if(!n){box.innerHTML=`<div class="list-line">Торговец ушёл.</div>`;return false;}
+ const d=safeFn(()=>merchSoul(n),null);
+ document.getElementById("shopTitle").textContent=`🛒 ${n.name}: ${SHOP.tab==="buy"?"купить":"продать"}`;
+ const buyRows=shopStockRows(n),sellRows=shopSellRows(n).filter(r=>r.ок);
+ const rows=SHOP.tab==="buy"?buyRows:sellRows;
+ let html=`<div class="list-line" tabindex="0" data-speak="${(`${n.name}, ${n.prof}${d?`, ${d.вид.n}: ${d.вид.о}`:""}. Золота у вас ${G.gold}${d?`, у торговца около ${merchPurse(n)}`:""}.`).replace(/"/g,"&quot;")}">🏪 ${n.name}${d?` — ${d.вид.n}`:""} · 🪙 у вас ${G.gold}</div>`;
+ html+=`<div class="row"><button class="item" data-cmd="shoptab:buy" data-speak="Купить: ${buyRows.length} ${plural(buyRows.length,"товар","товара","товаров")}.">${SHOP.tab==="buy"?"✔ ":""}🛒 Купить (${buyRows.length})</button><button class="item" data-cmd="shoptab:sell" data-speak="Продать: торговец возьмёт ${sellRows.length} ${plural(sellRows.length,"вещь","вещи","вещей")} из вашей сумы.">${SHOP.tab==="sell"?"✔ ":""}💰 Продать (${sellRows.length})</button></div>`;
+ /* категории с числом вещей */
+ const cats=SHOP_CATS.filter(c=>rows.some(r=>r.cat===c.id));
+ html+=`<h3>Категории</h3>`+(cats.length?`<button class="item" data-cmd="shopcat:all" data-speak="Все категории: ${rows.length}.">${SHOP.cat?"":"✔ "}📚 Все (${rows.length})</button>`+cats.map(c=>{const k=rows.filter(r=>r.cat===c.id).length;return `<button class="item" data-cmd="shopcat:${c.id}" data-speak="${c.n}: ${k}.">${SHOP.cat===c.id?"✔ ":""}${c.з} ${c.n} (${k})</button>`;}).join(""):`<div class="list-line">${SHOP.tab==="buy"?"На прилавке пусто.":"Из вашего этот торговец ничего не берёт."}</div>`);
+ /* вещи выбранной категории */
+ const shown=SHOP.cat?rows.filter(r=>r.cat===SHOP.cat):rows;
+ html+=`<h3>${SHOP.tab==="buy"?"Товары":"Ваши вещи"}${SHOP.cat?`: ${SHOP_CAT_BY_ID[SHOP.cat].n}`:""}</h3>`;
+ html+=shown.map((r,i)=>{const idx=rows.indexOf(r);const цена=`${r.price} ${plural(r.price,"золотой","золотых","золотых")}`;
+  const речь=SHOP.tab==="buy"?`${r.name} — ${цена}${r.count?" за штуку":""}.`:`${r.name}${r.n>1?`, ${r.n} шт.`:""} — ${цена}${r.n>1?" за штуку":""}.`;
+  return `<button class="item" data-cmd="shopitem:${idx}" data-speak="${речь.replace(/"/g,"&quot;")} Двойное касание — карточка и сделка.">${(SHOP_CAT_BY_ID[r.cat]||{}).з||"🎁"} ${r.name}${SHOP.tab==="sell"&&r.n>1?` ×${r.n}`:""} — ${r.price} 🪙</button>`;}).join("")||`<div class="list-line">Здесь пусто.</div>`;
+ /* что не берёт — с причиной */
+ if(SHOP.tab==="sell"){const нет=shopSellRows(n).filter(r=>!r.ок).slice(0,6);if(нет.length)html+=`<h3>Не берёт</h3>`+нет.map(r=>`<div class="list-line" tabindex="0" data-speak="${(r.name+": не берёт — "+r.почему).replace(/"/g,"&quot;")}">🚫 ${r.name} — ${r.почему}</div>`).join("");}
+ /* скрытый товар */
+ if(SHOP.tab==="buy"&&d){const двери=merchDoors(n);const закр=двери.filter(x=>!x.открыто);if(закр.length)html+=`<h3>Под прилавком</h3>`+закр.map(x=>`<div class="list-line" tabindex="0" data-speak="${(x.n+": закрыто, нужно "+x.о).replace(/"/g,"&quot;")}">🔑 ${x.n} — нужно: ${x.о}</div>`).join("");}
+ box.innerHTML=html;
+ return true;}
+function shopItemCard(idx){
+ const n=shopNpc();if(!n)return false;
+ const rows=SHOP.tab==="buy"?shopStockRows(n):shopSellRows(n).filter(r=>r.ок);
+ const r=rows[Number(idx)];if(!r){narrate("Этой вещи уже нет.");return false;}
+ SHOP.sel={idx:Number(idx),tab:SHOP.tab};
+ const box=document.getElementById("shopBody");
+ const цена=`${r.price} ${plural(r.price,"золотой","золотых","золотых")}`;
+ const карточка=SHOP.tab==="buy"
+  ?`${r.name}. ${(SHOP_CAT_BY_ID[r.cat]||{}).n||"Прочее"}. ${r.card} Цена: ${цена}${r.count?" за штуку":""}. ${r.треб||""} Доступность: ${r.доступно}.`
+  :`${r.name}. ${(SHOP_CAT_BY_ID[r.cat]||{}).n||"Прочее"}. ${r.card} ${r.n>1?`У вас ${r.n} шт. `:""}Торговец даёт ${цена}${r.n>1?" за штуку":""}.`;
+ safeFn(()=>Bank.play(itemVoice(r.s&&r.s.gear||r.name),{gain:0.45,maxSec:2}));
+ let html=`<div class="list-line" tabindex="0" data-speak="${карточка.replace(/"/g,"&quot;")}">${(SHOP_CAT_BY_ID[r.cat]||{}).з||"🎁"} ${карточка}</div>`;
+ if(SHOP.tab==="buy"){
+  const можно=(Number(G.gold)||0)>=r.price;
+  if(r.count){const макс=Math.max(1,Math.floor((Number(G.gold)||0)/Math.max(1,r.price)));
+   html+=[1,5,10].filter(k=>k<=макс).map(k=>`<button class="item" data-cmd="shopask:buy:${k}" data-speak="Купить ${k} за ${r.price*k} золота.">🛒 Купить ${k} (${r.price*k})</button>`).join("")+(макс>1?`<button class="item" data-cmd="shopask:buy:${макс}" data-speak="Купить на всё золото: ${макс} за ${r.price*макс}.">🛒 На всё золото: ${макс} (${r.price*макс})</button>`:"");}
+  else html+=`<button class="item" data-cmd="shopask:buy:1" data-speak="${можно?`Купить ${r.name} за ${цена}.`:`Не хватает золота: нужно ${r.price}, у вас ${G.gold}.`}">${можно?"🛒 Купить":"🚫 Не хватает золота"} (${r.price})</button>`;}
+ else{
+  if(r.n>1)html+=[1,5,10].filter(k=>k<r.n).map(k=>`<button class="item" data-cmd="shopask:sell:${k}" data-speak="Продать ${k} за ${r.price*k} золота.">💰 Продать ${k} (${r.price*k})</button>`).join("")+`<button class="item" data-cmd="shopask:sell:${r.n}" data-speak="Продать всё: ${r.n} за ${r.price*r.n}.">💰 Продать всё (${r.price*r.n})</button>`;
+  else html+=`<button class="item" data-cmd="shopask:sell:1" data-speak="Продать ${r.name} за ${цена}.">💰 Продать (${r.price})</button>`;}
+ html+=`<button class="item" data-cmd="shopback" data-speak="Назад, к списку.">↩️ Назад</button>`;
+ box.innerHTML=html;
+ narrate(карточка+(SHOP.tab==="buy"?" Двойное касание по кнопке — купить.":" Двойное касание по кнопке — продать."),{interrupt:true});
+ return true;}
+function shopAsk(tab,count){
+ const n=shopNpc();if(!n||!SHOP.sel)return false;
+ const rows=SHOP.sel.tab==="buy"?shopStockRows(n):shopSellRows(n).filter(r=>r.ок);
+ const r=rows[SHOP.sel.idx];if(!r){narrate("Этой вещи уже нет.");return false;}
+ count=Math.max(1,Number(count)||1);
+ SHOP.confirm={tab,count};
+ const сумма=r.price*count;
+ const вопрос=tab==="buy"?`Купить «${r.name}»${count>1?` ×${count}`:""} за ${сумма} ${plural(сумма,"золотой","золотых","золотых")}?`:`Продать «${r.name}»${count>1?` ×${count}`:""} за ${сумма} ${plural(сумма,"золотой","золотых","золотых")}?`;
+ const box=document.getElementById("shopBody");
+ box.innerHTML=`<div class="list-line" tabindex="0" data-speak="${вопрос.replace(/"/g,"&quot;")}">❔ ${вопрос}</div>`
+  +`<button class="item" data-cmd="shopyes" data-speak="${tab==="buy"?"Купить":"Продать"}.">${tab==="buy"?"🛒 Купить":"💰 Продать"}</button>`
+  +`<button class="item" data-cmd="shopback" data-speak="Отмена.">↩️ Отмена</button>`;
+ narrate(`${вопрос} ${tab==="buy"?"Купить":"Продать"} или отмена.`,{interrupt:true,pri:1});
+ return true;}
+function shopYes(){
+ const n=shopNpc();const c=SHOP.confirm;if(!n||!c||!SHOP.sel){narrate("Сделки нет.");return false;}
+ SHOP.confirm=null;
+ if(c.tab==="buy"){
+  const rows=shopStockRows(n);const r=rows[SHOP.sel.idx];if(!r){narrate("Товар ушёл с прилавка.");renderShop();return false;}
+  const итог=r.price*c.count;
+  if((Number(G.gold)||0)<итог){narrate(`Не хватает золота: нужно ${итог}, у вас ${G.gold}.`);renderShop();return false;}
+  if(c.count===1||!r.count){buyItem(n.key,r.i);}
+  else{const s=r.s;if(s.res&&!cargoFits(c.count,`«${s.n}»`)){renderShop();return false;}
+   G.gold-=итог;G.inv[s.n]=(Number(G.inv[s.n])||0)+c.count;safeFn(()=>addRep(n.race,1));safeFn(()=>noteTrade(n,итог));safeFn(()=>npcRemember(n,"купил",итог,5));
+   safeFn(()=>{UI.pickup();Bank.play("gold",{seed:итог,gain:0.7});Bank.play("arte_coins",{seed:итог,gain:0.5,maxSec:3});});
+   narrate(`Куплено: ${s.n} ×${c.count} за ${итог} золота. Осталось золота: ${G.gold}.`);journal(`Покупка: ${s.n} ×${c.count} за ${итог}.`);saveGame(true);refresh();}
+  SHOP.sel=null;renderShop();return true;}
+ const rows=shopSellRows(n).filter(r=>r.ок);const r=rows[SHOP.sel.idx];if(!r){narrate("Этой вещи уже нет.");renderShop();return false;}
+ const row=r.row;
+ if(["res","rare","plant","fish"].includes(row.kind)&&c.count>1){shopSellRes(n,row.key,Math.min(c.count,row.n));}
+ else sellRowTo(n,row,(t)=>{narrate(t,{interrupt:true});return true;});
+ SHOP.sel=null;saveGame(true);refresh();renderShop();return true;}
+/* Продажа стопки счётом: та же цена, что у sellResource, одна фраза. */
+function shopSellRes(n,res,qty){
+ const have=Number(G.inv[res])||0;qty=Math.max(1,Math.min(have,Number(qty)||1));if(!have){narrate(`У вас нет ресурса «${res}».`);return false;}
+ const unit=sellUnit(n,res);const total=unit*qty;
+ G.inv[res]=have-qty;if(G.inv[res]<=0)delete G.inv[res];G.gold+=total;safeFn(()=>deed("deals"));safeFn(()=>addRep(n.race,1));safeFn(()=>merchSpend(n,total));
+ safeFn(()=>{UI.pickup();Bank.play("gold",{seed:total,gain:0.8});Bank.play("market_slap",{seed:total,gain:0.45,maxSec:3});});
+ narrate(`Продано: ${res} — ${qty} шт. по ${unit} золота. Получено ${total}. Всего золота: ${G.gold}.`);journal(`Продажа: ${res} ×${qty} за ${total} золота.`);return true;}
+/* После сделки перерисовывается то окно, что открыто: лавка или карточка жителя. */
+function afterTrade(key){
+ try{const m=document.getElementById("modal-shop");if(m&&!m.hidden){renderShop();return;}openNPC(key,true);}catch(_){}}
+const Trade=Modules.register("TRADE",{cats:SHOP_CATS,open:openTrade,render:renderShop,stock:shopStockRows,sellable:shopSellRows,buys:merchantBuys,price:sellPriceOf,state:SHOP});
 /* ════════ НИПИ ════════ */
 function tellNPCStory(n){if(!n)return;
  const stories={
@@ -30762,6 +31310,7 @@ function openNPC(key,silent){const n=getNPCByKey(key);
    html+=`<div class="list-line" tabindex="0" data-speak="${дв.replace(/"/g,"&quot;")}">🔑 ${дв}</div>`;
    const рын=marketLine(empireIndexAt(n.x,n.y));
    if(рын)html+=`<div class="list-line" tabindex="0" data-speak="Рынок этой земли: ${рын}.">📉 Рынок: ${рын}</div>`;});
+  html+=`<button class="item" data-cmd="shop:${n.key}~buy" data-speak="Торговля: купить и продать по категориям. Открыть.">🛒 Торговля: купить и продать</button>`;
   html+=`<h3>Товары</h3>`;
   if(att.say)html+=`<div class="list-line" data-speak="${att.say}">💬 ${att.say}</div>`;
   stockFor(n).forEach((s,i)=>{html+=`<div class="list-line">${s.gear?lootDesc(s.gear):s.n} — ${s.price} золота
@@ -30998,34 +31547,100 @@ function closeModal(m){if(!m)return;
    от вещи и от места: у наковальни чинят и куют, у горна плавят, у чана и
    очага варят, у алтаря приносят в дар, у торговца продают. */
 const INV={sel:null};
-const INV_KINDS={equip:"на теле",gear:"оружие и снаряжение",res:"припасы",rare:"редкие товары",plant:"растения и грибы",potion:"зелья",art:"артефакты",item:"предметы",fish:"улов"};
+/* ════════ ИНВЕНТАРЬ ПО ДВАДЦАТИ РАЗДЕЛАМ ════════
+   Вещь лежит в разделе по своему роду, а не по тому, в каком списке
+   сохранения она хранится: меч и щит — в разных разделах, хотя оба в G.gear;
+   свиток и книга — в разных, хотя оба в G.items. Разделы — данные
+   (INV_CATS), разбор — правила по порядку (INV_CAT_RULES): новый род вещи —
+   новое правило, а не новая ветка условий. Чего не узнало ни одно правило,
+   честно ложится в «Прочие предметы», названный раздел, а не в «непонятно».
+
+   Карточка вещи говорит коротко: имя, род, урон или защита, состояние,
+   требование силы, ранг. Действия собираются из реестра ITEM_ACTIONS по
+   разделу вещи И по месту: у наковальни чинят, куют и клеймят, у чана варят
+   и перегоняют, у алтаря освящают и просят откровения. Недоступное
+   показывается с причиной, а не прячется. */
+const INV_CATS=[
+ {id:"weapon",n:"Оружие",з:"🗡️"},{id:"shield",n:"Щиты",з:"🛡️"},{id:"armor",n:"Броня",з:"🥋"},{id:"helm",n:"Шлемы",з:"⛑️"},
+ {id:"gloves",n:"Перчатки",з:"🧤"},{id:"boots",n:"Обувь",з:"🥾"},{id:"acc",n:"Аксессуары",з:"💍"},{id:"artifact",n:"Артефакты",з:"💎"},
+ {id:"magic",n:"Магические предметы",з:"🔮"},{id:"scroll",n:"Свитки",з:"📜"},{id:"book",n:"Книги",з:"📕"},{id:"potion",n:"Зелья",з:"🧪"},
+ {id:"res",n:"Ресурсы",з:"📦"},{id:"material",n:"Материалы",з:"🧱"},{id:"quest",n:"Квестовые предметы",з:"📌"},{id:"tool",n:"Инструменты",з:"🔧"},
+ {id:"ammo",n:"Боеприпасы",з:"🏹"},{id:"food",n:"Еда",з:"🍞"},{id:"ingredient",n:"Ингредиенты",з:"🌿"},{id:"other",n:"Прочие предметы",з:"🎁"}];
+const INV_CAT_BY_ID=Object.fromEntries(INV_CATS.map(c=>[c.id,c]));
+/* Правила разбора по имени: первое совпадение решает. Порядок важен: «Свиток: Огненный меч» — свиток, а не меч. */
+const INV_CAT_RULES=[
+ {cat:"scroll",re:/^Свиток: /},
+ {cat:"quest",re:/^Реликвия/},
+ {cat:"potion",re:/зелье|настой|отвар|эликсир|^яд\b|противояд/i},
+ {cat:"tool",re:/^(факел|верёвка|свеча|удочка|рыболовная сеть|ключ|кирка|отмычк|фонарь|компас|секстант|ведро)/i},
+ {cat:"ammo",re:/стрел|болт|дротик|камни для пращ/i},
+ {cat:"book",re:/книга|^том\b|трактат|гримуар|летопис|апокриф|скрижал|^свод|записки|дневник|устав|хроник/i},
+ {cat:"shield",re:/щит/i},{cat:"helm",re:/шлем|шапка|капюшон/i},{cat:"gloves",re:/перчат|рукавиц/i},{cat:"boots",re:/сапог|ботин|обув|башмак/i},
+ {cat:"armor",re:/кольчуг|доспех|панцир|куртк|кираса|бригант|нагрудник/i},
+ {cat:"weapon",re:/меч|клинок|кинжал|молот|топор|секир|\bлук\b|копь|посох|булав|\bнож|сабл|челюсть|клык дома|\bрог\b/i},
+ {cat:"acc",re:/плащ|кольцо|амулет|ожерель|пояс|серьг|маска|ленты?\b/i},
+ {cat:"food",re:/еда|хлеб|мясо|сыр|похлёбк|вялен|лепёшк/i},
+ {cat:"magic",re:/талисман|оберег|слепок|ядро|руна|эссенц|печать|стрелка|фляга|склянка|чаша|фонарь|компас|секстант|гребень|венок|сеть|перо|стило|уголь|колокольчик|ложка|час\b|осколок|отвес|серп|ведро|гиря|покрывало|монета|кочерга|ларец|клеймо|рог\b|посох|засечн|камень/i}];
+/* Сырьё — в ресурсы, переработанное и торговое — в материалы. */
+const INV_RAW=new Set(["дерево","трава","ягоды","камень","руда","кристалл","ракушка","грибы","кость"]);
+function invCategoryOf(row){
+ try{
+  const it=row.it,name=String(row.name||"");
+  if(row.kind==="art")return "artifact";
+  if(row.kind==="potion")return "potion";
+  if(row.kind==="part")return "material";
+  if(row.kind==="plant")return "ingredient";
+  if(row.kind==="fish")return "food";
+  if(row.kind==="res"||row.kind==="rare"){if(name==="Еда в дорогу")return "food";return INV_RAW.has(name)?"res":"material";}
+  if(row.kind==="equip"||row.kind==="gear"){
+   if(it&&typeof it==="object"){const t=String(it.type||it.name||"");
+    for(const r of INV_CAT_RULES){if(["shield","helm","gloves","boots","armor","weapon","acc"].includes(r.cat)&&r.re.test(t))return r.cat;}
+    if(it.slot==="weapon")return "weapon";if(it.slot==="armor")return "armor";return "acc";}
+   return "weapon";}
+  /* строки сумки */
+  if(safeFn(()=>(G.quests||[]).some(q=>!q.done&&q.предмет===name),false))return "quest";
+  if(typeof G.tomes==="object"&&G.tomes&&G.tomes[name])return "book";
+  if(safeFn(()=>LESSER_GODS.some(g=>g.артефакт===name),false))return "magic";
+  if(safeFn(()=>HOUSES.some(h=>h.вещь===name),false)){for(const r of INV_CAT_RULES){if(["shield","helm","gloves","boots","armor","weapon","acc"].includes(r.cat)&&r.re.test(name))return r.cat;}return "magic";}
+  if(typeof SECRET_BLADES!=="undefined"&&SECRET_BLADES.includes(name))return "weapon";
+  for(const r of INV_CAT_RULES){if(r.re.test(name))return r.cat;}
+ }catch(_){}
+ return "other";}
+const Inventory=Modules.register("INVENTORY",{cats:INV_CATS,rules:INV_CAT_RULES,
+ /* Новый род вещи — новое правило, а не новая ветка кода. */
+ registerRule(cat,re,first){if(!INV_CAT_BY_ID[cat])return false;const r={cat,re};if(first)INV_CAT_RULES.unshift(r);else INV_CAT_RULES.push(r);return true;},
+ registerCat(id,n,з){if(INV_CAT_BY_ID[id])return false;const c={id,n,з:з||"🎁"};INV_CATS.splice(INV_CATS.length-1,0,c);INV_CAT_BY_ID[id]=c;return true;},
+ rows:()=>invAll(),category:invCategoryOf,brief:(k,key)=>invBrief(k,key),actions:(k,key)=>invActionsAll(invRow(k,key)),do:(a,k,key,arg)=>invDo(a,k,key,arg)});
+const INV_KINDS={equip:"на теле",gear:"оружие и снаряжение",res:"припасы",rare:"редкие товары",plant:"растения и грибы",potion:"зелья",art:"артефакты",item:"предметы",fish:"улов",part:"части"};
 function invAll(){
  const out=[];
  try{
   normalizeWeaponState();
   const eq=G.equip||{};
-  for(const slot of ["weapon","armor","acc"]){const it=eq[slot];if(it)out.push({kind:"equip",key:slot,label:`${slot==="weapon"?"⚔️":slot==="armor"?"🛡️":"💍"} ${it.name||it}`,name:it.name||String(it)});}
+  for(const slot of ["weapon","armor","acc"]){const it=eq[slot];if(it)out.push({kind:"equip",key:slot,label:`${it.name||it} (надето)`,name:it.name||String(it),it,equipped:true});}
   const gear=Array.isArray(G.gear)?G.gear:[];
-  gear.forEach((w,i)=>{if(!w||(eq.weapon&&(w.id&&w.id===eq.weapon.id)))return;out.push({kind:"gear",key:String(i),label:`🗡️ ${w.name}`,name:w.name});});
+  gear.forEach((w,i)=>{if(!w||(eq.weapon&&(w.id&&w.id===eq.weapon.id)))return;out.push({kind:"gear",key:String(i),label:`${w.name}`,name:w.name,it:w});});
   const fishNames=new Set((typeof FISH!=="undefined"?FISH:[]).map(f=>f.n));
   for(const [k,v] of Object.entries(G.inv||{})){
    if(!(Number(v)>0)||/^__/.test(k)||/^[a-z0-9-]+$/.test(k))continue;
    const kind=PLANT_BY_NAME[k]?"plant":fishNames.has(k)?"fish":(SORT_GOODS[k]&&!RES_SORTS[k])?"rare":"res";
-   out.push({kind,key:k,label:`${RESICON[k]||"📦"} ${k}: ${v} шт.`,name:k,n:v});}
-  (Array.isArray(G.potions)?G.potions:[]).forEach((r,i)=>{const pt=POTION_BY_ID[r.id]||{n:r.id};out.push({kind:"potion",key:String(i),label:`🧪 зелье ${pt.n} — ${potionQualityWord(r.q)}`,name:"зелье "+pt.n});});
-  (Array.isArray(G.artifacts)?G.artifacts:[]).forEach((a,i)=>{if(!a||typeof a!=="object")return;out.push({kind:"art",key:String(i),label:`💎 ${a.имя}`,name:a.имя});});
-  (Array.isArray(G.items)?G.items:[]).forEach((it,i)=>{const n=typeof it==="string"?it:(it&&it.name)||"Предмет";out.push({kind:"item",key:String(i),label:`🎁 ${n}`,name:n});});
+   out.push({kind,key:k,label:`${k}: ${v} шт.`,name:k,n:v,it:k});}
+  (Array.isArray(G.potions)?G.potions:[]).forEach((r,i)=>{const pt=POTION_BY_ID[r.id]||{n:r.id};out.push({kind:"potion",key:String(i),label:`зелье ${pt.n} — ${potionQualityWord(r.q)}`,name:"зелье "+pt.n,it:r});});
+  (Array.isArray(G.artifacts)?G.artifacts:[]).forEach((a,i)=>{if(!a||typeof a!=="object")return;out.push({kind:"art",key:String(i),label:`${a.имя}${a.спит?" (спит)":""}`,name:a.имя,it:a});});
+  (Array.isArray(G.items)?G.items:[]).forEach((it,i)=>{const n=typeof it==="string"?it:(it&&it.name)||"Предмет";out.push({kind:"item",key:String(i),label:n,name:n,it});});
+  Object.keys(G.comps||{}).forEach(k=>{const n=Number(G.comps[k])||0;const p=(typeof ART_PART_BY_ID!=="undefined")&&ART_PART_BY_ID[k];if(n<=0||!p)return;out.push({kind:"part",key:k,label:`${p.n}: ${n} шт.`,name:p.n,n,it:p});});
+  out.forEach(r=>{r.cat=invCategoryOf(r);const c=INV_CAT_BY_ID[r.cat]||INV_CAT_BY_ID.other;r.label=`${c.з} ${r.label}`;});
  }catch(_){}
  return out;}
+function invRow(kind,key){key=decodeURIComponent(String(key||""));return invAll().find(r=>r.kind===kind&&r.key===key)||null;}
 function renderInventory(){
  try{
   const box=document.getElementById("invSections");if(!box)return;
   const all=invAll();
-  const order=["equip","gear","res","rare","plant","potion","art","item","fish"];
   let html="";
-  for(const k of order){const rows=all.filter(x=>x.kind===k);if(!rows.length)continue;
-   html+=`<h3>${({equip:"⚔️ На теле",gear:"🗡️ Оружие и снаряжение",res:"📦 Припасы",rare:"💠 Редкие товары",plant:"🌿 Растения и грибы",potion:"🧪 Зелья",art:"💎 Артефакты",item:"🎁 Предметы",fish:"🐟 Улов"})[k]}</h3>`;
-   html+=rows.map(r=>`<button class="item" data-cmd="invpick:${r.kind}:${encodeURIComponent(r.key)}" data-speak="${r.label.replace(/"/g,"&quot;")}. Двойное касание — о вещи, свайп вверх или вниз — действия.">${INV.sel&&INV.sel.kind===r.kind&&INV.sel.key===r.key?"✔ ":""}${r.label}</button>`).join("");}
+  INV_CATS.forEach(c=>{const rows=all.filter(x=>x.cat===c.id);if(!rows.length)return;
+   html+=`<h3>${c.з} ${c.n} (${rows.length})</h3>`;
+   html+=rows.map(r=>`<button class="item" data-cmd="invpick:${r.kind}:${encodeURIComponent(r.key)}" data-speak="${r.label.replace(/"/g,"&quot;")}. Двойное касание — о вещи, свайп вверх или вниз — действия.">${INV.sel&&INV.sel.kind===r.kind&&INV.sel.key===r.key?"✔ ":""}${r.label}</button>`).join("");});
   box.innerHTML=html||`<div class="list-line">🎒 В инвентаре пока нет вещей: ни припасов, ни предметов.</div>`;
   if(!all.length)narrate("Инвентарь пуст. В нём нет предметов и ресурсов.",{interrupt:true});
  }catch(e){try{console.error('[InventoryGuard]',e);narrate('Инвентарь восстановлен в безопасном режиме.');}catch(_){} }
@@ -31038,125 +31653,475 @@ function invFind(kind,key){
   if(kind==="potion")return (G.potions||[])[Number(key)]||null;
   if(kind==="art")return (G.artifacts||[])[Number(key)]||null;
   if(kind==="item")return (G.items||[])[Number(key)]||null;
+  if(kind==="part")return (Number(G.comps&&G.comps[key])||0)>0?key:null;
   return (Number(G.inv&&G.inv[key])||0)>0?key:null;
  }catch(_){return null;}}
-function invBrief(kind,key){
- const it=invFind(kind,key);if(it==null)return "Такой вещи уже нет.";
+/* ── Состояние и требования вещи ──
+   Прочности прежде не было. Теперь у снаряжения есть состояние в сотых:
+   бой его снимает, наковальня возвращает. Требование силы — по рангу и
+   качеству; не хватает силы — вещь всё же надевается, но об этом говорят. */
+function itemCondition(it){if(!it||typeof it!=="object")return 100;const v=Number(it.сост);return Number.isFinite(v)?Math.max(0,Math.min(100,Math.round(v))):100;}
+function itemStrReq(it){if(!it||typeof it!=="object")return 0;return 6+(Number(it.rank)||0)*3+(Number(it.qual)||0);}
+function gearCat(it){return invCategoryOf({kind:"gear",it,name:it&&it.name});}
+function gearWordOf(cat,it){
+ const t=String((it&&(it.type||it.name))||"").toLowerCase();
+ if(cat==="weapon")return /посох|лук|копь|алебард/.test(t)?"двуручное оружие":"одноручное оружие";
+ return ({shield:"щит",armor:"доспех",helm:"шлем",gloves:"перчатки",boots:"обувь",acc:"аксессуар"})[cat]||"снаряжение";}
+/* Бой снимает состояние: оружие сильнее, доспех слабее. Ниже тридцати вещь называют изношенной. */
+function gearWear(){
  try{
-  if(kind==="equip"||kind==="gear"){const слово=kind==="equip"?"На теле. ":"";return `${слово}${typeof it==="object"?lootDesc(it):String(it)}`;}
-  if(kind==="potion"){const pt=POTION_BY_ID[it.id]||{n:it.id,о:""};return `Зелье ${pt.n}: ${pt.о}. Качество ${potionQualityWord(it.q)}, устойчивость ${Math.round(it.стаб*100)} из ста, ${potionExpired(it)?"выдохлось":"годно до "+(it.день+it.срок)+"-го дня"}.`;}
-  if(kind==="art")return ART.describe(it,true);
+  const eq=G.equip||{};let слова=[];
+  [["weapon",1+Math.floor(Math.random()*3)],["armor",Math.floor(Math.random()*3)]].forEach(([slot,d])=>{
+   const it=eq[slot];if(!it||typeof it!=="object"||!d)return;
+   const было=itemCondition(it);it.сост=Math.max(5,было-d);
+   if(было>=30&&it.сост<30)слова.push(`${it.name}: состояние ${it.сост} из ста, вещь изношена — её чинят у наковальни`);});
+  if(слова.length)narrate(слова.join(". ")+".",{interrupt:false});
+  return true;
+ }catch(_){return false;}}
+function invBrief(kind,key){
+ const row=invRow(kind,key);const it=row?row.it:null;if(!row)return "Такой вещи уже нет.";
+ try{
+  const cat=INV_CAT_BY_ID[row.cat]||INV_CAT_BY_ID.other;
+  if(kind==="equip"||kind==="gear"){
+   if(typeof it!=="object")return `${String(it)}: ${cat.n.toLowerCase()}.`;
+   const c=row.cat,слово=gearWordOf(c,it);
+   const стат=c==="weapon"?"Урон":c==="acc"?"Бонус":"Защита";
+   const треб=itemStrReq(it);
+   return `${it.name}. ${слово[0].toUpperCase()+слово.slice(1)}. ${стат}: ${it.val}. Состояние: ${itemCondition(it)}%. Требование силы: ${треб}${(Number(G.str)||0)>=треб?"":" — вам не хватает силы"}. Ранг: ${String(RANKS[it.rank]||"обычный").toLowerCase()}, качество ${String(QUAL[it.qual]||"простое").toLowerCase()}.${row.equipped?" Надето.":""}${it.чары?` Зачаровано: ${it.чары}.`:""}${it.руна?" С руной.":""}${it.освящён?" Освящено.":""}${it.яд?" Смазано ядом.":""}${it.клеймо?` Клеймо: ${it.клеймо}.`:""}${it.улучшений?` Улучшений: ${it.улучшений}.`:""}`;}
+  if(kind==="potion"){const pt=POTION_BY_ID[it.id]||{n:it.id,о:""};return `Зелье ${pt.n}: ${pt.о}. Качество ${potionQualityWord(it.q)}, устойчивость ${Math.round(it.стаб*100)} из ста, ${potionExpired(it)?"выдохлось":"годно до "+(it.день+it.срок)+"-го дня"}. Действие — выпить.`;}
+  if(kind==="art")return ART.describe(it,true)+(it.спит?" Артефакт спит: его свойства не действуют.":"");
+  if(kind==="part")return `${row.name}: часть для гнёзд артефактов, ${row.n} шт. ${it.о||""}`;
   if(kind==="item"){const n=String(typeof it==="string"?it:it.name);
-   if(/^Свиток: /.test(n)){const sp=LEGEND_BY_NAME[n.slice(8)];return `${n}: одноразовый свиток. ${sp?sp.d:""} Действие — прочитать.`;}
+   if(row.cat==="scroll"){const sp=LEGEND_BY_NAME[n.slice(8)];return `${n}: одноразовый свиток. ${sp?sp.d:""} Действия — прочитать, изучить, передать.`;}
+   if(row.cat==="book"){const т=G.tomes&&G.tomes[n];return т?`${т.строка||n} ${G.tomeRead&&G.tomeRead[n]?"Изучена.":"Не изучена."}`:`${n}: книга. Читать, изучать по главам, учиться.`;}
    if(/Зелье здоровья/.test(n))return "Зелье здоровья: восстанавливает пятнадцать здоровья. Действие — выпить.";
-   if(/^Реликвия/.test(n))return `${n}: святыня бога. Её ждёт заказчик или алтарь.`;
-   return `${n}: предмет.`;}
-  if(kind==="plant"){const p=PLANT_BY_NAME[it];const кат=PLANT_CAT_BY_ID[p.кат]||{n:""};return `${p.n}, ${кат.n}: ${p.о}. В котомке ${G.inv[it]} шт. Идёт в зелья: ${p.рецепты.map(id=>(POTION_BY_ID[id]||{n:id}).n).join(", ")}.`;}
-  if(kind==="fish"){const f=(FISH||[]).find(x=>x.n===it);return `${it}: ${f?f.d:"улов"}. ${G.inv[it]} шт., цена около ${f?f.price:RES_BASE[it]||5} золота.`;}
+   if(n==="Яд")return "Яд: склянка тёмной жижи. Им смазывают клинок или, по глупости, пьют.";
+   if(n==="Противоядие")return "Противоядие: горький настой. Снимает яд и чуть лечит.";
+   if(/^Реликвия/.test(n))return `${n}: святыня бога. Квестовый предмет: её ждёт заказчик или алтарь; выбросить нельзя.`;
+   if(row.cat==="quest")return `${n}: квестовый предмет, его ждут по делу. Выбросить нельзя.`;
+   if(row.cat==="tool")return `${n}: инструмент. ${({"Факел":"Даёт свет в глубине.","Верёвка":"Пригодится на спуске и у колодца.","Удочка":"Рыбачат на берегу: меню действий, «Рыбачить».","Рыболовная сеть":"Улов больше, чем с удочкой."})[n]||"Применяется по месту."}`;
+   if(row.cat==="magic")return `${n}: ${cat.n.toLowerCase()}. ${safeFn(()=>{const g=LESSER_GODS.find(g=>g.артефакт===n);return g?`Артефакт ${g.n}: ${g.чудо}.`:"";},"")||safeFn(()=>{const h=HOUSES.find(h=>h.вещь===n);return h?`Вещь Дома «${h.n}», ${h.стиль}ой работы.`:"";},"")||"Хранит в себе чары."}`;
+   if(row.cat==="weapon")return `${n}: именное оружие. Хранится как вещь; в бой идёт то, что надето.`;
+   return `${n}: ${cat.n.toLowerCase()}.`;}
+  if(kind==="plant"){const p=PLANT_BY_NAME[it];const кат=PLANT_CAT_BY_ID[p.кат]||{n:""};return `${p.n}, ${кат.n}: ${p.о}. В котомке ${G.inv[it]} шт. Идёт в зелья: ${p.рецепты.map(id=>(POTION_BY_ID[id]||{n:id}).n).join(", ")}.${G.pure&&G.pure[it]?" Очищено.":""}`;}
+  if(kind==="fish"){const f=(FISH||[]).find(x=>x.n===it);return `${it}: ${f?f.d:"улов"}. ${G.inv[it]} шт., цена около ${f?f.price:RES_BASE[it]||5} золота. Еда.`;}
   const сорт=RES_SORTS[it]?"":(SORT_GOODS[it]?"редкий товар, ":"");
-  return `${it}: ${сорт}${G.inv[it]} шт., цена около ${RES_BASE[it]||6} золота за штуку.`;
+  return `${it}: ${G.inv[it]} шт., ${cat.n.toLowerCase()}, ${сорт}цена около ${RES_BASE[it]||6} золота за штуку.`;
  }catch(_){return `${key}.`;}}
 function invPick(kind,key){
  key=decodeURIComponent(String(key||""));
- INV.sel={kind,key};
+ INV.sel={kind,key};INV.confirm=null;
  safeFn(()=>Bank.play(itemVoice(invFind(kind,key)||key),{gain:0.45,maxSec:2}));
  narrate(invBrief(kind,key)+" Свайп вверх или вниз — действия.",{interrupt:true});
  safeFn(()=>renderInventory());
  return true;}
-/* Где стоим: станки рядом, алтарь, торговец. От этого зависит список действий. */
+/* Где стоим: станки рядом, алтарь, торговец, житель. От этого зависит список действий. */
 function invContext(){
- const ctx={станки:new Set(),алтарь:false,торговец:null};
+ const ctx={станки:new Set(),алтарь:null,торговец:null,житель:null,ночь:safeFn(()=>isNight(),false)};
  try{
   if(G.place){
-   (safeFn(()=>objectsHere(),[])||[]).forEach(o=>{if(o.d>1)return;if(o.станок)ctx.станки.add(o.станок);if(o.плитка==="A")ctx.алтарь=true;if(o.жилец&&o.жилец.trade&&!ctx.торговец)ctx.торговец=o.жилец;});
+   (safeFn(()=>objectsHere(),[])||[]).forEach(o=>{if(o.d>1)return;if(o.станок)ctx.станки.add(o.станок);if(o.плитка==="A")ctx.алтарь=safeFn(()=>altarAt(o.x,o.y),null)||{k:{n:"алтарь"},бог:safeFn(()=>altarGod(o.x,o.y),null)};
+    if(o.жилец){if(o.жилец.trade&&!ctx.торговец)ctx.торговец=o.жилец;if(!ctx.житель)ctx.житель=o.жилец;}});
   }else{
    const c=cellContent(G.x,G.y);
    const ns=safeFn(()=>c.structure?npcsFor(c):[],[]);
-   ctx.торговец=ns.find(n=>n.trade)||null;}
+   ctx.торговец=ns.find(n=>n.trade)||null;ctx.житель=ns[0]||null;}
  }catch(_){}
  return ctx;}
-function invActionList(kind,key){
- const it=invFind(kind,key);if(it==null)return [];
- const ctx=invContext();const A=[];
- const add=(id,n)=>A.push({id,n});
- add("look","🔎 Осмотреть подробно");
- if(kind==="equip"){add("unequip","🧤 Снять");}
- if(kind==="gear"){add("equip","🧤 Надеть");add("drop","🗑️ Выбросить");}
- if(kind==="res"||kind==="rare"||kind==="fish"){
-  if(ctx.торговец)add("sell","🪙 Продать торговцу");
-  if(ctx.станки.has("forge")&&key==="руда")add("melt","🔥 Плавить в горне");
-  if(ctx.станки.has("anvil")&&key==="слиток")add("blade","⚒️ Отковать клинок");
-  if(ctx.алтарь)add("offer","🕯️ Принести в дар");
-  if(kind==="fish")add("eat","🍽️ Съесть");
-  add("compare","⚖️ Сравнить с ценой");
-  add("drop","🗑️ Выбросить одну");add("dropall","🗑️ Выбросить всё");}
- if(kind==="plant"){if(ctx.станки.has("cauldron")||ctx.станки.has("hearth"))add("brew","⚗️ Сварить зелье");if(ctx.алтарь)add("offer","🕯️ Принести в дар");if(ctx.торговец)add("sell","🪙 Продать торговцу");add("drop","🗑️ Выбросить одну");}
- if(kind==="potion"){add("drink","🧪 Выпить");add("drop","🗑️ Вылить");}
- if(kind==="art"){add("lore","📜 Родословная");if(ctx.станки.has("anvil")||ctx.станки.has("forge"))add("mend","🩹 Починить");if(ctx.торговец)add("artsell","🪙 Продать");add("artwin","💎 Части, чары и гнёзда");}
- if(kind==="item"){const n=String(typeof it==="string"?it:it.name);
-  if(/^Свиток: /.test(n))add("scroll","📜 Прочитать свиток");
-  if(/Зелье здоровья/.test(n))add("drinkitem","🧪 Выпить");
-  if(/^Реликвия/.test(n)&&ctx.алтарь)add("relic","🕯️ Возложить на алтарь");
-  add("drop","🗑️ Выбросить");}
- return A;}
+/* ── РЕЕСТР ДЕЙСТВИЙ С ВЕЩАМИ ──
+   Действие знает, к каким разделам относится, когда доступно и почему нет,
+   и что делает. Меню собирается из реестра; недоступное показывается
+   с причиной. */
+const ITEM_ACTIONS=[];
+function iaction(id,def){ITEM_ACTIONS.push(Object.assign({id},def));}
+const GEAR_CATS=["weapon","shield","armor","helm","gloves","boots","acc"];
+const ALL_CATS=INV_CATS.map(c=>c.id);
+const ok=()=>true;
+const нужен=(ctx,...станки)=>станки.some(s=>ctx.станки.has(s));
+function invRemoveItem(row){
+ if(row.kind==="item"){G.items.splice(Number(row.key),1);return true;}
+ if(row.kind==="gear"){G.gear.splice(Number(row.key),1);return true;}
+ if(row.kind==="potion"){G.potions.splice(Number(row.key),1);return true;}
+ if(row.kind==="art"){G.artifacts.splice(Number(row.key),1);return true;}
+ if(row.kind==="part"){G.comps[row.key]=(Number(G.comps[row.key])||0)-1;if(G.comps[row.key]<=0)delete G.comps[row.key];return true;}
+ if(row.kind==="equip"){G.equip[row.key]=null;return true;}
+ G.inv[row.key]=(Number(G.inv[row.key])||0)-1;if(G.inv[row.key]<=0)delete G.inv[row.key];return true;}
+function invTake(res,n){G.inv[res]=(Number(G.inv[res])||0)-n;if(G.inv[res]<=0)delete G.inv[res];}
+function invHas(res,n){return (Number(G.inv&&G.inv[res])||0)>=(n||1);}
+function pileKey(){return G.place?`p:${placeKey(G.place.bx,G.place.by,G.place.depth)}:${G.place.x},${G.place.y}`:`w:${G.x},${G.y}`;}
+function pileHere(){if(!G.piles||typeof G.piles!=="object")G.piles={};return G.piles[pileKey()]||null;}
+/* общие */
+iaction("look",{n:"Осмотреть",значок:"🔎",cats:ALL_CATS,можно:ok,
+ делать:(row,ctx)=>{let t=invBrief(row.kind,row.key);
+  if(row.kind==="art")t=ART.describe(row.it);
+  if(row.kind==="res"||row.kind==="rare"){const сорт=RES_SORTS[row.key];t+=сорт?` Сорта: ${сорт.map(x=>x.n).join(", ")}.`:"";t+=` Спрос державы: ${safeFn(()=>priceWhy(row.key,empireIndexAt(G.x,G.y),null),"")}.`;}
+  narrate(t,{interrupt:true});return "keep";}});
+/* снаряжение */
+iaction("equip",{n:"Экипировать",значок:"🧤",cats:GEAR_CATS,
+ можно:(row)=>row.kind==="gear"&&typeof row.it==="object"?true:row.kind==="equip"?"уже надето":"это вещь в сумке, а не снаряжение: в бой идёт то, что сковано по мерке",
+ делать:(row,ctx,done)=>{const w=row.it;
+  if((Number(G.str)||0)<itemStrReq(w))narrate(`${w.name}: требование силы ${itemStrReq(w)}, у вас ${G.str}. Надето, но в руках держится тяжело.`,{interrupt:false});
+  if(w.slot==="weapon"){const i=weaponList().findIndex(x=>x.id===w.id||x.name===w.name);safeFn(()=>closeModal(document.getElementById("modal-invact")));equipWeaponIndex(i);return true;}
+  const prev=G.equip[w.slot];G.equip[w.slot]=w;const gi=(G.gear||[]).indexOf(w);if(gi>=0)G.gear.splice(gi,1);if(prev)G.gear.push(prev);
+  safeFn(()=>Bank.play(itemVoice(w),{gain:0.5,maxSec:2}));return done(`Надето: ${w.name}${prev?`, прежнее — ${prev.name} — в суме`:""}.`);}});
+iaction("unequip",{n:"Снять",значок:"🧺",cats:GEAR_CATS,можно:(row)=>row.kind==="equip"?true:"не надето",
+ делать:(row,ctx,done)=>{const w=G.equip[row.key];if(!w)return done("Снимать нечего.");
+  if(row.key==="weapon"){G.weaponDrawn=false;safeFn(()=>Bank.play("lug_knife_sheathe",{gain:0.45,maxSec:2}));return done(`${w.name} убран в ножны. Оружие всегда при вас: сменить его можно, надев другое.`);}
+  G.equip[row.key]=null;G.gear.push(w);safeFn(()=>Bank.play(itemVoice(w),{gain:0.5,maxSec:2}));return done(`Снято: ${w.name}. Лежит в суме.`);}});
+iaction("use",{n:"Использовать",значок:"✋",cats:["weapon","tool","magic","other","ammo","food","res","material","ingredient","potion","scroll","book"],
+ можно:(row,ctx)=>{if(row.cat==="weapon"&&row.kind==="equip")return true;if(row.cat==="weapon")return "сперва экипируйте";
+  if(row.cat==="food"||row.cat==="potion"||row.cat==="scroll"||row.cat==="book")return true;
+  if(row.cat==="tool")return true;
+  if(row.cat==="ingredient")return нужен(ctx,"cauldron","hearth")?true:"ингредиенты идут в чан: рядом нет чана алхимика или очага";
+  if(row.cat==="res"||row.cat==="material")return ctx.станки.size?true:"сырьё применяют у станка: рядом нет ни горна, ни наковальни, ни верстака";
+  return true;},
+ делать:(row,ctx,done)=>{
+  if(row.cat==="weapon"){if(G.weaponDrawn){sheatheWeapon();return done("Оружие убрано.");}drawWeapon();return done("Оружие в руках.");}
+  if(row.cat==="food")return invDo("eat",row.kind,row.key);
+  if(row.cat==="potion")return invDo("drink",row.kind,row.key);
+  if(row.cat==="scroll")return invDo("read",row.kind,row.key);
+  if(row.cat==="book")return invDo("read",row.kind,row.key);
+  if(row.cat==="ingredient")return invDo("alchemy",row.kind,row.key);
+  if(row.cat==="res"||row.cat==="material")return invDo("craft",row.kind,row.key);
+  const n=String(row.name);
+  if(n==="Факел"){safeFn(()=>Bank.play("torch",{gain:0.5,maxSec:3}));return done(G.place&&G.place.depth>0?"Факел зажжён: свет держится на расстоянии руки, и стены слышны лучше — маяки звучат ближе.":"Факел зажжён. Днём от него мало проку, но огонь при вас.");}
+  if(n==="Удочка"||n==="Рыболовная сеть"){safeFn(()=>closeModal(document.getElementById("modal-invact")));safeFn(()=>closeModal(document.getElementById("modal-inventory")));if(typeof CMD.fish==="function")CMD.fish();return true;}
+  if(n==="Верёвка")return done("Верёвка при вас: её спросят на спуске в колодец и на обрыве.");
+  if(row.cat==="magic"){const g=safeFn(()=>LESSER_GODS.find(g=>g.артефакт===n),null);if(g){safeFn(()=>Bank.play(g.звук,{gain:0.55,maxSec:5}));const v=({hp:()=>{G.hp=Math.min(G.hpMax,G.hp+10);return "здоровье +10";},mana:()=>{G.mana=Math.min(G.manaMax,G.mana+6);return "мана +6";},water:()=>{G.water=Math.min(200,(Number(G.water)||0)+30);return "вода +30";},gold:()=>{G.gold+=5;return "золото +5";},xp:()=>{G.xp+=10;return "опыт +10";}})[g.дар]||(()=>"");
+     if(!G.artUse||typeof G.artUse!=="object")G.artUse={};if(G.artUse[n]===G.day)return done(`${n} сегодня уже отдал своё: чудо раз в день.`);G.artUse[n]=G.day;return done(`${n}: ${g.чудо}. ${v()}.`);}
+   const h=safeFn(()=>HOUSES.find(h=>h.вещь===n),null);if(h){safeFn(()=>Bank.play(h.мотив,{gain:0.5,maxSec:4}));return done(`${n} отзывается гербовым сигналом Дома «${h.n}»: ${h.девиз}.`);}
+   return done(`${n} держите в руках: он тёплый, но своего часа ждёт.`);}
+  return done(`${n}: применить пока нечему. Применяется по месту: у станка, у алтаря, в деле.`);}});
+iaction("compare",{n:"Сравнить",значок:"⚖️",cats:GEAR_CATS,
+ можно:(row)=>{const slot=row.it&&row.it.slot;const cur=G.equip&&G.equip[slot];return row.kind==="equip"?"это и есть надетое":cur?true:"надетого для сравнения нет";},
+ делать:(row,ctx,done)=>{const it=row.it,cur=G.equip[it.slot];const d=it.val-cur.val;
+  return done(`${it.name}: ${it.val} против ${cur.name}: ${cur.val}. ${d>0?`Лучше на ${d}.`:d<0?`Хуже на ${-d}.`:"Равны."} Состояние ${itemCondition(it)} против ${itemCondition(cur)}.`);}});
+iaction("condition",{n:"Проверить состояние",значок:"🩹",cats:GEAR_CATS,можно:(row)=>typeof row.it==="object"?true:"у именной вещи состояния нет",
+ делать:(row,ctx,done)=>{const c=itemCondition(row.it);return done(`${row.it.name}: состояние ${c} из ста — ${c>=80?"как новая":c>=50?"потёртая":c>=30?"изношенная":"на последнем издыхании; чинить у наковальни или в горне"}.`);}});
+iaction("repair",{n:"Отремонтировать",значок:"🔨",cats:GEAR_CATS.concat(["artifact"]),
+ можно:(row,ctx)=>{if(row.kind==="art")return нужен(ctx,"anvil","forge")?true:"чинят у наковальни или горна: рядом нет кузнечного оборудования";
+  if(typeof row.it!=="object")return "именную вещь не чинят";if(itemCondition(row.it)>=100)return "вещь цела";
+  if(!нужен(ctx,"anvil","forge"))return "рядом нет кузнечного оборудования";if(!invHas("руда",1))return "нужна руда, одна";return true;},
+ делать:(row,ctx,done)=>{if(row.kind==="art"){const t=artMend();safeFn(()=>Bank.play("uh_smith",{gain:0.5,maxSec:2}));return done(t[0].toUpperCase()+t.slice(1)+".");}
+  invTake("руда",1);row.it.сост=100;safeFn(()=>{Bank.play("uh_smith",{gain:0.55,maxSec:3});setTimeout(()=>safeFn(()=>Bank.play("forge_hammer",{gain:0.5,maxSec:3})),300);});safeFn(()=>mastGain("smith",2));safeFn(()=>propTime(0.5));
+  return done(`${row.it.name} починен: состояние сто из ста. Ушла одна руда.`);}});
+iaction("improve",{n:"Улучшить",значок:"⬆️",cats:GEAR_CATS,
+ можно:(row,ctx)=>{if(typeof row.it!=="object")return "именную вещь не улучшают";if(!нужен(ctx,"anvil"))return "улучшают у наковальни: её рядом нет";
+  if((Number(row.it.улучшений)||0)>=3)return "три улучшения — предел этой вещи";if(!invHas("слиток",1))return "нужен слиток";if(safeFn(()=>mastLevel("smith"),0)<1)return "нужен первый урок кузнечного дела";return true;},
+ делать:(row,ctx,done)=>{invTake("слиток",1);row.it.val=(Number(row.it.val)||0)+1;row.it.улучшений=(Number(row.it.улучшений)||0)+1;row.it.price=Math.round((Number(row.it.price)||10)*1.2);
+  safeFn(()=>{Bank.play("forge_hammer",{gain:0.6,maxSec:3});setTimeout(()=>safeFn(()=>Bank.play("wild_anvil",{gain:0.5,maxSec:3})),350);});safeFn(()=>mastGain("smith",3));safeFn(()=>propTime(0.8));
+  return done(`${row.it.name} улучшен: бонус ${row.it.val}, улучшений ${row.it.улучшений} из трёх. Ушёл слиток.`);}});
+iaction("enchant",{n:"Зачаровать",значок:"✨",cats:GEAR_CATS.concat(["artifact"]),
+ можно:(row,ctx)=>{if(typeof row.it!=="object")return "именную вещь не зачаровать";if(!нужен(ctx,"circle","orb"))return "чаруют у магического круга или хрустального шара: их рядом нет";
+  if(row.it.чары)return "вещь уже зачарована";if(!invHas("кристалл",1))return "нужен кристалл";if(!(G.spells||[]).length)return "нужно знать хотя бы одно заклинание";return true;},
+ делать:(row,ctx,done)=>{invTake("кристалл",1);const sp=(G.spells||[])[0];const школа=safeFn(()=>spellSchoolGuess({n:sp}),"generic");const sc=SCHOOLS.find(s=>s.id===школа)||{n:"неведомой школы"};
+  row.it.чары=sc.n;if(typeof row.it.val==="number")row.it.val+=1;row.it.price=Math.round((Number(row.it.price)||10)*1.3);
+  safeFn(()=>{Bank.play("magic_hum",{kind:"magic",gain:0.55,maxSec:4});setTimeout(()=>safeFn(()=>Bank.play("fx_crystal",{kind:"magic",gain:0.5,maxSec:3})),400);});safeFn(()=>propTime(0.6));
+  return done(`${row.it.имя||row.it.name}: зачаровано школой «${sc.n}». Кристалл ушёл в вещь.`);}});
+iaction("rune",{n:"Наложить руну",значок:"🪧",cats:["weapon","shield","armor","helm"],
+ можно:(row,ctx)=>{if(typeof row.it!=="object")return "именную вещь не метят";if(!нужен(ctx,"bench","anvil"))return "руну кладут у верстака или наковальни: их рядом нет";
+  if(row.it.руна)return "руна уже стоит";if(safeFn(()=>mastLevel("runes"),0)<1)return "нужен первый урок рунического дела";if(!invHas("камень",1))return "нужен камень для рунной вставки";return true;},
+ делать:(row,ctx,done)=>{invTake("камень",1);row.it.руна=true;row.it.val=(Number(row.it.val)||0)+1;safeFn(()=>{Bank.play("craft_stone",{gain:0.55,maxSec:3});setTimeout(()=>safeFn(()=>Bank.play("stk_ward",{gain:0.5,maxSec:3})),350);});safeFn(()=>mastGain("runes",3));
+  return done(`${row.it.name}: руна легла в борозду, бонус ${row.it.val}.`);}});
+/* кузница: контекст станка */
+iaction("forge_make",{n:"Ковать: создать оружие",значок:"⚒️",cats:["res","material"],
+ можно:(row,ctx)=>{if(!нужен(ctx,"anvil"))return "ковать можно только у наковальни";if(!["слиток","руда"].includes(row.key))return "куют из слитка";if(safeFn(()=>mastLevel("smith"),0)<3)return "нужна третья ступень кузнечного дела";return true;},
+ делать:(row,ctx,done)=>{safeFn(()=>closeModal(document.getElementById("modal-invact")));techDo(TECH_BY_ID.blade,"anvil");safeFn(()=>renderInventory());return true;}});
+iaction("reforge",{n:"Перековать: изменить форму",значок:"🔁",cats:["weapon"],
+ можно:(row,ctx)=>{if(typeof row.it!=="object")return "именную вещь не перековать";if(!нужен(ctx,"anvil","forge"))return "перековывают у наковальни или горна";if(safeFn(()=>mastLevel("smith"),0)<2)return "нужна вторая ступень кузнечного дела";return true;},
+ делать:(row,ctx,done)=>{const формы=["Меч","Кинжал","Посох","Топор","Копьё","Булава"];const t=String(row.it.type||"Меч");const i=формы.indexOf(t);const новая=формы[(i+1+формы.length)%формы.length];
+  row.it.type=новая;row.it.name=String(row.it.name).replace(new RegExp(t.toLowerCase(),"i"),новая.toLowerCase());row.it.сост=Math.max(40,itemCondition(row.it)-10);
+  safeFn(()=>{Bank.play("forge_hammer",{gain:0.6,maxSec:3});setTimeout(()=>safeFn(()=>Bank.play("oc_metal_dull",{gain:0.5,maxSec:2})),400);});safeFn(()=>propTime(1));
+  return done(`Перековано: теперь это ${новая.toLowerCase()} — ${row.it.name}. Металл устал на десять.`);}});
+iaction("temper",{n:"Закалить",значок:"🔥",cats:["weapon","shield","armor","helm"],
+ можно:(row,ctx)=>{if(typeof row.it!=="object")return "именную вещь не закалить";if(!нужен(ctx,"forge"))return "закаляют в горне: горна рядом нет";if(row.it.закалка)return "уже закалено";return true;},
+ делать:(row,ctx,done)=>{row.it.закалка=true;row.it.сост=100;row.it.val=(Number(row.it.val)||0)+1;safeFn(()=>{Bank.play("mtg_furnace",{gain:0.55,maxSec:4});setTimeout(()=>safeFn(()=>Bank.play("oc_sizzle",{gain:0.5,maxSec:3})),500);});safeFn(()=>propTime(0.7));
+  return done(`${row.it.name} закалён: состояние сто, бонус ${row.it.val}. Сталь запомнила огонь.`);}});
+iaction("sharpen",{n:"Заточить",значок:"🔪",cats:["weapon"],
+ можно:(row,ctx)=>{if(typeof row.it!=="object")return "именную вещь не заточить";if(!нужен(ctx,"whetstone","anvil"))return "точат на точиле или у наковальни";if(/посох|лук/i.test(String(row.it.type||row.it.name)))return "это не точат";return true;},
+ делать:(row,ctx,done)=>{safeFn(()=>buffSet("заточка",6));safeFn(()=>{Bank.play("oc_metal_dull",{gain:0.5,maxSec:3});setTimeout(()=>safeFn(()=>Bank.play("clang_soft",{gain:0.45,maxSec:2})),300);});safeFn(()=>propTime(0.3));
+  return done(`${row.it.name} заточен: шесть часов удар режет на единицу сильнее.`);}});
+iaction("brand",{n:"Нанести клеймо",значок:"🔏",cats:GEAR_CATS,
+ можно:(row,ctx)=>{if(typeof row.it==="object"&&row.it.клеймо)return "клеймо уже стоит";if(typeof row.it!=="object")return "именную вещь не клеймят";if(!нужен(ctx,"anvil","forge"))return "клеймят у наковальни или горна";if(safeFn(()=>mastLevel("smith"),0)<1)return "нужен первый урок кузнечного дела";return true;},
+ делать:(row,ctx,done)=>{row.it.клеймо=G.name||"мастер без имени";row.it.price=Math.round((Number(row.it.price)||10)*1.15);safeFn(()=>Bank.play("clang_hard",{gain:0.55,maxSec:2}));return done(`${row.it.name}: клеймо «${row.it.клеймо}» выбито. Вещь узнают и ценят выше.`);}});
+iaction("component",{n:"Установить компонент",значок:"🧩",cats:GEAR_CATS,
+ можно:(row,ctx)=>{if(typeof row.it!=="object")return "именной вещи гнёзд нет";if(!нужен(ctx,"bench","anvil"))return "компоненты ставят у верстака или наковальни";
+  const части=Object.keys(G.comps||{}).filter(k=>(Number(G.comps[k])||0)>0);if(!части.length)return "нет ни одной части: их находят и покупают у огранщиков";if((Number(row.it.компонентов)||0)>=2)return "два компонента — предел";return true;},
+ делать:(row,ctx,done)=>{const k=Object.keys(G.comps).find(k=>(Number(G.comps[k])||0)>0);const p=ART_PART_BY_ID[k]||{n:k};G.comps[k]-=1;if(G.comps[k]<=0)delete G.comps[k];
+  row.it.компонентов=(Number(row.it.компонентов)||0)+1;row.it.val=(Number(row.it.val)||0)+1;safeFn(()=>{Bank.play("craft_knock",{gain:0.5,maxSec:2});setTimeout(()=>safeFn(()=>Bank.play("fx_crystal",{gain:0.45,maxSec:2})),300);});
+  return done(`${row.it.name}: вставлено — ${p.n}. Бонус ${row.it.val}.`);}});
+iaction("disassemble",{n:"Разобрать предмет",значок:"🪚",cats:GEAR_CATS,
+ можно:(row,ctx)=>{if(row.kind==="equip")return "сперва снимите";if(typeof row.it!=="object")return "именную вещь не разобрать";if(!нужен(ctx,"anvil","forge","bench"))return "разбирают у станка: рядом нет наковальни, горна или верстака";return true;},
+ делать:(row,ctx,done)=>{const it=row.it;const руда=1+(Number(it.rank)||0);const дерево=it.slot==="weapon"?1:0;invRemoveItem(row);G.inv["руда"]=(Number(G.inv["руда"])||0)+руда;if(дерево)G.inv["дерево"]=(Number(G.inv["дерево"])||0)+дерево;
+  safeFn(()=>{Bank.play("oc_metal_dull",{gain:0.55,maxSec:3});setTimeout(()=>safeFn(()=>Bank.play("arte_metal",{gain:0.5,maxSec:2})),300);});return done(`${it.name} разобран: руда ×${руда}${дерево?`, дерево ×${дерево}`:""}.`);}});
+/* алхимическая лаборатория */
+iaction("alchemy",{n:"Использовать в алхимии",значок:"⚗️",cats:["ingredient","res","potion","material"],
+ можно:(row,ctx)=>нужен(ctx,"cauldron","hearth")?true:"рядом нет чана алхимика или очага",
+ делать:(row,ctx,done)=>{safeFn(()=>closeModal(document.getElementById("modal-invact")));safeFn(()=>closeModal(document.getElementById("modal-inventory")));openPotions();return true;}});
+iaction("mix",{n:"Смешать",значок:"🧪",cats:["ingredient"],можно:(row,ctx)=>нужен(ctx,"cauldron","hearth")?true:"смешивают в чане: его рядом нет",
+ делать:(row,ctx,done)=>invDo("alchemy",row.kind,row.key)});
+iaction("essence",{n:"Извлечь эссенцию",значок:"💧",cats:["ingredient","res"],
+ можно:(row,ctx)=>{if(!нужен(ctx,"cauldron"))return "эссенцию отгоняют в чане";if(safeFn(()=>mastLevel("alchemy"),0)<2)return "нужна вторая ступень алхимии";return true;},
+ делать:(row,ctx,done)=>{safeFn(()=>closeModal(document.getElementById("modal-invact")));techDo(TECH_BY_ID.essence,"cauldron");safeFn(()=>renderInventory());return true;}});
+iaction("distill",{n:"Перегнать",значок:"🌡️",cats:["potion"],
+ можно:(row,ctx)=>{if(row.kind!=="potion")return "перегоняют только сваренное зелье";if(!нужен(ctx,"cauldron"))return "перегоняют в чане";if((Number(row.it.q)||1)>=3)return "качество уже предельное";if(!invHas("кристалл",1))return "нужен кристалл";return true;},
+ делать:(row,ctx,done)=>{invTake("кристалл",1);row.it.q=(Number(row.it.q)||1)+1;row.it.стаб=Math.min(1,(Number(row.it.стаб)||0.5)+0.2);safeFn(()=>{Bank.play("oc_boiling",{gain:0.55,maxSec:4});setTimeout(()=>safeFn(()=>Bank.play("arte_potion",{gain:0.5,maxSec:3})),500);});safeFn(()=>mastGain("alchemy",3));
+  return done(`Зелье перегнано: качество ${potionQualityWord(row.it.q)}, устойчивость ${Math.round(row.it.стаб*100)} из ста.`);}});
+iaction("poison",{n:"Создать яд",значок:"☠️",cats:["ingredient","res"],
+ можно:(row,ctx)=>{if(!нужен(ctx,"cauldron"))return "яд варят в чане";if(!invHas("грибы",2))return "нужно два гриба";if(safeFn(()=>mastLevel("alchemy"),0)<1)return "нужен первый урок алхимии";return true;},
+ делать:(row,ctx,done)=>{invTake("грибы",2);G.items.push("Яд");safeFn(()=>{Bank.play("oc_bubble",{gain:0.55,maxSec:3});setTimeout(()=>safeFn(()=>Bank.play("oc_corrode",{gain:0.45,maxSec:2})),400);});safeFn(()=>mastGain("alchemy",2));return done("Сварен яд: тёмная склянка в суме. Им смазывают клинок.");}});
+iaction("antidote",{n:"Создать противоядие",значок:"🩺",cats:["ingredient","res"],
+ можно:(row,ctx)=>{if(!нужен(ctx,"cauldron","hearth"))return "противоядие варят в чане или на очаге";if(!invHas("трава",2))return "нужно две травы";return true;},
+ делать:(row,ctx,done)=>{invTake("трава",2);G.items.push("Противоядие");safeFn(()=>{Bank.play("arte_potion",{gain:0.55,maxSec:3});});safeFn(()=>mastGain("alchemy",1));return done("Сварено противоядие: горький настой в суме.");}});
+iaction("purify",{n:"Очистить ингредиент",значок:"🫧",cats:["ingredient"],
+ можно:(row,ctx)=>{if(!нужен(ctx,"cauldron"))return "очищают в чане";if(G.pure&&G.pure[row.key])return "уже очищено";return true;},
+ делать:(row,ctx,done)=>{if(!G.pure||typeof G.pure!=="object")G.pure={};G.pure[row.key]=1;safeFn(()=>Bank.play("oc_waterdrop",{gain:0.5,maxSec:2}));return done(`${row.key}: очищено от сора. Зелья из него выйдут качеством выше.`);}});
+iaction("research",{n:"Исследовать состав",значок:"📖",cats:["ingredient","potion"],
+ можно:(row,ctx)=>нужен(ctx,"cauldron")?true:"состав исследуют в чане",
+ делать:(row,ctx,done)=>{if(row.kind==="plant"){const p=PLANT_BY_NAME[row.key];return done(`${p.n}: ${p.о} Ниша — ${(PLANT_CAT_BY_ID[p.кат]||{n:"своя"}).n}. Идёт в: ${p.рецепты.map(id=>(POTION_BY_ID[id]||{n:id}).n).join(", ")}.`);}
+  const pt=POTION_BY_ID[row.it.id]||{n:row.it.id,о:""};return done(`Зелье ${pt.n}: ${pt.о} Из двух ниш: ${(pt.из||[]).map(k=>(PLANT_CAT_BY_ID[k]||{n:k}).n).join(" и ")}.`);}});
+iaction("craft",{n:"Применить в ремесле",значок:"🛠️",cats:["res","material","ingredient"],
+ можно:(row,ctx)=>ctx.станки.size?true:"рядом нет станка: горна, наковальни, верстака, чана",
+ делать:(row,ctx,done)=>{const техн=[];ctx.станки.forEach(st=>(safeFn(()=>techsAt(st),[])||[]).forEach(t=>{if(t.берёт&&t.берёт[row.key]&&!техн.some(x=>x.id===t.id))техн.push(t);}));
+  if(!техн.length)return done(`${row.key} здесь ни в одну работу не идёт. Станки рядом: ${[...ctx.станки].map(s=>STANOK_NAME[s]||s).join(", ")}.`);
+  const t=техн[0];safeFn(()=>closeModal(document.getElementById("modal-invact")));const st=[...ctx.станки].find(s=>t.станки.includes(s));techDo(t,st);safeFn(()=>renderInventory());return true;}});
+iaction("melt",{n:"Плавить в горне",значок:"🔥",cats:["res"],можно:(row,ctx)=>row.key==="руда"?(нужен(ctx,"forge")?true:"горна рядом нет"):"плавят только руду",
+ делать:(row,ctx,done)=>{safeFn(()=>closeModal(document.getElementById("modal-invact")));techDo(TECH_BY_ID.melt,"forge");safeFn(()=>renderInventory());return true;}});
+iaction("blade",{n:"Отковать клинок",значок:"⚒️",cats:["material"],можно:(row,ctx)=>row.key==="слиток"?(нужен(ctx,"anvil")?true:"наковальни рядом нет"):"клинок куют из слитка",
+ делать:(row,ctx,done)=>{safeFn(()=>closeModal(document.getElementById("modal-invact")));techDo(TECH_BY_ID.blade,"anvil");safeFn(()=>renderInventory());return true;}});
+iaction("brew",{n:"Сварить зелье",значок:"⚗️",cats:["ingredient"],можно:(row,ctx)=>нужен(ctx,"cauldron","hearth")?true:"чана или очага рядом нет",
+ делать:(row,ctx,done)=>invDo("alchemy",row.kind,row.key)});
+/* стопки */
+iaction("split",{n:"Разделить стопку",значок:"✂️",cats:["res","material","ingredient","food"],
+ можно:(row)=>(Number(row.n)||0)>=2?true:"стопка из одной штуки: делить нечего",
+ делать:(row,ctx,done)=>{const n=Math.floor((Number(row.n)||0)/2);if(!G.piles||typeof G.piles!=="object")G.piles={};const k=pileKey();const p=G.piles[k]||{};p[row.key]=(Number(p[row.key])||0)+n;G.piles[k]=p;invTake(row.key,n);
+  safeFn(()=>Bank.play("mtg_place",{gain:0.45,maxSec:2}));return done(`Отложено на землю: ${row.key} ×${n}. Осталось при вас ${Number(G.inv[row.key])||0}. Объединить обратно — здесь же.`);}});
+iaction("merge",{n:"Объединить",значок:"🧺",cats:["res","material","ingredient","food"],
+ можно:(row)=>{const p=pileHere();return p&&(Number(p[row.key])||0)>0?true:"здесь нет отложенной части этой стопки";},
+ делать:(row,ctx,done)=>{const p=pileHere();const n=Number(p[row.key])||0;delete p[row.key];if(!Object.keys(p).length)delete G.piles[pileKey()];G.inv[row.key]=(Number(G.inv[row.key])||0)+n;safeFn(()=>UI.pickup());return done(`Стопка объединена: ${row.key} ×${Number(G.inv[row.key])||0}.`);}});
+/* еда, зелья, свитки, книги */
+iaction("eat",{n:"Съесть",значок:"🍽️",cats:["food"],можно:ok,
+ делать:(row,ctx,done)=>{invRemoveItem(row);const h=Math.min(G.hpMax,G.hp+6)-G.hp;G.hp+=h;G.water=Math.min(200,(Number(G.water)||0)+5);safeFn(()=>Bank.play("oc_munch",{gain:0.5,maxSec:2}));return done(`Съедено: ${row.name}. Здоровья +${h}.`);}});
+iaction("drink",{n:"Выпить",значок:"🧪",cats:["potion"],можно:ok,
+ делать:(row,ctx,done)=>{if(row.kind==="potion"){safeFn(()=>closeModal(document.getElementById("modal-invact")));drinkPotion(Number(row.key));safeFn(()=>renderInventory());return true;}
+  const n=String(row.name);invRemoveItem(row);
+  if(n==="Яд"){const урон=Math.max(1,Math.round(G.hpMax*0.15));G.hp=Math.max(1,G.hp-урон);safeFn(()=>Bank.play("oc_corrode",{gain:0.5,maxSec:2}));return done(`Вы выпили яд. Урон ${урон}, здоровья ${G.hp}. Зачем?`);}
+  if(n==="Противоядие"){G.poisoned=null;const h=Math.min(G.hpMax,G.hp+10)-G.hp;G.hp+=h;safeFn(()=>Bank.play("cast_potion",{gain:0.5,maxSec:2}));return done(`Противоядие выпито: яд снят, здоровья +${h}.`);}
+  const h=Math.min(G.hpMax,G.hp+15)-G.hp;G.hp+=h;safeFn(()=>{UI.drink();Bank.play("cast_potion",{gain:0.5,maxSec:2});});return done(`Выпито: ${n}. Здоровья +${h}.`);}});
+iaction("drinkitem",{n:"Выпить",значок:"🧪",cats:[],можно:ok,делать:(row,ctx,done)=>invDo("drink",row.kind,row.key)});
+iaction("read",{n:"Прочитать",значок:"📖",cats:["scroll","book"],можно:ok,
+ делать:(row,ctx,done)=>{const n=String(row.name);
+  if(row.cat==="scroll"){safeFn(()=>closeModal(document.getElementById("modal-invact")));readLegendScroll(n.slice(8));safeFn(()=>renderInventory());return true;}
+  const т=G.tomes&&G.tomes[n];safeFn(()=>Bank.play("arte_book",{gain:0.5,maxSec:3}));
+  return done(т?`${т.строка} Вы читаете вслух: ${т.вид_о||""} ${т.орден?`Из собрания «${т.орден}». `:""}Изучить — значит положить это в собрание знаний.`:`${n}. Страницы шуршат; чтобы знание осталось, изучите книгу.`);}});
+iaction("study",{n:"Изучить",значок:"🎓",cats:["scroll","book"],
+ можно:(row)=>row.cat==="book"&&G.tomeRead&&G.tomeRead[row.name]?"эта книга уже изучена":true,
+ делать:(row,ctx,done)=>{const n=String(row.name);
+  if(row.cat==="scroll"){const sp=LEGEND_BY_NAME[n.slice(8)];G.xp=(Number(G.xp)||0)+6;safeFn(()=>checkLevelUp());safeFn(()=>Bank.play("arte_page",{gain:0.5,maxSec:3}));return done(`Свиток разобран: ${sp?sp.d:"строки чужой руки"}. Опыт +6; сам свиток цел.`);}
+  if(!G.tomeRead||typeof G.tomeRead!=="object")G.tomeRead={};G.tomeRead[n]=Number(G.day)||1;const т=G.tomes&&G.tomes[n];const оп=10+(т?Number(т.редкость)||0:0)*4;G.xp=(Number(G.xp)||0)+оп;safeFn(()=>mastGain("lang",2));safeFn(()=>checkLevelUp());
+  safeFn(()=>{Bank.play("arte_book",{gain:0.5,maxSec:3});setTimeout(()=>safeFn(()=>Bank.play("arte_page",{gain:0.45,maxSec:3})),400);});safeFn(()=>propTime(1));
+  return done(`${n} изучена: опыт +${оп}, древние языки растут.${т&&т.дар==="spell"?" В книге заклинание: учиться ему — «Использовать для обучения».":""}`);}});
+iaction("chapters",{n:"Изучать главы",значок:"📑",cats:["book"],можно:ok,
+ делать:(row,ctx,done)=>{const n=String(row.name);const т=G.tomes&&G.tomes[n];const seed=(n.length*31)%997;const главы=["О начале","О ремесле и мере","О людях и дорогах","О том, что за Гранью"].filter((_,i)=>hashName(seed,i,9100)>0.3);
+  if(!G.tomeChap||typeof G.tomeChap!=="object")G.tomeChap={};const k=(Number(G.tomeChap[n])||0);if(k>=главы.length)return done(`${n}: все ${главы.length} главы прочтены.`);G.tomeChap[n]=k+1;G.xp=(Number(G.xp)||0)+4;safeFn(()=>checkLevelUp());safeFn(()=>Bank.play("arte_page",{gain:0.5,maxSec:3}));
+  return done(`Глава ${k+1} из ${главы.length}: «${главы[k]}». ${т?т.вид_о||"":""} Опыт +4.`);}});
+iaction("teach",{n:"Использовать для обучения",значок:"🧠",cats:["book"],
+ можно:(row)=>{const т=G.tomes&&G.tomes[row.name];if(!т)return "у этой книги нет учебной части";if(G.tomeTaught&&G.tomeTaught[row.name])return "по этой книге вы уже учились";return true;},
+ делать:(row,ctx,done)=>{const n=String(row.name);const т=G.tomes[n];if(!G.tomeTaught||typeof G.tomeTaught!=="object")G.tomeTaught={};G.tomeTaught[n]=1;
+  let слово="";if(т.дар==="spell"){const неизв=SPELLS.filter(s=>!s.custom&&!(G.spells||[]).includes(s.n));if(неизв.length){const sp=неизв[Math.floor(hashName(n.length,т.редкость||0,9101)*неизв.length)%неизв.length];G.spells.push(sp.n);слово=`Выучено заклинание: ${sp.n}.`;}}
+  else if(т.дар==="skill"){safeFn(()=>mastGain("lang",6));слово="Древние языки поднялись.";}
+  else{G.xp=(Number(G.xp)||0)+15;слово="Опыт +15.";}
+  safeFn(()=>checkLevelUp());safeFn(()=>{Bank.play("arte_book",{gain:0.5,maxSec:3});setTimeout(()=>safeFn(()=>Bank.play("magic_shimmer",{kind:"magic",gain:0.45,maxSec:3})),500);});return done(`Учение по книге «${n}»: ${слово}`);}});
+iaction("give",{n:"Передать",значок:"🤲",cats:["scroll","book","potion","tool","other","magic","food"],
+ можно:(row,ctx)=>ctx.житель?true:"рядом нет того, кому передать: подойдите к жителю",
+ делать:(row,ctx,done)=>{const n=ctx.житель;const имя=String(row.name);invRemoveItem(row);safeFn(()=>{npcRemember(n,"подарок",имя,5);addRep(n.race,1);addStand("npc",n.key,3,true);});safeFn(()=>Bank.play("arte_cloth",{gain:0.45,maxSec:2}));
+  return done(`${имя} передан: ${n.name} принимает и благодарит. Народ «${n.race}» это запомнит.`);}});
+/* артефакты */
+iaction("lore",{n:"Изучить",значок:"📜",cats:["artifact"],можно:ok,делать:(row)=>{narrate(artLoreText(row.it),{interrupt:true});return "keep";}});
+iaction("activate",{n:"Активировать",значок:"🟢",cats:["artifact"],можно:(row)=>row.it.спит?true:"артефакт уже действует",
+ делать:(row,ctx,done)=>{delete row.it.спит;safeFn(()=>Bank.play("artifact_hum",{gain:0.5,maxSec:3}));return done(`${row.it.имя} пробуждён: его свойства снова при вас.`);}});
+iaction("deactivate",{n:"Деактивировать",значок:"⚫",cats:["artifact"],можно:(row)=>row.it.спит?"артефакт и так спит":true,
+ делать:(row,ctx,done)=>{row.it.спит=true;safeFn(()=>Bank.play("oc_soft_touch",{gain:0.45,maxSec:2}));return done(`${row.it.имя} усыплён: свойства не действуют, пока не разбудите.`);}});
+iaction("configure",{n:"Настроить: части, чары и гнёзда",значок:"💎",cats:["artifact"],можно:ok,
+ делать:(row,ctx,done)=>{safeFn(()=>closeModal(document.getElementById("modal-invact")));safeFn(()=>closeModal(document.getElementById("modal-inventory")));openModal("modal-artifacts");renderArtifacts();return true;}});
+iaction("ability",{n:"Использовать способность",значок:"⚡",cats:["artifact"],
+ можно:(row)=>{if(row.it.спит)return "артефакт спит";if((Number(row.it.заряд)||0)<=0)return "заряд пуст: зарядите кристаллом";return true;},
+ делать:(row,ctx,done)=>{row.it.заряд-=1;const st=safeFn(()=>ART.stats(row.it).статы,{})||{};const top=Object.keys(st).sort((a,b)=>Math.abs(st[b])-Math.abs(st[a]))[0];
+  let слово="";if(/жизн|здоров/i.test(top||"")){const h=Math.min(G.hpMax,G.hp+12)-G.hp;G.hp+=h;слово=`здоровье +${h}`;}else if(/ман/i.test(top||"")){G.mana=Math.min(G.manaMax,G.mana+8);слово="мана +8";}else{safeFn(()=>buffSet("оберег",3));слово="оберег на три часа";}
+  safeFn(()=>{Bank.play("artifact_hum",{gain:0.55,maxSec:3});setTimeout(()=>safeFn(()=>Bank.play("fx_crystal",{gain:0.5,maxSec:2})),300);});return done(`${row.it.имя}: способность применена — ${слово}. Заряда осталось ${row.it.заряд}.`);}});
+iaction("identify",{n:"Определить свойства",значок:"🔍",cats:["artifact","magic"],можно:(row)=>row.kind==="art"&&row.it.опознан?"свойства уже известны":true,
+ делать:(row,ctx,done)=>{if(row.kind==="art"){row.it.опознан=true;safeFn(()=>Bank.play("magic_hum",{kind:"magic",gain:0.5,maxSec:3}));return done(`${ART.describe(row.it)} Скрытого больше нет.`);}
+  return done(invBrief(row.kind,row.key));}});
+iaction("charge",{n:"Зарядить",значок:"🔋",cats:["artifact"],можно:(row)=>invHas("кристалл",1)?true:"нужен кристалл",
+ делать:(row,ctx,done)=>{invTake("кристалл",1);row.it.заряд=(Number(row.it.заряд)||0)+3;safeFn(()=>{Bank.play("fx_crystal",{gain:0.55,maxSec:3});});return done(`${row.it.имя} заряжен: зарядов ${row.it.заряд}.`);}});
+iaction("artsell",{n:"Продать",значок:"🪙",cats:[],можно:ok,делать:(row,ctx,done)=>invDo("sell",row.kind,row.key)});
+iaction("artwin",{n:"Части, чары и гнёзда",значок:"💎",cats:[],можно:ok,делать:(row,ctx,done)=>invDo("configure",row.kind,row.key)});
+iaction("mend",{n:"Починить",значок:"🩹",cats:[],можно:ok,делать:(row,ctx,done)=>invDo("repair",row.kind,row.key)});
+/* яд на клинок */
+iaction("poisonblade",{n:"Смазать ядом",значок:"☠️",cats:["weapon"],
+ можно:(row)=>{if(typeof row.it!=="object")return "именную вещь не смазать";if(!(G.items||[]).includes("Яд"))return "нужен яд из чана алхимика";if(row.it.яд)return "клинок уже смазан";return true;},
+ делать:(row,ctx,done)=>{G.items.splice(G.items.indexOf("Яд"),1);row.it.яд=3;row.it.val=(Number(row.it.val)||0)+2;safeFn(()=>Bank.play("oc_corrode",{gain:0.5,maxSec:2}));return done(`${row.it.name} смазан ядом: три боя удар тяжелее на два.`);}});
+/* алтарь */
+const алтарьМожно=(ctx)=>ctx.алтарь?true:"рядом нет алтаря";
+iaction("altar_pray",{n:"Помолиться",значок:"🙏",cats:ALL_CATS,можно:(row,ctx)=>алтарьМожно(ctx),
+ делать:(row,ctx,done)=>{const a=(safeFn(()=>objectsHere(),[])||[]).find(o=>o.плитка==="A"&&o.d<=1);safeFn(()=>closeModal(document.getElementById("modal-invact")));safeFn(()=>closeModal(document.getElementById("modal-inventory")));if(a)useAltar(a.x,a.y);return true;}});
+iaction("offer",{n:"Принести в дар",значок:"🕯️",cats:["res","material","ingredient","food"],можно:(row,ctx)=>алтарьМожно(ctx),
+ делать:(row,ctx,done)=>{const alt=ctx.алтарь;invRemoveItem(row);if(!G.faith)G.faith={};const god=alt&&alt.бог?alt.бог.id:null;if(god)G.faith[god]=(Number(G.faith[god])||0)+1;
+  safeFn(()=>{altarSound("sacrifice",{gain:0.5,maxSec:4});deed("rites");});return done(`Принесено в дар: ${row.name}.${god?` ${alt.бог.n} принимает: благосклонность растёт.`:""}`);}});
+iaction("sacrifice",{n:"Принести жертву",значок:"🩸",cats:["food","potion","magic","other"],можно:(row,ctx)=>алтарьМожно(ctx),
+ делать:(row,ctx,done)=>{const alt=ctx.алтарь;invRemoveItem(row);const god=alt&&alt.бог?alt.бог.id:null;if(god){if(!G.faith)G.faith={};G.faith[god]=(Number(G.faith[god])||0)+2;}safeFn(()=>{altarSound("sacrifice",{gain:0.55,maxSec:4});deed("rites");});return done(`Жертва принесена: ${row.name}.${god?` ${alt.бог.n} доволен: благосклонность +2.`:""}`);}});
+function altarObjIndex(){try{objList=objectsHere();return objList.findIndex(o=>o.плитка==="A"&&o.d<=1);}catch(_){return -1;}}
+iaction("blessing",{n:"Получить благословение",значок:"✨",cats:ALL_CATS,
+ можно:(row,ctx)=>{const a=алтарьМожно(ctx);if(a!==true)return a;const i=altarObjIndex();if(i<0)return "алтарь не под рукой";const o=objList[i];const r=safeFn(()=>IACT.altbless.можно(o),false);return r?true:"алтарь не готов благословить: печать или условия — проверьте ауру";},
+ делать:(row,ctx,done)=>{const i=altarObjIndex();safeFn(()=>closeModal(document.getElementById("modal-invact")));safeFn(()=>closeModal(document.getElementById("modal-inventory")));if(i>=0)doObjAction(i,"altbless");return true;}});
+iaction("rite",{n:"Провести религиозный обряд",значок:"🕯️",cats:ALL_CATS,
+ можно:(row,ctx)=>{const a=алтарьМожно(ctx);if(a!==true)return a;const i=altarObjIndex();if(i<0)return "алтарь не под рукой";const o=objList[i];return safeFn(()=>IACT.altrite.можно(o),false)?true:"обряд здесь не ведут: нужен алтарь с целой печатью и сошедшимися условиями";},
+ делать:(row,ctx,done)=>{const i=altarObjIndex();safeFn(()=>closeModal(document.getElementById("modal-invact")));safeFn(()=>closeModal(document.getElementById("modal-inventory")));if(i>=0)doObjAction(i,"altrite");return true;}});
+iaction("consecrate",{n:"Освятить предмет",значок:"✨",cats:GEAR_CATS,
+ можно:(row,ctx)=>{const a=алтарьМожно(ctx);if(a!==true)return a;if(typeof row.it!=="object")return "именную вещь не освятить";if(row.it.освящён)return "уже освящено";const god=ctx.алтарь.бог;if(!god)return "алтарь ничей";if(godFavor(god.id)<4)return `нужна благосклонность ${god.n} от четырёх, у вас ${godFavor(god.id)}`;return true;},
+ делать:(row,ctx,done)=>{const god=ctx.алтарь.бог;row.it.освящён=god.n;row.it.val=(Number(row.it.val)||0)+1;safeFn(()=>{altarSound("blessing",{gain:0.55,maxSec:4});setTimeout(()=>safeFn(()=>Bank.play("choir",{gain:0.45,maxSec:4})),400);});return done(`${row.it.name} освящён именем ${god.n}: бонус ${row.it.val}, мертвецы боятся его больше.`);}});
+iaction("cleanse",{n:"Очистить предмет",значок:"🫧",cats:GEAR_CATS,
+ можно:(row,ctx)=>{const a=алтарьМожно(ctx);if(a!==true)return a;if(typeof row.it!=="object")return "именную вещь не очистить";if(!row.it.яд&&!row.it.проклят)return "на вещи нет ни яда, ни проклятия";return true;},
+ делать:(row,ctx,done)=>{if(row.it.яд){row.it.val=Math.max(0,(Number(row.it.val)||0)-2);delete row.it.яд;}delete row.it.проклят;safeFn(()=>altarSound("touch",{gain:0.5,maxSec:3}));return done(`${row.it.name} очищен: ни яда, ни проклятия.`);}});
+iaction("uncurse",{n:"Снять проклятие",значок:"🕊️",cats:GEAR_CATS.concat(["artifact","magic"]),
+ можно:(row,ctx)=>{const a=алтарьМожно(ctx);if(a!==true)return a;if(!(row.it&&row.it.проклят))return "на этой вещи проклятия нет";const god=ctx.алтарь.бог;if(god&&godFavor(god.id)<4)return `нужна благосклонность ${god.n} от четырёх`;return true;},
+ делать:(row,ctx,done)=>{delete row.it.проклят;safeFn(()=>{altarSound("blessing",{gain:0.55,maxSec:4});});return done(`Проклятие снято с ${row.name}.`);}});
+iaction("revelation",{n:"Получить откровение",значок:"🌟",cats:ALL_CATS,
+ можно:(row,ctx)=>{const a=алтарьМожно(ctx);if(a!==true)return a;const god=ctx.алтарь.бог;if(!god)return "алтарь ничей";if(godFavor(god.id)<12)return `откровение даётся послушникам: благосклонность ${god.n} от двенадцати, у вас ${godFavor(god.id)}`;return true;},
+ делать:(row,ctx,done)=>{const god=ctx.алтарь.бог;if(!G.revealed||typeof G.revealed!=="object")G.revealed={};const было=G.revealed[god.id];G.revealed[god.id]=(Number(было)||0)+1;G.xp=(Number(G.xp)||0)+12;safeFn(()=>checkLevelUp());
+  safeFn(()=>{Bank.play("god",{seed:PANTHEON.findIndex(x=>x.id===god.id),gain:0.7,maxSec:6});setTimeout(()=>safeFn(()=>godVoice(god.id,{gain:0.6,maxSec:6})),400);});
+  return done(`${god.n} открывает: ${god.myth} Запрет: ${god.taboo} Дар: ${god.boon} Опыт +12.`);}});
+iaction("address",{n:"Обратиться к божеству",значок:"🗣️",cats:ALL_CATS,
+ можно:(row,ctx)=>{const a=алтарьМожно(ctx);if(a!==true)return a;return ctx.алтарь.бог?true:"алтарь ничей";},
+ делать:(row,ctx,done)=>{const god=ctx.алтарь.бог;const f=godFavor(god.id);safeFn(()=>godVoice(god.id,{gain:0.55,maxSec:5}));return done(f<=0?`${god.n} молчит: вы ему незнакомы. Помолитесь и принесите дар.`:`${god.n}, ${god.ep}, слышит вас. Вы для него — ${faithTitle(god.id)}. ${f>=24?god.boon:"Служите дальше — и дар придёт."}`);}});
+iaction("relic",{n:"Возложить реликвию",значок:"🕯️",cats:["quest"],
+ можно:(row,ctx)=>{const a=алтарьМожно(ctx);if(a!==true)return a;return /^Реликвия/.test(String(row.name))?true:"на алтарь кладут реликвию бога";},
+ делать:(row,ctx,done)=>{const n=String(row.name);const alt=ctx.алтарь;invRemoveItem(row);if(!G.faith)G.faith={};if(alt&&alt.бог)G.faith[alt.бог.id]=(Number(G.faith[alt.бог.id])||0)+3;safeFn(()=>{altarSound("rite_end",{gain:0.6,maxSec:5});deed("rites");});return done(`${n} возложена.${alt&&alt.бог?` ${alt.бог.n} отвечает благосклонностью +3.`:""}`);}});
+iaction("special_rite",{n:"Особый ритуал",значок:"🌙",cats:["artifact","magic"],
+ можно:(row,ctx)=>{const a=алтарьМожно(ctx);if(a!==true)return a;const god=ctx.алтарь.бог;if(!god)return "алтарь ничей";if(!ctx.ночь)return "особый ритуал ведут ночью";if(godFavor(god.id)<20)return `нужна благосклонность ${god.n} от двадцати`;return true;},
+ делать:(row,ctx,done)=>{const god=ctx.алтарь.бог;safeFn(()=>{buffSet("благословение",12);buffSet("оберег",12);deed("rites");});safeFn(()=>{altarSound("rite",{gain:0.6,maxSec:6});setTimeout(()=>safeFn(()=>eventTheme("achieve",{tier:"rare",gain:0.55})),700);});journal(`Особый ритуал: ${god.n}.`);return done(`Ночной ритуал ${god.n} принят: благословение и оберег на двенадцать часов.`);}});
+/* торг и выброс */
+iaction("sell",{n:"Продать",значок:"🪙",cats:ALL_CATS,
+ можно:(row,ctx)=>{if(!ctx.торговец)return "торговца рядом нет";if(row.cat==="quest")return "квестовое не продают";if(row.kind==="equip")return "сперва снимите";const b=safeFn(()=>merchantBuys(ctx.торговец,row),{ок:true});return b.ок?true:b.почему;},
+ делать:(row,ctx,done)=>{INV.confirm={act:"sell",row:{kind:row.kind,key:row.key}};const цена=safeFn(()=>sellPriceOf(ctx.торговец,row),0);
+  invActConfirm(`Продать «${row.name}» за ${цена} ${plural(цена,"золотой","золотых","золотых")}?`,[["sellyes","🪙 Продать"],["cancel","↩️ Отмена"]]);return "keep";}});
+iaction("drop",{n:"Выбросить",значок:"🗑️",cats:ALL_CATS,
+ можно:(row)=>row.cat==="quest"?"квестовый предмет защищён от случайного удаления":row.kind==="equip"?"сперва снимите":true,
+ делать:(row,ctx,done)=>{INV.confirm={act:"drop",row:{kind:row.kind,key:row.key}};
+  if((Number(row.n)||0)>1){const n=Number(row.n);invActConfirm(`Выбросить сколько? ${row.name}: ${n} шт.`,[["dropn:1","1️⃣ Одну"],["dropn:"+Math.min(n,5),"5️⃣ Несколько: "+Math.min(n,5)],["dropn:"+Math.ceil(n/2),"½ Половину: "+Math.ceil(n/2)],["dropn:"+n,"🗑️ Всю стопку"],["cancel","↩️ Нет"]]);return "keep";}
+  invActConfirm(`Выбросить «${row.name}»?`,[["dropyes","✅ Да"],["cancel","❌ Нет"]]);return "keep";}});
+iaction("drop1",{n:"Выбросить одну",значок:"🗑️",cats:[],можно:ok,делать:(row,ctx,done)=>invDropN(row,1,done)});
+iaction("dropall",{n:"Выбросить всё",значок:"🗑️",cats:[],можно:ok,делать:(row,ctx,done)=>invDropN(row,Number(row.n)||1,done)});
+function invDropN(row,n,done){
+ if(row.cat==="quest")return done("Квестовый предмет защищён: его ждут по делу.");
+ if((Number(row.n)||0)>=1&&["res","rare","plant","fish","part"].includes(row.kind)){n=Math.max(1,Math.min(Number(row.n)||1,Number(n)||1));
+  if(row.kind==="part"){G.comps[row.key]=(Number(G.comps[row.key])||0)-n;if(G.comps[row.key]<=0)delete G.comps[row.key];}else invTake(row.key,n);
+  safeFn(()=>Bank.play("mtg_place",{gain:0.4,maxSec:1}));return done(`Выброшено: ${row.name} ×${n}. Осталось ${Number(row.kind==="part"?G.comps[row.key]:G.inv[row.key])||0}.`);}
+ invRemoveItem(row);safeFn(()=>Bank.play(row.kind==="potion"?"oc_bubble":"mtg_place",{gain:0.4,maxSec:1}));return done(`Выброшено: ${row.name}.`);}
+/* ── Меню действий: доступное и недоступное с причиной ── */
+function invActionsAll(row){
+ const ok=[],blocked=[];if(!row)return {ok,blocked};
+ const ctx=invContext();
+ ITEM_ACTIONS.forEach(a=>{if(!a.cats.includes(row.cat))return;
+  const r=safeFn(()=>a.можно(row,ctx),"не сейчас");
+  if(r===true)ok.push({id:a.id,n:`${a.значок} ${a.n}`,а:a});else if(typeof r==="string")blocked.push({id:a.id,n:`${a.значок} ${a.n}`,почему:r,а:a});});
+ /* Недоступное — с причиной, но не всё подряд: сперва то, что упирается не в место
+    (нет припаса, не та ступень, уже сделано), потом место; не больше восьми. */
+ const оМесте=r=>/рядом нет|рядом нет|у наковальни|в горне|в чане|у верстака|у магического|на точиле|торговца рядом|нет алтаря|ведут ночью/i.test(r.почему);
+ blocked.sort((x,y)=>(оМесте(x)?1:0)-(оМесте(y)?1:0));
+ return {ok,blocked:blocked.slice(0,8)};}
+function invActionList(kind,key){const row=invRow(kind,key);const all=invActionsAll(row);return all.ok.map(a=>({id:a.id,n:a.n}));}
+function invActConfirm(вопрос,кнопки){
+ const box=document.getElementById("invActBody");if(!box)return false;
+ const sel=INV.sel;
+ box.innerHTML=`<div class="list-line" tabindex="0" data-speak="${вопрос.replace(/"/g,"&quot;")}">❔ ${вопрос}</div>`
+  +кнопки.map(([id,n])=>`<button class="item" data-cmd="invdo:${id}:${sel.kind}:${encodeURIComponent(sel.key)}" data-speak="${n.replace(/^\S+\s/,"")}">${n}</button>`).join("");
+ openModal("modal-invact");
+ narrate(`${вопрос} ${кнопки.map(([,n])=>n.replace(/^\S+\s/,"")).join(", ")}.`,{interrupt:true,pri:1});
+ return true;}
 function invActions(){
  const sel=INV.sel;
  if(!sel||invFind(sel.kind,sel.key)==null){narrate("Сначала выберите вещь двойным касанием, потом свайп вверх или вниз — действия с ней.");return false;}
- const A=invActionList(sel.kind,sel.key);
+ const row=invRow(sel.kind,sel.key);const A=invActionsAll(row);
  const box=document.getElementById("invActBody");if(!box)return false;
- const name=(invAll().find(x=>x.kind===sel.kind&&x.key===sel.key)||{}).name||sel.key;
- box.innerHTML=`<div class="list-line" tabindex="0" data-speak="${String(name).replace(/"/g,"&quot;")}: действий ${A.length}.">${name}</div>`+
-  A.map(a=>`<button class="item" data-cmd="invdo:${a.id}:${sel.kind}:${encodeURIComponent(sel.key)}" data-speak="${a.n.replace(/^\S+\s/,"")}">${a.n}</button>`).join("");
+ const name=row.name||sel.key;
+ box.innerHTML=`<div class="list-line" tabindex="0" data-speak="${String(name).replace(/"/g,"&quot;")}: действий ${A.ok.length}, недоступных ${A.blocked.length}.">${name}</div>`+
+  A.ok.map(a=>`<button class="item" data-cmd="invdo:${a.id}:${sel.kind}:${encodeURIComponent(sel.key)}" data-speak="${a.n.replace(/^\S+\s/,"")}">${a.n}</button>`).join("")+
+  (A.blocked.length?`<h3>Недоступно сейчас</h3>`+A.blocked.map(a=>`<button class="item" data-cmd="invwhy:${a.id}:${sel.kind}:${encodeURIComponent(sel.key)}" data-speak="${a.n.replace(/^\S+\s/,"")} — нельзя: ${a.почему.replace(/"/g,"&quot;")}">🔒 ${a.n.replace(/^\S+\s/,"")} — ${a.почему}</button>`).join(""):"");
  openModal("modal-invact");
- narrate(`${name}: ${A.map(a=>a.n.replace(/^\S+\s/,"")).join(", ")}.`,{interrupt:true});
+ narrate(`${name}: ${A.ok.map(a=>a.n.replace(/^\S+\s/,"")).join(", ")}.${A.blocked.length?` Недоступно: ${A.blocked.length}; в списке сказано почему.`:""}`,{interrupt:true});
  return true;}
-function invDo(action,kind,key){
+function invWhy(action,kind,key){
+ key=decodeURIComponent(String(key||""));const row=invRow(kind,key);const a=ITEM_ACTIONS.find(x=>x.id===action);
+ if(!row||!a){narrate("Такого действия нет.");return false;}
+ const r=safeFn(()=>a.можно(row,invContext()),"не сейчас");
+ narrate(r===true?`${a.n}: доступно.`:`${a.n} нельзя. ${String(r)[0].toUpperCase()+String(r).slice(1)}.`,{interrupt:true});return true;}
+function invDo(action,kind,key,arg){
  key=decodeURIComponent(String(key||""));
- const it=invFind(kind,key);
  const done=(t)=>{safeFn(()=>closeModal(document.getElementById("modal-invact")));safeFn(()=>{renderInventory();refresh();saveGame(true);});if(t)narrate(t,{interrupt:true});return true;};
- if(it==null)return done("Такой вещи уже нет.");
+ if(action==="cancel"){INV.confirm=null;return done("Отменено.");}
+ const row=invRow(kind,key);
+ if(!row)return done("Такой вещи уже нет.");
  try{
   const ctx=invContext();
-  switch(action){
-   case "look":{
-    let t=invBrief(kind,key);
-    if(kind==="art")t=ART.describe(it);
-    if(kind==="res"||kind==="rare"){const сорт=RES_SORTS[key];t+=сорт?` Сорта: ${сорт.map(x=>x.n).join(", ")}.`:"";t+=` Спрос державы: ${priceWhy(key,empireIndexAt(G.x,G.y),null)}.`;}
-    narrate(t,{interrupt:true});return true;}
-   case "unequip":{const w=G.equip[key];if(!w)return done("Снимать нечего.");if(key==="weapon"){G.weaponDrawn=false;safeFn(()=>Bank.play("lug_knife_sheathe",{gain:0.45,maxSec:2}));return done(`${w.name} убран в ножны. Оружие всегда при вас: сменить его можно, надев другое из сумы.`);}else{if(!Array.isArray(G.gear))G.gear=[];G.gear.push(w);G.equip[key]=null;}
-    safeFn(()=>Bank.play(itemVoice(w),{gain:0.5,maxSec:2}));return done(`Снято: ${w.name}. Лежит в суме.`);}
-   case "equip":{const w=it;if(!w)return done("Надевать нечего.");
-    if(w.slot==="weapon"){const i=weaponList().findIndex(x=>x.id===w.id||x.name===w.name);safeFn(()=>closeModal(document.getElementById("modal-invact")));equipWeaponIndex(i);return true;}
-    const prev=G.equip[w.slot];G.equip[w.slot]=w;const gi=(G.gear||[]).indexOf(w);if(gi>=0)G.gear.splice(gi,1);if(prev)G.gear.push(prev);
-    safeFn(()=>Bank.play(itemVoice(w),{gain:0.5,maxSec:2}));return done(`Надето: ${w.name}${prev?`, прежнее — ${prev.name} — в суме`:""}.`);}
-   case "drop":{
-    if(kind==="gear"){const gi=Number(key);const w=G.gear.splice(gi,1)[0];return done(`Выброшено: ${w?w.name:"вещь"}.`);}
-    if(kind==="potion"){G.potions.splice(Number(key),1);return done("Зелье вылито.");}
-    if(kind==="item"){const n=G.items.splice(Number(key),1)[0];return done(`Выброшено: ${typeof n==="string"?n:n&&n.name}.`);}
-    G.inv[key]=(Number(G.inv[key])||0)-1;if(G.inv[key]<=0)delete G.inv[key];safeFn(()=>Bank.play("mtg_place",{gain:0.4,maxSec:1}));return done(`Выброшена одна: ${key}. Осталось ${Number(G.inv[key])||0}.`);}
-   case "dropall":{delete G.inv[key];return done(`Выброшено всё: ${key}.`);}
-   case "sell":{if(!ctx.торговец)return done("Торговца рядом нет.");safeFn(()=>closeModal(document.getElementById("modal-invact")));sellResource(ctx.торговец.key,key,false);safeFn(()=>renderInventory());return true;}
-   case "melt":{safeFn(()=>closeModal(document.getElementById("modal-invact")));techDo(TECH_BY_ID.melt,"forge");safeFn(()=>renderInventory());return true;}
-   case "blade":{safeFn(()=>closeModal(document.getElementById("modal-invact")));techDo(TECH_BY_ID.blade,"anvil");safeFn(()=>renderInventory());return true;}
-   case "brew":{safeFn(()=>closeModal(document.getElementById("modal-invact")));safeFn(()=>closeModal(document.getElementById("modal-inventory")));openPotions();return true;}
-   case "offer":{const a=(safeFn(()=>objectsHere(),[])||[]).find(o=>o.плитка==="A"&&o.d<=1);const alt=a?safeFn(()=>altarAt(a.x,a.y),null):null;
-    G.inv[key]=(Number(G.inv[key])||0)-1;if(G.inv[key]<=0)delete G.inv[key];
-    if(!G.faith)G.faith={};const god=alt&&alt.бог?alt.бог.id:null;if(god)G.faith[god]=(Number(G.faith[god])||0)+1;
-    safeFn(()=>{altarSound("sacrifice",{gain:0.5,maxSec:4});deed("rites");});
-    return done(`Принесено в дар: ${key}.${god?` ${alt.бог.n} принимает: благосклонность растёт.`:""}`);}
-   case "eat":{G.inv[key]=(Number(G.inv[key])||0)-1;if(G.inv[key]<=0)delete G.inv[key];const h=Math.min(G.hpMax,G.hp+6)-G.hp;G.hp+=h;G.water=Math.min(200,(Number(G.water)||0)+5);safeFn(()=>Bank.play("oc_munch",{gain:0.5,maxSec:2}));return done(`Съедено: ${key}. Здоровья +${h}.`);}
-   case "compare":{const idx=empireIndexAt(G.x,G.y);const p=marketPrice(key,idx,G.day);return done(`${key}: в державе ${EMPIRES[idx].short} дают около ${p} золота за штуку; ${priceWhy(key,idx,null)}.`);}
-   case "drink":{safeFn(()=>closeModal(document.getElementById("modal-invact")));drinkPotion(Number(key));safeFn(()=>renderInventory());return true;}
-   case "lore":{narrate(artLoreText(it),{interrupt:true});return true;}
-   case "mend":{const t=artMend();safeFn(()=>Bank.play("uh_smith",{gain:0.5,maxSec:2}));return done(t[0].toUpperCase()+t.slice(1)+".");}
-   case "artsell":{if(!ctx.торговец)return done("Торговца рядом нет.");safeFn(()=>closeModal(document.getElementById("modal-invact")));artSell(Number(key),ctx.торговец.key);safeFn(()=>renderInventory());return true;}
-   case "artwin":{safeFn(()=>closeModal(document.getElementById("modal-invact")));safeFn(()=>closeModal(document.getElementById("modal-inventory")));openModal("modal-artifacts");renderArtifacts();return true;}
-   case "scroll":{const n=String(typeof it==="string"?it:it.name).slice(8);safeFn(()=>closeModal(document.getElementById("modal-invact")));readLegendScroll(n);safeFn(()=>renderInventory());return true;}
-   case "drinkitem":{G.items.splice(Number(key),1);const h=Math.min(G.hpMax,G.hp+15)-G.hp;G.hp+=h;safeFn(()=>{UI.drink();Bank.play("cast_potion",{gain:0.5,maxSec:2});});return done(`Выпито зелье здоровья: +${h}.`);}
-   case "relic":{const n=G.items.splice(Number(key),1)[0];const a=(safeFn(()=>objectsHere(),[])||[]).find(o=>o.плитка==="A"&&o.d<=1);const alt=a?safeFn(()=>altarAt(a.x,a.y),null):null;if(!G.faith)G.faith={};if(alt&&alt.бог)G.faith[alt.бог.id]=(Number(G.faith[alt.бог.id])||0)+3;safeFn(()=>Bank.play("choir",{gain:0.5,maxSec:5}));return done(`Возложено: ${n}. Богам угодно.`);}
-  }
-  return done("Такого действия нет.");
+  if(action==="dropyes")return invDropN(row,1,done);
+  if(String(action).startsWith("dropn")){const n=Number(String(action).split(":")[1]||arg||1);return invDropN(row,n,done);}
+  if(action==="sellyes"){const n=ctx.торговец;if(!n)return done("Торговца рядом нет.");return sellRowTo(n,row,done);}
+  const a=ITEM_ACTIONS.find(x=>x.id===action);
+  if(!a)return done("Такого действия нет.");
+  const r=safeFn(()=>a.можно(row,ctx),"не сейчас");
+  if(r!==true)return done(`${a.n} нельзя. ${String(r)[0].toUpperCase()+String(r).slice(1)}.`);
+  const res=a.делать(row,ctx,done);
+  if(res==="keep")return true;
+  return res===undefined?true:res;
  }catch(e){return done("Не вышло: "+String(e&&e.message||e));}}
+/* ── Что торговец берёт и по какой цене ──
+   Не всякий берёт всё: кузнец — оружие, доспех и металл; травник — травы и
+   зелья; книжник — книги и свитки; собиратель — артефакты; лавочник — еду,
+   инструмент и сырьё. «Берёт только своё» сужает, «берёт краденое» расширяет. */
+const MERCH_BUYS={
+ mech:["weapon","material","res","ammo"],bron:["shield","armor","helm","gloves","boots","material","res"],redk:["weapon","shield","armor","helm","gloves","boots","acc","magic","material"],
+ arte:["artifact","magic","material"],star:["weapon","shield","armor","helm","gloves","boots","acc","tool","other"],zapret:["weapon","acc","magic","potion","other","material"],
+ pripas:["food","tool","res","ingredient","other"],knigi:["book","scroll"],snadob:["potion","ingredient","food"],instr:["tool","material","res","ammo"],kamni:["material","magic"],
+ obshiy:["weapon","shield","armor","helm","gloves","boots","acc","food","tool","res","material","potion","other","ingredient"]};
+function merchantBuys(n,row){
+ try{
+  if(!n||!n.trade)return {ок:false,почему:"этот житель не торгует"};
+  if(row.cat==="quest")return {ок:false,почему:"квестовое не продают"};
+  const d=merchSoul(n);
+  if(!d)return {ок:["res","rare","plant","fish"].includes(row.kind),почему:"берёт только припасы"};
+  const list=MERCH_BUYS[d.вид.id]||MERCH_BUYS.obshiy;
+  if(d.нрав.толькоСвоё&&!list.includes(row.cat))return {ок:false,почему:`${d.вид.n} берёт только своё: ${list.map(c=>(INV_CAT_BY_ID[c]||{}).n||c).join(", ").toLowerCase()}`};
+  if(!list.includes(row.cat)&&!(d.нрав.краденое&&row.cat!=="artifact"))return {ок:false,почему:`${d.вид.n} такого не берёт: его дело — ${(d.вид.о||"").toLowerCase()}`};
+  if(row.kind==="art"&&d.вид.id!=="arte"&&d.вид.id!=="redk")return {ок:false,почему:"артефакты берёт только собиратель артефактов или продавец редкого"};
+  const кошель=merchPurse(n);const цена=sellPriceOf(n,row);
+  if(кошель<цена)return {ок:false,почему:`в кошеле торговца ${кошель} золота, а вещь стоит ${цена}: он не расплатится`};
+  return {ок:true};
+ }catch(_){return {ок:true};}}
+function sellPriceOf(n,row){
+ try{
+  if(["res","rare","plant","fish"].includes(row.kind))return sellUnit(n,row.key);
+  if(row.kind==="part")return Math.max(3,Math.round(20*(1+((ART_PART_BY_ID[row.key]||{}).ред||0))));
+  if(row.kind==="art")return Math.round(ART.price(row.it)*0.62);
+  if(row.kind==="potion")return Math.max(4,Math.round(12*(Number(row.it.q)||1)));
+  const d=merchSoul(n);const k=(d?d.нрав.k:1)*(d&&d.нрав.краденое?0.8:1);
+  if(row.kind==="gear"||row.kind==="equip"){const it=row.it;const база=Number(it.price)||RANKPRICE[Number(it.rank)||0]||30;return Math.max(1,Math.round(база*0.4*(itemCondition(it)/100)*k));}
+  const name=String(row.name);
+  if(row.cat==="scroll")return Math.round(25*k);
+  if(row.cat==="book"){const т=G.tomes&&G.tomes[name];return Math.round((т?т.цена:20)*0.5*k);}
+  if(row.cat==="tool")return Math.round(6*k);if(row.cat==="magic")return Math.round(60*k);
+  return Math.round(8*k);
+ }catch(_){return 1;}}
+function sellRowTo(n,row,done){
+ done=done||((t)=>{narrate(t,{interrupt:true});return true;});
+ const b=merchantBuys(n,row);if(!b.ок)return done(`Не продано. ${b.почему[0].toUpperCase()+b.почему.slice(1)}.`);
+ if(["res","rare","plant","fish"].includes(row.kind)){safeFn(()=>closeModal(document.getElementById("modal-invact")));sellResource(n.key,row.key,false);safeFn(()=>renderInventory());return true;}
+ if(row.kind==="art"){safeFn(()=>closeModal(document.getElementById("modal-invact")));artSell(Number(row.key),n.key);safeFn(()=>renderInventory());return true;}
+ const цена=sellPriceOf(n,row);const имя=row.name;
+ invRemoveItem(row);G.gold+=цена;safeFn(()=>merchSpend(n,цена));safeFn(()=>deed("deals"));safeFn(()=>addRep(n.race,1));
+ safeFn(()=>{UI.pickup();Bank.play("gold",{seed:цена,gain:0.7});Bank.play("market_slap",{seed:цена,gain:0.45,maxSec:3});});
+ journal(`Продажа: ${имя} за ${цена} золота.`);
+ return done(`Продано: ${имя} за ${цена} золота. Всего золота: ${G.gold}.`);}
 function renderCharacter(){
  const R=raceInfo(G.race),rg=GOD_BY_ID[R.god],p=patronGod();
  const cl=G.clan&&CLAN_BY_NAME[G.clan];
@@ -31204,7 +32169,64 @@ function renderCharacter(){
     `<button data-cmd="cast:${i}" data-speak="Сотворить ${s.n}.">✨ Сотворить</button>`:
     учат?`<button data-cmd="learn:${i}" data-speak="Выучить ${s.n} за ${цена} золота.">📚 Выучить за ${цена} золота</button>`
         :`<span data-speak="${s.n}: здесь этому не учат. Ищите в других державах.">🚫 Здесь не учат</span>`}</div>`;}).join("");}
+/* ── ЖУРНАЛ ДЕЛ ПО РАЗДЕЛАМ ──
+   Активные, готовые к сдаче, выполненные, проваленные, цепочки и то, о чём
+   пока только слышно. У дела — цель, текущий этап, указания, награда,
+   последствия и что оно меняет в отношении к вам. */
+function questConsequences(q){
+ const out=[];
+ try{
+  if(q.diplo)out.push("держава запомнит службу");
+  if(q.faith&&q.godId)out.push(`благосклонность ${GOD_BY_ID[q.godId]?GOD_BY_ID[q.godId].n:"бога"} +${q.faith}`);
+  if(q.race)out.push(`народ «${q.race}» это запомнит`);
+  if(q.дом&&HOUSE_BY_ID[q.дом])out.push(`Дом «${HOUSE_BY_ID[q.дом].n}»: положение вырастет`);
+  if(q.малыйБог&&LESSER_GOD_BY_ID[q.малыйБог])out.push(`${LESSER_GOD_BY_ID[q.малыйБог].n} услышит`);
+  if(q.держава)out.push(`держава «${q.держава}»: доверие и торг`);
+  if(q.империя)out.push("тёмная империя зачтёт дело");
+  if(q.chain)out.push("цепочка пойдёт дальше");
+  out.push("отказ — минус два к отношению народа заказчика");
+ }catch(_){}
+ return out;}
+function questCardHtml(q){
+ const цель=safeFn(()=>qProgressText(q),"")||(q.done?"дело закрыто":"выполнить условие");
+ const награда=q.reward?`${q.reward.gold||0} золота, ${q.reward.xp||0} опыта${q.дар?`, ${q.дар.n||q.дар.res||"дар"}`:""}`:"без награды";
+ const этап=q.chain?`цепочка «${q.chainName||q.chain}», шаг ${(Number(q.chainStep)||0)+1} из ${q.chainOf||"?"}`:(q.уровень?`дело ${q.уровень}-го уровня`:"одиночное дело");
+ const состояние=safeFn(()=>questStateWord(q),"");
+ const последствия=questConsequences(q).join("; ");
+ const ярус=safeFn(()=>questTier(q).n,"")||"";
+ const речь=`От ${q.npc}. ${q.text} Цель: ${цель}. Этап: ${этап}.${ярус?` Ярус: ${ярус}.`:""} Состояние: ${состояние}. Награда: ${награда}. Последствия: ${последствия}.`;
+ return `<div class="list-line" tabindex="0" data-speak="${речь.replace(/"/g,"&quot;")}">${q.провал?"❌":q.done?"✅":"📜"} От: <b>${q.npc}</b><br>${q.text}<br>
+   🎯 Цель: ${цель}<br>🪜 Этап: ${этап}${ярус?` · Ярус: ${ярус}`:""} · состояние: ${состояние}${q.до&&!q.done?`, срок до ${q.до}-го дня`:""}<br>
+   🎁 Награда: ${награда}<br>⚖️ Последствия: ${последствия}<br>
+   ${!q.done&&safeFn(()=>questPartialReady(q),false)?`<button data-cmd="qpart:${q.id}" data-speak="Сдать частично: половина сделана, платят меньше, последствия придут позже.">½ Сдать частично</button>`:""}
+   ${q.done?"":`<button data-cmd="qdone:${q.id}" data-speak="Завершить квест: ${String(q.text).replace(/"/g,"&quot;").slice(0,80)}">✅ Завершить</button>
+   ${(()=>{const a=safeFn(()=>qAltFor(q),null);if(!a)return "";const ц=safeFn(()=>qAltPrice(q),0);
+     return `<button data-cmd="qalt:${q.id}" data-speak="Второй путь: ${a.n}${ц?`, ${ц} золота`:""}. ${a.о}.">🪙 ${a.n}${ц?` (${ц})`:""}</button>`;})()}
+   <button data-cmd="qdrop:${q.id}" data-speak="Отказаться от дела: ${String(q.text).replace(/"/g,"&quot;").slice(0,80)}. Репутация у народа упадёт на два.">🚫 Отказаться</button>`}</div>`;}
 function renderQuests(){
+ try{
+  const el=document.getElementById("questList");if(!el)return;
+  const все=G.quests||[];
+  const активные=все.filter(q=>!q.done&&safeFn(()=>questStateWord(q),"")!=="готово к сдаче");
+  const готовые=все.filter(q=>!q.done&&safeFn(()=>questStateWord(q),"")==="готово к сдаче");
+  const сданные=все.filter(q=>q.done&&!q.провал);
+  const провалы=все.filter(q=>q.провал);
+  const цепочки=[...new Set(все.filter(q=>q.chain).map(q=>q.chain))];
+  const взятые=new Set(цепочки);
+  const скрытые=Object.keys(typeof CHAIN_DB==="object"?CHAIN_DB:{}).filter(id=>!взятые.has(id)).length;
+  const open=openQuests().length;
+  const секция=(заг,список,пусто)=>`<h3>${заг} (${список.length})</h3>`+(список.length?список.map(questCardHtml).join(""):`<div class="list-line">${пусто}</div>`);
+  el.innerHTML=`<div class="list-line" tabindex="0" data-speak="Незакрытых дел ${open} из ${QUEST_LIMIT}. Активных ${активные.length}, готовых к сдаче ${готовые.length}, выполненных ${сданные.length}, проваленных ${провалы.length}, цепочек ${цепочки.length}, неизвестных цепочек ${скрытые}.">📋 Незакрытых дел: <b>${open}</b> из ${QUEST_LIMIT}</div>`
+   +секция("📜 Активные",активные,"Активных дел нет. Поговорите с жителями — у каждого есть задание.")
+   +секция("✅ Готовые к сдаче",готовые,"Пока ничего не готово.")
+   +секция("🏁 Выполненные",сданные,"Ещё ничего не сдано.")
+   +секция("❌ Проваленные",провалы,"Провалов нет.")
+   +`<h3>🔗 Цепочки (${цепочки.length})</h3>`+(цепочки.length?цепочки.map(id=>{const шаги=все.filter(q=>q.chain===id);const посл=шаги[шаги.length-1];const c=(typeof CHAIN_DB==="object"&&CHAIN_DB[id])||{};
+     const t=`Цепочка «${посл.chainName||c.n||id}»: пройдено шагов ${шаги.filter(q=>q.done).length} из ${посл.chainOf||шаги.length}. Текущий: ${посл.text}`;
+     return `<div class="list-line" tabindex="0" data-speak="${t.replace(/"/g,"&quot;")}">🔗 ${t}</div>`;}).join(""):`<div class="list-line">Цепочек пока нет: их дают жители с историей.</div>`)
+   +`<h3>❔ Скрытые и неизвестные</h3><div class="list-line" tabindex="0" data-speak="Неизвестных цепочек в мире ${скрытые}: о них пока только слышно в слухах и от жителей.">❔ Неизвестных цепочек: ${скрытые}. О них пока только слышно.</div>`;
+ }catch(e){try{console.error("renderQuests",e);}catch(_){}}}
+function renderQuestsOld(){
  document.getElementById("questList").innerHTML=G.quests.length?
   G.quests.map(q=>`<div class="list-line">${q.done?"✅":"📜"} От: ${q.npc}<br>${q.text}<br>
    ${q.chain?`Цепочка «${q.chainName}», шаг ${(q.chainStep||0)+1} из ${q.chainOf}.<br>`:""}Ярус: ${safeFn(()=>questTier(q).n,"")}, состояние: ${safeFn(()=>questStateWord(q),"")}${q.до&&!q.done?`, срок до ${q.до}-го дня`:""}.<br>Прогресс: ${q.done?(q.провал?"провалено":q.состояние==="частично"?"сдано частично":"выполнен"):qProgressText(q)}<br>Награда: ${questPay(q).gold} золота
@@ -31571,8 +32593,11 @@ CMD.craftdo=i=>{
  narrate(`Создано: ${names[i]}.`);refresh();renderCraft();};
 function renderGestures(){
  /* Единая логика: число пальцев = область игры.
-    1 — движение и предметы, 2 — места и меню, 3 — бой и сведения, 4 — магия. */
+    1 — движение и предметы, 2 — места и меню, 3 — бой и сведения, 4 — магия.
+    Сперва — карта жестов из таблицы GESTURE_MAP (та же, по которой работает
+    диспетчер), потом подробности словами. */
  document.getElementById("gestBody").innerHTML=[
+  "<b>КАРТА ЖЕСТОВ — одна таблица на всю игру</b>"].concat(GESTURE_MAP.map(g=>"🤚 "+Gestures.word(g)+".")).concat([
   "<b>ОДИН ПАЛЕЦ — движение, предметы, кнопки</b>",
   "🤚 Касание и ведение пальцем (не отрывая) — ощупывание: игра называет элемент под пальцем, как в экранных дикторах. Смена элемента сразу обрывает предыдущую фразу.",
   "🎚️ Ползунки громкости и скорости речи двигаются только двойным касанием: каждое прибавляет десятую часть шкалы, а с края значение возвращается к началу. Палец, положенный на ползунок, ничего не меняет — раньше он перебрасывал бегунок туда, где коснулся, и настройки менялись сами собой.",
@@ -31584,7 +32609,7 @@ function renderGestures(){
   "🏃 Свайп и удержание пальца — бег в эту сторону. Отпустите палец — остановка.",
   "🎣 Во время поклёвки любое касание или свайп — <b>подсечка</b>: игра сама скажет «Клюёт!» и подаст звук, а у вас будет около двух секунд.",
   "👆 Одиночное касание одним пальцем не делает ничего — ни действия, ни имени. Что под ногами и что под пальцем, называют ощупывание и палец, полежавший на месте четверть секунды.",
-  "👆👆 Двойное касание игрового поля — <b>действие здесь</b>: войти в дверь или ворота, спуститься по лестнице, открыть сундук, добыть жилу, помолиться у алтаря, заговорить с жителем или торговцем, собрать добычу.",
+  "👆👆 Двойное касание — выполнить названный пункт окна. Касание игрового поля одним пальцем — одиночное или двойное — <b>ничего не делает</b>: действие здесь — свайп двумя пальцами вниз, сбор — касание двумя пальцами.",
   "✋ Палец, лежащий на месте, через четверть секунды называет то, чего касается, — и только называет. Ни одно одиночное касание в игре ничего не выполняет: сколько бы палец ни лежал, при отрыве ничего не произойдёт.",
   "🚪 <b>Вход своим ходом.</b> Дойдя до города, дома или пещеры, вы встаёте на пороге — игра говорит: «вы у входа». Шагните ещё раз в ту же сторону, и вы войдёте сами. Внутри так же: встали на ступени — шаг в ту же сторону спускает вас ниже или поднимает выше; встали в воротах — шаг наружу выводит из города. Меню действий по-прежнему работает, но ходить теперь можно ногами.",
   "↔️ Свайп в окнах и меню — перелистывание пунктов на один шаг, включая длинные списки народов и богов. Свайп между двумя касаниями отменяет начатую активацию, чтобы не сработало лишнее.",
@@ -31615,7 +32640,7 @@ function renderGestures(){
   "🛣️ <b>Дороги.</b> Большие тракты идут через весь мир, от каждого селения к ближнему тракту протоптан съезд. Там, где тракты пересекаются, стоит перекрёсток со столбом-указателем: он называет ближние города, сторону света и расстояние в шагах.",
   "⚔️ <b>Сложность.</b> В настройках три уровня: спокойный, обычный и суровый. Меняется не то, что происходит, а мера — сколько бьют, сколько держат твари, как часто встречаются, почём торгуют и сколько отнимает поражение. Переключить можно в любой момент.",
   "💾 <b>Сохранения.</b> Игра сохраняется сама, но в меню «Сохранения» есть три слота и выгрузка в файл: файл можно унести на другой телефон и вернуть игру там же, где остановились. Если памяти браузера не хватит, игра скажет об этом вслух, а не промолчит.",
-  "⌨️ Клавиатура: стрелки — ходьба, Таб — перебор элементов, Энтер — действие, Эскейп — закрыть окно или побег из боя, Альт+S — тишина."].map(t=>`<div class="list-line">${t}</div>`).join("");}
+  "⌨️ Клавиатура: стрелки — ходьба, Таб — перебор элементов, Энтер — действие, Эскейп — закрыть окно или побег из боя, Альт+S — тишина."]).map(t=>`<div class="list-line">${t}</div>`).join("");}
 function renderMap(){
  const g=document.getElementById("mapGrid");g.innerHTML="";
  if(G.place){
@@ -31635,7 +32660,8 @@ function renderMap(){
    g.appendChild(b);}
   const info=document.getElementById("mapInfo");
   if(info)info.textContent=`${placeTitle()}. Клетка (${p.x};${p.y}).`;
-  narrate(`Карта места: ${placeTitle()}. Сетка семь на семь вокруг вас. Касание клетки называет её и проигрывает её маяк.`);
+  safeFn(()=>renderMapPoints());
+  narrate(`Карта места: ${placeTitle()}. Сетка семь на семь вокруг вас. Касание клетки называет её и проигрывает её маяк. Ниже — известные точки: двери, лестницы, жители, сундуки.`);
   return;}
  for(let dy=-3;dy<=3;dy++)for(let dx=-3;dx<=3;dx++){
   const x=G.x+dx,y=G.y+dy;
@@ -31656,7 +32682,52 @@ function renderMap(){
   b.dataset.speak=`${dirTxt}: ${desc}.`;
   b.dataset.cmd=`mapcell:${dx},${dy}`;
   b.setAttribute("aria-label",b.dataset.speak);
-  g.appendChild(b);}}
+  g.appendChild(b);}
+ safeFn(()=>renderMapPoints());
+ narrate(`Карта места: ${cellContent(G.x,G.y).terrain[1]}, ${cellContent(G.x,G.y).empire.name}. Сетка семь на семь вокруг вас. Ниже — известные точки: города, постройки, подземелья, цели дел, узлы сети, зал Дома.`,{cat:"ui"});}
+/* ── ИЗВЕСТНЫЕ ТОЧКИ КАРТЫ ──
+   Карта — не только семь клеток вокруг. Внутри она перечисляет двери,
+   проходы, лестницы, сундуки, алтари и жителей яруса; снаружи — города,
+   постройки, подземелья, цели незакрытых дел, открытые узлы сети, крепости
+   и зал Дома. Каждая точка — сторона и расстояние, и по касанию звучит
+   маяком с той стороны, где стоит. */
+function mapPoints(){
+ const out=[];
+ try{
+  if(G.place){
+   const near=nearFeatures(12);
+   const род=t=>({"+":"дверь","G":"ворота","Y":"дверь палаты","<":"лестница вверх",">":"лестница вниз","C":"сундук","A":"алтарь","N":"житель","P":"торговец","S":"лавка","F":"горн","B":"стража","K":"книги","W":"колодец","R":"жила","M":"логово","L":"голубятня","T":"факел","X":"обстановка"})[t]||"объект";
+   near.forEach(o=>out.push({n:o.name,род:род(o.t),dx:o.dx,dy:o.dy,d:o.d,dir:o.dir,bid:o.bid,dz:o.t===">"?-1:o.t==="<"?1:0,x:o.x,y:o.y}));
+   safeFn(()=>{(Actors&&Actors.list||[]).forEach(a=>{const dx=a.x-G.place.x,dy=a.y-G.place.y,d=Math.max(Math.abs(dx),Math.abs(dy));if(!d||d>12)return;
+    out.push({n:(a.m&&a.m.n)||a.n||"живое существо",род:a.m?"тварь":"житель",dx,dy,d,dir:dirBetween(dx,dy),bid:a.m?"danger":"npc",x:a.x,y:a.y});});});
+   out.sort((a,b)=>a.d-b.d);
+   return out.slice(0,24);}
+  if(G.ship)return out;
+  const push=(n,род,x,y,bid)=>{const dx=x-G.x,dy=y-G.y,d=Math.max(Math.abs(dx),Math.abs(dy));if(d>WORLD)return;out.push({n,род,dx,dy,d,dir:d?dirBetween(dx,dy):"здесь",bid,x,y});};
+  for(let dx=-6;dx<=6;dx++)for(let dy=-6;dy<=6;dy++){const x=G.x+dx,y=G.y+dy;if(x<0||y<0||x>=WORLD||y>=WORLD)continue;
+   const c=safeFn(()=>cellContent(x,y),null);if(!c)continue;
+   if(c.structure)push(c.structure.name,PLACE_KIND[c.structure.type]==="dungeon"?"подземелье":PLACE_KIND[c.structure.type]==="city"?"город":"постройка",x,y,c.structure.beacon);
+   else if(c.monster&&!G.cleared[x+","+y]&&Math.max(Math.abs(dx),Math.abs(dy))<=4)push(c.monster.n,"опасность",x,y,"danger");}
+  safeFn(()=>findCities(G.x,G.y,40,6).forEach(c=>{if(!out.some(o=>o.x===c.x&&o.y===c.y))push(c.name,"город",c.x,c.y,"castle");}));
+  (G.quests||[]).filter(q=>!q.done&&Number.isFinite(Number(q.tx))&&Number.isFinite(Number(q.ty))).slice(0,6).forEach(q=>push(`цель дела: ${q.city||q.location||q.npc}`,"дело",Number(q.tx),Number(q.ty),"quest"));
+  safeFn(()=>portalsKnown().map(portalNodeByKey).filter(Boolean).slice(0,4).forEach(nd=>push(nd.name,"узел сети",nd.x,nd.y,"portal")));
+  safeFn(()=>{const h=Houses.here();if(h)push(`зал Дома «${h.n}»`,"Дом",h.x,h.y,"castle");});
+  safeFn(()=>FORTS.filter(f=>Math.max(Math.abs(f.x-G.x),Math.abs(f.y-G.y))<=30).slice(0,4).forEach(f=>push(f.n,"крепость",f.x,f.y,"castle")));
+  out.sort((a,b)=>a.d-b.d);
+ }catch(_){}
+ return out.slice(0,24);}
+function renderMapPoints(){
+ const el=document.getElementById("mapPoints");if(!el)return;
+ const pts=mapPoints();
+ el.innerHTML=pts.length?pts.map((o,i)=>{const t=`${o.n} — ${o.род}, ${o.d?`${o.dir}, ${o.d} ${plural(o.d,"шаг","шага","шагов")}`:"здесь"}`;
+  return `<button class="item" data-cmd="mappt:${i}" data-speak="${t.replace(/"/g,"&quot;")}. Двойное касание — маяк с её стороны.">📌 ${t}</button>`;}).join("")
+  :`<div class="list-line">Известных точек рядом нет: пройдите дальше или осмотритесь.</div>`;}
+function mapPointGo(i){
+ const pts=mapPoints();const o=pts[Number(i)];
+ if(!o){narrate("Эта точка карты больше не читается.");return false;}
+ safeFn(()=>{if(o.bid&&typeof BEACON_ROLE!=="undefined"&&(BEACON_ROLE[o.bid]||(typeof BEACON_SAMPLE!=="undefined"&&BEACON_SAMPLE[o.bid])))beaconAt(o.bid,o.dx,o.dy,o.dz||0,Math.min(o.d,8));else beaconAt("wall",o.dx,o.dy,0,Math.min(o.d,8));});
+ narrate(`${o.n}: ${o.род}, ${o.d?`${o.dir}, ${o.d} ${plural(o.d,"шаг","шага","шагов")}`:"вы здесь"}.`,{interrupt:true});
+ return true;}
 async function scanSpeak(){
  if(G.place){
   /* Внутри постройки скан перечисляет двери, лестницы, сундуки и жилы,
@@ -31786,8 +32857,8 @@ function bindSettings(){const $=id=>document.getElementById(id);
  renderDifficulty();
  safeFn(()=>bindSpeechSettings($));
  $("setSpeech").checked=!!settings.speech;$("setEffects").checked=!!settings.effects;
- $("setMusic").checked=!!settings.music;$("setSubs").checked=!!settings.subtitles;
- $("setExplore").checked=!!settings.explore;$("setHints").checked=settings.hints!==0;$("setFastTap").checked=!!settings.fastTap;$("setHaptics").checked=!!settings.haptics;
+ $("setMusic").checked=!!settings.music;{const sm=$("setSubMode");if(sm)sm.value=settings.subMode||"sounds";}
+ $("setExplore").checked=!!settings.explore;{const hm=$("setHintMode");if(hm)hm.value=settings.hintMode||"full";}$("setFastTap").checked=!!settings.fastTap;$("setHaptics").checked=!!settings.haptics;
  $("setHrtf").checked=!!settings.hrtf;$("setScape").checked=!!settings.scape;
  $("setHrtf").addEventListener("change",e=>{settings.hrtf=e.target.checked?1:0;saveSettings();
   safeFn(()=>Spatial.stopAll());
@@ -31821,9 +32892,10 @@ function bindSettings(){const $=id=>document.getElementById(id);
  $("setMusic").addEventListener("change",e=>{settings.music=e.target.checked?1:0;saveSettings();
   AE.applyVolumes();
   if(settings.music&&gameActive()&&!G.inCombat){const c=cellContent(G.x,G.y);Music.start(c.terrain[0]);}else Music.stop();});
- $("setSubs").addEventListener("change",e=>{settings.subtitles=e.target.checked?1:0;saveSettings();
-  if(!settings.subtitles)document.getElementById("subText").hidden=true;});
- $("setHints").addEventListener("change",e=>{settings.hints=e.target.checked?1:0;saveSettings();narrate(settings.hints?"Подсказки включены: игра называет, где что находится.":"Подсказки выключены: мир только звуками. Проходы слышны ветром с их стороны, осмотреться — свайп тремя пальцами влево.");});
+ {const sm=$("setSubMode");if(sm)sm.addEventListener("change",e=>{setSubMode(e.target.value);
+  narrate({off:"Субтитры выключены.",important:"Субтитры: только важные события.",speech:"Субтитры: все реплики игры.",sounds:"Субтитры: все реплики и описания игровых звуков."}[settings.subMode]||"Субтитры настроены.");});}
+ {const hm=$("setHintMode");if(hm)hm.addEventListener("change",e=>{setHintMode(e.target.value);
+  narrate({full:"Подсказки полные: игра называет, что рядом, где оно и как подойти.",min:"Подсказки минимальные: только важное — имя места, опасность, первая фраза.",sound:"Только звуковая навигация: подсказки о расположении словами выключены. Проходы слышны ветром, двери — петлёй, ступени — камнем, тварь — со своей стороны. Осмотреться — три пальца влево, объекты вокруг — меню действий."}[settings.hintMode]||"Подсказки настроены.");});}
  $("setExplore").addEventListener("change",e=>{settings.explore=e.target.checked?1:0;saveSettings();
   narrate(settings.explore?"Режим ощупывания включён.":"Режим ощупывания выключен.");});
  $("setFastTap").addEventListener("change",e=>{settings.fastTap=e.target.checked?1:0;saveSettings();

@@ -44,7 +44,7 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   /* Принятое в очередь — то, что и вправду прозвучит: отброшенное распорядителем сюда не попадает. */
   window.SPOKEN=[];const ps=Speech._push.bind(Speech);Speech._push=function(m){SPOKEN.push(String(m&&m.text));return ps(m);};const pf=Speech._pushFront.bind(Speech);Speech._pushFront=function(m){SPOKEN.push(String(m&&m.text));return pf(m);};
   window.PLAYED=[];const p=Bank.play.bind(Bank);Bank.play=(r,o)=>{PLAYED.push(String(r));return p(r,o);};const sr=Spatial.role.bind(Spatial);Spatial.role=(r,dx,dy,o)=>{PLAYED.push("sp:"+r+":"+dx+","+dy);return sr(r,dx,dy,o);};
-  window.LOG=[];const u=useHere;window.useHere=function(){LOG.push("useHere");return u.apply(this,arguments);};const sc=scanSpeak;window.scanSpeak=function(){LOG.push("scan");return sc.apply(this,arguments);};
+  window.LOG=[];const u=useHere;window.useHere=function(){LOG.push("useHere");return u.apply(this,arguments);};const sc=scanSpeak;window.scanSpeak=function(){LOG.push("scan");return sc.apply(this,arguments);};const lo=Look.open.bind(Look);Look.open=function(){LOG.push("scan");return lo();};
   const st=Speech.status.bind(Speech);Speech.status=function(){LOG.push("status");return st();};const rl=Speech.repeatLast.bind(Speech);Speech.repeatLast=function(){LOG.push("repeat");return rl();};
   G.place=null;G.ship=null;G.inCombat=false;G.combat=null;G.weaponDrawn=false;settings.fastTap=0;});
 
@@ -59,7 +59,7 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   SPOKEN.length=0;if(wall2)moveInside(wall2);await new Promise(res=>setTimeout(res,200));r.стенаМолчит=SPOKEN.length===0;
   settings.hints=1;SAID.length=0;if(wall2)moveInside(wall2);r.стенаСказ=SAID.slice();
   SAID.length=0;let back=null;for(const d of ["N","E","S","W"]){if(tileAt(L,G.place.x+DIRV[d][0],G.place.y+DIRV[d][1])===".")back=d;}moveInside(back);await new Promise(res=>setTimeout(res,300));r.сПодсказками=SAID.length;
-  r.чекбокс=!!document.getElementById("setHints");
+  r.чекбокс=!!document.getElementById("setHintMode")&&typeof setHintMode==="function"&&(setHintMode("sound"),settings.hints===0)&&(setHintMode("full"),settings.hints===1);
   return r;});
  check('1. без подсказок шаг и стена молчат, а проходы слышны с их стороны; с подсказками стена и шаг называются',
   подск.шагСказ.length===0&&подск.проходы.length>=1&&подск.стенаМолчит&&/Стена/.test(подск.стенаСказ.join(" "))&&подск.сПодсказками>=1&&подск.чекбокс,подск);
@@ -106,7 +106,7 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   const r={};G.hp=10;G.hpMax=100;
   invPick("potion","0");invDo("drink","potion","0");r.зелье=[G.hp,G.potions.length];
   invPick("item","0");invDo("drinkitem","item","0");r.склянка=[G.hp,G.items.length];
-  invPick("res","руда");invDo("drop","res","руда");r.руда1=G.inv["руда"];invDo("dropall","res","руда");r.рудаВсё=G.inv["руда"];
+  invPick("res","руда");invDo("drop1","res","руда");r.руда1=G.inv["руда"];invDo("dropall","res","руда");r.рудаВсё=G.inv["руда"];
   const w=G.equip.weapon;G.gear=G.gear||[];const second={id:"t_sword",name:"Проверочный меч",type:"меч",slot:"weapon",rank:1,qual:1,val:3,price:10};G.gear.push(second);
   const gi=G.gear.indexOf(second);invPick("gear",String(gi));invDo("equip","gear",String(gi));r.надето=G.equip.weapon&&G.equip.weapon.name;
   /* контекст: горн, алтарь, торговец */

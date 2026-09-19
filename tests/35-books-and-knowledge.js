@@ -317,8 +317,20 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
  await tap(195,600);
  await page.waitForTimeout(600);
  const послеДвух=await page.evaluate(()=>({страниц:knowRead().length,окно:!document.getElementById("modal-read").hidden}));
- check('двойное касание по полю изучает книгу под ногами',
-  послеДвух.страниц>одно&&послеДвух.окно===true,послеДвух);
+ check('второе касание одним пальцем по полю тоже ничего не изучает: двойное касание на поле снято',
+  послеДвух.страниц===одно&&послеДвух.окно===false,послеДвух);
+ /* Изучение — свайп двумя пальцами вниз (взаимодействие с тем, что под ногами). */
+ {const pts=[{x:150,y:600,id:0},{x:210,y:600,id:1}];
+  await cdp.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[pts[0]]});await page.waitForTimeout(35);
+  await cdp.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:pts});await page.waitForTimeout(60);
+  for(let step=1;step<=5;step++){await cdp.send('Input.dispatchTouchEvent',{type:'touchMove',touchPoints:pts.map(p=>({x:p.x,y:p.y+160*step/5,id:p.id}))});await page.waitForTimeout(20);}
+  await cdp.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[{x:210,y:760,id:1}]});await page.waitForTimeout(20);
+  await cdp.send('Input.dispatchTouchEvent',{type:'touchMove',touchPoints:[{x:152,y:761,id:0}]});await page.waitForTimeout(20);
+  await cdp.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[{x:152,y:761,id:0}]});}
+ await page.waitForTimeout(600);
+ const послеСвайпа=await page.evaluate(()=>({страниц:knowRead().length,окно:!document.getElementById("modal-read").hidden}));
+ check('свайп двумя пальцами вниз изучает книгу под ногами',
+  послеСвайпа.страниц>одно&&послеСвайпа.окно===true,послеСвайпа);
  await page.evaluate(()=>{while(activeLayer())closeTopUI();});
 
  check('игра не выбрасывала ошибок за весь прогон',errors.length===0,errors.slice(0,3));
