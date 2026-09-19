@@ -110,6 +110,8 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
 
  /* ── 6. Скорость: клетка выводится, а не ищется ── */
  const скорость=await page.evaluate(()=>{
+  /* Разогрев: меряется цена клетки, а не первый прогон компилятора. */
+  for(let i=0;i<1500;i++){const x=(i*31)%WORLD,y=(i*17+9000)%WORLD;safeFn(()=>cellContent(x,y),null);}
   const t=performance.now();
   let n=0;
   for(let i=0;i<20000;i++){

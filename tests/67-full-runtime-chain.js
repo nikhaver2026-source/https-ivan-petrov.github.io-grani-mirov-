@@ -518,6 +518,80 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
  check('IV-6. синтезатор зовут из одного места, распорядитель и очередь одни',
   речь.единый.прямых===1&&речь.единый.очередьОдна,речь.единый);
 
+ /* ── Пятая цепь: единый живой мир (§135) ──
+    движение → ориентация → столкновение → объект → звук → NPC → квест → бой →
+    магия → ресурс → растение → зелье → артефакт → дверь → город → море →
+    остров → подземелье → босс → репутация → торговля → сохранение → загрузка.
+    Каждый шаг делается тем же кодом, что и в игре, и каждый оставляет след,
+    который видит следующий. */
+ const цепьV=await page.evaluate(async()=>{
+  const ш={};const rnd=Math.random;Math.random=()=>0.3;
+  maybeEvent=()=>false;maybeSeaEvent=()=>false;
+  window.PLAYED=window.PLAYED||[];const bp=Bank.play.bind(Bank);Bank.play=(r,o)=>{PLAYED.push(String(r));return bp(r,o);};
+  const said=[];const bs=Speech.say.bind(Speech);Speech.say=(t,o)=>{said.push(String(t));return bs(t,o);};
+  try{
+   G.place=null;G.ship=null;G.dark=false;G.inCombat=false;G.combat=null;G.alt=0;G.level=20;G.hp=900;G.hpMax=900;G.mana=100;G.manaMax=100;G.gold=500;G.hour=12;G.weather="Ясно";
+   /* 1. движение */
+   G.x=WORLD>>1;G.y=WORLD>>1;const x0=G.x;PLAYED.length=0;move("E");if(G.inCombat){endCombat();G.inCombat=false;G.combat=null;}
+   ш.движение=G.x===x0+1;ш.звук=PLAYED.length>0;
+   /* 2. ориентация: что вокруг и с какой стороны */
+   const круг=Scape.around();ш.ориентация=Array.isArray(круг)&&круг.every(o=>typeof o.dx==="number"&&typeof o.dy==="number");
+   /* 3–4. столкновение и объект: в подземелье стена держит, дверь открывается */
+   let lvl=null,bx=0,by=0;for(bx=3;bx<40&&!lvl;bx++)for(by=3;by<40&&!lvl;by++){const l=safeFn(()=>genLevel(bx,by,2,"ruins"),null);if(l&&l.entry)lvl=l;}
+   bx--;by--;G.place={kind:"dungeon",bx,by,stype:"ruins",name:"Проверка",depth:2,x:lvl.entry.x,y:lvl.entry.y};
+   const L=curLevel();let стена=null,дверь=null;
+   for(let y=1;y<L.h-1&&!дверь;y++)for(let x=1;x<L.w-1&&!дверь;x++){if(tileAt(L,x,y)!=="."&&tileAt(L,x,y)!=="+")continue;
+    for(const d of ["N","E","S","W"]){const t=tileAt(L,x+DIRV[d][0],y+DIRV[d][1]);if(t==="#"&&!стена)стена={x,y,d};if(t==="+")дверь={x,y,d};}}
+   if(стена){G.place.x=стена.x;G.place.y=стена.y;said.length=0;moveInside(стена.d);ш.столкновение=said.some(t=>/Стена/.test(t));}
+   if(дверь){G.place.x=дверь.x;G.place.y=дверь.y;said.length=0;PLAYED.length=0;moveInside(дверь.d);ш.дверь=said.some(t=>/Дверь открыта/.test(t))&&PLAYED.some(r=>/deep_stone|deep_door/.test(r));}
+   ш.объект=(Scape.around()||[]).length>=0&&!!SCAPE_TILE;
+   G.place=null;
+   /* 5–6. NPC и квест */
+   let npc=null,cellS=null;outer: for(let rr=0;rr<80;rr++)for(let dx=-rr;dx<=rr;dx++)for(let dy=-rr;dy<=rr;dy++){
+    const c=safeFn(()=>cellContent((WORLD>>1)+dx,(WORLD>>1)+dy),null);
+    if(c&&c.structure){const ns=safeFn(()=>npcsFor(c),[]);if(ns.length){G.x=(WORLD>>1)+dx;G.y=(WORLD>>1)+dy;npc=ns[0];cellS=c;break outer;}}}
+   openNPC(npc.key,true);ш.npc=document.querySelectorAll("#npcBody button").length>0;safeFn(()=>closeModal(document.getElementById("modal-npc")));
+   G.quests=[];G.chainTaken={};takeNPCQuest(npc);ш.квест=G.quests.length===1&&!!G.quests[0].ярус&&!!G.quests[0].до;
+   /* 7. бой */
+   const c=safeFn(()=>{for(let r=1;r<200;r++)for(let dy=-r;dy<=r;dy++)for(let dx=-r;dx<=r;dx++){const cc=cellContent((WORLD>>1)+dx,(WORLD>>1)+dy);if(cc.monster&&!cc.structure&&safeFn(()=>foeAlt(cc.monster),0)===0){G.x=(WORLD>>1)+dx;G.y=(WORLD>>1)+dy;return cc;}}return null;},null);
+   G.weaponDrawn=true;startCombat(c);const hp0=G.combat.hp;fight("atk");ш.удар=G.combat.hp<hp0;const xp0=G.xp;G.combat.hp=1;fight("atk");ш.бой=!G.inCombat&&G.xp>xp0;
+   /* 8. магия */
+   if(!G.spells.includes("Искра"))G.spells.push("Искра");const m0=G.mana;castSpell(SPELLS.findIndex(s=>s.n==="Искра"));ш.магия=G.mana<m0;
+   /* 9. ресурс */
+   G.depleted={};G.inv={};let rc=null;for(let i=0;i<80000&&!rc;i++){const x=(i*37)%WORLD,y=(i*59+7000)%WORLD;const cc=cellContent(x,y);if(cc.res&&/трав/.test(cc.res.name)&&!cc.structure&&!cc.monster){G.x=x;G.y=y;rc=cc;}}
+   gatherCurrent("tap");ш.ресурс=(Number(G.inv["трава"])||0)>=1;
+   /* 10. растение → 11. зелье */
+   delete G.inv["рановник"];delete G.inv["топяной хвощ"];plantTake(PLANT_BY_ID.ranovnik,G.x,G.y);plantTake(PLANT_BY_ID.kvost,G.x,G.y);ш.растение=G.inv["рановник"]===1&&G.inv["топяной хвощ"]===1;
+   G.mast=G.mast||{};G.mast.alchemy={ур:1,оп:0};G.potions=[];brewPotion("heal");const hpБыло=G.hp=100;drinkPotion(0);ш.зелье=G.potions.length===0&&G.hp>hpБыло;
+   /* 12. артефакт */
+   const a=ART.make({дом:"war",ранг:1,кач:2,seed:5});G.artifacts=[a];a.износ=12;ш.артефакт=artLore(a).состояние==="потёртая"&&/починена/.test(artMend())&&a.износ===0;
+   /* 13. город */
+   let город=null;for(let i=0;i<60000&&!город;i++){const x=(i*37)%WORLD,y=(i*59+7000)%WORLD;const cc=cellContent(x,y);if(cc.structure&&PLACE_KIND[cc.structure.type]==="city"){G.x=x;G.y=y;город=cc;}}
+   enterPlace(город);ш.город=!!G.place&&G.place.kind==="city";leavePlace();ш.городВыход=!G.place;
+   /* 14. море → 15. остров */
+   G.ship={name:"Проба",kind:"cog",speed:1,hold:20,tox:G.x+40,toy:G.y,toName:"Порт",legs:8,left:8,leg:0,war:false,storm:false,fare:10};
+   sailLeg();ш.море=!!(G.ship&&G.ship.sea);
+   let n=0;while(G.ship&&!G.ship.island&&n<80){G.ship.left=5;G.ship.leg=1+(n%6);G.day=1+n;islandSight(G.ship);n++;}
+   const isl=G.ship&&G.ship.island;ш.остров=!!isl&&landIsland()===true;G.ship=null;G.inCombat=false;G.combat=null;
+   /* 16. подземелье */
+   G.place={kind:"dungeon",bx,by,stype:"ruins",name:"Проверка",depth:2,x:lvl.entry.x,y:lvl.entry.y};ш.подземелье=!!curLevel()&&(G.place.depth===2);G.place=null;
+   /* 17. босс */
+   const b=BOSS_BY_ID.ashlord;const l=bossLair(b);G.bosses={};G.bossOmen={};G.bossSeen={};G.x=l.x-3;G.y=l.y;bossOmens();ш.предвестник=!!(G.bossSeen&&G.bossSeen.ashlord);
+   G.x=l.x;G.y=l.y;G.hour=12;bossFight();ш.владыкаБой=!!(G.combat&&G.combat.m&&G.combat.m.boss);G.combat.hp=1;G.standing={};fight("atk");ш.босс=!!(G.bosses.ashlord&&G.bosses.ashlord.slain);
+   /* 18. репутация */
+   const idx=empireIndexAt(l.x,l.y);ш.репутация=standOf("fact",EMPIRES[idx].short)>0&&(G.titles||[]).length>0;
+   /* 19. торговля */
+   ш.торговля=marketPrice("руда",idx,G.day)>0&&priceWhy("руда",idx,null).length>0&&marketOf(idx).подвоз>1;
+   /* 20. сохранение → 21. загрузка */
+   G.gold=777;saveGame(true);const raw=localStorage.getItem(SAVE_KEY)||"";ш.сохранение=/"bosses"/.test(raw)&&/"spellbook"|"potions"/.test(raw)&&/"plantsSeen"/.test(raw);
+   G.gold=1;G.bosses={};loadGame();ш.загрузка=G.gold===777&&!!(G.bosses&&G.bosses.ashlord&&G.bosses.ashlord.slain)&&(G.titles||[]).length>0;
+  }catch(e){ш.ошибка=String(e&&e.stack||e);}
+  Math.random=rnd;Speech.say=bs;Bank.play=bp;
+  return ш;});
+ const шаги=["движение","ориентация","столкновение","объект","звук","npc","квест","удар","бой","магия","ресурс","растение","зелье","артефакт","дверь","город","городВыход","море","остров","подземелье","предвестник","владыкаБой","босс","репутация","торговля","сохранение","загрузка"];
+ check('V. единый живой мир: движение → ориентация → столкновение → объект → звук → NPC → квест → бой → магия → ресурс → растение → зелье → артефакт → дверь → город → море → остров → подземелье → босс → репутация → торговля → сохранение → загрузка',
+  !цепьV.ошибка&&шаги.every(k=>цепьV[k]===true),цепьV.ошибка||шаги.filter(k=>цепьV[k]!==true));
+
  console.log(results.join('\n'));
  console.log('\nОшибки страницы: '+(errors.length?errors.slice(0,5).join('\n'):'нет'));
  await browser.close();

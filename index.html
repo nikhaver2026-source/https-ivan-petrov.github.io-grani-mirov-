@@ -358,6 +358,7 @@ h3{color:var(--acc2);margin:14px 0 6px;font-size:1.05rem;}
  <h3>🔥 Войны сегодня</h3><div id="polWars"></div>
  <h3>🤝 Союзы и договоры</h3><div id="polAllies"></div>
  <h3>🏛️ Восемь держав</h3><div id="polEmpires"></div>
+ <h3>🏰 Досье держав: цели, правители, тайные дела</h3><div id="polFactions"></div>
  <h3>🪙 Рынок вашей державы</h3><div id="polMarket"></div>
 </div></div>
 
@@ -3643,6 +3644,7 @@ const AM_GROUPS=[
   ["signs","🗺️ Приметы и клады"],
   ["stashes","🕵️ Указанные тайники"],
   ["objects","🔎 Что вокруг: объекты и действия"],
+  ["bossfight","👹 Бросить вызов владыке"],
   ["mastery","🎓 Мастерства и ремёсла"],
   ["homun","🧫 Гомункул"],
   ["demonology","🕯️ Демонология"],
@@ -3666,6 +3668,7 @@ const AM_GROUPS=[
   ["bodystate","🧬 Тело: состояние и черты"],
   ["realms","🌀 Слои мира"],
   ["quests","📜 Квесты"],
+  ["questlist","🧾 Дела: ярусы и сроки"],
   ["school","🎓 Школы и умения"],
   ["spellforge","🧪 Составить заклинание"],
   ["schools","📚 Школы заклинаний"],
@@ -3690,6 +3693,9 @@ const AM_GROUPS=[
   ["best","📖 Бестиарий"],
   ["art","💎 Артефакты, части и рецепты"],
   ["plants","🌿 Травник: растения и грибы"],
+  ["bosses","👹 Владыки земель"],
+  ["factions","🏰 Досье державы"],
+  ["rumours","🗣️ Вести о вас здесь"],
   ["seas","🌊 Моря, острова и глубины"]]],
  ["Звук и справка",[
   ["lore","📚 Собрание знаний"],
@@ -3707,6 +3713,7 @@ const AM_GROUPS=[
   ["silence","⏹ Тишина"]]],
  ["Игра",[
   ["settings","⚙️ Настройки"],
+  ["worldcheck","🧪 Самопроверка мира"],
   ["save","💾 Сохранить игру"],
   ["saves","🗄️ Сохранения: слоты и файл"],
   ["music","🎼 Музыка: вкл/выкл"],
@@ -3752,6 +3759,7 @@ function amAvailable(cmd){
   if(cmd==="sail")return !!G.ship;
   if(cmd==="fish")return !!fishingSpot();
   if(cmd==="dive")return safeFn(()=>diveAvailable(),false);
+  if(cmd==="bossfight")return !!safeFn(()=>bossHere(),null);
   if(cmd==="landisle")return !!(G.ship&&G.ship.island);
   if(cmd==="potions")return mastLevel("alchemy")>0||(Array.isArray(G.potions)&&G.potions.length>0);
   if(cmd==="descend")return !!G.place||!!(c.structure&&PLACE_KIND[c.structure.type]);
@@ -5785,6 +5793,7 @@ function marketPrice(res,idx,day){
   if(сезон===3)return еда?1.18:1.05;                  /* зимой еда дорога */
   if(сезон===2)return еда?0.88:1;                     /* осенью урожай */
   return 1;},1);
+ k*=safeFn(()=>roadSafetyK(idx)*originK(res,idx)*lawK(res,idx)*secretOpK(res,idx,day),1);
  return Math.max(2,Math.round(base*Math.max(0.35,k)));
 }
 /* ════════════════════════════════════════════════════════════════════════
@@ -5969,6 +5978,73 @@ const TRADER_CUT=0.9;
 function capBid(bid,ask){
  return Math.max(1,Math.min(Math.round(bid),Math.floor(ask*TRADER_CUT)));
 }
+
+/* ════════ ЦЕНА ПО ФАКТОРАМ (§126) ════════
+   Цена и раньше знала державу, город, избыток, нехватку, войну, погоду,
+   сезон, заслуги и навык торга. Теперь она знает ещё безопасность дорог,
+   пошлину державы, происхождение товара и местные законы: у каждой державы
+   два запретных товара, которые продают из-под полы дороже, но с риском
+   попасться страже. И цена умеет объяснить себя словами. */
+const CONTRABAND_POOL=["чёрная соль","тёмная смола","поганка","вороний корень","пепел","зеркальный осколок","чёрный дурманник","светляки"];
+function empireLaw(idx){
+ const i=Math.max(0,Number(idx)||0);
+ const a=CONTRABAND_POOL[Math.floor(H(i,1,9500)*CONTRABAND_POOL.length)%CONTRABAND_POOL.length];
+ let b=CONTRABAND_POOL[Math.floor(H(i,2,9501)*CONTRABAND_POOL.length)%CONTRABAND_POOL.length];
+ if(b===a)b=CONTRABAND_POOL[(CONTRABAND_POOL.indexOf(a)+3)%CONTRABAND_POOL.length];
+ return {запрет:[a,b],пошлина:+(0.04+H(i,3,9502)*0.1).toFixed(2)};}
+function isContraband(res,idx){return empireLaw(idx).запрет.includes(res);}
+function roadSafetyK(idx){
+ try{const m=marketOf(idx);let k=1;
+  if(empireAtWar(idx,G.day))k+=0.12;
+  if((Number(m.подвоз)||1)<0.85)k+=0.15;
+  return k;}catch(_){return 1;}}
+function originK(res,idx){
+ try{
+  if(RES_SORTS[res]||["зерно","сталь","ткани"].includes(res))return 1;
+  if(SORT_GOODS[res])return 1.08;
+  return 1;}catch(_){return 1;}}
+function lawK(res,idx){return isContraband(res,idx)?1.6:1;}
+const SECRET_OPS=[
+ {id:"smuggle",n:"тайный провоз запретного",эффект:"запретное дороже на пятую часть"},
+ {id:"bribe",n:"подкуп таможни соседа",эффект:"пошлина на три сотых выше"},
+ {id:"spies",n:"разведка дорог",эффект:"дороги безопаснее: цены ровнее"},
+ {id:"mines",n:"порча чужих рудников",эффект:"руда и камень дороже на десятую"},
+ {id:"grain",n:"скупка зерна перед недородом",эффект:"еда дороже на десятую"}];
+function secretOp(idx,day){const w=Math.floor((Number(day)||1)/7);return SECRET_OPS[Math.floor(H(idx,w,9510)*SECRET_OPS.length)%SECRET_OPS.length];}
+function secretOpK(res,idx,day){
+ const op=secretOp(idx,day);
+ if(op.id==="smuggle"&&isContraband(res,idx))return 1.2;
+ if(op.id==="mines"&&["руда","камень"].includes(res))return 1.1;
+ if(op.id==="grain"&&["зерно","трава","ягоды","грибы"].includes(res))return 1.1;
+ if(op.id==="spies")return 0.97;
+ return 1;}
+function priceWhy(res,idx,c){
+ const emp=EMPIRES[idx]||EMPIRES[0];const из=[];
+ if((emp.exports||[]).includes(res))из.push("своё — дешевле");
+ if((emp.imports||[]).includes(res))из.push("нужное — дороже");
+ if(empireAtWar(idx,G.day))из.push("война: дороги небезопасны, металл в цене");
+ else if(roadSafetyK(idx)>1)из.push("дороги небезопасны: подвоз редок");
+ const п=String(G.weather||"");if(/буря|метель|гроза|ливень/i.test(п))из.push("непогода: возить дороже");
+ const сезон=Math.floor(((Number(G.day)||1)%48)/12);if(сезон===3)из.push("зима");else if(сезон===2)из.push("осень: урожай");
+ if(SORT_GOODS[res]&&!RES_SORTS[res])из.push("редкий товар издалека");
+ if(isContraband(res,idx))из.push(`под запретом в державе ${emp.short}: контрабанда — дороже, но с риском`);
+ const op=secretOp(idx,G.day);if(secretOpK(res,idx,G.day)!==1)из.push(`тайное дело державы: ${op.n}`);
+ if(c){const pf=cityProfile(c);из.push(`пошлина города ${Math.round((pf.tax+empireLaw(idx).пошлина)*100)} сотых`);}
+ return из.length?из.join("; "):"обычная цена";}
+/* Контрабанда: продал запретное в городе — стража может взять своё. */
+function smuggleCheck(res,total){
+ try{
+  const idx=empireIndexAt(G.x,G.y);
+  if(!isContraband(res,idx))return "";
+  safeFn(()=>addStand("crime",null,3,true));
+  if(Math.random()<0.25){
+   const штраф=Math.min(G.gold,Math.round(total*0.6));G.gold-=штраф;
+   safeFn(()=>{addStand("army",null,-6,true);Bank.play("es_alarm",{gain:0.5,maxSec:3});});
+   safeFn(()=>journal(`Стража взяла штраф за контрабанду: ${штраф} золота.`));
+   return ` Стража видела сделку: «${res}» здесь под запретом. Штраф ${штраф} золота, и в войске о вас теперь худого мнения.`;}
+  return ` Товар под запретом в этой державе: продано из-под полы, преступный мир это оценил.`;
+ }catch(_){return "";}}
+
 function citySellPrice(res,c,day,опц){ /* сколько город просит с вас */
  const p=cityProfile(c);
  /* ── ГОРОДСКОЙ ПРИЛАВОК ТОЖЕ ПОМНИТ УСЛУГИ ──
@@ -5977,7 +6053,7 @@ function citySellPrice(res,c,day,опц){ /* сколько город прос�
     и есть держава. Теперь обе стороны городского торга проходят через тот
     же множитель заслуг, что и лавка; знакомство сюда не идёт — за прилавком
     палаты стоит не человек, а очередь. */
- return Math.max(2,Math.round(cityPriceOf(res,c,day)*(1+p.tax)
+ return Math.max(2,Math.round(cityPriceOf(res,c,day)*(1+p.tax+safeFn(()=>empireLaw(EMPIRES.indexOf(c.emp)).пошлина+(secretOp(EMPIRES.indexOf(c.emp),day).id==="bribe"?0.03:0),0))
   *(1-0.05*fxLevel("deal")-0.03*fxLevel("trade"))
   *(опц&&опц.безЗаслуг?1:safeFn(()=>meritK(c.x,c.y),1))
   *tradeBuyK(c&&c.emp&&c.emp.race)));
@@ -9457,6 +9533,7 @@ const PLANTS=[
 const PLANT_BY_ID=Object.fromEntries(PLANTS.map(p=>[p.id,p]));
 const PLANT_BY_NAME=Object.fromEntries(PLANTS.map(p=>[p.n,p]));
 Object.assign(SORT_GOODS,Object.fromEntries(PLANTS.map(p=>[p.n,{цена:8+p.редкость*12,знак:"🌿"}])));
+Object.assign(SORT_GOODS,{"сердце пепла":{цена:420,знак:"🔥"},"слеза сновидицы":{цена:380,знак:"💧"},"компас кормчего":{цена:400,знак:"🧭"},"хребтовый камень":{цена:360,знак:"🪨"},"нота хора":{цена:390,знак:"🎵"},"сердечная шестерня":{цена:450,знак:"⚙️"}});
 function plantHourOk(ч){
  const h=Number(G.hour)%24;
  if(!ч)return true;
@@ -10841,6 +10918,7 @@ function beastAt(x,y,c,базоваяДоля){
  if(safeFn(()=>buffActive("морок")||buffActive("астрал"),false))доля*=0.5;
  if(safeFn(()=>buffActive("ночное зрение")&&isNight(),false))доля*=0.7;
  доля*=safeFn(()=>islandEncounterK(),1);
+ доля*=safeFn(()=>bossRegionK(),1);
  if(safeFn(()=>assimBonus("beast")>0,false))доля*=0.67;
  /* Сведённый свод держит над головой пустоту: под ним почти никто не ходит. */
  if(safeFn(()=>buffActive("свод"),false))доля*=0.25;
@@ -10956,6 +11034,7 @@ function worldLiveTick(){
   if(!Number.isFinite(было)||было>день)return;
   const дней=Math.max(1,Math.min(30,день-было));
   for(let i=0;i<дней;i++)safeFn(()=>rumorTick());
+  safeFn(()=>questDayTick());
   /* Рынок ходит на том же такте: потоки понемногу возвращаются к норме. */
   safeFn(()=>marketTick(дней));
   safeFn(()=>{
@@ -11408,7 +11487,7 @@ const RUMOR_LADDER={
  война:["на рубеже неспокойно","жгут деревни на границе",
   "война перешла на нашу землю","деревень на рубеже больше нет",
   "державы жгут друг друга до последнего двора"]};
-function rumorSeed(вид,что,x,y,правда){
+function rumorSeed(вид,что,x,y,правда,манип){
  try{
   if(!RUMOR_LADDER[вид])return null;
   if(!Array.isArray(G.rumors))G.rumors=[];
@@ -11416,7 +11495,8 @@ function rumorSeed(вид,что,x,y,правда){
   const было=G.rumors.find(r=>r.в===вид&&Math.max(Math.abs(r.x-x),Math.abs(r.y-y))<40);
   if(было){было.сила=Math.min(5,(Number(было.сила)||1)+1);было.д=Number(G.day)||1;return было;}
   const r={id:`ru${Date.now()%1e7}_${G.rumors.length}`,в:вид,что:String(что||""),
-   x:Math.round(x),y:Math.round(y),д:Number(G.day)||1,шаг:0,сила:1,правда:правда!==false};
+   x:Math.round(x),y:Math.round(y),д:Number(G.day)||1,д0:Number(G.day)||1,шаг:0,сила:1,правда:правда!==false,манип:!!манип,
+   держава:safeFn(()=>empireIndexAt(Math.round(x),Math.round(y)),0)};
   G.rumors.push(r);
   if(G.rumors.length>60)G.rumors.splice(0,G.rumors.length-60);
   return r;
@@ -11458,7 +11538,49 @@ function rumorText(r){
     а не сама собой от расстояния. */
  const у=Math.max(1,Math.min(5,5-(Number(r.шаг)||0)-(и>2?1:0)));
  const с=MEM_SURE[у]||MEM_SURE[2];
- return {текст:л[и],уверенность:у,откуда:с.слово,раздуто:и>0};}
+ const род=safeFn(()=>rumorClass(r),null)||{id:"true",n:"правдивый"};
+ return {текст:л[и],уверенность:у,откуда:с.слово,раздуто:и>0,род:род.n,родId:род.id};}
+/* ════════ РОДЫ ВЕСТЕЙ И ЧУЖИЕ УШИ (§125) ════════
+   Весть была верной или кривой. Теперь у неё род: правдивая, частично
+   правдивая (обросла подробностями), ложная, устаревшая (две седмицы и
+   старше) или манипулятивная (пущена нарочно). И одна и та же весть по-разному
+   слышится в разных державах: своя держава верит, воюющая считает выдумкой
+   врага, чужой торговый люд передаёт с охотой, но без веры. */
+const RUMOR_CLASSES=[
+ {id:"true",n:"правдивый",о:"было так, как говорят"},
+ {id:"partial",n:"частично правдивый",о:"было, но не так и не столько"},
+ {id:"false",n:"ложный",о:"не было вовсе"},
+ {id:"stale",n:"устаревший",о:"было, но давно и уже не так"},
+ {id:"manip",n:"манипулятивный",о:"пущен нарочно, чтобы кого-то подвинуть"}];
+const RUMOR_CLASS_BY_ID=Object.fromEntries(RUMOR_CLASSES.map(c=>[c.id,c]));
+function rumorClass(r){
+ if(!r)return RUMOR_CLASS_BY_ID.true;
+ if(r.манип)return RUMOR_CLASS_BY_ID.manip;
+ if(r.правда===false)return RUMOR_CLASS_BY_ID.false;
+ const возраст=(Number(G.day)||1)-(Number(r.д0)||Number(r.д)||1);
+ if(возраст>=14)return RUMOR_CLASS_BY_ID.stale;
+ if((Number(r.искажение)||0)>=2)return RUMOR_CLASS_BY_ID.partial;
+ return RUMOR_CLASS_BY_ID.true;}
+/* Как этот житель воспринимает весть: по своей державе и её отношениям. */
+function rumorPerception(r,n){
+ try{
+  const мой=empireIndexAt(n.x,n.y),их=Number(r.держава);
+  const род=rumorClass(r);
+  const d=safeFn(()=>npcSoul(n),null);const охота=d?d.нрав.слух:1;
+  if(Number.isFinite(их)&&мой!==их){
+   const отн=relationWord(relationAt(мой,их,G.day));
+   if(отн==="война")return {верит:false,слово:`в державе ${EMPIRES[мой].short} это считают выдумкой врага`};
+   if(отн==="союз"||отн==="дружба")return {верит:род.id!=="false"&&род.id!=="manip",слово:`здесь этому верят: весть пришла от союзников`};
+   return {верит:охота>1.2,слово:охота>1.2?"здесь передают охотно, хоть и не видели":"здесь этому не очень верят: чужая земля"};}
+  if(род.id==="manip")return {верит:охота>1.2,слово:охота>1.2?"здесь повторяют, не спрашивая, кому это выгодно":"здесь догадываются, кому это выгодно"};
+  if(род.id==="stale")return {верит:true,слово:"здесь помнят, хоть это и старая история"};
+  return {верит:род.id!=="false",слово:род.id==="false"?"здесь этому не верят":"здесь этому верят: своя земля"};
+ }catch(_){return {верит:true,слово:""};}}
+function rumorsText(){
+ const в=safeFn(()=>rumorsHere(G.x,G.y),[]);
+ if(!в.length)return "Вестей о вас здесь нет.";
+ return `Вестей здесь ${в.length}: `+в.slice(0,6).map(r=>{const t=rumorText(r);return `«${t.текст}» — ${t.род}, ${t.откуда}`;}).join("; ")+".";}
+
 /* Знает ли этот житель эту весть и насколько ей верит. Разносчик по нраву
    узнаёт раньше и рассказывает охотнее. */
 function npcKnowsRumor(n,r){
@@ -11748,7 +11870,8 @@ function dlgOutcome(n,move,успех,перевес){
    const вести=safeFn(()=>rumorsHere(n.x,n.y),[]).filter(r=>npcKnowsRumor(n,r));
    if(успех&&вести.length){
     const t=rumorText(вести[0]);
-    o.слова=`${n.name} понижает голос: «${t.текст}» — ${t.откуда}.`;
+    const п=safeFn(()=>rumorPerception(вести[0],n),null);
+    o.слова=`${n.name} понижает голос: «${t.текст}» — ${t.откуда}. Слух ${t.род}${п&&п.слово?"; "+п.слово:""}.`;
     o.звук="fx_haze";o.оси=[["доверие",1]];}
    else{o.слова=`${n.name} пожимает плечами: «Мало ли что болтают».`;o.звук="throng_retreat";}
    break;}
@@ -20032,7 +20155,7 @@ function journal(t){G.journal.unshift(`Д${G.day} ${String(Math.floor(G.hour)).p
 
 /* ════════ HUD ════════ */
 function refresh(){
- safeFn(()=>realmCheck());safeFn(()=>anomalyCheck());safeFn(()=>islandCheck());safeFn(()=>diveCheck());
+ safeFn(()=>realmCheck());safeFn(()=>anomalyCheck());safeFn(()=>islandCheck());safeFn(()=>diveCheck());safeFn(()=>bossOmens());
  const c=cellContent(G.x,G.y);
  const h=Math.floor(G.hour%24);
  /* Мир живёт своим чередом: войны начинаются и кончаются, имя игрока растёт
@@ -22008,6 +22131,201 @@ function fightGuardian(){
  narrate(`${g.n} загораживает шахту. Он не отойдёт: ${g.lvl} уровень, и он здесь ровно за этим.`);
  startCombat({x:G.x,y:G.y,monster:g});
  return true;}
+
+/* ════════ ВЛАДЫКИ ЗЕМЕЛЬ: МИРОВЫЕ БОССЫ (§127) ════════
+   Босс — не тварь с большим здоровьем. У каждого из шести владык своя
+   история, своя земля, предвестники за двадцать четыре, двенадцать и четыре
+   шага, своя звуковая сигнатура, три фазы с переменой погоды и повадки,
+   отклик на школу чар, своя механика, редкий припас, условие доступа и
+   награда. Победа и поражение меняют землю вокруг логова на дни: встречи
+   реже или чаще, подвоз щедрее или скуднее, и об этом идёт весть. Владыка
+   возвращается через шестьдесят дней. */
+const WORLD_BOSSES=[
+ {id:"ashlord",n:"Пепельный Владыка",род:"Пепельного Владыки",lvl:14,hp:640,dmg:22,
+  история:"Когда гора впервые выдохнула пепел, кто-то остался в нём стоять. Он не жжёт того, кто молчит, и жжёт всех, кто зовёт его по имени.",
+  био:["volcano","ashland","lava_tube"],x:8250,y:36124,
+  предвестники:["тёплый пепел на ветру","гул под ногами и запах серы","земля дрожит, воздух дрожит"],
+  звуки:{дальний:"score_lava",ближний:"oc_quake",голос:"tuba_boss",фаза:"mtg_lava",смерть:"es_boom_last"},
+  фазы:[{n:"пламя",от:1,множ:1,о:"он идёт стеной жара"},
+        {n:"пепельная буря",от:0.6,множ:1.3,погода:"Песчаная буря",о:"пепел встал стеной: удары тяжелее, и вода в цене"},
+        {n:"ядро",от:0.25,множ:0.8,механика:"физика вполсилы",о:"он ушёл в ядро: клинок берёт вполсилы, чары — вполне"}],
+  отклик:{water:2,crystal:1.6,fire:0},откликСлова:"вода и кристалл рвут его, огонь его кормит",
+  доступ:{уровень:8},припас:"сердце пепла",земля:{победа:"пепел остывает: встреч меньше, руда идёт щедрее",поражение:"пепельный мор: встречи чаще, вода уходит"}},
+ {id:"dreamer",n:"Сновидица Топей",род:"Сновидицы Топей",lvl:12,hp:480,dmg:16,
+  история:"Топь спит, и во сне у неё есть лицо. Кто заснул у воды, тот видел его — и наутро не помнил, чьё оно.",
+  био:["mire","swamp","fen","mangrove"],x:30899,y:13550,
+  предвестники:["лягушки смолкли разом","шёпот, которого никто не произносит","веки тяжелы: час прошёл незаметно"],
+  звуки:{дальний:"fx_haze",ближний:"oc_rustle",голос:"ghost_choir",фаза:"mist_keys",смерть:"moan_deep"},
+  фазы:[{n:"морок",от:1,множ:1,механика:"мимо",о:"её образ двоится: треть ударов уходит в морок"},
+        {n:"отголоски",от:0.4,множ:1.4,погода:"Туман",о:"топь отвечает эхом: удары чаще и злее"},
+        {n:"пробуждение",от:0.15,множ:0.5,о:"она просыпается — и слабеет: сон был её силой"}],
+  отклик:{light:2,sound:1.5,dark:0},откликСлова:"свет и звук будят её, тьма её баюкает",
+  доступ:{ночь:true},припас:"слеза сновидицы",земля:{победа:"туман с топей сошёл: встреч меньше, вести правдивее",поражение:"сон ложится на округу: встречи чаще, время уходит"}},
+ {id:"helmsman",n:"Костяной Кормчий",род:"Костяного Кормчего",lvl:13,hp:560,dmg:19,
+  история:"Судно без флага ходит вдоль берегов уже сто лет. Кормчий стоит у руля, потому что руль — единственное, что он помнит.",
+  био:["shore","reef","archipelago","inner_sea"],x:42824,y:27249,
+  предвестники:["рог в тумане, хотя порта рядом нет","скрип снастей без ветра","холод с воды и звон цепи"],
+  звуки:{дальний:"port_horn",ближний:"ship_creak",голос:"wraith_voice",фаза:"sea_storm",смерть:"oc_wood_creak"},
+  фазы:[{n:"абордаж",от:1,множ:1,о:"мертвецы лезут через борт"},
+        {n:"залп",от:0.55,множ:1.3,погода:"Гроза",о:"с борта бьют пушки: гроза и щепки"},
+        {n:"якорь",от:0.2,множ:1,механика:"без бегства",о:"якорь брошен: бежать некуда, бой до конца"}],
+  отклик:{fire:1.8,light:1.5,water:0.5},откликСлова:"огонь жжёт паруса, свет гонит команду, вода ему родная",
+  доступ:{ночь:true},припас:"компас кормчего",земля:{победа:"морские пути чисты: пиратов меньше, подвоз с моря щедрее",поражение:"призрачная эскадра ходит у берега: встречи чаще"}},
+ {id:"giant",n:"Хребтовый Исполин",род:"Хребтового Исполина",lvl:15,hp:720,dmg:24,
+  история:"Хребет — это не горы, это спина. Когда она шевелится, сходит лавина; когда встаёт — идёт он.",
+  био:["ridge","highland","snow_ridge","canyon"],x:14425,y:11250,
+  предвестники:["камнепад без причины","шаг, от которого дрожит тропа","тень выше вершины"],
+  звуки:{дальний:"oc_rock_hit",ближний:"giant_step",голос:"tuba_boss",фаза:"oc_quake",смерть:"body_fall"},
+  фазы:[{n:"шаг",от:1,множ:1,о:"каждый его шаг — удар"},
+        {n:"лавина",от:0.5,множ:1.4,погода:"Метель",о:"он бьёт по склону: лавина и метель"},
+        {n:"осыпь",от:0.2,множ:1.1,механика:"защита минус три",о:"склон осыпается: защита слабее"}],
+  отклик:{gravity:2,earth:0.5,air:1.5},откликСлова:"тяжесть валит его, земля ему своя, воздух сбивает",
+  доступ:{день:true,уровень:10},припас:"хребтовый камень",земля:{победа:"перевалы спокойны: встреч меньше, руда дешевле",поражение:"хребет неспокоен: встречи чаще, дороги в осыпях"}},
+ {id:"choir",n:"Полуночный Хор",род:"Полуночного Хора",lvl:12,hp:500,dmg:17,
+  история:"В погибшем городе каждую полночь поют. Поющих не видно, слова не разобрать, а те, кто подпел, остаются петь.",
+  био:["lost_city","warfield","ancient_forest"],x:25399,y:39424,
+  предвестники:["далёкое пение без слов","хор ближе: слова почти разборчивы","вы понимаете слова — и лучше бы не понимали"],
+  звуки:{дальний:"choir",ближний:"ghost_choir",голос:"wraith_voice",фаза:"spirit_voice",смерть:"moan_deep"},
+  фазы:[{n:"хор",от:1,множ:1,механика:"тянет ману",о:"хор тянет ману: пять за каждый ваш ход"},
+        {n:"соло",от:0.5,множ:1.4,о:"один голос над всеми: удары злее"},
+        {n:"тишина",от:0.2,множ:1,механика:"магия не берёт",о:"хор смолк: чары уходят в тишину, но клинок бьёт вдвое"}],
+  отклик:{sound:2,light:1.5,spirit:1.5,dark:0.5},откликСлова:"звук, свет и дух рвут хор, тьма ему подпевает",
+  доступ:{ночь:true},припас:"нота хора",земля:{победа:"ночи тихи: ночных встреч меньше, летописи правдивее",поражение:"хор ходит по округе: ночью встречи чаще"}},
+ {id:"engine",n:"Ржавый Механизм",род:"Ржавого Механизма",lvl:16,hp:800,dmg:20,
+  история:"Его построили, чтобы охранять то, чего давно нет. Он не знает об этом и охраняет пустоту с тем же усердием.",
+  био:["warfield","lost_city","stony_desert","canyon"],x:36849,y:42824,
+  предвестники:["тиканье под землёй","шестерни проворачиваются где-то рядом","пар из щелей и запах горячего масла"],
+  звуки:{дальний:"stk_clock",ближний:"oc_electrical",голос:"oc_steam",фаза:"oc_metal_dull",смерть:"es_boom_last"},
+  фазы:[{n:"шестерни",от:1,множ:1,о:"он бьёт ровно, как часы"},
+        {n:"пар",от:0.55,множ:1.2,погода:"Туман",о:"пар стелется по земле: удары чаще"},
+        {n:"перегрев",от:0.25,множ:1.3,механика:"обжигает",о:"он раскалён: каждый ваш удар обжигает вас на три"}],
+  отклик:{runes:2,artefact:2,water:1.6,fire:0.5},откликСлова:"руны и артефактная магия глушат его, вода остужает, огонь лишь греет",
+  доступ:{ремесло:["runes","arte"]},припас:"сердечная шестерня",земля:{победа:"механизмы округи затихли: кристалл дешевле, руны крепнут",поражение:"механизмы проснулись: встречи чаще, тиканье повсюду"}}];
+const BOSS_BY_ID=Object.fromEntries(WORLD_BOSSES.map(b=>[b.id,b]));
+const BOSS_RESPAWN=60,BOSS_RADIUS=48,BOSS_EFFECT_WIN=20,BOSS_EFFECT_LOSS=7;
+/* Логово: постоянная клетка мира в своём биоме (мир выводится из семени,
+   и клетка та же на любом устройстве). */
+function bossLair(b){return {x:b.x,y:b.y};}
+function bossState(id){if(!G.bosses||typeof G.bosses!=="object")G.bosses={};return G.bosses[id]||null;}
+function bossAlive(b){const st=bossState(b.id);return !(st&&st.slain&&(Number(G.day)||1)-st.slain<BOSS_RESPAWN);}
+function bossDist(b){const l=bossLair(b);return Math.max(Math.abs(G.x-l.x),Math.abs(G.y-l.y));}
+function bossAccess(b){
+ const a=b.доступ||{};
+ if(a.уровень&&(Number(G.level)||1)<a.уровень)return `нужен ${a.уровень}-й уровень`;
+ if(a.ночь&&!isNight())return "он выходит только ночью";
+ if(a.день&&isNight())return "он встаёт только днём";
+ if(a.ремесло&&!a.ремесло.some(m=>safeFn(()=>mastLevel(m),0)>=1))return "без первого урока рун или артефакторики он не откроется";
+ return "";}
+function bossHere(){
+ if(G.place||G.ship||inFlight()||G.dark)return null;
+ for(const b of WORLD_BOSSES){if(bossDist(b)<=1&&bossAlive(b))return b;}
+ return null;}
+/* Предвестники: три яруса по расстоянию, каждый объявляется раз за подход. */
+function bossOmens(){
+ try{
+  if(G.place||G.ship||G.dark)return;
+  if(!G.bossOmen||typeof G.bossOmen!=="object")G.bossOmen={};
+  if(!G.bossSeen||typeof G.bossSeen!=="object")G.bossSeen={};
+  for(const b of WORLD_BOSSES){
+   const d=bossDist(b);
+   const ярус=!bossAlive(b)||d>24?0:d>12?1:d>4?2:3;
+   if((G.bossOmen[b.id]||0)===ярус)continue;
+   const был=G.bossOmen[b.id]||0;G.bossOmen[b.id]=ярус;
+   if(!ярус||ярус<был)continue;
+   G.bossSeen[b.id]=1;
+   const l=bossLair(b);
+   safeFn(()=>{const роль=ярус===1?b.звуки.дальний:ярус===2?b.звуки.ближний:b.звуки.голос;
+    Spatial.role(роль,Math.sign(l.x-G.x)*Math.min(6,Math.abs(l.x-G.x)),Math.sign(l.y-G.y)*Math.min(6,Math.abs(l.y-G.y)),{gain:0.35+ярус*0.15,maxSec:6})||Bank.play(роль,{gain:0.35+ярус*0.15,maxSec:6});});
+   const напр=dirBetween(l.x-G.x,l.y-G.y)||"здесь";
+   narrate(`${b.предвестники[ярус-1][0].toUpperCase()+b.предвестники[ярус-1].slice(1)}: ${напр}, ${d} ${plural(d,"шаг","шага","шагов")}. ${ярус===3?`Это ${b.n}. ${b.история}`:ярус===2?`Так предупреждает ${b.род.replace(/^./,c=>c.toUpperCase())}.`:"Что-то большое неподалёку."}`,{pri:ярус===3?1:2,key:"boss:"+b.id,ttl:8000});
+   if(ярус===3)safeFn(()=>journal(`Логово: ${b.n}.`));}
+ }catch(_){}}
+function bossFight(){
+ const b=bossHere();
+ if(!b){narrate("Владыки здесь нет: логова ищут по предвестникам.");return false;}
+ if(G.inCombat){narrate("Бой уже идёт.");return false;}
+ const беда=bossAccess(b);if(беда){narrate(`${b.n} не выходит: ${беда}.`);return false;}
+ const m={id:"wb_"+b.id,n:b.n,lvl:b.lvl,hp:Math.round(b.hp*safeFn(()=>diff().foeHp,1)),dmg:b.dmg,dmg0:b.dmg,xp:b.lvl*60,gold:b.lvl*30,voice:"wraith",fx:"roar",snd:"mroar",boss:{id:b.id,phase:1},biomes:b.био};
+ safeFn(()=>{Bank.play(b.звуки.голос,{gain:0.8,maxSec:6});setTimeout(()=>safeFn(()=>Bank.play("war_timpani",{gain:0.6,maxSec:5})),400);});
+ safeFn(()=>journal(`Вызов брошен: ${b.n}.`));
+ narrate(`${b.n} принимает вызов. ${b.история} Фаза первая — ${b.фазы[0].n}: ${b.фазы[0].о}. Отклик: ${b.откликСлова}.`,{pri:1,key:"boss"});
+ startCombat({x:G.x,y:G.y,monster:m});
+ return true;}
+function bossPhaseOf(m){const b=m&&m.boss&&BOSS_BY_ID[m.boss.id];if(!b)return null;return b.фазы[Math.max(0,(m.boss.phase||1)-1)];}
+function bossPhaseCheck(){
+ try{
+  const cb=G.combat;if(!cb||!cb.m||!cb.m.boss)return;
+  const b=BOSS_BY_ID[cb.m.boss.id];if(!b)return;
+  const доля=Math.max(0,cb.hp)/Math.max(1,cb.m.hp);
+  let ф=1;b.фазы.forEach((p,i)=>{if(доля<=p.от)ф=i+1;});
+  if(ф<=cb.m.boss.phase)return;
+  cb.m.boss.phase=ф;const p=b.фазы[ф-1];
+  cb.m.dmg=Math.round((cb.m.dmg0||b.dmg)*p.множ);
+  if(p.погода&&G.weather!==p.погода){G.weather=p.погода;safeFn(()=>Weather.set(p.погода));}
+  safeFn(()=>{Bank.play(b.звуки.фаза,{gain:0.7,maxSec:5});setTimeout(()=>safeFn(()=>Bank.play(b.звуки.голос,{gain:0.6,maxSec:4})),500);});
+  narrate(`${b.n}, фаза ${ф===2?"вторая":"третья"} — ${p.n}: ${p.о}.`,{pri:1,key:"bossphase",interrupt:true});
+  safeFn(()=>updateCombat());
+ }catch(_){}}
+/* Множитель урона по владыке: род удара и школа чар. */
+function bossDamageK(kind,school){
+ try{
+  const cb=G.combat;if(!cb||!cb.m||!cb.m.boss)return 1;
+  const b=BOSS_BY_ID[cb.m.boss.id];const p=bossPhaseOf(cb.m);let k=1;
+  if(kind==="atk"){if(p.механика==="физика вполсилы")k*=0.5;if(p.механика==="магия не берёт")k*=2;if(p.механика==="мимо"&&!safeFn(()=>buffActive("чутьё")||buffActive("ночное зрение"),false)&&Math.random()<0.33)k=0;}
+  if(kind==="magic"||kind==="spell"){if(p.механика==="магия не берёт")k=0;if(school&&b.отклик&&b.отклик[school]!==undefined)k*=b.отклик[school];}
+  return k;
+ }catch(_){return 1;}}
+function bossPlayerTurn(){
+ try{
+  const cb=G.combat;if(!cb||!cb.m||!cb.m.boss)return "";
+  const p=bossPhaseOf(cb.m);
+  if(p.механика==="тянет ману"){const m=Math.min(G.mana,5);G.mana-=m;return m?` Хор тянет ману: −${m}.`:"";}
+  if(p.механика==="обжигает"){G.hp=Math.max(1,G.hp-3);return " Раскалённый металл обжигает: −3.";}
+  return "";
+ }catch(_){return "";}}
+function bossVictory(m){
+ try{
+  const b=BOSS_BY_ID[m.boss.id];if(!b)return;
+  if(!G.bosses)G.bosses={};G.bosses[b.id]={slain:Number(G.day)||1,at:G.day};
+  G.inv[b.припас]=(Number(G.inv[b.припас])||0)+1;
+  safeFn(()=>{Bank.play(b.звуки.смерть,{gain:0.7,maxSec:6});eventFanfare(["siege_victory","war_brass","wide_strings","crowd_cheer"],0.7);});
+  safeFn(()=>findArtifact({глубина:60,seed:b.id.length*977+(Number(G.day)||1)}));
+  if(!Array.isArray(G.titles))G.titles=[];const титул=`Одолевший ${b.род}`;if(!G.titles.includes(титул))G.titles.push(титул);
+  const l=bossLair(b);const idx=empireIndexAt(l.x,l.y);
+  safeFn(()=>{marketNudge(idx,"подвоз",0.3,`пал ${b.n}`);addStand("fact",EMPIRES[idx].short,15);addStand("army",null,10,true);rumorSeed("бой",`одолел ${b.род}`,l.x,l.y,true);deed("kills");});
+  if(G.weather!=="Ясно"){G.weather="Ясно";safeFn(()=>Weather.set("Ясно"));}
+  journal(`Пал ${b.n}. ${b.земля.победа}.`);
+  narrate(`${b.n} пал. ${b.земля.победа[0].toUpperCase()+b.земля.победа.slice(1)}. Взято: ${b.припас}. Вы — ${титул}. Он вернётся через ${BOSS_RESPAWN} дней.`,{pri:1,key:"boss"});
+ }catch(_){}}
+function bossDefeat(m){
+ try{
+  const b=BOSS_BY_ID[m.boss.id];if(!b)return;
+  if(!G.bosses)G.bosses={};G.bosses[b.id]={beaten:Number(G.day)||1};
+  const l=bossLair(b);const idx=empireIndexAt(l.x,l.y);
+  safeFn(()=>{marketNudge(idx,"подвоз",-0.2,`${b.n} одержал верх`);rumorSeed("война",`${b.n} вышел из логова`,l.x,l.y,true);});
+  journal(`${b.n} одержал верх. ${b.земля.поражение}.`);
+  narrate(`${b.n} одержал верх. ${b.земля.поражение[0].toUpperCase()+b.земля.поражение.slice(1)} — на ${BOSS_EFFECT_LOSS} дней.`,{pri:1,key:"boss"});
+ }catch(_){}}
+/* Земля вокруг логова помнит исход: встречи реже после победы, чаще после поражения. */
+function bossRegionK(){
+ try{
+  if(!G.bosses)return 1;const день=Number(G.day)||1;let k=1;
+  for(const b of WORLD_BOSSES){const st=G.bosses[b.id];if(!st)continue;
+   if(bossDist(b)>BOSS_RADIUS)continue;
+   if(st.slain&&день-st.slain<BOSS_EFFECT_WIN)k*=0.5;
+   if(st.beaten&&день-st.beaten<BOSS_EFFECT_LOSS)k*=1.5;}
+  return k;
+ }catch(_){return 1;}}
+function bossesText(){
+ const seen=G.bossSeen||{};
+ const строки=WORLD_BOSSES.map(b=>{
+  const st=bossState(b.id);const l=bossLair(b);const d=bossDist(b);
+  const где=seen[b.id]?`${dirBetween(l.x-G.x,l.y-G.y)||"здесь"}, ${d} шагов`:"логово ещё не найдено: слушайте предвестников";
+  const сост=st&&st.slain&&(Number(G.day)||1)-st.slain<BOSS_RESPAWN?`повержен, вернётся через ${BOSS_RESPAWN-((Number(G.day)||1)-st.slain)} дн.`:st&&st.beaten?"одержал верх над вами":"жив";
+  const доступ=b.доступ.уровень?`с ${b.доступ.уровень}-го уровня`:b.доступ.ночь?"только ночью":b.доступ.день?"только днём":b.доступ.ремесло?"знающему руны или артефакторику":"без условий";
+  return `${b.n} — ${(b.био||[]).map(id=>(BIOME_BY_ID[id]||{n:id}).n).slice(0,2).join(", ")}; ${где}; ${сост}; доступ ${доступ}; отклик: ${b.откликСлова}; припас: ${b.припас}`;});
+ return `Владык земель ${WORLD_BOSSES.length}. ${строки.join(". ")}.`;}
+
 /* ── ДОБЫЧА ГЛУБИНЫ ──
    Вещь с сотого яруса не может быть той же, что с первого. Ранг и качество
    растут с глубиной, к имени прибавляется слово круга, а с сорокового яруса
@@ -25993,6 +26311,7 @@ function fight(a){const cb=G.combat;if(!cb)return;const m=cb.m;
   if(crit){dmg*=2;safeFn(()=>{UI.blip(1320,.12,.25);Bank.play("lug_impact",{seed:dmg,gain:0.6,maxSec:2});Bank.play("clash",{seed:dmg,gain:0.7,maxSec:3});
    Bank.play("cast_warcry",{seed:dmg,gain:0.5,maxSec:3});
    setTimeout(()=>safeFn(()=>Bank.play("clash_blades",{seed:dmg,gain:0.6,maxSec:3})),120);});}
+  dmg=Math.round(dmg*safeFn(()=>bossDamageK("atk"),1));
   cb.hp-=dmg;playWeaponCombatSfx(true,(G.combat&&G.combat.lastDir)||"N",dmg);
   setTimeout(()=>safeFn(()=>playRealMonsterCue(m,"damage",0.6)),120);
   cbLog(crit?`Сокрушительный удар: −${dmg}!`:`Вы ударили: −${dmg}.`);}
@@ -26003,16 +26322,19 @@ function fight(a){const cb=G.combat;if(!cb)return;const m=cb.m;
      обеими надбавками складывались бы вдвое. */
   const усил=safeFn(()=>Math.max(ART.sum("шк_общ"),
    Math.max(ART.sum("шк_огонь"),ART.sum("шк_лёд"),ART.sum("шк_свет"),ART.sum("шк_тень"))),0);
-  const dmg=Math.round((G.mind*2+G.level*2+Math.floor(Math.random()*6))*(1+усил));cb.hp-=dmg;
+  const dmg=Math.round((G.mind*2+G.level*2+Math.floor(Math.random()*6))*(1+усил)*safeFn(()=>bossDamageK("magic"),1));cb.hp-=dmg;
   safeFn(()=>{if(!natShot("magic_woosh",0,0.8))natShot("magic_shimmer",0,0.7);});
   Play.start("ev","magic",{dur:3});cbLog(`Магия: −${dmg}.`);}
  else if(a==="potion"){if(G.water<20){narrate("Нет воды для зелья.");return;}
   G.water-=20;G.hp=Math.min(G.hpMax,G.hp+15);UI.drink();cbLog("Зелье: +15 здоровья.");}
- else if(a==="flee"){if(Math.random()<0.4+G.agi*0.02+0.12*fxLevel("deal")){
+ else if(a==="flee"){if(safeFn(()=>{const p=bossPhaseOf(cb.m);return p&&p.механика==="без бегства";},false)){cbLog("Якорь брошен: бежать некуда.");}
+  else{if(Math.random()<0.4+G.agi*0.02+0.12*fxLevel("deal")){
    endCombat();narrate("Вы сбежали!");journal(`Побег от «${m.n}».`);refresh();resumeLocationMusic();return;}
-  cbLog("Сбежать не вышло!");
+  cbLog("Сбежать не вышло!");}
   safeFn(()=>{Bank.play("oc_shield_block",{seed:G.hp,gain:0.5,maxSec:2});Bank.play("shield_block",{seed:G.hp,gain:0.45,maxSec:3});Play.start("ev","shield_bash",{dur:2});});}
+ safeFn(()=>{const ход=bossPlayerTurn();if(ход)cbLog(cbLog2text()+ход);});
  narrate(cbLog2text());
+ safeFn(()=>bossPhaseCheck());
  if(cb.hp<=0){victory();return;}
  /* Мера сложности: во сколько раз больнее бьёт мир. */
  let mdmg=Math.max(1,Math.round((m.dmg-Math.floor(def()/2)+Math.floor(Math.random()*3))*diff().dmg));
@@ -26154,6 +26476,7 @@ function victory(){const cb=G.combat,m=cb.m;
   safeFn(()=>{setPlaceMark(k.x,k.y,"dead");G.dungeonKills=(Number(G.dungeonKills)||0)+1;checkQuestProgress();});}
  G.xp+=xpGain(m.xp);
  safeFn(()=>{G.lastKill={id:m.id,n:m.n,lvl:m.lvl,fx:m.fx,когда:(Number(G.day)||1)*24+(Number(G.hour)||0)};deed("kills");artWearAll(1);});
+ if(m&&m.boss)safeFn(()=>bossVictory(m));
  /* ── О ПОБЕДЕ УЗНАЮТ ──
     Весть рождается там, где был бой, и дальше идёт без игрока. Мелкую драку
     никто не разносит: весть заводится только на том, что выше игрока или
@@ -26292,7 +26615,8 @@ function takeLoot(){
   return true;
  }catch(e){try{console.error("takeLoot",e);}catch(_){}return false;}
 }
-function defeat(){endCombat();Music.stop();
+function defeat(){const павший=G.combat&&G.combat.m;endCombat();Music.stop();
+ if(павший&&павший.boss)safeFn(()=>bossDefeat(павший));
  safeFn(()=>{Bank.play("jingle_lose",{gain:0.8});Bank.play("defeat",{seed:G.day,gain:0.55,maxSec:9});
   setTimeout(()=>safeFn(()=>Bank.play("cello_defeat",{gain:0.7,maxSec:7})),380);
   /* Поражение договаривают глубина и плач: удар о землю, стон, гобой. */
@@ -26839,6 +27163,13 @@ const CMD={
   if(!n){narrate("Тот, кто предлагал это дело, уже ушёл. Подряд придётся искать у кого-то другого.");return;}
   takeNPCQuest(n);},
  qdone(id){completeQuest(id);},
+ qpart(id){safeFn(()=>completeQuestPartial(id));},
+ bossfight(){bossFight();},
+ bosses(){narrate(bossesText());},
+ factions(){narrate(factionsText());},
+ rumours(){narrate(rumorsText());},
+ questlist(){narrate(questsText());},
+ worldcheck(){narrate(worldCheckText());},
  /* Второй путь: золотом или словом вместо вещи. */
  qalt(id){safeFn(()=>completeQuestAlt(id));},
  /* Отказ помнят так же твёрдо, как и исполнение. */
@@ -27379,7 +27710,7 @@ function castCustomEffect(sp){
   if(sp.откат)G.spellCD[sp.id]=now+sp.откат;
   if(sp.голос)safeFn(()=>Bank.play(sp.голос,{seed:sp.n.length,gain:0.55,maxSec:4}));
   const бой=G.inCombat&&G.combat;
-  const удар=d=>{G.combat.hp-=d;safeFn(()=>updateCombat());if(G.combat.hp<=0){narrate(`Заклинание «${sp.n}» сотворено. −${d} твари: она пала.`);victory();return " ";}return ` −${d} твари.`;};
+  const удар=d=>{d=Math.round(d*safeFn(()=>bossDamageK("spell",sp.school),1));G.combat.hp-=d;safeFn(()=>updateCombat());safeFn(()=>bossPhaseCheck());if(G.combat.hp<=0){narrate(`Заклинание «${sp.n}» сотворено. −${d} твари: она пала.`);victory();return " ";}return ` −${d} твари.`;};
   if(sc.сем==="урон"){
    if(f.id==="bolt")return бой?удар(Math.round((10+G.level*2)*sc.k*k)):" Стрела ушла в пустоту: бить было некого.";
    if(f.id==="wave")return бой?удар(Math.round((6+G.level)*sc.k*k)):" Волна прокатилась по пустому месту.";
@@ -27513,6 +27844,11 @@ function castSpell(i){const sp=SPELLS[i];
     не исключение. Иначе свиток превращается в строчку в списке. */
  let итог="";
  if(sp.custom){итог=castCustomEffect(sp);if(итог===" ")return;}
+ else if(G.inCombat&&G.combat&&G.combat.m&&G.combat.m.boss&&/Огненный шар|Ледяная игла|Искра глубин|Искра/.test(sp.n)){
+  const sc=safeFn(()=>spellSchool(sp),null);const k=safeFn(()=>bossDamageK("spell",sc&&sc.id),1);
+  const d=Math.round((8+G.level*2)*k);G.combat.hp-=d;safeFn(()=>{updateCombat();bossPhaseCheck();});
+  итог=k>1?` −${d} твари: ${(BOSS_BY_ID[G.combat.m.boss.id]||{}).откликСлова}.`:k===0?" Чары ушли впустую: он этим кормится.":` −${d} твари.`;
+  if(G.combat.hp<=0){narrate(`Заклинание «${sp.n}» сотворено.${итог}`);victory();return;}}
  else switch(sp.n){
   case "Исцеление":G.hp=Math.min(G.hpMax,G.hp+25);UI.drink();
    safeFn(()=>Bank.play("cast_potion",{gain:0.6,maxSec:3}));итог=" Раны затянулись.";break;
@@ -27632,7 +27968,9 @@ function sellResource(key,res,all){
  safeFn(()=>{UI.pickup();Bank.play("gold",{seed:total,gain:0.8});
   Bank.play("market_slap",{seed:total,gain:0.45,maxSec:3});
   setTimeout(()=>safeFn(()=>Bank.play("market_tone",{seed:total,gain:0.4,maxSec:3})),260);});
- narrate(`Продано: ${res} — ${qty} шт. по ${unit} золота. Получено ${total}. Всего золота: ${G.gold}.`);
+ const почему=safeFn(()=>priceWhy(res,empireIndexAt(G.x,G.y),null),"");
+ const контра=safeFn(()=>smuggleCheck(res,total),"")||"";
+ narrate(`Продано: ${res} — ${qty} шт. по ${unit} золота. Получено ${total}. Всего золота: ${G.gold}. Цена сложилась так: ${почему}.${контра}`);
  journal(`Продажа: ${res} ×${qty} за ${total} золота.`);
  saveGame(true);refresh();openNPC(key,true);}
 /* Надбавка за глубину: под землю всё приходится нести на себе. */
@@ -28353,6 +28691,96 @@ function advanceChain(q){
    сверх уже начатого. Отказаться от дела можно всегда — заказчик этого не
    забудет, но и держать игрока в тупике игра не станет.
    ════════════════════════════════════════════════════════════════════════ */
+
+/* ════════ ЧЕТЫРЕ УРОВНЯ ДЕЛ (§128) ════════
+   Дела были одного роста. Теперь у каждого ярус: точечное — одно действие;
+   локальное — история земли; индивидуальное — история самого героя (цепочки,
+   паломничества, тёмные дела); мировое — то, что меняет много земель. Ярус
+   решает срок, цену провала и след в мире. У дела есть условие запуска,
+   состояние, второй путь, срок и провал, частичная сдача за половину и
+   отложенные последствия, которые приходят через дни. */
+const QUEST_TIERS=[
+ {id:"point",n:"точечное",срок:6,о:"одно действие"},
+ {id:"local",n:"локальное",срок:12,о:"история этой земли"},
+ {id:"personal",n:"индивидуальное",срок:20,о:"история вашего пути"},
+ {id:"world",n:"мировое",срок:30,о:"меняет много земель"}];
+const QUEST_TIER_BY_ID=Object.fromEntries(QUEST_TIERS.map(t=>[t.id,t]));
+function questTier(q){
+ if(!q)return QUEST_TIER_BY_ID.point;
+ if(q.ярус&&QUEST_TIER_BY_ID[q.ярус])return QUEST_TIER_BY_ID[q.ярус];
+ if(q.type==="war_raid"||q.type==="war_supply"||q.мировое)return QUEST_TIER_BY_ID.world;
+ if(q.chain||q.type==="god_altar"||q.type==="god_relic"||q.тёмнаяНаграда||q.уровень)return QUEST_TIER_BY_ID.personal;
+ if(["hunt","craft","trapwork","hoard","escort","freight","portal_run","study"].includes(q.type))return QUEST_TIER_BY_ID.local;
+ return QUEST_TIER_BY_ID.point;}
+function questStateWord(q){
+ if(!q)return "";
+ if(q.провал)return "провалено";
+ if(q.состояние==="частично")return "сдано частично";
+ if(q.done)return "сдано";
+ const надо=Number(q.need)||0,есть=q.type==="fetch"||q.type==="delivery"||q.type==="freight"||q.type==="war_supply"?Number(G.inv&&G.inv[q.res])||0:Number(q.have)||0;
+ if(надо&&есть>=надо)return "готово к сдаче";
+ if(надо&&есть>0)return "идёт";
+ return "открыто";}
+function questPartialReady(q){
+ if(!q||q.done)return false;
+ const надо=Number(q.need)||0;if(надо<2)return false;
+ const есть=["fetch","delivery","freight","war_supply"].includes(q.type)?Number(G.inv&&G.inv[q.res])||0:["kill","hunt","craft","study","trapwork","hoard","war_raid"].includes(q.type)?Number(q.have)||0:-1;
+ if(есть<0)return false;
+ return есть>=Math.ceil(надо/2)&&есть<надо;}
+function questDelay(день,текст,эффект){if(!Array.isArray(G.delayed))G.delayed=[];G.delayed.push({день:Number(день)||((Number(G.day)||1)+3),текст:String(текст||""),эффект:эффект||null});}
+function completeQuestPartial(id){
+ const q=(G.quests||[]).find(x=>x.id===id&&!x.done);
+ if(!q){narrate("Дело не найдено.");return false;}
+ if(!questPartialReady(q)){narrate("Частично сдать нельзя: нужна хотя бы половина, и не всё целиком.");return false;}
+ if(["fetch","delivery","freight","war_supply"].includes(q.type)){const есть=Number(G.inv[q.res])||0;G.inv[q.res]=0;delete G.inv[q.res];q.сдано=есть;}
+ q.done=true;q.состояние="частично";
+ const п=questPay(q);const gold=Math.round(п.gold*0.45),xp=Math.round(п.xp*0.5);
+ G.gold+=gold;G.xp+=xp;
+ safeFn(()=>{addRep(q.race,1);Bank.play("gold",{gain:0.5});});
+ questDelay((Number(G.day)||1)+4,`${q.npc} недоволен половиной дела: имя у народа «${q.race}» упало.`,{rep:q.race,n:-1});
+ journal(`Дело сдано частично: ${q.text}`);
+ narrate(`Дело сдано частично. ${q.npc} берёт что есть и платит меньше: ${gold} золота, опыт ${xp}. Последствия придут позже.`,{pri:1});
+ safeFn(()=>{checkLevelUp();refresh();renderQuests();saveGame(true);});
+ return true;}
+/* Ход дня: сроки, провалы и отложенные последствия. */
+function questDayTick(){
+ try{
+  const день=Number(G.day)||1;
+  for(const q of (G.quests||[])){
+   if(!q||q.done||!q.до)continue;
+   if(день>q.до){
+    q.done=true;q.провал=true;q.состояние="провалено";
+    safeFn(()=>{addRep(q.race,-2);Bank.play("horn_dark",{gain:0.5,maxSec:4});});
+    const ярус=questTier(q);
+    if(ярус.id==="world")safeFn(()=>{const idx=empireIndexAt(Number(q.tx)||G.x,Number(q.ty)||G.y);marketNudge(idx,"подвоз",-0.2,"мировое дело провалено");rumorSeed("война","дело провалено",Number(q.tx)||G.x,Number(q.ty)||G.y,true);});
+    questDelay(день+3,`О провале дела от ${q.npc} узнали соседи: имя у народа «${q.race}» упало ещё.`,{rep:q.race,n:-1});
+    journal(`Срок вышел: дело от ${q.npc} провалено.`);
+    narrate(`Срок вышел: дело от ${q.npc} (${ярус.n}) провалено. Имя у народа упало.`,{pri:2,key:"qfail:"+q.id});}}
+  if(Array.isArray(G.delayed)){
+   const идут=G.delayed.filter(d=>d&&Number(d.день)<=день);
+   G.delayed=G.delayed.filter(d=>d&&Number(d.день)>день);
+   for(const d of идут){
+    safeFn(()=>{if(d.эффект&&d.эффект.rep)addRep(d.эффект.rep,Number(d.эффект.n)||0);if(d.эффект&&d.эффект.stand)addStand(d.эффект.stand,d.эффект.id||null,Number(d.эффект.n)||0);if(d.эффект&&d.эффект.gold)G.gold=Math.max(0,G.gold+Number(d.эффект.gold));});
+    journal(`Отголосок: ${d.текст}`);
+    narrate(`Отголосок прошлого: ${d.текст}`,{pri:2,key:"delayed"});}}
+ }catch(_){}}
+/* Мировое дело меняет мир, когда сдано. */
+function questWorldChange(q){
+ try{
+  const ярус=questTier(q);
+  if(ярус.id!=="world")return "";
+  const idx=empireIndexAt(Number(q.tx)||G.x,Number(q.ty)||G.y);
+  marketNudge(idx,"подвоз",0.25,"мировое дело закрыто");
+  rumorSeed("добро",`закрыл мировое дело: ${q.text.slice(0,40)}`,Number(q.tx)||G.x,Number(q.ty)||G.y,true);
+  if(!G.worldFlags||typeof G.worldFlags!=="object")G.worldFlags={};
+  G.worldFlags[`q_${q.type}_${idx}`]=Number(G.day)||1;
+  questDelay((Number(G.day)||1)+5,`Держава ${EMPIRES[idx].short} помнит закрытое мировое дело: имя у державы выросло.`,{stand:"fact",id:EMPIRES[idx].short,n:8});
+  return ` Это мировое дело: подвоз в державе ${EMPIRES[idx].short} стал щедрее, и весть пошла по землям.`;
+ }catch(_){return "";}}
+function questsText(){
+ const о=(G.quests||[]).filter(q=>!q.done);
+ return `Дел открыто ${о.length}: `+(о.map(q=>`${q.text.slice(0,50)} — ${questTier(q).n}, ${questStateWord(q)}${q.до?`, срок до ${q.до}-го дня`:""}`).join("; ")||"ни одного")+".";}
+
 const QUEST_LIMIT=8;
 function openQuests(){return (G.quests||[]).filter(q=>!q.done);}
 function dropQuest(id){
@@ -28382,6 +28810,7 @@ function takeNPCQuest(n){
  if(chained){if(!G.chainTaken)G.chainTaken={};G.chainTaken[chainId]=true;}
  q.have=q.have||0;q.done=false;q.race=n.race;q.god=godOfRace(n.race).id;
  if(!q.npcKey)q.npcKey=n.key;
+ safeFn(()=>{const ярус=questTier(q);q.ярус=ярус.id;q.состояние="открыто";q.старт=`взято у ${n.name} (${n.race}) в державе ${EMPIRES[empireIndexAt(n.x,n.y)].short} на ${G.day}-й день`;if(!q.до&&!q.due)q.до=(Number(G.day)||1)+ярус.срок;});
  if(q.type==="war_raid")q.base=Number(G.dungeonKills)||0; /* рейд считается с момента, когда задание взято */
  G.quests.push(q);journal(`Квест от ${n.name}: ${q.text}`);
  const details=q.type==='fetch'?` Нужно принести ${q.need} «${q.res}». Ищи их в районе (${q.tx}; ${q.ty}).`
@@ -28395,7 +28824,8 @@ function takeNPCQuest(n){
   return ` Есть и второй путь: ${a.n}${ц?` за ${ц} золота`:""} — ${a.о}. Платят за него меньше.`;},"");
  const chainWord=q.chain&&CHAIN_DB[q.chain]
   ?` ${CHAIN_DB[q.chain].intro} Это шаг ${(q.chainStep||0)+1} из ${q.chainOf}, цепочка «${q.chainName}».`:"";
- narrate(`${n.name} берёт тебя за плечо и объясняет поручение. ${q.text}${details}${chainWord}${второй} После выполнения возвращайся ко мне.`);safeFn(()=>UI.fanfare());saveGame(true);openNPC(n.key);
+ const ярусСлово=safeFn(()=>{const t=questTier(q);return ` Дело ${t.n}: ${t.о}${q.до?`, срок до ${q.до}-го дня`:""}.`;},"");
+ narrate(`${n.name} берёт тебя за плечо и объясняет поручение. ${q.text}${details}${chainWord}${второй}${ярусСлово} После выполнения возвращайся ко мне.`);safeFn(()=>UI.fanfare());saveGame(true);openNPC(n.key);
 }
 function openNPC(key,silent){const n=getNPCByKey(key);
  if(!n){narrate("Этого жителя здесь больше нет.");return;}
@@ -28448,8 +28878,8 @@ function openNPC(key,silent){const n=getNPCByKey(key);
   if(пам)html+=`<div class="list-line" tabindex="0" data-speak="${пам.replace(/"/g,"&quot;")}">🧠 ${пам}</div>`;}
  {const вести=safeFn(()=>rumorsHere(n.x,n.y),[]).filter(r=>npcKnowsRumor(n,r)).slice(0,3);
   if(вести.length){
-   const т=вести.map(r=>{const t=rumorText(r);
-    return `«${t.текст}» — ${t.откуда}${t.раздуто?", и, похоже, приукрашено":""}`;}).join("; ");
+   const т=вести.map(r=>{const t=rumorText(r);const п=safeFn(()=>rumorPerception(r,n),null);
+    return `«${t.текст}» — ${t.откуда}${t.раздуто?", и, похоже, приукрашено":""} (${t.род}${п&&п.слово?"; "+п.слово:""})`;}).join("; ");
    const сказ=`Что о вас тут говорят: ${т}.`;
    html+=`<div class="list-line" tabindex="0" data-speak="${сказ.replace(/"/g,"&quot;")}">🗣️ ${сказ}</div>`;}}
  {const ст=safeFn(()=>standText(n),"");
@@ -28601,9 +29031,10 @@ function completeQuest(id){
  else if(q.type==="war_raid"){
   const have=Math.max(0,(Number(G.dungeonKills)||0)-(Number(q.base)||0));
   if(have<q.need){narrate(`Рейд не завершён: ${have} из ${q.need} тварей подземелья.`);return;}}
- q.done=true;
+ q.done=true;q.состояние="сдано";
  const {gold,xp}=questPay(q);
  G.gold+=gold;G.xp+=xp;
+ const мировое=safeFn(()=>questWorldChange(q),"")||"";
  /* Тёмное дело платит по-своему: сперва берёт плату, потом даёт дар. */
  let тёмное="";
  if(q.тёмнаяНаграда){
@@ -28659,7 +29090,7 @@ function completeQuest(id){
  safeFn(()=>Bank.play("quest",{seed:G.quests.length,gain:0.7,maxSec:7}));
  /* Труба на два голоса: задание сдано. */
  safeFn(()=>eventTheme("quest_done",{seed:0,gain:0.7}));
- narrate(`Квест выполнен! Награда: ${gold} золота, ${xp} опыта.`+даром+школьное+тёмное+
+ narrate(`Квест выполнен! Награда: ${gold} золота, ${xp} опыта.`+даром+школьное+тёмное+мировое+
   (q.наряд?` ${q.наряд} закрыт.`:"")+
   (q.faith&&q.godId?` Благосклонность ${GOD_BY_ID[q.godId]?GOD_BY_ID[q.godId].n:"бога"} +${q.faith}.`:"")+
   (q.diplo?" Держава запомнит вашу службу.":"")+
@@ -28789,7 +29220,8 @@ function renderCharacter(){
 function renderQuests(){
  document.getElementById("questList").innerHTML=G.quests.length?
   G.quests.map(q=>`<div class="list-line">${q.done?"✅":"📜"} От: ${q.npc}<br>${q.text}<br>
-   ${q.chain?`Цепочка «${q.chainName}», шаг ${(q.chainStep||0)+1} из ${q.chainOf}.<br>`:""}Прогресс: ${q.done?"выполнен":qProgressText(q)}<br>Награда: ${questPay(q).gold} золота, ${questPay(q).xp} опыта.
+   ${q.chain?`Цепочка «${q.chainName}», шаг ${(q.chainStep||0)+1} из ${q.chainOf}.<br>`:""}Ярус: ${safeFn(()=>questTier(q).n,"")}, состояние: ${safeFn(()=>questStateWord(q),"")}${q.до&&!q.done?`, срок до ${q.до}-го дня`:""}.<br>Прогресс: ${q.done?(q.провал?"провалено":q.состояние==="частично"?"сдано частично":"выполнен"):qProgressText(q)}<br>Награда: ${questPay(q).gold} золота
+   ${!q.done&&safeFn(()=>questPartialReady(q),false)?`<button data-cmd="qpart:${q.id}" data-speak="Сдать частично: половина сделана, платят меньше, последствия придут позже.">½ Сдать частично</button>`:""}, ${questPay(q).xp} опыта.
    ${q.done?"":`<button data-cmd="qdone:${q.id}" data-speak="Завершить квест: ${String(q.text).replace(/"/g,"&quot;").slice(0,80)}">✅ Завершить</button>
    ${(()=>{const a=safeFn(()=>qAltFor(q),null);if(!a)return "";const ц=safeFn(()=>qAltPrice(q),0);
      return `<button data-cmd="qalt:${q.id}" data-speak="Второй путь: ${a.n}${ц?`, ${ц} золота`:""}. ${a.о}.">🪙 ${a.n}${ц?` (${ц})`:""}</button>`;})()}
@@ -28878,6 +29310,79 @@ function renderPantheon(){
    ${G.patron===g.id?"":`<button data-cmd="patron:${g.id}" data-speak="Принять покровительство: ${g.n}. Дар: ${g.boon}">🕯️ Принять покровительство</button>`}</div>`;}).join("");
  narrate(`Пантеон двенадцати богов. Ваш покровитель: ${p?p.n:"не выбран"}.`);
 }
+
+/* ════════ ФРАКЦИИ И ПОЛИТИКА (§124) ════════
+   У державы были строй, хозяйство, вывоз и войны. Теперь у каждой — досье:
+   цели, идеология, средства, правитель, вассальные кланы, союзники и враги,
+   торговые связи, войско, тайное дело седмицы и внутренний раздор, а также
+   ваше положение у неё по кругам и осям. Единой шкалы «добро — зло» нет:
+   круги (держава, войско, торговцы, храм, знать, преступный мир) и оси
+   (страх, доверие, известность…) ведутся отдельно, и подняться у одних —
+   значит опуститься у других. */
+const FACTION_GOALS=["удержать перевалы и рудники","прибрать морские пути","собрать под себя малые кланы","вернуть спорную границу","накормить свои города чужим зерном","закрыть разломы на своей земле","сделать свою веру верой соседей","выстроить дорогу через чужие земли"];
+const FACTION_TROUBLES=["знать против цехов: спор о податях","войско ропщет: жалованье задерживают","два храма делят паству","наследники делят престол ещё при живом правителе","гильдии грозят закрыть склады","пограничные кланы не шлют ополчение"];
+const LEADER_TITLES=["Голос","Держатель","Старший","Наместник","Кормчий","Хранитель"];
+function factionProfile(idx){
+ const i=Math.max(0,Math.min(EMPIRES.length-1,Number(idx)||0));const emp=EMPIRES[i];const day=Number(G.day)||1;
+ const w=Math.floor(day/7);
+ const pick=(arr,k)=>arr[Math.floor(H(i,k,9600)*arr.length)%arr.length];
+ const цели=[pick(FACTION_GOALS,1),pick(FACTION_GOALS,2)].filter((v,j,a)=>a.indexOf(v)===j);
+ const правитель=`${pick(LEADER_TITLES,3)} ${SYL[Math.floor(H(i,4,9600)*SYL.length)]}${SYL2[Math.floor(H(i,5,9600)*SYL2.length)]}`;
+ const вассалы=CLAN_DB.filter(c=>c.seat===emp.short).map(c=>c.n);
+ const союзники=[],враги=[],торговля=[];
+ EMPIRES.forEach((o,j)=>{if(j===i)return;const отн=relationWord(relationAt(i,j,day));
+  if(отн==="союз"||отн==="дружба")союзники.push(o.short);if(отн==="война")враги.push(o.short);
+  if((o.exports||[]).some(r=>(emp.imports||[]).includes(r)))торговля.push(o.short);});
+ const войско=`${3+Math.floor(H(i,6,9600)*6)} полков${empireAtWar(i,day)?", в походе":", в гарнизонах"}`;
+ const тайное=secretOp(i,day);
+ const раздор=FACTION_TROUBLES[Math.floor(H(i,w,9601)*FACTION_TROUBLES.length)%FACTION_TROUBLES.length];
+ const положение=standOf("fact",emp.short);
+ return {emp,цели,идеология:String(emp.gov||"").split(".")[0]+".",средства:(emp.exports||[]).join(", "),правитель,вассалы,союзники,враги,торговля,войско,тайное,раздор,
+  положение,слово:standWord(положение).n,закон:empireLaw(i)};}
+function factionText(idx){
+ const p=factionProfile(idx);
+ return `${p.emp.name}. Правитель: ${p.правитель}. Идеология: ${p.идеология} Цели: ${p.цели.join(" и ")}. Средства: ${p.средства}. Вассальные кланы: ${p.вассалы.join(", ")||"нет"}. Союзники: ${p.союзники.join(", ")||"нет"}. Враги: ${p.враги.join(", ")||"нет"}. Торгует с: ${p.торговля.join(", ")||"ни с кем"}. Войско: ${p.войско}. Тайное дело седмицы: ${p.тайное.n} — ${p.тайное.эффект}. Внутренний раздор: ${p.раздор}. Под запретом: ${p.закон.запрет.join(", ")}; пошлина ${Math.round(p.закон.пошлина*100)} сотых. Ваше положение у державы: ${p.слово} (${p.положение}). Менять его можно делами, торговлей, разговором, войной, помощью людям, разведкой дорог, отказом от дел и раскрытием чужих тайн.`;}
+function factionsText(){const i=empireIndexAt(G.x,G.y);return factionText(i)+` Всего держав ${EMPIRES.length}: ${EMPIRES.map(e=>e.short).join(", ")}.`;}
+
+
+/* ════════ САМОПРОВЕРКА МИРА (§131, §133) ════════
+   Генератор обязан проверять сам себя: проходимость дорог между престолами,
+   отсутствие невозможных ресурсов, логику климата, связность хозяйства и
+   держав, доступность условий дел и звук у каждого важного объекта. Список
+   финального контроля тоже считается живьём, а не ставится галочкой. */
+function worldSelfCheck(){
+ const out=[];const ok=(id,c,note)=>out.push({id,ok:!!c,note:note||""});
+ try{
+  const day=Number(G.day)||1;
+  ok("routes",EMPIRES.every(e=>safeFn(()=>bestRoutes(e.cap.x,e.cap.y,day,4).length>0,false)),"из каждого престола есть торговый путь");
+  const bio=new Set(BIOMES.map(b=>b.id));
+  const плохие=[];for(const k in RES_SORTS)for(const с of RES_SORTS[k])if(с.био&&!с.био.some(id=>bio.has(id)))плохие.push(с.n);
+  ok("resources",!плохие.length,плохие.length?"недостижимые сорта: "+плохие.join(", "):"каждый сорт где-то растёт");
+  ok("plants",PLANTS.every(p=>!p.био||p.био.every(id=>id==="dark"||id==="alt"||bio.has(id))),"у каждого растения настоящая ниша");
+  let лёдТёплый=0;for(let i=0;i<600;i++){const x=(i*37)%WORLD,y=(i*59+3000)%WORLD;if(seaTypeAt(x,y).id==="ice"&&climateAt(x,y).тепло>=CLIM.Т_ЛЁД)лёдТёплый++;}
+  ok("climate",!лёдТёплый,"ледяное море только в стуже");
+  ok("economy",EMPIRES.every((e,i)=>(e.imports||[]).every(r=>EMPIRES.some((o,j)=>j!==i&&(o.exports||[]).includes(r)))),"всё, что держава ввозит, кто-то вывозит");
+  ok("factions",EMPIRES.every((e,i)=>EMPIRES.some((o,j)=>j!==i&&relationWord(relationAt(i,j,day))!=="нейтралитет")),"у каждой державы есть друг или враг");
+  ok("quests",Object.keys(QW_WORD).every(t=>t!=="craft"||TECHS.length>0)&&typeof questFor==="function"&&typeof completeQuest==="function"&&typeof completeQuestPartial==="function","дела всех родов имеют путь к сдаче");
+  const без=[];const roles=[];
+  SEA_TYPES.forEach(t=>roles.push([t.n,t.звук]));ISLAND_TYPES.forEach(t=>roles.push([t.n,t.звук]));DIVE_SITES.forEach(d=>roles.push([d.n,d.звук]));
+  WORLD_BOSSES.forEach(b=>Object.values(b.звуки).forEach(r=>roles.push([b.n,r])));SCHOOLS.forEach(sc=>{roles.push([sc.n,sc.звук]);roles.push([sc.n,sc.голос]);});
+  roles.forEach(([n,r])=>{if(!SOUND_BANK[r])без.push(n+":"+r);});
+  ok("audio",!без.length,без.length?"без звука: "+без.slice(0,5).join(", "):"у каждого важного объекта есть запись");
+  ok("bosses",new Set(WORLD_BOSSES.map(b=>b.фазы.map(p=>p.механика||"").join("|")+b.откликСлова)).size===WORLD_BOSSES.length,"у каждого владыки своя механика");
+  ok("potions",POTIONS.every(p=>p.из.length===2&&PLANTS.some(x=>x.кат===p.из[0])&&PLANTS.some(x=>x.кат===p.из[1])),"у каждого зелья рецепт из существующих ниш");
+  ok("artifacts",(G.artifacts||[]).every(a=>typeof a!=="object"||!!artLore(a)),"у каждого артефакта происхождение");
+  ok("cities",EMPIRES.every(e=>!!safeFn(()=>cityProfile({x:e.cap.x,y:e.cap.y,type:"castle",emp:e}),null)),"у каждого престола хозяйство");
+  ok("npc",!!safeFn(()=>npcSoul(getNPC(EMPIRES[0].cap.x,EMPIRES[0].cap.y,0)),null),"у жителя есть состояние");
+  ok("tts",typeof Speech==="object"&&typeof narrate==="function"&&String(narrate).includes("Speech.say"),"один распорядитель речи");
+  const keys=["spellbook","potions","plantsSeen","bosses","delayed","seasSeen","dives","bookGifts","asked","artifacts","quests","rumors","standing"];
+  ok("save",(()=>{try{saveGame(true);const raw=localStorage.getItem(SAVE_KEY)||"";const o=JSON.parse(raw);const g=o.G||o;return keys.every(k=>!(k in G)||k in g);}catch(_){return false;}})(),"новые поля лежат в сохранении");
+ }catch(e){ok("run",false,String(e));}
+ return out;}
+function worldCheckText(){
+ const r=worldSelfCheck();const плохие=r.filter(x=>!x.ok);
+ return `Самопроверка мира: ${r.length-плохие.length} из ${r.length} в порядке.${плохие.length?" Не в порядке: "+плохие.map(x=>x.id+" — "+x.note).join("; ")+".":" "+r.map(x=>x.note).join("; ")+"."}`;}
+
 function renderPolitics(){
  const day=G.day,wars=warsAt(day),allies=alliesAt(day),here=empireIndexAt(G.x,G.y);
  const w=document.getElementById("polWars");
@@ -28901,6 +29406,9 @@ function renderPolitics(){
    👑 Строй: ${emp.gov}<br>🪙 Хозяйство: ${emp.econ}<br>
    📤 Вывозит: ${(emp.exports||[]).join(", ")} · 📥 Ввозит: ${(emp.imports||[]).join(", ")}<br>
    📜 ${emp.hist}<br>🤝 Отношения: ${rel}</div>`;}).join("");
+ const f=document.getElementById("polFactions");
+ if(f)f.innerHTML=EMPIRES.map((emp,i)=>{const t=safeFn(()=>factionText(i),"");const p=safeFn(()=>factionProfile(i),null);
+  return `<div class="list-line" tabindex="0" data-speak="${t.replace(/"/g,"&quot;")}">🏰 <b>${emp.short}</b>${i===here?" · <b>вы здесь</b>":""}${p?`<br>👑 ${p.правитель} · цели: ${p.цели.join(" и ")}<br>🤝 ${p.союзники.join(", ")||"—"} · ⚔️ ${p.враги.join(", ")||"—"} · 🕵️ ${p.тайное.n}<br>⚖️ Вы: ${p.слово} (${p.положение})`:""}</div>`;}).join("");
  const m=document.getElementById("polMarket");
  if(m){const emp=EMPIRES[here]||EMPIRES[0];
   const rows=Object.keys(RESICON).map(r=>{const price=marketPrice(r,here,day),have=Number(G.inv[r])||0;
