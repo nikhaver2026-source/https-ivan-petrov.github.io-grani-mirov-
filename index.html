@@ -279,6 +279,10 @@ h3{color:var(--acc2);margin:14px 0 6px;font-size:1.05rem;}
 <div class="modal" id="modal-world" role="dialog" aria-modal="true" aria-label="Живой мир" hidden><div class="sheet">
  <header><h2>🌍 Живой мир</h2><button type="button" data-cmd="close">✖️ Закрыть</button></header>
  <h3>🏛️ Империи</h3><div id="wEmp"></div>
+ <h3>🗺️ Области мира</h3><div id="wRegions"></div>
+ <h3>🏙️ Именованные города</h3><div id="wCities"></div>
+ <h3>🌲 Великие леса</h3><div id="wForests"></div>
+ <h3>🏯 Крепости</h3><div id="wForts"></div>
  <h3>🧬 Народы мира</h3><div id="wRaces"></div>
  <h3>🌟 Редкие, легендарные и божественные</h3><div id="wURaces"></div>
  <h3>🔥 Войны и союзы</h3><div id="wWars"></div>
@@ -534,6 +538,17 @@ const DIFFICULTY={
   dmg:1.5,foeHp:1.35,meet:1.4,price:1.15,loss:1.6,heal:0.8}};
 function diff(){return DIFFICULTY[settings.difficulty]||DIFFICULTY.normal;}
 const saveSettings=()=>store.set("gm29set",JSON.stringify(settings));
+/* ════════════════════════════════════════════════════════════════════════
+   РЕЕСТР МОДУЛЕЙ
+   Каждая крупная система мира регистрирует свой служебный слой под именем:
+   старые обработчики зовут его через Modules.get, не трогая внутренностей,
+   а новые системы не спорят со старыми за имена. Список — Modules.list().
+   ════════════════════════════════════════════════════════════════════════ */
+const Modules={reg:{},
+ register(name,api){this.reg[name]=api;return api;},
+ get(name){return this.reg[name]||null;},
+ has(name){return !!this.reg[name];},
+ list(){return Object.keys(this.reg);}};
 function vib(p){if(settings.haptics&&navigator.vibrate){try{navigator.vibrate(p);}catch(e){}}}
 
 /* ════════════════════════════════════════════════════════════════════════
@@ -2296,10 +2311,14 @@ const MUSIC_POOL={
   {роль:"siege_victory",следом:[["war_brass",400]],о:"победная медь"},
   {роль:"trumpet_victory",следом:[["crowd_cheer",600]],о:"труба победы"}],
  region_new:[
-  {роль:"village_pipe",следом:[["dawn_birds",500]],о:"свирель села"},
-  {роль:"far_flute",следом:[["horn_gate",600]],о:"дальняя флейта"},
-  {роль:"far_koto",следом:[["pad_halo",500]],о:"кото и ореол"},
-  {роль:"desert_reed",следом:[["far_flute",700]],о:"тростник пустыни"}],
+  {роль:"village_pipe",следом:[["dawn_birds",500]],ярус:"light",о:"свирель села"},
+  {роль:"far_flute",следом:[["horn_gate",600]],ярус:"light",о:"дальняя флейта"},
+  {роль:"far_koto",следом:[["pad_halo",500]],ярус:"strange",о:"кото и ореол"},
+  {роль:"desert_reed",следом:[["far_flute",700]],ярус:"wild",о:"тростник пустыни"},
+  {роль:"field_pipe",следом:[["dawn_birds",500]],ярус:"wild",о:"свирель полей"},
+  {роль:"mist_keys",следом:[["fx_haze",600]],ярус:"strange",о:"туманные клавиши"},
+  {роль:"pad_dread",следом:[["horn_dark",700]],ярус:"dark",о:"тьма и тёмный рог"},
+  {роль:"ghost_choir",следом:[["fx_rift",600]],ярус:"dark",о:"призрачный хор и разлом"}],
  place_new:[
   {роль:"ghost_choir",следом:[["fx_crystal",500]],ярус:"dungeon",о:"подземелье: призрачный хор"},
   {роль:"pad_dread",следом:[["fx_lurk",600]],ярус:"dungeon",о:"подземелье: тьма"},
@@ -2309,7 +2328,9 @@ const MUSIC_POOL={
   {роль:"court_harpsi",следом:[["gate_fanfare",500]],ярус:"city",о:"город: клавесин двора"},
   {роль:"crypt_organ",следом:[["fx_rift",600]],ярус:"tower",о:"башня: орган склепа"},
   {роль:"mist_keys",следом:[["fx_haze",500]],ярус:"tower",о:"башня: туманные клавиши"},
-  {роль:"secret_box",следом:[["fx_crystal",400]],ярус:"other",о:"находка"}],
+  {роль:"secret_box",следом:[["fx_crystal",400]],ярус:"other",о:"находка"},
+  {роль:"far_flute",следом:[["dawn_birds",500]],ярус:"forest",о:"лес: дальняя флейта"},
+  {роль:"lute_wood",следом:[["far_flute",600]],ярус:"forest",о:"лес: лютня"}],
  story_stage:[
   {роль:"fate_hit",следом:[["epic_strings",400],["temple_choir",1200]],о:"удар судьбы"},
   {роль:"omen_swell",следом:[["temple_choir",600]],о:"знамение и хор"},
@@ -3321,7 +3342,7 @@ function handleThreeFingerSwipe(dir){
  const дорога=(!G.place&&!G.ship)?safeFn(()=>roadFullName(G.x,G.y),null):null;
  const where=G.ship?`на борту судна «${G.ship.name}», курс на «${G.ship.toName}», осталось переходов ${G.ship.left} из ${G.ship.legs}${G.ship.storm?", идёт шторм":""}`
   :G.place?placeTitle()+`, клетка ${G.place.x} на ${G.place.y}`
-  :`${cellContent(G.x,G.y).terrain[1]}${дорога?`, ${дорога}`:""}, ${cellContent(G.x,G.y).empire.name}, координаты ${G.x} и ${G.y}`;
+  :`${cellContent(G.x,G.y).terrain[1]}${дорога?`, ${дорога}`:""}${safeFn(()=>{const f=forestAt(G.x,G.y);return f?`, ${f.n}`:"";},"")}, ${cellContent(G.x,G.y).empire.name}, область ${safeFn(()=>regionAt(G.x,G.y).n,"")}, координаты ${G.x} и ${G.y}`;
  /* Куда идти за сетью: ближайший открытый узел с направлением и расстоянием.
     Без этого сеть пришлось бы искать вслепую по всей карте. */
  const сеть=(!G.place&&!G.ship)?safeFn(()=>{
@@ -3838,6 +3859,8 @@ const AM_GROUPS=[
   ["potions","⚗️ Зелья: сварить и выпить"],
   ["patrol","🛡️ Окликнуть разъезд"],
   ["cityplan","🏙️ План города: кварталы и площадь"],
+  ["regions","🗺️ Область мира: где я и что рядом"],
+  ["fort","🏯 Крепость: состояние и действия"],
   ["trade","🐫 Рынки, маршруты и караваны"],
   ["harbor","⚓ Причал: корабли и рейсы"],
   ["portal","🌀 Портальная сеть"],
@@ -5980,6 +6003,7 @@ function marketPrice(res,idx,day){
   if(сезон===2)return еда?0.88:1;                     /* осенью урожай */
   return 1;},1);
  k*=safeFn(()=>roadSafetyK(idx)*originK(res,idx)*lawK(res,idx)*secretOpK(res,idx,day),1);
+ k*=safeFn(()=>regionPriceK(res),1);
  return Math.max(2,Math.round(base*Math.max(0.35,k)));
 }
 /* ════════════════════════════════════════════════════════════════════════
@@ -6105,6 +6129,8 @@ function isCityAt(x,y){
  /* Короткие имена держав не склоняются: «Цитадель Хладная Стужаа» — не имя,
     а опечатка вслух. Держава берётся в кавычки как есть. */
  if(x===emp.cap.x&&y===emp.cap.y)return {x,y,type:"castle",name:`Цитадель «${emp.short}»`,emp,size:3};
+ if(typeof NAMED_CITY_MAP!=="undefined"&&NAMED_CITY_MAP.has(x+","+y)){const нг=NAMED_CITY_MAP.get(x+","+y);return {x,y,type:"castle",name:нг.полное,emp,size:3,named:нг.id};}
+ if(typeof FORT_MAP!=="undefined"&&FORT_MAP.has(x+","+y)){const кр=FORT_MAP.get(x+","+y);return {x,y,type:"fortress",name:кр.n,emp,size:2,fort:кр.id};}
  if(terrainAt(x,y)[0]==="coast"&&!isRoad(x,y)&&H(x,y,502)<0.02)
   return {x,y,type:"port",name:portNameAt(x,y),emp,size:2};
  if(!isRoad(x,y)&&H(x,y,3)<0.0035){
@@ -6183,6 +6209,7 @@ function roadSafetyK(idx){
  try{const m=marketOf(idx);let k=1;
   if(empireAtWar(idx,G.day))k+=0.12;
   if((Number(m.подвоз)||1)<0.85)k+=0.15;
+  if(safeFn(()=>Forts.troubled(idx),false))k+=0.2;
   return k;}catch(_){return 1;}}
 function originK(res,idx){
  try{
@@ -6209,6 +6236,8 @@ function priceWhy(res,idx,c){
  if((emp.exports||[]).includes(res))из.push("своё — дешевле");
  if((emp.imports||[]).includes(res))из.push("нужное — дороже");
  if(empireAtWar(idx,G.day))из.push("война: дороги небезопасны, металл в цене");
+ safeFn(()=>{const k=regionPriceK(res);if(k<1)из.push(`товар области «${regionAt(G.x,G.y).n}» — дешевле`);else if(k>1)из.push("везут издалека: область опасная");});
+ if(safeFn(()=>Forts.troubled(idx),false))из.push("крепость державы в осаде или пала: подвоз хуже");
  else if(roadSafetyK(idx)>1)из.push("дороги небезопасны: подвоз редок");
  const п=String(G.weather||"");if(/буря|метель|гроза|ливень/i.test(п))из.push("непогода: возить дороже");
  const сезон=Math.floor(((Number(G.day)||1)%48)/12);if(сезон===3)из.push("зима");else if(сезон===2)из.push("осень: урожай");
@@ -7546,7 +7575,7 @@ function roomKind(){
    if(d>=4)return "deep";
    if(d>0)return G.place.stype==="cave_entrance"?"cave":"dungeon";
    const k=G.place.kind,st=G.place.stype;
-   if(k==="city")return st==="castle"?"castle":"city";
+   if(k==="city")return (st==="castle"||st==="fortress")?"castle":"city";
    if(st==="temple")return "temple";
    if(st==="smugglers")return "smugcave";
    if(st==="forge")return "forge";
@@ -8538,6 +8567,7 @@ const DEPTH_SCENES=[[],["rats","dungeon_drip"],["rats","chains"],["chains","bone
 const LIVE_SCENE={
  village:["beasts_cattle","beasts_fowl","beasts_sheep","beasts_pig","throng_build","ad_farm_sel","ad_farmstead"],
  castle:["beasts_horse","throng_march","throng_lord","siege_garrison","hall_fort","uh_stonemason"],
+ fortress:["siege_garrison","hall_fort","throng_march","guard_shout","oc_chain","siege_alarm_city"],
  clanhall:["throng_cry","throng_fight","throng_march","battle_sword","throng_retreat"],
  market:["trade_m","trade_f","hall_market","throng_hail_m","battle_wood","ad_market_sel"],
  tavern:["trade_f","throng_hail_f","throng_yes","wild_hearth","wild_fire"],
@@ -8620,7 +8650,7 @@ function bankUpdateAmbient(){
 const LIVE_AMB_PLACE={
  market:["hall_market","ad_trade","uh_square"], port:["hall_port","ad_port"],
  forge:["wild_anvil","oc_furnace","uh_smith"], tavern:["wild_hearth","uh_tavern","lug_fire"],
- village:["hall_farm","ad_farm","uh_sheep","uh_windmill","uh_lumber_long"], castle:["hall_center","oc_wind"],
+ village:["hall_farm","ad_farm","uh_sheep","uh_windmill","uh_lumber_long"], castle:["hall_center","oc_wind"], fortress:["hall_fort","hall_barracks","oc_wind"],
  temple:["hall_temple","uh_chapel","ad_temple"], clanhall:["hall_barracks","uh_warehouse"],
  tower:["oc_electrical","oc_wind"], ruins:["oc_wind","deep_wind"],
  cave_entrance:["deep_drip","deep_wind"], school:["uh_chapel","wild_hearth"],
@@ -10935,6 +10965,8 @@ function cellContent(x,y){
  const c={x,y,terrain:terrainAt(x,y),empire:empireAt(x,y),structure:null,res:null,monster:null};
  const emp=c.empire;
  if(x===emp.cap.x&&y===emp.cap.y)c.structure={type:"castle",name:`Цитадель «${emp.short}»`,beacon:"castle"};
+ else if(typeof NAMED_CITY_MAP!=="undefined"&&NAMED_CITY_MAP.has(x+","+y))c.structure=namedCityStructure(x,y);
+ else if(typeof FORT_MAP!=="undefined"&&FORT_MAP.has(x+","+y))c.structure=fortStructure(x,y);
  else{
   const r3=H(x,y,3);
   if(r3<0.0035&&!isRoad(x,y)){
@@ -11365,7 +11397,7 @@ function worldLiveTick(){
   if(!Number.isFinite(было)||было>день)return;
   const дней=Math.max(1,Math.min(30,день-было));
   for(let i=0;i<дней;i++)safeFn(()=>rumorTick());
-  safeFn(()=>questDayTick());
+  safeFn(()=>questDayTick());safeFn(()=>Forts.tick());
   /* Рынок ходит на том же такте: потоки понемногу возвращаются к норме. */
   safeFn(()=>marketTick(дней));
   safeFn(()=>{
@@ -11409,7 +11441,7 @@ function dayPhaseCue(){
  }catch(_){}}
 
 /* ════════ НИПИ ════════ */
-const PROFS={castle:["Правитель","Стражник","Советник"],village:["Старейшина","Фермер","Целительница"],
+const PROFS={fortress:["Комендант","Стражник","Лекарь"],castle:["Правитель","Стражник","Советник"],village:["Старейшина","Фермер","Целительница"],
  cave_entrance:["Странник"],
  port:["Капитан","Торговец","Грузчик"],
  tavern:["Трактирщик","Посетитель"],clanhall:["Глава клана","Воин клана"],school:["Магистр","Ученик"],
@@ -21003,7 +21035,7 @@ const PLACE_KIND={
  /* Тёмные земли: пять своих видов мест и врата, в которые не входят. */
  shrine:"house",ossuary:"dungeon",pit:"dungeon",spire:"house",bazaar:"house",
  den:"house",hold:"house",citadel:"city",burg:"city",gate:null,rift:null,
- castle:"city",village:"city",port:"city",tavern:"house",clanhall:"house",tower:"house",
+ fortress:"city",castle:"city",village:"city",port:"city",tavern:"house",clanhall:"house",tower:"house",
  temple:"house",ruins:"dungeon",traveler:null,cave_entrance:"dungeon",
  /* Кузница, торговый двор и школа — такие же дома, как таверна: вход, комнаты,
     работа внутри, подвал. */
@@ -21082,7 +21114,11 @@ function genLevel(bx,by,depth,stype){
  /* Улицы стали шире, кварталы — просторнее, поэтому и город больше:
     цитадель крупнее порта, порт крупнее деревни. */
  const BLOCKW=stype==="castle"?8:stype==="port"?7:6;
- const NC=3,NR=2;
+ /* Именованный город — своя сетка районов (Кольцевой — семь на шесть),
+    крепость — четыре на два: казармы, арсенал, склады и прочее. */
+ const именной=depth>0?null:safeFn(()=>namedCityAt(bx,by),null);
+ const крепость=depth>0?null:safeFn(()=>fortAt(bx,by),null);
+ const NC=именной?именной.сетка[0]:(крепость?4:3),NR=именной?именной.сетка[1]:2;
  const w=kind==="city"?4+NC*(2+BLOCKW)+1:21+Math.floor(R(1)*8);
  const h=kind==="city"?4+NR*(2+BLOCKW)+1:15+Math.floor(R(2)*6);
  const g=[];for(let y=0;y<h;y++)g.push(new Array(w).fill("#"));
@@ -21170,6 +21206,7 @@ function genLevel(bx,by,depth,stype){
    b.kindName=BLOCK_NAMES[purpose]||BLOCK_NAMES.N;
    b.trade=QUARTER_TRADE[purpose]||QUARTER_TRADE.N;
    b.name=quarterName(bx,by,bi,purpose);
+   safeFn(()=>districtOverride(b,bi,bx,by,depth,stype));
    b.cx=b.x0+((b.x1-b.x0)>>1);b.cy=b.y0+((b.y1-b.y0)>>1);
    if(bi===specialAt){
     const sp=SPECIAL_QUARTERS[Math.floor(hashName(bx,by,980)*SPECIAL_QUARTERS.length)%SPECIAL_QUARTERS.length];
@@ -21181,7 +21218,7 @@ function genLevel(bx,by,depth,stype){
     if(g[sy][sx]==="."){g[sy][sx]=sp.tile;
      if(sp.res)veins[sx+","+sy]=sp.res;}}
    const r0=b.rooms[0],cxr=r0.x0+((r0.x1-r0.x0)>>1),cyr=r0.y0+((r0.y1-r0.y0)>>1);
-   if(g[cyr][cxr]===".")g[cyr][cxr]=purpose;
+   if(g[cyr][cxr]===".")g[cyr][cxr]=b.purpose||purpose;
    b.rooms.slice(1).forEach((r,ri)=>{
     const x=r.x0+((r.x1-r.x0)>>1),y=r.y0+((r.y1-r.y0)>>1);
     if(g[y][x]!==".")return;
@@ -24506,7 +24543,7 @@ function ambienceSetFor(){
   if(st==="forge")return "forge";
   if(st==="temple")return "temple";
   if(st==="village")return "village";
-  if(st==="castle"||st==="clanhall")return "castle";
+  if(st==="castle"||st==="clanhall"||st==="fortress")return "castle";
   if(st==="market"||st==="port")return "city";
   const k=roomKind();
   if(k==="tavern")return "tavern";
@@ -24531,6 +24568,7 @@ const Ambience={
  spots(name){
   const st=AMBIENCE_SET[name];if(!st)return [];
   let list=st.spots.slice();
+  safeFn(()=>{list=list.concat(Regions.spots(),Forests.spots());});
   const w=String(G.weather||"");
   if(st.rain&&/Дождь|Ливень|Гроза/.test(w)&&!G.place)list=list.concat(st.rain);
   if(st.night&&safeFn(()=>isNight(),false)&&!G.place)list=list.concat(st.night);
@@ -25711,6 +25749,7 @@ const DEPTH_MIX=[
 ];
 const PLACE_MIX={
  castle:["marble","stone","plank"],
+ fortress:["stone","marble","metal"],
  temple:["marble","stone","straw"],
  tower:["plank","stone","crystal"],
  school:["plank","marble","straw"],
@@ -26196,6 +26235,8 @@ function arrive(dir){
    narrate(`Земли: ${e.name}. Народы: ${(e.races||[e.race]).slice(0,4).join(", ")}. Здесь чтут: ${g?g.n:"разных богов"}. `+
     (w.length?`Идёт война с державами: ${w.map(x=>EMPIRES[x.a===i?x.b:x.a].short).join(", ")}.`:"Держава ни с кем не воюет."),{interrupt:false});});}
  lastArrive=c;
+ /* Область и великий лес объявляются на входе, не чаще смены. */
+ safeFn(()=>Regions.arrive(c));safeFn(()=>Forests.arrive(c));
  /* ── ПЕРЕПРАВА ──
     Мост, брод, тоннель и перевал — это места, а не клетки: игрок должен
     услышать, что ступил на настил, и услышать, что сошёл с него. Объявляется
@@ -27104,6 +27145,12 @@ function questMonsterProgress(monster){
  }catch(e){try{console.error('[QuestProgress]',e);}catch(_){}return false;}
 }
 function victory(){const cb=G.combat,m=cb.m;
+ /* Крепости: снятая осада и взятые ворота. */
+ safeFn(()=>{if(m&&m.защита&&m.защита.fort){const st=Forts.state(m.защита.fort);const кто=st&&st.siege&&st.siege.by;if(st){st.siege=null;}
+   const e=Number.isFinite(Number(кто))?EMPIRES[кто]:null;const мой=EMPIRES[st?st.owner:0];
+   journal(`Осада снята: ${FORT_BY_ID[m.защита.fort].n}.`);if(мой)safeFn(()=>{addRep(мой.race,3);addStand("fact",мой.short,6);});
+   setTimeout(()=>safeFn(()=>Bank.play("siege_victory",{gain:0.6,maxSec:6})),400);}
+  if(m&&m.взятие&&m.взятие.fort)setTimeout(()=>safeFn(()=>Forts._take(m.взятие.fort)),300);});
  safeFn(()=>playRealMonsterCue(m,"death",0.75));
  safeFn(()=>setTimeout(()=>safeFn(()=>foeProfileCue(m,"death",{gain:0.6})),180));
  /* Разбойники и корсары — люди, и умирают они по-человечески. */
@@ -27869,6 +27916,16 @@ const CMD={
  cards(bet){playCards(+bet);},
  pray(){pray();},
  learn(i){learnSpell(+i);},
+ /* Крепости: действия из окна здания и меню. */
+ fort(arg){const p=String(arg||"").split("~");const act=p[0],id=p[1];
+  if(!id){const f=safeFn(()=>Forts.here(),null);if(!f){narrate("Крепости здесь нет: они стоят в мире отдельными постройками, сто двадцать по десяти родам. Ближайшие названы в окне «Живой мир».");return;}
+   narrate(Forts.status(f.id));return;}
+  if(act==="status")narrate(Forts.status(id));
+  else if(act==="besiege")Forts.besiege(id);else if(act==="defend")Forts.defend(id);else if(act==="capture")Forts.capture(id);
+  else if(act==="restore")Forts.restore(id);else if(act==="modernize")Forts.modernize(id);else if(act==="transfer")Forts.transfer(id,p[2]);else if(act==="base")Forts.base(id);
+  safeFn(()=>{const m=document.getElementById("modal-building");if(m&&!m.hidden){const c=cellContent(G.x,G.y);if(c.structure&&c.structure.type==="fortress")openBuilding(c);}});},
+ regions(){const r=regionAt(G.x,G.y);const f=safeFn(()=>forestAt(G.x,G.y),null);const c=safeFn(()=>Cities.nearest(G.x,G.y),null);
+  narrate(Regions.text(r)+(f?` Вы в лесу: ${f.n}, ${FOREST_KINDS[f.kind].n}.`:"")+(c?` Ближайший именованный город: ${c.c.n}, ${c.c.роль}, ${c.d} ${plural(c.d,"шаг","шага","шагов")}, ${dirBetween(c.c.x-G.x,c.c.y-G.y)||"здесь"}.`:""));},
  joinclan(){joinClan();},
  searchruins(){searchRuins();},
  equip(i){equipWeaponIndex(+i);},
@@ -27976,6 +28033,379 @@ function look(){
   extra=objs.length?"Поблизости: "+objs.slice(0,4).join("; ")+".":"Вокруг тихо.";}
  narrate(`${c.terrain[1]}. ${c.terrain[2]} ${extra}`);}
 
+
+/* ════════════════════════════════════════════════════════════════════════
+   ГЕОГРАФИЯ БОЛЬШОГО МИРА: ОБЛАСТИ, ИМЕНОВАННЫЕ ГОРОДА, ВЕЛИКИЕ ЛЕСА, КРЕПОСТИ
+
+   Мир 50 000 на 50 000 клеток разложен на двадцать областей — по пять в
+   ряду и по четыре в столбце, по десять на двенадцать с половиной тысяч
+   клеток каждая. Область — это климат, свои биомы, свой товар, своя мера
+   опасности и свой голос: то, что доносится сверх обычного фона. Область
+   объявляется на входе один раз и звучит музыкой открытия при первом
+   посещении; «где я» называет область рядом с державой.
+
+   Девятнадцать именованных городов — у каждого своя роль, свои районы (от
+   двенадцати до сорока двух у Кольцевого города), у района — своё дело,
+   товар, голос, слух и дозор. Тридцать великих лесов десяти родов — у леса
+   своя панорама голосов, свои звери, хищники, растения и редкость. Сто
+   двадцать крепостей десяти родов — у крепости стены, ворота, башни,
+   казармы, арсенал, склады, кухня, лечебница, конюшни, командный двор,
+   тайные ходы, тюрьма и магический контур; крепость осаждают, защищают,
+   берут, восстанавливают, укрепляют, передают державе и делают базой, а
+   война двигает их сама, без игрока.
+   ════════════════════════════════════════════════════════════════════════ */
+const REGION_W=10000,REGION_H=12500;
+const REGIONS=[
+ {id:"north_ice",n:"Северные ледяные земли",о:"Наст скрипит под ногой, ветер режет, и всякий дым виден за день пути.",климат:"стужа",биомы:["glacier","snow_ridge","tundra","ice_cave"],ресурс:"кристалл",опасность:3,звук:["lug_wind","oc_ice_hit","wild_wind"],ярус:"wild"},
+ {id:"under_realms",n:"Подгорные царства",о:"Горы здесь полые: под каждым перевалом штольня, под каждой штольней ещё одна.",климат:"горы",биомы:["ridge","highland","karst","cavern"],ресурс:"руда",опасность:3,звук:["mine_pick","oc_rockfall","deep_wind"],ярус:"light"},
+ {id:"sky_isles",n:"Небесные острова",о:"Земля тут поднята выше облаков: обрывы без дна и ветер, который не ложится.",климат:"высь",биомы:["highland","ridge","meadow"],ресурс:"камень",опасность:2,звук:["sky_gust","raptor_cry","bird_hawk"],ярус:"strange"},
+ {id:"order_lands",n:"Земли порядка",о:"Дороги прямые, межи ровные, и даже птицы, кажется, летают строем.",климат:"умеренный",биомы:["plain","valley","meadow","broadleaf"],ресурс:"трава",опасность:1,звук:["uh_bell","oc_birds","throng_march"],ярус:"light"},
+ {id:"border_worlds",n:"Пограничные миры",о:"Здесь Грань тонка: по утрам над полями стоит не туман, а чужое небо.",климат:"переменчивый",биомы:["anomaly","warfield","lost_city"],ресурс:"кость",опасность:4,звук:["oc_electrical","deep_portal","oc_warp"],ярус:"strange"},
+ {id:"west_woods",n:"Западные леса",о:"Лес без конца и без края: стволы в два обхвата и дороги, которые он себе забирает обратно.",климат:"влажный",биомы:["ancient_forest","conifer","broadleaf","wet_forest"],ресурс:"дерево",опасность:2,звук:["wild_birds","oc_tree_crack","wolf_howl"],ярус:"light"},
+ {id:"central",n:"Центральные королевства",о:"Сердце обжитого мира: города в дне пути друг от друга, тракты и пошлины на каждом мосту.",климат:"мягкий",биомы:["plain","valley","meadow","woodland"],ресурс:"ягоды",опасность:1,звук:["throng_hail_m","mtg_cart","uh_bell"],ярус:"light"},
+ {id:"ether",n:"Эфирные территории",о:"Воздух звенит, шаг легче, и мана течёт быстрее — но и уходит быстрее.",климат:"звенящий",биомы:["meadow","anomaly","highland"],ресурс:"кристалл",опасность:3,звук:["oc_crystal_comm","magic_hum","oc_electrical"],ярус:"strange"},
+ {id:"east_steppe",n:"Восточные степи",о:"Трава по стремя, небо во весь окоём и конский топот раньше всадника.",климат:"сухой ветер",биомы:["steppe","savanna","plain"],ресурс:"трава",опасность:2,звук:["beasts_horse","tread_hoof","wild_wind"],ярус:"wild"},
+ {id:"rift_lands",n:"Земли разломов",о:"Земля тут в трещинах, и из трещин тянет холодом другого мира.",климат:"треснувший",биомы:["canyon","anomaly","lava_tube"],ресурс:"кристалл",опасность:5,звук:["stk_portal","fx_rift","oc_quake"],ярус:"dark"},
+ {id:"archipelago",n:"Великий архипелаг",о:"Острова россыпью, проливы узки, и каждая бухта — чей-то причал.",климат:"морской",биомы:["archipelago","reef","shore"],ресурс:"ракушка",опасность:2,звук:["sky_wave","uh_ships_bell","hall_dock"],ярус:"light"},
+ {id:"mist_lands",n:"Земли туманов",о:"Туман стоит с утра до утра; звук идёт дальше, чем видно, и это единственный способ идти.",климат:"сырой",биомы:["swamp","mire","fen","wet_forest"],ресурс:"грибы",опасность:3,звук:["oc_mosquito","oc_bubble","wild_raven"],ярус:"wild"},
+ {id:"underworld",n:"Подземный мир",о:"Здесь входов вниз больше, чем деревень наверху: земля вся изрыта.",климат:"каменный",биомы:["karst","cavern","underdark","lava_tube"],ресурс:"руда",опасность:4,звук:["deep_drip","oc_bat_flutter","deep_rocks"],ярус:"dark"},
+ {id:"time_zones",n:"Временные зоны",о:"Часы тут врут: полдень настаёт дважды, а иные ночи не кончаются.",климат:"сбитый",биомы:["anomaly","warfield","canyon"],ресурс:"кристалл",опасность:4,звук:["stk_clock","oc_warp","magic_rewind"],ярус:"strange"},
+ {id:"chaos_lands",n:"Земли хаоса",о:"Погода меняется трижды за час, дороги ведут не туда, куда шли вчера.",климат:"буйный",биомы:["volcano","anomaly","savanna"],ресурс:"кость",опасность:5,звук:["oc_thunder","oc_blast","oc_cracker"],ярус:"dark"},
+ {id:"magic_oceans",n:"Магические океаны",о:"Вода светится по ночам, и с неё приходят голоса, которых нет.",климат:"морской",биомы:["inner_sea","reef","river_mouth"],ресурс:"ракушка",опасность:3,звук:["sky_wave","oc_dive","deep_call"],ярус:"strange"},
+ {id:"sunken",n:"Затонувшие государства",о:"Из воды торчат шпили: тут стояли города, и кое-где до них можно донырнуть.",климат:"затопленный",биомы:["lakeland","river_mouth","lost_city"],ресурс:"ракушка",опасность:3,звук:["oc_splash","oc_bubble","uh_bell"],ярус:"strange"},
+ {id:"south_sands",n:"Южные пустыни",о:"Песок, зной и караванные колодцы через день пути.",климат:"зной",биомы:["desert","dunes","stony_desert","semidesert"],ресурс:"камень",опасность:3,звук:["lug_desert","beasts_camel","serpent_hiss"],ярус:"wild"},
+ {id:"ash_lands",n:"Пепельные земли",о:"Земля тёплая, воздух серый, и дождь оставляет полосы на коже.",климат:"пепел",биомы:["ashland","volcano","stony_desert"],ресурс:"руда",опасность:4,звук:["ad_fire_sizzle","oc_smoke","oc_earthquake"],ярус:"dark"},
+ {id:"dark_empires",n:"Тёмные империи",о:"Здесь державы служат тем, кому в остальном мире не молятся; дороги охраняют, но не для вас.",климат:"тень",биомы:["ashland","warfield","lost_city"],ресурс:"кость",опасность:5,звук:["od_undead","moan_deep","stk_dark"],ярус:"dark"}];
+const REGION_BY_ID=Object.fromEntries(REGIONS.map(r=>[r.id,r]));
+function regionIndexAt(x,y){
+ const col=Math.max(0,Math.min(4,Math.floor((Number(x)||0)/REGION_W)));
+ const row=Math.max(0,Math.min(3,Math.floor((Number(y)||0)/REGION_H)));
+ return row*5+col;}
+function regionAt(x,y){return REGIONS[regionIndexAt(x,y)]||REGIONS[0];}
+function regionCenter(r){const i=REGIONS.indexOf(r);const col=i%5,row=Math.floor(i/5);return {x:col*REGION_W+REGION_W/2,y:row*REGION_H+REGION_H/2};}
+/* Цена: свой товар области дешевле на шестую часть, чужой каменный/рудный
+   в мягких землях — чуть дороже: везти далеко. */
+function regionPriceK(res){
+ try{const r=regionAt(G.x,G.y);if(!r)return 1;
+  if(r.ресурс===res)return 0.84;
+  if(r.опасность>=4&&["трава","ягоды","дерево"].includes(res))return 1.12;
+  return 1;}catch(_){return 1;}}
+const Regions=Modules.register("GEOGRAPHY",{
+ at:regionAt,index:regionIndexAt,all:()=>REGIONS,
+ here(){return regionAt(G.x,G.y);},
+ seen(){if(!G.seenRegions||typeof G.seenRegions!=="object")G.seenRegions={};return G.seenRegions;},
+ /* На входе в новую область: слово, голос области и — впервые — музыка. */
+ arrive(c){
+  try{
+   if(G.place||G.ship)return false;
+   const r=regionAt(G.x,G.y);
+   if(this._last===r.id)return false;
+   const первый=!this.seen()[r.id];
+   this._last=r.id;
+   if(первый){this.seen()[r.id]=Number(G.day)||1;
+    setTimeout(()=>safeFn(()=>eventTheme("region_new",{tier:r.ярус,gain:0.6})),700);
+    safeFn(()=>deed("regions"));}
+   safeFn(()=>Bank.play(r.звук[0],{gain:0.45,maxSec:5}));
+   narrate(`Область: ${r.n}. ${r.о}${первый?" Вы здесь впервые.":""}`,{interrupt:false});
+   return true;
+  }catch(_){return false;}},
+ /* Голоса области — сверх набора окружения, только снаружи. */
+ spots(){try{if(G.place||G.ship)return [];const r=regionAt(G.x,G.y);return r.звук.map(role=>[role,0.8]);}catch(_){return [];}},
+ text(r){r=r||regionAt(G.x,G.y);const c=regionCenter(r);
+  return `${r.n}: ${r.о} Климат — ${r.климат}; земли — ${r.биомы.map(id=>{const b=BIOMES.find(x=>x.id===id);return b?b.n:id;}).join(", ")}; товар области — ${r.ресурс}; опасность ${r.опасность} из пяти. Середина области: ${Math.round(c.x)} на ${Math.round(c.y)}.`;},
+ _last:null});
+
+/* ── ИМЕНОВАННЫЕ ГОРОДА ── */
+const DISTRICT_KINDS=[
+ {id:"trade",n:"Торговый район",p:"S",слух:"на торгу шепчут о ценах",дозор:1},
+ {id:"craft",n:"Ремесленный район",p:"F",слух:"мастера жалуются на подвоз",дозор:1},
+ {id:"port",n:"Портовый район",p:"C",слух:"на причалах ждут судно, которое опаздывает",дозор:1},
+ {id:"temple",n:"Храмовый район",p:"A",слух:"жрецы говорят о знамении",дозор:0},
+ {id:"academy",n:"Университетский район",p:"A",слух:"студенты спорят до драки о школах чар",дозор:0},
+ {id:"noble",n:"Аристократический район",p:"N",слух:"в домах знати готовят приём",дозор:2},
+ {id:"crime",n:"Криминальный район",p:"C",слух:"здесь не спрашивают имён",дозор:0},
+ {id:"magic",n:"Магический район",p:"A",слух:"в лавках продают то, что гудит",дозор:1},
+ {id:"merc",n:"Наёмнический район",p:"B",слух:"ищут копья на войну",дозор:1},
+ {id:"sewer",n:"Канализационный район",p:"C",слух:"внизу кто-то живёт",дозор:0},
+ {id:"market",n:"Рыночный район",p:"S",слух:"с утра дерутся за место",дозор:1},
+ {id:"forge",n:"Кузнечный район",p:"F",слух:"мастер ищет подмастерье",дозор:1},
+ {id:"library",n:"Книжный район",p:"A",слух:"кто-то вынес редкую книгу",дозор:0},
+ {id:"heal",n:"Лечебный район",p:"A",слух:"лекари ждут травы с юга",дозор:0},
+ {id:"prison",n:"Тюремный район",p:"B",слух:"беглец ещё не пойман",дозор:2},
+ {id:"guard",n:"Гарнизонный район",p:"B",слух:"стража выступает на рассвете",дозор:2},
+ {id:"stables",n:"Конюшенный район",p:"C",слух:"кони дорожают перед походом",дозор:1},
+ {id:"weavers",n:"Ткацкий район",p:"F",слух:"сукно ушло за Грань",дозор:0},
+ {id:"dyers",n:"Красильный район",p:"F",слух:"река стала синей",дозор:0},
+ {id:"fish",n:"Рыбный район",p:"S",слух:"улов сегодня странный",дозор:0},
+ {id:"garden",n:"Садовый район",p:"N",слух:"в садах поют не птицы",дозор:0},
+ {id:"old",n:"Старый город",p:"N",слух:"под старыми домами ходы",дозор:1},
+ {id:"outer",n:"Внешнее кольцо",p:"N",слух:"у ворот беженцы",дозор:1},
+ {id:"river",n:"Речной район",p:"C",слух:"мост просел",дозор:0},
+ {id:"hill",n:"Холмовой район",p:"N",слух:"с холма видно дым",дозор:1},
+ {id:"foreign",n:"Иноземный район",p:"S",слух:"чужой язык на каждом углу",дозор:1},
+ {id:"alch",n:"Алхимический район",p:"F",слух:"ночью взорвалась лавка",дозор:0},
+ {id:"arena",n:"Район арены",p:"B",слух:"завтра бой без правил",дозор:1},
+ {id:"ruin",n:"Пепелище",p:"C",слух:"здесь горело, и не всё сгорело",дозор:0},
+ {id:"gate",n:"Привратный район",p:"B",слух:"пошлину подняли",дозор:2},
+ {id:"mill",n:"Мельничный район",p:"F",слух:"мельник задолжал",дозор:0},
+ {id:"bath",n:"Банный район",p:"N",слух:"в парной говорят о заговоре",дозор:0},
+ {id:"court",n:"Судный район",p:"B",слух:"суд отложен третий раз",дозор:2},
+ {id:"cemetery",n:"Погостный район",p:"A",слух:"по ночам кто-то копает",дозор:0},
+ {id:"caravan",n:"Караванный район",p:"S",слух:"обоз с юга не пришёл",дозор:1},
+ {id:"bell",n:"Колокольный район",p:"A",слух:"колокол бил не в срок",дозор:0},
+ {id:"glass",n:"Стеклодувный район",p:"F",слух:"печи гудят третьи сутки",дозор:0},
+ {id:"salt",n:"Соляной район",p:"S",слух:"соль подорожала вдвое",дозор:1},
+ {id:"tanners",n:"Кожевенный район",p:"F",слух:"вонь дошла до знати",дозор:0},
+ {id:"lantern",n:"Фонарный район",p:"N",слух:"фонари гаснут сами",дозор:1},
+ {id:"well",n:"Колодезный район",p:"N",слух:"вода в колодце горчит",дозор:0},
+ {id:"tower",n:"Башенный район",p:"A",слух:"с башни видели огни",дозор:1}];
+const NAMED_CITIES=[
+ {id:"arkel",n:"Аркель",роль:"город наставников",x:13400,y:18900,сетка:[5,4],о:"Здесь учат всему, чему можно научить, и требуют доказать, чему научился.",свои:["Двор наставников","Улица испытаний","Площадь клятв"],товар:["трава","ягоды"],нужда:["руда","кристалл"],пошлина:0.06,звук:["uh_page","throng_hail_m","uh_bell"]},
+ {id:"tarvek",n:"Тарвек",роль:"город наёмников",x:33352,y:16100,сетка:[5,4],о:"Копья продают на вес, клятвы — на срок; кто платит, тот и прав.",свои:["Двор контрактов","Оружейная площадь","Улица шрамов"],товар:["руда","кость"],нужда:["трава","ягоды"],пошлина:0.08,звук:["warrior_shout","stk_clang","throng_march"]},
+ {id:"norkael",n:"Нор-Каэль",роль:"шахтёрский город",x:15200,y:6300,сетка:[5,4],о:"Город стоит на штольнях, и половина улиц уходит под землю.",свои:["Штольный двор","Отвальная площадь","Улица фонарей"],товар:["руда","камень"],нужда:["дерево","ягоды"],пошлина:0.05,звук:["mine_pick","oc_lift_move","deep_cart"]},
+ {id:"eshgar",n:"Эшгар",роль:"рынок редких ресурсов",x:44100,y:19300,сетка:[5,4],о:"Сюда везут то, чего нет нигде, и продают тому, кто не спрашивает откуда.",свои:["Ряд редкостей","Двор оценщиков","Площадь весов"],товар:["кристалл","кость"],нужда:["трава","дерево"],пошлина:0.1,звук:["trade_m","trade_f","od_gold"]},
+ {id:"valtern",n:"Вальтерн",роль:"город артефакторов",x:22700,y:14400,сетка:[5,4],о:"В мастерских гудят ядра, и каждый второй дом — лавка с тем, что гудит.",свои:["Двор ядер","Улица оправ","Площадь пробуждений"],товар:["кристалл"],нужда:["руда","кость"],пошлина:0.09,звук:["artifact_hum","oc_crystal_comm","craft_knock"]},
+ {id:"sardorn",n:"Сар-Дорн",роль:"пограничная крепость-город",x:46200,y:8100,сетка:[5,4],о:"Стены здесь толще домов, и ворота запирают на закате.",свои:["Внутренний двор","Стрелковая галерея","Площадь сигнальных огней"],товар:["камень","руда"],нужда:["трава","грибы"],пошлина:0.07,звук:["siege_garrison","guard_shout","oc_chain"]},
+ {id:"mellian",n:"Меллиан",роль:"город магических школ",x:36400,y:4700,сетка:[5,4],о:"Двенадцать школ и один спор, который не кончается.",свои:["Двор двенадцати школ","Улица испытательных кругов","Площадь тишины"],товар:["кристалл","трава"],нужда:["руда","кость"],пошлина:0.06,звук:["magic_hum","spell_arcane","uh_chapel"]},
+ {id:"kernash",n:"Керн-Аш",роль:"город кузнецов",x:34803,y:41900,сетка:[5,4],о:"Молоты не смолкают, и пепел с неба здесь считают удобрением.",свои:["Наковальная площадь","Горновой двор","Улица закалки"],товар:["руда","камень"],нужда:["дерево","трава"],пошлина:0.05,звук:["anvil","oc_spark","uh_smith"]},
+ {id:"lioren",n:"Лиорен",роль:"лесной торговый узел",x:6400,y:17300,сетка:[5,4],о:"Город на сваях среди стволов: торгуют деревом, смолой и тем, что лес отдаёт.",свои:["Смоляной двор","Площадь плотогонов","Улица корней"],товар:["дерево","ягоды","грибы"],нужда:["руда","камень"],пошлина:0.05,звук:["uh_lumberjack","oc_chop","wild_birds"]},
+ {id:"hadrek",n:"Хадрек",роль:"подземный порт",x:27300,y:31100,сетка:[5,4],о:"Причалы под сводом, лодки на подземной реке и товар, который не видел солнца.",свои:["Подземный причал","Двор фонарщиков","Площадь шлюза"],товар:["руда","грибы","ракушка"],нужда:["трава","ягоды"],пошлина:0.07,звук:["oc_waterfall","hall_dock","deep_drip"]},
+ {id:"ordis",n:"Ордис",роль:"город исследователей",x:24600,y:7900,сетка:[5,4],о:"Карты здесь ценят выше золота, и каждый второй ушёл в экспедицию.",свои:["Картографический двор","Площадь возвращений","Улица дальних дорог"],товар:["камень","трава"],нужда:["кристалл","кость"],пошлина:0.06,звук:["uh_page","raptor_cry","stk_horn"]},
+ {id:"rankair",n:"Ран-Каир",роль:"военная столица",x:43502,y:30600,сетка:[5,4],о:"Плац больше площади, и колокол бьёт сбор чаще, чем полдень.",свои:["Плац","Двор ставки","Улица знамён"],товар:["руда","кость"],нужда:["трава","дерево"],пошлина:0.08,звук:["throng_march","siege_garrison","war_timpani"]},
+ {id:"talmir",n:"Талмир",роль:"город целителей",x:16800,y:29900,сетка:[5,4],о:"Тихие дворы, запах трав и очередь у каждой калитки.",свои:["Двор лечебниц","Травная площадь","Улица тихих шагов"],товар:["трава","грибы"],нужда:["кристалл","ракушка"],пошлина:0.04,звук:["oc_boiling","uh_chapel","oc_soft_touch"]},
+ {id:"elvarn",n:"Эль-Варн",роль:"город дипломатии",x:37100,y:33800,сетка:[5,4],о:"Здесь воюют словами, и каждый посол держит двух переводчиков.",свои:["Двор посольств","Площадь договоров","Улица печатей"],товар:["ягоды","трава"],нужда:["руда","кристалл"],пошлина:0.07,звук:["throng_hail_f","court_harpsi","uh_bell"]},
+ {id:"virren",n:"Виррен",роль:"город контрабандистов",x:4200,y:28700,сетка:[5,4],о:"Пошлина низкая, потому что её никто не платит.",свои:["Тайный причал","Двор двойного дна","Улица без фонарей"],товар:["ракушка","кристалл"],нужда:["руда","дерево"],пошлина:0.02,звук:["oc_wood_creak","sky_wave","oc_laugh"]},
+ {id:"kassar",n:"Кассар",роль:"город древних архивов",x:14700,y:42600,сетка:[5,4],о:"Полки уходят под воду и под землю; читать здесь учат раньше, чем ходить.",свои:["Двор архивов","Площадь забытых языков","Улица переписчиков"],товар:["камень","ракушка"],нужда:["трава","дерево"],пошлина:0.06,звук:["arte_page","uh_page","deep_wind"]},
+ {id:"dormara",n:"Дор-Мара",роль:"город изгнанников",x:45900,y:44300,сетка:[5,4],о:"Сюда приходят те, кого не ждут нигде; здесь не спрашивают почему.",свои:["Двор без гербов","Площадь чужих имён","Улица последнего дома"],товар:["кость","камень"],нужда:["трава","ягоды"],пошлина:0.03,звук:["moan_deep","oc_wind","throng_hail_m"]},
+ {id:"asterion",n:"Астерион",роль:"город портальных переходов",x:7600,y:41200,сетка:[5,4],о:"Камни сети стоят прямо на улицах, и по утрам ими пользуются, как мостами.",свои:["Двор смотрителей","Площадь камней","Улица переходов"],товар:["кристалл","ракушка"],нужда:["руда","трава"],пошлина:0.08,звук:["stk_portal","deep_portal","oc_electrical"]},
+ {id:"ring",n:"Кольцевой город",роль:"город-организм",x:25120,y:24880,сетка:[7,6],о:"Сорок два района, у каждого своя цена, свой дозор, свои слухи и свой голос; город живёт и без вас.",свои:["Кольцо",  "Двор гильдий","Площадь двенадцати дорог"],товар:["трава","ягоды","камень","дерево"],нужда:["руда","кристалл","кость"],пошлина:0.07,звук:["throng_hail_m","throng_hail_f","mtg_cart","uh_bell","oc_laugh"]}];
+NAMED_CITIES.forEach(c=>{c.полное=`${c.n} — ${c.роль}`;});
+var NAMED_CITY_MAP=new Map(NAMED_CITIES.map(c=>[c.x+","+c.y,c]));
+const NAMED_CITY_BY_ID=Object.fromEntries(NAMED_CITIES.map(c=>[c.id,c]));
+function namedCityAt(x,y){return NAMED_CITY_MAP.get(x+","+y)||null;}
+function namedCityStructure(x,y){const c=namedCityAt(x,y);if(!c)return null;
+ return {type:"castle",name:c.полное,beacon:"castle",named:c.id};}
+/* Районы именованного города: свои три плюс роды районов, начиная с точки,
+   своей у каждого города. Кольцевой город берёт все сорок два. */
+function namedCityDistricts(c){
+ const n=c.сетка[0]*c.сетка[1];
+ const out=[];
+ c.свои.forEach((имя,i)=>out.push({n:имя,p:["A","S","B"][i%3],слух:`${c.n}: ${c.роль}`,дозор:1,свой:true}));
+ const start=Math.floor(hashName(c.x,c.y,7300)*DISTRICT_KINDS.length);
+ for(let i=0;out.length<n&&i<DISTRICT_KINDS.length;i++){const k=DISTRICT_KINDS[(start+i)%DISTRICT_KINDS.length];out.push({n:k.n,p:k.p,слух:k.слух,дозор:k.дозор,id:k.id});}
+ return out.slice(0,n);}
+function districtOverride(b,bi,bx,by,depth,stype){
+ if(depth>0)return;
+ const c=namedCityAt(bx,by);
+ if(c){const d=namedCityDistricts(c)[bi];if(!d)return;
+  b.purpose=d.p;b.kindName=BLOCK_NAMES[d.p]||BLOCK_NAMES.N;b.trade=QUARTER_TRADE[d.p]||QUARTER_TRADE.N;b.name=d.n;b.слух=d.слух;b.дозор=d.дозор;b.район=d.id||"свой";return;}
+ const f=fortAt(bx,by);
+ if(f){const part=FORT_PARTS[bi%FORT_PARTS.length];b.purpose=part.p;b.kindName=part.n;b.trade=part.дело;b.name=part.n;b.часть=part.id;}}
+const Cities=Modules.register("CITIES",{
+ all:()=>NAMED_CITIES,at:namedCityAt,byId:id=>NAMED_CITY_BY_ID[id]||null,districts:namedCityDistricts,
+ /* Слух района: у каждого района свой, и он слышен на улице. */
+ districtHere(){try{const b=blockAt(G.place.x,G.place.y);return b&&b.слух?b:null;}catch(_){return null;}},
+ nearest(x,y){let best=null,bd=Infinity;NAMED_CITIES.forEach(c=>{const d=Math.max(Math.abs(c.x-x),Math.abs(c.y-y));if(d<bd){bd=d;best=c;}});return best?{c:best,d:bd}:null;},
+ text(c){return `${c.n}, ${c.роль}: ${c.о} Районов ${c.сетка[0]*c.сетка[1]}; продаёт ${c.товар.join(", ")}; ищет ${c.нужда.join(", ")}; пошлина ${Math.round(c.пошлина*100)} сотых. Координаты ${c.x} и ${c.y}.`;}});
+
+/* ── ВЕЛИКИЕ ЛЕСА ── */
+const FOREST_KINDS={
+ ancient:{n:"древний лес",о:"стволы в три обхвата и тишина, в которой слышно, как растёт мох",звук:["oc_tree_crack","wild_birds","wolf_howl"],птицы:"wild_birds",насекомые:"beast_bees",звери:["wolf","direbear"],хищник:"direbear",растения:"дерево",редкость:"ягоды",святилище:true},
+ misty:{n:"туманный лес",о:"туман стоит между стволами и глотает шаги",звук:["deep_wind","wild_raven","oc_waterdrop"],птицы:"wild_raven",насекомые:"oc_mosquito",звери:["wolf","nightmoth"],хищник:"wraith",растения:"грибы",редкость:"грибы",руины:true},
+ black:{n:"чёрный лес",о:"кора чёрная, свет не доходит до земли, и что-то следит",звук:["oc_growl","lug_snarl","oc_rustle"],птицы:"wild_owl",насекомые:"oc_bat_noise",звери:["spider","wolf"],хищник:"spider",растения:"грибы",редкость:"кость",подземелье:true},
+ light:{n:"светлый лес",о:"поляны, ручьи и птицы, которых слышно за версту",звук:["oc_chirp","oc_birds","stk_river"],птицы:"oc_chirp",насекомые:"beast_bees",звери:["wolf"],хищник:"wolf",растения:"ягоды",редкость:"трава",святилище:true},
+ elder:{n:"лес Старшего народа",о:"дороги выложены белым камнем, и деревья стоят, как поставлены",звук:["far_flute","oc_birds","uh_bell"],птицы:"oc_birds",насекомые:"beast_bees",звери:["stormhawk"],хищник:"treant",растения:"дерево",редкость:"кристалл",дороги:true,святилище:true},
+ infected:{n:"заражённый лес",о:"листва липкая, вода горчит, звери ходят кругами",звук:["oc_sizzle","oc_corrode","oc_bubble"],птицы:"wild_raven",насекомые:"oc_mosquito",звери:["spider","nightmoth"],хищник:"spider",растения:"грибы",редкость:"кость",подземелье:true},
+ living:{n:"живой лес",о:"ветви двигаются без ветра, тропы закрываются за спиной",звук:["oc_tree_crack","oc_rustle","lug_bush"],птицы:"oc_chirp",насекомые:"beast_bees",звери:["treant"],хищник:"treant",растения:"дерево",редкость:"трава",руины:true},
+ crystal:{n:"кристаллический лес",о:"стволы звенят, и на ветру лес поёт",звук:["oc_crystal_comm","oc_glass_hit","magic_hum"],птицы:"bird_hawk",насекомые:"oc_chirp",звери:["golem"],хищник:"basilisk",растения:"кристалл",редкость:"кристалл",дороги:true},
+ ghost:{n:"призрачный лес",о:"здесь ходят те, кто здесь не жил",звук:["wraith_moan","deep_wind","wild_owl"],птицы:"wild_owl",насекомые:"oc_bat_noise",звери:["wraith","banshee"],хищник:"banshee",растения:"грибы",редкость:"кость",руины:true,подземелье:true},
+ temporal:{n:"временной лес",о:"деревья цветут и осыпаются за один час",звук:["stk_clock","oc_rustle","magic_rewind"],птицы:"oc_birds",насекомые:"beast_bees",звери:["nightmoth","stormhawk"],хищник:"treant",растения:"ягоды",редкость:"кристалл",дороги:true}};
+const FOREST_NAMES=["Сивый бор","Лес Долгих Теней","Чернолесье Ворона","Светлая Дубрава","Белокаменный лес","Гнилой Ельник","Шевелящийся бор","Звонкий лес","Лес Ушедших","Лес Двух Осеней",
+ "Медвежий Кряж","Туманная Падь","Угольный бор","Ручейная роща","Лес Белых Дорог","Ржавая чаща","Живая Гряда","Хрустальная роща","Лес Немых Голосов","Лес Сбитых Часов",
+ "Кедровая Стена","Мглистый Лог","Волчья Тьма","Солнечная Просека","Лес Старших Троп","Липкая чаща","Бродячий бор","Поющие Столбы","Лес Пустых Домов","Лес Вчерашнего Дня"];
+const FORESTS=(()=>{const kinds=Object.keys(FOREST_KINDS);const out=[];
+ for(let i=0;i<30;i++){const kind=kinds[i%kinds.length];
+  const x=1200+Math.floor(hashName(i*31+7,i*13+3,7400)*(WORLD-2400)),y=1200+Math.floor(hashName(i*17+5,i*23+9,7401)*(WORLD-2400));
+  out.push({id:"forest"+i,n:FOREST_NAMES[i],kind,x,y,r:900+Math.floor(hashName(i,i,7402)*500)});}
+ return out;})();
+function forestAt(x,y){
+ try{
+  if(terrainAt(x,y)[0]!=="forest")return null;
+  for(const f of FORESTS){if(Math.abs(f.x-x)<=f.r&&Math.abs(f.y-y)<=f.r)return f;}
+  return null;
+ }catch(_){return null;}}
+const Forests=Modules.register("FORESTS",{
+ all:()=>FORESTS,kinds:FOREST_KINDS,at:forestAt,
+ here(){return G.place||G.ship?null:forestAt(G.x,G.y);},
+ seen(){if(!G.seenForests||typeof G.seenForests!=="object")G.seenForests={};return G.seenForests;},
+ arrive(c){
+  try{
+   if(G.place||G.ship)return false;
+   const f=forestAt(G.x,G.y);const id=f?f.id:null;
+   if(this._last===id)return false;
+   this._last=id;
+   if(!f)return false;
+   const k=FOREST_KINDS[f.kind];const первый=!this.seen()[f.id];
+   if(первый){this.seen()[f.id]=Number(G.day)||1;setTimeout(()=>safeFn(()=>eventTheme("place_new",{tier:"forest",gain:0.55})),600);safeFn(()=>deed("forests"));}
+   safeFn(()=>Bank.play(k.звук[0],{gain:0.45,maxSec:6}));
+   narrate(`${f.n}, ${k.n}: ${k.о}.${первый?" Вы здесь впервые.":""}`,{interrupt:false});
+   return true;
+  }catch(_){return false;}},
+ spots(){try{const f=this.here();if(!f)return [];const k=FOREST_KINDS[f.kind];return k.звук.map(r=>[r,1.2]).concat([[k.птицы,1],[k.насекомые,0.7]]);}catch(_){return [];}},
+ /* Хищник леса: тварь, которую лес выводит чаще прочих. */
+ predatorK(monsterId){try{const f=this.here();if(!f)return 1;const k=FOREST_KINDS[f.kind];return k.хищник===monsterId?2.5:(k.звери||[]).includes(monsterId)?1.5:1;}catch(_){return 1;}},
+ rareK(res){try{const f=this.here();if(!f)return 1;const k=FOREST_KINDS[f.kind];return k.редкость===res?2:k.растения===res?1.5:1;}catch(_){return 1;}},
+ text(f){const k=FOREST_KINDS[f.kind];return `${f.n} — ${k.n}: ${k.о}. Птицы — ${k.птицы.replace(/_/g," ")}, зверьё — ${k.звери.join(", ")}, хищник — ${k.хищник}; растёт ${k.растения}, редкость — ${k.редкость}${k.дороги?"; древние дороги":""}${k.святилище?"; святилища":""}${k.руины?"; руины":""}${k.подземелье?"; входы вниз":""}. Середина ${f.x} на ${f.y}, размах ${f.r} клеток.`;},
+ _last:null});
+
+/* ── КРЕПОСТИ ── */
+const FORT_CATS=[
+ {id:"border",n:"пограничная",преф:"Застава",о:"стоит на рубеже и первой встречает войну",звук:"siege_alarm_city"},
+ {id:"mountain",n:"горная",преф:"Твердыня",о:"врезана в скалу, и брать её можно только измором",звук:"oc_rockfall"},
+ {id:"river",n:"речная",преф:"Мостовой замок",о:"держит переправу и берёт мыто",звук:"stk_river"},
+ {id:"forest",n:"лесная",преф:"Острог",о:"срублен из тех стволов, что вокруг",звук:"oc_chop"},
+ {id:"desert",n:"пустынная",преф:"Караван-сарай крепостной",о:"стережёт колодец и дорогу к нему",звук:"lug_desert"},
+ {id:"under",n:"подземная",преф:"Подгорный оплот",о:"ворота ведут внутрь горы",звук:"deep_wind"},
+ {id:"magic",n:"магическая",преф:"Башенный чертог",о:"стены держат чары, а не камень",звук:"stk_ward"},
+ {id:"portal",n:"портальная",преф:"Врата-крепость",о:"построена вокруг камня сети",звук:"stk_portal"},
+ {id:"sky",n:"небесная",преф:"Гнездо-цитадель",о:"стоит на отвесе, куда ведёт только крыло",звук:"sky_gust"},
+ {id:"ruined",n:"разрушенная",преф:"Развалины крепости",о:"стены пали, но подвалы целы",звук:"ad_collapse"}];
+const FORT_NAMES=["Седого Клыка","Трёх Ветров","Верного Брода","Ясеневого Кола","Сухого Колодца","Гулкого Свода","Синего Огня","Ждущего Камня","Высокого Гнезда","Павшего Знамени",
+ "Медного Рога","Долгой Стены","Тихой Воды","Кабаньей Тропы","Белого Песка","Чёрной Штольни","Семи Печатей","Спящих Врат","Орлиного Зуба","Забытых Часов",
+ "Железной Ладони","Снежного Перевала","Красного Моста","Волчьего Лога","Соляного Пути","Глубокого Зала","Тонкой Грани","Двух Камней","Небесного Порога","Пустого Трона",
+ "Старого Долга","Ледяной Скобы","Утреннего Брода","Тёмного Бора","Знойной Стражи","Каменного Горла","Тихих Рун","Гулкого Камня","Ветреной Кромки","Сгоревшего Года",
+ "Первой Стрелы","Горного Затвора","Речной Цепи","Дубового Щита","Песчаного Часа","Нижнего Ключа","Светлого Круга","Узла Сети","Крылатого Дозора","Осевшей Башни",
+ "Верного Копья","Скального Клина","Паромного Двора","Лесной Межи","Караванной Тени","Рудного Горла","Печати Тишины","Дальнего Камня","Гнезда Ветров","Пепельной Стены",
+ "Долгого Дозора","Хребтового Зуба","Бродовой Стражи","Ельникового Вала","Жаркого Колодца","Подгорной Двери","Пятого Круга","Дрожащего Камня","Облачного Уступа","Немого Колокола",
+ "Северного Копья","Снежной Пасти","Речного Ока","Смоляного Вала","Солнечного Столпа","Слепого Хода","Живого Огня","Стоячего Перста","Верхнего Гнезда","Осколка Стены",
+ "Второго Рубежа","Каменной Совы","Мостовой Стражи","Корневого Двора","Соляного Марева","Нижнего Свода","Рунного Кольца","Врат Полудня","Скального Крыла","Битого Щита",
+ "Восточного Кола","Ледяного Пика","Тихого Парома","Хвойной Ограды","Караванного Ока","Штольного Сердца","Тонких Чар","Камня Переходов","Гнезда Грома","Ржавых Ворот",
+ "Последней Заставы","Гулкой Горы","Водяного Замка","Лесной Твердыни","Пустынного Оплота","Подземного Затвора","Чародейной Стены","Портального Кольца","Небесной Цитадели","Мёртвой Стены",
+ "Границы Рассвета","Скалы Стражей","Брода Королей","Бора Копейщиков","Барханной Стражи","Штольни Владык","Круга Хранителей","Перехода Смотрителей","Уступа Орлов","Праха Знамён"];
+const FORT_PARTS=[
+ {id:"gate",n:"ворота",p:"B",дело:"стража ворот"},{id:"barracks",n:"казармы",p:"B",дело:"гарнизон"},{id:"arsenal",n:"арсенал",p:"F",дело:"оружейники"},
+ {id:"depot",n:"склады",p:"C",дело:"припасы"},{id:"kitchen",n:"кухня",p:"N",дело:"котлы"},{id:"infirmary",n:"лечебница",p:"A",дело:"лекари"},
+ {id:"stables",n:"конюшни",p:"C",дело:"кони"},{id:"command",n:"командный двор",p:"B",дело:"ставка"},{id:"prison",n:"тюрьма",p:"C",дело:"колодки"},
+ {id:"secret",n:"тайные ходы",p:"N",дело:"подвалы"},{id:"ward",n:"магический контур",p:"A",дело:"чародеи"},{id:"towers",n:"башни",p:"B",дело:"дозор"}];
+const FORTS=(()=>{const out=[];const caps=new Set(EMPIRES.map(e=>e.cap.x+","+e.cap.y));
+ for(let i=0;i<120;i++){const cat=FORT_CATS[i%FORT_CATS.length];
+  let x=1500+Math.floor(hashName(i*29+3,i*7+11,7500)*(WORLD-3000)),y=1500+Math.floor(hashName(i*13+5,i*19+2,7501)*(WORLD-3000));
+  if(x%29===0)x++;if(y%29===0)y++;
+  if(caps.has(x+","+y)||NAMED_CITY_MAP.has(x+","+y)){x+=3;y+=2;}
+  out.push({id:"fort"+i,n:`${cat.преф} ${FORT_NAMES[i]}`,cat:cat.id,x,y});}
+ return out;})();
+var FORT_MAP=new Map(FORTS.map(f=>[f.x+","+f.y,f]));
+const FORT_BY_ID=Object.fromEntries(FORTS.map(f=>[f.id,f]));
+function fortAt(x,y){return FORT_MAP.get(x+","+y)||null;}
+function fortStructure(x,y){const f=fortAt(x,y);if(!f)return null;return {type:"fortress",name:f.n,beacon:"castle",fort:f.id};}
+const Forts=Modules.register("FORTRESSES",{
+ all:()=>FORTS,cats:FORT_CATS,parts:FORT_PARTS,at:fortAt,byId:id=>FORT_BY_ID[id]||null,
+ /* Состояние крепости живёт в сохранении и заводится при первом обращении. */
+ state(id){
+  if(!G.forts||typeof G.forts!=="object")G.forts={};
+  const f=FORT_BY_ID[id];if(!f)return null;
+  if(!G.forts[id]){const ruined=f.cat==="ruined";
+   G.forts[id]={owner:ruined?null:safeFn(()=>empireIndexAt(f.x,f.y),0),walls:ruined?20:100,supplies:ruined?0:100,garrison:ruined?0:20+Math.floor(hashName(f.x,f.y,7510)*30),ward:f.cat==="magic",siege:null,base:false,taken:0};}
+  return G.forts[id];},
+ ownerName(st){if(st.owner==="player")return "вы";if(st.owner===null||st.owner===undefined)return "ничья";const e=EMPIRES[st.owner];return e?e.short:"неизвестно";},
+ here(){try{if(G.place&&G.place.stype==="fortress")return FORT_MAP.get(G.place.bx+","+G.place.by)||null;if(!G.place&&!G.ship)return fortAt(G.x,G.y);return null;}catch(_){return null;}},
+ troubled(idx){try{if(!G.forts)return false;return Object.keys(G.forts).some(id=>{const st=G.forts[id];return st&&st.owner===idx&&(st.siege||st.walls<30);});}catch(_){return false;}},
+ status(id){const f=FORT_BY_ID[id],st=this.state(id);if(!f||!st)return "Такой крепости нет.";const cat=FORT_CATS.find(c=>c.id===f.cat);
+  return `${f.n}, ${cat.n} крепость: ${cat.о}. Владеет: ${this.ownerName(st)}. Стены ${st.walls} из ста, припасы ${st.supplies} из ста, гарнизон ${st.garrison}${st.ward?", магический контур держит":""}${st.siege?`. Осада: ведёт ${st.siege.by==="player"?"игрок":(EMPIRES[st.siege.by]||{}).short||"неизвестно"}, идёт ${Math.max(1,(Number(G.day)||1)-st.siege.day+1)}-й день`:""}${st.base?". Ваша база":""}. Части: ${FORT_PARTS.map(p=>p.n).join(", ")}.`;},
+ /* Осадить: чужую и не пустую. Каждый день осады съедает припасы и бьёт стены. */
+ besiege(id){const st=this.state(id);if(!st)return false;
+  if(st.owner==="player"){narrate("Это ваша крепость: осаждать её незачем.");return false;}
+  if(st.siege){narrate("Крепость уже в осаде.");return false;}
+  st.siege={by:"player",day:Number(G.day)||1};
+  safeFn(()=>{Bank.play("siege_alarm_city",{gain:0.6,maxSec:6});setTimeout(()=>safeFn(()=>Bank.play("siege_ram",{gain:0.5,maxSec:5})),700);});
+  journal(`Осада: ${FORT_BY_ID[id].n}.`);narrate(`Осада началась: ${FORT_BY_ID[id].n}. Каждый день стены слабеют, припасы тают. Когда стены упадут ниже тридцати или припасы кончатся, крепость можно взять.`);
+  safeFn(()=>deed("sieges"));return true;},
+ /* Защитить: снять осаду боем с осадным отрядом. */
+ defend(id){const st=this.state(id);if(!st)return false;
+  if(!st.siege){narrate("Осады нет: защищать не от кого.");return false;}
+  if(st.siege.by==="player"){narrate("Осаду ведёте вы сами.");return false;}
+  if(G.inCombat){narrate("Бой уже идёт.");return false;}
+  const враг=EMPIRES[st.siege.by];
+  const m={id:"siege_captain",n:`Осадный сотник «${враг?враг.short:"чужой"}»`,snd:"mgrowl",fx:"growl",lvl:Math.max(3,G.level+1),hp:60+G.level*10,dmg:6+G.level,xp:40+G.level*8,gold:30,biomes:[],max:9,защита:{fort:id}};
+  safeFn(()=>Bank.play("siege_garrison",{gain:0.6,maxSec:5}));
+  narrate(`Вы выходите на стену: ${FORT_BY_ID[id].n}. Осадный отряд идёт на приступ.`);
+  startCombat({x:G.x,y:G.y,monster:m});return true;},
+ /* Взять: только ослабленную; бой с капитаном гарнизона. */
+ capture(id){const st=this.state(id);if(!st)return false;
+  if(st.owner==="player"){narrate("Крепость уже ваша.");return false;}
+  if(st.owner===null){this._take(id);return true;}
+  if(st.walls>30&&st.supplies>0){narrate(`Стены ${st.walls} из ста и припасы ${st.supplies}: крепость держится. Сперва осада.`);return false;}
+  if(G.inCombat){narrate("Бой уже идёт.");return false;}
+  const m={id:"garrison_captain",n:`Капитан гарнизона «${FORT_BY_ID[id].n}»`,snd:"mgrowl",fx:"growl",lvl:Math.max(4,G.level+2),hp:80+G.level*12,dmg:7+G.level,xp:60+G.level*10,gold:50,biomes:[],max:9,взятие:{fort:id}};
+  safeFn(()=>Bank.play("oc_gate_hit",{gain:0.6,maxSec:4}));
+  narrate(`Ворота поддаются: ${FORT_BY_ID[id].n}. Гарнизон выходит навстречу.`);
+  startCombat({x:G.x,y:G.y,monster:m});return true;},
+ _take(id){const st=this.state(id);st.owner="player";st.siege=null;st.walls=Math.max(st.walls,40);st.garrison=10;st.taken=(Number(st.taken)||0)+1;
+  safeFn(()=>{Bank.play("siege_victory",{gain:0.6,maxSec:6});setTimeout(()=>safeFn(()=>eventTheme("victory_great",{gain:0.7})),500);});
+  journal(`Взята крепость: ${FORT_BY_ID[id].n}.`);narrate(`${FORT_BY_ID[id].n} — ваша. Её можно восстановить, укрепить, передать державе или сделать базой.`,{pri:1});
+  safeFn(()=>deed("forts"));},
+ restore(id){const st=this.state(id);if(!st)return false;
+  if(st.owner!=="player"){narrate("Восстанавливают только свою крепость.");return false;}
+  const цена=150;if(G.gold<цена){narrate(`Нужно ${цена} золота на камень и плотников.`);return false;}
+  G.gold-=цена;st.walls=100;st.supplies=Math.max(st.supplies,60);st.garrison=Math.max(st.garrison,20);
+  safeFn(()=>{Bank.play("build_work",{gain:0.6,maxSec:5});setTimeout(()=>safeFn(()=>Bank.play("craft_stone",{gain:0.5,maxSec:4})),500);setTimeout(()=>safeFn(()=>Bank.play("work_done",{gain:0.5,maxSec:4})),1400);});
+  narrate(`Стены подняты, склады пополнены: ${FORT_BY_ID[id].n} снова держит.`);journal(`Восстановлена крепость: ${FORT_BY_ID[id].n}.`);return true;},
+ modernize(id){const st=this.state(id);if(!st)return false;
+  if(st.owner!=="player"){narrate("Укрепляют только свою крепость.");return false;}
+  if(st.ward){narrate("Магический контур уже стоит.");return false;}
+  const кр=Number(G.inv["кристалл"])||0;if(G.gold<300||кр<3){narrate("Нужно 300 золота и три кристалла на контур.");return false;}
+  G.gold-=300;G.inv["кристалл"]=кр-3;if(G.inv["кристалл"]<=0)delete G.inv["кристалл"];st.ward=true;
+  safeFn(()=>{Bank.play("build_magic",{gain:0.6,maxSec:5});setTimeout(()=>safeFn(()=>Bank.play("stk_ward",{gain:0.5,maxSec:5})),600);});
+  narrate(`Магический контур замкнут: осада бьёт стены вдвое слабее.`);journal(`Укреплена крепость: ${FORT_BY_ID[id].n}.`);return true;},
+ transfer(id,idx){const st=this.state(id);if(!st)return false;
+  if(st.owner!=="player"){narrate("Передать можно только свою крепость.");return false;}
+  idx=Number(idx);const e=EMPIRES[idx];if(!e){narrate("Такой державы нет.");return false;}
+  st.owner=idx;st.base=false;
+  safeFn(()=>{Bank.play("hall_gate",{gain:0.55,maxSec:4});setTimeout(()=>safeFn(()=>Bank.play("throng_yes",{gain:0.5,maxSec:4})),500);});
+  safeFn(()=>{addRep(e.race,4);nudgeDiplo(idx,3);addStand("fact",e.short,10);});
+  narrate(`${FORT_BY_ID[id].n} передана державе «${e.short}». Народ ${e.race} этого не забудет.`);journal(`Передана крепость ${FORT_BY_ID[id].n}: «${e.short}».`);return true;},
+ base(id){const st=this.state(id);if(!st)return false;
+  if(st.owner!=="player"){narrate("База — только в своей крепости.");return false;}
+  st.base=true;G.hp=G.hpMax;G.mana=G.manaMax;G.hour=8;
+  safeFn(()=>{Bank.play("wild_hearth",{gain:0.5,maxSec:6});setTimeout(()=>safeFn(()=>Bank.play("hall_fort",{gain:0.4,maxSec:6})),400);});
+  narrate(`${FORT_BY_ID[id].n} — ваша база: отдых, склад и запись игры. Здоровье и мана восстановлены, утро.`);safeFn(()=>saveGame(true));return true;},
+ /* Ежедневно: осады идут сами, война двигает крепости без игрока. */
+ tick(){
+  try{
+   const day=Number(G.day)||1;
+   /* Осады игрока и держав: припасы и стены. */
+   if(G.forts)for(const id of Object.keys(G.forts)){const st=G.forts[id];if(!st||!st.siege)continue;
+    const k=st.ward?0.5:1;st.supplies=Math.max(0,st.supplies-Math.round(15*k));st.walls=Math.max(0,st.walls-Math.round(10*k));
+    if(st.siege.by!=="player"&&(st.walls<=0||st.supplies<=0)){
+     const кто=st.siege.by;const f=FORT_BY_ID[id];
+     st.owner=кто;st.siege=null;st.walls=40;st.supplies=50;st.garrison=15;
+     safeFn(()=>journal(`Пала крепость ${f.n}: взята державой «${(EMPIRES[кто]||{}).short||"?"}».`));
+     if(!G.fortNews)G.fortNews=[];G.fortNews.unshift(`${f.n} пала: её взяла держава «${(EMPIRES[кто]||{}).short||"?"}»`);if(G.fortNews.length>6)G.fortNews.pop();}}
+   /* Раз в пять дней каждая война выбирает одну крепость на границе и садится под неё. */
+   if(day%5!==0)return;
+   const wars=safeFn(()=>warsAt(day),[]);
+   wars.forEach((w,wi)=>{
+    const [a,b]=[w.a,w.b];
+    const цель=FORTS.filter(f=>{const st=this.state(f.id);return st.owner===a||st.owner===b;})
+     .map(f=>({f,st:this.state(f.id)})).filter(o=>!o.st.siege);
+    if(!цель.length)return;
+    const o=цель[Math.floor(hashName(day*7+wi*13,a*11+b*17,7520)*цель.length)%цель.length];
+    o.st.siege={by:o.st.owner===a?b:a,day};
+    if(!G.fortNews)G.fortNews=[];G.fortNews.unshift(`${o.f.n} в осаде: держава «${(EMPIRES[o.st.siege.by]||{}).short}» подошла к стенам`);if(G.fortNews.length>6)G.fortNews.pop();});
+  }catch(_){}},
+ news(){return (G.fortNews||[]).slice(0,2);},
+ windowHtml(f){const st=this.state(f.id);const мои=st.owner==="player";
+  let h=`<div class="list-line" tabindex="0" data-speak="${this.status(f.id).replace(/"/g,"&quot;")}">🏯 ${this.status(f.id)}</div>`;
+  h+=`<button class="item" data-cmd="fort:status~${f.id}" data-speak="Состояние крепости.">📋 Состояние крепости</button>`;
+  if(!мои&&!st.siege)h+=`<button class="item" data-cmd="fort:besiege~${f.id}" data-speak="Осадить крепость.">⚔️ Осадить</button>`;
+  if(st.siege&&st.siege.by!=="player"&&!мои)h+=`<button class="item" data-cmd="fort:defend~${f.id}" data-speak="Защитить крепость от осады.">🛡️ Защитить от осады</button>`;
+  if(!мои)h+=`<button class="item" data-cmd="fort:capture~${f.id}" data-speak="Захватить крепость.">🚩 Захватить</button>`;
+  if(мои){h+=`<button class="item" data-cmd="fort:restore~${f.id}" data-speak="Восстановить стены за сто пятьдесят золота.">🧱 Восстановить (150 золота)</button>`;
+   if(!st.ward)h+=`<button class="item" data-cmd="fort:modernize~${f.id}" data-speak="Укрепить магическим контуром за триста золота и три кристалла.">✨ Укрепить контуром (300 золота, 3 кристалла)</button>`;
+   h+=`<button class="item" data-cmd="fort:base~${f.id}" data-speak="Сделать базой: отдых и запись.">🏕️ Сделать базой</button>`;
+   h+=`<h3>Передать державе</h3>`+EMPIRES.map((e,i)=>`<button class="item" data-cmd="fort:transfer~${f.id}~${i}" data-speak="Передать крепость державе ${e.short}.">🤝 ${e.short}</button>`).join("");}
+  return h;}});
+
 /* ════════ ЗДАНИЯ ════════ */
 function openBuilding(c){const s=c&&c.structure;
  if(!s){narrate("Здесь нет постройки.");return;}
@@ -27997,6 +28427,7 @@ function openBuilding(c){const s=c&&c.structure;
    `<button class="item" data-cmd="svc:rumor">🗣️ Послушать слухи</button>`;}
  if(s.type==="castle"){
   html+=`<button class="item" data-cmd="svc:audience">👑 Аудиенция у правителя</button>`;}
+ if(s.type==="fortress"){const f=safeFn(()=>Forts.at(c.x,c.y),null);if(f)html+=`<h3>Крепость</h3>`+Forts.windowHtml(f);}
  if(s.type==="temple"){
   /* Каждый храм посвящён одному из двенадцати богов. */
   const tg=templeGod(c.x,c.y);
@@ -28056,8 +28487,9 @@ function openBuilding(c){const s=c&&c.structure;
   if(v)setTimeout(()=>safeFn(()=>Bank.play(v,{seed:c.x+c.y,gain:0.5,maxSec:7})),500);});
  openModal("modal-building");
  narrate(`${s.name}. ${bldDesc(s.type)} Внутри ${npcs.length?npcs.length+" жителей":"никого нет"}. Меню услуг доступно кнопками.`);}
-function iconFor(t){return{castle:"🏰",village:"🏘️",tavern:"🍺",clanhall:"🛡️",tower:"🗼",ruins:"🏚️",temple:"⛩️",traveler:"🚶",cave_entrance:"🕳️",port:"⚓",crossroads:"🛣️"}[t]||"🏠";}
-function bldDesc(t){return{castle:"Серые стены, штандарты империи, стража у ворот. За воротами — улицы, кварталы и спуск в подземелье.",
+function iconFor(t){return{fortress:"🏯",castle:"🏰",village:"🏘️",tavern:"🍺",clanhall:"🛡️",tower:"🗼",ruins:"🏚️",temple:"⛩️",traveler:"🚶",cave_entrance:"🕳️",port:"⚓",crossroads:"🛣️"}[t]||"🏠";}
+function bldDesc(t){return{fortress:"Стены, ворота и башни; за ними казармы, арсенал, склады, кухня, лечебница, конюшни, командный двор, тюрьма, тайные ходы и магический контур. Крепость осаждают, защищают, берут, восстанавливают и передают.",
+ castle:"Серые стены, штандарты империи, стража у ворот. За воротами — улицы, кварталы и спуск в подземелье.",
  cave_entrance:"Тёмный ход уходит вниз. Оттуда тянет холодом и слышно капли.",
  port:"Причалы, мокрое дерево, крики чаек и хлопки парусов. Отсюда уходят корабли в другие порты.",
  village:"Дымки над крышами, пахнет хлебом и скотиной.",
@@ -30307,6 +30739,15 @@ function renderWorld(){
  const day=G.day;
  document.getElementById("wEmp").innerHTML=EMPIRES.map((e,i)=>
   `<div class="list-line" tabindex="0" data-speak="${e.name}. Главный народ ${e.race}. ${e.gov} ${e.econ}">🏛️ <b>${e.name}</b>. Столица: (${e.cap.x}; ${e.cap.y}).<br>Народы: ${(e.races||[e.race]).join(", ")}. Бог: ${GOD_BY_ID[e.god]?GOD_BY_ID[e.god].n:"—"}.<br>${e.gov}<br>${e.econ}</div>`).join("");
+ safeFn(()=>{const seen=Regions.seen();const here=regionAt(G.x,G.y);
+  document.getElementById("wRegions").innerHTML=REGIONS.map(r=>`<div class="list-line" tabindex="0" data-speak="${Regions.text(r).replace(/"/g,"&quot;")}">${r===here?"📍":seen[r.id]?"✅":"🗺️"} <b>${r.n}</b> — ${r.климат}, опасность ${r.опасность}/5, товар ${r.ресурс}</div>`).join("");
+  document.getElementById("wCities").innerHTML=NAMED_CITIES.map(c=>`<div class="list-line" tabindex="0" data-speak="${Cities.text(c).replace(/"/g,"&quot;")}">🏙️ <b>${c.n}</b> — ${c.роль} (${c.x}; ${c.y})</div>`).join("");
+  const seenF=Forests.seen();
+  document.getElementById("wForests").innerHTML=FORESTS.map(f=>`<div class="list-line" tabindex="0" data-speak="${Forests.text(f).replace(/"/g,"&quot;")}">${seenF[f.id]?"✅":"🌲"} <b>${f.n}</b> — ${FOREST_KINDS[f.kind].n} (${f.x}; ${f.y})</div>`).join("");
+  const мои=FORTS.filter(f=>G.forts&&G.forts[f.id]&&G.forts[f.id].owner==="player");
+  const осады=FORTS.filter(f=>G.forts&&G.forts[f.id]&&G.forts[f.id].siege);
+  document.getElementById("wForts").innerHTML=`<div class="list-line">Крепостей ${FORTS.length}, десяти родов: ${FORT_CATS.map(c=>c.n).join(", ")}. Ваших: ${мои.length}. В осаде: ${осады.length}.</div>`+
+   мои.concat(осады).slice(0,12).map(f=>`<div class="list-line" tabindex="0" data-speak="${Forts.status(f.id).replace(/"/g,"&quot;")}">🏯 ${f.n}: ${Forts.ownerName(Forts.state(f.id))}${Forts.state(f.id).siege?", осада":""}</div>`).join("");});
  const common=RACES_DB.filter(r=>r.rank<=1),high=RACES_DB.filter(r=>r.rank>=2);
  document.getElementById("wRaces").innerHTML=common.map(r=>
   `<div class="list-line" tabindex="0" data-speak="${raceDossierText(r).replace(/"/g,"&quot;")}">🧬 <b>${r.n}</b> (${RANKS[r.rank]}) — ${r.myth}</div>`).join("")+
@@ -30333,6 +30774,8 @@ function worldNews(day){
  out.push(`Клан «${cl.n}» объявил сбор во имя ${GOD_BY_ID[cl.god]?GOD_BY_ID[cl.god].n:"своего бога"}.`);
  const g=PANTHEON[day%PANTHEON.length];
  out.push(`Сегодня чтут ${g.n}: ${g.dom}.`);
+ safeFn(()=>{const r=regionAt(G.x,G.y);out.push(`В области «${r.n}» свой товар — ${r.ресурс}: он здесь дешевле.`);});
+ safeFn(()=>Forts.news().forEach(t=>out.push(t+".")));
  return out;}
 /* ── ОКНО АРТЕФАКТОВ ──
    Прежде здесь был список строк и обещание двадцати шести тысяч. Теперь у
