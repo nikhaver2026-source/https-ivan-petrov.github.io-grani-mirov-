@@ -150,7 +150,7 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
  check('музыка событий при этом на месте и идёт каналом музыки',фон.событие===true&&фон.канал==="music",фон);
 
  /* ── 6. Бой, чары и люди — своими каналами ── */
- const кто=await page.evaluate(()=>{
+ const кто=await page.evaluate(async()=>{
   const виды=[];const o=Bank.play;Bank.play=function(r,opts){виды.push([r,(opts&&opts.kind)||"fx"]);return o.call(this,r,Object.assign({},opts||{},{gain:0,maxSec:0.3}));};
   const oa=Spatial.at;Spatial.at=function(f,dx,dy,opts){виды.push([f,(opts&&opts.kind)||"fx"]);return oa.call(this,f,dx,dy,opts);};
   G.equip=G.equip||{};G.equip.weapon=G.equip.weapon||{name:"Меч",type:"Меч"};
@@ -158,7 +158,11 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   const бой=виды.slice();виды.length=0;
   G.mana=99;G.spells=G.spells||[];if(!G.spells.includes(SPELLS[0].n))G.spells.push(SPELLS[0].n);
   castSpell(0);
-  const чары=виды.slice();виды.length=0;
+  /* Слои заклинания разнесены во времени: ждём их все. */
+  await new Promise(z=>setTimeout(z,1900));
+  /* Считаем только слои самой школы: живая картина и шаги звучат сами по себе. */
+  const слои=SPELL_LAYERS.map(l=>(SCHOOL_AUDIO[G.lastSpell.school]||SCHOOL_AUDIO.generic)[l]||SCHOOL_AUDIO.generic[l]);
+  const чары=виды.filter(x=>слои.includes(x[0]));виды.length=0;
   npcCue({x:G.x+1,y:G.y},"throng_hail_m");
   const люди=виды.slice();
   Bank.play=o;Spatial.at=oa;Bank.stopAll();

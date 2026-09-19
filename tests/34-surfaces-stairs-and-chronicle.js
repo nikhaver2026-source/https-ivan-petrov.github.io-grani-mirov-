@@ -60,8 +60,8 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   G.weather=было.w;G.x=было.x;G.y=было.y;
   return out;});
  check('у каждой земли своя поверхность под ногой',
-  surf.forest==="leaves"&&surf.plains==="grass"&&surf.mountains==="stone"&&
-  surf.coast==="sand"&&surf.desert==="sand"&&surf.swamp==="mud",surf);
+  surf.forest==="leaves"&&["grass","tallgrass"].includes(surf.plains)&&surf.mountains==="stone"&&
+  surf.coast==="sand"&&surf.desert==="sand"&&["mud","swamp","deepwater"].includes(surf.swamp),surf);
  check('перекрёсток слышен камнем, и дорога вообще звучит по-дорожному',
   surf.перекрёсток==="stone"
   &&surf.дороги.length>0

@@ -1,7 +1,7 @@
 # Записи Luanti (Minetest Game)
 
 **Источник:** [luanti-org/minetest_game](https://github.com/luanti-org/minetest_game),
-папки `mods/*/sounds`.
+папки `mods/*/sounds` (default, doors, fire, tnt, xpanes, carts).
 
 **Лицензия:** [Creative Commons Attribution-ShareAlike 3.0 Unported (CC BY-SA 3.0)](https://creativecommons.org/licenses/by-sa/3.0/)
 — та же, под которой распространяется и «Грань Миров», поэтому записи вошли в
@@ -15,7 +15,7 @@ paramat, BlockMen, sofar, Neuromancer, Gambit, asl97, KevDoy, Mito551,
 GreenXenith, kaeza, kilbith, tobyplowy, CloudyProton, TumeniNodes, Mossmanikin,
 random-geek, Extex101, An0n3m0us, Lopano.
 
-Всего файлов: 97.
+Всего файлов: 102.
 
 | Файл | Что это |
 |---|---|
@@ -116,3 +116,8 @@ random-geek, Extex101, An0n3m0us, Lopano.
 | `water_footstep_3.ogg` | шаг по воде |
 | `wood_footstep_1.ogg` | шаг по доскам |
 | `wood_footstep_2.ogg` | шаг по доскам |
+| `bar_door_open.ogg` | решётка отворяется (`xpanes/sounds/xpanes_steel_bar_door_open.ogg`) |
+| `bar_door_close.ogg` | решётка захлопывается (`xpanes/sounds/xpanes_steel_bar_door_close.ogg`) |
+| `cart_moving_1.ogg` | телега катится по улице (`carts/sounds/carts_cart_moving.1.ogg`) |
+| `cart_moving_2.ogg` | телега катится по улице (`carts/sounds/carts_cart_moving.2.ogg`) |
+| `cart_moving_3.ogg` | телега катится по улице (`carts/sounds/carts_cart_moving.3.ogg`) |

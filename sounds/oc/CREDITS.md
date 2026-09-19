@@ -169,3 +169,52 @@ https://creativecommons.org/licenses/by/3.0/ — текст лицензии р�
 | oc_crystal_comm_05 | сигналы древнего устройства | `Missions.ocf/DeepSeaMining.ocs/CrystalCommunicator.ocd/CrystalCommWumm.ogg` |
 | score_cavern_01 | музыка: пещерная глубь | `Music.ocg/Cavern.ogg` |
 | score_lucid_01 | музыка: ясный сон, астрал и морок | `Music.ocg/LucidDream.ogg` |
+| oc_door_open_01 | дверь открывается: створка и ручка | `Sound.ocg/Structures.ocg/DoorOpen1.wav` (перекодировано из WAV в OGG, содержимое не менялось) |
+| oc_door_open_02 | дверь открывается: створка и ручка | `Sound.ocg/Structures.ocg/DoorOpen2.wav` (перекодировано из WAV в OGG, содержимое не менялось) |
+| oc_door_close_01 | дверь закрывается: створка в косяк | `Sound.ocg/Structures.ocg/DoorClose1.wav` (перекодировано из WAV в OGG, содержимое не менялось) |
+| oc_door_close_02 | дверь закрывается: створка в косяк | `Sound.ocg/Structures.ocg/DoorClose2.wav` (перекодировано из WAV в OGG, содержимое не менялось) |
+| oc_door_unlock_01 | замок отпирается: ключ и ригель | `Sound.ocg/Structures.ocg/DoorUnlock.wav` (перекодировано из WAV в OGG, содержимое не менялось) |
+| oc_lock_01 | замок запирается: щелчок ригеля | `Sound.ocg/Objects.ocg/WallKit.ocg/Lock.wav` (перекодировано из WAV в OGG, содержимое не менялось) |
+| oc_laugh_01 | смех в таверне | `Sound.ocg/Clonk.ocg/Skin.ocg/Adventurer.ocg/Laughter1.wav` (перекодировано из WAV в OGG, содержимое не менялось) |
+| oc_laugh_02 | смех в таверне | `Sound.ocg/Clonk.ocg/Skin.ocg/Adventurer.ocg/Laughter2.wav` (перекодировано из WAV в OGG, содержимое не менялось) |
+| oc_laugh_03 | смех в таверне | `Sound.ocg/Clonk.ocg/Skin.ocg/Adventurer.ocg/Laughter3.wav` (перекодировано из WAV в OGG, содержимое не менялось) |
+| oc_growl_01 | рык твари: низкий, из груди | `Sound.ocg/Animals.ocg/Monster.ocg/Growl1.wav` (перекодировано из WAV в OGG, содержимое не менялось) |
+| oc_growl_02 | рык твари: низкий, из груди | `Sound.ocg/Animals.ocg/Monster.ocg/Growl2.wav` (перекодировано из WAV в OGG, содержимое не менялось) |
+| oc_growl_03 | рык твари: низкий, из груди | `Sound.ocg/Animals.ocg/Monster.ocg/Growl3.wav` (перекодировано из WAV в OGG, содержимое не менялось) |
+| oc_rockfall_01 | камнепад в горах | `Sound.ocg/Hits.ocg/Materials.ocg/Rock.ocg/Rockfall1.wav` (перекодировано из WAV в OGG, содержимое не менялось) |
+| oc_rockfall_02 | камнепад в горах | `Sound.ocg/Hits.ocg/Materials.ocg/Rock.ocg/Rockfall2.wav` (перекодировано из WAV в OGG, содержимое не менялось) |
+| oc_ice_hit_01 | лёд: удар и треск | `Sound.ocg/Hits.ocg/IceHit1.wav` (перекодировано из WAV в OGG, содержимое не менялось) |
+| oc_ice_hit_02 | лёд: удар и треск | `Sound.ocg/Hits.ocg/IceHit2.wav` (перекодировано из WAV в OGG, содержимое не менялось) |
+| oc_splash_01 | всплеск воды | `Sound.ocg/Liquids.ocg/Splash1.wav` (перекодировано из WAV в OGG, содержимое не менялось) |
+| oc_splash_02 | всплеск воды | `Sound.ocg/Liquids.ocg/Splash2.wav` (перекодировано из WAV в OGG, содержимое не менялось) |
+| oc_splash_03 | всплеск воды | `Sound.ocg/Liquids.ocg/Splash3.wav` (перекодировано из WAV в OGG, содержимое не менялось) |
+| oc_waterdrop_01 | капля в подземную воду | `Sound.ocg/Liquids.ocg/Waterdrop1.wav` (перекодировано из WAV в OGG, содержимое не менялось) |
+| oc_waterdrop_02 | капля в подземную воду | `Sound.ocg/Liquids.ocg/Waterdrop2.wav` (перекодировано из WAV в OGG, содержимое не менялось) |
+| oc_earthquake_01 | землетрясение: гул и обвал | `Sound.ocg/Environment.ocg/Disasters.ocg/Earthquake.ogg` |
+| oc_chop_01 | топор по стволу | `Sound.ocg/Environment.ocg/Tree.ocg/Chop1.wav` (перекодировано из WAV в OGG, содержимое не менялось) |
+| oc_chop_02 | топор по стволу | `Sound.ocg/Environment.ocg/Tree.ocg/Chop2.wav` (перекодировано из WAV в OGG, содержимое не менялось) |
+| oc_chop_03 | топор по стволу | `Sound.ocg/Environment.ocg/Tree.ocg/Chop3.wav` (перекодировано из WAV в OGG, содержимое не менялось) |
+| oc_tree_fall_01 | дерево валится | `Sound.ocg/Environment.ocg/Tree.ocg/Landing.ogg` |
+| oc_bat_flutter_01 | летучие мыши: хлопки крыльев | `Sound.ocg/Animals.ocg/Bat.ocg/Flutter1.wav` (перекодировано из WAV в OGG, содержимое не менялось) |
+| oc_bat_flutter_02 | летучие мыши: хлопки крыльев | `Sound.ocg/Animals.ocg/Bat.ocg/Flutter2.wav` (перекодировано из WAV в OGG, содержимое не менялось) |
+| oc_bat_flutter_03 | летучие мыши: хлопки крыльев | `Sound.ocg/Animals.ocg/Bat.ocg/Flutter3.wav` (перекодировано из WAV в OGG, содержимое не менялось) |
+| oc_bat_noise_01 | летучие мыши: писк в темноте | `Sound.ocg/Animals.ocg/Bat.ocg/Noise1.wav` (перекодировано из WAV в OGG, содержимое не менялось) |
+| oc_bat_noise_02 | летучие мыши: писк в темноте | `Sound.ocg/Animals.ocg/Bat.ocg/Noise2.wav` (перекодировано из WAV в OGG, содержимое не менялось) |
+| oc_bat_noise_03 | летучие мыши: писк в темноте | `Sound.ocg/Animals.ocg/Bat.ocg/Noise3.wav` (перекодировано из WAV в OGG, содержимое не менялось) |
+| oc_mosquito_01 | гнус над топью | `Sound.ocg/Animals.ocg/MosquitoBuzz.ogg` |
+| oc_dog_snuff_01 | собака принюхивается | `Sound.ocg/Animals.ocg/Wipf.ocg/Snuff1.wav` (перекодировано из WAV в OGG, содержимое не менялось) |
+| oc_dog_snuff_02 | собака принюхивается | `Sound.ocg/Animals.ocg/Wipf.ocg/Snuff2.wav` (перекодировано из WAV в OGG, содержимое не менялось) |
+| oc_dog_snuff_03 | собака принюхивается | `Sound.ocg/Animals.ocg/Wipf.ocg/Snuff3.wav` (перекодировано из WAV в OGG, содержимое не менялось) |
+| oc_dog_whine_01 | собака скулит | `Sound.ocg/Animals.ocg/Wipf.ocg/Whine.wav` (перекодировано из WAV в OGG, содержимое не менялось) |
+| oc_dog_bark_01 | собака лает во дворе | `Sound.ocg/Animals.ocg/Wipf.ocg/Aroof.wav` (перекодировано из WAV в OGG, содержимое не менялось) |
+| oc_cattle_snort_01 | скотина фыркает | `Sound.ocg/Animals.ocg/Mooq.ocg/Snort1.wav` (перекодировано из WAV в OGG, содержимое не менялось) |
+| oc_cattle_snort_02 | скотина фыркает | `Sound.ocg/Animals.ocg/Mooq.ocg/Snort2.wav` (перекодировано из WAV в OGG, содержимое не менялось) |
+| oc_cattle_snort_03 | скотина фыркает | `Sound.ocg/Animals.ocg/Mooq.ocg/Snort3.wav` (перекодировано из WAV в OGG, содержимое не менялось) |
+| oc_chirp_01 | птаха в ветвях | `Sound.ocg/Animals.ocg/Chippie.ocg/Chirp1.wav` (перекодировано из WAV в OGG, содержимое не менялось) |
+| oc_chirp_02 | птаха в ветвях | `Sound.ocg/Animals.ocg/Chippie.ocg/Chirp2.wav` (перекодировано из WAV в OGG, содержимое не менялось) |
+| oc_chirp_03 | птаха в ветвях | `Sound.ocg/Animals.ocg/Chippie.ocg/Chirp3.wav` (перекодировано из WAV в OGG, содержимое не менялось) |
+| oc_spark_01 | искры из горна | `Sound.ocg/Fire.ocg/Spark1.wav` (перекодировано из WAV в OGG, содержимое не менялось) |
+| oc_spark_02 | искры из горна | `Sound.ocg/Fire.ocg/Spark2.wav` (перекодировано из WAV в OGG, содержимое не менялось) |
+| oc_spark_03 | искры из горна | `Sound.ocg/Fire.ocg/Spark3.wav` (перекодировано из WAV в OGG, содержимое не менялось) |
+| oc_smoke_01 | дым: шипение и тяга | `Sound.ocg/Fire.ocg/Smoke.wav` (перекодировано из WAV в OGG, содержимое не менялось) |
+| oc_corrode_01 | кислота разъедает: алхимия | `Sound.ocg/Liquids.ocg/Corrode.ogg` |

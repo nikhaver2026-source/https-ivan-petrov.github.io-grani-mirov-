@@ -256,18 +256,18 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   Speech.say=t=>{window.__said.push(String(t));};
   /* Без открытых узлов сводка честно говорит, что их нет. */
   G.x=WORLD>>1;G.y=WORLD>>1;
-  handleThreeFingerSwipe("S");
+  handleThreeFingerSwipe("E"); /* «где я» — тремя пальцами вправо; вниз — инвентарь */
   const без=window.__said.slice(-1)[0]||"";
   /* С открытым узлом — называет его, расстояние и сторону света. */
   const nd=portalNodeAt(EMPIRES[0].cap.x,EMPIRES[0].cap.y);
   discoverPortal(nd);
   window.__said=[];
-  handleThreeFingerSwipe("S");
+  handleThreeFingerSwipe("E"); /* «где я» — тремя пальцами вправо; вниз — инвентарь */
   const с=window.__said.slice(-1)[0]||"";
   /* Стоя на тракте, сводка называет его имя. */
   G.x=29*4;G.y=100;
   window.__said=[];
-  handleThreeFingerSwipe("S");
+  handleThreeFingerSwipe("E"); /* «где я» — тремя пальцами вправо; вниз — инвентарь */
   const наТракте=window.__said.slice(-1)[0]||"";
   return {без,с,наТракте,имяТракта:roadNameAt(29*4,100)};});
  check('сводка «где я» честно говорит, что узлов сети ещё нет',
