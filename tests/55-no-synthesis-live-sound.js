@@ -136,7 +136,7 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
  /* ── 5. Музыка: у каждой темы настоящая запись ── */
  const музыка=await page.evaluate(async()=>{
   const до=window.__синт;
-  const синт=[];
+  const синт=[];settings.bgMusic=1;
   for(const k of Object.keys(MUSIC_TRACK)){Music.stop();Music.start(k);if(!Music.track)синт.push(k);}
   Music.stop();
   await new Promise(r=>setTimeout(r,500));

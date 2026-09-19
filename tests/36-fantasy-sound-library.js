@@ -130,6 +130,7 @@ const NEW_DIRS=["arte","deep","foe","cast","hero","wild","trade","score",
  /* ── 6. Музыка мира: настоящие темы вместо синтеза ── */
  const муз=await page.evaluate(()=>{
   const нет=Object.values(MUSIC_TRACK).filter(r=>!SOUND_BANK[r]);
+  settings.bgMusic=1; /* темы мест звучат только по выбору игрока */
   Music.stop();
   Music.start("town");
   const тема=Music.track;

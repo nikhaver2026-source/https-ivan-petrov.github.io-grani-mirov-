@@ -28,7 +28,7 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   const oo=SFX.prototype.osc,on=SFX.prototype.noise;let синт=0;
   SFX.prototype.osc=function(){синт++;return oo.apply(this,arguments);};
   SFX.prototype.noise=function(){синт++;return on.apply(this,arguments);};
-  const безТемы=[],рисуют=[];
+  const безТемы=[],рисуют=[];settings.bgMusic=1;
   for(const k of ключи){
    const до=синт;Music.stop();Music.start(k);
    if(!Music.track)безТемы.push(k);

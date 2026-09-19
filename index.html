@@ -137,16 +137,21 @@ h3{color:var(--acc2);margin:14px 0 6px;font-size:1.05rem;}
  <h3>Переключатели</h3>
  <label class="opt"><input type="checkbox" id="setSpeech" checked><span>🔊 <b>Озвучка</b><small>Встроенная речь игры: работает без VoiceOver и TalkBack</small></span></label>
  <label class="opt"><input type="checkbox" id="setEffects" checked><span>🎵 <b>Эффекты</b><small>Шаги, толпа, маяки и прочие звуки</small></span></label>
- <label class="opt"><input type="checkbox" id="setMusic" checked><span>🎼 <b>Музыка</b><small>Фоновая музыка локаций</small></span></label>
+ <label class="opt"><input type="checkbox" id="setMusic" checked><span>🎼 <b>Музыка событий</b><small>Новый уровень, дела, награды, достижения, владыки. Музыка — событие, а не подложка</small></span></label>
+ <label class="opt"><input type="checkbox" id="setBgMusic"><span>🎻 <b>Фоновая музыка мест</b><small>Темы местностей и глубин подложкой. По умолчанию выключено: место слышно звуками</small></span></label>
  <label class="opt"><input type="checkbox" id="setSubs" checked><span>💬 <b>Субтитры звуков</b><small>Для слабослышащих игроков</small></span></label>
  <h3>Громкость и скорость</h3>
  <p class="hint">🎧 Пространственный эмбиент, многослойная реверберация, динамический ветер, дождь, толпа, стерео-маяки объектов и акустика локации. Аудио генерируется в реальном времени.</p>
  <label class="opt">🗣️ Скорость озвучки <input type="range" id="setRate" min="0.6" max="6" step="0.2" data-tap-step="0.2" value="1"><span id="vRate">1.0×</span></label>
+ <label class="opt">🎚️ Общая громкость <input type="range" id="setMasterVol" min="0" max="100" value="100"><span id="vMaster">100%</span></label>
  <label class="opt">🔊 Громкость озвучки <input type="range" id="setVoiceVol" min="0" max="100" value="100"><span id="vVoice">100%</span></label>
  <label class="opt">🎵 Громкость мира <input type="range" id="setFxVol" min="0" max="100" value="100"><span id="vFx">100%</span></label>
  <label class="opt">🍃 Громкость фона <input type="range" id="setAmbVol" min="0" max="100" value="80"><span id="vAmb">80%</span></label>
  <label class="opt">🎼 Громкость музыки <input type="range" id="setMusicVol" min="0" max="100" value="100"><span id="vMusic">100%</span></label>
  <label class="opt">🔔 Громкость меню <input type="range" id="setUiVol" min="0" max="100" value="90"><span id="vUi">90%</span></label>
+ <label class="opt">⚔️ Громкость боя <input type="range" id="setCombatVol" min="0" max="100" value="100"><span id="vCombat">100%</span></label>
+ <label class="opt">✨ Громкость чар <input type="range" id="setMagicVol" min="0" max="100" value="100"><span id="vMagic">100%</span></label>
+ <label class="opt">🗣️ Громкость голосов людей <input type="range" id="setNpcVol" min="0" max="100" value="100"><span id="vNpc">100%</span></label>
  <label class="opt">🎤 Голос <select id="setVoice" aria-label="Выбор голоса"></select></label>
  <h3>⚔️ Сложность</h3>
  <p class="hint" id="diffHint">Мир одинаково честен на любом уровне: меняется не то, что происходит, а мера — сколько бьют, сколько держат, как часто встречаются и сколько стоит поражение.</p>
@@ -503,6 +508,15 @@ const settings=Object.assign({speech:1,effects:1,music:1,subtitles:1,explore:1,f
     приглушить надоевший фон, не оглушив при этом сигналы, было нельзя.
     Каналов теперь пять: голос, мир, фон, музыка и меню. */
  rate:1,voiceVol:1,fxVol:1,musicVol:1,ambVol:0.8,uiVol:0.9,
+ /* ── КАНАЛЫ ПО ТЗ ЗВУКА ──
+    Каналов девять: общий (master), музыка, фон, мир (sfx), голоса людей
+    (npc), речь игры (tts — это voiceVol), бой, меню и чары. У каждого своя
+    громкость, и ни один не роняет другой: скорость и громкость речи не
+    трогают мир, бой не глушит фон, чары не съедают голоса. */
+ masterVol:1,combatVol:1,magicVol:1,npcVol:1,
+ /* Фоновая музыка мест по умолчанию ВЫКЛЮЧЕНА: музыка — событию, а место
+    слышно звуками. Кому нужна подложка, включает её в настройках. */
+ bgMusic:0,
  voice:"",difficulty:"normal"},savedSet);
 /* ── СЛОЖНОСТЬ ──
    Раньше мир был одинаково суров ко всем: числа урона, здоровья тварей,
@@ -589,7 +603,7 @@ safeFn(()=>AudioLife.bind());
 function speechDuck(chan){
  try{if(typeof Speech==="undefined"||!Speech.ducking)return 1;
   const d=Math.max(0,Math.min(1,Number(settings.duck)));
-  return chan==="music"?1-d:chan==="ambient"?1-d*0.5:1;}catch(_){return 1;}}
+  return chan==="music"?1-d:chan==="ambient"?1-d*0.5:chan==="npc"?1-d*0.35:1;}catch(_){return 1;}}
 const Speech={voice:null,keepAlive:null,
  queue:[],current:null,speaking:false,gen:0,seq:0,
  history:[],last:null,ducking:false,adapter:null,_ctx:null,_ctxTimer:null,
@@ -921,6 +935,7 @@ const AE={ctx:null,master:null,fx:null,musicBus:null,dry:null,convolver:null,cac
   const wet=this.ctx.createGain();wet.gain.value=0.5;this.convolver.connect(wet);wet.connect(this.fx);
   this.applyVolumes();return this.ctx;},
  applyVolumes(){if(!this.ctx)return;
+  this.master.gain.setTargetAtTime(0.9*safeFn(()=>Bank.master(),1),this.ctx.currentTime,0.05);
   this.fx.gain.setTargetAtTime(settings.effects?settings.fxVol:0,this.ctx.currentTime,0.05);
   this.musicBus.gain.setTargetAtTime(settings.music?settings.musicVol*speechDuck("music"):0,this.ctx.currentTime,0.05);
   try{if(typeof Bank!=="undefined")Bank.refresh();}catch(_){}},
@@ -1958,7 +1973,7 @@ function liveInstead(id,opts){
   /* Возвращается сама запись, а не «да»: тогда её можно остановить по «Все
      звуки остановлены», как останавливался синтезированный слой. */
   return safeFn(()=>Bank.play(роль,{seed:сид,gain:o.gain===undefined?0.55:o.gain,
-   maxSec:o.dur||o.maxSec||5}),null)||false;
+   maxSec:o.dur||o.maxSec||5,kind:o.kind||"fx",prio:o.prio}),null)||false;
  }catch(_){return false;}}
 /* Короткий сигнал интерфейса — тоже запись. Высота сигнала переводится в
    выбор записи: низкий — глухой стук, высокий — звонкий. */
@@ -2210,9 +2225,9 @@ function eventTheme(id,opts){
  const o=opts||{};
  const сид=o.seed===undefined?(Number(G.day)||1):Number(o.seed)||0;
  const гр=o.gain===undefined?0.72:o.gain;
- safeFn(()=>Bank.play(т.роль,{seed:сид,gain:гр,maxSec:o.maxSec||6}));
+ safeFn(()=>Bank.play(т.роль,{seed:сид,gain:гр,maxSec:o.maxSec||6,kind:"jingle",prio:"high"}));
  (т.следом||[]).forEach(([роль,через])=>setTimeout(()=>safeFn(()=>
-  Bank.play(роль,{seed:сид+1,gain:гр*0.85,maxSec:o.maxSec||6})),через));
+  Bank.play(роль,{seed:сид+1,gain:гр*0.85,maxSec:o.maxSec||6,kind:"jingle",prio:"high"})),через));
  return true;}
 
 /* Пояс глубины по ярусу: та же лестница, что у света и тьмы в описаниях. */
@@ -2226,10 +2241,14 @@ function depthTrack(depth){
  if(d<=80)return "depth_4";
  return "depth_5";}
 const Music={sfx:null,timers:[],current:null,track:null,
+ /* Фон места звучит только если игрок сам включил «Фоновая музыка мест»:
+    по ТЗ музыка — событие, а место слышно звуками. До начала игры (заглавие)
+    тема играет как прежде. */
+ allowed(){try{return !!settings.bgMusic||!gameActive();}catch(_){return true;}},
  start(terrain){
   if(this.current===terrain&&(this.sfx||this.track))return;
   this.stop();
-  if(!settings.music)return;
+  if(!settings.music||!this.allowed())return;
   /* Сперва настоящая запись; синтез — если её нет. */
   const role=MUSIC_TRACK[terrain];
   if(role&&Bank.enabled&&Bank.has(role)&&Bank.loop("score",role,{seed:0,gain:0.55,kind:"music"})){
@@ -7076,7 +7095,66 @@ const SOUND_BANK={
  wild_raven:{f:["wild/wild_raven_01.ogg"],d:"Вороньё"},
  wild_river:{f:["wild/wild_river_01.ogg"],d:"Река"},
  wild_wind:{f:["wild/wild_wind_01.ogg"],d:"Ветер в поле"},
- rift_tick:{f:["nat/rift_tick_01.flac"],d:"Тик разлома: сбой в ткани мира"},};const Bank={
+ rift_tick:{f:["nat/rift_tick_01.flac"],d:"Тик разлома: сбой в ткани мира"},};/* ════════════════════════════════════════════════════════════════════════
+   СИСТЕМА ВАРИАТИВНОСТИ (Audio Variation System)
+
+   У одного события несколько записей, и подряд одна и та же не звучит:
+   на каждую роль хранится хвост последних вариантов, и следующий берётся
+   мимо них. Для ролей с двумя записями это чередование, для ролей с
+   восемью — почти никогда не слышно повтора. Сверх того — небольшой разброс
+   скорости: даже единственная запись звучит каждый раз чуть иначе.
+   ════════════════════════════════════════════════════════════════════════ */
+const Vary={
+ hist:new Map(),MAX:3,
+ /* Индекс варианта из n, минуя последние сыгранные. */
+ pick(role,n){
+  n=Number(n)||0;if(n<=1){if(n===1)this._push(role,0);return 0;}
+  const h=this.hist.get(role)||[];
+  const avoid=new Set(h.slice(-Math.min(this.MAX,n-1)));
+  let i=Math.floor(Math.random()*n),tries=0;
+  while(avoid.has(i)&&++tries<16)i=Math.floor(Math.random()*n);
+  if(avoid.has(i)){for(let k=0;k<n;k++)if(!avoid.has(k)){i=k;break;}}
+  this._push(role,i);return i;},
+ _push(role,i){const h=this.hist.get(role)||[];h.push(i);if(h.length>8)h.shift();this.hist.set(role,h);},
+ file(role){const b=SOUND_BANK[role];if(!b||!b.f.length)return null;return b.f[this.pick(role,b.f.length)];},
+ last(role){const h=this.hist.get(role);return h&&h.length?h[h.length-1]:-1;},
+ /* Разброс скорости: pitchVar — доля (0.06 = ±6 %). Без него — ровно 1. */
+ rate(o){const v=Number(o&&o.pitchVar)||0;return v>0?1+(Math.random()*2-1)*v:0;},
+ reset(role){if(role)this.hist.delete(role);else this.hist.clear();}
+};
+/* ════════════════════════════════════════════════════════════════════════
+   ПРИОРИТЕТ ГОЛОСОВ
+
+   Одновременно звучащих коротких записей не больше MAX. Когда их больше,
+   уступает не случайный и не самый старый, а самый неважный и самый дальний:
+   ветер в поле уходит раньше удара по щиту, дальняя овца раньше близкой
+   двери. Приоритеты: high — событие, опасность, удар, смерть, награда;
+   mid — люди, двери, вещи, бой, чары; low — фон, дальняя живность, ветер.
+   ════════════════════════════════════════════════════════════════════════ */
+const PRIO={high:2,mid:1,low:0};
+const Voices={
+ MAX:14,list:[],dropped:0,
+ prioOf(kind,explicit){
+  if(explicit&&PRIO[explicit]!==undefined)return PRIO[explicit];
+  const c=safeFn(()=>Bank.chanOf(kind),"world");
+  return c==="music"||c==="ui"||c==="combat"?2:c==="ambient"?0:1;},
+ /* Чем меньше счёт, тем первее уступает. */
+ score(r){return r.prio*1000-Math.min(20,Number(r.dist)||0)*20-Math.min(30,(Date.now()-r.t)/1000)*3;},
+ add(rec){
+  this.list=this.list.filter(r=>r.el&&!r.el.ended&&!r.el.__stopped);
+  this.list.push(rec);
+  while(this.list.length>this.MAX){
+   let worst=null,ws=Infinity;
+   for(const r of this.list){const sc=this.score(r);if(sc<ws){ws=sc;worst=r;}}
+   if(!worst)break;
+   this.dropped++;this.remove(worst);}
+  return rec;},
+ remove(r){try{if(r.stop)r.stop();else Bank.kill(r.el);}catch(_){}this.forget(r);},
+ forget(r){this.list=this.list.filter(x=>x!==r);},
+ count(){this.list=this.list.filter(r=>r.el&&!r.el.ended&&!r.el.__stopped);return this.list.length;},
+ stopAll(){this.list.slice().forEach(r=>this.remove(r));this.list=[];}
+};
+const Bank={
  base:"sounds/",
  enabled:true,          /* выключается, только если ни одна запись так и не загрузилась */
  fails:0,plays:0,       /* счётчики: банк «отсутствует», лишь когда всё подряд не читается */
@@ -7094,19 +7172,27 @@ const SOUND_BANK={
     «monster», «city» и прочие). Поэтому канал не угадывается, а берётся из
     таблицы, а всё неизвестное честно считается миром: новый вид источника
     зазвучит на общих правах, а не провалится в тишину. */
- CHAN:{music:"music",score:"music",
+ CHAN:{music:"music",score:"music",jingle:"music",
   ambient:"ambient",amb:"ambient",place:"ambient",
   ui:"ui",menu:"ui",
+  combat:"combat",battle:"combat",
+  magic:"magic",spell:"magic",
+  npc:"npc",voice:"npc",
   fx:"world",world:"world"},
  chanOf(kind){return this.CHAN[kind]||"world";},
+ /* Общая громкость — множитель поверх всех каналов. */
+ master(){try{const m=Number(settings.masterVol);return Number.isFinite(m)?Math.max(0,Math.min(1,m)):1;}catch(_){return 1;}},
  vol(kind){
   try{
-   const c=this.chanOf(kind);
-   if(c==="music")return settings.music?Math.min(1,(Number(settings.musicVol)||0.5))*speechDuck("music"):0;
+   const c=this.chanOf(kind),m=this.master();
+   if(c==="music")return settings.music?Math.min(1,(Number(settings.musicVol)||0.5))*speechDuck("music")*m:0;
    if(!settings.effects)return 0;
-   if(c==="ambient")return Math.min(1,Number(settings.ambVol)===0?0:(Number(settings.ambVol)||0.8))*speechDuck("ambient")*anomalyGain("ambient");
-   if(c==="ui")return Math.min(1,Number(settings.uiVol)===0?0:(Number(settings.uiVol)||0.9));
-   return Math.min(1,Number(settings.fxVol)||0.7)*anomalyGain("world");
+   if(c==="ambient")return Math.min(1,Number(settings.ambVol)===0?0:(Number(settings.ambVol)||0.8))*speechDuck("ambient")*anomalyGain("ambient")*m;
+   if(c==="ui")return Math.min(1,Number(settings.uiVol)===0?0:(Number(settings.uiVol)||0.9))*m;
+   if(c==="combat")return Math.min(1,Number(settings.combatVol)===0?0:(Number(settings.combatVol)||1))*anomalyGain("world")*m;
+   if(c==="magic")return Math.min(1,Number(settings.magicVol)===0?0:(Number(settings.magicVol)||1))*anomalyGain("world")*m;
+   if(c==="npc")return Math.min(1,Number(settings.npcVol)===0?0:(Number(settings.npcVol)||1))*speechDuck("npc")*m;
+   return Math.min(1,Number(settings.fxVol)||0.7)*anomalyGain("world")*m;
   }catch(_){return 0.5;}},
  /* ── ЗАТИШЬЕ И ПРОБУЖДЕНИЕ ──
     Уход из игры не должен оставлять за спиной играющий лес. Петли ставятся на
@@ -7117,10 +7203,13 @@ const SOUND_BANK={
   this.shots.forEach(a=>{try{a.pause();}catch(_){}});},
  wake(){
   this.loops.forEach(c=>{try{const pr=c.el.play();if(pr&&pr.catch)pr.catch(()=>{});}catch(_){}});},
- make(file,volume,loop){
+ make(file,volume,loop,rate){
   try{
    const a=new Audio(this.url(file));
    a.loop=!!loop;a.preload="auto";a.volume=Math.max(0,Math.min(1,volume));
+   /* Скорость — это высота и вес: тяжёлый шаг чуть ниже, быстрый чуть выше.
+      Небольшой разброс делает два одинаковых файла двумя разными звуками. */
+   if(rate&&rate!==1){try{a.preservesPitch=false;a.mozPreservesPitch=false;a.playbackRate=Math.max(0.5,Math.min(2,rate));}catch(_){}}
    /* Раньше одна осечка выключала весь банк — и, что хуже, осечку вызывала сама
       игра: остановка записи через src="" порождает событие ошибки. Из-за этого
       натуральные звуки замолкали через несколько нажатий, и оставался синтез.
@@ -7151,7 +7240,7 @@ const SOUND_BANK={
   if(cur)this.kill(cur.el);
   this.loops.delete(channel);},
  stopAll(){[...this.loops.keys()].forEach(k=>this.stop(k));
-  this.shots.forEach(a=>this.kill(a));this.shots=[];},
+  this.shots.forEach(a=>this.kill(a));this.shots=[];safeFn(()=>Voices.stopAll());},
  /* Можно ли развести запись по сторонам: для этого её нужно пропустить через
     звуковую шину, а браузер разрешает это только для страницы, открытой по сети.
     Открытой одним файлом игре остаётся синтез — он панораму умеет всегда. */
@@ -7181,27 +7270,35 @@ const SOUND_BANK={
    return el;
   }catch(e){return null;}},
  /* Запись по прямому пути: реплики чудовищ разложены по видам, а не по ролям. */
- file(path,{gain=1,kind="fx",maxSec=0}={}){
+ /* Записать короткий звук в общий список голосов: приоритет и дальность
+    решают, кто уступит место, когда голосов станет слишком много. */
+ _shot(el,kind,o,maxSec){
+  this.shots.push(el);
+  const rec={el,kind,prio:Voices.prioOf(kind,o.prio),dist:Number(o.dist)||0,t:Date.now(),
+   stop:()=>{Bank.kill(el);Bank.shots=Bank.shots.filter(x=>x!==el);}};
+  Voices.add(rec);
+  el.addEventListener("ended",()=>{this.shots=this.shots.filter(x=>x!==el);Voices.forget(rec);},{once:true});
+  if(maxSec>0)setTimeout(()=>{this.kill(el);
+   this.shots=this.shots.filter(x=>x!==el);Voices.forget(rec);},maxSec*1000);
+  return el;},
+ file(path,o={}){
+  const {gain=1,kind="fx",maxSec=0,rate=0}=o;
   if(!this.enabled||!path)return null;
-  const el=this.make(path,this.vol(kind)*gain,false);
+  const el=this.make(path,this.vol(kind)*gain,false,rate||Vary.rate(o));
   if(!el)return null;
-  this.shots.push(el);
-  if(this.shots.length>4)this.kill(this.shots.shift());
-  el.addEventListener("ended",()=>{this.shots=this.shots.filter(x=>x!==el);},{once:true});
-  if(maxSec>0)setTimeout(()=>{this.kill(el);
-   this.shots=this.shots.filter(x=>x!==el);},maxSec*1000);
-  return el;},
- /* Короткая запись поверх фона: событие, заклинание, голос бога. */
- play(role,{seed=0,gain=1,kind="fx",maxSec=0}={}){
+  return this._shot(el,kind,o,maxSec);},
+ /* Короткая запись поверх фона: событие, заклинание, голос бога.
+    Вариант берёт система вариативности: не тот, что звучал только что.
+    fixed:true оставляет прежний выбор по семени — для того, что должно
+    звучать одинаково на одном и том же месте. */
+ play(role,o={}){
+  const {seed=0,gain=1,kind="fx",maxSec=0,rate=0,fixed=false}=o;
   if(!this.enabled||!this.has(role))return null;
-  const el=this.make(this.pick(role,seed),this.vol(kind)*gain,false);
+  const file=fixed?this.pick(role,seed):Vary.file(role);
+  const el=this.make(file,this.vol(kind)*gain,false,rate||Vary.rate(o));
   if(!el)return null;
-  this.shots.push(el);
-  if(this.shots.length>4)this.kill(this.shots.shift());
-  el.addEventListener("ended",()=>{this.shots=this.shots.filter(x=>x!==el);},{once:true});
-  if(maxSec>0)setTimeout(()=>{this.kill(el);
-   this.shots=this.shots.filter(x=>x!==el);},maxSec*1000);
-  return el;},
+  el.__role=role;el.__file=file;
+  return this._shot(el,kind,o,maxSec);},
  /* Громкость подхватывается сразу после смены настроек. */
  refresh(){this.loops.forEach(c=>{try{c.el.volume=Math.max(0,Math.min(1,this.vol(c.kind)*c.gain));}catch(_){}});}
 };
@@ -7467,7 +7564,34 @@ const Spatial={
   while(this.live.length>max){const o=this.live.shift();try{o.stop();}catch(_){}}},
  /* Проиграть запись в точке пространства. Возвращает true, если получилось:
     вызывающий тогда не дублирует звук плоским способом. */
- at(path,dx,dy,{dz=0,gain=1,maxSec=3,roll=1.1}={}){
+ /* Сколько преград между слушателем и источником: стены считаются по
+    прямой на плане уровня, двери и ворота — вполовину, чужой ярус — как
+    перекрытие. Снаружи преграждают постройки, горы и — мягче — лес. */
+ occlusion(dx,dy,dz){
+  try{
+   dx=Number(dx)||0;dy=Number(dy)||0;dz=Number(dz)||0;
+   let walls=0,doors=0,floors=0;
+   const n=Math.max(Math.abs(dx),Math.abs(dy));
+   if(G.place){
+    if(Math.abs(dz)>=1)floors=Math.min(2,Math.abs(dz));
+    const lvl=curLevel();
+    if(lvl&&n>=2){const p=G.place;
+     for(let i=1;i<n;i++){
+      const x=Math.round(p.x+dx*i/n),y=Math.round(p.y+dy*i/n);
+      const t=tileAt(lvl,x,y);
+      if(t==="#")walls++;else if(t==="+"||t==="G"||t==="D")doors++;}}}
+   else if(!G.ship&&n>=2&&!(Number(G.alt)>0)){
+    for(let i=1;i<n;i++){
+     const x=Math.round(G.x+dx*i/n),y=Math.round(G.y+dy*i/n);
+     if(x<0||y<0||x>=WORLD||y>=WORLD)continue;
+     const c=cellContent(x,y);
+     if(c.structure)walls+=0.5;
+     const t=c.terrain&&c.terrain[0];
+     if(t==="mountains")walls+=0.6;else if(t==="forest")doors+=0.5;}}
+   return Math.min(4,walls+doors*0.4+floors*1.5);
+  }catch(_){return 0;}},
+ lastOccl:0,
+ at(path,dx,dy,{dz=0,gain=1,maxSec=3,roll=1.1,kind="fx",prio=null,occl=null}={}){
   if(!this.on()||!path)return false;
   /* Расстояние теперь объёмное: поднявшись на четыре клетки, игрок и вправду
      удалился от земли на четыре клетки, и дальние наземные голоса до него уже
@@ -7482,14 +7606,26 @@ const Spatial={
     if(Bank.plays===0&&Bank.fails>=4)Bank.enabled=false;},{once:true});
    el.addEventListener("loadeddata",()=>{Bank.plays++;Bank.fails=0;},{once:true});
    const src=ctx.createMediaElementSource(el);
-   const g=ctx.createGain();g.gain.value=Math.max(0,Math.min(1,Bank.vol("fx")*gain));
+   /* Преграды: за стеной звук глуше и тише, за перекрытием — ещё глуше;
+      кузница за стеной слышна иначе, чем кузница рядом. */
+   const прегр=occl===null?this.occlusion(dx,dy,dz):Math.max(0,Number(occl)||0);
+   this.lastOccl=прегр;
+   const g=ctx.createGain();g.gain.value=Math.max(0,Math.min(1,Bank.vol(kind)*gain*Math.pow(0.72,прегр)));
    const pan=this.node(dx,dy,dz,roll);
-   src.connect(pan);pan.connect(g);
-   /* Сухой путь и путь через отзвук помещения — доля второго задана акустикой. */
-   g.connect(Room.dry);g.connect(Room.conv);
-   const rec={el,src,g,pan,stop(){try{this.el.__stopped=true;this.el.pause();
-     this.src.disconnect();this.pan.disconnect();this.g.disconnect();}catch(_){}}};
-   this.live.push(rec);this.trim(10);
+   let lp=null;
+   if(прегр>0){lp=ctx.createBiquadFilter();lp.type="lowpass";lp.frequency.value=Math.max(300,9000/(1+прегр*2.2));lp.Q.value=0.5;
+    src.connect(lp);lp.connect(pan);}
+   else src.connect(pan);
+   pan.connect(g);
+   /* Сухой путь и путь через отзвук помещения — доля второго задана акустикой.
+      За преградой прямого звука почти нет: остаётся в основном отзвук. */
+   g.connect(Room.dry);
+   const wet=ctx.createGain();wet.gain.value=прегр>0?Math.min(1.6,1+прегр*0.3):1;g.connect(wet);wet.connect(Room.conv);
+   const rec={el,src,g,pan,lp,wet,occl:прегр,kind,dist,prio:Voices.prioOf(kind,prio),t:Date.now(),
+    stop(){try{this.el.__stopped=true;this.el.pause();
+     this.src.disconnect();this.pan.disconnect();this.g.disconnect();if(this.lp)this.lp.disconnect();this.wet.disconnect();}catch(_){}
+     Spatial.live=Spatial.live.filter(x=>x!==this);Voices.forget(this);}};
+   this.live.push(rec);this.trim(10);Voices.add(rec);
    const pr=el.play();if(pr&&pr.catch)pr.catch(()=>{});
    const life=Math.max(0.4,maxSec||3);
    const fade=Math.min(0.3,life*0.3);
@@ -7501,7 +7637,7 @@ const Spatial={
  /* То же, но по роли банка: вариант выбирается семенем. */
  role(role,dx,dy,opts={}){
   if(!Bank.enabled||!Bank.has(role))return false;
-  const f=Bank.pick(role,opts.seed||Math.floor(Math.random()*97));
+  const f=opts.fixed?Bank.pick(role,opts.seed||0):Vary.file(role);
   return f?this.at(f,dx,dy,opts):false;},
  stopAll(){this.live.forEach(o=>{try{o.stop();}catch(_){}});this.live=[];}
 };
@@ -8011,7 +8147,7 @@ function foeSpot(){
    запасным: без объёмного звука игра звучит как прежде. */
 function foeCue(role,opts){
  if(!role)return false;
- const o=Object.assign({seed:Math.floor(Math.random()*97),gain:0.7,maxSec:4},opts||{});
+ const o=Object.assign({seed:Math.floor(Math.random()*97),gain:0.7,maxSec:4,kind:"combat"},opts||{});
  if(G.inCombat&&G.combat){
   const s=safeFn(()=>foeSpot(),null);
   if(s&&safeFn(()=>Spatial.role(role,s.dx,s.dy,Object.assign({},o,{dz:s.dz})),false))return true;}
@@ -8055,8 +8191,8 @@ function bankMonsterCue(m,cue,vol){
   /* Та же точка боя: запись зверя приходит оттуда, где зверь. */
   if(G.inCombat&&G.combat){
    const sp=safeFn(()=>foeSpot(),null);
-   if(sp&&safeFn(()=>Spatial.at(file,sp.dx,sp.dy,{dz:sp.dz,gain:vol||0.85,maxSec:6}),false))return true;}
-  return Bank.file(file,{gain:vol||0.85,maxSec:6});
+   if(sp&&safeFn(()=>Spatial.at(file,sp.dx,sp.dy,{dz:sp.dz,gain:vol||0.85,maxSec:6,kind:"combat"}),false))return true;}
+  return Bank.file(file,{gain:vol||0.85,maxSec:6,kind:"combat"});
  }catch(_){return null;}
 }
 
@@ -11304,7 +11440,7 @@ function soulLine(n,полно){
 function npcCue(n,role,opts){
  try{
   if(!settings.effects||!role||!n)return false;
-  const o=Object.assign({gain:0.5,maxSec:4,seed:(n.x|0)+(n.y|0)},opts||{});
+  const o=Object.assign({gain:0.5,maxSec:4,seed:(n.x|0)+(n.y|0),kind:"npc"},opts||{});
   const p=G.place;
   const dx=p?((Number(n.px)||p.x)-p.x):((n.x|0)-(G.x|0));
   const dy=p?((Number(n.py)||p.y)-p.y):((n.y|0)-(G.y|0));
@@ -24523,7 +24659,12 @@ function useHere(){
   default:{
    const near=nearFeatures(1);
    if(near.length){narrate(`Под ногами пусто. Рядом: ${near.map(o=>`${o.name} на ${o.dir}е`).join("; ")}.`);pingSurroundings(1,3);return false;}
-   narrate("Здесь пусто. Идите дальше или осмотритесь свайпом двумя пальцами в сторону.");
+   /* Пусто под ногами и рядом — тогда подсказка, где спуск: ступени вниз
+      слышны из-под ног с их стороны, как и прежний жест «вниз». */
+   const спуск=nearFeatures(6).filter(o=>o.t===">");
+   if(спуск.length){narrate(`Здесь пусто. Лестница вниз: ${спуск[0].d} ${plural(спуск[0].d,"шаг","шага","шагов")}, ${спуск[0].dir}.`);
+    safeFn(()=>beaconAt("stairs_down",спуск[0].dx,спуск[0].dy,-1,спуск[0].d));return false;}
+   narrate("Здесь пусто. Идите дальше или осмотритесь свайпом тремя пальцами влево.");
    return false;}}
 }
 /* ── Голубиная почта ──
@@ -26091,22 +26232,22 @@ function startCombat(c,opts){
  safeFn(()=>playRealMonsterCue(m,"emerge",0.65));
  /* Нежить приходит с голосами без тел. */
  if(["wraith","banshee","ghost"].includes(m.id))
-  safeFn(()=>setTimeout(()=>safeFn(()=>Bank.play("wraith_voice",{seed:m.lvl,gain:0.5,maxSec:6})),320));
+  safeFn(()=>setTimeout(()=>safeFn(()=>Bank.play("wraith_voice",{kind:"combat",seed:m.lvl,gain:0.5,maxSec:6})),320));
  /* Громада ступает так, что слышно землю. */
  if(["golem","troll","ogre","treant","direbear"].includes(m.id))
-  safeFn(()=>setTimeout(()=>safeFn(()=>Bank.play("brute_step",{seed:m.lvl,gain:0.55,maxSec:4})),260));
+  safeFn(()=>setTimeout(()=>safeFn(()=>Bank.play("brute_step",{kind:"combat",seed:m.lvl,gain:0.55,maxSec:4})),260));
  /* Чем крупнее противник, тем ниже голос, которым мир его объявляет:
     туба для громад, виолончель для опасных, ничего лишнего для мелочи. */
  safeFn(()=>{const big=(Number(m.lvl)||1)>=Math.max(6,G.level+3);
   const mid=(Number(m.lvl)||1)>=G.level;
-  if(big)setTimeout(()=>safeFn(()=>Bank.play("brute_roar",{seed:m.lvl,gain:0.75,maxSec:6})),200);
-  else if(mid)setTimeout(()=>safeFn(()=>Bank.play("beast_growl",{gain:0.55,maxSec:5})),240);
+  if(big)setTimeout(()=>safeFn(()=>Bank.play("brute_roar",{kind:"combat",seed:m.lvl,gain:0.75,maxSec:6})),200);
+  else if(mid)setTimeout(()=>safeFn(()=>Bank.play("beast_growl",{kind:"combat",gain:0.55,maxSec:5})),240);
   /* Литавры на крупного противника; в воюющей земле — набат похода. */
-  if(big)setTimeout(()=>safeFn(()=>Bank.play("throng_fight",{seed:m.lvl,gain:0.6,maxSec:5})),420);
+  if(big)setTimeout(()=>safeFn(()=>Bank.play("throng_fight",{kind:"combat",seed:m.lvl,gain:0.6,maxSec:5})),420);
   /* «Воюющая земля» — та, у которой хоть с одним соседом война. */
   const war=safeFn(()=>{const i=empireIndexAt(G.x,G.y);
    return EMPIRES.some((_,j)=>j!==i&&relationWord(relationAt(i,j,G.day))==="война");},false);
-  if(war)setTimeout(()=>safeFn(()=>Bank.play("throng_march",{seed:G.day,gain:0.5,maxSec:5})),640);});
+  if(war)setTimeout(()=>safeFn(()=>Bank.play("throng_march",{kind:"combat",seed:G.day,gain:0.5,maxSec:5})),640);});
  document.getElementById("cbTitle").textContent=`⚔️ ${m.n}, уровень ${m.lvl}`;
  if(G.combat)G.combat.monsterTimer=setTimeout(function pulse(){
   if(!G.inCombat||!G.combat)return;
@@ -26179,24 +26320,24 @@ function weaponVoiceRole(){
 function playWeaponCombatSfx(hit,dir="N",dmg=6){try{AE.ensure();
  /* Взмах и попадание — настоящими записями; синтез остаётся, если банка нет. */
  const pan=dir==="E"?0.35:dir==="W"?-0.35:0;
- safeFn(()=>Bank.play(weaponVoiceRole(),{seed:Math.floor(Math.random()*97),gain:0.45,maxSec:2.5}));
+ safeFn(()=>Bank.play(weaponVoiceRole(),{kind:"combat",seed:Math.floor(Math.random()*97),gain:0.45,maxSec:2.5}));
  /* Живой замах героя и живой удар оружия поверх прочего. */
- safeFn(()=>Bank.play("hero_swing",{seed:Math.floor(Math.random()*97),gain:0.5,maxSec:2}));
+ safeFn(()=>Bank.play("hero_swing",{kind:"combat",seed:Math.floor(Math.random()*97),gain:0.5,maxSec:2}));
  if(hit)setTimeout(()=>safeFn(()=>{
   const w=weaponVoiceRole();
   const r=w==="bow_release"?"battle_arrowhit":w==="axe_chop"?"battle_stab":
    w==="spear_thrust"?"battle_pike":"battle_sword";
-  Bank.play(r,{seed:Math.floor(Math.random()*97),gain:0.5,maxSec:2});}),140);
+  Bank.play(r,{kind:"combat",seed:Math.floor(Math.random()*97),gain:0.5,maxSec:2});}),140);
  /* Здесь стоял ещё один слой — «battle_flesh». Такой роли в банке нет и не
     было, поэтому слой все эти дни молчал. Глухой удар по телу и так звучит
     ниже (dull_hit / metal_hit), второй раз он не нужен. */
  /* Стрела попадает в цель иначе, чем клинок: свист и глухой удар древка. */
  if(weaponVoiceRole()==="bow_release")safeFn(()=>{
   /* Выстрел из лука слышен в три такта: тетива, полёт, попадание. */
-  Bank.play("battle_bow",{seed:Math.floor(Math.random()*97),gain:0.6,maxSec:2});
-  setTimeout(()=>safeFn(()=>Bank.play("battle_arrowfly",{seed:Math.floor(Math.random()*97),gain:0.45,maxSec:2})),120);
+  Bank.play("battle_bow",{kind:"combat",seed:Math.floor(Math.random()*97),gain:0.6,maxSec:2});
+  setTimeout(()=>safeFn(()=>Bank.play("battle_arrowfly",{kind:"combat",seed:Math.floor(Math.random()*97),gain:0.45,maxSec:2})),120);
   if(hit)Play.start("ev","arrow_hit",{dur:2});});
- if(weaponVoiceRole()==="spear_thrust")safeFn(()=>Bank.play("battle_jav",{seed:Math.floor(Math.random()*97),gain:0.5,maxSec:2}));
+ if(weaponVoiceRole()==="spear_thrust")safeFn(()=>Bank.play("battle_jav",{kind:"combat",seed:Math.floor(Math.random()*97),gain:0.5,maxSec:2}));
  if(hit)setTimeout(()=>safeFn(()=>Bank.play((Number(dmg)||6)>=12?"metal_hit":"dull_hit",
   {seed:Math.floor(Math.random()*97),gain:0.5,maxSec:2})),150);
  const natSwing=natShot("swing",pan,0.7);
@@ -26219,8 +26360,8 @@ function playWoundSfx(dmg=6){try{AE.ensure();
  safeFn(()=>natShot("hit_light",0,0.6));
  /* Живой голос героя: ему больно, и это слышно. */
  /* Голос героя выбирается по народу и остаётся тем же всю игру. */
- safeFn(()=>Bank.play(heroVoiceFemale()?"hero_pain_f":"hero_pain_m",{seed:dmg,gain:0.55,maxSec:2}));
- safeFn(()=>Bank.play("battle_shield",{seed:dmg,gain:0.4,maxSec:2}));
+ safeFn(()=>Bank.play(heroVoiceFemale()?"hero_pain_f":"hero_pain_m",{kind:"combat",seed:dmg,gain:0.55,maxSec:2}));
+ safeFn(()=>Bank.play("battle_shield",{kind:"combat",seed:dmg,gain:0.4,maxSec:2}));
  /* Доспех отвечает на удар: лязг и глухой толчок в щит. */
  safeFn(()=>Bank.play((Number(dmg)||6)>=12?"oc_shield_metal":((Number(dmg)||0)%2?"armor_clank":"lug_metal"),
   {seed:Math.floor(Math.random()*97),gain:0.45,maxSec:2}));
@@ -26250,14 +26391,14 @@ function weaponKind(){
 function weaponSwingSound(hit){
  try{
   const k=weaponKind(),seed=(Number(G.x)||0)*7+(Number(G.y)||0)*13+(Number(G.hp)||0);
-  if(k==="bow"){Bank.play("oc_bow_shoot",{seed,gain:0.6,maxSec:2});
-   setTimeout(()=>safeFn(()=>Bank.play("oc_arrow_shoot",{seed,gain:0.5,maxSec:2})),120);
-   setTimeout(()=>safeFn(()=>Bank.play(hit?"oc_projectile_hit":"oc_arrow_ground",{seed,gain:0.55,maxSec:2})),420);return true;}
-  if(k==="javelin"){Bank.play("oc_javelin_throw",{seed,gain:0.6,maxSec:2});
-   setTimeout(()=>safeFn(()=>Bank.play(hit?"oc_projectile_hit":"oc_javelin_ground",{seed,gain:0.55,maxSec:2})),380);return true;}
-  Bank.play(k==="staff"?"oc_swing":"lug_whoosh",{seed,gain:0.5,maxSec:1.5});
-  setTimeout(()=>safeFn(()=>Bank.play(!hit?"lug_whoosh_hit":k==="staff"?(seed%2?"lug_staff":"oc_weapon_hit"):k==="knife"?"lug_knife_slice":"lug_sword",{seed,gain:0.6,maxSec:2})),160);
-  if(hit&&k!=="staff")setTimeout(()=>safeFn(()=>Bank.play("lug_flesh",{seed,gain:0.4,maxSec:1.5})),260);
+  if(k==="bow"){Bank.play("oc_bow_shoot",{kind:"combat",seed,gain:0.6,maxSec:2});
+   setTimeout(()=>safeFn(()=>Bank.play("oc_arrow_shoot",{kind:"combat",seed,gain:0.5,maxSec:2})),120);
+   setTimeout(()=>safeFn(()=>Bank.play(hit?"oc_projectile_hit":"oc_arrow_ground",{kind:"combat",seed,gain:0.55,maxSec:2})),420);return true;}
+  if(k==="javelin"){Bank.play("oc_javelin_throw",{kind:"combat",seed,gain:0.6,maxSec:2});
+   setTimeout(()=>safeFn(()=>Bank.play(hit?"oc_projectile_hit":"oc_javelin_ground",{kind:"combat",seed,gain:0.55,maxSec:2})),380);return true;}
+  Bank.play(k==="staff"?"oc_swing":"lug_whoosh",{kind:"combat",seed,gain:0.5,maxSec:1.5});
+  setTimeout(()=>safeFn(()=>Bank.play(!hit?"lug_whoosh_hit":k==="staff"?(seed%2?"lug_staff":"oc_weapon_hit"):k==="knife"?"lug_knife_slice":"lug_sword",{kind:"combat",seed,gain:0.6,maxSec:2})),160);
+  if(hit&&k!=="staff")setTimeout(()=>safeFn(()=>Bank.play("lug_flesh",{kind:"combat",seed,gain:0.4,maxSec:1.5})),260);
   return true;}catch(_){return false;}}
 function fight(a){const cb=G.combat;if(!cb)return;const m=cb.m;
  /* ── Разрыв высот ──
@@ -26441,18 +26582,18 @@ function victory(){const cb=G.combat,m=cb.m;
  safeFn(()=>playRealMonsterCue(m,"death",0.75));
  /* Разбойники и корсары — люди, и умирают они по-человечески. */
  safeFn(()=>{if(["bandit","pirate","slaver"].includes(m.id))
-  Bank.play(Math.random()<0.5?"throng_die_m":"throng_die_f",{seed:m.lvl,gain:0.6,maxSec:4});});
+  Bank.play(Math.random()<0.5?"throng_die_m":"throng_die_f",{kind:"combat",seed:m.lvl,gain:0.6,maxSec:4});});
  /* Тяжёлый обвал в конце схватки: тварь падает по-настоящему. */
  safeFn(()=>setTimeout(()=>safeFn(()=>natShot("boom",0,0.6)),260));
- safeFn(()=>setTimeout(()=>safeFn(()=>Bank.play("trumpet_victory",{gain:0.7,maxSec:5})),520));
- safeFn(()=>{Bank.play("jingle_win",{gain:0.8});Bank.play("victory",{seed:G.level+(G.xp||0),gain:0.55,maxSec:8});});
+ safeFn(()=>setTimeout(()=>safeFn(()=>Bank.play("trumpet_victory",{kind:"combat",gain:0.7,maxSec:5})),520));
+ safeFn(()=>{Bank.play("jingle_win",{kind:"combat",gain:0.8});Bank.play("victory",{kind:"combat",seed:G.level+(G.xp||0),gain:0.55,maxSec:8});});
  /* Рядовая схватка и настоящая победа не должны звучать одинаково. Тварь
     сильно выше вас — это событие: вступает медь, поднимаются струнные и
     отзывается толпа. Обычный бой закрывается коротким телом на земле. */
  safeFn(()=>{
    const значимо=(Number(m.lvl)||1)>=(Number(G.level)||1)+3;
    if(значимо)eventFanfare(["siege_victory","war_brass","wide_strings","crowd_cheer"],0.6);
-   else setTimeout(()=>safeFn(()=>{Bank.play("lug_splatter",{seed:m.lvl,gain:0.35,maxSec:1});Bank.play("body_fall",{seed:m.lvl,gain:0.45,maxSec:2});}),300);});
+   else setTimeout(()=>safeFn(()=>{Bank.play("lug_splatter",{kind:"combat",seed:m.lvl,gain:0.35,maxSec:1});Bank.play("body_fall",{kind:"combat",seed:m.lvl,gain:0.45,maxSec:2});}),300);});
  UI.fanfare();journal(`Побеждён «${m.n}» ${m.lvl} уровня.`);
  /* Логово в подземелье после победы пустеет и больше не нападает. */
  /* ── СТРАЖ ПАЛ ──
@@ -26465,10 +26606,10 @@ function victory(){const cb=G.combat,m=cb.m;
   safeFn(()=>markGuardianDead(g.bx,g.by,g.depth));
   G.place.pendingGuard=null;стражПал=true;
   safeFn(()=>{
-   Bank.play("es_boom_last",{gain:0.6,maxSec:5});
-   setTimeout(()=>safeFn(()=>Bank.play("ad_gate_close",{gain:0.6,maxSec:5})),500);
+   Bank.play("es_boom_last",{kind:"combat",gain:0.6,maxSec:5});
+   setTimeout(()=>safeFn(()=>Bank.play("ad_gate_close",{kind:"combat",gain:0.6,maxSec:5})),500);
    setTimeout(()=>safeFn(()=>Spatial.role("stairs_down",0,0,{dz:-1,gain:0.7,maxSec:4})
-    ||Bank.play("stairs_down",{gain:0.7,maxSec:4})),900);});}
+    ||Bank.play("stairs_down",{kind:"combat",gain:0.7,maxSec:4})),900);});}
  if(G.place&&G.place.pendingKill){const k=G.place.pendingKill;G.place.pendingKill=null;
   safeFn(()=>{setPlaceMark(k.x,k.y,"dead");G.dungeonKills=(Number(G.dungeonKills)||0)+1;checkQuestProgress();});}
  G.xp+=xpGain(m.xp);
@@ -26561,7 +26702,7 @@ function victory(){const cb=G.combat,m=cb.m;
    if(клетка)клетка.monster=null;}});
  endCombat();
  const lootNames=loot.filter(l=>l.type==="mat").map(l=>l.name).join(", ");
- safeFn(()=>Bank.play("fate_hit",{seed:m.lvl,gain:0.55,maxSec:4}));
+ safeFn(()=>Bank.play("fate_hit",{kind:"combat",seed:m.lvl,gain:0.55,maxSec:4}));
  let txt=`Победа! Опыт +${m.xp}. Добыча лежит на вашей клетке: золото ${m.gold}, ${lootNames}`;
  if(loot.find(l=>l.type==="gear"))txt+=", предмет экипировки";
  txt+='. Двойное касание одним пальцем соберёт всю добычу.';
@@ -26587,7 +26728,7 @@ function takeLoot(){
     else {left.push(l.name);continue;}}
    else if(l?.type==="gear"&&l.item){G.gear.push(l.item);}
   }
-  safeFn(()=>Bank.play("gold",{seed:Date.now(),gain:0.85}));
+  safeFn(()=>Bank.play("gold",{kind:"combat",seed:Date.now(),gain:0.85}));
   const gold=loot.filter(l=>l.type==="gold").reduce((n,l)=>n+(Number(l.amount)||0),0);
   const mats=loot.filter(l=>l.type==="mat").map(l=>l.name);
   const gearItems=loot.filter(l=>l.type==="gear"&&l.item).map(l=>l.item);
@@ -26614,15 +26755,15 @@ function takeLoot(){
 }
 function defeat(){const павший=G.combat&&G.combat.m;endCombat();Music.stop();
  if(павший&&павший.boss)safeFn(()=>bossDefeat(павший));
- safeFn(()=>{Bank.play("jingle_lose",{gain:0.8});Bank.play("defeat",{seed:G.day,gain:0.55,maxSec:9});
-  setTimeout(()=>safeFn(()=>Bank.play("cello_defeat",{gain:0.7,maxSec:7})),380);
+ safeFn(()=>{Bank.play("jingle_lose",{kind:"combat",gain:0.8});Bank.play("defeat",{kind:"combat",seed:G.day,gain:0.55,maxSec:9});
+  setTimeout(()=>safeFn(()=>Bank.play("cello_defeat",{kind:"combat",gain:0.7,maxSec:7})),380);
   /* Поражение договаривают глубина и плач: удар о землю, стон, гобой. */
-  Bank.play("oc_die",{seed:G.day,gain:0.5,maxSec:2});Bank.play("body_fall",{seed:G.day,gain:0.55,maxSec:3});
-  Bank.play(heroVoiceFemale()?"hero_die_f":"hero_die_m",{seed:G.day,gain:0.7,maxSec:4});
-  setTimeout(()=>safeFn(()=>Bank.play("siege_defeat",{gain:0.6,maxSec:6})),700);
+  Bank.play("oc_die",{kind:"combat",seed:G.day,gain:0.5,maxSec:2});Bank.play("body_fall",{kind:"combat",seed:G.day,gain:0.55,maxSec:3});
+  Bank.play(heroVoiceFemale()?"hero_die_f":"hero_die_m",{kind:"combat",seed:G.day,gain:0.7,maxSec:4});
+  setTimeout(()=>safeFn(()=>Bank.play("siege_defeat",{kind:"combat",gain:0.6,maxSec:6})),700);
   Play.start("ev","scream",{dur:3});
-  setTimeout(()=>safeFn(()=>Bank.play("moan_deep",{seed:G.day,gain:0.45,maxSec:5})),700);
-  setTimeout(()=>safeFn(()=>Bank.play("lament_oboe",{seed:G.day,gain:0.5,maxSec:7})),1300);});
+  setTimeout(()=>safeFn(()=>Bank.play("moan_deep",{kind:"combat",seed:G.day,gain:0.45,maxSec:5})),700);
+  setTimeout(()=>safeFn(()=>Bank.play("lament_oboe",{kind:"combat",seed:G.day,gain:0.5,maxSec:7})),1300);});
  const emp=empireAt(G.x,G.y);G.x=emp.cap.x;G.y=emp.cap.y;
  /* Милость Мортаны Тихой: поражение обходится дешевле её последователям. */
  const mercy=Math.min(0.09,0.03*fxLevel("mercy"));
@@ -27809,20 +27950,20 @@ function itogTish(){
 function castSpell(i){const sp=SPELLS[i];
  if(!sp){narrate(`Слот ${i+1} пока пуст.`);return;}
  if(!G.spells.includes(sp.n)){narrate("Заклинание не изучено.");return;}
- if(sp.custom){const ч=spellCooling(sp);if(ч){safeFn(()=>Bank.play("hero_nomana",{gain:0.5,maxSec:2}));narrate(`«${sp.n}» ещё перезаряжается: ${ч} ч.`);return;}}
- if(G.mana<sp.cost){safeFn(()=>Bank.play("hero_nomana",{gain:0.6,maxSec:3}));
+ if(sp.custom){const ч=spellCooling(sp);if(ч){safeFn(()=>Bank.play("hero_nomana",{kind:"magic",gain:0.5,maxSec:2}));narrate(`«${sp.n}» ещё перезаряжается: ${ч} ч.`);return;}}
+ if(G.mana<sp.cost){safeFn(()=>Bank.play("hero_nomana",{kind:"magic",gain:0.6,maxSec:3}));
   narrate(`Нужно ${sp.cost} маны, у вас ${G.mana}.`);return;}
  G.mana-=Math.max(1,Math.round(sp.cost*(1+safeFn(()=>adaptBonus("spellCost"),0))));safeFn(()=>{deed("casts");deed("manaSpent",sp.cost);adaptAdd("чары",1);});
- safeFn(()=>{Bank.play("spell_arcane",{seed:i,gain:0.85});Bank.play(spellBankRole(sp),{seed:i,gain:0.5,maxSec:7});
+ safeFn(()=>{Bank.play("spell_arcane",{kind:"magic",seed:i,gain:0.85});Bank.play(spellBankRole(sp),{kind:"magic",seed:i,gain:0.5,maxSec:7});
   /* Второй слой школы: свет — вспышка благословения, тьма — дымка,
      лёд и молния — звон колокольчика чар, всё прочее — челеста. */
   const role=spellBankRole(sp);
   const layer=role==="spell_light"?"cast_heal":role==="spell_dark"?"cast_shock":
    role==="spell_ice"?"cast_ice":role==="spell_fire"?"cast_fire":"magic_woosh";
-  setTimeout(()=>safeFn(()=>Bank.play(layer,{seed:i,gain:0.5,maxSec:6})),260);
+  setTimeout(()=>safeFn(()=>Bank.play(layer,{kind:"magic",seed:i,gain:0.5,maxSec:6})),260);
   /* Каст слышен в три захода: набор силы, слово и разряд. Школа выбирает
      третий слой — свет поёт арфой, тьма отвечает порчей, прочее бьёт. */
-  safeFn(()=>Bank.play("oc_cracker",{seed:i,gain:0.45,maxSec:2}));
+  safeFn(()=>Bank.play("oc_cracker",{kind:"magic",seed:i,gain:0.45,maxSec:2}));
   /* Живая запись школы поверх оркестрового слоя. */
   const живой={"Исцеление":"cast_heal","Свет зари":"cast_heal","Каменная кожа":"cast_shield",
    "Ледяная игла":"cast_ice","Искра глубин":"cast_shock","Покров тени":"cast_teleport",
@@ -27830,16 +27971,16 @@ function castSpell(i){const sp=SPELLS[i];
    "Искра":"oc_zap","Зов дождя":"cast_thunder","Ветер странника":"cast_teleport"}[sp.n]
    ||(role==="spell_fire"?"cast_fire":role==="spell_ice"?"cast_ice":
       role==="spell_light"?"cast_heal":role==="spell_dark"?"cast_burn":"cast_shoot");
-  Bank.play(живой,{seed:i,gain:0.7,maxSec:6});
+  Bank.play(живой,{kind:"magic",seed:i,gain:0.7,maxSec:6});
   const бросок=role==="spell_light"?"magic_shimmer":role==="spell_dark"?"oc_sizzle":
    role==="spell_ice"?"mtg_ice_break":role==="spell_fire"?"oc_blast":"oc_electrical";
-  setTimeout(()=>safeFn(()=>Bank.play(бросок,{seed:i,gain:0.5,maxSec:5})),520);
-  setTimeout(()=>safeFn(()=>Bank.play("magic_rewind",{seed:i,gain:0.35,maxSec:3})),900);});
+  setTimeout(()=>safeFn(()=>Bank.play(бросок,{kind:"magic",seed:i,gain:0.5,maxSec:5})),520);
+  setTimeout(()=>safeFn(()=>Bank.play("magic_rewind",{kind:"magic",seed:i,gain:0.35,maxSec:3})),900);});
  /* Синтез договаривает то, чего нет в записях: набор силы, разряд и — для
     защитных заклинаний — стоящий круг оберега. */
- safeFn(()=>{Play.start("ev2","cast_charge",{dur:2.2});
+ safeFn(()=>{Play.start("ev2","cast_charge",{dur:2.2,kind:"magic"});
   setTimeout(()=>safeFn(()=>Play.start("ev2",
-   /щит|оберег|защит|исцел/i.test(sp.n)?"ward_shimmer":"spell_release",{dur:3})),1200);});
+   /щит|оберег|защит|исцел/i.test(sp.n)?"ward_shimmer":"spell_release",{dur:3,kind:"magic"})),1200);});
  /* Каждое заклинание должно что-то делать: семь новых, выученных по книгам,
     не исключение. Иначе свиток превращается в строчку в списке. */
  let итог="";
@@ -27851,11 +27992,11 @@ function castSpell(i){const sp=SPELLS[i];
   if(G.combat.hp<=0){narrate(`Заклинание «${sp.n}» сотворено.${итог}`);victory();return;}}
  else switch(sp.n){
   case "Исцеление":G.hp=Math.min(G.hpMax,G.hp+25);UI.drink();
-   safeFn(()=>Bank.play("cast_potion",{gain:0.6,maxSec:3}));итог=" Раны затянулись.";break;
+   safeFn(()=>Bank.play("cast_potion",{kind:"magic",gain:0.6,maxSec:3}));итог=" Раны затянулись.";break;
   case "Свет зари":G.hp=Math.min(G.hpMax,G.hp+40);UI.drink();итог=" Свет прошёл насквозь: здоровье выросло заметно.";break;
   case "Каменная кожа":G.hp=Math.min(G.hpMax,G.hp+Math.round(G.hpMax*0.2));
-   safeFn(()=>{Bank.play("cast_block",{gain:0.6,maxSec:3});
-    setTimeout(()=>safeFn(()=>Bank.play("cast_quake",{gain:0.5,maxSec:4})),300);});
+   safeFn(()=>{Bank.play("cast_block",{kind:"magic",gain:0.6,maxSec:3});
+    setTimeout(()=>safeFn(()=>Bank.play("cast_quake",{kind:"magic",gain:0.5,maxSec:4})),300);});
    итог=" Кожа отвердела: удары пройдут хуже.";break;
   case "Ледяная игла":
    if(G.inCombat&&G.combat){const d=10+G.level*2;G.combat.hp-=d;
@@ -27863,7 +28004,7 @@ function castSpell(i){const sp=SPELLS[i];
     if(G.combat.hp<=0){narrate(`Заклинание «${sp.n}» сотворено.${итог}`);victory();return;}}
    else итог=" Игла ушла в пустоту.";break;
   case "Искра глубин":
-   safeFn(()=>Bank.play("cast_spikes",{gain:0.55,maxSec:4}));
+   safeFn(()=>Bank.play("cast_spikes",{kind:"magic",gain:0.55,maxSec:4}));
    if(G.inCombat&&G.combat){const d=16+G.level*3;G.combat.hp-=d;
     итог=` Разряд из-под земли: −${d} твари.`;safeFn(()=>updateCombat());
     if(G.combat.hp<=0){narrate(`Заклинание «${sp.n}» сотворено.${итог}`);victory();return;}}
@@ -29942,6 +30083,16 @@ function bindSettings(){const $=id=>document.getElementById(id);
  $("setAmbVol").value=Math.round(settings.ambVol*100);$("vAmb").textContent=Math.round(settings.ambVol*100)+"%";
  $("setUiVol").value=Math.round(settings.uiVol*100);$("vUi").textContent=Math.round(settings.uiVol*100)+"%";
  $("setMusicVol").value=settings.musicVol*100;$("vMusic").textContent=settings.musicVol*100+"%";
+ [["setMasterVol","vMaster","masterVol"],["setCombatVol","vCombat","combatVol"],["setMagicVol","vMagic","magicVol"],["setNpcVol","vNpc","npcVol"]].forEach(([id,v,key])=>{
+  const el=$(id);if(!el)return;
+  const cur=Number(settings[key]);const val=Number.isFinite(cur)?Math.round(cur*100):100;
+  el.value=val;$(v).textContent=val+"%";
+  el.addEventListener("input",e=>{settings[key]=e.target.value/100;saveSettings();$(v).textContent=e.target.value+"%";AE.applyVolumes();});});
+ const bg=$("setBgMusic");if(bg){bg.checked=!!settings.bgMusic;
+  bg.addEventListener("change",e=>{settings.bgMusic=e.target.checked?1:0;saveSettings();
+   if(settings.bgMusic&&settings.music&&gameActive()&&!G.inCombat){const c=cellContent(G.x,G.y);Music.start(G.place?"prologue":c.terrain[0]);}
+   else Music.stop();
+   narrate(settings.bgMusic?"Фоновая музыка мест включена.":"Фоновая музыка мест выключена: место слышно звуками, музыка — событиям.");});}
  $("setSpeech").addEventListener("change",e=>{settings.speech=e.target.checked?1:0;saveSettings();
   if(settings.speech)narrate("Озвучка включена.");});
  $("setEffects").addEventListener("change",e=>{settings.effects=e.target.checked?1:0;saveSettings();
