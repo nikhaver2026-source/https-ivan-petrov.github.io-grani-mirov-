@@ -464,6 +464,60 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
    вещи.числа.hp&&вещи.числа.золото&&вещи.числа.котомка,вещи.числа);
  }
 
+
+ /* ── Четвёртая цепь: речь + звук + мир (§106) ──
+    Стоп, повтор и очистка; музыка тише при речи, а мир и шаги — нет; хвост
+    старого синтезатора после стопа ничего не трогает; дубли не повторяются,
+    мелочь опыта складывается в одну фразу; распорядитель речи один. */
+ const речь=await page.evaluate(async()=>{
+  const fake={log:[],cancels:0,cur:null,
+   speak(t,o){this.log.push(t);this.cur=o;setTimeout(()=>{try{o.onstart();}catch(e){}},0);return true;},
+   cancel(){this.cancels++;this.cur=null;},speaking(){return !!this.cur;},
+   end(){const o=this.cur;this.cur=null;if(o&&o.onend)o.onend();}};
+  const прежний=Speech.adapter,прежнийChunk=Speech._chunk;Speech.adapter=fake;Speech._chunk=x=>[String(x)];Speech.stop();Speech.recent.clear();Speech.last=null;
+  const wait=ms=>new Promise(r=>setTimeout(r,ms));
+  const шаг={};
+  try{
+   settings.speech=1;settings.music=1;settings.musicVol=1;settings.effects=1;settings.duck=0.5;settings.verbosity="normal";
+   const музыка0=Bank.vol("music"),мир0=Bank.vol("fx");
+   narrate("Сундук открыт. Золото: 120.");await wait(30);fake.end();await wait(30);
+   narrate("Перед вами длинный коридор с древними знаками на стенах.",{interrupt:false});await wait(30);
+   const говорило=Speech.isSpeaking();Speech.stop();const стихло=!Speech.isSpeaking();
+   Speech.repeatLast();await wait(30);
+   шаг.стоп={говорило,стихло,повтор:fake.log[fake.log.length-1]};
+   fake.end();await wait(20);
+   narrate("Новый уровень! Теперь вы выше.",{pri:1});narrate("Лишнее раз.",{pri:3,key:"l1",interrupt:false});narrate("Лишнее два.",{pri:3,key:"l2",interrupt:false});
+   await wait(30);
+   шаг.очистка={снято:Speech.flush(),осталось:Speech.queue.length,текущее:Speech.current&&Speech.current.text};
+   шаг.микшер={речьИдёт:Speech.isSpeaking(),музыка0,музыкаВРечи:Bank.vol("music"),мир0,мирВРечи:Bank.vol("fx")};
+   fake.end();await wait(30);
+   шаг.микшер.музыкаПосле=Bank.vol("music");
+   narrate("Старое.");await wait(30);const старый=fake.cur;Speech.stop();narrate("Новое.");await wait(30);
+   try{старый.onend();}catch(e){}await wait(20);
+   шаг.хвост={текущее:Speech.current&&Speech.current.text,состояние:Speech.current&&Speech.current.state};
+   fake.log.length=0;for(let i=0;i<5;i++)narrate("Перед вами дверь.",{key:"d",pri:3});
+   Speech.tally("xp",5);Speech.tally("xp",7);await wait(600);
+   /* Мир не замирает на время проверки: за эти полсекунды он мог сказать
+      своё, и тогда фраза опыта ждёт в очереди. Считаем и очередь. */
+   шаг.дубли={дверей:fake.log.filter(t=>t==="Перед вами дверь.").length,
+    опыт:fake.log.some(t=>/Опыт: 12\./.test(t))||Speech.queue.some(m=>/Опыт: 12\./.test(m.text))};
+   const src=document.documentElement.innerHTML;
+   шаг.единый={прямых:(src.match(/speechSynthesis\.speak\(/g)||[]).length,очередьОдна:Array.isArray(Speech.queue)&&typeof Speech.enqueue==="function"};
+  }finally{Speech.stop();Speech.adapter=прежний;Speech._chunk=прежнийChunk;}
+  return шаг;});
+ check('IV-1. стоп обрывает описание, повтор возвращает последнее завершённое, а не оборванное',
+  речь.стоп.говорило&&речь.стоп.стихло&&речь.стоп.повтор==="Сундук открыт. Золото: 120.",речь.стоп);
+ check('IV-2. очистка очереди снимает лишнее и оставляет важное на голосе',
+  речь.очистка.снято===2&&речь.очистка.осталось===0&&/Новый уровень/.test(речь.очистка.текущее||""),речь.очистка);
+ check('IV-3. речь приглушает музыку, но не мир и шаги; после речи музыка возвращается',
+  речь.микшер.речьИдёт&&речь.микшер.музыкаВРечи<речь.микшер.музыка0&&речь.микшер.мирВРечи===речь.микшер.мир0&&речь.микшер.музыкаПосле===речь.микшер.музыка0,речь.микшер);
+ check('IV-4. хвост старого синтезатора после стопа не трогает новую речь',
+  речь.хвост.текущее==="Новое."&&речь.хвост.состояние!=="COMPLETED",речь.хвост);
+ check('IV-5. дубли не повторяются, мелочь опыта сложена в одну фразу',
+  речь.дубли.опыт&&речь.дубли.дверей===1,речь.дубли);
+ check('IV-6. синтезатор зовут из одного места, распорядитель и очередь одни',
+  речь.единый.прямых===1&&речь.единый.очередьОдна,речь.единый);
+
  console.log(results.join('\n'));
  console.log('\nОшибки страницы: '+(errors.length?errors.slice(0,5).join('\n'):'нет'));
  await browser.close();

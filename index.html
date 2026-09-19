@@ -135,7 +135,7 @@ h3{color:var(--acc2);margin:14px 0 6px;font-size:1.05rem;}
 <div class="modal" id="modal-settings" role="dialog" aria-modal="true" aria-label="Настройки" hidden><div class="sheet">
  <header><h2>⚙️ Настройки</h2><button type="button" data-cmd="close">⬅️ Назад</button></header>
  <h3>Переключатели</h3>
- <label class="opt"><input type="checkbox" id="setSpeech" checked><span>🔊 <b>Озвучка</b><small>Голосовое озвучивание текста и сцен</small></span></label>
+ <label class="opt"><input type="checkbox" id="setSpeech" checked><span>🔊 <b>Озвучка</b><small>Встроенная речь игры: работает без VoiceOver и TalkBack</small></span></label>
  <label class="opt"><input type="checkbox" id="setEffects" checked><span>🎵 <b>Эффекты</b><small>Шаги, толпа, маяки и прочие звуки</small></span></label>
  <label class="opt"><input type="checkbox" id="setMusic" checked><span>🎼 <b>Музыка</b><small>Фоновая музыка локаций</small></span></label>
  <label class="opt"><input type="checkbox" id="setSubs" checked><span>💬 <b>Субтитры звуков</b><small>Для слабослышащих игроков</small></span></label>
@@ -158,6 +158,23 @@ h3{color:var(--acc2);margin:14px 0 6px;font-size:1.05rem;}
  <h3>🎧 Позиционный звук</h3>
  <label class="opt"><input type="checkbox" id="setHrtf" checked><span>🧭 <b>Объёмный звук</b><small>Слышно сторону, расстояние и высоту источника: тварь слева и сзади, ступени под ногами. Лучше всего в наушниках. Выключите, если одно ухо слышит хуже другого — тогда останется простая панорама</small></span></label>
  <label class="opt"><input type="checkbox" id="setScape" checked><span>🌍 <b>Живая звуковая картина</b><small>Мир сам подаёт голос с тех сторон, где что-то стоит или ходит: угроза напоминает о себе часто, постройка редко. Выключите, если хотите тишину между действиями</small></span></label>
+ <h3>🗣️ Речь</h3>
+ <p class="hint">Все речевые сообщения идут через одного распорядителя: важное перебивает обычное, новое действие снимает старое описание, мелочь складывается в одну фразу, дубли не повторяются. Остановить речь — свайп четырьмя пальцами вниз или Alt+Пробел; повторить последнее — вверх или Alt+R; состояние игрока — влево или Alt+H; очистить очередь — вправо или Alt+X.</p>
+ <label class="opt"><input type="checkbox" id="setAutoSpeech" checked><span>🗣️ <b>Автоматическая речь</b><small>Игра говорит сама; выключено — только важное и по запросу</small></span></label>
+ <label class="opt"><input type="checkbox" id="setAutoDescribe" checked><span>🏞️ <b>Автоописание окружения</b><small>Описывать место после шага</small></span></label>
+ <label class="opt"><input type="checkbox" id="setDescribeObjects" checked><span>📦 <b>Описывать объекты голосом</b><small>Иначе — звуком и по запросу</small></span></label>
+ <label class="opt"><input type="checkbox" id="setSoundFirst" checked><span>🔈 <b>Звук вместо описаний</b><small>Шорохи, шаги и механизмы не дублируются словами</small></span></label>
+ <label class="opt"><input type="checkbox" id="setStopOnMove" checked><span>🚶 <b>Прерывать речь при движении</b></span></label>
+ <label class="opt"><input type="checkbox" id="setStopOnMenu" checked><span>📋 <b>Прерывать речь при меню</b></span></label>
+ <label class="opt"><input type="checkbox" id="setStopOnGather" checked><span>🌿 <b>Прерывать речь при сборе</b></span></label>
+ <label class="opt"><input type="checkbox" id="setSayXp" checked><span>✨ <b>Озвучивать мелкие изменения опыта</b></span></label>
+ <label class="opt"><input type="checkbox" id="setSayHp" checked><span>❤️ <b>Озвучивать мелкие изменения здоровья</b></span></label>
+ <label class="opt"><input type="checkbox" id="setSaySpatial" checked><span>🧭 <b>Озвучивать пространственные события</b><small>Только если «звук вместо описаний» выключен</small></span></label>
+ <label class="opt">📏 Подробность речи <select id="setVerbosity" aria-label="Уровень подробности"><option value="min">Минимальная</option><option value="brief">Краткая</option><option value="normal" selected>Стандартная</option><option value="full">Подробная</option></select></label>
+ <label class="opt">♿ Объявления VoiceOver и TalkBack <select id="setSrMode" aria-label="Объявления для чтеца экрана"><option value="auto" selected>Автоматически</option><option value="request">По запросу</option><option value="off">Выключены</option></select></label>
+ <label class="opt">🤚 Жест остановки речи <select id="setStopGesture" aria-label="Жест остановки речи"><option value="four_down" selected>Четыре пальца вниз</option><option value="four_up">Четыре пальца вверх</option></select></label>
+ <label class="opt">🎚️ Приглушение музыки при речи <input type="range" id="setDuck" min="0" max="100" value="50"><span id="vDuck">50%</span></label>
+ <div class="row"><button type="button" id="btnStopSpeech">🔇 Остановить речь</button><button type="button" id="btnRepeatLast">🔁 Повторить последнее</button><button type="button" id="btnReadStatus">🧍 Состояние игрока</button></div>
  <div class="row"><button type="button" id="btnSpeechSample">📢 Тест озвучки</button></div>
 </div></div>
 
@@ -454,6 +471,7 @@ const store={
 /* ════════ НАСТРОЙКИ ════════ */
 let savedSet={};try{savedSet=JSON.parse(store.get("gm29set")||"{}")||{};}catch(e){}
 const settings=Object.assign({speech:1,effects:1,music:1,subtitles:1,explore:1,fastTap:0,haptics:1,
+ autoSpeech:1,verbosity:"normal",autoDescribe:1,describeObjects:1,soundFirst:1,stopOnMove:1,stopOnMenu:1,stopOnGather:1,sayXp:1,sayHp:1,saySpatial:1,srMode:"auto",duck:0.5,stopGesture:"four_down",
  /* hrtf — позиционный звук: сторона, расстояние и высота источника считаются
     свёрткой с откликом головы. scape — живая звуковая картина вокруг: мир
     сам подаёт голос с тех сторон, где что-то стоит или ходит. */
@@ -507,7 +525,7 @@ const AudioLife={
   if(this.hushed)return false;
   this.hushed=true;
   safeFn(()=>Bank.hush());
-  safeFn(()=>{if(window.speechSynthesis)speechSynthesis.cancel();});
+  safeFn(()=>Speech.hush());
   safeFn(()=>{if(AE.ctx&&AE.ctx.state==="running"&&AE.ctx.suspend)AE.ctx.suspend();});
   return true;},
  wake(){
@@ -533,7 +551,31 @@ const AudioLife={
 safeFn(()=>AudioLife.bind());
 
 /* ════════ РЕЧЬ (очередь фраз, нарезка, защита от обрыва в 15 секунд) ════════ */
-const Speech={voice:null,queue:[],speaking:false,keepAlive:null,
+/* ════════ РАСПОРЯДИТЕЛЬ РЕЧИ ════════
+   Речь шла из тысячи мест напрямую в синтезатор: каждое событие само решало,
+   перебить ли соседа, и старая фраза, оборванная новой, договаривала хвост
+   через обратный вызов. Теперь всё речевое проходит через одного
+   распорядителя (§78–108): у сообщения есть приоритет (P0 — смертельная
+   опасность … P4 — фон), ключ для дублей и замены, срок годности, состояние;
+   важное перебивает обычное, обычное ждёт важного; новое действие игрока
+   снимает старое описание; мелочь — опыт, золото, ресурсы — складывается в
+   одну фразу; каждый запуск помечен поколением, и обратный вызов чужого
+   поколения не делает ничего. Игрок в любой миг может остановить речь,
+   повторить последнее сказанное и очистить очередь — без чтеца экрана.
+   Синтезатор — за адаптером: браузерный speechSynthesis или родной мост
+   window.GraniTTS на iOS/Android. Музыка и фон при речи приглушаются, мир,
+   шаги и сигналы — нет. */
+function speechDuck(chan){
+ try{if(typeof Speech==="undefined"||!Speech.ducking)return 1;
+  const d=Math.max(0,Math.min(1,Number(settings.duck)));
+  return chan==="music"?1-d:chan==="ambient"?1-d*0.5:1;}catch(_){return 1;}}
+const Speech={voice:null,keepAlive:null,
+ queue:[],current:null,speaking:false,gen:0,seq:0,
+ history:[],last:null,ducking:false,adapter:null,_ctx:null,_ctxTimer:null,
+ recent:new Map(),agg:{items:null,timer:null,at:0},
+ stats:{spoken:0,cut:0,dropped:0,expired:0,replaced:0,deduped:0,merged:0,queued:0,live:0,userStops:0},
+ WINDOW:{dedupe:1200,agg:350},
+ TTL:{2:20000,3:8000,4:6000},
  init(){if(!("speechSynthesis" in window))return;
   const pick=()=>{try{
    const vs=speechSynthesis.getVoices(),sel=document.getElementById("setVoice");
@@ -557,58 +599,229 @@ const Speech={voice:null,queue:[],speaking:false,keepAlive:null,
     s=s.slice(cut+1).trim();}
    if(s)out.push(s);});
   return out;},
- say(text,{interrupt=true,onDone=null}={}){
+ /* ── адаптер синтезатора ── */
+ _adapter(){
+  if(this.adapter)return this.adapter;
+  try{if(window.GraniTTS&&typeof window.GraniTTS.speak==="function")return this.adapter=this._nativeAdapter();}catch(_){}
+  if("speechSynthesis" in window)return this.adapter=this._webAdapter();
+  return null;},
+ _webAdapter(){const self=this;return {name:"web",
+  speak(text,o){try{const u=new SpeechSynthesisUtterance(text);
+    if(self.voice){u.voice=self.voice;u.lang=self.voice.lang;}else u.lang="ru-RU";
+    u.rate=+o.rate;u.volume=+o.volume;
+    u.onstart=()=>{if(o.onstart)o.onstart();};u.onend=()=>{if(o.onend)o.onend();};u.onerror=()=>{if(o.onerror)o.onerror();};
+    setTimeout(()=>{try{speechSynthesis.speak(u);}catch(e){if(o.onerror)o.onerror();}},30);return true;}catch(e){return false;}},
+  cancel(){try{speechSynthesis.cancel();}catch(_){}},
+  speaking(){try{return !!speechSynthesis.speaking;}catch(_){return false;}}};},
+ _nativeAdapter(){const self=this;const cbs={};
+  window.GraniTTSDone=id=>{const c=cbs[id];delete cbs[id];if(c&&c.onend)c.onend();};
+  window.GraniTTSError=id=>{const c=cbs[id];delete cbs[id];if(c&&c.onerror)c.onerror();};
+  return {name:"native",
+   speak(text,o){const id=String(++self.seq);cbs[id]=o;
+    try{window.GraniTTS.speak(text,+o.rate,+o.volume,id);if(o.onstart)setTimeout(o.onstart,0);return true;}catch(e){delete cbs[id];return false;}},
+   cancel(){try{window.GraniTTS.stop();}catch(_){}for(const k in cbs)delete cbs[k];},
+   speaking(){try{return !!window.GraniTTS.isSpeaking();}catch(_){return false;}}};},
+ /* ── класс сообщения: приоритет и род ── */
+ _classify(text,o){
+  let pri=o.pri;
+  if(pri==null){
+   if(/на исходе|критическ|смертельн|вы пали|вы погиб|умира/i.test(text))pri=0;
+   else if(/новый уровень|легендарн|божественн|достижени|звание|титул|навык (получен|поднялся)|выучен|цепочка пройдена/i.test(text))pri=1;
+   else pri=o.interrupt===false?3:2;}
+  pri=Math.max(0,Math.min(4,Number(pri)||0));
+  const cat=o.cat||this._ctx||(pri<=1?"important":pri===2?"result":"context");
+  return {pri,cat};},
+ _shape(text,m){
   try{
-   const live=document.getElementById("liveRegion");
-   if(live){live.textContent="";requestAnimationFrame(()=>{try{live.textContent=text;}catch(e){}});}
-  }catch(e){try{console.warn('[Speech.say:live]',e);}catch(_){}}
-  try{
-   if(interrupt)this._pendingDone=null; /* сброс, чтобы обратный вызов от прошлой фразы не сработал не вовремя */
-   if(!settings.speech||!("speechSynthesis" in window)){if(onDone)setTimeout(onDone,10);return;}
-   /* Свёрнутую игру не озвучиваем. Мир продолжает жить и сам по себе подаёт
-      голос — без этой проверки он наговаривал бы в наушники поверх того, чем
-      игрок сейчас занят. Обещание вызывающему всё равно исполняется: иначе
-      тот, кто ждал конца фразы, завис бы навсегда. */
-   if(typeof AudioLife!=="undefined"&&AudioLife.hushed){
-    if(onDone)setTimeout(onDone,10);return;}
-   if(interrupt){this.queue=[];this.speaking=false;this._stopKeepAlive();
-    try{speechSynthesis.cancel();}catch(e){}}
-   if(onDone)this._pendingDone=onDone;
-   const parts=this._chunk(text);
-   parts.forEach(p=>this.queue.push(p));
-   this._pump();
-  }catch(e){try{console.warn('[Speech.say]',e);}catch(_){}if(onDone)try{onDone();}catch(_){}}
- },
+   const v=settings.verbosity||"normal";
+   if(m.user||m.pri<=1||v==="normal"||v==="full")return text;
+   const sents=text.match(/[^.!?…]+[.!?…]*/g)||[text];
+   if(v==="min")return (sents[0]||text).trim();
+   if(v==="brief")return sents.slice(0,2).map(x=>x.trim()).join(" ").trim();
+  }catch(_){}
+  return text;},
+ /* Пометить всё, что скажут синхронно в этом же такте: например, описание
+    места после шага — «desc», и его можно выключить одной настройкой. */
+ ctxTag(cat){this._ctx=cat;clearTimeout(this._ctxTimer);this._ctxTimer=setTimeout(()=>{this._ctx=null;},0);},
+ /* ── вход ── */
+ say(text,o){return this.enqueue(text,o);},
+ request(text,o={}){return this.say(text,Object.assign({pri:1,user:true,interrupt:true},o));},
+ /* Пространственное событие: по умолчанию его передаёт звук, а не слово. */
+ spatial(text,o={}){if(settings.soundFirst!==0||settings.saySpatial===0)return null;return this.say(text,Object.assign({pri:3,cat:"spatial",ttl:1500},o));},
+ enqueue(text,{interrupt=true,onDone=null,pri=null,cat=null,key=null,ttl=null,user=false,persistent=false}={}){
+  text=String(text==null?"":text).replace(/\s+/g," ").trim();
+  const done=cb=>{if(cb)setTimeout(()=>{try{cb();}catch(e){}},10);};
+  if(!text){done(onDone);return null;}
+  const cls=this._classify(text,{pri,cat,interrupt});
+  const m={id:++this.seq,gen:0,text,pri:cls.pri,cat:cls.cat,key,user:!!user,persistent:!!persistent,
+   interrupt:interrupt!==false,createdAt:Date.now(),ttl:ttl!=null?Number(ttl):(this.TTL[cls.pri]||0),onDone,state:"QUEUED",parts:null};
+  this._live(m);
+  const drop=()=>{m.state="DROPPED";this.stats.dropped++;done(onDone);return m;};
+  if(!user){
+   if(settings.autoSpeech===0&&m.pri>=2)return drop();
+   if(m.cat==="desc"&&settings.autoDescribe===0)return drop();
+   if(m.cat==="object"&&settings.describeObjects===0)return drop();
+   if(settings.verbosity==="min"&&m.pri>=3)return drop();}
+  if(!settings.speech||!this._adapter()){this._finish(m,"COMPLETED",true);return m;}
+  if(typeof AudioLife!=="undefined"&&AudioLife.hushed)return drop();
+  m.text=this._shape(text,m);
+  /* дубли и замена */
+  const dk=key||m.text;const rec=this.recent.get(dk);
+  if(rec&&Date.now()-rec.at<this.WINDOW.dedupe){
+   if(key&&rec.text!==m.text){
+    const q=this.queue.find(x=>x.key===key);
+    if(q){q.state="REPLACED";this.queue=this.queue.filter(x=>x!==q);this.stats.replaced++;done(q.onDone);}
+    else if(this.current&&this.current.key===key&&this.current.pri>=m.pri){this._cut(this.current,"REPLACED");this.stats.replaced++;}
+   }else{m.state="DEDUPED";this.stats.deduped++;done(onDone);return m;}}
+  this.recent.set(dk,{text:m.text,at:Date.now()});
+  if(this.recent.size>80){const k0=this.recent.keys().next().value;this.recent.delete(k0);}
+  if(key){const q=this.queue.find(x=>x.key===key);if(q){q.state="REPLACED";this.queue=this.queue.filter(x=>x!==q);this.stats.replaced++;done(q.onDone);}}
+  const cur=this.current;
+  if(cur&&this.speaking){
+   if(m.pri<cur.pri){this._cut(cur,"CANCELLED");this._pushFront(m);this._pump();return m;}
+   if(m.pri>=2&&cur.pri<=1){if(m.interrupt)this._dropQueued(2,"CANCELLED");this._push(m);return m;}
+   if(m.interrupt&&m.pri>=2&&cur.pri>=2){this._cut(cur,"CANCELLED");this._dropQueued(2,"CANCELLED");this._pushFront(m);this._pump();return m;}
+   if(m.interrupt&&m.pri<=1){this._dropQueued(2,"CANCELLED");this._push(m);return m;}
+   this._push(m);return m;}
+  this._pushFront(m);this._pump();return m;},
+ _push(m){m.state="QUEUED";this.queue.push(m);this.queue.sort((a,b)=>a.pri-b.pri||a.id-b.id);this.stats.queued++;},
+ _pushFront(m){m.state="QUEUED";this.queue.unshift(m);},
+ _dropQueued(minPri,state){
+  const keep=[],gone=[];
+  this.queue.forEach(x=>(x.pri>=minPri&&!x.persistent?gone:keep).push(x));
+  this.queue=keep;
+  gone.forEach(x=>{x.state=state;this.stats.dropped++;if(x.onDone)setTimeout(()=>{try{x.onDone();}catch(e){}},10);});
+  return gone.length;},
+ _cut(m,state){
+  if(!m)return;
+  m.state=state;this.stats.cut++;this.gen++;
+  this.speaking=false;this.current=null;this._stopKeepAlive();this._duck(false);
+  try{const a=this._adapter();if(a)a.cancel();}catch(_){}
+  if(m.onDone)setTimeout(()=>{try{m.onDone();}catch(e){}},10);},
+ _expired(m){return m.ttl>0&&!m.user&&Date.now()-m.createdAt>m.ttl;},
  _pump(){
-  if(this.speaking||!this.queue.length){
-   if(!this.speaking&&!this.queue.length&&this._pendingDone){const cb=this._pendingDone;this._pendingDone=null;try{cb();}catch(e){try{console.warn('[Speech.onDone]',e);}catch(_){}}}
-   return;}
-  if(!("speechSynthesis" in window))return;
+  if(this.speaking||this.current)return;
+  while(this.queue.length){
+   const m=this.queue.shift();
+   if(this._expired(m)){m.state="EXPIRED";this.stats.expired++;if(m.onDone)setTimeout(()=>{try{m.onDone();}catch(e){}},10);continue;}
+   this._speak(m);return;}},
+ _speak(m){
+  const a=this._adapter();if(!a){this._finish(m,"FAILED");return;}
+  m.parts=this._chunk(m.text);m.gen=++this.gen;m.state="STARTING";
+  this.current=m;this.speaking=true;this._duck(true);
+  this._part(m,0);},
+ _part(m,i){
+  const gen=m.gen;
+  if(gen!==this.gen||this.current!==m)return;
+  if(i>=m.parts.length){this._finish(m,"COMPLETED");return;}
+  const a=this._adapter();
+  const ok=a&&a.speak(m.parts[i],{rate:+settings.rate||1,volume:+settings.voiceVol,
+   onstart:()=>{if(gen!==this.gen||this.current!==m)return;m.state="SPEAKING";this._keepAlive();},
+   onend:()=>{if(gen!==this.gen||this.current!==m)return;this._part(m,i+1);},
+   onerror:()=>{if(gen!==this.gen||this.current!==m)return;this._finish(m,i>0?"COMPLETED":"FAILED");}});
+  if(!ok)this._finish(m,"FAILED");},
+ _finish(m,state,silent){
+  m.state=state;
+  if(this.current===m){this.current=null;this.speaking=false;this._stopKeepAlive();this._duck(false);}
+  if(state==="COMPLETED"){this.stats.spoken++;this.last=m;this.history.push(m);if(this.history.length>20)this.history.shift();}
+  if(m.onDone)setTimeout(()=>{try{m.onDone();}catch(e){}},10);
+  if(!silent)this._pump();},
+ /* ── управление игроком ── */
+ stop({user=true}={}){
+  const cur=this.current;
+  if(cur)this._cut(cur,"CANCELLED");
+  else{this.gen++;try{const a=this._adapter();if(a)a.cancel();}catch(_){}}
+  this._dropQueued(0,"CANCELLED");
+  this.speaking=false;this.current=null;this._stopKeepAlive();this._duck(false);
+  if(user)this.stats.userStops++;
+  return true;},
+ /* Игра свёрнута или потеряла звук: текущее режем, обычную очередь снимаем,
+    а вернувшись, ничего устаревшего не договариваем. */
+ hush(){if(this.current)this._cut(this.current,"CANCELLED");else{this.gen++;try{const a=this._adapter();if(a)a.cancel();}catch(_){}}
+  this._dropQueued(2,"EXPIRED");},
+ flush(){return this._dropQueued(0,"CANCELLED");},
+ interrupt(minPri=2){if(this.current&&this.current.pri>=minPri)this._cut(this.current,"CANCELLED");this._dropQueued(minPri,"CANCELLED");this._pump();return true;},
+ cancel(what){
+  const q=this.queue.filter(x=>x.key===what||x.id===what);
+  q.forEach(x=>{x.state="CANCELLED";if(x.onDone)setTimeout(()=>{try{x.onDone();}catch(e){}},10);});
+  this.queue=this.queue.filter(x=>!q.includes(x));
+  if(this.current&&(this.current.key===what||this.current.id===what))this._cut(this.current,"CANCELLED");
+  this._pump();return q.length;},
+ clearContext(minPri=2){return this.interrupt(minPri);},
+ /* Новое действие игрока снимает старое описание — по настройкам. */
+ contextCut(reason){
   try{
-   const text=this.queue.shift();
-   const u=new SpeechSynthesisUtterance(text);
-   if(this.voice){u.voice=this.voice;u.lang=this.voice.lang;}else u.lang="ru-RU";
-   u.rate=+settings.rate;u.volume=+settings.voiceVol;
-   u.onstart=()=>{this.speaking=true;this._keepAlive();};
-   u.onend=()=>{this.speaking=false;this._stopKeepAlive();this._pump();};
-   u.onerror=()=>{this.speaking=false;this._stopKeepAlive();this._pump();};
-   this.speaking=true;
-   setTimeout(()=>{try{speechSynthesis.speak(u);}catch(e){this.speaking=false;this._pump();}},30);
-  }catch(e){try{console.warn('[Speech._pump]',e);}catch(_){}this.speaking=false;}},
+   const on={move:settings.stopOnMove,menu:settings.stopOnMenu,gather:settings.stopOnGather}[reason];
+   if(on===0)return false;
+   return this.interrupt(2);
+  }catch(_){return false;}},
+ isSpeaking(){return !!(this.speaking&&this.current);},
+ repeatLast(){
+  const m=this.last;
+  if(!m){this.request("Повторять нечего.",{key:"repeat"});return false;}
+  this.request(m.text,{key:"repeat"});return true;},
+ status(){
+  try{
+   const hp=Number(G.hp)||0,hpMax=Number(G.hpMax)||0;
+   const bad=(G.inCombat?"Идёт бой. ":"")+(hp<=Math.ceil((hpMax||1)/4)?"Здоровье критическое. ":"");
+   const where=G.place?(G.place.name||"постройка"):(G.ship?`на борту «${G.ship.name}»`:"под открытым небом");
+   this.request(`${bad}Здоровье ${hp} из ${hpMax}, мана ${Number(G.mana)||0} из ${Number(G.manaMax)||0}. Уровень ${Number(G.level)||1}, опыт ${Number(G.xp)||0}. Золото ${Number(G.gold)||0}. ${where.charAt(0).toUpperCase()+where.slice(1)}.`,{key:"status"});
+   return true;}catch(e){return false;}},
+ /* ── мелочь складывается в одну фразу ── */
+ tally(kind,n,extra){
+  try{
+   if(!this.agg.items){this.agg.items={};this.agg.at=Date.now();}
+   const it=this.agg.items;
+   if(kind==="level")it.level=Number(n)||it.level;
+   else if(kind==="skill")it.skill=(it.skill||0)+(Number(n)||1);
+   else if(kind==="res"){it.res=it.res||{};it.res[extra]=(it.res[extra]||0)+(Number(n)||0);}
+   else it[kind]=(it[kind]||0)+(Number(n)||0);
+   clearTimeout(this.agg.timer);
+   const wait=Math.min(1000-(Date.now()-this.agg.at),this.WINDOW.agg);
+   this.agg.timer=setTimeout(()=>this._flushTally(),Math.max(60,wait));
+   return true;}catch(_){return false;}},
+ _flushTally(){
+  const it=this.agg.items;this.agg.items=null;this.agg.timer=null;if(!it)return null;
+  const parts=[];
+  if(it.level!=null)parts.push(`Уровень ${it.level}.`);
+  if(it.xp&&(settings.sayXp!==0||it.level!=null||it.xp>=50))parts.push(`Опыт: ${it.xp}.`);
+  if(it.skill)parts.push(it.skill===1?"Доступно очко навыка.":`Доступно очков навыка: ${it.skill}.`);
+  if(it.gold)parts.push(`Золото: ${it.gold>0?"":"минус "}${Math.abs(it.gold)}.`);
+  if(it.res)for(const k in it.res)parts.push(`${k.charAt(0).toUpperCase()+k.slice(1)}: ${it.res[k]}.`);
+  if(it.hp&&(settings.sayHp!==0||Math.abs(it.hp)>=10))parts.push(`Здоровье ${it.hp>0?"плюс":"минус"} ${Math.abs(it.hp)}.`);
+  if(it.mana)parts.push(`Мана ${it.mana>0?"плюс":"минус"} ${Math.abs(it.mana)}.`);
+  if(it.rep)parts.push(`Имя ${it.rep>0?"плюс":"минус"} ${Math.abs(it.rep)}.`);
+  if(!parts.length)return null;
+  this.stats.merged++;
+  return this.say(parts.join(" "),{pri:it.level!=null?1:2,key:"tally",interrupt:it.level!=null});},
+ /* ── мост доступности: живая область для VoiceOver и TalkBack ── */
+ _live(m){
+  try{
+   const mode=settings.srMode||"auto";
+   if(mode==="off")return;
+   if(mode==="request"&&!m.user)return;
+   const live=document.getElementById("liveRegion");if(!live)return;
+   live.textContent="";const t=m.text;
+   requestAnimationFrame(()=>{try{live.textContent=t;}catch(e){}});
+   this.stats.live++;
+  }catch(_){}},
+ /* ── микшер: речь приглушает музыку и фон, но не мир ── */
+ _duck(on){
+  try{
+   on=!!on;if(this.ducking===on)return;
+   this.ducking=on;
+   if(typeof AE!=="undefined"&&AE.ctx)AE.applyVolumes();
+   else if(typeof Bank!=="undefined"&&Bank.refresh)Bank.refresh();
+  }catch(_){}},
  _keepAlive(){
   if(this.keepAlive)return;
   const isChrome=/Chrome\//.test(navigator.userAgent)&&!/Edg\//.test(navigator.userAgent);
   if(!isChrome)return;
   this.keepAlive=setInterval(()=>{
-   /* Подпорка против обрыва на пятнадцатой секунде в Chrome. Пока игра
-      свёрнута, она молчит: иначе pause+resume будили бы речь, которую
-      распорядитель только что оборвал. */
    try{if(typeof AudioLife!=="undefined"&&AudioLife.hushed)return;
     if(speechSynthesis.speaking&&!speechSynthesis.paused){speechSynthesis.pause();speechSynthesis.resume();}}catch(e){}
   },9000);},
- _stopKeepAlive(){if(this.keepAlive){clearInterval(this.keepAlive);this.keepAlive=null;}},
- stop(){this.queue=[];this.speaking=false;this._pendingDone=null;this._stopKeepAlive();
-  if("speechSynthesis" in window){try{speechSynthesis.cancel();}catch(e){}}}};
+ _stopKeepAlive(){if(this.keepAlive){clearInterval(this.keepAlive);this.keepAlive=null;}}};
 const narrate=(t,o)=>Speech.say(t,o);
 
 /* ════════ АУДИО-ДВИЖОК ════════ */
@@ -686,7 +899,7 @@ const AE={ctx:null,master:null,fx:null,musicBus:null,dry:null,convolver:null,cac
   this.applyVolumes();return this.ctx;},
  applyVolumes(){if(!this.ctx)return;
   this.fx.gain.setTargetAtTime(settings.effects?settings.fxVol:0,this.ctx.currentTime,0.05);
-  this.musicBus.gain.setTargetAtTime(settings.music?settings.musicVol:0,this.ctx.currentTime,0.05);
+  this.musicBus.gain.setTargetAtTime(settings.music?settings.musicVol*speechDuck("music"):0,this.ctx.currentTime,0.05);
   try{if(typeof Bank!=="undefined")Bank.refresh();}catch(_){}},
  impulse(sec,decay){const rate=this.ctx.sampleRate,len=rate*sec,buf=this.ctx.createBuffer(2,len,rate);
   for(let c=0;c<2;c++){const d=buf.getChannelData(c);for(let i=0;i<len;i++)d[i]=(Math.random()*2-1)*Math.pow(1-i/len,decay);}return buf;},
@@ -3010,6 +3223,16 @@ function performWeaponAction(){
  safeFn(()=>drawWeapon());safeFn(()=>saveGame(true));
 }
 function handleThreeFingerTap(){if(!gameActive())return;performWeaponAction();}
+/* Свайп четырьмя пальцами — речь: вниз (или вверх, по настройке) — стоп,
+   в другую сторону — повтор последнего, влево — состояние игрока, вправо —
+   очистить очередь. Работает без чтеца экрана и поверх любого окна. */
+function handleFourFingerSwipe(dir){
+ const g=settings.stopGesture||"four_down";
+ const stopDir=g==="four_up"?"N":"S",repDir=g==="four_up"?"S":"N";
+ if(dir===stopDir){Speech.stop();safeFn(()=>UI.blip(420,.06,.1));vib(15);return;}
+ if(dir===repDir){Speech.repeatLast();return;}
+ if(dir==="W"){Speech.status();return;}
+ if(dir==="E"){const n=Speech.flush();Speech.request(n?`Очередь речи очищена: ${n}.`:"Очередь речи пуста.",{key:"flush"});return;}}
 function handleFourFingerTap(){if(!gameActive())return;
  const m=document.getElementById('magicPanel');
  if(m&&!m.hidden){safeFn(()=>closeMagicPanel());safeFn(()=>UI.blip(520,.08,.12));return;}
@@ -3292,6 +3515,8 @@ document.addEventListener('touchend',e=>{
   if(g.moved&&g.dir){
    const слой=activeLayer();
    if(fingers===3&&g.dir==="N"){safeFn(()=>actionMenuGesture());return;}
+   /* Речь останавливают откуда угодно, и поверх окна тоже. */
+   if(fingers===4){safeFn(()=>handleFourFingerSwipe(g.dir));return;}
    if(слой){
     safeFn(()=>narrate(`Сверху ${layerName(слой)}: этот жест сейчас не про мир, а про список. Свайп одним пальцем — листать, двойное касание — выполнить, свайп двумя пальцами вниз — закрыть.`));
     return;}
@@ -3446,6 +3671,10 @@ const AM_GROUPS=[
  ["Звук и справка",[
   ["lore","📚 Собрание знаний"],
   ["encyc","🎧 Энциклопедия звуков"],
+  ["speechstop","🔇 Остановить речь"],
+  ["speechrepeat","🔁 Повторить последнее"],
+  ["speechflush","🧹 Очистить очередь речи"],
+  ["hud","🧍 Состояние игрока"],
   ["guide","📖 Полное руководство"],
   ["gestures","❓ Жесты"],
   ["tutor","🎓 Обучение жестам"],
@@ -3526,7 +3755,7 @@ function amAvailable(cmd){
   return true;
  }catch(_){return true;}
 }
-function openActionMenu(){lastFocused=document.activeElement;
+function openActionMenu(){lastFocused=document.activeElement;safeFn(()=>Speech.contextCut("menu"));
  safeFn(()=>{resetCursor();Bank.play("menu_select",{gain:0.5});});
  const m=document.getElementById("actionMenu"); if(!m)return; m.hidden=false; m.setAttribute("aria-hidden","false");
  const list=document.getElementById("amList");if(!list){narrate("Меню действий временно недоступно.");return;}list.innerHTML="";
@@ -6780,9 +7009,9 @@ const SOUND_BANK={
  vol(kind){
   try{
    const c=this.chanOf(kind);
-   if(c==="music")return settings.music?Math.min(1,Number(settings.musicVol)||0.5):0;
+   if(c==="music")return settings.music?Math.min(1,(Number(settings.musicVol)||0.5))*speechDuck("music"):0;
    if(!settings.effects)return 0;
-   if(c==="ambient")return Math.min(1,Number(settings.ambVol)===0?0:(Number(settings.ambVol)||0.8));
+   if(c==="ambient")return Math.min(1,Number(settings.ambVol)===0?0:(Number(settings.ambVol)||0.8))*speechDuck("ambient");
    if(c==="ui")return Math.min(1,Number(settings.uiVol)===0?0:(Number(settings.uiVol)||0.9));
    return Math.min(1,Number(settings.fxVol)||0.7);
   }catch(_){return 0.5;}},
@@ -23324,6 +23553,7 @@ function move(dir){
   narrate(`Шаг не проходит: сверху ${layerName(слой)}. Свайп вниз двумя пальцами — закрыть, и шаг снова пойдёт по миру.`);
   return false;}
  if(!DIRV[dir])return false;
+ safeFn(()=>{Speech.contextCut("move");Speech.ctxTag("desc");});
  /* На борту корабля шаг превращается в морской переход: судно идёт своим курсом. */
  if(G.ship)return sailLeg();
  /* Внутри здания, города или подземелья ходьба идёт по клеткам уровня. */
@@ -24737,10 +24967,10 @@ function fight(a){const cb=G.combat;if(!cb)return;const m=cb.m;
   if(hpBefore>q&&G.hp<=q){Bank.play("piano_dark",{gain:0.7,maxSec:6});
    setTimeout(()=>safeFn(()=>Bank.play("chase_tremolo",{gain:0.55,maxSec:5})),300);
    setTimeout(()=>safeFn(()=>Bank.play("pad_dread",{gain:0.45,maxSec:6})),800);
-   narrate("Здоровье на исходе: четверть и меньше. Зелье или бегство.",{interrupt:false});}});
+   narrate("Здоровье на исходе: четверть и меньше. Зелье или бегство.",{pri:0,key:"hplow",cat:"combat"});}});
  if(!safeFn(()=>playRealMonsterCue(m,"attack",0.7),false))playMonsterSound(m);
   if(cb.ai?.chase&&Math.random()<cb.ai.chase){sub(`${m.n} преследует вас.`);}
- narrate(` ${m.n} бьёт вас: −${mdmg}.`);
+ narrate(` ${m.n} бьёт вас: −${mdmg}.`,{key:"enemyhit",pri:3,ttl:1500,cat:"combat"});
  updateCombat();refresh();
  if(G.hp<=0)defeat();}
 function cbLog2text(){const el=document.getElementById("cbLog");return el?el.textContent:"";}
@@ -25057,7 +25287,7 @@ function checkLevelUp(){let leveled=false;
    /* Мир отзывается на рост: медь и одобрительный гул. */
    setTimeout(()=>safeFn(()=>Bank.play("gate_fanfare",{seed:G.level,gain:0.6,maxSec:6})),300);
    setTimeout(()=>safeFn(()=>Bank.play("crowd_cheer",{seed:G.level,gain:0.4,maxSec:5})),900);});
-  narrate(`Новый уровень! Теперь вы ${G.level} уровня. Здоровье и характеристики выросли.`);
+  narrate(`Новый уровень! Теперь вы ${G.level} уровня. Здоровье и характеристики выросли.`,{pri:1,key:"levelup"});
   journal(`Уровень ${G.level}!`);}}
 
 function resourceEmptyFeedback(){safeFn(()=>UI.empty());safeFn(()=>UI.blip(180,.16,.22));}
@@ -25065,6 +25295,7 @@ function resourceEmptyFeedback(){safeFn(()=>UI.empty());safeFn(()=>UI.blip(180,.
 function gatherCurrent(source="tap"){
  try{
   if(!gameActive()){return false;}
+  safeFn(()=>Speech.contextCut("gather"));
   /* В бою сбор молчал наглухо: игрок делал жест двумя пальцами и не слышал
      ничего — ни отказа, ни причины. Для того, кто играет на слух, это то же
      самое, что зависшая игра. Отказ теперь называется вслух и подсказывает,
@@ -25378,6 +25609,10 @@ const CMD={
  settings(){openModal("modal-settings");},
  testall(){openModal("modal-encyclopedia");buildEncycCats();testAllSounds();},
  silence(){stopEverything();},
+ speechstop(){Speech.stop();safeFn(()=>UI.blip(420,.06,.1));vib(15);Speech.request("Тихо.",{key:"stopped"});},
+ speechrepeat(){Speech.repeatLast();},
+ speechflush(){const n=Speech.flush();Speech.request(n?`Очередь речи очищена: ${n}.`:"Очередь речи пуста.",{key:"flush"});},
+ hud(){Speech.status();},
  save(){saveGame();},
  music(){settings.music=settings.music?0:1;saveSettings();AE.applyVolumes();
   if(settings.music&&gameActive()&&!G.inCombat){Music.start(cellContent(G.x,G.y).terrain[0]);}
@@ -27132,6 +27367,7 @@ function modalTitleText(m){
  }catch(_){return "";}}
 function openModal(id){const m=document.getElementById(id);if(!m||!m.hidden)return;
  lastFocused=document.activeElement;m.hidden=false;modalStack.push(m);UI.open();
+ safeFn(()=>Speech.contextCut("menu"));
  safeFn(()=>resetCursor());
  safeFn(()=>Bank.play("inventory_open",{seed:modalStack.length,gain:0.45}));
  /* Раньше открытое окно называло ровно одно слово — «Закрыть»: фокус садился
@@ -27146,10 +27382,11 @@ function openModal(id){const m=document.getElementById(id);if(!m||!m.hidden)retu
   const имя=modalTitleText(m);
   const пункт=cb?((cb.dataset&&cb.dataset.speak)||(cb.textContent||"").trim().replace(/\s+/g," ")):"";
   if(!имя&&!пункт)return;
-  narrate(имя?`Окно «${имя}». Выбрано: ${пункт||"первый пункт"}.`:`Выбрано: ${пункт}.`,{interrupt:true});});}
+  narrate(имя?`Окно «${имя}». Выбрано: ${пункт||"первый пункт"}.`:`Выбрано: ${пункт}.`,{interrupt:true,pri:1,cat:"ui"});});}
 function closeModal(m){if(!m)return;
  const имя=safeFn(()=>modalTitleText(m),"");
  m.hidden=true;UI.close();safeFn(()=>resetCursor());
+ safeFn(()=>Speech.contextCut("menu"));
  const i=modalStack.indexOf(m);if(i>=0)modalStack.splice(i,1);
  if(lastFocused&&lastFocused.focus){silentFocus=true;safeFn(()=>lastFocused.focus());silentFocus=false;}
  /* Закрытое окно тоже обязано отчитаться: иначе игрок жмёт «Закрыть» и
@@ -27157,7 +27394,7 @@ function closeModal(m){if(!m)return;
  safeFn(()=>{
   const низ=modalStack[modalStack.length-1];
   const куда=низ?`Окно «${modalTitleText(низ)}»`:"Игровое поле";
-  narrate(имя?`Окно «${имя}» закрыто. ${куда}.`:`${куда}.`,{interrupt:true});});}
+  narrate(имя?`Окно «${имя}» закрыто. ${куда}.`:`${куда}.`,{interrupt:true,pri:1,cat:"ui"});});}
 function renderInventory(){
  try{
   normalizeWeaponState();
@@ -27683,8 +27920,33 @@ function setDifficulty(k){
  journal(`Сложность: ${d.n}.`);
  return true;
 }
+function bindSpeechSettings($){
+ const chk=(id,key,onText,offText)=>{const el=$(id);if(!el)return;el.checked=settings[key]!==0;
+  el.addEventListener("change",e=>{settings[key]=e.target.checked?1:0;saveSettings();
+   if(onText)Speech.request(e.target.checked?onText:offText,{key:"set:"+key});});};
+ chk("setAutoSpeech","autoSpeech","Автоматическая речь включена.","Автоматическая речь выключена: игра говорит только важное и по запросу.");
+ chk("setAutoDescribe","autoDescribe","Автоописание окружения включено.","Автоописание окружения выключено.");
+ chk("setDescribeObjects","describeObjects","Объекты описываются голосом.","Объекты голосом не описываются: только звуком и по запросу.");
+ chk("setSoundFirst","soundFirst","Звук вместо описаний: пространственные события передаёт звук.","Пространственные события дублируются словом.");
+ chk("setStopOnMove","stopOnMove","Речь прерывается при движении.","Речь при движении не прерывается.");
+ chk("setStopOnMenu","stopOnMenu","Речь прерывается при открытии меню.","Речь меню не прерывается.");
+ chk("setStopOnGather","stopOnGather","Речь прерывается при сборе.","Речь сбором не прерывается.");
+ chk("setSayXp","sayXp","Мелкие изменения опыта озвучиваются.","Мелкие изменения опыта не озвучиваются.");
+ chk("setSayHp","sayHp","Мелкие изменения здоровья озвучиваются.","Мелкие изменения здоровья не озвучиваются.");
+ chk("setSaySpatial","saySpatial","Пространственные события озвучиваются.","Пространственные события — только звуком.");
+ const sel=(id,key,say)=>{const el=$(id);if(!el)return;el.value=String(settings[key]);
+  el.addEventListener("change",e=>{settings[key]=e.target.value;saveSettings();Speech.request(say(e.target.value),{key:"set:"+key});});};
+ sel("setVerbosity","verbosity",v=>({min:"Подробность: минимальная — только важное и результат действия.",brief:"Подробность: краткая — первые две фразы.",normal:"Подробность: стандартная.",full:"Подробность: полная."}[v]||"Подробность изменена."));
+ sel("setSrMode","srMode",v=>({auto:"Объявления для VoiceOver и TalkBack: автоматически.",request:"Объявления для VoiceOver и TalkBack: только по запросу.",off:"Объявления для VoiceOver и TalkBack выключены."}[v]||"Режим объявлений изменён."));
+ sel("setStopGesture","stopGesture",v=>v==="four_up"?"Остановка речи: свайп четырьмя пальцами вверх, повтор — вниз.":"Остановка речи: свайп четырьмя пальцами вниз, повтор — вверх.");
+ const d=$("setDuck");if(d){d.value=Math.round((Number(settings.duck)||0)*100);$("vDuck").textContent=d.value+"%";
+  d.addEventListener("input",e=>{settings.duck=e.target.value/100;saveSettings();$("vDuck").textContent=e.target.value+"%";});}
+ const r=$("btnRepeatLast");if(r)r.addEventListener("click",()=>Speech.repeatLast());
+ const st=$("btnReadStatus");if(st)st.addEventListener("click",()=>Speech.status());
+ const sp=$("btnStopSpeech");if(sp)sp.addEventListener("click",()=>{Speech.stop();vib(15);});}
 function bindSettings(){const $=id=>document.getElementById(id);
  renderDifficulty();
+ safeFn(()=>bindSpeechSettings($));
  $("setSpeech").checked=!!settings.speech;$("setEffects").checked=!!settings.effects;
  $("setMusic").checked=!!settings.music;$("setSubs").checked=!!settings.subtitles;
  $("setExplore").checked=!!settings.explore;$("setFastTap").checked=!!settings.fastTap;$("setHaptics").checked=!!settings.haptics;
@@ -28241,6 +28503,12 @@ document.addEventListener("keydown",e=>{
   if(!document.getElementById("guideOverlay").hidden){closeGuide();return;}
   if(!document.getElementById("actionMenu").hidden){closeActionMenu();return;}
   stopEverything();return;}
+ /* Речь под рукой без чтеца экрана: Alt+Пробел — стоп, Alt+R — повтор,
+    Alt+H — состояние игрока, Alt+X — очистить очередь. */
+ if(e.altKey&&(e.code==="Space"||e.key===" ")){e.preventDefault();Speech.stop();vib(15);return;}
+ if(e.altKey&&e.key.toLowerCase()==="r"){e.preventDefault();Speech.repeatLast();return;}
+ if(e.altKey&&e.key.toLowerCase()==="h"){e.preventDefault();Speech.status();return;}
+ if(e.altKey&&e.key.toLowerCase()==="x"){e.preventDefault();const n=Speech.flush();Speech.request(n?`Очередь речи очищена: ${n}.`:"Очередь речи пуста.",{key:"flush"});return;}
  const dirMap={ArrowUp:"N",ArrowDown:"S",ArrowLeft:"W",ArrowRight:"E"};
  if(dirMap[e.key]&&gameActive()&&!activeLayer()){e.preventDefault();move(dirMap[e.key]);return;}
  if((e.ctrlKey||e.altKey)&&e.key.toLowerCase()==="g"){e.preventDefault();openGuide();}
