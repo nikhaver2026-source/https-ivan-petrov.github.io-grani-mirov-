@@ -61,10 +61,13 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
  const after=await page.evaluate(()=>G.place&&[G.place.x,G.place.y]);
  check('свайп одним пальцем — шаг внутри постройки',JSON.stringify(before)!==JSON.stringify(after),{before,after});
 
- // 3. Свайп двумя пальцами вверх — выход наружу через ворота
+ // 3. Свайп двумя пальцами вниз на воротах — выход наружу (2↑ теперь повтор/прерывание речи)
  await page.evaluate(()=>{const l=curLevel();for(let y=0;y<l.h;y++)for(let x=0;x<l.w;x++)if(l.g[y][x]==="G"||l.g[y][x]==="<"){G.place.x=x;G.place.y=y;return;}});
  await multi(2,'N');
- check('свайп двумя пальцами вверх выводит наружу', await page.evaluate(()=>G.place===null));
+ const послеВверх=await page.evaluate(()=>!!G.place);
+ check('свайп двумя пальцами вверх больше не выводит наружу (это повтор речи)',послеВверх===true);
+ await multi(2,'S');
+ check('свайп двумя пальцами вниз на воротах выводит наружу', await page.evaluate(()=>G.place===null));
 
  // 4. Двойное касание — действие «здесь» (вход). Долгое касание больше ничего
  //    не выполняет: одиночное касание в игре только называет.

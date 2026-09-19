@@ -53,9 +53,11 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
  const bc=await page.evaluate(()=>{
   const need=["castle","village","tavern","temple","market","clanhall","tower","ruins","port","cave_entrance","traveler","forge"];
   const miss=need.filter(id=>!BEACON_SAMPLE[id]);
+  /* Маяки построек — записи мира (залы, дворы, причалы), а не инструменты: инструменты остались музыке событий. */
+  const live=need.filter(id=>/^[a-z]+\/.+\.(ogg|mp3|flac|wav)$/.test(BEACON_SAMPLE[id]||"")).length;
   const inst=need.filter(id=>(BEACON_SAMPLE[id]||"").startsWith("inst/")).length;
-  return {miss,inst};});
- check('у построек живые маяки, а не только синтез',bc.miss.length===0&&bc.inst>=8,bc);
+  return {miss,live,inst};});
+ check('у построек живые маяки записями, без инструментов',bc.miss.length===0&&bc.live>=12&&bc.inst===0,bc);
 
  // 5. Рассвет и закат объявляются
  const phase=await page.evaluate(()=>{

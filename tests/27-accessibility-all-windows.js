@@ -267,8 +267,8 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
  await page.waitForTimeout(300);
  const afterSingle=await page.evaluate(()=>({сложность:settings.difficulty,сказано:window.__said.length,
   курсор:uiCursor&&uiCursor.dataset.cmd}));
- check('одно касание только называет пункт и делает его текущим, но не выполняет',
-  afterSingle.сложность==="normal"&&afterSingle.сказано>=1&&afterSingle.курсор==="setdiff:harsh",afterSingle);
+ check('одно касание молчит, делает пункт текущим, но не выполняет',
+  afterSingle.сложность==="normal"&&afterSingle.сказано===0&&afterSingle.курсор==="setdiff:harsh",afterSingle);
  await page.evaluate(()=>{while(activeLayer())closeTopUI();});
 
  // ══ Неспешное устройство: голос не должен опережать жест ══
