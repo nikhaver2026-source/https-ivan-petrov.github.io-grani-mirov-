@@ -107,6 +107,8 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
 
  /* ── 4. Толчок снимает механизм, но не чары ── */
  const толчок=await page.evaluate(()=>{
+  /* Доля неудачи у работы настоящая, а проверка — о толчке, не об удаче. */
+  const жребий=Math.random;Math.random=()=>0.999;
   G.mast={flux:{ур:5,оп:0,дел:0}};
   G.place={kind:"dungeon",bx:1200,by:1200,stype:"ruins",name:"Низ",depth:14,x:1,y:1};
   const l=curLevel();
@@ -145,7 +147,7 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   techDo(TECH_BY_ID.throw,"orb");
   Speech.say=был2;
   итог.впустую=/толкать нечего/i.test(сказ2.join(" "));
-  G.place=null;
+  Math.random=жребий;G.place=null;
   return итог;});
  check('толчок снимает найденный механизм и говорит об этом',
   толчок.механизм&&толчок.механизм.состояние==="обезврежена"&&толчок.механизм.сказало,толчок);

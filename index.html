@@ -3618,6 +3618,7 @@ let lastFocused=null;
 const AM_GROUPS=[
  ["Здесь и сейчас",[
   ["usehere","✋ Действие здесь (дверь, сундук, алтарь)"],
+  ["assimilate","🧬 Разобрать останки"],
   /* Небо — такой же путь, как дверь и лестница, и живёт в том же разделе. */
   ["takeoff","🕊️ Подняться на крыло"],
   ["flydown","🪶 Снизиться на клетку"],
@@ -3646,6 +3647,9 @@ const AM_GROUPS=[
  ["Персонаж",[
   ["inv","🎒 Инвентарь и экипировка"],
   ["char","👤 Персонаж и опыт"],
+  ["branches","🌿 Ветви силы"],
+  ["bodystate","🧬 Тело: состояние и черты"],
+  ["realms","🌀 Слои мира"],
   ["quests","📜 Квесты"],
   ["school","🎓 Школы и умения"],
   ["enterdark","⚫ Шагнуть в разлом"],
@@ -3701,6 +3705,7 @@ function amLabel(cmd,label){
 function amAvailable(cmd){
  try{
   const c=cellContent(G.x,G.y);
+  if(cmd==="assimilate")return safeFn(()=>assimAvailable(),false);
   if(cmd==="ascend")return !!G.place;
   if(cmd==="enterdark")return !G.dark&&!G.place&&!G.ship&&safeFn(()=>riftAt(G.x,G.y),false);
   if(cmd==="darkrite"){
@@ -7011,9 +7016,9 @@ const SOUND_BANK={
    const c=this.chanOf(kind);
    if(c==="music")return settings.music?Math.min(1,(Number(settings.musicVol)||0.5))*speechDuck("music"):0;
    if(!settings.effects)return 0;
-   if(c==="ambient")return Math.min(1,Number(settings.ambVol)===0?0:(Number(settings.ambVol)||0.8))*speechDuck("ambient");
+   if(c==="ambient")return Math.min(1,Number(settings.ambVol)===0?0:(Number(settings.ambVol)||0.8))*speechDuck("ambient")*anomalyGain("ambient");
    if(c==="ui")return Math.min(1,Number(settings.uiVol)===0?0:(Number(settings.uiVol)||0.9));
-   return Math.min(1,Number(settings.fxVol)||0.7);
+   return Math.min(1,Number(settings.fxVol)||0.7)*anomalyGain("world");
   }catch(_){return 0.5;}},
  /* ── ЗАТИШЬЕ И ПРОБУЖДЕНИЕ ──
     Уход из игры не должен оставлять за спиной играющий лес. Петли ставятся на
@@ -8208,7 +8213,7 @@ function liveAmbient(seed){
   /* У каждого места несколько живых фонов, и какой звучит — решает само место
      (его семя), а не случай: вернувшись, слышишь ту же кузницу. */
   const pick=arr=>arr[Math.abs(Math.floor(Number(seed)||0))%arr.length];
-  if(p&&p.depth>0)role=pick(["deep_wind","deep_drip","deep_wind"]);
+  if(p&&p.depth>0)role=safeFn(()=>{const a=anomalyHere();return a&&a.фон;},null)||pick(["deep_wind","deep_drip","deep_wind"]);
   else if(p)role=pick(LIVE_AMB_PLACE[p.stype]||(p.kind==="city"?LIVE_AMB_PLACE.city:LIVE_AMB_PLACE.house));
   else if(G.ship)role=pick(["sky_wave","ad_wave_rocky"]);
   else{
@@ -8530,7 +8535,7 @@ function buyLot(res,qty){
  const total=lotPrice(res,port,G.day,n);
  if(G.gold<total){narrate(`Партия ${res} ×${n} стоит ${total} золота, у вас ${G.gold}.`);return false;}
  if(!cargoFits(n,`Партия «${res}» ×${n}`))return false;
- G.gold-=total;
+ G.gold-=total;safeFn(()=>deed("deals"));
  G.inv[res]=(Number(G.inv[res])||0)+n;
  safeFn(()=>{UI.pickup();Bank.play("gold",{seed:total,gain:0.8});});
  const where=bestRoutes(port.x,port.y,G.day,6).find(r=>r.res===res);
@@ -8729,7 +8734,7 @@ function boardShip(i){
 function sailLeg(){
  if(!G.ship)return false;
  const s=G.ship;
- s.leg++;s.left=Math.max(0,s.left-1);
+ s.leg++;s.left=Math.max(0,s.left-1);safeFn(()=>deed("legs"));
  G.hour+=3;if(G.hour>=24){G.hour-=24;G.day++;}
  /* Погода меняется в море: штиль, ход волны, шторм. */
  const r=H(s.tox+s.leg,s.toy+G.day,520+s.leg);
@@ -8842,7 +8847,7 @@ function addRep(raceName,n){const r=RACE_BY_NAME[raceName];if(!r)return;if(!G.re
  /* Дар «имя»: сутки вам верят на слово, и доброе запоминается вдвое лучше. */
  if(n>0&&safeFn(()=>pactGift("имя"),false))n=Math.ceil(n*2);
  const было=Number(G.rep[r.id])||0;
- G.rep[r.id]=Math.max(-20,Math.min(20,было+n));
+ G.rep[r.id]=Math.max(-20,Math.min(20,было+n));if(n>0)safeFn(()=>deed("repGains"));
  const стало=G.rep[r.id];
  if(стало===было)return;
  /* Отношение народа слышно сразу: вверх — светлый перебор, вниз — глухой
@@ -9980,8 +9985,11 @@ function findTaken(x,y,tag){
 /* Время, потраченное у находки: разбор остова стоит часа, а не мгновения. */
 /* Одержимость спрашивают там же, где идёт время: часы её кормят. */
 function propTime(ч){
+ /* Временная петля: на таком ярусе часы не идут. */
+ if(safeFn(()=>anomalyIs("loop"),false))return;
  /* Ускоренный час короче чужого: всякое дело отнимает меньше времени. */
  if(safeFn(()=>buffActive("скорость"),false))ч=(Number(ч)||0)*0.7;
+ if(safeFn(()=>propActive("hourglass"),false))ч=(Number(ч)||0)*0.8;
  G.hour+=Number(ч)||0;
  safeFn(()=>demonUpkeep());
  while(G.hour>=24){G.hour-=24;G.day++;
@@ -10342,7 +10350,8 @@ function beastAt(x,y,c,базоваяДоля){
  if(жребий>=доля)return null;
  доля*=safeFn(()=>patrolSafety(x,y),1);
  /* Морок иллюзиониста: вокруг идёт не тот, кто идёт, и встреч вдвое меньше. */
- if(safeFn(()=>buffActive("морок"),false))доля*=0.5;
+ if(safeFn(()=>buffActive("морок")||buffActive("астрал"),false))доля*=0.5;
+ if(safeFn(()=>assimBonus("beast")>0,false))доля*=0.67;
  /* Сведённый свод держит над головой пустоту: под ним почти никто не ходит. */
  if(safeFn(()=>buffActive("свод"),false))доля*=0.25;
  if(жребий>=доля)return null;
@@ -15235,7 +15244,7 @@ let propCell=null;
    Теперь на всякую передышку уходит время — как на лежанке, только меньше:
    час мира за раз. Час двигает сутки, голод и жажду, ночь и день, поэтому
    лечиться без конца становится нечем — время само себя и ограничивает. */
-function propRest(часов){
+function propRest(часов){safeFn(()=>adaptRest((Number(часов)||1)*4));
  /* Огонь, у которого грелись, оседает: короткий выдох углей. */
  safeFn(()=>setTimeout(()=>safeFn(()=>Bank.play("mtg_fire_out",{gain:0.4,maxSec:3})),1200));
  const ч=Math.max(0.25,Number(часов)||1);
@@ -15777,6 +15786,9 @@ iact("knock",{n:"Постучать",значок:"✊",
 iact("hollow",{n:"Проверить на пустоту",значок:"🔍",
  можно:o=>!!G.place&&["#","+","X","C","Y"].indexOf(o.плитка)>=0,
  делать:o=>{
+  if(safeFn(()=>anomalyIs("living"),false)&&Math.floor(Number(G.hour)||0)%2===0){
+   safeFn(()=>Bank.play("moan_deep",{seed:o.x+o.y,gain:0.5,maxSec:3}));
+   narrate(`${o.n}: кладка дышит и держит ход. Живые стены открываются лишь в нечётный час.`,{interrupt:false});return true;}
   const было=safeFn(()=>revealSecret(o.x,o.y,undefined,true),false);
   if(!было){
    safeFn(()=>Bank.play("knock_soft",{seed:o.x+o.y,gain:0.5,maxSec:3}));
@@ -15788,6 +15800,9 @@ iact("hollow",{n:"Проверить на пустоту",значок:"🔍",
 iact("secret",{n:"Искать скрытый отсек",значок:"🕯️",
  можно:o=>!!G.place&&o.плитка==="X",
  делать:o=>{
+  if(safeFn(()=>anomalyIs("living"),false)&&Math.floor(Number(G.hour)||0)%2===0){
+   safeFn(()=>Bank.play("moan_deep",{seed:o.x+o.y,gain:0.5,maxSec:3}));
+   narrate(`${o.n}: кладка дышит и держит ход. Живые стены открываются лишь в нечётный час.`,{interrupt:false});return true;}
   const было=safeFn(()=>revealSecret(o.x,o.y),false);
   if(!было){
    safeFn(()=>Bank.play("knock_soft",{seed:o.x+o.y,gain:0.5,maxSec:3}));
@@ -15870,7 +15885,7 @@ iact("drawer",{n:"Открыть ящик",значок:"🗄️",
    иногда руна, и слепому важно знать это ДО того, как он навалится плечом. */
 iact("doormech",{n:"Проверить механизм",значок:"🔩",
  можно:o=>!!(G.place&&["+","G","Y"].indexOf(o.плитка)>=0),
- делать:o=>{
+ делать:o=>{safeFn(()=>{deed("mechanisms");if(anomalyIs("mechanism"))deed("mechanisms");});
   safeFn(()=>{Bank.play("lock_click",{seed:o.x+o.y,gain:0.5,maxSec:3});setTimeout(()=>safeFn(()=>Bank.play("oc_hinge",{seed:o.y,gain:0.45,maxSec:2})),300);
    setTimeout(()=>safeFn(()=>Bank.play("metal_hit",{seed:o.y,gain:0.4,maxSec:3})),240);});
   safeFn(()=>propTime(0.15));
@@ -15901,7 +15916,7 @@ function leverKind(x,y){
  return "мёртвый";}
 iact("pull",{n:"Потянуть рычаг",значок:"🎚️",
  можно:o=>!!(G.place&&o.плитка==="X"&&o.вещь==="lever"),
- делать:o=>{
+ делать:o=>{safeFn(()=>{deed("mechanisms");if(anomalyIs("mechanism"))deed("mechanisms");});
   if(propMarked(o.x,o.y,"pulled")){
    safeFn(()=>Bank.play("mechanism",{seed:o.x+o.y,gain:0.45,maxSec:3}));
    narrate("Рычаг уже опущен и назад не идёт: своё он отработал.",{interrupt:false});
@@ -16273,6 +16288,102 @@ iact("stashtake",{n:"Достать из тайника",значок:"📜",
    Сделанное помнится: починенная не ломается заново, обобранная не отдаёт
    припас второй раз, прочтённый наговор не читают дважды.
    ════════════════════════════════════════════════════════════════════════ */
+
+/* ── СВОЁ МЕСТО, ЗАМОК, ЗАДВИНУТЬ, СРАВНИТЬ, ВКЛЮЧИТЬ (§118) ──
+   У вещи было «открыть» и «взять», но не было «положить»: игрок не мог
+   оставить своё в комоде и вернуться за ним. Теперь любой ящик, стол, комод,
+   бочка или мешок берёт одну меру самого частого припаса и держит её, пока
+   хозяин не заберёт — запись помнит. Замок сокровищницы можно не только
+   отпереть ключом или рычагом, но и взломать: умеющий кузнец или
+   артефактор пробует по хэшу клетки, и неудача бьёт крошкой. Выдвинутый
+   ящик задвигается; стойку с оружием, щиты, весы и шкаф можно сравнить со
+   своим; астролябия, песочные часы, жёрнов, станок и верстак включаются и
+   выключаются, и это слышно и что-то значит. */
+function myStashKey(o){return `${G.place.bx},${G.place.by},${G.place.depth}:${o.x},${o.y}`;}
+function myStash(){if(!G.myStash||typeof G.myStash!=="object")G.myStash={};return G.myStash;}
+iact("put",{n:"Положить своё",значок:"📥",
+ можно:o=>!!(G.place&&o.плитка==="X"&&DRAWER_PROPS.indexOf(o.вещь)>=0),
+ делать:o=>{
+  const inv=G.inv||{};
+  const что=Object.keys(inv).filter(k=>(Number(inv[k])||0)>=1).sort((a,b)=>(Number(inv[b])||0)-(Number(inv[a])||0))[0];
+  if(!что){safeFn(()=>Bank.play("oc_wood_dull",{seed:o.x,gain:0.4,maxSec:2}));narrate(`${o.n}: положить нечего — котомка пуста.`,{interrupt:false});return true;}
+  const k=myStashKey(o),st=myStash();st[k]=st[k]||{};st[k][что]=(Number(st[k][что])||0)+1;
+  inv[что]-=1;if(inv[что]<=0)delete inv[что];
+  safeFn(()=>propTime(0.1));
+  safeFn(()=>{Bank.play("oc_chest_open",{seed:o.x+o.y,gain:0.55,maxSec:2});setTimeout(()=>safeFn(()=>Bank.play("oc_soft_hit",{seed:o.y,gain:0.5,maxSec:1})),300);});
+  narrate(`${o.n}: положено ${что} ×1. Всего здесь вашего: ${Object.entries(st[k]).map(([a,b])=>`${a} ×${b}`).join(", ")}. Заберёте на этом же месте.`);
+  safeFn(()=>{refresh();saveGame(true);});return true;}});
+iact("mytake",{n:"Забрать своё",значок:"📤",
+ можно:o=>!!(G.place&&o.плитка==="X"&&myStash()[myStashKey(o)]&&Object.keys(myStash()[myStashKey(o)]).length),
+ делать:o=>{
+  const k=myStashKey(o),st=myStash(),свое=st[k]||{};
+  const слова=Object.entries(свое).map(([a,b])=>`${a} ×${b}`).join(", ");
+  for(const a in свое)G.inv[a]=(Number(G.inv[a])||0)+(Number(свое[a])||0);
+  delete st[k];
+  safeFn(()=>{Bank.play("oc_chest_open",{seed:o.x+o.y,gain:0.55,maxSec:2});setTimeout(()=>safeFn(()=>Bank.play("arte_cloth",{seed:o.y,gain:0.5,maxSec:2})),300);});
+  narrate(`${o.n}: своё забрано — ${слова}.`);
+  safeFn(()=>{refresh();saveGame(true);});return true;}});
+iact("close",{n:"Задвинуть",значок:"🚪",
+ можно:o=>!!(G.place&&o.плитка==="X"&&propMarked(o.x,o.y,"drawer")&&!propMarked(o.x,o.y,"closed")),
+ делать:o=>{
+  propMark(o.x,o.y,"closed");
+  safeFn(()=>{Bank.play("oc_hinge",{seed:o.x+o.y,gain:0.45,maxSec:2});setTimeout(()=>safeFn(()=>Bank.play("oc_wood_dull",{seed:o.y,gain:0.55,maxSec:1})),350);});
+  narrate(`${o.n}: ящик задвинут до упора.`);
+  safeFn(()=>{refresh();saveGame(true);});return true;}});
+iact("lockpick",{n:"Взломать замок",значок:"🗝️",
+ можно:o=>!!(G.place&&o.плитка==="Y"&&!safeFn(()=>vaultIsOpen(o.x,o.y),false)),
+ делать:o=>{
+  const ур=Math.max(safeFn(()=>mastLevel("smith"),0),safeFn(()=>mastLevel("arte"),0));
+  if(ур<1){safeFn(()=>Bank.play("lock_click",{seed:o.x,gain:0.5,maxSec:2}));
+   narrate("Замок сокровищницы не поддаётся голым рукам: нужен хоть первый урок кузнеца или артефактора.");return true;}
+  if(propMarked(o.x,o.y,"picked")){narrate("Этот замок вы уже пробовали: язычок сбит, и до утра он не ляжет в паз.",{interrupt:false});return true;}
+  propMark(o.x,o.y,"picked");safeFn(()=>propTime(0.4));safeFn(()=>deed("mechanisms"));
+  const h=hashName(G.place.bx+o.x*7,G.place.by+o.y*11,8300+(Number(G.day)||1));
+  const шанс=0.3+ур*0.15;
+  if(h<шанс){
+   setPlaceMark(o.x,o.y,"open");safeFn(()=>markVaultOpen(o.x,o.y));
+   safeFn(()=>{Bank.play("lock_click",{seed:o.x+o.y,gain:0.6,maxSec:2});setTimeout(()=>safeFn(()=>Bank.play("ad_gate_open",{gain:0.6,maxSec:4})),400);});
+   journal("Замок сокровищницы взломан.");
+   narrate(`Замок сокровищницы поддался: язычок ушёл, и створка отошла. Шагните к ней ещё раз — войдёте.`);}
+  else{
+   const урон=Math.max(3,Math.round(3+(Number(G.place.depth)||1)*0.5));G.hp=Math.max(1,(Number(G.hp)||1)-урон);
+   safeFn(()=>{Bank.play("oc_pop",{seed:o.x,gain:0.6,maxSec:1});setTimeout(()=>safeFn(()=>Bank.play("lug_impact",{gain:0.5,maxSec:2})),150);});
+   narrate(`Замок щёлкнул не туда: из паза ударило крошкой. Урон ${урон}, здоровья ${G.hp}. До утра он не поддастся.`);}
+  safeFn(()=>{refresh();saveGame(true);});return true;}});
+iact("compare",{n:"Сравнить со своим",значок:"⚖️",
+ можно:o=>!!(G.place&&o.плитка==="X"&&["rack","shields","scales","bookcase"].indexOf(o.вещь)>=0),
+ делать:o=>{
+  const h=hashName(G.place.bx+o.x,G.place.by+o.y,8400);
+  let слова="";
+  if(o.вещь==="rack"){const w=G.equip&&G.equip.weapon;const чужой=2+Math.floor(h*10);
+   слова=w?`Ваше оружие даёт +${Number(w.val)||0}, лучший клинок на стойке — +${чужой}: ваше ${((Number(w.val)||0)>=чужой)?"не хуже":"слабее"}.`:`На стойке лучший клинок даёт +${чужой}, а у вас оружия нет.`;
+   safeFn(()=>Bank.play("blade_ring",{seed:o.x,gain:0.5,maxSec:2}));}
+  else if(o.вещь==="shields"){const a=G.equip&&G.equip.armor;const чужой=1+Math.floor(h*8);
+   слова=a?`Ваша броня даёт +${Number(a.val)||0}, лучший щит на стойке — +${чужой}: ваша ${((Number(a.val)||0)>=чужой)?"не хуже":"слабее"}.`:`Лучший щит на стойке даёт +${чужой}, а брони на вас нет.`;
+   safeFn(()=>Bank.play("oc_shield_wood",{seed:o.x,gain:0.5,maxSec:2}));}
+  else if(o.вещь==="scales"){const inv=G.inv||{};const пары=Object.keys(inv).filter(k=>(Number(inv[k])||0)>0).sort((a,b)=>(Number(inv[b])||0)-(Number(inv[a])||0));
+   слова=пары.length>=2?`На чашах: ${пары[0]} ×${inv[пары[0]]} против ${пары[1]} ×${inv[пары[1]]} — перевешивает ${пары[0]}.`:пары.length===1?`На чашах одно: ${пары[0]} ×${inv[пары[0]]}. Сравнивать не с чем.`:"Чаши пусты: класть на них нечего.";
+   safeFn(()=>Bank.play("oc_metal_light",{seed:o.x,gain:0.5,maxSec:2}));}
+  else{const стр=safeFn(()=>knowRead().length,0),всего=safeFn(()=>knowTotal(),0);
+   слова=`В шкафу страниц: ${всего}; вами прочитано ${стр} — ${всего?Math.round(стр*100/всего):0} из ста.`;
+   safeFn(()=>Bank.play("uh_page",{seed:o.x,gain:0.5,maxSec:1}));}
+  narrate(`${o.n}: ${слова}`);return true;}});
+const TOGGLE_PROPS={astrolabe:"астролябия наведена: звуковая картина на два шага шире, пока вы на этом ярусе",
+ hourglass:"песочные часы перевёрнуты: всякое дело здесь отнимает на пятую часть меньше времени",
+ millstone:"жёрнов пущен: гул мелет, и зверьё яруса держится дальше",
+ loom:"станок заправлен: нить натянута, работа пойдёт быстрее",
+ bench:"верстак расчищен: тиски зажаты, работа пойдёт быстрее"};
+iact("toggle",{n:"Включить или выключить",значок:"🔛",
+ можно:o=>!!(G.place&&o.плитка==="X"&&TOGGLE_PROPS[o.вещь]),
+ делать:o=>{
+  const было=propMarked(o.x,o.y,"active");
+  if(было){safeFn(()=>propUnmark(o.x,o.y,"active"));}else propMark(o.x,o.y,"active");
+  safeFn(()=>{Bank.play(было?"oc_lift_stop":"oc_lift_start",{seed:o.x+o.y,gain:0.55,maxSec:2});
+   if(!было)setTimeout(()=>safeFn(()=>Bank.play("oc_wheels",{seed:o.y,gain:0.4,maxSec:3})),300);});
+  safeFn(()=>{if(!G.place.active)G.place.active={};G.place.active[o.вещь]=!было;});
+  narrate(было?`${o.n}: выключено, ход остановлен.`:`${o.n}: включено — ${TOGGLE_PROPS[o.вещь]}.`);
+  safeFn(()=>{refresh();saveGame(true);});return true;}});
+function propActive(вещь){try{return !!(G.place&&G.place.active&&G.place.active[вещь]);}catch(_){return false;}}
 const PROP_STATE={
  master:{n:"рабочая",     о:"чужой порядок на ней и следы недавней работы"},
  broken:{n:"повреждённая",о:"ножка подломлена, и всё на ней ходит ходуном"},
@@ -16304,6 +16415,7 @@ function propMarkKey(x,y,что){
 function propMarked(x,y,что){
  const k=propMarkKey(x,y,что);
  return !!(k&&G.propMarks&&G.propMarks[k]);}
+function propUnmark(x,y,что){try{const k=propMarkKey(x,y,что);if(k&&G.propMarks)delete G.propMarks[k];return true;}catch(_){return false;}}
 function propMark(x,y,что){
  const k=propMarkKey(x,y,что);if(!k)return false;
  if(!G.propMarks||typeof G.propMarks!=="object")G.propMarks={};
@@ -16317,7 +16429,7 @@ function propStateNow(x,y){
 /* Починить — только повреждённую, и только тем, из чего чинят. */
 iact("repair",{n:"Починить",значок:"🔧",
  можно:o=>!!G.place&&o.вид==="tile"&&o.плитка==="X"&&propStateNow(o.x,o.y)==="broken",
- делать:o=>{
+ делать:o=>{safeFn(()=>{deed("mechanisms");if(anomalyIs("mechanism"))deed("mechanisms");});
   const надо=(Number(G.inv&&G.inv["дерево"])||0)>=2?["дерево",2]
    :((Number(G.inv&&G.inv["слиток"])||0)>=1?["слиток",1]:null);
   if(!надо){
@@ -16570,7 +16682,7 @@ iact("altbless",{n:"Получить благословение",значок:"�
   safeFn(()=>buffSet("оберег",часов));
   const было=G.hp;
   G.hp=Math.min(G.hpMax,G.hp+Math.round(G.hpMax*0.3));
-  G.mana=Math.min(G.manaMax,G.mana+Math.round(G.manaMax*0.3));
+  G.mana=Math.min(G.manaMax,G.mana+Math.round(G.manaMax*0.3));safeFn(()=>deed("rites"));
   safeFn(()=>{if(!G.faith)G.faith={};G.faith[a.бог.id]=(Number(G.faith[a.бог.id])||0)+2;});
   safeFn(()=>{UI.fanfare();Bank.play("fx_blessing",{gain:0.7,maxSec:6});
    setTimeout(()=>safeFn(()=>Bank.play("choir",{seed:o.x,gain:0.55,maxSec:7})),400);
@@ -16614,7 +16726,7 @@ iact("altartefact",{n:"Поместить артефакт",значок:"💠",
    return true;}
   const v=(G.artifacts||[]).find(z=>z&&typeof z==="object");
   if(!v){narrate("Класть нечего: вещи с силой при вас нет.");return true;}
-  propMark(o.x,o.y,"charged");
+  propMark(o.x,o.y,"charged");safeFn(()=>adaptAdd("материал",1));
   safeFn(()=>propTime(0.8));
   safeFn(()=>{Bank.play("oc_electrical",{seed:o.x+o.y,gain:0.65,maxSec:6});
    setTimeout(()=>safeFn(()=>Bank.play("magic_shimmer",{seed:o.y,gain:0.5,maxSec:4})),380);});
@@ -16638,7 +16750,7 @@ iact("altrite",{n:"Провести обряд",значок:"🔔",
    narrate(`Обряд берёт двадцать маны, у вас ${Math.round(Number(G.mana)||0)}.`);
    return true;}
   G.mana-=20;
-  safeFn(()=>propTime(1.2));
+  safeFn(()=>propTime(1.2));safeFn(()=>{deed("rites");adaptAdd("обряд",1);});
   safeFn(()=>{Bank.play("oc_inflame",{seed:o.x+o.y,gain:0.7,maxSec:7});
    setTimeout(()=>safeFn(()=>Bank.play(a.вид==="blood"?"deep_call":"choir",{gain:0.55,maxSec:7})),420);
    setTimeout(()=>safeFn(()=>Bank.play("oc_fire",{gain:0.5,maxSec:7})),900);});
@@ -16792,7 +16904,7 @@ iact("apprentice",{n:"Проситься в ученики",значок:"🎓",
    К общим добавляются техники станка: у горна свои, у наковальни свои, и
    показаны только те, до которых доросло мастерство. */
 function actionsFor(o){
- const порядок=["look","listen","knock","hollow","secret","stash","stashtake","drawer","pull","shove","doormech","repair","salvage","attune",
+ const порядок=["look","listen","knock","hollow","secret","stash","stashtake","drawer","close","put","mytake","lockpick","compare","toggle","pull","shove","doormech","repair","salvage","attune",
   "altstudy","altread","altaura","altoffer","altbless","altseal","altartefact","altrite","altsacrifice","altmech",
   "assay","trap","disarm","shelf","apprentice","use"];
  const общие=порядок.map(id=>IACT[id]).filter(a=>a&&(!a.можно||safeFn(()=>a.можно(o),false)));
@@ -17126,7 +17238,7 @@ const STANOK_NAME={forge:"горн",anvil:"наковальня",cauldron:"ча�
    ════════════════════════════════════════════════════════════════════════ */
 const ALCH_EFFECTS=[
  {id:"heal",  n:"целебный",   о:"затягивает раны на глазах",
-  дать:()=>{const h=Math.min(G.hpMax,G.hp+Math.round(G.hpMax*0.35))-G.hp;G.hp+=h;
+  дать:()=>{const h=Math.min(G.hpMax,G.hp+Math.round(G.hpMax*0.35))-G.hp;G.hp+=h;safeFn(()=>adaptRest(8));
    return `здоровья +${h}`;}},
  {id:"mana",  n:"силовой",    о:"по жилам идёт тепло",
   дать:()=>{const m=Math.min(G.manaMax,G.mana+Math.round(G.manaMax*0.6))-G.mana;G.mana+=m;
@@ -17144,7 +17256,7 @@ const ALCH_EFFECTS=[
   дать:()=>"ничего: состав пустой"},
  {id:"toxic", n:"ядовитый",   о:"обжигает нутро", вред:true,
   дать:()=>{const d=Math.max(3,Math.round(G.hpMax*0.12));G.hp=Math.max(1,G.hp-d);
-   G.water=Math.max(0,(Number(G.water)||0)-15);
+   G.water=Math.max(0,(Number(G.water)||0)-15);safeFn(()=>adaptAdd("мутаген",1));
    return `здоровья −${d}, и во рту сухо`;}}];
 const ALCH_BY_ID=Object.fromEntries(ALCH_EFFECTS.map(e=>[e.id,e]));
 /* Пара веществ называется всегда одинаково, в каком порядке их ни возьми. */
@@ -17238,6 +17350,10 @@ const TECHS=[
  {id:"unveil",маст:"illus",ур:2,станки:["mirror"],n:"Прочесть морок",значок:"🪞",
   время:0.5,оп:5,звук:"oc_glass_hit",след:"magic_shimmer",
   о:"Чужая ложь видна тому, кто плетёт свою: ловушка рядом перестаёт быть тайной."},
+ {id:"astral",маст:"illus",ур:2,станки:["mirror","circle"],n:"Астральный ход",значок:"🌌",
+  берёт:{"кристалл":1},время:0.3,оп:6,буфф:["астрал",2],
+  звук:"oc_warp",след:"magic_shimmer",
+  о:"Два часа мир виден сквозь морок: встреч меньше, маяки слышнее. Это отдельный слой мира — астральный."},
  {id:"vessel",маст:"homun",ур:2,станки:["cauldron","circle"],n:"Собрать гомункула",значок:"🧫",
   время:0.2,оп:2,
   звук:"arte_potion",след:"oc_glass_hit",
@@ -17360,11 +17476,11 @@ function techDo(t,станок){
  /* Сборка гомункула не работа у горна, а разговор с сосудом: сперва выбор
     четырёх частей, и только потом припас и время. Жребия срыва здесь нет. */
  if(t.id==="vessel"){
-  safeFn(()=>mastGain(t.маст,t.оп||2));
+  safeFn(()=>mastGain(t.маст,t.оп||2));safeFn(()=>deedTech(t));
   safeFn(()=>openHomun());
   return true;}
  if(t.id==="rites"){
-  safeFn(()=>mastGain(t.маст,t.оп||2));
+  safeFn(()=>mastGain(t.маст,t.оп||2));safeFn(()=>deedTech(t));
   safeFn(()=>openDemon());
   return true;}
  if(t.опыт||t.смесь){
@@ -17386,7 +17502,7 @@ function techDo(t,станок){
   narrate(`${a} и ${b} в чану. ${e.n[0].toUpperCase()+e.n.slice(1)} состав: ${e.о}. ${итог}.`
    +(новое?" Запись легла в книжку: теперь эту пару можно мешать сознательно."
      :" Эту пару вы уже знали."));
-  safeFn(()=>mastGain(t.маст,(t.оп||3)+(новое?3:0)));
+  safeFn(()=>mastGain(t.маст,(t.оп||3)+(новое?3:0)));safeFn(()=>deedTech(t));
   safeFn(()=>questWorldTick("craft",q=>!q.маст||q.маст===t.маст));
   safeFn(()=>{refresh();saveGame(true);});
   return true;}
@@ -18227,7 +18343,7 @@ function riteDo(rite,demonId){
   return false;}
  for(const k in (r.берёт||{})){G.inv[k]=(Number(G.inv[k])||0)-r.берёт[k];if(G.inv[k]<=0)delete G.inv[k];}
  G.mana=Math.max(0,(Number(G.mana)||0)-r.мана);
- safeFn(()=>propTime(r.часы));
+ safeFn(()=>propTime(r.часы));safeFn(()=>{deed("rites");adaptAdd("обряд",1);});
  safeFn(()=>{Bank.play("oc_inflame",{seed:r.часы*10,gain:0.6,maxSec:5});
   setTimeout(()=>safeFn(()=>Bank.play("stk_dark",{gain:0.5,maxSec:5})),420);});
  const сорвалось=Math.random()<riteRisk(rite,demonId);
@@ -18837,10 +18953,348 @@ function xpGain(n){return Math.max(1,Math.round((Number(n)||0)*(1+0.12*fxLevel("
 /* Удар и защита считаются в одном месте, и артефакты входят сюда же, а не
    заводят себе второй расчёт: ART.sum отдаёт сумму по тем вещам, что
    работают (требования выполнены), уже подрезанную по пределу. */
+/* ════════ АНОМАЛИИ ГЛУБИНЫ (§117) ════════
+   Сто ярусов различались породой, тварями и музыкой, но не тем, как в них
+   живётся. Теперь у части ярусов от третьего и ниже — своя аномалия, и
+   слышна она раньше, чем названа: зона тишины глушит шаги и мир, обратное
+   эхо возвращает каждый шаг с опозданием, изменённая тяжесть делает шаг
+   дольше и зверьё вялым, затопленный ярус кладёт под ноги воду, подземная
+   река шумит рядом, платформы уводят шаг в сторону, древние механизмы гудят
+   машиной, живые стены открывают тайные ходы лишь в нечётный час, а в
+   временной петле часы не идут. Аномалия — свойство яруса, выведенное из
+   его координат, и объявляется голосом один раз при входе. */
+const ANOMALIES=[
+ {id:"silence",n:"зона тишины",о:"звуки глохнут: шаги и мир вполголоса, картина уже",фон:null,вес:3},
+ {id:"echo",n:"зона обратного эха",о:"каждый шаг возвращается с опозданием, стены отвечают позже, чем ждёшь",фон:"deep_wind",вес:3},
+ {id:"gravity",n:"область изменённой тяжести",о:"шаг тяжелее, зверьё вялое, защита ниже на единицу",фон:"oc_electrical",вес:2},
+ {id:"flood",n:"затопленный ярус",о:"вода по колено: каждый шаг дольше, а пол отвечает водой",фон:"oc_dive",вес:2},
+ {id:"river",n:"подземная река",о:"поток рядом: шум воды, у берега попадаются ракушки",фон:"ad_river_fast",вес:2},
+ {id:"platform",n:"движущиеся платформы",о:"плиты под ногами ходят: иной шаг уводит в сторону",фон:"oc_lift_move",вес:2},
+ {id:"mechanism",n:"древние механизмы",о:"стены гудят машиной древних: рычаги и механизмы здесь считаются вдвойне",фон:"oc_steam",вес:2},
+ {id:"living",n:"живые стены",о:"кладка дышит: тайные ходы открываются лишь в нечётный час",фон:"moan_deep",вес:1},
+ {id:"loop",n:"временная петля",о:"время стоит: часы не идут, пока вы на ярусе",фон:"stk_clock",вес:1}];
+const ANOMALY_BY_ID=Object.fromEntries(ANOMALIES.map(a=>[a.id,a]));
+function dungeonAnomalyAt(p){
+ try{
+  p=p||G.place;if(!p||!(Number(p.depth)>0)||p.stype==="tower")return null;
+  const d=Number(p.depth)||0;if(d<3)return null;
+  const h=hashName(p.bx*3+d*7,p.by*5+d*11,7400+d);
+  const шанс=Math.min(0.75,0.3+d*0.01);
+  if(h>=шанс)return null;
+  const пул=[];ANOMALIES.forEach(a=>{for(let i=0;i<a.вес;i++)пул.push(a);});
+  return пул[Math.floor(hashName(p.bx+d,p.by*7+d,7401)*пул.length)%пул.length];
+ }catch(_){return null;}}
+function anomalyHere(){return G.place?dungeonAnomalyAt(G.place):null;}
+function anomalyIs(id){const a=anomalyHere();return !!(a&&a.id===id);}
+function anomalyCheck(){
+ try{
+  const a=anomalyHere();
+  if(!G.anomSeen||typeof G.anomSeen!=="object")G.anomSeen={};
+  if(!a){G.anomNow=null;return false;}
+  const key=`${G.place.bx},${G.place.by},${G.place.depth}`;
+  if(G.anomNow===key)return false;
+  G.anomNow=key;const первый=!G.anomSeen[key];G.anomSeen[key]=1;
+  if(первый)journal(`Ярус ${G.place.depth}: ${a.n}.`);
+  safeFn(()=>Bank.play(a.id==="silence"?"oc_soft_touch":(a.фон||"deep_wind"),{gain:0.45,maxSec:4}));
+  narrate(`${a.n.charAt(0).toUpperCase()+a.n.slice(1)}: ${a.о}.`,{pri:первый?2:3,key:"anomaly",ttl:8000});
+  return true;
+ }catch(_){return false;}}
+function anomalyGain(chan){try{const a=anomalyHere();if(!a||a.id!=="silence")return 1;return chan==="ambient"?0.35:chan==="world"?0.5:1;}catch(_){return 1;}}
+/* Шаг по аномальному ярусу: вода и тяжесть отнимают время, плита уводит. */
+function anomalyStep(dir){
+ try{
+  const a=anomalyHere();if(!a)return false;
+  if(a.id==="flood"||a.id==="gravity")propTime(0.1);
+  if(a.id==="platform"){
+   const p=G.place,lvl=curLevel();
+   const h=hashName(p.bx+p.x*7,p.by+p.y*11+(Number(G.hour)||0),7402);
+   if(h<0.15){
+    const стороны=["N","S","W","E"].filter(k=>k!==dir);
+    const k=стороны[Math.floor(h*100)%стороны.length];
+    const nx=p.x+DIRV[k][0],ny=p.y+DIRV[k][1];
+    const t=tileAt(lvl,nx,ny);
+    if(t!=="#"&&t!=="+"&&t!=="G"&&t!=="Y"){
+     p.x=nx;p.y=ny;
+     safeFn(()=>{Bank.play("oc_lift_move",{gain:0.5,maxSec:2});setTimeout(()=>safeFn(()=>Bank.play("oc_lift_stop",{gain:0.45,maxSec:2})),700);});
+     narrate(`Плита под ногами поехала и увела вас на ${DIRN[k].split(",")[0]}.`,{pri:2,key:"platform"});
+     return true;}}}
+  return false;
+ }catch(_){return false;}}
+/* ════════ СЛОИ МИРА, ВЕТВИ СИЛЫ, ТЕЛО И ПОГЛОЩЕНИЕ (§113–116) ════════
+   Сила была одним числом — уровнем героя. Теперь у неё двадцать пять ветвей,
+   и каждая растёт только от сделанного: побед, чар, ремесла, дорог, сделок,
+   обрядов, морских переходов, рычагов и разобранных останков. Ступеней восемь:
+   новичок, ученик, практик, мастер, эксперт, великий мастер, легендарный,
+   трансцендентный. Ремёсла отдают ветви свои пять ступеней, дальше ведёт
+   число сделанных работ.
+   Тело помнит, что через него прошло: чары, раны, обряды, чужая энергия и
+   мутагенные составы копят нагрузку, и у тела восемь состояний — от
+   стабильного через адаптированное, перегруженное и нестабильное к
+   мутировавшему (за Гранью — аномальному), а после отдыха — восстановленное;
+   три усвоенные черты сводят его в эволюционировавшее. У каждого состояния
+   своя цена и своя выгода, и голосом сообщается только смена состояния.
+   Останки побеждённой твари можно разобрать сразу после боя: совместимость
+   от нуля до ста делится на шесть полос, и только в верхних тварь отдаёт
+   черту насовсем — ночной нюх, яд в крови, чуткий слух, холодную кровь,
+   тяжёлую кость, жабры тени. Полное умение противника не переходит никогда;
+   лишняя черта вытесняет прежнюю, а после разбора тело просит часы покоя.
+   Мир разложен на десять слоёв — поверхность, глубина, астрал, разлом,
+   древние карманы, лабиринты башен, затерянные острова, воздух, временные
+   аномалии, искусственные миры древних, — и у каждого свой порог: не
+   телепорт, а знание, вещь, работа, ступень, крыло или корабль. */
+function deeds(k){try{return Number(G.deeds&&G.deeds[k])||0;}catch(_){return 0;}}
+function deed(k,n){
+ try{
+  if(!G.deeds||typeof G.deeds!=="object")G.deeds={};
+  const до=branchRanksSnapshot();
+  G.deeds[k]=(Number(G.deeds[k])||0)+(n==null?1:Number(n)||0);
+  branchAnnounce(до);
+  return G.deeds[k];
+ }catch(_){return 0;}}
+const BRANCH_RANKS=["новичок","ученик","практик","мастер","эксперт","великий мастер","легендарный","трансцендентный"];
+const BRANCH_STEPS=[0,12,35,90,200,450,1000,2200];
+const BRANCHES=[
+ {id:"body",n:"физическая мощь",о:"удары, дошедшие до цели, и сила тела",счёт:()=>deeds("hits")+Math.max(0,(Number(G.str)||10)-10)*6},
+ {id:"combat",n:"боевое мастерство",о:"побеждённые твари",счёт:()=>deeds("kills")*4},
+ {id:"magic",n:"магическая мощь",о:"сотворённые чары и выученные заклинания",счёт:()=>deeds("casts")*3+Math.max(0,((G.spells||[]).length-1))*8},
+ {id:"energy",n:"контроль энергии",о:"мана, прошедшая через руки",счёт:()=>Math.floor(deeds("manaSpent")/6)},
+ {id:"resist",n:"сопротивления",о:"удары, что тело выдержало",счёт:()=>Math.floor(deeds("dmgTaken")/12)},
+ {id:"alchemy",n:"алхимия",о:"ступени ремесла и сделанные работы",маст:"alchemy"},
+ {id:"arte",n:"артефакторика",о:"ступени ремесла и сделанные работы",маст:"arte"},
+ {id:"runes",n:"руны",о:"ступени ремесла и сделанные работы",маст:"runes"},
+ {id:"enchant",n:"зачарование",о:"камнерезное дело: оправа, огранка, заряд",маст:"jewel"},
+ {id:"smith",n:"кузнечное дело",о:"ступени ремесла и сделанные работы",маст:"smith"},
+ {id:"mystic",n:"мистицизм",о:"обряды у алтарей и благосклонность богов",счёт:()=>deeds("rites")*8+faithSum()},
+ {id:"illus",n:"иллюзии",о:"ступени ремесла и сделанные работы",маст:"illus"},
+ {id:"demon",n:"демонология",о:"ступени ремесла и сделанные работы",маст:"demon"},
+ {id:"homun",n:"работа с гомункулами",о:"ступени ремесла и сделанные работы",маст:"homun"},
+ {id:"gravity",n:"управление тяжестью",о:"работы с тяжестью у шара и круга",счёт:()=>deeds("fluxG")*9},
+ {id:"time",n:"управление временными потоками",о:"работы со временем у шара и круга",счёт:()=>deeds("fluxT")*9},
+ {id:"explore",n:"исследование",о:"пройденные клетки и открытые места",счёт:()=>Math.floor(deeds("steps")/8)+deeds("places")*3},
+ {id:"survival",n:"выживание",о:"добыча и прожитые дни",счёт:()=>deeds("gathers")+(Math.max(1,Number(G.day)||1)-1)*3},
+ {id:"diplomacy",n:"дипломатия",о:"доброе имя у народов",счёт:()=>deeds("repGains")*3+repSum()},
+ {id:"trade",n:"торговля",о:"сделки на прилавках",счёт:()=>deeds("deals")*3},
+ {id:"command",n:"командование",о:"сданные дела и рейды",счёт:()=>deeds("quests")*4+deeds("raids")*12},
+ {id:"navigation",n:"навигация",о:"морские переходы",счёт:()=>deeds("legs")*5},
+ {id:"diving",n:"подводное исследование",о:"погружения",счёт:()=>deeds("dives")*8},
+ {id:"ancient",n:"работа с древними технологиями",о:"рычаги, механизмы и починка",счёт:()=>deeds("mechanisms")*6},
+ {id:"assim",n:"поглощение и усвоение",о:"разобранные останки и усвоенные черты",счёт:()=>deeds("assim")*10+assimTraitCount()*15}];
+const BRANCH_BY_ID=Object.fromEntries(BRANCHES.map(b=>[b.id,b]));
+function faithSum(){try{return Object.values(G.faith||{}).reduce((a,b)=>a+Math.max(0,Number(b)||0),0);}catch(_){return 0;}}
+function repSum(){try{return Object.values(G.rep||{}).reduce((a,b)=>a+Math.max(0,Number(b)||0),0);}catch(_){return 0;}}
+function branchScore(b){
+ try{
+  if(b.маст){const r=(G.mast&&G.mast[b.маст])||{ур:0,дел:0};const ур=Number(r.ур)||0,дел=Number(r.дел)||0;
+   if(!ур)return 0;
+   return BRANCH_STEPS[Math.min(5,ур)]+Math.min(дел*8,BRANCH_STEPS[7]);}
+  return Math.max(0,Math.round(b.счёт()));
+ }catch(_){return 0;}}
+function branchRank(id){
+ const b=typeof id==="string"?BRANCH_BY_ID[id]:id;if(!b)return 0;
+ const sc=branchScore(b);let r=0;
+ for(let i=0;i<BRANCH_STEPS.length;i++)if(sc>=BRANCH_STEPS[i])r=i;
+ return r;}
+function branchRanksSnapshot(){const o={};BRANCHES.forEach(b=>{o[b.id]=branchRank(b);});return o;}
+function branchAnnounce(до){
+ try{
+  if(!до)return;
+  for(const b of BRANCHES){
+   const было=Number(до[b.id])||0,стало=branchRank(b);
+   if(стало>было){
+    journal(`Ветвь «${b.n}»: ${BRANCH_RANKS[стало]}.`);
+    safeFn(()=>{Bank.play("jingle_achievement",{gain:0.7});setTimeout(()=>safeFn(()=>Bank.play("harp_light",{seed:стало,gain:0.5,maxSec:4})),300);});
+    narrate(`Ветвь силы «${b.n}»: ${BRANCH_RANKS[стало]}.`,{pri:1,key:"branch:"+b.id});}}
+ }catch(_){}}
+function branchesText(){
+ const rows=BRANCHES.map(b=>({b,r:branchRank(b)})).filter(x=>x.r>0).sort((a,b)=>b.r-a.r);
+ if(!rows.length)return "Ветви силы: все двадцать пять пока на ступени новичка. Ступени растут только от сделанного: побед, чар, ремесла, дорог, сделок и дел.";
+ return `Ветви силы, ${rows.length} из ${BRANCHES.length} выше новичка: `+rows.map(x=>`${x.b.n} — ${BRANCH_RANKS[x.r]}`).join("; ")+". Остальные — новичок.";}
+function branchesHtml(){
+ const rows=BRANCHES.map(b=>({b,r:branchRank(b),sc:branchScore(b)}));
+ const текст=branchesText();
+ return `<div class="list-line" tabindex="0" data-speak="${текст.replace(/"/g,"&quot;")}">🌿 <b>Ветви силы</b> (${rows.filter(x=>x.r>0).length} из ${BRANCHES.length} выше новичка):<br>`+
+  rows.map(x=>`${x.b.n}: <b>${BRANCH_RANKS[x.r]}</b>${x.r<7?` (${x.sc} из ${BRANCH_STEPS[x.r+1]})`:""}`).join("<br>")+`</div>`;}
+function deedTech(t){
+ try{
+  if(!t)return;
+  if(t.маст==="flux"){if(["press","lighten","arch","throw"].includes(t.id))deed("fluxG");else deed("fluxT");}
+  deed("works");
+ }catch(_){}}
+/* ── ТЕЛО: НАГРУЗКА И СОСТОЯНИЯ ── */
+const ADAPT_STATES=[
+ {id:"stable",n:"стабильное",о:"тело держит себя как всегда"},
+ {id:"adapted",n:"адаптированное",о:"чужое вошло в кровь и слушается: защита выше на единицу"},
+ {id:"overloaded",n:"перегруженное",о:"тело несёт больше, чем может: чары стоят на десятую часть дороже"},
+ {id:"mutated",n:"мутировавшее",о:"перемена стала телом: новая черта, но обаяние ниже на единицу"},
+ {id:"anomalous",n:"аномальное",о:"за Гранью перемена пошла не туда: чары на четверть дешевле, раны на пятую часть глубже"},
+ {id:"unstable",n:"нестабильное",о:"тело спорит само с собой: мана утекает по капле на каждом пятом шаге"},
+ {id:"restored",n:"восстановленное",о:"перегруз сошёл, тело помнит и стало крепче: защита выше на единицу"},
+ {id:"evolved",n:"эволюционировавшее",о:"три черты сошлись в одно: защита выше на три, раны на десятую часть легче, чары на десятую часть дешевле"}];
+const ADAPT_BY_ID=Object.fromEntries(ADAPT_STATES.map(x=>[x.id,x]));
+const ADAPT_SOURCES={среда:1,чары:0.6,пища:2,рана:0.4,опыт:3,энергия:5,материал:4,обряд:6,мутаген:12};
+function adapt(){if(!G.adapt||typeof G.adapt!=="object")G.adapt={load:0,state:"stable",peak:0,traits:0,events:0};return G.adapt;}
+function adaptAdd(источник,n){
+ try{
+  const a=adapt();const k=ADAPT_SOURCES[источник]||1;
+  const было=adaptState();
+  a.load=Math.max(0,Math.min(120,(Number(a.load)||0)+k*(n==null?1:Number(n)||0)));
+  a.peak=Math.max(Number(a.peak)||0,a.load);
+  adaptResolve(было);
+  return a.load;
+ }catch(_){return 0;}}
+function adaptRest(n){
+ try{const a=adapt();const было=adaptState();a.load=Math.max(0,(Number(a.load)||0)-(Number(n)||10));adaptResolve(было);return a.load;}catch(_){return 0;}}
+function adaptState(){
+ try{
+  const a=adapt();const L=Number(a.load)||0;
+  if(a.state==="evolved")return "evolved";
+  if((a.state==="mutated"||a.state==="anomalous")&&L>=20)return a.state;
+  if(a.state==="restored"&&L<20)return "restored";
+  if(L>=95)return G.dark?"anomalous":"mutated";
+  if(L>=70)return "unstable";
+  if(L>=45)return "overloaded";
+  if(L>=20)return "adapted";
+  if((Number(a.peak)||0)>=45)return "restored";
+  return "stable";
+ }catch(_){return "stable";}}
+function adaptResolve(было){
+ try{
+  const a=adapt();let стало=adaptState();
+  if(стало===было)return false;
+  if(стало==="mutated"||стало==="anomalous"){a.traits=(Number(a.traits)||0)+1;G.cha=Math.max(1,(Number(G.cha)||10)-1);a.load=Math.max(20,(Number(a.load)||0)-50);}
+  if(assimTraitCount()>=3&&(стало==="adapted"||стало==="restored"))стало="evolved";
+  a.state=стало;a.events=(Number(a.events)||0)+1;
+  const st=ADAPT_BY_ID[стало];
+  journal(`Тело: ${st.n}.`);
+  safeFn(()=>Bank.play(стало==="mutated"||стало==="anomalous"?"oc_organic_hit":стало==="unstable"?"oc_electrical":"oc_soft_touch",{gain:0.55,maxSec:3}));
+  narrate(`Состояние тела: ${st.n} — ${st.о}.`,{pri:1,key:"adapt"});
+  return true;
+ }catch(_){return false;}}
+function adaptBonus(kind){
+ try{
+  const st=adaptState();
+  if(kind==="def")return st==="adapted"||st==="restored"?1:st==="evolved"?3:st==="anomalous"?-1:0;
+  if(kind==="spellCost")return st==="anomalous"?-0.25:st==="overloaded"?0.1:st==="evolved"?-0.1:0;
+  if(kind==="dmgTaken")return st==="anomalous"?0.2:st==="evolved"?-0.1:0;
+  return 0;}catch(_){return 0;}}
+function adaptText(){const st=ADAPT_BY_ID[adaptState()];const a=adapt();return `Состояние тела: ${st.n} — ${st.о}. Нагрузка ${Math.round(Number(a.load)||0)} из ста.`;}
+/* ── ПОГЛОЩЕНИЕ И УСВОЕНИЕ ── */
+const ASSIM_TRAITS=[
+ {id:"nose",n:"ночной нюх",о:"зверя чуешь раньше, чем он тебя: встреч со зверьём меньше",fx:["growl","roar"],бонус:{beast:1}},
+ {id:"venom",n:"яд в крови",о:"укус и яд бьют на четверть слабее",fx:["hiss"],бонус:{poison:0.25}},
+ {id:"ear",n:"чуткий слух",о:"звуковая картина на два шага шире",fx:["screech"],бонус:{ear:2}},
+ {id:"cold",n:"холодная кровь",о:"за Гранью удары на пятую часть слабее",fx:["wail"],бонус:{dark:0.2}},
+ {id:"bone",n:"тяжёлая кость",о:"защита выше на два",fx:["stomp"],бонус:{def:2}},
+ {id:"gill",n:"жабры тени",о:"под водой дышится дольше",fx:["water","splash"],бонус:{breath:1}}];
+const ASSIM_BANDS=[[20,"несовместимо"],[40,"слабый эффект"],[60,"частичное усвоение"],[80,"устойчивое усвоение"],[95,"высокая синергия"],[100,"идеальное совпадение"]];
+function assim(){if(!G.assim||typeof G.assim!=="object")G.assim={traits:{},cooldown:0,materials:0,energy:0};if(!G.assim.traits)G.assim.traits={};return G.assim;}
+function assimTraitCount(){try{return Object.keys(assim().traits||{}).length;}catch(_){return 0;}}
+function assimBand(c){for(const [до,имя] of ASSIM_BANDS)if(c<=до)return имя;return "идеальное совпадение";}
+function assimTraitFor(m){const fx=String(m&&m.fx||"");return ASSIM_TRAITS.find(t=>t.fx.includes(fx))||null;}
+function assimCompat(m){
+ try{
+  const id=String(m&&m.id||"");
+  const h=hashName(id.length*31+(Number(m.lvl)||1),String(G.race||"").length*7+assimTraitCount()*3,7301+id.charCodeAt(0));
+  let c=Math.round(h*100);
+  const t=assimTraitFor(m);if(t&&assim().traits[t.id])c=Math.min(100,c+15);
+  if(assimTraitCount()>=4)c=Math.max(0,c-10);
+  return Math.max(0,Math.min(100,c));
+ }catch(_){return 0;}}
+function assimBonus(kind){
+ try{const tr=assim().traits;let v=0;
+  for(const id in tr){const t=ASSIM_TRAITS.find(x=>x.id===id);if(t&&t.бонус[kind]!=null)v+=t.бонус[kind]*(Number(tr[id])||1);}
+  return v;}catch(_){return 0;}}
+function assimAvailable(){
+ try{const k=G.lastKill;if(!k||k.разобран||G.inCombat)return false;
+  const now=(Number(G.day)||1)*24+(Number(G.hour)||0);return now-(Number(k.когда)||0)<=3;}catch(_){return false;}}
+function assimilateRemains(){
+ try{
+  const k=G.lastKill;const a=assim();
+  const now=(Number(G.day)||1)*24+(Number(G.hour)||0);
+  if(!k||k.разобран){narrate("Разбирать нечего: останков рядом нет.");return false;}
+  if(now-(Number(k.когда)||0)>3){narrate("Останки остыли: разбирать их поздно.");return false;}
+  if((Number(a.cooldown)||0)>now){narrate(`Тело ещё усваивает прошлое: разбирать можно через ${Math.ceil(a.cooldown-now)} ч.`);return false;}
+  k.разобран=true;
+  const c=assimCompat(k),band=assimBand(c),t=assimTraitFor(k);
+  const материал=`след: ${k.n}`;
+  let слова=`Останки «${k.n}» разобраны. Совместимость ${c} из ста: ${band}.`;
+  safeFn(()=>{Bank.play("oc_organic_hit",{gain:0.55,maxSec:2});setTimeout(()=>safeFn(()=>Bank.play("oc_boiling",{gain:0.4,maxSec:3})),300);});
+  deed("assim");adaptAdd("энергия",Math.max(1,Math.round(c/40)));
+  if(c<=20){adaptAdd("мутаген",1);a.cooldown=now+6;слова+=" Чужое отторгнуто: тело перегружено, следующий разбор через шесть часов.";}
+  else if(c<=40){if(t)buffSet("черта:"+t.id,6);a.cooldown=now+3;слова+=t?` Слабый след: «${t.n}» на шесть часов.`:" Слабый след, и тот растаял.";}
+  else if(c<=60){if(t){a.traits[t.id]=Math.max(Number(a.traits[t.id])||0,1);слова+=` Частично усвоено: «${t.n}» — ${t.о}.`;}a.cooldown=now+2;}
+  else if(c<=80){if(t){a.traits[t.id]=Math.max(Number(a.traits[t.id])||0,1);слова+=` Устойчиво усвоено: «${t.n}» — ${t.о}.`;}a.cooldown=now+1;}
+  else if(c<=95){if(t){a.traits[t.id]=(Number(a.traits[t.id])||0)+1;слова+=` Высокая синергия: «${t.n}» крепнет (${a.traits[t.id]}).`;}
+   a.materials=(Number(a.materials)||0)+1;G.inv[материал]=(Number(G.inv[материал])||0)+1;слова+=" В котомке редкий материал.";}
+  else{if(t){a.traits[t.id]=(Number(a.traits[t.id])||0)+2;слова+=` Идеальное совпадение: «${t.n}» — ${t.о}, вдвое.`;}
+   G.inv[материал]=(Number(G.inv[материал])||0)+1;a.energy=(Number(a.energy)||0)+1;G.mana=Math.min(G.manaMax,(Number(G.mana)||0)+10);
+   слова+=" Редкий материал в котомке и след энергии: мана плюс десять.";}
+  if(assimTraitCount()>5){const ids=Object.keys(a.traits);const gone=ids[Math.floor(Math.random()*ids.length)];delete a.traits[gone];
+   слова+=` Черт слишком много, тело спорит: «${(ASSIM_TRAITS.find(x=>x.id===gone)||{n:gone}).n}» ушла.`;}
+  if(assimTraitCount()>=3)safeFn(()=>adaptResolve("_"));
+  journal(слова);narrate(слова,{pri:2,key:"assim"});
+  safeFn(()=>{refresh();saveGame(true);});
+  return true;
+ }catch(e){try{console.warn("assimilate",e);}catch(_){}return false;}}
+function assimText(){const a=assim();const tr=Object.keys(a.traits||{}).map(id=>{const t=ASSIM_TRAITS.find(x=>x.id===id);return t?`${t.n} (${a.traits[id]})`:id;});
+ return tr.length?`Усвоенные черты: ${tr.join(", ")}. Разобрано останков: ${deeds("assim")}.`:"Усвоенных черт нет: разберите останки побеждённой твари сразу после боя.";}
+/* ── СЛОИ МИРА ── */
+const REALMS=[
+ {id:"surface",n:"Поверхностный мир",о:"земля под ногами, дороги, селения и погода",порог:"выйти наружу, спуститься с крыла или сойти с корабля"},
+ {id:"deep",n:"Глубинный мир",о:"ярусы под землёй: камень, капель и стражи",порог:"лестница вниз в любом подземелье"},
+ {id:"astral",n:"Астральные области",о:"мир, увиденный сквозь морок: встреч меньше, маяки слышнее",порог:"работа «Астральный ход» у зеркала или круга: вторая ступень иллюзий и кристалл"},
+ {id:"rift",n:"Разломные пространства",о:"тёмные земли за Гранью",порог:"разлом в горах, топях или пещерах — и решимость шагнуть"},
+ {id:"pocket",n:"Древние карманы реальности",о:"ярусы, где кладка старше державы",порог:"глубина от одиннадцатого яруса до тридцатого"},
+ {id:"labyrinth",n:"Магические лабиринты",о:"этажи башен орденов",порог:"подняться в башне выше первого этажа"},
+ {id:"isles",n:"Затерянные островные зоны",о:"архипелаги и рифы вдали от берега",порог:"корабль и попутный ветер"},
+ {id:"sky",n:"Высотные и воздушные регионы",о:"воздух над землёй, гнездовья и кумирни",порог:"крыло: народ, умеющий летать, или скакун"},
+ {id:"timeloop",n:"Временные аномальные области",о:"час, снятый слепком, и ярусы с петлёй времени",порог:"слепок часа у шара или ярус, где время идёт по кругу"},
+ {id:"ancient",n:"Заброшенные искусственные миры древних",о:"нижние ярусы, где стены сделаны, а не выросли",порог:"глубина от тридцать первого яруса"}];
+const REALM_BY_ID=Object.fromEntries(REALMS.map(r=>[r.id,r]));
+function realmHere(){
+ try{
+  if(G.dark)return "rift";
+  if(safeFn(()=>buffActive("астрал"),false))return "astral";
+  if(G.place){
+   const d=Number(G.place.depth)||0;
+   if(G.place.stype==="tower"&&d>0)return "labyrinth";
+   if(d>=31)return "ancient";
+   if(d>=11)return "pocket";
+   if(d>0)return (typeof dungeonAnomalyAt==="function"&&safeFn(()=>{const z=dungeonAnomalyAt();return !!(z&&z.id==="loop");},false))?"timeloop":"deep";
+   if(G.place.stype==="eyrie"||G.place.stype==="peakshrine")return "sky";
+   return "surface";}
+  if(G.flux&&G.flux.слепок&&safeFn(()=>buffActive("слепок"),false))return "timeloop";
+  if(G.ship)return "isles";
+  if((Number(G.alt)||0)>0)return "sky";
+  const b=safeFn(()=>(typeof biomeAt==="function"?biomeAt(G.x,G.y):null),null);
+  const bid=b?String(b.id||b):"";
+  if(/archipelago|reef/.test(bid))return "isles";
+  return "surface";
+ }catch(_){return "surface";}}
+function realmCheck(){
+ try{
+  const id=realmHere();
+  const fresh=!G.realms||typeof G.realms!=="object";
+  if(fresh)G.realms={now:null,seen:{}};
+  if(!G.realms.seen||typeof G.realms.seen!=="object")G.realms.seen={};
+  if(G.realms.now===id)return false;
+  const первый=!G.realms.seen[id];
+  G.realms.now=id;G.realms.seen[id]=(Number(G.realms.seen[id])||0)+1;
+  const r=REALM_BY_ID[id];
+  if(fresh)return true;
+  if(первый){journal(`Слой мира: ${r.n}.`);safeFn(()=>Bank.play("oc_warp",{gain:0.4,maxSec:2}));}
+  narrate(`Слой мира: ${r.n}.`,{pri:3,key:"realm",ttl:6000});
+  return true;
+ }catch(_){return false;}}
+function realmsText(){
+ const seen=(G.realms&&G.realms.seen)||{};const now=REALM_BY_ID[realmHere()]||REALMS[0];
+ const были=REALMS.filter(r=>seen[r.id]),нет=REALMS.filter(r=>!seen[r.id]);
+ return `Сейчас: ${now.n} — ${now.о}. Слоёв открыто ${были.length} из ${REALMS.length}${были.length?`: ${были.map(r=>r.n).join(", ")}`:""}. `+
+  (нет.length?`Не открыты: ${нет.map(r=>`${r.n} — ${r.порог}`).join("; ")}.`:"Открыты все слои.");}
 function atk(){return G.str+(G.equip.weapon?G.equip.weapon.val:0)+Math.round(2*fxLevel("atk"))
  +safeFn(()=>ART.sum("сила"),0);}
 function def(){return Math.floor(G.agi/3)+(G.equip.armor?G.equip.armor.val:0)+Math.round(2*fxLevel("def"))
- +safeFn(()=>ART.sum("защита"),0);}
+ +safeFn(()=>ART.sum("защита"),0)+safeFn(()=>Math.round(assimBonus("def")+adaptBonus("def")),0)-(safeFn(()=>anomalyIs("gravity"),false)?1:0);}
 const RANKS=["Обычный","Необычный","Редкий","Эпический","Легендарный","Божественный"];
 const QUAL=["Грубое","Простое","Добротное","Отличное","Превосходное","Благословенное"];
 const MAT=["кожаный","железный","стальной","серебряный","мифриловый","драконий"];
@@ -18975,6 +19429,7 @@ function journal(t){G.journal.unshift(`Д${G.day} ${String(Math.floor(G.hour)).p
 
 /* ════════ HUD ════════ */
 function refresh(){
+ safeFn(()=>realmCheck());safeFn(()=>anomalyCheck());
  const c=cellContent(G.x,G.y);
  const h=Math.floor(G.hour%24);
  /* Мир живёт своим чередом: войны начинаются и кончаются, имя игрока растёт
@@ -22035,7 +22490,7 @@ function artSell(i,key){
   return true;
  }catch(_){return false;}}
 /* ── Вход, выход, спуск, подъём ── */
-function enterPlace(c){
+function enterPlace(c){safeFn(()=>deed("places"));
  /* Последний рубеж: в здание не входят с палубы, чем бы это ни было
     вызвано — жестом, меню или событием. */
  if(G.ship){narrate("Сначала сойдите на берег: судно в море.");return false;}
@@ -22532,7 +22987,7 @@ function moveInside(dir){
    Play.start("ev","rusty_gate",{dur:4});});
   narrate("Створки городских ворот разошлись. Шагните ещё раз в ту же сторону — встанете в воротах.");
   return false;}
- p.x=nx;p.y=ny;
+ p.x=nx;p.y=ny;safeFn(()=>anomalyStep(dir));
  G.hour+=runState.active?0.06:0.09;
  if(G.hour>=24){G.hour-=24;G.day++;}
  /* Подсказка о новом — в тот миг, когда новое оказалось под рукой. */
@@ -22655,6 +23110,7 @@ const SCAPE_MAX=2;
 /* И общий промежуток между любыми двумя откликами картины. */
 const SCAPE_GAP=700;
 const SCAPE_RAD=7;          /* докуда слышно, в клетках */
+function scapeRad(){return SCAPE_RAD+safeFn(()=>Math.round(assimBonus("ear")),0)+(safeFn(()=>propActive("astrolabe"),false)?2:0);}
 
 /* Что и как часто подаёт голос. period — секунды между откликами вблизи;
    дальние ждут дольше. */
@@ -22712,8 +23168,8 @@ const Scape={
    if(G.place){
     const lvl=curLevel();if(!lvl)return out;
     const p=G.place;
-    for(let y=Math.max(0,p.y-SCAPE_RAD);y<Math.min(lvl.h,p.y+SCAPE_RAD+1);y++)
-     for(let x=Math.max(0,p.x-SCAPE_RAD);x<Math.min(lvl.w,p.x+SCAPE_RAD+1);x++){
+    for(let y=Math.max(0,p.y-scapeRad());y<Math.min(lvl.h,p.y+scapeRad()+1);y++)
+     for(let x=Math.max(0,p.x-scapeRad());x<Math.min(lvl.w,p.x+scapeRad()+1);x++){
       const t=tileAt(lvl,x,y);
       const kind=SCAPE_TILE[t];if(!kind)continue;
       const dx=x-p.x,dy=y-p.y;if(!dx&&!dy)continue;
@@ -22722,14 +23178,14 @@ const Scape={
     /* Твари, что бродят по уровню, звучат сами по себе и на ходу. */
     safeFn(()=>{(Actors&&Actors.list||[]).forEach((a,i)=>{
      const dx=a.x-p.x,dy=a.y-p.y,d=Math.max(Math.abs(dx),Math.abs(dy));
-     if(d>SCAPE_RAD)return;
+     if(d>scapeRad())return;
      out.push({key:"a"+i,kind:"monster",dx,dy,d,
       role:safeFn(()=>bankFoeRole(a.m),"danger")||"danger",seed:a.x+a.y});});});
     return out;}
    /* Снаружи: постройки, ресурсы, твари и обозы вокруг. С крыла круг
       слышимости шире: с высоты голос доносится оттуда, куда с земли не
       докричишься. */
-   const рад=SCAPE_RAD+Math.min(6,(Number(G.alt)||0)*2);
+   const рад=scapeRad()+Math.min(6,(Number(G.alt)||0)*2);
    for(let dy=-рад;dy<=рад;dy++)for(let dx=-рад;dx<=рад;dx++){
     if(!dx&&!dy)continue;
     const x=G.x+dx,y=G.y+dy;
@@ -22752,11 +23208,11 @@ const Scape={
     if(c.находка)out.push({key:"f"+x+","+y,kind:"find",dx,dy,d,
      role:null,bid:c.находка.b,seed:x*17+y});
    }
-   safeFn(()=>{caravansNear(G.x,G.y,G.day,G.hour,SCAPE_RAD).forEach((c,i)=>{
+   safeFn(()=>{caravansNear(G.x,G.y,G.day,G.hour,scapeRad()).forEach((c,i)=>{
     if(!c.d)return;
     out.push({key:"c"+i,kind:"caravan",dx:c.dx,dy:c.dy,d:c.d,
      role:SCAPE_VOICE.caravan.role,seed:i});});});
-  safeFn(()=>{patrolsNear(G.x,G.y,G.day,G.hour,SCAPE_RAD).forEach((p,i)=>{
+  safeFn(()=>{patrolsNear(G.x,G.y,G.day,G.hour,scapeRad()).forEach((p,i)=>{
     if(!p.d)return;
     out.push({key:"p"+i,kind:"patrol",dx:p.dx,dy:p.dy,d:p.d,
      role:SCAPE_VOICE.patrol.role,seed:p.x+p.y});});});
@@ -22779,7 +23235,7 @@ const Scape={
    if(Date.now()-this.lastAny<SCAPE_GAP)break;
    const v=SCAPE_VOICE[o.kind];if(!v)continue;
    /* Дальний ждёт дольше: вдвое дольше на краю слышимости. */
-   const срок=v.period*1000*(1+o.d/SCAPE_RAD);
+   const срок=v.period*1000*(1+o.d/scapeRad());
    const был=this.last.get(o.key)||0;
    if(now-был<срок)continue;
    /* Разброс, чтобы источники не били в такт. */
@@ -22787,7 +23243,7 @@ const Scape={
    /* У источника может быть СВОЯ высота (летящая тварь) — она главнее общей
       для вида: та задаёт, где вещь стоит обычно, а эта — где она сейчас. */
    const dz=(o.dz!==undefined&&o.dz!==null)?o.dz:(v.dz||0);
-   const gain=v.gain*Math.max(0.25,1-o.d/(SCAPE_RAD+3));
+   const gain=v.gain*Math.max(0.25,1-o.d/(scapeRad()+3));
    let ok=false;
    if(o.role)ok=Spatial.role(o.role,o.dx,o.dy,{dz,gain,maxSec:2.4,seed:o.seed});
    if(!ok&&o.bid)safeFn(()=>beaconAt(o.bid,o.dx,o.dy,dz,o.d));
@@ -23570,6 +24026,8 @@ function move(dir){
  G.x=Math.max(0,Math.min(WORLD-1,G.x+DIRV[dir][0]));
  G.y=Math.max(0,Math.min(WORLD-1,G.y+DIRV[dir][1]));
  if(G.x===oldX&&G.y===oldY){narrate(`Край мира. Дальше на ${DIRN[dir]} идти нельзя.`);return;}
+ safeFn(()=>{deed("steps");if(G.dark)adaptAdd("среда",0.5);
+  if(adaptState()==="unstable"&&deeds("steps")%5===0&&G.mana>0)G.mana=Math.max(0,(Number(G.mana)||0)-1);});
  /* На крыле дорога короче: под вами и топь, и вода, и хребет — всё одинаково.
     Зато крыло на этом и устаёт. */
  if(inFlight()){
@@ -23737,6 +24195,7 @@ function darkFloorSurface(){
    bazaar:"plank",den:"plank",hold:"stone"})[p.stype]||"stone";
  }catch(_){return null;}}
 function indoorSurface(){
+ if(safeFn(()=>anomalyIs("flood"),false))return "water";
  const тёмный=safeFn(()=>darkFloorSurface(),null);
  if(тёмный)return тёмный;
  const p=G.place;if(!p)return "stone";
@@ -24012,19 +24471,21 @@ function stepSound(){AE.ensure();
     и для случая, когда папки со звуками рядом нет. */
  if(Bank.enabled&&Math.random()<0.85){
   const seed=G.x*7+G.y*13+Math.floor(Math.random()*10);
+  const тихо=safeFn(()=>anomalyIs("silence"),false);
+  if(safeFn(()=>anomalyIs("echo"),false))setTimeout(()=>safeFn(()=>Bank.play("oc_step_hard",{seed,gain:0.3,maxSec:0.6})),450);
   const пов=G.place?safeFn(()=>indoorSurface(),outdoorSurface()):outdoorSurface();
   /* За Гранью — своя палитра шагов. */
   if(G.dark){
    const тёмный=DARK_STEP_ROLE[пов];
-   if(тёмный&&Bank.play(тёмный,{seed,gain:0.55,maxSec:0.9}))return;}
+   if(тёмный&&Bank.play(тёмный,{seed,gain:тихо?0.22:0.55,maxSec:0.9}))return;}
   const живой=STEP_ALT[пов];
   if(живой&&seed%3===0&&Bank.play(живой,{seed,gain:0.5,maxSec:0.9}))return;
   const свой=SURF_ROLE[пов];
-  if(свой&&Bank.play(свой,{seed,gain:0.55,maxSec:0.9}))return;
+  if(свой&&Bank.play(свой,{seed,gain:тихо?0.22:0.55,maxSec:0.9}))return;
   const зап=SURF_FALLBACK[пов];
-  if(зап&&Bank.play(зап,{seed,gain:0.55,maxSec:0.9}))return;
+  if(зап&&Bank.play(зап,{seed,gain:тихо?0.22:0.55,maxSec:0.9}))return;
   const role=surface==="water"?"step_water":surface==="grass"||surface==="dirt"?"step_dirt":null;
-  if(role&&Bank.play(role,{seed,gain:0.55,maxSec:0.9}))return;}
+  if(role&&Bank.play(role,{seed,gain:тихо?0.22:0.55,maxSec:0.9}))return;}
  /* Раньше на каждый шаг игры звучала ПАРА шагов — левая и правая — и растягивалась
     на 280–840 мс. Отклик от этого казался вязким: игрок делал свайп, а игра ещё
     дотаптывала предыдущий. Теперь один шаг — один звук, а нога чередуется, чтобы
@@ -24855,7 +25316,7 @@ function fight(a){const cb=G.combat;if(!cb)return;const m=cb.m;
   cbLog("Удар ушёл в пустоту: разная высота.");
   updateCombat();
   return;}
- if(a==="atk"){safeFn(()=>weaponSwingSound(true));let dmg=atk()+Math.floor(Math.random()*5);
+ if(a==="atk"){safeFn(()=>weaponSwingSound(true));safeFn(()=>deed("hits"));let dmg=atk()+Math.floor(Math.random()*5);
   dmg+=Math.round(3*fxLevel("slay"));                       /* пламя Кальдера: урон по чудовищам */
   let critChance=0.10*fxLevel("crit")+(hasSkill("steady")?0.12:0); /* удар Таура и твёрдая рука */
   /* Свойства глубинных вещей: острая чаще бьёт насмерть, тяжёлая — больнее. */
@@ -24912,6 +25373,11 @@ function fight(a){const cb=G.combat;if(!cb)return;const m=cb.m;
  /* Мера сложности: во сколько раз больнее бьёт мир. */
  let mdmg=Math.max(1,Math.round((m.dmg-Math.floor(def()/2)+Math.floor(Math.random()*3))*diff().dmg));
  if(hasSkill("warded"))mdmg=Math.max(1,Math.round(mdmg*0.8));  /* навык «Оберег» держит удар */
+ /* Усвоенные черты и состояние тела: холодная кровь за Гранью, яд в крови
+    против змей, аномальное тело — раны глубже, эволюционировавшее — легче. */
+ mdmg=Math.max(1,Math.round(mdmg*(1-(G.dark?safeFn(()=>assimBonus("dark"),0):0)
+  -(/hiss|serpent|spider|snake|basilisk/.test(String((m&&(m.fx||m.id))||""))?safeFn(()=>assimBonus("poison"),0):0)
+  +safeFn(()=>adaptBonus("dmgTaken"),0))));
  /* Удар по игроку слышен: за Гранью тяжелее, на Грани — короче. */
  safeFn(()=>Bank.play(G.dark?"es_hit":(/wolf|bear|spider|drake|harpy|cat|rat|волк|медвед|паук|кош|крыс/i.test(String(m.id||m.kind||m.n||""))?"lug_claw":((Number(mdmg)||0)%2?"mtg_hurt":"oc_hurt")),{gain:0.55,maxSec:3}));
  /* Школьные дары в защите: стальное сердце тупит удар, стена щитов гасит
@@ -24952,7 +25418,7 @@ function fight(a){const cb=G.combat;if(!cb)return;const m=cb.m;
   const r=ART.sum(стихия);
   if(r>0)mdmg=Math.max(1,Math.round(mdmg*(1-Math.min(0.7,r))));});
  const hpBefore=G.hp;
- G.hp-=mdmg;UI.hit();vib(40);
+ G.hp-=mdmg;UI.hit();vib(40);safeFn(()=>{deed("dmgTaken",mdmg);adaptAdd("рана",1);});
  playWoundSfx(mdmg);
  /* Слабый удар принимает щит, тяжёлый проходит: это две разные вещи, и на
     слух они должны различаться. */
@@ -25043,6 +25509,7 @@ function victory(){const cb=G.combat,m=cb.m;
  if(G.place&&G.place.pendingKill){const k=G.place.pendingKill;G.place.pendingKill=null;
   safeFn(()=>{setPlaceMark(k.x,k.y,"dead");G.dungeonKills=(Number(G.dungeonKills)||0)+1;checkQuestProgress();});}
  G.xp+=xpGain(m.xp);
+ safeFn(()=>{G.lastKill={id:m.id,n:m.n,lvl:m.lvl,fx:m.fx,когда:(Number(G.day)||1)*24+(Number(G.hour)||0)};deed("kills");});
  /* ── О ПОБЕДЕ УЗНАЮТ ──
     Весть рождается там, где был бой, и дальше идёт без игрока. Мелкую драку
     никто не разносит: весть заводится только на том, что выше игрока или
@@ -25287,7 +25754,7 @@ function checkLevelUp(){let leveled=false;
    /* Мир отзывается на рост: медь и одобрительный гул. */
    setTimeout(()=>safeFn(()=>Bank.play("gate_fanfare",{seed:G.level,gain:0.6,maxSec:6})),300);
    setTimeout(()=>safeFn(()=>Bank.play("crowd_cheer",{seed:G.level,gain:0.4,maxSec:5})),900);});
-  narrate(`Новый уровень! Теперь вы ${G.level} уровня. Здоровье и характеристики выросли.`,{pri:1,key:"levelup"});
+  safeFn(()=>adaptAdd("опыт",1));narrate(`Новый уровень! Теперь вы ${G.level} уровня. Здоровье и характеристики выросли.`,{pri:1,key:"levelup"});
   journal(`Уровень ${G.level}!`);}}
 
 function resourceEmptyFeedback(){safeFn(()=>UI.empty());safeFn(()=>UI.blip(180,.16,.22));}
@@ -25365,7 +25832,7 @@ function gatherCurrent(source="tap"){
   const вьюк=safeFn(()=>mountGift("добыча"),null);
   if(вьюк){bounty+=вьюк;навык+=` ${mountNow().n} везёт ещё ${вьюк}.`;}
   if(зелёное&&hasAbility("greenhand")){bounty+=1;навык+=" Зелёная рука: ещё одна.";}
-  G.inv[c.res.name]=(G.inv[c.res.name]||0)+bounty;
+  G.inv[c.res.name]=(G.inv[c.res.name]||0)+bounty;safeFn(()=>deed("gathers"));
   /* ── РЕДКИЙ СОРТ ДАЁТ СВОЙ ТОВАР ──
      С мифриловой жилы игрок берёт и руду — подряд на руду зачтётся, — и
      немного мифрила сверх неё. Так редкая находка не отменяет обычную добычу,
@@ -25506,6 +25973,10 @@ const CMD={
  map(){openModal("modal-map");renderMap();},
  inv(){openModal("modal-inventory");renderInventory();},
  char(){openModal("modal-character");renderCharacter();},
+ branches(){Speech.request(branchesText(),{key:"branches"});},
+ bodystate(){Speech.request(adaptText()+" "+assimText(),{key:"body"});},
+ realms(){Speech.request(realmsText(),{key:"realms"});},
+ assimilate(){assimilateRemains();},
  quests(){openModal("modal-quests");renderQuests();},
  signs(){openSigns();},
  stashes(){safeFn(()=>openStashes());},
@@ -26169,7 +26640,7 @@ function castSpell(i){const sp=SPELLS[i];
  if(!G.spells.includes(sp.n)){narrate("Заклинание не изучено.");return;}
  if(G.mana<sp.cost){safeFn(()=>Bank.play("hero_nomana",{gain:0.6,maxSec:3}));
   narrate(`Нужно ${sp.cost} маны, у вас ${G.mana}.`);return;}
- G.mana-=sp.cost;
+ G.mana-=Math.max(1,Math.round(sp.cost*(1+safeFn(()=>adaptBonus("spellCost"),0))));safeFn(()=>{deed("casts");deed("manaSpent",sp.cost);adaptAdd("чары",1);});
  safeFn(()=>{Bank.play("spell_arcane",{seed:i,gain:0.85});Bank.play(spellBankRole(sp),{seed:i,gain:0.5,maxSec:7});
   /* Второй слой школы: свет — вспышка благословения, тьма — дымка,
      лёд и молния — звон колокольчика чар, всё прочее — челеста. */
@@ -26314,7 +26785,7 @@ function sellResource(key,res,all){
  G.inv[res]=have-qty;
  if(G.inv[res]<=0)delete G.inv[res];
  const total=unit*qty;
- G.gold+=total;
+ G.gold+=total;safeFn(()=>deed("deals"));
  safeFn(()=>addRep(n.race,1));
  safeFn(()=>{UI.pickup();Bank.play("gold",{seed:total,gain:0.8});
   Bank.play("market_slap",{seed:total,gain:0.45,maxSec:3});
@@ -27234,6 +27705,9 @@ function completeQuest(id){
  const q=G.quests.find(qq=>qq.id===id&&!qq.done)||G.quests.find(qq=>qq.id===id);
  if(!q){narrate("Квест не найден.");return;}
  if(q.done){narrate("Это задание уже сдано.");return;}
+ /* Сданное дело — в счёт командования; рейд — вдвойне. */
+ safeFn(()=>{const было=G.quests.filter(x=>x.done).length;
+  setTimeout(()=>safeFn(()=>{if(G.quests.filter(x=>x.done).length>было){deed("quests");if(q.type==="war_raid")deed("raids");}}),0);});
  if(q.type==="fetch"){
   if((G.inv[q.res]||0)<q.need){narrate(`Квест не выполнен: нужно ${q.need} «${q.res}», у вас ${G.inv[q.res]||0}.`);return;}
   G.inv[q.res]-=q.need;}
@@ -27423,7 +27897,8 @@ function renderCharacter(){
  const R=raceInfo(G.race),rg=GOD_BY_ID[R.god],p=patronGod();
  const cl=G.clan&&CLAN_BY_NAME[G.clan];
  const reps=Object.keys(G.rep||{}).filter(k=>G.rep[k]).map(k=>`${RACE_BY_ID[k]?RACE_BY_ID[k].n:k}: ${G.rep[k]}`).join(", ");
- document.getElementById("charStats").innerHTML=
+ document.getElementById("charStats").innerHTML=safeFn(()=>branchesHtml(),"")+
+  safeFn(()=>`<div class="list-line" tabindex="0" data-speak="${(adaptText()+" "+assimText()+" "+realmsText()).replace(/"/g,"&quot;")}">🧬 ${adaptText()}<br>${assimText()}<br>🌀 ${realmsText()}</div>`,"")+
   `<div class="list-line">⭐ Уровень ${G.level} · Опыт ${G.xp} из ${xpNeed(G.level)}<br>
   ❤️ ${G.hp}/${G.hpMax} · 💪 ${G.str} · 🏃 ${G.agi} · 🧠 ${G.mind} · 💬 ${G.cha}<br>
   ✨ ${G.mana}/${G.manaMax} · 🗡️ Атака ${atk()} · 🛡️ Защита ${def()}<br>
