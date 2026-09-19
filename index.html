@@ -506,7 +506,8 @@ const settings=Object.assign({speech:1,effects:1,music:1,subtitles:1,explore:1,f
     Ползунков было три: озвучка, «эффекты» и музыка. Под «эффектами» лежало
     всё разом — шаги, твари, погода, ровный фон местности и писк меню, — и
     приглушить надоевший фон, не оглушив при этом сигналы, было нельзя.
-    Каналов теперь пять: голос, мир, фон, музыка и меню. */
+    Каналов теперь девять: общий, голос, мир, фон, музыка, меню, бой, чары
+    и голоса людей (см. masterVol, combatVol, magicVol, npcVol ниже). */
  rate:1,voiceVol:1,fxVol:1,musicVol:1,ambVol:0.8,uiVol:0.9,
  /* ── КАНАЛЫ ПО ТЗ ЗВУКА ──
     Каналов девять: общий (master), музыка, фон, мир (sfx), голоса людей
@@ -28537,6 +28538,14 @@ function spellSchoolGuess(sp){
 function spellAudio(sp,opts){
  const o=opts||{};
  const sc=o.school||safeFn(()=>{const x=spellSchool(sp);return x&&x.id;},null)||spellSchoolGuess(sp);
+ /* «Тихое» усиление составителя — без слышимой сигнатуры школы: только
+    едва слышная подготовка и затухание общего языка, чтобы твари не
+    насторожились. */
+ if(sp&&sp.custom&&sp.усиление==="silent"){
+  safeFn(()=>Bank.play("oc_cracker",{kind:"magic",gain:0.18,maxSec:2}));
+  setTimeout(()=>safeFn(()=>Bank.play("magic_rewind",{kind:"magic",gain:0.16,maxSec:3})),900);
+  G.lastSpell={school:sc,layers:[["prep","oc_cracker"],["fade","magic_rewind"]],silent:true};
+  return true;}
  const A=Object.assign({},SCHOOL_AUDIO.generic,SCHOOL_AUDIO[sc]||{});
  const seq=[];
  SPELL_LAYERS.forEach(l=>{const role=A[l];if(!role||!Bank.has(role))return;
