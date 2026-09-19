@@ -41,6 +41,8 @@ function check(name,cond,extra){results.push((cond?'PASS':'FAIL')+' — '+name+(
   }
   await page.waitForTimeout(150);
  }
+ /* Три и четыре пальца выполняют только двойным касанием: одиночное лишь взводит. */
+ async function multiDouble(n){await multiTap(n);await multiTap(n);}
  /* Свайп несколькими пальцами: меню действий переехало на три пальца вверх,
     чтобы одно касание двумя пальцами могло собирать ресурсы. */
  async function multiSwipe(n,dx,dy,steps=6,stepMs=16){
@@ -72,9 +74,12 @@ function check(name,cond,extra){results.push((cond?'PASS':'FAIL')+' — '+name+(
 
  // 1. три пальца с разновременным отрывом → оружие вынуто
  await multiTap(3);
- check('3 пальца (разновременный отрыв) вынимают оружие', await page.evaluate(()=>G.weaponDrawn===true));
- await multiTap(3);
- check('3 пальца повторно убирают оружие', await page.evaluate(()=>G.weaponDrawn===false));
+ check('одиночное касание тремя пальцами ничего не делает', await page.evaluate(()=>G.weaponDrawn===false));
+ await page.waitForTimeout(1000);
+ await multiDouble(3);
+ check('двойное касание тремя пальцами (разновременный отрыв) вынимает оружие', await page.evaluate(()=>G.weaponDrawn===true));
+ await multiDouble(3);
+ check('двойное касание тремя пальцами повторно убирает оружие', await page.evaluate(()=>G.weaponDrawn===false));
 
  // 2. три пальца вверх → меню действий, два пальца → закрытие
  await multiSwipe(3,0,-170);
@@ -95,9 +100,12 @@ function check(name,cond,extra){results.push((cond?'PASS':'FAIL')+' — '+name+(
 
  // 3. четыре пальца → панель магии
  await multiTap(4);
- check('4 пальца открывают панель магии', await page.evaluate(()=>{const m=document.getElementById('magicPanel');return !!m&&!m.hidden;}));
- await multiTap(4);
- check('4 пальца закрывают панель магии', await page.evaluate(()=>{const m=document.getElementById('magicPanel');return !!m&&m.hidden;}));
+ check('одиночное касание четырьмя пальцами панель не открывает', await page.evaluate(()=>{const m=document.getElementById('magicPanel');return !m||m.hidden;}));
+ await page.waitForTimeout(1000);
+ await multiDouble(4);
+ check('двойное касание четырьмя пальцами открывает панель магии', await page.evaluate(()=>{const m=document.getElementById('magicPanel');return !!m&&!m.hidden;}));
+ await multiDouble(4);
+ check('двойное касание четырьмя пальцами закрывает панель магии', await page.evaluate(()=>{const m=document.getElementById('magicPanel');return !!m&&m.hidden;}));
 
  // 4. бой: окна нет, есть встроенная сводка, слой не активен
  await page.evaluate(()=>{const c=cellContent(G.x,G.y);const m={id:'wolf',n:'Волк',lvl:2,hp:30,dmg:4,xp:10,gold:5};startCombat({x:G.x,y:G.y,monster:m});});
@@ -106,7 +114,7 @@ function check(name,cond,extra){results.push((cond?'PASS':'FAIL')+' — '+name+(
  check('боевая сводка показана на игровом экране', await page.evaluate(()=>(document.getElementById('combatBar')||{hidden:'нет узла'}).hidden===false));
 
  // 5. удар свайпом в бою
- await multiTap(3); // вынуть оружие
+ await multiDouble(3); // вынуть оружие двойным касанием
  check('оружие вынимается прямо в бою', await page.evaluate(()=>G.weaponDrawn===true));
  const hpBefore=await page.evaluate(()=>G.combat.hp);
  await swipe(200,400,330,400);
