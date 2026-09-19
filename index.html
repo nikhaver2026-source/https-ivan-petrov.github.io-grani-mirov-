@@ -2213,16 +2213,139 @@ const EVENT_THEME={
  bargain:       {роль:"market_tap",следом:[["xylo_coin",280],["caravan_sitar",600]],   о:"сделка заключена"},
  standing_up:   {роль:"court_harpsi",следом:[["cast_shield",380]],    о:"имя поднялось"},
  standing_down: {роль:"trombone_alarm",следом:[["violin_tense",380],["sneak_pizz",800]], о:"имя упало"},
+ /* ── ПОБЕДЫ, ЗЕМЛИ, ГЛАВЫ ── */
+ boss_down:     {роль:"siege_victory",следом:[["war_brass",400],["wide_strings",900],["crowd_cheer",1600]], о:"владыка земель пал"},
+ victory_great: {роль:"war_timpani",следом:[["epic_strings",300],["crowd_cheer",1100]], о:"победа над много сильнейшим"},
+ region_new:    {роль:"village_pipe",следом:[["dawn_birds",500]],     о:"новая держава открыта"},
+ place_new:     {роль:"ghost_choir",следом:[["fx_crystal",500]],      о:"важное место открыто впервые"},
+ story_stage:   {роль:"fate_hit",   следом:[["epic_strings",400],["temple_choir",1200]], о:"новая ступень истории"},
+ reward_rare:   {роль:"relic_sing", следом:[["fx_crystal",400]],      о:"редкая вещь"},
+ reward_legend: {роль:"temple_choir",следом:[["epic_strings",500],["crowd_cheer",1400]], о:"легендарная вещь"},
+ achieve_hidden:{роль:"sneak_pizz", следом:[["secret_box",400],["charm_bell",900]], о:"скрытое достижение"},
  /* ── ВНЕ МИРА ──
     Обучение и загрузка записей — не события мира, и звучать миром они не
     должны: у них свой, служебный голос. */
  tutor_done:    {роль:"bard",       следом:[["dance_nylon",520],["stk_flute",1100]],     о:"обучение пройдено"},
  warm_done:     {роль:"charm_bell", следом:[["magic_shimmer",320]],   о:"записи загружены"}};
+/* ════════════════════════════════════════════════════════════════════════
+   ПУЛЫ МУЗЫКИ СОБЫТИЙ
+
+   По ТЗ один и тот же музыкальный файл на одно и то же событие каждый раз —
+   запрещено. У каждого события пул вариантов, у варианта — ярус значимости:
+   новый уровень — героический, магический, торжественный, спокойный,
+   храмовый; каждый пятый — редкий, каждый десятый — эпический. Сдача дела —
+   обычная, успешная, трудная, цепочка, глава, неожиданная развязка. Взятие
+   дела — обычное, важное, цепочка, сюжетное, тайное, эпическое. Достижение —
+   обычное, редкое, эпическое, скрытое, сюжетное. Награда — обычная (это
+   звук вещи, без музыки), ценная, редкая, единственная, легендарная,
+   артефактная, сюжетная.
+
+   Выбор помнит последние сыгранные варианты (и между запусками тоже) и не
+   повторяет их подряд. Запись из EVENT_THEME остаётся первым вариантом.
+   ════════════════════════════════════════════════════════════════════════ */
+const MUSIC_POOL={
+ levelup:[
+  {роль:"hero_levelup",следом:[["cast_heal",220],["gate_fanfare",520]],ярус:"normal",о:"героическая"},
+  {роль:"trumpet_fanfare",следом:[["harp_high",300],["charm_celesta",700]],ярус:"normal",о:"торжественная"},
+  {роль:"spell_harp",следом:[["charm_bell",350],["pad_halo",800]],ярус:"normal",о:"магическая"},
+  {роль:"harp_light",следом:[["flute_dawn",400],["dawn_birds",900]],ярус:"normal",о:"спокойная"},
+  {роль:"gate_fanfare",следом:[["organ_temple",500],["temple_bell",900]],ярус:"normal",о:"храмовая"},
+  {роль:"epic_strings",следом:[["war_timpani",400],["crowd_cheer",1200]],ярус:"rare",о:"редкая: каждый пятый уровень"},
+  {роль:"trumpet_victory",следом:[["temple_choir",600],["epic_strings",1000],["crowd_cheer",1800]],ярус:"epic",о:"эпическая: каждый десятый"}],
+ quest_done:[
+  {роль:"trumpet_fanfare",следом:[["trumpet_fanfare",300]],ярус:"normal",о:"обычное завершение"},
+  {роль:"gate_fanfare",следом:[["harp_light",400]],ярус:"normal",о:"обычное: ворота и арфа"},
+  {роль:"xylo_coin",следом:[["charm_celesta",300],["harp_light",700]],ярус:"normal",о:"обычное: плата и звон"},
+  {роль:"clan_pipes",следом:[["harp_high",500]],ярус:"normal",о:"обычное: волынка клана"},
+  {роль:"trumpet_victory",следом:[["harp_high",400],["crowd_cheer",1000]],ярус:"success",о:"успешное завершение"},
+  {роль:"war_brass",следом:[["war_timpani",300],["epic_strings",900]],ярус:"hard",о:"трудное дело закрыто"},
+  {роль:"epic_strings",следом:[["temple_choir",700],["crowd_cheer",1500]],ярус:"chain",о:"цепочка пройдена"},
+  {роль:"temple_choir",следом:[["organ_eternal",600],["epic_strings",1300]],ярус:"chapter",о:"глава истории закрыта"},
+  {роль:"violin_omen",следом:[["secret_box",500],["charm_bell",1000]],ярус:"unexpected",о:"неожиданная развязка"}],
+ quest_take:[
+  {роль:"tread_gravel",следом:[["stk_horn",300]],ярус:"normal",о:"обычное дело"},
+  {роль:"road_banjo",следом:[["stk_horn",400]],ярус:"normal",о:"обычное: дорожная струна"},
+  {роль:"horn_gate",следом:[["war_timpani",400]],ярус:"important",о:"важное дело"},
+  {роль:"clan_pipes",следом:[["tread_gravel",500]],ярус:"chain",о:"цепочка дел"},
+  {роль:"omen_swell",следом:[["horn_gate",600]],ярус:"story",о:"сюжетное дело"},
+  {роль:"sneak_pizz",следом:[["secret_box",400]],ярус:"secret",о:"тайное дело"},
+  {роль:"epic_strings",следом:[["horn_gate",500],["war_timpani",1000]],ярус:"epic",о:"эпическая линия"}],
+ achieve:[
+  {роль:"jingle_achievement",следом:[["harp_high",420]],ярус:"normal",о:"обычное достижение"},
+  {роль:"spark_glock",следом:[["harp_light",350]],ярус:"normal",о:"обычное: искра и арфа"},
+  {роль:"charm_celesta",следом:[["harp_high",300],["crowd_cheer",900]],ярус:"rare",о:"редкое достижение"},
+  {роль:"trumpet_victory",следом:[["crowd_cheer",500],["epic_strings",900]],ярус:"epic",о:"эпическое достижение"},
+  {роль:"sneak_pizz",следом:[["secret_box",400],["charm_bell",900]],ярус:"hidden",о:"скрытое достижение"},
+  {роль:"temple_choir",следом:[["gate_fanfare",600]],ярус:"story",о:"сюжетное достижение"}],
+ reward:[
+  {роль:"arte_find",следом:[["arte_object",300]],ярус:"common",о:"обычная: звук вещи, без музыки"},
+  {роль:"xylo_coin",следом:[["gold",260]],ярус:"valuable",о:"ценная"},
+  {роль:"harp_high",следом:[["fx_crystal",420]],ярус:"rare",о:"редкая"},
+  {роль:"relic_sing",следом:[["fx_crystal",400]],ярус:"rare",о:"редкая: пение реликвии"},
+  {роль:"charm_celesta",следом:[["relic_sing",500]],ярус:"unique",о:"единственная"},
+  {роль:"epic_strings",следом:[["relic_sing",500],["crowd_cheer",1300]],ярус:"legendary",о:"легендарная"},
+  {роль:"harp_high",следом:[["fx_crystal",420],["artifact_hum",900]],ярус:"artifact",о:"артефактная"},
+  {роль:"temple_choir",следом:[["fate_hit",500]],ярус:"story",о:"сюжетная"}],
+ boss_down:[
+  {роль:"siege_victory",следом:[["war_brass",400],["wide_strings",900],["crowd_cheer",1600]],о:"медь и струнные"},
+  {роль:"trumpet_victory",следом:[["war_timpani",300],["temple_choir",900],["crowd_cheer",1700]],о:"труба и хор"},
+  {роль:"epic_strings",следом:[["fate_hit",300],["crowd_cheer",1200]],о:"струнные и удар судьбы"}],
+ victory_great:[
+  {роль:"war_timpani",следом:[["epic_strings",300],["crowd_cheer",1100]],о:"литавры"},
+  {роль:"siege_victory",следом:[["war_brass",400]],о:"победная медь"},
+  {роль:"trumpet_victory",следом:[["crowd_cheer",600]],о:"труба победы"}],
+ region_new:[
+  {роль:"village_pipe",следом:[["dawn_birds",500]],о:"свирель села"},
+  {роль:"far_flute",следом:[["horn_gate",600]],о:"дальняя флейта"},
+  {роль:"far_koto",следом:[["pad_halo",500]],о:"кото и ореол"},
+  {роль:"desert_reed",следом:[["far_flute",700]],о:"тростник пустыни"}],
+ place_new:[
+  {роль:"ghost_choir",следом:[["fx_crystal",500]],ярус:"dungeon",о:"подземелье: призрачный хор"},
+  {роль:"pad_dread",следом:[["fx_lurk",600]],ярус:"dungeon",о:"подземелье: тьма"},
+  {роль:"temple_bell",следом:[["organ_temple",500]],ярус:"temple",о:"храм: колокол и орган"},
+  {роль:"chapel_organ",следом:[["temple_choir",700]],ярус:"temple",о:"храм: орган часовни"},
+  {роль:"isle_market",следом:[["crowd_cheer",600]],ярус:"city",о:"город: ряды и толпа"},
+  {роль:"court_harpsi",следом:[["gate_fanfare",500]],ярус:"city",о:"город: клавесин двора"},
+  {роль:"crypt_organ",следом:[["fx_rift",600]],ярус:"tower",о:"башня: орган склепа"},
+  {роль:"mist_keys",следом:[["fx_haze",500]],ярус:"tower",о:"башня: туманные клавиши"},
+  {роль:"secret_box",следом:[["fx_crystal",400]],ярус:"other",о:"находка"}],
+ story_stage:[
+  {роль:"fate_hit",следом:[["epic_strings",400],["temple_choir",1200]],о:"удар судьбы"},
+  {роль:"omen_swell",следом:[["temple_choir",600]],о:"знамение и хор"},
+  {роль:"wide_strings",следом:[["horn_dark",500]],о:"широкие струнные"}],
+ reward_title:[
+  {роль:"gate_fanfare",следом:[["crowd_cheer",520]],о:"фанфара и толпа"},
+  {роль:"trumpet_victory",следом:[["war_brass",500]],о:"труба и медь"},
+  {роль:"clan_pipes",следом:[["crowd_cheer",600]],о:"волынка и толпа"}],
+ chain_done:[
+  {роль:"epic_strings",следом:[["temple_choir",700],["crowd_cheer",1500]],о:"струнные, хор, толпа"},
+  {роль:"temple_choir",следом:[["epic_strings",600],["crowd_cheer",1500]],о:"хор, струнные, толпа"},
+  {роль:"trumpet_victory",следом:[["wide_strings",500],["crowd_cheer",1300]],о:"труба, струнные, толпа"}]};
+/* Выбор варианта с памятью: последние три на событие не повторяются, память
+   переживает перезапуск. */
+const Jingle={
+ hist:null,last:null,
+ load(){if(this.hist)return this.hist;try{this.hist=JSON.parse(store.get("gm29jh")||"{}")||{};}catch(_){this.hist={};}return this.hist;},
+ save(){try{store.set("gm29jh",JSON.stringify(this.load()));}catch(_){}},
+ choose(id,tier){
+  const pool=MUSIC_POOL[id];if(!pool||!pool.length)return null;
+  let c=pool.map((v,i)=>({v,i}));
+  if(tier){const t=c.filter(x=>x.v.ярус===tier);if(t.length)c=t;}
+  const h=this.load()[id]||[];
+  const avoid=new Set(h.slice(-Math.min(3,c.length-1)));
+  const free=c.filter(x=>!avoid.has(x.i));
+  const из=free.length?free:c;
+  const pick=из[Math.floor(Math.random()*из.length)];
+  h.push(pick.i);while(h.length>8)h.shift();this.load()[id]=h;this.save();
+  this.last={id,i:pick.i,tier:tier||null};
+  return pick.v;},
+ reset(){this.hist={};this.save();}
+};
 /* Сыграть тему события. Возвращает «нет», если такого события нет в таблице,
    чтобы опечатка в имени не проходила молча. */
 function eventTheme(id,opts){
- const т=EVENT_THEME[id];if(!т)return false;
  const o=opts||{};
+ const т=(MUSIC_POOL[id]&&Jingle.choose(id,o.tier))||EVENT_THEME[id];if(!т)return false;
  const сид=o.seed===undefined?(Number(G.day)||1):Number(o.seed)||0;
  const гр=o.gain===undefined?0.72:o.gain;
  safeFn(()=>Bank.play(т.роль,{seed:сид,gain:гр,maxSec:o.maxSec||6,kind:"jingle",prio:"high"}));
@@ -15569,7 +15692,7 @@ function trapDisarm(x,y){
   return trapFire(x,y,л);}
  safeFn(()=>setPlaceMark(x,y,"trap_off"));
  safeFn(()=>{Bank.play("mechanism",{seed:x+y,gain:0.6,maxSec:4});
-  setTimeout(()=>safeFn(()=>Bank.play("jingle_achievement",{gain:0.5,maxSec:4})),300);});
+  setTimeout(()=>safeFn(()=>eventTheme("achieve",{tier:"hidden",gain:0.5})),300);});
  const оп=6+л.глубина;
  G.xp+=оп;
  safeFn(()=>mastGain("runes",2));
@@ -17998,7 +18121,7 @@ function mastGain(id,n){
  while(r.ур<5&&r.оп>=mastNeed(r.ур)){
   r.оп-=mastNeed(r.ур);r.ур++;
   const м=MAST_BY_ID[id];
-  safeFn(()=>{UI.fanfare();Bank.play("jingle_achievement",{gain:0.7,maxSec:5});
+  safeFn(()=>{UI.fanfare();eventTheme("achieve",{tier:r.ур>=5?"epic":r.ур>=3?"rare":"normal",gain:0.7});
    setTimeout(()=>safeFn(()=>Bank.play("harp_light",{seed:r.ур,gain:0.6,maxSec:4})),320);});
   safeFn(()=>narrate(`Мастерство растёт: ${м.n} — ${MAST_RANK[r.ур]}. Открылось то, чего прежде не выходило.`,{interrupt:false}));
   safeFn(()=>journal(`Мастерство: ${м.n}, ${MAST_RANK[r.ур]}.`));}
@@ -18695,7 +18818,7 @@ function homunGain(n){
   /* Ступень открывает следующую способность из тех, что положены назначению. */
   const новая=(p.умения||[]).find(u=>u.при<=h.ур&&(h.умения||[]).indexOf(u.id)<0);
   if(новая){if(!Array.isArray(h.умения))h.умения=[];h.умения.push(новая.id);}
-  safeFn(()=>{UI.fanfare();Bank.play("jingle_achievement",{gain:0.6,maxSec:4});
+  safeFn(()=>{UI.fanfare();eventTheme("achieve",{tier:"normal",gain:0.6});
    setTimeout(()=>safeFn(()=>Bank.play("arte_potion",{seed:h.ур,gain:0.5,maxSec:4})),300);});
   safeFn(()=>narrate(`${h.имя} вырос: ступень ${h.ур}.${новая?` Научился: ${новая.n}.`:""}`,{interrupt:false}));
   safeFn(()=>journal(`Гомункул ${h.имя}: ступень ${h.ур}.`));}
@@ -19948,7 +20071,7 @@ function branchAnnounce(до){
    const было=Number(до[b.id])||0,стало=branchRank(b);
    if(стало>было){
     journal(`Ветвь «${b.n}»: ${BRANCH_RANKS[стало]}.`);
-    safeFn(()=>{Bank.play("jingle_achievement",{gain:0.7});setTimeout(()=>safeFn(()=>Bank.play("harp_light",{seed:стало,gain:0.5,maxSec:4})),300);});
+    safeFn(()=>eventTheme("achieve",{tier:стало>=7?"epic":стало>=4?"rare":"normal",gain:0.7}));
     narrate(`Ветвь силы «${b.n}»: ${BRANCH_RANKS[стало]}.`,{pri:1,key:"branch:"+b.id});}}
  }catch(_){}}
 function branchesText(){
@@ -22408,7 +22531,10 @@ function bossVictory(m){
   const b=BOSS_BY_ID[m.boss.id];if(!b)return;
   if(!G.bosses)G.bosses={};G.bosses[b.id]={slain:Number(G.day)||1,at:G.day};
   G.inv[b.припас]=(Number(G.inv[b.припас])||0)+1;
-  safeFn(()=>{Bank.play(b.звуки.смерть,{gain:0.7,maxSec:6});eventFanfare(["siege_victory","war_brass","wide_strings","crowd_cheer"],0.7);});
+  safeFn(()=>{Bank.play(b.звуки.смерть,{kind:"combat",gain:0.7,maxSec:6});
+   setTimeout(()=>safeFn(()=>eventTheme("boss_down",{gain:0.8})),500);
+   /* Титул звучит своей темой, после музыки победы. */
+   setTimeout(()=>safeFn(()=>eventTheme("reward_title",{gain:0.6})),4200);});
   safeFn(()=>findArtifact({глубина:60,seed:b.id.length*977+(Number(G.day)||1)}));
   if(!Array.isArray(G.titles))G.titles=[];const титул=`Одолевший ${b.род}`;if(!G.titles.includes(титул))G.titles.push(титул);
   const l=bossLair(b);const idx=empireIndexAt(l.x,l.y);
@@ -23572,6 +23698,27 @@ function artSell(i,key){
   return true;
  }catch(_){return false;}}
 /* ── Вход, выход, спуск, подъём ── */
+/* Открытие новой державы и нового рода места: музыка звучит один раз,
+   при первом входе, и помнится в сохранении. */
+function regionDiscovered(name){
+ if(!name)return false;
+ if(!G.seenEmp||typeof G.seenEmp!=="object")G.seenEmp={};
+ if(G.seenEmp[name])return false;
+ G.seenEmp[name]=Number(G.day)||1;
+ setTimeout(()=>safeFn(()=>eventTheme("region_new",{gain:0.6})),900);
+ return true;}
+const PLACE_NEW_TIER={dungeon:"dungeon",cave_entrance:"dungeon",temple:"temple",shrine:"temple",
+ castle:"city",port:"city",market:"city",tower:"tower",school:"tower",ruins:"other",clanhall:"other",
+ hold:"other",ossuary:"dungeon",pit:"dungeon",spire:"tower"};
+function placeDiscovered(stype,kind){
+ const tier=PLACE_NEW_TIER[stype]||(kind==="city"?"city":null);
+ if(!tier)return false;
+ if(!G.seenKinds||typeof G.seenKinds!=="object")G.seenKinds={};
+ const key=stype||kind;
+ if(G.seenKinds[key])return false;
+ G.seenKinds[key]=Number(G.day)||1;
+ setTimeout(()=>safeFn(()=>eventTheme("place_new",{tier,gain:0.55})),1200);
+ return true;}
 function enterPlace(c){safeFn(()=>deed("places"));
  /* Последний рубеж: в здание не входят с палубы, чем бы это ни было
     вызвано — жестом, меню или событием. */
@@ -23591,6 +23738,7 @@ function enterPlace(c){safeFn(()=>deed("places"));
  const depth=kind==="dungeon"?1:0;
  const lvl=genLevel(c.x,c.y,depth,stype);
  G.place={kind,bx:c.x,by:c.y,stype,name:c.structure.name,depth,x:lvl.entry.x,y:lvl.entry.y};
+ safeFn(()=>placeDiscovered(stype,kind));
  /* Побывал — значит знает: место попадает в молву как виденное своими
     глазами, вместе с промыслом, который здесь ведут. */
  safeFn(()=>notePlace(c.x,c.y,stype,c.structure.name,"был"));
@@ -24928,7 +25076,9 @@ function openChest(x,y){
     safeFn(()=>markTreasureTaken(казна.сокровище.n));
     bits.push(казна.сокровище.n);
     safeFn(()=>{Bank.play("artifact_hum",{seed:x+y,gain:0.55,maxSec:5});
-     setTimeout(()=>safeFn(()=>Bank.play("arte_gem",{gain:0.5,maxSec:3})),400);});
+     setTimeout(()=>safeFn(()=>Bank.play("arte_gem",{gain:0.5,maxSec:3})),400);
+     /* Именная вещь казны — единственная: своя музыка награды. */
+     setTimeout(()=>safeFn(()=>eventTheme("reward",{tier:"unique",gain:0.6})),900);});
     setTimeout(()=>safeFn(()=>narrate(
      `На отдельной подставке — ${казна.сокровище.n.toLowerCase()}: ${казна.сокровище.д}. Такого нет больше нигде.`,
      {interrupt:false})),1400);}
@@ -25708,6 +25858,8 @@ function arrive(dir){
      кому здесь молятся и с кем эта держава воюет. */
   /* Пересечение границы объявляется валторной, как рог заставы. */
   if(empChanged)safeFn(()=>Bank.play("horn_gate",{gain:0.6,maxSec:6}));
+  /* Впервые в этой державе — открытие земли, и оно звучит музыкой. */
+  if(empChanged)safeFn(()=>regionDiscovered(c.empire.name));
   if(empChanged)safeFn(()=>{const i=Math.max(0,EMPIRES.indexOf(c.empire));
    setTimeout(()=>safeFn(()=>Bank.play(EMPIRE_VOICE[i%EMPIRE_VOICE.length],
     {seed:i,gain:0.5,maxSec:6})),700);});
@@ -26585,15 +26737,13 @@ function victory(){const cb=G.combat,m=cb.m;
   Bank.play(Math.random()<0.5?"throng_die_m":"throng_die_f",{kind:"combat",seed:m.lvl,gain:0.6,maxSec:4});});
  /* Тяжёлый обвал в конце схватки: тварь падает по-настоящему. */
  safeFn(()=>setTimeout(()=>safeFn(()=>natShot("boom",0,0.6)),260));
- safeFn(()=>setTimeout(()=>safeFn(()=>Bank.play("trumpet_victory",{kind:"combat",gain:0.7,maxSec:5})),520));
- safeFn(()=>{Bank.play("jingle_win",{kind:"combat",gain:0.8});Bank.play("victory",{kind:"combat",seed:G.level+(G.xp||0),gain:0.55,maxSec:8});});
- /* Рядовая схватка и настоящая победа не должны звучать одинаково. Тварь
-    сильно выше вас — это событие: вступает медь, поднимаются струнные и
-    отзывается толпа. Обычный бой закрывается коротким телом на земле. */
+ /* Рядовая схватка — не событие: по ТЗ ей положен звук, а не музыка. Тело
+    на земле, выдох героя, и всё. Тварь много сильнее вас — событие: вступает
+    музыка победы из пула, каждый раз другая. */
  safeFn(()=>{
    const значимо=(Number(m.lvl)||1)>=(Number(G.level)||1)+3;
-   if(значимо)eventFanfare(["siege_victory","war_brass","wide_strings","crowd_cheer"],0.6);
-   else setTimeout(()=>safeFn(()=>{Bank.play("lug_splatter",{kind:"combat",seed:m.lvl,gain:0.35,maxSec:1});Bank.play("body_fall",{kind:"combat",seed:m.lvl,gain:0.45,maxSec:2});}),300);});
+   if(значимо)setTimeout(()=>safeFn(()=>eventTheme("victory_great",{gain:0.7})),420);
+   setTimeout(()=>safeFn(()=>{Bank.play("lug_splatter",{kind:"combat",seed:m.lvl,gain:0.35,maxSec:1});Bank.play("body_fall",{kind:"combat",seed:m.lvl,gain:0.45,maxSec:2});}),300);});
  UI.fanfare();journal(`Побеждён «${m.n}» ${m.lvl} уровня.`);
  /* Логово в подземелье после победы пустеет и больше не нападает. */
  /* ── СТРАЖ ПАЛ ──
@@ -26715,10 +26865,19 @@ function openLootView(txt){
  narrate(txt);
  checkLevelUp();
 }
+/* Ярус награды по рангу вещи: обычный и необычный — звук вещи, редкий —
+   редкая, эпический — единственная, легендарный и выше — легендарная. */
+function rewardTierOf(item){
+ const r=Number(item&&item.rank)||0;
+ return r>=4?"legendary":r>=3?"unique":r>=2?"rare":r>=1?"valuable":"common";}
 function takeLoot(){
  try{
   if(!G.loot||!Array.isArray(G.loot)||!G.loot.length)return false;
   const loot=G.loot.slice();
+  /* Музыка — по самой ценной вещи в добыче; обычная добыча звучит вещью. */
+  safeFn(()=>{const best=loot.filter(l=>l&&l.type==="gear"&&l.item).map(l=>l.item)
+   .sort((a,b)=>(Number(b.rank)||0)-(Number(a.rank)||0))[0];
+   if(best)setTimeout(()=>safeFn(()=>eventTheme("reward",{tier:rewardTierOf(best),gain:0.65})),350);});
   const left=[];
   for(const l of loot){
    if(l?.type==="gold")G.gold+=(Number(l.amount)||0);
@@ -26851,15 +27010,14 @@ function artRegen(){
   if(hp>0&&G.hp<G.hpMax)G.hp=Math.min(G.hpMax,G.hp+hp*шагов);
   if(mp>0&&G.mana<G.manaMax)G.mana=Math.min(G.manaMax,G.mana+mp*шагов);
  }catch(_){}}
+function levelTier(l){l=Number(l)||1;return l%10===0?"epic":l%5===0?"rare":"normal";}
 function checkLevelUp(){let leveled=false;
  while(G.xp>=xpNeed(G.level)){G.xp-=xpNeed(G.level);G.level++;leveled=true;
   G.hpMax+=10;G.hp=G.hpMax;G.str++;G.agi++;G.mind++;G.cha++;G.manaMax+=5;G.mana=G.manaMax;}
- if(leveled){UI.fanfare();vib([60,80,60]);safeFn(()=>{Bank.play("hero_levelup",{gain:0.8,maxSec:6});Bank.play("jingle_achievement",{gain:0.85});Bank.play("levelup",{seed:G.level,gain:0.5,maxSec:8});
-   /* Арфа поднимается тремя нотами — слышно, что вырос именно уровень. */
-   [0,220,440].forEach((d,i)=>setTimeout(()=>safeFn(()=>Bank.play("harp_light",{seed:i,gain:0.7,maxSec:4})),d));
-   /* Мир отзывается на рост: медь и одобрительный гул. */
-   setTimeout(()=>safeFn(()=>Bank.play("gate_fanfare",{seed:G.level,gain:0.6,maxSec:6})),300);
-   setTimeout(()=>safeFn(()=>Bank.play("crowd_cheer",{seed:G.level,gain:0.4,maxSec:5})),900);});
+ if(leveled){UI.fanfare();vib([60,80,60]);
+  /* Музыка уровня — из пула: каждый раз другая; каждый пятый уровень —
+     редкая тема, каждый десятый — эпическая. */
+  safeFn(()=>eventTheme("levelup",{tier:levelTier(G.level),gain:0.8}));
   safeFn(()=>adaptAdd("опыт",1));narrate(`Новый уровень! Теперь вы ${G.level} уровня. Здоровье и характеристики выросли.`,{pri:1,key:"levelup"});
   journal(`Уровень ${G.level}!`);}}
 
@@ -27010,7 +27168,7 @@ function findArtifact(opts){
  if(кач<=1&&S(9)<0.25)a.нестаб=0.08+S(10)*0.14;
  ART.grant({готовая:a});
  safeFn(()=>{Bank.play("artifact",{seed:G.artifacts.length,gain:0.6,maxSec:9});
-  eventTheme("reward_artifact",{seed:G.artifacts.length,gain:0.8});
+  eventTheme("reward",{tier:"artifact",gain:0.8});
   Play.start("ev","seal_break",{dur:3});
   setTimeout(()=>safeFn(()=>Play.start("ev","artifact_pulse",{dur:6})),1600);});
  UI.fanfare();
@@ -28817,7 +28975,8 @@ function advanceChain(q){
   if(!nq)return false;
   G.quests.push(nq);
   journal(`Продолжение «${ch.n}», шаг ${next+1}: ${nq.text}`);
-  safeFn(()=>Bank.play("quest",{seed:next,gain:0.6,maxSec:5}));
+  /* Новая ступень истории: не та же труба, что у всякого дела. */
+  safeFn(()=>eventTheme("story_stage",{gain:0.6}));
   narrate(`У дела есть продолжение. ${ch.n}, шаг ${next+1} из ${ch.steps.length}: ${nq.text}`,{interrupt:false});
   return true;
  }catch(_){return false;}
@@ -28870,6 +29029,7 @@ function questPartialReady(q){
  return есть>=Math.ceil(надо/2)&&есть<надо;}
 function questDelay(день,текст,эффект){if(!Array.isArray(G.delayed))G.delayed=[];G.delayed.push({день:Number(день)||((Number(G.day)||1)+3),текст:String(текст||""),эффект:эффект||null});}
 function completeQuestPartial(id){
+ safeFn(()=>setTimeout(()=>safeFn(()=>eventTheme("quest_done",{tier:"unexpected",gain:0.65})),150));
  const q=(G.quests||[]).find(x=>x.id===id&&!x.done);
  if(!q){narrate("Дело не найдено.");return false;}
  if(!questPartialReady(q)){narrate("Частично сдать нельзя: нужна хотя бы половина, и не всё целиком.");return false;}
@@ -28954,6 +29114,7 @@ function takeNPCQuest(n){
  safeFn(()=>{const ярус=questTier(q);q.ярус=ярус.id;q.состояние="открыто";q.старт=`взято у ${n.name} (${n.race}) в державе ${EMPIRES[empireIndexAt(n.x,n.y)].short} на ${G.day}-й день`;if(!q.до&&!q.due)q.до=(Number(G.day)||1)+ярус.срок;});
  if(q.type==="war_raid")q.base=Number(G.dungeonKills)||0; /* рейд считается с момента, когда задание взято */
  G.quests.push(q);journal(`Квест от ${n.name}: ${q.text}`);
+ safeFn(()=>eventTheme("quest_take",{tier:questTakeTier(q),gain:0.6}));
  const details=q.type==='fetch'?` Нужно принести ${q.need} «${q.res}». Ищи их в районе (${q.tx}; ${q.ty}).`
   :q.type==='kill'?` Нужно уничтожить ${q.need} монстров. Направление поиска: ${q.text.match(/Иди на ([А-Яа-яЁё]+)/)?.[1]||'округа'}.`
   :q.type==='hunt'?` Нужно выследить именно «${q.monsterName}» (${q.need} шт.). Обычные монстры не подходят.`
@@ -29116,6 +29277,21 @@ function qProgressText(q){
  if(q.type==="kill")return `${Math.min(q.have||0,q.need)} из ${q.need} монстров`;
  if(q.type==="hunt")return `${Math.min(q.have||0,q.need)} из ${q.need} — «${q.monsterName}»`;
  return q.doneFlag?"цель достигнута, вернитесь к заказчику":"идите к отметке ("+q.tx+"; "+q.ty+")";}
+/* Ярус музыки сдачи: точечное — обычная, локальное — успешная, личное —
+   трудное, мировое — глава; шаг цепочки звучит цепочкой. */
+function questDoneTier(q){
+ try{
+  if(q&&q.chain)return "chain";
+  const t=safeFn(()=>questTier(q),null);const id=t&&t.id;
+  return id==="world"?"chapter":id==="personal"?"hard":id==="local"?"success":"normal";
+ }catch(_){return "normal";}}
+function questTakeTier(q){
+ try{
+  if(q&&q.chain)return "chain";
+  if(q&&(q.тьма||q.паломничество))return "secret";
+  const t=safeFn(()=>questTier(q),null);const id=t&&t.id;
+  return id==="world"?"epic":id==="personal"?"story":id==="local"?"important":"normal";
+ }catch(_){return "normal";}}
 function completeQuest(id){
  /* Незавершённое — вперёд: даже если в списке остался старый однофамилец,
     награда не должна выдаваться за уже сданное. */
@@ -29230,7 +29406,7 @@ function completeQuest(id){
  UI.fanfare();
  safeFn(()=>Bank.play("quest",{seed:G.quests.length,gain:0.7,maxSec:7}));
  /* Труба на два голоса: задание сдано. */
- safeFn(()=>eventTheme("quest_done",{seed:0,gain:0.7}));
+ safeFn(()=>eventTheme("quest_done",{tier:questDoneTier(q),gain:0.7}));
  narrate(`Квест выполнен! Награда: ${gold} золота, ${xp} опыта.`+даром+школьное+тёмное+мировое+
   (q.наряд?` ${q.наряд} закрыт.`:"")+
   (q.faith&&q.godId?` Благосклонность ${GOD_BY_ID[q.godId]?GOD_BY_ID[q.godId].n:"бога"} +${q.faith}.`:"")+
