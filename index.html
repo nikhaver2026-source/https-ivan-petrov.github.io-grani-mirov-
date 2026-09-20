@@ -4419,7 +4419,11 @@ function safeOpenMagicPanel(){
   const known=Array.isArray(G.spells)?G.spells:[];
   safeFn(()=>registerCustomSpells());
   for(let i=0;i<Math.max(12,SPELLS.length);i++){
-   const sp=SPELLS[i]||{n:`Слот ${i+1}`,cost:0};const b=document.createElement('button');b.type='button';b.className='item';b.dataset.magicIndex=i;b.dataset.speak=`Слот ${i+1}: ${sp.n}. Мана ${sp.cost}.`;
+   const sp=SPELLS[i]||{n:`Слот ${i+1}`,cost:0};const b=document.createElement('button');b.type='button';b.className='item';b.dataset.magicIndex=i;
+   /* Резонанс называется до траты: незрячему игроку важно услышать, во что
+      обойдётся чужая стихия, прежде чем он её тронет. */
+   const рез=(SPELLS[i]&&known.includes(sp.n))?safeFn(()=>" Созвучие: "+Resonance.слово(sp)+".",""):"";
+   b.dataset.speak=`Слот ${i+1}: ${sp.n}. Мана ${sp.cost}.${рез}`;
    b.textContent=`${i+1}. ${sp.n}${known.includes(sp.n)?'':' (не изучено)'}`;
    b.addEventListener('click',()=>{try{castSpell(i);}catch(e){narrate('Не удалось применить заклинание.');}});list.appendChild(b);
   }
@@ -4807,6 +4811,15 @@ const GUIDE=[
  "Вещь растёт. За каждую победу работающий артефакт получает опыт, а на пороге открывает ступень — прибавку, которой у него раньше не было, и всегда из своего направления. Каждая следующая ступень даётся вдвое тяжелее. Если гнёзда кончились, редкую часть можно скормить вещи: она уйдёт в опыт вместо гнезда.",
  "Требования. Ранг задаёт уровень; сверх того вещь может требовать навык, заклинание нужной школы, расположение народа, принадлежность к клану, прочитанное знание или закрытое дело. Вещь, требования которой не выполнены, лежит мёртвым грузом и не даёт ничего — и прямо говорит, чего ей не хватает.",
  "Где всё это. Пункт меню «Артефакты, части и рецепты». В нём видно, каким ремеслом здесь занимаются и каково ваше умение, какие рецепты под рукой и чего не хватает, какие части лежат в суме, и по каждой вещи — всё, что о ней известно, и всё, что с ней можно сделать: вложить, вынуть, зачаровать, скормить, продать."]},
+{title:"Глава 68. Резонанс: согласие героя, вещи и чары",body:[
+ "Заклинание не висит в пустоте. Его творит ЭТОТ герой, держа в руках ЭТУ вещь. Трое должны согласиться — иначе плетение идёт туго, стоит дороже и рвётся в руках.",
+ "ЧЕТЫРЕ ЧИСЛА, И ВСЕ ЧЕТЫРЕ СЛЫШНЫ. Согласие — от минус единицы до единицы: насколько стихия чары своя вам и вашей вещи. Устойчивость — удержится ли плетение. Цена — множитель маны: своё дешевле, чужое дороже. Срыв — вероятность того, что чара отдаст в творящего. Панель магии называет все четыре одной строкой, прежде чем вы потратите ману: «в лад», «складно», «ровно», «туго» или «наперекор».",
+ "ЧЕМ ЗВУЧИТЕ ВЫ. Ваша стихия не выбирается в меню — она складывается сама из того, что вы выучили, что носите и куда качнулось равновесие мира. Знаете десяток огненных чар — звучите огнём. Носите ледяной клинок — лёд тянет к себе. Ушли в порядок или в хаос — это тоже слышно. Ничего не выдумано: всё считано из того, что у вас и вправду есть.",
+ "ЧЕМ ЗВУЧИТ ВЕЩЬ. Артефакт старшего ранга в вашей суме задаёт тон. Его стихию игра читает сперва по его собственным свойствам — школа огня, сопротивление льду, — и только потом по направлению: воинское клонит к огню, защитное к земле, духовное к свету, разломное к хаосу.",
+ "РОДСТВО И РОЗНЬ. Восемнадцать стихий связаны попарно, и связи взаимны: если огонь в родстве с грозой, то и гроза с огнём. Огонь в родстве с грозой и металлом и в розни с водой и льдом. Свет в родстве с порядком и духом и в розни с тьмой и костью. Хаос в родстве с кровью и пространством и в розни с порядком, временем и разумом. Своя стихия даёт полное согласие, родная — половину, чужая ничего, враждебная отнимает.",
+ "СРЫВ НАСТОЯЩИЙ, И У КАЖДОЙ СТИХИИ СВОЙ. Шесть родов, и ни один не отделывается словом. Огонь и гроза жгут: здоровье падает. Вода, лёд и лоза студят: мана уходит. Земля, металл и кость дают отдачу: несколько часов рука тяжелее, защита слабее, а всякая чара дороже на пятую часть. Тьма и кровь берут своё кровью и качают равновесие к хаосу. Время, пространство и воздух сдвигают час: часы пропадают. Свет, дух, разум, порядок и хаос путают плетение: ближайшая чара замолкает на несколько часов.",
+ "ЧЕМ ВЫШЕ СОГЛАСИЕ, ТЕМ РЕЖЕ РВЁТСЯ. Устойчивость растёт от согласия, от ступени рун и артефакторики и от порядка в мире; падает от нестабильной вещи в руках. Из устойчивости считается срыв: при полном согласии он почти не случается, при розни — почти каждая пятая чара.",
+ "ЧТО С ЭТИМ ДЕЛАТЬ. Три пути, и все честные. Учить чары своей стихии — тогда они дешевле и сильнее. Носить вещь, которая с ними в ладу, — и она добавит согласия. Или брать чужую стихию сознательно, зная цену: игра назовёт её вслух заранее и не станет притворяться, что всё хорошо."]},
 {title:"Глава 67. Плетение чар: ядро, стихия, форма, усиление",body:[
  "Заклинание в игре складывается из четырёх осей, а не из одной. Раньше их было две с половиной: школа, форма и небольшое усиление. Теперь у каждой чары есть ЯДРО — что она делает, СТИХИЯ — чем она сделана, ФОРМА — как она ложится, и УСИЛЕНИЕ — какой ценой.",
  "ШЕСТНАДЦАТЬ ЯДЕР. Удар, врачевание, оберег, морок, метка, печать, чутьё, возврат маны, лёгкость, астрал, путы, вытяжка, порча, благословение, развеивание, перенос. Ядро — единственный обработчик действия: и собранная вами чара, и любое из ста двух именных школьных заклинаний идут через него же. Шесть ядер новые. Путы держат тварь, и она вправду теряет ход. Вытяжка отнимает у твари и отдаёт вам здоровье и ману. Порча заставляет её бить слабее — и это видно по числам. Благословение делает тяжелее ваш удар и вашу защиту. Развеивание обезвреживает найденную ловушку, снимает чужие метки вокруг, гасит аномалию яруса на несколько часов и в бою сжигает остаточные перезарядки. Перенос переставляет вас сквозь камень на несколько шагов, а из боя — выводит.",
@@ -22360,11 +22373,13 @@ function realmsText(){
   (нет.length?`Не открыты: ${нет.map(r=>`${r.n} — ${r.порог}`).join("; ")}.`:"Открыты все слои.");}
 function atk(){return G.str+(G.equip.weapon?G.equip.weapon.val:0)+Math.round(2*fxLevel("atk"))
  +(safeFn(()=>buffActive("благословение"),false)?4:0)
+ -(safeFn(()=>buffActive("отдача"),false)?2:0)
  +safeFn(()=>Tree.боК(),0)
  +safeFn(()=>ART.sum("сила"),0)+(safeFn(()=>buffActive("мощь"),false)?3:0)
  +(safeFn(()=>buffActive("заточка"),false)?3:0);}
 function def(){return Math.floor(G.agi/3)+(G.equip.armor?G.equip.armor.val:0)+Math.round(2*fxLevel("def"))
  +(safeFn(()=>buffActive("благословение"),false)?3:0)
+ -(safeFn(()=>buffActive("отдача"),false)?2:0)
  +safeFn(()=>Tree.защК(),0)
  +safeFn(()=>ART.sum("защита"),0)+safeFn(()=>Math.round(assimBonus("def")+adaptBonus("def")),0)-(safeFn(()=>anomalyIs("gravity"),false)?1:0)+(safeFn(()=>buffActive("стойкость"),false)?2:0);}
 const RANKS=["Обычный","Необычный","Редкий","Эпический","Легендарный","Божественный"];
@@ -35652,7 +35667,7 @@ const SPELL_ELEMENTS=[
   ночью:1.1,                                                          о:"берёт много и много даёт; платится собой"},
  {id:"e_bone", n:"Кость",       род:"кости",        k:1.15,звук:"foe_bone_hit",    школы:["necro"],
   подземом:1.25,ночью:1.1,                                            о:"холодна и терпелива; в склепах и на дне у себя"},
- {id:"e_spirit",n:"Дух",        род:"духа",         k:1.0, звук:"ghost_choir",     школы:["spirit"],
+ {id:"e_spirit",n:"Дух",        род:"духа",         k:1.0, звук:"ghost_choir",     школы:["spirit","aether"],
   ночью:1.15,                                                         о:"проходит сквозь тело; ночью слышнее"},
  {id:"e_vine", n:"Лоза",        род:"лозы",         k:0.9, звук:"lug_bush",        школы:["plants","homunc"],
   наверху:1.2,подземом:0.75,погода:{"Дождь":1.2,"Ливень":1.25},       о:"растёт и держит; под землёй ей нечем расти"},
@@ -35664,7 +35679,7 @@ const SPELL_ELEMENTS=[
   ночью:1.1,                                                          о:"обманывает и ведёт; ночью в голову входит легче"},
  {id:"e_order",n:"Порядок",     род:"порядка",      k:1.05,звук:"oc_connect",      школы:["order","barrier","enchant","artefact"],
   наверху:1.05,                                                       о:"строит и держит; там, где есть закон, крепче"},
- {id:"e_chaos",n:"Хаос",        род:"хаоса",        k:1.25,звук:"fx_rift",         школы:["chaos","demon","aether","summon"],
+ {id:"e_chaos",n:"Хаос",        род:"хаоса",        k:1.25,звук:"fx_rift",         школы:["chaos","demon","summon"],
   подземом:1.1,погода:{"Гроза":1.2},                                  о:"сильнее всех и ни в чём не надёжен"}];
 const ELEM_BY_ID=Object.fromEntries(SPELL_ELEMENTS.map(x=>[x.id,x]));
 const SCHOOL_ELEMENT=(()=>{const m={};SPELL_ELEMENTS.forEach(e=>e.школы.forEach(id=>{m[id]=e.id;}));return m;})();
@@ -35818,7 +35833,185 @@ function composeSpell(schoolId,formId,modId,ур,coreId,elemId){
  return rec;}
 /* Ядро и стихия любого заклинания — и собранного, и именного школьного. */
 function spellCoreOf(sp){try{return CORE_BY_ID[sp&&sp.ядро]||coreDefault(sp&&sp.school,sp&&sp.форма)||CORE_BY_ID.strike;}catch(_){return CORE_BY_ID.strike;}}
-function spellElemOf(sp){try{return ELEM_BY_ID[sp&&sp.стихия]||elemOfSchool(sp&&sp.school);}catch(_){return ELEM_BY_ID.e_order;}}
+function spellElemOf(sp){try{
+ if(sp&&sp.стихия&&ELEM_BY_ID[sp.стихия])return ELEM_BY_ID[sp.стихия];
+ /* У двенадцати исходных чар поля школы нет: она известна по имени, и
+    spellSchool её находит. Без этого они все считались бы порядком. */
+ const sc=(sp&&sp.school)||safeFn(()=>{const x=spellSchool(sp);return x&&x.id;},null);
+ return elemOfSchool(sc);}catch(_){return ELEM_BY_ID.e_order;}}
+/* ══════════════════ РЕЗОНАНС ══════════════════
+   Чара не висит в пустоте. Её творит ЭТОТ герой, держа в руках ЭТУ вещь.
+   Трое должны согласиться — иначе плетение идёт туго, стоит дороже и рвётся.
+
+   Считаются четыре числа, и все четыре видны игроку словами:
+     СОГЛАСИЕ     от минус единицы до единицы: насколько стихия чары своя
+                  герою и его вещи.
+     УСТОЙЧИВОСТЬ от нуля до единицы: удержится ли плетение.
+     ЦЕНА         множитель маны: своё дешевле, чужое дороже.
+     СРЫВ         вероятность того, что чара отдаст в творящего.
+
+   Ничего из этого не выдумано на пустом месте: склад героя выводится из
+   того, что он выучил, что носит и куда клонит равновесие мира; склад
+   вещи — из её направления и её же свойств. Срыв — настоящий: он бьёт,
+   и по-разному от разных стихий.
+   ═══════════════════════════════════════════════ */
+/* Родство и рознь стихий. Обе связи взаимны, и самопроверка это стережёт. */
+const RESO_BOND={
+ e_fire:  {родня:["e_storm","e_metal"],           рознь:["e_water","e_ice"]},
+ e_water: {родня:["e_ice","e_vine"],              рознь:["e_fire"]},
+ e_earth: {родня:["e_metal","e_bone","e_vine"],   рознь:["e_air","e_space","e_storm"]},
+ e_air:   {родня:["e_storm","e_space"],           рознь:["e_earth"]},
+ e_light: {родня:["e_order","e_spirit"],          рознь:["e_dark","e_bone"]},
+ e_dark:  {родня:["e_bone","e_blood"],            рознь:["e_light"]},
+ e_storm: {родня:["e_fire","e_air"],              рознь:["e_earth"]},
+ e_ice:   {родня:["e_water","e_metal"],           рознь:["e_fire"]},
+ e_metal: {родня:["e_earth","e_order","e_fire","e_ice"], рознь:["e_vine","e_spirit"]},
+ e_blood: {родня:["e_dark","e_bone","e_chaos"],   рознь:["e_order"]},
+ e_bone:  {родня:["e_dark","e_earth","e_blood"],  рознь:["e_light","e_vine"]},
+ e_spirit:{родня:["e_light","e_mind"],            рознь:["e_metal"]},
+ e_vine:  {родня:["e_water","e_earth"],           рознь:["e_bone","e_metal"]},
+ e_time:  {родня:["e_order","e_space","e_mind"],  рознь:["e_chaos"]},
+ e_space: {родня:["e_air","e_time","e_chaos"],    рознь:["e_earth"]},
+ e_mind:  {родня:["e_spirit","e_time"],           рознь:["e_chaos"]},
+ e_order: {родня:["e_light","e_metal","e_time"],  рознь:["e_chaos","e_blood"]},
+ e_chaos: {родня:["e_blood","e_space"],           рознь:["e_order","e_time","e_mind"]}};
+/* Направление вещи клонит её к своей стихии. */
+const RESO_DIR_ELEM={mag:"e_spirit",myst:"e_dark",run:"e_metal",war:"e_fire",def:"e_earth",
+ util:"e_vine",alch:"e_water",elem:"e_fire",spir:"e_light",space:"e_space",time:"e_time",
+ fact:"e_order",leg:"e_chaos"};
+/* Свойство вещи тоже говорит о её стихии — и говорит громче направления. */
+const RESO_STAT_ELEM={"шк_огонь":"e_fire","сопр_огонь":"e_fire","шк_лёд":"e_ice","сопр_лёд":"e_ice",
+ "шк_свет":"e_light","сопр_свет":"e_light","шк_тень":"e_dark","сопр_тьма":"e_dark","сопр_яд":"e_vine"};
+/* Что делает срыв. У каждой стихии своё, и все шесть — настоящие. */
+const RESO_BREAKS=[
+ {id:"burn", n:"ожог",      стихии:["e_fire","e_storm"],звук:"oc_sizzle",
+  делать(k){const d=Math.max(2,Math.round(4+k*6));G.hp=Math.max(1,(Number(G.hp)||1)-d);
+   return `чара обожгла творящего: −${d} здоровья`;}},
+ {id:"chill",n:"остуда",    стихии:["e_water","e_ice","e_vine"],звук:"mtg_ice_break",
+  делать(k){const m=Math.max(2,Math.round(3+k*6));G.mana=Math.max(0,(Number(G.mana)||0)-m);
+   return `сила ушла в холод: мана минус ${m}`;}},
+ {id:"weight",n:"тяжесть",  стихии:["e_earth","e_metal","e_bone"],звук:"oc_rock_hit",
+  делать(k){const h=Math.max(1,Math.round(1+k*3));safeFn(()=>buffSet("отдача",h));
+   return `тело приняло отдачу: ${h} ${plural(h,"час","часа","часов")} рука тяжелее`;}},
+ {id:"bleed",n:"откуп",     стихии:["e_dark","e_blood"],звук:"oc_res_blood",
+  делать(k){const d=Math.max(2,Math.round(3+k*5));G.hp=Math.max(1,(Number(G.hp)||1)-d);
+   safeFn(()=>Balance.shift(-2,"срыв чары"));
+   return `чара взяла своё кровью: −${d} здоровья, и равновесие качнулось к хаосу`;}},
+ {id:"slip", n:"сдвиг",     стихии:["e_time","e_space","e_air"],звук:"oc_warp",
+  делать(k){const ч=1+Math.round(k*2);G.hour=(Number(G.hour)||0)+ч;
+   while(G.hour>=24){G.hour-=24;G.day=(Number(G.day)||1)+1;}
+   return `время дёрнулось: ${ч} ${plural(ч,"час","часа","часов")} пропало`;}},
+ {id:"muddle",n:"морока",   стихии:["e_light","e_spirit","e_mind","e_order","e_chaos"],звук:"magic_unwind",
+  делать(k){
+   /* Плетение спуталось: ближайшая чара уходит на лишнюю перезарядку. */
+   const now=(Number(G.day)||1)*24+(Number(G.hour)||0);
+   const ч=1+Math.round(k*3);
+   if(!G.spellCD||typeof G.spellCD!=="object")G.spellCD={};
+   const книга=(Array.isArray(G.spells)?G.spells:[]).map(n=>SPELLS.find(x=>x.n===n)).filter(Boolean);
+   const цель=книга.find(x=>x.id&&!(G.spellCD[x.id]>now))||книга[0];
+   if(цель&&цель.id){G.spellCD[цель.id]=now+ч;
+    return `плетение спуталось: «${цель.n}» молчит ${ч} ${plural(ч,"час","часа","часов")}`;}
+   const m=Math.max(1,Math.round(2+k*4));G.mana=Math.max(0,(Number(G.mana)||0)-m);
+   return `плетение спуталось: мана минус ${m}`;}}];
+const RESO_BREAK_BY_ELEM=(()=>{const m={};RESO_BREAKS.forEach(b=>b.стихии.forEach(e=>{m[e]=b;}));return m;})();
+/* Вещь в руках, которая и звучит в резонансе: артефакт, а не всякая поклажа. */
+function resoItem(){
+ try{
+  const все=Array.isArray(G.artifacts)?G.artifacts.filter(a=>a&&safeFn(()=>ART.works(a),true)):[];
+  if(!все.length)return null;
+  /* Старшая по рангу: она и задаёт тон. */
+  return все.slice().sort((a,b)=>(Number(b.ранг)||0)-(Number(a.ранг)||0))[0];
+ }catch(_){return null;}}
+const Resonance=Modules.register("RESONANCE",{
+ bonds:RESO_BOND,breaks:RESO_BREAKS,
+ /* Склад героя: что он выучил, что носит и куда клонит равновесие мира. */
+ склад(){
+  const вес={};
+  const плюс=(id,n)=>{if(id&&ELEM_BY_ID[id])вес[id]=(вес[id]||0)+n;};
+  safeFn(()=>{(Array.isArray(G.spells)?G.spells:[]).forEach(n=>{
+   const sp=SPELLS.find(x=>x.n===n);if(sp)плюс(spellElemOf(sp).id,1);});});
+  safeFn(()=>{(Array.isArray(G.artifacts)?G.artifacts:[]).forEach(a=>{
+   const e=this.вещьСтихия(a);if(e)плюс(e.id,0.5);});});
+  safeFn(()=>{const o=Balance.get();
+   if(o>=15)плюс("e_order",1+o/50);else if(o<=-15)плюс("e_chaos",1+(-o)/50);});
+  return вес;},
+ /* Ведущая стихия героя: то, чем он звучит сам. */
+ своя(){
+  const в=this.склад();const ids=Object.keys(в);
+  if(!ids.length)return null;
+  ids.sort((a,b)=>в[b]-в[a]);
+  return ELEM_BY_ID[ids[0]]||null;},
+ /* Стихия вещи: сперва по её свойствам, потом по направлению. */
+ вещьСтихия(a){
+  try{
+   if(!a)return null;
+   const ст=safeFn(()=>ART.stats(a).статы,{})||{};
+   const счёт={};
+   for(const k in ст){const e=RESO_STAT_ELEM[k];if(e)счёт[e]=(счёт[e]||0)+Math.abs(Number(ст[k])||0)+1;}
+   const ids=Object.keys(счёт);
+   if(ids.length){ids.sort((x,y)=>счёт[y]-счёт[x]);return ELEM_BY_ID[ids[0]]||null;}
+   return ELEM_BY_ID[RESO_DIR_ELEM[a.дом]]||null;
+  }catch(_){return null;}},
+ /* Связь двух стихий: своя, родная, чужая или враждебная. */
+ связь(a,b){
+  if(!a||!b)return 0;
+  if(a===b||a.id===b.id)return 1;
+  const бонд=RESO_BOND[a.id]||{};
+  if((бонд.родня||[]).indexOf(b.id)>=0)return 0.5;
+  if((бонд.рознь||[]).indexOf(b.id)>=0)return -0.7;
+  return 0;},
+ /* ── ЧЕТЫРЕ ЧИСЛА ── */
+ of(sp){
+  try{
+   const el=spellElemOf(sp),c=spellCoreOf(sp);
+   const своя=this.своя();
+   const вещь=resoItem();
+   const вЭл=this.вещьСтихия(вещь);
+   const отГероя=this.связь(своя,el);
+   const отВещи=вещь?this.связь(вЭл,el):0;
+   /* Ветвь чар Древа Граней тянет плетение к согласию: рука помнит. */
+   const рука=Math.min(0.2,safeFn(()=>Tree.чарыK("сила"),1)-1);
+   const согласие=Math.max(-1,Math.min(1,0.55*отГероя+(вещь?0.35:0)*отВещи+рука));
+   const ступень=Math.max(safeFn(()=>mastLevel("runes"),0),safeFn(()=>mastLevel("arte"),0));
+   const нестаб=вещь&&вещь.нестаб?0.15:0;
+   const устойчивость=Math.max(0.05,Math.min(0.99,
+    0.62+0.3*согласие+0.035*ступень+safeFn(()=>Balance.stabK(),0)-нестаб));
+   const ценаK=Math.round(Math.max(0.75,Math.min(1.4,1-0.25*согласие))*100)/100;
+   const силаK=Math.round(Math.max(0.8,Math.min(1.25,1+0.2*согласие))*100)/100;
+   const срыв=Math.round(Math.max(0,Math.min(0.45,(1-устойчивость)*0.55))*100)/100;
+   return {стихия:el,ядро:c,своя,вещь:вещь||null,вещьСтихия:вЭл||null,
+    отГероя,отВещи,согласие:Math.round(согласие*100)/100,
+    устойчивость:Math.round(устойчивость*100)/100,ценаK,силаK,срыв};
+  }catch(_){return {стихия:null,ядро:null,своя:null,вещь:null,вещьСтихия:null,
+   отГероя:0,отВещи:0,согласие:0,устойчивость:0.62,ценаK:1,силаK:1,срыв:0.21};}},
+ ценаK(sp){return this.of(sp).ценаK;},
+ силаK(sp){return this.of(sp).силаK;},
+ срыв(sp){return this.of(sp).срыв;},
+ /* Слово о согласии: игрок слышит его прежде, чем потратит ману. */
+ слово(sp){
+  const r=this.of(sp);
+  const с=r.согласие;
+  const л=с>=0.55?"в лад":с>=0.2?"складно":с>-0.2?"ровно":с>-0.55?"туго":"наперекор";
+  return `${л}: согласие ${r.согласие}, устойчивость ${Math.round(r.устойчивость*100)} из ста, `+
+   `мана ×${r.ценаK}, сила ×${r.силаK}, срыв ${Math.round(r.срыв*100)} из ста`;},
+ /* Срыв: бросок и настоящее последствие по стихии чары. */
+ бросок(sp){
+  try{
+   const r=this.of(sp);
+   if(!(r.срыв>0)||Math.random()>=r.срыв)return "";
+   const b=RESO_BREAK_BY_ELEM[r.стихия&&r.стихия.id]||RESO_BREAKS[5];
+   const k=Math.max(0,Math.min(1.5,1-r.устойчивость+((Number(sp.ранг)||1)-1)*0.15));
+   safeFn(()=>Bank.play(b.звук,{kind:"magic",gain:0.55,maxSec:3}));
+   const что=b.делать(k);
+   safeFn(()=>journal(`Срыв чары «${sp.n}»: ${что}.`));
+   return ` Плетение сорвалось (${b.n}): ${что}.`;
+  }catch(_){return "";}},
+ text(){
+  const св=this.своя(),в=resoItem();
+  const вЭл=this.вещьСтихия(в);
+  return `Резонанс. Ваша стихия: ${св?св.n.toLowerCase():"ещё не сложилась"}.`+
+   (в?` В руках «${в.имя}», её стихия: ${вЭл?вЭл.n.toLowerCase():"не читается"}.`:" Вещи силы при вас нет.")+
+   ` Родство и рознь считаны у ${Object.keys(RESO_BOND).length} стихий, срывов ${RESO_BREAKS.length} родов.`;}});
 function registerCustomSpells(){
  try{
   const книга=Array.isArray(G.spellbook)?G.spellbook:(G.spellbook=[]);
@@ -35967,7 +36160,8 @@ function castCustomEffect(sp){
   const md=MOD_BY_ID[sp.усиление]||MOD_BY_ID.none;
   /* Пробивное не слушает нрава стихии: считается, как в свою пору. */
   const еК=md.пробой?(Number(el.k)||1):elemPower(el);
-  const k=(Number(sp.сила)||1)*еК*modPower(md);
+  /* Резонанс: согласие героя, вещи и стихии входит прямо в силу плетения. */
+  const k=(Number(sp.сила)||1)*еК*modPower(md)*safeFn(()=>Resonance.силаK(sp),1);
   const now=(Number(G.day)||1)*24+(Number(G.hour)||0);
   if(!G.spellCD||typeof G.spellCD!=="object")G.spellCD={};
   if(sp.откат)G.spellCD[sp.id]=now+sp.откат;
@@ -36646,7 +36840,11 @@ function castSpell(i){const sp=SPELLS[i];
  if(G.mana<sp.cost){safeFn(()=>Bank.play("hero_nomana",{kind:"magic",gain:0.6,maxSec:3}));
   narrate(`Нужно ${sp.cost} маны, у вас ${G.mana}.`);return;}
  МАНА_ДО=Number(G.mana)||0;
- G.mana-=Math.max(1,Math.round(sp.cost*(1+safeFn(()=>adaptBonus("spellCost"),0))*safeFn(()=>Waves.spellK(),1)*safeFn(()=>Balance.spellK(),1)*safeFn(()=>Zones.spellK(),1)*safeFn(()=>Power.spellK(sp),1)*safeFn(()=>Global.k("чары"),1))-safeFn(()=>Houses.manaDiscount(sp),0)-safeFn(()=>Gods.manaDiscount(sp),0));
+ /* Резонанс: своя стихия слушается дешевле, чужая дороже. Отдача от прежнего
+    срыва тоже сидит в цене — пока держится, всякая чара идёт тяжелее. */
+ G.mana-=Math.max(1,Math.round(sp.cost*safeFn(()=>Resonance.ценаK(sp),1)
+  *(safeFn(()=>buffActive("отдача"),false)?1.2:1)
+  *(1+safeFn(()=>adaptBonus("spellCost"),0))*safeFn(()=>Waves.spellK(),1)*safeFn(()=>Balance.spellK(),1)*safeFn(()=>Zones.spellK(),1)*safeFn(()=>Power.spellK(sp),1)*safeFn(()=>Global.k("чары"),1))-safeFn(()=>Houses.manaDiscount(sp),0)-safeFn(()=>Gods.manaDiscount(sp),0));
  safeFn(()=>Balance.onCast(sp));safeFn(()=>{if(Balance.backlash()){G.mana=Math.max(0,G.mana-3);narrate("Хаос отдаёт: мана минус три сверх цены.",{interrupt:false});}});safeFn(()=>{deed("casts");deed("manaSpent",sp.cost);adaptAdd("чары",1);});
  /* Заклинание — семь слоёв языка своей школы: подготовка, заряд,
     произнесение, движение силы, удар, итог, затухание. */
@@ -36689,6 +36887,10 @@ function castSpell(i){const sp=SPELLS[i];
    итог=" Ветер принёс влагу: запас воды пополнен.";break;
   default:break;}
  if(settings.effects&&sp.n!=="Исцеление")Play.start("ev",sp.n==="Огненный шар"?"magic":sp.n==="Зов дождя"?"rain":sp.n==="Ветер странника"?"wind":"magic",{dur:4,kind:"magic"});
+ /* Плетение может сорваться: чем меньше согласия, тем чаще, и последствие
+    у каждой стихии своё. Бросок делается ПОСЛЕ действия чары: сорвалась
+    отдача, а не само заклинание. */
+ итог+=safeFn(()=>Resonance.бросок(sp),"");
  narrate(`Заклинание «${sp.n}» сотворено.${итог}`);journal("Заклинание: "+sp.n);
  refresh();renderCharacter();}
 /* equipGear(index-в-сыром-G.gear) была удалена: кнопка «Экипировать» в инвентаре
@@ -40054,6 +40256,26 @@ function worldSelfCheck(){
   ok("sigils",SIGIL_SYMBOLS.length===8&&SIGIL_SYMBOLS.every(x=>MSCHOOL_BY_ID[x.школа]&&x.намерения.every(i=>SIGIL_INTENTS[i]))&&SIGIL_CARRIERS.length===8&&SIGIL_CARRIERS.every(x=>RES_BASE[x.ресурс])&&SIGIL_GEOMETRY.length===5&&INKS.length===6&&INKS.every(x=>SOUND_BANK[x.звук]&&Object.keys(x.рецепт).every(r=>RES_BASE[r]))&&AWAKEN_SOURCES.length===6&&AWAKEN_SOURCES.every(x=>SOUND_BANK[x.звук])&&WAVES.length===3&&MORPH_TRAITS.length===6&&MORPHOBEASTS.length===10&&MORPHOBEASTS.every(b=>MONSTERS.some(m=>m.id===b.база))&&DEVOUR_GIFTS.length===6&&EVENT_THEME.world_event&&SOUND_BANK[EVENT_THEME.world_event.роль],"Знаки: восемь символов, восемь носителей, пять геометрий, шесть чернил, шесть источников пробуждения, три волны, шесть черт, десять морфозверей, шесть даров Эха — всё со звуком и по настоящим ресурсам");
   ok("cases",CASE_TEMPLATES.length===6&&CASE_TEMPLATES.every(t=>t.версии.length===3&&t.улики.every(k=>CLUE_KINDS[k])&&t.версии.every(v=>v.улики.every(k=>t.улики.includes(k))))&&SYNDICATES.length===8&&SYNDICATES.every(x=>SOUND_BANK[x.звук]&&x.города.every(id=>NAMED_CITY_BY_ID[id])&&REGIONS[x.область])&&Object.keys(DECISIONS).length===9&&Object.values(DECISIONS).every(d=>Object.keys(d).length>=3)&&["deeper","border_war","shards","lasthouse","beast","price","undercity","maskface","endless"].every(id=>CHAIN_DB[id])&&HOUSE_BY_ID[LAST_HOUSE.враг]&&DLG_MOVE_BY_ID.znanie&&DLG_MOVE_BY_ID.kultura&&DLG_MOVE_BY_ID.nedoskazat,"Расследования: шесть дел с тремя версиями, восемь синдикатов со звуком и городами, девять цепочек с развязками, три хода разговора");
   ok("academy",LANGS.length>=20&&LANGS.every(l=>l.письмо&&l.о)&&SCIENCES.length===6&&SCIENCES.every(x=>SOUND_BANK[x.звук]&&x.эффект.length===3&&FACULTY_BY_ID[x.факультет])&&FACULTIES.length===12&&FACULTIES.every(f=>(f.школы||[]).every(id=>MSCHOOL_BY_ID[id]&&SCHOOL_AUDIO[id])&&(!f.маст||MAST_BY_ID[f.маст]))&&SCHOOLS.length>=30&&SCHOOLS.every(sc=>SCHOOL_AUDIO[sc.id]&&SPELL_LAYERS.every(l=>SOUND_BANK[SCHOOL_AUDIO[sc.id][l]])),"Академия: двадцать один язык, шесть наук, двенадцать факультетов, тридцать четыре школы чар — все со звуком");
+  ok("resonance",Object.keys(RESO_BOND).length===18
+   &&SPELL_ELEMENTS.every(e=>RESO_BOND[e.id])
+   /* Родство и рознь взаимны: односторонней приязни у стихий не бывает. */
+   &&Object.keys(RESO_BOND).every(a=>(RESO_BOND[a].родня||[]).every(b=>ELEM_BY_ID[b]&&(RESO_BOND[b].родня||[]).indexOf(a)>=0))
+   &&Object.keys(RESO_BOND).every(a=>(RESO_BOND[a].рознь||[]).every(b=>ELEM_BY_ID[b]&&(RESO_BOND[b].рознь||[]).indexOf(a)>=0))
+   /* Одна и та же пара не бывает разом и роднёй, и рознью. */
+   &&Object.keys(RESO_BOND).every(a=>(RESO_BOND[a].родня||[]).every(b=>(RESO_BOND[a].рознь||[]).indexOf(b)<0))
+   &&Object.keys(RESO_BOND).every(a=>(RESO_BOND[a].родня||[]).indexOf(a)<0&&(RESO_BOND[a].рознь||[]).indexOf(a)<0)
+   /* Шесть родов срыва, у каждого настоящая запись, и у каждой стихии свой. */
+   &&RESO_BREAKS.length===6&&RESO_BREAKS.every(b=>b.n&&SOUND_BANK[b.звук]&&typeof b.делать==="function"&&b.стихии.every(e=>ELEM_BY_ID[e]))
+   &&SPELL_ELEMENTS.every(e=>RESO_BREAK_BY_ELEM[e.id])
+   &&new Set(RESO_BREAKS.map(b=>b.id)).size===6
+   /* Направление вещи и её свойства знают свою стихию. */
+   &&ART_DIRS.every(d=>ELEM_BY_ID[RESO_DIR_ELEM[d.id]])
+   &&Object.keys(RESO_STAT_ELEM).every(k=>ART_STAT_BY_ID[k]&&ELEM_BY_ID[RESO_STAT_ELEM[k]])
+   /* Четыре числа считаются для любой чары и не выходят за берега. */
+   &&SCHOOL_SPELLS.every(sp=>{const r=Resonance.of(SPELLS.find(x=>x.n===sp.n)||sp);
+     return r&&r.согласие>=-1&&r.согласие<=1&&r.устойчивость>0&&r.устойчивость<1
+       &&r.ценаK>=0.75&&r.ценаK<=1.4&&r.силаK>=0.8&&r.силаK<=1.25&&r.срыв>=0&&r.срыв<=0.45;}),
+   "Резонанс: родство и рознь восемнадцати стихий взаимны, шесть родов срыва со своими записями, четыре числа считаются для любой чары");
   ok("weave",SPELL_CORES.length===16&&SPELL_ELEMENTS.length===18&&SPELL_FORMS.length===12&&SPELL_MODS.length===16
    &&new Set(SPELL_CORES.map(c=>c.id)).size===16&&new Set(SPELL_ELEMENTS.map(e=>e.id)).size===18
    &&new Set(SPELL_FORMS.map(f=>f.id)).size===12&&new Set(SPELL_MODS.map(m=>m.id)).size===16
