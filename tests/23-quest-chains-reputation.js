@@ -142,8 +142,16 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
 
  // ── Отношение народа ──
  const att=await page.evaluate(()=>{
-  const probe=r=>{G.rep={};G.clan=null;addRep("Люди",r);const a=attitudeOf("Люди");
-   return {id:a.id,priceK:a.priceK,refuses:a.refuses};};
+  /* Ставим доброе имя НАПРЯМУЮ, а не через addRep: здесь проверяются
+     ступени отношения и цены, а не скорость роста. Скорость с §44.2
+     зависит от умений «дипломатия» и «управление репутацией» Древа Граней,
+     и к этому прогону она уже не единица — через addRep семёрка легла бы
+     десяткой, и проверка падала бы не на ступенях, а на чужой надбавке.
+     Саму надбавку проверяет набор 127. */
+  const probe=r=>{G.rep={};G.clan=null;
+   const id=(RACE_BY_NAME["Люди"]||{}).id;G.rep[id]=r;
+   const a=attitudeOf("Люди");
+   return {id:a.id,priceK:a.priceK,refuses:a.refuses,поставлено:r,вышло:G.rep[id]};};
   return {friend:probe(15),warm:probe(7),plain:probe(0),cold:probe(-6),hostile:probe(-14)};});
  check('пять ступеней отношения, от своего до враждебного',
   att.friend.id==="friend"&&att.warm.id==="warm"&&att.plain.id==="plain"&&att.cold.id==="cold"&&att.hostile.id==="hostile",
@@ -152,6 +160,21 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   att.friend.priceK<1&&att.plain.priceK===1&&att.cold.priceK>1&&att.hostile.priceK>att.cold.priceK,
   {свой:att.friend.priceK,чужой:att.cold.priceK,враг:att.hostile.priceK});
  check('за чертой торговли нет',att.hostile.refuses===true&&att.cold.refuses===false);
+ check('доброе имя ставится ровно тем числом, каким его задали: ступень читает его, а не додумывает',
+  Object.values(att).every(a=>a.вышло===a.поставлено),
+  Object.fromEntries(Object.entries(att).map(([k,v])=>[k,[v.поставлено,v.вышло]])));
+ /* А рост доброго имени — дело умений Древа Граней, и он идёт через addRep. */
+ const ростИмени=await page.evaluate(()=>{
+  const id=(RACE_BY_NAME["Люди"]||{}).id;
+  G.rep={};G.deeds=G.deeds||{};
+  const безУмения=(()=>{const был=G.deeds.repGains;G.deeds.repGains=0;
+   G.rep={};addRep("Люди",4);const v=Number(G.rep[id])||0;G.deeds.repGains=был;return v;})();
+  const сУмением=(()=>{const был=G.deeds.repGains;G.deeds.repGains=400;
+   G.rep={};addRep("Люди",4);const v=Number(G.rep[id])||0;G.deeds.repGains=был;return v;})();
+  G.rep={};
+  return {безУмения,сУмением,ступень:safeFn(()=>Tree.ступень("diplo"),0)};});
+ check('дипломатия из Древа Граней и вправду ускоряет рост доброго имени',
+  ростИмени.сУмением>ростИмени.безУмения,ростИмени);
 
  const clanFoe=await page.evaluate(()=>{
   G.rep={};G.clan=null;
@@ -171,8 +194,11 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   G.rep={};G.clan=null;
   const n=getNPC(1000,1000,0,"Торговец");
   /* Народ жителя выводится из его координат, поэтому портим репутацию
-     именно у его народа, а не у выдуманного. */
-  addRep(n.race,-15);
+     именно у его народа, а не у выдуманного. Ставим число напрямую:
+     «управление репутацией» из Древа Граней гасит дурную славу, и через
+     addRep пятнадцать легли бы восемью — до вражды бы не дошло, и проверка
+     падала бы не на лавке, а на чужой надбавке. */
+  {const rid=(RACE_BY_NAME[n.race]||{}).id;if(rid)G.rep[rid]=-15;else addRep(n.race,-15);}
   const key=n.key;
   // карточка не показывает товары враждебному народу
   openNPC(key,true);

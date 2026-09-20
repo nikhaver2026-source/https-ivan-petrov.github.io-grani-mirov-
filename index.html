@@ -4806,6 +4806,14 @@ const GUIDE=[
  "Вещь растёт. За каждую победу работающий артефакт получает опыт, а на пороге открывает ступень — прибавку, которой у него раньше не было, и всегда из своего направления. Каждая следующая ступень даётся вдвое тяжелее. Если гнёзда кончились, редкую часть можно скормить вещи: она уйдёт в опыт вместо гнезда.",
  "Требования. Ранг задаёт уровень; сверх того вещь может требовать навык, заклинание нужной школы, расположение народа, принадлежность к клану, прочитанное знание или закрытое дело. Вещь, требования которой не выполнены, лежит мёртвым грузом и не даёт ничего — и прямо говорит, чего ей не хватает.",
  "Где всё это. Пункт меню «Артефакты, части и рецепты». В нём видно, каким ремеслом здесь занимаются и каково ваше умение, какие рецепты под рукой и чего не хватает, какие части лежат в суме, и по каждой вещи — всё, что о ней известно, и всё, что с ней можно сделать: вложить, вынуть, зачаровать, скормить, продать."]},
+{title:"Глава 62. Четыре оси и знание как ресурс",body:[
+ "Герой растёт не одним числом. §31 называет четыре независимые оси: Опыт, Мастерство, Репутация и Знание. Три из них в игре были и считались порознь — уровень с опытом, ступени одиннадцати ремёсел, доброе имя у народов и держав. Четвёртой не было вовсе.",
+ "ОСИ НЕЗАВИСИМЫ, И ЭТО НЕ СЛОВА. Ни одна ось не считает чужого. Опыт не растёт от выученного языка, доброе имя — от ступени кузнеца, знание — от убитых тварей. Самопроверка мира каждый раз двигает каждую ось по очереди и краснеет, если хоть одна потянула за собой соседнюю. Растить их приходится разными делами, и ни одно не заменяет другого.",
+ "ЗНАНИЕ — ОТДЕЛЬНЫЙ РЕСУРС. Семь родов: рецепт, язык, карта, обряд, слабость твари, история вещи, политический секрет. Знание лежало по углам — выученный язык в одной книге, изведанная пара в другой, отпечаток твари в третьей, — и нигде не было сведено в счёт, который можно предъявить.",
+ "ОТКУДА ОНО БЕРЁТСЯ. Рецепт — от удавшейся работы у горна, чана и круга и от опыта с парой припасов. Язык — от взятой ступени языка. Карта — от каждого открытого места. Обряд — от проведённого обряда. Слабость твари — от биологического отпечатка с четвёртой глубины, где он называет уязвимости. История вещи — от прочитанной родословной артефакта. Секрет — от расследования и от тайны синдиката. Нигде — от уровня.",
+ "ЧТО ОНО ДАЁТ. У каждого рода ровно один ясный дар. Записанный рецепт — у горна срывается реже на шесть сотых. Язык — закрытого человека легче разговорить, по два за язык. Карта — скан называет на одно больше за каждые четыре. Обряд — благосклонность богов растёт быстрее, на одно за каждые два. Слабость твари — по ней вы бьёте на пятнадцать сотых сильнее, и только по ней. История вещи — эту вещь у вас купят на пятую дороже. Секрет — недоверие ломается легче, по три за секрет.",
+ "ЕГО МОЖНО ОТДАТЬ. Ресурс на то и ресурс: знанием платят. Торговец за редкое просит не только золото — иногда «расскажите то, чего я не знаю»: тайну, историю вещи или две карты. Отданное вы не забываете — дар остаётся при вас, — но второй раз то же самое уже не продать: слух пошёл.",
+ "ГДЕ СМОТРЕТЬ. Окно «Герой», самое начало: четыре оси одной строкой, свод знаний и все семь родов — сколько записано, сколько отдано и что каждый даёт."]},
 {title:"Глава 61. Тридцать четыре двери: как устроена игра внутри",body:[
  "Эта глава не про мир, а про то, как он собран. Играть она не мешает и ничего не требует — но кто хочет знать, почему игра не спотыкается сама о себя, тот прочтёт.",
  "§42 брифа перечисляет тридцать четыре части: мир, география, биомы, города, постройки, жители, фракции, политика, хозяйство, дела, подземелья, бой, чары, артефакты, ремёсла, алхимия, руны, зачарование, мистицизм, демонология, гомункулы, время, тяжесть, иллюзии, знание, языки, доброе имя, достижения, объёмный звук, речь, доступность, сохранения, события и суточный ход мира.",
@@ -13189,6 +13197,7 @@ function dlgPush(против){
    case "смелость":     p+=(Number(G.str)||10)*1.4+axisOf("страх")*0.5
                           +(G.weaponDrawn?12:0); break;}
   p+=safeFn(()=>Tree.словоK(против),0);
+  p+=safeFn(()=>Lore.словоK(против),0);   /* §31: язык открывает, секрет ломает недоверие */
   return Math.max(5,Math.round(p));
  }catch(_){return 30;}}
 /* Какие ходы уместны прямо сейчас. */
@@ -19970,6 +19979,7 @@ function alchLearn(a,b){
   const к=alchPair(a,b);
   if(G.alch[к])return false;
   G.alch[к]=alchEffect(a,b).id;
+  safeFn(()=>Lore.add("recipe",`alch:${к}`,`${a} и ${b}`,"опыт у чана"));
   return true;
  }catch(_){return false;}}
 /* Что вообще можно смешивать: то, что лежит в котомке и годится в чан. */
@@ -20146,6 +20156,7 @@ function techRisk(t){
  if(safeFn(()=>pactGift("рука"),false))p-=0.15;
  if(safeFn(()=>buffActive("твёрдая рука"),false))p-=0.12;
  p-=safeFn(()=>Tree.рукаK(t.маст),0);   /* ремесленная ветвь Древа Граней */
+ p-=safeFn(()=>Lore.recipeK(t),0);      /* §31: записанный рецепт — знание */
  p*=safeFn(()=>Balance.riskK(),1);
  return Math.max(0.02,Math.min(0.45,p));}
 /* Какие техники доступны у этого станка. */
@@ -20232,6 +20243,8 @@ function techDo(t,станок){
   return true;}
  /* Работа вышла — и если её у вас заказывали, счёт идёт здесь, а не у заказчика. */
  safeFn(()=>questWorldTick("craft",q=>!q.маст||q.маст===t.маст));
+ /* §31: удавшаяся работа записывается как рецепт — знание, а не только опыт. */
+ safeFn(()=>Lore.add("recipe",t.id,t.n,`${(MAST_BY_ID[t.маст]||{}).n||t.маст}: сделано своими руками`));
  let дар="";
  for(const k in (t.даёт||{})){
   G.inv[k]=(Number(G.inv[k])||0)+t.даёт[k];
@@ -21054,6 +21067,7 @@ function riteDo(rite,demonId){
  for(const k in (r.берёт||{})){G.inv[k]=(Number(G.inv[k])||0)-r.берёт[k];if(G.inv[k]<=0)delete G.inv[k];}
  G.mana=Math.max(0,(Number(G.mana)||0)-r.мана);
  safeFn(()=>propTime(r.часы));safeFn(()=>{deed("rites");adaptAdd("обряд",1);});
+ safeFn(()=>Lore.add("rite",r.id,r.n,"обряд проведён своими руками"));
  safeFn(()=>altarSound("ritual",{gain:0.6,maxSec:5}));
  const сорвалось=Math.random()<riteRisk(rite,demonId);
  if(сорвалось){
@@ -23641,6 +23655,8 @@ function notePlace(x,y,stype,name,how){
   const новое=!было||(был&&!(было&&было.v));
   G.known[k]={t:stype,n:name||(было&&было.n)||"безымянное место",
    tr:t?t.id:(было&&было.tr)||null,v:был,d:Number(G.day)||1};
+  /* §31: открытое место — это карта, а карта — знание. */
+  if(новое)safeFn(()=>Lore.add("map",k,G.known[k].n,how==="был"?"вы там были":"о нём узнали"));
   return новое;
  }catch(_){return false;}}
 /* Известно ли уже это место. */
@@ -25564,6 +25580,8 @@ const ART={
     return st.ед==="доля"?`${st.n} ${v>0?"+":""}${Math.round(v*100)}%`:`${st.n} ${v>0?"+":""}${v}`;});
    const шапка=`${a.имя}: ${R.n} артефакт, ${дом.n}, ${Q.n} изготовление.`;
    const родословная=safeFn(()=>artLoreText(a),"");
+   /* §31: прочитанная родословная остаётся знанием о вещи. */
+   if(родословная&&!кратко)safeFn(()=>Lore.add("relic",a.имя,a.имя,"родословная прочитана"));
    if(кратко)return `${шапка} ${строки.join(", ")||"без свойств"}. Цена ${ART.price(a)}.`;
    const гн=ART.slots(a);
    const части=(a.части||[]).map(id=>(ART_PART_BY_ID[id]||{}).n).filter(Boolean);
@@ -26285,6 +26303,8 @@ function pingSurroundings(rad=3,max=4){
  /* Древо Граней: ориентирование и карта достают дальше, след, тайник и
     магическое зрение называют больше. */
  safeFn(()=>{const з=Tree.зрение();rad+=з.рад;max+=з.макс;});
+ /* §31: карты в голове — скан называет больше. */
+ safeFn(()=>{max+=Lore.mapK();});
  /* Чутьё артефактов достаёт дальше и называет больше. */
  safeFn(()=>{const ч=ART.sum("чутьё");
   if(ч>0){rad+=Math.min(6,Math.floor(ч/2));max+=Math.min(8,ч);}});
@@ -29439,7 +29459,7 @@ function fight(a){const cb=G.combat;if(!cb)return;const m=cb.m;
   if(crit){dmg*=2;safeFn(()=>{UI.blip(1320,.12,.25);Bank.play("lug_impact",{seed:dmg,gain:0.6,maxSec:2});Bank.play("clash",{seed:dmg,gain:0.7,maxSec:3});
    Bank.play("cast_warcry",{seed:dmg,gain:0.5,maxSec:3});
    setTimeout(()=>safeFn(()=>Bank.play("clash_blades",{seed:dmg,gain:0.6,maxSec:3})),120);});}
-  dmg=Math.round(dmg*safeFn(()=>bossDamageK("atk"),1)*safeFn(()=>Waves.weaponK(),1));
+  dmg=Math.round(dmg*safeFn(()=>bossDamageK("atk"),1)*safeFn(()=>Waves.weaponK(),1)*safeFn(()=>Lore.weakK(m),1));
   dmg=safeFn(()=>Morpho.armor(m,dmg),dmg);safeFn(()=>{const r=Morpho.reflect(m,dmg);if(r)cbLog(`Эхо-кожа: ${r} вернулось вам.`);});G.lastDamageKind="melee";
   cb.hp-=dmg;playWeaponCombatSfx(true,(G.combat&&G.combat.lastDir)||"N",dmg);
   setTimeout(()=>safeFn(()=>playRealMonsterCue(m,"damage",0.6)),120);
@@ -31828,6 +31848,8 @@ const Gods=Modules.register("GODS",{
  title(id){const f=this.favor(id);return f>=20?"избранник":f>=10?"служитель":f>=4?"ходок":f>=1?"слушатель":"незнаком";},
  addFavor(id,n){try{
   if(!GOD_ANY_BY_ID[id])return 0;
+  /* §31: знающий обряды угоден быстрее — но только когда просит доброго. */
+  if((Number(n)||0)>0)n=(Number(n)||0)+safeFn(()=>Lore.riteK(),0);
   const книга=GOD_BY_ID[id]?"faith":"faithSmall";
   if(!G[книга]||typeof G[книга]!=="object")G[книга]={};
   G[книга][id]=Math.max(0,(Number(G[книга][id])||0)+(Number(n)||0));
@@ -32359,7 +32381,11 @@ const Path=Modules.register("PATH",{
    {n:"гарантия Дома",ок:()=>!!G.house,что:"клятва Дому"},
    {n:"доступ",ок:()=>Object.keys(Regions.seen()).length>=3,что:"три открытые области"},
    {n:"дело",ок:()=>deeds("quests")>=5,что:"пять сданных дел"},
-   {n:"договорная печать",ок:()=>Coins.rare("seals")>=1,что:"договорная печать"}];
+   {n:"договорная печать",ок:()=>Coins.rare("seals")>=1,что:"договорная печать"},
+   /* §31: знание — ресурс, и им платят. Отданное вы не забываете, но
+      второй раз то же самое уже не продать. */
+   {n:"знание",ок:()=>safeFn(()=>Lore.canPay("secret",1)||Lore.canPay("relic",1)||Lore.canPay("map",2),false),
+    что:"рассказ о том, чего он не знает: тайна, история вещи или две карты"}];
   const k=виды[Math.floor(H(n.x,n.y,900+(Number(i)||0))*виды.length)%виды.length];const ок=safeFn(()=>k.ок(),false);return {ок,вид:k.n,почему:ок?`требование выполнено: ${k.n}`:`торговец просит не только золото: ${k.n} — нужно ${k.что}`};}catch(_){return null;}},
  stockExtra(n,out){try{const p=PATH_PROF_BY_NAME[n.prof];if(!p)return;const push=(name,price)=>{if(!(G.items||[]).includes(name))out.push({n:name,вещь:true,price});};
   if(n.prof==="Мастер Ядер"){push("Ядро Отклика",300);push("Маска мага",120);push("Маска разведчика",120);}
@@ -32464,7 +32490,8 @@ const Langs=Modules.register("LANGS",{
   while(r.ур<3&&r.оп>=this.need(id)){r.оп-=this.need(id);r.ур++;up=true;}
   if(up){const l=LANG_BY_ID[id];safeFn(()=>{Bank.play("arte_page",{gain:0.55,maxSec:3});setTimeout(()=>safeFn(()=>eventTheme("achieve",{tier:r.ур>=3?"rare":"normal",gain:0.55})),350);});
    narrate(`${l.n[0].toUpperCase()+l.n.slice(1)}: теперь вы ${LANG_LEVELS[r.ур]}${r.ур>=2?" — с носителями можно торговать без потерь и читать их письмо":r.ур===1?" — разбираете речь и простые надписи":""}.${why?` (${why})`:""}`,{interrupt:false});
-   journal(`Язык: ${l.n}, ${LANG_LEVELS[r.ур]}.`);safeFn(()=>Ledger.add("языки",`${l.n}: ${LANG_LEVELS[r.ур]}`,why||"учение"));}
+   journal(`Язык: ${l.n}, ${LANG_LEVELS[r.ур]}.`);safeFn(()=>Ledger.add("языки",`${l.n}: ${LANG_LEVELS[r.ур]}`,why||"учение"));
+   safeFn(()=>Lore.add("tongue",l.id,l.n,`ступень «${LANG_LEVELS[r.ур]}»`));}
   return up;}catch(_){return false;}},
  /* Разговор с носителем — тоже урок, раз в день с каждого. */
  practice(n){try{const l=this.ofNPC(n);if(l.id==="common"||this.level(l.id)>=3)return false;if(!G.langTalk||typeof G.langTalk!=="object")G.langTalk={};const k=n.key+"@"+G.day;if(G.langTalk[k])return false;G.langTalk[k]=1;
@@ -32744,7 +32771,8 @@ const Syndicates=Modules.register("SYNDICATES",{
   if(a==="pay"){if((Number(G.gold)||0)<30)return "Дань — тридцать золотых: не хватает.";G.gold-=30;st.дань++;st.отн+=3;safeFn(()=>{addStand("crime",emp.short,2);Bank.play("arte_coins",{gain:0.45,maxSec:2});});return `Дань уплачена: ${s.n} считает вас своим на месяц. Отношение ${st.отн}.`;}
   if(a==="fight"){if(G.inCombat)return "Бой уже идёт.";const lvl=Math.max(2,(Number(G.level)||1)+1);st.отн-=5;st.враг=st.отн<=-10;safeFn(()=>Bank.play(s.звук,{gain:0.45,maxSec:3}));narrate(`${s.n}: громила выходит из тени.`);startCombat({x:G.x,y:G.y,monster:{id:"synd_thug",n:`Громила: ${s.n}`,snd:"mgrowl",fx:"growl",lvl,hp:34+lvl*12,dmg:4+lvl*2,xp:26+lvl*14,gold:15+lvl*6,синдикат:s.id}});return "";}
   if(a==="deal"){const сил=safeFn(()=>dlgPush("недоверие"),30),соп=45+Math.abs(st.отн)*0.5;if(сил>=соп){st.отн+=5;safeFn(()=>Bank.play("throng_yes",{gain:0.45,maxSec:2}));safeFn(()=>Ledger.add("политика",`${s.n}: договор — ${s.правила}`,"синдикат"));return `Договорились: ${s.лидер} принимает ваши условия. Отношение ${st.отн}. (Ваше ${сил} против его ${Math.round(соп)}.)`;}st.отн-=2;return `Не договорились: ${s.лидер} смеётся. Отношение ${st.отн}. (Ваше ${сил} против его ${Math.round(соп)}.)`;}
-  if(a==="investigate"){if(st.тайна)return `Тайна ${s.n} у вас: ${s.конфликт[1]} готовят переворот против ${s.конфликт[0]}.`;const ок=safeFn(()=>Cases.solved(),0)>=1||safeFn(()=>Ledger.list("политика").length,0)>=3;if(!ок)return "Расследование синдиката: нужен опыт — раскрытое дело или три записи политики в реестре.";st.тайна=true;safeFn(()=>Bank.play("oc_rustle",{gain:0.45,maxSec:3}));safeFn(()=>Ledger.add("политика",`${s.n}: ${s.конфликт[1]} готовят переворот против ${s.конфликт[0]}`,"расследование"));return `Расследование: ${s.конфликт[1]} готовят переворот против ${s.конфликт[0]}. Это рычаг — для шантажа или союза.`;}
+  if(a==="investigate"){if(st.тайна){safeFn(()=>Lore.add("secret",s.id,`тайна ${s.n}`,"расследование синдиката"));
+    return `Тайна ${s.n} у вас: ${s.конфликт[1]} готовят переворот против ${s.конфликт[0]}.`;}const ок=safeFn(()=>Cases.solved(),0)>=1||safeFn(()=>Ledger.list("политика").length,0)>=3;if(!ок)return "Расследование синдиката: нужен опыт — раскрытое дело или три записи политики в реестре.";st.тайна=true;safeFn(()=>Bank.play("oc_rustle",{gain:0.45,maxSec:3}));safeFn(()=>Ledger.add("политика",`${s.n}: ${s.конфликт[1]} готовят переворот против ${s.конфликт[0]}`,"расследование"));return `Расследование: ${s.конфликт[1]} готовят переворот против ${s.конфликт[0]}. Это рычаг — для шантажа или союза.`;}
   if(a==="blackmail"){if(!st.тайна)return "Шантажировать нечем: сперва узнайте их тайну.";G.gold+=50;st.отн-=8;safeFn(()=>{addStand("crime",emp.short,-3);addAxis("страх",3);Bank.play("arte_coins",{gain:0.45,maxSec:2});});safeFn(()=>Talk.later(3,`${s.n} прислали должника за шантаж.`,{круги:[["crime",emp.short,-2]],бой:{id:"synd_debt",n:`Должник: ${s.n}`,snd:"mgrowl",fx:"growl",lvl:Math.max(2,(Number(G.level)||1)+1),hp:40,dmg:6,xp:30,gold:10}}));return `Шантаж удался: пятьдесят золотых. ${s.лидер} этого не простит — через три дня жди должника. Отношение ${st.отн}.`;}
   if(a==="ally"){if(st.союз)return `Союз с ${s.n} уже есть.`;if(st.отн<10&&!st.тайна)return `Союз: нужно отношение от десяти (сейчас ${st.отн}) или их тайна в руках.`;st.союз=true;st.враг=false;safeFn(()=>{addStand("crime",emp.short,4);addStand("noble",emp.short,-2);Bank.play(s.звук,{gain:0.5,maxSec:3});});journal(`Союз с синдикатом: ${s.n}.`);safeFn(()=>Ledger.add("политика",`Союз: ${s.n}`,"синдикат"));return `Союз заключён: ${s.n} даёт информатора даром и не трогает ваши обозы; знать это заметит.`;}
   if(a==="info"){const цена=st.союз?0:10;if((Number(G.gold)||0)<цена)return "Информатор берёт десять золотых: не хватает.";if(st.инф===G.day)return "Информатор сегодня уже говорил.";G.gold-=цена;st.инф=G.day;const t=safeFn(()=>rumorsText(),"")||"Тихо.";safeFn(()=>Ledger.add("политика",`Информатор ${s.n}: ${String(t).slice(0,90)}`,"синдикат"));safeFn(()=>Bank.play("oc_rustle",{gain:0.4,maxSec:2}));return `Информатор: ${t}`;}
@@ -33084,7 +33112,11 @@ const Imprint=Modules.register("IMPRINT",{
   if(lvl>=4)поля.push(`уязвимости: ${({beast:"огонь",crawler:"холод",humanoid:"чары разума",bone:"дробящее",spirit:"свет",undead:"огонь и свет",giant:"яд",construct:"молния",dragon:"лёд",bird:"сети",deep:"свет",fiend:"свет и печати"})[prof]||"неизвестны"}`);
   if(lvl>=5)поля.push(`происхождение: род ${prof}${k.морф?", морфозверь — форма сменилась":""}`);
   if(k.черты&&lvl>=3)поля.push(`черты: ${k.черты.map(id=>MORPH_BY_ID[id]?MORPH_BY_ID[id].n:id).join(", ")}`);
-  const st=this.state();st[k.id]=Math.max(Number(st[k.id])||0,lvl);safeFn(()=>{Bank.play("oc_organic_hit",{gain:0.4,maxSec:2});Ledger.add("твари",`${k.n}: ${поля.join("; ")}`,"биологический отпечаток");deed("imprints");mastGain("alchemy",1);});
+  const st=this.state();st[k.id]=Math.max(Number(st[k.id])||0,lvl);
+  /* §31: с четвёртой глубины отпечаток называет уязвимости — и это знание,
+     которое потом и вправду помогает бить. */
+  if(lvl>=4)safeFn(()=>Lore.add("weak",k.id,k.n,`биологический отпечаток, глубина ${lvl}`));
+  safeFn(()=>{Bank.play("oc_organic_hit",{gain:0.4,maxSec:2});Ledger.add("твари",`${k.n}: ${поля.join("; ")}`,"биологический отпечаток");deed("imprints");mastGain("alchemy",1);});
   return `Биологический отпечаток «${k.n}», глубина ${lvl} из пяти: ${поля.join("; ")}. Глубже — с биоинженерией, алхимией, Гранью «Память добычи» и навыком следопыта.`;},
  text(){const st=this.state();const n=Object.keys(st).length;return `Отпечатков изучено ${n}${n?`: ${Object.keys(st).map(id=>`${(MONSTERS.find(x=>x.id===id)||{n:id}).n} (${st[id]})`).join(", ")}`:""}. Глубина исследования сейчас ${this.level()} из пяти.`;}});
 function renderSigils(){
@@ -37774,7 +37806,7 @@ function sellPriceOf(n,row){
  try{
   if(["res","rare","plant","fish"].includes(row.kind))return sellUnit(n,row.key);
   if(row.kind==="part")return Math.max(3,Math.round(20*(1+((ART_PART_BY_ID[row.key]||{}).ред||0))));
-  if(row.kind==="art")return Math.round(ART.price(row.it)*0.62);
+  if(row.kind==="art")return Math.round(ART.price(row.it)*0.62*safeFn(()=>Lore.relicK(row.it&&row.it.имя),1));
   if(row.kind==="potion")return Math.max(4,Math.round(12*(Number(row.it.q)||1)));
   const d=merchSoul(n);const k=(d?d.нрав.k:1)*(d&&d.нрав.краденое?0.8:1);
   if(row.kind==="gear"||row.kind==="equip"){const it=row.it;const база=Number(it.price)||RANKPRICE[Number(it.rank)||0]||30;return Math.max(1,Math.round(база*0.4*(itemCondition(it)/100)*k));}
@@ -37798,7 +37830,7 @@ function renderCharacter(){
  const R=raceInfo(G.race),rg=GOD_BY_ID[R.god],p=patronGod();
  const cl=G.clan&&CLAN_BY_NAME[G.clan];
  const reps=Object.keys(G.rep||{}).filter(k=>G.rep[k]).map(k=>`${RACE_BY_ID[k]?RACE_BY_ID[k].n:k}: ${G.rep[k]}`).join(", ");
- document.getElementById("charStats").innerHTML=safeFn(()=>branchesHtml(),"")+safeFn(()=>treeHtml(),"")+
+ document.getElementById("charStats").innerHTML=safeFn(()=>axesHtml(),"")+safeFn(()=>branchesHtml(),"")+safeFn(()=>treeHtml(),"")+
   safeFn(()=>`<div class="list-line" tabindex="0" data-speak="${(adaptText()+" "+assimText()+" "+realmsText()).replace(/"/g,"&quot;")}">🧬 ${adaptText()}<br>${assimText()}<br>🌀 ${realmsText()}</div>`,"")+
   `<div class="list-line">⭐ Уровень ${G.level} · Опыт ${G.xp} из ${xpNeed(G.level)}<br>
   ❤️ ${G.hp}/${G.hpMax} · 💪 ${G.str} · 🏃 ${G.agi} · 🧠 ${G.mind} · 💬 ${G.cha}<br>
@@ -38222,11 +38254,20 @@ Modules.register("ILLUSIONS",{
  text(){const м=this.worn();
   return `Иллюзии ступени ${this.level()}. Масок ${this.masks().length}, надета: ${м||"ни одной"}.`;}});
 Modules.register("KNOWLEDGE",{
+ /* §31: знание — отдельный ресурс семи родов. Полки и предметы — это темы,
+    по которым его читают, а не само знание; места в G.known — карта, и она
+    лежит под своим именем, чтобы одно не выдавалось за другое. */
+ kinds:()=>LORE_KINDS,
+ lore:()=>Modules.get("LORE"),
+ count:род=>S(()=>Lore.count(род),0),
+ has:(род,id)=>S(()=>Lore.has(род,id),false),
+ add:(род,id,n,откуда)=>S(()=>Lore.add(род,id,n,откуда),false),
+ pay:(род,n)=>S(()=>Lore.pay(род,n),null),
  shelves:()=>KNOW_SHELVES,
  objects:()=>KNOW_OBJ,
+ places:()=>(G.known&&typeof G.known==="object")?G.known:{},
  encyclopedia:()=>Modules.get("ENCYCLO"),
- known:()=>(G.known&&typeof G.known==="object")?G.known:{},
- text(){return `Полок знания ${KNOW_SHELVES.length}, предметов знания ${KNOW_OBJ.length}.`;}});
+ text(){return S(()=>Lore.text(),`Полок знания ${KNOW_SHELVES.length}.`);}});
 Modules.register("LANGUAGES",{
  list:()=>LANGS,
  level:id=>S(()=>Langs.level(id),0),
@@ -38299,6 +38340,138 @@ Modules.register("WORLD_SIMULATION",{
    .forEach(([n,f])=>{if(S(f,false))было.push(n);});
   return было;},
  text(){return `Суточный ход мира: войска, судьбы, пророчества, мировые события, долги и дуга.`;}});
+
+/* ════════ ЧЕТЫРЕ ОСИ И ЗНАНИЕ КАК РЕСУРС (§31) ════════
+   §31 говорит коротко: «Четыре независимые оси развития: Опыт; Мастерство;
+   Репутация; Знания. Знание — отдельный ресурс: рецепт, язык, карта, ритуал,
+   слабость монстра, история предмета, политический секрет».
+
+   Три оси в игре были и считались порознь: опыт с уровнем, ступени ремёсел,
+   доброе имя у народов и держав. Четвёртой не было вовсе. Знание лежало
+   по углам — выученный язык в одной книге, изведанная пара в другой,
+   отпечаток твари в третьей, — и нигде не было сведено в счёт, который
+   можно предъявить, потратить и потерять.
+
+   ЗНАНИЕ КАК РЕСУРС. Ресурс — это то, что копится от дела, что-то даёт и
+   чем можно расплатиться. Здесь всё три:
+   — копится: каждый род прирастает от своего настоящего дела, а не от
+     уровня (§31 требует независимости осей, и она проверяется);
+   — даёт: у каждого из семи родов ровно один ясный дар, и он не
+     складывается дважды с чужими надбавками;
+   — тратится: знание можно отдать — торговцу за редкое, синдикату вместо
+     денег, учителю вместо платы. Отданное вы не забываете (дар остаётся),
+     но продать его второй раз уже нельзя: слух пошёл.
+
+   ЧЕТЫРЕ ОСИ НЕЗАВИСИМЫ. Это не слова: ни одна ось не считает чужого.
+   Опыт не растёт от выученного языка, доброе имя — от ступени кузнеца,
+   знание — от убитых тварей. Самопроверка мира двигает каждую ось по
+   очереди и краснеет, если хоть одна потянула за собой соседнюю. */
+const LORE_KINDS=[
+ {id:"recipe",n:"рецепт",              о:"как это делается",              откуда:"работа у горна, чана и круга; книги и учителя",
+  дар:"у горна срывается реже",                звук:"craft_knock"},
+ {id:"tongue",n:"язык",                о:"как это читается и говорится",  откуда:"ступени языков: книги, разговоры, уроки",
+  дар:"закрытого человека легче разговорить",  звук:"arte_book"},
+ {id:"map",   n:"карта",               о:"где это лежит",                 откуда:"открытые места: вы там были или о них узнали",
+  дар:"скан называет на одно больше",          звук:"arte_page"},
+ {id:"rite",  n:"обряд",               о:"как к этому обращаются",        откуда:"проведённые обряды у алтарей и кругов",
+  дар:"благосклонность богов растёт быстрее",  звук:"temple_bell"},
+ {id:"weak",  n:"слабость твари",      о:"чем её берут",                  откуда:"биологический отпечаток с четвёртой глубины",
+  дар:"по этой твари вы бьёте сильнее",        звук:"beast_growl"},
+ {id:"relic", n:"история вещи",        о:"откуда она и чья была",         откуда:"разбор артефакта: родословная прочитана",
+  дар:"эту вещь у вас купят дороже",           звук:"artifact_hum"},
+ {id:"secret",n:"политический секрет", о:"кто кому чем обязан",           откуда:"расследования и тайны синдикатов",
+  дар:"недоверие ломается легче",              звук:"lock_click"}];
+const LORE_KIND_BY_ID=Object.fromEntries(LORE_KINDS.map(k=>[k.id,k]));
+const Lore=Modules.register("LORE",{
+ kinds:LORE_KINDS,
+ state(){if(!G.lore||typeof G.lore!=="object"||Array.isArray(G.lore))G.lore={};return G.lore;},
+ key(род,id){return `${род}:${String(id)}`;},
+ has(род,id){return !!this.state()[this.key(род,id)];},
+ get(род,id){return this.state()[this.key(род,id)]||null;},
+ all(){const st=this.state();return Object.keys(st).map(k=>st[k]);},
+ of(род){return this.all().filter(x=>x&&x.род===род);},
+ count(род){return род?this.of(род).length:this.all().length;},
+ /* Записать знание. Возвращает true только когда оно и вправду новое:
+    иначе четвёртая ось росла бы от повторения одного и того же. */
+ add(род,id,n,откуда){try{
+  const k=LORE_KIND_BY_ID[род];if(!k||id==null)return false;
+  const ключ=this.key(род,id);const st=this.state();
+  if(st[ключ])return false;
+  st[ключ]={род,id:String(id),n:String(n||id),откуда:String(откуда||k.откуда),
+   день:Number(G.day)||1,отдано:false};
+  safeFn(()=>{Bank.play(k.звук,{gain:0.45,maxSec:3});
+   journal(`Знание: ${k.n} — ${n||id}.`);
+   Ledger.add("знание",`${k.n}: ${n||id}${откуда?` (${откуда})`:""}`,"знание");});
+  narrate(`Узнано: ${k.n} — ${n||id}. Знаний ${this.count()}.`,{interrupt:false});
+  return true;}catch(_){return false;}},
+ /* Отдать знание как плату. Дар остаётся при вас — вы его не забыли, —
+    но второй раз то же самое уже не продать. */
+ payable(род){return this.of(род).filter(x=>!x.отдано);},
+ canPay(род,n){return this.payable(род).length>=Math.max(1,Number(n)||1);},
+ pay(род,n){try{
+  n=Math.max(1,Number(n)||1);const годные=this.payable(род);
+  if(годные.length<n)return null;
+  const взято=годные.slice(0,n);
+  взято.forEach(x=>{x.отдано=true;});
+  safeFn(()=>Bank.play(LORE_KIND_BY_ID[род].звук,{gain:0.4,maxSec:3}));
+  return взято.map(x=>x.n);}catch(_){return null;}},
+ /* ── СЕМЬ ДАРОВ. У каждого рода ровно один, и он читается миром. ── */
+ recipeK(t){try{const id=t&&(t.id||t);if(id&&this.has("recipe",id))return 0.06;
+  return Math.min(0.05,this.count("recipe")*0.004);}catch(_){return 0;}},
+ tongueK(){return Math.min(12,this.count("tongue")*2);},
+ mapK(){return Math.min(3,Math.floor(this.count("map")/4));},
+ riteK(){return Math.min(3,Math.floor(this.count("rite")/2));},
+ weakK(m){try{const id=m&&(m.id||m);return (id&&this.has("weak",id))?1.15:1;}catch(_){return 1;}},
+ relicK(name){try{return (name&&this.has("relic",name))?1.2:1;}catch(_){return 1;}},
+ secretK(){return Math.min(15,this.count("secret")*3);},
+ /* Слово в разговоре: язык открывает закрытого, секрет ломает недоверие. */
+ словоK(против){if(против==="закрытость")return this.tongueK();
+  if(против==="недоверие")return this.secretK();return 0;},
+ сводка(){return LORE_KINDS.map(k=>({id:k.id,n:k.n,сколько:this.count(k.id),
+  отдано:this.of(k.id).filter(x=>x.отдано).length}));},
+ text(){const c=this.count();
+  if(!c)return `Знание — четвёртая ось развития и отдельный ресурс семи родов: ${LORE_KINDS.map(k=>k.n).join(", ")}. Пока не записано ни одного: знание берут делом, а не уровнем.`;
+  return `Знаний ${c}. `+this.сводка().filter(x=>x.сколько).map(x=>`${x.n} — ${x.сколько}${x.отдано?` (отдано ${x.отдано})`:""}`).join(", ")
+   +`. Знание можно отдать как плату: торговцу за редкое, синдикату вместо денег. Отданное вы не забываете, но второй раз его не продать.`;}});
+/* ── ЧЕТЫРЕ ОСИ ── */
+const AXES_FOUR=[
+ {id:"exp",  n:"Опыт",      о:"уровень и то, что до следующего",   звук:"hero_levelup"},
+ {id:"craft",n:"Мастерство",о:"ступени ремёсел и сделанные работы",звук:"forge_hammer"},
+ {id:"rep",  n:"Репутация", о:"доброе имя у народов и держав",     звук:"throng_hail_m"},
+ {id:"lore", n:"Знание",    о:"семь родов знания",                 звук:"arte_book"}];
+const Axes=Modules.register("AXES",{
+ list:AXES_FOUR,
+ exp(){return {ур:Number(G.level)||1,оп:Number(G.xp)||0,до:safeFn(()=>xpNeed(Number(G.level)||1),0)};},
+ craft(){const ур=MASTERY.map(m=>safeFn(()=>mastLevel(m.id),0));
+  return {сумма:ур.reduce((a,b)=>a+b,0),высшая:Math.max.apply(null,ур.concat([0])),
+   дел:MASTERY.reduce((a,m)=>a+(safeFn(()=>mastOf(m.id).дел,0)||0),0)};},
+ rep(){const r=(G.rep&&typeof G.rep==="object")?G.rep:{};
+  const народов=Object.keys(r).filter(k=>Number(r[k])).length;
+  return {народов,сумма:safeFn(()=>repSum(),0),осей:safeFn(()=>STAND_AXES.reduce((a,x)=>a+axisOf(x.id),0),0)};},
+ lore(){return {всего:Lore.count(),родов:LORE_KINDS.filter(k=>Lore.count(k.id)).length,отдано:Lore.all().filter(x=>x.отдано).length};},
+ /* Число оси одним значением — для сравнения и для проверки независимости. */
+ value(id){switch(id){
+  case "exp":  return this.exp().ур*100+this.exp().оп;
+  case "craft":return this.craft().сумма*100+this.craft().дел;
+  case "rep":  return this.rep().сумма*100+this.rep().народов;
+  case "lore": return this.lore().всего;
+  default:return 0;}},
+ snapshot(){const o={};AXES_FOUR.forEach(a=>{o[a.id]=this.value(a.id);});return o;},
+ text(){const e=this.exp(),c=this.craft(),r=this.rep(),l=this.lore();
+  return `Четыре оси развития, и они не тянут друг друга. Опыт: уровень ${e.ур}, ${e.оп} из ${e.до}. `
+   +`Мастерство: ступеней ${c.сумма} по ${MASTERY.length} ремёслам, работ ${c.дел}. `
+   +`Репутация: ${r.народов} ${plural(r.народов,"народ","народа","народов")} вас знает, вес ${r.сумма}. `
+   +`Знание: ${l.всего} ${plural(l.всего,"запись","записи","записей")} в ${l.родов} из семи родов.`;}});
+function axesHtml(){
+ try{
+  const line=(t,ic)=>`<div class="list-line" tabindex="0" data-speak="${String(t).replace(/"/g,"&quot;")}">${ic||"•"} ${t}</div>`;
+  let h=line(Axes.text(),"🧭");
+  h+=line(Lore.text(),"📚");
+  const c=Lore.сводка();
+  h+=`<div class="list-line" tabindex="0" data-speak="${LORE_KINDS.map(k=>`${k.n}: ${k.о}; берётся так — ${k.откуда}; даёт — ${k.дар}. Записано ${Lore.count(k.id)}.`).join(" ").replace(/"/g,"&quot;")}">`
+   +LORE_KINDS.map((k,i)=>`📖 <b>${k.n}</b> — ${k.о}. Записано ${c[i].сколько}${c[i].отдано?`, отдано ${c[i].отдано}`:""}. Даёт: ${k.дар}.`).join("<br>")+`</div>`;
+  return h;
+ }catch(_){return "";}}
 function worldSelfCheck(){
  const out=[];const ok=(id,c,note)=>out.push({id,ok:!!c,note:note||""});
  try{
@@ -38491,6 +38664,14 @@ function worldSelfCheck(){
   ok("sigils",SIGIL_SYMBOLS.length===8&&SIGIL_SYMBOLS.every(x=>MSCHOOL_BY_ID[x.школа]&&x.намерения.every(i=>SIGIL_INTENTS[i]))&&SIGIL_CARRIERS.length===8&&SIGIL_CARRIERS.every(x=>RES_BASE[x.ресурс])&&SIGIL_GEOMETRY.length===5&&INKS.length===6&&INKS.every(x=>SOUND_BANK[x.звук]&&Object.keys(x.рецепт).every(r=>RES_BASE[r]))&&AWAKEN_SOURCES.length===6&&AWAKEN_SOURCES.every(x=>SOUND_BANK[x.звук])&&WAVES.length===3&&MORPH_TRAITS.length===6&&MORPHOBEASTS.length===10&&MORPHOBEASTS.every(b=>MONSTERS.some(m=>m.id===b.база))&&DEVOUR_GIFTS.length===6&&EVENT_THEME.world_event&&SOUND_BANK[EVENT_THEME.world_event.роль],"Знаки: восемь символов, восемь носителей, пять геометрий, шесть чернил, шесть источников пробуждения, три волны, шесть черт, десять морфозверей, шесть даров Эха — всё со звуком и по настоящим ресурсам");
   ok("cases",CASE_TEMPLATES.length===6&&CASE_TEMPLATES.every(t=>t.версии.length===3&&t.улики.every(k=>CLUE_KINDS[k])&&t.версии.every(v=>v.улики.every(k=>t.улики.includes(k))))&&SYNDICATES.length===8&&SYNDICATES.every(x=>SOUND_BANK[x.звук]&&x.города.every(id=>NAMED_CITY_BY_ID[id])&&REGIONS[x.область])&&Object.keys(DECISIONS).length===9&&Object.values(DECISIONS).every(d=>Object.keys(d).length>=3)&&["deeper","border_war","shards","lasthouse","beast","price","undercity","maskface","endless"].every(id=>CHAIN_DB[id])&&HOUSE_BY_ID[LAST_HOUSE.враг]&&DLG_MOVE_BY_ID.znanie&&DLG_MOVE_BY_ID.kultura&&DLG_MOVE_BY_ID.nedoskazat,"Расследования: шесть дел с тремя версиями, восемь синдикатов со звуком и городами, девять цепочек с развязками, три хода разговора");
   ok("academy",LANGS.length>=20&&LANGS.every(l=>l.письмо&&l.о)&&SCIENCES.length===6&&SCIENCES.every(x=>SOUND_BANK[x.звук]&&x.эффект.length===3&&FACULTY_BY_ID[x.факультет])&&FACULTIES.length===12&&FACULTIES.every(f=>(f.школы||[]).every(id=>MSCHOOL_BY_ID[id]&&SCHOOL_AUDIO[id])&&(!f.маст||MAST_BY_ID[f.маст]))&&SCHOOLS.length>=30&&SCHOOLS.every(sc=>SCHOOL_AUDIO[sc.id]&&SPELL_LAYERS.every(l=>SOUND_BANK[SCHOOL_AUDIO[sc.id][l]])),"Академия: двадцать один язык, шесть наук, двенадцать факультетов, тридцать четыре школы чар — все со звуком");
+  ok("axes",LORE_KINDS.length===7&&AXES_FOUR.length===4
+   &&LORE_KINDS.every(k=>k.n&&k.о&&k.откуда&&k.дар&&SOUND_BANK[k.звук])
+   &&new Set(LORE_KINDS.map(k=>k.звук)).size===7
+   &&AXES_FOUR.every(a=>a.n&&a.о&&SOUND_BANK[a.звук])
+   &&["recipe","tongue","map","rite","weak","relic","secret"].every(id=>LORE_KIND_BY_ID[id])
+   &&typeof Lore.pay==="function"&&typeof Lore.canPay==="function"
+   &&Object.keys(Axes.snapshot()).length===4,
+   "Игрок: четыре независимые оси развития, знание — отдельный ресурс семи родов, и его можно отдать как плату");
   ok("api",API_SPEC.length===34&&API_SPEC.every(n=>{
     const m=Modules.get(n);
     if(!m||typeof m.text!=="function")return false;
