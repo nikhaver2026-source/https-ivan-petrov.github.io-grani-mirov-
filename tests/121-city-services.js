@@ -26,8 +26,11 @@
    6. Вклад: золото уходит на хранение, возвращается по требованию и не
       теряется при поражении.
    7. Люк ведёт вниз, и первый ярус под городом называется канализацией.
-   8. Самопроверка мира держит строку «services», руководство и README о
-      службах рассказывают.
+   8. Большой город и вправду большой: полсотни жителей, сотня вещей, с
+      которыми что-то делают, и не один трактир. Деревня остаётся
+      деревней.
+   9. Самопроверка мира держит строки «services» и «citysize», руководство
+      и README о службах и плотности рассказывают.
    ═══════════════════════════════════════════════════════════════════════ */
 const {chromium}=require('playwright');
 const fs=require('fs'),path=require('path');
@@ -220,15 +223,72 @@ const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(e!==undefined?' :
  check('первый ярус под городом — канализация, и он себя называет',
   люк.глубина===1&&люк.стоки===true&&/канализац/i.test(люк.внизу),люк);
 
- /* ── 8. самопроверка, руководство, README ── */
+ /* ── 8. большой город и вправду большой ── */
+ const плотность=await page.evaluate(()=>{
+  const счёт=(x,y)=>{
+   const st=safeFn(()=>(cellContent(x,y).structure||{}).type,null);
+   const l=st?safeFn(()=>genLevel(x,y,0,st),null):null;
+   if(!l)return null;
+   let люди=0,вещи=0,трактиров=0;
+   const вещные="CKXSFWAPBLHJDUVRY";
+   for(let yy=0;yy<l.h;yy++)for(let xx=0;xx<l.w;xx++){
+    const t=l.g[yy][xx];
+    if(t==="N"||t==="P"||t==="B")люди++;
+    if(вещные.indexOf(t)>=0)вещи++;
+    if(t==="V")трактиров++;}
+   return {вид:st,люди,вещи,трактиров};};
+  const города=NAMED_CITIES.slice(0,6).map(c=>счёт(c.x,c.y)).filter(Boolean);
+  let деревня=null;
+  for(let r=1;r<160&&!деревня;r++)for(let dy=-r;dy<=r&&!деревня;dy++)for(let dx=-r;dx<=r;dx++){
+   if(Math.max(Math.abs(dx),Math.abs(dy))!==r)continue;
+   const x=1000+dx,y=1000+dy,c=cellContent(x,y);
+   if(c.structure&&c.structure.type==="village"&&!safeFn(()=>cityAt(x,y),null)){деревня=счёт(x,y);break;}}
+  return {города,деревня};});
+ check('в каждом большом городе полсотни жителей и больше',
+  плотность.города.length>=5&&плотность.города.every(c=>c.люди>=50),
+  плотность.города.map(c=>c.люди));
+ check('в каждом большом городе сотня вещей, с которыми что-то делают',
+  плотность.города.every(c=>c.вещи>=100),плотность.города.map(c=>c.вещи));
+ check('трактир в большом городе не один',
+  плотность.города.every(c=>c.трактиров>=2),плотность.города.map(c=>c.трактиров));
+ check('деревня осталась деревней: людно в ней не стало',
+  !!плотность.деревня&&плотность.деревня.люди<=20&&плотность.деревня.трактиров===0,плотность.деревня);
+
+ /* Трактир кормит, берёт час и что-нибудь рассказывает. */
+ const трактир=await page.evaluate(()=>{
+  const речь=()=>__said.join(" | ");
+  const c=NAMED_CITIES[0];G.x=c.x;G.y=c.y;
+  if(G.place)safeFn(()=>leavePlace());
+  safeFn(()=>enterPlace(cellContent(c.x,c.y)));
+  const lvl=curLevel();
+  let м=null;for(let y=0;y<lvl.h;y++)for(let x=0;x<lvl.w;x++)if(tileAt(lvl,x,y)==="V")м={x,y};
+  if(!м)return {нет:true};
+  G.place.x=м.x;G.place.y=м.y;
+  G.gold=1;G.hp=10;G.hpMax=100;G.food=0;
+  __said.length=0;const бедный=useHere();const словоБедного=речь();
+  G.gold=100;
+  const часДо=Number(G.hour)||0,деньДо=Number(G.day)||1;
+  __said.length=0;const сел=useHere();const слово=речь();
+  return {бедный,словоБедного,сел,слово,
+   после:{hp:G.hp,еда:G.food,золото:G.gold,
+    час:(Number(G.day)-деньДо)*24+(Number(G.hour)-часДо)}};});
+ check('без денег трактирщик кивает на дверь и называет цену',
+  трактир.бедный===false&&/\d/.test(трактир.словоБедного)&&/трактир/i.test(трактир.словоБедного),
+  трактир.словоБедного);
+ check('трактир кормит, лечит понемногу, берёт час и что-нибудь рассказывает',
+  трактир.сел===true&&трактир.после.hp>10&&трактир.после.еда>0&&трактир.после.золото<100
+  &&Math.abs(трактир.после.час-1)<0.35&&/говорят|молчат/i.test(трактир.слово),трактир);
+
+ /* ── 9. самопроверка, руководство, README ── */
  const свод=await page.evaluate(()=>{
   const c=worldSelfCheck();const r=(c.rows||c);
   const гл=GUIDE.find(g=>/Городские службы/i.test(g.title));
   return {services:(r.find?r.find(x=>x&&x.id==="services"):null)||null,
+   citysize:(r.find?r.find(x=>x&&x.id==="citysize"):null)||null,
    плохие:(r.filter?r.filter(x=>x&&x.ok===false).map(x=>x.id):[]),
    глава:!!гл,строк:гл?гл.body.length:0};});
- check('самопроверка мира держит зелёную строку «services»',
-  !!свод.services&&свод.services.ok===true,свод.services);
+ check('самопроверка мира держит зелёные строки «services» и «citysize»',
+  !!свод.services&&свод.services.ok===true&&!!свод.citysize&&свод.citysize.ok===true,свод);
  check('вся остальная самопроверка мира тоже зелёная',свод.плохие.length===0,свод.плохие);
  check('в руководстве есть глава о городских службах',свод.глава&&свод.строк>=5,свод);
 
