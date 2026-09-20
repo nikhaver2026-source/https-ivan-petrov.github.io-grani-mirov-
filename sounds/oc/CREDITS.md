@@ -218,3 +218,66 @@ https://creativecommons.org/licenses/by/3.0/ — текст лицензии р�
 | oc_spark_03 | искры из горна | `Sound.ocg/Fire.ocg/Spark3.wav` (перекодировано из WAV в OGG, содержимое не менялось) |
 | oc_smoke_01 | дым: шипение и тяга | `Sound.ocg/Fire.ocg/Smoke.wav` (перекодировано из WAV в OGG, содержимое не менялось) |
 | oc_corrode_01 | кислота разъедает: алхимия | `Sound.ocg/Liquids.ocg/Corrode.ogg` |
+
+## Добавлено позже: рода ловушек, способы их найти, маяки поздних ресурсов
+и голоса четырёх богов за Гранью
+
+| Файл | Роль в игре | Исходный файл OpenClonk (planet/) |
+|---|---|---|
+| oc_trap_mech_01 | механическая ловушка: пружина, тяга и противовес | `Sound.ocg/Structures.ocg/SwitchMove.wav` (перекодировано из WAV в OGG, содержимое не менялось) |
+| oc_trap_mech_02 | механическая ловушка: пружина, тяга и противовес | `Sound.ocg/Structures.ocg/SwitchFlip.wav` (перекодировано из WAV в OGG, содержимое не менялось) |
+| oc_trap_magic_01 | магическая ловушка: знак занялся | `Sound.ocg/Fire.ocg/Fuse.ogg` |
+| oc_trap_magic_02 | магическая ловушка: знак занялся | `Sound.ocg/Fire.ocg/FuseShort.ogg` |
+| oc_trap_sound_01 | звуковая ловушка: отклик на шум | `Sound.ocg/UI.ocg/Ding.ogg` |
+| oc_trap_light_01 | световая ловушка: копившийся свет вышел разом | `Sound.ocg/Fire.ocg/Blowout.ogg` |
+| oc_trap_poison_01 | ядовитая ловушка: состав распылился | `Sound.ocg/Objects.ocg/SprayCan.wav` (перекодировано из WAV в OGG, содержимое не менялось) |
+| oc_trap_space_01 | пространственная ловушка: ход подменён ходом | `Sound.ocg/Animals.ocg/Puka.ocg/TeleportIn.wav` (перекодировано из WAV в OGG, содержимое не менялось) |
+| oc_trap_space_02 | пространственная ловушка: ход подменён ходом | `Sound.ocg/Animals.ocg/Puka.ocg/TeleportOut.wav` (перекодировано из WAV в OGG, содержимое не менялось) |
+| oc_trap_time_01 | временная ловушка: отсчёт до удара | `Sound.ocg/UI.ocg/Tick.ogg` |
+| oc_trap_grav_01 | гравитационная ловушка: вес стал непомерным | `Sound.ocg/Objects.ocg/Lorry.ocg/Dump1.wav` (перекодировано из WAV в OGG, содержимое не менялось) |
+| oc_trap_grav_02 | гравитационная ловушка: вес стал непомерным | `Sound.ocg/Objects.ocg/Lorry.ocg/Dump2.wav` (перекодировано из WAV в OGG, содержимое не менялось) |
+| oc_trap_illusion_01 | иллюзорная ловушка: морок дрогнул | `Sound.ocg/Hits.ocg/Materials.ocg/Glass.ocg/GlassHit3.ogg` |
+| oc_trap_illusion_02 | иллюзорная ловушка: морок дрогнул | `Sound.ocg/Hits.ocg/Materials.ocg/Glass.ocg/GlassHit4.ogg` |
+| oc_trap_living_01 | живая ловушка: пасть сомкнулась | `Sound.ocg/Animals.ocg/Chippie.ocg/Bite1.wav` (перекодировано из WAV в OGG, содержимое не менялось) |
+| oc_trap_living_02 | живая ловушка: пасть сомкнулась | `Sound.ocg/Animals.ocg/Chippie.ocg/Bite2.wav` (перекодировано из WAV в OGG, содержимое не менялось) |
+| oc_find_listen_01 | поиск слухом: стоять и слушать пол | `Sound.ocg/Clonk.ocg/Action.ocg/Breathing.wav` (перекодировано из WAV в OGG, содержимое не менялось) |
+| oc_find_probe_01 | поиск ощупыванием: ладонь по плитам | `Sound.ocg/Hits.ocg/BucketHit1.wav` (перекодировано из WAV в OGG, содержимое не менялось) |
+| oc_find_probe_02 | поиск ощупыванием: ладонь по плитам | `Sound.ocg/Hits.ocg/BucketHit2.wav` (перекодировано из WAV в OGG, содержимое не менялось) |
+| oc_find_analyze_01 | магический разбор: чары прочтены | `Sound.ocg/UI.ocg/Cleared.ogg` |
+| oc_find_track_01 | следопытство: принюхаться к следу | `Sound.ocg/Animals.ocg/Mooq.ocg/Snorting1.wav` (перекодировано из WAV в OGG, содержимое не менялось) |
+| oc_find_track_02 | следопытство: принюхаться к следу | `Sound.ocg/Animals.ocg/Mooq.ocg/Snorting2.wav` (перекодировано из WAV в OGG, содержимое не менялось) |
+| oc_find_tool_01 | поиск щупом: железо о камень | `Sound.ocg/Objects.ocg/Pickaxe.ocg/Clang1.wav` (перекодировано из WAV в OGG, содержимое не менялось) |
+| oc_find_tool_02 | поиск щупом: железо о камень | `Sound.ocg/Objects.ocg/Pickaxe.ocg/Clang2.wav` (перекодировано из WAV в OGG, содержимое не менялось) |
+| oc_find_tool_03 | поиск щупом: железо о камень | `Sound.ocg/Objects.ocg/Pickaxe.ocg/Clang3.wav` (перекодировано из WAV в OGG, содержимое не менялось) |
+| oc_find_mate_01 | спутник впереди: зверь скулит у опасного места | `Sound.ocg/Animals.ocg/Wipf.ocg/Weep1.wav` (перекодировано из WAV в OGG, содержимое не менялось) |
+| oc_find_mate_02 | спутник впереди: зверь скулит у опасного места | `Sound.ocg/Animals.ocg/Wipf.ocg/Weep2.wav` (перекодировано из WAV в OGG, содержимое не менялось) |
+| oc_find_risk_01 | рискованный опыт: тронули и заело | `Sound.ocg/Structures.ocg/SwitchStuck.wav` (перекодировано из WAV в OGG, содержимое не менялось) |
+| oc_res_hide_01 | маяк шкуры: скрип выделанной кожи | `Sound.ocg/Environment.ocg/Vine.ocg/Grab1.wav` (перекодировано из WAV в OGG, содержимое не менялось) |
+| oc_res_hide_02 | маяк шкуры: скрип выделанной кожи | `Sound.ocg/Environment.ocg/Vine.ocg/Grab2.wav` (перекодировано из WAV в OGG, содержимое не менялось) |
+| oc_res_organ_01 | маяк органа: влажный хруст | `Sound.ocg/Animals.ocg/Chippie.ocg/EggCrack1.wav` (перекодировано из WAV в OGG, содержимое не менялось) |
+| oc_res_organ_02 | маяк органа: влажный хруст | `Sound.ocg/Animals.ocg/Chippie.ocg/EggCrack2.wav` (перекодировано из WAV в OGG, содержимое не менялось) |
+| oc_res_organ_03 | маяк органа: влажный хруст | `Sound.ocg/Animals.ocg/Chippie.ocg/EggCrack3.wav` (перекодировано из WAV в OGG, содержимое не менялось) |
+| oc_res_blood_01 | маяк крови: густой пузырь | `Parkour.ocf/VolcanoEscapeEx.ocs/BigVolcano.ocd/BigVolcanoBubble1.wav` (перекодировано из WAV в OGG, содержимое не менялось) |
+| oc_res_blood_02 | маяк крови: густой пузырь | `Parkour.ocf/VolcanoEscapeEx.ocs/BigVolcano.ocd/BigVolcanoBubble2.wav` (перекодировано из WAV в OGG, содержимое не менялось) |
+| oc_res_venom_01 | маяк яда: шипение | `Sound.ocg/Animals.ocg/Puka.ocg/Hiss1.wav` (перекодировано из WAV в OGG, содержимое не менялось) |
+| oc_res_venom_02 | маяк яда: шипение | `Sound.ocg/Animals.ocg/Puka.ocg/Hiss2.wav` (перекодировано из WAV в OGG, содержимое не менялось) |
+| oc_res_essence_01 | маяк эссенции: сгущение силы | `Sound.ocg/Objects.ocg/Windbag.ocg/Charge.ogg` |
+| oc_res_ether_01 | маяк эфира: кристальный отклик | `Missions.ocf/DeepSeaMining.ocs/CrystalCommunicator.ocd/CrystalCommBoost.ogg` |
+| oc_res_timeshard_01 | маяк осколка времени: окаменение | `Sound.ocg/Animals.ocg/LavaCore.ocg/Fossilize.ogg` |
+| oc_res_heavy_01 | маяк тяжёлого минерала: неподъёмный удар | `Defense.ocf/FightForGidl.ocs/OgreClubHit.wav` (перекодировано из WAV в OGG, содержимое не менялось) |
+| oc_res_rune_01 | маяк рунного камня: резец по кладке | `Sound.ocg/Structures.ocg/Repair.wav` (перекодировано из WAV в OGG, содержимое не менялось) |
+| oc_coin_lost_01 | деньги ушли: монета из ладони | `Sound.ocg/UI.ocg/UnCash1.wav` (перекодировано из WAV в OGG, содержимое не менялось) |
+| oc_coin_lost_02 | деньги ушли: монета из ладони | `Sound.ocg/UI.ocg/UnCash2.wav` (перекодировано из WAV в OGG, содержимое не менялось) |
+| oc_coin_lost_03 | деньги ушли: монета из ладони | `Sound.ocg/UI.ocg/UnCash3.wav` (перекодировано из WAV в OGG, содержимое не менялось) |
+| oc_grab_01 | хватка: взяли и отпустили | `Sound.ocg/Clonk.ocg/Action.ocg/Grab.ogg` |
+| oc_grab_02 | хватка: взяли и отпустили | `Sound.ocg/Clonk.ocg/Action.ocg/UnGrab.ogg` |
+| oc_drone_die_01 | гул, оседающий в тишину | `Missions.ocf/Crash.ocs/Sound.ocg/EngineDie.ogg` |
+| oc_seal_close_01 | черта проведена: створ закрылся | `Sound.ocg/UI.ocg/CloseViewport.ogg` |
+| oc_ui_select_01 | выбор в списке | `Sound.ocg/UI.ocg/Select.ogg` |
+| oc_ui_select_02 | выбор в списке | `Sound.ocg/UI.ocg/Click2.ogg` |
+| oc_dig_01 | копать: лопата в грунт | `Sound.ocg/Clonk.ocg/Action.ocg/Dig.ocg/Dig1.wav` (перекодировано из WAV в OGG, содержимое не менялось) |
+| oc_dig_02 | копать: лопата в грунт | `Sound.ocg/Clonk.ocg/Action.ocg/Dig.ocg/Dig2.wav` (перекодировано из WAV в OGG, содержимое не менялось) |
+| oc_dig_03 | копать: лопата в грунт | `Sound.ocg/Clonk.ocg/Action.ocg/Dig.ocg/Dig3.wav` (перекодировано из WAV в OGG, содержимое не менялось) |
+| oc_dig_04 | копать: лопата в грунт | `Sound.ocg/Clonk.ocg/Action.ocg/Dig.ocg/Dig4.wav` (перекодировано из WAV в OGG, содержимое не менялось) |
+| oc_dig_05 | копать: лопата в грунт | `Sound.ocg/Clonk.ocg/Action.ocg/Dig.ocg/Dig5.wav` (перекодировано из WAV в OGG, содержимое не менялось) |
+| oc_chest_close_01 | крышка сундука закрывается | `Sound.ocg/Structures.ocg/Chest.ocg/Close.ogg` |
