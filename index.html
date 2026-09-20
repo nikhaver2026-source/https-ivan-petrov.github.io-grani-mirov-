@@ -4806,6 +4806,13 @@ const GUIDE=[
  "Вещь растёт. За каждую победу работающий артефакт получает опыт, а на пороге открывает ступень — прибавку, которой у него раньше не было, и всегда из своего направления. Каждая следующая ступень даётся вдвое тяжелее. Если гнёзда кончились, редкую часть можно скормить вещи: она уйдёт в опыт вместо гнезда.",
  "Требования. Ранг задаёт уровень; сверх того вещь может требовать навык, заклинание нужной школы, расположение народа, принадлежность к клану, прочитанное знание или закрытое дело. Вещь, требования которой не выполнены, лежит мёртвым грузом и не даёт ничего — и прямо говорит, чего ей не хватает.",
  "Где всё это. Пункт меню «Артефакты, части и рецепты». В нём видно, каким ремеслом здесь занимаются и каково ваше умение, какие рецепты под рукой и чего не хватает, какие части лежат в суме, и по каждой вещи — всё, что о ней известно, и всё, что с ней можно сделать: вложить, вынуть, зачаровать, скормить, продать."]},
+{title:"Глава 61. Тридцать четыре двери: как устроена игра внутри",body:[
+ "Эта глава не про мир, а про то, как он собран. Играть она не мешает и ничего не требует — но кто хочет знать, почему игра не спотыкается сама о себя, тот прочтёт.",
+ "§42 брифа перечисляет тридцать четыре части: мир, география, биомы, города, постройки, жители, фракции, политика, хозяйство, дела, подземелья, бой, чары, артефакты, ремёсла, алхимия, руны, зачарование, мистицизм, демонология, гомункулы, время, тяжесть, иллюзии, знание, языки, доброе имя, достижения, объёмный звук, речь, доступность, сохранения, события и суточный ход мира.",
+ "САМИ ЧАСТИ БЫЛИ ВСЕ. Не было другого: одной названной двери в каждую. Обработчики ходили прямо к внутренним функциям, и всякий новый рисковал разойтись со старым — тот же счёт считался в двух местах и понемногу расходился.",
+ "ТЕПЕРЬ ДВЕРЕЙ ТРИДЦАТЬ ЧЕТЫРЕ. У каждой части свой слой с именем: спросить его можно всегда, и он всегда отвечает. Ни один слой не считает сам — он только зовёт то, что уже написано, и отдаёт то, что оно вернуло. Это сделано нарочно: слой, который начнёт считать сам, назавтра разойдётся с тем, поверх чего лежит.",
+ "КАЖДАЯ ОТВЕЧАЕТ БЕЗ ДОВОДОВ. Любую ручку любого слоя можно позвать пустой, и она не уронит игру: вернёт то, что есть, или честное «ничего». Самопроверка мира зовёт их все подряд каждый раз и краснеет, если хоть одна споткнулась.",
+ "ЧТО ЭТО ДАЁТ ИГРОКУ. Ровно одно, но важное: меньше поломок. Когда в мир добавляют новое — а его добавляют почти каждый раз, — новое цепляется за дверь, а не за внутренности, и старое от этого не ломается."]},
 {title:"Глава 60. Весёлые случаи: мир, который иногда смешит",body:[
  "Мир умел пугать, требовать и награждать — и не умел рассмешить. §7 просит от него и юмористических событий, и теперь их двенадцать: упрямый вол на тракте, бочка под горку через рынок, петух не по часам, кот на алтаре, глашатай, забывший имя, лопнувшая струна на верхней ноте, коза на крыше, поросёнок с базара, ведро на голове подмастерья, чары наоборот, не та дверь в трактире и сапоги не с той ноги.",
  "НИКТО НЕ УНИЖЕН. Смешно положение, а не человек. Ни один случай не смеётся над чужой бедой, немощью, народом или верой. Вол упрям, бочка катится, коза ест крышу — и всем от этого только веселее, включая тех, кто попал в положение.",
@@ -30837,6 +30844,10 @@ function namedCityStructure(x,y){const c=cityAt(x,y);if(!c)return null;
 /* Районы именованного города: свои три плюс роды районов, начиная с точки,
    своей у каждого города. Кольцевой город берёт все сорок два. */
 function namedCityDistricts(c){
+ /* §42: сервисный слой зовут и без довода. Без города берётся тот, в котором
+    вы стоите; если ни в каком — районов нет, и это не ошибка, а ответ. */
+ c=c||safeFn(()=>namedCityAt(G.x,G.y),null);
+ if(!c||!Array.isArray(c.сетка)||!Array.isArray(c.свои))return [];
  const n=c.сетка[0]*c.сетка[1];
  const out=[];
  c.свои.forEach((имя,i)=>out.push({n:имя,p:["A","S","B"][i%3],слух:`${c.n}: ${c.роль}`,дозор:1,свой:true}));
@@ -30869,7 +30880,23 @@ const Cities=Modules.register("CITIES",{
  nearestAny(x,y){let best=null,bd=Infinity;
   NAMED_CITIES.concat(empireCities()).forEach(c=>{const d=Math.max(Math.abs(c.x-x),Math.abs(c.y-y));if(d<bd){bd=d;best=c;}});
   return best?{c:best,d:bd}:null;},
- text(c){return `${c.n}, ${c.роль}: ${c.о} Районов ${c.сетка[0]*c.сетка[1]}; продаёт ${c.товар.join(", ")}; ищет ${c.нужда.join(", ")}; пошлина ${Math.round(c.пошлина*100)} сотых. Координаты ${c.x} и ${c.y}.`;}});
+ /* §42: у сервисного слоя одна дверь, и она отвечает без доводов. Без
+    города в доводе берётся тот, в котором вы стоите, а если ни в каком —
+    ближайший. Поля называются по одному и только те, что есть: и именной,
+    и державный город сейчас полны, но дверь не должна падать от города,
+    собранного иначе, — а такие в мире ещё появятся. */
+ text(c){
+  c=c||safeFn(()=>this.here(),null)
+     ||safeFn(()=>{const n=this.nearestAny(G.x,G.y);return n&&n.c;},null);
+  if(!c)return `Именных городов ${NAMED_CITIES.length}, городов держав ${safeFn(()=>empireCities().length,0)}. Рядом ни одного.`;
+  const ч=[`${c.n}${c.роль?`, ${c.роль}`:""}`];
+  if(c.о)ч.push(c.о);
+  if(Array.isArray(c.сетка)&&c.сетка.length===2)ч.push(`Районов ${c.сетка[0]*c.сетка[1]}`);
+  if(Array.isArray(c.товар)&&c.товар.length)ч.push(`продаёт ${c.товар.join(", ")}`);
+  if(Array.isArray(c.нужда)&&c.нужда.length)ч.push(`ищет ${c.нужда.join(", ")}`);
+  if(typeof c.пошлина==="number")ч.push(`пошлина ${Math.round(c.пошлина*100)} сотых`);
+  ч.push(`Координаты ${c.x} и ${c.y}`);
+  return ч.join(". ").replace(/\.\./g,".")+".";}});
 
 /* ── ВЕЛИКИЕ ЛЕСА ── */
 const FOREST_KINDS={
@@ -38010,6 +38037,268 @@ function factionsText(){const i=empireIndexAt(G.x,G.y);return factionText(i)+` �
    отсутствие невозможных ресурсов, логику климата, связность хозяйства и
    держав, доступность условий дел и звук у каждого важного объекта. Список
    финального контроля тоже считается живьём, а не ставится галочкой. */
+
+/* ════════ СЕРВИСНЫЕ СЛОИ МОДУЛЕЙ (§42) ════════
+   §42 перечисляет тридцать четыре модуля и требует: «Каждый модуль должен
+   иметь собственный сервисный/API-слой, чтобы старые обработчики не
+   конфликтовали с новыми».
+
+   Сами системы в игре есть все — биомы, постройки, жители, фракции,
+   политика, хозяйство, дела, подземелья, бой, чары, артефакты, ремёсла,
+   алхимия, руны, зачарование, мистицизм, демонология, гомункулы, время,
+   тяжесть, иллюзии, знание, языки, доброе имя, достижения, объёмный звук,
+   речь, доступность, сохранения, события и суточный ход мира. Не было
+   именно того, чего просит §42: одной названной двери в каждую из них.
+   Обработчики лезли прямо к глобальным функциям, и всякий новый рисковал
+   разойтись со старым.
+
+   Ниже — тридцать две тонкие двери. Ни одна не содержит игровой логики:
+   каждая только зовёт то, что уже написано, и возвращает то, что оно
+   вернуло. Это сознательно: слой, который начнёт считать сам, назавтра
+   разойдётся с тем, поверх чего он лежит. Два имени из списка §42 —
+   GEOGRAPHY и CITIES — были зарегистрированы раньше и остаются как есть.
+
+   Правило для нового кода: ходить через Modules.get("ИМЯ"), а не к
+   глобальной функции напрямую. */
+const API_SPEC=["WORLD","GEOGRAPHY","BIOMES","CITIES","BUILDINGS","NPC","FACTIONS","POLITICS",
+ "ECONOMY","QUESTS","DUNGEONS","COMBAT","MAGIC","ARTIFACTS","CRAFTING","ALCHEMY","RUNES",
+ "ENCHANTING","MYSTICISM","DEMONOLOGY","HOMUNCULI","TIME","GRAVITY","ILLUSIONS","KNOWLEDGE",
+ "LANGUAGES","REPUTATION","ACHIEVEMENTS","AUDIO_3D","TTS","ACCESSIBILITY","SAVE_LOAD","EVENTS",
+ "WORLD_SIMULATION"];
+const S=(f,d)=>safeFn(f,d);   /* короткая обёртка: дверь не должна падать */
+
+Modules.register("WORLD",{
+ size:()=>WORLD,
+ where:()=>({x:G.x,y:G.y,alt:Number(G.alt)||0,место:G.place||null,глубина:(G.place&&Number(G.place.depth))||0}),
+ at:(x,y)=>S(()=>cellContent(x==null?G.x:x,y==null?G.y:y),null),
+ terrain:(x,y)=>S(()=>terrainAt(x==null?G.x:x,y==null?G.y:y),null),
+ region:(x,y)=>S(()=>REGIONS[regionIndexAt(x==null?G.x:x,y==null?G.y:y)],null),
+ realm:()=>S(()=>realmHere(),null),
+ text(){const w=this.where();const r=this.region();
+  return `Мир ${WORLD} на ${WORLD}. Вы на ${w.x}, ${w.y}${w.глубина?`, ярус ${w.глубина}`:""}. Область: ${r?r.n:"неизвестна"}.`;}});
+Modules.register("BIOMES",{
+ all:()=>BIOMES,
+ at:(x,y)=>S(()=>biomeAt(x==null?G.x:x,y==null?G.y:y),null),
+ byId:id=>BIOMES.find(b=>b.id===id)||null,
+ text(){const b=this.at();return `Биомов ${BIOMES.length}. Здесь: ${b?b.n:"неизвестно"}.`;}});
+Modules.register("BUILDINGS",{
+ tiles:()=>TILE,
+ kinds:()=>Object.keys(TILE),
+ at:(x,y)=>S(()=>{const l=curLevel();return l?tileAt(l,x,y):null;},null),
+ here:()=>S(()=>{const p=G.place;const l=curLevel();return (p&&l)?TILE[tileAt(l,p.x,p.y)]||null:null;},null),
+ text(){const h=this.here();return `Родов построек и клеток ${Object.keys(TILE).length}. Под ногами: ${h?(h.n||h.имя||"клетка"):"открытое место"}.`;}});
+Modules.register("NPC",{
+ at:(x,y,i,prof)=>S(()=>getNPC(x,y,i,prof),null),
+ byKey:k=>S(()=>getNPCByKey(k),null),
+ soul:n=>S(()=>npcSoul(n),null),
+ near:rad=>S(()=>Actors.near(rad||6),[]),
+ voice:(n,what)=>S(()=>npcVoice(n,what),false),
+ arc:n=>S(()=>Arcs.note(n),null),
+ text(){const near=this.near(6);return `Жителей рядом ${near.length}. У каждого имя, возраст, ремесло, семья, расписание, страхи, цели и память.`;}});
+Modules.register("FACTIONS",{
+ houses:()=>HOUSES,clans:()=>CLAN_DB,syndicates:()=>SYNDICATES,orgs:x=>S(()=>cityOrgs(x),[]),
+ standing:(scope,id)=>S(()=>standOf(scope,id),0),
+ add:(scope,id,n,тихо)=>S(()=>addStand(scope,id,n,тихо),0),
+ houseRank:id=>S(()=>Houses.rank(id),0),
+ text(){return `Домов ${HOUSES.length}, кланов ${CLAN_DB.length}, синдикатов ${SYNDICATES.length}.`;}});
+Modules.register("POLITICS",{
+ empires:()=>EMPIRES,
+ at:(x,y)=>S(()=>EMPIRES[empireIndexAt(x==null?G.x:x,y==null?G.y:y)],null),
+ wars:day=>S(()=>warsAt(day==null?G.day:day),[]),
+ armies:()=>Modules.get("ARMIES"),
+ arc:()=>S(()=>WarArc.here(),null),
+ text(){const w=this.wars();const e=this.at();
+  return `Держав ${EMPIRES.length}. Здесь: ${e?e.short:"ничья земля"}. Войн сегодня ${w.length}.`;}});
+Modules.register("ECONOMY",{
+ price:(res,idx,day,npc)=>S(()=>sellPrice(res,idx,day==null?G.day:day,npc),0),
+ rowPrice:(n,row)=>S(()=>sellPriceOf(n,row),0),
+ merchant:n=>S(()=>merchSoul(n),null),
+ coins:()=>Modules.get("COINS"),
+ warK:res=>S(()=>WarArc.priceK(res),1),
+ treeK:()=>S(()=>Tree.ценаK(),0),
+ text(){return S(()=>Coins.text(),"Хозяйство: золото, серебро, медь.");}});
+Modules.register("QUESTS",{
+ all:()=>Array.isArray(G.quests)?G.quests:[],
+ active(){return this.all().filter(q=>!q.done);},
+ done(){return this.all().filter(q=>q.done);},
+ kinds:()=>QUEST_KINDS,
+ kindOf:q=>S(()=>questKind(q),null),
+ take:(n,q)=>S(()=>takeNPCQuest(n,q),false),
+ complete:q=>S(()=>completeQuest(q),false),
+ text(){return `Дел взято ${this.active().length}, сдано ${this.done().length}. Родов дел ${QUEST_KINDS.length}.`;}});
+Modules.register("DUNGEONS",{
+ passport:(bx,by,d,st)=>S(()=>Passport.of(bx,by,d,st),null),
+ complexes:()=>Modules.get("COMPLEXES"),
+ ecology:()=>Modules.get("ECOLOGY"),
+ depth:()=>(G.place&&Number(G.place.depth))||0,
+ maxDepth:()=>S(()=>maxDepthHere(),MAX_DEPTH),
+ traps:()=>Modules.get("TRAPS"),
+ text(){return S(()=>Passport.text(),"Паспорта нет: вы не у подземелья.");}});
+Modules.register("COMBAT",{
+ active:()=>!!G.inCombat,
+ state:()=>G.combat||null,
+ start:(c,o)=>S(()=>startCombat(c,o),false),
+ act:a=>S(()=>fight(a),false),
+ atk:()=>S(()=>atk(),0),
+ def:()=>S(()=>def(),0),
+ treeK:()=>S(()=>Tree.боК(),0),
+ text(){return this.active()?`Бой: ${(G.combat&&G.combat.m&&G.combat.m.n)||"противник"}.`:`Боя нет. Атака ${this.atk()}, защита ${this.def()}.`;}});
+Modules.register("MAGIC",{
+ schools:()=>SCHOOLS,
+ forms:()=>SPELL_FORMS,
+ spells:()=>SPELLS,
+ known:()=>Array.isArray(G.spells)?G.spells:[],
+ compose:(sc,f,m,ур)=>S(()=>composeSpell(sc,f,m,ур),null),
+ mana:()=>({есть:Number(G.mana)||0,предел:Number(G.manaMax)||0}),
+ text(){return `Школ чар ${SCHOOLS.length}, форм ${SPELL_FORMS.length}. Выучено ${this.known().length}. Мана ${this.mana().есть} из ${this.mana().предел}.`;}});
+Modules.register("ARTIFACTS",{
+ core:()=>ART,
+ all:()=>Array.isArray(G.artifacts)?G.artifacts:[],
+ sum:k=>S(()=>ART.sum(k),0),
+ price:it=>S(()=>ART.price(it),0),
+ chains:()=>Modules.get("ARTCHAINS"),
+ text(){return `Артефактов при вас ${this.all().length}.`;}});
+Modules.register("CRAFTING",{
+ masteries:()=>MASTERY,
+ level:id=>S(()=>mastLevel(id),0),
+ of:id=>S(()=>mastOf(id),{ур:0,оп:0,дел:0}),
+ risk:t=>S(()=>techRisk(t),0.3),
+ treeK:id=>S(()=>Tree.рукаK(id),0),
+ text(){return `Ремёсел ${MASTERY.length}: ${MASTERY.map(m=>`${m.n} ${this.level(m.id)}`).join(", ")}.`;}});
+Modules.register("ALCHEMY",{
+ level:()=>S(()=>mastLevel("alchemy"),0),
+ effect:(a,b)=>S(()=>alchEffect(a,b),null),
+ learned:()=>(G.alch&&typeof G.alch==="object")?G.alch:{},
+ text(){return `Алхимия ступени ${this.level()}. Изведанных пар ${Object.keys(this.learned()).length}.`;}});
+Modules.register("RUNES",{
+ symbols:()=>SIGIL_SYMBOLS,carriers:()=>SIGIL_CARRIERS,geometry:()=>SIGIL_GEOMETRY,inks:()=>INKS,
+ level:()=>S(()=>mastLevel("runes"),0),
+ sigils:()=>Modules.get("SIGILS"),
+ text(){return `Символов ${SIGIL_SYMBOLS.length}, носителей ${SIGIL_CARRIERS.length}, чернил ${INKS.length}. Рунное дело ступени ${this.level()}.`;}});
+Modules.register("ENCHANTING",{
+ level:()=>S(()=>mastLevel("jewel"),0),
+ treeK:()=>S(()=>Tree.доб("ench"),0),
+ charge:it=>Number(it&&it.заряд)||0,
+ text(){return `Зачарование и камнерезное дело ступени ${this.level()}.`;}});
+Modules.register("MYSTICISM",{
+ rites:()=>S(()=>deeds("rites"),0),
+ favor:id=>S(()=>godFavor(id),0),
+ gods:()=>Modules.get("GODS"),
+ patron:()=>S(()=>patronGod(),null),
+ text(){const p=this.patron();return `Обрядов ${this.rites()}. Покровитель: ${p?p.n:"не выбран"}.`;}});
+Modules.register("DEMONOLOGY",{
+ level:()=>S(()=>mastLevel("demon"),0),
+ open:()=>S(()=>openDemon(),false),
+ gift:k=>S(()=>pactGift(k),false),
+ text(){return `Демонология ступени ${this.level()}.`;}});
+Modules.register("HOMUNCULI",{
+ level:()=>S(()=>mastLevel("homun"),0),
+ open:()=>S(()=>openHomun(),false),
+ bonus:k=>S(()=>homunBonus(k),0),
+ gain:n=>S(()=>homunGain(n),0),
+ text(){return `Работа с гомункулами ступени ${this.level()}.`;}});
+Modules.register("TIME",{
+ day:()=>Number(G.day)||1,
+ hour:()=>Number(G.hour)||0,
+ night:()=>S(()=>isNight(),false),
+ weather:()=>G.weather||"Ясно",
+ flux:()=>S(()=>deeds("fluxT"),0),
+ level:()=>S(()=>mastLevel("flux"),0),
+ text(){return `День ${this.day()}, час ${Math.floor(this.hour())}. ${this.night()?"Ночь":"День"}. Погода: ${this.weather()}.`;}});
+Modules.register("GRAVITY",{
+ flux:()=>S(()=>deeds("fluxG"),0),
+ level:()=>S(()=>mastLevel("flux"),0),
+ anomaly:()=>S(()=>anomalyIs("gravity"),false),
+ text(){return `Работ с тяжестью ${this.flux()}. Тяжесть здесь ${this.anomaly()?"искажена":"обычная"}.`;}});
+Modules.register("ILLUSIONS",{
+ level:()=>S(()=>mastLevel("illus"),0),
+ of:()=>S(()=>mastOf("illus"),{ур:0,оп:0,дел:0}),
+ masks:()=>S(()=>Path.masks,[]),
+ worn:()=>S(()=>(G.mask&&String(G.mask))||null,null),
+ maskK:()=>S(()=>Path.maskK(),1),
+ wear:id=>S(()=>Path.wear(id),false),
+ takeOff:()=>S(()=>Path.takeOff(),false),
+ anomaly:()=>S(()=>anomalyIs("illusion"),false),
+ text(){const м=this.worn();
+  return `Иллюзии ступени ${this.level()}. Масок ${this.masks().length}, надета: ${м||"ни одной"}.`;}});
+Modules.register("KNOWLEDGE",{
+ shelves:()=>KNOW_SHELVES,
+ objects:()=>KNOW_OBJ,
+ encyclopedia:()=>Modules.get("ENCYCLO"),
+ known:()=>(G.known&&typeof G.known==="object")?G.known:{},
+ text(){return `Полок знания ${KNOW_SHELVES.length}, предметов знания ${KNOW_OBJ.length}.`;}});
+Modules.register("LANGUAGES",{
+ list:()=>LANGS,
+ level:id=>S(()=>Langs.level(id),0),
+ learn:(id,pts,why)=>S(()=>Langs.learn(id,pts,why),false),
+ at:(x,y)=>S(()=>Langs.at(x,y),null),
+ check:n=>S(()=>Langs.check(n),null),
+ treeK:()=>S(()=>Tree.знание("язык"),1),
+ text(){const знает=LANGS.filter(l=>this.level(l.id)>0).length;
+  return `Языков ${LANGS.length}, из них хоть немного знаете ${знает}.`;}});
+Modules.register("REPUTATION",{
+ races:()=>(G.rep&&typeof G.rep==="object")?G.rep:{},
+ add:(race,n)=>S(()=>addRep(race,n),0),
+ axes:()=>STAND_AXES,
+ axis:id=>S(()=>axisOf(id),0),
+ standing:(scope,id)=>S(()=>standOf(scope,id),0),
+ treeK:добрая=>S(()=>Tree.репK(!!добрая),1),
+ text(){const r=this.races();const н=Object.keys(r).filter(k=>r[k]).length;
+  return `Доброе имя у ${н} ${plural(н,"народа","народов","народов")}. Осей отношения ${STAND_AXES.length}.`;}});
+Modules.register("ACHIEVEMENTS",{
+ merits:()=>Modules.get("MERITS"),
+ kinds:()=>MERIT_KINDS,
+ check:()=>S(()=>Merits.check(),false),
+ text(){return S(()=>Merits.text(),"Достижений пока нет.");}});
+Modules.register("AUDIO_3D",{
+ spatial:()=>Spatial,
+ at:(role,dx,dy,o)=>S(()=>Spatial.at(role,dx,dy,o),false),
+ role:(r,dx,dy,o)=>S(()=>Spatial.role(r,dx,dy,o),false),
+ room:()=>S(()=>Room.name(),"открытое место"),
+ enabled:()=>settings.hrtf!==0,
+ scan:(rad,max)=>S(()=>pingSurroundings(rad,max),0),
+ text(){return `Объёмный звук ${this.enabled()?"включён":"выключен"}. Акустика места: ${this.room()}.`;}});
+Modules.register("TTS",{
+ speech:()=>Speech,
+ say:(t,o)=>S(()=>narrate(t,o),false),
+ stop:()=>S(()=>Speech.hush(),false),
+ rate:()=>Number(settings.rate)||1,
+ auto:()=>settings.autoSpeech!==0,
+ text(){return `Речь: скорость ${(Number(settings.rate)||1).toFixed(1)}, автоматическая речь ${this.auto()?"включена":"выключена"}.`;}});
+Modules.register("ACCESSIBILITY",{
+ gestures:()=>GESTURE_MAP,
+ conflicts:()=>S(()=>Gestures.conflicts(),[]),
+ scan:(rad,max)=>S(()=>pingSurroundings(rad,max),0),
+ beacon:(role,dx,dy,dz,d)=>S(()=>beaconAt(role,dx,dy,dz,d),false),
+ flags:()=>({объём:settings.hrtf!==0,картина:settings.scape!==0,речьНародов:settings.folk!==0,
+  весёлые:settings.mirth!==0,подсказки:settings.hints!==0,эффекты:!!settings.effects}),
+ text(){return `Жестов в карте ${GESTURE_MAP.length}, столкновений между ними ${this.conflicts().length}. Мир проходим без зрения: сторона, расстояние, высота, маяки и осмотр.`;}});
+Modules.register("SAVE_LOAD",{
+ save:silent=>S(()=>saveGame(silent),false),
+ load:()=>S(()=>loadGame(),false),
+ has:()=>{try{return !!localStorage.getItem("gm_save");}catch(_){return false;}},
+ text(){return `Сохранение ${this.has()?"есть":"ещё не сделано"}. День ${Number(G.day)||1}.`;}});
+Modules.register("EVENTS",{
+ random:()=>RANDOM_EVENTS,
+ global:()=>GLOBAL_EVENTS,
+ mirth:()=>MIRTH_EVENTS,
+ happen:()=>Modules.get("HAPPEN"),
+ prophecies:()=>PROPHECIES,
+ text(){const об=RANDOM_EVENTS.filter(e=>!/^(conj_|mirth_)/.test(e.id)).length;
+  return `Событий мира ${GLOBAL_EVENTS.length}, случайных ${об}, весёлых ${MIRTH_EVENTS.length}, пророчеств ${PROPHECIES.length}.`;}});
+Modules.register("WORLD_SIMULATION",{
+ armies:()=>Modules.get("ARMIES"),
+ arcs:()=>Modules.get("ARCS"),
+ zones:()=>Modules.get("ZONES"),
+ echoes:()=>Modules.get("ECHOES"),
+ /* Один суточный ход мира, собранный в одном месте: раньше эти вызовы
+    стояли врассыпную и новый обработчик легко забывал один из них. */
+ daily(){const было=[];
+  [["armies",()=>Armies.tick()],["arcs",()=>Arcs.daily()],["prophecy",()=>Prophecy.daily()],
+   ["global",()=>Global.daily()],["coins",()=>Coins.daily()],["wararc",()=>WarArc.tick()]]
+   .forEach(([n,f])=>{if(S(f,false))было.push(n);});
+  return было;},
+ text(){return `Суточный ход мира: войска, судьбы, пророчества, мировые события, долги и дуга.`;}});
 function worldSelfCheck(){
  const out=[];const ok=(id,c,note)=>out.push({id,ok:!!c,note:note||""});
  try{
@@ -38202,6 +38491,17 @@ function worldSelfCheck(){
   ok("sigils",SIGIL_SYMBOLS.length===8&&SIGIL_SYMBOLS.every(x=>MSCHOOL_BY_ID[x.школа]&&x.намерения.every(i=>SIGIL_INTENTS[i]))&&SIGIL_CARRIERS.length===8&&SIGIL_CARRIERS.every(x=>RES_BASE[x.ресурс])&&SIGIL_GEOMETRY.length===5&&INKS.length===6&&INKS.every(x=>SOUND_BANK[x.звук]&&Object.keys(x.рецепт).every(r=>RES_BASE[r]))&&AWAKEN_SOURCES.length===6&&AWAKEN_SOURCES.every(x=>SOUND_BANK[x.звук])&&WAVES.length===3&&MORPH_TRAITS.length===6&&MORPHOBEASTS.length===10&&MORPHOBEASTS.every(b=>MONSTERS.some(m=>m.id===b.база))&&DEVOUR_GIFTS.length===6&&EVENT_THEME.world_event&&SOUND_BANK[EVENT_THEME.world_event.роль],"Знаки: восемь символов, восемь носителей, пять геометрий, шесть чернил, шесть источников пробуждения, три волны, шесть черт, десять морфозверей, шесть даров Эха — всё со звуком и по настоящим ресурсам");
   ok("cases",CASE_TEMPLATES.length===6&&CASE_TEMPLATES.every(t=>t.версии.length===3&&t.улики.every(k=>CLUE_KINDS[k])&&t.версии.every(v=>v.улики.every(k=>t.улики.includes(k))))&&SYNDICATES.length===8&&SYNDICATES.every(x=>SOUND_BANK[x.звук]&&x.города.every(id=>NAMED_CITY_BY_ID[id])&&REGIONS[x.область])&&Object.keys(DECISIONS).length===9&&Object.values(DECISIONS).every(d=>Object.keys(d).length>=3)&&["deeper","border_war","shards","lasthouse","beast","price","undercity","maskface","endless"].every(id=>CHAIN_DB[id])&&HOUSE_BY_ID[LAST_HOUSE.враг]&&DLG_MOVE_BY_ID.znanie&&DLG_MOVE_BY_ID.kultura&&DLG_MOVE_BY_ID.nedoskazat,"Расследования: шесть дел с тремя версиями, восемь синдикатов со звуком и городами, девять цепочек с развязками, три хода разговора");
   ok("academy",LANGS.length>=20&&LANGS.every(l=>l.письмо&&l.о)&&SCIENCES.length===6&&SCIENCES.every(x=>SOUND_BANK[x.звук]&&x.эффект.length===3&&FACULTY_BY_ID[x.факультет])&&FACULTIES.length===12&&FACULTIES.every(f=>(f.школы||[]).every(id=>MSCHOOL_BY_ID[id]&&SCHOOL_AUDIO[id])&&(!f.маст||MAST_BY_ID[f.маст]))&&SCHOOLS.length>=30&&SCHOOLS.every(sc=>SCHOOL_AUDIO[sc.id]&&SPELL_LAYERS.every(l=>SOUND_BANK[SCHOOL_AUDIO[sc.id][l]])),"Академия: двадцать один язык, шесть наук, двенадцать факультетов, тридцать четыре школы чар — все со звуком");
+  ok("api",API_SPEC.length===34&&API_SPEC.every(n=>{
+    const m=Modules.get(n);
+    if(!m||typeof m.text!=="function")return false;
+    let t;try{t=m.text();}catch(_){return false;}
+    if(typeof t!=="string"||t.length<10)return false;
+    /* Каждая ручка слоя должна отвечать и без доводов: слой, который падает
+       от пустого вызова, — не дверь, а ловушка для нового обработчика. */
+    return Object.keys(m).every(k=>{if(typeof m[k]!=="function")return true;
+     try{m[k]();return true;}catch(_){return false;}});
+   })&&new Set(API_SPEC).size===34,
+   "Архитектура: все тридцать четыре модуля §42 зарегистрированы, у каждого свой сервисный слой, и каждая ручка отвечает без доводов");
   ok("mirth",MIRTH_EVENTS.length===12&&MIRTH_GIFTS.length===12
    &&MIRTH_EVENTS.every(m=>m.n&&m.о&&m.что&&m.где&&SOUND_BANK[m.звук]&&SOUND_BANK[m.шутка]&&m.звук!==m.шутка)
    &&new Set(MIRTH_EVENTS.map(m=>m.звук)).size===12&&new Set(MIRTH_EVENTS.map(m=>m.шутка)).size===12
