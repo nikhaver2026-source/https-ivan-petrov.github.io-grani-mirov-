@@ -169,6 +169,7 @@ h3{color:var(--acc2);margin:14px 0 6px;font-size:1.05rem;}
  <h3>🎧 Позиционный звук</h3>
  <label class="opt"><input type="checkbox" id="setHrtf" checked><span>🧭 <b>Объёмный звук</b><small>Слышно сторону, расстояние и высоту источника: тварь слева и сзади, ступени под ногами. Лучше всего в наушниках. Выключите, если одно ухо слышит хуже другого — тогда останется простая панорама</small></span></label>
  <label class="opt"><input type="checkbox" id="setFolk" checked><span>🗣️ <b>Живая речь народов</b><small>Житель откликается настоящим голосом на русском: у каждого из ста двенадцати народов свой тембр, у каждого ремесла своё слово, а в разговоре слышно и то, что сказали вы. Выключите, если хотите слышать только рассказчика</small></span></label>
+ <label class="opt"><input type="checkbox" id="setMirth" checked><span>🙂 <b>Весёлые случаи</b><small>Иногда мир не пугает и не требует, а смешит: упрямый вол на тракте, бочка под горку через рынок, коза на крыше, кот на алтаре. Смешно положение, а не человек. У каждого случая две записи — та, что ставит положение, и та, что даёт развязку. Снимите галочку, если хотите мир без шуток</small></span></label>
  <label class="opt"><input type="checkbox" id="setScape" checked><span>🌍 <b>Живая звуковая картина</b><small>Мир сам подаёт голос с тех сторон, где что-то стоит или ходит: угроза напоминает о себе часто, постройка редко. Выключите, если хотите тишину между действиями</small></span></label>
  <h3>🗣️ Речь</h3>
  <p class="hint">Все речевые сообщения идут через одного распорядителя: важное перебивает обычное, новое действие снимает старое описание, мелочь складывается в одну фразу, дубли не повторяются. Остановить речь — свайп четырьмя пальцами вниз или Alt+Пробел; повторить последнее — вверх или Alt+R; состояние игрока — влево или Alt+H; очистить очередь — вправо или Alt+X.</p>
@@ -614,6 +615,7 @@ const settings=Object.assign({speech:1,effects:1,music:1,subtitles:1,explore:1,f
  /* folk — живая речь народов: житель окликает не гулом толпы, а голосом
     своего народа. Выключается для тех, кому довольно рассказчика. */
  folk:1,
+ mirth:1,   /* весёлые случаи мира (§7) */
  /* ── ГРОМКОСТЬ ПО КАНАЛАМ ──
     Ползунков было три: озвучка, «эффекты» и музыка. Под «эффектами» лежало
     всё разом — шаги, твари, погода, ровный фон местности и писк меню, — и
@@ -4804,6 +4806,13 @@ const GUIDE=[
  "Вещь растёт. За каждую победу работающий артефакт получает опыт, а на пороге открывает ступень — прибавку, которой у него раньше не было, и всегда из своего направления. Каждая следующая ступень даётся вдвое тяжелее. Если гнёзда кончились, редкую часть можно скормить вещи: она уйдёт в опыт вместо гнезда.",
  "Требования. Ранг задаёт уровень; сверх того вещь может требовать навык, заклинание нужной школы, расположение народа, принадлежность к клану, прочитанное знание или закрытое дело. Вещь, требования которой не выполнены, лежит мёртвым грузом и не даёт ничего — и прямо говорит, чего ей не хватает.",
  "Где всё это. Пункт меню «Артефакты, части и рецепты». В нём видно, каким ремеслом здесь занимаются и каково ваше умение, какие рецепты под рукой и чего не хватает, какие части лежат в суме, и по каждой вещи — всё, что о ней известно, и всё, что с ней можно сделать: вложить, вынуть, зачаровать, скормить, продать."]},
+{title:"Глава 60. Весёлые случаи: мир, который иногда смешит",body:[
+ "Мир умел пугать, требовать и награждать — и не умел рассмешить. §7 просит от него и юмористических событий, и теперь их двенадцать: упрямый вол на тракте, бочка под горку через рынок, петух не по часам, кот на алтаре, глашатай, забывший имя, лопнувшая струна на верхней ноте, коза на крыше, поросёнок с базара, ведро на голове подмастерья, чары наоборот, не та дверь в трактире и сапоги не с той ноги.",
+ "НИКТО НЕ УНИЖЕН. Смешно положение, а не человек. Ни один случай не смеётся над чужой бедой, немощью, народом или верой. Вол упрям, бочка катится, коза ест крышу — и всем от этого только веселее, включая тех, кто попал в положение.",
+ "ШУТКА СЛЫШНА. Вы не видите сцены, поэтому у случая две записи, а не одна. Первая ставит положение: мычание вола, грохот колёс, петух, храмовый колокол. Вторая — развязка, и она приходит отдельно, через паузу в полторы секунды. Без второй записи шутка для незрячего просто не случается, поэтому её не может не быть ни у одного из двенадцати.",
+ "СЛУЧАЙ НЕ ПУСТОЙ. После каждого в мире что-то остаётся: ягоды от возницы, двенадцать золотых от бондаря, хлеб от хозяина козы, руда от кузнеца, благословение жреца, эфир от незадачливого ученика. И всегда — ось отношения: благодарность, уважение, доверие или известность. И всегда немного меньше стресса: смех и вправду его снимает, на десять из ста.",
+ "ГДЕ ОНИ СЛУЧАЮТСЯ. У каждого своё место: вол — только на тракте, бочка, глашатай, поросёнок, ведро и чары — в городе, петух и коза — в селении, кот — там, где храм, струна и дверь — в трактире. В подземелье и в бою не случается ни один: там не до того.",
+ "МОЖНО ВЫКЛЮЧИТЬ. Кому нужен мир без шуток, тот снимает галочку «Весёлые случаи» в настройках, и группа замолкает целиком, не трогая остальные события мира."]},
 {title:"Глава 59. Войско: восемь свойств и семь ролей",body:[
  "У державы, которая воюет, есть войско, и оно не одно число. §23 называет восемь вещей, и все восемь считаются: численность — сколько копий в поле; командование — держат ли строй и слушают ли приказ; мораль — желание стоять, когда бьют; снабжение — хлеб, железо и обозы; разведка — знают ли, куда идти и кто напротив; транспорт — скорость подвоза и переброски; магическая поддержка — что могут те, кто за спиной строя; осадные средства — чем берут стену, а не поле.",
  "НИ ОДНО НЕ ЛЕЖИТ ЗРЯ. Все восемь входят в силу войска. Плохо командуемое войско теряет около трети силы при той же численности. Транспорт решает, сколько снабжения вернётся за сутки и насколько дальше уйдёт фронт у того, кто возит быстрее. Осадные средства считаются отдельным числом: пока оно ниже сорока пяти, войско берёт поле, но не стену.",
@@ -33311,6 +33320,115 @@ const Conj=Modules.register("CONJ",{
    `в городах стоит «${CONJ_ORG.n}» и ходят ${CONJ_PROFS.join(", ")}.`;}
 });
 /* ── СЛУЧАЙНЫЕ СОБЫТИЯ ── */
+/* ── ВЕСЁЛЫЕ СЛУЧАИ (§7) ──
+   §7 требует от мира не только цепочек, детективов, политических линий и
+   экспедиций, но и юмористических событий. Их не было ни одного: мир умел
+   пугать, требовать и награждать, но не умел рассмешить.
+
+   ТРИ ПРАВИЛА, И ОНИ ЖЁСТКИЕ.
+
+   1. Никто не унижен. Смешно положение, а не человек: упрямый вол, бочка
+      под горку, коза на крыше. Ни один случай не смеётся над чужой бедой,
+      немощью, народом или верой.
+   2. Шутка слышна. Игрок не видит сцены, поэтому у случая две записи:
+      первая ставит положение, вторая — развязка, и она приходит отдельно,
+      через паузу. Без второй записи шутка для незрячего просто не
+      случается.
+   3. Случай не пустой (§38). После каждого в мире что-то остаётся: монета,
+      припас, доброе имя, ось отношения — и всегда немного меньше стресса,
+      потому что смех и вправду его снимает.
+
+   Выключается отдельно: кому нужен мир без шуток, тот снимает галочку
+   «Весёлые случаи» в настройках, и группа замолкает целиком. */
+const MIRTH_EVENTS=[
+ {id:"mirth_ox",n:"упрямый вол",о:"вол встал поперёк тракта и смотрит вдаль",
+  звук:"beasts_cattle",шутка:"oc_cattle_snort",где:"дорога",
+  что:"Возница уговаривает, вол думает. Вы взялись за постромки — вол пошёл, но в другую сторону, и увёз возницу к его же дому."},
+ {id:"mirth_barrel",n:"бочка под горку",о:"с телеги сорвалась бочка и пошла через рынок",
+  звук:"oc_wheels",шутка:"stk_crash",где:"город",
+  что:"Бочка прошла весь ряд, снесла шест с вывеской и встала у прилавка бондаря — единственного, кто ей обрадовался."},
+ {id:"mirth_rooster",n:"петух не по часам",о:"петух запел в полдень",
+  звук:"bird_rooster",шутка:"crowd_cheer",где:"селение",
+  что:"Полсела решило, что проспало, и вышло на работу второй раз. Петуха сочли начальством и накормили."},
+ {id:"mirth_cat",n:"кот на алтаре",о:"кот улёгся там, где кладут дары",
+  звук:"temple_bell",шутка:"charm_bell",где:"храм",
+  что:"Жрец делает вид, что так и задумано, и произносит над котом благословение. Кот принимает его с достоинством."},
+ {id:"mirth_herald",n:"глашатай забыл имя",о:"герольд объявляет гостя и запинается",
+  звук:"herald_trumpet",шутка:"trumpet_fanfare",где:"город",
+  что:"«Прибыл… прибыл достойный человек!» — и трубач, спасая дело, дунул так, что имя уже никого не занимало."},
+ {id:"mirth_lute",n:"струна на верхней ноте",о:"бродячий певец берёт самую высокую",
+  звук:"lute_wood",шутка:"oc_line_snap",где:"трактир",
+  что:"Струна лопнула ровно на ней. Певец, не сбившись, объявил, что так эту песню и поют — с тех пор её так и поют."},
+ {id:"mirth_goat",n:"коза на крыше",о:"коза забралась на соломенную кровлю",
+  звук:"beast_sheep",шутка:"oc_munch",где:"селение",
+  что:"Ест крышу и смотрит на хозяина сверху вниз. Хозяин снизу вверх объясняет ей, что так нельзя."},
+ {id:"mirth_pig",n:"поросёнок с базара",о:"поросёнок ушёл из-под руки торговца",
+  звук:"beast_pig",шутка:"throng_cry",где:"город",
+  что:"За ним бежит пол-улицы, поросёнок бежит быстрее всех. Взяли его только потому, что он сам остановился у пекарни."},
+ {id:"mirth_bucket",n:"ведро на голове",о:"в кузне подмастерье примерил не то",
+  звук:"forge_hammer",шутка:"metal_hit",где:"город",
+  что:"Ведро село плотно. Кузнец постучал по нему молотком — «звенит, значит, целое» — и снял с третьей попытки."},
+ {id:"mirth_spell",n:"чары наоборот",о:"ученик мага перепутал ударение в слове",
+  звук:"magic_shimmer",шутка:"beast_bull",где:"город",
+  что:"Голос у него стал как у быка, и на сутки. Учитель велел ему читать вслух весь свод правил — чтоб запомнил."},
+ {id:"mirth_door",n:"не та дверь",о:"постоялец дёргает дверь кладовой",
+  звук:"oc_door_open",шутка:"oc_hinge",где:"трактир",
+  что:"Полчаса он был уверен, что это его комната и что её заперли назло. Хозяин показал: его — напротив, и открыта."},
+ {id:"mirth_boots",n:"сапоги не с той ноги",о:"дозорный идёт обход как-то странно",
+  звук:"guard_march",шутка:"watch_call",где:"город",
+  что:"Весь обход прошёл в чужих сапогах и признался только к утру. Смена хохотала громче, чем положено в дозоре."}];
+const MIRTH_BY_ID=Object.fromEntries(MIRTH_EVENTS.map(m=>[m.id,m]));
+/* Что остаётся после смеха. У каждого случая своё, и это не украшение. */
+const MIRTH_GIFTS=[
+ {id:"mirth_ox",     ось:"благодарность",на:2, дар(){G.inv["ягоды"]=(Number(G.inv["ягоды"])||0)+2;return "возница отсыпал ягод из своего короба";}},
+ {id:"mirth_barrel", ось:"уважение",    на:2, дар(){G.gold=(Number(G.gold)||0)+12;return "бондарь дал двенадцать золотых за спасённую бочку";}},
+ {id:"mirth_rooster",ось:"известность", на:2, дар(){return "село запомнило вас как того, кто не смеялся первым";}},
+ {id:"mirth_cat",    ось:"доверие",     на:2, дар(){safeFn(()=>Bank.play("temple_choir",{gain:0.35,maxSec:4}));return "жрец благословил заодно и вас";}},
+ {id:"mirth_herald", ось:"известность", на:3, дар(){return "теперь вас объявляют первым, чтобы не сбиться";}},
+ {id:"mirth_lute",   ось:"уважение",    на:2, дар(){G.gold=(Number(G.gold)||0)+6;return "певец поделился монетой из шапки: слушателей прибавилось";}},
+ {id:"mirth_goat",   ось:"благодарность",на:2,дар(){G.inv["Еда в дорогу"]=(Number(G.inv["Еда в дорогу"])||0)+1;return "хозяин отдал вам хлеб — за козу, снятую с крыши";}},
+ {id:"mirth_pig",    ось:"известность", на:2, дар(){G.gold=(Number(G.gold)||0)+8;return "торговец дал восемь золотых, а пекарь — тёплую краюху";}},
+ {id:"mirth_bucket", ось:"уважение",    на:2, дар(){G.inv["руда"]=(Number(G.inv["руда"])||0)+1;return "кузнец отсыпал руды: за то, что помогли молча";}},
+ {id:"mirth_spell",  ось:"доверие",     на:2, дар(){safeFn(()=>Energy.add("aether",2));return "учитель отдал вам остаток эфира от неудачных чар";}},
+ {id:"mirth_door",   ось:"благодарность",на:2,дар(){G.hp=Math.min(G.hpMax,(Number(G.hp)||0)+5);return "хозяин поднёс горячего: здоровье плюс пять";}},
+ {id:"mirth_boots",  ось:"уважение",    на:2, дар(){return "смена запомнила: вы не выдали дозорного начальству";}}];
+const MIRTH_GIFT_BY_ID=Object.fromEntries(MIRTH_GIFTS.map(g=>[g.id,g]));
+const Mirth=Modules.register("MIRTH",{
+ list:MIRTH_EVENTS,gifts:MIRTH_GIFTS,
+ включено(){return settings.mirth!==0;},
+ byId(id){return MIRTH_BY_ID[id]||null;},
+ /* Где случай уместен: на дороге — дорожные, в городе — городские. */
+ годится(m){try{
+  if(!this.включено())return false;
+  const вМесте=!!G.place;
+  if(m.где==="дорога")return !вМесте&&!G.inCombat;
+  if(!вМесте||G.inCombat)return false;
+  if(m.где==="город")return G.place.kind==="city";
+  if(m.где==="селение")return G.place.kind!=="city"&&(Number(G.place.depth)||0)===0;
+  if(m.где==="храм"||m.где==="трактир")return (Number(G.place.depth)||0)===0;
+  return false;}catch(_){return false;}},
+ /* Развязка приходит отдельной записью через паузу: без второй записи
+    шутка для незрячего просто не случается. */
+ сыграть(m){safeFn(()=>{Bank.play(m.звук,{gain:0.5,maxSec:4});
+  setTimeout(()=>safeFn(()=>Bank.play(m.шутка,{gain:0.55,maxSec:4})),1400);});},
+ случай(id){try{
+  const m=MIRTH_BY_ID[id];if(!m)return null;
+  const g=MIRTH_GIFT_BY_ID[id];
+  this.сыграть(m);
+  const дар=g?safeFn(()=>g.дар(),""):"";
+  if(g)safeFn(()=>addAxis(g.ось,g.на));
+  /* Смех и вправду снимает напряжение: стресс отпускает на десять. */
+  safeFn(()=>Survival.relieve("stress",10));
+  if(!G.mirth||typeof G.mirth!=="object")G.mirth={видано:{},счёт:0};
+  G.mirth.видано[id]=(Number(G.mirth.видано[id])||0)+1;G.mirth.счёт=(Number(G.mirth.счёт)||0)+1;
+  safeFn(()=>{journal(`Весёлый случай: ${m.n}.`);
+   Ledger.add("история",`${m.n}: ${m.что}`,"весёлый случай");});
+  return `${m.n[0].toUpperCase()+m.n.slice(1)}: ${m.о}. ${m.что}${дар?` И ${дар}.`:""}`;}catch(_){return null;}},
+ счёт(){return Number((G.mirth||{}).счёт)||0;},
+ виданоВсего(){try{return Object.keys((G.mirth||{}).видано||{}).length;}catch(_){return 0;}},
+ text(){
+  if(!this.включено())return "Весёлые случаи выключены: мир остаётся серьёзным.";
+  return `Весёлых случаев двенадцать: ${MIRTH_EVENTS.map(m=>m.n).join(", ")}. Видано ${this.виданоВсего()} из ${MIRTH_EVENTS.length}, всего ${this.счёт()} ${plural(this.счёт(),"раз","раза","раз")}. Смешно положение, а не человек; у каждого своя развязка отдельной записью, и после каждого что-то остаётся.`;}});
 const RANDOM_EVENTS=[
  {id:"caravan",n:"обоз",о:"обоз идёт мимо и зовёт разделить костёр",звук:"throng_march",когда:()=>!G.place&&!isNight(),делать(){G.inv["Еда в дорогу"]=(Number(G.inv["Еда в дорогу"])||0)+1;return "у костра дали хлеба на дорогу";}},
  {id:"ambush",n:"нападение",о:"на тракте ждали не вас, но сойдёт и вас",звук:"throng_fight",когда:()=>!G.place&&!G.inCombat,делать(){const lvl=Math.max(1,(Number(G.level)||1));startCombat({x:G.x,y:G.y,monster:{id:"bandit",n:"Лихой человек",snd:"mgrowl",fx:"growl",lvl,hp:26+lvl*9,dmg:4+lvl,xp:20+lvl*10,gold:12+lvl*4}});return "бой";}},
@@ -33320,6 +33438,44 @@ const RANDOM_EVENTS=[
  {id:"surge",n:"магический выброс",о:"воздух звенит и бьёт по коже",звук:"oc_electrical",когда:()=>true,делать(){Energy.add("aether",3);G.hp=Math.max(1,G.hp-3);safeFn(()=>Balance.shift(-1,"выброс"));return "эфир плюс три, здоровье минус три";}},
  /* §5: пока идёт Сопряжение, по дорогам ходят пришлые и экспедиции. Оба
     события живут только на время события мира и сами это говорят. */
+ /* §7: двенадцать весёлых случаев. Их условие и последствие лежат в модуле
+    Mirth — здесь только вход в общий список событий мира. */
+ {id:"mirth_ox",n:MIRTH_BY_ID["mirth_ox"].n,о:MIRTH_BY_ID["mirth_ox"].о,звук:MIRTH_BY_ID["mirth_ox"].звук,
+  когда:()=>safeFn(()=>Mirth.годится(MIRTH_BY_ID["mirth_ox"]),false),
+  делать(){return safeFn(()=>Mirth.случай("mirth_ox"),"")||"случай разошёлся сам собой";}},
+ {id:"mirth_barrel",n:MIRTH_BY_ID["mirth_barrel"].n,о:MIRTH_BY_ID["mirth_barrel"].о,звук:MIRTH_BY_ID["mirth_barrel"].звук,
+  когда:()=>safeFn(()=>Mirth.годится(MIRTH_BY_ID["mirth_barrel"]),false),
+  делать(){return safeFn(()=>Mirth.случай("mirth_barrel"),"")||"случай разошёлся сам собой";}},
+ {id:"mirth_rooster",n:MIRTH_BY_ID["mirth_rooster"].n,о:MIRTH_BY_ID["mirth_rooster"].о,звук:MIRTH_BY_ID["mirth_rooster"].звук,
+  когда:()=>safeFn(()=>Mirth.годится(MIRTH_BY_ID["mirth_rooster"]),false),
+  делать(){return safeFn(()=>Mirth.случай("mirth_rooster"),"")||"случай разошёлся сам собой";}},
+ {id:"mirth_cat",n:MIRTH_BY_ID["mirth_cat"].n,о:MIRTH_BY_ID["mirth_cat"].о,звук:MIRTH_BY_ID["mirth_cat"].звук,
+  когда:()=>safeFn(()=>Mirth.годится(MIRTH_BY_ID["mirth_cat"]),false),
+  делать(){return safeFn(()=>Mirth.случай("mirth_cat"),"")||"случай разошёлся сам собой";}},
+ {id:"mirth_herald",n:MIRTH_BY_ID["mirth_herald"].n,о:MIRTH_BY_ID["mirth_herald"].о,звук:MIRTH_BY_ID["mirth_herald"].звук,
+  когда:()=>safeFn(()=>Mirth.годится(MIRTH_BY_ID["mirth_herald"]),false),
+  делать(){return safeFn(()=>Mirth.случай("mirth_herald"),"")||"случай разошёлся сам собой";}},
+ {id:"mirth_lute",n:MIRTH_BY_ID["mirth_lute"].n,о:MIRTH_BY_ID["mirth_lute"].о,звук:MIRTH_BY_ID["mirth_lute"].звук,
+  когда:()=>safeFn(()=>Mirth.годится(MIRTH_BY_ID["mirth_lute"]),false),
+  делать(){return safeFn(()=>Mirth.случай("mirth_lute"),"")||"случай разошёлся сам собой";}},
+ {id:"mirth_goat",n:MIRTH_BY_ID["mirth_goat"].n,о:MIRTH_BY_ID["mirth_goat"].о,звук:MIRTH_BY_ID["mirth_goat"].звук,
+  когда:()=>safeFn(()=>Mirth.годится(MIRTH_BY_ID["mirth_goat"]),false),
+  делать(){return safeFn(()=>Mirth.случай("mirth_goat"),"")||"случай разошёлся сам собой";}},
+ {id:"mirth_pig",n:MIRTH_BY_ID["mirth_pig"].n,о:MIRTH_BY_ID["mirth_pig"].о,звук:MIRTH_BY_ID["mirth_pig"].звук,
+  когда:()=>safeFn(()=>Mirth.годится(MIRTH_BY_ID["mirth_pig"]),false),
+  делать(){return safeFn(()=>Mirth.случай("mirth_pig"),"")||"случай разошёлся сам собой";}},
+ {id:"mirth_bucket",n:MIRTH_BY_ID["mirth_bucket"].n,о:MIRTH_BY_ID["mirth_bucket"].о,звук:MIRTH_BY_ID["mirth_bucket"].звук,
+  когда:()=>safeFn(()=>Mirth.годится(MIRTH_BY_ID["mirth_bucket"]),false),
+  делать(){return safeFn(()=>Mirth.случай("mirth_bucket"),"")||"случай разошёлся сам собой";}},
+ {id:"mirth_spell",n:MIRTH_BY_ID["mirth_spell"].n,о:MIRTH_BY_ID["mirth_spell"].о,звук:MIRTH_BY_ID["mirth_spell"].звук,
+  когда:()=>safeFn(()=>Mirth.годится(MIRTH_BY_ID["mirth_spell"]),false),
+  делать(){return safeFn(()=>Mirth.случай("mirth_spell"),"")||"случай разошёлся сам собой";}},
+ {id:"mirth_door",n:MIRTH_BY_ID["mirth_door"].n,о:MIRTH_BY_ID["mirth_door"].о,звук:MIRTH_BY_ID["mirth_door"].звук,
+  когда:()=>safeFn(()=>Mirth.годится(MIRTH_BY_ID["mirth_door"]),false),
+  делать(){return safeFn(()=>Mirth.случай("mirth_door"),"")||"случай разошёлся сам собой";}},
+ {id:"mirth_boots",n:MIRTH_BY_ID["mirth_boots"].n,о:MIRTH_BY_ID["mirth_boots"].о,звук:MIRTH_BY_ID["mirth_boots"].звук,
+  когда:()=>safeFn(()=>Mirth.годится(MIRTH_BY_ID["mirth_boots"]),false),
+  делать(){return safeFn(()=>Mirth.случай("mirth_boots"),"")||"случай разошёлся сам собой";}},
  {id:"conj_beast",n:"пришлая тварь",о:"из ниоткуда вышло то, чего в этом мире нет",звук:"fx_rift",
   когда:()=>safeFn(()=>Conj.on(),false)&&!G.place&&!G.inCombat,
   делать(){
@@ -38042,10 +38198,16 @@ function worldSelfCheck(){
   ok("wararc",WAR_FEATURES.length===12&&WAR_FEATURES.every(x=>SOUND_BANK[x.звук]&&x.о)&&WAR_ACTS.length===6&&WAR_ACTS.every(x=>SOUND_BANK[x.звук]&&x.сдвиг>0),"у дуги двенадцать примет войны и шесть дел");
   ok("merit",MERIT_KINDS.length===12&&MERIT_KINDS.every(k=>SOUND_BANK[k.звук])&&MERITS.length>=24&&MERITS.every(m=>MERIT_BY_KIND[m.род]&&m.цель>0&&typeof m.счёт==="function")&&MERIT_KINDS.every(k=>MERITS.some(m=>m.род===k.id))&&ART_CHAIN_STEPS.length===10&&ART_RANKS.length===7&&Encyclo.fields.length===7&&Encyclo.count()>100,"Достижения: двенадцать родов со звуком и своими строками, цепочка артефакта из десяти звеньев, семь рангов, энциклопедия по семи полям");
   ok("deeps",DUNG_TYPES.length===14&&DUNG_TYPES.every(t=>SOUND_BANK[t.звук]&&RES_BASE[t.ресурс]&&t.опасность)&&Complexes.all().length===42&&Complexes.all().every(c=>c.n&&c.ярусы[1]>c.ярусы[0]&&c.награда)&&Complexes.byId("cx_whisper")&&Complexes.byId("cx_bottomless")&&DEEP_FAMILIES.length===10&&DEEP_FAMILIES.every(f=>SOUND_BANK[f.звук]&&f.ест&&f.страх)&&DEEP_RESOURCES.length===10&&DEEP_RESOURCES.every(r=>r.ярус>0&&r.цена>0&&r.что)&&PARANOIA.length===7&&PARANOIA.every(p=>SOUND_BANK[p.звук])&&SURVIVAL_NEEDS.length===10&&Passport.fields().length===25,"Глубины: четырнадцать видов, сорок два комплекса, десять семейств, десять пород, семь признаков, десять нужд, паспорт из двадцати пяти полей");
-  ok("living",Zones.all().length>=100&&Zones.all().every(z=>ANOM_BY_ID[z.правило]&&z.x>=0&&z.y>=0)&&ANOM_RULES.length===20&&ANOM_RULES.every(r=>SOUND_BANK[r.маркер]&&r.как&&r.маршрут&&RES_BASE[r.ресурс]&&r.опасность)&&Power.all().length>=60&&POWER_PLACES.every(p=>SOUND_BANK[p.звук]&&MSCHOOL_BY_ID[p.школа]&&WEATHER_BY_ID[p.погода])&&GLOBAL_EVENTS.length===10&&GLOBAL_EVENTS.every(e=>SOUND_BANK[e.звук]&&e.срок>0)&&RANDOM_EVENTS.filter(e=>e.id.indexOf("conj_")!==0).length===14&&RANDOM_EVENTS.every(e=>SOUND_BANK[e.звук]&&typeof e.когда==="function")&&PROPHECIES.length===6&&ARC_STEPS.length===8,"Живой мир: сто аномальных зон по двадцати правилам, шестьдесят мест силы, десять мировых событий, четырнадцать случайных (сверх них два на время Сопряжения), шесть пророчеств, восемь ступеней судьбы — всё со звуком");
+  ok("living",Zones.all().length>=100&&Zones.all().every(z=>ANOM_BY_ID[z.правило]&&z.x>=0&&z.y>=0)&&ANOM_RULES.length===20&&ANOM_RULES.every(r=>SOUND_BANK[r.маркер]&&r.как&&r.маршрут&&RES_BASE[r.ресурс]&&r.опасность)&&Power.all().length>=60&&POWER_PLACES.every(p=>SOUND_BANK[p.звук]&&MSCHOOL_BY_ID[p.школа]&&WEATHER_BY_ID[p.погода])&&GLOBAL_EVENTS.length===10&&GLOBAL_EVENTS.every(e=>SOUND_BANK[e.звук]&&e.срок>0)&&RANDOM_EVENTS.filter(e=>!/^(conj_|mirth_)/.test(e.id)).length===14&&RANDOM_EVENTS.filter(e=>e.id.indexOf("mirth_")===0).length===12&&RANDOM_EVENTS.every(e=>SOUND_BANK[e.звук]&&typeof e.когда==="function")&&PROPHECIES.length===6&&ARC_STEPS.length===8,"Живой мир: сто аномальных зон по двадцати правилам, шестьдесят мест силы, десять мировых событий, четырнадцать случайных (сверх них два на время Сопряжения и двенадцать весёлых), шесть пророчеств, восемь ступеней судьбы — всё со звуком");
   ok("sigils",SIGIL_SYMBOLS.length===8&&SIGIL_SYMBOLS.every(x=>MSCHOOL_BY_ID[x.школа]&&x.намерения.every(i=>SIGIL_INTENTS[i]))&&SIGIL_CARRIERS.length===8&&SIGIL_CARRIERS.every(x=>RES_BASE[x.ресурс])&&SIGIL_GEOMETRY.length===5&&INKS.length===6&&INKS.every(x=>SOUND_BANK[x.звук]&&Object.keys(x.рецепт).every(r=>RES_BASE[r]))&&AWAKEN_SOURCES.length===6&&AWAKEN_SOURCES.every(x=>SOUND_BANK[x.звук])&&WAVES.length===3&&MORPH_TRAITS.length===6&&MORPHOBEASTS.length===10&&MORPHOBEASTS.every(b=>MONSTERS.some(m=>m.id===b.база))&&DEVOUR_GIFTS.length===6&&EVENT_THEME.world_event&&SOUND_BANK[EVENT_THEME.world_event.роль],"Знаки: восемь символов, восемь носителей, пять геометрий, шесть чернил, шесть источников пробуждения, три волны, шесть черт, десять морфозверей, шесть даров Эха — всё со звуком и по настоящим ресурсам");
   ok("cases",CASE_TEMPLATES.length===6&&CASE_TEMPLATES.every(t=>t.версии.length===3&&t.улики.every(k=>CLUE_KINDS[k])&&t.версии.every(v=>v.улики.every(k=>t.улики.includes(k))))&&SYNDICATES.length===8&&SYNDICATES.every(x=>SOUND_BANK[x.звук]&&x.города.every(id=>NAMED_CITY_BY_ID[id])&&REGIONS[x.область])&&Object.keys(DECISIONS).length===9&&Object.values(DECISIONS).every(d=>Object.keys(d).length>=3)&&["deeper","border_war","shards","lasthouse","beast","price","undercity","maskface","endless"].every(id=>CHAIN_DB[id])&&HOUSE_BY_ID[LAST_HOUSE.враг]&&DLG_MOVE_BY_ID.znanie&&DLG_MOVE_BY_ID.kultura&&DLG_MOVE_BY_ID.nedoskazat,"Расследования: шесть дел с тремя версиями, восемь синдикатов со звуком и городами, девять цепочек с развязками, три хода разговора");
   ok("academy",LANGS.length>=20&&LANGS.every(l=>l.письмо&&l.о)&&SCIENCES.length===6&&SCIENCES.every(x=>SOUND_BANK[x.звук]&&x.эффект.length===3&&FACULTY_BY_ID[x.факультет])&&FACULTIES.length===12&&FACULTIES.every(f=>(f.школы||[]).every(id=>MSCHOOL_BY_ID[id]&&SCHOOL_AUDIO[id])&&(!f.маст||MAST_BY_ID[f.маст]))&&SCHOOLS.length>=30&&SCHOOLS.every(sc=>SCHOOL_AUDIO[sc.id]&&SPELL_LAYERS.every(l=>SOUND_BANK[SCHOOL_AUDIO[sc.id][l]])),"Академия: двадцать один язык, шесть наук, двенадцать факультетов, тридцать четыре школы чар — все со звуком");
+  ok("mirth",MIRTH_EVENTS.length===12&&MIRTH_GIFTS.length===12
+   &&MIRTH_EVENTS.every(m=>m.n&&m.о&&m.что&&m.где&&SOUND_BANK[m.звук]&&SOUND_BANK[m.шутка]&&m.звук!==m.шутка)
+   &&new Set(MIRTH_EVENTS.map(m=>m.звук)).size===12&&new Set(MIRTH_EVENTS.map(m=>m.шутка)).size===12
+   &&MIRTH_EVENTS.every(m=>MIRTH_GIFT_BY_ID[m.id]&&STAND_AXIS_BY_ID[MIRTH_GIFT_BY_ID[m.id].ось]&&typeof MIRTH_GIFT_BY_ID[m.id].дар==="function")
+   &&RANDOM_EVENTS.filter(e=>e.id.indexOf("mirth_")===0).length===12,
+   "двенадцать весёлых случаев: у каждого положение, развязка отдельной записью и то, что остаётся после");
   ok("armies",ARMY_TRAITS.length===8&&WAR_ROLES.length===7
    &&ARMY_TRAITS.every(t=>t.n&&t.о&&SOUND_BANK[t.звук])
    &&WAR_ROLES.every(r=>r.n&&r.о&&r.треб&&SOUND_BANK[r.звук]&&ARMY_TRAIT_BY_ID[r.свойство])
@@ -38556,6 +38718,11 @@ function bindSettings(){const $=id=>document.getElementById(id);
   narrate(settings.hrtf
    ?`Объёмный звук включён. Акустика места: ${Room.name()}.`
    :"Объёмный звук выключен: остаётся простая панорама слева направо.");});
+ {const f=$("setMirth");if(f){f.checked=settings.mirth!==0;
+  f.addEventListener("change",e=>{settings.mirth=e.target.checked?1:0;saveSettings();
+   narrate(settings.mirth
+    ?"Весёлые случаи включены: мир иногда будет смешить, и каждая шутка придёт со своей развязкой."
+    :"Весёлые случаи выключены: мир остаётся серьёзным.");});}}
  {const f=$("setFolk");if(f){f.checked=settings.folk!==0;
   f.addEventListener("change",e=>{settings.folk=e.target.checked?1:0;saveSettings();
    narrate(settings.folk?"Живая речь народов включена: житель отвечает своим голосом.":"Живая речь народов выключена: остаётся рассказчик.");});}}

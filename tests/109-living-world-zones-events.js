@@ -46,7 +46,8 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   r.global=GLOBAL_EVENTS.length;r.globalOk=GLOBAL_EVENTS.every(e=>SOUND_BANK[e.звук]&&e.срок>0&&typeof e.начать==="function");
   /* Случайных событий четырнадцать; два события Сопряжения живут только на
      время мирового события и считаются отдельно (§5). */
-  r.random=RANDOM_EVENTS.filter(e=>e.id.indexOf("conj_")!==0).length;
+  r.random=RANDOM_EVENTS.filter(e=>!/^(conj_|mirth_)/.test(e.id)).length;
+  r.randomMirth=RANDOM_EVENTS.filter(e=>e.id.indexOf("mirth_")===0).length;
   r.randomConj=RANDOM_EVENTS.filter(e=>e.id.indexOf("conj_")===0).length;
   r.randomOk=RANDOM_EVENTS.every(e=>SOUND_BANK[e.звук]&&typeof e.когда==="function"&&typeof e.делать==="function");
   r.proph=PROPHECIES.length;r.prophOk=PROPHECIES.every(p=>p.текст&&p.ускорить&&typeof p.условие==="function"&&typeof p.итог==="function"&&typeof p.срыв==="function");
@@ -56,8 +57,8 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   return r;});
  check('двадцать правил зон со звуком, признаком, маршрутом, настоящим ресурсом и опасностью; сто зон с разными именами внутри мира; шестьдесят мест силы пяти родов со звуком, школой, погодой и травой',
   данные.rules===20&&данные.rulesOk&&данные.zones===100&&данные.zonesOk&&данные.power===60&&данные.powerOk,данные);
- check('десять мировых событий, четырнадцать случайных, шесть пророчеств, восемь ступеней судьбы, восемь модулей; самопроверка мира видит живой мир',
-  данные.global===10&&данные.globalOk&&данные.random===14&&данные.randomConj===2&&данные.randomOk&&данные.proph===6&&данные.prophOk&&данные.arcs===8&&данные.modules&&данные.selfcheck===true,данные);
+ check('десять мировых событий, четырнадцать случайных (и двенадцать весёлых), шесть пророчеств, восемь ступеней судьбы, восемь модулей; самопроверка мира видит живой мир',
+  данные.global===10&&данные.globalOk&&данные.random===14&&данные.randomConj===2&&данные.randomMirth===12&&данные.randomOk&&данные.proph===6&&данные.prophOk&&данные.arcs===8&&данные.modules&&данные.selfcheck===true,данные);
 
  /* ── 2. зона ── */
  const зона=await page.evaluate(()=>{
