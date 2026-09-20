@@ -42,7 +42,11 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   const z=Zones.all();r.zones=z.length;r.zonesOk=z.every(x=>ANOM_BY_ID[x.правило]&&x.x>=0&&x.x<WORLD&&x.y>=0&&x.y<WORLD&&x.r>=6)&&new Set(z.map(x=>x.id)).size===z.length;
   r.power=Power.all().length;r.powerOk=POWER_PLACES.every(p=>SOUND_BANK[p.звук]&&MSCHOOL_BY_ID[p.школа]&&WEATHER_BY_ID[p.погода]&&RES_BASE[p.трава]&&p.дар);
   r.global=GLOBAL_EVENTS.length;r.globalOk=GLOBAL_EVENTS.every(e=>SOUND_BANK[e.звук]&&e.срок>0&&typeof e.начать==="function");
-  r.random=RANDOM_EVENTS.length;r.randomOk=RANDOM_EVENTS.every(e=>SOUND_BANK[e.звук]&&typeof e.когда==="function"&&typeof e.делать==="function");
+  /* Случайных событий четырнадцать; два события Сопряжения живут только на
+     время мирового события и считаются отдельно (§5). */
+  r.random=RANDOM_EVENTS.filter(e=>e.id.indexOf("conj_")!==0).length;
+  r.randomConj=RANDOM_EVENTS.filter(e=>e.id.indexOf("conj_")===0).length;
+  r.randomOk=RANDOM_EVENTS.every(e=>SOUND_BANK[e.звук]&&typeof e.когда==="function"&&typeof e.делать==="function");
   r.proph=PROPHECIES.length;r.prophOk=PROPHECIES.every(p=>p.текст&&p.ускорить&&typeof p.условие==="function"&&typeof p.итог==="function"&&typeof p.срыв==="function");
   r.arcs=ARC_STEPS.length;
   r.modules=["ZONES","POWER","GLOBAL","HAPPEN","ARMIES","ARCS","ECHOES","PROPHECY"].every(m=>Modules.get?!!Modules.get(m):true);
@@ -51,7 +55,7 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
  check('двадцать правил зон со звуком, признаком, маршрутом, настоящим ресурсом и опасностью; сто зон с разными именами внутри мира; шестьдесят мест силы пяти родов со звуком, школой, погодой и травой',
   данные.rules===20&&данные.rulesOk&&данные.zones===100&&данные.zonesOk&&данные.power===60&&данные.powerOk,данные);
  check('десять мировых событий, четырнадцать случайных, шесть пророчеств, восемь ступеней судьбы, восемь модулей; самопроверка мира видит живой мир',
-  данные.global===10&&данные.globalOk&&данные.random===14&&данные.randomOk&&данные.proph===6&&данные.prophOk&&данные.arcs===8&&данные.modules&&данные.selfcheck===true,данные);
+  данные.global===10&&данные.globalOk&&данные.random===14&&данные.randomConj===2&&данные.randomOk&&данные.proph===6&&данные.prophOk&&данные.arcs===8&&данные.modules&&данные.selfcheck===true,данные);
 
  /* ── 2. зона ── */
  const зона=await page.evaluate(()=>{

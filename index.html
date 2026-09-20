@@ -4798,6 +4798,14 @@ const GUIDE=[
  "Вещь растёт. За каждую победу работающий артефакт получает опыт, а на пороге открывает ступень — прибавку, которой у него раньше не было, и всегда из своего направления. Каждая следующая ступень даётся вдвое тяжелее. Если гнёзда кончились, редкую часть можно скормить вещи: она уйдёт в опыт вместо гнезда.",
  "Требования. Ранг задаёт уровень; сверх того вещь может требовать навык, заклинание нужной школы, расположение народа, принадлежность к клану, прочитанное знание или закрытое дело. Вещь, требования которой не выполнены, лежит мёртвым грузом и не даёт ничего — и прямо говорит, чего ей не хватает.",
  "Где всё это. Пункт меню «Артефакты, части и рецепты». В нём видно, каким ремеслом здесь занимаются и каково ваше умение, какие рецепты под рукой и чего не хватает, какие части лежат в суме, и по каждой вещи — всё, что о ней известно, и всё, что с ней можно сделать: вложить, вынуть, зачаровать, скормить, продать."]},
+{title:"Глава 56. Сопряжение Грани: что бывает, когда миры сходятся",body:[
+ "Среди десяти мировых событий есть одно, после которого мир восемь дней живёт иначе, — Сопряжение Грани. Раньше оно поднимало эфир, учащало встречи и поднимало цены, и этим всё кончалось. Теперь у него семь последствий, и каждое настоящее.",
+ "ТВАРИ. Приходят шесть видов, которых в этом мире нет и не будет: Ходок сквозь, Стеклянный жнец, Пепельный вестник, Железный пришлец, Хор без тел и Пасть перехода. У каждого свой голос, свой вес и своя добыча — чужой товар, который иначе взять негде. Как только событие кончится, пришлые уйдут.",
+ "ПЕРЕХОДЫ. Пока миры сомкнуты, каждый город становится временным узлом сети: уйти можно оттуда, откуда обычно нельзя, и игра называет такой узел «временным переходом». С концом события переходы закрываются.",
+ "ТОВАРЫ И ЗАКОНЫ. В мир приходят три чужих товара: чужая соль, переходный сплав и семя иного. Своими руками их здесь не добывают — их приносят пришлые твари и экспедиции. И одновременно меняются законы: чужое объявлено запретным во всех державах СРАЗУ, а не в одной, и потому цена на него растёт.",
+ "ЭКСПЕДИЦИИ. По дорогам идут отряды с той стороны: передовой отряд, торговый обоз, сеятели и сторожевая полусотня. У каждого свой голос, своя цена и свой дар; ведёт их одно из трёх новых ремёсел — переходчик, скупщик чужого или толмач Грани.",
+ "МАРШРУТЫ И ЛЮДИ. Пока переходы открыты, торговые пути спорны: прибыль на них в полтора раза выше, потому что возить стало опаснее. А в каждом городе на эти восемь дней встаёт ещё одно товарищество — Товарищество Перехода, которое возит чужое и ведёт счёт переходам.",
+ "ЧТО ОСТАЁТСЯ ПОТОМ. Переходы закрываются, пришлые уходят, законы возвращаются, товарищество съезжает. А чужие товары остаются: и в вашей суме, и в торговых книгах — их уже привезли, и цена у них теперь есть навсегда."]},
 {title:"Глава 55. Неизбранный: с чего начинается герой",body:[
  "Герой входил в мир ниоткуда: без прошлого, без ремесла, одинаковый у всех. Первый час игры был один и тот же и для того, кто хочет торговать, и для того, кто хочет копать.",
  "ШЕСТЬ РЕМЁСЕЛ. Ремесленник держал молот раньше, чем меч. Охотник вырос в лесу и уходит с тропы раньше, чем его заметят. Торговец считал чужие деньги с детства. Писарь умеет читать и писать — в этом мире это редкость дороже меча. Исследователя всегда тянуло за следующий поворот, и он научился возвращаться. Счётчик разбирает знаки и числа так, как другие разбирают речь.",
@@ -5269,6 +5277,8 @@ function portalNodeAt(x,y){
   /* Родительный падеж от коротких имён держав вышел бы уродливым
      («Серебряные Рекиа»), поэтому имя державы берётся в кавычки как есть. */
   return {x,y,kind:"gate",name:`Врата державы «${emp.short}»`,emp};
+ /* §5: пока идёт Сопряжение, город сам становится узлом сети. */
+ {const вр=safeFn(()=>Conj.порталАt(x,y),null);if(вр)return вр;}
  if(isCrossroads(x,y)&&hashName(x,y,911)<0.05){
   const a=PORTAL_STONE_A[Math.floor(hashName(x,y,912)*PORTAL_STONE_A.length)];
   const b=PORTAL_STONE_B[Math.floor(hashName(x,y,913)*PORTAL_STONE_B.length)];
@@ -6236,6 +6246,10 @@ const CLAN_BY_NAME=Object.fromEntries(CLAN_DB.map(c=>[c.n,c]));
 /* Девять родов из §17, которых в мире не было: их не подбирают с земли,
    их берут с убитой твари, в аномальной зоне и в руинах. */
 const RES_BASE={"шкура":18,"орган":26,"кровь":22,"яд":34,"эссенция":48,"эфир":62,
+ /* §5: чужие товары. Своими руками их в этом мире не добывают — они
+    приходят через Сопряжение Грани: с пришлых тварей и с экспедиций.
+    Цена у них есть всегда, потому что торгуют ими и после события. */
+ "чужая соль":54,"переходный сплав":78,"семя иного":96,
  "осколок времени":88,"тяжёлый минерал":54,"рунный камень":40,
  "дерево":6,"трава":5,"ягоды":6,"камень":7,"руда":14,"кристалл":30,"ракушка":10,"грибы":7,"кость":9,
  /* Казна яруса: слитки и самоцветы не добываются наверху — их выносят из
@@ -6663,7 +6677,11 @@ function empireLaw(idx){
  let b=CONTRABAND_POOL[Math.floor(H(i,2,9501)*CONTRABAND_POOL.length)%CONTRABAND_POOL.length];
  if(b===a)b=CONTRABAND_POOL[(CONTRABAND_POOL.indexOf(a)+3)%CONTRABAND_POOL.length];
  return {запрет:[a,b],пошлина:+(0.04+H(i,3,9502)*0.1).toFixed(2)};}
-function isContraband(res,idx){return empireLaw(idx).запрет.includes(res);}
+/* §5: пока миры сомкнуты, чужое запретно во всех державах сразу — это и
+   есть «меняются законы регионов»: не в одной земле, а везде. */
+function isContraband(res,idx){
+ if(safeFn(()=>Conj.запретно(res),false))return true;
+ return empireLaw(idx).запрет.includes(res);}
 function roadSafetyK(idx){
  try{const m=marketOf(idx);let k=1;
   if(empireAtWar(idx,G.day))k+=0.12;
@@ -6757,11 +6775,14 @@ function bestRoutes(cx,cy,day,limit=6){
   if(dist<4||dist>70)continue;
   for(const res of TRADE_GOODS){
    const buy=citySellPrice(res,a,day),sell=cityBuyPrice(res,b,day);
-   const profit=sell-buy;
+   /* §5: пока идёт Сопряжение, пути спорны — прибыль на них выше, потому
+      что возить стало опаснее, а чужое дороже. */
+   const спор=safeFn(()=>Conj.спорно(),false);
+   const profit=Math.round((sell-buy)*(спор?safeFn(()=>Conj.маршрутK(),1):1));
    if(profit<=0)continue;
    const ia=Math.max(0,EMPIRES.indexOf(a.emp)),ib=Math.max(0,EMPIRES.indexOf(b.emp));
    const war=ia!==ib&&atWar(ia,ib,day);
-   out.push({from:a,to:b,res,buy,sell,profit,dist,war,
+   out.push({from:a,to:b,res,buy,sell,profit,dist,war,спорный:спор,
     per:Math.round(profit*100/Math.max(1,dist))/100});}}
  out.sort((x,y)=>y.per-x.per||y.profit-x.profit);
  /* Оставляем по одному лучшему товару на пару городов, чтобы список был читаем. */
@@ -10346,6 +10367,7 @@ const RESBYT={forest:["дерево","трава","ягоды"],plains:["кам�
 /* Собираемые в мире ресурсы: только они попадают в клетки и в квесты на сбор. */
 const LAND_RES=["дерево","трава","ягоды","камень","руда","кристалл","ракушка","грибы","кость"];
 const RESICON={"шкура":"🧥","орган":"🫀","кровь":"🩸","яд":"🧪","эссенция":"✨","эфир":"🌌",
+ "чужая соль":"🧂","переходный сплав":"⚙️","семя иного":"🫘",
  "осколок времени":"⏳","тяжёлый минерал":"🧲","рунный камень":"🪧",
  дерево:"🌳",трава:"🌿",ягоды:"🫐",камень:"🪨",руда:"⛏️",кристалл:"💠",ракушка:"🐚",грибы:"🍄",кость:"🦴",
  /* Добыча тёмных земель: в мире Грани её не бывает, но возить и продавать
@@ -30773,6 +30795,11 @@ function cityOrgs(c){
    глава:orgLeader(c.x,c.y,31),район:гдеИскать("court"),сила:3,мир:true});
   out.push({id:"spies",n:ex.шпионы.n,дело:"слушает и запоминает",нрав:"молчанием",
    глава:"того не называют",район:гдеИскать("couriers"),сила:3,мир:true});}
+ /* §5: пока идёт Сопряжение, в городе стоит ещё и Товарищество Перехода —
+    те, кто возит чужое и ведёт счёт переходам. Уходит вместе с событием. */
+ safeFn(()=>{const t=Conj.орг();
+  if(t)out.push({id:"conj_org",n:t.n,дело:t.дело,нрав:t.нрав,глава:t.глава,
+   район:гдеИскать("gatehouse"),сила:t.сила,мир:true,сопряжение:true});});
  /* Меньше десяти не бывает: недостающее добирается из общего списка. */
  for(let k=0;out.length<10&&k<ORG_KINDS.length;k++){
   const o=ORG_KINDS[k];if(out.some(z=>z.id===o.id))continue;
@@ -32812,7 +32839,113 @@ const Global=Modules.register("GLOBAL",{
   narrate(`Мировое событие: ${e.n}. ${e.о[0].toUpperCase()+e.о.slice(1)}${хвост?` — ${хвост}`:""}. Продлится ${e.срок} ${plural(e.срок,"день","дня","дней")}.`,{pri:1});return e.n;},
  k(что){const e=this.cur();return (e&&e.эффект&&e.эффект[что])||1;},
  daily(){try{if(this.cur())return false;if(hashName(G.day,13,8710)>0.08)return false;const e=GLOBAL_EVENTS[Math.floor(hashName(G.day,17,8711)*GLOBAL_EVENTS.length)%GLOBAL_EVENTS.length];this.start(e.id);return true;}catch(_){return false;}},
+ конъ(){return safeFn(()=>Conj.text(),"");},
  text(){const e=this.cur();return e?`Мировое событие: ${e.n} — ${e.о}; до ${G.global.до}-го дня.`:"Мировых событий сейчас нет.";}});
+/* ════════════════════════════════════════════════════════════════════════
+   СОПРЯЖЕНИЕ ГРАНИ: СЕМЬ ПОСЛЕДСТВИЙ (§5 брифа)
+   ────────────────────────────────────────────────────────────────────────
+   Мировое событие «Сопряжение Грани» в мире было, но делало оно немного:
+   поднимало эфир, учащало встречи и поднимало цены. §5 требует другого:
+   после Сопряжения появляются новые виды существ, открываются переходы,
+   возникают новые ресурсы, меняются законы регионов, приходят экспедиции,
+   начинается борьба за торговые маршруты и появляются новые профессии и
+   фракции. Семь последствий — и каждое настоящее.
+
+   1. ТВАРИ. Шесть пришлых видов, которых в этом мире нет и не будет: они
+      встречаются только пока событие идёт, и у каждого свой голос.
+   2. ПЕРЕХОДЫ. Пока миры сомкнуты, каждый город — временный узел сети:
+      уйти можно оттуда, откуда обычно нельзя.
+   3. ТОВАРЫ. Чужая соль, переходный сплав и семя иного: в этом мире их не
+      добывают — их приносят пришлые твари и экспедиции.
+   4. ЗАКОНЫ. Чужое объявлено запретным во всех державах сразу: цена на
+      него растёт, и Надзор смотрит строже.
+   5. ЭКСПЕДИЦИИ. По дорогам идут отряды с той стороны: четыре рода, и с
+      каждым можно сторговаться или разойтись.
+   6. МАРШРУТЫ. Пока переходы открыты, торговые пути спорны: прибыль на
+      них выше, а обозы берут чаще.
+   7. ЛЮДИ. Три ремесла, которых в мире не было — переходчик, скупщик
+      чужого и толмач Грани, — и товарищество, которое их держит.
+
+   Всё это живёт ровно столько, сколько идёт событие: восемь дней. Потом
+   переходы закрываются, пришлые уходят, законы возвращаются — а чужие
+   товары остаются в сумах и в торговых книгах, потому что их уже привезли.
+   ════════════════════════════════════════════════════════════════════════ */
+const CONJ_BEASTS=[
+ {id:"cj_walker",n:"Ходок сквозь",snd:"mwail",fx:"wail",голос:"ghost",сила:1.0,
+  о:"идёт, будто стены ему не стены: шаг слышно раньше, чем он появится"},
+ {id:"cj_glass",n:"Стеклянный жнец",snd:"mhiss",fx:"hiss",голос:"slime",сила:1.15,
+  о:"суставы звенят, как посуда в мешке, и режет он тем же звоном"},
+ {id:"cj_ash",n:"Пепельный вестник",snd:"mscreech",fx:"screech",голос:"bat",сила:0.9,
+  о:"крылья не шумят, зато сыплется пепел — по нему его и находят"},
+ {id:"cj_iron",n:"Железный пришлец",snd:"mstomp",fx:"stomp",голос:"behemoth",сила:1.4,
+  о:"тяжёлый и медленный: каждый его шаг слышно за десять клеток"},
+ {id:"cj_choir",n:"Хор без тел",snd:"mmagic",fx:"magic",голос:"ghost",сила:1.1,
+  о:"голосов много, а тела ни одного; бьёт согласием всех сразу"},
+ {id:"cj_maw",n:"Пасть перехода",snd:"mroar",fx:"roar",голос:"dragon",сила:1.6,
+  о:"сама дыра, у которой выросли зубы: то, что в неё попало, не возвращается"}];
+const CONJ_BEAST_BY_ID=Object.fromEntries(CONJ_BEASTS.map(b=>[b.id,b]));
+const CONJ_RES=["чужая соль","переходный сплав","семя иного"];
+const CONJ_PROFS=["Переходчик","Скупщик чужого","Толмач Грани"];
+const CONJ_ORG={n:"Товарищество Перехода",дело:"возит чужое и держит счёт переходам",
+ нрав:"счётом",сила:4,звук:"stk_portal"};
+const CONJ_EXPED=[
+ {id:"scout",n:"передовой отряд",о:"идут налегке и записывают всё, что видят",
+  дар:{res:"чужая соль",n:1},плата:20,звук:"caravan_drum"},
+ {id:"trade",n:"торговый обоз с той стороны",о:"везут то, чего здесь не делают",
+  дар:{res:"переходный сплав",n:1},плата:45,звук:"caravan"},
+ {id:"seed",n:"сеятели",о:"несут семена и ищут, куда их положить",
+  дар:{res:"семя иного",n:1},плата:60,звук:"ad_windleaves"},
+ {id:"guard",n:"сторожевая полусотня",о:"идут молча и никого не пускают в середину строя",
+  дар:{res:"переходный сплав",n:2},плата:80,звук:"guard_march"}];
+const Conj=Modules.register("CONJ",{
+ /* Идёт ли Сопряжение прямо сейчас. */
+ on(){try{const e=Global.cur();return !!(e&&e.id==="conjunction");}catch(_){return false;}},
+ дней(){try{if(!this.on())return 0;return Math.max(0,(Number(G.global.до)||0)-(Number(G.day)||1));}catch(_){return 0;}},
+ /* 1. Пришлая тварь: только пока событие идёт. */
+ тварь(){
+  try{
+   if(!this.on())return null;
+   const b=CONJ_BEASTS[Math.floor(Math.random()*CONJ_BEASTS.length)];
+   const lvl=Math.max(2,Math.round((Number(G.level)||1)*b.сила)+1);
+   return Object.assign({},b,{lvl,
+    hp:Math.round((26+lvl*11)*b.сила*safeFn(()=>diff().foeHp,1)),
+    dmg:Math.round((5+lvl*1.8)*b.сила),
+    xp:Math.round((30+lvl*14)*b.сила),
+    gold:Math.round((14+lvl*7)*b.сила),
+    добыча:CONJ_RES[Math.floor(Math.random()*CONJ_RES.length)]});
+  }catch(_){return null;}},
+ /* 2. Переход: пока миры сомкнуты, город — временный узел сети. */
+ порталАt(x,y){
+  try{
+   if(!this.on())return null;
+   const c=safeFn(()=>isCityAt(x,y),null);
+   if(!c)return null;
+   return {x,y,kind:"conj",name:`Временный переход у города «${c.name}»`,emp:safeFn(()=>empireAt(x,y),null)};
+  }catch(_){return null;}},
+ /* 3–4. Чужое: товар есть всегда, но запретным оно становится на время. */
+ чужое(res){return CONJ_RES.indexOf(res)>=0;},
+ запретно(res){return this.on()&&this.чужое(res);},
+ /* 5. Экспедиция: кто идёт по дороге с той стороны. */
+ экспедиция(){
+  try{
+   if(!this.on())return null;
+   const e=CONJ_EXPED[Math.floor(Math.random()*CONJ_EXPED.length)];
+   const проф=CONJ_PROFS[Math.floor(Math.random()*CONJ_PROFS.length)];
+   return Object.assign({},e,{проф});
+  }catch(_){return null;}},
+ /* 6. Маршруты: пока переходы открыты, пути спорны. */
+ маршрутK(){return this.on()?1.35:1;},
+ спорно(){return this.on();},
+ /* 7. Люди: три ремесла и товарищество, которых в мире не было. */
+ ремёсла(){return this.on()?CONJ_PROFS.slice():[];},
+ орг(){return this.on()?Object.assign({},CONJ_ORG,{район:"у ворот",глава:"счётчик переходов"}):null;},
+ text(){
+  if(!this.on())return "Сопряжения нет: миры врозь, переходы закрыты, чужого на торгах не бывает.";
+  return `Сопряжение Грани идёт, осталось ${this.дней()} ${plural(this.дней(),"день","дня","дней")}. `+
+   `Пришлых видов ${CONJ_BEASTS.length}; каждый город — временный переход; чужие товары (${CONJ_RES.join(", ")}) объявлены запретными и потому дороги; `+
+   `по дорогам идут экспедиции (${CONJ_EXPED.length} рода); торговые пути спорны, прибыль на них выше в полтора раза; `+
+   `в городах стоит «${CONJ_ORG.n}» и ходят ${CONJ_PROFS.join(", ")}.`;}
+});
 /* ── СЛУЧАЙНЫЕ СОБЫТИЯ ── */
 const RANDOM_EVENTS=[
  {id:"caravan",n:"обоз",о:"обоз идёт мимо и зовёт разделить костёр",звук:"throng_march",когда:()=>!G.place&&!isNight(),делать(){G.inv["Еда в дорогу"]=(Number(G.inv["Еда в дорогу"])||0)+1;return "у костра дали хлеба на дорогу";}},
@@ -32821,6 +32954,28 @@ const RANDOM_EVENTS=[
  {id:"feast",n:"праздник",о:"улица пьёт и поёт",звук:"crowd_cheer",когда:()=>!!G.place,делать(){G.hp=Math.min(G.hpMax,G.hp+8);return "вас угостили: здоровье плюс восемь";}},
  {id:"fire",n:"пожар",о:"крыша занялась, и воду носят цепочкой",звук:"oc_fire",когда:()=>!!G.place,делать(){safeFn(()=>{addStand("city",(isCityAt(G.place.bx,G.place.by)||{}).name,3);addAxis("благодарность",2);});return "вы встали в цепочку, и огонь сбили";}},
  {id:"surge",n:"магический выброс",о:"воздух звенит и бьёт по коже",звук:"oc_electrical",когда:()=>true,делать(){Energy.add("aether",3);G.hp=Math.max(1,G.hp-3);safeFn(()=>Balance.shift(-1,"выброс"));return "эфир плюс три, здоровье минус три";}},
+ /* §5: пока идёт Сопряжение, по дорогам ходят пришлые и экспедиции. Оба
+    события живут только на время события мира и сами это говорят. */
+ {id:"conj_beast",n:"пришлая тварь",о:"из ниоткуда вышло то, чего в этом мире нет",звук:"fx_rift",
+  когда:()=>safeFn(()=>Conj.on(),false)&&!G.place&&!G.inCombat,
+  делать(){
+   const b=safeFn(()=>Conj.тварь(),null);
+   if(!b)return "переход закрылся раньше, чем из него вышли";
+   safeFn(()=>{if(typeof MONSTER_VOICE==="object"&&b.голос)MONSTER_VOICE[b.id]=b.голос;});
+   startCombat({x:G.x,y:G.y,monster:b});
+   return `${b.n}: ${b.о}`;}},
+ {id:"conj_exped",n:"экспедиция",о:"по дороге идёт отряд с той стороны",звук:"caravan_drum",
+  когда:()=>safeFn(()=>Conj.on(),false)&&!G.place&&!G.inCombat,
+  делать(){
+   const e=safeFn(()=>Conj.экспедиция(),null);
+   if(!e)return "отряд свернул раньше, чем вы подошли";
+   safeFn(()=>Bank.play(e.звук,{gain:0.5,maxSec:5}));
+   const цена=Math.round(e.плата*safeFn(()=>diff().price,1));
+   if((Number(G.gold)||0)>=цена){
+    G.gold-=цена;
+    G.inv[e.дар.res]=(Number(G.inv[e.дар.res])||0)+e.дар.n;
+    return `${e.n} (${e.о}); ведёт их ${e.проф.toLowerCase()}. За ${цена} золота отдали ${e.дар.res} ×${e.дар.n}`;}
+   return `${e.n} (${e.о}); ведёт их ${e.проф.toLowerCase()}. Просят ${цена} золота за ${e.дар.res} — у вас столько нет`;}},
  {id:"beast",n:"зверь",о:"кто-то крупный вышел на тропу",звук:"wolf_howl",когда:()=>!G.place&&!G.inCombat,делать(){const c=safeFn(()=>cellContent(G.x,G.y),null);const cand=MONSTERS.filter(m=>m.biomes&&c&&m.biomes.includes(c.terrain[0]));const m=cand.length?cand[Math.floor(Math.random()*cand.length)]:MONSTERS[0];const lvl=Math.max(1,(Number(G.level)||1));startCombat({x:G.x,y:G.y,monster:Object.assign({},m,{lvl,hp:22+lvl*8,dmg:3+lvl,xp:18+lvl*9,gold:4})},{morph:true});return "бой";}},
  {id:"sick",n:"поветрие",о:"в селении кашляют",звук:"moan_deep",когда:()=>!!G.place,делать(){if(invHas("трава",1)){invTake("трава",1);safeFn(()=>addAxis("благодарность",3));return "вы отдали травы, и жар спал";}G.hp=Math.max(1,G.hp-4);return "хворь зацепила и вас: здоровье минус четыре";}},
  {id:"snow",n:"снегопад",о:"снег валит стеной",звук:"sky_snow",когда:()=>/Снег|Метель/.test(String(G.weather||"")),делать(){G.hour=(Number(G.hour)||0)+1;if(G.hour>=24){G.hour-=24;G.day++;}return "переждали час";}},
@@ -37094,6 +37249,18 @@ function worldSelfCheck(){
      находится у любого дела, какого бы оно ни было вида. */
   /* §10: шесть начальных ремёсел, у каждого настоящий навык, набор, совет
      и свой голос. */
+  /* §5: у Сопряжения Грани семь последствий, и все они настоящие. */
+  ok("conjunction",!!GLOBAL_BY_ID.conjunction
+   &&CONJ_BEASTS.length===6&&CONJ_BEASTS.every(b=>b.n&&b.о&&b.snd&&b.fx&&b.голос&&b.сила>0)
+   &&new Set(CONJ_BEASTS.map(b=>b.snd)).size>=4
+   &&CONJ_RES.length===3&&CONJ_RES.every(r=>RES_BASE[r]&&RESICON[r])
+   &&CONJ_PROFS.length===3&&CONJ_EXPED.length===4
+   &&CONJ_EXPED.every(e=>e.n&&e.о&&SOUND_BANK[e.звук]&&RES_BASE[e.дар.res]&&e.плата>0)
+   &&SOUND_BANK[CONJ_ORG.звук]&&CONJ_ORG.n&&CONJ_ORG.дело
+   &&RANDOM_EVENTS.filter(e=>e.id.indexOf("conj_")===0).length===2
+   &&typeof Conj.on==="function"&&typeof Conj.порталАt==="function"
+   &&typeof Conj.запретно==="function"&&typeof Conj.маршрутK==="function",
+   "у Сопряжения Грани семь последствий: твари, переходы, товары, законы, экспедиции, маршруты и люди");
   ok("startcraft",START_CRAFTS.length===6
    &&START_CRAFTS.every(c=>c.n&&c.о&&c.совет&&SKILL_BY_ID[c.навык]&&SOUND_BANK[c.звук]
     &&(c.золото>0)&&Array.isArray(c.вещи)&&c.вещи.length>0
@@ -37161,7 +37328,7 @@ function worldSelfCheck(){
   ok("wararc",WAR_FEATURES.length===12&&WAR_FEATURES.every(x=>SOUND_BANK[x.звук]&&x.о)&&WAR_ACTS.length===6&&WAR_ACTS.every(x=>SOUND_BANK[x.звук]&&x.сдвиг>0),"у дуги двенадцать примет войны и шесть дел");
   ok("merit",MERIT_KINDS.length===12&&MERIT_KINDS.every(k=>SOUND_BANK[k.звук])&&MERITS.length>=24&&MERITS.every(m=>MERIT_BY_KIND[m.род]&&m.цель>0&&typeof m.счёт==="function")&&MERIT_KINDS.every(k=>MERITS.some(m=>m.род===k.id))&&ART_CHAIN_STEPS.length===10&&ART_RANKS.length===7&&Encyclo.fields.length===7&&Encyclo.count()>100,"Достижения: двенадцать родов со звуком и своими строками, цепочка артефакта из десяти звеньев, семь рангов, энциклопедия по семи полям");
   ok("deeps",DUNG_TYPES.length===14&&DUNG_TYPES.every(t=>SOUND_BANK[t.звук]&&RES_BASE[t.ресурс]&&t.опасность)&&Complexes.all().length===42&&Complexes.all().every(c=>c.n&&c.ярусы[1]>c.ярусы[0]&&c.награда)&&Complexes.byId("cx_whisper")&&Complexes.byId("cx_bottomless")&&DEEP_FAMILIES.length===10&&DEEP_FAMILIES.every(f=>SOUND_BANK[f.звук]&&f.ест&&f.страх)&&DEEP_RESOURCES.length===10&&DEEP_RESOURCES.every(r=>r.ярус>0&&r.цена>0&&r.что)&&PARANOIA.length===7&&PARANOIA.every(p=>SOUND_BANK[p.звук])&&SURVIVAL_NEEDS.length===10&&Passport.fields().length===25,"Глубины: четырнадцать видов, сорок два комплекса, десять семейств, десять пород, семь признаков, десять нужд, паспорт из двадцати пяти полей");
-  ok("living",Zones.all().length>=100&&Zones.all().every(z=>ANOM_BY_ID[z.правило]&&z.x>=0&&z.y>=0)&&ANOM_RULES.length===20&&ANOM_RULES.every(r=>SOUND_BANK[r.маркер]&&r.как&&r.маршрут&&RES_BASE[r.ресурс]&&r.опасность)&&Power.all().length>=60&&POWER_PLACES.every(p=>SOUND_BANK[p.звук]&&MSCHOOL_BY_ID[p.школа]&&WEATHER_BY_ID[p.погода])&&GLOBAL_EVENTS.length===10&&GLOBAL_EVENTS.every(e=>SOUND_BANK[e.звук]&&e.срок>0)&&RANDOM_EVENTS.length===14&&RANDOM_EVENTS.every(e=>SOUND_BANK[e.звук]&&typeof e.когда==="function")&&PROPHECIES.length===6&&ARC_STEPS.length===8,"Живой мир: сто аномальных зон по двадцати правилам, шестьдесят мест силы, десять мировых событий, четырнадцать случайных, шесть пророчеств, восемь ступеней судьбы — всё со звуком");
+  ok("living",Zones.all().length>=100&&Zones.all().every(z=>ANOM_BY_ID[z.правило]&&z.x>=0&&z.y>=0)&&ANOM_RULES.length===20&&ANOM_RULES.every(r=>SOUND_BANK[r.маркер]&&r.как&&r.маршрут&&RES_BASE[r.ресурс]&&r.опасность)&&Power.all().length>=60&&POWER_PLACES.every(p=>SOUND_BANK[p.звук]&&MSCHOOL_BY_ID[p.школа]&&WEATHER_BY_ID[p.погода])&&GLOBAL_EVENTS.length===10&&GLOBAL_EVENTS.every(e=>SOUND_BANK[e.звук]&&e.срок>0)&&RANDOM_EVENTS.filter(e=>e.id.indexOf("conj_")!==0).length===14&&RANDOM_EVENTS.every(e=>SOUND_BANK[e.звук]&&typeof e.когда==="function")&&PROPHECIES.length===6&&ARC_STEPS.length===8,"Живой мир: сто аномальных зон по двадцати правилам, шестьдесят мест силы, десять мировых событий, четырнадцать случайных (сверх них два на время Сопряжения), шесть пророчеств, восемь ступеней судьбы — всё со звуком");
   ok("sigils",SIGIL_SYMBOLS.length===8&&SIGIL_SYMBOLS.every(x=>MSCHOOL_BY_ID[x.школа]&&x.намерения.every(i=>SIGIL_INTENTS[i]))&&SIGIL_CARRIERS.length===8&&SIGIL_CARRIERS.every(x=>RES_BASE[x.ресурс])&&SIGIL_GEOMETRY.length===5&&INKS.length===6&&INKS.every(x=>SOUND_BANK[x.звук]&&Object.keys(x.рецепт).every(r=>RES_BASE[r]))&&AWAKEN_SOURCES.length===6&&AWAKEN_SOURCES.every(x=>SOUND_BANK[x.звук])&&WAVES.length===3&&MORPH_TRAITS.length===6&&MORPHOBEASTS.length===10&&MORPHOBEASTS.every(b=>MONSTERS.some(m=>m.id===b.база))&&DEVOUR_GIFTS.length===6&&EVENT_THEME.world_event&&SOUND_BANK[EVENT_THEME.world_event.роль],"Знаки: восемь символов, восемь носителей, пять геометрий, шесть чернил, шесть источников пробуждения, три волны, шесть черт, десять морфозверей, шесть даров Эха — всё со звуком и по настоящим ресурсам");
   ok("cases",CASE_TEMPLATES.length===6&&CASE_TEMPLATES.every(t=>t.версии.length===3&&t.улики.every(k=>CLUE_KINDS[k])&&t.версии.every(v=>v.улики.every(k=>t.улики.includes(k))))&&SYNDICATES.length===8&&SYNDICATES.every(x=>SOUND_BANK[x.звук]&&x.города.every(id=>NAMED_CITY_BY_ID[id])&&REGIONS[x.область])&&Object.keys(DECISIONS).length===9&&Object.values(DECISIONS).every(d=>Object.keys(d).length>=3)&&["deeper","border_war","shards","lasthouse","beast","price","undercity","maskface","endless"].every(id=>CHAIN_DB[id])&&HOUSE_BY_ID[LAST_HOUSE.враг]&&DLG_MOVE_BY_ID.znanie&&DLG_MOVE_BY_ID.kultura&&DLG_MOVE_BY_ID.nedoskazat,"Расследования: шесть дел с тремя версиями, восемь синдикатов со звуком и городами, девять цепочек с развязками, три хода разговора");
   ok("academy",LANGS.length>=20&&LANGS.every(l=>l.письмо&&l.о)&&SCIENCES.length===6&&SCIENCES.every(x=>SOUND_BANK[x.звук]&&x.эффект.length===3&&FACULTY_BY_ID[x.факультет])&&FACULTIES.length===12&&FACULTIES.every(f=>(f.школы||[]).every(id=>MSCHOOL_BY_ID[id]&&SCHOOL_AUDIO[id])&&(!f.маст||MAST_BY_ID[f.маст]))&&SCHOOLS.length>=30&&SCHOOLS.every(sc=>SCHOOL_AUDIO[sc.id]&&SPELL_LAYERS.every(l=>SOUND_BANK[SCHOOL_AUDIO[sc.id][l]])),"Академия: двадцать один язык, шесть наук, двенадцать факультетов, тридцать четыре школы чар — все со звуком");
