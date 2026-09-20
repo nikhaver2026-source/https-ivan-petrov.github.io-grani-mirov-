@@ -32955,15 +32955,32 @@ function campDeed(act){
   safeFn(()=>Bank.play(k.звук,{seed:G.x+G.y,gain:0.5,maxSec:5}));
   narrate(`${k.n}: «${k.слово}» ${safeFn(()=>rumor(),"")||""}`);return true;}
  if(act==="sell"){
-  const есть=(k.сбыт||[]).filter(r=>(Number((G.inv||{})[r])||0)>0);
-  if(!есть.length){narrate(`${k.n} берёт ${(k.сбыт||[]).join(", ")||"ничего"}, а у вас этого нет.`);return true;}
+  /* Обещанное по делу не продаётся: сума считается за вычетом того, что
+     нужно принести. Иначе одно нажатие рвало поручение молча. */
+  const надо=r=>{try{
+   return (G.quests||[]).filter(q=>!q.done&&q.res===r
+    &&["fetch","delivery","freight","war_supply"].indexOf(q.type)>=0)
+    .reduce((k2,q)=>k2+(Number(q.need)||0),0);}catch(_){return 0;}};
+  const свободно=r=>Math.max(0,(Number((G.inv||{})[r])||0)-надо(r));
+  const есть=(k.сбыт||[]).filter(r=>свободно(r)>0);
+  const держим=(k.сбыт||[]).filter(r=>надо(r)>0&&(Number((G.inv||{})[r])||0)>0);
+  const оговорка=держим.length
+   ? ` Обещанное по делу не тронуто: ${держим.map(r=>`${r} ×${Math.min(надо(r),Number(G.inv[r])||0)}`).join(", ")}.`
+   : "";
+  if(!есть.length){
+   narrate(держим.length
+    ? `${k.n} берёт ${(k.сбыт||[]).join(", ")}, но свободного у вас нет.${оговорка}`
+    : `${k.n} берёт ${(k.сбыт||[]).join(", ")||"ничего"}, а у вас этого нет.`);
+   return true;}
   let всего=0;const строки=[];
-  есть.forEach(r=>{const n=Number(G.inv[r])||0;
+  есть.forEach(r=>{const n=свободно(r);
    const цена=Math.max(1,Math.round(safeFn(()=>marketPrice(r,idx,G.day),RES_BASE[r]||5)*1.15));
-   всего+=цена*n;строки.push(`${r} ×${n} по ${цена}`);delete G.inv[r];});
+   всего+=цена*n;строки.push(`${r} ×${n} по ${цена}`);
+   const остаток=(Number(G.inv[r])||0)-n;
+   if(остаток>0)G.inv[r]=остаток;else delete G.inv[r];});
   G.gold=(Number(G.gold)||0)+всего;
   safeFn(()=>{Bank.play("arte_coins",{gain:0.5,maxSec:4});deed("trades");refresh();saveGame(true);});
-  narrate(`${k.n} берёт своё дороже города: ${строки.join(", ")}. Всего ${всего} золота.`);return true;}
+  narrate(`${k.n} берёт своё дороже города: ${строки.join(", ")}. Всего ${всего} золота.${оговорка}`);return true;}
  if(act==="pay"){
   const мыто=Math.max(10,Math.round((Number(G.gold)||0)*0.1));
   if((Number(G.gold)||0)<мыто){narrate("Платить нечем, и это здесь понимают по-своему. Уходите или беритесь за оружие.");return true;}
