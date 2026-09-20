@@ -2910,7 +2910,9 @@ const BEACON_INFO={
  res_blood:["Кровь","Густой пузырь"], res_venom:["Яд","Железа твари: шипение"],
  res_essence:["Эссенция","Сгущение силы в аномальной зоне"], res_ether:["Эфир","Кристальный отклик Грани"],
  res_timeshard:["Осколок времени","Окаменевший миг"], res_heavy:["Тяжёлый минерал","Неподъёмный удар"],
- res_rune:["Рунный камень","Резец по старой кладке"], npc_ruler:["Правитель","Маяк правителя"], npc_guard:["Стражник","Маяк стражника"], npc_merchant:["Торговец","Маяк торговца"], npc_scholar:["Учёный","Маяк учёного"], npc_bartender:["Трактирщик","Маяк трактирщика"], npc_common:["Житель","Обычный житель"], npc_elder:["Старейшина","Маяк старейшины"], npc_farmer:["Крестьянин","Маяк крестьянина"], npc_healer:["Целитель","Маяк целителя"], npc_clanlead:["Глава клана","Маяк главы клана"], npc_warrior:["Воин клана","Маяк воина клана"], npc_apprentice:["Ученик мага","Маяк ученика-заклинателя"], npc_traveler:["Странник","Маяк странствующего NPC"], portal:["Портал","Магический портал"],
+ res_rune:["Рунный камень","Резец по старой кладке"],
+ camp:["Стан","Люди без стен: костёр, навесы и дозорный"],
+ landmark:["Чудо природы","Место, которому удивляются: вода, камень или лёд"], npc_ruler:["Правитель","Маяк правителя"], npc_guard:["Стражник","Маяк стражника"], npc_merchant:["Торговец","Маяк торговца"], npc_scholar:["Учёный","Маяк учёного"], npc_bartender:["Трактирщик","Маяк трактирщика"], npc_common:["Житель","Обычный житель"], npc_elder:["Старейшина","Маяк старейшины"], npc_farmer:["Крестьянин","Маяк крестьянина"], npc_healer:["Целитель","Маяк целителя"], npc_clanlead:["Глава клана","Маяк главы клана"], npc_warrior:["Воин клана","Маяк воина клана"], npc_apprentice:["Ученик мага","Маяк ученика-заклинателя"], npc_traveler:["Странник","Маяк странствующего NPC"], portal:["Портал","Магический портал"],
  door:["Дверь","Дверь здания или комнаты: скрип петель"], gate:["Ворота","Городские ворота: лязг цепи и засова"], stairs_down:["Лестница вниз","Ступени, ведущие на нижний уровень"], stairs_up:["Лестница вверх","Ступени наверх или выход наружу"], chest:["Сундук","Запертый сундук с добычей"], altar:["Алтарь","Алтарь бога в святилище или подземелье"], torch:["Факел","Настенный факел — ориентир в темноте"], well:["Колодец","Колодец или источник воды"], city:["Город","Городская площадь: гул голосов и колокол"], dungeon:["Подземелье","Гул камня и капли в глубине"], wall:["Стена","Тупик: глухой удар в камень"], house:["Дом","Жилой дом внутри поселения"], barracks:["Казарма","Оружейные стойки и стража"], throne:["Тронный зал","Зал правителя"], caravan:["Караван","Обоз в пути: колёса, бубенцы и шаг животных"],
  port:["Порт","Причалы: волна о доски, снасти и корабельный колокол"],
  ship:["Корабль","Судно: скрип корпуса и хлопок паруса"], cave_entrance:["Вход в пещеру","Тяга воздуха и эхо подземелья"]
@@ -4036,6 +4038,7 @@ const AM_GROUPS=[
   ["patrol","🛡️ Окликнуть разъезд"],
   ["cityplan","🏙️ План города: кварталы и площадь"],
   ["cityorgs","🏛️ Организации города: кто здесь заправляет"],
+  ["wilds","⛺ Станы и чудеса природы: что стоит в глуши"],
   ["regions","🗺️ Область мира: где я и что рядом"],
   ["fort","🏯 Крепость: состояние и действия"],
   ["garrison","🍲 Службы крепости: кухня, лечебница, библиотека, мастерская"],
@@ -8823,6 +8826,9 @@ const BEACON_ROLE={
     птичьим криком с высоты, кумирня — колокольцем на ветру. Ни то, ни другое
     не спутать с руинами и храмом на земле. */
  eyrie:"raptor_cry", peakshrine:"bell_big",
+ /* Стан слышен костром, чудо природы — колокольчиком: и то и другое
+    стоит вне дорог, и на слух их надо отличать от деревни и руин. */
+ camp:"lug_fire", landmark:"charm_bell",
  /* Портовый рог: отход и приход корабля звали маяк «port_horn», а такого
     маяка нигде не было — сигнал молчал. Роль в банке для него есть давно. */
  port_horn:"port_horn"};
@@ -11378,6 +11384,14 @@ function cellContent(x,y){
    c.structure={type:"peakshrine",name:"Кумирня на вершине",beacon:"peakshrine",onlyAir:true};
   else if(H(x,y,10)<0.0022&&(c.terrain[0]==="cave"||c.terrain[0]==="mountains"))
    c.structure={type:"cave_entrance",name:H(x,y,11)<0.5?"Пещерный зев":"Провал в скале",beacon:"cave_entrance"};
+  /* Стан и чудо природы: §11 просит их в каждой области, а их не было
+     вовсе. Ставятся вне дорог и по рельефу клетки. */
+  else if(c.terrain[0]!=="road"&&safeFn(()=>campAt(x,y,c.terrain[0]),null)){
+   const к=campAt(x,y,c.terrain[0]);
+   c.structure={type:"camp",name:к.n,beacon:"camp",стан:к.id,опасный:!!к.опасный};}
+  else if(c.terrain[0]!=="road"&&safeFn(()=>landmarkAt(x,y,c.terrain[0]),null)){
+   const ч=landmarkAt(x,y,c.terrain[0]);
+   c.structure={type:"landmark",name:ч.n,beacon:"landmark",чудо:ч.id};}
   else if(r3>0.997&&c.terrain[0]!=="road")c.structure={type:"temple",name:"Храм тихого света",beacon:"temple"};}
  if(!c.structure){
   if(isCrossroads(x,y)){
@@ -11866,11 +11880,19 @@ function getNPC(x,y,i,profForced){
  /* Пограничный люд помечается: по этой пометке ему достаются свои дела,
     свои строки и свой голос, где бы он ни сидел — в схроне или в притоне. */
  const гр=safeFn(()=>BORDER_FOLK.find(b=>b.n===prof),null);
- return {key:`${x},${y},${i}`+(profForced?","+encodeURIComponent(profForced):""),x,y,name,race,uniq,prof,tier,
+ const key=`${x},${y},${i}`+(profForced?","+encodeURIComponent(profForced):"");
+ const out={key,x,y,name,race,uniq,prof,tier,
   life:LIFE[Math.floor(h4*LIFE.length)],view:VIEWS[Math.floor(h5*VIEWS.length)],
   beacon:(гр&&гр.beacon)||NPCBEACON[prof]||"npc_common",
   border:гр?гр.id:null,
-  trade:["Торговец","Кузнец","Трактирщик","Контрабандист"].includes(prof)};}
+  trade:["Торговец","Кузнец","Трактирщик","Контрабандист"].includes(prof)};
+ /* Уехавшего или умершего сменил родич: то же место и то же ремесло,
+    другое имя. Иначе игрок хоронил бы человека и тут же с ним говорил. */
+ try{
+  const ж=(G.npcLife&&G.npcLife[key])||null;
+  if(ж&&ж.конец&&ж.наследник){out.name=ж.наследник;out.наследник=ж.конец;}
+ }catch(_){}
+ return out;}
 /* ════════════════════════════════════════════════════════════════════════
    ДУША ЖИТЕЛЯ: КТО ЭТО ТАКОЙ НА САМОМ ДЕЛЕ
    ════════════════════════════════════════════════════════════════════════
@@ -12152,9 +12174,163 @@ function npcRemember(n,тип,значение,уверенность){
    m.д.length=14;}
   return true;
  }catch(_){return false;}}
+/* ════════ ЖИЗНЬ ЖИТЕЛЯ (§20) ════════
+   Бриф: житель может переезжать, менять работу, вступать в организации,
+   жениться, заводить детей, наживать врагов, погибать и передавать
+   имущество. Ничего этого не было: вернувшись через год, игрок находил того
+   же человека на том же месте с той же фразой.
+
+   Жизнь считается по встречам, а не тикает в пустоту: что случилось за время
+   отсутствия, узнаёт тот, кто вернулся. Правила простые и строгие, чтобы мир
+   не менялся под руками: за первые тридцать дней знакомства не происходит
+   ничего; за одну встречу случается не больше двух событий; смерть приходит
+   только к пожилому и только после трёх месяцев отсутствия. Что именно
+   случится — следует из души: молодые женятся, должники разоряются,
+   честолюбивые меняют ремесло и входят в общины.
+
+   Уехавшего или умершего сменяет родич: то же место, то же ремесло, другое
+   имя — и имущество, которое перешло к нему. Это и есть «передавать
+   имущество»: наследник называет, что ему досталось. */
+const LIFE_EVENTS=[
+ {id:"craft",n:"сменил ремесло",     звук:"craft_knock",
+  когда:d=>d.лет<55?2:1,
+  слово:(n,d)=>`${n.name} ${d.пол==="ж"?"бросила":"бросил"} прежнее дело и ${d.пол==="ж"?"взялась":"взялся"} за новое: ${d.цель}.`},
+ {id:"org",  n:"вошёл в общину",     звук:"hall_market",
+  когда:d=>d.статус.вес>=1?3:1,
+  слово:(n,d,x)=>`${n.name} ${d.пол==="ж"?"вошла":"вошёл"} в общину «${x||"городская палата"}». Теперь за ${d.пол==="ж"?"ней":"ним"} стоят не только свои.`},
+ {id:"wed",  n:"женился",            звук:"charm_bell",
+  когда:d=>d.лет>=18&&d.лет<=45?4:0,
+  слово:(n,d,x)=>`${n.name} ${d.пол==="ж"?"вышла замуж":"женился"} — ${x}. В доме стало двое.`},
+ {id:"child",n:"завёл ребёнка",      звук:"bell_small",
+  когда:d=>d.лет>=20&&d.лет<=50?3:0,
+  слово:(n)=>`У ${n.name} родился ребёнок. Родни прибыло.`},
+ {id:"foe",  n:"нажил врага",        звук:"warrior_shout",
+  когда:d=>d.нрав&&/гор|фанат|высок/.test(d.нрав.id)?3:1,
+  слово:(n,d)=>`${n.name} ${d.пол==="ж"?"нажила":"нажил"} врага: ${d.беда} довело до ссоры, и её не забыли.`},
+ {id:"rich", n:"поднялся",           звук:"arte_coins",
+  когда:d=>d.долг?0:2,
+  слово:(n,d)=>`${n.name} ${d.пол==="ж"?"поднялась":"поднялся"}: дело пошло, и достаток вырос.`},
+ {id:"ruin", n:"разорился",          звук:"oc_coin_lost",
+  когда:d=>d.долг?4:1,
+  слово:(n,d)=>`${n.name} ${d.пол==="ж"?"разорилась":"разорился"}: долг в ${d.долг||"сотню"} золота съел всё.`},
+ {id:"move", n:"уехал",              звук:"mtg_cart",
+  когда:d=>/уех|перебр|искать|уйти/.test(String(d.цель))?2:1,
+  слово:(n,d)=>`${n.name} ${d.пол==="ж"?"уехала":"уехал"} отсюда. На ${d.пол==="ж"?"её":"его"} месте теперь родич.`,конец:true},
+ {id:"died", n:"умер",               звук:"temple_bell",
+  когда:d=>d.лет>=58?2:0,
+  слово:(n,d)=>`${n.name} ${d.пол==="ж"?"умерла":"умер"}. ${d.лет} ${plural(d.лет,"год","года","лет")} — не малый срок. Имущество перешло к родне.`,конец:true}];
+const LIFE_BY_ID=Object.fromEntries(LIFE_EVENTS.map(e=>[e.id,e]));
+function lifeOf(key){
+ try{
+  if(!G.npcLife||typeof G.npcLife!=="object")G.npcLife={};
+  const k=String(key||"");if(!k)return null;
+  if(!G.npcLife[k]||typeof G.npcLife[k]!=="object")G.npcLife[k]={д:[]};
+  if(!Array.isArray(G.npcLife[k].д))G.npcLife[k].д=[];
+  return G.npcLife[k];
+ }catch(_){return null;}}
+/* Имя родича: то же место, другой человек. */
+function heirName(key,k){
+ const h=(i)=>hashName(String(key).length*7+i*13+k,String(key).length*11+i*3,9700+i);
+ return SYL[Math.floor(h(1)*SYL.length)]+SYL2[Math.floor(h(2)*SYL2.length)];}
+/* Что случилось с жителем за время, пока его не видели. */
+function npcLifeTick(n,прошло,встреч){
+ try{
+  if(!n||!n.key)return [];
+  if(!(встреч>0))return [];            /* при первом знакомстве ничего не случилось */
+  if(!(прошло>=30))return [];          /* и в первый месяц тоже */
+  const ж=lifeOf(n.key);if(!ж)return [];
+  const день0=Number(G.day)||1;
+  if(!ж.знаком)ж.знаком=день0;
+  /* Сколько вы знакомы: человек может уйти или умереть и тогда, когда вы
+     ходите к нему каждые полгода, — иначе постоянные гости бессмертны. */
+  const знакомы=день0-(Number(ж.знаком)||день0);
+   const d=safeFn(()=>npcSoul(n),null);if(!d)return [];
+  const пок=Number(ж.поколение)||1;
+  /* Считается только жизнь нынешнего человека: родич начинает свою, и
+     жениться ему можно, даже если женился его предшественник. */
+  const было=new Set((ж.д||[]).filter(z=>(Number(z.п)||1)===пок).map(z=>z.т));
+  const H3=(i)=>hashName((n.x|0)+i*17+прошло,(n.y|0)+i*29+(Number(G.day)||1),9710+i);
+  /* Событие — редкость, а не расписание. Чем дольше отсутствие, тем выше
+     вероятность, но и через месяц чаще всего не случается ничего; два
+     события за раз — только после года. */
+  if(H3(0)>=Math.min(0.6,прошло/300))return [];
+  const сколько=прошло>=365?2:1;
+  const вышло=[];
+  for(let шаг=0;шаг<сколько;шаг++){
+   const годные=LIFE_EVENTS.filter(e=>{
+    if(было.has(e.id))return false;
+    if((e.id==="died"||e.id==="move")&&прошло<90&&знакомы<400)return false;
+    /* После того как на месте сменился человек, следующая смена не раньше,
+       чем через восемь месяцев: иначе за год сменяется целый род. */
+    if(e.конец&&(Number(ж.деньКонца)||0)&&((Number(G.day)||1)-(Number(ж.деньКонца)||0))<240)return false;
+    if(e.id==="child"&&!было.has("wed")&&!вышло.some(z=>z.т==="wed"))return false;
+    return e.когда(d)>0;});
+   if(!годные.length)break;
+   let сумма=0;годные.forEach(e=>сумма+=e.когда(d));
+   let жребий=H3(шаг+1)*сумма,взят=годные[годные.length-1];
+   for(const e of годные){жребий-=e.когда(d);if(жребий<=0){взят=e;break;}}
+   const день=Number(G.day)||1;
+   let что="";
+   if(взят.id==="org"){
+    const c=safeFn(()=>Cities.any(n.x,n.y),null)
+     ||safeFn(()=>{const z=Cities.nearestAny(n.x,n.y);return z&&z.c;},null);
+    const орг=c?safeFn(()=>cityOrgs(c),[]):[];
+    что=орг.length?орг[Math.floor(H3(20+шаг)*орг.length)%орг.length].n:"соседская складчина";
+    ж.община=что;}
+   if(взят.id==="wed"){что=heirName(n.key,шаг+40);ж.супруг=что;}
+   if(взят.id==="child")ж.детей=(Number(ж.детей)||0)+1;
+   if(взят.id==="craft")ж.ремесло=true;
+   if(взят.id==="rich")ж.достаток=(Number(ж.достаток)||0)+1;
+   if(взят.id==="ruin")ж.достаток=(Number(ж.достаток)||0)-1;
+   const ктоСейчас=n.name;
+   if(взят.конец){ж.конец=взят.id;ж.поколение=пок+1;
+    ж.наследник=heirName(n.key,пок+1);ж.деньКонца=день;}
+   /* Имя пишется в само событие: через год карточку откроет уже родич,
+      и «Ирон разорился» про человека, которого Ирон сменил, — неправда. */
+   ж.д.push({т:взят.id,д:день,з:что||null,п:пок,имя:ктоСейчас});
+   было.add(взят.id);
+   вышло.push({т:взят.id,д:день,з:что||null,п:пок,имя:ктоСейчас});
+   if(взят.конец)break;}
+  if(ж.д.length>8)ж.д=ж.д.slice(-8);
+  return вышло;
+ }catch(_){return [];}}
+/* Словами: что случилось с прошлой встречи. */
+function npcLifeText(n){
+ try{
+  const ж=lifeOf(n&&n.key);if(!ж||!ж.д.length)return "";
+  const d=safeFn(()=>npcSoul(n),null)||{лет:40,пол:"м",цель:"своё дело",беда:"нужда",долг:0,статус:{вес:1}};
+  const пок=Number(ж.поколение)||1;
+  /* Сперва — что было с нынешним человеком; если он тут недавно, то чем
+     кончилось у прежнего. Имя берётся из самого события. */
+  const свои=ж.д.filter(z=>(Number(z.п)||1)===пок);
+  const список=(свои.length?свои:ж.д).slice(-3);
+  const строки=список.map(z=>{
+   const e=LIFE_BY_ID[z.т];if(!e)return "";
+   const кто={name:z.имя||n.name};
+   return safeFn(()=>e.слово(кто,d,z.з),e.n);}).filter(Boolean);
+  if(!строки.length)return "";
+  return "Что с ним было: "+строки.join(" ");
+ }catch(_){return "";}}
+/* Наследник говорит, что ему досталось. */
+function npcHeirText(n){
+ try{
+  const ж=lifeOf(n&&n.key);if(!ж||!ж.конец)return "";
+  const кто=ж.конец==="died"?"после смерти":"после отъезда";
+  const дом=ж.община?` Община «${ж.община}» держит сторону этого дома.`:"";
+  const колено=(Number(ж.поколение)||2)>2?` Это уже ${ж.поколение}-е колено на этом месте.`:"";
+  return `${n.name} — родич прежнего хозяина: место, ремесло и имущество перешли по наследству ${кто}.${дом}${колено}`;
+ }catch(_){return "";}}
 function npcMet(n){
  const m=memOf(n&&n.key);
  if(!m)return 0;
+ /* Жизнь считается до того, как обновится день последней встречи: иначе
+    «сколько прошло» всегда равнялось бы нулю. */
+ const прошло=Math.max(0,(Number(G.day)||1)-(Number(m.день)||Number(G.day)||1));
+ const случилось=safeFn(()=>npcLifeTick(n,прошло,Number(m.в)||0),[]);
+ if(случилось&&случилось.length)safeFn(()=>{
+  const e=LIFE_BY_ID[случилось[случилось.length-1].т];
+  if(e&&Bank.has(e.звук))Bank.play(e.звук,{seed:(n.x|0)+(n.y|0),gain:0.45,maxSec:4});
+  journal(`${n.name}: ${случилось.map(z=>(LIFE_BY_ID[z.т]||{}).n||z.т).join(", ")}.`);});
  m.в=(Number(m.в)||0)+1;m.день=Number(G.day)||1;
  return m.в;}
 /* Насколько этот человек к вам расположен ЛИЧНО — сверх отношения народа.
@@ -13292,6 +13468,8 @@ function socMeddle(keyA,keyB,tieId){
  }catch(_){narrate("Вмешаться не вышло.");return false;}}
 function npcsFor(c){if(!c.structure)return[];
  const counts={castle:3,village:3,port:3,tavern:2,clanhall:2,temple:1,tower:1,traveler:1,ruins:0,cave_entrance:0,
+  /* В стане живут, у чуда природы — нет. */
+  camp:3,landmark:0,
   /* Твердыня многолюдна, посад поменьше, схрон — трое, и все с разлома. */
   citadel:3,burg:2,smugglers:3};
  const n=counts[c.structure.type]||1,out=[];
@@ -24686,6 +24864,7 @@ function regionDiscovered(name){
  setTimeout(()=>safeFn(()=>eventTheme("region_new",{gain:0.6})),900);
  return true;}
 const PLACE_NEW_TIER={dungeon:"dungeon",cave_entrance:"dungeon",temple:"temple",shrine:"temple",
+ camp:"other",landmark:"other",
  castle:"city",port:"city",market:"city",tower:"tower",school:"tower",ruins:"other",clanhall:"other",
  hold:"other",ossuary:"dungeon",pit:"dungeon",spire:"tower"};
 function placeDiscovered(stype,kind){
@@ -28937,6 +29116,9 @@ const CMD={
   fight(a);},
  cityplan(){cityPlan();},
  cityorgs(){return cityOrgsHere();},
+ camp(a){return campDeed(String(a||""));},
+ wonder(){return wonderTake();},
+ wilds(){narrate(Wilds.text());},
  setdiff(k){setDifficulty(k);},
  tutor(){Tutor.on?Tutor.stop():Tutor.start();},
  warm(){Warm.busy?Warm.cancel():Warm.run();},
@@ -32526,6 +32708,22 @@ function openBuilding(c){const s=c&&c.structure;
   html+=`<button class="item" data-cmd="signread" data-speak="Прочитать указатель вслух целиком.">📖 Прочитать указатель</button>`;}
  if(s.type==="ruins"){
   html+=`<button class="item" data-cmd="searchruins">🔦 Обыскать руины</button>`;}
+ if(s.type==="camp"){
+  const к=CAMP_BY_ID[s.стан];
+  if(к){
+   safeFn(()=>Bank.play(к.звук,{seed:c.x+c.y,gain:0.55,maxSec:6}));
+   const ярлык={warm:"🔥 Погреться у костра (час)",ask:"🗣️ Расспросить",
+    sell:`💰 Сбыть им: ${(к.сбыт||[]).join(", ")}`,pay:"🪙 Откупиться мытом",
+    bless:"✨ Принять благословение",war:"⚔️ Спросить о войне",
+    feed:"🐴 Вода и корм (15 золота)"};
+   html+=`<div class="list-line" data-speak="${к.о} ${к.слово}">⛺ ${к.о}<br>«${к.слово}»</div>`;
+   html+=(к.дела||[]).map(a=>`<button class="item" data-cmd="camp:${a}">${ярлык[a]||a}</button>`).join("");}}
+ if(s.type==="landmark"){
+  const ч=LANDMARK_BY_ID[s.чудо];
+  if(ч){
+   safeFn(()=>Bank.play(ч.звук,{seed:c.x+c.y,gain:0.55,maxSec:7}));
+   html+=`<div class="list-line" data-speak="${ч.о} ${ч.слово}">🏞️ ${ч.о}<br>«${ч.слово}»</div>`;
+   html+=`<button class="item" data-cmd="wonder">🏞️ Побыть здесь и взять своё (раз в сутки)</button>`;}}
  /* Причал: рейсы к другим портам. */
  if(s.type==="port"){
   html+=`<button class="item" data-cmd="harbor" data-speak="Открыть причал: рейсы к другим портам, посадка на корабль.">🚢 Причал: корабли и рейсы</button>`;}
@@ -32550,7 +32748,7 @@ function openBuilding(c){const s=c&&c.structure;
   if(v)setTimeout(()=>safeFn(()=>Bank.play(v,{seed:c.x+c.y,gain:0.5,maxSec:7})),500);});
  openModal("modal-building");
  narrate(`${s.name}. ${bldDesc(s.type)} Внутри ${npcs.length?npcs.length+" жителей":"никого нет"}. Меню услуг доступно кнопками.`);}
-function iconFor(t){return{fortress:"🏯",castle:"🏰",village:"🏘️",tavern:"🍺",clanhall:"🛡️",tower:"🗼",ruins:"🏚️",temple:"⛩️",traveler:"🚶",cave_entrance:"🕳️",port:"⚓",crossroads:"🛣️"}[t]||"🏠";}
+function iconFor(t){return{fortress:"🏯",castle:"🏰",village:"🏘️",tavern:"🍺",clanhall:"🛡️",tower:"🗼",ruins:"🏚️",temple:"⛩️",traveler:"🚶",cave_entrance:"🕳️",port:"⚓",crossroads:"🛣️",camp:"⛺",landmark:"🏞️"}[t]||"🏠";}
 function bldDesc(t){return{fortress:"Стены, ворота и башни; за ними казармы, арсенал, склады, кухня, лечебница, конюшни, командный двор, тюрьма, тайные ходы и магический контур. Крепость осаждают, защищают, берут, восстанавливают и передают.",
  castle:"Серые стены, штандарты империи, стража у ворот. За воротами — улицы, кварталы и спуск в подземелье.",
  cave_entrance:"Тёмный ход уходит вниз. Оттуда тянет холодом и слышно капли.",
@@ -32562,7 +32760,9 @@ function bldDesc(t){return{fortress:"Стены, ворота и башни; з�
  ruins:"Обломки древних стен. Что-то блестит в тени.",
  temple:"Тихий свет свечей и запах ладана.",
  traveler:"Усталый путник греется у маленького костра.",
- crossroads:"Два тракта сходятся крест-накрест. У обочины врыт столб с досками-указателями; ветер поворачивает их и они скрипят."}[t]||"";}
+ crossroads:"Два тракта сходятся крест-накрест. У обочины врыт столб с досками-указателями; ветер поворачивает их и они скрипят.",
+ camp:"Люди без стен: костёр, навесы, поклажа под рогожей и дозорный, который вас уже заметил.",
+ landmark:"Место, а не постройка: сюда приходят смотреть, а уносят столько, сколько место даёт за день."}[t]||"";}
 function tavernService(s){const c=cellContent(G.x,G.y);
  if(s==="food"){if(G.gold<10){narrate("Не хватает золота. Нужно 10.");return true;}
   G.gold-=10;G.hp=Math.min(G.hpMax,G.hp+15);UI.drink();
@@ -32620,6 +32820,186 @@ function playCards(bet){
    Каждый храм посвящён одному из двенадцати богов (определяется по клетке).
    Молитва даёт благосклонность; покровитель усиливает свой дар (см. fxLevel).
    ════════════════════════════════════════════════════════════════════ */
+/* ════════ СТАНЫ И ЧУДЕСА ПРИРОДЫ (§11) ════════
+   Бриф перечисляет, что стоит в каждой области: города, поселения, дороги,
+   пещеры, руины, храмы, башни, лагеря, тайники и природные
+   достопримечательности. Всё это было, кроме двух последних.
+
+   Стан — это люди без стен: восемь родов, и у каждого своё дело, свой голос
+   и своё слово. У костра греются, у стана расспрашивают, охотникам сбывают
+   шкуры, старателям — руду, разбойникам откупаются. Чудо природы — место, а
+   не постройка: двенадцать родов, и у каждого свой дар, который берут раз в
+   сутки, потому что место не лавка и второй раз за день ничего не даст.
+
+   Оба рода ставятся вне дорог и по рельефу: дровосеки — в лесу, старатели —
+   в горах, погонщики — в степи и песках; водопад — в лесу и горах, соляные
+   столпы — в пустыне, светящийся омут — в топях. */
+const CAMP_KINDS=[
+ {id:"hunt",n:"Охотничий стан",земли:["forest","plains","mountains"],звук:"oc_dog_bark",
+  о:"Шкуры на растяжках, собаки у костра, вяленое мясо на жердях.",
+  слово:"Следы здесь читают лучше, чем в городе читают книги.",
+  сбыт:["шкура","кость","орган"],дела:["warm","ask","sell"]},
+ {id:"dig",n:"Стан старателей",земли:["mountains","cave"],звук:"mine_pick",
+  о:"Промывочные лотки, отвал пустой породы и пара шурфов под склоном.",
+  слово:"Жила не лжёт, лжёт тот, кто её продаёт.",
+  сбыт:["руда","камень","кристалл"],дела:["warm","ask","sell"]},
+ {id:"wood",n:"Дровосечий стан",земли:["forest"],звук:"oc_chop",
+  о:"Штабеля брёвен, свежие пни и запах смолы, который слышен раньше топоров.",
+  слово:"Лес отдаёт столько, сколько успеешь вывезти до распутицы.",
+  сбыт:["дерево","грибы","ягоды"],дела:["warm","ask","sell"]},
+ {id:"band",n:"Разбойничий лагерь",земли:["forest","swamp","mountains"],звук:"lug_snarl",
+  о:"Костёр в яме, чтобы не видели издали, и дозорный на дереве.",
+  слово:"Дорога общая, а мыто наше.",
+  сбыт:[],дела:["pay","ask"],опасный:true},
+ {id:"pilg",n:"Стан паломников",земли:["plains","mountains","desert"],звук:"temple_choir",
+  о:"Круг из котомок, посохи воткнуты в землю, кто-то поёт вполголоса.",
+  слово:"Дорога к святому месту и есть святое место.",
+  сбыт:[],дела:["warm","ask","bless"]},
+ {id:"army",n:"Полевой стан войска",земли:["plains","desert","road"],звук:"throng_march",
+  о:"Ровные ряды палаток, коновязь, кашевары и часовой, который вас уже видел.",
+  слово:"Приказ пришёл вчера, обоз придёт послезавтра.",
+  сбыт:[],дела:["warm","ask","war"]},
+ {id:"drov",n:"Стан погонщиков",земли:["plains","desert"],звук:"beasts_horse",
+  о:"Кони и волы на приколе, телеги кругом, вода в бочках под рогожей.",
+  слово:"Скотина идёт ровно столько, сколько ей дали пить.",
+  сбыт:["трава","ягоды"],дела:["warm","ask","feed"]},
+ {id:"exil",n:"Стан изгнанников",земли:["swamp","desert","cave"],звук:"lug_fire",
+  о:"Навесы из шкур и жердей, общий котёл и ни одного вопроса о том, кто вы.",
+  слово:"Здесь не спрашивают имён, и вы не спрашивайте.",
+  сбыт:["шкура","кость","грибы","яд"],дела:["warm","ask","sell"]}];
+const CAMP_BY_ID=Object.fromEntries(CAMP_KINDS.map(k=>[k.id,k]));
+const LANDMARKS=[
+ {id:"falls",  n:"Водопад",              земли:["forest","mountains"],звук:"oc_waterfall",
+  о:"Вода падает с высоты в три копья и разбивается в белую пыль; говорить приходится громче.",
+  дар:{hp:12},слово:"У воды дышится легче, и усталость сходит быстрее."},
+ {id:"geyser", n:"Гейзер",               земли:["mountains","desert"],звук:"oc_steam",
+  о:"Земля вздыхает кипятком по своему счёту; между вздохами успеваешь подойти.",
+  дар:{hp:8,res:"камень",сколько:1},слово:"Корка вокруг спёкшаяся: её отламывают и продают как камень."},
+ {id:"singing",n:"Поющие камни",         земли:["plains","desert"],   звук:"far_flute",
+  о:"Ветер проходит сквозь дыры в камнях, и камни отвечают на разные голоса.",
+  дар:{mana:12},слово:"Их слышно за версту, и ни один не повторяет соседа."},
+ {id:"giant",  n:"Исполинское дерево",   земли:["forest"],            звук:"oc_tree_crack",
+  о:"Ствол в двенадцать обхватов; под ним темно и сухо даже в дождь.",
+  дар:{res:"дерево",сколько:2},слово:"Сушняк с него не рубят — он падает сам, и его хватает."},
+ {id:"crater", n:"Звёздный кратер",      земли:["plains","desert"],   звук:"deep_thud",
+  о:"Круглая воронка с оплавленным краем; на дне железо, которое здесь не родится.",
+  дар:{res:"руда",сколько:2},слово:"Это железо не из земли: оно упало и осталось."},
+ {id:"salt",   n:"Соляные столпы",       земли:["desert"],            звук:"amb_desert",
+  о:"Столпы соли в человеческий рост стоят рядами, как оставленное войско.",
+  дар:{res:"кристалл",сколько:1},слово:"Соль здесь растёт вверх, а не лежит."},
+ {id:"arch",   n:"Каменная арка",        земли:["desert","mountains"],звук:"sky_gust",
+  о:"Ветер выел в скале проход, и в нём всегда тень и тяга.",
+  дар:{hp:6,mana:6},слово:"Под аркой пережидают полдень и бурю."},
+ {id:"springs",n:"Горячие ключи",        земли:["mountains"],         звук:"oc_boiling",
+  о:"Вода выходит горячей и пахнет серой; камни вокруг тёплые даже в стужу.",
+  дар:{hp:20},слово:"В ключах отмокают раны, которые мазь не берёт."},
+ {id:"stones", n:"Круг стоячих камней",  земли:["plains","mountains"],звук:"temple_bell",
+  о:"Двенадцать камней поставлены кругом; тринадцатый лежит в середине.",
+  дар:{mana:14,слух:true},слово:"Кто ставил — не помнят; что считали — видно по теням."},
+ {id:"sink",   n:"Карстовый провал",     земли:["cave","plains"],     звук:"deep_wind",
+  о:"Земля ушла вниз кругом; со дна тянет холодом, и там белеет кость.",
+  дар:{res:"кость",сколько:2},слово:"Скотина сюда не подходит, и правильно делает."},
+ {id:"ice",    n:"Ледяной язык",         земли:["mountains"],         звук:"oc_ice_hit",
+  о:"Лёд сполз с перевала и встал; внутри видны камни, которые он нёс.",
+  дар:{mana:8,res:"камень",сколько:1},слово:"Лёд отдаёт то, что взял, — но не сразу."},
+ {id:"pool",   n:"Светящийся омут",      земли:["swamp","forest"],    звук:"oc_bubble",
+  о:"Вода стоит без течения и светится снизу; по берегу растут грибы того же света.",
+  дар:{res:"грибы",сколько:2},слово:"Свет не от воды, а от того, что в ней растёт."}];
+const LANDMARK_BY_ID=Object.fromEntries(LANDMARKS.map(k=>[k.id,k]));
+/* Стан и чудо ставятся вне дорог и по рельефу клетки. */
+function campAt(x,y,terr){
+ if(H(x,y,9200)>=0.0012)return null;
+ const t=terr||"plains";
+ const годные=CAMP_KINDS.filter(k=>k.земли.indexOf(t)>=0);
+ if(!годные.length)return null;
+ return годные[Math.floor(H(x,y,9201)*годные.length)%годные.length];}
+function landmarkAt(x,y,terr){
+ if(H(x,y,9210)>=0.0008)return null;
+ const t=terr||"plains";
+ const годные=LANDMARKS.filter(k=>k.земли.indexOf(t)>=0);
+ if(!годные.length)return null;
+ return годные[Math.floor(H(x,y,9211)*годные.length)%годные.length];}
+function campHere(){try{const c=cellContent(G.x,G.y);return (c.structure&&c.structure.стан&&CAMP_BY_ID[c.structure.стан])||null;}catch(_){return null;}}
+function landmarkHere(){try{const c=cellContent(G.x,G.y);return (c.structure&&c.structure.чудо&&LANDMARK_BY_ID[c.structure.чудо])||null;}catch(_){return null;}}
+/* Дар чуда берут раз в сутки: место не лавка. */
+function wonderKey(k){return `wonder:${k.id}:${G.x},${G.y}:${Number(G.day)||1}`;}
+function wonderTake(){
+ const k=landmarkHere();
+ if(!k){narrate("Чуда природы здесь нет.");return false;}
+ if(!G.zoneTake||typeof G.zoneTake!=="object")G.zoneTake={};
+ const ключ=wonderKey(k);
+ if(G.zoneTake[ключ]){narrate(`${k.n} сегодня уже отдал своё. Место не лавка: приходите завтра.`);return true;}
+ G.zoneTake[ключ]=1;
+ const д=k.дар||{};const части=[];
+ if(д.hp){G.hp=Math.min(G.hpMax,(Number(G.hp)||0)+д.hp);части.push(`здоровье +${д.hp}`);}
+ if(д.mana){G.mana=Math.min(G.manaMax,(Number(G.mana)||0)+д.mana);части.push(`мана +${д.mana}`);}
+ if(д.res){const n=д.сколько||1;G.inv[д.res]=(Number(G.inv[д.res])||0)+n;части.push(`${д.res} ×${n}`);}
+ let слух="";
+ if(д.слух)слух=" "+(safeFn(()=>rumor(),"")||"");
+ safeFn(()=>Bank.play(k.звук,{seed:G.x+G.y,gain:0.55,maxSec:6}));
+ safeFn(()=>{deed("gathers");refresh();saveGame(true);});
+ narrate(`${k.n}: ${части.join(", ")||"здесь просто хорошо"}.${слух}`);
+ return true;}
+/* Дела стана. */
+function campDeed(act){
+ const k=campHere();
+ if(!k){narrate("Стана здесь нет: станы стоят в глуши, вне дорог.");return false;}
+ const idx=Math.max(0,safeFn(()=>empireIndexAt(G.x,G.y),0));
+ if(act==="warm"){
+  if((Number(G.hp)||0)>=G.hpMax){narrate("У костра тепло, но греться вам незачем: вы целы.");return true;}
+  G.hp=Math.min(G.hpMax,(Number(G.hp)||0)+8);
+  safeFn(()=>{Bank.play("lug_fire",{gain:0.5,maxSec:6});propTime(1);});
+  narrate(`${k.n}: час у костра. Здоровье +8.`);
+  safeFn(()=>{refresh();saveGame(true);});return true;}
+ if(act==="ask"){
+  safeFn(()=>Bank.play(k.звук,{seed:G.x+G.y,gain:0.5,maxSec:5}));
+  narrate(`${k.n}: «${k.слово}» ${safeFn(()=>rumor(),"")||""}`);return true;}
+ if(act==="sell"){
+  const есть=(k.сбыт||[]).filter(r=>(Number((G.inv||{})[r])||0)>0);
+  if(!есть.length){narrate(`${k.n} берёт ${(k.сбыт||[]).join(", ")||"ничего"}, а у вас этого нет.`);return true;}
+  let всего=0;const строки=[];
+  есть.forEach(r=>{const n=Number(G.inv[r])||0;
+   const цена=Math.max(1,Math.round(safeFn(()=>marketPrice(r,idx,G.day),RES_BASE[r]||5)*1.15));
+   всего+=цена*n;строки.push(`${r} ×${n} по ${цена}`);delete G.inv[r];});
+  G.gold=(Number(G.gold)||0)+всего;
+  safeFn(()=>{Bank.play("arte_coins",{gain:0.5,maxSec:4});deed("trades");refresh();saveGame(true);});
+  narrate(`${k.n} берёт своё дороже города: ${строки.join(", ")}. Всего ${всего} золота.`);return true;}
+ if(act==="pay"){
+  const мыто=Math.max(10,Math.round((Number(G.gold)||0)*0.1));
+  if((Number(G.gold)||0)<мыто){narrate("Платить нечем, и это здесь понимают по-своему. Уходите или беритесь за оружие.");return true;}
+  G.gold-=мыто;
+  safeFn(()=>{Bank.play("arte_coins",{gain:0.5,maxSec:3});propTime(1);});
+  narrate(`Мыто уплачено: ${мыто} золота. Дорога до вечера ваша.`);
+  safeFn(()=>{refresh();saveGame(true);});return true;}
+ if(act==="bless"){
+  if(!G.zoneTake||typeof G.zoneTake!=="object")G.zoneTake={};
+  const ключ=`camp:bless:${G.x},${G.y}:${Number(G.day)||1}`;
+  if(G.zoneTake[ключ]){narrate("Сегодня вас уже благословили. Дважды в день не просят.");return true;}
+  G.zoneTake[ключ]=1;
+  G.mana=Math.min(G.manaMax,(Number(G.mana)||0)+12);
+  safeFn(()=>Bank.play("temple_choir",{gain:0.5,maxSec:6}));
+  narrate("Паломники делятся благословением: мана +12.");
+  safeFn(()=>{refresh();saveGame(true);});return true;}
+ if(act==="war"){
+  const a=safeFn(()=>Empires.army(idx),null);
+  const войны=safeFn(()=>warsAt(G.day).filter(w=>w.a===idx||w.b===idx)
+   .map(w=>EMPIRES[w.a===idx?w.b:w.a].short),[]);
+  narrate(`${k.n}: ${войны.length?`идёт война с державами ${войны.join(", ")}`:"войны нет, и стан стоит на всякий случай"}. `
+   +(a?`Полков ${a.полки}, дух ${a.мораль}, снабжение ${a.снабжение}.`:""));
+  safeFn(()=>Bank.play("throng_march",{gain:0.5,maxSec:6}));return true;}
+ if(act==="feed"){
+  if((Number(G.gold)||0)<15){narrate("Вода и корм стоят пятнадцать золота, а у вас меньше.");return true;}
+  G.gold-=15;G.hp=Math.min(G.hpMax,(Number(G.hp)||0)+10);
+  safeFn(()=>Bank.play("beasts_horse",{gain:0.5,maxSec:5}));
+  narrate("Погонщики делятся водой и кормом: здоровье +10, пятнадцать золота ушло.");
+  safeFn(()=>{refresh();saveGame(true);});return true;}
+ narrate("Такого дела в стане нет.");return false;}
+const Wilds=Modules.register("WILDS",{
+ camps:()=>CAMP_KINDS,wonders:()=>LANDMARKS,
+ campAt,landmarkAt,campHere,landmarkHere,
+ text(){return `Вне дорог в глуши стоят станы (${CAMP_KINDS.length} родов: ${CAMP_KINDS.map(k=>k.n.toLowerCase()).join(", ")}) `
+  +`и чудеса природы (${LANDMARKS.length} родов: ${LANDMARKS.map(k=>k.n.toLowerCase()).join(", ")}). `
+  +"У стана греются, расспрашивают и сбывают добычу; чудо отдаёт свой дар раз в сутки.";}});
 function templeGod(x,y){
  /* Храм в столице посвящён богу своей державы, прочие — по жребию клетки. */
  const emp=empireAt(x,y);
@@ -34317,6 +34697,10 @@ function openNPC(key,silent){const n=getNPCByKey(key);
   Держава: ${emp.name}. ${wars.length?`Идёт война с державами: ${wars.map(w=>`${EMPIRES[w.a===idx?w.b:w.a].short} — ${w.cause}`).join("; ")}.`:"Держава ни с кем не воюет."}<br>
   Отношение народа: ${repWord} (репутация ${rep}). Лично к вам: ${личноеСлово.n} (${личн}).<br>
   История: ${n.life}. Взгляд: «${n.view}».</div>`;
+ /* Что случилось с ним, пока вас не было, и кто он теперь, если прежнего
+    хозяина уже нет. */
+ safeFn(()=>{const ж=npcHeirText(n),жизнь=npcLifeText(n);
+  if(ж||жизнь)html+=`<div class="list-line" data-speak="${[ж,жизнь].filter(Boolean).join(" ")}">🕰️ ${[ж,жизнь].filter(Boolean).join(" ")}</div>`;});
  html+=safeFn(()=>Houses.npcLine(n),"")+safeFn(()=>Gods.npcLine(n),"")+safeFn(()=>Path.npcLine(n),"")+safeFn(()=>Langs.npcLine(n),"");
  if(душа){
   const пд=soulLine(n,true);
@@ -35521,6 +35905,21 @@ function worldSelfCheck(){
     return l.length>=10&&l.every(o=>o.n&&o.дело&&o.глава&&o.район&&o.нрав&&o.сила>=1&&o.сила<=5)
      &&new Set(l.map(o=>o.n)).size===l.length;}),
    "в каждом городе десять и больше организаций, у каждой глава, квартал, сила и нрав");
+  /* §11: в области, кроме городов и поселений, есть станы и чудеса природы. */
+  ok("wilds",CAMP_KINDS.length===8&&LANDMARKS.length===12
+   &&CAMP_KINDS.every(k=>SOUND_BANK[k.звук]&&k.о&&k.слово&&k.земли.length&&(k.дела||[]).length>=2)
+   &&LANDMARKS.every(k=>SOUND_BANK[k.звук]&&k.о&&k.слово&&k.земли.length
+    &&(k.дар.hp||k.дар.mana||k.дар.res)&&(!k.дар.res||RES_BASE[k.дар.res]))
+   &&CAMP_KINDS.every(k=>(k.сбыт||[]).every(r=>RES_BASE[r]))
+   &&SOUND_BANK[BEACON_ROLE.camp]&&SOUND_BANK[BEACON_ROLE.landmark]
+   &&BEACON_INFO.camp&&BEACON_INFO.landmark,
+   "восемь родов станов и двенадцать чудес природы: место по рельефу, свой голос и своё дело");
+  /* §20: жизнь жителя идёт своим чередом, и у каждого события свой голос. */
+  ok("lives",LIFE_EVENTS.length===9
+   &&LIFE_EVENTS.every(e=>SOUND_BANK[e.звук]&&e.n&&typeof e.когда==="function"&&typeof e.слово==="function")
+   &&new Set(LIFE_EVENTS.map(e=>e.звук)).size===LIFE_EVENTS.length
+   &&LIFE_EVENTS.filter(e=>e.конец).length===2,
+   "девять событий жизни жителя, у каждого свой голос, и два из них сменяют человека родичем");
   ok("res",RES_KINDS.length===19&&RES_KINDS.every(k=>k.n&&k.добыча&&k.обработка&&k.рынок&&k.сезоны.length&&k.res.length
    &&k.сезоны.every(c=>SEASONS.some(x=>x.id===c)))
    &&["шкура","орган","кровь","яд","эссенция","эфир","осколок времени","тяжёлый минерал","рунный камень"].every(r=>RES_BASE[r]&&RESICON[r]&&SOUND_BANK[BEACON_ROLE[RESBEACON[r]]]&&RES_KIND_BY_RES[r])
@@ -36150,6 +36549,7 @@ function pruneState(hard){
   /* Память жителей и круги отношения режутся с запасом: их много, но за
      каждой записью стоит поступок игрока. Вести и так стареют сами. */
   if(G.npcMem&&typeof G.npcMem==="object")G.npcMem=trimDict(G.npcMem,hard?300:900);
+  if(G.npcLife&&typeof G.npcLife==="object")G.npcLife=trimDict(G.npcLife,hard?300:900);
   if(G.standing&&typeof G.standing==="object")G.standing=trimDict(G.standing,hard?200:600);
   if(G.social&&typeof G.social==="object")G.social=trimDict(G.social,hard?150:500);
   if(G.market&&typeof G.market==="object")G.market=trimDict(G.market,EMPIRES.length+4);
@@ -36711,6 +37111,7 @@ window.addEventListener("beforeunload",()=>{try{stopRun();saveGame(true);}catch(
   if(!G.recipes||typeof G.recipes!=='object'||Array.isArray(G.recipes))G.recipes={};
   /* Живой мир: память, вести, круги и оси. */
   if(!G.npcMem||typeof G.npcMem!=='object'||Array.isArray(G.npcMem))G.npcMem={};
+  if(!G.npcLife||typeof G.npcLife!=='object'||Array.isArray(G.npcLife))G.npcLife={};
   if(!Array.isArray(G.rumors))G.rumors=[];
   G.rumors=G.rumors.filter(r=>r&&typeof r==='object'&&RUMOR_LADDER[r.в]&&
    Number.isFinite(Number(r.x))&&Number.isFinite(Number(r.y)));

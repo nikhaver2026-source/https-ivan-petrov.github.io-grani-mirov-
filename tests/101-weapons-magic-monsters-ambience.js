@@ -50,7 +50,14 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
  const удары=await page.evaluate(async()=>{
   const пауза=ms=>new Promise(z=>setTimeout(z,ms));
   const r={};G.equip.weapon={name:"Меч",slot:"weapon"};
-  PLAYED.length=0;r.кость=weaponSound("hit_bone",{cls:"sword"});await пауза(250);r.костьРоли=roles();r.костьКанал=kinds();
+  /* Считается только боевой канал. За эти четверть секунды может доиграть
+     хвост музыки открытия земли — «свирель села» и её тёмный рог идут через
+     семьсот миллисекунд после самого открытия, — и он не имеет к удару
+     никакого отношения. Прежняя проверка ловила его и падала не на том. */
+  PLAYED.length=0;r.кость=weaponSound("hit_bone",{cls:"sword"});await пауза(250);
+  r.костьРоли=PLAYED.filter(x=>x[1]==="combat").map(x=>x[0]);
+  r.костьКанал=PLAYED.filter(x=>x[1]==="combat").map(x=>x[1]);
+  r.костьВсё=roles();
   r.нет=weaponSound("такого-нет");
   G.inCombat=true;G.combat={m:{id:"golem",n:"Голем",lvl:3,hp:50},hp:50,key:G.x+","+G.y,alt:0};
   PLAYED.length=0;playWeaponCombatSfx(true,"E",20);await пауза(700);r.голем=roles();
@@ -61,7 +68,9 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   while(activeLayer())closeTopUI();
   return r;});
  check('удар по кости звучит костью каналом боя; неизвестное состояние — «нет»',
-  удары.кость===true&&удары.костьРоли[0]==="foe_bone_hit"&&удары.костьКанал.every(k=>k==="combat")&&удары.нет===false,удары.костьРоли);
+  удары.кость===true&&удары.костьРоли[0]==="foe_bone_hit"&&удары.костьРоли.length>0
+  &&удары.костьКанал.every(k=>k==="combat")&&удары.нет===false,
+  {боевые:удары.костьРоли,всё:удары.костьВсё});
  check('тяжёлый удар по голему: замах героя, попадание, броня и тяжесть',
   удары.голем.includes("hero_swing")&&удары.голем.includes("lug_sword")&&удары.голем.includes("metal_hit")&&удары.голем.includes("impact_heavy"),удары.голем);
  check('промах свистит, а не бьёт',удары.промах.includes("lug_whoosh_hit")&&!удары.промах.includes("lug_sword"),удары.промах);
