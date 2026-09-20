@@ -4804,6 +4804,14 @@ const GUIDE=[
  "Вещь растёт. За каждую победу работающий артефакт получает опыт, а на пороге открывает ступень — прибавку, которой у него раньше не было, и всегда из своего направления. Каждая следующая ступень даётся вдвое тяжелее. Если гнёзда кончились, редкую часть можно скормить вещи: она уйдёт в опыт вместо гнезда.",
  "Требования. Ранг задаёт уровень; сверх того вещь может требовать навык, заклинание нужной школы, расположение народа, принадлежность к клану, прочитанное знание или закрытое дело. Вещь, требования которой не выполнены, лежит мёртвым грузом и не даёт ничего — и прямо говорит, чего ей не хватает.",
  "Где всё это. Пункт меню «Артефакты, части и рецепты». В нём видно, каким ремеслом здесь занимаются и каково ваше умение, какие рецепты под рукой и чего не хватает, какие части лежат в суме, и по каждой вещи — всё, что о ней известно, и всё, что с ней можно сделать: вложить, вынуть, зачаровать, скормить, продать."]},
+{title:"Глава 59. Войско: восемь свойств и семь ролей",body:[
+ "У державы, которая воюет, есть войско, и оно не одно число. §23 называет восемь вещей, и все восемь считаются: численность — сколько копий в поле; командование — держат ли строй и слушают ли приказ; мораль — желание стоять, когда бьют; снабжение — хлеб, железо и обозы; разведка — знают ли, куда идти и кто напротив; транспорт — скорость подвоза и переброски; магическая поддержка — что могут те, кто за спиной строя; осадные средства — чем берут стену, а не поле.",
+ "НИ ОДНО НЕ ЛЕЖИТ ЗРЯ. Все восемь входят в силу войска. Плохо командуемое войско теряет около трети силы при той же численности. Транспорт решает, сколько снабжения вернётся за сутки и насколько дальше уйдёт фронт у того, кто возит быстрее. Осадные средства считаются отдельным числом: пока оно ниже сорока пяти, войско берёт поле, но не стену.",
+ "СЕМЬ РОЛЕЙ. Игрок служит войску тем, чем умеет, и у каждой роли своё свойство. Солдат — вылазка на вражеский дозор, растит мораль. Разведчик — пройти по краю и вернуться со счётом костров, растит разведку. Дипломат — свести штабы, растит командование. Диверсант — сжечь чужие машины и привезти чертёж: свои осадные средства вверх, чужие и чужое снабжение вниз. Торговец — пригнать подводы и упряжь, растит транспорт и приносит выручку. Поставщик — две руды в обоз, растит снабжение. Командир — повести крыло, двигает фронт.",
+ "У КАЖДОЙ РОЛИ СВОЁ ТРЕБОВАНИЕ. Разведка не требует ничего, кроме ног. Поставщику нужны две руды. Дипломата слушают при дипломатии от второй ступени Древа Граней или обаянии от двенадцати. Диверсанту нужна маскировка от второй ступени. Торговцу — сорок золота и торговля от первой ступени. Командиру — ветвь «командование» от второй ступени. Если требование не выполнено, день не сгорает: войско просто не берёт вас сегодня на это дело, и говорит, чего не хватает.",
+ "ВОЙСКО БЕРЁТ РАЗ В ДЕНЬ. Одна служба в сутки: война не торопит дважды.",
+ "ФРОНТ ИДЁТ БЕЗ ВАС. Каждые сутки сильнейший теснит слабого, снабжение тает, мораль ходит за перевесом, командование понемногу садится без человека, который его держит. Весть о сдвиге приходит сама, с маршем и голосом. Ваша служба ускоряет это, но не заменяет.",
+ "ГДЕ СМОТРЕТЬ. Окно живого мира, раздел «Войска»: там свод по всем восьми свойствам обеих сторон, сила каждого войска, возьмёт ли оно стену, и семь кнопок службы. Кнопка, которая сейчас не годится, так и говорит — и объясняет, чего не хватает."]},
 {title:"Глава 58. Древо Граней: сорок шесть умений, что растут от дела",body:[
  "Ветви силы считают жизнь целиком: «боевое мастерство», «выживание», «торговля». Древо Граней считает мелко и по делу. Не «бой», а меч отдельно от лука и от кулака. Не «выживание», а поиск воды отдельно от разведения огня. Одно другому не мешает: крупная ветвь говорит, кто вы, мелкое умение — что у вас в руках получается.",
  "ШЕСТЬ ВЕТВЕЙ. Боевая — чем и как вы бьёте. Выживательная — чем держитесь в пути. Исследовательская — чем берёте неизвестное. Магическая — как обращаетесь с силой. Социальная — чем берёте людей. Ремесленная — что выходит из рук. Умений в них сорок шесть.",
@@ -33352,33 +33360,159 @@ const Happen=Modules.register("HAPPEN",{
   narrate(слова,{interrupt:false,pri:1});safeFn(()=>{journal(слова);Echoes.add(слова,"случай");});return слова;},
  tick(){try{if(G.inCombat||activeLayer())return false;if(Math.random()>this.chance())return false;const t=this.fire();return !!t;}catch(_){return false;}}});
 /* ── АРМИИ И ФРОНТ ── */
+/* ── ВОСЕМЬ СВОЙСТВ ВОЙСКА И СЕМЬ РОЛЕЙ ИГРОКА (§23) ──
+   §23 перечисляет у армии восемь вещей: численность, командование, мораль,
+   снабжение, разведку, транспорт, магическую поддержку и осадные средства.
+   Шесть из них считались и раньше; командования и осадных средств не было
+   вовсе, а транспорт стоял в записи и ни на что не влиял — то есть был
+   украшением, чего §38 не допускает.
+
+   Теперь все восемь входят в силу войска, и у каждого своя работа:
+   численность даёт копья, командование — порядок (плохо командуемое войско
+   теряет треть силы), мораль — желание стоять, снабжение — хлеб, разведка —
+   знание, куда идти, транспорт — скорость, с какой снабжение
+   восстанавливается и фронт двигается, чары — удар сверх копий, осадные
+   средства — возможность взять стену, а не только поле.
+
+   §23 называет и семь ролей игрока. Их было четыре; добавлены дипломат,
+   диверсант и торговец. У каждой роли — своё требование, своё действие над
+   своим свойством войска и своя запись. */
+const ARMY_TRAITS=[
+ {id:"числ",      n:"численность",         о:"сколько копий стоит в поле",            звук:"throng_march"},
+ {id:"командование",n:"командование",      о:"держат ли строй и слушают ли приказ",   звук:"herald_trumpet"},
+ {id:"мораль",    n:"мораль",              о:"желание стоять, когда бьют",            звук:"war_brass"},
+ {id:"снабжение", n:"снабжение",           о:"хлеб, железо и обозы",                  звук:"deep_cart"},
+ {id:"разведка",  n:"разведка",            о:"знают ли, куда идти и кто напротив",    звук:"watch_call"},
+ {id:"транспорт", n:"транспорт",           о:"скорость подвоза и переброски",         звук:"mtg_cart"},
+ {id:"чары",      n:"магическая поддержка",о:"что могут те, кто за спиной строя",     звук:"spell_battle"},
+ {id:"осады",     n:"осадные средства",    о:"чем берут стену, а не поле",            звук:"siege_onager"}];
+const ARMY_TRAIT_BY_ID=Object.fromEntries(ARMY_TRAITS.map(t=>[t.id,t]));
+const WAR_ROLES=[
+ {id:"raid",    n:"солдат",    свойство:"мораль",      о:"вылазка на вражеский дозор",
+  треб:"оружие в руках и не в бою",           звук:"battle_sword"},
+ {id:"scout",   n:"разведчик", свойство:"разведка",    о:"пройти по краю и вернуться со счётом костров",
+  треб:"ничего, кроме ног",                    звук:"watch_call"},
+ {id:"diplomat",n:"дипломат",  свойство:"командование",о:"свести штабы и договориться о порядке",
+  треб:"дипломатия от второй ступени Древа или обаяние от двенадцати", звук:"herald_trumpet"},
+ {id:"saboteur",n:"диверсант", свойство:"осады",       о:"сжечь чужие машины и привезти чертёж",
+  треб:"маскировка от второй ступени Древа",   звук:"siege_fire"},
+ {id:"trader",  n:"торговец",  свойство:"транспорт",   о:"пригнать войску подводы и упряжь",
+  треб:"сорок золота и торговля от первой ступени Древа", звук:"xylo_coin",цена:40},
+ {id:"supply",  n:"поставщик", свойство:"снабжение",   о:"поднести припас: две руды в обоз",
+  треб:"две руды",                             звук:"deep_cart"},
+ {id:"command", n:"командир",  свойство:"числ",        о:"повести крыло и сдвинуть фронт",
+  треб:"ветвь «командование» от второй ступени", звук:"war_timpani"}];
+const WAR_ROLE_BY_ID=Object.fromEntries(WAR_ROLES.map(r=>[r.id,r]));
 const Armies=Modules.register("ARMIES",{
  state(i){if(!G.armies||typeof G.armies!=="object")G.armies={};const e=EMPIRES[i];if(!e)return null;
   if(!G.armies[i])G.armies[i]={числ:800+Math.floor(hashName(i,3,8800)*1200),мораль:70,снабжение:70,разведка:50,транспорт:50,чары:Math.round(hashName(i,5,8801)*60),фронт:0,день:Number(G.day)||1};
-  return G.armies[i];},
- strength(i){const a=this.state(i);if(!a)return 0;return Math.round(a.числ*(a.мораль/100)*(0.6+a.снабжение/250)*(1+a.чары/300));},
+  /* Два свойства из восьми появились позже прочих: старым сохранениям их
+     дописывают здесь, а не роняют игру об отсутствующее поле. */
+  const a=G.armies[i];
+  if(typeof a.командование!=="number")a.командование=40+Math.round(hashName(i,7,8802)*45);
+  if(typeof a.осады!=="number")a.осады=Math.round(hashName(i,11,8803)*70);
+  if(typeof a.транспорт!=="number")a.транспорт=50;
+  return a;},
+ traits:ARMY_TRAITS,roles:WAR_ROLES,
+ trait(i,id){const a=this.state(i);return a?Number(a[id])||0:0;},
+ /* Сила войска. Все восемь свойств входят сюда, и ни одно не лежит зря:
+    копья дают основу, командование — порядок (без него теряется треть),
+    мораль — желание стоять, снабжение — хлеб, разведка и транспорт —
+    точность и скорость, чары и осадные машины — удар сверх строя. */
+ strength(i){const a=this.state(i);if(!a)return 0;
+  return Math.round(a.числ
+   *(0.66+(Number(a.командование)||0)/300)
+   *(a.мораль/100)
+   *(0.6+a.снабжение/250)
+   *(1+(Number(a.разведка)||0)/500)
+   *(1+(Number(a.транспорт)||0)/400)
+   *(1+a.чары/300)
+   *(1+(Number(a.осады)||0)/500));},
+ /* Стену берут осадными машинами, а не строем: своё число и свой порог. */
+ siegePower(i){const a=this.state(i);if(!a)return 0;
+  return Math.round((Number(a.осады)||0)*(0.5+(Number(a.командование)||0)/200)*(0.6+a.снабжение/250));},
+ canBreach(i){return this.siegePower(i)>=45;},
  /* Фронт двигается без игрока: сильнейший теснит слабого, снабжение тает. */
  tick(){try{const войны=safeFn(()=>warsAt(G.day),[])||[];if(!войны.length)return false;let двинулся=false;
   войны.slice(0,3).forEach(w=>{const a=this.state(w.a),b=this.state(w.b);if(!a||!b)return;
    const sa=this.strength(w.a),sb=this.strength(w.b);const перевес=(sa-sb)/Math.max(1,sa+sb);
    a.фронт=Math.max(-100,Math.min(100,a.фронт+Math.round(перевес*8)));b.фронт=-a.фронт;
-   [a,b].forEach(x=>{x.снабжение=Math.max(10,x.снабжение-2);x.мораль=Math.max(10,Math.min(100,x.мораль+(x===a?перевес:-перевес)*6-1));x.числ=Math.max(100,Math.round(x.числ*0.995));});
+   /* Транспорт — не запись в книге: он решает, сколько снабжения вернётся
+      за сутки и насколько дальше уйдёт фронт у того, кто возит быстрее. */
+   a.фронт=Math.max(-100,Math.min(100,a.фронт+Math.round(((Number(a.транспорт)||0)-(Number(b.транспорт)||0))/40)));b.фронт=-a.фронт;
+   [a,b].forEach(x=>{
+    const подвоз=Math.round((Number(x.транспорт)||0)/40);      /* 0…2 обратно */
+    x.снабжение=Math.max(10,Math.min(100,x.снабжение-3+подвоз));
+    x.мораль=Math.max(10,Math.min(100,x.мораль+(x===a?перевес:-перевес)*6-1+((Number(x.командование)||0)>=70?1:0)));
+    /* Командование садится без того, кто его держит, — но целыми делениями:
+       дробное число в речи звучит как ошибка, а не как мера. */
+    if(((Number(G.day)||1)%2)===0)x.командование=Math.max(10,Math.min(100,Math.round(Number(x.командование)||0)-1));
+    else x.командование=Math.max(10,Math.min(100,Math.round(Number(x.командование)||0)));
+    x.числ=Math.max(100,Math.round(x.числ*0.995));});
    двинулся=true;});
   if(двинулся&&hashName(G.day,19,8810)<0.35){const w=войны[0];const e=EMPIRES[this.state(w.a).фронт>0?w.a:w.b];
    safeFn(()=>{Bank.play("throng_march",{gain:0.45,maxSec:5});Echoes.add(`Фронт сдвинулся: ${e.short} теснит соседа.`,"война");});
    narrate(`Весть с войны: ${e.short} теснит соседа. Фронт сдвинулся.`,{interrupt:false});}
   return двинулся;}catch(_){return false;}},
- /* Служба в войске: разведка, снабжение, диверсия, командование. */
+ /* Годна ли роль прямо сейчас: своё требование у каждой. Возвращает пустую
+    строку, когда годна, и человеческое объяснение, когда нет. */
+ roleBar(id){try{
+  if(id==="raid")return G.inCombat?"Бой уже идёт.":"";
+  if(id==="supply")return invHas("руда",2)?"":"Для обоза нужны две руды.";
+  if(id==="diplomat"){
+   const д=safeFn(()=>Tree.ступень("diplo"),0)>=2||(Number(G.cha)||10)>=12;
+   return д?"":"Штабы сведёт тот, кого слушают: дипломатия от второй ступени Древа Граней или обаяние от двенадцати.";}
+  if(id==="saboteur")return safeFn(()=>Tree.ступень("hide"),0)>=2?"":"К чужим машинам подойдёт тот, кого не видно: маскировка от второй ступени Древа Граней.";
+  if(id==="trader"){
+   if((Number(G.gold)||0)<40)return `На подводы нужно сорок золота, а у вас ${Number(G.gold)||0}.`;
+   return safeFn(()=>Tree.ступень("barter"),0)>=1?"":"Подводы по войсковой цене достанет торгующий: торговля от первой ступени Древа Граней.";}
+  if(id==="command")return safeFn(()=>branchRank("command"),0)>=2?"":"Командовать пустят с ветвью «командование» от второй ступени.";
+  if(id==="scout")return "";
+  return "Так в войске не служат.";}catch(_){return "";}},
+ /* Служба в войске: семь ролей §23 — солдат, разведчик, дипломат,
+    диверсант, торговец, поставщик и командир. У каждой своё свойство. */
  serve(what){const i=Math.max(0,safeFn(()=>empireIndexAt(G.x,G.y),0));const a=this.state(i);const e=EMPIRES[i];if(!a)return "Здесь нет державы.";
   if(!safeFn(()=>warsAt(G.day),[]).some(w=>w.a===i||w.b===i))return `Держава «${e.short}» сейчас не воюет: служить некуда.`;
   if(G.serveDay===G.day)return "Сегодня вы уже отслужили: войско не берёт дважды в день.";G.serveDay=G.day;
   if(what==="scout"){a.разведка=Math.min(100,a.разведка+8);safeFn(()=>{addStand("army",e.short,3);deed("steps",5);});return `Разведка для «${e.short}»: вы прошли по краю и вернулись. Разведка войска ${a.разведка}.`;}
-  if(what==="supply"){if(!invHas("руда",2))return "Для обоза нужны две руды.";invTake("руда",2);a.снабжение=Math.min(100,a.снабжение+10);safeFn(()=>addStand("army",e.short,4));G.gold+=40;return `Подвоз для «${e.short}»: снабжение ${a.снабжение}, плата сорок золотых.`;}
-  if(what==="raid"){if(G.inCombat)return "Бой уже идёт.";const lvl=Math.max(2,(Number(G.level)||1)+1);a.мораль=Math.min(100,a.мораль+5);startCombat({x:G.x,y:G.y,monster:{id:"war_scout",n:"Вражеский дозор",snd:"mstomp",fx:"stomp",lvl,hp:34+lvl*12,dmg:5+lvl*2,xp:28+lvl*14,gold:18+lvl*6}});return "";}
-  if(what==="command"){if(safeFn(()=>branchRank("command"),0)<2)return "Командовать пустят с ветвью «командование» от второй ступени.";a.мораль=Math.min(100,a.мораль+8);a.фронт=Math.max(-100,Math.min(100,a.фронт+5));safeFn(()=>{addStand("army",e.short,6);deed("quests");});return `Вы вели полк «${e.short}»: мораль ${a.мораль}, фронт сдвинут на пять.`;}
+  if(what==="supply"){if(!invHas("руда",2)){G.serveDay=null;return "Для обоза нужны две руды.";}invTake("руда",2);a.снабжение=Math.min(100,a.снабжение+10);safeFn(()=>addStand("army",e.short,4));G.gold+=40;return `Подвоз для «${e.short}»: снабжение ${a.снабжение}, плата сорок золотых.`;}
+  if(what==="diplomat"){const бар=this.roleBar("diplomat");if(бар){G.serveDay=null;return бар;}
+   a.командование=Math.min(100,(Number(a.командование)||0)+9);
+   safeFn(()=>{addStand("army",e.short,3);Bank.play("herald_trumpet",{gain:0.5,maxSec:5});deed("persuade");});
+   return `Дипломат при войске «${e.short}»: вы свели штабы, и приказ стал один на всех. Командование ${a.командование}.`;}
+  if(what==="saboteur"){const бар=this.roleBar("saboteur");if(бар){G.serveDay=null;return бар;}
+   const враг=safeFn(()=>{const w=(warsAt(G.day)||[]).find(w=>w.a===i||w.b===i);return w?(w.a===i?w.b:w.a):null;},null);
+   a.осады=Math.min(100,(Number(a.осады)||0)+8);
+   let чужое="";
+   if(враг!=null){const b=this.state(враг);
+    if(b){b.осады=Math.max(0,(Number(b.осады)||0)-10);b.снабжение=Math.max(10,b.снабжение-6);
+     чужое=` У «${EMPIRES[враг].short}» осадные средства ${b.осады}, снабжение ${b.снабжение}.`;}}
+   safeFn(()=>{addStand("army",e.short,4);Bank.play("siege_fire",{gain:0.55,maxSec:5});deed("hides");});
+   return `Диверсант при войске «${e.short}»: чужие машины горят, чертёж у своих. Осадные средства ${a.осады}.${чужое}`;}
+  if(what==="trader"){const бар=this.roleBar("trader");if(бар){G.serveDay=null;return бар;}
+   G.gold=(Number(G.gold)||0)-40;
+   a.транспорт=Math.min(100,(Number(a.транспорт)||0)+10);
+   const выручка=55+Math.round((Number(a.снабжение)||0)/5);
+   G.gold+=выручка;
+   safeFn(()=>{addStand("army",e.short,3);Bank.play("xylo_coin",{gain:0.5,maxSec:4});deed("deals");});
+   return `Торговец при войске «${e.short}»: подводы и упряжь пригнаны. Транспорт ${a.транспорт}, выручка ${выручка} золотых за сорок вложенных.`;}
+  if(what==="raid"){if(G.inCombat){G.serveDay=null;return "Бой уже идёт.";}const lvl=Math.max(2,(Number(G.level)||1)+1);a.мораль=Math.min(100,a.мораль+5);startCombat({x:G.x,y:G.y,monster:{id:"war_scout",n:"Вражеский дозор",snd:"mstomp",fx:"stomp",lvl,hp:34+lvl*12,dmg:5+lvl*2,xp:28+lvl*14,gold:18+lvl*6}});return "";}
+  if(what==="command"){const бар=this.roleBar("command");if(бар){G.serveDay=null;return бар;}a.мораль=Math.min(100,a.мораль+8);a.фронт=Math.max(-100,Math.min(100,a.фронт+5));safeFn(()=>{addStand("army",e.short,6);deed("quests");});return `Вы вели полк «${e.short}»: мораль ${a.мораль}, фронт сдвинут на пять.`;}
   return "Так в войске не служат.";},
- text(){const войны=safeFn(()=>warsAt(G.day),[])||[];if(!войны.length)return "Войн сегодня нет: армии стоят по крепостям.";
-  return войны.slice(0,3).map(w=>{const a=this.state(w.a),b=this.state(w.b);return `${EMPIRES[w.a].short} и ${EMPIRES[w.b].short}: у первого ${a.числ} копий, мораль ${a.мораль}, снабжение ${a.снабжение}, разведка ${a.разведка}, чары ${a.чары}; у второго ${b.числ}, ${b.мораль}, ${b.снабжение}. Фронт ${a.фронт>0?`клонится к ${EMPIRES[w.b].short}`:a.фронт<0?`клонится к ${EMPIRES[w.a].short}`:"стоит"}.`;}).join(" ");}});
+ text(){const войны=safeFn(()=>warsAt(G.day),[])||[];
+  const роли=`Ролей семь: ${WAR_ROLES.map(r=>`${r.n} — ${ARMY_TRAIT_BY_ID[r.свойство].n}`).join(", ")}.`;
+  if(!войны.length)return `Войн сегодня нет: армии стоят по крепостям. У войска восемь свойств: ${ARMY_TRAITS.map(t=>t.n).join(", ")}. ${роли}`;
+  const строки=войны.slice(0,3).map(w=>{const a=this.state(w.a),b=this.state(w.b);
+   const свод=x=>ARMY_TRAITS.map(t=>`${t.n} ${Math.round(Number(x[t.id])||0)}`).join(", ");
+   return `${EMPIRES[w.a].short} против «${EMPIRES[w.b].short}». Первое войско: ${свод(a)}; сила ${this.strength(w.a)}, стену ${this.canBreach(w.a)?"возьмёт":"не возьмёт"}. Второе: ${свод(b)}; сила ${this.strength(w.b)}, стену ${this.canBreach(w.b)?"возьмёт":"не возьмёт"}. Фронт ${a.фронт}.`;}).join(" ");
+  return `${строки} ${роли}`;},
+ windowHtml(){const т=this.text();
+  const i=Math.max(0,safeFn(()=>empireIndexAt(G.x,G.y),0));
+  let h=`<div class="list-line" tabindex="0" data-speak="${т.replace(/"/g,"&quot;")}">⚔️ ${т}</div>`;
+  h+=WAR_ROLES.map(r=>{const бар=safeFn(()=>this.roleBar(r.id),"");
+   const речь=`${r.n}: ${r.о}. Растит: ${ARMY_TRAIT_BY_ID[r.свойство].n} — ${ARMY_TRAIT_BY_ID[r.свойство].о}. Нужно: ${r.треб}.${бар?` Сейчас нельзя: ${бар}`:""}`;
+   return `<button class="item" data-cmd="serve:${r.id}" data-speak="${речь.replace(/"/g,"&quot;")}">⚔️ ${r.n}${бар?" (пока нельзя)":""} — ${ARMY_TRAIT_BY_ID[r.свойство].n}</button>`;}).join("");
+  return h;}});
 /* ── СУДЬБЫ ЖИТЕЛЕЙ ── */
 const ARC_STEPS=[
  {id:"married",n:"женился",о:"в доме прибавилось"},{id:"child",n:"ребёнок",о:"теперь есть кого кормить"},
@@ -33457,7 +33591,7 @@ function renderLiving(){
   if($("lwZone"))$("lwZone").innerHTML=line(Zones.text(),"🌀");
   if($("lwPower"))$("lwPower").innerHTML=line(Power.text(),"🌿")+(Power.here()?`<button class="item" data-cmd="powerite" data-speak="Обряд у места силы: две воли и пять маны.">🕯️ Обряд места силы</button>`:"");
   if($("lwGlobal"))$("lwGlobal").innerHTML=line(Global.text(),"🔥")+line(Waves.text(),"🌊");
-  if($("lwArmies"))$("lwArmies").innerHTML=line(Armies.text(),"⚔️")+[["scout","🔍 Разведка"],["supply","🛒 Подвоз (две руды)"],["raid","⚔️ Вылазка"],["command","🎖️ Командовать"]].map(([a,l])=>`<button class="item" data-cmd="serve:${a}" data-speak="${l}.">${l}</button>`).join("");
+  if($("lwArmies"))$("lwArmies").innerHTML=safeFn(()=>Armies.windowHtml(),"");
   if($("lwArcs"))$("lwArcs").innerHTML=line(Arcs.text(),"🧓")+Object.keys(Arcs.all()).slice(0,6).map(k=>Arcs.line({key:k})).join("");
   if($("lwEchoes"))$("lwEchoes").innerHTML=line(Echoes.text(),"🌙")+`<button class="item" data-cmd="dream" data-speak="Вспомнить сон или видение.">🌙 Сон или видение</button>`;
   if($("lwProph"))$("lwProph").innerHTML=line(Prophecy.text(),"🔮")+PROPHECIES.map(p=>`<button class="item" data-cmd="proph:hear~${p.id}" data-speak="Услышать ${p.n}.">🔮 ${p.n}</button><button class="item" data-cmd="proph:ускорить~${p.id}" data-speak="Ускорить ${p.n}: две воли.">⏩ Ускорить</button><button class="item" data-cmd="proph:задержать~${p.id}" data-speak="Задержать ${p.n}: две воли.">⏸️ Задержать</button><button class="item" data-cmd="proph:сорвать~${p.id}" data-speak="Сорвать ${p.n}: четыре воли и шесть маны.">✖️ Сорвать</button>`).join("");
@@ -37912,6 +38046,13 @@ function worldSelfCheck(){
   ok("sigils",SIGIL_SYMBOLS.length===8&&SIGIL_SYMBOLS.every(x=>MSCHOOL_BY_ID[x.школа]&&x.намерения.every(i=>SIGIL_INTENTS[i]))&&SIGIL_CARRIERS.length===8&&SIGIL_CARRIERS.every(x=>RES_BASE[x.ресурс])&&SIGIL_GEOMETRY.length===5&&INKS.length===6&&INKS.every(x=>SOUND_BANK[x.звук]&&Object.keys(x.рецепт).every(r=>RES_BASE[r]))&&AWAKEN_SOURCES.length===6&&AWAKEN_SOURCES.every(x=>SOUND_BANK[x.звук])&&WAVES.length===3&&MORPH_TRAITS.length===6&&MORPHOBEASTS.length===10&&MORPHOBEASTS.every(b=>MONSTERS.some(m=>m.id===b.база))&&DEVOUR_GIFTS.length===6&&EVENT_THEME.world_event&&SOUND_BANK[EVENT_THEME.world_event.роль],"Знаки: восемь символов, восемь носителей, пять геометрий, шесть чернил, шесть источников пробуждения, три волны, шесть черт, десять морфозверей, шесть даров Эха — всё со звуком и по настоящим ресурсам");
   ok("cases",CASE_TEMPLATES.length===6&&CASE_TEMPLATES.every(t=>t.версии.length===3&&t.улики.every(k=>CLUE_KINDS[k])&&t.версии.every(v=>v.улики.every(k=>t.улики.includes(k))))&&SYNDICATES.length===8&&SYNDICATES.every(x=>SOUND_BANK[x.звук]&&x.города.every(id=>NAMED_CITY_BY_ID[id])&&REGIONS[x.область])&&Object.keys(DECISIONS).length===9&&Object.values(DECISIONS).every(d=>Object.keys(d).length>=3)&&["deeper","border_war","shards","lasthouse","beast","price","undercity","maskface","endless"].every(id=>CHAIN_DB[id])&&HOUSE_BY_ID[LAST_HOUSE.враг]&&DLG_MOVE_BY_ID.znanie&&DLG_MOVE_BY_ID.kultura&&DLG_MOVE_BY_ID.nedoskazat,"Расследования: шесть дел с тремя версиями, восемь синдикатов со звуком и городами, девять цепочек с развязками, три хода разговора");
   ok("academy",LANGS.length>=20&&LANGS.every(l=>l.письмо&&l.о)&&SCIENCES.length===6&&SCIENCES.every(x=>SOUND_BANK[x.звук]&&x.эффект.length===3&&FACULTY_BY_ID[x.факультет])&&FACULTIES.length===12&&FACULTIES.every(f=>(f.школы||[]).every(id=>MSCHOOL_BY_ID[id]&&SCHOOL_AUDIO[id])&&(!f.маст||MAST_BY_ID[f.маст]))&&SCHOOLS.length>=30&&SCHOOLS.every(sc=>SCHOOL_AUDIO[sc.id]&&SPELL_LAYERS.every(l=>SOUND_BANK[SCHOOL_AUDIO[sc.id][l]])),"Академия: двадцать один язык, шесть наук, двенадцать факультетов, тридцать четыре школы чар — все со звуком");
+  ok("armies",ARMY_TRAITS.length===8&&WAR_ROLES.length===7
+   &&ARMY_TRAITS.every(t=>t.n&&t.о&&SOUND_BANK[t.звук])
+   &&WAR_ROLES.every(r=>r.n&&r.о&&r.треб&&SOUND_BANK[r.звук]&&ARMY_TRAIT_BY_ID[r.свойство])
+   &&new Set(WAR_ROLES.map(r=>r.свойство)).size===7
+   &&ARMY_TRAITS.every(t=>typeof Armies.state(0)[t.id]==="number")
+   &&typeof Armies.siegePower(0)==="number"&&typeof Armies.canBreach(0)==="boolean",
+   "Войны: у войска восемь свойств, у игрока семь ролей, и каждая роль растит своё свойство");
   ok("tree",TREE_GROUPS.length===6&&TREE_LEAVES.length===46
    &&TREE_GROUPS.every(g=>SOUND_BANK[g.звук])&&TREE_LEAVES.every(l=>SOUND_BANK[l.звук])
    &&TREE_LEAVES.every(l=>TREE_GROUP_BY_ID[l.гр]&&Array.isArray(l.шаги)&&l.шаги.length===5
