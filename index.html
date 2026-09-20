@@ -29762,6 +29762,9 @@ const ORG_KINDS=[
  {id:"water",   n:"Водяная братчина",          дело:"колодцы, стоки и подземные ходы",        нрав:"счётом",   районы:["sewer","market"]},
  {id:"burial",  n:"Погребальная братчина",     дело:"кости, поминовение и чужое наследство",  нрав:"молчанием",районы:["cemetery","temple"]}];
 const ORG_BY_ID=Object.fromEntries(ORG_KINDS.map(o=>[o.id,o]));
+/* Чем организацию берут, слышно раньше слов: счёт звенит монетой, сила
+   идёт строем, слово отвечает колоколом, молчание — шорохом. */
+const ORG_VOICE={"счётом":"arte_coins","силой":"throng_march","словом":"uh_bell","молчанием":"oc_rustle"};
 function orgLeader(x,y,k){
  return `${SYL[Math.floor(hashName(x+k*3,y+k*7,9500)*SYL.length)]}${SYL2[Math.floor(hashName(x+k*5,y+k*11,9501)*SYL2.length)]}`;}
 /* Город, в котором сейчас стоит игрок: именованный, державный или престол. */
@@ -29819,7 +29822,15 @@ function cityOrgsText(c){
 function cityOrgsHere(){
  const c=cityHere();
  if(!c){narrate("Организации считают внутри городских стен: здесь их нет.");return false;}
- safeFn(()=>Bank.play("hall_market",{gain:0.45,maxSec:3}));
+ const список=cityOrgs(c);
+ /* Сперва голос самого города, следом — нрав той организации, что сильнее
+    прочих: по звуку слышно, чем здесь берут, ещё до перечисления. */
+ safeFn(()=>{
+  const свой=(c.звук||[])[0];
+  if(свой)Bank.play(свой,{seed:c.x+c.y,gain:0.5,maxSec:5});
+  const глава=список.slice().sort((a,b)=>(b.сила||0)-(a.сила||0))[0];
+  const голос=глава&&ORG_VOICE[глава.нрав];
+  if(голос)setTimeout(()=>safeFn(()=>Bank.play(голос,{seed:c.x+1,gain:0.45,maxSec:4})),620);});
  narrate(`${c.n}. ${cityOrgsText(c)}`);
  return true;}
 
@@ -32743,8 +32754,17 @@ function openBuilding(c){const s=c&&c.structure;
  beacon(s.beacon,0,0);
  /* Второй слой постройки: руины отзываются окариной, храм — органом,
     башня — вибрафоном снов, зал клана — волынками, замок — струнами. */
- safeFn(()=>{const v={ruins:"hall_fall",temple:"uh_chapel",tower:"magic_hum",
-  clanhall:"hall_barracks",castle:"hall_center",city:"hall_market",port:"hall_port"}[s.type];
+ /* У города — свои три голоса: по ним он и узнаётся. Они были записаны у
+    каждого из девятнадцати именованных и у каждого городa державы, но не
+    играли ни разу: всякий замок отвечал одним «залом цитадели». */
+ safeFn(()=>{
+  const гор=safeFn(()=>cityAt(c.x,c.y),null);
+  if(гор&&(гор.звук||[]).length){
+   (гор.звук||[]).slice(0,3).forEach((роль,i)=>setTimeout(()=>safeFn(()=>
+    Bank.play(роль,{seed:c.x+c.y+i,gain:i?0.42:0.55,maxSec:7})),500+i*620));
+   return;}
+  const v={ruins:"hall_fall",temple:"uh_chapel",tower:"magic_hum",
+   clanhall:"hall_barracks",castle:"hall_center",city:"hall_market",port:"hall_port"}[s.type];
   if(v)setTimeout(()=>safeFn(()=>Bank.play(v,{seed:c.x+c.y,gain:0.5,maxSec:7})),500);});
  openModal("modal-building");
  narrate(`${s.name}. ${bldDesc(s.type)} Внутри ${npcs.length?npcs.length+" жителей":"никого нет"}. Меню услуг доступно кнопками.`);}
@@ -35922,6 +35942,12 @@ function worldSelfCheck(){
     return l.length>=10&&l.every(o=>o.n&&o.дело&&o.глава&&o.район&&o.нрав&&o.сила>=1&&o.сила<=5)
      &&new Set(l.map(o=>o.n)).size===l.length;}),
    "в каждом городе десять и больше организаций, у каждой глава, квартал, сила и нрав");
+  ok("cityvoice",NAMED_CITIES.every(c=>(c.звук||[]).length>=2&&c.звук.every(r=>SOUND_BANK[r]))
+   &&(свои||[]).every(c=>(c.звук||[]).length>=2&&c.звук.every(r=>SOUND_BANK[r]))
+   &&Object.keys(ORG_VOICE).length===4
+   &&Object.values(ORG_VOICE).every(r=>SOUND_BANK[r])
+   &&ORG_KINDS.every(k=>ORG_VOICE[k.нрав]),
+   "у каждого города свои голоса записями, и у каждого нрава организации свой");
   /* §11: в области, кроме городов и поселений, есть станы и чудеса природы. */
   ok("wilds",CAMP_KINDS.length===8&&LANDMARKS.length===12
    &&CAMP_KINDS.every(k=>SOUND_BANK[k.звук]&&k.о&&k.слово&&k.земли.length&&(k.дела||[]).length>=2)

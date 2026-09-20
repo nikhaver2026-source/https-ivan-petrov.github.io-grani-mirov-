@@ -14,6 +14,8 @@
    2в. У каждого города десять и больше организаций: свои палаты и цехи по
       кварталам плюс Дом этих земель, здешние синдикаты, оппозиция державы
       и её шпионы; у каждой глава, квартал, сила и то, чем её берут.
+   2г. У каждого города три своих голоса, и в окне города звучат они, а не
+      общий зал цитадели; у каждого нрава организации свой голос.
    3. Тридцать великих лесов десяти родов: лес узнаётся по месту, объявляется
       на входе, даёт свои голоса окружению, хищника и редкость.
    4. Сто двадцать крепостей десяти родов на своих местах, с частями;
@@ -204,6 +206,54 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   &&орг.вГороде===true&&орг.снаружиВидно===false,
   {сказано:орг.сказано.slice(0,90),снаружи:орг.снаружи.slice(0,90),
    вГороде:орг.вГороде,снаружиВидно:орг.снаружиВидно});
+
+ /* ── 2г. Голоса города: три записи у каждого, и они звучат ── */
+ const голоса=await page.evaluate(async()=>{
+  const пауза=ms=>new Promise(z=>setTimeout(z,ms));
+  window.PLAYED=[];const pb=Bank.play.bind(Bank);
+  Bank.play=(r,o)=>{PLAYED.push(String(r));return pb(r,Object.assign({},o||{},{gain:0,maxSec:0.3}));};
+  const r={};
+  const бx=G.x,бy=G.y;
+  r.безГолоса=NAMED_CITIES.concat(Cities.empireAll())
+   .filter(c=>!(c.звук||[]).length||!c.звук.every(z=>Bank.has(z))).map(c=>c.n);
+  /* Именованный город отвечает своими голосами, а не общим залом цитадели. */
+  const ring=NAMED_CITY_BY_ID.ring;
+  G.x=ring.x;G.y=ring.y;PLAYED.length=0;
+  openBuilding(cellContent(ring.x,ring.y));await пауза(2400);
+  r.кольцоСвои=ring.звук.filter(z=>PLAYED.indexOf(z)>=0).length;
+  r.кольцоОбщий=PLAYED.indexOf("hall_center")>=0;
+  while(activeLayer&&activeLayer())closeTopUI();
+  /* Город державы — тоже своими. */
+  const свой=Cities.empireAll()[0];
+  G.x=свой.x;G.y=свой.y;PLAYED.length=0;
+  openBuilding(cellContent(свой.x,свой.y));await пауза(2400);
+  r.свойСвои=свой.звук.filter(z=>PLAYED.indexOf(z)>=0).length;
+  while(activeLayer&&activeLayer())closeTopUI();
+  /* У престола своего голоса нет — там прежний зал цитадели. */
+  const cap=EMPIRES[0].cap;G.x=cap.x;G.y=cap.y;PLAYED.length=0;
+  openBuilding(cellContent(cap.x,cap.y));await пауза(1200);
+  r.престолОбщий=PLAYED.indexOf("hall_center")>=0;
+  while(activeLayer&&activeLayer())closeTopUI();
+  /* Нрав организации слышен: у каждого из четырёх свой голос. */
+  r.нравов=Object.keys(ORG_VOICE).length;
+  r.нравыВБанке=Object.values(ORG_VOICE).every(z=>Bank.has(z));
+  r.нравыРазные=new Set(Object.values(ORG_VOICE)).size===Object.keys(ORG_VOICE).length;
+  r.нравБезГолоса=ORG_KINDS.filter(k=>!ORG_VOICE[k.нрав]).map(k=>k.id);
+  G.x=ring.x;G.y=ring.y;enterPlace(cellContent(G.x,G.y));await пауза(400);
+  PLAYED.length=0;CMD.cityorgs();await пауза(900);
+  const глава=Cities.orgs(ring).slice().sort((a,b)=>(b.сила||0)-(a.сила||0))[0];
+  r.оргГолос=PLAYED.indexOf(ORG_VOICE[глава.нрав])>=0;
+  G.place=null;G.x=бx;G.y=бy;
+  r.строка=safeFn(()=>{const z=worldSelfCheck().find(v=>v.id==="cityvoice");return z?z.ok:null;},null);
+  return r;});
+ check('у каждого города свои голоса записями, и в окне города звучат они, а не общий зал цитадели',
+  !голоса.безГолоса.length&&голоса.кольцоСвои>=3&&!голоса.кольцоОбщий
+  &&голоса.свойСвои>=3&&голоса.престолОбщий&&голоса.строка===true,
+  {без:голоса.безГолоса.slice(0,3),кольцо:голоса.кольцоСвои,свой:голоса.свойСвои,
+   общийУКольца:голоса.кольцоОбщий,престол:голоса.престолОбщий});
+ check('нрав организации слышен: четыре нрава — четыре разных голоса, и сильнейшая отвечает своим',
+  голоса.нравов===4&&голоса.нравыВБанке&&голоса.нравыРазные
+  &&!голоса.нравБезГолоса.length&&голоса.оргГолос,голоса);
 
  /* ── 3. Великие леса ── */
  const лес=await page.evaluate(async()=>{
