@@ -115,7 +115,12 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   unknown.мана===30&&/не изучен/i.test(unknown.сказано),unknown);
 
  /* ── 4. Панель магии: свайп творит слот по раскладке, двойное касание — слот под пальцем ── */
- await page.evaluate(()=>{G.spells=SPELLS.map(s=>s.n);G.mana=G.manaMax=60;resetCursor();ensureCursor(activeLayer());});
+ await page.evaluate(()=>{G.spells=SPELLS.map(s=>s.n);G.mana=G.manaMax=60;resetCursor();ensureCursor(activeLayer());
+  /* Цену чар двигают волна мира, равновесие, зона и место силы. Здесь
+     проверяется панель, а не экономика: мир ставится в затишье и покой. */
+  G.wave={вид:"calm",сила:0,до:(Number(G.day)||1)+99};G.order=0;G.global=null;G.zoneNow=null;G.powerNow=null;
+  const бx=G.x,бy=G.y;window.__вернуть=()=>{G.x=бx;G.y=бy;};
+  for(let i=0;i<300;i++){if(!safeFn(()=>Zones.here(),null)&&!safeFn(()=>Power.here(),null))break;G.x+=13;G.y+=7;}});
  await clearSaid();
  await fwd();
  await page.waitForTimeout(200);

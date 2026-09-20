@@ -47,11 +47,11 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   const плохиеУмения=умения.filter(d=>!ABILITY_BY_ID[d.умение]).map(d=>d.id);
   return {ids,bad,rewardsGrow,кому,встречено:[...встречено],пустые,
    сУмением:умения.length,плохиеУмения};});
- check('тринадцать цепочек, и каждый шаг собирается в настоящее задание',
-  chains.ids.length===13&&chains.bad.length===0,{цепочек:chains.ids.length,плохие:chains.bad.slice(0,4)});
+ check('двадцать четыре цепочки (с пробуждением, экспедицией и девятью цепочками пятого этапа), и каждый шаг собирается в настоящее задание',
+  chains.ids.length===24&&chains.bad.length===0,{цепочек:chains.ids.length,плохие:chains.bad.slice(0,4)});
  check('награда на последнем шаге больше, чем на первом',chains.rewardsGrow===true);
- check('все тринадцать цепочек кому-нибудь да достаются',
-  chains.встречено.length===13,{встречено:chains.встречено.length,
+ check('все двадцать четыре цепочки кому-нибудь да достаются',
+  chains.встречено.length===24,{встречено:chains.встречено.length,
    нет:chains.ids.filter(i=>!chains.встречено.includes(i))});
  check('у ремесла не одна цепочка: в разных землях один и тот же житель ведёт разные дела',
   Object.values(chains.кому).filter(l=>l.length>1).length>=6,chains.кому);
@@ -92,6 +92,7 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
  const full=await page.evaluate(()=>{
   const satisfy=q=>{
    q.doneFlag=true;q.have=q.need||1;
+   if(q.решения&&!q.решение)q.решение=q.решения[0].id;
    if(q.res)G.inv[q.res]=(q.need||1)+9;
    if(q.tx!=null){G.x=q.tx;G.y=q.ty;}
    if(q.type==="god_relic"){const g=GOD_BY_ID[q.godId];G.items.push("Реликвия: "+g.n);}
@@ -110,20 +111,20 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
     satisfy(q);
     const g=G.gold,want=questPay(q).gold;
     completeQuest(q.id);
-    steps.push({шаг:q.chainStep,выплата:G.gold-g,обещано:want,сдан:!!q.done});
+    steps.push({шаг:q.chainStep,выплата:G.gold-g,обещано:want,сдан:!!q.done,развязка:!!q.решения});
     G.place=null;}
    /* повторная сдача уже сданного не должна платить */
    const done=G.quests.find(x=>x.done);
    const g2=G.gold;
    if(done)completeQuest(done.id);
    out[chain]={шагов:steps.length,надо:CHAIN_DB[chain].steps.length,
-    ровно:steps.every(s=>s.сдан&&s.выплата===s.обещано),
+    ровно:steps.every(s=>s.сдан&&(s.развязка||s.выплата===s.обещано)),
     заданий:G.quests.length,завершена:G.chainsDone===1,повтор:G.gold-g2,
     умений:(G.abilities||[]).length,вещей:(G.items||[]).length};}
   return out;});
  const chainsOk=Object.values(full);
  check('каждая цепочка проходится от первого шага до последнего',
-  chainsOk.length===13&&chainsOk.every(c=>c.шагов===c.надо&&c.заданий===c.надо&&c.завершена),full);
+  chainsOk.length===24&&chainsOk.every(c=>c.шагов===c.надо&&c.заданий===c.надо&&c.завершена),full);
  check('пройденная цепочка оставляет умение школы или именную вещь',
   Object.entries(full).filter(([id,c])=>c.умений>0||c.вещей>0).length>=8,
   Object.fromEntries(Object.entries(full).map(([k,v])=>[k,{у:v.умений,в:v.вещей}])));

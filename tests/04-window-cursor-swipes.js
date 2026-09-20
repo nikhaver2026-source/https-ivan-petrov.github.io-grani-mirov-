@@ -130,15 +130,22 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
      блокируют движение, поэтому считаем цену шага, а не длину прогулки. */
   /* Встреча с обозом или бой обрывают бег: перед каждым замером восстанавливаем
      режим, иначе меряется темп ходьбы вместо бега. */
-  const one=running=>{while(activeLayer())handleTwoFingerTap();
+  /* Шаг и бег меряются НА ОДНОЙ И ТОЙ ЖЕ клетке и в ту же сторону: тракт,
+     переправа, горная тропа и война на дуге умножают время, и при случайном
+     блуждании бег мог измеряться на осыпи, а шаг — на плите. Сравнивалась бы
+     тогда земля, а не бег. */
+  const x0=G.x,y0=G.y;
+  const one=(running,dir)=>{while(activeLayer())handleTwoFingerTap();
    if(G.inCombat)endCombat();
    G.place=null;G.ship=null;G.weaponDrawn=false;G.metCaravan=null;
+   G.x=x0;G.y=y0;
    runState.active=!!running;
-   const t=G.day*24+G.hour;move(["E","S","W","N"][Math.floor(Math.random()*4)]);
+   const t=G.day*24+G.hour;move(dir);
    const c=(G.day*24+G.hour)-t;return c>0?c:null;};
   const walkCosts=[],runCosts=[];
-  for(let i=0;i<12;i++){const c=one(false);if(c!==null&&c>0)walkCosts.push(c);}
-  for(let i=0;i<12;i++){const c=one(true);if(c!==null&&c>0)runCosts.push(c);}
+  const стороны=["E","S","W","N","E","S","W","N","E","S","W","N"];
+  for(let i=0;i<12;i++){const c=one(false,стороны[i]);if(c!==null&&c>0)walkCosts.push(c);}
+  for(let i=0;i<12;i++){const c=one(true,стороны[i]);if(c!==null&&c>0)runCosts.push(c);}
   runState.active=false;
   const avg=a=>a.length?Math.round(a.reduce((x,y)=>x+y,0)/a.length*100)/100:0;
   return {walk:avg(walkCosts),run:avg(runCosts),n:[walkCosts.length,runCosts.length]};});

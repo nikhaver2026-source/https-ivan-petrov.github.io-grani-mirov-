@@ -173,6 +173,12 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   const say=Speech.say.bind(Speech);Speech.say=(t,o)=>{реплики.push(String(t));return say(t,o);};
   const bp=Bank.play.bind(Bank);Bank.play=(r,o)=>{звуки.push(r);return bp(r,o);};
   G.dark=false;G.place=null;G.ship=null;G.inCombat=false;
+  /* Замеряем, сколько раз называют переправу, — а не дорожные случайности.
+     Мостовщик с пошлиной попросту не пускает дальше, и герой остаётся на
+     мосту все восемьдесят шагов; «Бродячий сказитель» же попадает в отбор
+     одним корнем «брод». Держим окно тихим: у случайных событий свой
+     сорокапятисекундный порог, и свежая отметка закрывает их на весь замер. */
+  G.lastEventAt=Date.now();
   G.x=цель.x-3;G.y=y;
   /* Мост бывает и в полсотни клеток: идём, пока переправа не кончится, а не
      ровно девять шагов — иначе «сошли с моста» не случится за время замера. */
@@ -184,7 +190,7 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
    if(c)былаПереправа=true;
    else if(былаПереправа)break;}
   Speech.say=say;Bank.play=bp;
-  const пpo=реплики.filter(t=>/мост|брод|тоннель|перевал|переправ/i.test(t));
+  const пpo=реплики.filter(t=>/мост|брод|тоннель|перевал|переправ/i.test(t)&&!/Вариантов: \d/.test(t));
   return {цель,назвали:пpo,разНазвали:пpo.filter(t=>!/позади/i.test(t)).length,
    сошли:пpo.some(t=>/позади/i.test(t)),
    звук:звуки.some(z=>/stk_bridge|stk_splash|wild_river|deep_stone|deep_wind/.test(z)),
