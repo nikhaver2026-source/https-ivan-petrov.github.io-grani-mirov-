@@ -4807,6 +4807,16 @@ const GUIDE=[
  "Вещь растёт. За каждую победу работающий артефакт получает опыт, а на пороге открывает ступень — прибавку, которой у него раньше не было, и всегда из своего направления. Каждая следующая ступень даётся вдвое тяжелее. Если гнёзда кончились, редкую часть можно скормить вещи: она уйдёт в опыт вместо гнезда.",
  "Требования. Ранг задаёт уровень; сверх того вещь может требовать навык, заклинание нужной школы, расположение народа, принадлежность к клану, прочитанное знание или закрытое дело. Вещь, требования которой не выполнены, лежит мёртвым грузом и не даёт ничего — и прямо говорит, чего ей не хватает.",
  "Где всё это. Пункт меню «Артефакты, части и рецепты». В нём видно, каким ремеслом здесь занимаются и каково ваше умение, какие рецепты под рукой и чего не хватает, какие части лежат в суме, и по каждой вещи — всё, что о ней известно, и всё, что с ней можно сделать: вложить, вынуть, зачаровать, скормить, продать."]},
+{title:"Глава 66. Ядра мира и отладочная панель",body:[
+ "У игры сто с лишним отдельных слоёв — мир, жители, бой, чары, ремёсла, хозяйство, подземелья, звук, речь, доступность, сохранение. Каждый из них умеет отвечать о себе сам, и любая часть игры спрашивает его по имени, а не лезет во внутренности соседа. Это то, что держит игру такого размера в одном файле и не даёт ей рассыпаться.",
+ "ДВАДЦАТЬ СЕМЬ ЯДЕР. У всей этой сети теперь есть единый список имён: мир, игрок, живые существа, жители, бой, чары, умения, вещи, артефакты, ресурсы, ремесло, алхимия, руны, фракции, хозяйство, дела, подземелья, порождение, мировые события, объёмный звук, сведение звука, речь, доступность, состояние, сохранение, загрузка и отладка. Спросить можно любое — каждое отвечает словами о себе.",
+ "ДВОЙНИКОВ НЕ ЗАВЕДЕНО. Двадцать два имени из двадцати семи — это новые имена для слоёв, которые уже работали. Они отдают ТОТ ЖЕ самый слой, а не свою копию: второго обработчика одного и того же дела в игре нет, и самопроверка мира следит за этим каждым запуском. Свои, новых, ядер пять: живые существа, сведение звука, состояние мира, порождение и отладка.",
+ "ЖИВЫЕ СУЩЕСТВА. Одна дверь ко всему, что дышит: твари, глубинные семейства, мировые боссы, владыки ярусов, кто сейчас рядом, кто встанет на таком-то ярусе, идёт ли бой.",
+ "СВЕДЕНИЕ ЗВУКА. Шестнадцать каналов, громкость каждого, общая громкость, звучащие сейчас петли и пять уровней важности речи: ноль — смертельная опасность, четыре — фон. Речь всегда приглушает остальное, и отсюда видно, насколько.",
+ "СОСТОЯНИЕ МИРА. Все ключи, которые мир держит, их число и размер, и сколько из них ушло в сохранение. Писать отсюда можно только в уже существующий ключ и только простым значением: это дверь к состоянию, а не творец новых полей.",
+ "ПОРОЖДЕНИЕ. Восемь множителей, разбор любого места, план яруса, его паспорт — и проверка устойчивости: одно и то же место должно сложиться дважды одинаково.",
+ "ОТЛАДОЧНАЯ ПАНЕЛЬ — И ПОЧЕМУ ВЫ ЕЁ НЕ ВИДИТЕ. Тринадцать систем и десять действий над каждой: включить, выключить, сбросить, осмотреть, прочесть журнал, прогнать вперёд, породить, перенести, выдать вещь, поставить значение. Это для разбора поломок, а не для игры, поэтому панель заперта: она не добавляет ни одной кнопки в меню действий и молчит, пока её не откроют строкой запроса «?debug=1». Пока она закрыта, любое действие честно отвечает, что панель выключена, и ничего не делает. Игра для незрячих: лишний пункт в меню здесь дороже, чем где-либо ещё.",
+ "ЧЕСТНО О ГРАНИЦАХ. Сброс системы чистит её ключи и не трогает чужие. Прогон вперёд двигает только то, у чего есть суточный ход: у осей героя и у котомки его нет, и панель так и говорит, а не делает вид. Перенос понимает и «x y», и имя именного города."]},
 {title:"Глава 65. Владыки ярусов: крупный страж — тоже босс",body:[
  "На двадцать пятом, пятидесятом, семьдесят пятом ярусе и на дне стоит крупный страж. Раньше от обычного он отличался только здоровьем и ударом покрепче: ни истории, ни фаз, ни слабостей. Между тем это и есть большие боссы подземелий — их ищут, к ним готовятся, о них рассказывают.",
  "ЧЕТЫРЕ ВЛАДЫКИ. Дозорный Порога на двадцать пятом: его поставили сторожить первую четверть хода и забыли сменить. Хранитель Свода на пятидесятом: свод держится на его воле дольше, чем на камне. Смотритель Тишины на семьдесят пятом: всё, что звучит, он считает непорядком. Древний Первого Хода на дне: он был здесь до того, как пробили первый ход.",
@@ -34911,7 +34921,16 @@ const Res=Modules.register("RES",{
    добыча:k?k.добыча:"рукой",
    обработка:k?k.обработка:"идёт как есть",
    рынок:k?k.рынок:"любая лавка"};},
- text(res){const i=this.info(res);if(!RES_BASE[res]&&!this.kind(res))return `Такого ресурса нет: «${res}».`;
+ /* Сводка обо всём хозяйстве ресурсов: ответ слоя о самом себе. */
+ сводка(){try{
+  const всего=Object.keys(RES_BASE).length;
+  const пора=this.season();
+  const вСезон=Object.keys(RES_BASE).filter(r=>this.kind(r)&&this.inSeason(r)).length;
+  const глуб=(DEEP_RESOURCES||[]).length;
+  return `Родов ресурсов ${RES_KINDS.length}, названий ${всего}. Сейчас ${this.seasonName(пора.id)}: в свою пору ${вСезон} из тех, у кого пора есть, остальные дороже на четверть. Глубинных пород ${глуб}. У каждого все семь свойств: род, регион, сезон, глубина, редкость, добыча и обработка.`;
+  }catch(_){return `Родов ресурсов ${RES_KINDS.length}.`;}},
+ text(res){if(res==null||res==="")return this.сводка();
+  const i=this.info(res);if(!RES_BASE[res]&&!this.kind(res))return `Такого ресурса нет: «${res}».`;
   return `${i.название}: ${i.род}. Регион: ${i.регион}. Сезон: ${i.сезон}${this.inSeason(res)?" — сейчас его время":" — сейчас не сезон, и потому дороже"}. Глубина: ${i.глубина}. Редкость: ${i.редкость}. Берут ${i.добыча}, идёт на ${i.обработка}. Покупает ${i.рынок}. Цена около ${Number(RES_BASE[res])||"—"}.`;},
  /* Что берут с убитой твари: шкура, нутро, кровь и яд — у кого что есть. */
  fromKill(m){try{
@@ -37722,7 +37741,13 @@ const Inventory=Modules.register("INVENTORY",{cats:INV_CATS,rules:INV_CAT_RULES,
  /* Новый род вещи — новое правило, а не новая ветка кода. */
  registerRule(cat,re,first){if(!INV_CAT_BY_ID[cat])return false;const r={cat,re};if(first)INV_CAT_RULES.unshift(r);else INV_CAT_RULES.push(r);return true;},
  registerCat(id,n,з){if(INV_CAT_BY_ID[id])return false;const c={id,n,з:з||"🎁"};INV_CATS.splice(INV_CATS.length-1,0,c);INV_CAT_BY_ID[id]=c;return true;},
- rows:()=>invAll(),category:invCategoryOf,brief:(k,key)=>invBrief(k,key),actions:(k,key)=>invActionsAll(invRow(k,key)),do:(a,k,key,arg)=>invDo(a,k,key,arg)});
+ rows:()=>invAll(),category:invCategoryOf,brief:(k,key)=>invBrief(k,key),actions:(k,key)=>invActionsAll(invRow(k,key)),do:(a,k,key,arg)=>invDo(a,k,key,arg),
+ text(){try{
+  const r=invAll();const по={};r.forEach(x=>{const c=invCategoryOf(x)||"item";по[c]=(по[c]||0)+1;});
+  const сп=INV_CATS.filter(c=>по[c.id]).map(c=>`${c.n} ${по[c.id]}`);
+  const eq=G.equip||{};const надето=["weapon","armor","acc"].filter(sl=>eq[sl]).length;
+  return `В котомке ${r.length} ${plural(r.length,"строка","строки","строк")} по ${сп.length} ${plural(сп.length,"разделу","разделам","разделам")}: ${сп.join(", ")||"пусто"}. Надето вещей ${надето} из трёх. Родов вещей ${INV_CATS.length}.`;
+ }catch(e){return "Котомка не отвечает.";}}});
 const INV_KINDS={equip:"на теле",gear:"оружие и снаряжение",res:"припасы",rare:"редкие товары",plant:"растения и грибы",potion:"зелья",art:"артефакты",item:"предметы",fish:"улов",part:"части"};
 function invAll(){
  const out=[];
@@ -39038,6 +39063,229 @@ const Gen=Modules.register("GEN",{
    +GEN_FACTORS.map(x=>`${x.n} — ${f[x.id].n}`).join("; ")
    +`. Что от этого прибавилось: комнат +${pl.комнат}, тварей +${pl.тварей}, сундуков +${pl.сундуков}, жил +${pl.жил}, книг +${pl.книг}, вещей +${pl.вещей}, факелов +${pl.факелов}. `
    +`Случай решает, где именно всё ляжет; мир решает, сколько.`;}});
+
+/* ════════ ЯДРА АРХИТЕКТУРЫ И ОТЛАДОЧНАЯ ПАНЕЛЬ ════════
+   Мастер-промпт называет двадцать семь ядер и требует, чтобы у каждого был
+   один активный обработчик, а не два. Тридцать четыре сервисных слоя по §42
+   уже есть; здесь к ним добавлены недостающие имена и три ядра, которых не
+   было вовсе: DATABASE (единое чтение и запись состояния), PROCEDURAL
+   (порождение мира) и DEBUG (отладочная панель).
+
+   Ядро НИЧЕГО не считает само: оно зовёт то, что уже написано. Ядро с
+   собственной арифметикой назавтра разойдётся с тем, поверх чего лежит, и
+   мастер-промпт запрещает ровно это: «не допускай дублирования
+   обработчиков». Там, где ядро — другое имя уже существующего слоя, оно
+   возвращает тот же объект, а не копию: подмены не происходит.
+
+   Отладочная панель обычному игроку недоступна. Она включается только
+   строкой запроса (?debug=1 или #debug) либо ключом в хранилище браузера, и
+   ни одна её кнопка не попадает в меню действий. Это сделано нарочно: игра
+   для незрячих, и лишний пункт в меню здесь дороже, чем где-либо ещё. */
+const CORE_ALIASES={
+ WORLD_CORE:"WORLD", PLAYER_CORE:"AXES", NPC_CORE:"NPC", COMBAT_CORE:"COMBAT",
+ MAGIC_CORE:"MAGIC", SKILL_CORE:"TREE", ITEM_CORE:"INVENTORY", ARTIFACT_CORE:"ARTIFACTS",
+ RESOURCE_CORE:"RES", CRAFT_CORE:"CRAFTING", ALCHEMY_CORE:"ALCHEMY", RUNE_CORE:"RUNES",
+ FACTION_CORE:"FACTIONS", ECONOMY_CORE:"ECONOMY", QUEST_CORE:"QUESTS", DUNGEON_CORE:"DUNGEONS",
+ WORLD_EVENT_CORE:"EVENTS", AUDIO_WORLD_CORE:"AUDIO_3D", TTS_CORE:"TTS",
+ ACCESSIBILITY_CORE:"ACCESSIBILITY", SAVE_CORE:"SAVE_LOAD", LOAD_CORE:"SAVE_LOAD",
+ ENTITY_CORE:null, AUDIO_MIXER_CORE:null, DATABASE_CORE:null, PROCEDURAL_CORE:null, DEBUG_CORE:null};
+/* Живые существа мира: твари, жители, стражи и владыки ярусов. */
+Modules.register("ENTITY_CORE",{
+ monsters:()=>MONSTERS,
+ deepFamilies:()=>DEEP_FAMILIES,
+ worldBosses:()=>WORLD_BOSSES,
+ guardLords:()=>GUARD_LORDS,
+ near:rad=>S(()=>Actors.near(rad||6),[]),
+ guardianAt:(bx,by,d)=>S(()=>guardianAt(bx,by,d),null),
+ inCombat:()=>!!G.inCombat,
+ text(){return `Тварей ${MONSTERS.length}, глубинных семейств ${DEEP_FAMILIES.length}, мировых боссов ${WORLD_BOSSES.length}, владык ярусов ${GUARD_LORDS.length}. Рядом живых ${this.near(6).length}.`;}});
+/* Сведение звука: каналы, громкости, приглушение речью и приоритеты. */
+Modules.register("AUDIO_MIXER_CORE",{
+ channels:()=>Object.keys(Bank.CHAN||{}),
+ channelOf:kind=>S(()=>Bank.chanOf(kind),"world"),
+ volumeOf:kind=>S(()=>Bank.vol(kind),0),
+ master:()=>S(()=>Bank.master(),1),
+ /* Пять приоритетов речи: ноль — смертельная опасность, четыре — фон. */
+ priorities:()=>[[0,"смертельная опасность"],[1,"важное: уровень, звание, находка"],
+  [2,"итог действия"],[3,"описание и подсказка"],[4,"фон"]],
+ duck:kind=>S(()=>speechDuck(kind),1),
+ loops:()=>S(()=>[...Bank.loops.keys()],[]),
+ stop:ch=>S(()=>Bank.stop(ch),false),
+ text(){const ch=this.channels();
+  return `Каналов звука ${ch.length}: ${ch.slice(0,8).join(", ")}${ch.length>8?"…":""}. Общая громкость ${this.master().toFixed(2)}. Приоритетов речи пять: от смертельной опасности до фона. Звучащих петель ${this.loops().length}.`;}});
+/* Единое чтение и запись состояния: одна дверь ко всему, что сохраняется. */
+Modules.register("DATABASE_CORE",{
+ /* Все ключи состояния, которые мир и вправду держит. */
+ keys:()=>Object.keys(G||{}).sort(),
+ get:k=>{try{return G[k];}catch(_){return undefined;}},
+ has:k=>{try{return Object.prototype.hasOwnProperty.call(G,k);}catch(_){return false;}},
+ /* Запись идёт только по существующему ключу и только простым значением:
+    выдумывать миру новые поля отсюда нельзя — это дверь, а не творец. */
+ set(k,v){try{
+  if(!this.has(k))return false;
+  const t=typeof G[k];
+  if(t!=="number"&&t!=="string"&&t!=="boolean")return false;
+  G[k]=v;return true;}catch(_){return false;}},
+ size(){try{return JSON.stringify(G).length;}catch(_){return -1;}},
+ /* Что именно уходит в сохранение: спрашивается у самого сохранения. */
+ saved:()=>{try{const raw=localStorage.getItem("gm_save");return raw?Object.keys(JSON.parse(raw)).length:0;}catch(_){return 0;}},
+ text(){return `Состояние мира: ${this.keys().length} ключей, ${this.size()} знаков. В сохранении ${this.saved()} ключей.`;}});
+/* Порождение мира: восемь множителей, ярусы, паспорта, области. */
+Modules.register("PROCEDURAL_CORE",{
+ factors:()=>GEN_FACTORS,
+ of:(bx,by,d,st)=>S(()=>Gen.of(bx,by,d,st),null),
+ plan:(bx,by,d,st)=>S(()=>Gen.plan(bx,by,d,st),null),
+ level:(bx,by,d,st)=>S(()=>genLevel(bx,by,d,st),null),
+ passport:(bx,by,d,st)=>S(()=>Passport.of(bx,by,d,st),null),
+ /* Устойчивость мира: одно место порождается одинаково дважды. */
+ stable(bx,by,d,st){try{
+  return JSON.stringify(Gen.of(bx,by,d,st))===JSON.stringify(Gen.of(bx,by,d,st));}catch(_){return false;}},
+ text(){const шапка=`Порождение по ${GEN_FACTORS.length} множителям: ${GEN_FACTORS.map(f=>f.n).join(", ")}. Шаблонов подземелий ${Object.keys(GEN_TEMPLATE).length}.`;
+  return шапка+" "+S(()=>Gen.text(),"");}});
+/* ── ОТЛАДОЧНАЯ ПАНЕЛЬ ── */
+const DEBUG_SYSTEMS=[
+ {id:"WORLD",    n:"мир",        мод:"WORLD"},
+ {id:"PLAYER",   n:"игрок",      мод:"AXES"},
+ {id:"NPC",      n:"жители",     мод:"NPC"},
+ {id:"AUDIO",    n:"звук",       мод:"AUDIO_MIXER_CORE"},
+ {id:"MAGIC",    n:"чары",       мод:"MAGIC"},
+ {id:"ITEMS",    n:"вещи",       мод:"INVENTORY"},
+ {id:"CRAFT",    n:"ремёсла",    мод:"CRAFTING"},
+ {id:"QUEST",    n:"дела",       мод:"QUESTS"},
+ {id:"FACTION",  n:"фракции",    мод:"FACTIONS"},
+ {id:"ECONOMY",  n:"хозяйство",  мод:"ECONOMY"},
+ {id:"DUNGEON",  n:"подземелья", мод:"DUNGEONS"},
+ {id:"SAVE",     n:"сохранение", мод:"SAVE_LOAD"},
+ {id:"GESTURES", n:"жесты",      мод:"GESTURES"}];
+const DEBUG_OPS=["ENABLE","DISABLE","RESET","INSPECT","LOG","SIMULATE","SPAWN","TELEPORT","GIVE_ITEM","SET_VALUE"];
+const DEBUG_SYS_BY_ID=Object.fromEntries(DEBUG_SYSTEMS.map(x=>[x.id,x]));
+const Debug=Modules.register("DEBUG_CORE",{
+ systems:DEBUG_SYSTEMS,ops:DEBUG_OPS,
+ /* Обычному игроку панель недоступна: только строкой запроса или ключом
+    в хранилище. Ни одной кнопки в меню действий она не добавляет. */
+ enabled(){try{
+  /* Явный отказ сильнее всего: сказали «выключить» — выключено, даже
+     когда в строке запроса стоит debug=1. */
+  if(G.__debug===false)return false;
+  if(G.__debug===true)return true;
+  const q=String(location.search||"")+String(location.hash||"");
+  if(/[?&#]debug(=1|\b)/.test(q))return true;
+  return localStorage.getItem("gm_debug")==="1";}catch(_){return false;}},
+ on(){G.__debug=true;try{localStorage.setItem("gm_debug","1");}catch(_){}return this.enabled();},
+ off(){G.__debug=false;try{localStorage.removeItem("gm_debug");}catch(_){}return this.enabled();},
+ /* Выключенные отладкой системы: их суточный ход и звук замолкают. */
+ disabled(){if(!G.__off||typeof G.__off!=="object")G.__off={};return G.__off;},
+ isOff(id){return !!this.disabled()[String(id||"").toUpperCase()];},
+ log(){if(!Array.isArray(G.__log))G.__log=[];return G.__log;},
+ note(t){const L=this.log();L.unshift({t:String(t),день:Number(G.day)||1,час:Math.round(Number(G.hour)||0)});
+  if(L.length>80)L.pop();return L[0];},
+ /* Единственная дверь: система + действие. Ничего не делает, пока панель
+    не включена, — и об этом честно говорит. */
+ run(sys,op,arg){
+  if(!this.enabled())return "Отладочная панель выключена: она не для игры. Включается строкой запроса «?debug=1».";
+  const S0=DEBUG_SYS_BY_ID[String(sys||"").toUpperCase()];
+  const O=String(op||"").toUpperCase();
+  if(!S0)return `Такой системы нет: ${sys}. Есть: ${DEBUG_SYSTEMS.map(x=>x.id).join(", ")}.`;
+  if(DEBUG_OPS.indexOf(O)<0)return `Такого действия нет: ${op}. Есть: ${DEBUG_OPS.join(", ")}.`;
+  const m=Modules.get(S0.мод);
+  let out="";
+  try{
+   switch(O){
+    case "ENABLE":  delete this.disabled()[S0.id];out=`${S0.n}: включено.`;break;
+    case "DISABLE": this.disabled()[S0.id]=1;out=`${S0.n}: выключено до включения обратно.`;break;
+    case "RESET":   out=this._reset(S0);break;
+    case "INSPECT": out=m&&typeof m.text==="function"?String(m.text()):`${S0.n}: слоя нет.`;break;
+    case "LOG":     out=this.log().slice(0,6).map(e=>`день ${e.день}, час ${e.час}: ${e.t}`).join("; ")||"Записей нет.";break;
+    case "SIMULATE":out=this._simulate(S0,arg);break;
+    case "SPAWN":   out=this._spawn(S0,arg);break;
+    case "TELEPORT":out=this._teleport(arg);break;
+    case "GIVE_ITEM":out=this._give(arg);break;
+    case "SET_VALUE":out=this._set(arg);break;}
+  }catch(e){out=`${S0.n}: ${O} сорвалось — ${String(e).slice(0,60)}.`;}
+  this.note(`${S0.id}.${O}${arg!=null?" "+arg:""} → ${String(out).slice(0,70)}`);
+  return out;},
+ _reset(S0){
+  const было={};
+  const чисти=ks=>{ks.forEach(k=>{было[k]=true;delete G[k];});};
+  switch(S0.id){
+   case "PLAYER":  чисти(["lore","axes","tree","facetTiers"]);G.xp=0;G.level=1;break;
+   case "NPC":     чисти(["arcs","merch","npcMem"]);safeFn(()=>Actors.stop());break;
+   case "MAGIC":   чисти(["spellCD","spellbook"]);G.spells=["Искра"];break;
+   case "ITEMS":   чисти(["inv","gear","artifacts","comps"]);break;
+   case "CRAFT":   чисти(["mast","alch"]);break;
+   case "QUEST":   чисти(["quests","cases"]);break;
+   case "FACTION": чисти(["rep","stand","houses"]);break;
+   case "ECONOMY": чисти(["market","rareUnits"]);break;
+   case "DUNGEON": чисти(["guards","marks","imprints"]);safeFn(()=>levelCache.clear());break;
+   case "SAVE":    чисти(["__log"]);break;
+   case "GESTURES":чисти(["gestureLock"]);break;
+   default:        чисти(["known","lore"]);}
+  safeFn(()=>refresh());
+  return `${S0.n}: сброшено ${Object.keys(было).length} ${plural(Object.keys(было).length,"ключ","ключа","ключей")}.`;},
+ _simulate(S0,arg){
+  const n=Math.max(1,Math.min(60,Number(arg)||1));
+  switch(S0.id){
+   case "WORLD":case "FACTION":case "ECONOMY":{
+    let шло=[];for(let i=0;i<n;i++){G.day=(Number(G.day)||1)+1;
+     шло=шло.concat(safeFn(()=>Modules.get("WORLD_SIMULATION").daily(),[])||[]);}
+    return `Прожито ${n} ${plural(n,"сутки","суток","суток")}: сработало ${шло.length}.`;}
+   case "NPC":{let k=0;for(let i=0;i<n;i++)if(safeFn(()=>Arcs.daily(),false))k++;return `Судеб сдвинулось: ${k} за ${n}.`;}
+   case "MAGIC":{let k=0;for(let i=0;i<n;i++)if(safeFn(()=>Balance.backlash(),false))k++;return `Отдач хаоса: ${k} из ${n}.`;}
+   case "DUNGEON":{const d=Math.max(1,Math.min(MAX_DEPTH,n));
+    const p=safeFn(()=>Gen.plan((G.place&&G.place.bx)||G.x,(G.place&&G.place.by)||G.y,d,"ruins"),null);
+    return p?`Ярус ${d}: комнат +${p.комнат}, тварей +${p.тварей}, сундуков +${p.сундуков}, жил +${p.жил}.`:"Порождение не ответило.";}
+   case "AUDIO":{const ch=Modules.get("AUDIO_MIXER_CORE").channels();
+    return `Каналов ${ch.length}, петель ${safeFn(()=>Bank.loops.size,0)}, речь ${Speech.speaking?"идёт":"молчит"}.`;}
+   case "QUEST":{let k=0;for(let i=0;i<n;i++)if(safeFn(()=>questWorldTick("day",()=>true),false))k++;return `Дела сдвинулись ${k} раз.`;}
+   default:return `${S0.n}: прогон ${n} — этой системе нечего прогонять.`;}},
+ _spawn(S0,arg){
+  switch(S0.id){
+   case "NPC":{const n=safeFn(()=>getNPC(G.x,G.y,0,String(arg||"Торговец")),null);
+    return n?`Житель: ${n.name}, ${n.prof}, ${n.race}.`:"Жителя здесь не выходит.";}
+   case "ITEMS":{const it=safeFn(()=>genLoot(G.x,G.y,Math.floor(Math.random()*9999),Number(arg)||G.level),null);
+    if(!it)return "Вещь не вышла.";G.gear=G.gear||[];G.gear.push(it);return `Вещь: ${it.name}.`;}
+   case "DUNGEON":{const g=safeFn(()=>guardianAt(G.x,G.y,Number(arg)||25),null);
+    return g?`Страж: ${g.n}${g.boss?" (владыка)":""}.`:"Стража не выходит.";}
+   case "MAGIC":{const sp=SCHOOL_SPELLS.find(x=>x.n===String(arg))||SCHOOL_SPELLS[0];
+    G.spells=G.spells||[];if(G.spells.indexOf(sp.n)<0)G.spells.push(sp.n);return `Чара выдана: ${sp.n}.`;}
+   default:return `${S0.n}: этой системе нечего порождать.`;}},
+ _teleport(arg){
+  const p=String(arg||"").split(/[ ,]+/).map(Number);
+  if(p.length>=2&&Number.isFinite(p[0])&&Number.isFinite(p[1])){
+   G.x=Math.max(0,Math.min(WORLD-1,Math.round(p[0])));
+   G.y=Math.max(0,Math.min(WORLD-1,Math.round(p[1])));
+   G.place=null;safeFn(()=>refresh());
+   return `Вы на ${G.x}, ${G.y}.`;}
+  const c=NAMED_CITIES.find(z=>z.id===String(arg)||z.n===String(arg));
+  if(c){G.x=c.x;G.y=c.y;G.place=null;safeFn(()=>refresh());return `Вы у города «${c.n}»: ${c.x}, ${c.y}.`;}
+  return "Куда: «x y» или имя именного города.";},
+ _give(arg){
+  const s=String(arg||"").split(/\s*[x×]\s*/);
+  const имя=s[0].trim(),n=Math.max(1,Math.min(999,Number(s[1])||1));
+  if(!имя)return "Что выдать: «имя» или «имя ×5».";
+  G.inv=G.inv||{};G.inv[имя]=(Number(G.inv[имя])||0)+n;
+  safeFn(()=>refresh());
+  return `Выдано: ${имя} ×${n}. Теперь ${G.inv[имя]}.`;},
+ _set(arg){
+  const s=String(arg||"").split(/\s*=\s*/);
+  if(s.length<2)return "Как: «ключ = значение».";
+  const k=s[0].trim();let v=s[1].trim();
+  if(/^-?\d+(\.\d+)?$/.test(v))v=Number(v);
+  else if(v==="true")v=true;else if(v==="false")v=false;
+  const ок=Modules.get("DATABASE_CORE").set(k,v);
+  safeFn(()=>refresh());
+  return ок?`${k} = ${v}.`:`${k} так не ставится: ключа нет или он не простого рода.`;},
+ text(){
+  if(!this.enabled())return "Отладочная панель выключена. Игроку она не нужна и в меню не показывается.";
+  const выкл=Object.keys(this.disabled());
+  return `Отладочная панель: ${DEBUG_SYSTEMS.length} систем, ${DEBUG_OPS.length} действий. Выключено: ${выкл.length?выкл.join(", "):"ничего"}. Записей в журнале ${this.log().length}.`;}});
+/* Имена ядер мастер-промпта. Там, где ядро — другое имя уже существующего
+   слоя, отдаётся ТОТ ЖЕ объект: двух обработчиков одного дела не заводится. */
+Object.keys(CORE_ALIASES).forEach(имя=>{
+ const к=CORE_ALIASES[имя];
+ if(!к)return;                       /* своё ядро уже зарегистрировано выше */
+ const m=Modules.get(к);
+ if(m&&!Modules.has(имя))Modules.register(имя,m);});
 function worldSelfCheck(){
  const out=[];const ok=(id,c,note)=>out.push({id,ok:!!c,note:note||""});
  try{
@@ -39230,6 +39478,17 @@ function worldSelfCheck(){
   ok("sigils",SIGIL_SYMBOLS.length===8&&SIGIL_SYMBOLS.every(x=>MSCHOOL_BY_ID[x.школа]&&x.намерения.every(i=>SIGIL_INTENTS[i]))&&SIGIL_CARRIERS.length===8&&SIGIL_CARRIERS.every(x=>RES_BASE[x.ресурс])&&SIGIL_GEOMETRY.length===5&&INKS.length===6&&INKS.every(x=>SOUND_BANK[x.звук]&&Object.keys(x.рецепт).every(r=>RES_BASE[r]))&&AWAKEN_SOURCES.length===6&&AWAKEN_SOURCES.every(x=>SOUND_BANK[x.звук])&&WAVES.length===3&&MORPH_TRAITS.length===6&&MORPHOBEASTS.length===10&&MORPHOBEASTS.every(b=>MONSTERS.some(m=>m.id===b.база))&&DEVOUR_GIFTS.length===6&&EVENT_THEME.world_event&&SOUND_BANK[EVENT_THEME.world_event.роль],"Знаки: восемь символов, восемь носителей, пять геометрий, шесть чернил, шесть источников пробуждения, три волны, шесть черт, десять морфозверей, шесть даров Эха — всё со звуком и по настоящим ресурсам");
   ok("cases",CASE_TEMPLATES.length===6&&CASE_TEMPLATES.every(t=>t.версии.length===3&&t.улики.every(k=>CLUE_KINDS[k])&&t.версии.every(v=>v.улики.every(k=>t.улики.includes(k))))&&SYNDICATES.length===8&&SYNDICATES.every(x=>SOUND_BANK[x.звук]&&x.города.every(id=>NAMED_CITY_BY_ID[id])&&REGIONS[x.область])&&Object.keys(DECISIONS).length===9&&Object.values(DECISIONS).every(d=>Object.keys(d).length>=3)&&["deeper","border_war","shards","lasthouse","beast","price","undercity","maskface","endless"].every(id=>CHAIN_DB[id])&&HOUSE_BY_ID[LAST_HOUSE.враг]&&DLG_MOVE_BY_ID.znanie&&DLG_MOVE_BY_ID.kultura&&DLG_MOVE_BY_ID.nedoskazat,"Расследования: шесть дел с тремя версиями, восемь синдикатов со звуком и городами, девять цепочек с развязками, три хода разговора");
   ok("academy",LANGS.length>=20&&LANGS.every(l=>l.письмо&&l.о)&&SCIENCES.length===6&&SCIENCES.every(x=>SOUND_BANK[x.звук]&&x.эффект.length===3&&FACULTY_BY_ID[x.факультет])&&FACULTIES.length===12&&FACULTIES.every(f=>(f.школы||[]).every(id=>MSCHOOL_BY_ID[id]&&SCHOOL_AUDIO[id])&&(!f.маст||MAST_BY_ID[f.маст]))&&SCHOOLS.length>=30&&SCHOOLS.every(sc=>SCHOOL_AUDIO[sc.id]&&SPELL_LAYERS.every(l=>SOUND_BANK[SCHOOL_AUDIO[sc.id][l]])),"Академия: двадцать один язык, шесть наук, двенадцать факультетов, тридцать четыре школы чар — все со звуком");
+  ok("cores",Object.keys(CORE_ALIASES).length===27
+   &&Object.keys(CORE_ALIASES).every(n=>Modules.has(n))
+   /* Псевдоним отдаёт ТОТ ЖЕ объект: второго обработчика одного дела нет. */
+   &&Object.keys(CORE_ALIASES).every(n=>!CORE_ALIASES[n]||Modules.get(n)===Modules.get(CORE_ALIASES[n]))
+   &&Object.keys(CORE_ALIASES).every(n=>typeof Modules.get(n).text==="function")
+   &&DEBUG_SYSTEMS.length===13&&DEBUG_OPS.length===10
+   &&DEBUG_SYSTEMS.every(x=>x.n&&Modules.has(x.мод)&&typeof Modules.get(x.мод).text==="function")
+   &&new Set(DEBUG_SYSTEMS.map(x=>x.id)).size===13
+   /* Панель заперта: пока не открыта, ни одно действие ничего не делает. */
+   &&(Debug.enabled()||/выключен/.test(Debug.run("WORLD","RESET"))),
+   "Ядра: двадцать семь имён мастер-промпта, у каждого свой слой и свой ответ; отладочная панель из тринадцати систем и десяти действий, запертая от игрока");
   ok("guards",GUARD_LORDS.length===4
    &&GUARD_LORDS.every(l=>l.n&&l.род&&l.история&&l.стиль&&l.припас&&l.откликСлова
      &&l.фазы.length===3&&l.фазы.every(f=>f.n&&f.о&&f.множ>0)
