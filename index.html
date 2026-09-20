@@ -16529,9 +16529,14 @@ const PROPS=[
   use:()=>{safeFn(()=>{Bank.play("craft_knock",{gain:0.45,maxSec:2});setTimeout(()=>safeFn(()=>Bank.play("water_swash",{gain:0.4,maxSec:2})),300);});
    narrate("Кружки на крюках. Глина, олово и одна серебряная — хозяйская. Донья в потёках: их моют раз в день и не слишком усердно.");}},
  {id:"cookfire",n:"кухонный очаг",b:"forge",
-  use:()=>{const час=propRest(1);const л=Math.round((Number(G.hpMax)||20)*0.08);G.hp=Math.min(G.hpMax,(Number(G.hp)||0)+л);
-   G.food=Math.min(200,(Number(G.food)||0)+25);
+  /* Час мира уходит только тогда, когда у очага и вправду что-то взяли:
+     сытому и здоровому кухарка кивнёт, но времени это не стоит. */
+  use:()=>{const надо=(Number(G.hp)||0)<(Number(G.hpMax)||20)||(Number(G.food)||0)<200;
    safeFn(()=>Bank.play("mtg_fire",{gain:0.45,maxSec:4}));
+   if(!надо){narrate("Кухонный очаг. На вертеле что-то шипит, и жир падает в угли. Кухарка косится на вас: вы сыты и целы, и добавки тут не дают.");return;}
+   const л=Math.round((Number(G.hpMax)||20)*0.08);G.hp=Math.min(G.hpMax,(Number(G.hp)||0)+л);
+   G.food=Math.min(200,(Number(G.food)||0)+25);
+   const час=propRest(1);
    narrate(`Кухонный очаг. На вертеле что-то шипит, и жир падает в угли. Кухарка молча отрезает вам край: сытость ${Math.round(G.food)}, здоровья на ${л} больше.${час}`);}},
  {id:"shelf",n:"полки над стойкой",b:"chest",
   use:()=>{safeFn(()=>Bank.play("craft_wood",{gain:0.4,maxSec:2}));
