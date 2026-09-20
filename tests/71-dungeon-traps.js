@@ -93,6 +93,11 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   while(activeLayer())closeTopUI();
   G.place={kind:"dungeon",bx:1200,by:1200,stype:"ruins",name:"Проба",depth:9,x:1,y:1};
   G.marks={};G.hp=200;G.hpMax=200;G.inCombat=false;G.flight=null;
+  /* Мерим ловушку, а не встречу: бродячие твари на время замеряния
+     останавливаются. С §28 их на ярусе стало больше, и одна из них успевала
+     дойти до игрока между двумя шагами — тогда второй шаг не делался вовсе,
+     и проверка падала не на ловушке, а на подошедшем огре. */
+  safeFn(()=>Actors.stop());
   const l=curLevel();
   /* Ищем ловушку, к которой можно шагнуть с соседней клетки. */
   let цель=null;
@@ -111,18 +116,34 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   const hpДо=G.hp;
   moveInside(дир);
   const hpПосле=G.hp;
-  const сработала=реплики.some(t=>/Плита|болт|шипы|камнем|дым|пламя|стужей|холодом|колокол|Жила/i.test(t));
+  /* Слова берём из самой ловушки, а не из рукописного списка: родов десять,
+     и список их все не покрывал — стоило генератору выбрать другой род, и
+     проверка падала на верно сработавшей ловушке. */
+  const своиСлова=(function(){
+   const t=TRAPS.find(x=>x.id===цель.id);
+   if(!t||!t.бьёт)return null;
+   return String(t.бьёт).split(/[\s,.:;—-]+/).filter(w=>w.length>=5).slice(0,3);})();
+  const сработала=(своиСлова&&своиСлова.length
+    ? реплики.some(t=>своиСлова.some(w=>t.indexOf(w)>=0))
+    : реплики.some(t=>/Урон: \d+/.test(t)))
+   &&реплики.some(t=>/Урон: \d+/.test(t));
   const метка=placeMark(цель.x,цель.y);
   /* Второй заход: ловушка найдена — её переступают. */
   G.marks={};
+  /* Между замерами гасим бой: ярус с §28 населён гуще, тварь успевает дойти
+     до игрока после первого шага, а в бою шаг не делается вовсе — и проверка
+     падала бы не на ловушке, а на встрече. */
+  G.inCombat=false;G.combat=null;safeFn(()=>Actors.stop());
+  while(activeLayer())closeTopUI();
   setPlaceMark(цель.x,цель.y,"trap_on");
   G.place.x=цель.x-цель.dx;G.place.y=цель.y-цель.dy;G.hp=200;
   const рБыло=реплики.length;
   moveInside(дир);
   const переступил=реплики.slice(рБыло).some(t=>/переступили/i.test(t));
+  safeFn(()=>Actors.ensure());
   Speech.say=say;Bank.play=bp;
   while(activeLayer())closeTopUI();
-  return {цель,hpДо,hpПосле,сработала,метка,переступил,
+  return {цель,hpДо,hpПосле,сработала,метка,переступил,своиСлова,
    ранило:hpПосле<hpДо,звучало:звуки.length>0};});
  check('шаг по ненайденной ловушке её срабатывает, и это слышно словами',
   !шаг.нет&&шаг.сработала&&шаг.звучало,шаг);
