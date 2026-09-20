@@ -53,8 +53,11 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
  const обряды=await page.evaluate(()=>{
   /* Круг и кадильница стоят не в каждой башне: их надо найти. Помощник —
      тот же поиск, только по месту, где рядом живёт кто-то живой. */
+  /* Годится не всякий круг: повреждённый станком быть перестаёт,
+     и обряд у него честно откажет. Поэтому ищем не по имени вещи, а по тому,
+     признаёт ли сам обряд это место рабочим: спрашиваем riteStation —
+     ровно то, что спросит сама игра. */
   const встать=(нужно)=>{
-   const ids=нужно==="круг"?["circle","orb"]:["censer","cauldron"];
    for(let i=0;i<60;i++){
     const bx=1000+i*137,by=900+i*211;
     for(const st of ["tower","school","spire","temple"]){
@@ -62,8 +65,8 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
      const l=curLevel();if(!l)continue;
      for(let y=0;y<l.h;y++)for(let x=0;x<l.w;x++){
       if(tileAt(l,x,y)!=="X")continue;
-      const pr=propAt(x,y);
-      if(pr&&ids.indexOf(pr.id)>=0){G.place.x=x;G.place.y=y;return true;}}}}
+      G.place.x=x;G.place.y=y;
+      if(riteStation(нужно))return true;}}}
    G.place=null;return false;};
   const плохие=RITES.filter(r=>!r.id||!r.n||!r.о||!(r.часы>0)||!(r.мана>=0)||!(r.ур>=1)).map(r=>r.id||"?");
   /* Ничего нет: ни ступени, ни припаса, ни маны, ни места, ни печати. */
@@ -107,7 +110,8 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   /* Круг и кадильница стоят не в каждой башне: их надо найти. Помощник —
      тот же поиск, только по месту, где рядом живёт кто-то живой. */
   const встать=(нужно)=>{
-   const ids=нужно==="круг"?["circle","orb"]:["censer","cauldron"];
+   /* Годится не всякий круг: повреждённый станком быть перестаёт.
+      Поэтому спрашиваем riteStation — ровно то, что спросит сама игра. */
    for(let i=0;i<60;i++){
     const bx=1000+i*137,by=900+i*211;
     for(const st of ["tower","school","spire","temple"]){
@@ -115,8 +119,8 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
      const l=curLevel();if(!l)continue;
      for(let y=0;y<l.h;y++)for(let x=0;x<l.w;x++){
       if(tileAt(l,x,y)!=="X")continue;
-      const pr=propAt(x,y);
-      if(pr&&ids.indexOf(pr.id)>=0){G.place.x=x;G.place.y=y;return true;}}}}
+      G.place.x=x;G.place.y=y;
+      if(riteStation(нужно))return true;}}}
    G.place=null;return false;};
   const сказ=[];const был=Speech.say;Speech.say=(t,o)=>{сказ.push(String(t));return был.call(Speech,t,o);};
   const нольСрыва=Math.random;Math.random=()=>0.999;   /* обряды не срываются */
@@ -176,7 +180,8 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   /* Круг и кадильница стоят не в каждой башне: их надо найти. Помощник —
      тот же поиск, только по месту, где рядом живёт кто-то живой. */
   const встать=(нужно)=>{
-   const ids=нужно==="круг"?["circle","orb"]:["censer","cauldron"];
+   /* Годится не всякий круг: повреждённый станком быть перестаёт.
+      Поэтому спрашиваем riteStation — ровно то, что спросит сама игра. */
    for(let i=0;i<60;i++){
     const bx=1000+i*137,by=900+i*211;
     for(const st of ["tower","school","spire","temple"]){
@@ -184,8 +189,8 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
      const l=curLevel();if(!l)continue;
      for(let y=0;y<l.h;y++)for(let x=0;x<l.w;x++){
       if(tileAt(l,x,y)!=="X")continue;
-      const pr=propAt(x,y);
-      if(pr&&ids.indexOf(pr.id)>=0){G.place.x=x;G.place.y=y;return true;}}}}
+      G.place.x=x;G.place.y=y;
+      if(riteStation(нужно))return true;}}}
    G.place=null;return false;};
   const сказ=[];const был=Speech.say;Speech.say=(t,o)=>{сказ.push(String(t));return был.call(Speech,t,o);};
   const r=Math.random;Math.random=()=>0.0001;         /* всё срывается */
@@ -228,7 +233,8 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   /* Круг и кадильница стоят не в каждой башне: их надо найти. Помощник —
      тот же поиск, только по месту, где рядом живёт кто-то живой. */
   const встать=(нужно)=>{
-   const ids=нужно==="круг"?["circle","orb"]:["censer","cauldron"];
+   /* Годится не всякий круг: повреждённый станком быть перестаёт.
+      Поэтому спрашиваем riteStation — ровно то, что спросит сама игра. */
    for(let i=0;i<60;i++){
     const bx=1000+i*137,by=900+i*211;
     for(const st of ["tower","school","spire","temple"]){
@@ -236,8 +242,8 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
      const l=curLevel();if(!l)continue;
      for(let y=0;y<l.h;y++)for(let x=0;x<l.w;x++){
       if(tileAt(l,x,y)!=="X")continue;
-      const pr=propAt(x,y);
-      if(pr&&ids.indexOf(pr.id)>=0){G.place.x=x;G.place.y=y;return true;}}}}
+      G.place.x=x;G.place.y=y;
+      if(riteStation(нужно))return true;}}}
    G.place=null;return false;};
   const сказ=[];const был=Speech.say;Speech.say=(t,o)=>{сказ.push(String(t));return был.call(Speech,t,o);};
   const r=Math.random;Math.random=()=>0.999;

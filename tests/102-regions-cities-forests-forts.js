@@ -223,21 +223,40 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   const бx=G.x,бy=G.y;
   r.безГолоса=NAMED_CITIES.concat(Cities.empireAll())
    .filter(c=>!(c.звук||[]).length||!c.звук.every(z=>Bank.has(z))).map(c=>c.n);
-  /* Именованный город отвечает своими голосами, а не общим залом цитадели. */
+  /* Именованный город отвечает своими голосами, а не общим залом цитадели.
+     Проверяется ОКНО города, а не вход внутрь: войдя в замок, игрок и должен
+     услышать зал цитадели с гарнизоном — это верно и нужно. Поэтому перед
+     каждым замером место сбрасывается и лишние окна закрываются, иначе
+     openBuilding уводит внутрь и меряется совсем другое. */
+  /* Голоса места ставятся отложенно, на секунды вперёд. Поэтому перед каждым
+     замером надо не только закрыть окна и выйти из места, но и ДАТЬ УЖЕ
+     ЗАПЛАНИРОВАННОМУ ОТЗВУЧАТЬ: иначе зал цитадели, назначенный прошлым
+     шагом набора, падает в чужое окно и выглядит ошибкой игры. */
+  const начисто=async()=>{
+   while(activeLayer&&activeLayer())closeTopUI();
+   G.place=null;G.inCombat=false;G.combat=null;
+   safeFn(()=>{Scape.stop();Bank.stopAll&&Bank.stopAll();});
+   await пауза(3200);PLAYED.length=0;};
   const ring=NAMED_CITY_BY_ID.ring;
+  await начисто();
   G.x=ring.x;G.y=ring.y;PLAYED.length=0;
   openBuilding(cellContent(ring.x,ring.y));await пауза(2400);
   r.кольцоСвои=ring.звук.filter(z=>PLAYED.indexOf(z)>=0).length;
   r.кольцоОбщий=PLAYED.indexOf("hall_center")>=0;
+  r.кольцоСтроение=safeFn(()=>(cellContent(ring.x,ring.y).structure||{}).type,null);
+  r.кольцоЗвуки=PLAYED.slice(0,12);
   while(activeLayer&&activeLayer())closeTopUI();
   /* Город державы — тоже своими. */
   const свой=Cities.empireAll()[0];
+  await начисто();
   G.x=свой.x;G.y=свой.y;PLAYED.length=0;
   openBuilding(cellContent(свой.x,свой.y));await пауза(2400);
   r.свойСвои=свой.звук.filter(z=>PLAYED.indexOf(z)>=0).length;
   while(activeLayer&&activeLayer())closeTopUI();
   /* У престола своего голоса нет — там прежний зал цитадели. */
-  const cap=EMPIRES[0].cap;G.x=cap.x;G.y=cap.y;PLAYED.length=0;
+  const cap=EMPIRES[0].cap;
+  await начисто();
+  G.x=cap.x;G.y=cap.y;PLAYED.length=0;
   openBuilding(cellContent(cap.x,cap.y));await пауза(1200);
   r.престолОбщий=PLAYED.indexOf("hall_center")>=0;
   while(activeLayer&&activeLayer())closeTopUI();
@@ -257,7 +276,8 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   !голоса.безГолоса.length&&голоса.кольцоСвои>=3&&!голоса.кольцоОбщий
   &&голоса.свойСвои>=3&&голоса.престолОбщий&&голоса.строка===true,
   {без:голоса.безГолоса.slice(0,3),кольцо:голоса.кольцоСвои,свой:голоса.свойСвои,
-   общийУКольца:голоса.кольцоОбщий,престол:голоса.престолОбщий});
+   общийУКольца:голоса.кольцоОбщий,престол:голоса.престолОбщий,
+   строение:голоса.кольцоСтроение,звуки:голоса.кольцоЗвуки});
  check('нрав организации слышен: четыре нрава — четыре разных голоса, и сильнейшая отвечает своим',
   голоса.нравов===4&&голоса.нравыВБанке&&голоса.нравыРазные
   &&!голоса.нравБезГолоса.length&&голоса.оргГолос,голоса);
