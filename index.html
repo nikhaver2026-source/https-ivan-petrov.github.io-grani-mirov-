@@ -4035,6 +4035,7 @@ const AM_GROUPS=[
   ["potions","⚗️ Зелья: сварить и выпить"],
   ["patrol","🛡️ Окликнуть разъезд"],
   ["cityplan","🏙️ План города: кварталы и площадь"],
+  ["cityorgs","🏛️ Организации города: кто здесь заправляет"],
   ["regions","🗺️ Область мира: где я и что рядом"],
   ["fort","🏯 Крепость: состояние и действия"],
   ["garrison","🍲 Службы крепости: кухня, лечебница, библиотека, мастерская"],
@@ -4204,6 +4205,7 @@ function amAvailable(cmd){
    const lvl=curLevel(),t=lvl&&tileAt(lvl,G.place.x,G.place.y);
    return t==="C"||t==="R";}
   if(cmd==="cityplan")return !!(G.place&&G.place.kind==="city");
+  if(cmd==="cityorgs")return !!(G.place&&G.place.kind==="city"&&safeFn(()=>!!cityHere(),false));
   if(cmd==="echo"||cmd==="look"||cmd==="map"||cmd==="usehere")return true;
   return true;
  }catch(_){return true;}
@@ -6389,7 +6391,8 @@ function isCityAt(x,y){
  /* Короткие имена держав не склоняются: «Цитадель Хладная Стужаа» — не имя,
     а опечатка вслух. Держава берётся в кавычки как есть. */
  if(x===emp.cap.x&&y===emp.cap.y)return {x,y,type:"castle",name:`Цитадель «${emp.short}»`,emp,size:3};
- if(typeof NAMED_CITY_MAP!=="undefined"&&NAMED_CITY_MAP.has(x+","+y)){const нг=NAMED_CITY_MAP.get(x+","+y);return {x,y,type:"castle",name:нг.полное,emp,size:3,named:нг.id};}
+ const нг=safeFn(()=>cityAt(x,y),null);
+ if(нг)return {x,y,type:"castle",name:нг.полное,emp,size:нг.держава==null?3:2,named:нг.id};
  if(typeof FORT_MAP!=="undefined"&&FORT_MAP.has(x+","+y)){const кр=FORT_MAP.get(x+","+y);return {x,y,type:"fortress",name:кр.n,emp,size:2,fort:кр.id};}
  if(terrainAt(x,y)[0]==="coast"&&!isRoad(x,y)&&H(x,y,502)<0.02)
   return {x,y,type:"port",name:portNameAt(x,y),emp,size:2};
@@ -11315,7 +11318,7 @@ function cellContent(x,y){
  const c={x,y,terrain:terrainAt(x,y),empire:empireAt(x,y),structure:null,res:null,monster:null};
  const emp=c.empire;
  if(x===emp.cap.x&&y===emp.cap.y)c.structure={type:"castle",name:`Цитадель «${emp.short}»`,beacon:"castle"};
- else if(typeof NAMED_CITY_MAP!=="undefined"&&NAMED_CITY_MAP.has(x+","+y))c.structure=namedCityStructure(x,y);
+ else if(safeFn(()=>!!cityAt(x,y),false))c.structure=namedCityStructure(x,y);
  else if(typeof FORT_MAP!=="undefined"&&FORT_MAP.has(x+","+y))c.structure=fortStructure(x,y);
  else{
   const r3=H(x,y,3);
@@ -21978,7 +21981,7 @@ function genLevel(bx,by,depth,stype){
  const BLOCKW=stype==="castle"?8:stype==="port"?7:6;
  /* Именованный город — своя сетка районов (Кольцевой — семь на шесть),
     крепость — четыре на два: казармы, арсенал, склады и прочее. */
- const именной=depth>0?null:safeFn(()=>namedCityAt(bx,by),null);
+ const именной=depth>0?null:safeFn(()=>cityAt(bx,by),null);
  const крепость=depth>0?null:safeFn(()=>fortAt(bx,by),null);
  const NC=именной?именной.сетка[0]:(крепость?4:3),NR=именной?именной.сетка[1]:2;
  const w=kind==="city"?4+NC*(2+BLOCKW)+1:21+Math.floor(R(1)*8);
@@ -28933,6 +28936,7 @@ const CMD={
    narrate("В бою есть четыре хода: удар, чары, зелье и побег. Свайп тремя пальцами вверх — меню действий.");return;}
   fight(a);},
  cityplan(){cityPlan();},
+ cityorgs(){return cityOrgsHere();},
  setdiff(k){setDifficulty(k);},
  tutor(){Tutor.on?Tutor.stop():Tutor.start();},
  warm(){Warm.busy?Warm.cancel():Warm.run();},
@@ -29286,7 +29290,7 @@ NAMED_CITIES.forEach(c=>{c.полное=`${c.n} — ${c.роль}`;});
 var NAMED_CITY_MAP=new Map(NAMED_CITIES.map(c=>[c.x+","+c.y,c]));
 const NAMED_CITY_BY_ID=Object.fromEntries(NAMED_CITIES.map(c=>[c.id,c]));
 function namedCityAt(x,y){return NAMED_CITY_MAP.get(x+","+y)||null;}
-function namedCityStructure(x,y){const c=namedCityAt(x,y);if(!c)return null;
+function namedCityStructure(x,y){const c=cityAt(x,y);if(!c)return null;
  return {type:"castle",name:c.полное,beacon:"castle",named:c.id};}
 /* Районы именованного города: свои три плюс роды районов, начиная с точки,
    своей у каждого города. Кольцевой город берёт все сорок два. */
@@ -29299,16 +29303,30 @@ function namedCityDistricts(c){
  return out.slice(0,n);}
 function districtOverride(b,bi,bx,by,depth,stype){
  if(depth>0)return;
- const c=namedCityAt(bx,by);
+ const c=safeFn(()=>cityAt(bx,by),null);
  if(c){const d=namedCityDistricts(c)[bi];if(!d)return;
   b.purpose=d.p;b.kindName=BLOCK_NAMES[d.p]||BLOCK_NAMES.N;b.trade=QUARTER_TRADE[d.p]||QUARTER_TRADE.N;b.name=d.n;b.слух=d.слух;b.дозор=d.дозор;b.район=d.id||"свой";return;}
  const f=fortAt(bx,by);
  if(f){const part=FORT_PARTS[bi%FORT_PARTS.length];b.purpose=part.p;b.kindName=part.n;b.trade=part.дело;b.name=part.n;b.часть=part.id;}}
 const Cities=Modules.register("CITIES",{
  all:()=>NAMED_CITIES,at:namedCityAt,byId:id=>NAMED_CITY_BY_ID[id]||null,districts:namedCityDistricts,
+ /* Города держав: свой список, свой поиск и свой счёт по державам. */
+ empireAll:()=>empireCities(),empireAt:empireCityAt,ofEmpire:i=>empireCitiesOf(i),
+ any:(x,y)=>cityAt(x,y),here:cityHere,orgs:cityOrgs,orgsText:cityOrgsText,
+ /* Список родов организаций объявлен ниже по файлу, поэтому берётся
+    вызовом, а не значением: иначе реестр читал бы его до объявления. */
+ orgKinds:()=>ORG_KINDS,
+ countByEmpire(){const out=EMPIRES.map(()=>0);
+  NAMED_CITIES.forEach(c=>{const i=safeFn(()=>empireIndexAt(c.x,c.y),-1);if(i>=0)out[i]++;});
+  empireCities().forEach(c=>{out[c.держава]++;});return out;},
  /* Слух района: у каждого района свой, и он слышен на улице. */
  districtHere(){try{const b=blockAt(G.place.x,G.place.y);return b&&b.слух?b:null;}catch(_){return null;}},
  nearest(x,y){let best=null,bd=Infinity;NAMED_CITIES.forEach(c=>{const d=Math.max(Math.abs(c.x-x),Math.abs(c.y-y));if(d<bd){bd=d;best=c;}});return best?{c:best,d:bd}:null;},
+ /* Ближайший любой город — и именованный, и державный: по нему игра
+    отвечает, докуда идти до ближайших стен. */
+ nearestAny(x,y){let best=null,bd=Infinity;
+  NAMED_CITIES.concat(empireCities()).forEach(c=>{const d=Math.max(Math.abs(c.x-x),Math.abs(c.y-y));if(d<bd){bd=d;best=c;}});
+  return best?{c:best,d:bd}:null;},
  text(c){return `${c.n}, ${c.роль}: ${c.о} Районов ${c.сетка[0]*c.сетка[1]}; продаёт ${c.товар.join(", ")}; ищет ${c.нужда.join(", ")}; пошлина ${Math.round(c.пошлина*100)} сотых. Координаты ${c.x} и ${c.y}.`;}});
 
 /* ── ВЕЛИКИЕ ЛЕСА ── */
@@ -29402,6 +29420,228 @@ var FORT_MAP=new Map(FORTS.map(f=>[f.x+","+f.y,f]));
 const FORT_BY_ID=Object.fromEntries(FORTS.map(f=>[f.id,f]));
 function fortAt(x,y){return FORT_MAP.get(x+","+y)||null;}
 function fortStructure(x,y){const f=fortAt(x,y);if(!f)return null;return {type:"fortress",name:f.n,beacon:"castle",fort:f.id};}
+/* ════════ ГОРОДА ДЕРЖАВ ════════
+   У державы, по брифу, престол, от пяти до десяти городов и двадцать с
+   лишним поселений. Поселения мир родит сам: деревня встречается на трёх
+   клетках из тысячи, и на державу их приходится куда больше двадцати.
+   Городов же было тридцать один на двенадцать держав — двенадцать
+   престолов и девятнадцать именованных, — и половине держав похвастаться
+   было нечем, кроме своего престола.
+
+   Город державы встаёт кольцом вокруг престола. Место ищется от дальнего
+   кольца к ближнему и берётся первое, которое легло в свою землю и не на
+   чужое строение: земля делится по ближайшей столице, и кольцо у тесной
+   державы само поджимается. Дело города следует из того, что под ногами:
+   в горах рубят руду, у воды держат причал, в лесу пилят лес, в песках
+   стоят на караванном пути, на дороге торгуют. Входят в такой город так
+   же, как в именованный: та же сетка районов, те же кварталы, тот же торг
+   и та же пошлина — потому что город ищут одной и той же рукой, cityAt,
+   а она смотрит в оба списка. */
+const CITY_TRADES=[
+ {id:"mine",  роль:"рудничный город",  земли:["mountains","cave"],
+  о:"Город стоит на отвалах: дым из плавилен виден раньше самих крыш.",
+  свои:["Отвальный двор","Улица подъёмников","Площадь весов"],
+  товар:["руда","камень"],нужда:["дерево","ягоды"],звук:["mine_pick","oc_lift_move","hall_forge"]},
+ {id:"forge", роль:"кузнечный город",  земли:["mountains","road"],
+  о:"Здесь считают день не по солнцу, а по тому, сколько раз остыл горн.",
+  свои:["Горновый двор","Улица молотов","Площадь клейма"],
+  товар:["руда","камень"],нужда:["дерево","трава"],звук:["hall_forge","stk_clang","craft_knock"]},
+ {id:"port",  роль:"причальный город", земли:["coast"],
+  о:"Половина улиц кончается водой, и половина разговоров — ценой фрахта.",
+  свои:["Причальный двор","Улица снастей","Площадь фонарей"],
+  товар:["ракушка","кость"],нужда:["дерево","трава"],звук:["hall_dock","uh_ships_bell","sky_wave"]},
+ {id:"timber",роль:"лесопильный город",земли:["forest"],
+  о:"Город пахнет смолой и опилками, и пилы слышно раньше колоколов.",
+  свои:["Пильный двор","Улица брёвен","Площадь клиньев"],
+  товар:["дерево","ягоды"],нужда:["руда","камень"],звук:["craft_saw","oc_sawmill","oc_chop"]},
+ {id:"caravan",роль:"караванный город",земли:["desert"],
+  о:"Город живёт водой и пошлиной: без первой не дойти, без второй не пройти.",
+  свои:["Караванный двор","Улица колодцев","Площадь мер"],
+  товар:["кристалл","камень"],нужда:["трава","дерево"],звук:["caravan_sitar","mtg_cart","hall_market"]},
+ {id:"herb",  роль:"знахарский город", земли:["swamp"],
+  о:"Сушат всё, что растёт, и продают то, чего не растёт больше нигде.",
+  свои:["Сушильный двор","Улица склянок","Площадь корней"],
+  товар:["грибы","трава"],нужда:["камень","руда"],звук:["craft_field","oc_bubble","uh_page"]},
+ {id:"grain", роль:"хлебный город",    земли:["plains"],
+  о:"Город держится на укосе: чей амбар полон, тот и в совете.",
+  свои:["Амбарный двор","Улица жерновов","Площадь снопов"],
+  товар:["трава","ягоды"],нужда:["руда","кристалл"],звук:["hall_farm","bell_field","craft_field"]},
+ {id:"market",роль:"торговый город",   земли:["road","plains"],
+  о:"Здесь торгуют всем, и потому цену всему называют здесь.",
+  свои:["Торговый двор","Улица лавок","Площадь весов"],
+  товар:["ягоды","трава"],нужда:["кристалл","кость"],звук:["hall_market","market_tap","throng_hail_m"]},
+ {id:"guard", роль:"сторожевой город", земли:["road","mountains"],
+  о:"Город при заставе: ворота считают всех, кто вошёл, и всех, кто не вышел.",
+  свои:["Сторожевой двор","Улица караулов","Площадь смотра"],
+  товар:["камень","руда"],нужда:["трава","ягоды"],звук:["throng_march","hall_gate","guard_whistle"]},
+ {id:"book",  роль:"книжный город",    земли:["plains","road"],
+  о:"Тише прочих: здесь и торгуются вполголоса, чтобы не мешать читающим.",
+  свои:["Книжный двор","Улица переписчиков","Площадь списков"],
+  товар:["трава","кость"],нужда:["дерево","кристалл"],звук:["uh_page","arte_page","bell_small"]},
+ {id:"temple",роль:"храмовый город",   земли:["plains","mountains"],
+  о:"Колокол здесь задаёт час всему: и торгу, и страже, и сну.",
+  свои:["Храмовый двор","Улица обетов","Площадь колоколов"],
+  товар:["кость","камень"],нужда:["трава","ягоды"],звук:["temple_bell","temple_choir","uh_bell"]},
+ {id:"cave",  роль:"подгорный город",  земли:["cave"],
+  о:"Город врос в гору: небо видно только с верхних ярусов.",
+  свои:["Подгорный двор","Улица штолен","Площадь эха"],
+  товар:["камень","кристалл"],нужда:["трава","дерево"],звук:["deep_wind","oc_rockfall","deep_cart"]}];
+const CITY_TRADE_BY_ID=Object.fromEntries(CITY_TRADES.map(t=>[t.id,t]));
+/* Имя города собирается из тех же слогов, что и всё в этом мире: иногда с
+   приставкой через дефис, как Нор-Каэль и Эль-Варн, иногда без неё. */
+const CITY_PREF=["Нор","Сар","Эль","Дор","Ран","Керн","Вар","Тал"];
+const CITY_SUF=["ель","вен","дор","ир","ан","ем","орн","ак","ис","ур","ейн","ал","ар","ен"];
+function cityNameAt(x,y){
+ const кор=SYL[Math.floor(hashName(x,y,9110)*SYL.length)];
+ const кон=CITY_SUF[Math.floor(hashName(x,y,9111)*CITY_SUF.length)];
+ const имя=кор+кон;
+ return hashName(x,y,9112)<0.3
+  ? CITY_PREF[Math.floor(hashName(x,y,9113)*CITY_PREF.length)]+"-"+имя
+  : имя;}
+/* Список строится один раз и лениво: к этому мигу и державы, и именованные
+   города, и крепости уже на карте, и место можно проверить по-настоящему. */
+var EMPIRE_CITIES_CACHE=null,EMPIRE_CITY_MAP_CACHE=null;
+function buildEmpireCities(){
+ const out=[];
+ const занято=new Set(EMPIRES.map(e=>e.cap.x+","+e.cap.y));
+ try{NAMED_CITY_MAP.forEach((_,k)=>занято.add(k));}catch(_){}
+ try{FORT_MAP.forEach((_,k)=>занято.add(k));}catch(_){}
+ /* Именованные города считаются в ту же меру: бриф просит от пяти до
+    десяти городов на державу всего, а не сверх тех девятнадцати, что
+    расставлены рукой. Где именованных уже много, своих ставится меньше. */
+ const именных=EMPIRES.map(()=>0);
+ try{NAMED_CITIES.forEach(c=>{const i=safeFn(()=>empireIndexAt(c.x,c.y),-1);if(i>=0)именных[i]++;});}catch(_){}
+ EMPIRES.forEach((e,i)=>{
+  const мера=5+Math.floor(hashName(e.cap.x,e.cap.y,9100)*6);
+  const сколько=Math.max(0,мера-именных[i]);
+  if(!сколько)return;
+  const фаза=hashName(e.cap.x,e.cap.y,9101)*Math.PI*2;
+  for(let k=0;k<сколько;k++){
+   const угол=фаза+k*Math.PI*2/сколько+(hashName(e.cap.x+k*3,e.cap.y+k*5,9102)-0.5)*0.5;
+   let x=0,y=0,нашли=false;
+   for(let r=3200;r>=600&&!нашли;r-=200){
+    const rr=Math.round(r*(0.85+hashName(e.cap.x+k*7,e.cap.y+k*11,9103)*0.3));
+    x=Math.round(e.cap.x+Math.cos(угол)*rr);
+    y=Math.round(e.cap.y+Math.sin(угол)*rr);
+    if(x<200||y<200||x>=WORLD-200||y>=WORLD-200)continue;
+    if(занято.has(x+","+y))continue;
+    if(safeFn(()=>empireIndexAt(x,y),-1)!==i)continue;
+    нашли=true;}
+   if(!нашли)continue;
+   занято.add(x+","+y);
+   const земля=safeFn(()=>{const b=biomeAt(x,y);return b&&b.база;},null)
+    ||(e.terrains&&e.terrains[0])||"plains";
+   const годные=CITY_TRADES.filter(t=>t.земли.indexOf(земля)>=0);
+   const пул=годные.length?годные:CITY_TRADES;
+   const t=пул[Math.floor(hashName(x,y,9104)*пул.length)];
+   const ш=3+Math.floor(hashName(x,y,9105)*3),в=3+Math.floor(hashName(x,y,9106)*2);
+   out.push({id:"ec"+i+"_"+k,держава:i,n:cityNameAt(x,y),роль:t.роль,дело:t.id,
+    x,y,сетка:[ш,в],о:t.о,свои:t.свои.slice(),товар:t.товар.slice(),нужда:t.нужда.slice(),
+    пошлина:Math.round((0.04+hashName(x,y,9107)*0.05)*100)/100,звук:t.звук.slice()});}});
+ out.forEach(c=>{c.полное=`${c.n} — ${c.роль}`;});
+ return out;}
+function empireCities(){if(!EMPIRE_CITIES_CACHE)EMPIRE_CITIES_CACHE=safeFn(buildEmpireCities,[])||[];return EMPIRE_CITIES_CACHE;}
+function empireCityMap(){if(!EMPIRE_CITY_MAP_CACHE)EMPIRE_CITY_MAP_CACHE=new Map(empireCities().map(c=>[c.x+","+c.y,c]));return EMPIRE_CITY_MAP_CACHE;}
+function empireCityAt(x,y){return empireCityMap().get(x+","+y)||null;}
+function empireCitiesOf(i){return empireCities().filter(c=>c.держава===i);}
+/* Одна рука на оба списка: и именованный город, и город державы. */
+function cityAt(x,y){return namedCityAt(x,y)||empireCityAt(x,y);}
+/* ════════ ОРГАНИЗАЦИИ ГОРОДА (§12) ════════
+   Бриф просит у большого города десять и больше организаций. Дома,
+   синдикаты и Надзор в мире были, но города не касались: на вопрос
+   «кто здесь заправляет» город отвечал кварталами и больше ничем.
+
+   Организации города — двух родов. Первые растут из самого города: палата,
+   цехи, дозор, приход, училище, лечебный дом, судная палата, гонцы,
+   переписчики, копейный двор, ночная доля, караванное товарищество,
+   водяной и погребальный братчины. Какие именно — следует из кварталов:
+   где есть причал, там товарищество корабельщиков, где горны — цех
+   кузнецов. Вторые в городе уже были и просто не назывались рядом: Дом
+   этих земель, синдикаты, чьи люди здесь сидят, оппозиция державы и её
+   шпионская сеть. Вместе их всегда не меньше десяти.
+
+   У организации есть глава, квартал, где её ищут, сила от одного до пяти
+   и нрав — то, чем её берут: счётом, словом, силой или молчанием. */
+const ORG_KINDS=[
+ {id:"chamber", n:"Торговая палата",           дело:"держит меры, весы и городскую пошлину",  нрав:"счётом",   районы:["trade","market"],   всегда:true},
+ {id:"watch",   n:"Городской дозор",           дело:"ворота, ночные обходы и списки вошедших",нрав:"силой",   районы:["guard","prison"],   всегда:true},
+ {id:"parish",  n:"Городской приход",          дело:"колокол, обеты и счёт праздничным дням", нрав:"словом",  районы:["temple","cemetery"],всегда:true},
+ {id:"craft",   n:"Цех ремёсел",               дело:"клейма, подмастерья и споры о подряде",  нрав:"счётом",   районы:["craft","forge"]},
+ {id:"smiths",  n:"Цех кузнецов",              дело:"уголь, руда и цена железа",              нрав:"счётом",   районы:["forge","craft"]},
+ {id:"ships",   n:"Товарищество корабельщиков",дело:"фрахт, лоцманы и доля с киля",           нрав:"счётом",   районы:["port"]},
+ {id:"caravan", n:"Караванное товарищество",   дело:"проводники, вода и охрана обоза",        нрав:"счётом",   районы:["stables","market","trade"]},
+ {id:"healers", n:"Лечебный дом",              дело:"раненые, моровые списки и травы",        нрав:"словом",  районы:["heal"]},
+ {id:"scribes", n:"Палата переписчиков",       дело:"списки книг, договоры и печати",         нрав:"словом",  районы:["library","academy"]},
+ {id:"school",  n:"Городское училище",         дело:"учит счёту, письму и начаткам чар",      нрав:"словом",  районы:["academy","library","magic"]},
+ {id:"court",   n:"Судная палата",             дело:"тяжбы, межи и цена вины",                нрав:"словом",  районы:["prison","noble","guard"]},
+ {id:"spears",  n:"Копейный двор",             дело:"нанимает копья и продаёт чужие клятвы",  нрав:"силой",   районы:["merc","guard"]},
+ {id:"night",   n:"Ночная доля",               дело:"берёт своё с тех, кто торгует после заката",нрав:"молчанием",районы:["crime","sewer"]},
+ {id:"couriers",n:"Гонцовая служба",           дело:"письма, вести и то, что не пишут",       нрав:"молчанием",районы:["trade","noble"]},
+ {id:"water",   n:"Водяная братчина",          дело:"колодцы, стоки и подземные ходы",        нрав:"счётом",   районы:["sewer","market"]},
+ {id:"burial",  n:"Погребальная братчина",     дело:"кости, поминовение и чужое наследство",  нрав:"молчанием",районы:["cemetery","temple"]}];
+const ORG_BY_ID=Object.fromEntries(ORG_KINDS.map(o=>[o.id,o]));
+function orgLeader(x,y,k){
+ return `${SYL[Math.floor(hashName(x+k*3,y+k*7,9500)*SYL.length)]}${SYL2[Math.floor(hashName(x+k*5,y+k*11,9501)*SYL2.length)]}`;}
+/* Город, в котором сейчас стоит игрок: именованный, державный или престол. */
+function cityHere(){
+ try{
+  const p=G.place;if(!p||p.depth>0)return null;
+  const c=safeFn(()=>cityAt(p.bx,p.by),null);
+  if(c)return c;
+  const e=EMPIRES.find(z=>z.cap.x===p.bx&&z.cap.y===p.by);
+  if(e)return {id:"cap"+EMPIRES.indexOf(e),n:`Цитадель «${e.short}»`,роль:"престол державы",
+   x:e.cap.x,y:e.cap.y,сетка:[3,2],свои:[],престол:true};
+  return null;
+ }catch(_){return null;}}
+function cityOrgs(c){
+ if(!c)return [];
+ const out=[];
+ const районы=safeFn(()=>namedCityDistricts(c).map(d=>d.id).filter(Boolean),[])||[];
+ const есть=new Set(районы);
+ const имена=safeFn(()=>namedCityDistricts(c),[])||[];
+ const гдеИскать=id=>{
+  const k=ORG_BY_ID[id];if(!k)return "на улицах";
+  const д=имена.find(x=>k.районы.indexOf(x.id)>=0);
+  return д?д.n:(имена[0]?имена[0].n:"на улицах");};
+ /* Свои: сперва те, что есть в городе всегда, потом те, чей квартал нашёлся. */
+ const свои=ORG_KINDS.filter(k=>k.всегда||k.районы.some(r=>есть.has(r)));
+ свои.forEach((k,i)=>out.push({id:k.id,n:k.n,дело:k.дело,нрав:k.нрав,
+  глава:orgLeader(c.x,c.y,i+1),район:гдеИскать(k.id),
+  сила:1+Math.floor(hashName(c.x+i*13,c.y+i*17,9502)*5),своя:true}));
+ /* Те, что были в мире и просто не назывались рядом с городом. */
+ const дом=safeFn(()=>houseAt(c.x,c.y),null);
+ if(дом)out.push({id:"house_"+дом.id,n:дом.n,дело:дом.econ||"держит эти земли",
+  нрав:"словом",глава:`старший Дома, девиз «${дом.девиз}»`,район:гдеИскать("court"),сила:5,мир:true});
+ safeFn(()=>{SYNDICATES.forEach(sy=>{
+  if((sy.города||[]).some(id=>NAMED_CITY_BY_ID[id]&&NAMED_CITY_BY_ID[id].x===c.x&&NAMED_CITY_BY_ID[id].y===c.y))
+   out.push({id:"synd_"+sy.id,n:sy.n,дело:sy.спец||"своё дело, о котором не спрашивают",
+    нрав:"молчанием",глава:sy.лидер||"никто не назовётся",район:гдеИскать("night"),сила:4,мир:true});});});
+ const i=safeFn(()=>empireIndexAt(c.x,c.y),-1);
+ const ex=i>=0?safeFn(()=>Empires.extra(i),null):null;
+ if(ex){
+  out.push({id:"oppo",n:ex.оппозиция.n,дело:`хочет ${ex.оппозиция.хочет}`,нрав:"словом",
+   глава:orgLeader(c.x,c.y,31),район:гдеИскать("court"),сила:3,мир:true});
+  out.push({id:"spies",n:ex.шпионы.n,дело:"слушает и запоминает",нрав:"молчанием",
+   глава:"того не называют",район:гдеИскать("couriers"),сила:3,мир:true});}
+ /* Меньше десяти не бывает: недостающее добирается из общего списка. */
+ for(let k=0;out.length<10&&k<ORG_KINDS.length;k++){
+  const o=ORG_KINDS[k];if(out.some(z=>z.id===o.id))continue;
+  out.push({id:o.id,n:o.n,дело:o.дело,нрав:o.нрав,глава:orgLeader(c.x,c.y,40+k),
+   район:гдеИскать(o.id),сила:1+Math.floor(hashName(c.x+k,c.y+k,9503)*5),своя:true});}
+ return out;}
+function cityOrgsText(c){
+ const list=cityOrgs(c);
+ if(!list.length)return "Организаций здесь нет: это не город.";
+ return `Организаций в городе ${list.length}: `
+  +list.map(o=>`${o.n} — ${o.дело}; глава ${o.глава}, искать ${o.район}, сила ${o.сила} из пяти, берут ${o.нрав}`).join(". ")+".";}
+function cityOrgsHere(){
+ const c=cityHere();
+ if(!c){narrate("Организации считают внутри городских стен: здесь их нет.");return false;}
+ safeFn(()=>Bank.play("hall_market",{gain:0.45,maxSec:3}));
+ narrate(`${c.n}. ${cityOrgsText(c)}`);
+ return true;}
+
+
 const Forts=Modules.register("FORTRESSES",{
  all:()=>FORTS,cats:FORT_CATS,parts:FORT_PARTS,at:fortAt,byId:id=>FORT_BY_ID[id]||null,
  /* Состояние крепости живёт в сохранении и заводится при первом обращении. */
@@ -30167,10 +30407,22 @@ const Empires=Modules.register("EMPIRES",{
   }catch(_){return {полки:0,мораль:50,снабжение:50,численность:0};}},
  darkArmy(id,day){try{day=day==null?G.day:day;const ex=this.darkExtra(id);if(!ex)return null;let полки=ex.войско.полки,мораль=ex.войско.мораль,снаб=ex.войско.снабжение;const i=DARK_EMPIRES.findIndex(e=>e.id===id);if(safeFn(()=>darkEmpireAtWar(i,day),false)){полки+=2;мораль-=6;снаб-=8;}return {полки,мораль:Math.max(10,Math.min(100,мораль)),снабжение:Math.max(10,Math.min(100,снаб)),численность:полки*600};}catch(_){return null;}},
  schoolsText(ids){return (ids||[]).map(id=>(SCHOOLS.find(x=>x.id===id)||{}).n||id).join(", ");},
+ /* Города державы: сколько их, как зовут и чем живут. Раньше на вопрос
+    «какие здесь города» держава отвечала только своим престолом. */
+ citiesText(i){
+  try{
+   const emp=EMPIRES[i]||EMPIRES[0];
+   const свои=safeFn(()=>Cities.ofEmpire(i),[])||[];
+   const именные=NAMED_CITIES.filter(c=>safeFn(()=>empireIndexAt(c.x,c.y),-1)===i);
+   const все=именные.concat(свои);
+   if(!все.length)return `Городов, кроме престола «${emp.short}», в державе нет.`;
+   return `Города державы, кроме престола (${все.length}): `
+    +все.map(c=>`${c.n} — ${c.роль}`).join("; ")+".";
+  }catch(_){return "";}},
  text(i){
   try{
    const ex=this.extra(i);const a=this.army(i);const emp=EMPIRES[i]||EMPIRES[0];
-   return `Династия «${emp.short}»: ${ex.династия}, правит ${ex.правит} уже ${ex.лет} ${plural(ex.лет,"год","года","лет")}. Наследники: ${ex.наследники.join("; ")}. Оппозиция — ${ex.оппозиция.n}: хочет ${ex.оппозиция.хочет}. Шпионы — ${ex.шпионы.n}, работают в землях: ${ex.шпионы.где}. Внутренний раздор: ${ex.конфликт}. Школы чар: ${this.schoolsText(ex.школы)}. Особый товар: ${ex.ресурс}. Войско: ${a.полки} ${plural(a.полки,"полк","полка","полков")} (${a.численность} копий), боевой дух ${a.мораль}, снабжение ${a.снабжение}.`;
+   return `Династия «${emp.short}»: ${ex.династия}, правит ${ex.правит} уже ${ex.лет} ${plural(ex.лет,"год","года","лет")}. Наследники: ${ex.наследники.join("; ")}. Оппозиция — ${ex.оппозиция.n}: хочет ${ex.оппозиция.хочет}. Шпионы — ${ex.шпионы.n}, работают в землях: ${ex.шпионы.где}. Внутренний раздор: ${ex.конфликт}. Школы чар: ${this.schoolsText(ex.школы)}. Особый товар: ${ex.ресурс}. Войско: ${a.полки} ${plural(a.полки,"полк","полка","полков")} (${a.численность} копий), боевой дух ${a.мораль}, снабжение ${a.снабжение}. ${this.citiesText(i)}`;
   }catch(_){return "";}},
  darkText(id){
   try{
@@ -35246,6 +35498,29 @@ function worldSelfCheck(){
   ok("potions",POTIONS.every(p=>p.из.length===2&&PLANTS.some(x=>x.кат===p.из[0])&&PLANTS.some(x=>x.кат===p.из[1])),"у каждого зелья рецепт из существующих ниш");
   ok("artifacts",(G.artifacts||[]).every(a=>typeof a!=="object"||!!artLore(a)),"у каждого артефакта происхождение");
   ok("cities",EMPIRES.every(e=>!!safeFn(()=>cityProfile({x:e.cap.x,y:e.cap.y,type:"castle",emp:e}),null)),"у каждого престола хозяйство");
+  /* §29: у державы престол, от пяти до десяти городов и двадцать с лишним
+     поселений. Города считаются все — и расставленные рукой, и свои; они
+     обязаны лежать в своей земле, не на престоле, не на именованном городе
+     и не на крепости, и у каждого своя сетка районов и свой торг. */
+  const счётГородов=safeFn(()=>Cities.countByEmpire(),[]);
+  const свои=safeFn(()=>Cities.empireAll(),[]);
+  ok("towns",счётГородов.length===EMPIRES.length
+   &&счётГородов.every(n=>n>=5&&n<=10)
+   &&свои.every(c=>safeFn(()=>empireIndexAt(c.x,c.y),-1)===c.держава)
+   &&свои.every(c=>!EMPIRES.some(e=>e.cap.x===c.x&&e.cap.y===c.y))
+   &&свои.every(c=>!NAMED_CITY_MAP.has(c.x+","+c.y)&&!FORT_MAP.has(c.x+","+c.y))
+   &&свои.every(c=>c.сетка[0]*c.сетка[1]>=9&&c.свои.length===3&&c.товар.length&&c.нужда.length
+    &&CITY_TRADE_BY_ID[c.дело]&&(c.звук||[]).every(r=>SOUND_BANK[r]))
+   &&new Set(свои.map(c=>c.x+","+c.y)).size===свои.length,
+   "у каждой державы от пяти до десяти городов, и всякий стоит в своей земле");
+  /* §12: у большого города десять и больше организаций. Считаются все
+     города мира — и расставленные рукой, и державные. */
+  const городаВсе=NAMED_CITIES.concat(свои||[]);
+  ok("orgs",городаВсе.length>0&&городаВсе.every(c=>{
+    const l=safeFn(()=>cityOrgs(c),[]);
+    return l.length>=10&&l.every(o=>o.n&&o.дело&&o.глава&&o.район&&o.нрав&&o.сила>=1&&o.сила<=5)
+     &&new Set(l.map(o=>o.n)).size===l.length;}),
+   "в каждом городе десять и больше организаций, у каждой глава, квартал, сила и нрав");
   ok("res",RES_KINDS.length===19&&RES_KINDS.every(k=>k.n&&k.добыча&&k.обработка&&k.рынок&&k.сезоны.length&&k.res.length
    &&k.сезоны.every(c=>SEASONS.some(x=>x.id===c)))
    &&["шкура","орган","кровь","яд","эссенция","эфир","осколок времени","тяжёлый минерал","рунный камень"].every(r=>RES_BASE[r]&&RESICON[r]&&SOUND_BANK[BEACON_ROLE[RESBEACON[r]]]&&RES_KIND_BY_RES[r])
