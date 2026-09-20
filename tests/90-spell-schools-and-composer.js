@@ -58,8 +58,8 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   far_ward:spellIncompat("earth","ward","far"),quick_call:spellIncompat("spirit","call","quick"),
   lasting_bolt:spellIncompat("fire","bolt","lasting"),ok:spellIncompat("fire","bolt","quick"),ok2:spellIncompat("earth","ward","lasting"),
   пусто:spellIncompat("nope","bolt")}));
- check('2. пять форм, пять усилений; бессмысленное отвергается словами, осмысленное проходит',
-  формы.форм===5&&формы.усилений===5&&/не имеет смысла/.test(формы.heal_bolt)&&/тихого звука/.test(формы.silent_sound)&&/щит/.test(формы.far_ward)&&/зов/.test(формы.quick_call)&&/стрела/.test(формы.lasting_bolt)&&формы.ok===""&&формы.ok2===""&&формы.пусто.length>0,
+ check('2. двенадцать форм, шестнадцать усилений; бессмысленное отвергается словами, осмысленное проходит',
+  формы.форм===12&&формы.усилений===16&&/не имеет смысла/.test(формы.heal_bolt)&&/тихого звука/.test(формы.silent_sound)&&/щит/.test(формы.far_ward)&&/зов/.test(формы.quick_call)&&/стрела/.test(формы.lasting_bolt)&&формы.ok===""&&формы.ok2===""&&формы.пусто.length>0,
   [формы.heal_bolt,формы.silent_sound]);
 
  /* ── 3. запись ── */
@@ -94,6 +94,9 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   r.школ=document.querySelectorAll('#sfBody [data-cmd^="sfschool:"]').length;
   r.форм=document.querySelectorAll('#sfBody [data-cmd^="sfform:"]').length;
   r.усил=document.querySelectorAll('#sfBody [data-cmd^="sfmod:"]').length;
+  /* Две новые оси составителя: ядро и стихия. У каждой ещё кнопка «по школе». */
+  r.ядер=document.querySelectorAll('#sfBody [data-cmd^="sfcore:"]').length;
+  r.стихий=document.querySelectorAll('#sfBody [data-cmd^="sfelem:"]').length;
   r.собрать=!!document.querySelector('#sfBody [data-cmd="sfbuild"]');
   SAID.length=0;document.querySelector('#sfBody [data-cmd="sfschool:fire"]').click();r.сказШкола=SAID.slice(-1)[0]||"";
   SAID.length=0;document.querySelector('#sfBody [data-cmd="sfform:bolt"]').click();r.сказФорма=SAID.slice(-1)[0]||"";
@@ -108,8 +111,8 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   safeOpenMagicPanel();r.слот=[...document.querySelectorAll('#magicSlots button')].some(b=>/Стрела огня/.test(b.textContent)&&!/не изучено/.test(b.textContent));
   closeMagicPanel();
   return r;});
- check('5а. окно составителя: 34 школы, 5 форм, 5 усилений и «Собрать»; выбор озвучен и отмечен',
-  окно.открыто&&окно.видно&&окно.школ===34&&окно.форм===5&&окно.усил===5&&окно.собрать&&/Огонь|Выйдет/.test(окно.сказШкола)&&/Выйдет «Стрела огня»/.test(окно.сказФорма)&&окно.галочка,
+ check('5а. окно составителя: 34 школы, 12 форм, 16 ядер и 18 стихий (плюс «по школе»), 16 усилений и «Собрать»; выбор озвучен и отмечен',
+  окно.открыто&&окно.видно&&окно.школ===34&&окно.форм===12&&окно.усил===16&&окно.ядер===17&&окно.стихий===19&&окно.собрать&&/Огонь|Выйдет/.test(окно.сказШкола)&&/Выйдет «Стрела огня»/.test(окно.сказФорма)&&окно.галочка,
   [окно.школ,окно.форм,окно.усил,окно.сказФорма]);
  check('5б. сборка берёт кристалл и пятнадцать маны; без них — отказ; дважды одно — отказ',
   окно.безКристалла===false&&/кристалл/i.test(окно.безКристаллаСказ)&&окно.безМаны===false&&/маны/.test(окно.безМаныСказ)&&окно.ok&&окно.кристалл===2&&окно.мана===25&&окно.дважды===false&&/уже есть/.test(окно.дваждыСказ),
@@ -124,7 +127,9 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   const добавить=(sc,f,m)=>{const rec=composeSpell(sc,f,m,1);G.spellbook.push(rec);registerCustomSpells();return SPELLS.findIndex(s=>s.n===rec.n);};
   const iStrela=SPELLS.findIndex(s=>s.n==="Стрела огня");
   const iShield=добавить("earth","ward","none"),iCall=добавить("light","call","none"),iWave=добавить("chaos","wave","lasting"),iSilent=добавить("dark","bolt","silent");
-  r.записей=SPELLS.filter(s=>s.custom).length;
+  /* Собранные составителем: у них id начинается на cs_. Именные чары школ
+     тоже идут через castCustomEffect, поэтому одного флага custom мало. */
+  r.записей=SPELLS.filter(s=>s.custom&&/^cs_/.test(String(s.id||""))).length;
   /* вне боя */
   G.inCombat=false;G.combat=null;SAID.length=0;castSpell(iStrela);r.пустота=SAID.slice(-1)[0]||"";
   /* в бою */
@@ -151,7 +156,7 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   каст.волна&&каст.cd===2&&/перезаряжается: 2 ч/.test(каст.повтор)&&каст.повторБезУрона,[каст.cd,каст.повтор]);
  check('6в. тихое — без голоса; щит земли даёт оберег; зов света лечит',
   каст.тихо&&каст.оберег&&/оберег/.test(каст.щитСказ)&&каст.лечение&&/здоровье плюс/.test(каст.зовСказ),[каст.щитСказ,каст.зовСказ]);
- check('6г. «Школы» перечисляют двадцать семь школ и известные чары по школам',
+ check('6г. «Школы» перечисляют тридцать четыре школы и известные чары по школам',
   /Школ заклинаний 34/.test(каст.школыТекст)&&/Огонь — /.test(каст.школыТекст)&&каст.записей===5,каст.школыТекст.slice(0,160));
 
  /* ── 7. сохранение ── */

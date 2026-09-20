@@ -224,9 +224,14 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
    try{castSpell(i);}catch(e){плохие.push(sp.n+": "+e.message);}
    if(G.mana>=до)плохие.push(sp.n+": мана не потрачена");});
   return {плохие,всего:SPELLS.length,
+   исходных:SPELLS.filter(sp=>!sp.custom).length,
+   школьных:SPELLS.filter(sp=>sp.custom&&SCHOOL_SPELL_BY_NAME[sp.n]).length,
    слотов:document.querySelectorAll("#magicSlots button").length};});
- check('двенадцать заклинаний, каждое творится и тратит ману',
-  !закл.плохие.length&&закл.всего===12,{плохие:закл.плохие.slice(0,3),всего:закл.всего});
+ /* Двенадцать исходных чар плюс сто два именных по школам: ни одна из ста
+    четырнадцати не должна быть вечным источником маны. */
+ check('сто четырнадцать заклинаний, каждое творится и тратит ману',
+  !закл.плохие.length&&закл.всего===114&&закл.исходных===12&&закл.школьных===102,
+  {плохие:закл.плохие.slice(0,3),всего:закл.всего});
 
  /* ── 7. Обстановка ── */
  const вещи=await page.evaluate(()=>{

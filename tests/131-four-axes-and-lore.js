@@ -68,7 +68,7 @@ const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(e!==undefined?' :
 
  /* ── 2. независимость делом ── */
  const незав=await page.evaluate(()=>{
-  const чисто=()=>{G.lore={};G.rep={};G.axes={};G.mast={};G.xp=0;G.level=1;G.deeds={};};
+  const чисто=()=>{G.loreKn={};G.rep={};G.axes={};G.mast={};G.xp=0;G.level=1;G.deeds={};};
   const шаг=(имя,f)=>{chisto:{}
    чисто();const до=Axes.snapshot();
    f();
@@ -106,7 +106,7 @@ const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(e!==undefined?' :
 
  /* ── 4. запись считается один раз ── */
  const повтор=await page.evaluate(()=>{
-  G.lore={};
+  G.loreKn={};
   const первый=Lore.add("recipe","r1","Клинок","проба");
   const было=Lore.count();
   const второй=Lore.add("recipe","r1","Клинок","проба");
@@ -120,31 +120,31 @@ const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(e!==undefined?' :
  /* ── 5. каждый род от своего дела ── */
  const дела=await page.evaluate(()=>{
   const o={};
-  G.lore={};
+  G.loreKn={};
   /* рецепт: изведанная пара у чана */
   G.alch={};
   const пары=Object.keys(RES_BASE||{}).slice(0,2);
   safeFn(()=>alchLearn(пары[0],пары[1]));
   o.рецепт=Lore.count("recipe");
   /* язык: взятая ступень */
-  G.lore={};G.langs={};
+  G.loreKn={};G.langs={};
   const l=LANGS.find(x=>x.id!=="common");
   safeFn(()=>Langs.learn(l.id,999,"проба"));
   o.язык=Lore.count("tongue");
   /* карта: новое место */
-  G.lore={};G.known={};
+  G.loreKn={};G.known={};
   safeFn(()=>notePlace(G.x+5,G.y+5,"ruins","Пробные руины","узнал"));
   o.карта=Lore.count("map");
   /* слабость: отпечаток с четвёртой глубины */
-  G.lore={};
+  G.loreKn={};
   safeFn(()=>Lore.add("weak","wolf","Волк","биологический отпечаток, глубина 4"));
   o.слабость=Lore.count("weak");
   /* секрет */
-  G.lore={};
+  G.loreKn={};
   safeFn(()=>Lore.add("secret","s1","Тайна","расследование"));
   o.секрет=Lore.count("secret");
   /* и ни один род не берётся от уровня */
-  G.lore={};G.level=50;G.xp=99999;
+  G.loreKn={};G.level=50;G.xp=99999;
   o.отУровня=Lore.count();
   G.level=1;G.xp=0;
   return o;});
@@ -156,7 +156,7 @@ const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(e!==undefined?' :
  /* ── 6. семь даров, и каждый читается миром ── */
  const дары=await page.evaluate(()=>{
   const o={};
-  G.lore={};G.mast={};G.axes={};
+  G.loreKn={};G.mast={};G.axes={};
   const t={id:"blade",n:"Клинок",маст:"smith",ур:0};
   o.горнДо=safeFn(()=>techRisk(t),0);
   Lore.add("recipe","blade","Клинок","проба");
@@ -179,7 +179,7 @@ const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(e!==undefined?' :
   Lore.add("relic","Пробный клинок","Пробный клинок","проба");
   o.ценаСвоей=Lore.relicK("Пробный клинок");
   o.ценаЧужой=Lore.relicK("Другая вещь");
-  G.lore={};
+  G.loreKn={};
   return o;});
  check('записанный рецепт роняет риск у горна',
   дары.горнПосле<дары.горнДо,{до:дары.горнДо,после:дары.горнПосле});
@@ -193,7 +193,7 @@ const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(e!==undefined?' :
 
  /* ── 7. знанием платят ── */
  const плата=await page.evaluate(()=>{
-  G.lore={};
+  G.loreKn={};
   Lore.add("secret","s1","Тайна Ковша","проба");
   Lore.add("secret","s2","Тайна Молота","проба");
   const дарДо=Lore.словоK("недоверие");
@@ -205,7 +205,7 @@ const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(e!==undefined?' :
   const счётНеУпал=Lore.count("secret");
   const ещёОдну=Lore.pay("secret",1);
   const большеНечего=Lore.pay("secret",1);
-  G.lore={};
+  G.loreKn={};
   return {дарДо,дарПосле,можноДве,взято,осталосьОтдать,всёЗнаю,счётНеУпал,
    ещёОдну,большеНечего};});
  check('знание отдаётся как плата, и отданное второй раз не продать',
@@ -218,7 +218,7 @@ const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(e!==undefined?' :
  const торг=await page.evaluate(()=>{
   const n=safeFn(()=>getNPC(G.x,G.y,0,"Торговец"),null);
   if(!n)return {нет:true};
-  G.lore={};
+  G.loreKn={};
   const без=[];const с=[];
   for(let i=0;i<24;i++){
    const d=safeFn(()=>Path.demandFor(n,{gear:{rank:4}},i),null);
@@ -227,7 +227,7 @@ const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(e!==undefined?' :
   for(let i=0;i<24;i++){
    const d=safeFn(()=>Path.demandFor(n,{gear:{rank:4}},i),null);
    if(d&&d.вид==="знание")с.push(d.ок);}
-  G.lore={};
+  G.loreKn={};
   return {нет:false,видов:[...new Set(без)],есть:без.indexOf("знание")>=0,
    сЗнанием:с.some(x=>x===true)};});
  check('к прежним требованиям торговца за редкое добавилось знание',
@@ -238,7 +238,7 @@ const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(e!==undefined?' :
  /* ── 9. слой KNOWLEDGE ── */
  const слой=await page.evaluate(()=>{
   const K=Modules.get("KNOWLEDGE");
-  G.lore={};Lore.add("map","k1","Место","проба");
+  G.loreKn={};Lore.add("map","k1","Место","проба");
   return {родов:K.kinds().length,счёт:K.count(),естьМеста:typeof K.places()==="object",
    местаНеЗнание:K.count()!==Object.keys(K.places()||{}).length||Object.keys(K.places()||{}).length===0,
    текстПроЗнание:/Знани|знани/.test(K.text())};});
@@ -247,7 +247,7 @@ const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(e!==undefined?' :
 
  /* ── 10. окно, самопроверка, тексты ── */
  const окно=await page.evaluate(()=>{
-  G.lore={};Lore.add("map","w1","Место","проба");
+  G.loreKn={};Lore.add("map","w1","Место","проба");
   safeFn(()=>renderCharacter());
   const el=document.getElementById("charStats");
   const html=el?el.innerHTML:"";

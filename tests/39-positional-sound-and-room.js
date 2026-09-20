@@ -266,9 +266,27 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
    if(tileAt(lvl,x,y)==="."&&tileAt(lvl,x+1,y)==="#"){G.place.x=x;G.place.y=y;break outer;}
   точки.length=0;moveInside("E");
   await пауза(100);out.стена=точки.slice(-1)[0]||null;
-  /* подсказка о лестнице вниз */
-  точки.length=0;handleTwoFingerSwipe("S");
-  await пауза(180);out.лестница=точки.slice(-1)[0]||null;
+  /* Подсказка о лестнице вниз. Её подаёт звуковая картина места, а у картины
+     свой размеренный такт: у лестницы отклик раз в семь секунд, и между
+     любыми двумя откликами — общий промежуток. Ждать его вживую значило бы
+     мерить не игру, а секундомер, поэтому такт вызывается прямо, а часы
+     картины сбрасываются перед каждым вызовом. */
+  {let ст=null;
+   for(let y=1;y<lvl.h-1&&!ст;y++)for(let x=1;x<lvl.w-1;x++)if(tileAt(lvl,x,y)===">"){ст={x,y};break;}
+   out.естьЛестница=!!ст;
+   if(ст){
+    let место=null;
+    for(let d=1;d<=3&&!место;d++)for(let dy=-d;dy<=d;dy++)for(let dx=-d;dx<=d;dx++){
+     if(Math.max(Math.abs(dx),Math.abs(dy))!==d)continue;
+     if(tileAt(lvl,ст.x+dx,ст.y+dy)===".")место={x:ст.x+dx,y:ст.y+dy};}
+    if(место){G.place.x=место.x;G.place.y=место.y;}
+    точки.length=0;Scape.last.clear();
+    /* Часы каждого источника сбрасываются один раз: дальше картина сама
+       перебирает их по важности, отдавая голос по очереди. */
+    for(let i=0;i<40;i++){Scape.lastAny=0;Scape.tick();
+     if(точки.some(o=>o.dz===-1))break;}
+    await пауза(60);
+    out.лестница=точки.find(o=>o.dz===-1)||точки.slice(-1)[0]||null;}}
   /* соседняя клетка мира */
   G.place=null;
   outer2:for(let r=1;r<120;r++){const x=1000+r,y=1000;

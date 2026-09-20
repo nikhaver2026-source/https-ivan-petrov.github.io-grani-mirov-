@@ -223,9 +223,9 @@ const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(e!==undefined?' :
   о.значение=(G.gold===4242);
   о.отказНаВыдумку=/не ставится/.test(String(Debug.run("ECONOMY","SET_VALUE","чужой_ключ = 1")));
   /* сброс */
-  G.lore={"рецепт:проба":1};
+  G.loreKn={"рецепт:проба":1};
   const сброс=String(Debug.run("PLAYER","RESET"));
-  о.сброс=!G.lore&&/сброшено/.test(сброс);
+  о.сброс=!G.loreKn&&/сброшено/.test(сброс);
   /* прогон суток */
   const день=Number(G.day)||1;
   const пр=String(Debug.run("WORLD","SIMULATE",3));
