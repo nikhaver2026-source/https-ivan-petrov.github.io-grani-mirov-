@@ -42,7 +42,17 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
    for(let r=0;r<300;r++)for(let dy=-r;dy<=r;dy++)for(let dx=-r;dx<=r;dx++){
     if(Math.max(Math.abs(dx),Math.abs(dy))!==r)continue;
     const x=C+dx,y=C+dy;const c=cellContent(x,y);
-    if(c.monster&&!c.monster.fly&&!c.structure&&!c.res)return {x,y};}return null;};
+    if(!c.monster||c.monster.fly||c.structure||c.res)continue;
+    /* И чтобы по соседству никто не жил: набор проверяет, что УБИТАЯ тварь
+       не встаёт, а взмах в сторону соседа, у которого своя живая тварь,
+       начинает честный бой — и это не воскрешение. */
+    const занято=[[1,0],[-1,0],[0,1],[0,-1]].some(([ax,ay])=>{
+     const сосед=cellContent(x+ax,y+ay);return !!(сосед&&сосед.monster);});
+    if(занято)continue;
+    return {x,y};}return null;};
+  /* Бой считается воскрешением только тогда, когда он идёт НА ТОЙ КЛЕТКЕ. */
+  const наКлетке=(т)=>!!(G.inCombat&&G.combat&&G.combat.x===т.x&&G.combat.y===т.y);
+  const сбросить=()=>{G.inCombat=false;G.combat=null;};
   const добить=async()=>{for(let i=0;i<25&&G.inCombat;i++){fight("atk");await new Promise(z=>setTimeout(z,15));}};
 
   /* ── Победа над хозяйкой клетки ── */
@@ -75,14 +85,20 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   for(const d of ["N","S","E","W"]){
    G.weaponDrawn=true;window.__said=[];
    weaponSwing(d);await new Promise(z=>setTimeout(z,180));
-   if(G.inCombat||window.__said.some(t=>/Бой!|преграждает путь/.test(t))){ожилаВСторону=d;break;}}
+   if(наКлетке(т)||(!G.inCombat&&window.__said.some(t=>/Бой!|преграждает путь/.test(t)))){
+    ожилаВСторону=d;break;}
+   /* Соседская тварь — не наша забота: бой с ней гасится и проверка идёт дальше. */
+   if(G.inCombat)сбросить();}
   out.всеСтороны=ожилаВСторону;
 
   /* ── Возвращение на клетку своим ходом ── */
   G.x=т.x+3;G.y=т.y;window.__said=[];
+  сбросить();
   G.x=т.x;G.y=т.y;arrive("W");await new Promise(z=>setTimeout(z,150));
-  out.возвращение={бой:!!G.inCombat,
-   ожила:window.__said.some(t=>/Бой!|преграждает путь/.test(t))};
+  out.возвращение={бой:наКлетке(т),
+   ожила:наКлетке(т)&&window.__said.some(t=>/Бой!|преграждает путь/.test(t)),
+   чужойБой:!!G.inCombat&&!наКлетке(т)};
+  if(G.inCombat)сбросить();
 
   /* ── Пережило очистку кэша клеток и перезагрузку сохранения ── */
   saveGame(true);loadGame();contentCache.clear();
