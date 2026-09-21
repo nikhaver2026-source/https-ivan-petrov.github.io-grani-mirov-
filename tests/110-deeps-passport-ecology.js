@@ -3,7 +3,7 @@
    ПАРАНОЙЯ, ГЕОМЕТРИЯ НА СЛУХ, ВЫЖИВАНИЕ
 
    1. Данные: четырнадцать видов подземелий со звуком и ресурсом, сорок два
-      комплекса (в том числе Шахта Шепчущихся Глубин и Бездонный комплекс),
+      комплекса (в том числе Стоустый Рудник и Бездонный комплекс),
       десять семейств глубинных тварей, десять пород, семь косвенных
       признаков, десять нужд выживания; самопроверка мира.
    2. Паспорт: двадцать пять полей, выводится из места и повторяется для
@@ -35,8 +35,8 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
  const данные=await page.evaluate(()=>{
   const r={};r.types=DUNG_TYPES.length;r.typesOk=DUNG_TYPES.every(t=>SOUND_BANK[t.звук]&&RES_BASE[t.ресурс]&&t.опасность&&t.о);
   const c=Complexes.all();r.cx=c.length;r.cxOk=c.every(x=>x.n&&x.ярусы[1]>x.ярусы[0]&&x.награда&&x.история&&x.x>=0&&x.y>=0)&&new Set(c.map(x=>x.id)).size===c.length;
-  r.named=!!(Complexes.byId("cx_whisper")&&Complexes.byId("cx_bottomless"));
-  r.whisper=Complexes.byId("cx_whisper").ярусы;r.bottom=Complexes.byId("cx_bottomless").ярусы;
+  r.named=!!(Complexes.byId("cx_mine")&&Complexes.byId("cx_bottomless"));
+  r.whisper=Complexes.byId("cx_mine").ярусы;r.bottom=Complexes.byId("cx_bottomless").ярусы;
   r.fam=DEEP_FAMILIES.length;r.famOk=DEEP_FAMILIES.every(f=>SOUND_BANK[f.звук]&&f.ест&&f.страх&&f.ярус[1]>f.ярус[0]);
   r.res=DEEP_RESOURCES.length;r.resOk=DEEP_RESOURCES.every(x=>x.ярус>0&&x.цена>0&&x.что&&x.о);
   r.para=PARANOIA.length;r.paraOk=PARANOIA.every(p=>SOUND_BANK[p.звук]&&p.о);
@@ -45,7 +45,7 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   r.modules=["PASSPORT","COMPLEXES","ECOLOGY","DEEPRES","PARANOIA","GEOMETRY","SURVIVAL"].every(m=>Modules.get?!!Modules.get(m):true);
   const sc=worldSelfCheck();const row=sc.find(x=>x.id==="deeps");r.selfcheck=row?row.ok:null;
   return r;});
- check('четырнадцать видов подземелий со звуком, ресурсом и опасностью; сорок два комплекса с историей и наградой, среди них Шахта Шепчущихся Глубин от первого до сотого и Бездонный комплекс',
+ check('четырнадцать видов подземелий со звуком, ресурсом и опасностью; сорок два комплекса с историей и наградой, среди них Стоустый Рудник от первого до сотого и Бездонный комплекс',
   данные.types===14&&данные.typesOk&&данные.cx===42&&данные.cxOk&&данные.named&&данные.whisper[0]===1&&данные.whisper[1]===100&&данные.bottom[1]===100,данные);
  check('десять семейств глубинных тварей со звуком, пищей и страхом; десять пород с ярусом, ценой и назначением; семь признаков; десять нужд; паспорт из двадцати пяти полей; самопроверка мира видит глубины',
   данные.fam===10&&данные.famOk&&данные.res===10&&данные.resOk&&данные.para===7&&данные.paraOk&&данные.needs===10&&данные.needsOk&&данные.fields===25&&данные.modules&&данные.selfcheck===true,данные);
@@ -58,8 +58,8 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   r.тот=JSON.stringify(p1)===JSON.stringify(p2);
   r.другой=JSON.stringify(Passport.of(9000,9000,5,"ruins"))!==JSON.stringify(p1);
   r.боссы=p1.боссы.length===Math.floor(p1.ярусов/25);
-  const c=Complexes.byId("cx_whisper");const pc=Passport.of(c.x,c.y,5,"ruins");
-  r.именной=pc.n==="Шахта Шепчущихся Глубин"&&/Живые минералы/.test(pc.история)&&/Сердце шахты/.test(pc.награда);
+  const c=Complexes.byId("cx_mine");const pc=Passport.of(c.x,c.y,5,"ruins");
+  r.именной=pc.n==="Стоустый Рудник"&&/Живые минералы/.test(pc.история)&&/Сердце шахты/.test(pc.награда);
   r.text=Passport.text(pc);
   return r;});
  check('паспорт даёт двадцать пять полей и повторяется для того же входа, а для другого — другой; боссы стоят через двадцать пять ярусов; у именного комплекса своя история и награда; текст называет всё',

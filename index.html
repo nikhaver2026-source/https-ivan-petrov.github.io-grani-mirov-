@@ -4173,7 +4173,7 @@ const AM_GROUPS=[
   ["ascend","⬆️ Подняться или выйти"],
   ["interact","🤝 Взаимодействовать"],
   ["gather","📦 Собрать ресурс"],
-  /* §6: своё у Шахты Шепчущихся Глубин — лагерь артели и подъёмник. */
+  /* §6: своё у Стоустого Рудника — лагерь артели и подъёмник. */
   ["whisperrest","🔥 Привал в артельном лагере"],
   ["whisperup","🛗 Подъёмник: вверх на десять ярусов"],
   ["whisperdown","🛗 Подъёмник: вниз на десять ярусов"],
@@ -4364,8 +4364,8 @@ function amAvailable(cmd){
    if(!G.place)return !!c.res;
    const lvl=curLevel(),t=lvl&&tileAt(lvl,G.place.x,G.place.y);
    return t==="C"||t==="R";}
-  if(cmd==="whisperrest")return safeFn(()=>Whisper.here()&&Whisper.лагерь(),false);
-  if(cmd==="whisperup"||cmd==="whisperdown")return safeFn(()=>Whisper.here()&&Whisper.механизм(),false);
+  if(cmd==="whisperrest")return safeFn(()=>Mine.here()&&Mine.лагерь(),false);
+  if(cmd==="whisperup"||cmd==="whisperdown")return safeFn(()=>Mine.here()&&Mine.механизм(),false);
   if(cmd.indexOf("craft_")===0)return safeFn(()=>startCraftOpen(),false);
   if(cmd==="deposit"||cmd==="withdraw"){
    if(!G.place)return false;
@@ -5017,15 +5017,16 @@ const GUIDE=[
  "ДАР НАСТОЯЩИЙ. Ступень — не строка в окне. Меч на пятой даёт плюс шесть к удару; поиск воды вдвое замедляет жажду; контроль энергии удешевляет чару в бою; сосредоточенность возвращает часть маны; сопротивление магии гасит чужие чары почти на треть; торговля двигает цену на тринадцать сотых; кузнечное дело на столько же реже роняет работу у горна.",
  "ЛЕС, А НЕ ШЕСТЬ ДЕРЕВЬЕВ. У каждого умения есть связь с умением из другой ветви. Когда связанное доходит до третьей ступени, это получает ступень сверх заработанной. Кузнец, научившийся читать руны, — уже другой кузнец; лучник, читающий след, стреляет иначе.",
  "ГДЕ СМОТРЕТЬ. Окно «Герой»: сразу под ветвями силы. Начатые умения читаются полностью — ступень, дар и сколько осталось до следующей; ещё не начатые называются одной строкой на ветвь, чтобы окно не превратилось в перепись."]},
-{title:"Глава 57. Шахта Шепчущихся Глубин",body:[
- "Из всех подземелий мира два именных, и первое — Шахта Шепчущихся Глубин: сто ярусов, прорубленных подгорным народом в поисках руды. В паспорте подземелий она значилась и раньше, но внутри ничем не отличалась от любой другой дыры в земле. Теперь отличается восемью вещами.",
+{title:"Глава 57. Стоустый Рудник",body:[
+ "ОТКУДА ИМЯ. Сто ярусов — и сто голосов: порода здесь отвечает тому, кто её тронул, и отвечает не всегда своим голосом. Подгорные звали его стоустым задолго до того, как сосчитали ярусы, и когда сосчитали — имя подошло дважды.",
+ "Из всех подземелий мира два именных, и первое — Стоустый Рудник: сто ярусов, прорубленных подгорным народом в поисках руды. В паспорте подземелий она значилась и раньше, но внутри ничем не отличалась от любой другой дыры в земле. Теперь отличается восемью вещами.",
  "ШТРЕКИ. Ярус принадлежит одному из шести ходов: Соляному, Рудному, Хрустальному, Костяному, Мокрому или Глухому. У штрека своя порода, своя опасность и свой голос — по нему ярус узнаётся раньше, чем игра назовёт имя. Какой штрек на каком ярусе, решает сам ярус: шахта всегда одна и та же.",
  "ЯРУСЫ С ПРАВИЛАМИ. Каждый десяток живёт по своему: Верхние крепи (обвалы редки), Пыльный ход (жилы щедрее), Последний лагерь (ниже артель не спускается), Шёпот начинается, Зал воротов (машины ещё ходят), Живая порода, Обвальные ярусы, Тишина, Чужие крепи и Сердце шахты на сотом.",
  "ЖИВЫЕ МИНЕРАЛЫ. Четыре рода: пульсирующая жила, поющий кристалл, рудный корень и глядящий самоцвет. Они дают не то, что обычная жила, — эссенцию, астральный кристалл, мифрил, самоцвет, — и каждый второй раз отвечают: отдёргиваются, звенят по ушам, держат кирку или мутнеют так, что делается нехорошо.",
  "ЛАГЕРЯ И МЕХАНИЗМЫ. До тридцатого яруса на каждом десятом стоит артельный лагерь: миска, огонь, час покоя, четверть здоровья и весть о том, что начинается ниже. А подъёмник подгорного народа, где он цел, берёт сразу десять ярусов — вверх или вниз, за час хода платформы.",
  "ОБВАЛЫ. Порода садится: чем глубже, тем чаще, на обвальных ярусах вдвое, на верхних крепях вчетверо реже. Обвал слышно, он отнимает здоровье и час, и боковой ход закрывается насовсем.",
- "ШЁПОТ. Главное в шахте — то, за что она названа. На своих ярусах эхо отвечает не с той стороны. Игра говорит об этом ПРЯМО, как только вы туда ступили: слепому игроку нельзя лгать молча. Идите по стене, а не на звук — или возьмите Чутьё глубин, оно шёпот снимает.",
- "ТАЙНЫЕ КАМЕРЫ. Подгорные прятали всерьёз: в Шахте скрытых ходов вдвое больше, чем где-либо, а на ярусах чужих крепей — вчетверо. Ищут их так же, как везде: трогая всё подряд."]},
+ "ШЁПОТ. Главное в руднике — то, за что он назван. На своих ярусах эхо отвечает не с той стороны. Игра говорит об этом ПРЯМО, как только вы туда ступили: слепому игроку нельзя лгать молча. Идите по стене, а не на звук — или возьмите Чутьё глубин, оно шёпот снимает.",
+ "ТАЙНЫЕ КАМЕРЫ. Подгорные прятали всерьёз: в Руднике скрытых ходов вдвое больше, чем где-либо, а на ярусах чужих крепей — вчетверо. Ищут их так же, как везде: трогая всё подряд."]},
 {title:"Глава 56. Сопряжение Грани: что бывает, когда миры сходятся",body:[
  "Среди десяти мировых событий есть одно, после которого мир восемь дней живёт иначе, — Сопряжение Грани. Раньше оно поднимало эфир, учащало встречи и поднимало цены, и этим всё кончалось. Теперь у него семь последствий, и каждое настоящее.",
  "ТВАРИ. Приходят шесть видов, которых в этом мире нет и не будет: Ходок сквозь, Стеклянный жнец, Пепельный вестник, Железный пришлец, Хор без тел и Пасть перехода. У каждого свой голос, свой вес и своя добыча — чужой товар, который иначе взять негде. Как только событие кончится, пришлые уйдут.",
@@ -18544,11 +18545,11 @@ function propHidesSwitch(bx,by,depth,x,y,propId){
    /* Спросили без вещи — значит, интересует само место: берём среднюю меру. */
    порог=0.06;
   }else if(propId&&SECRET_BEHIND[propId]!==undefined)порог=SECRET_BEHIND[propId];
-  /* §6: в Шахте Шепчущихся Глубин прятали всерьёз — тайных камер там вдвое
+  /* §6: в Стоустом Руднике прятали всерьёз — тайных камер там вдвое
      больше обычного, а на ярусах чужих крепей вчетверо. */
   порог*=safeFn(()=>{
-   if(!Whisper.here())return 1;
-   const п=Whisper.правило();
+   if(!Mine.here())return 1;
+   const п=Mine.правило();
    return (п&&п.дело==="тайных камер вдвое больше")?4:2;},1);
   return h<порог;
  }catch(_){return false;}}
@@ -27649,9 +27650,9 @@ function changeDepth(delta){
  if(delta>0)safeFn(()=>Gods.taboo("deep"));
  /* §14: вехи ста ярусов — узел, крупное событие, уникальный комплекс. */
  if(nd>0)setTimeout(()=>safeFn(()=>deepMilestones(p.bx,p.by,nd)),2200);
- /* §6: Шахта Шепчущихся Глубин живёт по своим правилам — штрек, правило
+ /* §6: Стоустый Рудник живёт по своим правилам — штрек, правило
     десятка, живая жила, лагерь, подъёмник, обвал и шёпот. */
- if(nd>0)safeFn(()=>Whisper.приход(nd));
+ if(nd>0)safeFn(()=>Mine.приход(nd));
  /* Первый ярус под городом — это городские стоки, а не пещера: и слово, и
     голос у него свои. */
  if(nd===1&&PLACE_KIND[p.stype]==="city")safeFn(()=>{
@@ -29395,7 +29396,7 @@ function mineVein(x,y){
  safeFn(()=>Bank.play(p.depth>=3?"clang_splash":p.depth>0?"clang_pedal":"clang_soft",
   {seed:x+y,gain:0.55,maxSec:4}));
  /* §6: в Шахте на иных ярусах жила живая — она отдаёт своё и отвечает. */
- {const живое=safeFn(()=>Whisper.here()?Whisper.добыть():null,null);
+ {const живое=safeFn(()=>Mine.here()?Mine.добыть():null,null);
   if(живое){
    const ост=(Number(placeMark(x,y))||3)-1;
    setPlaceMark(x,y,ост<=0?"empty":ост);
@@ -31763,9 +31764,9 @@ const CMD={
  sact(arg){const p=String(arg).split(":");doShelfAction(p[0],p.slice(1).join(":"));},
  sback(){openShelf();},
  patrol(){meetPatrol();},
- whisperrest(){safeFn(()=>Whisper.отдых());},
- whisperup(){safeFn(()=>Whisper.подъём(false));},
- whisperdown(){safeFn(()=>Whisper.подъём(true));},
+ whisperrest(){safeFn(()=>Mine.отдых());},
+ whisperup(){safeFn(()=>Mine.подъём(false));},
+ whisperdown(){safeFn(()=>Mine.подъём(true));},
  craft_crafter(){safeFn(()=>startCraftPick("crafter"));},
  craft_hunter(){safeFn(()=>startCraftPick("hunter"));},
  craft_trader(){safeFn(()=>startCraftPick("trader"));},
@@ -36187,8 +36188,8 @@ const Complexes=Modules.register("COMPLEXES",{
     дела:h(10)<0.5?"подряд от гильдии":"дел никто не даёт",
     фракции:[["держава","орден","синдикат","артель"][Math.floor(h(11)*4)%4]],
     награда:`${["Ключ Предтеч","Кристалл Глубин","Печать Адаптации","Око Архива"][Math.floor(h(12)*4)%4]} на дне`});}});
-  /* Два именных: Шахта Шепчущихся Глубин и Бездонный комплекс. */
-  out.push({id:"cx_whisper",род:"ancient",вид:"mine",n:"Шахта Шепчущихся Глубин",x:Math.floor(REGION_W*1.5),y:Math.floor(REGION_H*0.5),область:1,ярусы:[1,100],
+  /* Два именных: Стоустый Рудник и Бездонный комплекс. */
+  out.push({id:"cx_mine",род:"ancient",вид:"mine",n:"Стоустый Рудник",x:Math.floor(REGION_W*1.5),y:Math.floor(REGION_H*0.5),область:1,ярусы:[1,100],
    возраст:DUNG_AGE[2],создатель:"подгорный народ",хозяин:"нечто, что не называют",причина:"искали руду",
    история:"Живые минералы, шахтёрские лагеря, обвалы, механизмы, ветви, тайные камеры и ярусы со своими правилами. Шёпот слышат все, кто спускается ниже сорокового.",
    жители:"шахтёрские лагеря до тридцатого яруса",дела:"артель платит за карты ярусов",фракции:["артель","синдикат"],награда:"Сердце шахты на сотом ярусе"});
@@ -36527,7 +36528,7 @@ const Econ=Modules.register("ECON",{
       стороны — и игра говорит об этом прямо, до того как игрок пойдёт на
       обманный звук: слепому игроку нельзя лгать молча.
    ════════════════════════════════════════════════════════════════════════ */
-const WHISPER_BRANCHES=[
+const MINE_BRANCHES=[
  {id:"salt",n:"Соляной штрек",порода:"чужая соль",о:"стены белые и сухие, шаг скрипит",
   опасность:"солёная пыль щиплет горло",звук:"deep_rocks"},
  {id:"ore",n:"Рудный штрек",порода:"руда",о:"главный ход артели: рельсы и брошенные тачки",
@@ -36540,7 +36541,7 @@ const WHISPER_BRANCHES=[
   опасность:"вода прибывает без дождя",звук:"oc_waterdrop"},
  {id:"deep",n:"Глухой штрек",порода:"тяжёлый минерал",о:"ни эха, ни сквозняка: звук умирает у самого рта",
   опасность:"здесь теряют направление",звук:"drone_low"}];
-const WHISPER_RULES=[
+const MINE_RULES=[
  {д:10,n:"Верхние крепи",о:"ещё пахнет смолой от факелов артели",звук:"oc_wood_creak",дело:"обвалы редки"},
  {д:20,n:"Пыльный ход",о:"пыль стоит столбом и садится на язык",звук:"vent",дело:"жилы щедрее на треть"},
  {д:30,n:"Последний лагерь",о:"ниже артель не спускается: тут её край",звук:"lug_fire",дело:"последний лагерь шахты"},
@@ -36551,7 +36552,7 @@ const WHISPER_RULES=[
  {д:80,n:"Тишина",о:"звук не идёт дальше вытянутой руки",звук:"drone_low",дело:"эхо врёт"},
  {д:90,n:"Чужие крепи",о:"кладка не подгорная и не человеческая",звук:"hollow_thud",дело:"тайных камер вдвое больше"},
  {д:100,n:"Сердце шахты",о:"порода здесь дышит, и шёпот наконец складывается в слова",звук:"dungeon_heart",дело:"здесь лежит Сердце Шахты"}];
-const WHISPER_LIVE=[
+const MINE_LIVE=[
  {id:"pulse",n:"пульсирующая жила",порода:"эссенция",о:"бьётся под ладонью, как жила на шее",
   ответ:"жила отдёргивается и бьёт отдачей",звук:"oc_organic_hit",урон:6},
  {id:"singing",n:"поющий кристалл",порода:"астральный кристалл",о:"звенит сам, без удара",
@@ -36560,9 +36561,9 @@ const WHISPER_LIVE=[
   ответ:"корень сжимается и держит кирку",звук:"craft_ore",урон:4},
  {id:"eye",n:"глядящий самоцвет",порода:"самоцвет",о:"грань поворачивается вслед за вами",
   ответ:"самоцвет мутнеет, и вам делается нехорошо",звук:"oc_diamond",урон:8}];
-const Whisper=Modules.register("WHISPER",{
- /* Мы в Шахте Шепчущихся Глубин? Она одна на весь мир и стоит на своём месте. */
- паспорт(){return safeFn(()=>Complexes.byId("cx_whisper"),null);},
+const Mine=Modules.register("HUNDREDMOUTH",{
+ /* Мы в Стоустом Руднике? Он один на весь мир и стоит на своём месте. */
+ паспорт(){return safeFn(()=>Complexes.byId("cx_mine"),null);},
  here(){
   try{
    const p=G.place;if(!p||!(Number(p.depth)>0))return false;
@@ -36573,13 +36574,13 @@ const Whisper=Modules.register("WHISPER",{
  /* 1. Ветвь этого яруса. */
  ветвь(d){
   try{d=Number(d==null?this.ярус():d)||0;if(d<=0)return null;
-   return WHISPER_BRANCHES[Math.floor(hashName(d*7,d*13,9900)*WHISPER_BRANCHES.length)%WHISPER_BRANCHES.length];
+   return MINE_BRANCHES[Math.floor(hashName(d*7,d*13,9900)*MINE_BRANCHES.length)%MINE_BRANCHES.length];
   }catch(_){return null;}},
  /* 2. Правило десятка. */
  правило(d){
   try{d=Number(d==null?this.ярус():d)||0;if(d<=0)return null;
    const дес=Math.min(100,Math.ceil(d/10)*10);
-   return WHISPER_RULES.find(r=>r.д===дес)||null;
+   return MINE_RULES.find(r=>r.д===дес)||null;
   }catch(_){return null;}},
  /* 3. Живая жила: есть ли она на этом ярусе и какая. */
  минерал(d){
@@ -36587,7 +36588,7 @@ const Whisper=Modules.register("WHISPER",{
    const п=this.правило(d);
    const порог=(п&&п.дело==="живых жил вдвое больше")?0.5:0.25;
    if(hashName(d*11,d*17,9901)>=порог)return null;
-   return WHISPER_LIVE[Math.floor(hashName(d*3,d*5,9902)*WHISPER_LIVE.length)%WHISPER_LIVE.length];
+   return MINE_LIVE[Math.floor(hashName(d*3,d*5,9902)*MINE_LIVE.length)%MINE_LIVE.length];
   }catch(_){return null;}},
  /* 4. Артельный лагерь: до тридцатого яруса, на каждом десятом. */
  лагерь(d){
@@ -36706,7 +36707,7 @@ const Whisper=Modules.register("WHISPER",{
    return слово;
   }catch(_){return null;}},
  text(){
-  if(!this.here())return "Вы не в Шахте Шепчущихся Глубин.";
+  if(!this.here())return "Вы не в Стоустом Руднике.";
   return this.слово();}
 });
 /* ── АУДИОЭНЦИКЛОПЕДИЯ ── */
@@ -43215,17 +43216,17 @@ function worldSelfCheck(){
   /* §10: шесть начальных ремёсел, у каждого настоящий навык, набор, совет
      и свой голос. */
   /* §5: у Сопряжения Грани семь последствий, и все они настоящие. */
-  /* §6: у Шахты Шепчущихся Глубин восемь свойств, и все настоящие. */
-  ok("whisper",WHISPER_BRANCHES.length===6&&WHISPER_RULES.length===10&&WHISPER_LIVE.length===4
-   &&WHISPER_BRANCHES.every(b=>b.n&&b.о&&b.опасность&&RES_BASE[b.порода]&&SOUND_BANK[b.звук])
-   &&WHISPER_RULES.every(r=>r.n&&r.о&&r.дело&&SOUND_BANK[r.звук]&&r.д%10===0&&r.д<=MAX_DEPTH)
-   &&WHISPER_LIVE.every(l=>l.n&&l.о&&l.ответ&&RES_BASE[l.порода]&&SOUND_BANK[l.звук]&&l.урон>0)
-   &&new Set(WHISPER_RULES.map(r=>r.д)).size===10
-   &&new Set(WHISPER_BRANCHES.map(b=>b.звук)).size===6
-   &&!!safeFn(()=>Complexes.byId("cx_whisper"),null)
+  /* §6: у Стоустого Рудника восемь свойств, и все настоящие. */
+  ok("mine",MINE_BRANCHES.length===6&&MINE_RULES.length===10&&MINE_LIVE.length===4
+   &&MINE_BRANCHES.every(b=>b.n&&b.о&&b.опасность&&RES_BASE[b.порода]&&SOUND_BANK[b.звук])
+   &&MINE_RULES.every(r=>r.n&&r.о&&r.дело&&SOUND_BANK[r.звук]&&r.д%10===0&&r.д<=MAX_DEPTH)
+   &&MINE_LIVE.every(l=>l.n&&l.о&&l.ответ&&RES_BASE[l.порода]&&SOUND_BANK[l.звук]&&l.урон>0)
+   &&new Set(MINE_RULES.map(r=>r.д)).size===10
+   &&new Set(MINE_BRANCHES.map(b=>b.звук)).size===6
+   &&!!safeFn(()=>Complexes.byId("cx_mine"),null)
    &&["whisperrest","whisperup","whisperdown"].every(c=>typeof CMD[c]==="function")
-   &&typeof Whisper.тайноеK==="function"&&String(propHidesSwitch).indexOf("Whisper")>=0,
-   "у Шахты Шепчущихся Глубин шесть штреков, десять правил, четыре живые жилы, лагеря, обвалы, подъёмник и шёпот");
+   &&typeof Mine.тайноеK==="function"&&String(propHidesSwitch).indexOf("Mine")>=0,
+   "у Стоустого Рудника шесть штреков, десять правил, четыре живые жилы, лагеря, обвалы, подъёмник и шёпот");
   ok("conjunction",!!GLOBAL_BY_ID.conjunction
    &&CONJ_BEASTS.length===6&&CONJ_BEASTS.every(b=>b.n&&b.о&&b.snd&&b.fx&&b.голос&&b.сила>0)
    &&new Set(CONJ_BEASTS.map(b=>b.snd)).size>=4
@@ -43303,7 +43304,7 @@ function worldSelfCheck(){
   ok("tavern",(PROPS_BY_PLACE.tavern||[]).length===17&&(PROPS_BY_PLACE.tavern||[]).every(id=>PROP_BY_ID[id])&&TAVERN_EVENTS.length===9&&TAVERN_EVENTS.every(x=>SOUND_BANK[x.звук]&&typeof x.дело==="function"),"в таверне семнадцать вещей и девять происшествий");
   ok("wararc",WAR_FEATURES.length===12&&WAR_FEATURES.every(x=>SOUND_BANK[x.звук]&&x.о)&&WAR_ACTS.length===6&&WAR_ACTS.every(x=>SOUND_BANK[x.звук]&&x.сдвиг>0),"у дуги двенадцать примет войны и шесть дел");
   ok("merit",MERIT_KINDS.length===12&&MERIT_KINDS.every(k=>SOUND_BANK[k.звук])&&MERITS.length>=24&&MERITS.every(m=>MERIT_BY_KIND[m.род]&&m.цель>0&&typeof m.счёт==="function")&&MERIT_KINDS.every(k=>MERITS.some(m=>m.род===k.id))&&ART_CHAIN_STEPS.length===10&&ART_RANKS.length===10&&Encyclo.fields.length===7&&Encyclo.count()>100,"Достижения: двенадцать родов со звуком и своими строками, цепочка артефакта из десяти звеньев, семь рангов, энциклопедия по семи полям");
-  ok("deeps",DUNG_TYPES.length===14&&DUNG_TYPES.every(t=>SOUND_BANK[t.звук]&&RES_BASE[t.ресурс]&&t.опасность)&&Complexes.all().length===42&&Complexes.all().every(c=>c.n&&c.ярусы[1]>c.ярусы[0]&&c.награда)&&Complexes.byId("cx_whisper")&&Complexes.byId("cx_bottomless")&&DEEP_FAMILIES.length===10&&DEEP_FAMILIES.every(f=>SOUND_BANK[f.звук]&&f.ест&&f.страх)&&DEEP_RESOURCES.length===10&&DEEP_RESOURCES.every(r=>r.ярус>0&&r.цена>0&&r.что)&&PARANOIA.length===7&&PARANOIA.every(p=>SOUND_BANK[p.звук])&&SURVIVAL_NEEDS.length===10&&Passport.fields().length===25,"Глубины: четырнадцать видов, сорок два комплекса, десять семейств, десять пород, семь признаков, десять нужд, паспорт из двадцати пяти полей");
+  ok("deeps",DUNG_TYPES.length===14&&DUNG_TYPES.every(t=>SOUND_BANK[t.звук]&&RES_BASE[t.ресурс]&&t.опасность)&&Complexes.all().length===42&&Complexes.all().every(c=>c.n&&c.ярусы[1]>c.ярусы[0]&&c.награда)&&Complexes.byId("cx_mine")&&Complexes.byId("cx_bottomless")&&DEEP_FAMILIES.length===10&&DEEP_FAMILIES.every(f=>SOUND_BANK[f.звук]&&f.ест&&f.страх)&&DEEP_RESOURCES.length===10&&DEEP_RESOURCES.every(r=>r.ярус>0&&r.цена>0&&r.что)&&PARANOIA.length===7&&PARANOIA.every(p=>SOUND_BANK[p.звук])&&SURVIVAL_NEEDS.length===10&&Passport.fields().length===25,"Глубины: четырнадцать видов, сорок два комплекса, десять семейств, десять пород, семь признаков, десять нужд, паспорт из двадцати пяти полей");
   ok("living",Zones.all().length>=100&&Zones.all().every(z=>ANOM_BY_ID[z.правило]&&z.x>=0&&z.y>=0)&&ANOM_RULES.length===20&&ANOM_RULES.every(r=>SOUND_BANK[r.маркер]&&r.как&&r.маршрут&&RES_BASE[r.ресурс]&&r.опасность)&&Power.all().length>=60&&POWER_PLACES.every(p=>SOUND_BANK[p.звук]&&MSCHOOL_BY_ID[p.школа]&&WEATHER_BY_ID[p.погода])&&GLOBAL_EVENTS.length===10&&GLOBAL_EVENTS.every(e=>SOUND_BANK[e.звук]&&e.срок>0)&&RANDOM_EVENTS.filter(e=>!/^(conj_|mirth_)/.test(e.id)).length===14&&RANDOM_EVENTS.filter(e=>e.id.indexOf("mirth_")===0).length===12&&RANDOM_EVENTS.every(e=>SOUND_BANK[e.звук]&&typeof e.когда==="function")&&PROPHECIES.length===6&&ARC_STEPS.length===8,"Живой мир: сто аномальных зон по двадцати правилам, шестьдесят мест силы, десять мировых событий, четырнадцать случайных (сверх них два на время Сопряжения и двенадцать весёлых), шесть пророчеств, восемь ступеней судьбы — всё со звуком");
   ok("sigils",SIGIL_SYMBOLS.length===8&&SIGIL_SYMBOLS.every(x=>MSCHOOL_BY_ID[x.школа]&&x.намерения.every(i=>SIGIL_INTENTS[i]))&&SIGIL_CARRIERS.length===8&&SIGIL_CARRIERS.every(x=>RES_BASE[x.ресурс])&&SIGIL_GEOMETRY.length===5&&INKS.length===6&&INKS.every(x=>SOUND_BANK[x.звук]&&Object.keys(x.рецепт).every(r=>RES_BASE[r]))&&AWAKEN_SOURCES.length===6&&AWAKEN_SOURCES.every(x=>SOUND_BANK[x.звук])&&WAVES.length===3&&MORPH_TRAITS.length===6&&MORPHOBEASTS.length===10&&MORPHOBEASTS.every(b=>MONSTERS.some(m=>m.id===b.база))&&DEVOUR_GIFTS.length===6&&EVENT_THEME.world_event&&SOUND_BANK[EVENT_THEME.world_event.роль],"Знаки: восемь символов, восемь носителей, пять геометрий, шесть чернил, шесть источников пробуждения, три волны, шесть черт, десять морфозверей, шесть даров Эха — всё со звуком и по настоящим ресурсам");
   ok("cases",CASE_TEMPLATES.length===6&&CASE_TEMPLATES.every(t=>t.версии.length===3&&t.улики.every(k=>CLUE_KINDS[k])&&t.версии.every(v=>v.улики.every(k=>t.улики.includes(k))))&&SYNDICATES.length===8&&SYNDICATES.every(x=>SOUND_BANK[x.звук]&&x.города.every(id=>NAMED_CITY_BY_ID[id])&&REGIONS[x.область])&&Object.keys(DECISIONS).length===9&&Object.values(DECISIONS).every(d=>Object.keys(d).length>=3)&&["deeper","border_war","shards","lasthouse","beast","price","undercity","maskface","endless"].every(id=>CHAIN_DB[id])&&HOUSE_BY_ID[LAST_HOUSE.враг]&&DLG_MOVE_BY_ID.znanie&&DLG_MOVE_BY_ID.kultura&&DLG_MOVE_BY_ID.nedoskazat,"Расследования: шесть дел с тремя версиями, восемь синдикатов со звуком и городами, девять цепочек с развязками, три хода разговора");

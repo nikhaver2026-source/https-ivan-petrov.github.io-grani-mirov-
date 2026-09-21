@@ -99,7 +99,7 @@ const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(e!==undefined?' :
   o.опасностьМелко=Gen.of(x,y,1,"ruins").опасность.k;
   o.опасностьГлубоко=Gen.of(x,y,60,"ruins").опасность.k;
   /* Именной комплекс: шаблон обязан его заметить. */
-  const c=safeFn(()=>Complexes.byId("cx_whisper"),null);
+  const c=safeFn(()=>Complexes.byId("cx_mine"),null);
   o.уКомплекса=c?Gen.of(c.x,c.y,5,"ruins").шаблон.k:-1;
   o.имяКомплекса=c?Gen.of(c.x,c.y,5,"ruins").шаблон.n:"";
   o.комплексЕсть=!!c;
