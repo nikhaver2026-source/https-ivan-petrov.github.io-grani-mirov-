@@ -43077,6 +43077,9 @@ function councilAnnounce(тихо){
   const w=Math.floor((Number(G.day)||1)/7);
   if(!G.council||typeof G.council!=="object")G.council={};
   if(G.council[i]===w)return false;
+  /* Поверх открытого окна глашатай молчит: там игрок слушает свайпы, и
+     лишний голос сбивает выбор. Не помечаем сказанным — объявим позже. */
+  if(safeFn(()=>!!activeLayer(),false))return false;
   G.council[i]=w;
   const m=factionMove(i,G.day);
   if(!тихо){
@@ -43467,6 +43470,8 @@ function weventAnnounce(){
   if(!G.weventSaid||typeof G.weventSaid!=="object")G.weventSaid={};
   const ev=новые.find(x=>!G.weventSaid[x.id]);
   if(!ev)return false;
+  /* То же правило, что и у глашатая совета: поверх открытого окна молчим. */
+  if(safeFn(()=>!!activeLayer(),false))return false;
   G.weventSaid[ev.id]=G.day;
   /* Память вестника не растёт без края: старое стирается. */
   const ключи=Object.keys(G.weventSaid);
