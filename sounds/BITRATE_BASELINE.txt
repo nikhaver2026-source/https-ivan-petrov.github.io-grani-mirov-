@@ -1673,7 +1673,7 @@ sounds/voice/race_garpii.mp3	161
 sounds/voice/race_glubinnye_leviafany.mp3	161
 sounds/voice/race_gnilokoronnye.mp3	163
 sounds/voice/race_gnilokrylye.mp3	161
-sounds/voice/race_gnomy.mp3	162
+sounds/voice/race_gnomy.mp3	192
 sounds/voice/race_gobliny.mp3	161
 sounds/voice/race_golemy.mp3	162
 sounds/voice/race_golodnye.mp3	161
@@ -1707,8 +1707,8 @@ sounds/voice/race_nagi.mp3	161
 sounds/voice/race_nasledniki_harga.mp3	162
 sounds/voice/race_nebesnye_tabunschiki.mp3	161
 sounds/voice/race_oblachnye_skakuny.mp3	161
-sounds/voice/race_ogry.mp3	162
-sounds/voice/race_orki.mp3	163
+sounds/voice/race_ogry.mp3	192
+sounds/voice/race_orki.mp3	192
 sounds/voice/race_padalschiki_korvaksa.mp3	161
 sounds/voice/race_pegasy.mp3	162
 sounds/voice/race_pepelnye_deti.mp3	161
