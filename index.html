@@ -4832,6 +4832,15 @@ const GUIDE=[
  "Вещь растёт. За каждую победу работающий артефакт получает опыт, а на пороге открывает ступень — прибавку, которой у него раньше не было, и всегда из своего направления. Каждая следующая ступень даётся вдвое тяжелее. Если гнёзда кончились, редкую часть можно скормить вещи: она уйдёт в опыт вместо гнезда.",
  "Требования. Ранг задаёт уровень; сверх того вещь может требовать навык, заклинание нужной школы, расположение народа, принадлежность к клану, прочитанное знание или закрытое дело. Вещь, требования которой не выполнены, лежит мёртвым грузом и не даёт ничего — и прямо говорит, чего ей не хватает.",
  "Где всё это. Пункт меню «Артефакты, части и рецепты». В нём видно, каким ремеслом здесь занимаются и каково ваше умение, какие рецепты под рукой и чего не хватает, какие части лежат в суме, и по каждой вещи — всё, что о ней известно, и всё, что с ней можно сделать: вложить, вынуть, зачаровать, скормить, продать."]},
+{title:"Глава 81. Второе усиление",body:[
+ "КАК БЫЛО. Составитель брал ровно одно усиление. Между тем §7 показывает сборку из ядра, стихии, формы и НЕСКОЛЬКИХ: «ядро — удар, стихия — молния, форма — цепь, модификатор — металл, модификатор — распространение». Вся вторая половина примера была недоступна.",
+ "ЧТО ПОЯВИЛОСЬ. В окне составителя есть раздел «Второе усиление». Кладут его руками, и оно настоящее: дальность, радиус, подготовка, перезарядка и сила умножаются на оба, признаки берутся от обоих, а имя несёт оба — «Стрела огня (быстрое и дальнее)».",
+ "ЧТО ЭТО СТОИТ. Мана на четверть больше сверх того, что и так берут оба усиления, подготовка на треть дольше. Второе усиление — не подарок, а вложение.",
+ "КОМУ ПОЗВОЛЕНО. Тому, у кого руническое дело или артефакторика хотя бы третьей ступени. До неё раздел заперт, и о причине сказано прямо, а не умолчанием.",
+ "НЕ ВСЯКАЯ ПАРА СХОДИТСЯ. Быстрое и неспешное — одно торопит, другое держит. Бережливое и двойное — вполсилы дважды это то же самое, что раз в полную. Тихое и отзвучное — отзвук слышен, тихим он не бывает. Кровное и бережливое — кровью платят не за дешевизну. Стойкое и якорное — одно удлиняет перезарядку вдвое, другое вдвое её режет. Глубинное и ночное — под землёй ночи нет, одно из двух всегда впустую. Игра называет причину, а не молчит.",
+ "ОДНО И ТО ЖЕ ДВАЖДЫ НЕ КЛАДУТ. Это тоже сказано словами.",
+ "ПРЕЖНЕЕ НЕ СЛОМАЛОСЬ. Чара с одним усилением собирается ровно как раньше: то же имя, та же цена, тот же опознаватель. Второе усиление словно и не заведено, пока его не выбрали.",
+ "ГРИМУАР ОСТАЁТСЯ НА ОДНОМ. Каталог — это каталог: двадцать шесть тысяч записей по одному усилению. Второе кладут в мастерской, а не берут с полки."]},
 {title:"Глава 80. Семь рынков и походный лагерь",body:[
  "КАК БЫЛО. Цена в мире считалась по двум десяткам причин — держава, эпоха, война, погода, сезон, дороги, законы, Дома, боги, разбитые переделы, — и ни одна из них не спрашивала, ГДЕ вы стоите. Мешок травы в столичном ряду и в деревне, откуда его привезли, стоил ровно одинаково.",
  "СЕМЬ РОДОВ. Деревенский торг: своё дёшево, привозное дорого, а выбор — что нашлось в амбаре. Городской рынок: ровная цена мира, с ней и сравнивают все прочие. Столичный ряд: дороже всё, но и берут щедрее, и выбор здесь самый широкий. Пограничная крепость: железо и оружие в цене, прочего сюда почти не возят. Походный лагерь: дерут втридорога и платят втридорога — за хлеб, снадобья и железо. Подземный торг: наверху этого нет вовсе, зато породу берут прямо здесь, без извоза. Торговый порт: рыба и заморское дёшево, а за своё платят лучше, чем где-либо.",
@@ -31878,6 +31887,8 @@ const CMD={
  sfschool(id){spellForgePick("school",id);},
  sfform(id){spellForgePick("form",id);},
  sfmod(id){spellForgePick("mod",id);},
+ /* §7: второе усиление. Пустое — это «одно», а не ошибка. */
+ sfmod2(id){spellForgePick("mod2",id||"");},
  echofit(i){const t=Echo.fit(+i);narrate(t,{pri:1,key:"echo"});safeFn(()=>{if(typeof renderPath==="function")renderPath();});},
  echodrop(i){const t=Echo.drop(+i);narrate(t,{pri:2,key:"echo"});safeFn(()=>{if(typeof renderPath==="function")renderPath();});},
  echosay(){narrate(Echo.text(),{pri:2,key:"echo"});},
@@ -38390,9 +38401,48 @@ function spellIncompat(schoolId,formId,modId,coreId,elemId){
  if(m.id==="night"&&el.id==="e_light")return "свет ночью не крепнет: ночное усиление ему во вред";
  if(m.id==="deep"&&el.id==="e_air")return "воздуху под землёй тесно: глубинное усиление ему ни к чему";
  return "";}
-function composeSpell(schoolId,formId,modId,ур,coreId,elemId){
+/* ── ВТОРОЕ УСИЛЕНИЕ (§7) ──
+   §7 показывает сборку из ядра, стихии, формы и НЕСКОЛЬКИХ усилений:
+   «модификатор: металл, модификатор: распространение». Составитель брал
+   ровно одно, и вся вторая половина примера была недоступна.
+
+   Второе усиление кладёт игрок руками — гримуар остаётся на одном, он
+   каталог, а не мастерская. За второе платят: мана на четверть больше,
+   подготовка на треть дольше, и нужна третья ступень рун или
+   артефакторики. Не всякая пара сходится: одно торопит, другое держит. */
+const MOD_PAIR_BAD=[
+ ["quick","slow","одно торопит, другое держит: вместе они спорят"],
+ ["cheap","twin","вполсилы дважды — это то же самое, что раз в полную"],
+ ["silent","echo","отзвук слышен: тихим он не бывает"],
+ ["bloodpay","cheap","кровью платят не за дешевизну"],
+ ["lasting","anchor","одно удлиняет перезарядку вдвое, другое вдвое её режет"],
+ ["deep","night","под землёй ночи нет: одно из двух всегда впустую"]];
+function modPairIncompat(a,b){
+ try{
+  a=a||"none";b=b||"none";
+  if(a==="none"||b==="none")return "";
+  if(a===b)return "одно и то же усиление дважды не кладут";
+  for(const [x,y,поч] of MOD_PAIR_BAD)
+   if((a===x&&b===y)||(a===y&&b===x))return поч;
+  return "";
+ }catch(_){return "";}}
+/* Сколько усилений вообще позволено рукам этого героя. */
+function modSlots(){
+ try{
+  const ур=Math.max(safeFn(()=>mastLevel("runes"),0),safeFn(()=>mastLevel("arte"),0));
+  return ур>=3?2:1;
+ }catch(_){return 1;}}
+function composeSpell(schoolId,formId,modId,ур,coreId,elemId,mod2Id){
  const why=spellIncompat(schoolId,formId,modId,coreId,elemId);if(why)return {ошибка:why};
+ /* Второе усиление проходит того же судью, что и первое, и ещё одного — на
+    пару. Без него собралось бы «быстрое и неспешное». */
+ if(mod2Id&&mod2Id!=="none"){
+  const why2=spellIncompat(schoolId,formId,mod2Id,coreId,elemId);if(why2)return {ошибка:why2};
+  const пара=modPairIncompat(modId,mod2Id);if(пара)return {ошибка:пара};}
  const sc=MSCHOOL_BY_ID[schoolId],f=FORM_BY_ID[formId],m=MOD_BY_ID[modId||"none"];
+ const m2=(mod2Id&&mod2Id!=="none"&&MOD_BY_ID[mod2Id]&&mod2Id!==(modId||"none"))?MOD_BY_ID[mod2Id]:null;
+ /* Плата за второе усиление: четверть маны сверху и треть подготовки. */
+ const двK=m2?1.25:1,двП=m2?1.3:1;
  const своёЯдро=coreDefault(schoolId,formId);
  const c=coreId?CORE_BY_ID[coreId]:своёЯдро;
  const своя=elemOfSchool(schoolId);
@@ -38401,26 +38451,58 @@ function composeSpell(schoolId,formId,modId,ур,coreId,elemId){
  const роднoeЯдро=!!(своёЯдро&&c.id===своёЯдро.id);
  ур=Math.max(1,Number(ур)||1);
  /* Имя прежнее, пока ядро и стихия — свои: старые чары не переименовываются. */
- const хвост=m.id==="none"?"":" ("+m.n+")";
+ const хвост=m.id==="none"&&!m2?"":" ("+[m.id==="none"?null:m.n,m2?m2.n:null].filter(Boolean).join(" и ")+")";
  const n=роднаяСтихия&&роднoeЯдро?`${f.имя} ${sc.род}${хвост}`
   :роднoeЯдро?`${f.имя} ${sc.род}: ${el.n.toLowerCase()}${хвост}`
   :роднаяСтихия?`${f.имя} ${sc.род}: ${c.n.toLowerCase()}${хвост}`
   :`${f.имя} ${sc.род}: ${el.n.toLowerCase()}, ${c.n.toLowerCase()}${хвост}`;
  /* Чужая стихия слушается хуже и стоит дороже: это плата за свободу. */
  const цк=(роднoeЯдро?1:c.k)*(роднаяСтихия?1:1.3);
- const cost=Math.max(3,Math.round(f.база*sc.k*m.цена*цк+ур*1.5));
- const id=роднаяСтихия&&роднoeЯдро?`cs_${sc.id}_${f.id}_${m.id}`:`cs_${sc.id}_${f.id}_${m.id}_${c.id}_${el.id}`;
+ const cost=Math.max(3,Math.round(f.база*sc.k*m.цена*(m2?m2.цена:1)*двK*цк+ур*1.5));
+ const хв2=m2?`_${m2.id}`:"";
+ const id=(роднаяСтихия&&роднoeЯдро?`cs_${sc.id}_${f.id}_${m.id}`:`cs_${sc.id}_${f.id}_${m.id}_${c.id}_${el.id}`)+хв2;
  const rec={id,n,custom:true,school:sc.id,форма:f.id,усиление:m.id,ядро:c.id,стихия:el.id,
-  ранг:ур,уровень:ур*3,cost,price:0,дальность:f.дальность*(m.дальность||1),радиус:f.радиус*(m.радиус||1),
-  подготовка:+(f.подготовка*(m.подготовка||1)).toFixed(2),откат:Math.round(f.откат*(m.откат||1)),
+  ранг:ур,уровень:ур*3,cost,price:0,
+  дальность:f.дальность*(m.дальность||1)*(m2?(m2.дальность||1):1),
+  радиус:f.радиус*(m.радиус||1)*(m2?(m2.радиус||1):1),
+  подготовка:+(f.подготовка*(m.подготовка||1)*(m2?(m2.подготовка||1):1)*двП).toFixed(2),
+  откат:Math.round(f.откат*(m.откат||1)*(m2?(m2.откат||1):1)),
   компоненты:["кристалл"],условия:f.id==="bolt"||f.id==="wave"?"в бою":"в любое время",
   противодействие:sc.сем==="урон"?"щит противной школы":sc.сем==="защита"?"стрела хаоса":"тишина",
   сопротивление:sc.сем==="урон"?`сопротивление ${sc.род}`:"нет",
   побочное:sc.сем==="урон"?"тело копит нагрузку от чар":sc.сем==="контроль"?"мана после отката возвращается медленнее":"нет",
-  звук:sc.звук,голос:m.id==="silent"?null:sc.голос,стихийныйЗвук:el.звук,
+  усиление2:m2?m2.id:null,
+  /* Тихое молчит, с чем бы его ни клали. */
+  звук:sc.звук,голос:(m.id==="silent"||(m2&&m2.id==="silent"))?null:sc.голос,стихийныйЗвук:el.звук,
   вид:`${sc.n.toLowerCase()} в форме ${f.род}, ядро ${c.род}, стихия ${el.род}`,
-  источник:"игрок",сила:+((роднoeЯдро?m.k:m.k*c.k)*(роднаяСтихия?1:0.9)).toFixed(2)};
+  источник:"игрок",
+  сила:+((роднoeЯдро?m.k:m.k*c.k)*(m2?m2.k:1)*(роднаяСтихия?1:0.9)).toFixed(2)};
  return rec;}
+/* Два усиления сливаются в одно на время сотворения: признаки берутся от
+   обоих, числа перемножаются. Без этого второе усиление было бы записью в
+   карточке и ничем больше — обработчик читает ровно один объект. */
+function modMerged(sp){
+ try{
+  const a=MOD_BY_ID[sp&&sp.усиление]||MOD_BY_ID.none;
+  const b=(sp&&sp.усиление2)?MOD_BY_ID[sp.усиление2]:null;
+  if(!b)return a;
+  const тихо=a.id==="silent"||b.id==="silent";
+  return {id:тихо?"silent":a.id,n:`${a.n} и ${b.n}`,пара:true,
+   k:(Number(a.k)||1)*(Number(b.k)||1),
+   цена:(Number(a.цена)||1)*(Number(b.цена)||1),
+   дальность:(Number(a.дальность)||1)*(Number(b.дальность)||1),
+   радиус:(Number(a.радиус)||1)*(Number(b.радиус)||1),
+   подготовка:(Number(a.подготовка)||1)*(Number(b.подготовка)||1),
+   откат:(Number(a.откат)||1)*(Number(b.откат)||1),
+   пробой:!!(a.пробой||b.пробой),
+   повтор:Math.max(Number(a.повтор)||1,Number(b.повтор)||1),
+   подземом:(Number(a.подземом)||1)*(Number(b.подземом)||1),
+   ночью:(Number(a.ночью)||1)*(Number(b.ночью)||1),
+   днём:(Number(a.днём)||1)*(Number(b.днём)||1),
+   верно:!!(a.верно||b.верно),
+   отзвук:Math.max(Number(a.отзвук)||0,Number(b.отзвук)||0),
+   кровью:!!(a.кровью||b.кровью)};
+ }catch(_){return MOD_BY_ID.none;}}
 /* Ядро и стихия любого заклинания — и собранного, и именного школьного. */
 function spellCoreOf(sp){try{return CORE_BY_ID[sp&&sp.ядро]||coreDefault(sp&&sp.school,sp&&sp.форма)||CORE_BY_ID.strike;}catch(_){return CORE_BY_ID.strike;}}
 function spellElemOf(sp){try{
@@ -38892,7 +38974,7 @@ function grimPage(d){
  safeFn(()=>Bank.play("arte_page",{gain:0.4,maxSec:2}));
  narrate(`Страница ${GRIM.стр+1} из ${страниц}.`,{key:"grim"});
  return GRIM.стр;}
-const SF={school:null,form:null,mod:"none",core:null,elem:null};
+const SF={school:null,form:null,mod:"none",mod2:"none",core:null,elem:null};
 /* Что сейчас листают в гримуаре. */
 const GRIM={школа:null,спец:null,стр:0,накрупно:12,выбор:null};
 function spellForgeOpen(){
@@ -38901,7 +38983,10 @@ function spellForgeOpen(){
   return false;}
  openModal("modal-spellforge");spellForgeRender();return true;}
 function sfProbe(ур){
- return SF.school&&SF.form?composeSpell(SF.school,SF.form,SF.mod,ур,SF.core,SF.elem):null;}
+ /* Второе усиление берётся, только если руки до него доросли: иначе проба
+    показывала бы то, чего собрать нельзя. */
+ const вт=safeFn(()=>modSlots(),1)>=2?SF.mod2:"none";
+ return SF.school&&SF.form?composeSpell(SF.school,SF.form,SF.mod,ур,SF.core,SF.elem,вт):null;}
 function spellForgeRender(){
  const box=document.getElementById("sfBody");if(!box)return;
  const ур=Math.max(safeFn(()=>mastLevel("runes"),0),safeFn(()=>mastLevel("arte"),0));
@@ -38927,6 +39012,24 @@ function spellForgeRender(){
   `<button class="item" data-cmd="sfelem:" data-speak="Стихия по школе: ${свояСт?свояСт.n:"выберите школу"}. ${SF.elem?"":"Выбрана."}">${SF.elem?"":"✔ "}По школе${свояСт?" — "+свояСт.n.toLowerCase():""}</button>`+
   SPELL_ELEMENTS.map(e=>`<button class="item" data-cmd="sfelem:${e.id}" data-speak="Стихия ${e.n}: ${e.о}. ${SF.elem===e.id?"Выбрана.":""}${свояСт&&e.id!==свояСт.id?" Чужая школе: дороже и слабее.":""}">${SF.elem===e.id?"✔ ":""}${e.n} — ${e.о}</button>`).join("");
  html+=`<h3>Усиление</h3>`+SPELL_MODS.map(m=>`<button class="item" data-cmd="sfmod:${m.id}" data-speak="Усиление ${m.n}: ${m.о}. ${SF.mod===m.id?"Выбрано.":""}">${SF.mod===m.id?"✔ ":""}${m.n} — ${m.о}</button>`).join("");
+ /* ── ВТОРОЕ УСИЛЕНИЕ (§7) ──
+    §7 собирает чару из ядра, стихии, формы и НЕСКОЛЬКИХ усилений. Второе
+    кладут руками и не всякое: одно торопит, другое держит. Открывается с
+    третьей ступени рун или артефакторики — до неё раздела просто нет, и о
+    причине сказано прямо, а не умолчанием. */
+ const слотов=safeFn(()=>modSlots(),1);
+ if(слотов>=2){
+  html+=`<h3>Второе усиление</h3>`
+   +`<button class="item" data-cmd="sfmod2:" data-speak="Без второго усиления: одно.${SF.mod2==="none"?" Выбрано.":""}">${SF.mod2==="none"?"✔ ":""}Одно усиление</button>`
+   +SPELL_MODS.filter(m=>m.id!=="none").map(m=>{
+     const беда=modPairIncompat(SF.mod,m.id);
+     const сл=`Второе усиление ${m.n}: ${m.о}. `
+      +(беда?`Нельзя вместе с «${MOD_BY_ID[SF.mod].n}»: ${беда}.`:"Можно.")
+      +(SF.mod2===m.id?" Выбрано.":"");
+     return `<button class="item" data-cmd="sfmod2:${m.id}" data-speak="${сл.replace(/"/g,"&quot;")}">${SF.mod2===m.id?"✔ ":беда?"✖ ":""}${m.n} — ${m.о}</button>`;}).join("");
+ }else{
+  const сл="Второе усиление кладёт тот, у кого руническое дело или артефакторика хотя бы третьей ступени. Сейчас доступно одно.";
+  html+=`<h3>Второе усиление</h3><div class="list-line" tabindex="0" data-speak="${сл}">🔒 ${сл}</div>`;}
  html+=`<button class="item" data-cmd="sfbuild" data-speak="Собрать заклинание.">🔮 Собрать</button>`;
  /* ── ГРИМУАР В ТОМ ЖЕ ОКНЕ ──
     Составитель собирает по одному; гримуар показывает всё, что вообще
@@ -38997,11 +39100,12 @@ function spellForgeRender(){
 function spellForgePick(what,id){
  /* Пустое «по школе» — это выбор, а не ошибка: ядро и стихия возвращаются
     к тем, что школа даёт сама. */
- if((what==="core"||what==="elem")&&!id){
-  if(what==="core")SF.core=null;else SF.elem=null;
+ /* Пустое «второе усиление» — это «одно»: такой же выбор, как «по школе». */
+ if((what==="core"||what==="elem"||what==="mod2")&&!id){
+  if(what==="core")SF.core=null;else if(what==="elem")SF.elem=null;else SF.mod2="none";
   spellForgeRender();
   safeFn(()=>Bank.play("oc_ui_select"in SOUND_BANK?"oc_ui_select":"knock_soft",{gain:0.4,maxSec:1}));
-  narrate(what==="core"?"Ядро — по школе.":"Стихия — по школе.",{key:"sf"});
+  narrate(what==="core"?"Ядро — по школе.":what==="elem"?"Стихия — по школе.":"Второго усиления нет: одно.",{key:"sf"});
   return true;}
  const есть=what==="school"?MSCHOOL_BY_ID[id]:what==="form"?FORM_BY_ID[id]
   :what==="core"?CORE_BY_ID[id]:what==="elem"?ELEM_BY_ID[id]:MOD_BY_ID[id];
@@ -39010,6 +39114,7 @@ function spellForgePick(what,id){
  if(what==="school")SF.school=id;
  if(what==="form")SF.form=id;
  if(what==="mod")SF.mod=id;
+ if(what==="mod2")SF.mod2=id;
  if(what==="core")SF.core=id;
  if(what==="elem")SF.elem=id;
  spellForgeRender();
@@ -39025,7 +39130,10 @@ function spellForgeBuild(){
  try{
   const ур=Math.max(safeFn(()=>mastLevel("runes"),0),safeFn(()=>mastLevel("arte"),0));
   if(!SF.school||!SF.form){narrate("Сперва выберите школу и форму.");return false;}
-  const rec=composeSpell(SF.school,SF.form,SF.mod,ур,SF.core,SF.elem);
+  const вт=safeFn(()=>modSlots(),1)>=2?SF.mod2:"none";
+  if(SF.mod2&&SF.mod2!=="none"&&вт==="none"){
+   narrate("Второе усиление кладёт тот, у кого руническое дело или артефакторика хотя бы третьей ступени.");return false;}
+  const rec=composeSpell(SF.school,SF.form,SF.mod,ур,SF.core,SF.elem,вт);
   if(rec.ошибка){safeFn(()=>Bank.play("oc_pshsh",{gain:0.5,maxSec:1}));narrate(`Несовместимо: ${rec.ошибка}.`);return false;}
   if(SPELLS.some(sp=>sp.n===rec.n)&&G.spells.includes(rec.n)){narrate(`«${rec.n}» у вас уже есть.`);return false;}
   if((Number(G.inv&&G.inv["кристалл"])||0)<1){narrate("Нужен кристалл: он держит составленное заклинание.");return false;}
@@ -39095,7 +39203,7 @@ function castCustomEffect(sp){
   const sc=MSCHOOL_BY_ID[sp.school]||SCHOOLS[0];
   const f=FORM_BY_ID[sp.форма]||SPELL_FORMS[0];
   const c=spellCoreOf(sp),el=spellElemOf(sp);
-  const md=MOD_BY_ID[sp.усиление]||MOD_BY_ID.none;
+  const md=modMerged(sp);
   /* Пробивное не слушает нрава стихии: считается, как в свою пору. */
   const еК=md.пробой?(Number(el.k)||1):elemPower(el);
   /* Резонанс: согласие героя, вещи и стихии входит прямо в силу плетения. */
@@ -42386,8 +42494,13 @@ const Weave=Modules.register("WEAVE",{
  power:el=>S(()=>elemPower(el),1),
  why:el=>S(()=>elemWhy(el),""),
  modPower:m=>S(()=>modPower(m),1),
- compose:(sc,f,m,ур,c,el)=>S(()=>composeSpell(sc,f,m,ур,c,el),null),
+ compose:(sc,f,m,ур,c,el,m2)=>S(()=>composeSpell(sc,f,m,ур,c,el,m2),null),
  why_not:(sc,f,m,c,el)=>S(()=>spellIncompat(sc,f,m,c,el),"не сложилось"),
+ /* §7: второе усиление. Пары, слоты и слияние. */
+ pairs:MOD_PAIR_BAD,
+ pairWhyNot:(a,b)=>S(()=>modPairIncompat(a,b),""),
+ slots:()=>S(()=>modSlots(),1),
+ merged:sp=>S(()=>modMerged(sp),null),
  /* Сколько сочетаний вообще складывается: считается по тем же правилам. */
  count(){let n=0;
   SCHOOLS.forEach(sc=>SPELL_FORMS.forEach(f=>SPELL_CORES.forEach(c=>{
@@ -43518,6 +43631,28 @@ function worldSelfCheck(){
   ok("sigils",SIGIL_SYMBOLS.length===8&&SIGIL_SYMBOLS.every(x=>MSCHOOL_BY_ID[x.школа]&&x.намерения.every(i=>SIGIL_INTENTS[i]))&&SIGIL_CARRIERS.length===8&&SIGIL_CARRIERS.every(x=>RES_BASE[x.ресурс])&&SIGIL_GEOMETRY.length===5&&INKS.length===6&&INKS.every(x=>SOUND_BANK[x.звук]&&Object.keys(x.рецепт).every(r=>RES_BASE[r]))&&AWAKEN_SOURCES.length===6&&AWAKEN_SOURCES.every(x=>SOUND_BANK[x.звук])&&WAVES.length===3&&MORPH_TRAITS.length===6&&MORPHOBEASTS.length===10&&MORPHOBEASTS.every(b=>MONSTERS.some(m=>m.id===b.база))&&DEVOUR_GIFTS.length===6&&EVENT_THEME.world_event&&SOUND_BANK[EVENT_THEME.world_event.роль],"Знаки: восемь символов, восемь носителей, пять геометрий, шесть чернил, шесть источников пробуждения, три волны, шесть черт, десять морфозверей, шесть даров Эха — всё со звуком и по настоящим ресурсам");
   ok("cases",CASE_TEMPLATES.length===6&&CASE_TEMPLATES.every(t=>t.версии.length===3&&t.улики.every(k=>CLUE_KINDS[k])&&t.версии.every(v=>v.улики.every(k=>t.улики.includes(k))))&&SYNDICATES.length===8&&SYNDICATES.every(x=>SOUND_BANK[x.звук]&&x.города.every(id=>NAMED_CITY_BY_ID[id])&&REGIONS[x.область])&&Object.keys(DECISIONS).length===9&&Object.values(DECISIONS).every(d=>Object.keys(d).length>=3)&&["deeper","border_war","shards","lasthouse","beast","price","undercity","maskface","endless"].every(id=>CHAIN_DB[id])&&HOUSE_BY_ID[LAST_HOUSE.враг]&&DLG_MOVE_BY_ID.znanie&&DLG_MOVE_BY_ID.kultura&&DLG_MOVE_BY_ID.nedoskazat,"Расследования: шесть дел с тремя версиями, восемь синдикатов со звуком и городами, девять цепочек с развязками, три хода разговора");
   ok("academy",LANGS.length>=20&&LANGS.every(l=>l.письмо&&l.о)&&SCIENCES.length===6&&SCIENCES.every(x=>SOUND_BANK[x.звук]&&x.эффект.length===3&&FACULTY_BY_ID[x.факультет])&&FACULTIES.length===12&&FACULTIES.every(f=>(f.школы||[]).every(id=>MSCHOOL_BY_ID[id]&&SCHOOL_AUDIO[id])&&(!f.маст||MAST_BY_ID[f.маст]))&&SCHOOLS.length>=30&&SCHOOLS.every(sc=>SCHOOL_AUDIO[sc.id]&&SPELL_LAYERS.every(l=>SOUND_BANK[SCHOOL_AUDIO[sc.id][l]])),"Академия: двадцать один язык, шесть наук, двенадцать факультетов, тридцать восемь школ чар — все со звуком");
+  ok("modpair",MOD_PAIR_BAD.length===6
+   /* Каждая спорная пара — из настоящих усилений, с двумя разными и со словом. */
+   &&MOD_PAIR_BAD.every(([a,b,поч])=>MOD_BY_ID[a]&&MOD_BY_ID[b]&&a!==b&&поч&&поч.length>12)
+   &&new Set(MOD_PAIR_BAD.map(([a,b])=>[a,b].sort().join("|"))).size===MOD_PAIR_BAD.length
+   /* Судья взаимен и молчит там, где спора нет. */
+   &&MOD_PAIR_BAD.every(([a,b])=>modPairIncompat(a,b)&&modPairIncompat(b,a))
+   &&!modPairIncompat("quick","far")&&!modPairIncompat("none","slow")
+   &&!!modPairIncompat("quick","quick")
+   /* Одно усиление собирается ровно как прежде — второго словно нет. */
+   &&(()=>{try{
+     const a=composeSpell("fire","bolt","quick",1,null,null);
+     const b=composeSpell("fire","bolt","quick",1,null,null,"none");
+     if(!a||!b||a.n!==b.n||a.cost!==b.cost||a.id!==b.id)return false;
+     /* Два усиления дороже одного, оба имени в названии, признаки слиты. */
+     const c=composeSpell("fire","bolt","quick",1,null,null,"far");
+     if(!c||c.ошибка||c.cost<=a.cost||c.усиление2!=="far")return false;
+     if(!/быстрое и дальнее/.test(c.n)||c.дальность<=a.дальность)return false;
+     const d=composeSpell("blood","bolt","bloodpay",1,null,null,"twin");
+     const m=modMerged(d);
+     return !!(d&&!d.ошибка&&m&&m.кровью&&m.повтор===2&&m.k>1);
+    }catch(_){return false;}})(),
+   "Второе усиление: шесть спорных пар со словом, судья взаимен, одно усиление собирается как прежде, два — дороже и со слитыми признаками");
   ok("markets",MARKET_KINDS.length===7&&new Set(MARKET_KINDS.map(m=>m.id)).size===7
    /* У каждого рода свои числа в берегах, свой голос и свои товары. */
    &&MARKET_KINDS.every(m=>m.n&&m.о&&SOUND_BANK[m.звук]
