@@ -32,7 +32,6 @@
 | giant_step | поступь громады | synth_drum |
 | fate_hit | удар судьбы | orchestra_hit |
 | omen_swell | предвестие | reverse_cymbal |
-| craft_knock | стук ремесла | woodblock |
 | market_agogo | рыночный колокольчик | agogo |
 | isle_market | островной торг | steel_drums |
 | charm_bell | колокольчик чар | tinkle_bell |

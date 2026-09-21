@@ -16,7 +16,7 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   races:RACES_DB.length,
   gods:PANTHEON.length,
   clans:CLAN_DB.length,
-  byRank:RANKS.map((r,i)=>RACES_DB.filter(x=>x.rank===i).length),
+  byRank:RACE_RANKS.map((r,i)=>RACES_DB.filter(x=>x.rank===i).length),
   names:Object.keys(RACE_BY_NAME).length,
   branches:Object.keys(RACE_BRANCH).length,
   common:RACES.length,uniq:URACES.length,
