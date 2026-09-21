@@ -45,15 +45,18 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   const r={};r.langs=LANGS.length;r.langsOk=LANGS.every(l=>l.n&&l.письмо&&l.о&&l.семья&&(l.область==null||REGIONS[l.область]));r.langRegions=new Set(LANGS.filter(l=>l.область!=null).map(l=>l.область)).size;
   r.sci=SCIENCES.length;r.sciOk=SCIENCES.every(x=>SOUND_BANK[x.звук]&&x.эффект.length===3&&FACULTY_BY_ID[x.факультет]);
   r.fac=FACULTIES.length;r.facOk=FACULTIES.every(f=>f.о&&f.полка&&f.станок&&(f.школы||[]).every(id=>MSCHOOL_BY_ID[id])&&(!f.маст||MAST_BY_ID[f.маст])&&(!f.наука||SCI_BY_ID[f.наука]));
-  r.schools=SCHOOLS.length;r.newSchools=["necro","enchant","forgemagic","homunc","memory","dream","rift"].filter(id=>!MSCHOOL_BY_ID[id]||!SCHOOL_AUDIO[id]);
+  /* Набор 147 добавил четыре школы §6: энергетику, биомантию, астральную
+     науку и магическую инженерию. Они тоже должны быть полны. */
+  r.schools=SCHOOLS.length;r.newSchools=["necro","enchant","forgemagic","homunc","memory","dream","rift",
+   "power","biomancy","astro","engine"].filter(id=>!MSCHOOL_BY_ID[id]||!SCHOOL_AUDIO[id]);
   r.layers=SCHOOLS.filter(sc=>!SCHOOL_AUDIO[sc.id]||!SPELL_LAYERS.every(l=>SOUND_BANK[SCHOOL_AUDIO[sc.id][l]])).map(sc=>sc.id);
   r.modules=["LANGS","SCIENCES","LEDGER","MENTOR","ACADEMY"].every(m=>Modules.get?!!Modules.get(m):true);
   const sc=worldSelfCheck();const row=sc.find(x=>x.id==="academy");r.selfcheck=row?row.ok:null;
   return r;});
  check('двадцать один язык с письмом, семьёй и областью на все двадцать областей; шесть наук с факультетом и звуком; двенадцать факультетов с полкой и станком',
   данные.langs>=20&&данные.langsOk&&данные.langRegions===20&&данные.sci===6&&данные.sciOk&&данные.fac===12&&данные.facOk,данные);
- check('школ чар тридцать четыре, семь новых со своим языком из семи слоёв записями; самопроверка мира видит Академию',
-  данные.schools===34&&данные.newSchools.length===0&&данные.layers.length===0&&данные.modules&&данные.selfcheck===true,данные);
+ check('школ чар тридцать восемь, одиннадцать новых со своим языком из семи слоёв записями; самопроверка мира видит Академию',
+  данные.schools===38&&данные.newSchools.length===0&&данные.layers.length===0&&данные.modules&&данные.selfcheck===true,данные);
 
  /* ── 2. языки ── */
  const языки=await page.evaluate(()=>{
