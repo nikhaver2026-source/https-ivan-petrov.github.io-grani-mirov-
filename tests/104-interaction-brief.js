@@ -225,7 +225,10 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   const ri=stock.findIndex(x=>x.count);r.hasStack=ri>=0;
   if(ri>=0){SAID.length=0;shopItemCard(ri);await пауза(30);r.card=SAID.slice(-1)[0];r.buyBtns=[...document.querySelectorAll('#shopBody [data-cmd^="shopask:buy"]')].map(b=>b.dataset.cmd);
    const g0=G.gold,name=stock[ri].name,price=stock[ri].price;shopAsk("buy",5);await пауза(20);r.askQ=SAID.slice(-1)[0];shopYes();await пауза(30);r.bought=[g0-G.gold,price*5,Number(G.inv[name])||0];}
-  const gi=stock.findIndex(x=>x.s.gear);if(gi>=0){shopItemCard(gi);const g0=G.gold;const price=stock[gi].price;shopAsk("buy",1);shopYes();await пауза(30);r.boughtGear=[g0-G.gold,price,G.gear.some(g=>g&&g.name===stock[gi].name)];}
+  /* Цену берём заново, а не из старого снимка: покупка стопки подняла имя у
+     народа, торговец подобрел, и цена к этому мигу уже другая. Сравнивать
+     списанное с ценой ДО покупки — значит ловить не ошибку, а расположение. */
+  const gi=stock.findIndex(x=>x.s.gear);if(gi>=0){shopItemCard(gi);const g0=G.gold;const price=(shopStockRows(npc)[gi]||{}).price;shopAsk("buy",1);shopYes();await пауза(30);r.boughtGear=[g0-G.gold,price,G.gear.some(g=>g&&g.name===stock[gi].name)];}
   /* продать */
   CMD.shoptab("sell");await пауза(30);const sell=shopSellRows(npc);r.sellOk=sell.filter(x=>x.ок).map(x=>x.name);r.sellNo=sell.filter(x=>!x.ок).map(x=>x.name+"|"+x.почему);r.relicHidden=!sell.some(x=>/Реликвия/.test(x.name));
   const rows=sell.filter(x=>x.ок);const oi=rows.findIndex(x=>x.name==="руда");

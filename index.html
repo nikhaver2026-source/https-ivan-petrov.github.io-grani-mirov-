@@ -7007,9 +7007,21 @@ const MARKET_KINDS=[
 const MARKET_BY_ID=Object.fromEntries(MARKET_KINDS.map(m=>[m.id,m]));
 /* Где мы торгуем. Глубина сильнее места: артель под землёй торгует
    по-подземному, даже если вход был в городской стене. */
+let MARKET_KIND_MEMO=null;
 function marketKindHere(){
  try{
   const p=G.place;
+  /* Ответ держится до следующего шага: marketPrice зовут из каждой строки
+     прилавка и из каждого шага поиска маршрута, а isCityAt и empireIndexAt
+     внутри стоят дорого. Ключ — всё, от чего ответ зависит. */
+  const ключ=`${p?p.stype:""}|${p?p.depth:""}|${G.x}|${G.y}|${G.ship?1:0}|${G.dark?1:0}`;
+  if(MARKET_KIND_MEMO&&MARKET_KIND_MEMO.k===ключ)return MARKET_KIND_MEMO.v;
+  const ответ=marketKindCompute(p);
+  MARKET_KIND_MEMO={k:ключ,v:ответ};
+  return ответ;
+ }catch(_){return MARKET_BY_ID.city;}}
+function marketKindCompute(p){
+ try{
   if(p&&Number(p.depth)>0)return MARKET_BY_ID.deep;
   if(p){
    if(p.stype==="port")return MARKET_BY_ID.port;
@@ -7023,6 +7035,7 @@ function marketKindHere(){
   if(emp&&emp.cap&&G.x===emp.cap.x&&G.y===emp.cap.y)return MARKET_BY_ID.capital;
   const c=safeFn(()=>isCityAt(G.x,G.y),null);
   if(c)return MARKET_BY_ID.city;
+  /* В чистом поле торгуют хутора и обозы: это деревенский торг. */
   return MARKET_BY_ID.village;
  }catch(_){return MARKET_BY_ID.city;}}
 /* Товарная поправка: что здесь дёшево, что дорого. Берега узкие нарочно —
