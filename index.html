@@ -4832,6 +4832,13 @@ const GUIDE=[
  "Вещь растёт. За каждую победу работающий артефакт получает опыт, а на пороге открывает ступень — прибавку, которой у него раньше не было, и всегда из своего направления. Каждая следующая ступень даётся вдвое тяжелее. Если гнёзда кончились, редкую часть можно скормить вещи: она уйдёт в опыт вместо гнезда.",
  "Требования. Ранг задаёт уровень; сверх того вещь может требовать навык, заклинание нужной школы, расположение народа, принадлежность к клану, прочитанное знание или закрытое дело. Вещь, требования которой не выполнены, лежит мёртвым грузом и не даёт ничего — и прямо говорит, чего ей не хватает.",
  "Где всё это. Пункт меню «Артефакты, части и рецепты». В нём видно, каким ремеслом здесь занимаются и каково ваше умение, какие рецепты под рукой и чего не хватает, какие части лежат в суме, и по каждой вещи — всё, что о ней известно, и всё, что с ней можно сделать: вложить, вынуть, зачаровать, скормить, продать."]},
+{title:"Глава 84. Держава решает сама",body:[
+ "ШЕСТНАДЦАТЬ СВОЙСТВ. У всякой державы их ровно шестнадцать: территория, население, экономика, ресурсы, производство, армия, разведка, религия, законы, налоги, дипломатия, союзники, враги, внутренние группы, лидеры и цели. Спросить можно любое, и каждое отвечает числом из настоящего мира, а не присказкой: города берутся у самих городов, производство — у мастерских, войско — у того самого войска, которым ведутся войны, бумаги — у дипломатии, боги — у пантеона.",
+ "СОВЕТ СОБИРАЕТСЯ РАЗ В СЕДМИЦУ. Держава смотрит на себя — идёт ли война, сколько их, что поломано, чего недостаёт, кто спорит внутри, кому молятся, кто сосед, сильно ли войско, — и выбирает одно решение из двенадцати. Выбор не жребий: у каждого решения свой вес от состояния, и берётся тяжелейшее. Жребий колеблет вес не больше чем на полтора, поэтому разрыв в полтора и выше решает состояние, а не случай.",
+ "ДВЕНАДЦАТЬ РЕШЕНИЙ. Набор в войско, поднять подать, закрыть вывоз, государева закупка, чинить дороги, десятина храму, облава на теневых, открыть житницы, посольство к соседу, поход за границу, открыть новую штольню, созвать учёных. У каждого свой голос настоящей записью, и вы услышите его, войдя в жилое место этой державы.",
+ "ЭТО НЕ СТРОКА В ОКНЕ. У решения шесть настоящих следствий: цена товара, цена, по которой держава скупает у вас, пошлина у заставы, запрет вывоза, безопасность дорог и цена урока у наставника. Набор в войско поднимает железо и наполняет тракты разъездами; житницы удешевляют еду; штольня — камень и руду; посольство — чужой ввоз; поход делает дороги опаснее; учёные удешевляют всякий урок на треть.",
+ "РЕШЕНИЕ СЕДМИЧНОЕ, НУЖДА ЖИВАЯ. Что решено — держится седмицу. А чего именно касается решение — какого товара недостаёт больше прочих, — спрашивается заново каждый раз: иначе совет запирал бы вывоз руды и через седмицу после того, как рудник снова дал руду.",
+ "КАК УСЛЫШАТЬ. Спросите досье державы: оно называет решение седмицы, его следствия и все шестнадцать свойств подряд. А глашатай объявит решение сам — один раз за седмицу и только в той державе, где вы стоите."]},
 {title:"Глава 83. Чего хочет наставник",body:[
  "КАК БЫЛО. Урок стоил золота и, со второй ступени, материалов. И всё: заплатил — научили. §22 перечисляет семь родов требования, и четырёх из них не было вовсе.",
  "СЕМЬ РОДОВ. Плата — золото, и чем выше ступень, тем дороже. Материалы — на уроке портят припас, и приносит его ученик. Имя у народа — он берёт того, о ком слышал доброе. Сданные дела — сперва покажи, что доводишь начатое до конца. Доказательство мастерства — сделай своими руками то, чему уже учился. Сторона — он учит своих: держись Дома этих земель. Открытая Грань — без неё не возьмётся, не поймёшь, что он говорит.",
@@ -7125,6 +7132,8 @@ function marketPrice(res,idx,day){
  k*=safeFn(()=>diploPriceK(res,idx,day),1);
  /* §13: разбитая войной цепь передела. Дверь производственной экономики. */
  k*=safeFn(()=>prodEconPriceK(res,idx,day),1);
+ /* §17: решение совета державы на эту седмицу. Дверь фракции в рынок. */
+ k*=safeFn(()=>factionMovePriceK(res,idx,day),1);
  /* §14: где именно стоит прилавок. Дверь локального рынка. */
  k*=safeFn(()=>marketKindK(res),1);
  return Math.max(2,Math.round(base*Math.max(0.35,k)));
@@ -7164,6 +7173,7 @@ function sellPrice(res,idx,day,npc){
  p*=1+safeFn(()=>Path.facetK("trade"),0);               /* Грань «Торговая чуйка» */
  p*=tradeSellK(npc&&npc.race,npc);                      /* отношение народа, мера мира, знакомство */
  p*=safeFn(()=>prodEconBuyK(res,idx,day),1);            /* §13: держава скупает недостающее */
+ p*=safeFn(()=>factionMoveBuyK(res,idx,day),1);         /* §17: государева закупка по решению совета */
  p*=safeFn(()=>marketKindSellK(res),1);                 /* §14: щедрость этого прилавка */
  /* ── ПОТОЛОК ВЫПЛАТЫ СЧИТАЕТСЯ ОТ РОВНОЙ ЦЕНЫ ──
     Торговец не платит больше, чем просит, — это правило остаётся. Но потолок
@@ -7182,7 +7192,8 @@ function sellPrice(res,idx,day,npc){
     этого держит, и трогать его нельзя. */
  const ask=Math.max(2,Math.round(marketPrice(res,idx,day)*1.15
   *safeFn(()=>buyModifier(npc),1)*safeFn(()=>diff().price,1)
-  *safeFn(()=>prodEconBuyK(res,idx,day),1)));
+  *safeFn(()=>prodEconBuyK(res,idx,day),1)
+  *safeFn(()=>factionMoveBuyK(res,idx,day),1)));
  return capBid(p,ask);
 }
 /* ════════════════════════════════════════════════════════════════════════
@@ -7511,9 +7522,10 @@ function isContraband(res,idx){
    временный, и цену он не трогает: её уже поднял сам дефицит. Общего у них
    одно — вывозить нельзя, и за это берут у заставы. */
 function bannedHere(res,idx){
- return isContraband(res,idx)||safeFn(()=>prodBanned(res,idx,G.day),false);}
+ return isContraband(res,idx)||safeFn(()=>prodBanned(res,idx,G.day),false)
+  ||safeFn(()=>factionMoveBans(idx,G.day).includes(res),false);}
 function roadSafetyK(idx){
- try{const m=marketOf(idx);let k=1;
+ try{const m=marketOf(idx);let k=safeFn(()=>factionMoveRoadK(idx,G.day),1);
   if(empireAtWar(idx,G.day))k+=0.12;
   if((Number(m.подвоз)||1)<0.85)k+=0.15;
   if(safeFn(()=>Forts.troubled(idx),false))k+=0.2;
@@ -7562,6 +7574,7 @@ function priceWhy(res,idx,c){
  else if(safeFn(()=>prodBanned(res,idx,G.day),false))
   из.push(`вывоз закрыт по нужде: своего не хватает, и за вывоз спросят у заставы`);
  const op=secretOp(idx,G.day);if(secretOpK(res,idx,G.day)!==1)из.push(`тайное дело державы: ${op.n}`);
+ safeFn(()=>{if(factionMovePriceK(res,idx,G.day)!==1)из.push(`решение совета державы: ${factionMove(idx,G.day).n}`);});
  /* §18: договоры и меры двигают цену, и игрок вправе знать какие. */
  safeFn(()=>{
   for(let j=0;j<EMPIRES.length;j++){
@@ -7579,7 +7592,7 @@ function priceWhy(res,idx,c){
   const цепь=PROD_CHAINS.find(x=>x.сырьё===res||PROD_GOODS.some(g=>g.n===res&&g.цепь===x.id)
    ||(x.id==="ore"&&res==="слиток"));
   из.push(`${цепь?`цепь «${цепь.n}» разбита`:"передел встал"}: недостаёт ${Math.round(н*100)} сотых, дороже`);});
- if(c){const pf=cityProfile(c);из.push(`пошлина города ${Math.round((pf.tax+empireLaw(idx).пошлина)*100)} сотых`);}
+ if(c){const pf=cityProfile(c);из.push(`пошлина города ${Math.round((pf.tax+safeFn(()=>empireTax(idx,G.day),empireLaw(idx).пошлина))*100)} сотых`);}
  return из.length?из.join("; "):"обычная цена";}
 /* Контрабанда: продал запретное в городе — стража может взять своё. */
 function smuggleCheck(res,total){
@@ -7603,7 +7616,7 @@ function citySellPrice(res,c,day,опц){ /* сколько город прос�
     и есть держава. Теперь обе стороны городского торга проходят через тот
     же множитель заслуг, что и лавка; знакомство сюда не идёт — за прилавком
     палаты стоит не человек, а очередь. */
- return Math.max(2,Math.round(cityPriceOf(res,c,day)*(1+p.tax+safeFn(()=>empireLaw(EMPIRES.indexOf(c.emp)).пошлина+(secretOp(EMPIRES.indexOf(c.emp),day).id==="bribe"?0.03:0),0))
+ return Math.max(2,Math.round(cityPriceOf(res,c,day)*(1+p.tax+safeFn(()=>empireTax(EMPIRES.indexOf(c.emp),day)+(secretOp(EMPIRES.indexOf(c.emp),day).id==="bribe"?0.03:0),0))
   *(1-0.05*fxLevel("deal")-0.03*fxLevel("trade"))
   *(опц&&опц.безЗаслуг?1:safeFn(()=>meritK(c.x,c.y),1))
   *tradeBuyK(c&&c.emp&&c.emp.race)));
@@ -20787,7 +20800,7 @@ function mastAsk(npc,id){
  if(было>=учит){
   narrate(`${npc.name} разводит руками: «${м.n} вы знаете не хуже меня. Ищите того, кто выше».`);
   return false;}
- const цена=40+было*60;
+ const цена=safeFn(()=>teachGoldCost(id),40+было*60);
  if((Number(G.gold)||0)<цена){
   narrate(`${npc.name} называет цену урока: ${цена} золота. В кошеле столько не набирается.`);
   return false;}
@@ -27783,6 +27796,9 @@ function enterPlace(c){safeFn(()=>deed("places"));
  const lvl=genLevel(c.x,c.y,depth,stype);
  G.place={kind,bx:c.x,by:c.y,stype,name:c.structure.name,depth,x:lvl.entry.x,y:lvl.entry.y};
  safeFn(()=>placeDiscovered(stype,kind));
+ /* §17: в жилом месте глашатай объявляет решение совета державы — один раз
+    за седмицу и только там, где игрок стоит. */
+ if(kind==="house")safeFn(()=>setTimeout(()=>safeFn(()=>councilAnnounce()),900));
  safeFn(()=>setTimeout(()=>safeFn(()=>doorSound(doorKindHere(),"open",{gain:0.5})),120));
  /* Побывал — значит знает: место попадает в молву как виденное своими
     глазами, вместе с промыслом, который здесь ведут. */
@@ -34829,7 +34845,7 @@ function teachOne(n,id,дем,учит){
  const ур=Math.max(1,Number(учит)||1);
  try{
   switch(дем){
-   case "gold":{const надо=40+safeFn(()=>mastLevel(id),0)*60;
+   case "gold":{const надо=safeFn(()=>teachGoldCost(id),40);
     return {id:дем,надо,есть:Number(G.gold)||0,ок:(Number(G.gold)||0)>=надо,
      слово:`урок стоит ${надо} золота`};}
    case "stock":{const нужно=MENTOR_MATERIALS[id]||{};
@@ -34894,7 +34910,7 @@ const Mentor=Modules.register("MENTOR",{
   const нет=все.filter(x=>!x.ок);
   if(нет.length)return {ок:false,почему:нет.map(x=>x.слово).join("; "),
    требования:все,невыполнено:нет.map(x=>x.id)};
-  const цена=40+было*60;
+  const цена=safeFn(()=>teachGoldCost(id),40+было*60);
   return {ок:true,цена,требования:все,
    материалы:было>=1?(MENTOR_MATERIALS[id]||{}):{}};}catch(_){return {ок:false,почему:"урок не сложился"};}},
  /* §22: чего он хочет — списком и до просьбы. */
@@ -42645,25 +42661,418 @@ const FACTION_TROUBLES=["знать против цехов: спор о под�
 const LEADER_TITLES=["Голос","Держатель","Старший","Наместник","Кормчий","Хранитель"];
 function factionProfile(idx){
  const i=Math.max(0,Math.min(EMPIRES.length-1,Number(idx)||0));const emp=EMPIRES[i];const day=Number(G.day)||1;
- const w=Math.floor(day/7);
- const pick=(arr,k)=>arr[Math.floor(H(i,k,9600)*arr.length)%arr.length];
- const цели=[pick(FACTION_GOALS,1),pick(FACTION_GOALS,2)].filter((v,j,a)=>a.indexOf(v)===j);
- const правитель=`${pick(LEADER_TITLES,3)} ${SYL[Math.floor(H(i,4,9600)*SYL.length)]}${SYL2[Math.floor(H(i,5,9600)*SYL2.length)]}`;
+ const цели=factionGoals(i);
+ const правитель=factionRuler(i);
  const вассалы=CLAN_DB.filter(c=>c.seat===emp.short).map(c=>c.n);
  const союзники=[],враги=[],торговля=[];
  EMPIRES.forEach((o,j)=>{if(j===i)return;const отн=relationWord(relationAt(i,j,day));
   if(отн==="союз"||отн==="дружба")союзники.push(o.short);if(отн==="война")враги.push(o.short);
   if((o.exports||[]).some(r=>(emp.imports||[]).includes(r)))торговля.push(o.short);});
- const войско=`${3+Math.floor(H(i,6,9600)*6)} полков${empireAtWar(i,day)?", в походе":", в гарнизонах"}`;
+ const войско=safeFn(()=>factionTrait(i,"army").слово,
+  `${3+Math.floor(H(i,6,9600)*6)} полков${empireAtWar(i,day)?", в походе":", в гарнизонах"}`);
  const тайное=secretOp(i,day);
- const раздор=FACTION_TROUBLES[Math.floor(H(i,w,9601)*FACTION_TROUBLES.length)%FACTION_TROUBLES.length];
+ const раздор=factionTrouble(i,day);
  const положение=standOf("fact",emp.short);
  return {emp,цели,идеология:String(emp.gov||"").split(".")[0]+".",средства:(emp.exports||[]).join(", "),правитель,вассалы,союзники,враги,торговля,войско,тайное,раздор,
   положение,слово:standWord(положение).n,закон:empireLaw(i)};}
 function factionText(idx){
  const p=factionProfile(idx);
- return safeFn(()=>Empires.text(idx)+" ","")+`${p.emp.name}. Правитель: ${p.правитель}. Идеология: ${p.идеология} Цели: ${p.цели.join(" и ")}. Средства: ${p.средства}. Вассальные кланы: ${p.вассалы.join(", ")||"нет"}. Союзники: ${p.союзники.join(", ")||"нет"}. Враги: ${p.враги.join(", ")||"нет"}. Торгует с: ${p.торговля.join(", ")||"ни с кем"}. Войско: ${p.войско}. Тайное дело седмицы: ${p.тайное.n} — ${p.тайное.эффект}. Внутренний раздор: ${p.раздор}. Под запретом: ${p.закон.запрет.join(", ")}; пошлина ${Math.round(p.закон.пошлина*100)} сотых. Ваше положение у державы: ${p.слово} (${p.положение}). Менять его можно делами, торговлей, разговором, войной, помощью людям, разведкой дорог, отказом от дел и раскрытием чужих тайн.`;}
+ return safeFn(()=>Empires.text(idx)+" ","")+`${p.emp.name}. Правитель: ${p.правитель}. Идеология: ${p.идеология} Цели: ${p.цели.join(" и ")}. Средства: ${p.средства}. Вассальные кланы: ${p.вассалы.join(", ")||"нет"}. Союзники: ${p.союзники.join(", ")||"нет"}. Враги: ${p.враги.join(", ")||"нет"}. Торгует с: ${p.торговля.join(", ")||"ни с кем"}. Войско: ${p.войско}. Тайное дело седмицы: ${p.тайное.n} — ${p.тайное.эффект}. Внутренний раздор: ${p.раздор}. Под запретом: ${p.закон.запрет.join(", ")}; пошлина ${Math.round(p.закон.пошлина*100)} сотых. Ваше положение у державы: ${p.слово} (${p.положение}). Менять его можно делами, торговлей, разговором, войной, помощью людям, разведкой дорог, отказом от дел и раскрытием чужих тайн. `
+  +safeFn(()=>factionMoveLine(idx,G.day),"")
+  +` Шестнадцать свойств державы: `+safeFn(()=>factionTraits(idx).map(t=>`${t.n} — ${t.слово}`).join("; "),"")+".";}
 function factionsText(){const i=empireIndexAt(G.x,G.y);return factionText(i)+` Всего держав ${EMPIRES.length}: ${EMPIRES.map(e=>e.short).join(", ")}.`;}
+
+/* ════════════════════════════════════════════════════════════════════════
+   §17 ФРАКЦИИ: ШЕСТНАДЦАТЬ СВОЙСТВ И СОВЕТ, КОТОРЫЙ РЕШАЕТ САМ
+
+   §17 мастер-промпта перечисляет у фракции шестнадцать свойств —
+   территорию, население, экономику, ресурсы, производство, армию,
+   разведку, религию, законы, налоги, дипломатию, союзников, врагов,
+   внутренние группы, лидеров и цели, — а отдельной строкой говорит
+   главное: «Фракции принимают решения самостоятельно».
+
+   КАК БЫЛО. Досье державы (§124) называло девять вещей из шестнадцати, и
+   за иными не стояло ничего: «войско — пять полков» бралось из жребия, а
+   не из того войска, которое считает §23. Семь остальных — территория,
+   население, производство, разведка, религия, налоги и дипломатия — жили
+   каждое в своём углу игры и в досье не попадали вовсе. А главного не было
+   совсем: держава ничего не решала. Мир менялся вокруг неё — войны,
+   обвалы, дефицит, — а она молчала.
+
+   КАК СТАЛО. Шестнадцать свойств — один список, и каждое берётся оттуда,
+   где оно на самом деле живёт: города из §12, производство и дефицит из
+   §13, войско из §23, бумаги из §18, боги из §24, законы и пошлина из
+   §124, разведка — из тайного дела седмицы. Ни одно не выдумано на месте:
+   поменяйте войску мораль — переменится строка «армия».
+
+   И СОВЕТ. Раз в седмицу держава смотрит на себя — война, гнёт на
+   производстве, дефицит, раздор, вера, соседи, сила войска — и выбирает
+   одно из двенадцати решений. Не жребием: у каждого решения свой вес от
+   состояния, берётся тяжелейшее, а жребий только разводит равных. Поэтому
+   решение меняется вместе с миром: началась война — будет набор в войско,
+   встал рудник — закроют вывоз, настала мирная седмица — примутся чинить
+   дороги. Это и есть «принимают решения самостоятельно».
+
+   И у решения настоящее следствие в шести местах: цена товара, государева
+   закупка, пошлина, запрет вывоза, безопасность дорог и цена урока у
+   наставника. Ничего не хранится: всё выводится из державы и дня, и
+   перезагрузка ничего не меняет. В сохранении лежит только то, о чём
+   игроку уже объявили, — чтобы глашатай не повторял одно дважды.
+   ════════════════════════════════════════════════════════════════════════ */
+const LAND_WORD={forest:"леса",plains:"равнины",mountains:"горы",coast:"побережье",
+ cave:"пещеры",swamp:"топи",desert:"пустыни",road:"тракты"};
+const FACTION_WAR_GOODS=["руда","слиток","кованая полоса","закалённый клинок","отборная руда"];
+const FACTION_FOOD=["трава","ягоды","грибы"];
+const FACTION_STONE=["руда","камень","дроблёная руда","колотый камень"];
+/* Правитель, цели и раздор считались прямо в досье. Теперь у них свои
+   имена: то же самое число должно выходить и в досье, и в свойстве. */
+function factionRuler(i){
+ return `${LEADER_TITLES[Math.floor(H(i,3,9600)*LEADER_TITLES.length)%LEADER_TITLES.length]} `
+  +`${SYL[Math.floor(H(i,4,9600)*SYL.length)]}${SYL2[Math.floor(H(i,5,9600)*SYL2.length)]}`;}
+function factionGoals(i){
+ const p=k=>FACTION_GOALS[Math.floor(H(i,k,9600)*FACTION_GOALS.length)%FACTION_GOALS.length];
+ return [p(1),p(2)].filter((v,j,a)=>a.indexOf(v)===j);}
+function factionTrouble(i,day){
+ const w=Math.floor((Number(day)||Number(G.day)||1)/7);
+ return FACTION_TROUBLES[Math.floor(H(i,w,9601)*FACTION_TROUBLES.length)%FACTION_TROUBLES.length];}
+/* Сколько душ под рукой. Считается по самим городам — по их сетке, той
+   самой, по которой игрок ходит, — а не берётся из воздуха. */
+function factionSouls(i){
+ let душ=0;
+ safeFn(()=>NAMED_CITIES.forEach(c=>{
+  if(safeFn(()=>empireIndexAt(c.x,c.y),-1)!==i)return;
+  const [ш,в]=c.сетка||[4,4];душ+=ш*в*900;}));
+ safeFn(()=>empireCitiesOf(i).forEach(c=>{
+  const [ш,в]=c.сетка||[3,3];душ+=ш*в*400;}));
+ return душ;}
+const FACTION_TRAITS=[
+ {id:"land",n:"территория",о:"города, престол и роды земли под рукой",звук:"hall_gate",
+  дать(i){const emp=EMPIRES[i]||{};
+   const свои=safeFn(()=>empireCitiesOf(i).length,0);
+   const имен=safeFn(()=>NAMED_CITIES.filter(c=>empireIndexAt(c.x,c.y)===i).length,0);
+   const земли=(emp.terrains||[]).map(t=>LAND_WORD[t]||t);
+   return {знач:свои+имен,
+    слово:`${свои+имен} городов, из них именованных ${имен}; земли: ${земли.join(", ")||"неведомые"}`};}},
+ {id:"folk",n:"население",о:"кто здесь живёт и сколько их",звук:"throng_hail_m",
+  дать(i){const emp=EMPIRES[i]||{};const р=emp.races||[];
+   const душ=factionSouls(i);
+   return {знач:душ,
+    слово:`около ${Math.round(душ/1000)} тысяч душ, народов ${р.length}: ${р.slice(0,4).join(", ")}${р.length>4?" и другие":""}; правящий — ${emp.race||"неизвестен"}`};}},
+ {id:"econ",n:"экономика",о:"чем держава живёт и как ей сейчас",звук:"hall_market",
+  дать(i){const emp=EMPIRES[i]||{};
+   const m=safeFn(()=>marketOf(i),{подвоз:1,достаток:1});
+   const д=Number(m.достаток)||1,п=Number(m.подвоз)||1;
+   return {знач:Math.round(д*100)/100,
+    слово:`${String(emp.econ||"").replace(/\.$/,"")}; достаток ${д.toFixed(2)}, подвоз ${п.toFixed(2)}`};}},
+ {id:"res",n:"ресурсы",о:"что родит своя земля и чего ей недостаёт",звук:"craft_ore",
+  дать(i){const emp=EMPIRES[i]||{};
+   const деф=safeFn(()=>prodDeficit(i,G.day),{});
+   const нет=Object.keys(деф).filter(r=>деф[r]>=0.15).slice(0,3);
+   return {знач:(emp.exports||[]).length,
+    слово:`своё: ${(emp.exports||[]).join(", ")||"ничего"}; надобно: ${(emp.imports||[]).join(", ")||"ничего"}`
+     +(нет.length?`; сейчас недостаёт: ${нет.join(", ")}`:"; недостатка нет")};}},
+ {id:"prod",n:"производство",о:"сколько мастерских стоит и что даёт цепь",звук:"hall_forge",
+  дать(i){const сайты=safeFn(()=>prodSitesOf(i),{});
+   const всего=Object.keys(сайты).reduce((s,k)=>s+(Number(сайты[k])||0),0);
+   const сост=safeFn(()=>prodEconOf(i,G.day),{цел:{},выход:{}});
+   const цел=Object.keys(сост.цел||{}).reduce((s,k)=>s+(Number(сост.цел[k])||0),0);
+   const руда=safeFn(()=>prodSupply("ore",i,G.day),1);
+   return {знач:всего,
+    слово:`мастерских ${всего}, в деле ${цел}; рудная цепь даёт ${Math.round(руда*100)} сотых от полного`};}},
+ {id:"army",n:"армия",о:"копья, командование, мораль и хлеб",звук:"army_horn",
+  дать(i){const a=safeFn(()=>Armies.state(i),null);
+   if(!a)return {знач:0,слово:"войска нет"};
+   const сила=safeFn(()=>Armies.strength(i),0);
+   return {знач:сила,
+    слово:`${a.числ} копий, сила ${сила}; командование ${Math.round(a.командование)}, мораль ${Math.round(a.мораль)}, снабжение ${Math.round(a.снабжение)}`
+     +(safeFn(()=>empireAtWar(i,G.day),false)?"; в походе":"; в гарнизонах")};}},
+ {id:"spy",n:"разведка",о:"чем заняты соглядатаи этой седмицы",звук:"watch_call",
+  дать(i){const op=safeFn(()=>secretOp(i,G.day),{n:"ничем",эффект:""});
+   const р=safeFn(()=>Armies.trait(i,"разведка"),0);
+   return {знач:р,слово:`тайное дело седмицы: ${op.n} — ${op.эффект}; глаза войска ${р} из ста`};}},
+ {id:"faith",n:"религия",о:"кому держава молится и что с этого",звук:"hall_temple",
+  дать(i){const emp=EMPIRES[i]||{};const g=GOD_BY_ID[emp.god];
+   if(!g)return {знач:0,слово:"без общего бога: всякий город со своим"};
+   return {знач:1,слово:`${g.n} — ${g.ep}; удел: ${g.dom}`};}},
+ {id:"law",n:"законы",о:"что запрещено возить через её заставы",звук:"mtg_gate",
+  дать(i){const з=safeFn(()=>empireLaw(i).запрет,[]);
+   const сверх=safeFn(()=>factionMoveBans(i,G.day),[]);
+   return {знач:з.length+сверх.length,
+    слово:`под запретом всегда: ${з.join(", ")}`+(сверх.length?`; и по нужде седмицы: ${сверх.join(", ")}`:"")};}},
+ {id:"tax",n:"налоги",о:"сколько берут у заставы и почему",звук:"market_slap",
+  дать(i){const б=safeFn(()=>empireLaw(i).пошлина,0.05);
+   const т=safeFn(()=>empireTax(i,G.day),б);
+   const k=safeFn(()=>factionMoveTaxK(i,G.day),1);
+   return {знач:Math.round(т*1000)/1000,
+    слово:`пошлина ${Math.round(т*100)} сотых`+(k!==1?` (обычно ${Math.round(б*100)}: ${factionMove(i,G.day).n})`:"")};}},
+ {id:"diplo",n:"дипломатия",о:"сколько бумаг подписано и с кем",звук:"herald_trumpet",
+  дать(i){let бумаг=0;const с=[];
+   safeFn(()=>EMPIRES.forEach((o,j)=>{if(j===i)return;
+    const v=Diplo.visible(i,j,G.day)||[];
+    if(v.length){бумаг+=v.length;с.push(o.short);}}));
+   return {знач:бумаг,
+    слово:бумаг?`бумаг ${бумаг} с державами: ${с.slice(0,4).join(", ")}`:"ни одной открытой бумаги"};}},
+ {id:"allies",n:"союзники",о:"кто встанет рядом",звук:"throng_yes",
+  дать(i){const out=[];
+   safeFn(()=>EMPIRES.forEach((o,j)=>{if(j===i)return;
+    const w=relationWord(relationAt(i,j,G.day));
+    if(w==="союз"||w==="дружба")out.push(o.short);}));
+   return {знач:out.length,слово:out.length?out.join(", "):"никого: стоит одна"};}},
+ {id:"foes",n:"враги",о:"с кем война сейчас",звук:"siege_alarm_war",
+  дать(i){const out=[];
+   safeFn(()=>EMPIRES.forEach((o,j)=>{if(j===i)return;
+    if(relationWord(relationAt(i,j,G.day))==="война")out.push(o.short);}));
+   return {знач:out.length,слово:out.length?out.join(", "):"ни с кем: мир"};}},
+ {id:"inner",n:"внутренние группы",о:"кланы, Дома и кто с кем спорит",звук:"throng_cry",
+  дать(i){const emp=EMPIRES[i]||{};
+   const кланы=safeFn(()=>CLAN_DB.filter(c=>c.seat===emp.short).map(c=>c.n),[]);
+   const дома=safeFn(()=>HOUSES.filter(h=>h.держава===i).map(h=>h.n),[]);
+   return {знач:кланы.length+дома.length,
+    слово:`кланы: ${кланы.join(", ")||"нет"}; Дома: ${дома.join(", ")||"нет"}; раздор: ${factionTrouble(i,G.day)}`};}},
+ {id:"lead",n:"лидеры",о:"кто говорит за державу",звук:"throng_lord",
+  дать(i){const emp=EMPIRES[i]||{};
+   return {знач:1,слово:`${factionRuler(i)}; строй: ${String(emp.gov||"").split(":")[0]}`};}},
+ {id:"goals",n:"цели",о:"чего она добивается",звук:"quest",
+  дать(i){const ц=factionGoals(i);
+   return {знач:ц.length,слово:ц.join(" и ")};}}];
+const FACTION_TRAIT_BY_ID=Object.fromEntries(FACTION_TRAITS.map(t=>[t.id,t]));
+function factionTrait(i,id){
+ const t=FACTION_TRAIT_BY_ID[id];
+ const k=Math.max(0,Math.min(EMPIRES.length-1,Number(i)||0));
+ if(!t)return null;
+ const v=safeFn(()=>t.дать(k),null)||{знач:0,слово:"неизвестно"};
+ return {id:t.id,n:t.n,о:t.о,звук:t.звук,знач:v.знач,слово:v.слово};}
+function factionTraits(i){return FACTION_TRAITS.map(t=>factionTrait(i,t.id));}
+function factionSheet(i){
+ const k=Math.max(0,Math.min(EMPIRES.length-1,Number(i)||0));
+ const emp=EMPIRES[k]||{};
+ return `${emp.name}. `+factionTraits(k).map(t=>`${t.n}: ${t.слово}`).join(". ")+".";}
+
+/* ── СОВЕТ ДЕРЖАВЫ: ДВЕНАДЦАТЬ РЕШЕНИЙ ──────────────────────────────────
+   Вес считается от состояния, а не от жребия. Ноль — решение невозможно;
+   жребий вмешивается только там, где два решения весят одинаково. */
+const FACTION_MOVES=[
+ {id:"levy",n:"набор в войско",звук:"army_horn",
+  о:"держава сзывает ополчение: железо скупают, по дорогам ходят разъезды",
+  вес:s=>s.война?8+s.войн:(s.враги.length?4:(s.напряжение.length?2:0)),
+  цена:(res,s)=>FACTION_WAR_GOODS.includes(res)?1.15:1,
+  закупка:(res,s)=>FACTION_WAR_GOODS.includes(res)?1.18:1,
+  пошлина:1.2,дороги:0.9},
+ {id:"tax",n:"поднять подать",звук:"market_slap",
+  о:"казна пуста, и её наполняют с проезжих",
+  вес:s=>/жалованье|склады/.test(s.раздор)?7:1+s.гнёт*4,
+  пошлина:1.6},
+ {id:"ban",n:"закрыть вывоз",звук:"mtg_gate",
+  о:"чего не хватает своим, того не выпустят чужим",
+  /* Порог выше хронического: недостаток в треть у этого мира — будни, и
+     на будни вывоз не закрывают. */
+  вес:s=>(s.гнёт>=0.4&&s.нехватка>=0.4)?10:0,
+  запрет:s=>s.худший?[s.худший]:[]},
+ {id:"buy",n:"государева закупка",звук:"trade_m",
+  о:"держава сама скупает недостающее и платит за него выше рынка",
+  вес:s=>s.нехватка>=0.3?5:(s.нехватка>0?3:0),
+  закупка:(res,s)=>res===s.худший?1.22:1},
+ {id:"road",n:"чинить дороги",звук:"mtg_cart",
+  о:"мирная седмица: мостят тракты, ставят вехи и жгут разбойничьи лёжки",
+  вес:s=>s.война?0:Math.max(0,5-s.гнёт*10),
+  дороги:0.82,цена:()=>0.97},
+ {id:"tithe",n:"десятина храму",звук:"hall_temple",
+  о:"держава платит богу, а берёт это с подданных",
+  вес:s=>/храм/.test(s.раздор)?6:(s.бог?2:0),
+  пошлина:1.25},
+ {id:"purge",n:"облава на теневых",звук:"watch_call",
+  о:"стража выходит на перекупщиков: запретное дорожает вдвое против обычного",
+  вес:s=>3+Math.min(4,s.запретных),
+  цена:(res,s)=>safeFn(()=>isContraband(res,s.держава),false)?1.3:1},
+ {id:"feast",n:"открыть житницы",звук:"throng_hail_m",
+  о:"держава кормит свои города из запаса, и еда дешевеет",
+  вес:s=>s.война?0:(/знать|цех|подат/.test(s.раздор)?6:1),
+  цена:(res,s)=>FACTION_FOOD.includes(res)?0.85:1},
+ {id:"envoy",n:"посольство к соседу",звук:"herald_trumpet",
+  о:"едут говорить, а не воевать: чужое на прилавке дешевеет",
+  вес:s=>s.война?0:(s.напряжение.length?3+Math.min(2,s.напряжение.length):0),
+  цена:(res,s)=>s.ввоз.includes(res)?0.9:1},
+ {id:"raid",n:"поход за границу",звук:"siege_alarm_war",
+  о:"войско уходит на соседа, и на дорогах становится небезопасно",
+  вес:s=>(s.враги.length&&s.сила>=s.порог)?(s.война?9:5):0,
+  дороги:1.25,цена:(res,s)=>FACTION_WAR_GOODS.includes(res)?1.1:1},
+ {id:"mine",n:"открыть новую штольню",звук:"mtg_dig_gravel",
+  о:"держава берётся за жилу сама, и камень с рудой дешевеют",
+  вес:s=>{if(!s.горы)return 0;
+   const н=Math.max(Number(s.деф["руда"])||0,Number(s.деф["камень"])||0);
+   return н>=0.3?6:(н>0?3:0);},
+  цена:(res,s)=>FACTION_STONE.includes(res)?0.88:1},
+ {id:"school",n:"созвать учёных",звук:"arte_page",
+  о:"державе нужны мастера, и она доплачивает за всякий урок",
+  вес:s=>(!s.война&&s.академия)?6:0,
+  урок:0.7}];
+const FACTION_MOVE_BY_ID=Object.fromEntries(FACTION_MOVES.map(m=>[m.id,m]));
+/* Что держава видит, когда смотрит на себя. */
+function factionState(i,day){
+ const k=Math.max(0,Math.min(EMPIRES.length-1,Number(i)||0));
+ const d=Number(day)||Number(G.day)||1;
+ const emp=EMPIRES[k]||{};
+ const деф=safeFn(()=>prodDeficit(k,d),{})||{};
+ let худший=null,нехватка=0;
+ Object.keys(деф).forEach(r=>{const v=Number(деф[r])||0;if(v>нехватка){нехватка=v;худший=r;}});
+ const враги=[],союзники=[],напряжение=[];
+ safeFn(()=>EMPIRES.forEach((o,j)=>{if(j===k)return;
+  const w=relationWord(relationAt(k,j,d));
+  if(w==="война")враги.push(j);
+  else if(w==="напряжение")напряжение.push(j);
+  else if(w==="союз"||w==="дружба")союзники.push(j);}));
+ const силы=safeFn(()=>EMPIRES.map((o,j)=>Armies.strength(j)),[])||[];
+ const средняя=силы.length?силы.reduce((a,b)=>a+b,0)/силы.length:0;
+ const академия=safeFn(()=>Object.keys(ACADEMY_CITIES).some(id=>{
+  const c=NAMED_CITIES.find(x=>x.id===id);return c&&empireIndexAt(c.x,c.y)===k;}),false);
+ return {держава:k,день:d,седмица:Math.floor(d/7),
+  война:safeFn(()=>empireAtWar(k,d),false),
+  войн:safeFn(()=>warsAt(d).filter(w=>w.a===k||w.b===k).length,0),
+  гнёт:safeFn(()=>prodPressure(k,d),0),
+  деф,худший,нехватка:Math.round(нехватка*100)/100,
+  враги,союзники,напряжение,
+  раздор:factionTrouble(k,d),
+  бог:emp.god||null,
+  ввоз:(emp.imports||[]).slice(),
+  вывоз:(emp.exports||[]).slice(),
+  горы:(emp.terrains||[]).some(t=>t==="mountains"||t==="cave"),
+  академия,
+  запретных:safeFn(()=>empireLaw(k).запрет.length,0)
+   +Object.keys(деф).filter(r=>деф[r]>=0.4).length,
+  сила:safeFn(()=>Armies.strength(k),0),
+  порог:Math.round(средняя)};}
+let FACTION_MOVE_CACHE=new Map();
+/* Решение седмицы. Берётся тяжелейшее; жребий разводит только равных. */
+function factionMove(i,day){
+ try{
+  const k=Math.max(0,Math.min(EMPIRES.length-1,Number(i)||0));
+  const d=Number(day)||Number(G.day)||1;
+  const w=Math.floor(d/7);
+  const ключ=k+":"+w;
+  const было=FACTION_MOVE_CACHE.get(ключ);
+  if(было)return было;
+  /* Совет собирается в первый день седмицы и смотрит на мир того дня. Иначе
+     решение менялось бы посреди седмицы всякий раз, как двинется война, — и
+     «раз в седмицу» превратилось бы в «каждый день». Следствия при этом
+     остаются живыми: чего именно касается запрет, спрашивается заново. */
+  const s=factionState(k,Math.max(1,w*7));
+  let лучший=null,вес=-1,оценка=-1;
+  FACTION_MOVES.forEach((m,mi)=>{
+   const v=Math.max(0,Number(safeFn(()=>m.вес(s),0))||0);
+   if(v<=0)return;
+   /* Колебание седмицы: не больше полутора. Разрыв в полтора и выше решает
+      состояние державы, а не жребий; жребий разводит только равных. */
+   const о=v+H(k*31+mi,w,9700)*1.5;
+   if(о>оценка){оценка=о;вес=v;лучший=m;}});
+  if(!лучший)лучший=FACTION_MOVE_BY_ID.tax;
+  const r=Object.assign({},лучший,{вес:Math.round(вес*100)/100,сост:s});
+  if(FACTION_MOVE_CACHE.size>200)FACTION_MOVE_CACHE.clear();
+  FACTION_MOVE_CACHE.set(ключ,r);
+  return r;
+ }catch(_){return Object.assign({},FACTION_MOVE_BY_ID.tax,{вес:1,сост:null});}}
+function factionMoveLine(i,day){
+ try{
+  const m=factionMove(i,day==null?G.day:day);
+  const emp=EMPIRES[Math.max(0,Math.min(EMPIRES.length-1,Number(i)||0))]||{};
+  const с=[];
+  if(m.пошлина&&m.пошлина!==1)с.push(`пошлина ${m.пошлина>1?"выше":"ниже"}`);
+  if(m.дороги&&m.дороги!==1)с.push(`на дорогах ${m.дороги>1?"опаснее":"спокойнее"}`);
+  if(typeof m.запрет==="function"){const з=factionMoveBans(i,day);
+   if(з&&з.length)с.push(`вывоз закрыт: ${з.join(", ")}`);}
+  if(m.урок&&m.урок!==1)с.push("урок у наставника дешевле");
+  if(typeof m.цена==="function")с.push("цены сдвинулись");
+  if(typeof m.закупка==="function")с.push("держава скупает своё");
+  return `Совет державы «${emp.short}» решил: ${m.n}. ${m.о}.`
+   +(с.length?` Из этого следует: ${с.join(", ")}.`:"");
+ }catch(_){return "";}}
+/* ── ШЕСТЬ НАСТОЯЩИХ СЛЕДСТВИЙ ──────────────────────────────────────────
+   Решение седмичное, а нужда живая: РЕШЕНИЕ берётся из памяти совета, но
+   ЧЕГО ИМЕННО оно касается — какого товара недостаёт больше прочих —
+   спрашивается заново. Иначе совет запирал бы вывоз руды и через седмицу
+   после того, как рудник снова дал руду. Живой снимок дешёв: недостаток
+   уже посчитан §13 и лежит в его памяти. */
+function factionLive(i,day){
+ const k=Math.max(0,Math.min(EMPIRES.length-1,Number(i)||0));
+ const d=Number(day)||Number(G.day)||1;
+ const emp=EMPIRES[k]||{};
+ const деф=safeFn(()=>prodDeficit(k,d),{})||{};
+ let худший=null,н=0;
+ Object.keys(деф).forEach(r=>{const v=Number(деф[r])||0;if(v>н){н=v;худший=r;}});
+ return {держава:k,день:d,деф,худший,нехватка:Math.round(н*100)/100,
+  ввоз:emp.imports||[],вывоз:emp.exports||[]};}
+function factionMovePriceK(res,i,day){
+ try{const m=factionMove(i,day);
+  if(typeof m.цена!=="function")return 1;
+  const k=Number(m.цена(res,factionLive(i,day)))||1;
+  return Math.max(0.75,Math.min(1.4,k));
+ }catch(_){return 1;}}
+function factionMoveBuyK(res,i,day){
+ try{const m=factionMove(i,day);
+  if(typeof m.закупка!=="function")return 1;
+  const k=Number(m.закупка(res,factionLive(i,day)))||1;
+  return Math.max(1,Math.min(1.25,k));
+ }catch(_){return 1;}}
+function factionMoveTaxK(i,day){
+ try{const m=factionMove(i,day);return Math.max(0.8,Math.min(1.8,Number(m.пошлина)||1));}
+ catch(_){return 1;}}
+/* Пошлина державы вместе с решением седмицы. Одна дверь на всех: и цена
+   городского прилавка, и объяснение цены, и досье берут её отсюда. */
+function empireTax(i,day){
+ try{return Math.round(empireLaw(i).пошлина*factionMoveTaxK(i,day==null?G.day:day)*1000)/1000;}
+ catch(_){return 0.05;}}
+function factionMoveBans(i,day){
+ try{const m=factionMove(i,day);
+  if(typeof m.запрет!=="function")return [];
+  return m.запрет(factionLive(i,day))||[];
+ }catch(_){return [];}}
+function factionMoveRoadK(i,day){
+ try{const m=factionMove(i,day);return Math.max(0.7,Math.min(1.4,Number(m.дороги)||1));}
+ catch(_){return 1;}}
+function factionMoveTeachK(i,day){
+ try{const m=factionMove(i,day);return Math.max(0.6,Math.min(1.4,Number(m.урок)||1));}
+ catch(_){return 1;}}
+/* Цена урока — одна на три места: требование наставника, его проверка и
+   сама просьба. Иначе совет державы удешевлял бы просьбу, а требование
+   осталось бы прежним, и наставник спорил бы сам с собой. */
+function teachGoldCost(id){
+ const б=40+safeFn(()=>mastLevel(id),0)*60;
+ return Math.round(б*safeFn(()=>factionMoveTeachK(safeFn(()=>empireIndexAt(G.x,G.y),0),G.day),1));}
+/* Глашатай. Решение объявляют один раз за седмицу и в той державе, где
+   игрок стоит: иначе он услышал бы двенадцать советов разом. */
+function councilAnnounce(тихо){
+ try{
+  const i=safeFn(()=>empireIndexAt(G.x,G.y),-1);
+  if(i<0||!EMPIRES[i])return false;
+  const w=Math.floor((Number(G.day)||1)/7);
+  if(!G.council||typeof G.council!=="object")G.council={};
+  if(G.council[i]===w)return false;
+  G.council[i]=w;
+  const m=factionMove(i,G.day);
+  if(!тихо){
+   safeFn(()=>Bank.play(m.звук,{gain:0.5,maxSec:4}));
+   narrate(factionMoveLine(i,G.day),{interrupt:false});
+   journal(`Совет державы «${EMPIRES[i].short}»: ${m.n}.`);}
+  return true;
+ }catch(_){return false;}}
+const Council=Modules.register("COUNCIL",{
+ traits:FACTION_TRAITS,
+ trait:(i,id)=>S(()=>factionTrait(i,id),null),
+ all:i=>S(()=>factionTraits(i),[]),
+ sheet:i=>S(()=>factionSheet(i),""),
+ moves:FACTION_MOVES,
+ state:(i,day)=>S(()=>factionState(i,day==null?G.day:day),null),
+ move:(i,day)=>S(()=>factionMove(i,day==null?G.day:day),null),
+ line:(i,day)=>S(()=>factionMoveLine(i,day==null?G.day:day),""),
+ priceK:(res,i,day)=>S(()=>factionMovePriceK(res,i,day==null?G.day:day),1),
+ buyK:(res,i,day)=>S(()=>factionMoveBuyK(res,i,day==null?G.day:day),1),
+ taxK:(i,day)=>S(()=>factionMoveTaxK(i,day==null?G.day:day),1),
+ tax:(i,day)=>S(()=>empireTax(i,day==null?G.day:day),0.05),
+ bans:(i,day)=>S(()=>factionMoveBans(i,day==null?G.day:day),[]),
+ roadK:(i,day)=>S(()=>factionMoveRoadK(i,day==null?G.day:day),1),
+ teachK:(i,day)=>S(()=>factionMoveTeachK(i,day==null?G.day:day),1),
+ announce:тихо=>S(()=>councilAnnounce(тихо),false),
+ text(){const i=S(()=>empireIndexAt(G.x,G.y),0);
+  return `У фракции шестнадцать свойств. ${S(()=>factionMoveLine(i,G.day),"")}`;}});
 
 
 /* ════════ САМОПРОВЕРКА МИРА (§131, §133) ════════
@@ -43951,6 +44360,43 @@ function worldSelfCheck(){
   ok("sigils",SIGIL_SYMBOLS.length===8&&SIGIL_SYMBOLS.every(x=>MSCHOOL_BY_ID[x.школа]&&x.намерения.every(i=>SIGIL_INTENTS[i]))&&SIGIL_CARRIERS.length===8&&SIGIL_CARRIERS.every(x=>RES_BASE[x.ресурс])&&SIGIL_GEOMETRY.length===5&&INKS.length===6&&INKS.every(x=>SOUND_BANK[x.звук]&&Object.keys(x.рецепт).every(r=>RES_BASE[r]))&&AWAKEN_SOURCES.length===6&&AWAKEN_SOURCES.every(x=>SOUND_BANK[x.звук])&&WAVES.length===3&&MORPH_TRAITS.length===6&&MORPHOBEASTS.length===10&&MORPHOBEASTS.every(b=>MONSTERS.some(m=>m.id===b.база))&&DEVOUR_GIFTS.length===6&&EVENT_THEME.world_event&&SOUND_BANK[EVENT_THEME.world_event.роль],"Знаки: восемь символов, восемь носителей, пять геометрий, шесть чернил, шесть источников пробуждения, три волны, шесть черт, десять морфозверей, шесть даров Эха — всё со звуком и по настоящим ресурсам");
   ok("cases",CASE_TEMPLATES.length===6&&CASE_TEMPLATES.every(t=>t.версии.length===3&&t.улики.every(k=>CLUE_KINDS[k])&&t.версии.every(v=>v.улики.every(k=>t.улики.includes(k))))&&SYNDICATES.length===8&&SYNDICATES.every(x=>SOUND_BANK[x.звук]&&x.города.every(id=>NAMED_CITY_BY_ID[id])&&REGIONS[x.область])&&Object.keys(DECISIONS).length===9&&Object.values(DECISIONS).every(d=>Object.keys(d).length>=3)&&["deeper","border_war","shards","lasthouse","beast","price","undercity","maskface","endless"].every(id=>CHAIN_DB[id])&&HOUSE_BY_ID[LAST_HOUSE.враг]&&DLG_MOVE_BY_ID.znanie&&DLG_MOVE_BY_ID.kultura&&DLG_MOVE_BY_ID.nedoskazat,"Расследования: шесть дел с тремя версиями, восемь синдикатов со звуком и городами, девять цепочек с развязками, три хода разговора");
   ok("academy",LANGS.length>=20&&LANGS.every(l=>l.письмо&&l.о)&&SCIENCES.length===6&&SCIENCES.every(x=>SOUND_BANK[x.звук]&&x.эффект.length===3&&FACULTY_BY_ID[x.факультет])&&FACULTIES.length===12&&FACULTIES.every(f=>(f.школы||[]).every(id=>MSCHOOL_BY_ID[id]&&SCHOOL_AUDIO[id])&&(!f.маст||MAST_BY_ID[f.маст]))&&SCHOOLS.length>=30&&SCHOOLS.every(sc=>SCHOOL_AUDIO[sc.id]&&SPELL_LAYERS.every(l=>SOUND_BANK[SCHOOL_AUDIO[sc.id][l]])),"Академия: двадцать один язык, шесть наук, двенадцать факультетов, тридцать восемь школ чар — все со звуком");
+  ok("faction16",FACTION_TRAITS.length===16&&new Set(FACTION_TRAITS.map(t=>t.id)).size===16
+   &&FACTION_TRAITS.every(t=>t.n&&t.о&&t.о.length>12&&SOUND_BANK[t.звук])
+   &&FACTION_TRAITS.map(t=>t.id).join(",")==="land,folk,econ,res,prod,army,spy,faith,law,tax,diplo,allies,foes,inner,lead,goals"
+   /* Каждое свойство говорит о себе у всякой державы, и ни одно не пусто. */
+   &&EMPIRES.every((e,i)=>factionTraits(i).every(t=>t.слово&&t.слово.length>3))
+   /* Двенадцать решений, у каждого голос настоящей записью и хоть одно
+      настоящее следствие; и ни одно не из синтезированных папок. */
+   &&FACTION_MOVES.length===12&&new Set(FACTION_MOVES.map(m=>m.id)).size===12
+   &&FACTION_MOVES.every(m=>m.n&&m.о&&m.о.length>20&&SOUND_BANK[m.звук]
+     &&!/^(inst|orch|mood|relic|score|folk|depth)\//.test(SOUND_BANK[m.звук].f[0])
+     &&(typeof m.цена==="function"||typeof m.закупка==="function"||typeof m.запрет==="function"
+        ||m.пошлина||m.дороги||m.урок))
+   /* Решение выводится из состояния, а не бросается: тот же день — тот же
+      совет; и на войне держава решает не то же, что в мире. */
+   &&(()=>{try{
+     const был=G.day;const i=0;
+     const a=factionMove(i,70).id,b=factionMove(i,70).id;
+     if(a!==b)return false;
+     const s0=factionState(i,70);
+     if(!s0||typeof s0.гнёт!=="number"||!Array.isArray(s0.враги))return false;
+     /* Хоть одно решение меняется за год: держава не стоит на месте. */
+     const виды=new Set();
+     for(let d=7;d<=364;d+=7)виды.add(factionMove(i,d).id);
+     G.day=был;
+     return виды.size>=2;
+    }catch(_){return false;}})()
+   /* Следствия доходят: пошлина, дороги, цена, закупка, запрет и урок
+      считаются через одни и те же двери и не выходят из берегов. */
+   &&EMPIRES.every((e,i)=>{
+     const t=factionMoveTaxK(i,G.day),d=factionMoveRoadK(i,G.day),u=factionMoveTeachK(i,G.day);
+     const ц=factionMovePriceK("руда",i,G.day),з=factionMoveBuyK("руда",i,G.day);
+     return t>=0.8&&t<=1.8&&d>=0.7&&d<=1.4&&u>=0.6&&u<=1.4
+      &&ц>=0.75&&ц<=1.4&&з>=1&&з<=1.25
+      &&Array.isArray(factionMoveBans(i,G.day))
+      &&empireTax(i,G.day)>0;})
+   &&typeof Modules.get("COUNCIL").sheet(0)==="string"&&Modules.get("COUNCIL").sheet(0).length>200,
+   "у фракции шестнадцать свойств из настоящего состояния мира, и совет державы сам выбирает одно из двенадцати решений седмицы");
   ok("teach",TEACH_DEMANDS.length===7&&new Set(TEACH_DEMANDS.map(d=>d.id)).size===7
    &&TEACH_DEMANDS.every(d=>d.n&&d.о&&d.о.length>15)
    &&TEACH_REFUSALS.length>=6&&TEACH_REFUSALS.every(r=>r.length>25)
@@ -44416,7 +44862,7 @@ function worldSelfCheck(){
   ok("gods",LESSER_GODS.length===32&&LESSER_GODS.every(g=>SOUND_BANK[g.звук]&&g.праздник>=1&&g.праздник<=36)&&new Set(LESSER_GODS.map(g=>g.праздник)).size===LESSER_GODS.length,"у каждого малого бога голос и свой день праздника");
   ok("npc",!!safeFn(()=>npcSoul(getNPC(EMPIRES[0].cap.x,EMPIRES[0].cap.y,0)),null),"у жителя есть состояние");
   ok("tts",typeof Speech==="object"&&typeof narrate==="function"&&String(narrate).includes("Speech.say"),"один распорядитель речи");
-  const keys=["spellbook","charged","potions","plantsSeen","bosses","delayed","seasSeen","dives","bookGifts","asked","artifacts","quests","rumors","standing"];
+  const keys=["spellbook","charged","council","potions","plantsSeen","bosses","delayed","seasSeen","dives","bookGifts","asked","artifacts","quests","rumors","standing"];
   ok("save",(()=>{try{saveGame(true);const raw=localStorage.getItem(SAVE_KEY)||"";const o=JSON.parse(raw);const g=o.G||o;return keys.every(k=>!(k in G)||k in g);}catch(_){return false;}})(),"новые поля лежат в сохранении");
  }catch(e){ok("run",false,String(e));}
  return out;}
