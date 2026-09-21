@@ -92,7 +92,11 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   G.inv={"руда":3,"рановник":1,"салака":2,"жемчуг":1};G.potions=[{id:"heal",q:1,стаб:0.9,день:G.day,срок:10}];G.items=["Зелье здоровья","Свиток: Искра"];
   toggleWindowGesture("modal-inventory");
   const r={секции:[...document.querySelectorAll("#invSections h3")].map(h=>h.textContent),кнопок:document.querySelectorAll('#invSections [data-cmd^="invpick:"]').length};
-  const b=document.querySelector('#invSections [data-cmd="invpick:res:%D1%80%D1%83%D0%B4%D0%B0"]');b.scrollIntoView({block:"center"});const rc=b.getBoundingClientRect();r.x=rc.left+10;r.y=rc.top+8;
+  const b=document.querySelector('#invSections [data-cmd="invpick:res:%D1%80%D1%83%D0%B4%D0%B0"]');b.scrollIntoView({block:"center"});
+  /* Вещь выбирают свайпом или ощупыванием; одиночного касания одним пальцем в
+     игре нет, и двойное подтверждает ВЫБРАННОЕ, а не то, куда попал палец. */
+  setCursor(b,false);
+  const rc=b.getBoundingClientRect();r.x=rc.left+10;r.y=rc.top+8;
   return r;});
  await tap(инв.x,инв.y);await tap(инв.x,инв.y);await page.waitForTimeout(200);
  const выбрано=await page.evaluate(()=>({sel:INV.sel,сказ:SAID.slice(-1)[0]}));

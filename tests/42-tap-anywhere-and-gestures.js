@@ -69,8 +69,10 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
  check('свайп тремя пальцами вверх открывает меню действий',
   await page.evaluate(()=>!document.getElementById('actionMenu').hidden));
 
- /* ── 2. РОВНО СЛУЧАЙ ИЗ ЖАЛОБЫ: двойное касание по пункту в разных частях
-       экрана, в том числе по самому нижнему, где список и уезжал ── */
+ /* ── 2. РОВНО СЛУЧАЙ ИЗ ЖАЛОБЫ: двойное касание подтверждает ВЫБРАННЫЙ пункт,
+       где бы он ни был на экране — в том числе самый нижний, где список уезжал.
+       Палец при этом нарочно опускается на ДРУГОЙ пункт: одиночного касания
+       одним пальцем в игре нет, и уводить выбор под палец оно больше не может. */
  const попытки=[];
  for(const где of ['первый','середина','последний']){
   await закрытьВсё();await пальцами(3,-130);
@@ -80,24 +82,32 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
     return r.top>=0&&r.bottom<=innerHeight&&r.height>4;});
    if(вид.length<3)return null;
    const el=г==='первый'?вид[0]:г==='середина'?вид[Math.floor(вид.length/2)]:вид[вид.length-1];
-   /* выбор нарочно стоит на ДРУГОМ пункте: целимся пальцем, а не свайпом */
-   setCursor(вид[0]===el?вид[1]:вид[0],false);
-   const r=el.getBoundingClientRect();
+   /* Выбор стоит на цели — так его ставит свайп. Палец целится в СОСЕДНИЙ
+      пункт: сработать должен выбранный. Соседа выбираем ПОСЛЕ того, как выбор
+      подтянул список к цели, — иначе палец целится в уехавшее место. */
+   setCursor(el,false);
+   const видно=cursorItems(lay).filter(x=>{const q=x.getBoundingClientRect();
+    return q.top>=0&&q.bottom<=innerHeight&&q.height>4;});
+   const чужой=видно.find(x=>x!==el)||el;
+   const r=чужой.getBoundingClientRect();
    window.__done=[];
-   return {надо:имяПункта(el),былВыбран:имяПункта(uiCursor),
+   return {надо:имяПункта(el),палецПо:имяПункта(чужой),
     x:Math.round(r.left+r.width/2),y:Math.round(r.top+r.height/2),
     верх:Math.round(r.top)};},где);
   if(!цель)continue;
   await касание(цель.x,цель.y);
-  const списокУехал=await page.evaluate(([x,y,надо])=>{
+  /* Под пальцем после первого касания должно остаться то же, что и было:
+     первое касание больше ничего не подтягивает и не двигает. Сверяем с тем,
+     куда палец и целился, а не с целью, — целимся мы нарочно мимо. */
+  const списокУехал=await page.evaluate(([x,y,подПальцем])=>{
    const el=document.elementFromPoint(x,y);
    const b=el&&el.closest&&el.closest('button,[data-cmd],[role="button"]');
-   return b?имяПункта(b)!==надо:true;},[цель.x,цель.y,цель.надо]);
+   return b?имяПункта(b)!==подПальцем:true;},[цель.x,цель.y,цель.палецПо]);
   await касание(цель.x,цель.y);
   const сделано=await page.evaluate(()=>window.__done.slice());
   попытки.push({где,...цель,списокУехал,сделано});}
  const промахи=попытки.filter(п=>!(п.сделано.length===1&&п.сделано[0]===п.надо));
- check('двойное касание по пункту выполняет ЕГО, где бы на экране он ни был',
+ check('двойное касание выполняет ВЫБРАННЫЙ пункт, где бы на экране он ни был и куда бы ни попал палец',
   попытки.length>=3&&промахи.length===0,промахи.slice(0,3));
  check('список не уезжает из-под пальца между двумя касаниями',
   попытки.every(п=>!п.списокУехал),попытки.filter(п=>п.списокУехал).slice(0,3));
@@ -152,16 +162,16 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   /* поднимем любое событие честным путём */
   for(let i=0;i<400;i++){safeFn(()=>maybeEvent('step'));if(!m.hidden)break;}
   if(m.hidden)return {нет:true};
-  /* Берём НИЖНИЙ вариант — тот, на котором список и уезжал, — и целимся в него
-     пальцем, поставив выбор на другой. Сработать должен тот, в который целились. */
+  /* Выбираем НИЖНИЙ вариант — тот, на котором список и уезжал, — а пальцем
+     целимся в верхний. Сработать должен выбранный. */
   const вар=cursorItems(m).filter(el=>{const r=el.getBoundingClientRect();
    return r.top>=0&&r.bottom<=innerHeight&&r.height>4;});
   if(вар.length<2)return {мало:вар.length};
   const цель=вар[вар.length-1];
-  setCursor(вар[0],false);
-  const r=цель.getBoundingClientRect();
+  setCursor(цель,false);
+  const r=вар[0].getBoundingClientRect();
   window.__done=[];
-  return {надо:имяПункта(цель),былВыбран:имяПункта(вар[0]),вариантов:вар.length,
+  return {надо:имяПункта(цель),палецПо:имяПункта(вар[0]),вариантов:вар.length,
    x:Math.round(r.left+r.width/2),y:Math.round(r.top+r.height/2)};});
  if(событие.нет||событие.мало){
   check('диалог события: нижний вариант подтверждается двойным касанием',true,'событие не поднялось — пропущено');
