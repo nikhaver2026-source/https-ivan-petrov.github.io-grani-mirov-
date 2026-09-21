@@ -153,6 +153,32 @@ const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(e!==undefined?' :
  check('тройное касание распознаётся: счёт касаний подряд идёт один, два, три — и назначенное на него действие срабатывает',
   тройное.шаги.join(",")==="1,2,3"&&тройное.сработал===true,тройное);
 
+ /* ── 12б. Пара не ломается тройкой ── */
+ const пара=await page.evaluate(()=>{
+  G.gestBind={};
+  /* Четыре касания подряд четырьмя пальцами: панель магии должна открыться
+     на втором и закрыться на четвёртом. Прежде счёт тройного сбивал пару, и
+     открытая панель уже не закрывалась — она перехватывала касания, и
+     игра выглядела зависшей. */
+  const откр=()=>{const m=document.getElementById("magicPanel");return !!(m&&!m.hidden&&m.getAttribute("aria-hidden")!=="true");};
+  multiTap.n=0;multiTap.t=0;multiTap.c=0;multiTap.p=0;multiTap.pt=0;
+  const путь=[];
+  for(let i=0;i<4;i++){
+   const now=Date.now();
+   const тройка=()=>{
+    multiTap.c=(multiTap.p===4&&now-multiTap.pt<900)?(Number(multiTap.c)||0)+1:1;
+    multiTap.p=4;multiTap.pt=now;
+    const n=multiTap.c;if(n>=3)multiTap.c=0;return n;};
+   const двойное=multiTap.n===4&&now-multiTap.t<900;
+   тройка();
+   multiTap.n=двойное?0:4;multiTap.t=now;
+   handleFourFingerTap(двойное);
+   путь.push(откр());}
+  if(откр())handleFourFingerTap(true);
+  return {путь};});
+ check('счёт тройного не ломает пару: четыре касания подряд открывают панель магии вторым и закрывают четвёртым',
+  пара.путь.join(",")==="false,true,true,false",пара);
+
  /* ── 13. Уголок ── */
  const уголок=await page.evaluate(()=>{
   G.gestBind={};

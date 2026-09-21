@@ -3216,7 +3216,7 @@ let exploreHold=null;
 function cancelExploreHold(){if(exploreHold){clearTimeout(exploreHold);exploreHold=null;}}
 const touchGate={lastUiTap:0,lastUiEl:null,suppressClickUntil:0};
 /* Двойное касание несколькими пальцами: первое касание только взводит, второе выполняет. */
-const multiTap={n:0,t:0,c:0};
+const multiTap={n:0,t:0,c:0,p:0,pt:0};
 function gameActive(){const el=document.getElementById('screen-game');return !!(el&&!el.hidden&&entered);}
 function safeFn(fn,fb=null){try{return typeof fn==='function'?fn():fb;}catch(e){try{console.warn('[Safe]',e);}catch(_){}return fb;}}
 function touchDirection(dx,dy){return Math.abs(dx)>=Math.abs(dy)?(dx>=0?'E':'W'):(dy>=0?'S':'N');}
@@ -4133,18 +4133,31 @@ document.addEventListener('touchend',e=>{
       выполняют только ДВОЙНЫМ касанием: одиночное лишь взводит и отвечает
       коротким щелчком, чтобы случайно поставленные пальцы ничего не делали. */
    const now=Date.now();
-   /* Сколько касаний подряд этими же пальцами. Прежде считалось только
-      «второе или нет»; теперь счёт доходит до трёх — иначе тройному
-      касанию не на что опереться. Четвёртое начинает счёт заново. */
-   let подряд=(multiTap.n===fingers&&now-multiTap.t<900)?(Number(multiTap.c)||0)+1:1;
-   if(подряд>3)подряд=1;
-   multiTap.n=fingers;multiTap.c=подряд;multiTap.t=now;
-   const родКасания=подряд>=3?"tap3":подряд===2?"tap2":"tap";
+   /* ── ПАРА И ТРОЙКА СЧИТАЮТСЯ ОТДЕЛЬНО ──
+      Пара считается ровно как раньше: каждое второе касание — двойное, и
+      счёт после него обнуляется. Тройное ведёт СВОЙ счёт рядом и в пару не
+      вмешивается. Считать одним счётчиком нельзя: третье и четвёртое
+      касание переставали складываться в пару, и панель магии, открытая
+      двойным касанием, вторым двойным уже не закрывалась. */
+   const тройка=()=>{
+    multiTap.c=(multiTap.p===fingers&&now-multiTap.pt<900)?(Number(multiTap.c)||0)+1:1;
+    multiTap.p=fingers;multiTap.pt=now;
+    const n=multiTap.c;
+    if(n>=3)multiTap.c=0;
+    return n;};
+   if(fingers===2){
+    /* Сбор двумя пальцами остаётся немедленным: ждать второго касания
+       нельзя, иначе он начнёт запаздывать почти на секунду. */
+    const n=тройка();
+    multiTap.n=0;
+    if(gestRun(2,n>=3?"tap3":n===2?"tap2":"tap",null))return;
+    handleTwoFingerTap();return;}
+   const двойное=multiTap.n===fingers&&now-multiTap.t<900;
+   const n=тройка();
+   multiTap.n=двойное?0:fingers;multiTap.t=now;
    /* Переназначенная фигура забирает жест себе. Пока привязка — умолчание,
       gestRun возвращает ложь, и всё идёт прежним путём. */
-   if(gestRun(fingers,родКасания,null))return;
-   if(fingers===2){handleTwoFingerTap();return;}
-   const двойное=подряд===2;
+   if(gestRun(fingers,n>=3?"tap3":двойное?"tap2":"tap",null))return;
    if(fingers===3)handleThreeFingerTap(двойное);
    else if(fingers===4)handleFourFingerTap(двойное);
    return;}
