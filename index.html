@@ -4833,6 +4833,13 @@ const GUIDE=[
  "Вещь растёт. За каждую победу работающий артефакт получает опыт, а на пороге открывает ступень — прибавку, которой у него раньше не было, и всегда из своего направления. Каждая следующая ступень даётся вдвое тяжелее. Если гнёзда кончились, редкую часть можно скормить вещи: она уйдёт в опыт вместо гнезда.",
  "Требования. Ранг задаёт уровень; сверх того вещь может требовать навык, заклинание нужной школы, расположение народа, принадлежность к клану, прочитанное знание или закрытое дело. Вещь, требования которой не выполнены, лежит мёртвым грузом и не даёт ничего — и прямо говорит, чего ей не хватает.",
  "Где всё это. Пункт меню «Артефакты, части и рецепты». В нём видно, каким ремеслом здесь занимаются и каково ваше умение, какие рецепты под рукой и чего не хватает, какие части лежат в суме, и по каждой вещи — всё, что о ней известно, и всё, что с ней можно сделать: вложить, вынуть, зачаровать, скормить, продать."]},
+{title:"Глава 86. Книга как ресурс",body:[
+ "ДЕВЯТЬ РОДОВ ЗНАНИЯ. Прочитанная страница даёт не «знание вообще», а одно из девяти: рецепт, заклинание, специализацию, историческое знание, координаты, дело, тайну, ремесленную технологию или часть карты. Что именно — решает класс книги, а не жребий.",
+ "ВОСЕМЬ КЛАССОВ. Обычная книга, редкий трактат, запрещённая книга, дневник, свод карт, рукопись, учебник, древний манускрипт. Класс — не переплёт: переплёт говорит, как книга сделана, а класс — что она такое и что может открыть. У каждого класса свой голос настоящей записью и своя цена.",
+ "КЛАСС ВЫВОДИТСЯ ИЗ МЕСТА. Наверху чаще попадаются обычные книги и учебники, у дна — рукописи и древние манускрипты, запретное лежит там, где его прячут. Одна и та же страница всегда даёт один и тот же класс: книга не меняется от того, что вы к ней вернулись.",
+ "КАЖДЫЙ РОД ДЕЛАЕТ НАСТОЯЩЕЕ. Рецепт ложится в руки, и вещь можно собрать. Специализация открывается целиком: её чары выписываются из гримуара без кристалла, потому что вы и так знаете, как их писать. Координаты называют настоящее место числами и кладут его в молву — туда можно дойти. Дело ложится в журнал с целью и наградой. Тайна открывает тайную бумагу двух держав, и она становится видна в политике. Технология открывает технику у станка на ступень раньше, чем дал бы урок. Часть карты кладёт в молву сразу несколько мест области.",
+ "ЗАПРЕТНОЕ ЧТЕНИЕ. Запрещённая книга даёт больше прочих — тайну или чару, — но держава ставит её чтение вам в вину: доброе имя у державы падает. Это цена, а не украшение.",
+ "ГДЕ СЛУШАТЬ. Книга под ногами и книга с полки называют свой класс и то, что открывают, до того, как вы их прочтёте. На прилавке у торговца класс входит в цену."]},
 {title:"Глава 85. Вести мира",body:[
  "ЧЕТЫРНАДЦАТЬ РОДОВ. Мир заводит их сам: войны, восстания, эпидемии, голод, пожары, наводнения, магические штормы, открытия штолен, обвалы, нашествия, появление владык, открытие порталов, разрушение городов и торговые кризисы. Спросить, что где творится, можно в меню «Мир» — пункт «Вести мира».",
  "ПОВОД. Ни одно событие не берётся из ниоткуда. У каждого рода своя мера готовности мира, и считает её то же состояние державы, на которое смотрит совет: нет врагов — не будет войны, нет гор — не откроют штольню, полны житницы — не придёт голод, нет воды — не будет половодья. Жребий решает только «на этой седмице или на следующей», и никогда — «бывает ли такое вовсе».",
@@ -17452,11 +17459,240 @@ function knowReward(n,depth){
  if(d>=3&&r<0.16)return {type:"legend"};
  if(r<0.09)return {type:"skill"};
  if(r<0.22)return {type:"spell"};
- return {type:"lore"};}
+ /* §21: остальное — не один общий мешок «знание», а семь родов, и какой
+    именно, решает класс книги: у дневника координаты, у учебника
+    технология, у свода карт кусок карты. */
+ return {type:safeFn(()=>bookOpenFor(n,d),"lore")};}
 /* Собрание игрока: номера прочитанных страниц. Хранится числами, поэтому
    тысяча прочитанных книг весит меньше килобайта. */
 function knowRead(){return Array.isArray(G.lore)?G.lore:(G.lore=[]);}
 function knowHas(n){return knowRead().indexOf(n)>=0;}
+
+/* ════════════════════════════════════════════════════════════════════════
+   §21 КНИГИ И ЗНАНИЯ: КНИГА КАК РЕСУРС
+
+   §21 мастер-промпта говорит: «Книги становятся игровым ресурсом», — и
+   перечисляет девять вещей, которые книга может открыть: рецепт,
+   заклинание, специализацию, историческое знание, координаты, квест,
+   секрет, ремесленную технологию и часть карты. И отдельно — восемь
+   классов: обычные книги, редкие трактаты, запрещённые книги, дневники,
+   карты, рукописи, учебники, древние манускрипты.
+
+   КАК БЫЛО. У прочитанной страницы было четыре исхода: навык, заклинание,
+   одноразовый свиток и «знание записано в собрание». Пять родов из девяти
+   не существовало вовсе, а «знание в собрание» было общим мешком, куда
+   попадало всё, чему не нашлось места. Классов не было: у тома был вид
+   переплёта (трактат, гримуар, скрижаль), но вид — это как книга сделана,
+   а не что она такое.
+
+   КАК СТАЛО. Девять родов знания, и каждый делает что-то настоящее:
+
+     рецепт      — artLearnRecipe: рецепт артефакторики ложится в руки;
+     заклинание  — чара в книгу заклинаний (как и было);
+     специализация — открытая специализация гримуара: её чары выписываются
+                   без кристалла, потому что вы и так знаете, как их писать;
+     историческое знание — реестр знаний и собрание (как и было);
+     координаты  — настоящее место на карте, названное по имени и с числами,
+                   ложится в молву: туда можно дойти;
+     квест       — настоящее дело в журнал, с целью и наградой;
+     секрет      — тайная бумага двух держав (§18) становится известной;
+     ремесленная технология — техника у станка открывается на ступень
+                   раньше, чем её дал бы урок;
+     часть карты — сразу несколько мест области ложатся в молву.
+
+   И восемь классов. Класс — не переплёт: он решает, ЧТО книга может
+   открыть, насколько она дорога, как звучит и чем грозит. Обычная книга
+   даёт знание и рецепт; учебник — технологию и специализацию; дневник —
+   координаты и секрет; карты — часть карты и координаты; рукопись — дело и
+   знание; редкий трактат — специализацию и чару; запрещённая книга —
+   секрет и чару, и за её чтение держава ставит это вам в вину;
+   древний манускрипт — что угодно из девяти, но встречается он у самого
+   дна.
+
+   Класс выводится из места и глубины, а не хранится: наверху больше
+   обычных книг и учебников, у дна — рукописей и древних манускриптов,
+   запретное лежит там, где его прячут.
+   ════════════════════════════════════════════════════════════════════════ */
+const BOOK_OPENS=[
+ {id:"recipe", n:"рецепт",                о:"как собрать вещь своими руками", звук:"craft_knock"},
+ {id:"spell",  n:"заклинание",            о:"чара ложится в книгу заклинаний", звук:"spell_harp"},
+ {id:"spec",   n:"специализация",         о:"целая ветвь школы открывается разом", звук:"magic_shimmer"},
+ {id:"lore",   n:"историческое знание",   о:"страница ложится в собрание и реестр", звук:"arte_book"},
+ {id:"coords", n:"координаты",            о:"место названо по имени и с числами", звук:"arte_find"},
+ {id:"quest",  n:"дело",                  о:"в журнал ложится настоящее поручение", звук:"quest"},
+ {id:"secret", n:"тайна",                 о:"тайная бумага двух держав перестаёт быть тайной", звук:"knock_soft"},
+ {id:"tech",   n:"ремесленная технология",о:"техника у станка открывается раньше срока", звук:"forge_hammer"},
+ {id:"mapfrag",n:"часть карты",           о:"разом ложатся в молву несколько мест области", звук:"arte_cloth"}];
+const BOOK_OPEN_BY_ID=Object.fromEntries(BOOK_OPENS.map(o=>[o.id,o]));
+/* Восемь классов §21. «вес(глубина)» — насколько такой класс здесь вероятен. */
+const BOOK_CLASSES=[
+ {id:"common",   n:"обычная книга",      род:"ж",цена:1.0,ред:0,звук:"uh_page",
+  о:"переплёт в доску, ходовая бумага, писана без затей",
+  открывает:["lore","recipe","coords"],вес:d=>Math.max(0.2,1.4-d*0.05)},
+ {id:"treatise", n:"редкий трактат",     род:"м",цена:2.2,ред:2,звук:"arte_book",
+  о:"писан рукой мастера и переписан дважды, поля в пометках",
+  открывает:["spec","spell","lore"],вес:d=>0.5+d*0.01},
+ {id:"forbidden",n:"запрещённая книга",  род:"ж",цена:3.4,ред:3,звук:"stk_dark",
+  о:"без выходных данных, углы обожжены; держава ставит её чтение в вину",
+  открывает:["secret","spell","spec"],вес:d=>0.25+d*0.02,запретна:true},
+ {id:"diary",    n:"дневник",            род:"м",цена:1.3,ред:1,звук:"arte_page",
+  о:"почерк портится к концу, последние страницы вырваны",
+  открывает:["coords","secret","lore"],вес:d=>0.7},
+ {id:"mapbook",  n:"свод карт",          род:"м",цена:1.8,ред:1,звук:"arte_cloth",
+  о:"листы в складку, сгибы протёрты до дыр",
+  открывает:["mapfrag","coords"],вес:d=>0.6},
+ {id:"manuscript",n:"рукопись",          род:"ж",цена:2.0,ред:2,звук:"oc_rustle",
+  о:"тетрадь без переплёта, сшита нитью, страницы разной руки",
+  открывает:["quest","lore","recipe"],вес:d=>0.4+d*0.015},
+ {id:"textbook", n:"учебник",            род:"м",цена:1.5,ред:1,звук:"bell_small",
+  о:"по нему учат в Академии: задачи, разборы, ответы в конце",
+  открывает:["tech","spec","recipe"],вес:d=>Math.max(0.15,0.9-d*0.03)},
+ {id:"ancient",  n:"древний манускрипт", род:"м",цена:4.0,ред:4,звук:"arte_heavy",
+  о:"язык старше держав, оклад с углами, пергамент в чешуе",
+  открывает:["spec","tech","secret","mapfrag","recipe","quest","coords","spell","lore"],
+  вес:d=>0.05+d*0.03}];
+const BOOK_CLASS_BY_ID=Object.fromEntries(BOOK_CLASSES.map(c=>[c.id,c]));
+/* Ключ страницы хешируется целиком: длины у ключей почти одинаковы, и по
+   длине все книги вышли бы одной. Тот же приём, что и у наставников. */
+function bookSum(s){let h=0;s=String(s==null?"":s);
+ for(let i=0;i<s.length;i++)h=(h*31+s.charCodeAt(i))%100003;return h;}
+/* Класс книги. Выводится из страницы и глубины, а не хранится. */
+function bookClassFor(n,глубина){
+ try{
+  const d=Math.max(0,Number(глубина)||0);
+  const веса=BOOK_CLASSES.map(c=>Math.max(0.01,Number(safeFn(()=>c.вес(d),0.3))||0.01));
+  const сумма=веса.reduce((a,b)=>a+b,0);
+  let бросок=hashName(bookSum(n),d*7+3,9900)*сумма;
+  for(let i=0;i<BOOK_CLASSES.length;i++){
+   бросок-=веса[i];
+   if(бросок<=0)return BOOK_CLASSES[i];}
+  return BOOK_CLASSES[0];
+ }catch(_){return BOOK_CLASSES[0];}}
+/* Что открывает именно эта книга — из того, что вообще может её класс. */
+function bookOpenFor(n,глубина){
+ try{
+  const c=bookClassFor(n,глубина);
+  const список=c.открывает;
+  return список[Math.floor(hashName(bookSum(n)+11,(Number(глубина)||0)*13+5,9901)*список.length)%список.length];
+ }catch(_){return "lore";}}
+/* ── ЧТО КНИГА ОТКРЫВАЕТ НА САМОМ ДЕЛЕ ─────────────────────────────────── */
+/* Открытая специализация: её чары выписываются из гримуара без кристалла. */
+function bookSpecKnown(id){try{return !!(G.specBook&&G.specBook[id]);}catch(_){return false;}}
+/* Открытая технология: техника доступна на ступень раньше урока. */
+function bookTechKnown(id){try{return !!(G.techBook&&G.techBook[id]);}catch(_){return false;}}
+/* Место, до которого можно дойти: настоящий город, крепость или поселение. */
+function bookPlaceFor(n,дальше){
+ try{
+  const r=Math.max(40,Math.min(900,Number(дальше)||160));
+  const свои=safeFn(()=>findCities(G.x,G.y,r,8),[])||[];
+  const годные=свои.filter(c=>{
+   const k=safeFn(()=>knownKey(c.x,c.y),null);
+   return k&&!(G.known&&G.known[k]);});
+  const пул=годные.length?годные:свои;
+  if(!пул.length)return null;
+  return пул[Math.floor(hashName(bookSum(n),7,9902)*пул.length)%пул.length];
+ }catch(_){return null;}}
+function bookGrant(n,openId){
+ const о=BOOK_OPEN_BY_ID[openId];
+ if(!о)return "";
+ const голос=()=>safeFn(()=>Bank.play(о.звук,{seed:bookSum(n),gain:0.5,maxSec:3}));
+ try{
+  switch(openId){
+   case "recipe":{
+    const нет=(typeof ART_RECIPES!=="undefined"?ART_RECIPES:[])
+     .filter(r=>!r.общий&&!safeFn(()=>artKnowsRecipe(r.id),false));
+    if(!нет.length)return " Рецепт из этой книги вам уже знаком.";
+    const r=нет[Math.floor(hashName(bookSum(n),13,9903)*нет.length)%нет.length];
+    safeFn(()=>artLearnRecipe(r.id,"из книги"));
+    голос();journal(`Рецепт: ${r.n}.`);
+    return ` Рецепт записан: «${r.n}». Теперь его можно собрать своими руками.`;}
+   case "spec":{
+    if(!G.specBook||typeof G.specBook!=="object")G.specBook={};
+    const нет=(typeof SPELL_SPECS!=="undefined"?SPELL_SPECS:[])
+     .filter(s=>!bookSpecKnown(s.id));
+    if(!нет.length)return " Все специализации этой книги вам уже открыты.";
+    const s=нет[Math.floor(hashName(bookSum(n),17,9904)*нет.length)%нет.length];
+    G.specBook[s.id]=1;
+    голос();journal(`Специализация: ${s.n}.`);
+    return ` Открыта специализация «${s.n}» (${(SCHOOL_BY_ID[s.школа]||{n:s.школа}).n}). `
+     +`Её чары выписываются из гримуара без кристалла: вы и так знаете, как их писать.`;}
+   case "coords":{
+    const p=bookPlaceFor(n,240);
+    if(!p)return " Координаты в книге ведут в места, которые вам уже знакомы.";
+    safeFn(()=>notePlace(p.x,p.y,p.stype||p.type||"village",p.name||p.n||"безымянное место","молва"));
+    голос();journal(`Координаты: ${p.name||p.n}.`);
+    return ` В книге записаны координаты: ${p.name||p.n}, отметка (${p.x}; ${p.y}). Место легло в молву — туда можно дойти.`;}
+   case "quest":{
+    const p=bookPlaceFor(n,320);
+    if(!p)return " Поручение в книге давно исполнено кем-то другим.";
+    if(!Array.isArray(G.quests))G.quests=[];
+    const id=`book_${p.x}_${p.y}`;
+    if(G.quests.some(q=>q.id===id))return " Это дело вы уже взяли.";
+    G.quests.push({id,npc:"книга",type:"visit",need:1,tx:p.x,ty:p.y,
+     text:`По книге: дойти до места «${p.name||p.n}» на отметке (${p.x}; ${p.y}) и посмотреть, что там осталось.`,
+     reward:{gold:90+Math.round(hashName(bookSum(n),19,9905)*160),xp:140}});
+    голос();journal(`Дело из книги: ${p.name||p.n}.`);
+    return ` В журнал легло дело: дойти до «${p.name||p.n}», отметка (${p.x}; ${p.y}).`;}
+   case "secret":{
+    let нашли=null;
+    safeFn(()=>{
+     for(let i=0;i<EMPIRES.length&&!нашли;i++)
+      for(let j=i+1;j<EMPIRES.length&&!нашли;j++){
+       const т=diploHidden(i,j,G.day);
+       if(т&&т.length)нашли={i,j,pact:т[0]};}});
+    if(!нашли)return " Тайна из этой книги давно перестала быть тайной.";
+    safeFn(()=>diploLearn(нашли.i,нашли.j,нашли.pact.id));
+    голос();
+    const имя=(DIPLO_BY_ID[нашли.pact.id]||{n:нашли.pact.id}).n;
+    journal(`Тайна: ${EMPIRES[нашли.i].short} и ${EMPIRES[нашли.j].short}.`);
+    return ` Книга выдаёт тайную бумагу: «${имя}» между державами «${EMPIRES[нашли.i].short}» и `
+     +`«${EMPIRES[нашли.j].short}». Теперь она видна в политике.`;}
+   case "tech":{
+    if(!G.techBook||typeof G.techBook!=="object")G.techBook={};
+    const нет=(typeof TECHS!=="undefined"?TECHS:[])
+     .filter(t=>t.ур>=1&&!bookTechKnown(t.id));
+    if(!нет.length)return " Всё, чему учит эта книга, вы уже умеете.";
+    const t=нет[Math.floor(hashName(bookSum(n),23,9906)*нет.length)%нет.length];
+    G.techBook[t.id]=1;
+    голос();journal(`Технология: ${t.n}.`);
+    return ` Разобрана технология: «${t.n}» (${(MAST_BY_ID[t.маст]||{n:t.маст}).n}, ступень ${t.ур}). `
+     +`У станка она откроется на ступень раньше, чем дал бы урок.`;}
+   case "mapfrag":{
+    const круг=safeFn(()=>findCities(G.x,G.y,300,12),[])||[];
+    const новые=круг.filter(c=>{const k=safeFn(()=>knownKey(c.x,c.y),null);return k&&!(G.known&&G.known[k]);});
+    if(!новые.length)return " Кусок карты в книге описывает земли, которые вы уже знаете.";
+    const сколько=Math.min(новые.length,3+Math.floor(hashName(bookSum(n),29,9907)*4));
+    const легли=[];
+    for(let i=0;i<сколько;i++){
+     const c=новые[i];
+     safeFn(()=>notePlace(c.x,c.y,c.stype||c.type||"village",c.name||c.n||"безымянное место","молва"));
+     легли.push(c.name||c.n);}
+    голос();journal(`Часть карты: мест ${легли.length}.`);
+    return ` Кусок карты лёг в молву: ${легли.join(", ")} — всего ${легли.length} ${легли.length===1?"место":легли.length<5?"места":"мест"}.`;}
+  }
+  return "";
+ }catch(_){return "";}}
+/* Строка книги: класс, что открывает, чем грозит. */
+function bookLine(n,глубина){
+ try{
+  const c=bookClassFor(n,глубина);
+  const o=BOOK_OPEN_BY_ID[bookOpenFor(n,глубина)]||BOOK_OPEN_BY_ID.lore;
+  return `${c.n[0].toUpperCase()+c.n.slice(1)}: ${c.о}. Открывает: ${o.n} — ${o.о}.`
+   +(c.запретна?" Запретное чтение: держава ставит его вам в вину.":"");
+ }catch(_){return "Книга.";}}
+const Books=Modules.register("BOOKS",{
+ opens:BOOK_OPENS,
+ classes:BOOK_CLASSES,
+ open:id=>BOOK_OPEN_BY_ID[id]||null,
+ klass:id=>BOOK_CLASS_BY_ID[id]||null,
+ classOf:(n,d)=>S(()=>bookClassFor(n,d),null),
+ openOf:(n,d)=>S(()=>bookOpenFor(n,d),"lore"),
+ line:(n,d)=>S(()=>bookLine(n,d),""),
+ grant:(n,id)=>S(()=>bookGrant(n,id),""),
+ specKnown:id=>S(()=>bookSpecKnown(id),false),
+ techKnown:id=>S(()=>bookTechKnown(id),false),
+ text(){return `Книга открывает одно из девяти: ${BOOK_OPENS.map(o=>o.n).join(", ")}. `
+  +`Классов книг восемь: ${BOOK_CLASSES.map(c=>c.n).join(", ")}.`;}});
 
 /* ════════════════════════════════════════════════════════════════════════
    ТОМА: КНИГА КАК ВЕЩЬ, А НЕ КАК СТРАНИЦА
@@ -17554,8 +17790,11 @@ function makeTome(опции){
  /* Орден башни делает свой том дороже прочих: за ним ходят собиратели. */
  const орден=o.order?TOWER_ORDER_BY_ID[o.order]:null;
  const ред=TOME_RARITY[r];
+ /* §21: класс книги. Считается от страницы, если она известна, — тогда
+    класс тома и то, что даёт эта страница при чтении, не расходятся. */
+ const кл=safeFn(()=>bookClassFor(o.page!=null?o.page:seed,глубина),null);
  const цена=Math.max(8,Math.round(
-  14*ред.k*вид.вес*ист.вес*(1+глубина*0.04)*(орден?1.35:1)));
+  14*ред.k*вид.вес*ист.вес*(1+глубина*0.04)*(орден?1.35:1)*(кл?кл.цена:1)));
  const имя=`${вид.n[0].toUpperCase()+вид.n.slice(1)} «${tomeTitle(seed)}»`;
  const словоРедкости=rarityWord(r,вид.р);
  /* Книга — вещь мира: у неё автор, язык, тема и сложность. */
@@ -17568,6 +17807,9 @@ function makeTome(опции){
   откуда:ист.n,origin:o.origin||"city",орден:орден?орден.кратко:null,
   редкость:r,редкостьИмя:словоРедкости,редкость_о:ред.о,
   дар,цена,глубина,автор,наречие,тема,сложность,
+  класс:кл?кл.id:null,классИмя:кл?кл.n:null,класс_о:кл?кл.о:null,
+  запретна:!!(кл&&кл.запретна),
+  открывает:safeFn(()=>bookOpenFor(o.page!=null?o.page:seed,глубина),"lore"),
   строка:`${имя}: ${словоРедкости} ${вид.n}, ${ист.n}${орден?`, из собрания «${орден.кратко}»`:""}. Автор: ${автор}. Язык: ${(LANG_BY_ID[наречие]||{n:"общая речь"}).n}. Тема: ${тема}. Сложность ${сложность} из трёх. ${вид.о}. Цена ${цена} золота.`};}
 /* Откуда книга в том месте, где стоит игрок. */
 function tomeOriginHere(){
@@ -17588,6 +17830,7 @@ function tomeAt(x,y){
   if(!k)return null;
   const б=p.stype==="tower"?safeFn(()=>towerAt(p.bx,p.by),null):null;
   return makeTome({origin:tomeOriginHere(),seed:(k.n||1)+p.bx+p.by+x*7+y*13,
+   page:k.n,
    depth:p.depth,reward:k.reward&&k.reward.type,order:б?б.орден.id:null});
  }catch(_){return null;}}
 /* ── Носитель знаний на клетке ──
@@ -17672,8 +17915,21 @@ function knowGrant(n,reward){
   safeFn(()=>{eventFanfare(["fx_crystal","relic_sing","gate_fanfare"],0.6);});
   награда=` Со страницы сходит одноразовый свиток: «${sp.n}». ${sp.d} Он ляжет в сумку и сработает один раз.`;
   journal(`Найден свиток: ${sp.n}.`);
+ }else if(BOOK_OPEN_BY_ID[reward.type]&&reward.type!=="lore"){
+  /* §21: рецепт, специализация, координаты, дело, тайна, технология,
+     часть карты — каждый делает что-то настоящее. */
+  награда=safeFn(()=>bookGrant(n,reward.type),"")
+   ||` Знание записано в собрание: страниц у вас ${knowRead().length}.`;
  }else{
   награда=` Знание записано в собрание: страниц у вас ${knowRead().length}.`;}
+ /* §21: запретное чтение держава ставит в вину — и это слышно. */
+ награда+=safeFn(()=>{
+  const c=bookClassFor(n,(G.place&&G.place.depth)||0);
+  if(!c||!c.запретна)return "";
+  const emp=EMPIRES[safeFn(()=>empireIndexAt(G.x,G.y),0)];
+  if(!emp)return "";
+  addStand("fact",emp.short,-1,true);
+  return ` Книга запретная: держава «${emp.short}» ставит её чтение вам в вину.`;},"");
  return награда;}
 function studyKnowledge(x,y){
  const k=knowledgeAt(x,y);
@@ -21377,7 +21633,9 @@ function techRisk(t){
 /* Какие техники доступны у этого станка. */
 function techsAt(станок,все){
  if(!станок)return [];
- return TECHS.filter(t=>t.станки.indexOf(станок)>=0&&(все||mastLevel(t.маст)>=t.ур));}
+ /* §21: разобранная по книге технология открывается на ступень раньше. */
+ return TECHS.filter(t=>t.станки.indexOf(станок)>=0
+  &&(все||mastLevel(t.маст)>=t.ур-(safeFn(()=>bookTechKnown(t.id),false)?1:0)));}
 /* ── ЛЕСТНИЦА РЕМЕСЛА ВИДНА ЦЕЛИКОМ ──
    Работы выше вашей ступени прятались. Игрок, стоящий у наковальни с первой
    ступенью, слышал две работы и не знал, что их семь: лестница была, а
@@ -39111,11 +39369,14 @@ function grimLearn(i){
  if(!Array.isArray(G.spellbook))G.spellbook=[];
  if(G.spellbook.some(x=>x&&x.n===rec.n)||(G.spells||[]).includes(rec.n)){
   narrate(`«${rec.n}» у вас уже есть.`);return false;}
- if((Number(G.inv&&G.inv["кристалл"])||0)<1){
+ /* §21: открытая книгой специализация — вы и так знаете, как писать её
+    чары, и кристалл держать их не нужно. */
+ const своя=safeFn(()=>bookSpecKnown(rec.спец),false);
+ if(!своя&&(Number(G.inv&&G.inv["кристалл"])||0)<1){
   narrate("Нужен кристалл: он держит выписанное из гримуара заклинание.");return false;}
  if((Number(G.mana)||0)<15){
   narrate(`Нужно пятнадцать маны, у вас ${Math.round(Number(G.mana)||0)}.`);return false;}
- G.inv["кристалл"]-=1;if(G.inv["кристалл"]<=0)delete G.inv["кристалл"];
+ if(!своя){G.inv["кристалл"]-=1;if(G.inv["кристалл"]<=0)delete G.inv["кристалл"];}
  G.mana-=15;
  G.spellbook.push(rec);safeFn(()=>registerCustomSpells());
  safeFn(()=>mastGain("runes",4));
@@ -44784,6 +45045,37 @@ function worldSelfCheck(){
   ok("sigils",SIGIL_SYMBOLS.length===8&&SIGIL_SYMBOLS.every(x=>MSCHOOL_BY_ID[x.школа]&&x.намерения.every(i=>SIGIL_INTENTS[i]))&&SIGIL_CARRIERS.length===8&&SIGIL_CARRIERS.every(x=>RES_BASE[x.ресурс])&&SIGIL_GEOMETRY.length===5&&INKS.length===6&&INKS.every(x=>SOUND_BANK[x.звук]&&Object.keys(x.рецепт).every(r=>RES_BASE[r]))&&AWAKEN_SOURCES.length===6&&AWAKEN_SOURCES.every(x=>SOUND_BANK[x.звук])&&WAVES.length===3&&MORPH_TRAITS.length===6&&MORPHOBEASTS.length===10&&MORPHOBEASTS.every(b=>MONSTERS.some(m=>m.id===b.база))&&DEVOUR_GIFTS.length===6&&EVENT_THEME.world_event&&SOUND_BANK[EVENT_THEME.world_event.роль],"Знаки: восемь символов, восемь носителей, пять геометрий, шесть чернил, шесть источников пробуждения, три волны, шесть черт, десять морфозверей, шесть даров Эха — всё со звуком и по настоящим ресурсам");
   ok("cases",CASE_TEMPLATES.length===6&&CASE_TEMPLATES.every(t=>t.версии.length===3&&t.улики.every(k=>CLUE_KINDS[k])&&t.версии.every(v=>v.улики.every(k=>t.улики.includes(k))))&&SYNDICATES.length===8&&SYNDICATES.every(x=>SOUND_BANK[x.звук]&&x.города.every(id=>NAMED_CITY_BY_ID[id])&&REGIONS[x.область])&&Object.keys(DECISIONS).length===9&&Object.values(DECISIONS).every(d=>Object.keys(d).length>=3)&&["deeper","border_war","shards","lasthouse","beast","price","undercity","maskface","endless"].every(id=>CHAIN_DB[id])&&HOUSE_BY_ID[LAST_HOUSE.враг]&&DLG_MOVE_BY_ID.znanie&&DLG_MOVE_BY_ID.kultura&&DLG_MOVE_BY_ID.nedoskazat,"Расследования: шесть дел с тремя версиями, восемь синдикатов со звуком и городами, девять цепочек с развязками, три хода разговора");
   ok("academy",LANGS.length>=20&&LANGS.every(l=>l.письмо&&l.о)&&SCIENCES.length===6&&SCIENCES.every(x=>SOUND_BANK[x.звук]&&x.эффект.length===3&&FACULTY_BY_ID[x.факультет])&&FACULTIES.length===12&&FACULTIES.every(f=>(f.школы||[]).every(id=>MSCHOOL_BY_ID[id]&&SCHOOL_AUDIO[id])&&(!f.маст||MAST_BY_ID[f.маст]))&&SCHOOLS.length>=30&&SCHOOLS.every(sc=>SCHOOL_AUDIO[sc.id]&&SPELL_LAYERS.every(l=>SOUND_BANK[SCHOOL_AUDIO[sc.id][l]])),"Академия: двадцать один язык, шесть наук, двенадцать факультетов, тридцать восемь школ чар — все со звуком");
+  ok("books21",BOOK_OPENS.length===9&&new Set(BOOK_OPENS.map(o=>o.id)).size===9
+   &&BOOK_OPENS.map(o=>o.id).join(",")==="recipe,spell,spec,lore,coords,quest,secret,tech,mapfrag"
+   &&BOOK_OPENS.every(o=>o.n&&o.о&&o.о.length>15&&SOUND_BANK[o.звук]
+     &&!/^(inst|orch|mood|relic|score|folk|depth)\//.test(SOUND_BANK[o.звук].f[0]))
+   &&BOOK_CLASSES.length===8&&new Set(BOOK_CLASSES.map(c=>c.id)).size===8
+   &&BOOK_CLASSES.map(c=>c.id).join(",")==="common,treatise,forbidden,diary,mapbook,manuscript,textbook,ancient"
+   &&BOOK_CLASSES.every(c=>c.n&&c.о&&c.о.length>20&&c.цена>0&&typeof c.вес==="function"
+     &&Array.isArray(c.открывает)&&c.открывает.length>=2
+     &&c.открывает.every(id=>BOOK_OPEN_BY_ID[id])
+     &&SOUND_BANK[c.звук]
+     &&!/^(inst|orch|mood|relic|score|folk|depth)\//.test(SOUND_BANK[c.звук].f[0]))
+   /* Все девять родов достижимы хоть через один класс. */
+   &&BOOK_OPENS.every(o=>BOOK_CLASSES.some(c=>c.открывает.includes(o.id)))
+   /* Класс выводится, а не бросается: та же страница — тот же класс; и с
+      глубиной состав меняется. */
+   &&(()=>{try{
+     const a=bookClassFor(1234,0).id,b=bookClassFor(1234,0).id;
+     if(a!==b)return false;
+     const верх={},низ={};
+     for(let n=1;n<=600;n++){
+      верх[bookClassFor(n,0).id]=1;низ[bookClassFor(n,60).id]=1;}
+     return Object.keys(верх).length>=5&&Object.keys(низ).length>=5;
+    }catch(_){return false;}})()
+   /* Что открывает книга, всегда из того, что может её класс. */
+   &&(()=>{try{
+     for(let n=1;n<=400;n++)for(const d of [0,10,40]){
+      const c=bookClassFor(n,d),o=bookOpenFor(n,d);
+      if(!c.открывает.includes(o))return false;}
+     return true;}catch(_){return false;}})()
+   &&typeof Modules.get("BOOKS").text()==="string",
+   "книга открывает одно из девяти — рецепт, чару, специализацию, знание, координаты, дело, тайну, технологию или часть карты, — и классов книг восемь, от обычной до древнего манускрипта");
   ok("wevents",WEVENT_KINDS.length===14&&new Set(WEVENT_KINDS.map(k=>k.id)).size===14
    &&WEVENT_KINDS.map(k=>k.id).join(",")==="war,revolt,plague,famine,fire,flood,mstorm,mineopen,collapse,invasion,boss,portal,cityfall,tradecrisis"
    /* Восемь свойств у каждого рода, и звуковой профиль без синтеза. */
@@ -45328,7 +45620,7 @@ function worldSelfCheck(){
   ok("gods",LESSER_GODS.length===32&&LESSER_GODS.every(g=>SOUND_BANK[g.звук]&&g.праздник>=1&&g.праздник<=36)&&new Set(LESSER_GODS.map(g=>g.праздник)).size===LESSER_GODS.length,"у каждого малого бога голос и свой день праздника");
   ok("npc",!!safeFn(()=>npcSoul(getNPC(EMPIRES[0].cap.x,EMPIRES[0].cap.y,0)),null),"у жителя есть состояние");
   ok("tts",typeof Speech==="object"&&typeof narrate==="function"&&String(narrate).includes("Speech.say"),"один распорядитель речи");
-  const keys=["spellbook","charged","council","weventSaid","potions","plantsSeen","bosses","delayed","seasSeen","dives","bookGifts","asked","artifacts","quests","rumors","standing"];
+  const keys=["spellbook","charged","council","weventSaid","specBook","techBook","potions","plantsSeen","bosses","delayed","seasSeen","dives","bookGifts","asked","artifacts","quests","rumors","standing"];
   ok("save",(()=>{try{saveGame(true);const raw=localStorage.getItem(SAVE_KEY)||"";const o=JSON.parse(raw);const g=o.G||o;return keys.every(k=>!(k in G)||k in g);}catch(_){return false;}})(),"новые поля лежат в сохранении");
  }catch(e){ok("run",false,String(e));}
  return out;}
