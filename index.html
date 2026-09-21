@@ -160,6 +160,10 @@ h3{color:var(--acc2);margin:14px 0 6px;font-size:1.05rem;}
  <h3>💾 Сохранения</h3>
  <p class="hint">Игра сохраняется сама после каждого шага и дела. Здесь — записать сейчас и открыть слоты с выгрузкой в файл.</p>
  <div class="row"><button type="button" data-cmd="am:save">💾 Сохранить сейчас</button><button type="button" data-cmd="am:saves">🗄️ Слоты и файл</button></div>
+ <h3>🖐️ Жесты</h3>
+ <p class="hint" id="gestHint">Любое значимое действие можно повесить на свою фигуру жеста. Фигуры с удержанием не назначаются: удержание занято ощупыванием — им незрячий игрок находит, что под пальцем. Пока вы ничего не меняли, жесты работают по умолчанию.</p>
+ <div class="row" id="gestRow"></div>
+ <div class="row"><button type="button" data-cmd="gestreset">↩️ Вернуть жесты к умолчанию</button></div>
  <h3>♿ Доступность</h3>
  <label class="opt"><input type="checkbox" id="setExplore" checked><span>🤚 <b>Режим ощупывания</b><small>Называть элементы под пальцем (для незрячих)</small></span></label>
  <label class="opt">🧭 Подсказки расположения объектов <select id="setHintMode" aria-label="Подсказки расположения объектов"><option value="full" selected>Полные подсказки</option><option value="min">Минимальные подсказки</option><option value="sound">Только звуковая навигация</option></select></label>
@@ -3212,11 +3216,11 @@ let exploreHold=null;
 function cancelExploreHold(){if(exploreHold){clearTimeout(exploreHold);exploreHold=null;}}
 const touchGate={lastUiTap:0,lastUiEl:null,suppressClickUntil:0};
 /* Двойное касание несколькими пальцами: первое касание только взводит, второе выполняет. */
-const multiTap={n:0,t:0};
+const multiTap={n:0,t:0,c:0};
 function gameActive(){const el=document.getElementById('screen-game');return !!(el&&!el.hidden&&entered);}
 function safeFn(fn,fb=null){try{return typeof fn==='function'?fn():fb;}catch(e){try{console.warn('[Safe]',e);}catch(_){}return fb;}}
 function touchDirection(dx,dy){return Math.abs(dx)>=Math.abs(dy)?(dx>=0?'E':'W'):(dy>=0?'S':'N');}
-function resetGesture(){gesture={count:0,maxCount:0,id:null,x:0,y:0,t:0,moved:false,dir:null,target:null,ui:null,runArmed:false,fast:false,speed:0,lastX:null,lastY:null,lastT:0,slowT:0};}
+function resetGesture(){gesture={count:0,maxCount:0,id:null,x:0,y:0,t:0,moved:false,dir:null,target:null,ui:null,runArmed:false,fast:false,speed:0,lastX:null,lastY:null,lastT:0,slowT:0,leg1:null,leg2:null,lx:0,ly:0};}
 /* ── ОЗВУЧИВАНИЕ КАК В VOICEOVER: новый элемент немедленно обрывает речь предыдущего ── */
 /* ── ЧТО СКАЗАТЬ ОБ ЭЛЕМЕНТЕ ──
    У кнопки текст есть внутри неё самой, а у флажка, ползунка и списка —
@@ -3513,6 +3517,204 @@ const Gestures=Modules.register("GESTURES",{
  text(){return "Карта жестов. "+GESTURE_MAP.map(g=>this.word(g)).join(". ")+".";},
  /* Два жеста спорят, если совпали пальцы, род и сторона; таблица обязана быть без споров. */
  conflicts(){const seen=new Map(),out=[];GESTURE_MAP.forEach(g=>{const k=`${g.fingers}:${g.kind}:${g.dir||"*"}`;if(seen.has(k))out.push(k);seen.set(k,g);});return out;}});
+
+/* ════════════════════════════════════════════════════════════════════════
+   ПЕРЕНАЗНАЧЕНИЕ ЖЕСТОВ: ТРИДЦАТЬ ТРИ ФИГУРЫ И ЗНАЧИМЫЕ ДЕЙСТВИЯ
+
+   Карта жестов была вшита в обработчики намертво: три пальца вниз — всегда
+   инвентарь, двойное касание тремя — всегда оружие. Для незрячего игрока
+   это хуже, чем кажется: у каждого своя рука, своя привычка от экранного
+   чтеца и свои пальцы, которыми удобно и неудобно. Присланный словарь
+   фигур (свайпы, уголки из двух шагов, одиночные, двойные и тройные
+   касания двумя, тремя и четырьмя пальцами) — это ровно тот набор, к
+   которому рука уже приучена TalkBack.
+
+   ЧТО СДЕЛАНО. Между фигурой жеста и действием появился слой привязок.
+   Тридцать три фигуры, двадцать девять значимых действий, и любое можно
+   повесить на любую фигуру в настройках.
+
+   УМОЛЧАНИЯ НЕ ТРОНУТЫ. Пятнадцать привязок по умолчанию в точности
+   повторяют нынешнюю карту: два пальца вниз — взаимодействие, три вниз —
+   инвентарь, двойное касание тремя — оружие. Пока игрок ничего не менял,
+   обработчики идут прежним путём — байт в байт, — и ни один из сорока
+   наборов про жесты не замечает разницы. Слой вмешивается ТОЛЬКО там, где
+   привязка отличается от умолчания.
+
+   УДЕРЖАНИЯ НЕТ НАРОЧНО. В словаре чтеца есть фигуры с удержанием, но
+   удержание в игре занято ощупыванием — самым частым действием незрячего
+   игрока: провёл пальцем, услышал, что под ним. Отдавать его под
+   назначаемую команду нельзя, и такие фигуры в список не включены.
+
+   УГОЛКИ. Двенадцать фигур из двух шагов (влево-вверх, вниз-вправо и
+   прочие) распознаются одним пальцем и по умолчанию НЕ НАЗНАЧЕНЫ ни на
+   что: шаг по полю остаётся шагом. Распознаватель только запоминает второй
+   поворот; пока уголок не назначен, он ничего не меняет.
+   ════════════════════════════════════════════════════════════════════════ */
+const GEST_DIRS={N:"вверх",S:"вниз",W:"влево",E:"вправо"};
+const GEST_KINDS={tap:"одно касание",tap2:"двойное касание",tap3:"тройное касание",swipe:"свайп"};
+/* Фигуры. Родом «corner» идут уголки: первый шаг и второй. */
+const GEST_SHAPES=(()=>{
+ const out=[];
+ [2,3,4].forEach(f=>{
+  ["tap","tap2","tap3"].forEach(k=>out.push({id:`${f}${k}`,пальцы:f,род:k,dir:null}));
+  ["N","S","W","E"].forEach(d=>out.push({id:`${f}swipe${d}`,пальцы:f,род:"swipe",dir:d}));});
+ ["NS","SN","WE","EW","WN","WS","EN","ES","NW","NE","SW","SE"].forEach(p=>
+  out.push({id:`corner${p}`,пальцы:1,род:"corner",dir:p}));
+ return out;})();
+const GEST_SHAPE_BY_ID=Object.fromEntries(GEST_SHAPES.map(s=>[s.id,s]));
+function gestShapeWord(s){
+ if(!s)return "";
+ if(s.род==="corner")
+  return `одним пальцем ${GEST_DIRS[s.dir[0]]}, затем ${GEST_DIRS[s.dir[1]]}`;
+ const п=s.пальцы===2?"двумя пальцами":s.пальцы===3?"тремя пальцами":"четырьмя пальцами";
+ return s.род==="swipe"?`свайп ${п} ${GEST_DIRS[s.dir]}`:`${GEST_KINDS[s.род]} ${п}`;}
+/* Значимые действия. Каждое зовёт то, что в игре уже написано. */
+const GEST_ACTIONS=[
+ {id:"none",   n:"нет команды",             о:"фигура молчит",                     делать:()=>false},
+ {id:"interact",n:"взаимодействие",         о:"с выбранным объектом или тем, что под ногами", делать:()=>{handleTwoFingerSwipe("S");return true;}},
+ {id:"repeat", n:"повторить или оборвать речь",о:"повтор последнего; если речь идёт — обрыв", делать:()=>{handleTwoFingerSwipe("N");return true;}},
+ {id:"map",    n:"карта места",             о:"открыть и закрыть тем же жестом",   делать:()=>{handleTwoFingerSwipe("W");return true;}},
+ {id:"journal",n:"журнал дел",              о:"открыть и закрыть тем же жестом",   делать:()=>{handleTwoFingerSwipe("E");return true;}},
+ {id:"gather", n:"собрать ресурс",          о:"а если открыто окно — закрыть его", делать:()=>{handleTwoFingerTap();return true;}},
+ {id:"weapon", n:"вынуть или убрать оружие",о:"перекинуть руку с пустой на клинок",делать:()=>{handleThreeFingerTap(true);return true;}},
+ {id:"actions",n:"меню действий",           о:"поверх любого окна",                делать:()=>{actionMenuGesture();return true;}},
+ {id:"inv",    n:"инвентарь",               о:"открыть и закрыть тем же жестом",   делать:()=>{handleThreeFingerSwipe("S");return true;}},
+ {id:"look",   n:"осмотреться",             о:"объекты вокруг и выбор цели",       делать:()=>{handleThreeFingerSwipe("W");return true;}},
+ {id:"where",  n:"сводка «где я»",          о:"место, сторона света, время",       делать:()=>{handleThreeFingerSwipe("E");return true;}},
+ {id:"magic",  n:"панель магии",            о:"двенадцать слотов по свайпам",      делать:()=>{handleFourFingerTap(true);return true;}},
+ {id:"stop",   n:"остановить речь",         о:"замолчать немедленно",              делать:()=>{handleFourFingerSwipe("S");return true;}},
+ {id:"again",  n:"повторить последнее",     о:"ещё раз то же самое",               делать:()=>{handleFourFingerSwipe("N");return true;}},
+ {id:"state",  n:"состояние героя",         о:"здоровье, эфир, вес, время",        делать:()=>{handleFourFingerSwipe("W");return true;}},
+ {id:"flush",  n:"очистить очередь речи",   о:"выбросить всё, что ещё не сказано", делать:()=>{handleFourFingerSwipe("E");return true;}},
+ {id:"char",   n:"окно героя",              о:"свойства, Грани, ремёсла",          делать:()=>{CMD.char();return true;}},
+ {id:"craft",  n:"ремесло",                 о:"работы у станка",                   делать:()=>{CMD.craft();return true;}},
+ {id:"quests", n:"список дел",              о:"что взято и что осталось",          делать:()=>{CMD.questlist();return true;}},
+ {id:"world",  n:"меню мира",               о:"области, державы, боги, бестиарий", делать:()=>{CMD.world();return true;}},
+ {id:"settings",n:"настройки",              о:"речь, звук, подсказки, жесты",      делать:()=>{CMD.settings();return true;}},
+ {id:"saves",  n:"сохранения",              о:"слоты и выгрузка в файл",           делать:()=>{CMD.saves();return true;}},
+ {id:"enc",    n:"Энциклопедия заклинаний", о:"четырнадцать тысяч записей",        делать:()=>{CMD.encspells();return true;}},
+ {id:"news",   n:"вести мира",              о:"что где творится",                  делать:()=>{CMD.wevents();return true;}},
+ {id:"faction",n:"досье державы",           о:"шестнадцать свойств и совет",       делать:()=>{CMD.factions();return true;}},
+ {id:"guide",  n:"руководство",             о:"все главы",                         делать:()=>{CMD.guide();return true;}},
+ {id:"rumours",n:"вести о вас",             о:"что о вас говорят здесь",           делать:()=>{CMD.rumours();return true;}},
+ {id:"politics",n:"политика",               о:"войны, договоры, рынок",            делать:()=>{CMD.politics();return true;}},
+ {id:"best",   n:"бестиарий",               о:"кого вы встречали",                 делать:()=>{CMD.best();return true;}}];
+const GEST_ACTION_BY_ID=Object.fromEntries(GEST_ACTIONS.map(a=>[a.id,a]));
+/* Умолчания — в точности нынешняя карта жестов. */
+const GEST_DEFAULTS={
+ "2tap":"gather","2swipeS":"interact","2swipeN":"repeat","2swipeW":"map","2swipeE":"journal",
+ "3tap2":"weapon","3swipeN":"actions","3swipeS":"inv","3swipeW":"look","3swipeE":"where",
+ "4tap2":"magic","4swipeS":"stop","4swipeN":"again","4swipeW":"state","4swipeE":"flush"};
+function gestBinds(){
+ if(!G.gestBind||typeof G.gestBind!=="object"||Array.isArray(G.gestBind))G.gestBind={};
+ return G.gestBind;}
+function gestActionId(shapeId){
+ const b=gestBinds();
+ if(Object.prototype.hasOwnProperty.call(b,shapeId))return b[shapeId];
+ return GEST_DEFAULTS[shapeId]||"none";}
+function gestIsDefault(shapeId){return gestActionId(shapeId)===(GEST_DEFAULTS[shapeId]||"none");}
+/* Назначить действие на фигуру. Одно действие может стоять только на одной
+   фигуре: иначе игрок теряет то, что уже назначил, и не понимает почему. */
+function gestBind(shapeId,actionId){
+ try{
+  const s=GEST_SHAPE_BY_ID[shapeId],a=GEST_ACTION_BY_ID[actionId];
+  if(!s||!a){narrate("Такой фигуры или такого действия нет.");return false;}
+  const b=gestBinds();
+  if(a.id!=="none")
+   GEST_SHAPES.forEach(x=>{if(x.id!==shapeId&&gestActionId(x.id)===a.id)b[x.id]="none";});
+  b[shapeId]=a.id;
+  safeFn(()=>Bank.play("oc_ui_select",{gain:0.45,maxSec:1}));
+  narrate(`${gestShapeWord(s)} — ${a.n}. ${a.о}.`,{interrupt:true});
+  return true;
+ }catch(_){return false;}}
+function gestReset(){
+ try{
+  G.gestBind={};
+  safeFn(()=>Bank.play("menu_select",{gain:0.45,maxSec:1}));
+  narrate("Жесты возвращены к умолчанию.",{interrupt:true});
+  return true;
+ }catch(_){return false;}}
+/* Споры: две фигуры на одно действие. Таблица обязана быть без споров. */
+function gestConflicts(){
+ const по={},out=[];
+ GEST_SHAPES.forEach(s=>{
+  const a=gestActionId(s.id);
+  if(a==="none")return;
+  if(по[a])out.push({действие:a,фигуры:[по[a],s.id]});
+  else по[a]=s.id;});
+ return out;}
+/* Единственная дверь из обработчиков в слой привязок. Возвращает true, если
+   жест разобран здесь, — и делает это ТОЛЬКО когда привязка не умолчание. */
+function gestRun(пальцы,род,dir){
+ try{
+  const id=род==="corner"?`corner${dir}`:(род==="swipe"?`${пальцы}swipe${dir}`:`${пальцы}${род}`);
+  const s=GEST_SHAPE_BY_ID[id];
+  if(!s)return false;
+  if(gestIsDefault(id))return false;      /* умолчание — прежним путём */
+  const a=GEST_ACTION_BY_ID[gestActionId(id)];
+  if(!a||a.id==="none"){
+   /* Назначенное «нет команды» — это тоже выбор игрока: молчим, но коротким
+      щелчком, чтобы жест не выглядел потерянным. */
+   safeFn(()=>UI.blip(320,.05,.08));
+   return true;}
+  return !!safeFn(()=>a.делать(),false);
+ }catch(_){return false;}}
+function gestLine(shapeId){
+ const s=GEST_SHAPE_BY_ID[shapeId];if(!s)return "";
+ const a=GEST_ACTION_BY_ID[gestActionId(shapeId)]||GEST_ACTION_BY_ID.none;
+ return `${gestShapeWord(s)} — ${a.n}${gestIsDefault(shapeId)?"":" (переназначено)"}.`;}
+function gestText(){
+ const занято=GEST_SHAPES.filter(s=>gestActionId(s.id)!=="none");
+ const свои=GEST_SHAPES.filter(s=>!gestIsDefault(s.id));
+ return `Жесты: фигур ${GEST_SHAPES.length}, действий ${GEST_ACTIONS.length}, занято ${занято.length}`
+  +(свои.length?`, переназначено ${свои.length}`:", всё по умолчанию")
+  +". "+занято.map(s=>gestLine(s.id)).join(" ");}
+const GestBind=Modules.register("GESTUREBIND",{
+ shapes:GEST_SHAPES,
+ actions:GEST_ACTIONS,
+ defaults:GEST_DEFAULTS,
+ shape:id=>GEST_SHAPE_BY_ID[id]||null,
+ action:id=>GEST_ACTION_BY_ID[id]||null,
+ word:id=>S(()=>gestShapeWord(GEST_SHAPE_BY_ID[id]),""),
+ of:id=>S(()=>gestActionId(id),"none"),
+ isDefault:id=>S(()=>gestIsDefault(id),true),
+ bind:(sh,a)=>S(()=>gestBind(sh,a),false),
+ reset:()=>S(()=>gestReset(),false),
+ conflicts:()=>S(()=>gestConflicts(),[]),
+ run:(f,k,d)=>S(()=>gestRun(f,k,d),false),
+ line:id=>S(()=>gestLine(id),""),
+ text(){return S(()=>gestText(),"Жесты молчат.");}});
+/* Раздел настроек: у каждой фигуры свой список действий. Список, а не
+   перебор по кругу: незрячему игроку нужно услышать все варианты и выбрать
+   один, а не щёлкать двадцать девять раз. */
+function renderGestBind(){
+ try{
+  const row=document.getElementById("gestRow");
+  if(!row)return false;
+  const части=[];
+  [2,3,4].forEach(f=>{
+   const свои=GEST_SHAPES.filter(x=>x.пальцы===f);
+   части.push(`<div class="list-line" tabindex="0" data-speak="${f===2?"Два пальца":f===3?"Три пальца":"Четыре пальца"}: ${свои.length} фигур.">— ${f===2?"два пальца":f===3?"три пальца":"четыре пальца"} —</div>`);
+   свои.forEach(s=>части.push(gestRowHtml(s)));});
+  const уг=GEST_SHAPES.filter(x=>x.род==="corner");
+  части.push(`<div class="list-line" tabindex="0" data-speak="Уголки одним пальцем: ${уг.length} фигур. По умолчанию ни одна не назначена, и шаг по полю остаётся шагом.">— уголки одним пальцем —</div>`);
+  уг.forEach(s=>части.push(gestRowHtml(s)));
+  row.innerHTML=части.join("");
+  row.querySelectorAll("select[data-gest]").forEach(sel=>{
+   sel.addEventListener("change",()=>{
+    gestBind(sel.dataset.gest,sel.value);
+    /* Перерисовываем не сейчас, а следом: иначе список исчезнет из-под
+       пальца ровно в тот миг, когда игрок его выбирает. */
+    setTimeout(()=>safeFn(()=>renderGestBind()),400);});});
+  return true;
+ }catch(_){return false;}}
+function gestRowHtml(s){
+ const cur=gestActionId(s.id);
+ const слово=gestShapeWord(s);
+ const опции=GEST_ACTIONS.map(a=>
+  `<option value="${a.id}"${a.id===cur?" selected":""}>${a.n}</option>`).join("");
+ return `<label class="opt">🖐️ ${слово}`
+  +`<select data-gest="${s.id}" aria-label="${слово}">${опции}</select></label>`;}
 function handleTwoFingerSwipe(dir){
  if(!gameActive())return;
  /* Вверх — повторить последнее, а если речь идёт — оборвать её. */
@@ -3853,6 +4055,17 @@ document.addEventListener('touchmove',e=>{
  const dx=t.clientX-gesture.x,dy=t.clientY-gesture.y,d=Math.hypot(dx,dy);
  /* Для многопальцевых тапов порог мягче: пальцы неизбежно «перекатываются», пока их ставят. */
  if(d>(gesture.maxCount>1?45:16)){gesture.moved=true;cancelExploreHold();gesture.dir=touchDirection(dx,dy);}
+ /* Уголок: два шага одним пальцем. Направление от НАЧАЛА после поворота даёт
+    диагональ, а не второй шаг, поэтому поворот отсчитывается от своей точки.
+    Пока уголок ни на что не назначен, всё это ничего не меняет: на отрыве
+    gestRun вернёт ложь, и свайп останется шагом. */
+ if(gesture.maxCount===1&&gesture.dir){
+  if(!gesture.leg1){gesture.leg1=gesture.dir;gesture.lx=t.clientX;gesture.ly=t.clientY;}
+  else if(!gesture.leg2){
+   const ldx=t.clientX-gesture.lx,ldy=t.clientY-gesture.ly;
+   if(Math.hypot(ldx,ldy)>40){
+    const d2=touchDirection(ldx,ldy);
+    if(d2&&d2!==gesture.leg1)gesture.leg2=d2;}}}
  if(gesture.maxCount!==1){e.preventDefault();return;}
  /* Скорость пальца отличает ощупывание от свайпа: медленно ведём — игра называет
     всё под пальцем; быстро проводим — это перелистывание, и по дороге она молчит,
@@ -3919,10 +4132,19 @@ document.addEventListener('touchend',e=>{
    /* Два пальца — одно касание: сбор (или закрыть окно). Три и четыре пальца
       выполняют только ДВОЙНЫМ касанием: одиночное лишь взводит и отвечает
       коротким щелчком, чтобы случайно поставленные пальцы ничего не делали. */
-   if(fingers===2){multiTap.n=0;handleTwoFingerTap();return;}
    const now=Date.now();
-   const двойное=multiTap.n===fingers&&now-multiTap.t<900;
-   multiTap.n=двойное?0:fingers;multiTap.t=now;
+   /* Сколько касаний подряд этими же пальцами. Прежде считалось только
+      «второе или нет»; теперь счёт доходит до трёх — иначе тройному
+      касанию не на что опереться. Четвёртое начинает счёт заново. */
+   let подряд=(multiTap.n===fingers&&now-multiTap.t<900)?(Number(multiTap.c)||0)+1:1;
+   if(подряд>3)подряд=1;
+   multiTap.n=fingers;multiTap.c=подряд;multiTap.t=now;
+   const родКасания=подряд>=3?"tap3":подряд===2?"tap2":"tap";
+   /* Переназначенная фигура забирает жест себе. Пока привязка — умолчание,
+      gestRun возвращает ложь, и всё идёт прежним путём. */
+   if(gestRun(fingers,родКасания,null))return;
+   if(fingers===2){handleTwoFingerTap();return;}
+   const двойное=подряд===2;
    if(fingers===3)handleThreeFingerTap(двойное);
    else if(fingers===4)handleFourFingerTap(двойное);
    return;}
@@ -3937,8 +4159,10 @@ document.addEventListener('touchend',e=>{
      окна не выполняются (они про мир, а не про список), но и не молчат:
      раньше здесь была тишина, неотличимая от зависшей игры. */
   if(g.moved&&g.dir){
-   multiTap.n=0;
+   multiTap.n=0;multiTap.c=0;
    const слой=activeLayer();
+   /* Панель магии забирает свайпы себе и до привязок: она модальна. */
+   if(!(fingers<4&&magicPanelOpen())&&gestRun(fingers,"swipe",g.dir))return;
    /* Пока открыта панель магии, свайпы одним, двумя и тремя пальцами — это
       её двенадцать слотов, и меню действий тремя пальцами вверх ей уступает. */
    if(fingers<4&&magicPanelOpen()){safeFn(()=>magicSlotSwipe(fingers,g.dir));return;}
@@ -3957,6 +4181,8 @@ document.addEventListener('touchend',e=>{
   }
   return;
  }
+ /* Назначенный уголок выполняется здесь; неназначенный молчит и не мешает. */
+ if(g.leg1&&g.leg2&&safeFn(()=>gestRun(1,"corner",g.leg1+g.leg2),false))return;
  const t=e.changedTouches[0];if(!t)return;
  const dx=t.clientX-g.x,dy=t.clientY-g.y,d=Math.hypot(dx,dy),dt=Date.now()-g.t;
  const dir=g.dir||touchDirection(dx,dy);
@@ -4834,6 +5060,14 @@ const GUIDE=[
  "Вещь растёт. За каждую победу работающий артефакт получает опыт, а на пороге открывает ступень — прибавку, которой у него раньше не было, и всегда из своего направления. Каждая следующая ступень даётся вдвое тяжелее. Если гнёзда кончились, редкую часть можно скормить вещи: она уйдёт в опыт вместо гнезда.",
  "Требования. Ранг задаёт уровень; сверх того вещь может требовать навык, заклинание нужной школы, расположение народа, принадлежность к клану, прочитанное знание или закрытое дело. Вещь, требования которой не выполнены, лежит мёртвым грузом и не даёт ничего — и прямо говорит, чего ей не хватает.",
  "Где всё это. Пункт меню «Артефакты, части и рецепты». В нём видно, каким ремеслом здесь занимаются и каково ваше умение, какие рецепты под рукой и чего не хватает, какие части лежат в суме, и по каждой вещи — всё, что о ней известно, и всё, что с ней можно сделать: вложить, вынуть, зачаровать, скормить, продать."]},
+{title:"Глава 88. Жесты можно переназначить",body:[
+ "ЗАЧЕМ. У каждого своя рука и своя привычка от экранного чтеца. То, что удобно одному, другому неудобно: три пальца вниз одному ложатся сами, другому — никак. Теперь любое значимое действие вешается на свою фигуру жеста, в настройках, разделом «Жесты».",
+ "ТРИДЦАТЬ ТРИ ФИГУРЫ. Двумя, тремя и четырьмя пальцами: одно касание, двойное, тройное и свайп в четыре стороны — двадцать одна фигура. И двенадцать уголков одним пальцем: провести вверх, затем влево; вниз, затем вправо; и так далее.",
+ "ДВАДЦАТЬ ДЕВЯТЬ ДЕЙСТВИЙ. Взаимодействие, повтор и обрыв речи, карта, журнал, сбор, оружие, меню действий, инвентарь, осмотреться, сводка «где я», панель магии, четыре речевых команды, окно героя, ремесло, список дел, меню мира, настройки, сохранения, Энциклопедия, вести мира, досье державы, руководство, вести о вас, политика, бестиарий — и «нет команды», чтобы фигура молчала.",
+ "УМОЛЧАНИЯ НЕ ТРОНУТЫ. Пятнадцать привязок по умолчанию в точности повторяют прежнюю карту: два пальца вниз — взаимодействие, вверх — повтор, влево — карта, вправо — журнал; три вниз — инвентарь, вверх — меню действий, двойное касание тремя — оружие. Пока вы ничего не меняли, всё работает как раньше, до последней мелочи.",
+ "УГОЛКИ ПО УМОЛЧАНИЮ МОЛЧАТ. Двенадцать уголков одним пальцем не назначены ни на что: шаг по полю остаётся шагом. Назначьте — и уголок заработает; не назначайте — и его как будто нет.",
+ "УДЕРЖАНИЯ НЕТ НАРОЧНО. В словаре экранного чтеца есть фигуры с удержанием, но удержание в игре занято ощупыванием — тем самым, которым вы находите, что под пальцем. Отдать его под команду нельзя, и таких фигур в списке нет.",
+ "ОДНО ДЕЙСТВИЕ — ОДНА ФИГУРА. Повесив действие на новую фигуру, вы снимаете его со старой: иначе игрок теряет назначенное и не понимает почему. Кнопка «Вернуть жесты к умолчанию» возвращает всё разом."]},
 {title:"Глава 87. Энциклопедия четырнадцати тысяч",body:[
  "ЧТО ЭТО. Отдельный каталог на четырнадцать тысяч заклинаний: семнадцать школ, по четыре специализации в каждой — шестьдесят восемь, — и восемь ступеней от Искры до Божественной. Он не лежит списком, а считается: у каждой записи свой номер от единицы до четырнадцати тысяч, и по номеру выводятся все её свойства.",
  "ОДИННАДЦАТЬ СВОЙСТВ. Школа, специализация, ступень, способ применения, цель, действие, аспект, срок, цена, требование и риск. Способ, цель и риск идут одной тройкой: печать всегда ложится на местность и грозит пространственным сдвигом, канал всегда идёт в оружие и грозит временным резонансом.",
@@ -32511,7 +32745,16 @@ const CMD={
  sellall(arg){const i=String(arg).lastIndexOf(":");sellResource(String(arg).slice(0,i),String(arg).slice(i+1),true);},
  encyc(){openModal("modal-encyclopedia");buildEncycCats();},
  guide(){openGuide();},
- settings(){openModal("modal-settings");},
+ settings(){openModal("modal-settings");safeFn(()=>renderGestBind());},
+ gestreset(){gestReset();safeFn(()=>renderGestBind());},
+ gestpick(arg){
+  const p=String(arg||"").split("~");
+  const s=GEST_SHAPE_BY_ID[p[0]];
+  if(!s){narrate("Такой фигуры нет.");return;}
+  if(p[1]){gestBind(p[0],p[1]);safeFn(()=>renderGestBind());return;}
+  /* Без второго довода — называем, что сейчас на этой фигуре, и предлагаем
+     список действий тем же окном действий. */
+  narrate(gestLine(p[0]),{interrupt:true});},
  testall(){openModal("modal-encyclopedia");buildEncycCats();testAllSounds();},
  silence(){stopEverything();},
  speechstop(){Speech.stop();safeFn(()=>UI.blip(420,.06,.1));vib(15);Speech.request("Тихо.",{key:"stopped"});},
@@ -45425,6 +45668,33 @@ function worldSelfCheck(){
   ok("sigils",SIGIL_SYMBOLS.length===8&&SIGIL_SYMBOLS.every(x=>MSCHOOL_BY_ID[x.школа]&&x.намерения.every(i=>SIGIL_INTENTS[i]))&&SIGIL_CARRIERS.length===8&&SIGIL_CARRIERS.every(x=>RES_BASE[x.ресурс])&&SIGIL_GEOMETRY.length===5&&INKS.length===6&&INKS.every(x=>SOUND_BANK[x.звук]&&Object.keys(x.рецепт).every(r=>RES_BASE[r]))&&AWAKEN_SOURCES.length===6&&AWAKEN_SOURCES.every(x=>SOUND_BANK[x.звук])&&WAVES.length===3&&MORPH_TRAITS.length===6&&MORPHOBEASTS.length===10&&MORPHOBEASTS.every(b=>MONSTERS.some(m=>m.id===b.база))&&DEVOUR_GIFTS.length===6&&EVENT_THEME.world_event&&SOUND_BANK[EVENT_THEME.world_event.роль],"Знаки: восемь символов, восемь носителей, пять геометрий, шесть чернил, шесть источников пробуждения, три волны, шесть черт, десять морфозверей, шесть даров Эха — всё со звуком и по настоящим ресурсам");
   ok("cases",CASE_TEMPLATES.length===6&&CASE_TEMPLATES.every(t=>t.версии.length===3&&t.улики.every(k=>CLUE_KINDS[k])&&t.версии.every(v=>v.улики.every(k=>t.улики.includes(k))))&&SYNDICATES.length===8&&SYNDICATES.every(x=>SOUND_BANK[x.звук]&&x.города.every(id=>NAMED_CITY_BY_ID[id])&&REGIONS[x.область])&&Object.keys(DECISIONS).length===9&&Object.values(DECISIONS).every(d=>Object.keys(d).length>=3)&&["deeper","border_war","shards","lasthouse","beast","price","undercity","maskface","endless"].every(id=>CHAIN_DB[id])&&HOUSE_BY_ID[LAST_HOUSE.враг]&&DLG_MOVE_BY_ID.znanie&&DLG_MOVE_BY_ID.kultura&&DLG_MOVE_BY_ID.nedoskazat,"Расследования: шесть дел с тремя версиями, восемь синдикатов со звуком и городами, девять цепочек с развязками, три хода разговора");
   ok("academy",LANGS.length>=20&&LANGS.every(l=>l.письмо&&l.о)&&SCIENCES.length===6&&SCIENCES.every(x=>SOUND_BANK[x.звук]&&x.эффект.length===3&&FACULTY_BY_ID[x.факультет])&&FACULTIES.length===12&&FACULTIES.every(f=>(f.школы||[]).every(id=>MSCHOOL_BY_ID[id]&&SCHOOL_AUDIO[id])&&(!f.маст||MAST_BY_ID[f.маст]))&&SCHOOLS.length>=30&&SCHOOLS.every(sc=>SCHOOL_AUDIO[sc.id]&&SPELL_LAYERS.every(l=>SOUND_BANK[SCHOOL_AUDIO[sc.id][l]])),"Академия: двадцать один язык, шесть наук, двенадцать факультетов, тридцать восемь школ чар — все со звуком");
+  ok("gestbind",GEST_SHAPES.length===33&&new Set(GEST_SHAPES.map(s=>s.id)).size===33
+   &&GEST_SHAPES.filter(s=>s.пальцы>=2).length===21
+   &&GEST_SHAPES.filter(s=>s.род==="corner").length===12
+   /* Удержания среди назначаемых фигур нет и быть не должно. */
+   &&GEST_SHAPES.every(s=>s.род!=="hold")
+   &&GEST_ACTIONS.length===29&&new Set(GEST_ACTIONS.map(a=>a.id)).size===29
+   &&GEST_ACTIONS.every(a=>a.n&&a.о&&typeof a.делать==="function")
+   &&GEST_ACTIONS[0].id==="none"
+   /* У каждой фигуры своё слово, и все слова разные. */
+   &&new Set(GEST_SHAPES.map(s=>gestShapeWord(s))).size===33
+   /* Умолчания — в точности нынешняя карта жестов: пятнадцать привязок, и
+      каждая ссылается на существующее действие. */
+   &&Object.keys(GEST_DEFAULTS).length===15
+   &&Object.keys(GEST_DEFAULTS).every(k=>GEST_SHAPE_BY_ID[k]&&GEST_ACTION_BY_ID[GEST_DEFAULTS[k]])
+   &&GEST_DEFAULTS["3swipeS"]==="inv"&&GEST_DEFAULTS["3tap2"]==="weapon"
+   &&GEST_DEFAULTS["2swipeS"]==="interact"&&GEST_DEFAULTS["2swipeN"]==="repeat"
+   &&GEST_DEFAULTS["2swipeW"]==="map"&&GEST_DEFAULTS["2swipeE"]==="journal"
+   /* Споров нет: одно действие стоит не больше чем на одной фигуре. */
+   &&gestConflicts().length===0
+   /* Пока ничего не переназначено, слой молчит и всё идёт прежним путём. */
+   &&(()=>{try{
+     const было=G.gestBind;G.gestBind={};
+     const тихо=GEST_SHAPES.every(sh=>gestIsDefault(sh.id))
+       &&gestRun(3,"swipe","S")===false&&gestRun(3,"tap2",null)===false;
+     G.gestBind=было;return тихо;}catch(_){return false;}})()
+   &&typeof Modules.get("GESTUREBIND").text()==="string",
+   "жесты переназначаются: тридцать три фигуры без удержаний, двадцать девять значимых действий, пятнадцать умолчаний в точности как прежняя карта, споров нет");
   ok("enc14000",ENC_TOTAL===14000&&ENC_SCHOOLS.length===17
    &&ENC_SCHOOLS.every(sc=>sc.n&&sc.о&&sc.о.length>40&&MSCHOOL_BY_ID[sc.id]
      &&Array.isArray(sc.спец)&&sc.спец.length===4&&new Set(sc.спец).size===4
@@ -46031,7 +46301,7 @@ function worldSelfCheck(){
   ok("gods",LESSER_GODS.length===32&&LESSER_GODS.every(g=>SOUND_BANK[g.звук]&&g.праздник>=1&&g.праздник<=36)&&new Set(LESSER_GODS.map(g=>g.праздник)).size===LESSER_GODS.length,"у каждого малого бога голос и свой день праздника");
   ok("npc",!!safeFn(()=>npcSoul(getNPC(EMPIRES[0].cap.x,EMPIRES[0].cap.y,0)),null),"у жителя есть состояние");
   ok("tts",typeof Speech==="object"&&typeof narrate==="function"&&String(narrate).includes("Speech.say"),"один распорядитель речи");
-  const keys=["spellbook","charged","council","weventSaid","specBook","techBook","enc","potions","plantsSeen","bosses","delayed","seasSeen","dives","bookGifts","asked","artifacts","quests","rumors","standing"];
+  const keys=["spellbook","charged","council","weventSaid","specBook","techBook","enc","gestBind","potions","plantsSeen","bosses","delayed","seasSeen","dives","bookGifts","asked","artifacts","quests","rumors","standing"];
   ok("save",(()=>{try{saveGame(true);const raw=localStorage.getItem(SAVE_KEY)||"";const o=JSON.parse(raw);const g=o.G||o;return keys.every(k=>!(k in G)||k in g);}catch(_){return false;}})(),"новые поля лежат в сохранении");
  }catch(e){ok("run",false,String(e));}
  return out;}
