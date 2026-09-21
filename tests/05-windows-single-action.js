@@ -48,7 +48,9 @@ const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(e!==undefined?' :
  // руководство: открытие главы двойным касанием (кнопки на нативных слушателях)
  await page.evaluate(()=>openGuide());
  await page.waitForTimeout(200);
- await dblTapSel('#guideToc button');
+ /* Первые три пункта оглавления — о самом оглавлении (части);
+    главу открывает кнопка главы. */
+ await dblTapSel('#guideToc .toc-btn');
  check('глава руководства открывается двойным касанием', await page.evaluate(()=>!document.getElementById('guideChapter').hidden));
  await page.evaluate(()=>closeGuide());
 

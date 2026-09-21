@@ -213,9 +213,17 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   послеСвайпов.названий>=5&&послеСвайпов.названий<=6,послеСвайпов);
 
  await clean();
+ /* Оглавление руководства разложено по частям: кроме девяноста глав в нём
+    заголовки девяти частей, три кнопки о самом оглавлении и «Закрыть». До
+    нужной главы свайпаем не вслепую, а ровно столько раз, сколько до неё. */
  const огл=await page.evaluate(()=>{openGuide();resetCursor();ensureCursor(activeLayer());
-  return {пунктов:cursorItems(activeLayer()).length,глав:GUIDE.length};});
- for(let i=0;i<4;i++)await fwd();
+  const items=cursorItems(activeLayer());
+  const цель=items.findIndex(x=>/^Глава 4\./.test((x.textContent||"").trim()));
+  const порядок=guideOrder();const где=порядок.indexOf(GUIDE_BY_NUM[4]);
+  return {пунктов:items.length,глав:GUIDE.length,частей:GUIDE_PARTS.length,
+   шагов:цель-Math.max(0,items.indexOf(uiCursor)),ждём:GUIDE_BY_NUM[4],
+   следом:порядок[где+1]};});
+ for(let i=0;i<огл.шагов;i++)await fwd();
  const наГлаве=await page.evaluate(()=>(uiCursor.textContent||"").trim().slice(0,10));
  const ep=await page.evaluate(()=>{const lay=activeLayer();
   for(let y=90;y<760;y+=8)for(const x of [6,384]){
@@ -228,8 +236,8 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
  const глава=await page.evaluate(()=>({номер:chIndex,
   заголовок:document.getElementById("chTitle").textContent.slice(0,10)}));
  check('в оглавлении руководства свайп листает главы, двойное касание открывает',
-  огл.пунктов===огл.глав+1&&/Глава 4/.test(наГлаве)&&глава.номер===3,
-  {пунктов:огл.пунктов,глав:огл.глав,курсор:наГлаве,открылась:глава});
+  огл.пунктов===огл.глав+огл.частей+4&&/Глава 4\./.test(наГлаве)&&глава.номер===огл.ждём,
+  {пунктов:огл.пунктов,глав:огл.глав,частей:огл.частей,шагов:огл.шагов,курсор:наГлаве,открылась:глава});
  /* Внутри главы свайп доводит до «След.», а двойное касание листает дальше. */
  await page.evaluate(()=>{resetCursor();ensureCursor(activeLayer());});
  const idxNext=await page.evaluate(()=>cursorItems(activeLayer()).findIndex(x=>x.id==="chNext"));
@@ -237,8 +245,9 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
  await tap(ep.x,ep.y);await tap(ep.x,ep.y);
  await page.waitForTimeout(300);
  const дальше=await page.evaluate(()=>chIndex);
- check('внутри главы свайп доводит до «След.», двойное касание листает дальше',
-  дальше===4,{стало:дальше});
+ /* «След.» ведёт по смысловому порядку частей, а не по месту в массиве. */
+ check('внутри главы свайп доводит до «След.», двойное касание листает дальше по порядку частей',
+  дальше===огл.следом,{стало:дальше,ждали:огл.следом});
  await clean();
 
  /* ── Заглавное меню: то же правило до входа в мир ── */

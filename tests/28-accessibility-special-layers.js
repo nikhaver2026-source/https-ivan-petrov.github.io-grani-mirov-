@@ -135,21 +135,26 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
 
  /* ── 5. Руководство: свайпом до нужной главы, двойным касанием — открыть ── */
  await clear();
+ /* Кроме глав в оглавлении заголовки девяти частей, три кнопки о самом
+    оглавлении и «Закрыть»: до главы свайпаем ровно столько раз, сколько до неё. */
  const toc=await page.evaluate(()=>{openGuide();resetCursor();ensureCursor(activeLayer());
   const items=cursorItems(activeLayer());
-  return {пунктов:items.length,глав:GUIDE.length,
+  const цель=items.findIndex(x=>/^Глава 3\./.test((x.textContent||'').trim()));
+  const порядок=guideOrder();const где=порядок.indexOf(GUIDE_BY_NUM[3]);
+  return {пунктов:items.length,глав:GUIDE.length,частей:GUIDE_PARTS.length,
+   шагов:цель-Math.max(0,items.indexOf(uiCursor)),ждём:GUIDE_BY_NUM[3],следом:порядок[где+1],
    первый:(items[0].textContent||'').trim().slice(0,10)};});
- for(let i=0;i<3;i++)await fwd();
+ for(let i=0;i<toc.шагов;i++)await fwd();
  const onChapter=await page.evaluate(()=>(uiCursor.textContent||'').trim());
  await doubleTap();
  const chapter=await page.evaluate(()=>({номер:chIndex,
   заголовок:document.getElementById('chTitle').textContent,
   пунктов:cursorItems(activeLayer()).length,
   тексты:cursorItems(activeLayer()).map(x=>(x.textContent||'').trim().slice(0,10))}));
- check('оглавление руководства состоит только из своих пунктов',
-  toc.пунктов===toc.глав+1,{пунктов:toc.пунктов,глав:toc.глав});
+ check('оглавление руководства состоит только из своих пунктов: главы, части и три кнопки о самом оглавлении',
+  toc.пунктов===toc.глав+toc.частей+4,{пунктов:toc.пунктов,глав:toc.глав,частей:toc.частей});
  check('в руководстве свайп доводит до нужной главы, двойное касание открывает её',
-  chapter.номер===2&&onChapter.startsWith('Глава 3')&&chapter.заголовок.startsWith('Глава 3'),
+  chapter.номер===toc.ждём&&onChapter.startsWith('Глава 3')&&chapter.заголовок.startsWith('Глава 3'),
   {курсорБыл:onChapter,открылась:chapter.заголовок});
  check('в открытой главе свайп не уходит в скрытое оглавление',
   chapter.пунктов<=6&&!chapter.тексты.some(t=>/^Глава 1\./.test(t)),chapter);
@@ -161,8 +166,8 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
  const onNext=await page.evaluate(()=>uiCursor&&uiCursor.id);
  await doubleTap();
  const advanced=await page.evaluate(()=>chIndex);
- check('в главе свайп доводит до «След.», двойное касание листает дальше',
-  onNext==='chNext'&&advanced===3,{курсор:onNext,глава:advanced});
+ check('в главе свайп доводит до «След.», двойное касание листает дальше по порядку частей',
+  onNext==='chNext'&&advanced===toc.следом,{курсор:onNext,глава:advanced,ждали:toc.следом});
 
  /* ── 7. Добыча: окно без кнопок отвечает подсказкой и собирается касанием ── */
  await clear();

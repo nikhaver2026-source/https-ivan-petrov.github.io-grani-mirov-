@@ -4808,7 +4808,14 @@ function openActionMenu(){lastFocused=document.activeElement;safeFn(()=>Speech.c
   list.appendChild(h);
   shown.forEach(addBtn);});
  safeFn(()=>secRefresh(m));
- const first=m.querySelector("button");if(first)first.focus();
+ /* Фокус встаёт на ПЕРВЫЙ пункт списка, а им теперь может быть заголовок
+    раздела. Раньше здесь искалась первая кнопка, и выходило расхождение:
+    браузерный фокус стоял на одной строке, а курсор окна (uiCursor) начинал
+    с другой — с заголовка. Первый свайп тогда приходил на уже названный
+    пункт, речь считала это повтором и молчала, и игрок терял одно название
+    из трёх. */
+ const first=list.querySelector("h3."+SEC_CLASS+",button")||m.querySelector("button");
+ if(first)first.focus();
  narrate(`Меню действий: ${count} ${plural(count,"пункт","пункта","пунктов")} в ${разделов} ${plural(разделов,"разделе","разделах","разделах")}`+
   `${G.place?", вы внутри: "+placeTitle():""}. Свайп — листать, двойное касание — выбрать. `+
   `Двойное касание по заголовку раздела перескакивает к следующему разделу.`);}

@@ -218,7 +218,7 @@ const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(e!==undefined?' :
   const m=Modules.get("GESTUREBIND");
   return {есть:!!r,ok:r?r.ok:false,
    плохие:rows.filter(x=>!x.ok).map(x=>x.id),
-   модуль:!!m&&m.shapes.length===33&&m.actions.length===29
+   модуль:!!m&&m.shapes.length===33&&m.actions.length===32
     &&typeof m.bind==="function"&&typeof m.run==="function"&&typeof m.reset==="function",
    текст:m?m.text():"",
    глава:GUIDE.some(g=>/Глава 88\. Жесты можно переназначить/.test(g.title)&&g.body.length>=6)};});
