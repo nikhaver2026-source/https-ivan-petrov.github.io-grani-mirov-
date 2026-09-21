@@ -185,6 +185,11 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   let былаПереправа=false;
   for(let i=0;i<80;i++){
    if(typeof activeLayer==="function"&&activeLayer()){while(activeLayer())closeTopUI();}
+   /* Встречная тварь на мосту останавливает ход, и «сошли с переправы» не
+      случается за время замера. Здесь меряется переправа, а не бой: схватку
+      снимаем, бродячих останавливаем. */
+   if(G.inCombat){G.inCombat=false;G.combat=null;}
+   safeFn(()=>Actors.stop());
    move("E");
    const c=crossingAt(G.x,G.y);
    if(c)былаПереправа=true;
