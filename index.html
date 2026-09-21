@@ -414,6 +414,7 @@ h3{color:var(--acc2);margin:14px 0 6px;font-size:1.05rem;}
  <header><h2>🌍 Живой мир</h2><button type="button" data-cmd="close">✖️ Закрыть</button></header>
  <h3>🌀 Аномальная зона</h3><div id="lwZone"></div>
  <h3>🌿 Место силы</h3><div id="lwPower"></div>
+ <h3>🗝️ Наследие Предтеч</h3><div id="lwFore"></div>
  <h3>🔥 Мировые события</h3><div id="lwGlobal"></div>
  <h3>⚔️ Армии и фронт</h3><div id="lwArmies"></div>
  <h3>🧓 Судьбы жителей</h3><div id="lwArcs"></div>
@@ -4812,6 +4813,14 @@ const GUIDE=[
  "Вещь растёт. За каждую победу работающий артефакт получает опыт, а на пороге открывает ступень — прибавку, которой у него раньше не было, и всегда из своего направления. Каждая следующая ступень даётся вдвое тяжелее. Если гнёзда кончились, редкую часть можно скормить вещи: она уйдёт в опыт вместо гнезда.",
  "Требования. Ранг задаёт уровень; сверх того вещь может требовать навык, заклинание нужной школы, расположение народа, принадлежность к клану, прочитанное знание или закрытое дело. Вещь, требования которой не выполнены, лежит мёртвым грузом и не даёт ничего — и прямо говорит, чего ей не хватает.",
  "Где всё это. Пункт меню «Артефакты, части и рецепты». В нём видно, каким ремеслом здесь занимаются и каково ваше умение, какие рецепты под рукой и чего не хватает, какие части лежат в суме, и по каждой вещи — всё, что о ней известно, и всё, что с ней можно сделать: вложить, вынуть, зачаровать, скормить, продать."]},
+{title:"Глава 71. Наследие Предтеч и лес возможностей",body:[
+ "До держав здесь жили Предтечи Грани. Они оставили после себя не руины, а СЕТЬ — и сеть разбита. Её узлы стоят в глуши, вне дорог и городов, и открывают их по одному.",
+ "ДЕВЯТЬ РОДОВ ОСТАВЛЕННОГО. Подземный комплекс — ход, пробитый не киркой. Портальная станция — кольцо плит, между которыми воздух гудит на одной ноте. Искусственная луна — то, что висит в небе и не звезда. Архив — полки в камне. Магическая машина — механизм без рычагов, который работает до сих пор. Автономный страж — он стоит здесь дольше, чем стоят державы. Хранилище — дверь без петель и без замка. Карта миров — плита, на которой начерчено больше миров, чем один. Инструмент изменения пространства — рукоять, за которую берутся не рукой.",
+ "ШЕСТЬ РОДОВ ТРЕБОВАНИЯ, И НИ ОДИН УЗЕЛ НЕ ОТКРЫВАЕТСЯ ПРОСТО ТАК. Ключ — предтеченский, его находят в глубоких казнах за запертой дверью, с пятнадцатого яруса и ниже. Знание — сколько у вас записано в реестре. Язык — чужое наречие на второй ступени. Энергия — мана и воля, которые узел возьмёт и не вернёт. Разрешение державы — доброе имя у народа этих земель. Испытание — сколько дел за спиной: боёв, спусков, обрядов и поручений.",
+ "У КАЖДОГО УЗЛА СВОИ ДВА, ТРИ ИЛИ ЧЕТЫРЕ ТРЕБОВАНИЯ, и они не меняются. Игра называет их все заранее и говорит, чего именно не хватает и сколько. Узел никогда не открывается наполовину: либо всё при вас, либо он молчит.",
+ "ЛЕС ВОЗМОЖНОСТЕЙ. Каждый открытый узел питает один из семи даров, и дары эти достаются всему миру разом, а не одному месту. Слышимость — округа звучит шире везде. Лёгкость чар — чары выговариваются легче. Щедрость недр — ярусы отдают больше сундуков. Долгое дыхание — под водой держитесь дольше. Верная рука — работа срывается реже. Близость сети — узлы переходов слышны дальше. Открытая память — языки учатся быстрее.",
+ "ЧЕМ БОЛЬШЕ ВОССТАНОВЛЕНО, ТЕМ БОЛЬШЕ ОТДАЁТ. Два узла в каждой области мира. Открытый архив прибавляет к учению; два архива — вдвое. Восстановленная луна слышна везде, а не только там, где висит.",
+ "ГДЕ СМОТРЕТЬ. Окно «Живой мир», раздел «Наследие Предтеч»: сколько узлов в мире, сколько восстановлено, что за узел рядом, чего ему не хватает и что уже дал лес возможностей. Там же кнопка «Открыть узел Предтеч», когда вы стоите у него."]},
 {title:"Глава 70. Эхо: осколки чужих способностей",body:[
  "Пожирание даёт мгновенный дар и забывается. Эхо — другое. От редкой твари, от отпечатка пятой глубины, от павшего крупного босса остаётся ОСКОЛОК: кусок чужой способности, который можно носить с собой и вживить в себя.",
  "ВОСЕМЬ РОДОВ ОСКОЛКА. Осколок удара делает руку тяжелее. Осколок шкуры крепит защиту. Осколок слуха раздвигает звуковую картину. Осколок жилы возвращает ману за отдых у огня. Осколок поступи отодвигает черту, за которой тварь вас чует. Осколок пасти берёт своё с каждого вашего удара и лечит вас. Осколок взгляда чаще находит ловушки. Осколок слова делает чары дешевле.",
@@ -9942,7 +9951,8 @@ function diveAvailable(){return !!diveSiteHere();}
 function breathTacts(){
  return 1+(safeFn(()=>buffActive("дыхание"),false)?2:0)+safeFn(()=>Math.round(assimBonus("breath")),0)
   +(G.race==="Русалки"?2:0)+(safeFn(()=>hasSkill("swimmer"),false)?1:0)
-  +Math.round(safeFn(()=>Path.facetK("water"),0)*4);}  /* Грань «Водное дыхание» */
+  +Math.round(safeFn(()=>Path.facetK("water"),0)*4)   /* Грань «Водное дыхание» */
+  +Math.round(safeFn(()=>Fore.boonK("ход"),0));}      /* §44.22: инструменты Предтеч */
 function diveCheck(){
  try{
   if(G.ship||G.place)return;
@@ -20240,6 +20250,7 @@ function techRisk(t){
  p-=safeFn(()=>Tree.рукаK(t.маст),0);   /* ремесленная ветвь Древа Граней */
  p-=safeFn(()=>Lore.recipeK(t),0);      /* §31: записанный рецепт — знание */
  p-=safeFn(()=>Path.facetK("craft"),0); /* Грань «Рука мастера» */
+ p-=safeFn(()=>Fore.boonK("рука"),0);   /* §44.22: хватка автономных стражей */
  p*=safeFn(()=>Balance.riskK(),1);
  return Math.max(0.02,Math.min(0.45,p));}
 /* Какие техники доступны у этого станка. */
@@ -26842,6 +26853,7 @@ function scapeRad(){
  if(safeFn(()=>isNight(),false))r+=Math.round(safeFn(()=>Path.facetK("night"),0));
  if(G.place&&G.place.kind==="city")r+=Math.round(safeFn(()=>Path.facetK("crowd"),0));
  r+=Math.round(safeFn(()=>Echo.bonus("ear"),0));        /* §9: осколок слуха */
+ r+=Math.round(safeFn(()=>Fore.boonK("эхо"),0));        /* §44.22: искусственные луны */
  return r;}
 
 /* Что и как часто подаёт голос. period — секунды между откликами вблизи;
@@ -28009,6 +28021,13 @@ function openChest(x,y){
   if(казна){
    gold=казна.gold;G.gold+=gold;bits.push(`золото ${gold}`);
    казна.gear.forEach(it=>{G.gear.push(it);bits.push(lootDesc(it));});
+   /* §44.21: в глубокой казне попадается предтеченский ключ — им
+      открывают узлы оставленной Предтечами сети. */
+   safeFn(()=>{
+    if(p.depth>=15&&hashName(x*13+p.depth,y*7,8990)<0.34){
+     G.inv["предтеченский ключ"]=(Number(G.inv["предтеченский ключ"])||0)+1;
+     bits.push("предтеченский ключ");
+     setTimeout(()=>safeFn(()=>Bank.play("relic_sing",{gain:0.5,maxSec:4})),950);}});
    /* В казне лежат и части для гнёзд: чем глубже палата, тем они реже. */
    safeFn(()=>{
     const сколько=1+Math.floor(p.depth/25);
@@ -30384,6 +30403,8 @@ const CMD={
  echofit(i){const t=Echo.fit(+i);narrate(t,{pri:1,key:"echo"});safeFn(()=>{if(typeof renderPath==="function")renderPath();});},
  echodrop(i){const t=Echo.drop(+i);narrate(t,{pri:2,key:"echo"});safeFn(()=>{if(typeof renderPath==="function")renderPath();});},
  echosay(){narrate(Echo.text(),{pri:2,key:"echo"});},
+ foreopen(){const t=Fore.open();narrate(t,{pri:1,key:"fore"});safeFn(()=>{if(typeof renderLiving==="function")renderLiving();});},
+ foresay(){narrate(Fore.text(),{pri:2,key:"fore"});},
  sfcore(id){spellForgePick("core",id||"");},
  sfelem(id){spellForgePick("elem",id||"");},
  sfbuild(){spellForgeBuild();},
@@ -30866,7 +30887,7 @@ const Look=Modules.register("LOOK",{
      if(c.monster&&!G.cleared[x+","+y])out.push({n:c.monster.n,род:"опасность",x,y,dx,dy,d,dir,bid:"danger",опасно:true,живое:true});}
     safeFn(()=>caravansNear(G.x,G.y,G.day,G.hour,R).forEach(c=>{if(c.d)out.push({n:`${c.name} в «${c.to.name}»`,род:"обоз",x:G.x+c.dx,y:G.y+c.dy,dx:c.dx,dy:c.dy,d:c.d,dir:dirBetween(c.dx,c.dy),bid:"caravan",живое:true});}));
     /* Разломный слух: узлы сети и разломы слышны дальше обычного круга. */
-    safeFn(()=>{const R2=Path.facetK("rift");if(!R2)return;for(let dx=-R2;dx<=R2;dx++)for(let dy=-R2;dy<=R2;dy++){const d=Math.max(Math.abs(dx),Math.abs(dy));if(d<=R||!d)continue;const x=G.x+dx,y=G.y+dy;if(x<0||y<0||x>=WORLD||y>=WORLD)continue;const nd=portalNodeAt(x,y);if(nd)out.push({n:nd.name,род:"узел сети",x,y,dx,dy,d,dir:dirBetween(dx,dy),bid:"portal"});else if(Path.facetTier("rift")>=3&&riftAt(x,y))out.push({n:"разлом",род:"разлом",x,y,dx,dy,d,dir:dirBetween(dx,dy),bid:"portal",опасно:true});}});
+    safeFn(()=>{const R2=Path.facetK("rift")+Math.round(safeFn(()=>Fore.boonK("сеть"),0));if(!R2)return;for(let dx=-R2;dx<=R2;dx++)for(let dy=-R2;dy<=R2;dy++){const d=Math.max(Math.abs(dx),Math.abs(dy));if(d<=R||!d)continue;const x=G.x+dx,y=G.y+dy;if(x<0||y<0||x>=WORLD||y>=WORLD)continue;const nd=portalNodeAt(x,y);if(nd)out.push({n:nd.name,род:"узел сети",x,y,dx,dy,d,dir:dirBetween(dx,dy),bid:"portal"});else if(Path.facetTier("rift")>=3&&riftAt(x,y))out.push({n:"разлом",род:"разлом",x,y,dx,dy,d,dir:dirBetween(dx,dy),bid:"portal",опасно:true});}});
     safeFn(()=>{const пер=crossingAt(G.x,G.y);if(пер)out.push({n:пер.n,род:"переправа",x:G.x,y:G.y,dx:0,dy:0,d:0,dir:"здесь",bid:"well"});});
     safeFn(()=>{const nd=portalNodeAt(G.x,G.y);if(nd)out.push({n:nd.name,род:"узел сети",x:G.x,y:G.y,dx:0,dy:0,d:0,dir:"здесь",bid:"portal"});});
    }
@@ -33007,7 +33028,8 @@ const Langs=Modules.register("LANGS",{
  tradeK(n){try{const c=this.check(n);return c.свободно?1:1.1;}catch(_){return 1;}},
  /* Рост: книги, разговоры, уроки, лекции; «Чужой язык» и меметика ускоряют. */
  learn(id,pts,why){try{this.ensure();if(id==="common"||!LANG_BY_ID[id])return false;const r=G.langs[id]||(G.langs[id]={ур:0,оп:0});if(r.ур>=3)return false;
-  const k=Math.max(1,safeFn(()=>Path.facetK("tongue"),1)||1)*(1+0.25*safeFn(()=>Sci.level("memetics"),0))*safeFn(()=>Tree.знание("язык"),1);
+  const k=Math.max(1,safeFn(()=>Path.facetK("tongue"),1)||1)*(1+0.25*safeFn(()=>Sci.level("memetics"),0))
+   *safeFn(()=>Tree.знание("язык"),1)*(1+safeFn(()=>Fore.boonK("знание"),0));  /* §44.22: архивы Предтеч */
   r.оп=(Number(r.оп)||0)+Math.max(1,Math.round((Number(pts)||0)*k));let up=false;
   while(r.ур<3&&r.оп>=this.need(id)){r.оп-=this.need(id);r.ур++;up=true;}
   if(up){const l=LANG_BY_ID[id];safeFn(()=>{Bank.play("arte_page",{gain:0.55,maxSec:3});setTimeout(()=>safeFn(()=>eventTheme("achieve",{tier:r.ур>=3?"rare":"normal",gain:0.55})),350);});
@@ -33976,6 +33998,199 @@ const Power=Modules.register("POWER",{
   safeFn(()=>{Bank.play(k.звук,{gain:0.5,maxSec:4});Balance.shift(3,"обряд места силы");deed("rites");buffSet("оберег",6);});
   const r=k.трава;G.inv[r]=(Number(G.inv[r])||0)+2;return `Обряд у места «${k.n}»: земля отвечает — ${r} ×2, оберег на шесть часов, равновесие клонится к порядку.`;},
  text(){const p=this.here();if(!p)return `Место силы не рядом. Всего их в мире ${this.all().length}: курганы, рощи, источники, горные святилища и пещеры предков.`;const k=this.kind(p);return `${k.n[0].toUpperCase()+k.n.slice(1)}: ${k.о}. ${k.дар}. Школа «${(MSCHOOL_BY_ID[k.школа]||{n:k.школа}).n}» здесь дешевле. Обряд — раз в день.`;}});
+/* ══════════════ НАСЛЕДИЕ ПРЕДТЕЧ ГРАНИ ══════════════
+   Предтечи Грани оставили после себя не руины, а СЕТЬ: подземные
+   комплексы, портальные станции, искусственные луны, архивы, магические
+   машины, автономных стражей, хранилища, карты миров и инструменты
+   изменения пространства. Сеть разбита, и узлы её открывают по одному.
+
+   Ни один узел не открывается просто так. У каждого свои требования из
+   шести: ключ, знание, язык, энергия, разрешение державы и испытание.
+   Игра всегда называет, чего именно не хватает, — и никогда не открывает
+   узел наполовину.
+
+   Открытые узлы складываются в ЛЕС ВОЗМОЖНОСТЕЙ: чем больше сети
+   восстановлено, тем больше она отдаёт всему миру разом. ══════════ */
+const FORE_KEYS=[
+ {id:"key",   n:"ключ",              о:"предтеченский ключ в руках",
+  как:"ключи находят в глубинных хранилищах и у подземных торговцев"},
+ {id:"lore",  n:"знание",            о:"записанные знания о Предтечах",
+  как:"знание копится в реестре: рецепты, карты, обряды, тайны"},
+ {id:"tongue",n:"язык",              о:"чужое наречие на второй ступени",
+  как:"языкам учат в Академии и у носителей"},
+ {id:"power", n:"энергия",           о:"мана и воля, которые узел возьмёт",
+  как:"энергия тратится при открытии и не возвращается"},
+ {id:"favor", n:"разрешение державы",о:"доброе имя у державы этих земель",
+  как:"доброе имя растёт от дел и от торга"},
+ {id:"trial", n:"испытание",         о:"дело, которое надо было сделать",
+  как:"испытание — это то, что вы уже делали: бои, спуски, обряды"}];
+const FORE_KEY_BY_ID=Object.fromEntries(FORE_KEYS.map(k=>[k.id,k]));
+const FORE_SITES=[
+ {id:"complex",n:"подземный комплекс",род:"комплекса",звук:"deep_portal",
+  о:"ход, пробитый не киркой: стены ровны, как отлитые",
+  дар:"глубина перестаёт скрывать: ярусы этого края читаются наперёд",
+  боон:"недра"},
+ {id:"station",n:"портальная станция",род:"станции",звук:"stk_portal",
+  о:"кольцо стоячих плит, между которыми воздух гудит на одной ноте",
+  дар:"сеть отзывается: переходы этого края слышны отовсюду",
+  боон:"сеть"},
+ {id:"moon",n:"искусственная луна",род:"луны",звук:"pad_halo",
+  о:"в небе висит то, что не звезда и не облако, и оно вас видит",
+  дар:"свет сверху: округа звучит шире и днём, и ночью",
+  боон:"эхо"},
+ {id:"archive",n:"архив Предтеч",род:"архива",звук:"uh_page",
+  о:"полки в камне, и на них то, что пережило державы",
+  дар:"страницы отдаются сами: знание ложится в реестр",
+  боон:"знание"},
+ {id:"machine",n:"магическая машина",род:"машины",звук:"es_ion",
+  о:"механизм без рычагов, который работает до сих пор",
+  дар:"машина делится ходом: чары выговариваются легче",
+  боон:"сила"},
+ {id:"warden",n:"автономный страж",род:"стража",звук:"golem_step",
+  о:"он стоит здесь дольше, чем стоят державы, и он не спал",
+  дар:"страж признаёт вас: его хватка переходит в вашу руку",
+  боон:"рука"},
+ {id:"vault",n:"хранилище Предтеч",род:"хранилища",звук:"mtg_steel_door",
+  о:"дверь без петель и без замка, и за ней полно",
+  дар:"хранилище открыто: редкое идёт в руки",
+  боон:"недра"},
+ {id:"chart",n:"карта миров",род:"карты",звук:"artifact_hum",
+  о:"плита, на которой начерчено больше миров, чем один",
+  дар:"карта читается: дальнее становится ближе",
+  боон:"сеть"},
+ {id:"shaper",n:"инструмент изменения пространства",род:"инструмента",звук:"oc_warp",
+  о:"рукоять, за которую берутся не рукой",
+  дар:"пространство поддаётся: дыхание держится дольше там, где его нет",
+  боон:"ход"}];
+const FORE_BY_ID=Object.fromEntries(FORE_SITES.map(x=>[x.id,x]));
+/* Лес возможностей: что отдаёт миру восстановленная сеть. Каждый дар
+   считается в одном месте и вшит в мир по-настоящему. */
+const FORE_BOONS=[
+ {id:"эхо",   n:"слышимость",  о:"округа звучит шире везде",        мера:"шагов к звуковой картине", k:1},
+ {id:"сила",  n:"лёгкость чар",о:"чары выговариваются легче",       мера:"долей к цене чар",         k:0.03},
+ {id:"недра", n:"щедрость недр",о:"ярусы отдают больше",            мера:"сундуков на ярус",         k:0.5},
+ {id:"ход",   n:"долгое дыхание",о:"под водой держитесь дольше",    мера:"тактов под водой",         k:0.5},
+ {id:"рука",  n:"верная рука", о:"работа срывается реже",           мера:"долей к надёжности",       k:0.02},
+ {id:"сеть",  n:"близость сети",о:"узлы сети слышны дальше",        мера:"шагов к слуху на сеть",    k:1},
+ {id:"знание",n:"открытая память",о:"страницы знания даются легче", мера:"долей к учению",           k:0.05}];
+const FORE_BOON_BY_ID=Object.fromEntries(FORE_BOONS.map(b=>[b.id,b]));
+const Fore=Modules.register("FORERUNNERS",{
+ sites:FORE_SITES,keys:FORE_KEYS,boons:FORE_BOONS,
+ state(){if(!G.fore||typeof G.fore!=="object")G.fore={открыты:{}};
+  if(!G.fore.открыты||typeof G.fore.открыты!=="object")G.fore.открыты={};return G.fore;},
+ /* Где они стоят. Место выводится из области и не пляшет между заходами. */
+ all(){
+  if(this._all)return this._all;
+  const out=[];
+  for(let i=0;i<REGIONS.length;i++)for(let k=0;k<2;k++){
+   const h=n=>hashName(i*23+k*7,k*13+3,8900+n);
+   const вид=FORE_SITES[Math.floor(h(1)*FORE_SITES.length)%FORE_SITES.length];
+   out.push({id:`fr_${i}_${k}`,вид:вид.id,
+    x:Math.floor((i%5)*REGION_W+REGION_W*(0.15+h(2)*0.7)),
+    y:Math.floor(Math.floor(i/5)*REGION_H+REGION_H*(0.15+h(3)*0.7)),
+    r:3+Math.floor(h(4)*4),область:i});}
+  this._all=out;return out;},
+ at(x,y){x=x==null?G.x:x;y=y==null?G.y:y;
+  return this.all().find(p=>Math.max(Math.abs(p.x-x),Math.abs(p.y-y))<=p.r)||null;},
+ here(){return G.place?null:this.at(G.x,G.y);},
+ kind(p){return p?FORE_BY_ID[p.вид]:null;},
+ opened(id){return !!this.state().открыты[id];},
+ count(){return Object.keys(this.state().открыты).length;},
+ /* Какие из шести требований у этого узла: два–четыре, и всегда те же. */
+ needs(p){
+  if(!p)return [];
+  const h=n=>hashName(p.x+n*7,p.y+n*11,8950+n);
+  const сколько=2+Math.floor(h(1)*3);
+  const пул=FORE_KEYS.map(k=>k.id);
+  const вышло=[];
+  for(let i=0;i<сколько&&пул.length;i++){
+   const j=Math.floor(h(10+i)*пул.length)%пул.length;
+   вышло.push(пул.splice(j,1)[0]);}
+  return вышло;},
+ /* Сколько именно требует это требование у этого узла. */
+ amount(p,keyId){
+  const h=hashName(p.x+keyId.length*3,p.y+keyId.length*5,8970);
+  switch(keyId){
+   case "lore":  return 3+Math.floor(h*8);
+   case "power": return {мана:8+Math.floor(h*14),воля:2+Math.floor(h*3)};
+   case "favor": return 10+Math.floor(h*25);
+   case "trial": return 8+Math.floor(h*20);
+   default:      return 1;}},
+ /* Чего не хватает — словами и по порядку. Пусто — можно открывать. */
+ lacks(p){
+  const нет=[];
+  if(!p)return ["узла рядом нет"];
+  this.needs(p).forEach(k=>{
+   const н=this.amount(p,k);
+   if(k==="key"){
+    if(!((Number(G.inv&&G.inv["предтеченский ключ"])||0)>=1))нет.push("предтеченский ключ");}
+   else if(k==="lore"){
+    if(safeFn(()=>Lore.count(),0)<н)нет.push(`записанных знаний ${н} (у вас ${safeFn(()=>Lore.count(),0)})`);}
+   else if(k==="tongue"){
+    const есть=safeFn(()=>LANGS.some(l=>l.id!=="common"&&l.id!==G.homeLang&&Langs.level(l.id)>=2),false);
+    if(!есть)нет.push("чужой язык на второй ступени");}
+   else if(k==="power"){
+    if((Number(G.mana)||0)<н.мана)нет.push(`${н.мана} маны (у вас ${Math.round(Number(G.mana)||0)})`);
+    const воля=safeFn(()=>{Energy.ensure();return Number(G.will)||0;},0);
+    if(воля<н.воля)нет.push(`${н.воля} воли (у вас ${воля})`);}
+   else if(k==="favor"){
+    const i=safeFn(()=>empireIndexAt(p.x,p.y),0);
+    const е=EMPIRES[i];
+    const р=safeFn(()=>Number((G.rep||{})[е.race])||0,0);
+    if(р<н)нет.push(`доброе имя ${н} у народа «${е.race}» (у вас ${р})`);}
+   else if(k==="trial"){
+    const сделано=safeFn(()=>deeds("kills")+deeds("dives")+deeds("rites")+deeds("quests"),0);
+    if(сделано<н)нет.push(`испытание: ${н} дел за спиной — боёв, спусков, обрядов и поручений (у вас ${сделано})`);}
+  });
+  return нет;},
+ /* Открыть узел. Берёт то, что должен взять, и отдаёт дар — один раз. */
+ open(){
+  const p=this.here();
+  if(!p)return "Узла Предтеч рядом нет: они стоят в глуши, вне дорог и городов.";
+  const k=this.kind(p);
+  const Дар=k.дар[0].toUpperCase()+k.дар.slice(1);
+  if(this.opened(p.id))return `Этот узел вы уже открыли: ${k.n}. ${Дар}.`;
+  const нет=this.lacks(p);
+  if(нет.length)return `Узел не открывается: ${k.n}. Не хватает: ${нет.join("; ")}.`;
+  const нужно=this.needs(p);
+  /* Плата берётся ровно та, что названа: ключ, энергия — и только они. */
+  if(нужно.indexOf("key")>=0){G.inv["предтеченский ключ"]-=1;
+   if(G.inv["предтеченский ключ"]<=0)delete G.inv["предтеченский ключ"];}
+  if(нужно.indexOf("power")>=0){const н=this.amount(p,"power");
+   G.mana=Math.max(0,(Number(G.mana)||0)-н.мана);
+   safeFn(()=>{Energy.ensure();G.will=Math.max(0,(Number(G.will)||0)-н.воля);});}
+  this.state().открыты[p.id]=Number(G.day)||1;
+  safeFn(()=>{Bank.play(k.звук,{gain:0.6,maxSec:6});
+   setTimeout(()=>safeFn(()=>Bank.play("es_gate",{gain:0.5,maxSec:5})),500);
+   setTimeout(()=>safeFn(()=>eventTheme("achieve",{tier:"rare",gain:0.6})),1100);});
+  safeFn(()=>{journal(`Наследие Предтеч: открыт узел — ${k.n}.`);
+   Ledger.add("история",`${k.n[0].toUpperCase()+k.n.slice(1)}: ${k.о}`,"Наследие Предтеч");
+   Lore.add("secret",p.id,k.n,"узел Предтеч открыт");
+   deed("rites");});
+  const н=this.count();
+  return `Узел открыт: ${k.n}. ${k.о[0].toUpperCase()+k.о.slice(1)}. ${Дар}. `+
+   `Узлов восстановлено ${н} из ${this.all().length}. ${this.boonText()}`;},
+ /* Лес возможностей: сколько узлов каждого дара восстановлено. */
+ boonCount(id){
+  const st=this.state().открыты;
+  return this.all().filter(p=>st[p.id]&&(FORE_BY_ID[p.вид]||{}).боон===id).length;},
+ boonK(id){
+  const b=FORE_BOON_BY_ID[id];if(!b)return 0;
+  return Math.round(this.boonCount(id)*b.k*100)/100;},
+ boonText(){
+  const есть=FORE_BOONS.filter(b=>this.boonCount(b.id)>0);
+  if(!есть.length)return "Лес возможностей ещё не пророс.";
+  return "Лес возможностей: "+есть.map(b=>`${b.n} — ${this.boonK(b.id)} ${b.мера}`).join("; ")+".";},
+ text(){
+  const p=this.here();
+  const всего=this.all().length,н=this.count();
+  const шапка=`Наследие Предтеч Грани: ${всего} узлов в мире, восстановлено ${н}. Родов ${FORE_SITES.length}, требований ${FORE_KEYS.length}: ${FORE_KEYS.map(k=>k.n).join(", ")}.`;
+  if(!p)return `${шапка} Узла рядом нет: они стоят в глуши, вне дорог и городов. ${this.boonText()}`;
+  const k=this.kind(p);
+  if(this.opened(p.id))return `${шапка} Здесь ${k.n}, уже открытый вами: ${k.дар}. ${this.boonText()}`;
+  const нет=this.lacks(p);
+  return `${шапка} Здесь ${k.n}: ${k.о}. Требует: ${this.needs(p).map(id=>FORE_KEY_BY_ID[id].n).join(", ")}. `+
+   (нет.length?`Не хватает: ${нет.join("; ")}.`:"Всё при вас: узел можно открыть.")+` ${this.boonText()}`;}});
 /* ── МИРОВЫЕ СОБЫТИЯ ── */
 const GLOBAL_EVENTS=[
  {id:"conjunction",n:"Сопряжение Грани",о:"миры сошлись: открылись переходы, пришли чужие твари и чужие товары",срок:8,звук:"stk_portal",
@@ -34544,6 +34759,13 @@ function renderLiving(){
   const $=id=>document.getElementById(id);const line=(t,ic)=>`<div class="list-line" tabindex="0" data-speak="${String(t).replace(/"/g,"&quot;")}">${ic||"•"} ${t}</div>`;
   if($("lwZone"))$("lwZone").innerHTML=line(Zones.text(),"🌀");
   if($("lwPower"))$("lwPower").innerHTML=line(Power.text(),"🌿")+(Power.here()?`<button class="item" data-cmd="powerite" data-speak="Обряд у места силы: две воли и пять маны.">🕯️ Обряд места силы</button>`:"");
+  if($("lwFore")){
+   let h=line(Fore.text(),"🗝️");
+   const у=Fore.here();
+   if(у&&!Fore.opened(у.id))
+    h+=`<button class="item" data-cmd="foreopen" data-speak="Открыть узел Предтеч. ${String(Fore.lacks(у).length?"Не хватает: "+Fore.lacks(у).join("; "):"Всё при вас.").replace(/"/g,"&quot;")}">🗝️ Открыть узел Предтеч</button>`;
+   h+=FORE_SITES.map(k=>line(`${k.n}: ${k.о}. Даёт: ${k.дар}. Питает дар «${(FORE_BOON_BY_ID[k.боон]||{}).n||k.боон}».`,"◆")).join("");
+   $("lwFore").innerHTML=h;}
   if($("lwGlobal"))$("lwGlobal").innerHTML=line(Global.text(),"🔥")+line(Waves.text(),"🌊");
   if($("lwArmies"))$("lwArmies").innerHTML=safeFn(()=>Armies.windowHtml(),"");
   if($("lwArcs"))$("lwArcs").innerHTML=line(Arcs.text(),"🧓")+Object.keys(Arcs.all()).slice(0,6).map(k=>Arcs.line({key:k})).join("");
@@ -37370,6 +37592,7 @@ function castSpell(i){const sp=SPELLS[i];
     срыва тоже сидит в цене — пока держится, всякая чара идёт тяжелее. */
  G.mana-=Math.max(1,Math.round(sp.cost*safeFn(()=>Resonance.ценаK(sp),1)
   *Math.max(0.6,1-safeFn(()=>Echo.bonus("word"),0))     /* §9: осколок слова */
+  *Math.max(0.6,1-safeFn(()=>Fore.boonK("сила"),0))     /* §44.22: машины Предтеч */
   *(safeFn(()=>buffActive("отдача"),false)?1.2:1)
   *(1+safeFn(()=>adaptBonus("spellCost"),0))*safeFn(()=>Waves.spellK(),1)*safeFn(()=>Balance.spellK(),1)*safeFn(()=>Zones.spellK(),1)*safeFn(()=>Power.spellK(sp),1)*safeFn(()=>Global.k("чары"),1))-safeFn(()=>Houses.manaDiscount(sp),0)-safeFn(()=>Gods.manaDiscount(sp),0));
  safeFn(()=>Balance.onCast(sp));safeFn(()=>{if(Balance.backlash()){G.mana=Math.max(0,G.mana-3);narrate("Хаос отдаёт: мана минус три сверх цены.",{interrupt:false});}});safeFn(()=>{deed("casts");deed("manaSpent",sp.cost);adaptAdd("чары",1);});
@@ -40348,7 +40571,7 @@ const Gen=Modules.register("GEN",{
   return {
    комнат:  Math.min(2,k("шаблон")+(k("история")>=3?1:0)),
    тварей:  Math.min(3,k("опасность")+(k("биом")>=2?1:0)),
-   сундуков:Math.min(2,k("экономика")>=3?2:k("экономика")>=2?1:0),
+   сундуков:Math.min(3,(k("экономика")>=3?2:k("экономика")>=2?1:0)+Math.round(safeFn(()=>Fore.boonK("недра"),0))),
    жил:     Math.min(2,k("биом")),
    книг:    Math.min(2,k("культура")),
    вещей:   Math.min(2,k("история")>=2?1:0)+(k("регион")>=2?1:0),
@@ -40783,6 +41006,20 @@ function worldSelfCheck(){
   ok("sigils",SIGIL_SYMBOLS.length===8&&SIGIL_SYMBOLS.every(x=>MSCHOOL_BY_ID[x.школа]&&x.намерения.every(i=>SIGIL_INTENTS[i]))&&SIGIL_CARRIERS.length===8&&SIGIL_CARRIERS.every(x=>RES_BASE[x.ресурс])&&SIGIL_GEOMETRY.length===5&&INKS.length===6&&INKS.every(x=>SOUND_BANK[x.звук]&&Object.keys(x.рецепт).every(r=>RES_BASE[r]))&&AWAKEN_SOURCES.length===6&&AWAKEN_SOURCES.every(x=>SOUND_BANK[x.звук])&&WAVES.length===3&&MORPH_TRAITS.length===6&&MORPHOBEASTS.length===10&&MORPHOBEASTS.every(b=>MONSTERS.some(m=>m.id===b.база))&&DEVOUR_GIFTS.length===6&&EVENT_THEME.world_event&&SOUND_BANK[EVENT_THEME.world_event.роль],"Знаки: восемь символов, восемь носителей, пять геометрий, шесть чернил, шесть источников пробуждения, три волны, шесть черт, десять морфозверей, шесть даров Эха — всё со звуком и по настоящим ресурсам");
   ok("cases",CASE_TEMPLATES.length===6&&CASE_TEMPLATES.every(t=>t.версии.length===3&&t.улики.every(k=>CLUE_KINDS[k])&&t.версии.every(v=>v.улики.every(k=>t.улики.includes(k))))&&SYNDICATES.length===8&&SYNDICATES.every(x=>SOUND_BANK[x.звук]&&x.города.every(id=>NAMED_CITY_BY_ID[id])&&REGIONS[x.область])&&Object.keys(DECISIONS).length===9&&Object.values(DECISIONS).every(d=>Object.keys(d).length>=3)&&["deeper","border_war","shards","lasthouse","beast","price","undercity","maskface","endless"].every(id=>CHAIN_DB[id])&&HOUSE_BY_ID[LAST_HOUSE.враг]&&DLG_MOVE_BY_ID.znanie&&DLG_MOVE_BY_ID.kultura&&DLG_MOVE_BY_ID.nedoskazat,"Расследования: шесть дел с тремя версиями, восемь синдикатов со звуком и городами, девять цепочек с развязками, три хода разговора");
   ok("academy",LANGS.length>=20&&LANGS.every(l=>l.письмо&&l.о)&&SCIENCES.length===6&&SCIENCES.every(x=>SOUND_BANK[x.звук]&&x.эффект.length===3&&FACULTY_BY_ID[x.факультет])&&FACULTIES.length===12&&FACULTIES.every(f=>(f.школы||[]).every(id=>MSCHOOL_BY_ID[id]&&SCHOOL_AUDIO[id])&&(!f.маст||MAST_BY_ID[f.маст]))&&SCHOOLS.length>=30&&SCHOOLS.every(sc=>SCHOOL_AUDIO[sc.id]&&SPELL_LAYERS.every(l=>SOUND_BANK[SCHOOL_AUDIO[sc.id][l]])),"Академия: двадцать один язык, шесть наук, двенадцать факультетов, тридцать четыре школы чар — все со звуком");
+  ok("forerunners",FORE_SITES.length===9&&FORE_KEYS.length===6&&FORE_BOONS.length===7
+   &&new Set(FORE_SITES.map(x=>x.id)).size===9
+   &&FORE_SITES.every(x=>x.n&&x.род&&x.о&&x.дар&&SOUND_BANK[x.звук]&&FORE_BOON_BY_ID[x.боон])
+   &&FORE_KEYS.every(k=>k.n&&k.о&&k.как)
+   &&FORE_BOONS.every(b=>b.n&&b.о&&b.мера&&b.k>0)
+   /* Каждый дар леса кто-то питает: висячих даров не бывает. */
+   &&FORE_BOONS.every(b=>FORE_SITES.some(x=>x.боон===b.id))
+   /* Узлы стоят по всему миру, и у каждого свои требования из шести. */
+   &&Fore.all().length===REGIONS.length*2
+   &&Fore.all().every(u=>{const n=Fore.needs(u);
+     return n.length>=2&&n.length<=4&&new Set(n).size===n.length&&n.every(id=>FORE_KEY_BY_ID[id]);})
+   /* Требование считается числом, и число осмысленно. */
+   &&Fore.all().every(u=>{const a=Fore.amount(u,"lore");return a>=3&&a<=11;}),
+   "Наследие Предтеч: девять родов оставленных мест со своей записью, шесть родов требования, семь даров леса возможностей, по два узла на каждую область");
   ok("echo",ECHO_KINDS.length===8&&new Set(ECHO_KINDS.map(k=>k.id)).size===8
    &&ECHO_KINDS.every(k=>k.n&&k.род&&k.о&&k.дар&&k.мера&&SOUND_BANK[k.звук]&&k.k>0)
    /* Вместимость всегда в берегах, и пустой набор устойчив. */
