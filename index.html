@@ -4268,6 +4268,7 @@ const AM_GROUPS=[
   ["plants","🌿 Травник: растения и грибы"],
   ["bosses","👹 Владыки земель"],
   ["factions","🏰 Досье державы"],
+  ["wevents","📯 Вести мира: что где творится"],
   ["rumours","🗣️ Вести о вас здесь"],
   ["seas","🌊 Моря, острова и глубины"]]],
  ["Звук и справка",[
@@ -4832,6 +4833,14 @@ const GUIDE=[
  "Вещь растёт. За каждую победу работающий артефакт получает опыт, а на пороге открывает ступень — прибавку, которой у него раньше не было, и всегда из своего направления. Каждая следующая ступень даётся вдвое тяжелее. Если гнёзда кончились, редкую часть можно скормить вещи: она уйдёт в опыт вместо гнезда.",
  "Требования. Ранг задаёт уровень; сверх того вещь может требовать навык, заклинание нужной школы, расположение народа, принадлежность к клану, прочитанное знание или закрытое дело. Вещь, требования которой не выполнены, лежит мёртвым грузом и не даёт ничего — и прямо говорит, чего ей не хватает.",
  "Где всё это. Пункт меню «Артефакты, части и рецепты». В нём видно, каким ремеслом здесь занимаются и каково ваше умение, какие рецепты под рукой и чего не хватает, какие части лежат в суме, и по каждой вещи — всё, что о ней известно, и всё, что с ней можно сделать: вложить, вынуть, зачаровать, скормить, продать."]},
+{title:"Глава 85. Вести мира",body:[
+ "ЧЕТЫРНАДЦАТЬ РОДОВ. Мир заводит их сам: войны, восстания, эпидемии, голод, пожары, наводнения, магические штормы, открытия штолен, обвалы, нашествия, появление владык, открытие порталов, разрушение городов и торговые кризисы. Спросить, что где творится, можно в меню «Мир» — пункт «Вести мира».",
+ "ПОВОД. Ни одно событие не берётся из ниоткуда. У каждого рода своя мера готовности мира, и считает её то же состояние державы, на которое смотрит совет: нет врагов — не будет войны, нет гор — не откроют штольню, полны житницы — не придёт голод, нет воды — не будет половодья. Жребий решает только «на этой седмице или на следующей», и никогда — «бывает ли такое вовсе».",
+ "СТУПЕНИ. Событие идёт своим чередом: зарево над крышами — огонь пошёл по кварталу — пепелище. Ступень слышна словами и растёт по ходу срока.",
+ "МЕСТО, УЧАСТНИКИ, РЕСУРСЫ. Каждое событие знает, где оно (держава, город, область, рудник или подземелье — и место названо по имени), кого касается (цеха, гарнизон, артель, лекари, беженцы) и какого добра (настоящие ресурсы, а не общие слова).",
+ "ЧЕТЫРЕ СЛЕДСТВИЯ. Цена товара, безопасность дорог, ширина прилавка и частота встреч в поле. Голод поднимает еду в полтора раза, новая штольня роняет камень и руду, нашествие наполняет дороги чужими, мор, наоборот, разгоняет людей по домам. Объяснение цены называет событие прямо.",
+ "УСЛОВИЕ КОНЦА. Срок — не единственный выход. Война кончается, когда стороны перестали воевать; голод — когда житницы полны; торговый кризис — когда пошёл подвоз. Условие проверяется на каждый спрос, и событие гаснет раньше срока, если мир переменился.",
+ "ВЕСТНИК. То, что началось сегодня там, где вы стоите, объявят вслух — один раз, со звуковым профилем своего рода: четыре настоящие записи одна поверх другой."]},
 {title:"Глава 84. Держава решает сама",body:[
  "ШЕСТНАДЦАТЬ СВОЙСТВ. У всякой державы их ровно шестнадцать: территория, население, экономика, ресурсы, производство, армия, разведка, религия, законы, налоги, дипломатия, союзники, враги, внутренние группы, лидеры и цели. Спросить можно любое, и каждое отвечает числом из настоящего мира, а не присказкой: города берутся у самих городов, производство — у мастерских, войско — у того самого войска, которым ведутся войны, бумаги — у дипломатии, боги — у пантеона.",
  "СОВЕТ СОБИРАЕТСЯ РАЗ В СЕДМИЦУ. Держава смотрит на себя — идёт ли война, сколько их, что поломано, чего недостаёт, кто спорит внутри, кому молятся, кто сосед, сильно ли войско, — и выбирает одно решение из двенадцати. Выбор не жребий: у каждого решения свой вес от состояния, и берётся тяжелейшее. Жребий колеблет вес не больше чем на полтора, поэтому разрыв в полтора и выше решает состояние, а не случай.",
@@ -7134,6 +7143,8 @@ function marketPrice(res,idx,day){
  k*=safeFn(()=>prodEconPriceK(res,idx,day),1);
  /* §17: решение совета державы на эту седмицу. Дверь фракции в рынок. */
  k*=safeFn(()=>factionMovePriceK(res,idx,day),1);
+ /* §23: мировые события этой державы. Дверь вестей мира в рынок. */
+ k*=safeFn(()=>weventPriceK(res,idx,day),1);
  /* §14: где именно стоит прилавок. Дверь локального рынка. */
  k*=safeFn(()=>marketKindK(res),1);
  return Math.max(2,Math.round(base*Math.max(0.35,k)));
@@ -7514,6 +7525,15 @@ function prodStockCut(i,day){
   const v=prodSupply("ore",i,day);
   return Math.max(0,Math.min(0.7,(0.9-v)*1.2));
  }catch(_){return 0;}}
+/* §13 и §23 режут стойку по-разному, и мера у каждого своя: «не больше семи
+   десятых» — обещание разбитой цепи, и трогать его нельзя. Здесь они
+   складываются: пожар и осада режут сверх цепи, новая штольня отпускает. */
+function stockCutTotal(i,day){
+ try{
+  const своя=prodStockCut(i,day);
+  const k=safeFn(()=>weventWidthK(i,day),1);
+  return Math.max(0,Math.min(0.85,1-(1-своя)*k));
+ }catch(_){return 0;}}
 function isContraband(res,idx){
  if(safeFn(()=>Conj.запретно(res),false))return true;
  return empireLaw(idx).запрет.includes(res);}
@@ -7525,7 +7545,8 @@ function bannedHere(res,idx){
  return isContraband(res,idx)||safeFn(()=>prodBanned(res,idx,G.day),false)
   ||safeFn(()=>factionMoveBans(idx,G.day).includes(res),false);}
 function roadSafetyK(idx){
- try{const m=marketOf(idx);let k=safeFn(()=>factionMoveRoadK(idx,G.day),1);
+ try{const m=marketOf(idx);let k=safeFn(()=>factionMoveRoadK(idx,G.day),1)
+   *safeFn(()=>weventRoadK(idx,G.day),1);
   if(empireAtWar(idx,G.day))k+=0.12;
   if((Number(m.подвоз)||1)<0.85)k+=0.15;
   if(safeFn(()=>Forts.troubled(idx),false))k+=0.2;
@@ -7575,6 +7596,9 @@ function priceWhy(res,idx,c){
   из.push(`вывоз закрыт по нужде: своего не хватает, и за вывоз спросят у заставы`);
  const op=secretOp(idx,G.day);if(secretOpK(res,idx,G.day)!==1)из.push(`тайное дело державы: ${op.n}`);
  safeFn(()=>{if(factionMovePriceK(res,idx,G.day)!==1)из.push(`решение совета державы: ${factionMove(idx,G.day).n}`);});
+ safeFn(()=>{if(weventPriceK(res,idx,G.day)!==1){
+  const ев=weventsOf(idx,G.day).filter(e=>(WEVENT_BY_ID[e.вид].цена(res))!==1);
+  if(ев.length)из.push(`вести мира: ${ев.map(e=>e.n).join(", ")}`);}});
  /* §18: договоры и меры двигают цену, и игрок вправе знать какие. */
  safeFn(()=>{
   for(let j=0;j<EMPIRES.length;j++){
@@ -7927,11 +7951,16 @@ function raidHere(){
    больше, а не меньше. Это обратная сторона разъезда. */
 function raidDanger(x,y){
  if(G.dark)return 1;
+ let k=1;
  const бл=safeFn(()=>raidsNear(x,y,G.day,6),null);
- if(!бл||!бл.length)return 1;
- let d=99;
- for(const н of бл){const dd=Math.max(Math.abs(н.x-x),Math.abs(н.y-y));if(dd<d)d=dd;}
- return d<=2?2.2:d<=4?1.6:d<=6?1.25:1;}
+ if(бл&&бл.length){
+  let d=99;
+  for(const н of бл){const dd=Math.max(Math.abs(н.x-x),Math.abs(н.y-y));if(dd<d)d=dd;}
+  k=d<=2?2.2:d<=4?1.6:d<=6?1.25:1;}
+ /* §23: нашествие и магический шторм поднимают встречи там, где идут, а мор
+    их убавляет — люди сидят по домам. Потолок общий и прежний: дешёвое сито
+    наверху отсеивает клетки по 2,2, и выше него подниматься нельзя. */
+ return Math.max(0.5,Math.min(2.2,k*safeFn(()=>weventRaidK(x,y),1)));}
 function caravanHere(){
  if(G.place)return null;
  const list=caravansNear(G.x,G.y,G.day,G.hour,1);
@@ -32323,6 +32352,7 @@ const CMD={
  bossfight(){bossFight();},
  bosses(){narrate(bossesText());},
  factions(){narrate(factionsText());},
+ wevents(){narrate(weventsText());},
  rumours(){narrate(rumorsText());},
  questlist(){narrate(questsText());},
  worldcheck(){narrate(worldCheckText());},
@@ -40741,7 +40771,7 @@ function stockFor(n){const out=[];
  /* §13: когда встала рудная цепь, стойку с оружием нечем наполнить. Не
     «дороже», а МЕНЬШЕ вещей: их не из чего делать. */
  safeFn(()=>{
-  const доля=prodStockCut(idx,G.day);
+  const доля=stockCutTotal(idx,G.day);
   if(!(доля>0))return;
   const железо=out.filter(o=>o.gear&&(o.gear.slot==="weapon"||o.gear.slot==="armor"));
   const убрать=Math.min(железо.length,Math.floor(железо.length*доля+0.5));
@@ -42936,6 +42966,7 @@ function factionState(i,day){
   ввоз:(emp.imports||[]).slice(),
   вывоз:(emp.exports||[]).slice(),
   горы:(emp.terrains||[]).some(t=>t==="mountains"||t==="cave"),
+  вода:(emp.terrains||[]).some(t=>t==="coast"||t==="swamp"),
   академия,
   запретных:safeFn(()=>empireLaw(k).запрет.length,0)
    +Object.keys(деф).filter(r=>деф[r]>=0.4).length,
@@ -43073,6 +43104,393 @@ const Council=Modules.register("COUNCIL",{
  announce:тихо=>S(()=>councilAnnounce(тихо),false),
  text(){const i=S(()=>empireIndexAt(G.x,G.y),0);
   return `У фракции шестнадцать свойств. ${S(()=>factionMoveLine(i,G.day),"")}`;}});
+
+/* ════════════════════════════════════════════════════════════════════════
+   §23 МИРОВЫЕ СОБЫТИЯ: ЧЕТЫРНАДЦАТЬ РОДОВ, У КАЖДОГО ВОСЕМЬ СВОЙСТВ
+
+   §23 требует, чтобы мир САМ заводил войны, восстания, эпидемии, голод,
+   пожары, наводнения, магические штормы, открытия шахт, обвалы,
+   нашествия, появление владык, открытие порталов, разрушение городов и
+   торговые кризисы, и чтобы у всякого события были восемь свойств:
+   CAUSE, STAGE, LOCATION, PARTICIPANTS, RESOURCES, CONSEQUENCES,
+   SOUND_PROFILE, END_CONDITIONS.
+
+   КАК БЫЛО. Десять мировых событий (GLOBAL_EVENTS) заводились по жребию
+   дня и жили сроком: у них были имя, звук и множитель. Ни повода, ни
+   ступеней, ни места, ни участников, ни условия конца — событие «падение
+   крепости» могло случиться в мире, где не воюют, и кончалось не потому,
+   что осада снята, а потому, что вышли дни.
+
+   КАК СТАЛО. Четырнадцать родов, и у каждого все восемь свойств.
+
+   ПОВОД (CAUSE). Ни одно событие не берётся из ниоткуда: у каждого рода
+   своя мера готовности мира, и считается она от того самого состояния
+   державы, которое смотрит совет (§17). Нет врагов — не будет войны; нет
+   гор — не откроют штольню; сыто — не будет голода. Жребий решает только
+   «сегодня или через седмицу», и никогда — «бывает ли такое вовсе».
+
+   СТУПЕНЬ (STAGE). Событие проходит свои ступени по ходу срока: зарево над
+   крышами — огонь по кварталу — пепелище. Ступень выводится из того,
+   сколько дней прошло, и слышна словами.
+
+   МЕСТО (LOCATION). Держава, город, область, рудник, крепость или
+   подземелье — у каждого рода своё, и место называется по имени.
+
+   УЧАСТНИКИ (PARTICIPANTS) и РЕСУРСЫ (RESOURCES). Кого это касается и
+   какого добра. Ресурсы — настоящие, из RES_BASE и переделов §12.
+
+   СЛЕДСТВИЯ (CONSEQUENCES). Четыре настоящие двери: цена товара, подвоз
+   (через безопасность дорог), ширина прилавка и частота встреч в поле. Ни
+   одно событие не строка в окне.
+
+   ЗВУКОВОЙ ПРОФИЛЬ (SOUND_PROFILE). Главная запись и три слоя — все
+   настоящие записи, без синтезированных папок.
+
+   УСЛОВИЕ КОНЦА (END_CONDITIONS). Срок — не единственный выход: война
+   кончается, когда стороны перестали воевать; голод — когда житницы
+   полны; обвал — когда разобрали завал. Условие проверяется на каждый
+   спрос, и событие гаснет раньше срока, если мир переменился.
+
+   Ничего не хранится: всё выводится из державы, седмицы и дня.
+   ════════════════════════════════════════════════════════════════════════ */
+const WEVENT_KINDS=[
+ {id:"war",n:"война",о:"державы сошлись оружием",срок:28,
+  звук:"siege_alarm_war",голоса:["army_horn","throng_march","battle_sword"],
+  ступени:["сбор войск","первые стычки","затяжные бои","перелом","затишье"],
+  где:"держава",кто:["полки державы","наёмные копья","обозники"],
+  рес:["руда","слиток","кованая полоса","закалённый клинок"],
+  повод:s=>s.враги.length?0.9:(s.напряжение.length?0.22:0.02),
+  поводСлово:s=>s.враги.length?"соседи объявили войну":"с соседом натянуто до предела",
+  цена:res=>FACTION_WAR_GOODS.includes(res)?1.25:(FACTION_FOOD.includes(res)?1.1:1),
+  дороги:1.2,прилавок:0.8,встречи:1.25,
+  конецСлово:"когда стороны перестанут воевать",
+  конец:s=>!s.война&&!s.враги.length},
+ {id:"revolt",n:"восстание",о:"город поднялся против казны",срок:14,
+  звук:"throng_cry",голоса:["throng_fight","watch_call","guard_shout"],
+  ступени:["ропот на площадях","камни в стражу","баррикады","усмирение"],
+  где:"город",кто:["цеха","чернь","городская стража","наёмники знати"],
+  рес:["полотно","пряжа","трава","ягоды"],
+  повод:s=>(/знать|цех|подат|жалованье|гильдии/.test(s.раздор)?0.5:0.07)
+   *(s.гнёт>=0.3?1.5:1),
+  поводСлово:s=>`внутренний раздор: ${s.раздор}`,
+  цена:res=>FACTION_FOOD.includes(res)?1.2:(["полотно","пряжа"].includes(res)?1.15:1),
+  дороги:1.15,прилавок:0.7,встречи:1.2,
+  конецСлово:"когда цеха договорятся с казной",
+  конец:s=>!/знать|цех|подат|жалованье|гильдии/.test(s.раздор)},
+ {id:"plague",n:"эпидемия",о:"мор пошёл по кварталам",срок:21,
+  звук:"moan_deep",голоса:["wild_raven","hall_temple","throng_die_m"],
+  ступени:["первые больные","закрытые кварталы","мор","выздоровление"],
+  где:"город",кто:["лекари","храмы","могильщики"],
+  рес:["трава","эссенция","кровь","орган"],
+  повод:s=>(s.нехватка>=0.35?0.35:0.09)+(s.война?0.15:0),
+  поводСлово:s=>s.война?"война согнала людей и грязь в одни стены":"нехватка и теснота",
+  цена:res=>["трава","эссенция","кровь"].includes(res)?1.4:1,
+  дороги:1.1,прилавок:0.6,встречи:0.8,
+  конецСлово:"когда лекари переломят мор",
+  конец:s=>false},
+ {id:"famine",n:"голод",о:"житницы пусты",срок:24,
+  звук:"hall_farm",голоса:["crow","wild_wind","throng_cry"],
+  ступени:["пустые житницы","дорогой хлеб","голод","подвоз пошёл"],
+  где:"держава",кто:["житницы","обозы","храмы","селяне"],
+  рес:["трава","ягоды","грибы"],
+  повод:s=>Math.max(Number(s.деф["трава"])||0,Number(s.деф["ягоды"])||0,
+   Number(s.деф["грибы"])||0)>=0.35?0.5:0.07,
+  поводСлово:s=>"недород и разбитый подвоз",
+  цена:res=>FACTION_FOOD.includes(res)?1.6:1,
+  дороги:1.1,прилавок:0.7,встречи:1.15,
+  конецСлово:"когда придёт обоз или снимут новый урожай",
+  конец:s=>Math.max(Number(s.деф["трава"])||0,Number(s.деф["ягоды"])||0,
+   Number(s.деф["грибы"])||0)<0.15},
+ {id:"fire",n:"пожар",о:"огонь пошёл по кварталу",срок:6,
+  звук:"mtg_fire",голоса:["ad_fire_crackle","siege_fire","throng_cry"],
+  ступени:["зарево над крышами","огонь пошёл по кварталу","пепелище"],
+  где:"город",кто:["горожане","стража","водоносы"],
+  рес:["дерево","доска","кряж","клеёный брус"],
+  повод:s=>0.11+(s.война?0.18:0),
+  поводСлово:s=>s.война?"война: жгут склады":"сушь, тесная застройка и открытый огонь",
+  цена:res=>["дерево","доска","кряж","клеёный брус"].includes(res)?1.35:1,
+  дороги:1,прилавок:0.75,встречи:1,
+  конецСлово:"когда огонь съест квартал или пойдёт дождь",
+  конец:s=>false},
+ {id:"flood",n:"наводнение",о:"вода поднялась и залила низины",срок:10,
+  звук:"sky_river",голоса:["stk_falls","oc_splash","sky_rain"],
+  ступени:["вода поднялась","залило низины","вода уходит"],
+  где:"область",кто:["речники","мостовщики","селяне"],
+  рес:["трава","ягоды","ракушка","дерево"],
+  повод:s=>s.вода?0.28:0.05,
+  поводСлово:s=>s.вода?"половодье на реках и побережье":"ливни в верховьях",
+  цена:res=>FACTION_FOOD.includes(res)?1.2:(res==="дерево"?1.1:1),
+  дороги:1.3,прилавок:0.8,встречи:1,
+  конецСлово:"когда вода сойдёт",
+  конец:s=>false},
+ {id:"mstorm",n:"магический шторм",о:"эфир встал стеной",срок:8,
+  звук:"stk_thunder",голоса:["magic_woosh","oc_warp","magic_shimmer"],
+  ступени:["эфир зазвенел","шторм","отголоски"],
+  где:"область",кто:["маги Академии","эфирные твари","портальные инженеры"],
+  рес:["эфир","кристалл","самоцвет","эссенция"],
+  повод:s=>0.16+(s.академия?0.08:0),
+  поводСлово:s=>"эфирные течения сошлись над этой землёй",
+  цена:res=>["эфир","кристалл","самоцвет"].includes(res)?1.3:1,
+  дороги:1.2,прилавок:0.9,встречи:1.3,
+  конецСлово:"когда эфир уляжется",
+  конец:s=>false},
+ {id:"mineopen",n:"открытие штольни",о:"нашли жилу и бьют новую штольню",срок:30,
+  звук:"mine_pick",голоса:["mtg_dig_gravel","craft_ore","deep_cart"],
+  ступени:["нашли жилу","бьют штольню","руда пошла","жила истощается"],
+  где:"рудник",кто:["артель","рудознатцы","охрана штольни"],
+  рес:["руда","камень","самоцвет","дроблёная руда"],
+  повод:s=>s.горы?0.3:0.03,
+  поводСлово:s=>s.горы?"рудознатцы нашли жилу в горах":"случайная находка на равнине",
+  цена:res=>FACTION_STONE.includes(res)?0.82:1,
+  дороги:0.95,прилавок:1.15,встречи:1,
+  конецСлово:"когда жила истощится",
+  конец:s=>false},
+ {id:"collapse",n:"обвал",о:"кровля не выдержала",срок:12,
+  звук:"mtg_crumble",голоса:["oc_rockfall","mtg_rubble","oc_quake"],
+  ступени:["треск в кровле","обвал","разбор завала"],
+  где:"рудник",кто:["рудокопы","артель","спасатели"],
+  рес:["руда","камень","дроблёная руда","слиток"],
+  повод:s=>s.горы?0.2:0.04,
+  поводСлово:s=>"перекрепь не держит: били торопясь",
+  цена:res=>res==="руда"?1.4:(res==="камень"?1.25:1),
+  дороги:1,прилавок:0.7,встречи:1,
+  конецСлово:"когда разберут завал",
+  конец:s=>false},
+ {id:"invasion",n:"нашествие",о:"чужие пришли толпой",срок:18,
+  звук:"throng_march",голоса:["beast_roar","siege_alarm_raid","war_brass"],
+  ступени:["следы на окраинах","первые набеги","нашествие","отбились"],
+  где:"область",кто:["чужое племя","твари из-за Грани","ополчение"],
+  рес:["шкура","кость","орган","яд"],
+  повод:s=>(s.война?0.3:0.1),
+  поводСлово:s=>s.война?"войско ушло на фронт, окраины оголились":"на окраинах стало нечем кормиться",
+  цена:res=>["шкура","кость"].includes(res)?0.9:(FACTION_FOOD.includes(res)?1.2:1),
+  дороги:1.35,прилавок:0.85,встречи:1.4,
+  конецСлово:"когда ополчение отгонит пришлых",
+  конец:s=>false},
+ {id:"boss",n:"появление владыки",о:"что-то очень старое подняло голову",срок:40,
+  звук:"deep_call",голоса:["wyrm_roar","dungeon_heart","omen"],
+  ступени:["дурные приметы","он показался","охота на него"],
+  где:"подземелье",кто:["владыка","охотники за головами","наёмные отряды"],
+  рес:["эссенция","эфир","орган","кровь"],
+  повод:s=>0.12,
+  поводСлово:s=>"печати старых глубин ослабли",
+  цена:res=>res==="эссенция"?1.25:1,
+  дороги:1.05,прилавок:1,встречи:1.2,
+  конецСлово:"когда владыку убьют или он уйдёт вглубь",
+  конец:s=>false},
+ {id:"portal",n:"открытие портала",о:"врата встали посреди поля",срок:14,
+  звук:"stk_portal",голоса:["deep_portal","magic_shimmer","oc_warp"],
+  ступени:["воздух дрожит","врата открылись","за вратами тихо"],
+  где:"область",кто:["портальные инженеры","пришлые","стража врат"],
+  рес:["чужая соль","переходный сплав","семя иного","осколок времени"],
+  повод:s=>0.15,
+  поводСлово:s=>"грань здесь тоньше бумаги",
+  цена:res=>["чужая соль","переходный сплав","семя иного","осколок времени"].includes(res)?0.85:1,
+  дороги:1.1,прилавок:1.1,встречи:1.25,
+  конецСлово:"когда врата закроются",
+  конец:s=>false},
+ {id:"cityfall",n:"разрушение города",о:"город взяли и сожгли",срок:20,
+  звук:"siege_alarm_city",голоса:["tower_fall","hall_fall","siege_ram"],
+  ступени:["осада","стены пали","город горит","руины"],
+  где:"город",кто:["осаждающие","гарнизон","беженцы"],
+  рес:["камень","тёсаный блок","полотно","доска"],
+  повод:s=>s.война?(s.сила<s.порог?0.3:0.1):0.01,
+  поводСлово:s=>s.война?"войско слабее соседского, и это знают обе стороны":"старая обида",
+  цена:res=>res==="камень"?1.3:1.15,
+  дороги:1.3,прилавок:0.5,встречи:1.2,
+  конецСлово:"когда осаду снимут или город падёт",
+  конец:s=>!s.война},
+ {id:"tradecrisis",n:"торговый кризис",о:"обозы встали, прилавки пусты",срок:16,
+  звук:"market_slap",голоса:["bazaar_tabla","throng_retreat","mtg_cart"],
+  ступени:["обозы не идут","пустые прилавки","перекупщики","подвоз наладился"],
+  где:"держава",кто:["купеческие дома","перекупщики","таможня"],
+  рес:["слиток","полотно","самоцвет","кристалл"],
+  повод:s=>s.нехватка>=0.32?0.35:0.09,
+  поводСлово:s=>"разбитая цепь передела и запертые заставы",
+  цена:res=>1.18,
+  дороги:1.1,прилавок:0.6,встречи:1,
+  конецСлово:"когда придут обозы и упадут перекупные цены",
+  конец:s=>s.нехватка<0.15}];
+const WEVENT_BY_ID=Object.fromEntries(WEVENT_KINDS.map(k=>[k.id,k]));
+const WEVENT_SHARE=0.25;   /* доля от повода: «сегодня или через седмицу» */
+/* Состояние державы на начало седмицы. Берётся из памяти совета (§17), а не
+   считается заново: совет уже посмотрел на мир в тот самый день. */
+function weventState(i,день){
+ return safeFn(()=>factionMove(i,Math.max(1,Math.floor((Number(день)||1)/7)*7)).сост,null);}
+/* Заводится ли событие этого рода у этой державы на этой седмице. */
+function weventStarts(i,ki,w){
+ try{
+  const k=WEVENT_KINDS[ki];if(!k)return false;
+  const s=weventState(i,Math.max(1,w*7));
+  if(!s)return false;
+  const п=Math.max(0,Math.min(1,Number(safeFn(()=>k.повод(s),0))||0));
+  if(п<=0)return false;
+  return H(i*53+ki,w,9800)<п*WEVENT_SHARE;
+ }catch(_){return false;}}
+/* Где именно. У каждого рода своё, и место называется по имени. */
+function weventPlace(k,i,w){
+ try{
+  const emp=EMPIRES[i]||{};
+  const ж=(соль)=>H(i*7+соль,w,9801);
+  if(k.где==="город"){
+   const свои=safeFn(()=>empireCitiesOf(i),[])||[];
+   const имен=safeFn(()=>NAMED_CITIES.filter(c=>empireIndexAt(c.x,c.y)===i),[])||[];
+   const все=имен.concat(свои);
+   if(все.length){const c=все[Math.floor(ж(1)*все.length)%все.length];
+    return {что:"город",имя:c.n||c.name,x:c.x,y:c.y};}
+   return {что:"город",имя:`престол ${emp.short}`,x:emp.cap?emp.cap.x:0,y:emp.cap?emp.cap.y:0};}
+  if(k.где==="область"){
+   const r=safeFn(()=>regionAt(emp.cap.x,emp.cap.y),null);
+   return {что:"область",имя:r?r.n:emp.short,x:emp.cap?emp.cap.x:0,y:emp.cap?emp.cap.y:0};}
+  if(k.где==="рудник"){
+   const dx=Math.round((ж(2)-0.5)*3000),dy=Math.round((ж(3)-0.5)*3000);
+   return {что:"рудник",имя:`горные разработки у ${emp.short}`,
+    x:(emp.cap?emp.cap.x:0)+dx,y:(emp.cap?emp.cap.y:0)+dy};}
+  if(k.где==="подземелье"){
+   const dx=Math.round((ж(4)-0.5)*5000),dy=Math.round((ж(5)-0.5)*5000);
+   const x=(emp.cap?emp.cap.x:0)+dx,y=(emp.cap?emp.cap.y:0)+dy;
+   const род=safeFn(()=>dungeonKindAt(x,y),null);
+   return {что:"подземелье",имя:род?`${род.n} в землях ${emp.short}`:`глубины ${emp.short}`,x,y};}
+  return {что:"держава",имя:emp.name||emp.short,x:emp.cap?emp.cap.x:0,y:emp.cap?emp.cap.y:0};
+ }catch(_){return {что:"держава",имя:(EMPIRES[i]||{}).short||"неведомо",x:0,y:0};}}
+/* Само событие: восемь свойств и ни одного лишнего. */
+function weventBuild(i,ki,w,день){
+ try{
+  const k=WEVENT_KINDS[ki];if(!k)return null;
+  const начало=Math.max(1,w*7);
+  const прошло=день-начало;
+  if(прошло<0||прошло>=k.срок)return null;
+  const s=weventState(i,день);
+  /* Условие конца сильнее срока: мир переменился — событие погасло. */
+  if(s&&прошло>=2&&safeFn(()=>!!k.конец(s),false))return null;
+  const ст=Math.min(k.ступени.length-1,Math.floor(прошло/k.срок*k.ступени.length));
+  return {id:`${k.id}:${i}:${w}`,вид:k.id,n:k.n,о:k.о,
+   держава:i,держархив:(EMPIRES[i]||{}).short,
+   начало,день,прошло,срок:k.срок,осталось:k.срок-прошло,
+   повод:safeFn(()=>k.поводСлово(s||{}),""),
+   ступень:ст,ступеньИмя:k.ступени[ст],ступеней:k.ступени.length,
+   место:weventPlace(k,i,w),
+   участники:k.кто.slice(),ресурсы:k.рес.slice(),
+   следствия:{цена:k.рес.map(r=>`${r} ×${(safeFn(()=>k.цена(r),1)).toFixed(2)}`),
+    дороги:k.дороги,прилавок:k.прилавок,встречи:k.встречи},
+   звук:k.звук,голоса:k.голоса.slice(),
+   конец:k.конецСлово};
+ }catch(_){return null;}}
+let WEVENT_CACHE=new Map();
+/* Все события мира на этот день. Считается раз на день. */
+function worldEvents(день){
+ try{
+  const d=Math.max(1,Number(день)||Number(G.day)||1);
+  const было=WEVENT_CACHE.get(d);
+  if(было)return было;
+  const out=[];
+  EMPIRES.forEach((e,i)=>{
+   WEVENT_KINDS.forEach((k,ki)=>{
+    const wКон=Math.floor(d/7);
+    const wНач=Math.floor(Math.max(1,d-k.срок)/7);
+    /* Сверху вниз и до первого: одно событие рода на державу зараз. */
+    for(let w=wКон;w>=wНач;w--){
+     const начало=Math.max(1,w*7);
+     if(начало>d)continue;
+     if(d-начало>=k.срок)break;
+     if(!weventStarts(i,ki,w))continue;
+     const ev=weventBuild(i,ki,w,d);
+     if(ev)out.push(ev);
+     break;}});});
+  if(WEVENT_CACHE.size>40)WEVENT_CACHE.clear();
+  WEVENT_CACHE.set(d,out);
+  return out;
+ }catch(_){return [];}}
+function weventsOf(i,день){
+ const k=Math.max(0,Math.min(EMPIRES.length-1,Number(i)||0));
+ return worldEvents(день==null?G.day:день).filter(ev=>ev.держава===k);}
+function weventsHere(){return weventsOf(safeFn(()=>empireIndexAt(G.x,G.y),0),G.day);}
+/* ── ЧЕТЫРЕ НАСТОЯЩИЕ ДВЕРИ СЛЕДСТВИЙ ─────────────────────────────────── */
+function weventPriceK(res,i,день){
+ try{
+  let k=1;
+  weventsOf(i,день).forEach(ev=>{
+   const вид=WEVENT_BY_ID[ev.вид];if(!вид)return;
+   k*=Number(safeFn(()=>вид.цена(res),1))||1;});
+  return Math.max(0.6,Math.min(2,k));
+ }catch(_){return 1;}}
+function weventRoadK(i,день){
+ try{let k=1;
+  weventsOf(i,день).forEach(ev=>{k*=Number((WEVENT_BY_ID[ev.вид]||{}).дороги)||1;});
+  return Math.max(0.8,Math.min(1.8,k));
+ }catch(_){return 1;}}
+function weventWidthK(i,день){
+ try{let k=1;
+  weventsOf(i,день).forEach(ev=>{k*=Number((WEVENT_BY_ID[ev.вид]||{}).прилавок)||1;});
+  return Math.max(0.35,Math.min(1.3,k));
+ }catch(_){return 1;}}
+function weventMeetK(i,день){
+ try{let k=1;
+  weventsOf(i,день).forEach(ev=>{k*=Number((WEVENT_BY_ID[ev.вид]||{}).встречи)||1;});
+  return Math.max(0.6,Math.min(1.6,k));
+ }catch(_){return 1;}}
+/* Встречи в поле. Дорогая проверка достаётся одной клетке из десяти —
+   тем, что прошли дешёвое сито наверху, — и общий потолок 2,2 держится
+   здесь же: выше него сито наверху начнёт врать. */
+function weventRaidK(x,y){
+ try{
+  if(G.dark)return 1;
+  return weventMeetK(safeFn(()=>empireIndexAt(x,y),0),G.day);
+ }catch(_){return 1;}}
+function weventLine(ev){
+ if(!ev)return "";
+ const вид=WEVENT_BY_ID[ev.вид]||{};
+ return `${ev.n} — ${ev.место.имя}. Ступень ${ev.ступень+1} из ${ev.ступеней}: ${ev.ступеньИмя}. `
+  +`Повод: ${ev.повод}. Кого касается: ${ev.участники.join(", ")}. `
+  +`Чего касается: ${ev.ресурсы.join(", ")}. `
+  +`Из этого следует: ${ev.следствия.цена.join(", ")}`
+  +(ev.следствия.дороги!==1?`; дороги ${ev.следствия.дороги>1?"опаснее":"спокойнее"}`:"")
+  +(ev.следствия.прилавок!==1?`; прилавок ${ev.следствия.прилавок>1?"полнее":"реже"}`:"")
+  +(ev.следствия.встречи!==1?`; встреч ${ev.следствия.встречи>1?"больше":"меньше"}`:"")
+  +`. Кончится, ${ev.конец}; сроку осталось ${ev.осталось} ${ev.осталось===1?"день":ev.осталось<5?"дня":"дней"}.`;}
+function weventsText(){
+ const i=safeFn(()=>empireIndexAt(G.x,G.y),0);
+ const свои=weventsOf(i,G.day);
+ const всего=worldEvents(G.day).length;
+ if(!свои.length)return `В землях «${(EMPIRES[i]||{}).short}» сейчас спокойно. Всего по миру событий ${всего}.`;
+ return `В землях «${(EMPIRES[i]||{}).short}» сейчас ${свои.length}: `
+  +свои.map(ev=>weventLine(ev)).join(" ")
+  +` Всего по миру событий ${всего}.`;}
+/* Вестник. Объявляет то, что началось сегодня там, где стоит игрок, —
+   один раз, со звуковым профилем рода. */
+function weventAnnounce(){
+ try{
+  const i=safeFn(()=>empireIndexAt(G.x,G.y),-1);
+  if(i<0)return false;
+  const новые=weventsOf(i,G.day).filter(ev=>ev.прошло===0);
+  if(!новые.length)return false;
+  if(!G.weventSaid||typeof G.weventSaid!=="object")G.weventSaid={};
+  const ev=новые.find(x=>!G.weventSaid[x.id]);
+  if(!ev)return false;
+  G.weventSaid[ev.id]=G.day;
+  /* Память вестника не растёт без края: старое стирается. */
+  const ключи=Object.keys(G.weventSaid);
+  if(ключи.length>60)ключи.slice(0,30).forEach(k=>{delete G.weventSaid[k];});
+  safeFn(()=>{
+   Bank.play(ev.звук,{gain:0.55,maxSec:4});
+   ev.голоса.forEach((г,n)=>setTimeout(()=>safeFn(()=>Bank.play(г,{gain:0.3,maxSec:3})),400+n*350));});
+  narrate(`Вести мира: ${weventLine(ev)}`,{interrupt:false});
+  journal(`${ev.n}: ${ev.место.имя}.`);
+  return true;
+ }catch(_){return false;}}
+const WEvents=Modules.register("WORLDEVENTS",{
+ kinds:WEVENT_KINDS,
+ kind:id=>WEVENT_BY_ID[id]||null,
+ all:день=>S(()=>worldEvents(день==null?G.day:день),[]),
+ of:(i,день)=>S(()=>weventsOf(i,день),[]),
+ here:()=>S(()=>weventsHere(),[]),
+ line:ev=>S(()=>weventLine(ev),""),
+ priceK:(res,i,день)=>S(()=>weventPriceK(res,i,день==null?G.day:день),1),
+ roadK:(i,день)=>S(()=>weventRoadK(i,день==null?G.day:день),1),
+ widthK:(i,день)=>S(()=>weventWidthK(i,день==null?G.day:день),1),
+ meetK:(i,день)=>S(()=>weventMeetK(i,день==null?G.day:день),1),
+ daily:()=>S(()=>weventAnnounce(),false),
+ text(){return S(()=>weventsText(),"Вести мира молчат.");}});
 
 
 /* ════════ САМОПРОВЕРКА МИРА (§131, §133) ════════
@@ -43415,7 +43833,8 @@ Modules.register("WORLD_SIMULATION",{
     стояли врассыпную и новый обработчик легко забывал один из них. */
  daily(){const было=[];
   [["armies",()=>Armies.tick()],["arcs",()=>Arcs.daily()],["prophecy",()=>Prophecy.daily()],
-   ["global",()=>Global.daily()],["coins",()=>Coins.daily()],["wararc",()=>WarArc.tick()]]
+   ["global",()=>Global.daily()],["coins",()=>Coins.daily()],["wararc",()=>WarArc.tick()],
+   ["wevents",()=>WEvents.daily()]]
    .forEach(([n,f])=>{if(S(f,false))было.push(n);});
   return было;},
  text(){return `Суточный ход мира: войска, судьбы, пророчества, мировые события, долги и дуга.`;}});
@@ -44360,6 +44779,48 @@ function worldSelfCheck(){
   ok("sigils",SIGIL_SYMBOLS.length===8&&SIGIL_SYMBOLS.every(x=>MSCHOOL_BY_ID[x.школа]&&x.намерения.every(i=>SIGIL_INTENTS[i]))&&SIGIL_CARRIERS.length===8&&SIGIL_CARRIERS.every(x=>RES_BASE[x.ресурс])&&SIGIL_GEOMETRY.length===5&&INKS.length===6&&INKS.every(x=>SOUND_BANK[x.звук]&&Object.keys(x.рецепт).every(r=>RES_BASE[r]))&&AWAKEN_SOURCES.length===6&&AWAKEN_SOURCES.every(x=>SOUND_BANK[x.звук])&&WAVES.length===3&&MORPH_TRAITS.length===6&&MORPHOBEASTS.length===10&&MORPHOBEASTS.every(b=>MONSTERS.some(m=>m.id===b.база))&&DEVOUR_GIFTS.length===6&&EVENT_THEME.world_event&&SOUND_BANK[EVENT_THEME.world_event.роль],"Знаки: восемь символов, восемь носителей, пять геометрий, шесть чернил, шесть источников пробуждения, три волны, шесть черт, десять морфозверей, шесть даров Эха — всё со звуком и по настоящим ресурсам");
   ok("cases",CASE_TEMPLATES.length===6&&CASE_TEMPLATES.every(t=>t.версии.length===3&&t.улики.every(k=>CLUE_KINDS[k])&&t.версии.every(v=>v.улики.every(k=>t.улики.includes(k))))&&SYNDICATES.length===8&&SYNDICATES.every(x=>SOUND_BANK[x.звук]&&x.города.every(id=>NAMED_CITY_BY_ID[id])&&REGIONS[x.область])&&Object.keys(DECISIONS).length===9&&Object.values(DECISIONS).every(d=>Object.keys(d).length>=3)&&["deeper","border_war","shards","lasthouse","beast","price","undercity","maskface","endless"].every(id=>CHAIN_DB[id])&&HOUSE_BY_ID[LAST_HOUSE.враг]&&DLG_MOVE_BY_ID.znanie&&DLG_MOVE_BY_ID.kultura&&DLG_MOVE_BY_ID.nedoskazat,"Расследования: шесть дел с тремя версиями, восемь синдикатов со звуком и городами, девять цепочек с развязками, три хода разговора");
   ok("academy",LANGS.length>=20&&LANGS.every(l=>l.письмо&&l.о)&&SCIENCES.length===6&&SCIENCES.every(x=>SOUND_BANK[x.звук]&&x.эффект.length===3&&FACULTY_BY_ID[x.факультет])&&FACULTIES.length===12&&FACULTIES.every(f=>(f.школы||[]).every(id=>MSCHOOL_BY_ID[id]&&SCHOOL_AUDIO[id])&&(!f.маст||MAST_BY_ID[f.маст]))&&SCHOOLS.length>=30&&SCHOOLS.every(sc=>SCHOOL_AUDIO[sc.id]&&SPELL_LAYERS.every(l=>SOUND_BANK[SCHOOL_AUDIO[sc.id][l]])),"Академия: двадцать один язык, шесть наук, двенадцать факультетов, тридцать восемь школ чар — все со звуком");
+  ok("wevents",WEVENT_KINDS.length===14&&new Set(WEVENT_KINDS.map(k=>k.id)).size===14
+   &&WEVENT_KINDS.map(k=>k.id).join(",")==="war,revolt,plague,famine,fire,flood,mstorm,mineopen,collapse,invasion,boss,portal,cityfall,tradecrisis"
+   /* Восемь свойств у каждого рода, и звуковой профиль без синтеза. */
+   &&WEVENT_KINDS.every(k=>k.n&&k.о&&k.о.length>=10
+     &&typeof k.повод==="function"&&typeof k.поводСлово==="function"
+     &&Array.isArray(k.ступени)&&k.ступени.length>=3&&k.где
+     &&Array.isArray(k.кто)&&k.кто.length>=3&&Array.isArray(k.рес)&&k.рес.length>=3
+     &&k.рес.every(r=>RES_BASE[r]||PROD_GOODS.some(g=>g.n===r))
+     &&typeof k.цена==="function"&&k.дороги&&k.прилавок&&k.встречи
+     &&SOUND_BANK[k.звук]&&Array.isArray(k.голоса)&&k.голоса.length===3
+     &&[k.звук].concat(k.голоса).every(г=>SOUND_BANK[г]
+       &&!/^(inst|orch|mood|relic|score|folk|depth)\//.test(SOUND_BANK[г].f[0]))
+     &&k.конецСлово&&typeof k.конец==="function")
+   /* Повод считается от мира: без гор не бьют штольню, без врагов не воюют. */
+   &&(()=>{try{
+     const б={враги:[],напряжение:[],союзники:[],гнёт:0,нехватка:0.1,деф:{},
+      раздор:"наследники делят престол ещё при живом правителе",война:false,войн:0,
+      горы:false,вода:false,академия:false,бог:"stone",сила:100,порог:100,
+      запретных:2,ввоз:[],вывоз:[]};
+     const с=д=>Object.assign({},б,д);
+     const k=id=>WEVENT_BY_ID[id];
+     return k("war").повод(с({враги:[1],война:true}))>k("war").повод(с({}))*5
+      &&k("mineopen").повод(с({горы:true}))>k("mineopen").повод(с({}))*5
+      &&k("famine").повод(с({деф:{"трава":0.5}}))>k("famine").повод(с({}))*5
+      &&WEVENT_KINDS.every(x=>{const v=x.повод(с({}));return v>=0&&v<=1;});
+    }catch(_){return false;}})()
+   /* События выводятся и не переполняют мир. */
+   &&(()=>{try{
+     const a=worldEvents(200).map(e=>e.id).sort().join("|");
+     const b=worldEvents(200).map(e=>e.id).sort().join("|");
+     const n=worldEvents(200).length;
+     return a===b&&n>=1&&n<=60
+      &&worldEvents(200).every(e=>e.место&&e.место.имя&&e.ступеньИмя
+        &&e.участники.length&&e.ресурсы.length&&e.осталось>0);
+    }catch(_){return false;}})()
+   /* Четыре двери следствий в берегах у всякой державы. */
+   &&EMPIRES.every((e,i)=>{
+     const d=weventRoadK(i,G.day),p=weventWidthK(i,G.day),m=weventMeetK(i,G.day);
+     const c=weventPriceK("руда",i,G.day);
+     return d>=0.8&&d<=1.8&&p>=0.35&&p<=1.3&&m>=0.6&&m<=1.6&&c>=0.6&&c<=2;})
+   &&typeof Modules.get("WORLDEVENTS").text()==="string",
+   "мировых событий четырнадцать родов, у каждого повод от состояния мира, ступени, место, участники, ресурсы, четыре следствия, звуковой профиль настоящими записями и условие конца сверх срока");
   ok("faction16",FACTION_TRAITS.length===16&&new Set(FACTION_TRAITS.map(t=>t.id)).size===16
    &&FACTION_TRAITS.every(t=>t.n&&t.о&&t.о.length>12&&SOUND_BANK[t.звук])
    &&FACTION_TRAITS.map(t=>t.id).join(",")==="land,folk,econ,res,prod,army,spy,faith,law,tax,diplo,allies,foes,inner,lead,goals"
@@ -44862,7 +45323,7 @@ function worldSelfCheck(){
   ok("gods",LESSER_GODS.length===32&&LESSER_GODS.every(g=>SOUND_BANK[g.звук]&&g.праздник>=1&&g.праздник<=36)&&new Set(LESSER_GODS.map(g=>g.праздник)).size===LESSER_GODS.length,"у каждого малого бога голос и свой день праздника");
   ok("npc",!!safeFn(()=>npcSoul(getNPC(EMPIRES[0].cap.x,EMPIRES[0].cap.y,0)),null),"у жителя есть состояние");
   ok("tts",typeof Speech==="object"&&typeof narrate==="function"&&String(narrate).includes("Speech.say"),"один распорядитель речи");
-  const keys=["spellbook","charged","council","potions","plantsSeen","bosses","delayed","seasSeen","dives","bookGifts","asked","artifacts","quests","rumors","standing"];
+  const keys=["spellbook","charged","council","weventSaid","potions","plantsSeen","bosses","delayed","seasSeen","dives","bookGifts","asked","artifacts","quests","rumors","standing"];
   ok("save",(()=>{try{saveGame(true);const raw=localStorage.getItem(SAVE_KEY)||"";const o=JSON.parse(raw);const g=o.G||o;return keys.every(k=>!(k in G)||k in g);}catch(_){return false;}})(),"новые поля лежат в сохранении");
  }catch(e){ok("run",false,String(e));}
  return out;}
