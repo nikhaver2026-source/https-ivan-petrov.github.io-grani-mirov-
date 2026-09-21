@@ -15,8 +15,16 @@ const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(e!==undefined?' :
  await page.waitForTimeout(200);
 
  async function tap(x,y){await cdp.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[{x,y,id:0}]});await page.waitForTimeout(25);await cdp.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[{x,y,id:0}]});await page.waitForTimeout(60);}
+ /* Одиночного касания одним пальцем в игре нет: в открытом окне двойное
+    касание подтверждает ВЫБРАННЫЙ пункт, где бы палец ни опустился. Поэтому
+    пункт сначала выбирается — так же, как его выбрал бы свайп, — и только
+    потом подтверждается двумя касаниями. Вне окон (кнопки на игровом экране)
+    выбора нет, и там касание работает по кнопке под пальцем, как и прежде. */
  async function dblTapSel(sel){
-  const box=await page.evaluate(s=>{const b=document.querySelector(s);if(!b)return null;b.scrollIntoView({block:'center'});const r=b.getBoundingClientRect();return {x:r.x+r.width/2,y:r.y+r.height/2};},sel);
+  const box=await page.evaluate(s=>{const b=document.querySelector(s);if(!b)return null;
+   b.scrollIntoView({block:'center'});
+   if(typeof navLayer==='function'&&navLayer()&&navLayer().contains(b))setCursor(b,false);
+   const r=b.getBoundingClientRect();return {x:r.x+r.width/2,y:r.y+r.height/2};},sel);
   if(!box)return false;
   await tap(box.x,box.y);await tap(box.x,box.y);await page.waitForTimeout(150);return true;
  }

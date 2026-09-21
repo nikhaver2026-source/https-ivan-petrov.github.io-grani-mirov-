@@ -252,17 +252,25 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
 
  /* ── Заглавное меню: то же правило до входа в мир ── */
  await clean();
+ /* Выбор делается свайпом (здесь — прямой установкой курсора, как его ставит
+    свайп), а касание только подтверждает: одиночного касания одним пальцем в
+    игре больше нет. */
  const заг=await page.evaluate(()=>{
   showScreen("screen-title");resetCursor();
   const el=[...cursorItems(navLayer())].find(x=>x.dataset&&x.dataset.cmd==="settings");
   el.scrollIntoView({block:"center"});const r=el.getBoundingClientRect();
+  const чужая=[...cursorItems(navLayer())].find(x=>x.dataset&&x.dataset.cmd&&x.dataset.cmd!=="settings");
+  const rc=чужая.getBoundingClientRect();
+  setCursor(el,false);
   window.__acts=[];window.__cmds=[];window.__said=[];
-  return {x:Math.round(r.x+r.width/2),y:Math.round(r.y+r.height/2)};});
- await tap(заг.x,заг.y);
+  return {x:Math.round(r.x+r.width/2),y:Math.round(r.y+r.height/2),
+   cx:Math.round(rc.x+rc.width/2),cy:Math.round(rc.y+rc.height/2),
+   чужой:чужая.dataset.cmd};});
+ await tap(заг.cx,заг.cy);
  const послеЗаг=await page.evaluate(()=>({окно:activeLayer()&&activeLayer().id,
   акт:window.__acts.slice(),кмд:window.__cmds.slice(),сказано:window.__said.length,
   курсор:uiCursor&&uiCursor.dataset.cmd}));
- check('в заглавном меню одно касание молчит и лишь ставит курсор',
+ check('в заглавном меню одно касание молчит, ничего не делает и не уводит выбор под палец',
   !послеЗаг.окно&&!послеЗаг.акт.length&&!послеЗаг.кмд.length
   &&послеЗаг.сказано===0&&послеЗаг.курсор==="settings",послеЗаг);
  await tap(заг.x,заг.y);await tap(заг.x,заг.y);
@@ -270,6 +278,14 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
  const открыли=await page.evaluate(()=>activeLayer()&&activeLayer().id);
  check('в заглавном меню двойное касание открывает выбранное',
   открыли==="modal-settings",{окно:открыли});
+ /* И оно же открывает выбранное, когда палец опустился на СОСЕДНЮЮ кнопку. */
+ await page.evaluate(()=>{while(activeLayer())closeTopUI();showScreen("screen-title");resetCursor();
+  const el=[...cursorItems(navLayer())].find(x=>x.dataset&&x.dataset.cmd==="settings");setCursor(el,false);});
+ await tap(заг.cx,заг.cy);await tap(заг.cx,заг.cy);
+ await page.waitForTimeout(300);
+ const мимо=await page.evaluate(()=>activeLayer()&&activeLayer().id);
+ check('двойное касание по соседней кнопке всё равно открывает выбранное, а не ту, куда попал палец',
+  мимо==="modal-settings",{окно:мимо,палецБыл:заг.чужой});
  await page.evaluate(()=>{while(activeLayer())closeTopUI();showScreen("screen-game");resetCursor();});
 
  /* ── Второй уровень энциклопедии: касание по звуку его не проигрывает ── */
@@ -318,6 +334,8 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   CMD.settings();resetCursor();
   const el=document.getElementById("setFxVol");
   el.scrollIntoView({block:"center"});const r=el.getBoundingClientRect();
+  /* Ползунок выбирают свайпом, как любой другой пункт; касание подтверждает. */
+  setCursor(el,false);
   settings.fxVol=1;el.value=100;window.__said=[];
   return {x:Math.round(r.x+r.width/2),y:Math.round(r.y+r.height/2),до:settings.fxVol};});
  await tap(пол.x,пол.y);
@@ -330,6 +348,7 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
  await page.waitForTimeout(300);
  const шаг=await page.evaluate(()=>({значение:settings.fxVol,сказано:window.__said.slice(-1)[0]||""}));
  await page.waitForTimeout(900);
+ await page.evaluate(()=>setCursor(document.getElementById("setFxVol"),false));
  await tap(пол.x,пол.y);await tap(пол.x,пол.y);
  await page.waitForTimeout(300);
  const шаг2=await page.evaluate(()=>settings.fxVol);

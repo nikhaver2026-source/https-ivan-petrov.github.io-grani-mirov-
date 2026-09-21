@@ -236,24 +236,30 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   onBuy===trade.cmd&&bought.золото<trade.золото,
   {курсор:onBuy,ждали:trade.cmd,былоЗолота:trade.золото,стало:bought.золото});
 
- // 4. Двойное касание ПО САМОЙ кнопке (а не по пустому месту) тоже работает
+ /* 4. Двойное касание подтверждает ВЫБРАННЫЙ пункт, а не тот, куда попал палец.
+       Одиночного касания одним пальцем в игре больше нет: оно спорило с двойным
+       и молча уводило выбор туда, куда случайно опустился палец. */
  const direct=await page.evaluate(()=>{
   while(activeLayer())closeTopUI();
   CMD.settings();resetCursor();ensureCursor(activeLayer());
   const b=[...activeLayer().querySelectorAll('[data-cmd^="setdiff:"]')].find(x=>x.dataset.cmd==="setdiff:harsh");
-  if(!b)return null;
+  const чужая=[...activeLayer().querySelectorAll('[data-cmd^="setdiff:"]')].find(x=>x.dataset.cmd==="setdiff:calm");
+  if(!b||!чужая)return null;
   b.scrollIntoView({block:"center"});
-  const r=b.getBoundingClientRect();
+  /* Выбор сделан заранее — так, как его делает свайп. */
+  setCursor(b,false);
+  const r=чужая.getBoundingClientRect();
   settings.difficulty="normal";
   return {x:Math.round(r.x+r.width/2),y:Math.round(r.y+r.height/2),cmd:b.dataset.cmd};});
  if(direct){
   await tap(direct.x,direct.y);await tap(direct.x,direct.y);
   await page.waitForTimeout(200);}
  const diffNow=await page.evaluate(()=>settings.difficulty);
- check('двойное касание прямо по кнопке тоже срабатывает',diffNow==="harsh",{стало:diffNow});
+ check('двойное касание подтверждает выбранный пункт, даже если палец попал по соседней кнопке',
+  diffNow==="harsh",{стало:diffNow});
  await page.evaluate(()=>{setDifficulty("normal");while(activeLayer())closeTopUI();});
 
- // 5. Одиночное касание по кнопке ничего не выполняет — только называет
+ // 5. Одиночное касание не выполняет НИЧЕГО и не двигает выбор
  const single=await page.evaluate(()=>{
   while(activeLayer())closeTopUI();
   CMD.settings();resetCursor();ensureCursor(activeLayer());
@@ -262,13 +268,16 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   b.scrollIntoView({block:"center"});
   const r=b.getBoundingClientRect();
   window.__said=[];
-  return {x:Math.round(r.x+r.width/2),y:Math.round(r.y+r.height/2)};});
+  return {x:Math.round(r.x+r.width/2),y:Math.round(r.y+r.height/2),
+   былКурсор:uiCursor&&(uiCursor.dataset.cmd||uiCursor.id||uiCursor.tagName)};});
  await tap(single.x,single.y);
  await page.waitForTimeout(300);
  const afterSingle=await page.evaluate(()=>({сложность:settings.difficulty,сказано:window.__said.length,
-  курсор:uiCursor&&uiCursor.dataset.cmd}));
- check('одно касание молчит, делает пункт текущим, но не выполняет',
-  afterSingle.сложность==="normal"&&afterSingle.сказано===0&&afterSingle.курсор==="setdiff:harsh",afterSingle);
+  курсор:uiCursor&&(uiCursor.dataset.cmd||uiCursor.id||uiCursor.tagName)}));
+ check('одно касание молчит, ничего не выполняет и не уводит выбор туда, куда попал палец',
+  afterSingle.сложность==="normal"&&afterSingle.сказано===0
+  &&afterSingle.курсор===single.былКурсор&&afterSingle.курсор!=="setdiff:harsh",
+  {было:single.былКурсор,стало:afterSingle});
  await page.evaluate(()=>{while(activeLayer())closeTopUI();});
 
  // ══ Неспешное устройство: голос не должен опережать жест ══

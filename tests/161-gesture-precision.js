@@ -20,6 +20,9 @@
   10. Двойное касание по пункту активирует его при умолчании.
   11. Съехавшее второе касание по тому же пункту всё равно активирует.
   12. Съехавшее касание по ДРУГОМУ пункту ничего не активирует.
+  12а. Одиночного касания одним пальцем нет: оно молчит и не двигает выбор.
+  12б. Двойное касание по соседней кнопке подтверждает ВЫБРАННОЕ.
+  12в. Выбрать пальцем можно ощупыванием: подержать, отпустить, подтвердить.
   13. С широким окном второе касание засчитывается позже прежнего предела.
   14. С узким окном опоздавшее второе касание не засчитывается.
   15. Окно отсчитывается от начала второго касания, а не от его конца.
@@ -157,6 +160,9 @@ const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(e!==undefined?' :
   const r=b.getBoundingClientRect();
   const c=кн[0]===b?кн[1]:кн[0];c.scrollIntoView({block:"nearest"});
   const rc=c.getBoundingClientRect();
+  /* Пункт выбирается заранее — так, как его выбрал бы свайп: одиночного
+     касания одним пальцем в игре нет, двойное подтверждает ВЫБРАННОЕ. */
+  setCursor(b,false);
   window.__acts=[];
   return {x:Math.round(r.left+r.width/2),y:Math.round(r.top+r.height/2),cmd:b.dataset.cmd,
    cx:Math.round(rc.left+rc.width/2),cy:Math.round(rc.top+rc.height/2),cmd2:c.dataset.cmd};});
@@ -186,6 +192,39 @@ const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(e!==undefined?' :
  const чужое=await снять();
  check('съехавшее касание без взведённого двойного ничего не активирует',
   чужое.length===0,чужое);
+
+ /* ── 12а–12в. Одиночного касания одним пальцем больше нет ── */
+ const m7=await место();
+ await page.evaluate(()=>{window.__said=[];const o=Speech.say.bind(Speech);
+  if(!window.__spy){window.__spy=1;Speech.say=(t,x)=>{window.__said.push(String(t));return o(t,x);};}});
+ await tapAt(m7.cx,m7.cy);      /* одно касание по СОСЕДНЕЙ кнопке */
+ const одно=await page.evaluate(()=>({акты:window.__acts.slice(),
+  курсор:uiCursor&&uiCursor.dataset?uiCursor.dataset.cmd:null,
+  сказано:(window.__said||[]).length}));
+ check('одно касание одним пальцем ничего не выполняет, молчит и не уводит выбор под палец',
+  одно.акты.length===0&&одно.курсор===m7.cmd&&одно.сказано===0,
+  {...одно,выбрано:m7.cmd,палецБыл:m7.cmd2});
+ await tapAt(m7.cx,m7.cy);
+ const мимо=await снять();
+ check('двойное касание по соседней кнопке подтверждает выбранный пункт, а не ту, куда попал палец',
+  мимо.length===1&&мимо[0]===m7.cmd,{акты:мимо,ждали:m7.cmd,палецБыл:m7.cmd2});
+
+ /* Выбрать пальцем по-прежнему можно — но это отдельный жест: подержать и
+    отпустить (ощупывание), а не стукнуть. */
+ const m8=await место();
+ await page.evaluate(()=>{window.__said=[];});
+ await cdp.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[{x:m8.cx,y:m8.cy,id:0}]});
+ await page.waitForTimeout(500);
+ await cdp.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});
+ await page.waitForTimeout(120);
+ const ощупь=await page.evaluate(()=>({курсор:uiCursor&&uiCursor.dataset?uiCursor.dataset.cmd:null,
+  сказано:(window.__said||[]).length,акты:window.__acts.slice()}));
+ await tapAt(m8.cx,m8.cy);await tapAt(m8.cx,m8.cy);
+ const послеОщупи=await снять();
+ check('выбрать пальцем можно ощупыванием: палец полежал, пункт назвался и стал текущим, а двойное касание его подтвердило',
+  ощупь.курсор===m8.cmd2&&ощупь.сказано>0&&ощупь.акты.length===0
+  &&послеОщупи.length===1&&послеОщупи[0]===m8.cmd2,
+  {ощупь,подтверждено:послеОщупи,ждали:m8.cmd2});
 
  /* ── 13–14. Окно решает, засчитано ли второе касание ── */
  const m4=await место();
