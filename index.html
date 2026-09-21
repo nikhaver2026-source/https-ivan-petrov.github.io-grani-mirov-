@@ -381,6 +381,7 @@ h3{color:var(--acc2);margin:14px 0 6px;font-size:1.05rem;}
  <h3>🔥 Войны сегодня</h3><div id="polWars"></div>
  <h3>🤝 Союзы и договоры</h3><div id="polAllies"></div>
  <h3>🕊️ Договоры, меры и тайное</h3><div id="polPacts"></div>
+ <h3>🏭 Производственная экономика</h3><div id="polProd"></div>
  <h3>🏛️ Восемь держав</h3><div id="polEmpires"></div>
  <h3>🏰 Досье держав: цели, правители, тайные дела</h3><div id="polFactions"></div>
  <h3>🪙 Рынок вашей державы</h3><div id="polMarket"></div>
@@ -4820,6 +4821,14 @@ const GUIDE=[
  "Вещь растёт. За каждую победу работающий артефакт получает опыт, а на пороге открывает ступень — прибавку, которой у него раньше не было, и всегда из своего направления. Каждая следующая ступень даётся вдвое тяжелее. Если гнёзда кончились, редкую часть можно скормить вещи: она уйдёт в опыт вместо гнезда.",
  "Требования. Ранг задаёт уровень; сверх того вещь может требовать навык, заклинание нужной школы, расположение народа, принадлежность к клану, прочитанное знание или закрытое дело. Вещь, требования которой не выполнены, лежит мёртвым грузом и не даёт ничего — и прямо говорит, чего ей не хватает.",
  "Где всё это. Пункт меню «Артефакты, части и рецепты». В нём видно, каким ремеслом здесь занимаются и каково ваше умение, какие рецепты под рукой и чего не хватает, какие части лежат в суме, и по каждой вещи — всё, что о ней известно, и всё, что с ней можно сделать: вложить, вынуть, зачаровать, скормить, продать."]},
+{title:"Глава 77. Производственная экономика: война ломает цепь",body:[
+ "§13 описывает не таблицу, а ЦЕПЬ: война разрушила шахту — меньше руды — меньше металла — меньше оружия — растёт цена — вооружение дефицитно — фракции меняют закупки — торговцы меняют ассортимент — появляются контрабандисты. В мире были все звенья по отдельности; не было самой цепи.",
+ "ЧТО ЛОМАЕТСЯ. У державы есть производственные здания — те самые, что стоят в её городах. Их ломают война, осада крепости и плохой подвоз, и ломают по-разному: шахту и плавильню жгут первыми, ткацкую позже, эфирную лабораторию почти никогда. Без них встаёт всё остальное, и это знают обе стороны.",
+ "УЗКОЕ МЕСТО РЕШАЕТ ВСЁ. Выход цепи считается по переделам: каждая ступень даёт не больше, чем даёт здание, которое её делает, и не больше, чем пришло с предыдущей. Уцелевшая кузница не спасёт, если сожжена плавильня: ковать будет нечего.",
+ "ЧЕТЫРЕ ПОСЛЕДСТВИЯ, А НЕ СТРОКА В ОКНЕ. Цена: то, что выходило из разбитой цепи, дорожает здесь и сейчас, и в объяснении цены так и сказано — «цепь разбита». Закупки: держава сама скупает недостающее, и вам за него платят дороже — это и есть «фракции меняют закупки». Прилавок: когда встал металл, у торговца редеет стойка с оружием — не дороже, а МЕНЬШЕ вещей, их не из чего делать. Контрабанда: при глубоком дефиците вывоз запрещают, и товар делается запретным со всем, что за этим следует.",
+ "ЭТО СЛЫШНО НА УЛИЦЕ. Войдя в город державы с глубоким дефицитом, вы услышите треск и возню пустого склада, а потом — о чём здесь говорят: какая мастерская разбита и чего не достать.",
+ "НИЧЕГО НЕ ХРАНИТСЯ. Всё выводится из державы, дня и уже написанных войн: перезагрузка ничего не меняет, а кончится война — отстроятся и мастерские.",
+ "ГДЕ СМОТРЕТЬ. Окно «Политика и торговля», раздел «Производственная экономика»: гнёт державы, что разбито, как идёт каждая из десяти цепей и чего недостаёт."]},
 {title:"Глава 76. Девять свойств и четырнадцать производных",body:[
  "У героя было четыре числа: сила, ловкость, разум, харизма. Прибавились пять: ВЫНОСЛИВОСТЬ, ВОЛЯ, ДУХ, ВОСПРИЯТИЕ и СИНХРОНИЗАЦИЯ. Харизма в списке не значилась, но она в игре везде — от торга до допроса, — и осталась девятой.",
  "СИЛА — что поднимете и как тяжело ляжет удар. ЛОВКОСТЬ — как быстро двигаетесь и как чисто ложится удар. ВЫНОСЛИВОСТЬ — сколько тело держит без передышки. РАЗУМ — что понимаете и как крепко держите мысль под ударом. ВОЛЯ — сколько воли в вас помещается. ДУХ — чем вы стоите против того, что бьёт не по телу. ВОСПРИЯТИЕ — что слышите и замечаете раньше других. СИНХРОНИЗАЦИЯ — насколько вы в лад с силой, которую тянете через себя.",
@@ -6946,6 +6955,8 @@ function marketPrice(res,idx,day){
  k*=safeFn(()=>Res.priceK(res),1);
  /* §18: договоры, меры и дань. Единственная дверь дипломатии в рынок. */
  k*=safeFn(()=>diploPriceK(res,idx,day),1);
+ /* §13: разбитая войной цепь передела. Дверь производственной экономики. */
+ k*=safeFn(()=>prodEconPriceK(res,idx,day),1);
  return Math.max(2,Math.round(base*Math.max(0.35,k)));
 }
 /* ════════════════════════════════════════════════════════════════════════
@@ -6982,6 +6993,7 @@ function sellPrice(res,idx,day,npc){
  p*=1+0.05*fxLevel("deal");                             /* умение торговаться */
  p*=1+safeFn(()=>Path.facetK("trade"),0);               /* Грань «Торговая чуйка» */
  p*=tradeSellK(npc&&npc.race,npc);                      /* отношение народа, мера мира, знакомство */
+ p*=safeFn(()=>prodEconBuyK(res,idx,day),1);            /* §13: держава скупает недостающее */
  /* ── ПОТОЛОК ВЫПЛАТЫ СЧИТАЕТСЯ ОТ РОВНОЙ ЦЕНЫ ──
     Торговец не платит больше, чем просит, — это правило остаётся. Но потолок
     нельзя брать от той цены, которую он просит ИМЕННО С ВАС: своему он
@@ -7151,8 +7163,171 @@ function empireLaw(idx){
  return {запрет:[a,b],пошлина:+(0.04+H(i,3,9502)*0.1).toFixed(2)};}
 /* §5: пока миры сомкнуты, чужое запретно во всех державах сразу — это и
    есть «меняются законы регионов»: не в одной земле, а везде. */
+/* ════════════════════════════════════════════════════════════════════════
+   §13 ПРОИЗВОДСТВЕННАЯ ЭКОНОМИКА: МИР СЧИТАЕТ ПОСЛЕДСТВИЯ САМ
+
+   §13 описывает не таблицу, а ЦЕПЬ: война разрушила шахту — меньше руды —
+   меньше металла — меньше оружия — растёт цена — вооружение дефицитно —
+   фракции меняют закупки — торговцы меняют ассортимент — появляются
+   контрабандисты.
+
+   КАК БЫЛО. В мире были все звенья по отдельности: война, обвал рудника,
+   плохой подвоз, запретный товар, контрабанда. Не было самой цепи. Война
+   поднимала цену металла на треть — и всё; шахта, плавильня и оружейная к
+   этому отношения не имели, потому что до §12 их просто не существовало.
+
+   КАК СТАЛО. У державы есть производственные здания — те самые тринадцать
+   родов, что стоят в её городах. Война, осада крепости и плохой подвоз их
+   ЛОМАЮТ, и ломают по-разному: шахту и плавильню жгут первыми, ткацкую
+   позже, эфирную лабораторию почти никогда. Дальше считается выход по
+   ЦЕПИ: каждый передел даёт не больше, чем даёт здание, которое его
+   делает, и не больше, чем пришло с предыдущей ступени. Узкое место
+   решает всё — ровно как в настоящем переделе.
+
+   И ИЗ ЭТОГО ВЫХОДЯТ ЧЕТЫРЕ ПОСЛЕДСТВИЯ, А НЕ СТРОКА В ОКНЕ:
+     ЦЕНА — то, что выходило из разбитой цепи, дорожает здесь и сейчас.
+     ЗАКУПКИ — держава сама начинает скупать недостающее, и вам за него
+       платят дороже: это и есть «фракции меняют закупки».
+     ПРИЛАВОК — когда встал металл, у торговца редеет стойка с оружием.
+       Не «дороже», а меньше вещей: их не из чего делать.
+     КОНТРАБАНДА — при глубоком дефиците вывоз запрещают, и товар
+       становится запретным со всем, что за этим следует.
+
+   Ничего из этого не хранится: всё выводится из державы, дня и уже
+   написанных войн. Перезагрузка ничего не меняет.
+   ════════════════════════════════════════════════════════════════════════ */
+/* Насколько род здания — военная цель. Шахту и плавильню жгут первыми:
+   без них встаёт всё остальное, и это знают обе стороны. */
+const PROD_VULN={mine:1,smelter:1,smithy:0.95,armory:0.95,
+ woodshop:0.7,stonecut:0.7,tannery:0.6,weavery:0.6,
+ runery:0.5,artery:0.45,alchlab:0.45,etherlab:0.35,astrallab:0.3};
+let PROD_SITES_CACHE=null;
+/* Сколько и каких производственных зданий у державы. Считается по её
+   городам — тем самым, в которых они и стоят по §12. */
+function prodSitesOf(i){
+ try{
+  if(!PROD_SITES_CACHE){
+   PROD_SITES_CACHE=EMPIRES.map(()=>({}));
+   const класть=(k,list)=>{list.forEach(b=>{PROD_SITES_CACHE[k][b.id]=(PROD_SITES_CACHE[k][b.id]||0)+1;});};
+   safeFn(()=>NAMED_CITIES.forEach(c=>{
+    const k=empireIndexAt(c.x,c.y);
+    if(k>=0)класть(k,prodShopSet(c.x,c.y,"castle",true));}));
+   safeFn(()=>empireCities().forEach(c=>{
+    const k=Number(c.держава);
+    if(k>=0&&k<EMPIRES.length)класть(k,prodShopSet(c.x,c.y,"burg",false));}));}
+  return PROD_SITES_CACHE[i]||{};
+ }catch(_){return {};}}
+/* Что державе сейчас ломают. Ноль — мир и покой, единица — всё в руинах. */
+function prodPressure(i,day){
+ try{
+  const d=Number(day)||Number(G.day)||1;
+  let p=0;
+  if(safeFn(()=>empireAtWar(i,d),false))p+=0.35;
+  if(safeFn(()=>Forts.troubled(i),false))p+=0.25;
+  const m=safeFn(()=>marketOf(i),null);
+  if(m&&(Number(m.подвоз)||1)<0.85)p+=0.1;
+  /* Осаждённой державе перепадает и от соседей: сколько войн, столько бед. */
+  p+=Math.min(0.15,safeFn(()=>warsAt(d).filter(w=>w.a===i||w.b===i).length,0)*0.08);
+  return Math.max(0,Math.min(0.9,p));
+ }catch(_){return 0;}}
+let PROD_ECON_CACHE=new Map();
+/* Состояние производства державы: сколько зданий каждого рода уцелело и
+   какой выход даёт каждая цепь. Считается раз в эпоху на державу. */
+function prodEconOf(i,day){
+ try{
+  const d=Number(day)||Number(G.day)||1;
+  const e=epochOf(d);
+  const ключ=i+":"+e+":"+(safeFn(()=>empireAtWar(i,d),false)?1:0)
+   +":"+(safeFn(()=>Forts.troubled(i),false)?1:0);
+  const было=PROD_ECON_CACHE.get(ключ);
+  if(было)return было;
+  const сайты=prodSitesOf(i);
+  const гнёт=prodPressure(i,d);
+  const цел={},всего={};
+  PROD_BUILDINGS.forEach((b,bi)=>{
+   const n=Number(сайты[b.id])||0;
+   всего[b.id]=n;
+   if(!n){цел[b.id]=0;return;}
+   /* Ломают не поровну: у каждого рода своя уязвимость и свой жребий. */
+   const жребий=0.6+H(i*7+bi,e*3+bi,9400)*0.8;
+   const доля=Math.max(0,Math.min(1,гнёт*(PROD_VULN[b.id]||0.5)*жребий));
+   цел[b.id]=Math.max(0,Math.round(n*(1-доля)));});
+  /* Выход по цепи: узкое место решает всё. */
+  const выход={};
+  PROD_CHAINS.forEach(c=>{
+   let v=1;
+   PROD_STEPS.filter(t=>t.цепь===c.id).forEach(t=>{
+    const b=PROD_BUILD_BY_STANOK[t.станки[0]];
+    if(!b)return;
+    const n=всего[b.id]||0;
+    /* Нет своего здания — возят со стороны, и этого всегда меньше. */
+    const шаг=n?0.35+0.65*((цел[b.id]||0)/n):0.7;
+    v=Math.min(v,шаг);});
+   выход[c.id]=Math.round(v*100)/100;});
+  const r={держава:i,ключ,гнёт:Math.round(гнёт*100)/100,всего,цел,выход};
+  if(PROD_ECON_CACHE.size>200)PROD_ECON_CACHE.clear();
+  PROD_ECON_CACHE.set(ключ,r);
+  return r;
+ }catch(_){return {держава:i,гнёт:0,всего:{},цел:{},выход:{}};}}
+function prodSupply(chainId,i,day){
+ const v=prodEconOf(i,day).выход[chainId];
+ return Number.isFinite(v)?v:1;}
+/* Какие товары сейчас в недостатке и насколько. Спрашивают это на каждую
+   цену — полсотни товаров на дюжину держав, — поэтому ответ кэшируется по
+   тому же ключу, что и состояние производства, и живёт ровно столько же.
+   Отдельной картой, а не полем в состоянии: иначе форма состояния зависела
+   бы от того, спрашивали ли уже дефицит, и два одинаковых мира выглядели бы
+   по-разному. */
+const PROD_DEFICIT_CACHE=new Map();
+function prodDeficit(i,day){
+ try{
+  const сост=prodEconOf(i,day);
+  const было=PROD_DEFICIT_CACHE.get(сост.ключ);
+  if(было)return было;
+  const out={};
+  PROD_CHAINS.forEach(c=>{
+   const v=prodSupply(c.id,i,day);
+   if(v>=0.9)return;
+   const нехватка=Math.round((1-v)*100)/100;
+   /* Недостаёт и сырья, которое некому добывать, и всего, что из него выходит. */
+   if(RES_BASE[c.сырьё])out[c.сырьё]=Math.max(out[c.сырьё]||0,нехватка);
+   PROD_GOODS.filter(g=>g.цепь===c.id).forEach(g=>{
+    out[g.n]=Math.max(out[g.n]||0,нехватка);});
+   /* Слиток выходит из рудной цепи, но в список полуфабрикатов не входит. */
+   if(c.id==="ore")out["слиток"]=Math.max(out["слиток"]||0,нехватка);});
+  if(PROD_DEFICIT_CACHE.size>200)PROD_DEFICIT_CACHE.clear();
+  PROD_DEFICIT_CACHE.set(сост.ключ,out);
+  return out;
+ }catch(_){return {};}}
+/* Цена: то, что выходило из разбитой цепи, дорожает. */
+function prodEconPriceK(res,i,day){
+ try{
+  const н=prodDeficit(i,day)[res];
+  if(!(н>0))return 1;
+  return Math.min(1.9,1+н*0.9);
+ }catch(_){return 1;}}
+/* Закупки державы: за недостающее здесь платят дороже — это и есть
+   «фракции меняют закупки», а не строка в досье. */
+function prodEconBuyK(res,i,day){
+ try{
+  const н=prodDeficit(i,day)[res];
+  if(!(н>0))return 1;
+  return Math.min(1.6,1+н*0.6);
+ }catch(_){return 1;}}
+/* Глубокий дефицит: вывоз запрещают, и товар делается запретным. */
+function prodBanned(res,i,day){
+ try{return (prodDeficit(i,day)[res]||0)>=0.4;}catch(_){return false;}}
+/* Прилавок: когда встал металл, стойку с оружием нечем наполнить. */
+function prodStockCut(i,day){
+ try{
+  const v=prodSupply("ore",i,day);
+  return Math.max(0,Math.min(0.7,(0.9-v)*1.2));
+ }catch(_){return 0;}}
 function isContraband(res,idx){
  if(safeFn(()=>Conj.запретно(res),false))return true;
+ /* §13: при глубоком дефиците держава запирает вывоз, и товар делается
+    запретным со всем, что за этим следует, — включая тех, кто на этом живёт. */
+ if(safeFn(()=>prodBanned(res,idx,G.day),false))return true;
  return empireLaw(idx).запрет.includes(res);}
 function roadSafetyK(idx){
  try{const m=marketOf(idx);let k=1;
@@ -7203,6 +7378,13 @@ function priceWhy(res,idx,c){
     .filter(x=>(DIPLO_BY_ID[x.id]||{}).род!=="дело"&&x.id!=="neutral")
     .map(x=>(DIPLO_BY_ID[x.id]||{}).n).join(" и ");
    if(что)из.push(`${что} с ${EMPIRES[j].short}: ${k<1?"дешевле":"дороже"} на ${Math.round(Math.abs(k-1)*100)} сотых`);}});
+ /* §13: разбитая цепь передела — самая понятная причина дороговизны. */
+ safeFn(()=>{
+  const н=prodDeficit(idx,G.day)[res];
+  if(!(н>0))return;
+  const цепь=PROD_CHAINS.find(x=>x.сырьё===res||PROD_GOODS.some(g=>g.n===res&&g.цепь===x.id)
+   ||(x.id==="ore"&&res==="слиток"));
+  из.push(`${цепь?`цепь «${цепь.n}» разбита`:"передел встал"}: недостаёт ${Math.round(н*100)} сотых, дороже`);});
  if(c){const pf=cityProfile(c);из.push(`пошлина города ${Math.round((pf.tax+empireLaw(idx).пошлина)*100)} сотых`);}
  return из.length?из.join("; "):"обычная цена";}
 /* Контрабанда: продал запретное в городе — стража может взять своё. */
@@ -27317,6 +27499,18 @@ function enterPlace(c){safeFn(()=>deed("places"));
   if(a.id==="friend")setTimeout(()=>narrate(`Вас узнают: народ «${race}» считает вас своим. Здесь помогут и уступят в цене.`,{interrupt:false}),1800);
   else if(a.id==="hostile")setTimeout(()=>narrate(`Разговоры стихают, когда вы проходите: народ «${race}» вас не жалует. Здесь вам не продадут, пока не заслужите иначе.`,{interrupt:false}),1800);
   else if(a.id==="cold")setTimeout(()=>narrate(`На вас смотрят косо: народ «${race}» вам не рад, и цены это покажут.`,{interrupt:false}),1800);});
+ /* §13: глубокий дефицит слышен на улице раньше, чем виден в лавке. */
+ safeFn(()=>{
+  const k=empireIndexAt(c.x,c.y);
+  const деф=prodDeficit(k,G.day);
+  const имена=Object.keys(деф).sort((a,b)=>деф[b]-деф[a]);
+  if(!имена.length||деф[имена[0]]<0.3)return;
+  const битые=safeFn(()=>ProdEcon.broken(k,G.day),[]);
+  setTimeout(()=>safeFn(()=>{
+   Bank.play("stk_break",{gain:0.45,maxSec:4});
+   setTimeout(()=>safeFn(()=>Bank.play("uh_warehouse",{gain:0.4,maxSec:4})),500);
+   narrate(`Здесь говорят об одном: ${битые.length?`${битые[0].n} разбита, и `:""}${имена[0]} не достать. `
+    +`За ${имена[0]} тут платят дороже обычного, а прилавки заметно поредели.`,{interrupt:false,pri:2,key:"deficit"});}),2600);});
  safeFn(()=>Actors.ensure());
  journal(`Вход: ${c.structure.name}.`);
  /* §14: у рода подземелья своя примета — то, по чему его узнают на слух. */
@@ -39165,6 +39359,16 @@ function stockFor(n){const out=[];
  });
  if(!safeFn(()=>merchSoul(n),null))
   for(let k=0;k<3;k++)out.push({gear:genLoot(n.x,n.y,Math.floor(H(n.x,n.y,80+k)*9999),G.level+n.tier),price:0});
+ /* §13: когда встала рудная цепь, стойку с оружием нечем наполнить. Не
+    «дороже», а МЕНЬШЕ вещей: их не из чего делать. */
+ safeFn(()=>{
+  const доля=prodStockCut(idx,G.day);
+  if(!(доля>0))return;
+  const железо=out.filter(o=>o.gear&&(o.gear.slot==="weapon"||o.gear.slot==="armor"));
+  const убрать=Math.min(железо.length,Math.floor(железо.length*доля+0.5));
+  for(let k=0;k<убрать;k++){
+   const i=out.indexOf(железо[железо.length-1-k]);
+   if(i>=0)out.splice(i,1);}});
  const km=buyModifier(n)*deepMarkup()*tradeBuyK(n.race);
  out.forEach(o=>{
   if(o.full)return;                                     /* уже посчитано целиком */
@@ -41482,6 +41686,49 @@ const LORE_KIND_BY_ID=Object.fromEntries(LORE_KINDS.map(k=>[k.id,k]));
    veinPool и Gen.plan. */
 /* §4: свойства героя и то, что из них следует. Одна дверь на чтение и
    запись, и один список адресов, по которым производные входят в игру. */
+/* §13: производственная экономика. Ничего своего не хранит: читает войны,
+   осады и подвоз, ломает по ним здания §12 и считает выход по цепям. */
+const ProdEcon=Modules.register("PRODECON",{
+ vuln:PROD_VULN,
+ sites:i=>S(()=>prodSitesOf(i),{}),
+ pressure:(i,day)=>S(()=>prodPressure(i,day||G.day),0),
+ of:(i,day)=>S(()=>prodEconOf(i,day||G.day),{всего:{},цел:{},выход:{}}),
+ supply:(c,i,day)=>S(()=>prodSupply(c,i,day||G.day),1),
+ deficit:(i,day)=>S(()=>prodDeficit(i,day||G.day),{}),
+ priceK:(res,i,day)=>S(()=>prodEconPriceK(res,i,day||G.day),1),
+ buyK:(res,i,day)=>S(()=>prodEconBuyK(res,i,day||G.day),1),
+ banned:(res,i,day)=>S(()=>prodBanned(res,i,day||G.day),false),
+ stockCut:(i,day)=>S(()=>prodStockCut(i,day||G.day),0),
+ /* Разбитые здания словами: что именно встало и почему. */
+ broken(i,day){
+  const e=this.of(i,day);const out=[];
+  PROD_BUILDINGS.forEach(b=>{
+   const n=Number(e.всего[b.id])||0;if(!n)return;
+   const ц=Number(e.цел[b.id])||0;
+   if(ц<n)out.push({id:b.id,n:b.n,цел:ц,всего:n});});
+  return out;},
+ /* Цепь словами: выход, узкое место и что из-за этого в недостатке. */
+ chainLine(c,i,day){
+  const v=this.supply(c.id,i,day);
+  const слово=v>=0.9?"идёт ровно":v>=0.7?"идёт с перебоями":v>=0.45?"еле дышит":"встала";
+  return `${c.n}: ${слово}, выход ${Math.round(v*100)} из ста. От сырья «${c.сырьё}» до «${c.итог}».`;},
+ text(i,day){
+  try{
+   const k=Number.isFinite(i)?i:S(()=>empireIndexAt(G.x,G.y),0);
+   const d=Number(day)||Number(G.day)||1;
+   const e=this.of(k,d);
+   const битые=this.broken(k,d);
+   const деф=this.deficit(k,d);
+   const имена=Object.keys(деф).sort((a,b)=>деф[b]-деф[a]);
+   const запрет=имена.filter(r=>this.banned(r,k,d));
+   return `Производство ${EMPIRES[k].short}: гнёт ${Math.round(e.гнёт*100)} из ста. `
+    +(битые.length?`Разбито: ${битые.map(b=>`${b.n} ${b.цел} из ${b.всего}`).join(", ")}. `
+      :"Все мастерские целы. ")
+    +(имена.length?`Недостаёт: ${имена.slice(0,6).map(r=>`${r} на ${Math.round(деф[r]*100)} сотых`).join(", ")}. `
+      +`За это здесь платят дороже обычного.`
+      :"Недостатка нет: цепи передела идут ровно.")
+    +(запрет.length?` Вывоз запрещён: ${запрет.join(", ")} — теперь это запретный товар.`:"");
+  }catch(_){return "Производственная экономика: считать нечего.";}}});
 const Attrs=Modules.register("ATTRIBUTES",{
  attrs:ATTRS,derived:DERIVED,base:ATTR_BASE,
  attr:id=>ATTR_BY_ID[id]||null,
@@ -42240,6 +42487,39 @@ function worldSelfCheck(){
   ok("sigils",SIGIL_SYMBOLS.length===8&&SIGIL_SYMBOLS.every(x=>MSCHOOL_BY_ID[x.школа]&&x.намерения.every(i=>SIGIL_INTENTS[i]))&&SIGIL_CARRIERS.length===8&&SIGIL_CARRIERS.every(x=>RES_BASE[x.ресурс])&&SIGIL_GEOMETRY.length===5&&INKS.length===6&&INKS.every(x=>SOUND_BANK[x.звук]&&Object.keys(x.рецепт).every(r=>RES_BASE[r]))&&AWAKEN_SOURCES.length===6&&AWAKEN_SOURCES.every(x=>SOUND_BANK[x.звук])&&WAVES.length===3&&MORPH_TRAITS.length===6&&MORPHOBEASTS.length===10&&MORPHOBEASTS.every(b=>MONSTERS.some(m=>m.id===b.база))&&DEVOUR_GIFTS.length===6&&EVENT_THEME.world_event&&SOUND_BANK[EVENT_THEME.world_event.роль],"Знаки: восемь символов, восемь носителей, пять геометрий, шесть чернил, шесть источников пробуждения, три волны, шесть черт, десять морфозверей, шесть даров Эха — всё со звуком и по настоящим ресурсам");
   ok("cases",CASE_TEMPLATES.length===6&&CASE_TEMPLATES.every(t=>t.версии.length===3&&t.улики.every(k=>CLUE_KINDS[k])&&t.версии.every(v=>v.улики.every(k=>t.улики.includes(k))))&&SYNDICATES.length===8&&SYNDICATES.every(x=>SOUND_BANK[x.звук]&&x.города.every(id=>NAMED_CITY_BY_ID[id])&&REGIONS[x.область])&&Object.keys(DECISIONS).length===9&&Object.values(DECISIONS).every(d=>Object.keys(d).length>=3)&&["deeper","border_war","shards","lasthouse","beast","price","undercity","maskface","endless"].every(id=>CHAIN_DB[id])&&HOUSE_BY_ID[LAST_HOUSE.враг]&&DLG_MOVE_BY_ID.znanie&&DLG_MOVE_BY_ID.kultura&&DLG_MOVE_BY_ID.nedoskazat,"Расследования: шесть дел с тремя версиями, восемь синдикатов со звуком и городами, девять цепочек с развязками, три хода разговора");
   ok("academy",LANGS.length>=20&&LANGS.every(l=>l.письмо&&l.о)&&SCIENCES.length===6&&SCIENCES.every(x=>SOUND_BANK[x.звук]&&x.эффект.length===3&&FACULTY_BY_ID[x.факультет])&&FACULTIES.length===12&&FACULTIES.every(f=>(f.школы||[]).every(id=>MSCHOOL_BY_ID[id]&&SCHOOL_AUDIO[id])&&(!f.маст||MAST_BY_ID[f.маст]))&&SCHOOLS.length>=30&&SCHOOLS.every(sc=>SCHOOL_AUDIO[sc.id]&&SPELL_LAYERS.every(l=>SOUND_BANK[SCHOOL_AUDIO[sc.id][l]])),"Академия: двадцать один язык, шесть наук, двенадцать факультетов, тридцать четыре школы чар — все со звуком");
+  ok("prodecon",Object.keys(PROD_VULN).length===PROD_BUILDINGS.length
+   &&PROD_BUILDINGS.every(b=>PROD_VULN[b.id]>0&&PROD_VULN[b.id]<=1)
+   /* У каждой державы есть производство, и выход каждой цепи в берегах. */
+   &&(()=>{try{
+     for(let i=0;i<EMPIRES.length;i++){
+      const e=prodEconOf(i,G.day);
+      if(!(e.гнёт>=0&&e.гнёт<=0.9))return false;
+      if(!PROD_CHAINS.every(c=>{const v=e.выход[c.id];return Number.isFinite(v)&&v>0&&v<=1;}))return false;
+      /* Уцелевших не больше, чем было. */
+      if(!PROD_BUILDINGS.every(b=>(e.цел[b.id]||0)<=(e.всего[b.id]||0)))return false;}
+     return true;}catch(_){return false;}})()
+   /* Цепь не может дать больше, чем даёт её узкое место. */
+   &&(()=>{try{
+     const i=0,e=prodEconOf(i,G.day);
+     return PROD_CHAINS.every(c=>{
+      let узкое=1;
+      PROD_STEPS.filter(t=>t.цепь===c.id).forEach(t=>{
+       const b=PROD_BUILD_BY_STANOK[t.станки[0]];if(!b)return;
+       const n=e.всего[b.id]||0;
+       узкое=Math.min(узкое,n?0.35+0.65*((e.цел[b.id]||0)/n):0.7);});
+      return Math.abs(e.выход[c.id]-Math.round(узкое*100)/100)<0.011;});}catch(_){return false;}})()
+   /* Мир без войны производит ровно: гнёт нулевой — выход полный. */
+   &&(()=>{try{
+     const i=EMPIRES.findIndex((_,k)=>prodPressure(k,G.day)===0);
+     if(i<0)return true;
+     return PROD_CHAINS.every(c=>prodSupply(c.id,i,G.day)>=0.7);}catch(_){return false;}})()
+   /* Следствия считаются числами и в берегах. */
+   &&(()=>{try{
+     return Object.keys(RES_BASE).every(r=>{
+      const a=prodEconPriceK(r,0,G.day),b=prodEconBuyK(r,0,G.day);
+      return Number.isFinite(a)&&a>=1&&a<=1.9&&Number.isFinite(b)&&b>=1&&b<=1.6;})
+      &&prodStockCut(0,G.day)>=0&&prodStockCut(0,G.day)<=0.7;}catch(_){return false;}})(),
+   "Производственная экономика: война ломает мастерские, узкое место решает выход цепи, из дефицита следуют цена, закупки, прилавок и запрет");
   ok("attrs",ATTRS.length===9&&DERIVED.length===14
    /* Все восемь основных из §4 названы, и харизма девятой. */
    &&["str","agi","end","mind","will","spirit","perc","sync","cha"].every(id=>ATTR_BY_ID[id])
@@ -42602,6 +42882,16 @@ function renderPolitics(){
    const n=safeFn(()=>Diplo.byKind(k.id,day).length,0);
    return line(`${k.n[0].toUpperCase()+k.n.slice(1)} — ${k.род}, ${k.сторон===1?"односторонняя":"двусторонняя"}: сейчас ${n} в мире. ${k.о} Следствие: ${k.знак}.`,"◆");}).join("");
   pk.innerHTML=h;}
+ /* §13: что война сделала с производством этой земли и что из этого вышло. */
+ const pe=document.getElementById("polProd");
+ if(pe){
+  const line=(t,ic)=>`<div class="list-line" tabindex="0" data-speak="${String(t).replace(/"/g,"&quot;")}">${ic||"•"} ${t}</div>`;
+  let h=line(safeFn(()=>ProdEcon.text(here,day),"Производство."),"🏭");
+  h+=PROD_CHAINS.map(c=>line(safeFn(()=>ProdEcon.chainLine(c,here,day),c.n),"⛓️")).join("");
+  const б=safeFn(()=>ProdEcon.broken(here,day),[]);
+  h+=б.length?б.map(x=>line(`${x.n}: уцелело ${x.цел} из ${x.всего}. Пока не отстроят, всё, что идёт через неё, будет в недостатке.`,"🔥")).join("")
+   :line("Ни одна мастерская державы не разбита.","✅");
+  pe.innerHTML=h;}
  const e=document.getElementById("polEmpires");
  if(e)e.innerHTML=EMPIRES.map((emp,i)=>{
   const rel=EMPIRES.map((o,j)=>i===j?null:`${o.short}: ${relationWord(relationAt(i,j,day))}`).filter(Boolean).join(", ");
