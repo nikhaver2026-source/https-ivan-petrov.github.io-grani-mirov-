@@ -462,6 +462,7 @@ h3{color:var(--acc2);margin:14px 0 6px;font-size:1.05rem;}
  <h3>🏅 Ступень и доказательства</h3><div id="pStatus"></div>
  <h3>⚡ Энергии</h3><div id="pEnergy"></div>
  <h3>💠 Грани</h3><div id="pFacets"></div>
+ <h3>🧩 Эхо: осколки</h3><div id="pEcho"></div>
  <h3>🌳 Древо Граней: ветви</h3><div id="pTree"></div>
  <h3>🛤️ Двенадцать путей</h3><div id="pPaths"></div>
  <h3>🔷 Ядро Отклика</h3><div id="pCore"></div>
@@ -4811,6 +4812,15 @@ const GUIDE=[
  "Вещь растёт. За каждую победу работающий артефакт получает опыт, а на пороге открывает ступень — прибавку, которой у него раньше не было, и всегда из своего направления. Каждая следующая ступень даётся вдвое тяжелее. Если гнёзда кончились, редкую часть можно скормить вещи: она уйдёт в опыт вместо гнезда.",
  "Требования. Ранг задаёт уровень; сверх того вещь может требовать навык, заклинание нужной школы, расположение народа, принадлежность к клану, прочитанное знание или закрытое дело. Вещь, требования которой не выполнены, лежит мёртвым грузом и не даёт ничего — и прямо говорит, чего ей не хватает.",
  "Где всё это. Пункт меню «Артефакты, части и рецепты». В нём видно, каким ремеслом здесь занимаются и каково ваше умение, какие рецепты под рукой и чего не хватает, какие части лежат в суме, и по каждой вещи — всё, что о ней известно, и всё, что с ней можно сделать: вложить, вынуть, зачаровать, скормить, продать."]},
+{title:"Глава 70. Эхо: осколки чужих способностей",body:[
+ "Пожирание даёт мгновенный дар и забывается. Эхо — другое. От редкой твари, от отпечатка пятой глубины, от павшего крупного босса остаётся ОСКОЛОК: кусок чужой способности, который можно носить с собой и вживить в себя.",
+ "ВОСЕМЬ РОДОВ ОСКОЛКА. Осколок удара делает руку тяжелее. Осколок шкуры крепит защиту. Осколок слуха раздвигает звуковую картину. Осколок жилы возвращает ману за отдых у огня. Осколок поступи отодвигает черту, за которой тварь вас чует. Осколок пасти берёт своё с каждого вашего удара и лечит вас. Осколок взгляда чаще находит ловушки. Осколок слова делает чары дешевле.",
+ "У КАЖДОГО ОСКОЛКА ЧЕТЫРЕ ЧИСЛА. Род — что он даёт. Уровень от первого до пятого — сколько. Стихия — одна из восемнадцати. Крепость — насколько надёжно он держится: чем выше уровень, тем осколок сильнее и тем хуже сидит.",
+ "ВМЕСТИМОСТЬ. Сколько чужого вы удержите разом. Начинается с двух и растёт от Пустотного якоря, от Эха Пожирания и от артефакторики — всё это умение держать в себе чужое. Больше восьми не носит никто.",
+ "СОВМЕСТИМОСТЬ СЧИТАЕТСЯ ПО ТОМУ ЖЕ РОДСТВУ СТИХИЙ, что и чары. Осколок огня рядом с осколком грозы — родня. Рядом с осколком воды — рознь. Из совместимости выходят три вещи разом: цена вживления, устойчивость набора и риск конфликта.",
+ "ЦЕНА ВЖИВЛЕНИЯ НАСТОЯЩАЯ: мана, кровь и часы. Своё идёт вдвое легче чужого. И вживление может не удаться: чем ниже совместимость и чем теснее в вас, тем выше риск. Не прижился — рассыпался, а цена ушла. Игра называет и цену, и риск заранее, до того как вы тронете кнопку.",
+ "КОНФЛИКТ — НЕ СЛОВО. Набор из враждебных стихий держится плохо. Раз в сутки он проверяется, и если устойчивость упала, осколки передерутся: тот, кто в наибольшей розни с остальными, будет вырван — с треском, с кровью и по-настоящему. Поэтому восемь сильных осколков вразнобой хуже трёх родственных.",
+ "ГДЕ СМОТРЕТЬ. Окно «Путь Грани», раздел «Эхо: осколки». Сверху — сколько вложено из скольких и какова устойчивость. Потом вложенные: каждый называет род, уровень, стихию, крепость и свой дар; касание вынимает его за час. Потом сума: каждый называет совместимость, цену и риск; касание вживляет."]},
 {title:"Глава 69. Семнадцать Граней и десять стадий",body:[
  "Грань — не умение и не заклинание. Это то, чем человек становится от того, что он делает изо дня в день. Её нельзя купить и нельзя выучить: она проступает сама. Опыт тут ни при чём — считаются ДЕЛА.",
  "СЕМНАДЦАТЬ ГРАНЕЙ. Тихий след, Каменная память, Зов глубины, Эхо клинка, Чужой язык, Разломный слух, Пепельное дыхание, Память добычи — и девять новых: Звериный слух, Торговая чуйка, Рука мастера, Водное дыхание, Ночное око, Живая кровь, Чуткость к знамениям, Городское чутьё, Пустотный якорь.",
@@ -12116,7 +12126,7 @@ function worldLiveTick(){
   for(let i=0;i<дней;i++)safeFn(()=>rumorTick());
   safeFn(()=>questDayTick());safeFn(()=>Forts.tick());
   safeFn(()=>Gods.tick());safeFn(()=>Empires.tick());safeFn(()=>Energy.daily());safeFn(()=>Coins.daily());safeFn(()=>Academy.daily());safeFn(()=>Talk.daily());safeFn(()=>Syndicates.daily());safeFn(()=>Oversight.daily());safeFn(()=>Waves.daily());safeFn(()=>Balance.daily());safeFn(()=>Awaken.daily());
-  safeFn(()=>Merits.check());safeFn(()=>Global.daily());safeFn(()=>Armies.tick());safeFn(()=>Arcs.daily());safeFn(()=>Prophecy.daily());safeFn(()=>Echoes.nightly());
+  safeFn(()=>Merits.check());safeFn(()=>Global.daily());safeFn(()=>Armies.tick());safeFn(()=>Arcs.daily());safeFn(()=>Prophecy.daily());safeFn(()=>Echoes.nightly());safeFn(()=>Echo.daily());
  safeFn(()=>Garrison.daily());safeFn(()=>WarArc.tick());
   /* Рынок ходит на том же такте: потоки понемногу возвращаются к норме. */
   safeFn(()=>marketTick(дней));
@@ -17165,6 +17175,7 @@ const Traps=Modules.register("TRAPS",{
   if(wayId==="companion"){const m=trapMate();if(m)k+=m.k;}
   if(wayId==="analyze")k+=0.05*safeFn(()=>mastLevel("runes"),0);
   if(wayId==="risk")k=0.95;
+  k+=safeFn(()=>Echo.bonus("sight"),0);   /* §9: осколок взгляда */
   return Math.max(0.05,Math.min(0.95,k));}catch(_){return 0;}},
  /* Поиск идёт по клетке под ногами и четырём вокруг — так подземелье и
     ощупывают, кругом, а не по одной плите: иначе на слух это невыносимо. */
@@ -19618,7 +19629,9 @@ iact("wellrope",{n:"Спустить верёвку",значок:"🪢",мож�
 const FIRE_LIKE=o=>!!G.place&&["hearth","brazier"].includes(objProp(o));
 iact("rest",{n:"Отдохнуть у огня",значок:"🔥",можно:o=>FIRE_LIKE(o)&&!G.inCombat,почему:o=>G.inCombat?"в бою не отдыхают":"огня рядом нет",
  делать:o=>{const сколько=Math.round(15*(1+safeFn(()=>Path.facetK("heal"),0)));  /* Грань «Живая кровь» */
-  const h=Math.min(G.hpMax,G.hp+сколько)-G.hp;G.hp+=h;G.hour+=1;if(G.hour>=24){G.hour-=24;G.day++;}safeFn(()=>{Bank.play("wild_hearth",{gain:0.5,maxSec:5});});narrate(`Час у огня: здоровье +${h}. Огонь потрескивает, тепло держится.`);refresh();saveGame(true);return true;}});
+  const мана=Math.round(safeFn(()=>Echo.bonus("vein"),0));                     /* §9: осколок жилы */
+  if(мана>0)G.mana=Math.min(G.manaMax,(Number(G.mana)||0)+мана);
+  const h=Math.min(G.hpMax,G.hp+сколько)-G.hp;G.hp+=h;G.hour+=1;if(G.hour>=24){G.hour-=24;G.day++;}safeFn(()=>{Bank.play("wild_hearth",{gain:0.5,maxSec:5});});narrate(`Час у огня: здоровье +${h}${мана>0?`, мана +${мана}`:""}. Огонь потрескивает, тепло держится.`);refresh();saveGame(true);return true;}});
 iact("cook",{n:"Приготовить",значок:"🍲",можно:o=>FIRE_LIKE(o)&&safeFn(()=>mastLevel("cook"),0)>=1,почему:o=>"нужен первый урок стряпни: учат в тавернах",
  делать:o=>{techDo(TECH_BY_ID.stew,"hearth");return true;}});
 iact("lighttorch",{n:"Зажечь факел",значок:"🕯️",можно:o=>FIRE_LIKE(o)&&(G.items||[]).includes("Факел")&&!buffActive("свет"),почему:o=>!(G.items||[]).includes("Факел")?"нужен факел":"факел уже горит",
@@ -22388,12 +22401,14 @@ function realmsText(){
  return `Сейчас: ${now.n} — ${now.о}. Слоёв открыто ${были.length} из ${REALMS.length}${были.length?`: ${были.map(r=>r.n).join(", ")}`:""}. `+
   (нет.length?`Не открыты: ${нет.map(r=>`${r.n} — ${r.порог}`).join("; ")}.`:"Открыты все слои.");}
 function atk(){return G.str+(G.equip.weapon?G.equip.weapon.val:0)+Math.round(2*fxLevel("atk"))
+ +Math.round(safeFn(()=>Echo.bonus("edge"),0))          /* §9: осколок удара */
  +(safeFn(()=>buffActive("благословение"),false)?4:0)
  -(safeFn(()=>buffActive("отдача"),false)?2:0)
  +safeFn(()=>Tree.боК(),0)
  +safeFn(()=>ART.sum("сила"),0)+(safeFn(()=>buffActive("мощь"),false)?3:0)
  +(safeFn(()=>buffActive("заточка"),false)?3:0);}
 function def(){return Math.floor(G.agi/3)+(G.equip.armor?G.equip.armor.val:0)+Math.round(2*fxLevel("def"))
+ +Math.round(safeFn(()=>Echo.bonus("hide"),0))          /* §9: осколок шкуры */
  +(safeFn(()=>buffActive("благословение"),false)?3:0)
  -(safeFn(()=>buffActive("отдача"),false)?2:0)
  +safeFn(()=>Tree.защК(),0)
@@ -24979,6 +24994,9 @@ function bossVictory(m){
    /* Титул звучит своей темой, после музыки победы. */
    setTimeout(()=>safeFn(()=>eventTheme("reward_title",{gain:0.6})),4200);});
   safeFn(()=>findArtifact({глубина:60,seed:b.id.length*977+(Number(G.day)||1)}));
+  /* §9: с павшего крупного босса остаётся осколок его способности. */
+  safeFn(()=>{const о=Echo.fromFoe(Object.assign({},m,{boss:true}),`победа над «${b.n}»`);
+   const сл=о?Echo.take(о):"";if(сл)narrate(`Эхо павшего.${сл}`,{pri:1,key:"echoboss"});});
   if(!Array.isArray(G.titles))G.titles=[];const титул=`Одолевший ${b.род}`;if(!G.titles.includes(титул))G.titles.push(титул);
   const l=bossLair(b);const idx=empireIndexAt(l.x,l.y);
   safeFn(()=>{marketNudge(idx,"подвоз",0.3,`пал ${b.n}`);addStand("fact",EMPIRES[idx].short,15);addStand("army",null,10,true);rumorSeed("бой",`одолел ${b.род}`,l.x,l.y,true);deed("kills");});
@@ -26823,6 +26841,7 @@ function scapeRad(){
   +(safeFn(()=>buffActive("чутьё"),false)?2:0);
  if(safeFn(()=>isNight(),false))r+=Math.round(safeFn(()=>Path.facetK("night"),0));
  if(G.place&&G.place.kind==="city")r+=Math.round(safeFn(()=>Path.facetK("crowd"),0));
+ r+=Math.round(safeFn(()=>Echo.bonus("ear"),0));        /* §9: осколок слуха */
  return r;}
 
 /* Что и как часто подаёт голос. period — секунды между откликами вблизи;
@@ -27178,7 +27197,9 @@ const Actors={
     continue;}
    /* Твари идут на игрока, если чуют; стража и горожане ходят своими путями. */
    let dx=0,dy=0;
-   if(a.kind==="mob"&&d0<=7){dx=Math.sign(p.x-a.x);dy=Math.sign(p.y-a.y);
+   /* §9: осколок поступи отодвигает черту, за которой тварь чует. */
+   const чует=Math.max(2,7-Math.round(safeFn(()=>Echo.bonus("step"),0)));
+   if(a.kind==="mob"&&d0<=чует){dx=Math.sign(p.x-a.x);dy=Math.sign(p.y-a.y);
     if(dx&&dy){if(Math.random()<0.5)dy=0;else dx=0;}}
    else{const dirs=[[1,0],[-1,0],[0,1],[0,-1]];
     const d=dirs[Math.floor(Math.random()*4)];dx=d[0];dy=d[1];}
@@ -29673,6 +29694,10 @@ function fight(a){const cb=G.combat;if(!cb)return;const m=cb.m;
   setTimeout(()=>safeFn(()=>playRealMonsterCue(m,"damage",0.6)),120);
   setTimeout(()=>safeFn(()=>foeProfileCue(m,cb.hp>0&&cb.hp<m.hp*0.25?"fear":cb.hp>0&&cb.hp<m.hp*0.5?"wound":"hurt",{gain:0.5})),220);
   safeFn(()=>Tree.удар(crit));
+  /* §9: осколок пасти берёт своё с каждого удара. */
+  {const лек=Math.round(safeFn(()=>Echo.bonus("maw"),0));
+   if(лек>0&&G.hp<G.hpMax){const было=G.hp;G.hp=Math.min(G.hpMax,G.hp+лек);
+    if(G.hp>было)cbLog(`Осколок пасти взял своё: +${G.hp-было} здоровья.`);}}
   cbLog(crit?`Сокрушительный удар: −${dmg}!`:`Вы ударили: −${dmg}.`);}
  else if(a==="magic"){
   /* Контроль энергии удешевляет чару, сосредоточенность возвращает долю маны. */
@@ -30356,6 +30381,9 @@ const CMD={
  sfschool(id){spellForgePick("school",id);},
  sfform(id){spellForgePick("form",id);},
  sfmod(id){spellForgePick("mod",id);},
+ echofit(i){const t=Echo.fit(+i);narrate(t,{pri:1,key:"echo"});safeFn(()=>{if(typeof renderPath==="function")renderPath();});},
+ echodrop(i){const t=Echo.drop(+i);narrate(t,{pri:2,key:"echo"});safeFn(()=>{if(typeof renderPath==="function")renderPath();});},
+ echosay(){narrate(Echo.text(),{pri:2,key:"echo"});},
  sfcore(id){spellForgePick("core",id||"");},
  sfelem(id){spellForgePick("elem",id||"");},
  sfbuild(){spellForgeBuild();},
@@ -32909,6 +32937,17 @@ function renderPath(){
   if($("pStatus"))$("pStatus").innerHTML=line(`Ступень «${k.n}», ${i+1} из ${PATH_RANKS.length}. Сумма ветвей ${Path.score()}. ${Path.next()}`,"🏅")+PATH_RANKS.map((r,j)=>line(`${r.n}: порог ветвей ${r.порог}${r.док?`, доказательство — ${r.док.n}${j<=i?" (пройдено)":safeFn(()=>r.док.ок(),false)?" (готово)":" (нет)"}`:""}`,j<=i?"✅":"⬜")).join("");
   if($("pEnergy"))$("pEnergy").innerHTML=ENERGY.map(e=>line(`${e.n}: ${e.get()} из ${e.max()} — ${e.о}`,"⚡")).join("");
   if($("pFacets"))$("pFacets").innerHTML=FACETS.map(f=>line(Path.facetText(f),Path.facetTier(f.id)?"💠":"◇")).join("");
+  if($("pEcho")){
+   const d=Echo.state();
+   let h=line(`Вложено ${d.вложено.length} из ${Echo.capacity()}, устойчивость ${Math.round(Echo.stability()*100)} из ста. Осколков в суме ${d.сумка.length}.`,"🧩");
+   h+=d.вложено.map((o,j)=>{const kk=ECHO_BY_ID[o.род],el=ELEM_BY_ID[o.стихия];
+    const сл=`${kk.n}, уровень ${o.ур}, стихия ${el.n.toLowerCase()}, крепость ${Math.round(o.стаб*100)}: ${kk.дар}. Вынуть — час.`;
+    return `<button class="item" data-cmd="echodrop:${j}" data-speak="${сл.replace(/"/g,"&quot;")}">🧩 ${сл}</button>`;}).join("");
+   h+=d.сумка.map((o,j)=>{const kk=ECHO_BY_ID[o.род],el=ELEM_BY_ID[o.стихия];const c=Echo.cost(o);
+    const сл=`В суме: ${kk.n}, уровень ${o.ур}, стихия ${el.n.toLowerCase()}. ${kk.дар}. Совместимость ${Echo.compat(o)}, цена ${c.мана} маны, ${c.здоровье} здоровья и ${c.часы} ${plural(c.часы,"час","часа","часов")}, риск ${Math.round(Echo.risk(o)*100)} из ста. Вживить.`;
+    return `<button class="item" data-cmd="echofit:${j}" data-speak="${сл.replace(/"/g,"&quot;")}">➕ ${сл}</button>`;}).join("");
+   if(!d.вложено.length&&!d.сумка.length)h+=line("Осколков пока нет. Они остаются от пожранных редких тварей, от отпечатка пятой глубины и от павших крупных боссов.","◇");
+   $("pEcho").innerHTML=h;}
   if($("pTree"))$("pTree").innerHTML=BRANCHES.map(b=>line(`${b.n}: ${BRANCH_RANKS[branchRank(b.id)]} — ${b.о}`,"🌿")).join("");
   if($("pPaths"))$("pPaths").innerHTML=PATH_WAYS.map(w=>{const s=Path.wayScore(w);const my=(G.paths||[]).includes(w.id);return `<div class="list-line" tabindex="0" data-speak="${(`${w.n}: ${w.о}; склонность ${s}${my?", объявлен":""}.`).replace(/"/g,"&quot;")}">${my?"✔":"🛤️"} ${w.n} — ${w.о}, склонность ${s}${my?" · объявлен":""}</div>`+(my?`<button class="item" data-cmd="pathact:renounce~${w.id}" data-speak="Оставить путь ${w.n}.">🚪 Оставить</button>`:`<button class="item" data-cmd="pathact:declare~${w.id}" data-speak="Объявить путь ${w.n}: нужна склонность от двух.">📜 Объявить</button>`);}).join("");
   if($("pCore")){let h=line(Core.status(),"🔷");if(Core.has()){h+=`<button class="item" data-cmd="core:trace" data-speak="Читать магические следы здесь.">🔮 Магические следы</button><button class="item" data-cmd="core:analyze" data-speak="Разобрать выбранную в инвентаре вещь.">🔍 Разобрать вещь</button><button class="item" data-cmd="core:fix" data-speak="Записать знание о месте.">📝 Записать знание</button><button class="item" data-cmd="core:mark" data-speak="Поставить точку возврата здесь.">📍 Поставить точку</button><button class="item" data-cmd="core:ancient" data-speak="Сопрячься с древним устройством.">⚙️ Древнее устройство</button>`;
@@ -33558,10 +33597,207 @@ const Devour=Modules.register("DEVOUR",{
   if(ограничение===0){safeFn(()=>{const L=Ledger.ensure();const kinds=LEDGER_KINDS.map(x=>x[0]).filter(kk=>L[kk].length);if(kinds.length){const kk=kinds[Math.floor(Math.random()*kinds.length)];const gone=L[kk].shift();части.push(`потеря части памяти: забыто — ${gone.n.slice(0,40)}`);}});}
   else if(ограничение===1){const a=assim();const ids=Object.keys(a.traits||{});if(ids.length>=2){const gone=ids[0];delete a.traits[gone];части.push(`конфликт способностей: черта «${(ASSIM_TRAITS.find(x=>x.id===gone)||{n:gone}).n}» ушла`);}}
   else if(ограничение===2){safeFn(()=>buffSet("загрязнение",8));G.mana=Math.max(0,(Number(G.mana)||0)-5);части.push("магическое загрязнение: мана минус пять, восемь часов слабости");}
+  /* §9: от редкой твари остаётся ОСКОЛОК — кусок её способности. */
+  const оск=safeFn(()=>{const о=Echo.fromFoe(k,`пожирание «${k.n}»`);return о?Echo.take(о):"";},"");
+  if(оск)части.push(оск.trim());
   safeFn(()=>{Bank.play("oc_organic_hit",{gain:0.55,maxSec:2});setTimeout(()=>safeFn(()=>Bank.play("wraith_moan",{gain:0.4,maxSec:3})),300);Balance.shift(-1,"эхо");deed("devours");});journal(`Эхо Пожирания: ${k.n}.`);
   return `Эхо Пожирания над «${k.n}» (совместимость ${c} из ста): ${части.join("; ")}. Перегрузка ${d.перегруз} из трёх.`;},
  rest(){const d=this.state();if(d)d.перегруз=0;},
  text(){if(!this.has())return "Эхо Пожирания: редкая опасная способность — поглощать редких существ ради памяти, признаков, способностей, сопротивлений, образцов и паттернов; цена — несовместимость, перегрузка, мутации, потеря памяти, конфликт способностей, загрязнение. Носители — те, кто одолел Поглотителя.";const d=this.state();return `Эхо Пожирания у вас: поглощено ${d.следов}, перегрузка ${d.перегруз} из трёх. ${this.can()||"Редкие останки рядом: можно поглотить."}`;}});
+/* ══════════════════ ЭХО: ОСКОЛКИ ЧУЖИХ СПОСОБНОСТЕЙ ══════════════════
+   Пожирание даёт мгновенный дар и забывается. Эхо — другое: от редкой
+   твари, от глубокого отпечатка, от павшего босса остаётся ОСКОЛОК —
+   кусок чужой способности, который можно носить с собой и вживить в себя.
+
+   У осколка четыре собственных числа: род (что он даёт), уровень (сколько),
+   стихия (с чем он в ладу) и стабильность (насколько крепко держится).
+
+   У носителя своё: ВМЕСТИМОСТЬ — сколько осколков он вообще удержит.
+   Вложенные осколки смотрят друг на друга: их стихии складываются по тому
+   же родству и розни, что и чары. Отсюда СОВМЕСТИМОСТЬ, а из неё —
+   УСТОЙЧИВОСТЬ набора, ЦЕНА ВЖИВЛЕНИЯ и РИСК КОНФЛИКТА.
+
+   Набрать восемь осколков враждебных стихий можно. Но они передерутся, и
+   мир выбросит один из них — с треском и по-настоящему. ══════════════ */
+const ECHO_KINDS=[
+ {id:"edge", n:"осколок удара",  род:"удара",  о:"чужая злость легла в руку",
+  дар:"удар тяжелее",            звук:"blade_ring",   k:1,    мера:"единиц к удару"},
+ {id:"hide", n:"осколок шкуры",  род:"шкуры",  о:"чужая шкура помнит, как держать удар",
+  дар:"защита крепче",           звук:"armor_clank",  k:1,    мера:"единиц к защите"},
+ {id:"ear",  n:"осколок слуха",  род:"слуха",  о:"чужое ухо слышит то, чего вы не слышали",
+  дар:"картина места шире",      звук:"fx_echo",      k:0.6,  мера:"шагов к слышимости"},
+ {id:"vein", n:"осколок жилы",   род:"жилы",   о:"чужая жила тянет силу из воздуха",
+  дар:"отдых возвращает ману",   звук:"magic_hum",    k:2,    мера:"маны за отдых"},
+ {id:"step", n:"осколок поступи",род:"поступи",о:"чужая поступь не будит камень",
+  дар:"твари чуют позже",        звук:"step_soft",    k:0.5,  мера:"шагов к скрытности"},
+ {id:"maw",  n:"осколок пасти",  род:"пасти",  о:"чужая пасть берёт своё с каждого удара",
+  дар:"удар лечит вас",          звук:"lug_flesh",    k:1,    мера:"здоровья за удар"},
+ {id:"sight",n:"осколок взгляда",род:"взгляда",о:"чужой глаз видит подвох раньше руки",
+  дар:"ловушки находятся чаще",  звук:"oc_find_probe",k:0.04, мера:"долей к поиску ловушек"},
+ {id:"word", n:"осколок слова",  род:"слова",  о:"чужое слово выговаривается само",
+  дар:"чары дешевле",            звук:"spell_arcane", k:0.02, мера:"долей к цене чар"}];
+const ECHO_BY_ID=Object.fromEntries(ECHO_KINDS.map(k=>[k.id,k]));
+const Echo=Modules.register("ECHO",{
+ kinds:ECHO_KINDS,
+ state(){if(!G.echoFrag||typeof G.echoFrag!=="object")G.echoFrag={сумка:[],вложено:[],счёт:0};
+  if(!Array.isArray(G.echoFrag.сумка))G.echoFrag.сумка=[];
+  if(!Array.isArray(G.echoFrag.вложено))G.echoFrag.вложено=[];
+  return G.echoFrag;},
+ bag(){return this.state().сумка;},
+ fitted(){return this.state().вложено;},
+ /* Сколько чужого носитель удержит. Растёт от пустотного якоря, от Эха
+    Пожирания и от артефакторики: всё это — умение держать чужое в себе. */
+ capacity(){
+  let c=2;
+  c+=Math.floor(safeFn(()=>Path.facetTier("void"),0)/3);
+  c+=safeFn(()=>Devour.has(),false)?1:0;
+  c+=Math.floor(safeFn(()=>mastLevel("arte"),0)/2);
+  return Math.max(1,Math.min(8,c));},
+ /* Осколок с той твари, что его оставила: стихия у неё всегда одна и та же. */
+ make(родId,ур,стихияId,откуда){
+  const k=ECHO_BY_ID[родId]||ECHO_KINDS[0];
+  ур=Math.max(1,Math.min(5,Math.round(Number(ур)||1)));
+  const el=ELEM_BY_ID[стихияId]||SPELL_ELEMENTS[0];
+  const d=this.state();d.счёт=(Number(d.счёт)||0)+1;
+  return {id:`ech_${d.счёт}`,род:k.id,ур,стихия:el.id,
+   стаб:Math.round(Math.max(0.35,Math.min(0.95,1.05-0.12*ур))*100)/100,
+   откуда:String(откуда||"находка")};},
+ /* Осколок от твари: род и стихия выводятся из неё самой и не пляшут. */
+ fromFoe(m,откуда){
+  try{
+   if(!m)return null;
+   const seed=String(m.id||m.n||"тварь");
+   const a=hashName(seed.length*7+ (Number(m.lvl)||1),seed.length*3,8700);
+   const b=hashName(seed.length*11,(Number(m.lvl)||1)*5,8701);
+   const род=ECHO_KINDS[Math.floor(a*ECHO_KINDS.length)%ECHO_KINDS.length].id;
+   const el=SPELL_ELEMENTS[Math.floor(b*SPELL_ELEMENTS.length)%SPELL_ELEMENTS.length].id;
+   const ур=Math.max(1,Math.min(5,1+Math.floor((Number(m.lvl)||1)/6)+(m.boss?2:0)));
+   return this.make(род,ур,el,откуда||`от «${m.n||"твари"}»`);
+  }catch(_){return null;}},
+ /* Положить осколок в суму. Сума не бездонна: больше дюжины не носят. */
+ take(о){
+  if(!о)return "";
+  const d=this.state();
+  if(d.сумка.length>=12)return `Осколков в суме уже двенадцать: ${о.род} рассыпался, не найдя места.`;
+  d.сумка.push(о);
+  const k=ECHO_BY_ID[о.род],el=ELEM_BY_ID[о.стихия];
+  safeFn(()=>{Bank.play(k.звук,{gain:0.5,maxSec:3});
+   setTimeout(()=>safeFn(()=>Bank.play("relic_sing",{gain:0.45,maxSec:4})),320);});
+  safeFn(()=>journal(`Эхо: ${k.n}, уровень ${о.ур}, стихия ${el.n.toLowerCase()}.`));
+  return ` Остался ${k.n} ${о.ур}-го уровня, стихия ${el.n.toLowerCase()}: ${k.дар}. Вживить — в окне «Путь Грани».`;},
+ /* Совместимость осколка с уже вложенными: по тому же родству стихий. */
+ compat(о){
+  const в=this.fitted();
+  if(!в.length||!о)return 0;
+  const el=ELEM_BY_ID[о.стихия];
+  const сумма=в.reduce((a,x)=>a+safeFn(()=>Resonance.связь(el,ELEM_BY_ID[x.стихия]),0),0);
+  return Math.round((сумма/в.length)*100)/100;},
+ /* Устойчивость набора: своя крепость осколков, их лад между собой и рука. */
+ stability(){
+  const в=this.fitted();
+  if(!в.length)return 1;
+  const своя=в.reduce((a,x)=>a+(Number(x.стаб)||0.5),0)/в.length;
+  const пары=[];
+  for(let i=0;i<в.length;i++)for(let j=i+1;j<в.length;j++)
+   пары.push(safeFn(()=>Resonance.связь(ELEM_BY_ID[в[i].стихия],ELEM_BY_ID[в[j].стихия]),0));
+  const лад=пары.length?пары.reduce((a,b)=>a+b,0)/пары.length:0;
+  const v=0.55+0.35*своя+0.3*лад-0.09*Math.max(0,в.length-1)+0.03*safeFn(()=>mastLevel("arte"),0);
+  return Math.round(Math.max(0.05,Math.min(0.99,v))*100)/100;},
+ /* Цена вживления: мана, кровь и часы. Своё идёт легче чужого. */
+ cost(о){
+  const c=this.compat(о);
+  const k=Math.max(0.5,1-0.25*c);
+  return {мана:Math.max(4,Math.round((8+6*(Number(о&&о.ур)||1))*k)),
+   здоровье:Math.max(2,Math.round((3+2*(Number(о&&о.ур)||1))*k)),
+   часы:Math.max(1,Math.round((1+(Number(о&&о.ур)||1)*0.5)*k))};},
+ /* Риск конфликта: чужая стихия в тесноте рвётся чаще. */
+ risk(о){
+  const c=this.compat(о);
+  const v=0.35-0.3*c+0.06*this.fitted().length-0.04*safeFn(()=>mastLevel("arte"),0);
+  return Math.round(Math.max(0.02,Math.min(0.6,v))*100)/100;},
+ /* Вживить осколок из сумы. Может не прижиться — и тогда он рассыплется. */
+ fit(i){
+  const d=this.state();
+  const о=d.сумка[Number(i)];
+  if(!о)return "Такого осколка в суме нет.";
+  if(d.вложено.length>=this.capacity())
+   return `Вместимость ${this.capacity()}: больше в себе не удержать. Сперва выньте другой.`;
+  const c=this.cost(о);
+  if((Number(G.mana)||0)<c.мана)return `Вживление стоит ${c.мана} маны, у вас ${Math.round(Number(G.mana)||0)}.`;
+  if((Number(G.hp)||0)<=c.здоровье)return `Вживление берёт ${c.здоровье} здоровья: столько отдать нельзя.`;
+  G.mana-=c.мана;G.hp-=c.здоровье;
+  G.hour=(Number(G.hour)||0)+c.часы;while(G.hour>=24){G.hour-=24;G.day=(Number(G.day)||1)+1;}
+  const риск=this.risk(о);
+  d.сумка.splice(Number(i),1);
+  const k=ECHO_BY_ID[о.род],el=ELEM_BY_ID[о.стихия];
+  if(Math.random()<риск){
+   safeFn(()=>{Bank.play("shatter",{gain:0.6,maxSec:3});
+    setTimeout(()=>safeFn(()=>Bank.play("oc_line_snap",{gain:0.5,maxSec:2})),260);});
+   safeFn(()=>journal(`Эхо: ${k.n} не прижился и рассыпался.`));
+   safeFn(()=>refresh());
+   return `${k.n} не прижился: чужое отторглось и рассыпалось. Цена ушла: ${c.мана} маны, ${c.здоровье} здоровья, ${c.часы} ${plural(c.часы,"час","часа","часов")}.`;}
+  d.вложено.push(о);
+  safeFn(()=>{Bank.play("oc_connect",{gain:0.55,maxSec:3});
+   setTimeout(()=>safeFn(()=>Bank.play(k.звук,{gain:0.5,maxSec:3})),300);
+   setTimeout(()=>safeFn(()=>eventTheme("achieve",{tier:о.ур>=4?"rare":"normal",gain:0.5})),620);});
+  safeFn(()=>journal(`Эхо вживлено: ${k.n}, уровень ${о.ур}.`));
+  safeFn(()=>refresh());
+  return `${k.n} прижился: ${k.дар}. Вложено ${d.вложено.length} из ${this.capacity()}, устойчивость ${Math.round(this.stability()*100)} из ста.`;},
+ /* Вынуть вложенное: обратно в суму, за час и без крови. */
+ drop(i){
+  const d=this.state();
+  const о=d.вложено[Number(i)];
+  if(!о)return "Такого осколка в вас нет.";
+  d.вложено.splice(Number(i),1);
+  if(d.сумка.length<12)d.сумка.push(о);
+  G.hour=(Number(G.hour)||0)+1;while(G.hour>=24){G.hour-=24;G.day=(Number(G.day)||1)+1;}
+  safeFn(()=>Bank.play("oc_line_snap",{gain:0.5,maxSec:3}));
+  safeFn(()=>refresh());
+  const k=ECHO_BY_ID[о.род];
+  return `${k.n} вынут и лёг обратно в суму. Вложено ${d.вложено.length} из ${this.capacity()}.`;},
+ /* Конфликт: набор, который не держится, сам выбрасывает худшее звено. */
+ conflict(){
+  const d=this.state();
+  if(d.вложено.length<2)return "";
+  const у=this.stability();
+  if(у>=0.6||Math.random()>=(0.6-у))return "";
+  /* Выбрасывается тот, кто в наибольшей розни с остальными. */
+  let худший=0,худ=99;
+  d.вложено.forEach((x,i)=>{
+   const el=ELEM_BY_ID[x.стихия];
+   const s=d.вложено.reduce((a,y,j)=>i===j?a:a+safeFn(()=>Resonance.связь(el,ELEM_BY_ID[y.стихия]),0),0);
+   if(s<худ){худ=s;худший=i;}});
+  const о=d.вложено.splice(худший,1)[0];
+  const k=ECHO_BY_ID[о.род];
+  const d2=Math.max(2,Math.round(3+о.ур*2));
+  G.hp=Math.max(1,(Number(G.hp)||1)-d2);
+  safeFn(()=>{Bank.play("shatter",{gain:0.6,maxSec:3});
+   setTimeout(()=>safeFn(()=>Bank.play("mtg_glass",{gain:0.5,maxSec:3})),240);});
+  safeFn(()=>journal(`Эхо: конфликт осколков, ${k.n} вырван.`));
+  const сл=`Осколки передрались: ${k.n} вырван с кровью, −${d2} здоровья. Устойчивость была ${Math.round(у*100)} из ста.`;
+  safeFn(()=>narrate(сл,{pri:1,key:"echoconf"}));
+  return сл;},
+ /* Что даёт носителю вложенное. Считается в одном месте — и только здесь. */
+ bonus(родId){
+  try{
+   const k=ECHO_BY_ID[родId];if(!k)return 0;
+   return this.fitted().reduce((a,x)=>x.род!==родId?a:
+    a+k.k*(Number(x.ур)||1)*(0.6+0.4*(Number(x.стаб)||0.5)),0);
+  }catch(_){return 0;}},
+ /* Суточный ход: набор проверяется на конфликт раз в день. */
+ daily(){try{if(G.echoDay===G.day)return "";G.echoDay=G.day;return this.conflict();}catch(_){return "";}},
+ /* Слово об осколках: всё, что о них надо знать, — одной речью. */
+ text(){
+  const d=this.state();
+  const в=d.вложено.map((o,i)=>{const k=ECHO_BY_ID[o.род],el=ELEM_BY_ID[o.стихия];
+   return `${i+1}: ${k.n}, уровень ${o.ур}, стихия ${el.n.toLowerCase()}, крепость ${Math.round(o.стаб*100)}`;});
+  const с=d.сумка.map((o,i)=>{const k=ECHO_BY_ID[o.род],el=ELEM_BY_ID[o.стихия];
+   const c=this.cost(o);
+   return `${i+1}: ${k.n}, уровень ${o.ур}, стихия ${el.n.toLowerCase()}, совместимость ${this.compat(o)}, цена ${c.мана} маны и ${c.здоровье} здоровья, риск ${Math.round(this.risk(o)*100)} из ста`;});
+  return `Эхо: осколков чужих способностей. Вложено ${d.вложено.length} из ${this.capacity()}, устойчивость ${Math.round(this.stability()*100)} из ста.`+
+   (в.length?` В вас — ${в.join("; ")}.`:" В вас пока ничего.")+
+   (с.length?` В суме — ${с.join("; ")}.`:" Сума пуста.")+
+   ` Родов осколка ${ECHO_KINDS.length}. Чем ближе стихии друг другу, тем дешевле вживление и тем реже конфликт.`;}});
 /* ── МОРФОЗВЕРИ И ПОЖИРАНИЕ У ТВАРЕЙ ── */
 const MORPH_TRAITS=[
  {id:"mineral",n:"минеральная броня",о:"съел кристаллоеда: удар входит на три слабее",откуда:"кристаллоеда",броня:3},
@@ -33615,8 +33851,12 @@ const Imprint=Modules.register("IMPRINT",{
   /* §31: с четвёртой глубины отпечаток называет уязвимости — и это знание,
      которое потом и вправду помогает бить. */
   if(lvl>=4)safeFn(()=>Lore.add("weak",k.id,k.n,`биологический отпечаток, глубина ${lvl}`));
+  /* §9: разобранная до дна тварь оставляет осколок своей способности. */
+  let оск="";
+  if(lvl>=5&&!st["ech:"+k.id]){st["ech:"+k.id]=1;
+   оск=safeFn(()=>{const о=Echo.fromFoe(k,`отпечаток «${k.n}», глубина пятая`);return о?Echo.take(о):"";},"");}
   safeFn(()=>{Bank.play("oc_organic_hit",{gain:0.4,maxSec:2});Ledger.add("твари",`${k.n}: ${поля.join("; ")}`,"биологический отпечаток");deed("imprints");mastGain("alchemy",1);});
-  return `Биологический отпечаток «${k.n}», глубина ${lvl} из пяти: ${поля.join("; ")}. Глубже — с биоинженерией, алхимией, Гранью «Память добычи» и навыком следопыта.`;},
+  return `Биологический отпечаток «${k.n}», глубина ${lvl} из пяти: ${поля.join("; ")}.${оск} Глубже — с биоинженерией, алхимией, Гранью «Память добычи» и навыком следопыта.`;},
  text(){const st=this.state();const n=Object.keys(st).length;return `Отпечатков изучено ${n}${n?`: ${Object.keys(st).map(id=>`${(MONSTERS.find(x=>x.id===id)||{n:id}).n} (${st[id]})`).join(", ")}`:""}. Глубина исследования сейчас ${this.level()} из пяти.`;}});
 function renderSigils(){
  try{
@@ -37129,6 +37369,7 @@ function castSpell(i){const sp=SPELLS[i];
  /* Резонанс: своя стихия слушается дешевле, чужая дороже. Отдача от прежнего
     срыва тоже сидит в цене — пока держится, всякая чара идёт тяжелее. */
  G.mana-=Math.max(1,Math.round(sp.cost*safeFn(()=>Resonance.ценаK(sp),1)
+  *Math.max(0.6,1-safeFn(()=>Echo.bonus("word"),0))     /* §9: осколок слова */
   *(safeFn(()=>buffActive("отдача"),false)?1.2:1)
   *(1+safeFn(()=>adaptBonus("spellCost"),0))*safeFn(()=>Waves.spellK(),1)*safeFn(()=>Balance.spellK(),1)*safeFn(()=>Zones.spellK(),1)*safeFn(()=>Power.spellK(sp),1)*safeFn(()=>Global.k("чары"),1))-safeFn(()=>Houses.manaDiscount(sp),0)-safeFn(()=>Gods.manaDiscount(sp),0));
  safeFn(()=>Balance.onCast(sp));safeFn(()=>{if(Balance.backlash()){G.mana=Math.max(0,G.mana-3);narrate("Хаос отдаёт: мана минус три сверх цены.",{interrupt:false});}});safeFn(()=>{deed("casts");deed("manaSpent",sp.cost);adaptAdd("чары",1);});
@@ -40542,6 +40783,22 @@ function worldSelfCheck(){
   ok("sigils",SIGIL_SYMBOLS.length===8&&SIGIL_SYMBOLS.every(x=>MSCHOOL_BY_ID[x.школа]&&x.намерения.every(i=>SIGIL_INTENTS[i]))&&SIGIL_CARRIERS.length===8&&SIGIL_CARRIERS.every(x=>RES_BASE[x.ресурс])&&SIGIL_GEOMETRY.length===5&&INKS.length===6&&INKS.every(x=>SOUND_BANK[x.звук]&&Object.keys(x.рецепт).every(r=>RES_BASE[r]))&&AWAKEN_SOURCES.length===6&&AWAKEN_SOURCES.every(x=>SOUND_BANK[x.звук])&&WAVES.length===3&&MORPH_TRAITS.length===6&&MORPHOBEASTS.length===10&&MORPHOBEASTS.every(b=>MONSTERS.some(m=>m.id===b.база))&&DEVOUR_GIFTS.length===6&&EVENT_THEME.world_event&&SOUND_BANK[EVENT_THEME.world_event.роль],"Знаки: восемь символов, восемь носителей, пять геометрий, шесть чернил, шесть источников пробуждения, три волны, шесть черт, десять морфозверей, шесть даров Эха — всё со звуком и по настоящим ресурсам");
   ok("cases",CASE_TEMPLATES.length===6&&CASE_TEMPLATES.every(t=>t.версии.length===3&&t.улики.every(k=>CLUE_KINDS[k])&&t.версии.every(v=>v.улики.every(k=>t.улики.includes(k))))&&SYNDICATES.length===8&&SYNDICATES.every(x=>SOUND_BANK[x.звук]&&x.города.every(id=>NAMED_CITY_BY_ID[id])&&REGIONS[x.область])&&Object.keys(DECISIONS).length===9&&Object.values(DECISIONS).every(d=>Object.keys(d).length>=3)&&["deeper","border_war","shards","lasthouse","beast","price","undercity","maskface","endless"].every(id=>CHAIN_DB[id])&&HOUSE_BY_ID[LAST_HOUSE.враг]&&DLG_MOVE_BY_ID.znanie&&DLG_MOVE_BY_ID.kultura&&DLG_MOVE_BY_ID.nedoskazat,"Расследования: шесть дел с тремя версиями, восемь синдикатов со звуком и городами, девять цепочек с развязками, три хода разговора");
   ok("academy",LANGS.length>=20&&LANGS.every(l=>l.письмо&&l.о)&&SCIENCES.length===6&&SCIENCES.every(x=>SOUND_BANK[x.звук]&&x.эффект.length===3&&FACULTY_BY_ID[x.факультет])&&FACULTIES.length===12&&FACULTIES.every(f=>(f.школы||[]).every(id=>MSCHOOL_BY_ID[id]&&SCHOOL_AUDIO[id])&&(!f.маст||MAST_BY_ID[f.маст]))&&SCHOOLS.length>=30&&SCHOOLS.every(sc=>SCHOOL_AUDIO[sc.id]&&SPELL_LAYERS.every(l=>SOUND_BANK[SCHOOL_AUDIO[sc.id][l]])),"Академия: двадцать один язык, шесть наук, двенадцать факультетов, тридцать четыре школы чар — все со звуком");
+  ok("echo",ECHO_KINDS.length===8&&new Set(ECHO_KINDS.map(k=>k.id)).size===8
+   &&ECHO_KINDS.every(k=>k.n&&k.род&&k.о&&k.дар&&k.мера&&SOUND_BANK[k.звук]&&k.k>0)
+   /* Вместимость всегда в берегах, и пустой набор устойчив. */
+   &&Echo.capacity()>=1&&Echo.capacity()<=8
+   /* Осколок с твари выходит всегда и всегда одним и тем же. */
+   &&(()=>{try{
+     const m={id:"проба_эха",n:"Проба",lvl:12};
+     const a=Echo.fromFoe(m,"проба"),b2=Echo.fromFoe(m,"проба");
+     return !!a&&!!b2&&a.род===b2.род&&a.стихия===b2.стихия&&a.ур===b2.ур
+      &&ECHO_BY_ID[a.род]&&ELEM_BY_ID[a.стихия]&&a.ур>=1&&a.ур<=5
+      &&a.стаб>0&&a.стаб<1;}catch(_){return false;}})()
+   /* Цена и риск считаются для любого осколка и не выходят за берега. */
+   &&ECHO_KINDS.every(k=>{const о=Echo.make(k.id,3,"e_fire","проба");
+     const c=Echo.cost(о),r=Echo.risk(о);
+     return c.мана>0&&c.здоровье>0&&c.часы>0&&r>=0.02&&r<=0.6;}),
+   "Эхо: восемь родов осколка со своей записью и своим даром, вместимость, совместимость по стихиям, цена вживления и риск конфликта");
   ok("resonance",Object.keys(RESO_BOND).length===18
    &&SPELL_ELEMENTS.every(e=>RESO_BOND[e.id])
    /* Родство и рознь взаимны: односторонней приязни у стихий не бывает. */
