@@ -140,7 +140,7 @@ h3{color:var(--acc2);margin:14px 0 6px;font-size:1.05rem;}
  <header><h2>⚙️ Настройки</h2><button type="button" data-cmd="close">⬅️ Назад</button></header>
  <!-- Оглавление окна: незрячий игрок слышит, из чего оно состоит, не листая. -->
  <div class="row"><button type="button" data-cmd="secindex">🧭 Оглавление настроек</button><button type="button" data-cmd="secjump">⏭️ Следующий раздел</button><button type="button" data-cmd="secback">⏮️ Предыдущий раздел</button></div>
- <p class="hint">Настройки разложены по десяти разделам. Заголовок раздела — такой же пункт, как переключатель: свайп его называет вместе с числом настроек внутри, двойное касание по нему перескакивает к следующему разделу.</p>
+ <p class="hint">Настройки разложены по одиннадцати разделам. Заголовок раздела — такой же пункт, как переключатель: свайп его называет вместе с числом настроек внутри, двойное касание по нему перескакивает к следующему разделу.</p>
  <h3 class="sec-head" tabindex="0" data-cmd="secjump" data-sec-title="Что звучит">🔊 Что звучит</h3>
  <p class="hint">Четыре главных выключателя: речь, звуки мира, музыка событий и фон.</p>
  <label class="opt"><input type="checkbox" id="setSpeech" checked><span>🔊 <b>Озвучка</b><small>Встроенная речь игры: работает без VoiceOver и TalkBack</small></span></label>
@@ -193,6 +193,12 @@ h3{color:var(--acc2);margin:14px 0 6px;font-size:1.05rem;}
  <p class="hint" id="gestHint">Любое значимое действие можно повесить на свою фигуру жеста. Фигуры с удержанием не назначаются: удержание занято ощупыванием — им незрячий игрок находит, что под пальцем. Пока вы ничего не меняли, жесты работают по умолчанию.</p>
  <div class="row" id="gestRow"></div>
  <div class="row"><button type="button" data-cmd="gestreset">↩️ Вернуть жесты к умолчанию</button></div>
+ <h3 class="sec-head" tabindex="0" data-cmd="secjump" data-sec-title="Точность жестов">🎯 Точность жестов</h3>
+ <p class="hint">Насколько далеко палец может съехать, прежде чем касание станет свайпом, и сколько времени даётся на второе касание. Рука у каждого своя: у одного палец ходит коротко и точно, у другого дрожит и ведёт вкось. Умолчания — прежние пороги игры до единицы.</p>
+ <label class="opt">🎚️ Чуткость жестов <select id="setGestSens" aria-label="Чуткость жестов"><option value="vhigh">Очень чуткие — короткий взмах уже листает</option><option value="high">Чуткие — жест распознаётся раньше</option><option value="norm" selected>Обычные — как задумано</option><option value="calm">Спокойные — палец может съехать сильнее</option><option value="vcalm">Очень спокойные — для дрожащей руки</option></select></label>
+ <label class="opt">⏱️ Окно двойного касания <select id="setTapWindow" aria-label="Окно двойного касания"><option value="500">0,5 секунды — быстрая рука</option><option value="800" selected>0,8 секунды — как задумано</option><option value="1200">1,2 секунды</option><option value="1600">1,6 секунды</option><option value="2200">2,2 секунды — сколько угодно не спеша</option></select></label>
+ <label class="opt"><input type="checkbox" id="setTapTick" checked><span>🔔 <b>Щелчок при первом касании</b><small>Первое касание молчит словом, но подаёт короткий знак, что оно дошло и второе будет засчитано. Без него взведено двойное или нет — не слышно</small></span></label>
+ <div class="row"><button type="button" data-cmd="gesttune">🎯 Что сейчас настроено</button><button type="button" data-cmd="gesttunereset">↩️ Вернуть точность к умолчанию</button></div>
  <h3 class="sec-head" tabindex="0" data-cmd="secjump" data-sec-title="Объёмный звук и живой мир">🎧 Объёмный звук и живой мир</h3>
  <p class="hint">Сторона, даль и высота источника; живые голоса народов, весёлые случаи и звуковая картина. 🎧 Пространственный эмбиент, многослойная реверберация, динамический ветер, дождь, толпа, стерео-маяки объектов и акустика локации. Аудио генерируется в реальном времени.</p>
  <label class="opt"><input type="checkbox" id="setHrtf" checked><span>🧭 <b>Объёмный звук</b><small>Слышно сторону, расстояние и высоту источника: тварь слева и сзади, ступени под ногами. Лучше всего в наушниках. Выключите, если одно ухо слышит хуже другого — тогда останется простая панорама</small></span></label>
@@ -659,7 +665,19 @@ const settings=Object.assign({speech:1,effects:1,music:1,subtitles:1,explore:1,f
  /* Фоновая музыка мест по умолчанию ВЫКЛЮЧЕНА: музыка — событию, а место
     слышно звуками. Кому нужна подложка, включает её в настройках. */
  bgMusic:0,
- voice:"",difficulty:"normal"},savedSet);
+ voice:"",difficulty:"normal",
+ /* ── ТОЧНОСТЬ ЖЕСТОВ ──
+    Пороги распознавания были зашиты числами: свайп от 38 пикселей, окно
+    двойного касания 0,8 секунды в окне и 0,65 снаружи, многопальцевый
+    перекат до 45. У незрячих игроков рука разная: у одного палец ходит
+    точно и быстро, у другого дрожит и ведёт вкось, и жёсткие числа
+    подходят обоим плохо — у первого касание не распознаётся как касание,
+    у второго второе касание двойного уходит в свайп. Теперь это настройка.
+    Умолчания в точности равны прежним числам. */
+ gestSens:"norm",   /* чуткость: множитель к расстояниям и скоростям */
+ tapWindow:800,     /* окно двойного касания, мс — ритм руки, а не размах */
+ tapTick:1          /* щелчок при первом касании: подтверждение взвода */
+ },savedSet);
 /* ── СЛОЖНОСТЬ ──
    Раньше мир был одинаково суров ко всем: числа урона, здоровья тварей,
    частоты встреч и цен были зашиты намертво. Кому-то это слишком тяжело —
@@ -3940,9 +3958,14 @@ function swipeNav(dir){
    опустился. А касание мимо кнопок работает по текущему пункту, так что
    подтвердить выбор можно и в пустом месте экрана — попадать пальцем в кнопку
    не нужно и знать, где она, не нужно. */
-function tapInLayer(el){
+/* Окно двойного касания отсчитывается от НАЧАЛА второго касания, а не от его
+   конца. Иначе палец, задержавшийся на пункте (а дрожащая рука задерживается
+   почти всегда), сам съедал своё окно: игрок успел коснуться вовремя, но пока
+   он вёл пальцем, время вышло, и касание считалось новым первым. */
+function tapInLayer(el,началось){
+ const когда=Number(началось)||Date.now();
  const lay=navLayer();
- const прилип=(touchGate.lastUiEl&&Date.now()-touchGate.lastUiTap<800&&
+ const прилип=(touchGate.lastUiEl&&когда-touchGate.lastUiTap<safeFn(()=>gestTapMs(),800)&&
    lay&&lay.contains(touchGate.lastUiEl)&&!touchGate.lastUiEl.hidden&&
    !touchGate.lastUiEl.disabled)?touchGate.lastUiEl:null;
  /* Второе касание двойного: выполняем прилипшую цель, что бы ни было под
@@ -3956,6 +3979,9 @@ function tapInLayer(el){
  if(!target){narrate("В этом окне нечего выбирать.");return;}
  if(settings.fastTap){setCursor(target,false,онНаЭкране(target)?false:undefined);activateElement(target);return;}
  touchGate.lastUiTap=Date.now();touchGate.lastUiEl=target;
+ /* Взвод слышен: короткий щелчок и лёгкая вибрация. Первое касание по-прежнему
+    молчит словом, но игрок знает, что оно дошло и второе будет засчитано. */
+ safeFn(()=>gestArmTick());
  /* Если палец уже полежал на пункте и тот назвался, при отрыве имя не
     повторяется: курсор просто встаёт на место. Список при этом с места не
     трогаем, пока пункт виден: иначе он уедет из-под пальца до второго касания. */
@@ -3992,21 +4018,23 @@ function spotSummary(){
   if(c.monster&&!G.cleared[G.x+","+G.y])return `Опасно: ${c.monster.n} преграждает путь.`;
   return `${c.terrain[1]}, ${c.empire.name}. Здесь пусто.`;
  }catch(_){return "Здесь пусто.";}}
-function handleSingleTap(el,x,y){
+function handleSingleTap(el,x,y,началось){
  /* В открытом окне — и в заглавном меню — разбирается tapInLayer: он и
     прилипшую цель двойного касания знает, и текущий пункт. */
- if(navLayer()){tapInLayer(el||null);return;}
+ if(navLayer()){tapInLayer(el||null,началось);return;}
  if(el){
   if(settings.fastTap){activateElement(el);return;} /* быстрая активация: без ожидания второго касания */
-  const now=Date.now();
+  const now=Number(началось)||Date.now();
   /* 450 мс было слишком строго для незрячих игроков: второе касание часто «не успевало».
      Цель прилипает, как и в окне: если первое касание уже наметило кнопку, второе
      выполняет ЕЁ, даже если под палец подъехала соседняя. */
+  /* Окно двойного касания одно на всю игру: было 800 мс в окне и 650 снаружи,
+     и рука училась двум ритмам вместо одного. Теперь это одна настройка. */
   const прилип=(touchGate.lastUiEl&&touchGate.lastUiEl!==FIELD_SPOT&&
-    now-touchGate.lastUiTap<650&&document.contains(touchGate.lastUiEl)&&
+    now-touchGate.lastUiTap<safeFn(()=>gestTapMs(),800)&&document.contains(touchGate.lastUiEl)&&
     !touchGate.lastUiEl.hidden&&!touchGate.lastUiEl.disabled)?touchGate.lastUiEl:null;
   if(прилип){touchGate.lastUiTap=0;touchGate.lastUiEl=null;activateElement(прилип);}
-  else{touchGate.lastUiTap=now;touchGate.lastUiEl=el;} /* одиночное касание молчит: оно лишь взводит двойное */
+  else{touchGate.lastUiTap=now;touchGate.lastUiEl=el;safeFn(()=>gestArmTick());} /* одиночное касание молчит: оно лишь взводит двойное */
   return;}
  if(!gameActive())return;
  if(activeLayer())return;
@@ -4068,7 +4096,7 @@ document.addEventListener('touchstart',e=>{safeFn(()=>AE.ensure());const n=e.tou
   cancelExploreHold();holdSpoke=false;
   exploreHold=setTimeout(()=>{exploreHold=null;
    safeFn(()=>{const было=lastAnnouncedAt;explorePoint(ex,ey);
-    if(lastAnnouncedAt!==было)holdSpoke=true;});},250);
+    if(lastAnnouncedAt!==было)holdSpoke=true;});},safeFn(()=>gestHoldMs(),250));
  }},{passive:false,capture:true});
 document.addEventListener('touchmove',e=>{
  if(!gesture.maxCount)return;
@@ -4078,7 +4106,8 @@ document.addEventListener('touchmove',e=>{
  if(!t){if(gesture.maxCount>1)e.preventDefault();return;}
  const dx=t.clientX-gesture.x,dy=t.clientY-gesture.y,d=Math.hypot(dx,dy);
  /* Для многопальцевых тапов порог мягче: пальцы неизбежно «перекатываются», пока их ставят. */
- if(d>(gesture.maxCount>1?45:16)){gesture.moved=true;cancelExploreHold();gesture.dir=touchDirection(dx,dy);}
+ const порогСдвига=safeFn(()=>gesture.maxCount>1?gestMultiPx():gestMovePx(),gesture.maxCount>1?45:16);
+ if(d>порогСдвига){gesture.moved=true;cancelExploreHold();gesture.dir=touchDirection(dx,dy);}
  /* Уголок: два шага одним пальцем. Направление от НАЧАЛА после поворота даёт
     диагональ, а не второй шаг, поэтому поворот отсчитывается от своей точки.
     Пока уголок ни на что не назначен, всё это ничего не меняет: на отрыве
@@ -4087,7 +4116,7 @@ document.addEventListener('touchmove',e=>{
   if(!gesture.leg1){gesture.leg1=gesture.dir;gesture.lx=t.clientX;gesture.ly=t.clientY;}
   else if(!gesture.leg2){
    const ldx=t.clientX-gesture.lx,ldy=t.clientY-gesture.ly;
-   if(Math.hypot(ldx,ldy)>40){
+   if(Math.hypot(ldx,ldy)>safeFn(()=>gestCornerPx(),40)){
     const d2=touchDirection(ldx,ldy);
     if(d2&&d2!==gesture.leg1)gesture.leg2=d2;}}}
  if(gesture.maxCount!==1){e.preventDefault();return;}
@@ -4099,15 +4128,15 @@ document.addEventListener('touchmove',e=>{
                        t.clientY-(gesture.lastY!=null?gesture.lastY:gesture.y));
  gesture.speed=step/dtm;
  gesture.lastX=t.clientX;gesture.lastY=t.clientY;gesture.lastT=now;
- if(gesture.speed>0.55)gesture.fast=true;
+ if(gesture.speed>safeFn(()=>gestFastV(),0.55))gesture.fast=true;
  /* «Быстро» отмечается раз и навсегда — иначе одно резкое движение в начале
     свайпа сбивало бы отсчёт. Но палец часто разгоняется, а потом переходит на
     ощупывание, не отрываясь от стекла; раньше всё оставшееся ведение молчало,
     будто экран умер. Поэтому считаем, сколько палец уже идёт медленно: четверть
     секунды спокойного ведения возвращает голос, а короткий взмах до неё не
     доживает и остаётся перелистыванием. */
- if(gesture.speed<0.25){if(!gesture.slowT)gesture.slowT=now;}else gesture.slowT=0;
- const settled=gesture.slowT&&now-gesture.slowT>=250;
+ if(gesture.speed<safeFn(()=>gestSlowV(),0.25)){if(!gesture.slowT)gesture.slowT=now;}else gesture.slowT=0;
+ const settled=gesture.slowT&&now-gesture.slowT>=safeFn(()=>gestHoldMs(),250);
  /* Ощупывание одним пальцем (доступность): озвучиваем элемент под пальцем НЕПРЕРЫВНО,
     пока палец скользит — как touch-explore в VoiceOver. Смена элемента сразу обрывает
     предыдущую фразу (см. speakTextOf/Speech.say interrupt:true). */
@@ -4115,11 +4144,11 @@ document.addEventListener('touchmove',e=>{
     иначе меню действий, вызванное посреди боя (а там и находится «Побег»),
     нельзя было прощупать пальцем — оно отвечало только на свайпы. */
  if(navLayer()?(!gesture.fast||settled):!G.weaponDrawn)explorePoint(t.clientX,t.clientY);
- if(navLayer()){if(d>20)e.preventDefault();return;}
+ if(navLayer()){if(d>safeFn(()=>gestDragPx(),20))e.preventDefault();return;}
  /* Удержание свайпа = бег: таймер взводится ОДИН раз при первом пересечении порога
     и больше не сбрасывается на каждое микро-движение пальца — раньше из-за этого
     бег почти никогда не успевал включиться при живом (не идеально неподвижном) свайпе. */
- if(d>25&&!G.weaponDrawn&&!G.inCombat&&!gesture.runArmed){
+ if(d>safeFn(()=>gestRunPx(),25)&&!G.weaponDrawn&&!G.inCombat&&!gesture.runArmed){
   gesture.runArmed=true;
   runState.pendingDir=gesture.dir;
   /* Бег начинается вдвое раньше: 320 мс ожидания ощущались как задержка. */
@@ -4152,7 +4181,7 @@ document.addEventListener('touchend',e=>{
   e.preventDefault();
   /* Многопальцевый тап: важна только длительность, «сдвиг» меряется по якорному пальцу
      с мягким порогом (см. touchmove). 800 мс не хватало, чтобы вслепую поставить три пальца. */
-  if(!g.moved&&Date.now()-g.t<1400){
+  if(!g.moved&&Date.now()-g.t<safeFn(()=>gestMultiMs(),1400)){
    /* Два пальца — одно касание: сбор (или закрыть окно). Три и четыре пальца
       выполняют только ДВОЙНЫМ касанием: одиночное лишь взводит и отвечает
       коротким щелчком, чтобы случайно поставленные пальцы ничего не делали. */
@@ -4164,7 +4193,8 @@ document.addEventListener('touchend',e=>{
       касание переставали складываться в пару, и панель магии, открытая
       двойным касанием, вторым двойным уже не закрывалась. */
    const тройка=()=>{
-    multiTap.c=(multiTap.p===fingers&&now-multiTap.pt<900)?(Number(multiTap.c)||0)+1:1;
+    const окно=safeFn(()=>gestMultiTapMs(),900);
+    multiTap.c=(multiTap.p===fingers&&now-multiTap.pt<окно)?(Number(multiTap.c)||0)+1:1;
     multiTap.p=fingers;multiTap.pt=now;
     const n=multiTap.c;
     if(n>=3)multiTap.c=0;
@@ -4176,7 +4206,7 @@ document.addEventListener('touchend',e=>{
     multiTap.n=0;
     if(gestRun(2,n>=3?"tap3":n===2?"tap2":"tap",null))return;
     handleTwoFingerTap();return;}
-   const двойное=multiTap.n===fingers&&now-multiTap.t<900;
+   const двойное=multiTap.n===fingers&&now-multiTap.t<safeFn(()=>gestMultiTapMs(),900);
    const n=тройка();
    multiTap.n=двойное?0:fingers;multiTap.t=now;
    /* Переназначенная фигура забирает жест себе. Пока привязка — умолчание,
@@ -4231,7 +4261,11 @@ document.addEventListener('touchend',e=>{
     дослушать: он входил в дверь или спускался по лестнице, не собираясь.
     Окно тапа растянуто, чтобы неспешное касание всё равно считалось касанием,
     а не пропадало впустую. */
- const swipe=d>=38&&dt<=1200,tap=d<38&&dt<3000;
+ /* Порог свайпа и «окно тапа» — одно и то же число, и оно настраивается
+    (см. ЧУВСТВИТЕЛЬНОСТЬ ЖЕСТОВ). Между ними не должно оставаться мёртвой
+    зоны, иначе касание не считается ни тем, ни другим. */
+ const порог=safeFn(()=>gestSwipePx(),38);
+ const swipe=d>=порог&&dt<=safeFn(()=>gestSwipeMs(),1200),tap=d<порог&&dt<safeFn(()=>gestTapMaxMs(),3000);
  /* Поклёвка: подсекает любое касание или свайп — важна скорость, а не точность. */
  if(G.fishing&&G.fishing.active&&G.fishing.bite&&!activeLayer()){e.preventDefault();safeFn(()=>hookFish());return;}
  if(runState.active){stopRun();e.preventDefault();return;}
@@ -4247,9 +4281,23 @@ document.addEventListener('touchend',e=>{
   if(swipe&&magicPanelOpen()){safeFn(()=>magicSlotSwipe(1,dir));return;}
   /* В инвентаре свайп вверх или вниз — действия с выбранной вещью; вбок — листать. */
   if(swipe&&(dir==='N'||dir==='S')&&layer.id==='modal-inventory'){safeFn(()=>invActions());return;}
-  const листает=swipe&&(g.fast||dt<=700||d>=90);
+  const листает=swipe&&(g.fast||dt<=safeFn(()=>gestListMs(),700)||d>=safeFn(()=>gestListPx(),90));
   if(листает){swipeNav((dir==='E'||dir==='S')?'next':'prev');return;}
   if(g.moved){
+   /* ── СЪЕХАВШЕЕ ВТОРОЕ КАСАНИЕ БОЛЬШЕ НЕ ПРОПАДАЕТ ──
+      Палец второго касания дрожит и уезжает. Если он уехал дальше порога, но
+      остался на ТОМ ЖЕ пункте, который взвело первое касание, — это всё равно
+      второе касание, а не новое ощупывание. Раньше такое касание молча
+      переставляло курсор и взводило двойное заново: игрок стучал по пункту
+      трижды и не понимал, почему ничего не происходит. */
+   const взведено=touchGate.lastUiEl;
+   if(взведено&&!settings.fastTap&&layer.contains(взведено)&&!взведено.disabled
+      &&g.t-touchGate.lastUiTap<safeFn(()=>gestTapMs(),800)
+      &&(pendingCursor===взведено||g.ui===взведено)){
+    touchGate.lastUiTap=0;touchGate.lastUiEl=null;pendingCursor=null;
+    if(uiCursor!==взведено)setCursor(взведено,false,false);
+    activateElement(взведено);
+    return;}
    /* Ощупывание: текущим становится пункт, на котором палец оторвался. Список
       при этом не двигаем — палец на нём и так стоит. */
    if(pendingCursor&&layer.contains(pendingCursor)){
@@ -4267,7 +4315,7 @@ document.addEventListener('touchend',e=>{
   pendingCursor=null;
   /* Через общий обработчик: он сначала отдаёт добычу, если она лежит под ногами,
      и только потом разбирается с выбором. */
-  if(tap)handleSingleTap(g.ui||null,t.clientX,t.clientY);
+  if(tap)handleSingleTap(g.ui||null,t.clientX,t.clientY,g.t);
   return;
  }
  if(!gameActive())return;
@@ -4279,7 +4327,7 @@ document.addEventListener('touchend',e=>{
   return;
  }
  if(swipe){e.preventDefault();safeFn(()=>move(dir));return;}
- if(tap){e.preventDefault();handleSingleTap(g.ui||null,t.clientX,t.clientY);}
+ if(tap){e.preventDefault();handleSingleTap(g.ui||null,t.clientX,t.clientY,g.t);}
 },{passive:false,capture:true});
 document.addEventListener('click',e=>{
  /* Окно после касания гасит «призрачный» клик, который браузер досылает по
@@ -4414,6 +4462,110 @@ function startCraftText(){
   START_CRAFTS.map(c=>`${c.n} — ${c.о}`).join("; ")+
   `. Выбирают один раз, в меню действий. Можно не выбирать вовсе: неизбранный значит, что никто не обязан быть избранным.`;}
 /* ════════════════════════════════════════════════════════════════════════
+   ТОЧНОСТЬ ЖЕСТОВ: ЧУТКОСТЬ И ОКНО ДВОЙНОГО КАСАНИЯ
+
+   Все пороги распознавания жили числами прямо в обработчиках: свайп от 38
+   пикселей, «палец сдвинулся» от 16, многопальцевый перекат до 45, тап до
+   трёх секунд, окно двойного касания 800 мс в окне и 650 снаружи, «быстро»
+   от 0,55 пикселя на миллисекунду. Числа подбирались под одну руку.
+
+   Рука у каждого своя, и у незрячего игрока — тем более. У одного палец
+   ходит точно и коротко: ему 38 пикселей много, короткий взмах не листает,
+   и он машет второй раз. У другого палец дрожит и ведёт вкось: его второе
+   касание двойного съезжает на сорок пикселей, игра считает это свайпом,
+   активация пропадает, и он не понимает почему.
+
+   Пять ступеней чуткости — это один множитель ко всем расстояниям,
+   скоростям и длительностям распознавания. Окно двойного касания вынесено
+   отдельной настройкой: это ритм руки, а не её размах, и связывать их
+   нельзя. «Обычные» и 800 мс дают в точности прежние числа — до единицы,
+   поэтому сорок наборов про жесты не замечают разницы.
+   ════════════════════════════════════════════════════════════════════════ */
+const GEST_SENS=[
+ {id:"vhigh",n:"очень чуткие",k:0.62,
+  о:"Короткий взмах уже листает, касание прощает совсем немного. Для твёрдой руки и мелких движений."},
+ {id:"high",n:"чуткие",k:0.8,
+  о:"Жест распознаётся раньше обычного. Для тех, кому прежние пороги кажутся вязкими."},
+ {id:"norm",n:"обычные",k:1,
+  о:"Как было задумано с самого начала: пороги ровно те, с которыми игра вышла."},
+ {id:"calm",n:"спокойные",k:1.35,
+  о:"Палец может заметно съехать, и это всё равно будет касание, а не свайп. Для неспешной руки."},
+ {id:"vcalm",n:"очень спокойные",k:1.8,
+  о:"Самые широкие пороги: касание прощает почти семьдесят пикселей. Для дрожащей руки и крупных движений."}];
+const GEST_SENS_BY_ID=Object.fromEntries(GEST_SENS.map(x=>[x.id,x]));
+function gestSens(){return GEST_SENS_BY_ID[settings.gestSens]||GEST_SENS_BY_ID.norm;}
+function gestK(){const k=Number(gestSens().k);return Number.isFinite(k)&&k>0?k:1;}
+/* Порог свайпа и предел «дрожи» для касания — одно и то же число: между ними
+   не должно оставаться мёртвой зоны, иначе касание не считается ни тем, ни
+   другим, и браузер досылает по нему собственный клик. */
+function gestSwipePx(){return Math.round(38*gestK());}
+function gestMovePx(){return Math.round(16*gestK());}
+function gestDragPx(){return Math.round(20*gestK());}
+function gestRunPx(){return Math.round(25*gestK());}
+function gestCornerPx(){return Math.round(40*gestK());}
+function gestMultiPx(){return Math.round(45*gestK());}
+function gestMultiMs(){return Math.round(1400*gestK());}
+function gestSwipeMs(){return Math.round(1200*gestK());}
+function gestTapMaxMs(){return Math.round(3000*gestK());}
+function gestListPx(){return Math.round(90*gestK());}
+function gestListMs(){return Math.round(700*gestK());}
+/* Чем спокойнее рука, тем труднее попасть в «быстро»: иначе неспешное ведение
+   считается перелистыванием и по дороге молчит. */
+function gestFastV(){return 0.55*gestK();}
+function gestSlowV(){return 0.25*gestK();}
+function gestHoldMs(){return Math.round(250*gestK());}
+/* Окно двойного касания — своя настройка, от чуткости не зависит. */
+function gestTapMs(){
+ const v=Number(settings.tapWindow);
+ return (Number.isFinite(v)&&v>=300&&v<=3000)?Math.round(v):800;}
+/* Три и четыре пальца вслепую ставятся дольше одного — им сотня сверху. */
+function gestMultiTapMs(){return gestTapMs()+100;}
+/* Щелчок взвода: первое касание молчит словом, но подаёт короткий знак, что
+   оно дошло. Без него незрячий игрок не знает, взведено двойное или нет, и
+   бьёт по экрану наугад. Настоящая запись, не синтез. */
+function gestArmTick(){
+ if(!settings.tapTick)return false;
+ safeFn(()=>{if(!UI.nat("ui_focus",0.3))UI.blip(1040,.04,.06);});
+ safeFn(()=>vib(8));
+ return true;}
+function gestSensSet(id){
+ if(!GEST_SENS_BY_ID[id])return false;
+ settings.gestSens=id;saveSettings();return true;}
+function gestTapWindowSet(ms){
+ const v=Math.round(Number(ms)||0);
+ if(!(v>=300&&v<=3000))return false;
+ settings.tapWindow=v;saveSettings();return true;}
+function gestTuneReset(){
+ settings.gestSens="norm";settings.tapWindow=800;settings.tapTick=1;
+ saveSettings();return true;}
+/* Что сейчас настроено — вслух, числами. Незрячему игроку это единственный
+   способ понять, куда он сдвинул пороги и куда двигать дальше. */
+/* Дробное число вслух читается с запятой, а не с точкой: «ноль запятая восемь». */
+function gestSec(ms){return (Math.round(Number(ms)||0)/1000).toFixed(1).replace(".",",");}
+function gestTuneText(){
+ const s=gestSens();
+ return `Точность жестов. Чуткость: ${s.n}. ${s.о} `+
+  `Свайп начинается с ${gestSwipePx()} ${plural(gestSwipePx(),"пикселя","пикселей","пикселей")}, `+
+  `касание прощает столько же. Палец считается сдвинутым с ${gestMovePx()}, `+
+  `многопальцевый перекат прощает ${gestMultiPx()}. `+
+  `Окно двойного касания: ${gestSec(gestTapMs())} секунды, `+
+  `для трёх и четырёх пальцев — ${gestSec(gestMultiTapMs())}. `+
+  `Щелчок при первом касании ${settings.tapTick?"включён":"выключен"}.`;}
+const GestTune=Modules.register("GESTTUNE",{
+ levels:GEST_SENS,
+ level:()=>S(()=>gestSens(),GEST_SENS_BY_ID.norm),
+ k:()=>S(()=>gestK(),1),
+ swipePx:()=>S(()=>gestSwipePx(),38),
+ movePx:()=>S(()=>gestMovePx(),16),
+ multiPx:()=>S(()=>gestMultiPx(),45),
+ tapMs:()=>S(()=>gestTapMs(),800),
+ multiTapMs:()=>S(()=>gestMultiTapMs(),900),
+ set:id=>S(()=>gestSensSet(id),false),
+ window:ms=>S(()=>gestTapWindowSet(ms),false),
+ reset:()=>S(()=>gestTuneReset(),false),
+ tick:()=>S(()=>gestArmTick(),false),
+ text:()=>S(()=>gestTuneText(),"")});
+/* ════════════════════════════════════════════════════════════════════════
    РАЗДЕЛЫ ОКНА: ЗАГОЛОВОК — ТОЖЕ ПУНКТ
 
    В игре три длинных окна: меню действий (сто тридцать пунктов), настройки
@@ -4479,13 +4631,18 @@ function secIndexText(layer){
  return `Разделов ${h.length}. `+
   h.map((el,i)=>`${i+1}. ${secTitle(el)} — ${secCount(el,layer)} ${plural(secCount(el,layer),"пункт","пункта","пунктов")}`).join("; ")+
   ". Двойное касание по заголовку — перескочить к следующему разделу.";}
-/* Перескок по разделам: вперёд или назад, по кругу. */
-function secNav(dir){
+/* Перескок по разделам: вперёд или назад, по кругу.
+   Отсчёт идёт от того, на чём стоит палец, а не только от курсора: двойное
+   касание по ПЯТОМУ заголовку должно вести к шестому, где бы ни стоял курсор.
+   Раньше перескок всегда мерил от курсора, и касание по заголовку в середине
+   списка уводило совсем не туда. */
+function secNav(dir,от){
  const lay=navLayer();
  const h=secRefresh(lay);
  if(!h.length){safeFn(()=>narrate("В этом окне разделов нет."));return false;}
  const все=visibleInteractive(lay||document);
- const iк=все.indexOf(uiCursor);
+ const откуда=(от&&все.indexOf(от)>=0)?от:uiCursor;
+ const iк=все.indexOf(откуда);
  let тек=-1;
  h.forEach((el,i)=>{const ie=все.indexOf(el);if(ie>=0&&iк>=0&&ie<=iк)тек=i;});
  const i=(dir==="prev")
@@ -4505,7 +4662,7 @@ const Sections=Modules.register("SECTIONS",{
  count:(h,l)=>S(()=>secCount(h,l),0),
  speak:(h,l)=>S(()=>secSpeak(h,l),""),
  refresh:l=>S(()=>secRefresh(l),[]),
- nav:d=>S(()=>secNav(d),false),
+ nav:(d,от)=>S(()=>secNav(d,от),false),
  menu:()=>AM_GROUPS.map(([t,items])=>({раздел:t,пунктов:items.length})),
  parts:()=>GUIDE_PARTS.map(([t,о,ns])=>({часть:t,о,глав:ns.length})),
  text:()=>S(()=>secIndexText(),"")});
@@ -5243,6 +5400,16 @@ const GUIDE=[
  "Вещь растёт. За каждую победу работающий артефакт получает опыт, а на пороге открывает ступень — прибавку, которой у него раньше не было, и всегда из своего направления. Каждая следующая ступень даётся вдвое тяжелее. Если гнёзда кончились, редкую часть можно скормить вещи: она уйдёт в опыт вместо гнезда.",
  "Требования. Ранг задаёт уровень; сверх того вещь может требовать навык, заклинание нужной школы, расположение народа, принадлежность к клану, прочитанное знание или закрытое дело. Вещь, требования которой не выполнены, лежит мёртвым грузом и не даёт ничего — и прямо говорит, чего ей не хватает.",
  "Где всё это. Пункт меню «Артефакты, части и рецепты». В нём видно, каким ремеслом здесь занимаются и каково ваше умение, какие рецепты под рукой и чего не хватает, какие части лежат в суме, и по каждой вещи — всё, что о ней известно, и всё, что с ней можно сделать: вложить, вынуть, зачаровать, скормить, продать."]},
+{title:"Глава 91. Точность жестов: чуткость и окно двойного касания",body:[
+ "ЗАЧЕМ. Пороги распознавания были зашиты числами: свайп от тридцати восьми пикселей, «палец сдвинулся» от шестнадцати, многопальцевый перекат до сорока пяти, окно двойного касания восемь десятых секунды. Числа подбирались под одну руку. Рука у каждого своя, и у незрячего игрока — тем более: у одного палец ходит коротко и точно, у другого дрожит и ведёт вкось. Первому короткий взмах не листал, и он махал второй раз; у второго второе касание съезжало на сорок пикселей, игра считала это свайпом, и активация пропадала неизвестно куда.",
+ "ПЯТЬ СТУПЕНЕЙ ЧУТКОСТИ. Очень чуткие, чуткие, обычные, спокойные, очень спокойные. Это один множитель ко ВСЕМ расстояниям, скоростям и длительностям распознавания разом: на «очень чутких» свайп начинается с двадцати четырёх пикселей, на «очень спокойных» — с шестидесяти восьми, и ровно столько же прощает касание. «Обычные» — в точности прежние числа игры, до единицы.",
+ "ОКНО ДВОЙНОГО КАСАНИЯ — ОТДЕЛЬНО. Это ритм руки, а не её размах, и связывать их нельзя: человек может водить пальцем широко и при этом стучать быстро. Пять значений от половины секунды до двух с лишним. Для трёх и четырёх пальцев окно на десятую долю шире: поставить вслепую три пальца дольше, чем один.",
+ "ОДИН РИТМ НА ВСЮ ИГРУ. Прежде окно двойного касания было восемь десятых секунды в открытом окне и шесть с половиной десятых снаружи — рука училась двум ритмам вместо одного, и на игровом поле второе касание «не успевало» чаще. Теперь число одно и берётся из настройки.",
+ "СЪЕХАВШЕЕ ВТОРОЕ КАСАНИЕ БОЛЬШЕ НЕ ПРОПАДАЕТ. Если палец второго касания медленно уехал дальше порога, но остался на ТОМ ЖЕ пункте, который взвело первое, — это засчитывается как второе касание. Раньше такое касание молча переставляло курсор и взводило двойное заново: игрок стучал по пункту трижды и не понимал, почему ничего не происходит. Быстрый росчерк в те же сорок пикселей остаётся свайпом — на то и чуткость, чтобы двигать эту границу.",
+ "ОКНО СЧИТАЕТСЯ ОТ НАЧАЛА ВТОРОГО КАСАНИЯ, А НЕ ОТ ЕГО КОНЦА. Палец, который коснулся вовремя, но задержался на пункте — а дрожащая рука задерживается почти всегда, — сам съедал своё окно: игрок успел, но пока он вёл пальцем, время вышло, и касание считалось новым первым. Теперь важно, когда касание НАЧАЛОСЬ.",
+ "ЩЕЛЧОК ПРИ ПЕРВОМ КАСАНИИ. Первое касание по-прежнему молчит словом — называют свайп и ощупывание. Но теперь оно подаёт короткий знак настоящей записью и лёгкой вибрацией: взведено. Без этого знака незрячий игрок не знает, дошло ли касание, и бьёт по экрану наугад. Выключается галочкой.",
+ "ЧТО СЕЙЧАС НАСТРОЕНО. Кнопка в разделе «Точность жестов» называет все пороги числами: с какого пикселя начинается свайп, сколько прощает касание, с какого пикселя палец считается сдвинутым, каково окно двойного касания. Вслепую подкрутить пороги иначе нельзя — не видя экрана, не поймёшь, куда ты их сдвинул.",
+ "ЭТО НЕ МЕНЯЕТ КАРТУ ЖЕСТОВ. Чуткость и окно — про то, КАК игра узнаёт жест, а не про то, ЧТО он делает. Карта жестов и её переназначение живут отдельно, в разделе «Жесты» (глава 88)."]},
 {title:"Глава 90. Разделы длинных окон",body:[
  "ЗАЧЕМ. В игре три окна, по которым нельзя просто пробежать глазами: меню действий на сто тридцать пунктов, настройки на шесть десятков переключателей и руководство на девяносто глав. Зрячий видит, где кончается одно и начинается другое; незрячий свайпает по одному пункту и до нужного добирается вслепую. Раньше заголовки разделов в этих окнах были подписаны «не читать» — игра их прятала от чтеца. Теперь заголовок — такой же пункт, как кнопка.",
  "ЧТО ГОВОРИТ ЗАГОЛОВОК. Свайп по нему называет раздел и сколько в нём пунктов прямо сейчас: «Раздел «Бой и опасность»: одиннадцать пунктов». Число живое — в бою одни пункты уместны, в городе другие, и заголовок считает по тому, что видно.",
@@ -5603,7 +5770,7 @@ const GUIDE=[
    приписанная ни к одной части, не теряется — она уходит в конец списка.
    ════════════════════════════════════════════════════════════════════════ */
 const GUIDE_PARTS=[
- ["Часть I. Первые шаги","Что нажимать, куда идти и как заставить игру замолчать.",[1,2,3,88,90,4,49]],
+ ["Часть I. Первые шаги","Что нажимать, куда идти и как заставить игру замолчать.",[1,2,3,88,91,90,4,49]],
  ["Часть II. Слушать мир","Игра проходится ухом: чем звучит место, поверхность, оружие, тварь и событие.",[5,21,22,24,25,26,28,29,33,34,50]],
  ["Часть III. Герой и его силы","Опыт, тело, свойства, умения и вещи, которые их меняют.",[6,7,40,48,55,58,62,69,72,76,82]],
  ["Часть IV. Магия","Школы, плетение, резонанс, эхо и две энциклопедии заклинаний.",[64,67,68,70,78,79,81,87]],
@@ -33189,9 +33356,17 @@ const CMD={
  guide(){openGuide();},
  settings(){openModal("modal-settings");safeFn(()=>renderGestBind());safeFn(()=>secRefresh(document.getElementById("modal-settings")));},
  gestreset(){gestReset();safeFn(()=>renderGestBind());},
+ /* Точность жестов: что настроено сейчас и возврат к умолчанию. */
+ gesttune(){narrate(safeFn(()=>gestTuneText(),"Точность жестов настроить не удалось."),{interrupt:true});},
+ gesttunereset(){
+  gestTuneReset();
+  safeFn(()=>{const g=document.getElementById("setGestSens");if(g)g.value="norm";
+   const w=document.getElementById("setTapWindow");if(w)w.value="800";
+   const t=document.getElementById("setTapTick");if(t)t.checked=true;});
+  narrate("Точность жестов возвращена к умолчанию: чуткость обычная, окно двойного касания восемь десятых секунды, щелчок включён.",{interrupt:true});},
  /* Разделы окна: перескочить вперёд, назад и услышать оглавление. */
- secjump(){safeFn(()=>secNav("next"));},
- secback(){safeFn(()=>secNav("prev"));},
+ secjump(a,el){safeFn(()=>secNav("next",el));},
+ secback(a,el){safeFn(()=>secNav("prev",el));},
  secindex(){narrate(safeFn(()=>secIndexText(),"В этом окне разделов нет."),{interrupt:true});},
  gestpick(arg){
   const p=String(arg||"").split("~");
@@ -46175,6 +46350,34 @@ function worldSelfCheck(){
      G.gestBind=было;return тихо;}catch(_){return false;}})()
    &&typeof Modules.get("GESTUREBIND").text()==="string",
    "жесты переназначаются: тридцать три фигуры без удержаний, тридцать два значимых действия, пятнадцать умолчаний в точности как прежняя карта, споров нет");
+  /* Точность жестов: пять ступеней чуткости и окно двойного касания. */
+  ok("gesttune",GEST_SENS.length===5&&new Set(GEST_SENS.map(x=>x.id)).size===5
+   &&GEST_SENS.every(x=>x.n&&x.о&&x.о.length>30&&Number.isFinite(x.k)&&x.k>0)
+   /* Ступени идут по возрастанию, и «обычные» ровно посередине с множителем один. */
+   &&GEST_SENS.every((x,i)=>i===0||x.k>GEST_SENS[i-1].k)
+   &&GEST_SENS[2].id==="norm"&&GEST_SENS[2].k===1
+   /* При умолчаниях все пороги в точности равны прежним числам игры. */
+   &&(()=>{const б=settings.gestSens,в=settings.tapWindow;
+     settings.gestSens="norm";settings.tapWindow=800;
+     const ок=gestSwipePx()===38&&gestMovePx()===16&&gestMultiPx()===45
+      &&gestMultiMs()===1400&&gestSwipeMs()===1200&&gestTapMaxMs()===3000
+      &&gestListPx()===90&&gestListMs()===700&&gestHoldMs()===250
+      &&gestFastV()===0.55&&gestSlowV()===0.25
+      &&gestTapMs()===800&&gestMultiTapMs()===900;
+     settings.gestSens=б;settings.tapWindow=в;return ок;})()
+   /* Спокойная рука получает более широкие пороги, чуткая — более узкие. */
+   &&(()=>{const б=settings.gestSens;
+     settings.gestSens="vcalm";const ш=gestSwipePx();
+     settings.gestSens="vhigh";const у=gestSwipePx();
+     settings.gestSens=б;return ш>38&&у<38&&ш>у;})()
+   /* Окно двойного касания принимает только разумные значения. */
+   &&(()=>{const б=settings.tapWindow;
+     const плохо=gestTapWindowSet(50)||gestTapWindowSet(99999)||gestTapWindowSet("ох");
+     const хорошо=gestTapWindowSet(1600)&&gestTapMs()===1600;
+     settings.tapWindow=б;saveSettings();return !плохо&&хорошо;})()
+   &&typeof CMD.gesttune==="function"&&typeof CMD.gesttunereset==="function"
+   &&typeof Modules.get("GESTTUNE").text()==="string",
+   "точность жестов настраивается: пять ступеней чуткости множителем ко всем порогам, своё окно двойного касания и щелчок взвода; при умолчаниях пороги в точности прежние");
   /* Разделы длинных окон: меню действий, настройки и руководство. */
   ok("sections",AM_GROUPS.length===14
    &&AM_GROUPS.every(([t,items])=>typeof t==="string"&&t.length>3&&Array.isArray(items)&&items.length>0)
@@ -46195,13 +46398,13 @@ function worldSelfCheck(){
    &&(()=>{try{
      const м=document.getElementById("modal-settings");
      const h=[...м.querySelectorAll("."+SEC_CLASS)];
-     return h.length===10&&new Set(h.map(x=>x.dataset.secTitle)).size===10
+     return h.length===11&&new Set(h.map(x=>x.dataset.secTitle)).size===11
       &&h.every(x=>x.dataset.cmd==="secjump");}catch(_){return false;}})()
    /* Три жеста о разделах есть в списке назначаемых действий. */
    &&["secnext","secprev","secindex"].every(id=>GEST_ACTION_BY_ID[id])
    &&typeof CMD.secjump==="function"&&typeof CMD.secback==="function"&&typeof CMD.secindex==="function"
    &&typeof Modules.get("SECTIONS").text()==="string",
-   "длинные окна разбиты по смыслу: четырнадцать разделов меню действий (было шесть, и в одном пятьдесят семь пунктов), десять разделов настроек, девять частей руководства; заголовок — пункт, и двойное касание по нему перескакивает через раздел");
+   "длинные окна разбиты по смыслу: четырнадцать разделов меню действий (было шесть, и в одном пятьдесят семь пунктов), одиннадцать разделов настроек, девять частей руководства; заголовок — пункт, и двойное касание по нему перескакивает через раздел");
   ok("enc14000",ENC_TOTAL===14000&&ENC_SCHOOLS.length===17
    &&ENC_SCHOOLS.every(sc=>sc.n&&sc.о&&sc.о.length>40&&MSCHOOL_BY_ID[sc.id]
      &&Array.isArray(sc.спец)&&sc.спец.length===4&&new Set(sc.спец).size===4
@@ -47388,6 +47591,17 @@ function bindSettings(){const $=id=>document.getElementById(id);
  $("setFastTap").addEventListener("change",e=>{settings.fastTap=e.target.checked?1:0;saveSettings();
   narrate(settings.fastTap?"Быстрая активация включена: одно касание сразу выполняет действие.":"Быстрая активация выключена: сначала озвучивание, затем повторное касание.");});
  $("setHaptics").addEventListener("change",e=>{settings.haptics=e.target.checked?1:0;saveSettings();vib(30);});
+ /* ── ТОЧНОСТЬ ЖЕСТОВ ── */
+ {const g=$("setGestSens");if(g){g.value=settings.gestSens||"norm";
+  g.addEventListener("change",e=>{gestSensSet(e.target.value);
+   narrate(`Чуткость жестов: ${gestSens().n}. ${gestSens().о} Свайп начинается с ${gestSwipePx()} пикселей, касание прощает столько же.`,{interrupt:true});});}}
+ {const w=$("setTapWindow");if(w){w.value=String(gestTapMs());
+  w.addEventListener("change",e=>{gestTapWindowSet(e.target.value);
+   narrate(`Окно двойного касания: ${gestSec(gestTapMs())} секунды. Для трёх и четырёх пальцев — ${gestSec(gestMultiTapMs())}.`,{interrupt:true});});}}
+ {const t=$("setTapTick");if(t){t.checked=settings.tapTick!==0;
+  t.addEventListener("change",e=>{settings.tapTick=e.target.checked?1:0;saveSettings();
+   safeFn(()=>gestArmTick());
+   narrate(settings.tapTick?"Щелчок при первом касании включён: вот он.":"Щелчок при первом касании выключен.");});}}
  $("setRate").addEventListener("input",e=>{settings.rate=+e.target.value;saveSettings();
   $("vRate").textContent=(+settings.rate).toFixed(1)+"×";});
  $("setRate").addEventListener("change",()=>narrate(`Скорость озвучки ${(+settings.rate).toFixed(1)}. Раз, два, три.`));

@@ -90,7 +90,13 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
    const слой=document.getElementById(id);
    const пункты=cursorItems(слой);
    let немых=0;const примеры=[];
-   for(const el of пункты){
+   for(let i=0;i<пункты.length;i++){
+    /* Пункт перечитывается заново: активация могла закрыть окно, а повторное
+       открытие перерисовывает список, и прежние узлы становятся ничьими —
+       нажать на такой нельзя и пальцем. */
+    const живые=cursorItems(слой);
+    const el=живые[i]||пункты[i];
+    if(!el||!document.contains(el))continue;
     const было=window.__said.length;
     try{activateElement(el);}catch(e){немых++;примеры.push("сбой: "+String(e).slice(0,50));continue;}
     await new Promise(z=>setTimeout(z,15));
