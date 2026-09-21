@@ -48,7 +48,7 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
  const данные=await page.evaluate(()=>{
   const r={};
   r.ranks=PATH_RANKS.length;r.ranksOrder=PATH_RANKS.every((k,i)=>i===0||k.порог>PATH_RANKS[i-1].порог);r.ranksDoc=PATH_RANKS.slice(1).every(k=>k.док&&k.док.n&&typeof k.док.ок==="function");
-  r.facets=FACETS.length;r.facetsOk=FACETS.every(f=>f.пороги.length===3&&f.эффект.length===3&&f.k.length===3&&f.предел&&f.синергия&&f.минус&&SOUND_BANK[f.звук]&&typeof f.сч==="function");
+  r.facets=FACETS.length;r.facetsOk=FACETS.every(f=>f.пороги.length===10&&f.эффект.length===10&&f.k.length===10&&f.предел&&f.синергия&&f.минус&&SOUND_BANK[f.звук]&&typeof f.сч==="function");
   r.ways=PATH_WAYS.length;r.waysOk=PATH_WAYS.every(w=>w.ветви.length>=2&&w.ветви.every(b=>BRANCH_BY_ID[b]));
   r.energy=ENERGY.length;r.energyOk=ENERGY.every(e=>typeof e.get==="function"&&typeof e.max==="function"&&e.о);
   r.spells=PATH_SPELLS.length;r.spellsOk=PATH_SPELLS.every(s=>SOUND_BANK[s.звук]&&typeof s.делать==="function"&&Object.keys(s.цена).length&&s.риск>0);
@@ -59,7 +59,7 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   const sc=worldSelfCheck();const row=sc.find(x=>x.id==="path");r.selfcheck=row?row.ok:null;
   return r;});
  check('десять ступеней по возрастанию с доказательствами, восемь Граней с порогами и звуком, двенадцать путей по настоящим ветвям, шесть энергий',
-  данные.ranks===10&&данные.ranksOrder&&данные.ranksDoc&&данные.facets===8&&данные.facetsOk&&данные.ways===12&&данные.waysOk&&данные.energy===6&&данные.energyOk,данные);
+  данные.ranks===10&&данные.ranksOrder&&данные.ranksDoc&&данные.facets===17&&данные.facetsOk&&данные.ways===12&&данные.waysOk&&данные.energy===6&&данные.energyOk,данные);
  check('десять чар со звуком, восемь масок, десять артефактов с историей, десять людей Пути в таблицах ремёсел; самопроверка мира видит Путь',
   данные.spells===10&&данные.spellsOk&&данные.masks===8&&данные.masksOk&&данные.arts===10&&данные.artsOk&&данные.profs===10&&данные.profsOk&&данные.selfcheck===true,данные);
 
@@ -85,7 +85,7 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   const r={};G.facetTiers={};G.deeds={steps:0};r.t0=Path.facetTier("quiet");r.k0=Path.facetK("quiet");
   G.deeds.steps=80;r.t1=Path.facetTier("quiet");r.k1=Path.facetK("quiet");
   PLAYED.length=0;SAID.length=0;JT.length=0;Path.facetTick();
-  r.звук=PLAYED.includes("lug_bush");r.слова=SAID.find(t=>/Грань «Тихий след», ступень 1/.test(t))||"";r.минус=/Обратная сторона/.test(r.слова);r.летопись=JT.some(t=>/Грань: Тихий след, ступень 1/.test(t));
+  r.звук=PLAYED.includes("lug_bush");r.слова=SAID.find(t=>/Грань «Тихий след», стадия 1 из десяти — Пробуждение/.test(t))||"";r.минус=/Обратная сторона/.test(r.слова);r.летопись=JT.some(t=>/Грань: Тихий след, ступень 1/.test(t));
   SAID.length=0;Path.facetTick();r.повтор=SAID.some(t=>/Грань «Тихий след»/.test(t));
   G.deeds.steps=1500;r.t3=Path.facetTier("quiet");r.k3=Path.facetK("quiet");
   r.text=Path.facetText(FACET_BY_ID.stone);
