@@ -380,6 +380,7 @@ h3{color:var(--acc2);margin:14px 0 6px;font-size:1.05rem;}
  <header><h2>⚔️ Политика и торговля</h2><button type="button" data-cmd="close">✖️ Закрыть</button></header>
  <h3>🔥 Войны сегодня</h3><div id="polWars"></div>
  <h3>🤝 Союзы и договоры</h3><div id="polAllies"></div>
+ <h3>🕊️ Договоры, меры и тайное</h3><div id="polPacts"></div>
  <h3>🏛️ Восемь держав</h3><div id="polEmpires"></div>
  <h3>🏰 Досье держав: цели, правители, тайные дела</h3><div id="polFactions"></div>
  <h3>🪙 Рынок вашей державы</h3><div id="polMarket"></div>
@@ -4819,6 +4820,16 @@ const GUIDE=[
  "Вещь растёт. За каждую победу работающий артефакт получает опыт, а на пороге открывает ступень — прибавку, которой у него раньше не было, и всегда из своего направления. Каждая следующая ступень даётся вдвое тяжелее. Если гнёзда кончились, редкую часть можно скормить вещи: она уйдёт в опыт вместо гнезда.",
  "Требования. Ранг задаёт уровень; сверх того вещь может требовать навык, заклинание нужной школы, расположение народа, принадлежность к клану, прочитанное знание или закрытое дело. Вещь, требования которой не выполнены, лежит мёртвым грузом и не даёт ничего — и прямо говорит, чего ей не хватает.",
  "Где всё это. Пункт меню «Артефакты, части и рецепты». В нём видно, каким ремеслом здесь занимаются и каково ваше умение, какие рецепты под рукой и чего не хватает, какие части лежат в суме, и по каждой вещи — всё, что о ней известно, и всё, что с ней можно сделать: вложить, вынуть, зачаровать, скормить, продать."]},
+{title:"Глава 74. Дипломатия: одиннадцать родов договоров, мер и состояний",body:[
+ "У пары держав было одно число и пять слов на шкале: союз, дружба, нейтралитет, напряжение, война. Шкала не умеет сказать главного. Торговый договор и военный — две разные бумаги, и они живут вместе. Эмбарго — не «чуть хуже нейтралитета», а мера, которую вводят, не объявляя войны. Вассалитет вообще не двусторонний: один платит дань, другой её берёт.",
+ "ЧЕТЫРЕ РАЗРЯДА ЗАПИСЕЙ. Состояние — ровно одно на пару: война, перемирие, вассалитет, нейтралитет. Договор складывается поверх состояния: союз, торговый, военный, тайный, и их бывает несколько разом. Мера односторонняя и недружественная, но не война: эмбарго и санкции. Дело идёт само по себе: шпионаж.",
+ "У КАЖДОЙ ЗАПИСИ ЕСТЬ СЛЕДСТВИЕ, а не строка в окне. Торговый договор: то, что вывозит другая сторона, здесь дешевле на пятую. Союз: дешевле на двенадцатую. Эмбарго: товары той стороны дороже на треть. Санкции: у наказанной державы дорожает всё — убытки раскладывают на всех. Вассалитет: вассал платит дань, и у него всё на десятую дороже, а у сюзерена на двенадцатую дешевле. Военный договор: если сосед воюет, а ты обязан встать рядом — живёшь как воюющий, и цены у тебя как на войне.",
+ "ПЕРЕМИРИЕ ОТМЕНЯЕТ ВОЙНУ ПО-НАСТОЯЩЕМУ. Пока оно держится, войны у этой пары нет ни в сводке войн, ни в ценах, ни в обозах. Но мир без единой войны был бы другим миром: если перемирия развели всех, злейшая пара всё равно воюет — её перемирие как раз и сорвалось.",
+ "ТАЙНЫЙ ДОГОВОР НЕ ВИДЕН. Его нет в окне, пока вы о нём не узнали, и он не смотрит на шкалу отношений: бумага между врагами — обычное дело, в том и смысл. Тайных договоров в мире около дюжины разом.",
+ "УЗНАЮТ ТАЙНОЕ ЗА ЗОЛОТО И С РИСКОМ. Кнопка «Разведать тайное» в окне политики. Спрашивать надо в городе: в поле не у кого. Цена зависит от вашего доброго имени у державы и падает там, где уже работает чужая разведка, — люди куплены не вами, но куплены. Удача зависит от уровня, от того, сколько политических секретов вы уже собрали, и от того, как к вам относятся. Не вышло — деньги ушли, а в канцелярии о вас узнали лишнее, и доброе имя просело.",
+ "УЗНАННОЕ ОСТАЁТСЯ. Оно ложится в собрание знаний, в политические секреты, и работает как всякое знание: недоверие ломается легче.",
+ "ВСЁ ВЫВОДИТСЯ, А НЕ ХРАНИТСЯ. Пара, эпоха и отношение дают один и тот же набор при любой перезагрузке. В сохранении лежит только то, что вы узнали.",
+ "ГДЕ СМОТРЕТЬ. Окно «Политика и торговля», раздел «Договоры, меры и тайное»: сперва то, что касается земли, в которой вы стоите, потом кнопка разведки, потом свод по всем одиннадцати родам — сколько их сейчас в мире и что каждый означает."]},
 {title:"Глава 73. Производство: переделы и тринадцать мастерских",body:[
  "Между породой и вещью прежде стоял один удар: четыре куска руды у горна — и слиток. Теперь между ними стоит ПЕРЕДЕЛ, и у каждого своя работа, свой станок и своё здание.",
  "ЦЕПЬ РУДЫ ЦЕЛИКОМ. Дробить породу в шахте. Разобрать её там же. Обогатить в плавильне. Выплавить слиток. Отковать полосу в кузнице. Закалить её в оружейной. Довести оружие — там же. Дальше вещь ждут уже знакомые руна, зачарование и артефакт.",
@@ -6453,7 +6464,17 @@ function relationAt(i,j,day){
 }
 function relationWord(v){return v>=60?"союз":v>=25?"дружба":v>=-24?"нейтралитет":v>=-54?"напряжение":"война";}
 function atWar(i,j,day){return relationAt(i,j,day)<=-55;}
-function warsAt(day){const out=[];
+let WARS_RAW_CACHE=null;
+function warsRaw(day){
+ const d=Number(day)||1;
+ if(WARS_RAW_CACHE&&WARS_RAW_CACHE.day===d&&WARS_RAW_CACHE.nudge===warsNudgeKey())return WARS_RAW_CACHE.out;
+ const out=warsBuild(d);
+ WARS_RAW_CACHE={day:d,nudge:warsNudgeKey(),out};
+ return out;}
+/* Поступки игрока двигают отношения, и от них зависит, кто воюет: ключ
+   пересобирается вместе с ними, иначе кэш держал бы вчерашнюю войну. */
+function warsNudgeKey(){try{return JSON.stringify(G.diplo||{});}catch(_){return "";}}
+function warsBuild(day){const out=[];
  for(let i=0;i<EMPIRES.length;i++)for(let j=i+1;j<EMPIRES.length;j++){
   if(atWar(i,j,day)){const c=WAR_CAUSE[Math.floor(H(i*7+1,j*11+2,901)*WAR_CAUSE.length)];
    out.push({a:i,b:j,cause:c,рознь:relationAt(i,j,day),
@@ -6468,6 +6489,15 @@ function warsAt(day){const out=[];
  const предел=Math.max(2,Math.round(EMPIRES.length/3));
  if(out.length>предел){out.sort((a,b)=>a.рознь-b.рознь);out.length=предел;}
  return out;}
+/* §18: перемирие — не украшение. Пока оно держится, войны у этой пары нет,
+   и всё, что от войны зависит, считает так же. Но мир без единой войны был
+   бы другим миром: если перемирия развели всех, злейшая пара всё равно
+   воюет — её перемирие как раз и сорвалось. */
+function warsAt(day){
+ const out=warsRaw(day);
+ const безПеремирий=out.filter(w=>!safeFn(()=>diploTruce(w.a,w.b,day),false));
+ if(безПеремирий.length)return безПеремирий;
+ return out.length?[out[0]]:out;}
 function alliesAt(day){const out=[];
  for(let i=0;i<EMPIRES.length;i++)for(let j=i+1;j<EMPIRES.length;j++){
   if(relationAt(i,j,day)>=60){const c=PEACE_NOTE[Math.floor(H(i*5+4,j*13+6,903)*PEACE_NOTE.length)];out.push({a:i,b:j,note:c});}}
@@ -6479,6 +6509,247 @@ function nudgeDiplo(idx,amount){
  if(!G.diplo)G.diplo={};
  for(let j=0;j<EMPIRES.length;j++){if(j===idx)continue;const k=diploKey(idx,j);
   G.diplo[k]=Math.max(-40,Math.min(40,(G.diplo[k]||0)+amount));}}
+
+/* ════════════════════════════════════════════════════════════════════════
+   §18 ДИПЛОМАТИЯ: ОДИННАДЦАТЬ РОДОВ ВМЕСТО ОДНОГО ЧИСЛА
+
+   КАК БЫЛО. У пары держав было одно число и пять слов на шкале: союз,
+   дружба, нейтралитет, напряжение, война. Шкала не умеет сказать главного.
+   Торговый договор и военный договор — не точки на ней, а две разные
+   бумаги, и они живут вместе. Эмбарго — не «чуть хуже нейтралитета», а
+   мера, которую вводят, не объявляя войны. Вассалитет вообще не
+   двусторонний: один платит дань, другой её берёт. Тайный договор по
+   определению не виден с той стороны шкалы, с которой смотрит игрок.
+
+   КАК СТАЛО. Четыре рода записей.
+     СОСТОЯНИЕ — ровно одно на пару: война, перемирие, вассалитет,
+       нейтралитет. Это то, в чём державы друг для друга находятся.
+     ДОГОВОР — складывается поверх состояния: союз, торговый, военный,
+       тайный. Их может быть несколько разом.
+     МЕРА — односторонняя и недружественная, но не война: эмбарго и
+       санкции. У неё есть тот, кто ввёл, и тот, против кого.
+     ДЕЛО — идёт само по себе: шпионаж. Тоже односторонний.
+
+   ВСЁ ВЫВОДИТСЯ, А НЕ ХРАНИТСЯ. Пара, эпоха и уже существующее отношение
+   дают один и тот же набор при любой перезагрузке. В сохранении лежит
+   только то, что игрок УЗНАЛ: тайное на то и тайное, что о нём сперва не
+   знают.
+
+   И У КАЖДОЙ ЗАПИСИ ЕСТЬ СЛЕДСТВИЕ. Не строка в окне, а цена на рынке,
+   война, которой нет из-за перемирия, дань, которую платит вассал, и
+   товар, за который здесь берут вдвое, потому что он из-под эмбарго.
+   ════════════════════════════════════════════════════════════════════════ */
+const DIPLO_KINDS=[
+ /* ── СОСТОЯНИЯ: ровно одно на пару ── */
+ {id:"war",     n:"война",            род:"состояние",сторон:2,звук:"stk_clang",
+  о:"Открытая война: полки в походе, тракты небезопасны.",
+  знак:"металл, камень и кость дороже; обозы реже; переход дороже"},
+ {id:"truce",   n:"перемирие",        род:"состояние",сторон:2,звук:"bell_small",
+  о:"Оружие сложено на срок. Мира нет, но и войны нет: обе стороны считают дни.",
+  знак:"войны на этот срок нет, и военной надбавки к ценам тоже"},
+ {id:"vassal",  n:"вассалитет",       род:"состояние",сторон:1,звук:"mtg_gate",
+  о:"Младшая держава платит дань старшей и следует её воле вовне.",
+  знак:"у вассала всё дороже на дань, у сюзерена дешевле"},
+ {id:"neutral", n:"нейтралитет",      род:"состояние",сторон:2,звук:"knock_soft",
+  о:"Ни бумаги, ни вражды. Каждый сам по себе.",
+  знак:"ничего сверх обычного"},
+ /* ── ДОГОВОРЫ: складываются поверх состояния ── */
+ {id:"alliance",n:"союз",             род:"договор",  сторон:2,звук:"hall_gate",
+  о:"Полный союз: общий враг, открытые границы, общая казна на войну.",
+  знак:"товары союзника дешевле, переход к нему дешевле"},
+ {id:"trade",   n:"торговый договор", род:"договор",  сторон:2,звук:"trade_m",
+  о:"Пошлины сняты, обозы ходят чаще, лавки берут чужое без наценки.",
+  знак:"то, что вывозит другая сторона, здесь дешевле на пятую"},
+ {id:"military",n:"военный договор",  род:"договор",  сторон:2,звук:"hall_fort",
+  о:"Если одному объявили войну, второй обязан встать рядом.",
+  знак:"втянутая держава живёт как воюющая: подвоз хуже, цены выше"},
+ {id:"secret",  n:"тайный договор",   род:"договор",  сторон:2,звук:"oc_soft_touch",
+  тайный:true,
+  о:"Бумага, о которой знают четверо. Она объясняет то, что иначе кажется нелепым.",
+  знак:"не виден, пока не узнан; узнанный объясняет чужие поступки"},
+ /* ── МЕРЫ: односторонние и недружественные, но не война ── */
+ {id:"embargo", n:"эмбарго",          род:"мера",     сторон:1,звук:"lock_click",
+  о:"Товар той стороны в эту землю не ввозят. Ввозят всё равно — но иначе и дороже.",
+  знак:"товары той стороны здесь дороже на треть и считаются запретными"},
+ {id:"sanctions",n:"санкции",         род:"мера",     сторон:1,звук:"clang_hard",
+  о:"Не запрет товару, а наказание казне: пошлины, аресты грузов, закрытые счета.",
+  знак:"у той стороны дорожает всё: убытки раскладывают на всех"},
+ /* ── ДЕЛО: идёт само по себе ── */
+ {id:"spy",     n:"шпионаж",          род:"дело",     сторон:1,звук:"step_soft",
+  о:"Одна держава держит людей в другой. Об этом не объявляют.",
+  знак:"там, где работает чужая разведка, тайное купить дешевле"}];
+const DIPLO_BY_ID=Object.fromEntries(DIPLO_KINDS.map(k=>[k.id,k]));
+/* Вес державы — то, чем мир её уже мерит: сколько городов она держит.
+   Заводить для вассалитета своё число значило бы завести вторую правду. */
+let EMPIRE_WEIGHT_CACHE=null;
+function empireWeight(i){
+ try{
+  if(!EMPIRE_WEIGHT_CACHE){
+   const c=safeFn(()=>Cities.countByEmpire(),null);
+   EMPIRE_WEIGHT_CACHE=EMPIRES.map((e,k)=>{
+    const n=c&&Number.isFinite(c[k])?c[k]:5;
+    return n*10+Math.round(hashName(e.cap.x,e.cap.y,9108)*9);});}
+  const v=EMPIRE_WEIGHT_CACHE[i];
+  return Number.isFinite(v)?v:50;
+ }catch(_){return 50;}}
+/* Действующие записи пары. Односторонние несут «от» и «к». */
+/* Набор записей у пары меняется раз в эпоху, а спрашивают его на каждую
+   цену: полсотни товаров на дюжину держав — это тысячи пересчётов подряд.
+   Держим по ключу «пара и эпоха», и кэш сам сменяется с эпохой. */
+const DIPLO_CACHE=new Map();
+function diploPacts(i,j,day){
+ const a=Math.min(i,j),b=Math.max(i,j);
+ if(a===b)return [];
+ const e=epochOf(day);
+ const ключ=a+":"+b+":"+e+":"+((G.diplo&&G.diplo[diploKey(a,b)])||0);
+ const было=DIPLO_CACHE.get(ключ);
+ if(было)return было;
+ const h=n=>H(a*31+7,b*17+3,9700+n+e*13);
+ const rel=relationAt(a,b,day);
+ const out=[];
+ const пара=(id)=>out.push({id,от:a,к:b,двусторонний:true});
+ const один=(id,от,к)=>out.push({id,от,к,двусторонний:false});
+ /* ── СОСТОЯНИЕ ── */
+ const вес=empireWeight(a),весB=empireWeight(b);
+ const разрыв=Math.abs(вес-весB)/Math.max(1,Math.max(вес,весB));
+ /* Воюют не все, у кого рознь: мир держит ограниченное число войн, и берём
+    мы его оттуда же, откуда берёт сводка, — чтобы война была одна на всех. */
+ const воюют=safeFn(()=>warsRaw(day).some(w=>w.a===a&&w.b===b),false);
+ if(воюют){
+  /* Перемирие заключают уставшие: оно и есть та война, которая встала. */
+  if(h(1)<0.28)пара("truce");else пара("war");
+ }else if(rel>=20&&разрыв>=0.28&&h(2)<0.3){
+  один("vassal",вес<весB?b:a,вес<весB?a:b);   /* от сюзерена к вассалу */
+ }else пара("neutral");
+ /* ── ДОГОВОРЫ ── */
+ if(rel>=60)пара("alliance");
+ if(rel>=10&&h(3)<0.55)пара("trade");
+ if(rel>=50&&h(4)<0.5)пара("military");
+ /* Тайный договор не смотрит на шкалу: в том и дело. */
+ if(h(5)<0.16)пара("secret");
+ /* ── МЕРЫ ── */
+ if(rel<=-25&&h(6)<0.5)один("embargo",h(7)<0.5?a:b,h(7)<0.5?b:a);
+ if(rel<=-40&&h(8)<0.45)один("sanctions",h(9)<0.5?a:b,h(9)<0.5?b:a);
+ /* ── ДЕЛО ── */
+ if(h(10)<0.4)один("spy",h(11)<0.5?a:b,h(11)<0.5?b:a);
+ if(DIPLO_CACHE.size>400)DIPLO_CACHE.clear();
+ DIPLO_CACHE.set(ключ,out);
+ return out;}
+function diploState(i,j,day){
+ const p=diploPacts(i,j,day).find(x=>(DIPLO_BY_ID[x.id]||{}).род==="состояние");
+ return p||{id:"neutral",от:Math.min(i,j),к:Math.max(i,j),двусторонний:true};}
+function diploHas(i,j,id,day){return diploPacts(i,j,day||G.day).some(x=>x.id===id);}
+/* Что игрок УЗНАЛ. Тайное на то и тайное, что о нём сперва не знают. */
+function diploKnownKey(i,j,id){return Math.min(i,j)+":"+Math.max(i,j)+":"+id;}
+function diploKnown(i,j,id){
+ try{return !!(G.diploKnown&&G.diploKnown[diploKnownKey(i,j,id)]);}catch(_){return false;}}
+function diploLearn(i,j,id){
+ if(!G.diploKnown||typeof G.diploKnown!=="object")G.diploKnown={};
+ G.diploKnown[diploKnownKey(i,j,id)]=Number(G.day)||1;
+ safeFn(()=>Lore.add("secret","diplo:"+diploKnownKey(i,j,id),
+  `${(DIPLO_BY_ID[id]||{}).n||id}: ${EMPIRES[i].short} и ${EMPIRES[j].short}`,
+  "узнано своими руками"));}
+/* То, что игрок вправе видеть: тайное — только узнанное. */
+function diploVisible(i,j,day){
+ return diploPacts(i,j,day).filter(x=>!(DIPLO_BY_ID[x.id]||{}).тайный||diploKnown(i,j,x.id));}
+/* Скрытое, о чём можно узнать: есть, но ещё не узнано. */
+function diploHidden(i,j,day){
+ return diploPacts(i,j,day).filter(x=>(DIPLO_BY_ID[x.id]||{}).тайный&&!diploKnown(i,j,x.id));}
+/* ── ВОЙНА, КОТОРОЙ НЕТ ──
+   Перемирие — не украшение: пока оно держится, войны у пары нет, и всё, что
+   от войны зависит (цены, обозы, походы), считает так же. */
+function diploTruce(i,j,day){return diploState(i,j,day).id==="truce";}
+/* ── ЦЕНА ──
+   Единственный множитель, через который дипломатия входит в рынок. Всё, что
+   она делает с ценой, делается здесь и объясняется словами в «почему». */
+function diploPriceK(res,idx,day,только){
+ try{
+  const d=Number(day)||Number(G.day)||1;
+  let k=1;
+  for(let j=0;j<EMPIRES.length;j++){
+   if(j===idx)continue;
+   if(Number.isFinite(только)&&j!==только)continue;
+   for(const p of diploPacts(idx,j,d)){
+    if(p.id==="trade"&&(EMPIRES[j].exports||[]).includes(res))k*=0.82;
+    if(p.id==="alliance"&&(EMPIRES[j].exports||[]).includes(res))k*=0.92;
+    if(p.id==="embargo"&&p.от===idx&&(EMPIRES[j].exports||[]).includes(res))k*=1.35;
+    if(p.id==="sanctions"&&p.к===idx)k*=1.12;
+    if(p.id==="vassal"&&p.к===idx)k*=1.10;   /* дань платит вассал */
+    if(p.id==="vassal"&&p.от===idx)k*=0.92;  /* дань берёт сюзерен */
+    /* Военный договор: союзника втягивает в чужую войну, и живёт он как
+       воюющий — подвоз хуже, цены выше. */
+    if(p.id==="military"&&safeFn(()=>empireAtWar(j,d),false)
+      &&!safeFn(()=>empireAtWar(idx,d),false))k*=1.08;}}
+  return Math.max(0.6,Math.min(1.8,k));
+ }catch(_){return 1;}}
+/* ── УЗНАТЬ ТАЙНОЕ ──
+   Тайный договор нельзя прочесть в окне: о нём узнают. Узнают дорого, с
+   риском и там, где есть у кого спросить, — в городе той державы, которой
+   он касается. Где уже работает чужая разведка, платить приходится меньше:
+   люди куплены не вами, но куплены. */
+function diploScoutCost(idx,day){
+ const d=Number(day)||Number(G.day)||1;
+ let ц=140+Math.round((Number(G.level)||1)*9);
+ /* Свои берут дешевле, чужие дороже. */
+ const emp=EMPIRES[idx];
+ if(emp)ц=Math.round(ц*Math.max(0.6,Math.min(1.5,1-safeFn(()=>standOf("fact",emp.short),0)/240)));
+ /* Там, где чужая разведка уже работает, покупать дешевле. */
+ const чужие=EMPIRES.some((_,j)=>j!==idx&&diploPacts(idx,j,d).some(p=>p.id==="spy"&&p.к===idx));
+ if(чужие)ц=Math.round(ц*0.7);
+ return Math.max(40,ц);}
+function diploScoutChance(idx){
+ let p=0.32+Math.min(0.25,(Number(G.level)||1)*0.012);
+ p+=Math.min(0.2,safeFn(()=>Lore.count("secret"),0)*0.03);
+ p+=Math.min(0.12,Math.max(0,safeFn(()=>standOf("fact",(EMPIRES[idx]||{}).short),0))/500);
+ return Math.max(0.1,Math.min(0.85,p));}
+function diploScout(idx){
+ const d=Number(G.day)||1;
+ const i=Math.max(0,Math.min(EMPIRES.length-1,Number(idx)));
+ const emp=EMPIRES[i];
+ if(!emp){narrate("Такой державы нет.");return false;}
+ /* Спрашивать надо у людей, а люди — в городе. */
+ const вГороде=!!(G.place&&PLACE_KIND[G.place.stype]==="city");
+ if(!вГороде){
+  narrate("Такое узнают не в поле: нужен город, где есть кого расспросить и кому заплатить.");
+  return false;}
+ const скрытое=[];
+ for(let j=0;j<EMPIRES.length;j++){if(j===i)continue;
+  diploHidden(i,j,d).forEach(x=>скрытое.push({j,x}));}
+ const цена=diploScoutCost(i,d);
+ if((Number(G.gold)||0)<цена){
+  narrate(`За такое просят ${цена} ${plural(цена,"золотой","золотых","золотых")}, а у вас ${Math.floor(G.gold)}. В долг тайное не продают.`);
+  return false;}
+ G.gold=Math.max(0,(Number(G.gold)||0)-цена);
+ safeFn(()=>propTime(2));
+ safeFn(()=>Bank.play("oc_soft_touch",{gain:0.5,maxSec:4}));
+ if(!скрытое.length){
+  narrate(`${цена} золота ушло, и вот всё, что удалось узнать: у ${emp.short} тайных бумаг сейчас нет — по крайней мере таких, о которых говорят. Деньги за работу берут и тогда, когда работа ничего не нашла.`);
+  safeFn(()=>{refresh();saveGame(true);});
+  return true;}
+ const шанс=diploScoutChance(i);
+ if(Math.random()>=шанс){
+  safeFn(()=>Bank.play("lock_click",{gain:0.5,maxSec:3}));
+  safeFn(()=>addStand("fact",emp.short,-3,true));
+  narrate(`${цена} золота ушло впустую: посредник взял деньги и пропал, а в канцелярии ${emp.short} о вас теперь знают лишнее. Доброе имя у державы просело.`);
+  safeFn(()=>{refresh();saveGame(true);});
+  return true;}
+ const н=скрытое[Math.floor(Math.random()*скрытое.length)];
+ diploLearn(i,н.j,н.x.id);
+ const вид=DIPLO_BY_ID[н.x.id]||{n:н.x.id,о:""};
+ safeFn(()=>Bank.play(вид.звук,{gain:0.55,maxSec:5}));
+ safeFn(()=>journal(`Узнано тайное: ${emp.short} и ${EMPIRES[н.j].short} — ${вид.n}.`));
+ narrate(`За ${цена} ${plural(цена,"золотой","золотых","золотых")} вам показали бумагу. ${вид.n[0].toUpperCase()+вид.n.slice(1)}: ${emp.short} и ${EMPIRES[н.j].short}. ${вид.о} Запись легла в собрание знаний, в политические секреты.`);
+ safeFn(()=>{refresh();saveGame(true);if(typeof renderPolitics==="function")renderPolitics();});
+ return true;}
+/* Кого втянул военный договор: воюет сосед, а обязан встать и ты. */
+function diploWarPull(day){
+ const d=Number(day)||Number(G.day)||1;const out=[];
+ for(let i=0;i<EMPIRES.length;i++)for(let j=0;j<EMPIRES.length;j++){
+  if(i===j)continue;
+  if(!diploHas(i,j,"military",d))continue;
+  if(safeFn(()=>empireAtWar(j,d),false)&&!safeFn(()=>empireAtWar(i,d),false))
+   out.push({помощник:i,воюющий:j});}
+ return out;}
 
 /* ════════════════════════════════════════════════════════════════════════
    ЖИВАЯ ЭКОНОМИКА: ПОЛОЖЕНИЕ ДЕЛ, ЗАСЛУГИ И ЗНАКОМСТВО С ТОРГОВЦЕМ
@@ -6653,6 +6924,8 @@ function marketPrice(res,idx,day){
  k*=safeFn(()=>Houses.priceK(res),1);k*=safeFn(()=>Realms.priceK(res),1);k*=safeFn(()=>Gods.priceK(res,day),1);
  k*=safeFn(()=>WarArc.priceK(res),1);
  k*=safeFn(()=>Res.priceK(res),1);
+ /* §18: договоры, меры и дань. Единственная дверь дипломатии в рынок. */
+ k*=safeFn(()=>diploPriceK(res,idx,day),1);
  return Math.max(2,Math.round(base*Math.max(0.35,k)));
 }
 /* ════════════════════════════════════════════════════════════════════════
@@ -6900,6 +7173,16 @@ function priceWhy(res,idx,c){
  if(SORT_GOODS[res]&&!RES_SORTS[res])из.push("редкий товар издалека");
  if(isContraband(res,idx))из.push(`под запретом в державе ${emp.short}: контрабанда — дороже, но с риском`);
  const op=secretOp(idx,G.day);if(secretOpK(res,idx,G.day)!==1)из.push(`тайное дело державы: ${op.n}`);
+ /* §18: договоры и меры двигают цену, и игрок вправе знать какие. */
+ safeFn(()=>{
+  for(let j=0;j<EMPIRES.length;j++){
+   if(j===idx)continue;
+   const k=diploPriceK(res,idx,G.day,j);
+   if(Math.abs(k-1)<0.001)continue;
+   const что=diploVisible(idx,j,G.day)
+    .filter(x=>(DIPLO_BY_ID[x.id]||{}).род!=="дело"&&x.id!=="neutral")
+    .map(x=>(DIPLO_BY_ID[x.id]||{}).n).join(" и ");
+   if(что)из.push(`${что} с ${EMPIRES[j].short}: ${k<1?"дешевле":"дороже"} на ${Math.round(Math.abs(k-1)*100)} сотых`);}});
  if(c){const pf=cityProfile(c);из.push(`пошлина города ${Math.round((pf.tax+empireLaw(idx).пошлина)*100)} сотых`);}
  return из.length?из.join("; "):"обычная цена";}
 /* Контрабанда: продал запретное в городе — стража может взять своё. */
@@ -30826,6 +31109,9 @@ const CMD={
  echodrop(i){const t=Echo.drop(+i);narrate(t,{pri:2,key:"echo"});safeFn(()=>{if(typeof renderPath==="function")renderPath();});},
  echosay(){narrate(Echo.text(),{pri:2,key:"echo"});},
  foreopen(){const t=Fore.open();narrate(t,{pri:1,key:"fore"});safeFn(()=>{if(typeof renderLiving==="function")renderLiving();});},
+ /* §18: узнать тайный договор державы. Дорого, с риском и только в городе. */
+ diploscout(i){safeFn(()=>Diplo.scout(Number(i)));},
+ diplosay(){narrate(safeFn(()=>Diplo.text(),"Дипломатия."),{pri:1,key:"diplo"});},
  foresay(){narrate(Fore.text(),{pri:2,key:"fore"});},
  sfcore(id){spellForgePick("core",id||"");},
  sfelem(id){spellForgePick("elem",id||"");},
@@ -40818,6 +41104,61 @@ const LORE_KINDS=[
  {id:"secret",n:"политический секрет", о:"кто кому чем обязан",           откуда:"расследования и тайны синдикатов",
   дар:"недоверие ломается легче",              звук:"lock_click"}];
 const LORE_KIND_BY_ID=Object.fromEntries(LORE_KINDS.map(k=>[k.id,k]));
+/* §18: дипломатия. Один слой над отношениями держав: что подписано, что
+   введено и что идёт втайне — и что из этого игрок уже знает. */
+const Diplo=Modules.register("DIPLOMACY",{
+ kinds:DIPLO_KINDS,
+ kind:id=>DIPLO_BY_ID[id]||null,
+ pacts:(i,j,day)=>S(()=>diploPacts(i,j,day||G.day),[]),
+ visible:(i,j,day)=>S(()=>diploVisible(i,j,day||G.day),[]),
+ hidden:(i,j,day)=>S(()=>diploHidden(i,j,day||G.day),[]),
+ state:(i,j,day)=>S(()=>diploState(i,j,day||G.day),{id:"neutral"}),
+ has:(i,j,id,day)=>S(()=>diploHas(i,j,id,day||G.day),false),
+ known:(i,j,id)=>S(()=>diploKnown(i,j,id),false),
+ learn:(i,j,id)=>S(()=>{diploLearn(i,j,id);return true;},false),
+ truce:(i,j,day)=>S(()=>diploTruce(i,j,day||G.day),false),
+ weight:i=>S(()=>empireWeight(i),50),
+ priceK:(res,idx,day)=>S(()=>diploPriceK(res,idx,day||G.day),1),
+ /* Что даёт по цене одна конкретная держава: сумма всех бумаг сразу не
+    позволяет разобрать отдельную. */
+ priceWith:(res,idx,j,day)=>S(()=>diploPriceK(res,idx,day||G.day,j),1),
+ warPull:day=>S(()=>diploWarPull(day||G.day),[]),
+ scoutCost:idx=>S(()=>diploScoutCost(idx,G.day),0),
+ scoutChance:idx=>S(()=>diploScoutChance(idx),0),
+ scout:idx=>S(()=>diploScout(idx),false),
+ /* Все записи мира на сегодня, по родам. */
+ all(day){
+  const d=Number(day)||Number(G.day)||1;const out=[];
+  for(let i=0;i<EMPIRES.length;i++)for(let j=i+1;j<EMPIRES.length;j++)
+   S(()=>diploPacts(i,j,d),[]).forEach(x=>out.push(Object.assign({a:i,b:j},x)));
+  return out;},
+ byKind(id,day){return this.all(day).filter(x=>x.id===id);},
+ /* Одна запись словами: кто, с кем, что это и что из этого следует. */
+ line(x){
+  const k=DIPLO_BY_ID[x.id]||{n:x.id,о:"",знак:""};
+  const A=EMPIRES[x.от],B=EMPIRES[x.к];
+  const кто=k.сторон===1?`${A?A.short:"?"} против ${B?B.short:"?"}`
+   :`${EMPIRES[x.a!==undefined?x.a:x.от].short} и ${EMPIRES[x.b!==undefined?x.b:x.к].short}`;
+  const направление=k.сторон===1&&k.род!=="мера"
+   ?`${A?A.short:"?"} над ${B?B.short:"?"}`:кто;
+  return `${k.n[0].toUpperCase()+k.n.slice(1)} (${k.род}): ${k.род==="мера"?кто:направление}. ${k.о} Следствие: ${k.знак}.`;},
+ text(){
+  try{
+   const d=Number(G.day)||1;
+   const все=this.all(d);
+   const по=DIPLO_KINDS.map(k=>`${k.n} ${все.filter(x=>x.id===k.id).length}`).join(", ");
+   const here=S(()=>empireIndexAt(G.x,G.y),0);
+   const мои=[];
+   for(let j=0;j<EMPIRES.length;j++){if(j===here)continue;
+    S(()=>diploVisible(here,j,d),[]).forEach(x=>{
+     if(x.id!=="neutral")мои.push(`${EMPIRES[j].short}: ${(DIPLO_BY_ID[x.id]||{}).n||x.id}`);});}
+   const тайных=(()=>{let n=0;for(let j=0;j<EMPIRES.length;j++){if(j===here)continue;
+    n+=S(()=>diploHidden(here,j,d),[]).length;}return n;})();
+   return `Дипломатия: ${DIPLO_KINDS.length} родов записей, всего действует ${все.length}. По родам: ${по}. `
+    +`Здесь ${EMPIRES[here].short}: ${мои.length?мои.join("; "):"ничего, кроме нейтралитета"}. `
+    +(тайных?`Есть ${тайных} ${plural(тайных,"бумага","бумаги","бумаг")}, о которых вы не знаете: их узнают в городе, за золото.`
+      :"Тайного, о чём вы не знали бы, у этой державы нет.");
+  }catch(_){return `Дипломатия: ${DIPLO_KINDS.length} родов записей.`;}}});
 const Lore=Modules.register("LORE",{
  kinds:LORE_KINDS,
  /* Свой ключ: G.lore — это список прочитанных страниц реестра знаний
@@ -41469,6 +41810,42 @@ function worldSelfCheck(){
   ok("sigils",SIGIL_SYMBOLS.length===8&&SIGIL_SYMBOLS.every(x=>MSCHOOL_BY_ID[x.школа]&&x.намерения.every(i=>SIGIL_INTENTS[i]))&&SIGIL_CARRIERS.length===8&&SIGIL_CARRIERS.every(x=>RES_BASE[x.ресурс])&&SIGIL_GEOMETRY.length===5&&INKS.length===6&&INKS.every(x=>SOUND_BANK[x.звук]&&Object.keys(x.рецепт).every(r=>RES_BASE[r]))&&AWAKEN_SOURCES.length===6&&AWAKEN_SOURCES.every(x=>SOUND_BANK[x.звук])&&WAVES.length===3&&MORPH_TRAITS.length===6&&MORPHOBEASTS.length===10&&MORPHOBEASTS.every(b=>MONSTERS.some(m=>m.id===b.база))&&DEVOUR_GIFTS.length===6&&EVENT_THEME.world_event&&SOUND_BANK[EVENT_THEME.world_event.роль],"Знаки: восемь символов, восемь носителей, пять геометрий, шесть чернил, шесть источников пробуждения, три волны, шесть черт, десять морфозверей, шесть даров Эха — всё со звуком и по настоящим ресурсам");
   ok("cases",CASE_TEMPLATES.length===6&&CASE_TEMPLATES.every(t=>t.версии.length===3&&t.улики.every(k=>CLUE_KINDS[k])&&t.версии.every(v=>v.улики.every(k=>t.улики.includes(k))))&&SYNDICATES.length===8&&SYNDICATES.every(x=>SOUND_BANK[x.звук]&&x.города.every(id=>NAMED_CITY_BY_ID[id])&&REGIONS[x.область])&&Object.keys(DECISIONS).length===9&&Object.values(DECISIONS).every(d=>Object.keys(d).length>=3)&&["deeper","border_war","shards","lasthouse","beast","price","undercity","maskface","endless"].every(id=>CHAIN_DB[id])&&HOUSE_BY_ID[LAST_HOUSE.враг]&&DLG_MOVE_BY_ID.znanie&&DLG_MOVE_BY_ID.kultura&&DLG_MOVE_BY_ID.nedoskazat,"Расследования: шесть дел с тремя версиями, восемь синдикатов со звуком и городами, девять цепочек с развязками, три хода разговора");
   ok("academy",LANGS.length>=20&&LANGS.every(l=>l.письмо&&l.о)&&SCIENCES.length===6&&SCIENCES.every(x=>SOUND_BANK[x.звук]&&x.эффект.length===3&&FACULTY_BY_ID[x.факультет])&&FACULTIES.length===12&&FACULTIES.every(f=>(f.школы||[]).every(id=>MSCHOOL_BY_ID[id]&&SCHOOL_AUDIO[id])&&(!f.маст||MAST_BY_ID[f.маст]))&&SCHOOLS.length>=30&&SCHOOLS.every(sc=>SCHOOL_AUDIO[sc.id]&&SPELL_LAYERS.every(l=>SOUND_BANK[SCHOOL_AUDIO[sc.id][l]])),"Академия: двадцать один язык, шесть наук, двенадцать факультетов, тридцать четыре школы чар — все со звуком");
+  ok("diplo",DIPLO_KINDS.length===11
+   /* Четыре рода, и у каждого свои есть. */
+   &&["состояние","договор","мера","дело"].every(r=>DIPLO_KINDS.some(k=>k.род===r))
+   &&DIPLO_KINDS.every(k=>k.n&&k.о&&k.знак&&SOUND_BANK[k.звук]&&(k.сторон===1||k.сторон===2))
+   /* Все одиннадцать родов из §18 названы. */
+   &&["war","truce","neutral","vassal","alliance","trade","military","secret","embargo","sanctions","spy"]
+     .every(id=>DIPLO_BY_ID[id])
+   /* У каждой пары держав ровно одно состояние — не два и не ни одного. */
+   &&(()=>{try{
+     for(let i=0;i<EMPIRES.length;i++)for(let j=i+1;j<EMPIRES.length;j++){
+      const с=diploPacts(i,j,G.day).filter(x=>(DIPLO_BY_ID[x.id]||{}).род==="состояние");
+      if(с.length!==1)return false;}
+     return true;}catch(_){return false;}})()
+   /* Односторонние записи знают, от кого и к кому, и это разные державы. */
+   &&(()=>{try{
+     return Diplo.all(G.day).every(x=>{
+      const k=DIPLO_BY_ID[x.id];
+      if(k.сторон!==1)return true;
+      return Number.isFinite(x.от)&&Number.isFinite(x.к)&&x.от!==x.к;});}catch(_){return false;}})()
+   /* Тайное не видно, пока не узнано: ни одна скрытая бумага не попадает
+      в то, что игроку показывают. */
+   &&(()=>{try{
+     for(let i=0;i<EMPIRES.length;i++)for(let j=i+1;j<EMPIRES.length;j++){
+      const видно=diploVisible(i,j,G.day);
+      if(diploHidden(i,j,G.day).some(x=>видно.some(v=>v.id===x.id)))return false;}
+     return true;}catch(_){return false;}})()
+   /* Набор у пары один и тот же при повторном спросе. */
+   &&(()=>{try{
+     const a=JSON.stringify(diploPacts(0,1,G.day)),b=JSON.stringify(diploPacts(1,0,G.day));
+     return a===b;}catch(_){return false;}})()
+   /* Множитель цены в берегах и не ломается ни на одном товаре. */
+   &&(()=>{try{
+     return Object.keys(RES_BASE).every(r=>{
+      const k=diploPriceK(r,0,G.day);
+      return Number.isFinite(k)&&k>=0.6&&k<=1.8;});}catch(_){return false;}})(),
+   "Дипломатия: 11 родов записей в четырёх разрядах, у пары одно состояние, тайное узнаётся, цена считается");
   ok("prod",PROD_BUILDINGS.length===13&&PROD_CHAINS.length===10&&PROD_GOODS.length===25
    &&PROD_STEPS.length===29
    /* У каждого здания имя, свой станок с именем вслух, живая запись и цепи. */
@@ -41703,6 +42080,35 @@ function renderPolitics(){
  const a=document.getElementById("polAllies");
  if(a)a.innerHTML=allies.length?allies.map(x=>`<div class="list-line" tabindex="0" data-speak="Союз: ${EMPIRES[x.a].name} и ${EMPIRES[x.b].name}. Основание: ${x.note}.">🤝 <b>${EMPIRES[x.a].short}</b> и <b>${EMPIRES[x.b].short}</b> — ${x.note}</div>`).join("")
   :`<div class="list-line">Крепких союзов сейчас нет.</div>`;
+ /* §18: одиннадцать родов записей. Сперва то, что касается земли, в
+    которой игрок стоит, — это ему нужнее всего; потом свод по всему миру. */
+ const pk=document.getElementById("polPacts");
+ if(pk){
+  const line=(t,ic)=>`<div class="list-line" tabindex="0" data-speak="${String(t).replace(/"/g,"&quot;")}">${ic||"•"} ${t}</div>`;
+  let h=line(safeFn(()=>Diplo.text(),"Дипломатия."),"🕊️");
+  const свои=[];
+  for(let j=0;j<EMPIRES.length;j++){
+   if(j===here)continue;
+   safeFn(()=>Diplo.visible(here,j,day),[]).forEach(x=>{
+    if(x.id==="neutral")return;
+    свои.push(Object.assign({a:Math.min(here,j),b:Math.max(here,j)},x));});}
+  h+=свои.length
+   ?свои.map(x=>line(safeFn(()=>Diplo.line(x),x.id),(DIPLO_BY_ID[x.id]||{}).род==="мера"?"⛔":"📜")).join("")
+   :line(`У ${EMPIRES[here].short} сейчас нет ни договоров, ни мер: со всеми соседями простой нейтралитет.`,"📜");
+  /* Тайное: сколько его и во что обойдётся узнать. */
+  let скрытых=0;
+  for(let j=0;j<EMPIRES.length;j++){if(j===here)continue;скрытых+=safeFn(()=>Diplo.hidden(here,j,day),[]).length;}
+  const цена=safeFn(()=>Diplo.scoutCost(here),0);
+  const шанс=Math.round(safeFn(()=>Diplo.scoutChance(here),0)*100);
+  h+=`<button class="item" data-cmd="diploscout:${here}" data-speak="Разведать тайные договоры державы ${EMPIRES[here].name}. Цена ${цена} золота, удача ${шанс} из ста. Спрашивать надо в городе.">🕵️ Разведать тайное: ${цена} золота, удача ${шанс} из ста</button>`;
+  h+=line(скрытых
+   ?`Бумаг, о которых вы ещё не знаете, у ${EMPIRES[here].short} — ${скрытых}. Узнают их в городе и за золото.`
+   :`Тайного, о чём вы не знали бы, у ${EMPIRES[here].short} нет.`,"🕵️");
+  /* Свод по миру: по роду и по числу. */
+  h+=DIPLO_KINDS.map(k=>{
+   const n=safeFn(()=>Diplo.byKind(k.id,day).length,0);
+   return line(`${k.n[0].toUpperCase()+k.n.slice(1)} — ${k.род}, ${k.сторон===1?"односторонняя":"двусторонняя"}: сейчас ${n} в мире. ${k.о} Следствие: ${k.знак}.`,"◆");}).join("");
+  pk.innerHTML=h;}
  const e=document.getElementById("polEmpires");
  if(e)e.innerHTML=EMPIRES.map((emp,i)=>{
   const rel=EMPIRES.map((o,j)=>i===j?null:`${o.short}: ${relationWord(relationAt(i,j,day))}`).filter(Boolean).join(", ");
