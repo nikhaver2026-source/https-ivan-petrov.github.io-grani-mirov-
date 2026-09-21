@@ -125,7 +125,7 @@ const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(e!==undefined?' :
   const ориг=prodDeficit;
   const мера=()=>({цена:marketPrice(товар,i,G.day),
    выручка:sellPrice(товар,i,G.day,null),
-   запрет:isContraband(товар,i),
+   запрет:bannedHere(товар,i),
    множЦены:prodEconPriceK(товар,i,G.day),
    множЗакупки:prodEconBuyK(товар,i,G.day)});
   const сДефицитом=мера();

@@ -7001,8 +7001,12 @@ function sellPrice(res,idx,day,npc){
     расположение съедало само себя — свой продавал не дороже чужого, хотя
     покупал дешевле. Потолок берётся от ровной цены, без скидки и без
     надбавки за отношение: доля торговца от этого не зависит. */
+ /* §13: за то, чего державе не хватает, торговец и просит больше, и платит
+    больше. Двигать одну выплату нельзя: она упрётся в этот самый потолок, и
+    сквозь него перестанут быть слышны и мера мира, и торговая чуйка. */
  const ask=Math.max(2,Math.round(marketPrice(res,idx,day)*1.15
-  *safeFn(()=>buyModifier(npc),1)*safeFn(()=>diff().price,1)));
+  *safeFn(()=>buyModifier(npc),1)*safeFn(()=>diff().price,1)
+  *safeFn(()=>prodEconBuyK(res,idx,day),1)));
  return capBid(p,ask);
 }
 /* ════════════════════════════════════════════════════════════════════════
@@ -7312,7 +7316,7 @@ function prodEconBuyK(res,i,day){
  try{
   const н=prodDeficit(i,day)[res];
   if(!(н>0))return 1;
-  return Math.min(1.6,1+н*0.6);
+  return Math.min(1.25,1+н*0.25);
  }catch(_){return 1;}}
 /* Глубокий дефицит: вывоз запрещают, и товар делается запретным. */
 function prodBanned(res,i,day){
@@ -7325,10 +7329,13 @@ function prodStockCut(i,day){
  }catch(_){return 0;}}
 function isContraband(res,idx){
  if(safeFn(()=>Conj.запретно(res),false))return true;
- /* §13: при глубоком дефиците держава запирает вывоз, и товар делается
-    запретным со всем, что за этим следует, — включая тех, кто на этом живёт. */
- if(safeFn(()=>prodBanned(res,idx,G.day),false))return true;
  return empireLaw(idx).запрет.includes(res);}
+/* §13: запрет по НУЖДЕ — не то же, что запрет по закону. Закон державы
+   постоянен и добавляет свою надбавку к цене; запрет вывоза при дефиците
+   временный, и цену он не трогает: её уже поднял сам дефицит. Общего у них
+   одно — вывозить нельзя, и за это берут у заставы. */
+function bannedHere(res,idx){
+ return isContraband(res,idx)||safeFn(()=>prodBanned(res,idx,G.day),false);}
 function roadSafetyK(idx){
  try{const m=marketOf(idx);let k=1;
   if(empireAtWar(idx,G.day))k+=0.12;
@@ -7367,6 +7374,8 @@ function priceWhy(res,idx,c){
  const сезон=Math.floor(((Number(G.day)||1)%48)/12);if(сезон===3)из.push("зима");else if(сезон===2)из.push("осень: урожай");
  if(SORT_GOODS[res]&&!RES_SORTS[res])из.push("редкий товар издалека");
  if(isContraband(res,idx))из.push(`под запретом в державе ${emp.short}: контрабанда — дороже, но с риском`);
+ else if(safeFn(()=>prodBanned(res,idx,G.day),false))
+  из.push(`вывоз закрыт по нужде: своего не хватает, и за вывоз спросят у заставы`);
  const op=secretOp(idx,G.day);if(secretOpK(res,idx,G.day)!==1)из.push(`тайное дело державы: ${op.n}`);
  /* §18: договоры и меры двигают цену, и игрок вправе знать какие. */
  safeFn(()=>{
@@ -7391,7 +7400,7 @@ function priceWhy(res,idx,c){
 function smuggleCheck(res,total){
  try{
   const idx=empireIndexAt(G.x,G.y);
-  if(!isContraband(res,idx))return "";
+  if(!bannedHere(res,idx))return "";
   safeFn(()=>addStand("crime",null,3,true));
   if(Math.random()<0.25){
    const штраф=Math.min(G.gold,Math.round(total*0.6));G.gold-=штраф;
@@ -42517,7 +42526,7 @@ function worldSelfCheck(){
    &&(()=>{try{
      return Object.keys(RES_BASE).every(r=>{
       const a=prodEconPriceK(r,0,G.day),b=prodEconBuyK(r,0,G.day);
-      return Number.isFinite(a)&&a>=1&&a<=1.9&&Number.isFinite(b)&&b>=1&&b<=1.6;})
+      return Number.isFinite(a)&&a>=1&&a<=1.9&&Number.isFinite(b)&&b>=1&&b<=1.25;})
       &&prodStockCut(0,G.day)>=0&&prodStockCut(0,G.day)<=0.7;}catch(_){return false;}})(),
    "Производственная экономика: война ломает мастерские, узкое место решает выход цепи, из дефицита следуют цена, закупки, прилавок и запрет");
   ok("attrs",ATTRS.length===9&&DERIVED.length===14
