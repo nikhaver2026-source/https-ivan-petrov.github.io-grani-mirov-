@@ -4820,6 +4820,15 @@ const GUIDE=[
  "Вещь растёт. За каждую победу работающий артефакт получает опыт, а на пороге открывает ступень — прибавку, которой у него раньше не было, и всегда из своего направления. Каждая следующая ступень даётся вдвое тяжелее. Если гнёзда кончились, редкую часть можно скормить вещи: она уйдёт в опыт вместо гнезда.",
  "Требования. Ранг задаёт уровень; сверх того вещь может требовать навык, заклинание нужной школы, расположение народа, принадлежность к клану, прочитанное знание или закрытое дело. Вещь, требования которой не выполнены, лежит мёртвым грузом и не даёт ничего — и прямо говорит, чего ей не хватает.",
  "Где всё это. Пункт меню «Артефакты, части и рецепты». В нём видно, каким ремеслом здесь занимаются и каково ваше умение, какие рецепты под рукой и чего не хватает, какие части лежат в суме, и по каждой вещи — всё, что о ней известно, и всё, что с ней можно сделать: вложить, вынуть, зачаровать, скормить, продать."]},
+{title:"Глава 76. Девять свойств и четырнадцать производных",body:[
+ "У героя было четыре числа: сила, ловкость, разум, харизма. Прибавились пять: ВЫНОСЛИВОСТЬ, ВОЛЯ, ДУХ, ВОСПРИЯТИЕ и СИНХРОНИЗАЦИЯ. Харизма в списке не значилась, но она в игре везде — от торга до допроса, — и осталась девятой.",
+ "СИЛА — что поднимете и как тяжело ляжет удар. ЛОВКОСТЬ — как быстро двигаетесь и как чисто ложится удар. ВЫНОСЛИВОСТЬ — сколько тело держит без передышки. РАЗУМ — что понимаете и как крепко держите мысль под ударом. ВОЛЯ — сколько воли в вас помещается. ДУХ — чем вы стоите против того, что бьёт не по телу. ВОСПРИЯТИЕ — что слышите и замечаете раньше других. СИНХРОНИЗАЦИЯ — насколько вы в лад с силой, которую тянете через себя.",
+ "ЧЕТЫРНАДЦАТЬ ПРОИЗВОДНЫХ, И У КАЖДОЙ СВОЙ АДРЕС. Здоровье и эфир — пределы здоровья и маны. Выносливость — такты дыхания под водой. Концентрация — насколько реже срываются чары. Сопротивление — защита. Скорость — счёт времени: ловкий делает то же дело быстрее. Переносимый вес — сколько унесёте. Скорость восстановления — час у огня. Точность и критический шанс — удар. Качество слухового восприятия — круг звуковой картины. Дальность обнаружения — поиск ловушек. Эффективность крафта — доля срыва у станка. Магическая стабильность — согласие плетения.",
+ "НИ ОДНА НЕ ДЕКОРАЦИЯ. Каждая входит в то место, которое уже написано, и нигде не заводит второго счётчика рядом с существующим. Если у производной нет адреса, её быть не должно.",
+ "ПРИ БАЗОВОЙ ДЕСЯТКЕ НИ ОДНА ПРИБАВКА НЕ РАБОТАЕТ. Это нарочно: пока свойства не выросли, мир считает ровно как считал, и старое сохранение читается без единой правки.",
+ "РАСТУТ ВСЕ ДЕВЯТЬ. Новый уровень поднимает каждое на единицу и называет вслух, сколько чего стало. Мутационный состав по-прежнему может поднять или уронить одно.",
+ "ПЕРЕНОСИМЫЙ ВЕС — НАСТОЯЩИЙ ПРЕДЕЛ. Больше него в руки не возьмёшь: сбор откажет и скажет, сколько в котомке и каков предел. Предел растёт от Силы и Выносливости.",
+ "ГДЕ СМОТРЕТЬ. Окно «Персонаж», сверху: свод по всем девяти, потом по кнопке на каждое свойство — касание называет его, говорит, что из него следует, и даёт услышать его голос; потом все четырнадцать производных с их значением и адресом."]},
 {title:"Глава 75. Четырнадцать родов подземелья",body:[
  "Подземелье было одно на всех. Как его назовут, решала ДВЕРЬ наверху: под руинами всегда были одни и те же руины, под зевом пещеры — одна и та же пещера. Что лежит внизу, мир не знал.",
  "ЧЕТЫРНАДЦАТЬ РОДОВ. Шахта, катакомбы, древний храм, ушедшая башня, подземный город, лаборатория, некрополь, подземная крепость, гробница, разлом, живое, водное, воздушное, временное. Род выводится из координат самого подземелья, поэтому он у него навсегда свой: под одними руинами катакомбы, под соседними — залитые водой ходы.",
@@ -10289,7 +10298,8 @@ function breathTacts(){
  return 1+(safeFn(()=>buffActive("дыхание"),false)?2:0)+safeFn(()=>Math.round(assimBonus("breath")),0)
   +(G.race==="Русалки"?2:0)+(safeFn(()=>hasSkill("swimmer"),false)?1:0)
   +Math.round(safeFn(()=>Path.facetK("water"),0)*4)   /* Грань «Водное дыхание» */
-  +Math.round(safeFn(()=>Fore.boonK("ход"),0));}      /* §44.22: инструменты Предтеч */
+  +Math.round(safeFn(()=>Fore.boonK("ход"),0))       /* §44.22: инструменты Предтеч */
+  +Math.round(safeFn(()=>derived("stam"),0));}       /* §4: производная «выносливость» */
 function diveCheck(){
  try{
   if(G.ship||G.place)return;
@@ -11985,6 +11995,8 @@ function findTaken(x,y,tag){
 /* Время, потраченное у находки: разбор остова стоит часа, а не мгновения. */
 /* Одержимость спрашивают там же, где идёт время: часы её кормят. */
 function propTime(ч){
+ /* §4: производная «скорость» — ловкий делает то же дело быстрее. */
+ ч=Math.max(0,(Number(ч)||0)*(1-safeFn(()=>derived("speed"),0)));
  /* Временная петля: на таком ярусе часы не идут. */
  if(safeFn(()=>anomalyIs("loop"),false))return;
  /* Ускоренный час короче чужого: всякое дело отнимает меньше времени. */
@@ -17534,6 +17546,7 @@ const Traps=Modules.register("TRAPS",{
   if(wayId==="analyze")k+=0.05*safeFn(()=>mastLevel("runes"),0);
   if(wayId==="risk")k=0.95;
   k+=safeFn(()=>Echo.bonus("sight"),0);   /* §9: осколок взгляда */
+  k+=safeFn(()=>derived("detect"),0);     /* §4: дальность обнаружения */
   return Math.max(0.05,Math.min(0.95,k));}catch(_){return 0;}},
  /* Поиск идёт по клетке под ногами и четырём вокруг — так подземелье и
     ощупывают, кругом, а не по одной плите: иначе на слух это невыносимо. */
@@ -19991,7 +20004,8 @@ iact("wellrope",{n:"Спустить верёвку",значок:"🪢",мож�
 /* ── ОЧАГ, ЖАРОВНЯ, КОСТЁР ── */
 const FIRE_LIKE=o=>!!G.place&&["hearth","brazier"].includes(objProp(o));
 iact("rest",{n:"Отдохнуть у огня",значок:"🔥",можно:o=>FIRE_LIKE(o)&&!G.inCombat,почему:o=>G.inCombat?"в бою не отдыхают":"огня рядом нет",
- делать:o=>{const сколько=Math.round(15*(1+safeFn(()=>Path.facetK("heal"),0)));  /* Грань «Живая кровь» */
+ делать:o=>{const сколько=Math.round(15*(1+safeFn(()=>Path.facetK("heal"),0))  /* Грань «Живая кровь» */
+   *(1+safeFn(()=>derived("regen"),0)));                                        /* §4: восстановление */
   const мана=Math.round(safeFn(()=>Echo.bonus("vein"),0));                     /* §9: осколок жилы */
   if(мана>0)G.mana=Math.min(G.manaMax,(Number(G.mana)||0)+мана);
   const h=Math.min(G.hpMax,G.hp+сколько)-G.hp;G.hp+=h;G.hour+=1;if(G.hour>=24){G.hour-=24;G.day++;}safeFn(()=>{Bank.play("wild_hearth",{gain:0.5,maxSec:5});});narrate(`Час у огня: здоровье +${h}${мана>0?`, мана +${мана}`:""}. Огонь потрескивает, тепло держится.`);refresh();saveGame(true);return true;}});
@@ -20889,6 +20903,7 @@ function techRisk(t){
  p-=safeFn(()=>Lore.recipeK(t),0);      /* §31: записанный рецепт — знание */
  p-=safeFn(()=>Path.facetK("craft"),0); /* Грань «Рука мастера» */
  p-=safeFn(()=>Fore.boonK("рука"),0);   /* §44.22: хватка автономных стражей */
+ p-=safeFn(()=>derived("craft"),0);     /* §4: эффективность крафта */
  p*=safeFn(()=>Balance.riskK(),1);
  return Math.max(0.02,Math.min(0.45,p));}
 /* Какие техники доступны у этого станка. */
@@ -22403,6 +22418,167 @@ const G={hp:100,hpMax:100,str:10,agi:10,mind:10,cha:10,mana:10,manaMax:10,
  social:{},
  /* Рыночная память земель: подвоз, спрос и достаток. */
  market:{}};
+/* ════════════════════════════════════════════════════════════════════════
+   §4 АТРИБУТЫ И ПРОИЗВОДНЫЕ
+
+   КАК БЫЛО. Четыре числа: сила, ловкость, разум, харизма. §4 называет
+   восемь основных и четырнадцать производных, и не было ни четырёх
+   основных, ни одной производной.
+
+   ЧЕГО НЕ ХВАТАЛО. Выносливости, Воли, Духа, Восприятия и Синхронизации.
+   Харизма в списке §4 не значится, но она в игре везде — от торга до
+   допроса, — поэтому осталась девятой: убрать работающее ради красоты
+   списка было бы хуже, чем иметь на одну строку больше.
+
+   ГДЕ ОНИ ЛЕЖАТ. Четыре прежних — там же, где лежали, в G.str, G.agi,
+   G.mind и G.cha: их читают сотни строк игры, и переселять их значило бы
+   переписывать половину файла ради поля в объекте. Пять новых — в G.attr,
+   потому что имя G.will уже занято ЗАПАСОМ волевой энергии. Это не две
+   правды об одном: Воля как свойство (G.attr.will) говорит, СКОЛЬКО воли в
+   вас помещается, а G.will — сколько её сейчас есть. Из первого считается
+   предел второго. Читают и пишут атрибуты через одну дверь — attrGet и
+   attrAdd, — поэтому где что лежит, снаружи не видно.
+
+   ПРОИЗВОДНЫЕ НЕ ДЕКОРАЦИЯ. Каждая из четырнадцати входит в то место,
+   которое уже написано: здоровье и эфир — в пределы, точность и крит — в
+   удар, сопротивление — в защиту, скорость — в счёт времени, слух — в
+   круг обзора, обнаружение — в поиск ловушек, крафт — в долю срыва у
+   станка, концентрация и стабильность — в согласие чар. Ни одна не
+   заводит своего счётчика рядом с существующим.
+
+   ПРИ БАЗОВЫХ ДЕСЯТИ ВСЕ ПРИБАВКИ РАВНЫ НУЛЮ. Это нарочно: новый слой
+   ничего не меняет в мире, пока атрибуты не выросли, и старые сохранения
+   читаются ровно как читались.
+   ════════════════════════════════════════════════════════════════════════ */
+const ATTRS=[
+ {id:"str",   n:"Сила",          ключ:"str", звук:"forge_hammer",
+  о:"Что вы поднимете и как тяжело ляжет ваш удар.",даёт:"здоровье, переносимый вес"},
+ {id:"agi",   n:"Ловкость",      ключ:"agi", звук:"step_soft",
+  о:"Как быстро вы двигаетесь и как чисто ложится удар.",даёт:"скорость, точность, крит"},
+ {id:"end",   n:"Выносливость",  гнездо:true,звук:"deep_wind",
+  о:"Сколько тело держит без передышки: под водой, под грузом, под уроном.",
+  даёт:"здоровье, дыхание, сопротивление, вес, восстановление"},
+ {id:"mind",  n:"Разум",         ключ:"mind",звук:"arte_page",
+  о:"Что вы понимаете и как крепко держите мысль под ударом.",
+  даёт:"эфир, концентрация, обнаружение, крафт"},
+ {id:"will",  n:"Воля",          гнездо:true,звук:"bell_small",
+  о:"Сколько воли в вас помещается и как твёрдо вы её держите.",
+  даёт:"запас воли, концентрация"},
+ {id:"spirit",n:"Дух",           гнездо:true,звук:"uh_chapel",
+  о:"Чем вы стоите против того, что бьёт не по телу.",
+  даёт:"сопротивление, восстановление, магическая стабильность"},
+ {id:"perc",  n:"Восприятие",    гнездо:true,звук:"voice_far",
+  о:"Что вы слышите и замечаете раньше других.",
+  даёт:"слух, обнаружение, точность, крит"},
+ {id:"sync",  n:"Синхронизация", гнездо:true,звук:"magic_hum",
+  о:"Насколько вы в лад с силой, которую тянете через себя.",
+  даёт:"эфир, магическая стабильность"},
+ {id:"cha",   n:"Харизма",       ключ:"cha", звук:"throng_hail_m",
+  о:"Как вас слушают и во что вам верят.",даёт:"торг, разговор, допрос"}];
+const ATTR_BY_ID=Object.fromEntries(ATTRS.map(a=>[a.id,a]));
+const ATTR_BASE=10;
+function attrEnsure(){
+ try{
+  if(!G.attr||typeof G.attr!=="object")G.attr={};
+  ATTRS.forEach(a=>{if(a.гнездо&&!Number.isFinite(Number(G.attr[a.id])))G.attr[a.id]=ATTR_BASE;});
+  return G.attr;
+ }catch(_){return {};}}
+function attrGet(id){
+ try{
+  const a=ATTR_BY_ID[id];if(!a)return 0;
+  if(a.гнездо){attrEnsure();return Math.max(1,Math.min(400,Number(G.attr[id])||ATTR_BASE));}
+  return Math.max(1,Math.min(400,Number(G[a.ключ])||ATTR_BASE));
+ }catch(_){return ATTR_BASE;}}
+function attrAdd(id,n){
+ try{
+  const a=ATTR_BY_ID[id];if(!a)return 0;
+  const d=Math.round(Number(n)||0);if(!d)return attrGet(id);
+  if(a.гнездо){attrEnsure();G.attr[id]=Math.max(1,Math.min(400,(Number(G.attr[id])||ATTR_BASE)+d));}
+  else G[a.ключ]=Math.max(1,Math.min(400,(Number(G[a.ключ])||ATTR_BASE)+d));
+  safeFn(()=>attrSyncMax());
+  return attrGet(id);
+ }catch(_){return ATTR_BASE;}}
+/* Насколько атрибут выше базовой десятки: из этого и считаются производные,
+   поэтому при десяти во всех девяти ни одна прибавка не работает. */
+function attrOver(id){return Math.max(0,attrGet(id)-ATTR_BASE);}
+/* ── ЧЕТЫРНАДЦАТЬ ПРОИЗВОДНЫХ ──
+   «где» — не пояснение, а адрес: место в игре, куда эта производная входит.
+   Если адреса нет, производной быть не должно. */
+const DERIVED=[
+ {id:"hp",       n:"здоровье",            ед:["единица","единицы","единиц"], из:["str","end"],
+  о:"Сколько урона держит тело.",где:"предел здоровья",
+  calc:()=>Math.min(80,attrOver("str")+attrOver("end")*3)},
+ {id:"stam",     n:"выносливость",        ед:["такт","такта","тактов"], из:["end"],
+  о:"Сколько тело работает без передышки.",где:"дыхание под водой",
+  calc:()=>Math.floor(attrOver("end")/4)},
+ {id:"aether",   n:"эфир",                ед:["единица","единицы","единиц"], из:["mind","sync"],
+  о:"Сколько силы в вас помещается.",где:"предел маны",
+  calc:()=>Math.min(40,attrOver("mind")+attrOver("sync")*2)},
+ {id:"focus",    n:"концентрация",        доля:true, из:["mind","will"],
+  о:"Насколько чары не срываются от помех.",где:"срыв чар",
+  calc:()=>Math.min(0.2,(attrOver("mind")+attrOver("will"))*0.006)},
+ {id:"resist",   n:"сопротивление",       ед:["единица защиты","единицы защиты","единиц защиты"], из:["end","spirit"],
+  о:"Чем тело и дух держат удар.",где:"защита",
+  calc:()=>Math.floor((attrOver("end")+attrOver("spirit"))/6)},
+ {id:"speed",    n:"скорость",            доля:true, из:["agi"],
+  о:"Насколько быстрее идёт шаг и работа.",где:"счёт времени",
+  calc:()=>Math.min(0.3,attrOver("agi")*0.015)},
+ {id:"carry",    n:"переносимый вес",     ед:["единица","единицы","единиц"], из:["str","end"],
+  о:"Сколько всего вы унесёте.",где:"сбор и бег",
+  calc:()=>1200+attrOver("str")*40+attrOver("end")*30},
+ {id:"regen",    n:"скорость восстановления",доля:true,из:["end","spirit"],
+  о:"Насколько быстрее заживает у огня.",где:"отдых",
+  calc:()=>Math.min(1,(attrOver("end")+attrOver("spirit"))*0.03)},
+ {id:"acc",      n:"точность",            доля:true, из:["agi","perc"],
+  о:"Как часто удар ложится чисто.",где:"удар",
+  calc:()=>Math.min(0.35,(attrOver("agi")+attrOver("perc"))*0.012)},
+ {id:"crit",     n:"критический шанс",    доля:true, из:["agi","perc"],
+  о:"Как часто удар выходит смертельным.",где:"удар",
+  calc:()=>Math.min(0.25,(attrOver("agi")+attrOver("perc"))*0.008)},
+ {id:"hearing",  n:"качество слухового восприятия",ед:["шаг","шага","шагов"],из:["perc"],
+  о:"Насколько шире слышно округу.",где:"звуковая картина",
+  calc:()=>Math.floor(attrOver("perc")/4)},
+ {id:"detect",   n:"дальность обнаружения",доля:true, из:["perc","mind"],
+  о:"Насколько чаще находится скрытое.",где:"поиск ловушек",
+  calc:()=>Math.min(0.3,(attrOver("perc")+attrOver("mind"))*0.01)},
+ {id:"craft",    n:"эффективность крафта",доля:true, из:["mind","agi"],
+  о:"Насколько реже срывается работа у станка.",где:"ремесло",
+  calc:()=>Math.min(0.2,(attrOver("mind")+attrOver("agi"))*0.007)},
+ {id:"stability",n:"магическая стабильность",доля:true,из:["spirit","sync"],
+  о:"Насколько ровно держится плетение.",где:"согласие чар",
+  calc:()=>Math.min(0.25,(attrOver("spirit")+attrOver("sync"))*0.008)}];
+const DERIVED_BY_ID=Object.fromEntries(DERIVED.map(d=>[d.id,d]));
+function derived(id){
+ try{const d=DERIVED_BY_ID[id];if(!d)return 0;
+  const v=Number(d.calc());return Number.isFinite(v)?v:0;}catch(_){return 0;}}
+/* ── ПРЕДЕЛЫ ОТ АТРИБУТОВ ──
+   Тот же приём, что у прибавок от артефактов: помнится ровно то, что уже
+   прибавлено, и правится только разница. Иначе при каждой сверке прибавка
+   ложилась бы второй раз. */
+function attrSyncMax(){
+ try{
+  if(!G.attrMax||typeof G.attrMax!=="object")G.attrMax={hp:0,mana:0,will:0};
+  const надо={hp:Math.round(derived("hp")),mana:Math.round(derived("aether")),
+   will:Math.round(attrOver("will")*2)};
+  const dHp=надо.hp-(Number(G.attrMax.hp)||0);
+  const dMana=надо.mana-(Number(G.attrMax.mana)||0);
+  const dWill=надо.will-(Number(G.attrMax.will)||0);
+  if(dHp){G.hpMax=Math.max(1,(Number(G.hpMax)||100)+dHp);
+   if(dHp>0)G.hp=Math.min(G.hpMax,(Number(G.hp)||0)+dHp);
+   G.hp=Math.max(1,Math.min(G.hpMax,Number(G.hp)||1));}
+  if(dMana){G.manaMax=Math.max(0,(Number(G.manaMax)||10)+dMana);
+   if(dMana>0)G.mana=Math.min(G.manaMax,(Number(G.mana)||0)+dMana);
+   G.mana=Math.max(0,Math.min(G.manaMax,Number(G.mana)||0));}
+  if(dWill&&Number.isFinite(Number(G.willMax))){
+   G.willMax=Math.max(4,(Number(G.willMax)||10)+dWill);
+   if(dWill>0)G.will=Math.min(G.willMax,(Number(G.will)||0)+dWill);}
+  G.attrMax=надо;
+ }catch(_){}}
+/* Сколько всего в котомке: по этому считается перегруз. */
+function carryNow(){
+ try{let n=0;for(const k in (G.inv||{})){const v=Number(G.inv[k])||0;if(v>0)n+=v;}return n;}
+ catch(_){return 0;}}
+function overloaded(){return carryNow()>derived("carry");}
 const xpNeed=l=>l*l*50;
 /* Дар Хронара и ткачей судьбы: опыт течёт быстрее. Через эту функцию проходит
    ВСЯ прибавка опыта, поэтому дар работает и в бою, и в заданиях. */
@@ -23058,6 +23234,7 @@ function atk(){return G.str+(G.equip.weapon?G.equip.weapon.val:0)+Math.round(2*f
  +Math.round(safeFn(()=>Echo.bonus("edge"),0))          /* §9: осколок удара */
  +(safeFn(()=>buffActive("благословение"),false)?4:0)
  -(safeFn(()=>buffActive("отдача"),false)?2:0)
+ +Math.round(safeFn(()=>derived("resist"),0))   /* §4: производная «сопротивление» */
  +safeFn(()=>Tree.боК(),0)
  +safeFn(()=>ART.sum("сила"),0)+(safeFn(()=>buffActive("мощь"),false)?3:0)
  +(safeFn(()=>buffActive("заточка"),false)?3:0);}
@@ -23065,6 +23242,7 @@ function def(){return Math.floor(G.agi/3)+(G.equip.armor?G.equip.armor.val:0)+Ma
  +Math.round(safeFn(()=>Echo.bonus("hide"),0))          /* §9: осколок шкуры */
  +(safeFn(()=>buffActive("благословение"),false)?3:0)
  -(safeFn(()=>buffActive("отдача"),false)?2:0)
+ +Math.round(safeFn(()=>derived("resist"),0))   /* §4: производная «сопротивление» */
  +safeFn(()=>Tree.защК(),0)
  +safeFn(()=>ART.sum("защита"),0)+safeFn(()=>Math.round(assimBonus("def")+adaptBonus("def")),0)-((safeFn(()=>anomalyIs("gravity"),false)&&safeFn(()=>Path.facetK("void"),0)<0.5)?1:0)+(safeFn(()=>buffActive("стойкость"),false)?2:0);}
 /* ── ДЕСЯТЬ РЕДКОСТЕЙ И СЕМЬ КАЧЕСТВ ──
@@ -27685,6 +27863,7 @@ function scapeRad(){
  if(G.place&&G.place.kind==="city")r+=Math.round(safeFn(()=>Path.facetK("crowd"),0));
  r+=Math.round(safeFn(()=>Echo.bonus("ear"),0));        /* §9: осколок слуха */
  r+=Math.round(safeFn(()=>Fore.boonK("эхо"),0));        /* §44.22: искусственные луны */
+ r+=Math.round(safeFn(()=>derived("hearing"),0));       /* §4: слуховое восприятие */
  return r;}
 
 /* Что и как часто подаёт голос. period — секунды между откликами вблизи;
@@ -30536,6 +30715,15 @@ function fight(a){const cb=G.combat;if(!cb)return;const m=cb.m;
  if(a==="atk"){safeFn(()=>weaponSwingSound(true));safeFn(()=>deed("hits"));let dmg=atk()+Math.floor(Math.random()*5);
   dmg+=Math.round(3*fxLevel("slay"));                       /* пламя Кальдера: урон по чудовищам */
   let critChance=0.10*fxLevel("crit")+(hasSkill("steady")?0.12:0); /* удар Таура и твёрдая рука */
+  critChance+=safeFn(()=>derived("crit"),0);                      /* §4: критический шанс */
+  /* §4: точность — не «попал или нет», а насколько чисто лёг удар. Промаха
+     в этой игре нет нарочно: незрячему игроку промах без причины неотличим
+     от поломки. Чистый удар прибавляет к урону и слышен своим звуком. */
+  if(Math.random()<safeFn(()=>derived("acc"),0)){
+   const чисто=Math.max(1,Math.round(atk()*0.2));
+   dmg+=чисто;
+   safeFn(()=>Bank.play("blade_ring",{gain:0.45,maxSec:2}));
+   cbLog(`Удар лёг чисто: плюс ${чисто}.`);}
   /* Свойства глубинных вещей: острая чаще бьёт насмерть, тяжёлая — больнее. */
   if(safeFn(()=>gearTrait("keen"),false))critChance+=0.12;
   /* Артефакты: сокрушающий удар и прибавка к урону — из общего счёта. */
@@ -30989,6 +31177,7 @@ function artSyncMax(){
  try{
   if(!G.artMax||typeof G.artMax!=="object")G.artMax={hp:0,mana:0};
   const надо={hp:safeFn(()=>ART.sum("здоровье"),0),mana:safeFn(()=>ART.sum("мана"),0)};
+  safeFn(()=>attrSyncMax());   /* §4: пределы от атрибутов — той же сверкой */
   const dHp=надо.hp-(Number(G.artMax.hp)||0);
   const dMana=надо.mana-(Number(G.artMax.mana)||0);
   if(dHp){G.hpMax=Math.max(1,(Number(G.hpMax)||100)+dHp);
@@ -31018,12 +31207,15 @@ function artRegen(){
 function levelTier(l){l=Number(l)||1;return l%10===0?"epic":l%5===0?"rare":"normal";}
 function checkLevelUp(){let leveled=false;safeFn(()=>{Energy.ensure();const m=10+(Number(G.level)||1)-(Core.has()&&G.core.форма==="implant"?2:0);if(m>(Number(G.willMax)||0))G.willMax=m;});
  while(G.xp>=xpNeed(G.level)){G.xp-=xpNeed(G.level);G.level++;leveled=true;
-  G.hpMax+=10;G.hp=G.hpMax;G.str++;G.agi++;G.mind++;G.cha++;G.manaMax+=5;G.mana=G.manaMax;}
+  G.hpMax+=10;G.hp=G.hpMax;G.str++;G.agi++;G.mind++;G.cha++;G.manaMax+=5;G.mana=G.manaMax;
+  /* §4: пять поздних атрибутов растут наравне с четырьмя прежними. */
+  safeFn(()=>{ATTRS.filter(a=>a.гнездо).forEach(a=>attrAdd(a.id,1));});}
  if(leveled){UI.fanfare();vib([60,80,60]);
   /* Музыка уровня — из пула: каждый раз другая; каждый пятый уровень —
      редкая тема, каждый десятый — эпическая. */
   safeFn(()=>eventTheme("levelup",{tier:levelTier(G.level),gain:0.8}));
-  safeFn(()=>adaptAdd("опыт",1));narrate(`Новый уровень! Теперь вы ${G.level} уровня. Здоровье и характеристики выросли.`,{pri:1,key:"levelup"});
+  safeFn(()=>adaptAdd("опыт",1));
+  narrate(`Новый уровень! Теперь вы ${G.level} уровня. Здоровье и все девять свойств выросли: ${ATTRS.map(a=>`${a.n.toLowerCase()} ${safeFn(()=>attrGet(a.id),0)}`).join(", ")}.`,{pri:1,key:"levelup"});
   journal(`Уровень ${G.level}!`);}}
 
 function resourceEmptyFeedback(){safeFn(()=>UI.empty());safeFn(()=>UI.blip(180,.16,.22));}
@@ -31062,6 +31254,13 @@ function gatherCurrent(source="tap"){
    if(t==="R")return mineVein(G.place.x,G.place.y);
    if(source==="tap"){resourceEmptyFeedback();
     narrate("Здесь нечего собирать. Двойное касание — действие здесь.");}
+   return false;}
+  /* §4: переносимый вес. Больше предела в руки не возьмёшь, и сказать об
+     этом надо голосом: молчащий отказ для незрячего игрока неотличим от
+     поломки. Предел растёт от Силы и Выносливости. */
+  if(safeFn(()=>overloaded(),false)){
+   if(source==="tap")safeFn(()=>resourceEmptyFeedback());
+   narrate(`Больше не унести: в котомке ${safeFn(()=>carryNow(),0)} при пределе ${Math.round(safeFn(()=>derived("carry"),0))}. Продайте или бросьте лишнее — предел растёт от силы и выносливости.`);
    return false;}
   const c=cellContent(G.x,G.y);
   if(!c||!c.res){if(source==="tap"){resourceEmptyFeedback(); narrate("На этой клетке ресурсов нет.");}return false;}
@@ -31267,6 +31466,11 @@ const CMD={
  /* §18: узнать тайный договор державы. Дорого, с риском и только в городе. */
  diploscout(i){safeFn(()=>Diplo.scout(Number(i)));},
  diplosay(){narrate(safeFn(()=>Diplo.text(),"Дипломатия."),{pri:1,key:"diplo"});},
+ /* §4: свойство называет себя и звучит своим голосом. */
+ attrsay(id){const a=ATTR_BY_ID[id];if(!a){narrate("Такого свойства нет.");return;}
+  safeFn(()=>Bank.play(a.звук,{gain:0.5,maxSec:4}));
+  narrate(safeFn(()=>Attrs.line(id),a.n),{pri:1,key:"attr"});},
+ attrssay(){narrate(safeFn(()=>Attrs.text(),"Свойства."),{pri:1,key:"attrs"});},
  foresay(){narrate(Fore.text(),{pri:2,key:"fore"});},
  sfcore(id){spellForgePick("core",id||"");},
  sfelem(id){spellForgePick("elem",id||"");},
@@ -37585,11 +37789,15 @@ const Resonance=Modules.register("RESONANCE",{
    const согласие=Math.max(-1,Math.min(1,0.55*отГероя+(вещь?0.35:0)*отВещи+рука));
    const ступень=Math.max(safeFn(()=>mastLevel("runes"),0),safeFn(()=>mastLevel("arte"),0));
    const нестаб=вещь&&вещь.нестаб?0.15:0;
+   /* §4: магическая стабильность держит плетение ровнее. */
    const устойчивость=Math.max(0.05,Math.min(0.99,
-    0.62+0.3*согласие+0.035*ступень+safeFn(()=>Balance.stabK(),0)-нестаб));
+    0.62+0.3*согласие+0.035*ступень+safeFn(()=>Balance.stabK(),0)-нестаб
+    +safeFn(()=>derived("stability"),0)));
    const ценаK=Math.round(Math.max(0.75,Math.min(1.4,1-0.25*согласие))*100)/100;
    const силаK=Math.round(Math.max(0.8,Math.min(1.25,1+0.2*согласие))*100)/100;
-   const срыв=Math.round(Math.max(0,Math.min(0.45,(1-устойчивость)*0.55))*100)/100;
+   /* §4: концентрация — то, чем держат мысль под помехой: срыв реже. */
+   const срыв=Math.round(Math.max(0,Math.min(0.45,
+    (1-устойчивость)*0.55-safeFn(()=>derived("focus"),0)))*100)/100;
    return {стихия:el,ядро:c,своя,вещь:вещь||null,вещьСтихия:вЭл||null,
     отГероя,отВещи,согласие:Math.round(согласие*100)/100,
     устойчивость:Math.round(устойчивость*100)/100,ценаK,силаK,срыв};
@@ -40646,7 +40854,15 @@ function renderCharacter(){
  const reps=Object.keys(G.rep||{}).filter(k=>G.rep[k]).map(k=>`${RACE_BY_ID[k]?RACE_BY_ID[k].n:k}: ${G.rep[k]}`).join(", ");
  document.getElementById("charStats").innerHTML=safeFn(()=>axesHtml(),"")+safeFn(()=>branchesHtml(),"")+safeFn(()=>treeHtml(),"")+
   safeFn(()=>`<div class="list-line" tabindex="0" data-speak="${(adaptText()+" "+assimText()+" "+realmsText()).replace(/"/g,"&quot;")}">🧬 ${adaptText()}<br>${assimText()}<br>🌀 ${realmsText()}</div>`,"")+
-  `<div class="list-line">⭐ Уровень ${G.level} · Опыт ${G.xp} из ${xpNeed(G.level)}<br>
+  /* §4: девять свойств и четырнадцать производных. У каждого свойства своя
+     запись: касание называет его и даёт услышать. */
+  safeFn(()=>`<div class="list-line" tabindex="0" data-speak="${Attrs.text().replace(/"/g,"&quot;")}">📊 ${Attrs.text()}</div>`
+   +ATTRS.map(a=>`<button class="item" data-cmd="attrsay:${a.id}" data-speak="${Attrs.line(a.id).replace(/"/g,"&quot;")}">📊 ${a.n}: ${attrGet(a.id)}</button>`).join("")
+   +DERIVED.map(d=>`<div class="list-line" tabindex="0" data-speak="${`${d.n}: ${Attrs.say(d)}. ${d.о} Из чего: ${d.из.map(x=>(ATTR_BY_ID[x]||{n:x}).n.toLowerCase()).join(" и ")}. Куда входит: ${d.где}.`.replace(/"/g,"&quot;")}">◆ ${d.n}: ${Attrs.say(d)} — ${d.где}</div>`).join(""),"")+
+  /* Эта строка держит главные числа героя и до сих пор была нема: курсор
+     проходил по ней молча, и уровень с запасом здоровья приходилось искать
+     в другом окне. */
+  `<div class="list-line" tabindex="0" data-speak="${`Уровень ${G.level}, опыт ${G.xp} из ${xpNeed(G.level)}. Здоровье ${G.hp} из ${G.hpMax}. Сила ${G.str}, ловкость ${G.agi}, разум ${G.mind}, харизма ${G.cha}. Мана ${G.mana} из ${G.manaMax}. Атака ${atk()}, защита ${def()}. Клан: ${G.clan||"нет"}. Артефактов ${G.artifacts.length}.`.replace(/"/g,"&quot;")}">⭐ Уровень ${G.level} · Опыт ${G.xp} из ${xpNeed(G.level)}<br>
   ❤️ ${G.hp}/${G.hpMax} · 💪 ${G.str} · 🏃 ${G.agi} · 🧠 ${G.mind} · 💬 ${G.cha}<br>
   ✨ ${G.mana}/${G.manaMax} · 🗡️ Атака ${atk()} · 🛡️ Защита ${def()}<br>
   🛡️ Клан: ${G.clan||"нет"} · 💎 Артефактов: ${G.artifacts.length}</div>`+
@@ -41264,6 +41480,41 @@ const LORE_KIND_BY_ID=Object.fromEntries(LORE_KINDS.map(k=>[k.id,k]));
 /* §14: роды подземелий. Слой над уже написанным: имя, голос, твари, добыча
    и перекос планировки берутся отсюда, а работают через Ambience, dungeonKin,
    veinPool и Gen.plan. */
+/* §4: свойства героя и то, что из них следует. Одна дверь на чтение и
+   запись, и один список адресов, по которым производные входят в игру. */
+const Attrs=Modules.register("ATTRIBUTES",{
+ attrs:ATTRS,derived:DERIVED,base:ATTR_BASE,
+ attr:id=>ATTR_BY_ID[id]||null,
+ get:id=>S(()=>attrGet(id),0),
+ over:id=>S(()=>attrOver(id),0),
+ add:(id,n)=>S(()=>attrAdd(id,n),0),
+ all:()=>ATTRS.map(a=>({id:a.id,n:a.n,v:S(()=>attrGet(a.id),0)})),
+ of:id=>DERIVED_BY_ID[id]||null,
+ value:id=>S(()=>derived(id),0),
+ values:()=>DERIVED.map(d=>({id:d.id,n:d.n,v:S(()=>derived(d.id),0),ед:d.ед,где:d.где})),
+ carry:()=>S(()=>carryNow(),0),
+ carryMax:()=>Math.round(S(()=>derived("carry"),0)),
+ overloaded:()=>S(()=>overloaded(),false),
+ /* Свойство словами: сколько его, что оно даёт и куда входит. */
+ line(id){
+  const a=ATTR_BY_ID[id];if(!a)return "Такого свойства нет.";
+  const v=S(()=>attrGet(id),0);
+  const свои=DERIVED.filter(d=>d.из.indexOf(id)>=0);
+  return `${a.n}: ${v}. ${a.о} Отсюда идут: ${свои.map(d=>`${d.n} (${this.say(d)})`).join(", ")||"пока ничего"}.`;},
+ /* Производная словами: доли читаются сотыми, а не «ноль целых». */
+ say(d){
+  const v=S(()=>derived(d.id),0);
+  if(d.доля)return `${Math.round(v*100)} сотых`;
+  const n=Math.round(v);
+  return `${n} ${plural(n,d.ед[0],d.ед[1],d.ед[2])}`;},
+ text(){
+  try{
+   const с=ATTRS.map(a=>`${a.n.toLowerCase()} ${attrGet(a.id)}`).join(", ");
+   const р=DERIVED.filter(d=>derived(d.id)>0).map(d=>`${d.n} ${this.say(d)}`);
+   return `Свойств ${ATTRS.length}: ${с}. Производных ${DERIVED.length}. `
+    +(р.length?`Сейчас работают: ${р.join(", ")}.`:"Пока ни одна прибавка не работает: все свойства на базовой десятке.")
+    +` В котомке ${carryNow()} при пределе ${Math.round(derived("carry"))}.`;
+  }catch(_){return `Свойств ${ATTRS.length}, производных ${DERIVED.length}.`;}}});
 const Dungeons=Modules.register("DUNGEONKINDS",{
  kinds:DUNGEON_KINDS,
  kind:id=>DUNGEON_KIND_BY_ID[id]||null,
@@ -41989,6 +42240,36 @@ function worldSelfCheck(){
   ok("sigils",SIGIL_SYMBOLS.length===8&&SIGIL_SYMBOLS.every(x=>MSCHOOL_BY_ID[x.школа]&&x.намерения.every(i=>SIGIL_INTENTS[i]))&&SIGIL_CARRIERS.length===8&&SIGIL_CARRIERS.every(x=>RES_BASE[x.ресурс])&&SIGIL_GEOMETRY.length===5&&INKS.length===6&&INKS.every(x=>SOUND_BANK[x.звук]&&Object.keys(x.рецепт).every(r=>RES_BASE[r]))&&AWAKEN_SOURCES.length===6&&AWAKEN_SOURCES.every(x=>SOUND_BANK[x.звук])&&WAVES.length===3&&MORPH_TRAITS.length===6&&MORPHOBEASTS.length===10&&MORPHOBEASTS.every(b=>MONSTERS.some(m=>m.id===b.база))&&DEVOUR_GIFTS.length===6&&EVENT_THEME.world_event&&SOUND_BANK[EVENT_THEME.world_event.роль],"Знаки: восемь символов, восемь носителей, пять геометрий, шесть чернил, шесть источников пробуждения, три волны, шесть черт, десять морфозверей, шесть даров Эха — всё со звуком и по настоящим ресурсам");
   ok("cases",CASE_TEMPLATES.length===6&&CASE_TEMPLATES.every(t=>t.версии.length===3&&t.улики.every(k=>CLUE_KINDS[k])&&t.версии.every(v=>v.улики.every(k=>t.улики.includes(k))))&&SYNDICATES.length===8&&SYNDICATES.every(x=>SOUND_BANK[x.звук]&&x.города.every(id=>NAMED_CITY_BY_ID[id])&&REGIONS[x.область])&&Object.keys(DECISIONS).length===9&&Object.values(DECISIONS).every(d=>Object.keys(d).length>=3)&&["deeper","border_war","shards","lasthouse","beast","price","undercity","maskface","endless"].every(id=>CHAIN_DB[id])&&HOUSE_BY_ID[LAST_HOUSE.враг]&&DLG_MOVE_BY_ID.znanie&&DLG_MOVE_BY_ID.kultura&&DLG_MOVE_BY_ID.nedoskazat,"Расследования: шесть дел с тремя версиями, восемь синдикатов со звуком и городами, девять цепочек с развязками, три хода разговора");
   ok("academy",LANGS.length>=20&&LANGS.every(l=>l.письмо&&l.о)&&SCIENCES.length===6&&SCIENCES.every(x=>SOUND_BANK[x.звук]&&x.эффект.length===3&&FACULTY_BY_ID[x.факультет])&&FACULTIES.length===12&&FACULTIES.every(f=>(f.школы||[]).every(id=>MSCHOOL_BY_ID[id]&&SCHOOL_AUDIO[id])&&(!f.маст||MAST_BY_ID[f.маст]))&&SCHOOLS.length>=30&&SCHOOLS.every(sc=>SCHOOL_AUDIO[sc.id]&&SPELL_LAYERS.every(l=>SOUND_BANK[SCHOOL_AUDIO[sc.id][l]])),"Академия: двадцать один язык, шесть наук, двенадцать факультетов, тридцать четыре школы чар — все со звуком");
+  ok("attrs",ATTRS.length===9&&DERIVED.length===14
+   /* Все восемь основных из §4 названы, и харизма девятой. */
+   &&["str","agi","end","mind","will","spirit","perc","sync","cha"].every(id=>ATTR_BY_ID[id])
+   &&ATTRS.every(a=>a.n&&a.о&&a.даёт&&SOUND_BANK[a.звук])
+   /* Все четырнадцать производных из §4 названы, у каждой адрес и источник. */
+   &&["hp","stam","aether","focus","resist","speed","carry","regen","acc","crit",
+      "hearing","detect","craft","stability"].every(id=>DERIVED_BY_ID[id])
+   &&DERIVED.every(d=>d.n&&d.о&&d.где&&(d.доля||(Array.isArray(d.ед)&&d.ед.length===3))&&(d.из||[]).length>=1
+     &&d.из.every(x=>ATTR_BY_ID[x])&&typeof d.calc==="function")
+   /* Каждое свойство хоть куда-то входит: свойство без следствия — украшение. */
+   &&ATTRS.filter(a=>a.id!=="cha").every(a=>DERIVED.some(d=>d.из.indexOf(a.id)>=0))
+   /* Все производные считаются числом и не выходят за свои берега. */
+   &&DERIVED.every(d=>{const v=derived(d.id);
+     return Number.isFinite(v)&&v>=0&&(!d.доля||v<=1);})
+   /* Читается и пишется одной дверью, и запись доходит до места. */
+   &&(()=>{try{
+     const было=attrGet("perc");
+     attrAdd("perc",4);
+     const стало=attrGet("perc"),слух=derived("hearing");
+     attrAdd("perc",-4);
+     return стало===было+4&&слух>=1&&attrGet("perc")===было;}catch(_){return false;}})()
+   /* При базовой десятке ни одна прибавка не работает: старые сохранения
+      читаются ровно как читались. */
+   &&(()=>{try{
+     const снимок=ATTRS.map(a=>attrGet(a.id));
+     ATTRS.forEach(a=>attrAdd(a.id,ATTR_BASE-attrGet(a.id)));
+     const тихо=DERIVED.filter(d=>d.id!=="carry").every(d=>derived(d.id)===0);
+     ATTRS.forEach((a,i)=>attrAdd(a.id,снимок[i]-attrGet(a.id)));
+     return тихо;}catch(_){return false;}})(),
+   "Свойства: 9 атрибутов и 14 производных — у каждой свой адрес в уже написанном, и при базовой десятке ни одна не работает");
   ok("dkinds",DUNGEON_KINDS.length===14
    /* Все четырнадцать родов из §14 брифа названы. */
    &&["mine","catacomb","temple","tower","undercity","lab","necropolis","fort",
