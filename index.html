@@ -4832,6 +4832,13 @@ const GUIDE=[
  "Вещь растёт. За каждую победу работающий артефакт получает опыт, а на пороге открывает ступень — прибавку, которой у него раньше не было, и всегда из своего направления. Каждая следующая ступень даётся вдвое тяжелее. Если гнёзда кончились, редкую часть можно скормить вещи: она уйдёт в опыт вместо гнезда.",
  "Требования. Ранг задаёт уровень; сверх того вещь может требовать навык, заклинание нужной школы, расположение народа, принадлежность к клану, прочитанное знание или закрытое дело. Вещь, требования которой не выполнены, лежит мёртвым грузом и не даёт ничего — и прямо говорит, чего ей не хватает.",
  "Где всё это. Пункт меню «Артефакты, части и рецепты». В нём видно, каким ремеслом здесь занимаются и каково ваше умение, какие рецепты под рукой и чего не хватает, какие части лежат в суме, и по каждой вещи — всё, что о ней известно, и всё, что с ней можно сделать: вложить, вынуть, зачаровать, скормить, продать."]},
+{title:"Глава 83. Чего хочет наставник",body:[
+ "КАК БЫЛО. Урок стоил золота и, со второй ступени, материалов. И всё: заплатил — научили. §22 перечисляет семь родов требования, и четырёх из них не было вовсе.",
+ "СЕМЬ РОДОВ. Плата — золото, и чем выше ступень, тем дороже. Материалы — на уроке портят припас, и приносит его ученик. Имя у народа — он берёт того, о ком слышал доброе. Сданные дела — сперва покажи, что доводишь начатое до конца. Доказательство мастерства — сделай своими руками то, чему уже учился. Сторона — он учит своих: держись Дома этих земель. Открытая Грань — без неё не возьмётся, не поймёшь, что он говорит.",
+ "У КАЖДОГО СВОЁ. Набор требований складывается из самого наставника и ступени урока: один и тот же человек хочет одного и того же всегда, разные хотят разного, а чем выше ступень, тем больше с вас спросят. Плата есть всегда, сверх неё — от нуля до трёх.",
+ "ЭТО СЛЫШНО ДО ПРОСЬБЫ. Наставник называет весь список с числами и с тем, сколько у вас уже есть: «плата сорок золота; сданных дел не меньше двух, у вас ноль». Выяснять условия отказом не придётся.",
+ "НЕ ВСЯКИЙ БЕРЁТСЯ. Один наставник из восьми не учит вовсе, и причина у него человеческая, а не «нельзя»: не берёт со стороны, отучился учить после того, как ученик ушёл с его инструментом, дал слово одному ученику в год, не учит тех, кто ходит за Грань. Отказ наотрез и звучит иначе — закрывшейся дверью, а не вежливым стуком.",
+ "ВРАЖДА НАРОДА — ОТДЕЛЬНО. Если ваш народ с его народом во вражде, он откажет и без этих семи: это было и раньше и осталось."]},
 {title:"Глава 82. Девять слагаемых найденной вещи",body:[
  "КАК БЫЛО. У находки было четыре слагаемых: род вещи, качество, редкость и выведенное из них число. §20 перечисляет девять и добавляет правило: «один и тот же базовый меч не должен всегда иметь одинаковые характеристики».",
  "ЧТО ПРИБАВИЛОСЬ. Отделка, край, подземелье, создатель, повесть и случайные свойства. Всё это говорится в карточке вещи вслух, одной связной фразой.",
@@ -34747,6 +34754,130 @@ const Ledger=Modules.register("LEDGER",{
  text(){const L=this.ensure();return `Реестр знаний: ${LEDGER_KINDS.map(([k])=>`${k} ${L[k].length}`).join(", ")}.`;}});
 /* ── НАСТАВНИК ── */
 const MENTOR_MATERIALS={smith:{"руда":2},jewel:{"кристалл":1},alchemy:{"трава":3},runes:{"камень":2},arte:{"кристалл":1},cook:{"ягоды":2},lang:{},illus:{},homun:{"кость":1},demon:{"кость":2},flux:{"кристалл":1}};
+/* ════════════════════════════════════════════════════════════════════════
+   §22: ЧЕГО НАСТАВНИК ХОЧЕТ СВЕРХ ПЛАТЫ
+
+   Урок стоил золота и, со второй ступени, материалов — и всё. §22
+   перечисляет семь родов требования: деньги, репутация, ресурс,
+   выполнение квеста, доказательство мастерства, принадлежность к фракции
+   и определённая Грань. Четырёх из них не было вовсе. И отдельной строкой
+   §22 говорит: «некоторые учителя могут отказаться обучать» — не за
+   враждебность народа, а просто потому, что этот не берёт кого попало.
+
+   ЧТО КОМУ НУЖНО — ВЫВОДИТСЯ, А НЕ НАЗНАЧЕНО. Набор требований складывается
+   из ключа наставника и ступени урока: один и тот же человек хочет одного
+   и того же всегда, разные хотят разного, а чем выше ступень, тем больше
+   с вас спросят. Ничего не хранится.
+
+   И ГЛАВНОЕ — ЭТО СЛЫШНО ЗАРАНЕЕ. Список требований называется ДО просьбы,
+   с числами и с тем, сколько у вас уже есть. Незрячий игрок не должен
+   выяснять условия отказом.
+   ════════════════════════════════════════════════════════════════════════ */
+const TEACH_DEMANDS=[
+ {id:"gold", n:"плата",                    о:"урок стоит золота, и чем выше ступень, тем дороже"},
+ {id:"stock",n:"материалы",                о:"на уроке портят припас, и приносит его ученик"},
+ {id:"rep",  n:"имя у народа",             о:"он берёт того, о ком слышал доброе"},
+ {id:"deed", n:"сданные дела",             о:"сперва покажи, что доводишь начатое до конца"},
+ {id:"proof",n:"доказательство мастерства",о:"сделай своими руками то, чему уже учился"},
+ {id:"side", n:"сторона",                  о:"он учит своих: держись Дома этих земель"},
+ {id:"facet",n:"открытая Грань",           о:"без неё не возьмётся: не поймёшь, что он говорит"}];
+const TEACH_DEMAND_BY_ID=Object.fromEntries(TEACH_DEMANDS.map(d=>[d.id,d]));
+/* Отказ наотрез. Один наставник из восьми не берёт кого попало, и у
+   каждого своя причина — не «нельзя», а человеческая. */
+const TEACH_REFUSALS=[
+ "он не берёт учеников со стороны: только своих подмастерьев",
+ "он отучился учить: последний ученик ушёл с его инструментом",
+ "он даёт слово одному ученику в год, и слово уже дано",
+ "он не учит тех, кто ходит за Грань: говорит, руки потом дрожат",
+ "он берёт с испытательного срока, а брать некого: мастерская закрыта",
+ "он учит только по письму от цеха, а письма у вас нет"];
+/* Ключ наставника надо хешировать целиком, а не по длине: длины у ключей
+   почти одинаковы, и по длине все наставники выходили одним человеком. */
+function teachSum(s){let h=0;s=String(s||"");
+ for(let i=0;i<s.length;i++)h=(h*31+s.charCodeAt(i))%100003;return h;}
+function teachHash(n,id,соль){
+ try{return hashName(teachSum((n&&n.key)||"")+соль*17,teachSum(id)+соль*29,7700+соль);}
+ catch(_){return 0.5;}}
+/* Берётся ли он учить вообще. */
+function teachRefuses(n){
+ try{
+  if(!n||!n.key)return null;
+  const h=teachHash(n,"",1);
+  if(h>=0.125)return null;
+  return TEACH_REFUSALS[Math.floor(teachHash(n,"",2)*TEACH_REFUSALS.length)%TEACH_REFUSALS.length];
+ }catch(_){return null;}}
+/* Какая Грань нужна именно этому наставнику. */
+function teachFacet(n,id){
+ try{const i=Math.floor(teachHash(n,id,3)*FACETS.length)%FACETS.length;return FACETS[i];}
+ catch(_){return FACETS[0];}}
+/* Набор требований. Плата всегда; материалы со второй ступени; сверх того
+   от нуля до трёх сообразно ступени урока. */
+function teachDemands(n,id,учит){
+ const out=["gold"];
+ const ур=Math.max(1,Number(учит)||1);
+ if(safeFn(()=>mastLevel(id),0)>=1)out.push("stock");
+ const сверх=["rep","deed","proof","side","facet"];
+ /* Прибавкой, а не умножением жребия: жребий у наставника один и тот же,
+    и floor(жребий × ступень) у малого жребия так и остался бы нулём. */
+ const сколько=Math.min(3,Math.floor(teachHash(n,id,4)*2)+(ур>=3?1:0)+(ур>=5?1:0));
+ for(let k=0;k<сколько;k++){
+  const д=сверх[Math.floor(teachHash(n,id,5+k)*сверх.length)%сверх.length];
+  if(out.indexOf(д)<0)out.push(д);}
+ return out;}
+/* Одно требование: надо столько-то, есть столько-то, выполнено или нет. */
+function teachOne(n,id,дем,учит){
+ const ур=Math.max(1,Number(учит)||1);
+ try{
+  switch(дем){
+   case "gold":{const надо=40+safeFn(()=>mastLevel(id),0)*60;
+    return {id:дем,надо,есть:Number(G.gold)||0,ок:(Number(G.gold)||0)>=надо,
+     слово:`урок стоит ${надо} золота`};}
+   case "stock":{const нужно=MENTOR_MATERIALS[id]||{};
+    const нет=Object.keys(нужно).filter(r=>!invHas(r,нужно[r]));
+    return {id:дем,надо:нужно,ок:!нет.length,слово:Object.keys(нужно).length
+     ?`материалы: ${Object.keys(нужно).map(r=>`${r} ×${нужно[r]}`).join(", ")}`:"материалов не надо"};}
+   case "rep":{const надо=2+ур*2,есть=safeFn(()=>repOf(n.race),0);
+    return {id:дем,надо,есть,ок:есть>=надо,
+     слово:`имя у народа «${n.race}» не ниже ${надо}, у вас ${есть}`};}
+   case "deed":{const надо=ур*2,есть=safeFn(()=>deeds("quests"),0);
+    return {id:дем,надо,есть,ок:есть>=надо,
+     слово:`сданных дел не меньше ${надо}, у вас ${есть}`};}
+   case "proof":{const надо=ур*3,есть=safeFn(()=>mastOf(id).дел,0);
+    return {id:дем,надо,есть,ок:есть>=надо,
+     слово:`сделано этим ремеслом не меньше ${надо} раз, у вас ${есть}`};}
+   case "side":{const h=safeFn(()=>Houses.here(),null);
+    const р=h?safeFn(()=>Houses.rank(h.id),0):0;
+    return {id:дем,надо:1,есть:р,ок:!!h&&р>=1,дом:h?h.n:null,
+     слово:h?`хоть какая-то ступень у Дома «${h.n}», у вас ${р?Houses.rankName(h.id):"чужак"}`
+           :"Дом этих земель, а здесь его нет"};}
+   case "facet":{const f=teachFacet(n,id);
+    const т=safeFn(()=>Path.facetTier(f.id),0);
+    return {id:дем,надо:1,есть:т,ок:т>=1,грань:f.id,
+     слово:`открытая Грань «${f.n}», у вас ступень ${т}`};}
+  }
+  return {id:дем,ок:true,слово:""};
+ }catch(_){return {id:дем,ок:true,слово:""};}}
+
+/* Все требования разом: что выполнено, что нет. */
+function teachAll(n,id,учит){
+ const out=[];
+ teachDemands(n,id,учит).forEach(д=>out.push(teachOne(n,id,д,учит)));
+ return out;}
+/* Чего он хочет — словами и ДО просьбы. */
+function teachLine(n,id){
+ try{
+  const м=MAST_BY_ID[id];if(!n||!м)return "Такого ремесла нет.";
+  const отказ=teachRefuses(n);
+  if(отказ)return `${n.name} не возьмётся учить вовсе: ${отказ}.`;
+  const учит=((MAST_TEACH[n.prof]||{})[id]||0)+safeFn(()=>Mentor.bonus(n,id),0);
+  if(!учит)return `${n.name} ${м.n.toLowerCase()} не учит.`;
+  const все=teachAll(n,id,учит);
+  const нет=все.filter(x=>!x.ок);
+  return `${n.name} учит ${м.n.toLowerCase()} до ${учит} ступени. Чего он хочет: `
+   +все.map(x=>x.слово).filter(Boolean).join("; ")+". "
+   +(нет.length?`Не хватает: ${нет.map(x=>TEACH_DEMAND_BY_ID[x.id].n).join(", ")}.`
+     :"Всё сошлось: можно просить урок.");
+ }catch(_){return "Наставник молчит.";}}
 const Mentor=Modules.register("MENTOR",{
  materials:MENTOR_MATERIALS,
  teaches(n){return n&&MAST_TEACH[n.prof]?Object.keys(MAST_TEACH[n.prof]):[];},
@@ -34754,11 +34885,28 @@ const Mentor=Modules.register("MENTOR",{
  check(n,id){try{const м=MAST_BY_ID[id];if(!n||!м)return {ок:false,почему:"такого ремесла нет"};const учит=((MAST_TEACH[n.prof]||{})[id]||0)+this.bonus(n,id);if(!учит)return {ок:false,почему:`${n.name} этому не учит`};
   const было=mastLevel(id);if(было>=учит)return {ок:false,почему:`${м.n} вы знаете не хуже него`};
   if(safeFn(()=>attitudeOf(n.race).refuses,false))return {ок:false,почему:"он вам не доверяет: отношения с его народом враждебны"};
-  const цена=40+было*60;if((Number(G.gold)||0)<цена)return {ок:false,почему:`урок стоит ${цена} золота`};
-  if(было>=1){const нужно=MENTOR_MATERIALS[id]||{};const нет=Object.keys(нужно).filter(r=>!invHas(r,нужно[r]));if(нет.length)return {ок:false,почему:`наставник требует материалы для урока: ${нет.map(r=>`${r} ×${нужно[r]}`).join(", ")}`,материалы:нужно};}
-  return {ок:true,цена,материалы:было>=1?(MENTOR_MATERIALS[id]||{}):{}};}catch(_){return {ок:false,почему:"урок не сложился"};}},
+  /* §22: иной не берёт кого попало, и это не про вражду народа. */
+  const отказ=safeFn(()=>teachRefuses(n),null);
+  if(отказ)return {ок:false,почему:отказ,наотрез:true};
+  /* §22: семь родов требования. Плата и материалы были и раньше; сданные
+     дела, доказательство мастерства, сторона и Грань — новые. */
+  const все=safeFn(()=>teachAll(n,id,учит),[]);
+  const нет=все.filter(x=>!x.ок);
+  if(нет.length)return {ок:false,почему:нет.map(x=>x.слово).join("; "),
+   требования:все,невыполнено:нет.map(x=>x.id)};
+  const цена=40+было*60;
+  return {ок:true,цена,требования:все,
+   материалы:было>=1?(MENTOR_MATERIALS[id]||{}):{}};}catch(_){return {ок:false,почему:"урок не сложился"};}},
+ /* §22: чего он хочет — списком и до просьбы. */
+ demands:(n,id)=>S(()=>teachAll(n,id,((MAST_TEACH[n&&n.prof]||{})[id]||1)),[]),
+ kinds:TEACH_DEMANDS,
+ refuses:n=>S(()=>teachRefuses(n),null),
+ facetOf:(n,id)=>S(()=>teachFacet(n,id),null),
+ wants:(n,id)=>S(()=>teachLine(n,id),"Наставник молчит."),
  bonus(n,id){try{return G.mentor&&G.mentor.key===n.key&&G.mentor.маст===id?1:0;}catch(_){return 0;}},
- ask(n,id){const c=this.check(n,id);const м=MAST_BY_ID[id]||{n:id};if(!c.ок){safeFn(()=>Bank.play("knock_soft",{gain:0.4,maxSec:2}));narrate(`${n.name} отказывает: ${c.почему}.`);return false;}
+ ask(n,id){const c=this.check(n,id);const м=MAST_BY_ID[id]||{n:id};if(!c.ок){
+   safeFn(()=>Bank.play(c.наотрез?"mtg_door_close":"knock_soft",{gain:c.наотрез?0.5:0.4,maxSec:2}));
+   narrate(`${n.name} отказывает: ${c.почему}.`);return false;}
   Object.keys(c.материалы||{}).forEach(r=>invTake(r,c.материалы[r]));
   const ок=safeFn(()=>mastAsk(n,id),false);if(!ок)return false;
   const ур=mastLevel(id);
@@ -43803,6 +43951,33 @@ function worldSelfCheck(){
   ok("sigils",SIGIL_SYMBOLS.length===8&&SIGIL_SYMBOLS.every(x=>MSCHOOL_BY_ID[x.школа]&&x.намерения.every(i=>SIGIL_INTENTS[i]))&&SIGIL_CARRIERS.length===8&&SIGIL_CARRIERS.every(x=>RES_BASE[x.ресурс])&&SIGIL_GEOMETRY.length===5&&INKS.length===6&&INKS.every(x=>SOUND_BANK[x.звук]&&Object.keys(x.рецепт).every(r=>RES_BASE[r]))&&AWAKEN_SOURCES.length===6&&AWAKEN_SOURCES.every(x=>SOUND_BANK[x.звук])&&WAVES.length===3&&MORPH_TRAITS.length===6&&MORPHOBEASTS.length===10&&MORPHOBEASTS.every(b=>MONSTERS.some(m=>m.id===b.база))&&DEVOUR_GIFTS.length===6&&EVENT_THEME.world_event&&SOUND_BANK[EVENT_THEME.world_event.роль],"Знаки: восемь символов, восемь носителей, пять геометрий, шесть чернил, шесть источников пробуждения, три волны, шесть черт, десять морфозверей, шесть даров Эха — всё со звуком и по настоящим ресурсам");
   ok("cases",CASE_TEMPLATES.length===6&&CASE_TEMPLATES.every(t=>t.версии.length===3&&t.улики.every(k=>CLUE_KINDS[k])&&t.версии.every(v=>v.улики.every(k=>t.улики.includes(k))))&&SYNDICATES.length===8&&SYNDICATES.every(x=>SOUND_BANK[x.звук]&&x.города.every(id=>NAMED_CITY_BY_ID[id])&&REGIONS[x.область])&&Object.keys(DECISIONS).length===9&&Object.values(DECISIONS).every(d=>Object.keys(d).length>=3)&&["deeper","border_war","shards","lasthouse","beast","price","undercity","maskface","endless"].every(id=>CHAIN_DB[id])&&HOUSE_BY_ID[LAST_HOUSE.враг]&&DLG_MOVE_BY_ID.znanie&&DLG_MOVE_BY_ID.kultura&&DLG_MOVE_BY_ID.nedoskazat,"Расследования: шесть дел с тремя версиями, восемь синдикатов со звуком и городами, девять цепочек с развязками, три хода разговора");
   ok("academy",LANGS.length>=20&&LANGS.every(l=>l.письмо&&l.о)&&SCIENCES.length===6&&SCIENCES.every(x=>SOUND_BANK[x.звук]&&x.эффект.length===3&&FACULTY_BY_ID[x.факультет])&&FACULTIES.length===12&&FACULTIES.every(f=>(f.школы||[]).every(id=>MSCHOOL_BY_ID[id]&&SCHOOL_AUDIO[id])&&(!f.маст||MAST_BY_ID[f.маст]))&&SCHOOLS.length>=30&&SCHOOLS.every(sc=>SCHOOL_AUDIO[sc.id]&&SPELL_LAYERS.every(l=>SOUND_BANK[SCHOOL_AUDIO[sc.id][l]])),"Академия: двадцать один язык, шесть наук, двенадцать факультетов, тридцать восемь школ чар — все со звуком");
+  ok("teach",TEACH_DEMANDS.length===7&&new Set(TEACH_DEMANDS.map(d=>d.id)).size===7
+   &&TEACH_DEMANDS.every(d=>d.n&&d.о&&d.о.length>15)
+   &&TEACH_REFUSALS.length>=6&&TEACH_REFUSALS.every(r=>r.length>25)
+   /* Набор требований у одного и того же наставника не меняется, у разных
+      наставников разный, и плата в нём есть всегда. */
+   &&(()=>{try{
+     const c=findCities(900,900,60,3)[0];if(!c)return false;
+     const наборы=new Set();let было=0,отказов=0;
+     /* Обход вложенный, по трём слоям на клетку: полосой наставников
+        набиралось пять вместо шестнадцати. */
+     const виден=new Set();
+     for(let dx=-5;dx<=5;dx++)for(let dy=-5;dy<=5;dy++)for(let k=0;k<3;k++){
+      const n=getNPC(c.x+dx,c.y+dy,k);
+      if(!n||!MAST_TEACH[n.prof]||виден.has(n.key))continue;
+      виден.add(n.key);было++;
+      if(teachRefuses(n))отказов++;
+      const id=Object.keys(MAST_TEACH[n.prof])[0];
+      const ур=MAST_TEACH[n.prof][id];
+      const a=teachDemands(n,id,ур),b=teachDemands(n,id,ур);
+      if(a.join()!==b.join())return false;              /* выводится, а не бросается */
+      if(a.indexOf("gold")<0||a.length>4)return false;  /* плата всегда, и не больше четырёх */
+      if(a.some(d=>!TEACH_DEMAND_BY_ID[d]))return false;
+      наборы.add(a.join(","));}
+     /* Отказ наотрез редок, но бывает. */
+     return было>=8&&наборы.size>=2&&отказов<было*0.5;
+    }catch(_){return false;}})(),
+   "Наставники: семь родов требования со словом, набор выводится из наставника и ступени, и не всякий берётся учить");
   ok("loot",LOOT_FITTINGS.length===12&&LOOT_TRAITS.length===8
    &&new Set(LOOT_FITTINGS.map(x=>x.id)).size===12&&new Set(LOOT_TRAITS.map(x=>x.id)).size===8
    /* Вся отделка звучит настоящей записью и годится хоть одному слоту. */

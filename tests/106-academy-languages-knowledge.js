@@ -130,8 +130,22 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
  /* ── 7. наставник ── */
  const наставник=await page.evaluate(()=>{
   const r={};G.mentor=null;G.mentorTrial=null;G.mast={};G.inv={};G.gold=0;
-  const кузнец=getNPC(G.x,G.y,0,"Кузнец");r.teaches=Mentor.teaches(кузнец);r.noGold=Mentor.check(кузнец,"smith");
-  G.gold=1000;r.ok0=Mentor.check(кузнец,"smith");G.mast.smith={ур:1,оп:0,дел:0};r.noMat=Mentor.check(кузнец,"smith");G.inv["руда"]=2;r.ok1=Mentor.check(кузнец,"smith");
+  /* §22: наставник хочет не только денег. Берём кузнеца, чьи требования
+     закрываются числом, и закрываем их — здесь проверяется не §22, а
+     плата, материалы и испытание. */
+  let кузнец=null;
+  искать: for(let d=0;d<=8&&!кузнец;d++)for(let dx=-d;dx<=d;dx++)for(let dy=-d;dy<=d;dy++)for(let k=0;k<3;k++){
+   const n=getNPC(G.x+dx,G.y+dy,k,"Кузнец");
+   if(!n||!Mentor.teaches(n).includes("smith")||Mentor.refuses(n))continue;
+   const ур=MAST_TEACH[n.prof].smith;
+   const лишнее=Mentor.demands(n,"smith").map(x=>x.id)
+    .filter(x=>!["gold","stock","rep","deed","proof"].includes(x));
+   if(лишнее.length||!ур)continue;
+   кузнец=n;break искать;}
+  r.нашёлся=!!кузнец;if(!кузнец)return r;
+  addRep(кузнец.race,20);G.deeds={quests:99};
+  r.teaches=Mentor.teaches(кузнец);r.noGold=Mentor.check(кузнец,"smith");
+  G.gold=1000;G.mast.smith={ур:0,оп:0,дел:99};r.ok0=Mentor.check(кузнец,"smith");G.mast.smith={ур:1,оп:0,дел:99};r.noMat=Mentor.check(кузнец,"smith");G.inv["руда"]=2;r.ok1=Mentor.check(кузнец,"smith");
   r.notHis=Mentor.check(кузнец,"cook");
   SAID.length=0;r.ask=Mentor.ask(кузнец,"smith");r.ур=mastLevel("smith");r.руда=Number(G.inv["руда"])||0;r.trial=G.mentorTrial?{маст:G.mentorTrial.маст,need:G.mentorTrial.need}:null;r.сказ=SAID.find(t=>/три работы/.test(t))||"";
   r.status1=Mentor.status();r.gain0=Mentor.gainK("smith");
@@ -140,7 +154,7 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   r.btns=Mentor.npcButtons(кузнец);G.gold=0;r.btnsNo=Mentor.npcButtons(кузнец);
   return r;});
  check('наставник проверяет ученика: без золота — цена, со второй ступени — материалы, чужое ремесло — отказ; урок берёт материалы и даёт ступень и испытание в три работы',
-  наставник.teaches.includes("smith")&&наставник.noGold.ок===false&&/урок стоит/.test(наставник.noGold.почему)&&наставник.ok0.ок===true&&наставник.noMat.ок===false&&/материалы.*руда ×2/.test(наставник.noMat.почему)&&наставник.ok1.ок===true&&/не учит/.test(наставник.notHis.почему)&&наставник.ask===true&&наставник.ур===2&&наставник.руда===0&&наставник.trial&&наставник.trial.маст==="smith"&&наставник.trial.need===3&&наставник.сказ.length>0,{noGold:наставник.noGold,noMat:наставник.noMat,ask:наставник.ask,ур:наставник.ур,руда:наставник.руда,trial:наставник.trial});
+  наставник.нашёлся&&наставник.teaches.includes("smith")&&наставник.noGold.ок===false&&/урок стоит/.test(наставник.noGold.почему)&&наставник.ok0.ок===true&&наставник.noMat.ок===false&&/материалы.*руда ×2/.test(наставник.noMat.почему)&&наставник.ok1.ок===true&&/не учит/.test(наставник.notHis.почему)&&наставник.ask===true&&наставник.ур===2&&наставник.руда===0&&наставник.trial&&наставник.trial.маст==="smith"&&наставник.trial.need===3&&наставник.сказ.length>0,{noGold:наставник.noGold,noMat:наставник.noMat,ask:наставник.ask,ур:наставник.ур,руда:наставник.руда,trial:наставник.trial});
  check('испытание считает работы и по третьей делает наставником: фанфара, ремесло на четверть быстрее, ступень выше обычной; кнопки урока с ценой, а без золота — с причиной',
   /Испытание наставника/.test(наставник.status1)&&наставник.gain0===1&&наставник.work2===false&&наставник.progress.length>0&&наставник.work3===true&&наставник.mentor&&наставник.mentor.маст==="smith"&&наставник.gain1===1.25&&наставник.bonus===1&&наставник.звук&&/Наставник: /.test(наставник.status2)&&/lesson:/.test(наставник.btns)&&/tutorwhy:.*урок стоит/.test(наставник.btnsNo),{status:[наставник.status1,наставник.status2],work:[наставник.work2,наставник.work3],gain:наставник.gain1,btns:наставник.btnsNo.slice(0,120)});
 
