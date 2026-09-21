@@ -134,7 +134,17 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
      переправа, горная тропа и война на дуге умножают время, и при случайном
      блуждании бег мог измеряться на осыпи, а шаг — на плите. Сравнивалась бы
      тогда земля, а не бег. */
-  const x0=G.x,y0=G.y;
+  /* Мерим на РОВНОЙ земле, а не там, где герой случайно встал. Цена шага
+     зависит от породы под ногами: на равнине 0.18 часа, на горной тропе и
+     в топи заметно больше. Порог 0.25 писался под равнину, и если
+     предыдущие проверки набора отвели героя в горы, проверка ловила не
+     подорожавший шаг, а склон. Ищем ближайшую равнину и меряем на ней. */
+  let x0=G.x,y0=G.y;
+  ищем: for(let rr=0;rr<=40;rr++)
+   for(let dx=-rr;dx<=rr;dx++)for(let dy=-rr;dy<=rr;dy++){
+    if(rr&&Math.max(Math.abs(dx),Math.abs(dy))!==rr)continue;
+    const c=safeFn(()=>cellContent(G.x+dx,G.y+dy),null);
+    if(c&&!c.structure&&c.terrain&&c.terrain[0]==="plain"){x0=G.x+dx;y0=G.y+dy;break ищем;}}
   const one=(running,dir)=>{while(activeLayer())handleTwoFingerTap();
    if(G.inCombat)endCombat();
    G.place=null;G.ship=null;G.weaponDrawn=false;G.metCaravan=null;
