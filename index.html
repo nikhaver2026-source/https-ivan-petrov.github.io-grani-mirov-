@@ -15873,11 +15873,16 @@ function roadNear(x,y,r){
 function warCampAt(x,y){
  try{
   if(G.dark)return false;
-  if(safeFn(()=>isCityAt(x,y),null))return false;
+  /* Жребий стоит ПЕРВЫМ, и это не украшение порядка. roadNear щупает
+     двадцать четыре соседние клетки, а isCityAt ищет город; если звать их
+     на каждой клетке мира, вывод двадцати тысяч далёких клеток перестаёт
+     укладываться в секунду. Жребий отсекает девятнадцать клеток из
+     двадцати одним хешем, и дорогое считается только для оставшейся. */
+  if(H(x,y,4310)>=0.05)return false;
   /* У тракта, но не на нём: обоз должен доехать, а строй — развернуться. */
   if(roadAt(x,y))return false;
-  if(!roadNear(x,y,2))return false;
-  return H(x,y,4310)<0.05;
+  if(safeFn(()=>isCityAt(x,y),null))return false;
+  return roadNear(x,y,2);
  }catch(_){return false;}}
 function smugglerDenAt(x,y){
  try{
