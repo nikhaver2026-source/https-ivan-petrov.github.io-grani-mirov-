@@ -145,7 +145,12 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   r.доступно=diveAvailable();r.меню=amAvailable("dive");
   G.place={kind:"dungeon",bx:1,by:1,stype:"ruins",name:"м",depth:1,x:1,y:1};r.вДоме=diveAvailable();G.place=null;
   судно(G.x+5,G.y);G.ship.storm=true;r.вШторм=diveAvailable();G.ship=null;
-  G.buffs={};G.race="Люди";G.assim={traits:{},cooldown:0,materials:0,energy:0};r.такты=breathTacts();buffSet("дыхание",3);r.тактыЗелье=breathTacts();G.buffs={};G.race="Русалки";r.тактыРусалка=breathTacts();G.race="Люди";
+  /* Такты считаются от голого героя: погружения этого же набора успевают
+     вырастить Грань «Водное дыхание», а восстановленная сеть Предтеч даёт
+     свой такт. И то и другое — верно, но меряется здесь не оно. */
+  G.buffs={};G.race="Люди";G.assim={traits:{},cooldown:0,materials:0,energy:0};
+  G.deeds={};G.facetTiers={};G.fore={открыты:{}};
+  r.такты=breathTacts();buffSet("дыхание",3);r.тактыЗелье=breathTacts();G.buffs={};G.race="Русалки";r.тактыРусалка=breathTacts();G.race="Люди";
   return r;});
  check('5. места под водой лежат только у воды, все десять родов встречаются; в доме и в шторм нырять нельзя; такты: один, два от зелья, два русалке',
   места.видов===10&&места.всего>50&&места.наСуше===0&&места.доступно&&места.меню&&места.вДоме===false&&места.вШторм===false&&места.такты===1&&места.тактыЗелье===3&&места.тактыРусалка===3,места);
