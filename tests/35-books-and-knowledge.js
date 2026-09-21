@@ -219,7 +219,10 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
  const закл=await page.evaluate(()=>{
   const плохие=[];
   SPELLS.forEach((sp,i)=>{
+   /* Часы плетения сбрасываются перед каждой чарой: срыв предыдущей мог
+      увести эту на перезарядку, и тогда мерялась бы не цена, а молчание. */
    G.spells=SPELLS.map(x=>x.n);G.manaMax=99;G.mana=99;G.inCombat=false;G.combat=null;
+   G.spellCD={};G.buffs={};
    const до=G.mana;
    try{castSpell(i);}catch(e){плохие.push(sp.n+": "+e.message);}
    if(G.mana>=до)плохие.push(sp.n+": мана не потрачена");});
