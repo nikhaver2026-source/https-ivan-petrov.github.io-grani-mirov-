@@ -4437,6 +4437,17 @@ function safeOpenMagicPanel(){
    b.textContent=`${i+1}. ${sp.n}${known.includes(sp.n)?'':' (не изучено)'}`;
    b.addEventListener('click',()=>{try{castSpell(i);}catch(e){narrate('Не удалось применить заклинание.');}});list.appendChild(b);
   }
+  /* Вложенные чары висят тут же, за слотами: жезл нужен в подземелье, а
+     не в башне, где его сделали. */
+  safeFn(()=>{
+   const мои=chargedList();
+   мои.forEach((it,k)=>{
+    const c=CARRIER_BY_ID[it.вид];if(!c||!c.заряды)return;
+    const b=document.createElement('button');b.type='button';b.className='item';
+    b.dataset.speak=chargedLine(it)+" Двойное касание — применить.";
+    b.textContent=`🔮 ${chargedName(it)} — ${it.заряд} из ${it.макс}`;
+    b.addEventListener('click',()=>{try{chargedUse(k);safeOpenMagicPanel();}catch(e){narrate('Не удалось применить вещь.');}});
+    list.appendChild(b);});});
   m.hidden=false;m.setAttribute('aria-hidden','false');UI.open();const first=list.querySelector('button');if(first)first.focus();narrate('Панель магии открыта. '+magicSlotHint());
  }catch(e){try{console.error('Magic panel recovery',e);narrate('Панель магии временно недоступна.');}catch(x){}}
 }
@@ -4821,6 +4832,15 @@ const GUIDE=[
  "Вещь растёт. За каждую победу работающий артефакт получает опыт, а на пороге открывает ступень — прибавку, которой у него раньше не было, и всегда из своего направления. Каждая следующая ступень даётся вдвое тяжелее. Если гнёзда кончились, редкую часть можно скормить вещи: она уйдёт в опыт вместо гнезда.",
  "Требования. Ранг задаёт уровень; сверх того вещь может требовать навык, заклинание нужной школы, расположение народа, принадлежность к клану, прочитанное знание или закрытое дело. Вещь, требования которой не выполнены, лежит мёртвым грузом и не даёт ничего — и прямо говорит, чего ей не хватает.",
  "Где всё это. Пункт меню «Артефакты, части и рецепты». В нём видно, каким ремеслом здесь занимаются и каково ваше умение, какие рецепты под рукой и чего не хватает, какие части лежат в суме, и по каждой вещи — всё, что о ней известно, и всё, что с ней можно сделать: вложить, вынуть, зачаровать, скормить, продать."]},
+{title:"Глава 79. Вложенная чара: свиток, жезл, талисман и фокус",body:[
+ "ЗАЧЕМ. Гримуар дал двадцать шесть тысяч заклинаний, но взять их можно было только в голову: выписал в книгу — знаешь, не выписал — нет. Между тем вещь с вложенной чарой — статья отдельная и очень старая, и §16 брифа прямо говорит, что артефакт умеет поглощать энергию. Теперь умеет.",
+ "ЧЕМ ЭТО НЕ ТО ЖЕ САМОЕ, ЧТО ВЫУЧИТЬ. Выученная чара стоит маны и знает перезарядку. Вложенная не стоит ни капли маны и перезарядки не знает вовсе — у неё заряды. Зато заряды кончаются, а носитель надо из чего-то сделать.",
+ "ЧЕТЫРЕ НОСИТЕЛЯ. Свиток — один заряд, потом сгорает; читать его может кто угодно, ремесла не надо. Жезл — пять зарядов и заряжается снова; делает его рунник первой ступени. Талисман — три заряда, носится под рубахой и заряжается снова; делает артефактор первой ступени. Фокус — зарядов нет вовсе: он не творит ничего, а свою специализацию делает дешевле на треть, а свою школу — на седьмую часть, пока вы его несёте; делает артефактор второй ступени.",
+ "ИЗ ЧЕГО. Из настоящих переделов §12, а не из воздуха: свиток — полотно и травяная вытяжка, жезл — клеёный брус и рунный камень, талисман — самоцвет и кованая полоса, фокус — эфирная линза и артефактная оправа. Ступень вложенной чары умножает всё: высшее втрое дороже малого. Так гримуар оказывается пришит к производству, к торговле и к местам силы разом.",
+ "ГДЕ ДЕЛАЮТ. В том же окне составителя — башня, школа или храм. У каждой строки гримуара есть вторая кнопка «в вещь»: ею выбирают заклинание, и игра называет цену всех четырёх носителей сразу, чтобы решать на слух и до траты.",
+ "ГДЕ ПРИМЕНЯЮТ. Где угодно. Вложенные вещи висят в панели магии сразу за двенадцатью слотами: жезл нужен в подземелье, а не в башне, где его сделали. Каждая называет себя, своё заклинание и остаток зарядов.",
+ "ГДЕ ЗАРЯЖАЮТ. На месте силы — даром: сила там и так есть. В башне, школе и храме — за те же составляющие, что пошли на носитель. Свиток не заряжают: он одноразовый.",
+ "НИ ОДНОЙ ТАБЛИЦЫ «ВЕЩЬ — ЗАКЛИНАНИЕ». Вещь помнит только номер в гримуаре; само заклинание выводится из номера тем же способом, что и всё остальное. Поэтому носителей ровно столько же, сколько заклинаний, — двадцать шесть тысяч на каждый из четырёх родов."]},
 {title:"Глава 78. Гримуар: двадцать шесть тысяч заклинаний",body:[
  "ЧЕТЫРЕ ШКОЛЫ, КОТОРЫХ НЕ БЫЛО. Школ было тридцать четыре, и четырёх дисциплин среди них не значилось вовсе: энергетика — источники силы и то, как её копят и сбрасывают; биомантия — работа с живой плотью; астральная наука — небесный слой и выход из тела; магическая инженерия — механизм, собранный из чар. Теперь их тридцать восемь, и у каждой новой, как у прежних, своё семейство, своя стихия, свои три именных заклинания и все семь звуковых слоёв.",
  "СПЕЦИАЛИЗАЦИЯ. Школа говорит, ЧЕМ вы работаете; специализация — КАК именно. У каждой школы их четыре, и каждая закрепляет за собой ядро и стихию: у Огня это Пламя (прямой удар огнём), Жар (путы), Угли (порча на земле) и Горн (вытягивание тепла). Всего специализаций сто пятьдесят две.",
@@ -31695,6 +31715,16 @@ const CMD={
   safeFn(()=>Bank.play(r.голос||"magic_shimmer",{gain:0.45,maxSec:3}));
   narrate(safeFn(()=>grimLine(r),r.n),{pri:1,key:"grim"});},
  grimlearn(i){safeFn(()=>grimLearn(Number(i)));},
+ /* Вложенная чара: выбрать, сделать носитель, применить, зарядить. */
+ grimpick(i){safeFn(()=>grimPickSpell(Number(i)));},
+ carriermake(v){
+  /* Number(null) — это ноль, а не «ничего»: без явной проверки пустой выбор
+     молча сделал бы носитель для самого первого заклинания каталога. */
+  if(!Number.isFinite(GRIM.выбор)){narrate("Сперва выберите заклинание: в гримуаре у каждой строки есть вторая кнопка «в вещь».");return;}
+  safeFn(()=>chargedMake(GRIM.выбор,v));},
+ carrieruse(k){safeFn(()=>chargedUse(Number(k)));},
+ carriercharge(k){safeFn(()=>chargedRecharge(Number(k)));},
+ carriersay(){narrate(safeFn(()=>Carriers.text(),"Вложенные чары."),{pri:1,key:"carrier"});},
  quests(){openModal("modal-quests");renderQuests();},
  signs(){openSigns();},
  stashes(){safeFn(()=>openStashes());},
@@ -38489,6 +38519,152 @@ function grimLine(rec){
  return `${rec.n}. Школа: ${sc.n}. Специализация: ${sp.n} — ${sp.о}. `
   +`${rec.вид||""} Мана ${rec.cost}, дальность ${rec.дальность}, радиус ${rec.радиус}, `
   +`перезарядка ${rec.откат} ч, ${rec.условия}.`;}
+/* ════════════════════════════════════════════════════════════════════════
+   ВЛОЖЕННАЯ ЧАРА: ЗАКЛИНАНИЕ, ПОЛОЖЕННОЕ В ВЕЩЬ
+
+   Гримуар дал двадцать шесть тысяч заклинаний, но взять их можно было
+   только в голову: выписал в книгу — знаешь, не выписал — нет. Между тем
+   вещь с вложенной чарой — статья отдельная и очень старая: свиток
+   срабатывает раз и сгорает, жезл держит пять и заряжается снова,
+   талисман носят под рубахой, а фокус не творит ничего вовсе и лишь
+   делает свою ветвь дешевле.
+
+   ЧЕМ ЭТО НЕ ТО ЖЕ САМОЕ, ЧТО ВЫУЧИТЬ. Выученная чара стоит маны и знает
+   перезарядку; вложенная не стоит ни капли маны и перезарядки не знает —
+   у неё заряды. Зато заряды кончаются, а носитель надо из чего-то
+   сделать: не из воздуха, а из тех самых полотна, бруса, самоцвета и
+   эфирной линзы, что выходят из переделов §12. Так гримуар оказывается
+   пришит к производству, к местам силы и к торговле разом.
+
+   НИ ОДНОЙ ТАБЛИЦЫ «ВЕЩЬ — ЗАКЛИНАНИЕ». Вещь помнит номер в гримуаре,
+   а заклинание выводится из номера тем же grimAt, что и всё остальное.
+   Цена, число зарядов и стоимость перезарядки считаются из самого
+   заклинания: чем дороже чара, тем дороже носитель.
+   ════════════════════════════════════════════════════════════════════════ */
+const CARRIERS=[
+ {id:"scroll",n:"свиток",род:"свитка",вин:"свиток",заряды:1,перезаряд:false,цена:1,
+  маст:null,ур:0,берёт:{"полотно":1,"травяная вытяжка":1},звук:"arte_page",
+  о:"срабатывает раз и сгорает; читать его может кто угодно"},
+ {id:"wand",n:"жезл",род:"жезла",вин:"жезл",заряды:5,перезаряд:true,цена:2.2,
+  маст:"runes",ур:1,берёт:{"клеёный брус":1,"рунный камень":1},звук:"artifact_hum",
+  о:"держит пять зарядов и заряжается снова"},
+ {id:"talisman",n:"талисман",род:"талисмана",вин:"талисман",заряды:3,перезаряд:true,цена:2.6,
+  маст:"arte",ур:1,берёт:{"самоцвет":1,"кованая полоса":1},звук:"arte_gem",
+  о:"три заряда, носится под рубахой и заряжается снова"},
+ {id:"focus",n:"фокус",род:"фокуса",вин:"фокус",заряды:0,перезаряд:false,цена:3,
+  маст:"arte",ур:2,берёт:{"эфирная линза":1,"артефактная оправа":1},звук:"magic_hum",
+  о:"не творит ничего, а свою ветвь делает дешевле на треть, пока вы его несёте"}];
+const CARRIER_BY_ID=Object.fromEntries(CARRIERS.map(c=>[c.id,c]));
+function chargedList(){if(!Array.isArray(G.charged))G.charged=[];return G.charged;}
+function chargedSpell(it){try{return it&&Number.isFinite(it.грим)?grimAt(it.грим):null;}catch(_){return null;}}
+function chargedName(it){
+ const c=CARRIER_BY_ID[it&&it.вид],r=chargedSpell(it);
+ if(!c)return "вещь";
+ return r?`${c.n} «${r.n}»`:c.n;}
+/* Цена носителя растёт со ступенью вложенной чары: высшее втрое дороже
+   малого, и это единственный множитель — остальное берётся из самой чары. */
+function chargedCost(вид,rec){
+ const c=CARRIER_BY_ID[вид];if(!c||!rec)return null;
+ const k=Math.max(1,Math.min(3,Number(rec.ступень)||1));
+ const берёт={};for(const r in c.берёт)берёт[r]=c.берёт[r]*k;
+ return {берёт,мана:Math.max(5,Math.round((Number(rec.cost)||10)*c.цена*k)),
+  маст:c.маст,ур:c.ур,зарядов:c.заряды};}
+function chargedWhyNot(вид,rec){
+ const c=CARRIER_BY_ID[вид];
+ if(!c||!rec)return "Такой вещи не делают.";
+ if(c.маст&&safeFn(()=>mastLevel(c.маст),0)<c.ур)
+  return `${c.n[0].toUpperCase()+c.n.slice(1)} делает тот, у кого ${(MAST_BY_ID[c.маст]||{n:c.маст}).n} хотя бы ${c.ур} ступени.`;
+ const ц=chargedCost(вид,rec);
+ const нет=Object.keys(ц.берёт).filter(r=>(Number(G.inv&&G.inv[r])||0)<ц.берёт[r]);
+ if(нет.length)return `Не хватает: ${нет.map(r=>`${r} — ${ц.берёт[r]}`).join(", ")}.`;
+ if((Number(G.mana)||0)<ц.мана)return `Нужно ${ц.мана} маны, у вас ${Math.round(Number(G.mana)||0)}.`;
+ return "";}
+function chargedMake(i,вид){
+ const rec=safeFn(()=>grimAt(Number(i)),null);
+ const c=CARRIER_BY_ID[вид];
+ if(!rec||!c){narrate("Такой вещи не делают.");return false;}
+ const беда=chargedWhyNot(вид,rec);
+ if(беда){safeFn(()=>Bank.play("oc_pshsh",{gain:0.45,maxSec:1}));narrate(беда);return false;}
+ const ц=chargedCost(вид,rec);
+ for(const r in ц.берёт){G.inv[r]-=ц.берёт[r];if(G.inv[r]<=0)delete G.inv[r];}
+ G.mana-=ц.мана;
+ chargedList().push({вид,грим:Number(i),заряд:c.заряды,макс:c.заряды});
+ safeFn(()=>mastGain(c.маст||"runes",3));
+ safeFn(()=>{Bank.play(c.звук,{gain:0.5,maxSec:3});
+  setTimeout(()=>safeFn(()=>Bank.play(rec.голос||"magic_shimmer",{gain:0.45,maxSec:3})),420);});
+ safeFn(()=>journal(`Вложено в ${c.вин}: ${rec.n}.`));
+ narrate(c.заряды
+  ?`Готов ${c.n}: «${rec.n}». Зарядов ${c.заряды}. ${c.о[0].toUpperCase()+c.о.slice(1)}.`
+  :`Готов ${c.n}: «${rec.n}». ${c.о[0].toUpperCase()+c.о.slice(1)}.`,{pri:1,key:"carrier"});
+ safeFn(()=>{if(typeof spellForgeRender==="function")spellForgeRender();refresh();saveGame(true);});
+ return true;}
+/* Вложенная чара творится тем же обработчиком, что и выученная, но не
+   стоит маны и не знает перезарядки: за неё уже заплачено при вложении. */
+function chargedUse(k){
+ const it=chargedList()[k];
+ const c=it&&CARRIER_BY_ID[it.вид];
+ const rec=chargedSpell(it);
+ if(!it||!c||!rec){narrate("Такой вещи у вас нет.");return false;}
+ if(!c.заряды){narrate(`${chargedName(it)} не творит: он делает свою ветвь дешевле, пока вы его несёте.`);return false;}
+ if(it.заряд<=0){
+  safeFn(()=>Bank.play("oc_pshsh",{gain:0.4,maxSec:1}));
+  narrate(`${chargedName(it)}: зарядов не осталось.`
+   +(c.перезаряд?" Зарядить можно на месте силы или в башне, школе и храме.":""));
+  return false;}
+ it.заряд--;
+ safeFn(()=>Bank.play(c.звук,{gain:0.5,maxSec:2}));
+ safeFn(()=>spellAudio(rec));
+ const итог=String(safeFn(()=>castCustomEffect(rec),"")||"");
+ let хвост="";
+ if(it.заряд<=0&&!c.перезаряд){chargedList().splice(k,1);хвост=` ${c.n[0].toUpperCase()+c.n.slice(1)} догорел.`;}
+ else хвост=` Осталось зарядов: ${it.заряд}.`;
+ safeFn(()=>{deed("casts");adaptAdd("чары",1);});
+ narrate(`${chargedName(it)}.${итог}${хвост}`,{pri:1,key:"carrier"});
+ safeFn(()=>{if(typeof spellForgeRender==="function")spellForgeRender();refresh();saveGame(true);});
+ return true;}
+/* Заряжают там, где сила и так есть: на месте силы даром, у мастера — за
+   те же составляющие, что пошли на носитель. */
+function chargedRecharge(k){
+ const it=chargedList()[k];
+ const c=it&&CARRIER_BY_ID[it.вид];
+ const rec=chargedSpell(it);
+ if(!it||!c||!rec){narrate("Такой вещи у вас нет.");return false;}
+ if(!c.перезаряд){narrate(`${chargedName(it)} не заряжают: он одноразовый.`);return false;}
+ if(it.заряд>=it.макс){narrate(`${chargedName(it)} и так полон: зарядов ${it.заряд}.`);return false;}
+ const наМесте=!!safeFn(()=>Power.here(),null);
+ const уМастера=!!(G.place&&["tower","school","temple"].includes(G.place.stype));
+ if(!наМесте&&!уМастера){narrate("Заряжают на месте силы или в башне, школе и храме.");return false;}
+ if(!наМесте){
+  const ц=chargedCost(it.вид,rec);
+  const нет=Object.keys(ц.берёт).filter(r=>(Number(G.inv&&G.inv[r])||0)<ц.берёт[r]);
+  if(нет.length){narrate(`Не хватает: ${нет.map(r=>`${r} — ${ц.берёт[r]}`).join(", ")}.`);return false;}
+  for(const r in ц.берёт){G.inv[r]-=ц.берёт[r];if(G.inv[r]<=0)delete G.inv[r];}}
+ it.заряд=it.макс;
+ safeFn(()=>Bank.play(c.звук,{gain:0.5,maxSec:3}));
+ narrate(наМесте
+  ?`${chargedName(it)} налился от места силы: зарядов снова ${it.макс}. Даром.`
+  :`${chargedName(it)} заряжен: зарядов снова ${it.макс}.`,{pri:1,key:"carrier"});
+ safeFn(()=>{if(typeof spellForgeRender==="function")spellForgeRender();refresh();saveGame(true);});
+ return true;}
+/* Фокус: своя специализация дешевле на треть, своя школа — на седьмую
+   часть. Берётся лучший из носимых, а не все разом. */
+function chargedFocusK(school,спец){
+ try{
+  let k=1;
+  chargedList().forEach(it=>{
+   const c=CARRIER_BY_ID[it.вид];if(!c||c.заряды)return;
+   const rec=chargedSpell(it);if(!rec)return;
+   if(спец&&rec.спец===спец)k=Math.min(k,0.67);
+   else if(school&&rec.school===school)k=Math.min(k,0.85);});
+  return k;
+ }catch(_){return 1;}}
+function chargedLine(it){
+ const c=CARRIER_BY_ID[it&&it.вид];const rec=chargedSpell(it);
+ if(!c||!rec)return "Вещь неизвестна.";
+ return `${chargedName(it)}. ${c.о[0].toUpperCase()+c.о.slice(1)}. `
+  +(c.заряды?`Зарядов ${it.заряд} из ${it.макс}. `:"")
+  +`${rec.вид||""} Дальность ${rec.дальность}, радиус ${rec.радиус}, ${rec.условия}`
+  +(c.заряды?" Маны не стоит.":"");}
 /* Отбор в гримуаре. Выбор специализации сам подтягивает её школу: иначе
    вышло бы «специализация огня в школе воды», чего не бывает. */
 function grimPick(что,id){
@@ -38506,6 +38682,19 @@ function grimPick(что,id){
  const сп=GRIM.спец?SPEC_BY_ID[GRIM.спец].n:"все специализации";
  narrate(`Гримуар: ${шк}, ${сп} — ${n} ${plural(n,"заклинание","заклинания","заклинаний")}.`,{key:"grim"});
  return true;}
+/* Что вложим в вещь. Выбор говорит цену всех четырёх носителей разом:
+   незрячему игроку важно услышать её до того, как он потратит материал. */
+function grimPickSpell(i){
+ const rec=safeFn(()=>grimAt(Number(i)),null);
+ if(!rec){narrate("Такого заклинания в гримуаре нет.");return false;}
+ GRIM.выбор=Number(i);
+ safeFn(()=>{if(typeof spellForgeRender==="function")spellForgeRender();});
+ safeFn(()=>Bank.play("oc_ui_select"in SOUND_BANK?"oc_ui_select":"knock_soft",{gain:0.4,maxSec:1}));
+ const цены=CARRIERS.map(c=>{
+  const ц=chargedCost(c.id,rec);
+  return `${c.n} — ${Object.keys(ц.берёт).map(r=>`${r} ${ц.берёт[r]}`).join(", ")}, мана ${ц.мана}`;}).join("; ");
+ narrate(`Под вложение выбрано «${rec.n}». Носители: ${цены}.`,{pri:1,key:"carrier"});
+ return true;}
 /* Листание по кругу: с последней страницы вперёд — на первую. */
 function grimPage(d){
  const всего=safeFn(()=>grimFind(GRIM.школа,GRIM.спец).length,0);
@@ -38517,7 +38706,7 @@ function grimPage(d){
  return GRIM.стр;}
 const SF={school:null,form:null,mod:"none",core:null,elem:null};
 /* Что сейчас листают в гримуаре. */
-const GRIM={школа:null,спец:null,стр:0,накрупно:12};
+const GRIM={школа:null,спец:null,стр:0,накрупно:12,выбор:null};
 function spellForgeOpen(){
  if(!spellForgeAvailable()){
   narrate(G.place&&["tower","school","temple"].includes(G.place.stype)?"Составлять заклинания может тот, кто знает хоть первый урок рун или артефакторики.":"Заклинания составляют в башне, школе или храме.");
@@ -38583,9 +38772,39 @@ function spellForgeRender(){
   const rec=safeFn(()=>grimAt(i),null);if(!rec)return;
   const знаю=(G.spells||[]).includes(rec.n)||(G.spellbook||[]).some(x=>x&&x.n===rec.n);
   const сл=grimLine(rec)+(знаю?" Уже выписано.":" Выписать: кристалл и пятнадцать маны.");
-  html+=`<button class="item" data-cmd="grimlearn:${i}" data-speak="${сл.replace(/"/g,"&quot;")}">${знаю?"✔ ":"📖 "}${rec.n} — мана ${rec.cost}</button>`;});
+  html+=`<button class="item" data-cmd="grimlearn:${i}" data-speak="${сл.replace(/"/g,"&quot;")}">${знаю?"✔ ":"📖 "}${rec.n} — мана ${rec.cost}</button>`;
+  html+=`<button class="item" data-cmd="grimpick:${i}" data-speak="Вложить «${rec.n.replace(/"/g,"&quot;")}» в вещь: свиток, жезл, талисман или фокус. Цены будут названы.${GRIM.выбор===i?" Уже выбрано.":""}">${GRIM.выбор===i?"✔ ":"🔧 "}…в вещь</button>`;});
  if(грСтраниц>1)html+=`<button class="item" data-cmd="grimpage:-1" data-speak="Страница назад: ${((GRIM.стр-1)%грСтраниц+грСтраниц)%грСтраниц+1} из ${грСтраниц}.">◀ Назад</button>`
   +`<button class="item" data-cmd="grimpage:1" data-speak="Страница вперёд: ${(GRIM.стр+1)%грСтраниц+1} из ${грСтраниц}.">Вперёд ▶</button>`;
+ /* ── ВЛОЖИТЬ ЧАРУ В ВЕЩЬ ──
+    Выученная чара стоит маны и знает перезарядку; вложенная не стоит ни
+    капли и перезарядки не знает — у неё заряды. Зато носитель надо из
+    чего-то сделать, и делается он из настоящих переделов. */
+ const вложВыб=Number.isFinite(GRIM.выбор)?safeFn(()=>grimAt(GRIM.выбор),null):null;
+ html+=`<h3>🔧 Вложить чару в вещь</h3>`;
+ const влШапка=вложВыб
+  ?`Выбрано «${вложВыб.n}», ступень ${вложВыб.ступень} из трёх. Вложенная чара не стоит маны и не знает перезарядки, но заряды у неё кончаются.`
+  :`Ничего не выбрано. В гримуаре у каждой строки есть вторая кнопка «в вещь» — ею и выбирают. Носителей четыре: ${CARRIERS.map(c=>`${c.n} — ${c.о}`).join("; ")}.`;
+ html+=`<div class="list-line" tabindex="0" data-speak="${влШапка.replace(/"/g,"&quot;")}">🔧 ${влШапка}</div>`;
+ if(вложВыб)CARRIERS.forEach(c=>{
+  const ц=chargedCost(c.id,вложВыб);
+  const беда=chargedWhyNot(c.id,вложВыб);
+  const сл=`${c.n[0].toUpperCase()+c.n.slice(1)}: ${c.о}. `
+   +`Берёт ${Object.keys(ц.берёт).map(r=>`${r} — ${ц.берёт[r]}`).join(", ")}, мана ${ц.мана}. `
+   +(беда?`Нельзя: ${беда}`:"Можно сделать.");
+  html+=`<button class="item" data-cmd="carriermake:${c.id}" data-speak="${сл.replace(/"/g,"&quot;")}">${беда?"✖ ":"🔧 "}${c.n} — мана ${ц.мана}</button>`;});
+ const мои=safeFn(()=>chargedList(),[]);
+ const моиШ=мои.length
+  ?`Ваших вложенных вещей ${мои.length}. Заряды тратятся при применении; жезл и талисман заряжают на месте силы даром, а в башне, школе и храме — за те же составляющие.`
+  :"Вложенных вещей у вас нет.";
+ html+=`<h3>🎒 Ваши вложенные вещи</h3>`
+  +`<div class="list-line" tabindex="0" data-speak="${моиШ.replace(/"/g,"&quot;")}">🎒 ${моиШ}</div>`;
+ мои.forEach((it,k)=>{
+  const c=CARRIER_BY_ID[it.вид];if(!c)return;
+  const сл=safeFn(()=>chargedLine(it),c.n);
+  html+=`<button class="item" data-cmd="carrieruse:${k}" data-speak="${сл.replace(/"/g,"&quot;")} Двойное касание — применить.">${c.заряды?"✨ ":"🔎 "}${chargedName(it)}${c.заряды?` — ${it.заряд} из ${it.макс}`:""}</button>`;
+  if(c.перезаряд&&it.заряд<it.макс)
+   html+=`<button class="item" data-cmd="carriercharge:${k}" data-speak="Зарядить ${chargedName(it).replace(/"/g,"&quot;")}: на месте силы даром, у мастера — за составляющие.">🔋 зарядить</button>`;});
  box.innerHTML=html;}
 function spellForgePick(what,id){
  /* Пустое «по школе» — это выбор, а не ошибка: ядро и стихия возвращаются
@@ -39409,7 +39628,7 @@ function castSpell(i){const sp=SPELLS[i];
   *Math.max(0.6,1-safeFn(()=>Echo.bonus("word"),0))     /* §9: осколок слова */
   *Math.max(0.6,1-safeFn(()=>Fore.boonK("сила"),0))     /* §44.22: машины Предтеч */
   *(safeFn(()=>buffActive("отдача"),false)?1.2:1)
-  *(1+safeFn(()=>adaptBonus("spellCost"),0))*safeFn(()=>Waves.spellK(),1)*safeFn(()=>Balance.spellK(),1)*safeFn(()=>Zones.spellK(),1)*safeFn(()=>Power.spellK(sp),1)*safeFn(()=>Global.k("чары"),1))-safeFn(()=>Houses.manaDiscount(sp),0)-safeFn(()=>Gods.manaDiscount(sp),0));
+  *(1+safeFn(()=>adaptBonus("spellCost"),0))*safeFn(()=>Waves.spellK(),1)*safeFn(()=>Balance.spellK(),1)*safeFn(()=>Zones.spellK(),1)*safeFn(()=>Power.spellK(sp),1)*safeFn(()=>chargedFocusK(sp.school,sp.спец),1)*safeFn(()=>Global.k("чары"),1))-safeFn(()=>Houses.manaDiscount(sp),0)-safeFn(()=>Gods.manaDiscount(sp),0));
  safeFn(()=>Balance.onCast(sp));safeFn(()=>{if(Balance.backlash()){G.mana=Math.max(0,G.mana-3);narrate("Хаос отдаёт: мана минус три сверх цены.",{interrupt:false});}});safeFn(()=>{deed("casts");deed("manaSpent",sp.cost);adaptAdd("чары",1);});
  /* Заклинание — семь слоёв языка своей школы: подготовка, заряд,
     произнесение, движение силы, удар, итог, затухание. */
@@ -42279,6 +42498,31 @@ const ProdEcon=Modules.register("PRODECON",{
       :"Недостатка нет: цепи передела идут ровно.")
     +(запрет.length?` Вывоз запрещён: ${запрет.join(", ")} — теперь это запретный товар.`:"");
   }catch(_){return "Производственная экономика: считать нечего.";}}});
+/* Вещь с вложенной чарой: гримуар, пришитый к производству и местам силы. */
+const Carriers=Modules.register("CARRIERS",{
+ kinds:CARRIERS,
+ kind:id=>CARRIER_BY_ID[id]||null,
+ list:()=>S(()=>chargedList(),[]),
+ spell:it=>S(()=>chargedSpell(it),null),
+ name:it=>S(()=>chargedName(it),""),
+ cost:(вид,rec)=>S(()=>chargedCost(вид,rec),null),
+ whyNot:(вид,rec)=>S(()=>chargedWhyNot(вид,rec),"нет"),
+ make:(i,вид)=>S(()=>chargedMake(i,вид),false),
+ use:k=>S(()=>chargedUse(k),false),
+ recharge:k=>S(()=>chargedRecharge(k),false),
+ focusK:(sc,sp)=>S(()=>chargedFocusK(sc,sp),1),
+ line:it=>S(()=>chargedLine(it),""),
+ text(){
+  try{
+   const мои=this.list();
+   if(!мои.length)return `Вложенных вещей у вас нет. Носителей четыре: `
+    +CARRIERS.map(c=>`${c.n} — ${c.о}`).join("; ")+". Делают их в башне, школе или храме, из гримуара.";
+   const живых=мои.filter(it=>{const c=CARRIER_BY_ID[it.вид];return c&&c.заряды&&it.заряд>0;}).length;
+   const фокусов=мои.filter(it=>{const c=CARRIER_BY_ID[it.вид];return c&&!c.заряды;}).length;
+   return `Вложенных вещей ${мои.length}: с зарядами ${живых}`
+    +(фокусов?`, фокусов ${фокусов}`:"")+". "
+    +мои.slice(0,6).map(it=>this.line(it)).join(" ");
+  }catch(_){return "Вложенные чары.";}}});
 /* §6 мастер-промпта доведён до конца: у составителя есть каталог. */
 const Grimoire=Modules.register("GRIMOIRE",{
  specs:SPELL_SPECS,ranks:GRIM_RANKS,
@@ -43064,6 +43308,22 @@ function worldSelfCheck(){
   ok("sigils",SIGIL_SYMBOLS.length===8&&SIGIL_SYMBOLS.every(x=>MSCHOOL_BY_ID[x.школа]&&x.намерения.every(i=>SIGIL_INTENTS[i]))&&SIGIL_CARRIERS.length===8&&SIGIL_CARRIERS.every(x=>RES_BASE[x.ресурс])&&SIGIL_GEOMETRY.length===5&&INKS.length===6&&INKS.every(x=>SOUND_BANK[x.звук]&&Object.keys(x.рецепт).every(r=>RES_BASE[r]))&&AWAKEN_SOURCES.length===6&&AWAKEN_SOURCES.every(x=>SOUND_BANK[x.звук])&&WAVES.length===3&&MORPH_TRAITS.length===6&&MORPHOBEASTS.length===10&&MORPHOBEASTS.every(b=>MONSTERS.some(m=>m.id===b.база))&&DEVOUR_GIFTS.length===6&&EVENT_THEME.world_event&&SOUND_BANK[EVENT_THEME.world_event.роль],"Знаки: восемь символов, восемь носителей, пять геометрий, шесть чернил, шесть источников пробуждения, три волны, шесть черт, десять морфозверей, шесть даров Эха — всё со звуком и по настоящим ресурсам");
   ok("cases",CASE_TEMPLATES.length===6&&CASE_TEMPLATES.every(t=>t.версии.length===3&&t.улики.every(k=>CLUE_KINDS[k])&&t.версии.every(v=>v.улики.every(k=>t.улики.includes(k))))&&SYNDICATES.length===8&&SYNDICATES.every(x=>SOUND_BANK[x.звук]&&x.города.every(id=>NAMED_CITY_BY_ID[id])&&REGIONS[x.область])&&Object.keys(DECISIONS).length===9&&Object.values(DECISIONS).every(d=>Object.keys(d).length>=3)&&["deeper","border_war","shards","lasthouse","beast","price","undercity","maskface","endless"].every(id=>CHAIN_DB[id])&&HOUSE_BY_ID[LAST_HOUSE.враг]&&DLG_MOVE_BY_ID.znanie&&DLG_MOVE_BY_ID.kultura&&DLG_MOVE_BY_ID.nedoskazat,"Расследования: шесть дел с тремя версиями, восемь синдикатов со звуком и городами, девять цепочек с развязками, три хода разговора");
   ok("academy",LANGS.length>=20&&LANGS.every(l=>l.письмо&&l.о)&&SCIENCES.length===6&&SCIENCES.every(x=>SOUND_BANK[x.звук]&&x.эффект.length===3&&FACULTY_BY_ID[x.факультет])&&FACULTIES.length===12&&FACULTIES.every(f=>(f.школы||[]).every(id=>MSCHOOL_BY_ID[id]&&SCHOOL_AUDIO[id])&&(!f.маст||MAST_BY_ID[f.маст]))&&SCHOOLS.length>=30&&SCHOOLS.every(sc=>SCHOOL_AUDIO[sc.id]&&SPELL_LAYERS.every(l=>SOUND_BANK[SCHOOL_AUDIO[sc.id][l]])),"Академия: двадцать один язык, шесть наук, двенадцать факультетов, тридцать восемь школ чар — все со звуком");
+  ok("carriers",CARRIERS.length===4&&new Set(CARRIERS.map(c=>c.id)).size===4
+   /* Носитель делается из настоящих переделов и звучит настоящей записью. */
+   &&CARRIERS.every(c=>c.n&&c.о&&c.цена>0&&SOUND_BANK[c.звук]
+     &&Object.keys(c.берёт).length>0
+     &&Object.keys(c.берёт).every(r=>RES_BASE[r]!==undefined)
+     &&(!c.маст||MAST_BY_ID[c.маст]))
+   /* Цена выводится из вложенной чары и растёт со ступенью. */
+   &&(()=>{try{
+     const a=grimAt(0),b=grimAt(2);if(!a||!b||a.ступень!==1||b.ступень!==3)return false;
+     const x=chargedCost("wand",a),y=chargedCost("wand",b);
+     if(!x||!y||!(y.мана>x.мана))return false;
+     return Object.keys(x.берёт).every(r=>y.берёт[r]===x.берёт[r]*3);
+    }catch(_){return false;}})()
+   /* Множитель фокуса всегда в берегах: он удешевляет, но не обнуляет. */
+   &&(()=>{const k=chargedFocusK("fire","plamya");return k>=0.67&&k<=1;})(),
+   "Носители чар: свиток, жезл, талисман и фокус — из настоящих переделов, со звуком, и цена выводится из вложенной чары");
   ok("grimoire",SPELL_SPECS.length===152&&SCHOOLS.length===38
    /* У каждой школы ровно четыре специализации, и ни одна не повторяется. */
    &&SCHOOLS.every(sc=>specsOfSchool(sc.id).length===4)
@@ -43423,7 +43683,7 @@ function worldSelfCheck(){
   ok("gods",LESSER_GODS.length===32&&LESSER_GODS.every(g=>SOUND_BANK[g.звук]&&g.праздник>=1&&g.праздник<=36)&&new Set(LESSER_GODS.map(g=>g.праздник)).size===LESSER_GODS.length,"у каждого малого бога голос и свой день праздника");
   ok("npc",!!safeFn(()=>npcSoul(getNPC(EMPIRES[0].cap.x,EMPIRES[0].cap.y,0)),null),"у жителя есть состояние");
   ok("tts",typeof Speech==="object"&&typeof narrate==="function"&&String(narrate).includes("Speech.say"),"один распорядитель речи");
-  const keys=["spellbook","potions","plantsSeen","bosses","delayed","seasSeen","dives","bookGifts","asked","artifacts","quests","rumors","standing"];
+  const keys=["spellbook","charged","potions","plantsSeen","bosses","delayed","seasSeen","dives","bookGifts","asked","artifacts","quests","rumors","standing"];
   ok("save",(()=>{try{saveGame(true);const raw=localStorage.getItem(SAVE_KEY)||"";const o=JSON.parse(raw);const g=o.G||o;return keys.every(k=>!(k in G)||k in g);}catch(_){return false;}})(),"новые поля лежат в сохранении");
  }catch(e){ok("run",false,String(e));}
  return out;}
