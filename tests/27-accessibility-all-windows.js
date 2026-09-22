@@ -39,7 +39,9 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
  const said=()=>page.evaluate(()=>window.__said.slice());
  const clearSaid=()=>page.evaluate(()=>{window.__said=[];});
  await page.evaluate(()=>{window.__said=[];if(!window.__origSay)window.__origSay=Speech.say;
-  Speech.say=t=>{window.__said.push(t);};});
+  /* __вИмени поднят, пока игра называет пункт: так отличаем называние
+     пункта от фразы, которую мир подал сам, по своему таймеру. */
+  Speech.say=t=>{window.__said.push(t);if(window.__вИмени)window.__names=(window.__names||0)+1;};});
  /* Пустое место внутри окна: там, где нет ни кнопки, ни карточки. */
  const emptyPoint=()=>page.evaluate(()=>{
   const lay=activeLayer();if(!lay)return {x:195,y:400};
@@ -357,9 +359,15 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   пунктов:navLayer()?cursorItems(navLayer()).length:0}));
  await page.evaluate(()=>{ensureCursor(navLayer());window.__said=[];});
  const titleTarget=await page.evaluate(()=>cursorItems(navLayer()).findIndex(x=>x.dataset.cmd==="settings"));
+ /* Считаем не всякую речь, а именно называния пунктов: мир подаёт голос и
+    сам, по своим таймерам, и под общей нагрузкой прогона его фраза успевала
+    лечь между свайпами — проверка краснела на чужом тексте. */
+ await page.evaluate(()=>{window.__names=0;const о=speakTextOf;
+  window.speakTextOf=function(el){window.__вИмени=true;
+   try{return о.apply(this,arguments);}finally{window.__вИмени=false;}};});
  for(let i=0;i<titleTarget;i++)await swipe(120,600,330,600);
  const onTitle=await page.evaluate(()=>uiCursor&&uiCursor.dataset.cmd);
- const titleNames=(await said()).length;
+ const titleNames=await page.evaluate(()=>window.__names);
  const tp=await page.evaluate(()=>{for(let y=80;y<760;y+=8)for(const x of [6,384]){
   const el=document.elementFromPoint(x,y);if(el&&!el.closest('button'))return {x,y};}return {x:6,y:96};});
  await tap(tp.x,tp.y);await tap(tp.x,tp.y);
