@@ -25,7 +25,7 @@
      GitHub Pages. Там же включается и service worker (см. ниже): игра ставится
      на главный экран и работает без сети. -->
 <meta name="theme-color" content="#10121c">
-<title>Грань Миров Alpha 2.3.0 — Живой динамичный мир</title>
+<title>Грань Миров Alpha 2.4.0 — Живой динамичный мир</title>
 <style>
 /* Палец, положенный на ползунок, не должен его двигать: браузер по умолчанию
    перебрасывает бегунок в точку касания, и незрячий игрок, просто читая
@@ -95,8 +95,8 @@ h3{color:var(--acc2);margin:14px 0 6px;font-size:1.05rem;}
 
 <!-- ТИТУЛ -->
 <div id="screen-title" class="screen">
- <h1>🌌 Грань Миров <small style="font-size:.5em;opacity:.75">Alpha 2.3.0</small></h1>
- <p class="sub">Полная хроника I–V · Alpha 2.3.0 — Единый живой мир · Карта 50000×50000</p>
+ <h1>🌌 Грань Миров <small style="font-size:.5em;opacity:.75">Alpha 2.4.0</small></h1>
+ <p class="sub">Полная хроника I–V · Alpha 2.4.0 — Единый живой мир · Карта 50000×50000</p>
  <div class="menu">
   <button type="button" data-cmd="check">🔊 Проверить звук</button>
   <button type="button" data-cmd="encyc" id="btnEncyc">🎧 Энциклопедия звуков</button>
@@ -140,21 +140,36 @@ h3{color:var(--acc2);margin:14px 0 6px;font-size:1.05rem;}
  <header><h2>⚙️ Настройки</h2><button type="button" data-cmd="close">⬅️ Назад</button></header>
  <!-- Оглавление окна: незрячий игрок слышит, из чего оно состоит, не листая. -->
  <div class="row"><button type="button" data-cmd="secindex">🧭 Оглавление настроек</button><button type="button" data-cmd="secjump">⏭️ Следующий раздел</button><button type="button" data-cmd="secback">⏮️ Предыдущий раздел</button></div>
- <p class="hint">Настройки разложены по одиннадцати разделам. Заголовок раздела — такой же пункт, как переключатель: свайп его называет вместе с числом настроек внутри, двойное касание по нему перескакивает к следующему разделу.</p>
+ <div class="row"><button type="button" data-cmd="setsave">💾 Сохранить настройки</button><button type="button" data-cmd="setsaved">📋 Что сохранено</button></div>
+ <p class="hint">Настройки сохраняются сами, как только их меняют. Кнопка нужна, чтобы убедиться: игра ответит, что и куда записано.</p>
+ <p class="hint">Настройки разложены по двенадцати разделам. Заголовок раздела — такой же пункт, как переключатель: свайп его называет вместе с числом настроек внутри, двойное касание по нему перескакивает к следующему разделу.</p>
  <h3 class="sec-head" tabindex="0" data-cmd="secjump" data-sec-title="Что звучит">🔊 Что звучит</h3>
  <p class="hint">Четыре главных выключателя: речь, звуки мира, музыка событий и фон.</p>
  <label class="opt"><input type="checkbox" id="setSpeech" checked><span>🔊 <b>Озвучка</b><small>Встроенная речь игры: работает без VoiceOver и TalkBack</small></span></label>
  <label class="opt"><input type="checkbox" id="setEffects" checked><span>🎵 <b>Эффекты</b><small>Шаги, толпа, маяки и прочие звуки</small></span></label>
  <label class="opt"><input type="checkbox" id="setMusic" checked><span>🎼 <b>Музыка событий</b><small>Новый уровень, дела, награды, достижения, владыки. Музыка — событие, а не подложка</small></span></label>
  <label class="opt"><input type="checkbox" id="setBgMusic"><span>🎻 <b>Фоновая музыка мест</b><small>Темы местностей и глубин подложкой. По умолчанию выключено: место слышно звуками</small></span></label>
- <h3 class="sec-head" tabindex="0" data-cmd="secjump" data-sec-title="Голос рассказчика">🗣️ Голос рассказчика</h3>
- <p class="hint">Каким голосом и как подробно игра говорит.</p>
+ <h3 class="sec-head" tabindex="0" data-cmd="secjump" data-sec-title="Синтезатор речи">🗣️ Синтезатор речи</h3>
+ <p class="hint">Всё про сам голос в одном разделе: чем игра говорит, каким голосом, с какой скоростью и высотой. Проба — тут же.</p>
+ <label class="opt">⚙️ Синтезатор <select id="setTtsEngine" aria-label="Каким синтезатором говорит игра"><option value="device" selected>Синтезатор устройства</option><option value="eleven">Голос ElevenLabs</option></select></label>
+ <p class="hint" id="ttsEngineHint">Синтезатор устройства — тот, что стоит в самом телефоне: на iPhone это голоса VoiceOver, на Android — Google, Samsung, Acapela или любой другой установленный. Он отвечает сразу и работает без сети. Голос ElevenLabs звучит живее, но ходит в сеть и требует ключа.</p>
+ <label class="opt"><input type="checkbox" id="setVoiceLocal" checked><span>📴 <b>Только голоса с устройства</b><small>Онлайн-голоса отсеиваются: они ждут сеть и отвечают с задержкой, а без сети молчат совсем</small></span></label>
+ <label class="opt">🌐 Язык голоса <select id="setVoiceLang" aria-label="Язык голоса"><option value="ru" selected>Русский</option><option value="all">Все языки</option></select></label>
+ <label class="opt">🎤 Голос <select id="setVoice" aria-label="Выбор голоса"></select></label>
+ <p class="hint" id="voiceHint">Список — то, что установлено на этом устройстве.</p>
+ <div class="row"><button type="button" id="btnVoiceRefresh">🔄 Перечитать голоса устройства</button></div>
  <label class="opt">🗣️ Скорость озвучки <input type="range" id="setRate" min="0.6" max="6" step="0.2" data-tap-step="0.2" value="5"><span id="vRate">5.0×</span></label>
  <p class="hint">Шкала от 0,6 до 6,0 шагом в две десятых, по умолчанию пять. Ползунок отвечает тем самым темпом, который выбран: «Раз, два, три» — это проба, а не подсказка. Дойдя до шести, шкала возвращается к началу, так что до медленного темпа добираться недалеко.</p>
- <label class="opt">🎤 Голос <select id="setVoice" aria-label="Выбор голоса"></select></label>
+ <label class="opt">🎚️ Высота голоса <input type="range" id="setPitch" min="50" max="200" step="5" data-tap-step="5" value="100"><span id="vPitch">1,0</span></label>
+ <p class="hint">От 0,5 до 2,0. Единица — как задумано голосом; ниже — глуше, выше — звонче. Не всякий синтезатор слушается высоты: голоса Apple слушаются, часть андроидных — нет.</p>
+ <label class="opt">🔑 Ключ ElevenLabs <input type="password" id="setElevenKey" autocomplete="off" spellcheck="false" aria-label="Ключ доступа ElevenLabs" placeholder="не задан"></label>
+ <p class="hint">Ключ хранится только на этом устройстве и никуда, кроме самого ElevenLabs, не уходит. Без ключа игра говорит синтезатором устройства.</p>
+ <label class="opt">🎙️ Голос ElevenLabs <select id="setElevenVoice" aria-label="Голос ElevenLabs"></select></label>
+ <div class="row"><button type="button" id="btnSpeechSample">📢 Тест озвучки</button><button type="button" id="btnElevenCheck">🔎 Проверить ключ и голоса</button></div>
+ <h3 class="sec-head" tabindex="0" data-cmd="secjump" data-sec-title="Голос рассказчика">🗣️ Голос рассказчика</h3>
+ <p class="hint">Не про сам голос, а про то, сколько он говорит и что берёт на себя чтец экрана.</p>
  <label class="opt">📏 Подробность речи <select id="setVerbosity" aria-label="Уровень подробности"><option value="min">Минимальная</option><option value="brief">Краткая</option><option value="normal" selected>Стандартная</option><option value="full">Подробная</option></select></label>
  <label class="opt">♿ Объявления VoiceOver и TalkBack <select id="setSrMode" aria-label="Объявления для чтеца экрана"><option value="auto" selected>Автоматически</option><option value="request">По запросу</option><option value="off">Выключены</option></select></label>
- <div class="row"><button type="button" id="btnSpeechSample">📢 Тест озвучки</button></div>
  <h3 class="sec-head" tabindex="0" data-cmd="secjump" data-sec-title="Громкость">🎚️ Громкость</h3>
  <p class="hint">Десять шкал: общая, речь, мир, фон, музыка, меню, бой, чары, голоса людей и приглушение музыки под речь.</p>
  <label class="opt">🎚️ Общая громкость <input type="range" id="setMasterVol" min="0" max="100" value="100"><span id="vMaster">100%</span></label>
@@ -668,6 +683,12 @@ const settings=Object.assign({speech:1,effects:1,music:1,subtitles:1,explore:1,f
     быстрее обычной речи; столько же теперь и здесь. Шкала прежняя, от
     0,6 до 6,0: кому пять быстро, ставит своё, и это запоминается. */
  rate:5,voiceVol:1,fxVol:1,musicVol:1,ambVol:0.8,uiVol:0.9,
+ /* ── СИНТЕЗАТОР ──
+    ttsEngine — чем говорить: «device» (то, что стоит на телефоне) или
+    «eleven» (живой голос по своему ключу). voiceLocal — отсев онлайновых
+    голосов: они ждут сеть и отвечают с задержкой на каждое слово меню.
+    voiceLang — искать ли только русские голоса. pitch — высота. */
+ ttsEngine:"device",voiceLocal:1,voiceLang:"ru",pitch:1,elevenKey:"",elevenVoice:"",
  /* ── КАНАЛЫ ПО ТЗ ЗВУКА ──
     Каналов девять: общий (master), музыка, фон, мир (sfx), голоса людей
     (npc), речь игры (tts — это voiceVol), бой, меню и чары. У каждого своя
@@ -850,18 +871,93 @@ const Speech={voice:null,keepAlive:null,
  stats:{spoken:0,cut:0,dropped:0,expired:0,replaced:0,deduped:0,merged:0,queued:0,live:0,userStops:0},
  WINDOW:{dedupe:1200,agg:350},
  TTL:{2:20000,3:8000,4:6000},
- init(){if(!("speechSynthesis" in window))return;
-  const pick=()=>{try{
-   const vs=speechSynthesis.getVoices(),sel=document.getElementById("setVoice");
-   if(sel){sel.innerHTML="";vs.forEach(v=>{const o=document.createElement("option");o.value=v.name;o.textContent=`${v.name} (${v.lang})`;sel.appendChild(o);});}
-   const ru=vs.find(v=>/^ru/i.test(v.lang));
-   this.voice=(settings.voice&&vs.find(v=>v.name===settings.voice))||ru||vs[0]||null;
-   if(this.voice&&sel)sel.value=this.voice.name;
-  }catch(e){try{console.warn('[Speech.pick]',e);}catch(_){}}};
-  pick();speechSynthesis.onvoiceschanged=pick;},
+ /* ── ГОЛОСА УСТРОЙСТВА ──
+    Браузер отдаёт вперемешку два разных рода голосов. Локальные лежат в
+    самом телефоне и отвечают мгновенно; сетевые («онлайн», localService
+    false) каждую фразу гоняют на чужой сервер: полсекунды задержки на
+    каждое слово меню, а без сети — молчание. Для игры, где речью идёт
+    всё, второй род негоден, и по умолчанию он отсеян. */
+ voices(){
+  try{
+   let vs=(speechSynthesis.getVoices()||[]).slice();
+   if(settings.voiceLocal!==0)vs=vs.filter(v=>v.localService!==false);
+   if((settings.voiceLang||"ru")==="ru"){
+    const ru=vs.filter(v=>/^ru/i.test(v.lang||""));
+    if(ru.length)vs=ru;}
+   return vs;
+  }catch(_){return [];}},
+ fillVoices(){
+  let vs=[];
+  try{vs=this.voices();}catch(_){}
+  const sel=document.getElementById("setVoice");
+  if(sel){
+   sel.innerHTML="";
+   if(!vs.length){const o=document.createElement("option");o.value="";o.textContent="Голосов не найдено";sel.appendChild(o);}
+   vs.forEach(v=>{const o=document.createElement("option");o.value=v.name;
+    o.textContent=`${v.name} (${v.lang}${v.localService===false?", онлайн":""})`;sel.appendChild(o);});}
+  const ru=vs.find(v=>/^ru/i.test(v.lang||""));
+  this.voice=(settings.voice&&vs.find(v=>v.name===settings.voice))||ru||vs[0]||null;
+  if(this.voice&&sel)sel.value=this.voice.name;
+  const h=document.getElementById("voiceHint");
+  if(h)h.textContent=vs.length
+   ?`Найдено голосов: ${vs.length}. ${settings.voiceLocal!==0?"Показаны только те, что говорят без сети.":"Показаны все, включая онлайновые."}`
+   :"Ни одного голоса не найдено. На Android поставьте синтезатор речи и русский голос в настройках системы, на iPhone — русский голос в настройках VoiceOver. Пока голоса нет, игра говорит субтитрами.";
+  return vs.length;},
+ /* ── ПЕРВОЕ КАСАНИЕ ──
+    На iPhone все браузеры — Safari, Chrome, Firefox, Edge, Яндекс — стоят на
+    одном движке WebKit и ведут себя одинаково: синтезатор заводится только
+    из обработчика настоящего касания. Фраза, выпавшая из этого такта (ушла
+    в setTimeout, пришла из промиса), проглатывается молча — и игрок решает,
+    что игра немая. Поэтому на первом же касании отдаём синтезатору пустую
+    фразу: она ничего не произносит, но снимает замок. Тем же касанием
+    будится звуковой движок: iOS держит его на том же ключе. */
+ primed:false,
+ prime(){
+  if(this.primed)return true;
+  this.primed=true;
+  try{AE.ensure();}catch(_){}
+  try{
+   /* Пустая фраза идёт тем же путём, что и всякая другая: через адаптер.
+      Иначе в файле завелась бы вторая дверь к синтезатору. */
+   if("speechSynthesis" in window)this._webAdapter().speak(" ",{rate:1,volume:0});
+  }catch(_){}
+  try{this.fillVoices();}catch(_){}
+  return true;},
+ /* Что умеет это устройство: по этому игра решает, чем говорить. */
+ capabilities(){
+  let голосов=0;
+  try{голосов=(speechSynthesis.getVoices()||[]).length;}catch(_){}
+  return {web:("speechSynthesis" in window),
+   native:!!(window.GraniTTS&&typeof window.GraniTTS.speak==="function"),
+   eleven:this._wantKind()==="eleven",
+   голосов,звук:!!(window.AudioContext||window.webkitAudioContext)};},
+ init(){
+  /* Замок снимается любым первым касанием, кнопкой или клавишей. */
+  try{["pointerdown","touchend","mousedown","keydown"].forEach(t=>
+   document.addEventListener(t,()=>{try{this.prime();}catch(_){}},{once:true,passive:true}));}catch(_){}
+  if(!("speechSynthesis" in window)){
+   /* Синтезатора нет вовсе — такое бывает на Firefox для Android. Игра не
+      должна молчать без объяснения: включаем субтитры и говорим, что делать. */
+   try{
+    if(!(window.GraniTTS&&window.GraniTTS.speak)&&settings.subMode==="off"){
+     settings.subMode="all";saveSettings();}
+   }catch(_){}
+   return;}
+  const pick=()=>{try{this.fillVoices();}catch(e){try{console.warn('[Speech.pick]',e);}catch(_){}}};
+  pick();speechSynthesis.onvoiceschanged=pick;
+  /* iOS и часть андроидных браузеров отдают список не сразу и без события:
+     перечитываем ещё дважды, иначе первый голос достаётся не тот. */
+  setTimeout(pick,400);setTimeout(pick,1500);},
+ /* ── ДЛИНА КУСКА ──
+    Прежде фраза резалась по предложениям всегда: «Пункт. Двойное касание —
+    выбрать. Свайп — дальше.» уходила тремя отдельными высказываниями, и
+    между ними синтезатор вставлял свою паузу — на слух это три запинки на
+    каждом пункте списка. Резать нужно только длинное: короткую строку
+    отдаём целиком, одним куском и без пауз. */
  _chunk(text){
   text=String(text==null?"":text).replace(/\s+/g," ").trim();
   if(!text)return[];
+  if(text.length<=180)return[text];
   const sents=text.match(/[^.!?…]+[.!?…]*/g)||[text];
   const out=[];
   sents.forEach(s=>{s=s.trim();if(!s)return;
@@ -874,18 +970,110 @@ const Speech={voice:null,keepAlive:null,
    if(s)out.push(s);});
   return out;},
  /* ── адаптер синтезатора ── */
+ /* Какой синтезатор нужен сейчас: выбор игрока, а не то, что попалось
+    первым при запуске. Смена настройки меняет адаптер на следующей фразе. */
+ _wantKind(){
+  try{if(settings.ttsEngine==="eleven"&&String(settings.elevenKey||"").length>=8
+      &&String(settings.elevenVoice||""))return "eleven";}catch(_){}
+  return "device";},
  _adapter(){
-  if(this.adapter)return this.adapter;
+  const род=this._wantKind();
+  if(this.adapter&&this._kind===род)return this.adapter;
+  try{if(this.adapter&&this.adapter.cancel)this.adapter.cancel();}catch(_){}
+  this.adapter=null;this._kind=род;
+  if(род==="eleven")return this.adapter=this._elevenAdapter();
   try{if(window.GraniTTS&&typeof window.GraniTTS.speak==="function")return this.adapter=this._nativeAdapter();}catch(_){}
   if("speechSynthesis" in window)return this.adapter=this._webAdapter();
   return null;},
+ /* ── ГОЛОС ELEVENLABS ──
+    Синтезатор устройства отвечает мгновенно и работает без сети, но звучит
+    так, как звучит. ElevenLabs даёт живую речь — ценой похода в сеть и
+    ключа, который игрок заводит сам: чужой ключ в игру не зашьёшь, это
+    и против правил ElevenLabs, и опасно для того, чей он.
+    Поэтому правило простое: ElevenLabs — по желанию и по своему ключу, а
+    на любой осечке (нет сети, кончилась квота, ключ отозвали) фраза тут же
+    уходит синтезатору устройства. Игра не замолкает никогда.
+    Сказанное кладётся в память: список пунктов, имена, «двойное касание —
+    выбрать» повторяются сотни раз за игру, и второй раз они звучат уже без
+    сети и без задержки. */
+ _elevenAdapter(){
+  const self=this;
+  const запас=("speechSynthesis" in window)?this._webAdapter():null;
+  const кэш=this._elevenCache||(this._elevenCache=new Map());
+  let узел=null,текущий=0;
+  const стоп=()=>{try{if(узел){узел.onended=null;узел.stop(0);}}catch(_){}узел=null;};
+  const запасом=(text,o)=>{if(запас)запас.speak(text,o);else if(o.onerror)o.onerror();};
+  return {name:"eleven",
+   speak(text,o){
+    const мой=++текущий;
+    const играть=buf=>{
+     if(мой!==текущий)return;
+     try{
+      const ctx=AE.ensure();if(!ctx||!buf)return запасом(text,o);
+      стоп();
+      const src=ctx.createBufferSource();src.buffer=buf;
+      /* Темп речи игрок держит тот же, что и у синтезатора устройства:
+         запись проигрывается быстрее. Выше четырёх не поднимаем — дальше
+         голос звенит и разбирать его нельзя. */
+      src.playbackRate.value=Math.max(0.5,Math.min(4,+o.rate||1));
+      const g=ctx.createGain();g.gain.value=Math.max(0,Math.min(1,+o.volume));
+      src.connect(g);g.connect(AE.master||ctx.destination);
+      src.onended=()=>{if(мой===текущий){узел=null;if(o.onend)o.onend();}};
+      узел=src;src.start(0);
+      if(o.onstart)o.onstart();
+     }catch(_){запасом(text,o);}};
+    const готово=кэш.get(text);
+    if(готово){играть(готово);return true;}
+    self._elevenFetch(text).then(buf=>{
+     if(мой!==текущий)return;
+     if(!buf)return запасом(text,o);
+     кэш.set(text,buf);
+     if(кэш.size>300)кэш.delete(кэш.keys().next().value);
+     играть(buf);
+    }).catch(()=>{if(мой===текущий)запасом(text,o);});
+    return true;},
+   cancel(){текущий++;стоп();if(запас)запас.cancel();},
+   speaking(){return !!узел;}};},
+ _elevenFetch(text){
+  try{
+   const ключ=String(settings.elevenKey||""),голос=String(settings.elevenVoice||"");
+   if(!ключ||!голос||typeof fetch!=="function")return Promise.resolve(null);
+   return fetch(`https://api.elevenlabs.io/v1/text-to-speech/${encodeURIComponent(голос)}?output_format=mp3_44100_128`,
+    {method:"POST",headers:{"xi-api-key":ключ,"Content-Type":"application/json"},
+     body:JSON.stringify({text:String(text),model_id:"eleven_multilingual_v2",
+      voice_settings:{stability:0.5,similarity_boost:0.75}})})
+    .then(r=>r.ok?r.arrayBuffer():null)
+    .then(ab=>{
+     if(!ab)return null;
+     const ctx=AE.ensure();if(!ctx)return null;
+     return new Promise(ok=>{try{ctx.decodeAudioData(ab,ok,()=>ok(null));}catch(_){ok(null);}});})
+    .catch(()=>null);
+  }catch(_){return Promise.resolve(null);}},
+ /* Какие голоса доступны по этому ключу. */
+ elevenVoices(){
+  try{
+   const ключ=String(settings.elevenKey||"");
+   if(!ключ||typeof fetch!=="function")return Promise.resolve([]);
+   return fetch("https://api.elevenlabs.io/v1/voices",{headers:{"xi-api-key":ключ}})
+    .then(r=>r.ok?r.json():null)
+    .then(j=>((j&&j.voices)||[]).map(v=>({id:v.voice_id,n:v.name,
+     lang:(v.labels&&(v.labels.language||v.labels.accent))||""})))
+    .catch(()=>[]);
+  }catch(_){return Promise.resolve([]);}},
  _webAdapter(){const self=this;return {name:"web",
   speak(text,o){try{const u=new SpeechSynthesisUtterance(text);
     if(self.voice){u.voice=self.voice;u.lang=self.voice.lang;}else u.lang="ru-RU";
     u.rate=+o.rate;u.volume=+o.volume;
+    u.pitch=Math.max(0.5,Math.min(2,+settings.pitch||1));
     u.onstart=()=>{if(o.onstart)o.onstart();};u.onend=()=>{if(o.onend)o.onend();};u.onerror=()=>{if(o.onerror)o.onerror();};
-    setTimeout(()=>{try{speechSynthesis.speak(u);}catch(e){if(o.onerror)o.onerror();}},30);return true;}catch(e){return false;}},
-  cancel(){try{speechSynthesis.cancel();}catch(_){}},
+    /* Тридцать миллисекунд задержки стояли на каждом куске ради одного
+       случая: сразу после cancel() часть движков теряет следующую фразу.
+       Ждём только в этом случае, а обычный отклик отдаём тем же тактом. */
+    const пуск=()=>{try{speechSynthesis.speak(u);}catch(e){if(o.onerror)o.onerror();}};
+    const пауза=Math.max(0,30-(Date.now()-(self._cancelAt||0)));
+    if(пауза<=0)пуск();else setTimeout(пуск,пауза);
+    return true;}catch(e){return false;}},
+  cancel(){self._cancelAt=Date.now();try{speechSynthesis.cancel();}catch(_){}},
   speaking(){try{return !!speechSynthesis.speaking;}catch(_){return false;}}};},
  _nativeAdapter(){const self=this;const cbs={};
   window.GraniTTSDone=id=>{const c=cbs[id];delete cbs[id];if(c&&c.onend)c.onend();};
@@ -5250,7 +5438,7 @@ function closeMagicPanel(){const m=document.getElementById('magicPanel');if(!m)r
 /* ════════ РУКОВОДСТВО ════════ */
 const GUIDE=[
 {title:"Глава 1. Добро пожаловать в «Грань Миров»",body:[
- "Версия Alpha 2.3.0 — живой динамичный мир размером 50000 на 50000 клеток: два с половиной миллиарда клеток, и ни одна не хранится в памяти — всякая выводится из своих координат в тот миг, когда об этой клетке спросили. Полная хроника частей с первой по пятую, объединённая в одном мире. Игра полностью доступна незрячим и слабовидящим.",
+ "Версия Alpha 2.4.0 — живой динамичный мир размером 50000 на 50000 клеток: два с половиной миллиарда клеток, и ни одна не хранится в памяти — всякая выводится из своих координат в тот миг, когда об этой клетке спросили. Полная хроника частей с первой по пятую, объединённая в одном мире. Игра полностью доступна незрячим и слабовидящим.",
  "Ведите пальцем по экрану — игра голосом назовёт то, что вы нашли. Двойное касание — действие. Всё озвучивается и имеет свой звук.",
  "Все кнопки игры собраны в меню действий: свайп тремя пальцами вверх. Инвентарь — три пальца вниз, карта — два пальца влево, журнал дел — два пальца вправо."]},
 {title:"Глава 2. Жесты",body:[
@@ -5281,6 +5469,11 @@ const GUIDE=[
  "Озвучка — голос читает всё. Эффекты — звуки мира и маяки. Музыка — фон локаций, пролога и боя. Субтитры звуков — подписи для слабослышащих.",
  "Скорость и громкость озвучки, громкость эффектов и музыки, выбор голоса.",
  "Скорость озвучки по умолчанию — пять: это рабочий темп чтеца экрана, а не темп диктора. Шкала идёт от 0,6 до 6,0 шагом в две десятых и по кругу: дойдя до шести, следующее касание ставит 0,6. Ползунок отвечает выбранным темпом — «Раз, два, три», — так что подобрать свой можно на слух, ничего не запоминая. Кто играл до этого обновления на медленной речи, будет поднят к пяти один раз и об этом услышит; выбранное после — остаётся навсегда.",
+ "Всё про сам голос собрано в отдельный раздел «Синтезатор речи»: чем говорить, каким голосом, с какой скоростью и высотой, и тут же проба. Раньше это лежало в трёх разных разделах.",
+ "Синтезатор можно выбрать. «Синтезатор устройства» — тот, что стоит в самом телефоне: на iPhone это голоса VoiceOver, на Android — Google, Samsung, Acapela или любой другой установленный. Он отвечает сразу и работает без сети. «Голос ElevenLabs» звучит живее, но ходит в сеть и требует ключа, который игрок заводит сам; на любой осечке фраза тут же уходит синтезатору устройства, и игра не замолкает.",
+ "Онлайн-голоса по умолчанию отсеяны. Браузер показывает вперемешку два рода голосов: те, что лежат в телефоне, и сетевые. Сетевой на каждое слово меню ходит на чужой сервер — полсекунды задержки на каждый пункт списка, а без сети молчание. Выключатель «Только голоса с устройства» их убирает; включить обратно можно там же.",
+ "Высота голоса — отдельный ползунок, от 0,5 до 2,0. Не всякий синтезатор слушается высоты: голоса Apple слушаются, часть андроидных — нет.",
+ "Кнопка «Сохранить настройки» есть наверху окна. Настройки сохраняются и сами, при каждой правке; кнопка нужна, чтобы игра ответила словом, что записано. Рядом «Что сохранено» — она называет движок, голос, темп, высоту и отсев онлайн-голосов.",
  "Режим ощупывания и тактильный отклик — в разделе доступности. Настройки сохраняются."]},
 {title:"Глава 5. Полное руководство по звукам",body:[
  "Кроме синтезированных звуков у игры есть звуковой банк — коллекция записей, разложенная по ролям: море и корабли, земли и погода, глубина подземелий, школы магии, голоса двенадцати богов, события и места. Записи лежат в папке sounds рядом с игрой и подгружаются по мере надобности; если папки нет, игра целиком работает на синтезированных звуках. Весь банк можно послушать в энциклопедии звуков.",
@@ -33699,6 +33892,27 @@ const CMD={
  secjump(a,el){safeFn(()=>secNav("next",el));},
  secback(a,el){safeFn(()=>UI.nat("ui_back",0.45));safeFn(()=>secNav("prev",el));},
  secindex(){narrate(safeFn(()=>secIndexText(),"В этом окне разделов нет."),{interrupt:true});},
+ /* ── СОХРАНЕНИЕ НАСТРОЕК ──
+    Настройки пишутся сами при каждой правке, и это правильно: игрок не
+    должен помнить про кнопку. Но «само» незрячему игроку не слышно — он
+    меняет голос, закрывает окно и не знает, запомнилось ли. Кнопка ничего
+    нового не делает: она записывает ещё раз и ОТВЕЧАЕТ, что записано. */
+ setsave(){
+  /* store.set возвращает правду: в приватном окне и при переполненном
+     хранилище запись не проходит, и обещать «сохранено» нельзя. */
+  const ok=safeFn(()=>saveSettings()!==false,false);
+  safeFn(()=>UI.nat("ui_success",0.6));
+  narrate(ok?"Настройки сохранены на этом устройстве. Они останутся и после закрытия игры."
+            :"Сохранить не вышло: браузер не даёт игре память. В частном окне это обычное дело — настройки будут жить до закрытия вкладки.",
+   {interrupt:true});},
+ setsaved(){
+  const было=safeFn(()=>JSON.parse(store.get("gm29set")||"{}"),null);
+  if(!было||!Object.keys(было).length){narrate("В памяти устройства настроек пока нет: они запишутся при первой правке.",{interrupt:true});return;}
+  const голос=(settings.ttsEngine==="eleven")?"голос ElevenLabs":"синтезатор устройства";
+  narrate(`Записано ${Object.keys(было).length} настроек. Говорит ${голос}. `+
+   `Голос: ${(Speech.voice&&Speech.voice.name)||settings.voice||"выбран по умолчанию"}. `+
+   `Темп ${(+settings.rate).toFixed(1).replace(".",",")}, высота ${(+settings.pitch||1).toFixed(1).replace(".",",")}. `+
+   `Онлайн-голоса ${settings.voiceLocal!==0?"отсеяны":"показаны"}.`,{interrupt:true});},
  gestpick(arg){
   const p=String(arg||"").split("~");
   const s=GEST_SHAPE_BY_ID[p[0]];
@@ -46733,11 +46947,12 @@ function worldSelfCheck(){
       &&все.every(n=>GUIDE_BY_NUM[n]!==undefined);})()
    /* Порядок чтения накрывает все главы и ни одну дважды. */
    &&(()=>{const o=guideOrder();return o.length===GUIDE.length&&new Set(o).size===GUIDE.length;})()
-   /* В настройках десять заголовков-разделов, и у каждого своё имя. */
+   /* В настройках двенадцать заголовков-разделов, и у каждого своё имя.
+      Двенадцатым стал «Синтезатор речи»: всё про сам голос собрано в него. */
    &&(()=>{try{
      const м=document.getElementById("modal-settings");
      const h=[...м.querySelectorAll("."+SEC_CLASS)];
-     return h.length===11&&new Set(h.map(x=>x.dataset.secTitle)).size===11
+     return h.length===12&&new Set(h.map(x=>x.dataset.secTitle)).size===12
       &&h.every(x=>x.dataset.cmd==="secjump");}catch(_){return false;}})()
    /* Три жеста о разделах есть в списке назначаемых действий. */
    &&["secnext","secprev","secindex"].every(id=>GEST_ACTION_BY_ID[id])
@@ -47973,7 +48188,58 @@ function bindSettings(){const $=id=>document.getElementById(id);
  $("setVoice").addEventListener("change",e=>{settings.voice=e.target.value;saveSettings();
   const vs=speechSynthesis.getVoices();Speech.voice=vs.find(v=>v.name===settings.voice)||null;
   narrate("Голос изменён. Здравствуйте, путник.");});
- $("btnSpeechSample").addEventListener("click",()=>narrate("Это образец озвучивания. Грань Миров говорит с вами."));}
+ $("btnSpeechSample").addEventListener("click",()=>narrate("Это образец озвучивания. Грань Миров говорит с вами."));
+ /* ── РАЗДЕЛ «СИНТЕЗАТОР РЕЧИ» ── */
+ {const e=$("setTtsEngine");if(e){e.value=settings.ttsEngine||"device";
+  e.addEventListener("change",ev=>{settings.ttsEngine=ev.target.value;saveSettings();
+   safeFn(()=>{Speech.adapter=null;Speech._kind=null;});
+   narrate(settings.ttsEngine==="eleven"
+    ?(String(settings.elevenKey||"").length>=8&&String(settings.elevenVoice||"")
+      ?"Говорит голос ElevenLabs. Если сеть подведёт, фраза уйдёт синтезатору устройства."
+      :"Голос ElevenLabs выбран, но ключ или голос не заданы: пока говорит синтезатор устройства.")
+    :"Говорит синтезатор устройства.",{interrupt:true});});}}
+ {const l=$("setVoiceLocal");if(l){l.checked=settings.voiceLocal!==0;
+  l.addEventListener("change",ev=>{settings.voiceLocal=ev.target.checked?1:0;saveSettings();
+   const n=safeFn(()=>Speech.fillVoices(),0);
+   narrate(settings.voiceLocal
+    ?`Онлайн-голоса отсеяны. Осталось голосов: ${n}.`
+    :`Показаны все голоса, включая онлайновые: ${n}. Онлайновые отвечают с задержкой и молчат без сети.`,{interrupt:true});});}}
+ {const g=$("setVoiceLang");if(g){g.value=settings.voiceLang||"ru";
+  g.addEventListener("change",ev=>{settings.voiceLang=ev.target.value;saveSettings();
+   const n=safeFn(()=>Speech.fillVoices(),0);
+   narrate(`${settings.voiceLang==="ru"?"Только русские голоса":"Голоса всех языков"}: ${n}.`,{interrupt:true});});}}
+ {const b=$("btnVoiceRefresh");if(b)b.addEventListener("click",()=>{
+  const n=safeFn(()=>Speech.fillVoices(),0);
+  narrate(n?`Список перечитан. Голосов на устройстве: ${n}. Текущий — ${(Speech.voice&&Speech.voice.name)||"не выбран"}.`
+           :"Ни одного голоса не нашлось. Поставьте голос в настройках системы и нажмите ещё раз.",{interrupt:true});});}
+ {const p=$("setPitch");if(p){p.value=Math.round((+settings.pitch||1)*100);
+  const п=()=>{const v=$("vPitch");if(v)v.textContent=(+settings.pitch||1).toFixed(1).replace(".",",");};п();
+  p.addEventListener("input",ev=>{settings.pitch=Math.max(0.5,Math.min(2,ev.target.value/100));saveSettings();п();});
+  p.addEventListener("change",()=>narrate(`Высота голоса ${(+settings.pitch).toFixed(1).replace(".",",")}. Раз, два, три.`,{interrupt:true}));}}
+ {const k=$("setElevenKey");if(k){k.value=settings.elevenKey||"";
+  k.addEventListener("change",ev=>{settings.elevenKey=String(ev.target.value||"").trim();saveSettings();
+   safeFn(()=>{Speech.adapter=null;Speech._kind=null;});
+   narrate(settings.elevenKey?"Ключ сохранён на этом устройстве. Нажмите «Проверить ключ и голоса».":"Ключ убран.",{interrupt:true});});}}
+ {const v=$("setElevenVoice");if(v){
+  const нарисовать=список=>{v.innerHTML="";
+   if(!список.length){const o=document.createElement("option");o.value="";o.textContent="Список пуст: задайте ключ и проверьте";v.appendChild(o);return 0;}
+   список.forEach(g=>{const o=document.createElement("option");o.value=g.id;o.textContent=g.lang?`${g.n} (${g.lang})`:g.n;v.appendChild(o);});
+   if(settings.elevenVoice)v.value=settings.elevenVoice;
+   return список.length;};
+  нарисовать([]);
+  v.addEventListener("change",ev=>{settings.elevenVoice=ev.target.value;saveSettings();
+   safeFn(()=>{Speech.adapter=null;Speech._kind=null;});
+   narrate("Голос ElevenLabs выбран.",{interrupt:true});});
+  const b=$("btnElevenCheck");
+  if(b)b.addEventListener("click",()=>{
+   if(!String(settings.elevenKey||"")){narrate("Ключ не задан: задайте его строкой выше.",{interrupt:true});return;}
+   narrate("Спрашиваю ElevenLabs…",{interrupt:true});
+   safeFn(()=>Speech.elevenVoices().then(список=>{
+    const n=нарисовать(список||[]);
+    narrate(n?`Ключ принят. Голосов доступно: ${n}. Выберите голос в списке ниже.`
+             :"ElevenLabs не ответил или ключ не подошёл. Игра продолжит говорить синтезатором устройства.",{interrupt:true});
+   }).catch(()=>narrate("ElevenLabs не ответил. Игра продолжит говорить синтезатором устройства.",{interrupt:true})));});}}
+ }
 
 /* ════════ СОХРАНЕНИЕ ════════ */
 /* ════════════════════════════════════════════════════════════════════════
