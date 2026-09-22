@@ -28,6 +28,8 @@
   14. README и документы описывают удержание фокуса.
   15. Сдвиг выбора слышен настоящей записью; обе новые записи — без потерь,
       44,1 кГц, и записаны в титрах своей папки с лицензией.
+  16. В основном файле не осталось ни одной невызываемой функции: всё, что
+      не зовёт ни игра, ни один набор проверок, — старое и должно уйти.
    ═══════════════════════════════════════════════════════════════════════ */
 const {chromium}=require('playwright');
 const fs=require('fs'),path=require('path');
@@ -277,6 +279,22 @@ const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(e!==undefined?' :
  check('14. README и документы описывают удержание фокуса',
   /Фокус не убегает/i.test(readme)&&/cursorRestore/.test(вз),
   {readme:/Фокус не убегает/i.test(readme),вз:/cursorRestore/.test(вз)});
+
+ /* ── 16. в основном файле не осталось невызываемых функций ── */
+ {
+  const src=fs.readFileSync(path.join(__dirname,'..','index.html'),'utf8');
+  const тесты=fs.readdirSync(__dirname).filter(f=>/\.js$/.test(f))
+   .map(f=>fs.readFileSync(path.join(__dirname,f),'utf8')).join('\n');
+  const имена=[...new Set([...src.matchAll(/^[ \t]*function ([A-Za-zА-Яа-яёЁ_$][A-Za-zА-Яа-яёЁ0-9_$]*)\s*\(/gm)].map(m=>m[1]))];
+  const мёртвые=имена.filter(n=>{
+   const re=new RegExp('(?<![A-Za-zА-Яа-яёЁ0-9_$.])'+n.replace(/[$]/g,'\\$&')+'(?![A-Za-zА-Яа-яёЁ0-9_$])','g');
+   const вИгре=(src.match(re)||[]).length;
+   if(вИгре>1)return false;              /* кто-то её зовёт */
+   return !(тесты.match(re)||[]).length; /* и ни один набор её не трогает */
+  });
+  check('16. в основном файле не осталось ни одной невызываемой функции',
+   мёртвые.length===0,{всего:имена.length,мёртвые:мёртвые.slice(0,12)});
+ }
 
  check('страница не бросила ни одной ошибки',errors.length===0,errors.slice(0,3));
  await browser.close();

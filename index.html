@@ -751,7 +751,6 @@ if(!settings.rateFast){
 if(!settings.subMode)settings.subMode=settings.subtitles===0?"off":"sounds";
 settings.subtitles=settings.subMode==="off"?0:1;
 function setHintMode(mode){if(!["full","min","sound"].includes(mode))mode="full";settings.hintMode=mode;settings.hints=mode==="sound"?0:1;saveSettings();return mode;}
-function setSurvival(mode){try{return Survival.setMode(mode);}catch(_){return "";}}
 function setSubMode(mode){if(!["off","important","speech","sounds"].includes(mode))mode="sounds";settings.subMode=mode;settings.subtitles=mode==="off"?0:1;saveSettings();
  if(mode==="off"){const el=document.getElementById("subText");if(el)el.hidden=true;}return mode;}
 const Modules={reg:{},
@@ -1136,24 +1135,6 @@ const SAMPLES={
  wraith_emerge:"data:audio/mp3;base64,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"
 };
 const sampleBufCache={};
-function playSample(id,vol=1,pan=0){
- AE.ensure();if(!AE.ctx||!settings.effects)return;
- const dest=AE.fx;
- const play=(buf)=>{
-  const src=AE.ctx.createBufferSource();src.buffer=buf;
-  const g=AE.ctx.createGain();g.gain.value=vol;
-  let out=g;
-  if(pan&&AE.ctx.createStereoPanner){const p=AE.ctx.createStereoPanner();p.pan.value=pan;g.connect(p);out=p;}
-  src.connect(g);out.connect(dest);src.start();
- };
- if(sampleBufCache[id]){play(sampleBufCache[id]);return;}
- const uri=SAMPLES[id];if(!uri)return;
- try{
-  const bin=atob(uri.split(",")[1]);
-  const arr=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)arr[i]=bin.charCodeAt(i);
-  AE.ctx.decodeAudioData(arr.buffer,(buf)=>{sampleBufCache[id]=buf;play(buf);},()=>{});
- }catch(e){}
-}
 
 const AE={ctx:null,master:null,fx:null,musicBus:null,dry:null,convolver:null,cache:{},
  ensure(){if(this.ctx){if(this.ctx.state==="suspended"){try{this.ctx.resume();}catch(e){}}return this.ctx;}
@@ -3221,6 +3202,8 @@ function buildEncycCats(){
 }
 
 /* ── Второй уровень: звуки одного раздела ── */
+/* Один и тот же ответ в трёх местах: папки со звуками рядом с игрой нет. */
+const НЕТ_ЗАПИСИ="Запись недоступна: папка со звуками не найдена рядом с игрой.";
 function openEncycCat(key,title){
  const cats=document.getElementById("encycCats"),one=document.getElementById("encycOne"),
   grid=document.getElementById("encycOneGrid"),head=document.getElementById("encycOneTitle"),
@@ -3253,7 +3236,7 @@ function openEncycCat(key,title){
     `${b.d}. Вариантов: ${b.f.length}. Двойное касание — прослушать.`,
     ()=>{narrate(b.d);
      if(!Bank.play(r,{seed:Date.now(),gain:0.8,maxSec:10}))
-      narrate("Запись недоступна: папка со звуками не найдена рядом с игрой.",{interrupt:false});}));});
+      narrate(НЕТ_ЗАПИСИ,{interrupt:false});}));});
  }else if(key==="voices"){
   подпись="Восемь существ, у каждого свой набор реплик.";
   Object.keys(MONSTER_BANK).forEach(sp=>{
@@ -3264,7 +3247,7 @@ function openEncycCat(key,title){
     `${name}. Реплики: ${cues.map(c=>MONSTER_CUE_NAMES[c]||c).join(", ")}. Этим голосом говорят ${who.length} ${plural(who.length,"вид","вида","видов")}. Двойное касание — прослушать появление.`,
     ()=>{narrate(name);
      if(!Bank.file(MONSTER_BANK[sp].emerge||MONSTER_BANK[sp].attack,{gain:0.85,maxSec:8}))
-      narrate("Запись недоступна: папка со звуками не найдена рядом с игрой.",{interrupt:false});}));});
+      narrate(НЕТ_ЗАПИСИ,{interrupt:false});}));});
  }else if(key==="beacons"){
   подпись="Маяк говорит, что за объект рядом и с какой стороны он стоит.";
   Object.keys(BEACONS).forEach(id=>{
@@ -4216,30 +4199,6 @@ function tapInLayer(el,началось){
    чтобы отличить два касания по полю от касания по полю и следом по кнопке. */
 const FIELD_SPOT={field:true};
 /* Что под ногами и что с этим делать. Коротко: это звучит на каждое касание поля. */
-function spotSummary(){
- try{
-  if(G.loot&&Array.isArray(G.loot)&&G.loot.length)
-   return "Добыча под ногами. Двойное касание — собрать всё.";
-  if(G.ship)return `На борту: «${G.ship.name}», курс на «${G.ship.toName}», осталось переходов ${G.ship.left}. Свайп — идти дальше.`;
-  if(inFlight()){
-   const c=cellContent(G.x,G.y);
-   return `Вы ${altWord(Number(G.alt)||0)}. Внизу: ${c.structure?c.structure.name:c.res?c.res.name:c.terrain[1]}. Крыла на ${Math.round(wingLeft()/wingCost())} ${plural(Math.round(wingLeft()/wingCost()),"взмах","взмаха","взмахов")}. Двойное касание — сесть.`;}
-  if(G.inCombat&&G.combat)return `Бой: ${G.combat.m.n}. Оружие ${G.weaponDrawn?"в руках, свайп — удар":"в ножнах, двойное касание тремя пальцами — вынуть"}.`;
-  if(G.place){
-   const lvl=curLevel(),t=lvl&&tileAt(lvl,G.place.x,G.place.y);
-   const what=t&&t!=="."?tileLabel(t,G.place.x,G.place.y):null;
-   return what?`Здесь: ${what}. Двойное касание — действие здесь.`
-              :`${placeTitle()}, клетка ${G.place.x} на ${G.place.y}. Пол. Свайп — шаг.`;}
-  const c=cellContent(G.x,G.y);
-  if(c.structure)return `Здесь: ${c.structure.name}. Двойное касание — войти или заговорить.`;
-  if(c.res){
-   const d=G.depleted[G.x+","+G.y];
-   const left=d?d.left:c.res.qty;
-   return left>0?`Здесь: ${c.res.name}, осталось ${left}. Одно касание двумя пальцами — собрать.`
-                :`Здесь: ${c.res.name}, уже собрано подчистую.`;}
-  if(c.monster&&!G.cleared[G.x+","+G.y])return `Опасно: ${c.monster.n} преграждает путь.`;
-  return `${c.terrain[1]}, ${c.empire.name}. Здесь пусто.`;
- }catch(_){return "Здесь пусто.";}}
 function handleSingleTap(el,x,y,началось){
  /* В открытом окне — и в заглавном меню — разбирается tapInLayer: он и
     прилипшую цель двойного касания знает, и текущий пункт. */
@@ -4586,10 +4545,6 @@ document.addEventListener('click',e=>{
  safeFn(()=>fn(parts.slice(1).join(':'),t));},{capture:true});
 document.addEventListener('focusin',e=>{if(silentFocus)return;
  const t=e.target.closest&&e.target.closest('[data-speak],[aria-label],button,input,select,a,[data-cmd],[data-magic-index]');if(t)speakTextOf(t);});
-function magicTap(){if(Play.active.size>0)Play.stopAll();
- else if(Play.lastMain){Play.start("main",Play.lastMain,{announceEnd:true});
-  narrate(`Возобновлено: ${SOUNDS[Play.lastMain].name}.`);}
- else narrate("Сейчас ничего не играет.");}
 function stopEverything(){Play.stopAll(false);Music.stop();Speech.stop();safeFn(()=>Bank.stopAll());
  /* Позиционные источники живут своей жизнью, мимо Play и Bank: их надо гасить
     отдельно, иначе «тишина» оказывалась неправдой — мир продолжал говорить с
@@ -6232,7 +6187,6 @@ const EMPIRES=[
   econ:"Стеклодувная и закалочная: пепельное стекло, закалка чужих клинков, щёлок и порох.",
   exports:["камень","кристалл","кость"],imports:["дерево","трава","ягоды"],
   hist:"Землю здесь трижды засыпало пеплом, и трижды на ней селились заново: пепел родит стекло, а стекло кормит."}];
-const EMPIRE_BY_SHORT=Object.fromEntries(EMPIRES.map((e,i)=>[e.short,{e,i}]));
 /* Территория империи определяется по ближайшей столице (диаграмма Вороного) —
    так можно добавлять сколько угодно империй без переписывания геометрии карты. */
 /* Голос державы. Пересекая границу, игрок слышит не только рог заставы, но и
@@ -6920,11 +6874,6 @@ function biomeAt(x,y){
  biomeCache.set(k,b);
  return b;}
 /* Биом под ногами — для описаний, звука и всего, что спрашивает «где я». */
-function biomeHere(){
- try{
-  if(G.dark||G.place)return null;
-  return biomeAt(G.x|0,G.y|0);
- }catch(_){return null;}}
 
 function terrainAt(x,y){
  /* В тёмных землях нет ни дорог, ни здешнего рельефа. */
@@ -7441,7 +7390,6 @@ const RACE_BRANCH={};
 RACES_DB.forEach(r=>{RACE_BY_NAME[r.n]=r;(r.br||[]).forEach(b=>{RACE_BY_NAME[b]=r;RACE_BRANCH[b]=r.n;});});
 const ALL_RACE_NAMES=Object.keys(RACE_BY_NAME);
 function raceInfo(name){return RACE_BY_NAME[name]||RACE_BY_NAME["Люди"];}
-function raceRankName(name){const r=raceInfo(name);return RACE_RANKS[r.rank]||RACE_RANKS[0];}
 /* RACES — народы, обычные для встречи; URACES — редкие и выше (их НИПИ помечаются
    как уникальные). Оба списка выведены из общего каталога, поэтому ни одно имя
    народа из прежних версий игры не потерялось. */
@@ -7869,7 +7817,6 @@ const ECON_EVENTS=[
   товар:["руда","дерево","зерно","трава","камень"], о:"Пошлину сняли на месяц. Дешевеет всё сразу, но ненадолго."},
  {id:"hoard",   n:"скупка впрок",    k:0.33,  срок:3,
   товар:["зерно","руда","дерево","кость"], о:"Кто-то скупает впрок целыми обозами. Цена идёт вверх сама собой."}];
-const ECON_BY_ID=Object.fromEntries(ECON_EVENTS.map(e=>[e.id,e]));
 /* Что происходит в державе на этот день. Считается от державы и дня, поэтому
    не хранится в сохранении и одинаково у всех. */
 function econAt(idx,day){
@@ -8729,7 +8676,6 @@ const PATROL_KIND=[
   о:"Двое верхом, идут скоро и в разговоры не вступают без нужды."},
  {id:"toll",  n:"объезд мытаря",    людей:3, звук:"horse_step",  голос:"guard_shout",
   о:"Мытарь с двумя провожатыми считает возы и берёт с них долю."}];
-const PATROL_BY_ID=Object.fromEntries(PATROL_KIND.map(p=>[p.id,p]));
 /* Отрезок тракта, за который отвечает один разъезд: шесть перегонов между
    перекрёстками. Дальше начинается чужая ответственность. */
 const PATROL_SPAN=29*6;
@@ -8843,7 +8789,6 @@ const RAID_PHASE=[
   о:"От деревни остались печные трубы и дорожка золы поперёк улицы."},
  {id:"mend", n:"отстраивается",звук:"craft_wood",      след:"wild_anvil",
   о:"Деревню поднимают заново: стучат топоры, пахнет смолой и свежим тёсом."}];
-const RAID_BY_ID=Object.fromEntries(RAID_PHASE.map(p=>[p.id,p]));
 const RAID_DAYS=4;
 /* Насколько это пограничье: ноль в сердце своей земли, единица у чужой. */
 function borderPull(x,y,своя,чужая){
@@ -8900,9 +8845,6 @@ function raidsNear(x,y,day,rad=6){
  if(raidBlockCache.size>6000)raidBlockCache.clear();
  raidBlockCache.set(k,v);
  return v;}
-function raidHere(){
- if(G.place||G.dark||G.ship)return null;
- return safeFn(()=>raidAt(G.x,G.y,G.day),null);}
 /* ── ЧТО НАБЕГ МЕНЯЕТ В ЗЕМЛЕ ВОКРУГ ──
    У разорённой деревни кормятся те, кто приходит после войска: встреч там
    больше, а не меньше. Это обратная сторона разъезда. */
@@ -12605,7 +12547,6 @@ const DARK_EMPIRES=[
   war:"Воюют чертой: обводят и ждут, пока внутри кончится всё.",
   дань:["пропуска","отсечённые"]},
 ];
-const DARK_EMPIRE_BY_ID=Object.fromEntries(DARK_EMPIRES.map(e=>[e.id,e]));
 /* Чья это земля за Гранью: ближайший престол империи. */
 function darkEmpireAt(x,y){
  let лучшая=DARK_EMPIRES[0],d0=Infinity;
@@ -12613,7 +12554,6 @@ function darkEmpireAt(x,y){
   const d=(e.cap.x-x)*(e.cap.x-x)+(e.cap.y-y)*(e.cap.y-y);
   if(d<d0){d0=d;лучшая=e;}}
  return лучшая;}
-function darkEmpireIndexAt(x,y){return DARK_EMPIRES.indexOf(darkEmpireAt(x,y));}
 /* ── ВОЙНЫ И СОЮЗЫ ЗА ГРАНЬЮ ──
    Считаются так же от дня, как войны Грани, но короче и злее: эпоха здесь
    вдвое быстрее, войн вдвое больше, а союзы держатся ровно до первой добычи. */
@@ -12823,8 +12763,6 @@ const DARK_MONSTERS=[
  {id:"d_veinborn",n:"Жильнорождённый", snd:"mhiss",  fx:"hiss",   min:6,max:14}];
 const DARK_MONSTER_BY_ID=Object.fromEntries(DARK_MONSTERS.map(m=>[m.id,m]));
 /* На крыле за Гранью встречается небесная тварь, а не наземная. */
-function darkAirMonsterAt(x,y){
- return safeFn(()=>darkSkyMonsterAt(x,y),null);}
 function darkMonsterAt(x,y){
  const r=darkRealmAt(x,y);
  const d=Math.max(Math.abs(x-r.throne.x),Math.abs(y-r.throne.y));
@@ -12852,7 +12790,6 @@ const DARK_CLANS=[
  {id:"glaz",   n:"Многие Глаза",    god:"sarkis",дело:"надзор, донос и цена молчания"},
 ];
 const DARK_CLAN_BY_ID=Object.fromEntries(DARK_CLANS.map(c=>[c.id,c]));
-const DARK_CLAN_NAMES=DARK_CLANS.map(c=>c.n);
 /* ── ШЕСТЬ ТЁМНЫХ ШКОЛ ──
    Три ступени, как у школ Грани, но плата иная: доля, кровь и срок. */
 const DARK_SCHOOLS=[
@@ -13363,7 +13300,6 @@ const FINDS=[
    else{evGive("камень",2);
     narrate("Натёчный столб. Верхушка откололась чисто: камень ×2. Звон идёт по всей пещере и долго не смолкает.");}
    refresh();saveGame(true);}}];
-const FIND_BY_ID=Object.fromEntries(FINDS.map(f=>[f.id,f]));
 /* Находка помнит, что с неё взяли: запись живёт в сохранении. */
 function findOnce(x,y,tag){
  if(!G.finds||typeof G.finds!=="object")G.finds={};
@@ -15379,7 +15315,6 @@ const PREACHERS=[
  {id:"reform",  n:"религиозный реформатор",место:["temple","school","castle"],звук:"throng_lord",
   умеет:["спор","мнение","задание"], пыл:0.8,
   о:"носит с собой список того, что надо поменять в обряде"}];
-const PREACHER_BY_ID=Object.fromEntries(PREACHERS.map(p=>[p.id,p]));
 /* Кто проповедует в этом месте. Как и всё прочее — из координат. */
 function preacherAt(x,y,stype){
  try{
@@ -16671,7 +16606,6 @@ function resolveEvent(i){
 }
 
 /* ════════ КВЕСТЫ НИПИ ════════ */
-function sayNoResource(){try{if(typeof UI!=='undefined'&&UI.blip)UI.blip(180,.16,.2);}catch(_){} narrate('На этой клетке ресурсов нет или они уже полностью собраны.');}
 function resourceDestination(npc,res){
  const dx=Math.floor(H(npc.x,npc.y,66)*31)-15,dy=Math.floor(H(npc.x,npc.y,67)*31)-15;
  const tx=Math.max(0,Math.min(WORLD-1,npc.x+dx||npc.x+8)),ty=Math.max(0,Math.min(WORLD-1,npc.y+dy||npc.y-6));
@@ -16905,15 +16839,6 @@ function smugglerDenAt(x,y){
   return H(x,y,4960)<0.66;
  }catch(_){return false;}}
 /* Кто именно сидит на этой клетке у разлома. */
-function borderFolkAt(x,y){
- try{
-  const рядом=safeFn(()=>riftNear(x,y,5),false);
-  if(!рядом)return null;
-  const h=H(x,y,4961);
-  if(h>0.34)return null;
-  const годные=BORDER_FOLK.filter(b=>G.dark?b.где!=="Грань":true);
-  return годные[Math.floor(H(x,y,4962)*годные.length)%годные.length];
- }catch(_){return null;}}
 /* Есть ли разлом в нескольких шагах: за Гранью считаются врата обратно. */
 function riftNear(x,y,r){
  try{
@@ -17130,23 +17055,6 @@ function punishLook(){
    Четыре ответа, и ни один не бесплатный. Смотреть — дёшево и пачкает.
    Выкупить — дорого и запоминается народу. Вмешаться — драка со стражей.
    Принять долю — только за Гранью, и это меняет игрока, а не мир. */
-function punishWatch(){
- const пн=safeFn(()=>punishHere(),null);
- if(!пн||пн.поздно||пн.кончено){narrate("Смотреть уже не на что.");return false;}
- safeFn(()=>punishCue(пн,0,0));
- safeFn(()=>markPunishDone());
- const тяж=Number(пн.тяж)||1;
- /* Смотреть — тоже поступок. Народ помнит тех, кто стоял в первом ряду. */
- safeFn(()=>{const р=safeFn(()=>raceHere(),null);if(р)addRep(р,тяж>=4?-1:0);});
- if(пн.тьма)safeFn(()=>{const r=darkRealmAt(G.place.bx,G.place.by);
-  if(r&&r.god){if(!G.darkFaith)G.darkFaith={};
-   G.darkFaith[r.god.id]=(Number(G.darkFaith[r.god.id])||0)+1;}});
- narrate(`Вы досмотрели до конца. ${пн.как} `+
-  (пн.тьма?"За Гранью смотреть — значит соглашаться, и это записали."
-   :"Толпа расходится молча. Кто-то заметил, что вы не отвернулись."),
-  {interrupt:false});
- journal(`${пн.тьма?"Яма":"Площадь"}: ${пн.n}.`);
- return true;}
 function punishRansom(){
  const пн=safeFn(()=>punishHere(),null);
  if(!пн||пн.поздно||пн.кончено){narrate("Выкупать уже некого.");return false;}
@@ -17319,7 +17227,6 @@ function questKind(q){
   /* Неизвестный тип — всё равно дело о добыче и расчёте: род есть у всех. */
   return QUEST_KIND_BY_ID.econ;
  }catch(_){return QUEST_KIND_BY_ID.econ;}}
-function questKindSay(q){const k=safeFn(()=>questKind(q),null);return k?`${k.n}: ${k.о}`:"";}
 /* Голос рода: звучит, когда дело берут и когда сдают. */
 function questKindCue(q,{gain=0.5,maxSec=5}={}){
  try{
@@ -18828,8 +18735,6 @@ function openReading(n,первый){
  safeFn(()=>Bank.play("oc_hinge",{seed:n,gain:0.45,maxSec:3}));
  narrate(`${первый?"Вы прочли":"Страница"}: ${e.title}. ${e.body.join(" ")}`);
  return true;}
-function closeReading(){const m=document.getElementById("modal-read");if(!m||m.hidden)return false;
- Speech.stop();closeModal(m);narrate("Книга закрыта.");return true;}
 function readingStep(d){
  const соб=knowRead();const i=соб.indexOf(readIndex);
  if(i<0)return;
@@ -19077,7 +18982,6 @@ const TRAPS=[
   покой:"beast_breath",сраб:"serpent_hiss",
   о:"Плита под ногой тёплая, и дышит: раз в несколько мгновений она чуть поднимается.",
   бьёт:"Пол разошёлся, и то, что им притворялось, сомкнулось на ноге."}];
-const TRAP_BY_ID=Object.fromEntries(TRAPS.map(t=>[t.id,t]));
 /* ── РОДА ЛОВУШЕК ──
    Материал говорил, из чего ловушка сделана, но не то, чем она берёт. Род
    говорит именно это: механическую слышно и щупают, магическую разбирают
@@ -19361,7 +19265,6 @@ const BOOK_TONGUE=[
  {id:"старый",n:"старое письмо", нужно:1, о:"буквы знакомы, но слова легли иначе"},
  {id:"рунный",n:"рунная строка", нужно:2, о:"строка идёт знаками, а не буквами"},
  {id:"древний",n:"язык погибших",нужно:3, о:"ни одной знакомой черты"}];
-const BOOK_TONGUE_BY_ID=Object.fromEntries(BOOK_TONGUE.map(t=>[t.id,t]));
 /* Что стоит на этой полке. Выводится из места, поэтому одна и та же полка в
    одной и той же башне держит одни и те же книги. */
 function shelfAt(x,y){
@@ -19872,9 +19775,6 @@ function propOnce(tag){
  if(placeMark(propCell.x,propCell.y)===метка)return false;
  setPlaceMark(propCell.x,propCell.y,метка);
  return true;}
-function propTakenAlready(tag){
- if(!propCell||!G.place)return false;
- return placeMark(propCell.x,propCell.y)==="взято"+(tag?":"+tag:"");}
 function useProp(x,y){
  const pr=propAt(x,y);if(!pr)return false;
  safeFn(()=>beacon(pr.b,0,0));
@@ -23279,7 +23179,6 @@ function openHomun(){
    отдаёт больше, чем брал. А если сорвётся высший обряд — то, что вы
    звали, придёт само и без договора.
    ════════════════════════════════════════════════════════════════════════ */
-const DEMON_KIND={дым:"дым",пепел:"пепел",соль:"соль",стужа:"стужа",кровь:"кровь",тень:"тень"};
 const DEMONS=[
  {id:"pipe",   n:"Шепчущий в трубе",  ранг:1,род:"дым",
   признак:"в пустой комнате тянет гарью, хотя очаг холоден",
@@ -23889,7 +23788,6 @@ const DARK_GOD_BY_ID=Object.fromEntries(DARK_GODS.map(g=>[g.id,g]));
    ранг: 0 — низшие, 1 — служилые, 2 — знать, 3 — древние, 4 — божественные
    наследники. Чем выше ранг, тем реже народ встречается и тем меньше с ним
    говорят на равных. */
-const DARK_RANKS=["низшие","служилые","знать","древние","божественные наследники"];
 const DARK_RACES=[
  {id:"grib",   n:"Грибожоры",        rank:0,god:"vermis",черта:"едят то, что растёт на мёртвом"},
  {id:"pepelnye",n:"Пепельные дети",  rank:0,god:"grimm", черта:"рождаются из остывшего кострища"},
@@ -23947,10 +23845,8 @@ const DARK_RACES=[
  {id:"pegasy_t",  n:"Пепельные пегасы",rank:4,god:"aeron",fly:4,черта:"единственные, кого за Гранью не запрягли"},
  {id:"posledn_k", n:"Последние крылья",rank:4,god:"zaruth",fly:4,черта:"их крылья ещё не раскрылись"},
 ];
-const DARK_RACE_BY_ID=Object.fromEntries(DARK_RACES.map(r=>[r.id,r]));
 /* Крылатые народы тёмных земель: у них есть потолок. */
 const DARK_FLY_RACES=DARK_RACES.filter(r=>(Number(r.fly)||0)>0);
-const DARK_RACE_BY_NAME=Object.fromEntries(DARK_RACES.map(r=>[r.n,r]));
 const DARK_RACE_NAMES=DARK_RACES.map(r=>r.n);
 
 /* ── ЗЕМЛЯ ПОД НОГОЙ ──
@@ -24307,7 +24203,6 @@ const ANOMALIES=[
  {id:"mechanism",n:"древние механизмы",о:"стены гудят машиной древних: рычаги и механизмы здесь считаются вдвойне",фон:"oc_steam",вес:2},
  {id:"living",n:"живые стены",о:"кладка дышит: тайные ходы открываются лишь в нечётный час",фон:"moan_deep",вес:1},
  {id:"loop",n:"временная петля",о:"время стоит: часы не идут, пока вы на ярусе",фон:"stk_clock",вес:1}];
-const ANOMALY_BY_ID=Object.fromEntries(ANOMALIES.map(a=>[a.id,a]));
 function dungeonAnomalyAt(p){
  try{
   p=p||G.place;if(!p||!(Number(p.depth)>0)||p.stype==="tower")return null;
@@ -25051,7 +24946,6 @@ function equipWeaponIndex(i){
   narrate(`Экипировано оружие: ${w.name}.`); return true;
  }catch(e){try{console.error("equipWeaponIndex",e);narrate("Не удалось экипировать оружие.");}catch(_){}return false;}
 }
-function ensureStarterSword(){normalizeWeaponState();return !!(G.equip&&G.equip.weapon);}
 
 /* ════════════════════════════════════════════════════════════════════════
    §20: ПРОЦЕДУРНЫЙ ЛУТ ИЗ ДЕВЯТИ СЛАГАЕМЫХ
@@ -27218,19 +27112,6 @@ function darkDeedAt(x,y){
   имя:`${род.n[0].toUpperCase()+род.n.slice(1)} именем ${бог.n.split(" ")[0]}`,
   подпись:[род.id,бог.id,народ.id,место,плата.id,награда.вид+":"+награда.что].join("|")};}
 /* Дело словами: то, что игрок услышит. */
-function darkDeedText(d){
- return `${d.имя}. Просит ${d.народ.n.toLowerCase()} — ${d.народ.черта}. `+
-  `Дело: ${d.род.дело}; место — ${DARK_PLACES[d.место].n.toLowerCase()}. `+
-  `Плата ${d.плата.n}: ${d.плата.словом}. `+
-  `Ступеней ${d.ступеней}. Обещают: ${darkPrizeWord(d.награда)}.`;}
-function darkPrizeWord(н){
- if(!н)return "ничего";
- if(н.вид==="артефакт")return `артефакт «${н.что}»`;
- if(н.вид==="умение"){const a=ABILITY_BY_ID[н.что];return `умение «${a?a.n:н.что}»`;}
- if(н.вид==="навык"){const s=SKILL_BY_ID[н.что];return `навык «${s?s.n:н.что}»`;}
- if(н.вид==="скакун"){const m=MOUNT_BY_ID[н.что];return `скакун «${m?m.n:н.что}»`;}
- if(н.вид==="знание")return `знание: ${н.что}`;
- const g=DARK_GOD_BY_ID[н.что];return `дар бога: ${g?g.дар:"милость"}`;}
 /* Шаги дела: настоящие задания, которые сдаются обычным порядком. */
 function darkDeedQuest(d,step,npc){
  const tier=Math.max(1,(npc&&npc.tier)||2);
@@ -27384,7 +27265,6 @@ const DEEP_MONSTERS=[
  {id:"deep_smith",   n:"Кузнец без лица",    snd:"mgrowl", fx:"growl",  min:18,max:26},
  {id:"deep_edge",    n:"Тварь с Порога",     snd:"mroar",  fx:"roar",   min:20,max:28},
  {id:"deep_first",   n:"Первый, кто копал",  snd:"mroar",  fx:"roar",   min:22,max:30}];
-const DEEP_MONSTER_BY_ID=Object.fromEntries(DEEP_MONSTERS.map(m=>[m.id,m]));
 /* Кто водится на этом ярусе обычного мира: сверху обычные твари, ниже —
    глубинные, и чем ниже, тем чаще именно они. */
 function deepPoolFor(depth){
@@ -33762,7 +33642,7 @@ const CMD={
   if(!src){narrate("Голос не найден.");return;}
   narrate(src.n);
   if(!bankMonsterCue({id:src.id,voice:src.voice},"emerge",0.9))
-   narrate("Запись недоступна: папка со звуками не найдена рядом с игрой.",{interrupt:false});},
+   narrate(НЕТ_ЗАПИСИ,{interrupt:false});},
  sail(){if(G.ship)sailLeg();else narrate("Вы не на борту. Найдите порт на побережье.");},
  carbuy(res){caravanBuy(res,1);},
  carbuy5(res){caravanBuy(res,5);},
@@ -34317,7 +34197,6 @@ const REGIONS=[
  {id:"south_sands",n:"Южные пустыни",о:"Песок, зной и караванные колодцы через день пути.",климат:"зной",биомы:["desert","dunes","stony_desert","semidesert"],ресурс:"камень",опасность:3,звук:["lug_desert","beasts_camel","serpent_hiss"],ярус:"wild"},
  {id:"ash_lands",n:"Пепельные земли",о:"Земля тёплая, воздух серый, и дождь оставляет полосы на коже.",климат:"пепел",биомы:["ashland","volcano","stony_desert"],ресурс:"руда",опасность:4,звук:["ad_fire_sizzle","oc_smoke","oc_earthquake"],ярус:"dark"},
  {id:"dark_empires",n:"Тёмные империи",о:"Здесь державы служат тем, кому в остальном мире не молятся; дороги охраняют, но не для вас.",климат:"тень",биомы:["ashland","warfield","lost_city"],ресурс:"кость",опасность:5,звук:["od_undead","moan_deep","stk_dark"],ярус:"dark"}];
-const REGION_BY_ID=Object.fromEntries(REGIONS.map(r=>[r.id,r]));
 function regionIndexAt(x,y){
  const col=Math.max(0,Math.min(4,Math.floor((Number(x)||0)/REGION_W)));
  const row=Math.max(0,Math.min(3,Math.floor((Number(y)||0)/REGION_H)));
@@ -36700,7 +36579,6 @@ const CASE_TEMPLATES=[
  {id:"fire",n:"Пожар в мастерской",о:"сгорела мастерская; хозяин говорит — молния, соседи — что видели огонь до грозы",место:"ремесленный район",улики:["показание","температура","чары","запах","звук"],версии:[{id:"arson",n:"поджог по найму",улики:["запах","звук","показание"]},{id:"spell",n:"сорвавшиеся чары ученика",улики:["чары","температура"]},{id:"storm",n:"всё-таки молния",улики:["температура","звук"]}]},
  {id:"vanish",n:"Исчезновение книжника",о:"книжник вышел за водой и не вернулся; на столе — недописанная страница",место:"квартал у библиотеки",улики:["показание","вещь","мана","чары","память"],версии:[{id:"portal",n:"ушёл сквозь разлом",улики:["мана","чары"]},{id:"debt",n:"увезли за долги",улики:["показание","вещь"]},{id:"dead",n:"убит за то, что прочёл",улики:["память","вещь","показание"]}]},
  {id:"haunt",n:"Смерть без раны",о:"третья смерть за месяц, и ни на одном теле нет раны; стража говорит о проклятии",место:"старый квартал",улики:["память","мана","звук","показание","температура"],версии:[{id:"spirit",n:"неупокоенный дух",улики:["память","звук"]},{id:"necro",n:"некромант в подполе",улики:["мана","память","показание"]},{id:"plague",n:"тихая хворь, а не чары",улики:["температура","показание"]}]}];
-const CASE_BY_ID=Object.fromEntries(CASE_TEMPLATES.map(c=>[c.id,c]));
 const Cases=Modules.register("CASES",{
  templates:CASE_TEMPLATES,kinds:CLUE_KINDS,
  city(){try{const x=G.place?G.place.bx:G.x,y=G.place?G.place.by:G.y;const c=isCityAt(x,y);return c?{x,y,name:c.name,key:x+","+y}:null;}catch(_){return null;}},
@@ -37701,7 +37579,6 @@ const CONJ_BEASTS=[
   о:"голосов много, а тела ни одного; бьёт согласием всех сразу"},
  {id:"cj_maw",n:"Пасть перехода",snd:"mroar",fx:"roar",голос:"dragon",сила:1.6,
   о:"сама дыра, у которой выросли зубы: то, что в неё попало, не возвращается"}];
-const CONJ_BEAST_BY_ID=Object.fromEntries(CONJ_BEASTS.map(b=>[b.id,b]));
 const CONJ_RES=["чужая соль","переходный сплав","семя иного"];
 const CONJ_PROFS=["Переходчик","Скупщик чужого","Толмач Грани"];
 const CONJ_ORG={n:"Товарищество Перехода",дело:"возит чужое и держит счёт переходам",
@@ -38003,7 +37880,6 @@ const WAR_ROLES=[
   треб:"две руды",                             звук:"deep_cart"},
  {id:"command", n:"командир",  свойство:"числ",        о:"повести крыло и сдвинуть фронт",
   треб:"ветвь «командование» от второй ступени", звук:"war_timpani"}];
-const WAR_ROLE_BY_ID=Object.fromEntries(WAR_ROLES.map(r=>[r.id,r]));
 const Armies=Modules.register("ARMIES",{
  state(i){if(!G.armies||typeof G.armies!=="object")G.armies={};const e=EMPIRES[i];if(!e)return null;
   if(!G.armies[i])G.armies[i]={числ:800+Math.floor(hashName(i,3,8800)*1200),мораль:70,снабжение:70,разведка:50,транспорт:50,чары:Math.round(hashName(i,5,8801)*60),фронт:0,день:Number(G.day)||1};
@@ -38334,7 +38210,6 @@ const DEEP_FAMILIES=[
  {id:"root",n:"корневые",ест:"воду",едят:"ползуны",ярус:[6,50],о:"тянутся из грибного леса",звук:"lug_growl",страх:"соль"},
  {id:"echo",n:"шёпотники",ест:"голоса",едят:"никто",ярус:[20,100],о:"повторяют то, что вы сказали час назад",звук:"amb_wind",страх:"тишина"},
  {id:"smith",n:"машинные стражи",ест:"ничего",едят:"никто",ярус:[25,100],о:"механизмы Предтеч, что всё ещё несут службу",звук:"oc_electrical",страх:"вода и ржа"}];
-const DEEP_FAM_BY_ID=Object.fromEntries(DEEP_FAMILIES.map(x=>[x.id,x]));
 const Ecology=Modules.register("ECOLOGY",{
  families:DEEP_FAMILIES,
  at(depth){depth=Number(depth)||0;return DEEP_FAMILIES.filter(f=>depth>=f.ярус[0]&&depth<=f.ярус[1]);},
@@ -38361,7 +38236,6 @@ const DEEP_RESOURCES=[
  {id:"deepamber",n:"глубинный янтарь",ярус:60,о:"в нём застыло то, чего нет наверху",цена:150,что:"алхимия и память"},
  {id:"riftsand",n:"разломный песок",ярус:75,о:"течёт вверх",цена:200,что:"пространственные чары"},
  {id:"firstmetal",n:"первый металл",ярус:90,о:"его лили Предтечи",цена:300,что:"артефакты высшего ранга"}];
-const DEEP_RES_BY_ID=Object.fromEntries(DEEP_RESOURCES.map(x=>[x.id,x]));
 const DeepRes=Modules.register("DEEPRES",{
  list:DEEP_RESOURCES,
  at(depth){depth=Number(depth)||0;return DEEP_RESOURCES.filter(r=>depth>=r.ярус);},
@@ -40986,7 +40860,6 @@ const ENC_SCHOOLS=[
   спец:["магические механизмы","автоматоны","барьеры","энергетические сети"],
   кратко:["Магические","Автоматоны","Барьеры","Энергетические"]},
 ];
-const ENC_SCHOOL_BY_ID=Object.fromEntries(ENC_SCHOOLS.map(s=>[s.id,s]));
 /* Восемь ступеней. Римская цифра — как в пакете; имя — как его читают вслух. */
 const ENC_TIERS=[
  {i:1,r:"I",   n:"Искра",       о:"первое прикосновение: работает, пока не отвлекут"},
@@ -41051,7 +40924,6 @@ const ENC_PER_TIER=103;     /* 824 = 8 ступеней × 103 */
 const ENC_TOTAL=14000;
 /* Цена по закону пакета: шаг семнадцать по кругу от трёх до ста. */
 function encCost(k){return 3+((82+17*(Number(k)||0))%98);}
-function encCount(){return ENC_TOTAL;}
 /* Запись каталога по номеру 1…14000. Ничего не хранится: всё считается. */
 function encAt(n){
  try{
@@ -42435,7 +42307,6 @@ const MERCH_TRAITS=[
   о:"покупает не глядя и платит меньше, чем стоит"},
  {id:"pridira",n:"берёт только своё",    k:1.05, уступ:0.95, толькоСвоё:true,
   о:"чужой товар не берёт вовсе: «это не по моей части»"}];
-const MERCH_TRAIT_BY_ID=Object.fromEntries(MERCH_TRAITS.map(t=>[t.id,t]));
 /* Лицо торговца. Выводится из ключа; казна и запас живут в сохранении
    только у тех, с кем игрок уже торговал. */
 const merchSoulCache=new Map();
@@ -43874,7 +43745,6 @@ const Inventory=Modules.register("INVENTORY",{cats:INV_CATS,rules:INV_CAT_RULES,
   const eq=G.equip||{};const надето=["weapon","armor","acc"].filter(sl=>eq[sl]).length;
   return `В котомке ${r.length} ${plural(r.length,"строка","строки","строк")} по ${сп.length} ${plural(сп.length,"разделу","разделам","разделам")}: ${сп.join(", ")||"пусто"}. Надето вещей ${надето} из трёх. Родов вещей ${INV_CATS.length}.`;
  }catch(e){return "Котомка не отвечает.";}}});
-const INV_KINDS={equip:"на теле",gear:"оружие и снаряжение",res:"припасы",rare:"редкие товары",plant:"растения и грибы",potion:"зелья",art:"артефакты",item:"предметы",fish:"улов",part:"части"};
 function invAll(){
  const out=[];
  try{
@@ -44522,21 +44392,6 @@ function renderQuests(){
      return `<div class="list-line" tabindex="0" data-speak="${t.replace(/"/g,"&quot;")}">🔗 ${t}</div>`;}).join(""):`<div class="list-line">Цепочек пока нет: их дают жители с историей.</div>`)
    +`<h3>❔ Скрытые и неизвестные</h3><div class="list-line" tabindex="0" data-speak="Неизвестных цепочек в мире ${скрытые}: о них пока только слышно в слухах и от жителей.">❔ Неизвестных цепочек: ${скрытые}. О них пока только слышно.</div>`;
  }catch(e){try{console.error("renderQuests",e);}catch(_){}}}
-function renderQuestsOld(){
- document.getElementById("questList").innerHTML=G.quests.length?
-  G.quests.map(q=>`<div class="list-line">${q.done?"✅":"📜"} От: ${q.npc}<br>${q.text}<br>
-   ${q.chain?`Цепочка «${q.chainName}», шаг ${(q.chainStep||0)+1} из ${q.chainOf}.<br>`:""}Ярус: ${safeFn(()=>questTier(q).n,"")}, состояние: ${safeFn(()=>questStateWord(q),"")}${q.до&&!q.done?`, срок до ${q.до}-го дня`:""}.<br>Прогресс: ${q.done?(q.провал?"провалено":q.состояние==="частично"?"сдано частично":"выполнен"):qProgressText(q)}<br>Награда: ${questPay(q).gold} золота
-   ${!q.done&&safeFn(()=>questPartialReady(q),false)?`<button data-cmd="qpart:${q.id}" data-speak="Сдать частично: половина сделана, платят меньше, последствия придут позже.">½ Сдать частично</button>`:""}, ${questPay(q).xp} опыта.
-   ${q.done?"":`<button data-cmd="qdone:${q.id}" data-speak="Завершить квест: ${String(q.text).replace(/"/g,"&quot;").slice(0,80)}">✅ Завершить</button>
-   ${(()=>{const a=safeFn(()=>qAltFor(q),null);if(!a)return "";const ц=safeFn(()=>qAltPrice(q),0);
-     return `<button data-cmd="qalt:${q.id}" data-speak="Второй путь: ${a.n}${ц?`, ${ц} золота`:""}. ${a.о}.">🪙 ${a.n}${ц?` (${ц})`:""}</button>`;})()}
-   <button data-cmd="qdrop:${q.id}" data-speak="Отказаться от дела: ${String(q.text).replace(/"/g,"&quot;").slice(0,80)}. Репутация у народа упадёт на два.">🚫 Отказаться</button>`}</div>`).join(""):
-  `<div class="list-line">Квестов нет. Поговорите с жителями — у каждого есть задание.</div>`;
- const hint=document.getElementById("questList");
- if(hint&&G.quests.length){
-  const open=openQuests().length;
-  hint.insertAdjacentHTML("afterbegin",
-   `<div class="list-line" data-speak="Незакрытых дел ${open} из ${QUEST_LIMIT}.">📋 Незакрытых дел: <b>${open}</b> из ${QUEST_LIMIT}</div>`);}}
 function renderJournal(){
  document.getElementById("journalList").innerHTML=G.journal.length?
   G.journal.slice(0,15).map(j=>`<div class="list-line">${j}</div>`).join(""):
@@ -46190,7 +46045,6 @@ const GEN_FACTORS=[
  {id:"опасность",n:"опасность",о:"чем это место опасно и как глубоко",звук:"danger"},
  {id:"биом",    n:"биом",     о:"какая порода и жизнь вокруг",        звук:"amb_cave"},
  {id:"магия",   n:"магия",    о:"близко ли место силы или аномалия",  звук:"magic_hum"}];
-const GEN_FACTOR_BY_ID=Object.fromEntries(GEN_FACTORS.map(f=>[f.id,f]));
 /* Как порождение читает шаблон. Это собственное чтение Gen, а не поле
    самого рода подземелья: крепость и машинный комплекс строили просторно и
    со светом, шахту и нору — тесно и в темноте, храм и книгохранилище — в
@@ -47732,6 +47586,7 @@ function renderGestures(){
   "🏃 Свайп и удержание пальца — бег в эту сторону. Отпустите палец — остановка.",
   "🎣 Во время поклёвки любое касание или свайп — <b>подсечка</b>: игра сама скажет «Клюёт!» и подаст звук, а у вас будет около двух секунд.",
   "👆 Одиночное касание одним пальцем не делает ничего — ни действия, ни имени, и <b>выбор оно не двигает</b>: куда бы палец ни попал, выбранным остаётся тот пункт, который назвали свайп или ощупывание. Что под ногами и что под пальцем, называют ощупывание и палец, полежавший на месте четверть секунды.",
+  "👆✌️ <b>Раздельное касание</b>, как в TalkBack и VoiceOver: держите палец на пункте, пока игра его не назовёт, и, не отрывая, стукните рядом вторым пальцем — пункт выполнится, а палец останется на месте. Только в окнах и только после того, как пункт назван. Выключается в настройках, раздел «Жесты».",
   "👆👆 Двойное касание — выполнить <b>выбранный</b> пункт окна, где бы палец ни опустился: на кнопке, мимо неё, в пустом месте. Попадать пальцем в кнопку не нужно и знать, где она, не нужно. Касание игрового поля одним пальцем — одиночное или двойное — <b>ничего не делает</b>: действие здесь — свайп двумя пальцами вниз, сбор — касание двумя пальцами.",
   "✋ Палец, лежащий на месте, через четверть секунды называет то, чего касается, — и этот пункт становится выбранным. Так выбирают пальцем: подержать и отпустить. Ни одно одиночное касание в игре ничего не выполняет: сколько бы палец ни лежал, при отрыве ничего не произойдёт.",
   "🚪 <b>Вход своим ходом.</b> Дойдя до города, дома или пещеры, вы встаёте на пороге — игра говорит: «вы у входа». Шагните ещё раз в ту же сторону, и вы войдёте сами. Внутри так же: встали на ступени — шаг в ту же сторону спускает вас ниже или поднимает выше; встали в воротах — шаг наружу выводит из города. Меню действий по-прежнему работает, но ходить теперь можно ногами.",
@@ -47739,9 +47594,9 @@ function renderGestures(){
   "<b>ДВА ПАЛЬЦА — места и меню</b>",
   "📦 Касание двумя пальцами — <b>собрать ресурс</b> под ногами: руду, травы, дерево, камень, кристаллы. Только сбор: окно этот жест больше не закрывает.",
   "🌀 Стоя у портального узла, откройте меню действий и выберите «Портальная сеть»: она перечислит открытые узлы, плату за каждый переход и разбор этой платы. Узел открывается сам, когда вы на него встаёте.",
-  "📋 Свайп тремя пальцами вверх — <b>меню действий</b>, где собраны все кнопки игры. Закрывается тем же свайпом, касанием двумя пальцами или клавишей Эскейп.",
+  "📋 Свайп тремя пальцами вверх — <b>меню действий</b>, где собраны все кнопки игры. Закрывается тем же свайпом, свайпом двумя пальцами вниз или клавишей Эскейп.",
 
-  "⬇️ Свайп двумя пальцами вниз — <b>взаимодействовать с найденным</b>: войти, спуститься, открыть сундук, заговорить, помолиться; на борту — идти дальше морем.",
+  "⬇️ Свайп двумя пальцами вниз — <b>закрыть открытое окно</b>. Окон нет — <b>взаимодействовать с найденным</b>: войти, спуститься, открыть сундук, заговорить, помолиться; на борту — идти дальше морем.",
 
   "⬆️ Свайп двумя пальцами вверх — <b>повторить последнее сообщение</b>, а если речь идёт — оборвать её.",
 
