@@ -161,10 +161,6 @@ Unported (CC BY-SA 3.0): https://creativecommons.org/licenses/by-sa/3.0/
 | minaret_03 | зов с башни | `minarett3.wav` |
 | minaret_04 | зов с башни | `minarett4.wav` |
 | minaret_05 | зов с башни | `minarett5.wav` |
-| mine_deep_01 | глубокая выработка | `technician_mine1.wav` |
-| mine_deep_02 | глубокая выработка | `technician_mine2.wav` |
-| mine_deep_03 | глубокая выработка | `technician_mine3.wav` |
-| mine_deep_04 | глубокая выработка | `technician_mine4.wav` |
 | mine_pick_01 | кирка по руде | `worker_mine1.wav` |
 | mine_pick_02 | кирка по руде | `worker_mine2.wav` |
 | mine_pick_03 | кирка по руде | `worker_mine3.wav` |

@@ -407,9 +407,9 @@ const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(e!==undefined?' :
    "isle_market","shore_wash","collapse","stone_low"];
   const живут=["brute_roar","oc_growl","raptor_cry","wraith_moan","wyrm_dark","wolf_howl",
    "serpent_hiss","lug_sword","craft_axe","battle_bow","battle_shield","lug_clank",
-   "mg_spear","throng_march","guard_shout","oc_res_rune","oc_zap","spell_light","curse",
-   "spell_dark","lug_snarl","throng_cry","wild_birds","signal_beep","ad_market_sel",
-   "ad_wave_rocky","stk_crash","dungeon_drone"];
+   "mg_spear","throng_march","guard_shout","oc_res_rune","oc_zap","spell_light","oc_trap_magic",
+   "spell_dark","lug_snarl","throng_cry","wild_birds","ad_market_sel",
+   "ad_wave_rocky","stk_crash","deep_3"];
   const итог=await page.evaluate(([ушли,живут])=>{
    const ноты=/^(inst|orch|mood|relic|score|folk|depth|beast|arms|spell)\//;
    /* Слова, которые называют вещь мира, а не инструмент и не тему. */

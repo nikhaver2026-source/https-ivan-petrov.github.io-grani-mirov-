@@ -111,10 +111,8 @@ https://creativecommons.org/licenses/by/3.0/ — текст лицензии р�
 | oc_thunder_03 | гром | `Sound.ocg/Environment.ocg/Lightning.ocg/Thunder3.ogg` |
 | oc_thunder_04 | гром | `Sound.ocg/Environment.ocg/Lightning.ocg/Thunder4.ogg` |
 | oc_thunder_05 | гром | `Sound.ocg/Environment.ocg/Lightning.ocg/Thunder5.ogg` |
-| oc_quake_01 | земля дрожит | `Sound.ocg/Environment.ocg/Disasters.ocg/Earthquake.ogg` |
-| oc_quake_02 | земля дрожит | `Sound.ocg/Environment.ocg/Disasters.ocg/EarthquakeEnd.ogg` |
-| oc_tree_crack_01 | дерево трещит и валится | `Sound.ocg/Environment.ocg/Tree.ocg/Crack.ogg` |
-| oc_tree_crack_02 | дерево трещит и валится | `Sound.ocg/Environment.ocg/Tree.ocg/Landing.ogg` |
+| oc_quake_02 | земля дрожит: короткий толчок | `Sound.ocg/Environment.ocg/Disasters.ocg/EarthquakeEnd.ogg` |
+| oc_tree_crack_01 | дерево трещит | `Sound.ocg/Environment.ocg/Tree.ocg/Crack.ogg` |
 | oc_soft_touch_01 | касание: ткань, ладонь, мягкое | `Sound.ocg/Hits.ocg/SoftTouch1.ogg` |
 | oc_soft_touch_02 | касание: ткань, ладонь, мягкое | `Sound.ocg/Hits.ocg/SoftTouch2.ogg` |
 | oc_soft_hit_01 | мягкий удар: вещь положена | `Sound.ocg/Hits.ocg/SoftHit1.ogg` |

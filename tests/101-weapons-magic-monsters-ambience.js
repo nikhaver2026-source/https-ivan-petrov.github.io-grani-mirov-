@@ -75,7 +75,7 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   &&удары.костьКанал.every(k=>k==="combat")&&удары.нет===false,
   {боевые:удары.костьРоли,всё:удары.костьВсё});
  check('тяжёлый удар по голему: замах героя, попадание, броня и тяжесть',
-  удары.голем.includes("hero_swing")&&удары.голем.includes("lug_sword")&&удары.голем.includes("metal_hit")&&удары.голем.includes("impact_heavy"),удары.голем);
+  удары.голем.includes("hero_swing")&&удары.голем.includes("lug_sword")&&удары.голем.includes("mtg_metal_hit")&&удары.голем.includes("lug_impact"),удары.голем);
  check('промах свистит, а не бьёт',удары.промах.includes("lug_whoosh_hit")&&!удары.промах.includes("lug_sword"),удары.промах);
  check('вынуть и убрать оружие — свои состояния модели',удары.вынуть==="draw"&&удары.убрать==="sheathe",{вынуть:удары.вынуть,убрать:удары.убрать});
 

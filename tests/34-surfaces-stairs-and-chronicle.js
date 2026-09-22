@@ -256,18 +256,21 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   const папки=new Set(роли.map(r=>(SOUND_BANK[r].f[0]||"").split("/")[0]));
   const безРаздела=[...папки].filter(p=>p&&!BANK_CATS[p]);
   /* Новые разделы на месте. */
-  /* surf ушла целиком: её «шаги» были хай-хэтами ударной установки. */
-  const новые=["blow","troop","bazaar","dark","arms","spell","relic","folk","mood"];
+  /* surf ушла целиком: её «шаги» были хай-хэтами ударной установки. blow,
+     troop, bazaar и dark — тоже: бочки, тарелки, табла, драм-машина и
+     робот-голоса под видом ударов, строя, рынка и голосов из тьмы. */
+  const новые=["arms","spell","relic","folk","mood"];
   const нетРаздела=новые.filter(k=>!BANK_CATS[k]);
   const нетРолей=новые.filter(k=>!роли.some(r=>(SOUND_BANK[r].f[0]||"").startsWith(k+"/")));
-  return {ролей:роли.length,безФайлов,безОписания,безРаздела,нетРаздела,нетРолей,
+  const ударные=["surf","blow","troop","bazaar","dark"].filter(k=>BANK_CATS[k]||роли.some(r=>(SOUND_BANK[r].f[0]||"").startsWith(k+"/")));
+  return {ролей:роли.length,безФайлов,безОписания,безРаздела,нетРаздела,нетРолей,ударные,
    всего:soundTotals()};});
  check('у каждой роли банка есть файлы и описание',
   !bank.безФайлов.length&&!bank.безОписания.length,
   {файлы:bank.безФайлов.slice(0,4),описание:bank.безОписания.slice(0,4)});
  check('каждая папка записей названа в энциклопедии',!bank.безРаздела.length,bank.безРаздела);
- check('девять новых разделов на месте и не пусты',
-  !bank.нетРаздела.length&&!bank.нетРолей.length,{разделы:bank.нетРаздела,роли:bank.нетРолей});
+ check('пять разделов живых записей на месте и не пусты, а ударные разделы ушли совсем',
+  !bank.нетРаздела.length&&!bank.нетРолей.length&&!bank.ударные.length,{разделы:bank.нетРаздела,роли:bank.нетРолей,ударные:bank.ударные});
  check('звуков в игре стало больше восьмисот',bank.всего.всего>800,bank.всего);
 
  const voices=await page.evaluate(()=>{

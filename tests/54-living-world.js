@@ -318,7 +318,7 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
    G.place=null;G.x=700;G.y=700;
    const m=getNPC(704,700,0,"Стражник");
    точки.length=0;плоско.length=0;
-   npcCue(m,"guard_march",{gain:0.5});
+   npcCue(m,"hero_step_metal",{gain:0.5});
    out.вПоле=точки.slice();
   }finally{Spatial.role=оR;Bank.play=оP;settings.effects=0;
    while(activeLayer())closeTopUI();G.place=null;}

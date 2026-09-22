@@ -32,4 +32,3 @@ License: CC-BY-SA-3.0`).
 | score_night_01 | музыка: ночь и сон | `content/audio/music/nightdream.ogg` |
 | score_newland_01 | музыка: новые земли | `content/audio/music/newfrontier.ogg` |
 | score_seafight_01 | музыка: морской бой | `content/audio/music/seafight.ogg` |
-| uh_ships_bell_01 | корабельный колокол в порту | `content/audio/sounds/ships_bell.ogg` |

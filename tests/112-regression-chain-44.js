@@ -192,8 +192,8 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   await new Promise(res=>setTimeout(res,250));
   r.сказано=SAID.filter(t=>/Проба цепи/.test(t)).length;r.озвучено=SPOKEN.filter(t=>/Проба цепи/.test(t)).length;
   /* речь не съедает игровые звуки */
-  PLAYED.length=0;Bank.play("knock_soft",{gain:0,maxSec:0.3});narrate("Вторая строка.",{interrupt:true});
-  await new Promise(res=>setTimeout(res,200));r.звук=PLAYED.includes("knock_soft");
+  PLAYED.length=0;Bank.play("oc_wood_dull",{gain:0,maxSec:0.3});narrate("Вторая строка.",{interrupt:true});
+  await new Promise(res=>setTimeout(res,200));r.звук=PLAYED.includes("oc_wood_dull");
   r.очередь=typeof Speech.status==="function"&&typeof Speech.repeatLast==="function"&&typeof Speech.stop==="function";
   return r;});
  check('один диспетчер касаний, один обработчик кликов и клавиш; одна строка звучит один раз; речь не съедает игровые звуки; очередь речи на месте',

@@ -12,7 +12,8 @@ GPL-2 (`click.ogg`) в игру не брался: эта лицензия не�
 **Изменения:** файлы переименованы; три музыкальные темы перекодированы в Ogg
 Vorbis 80 кбит/с моно, чтобы страница грузилась быстрее. Содержание не менялось.
 
-Всего файлов: 108.
+Всего файлов: 105. Три копии `healspell1` с тем же звуком, что и
+сам `healspell1`, убраны: вариант, который звучит так же, — не вариант.
 
 | Файл | Что это | Автор | Лицензия |
 |---|---|---|---|
@@ -47,9 +48,6 @@ Vorbis 80 кбит/с моно, чтобы страница грузилась �
 | `digging18.ogg` | копка породы | Svenskmand | CC BY-SA 3.0 |
 | `falling1.ogg` | падение тела | remaxim | CC BY-SA 3.0 |
 | `healspell1.ogg` | лечебные чары | DoKashiteru | CC BY-SA 3.0 |
-| `healspell1_2.ogg` | лечебные чары | DoKashiteru | CC BY-SA 3.0 |
-| `healspell1_3.ogg` | лечебные чары | DoKashiteru | CC BY-SA 3.0 |
-| `healspell1_4.ogg` | лечебные чары | DoKashiteru | CC BY-SA 3.0 |
 | `healspell2.ogg` | лечебные чары | DoKashiteru | CC BY-SA 3.0 |
 | `healspell3.ogg` | лечебные чары | DoKashiteru | CC BY-SA 3.0 |
 | `inventory1.ogg` | вещь берут в руки | artisticdude | CC BY-SA 3.0 |

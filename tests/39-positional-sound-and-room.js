@@ -365,7 +365,7 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
    G.place.x=5;G.place.y=5;
    точки.length=0;
    мерить(()=>Actors.voice({x:9,y:5},"throng_hail_m",{gain:0.5}));
-   мерить(()=>Actors.voice({x:5,y:1},"guard_march",{gain:0.5}));
+   мерить(()=>Actors.voice({x:5,y:1},"hero_step_metal",{gain:0.5}));
    out.живые=точки.slice();
    while(activeLayer())closeTopUI();G.place=null;
   }finally{Spatial.role=oR;Spatial.at=oA;Bank.play=oP;}

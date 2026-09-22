@@ -15,7 +15,8 @@ paramat, BlockMen, sofar, Neuromancer, Gambit, asl97, KevDoy, Mito551,
 GreenXenith, kaeza, kilbith, tobyplowy, CloudyProton, TumeniNodes, Mossmanikin,
 random-geek, Extex101, An0n3m0us, Lopano.
 
-Всего файлов: 102.
+Всего файлов: 99. Три записи «огонь гаснет» оказались тем же файлом, что
+и «лава остывает»; копии убраны, звук остался у одной роли.
 
 | Файл | Что это |
 |---|---|
@@ -47,9 +48,6 @@ random-geek, Extex101, An0n3m0us, Lopano.
 | `dug_node_1.ogg` | камень падает |
 | `dug_node_2.ogg` | камень падает |
 | `explode.ogg` | взрыв |
-| `extinguish_flame_1.ogg` | запись Minetest Game |
-| `extinguish_flame_2.ogg` | запись Minetest Game |
-| `extinguish_flame_3.ogg` | запись Minetest Game |
 | `fencegate_close.ogg` | калитка закрывается |
 | `fencegate_open.ogg` | калитка открывается |
 | `fire_1.ogg` | запись Minetest Game |

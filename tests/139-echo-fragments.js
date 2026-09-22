@@ -225,7 +225,7 @@ const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(e!==undefined?' :
   for(let i=0;i<300&&!слово;i++){G.echoDay=null;G.day=i+2;слово=Echo.conflict();}
   const o={лад,рознь,выброшенЛад,слово:String(слово).slice(0,100),
    стало:Echo.fitted().length,было,кровь:hp0-G.hp,
-   звук:__played.includes("shatter"),летопись:__jt.some(t=>/конфликт осколков/.test(t))};
+   звук:__played.includes("oc_glass_break"),летопись:__jt.some(t=>/конфликт осколков/.test(t))};
   /* Один осколок не конфликтует сам с собой. */
   G.echoFrag={сумка:[],вложено:[Echo.make("edge",5,"e_chaos","п")],счёт:9};
   o.одинНеРвётся=Echo.conflict()==="";

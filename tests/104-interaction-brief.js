@@ -47,7 +47,7 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   setSubMode("off");r.off=[settings.subtitles,sub("важно","important"),el.hidden];
   setSubMode("important");r.imp=[sub("важно","important"),sub("речь","speech"),sub("звук","sound")];
   setSubMode("speech");r.sp=[sub("речь","speech"),sub("звук","sound")];
-  setSubMode("sounds");subLastSound=0;r.snd=[sub("звук","sound"),subSound("chime"),el.textContent];
+  setSubMode("sounds");subLastSound=0;r.snd=[sub("звук","sound"),subSound("uh_bell"),el.textContent];
   /* речь идёт в субтитр по уровню */
   setSubMode("important");el.hidden=true;el.textContent="";Speech._speak({text:"Проверка важного",pri:1,parts:null});r.speechImp=el.textContent;Speech.stop();
   el.hidden=true;el.textContent="";Speech._speak({text:"Проверка обычного",pri:2,parts:null});r.speechOrd=el.textContent;Speech.stop();

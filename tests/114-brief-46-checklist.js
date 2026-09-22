@@ -68,10 +68,10 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
  /* ── 3 и 13 ── */
  const звук=await page.evaluate(async()=>{
   const r={};PLAYED.length=0;
-  Bank.play("knock_soft",{gain:0,maxSec:0.4});
+  Bank.play("oc_wood_dull",{gain:0,maxSec:0.4});
   narrate("Системное слово.",{interrupt:true});
   await new Promise(z=>setTimeout(z,200));
-  r.звукОстался=PLAYED.includes("knock_soft");
+  r.звукОстался=PLAYED.includes("oc_wood_dull");
   PLAYED.length=0;SAID.length=0;
   narrate("Второе слово.",{interrupt:true});
   Bank.play("bell_small",{gain:0,maxSec:0.4});

@@ -17,8 +17,11 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   const head=f=>fetch?null:null;
   return {roles:roles.length,files:files.length,
    inst:files.filter(f=>f.startsWith("inst/")).length,
-   nat:files.filter(f=>f.startsWith("nat/")).length};});
- check('банк ролей вырос: живые записи и инструменты внутри',bank.files>=320&&bank.roles>=140&&bank.inst>=38&&bank.nat>=75,bank);
+   nat:files.filter(f=>f.startsWith("nat/")).length,
+   ударные:files.filter(f=>/^(blow|troop|bazaar|dark|surf)\//.test(f)).length};});
+ /* В nat остались только записи настоящих предметов — колокола, дверь, касса,
+    стекло, хор, ворон и пар; бочки, тарелки и драм-машина ушли из игры. */
+ check('банк ролей вырос: живые записи и инструменты внутри, ударных под видом мира нет',bank.files>=320&&bank.roles>=140&&bank.inst>=38&&bank.nat>=10&&bank.ударные===0,bank);
 
  // 2. Каждый файл банка реально загружается
  const load=await page.evaluate(async()=>{

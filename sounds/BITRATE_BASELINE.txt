@@ -3,10 +3,10 @@
 # Правило: всякая НОВАЯ запись в sounds/ — либо без потерь (flac, wav),
 # либо сжата не ниже 320 кбит/с. Набор проверок 152 это стережёт.
 #
-# Перечисленные ниже 1701 записей пришли раньше правила, из свободных
+# Перечисленные ниже 1690 записей пришли раньше правила, из свободных
 # библиотек, и уже сжаты с потерями. Пережать их в 320 нельзя: пережатие не
 # возвращает того, чего в файле нет, — оно лишь втрое раздувает вес. Весь
-# банк весит 226 МБ; пережатие подняло бы его к 600 МБ без единого нового
+# банк весит 206 МБ; пережатие подняло бы его к 550 МБ без единого нового
 # слышимого призвука, и игра на телефоне грузилась бы дольше ни за что.
 # Поэтому они остаются как есть и записаны здесь поимённо.
 #
@@ -674,7 +674,6 @@ sounds/mg/minaret_02.ogg	78
 sounds/mg/minaret_03.ogg	81
 sounds/mg/minaret_04.ogg	75
 sounds/mg/minaret_05.ogg	78
-sounds/mg/mine_deep_04.ogg	241
 sounds/mg/mine_pick_01.ogg	95
 sounds/mg/mine_pick_02.ogg	108
 sounds/mg/mine_pick_03.ogg	197
@@ -836,9 +835,6 @@ sounds/mtg/dug_metal_2.ogg	116
 sounds/mtg/dug_node_1.ogg	193
 sounds/mtg/dug_node_2.ogg	232
 sounds/mtg/explode.ogg	81
-sounds/mtg/extinguish_flame_1.ogg	81
-sounds/mtg/extinguish_flame_2.ogg	98
-sounds/mtg/extinguish_flame_3.ogg	127
 sounds/mtg/fencegate_close.ogg	117
 sounds/mtg/fencegate_open.ogg	118
 sounds/mtg/fire_1.ogg	109
@@ -1017,7 +1013,6 @@ sounds/oc/oc_projectile_hit_01.ogg	220
 sounds/oc/oc_projectile_hit_02.ogg	213
 sounds/oc/oc_pshsh_01.ogg	114
 sounds/oc/oc_pumpjack_01.ogg	65
-sounds/oc/oc_quake_01.ogg	250
 sounds/oc/oc_quake_02.ogg	137
 sounds/oc/oc_res_blood_01.ogg	124
 sounds/oc/oc_res_blood_02.ogg	110
@@ -1086,7 +1081,6 @@ sounds/oc/oc_trap_sound_01.ogg	88
 sounds/oc/oc_trap_space_01.ogg	139
 sounds/oc/oc_trap_space_02.ogg	108
 sounds/oc/oc_tree_crack_01.ogg	210
-sounds/oc/oc_tree_crack_02.ogg	205
 sounds/oc/oc_tree_fall_01.ogg	205
 sounds/oc/oc_warp_01.ogg	54
 sounds/oc/oc_waterdrop_01.ogg	191
@@ -1138,9 +1132,6 @@ sounds/od/digging17.ogg	187
 sounds/od/digging18.ogg	229
 sounds/od/falling1.ogg	140
 sounds/od/healspell1.ogg	90
-sounds/od/healspell1_2.ogg	90
-sounds/od/healspell1_3.ogg	90
-sounds/od/healspell1_4.ogg	90
 sounds/od/healspell2.ogg	91
 sounds/od/healspell3.ogg	92
 sounds/od/inventory1.ogg	162
@@ -1477,7 +1468,6 @@ sounds/uh/uh_lumber_long_01.ogg	60
 sounds/uh/uh_lumberjack_01.ogg	142
 sounds/uh/uh_page_01.ogg	136
 sounds/uh/uh_sheep_01.ogg	72
-sounds/uh/uh_ships_bell_01.ogg	203
 sounds/uh/uh_smith_01.ogg	202
 sounds/uh/uh_square_01.ogg	173
 sounds/uh/uh_stonemason_01.ogg	138
@@ -1505,7 +1495,6 @@ sounds/ui/b_stairs_up.mp3	100
 sounds/ui/b_temple.mp3	65
 sounds/ui/b_wall.mp3	69
 sounds/ui/b_warn.mp3	65
-sounds/ui/b_well.mp3	68
 sounds/ui/ui_activate.mp3	73
 sounds/ui/ui_back.mp3	102
 sounds/ui/ui_close.mp3	70
