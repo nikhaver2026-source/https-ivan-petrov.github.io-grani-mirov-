@@ -44,6 +44,15 @@ h1{color:var(--acc);text-align:center;margin:8px 0 2px;font-size:1.8rem;}
 .menu{display:flex;flex-direction:column;gap:10px;max-width:560px;margin:14px auto;}
 .menu button{width:100%;text-align:left;font-size:1.03rem;}
 #screen-game{touch-action:none;user-select:none;}
+/* Ощупывание ведением в длинном окне уезжало: браузер начинал прокручивать
+   окно вместе с пальцем, и под пальцем всё время оставался тот же пункт.
+   Пока ощупывание включено, окна не прокручиваются пальцем — как в TalkBack
+   и VoiceOver, где одним пальцем щупают, а не листают. Список двигает свайп:
+   выбранный пункт сам встаёт на экран. Выключивший ощупывание (зрячий игрок)
+   получает обычную прокрутку назад. */
+body.explore .modal,body.explore .modal *,body.explore #actionMenu,body.explore #actionMenu *,
+body.explore #guideOverlay,body.explore #guideOverlay *,body.explore #magicPanel,body.explore #magicPanel *,
+body.explore #lootOverlay,body.explore #lootOverlay *{touch-action:none;}
 #hud{background:var(--panel);border:1px solid var(--bord);border-radius:12px;padding:8px 10px;text-align:center;font-size:.95rem;margin-bottom:10px;}
 .modal{position:fixed;inset:0;background:rgba(6,9,24,.96);z-index:50;overflow:auto;padding:14px;}
 .sheet{max-width:780px;margin:0 auto;background:var(--panel);border:2px solid var(--bord);border-radius:16px;padding:14px;}
@@ -3756,8 +3765,33 @@ function онНаЭкране(el){
  }catch(_){return false;}}
 /* Смена окна начинает выбор заново, с первого пункта. */
 function resetCursor(){uiCursor=null;uiCursorLayer=null;pendingCursor=null;touchGate.lastUiTap=0;touchGate.lastUiEl=null;}
-function focusableForExplore(el){try{return !!(el&&el.matches&&el.matches('button,a[href],select,[role="button"],[tabindex],input[type="checkbox"],input[type="radio"],input[type="range"]')&&!el.disabled);}catch(_){return false;}}
-function explorePoint(x,y){if(!settings.explore)return;try{const el=document.elementFromPoint(x,y),t=el?.closest?.('[data-speak],button,a,input,select,textarea,[role="button"],[data-cmd],[data-magic-index]');
+/* ── ЧТО ПОД ПАЛЬЦЕМ ──
+   Было три разных ответа на один вопрос. Палец НАЗЫВАЛ одно множество
+   элементов, ФОКУСОМ делал другое, поуже, а касание считало «пунктом под
+   пальцем» третье. Где множества расходились, двойное касание уходило мимо
+   названного: строка-подпись, текстовое поле, ссылка без адреса звучали, но
+   фокус оставался на прежнем пункте, и двойное касание жало его. А текст
+   переключателя в настройках — «Озвучка», «Автоописание окружения» — лежит в
+   <label> рядом с крошечным флажком, и под пальцем оказывалась подпись, а не
+   флажок: игра молчала, фокус стоял на «Назад», и двойное касание закрывало
+   окно вместо того, чтобы переключить.
+   Теперь ответ один. Подпись разбирается до своего переключателя; всё, что
+   палец называет, становится фокусом; двойное касание выполняет фокус. */
+const PICK_SEL='button,a,input,select,textarea,[role="button"],[data-cmd],[data-magic-index],[data-speak],[tabindex]:not([tabindex="-1"])';
+function pickTarget(node){
+ try{
+  if(!node||!node.closest)return null;
+  let t=node.closest(PICK_SEL);
+  /* Подпись переключателя: палец на тексте — значит, на самом переключателе. */
+  const lab=node.closest("label");
+  if(lab&&(!t||!lab.contains(t)||t===lab)){
+   const ctl=lab.control||lab.querySelector("input,select,textarea");
+   if(ctl)t=ctl;}
+  if(!t||t.disabled||t.hidden||t.closest("[hidden]")||t.closest('[aria-hidden="true"]'))return null;
+  return t;
+ }catch(_){return null;}}
+function focusableForExplore(el){try{return !!(el&&!el.disabled&&el.matches&&el.matches(PICK_SEL));}catch(_){return false;}}
+function explorePoint(x,y){if(!settings.explore)return;try{const el=document.elementFromPoint(x,y),t=pickTarget(el);
  if(t&&t!==lastExploreEl){lastExploreEl=t;speakTextOf(t);
   /* Палец только называет пункт; текущим он станет, когда палец на нём оторвётся
      (см. touchend). Так свайп по списку больше не сдвигает выбор туда, где палец
@@ -4330,7 +4364,15 @@ function swipeNav(dir){
   return false;}
  ensureCursor(layer);
  let i=items.indexOf(uiCursor);
- if(i<0)i=dir==='next'?-1:0;
+ if(i<0&&uiCursor&&layer.contains(uiCursor)){
+  /* Фокус стоит на том, чего нет в списке свайпа: палец назвал строку-подпись
+     или поле, и она стала фокусом. Прежде свайп от такого места прыгал в
+     самое начало окна — игрок терял место. Теперь свайп идёт от фокуса по
+     порядку окна: следующий пункт — тот, что ниже, предыдущий — тот, что выше. */
+  const ниже=items.findIndex(x=>uiCursor.compareDocumentPosition(x)&Node.DOCUMENT_POSITION_FOLLOWING);
+  const j=ниже<0?items.length:ниже;
+  i=dir==='next'?j-1:j;}
+ else if(i<0)i=dir==='next'?-1:0;
  i=dir==='next'?Math.min(items.length-1,i+1):Math.max(0,i-1);
  const el=items[i];
  /* Свайп всегда сдвигает выбор ровно на один пункт и называет его — ни больше,
@@ -4463,7 +4505,7 @@ document.addEventListener('touchstart',e=>{safeFn(()=>AE.ensure());const n=e.tou
     карточка досье — полноценный пункт для свайпа, но касание по ней считалось
     касанием пустого места и АКТИВИРОВАЛО предыдущий выбранный пункт вместо
     того, чтобы назвать карточку. */
- const ui=e.target?.closest?.('button,a,input,select,textarea,[role="button"],[data-cmd],[data-magic-index],[tabindex]:not([tabindex="-1"])');
+ const ui=pickTarget(e.target);
  /* Раздельное касание взводится ДО того, как жест перепишется: нужен ещё
     прежний счёт пальцев — второй палец пришёл к одному лежащему, а не лёг
     вместе с ним. */
@@ -4505,7 +4547,7 @@ document.addEventListener('touchmove',e=>{
  /* Снятие пальца — это не «сдвиг» жеста, а лишь изменение числа точек: просто запоминаем его. */
  gesture.count=e.touches.length;
  const t=[...e.touches].find(x=>x.identifier===gesture.id);
- if(!t){if(gesture.maxCount>1)e.preventDefault();return;}
+ if(!t){if(gesture.maxCount>1&&e.cancelable)e.preventDefault();return;}
  const dx=t.clientX-gesture.x,dy=t.clientY-gesture.y,d=Math.hypot(dx,dy);
  /* Для многопальцевых тапов порог мягче: пальцы неизбежно «перекатываются», пока их ставят. */
  const порогСдвига=safeFn(()=>gesture.maxCount>1?gestMultiPx():gestMovePx(),gesture.maxCount>1?45:16);
@@ -4521,7 +4563,7 @@ document.addEventListener('touchmove',e=>{
    if(Math.hypot(ldx,ldy)>safeFn(()=>gestCornerPx(),40)){
     const d2=touchDirection(ldx,ldy);
     if(d2&&d2!==gesture.leg1)gesture.leg2=d2;}}}
- if(gesture.maxCount!==1){e.preventDefault();return;}
+ if(gesture.maxCount!==1){if(e.cancelable)e.preventDefault();return;}
  /* Скорость пальца отличает ощупывание от свайпа: медленно ведём — игра называет
     всё под пальцем; быстро проводим — это перелистывание, и по дороге она молчит,
     иначе один свайп обрывал сам себя пятью недочитанными названиями. */
@@ -4546,7 +4588,9 @@ document.addEventListener('touchmove',e=>{
     иначе меню действий, вызванное посреди боя (а там и находится «Побег»),
     нельзя было прощупать пальцем — оно отвечало только на свайпы. */
  if(navLayer()?(!gesture.fast||settled):!G.weaponDrawn)explorePoint(t.clientX,t.clientY);
- if(navLayer()){if(d>safeFn(()=>gestDragPx(),20))e.preventDefault();return;}
+ /* Начавшуюся прокрутку браузер отменить уже не даёт и ругается в журнал:
+    проверяем, можно ли. */
+ if(navLayer()){if(d>safeFn(()=>gestDragPx(),20)&&e.cancelable)e.preventDefault();return;}
  /* Удержание свайпа = бег: таймер взводится ОДИН раз при первом пересечении порога
     и больше не сбрасывается на каждое микро-движение пальца — раньше из-за этого
     бег почти никогда не успевал включиться при живом (не идеально неподвижном) свайпе. */
@@ -4560,7 +4604,7 @@ document.addEventListener('touchmove',e=>{
  }else if(gesture.runArmed&&gesture.dir){
   runState.pendingDir=gesture.dir; /* направление можно уточнять на ходу, не сбрасывая отсчёт */
  }
- if(G.weaponDrawn)e.preventDefault();
+ if(G.weaponDrawn&&e.cancelable)e.preventDefault();
 },{passive:false,capture:true});
 /* Порог свайпа и «окно тапа» разведены так, чтобы между ними не оставалось мёртвой зоны:
    раньше касание со смещением 28–38 пикселей (обычный дребезг пальца) не обрабатывалось
@@ -48132,7 +48176,9 @@ function bindSettings(){const $=id=>document.getElementById(id);
   narrate({off:"Субтитры выключены.",important:"Субтитры: только важные события.",speech:"Субтитры: все реплики игры.",sounds:"Субтитры: все реплики и описания игровых звуков."}[settings.subMode]||"Субтитры настроены.");});}
  {const hm=$("setHintMode");if(hm)hm.addEventListener("change",e=>{setHintMode(e.target.value);
   narrate({full:"Подсказки полные: игра называет, что рядом, где оно и как подойти.",min:"Подсказки минимальные: только важное — имя места, опасность, первая фраза.",sound:"Только звуковая навигация: подсказки о расположении словами выключены. Проходы слышны ветром, двери — петлёй, ступени — камнем, тварь — со своей стороны. Осмотреться — три пальца влево, объекты вокруг — меню действий."}[settings.hintMode]||"Подсказки настроены.");});}
+ safeFn(()=>document.body.classList.toggle("explore",settings.explore!==0));
  $("setExplore").addEventListener("change",e=>{settings.explore=e.target.checked?1:0;saveSettings();
+  safeFn(()=>document.body.classList.toggle("explore",settings.explore!==0));
   narrate(settings.explore?"Режим ощупывания включён.":"Режим ощупывания выключен.");});
  $("setFastTap").addEventListener("change",e=>{settings.fastTap=e.target.checked?1:0;saveSettings();
   narrate(settings.fastTap?"Быстрая активация включена: одно касание сразу выполняет действие.":"Быстрая активация выключена: сначала озвучивание, затем повторное касание.");});
