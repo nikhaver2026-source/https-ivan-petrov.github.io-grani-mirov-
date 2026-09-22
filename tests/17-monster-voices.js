@@ -128,7 +128,7 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
 
  // 8. Бестиарий показывает морские разделы
  const best=await page.evaluate(()=>{
-  G.ship=null;while(activeLayer())handleTwoFingerTap();
+  G.ship=null;while(activeLayer())handleTwoFingerSwipe("S");
   CMD.best();
   const t=document.getElementById("bestList").textContent;
   return {sea:/Морские твари/.test(t),pir:/Пиратские ватаги/.test(t),

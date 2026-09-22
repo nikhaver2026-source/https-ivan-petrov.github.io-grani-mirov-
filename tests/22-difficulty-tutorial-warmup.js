@@ -94,7 +94,7 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   move("W");calm();                // урок 2
   startRun("N");stopRun();calm();  // урок 3
   handleThreeFingerSwipe("N");     // урок 4: открыть меню свайпом тремя пальцами вверх
-  handleTwoFingerTap();            // урок 5: закрыть двумя пальцами
+  handleTwoFingerSwipe("S");       // урок 5: закрыть свайпом двумя пальцами вниз
   handleTwoFingerTap();calm();     // урок 6: сбор двумя пальцами
   handleThreeFingerSwipe("E");     // урок 7: где я (тремя пальцами вправо)
   useHere();calm();                // урок 8: действие здесь
