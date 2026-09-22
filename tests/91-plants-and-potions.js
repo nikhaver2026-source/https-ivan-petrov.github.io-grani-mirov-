@@ -184,15 +184,19 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   r.работа=techDo(t,"cauldron");r.видно=!document.getElementById("modal-potions").hidden;
   r.вСумке=document.querySelectorAll('#potBody [data-cmd^="drinkpotion:"]').length;r.рецептов=document.querySelectorAll('#potBody [data-cmd^="brewpotion:"]').length;
   r.можно=[...document.querySelectorAll('#potBody [data-cmd^="brewpotion:"]')].filter(b=>/✅/.test(b.textContent)).map(b=>b.dataset.cmd);
+  /* Прежде число родов зелий брали у potionsText — строки, которую игра не
+     показывала нигде. Теперь берём то, что игрок слышит на самом деле:
+     первую строку окна зелий и сами кнопки рецептов. */
+  r.шапка=((document.querySelector('#potBody .list-line')||{}).dataset||{}).speak||"";
   closeModal(document.getElementById("modal-potions"));
   r.меню=amAvailable("potions");G.mast.alchemy={ур:0,оп:0};G.potions=[];r.менюБез=amAvailable("potions");
   G.potions=[{id:"speed",q:1,стаб:0.7,день:G.day,срок:8}];G.plantsSeen={durman:2};saveGame(true);
   const raw=localStorage.getItem(SAVE_KEY)||"";r.сохр=/"potions"/.test(raw)&&/"plantsSeen"/.test(raw)&&/durman/.test(raw);
-  r.текст=potionsText();r.травник=plantsText();
+  r.травник=plantsText();
   return r;});
  check('7. «Сварить зелье» — алхимия первой ступени у чана или очага, открывает окно с сумкой и рецептами; пункт меню — знающему или имеющему; сумка и травник в сохранении',
-  окно.тех&&окно.тех.ур===1&&окно.тех.маст==="alchemy"&&окно.тех.станки.includes("cauldron")&&окно.работа&&окно.видно&&окно.вСумке===1&&окно.рецептов===18&&окно.можно.includes("brewpotion:heal")&&окно.меню&&окно.менюБез===false&&окно.сохр&&/Зелий 18 родов/.test(окно.текст)&&/чёрный дурманник/.test(окно.травник),
-  [окно.тех,окно.вСумке,окно.рецептов,окно.можно,окно.меню,окно.менюБез,окно.сохр]);
+  окно.тех&&окно.тех.ур===1&&окно.тех.маст==="alchemy"&&окно.тех.станки.includes("cauldron")&&окно.работа&&окно.видно&&окно.вСумке===1&&окно.рецептов===18&&окно.можно.includes("brewpotion:heal")&&окно.меню&&окно.менюБез===false&&окно.сохр&&/Ступень алхимии 1/.test(окно.шапка)&&/чёрный дурманник/.test(окно.травник),
+  [окно.тех,окно.вСумке,окно.рецептов,окно.можно,окно.меню,окно.менюБез,окно.сохр,окно.шапка]);
 
  check('без ошибок страницы',errors.length===0,errors.slice(0,3));
  console.log(results.join('\n'));

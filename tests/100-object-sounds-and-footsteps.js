@@ -34,6 +34,7 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
 
  /* ── 1. Таблицы ── */
  const табл=await page.evaluate(()=>{
+  const DOOR_STATES=["open","close","lock","unlock","locked","pick","break"];
   const нет=[];
   const проверь=(имя,t,states)=>{for(const k in t){const m=t[k];states.forEach(st=>{const l=m[st];if(!Array.isArray(l)||!l.length)нет.push(имя+":"+k+":"+st);else l.forEach(r=>{if(!Bank.has(r))нет.push(имя+":"+k+":"+r);});});}};
   проверь("дверь",DOOR_SOUND,DOOR_STATES);

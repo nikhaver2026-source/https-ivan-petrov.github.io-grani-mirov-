@@ -273,11 +273,19 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   const плохие=[];
   Object.entries(MONSTER_LAYER).forEach(([id,role])=>{
    if(!SOUND_BANK[role])плохие.push(id+"→"+role);});
-  const оружие={};
-  ["Меч","Топор","Лук","Копьё","Посох"].forEach(t=>{
-   G.equip={weapon:{type:t,n:t}};оружие[t]=weaponVoiceRole();});
-  const нетРоли=Object.values(оружие).filter(r=>!SOUND_BANK[r]);
-  return {плохие,оружие,нетРоли,разных:new Set(Object.values(оружие)).size};});
+  /* Голос оружия игра берёт живым путём: weaponClass даёт род, WEAPON_SOUND —
+     записи этого рода. Прежний двойник weaponVoiceRole игрой не звался ни
+     разу и проверял сам себя; теперь проверяем то, что игрок слышит. */
+  const роды=["Меч","Топор","Лук","Копьё","Посох"];
+  const молчит=list=>list.some(r=>!Bank.has(r));
+  const оружие={},нетРоли=[],классы=new Set();
+  роды.forEach(t=>{
+   G.equip={weapon:{type:t,n:t}};
+   const к=weaponClass();классы.add(к);
+   const удар=((WEAPON_SOUND[к]||{}).hit)||[];
+   оружие[t]=к+": "+удар.join(", ");
+   if(!удар.length||молчит(удар))нетРоли.push(t+"→"+к);});
+  return {плохие,оружие,нетРоли,разных:классы.size};});
  check('у каждого рода тварей есть свой второй голос, и он существует',
   !voices.плохие.length,voices.плохие);
  check('у каждого рода оружия свой голос, и голоса разные',

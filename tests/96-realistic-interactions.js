@@ -31,7 +31,7 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
  /* ── 1. статика: в коде действий нет инструментов ── */
  const МУЗЫКА=/"(relic_xylo|relic_organ|relic_sing|treasure_spark|spark_glock|glade_marimba|swamp_kalimba|charm_celesta|charm_bell|chant_calliope|hex_charang|spell_harp|harp_light|harp_high|xylo_coin|clarinet_market|clarinet_shadow|caravan_sitar|piano_dark|chase_tremolo|pad_dread|pad_halo|pad_sanctum|pad_rift|pad_hearth|pad_dream|contrabass_dread|sneak_pizz|harmonium_low|harmonium_drone|temple_choir|temple_organ|fx_blessing|fx_haze|fx_rain|omen_swell|crypt_organ|lute_tavern|tuba_forge|signal_beep|market_dulcimer)"/;
  const статика=await page.evaluate(()=>{
-  const fns={studyPage,studyKnowledge,openChest,useAltar,takeSecret,takeTreasure,findArtifact,caravanBuy,hookFish,meetCaravan,talkInside,discoverPortal,portalTravel,useHere,pigeonPost,announceClosed,castSpell,fight,gatherCurrent,sellResource,buyLot};
+  const fns={studyPage,studyKnowledge,openChest,useAltar,takeSecret,takeTreasure,findArtifact,caravanBuy,hookFish,meetCaravan,talkInside,discoverPortal,portalTravel,useHere,pigeonPost,castSpell,fight,gatherCurrent,sellResource,buyLot};
   const out={};for(const k in fns)out[k]=String(fns[k]);return out;});
  const нарушили=Object.keys(статика).filter(k=>МУЗЫКА.test(статика[k])).map(k=>k+": "+(статика[k].match(МУЗЫКА)||[])[1]);
  check('1. в коде действий с предметами, чарами, торгом и боем нет ролей инструментов',нарушили.length===0,нарушили);

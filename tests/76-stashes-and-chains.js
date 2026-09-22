@@ -36,6 +36,7 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
 
  /* ── 1. Таблицы полны ── */
  const таблицы=await page.evaluate(()=>{
+  const STASH_WHAT_BY_ID=Object.fromEntries(STASH_WHAT.map(w=>[w.id,w]));
   const плохиеМеста=STASH_WHERE.filter(w=>!w.id||!w.n||!w.как||!SOUND_BANK[w.звук]
    ||!Array.isArray(w.плитки)||!w.плитки.length||!(w.сл>=1&&w.сл<=5)).map(w=>w.id||"?");
   const плохиеНаходки=STASH_WHAT.filter(w=>!w.id||!w.n||typeof w.дать!=="function"

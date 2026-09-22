@@ -42,6 +42,8 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
 
  /* ── 1. школы ── */
  const школы=await page.evaluate(()=>{
+  /* Пять семейств чар: перечень нужен проверке полноты, игре — нет. */
+  const SPELL_FAMILIES={урон:1,защита:1,исцеление:1,скрытность:1,контроль:1};
   const сем=new Set(SCHOOLS.map(s=>s.сем));
   const плохие=SCHOOLS.filter(s=>!s.n||!s.род||!SPELL_FAMILIES[s.сем]||!(s.k>0)||!SOUND_BANK[s.звук]||!SOUND_BANK[s.голос]).map(s=>s.id);
   const ids=new Set(SCHOOLS.map(s=>s.id));

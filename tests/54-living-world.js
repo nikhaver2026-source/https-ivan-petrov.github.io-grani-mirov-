@@ -97,6 +97,7 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
 
  /* ── 3. Нрав меняет поведение, а не только слова ── */
  const нрав=await page.evaluate(()=>{
+  const SOUL_CHAR_BY_ID=Object.fromEntries(SOUL_CHARS.map(c=>[c.id,c]));
   const жад=SOUL_CHAR_BY_ID.zhad,добр=SOUL_CHAR_BY_ID.dobr;
   const трус=SOUL_CHAR_BY_ID.trus,смел=SOUL_CHAR_BY_ID.smel;
   const манип=SOUL_CHAR_BY_ID.manip,чест=SOUL_CHAR_BY_ID.chest;

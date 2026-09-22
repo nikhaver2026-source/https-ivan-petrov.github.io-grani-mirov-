@@ -29,6 +29,8 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
 
  /* ── 1. Реестры ── */
  const реестр=await page.evaluate(()=>{
+  const DARK_CLAN_BY_ID=Object.fromEntries(DARK_CLANS.map(c=>[c.id,c]));
+  const DARK_FLY_RACES=DARK_RACES.filter(r=>(Number(r.fly)||0)>0);
   const беды=[];
   const ids=new Set();
   DARK_EMPIRES.forEach(e=>{

@@ -112,6 +112,7 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
 
  /* ── 3. Что стоит за Гранью ── */
  const слой=await page.evaluate(()=>{
+  const DARK_MONSTER_BY_ID=Object.fromEntries(DARK_MONSTERS.map(m=>[m.id,m]));
   G.dark=true;G.place=null;
   const земли=new Set(),твари=new Set(),ресурсы=new Set(),места=new Set(),народы=new Set();
   /* Постройки за Гранью редки: обходим карту полосами, а не выборкой. */
@@ -139,6 +140,7 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
 
  /* ── 4. Мир Грани не изменился ── */
  const светлый=await page.evaluate(()=>{
+  const DARK_MONSTER_BY_ID=Object.fromEntries(DARK_MONSTERS.map(m=>[m.id,m]));
   G.dark=false;contentCache.clear();
   let тёмных=0,тёмныхНародов=0;
   for(let i=0;i<2000;i++){
@@ -161,6 +163,7 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
 
  /* ── 5. Приключений многие тысячи, и все многоступенчатые ── */
  const дела=await page.evaluate(()=>{
+  const DARK_MONSTER_BY_ID=Object.fromEntries(DARK_MONSTERS.map(m=>[m.id,m]));
   const подписи=new Set(),роды=new Set(),боги=new Set(),награды=new Set(),ступени=new Set();
   for(let x=0;x<600;x+=1)for(let y=0;y<600;y+=7){
    const d=darkDeedAt(x,y);

@@ -30,6 +30,9 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
 
  /* ── 1. Оружие ── */
  const оружие=await page.evaluate(()=>{
+  /* Состояния оружия — то же самое: словарь нужен проверке, не игре. */
+  const WEAPON_STATES=["draw","sheathe","swing","hit","block","parry","hit_armor",
+   "hit_flesh","hit_bone","miss","drop","clash"];
   const нет=[];
   for(const k in WEAPON_SOUND){const m=WEAPON_SOUND[k];
    WEAPON_STATES.forEach(st=>{const l=m[st]||(st==="swing"&&m.shoot);if(!l||!l.length)нет.push(k+":"+st);else l.forEach(r=>{if(!Bank.has(r))нет.push(k+":"+r);});});}
@@ -108,6 +111,10 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
 
  /* ── 4. Твари ── */
  const твари=await page.evaluate(async()=>{
+  /* Словарь реплик твари. Держать его в файле игры незачем: игра зовёт
+     реплики по имени, а полноту профиля проверяет этот набор. */
+  const FOE_CUES=["breath","move","step","idle","warcry","attack","hurt","wound",
+   "death","aggro","detect","lose","fear","victory","unique"];
   const пауза=ms=>new Promise(z=>setTimeout(z,ms));
   const r={нет:[]};
   for(const f in MONSTER_PROFILE)FOE_CUES.forEach(c=>{const role=MONSTER_PROFILE[f][c];if(!role)r.нет.push(f+":"+c);else if(!Bank.has(role))r.нет.push(f+":"+role);});

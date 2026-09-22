@@ -28,7 +28,7 @@
    Кэш ЗАПИСЕЙ при этом не трогаем нарочно, и имя у него прежнее. Записи
    неизменяемы, их в банке 226 мегабайт, и перекачивать их заново ради новой
    страницы — значит наказать игрока за обновление. */
-const SHELL="grani-shell-v3";
+const SHELL="grani-shell-v4";
 const MEDIA="grani-v1-media";
 const SHELL_FILES=["./","./index.html","./manifest.json"];
 

@@ -65,6 +65,7 @@ const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 
  // 4. Полный цикл: заброс, поклёвка, подсечка
  const fishing=await page.evaluate(async()=>{
+  const FISH_BY_NAME=Object.fromEntries(FISH.map(f=>[f.n,f]));
   const p=__порт();G.x=p.x;G.y=p.y;G.ship=null;G.place=null;
   G.items=["Удочка","Рыболовная сеть"];G.inv={};
   const log=[];const orig=Speech.say;Speech.say=t=>log.push(t);
@@ -93,6 +94,7 @@ const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 
  // 5. Улов продаётся в порту
  const sell=await page.evaluate(()=>{
+  const FISH_BY_NAME=Object.fromEntries(FISH.map(f=>[f.n,f]));
   const p=__порт();G.x=p.x;G.y=p.y;
   const fishName=Object.keys(G.inv).find(k=>FISH_BY_NAME[k])||"треска";
   G.inv[fishName]=(Number(G.inv[fishName])||0)+3;G.gold=0;

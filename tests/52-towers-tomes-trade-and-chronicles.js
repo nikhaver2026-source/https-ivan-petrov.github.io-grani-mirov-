@@ -295,6 +295,7 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
 
  /* ── 7. Единственные вещи: по одному источнику на каждую ── */
  const единственные=await page.evaluate(()=>{
+  const DUNG_FAME_BY_ID=Object.fromEntries(DUNG_FAME.map(f=>[f.id,f]));
   G.dark=false;G.uniques={};G.gear=[];
   const беды=[];
   const ид=new Set(),ист=new Set();

@@ -25,7 +25,7 @@
      GitHub Pages. Там же включается и service worker (см. ниже): игра ставится
      на главный экран и работает без сети. -->
 <meta name="theme-color" content="#10121c">
-<title>Грань Миров Alpha 2.2.0 — Живой динамичный мир</title>
+<title>Грань Миров Alpha 2.3.0 — Живой динамичный мир</title>
 <style>
 /* Палец, положенный на ползунок, не должен его двигать: браузер по умолчанию
    перебрасывает бегунок в точку касания, и незрячий игрок, просто читая
@@ -95,8 +95,8 @@ h3{color:var(--acc2);margin:14px 0 6px;font-size:1.05rem;}
 
 <!-- ТИТУЛ -->
 <div id="screen-title" class="screen">
- <h1>🌌 Грань Миров <small style="font-size:.5em;opacity:.75">Alpha 2.2.0</small></h1>
- <p class="sub">Полная хроника I–V · Alpha 2.2.0 — Единый живой мир · Карта 50000×50000</p>
+ <h1>🌌 Грань Миров <small style="font-size:.5em;opacity:.75">Alpha 2.3.0</small></h1>
+ <p class="sub">Полная хроника I–V · Alpha 2.3.0 — Единый живой мир · Карта 50000×50000</p>
  <div class="menu">
   <button type="button" data-cmd="check">🔊 Проверить звук</button>
   <button type="button" data-cmd="encyc" id="btnEncyc">🎧 Энциклопедия звуков</button>
@@ -5250,7 +5250,7 @@ function closeMagicPanel(){const m=document.getElementById('magicPanel');if(!m)r
 /* ════════ РУКОВОДСТВО ════════ */
 const GUIDE=[
 {title:"Глава 1. Добро пожаловать в «Грань Миров»",body:[
- "Версия Alpha 2.2.0 — живой динамичный мир размером 50000 на 50000 клеток: два с половиной миллиарда клеток, и ни одна не хранится в памяти — всякая выводится из своих координат в тот миг, когда об этой клетке спросили. Полная хроника частей с первой по пятую, объединённая в одном мире. Игра полностью доступна незрячим и слабовидящим.",
+ "Версия Alpha 2.3.0 — живой динамичный мир размером 50000 на 50000 клеток: два с половиной миллиарда клеток, и ни одна не хранится в памяти — всякая выводится из своих координат в тот миг, когда об этой клетке спросили. Полная хроника частей с первой по пятую, объединённая в одном мире. Игра полностью доступна незрячим и слабовидящим.",
  "Ведите пальцем по экрану — игра голосом назовёт то, что вы нашли. Двойное касание — действие. Всё озвучивается и имеет свой звук.",
  "Все кнопки игры собраны в меню действий: свайп тремя пальцами вверх. Инвентарь — три пальца вниз, карта — два пальца влево, журнал дел — два пальца вправо."]},
 {title:"Глава 2. Жесты",body:[
@@ -10682,7 +10682,6 @@ function foeCue(role,opts){
    мертвец, громада, механизм, дракон, птица, глубина, бес. Голос идёт из
    точки твари каналом боя.
    ════════════════════════════════════════════════════════════════════════ */
-const FOE_CUES=["breath","move","step","idle","warcry","attack","hurt","wound","death","aggro","detect","lose","fear","victory","unique"];
 const MONSTER_PROFILE={
  beast:{breath:"lug_growl",move:"tread_grass",step:"lug_step_grass",idle:"lug_bark",warcry:"oc_growl",attack:"lug_claw",hurt:"lug_snarl",wound:"oc_dog_whine",death:"body_fall",aggro:"wolf_howl",detect:"oc_dog_snuff",lose:"lug_growl",fear:"oc_dog_whine",victory:"wolf_howl",unique:"beast_bull"},
  crawler:{breath:"serpent_hiss",move:"oc_rustle",step:"oc_step_soft",idle:"serpent_hiss",warcry:"serpent_hiss",attack:"foe_burrow_hit",hurt:"foe_burrow_pain",wound:"serpent_hiss",death:"foe_burrow_die",aggro:"serpent_hiss",detect:"oc_rustle",lose:"serpent_hiss",fear:"serpent_hiss",victory:"serpent_hiss",unique:"oc_corrode"},
@@ -10973,6 +10972,9 @@ const LIVE_SCENE={
  rift:         ["deep_portal","es_plasma","spell_dark","cast_teleport"],
  smugglers:    ["trade_f","throng_yes","oc_chest_open","wild_fire"],
  traveler:     ["tread_hoof","throng_hail_m","beasts_horse","wild_wind"]};
+/* Первый ярус под городом — это стоки, а не подземелье: капель, вода,
+   вязкий хлюп и дальний грохот тележки. У него свой набор. */
+const LIVE_SEWER=["oc_waterdrop","deep_drip","oc_bubble","stk_goo","deep_cart","foe_burrow_pain"];
 const LIVE_DEEP=[[],["deep_drip","deep_cart","foe_goblin_hit"],
  ["deep_rocks","deep_wood","foe_bone_hit","foe_goblin_cast"],
  ["deep_wind","foe_undead_cast","foe_undead_hit","battle_stone"],
@@ -10982,7 +10984,8 @@ function liveScene(){
  try{
   if(!settings.effects||!Bank.enabled||Math.random()>0.3)return false;
   const p=G.place;let набор=null;
-  if(p&&p.depth>0)набор=LIVE_DEEP[Math.min(LIVE_DEEP.length-1,p.depth)];
+  if(p&&p.depth>0)набор=(Number(p.depth)===1&&safeFn(()=>sewerHere(),false))
+   ?LIVE_SEWER:LIVE_DEEP[Math.min(LIVE_DEEP.length-1,p.depth)];
   else if(p)набор=LIVE_SCENE[p.stype];
   else if(!G.ship){
    const t=cellContent(G.x,G.y).terrain[0];
@@ -11235,7 +11238,6 @@ const FISH=[
  {n:"скат",    icon:"🐡",where:["coast","sea"],       rare:0.07,price:30,gear:"net", d:"Донный житель отмелей"},
  {n:"жемчужница",icon:"🦪",where:["coast","deep"],    rare:0.04,price:70,gear:"net", d:"Раковина с жемчугом: редкая удача"},
  {n:"морской окунь",icon:"🐟",where:["coast","port"], rare:0.18,price:14,gear:"any", d:"Держится у причалов и камней"}];
-const FISH_BY_NAME=Object.fromEntries(FISH.map(f=>[f.n,f]));
 /* Снасти делаются в мастерской и хранятся в предметах. */
 const TACKLE={rod:"Удочка",net:"Рыболовная сеть"};
 function hasTackle(kind){
@@ -12476,10 +12478,6 @@ function renderPotions(){
   const нужно=pt.из.map(id=>(PLANT_CAT_BY_ID[id]||{}).n).join(" и ");
   return `<button class="item" data-cmd="brewpotion:${pt.id}" data-speak="Зелье ${pt.n}: ${pt.о}. Нужны ${нужно}. ${можно?"Можно сварить.":a&&b?"Нужна ступень выше.":"Не хватает растений."}">${можно?"✅":"▫️"} ${pt.n} — ${нужно}</button>`;}).join("");
  box.innerHTML=html;}
-function potionsText(){
- const list=potionsOf();
- return `Зелий ${POTIONS.length} родов: ${POTIONS.map(p=>p.n).join(", ")}. В сумке ${list.length}${list.length?": "+list.map(r=>`${(POTION_BY_ID[r.id]||{}).n} (${potionQualityWord(r.q)})`).join(", "):""}.`;}
-
 /* Цены и значки редких сортов подмешиваются здесь: RES_BASE и RESICON уже
    объявлены, а заморозка — следующей же строкой. Позже было бы поздно: список
    ниже каменеет целиком, и новый товар остался бы без цены и без значка. */
@@ -12793,7 +12791,6 @@ const DARK_MONSTERS=[
  {id:"d_maw",    n:"Пасть Некроса",    snd:"mroar",  fx:"roar",   min:11,max:19},
  {id:"d_scarwalk",n:"Шагающий по шву", snd:"mstomp", fx:"stomp",  min:7,max:15},
  {id:"d_veinborn",n:"Жильнорождённый", snd:"mhiss",  fx:"hiss",   min:6,max:14}];
-const DARK_MONSTER_BY_ID=Object.fromEntries(DARK_MONSTERS.map(m=>[m.id,m]));
 /* На крыле за Гранью встречается небесная тварь, а не наземная. */
 function darkMonsterAt(x,y){
  const r=darkRealmAt(x,y);
@@ -12803,8 +12800,12 @@ function darkMonsterAt(x,y){
  const пул=DARK_MONSTERS.filter(m=>m.min<=Math.max(2,близко+6));
  const m0=(пул.length?пул:DARK_MONSTERS)[Math.floor(H(x,y,4916)*(пул.length||DARK_MONSTERS.length))];
  const lvl=Math.max(1,Math.round(m0.min+близко*0.4+H(x,y,4917)*3));
- return {...m0,lvl,hp:Math.round((30+lvl*11)*safeFn(()=>diff().foeHp,1)),
-  dmg:5+lvl*2,xp:26+lvl*14,gold:10+lvl*6,dark:true};}
+ /* Глубина за Гранью весит: на сотом ярусе тварь та же, но выношена тьмой.
+    Вес идёт и в силу, и в награду — иначе глубина была бы наказанием. */
+ const вес=safeFn(()=>darkDepthWeight(G.place&&G.place.depth),1)||1;
+ return {...m0,lvl,hp:Math.round((30+lvl*11)*вес*safeFn(()=>diff().foeHp,1)),
+  dmg:Math.round((5+lvl*2)*вес),xp:Math.round((26+lvl*14)*вес),
+  gold:Math.round((10+lvl*6)*вес),dark:true};}
 
 /* ── ОБЩЕСТВО ТЁМНЫХ ЗЕМЕЛЬ ──
    Кланы, притоны и школы. Здесь не учат за золото: здесь берут в долю, и
@@ -12821,7 +12822,6 @@ const DARK_CLANS=[
  {id:"pero",   n:"Сброшенное Перо", god:"aeron", дело:"небо, крыло и падение"},
  {id:"glaz",   n:"Многие Глаза",    god:"sarkis",дело:"надзор, донос и цена молчания"},
 ];
-const DARK_CLAN_BY_ID=Object.fromEntries(DARK_CLANS.map(c=>[c.id,c]));
 /* ── ШЕСТЬ ТЁМНЫХ ШКОЛ ──
    Три ступени, как у школ Грани, но плата иная: доля, кровь и срок. */
 const DARK_SCHOOLS=[
@@ -14039,7 +14039,6 @@ const SOUL_CHARS=[
   о:"носит с собой список того, что надо поменять, и он длинный"},
  {id:"manip",n:"манипулятор",   торг:0.85, дар:1.1,  слух:1.35,память:1.3, смелость:0.7, правда:0.35,
   о:"всякий разговор ведёт туда, куда ему нужно, и делает это хорошо"}];
-const SOUL_CHAR_BY_ID=Object.fromEntries(SOUL_CHARS.map(c=>[c.id,c]));
 const SOUL_ORIGINS=["из здешних, в третьем поколении","пришлый, осел лет десять назад",
  "беженец с приграничья","родился в обозе на тракте","с дальнего побережья",
  "из горного селения, которого больше нет","сирота при храме","выкуплен из долговой ямы",
@@ -20691,7 +20690,6 @@ const STASH_WHAT=[
     seed:т.x*13+т.y*7,имя:"Обломок старой вещи",откуда:"из тайника"}),null);
    if(a)safeFn(()=>ART.grant({готовая:a}));
    return `Обломок вещи, которая была целой: ${a?safeFn(()=>ART.describe(a,true),"он отзывается на руку"):"он отзывается на руку"}.${ч?` И часть в придачу: ${ч.n}.`:""}`;}}];
-const STASH_WHAT_BY_ID=Object.fromEntries(STASH_WHAT.map(w=>[w.id,w]));
 
 function stashKeyAt(x,y){
  const p=G.place;if(!p)return "";
@@ -23879,7 +23877,6 @@ const DARK_RACES=[
  {id:"posledn_k", n:"Последние крылья",rank:4,god:"zaruth",fly:4,черта:"их крылья ещё не раскрылись"},
 ];
 /* Крылатые народы тёмных земель: у них есть потолок. */
-const DARK_FLY_RACES=DARK_RACES.filter(r=>(Number(r.fly)||0)>0);
 const DARK_RACE_NAMES=DARK_RACES.map(r=>r.n);
 
 /* ── ЗЕМЛЯ ПОД НОГОЙ ──
@@ -25653,7 +25650,6 @@ const DUNG_FAME=[
   молва:"Говорят, зеркало там стоит без рамы и показывает не то, что перед ним."},
  {id:"bell",   n:"колоколом под камнем",ярус:[28,65], добыча:"bell",
   молва:"Говорят, под нижним ярусом лежит колокол, и он иногда отвечает шагам."}];
-const DUNG_FAME_BY_ID=Object.fromEntries(DUNG_FAME.map(f=>[f.id,f]));
 /* Летопись подземелья по его координатам. */
 const dungLoreCache=new Map();
 function dungeonLore(bx,by,stype){
@@ -26614,8 +26610,13 @@ function renderSchool(){
  const тьма=safeFn(()=>darkSchoolHere(),null);
  if(тьма){
   const шаг=darkSchoolStep(тьма.id);
+  /* За каждой тёмной школой стоит клан, и школа записывает ученика не себе,
+     а ему. Клан был в игре, но его имя нигде не звучало: игрок брал ступени,
+     не зная, кому обязан. Теперь школа называет клан и его дело. */
+  const клан=safeFn(()=>DARK_CLANS.find(c=>c.id===тьма.клан),null);
+  const слово=клан?` За «${тьма.n}» стоит клан «${клан.n}»: ${клан.дело}.`:"";
   html+=`<h3>Здесь берут в долю</h3>`;
-  html+=`<div class="list-line" data-speak="Тёмная школа «${тьма.n}». ${тьма.слово} Взято ступеней: ${шаг} из ${тьма.ступени.length}.">🩸 <b>${тьма.n}</b><br>${тьма.слово}<br>Взято ступеней: <b>${шаг}</b> из ${тьма.ступени.length}</div>`;
+  html+=`<div class="list-line" data-speak="Тёмная школа «${тьма.n}». ${тьма.слово}${слово} Взято ступеней: ${шаг} из ${тьма.ступени.length}.">🩸 <b>${тьма.n}</b><br>${тьма.слово}<br>Взято ступеней: <b>${шаг}</b> из ${тьма.ступени.length}</div>`;
   тьма.ступени.forEach((ст,i)=>{
    const взята=i<шаг,следующая=i===шаг;
    const беды=следующая?darkSchoolBlockers(тьма):[];
@@ -31017,7 +31018,6 @@ const DOOR_SOUND={
          locked:["oc_wood_creak","oc_wood_dull"],pick:["lock_click","oc_wood_creak"],break:["stk_break","oc_tree_crack"]},
  magic: {n:"магическая дверь",open:["stk_portal","cast_teleport"],close:["oc_warp","stk_portal"],lock:["cast_shield","stk_ward"],unlock:["magic_shimmer","oc_electrical"],
          locked:["stk_ward","oc_zap"],pick:["oc_electrical","oc_crystal_comm"],break:["oc_blast","es_magic"]}};
-const DOOR_STATES=["open","close","lock","unlock","locked","pick","break"];
 /* Род двери по месту: за Гранью и в оплотах — железо и решётки, в храме —
    тяжёлая, в башне — магическая, в руинах — скрипучая, в глубине — тяжёлая,
    а ещё глубже — решётка. Ворота — свой род. */
@@ -32648,19 +32648,6 @@ function natShot(role,pan=0,gain=0.8){
   if(Bank.canPan()&&Bank.panned(f,{pan,gain}))return true;
   return !!Bank.play(role,{seed:Math.floor(Math.random()*97),gain,maxSec:5});
  }catch(_){return false;}}
-/* У каждого оружия свой голос: клинок звенит, топор рубит, лук отпускает
-   тетиву, копьё свистит, посох гудит. Один общий «замах» на всё оружие
-   стирал разницу между ними, а разница эта — половина боя на слух. */
-const WEAPON_VOICE={"Меч":"lug_sword","Сабля":"lug_sword","Кинжал":"lug_sword",
- "Топор":"craft_axe","Секира":"craft_axe","Молот":"craft_axe","Булава":"craft_axe",
- "Лук":"battle_bow","Арбалет":"battle_bow",
- "Копьё":"mg_spear","Алебарда":"mg_spear",
- "Посох":"magic_woosh","Жезл":"cast_shoot"};
-function weaponVoiceRole(){
- const w=G.equip&&G.equip.weapon;
- const t=(w&&(w.type||w.n))||"";
- for(const k in WEAPON_VOICE)if(t.indexOf(k)>=0)return WEAPON_VOICE[k];
- return "lug_sword";}
 function playWeaponCombatSfx(hit,dir="N",dmg=6){try{AE.ensure();
  if(Bank.enabled){
   const k=weaponClass(),m=G.combat&&G.combat.m,mat=foeMaterial(m);
@@ -32748,7 +32735,6 @@ const WEAPON_SOUND={
  spear:{draw:["oc_javelin_draw"],sheathe:["lug_clank"],shoot:["oc_javelin_throw","battle_jav"],fly:["lug_whoosh","mg_spear"],
   hit:["oc_projectile_hit","battle_pike"],miss:["oc_javelin_ground"],hit_armor:["oc_metal_light"],hit_flesh:["lug_flesh"],
   hit_bone:["foe_bone_hit"],hit_wood:["oc_wood_hit"],hit_stone:["oc_rock_hit"],block:["oc_shield_wood"],parry:["oc_wood_hit"],drop:["lug_thud"],clash:["oc_weapon_hit"]}};
-const WEAPON_STATES=["draw","sheathe","swing","hit","block","parry","hit_armor","hit_flesh","hit_bone","miss","drop","clash"];
 function weaponClass(){
  try{const w=G.equip&&G.equip.weapon;const t=String((w&&(w.name||w.n||w.type))||"").toLowerCase();
   if(/лук|арбалет/.test(t))return "bow";
@@ -33490,7 +33476,6 @@ function closeTopUI(){
  }catch(err){ try{console.error("closeTopUI",err);}catch(_){} }
  return false;
 }
-function announceClosed(){ try{ UI.close(); narrate("Окно закрыто.",{interrupt:true}); }catch(_){} }
 
 const CMD={
  /* Жест закрытия при пустом экране молчал: игрок вёл двумя пальцами вниз и
@@ -34106,10 +34091,15 @@ const Look=Modules.register("LOOK",{
  /* Короткая сводка по сторонам: сперва опасное, потом то, что перед вами. */
  summary(list){
   const f=this.facing();
-  if(!list.length)return `Осмотр, лицом на ${DIRN[f].split(",")[0]}. Вокруг ничего заметного.`;
+  /* Осмотр достаёт на четыре-шесть шагов, а Грань стоит дальше — и всё
+     равно важнее всего, что вокруг. Поэтому о ней говорим отдельно и без
+     стороны: не «на севере», а «где-то рядом». За Гранью так же ищут врата. */
+  const грань=(!G.place&&!G.ship&&safeFn(()=>riftNear(G.x,G.y,10),false))
+   ?` ${G.dark?"Врата":"Разлом Грани"} где-то рядом, не дальше десяти шагов.`:"";
+  if(!list.length)return `Осмотр, лицом на ${DIRN[f].split(",")[0]}. Вокруг ничего заметного.${грань}`;
   const по={};list.slice(0,8).forEach(o=>{(по[o.сектор]=по[o.сектор]||[]).push(this.brief(o));});
   const части=[];["здесь","впереди","слева","справа","позади"].forEach(k=>{if(по[k])части.push(`${k[0].toUpperCase()+k.slice(1)}: ${по[k].join("; ")}.`);});
-  return `Осмотр, лицом на ${DIRN[f].split(",")[0]}. ${части.join(" ")}${list.length>8?` И ещё ${list.length-8}.`:""}`;},
+  return `Осмотр, лицом на ${DIRN[f].split(",")[0]}. ${части.join(" ")}${list.length>8?` И ещё ${list.length-8}.`:""}${грань}`;},
  open(){
   try{
    if(!gameActive())return false;
@@ -39625,7 +39615,6 @@ function learnSpell(i){const sp=SPELLS[i];
    исцеляющей стрелы не бывает, как и тихой школы звука. Составленное
    заклинание — настоящее: оно в списке, его творят, оно действует, у него
    есть перезарядка, и оно переживает сохранение. */
-const SPELL_FAMILIES={урон:"урон",защита:"защита",исцеление:"исцеление",скрытность:"скрытность",контроль:"контроль"};
 const SCHOOLS=[
  {id:"fire",n:"Огонь",род:"огня",сем:"урон",k:1.15,звук:"spell_fire",голос:"oc_fireball"},
  {id:"water",n:"Вода",род:"воды",сем:"исцеление",k:0.95,звук:"spell_cast",голос:"oc_bubble"},
@@ -42691,7 +42680,10 @@ function renderShop(){
  document.getElementById("shopTitle").textContent=`🛒 ${n.name}: ${SHOP.tab==="buy"?"купить":"продать"}`;
  const buyRows=shopStockRows(n),sellRows=shopSellRows(n).filter(r=>r.ок);
  const rows=SHOP.tab==="buy"?buyRows:sellRows;
- let html=`<div class="list-line" tabindex="0" data-speak="${(`${n.name}, ${n.prof}${d?`, ${d.вид.n}: ${d.вид.о}`:""}. Золота у вас ${G.gold}${d?`, у торговца около ${merchPurse(n)}`:""}.`).replace(/"/g,"&quot;")}">🏪 ${n.name}${d?` — ${d.вид.n}`:""} · 🪙 у вас ${G.gold}</div>`;
+ /* Положение дел в державе, заслуги и знакомство с этим торговцем — то,
+    от чего зависит цена. Игрок слышит это первой же строкой лавки. */
+ const дела=safeFn(()=>econLine(G.x,G.y,n),"")||"";
+ let html=`<div class="list-line" tabindex="0" data-speak="${(`${n.name}, ${n.prof}${d?`, ${d.вид.n}: ${d.вид.о}`:""}. Золота у вас ${G.gold}${d?`, у торговца около ${merchPurse(n)}`:""}.${дела?" "+дела:""}`).replace(/"/g,"&quot;")}">🏪 ${n.name}${d?` — ${d.вид.n}`:""} · 🪙 у вас ${G.gold}</div>`;
  html+=`<div class="row"><button class="item" data-cmd="shoptab:buy" data-speak="Купить: ${buyRows.length} ${plural(buyRows.length,"товар","товара","товаров")}.">${SHOP.tab==="buy"?"✔ ":""}🛒 Купить (${buyRows.length})</button><button class="item" data-cmd="shoptab:sell" data-speak="Продать: торговец возьмёт ${sellRows.length} ${plural(sellRows.length,"вещь","вещи","вещей")} из вашей сумы.">${SHOP.tab==="sell"?"✔ ":""}💰 Продать (${sellRows.length})</button></div>`;
  /* категории с числом вещей */
  const cats=SHOP_CATS.filter(c=>rows.some(r=>r.cat===c.id));
@@ -43889,7 +43881,12 @@ function invPick(kind,key){
  key=decodeURIComponent(String(key||""));
  INV.sel={kind,key};INV.confirm=null;
  safeFn(()=>Bank.play(itemVoice(invFind(kind,key)||key),{gain:0.45,maxSec:2}));
- narrate(invBrief(kind,key)+" Свайп вверх или вниз — действия.",{interrupt:true});
+ /* «Свайп — действия» не говорит, какие. Незрячему игроку это лишний круг:
+    он свайпает, чтобы узнать, есть ли вообще что делать. Теперь называем. */
+ const дела=safeFn(()=>invActionList(kind,key),[])||[];
+ narrate(invBrief(kind,key)+(дела.length
+  ?` Свайп вверх или вниз — ${дела.length} ${plural(дела.length,"действие","действия","действий")}: ${дела.map(a=>a.n).join(", ")}.`
+  :" Действий с этой вещью сейчас нет."),{interrupt:true});
  safeFn(()=>renderInventory());
  return true;}
 /* Где стоим: станки рядом, алтарь, торговец, житель. От этого зависит список действий. */
@@ -47364,12 +47361,15 @@ function worldCheckText(){
 function renderPolitics(){
  const day=G.day,wars=warsAt(day),allies=alliesAt(day),here=empireIndexAt(G.x,G.y);
  const w=document.getElementById("polWars");
- if(w)w.innerHTML=wars.length?wars.map(x=>{
+ /* За Гранью свои войны и свои союзы, и окно политики молчало о них. */
+ const тьма=G.dark?safeFn(()=>darkPoliticsText(day),""):"";
+ const шапкаТьмы=тьма?`<div class="list-line" tabindex="0" data-speak="${тьма.replace(/"/g,"&quot;")}">🌑 ${тьма}</div>`:"";
+ if(w)w.innerHTML=шапкаТьмы+(wars.length?wars.map(x=>{
   const A=EMPIRES[x.a],B=EMPIRES[x.b];
   return `<div class="list-line" tabindex="0" data-speak="Война: ${A.name} и ${B.name}. Причина: ${x.cause}. Идёт с ${x.since} дня. Народы: ${A.race} и ${B.race}.">
    ⚔️ Война: <b>${A.short}</b> и <b>${B.short}</b><br>Причина: ${x.cause}. Идёт с ${x.since}-го дня.<br>
    Народы: ${A.race} и ${B.race}. Боги: ${GOD_BY_ID[A.god]?GOD_BY_ID[A.god].n:"—"} и ${GOD_BY_ID[B.god]?GOD_BY_ID[B.god].n:"—"}.</div>`;}).join("")
-  :`<div class="list-line">Сегодня войн нет: державы держат хрупкий мир.</div>`;
+  :`<div class="list-line">Сегодня войн нет: державы держат хрупкий мир.</div>`);
  const a=document.getElementById("polAllies");
  if(a)a.innerHTML=allies.length?allies.map(x=>`<div class="list-line" tabindex="0" data-speak="Союз: ${EMPIRES[x.a].name} и ${EMPIRES[x.b].name}. Основание: ${x.note}.">🤝 <b>${EMPIRES[x.a].short}</b> и <b>${EMPIRES[x.b].short}</b> — ${x.note}</div>`).join("")
   :`<div class="list-line">Крепких союзов сейчас нет.</div>`;
