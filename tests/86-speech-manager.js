@@ -285,6 +285,43 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
  const меню=await page.evaluate(()=>{const names=[];AM_GROUPS.forEach(([,items])=>items.forEach(([c])=>names.push(c)));return ["speechstop","speechrepeat","speechflush","hud"].every(c=>names.includes(c));});
  check('в меню действий есть стоп, повтор, очистка и состояние',меню);
 
+ /* ── Сторона света при шаге: называется при повороте и выключается ── */
+ const стороны=await page.evaluate(()=>{
+  /* Слушаем распорядителя речи, а не narrate: сама игра живёт в своей
+     области видимости, и подмена window.narrate до её вызовов не доходит. */
+  const сказанное=[];
+  const о=Speech.say.bind(Speech);
+  Speech.say=(t,x)=>{сказанное.push(String(t));return о(t,x);};
+  const шаг=d=>{сказанное.length=0;lastMoveDir=null;safeFn(()=>move(d));
+   return сказанное.some(t=>/^(север|юг|запад|восток)\./i.test(t.trim()));};
+  const было=settings.sayDir;
+  while(activeLayer())closeTopUI();
+  G.place=null;G.ship=null;G.inCombat=false;G.alt=0;
+  settings.sayDir=1;
+  const вкл=шаг("N");
+  /* Продолжение по прямой молчит и при включённой настройке. */
+  сказанное.length=0;safeFn(()=>move("N"));
+  const поПрямой=сказанное.some(t=>/^(север|юг|запад|восток)\./i.test(t.trim()));
+  settings.sayDir=0;
+  const выкл=шаг("E");
+  /* С крыла — та же настройка. */
+  settings.sayDir=1;G.alt=0;
+  settings.sayDir=0;
+  const сКрыла=(()=>{try{
+    G.alt=2;lastMoveDir=null;сказанное.length=0;
+    safeFn(()=>arriveSky("S"));
+    return сказанное.some(t=>/^(север|юг|запад|восток)\./i.test(t.trim()));
+   }catch(_){return false;}finally{G.alt=0;}})();
+  /* Осмотр называет сторону всегда, выключена настройка или нет. */
+  const осмотр=safeFn(()=>lookText?lookText():"","")
+   ||safeFn(()=>(Look&&typeof Look.text==="function")?Look.text():"","");
+  Speech.say=о;settings.sayDir=было;
+  return {вкл,поПрямой,выкл,сКрыла,осмотр:String(осмотр).slice(0,60),
+   есть:!!document.getElementById("setSayDir")};});
+ check('сторона света называется при повороте, молчит при ходьбе по прямой и выключается настройкой',
+  стороны.вкл===true&&стороны.поПрямой===false&&стороны.выкл===false
+  &&стороны.сКрыла===false&&стороны.есть===true,стороны);
+
  /* ── единственность и старые вызовы ── */
  const единый=await page.evaluate(()=>{
   const src=document.documentElement.innerHTML;
