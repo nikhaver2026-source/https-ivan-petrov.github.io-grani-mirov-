@@ -10873,6 +10873,13 @@ const BEACON_SAMPLE={
    несколько. Ресурсы под ногами до сих пор звучали только синтезом: теперь
    у каждого своя живая запись. */
 const BEACON_ROLE={
+ /* Факел, жаровня, очаг и остывшее кострище откликались стуком: у маяка
+    torch не было роли, и он падал на прямой файл nat/knock_02. Для игры на
+    слух маяк — это и есть имя предмета, и стук вместо огня сбивал с толку.
+    Теперь огонь звучит огнём, и у него четыре разных записи вместо одной.
+    Лестница вниз отзывалась тем же стуком — теперь ступенями. */
+ torch:"ad_fire_crackle",
+ stairs_down:"deep_stairs",
  res_tree:"oc_rustle", res_stone:"deep_thud", res_ore:"clang_hard",
  res_herbs:"ad_leaves", res_berry:"lug_bush", res_crystal:"oc_glass_hit",
  res_shell:"sky_wave", res_bone:"mtg_rubble",
@@ -21632,7 +21639,7 @@ iact("rest",{n:"Отдохнуть у огня",значок:"🔥",можно:o
 iact("cook",{n:"Приготовить",значок:"🍲",можно:o=>FIRE_LIKE(o)&&safeFn(()=>mastLevel("cook"),0)>=1,почему:o=>"нужен первый урок стряпни: учат в тавернах",
  делать:o=>{techDo(TECH_BY_ID.stew,"hearth");return true;}});
 iact("lighttorch",{n:"Зажечь факел",значок:"🕯️",можно:o=>FIRE_LIKE(o)&&(G.items||[]).includes("Факел")&&!buffActive("свет"),почему:o=>!(G.items||[]).includes("Факел")?"нужен факел":"факел уже горит",
- делать:o=>{safeFn(()=>buffSet("свет",6));safeFn(()=>Bank.play("torch",{gain:0.5,maxSec:3}));narrate("Факел зажжён от огня: шесть часов света. Маяки в глубине слышны ближе.");return true;}});
+ делать:o=>{safeFn(()=>buffSet("свет",6));safeFn(()=>Bank.play("ad_fire_crackle",{gain:0.5,maxSec:3}));narrate("Факел зажжён от огня: шесть часов света. Маяки в глубине слышны ближе.");return true;}});
 /* ── СТАТУЯ, КРУГ, ЛЕСТНИЦА, ПРИЛАВОК, СЕТЬ, ПОСТРОЙКА ── */
 iact("lastmemory",{n:"Читать остаточную память",значок:"🕯️",своё:true,
  можно:o=>safeFn(()=>Escha.remainsHere(o),false)&&safeFn(()=>Escha.allowedHere(),false),почему:o=>safeFn(()=>Escha.remainsHere(o),false)?(safeFn(()=>Escha.why(),"")||"нельзя"):"это не останки",
@@ -23047,7 +23054,8 @@ function homunTend(){
     if(t&&IOBJ_TILES[t])вокруг.push(`${dirBetween(dx,dy)}: ${IOBJ_TILES[t]}`);}
    else{const c=cellContent(G.x+dx,G.y+dy);
     if(c&&c.structure)вокруг.push(`${dirBetween(dx,dy)}: ${c.structure.name}`);}}});
-  safeFn(()=>Bank.play("scout_run",{gain:0.5,maxSec:4})||Bank.play("step_grass",{gain:0.5,maxSec:3}));
+  /* Роли scout_run в банке не было: звучал только запасной путь. */
+  safeFn(()=>Bank.play("step_grass",{gain:0.5,maxSec:3}));
   слово=`${h.имя} обежал округу. ${вокруг.length?вокруг.join("; ")+"."
    :"Рядом ничего: ни двери, ни жилья, ни жилы."}`;}
  else if(p.дар==="лёгкость"){
@@ -26740,7 +26748,9 @@ function abilityRootWalk(){
     if(c&&лес.indexOf(c.terrain[0])>=0)цель={x,y,d:r};}
  if(!цель)return "Корней рядом нет: вокруг ни леса, ни топи.";
  G.x=цель.x;G.y=цель.y;
- safeFn(()=>{Bank.play("wood_creak",{gain:0.6,maxSec:4})||Bank.play("cast_teleport",{gain:0.6,maxSec:4});});
+ /* Роли wood_creak в банке не было, и корни уносили игрока под звук
+    телепорта. Скрип дерева в банке есть, и он здесь к месту. */
+ safeFn(()=>Bank.play("oc_wood_creak",{gain:0.6,maxSec:4}));
  safeFn(()=>arrive("N"));
  return `Корни вынесли вас за ${цель.d} ${plural(цель.d,"клетку","клетки","клеток")}: ${cellDesc(cellContent(G.x,G.y))}.`;}
 /* Приливный конь укорачивает морские переходы сам, без всякого умения. */
@@ -33034,8 +33044,8 @@ function victory(){const cb=G.combat,m=cb.m;
   safeFn(()=>{
    Bank.play("es_boom_last",{kind:"combat",gain:0.6,maxSec:5});
    setTimeout(()=>safeFn(()=>Bank.play("ad_gate_close",{kind:"combat",gain:0.6,maxSec:5})),500);
-   setTimeout(()=>safeFn(()=>Spatial.role("stairs_down",0,0,{dz:-1,gain:0.7,maxSec:4})
-    ||Bank.play("stairs_down",{kind:"combat",gain:0.7,maxSec:4})),900);});}
+   setTimeout(()=>safeFn(()=>Spatial.role("deep_stairs",0,0,{dz:-1,gain:0.7,maxSec:4})
+    ||Bank.play("deep_stairs",{kind:"combat",gain:0.7,maxSec:4})),900);});}
  if(G.place&&G.place.pendingKill){const k=G.place.pendingKill;G.place.pendingKill=null;
   safeFn(()=>{setPlaceMark(k.x,k.y,"dead");G.dungeonKills=(Number(G.dungeonKills)||0)+1;checkQuestProgress();});}
  G.xp+=xpGain(m.xp);
@@ -43962,7 +43972,7 @@ iaction("use",{n:"Использовать",значок:"✋",cats:["weapon","t
   if(row.cat==="ingredient")return invDo("alchemy",row.kind,row.key);
   if(row.cat==="res"||row.cat==="material")return invDo("craft",row.kind,row.key);
   const n=String(row.name);
-  if(n==="Факел"){safeFn(()=>Bank.play("torch",{gain:0.5,maxSec:3}));return done(G.place&&G.place.depth>0?"Факел зажжён: свет держится на расстоянии руки, и стены слышны лучше — маяки звучат ближе.":"Факел зажжён. Днём от него мало проку, но огонь при вас.");}
+  if(n==="Факел"){safeFn(()=>Bank.play("ad_fire_crackle",{gain:0.5,maxSec:3}));return done(G.place&&G.place.depth>0?"Факел зажжён: свет держится на расстоянии руки, и стены слышны лучше — маяки звучат ближе.":"Факел зажжён. Днём от него мало проку, но огонь при вас.");}
   if(n==="Удочка"||n==="Рыболовная сеть"){safeFn(()=>closeModal(document.getElementById("modal-invact")));safeFn(()=>closeModal(document.getElementById("modal-inventory")));if(typeof CMD.fish==="function")CMD.fish();return true;}
   if(n==="Верёвка")return done("Верёвка при вас: её спросят на спуске в колодец и на обрыве.");
   {const т=safeFn(()=>Path.artifactUse(n),null);if(т)return done(т);}

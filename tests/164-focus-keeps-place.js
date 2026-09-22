@@ -35,6 +35,8 @@
   19. Восемь новых ролей на месте, все записи банка существуют на диске, а
       синтезированный писк остался только запасным путём.
   20. У нового источника записей есть титры, лицензия и таблица файлов.
+  21. Ни одно имя звука, которое зовёт игра, не молчит: у каждого есть
+      запись в банке, и у каждого маяка есть свой голос.
    ═══════════════════════════════════════════════════════════════════════ */
 const {chromium}=require('playwright');
 const fs=require('fs'),path=require('path');
@@ -346,6 +348,36 @@ const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(e!==undefined?' :
    &&/ab_spell_learn_01/.test(крAB)&&лицAB
    &&/Ancient Beast/.test(src),
    {титры:/Ancient Beast/.test(крAB),лицензия:лицAB,вИгре:/Ancient Beast/.test(src)});
+ }
+
+ /* ── 21. ни одно имя звука не молчит ── */
+ {
+  const src=fs.readFileSync(path.join(__dirname,'..','index.html'),'utf8');
+  const зовут=[...new Set([
+   ...[...src.matchAll(/Bank\.play\("([A-Za-zА-Яа-яё0-9_]+)"/g)].map(m=>m[1]),
+   ...[...src.matchAll(/Spatial\.at\("([A-Za-zА-Яа-яё0-9_]+)"/g)].map(m=>m[1]),
+   ...[...src.matchAll(/UI\.nat\("([a-z_0-9]+)"/g)].map(m=>m[1]),
+   ...[...src.matchAll(/UI\.natStep\("([a-z_0-9]+)"/g)].map(m=>m[1]),
+  ])];
+  /* Имя, которого нет ни в одном банке, — это молчание на месте события.
+     Запасной путь через || его прячет, поэтому ищем не на слух, а по имени. */
+  const молчат=await page.evaluate(список=>список.filter(role=>{
+   let ok=false;
+   try{ok=!!(Bank.has&&Bank.has(role));}catch(_){}
+   if(!ok){try{ok=!!(typeof UI_BANK!=="undefined"&&UI_BANK[role]);}catch(_){}}
+   return !ok;}),зовут);
+  /* И маяки: у каждого либо роль с вариантами, либо прямая запись. */
+  const маяки=await page.evaluate(()=>{
+   const без=[];
+   const все=new Set([...Object.keys(typeof BEACON_ROLE!=="undefined"?BEACON_ROLE:{}),
+                      ...Object.keys(typeof BEACON_SAMPLE!=="undefined"?BEACON_SAMPLE:{})]);
+   все.forEach(id=>{
+    const r=(typeof BEACON_ROLE!=="undefined")&&BEACON_ROLE[id];
+    const f=(typeof BEACON_SAMPLE!=="undefined")&&BEACON_SAMPLE[id];
+    if(!(r&&Bank.has(r))&&!f)без.push(id);});
+   return без;});
+  check('21. ни одно имя звука, которое зовёт игра, не молчит, и у каждого маяка есть голос',
+   молчат.length===0&&маяки.length===0,{зовут:зовут.length,молчат,маяки});
  }
 
  check('страница не бросила ни одной ошибки',errors.length===0,errors.slice(0,3));
