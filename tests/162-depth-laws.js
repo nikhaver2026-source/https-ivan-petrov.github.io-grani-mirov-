@@ -118,6 +118,11 @@ const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(e!==undefined?' :
      дороже: на время замера его тоже придерживаем, иначе мерился бы порядок
      заклинаний, а не закон глубины. */
   const бПрив=window.adaptAdd;window.adaptAdd=()=>0;
+  /* Срыв плетения (Resonance.бросок) тоже случаен и в одном из последствий
+     снимает ещё несколько маны уже после цены. Раз в десяток замеров он
+     удваивал снятое, и порядок замеров начинал решать всё. Держим и его:
+     меряется закон глубины, а не удача броска. */
+  const бСрыв=Resonance.бросок;Resonance.бросок=()=>"";
   const цена=d=>{
    G.place={kind:"dungeon",bx:1000,by:1000,stype:"cave_entrance",depth:d,x:1,y:1};
    G.mana=G.manaMax=200;
@@ -131,7 +136,7 @@ const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(e!==undefined?' :
   /* Дважды и вперемешку: если закон работает, порядок замеров ничего не решает. */
   const немая1=цена(85),густая1=цена(55),густая2=цена(55),немая2=цена(85);
   const густая=Math.min(густая1,густая2),немая=Math.min(немая1,немая2);
-  Balance.backlash=бОтдача;window.adaptAdd=бПрив;
+  Balance.backlash=бОтдача;window.adaptAdd=бПрив;Resonance.бросок=бСрыв;
   G.place=былоП==="null"?null:JSON.parse(былоП);G.mana=былоМ;
   return {густая1,густая2,немая1,немая2,густая,немая,
    kГустая:deepLawK("мана",55),kНемая:deepLawK("мана",85)};});
