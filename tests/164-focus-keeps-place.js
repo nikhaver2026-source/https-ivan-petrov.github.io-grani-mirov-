@@ -472,6 +472,33 @@ const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(e!==undefined?' :
     нет:итог.нет,молчат:итог.молчат,молчатЗемли});
  }
 
+
+ /* ── 24. шаг — это шаг, а не удар по тарелке ──
+    Папка sounds/surf целиком была собрана из хай-хэтов ударной установки
+    (сэмплы Sonic Pi hat_* и tbd_perc_*), а «шаги по камню» и «шаги стражи»
+    в nat — из таблы. Их переименовали в шаги, и каждый шаг по земле звучал
+    тарелкой. Правило: всякая роль, которую зовёт система шагов, лежит в
+    папке настоящих записей шагов и шорохов поверхности. */
+ {
+  const src=fs.readFileSync(path.join(__dirname,'..','index.html'),'utf8');
+  const итог=await page.evaluate(()=>{
+   const живые=/^(tread|steps|lug|oc|mtg|deep|hero|monsters|stk)\//;
+   const роли=new Set();
+   [SURF_ROLE,SURF_FALLBACK,STEP_ALT,DARK_STEP_ROLE].forEach(t=>Object.values(t).forEach(r=>роли.add(r)));
+   Object.values(STEP_LAYER).forEach(([r])=>роли.add(r));
+   ["hero_step_metal","hero_step_leather","hero_step_cloth","hero_step_echo","stomp"].forEach(r=>роли.add(r));
+   const нет=[],мимо=[];
+   роли.forEach(r=>{const b=SOUND_BANK[r];
+    if(!b||!b.f||!b.f.length){нет.push(r);return;}
+    if(b.f.some(x=>!живые.test(x)))мимо.push(r+": "+b.f[0]);});
+   return {ролей:роли.size,нет,мимо};});
+  const ударные=/"(surf\/[^"]+|nat\/(step_soft|step_stone|stomp)_[^"]+)"/.test(src);
+  const папки=fs.existsSync(path.join(__dirname,'..','sounds','surf'));
+  check('24. шаг звучит шагом: ни одна роль шага не стоит на ударном сэмпле',
+   итог.нет.length===0&&итог.мимо.length===0&&!ударные&&!папки,
+   {ролей:итог.ролей,нет:итог.нет,мимо:итог.мимо,ударныеВФайле:ударные,surfНаДиске:папки});
+ }
+
  check('страница не бросила ни одной ошибки',errors.length===0,errors.slice(0,3));
  await browser.close();
  results.forEach(r=>console.log(r));

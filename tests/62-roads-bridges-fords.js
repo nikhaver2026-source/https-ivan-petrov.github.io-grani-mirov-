@@ -199,7 +199,7 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   return {цель,назвали:пpo,разНазвали:пpo.filter(t=>!/позади/i.test(t)).length,
    сошли:пpo.some(t=>/позади/i.test(t)),
    звук:звуки.some(z=>/stk_bridge|stk_splash|wild_river|deep_stone|deep_wind/.test(z)),
-   шаговПоВоде:звуки.filter(z=>z==="step_shallow"||z==="stk_bridge").length};});
+   шаговПоВоде:звуки.filter(z=>z==="step_water"||z==="stk_bridge").length};});
  check('переправа называется вслух, когда на неё ступают',
   !вслух.нет&&вслух.разНазвали>=1,вслух);
  check('и называется один раз, а не на каждом шагу по мосту',

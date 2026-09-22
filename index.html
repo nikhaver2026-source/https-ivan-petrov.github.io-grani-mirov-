@@ -2234,7 +2234,7 @@ const LIVE_INSTEAD={
     банке лежали: шаги, дверь и сундук. В самой игре они не звучат — их
     слушают в энциклопедии звуков, — и слышать там синтез, когда сто
     семнадцать соседних сцен отвечают записью, неправильно. */
- footsteps:     ["step_dirt","step_stone","step_grass"],
+ footsteps:     ["step_dirt","lug_step_stone","lug_step_grass"],
  door:          ["oc_door_open","door_wood","mtg_door_open"],
  chest:         ["oc_chest_open","mtg_chest_open"],
 
@@ -2245,7 +2245,7 @@ const LIVE_INSTEAD={
  dogs:          ["oc_growl","wolf_howl"],
  livestock:     ["beasts_cattle","beast_cow","beast_sheep"],
  chickens:      ["beasts_fowl","beast_fowl","bird_rooster"],
- rats:          ["fx_lurk","step_soft"],
+ rats:          ["fx_lurk","oc_step_soft"],
  bats_wings:    ["raptor_wing","wyrm_wing"],
  frogs:         ["amb_swamp","stk_goo"],
  boar:          ["beast_pig","beasts_pig"],
@@ -2264,7 +2264,7 @@ const LIVE_INSTEAD={
  stream:        ["wild_river","stk_river","sky_river"],
  sea:           ["sea_open","sky_wave","sea_calm"],
  crickets:      ["amb_night"],
- cave:          ["amb_cave","cave_drip"],
+ cave:          ["amb_cave","deep_drip"],
  swamp:         ["amb_swamp","stk_goo"],
  plains:        ["amb_plains","wild_wind"],
  mountains_amb: ["amb_mountain","sky_wind"],
@@ -2279,7 +2279,7 @@ const LIVE_INSTEAD={
  forge:         ["forge_work","forge_hammer","wild_anvil"],
 
  /* ── ПОДЗЕМЕЛЬЕ ── */
- dungeon_drip:  ["deep_drip","cave_drip"],
+ dungeon_drip:  ["deep_drip","oc_waterdrop"],
  shaft_wind:    ["deep_wind","sky_wind"],
 
  /* ── ГОЛОСА ТВАРЕЙ ──
@@ -2313,7 +2313,7 @@ const LIVE_INSTEAD={
  res_stone_s:   ["craft_quarry","stone_hit"],
  res_ore_s:     ["craft_ore","mine_pick"],
  res_crystal_s: ["fx_crystal","magic_shimmer"],
- res_bone_s:    ["step_bone","foe_bone_hit"],
+ res_bone_s:    ["tread_gravel","foe_bone_hit"],
  res_berry_s:   ["craft_berry","craft_field"],
 
  /* ── ГОЛОСА ЛЮДЕЙ ──
@@ -2347,7 +2347,7 @@ const LIVE_INSTEAD={
  market_shout:  ["market_tone","market_slap","market_slap"],
  guard_shout:   ["guard_shout","lug_clank"],
  chains:        ["stk_clang","clang_soft"],
- bone_pile:     ["step_bone","foe_bone_die","foe_bone_hit"],
+ bone_pile:     ["tread_gravel","foe_bone_die","foe_bone_hit"],
  dice:          ["craft_knock","market_tap"],
  coins:         ["arte_coins","clink","od_gold"],
  mroar:         ["wyrm_roar","brute_roar"],
@@ -2360,7 +2360,7 @@ const LIVE_INSTEAD={
  fog:           ["amb_wind","deep_wind"],
  storm:         ["sky_storm","sea_storm","stk_thunder"],
  res_tree_s:    ["craft_axe","craft_saw"],
- res_herbs_s:   ["craft_field","step_grass"],
+ res_herbs_s:   ["craft_field","lug_step_grass"],
  res_shell_s:   ["stk_splash","sky_wave"],
  npc_farmer_s:  ["hall_farm","craft_field"],
  npc_traveler_s:["tread_gravel","amb_road"],
@@ -3250,7 +3250,6 @@ const BANK_CATS={mg:"🐲 Фэнтезийный мир: твари, чары, �
  nat:"🌿 Живые записи мира: удары, двери, колокола, шаги, гул",
  inst:"🎻 Живые инструменты: боги, места, фанфары, предвестия",
  orch:"🎺 Оркестр мира: война, храм, народы, чары и стихии",
- surf:"🥾 Поверхности под ногой и ступени",
  blow:"🔨 Удары, оружие и разрушение",
  troop:"🛡️ Стража, строй и сигналы",
  bazaar:"🏺 Рынок, торг и зазывы",
@@ -3263,6 +3262,7 @@ const BANK_CATS={mg:"🐲 Фэнтезийный мир: твари, чары, �
  arte:"💎 Артефакты, вещи и находки",
  deep:"🕯️ Подземелья: лестницы, двери, камень",
  foe:"👹 Твари: удары, боль, гибель",
+ monsters:"🐾 Голоса и поступь тварей: появление, удар, боль, гибель, шаг",
  cast:"🔮 Заклинания и чары",
  hero:"🧍 Герой: удары, шаги, вехи",
  wild:"🌿 Природа, вода и очаг",
@@ -3299,9 +3299,9 @@ const BANK_GROUPS=[
  {n:"Боги, храмы и знамения", icon:"🕯️", dirs:["gods"]},
  {n:"События и повороты судьбы",icon:"⚡", dirs:["events","mood"]},
  {n:"Места, здания и постройки",icon:"🏛️", dirs:["places","hall","folk"]},
- {n:"Шаги и поверхности",     icon:"👣", dirs:["steps","surf","tread"]},
+ {n:"Шаги и поверхности",     icon:"👣", dirs:["steps","tread"]},
  {n:"Оружие, удары и война",  icon:"⚔️", dirs:["blow","arms","troop","battle","siege"]},
- {n:"Твари, звери и птицы",   icon:"🐉", dirs:["foe","beasts"]},
+ {n:"Твари, звери и птицы",   icon:"🐉", dirs:["foe","beasts","monsters"]},
  {n:"Люди, рынок и торг",     icon:"🗣️", dirs:["bazaar","throng","trade"]},
  {n:"Находки, вещи и артефакты",icon:"💎", dirs:["relic","arte"]},
  {n:"Ремёсла, добыча и стройка",icon:"🔨", dirs:["craft"]},
@@ -7801,7 +7801,7 @@ const DIPLO_KINDS=[
   о:"Не запрет товару, а наказание казне: пошлины, аресты грузов, закрытые счета.",
   знак:"у той стороны дорожает всё: убытки раскладывают на всех"},
  /* ── ДЕЛО: идёт само по себе ── */
- {id:"spy",     n:"шпионаж",          род:"дело",     сторон:1,звук:"step_soft",
+ {id:"spy",     n:"шпионаж",          род:"дело",     сторон:1,звук:"oc_step_soft",
   о:"Одна держава держит людей в другой. Об этом не объявляют.",
   знак:"там, где работает чужая разведка, тайное купить дешевле"}];
 const DIPLO_BY_ID=Object.fromEntries(DIPLO_KINDS.map(k=>[k.id,k]));
@@ -9348,11 +9348,10 @@ const SOUND_BANK={
  bell_small:{f:["nat/bell_small_01.flac"],d:"Малый колокол: алтарь"},
  shop_till:{f:["nat/shop_till_01.flac"],d:"Лавка: касса и монеты"},
  knock:{f:["nat/knock_01.flac","nat/knock_02.flac","nat/knock_03.flac"],d:"Стук: ступень, дерево, камень"},
- step_soft:{f:["nat/step_soft_01.flac","nat/step_soft_02.flac","nat/step_soft_03.flac"],d:"Мягкий шаг: стража и твари в переходах"},
  chime:{f:["nat/chime_01.flac","nat/chime_02.flac","nat/chime_03.flac","nat/chime_04.flac"],d:"Перезвон: лестница и ориентиры"},
  blip:{f:["nat/blip_01.flac","nat/blip_02.flac","nat/blip_03.flac","nat/blip_04.flac","nat/blip_05.flac","nat/blip_06.flac"],d:"Короткие отметки и подсказки"},
  clash:{f:["nat/clash_01.flac","nat/clash_02.flac","nat/clash_03.flac","nat/clash_04.flac","nat/clash_05.flac"],d:"Звон стали: столкновение клинков"},
- stomp:{f:["nat/stomp_01.flac","nat/stomp_02.flac","nat/stomp_03.flac"],d:"Тяжёлая поступь громады"},
+ stomp:{f:["monsters/Behemoth_Step.wav","monsters/Dragon_Step.wav"],d:"Тяжёлая поступь громады"},
  clink:{f:["nat/clink_01.flac","nat/clink_02.flac","nat/clink_03.flac","nat/clink_04.flac","nat/clink_05.flac"],d:"Мелкий металл: монеты, замок, пряжка"},
  curse:{f:["nat/curse_01.flac","nat/curse_02.flac","nat/curse_03.flac","nat/curse_04.flac","nat/curse_05.flac","nat/curse_06.flac"],d:"Порча и сбой чар"},
  hiss:{f:["nat/hiss_01.flac","nat/hiss_02.flac"],d:"Ветер и шипение"},
@@ -9360,7 +9359,6 @@ const SOUND_BANK={
  mechanism:{f:["nat/mechanism_01.flac","nat/mechanism_02.flac"],d:"Механизм: ворот, ловушка, привод"},
  vent:{f:["nat/vent_01.flac"],d:"Пар из трещины в камне"},
  wild:{f:["nat/wild_01.flac"],d:"Глушь: дальнее зверьё"},
- step_stone:{f:["nat/step_stone_01.flac","nat/step_stone_02.flac","nat/step_stone_03.flac","nat/step_stone_04.flac","nat/step_stone_05.flac","nat/step_stone_06.flac"],d:"Шаги по камню подземелья"},
  hit_snap:{f:["nat/hit_snap_01.flac","nat/hit_snap_02.flac","nat/hit_snap_03.flac","nat/hit_snap_04.flac"],d:"Резкий короткий удар"},
  mystic:{f:["nat/mystic_01.flac","nat/mystic_02.flac"],d:"Мистический отзвук струны"},
  tick:{f:["nat/tick_01.flac","nat/tick_02.flac","nat/tick_03.flac","nat/tick_04.flac"],d:"Отметки интерфейса"},
@@ -9466,7 +9464,6 @@ const SOUND_BANK={
  bazaar_tabla:{f:["bazaar/bazaar_tabla_01.flac","bazaar/bazaar_tabla_02.flac","bazaar/bazaar_tabla_03.flac"],d:"Барабанчик базара"},
  body_fall:{f:["blow/body_fall_01.flac"],d:"Падение тела"},
  boom_far:{f:["blow/boom_far_01.flac"],d:"Дальний гром"},
- cave_drip:{f:["surf/cave_drip_01.flac"],d:"Капель в пещере"},
  clash_blades:{f:["blow/clash_blades_01.flac"],d:"Лязг клинков"},
  deep_call:{f:["dark/deep_call_01.flac","dark/deep_call_02.flac"],d:"Зов из глубины"},
  distant_snare:{f:["troop/distant_snare_01.flac"],d:"Барабан вдалеке"},
@@ -9495,25 +9492,6 @@ const SOUND_BANK={
  shield_hit:{f:["blow/shield_hit_01.flac"],d:"Удар в щит"},
  signal_beep:{f:["troop/signal_beep_01.flac"],d:"Сигнал"},
  soft_thud:{f:["troop/soft_thud_01.flac"],d:"Мягкий удар"},
- stair_step:{f:["surf/stair_step_01.flac"],d:"Ступень лестницы"},
- step_ash:{f:["surf/step_ash_01.flac"],d:"Шаг по пеплу"},
- step_bone:{f:["surf/step_bone_01.flac"],d:"Шаг по костям"},
- step_bridge:{f:["surf/step_bridge_01.flac"],d:"Шаг по мосткам"},
- step_crystal:{f:["surf/step_crystal_01.flac"],d:"Шаг по кристаллу"},
- step_dust:{f:["surf/step_dust_01.flac"],d:"Шаг по пыли"},
- step_flag:{f:["surf/step_flag_01.flac"],d:"Шаг по каменной плите"},
- step_grass:{f:["surf/step_grass_01.flac"],d:"Шаг по траве"},
- step_gravel:{f:["surf/step_gravel_01.flac"],d:"Шаг по гравию"},
- step_ice:{f:["surf/step_ice_01.flac"],d:"Шаг по льду"},
- step_leaves:{f:["surf/step_leaves_01.flac"],d:"Шаг по палой листве"},
- step_marble:{f:["surf/step_marble_01.flac"],d:"Шаг по мрамору"},
- step_metal:{f:["surf/step_metal_01.flac"],d:"Шаг по металлу"},
- step_mud:{f:["surf/step_mud_01.flac"],d:"Шаг по грязи"},
- step_plank:{f:["surf/step_plank_01.flac"],d:"Шаг по доскам"},
- step_sand:{f:["surf/step_sand_01.flac"],d:"Шаг по песку"},
- step_shallow:{f:["surf/step_shallow_01.flac"],d:"Шаг по мелководью"},
- step_snow:{f:["surf/step_snow_01.flac"],d:"Шаг по снегу"},
- step_straw:{f:["surf/step_straw_01.flac"],d:"Шаг по соломе"},
  stone_hit:{f:["blow/stone_hit_01.flac"],d:"Удар по камню"},
  wraith_voice:{f:["dark/wraith_voice_01.flac","dark/wraith_voice_02.flac","dark/wraith_voice_03.flac","dark/wraith_voice_04.flac","dark/wraith_voice_05.flac","dark/wraith_voice_06.flac"],d:"Голос нежити"},
  /* ── Оркестр событий ───────────────────────────────────────────────────
@@ -10879,9 +10857,9 @@ const MONSTER_PROFILE={
  beast:{breath:"lug_growl",move:"tread_grass",step:"lug_step_grass",idle:"lug_bark",warcry:"oc_growl",attack:"lug_claw",hurt:"lug_snarl",wound:"oc_dog_whine",death:"body_fall",aggro:"wolf_howl",detect:"oc_dog_snuff",lose:"lug_growl",fear:"oc_dog_whine",victory:"wolf_howl",unique:"beast_bull"},
  crawler:{breath:"serpent_hiss",move:"oc_rustle",step:"oc_step_soft",idle:"serpent_hiss",warcry:"serpent_hiss",attack:"foe_burrow_hit",hurt:"foe_burrow_pain",wound:"serpent_hiss",death:"foe_burrow_die",aggro:"serpent_hiss",detect:"oc_rustle",lose:"serpent_hiss",fear:"serpent_hiss",victory:"serpent_hiss",unique:"oc_corrode"},
  humanoid:{breath:"goblin_voice",move:"tread_gravel",step:"oc_step_hard",idle:"goblin_voice",warcry:"warrior_shout",attack:"foe_goblin_hit",hurt:"foe_goblin_pain",wound:"oc_hurt",death:"foe_goblin_die",aggro:"guard_shout",detect:"guard_shout",lose:"throng_retreat",fear:"oc_hurt",victory:"oc_laugh",unique:"foe_goblin_cast"},
- bone:{breath:"deep_wind",move:"foe_bone_hit",step:"step_bone",idle:"foe_bone_pain",warcry:"wraith_die",attack:"foe_bone_hit",hurt:"foe_bone_pain",wound:"foe_bone_pain",death:"foe_bone_die",aggro:"wraith_die",detect:"step_bone",lose:"step_bone",fear:"foe_bone_pain",victory:"wraith_die",unique:"od_undead"},
+ bone:{breath:"deep_wind",move:"foe_bone_hit",step:"tread_gravel",idle:"foe_bone_pain",warcry:"wraith_die",attack:"foe_bone_hit",hurt:"foe_bone_pain",wound:"foe_bone_pain",death:"foe_bone_die",aggro:"wraith_die",detect:"tread_gravel",lose:"tread_gravel",fear:"foe_bone_pain",victory:"wraith_die",unique:"od_undead"},
  spirit:{breath:"wraith_moan",move:"deep_wind",step:"deep_wind",idle:"wraith_voice",warcry:"wraith_moan",attack:"foe_undead_hit",hurt:"foe_undead_pain",wound:"wraith_moan",death:"foe_undead_die",aggro:"wraith_voice",detect:"wraith_moan",lose:"wraith_die",fear:"wraith_moan",victory:"wraith_voice",unique:"foe_undead_cast"},
- undead:{breath:"od_undead",move:"step_mud",step:"oc_step_soft",idle:"od_undead",warcry:"mummy_hit",attack:"foe_undead_hit",hurt:"foe_undead_pain",wound:"od_undead",death:"mummy_die",aggro:"od_undead",detect:"od_undead",lose:"od_undead",fear:"od_undead",victory:"mummy_hit",unique:"od_keeper_groan"},
+ undead:{breath:"od_undead",move:"step_water",step:"oc_step_soft",idle:"od_undead",warcry:"mummy_hit",attack:"foe_undead_hit",hurt:"foe_undead_pain",wound:"od_undead",death:"mummy_die",aggro:"od_undead",detect:"od_undead",lose:"od_undead",fear:"od_undead",victory:"mummy_hit",unique:"od_keeper_groan"},
  giant:{breath:"brute_roar",move:"brute_step",step:"brute_step",idle:"lug_snarl",warcry:"brute_roar",attack:"foe_brute_hit",hurt:"foe_brute_pain",wound:"lug_growl",death:"brute_die",aggro:"brute_roar",detect:"brute_step",lose:"brute_roar",fear:"lug_snarl",victory:"brute_roar",unique:"hit_ground"},
  construct:{breath:"oc_steam",move:"golem_step",step:"golem_step",idle:"oc_electrical",warcry:"golem_hit",attack:"golem_hit",hurt:"oc_metal_dull",wound:"oc_glass_hit",death:"golem_die",aggro:"golem_step",detect:"oc_electrical",lose:"oc_steam",fear:"oc_metal_light",victory:"golem_hit",unique:"oc_crystal_comm"},
  dragon:{breath:"oc_growl",move:"wyrm_wing",step:"brute_step",idle:"dragon_growl",warcry:"wyrm_roar",attack:"foe_wyrm_hit",hurt:"wyrm_pain",wound:"foe_wyrm_pain",death:"wyrm_die",aggro:"wyrm_dark",detect:"wyrm_wing",lose:"wyrm_wing",fear:"wyrm_pain",victory:"wyrm_roar",unique:"foe_wyrm_cast"},
@@ -11023,7 +11001,7 @@ const BEACON_SAMPLE={
  forge:"nat/forge_work_01.flac", temple:"nat/choir_01.flac", portal:"nat/portal_deep_01.flac",
  /* маяки живого мира и подземелья */
  dungeon:"nat/dungeon_drone_01.flac", torch:"nat/knock_02.flac",
- guard:"nat/step_soft_01.flac", roamer:"nat/gurgle_01.flac",
+ guard:"oc/oc_step_soft_01.ogg", roamer:"nat/gurgle_01.flac",
  artifact:"nat/artifact_hum_01.flac", crossroads:"nat/chime_03.flac",
  signpost:"nat/knock_01.flac", trader_deep:"nat/shop_till_01.flac",
  /* Маяки построек: замок — валторна, деревня — флейта, таверна — лютня,
@@ -11033,7 +11011,7 @@ const BEACON_SAMPLE={
  castle:"hall/hall_fort_01.ogg", village:"hall/hall_farm_01.ogg",
  tavern:"uh/uh_tavern_01.ogg", clanhall:"hall/hall_barracks_01.ogg",
  tower:"nat/magic_hum_01.flac", ruins:"mg/hall_fall_01.ogg",
- cave_entrance:"surf/cave_drip_01.flac", port:"hall/hall_port_01.ogg",
+ cave_entrance:"deep/deep_drip_01.ogg", port:"hall/hall_port_01.ogg",
  traveler:"throng/throng_coming_01.ogg", city:"hall/hall_gate_01.ogg",
  caravan:"ad/ad_trade_01.ogg", school:"uh/uh_page_01.ogg"};
 /* Маяк по РОЛИ, а не по одному файлу: у роли несколько записей, и объект
@@ -11277,7 +11255,7 @@ function placeColour(seed){
   const p=G.place;
   let role=null;
   if(p&&p.depth>=MAX_DEPTH)role="deep_wind";
-  else if(p&&p.depth>=3)role="cave_drip";
+  else if(p&&p.depth>=3)role="deep_drip";
   else if(p&&p.depth>0)role="deep_wind";
   else if(!p&&!G.ship){
    const t=cellContent(G.x,G.y).terrain[0];
@@ -23237,7 +23215,7 @@ function homunTend(){
    else{const c=cellContent(G.x+dx,G.y+dy);
     if(c&&c.structure)вокруг.push(`${dirBetween(dx,dy)}: ${c.structure.name}`);}}});
   /* Роли scout_run в банке не было: звучал только запасной путь. */
-  safeFn(()=>Bank.play("step_grass",{gain:0.5,maxSec:3}));
+  safeFn(()=>Bank.play("lug_step_grass",{gain:0.5,maxSec:3}));
   слово=`${h.имя} обежал округу. ${вокруг.length?вокруг.join("; ")+"."
    :"Рядом ничего: ни двери, ни жилья, ни жилы."}`;}
  else if(p.дар==="лёгкость"){
@@ -24260,7 +24238,7 @@ const G={hp:100,hpMax:100,str:10,agi:10,mind:10,cha:10,mana:10,manaMax:10,
 const ATTRS=[
  {id:"str",   n:"Сила",          ключ:"str", звук:"forge_hammer",
   о:"Что вы поднимете и как тяжело ляжет ваш удар.",даёт:"здоровье, переносимый вес"},
- {id:"agi",   n:"Ловкость",      ключ:"agi", звук:"step_soft",
+ {id:"agi",   n:"Ловкость",      ключ:"agi", звук:"oc_step_soft",
   о:"Как быстро вы двигаетесь и как чисто ложится удар.",даёт:"скорость, точность, крит"},
  {id:"end",   n:"Выносливость",  гнездо:true,звук:"deep_wind",
   о:"Сколько тело держит без передышки: под водой, под грузом, под уроном.",
@@ -25729,7 +25707,7 @@ const PLACE_TRAITS={
    твари:["wraith","banshee","basilisk"],
    низ:"Ниже — ярусы погребений: полки в три ряда, и половина полок пуста.",
    слово:"Плиты сдвинуты изнутри, и это заметно сразу."},
-  {id:"sunk", n:"затопленные",вещи:["fountain","mushbed"],товар:["грибы"],звук:"cave_drip",
+  {id:"sunk", n:"затопленные",вещи:["fountain","mushbed"],товар:["грибы"],звук:"deep_drip",
    твари:["serpent","troll","treant"],
    низ:"Ниже вода стоит выше колена и не уходит: где-то там бьёт тёплый ключ.",
    слово:"По колено воды, и она нехолодная — где-то внизу бьёт тёплый ключ."},
@@ -25964,7 +25942,7 @@ const DUNGEON_KINDS=[
  {id:"water",n:"водное",звук:"oc_splash",
   о:"Затопленные ходы, где по пояс, а за поворотом с головой.",
   примета:"По щиколотку вода, и она идёт откуда-то сбоку, а не сверху.",
-  голоса:[["oc_splash",2],["amb_water",1.5],["oc_waterfall",1],["cave_drip",1.5]],
+  голоса:[["oc_splash",2],["amb_water",1.5],["oc_waterfall",1],["deep_drip",1.5]],
   твари:["kraken","serpent","basilisk"],добыча:["кость","кристалл"],
   план:{жил:1}},
  {id:"air",n:"воздушное",звук:"deep_wind",
@@ -26058,7 +26036,7 @@ const DARK_CIRCLES=[
  {n:"Пепельные ярусы",род:"пепельных ярусов", порода:"ash",     голос:"drone_deep",   беда:"пепел лежит по колено и тёплый"},
  {n:"Жильные ярусы",род:"жильных ярусов",   порода:"stone",   голос:"es_plasma",    беда:"камень пульсирует в такт вашему сердцу"},
  {n:"Зеркальные ярусы",род:"зеркальных ярусов",порода:"crystal", голос:"es_beam",      беда:"вас здесь двое, и второй идёт впереди"},
- {n:"Утопшие ярусы",род:"утопших ярусов",   порода:"water",   голос:"cave_drip",    беда:"вода стоит выше пояса и не холодная"},
+ {n:"Утопшие ярусы",род:"утопших ярусов",   порода:"water",   голос:"deep_drip",    беда:"вода стоит выше пояса и не холодная"},
  {n:"Гнилые ярусы",род:"гнилых ярусов",    порода:"mud",     голос:"stk_goo",      беда:"своды дышат"},
  {n:"Ярусы шва",род:"ярусов Шва",       порода:"metal",   голос:"es_organ",     беда:"Грань зашита прямо над головой"},
  {n:"Ярусы пустоты",род:"ярусов Пустоты",   порода:"ice",     голос:"es_ion",       беда:"здесь нет эха: звук уходит и не возвращается"},
@@ -27461,7 +27439,7 @@ const LIGHT_CIRCLES=[
  {n:"Подвалы",            род:"подвалов",              порода:"gravel", голос:"drone_calm",   беда:"здесь ещё пахнет поверхностью: бочки, солома, чужая работа"},
  {n:"Штольни",            род:"штолен",                порода:"stone",  голос:"od_dig",       беда:"старая крепь и рельсы, которые никуда не ведут"},
  {n:"Старые ходы",        род:"старых ходов",          порода:"dirt",   голос:"drone_dark",   беда:"ходы копали не для людей: своды низкие и круглые"},
- {n:"Затопленные горизонты",род:"затопленных горизонтов",порода:"water",голос:"cave_drip",    беда:"вода стоит по колено и не уходит никуда"},
+ {n:"Затопленные горизонты",род:"затопленных горизонтов",порода:"water",голос:"deep_drip",    беда:"вода стоит по колено и не уходит никуда"},
  {n:"Кристальные жилы",   род:"кристальных жил",       порода:"crystal",голос:"fx_crystal",   беда:"камень звенит от шага и отвечает светом"},
  {n:"Костяные слои",      род:"костяных слоёв",        порода:"bone",   голос:"od_undead",    беда:"порода состоит из того, что когда-то ходило"},
  {n:"Магмовые карманы",   род:"магмовых карманов",     порода:"ash",    голос:"mtg_lava",     беда:"жар идёт снизу, и дышать надо реже"},
@@ -27549,7 +27527,7 @@ const DEEP_NODES=[
  {д:30,n:"Хор в камне",о:"Из трещин идёт ровный многоголосый гул. Слов не разобрать, но он отвечает на шаг: замрёшь — стихает.",звук:"ghost_choir",дар:"мана"},
  {д:40,n:"Сухая река",о:"Русло, вылизанное водой до гладкого, и ни капли воды. Она ушла отсюда так давно, что даже ил окаменел.",звук:"vent",дар:"вода"},
  {д:50,n:"Раскол опоры",о:"Колонна, державшая ярус, расколота надвое и подперта чужой кладкой — наспех, но уже давно.",звук:"hollow_thud",дар:"опыт"},
- {д:60,n:"Костяной ярус",о:"Пол выстлан костями в три слоя, и они уложены, а не свалены: кто-то мостил ими дорогу.",звук:"step_bone",дар:"золото"},
+ {д:60,n:"Костяной ярус",о:"Пол выстлан костями в три слоя, и они уложены, а не свалены: кто-то мостил ими дорогу.",звук:"tread_gravel",дар:"золото"},
  {д:70,n:"Зеркальный ход",о:"Стены отполированы до блеска, и ход отражает сам себя. Идёшь прямо, а кажется, что навстречу.",звук:"spark_glock",дар:"мана"},
  {д:80,n:"Дыхание низа",о:"Тяга идёт снизу вверх, ровно и тепло, как из живого. Пламя факела ложится к своду.",звук:"drone_low",дар:"здоровье"},
  {д:90,n:"Порог дна",о:"Ступени кончаются площадкой, за которой камень другой — мельче, плотнее и без следов кирки. Дальше копал не человек.",звук:"rift_tick",дар:"опыт"}];
@@ -27754,7 +27732,7 @@ const DEEP_LAWS=[
  {д:30,n:"Тяжёлые пласты",звук:"deep_stone",
   о:"Порода давит сверху всем своим весом, и котомка тянет вниз сильнее, чем весит.",
   ноша:0.85,встречи:1.1},
- {д:40,n:"Сырые ходы",звук:"cave_drip",
+ {д:40,n:"Сырые ходы",звук:"deep_drip",
   о:"Вода берёт своё: капель стоит в ушах, глушит шаги и прячет под собой любой щелчок.",
   слышимость:0.75,заживление:0.85,ловушки:1.2},
  {д:50,n:"Рудное поле",звук:"deep_rocks",
@@ -29512,7 +29490,7 @@ function enterPlace(c){safeFn(()=>deed("places"));
  /* Порог каждого места звучит по-своему: в таверне берут струну, в храме
     вступает орган, в руинах отзывается фагот. */
  safeFn(()=>{const tone={tavern:"uh_tavern",temple:"uh_chapel",clanhall:"hall_barracks",
-  tower:"magic_hum",ruins:"hall_fall",cave_entrance:"cave_drip",port:"hall_dock",
+  tower:"magic_hum",ruins:"hall_fall",cave_entrance:"deep_drip",port:"hall_dock",
   castle:"hall_fort",village:"hall_farm"}[stype];
   if(tone)setTimeout(()=>safeFn(()=>Bank.play(tone,{seed:c.x+c.y,gain:0.55,maxSec:6})),380);});
  /* Третий слой — то, чем место занято: рынок гудит рядами, кузня бьёт
@@ -29530,7 +29508,7 @@ function enterPlace(c){safeFn(()=>deed("places"));
    clanhall:["hall_barracks","throng_march"],
    tower:["magic_hum","artifact_hum"],
    ruins:["deep_wind","hall_fall"],
-   cave_entrance:["deep_wind","cave_drip"]}[stype];
+   cave_entrance:["deep_wind","deep_drip"]}[stype];
   if(!дело)return;
   дело.forEach((r,i)=>setTimeout(()=>safeFn(()=>Bank.play(r,{seed:c.x+c.y+i,gain:0.42,maxSec:6})),700+i*520));});
  /* Живой голос места: рынок гудит рядами, порт работает, кузня бьёт молотом,
@@ -29868,7 +29846,7 @@ function startFlight(delta,dir){
  G.flight={d:delta,i:0,n,md:dir,x:p.x,y:p.y};
  /* Марш начинается настоящим звуком каменных ступеней. */
  safeFn(()=>{Bank.play("deep_stairs",{seed:n,gain:0.6,maxSec:4});setTimeout(()=>safeFn(()=>Bank.play("lug_land",{seed:n,gain:0.45,maxSec:1})),700);});
- safeFn(()=>Bank.play("stair_step",{seed:1,gain:0.55,maxSec:1.4}));
+ safeFn(()=>Bank.play("deep_stairs",{seed:1,gain:0.55,maxSec:1.4}));
  safeFn(()=>beacon(delta>0?"stairs_down":"stairs_up",0,0));
  /* Шахта вертикальна, и это стоит сказать: игрок должен знать, что вернётся
     ровно сюда же, а не «куда-нибудь». */
@@ -29879,8 +29857,8 @@ function flightFlavour(){
  const f=G.flight,p=G.place;if(!f||!p)return null;
  const низ=p.depth+(f.d>0?1:0);
  const свой=[["Сквозняк снизу тянет холодом.","gust_low"],
-  ["Где-то в глубине падает капля — и ещё одна.","cave_drip"],
-  ["Ваши шаги возвращаются эхом снизу.","stair_step"],
+  ["Где-то в глубине падает капля — и ещё одна.","deep_drip"],
+  ["Ваши шаги возвращаются эхом снизу.","deep_stairs"],
   ["Ступень под ногой шатается: камень сел от времени.","stone_hit"],
   ["Перила кончились: дальше держаться не за что.","knock_soft"]];
  const глубокий=[["Гул идёт из-под ног, ровный и низкий.","drone_low"],
@@ -29896,12 +29874,12 @@ function flightStep(dir){
  G.hour+=0.04;if(G.hour>=24){G.hour-=24;G.day++;}
  if(f.i<=0){
   G.flight=null;
-  safeFn(()=>Bank.play("stair_step",{seed:2,gain:0.5,maxSec:1.4}));
+  safeFn(()=>Bank.play("deep_stairs",{seed:2,gain:0.5,maxSec:1.4}));
   narrate(`Вы вернулись на площадку: ${placeTitle()}. ${describeHere(true)}`);
   refresh();saveGame(true);return true;}
  if(f.i>=f.n){
   const d=f.d;G.flight=null;
-  safeFn(()=>Bank.play("stair_step",{seed:3,gain:0.6,maxSec:1.4}));
+  safeFn(()=>Bank.play("deep_stairs",{seed:3,gain:0.6,maxSec:1.4}));
   safeFn(()=>Bank.play("deep_wind",{seed:f.n,gain:0.4,maxSec:6}));
   return changeDepth(d);}
  /* ── МАРШ СЛЫШЕН ПО ВЫСОТЕ ──
@@ -29915,8 +29893,8 @@ function flightStep(dir){
   const доля=f.i/Math.max(1,f.n);
   const вниз=f.d>0;
   /* Шаг: слышен под ногой, с лёгким наклоном по ходу движения. */
-  if(!Spatial.role("stair_step",0,0,{dz:вниз?-0.4:0.4,gain:0.5,maxSec:1.4,seed:f.i*5}))
-   Bank.play("stair_step",{seed:f.i*5,gain:0.5,maxSec:1.4});
+  if(!Spatial.role("deep_stairs",0,0,{dz:вниз?-0.4:0.4,gain:0.5,maxSec:1.4,seed:f.i*5}))
+   Bank.play("deep_stairs",{seed:f.i*5,gain:0.5,maxSec:1.4});
   /* Позади — то, что покинули; впереди — то, куда идёте. */
   const позадиZ=(вниз?1:-1)*(0.6+доля*2.4);
   const впередиZ=(вниз?-1:1)*(0.6+(1-доля)*2.4);
@@ -30146,7 +30124,7 @@ const SCAPE_VOICE={
     лежит рядом, в «bid», и служит запасным путём: если записи однажды не
     станет, примета всё равно подаст голос. */
  stairs_dn:{role:"deep_stairs",  bid:"stairs_down", period:7.0, gain:0.60, prio:2, dz:-1},
- stairs_up:{role:"stair_step",   bid:"stairs_up",   period:7.0, gain:0.60, prio:2, dz:1},
+ stairs_up:{role:"deep_stairs",   bid:"stairs_up",   period:7.0, gain:0.60, prio:2, dz:1},
  door:     {role:"door_wood",    bid:"door",        period:9.0, gain:0.45, prio:1},
  gate:     {role:"mtg_gate",     bid:"gate",        period:9.0, gain:0.55, prio:1},
  chest:    {role:"mtg_chest_open",bid:"chest",      period:8.0, gain:0.55, prio:2},
@@ -30212,7 +30190,7 @@ const AMBIENCE_SET={
   rain:[["oc_rain",2],["oc_waterdrop",2],["oc_thunder",1]],night:[["wild_owl",3],["wolf_howl",1],["oc_bat_flutter",1]]},
  mountains:{period:[7,14],spots:[["lug_wind",3],["sky_gust",2],["oc_rockfall",1],["raptor_cry",1.5],["bird_hawk",1],["stk_crash",0.5],["oc_ice_hit",1],["stk_river",1],["oc_wind",2],["ad_collapse",0.3]],
   rain:[["oc_rain",1.5],["oc_thunder",1.5]],night:[["wild_owl",1],["lug_wind",2]]},
- swamp:{period:[5,10],spots:[["oc_bubble",3],["amb_water",2],["oc_mosquito",2],["beast_bees",1],["wild_raven",1.5],["step_mud",1],["oc_tree_crack",0.7],["deep_wind",1],["oc_splash",1],["oc_waterdrop",1]],
+ swamp:{period:[5,10],spots:[["oc_bubble",3],["amb_water",2],["oc_mosquito",2],["beast_bees",1],["wild_raven",1.5],["step_water",1],["oc_tree_crack",0.7],["deep_wind",1],["oc_splash",1],["oc_waterdrop",1]],
   rain:[["oc_rain",2],["oc_thunder",0.7]],night:[["wild_owl",1],["oc_bat_noise",1],["oc_mosquito",2]]},
  cave:{period:[6,12],spots:[["deep_drip",3],["oc_waterdrop",2],["deep_wind",2],["deep_rocks",1],["oc_bat_flutter",1.5],["oc_bat_noise",1],["od_dig",0.7],["mtg_rubble",0.6],["oc_waterfall",0.5],["foe_burrow_pain",0.3],["oc_earthquake",0.15]]},
  dungeon:{period:[6,12],spots:[["deep_drip",2],["oc_waterdrop",1.5],["deep_wind",2],["deep_rocks",0.8],["oc_chain",0.6],["mtg_door_close",0.3],["od_undead",0.3],["oc_bat_noise",0.6],["mtg_rubble",0.5],["oc_step_hard",0.5]]},
@@ -30604,7 +30582,7 @@ const Actors={
      if(Spatial.at(f,dx,dy,{gain,maxSec:2.4}))return;
      if(Bank.panned(f,{pan,gain}))return;}
     else{
-     const f="nat/step_soft_0"+(1+(a.id%3))+".flac";
+     const f="oc/oc_step_soft_0"+(1+(a.id%6))+".ogg";
      if(Spatial.at(f,dx,dy,{gain,maxSec:2}))return;
      if(Bank.panned(f,{pan,gain}))return;}}
   }catch(_){}
@@ -30647,7 +30625,7 @@ function maybeWildlife(c){
  safeFn(()=>{
   if(!settings.effects)return;
   const v=MONSTER_VOICE[m.id],set=v&&MONSTER_BANK[v];
-  const f=(set&&(set.step||set.emerge))||"nat/step_soft_03.flac";
+  const f=(set&&(set.step||set.emerge))||"oc/oc_step_soft_03.ogg";
   const gain=Math.max(0.2,0.7-d*0.08);
   if(Spatial.at(f,dx,dy,{gain,maxSec:2.4}))return;
   if(Bank.enabled&&Bank.canPan()&&Bank.panned(f,{pan,gain}))return;
@@ -30663,8 +30641,8 @@ function maybeGuardPatrol(){
  const c=near[0],dx=c.x-G.x,dy=c.y-G.y;
  const pan=Math.max(-1,Math.min(1,dx/4));
  safeFn(()=>{
-  if(Spatial.at("nat/step_soft_02.flac",dx,dy,{gain:0.6,maxSec:2}))return;
-  if(Bank.enabled&&Bank.canPan()&&Bank.panned("nat/step_soft_02.flac",{pan,gain:0.6}))return;
+  if(Spatial.at("oc/oc_step_soft_02.ogg",dx,dy,{gain:0.6,maxSec:2}))return;
+  if(Bank.enabled&&Bank.canPan()&&Bank.panned("oc/oc_step_soft_02.ogg",{pan,gain:0.6}))return;
   beaconAt("npc_guard",dx,dy,0,c.d);});
  const dir=dirBetween(c.x-G.x,c.y-G.y)||"рядом";
  if(isNight())
@@ -31501,7 +31479,7 @@ function talkInside(t,x,y){
     ремеслом. Торговцы в подземелье такие же настоящие, как городские:
     у них свой запас, свои цены и свой разговор. */
  const profForced=t==="S"?"Торговец":t==="F"?"Кузнец":t==="P"?"Торговец":t==="B"?"Стражник":null;
- const role=t==="S"?"market":t==="F"?"forge":t==="P"?"shop_till":t==="B"?"step_soft":"tavern";
+ const role=t==="S"?"market":t==="F"?"forge":t==="P"?"shop_till":t==="B"?"oc_step_soft":"tavern";
  safeFn(()=>Bank.play(role,{seed:x+y,gain:0.55,maxSec:6}));
  /* Второй слой места: очаг таверны отвечает скрипкой, пост стражи — свистком,
     горн — стуком верстака, лавка — цимбалами меняльного ряда. */
@@ -31652,28 +31630,28 @@ const STEP_ALT={grass:"lug_step_grass",snow:"lug_step_snow",stone:"lug_step_ston
  marble:"oc_step_hard",plank:"oc_step_hard",dirt:"oc_step_soft",leaves:"oc_step_soft",mud:"oc_step_soft",
  straw:"oc_step_soft",water:"oc_swim",
  tallgrass:"lug_step_grass",wetdirt:"oc_step_soft",wood:"oc_step_hard",swamp:"oc_swim",deepwater:"oc_dive"};
-const SURF_ROLE={grass:"tread_grass",dirt:"step_dust",stone:"tread_rock",sand:"tread_sand",
- water:"step_shallow",cave:"tread_gravel",snow:"tread_snow",ice:"step_ice",leaves:"step_leaves",
- mud:"step_mud",plank:"tread_wood",straw:"step_straw",marble:"step_marble",bone:"step_bone",
- crystal:"step_crystal",metal:"step_metal",gravel:"tread_gravel",ash:"step_ash",
+const SURF_ROLE={grass:"tread_grass",dirt:"step_dirt",stone:"tread_rock",sand:"tread_sand",
+ water:"step_water",cave:"tread_gravel",snow:"tread_snow",ice:"mtg_step_ice",leaves:"oc_step_soft",
+ mud:"step_water",plank:"tread_wood",straw:"oc_step_soft",marble:"oc_step_hard",bone:"tread_gravel",
+ crystal:"mtg_step_glass",metal:"mtg_step_metal",gravel:"tread_gravel",ash:"tread_sand",
  /* Мостки: настил причала и переброшенного через реку моста. Прежняя роль
     остаётся запасной — она ниже, в SURF_FALLBACK. */
  bridge:"stk_bridge",
  /* ── ПО ТЗ: восемнадцать поверхностей ──
     Высокая трава, мокрая земля, дерево (не пол, а настил и брёвна),
     ступени, болото и глубокая вода добавлены к прежним двенадцати. */
- tallgrass:"tread_grass",wetdirt:"step_mud",wood:"mtg_step_wood",stairs:"deep_stairs",
- swamp:"step_mud",deepwater:"oc_swim"};
+ tallgrass:"tread_grass",wetdirt:"step_water",wood:"mtg_step_wood",stairs:"deep_stairs",
+ swamp:"step_water",deepwater:"oc_swim"};
 /* Второй слой поверхности: то, что слышно поверх самого шага — трава по
    голени, пузырь под сапогом, всплеск, скрип настила, треск наледи, эхо
    лестничного марша. */
 const STEP_LAYER={tallgrass:["oc_rustle",0.3],swamp:["oc_bubble",0.22],deepwater:["oc_splash",0.35],
- stairs:["hero_step_echo",0.25],wetdirt:["step_mud",0.18],ice:["oc_ice_hit",0.12],bridge:["oc_wood_creak",0.2],
+ stairs:["hero_step_echo",0.25],wetdirt:["step_water",0.18],ice:["oc_ice_hit",0.12],bridge:["oc_wood_creak",0.2],
  plank:["oc_wood_creak",0.1],wood:["oc_wood_creak",0.14],water:["oc_splash",0.15],mud:["oc_bubble",0.1]};
 /* Прежние роли остались запасными: если живой записи нет, звучит старая. */
-const SURF_FALLBACK={grass:"step_grass",stone:"step_flag",sand:"step_sand",cave:"step_gravel",
- snow:"step_snow",plank:"step_plank",gravel:"step_gravel",bridge:"step_bridge",
- tallgrass:"step_grass",wetdirt:"step_dirt",wood:"step_plank",stairs:"step_flag",swamp:"step_water",deepwater:"step_water"};
+const SURF_FALLBACK={grass:"lug_step_grass",stone:"lug_step_stone",sand:"mtg_step_sand",cave:"mtg_step_gravel",
+ snow:"lug_step_snow",plank:"oc_step_hard",gravel:"mtg_step_gravel",bridge:"tread_wood",
+ tallgrass:"lug_step_grass",wetdirt:"step_dirt",wood:"oc_step_hard",stairs:"lug_step_stone",swamp:"step_water",deepwater:"step_water"};
 const SURF_NAME={grass:"трава",dirt:"утоптанная земля",stone:"каменная плита",sand:"песок",
  water:"мелкая вода",cave:"пещерный щебень",snow:"снег",ice:"лёд",leaves:"палая листва",
  mud:"грязь",plank:"доски",straw:"солома",marble:"мрамор",bone:"кости",crystal:"кристалл",
@@ -32073,7 +32051,7 @@ function stepProfile(пов){
   /* Ноша: с тяжёлой сумой шаг ниже. */
   if((Array.isArray(G.gear)?G.gear.length:0)>14)p.rate*=0.97;
   const wet=!G.place&&/Дождь|Ливень|Гроза/.test(String(G.weather||""));
-  if(wet&&!/water|swamp|deepwater|mud|wetdirt/.test(пов)){p.wet=true;p.layers.push(["step_mud",0.16]);}
+  if(wet&&!/water|swamp|deepwater|mud|wetdirt/.test(пов)){p.wet=true;p.layers.push(["step_water",0.16]);}
   if(G.place&&(Number(G.place.depth)||0)>0&&пов!=="stairs")p.layers.push(["hero_step_echo",0.18]);
   const сл=STEP_LAYER[пов];if(сл)p.layers.push(сл);
   if(safeFn(()=>anomalyIs("silence"),false))p.gain*=0.4;
@@ -35450,7 +35428,7 @@ const GOD_DOSSIER={
  vespra:{культ:"Два Света",святое:"перекрёсток, освещённый с двух сторон",жрецы:"сумеречники в половинных плащах",табу:"не выбирать стороны в её праздник",ключ:"deal",артефакт:"Половинный плащ Веспры",чудо:"один отказ можно взять назад",друг:"omenos",враг:"zarya",праздник:64,погода:"Облачно",цена:{res:"инеевый лист",k:0.7},школа:"barrier",дарМолитвы:"mana",звук:"score_mansion"},
  orkhan:{культ:"Сломанный Строй",святое:"вал, на котором стояли и не устояли",жрецы:"сотники с переломленным древком",табу:"не отступать в его праздник",ключ:"kill",артефакт:"Переломленное древко Орхана",чудо:"строй врага рассыпается с первого удара",друг:"tarrog",враг:"road",праздник:65,погода:"Гроза",цена:{res:"обсидиан",k:0.7},школа:"chaos",дарМолитвы:"atk",звук:"guard_march"},
  maleth:{культ:"Полная Чаша",святое:"родник с горькой водой",жрецы:"отравители в перчатках до локтя",табу:"не пить чужого в её праздник",ключ:"trade",артефакт:"Горькая чаша Малет",чудо:"яд в крови обращается в силу один раз",друг:"ulura",враг:"deep",праздник:66,погода:"Дождь",цена:{res:"чёрный дурманник",k:0.7},школа:"alch",дарМолитвы:"hp",звук:"serpent_hiss"},
- sarkis:{культ:"Многие Глаза",святое:"башня без окон, но с прорезями",жрецы:"соглядатаи в мягких сапогах",табу:"не оставаться наедине в его праздник",ключ:"rival",артефакт:"Прорезь Саркиса",чудо:"один разговор слышен вам издалека",друг:"nyxor",враг:"shadow",праздник:67,погода:"Ясно",цена:{res:"звёздоцвет",k:0.7},школа:"mind",дарМолитвы:"xp",звук:"step_soft"},
+ sarkis:{культ:"Многие Глаза",святое:"башня без окон, но с прорезями",жрецы:"соглядатаи в мягких сапогах",табу:"не оставаться наедине в его праздник",ключ:"rival",артефакт:"Прорезь Саркиса",чудо:"один разговор слышен вам издалека",друг:"nyxor",враг:"shadow",праздник:67,погода:"Ясно",цена:{res:"звёздоцвет",k:0.7},школа:"mind",дарМолитвы:"xp",звук:"oc_step_soft"},
  quorra:{культ:"Разорванная Нить",святое:"две скалы, между которыми рвётся верёвка",жрецы:"разрывщики с обрубленной косой",табу:"не связывать себя словом в её праздник",ключ:"deal",артефакт:"Обрывок Куорры",чудо:"одна связь рвётся без последствий",друг:"drakon",враг:"zarya",праздник:68,погода:"Ветрено",цена:{res:"разломница",k:0.7},школа:"rift",дарМолитвы:"mana",звук:"oc_chain"},
  belzur:{культ:"Взятое Вперёд",святое:"ростовщический стол на площади",жрецы:"заимодавцы с двойной книгой",табу:"не отдавать долгов в его праздник",ключ:"trade",артефакт:"Двойная книга Бельзура",чудо:"долг переписывается на того, кто рядом",друг:"thessa",враг:"road",праздник:69,погода:"Ясно",цена:{res:"золотая крупица",k:0.7},школа:"artefact",дарМолитвы:"gold",звук:"bazaar_drum"},
  irenna:{культ:"Общее Молчание",святое:"зал, в котором не говорят",жрецы:"молчальницы с зашитыми рукавами",табу:"не произносить ни слова в её праздник",ключ:"deal",артефакт:"Зашитый рукав Иренны",чудо:"о вас один раз забывают все, кто искал",друг:"thessa",враг:"skarn",праздник:70,погода:"Снег",цена:{res:"тихая мята",k:0.7},школа:"memory",дарМолитвы:"hp",звук:"ad_temple",мир:true},
@@ -37200,7 +37178,7 @@ const ECHO_KINDS=[
  {id:"vein", n:"осколок жилы",   род:"жилы",   о:"чужая жила тянет силу из воздуха",
   дар:"отдых возвращает ману",   звук:"magic_hum",    k:2,    мера:"маны за отдых"},
  {id:"step", n:"осколок поступи",род:"поступи",о:"чужая поступь не будит камень",
-  дар:"твари чуют позже",        звук:"step_soft",    k:0.5,  мера:"шагов к скрытности"},
+  дар:"твари чуют позже",        звук:"oc_step_soft",    k:0.5,  мера:"шагов к скрытности"},
  {id:"maw",  n:"осколок пасти",  род:"пасти",  о:"чужая пасть берёт своё с каждого удара",
   дар:"удар лечит вас",          звук:"lug_flesh",    k:1,    мера:"здоровья за удар"},
  {id:"sight",n:"осколок взгляда",род:"взгляда",о:"чужой глаз видит подвох раньше руки",
@@ -38761,9 +38739,9 @@ const MINE_BRANCHES=[
  {id:"ore",n:"Рудный штрек",порода:"руда",о:"главный ход артели: рельсы и брошенные тачки",
   опасность:"старые крепи не держат",звук:"mine_pick"},
  {id:"crystal",n:"Хрустальный штрек",порода:"кристалл",о:"свод отвечает звоном на каждый шаг",
-  опасность:"кристалл режет не хуже ножа",звук:"step_crystal"},
+  опасность:"кристалл режет не хуже ножа",звук:"mtg_step_glass"},
  {id:"bone",n:"Костяной штрек",порода:"древняя кость",о:"порода вперемешку с костями, и кости старше породы",
-  опасность:"то, что здесь лежало, лежало не мёртвым",звук:"step_bone"},
+  опасность:"то, что здесь лежало, лежало не мёртвым",звук:"tread_gravel"},
  {id:"water",n:"Мокрый штрек",порода:"водный кристалл",о:"по щиколотку вода, и она тёплая",
   опасность:"вода прибывает без дождя",звук:"oc_waterdrop"},
  {id:"deep",n:"Глухой штрек",порода:"тяжёлый минерал",о:"ни эха, ни сквозняка: звук умирает у самого рта",
@@ -41148,7 +41126,7 @@ const ENC_ASPECTS=[
  {n:"тьма",          род:"тьмы",           звук:"stk_dark"},
  {n:"свет",          род:"света",          звук:"spell_light"},
  {n:"эфир",          род:"эфира",          звук:"magic_shimmer"},
- {n:"прах",          род:"праха",          звук:"step_ash"},
+ {n:"прах",          род:"праха",          звук:"tread_sand"},
  {n:"звёздная пыль", род:"звёздной пыли",  звук:"oc_diamond"},
  {n:"жизненная сила",род:"жизненной силы", звук:"cast_heal"},
  {n:"пустота",       род:"пустоты",        звук:"oc_warp"},

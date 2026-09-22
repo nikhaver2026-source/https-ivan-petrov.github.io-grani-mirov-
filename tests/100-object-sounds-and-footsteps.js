@@ -136,7 +136,7 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
  check('железный доспех: шаг ниже и с лязгом железа; кожа скрипит; без доспеха шуршит ткань',
   проф.железо.wear==="metal"&&проф.железо.rate<проф.тихо.rate&&проф.железо.слои.includes("hero_step_metal")&&проф.кожа.слои.includes("hero_step_leather")&&проф.тихо.слои.includes("hero_step_cloth"),проф);
  check('дождь мочит шаг, глубина даёт эхо, высокая трава шуршит по голени',
-  проф.дождь.wet&&проф.дождь.слои.includes("step_mud")&&проф.глубина.includes("hero_step_echo")&&проф.трава.includes("oc_rustle"),проф);
+  проф.дождь.wet&&проф.дождь.слои.includes("step_water")&&проф.глубина.includes("hero_step_echo")&&проф.трава.includes("oc_rustle"),проф);
 
  /* ── 7. Шаги без повторов; топь, дождь и ступени ── */
  const шаги=await page.evaluate(async()=>{

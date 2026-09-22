@@ -1296,7 +1296,7 @@
 
 Источники и лицензии записей перечислены в файлах `CREDITS.md` рядом с
 самими записями. Общественное достояние (CC0 1.0):
-[`sounds/nat`](sounds/nat/CREDITS.md), [`sounds/surf`](sounds/surf/CREDITS.md),
+[`sounds/nat`](sounds/nat/CREDITS.md),
 [`sounds/blow`](sounds/blow/CREDITS.md), [`sounds/troop`](sounds/troop/CREDITS.md),
 [`sounds/bazaar`](sounds/bazaar/CREDITS.md), [`sounds/dark`](sounds/dark/CREDITS.md).
 Creative Commons Attribution 3.0 — указание авторства дано там же и в самой
