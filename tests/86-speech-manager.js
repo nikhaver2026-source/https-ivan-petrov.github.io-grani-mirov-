@@ -62,6 +62,17 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
  const state=()=>page.evaluate(()=>({log:FAKE.log.slice(),cancels:FAKE.cancels,speaking:Speech.isSpeaking(),
   cur:Speech.current&&Speech.current.text,queue:Speech.queue.map(m=>m.text),stats:Object.assign({},Speech.stats)}));
 
+ /* Мир сам подаёт голос по таймерам входа: через 2,6 секунды — шесть ремёсел
+    (§10), через семь — подсказка про обучение. Обе фразы приходили в середину
+    проверок и ложились чужим сообщением то в тринадцатую, то в четырнадцатую,
+    то в пятнадцатую: очередь оказывалась длиннее, а в записи синтезатора
+    появлялась строка, которой проверка не заказывала. Подсказку снимаем
+    отметкой — её таймер перечитывает G.tutorDone, — а ремёсла пережидаем и
+    стираем: пусть придут сейчас, а не посреди замера. */
+ await page.evaluate(()=>{G.tutorDone=1;});
+ await page.waitForTimeout(2600);
+ await fresh();
+
  /* ── 1. агрегация ── */
  await fresh();
  await page.evaluate(()=>{Speech.tally("xp",5);Speech.tally("xp",10);Speech.tally("xp",20);Speech.tally("xp",15);Speech.tally("level",12);Speech.tally("skill",1);});
@@ -202,13 +213,26 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
  check('14. сообщение с истёкшим сроком не звучит',st.log.length===1&&st.stats.expired===1&&st.queue.length===0,{log:st.log,expired:st.stats.expired});
 
  /* ── 15. замена по ключу ── */
+ /* Очередь смотрим по ключу, а не целиком, и договариваем до двери. Мир
+    сам подаёт голос по таймерам загрузки — под общей нагрузкой прогона
+    отложенная фраза (например, про шесть ремёсел) успевала лечь в очередь
+    ровно в этот миг, и проверка краснела на чужом сообщении. Проверяется
+    замена по ключу, а не тишина вокруг. */
  await fresh();
- await page.evaluate(()=>{Speech.say("Важное занимает голос.",{pri:1});Speech.say("Перед вами дверь.",{pri:3,key:"door_front"});Speech.say("Дверь открыта.",{pri:3,key:"door_front"});});
- await page.waitForTimeout(30);
- const до15=await state();
- await page.evaluate(()=>FAKE.end());await page.waitForTimeout(40);
- st=await state();
- check('15. A → B с тем же ключом — A заменено, звучит только B',до15.queue.length===1&&до15.queue[0]==="Дверь открыта."&&st.log[1]==="Дверь открыта."&&st.stats.replaced===1,{queue:до15.queue,log:st.log});
+ const замена=await page.evaluate(async()=>{
+  Speech.say("Важное занимает голос.",{pri:1});
+  Speech.say("Перед вами дверь.",{pri:3,key:"door_front"});
+  Speech.say("Дверь открыта.",{pri:3,key:"door_front"});
+  await new Promise(r=>setTimeout(r,30));
+  const очередь=Speech.queue.filter(m=>m.key==="door_front").map(m=>m.text);
+  const заменено=Speech.stats.replaced;
+  for(let i=0;i<8&&FAKE.log.indexOf("Дверь открыта.")<0;i++){
+   FAKE.end();await new Promise(r=>setTimeout(r,20));}
+  return {очередь,заменено,log:FAKE.log.slice()};});
+ check('15. A → B с тем же ключом — A заменено, звучит только B',
+  замена.очередь.length===1&&замена.очередь[0]==="Дверь открыта."
+  &&замена.log.indexOf("Дверь открыта.")>0&&замена.log.indexOf("Перед вами дверь.")<0
+  &&замена.заменено===1,замена);
 
  /* ── повтор, состояние, очистка ── */
  await fresh();
