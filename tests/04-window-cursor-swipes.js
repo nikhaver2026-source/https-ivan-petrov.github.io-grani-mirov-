@@ -168,15 +168,17 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
  const nat=await page.evaluate(()=>({
   ui:Object.keys(UI_BANK).length,
   beacons:Object.keys(BEACON_SAMPLE).length,
-  /* Записи интерфейса лежат в ui/, а две новые — отклик раздельного касания
-     и знак сдвинувшегося списка — в oc/: они пришли из свободной игры
-     OpenClonk и лежат вместе с остальными её записями. Обе папки живые, ни
-     одной синтезированной среди них нет. */
-  missing:Object.values(UI_BANK).filter(v=>!v||!/^(ui|oc)\//.test(v)).length,
-  изOC:Object.values(UI_BANK).filter(v=>/^oc\//.test(v)).length,
+  /* Записи интерфейса лежат в ui/, а пришедшие из свободных игр — в папках
+     этих игр (oc — OpenClonk, ab — Ancient Beast). Проверяем не список папок,
+     который растёт с каждой новой записью, а само правило: у каждой роли
+     есть путь, и ни одна не сидит на синтезированной папке. */
+  missing:Object.values(UI_BANK).filter(v=>!v||!/^[a-z]+\/[A-Za-z0-9_.-]+$/.test(v)).length,
+  синтез:Object.values(UI_BANK).filter(v=>/^(inst|orch|mood|relic|score|folk|depth)\//.test(v)).length,
+  изИгр:Object.values(UI_BANK).filter(v=>!/^ui\//.test(v)).length,
   natWorks:UI.nat("ui_select",0.4),
   canPan:Bank.canPan()}));
- check('натуральные записи подключены к интерфейсу и маякам',nat.ui===35&&nat.beacons>=12&&nat.missing===0&&nat.изOC===2&&nat.natWorks,nat);
+ check('натуральные записи подключены к интерфейсу и маякам, и ни одна не синтезирована',
+  nat.ui>=43&&nat.beacons>=12&&nat.missing===0&&nat.синтез===0&&nat.изИгр>=10&&nat.natWorks,nat);
 
  const files=await page.evaluate(async()=>{
   const paths=Object.values(UI_BANK).slice(0,5);

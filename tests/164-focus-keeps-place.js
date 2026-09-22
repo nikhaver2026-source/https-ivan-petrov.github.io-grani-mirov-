@@ -32,6 +32,9 @@
       не зовёт ни игра, ни один набор проверок, — старое и должно уйти.
   17. Версия игры одна и та же везде: заголовок, заставка, руководство.
   18. Служебный работник поднимает кэш страницы и не трогает кэш записей.
+  19. Восемь новых ролей на месте, все записи банка существуют на диске, а
+      синтезированный писк остался только запасным путём.
+  20. У нового источника записей есть титры, лицензия и таблица файлов.
    ═══════════════════════════════════════════════════════════════════════ */
 const {chromium}=require('playwright');
 const fs=require('fs'),path=require('path');
@@ -319,6 +322,30 @@ const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(e!==undefined?' :
    &&/keys\.filter\(k=>k!==SHELL&&k!==MEDIA\)/.test(sw)
    &&/sounds\//.test(sw),
    {shell:/grani-shell-v2/.test(sw),media:/grani-v1-media/.test(sw)});
+ }
+
+ /* ── 19. живая запись вместо писка ── */
+ {
+  const src=fs.readFileSync(path.join(__dirname,'..','index.html'),'utf8');
+  const банк=await page.evaluate(()=>Object.entries(UI_BANK).map(([k,v])=>[k,v]));
+  const нет=банк.filter(([,v])=>!fs.existsSync(path.join(__dirname,'..','sounds',v))).map(([k])=>k);
+  const новые=["ui_arm","rank_up","bet_back","bounty","ui_hush","ui_magic_open","cards_deal","spell_learn"];
+  const пропали=новые.filter(r=>!банк.some(([k])=>k===r));
+  /* Синтезированный писк остался только запасным путём — когда папки со
+     звуками рядом с игрой нет. Всякий UI.blip обязан стоять под проверкой
+     «не нашлась живая запись». */
+  const писки=[...src.matchAll(/UI\.blip\(/g)].length;
+  const подЗапасом=[...src.matchAll(/if\(!UI\.nat\([^)]*\)\)UI\.blip\(/g)].length;
+  check('19. восемь новых ролей на месте, все записи банка существуют, а писк остался только запасным путём',
+   нет.length===0&&пропали.length===0&&писки===подЗапасом,
+   {нет,пропали,писки,подЗапасом,всего:банк.length});
+  const крAB=fs.readFileSync(path.join(__dirname,'..','sounds','ab','CREDITS.md'),'utf8');
+  const лицAB=fs.existsSync(path.join(__dirname,'..','sounds','ab','LICENSE-CC-BY-SA-4.0.txt'));
+  check('20. у нового источника есть титры с автором, лицензией и таблицей файлов, и текст лицензии рядом',
+   /Ancient Beast/.test(крAB)&&/CC BY-SA 4\.0/.test(крAB)&&/ab_hush_01/.test(крAB)
+   &&/ab_spell_learn_01/.test(крAB)&&лицAB
+   &&/Ancient Beast/.test(src),
+   {титры:/Ancient Beast/.test(крAB),лицензия:лицAB,вИгре:/Ancient Beast/.test(src)});
  }
 
  check('страница не бросила ни одной ошибки',errors.length===0,errors.slice(0,3));

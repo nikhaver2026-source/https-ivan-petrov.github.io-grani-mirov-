@@ -2330,6 +2330,13 @@ const UI={blip(f=880,d=0.08,v=0.12){
  /* nat() — натуральная запись из банка; при её отсутствии остаётся синтез. */
  nat(role,gain){try{return !!(typeof UI_BANK!=="undefined"&&UI_BANK[role]&&Bank.enabled&&
   Bank.file(UI_BANK[role],{gain:gain||0.7,maxSec:3}));}catch(_){return false;}},
+ /* natStep — та же запись, но своей высотой. Номер слота, ступень звания,
+    шаг дела раньше различались высотой синтезированного писка, и отнять у
+    игрока эту лесенку было нельзя: по ней он и понимает, какой слот сработал
+    и насколько продвинулось дело. Теперь высоту меняет живая запись —
+    лесенка та же, синтеза нет. */
+ natStep(role,gain,rate){try{return !!(typeof UI_BANK!=="undefined"&&UI_BANK[role]&&Bank.enabled&&
+  Bank.file(UI_BANK[role],{gain:gain||0.6,maxSec:3,rate:rate||1}));}catch(_){return false;}},
  click(){if(this.nat("ui_select",0.5))return;this.blip(700,0.06,0.06);},
  open(){if(this.nat("ui_open",0.6))return;this.blip(520,0.1,0.1);setTimeout(()=>this.blip(780,0.1,0.1),90);},
  close(){if(this.nat("ui_close",0.6))return;this.blip(600,0.08,0.09);setTimeout(()=>this.blip(400,0.1,0.09),80);},
@@ -3072,6 +3079,7 @@ const BANK_CATS={mg:"🐲 Фэнтезийный мир: твари, чары, �
  ad:"🌾 0 A.D.: ворота, обрушение, листва, мотыга, подворье, порт, реки и храм",
  uh:"🏘️ Unknown Horizons: каменотёс, кузнец, мельница, часовня, трактир и площадь",
  lug:"🔥 Lugaru: костёр, кусты, пустыня, ветер, шаги, лязг, клинки и звери",
+ ab:"🐉 Ancient Beast: взвод касания, оборванная речь, панель чар, карты и изученная чара (CC BY-SA 4.0)",
  battle:"⚔️ Оружие и удары боя",
  siege:"🏰 Война: осада, тревога, вести",
  craft:"🔨 Ремёсла, добыча и стройка",
@@ -3212,7 +3220,7 @@ function buildEncycCats(){
  const t=soundTotals();
  if(hint)hint.textContent=`Разделов: ${grid.children.length}. Всего звуков: ${t.всего} — ${t.сцены} синтезированных сцен и ${t.записи} живых записей. Касание называет раздел, двойное касание открывает его. Внутри раздела — те же жесты, а кнопка «Ко всем разделам» возвращает обратно.`;
  const cr=document.getElementById("encycCredits");
- if(cr)cr.textContent="Живая фэнтезийная библиотека взята из двух свободных игр. Flare (Free/Libre Action Roleplaying Engine), автор Clint Bellanger и участники проекта, flarerpg.org — артефакты и вещи, подземелья и лестницы, твари, заклинания, голос героя, природа, торговцы и двенадцать тем музыки мира. 0 A.D. (Empires Ascendant), автор Wildfire Games, play0ad.com — оружие и удары боя, осада, тревога и вести войны, ремёсла и стройка, звери, людские крики и кличи, шаги по поверхностям, погода и вода, здания, рынок и порт. Обе — под лицензией Creative Commons Attribution-ShareAlike 3.0 (CC BY-SA 3.0): указание авторства обязательно и дано здесь, записи остаются под той же лицензией. Разделы разложены по назначению: сперва мир на слух — поверхности под ногой, удары и оружие, строй и сигналы, рынок, голоса из тьмы; затем оркестр, который отмечает события — войну, чары, тварей, находки, глубину, люд и повороты судьбы. Источники записей: Neo HQ Mystic Sounds, Fantasy Sound Library, Classic Monster Sounds (автор Coucassi), пакет uisfx (CC0), сэмплы Sonic Pi с freesound.org (общественное достояние, CC0 1.0), живые инструменты проекта tonejs-instruments (Creative Commons Attribution 3.0) и оркестр из звукового шрифта FluidR3_GM автора Frank Wen, изданного проектом MIDI.js Soundfonts (Creative Commons Attribution 3.0). Указание авторства обязательно, и оно здесь дано. Вещи, с которыми игрок что-то делает, звучат живыми записями ещё четырёх свободных игр. OpenClonk (The OpenClonk Team and contributors, RedWolf Design GmbH, openclonk.org) — сундуки, петли, каменные ворота, цепи, дерево, камень, металл, стекло, чан, огонь, горн, древние механизмы, гром, дождь, ветер, птицы, лук и щит, отклик раздельного касания и знак сдвинувшегося списка (две записи без потерь, FLAC, 44,1 кГц), две темы музыки; лицензия Creative Commons Attribution 3.0 Unported (CC BY 3.0). 0 A.D. (Wildfire Games) — каменные ворота, обрушение, листва, мотыга, треск огня, подворье, порт, торговые ряды, день, реки, волны и голоса под сводами храма (CC BY-SA 3.0). Unknown Horizons (The Unknown Horizons Team, unknown-horizons.org) — каменотёс, кузнец, дровосек, выгон, мельница, часовня, трактир, площадь, склад, корабельный колокол, страница и пять тем музыки (CC BY-SA 3.0). Lugaru (Wolfire Games, wolfire.com, и OSS Lugaru) — костёр, кусты, пустыня, ветер, шаги, лязг, удары, клинки и звери (CC BY-SA 3.0). Для каждой папки в sounds лежат CREDITS.md с таблицей исходных файлов и текст лицензии.";
+ if(cr)cr.textContent="Живая фэнтезийная библиотека взята из двух свободных игр. Flare (Free/Libre Action Roleplaying Engine), автор Clint Bellanger и участники проекта, flarerpg.org — артефакты и вещи, подземелья и лестницы, твари, заклинания, голос героя, природа, торговцы и двенадцать тем музыки мира. 0 A.D. (Empires Ascendant), автор Wildfire Games, play0ad.com — оружие и удары боя, осада, тревога и вести войны, ремёсла и стройка, звери, людские крики и кличи, шаги по поверхностям, погода и вода, здания, рынок и порт. Обе — под лицензией Creative Commons Attribution-ShareAlike 3.0 (CC BY-SA 3.0): указание авторства обязательно и дано здесь, записи остаются под той же лицензией. Разделы разложены по назначению: сперва мир на слух — поверхности под ногой, удары и оружие, строй и сигналы, рынок, голоса из тьмы; затем оркестр, который отмечает события — войну, чары, тварей, находки, глубину, люд и повороты судьбы. Источники записей: Neo HQ Mystic Sounds, Fantasy Sound Library, Classic Monster Sounds (автор Coucassi), пакет uisfx (CC0), сэмплы Sonic Pi с freesound.org (общественное достояние, CC0 1.0), живые инструменты проекта tonejs-instruments (Creative Commons Attribution 3.0) и оркестр из звукового шрифта FluidR3_GM автора Frank Wen, изданного проектом MIDI.js Soundfonts (Creative Commons Attribution 3.0). Указание авторства обязательно, и оно здесь дано. Вещи, с которыми игрок что-то делает, звучат живыми записями ещё четырёх свободных игр. OpenClonk (The OpenClonk Team and contributors, RedWolf Design GmbH, openclonk.org) — сундуки, петли, каменные ворота, цепи, дерево, камень, металл, стекло, чан, огонь, горн, древние механизмы, гром, дождь, ветер, птицы, лук и щит, отклик раздельного касания и знак сдвинувшегося списка (две записи без потерь, FLAC, 44,1 кГц), две темы музыки; лицензия Creative Commons Attribution 3.0 Unported (CC BY 3.0). 0 A.D. (Wildfire Games) — каменные ворота, обрушение, листва, мотыга, треск огня, подворье, порт, торговые ряды, день, реки, волны и голоса под сводами храма (CC BY-SA 3.0). Unknown Horizons (The Unknown Horizons Team, unknown-horizons.org) — каменотёс, кузнец, дровосек, выгон, мельница, часовня, трактир, площадь, склад, корабельный колокол, страница и пять тем музыки (CC BY-SA 3.0). Lugaru (Wolfire Games, wolfire.com, и OSS Lugaru) — костёр, кусты, пустыня, ветер, шаги, лязг, удары, клинки и звери (CC BY-SA 3.0). Ancient Beast (Freezing Moon и участники проекта, AncientBeast.com) — пошаговая фэнтезийная игра о мифических тварях: у неё взяты отклик взведённого касания, знак оборванной речи, раскрытие панели чар, сдача карт в таверне и знак изученной чары; лицензия художественной и звуковой части Creative Commons Attribution-ShareAlike 4.0 (CC BY-SA 4.0), код игры не используется. Все записи этой поставки переведены в FLAC без потерь. Для каждой папки в sounds лежат CREDITS.md с таблицей исходных файлов и текст лицензии.";
 }
 
 /* ── Второй уровень: звуки одного раздела ── */
@@ -3881,7 +3889,7 @@ function gestRun(пальцы,род,dir){
   if(!a||a.id==="none"){
    /* Назначенное «нет команды» — это тоже выбор игрока: молчим, но коротким
       щелчком, чтобы жест не выглядел потерянным. */
-   safeFn(()=>UI.blip(320,.05,.08));
+   safeFn(()=>UI.nat("ui_arm",0.35));
    return true;}
   return !!safeFn(()=>a.делать(),false);
  }catch(_){return false;}}
@@ -3945,7 +3953,7 @@ function handleTwoFingerSwipe(dir){
  if(!gameActive())return;
  /* Вверх — повторить последнее, а если речь идёт — оборвать её. */
  if(dir==="N"){
-  if(Speech.isSpeaking()){Speech.stop();safeFn(()=>UI.blip(420,.06,.1));}
+  if(Speech.isSpeaking()){Speech.stop();safeFn(()=>UI.nat("ui_hush",0.5));}
   else Speech.repeatLast();
   return;}
  /* Влево — карта места, вправо — журнал дел; тот же свайп закрывает. */
@@ -3975,13 +3983,13 @@ function handleTwoFingerSwipe(dir){
    сначала закрывается лишнее. */
 function toggleWindowGesture(id){
  const m=document.getElementById(id);if(!m)return false;
- if(!m.hidden){safeFn(()=>closeModal(m));safeFn(()=>UI.blip(520,.08,.12));return true;}
+ if(!m.hidden){safeFn(()=>closeModal(m));return true;}
  for(let i=0;i<25&&activeLayer();i++)safeFn(()=>closeTopUI());
  openModal(id);
  if(id==="modal-map")safeFn(()=>renderMap());
  else if(id==="modal-quests")safeFn(()=>renderQuests());
  else if(id==="modal-inventory")safeFn(()=>renderInventory());
- safeFn(()=>UI.blip(980,.11,.2));
+ safeFn(()=>UI.open());
  return true;}
 function handleThreeFingerSwipe(dir){
  if(!gameActive())return;
@@ -4024,8 +4032,8 @@ function handleThreeFingerSwipe(dir){
 }
 /* Меню действий: открыть, а если оно (или любое другое окно) открыто — закрыть. */
 function toggleActionMenu(){if(!gameActive())return;
- if(closeTopUI()){safeFn(()=>UI.blip(520,.08,.12));safeFn(()=>Tutor.note("menuclose"));return;}
- safeFn(()=>openActionMenu());safeFn(()=>UI.blip(980,.11,.2));safeFn(()=>Tutor.note("menu"));}
+ if(closeTopUI()){safeFn(()=>Tutor.note("menuclose"));return;}
+ safeFn(()=>openActionMenu());safeFn(()=>Tutor.note("menu"));}
 /* ── Свайп тремя пальцами вверх: меню действий, откуда угодно ──
    Прежде этот жест звал toggleActionMenu, а тот сперва закрывает то, что
    открыто сверху. Поверх любого окна свайп поэтому не открывал меню, а закрывал
@@ -4036,10 +4044,10 @@ function toggleActionMenu(){if(!gameActive())return;
 function actionMenuGesture(){
  if(!gameActive())return;
  const am=document.getElementById("actionMenu");
- if(am&&!am.hidden){safeFn(()=>closeActionMenu());safeFn(()=>UI.blip(520,.08,.12));
+ if(am&&!am.hidden){safeFn(()=>closeActionMenu());
   safeFn(()=>Tutor.note("menuclose"));return;}
  for(let i=0;i<25&&activeLayer();i++)safeFn(()=>closeTopUI());
- safeFn(()=>openActionMenu());safeFn(()=>UI.blip(980,.11,.2));safeFn(()=>Tutor.note("menu"));}
+ safeFn(()=>openActionMenu());safeFn(()=>Tutor.note("menu"));}
 /* Одно касание двумя пальцами — сбор ресурса под ногами. Пока открыто окно,
    собирать нечего, и тот же жест остаётся привычным «закрыть окно»: это
    единственный жест выхода, отнимать его у игрока нельзя. */
@@ -4073,7 +4081,7 @@ function performWeaponAction(){
  safeFn(()=>drawWeapon());safeFn(()=>saveGame(true));
 }
 function handleThreeFingerTap(двойное){if(!gameActive())return;
- if(!двойное){safeFn(()=>UI.blip(700,.05,.08));return;}
+ if(!двойное){safeFn(()=>UI.nat("ui_arm",0.5));return;}
  performWeaponAction();}
 /* Свайп четырьмя пальцами — речь: вниз (или вверх, по настройке) — стоп,
    в другую сторону — повтор последнего, влево — состояние игрока, вправо —
@@ -4081,15 +4089,15 @@ function handleThreeFingerTap(двойное){if(!gameActive())return;
 function handleFourFingerSwipe(dir){
  const g=settings.stopGesture||"four_down";
  const stopDir=g==="four_up"?"N":"S",repDir=g==="four_up"?"S":"N";
- if(dir===stopDir){Speech.stop();safeFn(()=>UI.blip(420,.06,.1));vib(15);return;}
+ if(dir===stopDir){Speech.stop();safeFn(()=>UI.nat("ui_hush",0.5));vib(15);return;}
  if(dir===repDir){Speech.repeatLast();return;}
  if(dir==="W"){Speech.status();return;}
  if(dir==="E"){const n=Speech.flush();Speech.request(n?`Очередь речи очищена: ${n}.`:"Очередь речи пуста.",{key:"flush"});return;}}
 function handleFourFingerTap(двойное){if(!gameActive())return;
- if(!двойное){safeFn(()=>UI.blip(700,.05,.08));return;}
+ if(!двойное){safeFn(()=>UI.nat("ui_arm",0.5));return;}
  const m=document.getElementById('magicPanel');
- if(m&&!m.hidden){safeFn(()=>closeMagicPanel());safeFn(()=>UI.blip(520,.08,.12));return;}
- safeFn(()=>safeOpenMagicPanel());safeFn(()=>UI.blip(1260,.11,.22));}
+ if(m&&!m.hidden){safeFn(()=>closeMagicPanel());return;}
+ safeFn(()=>safeOpenMagicPanel());safeFn(()=>UI.nat("ui_magic_open",0.6));}
 /* ── ПАНЕЛЬ МАГИИ: ДВЕНАДЦАТЬ СЛОТОВ ПО СВАЙПАМ ──
    Пока панель открыта, каждый свайп — слот: одним пальцем вверх, вправо,
    вниз, влево — с первого по четвёртый; двумя пальцами так же — с пятого по
@@ -4101,7 +4109,7 @@ function magicPanelOpen(){const m=document.getElementById('magicPanel');return !
 function magicSlotSwipe(fingers,dir){
  const row=MAGIC_SLOT_MAP[fingers];if(!row||row[dir]===undefined)return false;
  const i=row[dir];const sp=SPELLS[i];
- safeFn(()=>UI.blip(880+i*30,.06,.1));
+ safeFn(()=>UI.natStep("ui_select",0.5,0.88+i*0.045));
  if(!sp){narrate(`Слот ${i+1} пуст.`,{interrupt:true});return true;}
  narrate(`Слот ${i+1}: ${sp.n}.`,{interrupt:true});
  safeFn(()=>castSpell(i));
@@ -10821,6 +10829,18 @@ const UI_BANK={
     sounds/oc/CREDITS.md. Формат FLAC: без потерь, 44,1 кГц. */
  ui_split:"oc/oc_ui_confirm_01.flac",
  ui_refocus:"oc/oc_ui_shift_01.flac",
+ /* Восемь событий, которые до сих пор отвечали синтезированным писком.
+    Теперь у каждого своя живая запись из свободной фэнтезийной игры:
+    OpenClonk (CC BY 3.0) и Ancient Beast (CC BY-SA 4.0). Всё — FLAC, без
+    потерь; авторство и лицензии в титрах и в CREDITS своих папок. */
+ ui_arm:"oc/oc_ui_arm_01.flac",
+ rank_up:"oc/oc_rank_up_01.flac",
+ bet_back:"oc/oc_bet_back_01.flac",
+ bounty:"oc/oc_bounty_01.flac",
+ ui_hush:"ab/ab_hush_01.flac",
+ ui_magic_open:"ab/ab_magic_open_01.flac",
+ cards_deal:"ab/ab_cards_deal_01.flac",
+ spell_learn:"ab/ab_spell_learn_01.flac",
  ui_select:"ui/ui_select.mp3",
  ui_success:"ui/ui_success.mp3",
  ui_toggle_off:"ui/ui_toggle_off.mp3",
@@ -11280,7 +11300,7 @@ function startFishing(){
    safeFn(()=>{beacon("well",0,0);});
    narrate("Дёрнуло и отпустило. Пусто.");
    endFishing();return;}
-  safeFn(()=>{Bank.play("step_water",{seed:Date.now(),gain:0.9});Bank.play("oc_fish_munch",{gain:0.8,maxSec:2});UI.blip(1240,.09,.2);vib(25);});
+  safeFn(()=>{Bank.play("step_water",{seed:Date.now(),gain:0.9});Bank.play("oc_fish_munch",{gain:0.8,maxSec:2});vib(25);});
   narrate("Клюёт! Подсекайте!",{interrupt:true});
   G.fishing.window=setTimeout(()=>{
    if(G.fishing&&G.fishing.bite){
@@ -23145,7 +23165,7 @@ function homDraftSet(поле,id){
  if(homun()){narrate(`${homun().имя} уже собран. Чтобы собрать другого, отпустите этого.`);return false;}
  if(!G.homDraft||typeof G.homDraft!=="object")G.homDraft={};
  G.homDraft[поле]=id;
- safeFn(()=>UI.blip(680+сп.indexOf(з)*40,.08,.16));
+ safeFn(()=>UI.natStep("spell_learn",0.55,0.92+сп.indexOf(з)*0.03));
  const d=G.homDraft;
  const нет=[["base","основа"],["core","ядро"],["power","источник силы"],["purpose","назначение"]]
   .filter(([k])=>!d[k]).map(([,n])=>n);
@@ -23565,7 +23585,7 @@ function demonPick(id){
  const d=DEMON_BY_ID[id];
  if(!d){narrate("Такой сущности нет.");return false;}
  demonState().выбран=id;
- safeFn(()=>UI.blip(620+d.ранг*50,.08,.16));
+ safeFn(()=>UI.natStep("rank_up",0.55,0.9+d.ранг*0.06));
  narrate(demonKnown(id)
   ?`Выбран: ${d.n}, ранг ${d.ранг}, род ${d.род}. Дар: ${d.дарО} Цена: ${d.ценаО}`
   :`Выбран: ${d.n}, ранг ${d.ранг}. Он не исследован: звать и договариваться пока нельзя, а признак его таков — ${d.признак}`,{interrupt:false});
@@ -32225,7 +32245,7 @@ function questWorldTick(тип,подходит){
   было=true;
   if(q.have<надо){
    safeFn(()=>narrate(`${слово} по делу от ${q.npc}: ${q.have} из ${надо}.`,{interrupt:false}));
-   safeFn(()=>UI.blip(700+q.have*40,.09,.18));}
+   safeFn(()=>UI.natStep("b_quest",0.5,0.9+q.have*0.04));}
   else{
    safeFn(()=>narrate(`${слово}: сделано всё, ${надо} из ${надо}. Возвращайтесь к заказчику ${q.npc}.`,{interrupt:false}));
    safeFn(()=>UI.fanfare());
@@ -32816,7 +32836,7 @@ function fight(a){const cb=G.combat;if(!cb)return;const m=cb.m;
    safeFn(()=>{delete G.buffs.forgecall;});}
   critChance+=safeFn(()=>Tree.критK(),0);
   const crit=critChance>0&&Math.random()<critChance;
-  if(crit){dmg*=2;safeFn(()=>{UI.blip(1320,.12,.25);Bank.play("lug_impact",{seed:dmg,gain:0.6,maxSec:2});Bank.play("clash",{seed:dmg,gain:0.7,maxSec:3});
+  if(crit){dmg*=2;safeFn(()=>{Bank.play("lug_impact",{seed:dmg,gain:0.6,maxSec:2});Bank.play("clash",{seed:dmg,gain:0.7,maxSec:3});
    Bank.play("cast_warcry",{seed:dmg,gain:0.5,maxSec:3});
    setTimeout(()=>safeFn(()=>Bank.play("clash_blades",{seed:dmg,gain:0.6,maxSec:3})),120);});}
   dmg=Math.round(dmg*safeFn(()=>bossDamageK("atk"),1)*safeFn(()=>Waves.weaponK(),1)*safeFn(()=>Lore.weakK(m),1));
@@ -32949,7 +32969,7 @@ function questMonsterProgress(monster){
     const have=q.have;
     if(have<q.need){
      narrate(`Прогресс квеста: ${have} из ${q.need} монстров.`,{interrupt:false});
-     try{UI.blip(760+have*45,.09,.18);}catch(_){}
+     try{UI.natStep("b_quest",0.5,0.95+have*0.04);}catch(_){}
     }else{
      narrate(`Квестовая цель выполнена: ${q.need} из ${q.need} монстров. Вернитесь к заказчику.`,{interrupt:false});
      try{UI.fanfare();}catch(_){}
@@ -32961,7 +32981,7 @@ function questMonsterProgress(monster){
     const have=q.have;
     if(have<q.need){
      narrate(`Охотничий квест: ${have} из ${q.need} — «${q.monsterName}».`,{interrupt:false});
-     try{UI.blip(820+have*45,.09,.18);}catch(_){}
+     try{UI.natStep("b_quest",0.5,1.0+have*0.04);}catch(_){}
     }else{
      narrate(`Именная цель выслежена и повержена: «${q.monsterName}». Вернитесь к заказчику.`,{interrupt:false});
      try{UI.fanfare();}catch(_){}
@@ -33282,7 +33302,7 @@ function checkLevelUp(){let leveled=false;safeFn(()=>{Energy.ensure();const m=10
   narrate(`Новый уровень! Теперь вы ${G.level} уровня. Здоровье и все девять свойств выросли: ${ATTRS.map(a=>`${a.n.toLowerCase()} ${safeFn(()=>attrGet(a.id),0)}`).join(", ")}.`,{pri:1,key:"levelup"});
   journal(`Уровень ${G.level}!`);}}
 
-function resourceEmptyFeedback(){safeFn(()=>UI.empty());safeFn(()=>UI.blip(180,.16,.22));}
+function resourceEmptyFeedback(){safeFn(()=>UI.empty());}
 /* ════════ СБОР РЕСУРСОВ (только если они ЕСТЬ) ════════ */
 function gatherCurrent(source="tap"){
  try{
@@ -33377,7 +33397,7 @@ function gatherCurrent(source="tap"){
    сортДар=Math.max(1,Number(сорт.дар)||1);
    G.inv[сорт.товар]=(Number(G.inv[сорт.товар])||0)+сортДар;
    safeFn(()=>{Bank.play("oc_diamond",{seed:G.x+G.y,gain:0.5,maxSec:1});Bank.play("oc_glass_hit",{seed:G.x+G.y,gain:0.55,maxSec:3});});}
-  if(bounty>1)safeFn(()=>UI.blip(1040,.09,.16));
+  if(bounty>1)safeFn(()=>UI.nat("bounty",0.55));
   /* Ремесло слышно по инструменту: кирка по руде, топор по дереву, серп
      по траве, короб по ягодам. */
   safeFn(()=>{const r=c.res.name;
@@ -33469,7 +33489,7 @@ function closeTopUI(){
  }catch(err){ try{console.error("closeTopUI",err);}catch(_){} }
  return false;
 }
-function announceClosed(){ try{ UI.blip(520,0.07,0.12); narrate("Окно закрыто.",{interrupt:true}); }catch(_){} }
+function announceClosed(){ try{ UI.close(); narrate("Окно закрыто.",{interrupt:true}); }catch(_){} }
 
 const CMD={
  /* Жест закрытия при пустом экране молчал: игрок вёл двумя пальцами вниз и
@@ -33691,7 +33711,7 @@ const CMD={
   narrate("Точность жестов возвращена к умолчанию: чуткость обычная, окно двойного касания восемь десятых секунды, щелчок включён.",{interrupt:true});},
  /* Разделы окна: перескочить вперёд, назад и услышать оглавление. */
  secjump(a,el){safeFn(()=>secNav("next",el));},
- secback(a,el){safeFn(()=>secNav("prev",el));},
+ secback(a,el){safeFn(()=>UI.nat("ui_back",0.45));safeFn(()=>secNav("prev",el));},
  secindex(){narrate(safeFn(()=>secIndexText(),"В этом окне разделов нет."),{interrupt:true});},
  gestpick(arg){
   const p=String(arg||"").split("~");
@@ -33703,7 +33723,7 @@ const CMD={
   narrate(gestLine(p[0]),{interrupt:true});},
  testall(){openModal("modal-encyclopedia");buildEncycCats();testAllSounds();},
  silence(){stopEverything();},
- speechstop(){Speech.stop();safeFn(()=>UI.blip(420,.06,.1));vib(15);Speech.request("Тихо.",{key:"stopped"});},
+ speechstop(){Speech.stop();safeFn(()=>UI.nat("ui_hush",0.5));vib(15);Speech.request("Тихо.",{key:"stopped"});},
  speechrepeat(){Speech.repeatLast();},
  speechflush(){const n=Speech.flush();Speech.request(n?`Очередь речи очищена: ${n}.`:"Очередь речи пуста.",{key:"flush"});},
  hud(){Speech.status();},
@@ -39236,7 +39256,7 @@ function tavernService(s){const c=cellContent(G.x,G.y);
   G.gold-=10;G.hp=Math.min(G.hpMax,G.hp+15);UI.drink();
   narrate("Горячая похлёбка. Здоровье +15.");journal("Поели в таверне.");refresh();return true;}
  if(s==="drink"){if(G.gold<5){narrate("Не хватает золота. Нужно 5.");return true;}
-  G.gold-=5;UI.blip(392,0.15,0.12);
+  G.gold-=5;safeFn(()=>UI.drink());
   narrate("Кружка медовухи. Настроение улучшилось.");refresh();return true;}
  if(s==="rest"){if(G.gold<20){narrate("Нужно 20 золота за комнату.");return true;}
   G.gold-=20;G.hp=G.hpMax;G.mana=G.manaMax;G.hour+=8;
@@ -39273,13 +39293,14 @@ function playCards(bet){
  bet=ставка;
  if(G.gold<bet){narrate(`Нужно ${bet} золота для ставки.`);return;}
  G.gold-=bet;AE.ensure();
- const s=new SFX();for(let i=0;i<5;i++)s.after(i*90,()=>s.crackle());setTimeout(()=>s.stop(0.2),700);
+ /* Карты сдают живой записью, а не синтезированным треском. */
+ safeFn(()=>UI.nat("cards_deal",0.6));
  const you=2+Math.floor(Math.random()*13),foe=2+Math.floor(Math.random()*13);
  const names=["","","Двойка","Тройка","Четвёрка","Пятёрка","Шестёрка","Семёрка","Восьмёрка","Девятка","Десятка","Валет","Дама","Король","Туз"];
  setTimeout(()=>{
   if(you>foe){G.gold+=bet*2;UI.fanfare();
    narrate(`Карты: у вас ${names[you]}, у соперника ${names[foe]}. Вы выиграли ${bet*2} золота!`);}
-  else if(you===foe){G.gold+=bet;UI.blip(500,0.2,0.1);
+  else if(you===foe){G.gold+=bet;safeFn(()=>UI.nat("bet_back",0.6));
    narrate(`Ничья: обе карты ${names[you]}. Ставка возвращена.`);}
   else{UI.hit();narrate(`Карты: у вас ${names[you]}, у соперника ${names[foe]}. Проигрыш.`);}
   refresh();},700);}
@@ -39512,7 +39533,7 @@ function prayToGod(id){
  /* У каждого из двенадцати богов свой голос из звукового банка. */
  safeFn(()=>Bank.play("god",{seed:PANTHEON.findIndex(x=>x.id===id),gain:0.8,maxSec:9}));
  safeFn(()=>setTimeout(()=>safeFn(()=>godVoice(id,{gain:0.7,maxSec:7})),320));
- safeFn(()=>UI.blip(880+PANTHEON.findIndex(x=>x.id===id)*40,.12,.2));
+ safeFn(()=>UI.natStep("chime",0.55,0.86+Math.max(0,PANTHEON.findIndex(x=>x.id===id))*0.035));
  narrate(`Молитва услышана. ${g.n}, ${g.ep}. Здоровье +${heal}.${extra} Благосклонность: ${G.faith[id]}, вы для него — ${faithTitle(id)}.`);
  journal(`Молитва: ${g.n}.`);
  refresh();saveGame(true);
@@ -47834,8 +47855,13 @@ function setDifficulty(k){
  return true;
 }
 function bindSpeechSettings($){
+ /* Галочка ЩЁЛКАЕТ. Сорок с лишним переключателей отвечали только словом,
+    а две живые записи — ui_toggle_on и ui_toggle_off — лежали в банке и не
+    звучали нигде. Теперь включение и выключение слышны по-разному, и это
+    доходит раньше слова. */
  const chk=(id,key,onText,offText)=>{const el=$(id);if(!el)return;el.checked=settings[key]!==0;
   el.addEventListener("change",e=>{settings[key]=e.target.checked?1:0;saveSettings();
+   safeFn(()=>Bank.play(e.target.checked?"ui_toggle_on":"ui_toggle_off",{gain:0.5,maxSec:2}));
    if(onText)Speech.request(e.target.checked?onText:offText,{key:"set:"+key});});};
  chk("setAutoSpeech","autoSpeech","Автоматическая речь включена.","Автоматическая речь выключена: игра говорит только важное и по запросу.");
  chk("setAutoDescribe","autoDescribe","Автоописание окружения включено.","Автоописание окружения выключено.");
@@ -47942,7 +47968,7 @@ function bindSettings(){const $=id=>document.getElementById(id);
  $("setAmbVol").addEventListener("input",e=>{settings.ambVol=e.target.value/100;saveSettings();
   $("vAmb").textContent=e.target.value+"%";AE.applyVolumes();});
  $("setUiVol").addEventListener("input",e=>{settings.uiVol=e.target.value/100;saveSettings();
-  $("vUi").textContent=e.target.value+"%";safeFn(()=>UI.blip(880,0.08,0.12));});
+  $("vUi").textContent=e.target.value+"%";safeFn(()=>UI.nat("ui_select",0.5));});
  $("setVoice").addEventListener("change",e=>{settings.voice=e.target.value;saveSettings();
   const vs=speechSynthesis.getVoices();Speech.voice=vs.find(v=>v.name===settings.voice)||null;
   narrate("Голос изменён. Здравствуйте, путник.");});
@@ -48102,14 +48128,14 @@ function writeSave(key,silent){
  if(!G.saveBroken){
   G.saveBroken=true;
   narrate("Сохранить не удалось: память браузера заполнена. Откройте «Сохранения» и выгрузите игру в файл, иначе прогресс будет потерян.",{interrupt:true});
-  safeFn(()=>{UI.blip(180,0.25,0.3);Bank.play("ui_error",{gain:0.8,maxSec:3});vib([60,40,60]);});
+  safeFn(()=>{Bank.play("ui_error",{gain:0.8,maxSec:3});vib([60,40,60]);});
  }
  return null;
 }
 function saveGame(silent){
  const raw=safeFn(()=>writeSave(SAVE_KEY,silent),null);
  if(!silent){
-  if(raw){narrate("Игра сохранена.");UI.blip(880,0.15,0.1);}
+  if(raw){narrate("Игра сохранена.");safeFn(()=>UI.nat("ui_success",0.5));}
   else narrate("Игра НЕ сохранена: нет места в памяти браузера. Выгрузите игру в файл через меню «Сохранения».");
  }
  return !!raw;
