@@ -31,7 +31,9 @@
    15. A → B с тем же ключом — A заменено, B сказано.
    Плюс: повтор последнего не повторяет остановленное; состояние игрока;
    очистка очереди; приглушение музыки только пока идёт речь; настройки
-   речи есть в окне и сохраняются; жест четырьмя пальцами и клавиши.
+   речи есть в окне и сохраняются; жест четырьмя пальцами и клавиши;
+   темп речи — пять по умолчанию, шкала прежняя, а старые медленные
+   настройки поднимаются к нему ровно один раз.
    ═══════════════════════════════════════════════════════════════════════ */
 const {chromium}=require('playwright');
 const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(e!==undefined?' :: '+JSON.stringify(e):''));
@@ -321,6 +323,49 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
  check('сторона света называется при повороте, молчит при ходьбе по прямой и выключается настройкой',
   стороны.вкл===true&&стороны.поПрямой===false&&стороны.выкл===false
   &&стороны.сКрыла===false&&стороны.есть===true,стороны);
+
+ /* ── темп речи ── */
+ await fresh();
+ const темп=await page.evaluate(async()=>{
+  const el=document.getElementById("setRate");
+  const шкала=el?[el.min,el.max,el.step,el.dataset.tapStep,el.value,
+   (document.getElementById("vRate")||{}).textContent]:null;
+  Speech.say("Проба темпа.",{pri:2});await new Promise(r=>setTimeout(r,30));
+  const ушло=FAKE.cur?Number(FAKE.cur.rate):null;FAKE.end();
+  return {умолчание:Number(settings.rate),флаг:Number(settings.rateFast)||0,шкала,ушло};});
+ check('темп речи по умолчанию пять, и ровно он уходит в синтезатор без ограничителей',
+  темп.умолчание===5&&темп.ушло===5&&темп.флаг===1,темп);
+ check('шкала темпа осталась от 0,6 до 6,0 шагом в две десятых',
+  !!темп.шкала&&темп.шкала[0]==="0.6"&&темп.шкала[1]==="6"&&темп.шкала[2]==="0.2"
+  &&темп.шкала[3]==="0.2"&&темп.шкала[4]==="5"&&темп.шкала[5]==="5.0×",темп.шкала);
+
+ /* Перенос старых настроек: медленное поднимается один раз, а выбранный
+    быстрый темп и осознанно возвращённый медленный остаются как были. */
+ const сПрофилем=async(профиль)=>{
+  const p2=await ctx.newPage();
+  await p2.addInitScript(о=>{try{localStorage.setItem("gm29set",JSON.stringify(о));}catch(_){}},профиль);
+  await p2.goto(process.argv[2]);await p2.waitForTimeout(600);
+  const r=await p2.evaluate(()=>{
+   let сохр={};try{сохр=JSON.parse(localStorage.getItem("gm29set")||"{}");}catch(_){}
+   return {rate:Number(settings.rate),флаг:Number(settings.rateFast)||0,
+    вСохранении:Number(сохр.rate),флагВСохранении:Number(сохр.rateFast)||0};});
+  await p2.close();return r;};
+ const старое=await сПрофилем({rate:1.6});
+ const быстрое=await сПрофилем({rate:3.6});
+ const осознанное=await сПрофилем({rate:1,rateFast:1});
+ check('медленный темп из старых настроек поднимается до пяти и запоминается',
+  старое.rate===5&&старое.флаг===1&&старое.вСохранении===5&&старое.флагВСохранении===1,старое);
+ check('выбранный быстрый темп и осознанно возвращённый медленный остаются нетронутыми',
+  быстрое.rate===3.6&&быстрое.флаг===1&&осознанное.rate===1&&осознанное.флаг===1,{быстрое,осознанное});
+ {
+  const fs=require('fs'),path=require('path');
+  const корень=path.join(__dirname,'..');
+  const readme=fs.readFileSync(path.join(корень,'README.md'),'utf8');
+  const мир=fs.readFileSync(path.join(корень,'docs','МИР.md'),'utf8');
+  check('README и документы описывают новый темп речи',
+   /темпе чтеца, а не диктора/.test(readme)&&/## 59\. Темп речи/.test(мир)&&/RATE_FAST/.test(мир),
+   {readme:/темпе чтеца, а не диктора/.test(readme),мир:/## 59\. Темп речи/.test(мир)});
+ }
 
  /* ── единственность и старые вызовы ── */
  const единый=await page.evaluate(()=>{
