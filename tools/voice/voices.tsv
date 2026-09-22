@@ -1,4 +1,6 @@
-народ	voice_id ElevenLabs
+# Это НЕ voice_id: это номера дублей (session id) тех записей, что уже сделаны.
+# Голос каждого народа в отдельности не сохранился — см. README, раздел «Чего не хватает».
+народ	session_id дубля
 race_gnomy	MLBpdzKZ9y9gkCzRaQa8
 race_orki	kcU7AjITH4ixKpYL2Lip
 race_trolli	Aaog5K0G5z54vAcMK4WP
