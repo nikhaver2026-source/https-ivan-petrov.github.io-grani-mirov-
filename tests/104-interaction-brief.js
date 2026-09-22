@@ -64,7 +64,7 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
  /* ── 2. жесты ── */
  const жесты=await page.evaluate(async()=>{const r={n:GESTURE_MAP.length,conf:Gestures.conflicts(),text:Gestures.text().length,fingers:[...new Set(GESTURE_MAP.map(g=>g.fingers))].sort().join("")};
   CMD.gestures();await new Promise(z=>setTimeout(z,50));r.окно=activeLayer()&&activeLayer().id;r.строк=document.querySelectorAll("#gestBody .list-line, #gestBody div").length;r.изТаблицы=document.getElementById("gestBody").textContent.includes(Gestures.word(GESTURE_MAP[4]));while(activeLayer())closeTopUI();return r;});
- check('карта жестов: пятнадцать записей на четыре числа пальцев, без споров, читается словами',жесты.n===15&&жесты.conf.length===0&&жесты.fingers==="1234"&&жесты.text>500,жесты);
+ check('карта жестов: шестнадцать записей на четыре числа пальцев, без споров, читается словами',жесты.n===16&&жесты.conf.length===0&&жесты.fingers==="1234"&&жесты.text>500,жесты);
  check('в исходнике один диспетчер касаний, один обработчик кликов и один клавиатуры',src.touchstart===1&&src.touchmove===1&&src.touchend===1&&src.click===1&&src.keydown===1,src);
  check('окно жестов открывается и читает ту же таблицу',жесты.окно==="modal-gestures"&&жесты.изТаблицы,жесты.окно);
 
