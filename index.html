@@ -2035,26 +2035,33 @@ const LIVE_INSTEAD={
  scream:        ["throng_cry","throng_die_m"],
  rusty_gate:    ["hall_gate","mtg_gate"],
  crowd_panic:   ["throng_retreat","throng_cry"],
- blade_draw:    ["blade_ring","blade_swing"],
+ blade_draw:    ["lug_sword","blade_swing"],
  battle_cry:    ["cast_warcry","throng_fight"],
  artifact_pulse:["magic_hum","artifact_hum"],
  arrow_hit:     ["cast_arrows","hit_knife"],
- spell_release: ["spell_bolt","cast_shoot"],
+ spell_release: ["oc_zap","cast_shoot"],
  ward_shimmer:  ["stk_ward","cast_shield"],
  anvil:         ["anvil"],
+ /* Три сцены каталога оставались рисованными, хотя живые записи для них в
+    банке лежали: шаги, дверь и сундук. В самой игре они не звучат — их
+    слушают в энциклопедии звуков, — и слышать там синтез, когда сто
+    семнадцать соседних сцен отвечают записью, неправильно. */
+ footsteps:     ["step_dirt","step_stone","step_grass"],
+ door:          ["oc_door_open","door_wood","mtg_door_open"],
+ chest:         ["oc_chest_open","mtg_chest_open"],
 
  /* ── ЗВЕРЬЁ И ПТИЦА ──
     Двор, лес и подземелье держатся на голосах живности. Рисованный конь —
     это два осциллятора; настоящий конь фыркает и переступает. */
  horse:         ["beasts_horse","tread_hoof"],
- dogs:          ["beast_growl","howl_low"],
+ dogs:          ["oc_growl","wolf_howl"],
  livestock:     ["beasts_cattle","beast_cow","beast_sheep"],
  chickens:      ["beasts_fowl","beast_fowl","bird_rooster"],
  rats:          ["fx_lurk","step_soft"],
  bats_wings:    ["raptor_wing","wyrm_wing"],
  frogs:         ["amb_swamp","stk_goo"],
  boar:          ["beast_pig","beasts_pig"],
- wolves:        ["wolf_howl","howl_low"],
+ wolves:        ["wolf_howl","lug_bark"],
  owl:           ["bird_owl","wild_owl"],
  crow:          ["crow","wild_raven"],
  seagull:       ["raptor_cry","bird_hawk"],
@@ -2065,7 +2072,7 @@ const LIVE_INSTEAD={
     Иначе выученное в каталоге не узнаётся в пути — а узнавание здесь
     заменяет карту. */
  forest:        ["amb_forest","wild_birds"],
- birds:         ["wild_birds","stk_birds","dawn_birds"],
+ birds:         ["wild_birds","stk_birds","oc_birds"],
  stream:        ["wild_river","stk_river","sky_river"],
  sea:           ["sea_open","sky_wave","sea_calm"],
  crickets:      ["amb_night"],
@@ -2077,7 +2084,7 @@ const LIVE_INSTEAD={
  snow_weather:  ["sky_snow","sky_snow"],
 
  /* ── ЛЮДНЫЕ МЕСТА И РЕМЕСЛО ── */
- crowd:         ["crowd_cheer","amb_city"],
+ crowd:         ["throng_cry","amb_city"],
  market_babble: ["market_tap","market_tap"],
  tavern_room:   ["stk_inn","uh_tavern","throng_hail_f"],
  pouring:       ["arte_potion","stk_splash"],
@@ -2090,18 +2097,18 @@ const LIVE_INSTEAD={
  /* ── ГОЛОСА ТВАРЕЙ ──
     Общие голоса и поимённые: у каждого чудовища своя запись, потому что по
     голосу его и узнают раньше, чем увидят. */
- mgrowl:        ["beast_growl","lair"],
+ mgrowl:        ["oc_growl","lair"],
  mhiss:         ["serpent_hiss","hiss"],
- mscreech:      ["raptor_cry","beast_roar"],
+ mscreech:      ["raptor_cry","brute_roar"],
  mwail:         ["wraith_moan","wraith_voice"],
- wolf_named:    ["wolf_howl","beast_growl"],
+ wolf_named:    ["wolf_howl","oc_growl"],
  goblin_named:  ["foe_goblin_cast","foe_goblin_hit"],
  troll_named:   ["brute_roar","foe_brute_hit"],
  ogre_named:    ["foe_brute_hit","brute_roar"],
  basilisk_named:["serpent_hiss","hiss"],
  wyvern_named:  ["raptor_cry","wyrm_roar"],
  banshee_named: ["wraith_voice","od_keeper_groan"],
- direbear_named:["beast_roar","beast_growl"],
+ direbear_named:["brute_roar","oc_growl"],
  treant_named:  ["stk_break","deep_wood"],
  kraken_named:  ["stk_deepsea","sea_storm"],
  bandit_named:  ["throng_cry","throng_fight"],
@@ -2124,7 +2131,7 @@ const LIVE_INSTEAD={
  /* ── ГОЛОСА ЛЮДЕЙ ──
     Примета собеседника: по ней слышно, к кому подошёл, ещё до приветствия. */
  npc_ruler_s:   ["throng_lord","hall_center"],
- npc_guard_s:   ["guard_shout","guard_shout"],
+ npc_guard_s:   ["guard_shout","guard_march"],
  npc_merchant_s:["market_tone","arte_coins"],
  npc_scholar_s: ["arte_page","uh_page"],
  npc_bartender_s:["uh_tavern","stk_inn"],
@@ -2150,12 +2157,12 @@ const LIVE_INSTEAD={
     выдавал не первый миг, а хвост — россыпь костей, перестук костяшек,
     поступь голема. Здесь они тоже переведены на запись. */
  market_shout:  ["market_tone","market_slap","market_slap"],
- guard_shout:   ["guard_shout","guard_shout"],
+ guard_shout:   ["guard_shout","lug_clank"],
  chains:        ["stk_clang","clang_soft"],
  bone_pile:     ["step_bone","foe_bone_die","foe_bone_hit"],
  dice:          ["craft_knock","market_tap"],
  coins:         ["arte_coins","clink","od_gold"],
- mroar:         ["wyrm_roar","beast_roar"],
+ mroar:         ["wyrm_roar","brute_roar"],
  mstomp:        ["golem_step","deep_thud","foe_brute_hit"],
  golem_named:   ["golem_step","golem_hit"],
  dragon_named:  ["wyrm_dark","dragon_growl","wyrm_roar"],
@@ -2409,7 +2416,7 @@ const MUSIC_TRACK={
  tower_vetv:"pad_halo",       tower_kamen:"throng_lord",
  tower_voda:"fx_rain",        tower_veter:"far_flute",
  tower_tenb:"clarinet_shadow",tower_led:"frost_keys",
- tower_zarya:"dawn_birds",    tower_korni:"lute_wood",
+ tower_zarya:"wild_birds",    tower_korni:"lute_wood",
  tower_grom:"fate_hit",       tower_shov:"pad_rift"};
 /* ════════════════════════════════════════════════════════════════════════
    МУЗЫКА СОБЫТИЙ: НАГРАДЫ, ДОСТИЖЕНИЯ, ОПЫТ
@@ -2436,12 +2443,12 @@ const EVENT_THEME={
  reward_artifact:{роль:"harp_high", следом:[["fx_crystal",420],["artifact_hum",900]], о:"артефакт обретён"},
  reward_tome:   {роль:"arte_book",  следом:[["secret_box",380]],      о:"книга или свиток"},
  reward_recipe: {роль:"craft_knock",следом:[["spark_glock",320]],     о:"рецепт разобран"},
- reward_title:  {роль:"gate_fanfare",следом:[["crowd_cheer",520]],    о:"титул или звание"},
+ reward_title:  {роль:"gate_fanfare",следом:[["throng_cry",520]],    о:"титул или звание"},
  reward_land:   {роль:"hall_gate",  следом:[["war_brass",560]],       о:"земля или владение"},
  reward_ally:   {роль:"throng_yes", следом:[["tread_gravel",340]],     о:"спутник примкнул"},
  /* ── ДОСТИЖЕНИЯ ── */
  achieve:       {роль:"jingle_achievement",следом:[["harp_high",420]],о:"достижение"},
- achieve_great: {роль:"trumpet_victory",следом:[["crowd_cheer",700]], о:"большое достижение"},
+ achieve_great: {роль:"trumpet_victory",следом:[["throng_cry",700]], о:"большое достижение"},
  /* ── ОПЫТ И РОСТ ── */
  levelup:       {роль:"hero_levelup",следом:[["cast_heal",220],["gate_fanfare",520]], о:"новый уровень"},
  skill_up:      {роль:"spark_glock",следом:[["cast_heal",300]],      о:"навык поднялся"},
@@ -2450,23 +2457,23 @@ const EVENT_THEME={
  quest_take:    {роль:"tread_gravel",следом:[["stk_horn",300]],        о:"задание принято"},
  quest_done:    {роль:"trumpet_fanfare",следом:[["trumpet_fanfare",300]], о:"задание сдано"},
  quest_fail:    {роль:"lament_oboe",следом:[["cello_defeat",420],["pad_dread",900]],    о:"задание провалено"},
- chain_done:    {роль:"epic_strings",следом:[["temple_choir",700],["crowd_cheer",1500]], о:"цепочка пройдена целиком"},
+ chain_done:    {роль:"epic_strings",следом:[["temple_choir",700],["throng_cry",1500]], о:"цепочка пройдена целиком"},
  /* ── СОБЫТИЯ МИРА ── */
  discovery:     {роль:"secret_box", следом:[["fx_crystal",400]],      о:"находка, тайник, проход"},
- omen:          {роль:"omen_swell", следом:[["fx_omen",600],["chase_tremolo",1000],["beast_breath",1400]],         о:"знамение"},
+ omen:          {роль:"omen_swell", следом:[["fx_omen",600],["chase_tremolo",1000],["lug_snarl",1400]],         о:"знамение"},
  bargain:       {роль:"market_tap",следом:[["xylo_coin",280],["caravan_sitar",600]],   о:"сделка заключена"},
  standing_up:   {роль:"court_harpsi",следом:[["cast_shield",380]],    о:"имя поднялось"},
  standing_down: {роль:"trombone_alarm",следом:[["violin_tense",380],["sneak_pizz",800]], о:"имя упало"},
  /* ── ПОБЕДЫ, ЗЕМЛИ, ГЛАВЫ ── */
- boss_down:     {роль:"siege_victory",следом:[["war_brass",400],["wide_strings",900],["crowd_cheer",1600]], о:"владыка земель пал"},
- victory_great: {роль:"war_timpani",следом:[["epic_strings",300],["crowd_cheer",1100]], о:"победа над много сильнейшим"},
- region_new:    {роль:"village_pipe",следом:[["dawn_birds",500]],     о:"новая держава открыта"},
+ boss_down:     {роль:"siege_victory",следом:[["war_brass",400],["wide_strings",900],["throng_cry",1600]], о:"владыка земель пал"},
+ victory_great: {роль:"war_timpani",следом:[["epic_strings",300],["throng_cry",1100]], о:"победа над много сильнейшим"},
+ region_new:    {роль:"village_pipe",следом:[["wild_birds",500]],     о:"новая держава открыта"},
  place_new:     {роль:"ghost_choir",следом:[["fx_crystal",500]],      о:"важное место открыто впервые"},
  festival:      {роль:"bell_field",следом:[["temple_bell",500]],      о:"праздник бога"},
  world_event:   {роль:"horn_dark",следом:[["deep_call",800],["war_timpani",1500]],о:"смена волны мира"},
  story_stage:   {роль:"fate_hit",   следом:[["epic_strings",400],["temple_choir",1200]], о:"новая ступень истории"},
  reward_rare:   {роль:"relic_sing", следом:[["fx_crystal",400]],      о:"редкая вещь"},
- reward_legend: {роль:"temple_choir",следом:[["epic_strings",500],["crowd_cheer",1400]], о:"легендарная вещь"},
+ reward_legend: {роль:"temple_choir",следом:[["epic_strings",500],["throng_cry",1400]], о:"легендарная вещь"},
  achieve_hidden:{роль:"sneak_pizz", следом:[["secret_box",400],["charm_bell",900]], о:"скрытое достижение"},
  /* ── ВНЕ МИРА ──
     Обучение и загрузка записей — не события мира, и звучать миром они не
@@ -2494,18 +2501,18 @@ const MUSIC_POOL={
   {роль:"hero_levelup",следом:[["cast_heal",220],["gate_fanfare",520]],ярус:"normal",о:"героическая"},
   {роль:"trumpet_fanfare",следом:[["harp_high",300],["charm_celesta",700]],ярус:"normal",о:"торжественная"},
   {роль:"spell_harp",следом:[["charm_bell",350],["pad_halo",800]],ярус:"normal",о:"магическая"},
-  {роль:"harp_light",следом:[["flute_dawn",400],["dawn_birds",900]],ярус:"normal",о:"спокойная"},
+  {роль:"harp_light",следом:[["flute_dawn",400],["wild_birds",900]],ярус:"normal",о:"спокойная"},
   {роль:"gate_fanfare",следом:[["organ_temple",500],["temple_bell",900]],ярус:"normal",о:"храмовая"},
-  {роль:"epic_strings",следом:[["war_timpani",400],["crowd_cheer",1200]],ярус:"rare",о:"редкая: каждый пятый уровень"},
-  {роль:"trumpet_victory",следом:[["temple_choir",600],["epic_strings",1000],["crowd_cheer",1800]],ярус:"epic",о:"эпическая: каждый десятый"}],
+  {роль:"epic_strings",следом:[["war_timpani",400],["throng_cry",1200]],ярус:"rare",о:"редкая: каждый пятый уровень"},
+  {роль:"trumpet_victory",следом:[["temple_choir",600],["epic_strings",1000],["throng_cry",1800]],ярус:"epic",о:"эпическая: каждый десятый"}],
  quest_done:[
   {роль:"trumpet_fanfare",следом:[["trumpet_fanfare",300]],ярус:"normal",о:"обычное завершение"},
   {роль:"gate_fanfare",следом:[["harp_light",400]],ярус:"normal",о:"обычное: ворота и арфа"},
   {роль:"xylo_coin",следом:[["charm_celesta",300],["harp_light",700]],ярус:"normal",о:"обычное: плата и звон"},
   {роль:"clan_pipes",следом:[["harp_high",500]],ярус:"normal",о:"обычное: волынка клана"},
-  {роль:"trumpet_victory",следом:[["harp_high",400],["crowd_cheer",1000]],ярус:"success",о:"успешное завершение"},
+  {роль:"trumpet_victory",следом:[["harp_high",400],["throng_cry",1000]],ярус:"success",о:"успешное завершение"},
   {роль:"war_brass",следом:[["war_timpani",300],["epic_strings",900]],ярус:"hard",о:"трудное дело закрыто"},
-  {роль:"epic_strings",следом:[["temple_choir",700],["crowd_cheer",1500]],ярус:"chain",о:"цепочка пройдена"},
+  {роль:"epic_strings",следом:[["temple_choir",700],["throng_cry",1500]],ярус:"chain",о:"цепочка пройдена"},
   {роль:"temple_choir",следом:[["organ_eternal",600],["epic_strings",1300]],ярус:"chapter",о:"глава истории закрыта"},
   {роль:"violin_omen",следом:[["secret_box",500],["charm_bell",1000]],ярус:"unexpected",о:"неожиданная развязка"}],
  quest_take:[
@@ -2519,8 +2526,8 @@ const MUSIC_POOL={
  achieve:[
   {роль:"jingle_achievement",следом:[["harp_high",420]],ярус:"normal",о:"обычное достижение"},
   {роль:"spark_glock",следом:[["harp_light",350]],ярус:"normal",о:"обычное: искра и арфа"},
-  {роль:"charm_celesta",следом:[["harp_high",300],["crowd_cheer",900]],ярус:"rare",о:"редкое достижение"},
-  {роль:"trumpet_victory",следом:[["crowd_cheer",500],["epic_strings",900]],ярус:"epic",о:"эпическое достижение"},
+  {роль:"charm_celesta",следом:[["harp_high",300],["throng_cry",900]],ярус:"rare",о:"редкое достижение"},
+  {роль:"trumpet_victory",следом:[["throng_cry",500],["epic_strings",900]],ярус:"epic",о:"эпическое достижение"},
   {роль:"sneak_pizz",следом:[["secret_box",400],["charm_bell",900]],ярус:"hidden",о:"скрытое достижение"},
   {роль:"temple_choir",следом:[["gate_fanfare",600]],ярус:"story",о:"сюжетное достижение"}],
  reward:[
@@ -2529,29 +2536,29 @@ const MUSIC_POOL={
   {роль:"harp_high",следом:[["fx_crystal",420]],ярус:"rare",о:"редкая"},
   {роль:"relic_sing",следом:[["fx_crystal",400]],ярус:"rare",о:"редкая: пение реликвии"},
   {роль:"charm_celesta",следом:[["relic_sing",500]],ярус:"unique",о:"единственная"},
-  {роль:"epic_strings",следом:[["relic_sing",500],["crowd_cheer",1300]],ярус:"legendary",о:"легендарная"},
+  {роль:"epic_strings",следом:[["relic_sing",500],["throng_cry",1300]],ярус:"legendary",о:"легендарная"},
   {роль:"harp_high",следом:[["fx_crystal",420],["artifact_hum",900]],ярус:"artifact",о:"артефактная"},
   {роль:"temple_choir",следом:[["fate_hit",500]],ярус:"story",о:"сюжетная"}],
  boss_down:[
-  {роль:"siege_victory",следом:[["war_brass",400],["wide_strings",900],["crowd_cheer",1600]],о:"медь и струнные"},
-  {роль:"trumpet_victory",следом:[["war_timpani",300],["temple_choir",900],["crowd_cheer",1700]],о:"труба и хор"},
-  {роль:"epic_strings",следом:[["fate_hit",300],["crowd_cheer",1200]],о:"струнные и удар судьбы"}],
+  {роль:"siege_victory",следом:[["war_brass",400],["wide_strings",900],["throng_cry",1600]],о:"медь и струнные"},
+  {роль:"trumpet_victory",следом:[["war_timpani",300],["temple_choir",900],["throng_cry",1700]],о:"труба и хор"},
+  {роль:"epic_strings",следом:[["fate_hit",300],["throng_cry",1200]],о:"струнные и удар судьбы"}],
  victory_great:[
-  {роль:"war_timpani",следом:[["epic_strings",300],["crowd_cheer",1100]],о:"литавры"},
+  {роль:"war_timpani",следом:[["epic_strings",300],["throng_cry",1100]],о:"литавры"},
   {роль:"siege_victory",следом:[["war_brass",400]],о:"победная медь"},
-  {роль:"trumpet_victory",следом:[["crowd_cheer",600]],о:"труба победы"}],
+  {роль:"trumpet_victory",следом:[["throng_cry",600]],о:"труба победы"}],
  festival:[
-  {роль:"village_pipe",следом:[["temple_bell",500],["crowd_cheer",1100]],ярус:"light",о:"свирель и колокол праздника"},
+  {роль:"village_pipe",следом:[["temple_bell",500],["throng_cry",1100]],ярус:"light",о:"свирель и колокол праздника"},
   {роль:"far_flute",следом:[["bell_field",600]],ярус:"light",о:"флейта и полевой колокол"},
-  {роль:"harp_light",следом:[["dawn_birds",500]],ярус:"light",о:"арфа утреннего праздника"},
+  {роль:"harp_light",следом:[["wild_birds",500]],ярус:"light",о:"арфа утреннего праздника"},
   {роль:"ghost_choir",следом:[["horn_dark",700]],ярус:"dark",о:"хор и тёмный рог"},
   {роль:"organ_temple",следом:[["deep_call",800]],ярус:"dark",о:"орган и зов глубины"}],
  region_new:[
-  {роль:"village_pipe",следом:[["dawn_birds",500]],ярус:"light",о:"свирель села"},
+  {роль:"village_pipe",следом:[["wild_birds",500]],ярус:"light",о:"свирель села"},
   {роль:"far_flute",следом:[["horn_gate",600]],ярус:"light",о:"дальняя флейта"},
   {роль:"far_koto",следом:[["pad_halo",500]],ярус:"strange",о:"кото и ореол"},
   {роль:"desert_reed",следом:[["far_flute",700]],ярус:"wild",о:"тростник пустыни"},
-  {роль:"field_pipe",следом:[["dawn_birds",500]],ярус:"wild",о:"свирель полей"},
+  {роль:"field_pipe",следом:[["wild_birds",500]],ярус:"wild",о:"свирель полей"},
   {роль:"mist_keys",следом:[["fx_haze",600]],ярус:"strange",о:"туманные клавиши"},
   {роль:"pad_dread",следом:[["horn_dark",700]],ярус:"dark",о:"тьма и тёмный рог"},
   {роль:"ghost_choir",следом:[["fx_rift",600]],ярус:"dark",о:"призрачный хор и разлом"}],
@@ -2560,25 +2567,25 @@ const MUSIC_POOL={
   {роль:"pad_dread",следом:[["fx_lurk",600]],ярус:"dungeon",о:"подземелье: тьма"},
   {роль:"temple_bell",следом:[["organ_temple",500]],ярус:"temple",о:"храм: колокол и орган"},
   {роль:"chapel_organ",следом:[["temple_choir",700]],ярус:"temple",о:"храм: орган часовни"},
-  {роль:"isle_market",следом:[["crowd_cheer",600]],ярус:"city",о:"город: ряды и толпа"},
+  {роль:"ad_market_sel",следом:[["throng_cry",600]],ярус:"city",о:"город: ряды и толпа"},
   {роль:"court_harpsi",следом:[["gate_fanfare",500]],ярус:"city",о:"город: клавесин двора"},
   {роль:"crypt_organ",следом:[["fx_rift",600]],ярус:"tower",о:"башня: орган склепа"},
   {роль:"mist_keys",следом:[["fx_haze",500]],ярус:"tower",о:"башня: туманные клавиши"},
   {роль:"secret_box",следом:[["fx_crystal",400]],ярус:"other",о:"находка"},
-  {роль:"far_flute",следом:[["dawn_birds",500]],ярус:"forest",о:"лес: дальняя флейта"},
+  {роль:"far_flute",следом:[["wild_birds",500]],ярус:"forest",о:"лес: дальняя флейта"},
   {роль:"lute_wood",следом:[["far_flute",600]],ярус:"forest",о:"лес: лютня"}],
  story_stage:[
   {роль:"fate_hit",следом:[["epic_strings",400],["temple_choir",1200]],о:"удар судьбы"},
   {роль:"omen_swell",следом:[["temple_choir",600]],о:"знамение и хор"},
   {роль:"wide_strings",следом:[["horn_dark",500]],о:"широкие струнные"}],
  reward_title:[
-  {роль:"gate_fanfare",следом:[["crowd_cheer",520]],о:"фанфара и толпа"},
+  {роль:"gate_fanfare",следом:[["throng_cry",520]],о:"фанфара и толпа"},
   {роль:"trumpet_victory",следом:[["war_brass",500]],о:"труба и медь"},
-  {роль:"clan_pipes",следом:[["crowd_cheer",600]],о:"волынка и толпа"}],
+  {роль:"clan_pipes",следом:[["throng_cry",600]],о:"волынка и толпа"}],
  chain_done:[
-  {роль:"epic_strings",следом:[["temple_choir",700],["crowd_cheer",1500]],о:"струнные, хор, толпа"},
-  {роль:"temple_choir",следом:[["epic_strings",600],["crowd_cheer",1500]],о:"хор, струнные, толпа"},
-  {роль:"trumpet_victory",следом:[["wide_strings",500],["crowd_cheer",1300]],о:"труба, струнные, толпа"}]};
+  {роль:"epic_strings",следом:[["temple_choir",700],["throng_cry",1500]],о:"струнные, хор, толпа"},
+  {роль:"temple_choir",следом:[["epic_strings",600],["throng_cry",1500]],о:"хор, струнные, толпа"},
+  {роль:"trumpet_victory",следом:[["wide_strings",500],["throng_cry",1300]],о:"труба, струнные, толпа"}]};
 /* Выбор варианта с памятью: последние три на событие не повторяются, память
    переживает перезапуск. */
 const Jingle={
@@ -3062,9 +3069,7 @@ const BANK_CATS={mg:"🐲 Фэнтезийный мир: твари, чары, �
  dark:"🌑 Голоса из тьмы и подземные гулы",
  arms:"⚔️ Война: рога, столкновения, лязг",
  spell:"🔮 Чары: касты и заклинания",
- beast:"🐗 Твари: рёв, вой и крики",
  relic:"💎 Находки, артефакты и клады",
- depth:"⛰️ Глубина, земля и дурные места",
  folk:"🪗 Люд, рынок, таверны и праздники",
  mood:"🎻 Судьба: заслуги, звания, репутация, день и ночь",
  arte:"💎 Артефакты, вещи и находки",
@@ -3089,7 +3094,7 @@ const BANK_CATS={mg:"🐲 Фэнтезийный мир: твари, чары, �
  sky:"🌦️ Погода, вода и день",
  hall:"🏛️ Здания, рынок, порт, подворье"};
 /* ── Разделы энциклопедии ──
-   Папок с записями стало сорок, и списком в сорок строк первый уровень
+   Папок с записями стало под сорок, и списком в сорок строк первый уровень
    энциклопедии перестал быть проходимым: до последнего раздела сорок свайпов.
    Поэтому папки сведены в тематические разделы: раздел на экране один, а
    внутри — записи всех своих папок. Каждая папка обязана попасть хотя бы в
@@ -3101,14 +3106,14 @@ const BANK_GROUPS=[
  {n:"Ремесло, огонь и камень",icon:"🪓", dirs:["mtg"]},
  {n:"Подземный мир и тёмные голоса",icon:"🏰", dirs:["od"]},
  {n:"Взрывы, гулы и переходы",  icon:"💥", dirs:["es"]},
- {n:"Подземелья и тьма",      icon:"🕳️", dirs:["dungeon","dark","deep","depth"]},
+ {n:"Подземелья и тьма",      icon:"🕳️", dirs:["dungeon","dark","deep"]},
  {n:"Магия, чары и касты",    icon:"🔮", dirs:["magic","spell","cast"]},
  {n:"Боги, храмы и знамения", icon:"🕯️", dirs:["gods"]},
  {n:"События и повороты судьбы",icon:"⚡", dirs:["events","mood"]},
  {n:"Места, здания и постройки",icon:"🏛️", dirs:["places","hall","folk"]},
  {n:"Шаги и поверхности",     icon:"👣", dirs:["steps","surf","tread"]},
  {n:"Оружие, удары и война",  icon:"⚔️", dirs:["blow","arms","troop","battle","siege"]},
- {n:"Твари, звери и птицы",   icon:"🐉", dirs:["beast","foe","beasts"]},
+ {n:"Твари, звери и птицы",   icon:"🐉", dirs:["foe","beasts"]},
  {n:"Люди, рынок и торг",     icon:"🗣️", dirs:["bazaar","throng","trade"]},
  {n:"Находки, вещи и артефакты",icon:"💎", dirs:["relic","arte"]},
  {n:"Ремёсла, добыча и стройка",icon:"🔨", dirs:["craft"]},
@@ -3220,7 +3225,7 @@ function buildEncycCats(){
  const t=soundTotals();
  if(hint)hint.textContent=`Разделов: ${grid.children.length}. Всего звуков: ${t.всего} — ${t.сцены} синтезированных сцен и ${t.записи} живых записей. Касание называет раздел, двойное касание открывает его. Внутри раздела — те же жесты, а кнопка «Ко всем разделам» возвращает обратно.`;
  const cr=document.getElementById("encycCredits");
- if(cr)cr.textContent="Живая фэнтезийная библиотека взята из двух свободных игр. Flare (Free/Libre Action Roleplaying Engine), автор Clint Bellanger и участники проекта, flarerpg.org — артефакты и вещи, подземелья и лестницы, твари, заклинания, голос героя, природа, торговцы и двенадцать тем музыки мира. 0 A.D. (Empires Ascendant), автор Wildfire Games, play0ad.com — оружие и удары боя, осада, тревога и вести войны, ремёсла и стройка, звери, людские крики и кличи, шаги по поверхностям, погода и вода, здания, рынок и порт. Обе — под лицензией Creative Commons Attribution-ShareAlike 3.0 (CC BY-SA 3.0): указание авторства обязательно и дано здесь, записи остаются под той же лицензией. Разделы разложены по назначению: сперва мир на слух — поверхности под ногой, удары и оружие, строй и сигналы, рынок, голоса из тьмы; затем оркестр, который отмечает события — войну, чары, тварей, находки, глубину, люд и повороты судьбы. Источники записей: Neo HQ Mystic Sounds, Fantasy Sound Library, Classic Monster Sounds (автор Coucassi), пакет uisfx (CC0), сэмплы Sonic Pi с freesound.org (общественное достояние, CC0 1.0), живые инструменты проекта tonejs-instruments (Creative Commons Attribution 3.0) и оркестр из звукового шрифта FluidR3_GM автора Frank Wen, изданного проектом MIDI.js Soundfonts (Creative Commons Attribution 3.0). Указание авторства обязательно, и оно здесь дано. Вещи, с которыми игрок что-то делает, звучат живыми записями ещё четырёх свободных игр. OpenClonk (The OpenClonk Team and contributors, RedWolf Design GmbH, openclonk.org) — сундуки, петли, каменные ворота, цепи, дерево, камень, металл, стекло, чан, огонь, горн, древние механизмы, гром, дождь, ветер, птицы, лук и щит, отклик раздельного касания и знак сдвинувшегося списка (две записи без потерь, FLAC, 44,1 кГц), две темы музыки; лицензия Creative Commons Attribution 3.0 Unported (CC BY 3.0). 0 A.D. (Wildfire Games) — каменные ворота, обрушение, листва, мотыга, треск огня, подворье, порт, торговые ряды, день, реки, волны и голоса под сводами храма (CC BY-SA 3.0). Unknown Horizons (The Unknown Horizons Team, unknown-horizons.org) — каменотёс, кузнец, дровосек, выгон, мельница, часовня, трактир, площадь, склад, корабельный колокол, страница и пять тем музыки (CC BY-SA 3.0). Lugaru (Wolfire Games, wolfire.com, и OSS Lugaru) — костёр, кусты, пустыня, ветер, шаги, лязг, удары, клинки и звери (CC BY-SA 3.0). Ancient Beast (Freezing Moon и участники проекта, AncientBeast.com) — пошаговая фэнтезийная игра о мифических тварях: у неё взяты отклик взведённого касания, знак оборванной речи, раскрытие панели чар, сдача карт в таверне и знак изученной чары; лицензия художественной и звуковой части Creative Commons Attribution-ShareAlike 4.0 (CC BY-SA 4.0), код игры не используется. Все записи этой поставки переведены в FLAC без потерь. Для каждой папки в sounds лежат CREDITS.md с таблицей исходных файлов и текст лицензии.";
+ if(cr)cr.textContent="Живая фэнтезийная библиотека взята из двух свободных игр. Flare (Free/Libre Action Roleplaying Engine), автор Clint Bellanger и участники проекта, flarerpg.org — артефакты и вещи, подземелья и лестницы, твари, заклинания, голос героя, природа, торговцы и двенадцать тем музыки мира. 0 A.D. (Empires Ascendant), автор Wildfire Games, play0ad.com — оружие и удары боя, осада, тревога и вести войны, ремёсла и стройка, звери, людские крики и кличи, шаги по поверхностям, погода и вода, здания, рынок и порт. Обе — под лицензией Creative Commons Attribution-ShareAlike 3.0 (CC BY-SA 3.0): указание авторства обязательно и дано здесь, записи остаются под той же лицензией. Разделы разложены по назначению: сперва мир на слух — поверхности под ногой, удары и оружие, строй и сигналы, рынок, голоса из тьмы; затем оркестр, который отмечает события — войну, чары, находки, люд и повороты судьбы. Сами вещи мира от оркестра отделены: рык и рёв твари, шипение, вой, визг, лязг доспеха, звон клинка, спуск тетивы, поступь строя, оклик дозора, начертание руны, боевой разряд, порча, обвал кладки, каменная толща, гул толпы, рассветные птицы, свисток стражи, островной торг и накат волны звучат живыми записями свободных игр, а не нотой звукового шрифта. Источники записей: Neo HQ Mystic Sounds, Fantasy Sound Library, Classic Monster Sounds (автор Coucassi), пакет uisfx (CC0), сэмплы Sonic Pi с freesound.org (общественное достояние, CC0 1.0), живые инструменты проекта tonejs-instruments (Creative Commons Attribution 3.0) и оркестр из звукового шрифта FluidR3_GM автора Frank Wen, изданного проектом MIDI.js Soundfonts (Creative Commons Attribution 3.0). Указание авторства обязательно, и оно здесь дано. Вещи, с которыми игрок что-то делает, звучат живыми записями ещё четырёх свободных игр. OpenClonk (The OpenClonk Team and contributors, RedWolf Design GmbH, openclonk.org) — сундуки, петли, каменные ворота, цепи, дерево, камень, металл, стекло, чан, огонь, горн, древние механизмы, гром, дождь, ветер, птицы, лук и щит, отклик раздельного касания и знак сдвинувшегося списка (две записи без потерь, FLAC, 44,1 кГц), две темы музыки; лицензия Creative Commons Attribution 3.0 Unported (CC BY 3.0). 0 A.D. (Wildfire Games) — каменные ворота, обрушение, листва, мотыга, треск огня, подворье, порт, торговые ряды, день, реки, волны и голоса под сводами храма (CC BY-SA 3.0). Unknown Horizons (The Unknown Horizons Team, unknown-horizons.org) — каменотёс, кузнец, дровосек, выгон, мельница, часовня, трактир, площадь, склад, корабельный колокол, страница и пять тем музыки (CC BY-SA 3.0). Lugaru (Wolfire Games, wolfire.com, и OSS Lugaru) — костёр, кусты, пустыня, ветер, шаги, лязг, удары, клинки и звери (CC BY-SA 3.0). Ancient Beast (Freezing Moon и участники проекта, AncientBeast.com) — пошаговая фэнтезийная игра о мифических тварях: у неё взяты отклик взведённого касания, знак оборванной речи, раскрытие панели чар, сдача карт в таверне и знак изученной чары; лицензия художественной и звуковой части Creative Commons Attribution-ShareAlike 4.0 (CC BY-SA 4.0), код игры не используется. Все записи этой поставки переведены в FLAC без потерь. Для каждой папки в sounds лежат CREDITS.md с таблицей исходных файлов и текст лицензии.";
 }
 
 /* ── Второй уровень: звуки одного раздела ── */
@@ -6218,7 +6223,7 @@ const EMPIRES=[
    тихих часов, дорожная гармонь и пепельный рожок. Двенадцать держав —
    двенадцать узнаваемых голосов; список был о восьми, и четыре последние
    державы звучали чужими голосами первых четырёх. */
-const EMPIRE_VOICE=["clan_pipes","field_pipe","desert_reed","isle_market",
+const EMPIRE_VOICE=["clan_pipes","field_pipe","desert_reed","ad_market_sel",
  "court_harpsi","village_pipe","road_banjo","far_koto",
  "forge_muted","hours_xylo","road_accordion","ash_horn"];
 function empireAt(x,y){let best=EMPIRES[0],bestD=Infinity;
@@ -9208,19 +9213,15 @@ const SOUND_BANK={
    часть — Creative Commons Attribution 3.0 (FluidR3_GM), ударные и гулы —
    общественное достояние CC0. Указание авторства дано в энциклопедии и в
    файлах sounds/orch/CREDITS.md и sounds/nat/CREDITS.md. ── */
- beast_breath:{f:["orch/beast_breath_01.mp3","orch/beast_breath_02.mp3"],d:"Дыхание твари: воздух сквозь пасть"},
  caravan_sitar:{f:["orch/caravan_sitar_01.mp3","orch/caravan_sitar_02.mp3"],d:"Ситар каравана: дорога через пески"},
  charm_bell:{f:["orch/charm_bell_01.mp3","orch/charm_bell_02.mp3"],d:"Колокольчик чар: тонкий звон заклятья"},
  charm_celesta:{f:["orch/charm_celesta_01.mp3","orch/charm_celesta_02.mp3","orch/charm_celesta_03.mp3"],d:"Челеста чар: хрустальная россыпь магии"},
  chase_tremolo:{f:["orch/chase_tremolo_01.mp3","orch/chase_tremolo_02.mp3","orch/chase_tremolo_03.mp3"],d:"Тремоло погони: дрожь струн в тревоге"},
  clan_pipes:{f:["orch/clan_pipes_01.mp3","orch/clan_pipes_02.mp3"],d:"Клановые волынки: горный марш"},
- collapse:{f:["orch/collapse_01.mp3","orch/collapse_02.mp3"],d:"Обвал: резкий удар и осыпь"},
  court_harpsi:{f:["orch/court_harpsi_01.mp3","orch/court_harpsi_02.mp3","orch/court_harpsi_03.mp3"],d:"Клавесин двора: замковая учтивость"},
  /* Стук верстака — действие, а не музыка, и оркестровому деревянному блоку
     здесь не место: у роли теперь настоящие записи стука и плотницкой работы. */
  craft_knock:{f:["craft/craft_wood_03.ogg"],d:"Стук ремесла: деревянный щелчок верстака"},
- crowd_cheer:{f:["orch/crowd_cheer_01.mp3","orch/crowd_cheer_02.mp3"],d:"Гул толпы: площадь, турнир, ликование"},
- dawn_birds:{f:["orch/dawn_birds_01.mp3","orch/dawn_birds_02.mp3"],d:"Рассветные птицы: первый голос утра"},
  desert_reed:{f:["orch/desert_reed_01.mp3","orch/desert_reed_02.mp3"],d:"Пустынная зурна: пронзительный напев"},
  epic_strings:{f:["orch/epic_strings_01.mp3","orch/epic_strings_02.mp3","orch/epic_strings_03.mp3"],d:"Струнный ансамбль: широкое дыхание мира"},
  far_flute:{f:["orch/far_flute_01.mp3","orch/far_flute_02.mp3"],d:"Флейта дальних земель: сякухати"},
@@ -9236,15 +9237,12 @@ const SOUND_BANK={
  fx_rift:{f:["orch/fx_rift_01.mp3","orch/fx_rift_02.mp3"],d:"Разлом Грани: чужой звук из-за края"},
  gate_fanfare:{f:["orch/gate_fanfare_01.mp3","orch/gate_fanfare_02.mp3","orch/gate_fanfare_03.mp3"],d:"Фанфары ворот: медь встречает гостя"},
  ghost_choir:{f:["orch/ghost_choir_01.mp3","orch/ghost_choir_02.mp3","orch/ghost_choir_03.mp3"],d:"Призрачный хор: голоса без тел"},
- guard_whistle:{f:["orch/guard_whistle_01.mp3","orch/guard_whistle_02.mp3"],d:"Свисток стражи: сигнал по улице"},
- isle_market:{f:["orch/isle_market_01.mp3","orch/isle_market_02.mp3","orch/isle_market_03.mp3"],d:"Островной торг: стальные бочки причала"},
  omen_swell:{f:["orch/omen_swell_01.mp3","orch/omen_swell_02.mp3"],d:"Предвестие: нарастающий шелест перед знамением"},
  pad_dread:{f:["orch/pad_dread_01.mp3","orch/pad_dread_02.mp3"],d:"Дурное место: смычковый гул тревоги"},
  pad_halo:{f:["orch/pad_halo_01.mp3","orch/pad_halo_02.mp3"],d:"Ореол бога: светлый купол звука"},
  pad_rift:{f:["orch/pad_rift_01.mp3","orch/pad_rift_02.mp3"],d:"Ветер Грани: протяжный переход"},
  road_banjo:{f:["orch/road_banjo_01.mp3","orch/road_banjo_02.mp3"],d:"Банджо тракта: попутная песня"},
  secret_box:{f:["orch/secret_box_01.mp3","orch/secret_box_02.mp3"],d:"Музыкальная шкатулка: спрятанная тайна"},
- shore_wash:{f:["orch/shore_wash_01.mp3","orch/shore_wash_02.mp3"],d:"Накат на берег: прибой у самой кромки"},
  sneak_pizz:{f:["orch/sneak_pizz_01.mp3","orch/sneak_pizz_02.mp3"],d:"Пиццикато крадущегося: шаг на цыпочках"},
  spark_glock:{f:["orch/spark_glock_01.mp3","orch/spark_glock_02.mp3","orch/spark_glock_03.mp3"],d:"Искры магии: колокольчики заклинания"},
  temple_bell:{f:["orch/temple_bell_01.mp3","orch/temple_bell_02.mp3","orch/temple_bell_03.mp3"],d:"Храмовый колокол: трубчатый звон святыни"},
@@ -9328,34 +9326,13 @@ const SOUND_BANK={
  /* ── Оркестр событий ───────────────────────────────────────────────────
     Музыка в игре не звучит фоном: она отмечает то, что случилось. Война и
     её ходы, чары, твари, находки, глубина, люд и повороты судьбы. */
- blade_ring:{f:["arms/blade_ring_01.mp3","arms/blade_ring_02.mp3","arms/blade_ring_03.mp3"],d:"Звон клинка"},
- axe_chop:{f:["arms/axe_chop_01.mp3","arms/axe_chop_02.mp3"],d:"Рубящий удар"},
- bow_release:{f:["arms/bow_release_01.mp3","arms/bow_release_02.mp3"],d:"Спуск тетивы"},
- shield_block:{f:["arms/shield_block_01.mp3","arms/shield_block_02.mp3"],d:"Щит принял удар"},
- armor_clank:{f:["arms/armor_clank_01.mp3","arms/armor_clank_02.mp3"],d:"Лязг доспеха"},
- spear_thrust:{f:["arms/spear_thrust_01.mp3","arms/spear_thrust_02.mp3"],d:"Свист выпада"},
  army_horn:{f:["arms/army_horn_01.mp3","arms/army_horn_02.mp3","arms/army_horn_03.mp3"],d:"Рог войска"},
  herald_trumpet:{f:["arms/herald_trumpet_01.mp3","arms/herald_trumpet_02.mp3"],d:"Труба герольда"},
- march_low:{f:["arms/march_low_01.mp3","arms/march_low_02.mp3","arms/march_low_03.mp3"],d:"Поступь строя"},
- watch_call:{f:["arms/watch_call_01.mp3","arms/watch_call_02.mp3"],d:"Оклик дозора"},
  siege_horn:{f:["arms/siege_horn_01.mp3","arms/siege_horn_02.mp3"],d:"Осадный рог"},
  war_brass:{f:["arms/war_brass_01.mp3","arms/war_brass_02.mp3"],d:"Медь войны"},
  spell_harp:{f:["spell/spell_harp_01.mp3","spell/spell_harp_02.mp3","spell/spell_harp_03.mp3"],d:"Арфа заклинания"},
- rune_square:{f:["spell/rune_square_01.mp3","spell/rune_square_02.mp3"],d:"Начертание руны"},
- spell_bolt:{f:["spell/spell_bolt_01.mp3","spell/spell_bolt_02.mp3"],d:"Боевой разряд"},
- charm_chiff:{f:["spell/charm_chiff_01.mp3","spell/charm_chiff_02.mp3"],d:"Дуновение чар"},
- hex_charang:{f:["spell/hex_charang_01.mp3","spell/hex_charang_02.mp3"],d:"Порча"},
- pad_hex:{f:["spell/pad_hex_01.mp3","spell/pad_hex_02.mp3"],d:"Металл порчи"},
- beast_roar:{f:["beast/beast_roar_01.mp3","beast/beast_roar_02.mp3"],d:"Рёв твари"},
- beast_growl:{f:["beast/beast_growl_01.mp3","beast/beast_growl_02.mp3"],d:"Рык твари"},
- shriek:{f:["beast/shriek_01.mp3","beast/shriek_02.mp3"],d:"Визг"},
- moan_deep:{f:["beast/moan_deep_01.mp3","beast/moan_deep_02.mp3"],d:"Стон из глубины"},
- serpent_horn:{f:["beast/serpent_horn_01.mp3","beast/serpent_horn_02.mp3"],d:"Змеиный зов"},
- howl_low:{f:["beast/howl_low_01.mp3","beast/howl_low_02.mp3"],d:"Вой"},
- hiss_high:{f:["beast/hiss_high_01.mp3","beast/hiss_high_02.mp3"],d:"Шипение"},
  relic_sing:{f:["relic/relic_sing_01.mp3","relic/relic_sing_02.mp3"],d:"Реликвия поёт"},
  crypt_organ:{f:["relic/crypt_organ_01.mp3","relic/crypt_organ_02.mp3"],d:"Орган склепа"},
- stone_low:{f:["depth/stone_low_01.mp3","depth/stone_low_02.mp3"],d:"Каменная толща"},
  chapel_organ:{f:["folk/chapel_organ_01.mp3","folk/chapel_organ_02.mp3"],d:"Часовня"},
  dance_nylon:{f:["folk/dance_nylon_01.mp3","folk/dance_nylon_02.mp3"],d:"Пляска на площади"},
  wide_strings:{f:["mood/wide_strings_01.mp3","mood/wide_strings_02.mp3"],d:"Широкие струнные"},
@@ -10617,14 +10594,14 @@ const MONSTER_VOICE={
    утопленники и призраки стонут нечеловеческим голосом, змеи и слизь шипят,
    глубинное зовёт снизу. Слой не заменяет голос, а достраивает его. */
 const MONSTER_LAYER={
- wolf:"lug_bark",direbear:"beast_growl",spider:"hiss_high",goblin:"shriek",
- serpent:"serpent_horn",harpy:"shriek",troll:"lug_growl",wraith:"wraith_voice",
- ogre:"lug_snarl",golem:"deep_rocks",dragon:"beast_roar",basilisk:"hiss_high",
- wyvern:"shriek",banshee:"wraith_voice",sandworm:"moan_deep",treant:"moan_deep",
- kraken:"deep_call",bandit:"howl_low",
- seaserpent:"serpent_horn",sharks:"hiss_high",drowned:"wraith_voice",siren:"moan_deep",
- isleFish:"deep_call",stormwyrm:"beast_roar",jellyswarm:"hiss_high",
- pirate:"howl_low",ghostpirate:"wraith_voice",slaver:"howl_low"};
+ wolf:"lug_bark",direbear:"oc_growl",spider:"serpent_hiss",goblin:"raptor_cry",
+ serpent:"wyrm_dark",harpy:"raptor_cry",troll:"lug_growl",wraith:"wraith_voice",
+ ogre:"lug_snarl",golem:"deep_rocks",dragon:"brute_roar",basilisk:"serpent_hiss",
+ wyvern:"raptor_cry",banshee:"wraith_voice",sandworm:"wraith_moan",treant:"wraith_moan",
+ kraken:"deep_call",bandit:"wolf_howl",
+ seaserpent:"wyrm_dark",sharks:"serpent_hiss",drowned:"wraith_voice",siren:"wraith_moan",
+ isleFish:"deep_call",stormwyrm:"brute_roar",jellyswarm:"serpent_hiss",
+ pirate:"wolf_howl",ghostpirate:"wraith_voice",slaver:"wolf_howl"};
 /* Живые голоса тварей из Flare: у каждого рода свой набор «бьёт — больно —
    гибнет». Ложатся третьим слоем поверх общего голоса и оркестровой краски. */
 const FOE_VOICE={
@@ -10707,8 +10684,8 @@ function foeCue(role,opts){
    ════════════════════════════════════════════════════════════════════════ */
 const FOE_CUES=["breath","move","step","idle","warcry","attack","hurt","wound","death","aggro","detect","lose","fear","victory","unique"];
 const MONSTER_PROFILE={
- beast:{breath:"lug_growl",move:"tread_grass",step:"lug_step_grass",idle:"lug_bark",warcry:"beast_growl",attack:"lug_claw",hurt:"lug_snarl",wound:"oc_dog_whine",death:"body_fall",aggro:"wolf_howl",detect:"oc_dog_snuff",lose:"lug_growl",fear:"oc_dog_whine",victory:"wolf_howl",unique:"beast_bull"},
- crawler:{breath:"serpent_hiss",move:"oc_rustle",step:"oc_step_soft",idle:"hiss_high",warcry:"serpent_hiss",attack:"foe_burrow_hit",hurt:"foe_burrow_pain",wound:"hiss_high",death:"foe_burrow_die",aggro:"serpent_hiss",detect:"oc_rustle",lose:"hiss_high",fear:"serpent_hiss",victory:"serpent_hiss",unique:"oc_corrode"},
+ beast:{breath:"lug_growl",move:"tread_grass",step:"lug_step_grass",idle:"lug_bark",warcry:"oc_growl",attack:"lug_claw",hurt:"lug_snarl",wound:"oc_dog_whine",death:"body_fall",aggro:"wolf_howl",detect:"oc_dog_snuff",lose:"lug_growl",fear:"oc_dog_whine",victory:"wolf_howl",unique:"beast_bull"},
+ crawler:{breath:"serpent_hiss",move:"oc_rustle",step:"oc_step_soft",idle:"serpent_hiss",warcry:"serpent_hiss",attack:"foe_burrow_hit",hurt:"foe_burrow_pain",wound:"serpent_hiss",death:"foe_burrow_die",aggro:"serpent_hiss",detect:"oc_rustle",lose:"serpent_hiss",fear:"serpent_hiss",victory:"serpent_hiss",unique:"oc_corrode"},
  humanoid:{breath:"goblin_voice",move:"tread_gravel",step:"oc_step_hard",idle:"goblin_voice",warcry:"warrior_shout",attack:"foe_goblin_hit",hurt:"foe_goblin_pain",wound:"oc_hurt",death:"foe_goblin_die",aggro:"guard_shout",detect:"guard_shout",lose:"throng_retreat",fear:"oc_hurt",victory:"oc_laugh",unique:"foe_goblin_cast"},
  bone:{breath:"deep_wind",move:"foe_bone_hit",step:"step_bone",idle:"foe_bone_pain",warcry:"wraith_die",attack:"foe_bone_hit",hurt:"foe_bone_pain",wound:"foe_bone_pain",death:"foe_bone_die",aggro:"wraith_die",detect:"step_bone",lose:"step_bone",fear:"foe_bone_pain",victory:"wraith_die",unique:"od_undead"},
  spirit:{breath:"wraith_moan",move:"deep_wind",step:"deep_wind",idle:"wraith_voice",warcry:"wraith_moan",attack:"foe_undead_hit",hurt:"foe_undead_pain",wound:"wraith_moan",death:"foe_undead_die",aggro:"wraith_voice",detect:"wraith_moan",lose:"wraith_die",fear:"wraith_moan",victory:"wraith_voice",unique:"foe_undead_cast"},
@@ -10911,9 +10888,9 @@ const BEACON_ROLE={
    алтарь, знамение и принятие покровительства звучат этим голосом, и бога
    можно узнать на слух, не читая имени. */
 const GOD_SOUND={
- zarya:"dawn_birds", forge:"anvil", moon:"wild_owl", storm:"stk_thunder",
+ zarya:"cast_heal", forge:"anvil", moon:"wild_owl", storm:"stk_thunder",
  deep:"stk_deepsea", wood:"ad_windleaves", ash:"ad_fire_crackle", shadow:"wraith_voice",
- time:"stk_clock", stone:"oc_rock_hit", death:"moan_deep", road:"tread_gravel"};
+ time:"stk_clock", stone:"oc_rock_hit", death:"wraith_moan", road:"tread_gravel"};
 function godVoice(id,{gain=0.8,pan=0,maxSec=6}={}){
  try{
   const role=GOD_SOUND[id];
@@ -10981,7 +10958,21 @@ const LIVE_SCENE={
  bazaar:["trade_m","trade_f","od_gold","od_take","hall_market"],
  den:["mtg_door_open","mtg_fire","od_keeper_word","throng_hail_f"],
  hold:["mtg_gate","od_keeper_word","throng_march","od_blade","siege_garrison","oc_group_attack"],
- cave_entrance:["deep_drip","beasts_lion","deep_rocks","deep_cart"]};
+ cave_entrance:["deep_drip","beasts_lion","deep_rocks","deep_cart"],
+ /* Двенадцать родов мест молчали: у них не было своего набора, и вход в них
+    ничем не отличался от чистого поля. Теперь отличается. */
+ camp:         ["wild_fire","ad_fire_crackle","throng_coming","beasts_horse","wild_hearth"],
+ warcamp:      ["throng_march","siege_garrison","guard_shout","wild_anvil","battle_wood"],
+ citadel:      ["od_keeper_word","mtg_gate","siege_garrison","throng_march","oc_chain"],
+ burg:         ["throng_hail_m","trade_m","ad_market_sel","beasts_pig","hall_market"],
+ crossroads:   ["tread_hoof","throng_coming","beasts_horse","wild_wind"],
+ eyrie:        ["raptor_cry","sky_gust","wild_raven","wild_birds"],
+ gate:         ["deep_portal","cast_teleport","es_plasma","stk_ward"],
+ landmark:     ["wild_wind","sky_falls","wild_birds","sky_gust"],
+ peakshrine:   ["hall_temple","sky_gust","uh_chapel","wild_wind"],
+ rift:         ["deep_portal","es_plasma","spell_dark","cast_teleport"],
+ smugglers:    ["trade_f","throng_yes","oc_chest_open","wild_fire"],
+ traveler:     ["tread_hoof","throng_hail_m","beasts_horse","wild_wind"]};
 const LIVE_DEEP=[[],["deep_drip","deep_cart","foe_goblin_hit"],
  ["deep_rocks","deep_wood","foe_bone_hit","foe_goblin_cast"],
  ["deep_wind","foe_undead_cast","foe_undead_hit","battle_stone"],
@@ -10995,7 +10986,7 @@ function liveScene(){
   else if(p)набор=LIVE_SCENE[p.stype];
   else if(!G.ship){
    const t=cellContent(G.x,G.y).terrain[0];
-   набор={forest:["wild_owl","beasts_bird","beasts_giant"],
+   набор={forest:["wild_owl","wild_birds","beasts_giant"],
     plains:["beasts_sheep","wild_wind","beasts_pig"],
     mountains:["sky_gust","beasts_lion","sky_falls"],
     coast:["sky_wave","sky_falls","hall_dock"],
@@ -11633,7 +11624,7 @@ const DIVE_SITES=[
  {id:"ruins",n:"затонувшие руины",о:"лестницы и арки под слоем ила",вес:10,звук:"oc_connect"},
  {id:"wreck",n:"кораблекрушение",о:"рёбра судна и обросший якорь",вес:12,звук:"oc_wood_creak"},
  {id:"field",n:"ресурсное поле",о:"дно усыпано раковинами и кристаллами",вес:15,звук:"oc_glass_hit"},
- {id:"predators",n:"логово хищников",о:"тени ходят кругами",вес:12,звук:"beast_roar"},
+ {id:"predators",n:"логово хищников",о:"тени ходят кругами",вес:12,звук:"brute_roar"},
  {id:"giants",n:"проход гигантов",о:"толща дрожит от чужого хода",вес:5,звук:"deep_call"},
  {id:"mechanism",n:"древний механизм",о:"под илом гудит и вертится",вес:5,звук:"oc_electrical"},
  {id:"settlement",n:"подводное поселение",о:"огни в глубине и голоса на выдохе",вес:6,звук:"choir"},
@@ -11945,15 +11936,15 @@ function addRep(raceName,n){const r=RACE_BY_NAME[raceName];if(!r)return;if(!G.re
  /* Отношение народа слышно сразу: вверх — светлый перебор, вниз — глухой
     удар. Порог отношения (свой, ровный, холодный, враждебный) отмечается
     отдельно: это уже не мелочь, а поворот. */
- safeFn(()=>Bank.play(стало>было?"spark_glock":"hex_charang",
+ safeFn(()=>Bank.play(стало>было?"spark_glock":"curse",
   {seed:Math.abs(стало),gain:0.42,maxSec:3}));
  safeFn(()=>{
   const порог=v=>v>=10?3:v>=0?2:v>=-8?1:0;
   const п1=порог(было),п2=порог(стало);
   if(п1===п2)return;
-  if(п2>п1){eventFanfare(["charm_chiff","dance_nylon"],0.5);
+  if(п2>п1){eventFanfare(["spell_light","dance_nylon"],0.5);
    narrate(`Народ «${raceName}» стал к вам теплее: ${attitudeOf(raceName).n||"отношение изменилось"}.`,{interrupt:false});}
-  else{eventFanfare(["pad_hex","magic_unwind"],0.5);
+  else{eventFanfare(["spell_dark","magic_unwind"],0.5);
    narrate(`Народ «${raceName}» вас невзлюбил: ${attitudeOf(raceName).n||"отношение изменилось"}.`,{interrupt:false});}});}
 function godOfRace(name){const r=raceInfo(name);return GOD_BY_ID[r.god]||PANTHEON[0];}
 const SYL=["Аш","Бер","Вел","Гор","Дар","Эл","Зеф","Ир","Каэ","Лун","Мир","Нор","Ор","Раг","Сел","Тар","Уль","Фен","Хал","Цер","Шар","Юв"];
@@ -13794,7 +13785,7 @@ function renownWatch(){
   if(r.i===G.__rank)return;
   const вверх=r.i>G.__rank;G.__rank=r.i;
   if(вверх){
-   eventFanfare(["siege_herojoin","gate_fanfare","herald_trumpet","crowd_cheer"],0.6);
+   eventFanfare(["siege_herojoin","gate_fanfare","herald_trumpet","throng_cry"],0.6);
    narrate(`Новое звание: ${r.n}. Заслуги ваши теперь ${Math.round(r.m)} — в державах об этом узнают раньше вас.`,{interrupt:false});
    journal(`Звание: ${r.n}.`);
   }else{
@@ -13826,7 +13817,7 @@ function warWatch(){
    narrate(`Война объявлена: ${имя(k)} сошлись оружием. На дорогах между ними станет опасно, а металл подорожает.`,{interrupt:false});
    journal(`Война: ${имя(k)}.`);}),i*2600));
   кончились.slice(0,2).forEach((k,i)=>setTimeout(()=>safeFn(()=>{
-   eventFanfare(["siege_victory","temple_bell","chapel_organ","crowd_cheer"],0.5);
+   eventFanfare(["siege_victory","temple_bell","chapel_organ","throng_cry"],0.5);
    narrate(`Замирение: ${имя(k)} сложили оружие. Дороги между ними открылись, а плата за переход упадёт.`,{interrupt:false});
    journal(`Мир: ${имя(k)}.`);}),1300+i*2600));
   /* Осада города слышна отдельно: набат, баллиста, камнемёт и огонь по
@@ -13895,7 +13886,7 @@ function dayPhaseCue(){
   if(!settings.effects&&!settings.speech)return;
   if(phase==="day"){
    /* Утро начинается с птиц: их слышно раньше, чем игра назовёт день. */
-   safeFn(()=>Bank.play("dawn_birds",{seed:G.day,gain:0.5,maxSec:6}));
+   safeFn(()=>Bank.play("wild_birds",{seed:G.day,gain:0.5,maxSec:6}));
    narrate(`Рассвет. Пошёл ${G.day}-й день пути.`,{interrupt:false});
   }else{
    safeFn(()=>Bank.play("wild_owl",{seed:G.day,gain:0.6,maxSec:6}));
@@ -15152,7 +15143,7 @@ function dlgOutcome(n,move,успех,перевес){
     o.круги=[["npc",null,-12]];if(emp)o.круги.push(["crime",emp.short,4],["army",emp.short,-3]);
     o.оси=[["страх",6],["известность",2]];}
    else{o.слова=`${n.name} смотрит прямо: «Убери железо, пока цел». И зовёт стражу.`;
-    o.звук="watch_call";o.стража=true;
+    o.звук="guard_shout";o.стража=true;
     o.круги=[["npc",null,-20]];if(emp)o.круги.push(["army",emp.short,-8]);
     if(город)o.круги.push(["city",город.name,-8]);
     o.оси=[["подозрение",8]];
@@ -15929,7 +15920,7 @@ const EVENTS=[
     narrate("Гнездо выточено под кристалл: значит, любой годится, был бы целый. Вы запомнили это — пригодится у следующего погасшего камня.");}},
    {l:"🚶 Оставить как есть",run:()=>narrate("Вы отошли. Свет в жилах мигнул ещё раз и погас.")}]},
 
- {id:"toll_dispute",w:2,snd:"crowd_cheer",ok:c=>!!c.node&&!!c.atCity,
+ {id:"toll_dispute",w:2,snd:"throng_cry",ok:c=>!!c.node&&!!c.atCity,
   title:()=>"Спор о пошлине",
   text:c=>`У самого узла спорят двое: сборщик держави «${c.emp.short}» и купец с чужим клеймом. Сборщик говорит — пошлина берётся с города назначения. Купец говорит — платить должен тот, кто отправляет. Оба смотрят на вас.`,
   choices:c=>[
@@ -15957,7 +15948,7 @@ const EVENTS=[
      safeFn(()=>Bank.play("clang_hard",{gain:0.7,maxSec:4}));
      narrate("Слово оказалось пустым, а смотритель — рядом. Восемьдесят золота ушли, и народ этой земли смотрит на вас косо.");}}},
    {l:"🚨 Позвать смотрителя",run:()=>{addRep(c.emp.race,3);G.gold+=30;
-    safeFn(()=>Bank.play("guard_whistle",{gain:0.7,maxSec:4}));
+    safeFn(()=>Bank.play("signal_beep",{gain:0.7,maxSec:4}));
     narrate("Свисток, топот — и ночного увели. Смотритель отсчитал вам 30 золота, а народ этой земли запомнил, чью сторону вы взяли.");}},
    {l:"🚶 Уйти молча",run:()=>narrate("Вы отошли, не сказав ни слова. Он не окликнул.")}]},
 
@@ -16967,7 +16958,7 @@ function borderQuestFor(npc){
 const PUNISH_LIGHT=[
  {id:"perevoz",  n:"Перевоз через площадь", вина:"мелкая кража",
   как:"Вора ведут через площадь с вязанкой на шее и называют вслух его двор. Бьют словом, не рукой.",
-  звук:"crowd_cheer", ц:40, тяж:1},
+  звук:"throng_cry", ц:40, тяж:1},
  {id:"kolodki",  n:"Колодки у столба",      вина:"обвес на торгу",
   как:"Купца заперли в колодки до вечера. Мимо идут те, кого он обвесил, и каждый останавливается.",
   звук:"throng_cry", ц:70, тяж:1},
@@ -16976,7 +16967,7 @@ const PUNISH_LIGHT=[
   звук:"stk_break", ц:120, тяж:2},
  {id:"kleymo",   n:"Клеймо на руку",        вина:"второй привод",
   как:"Железо греют при всех, чтобы никто не сказал, что клеймо холодное. Крик короткий: держат хорошо.",
-  звук:"hiss_high", ц:200, тяж:3},
+  звук:"serpent_hiss", ц:200, тяж:3},
  {id:"izgnanie", n:"Изгнание за межу",      вина:"клятвопреступление",
   как:"Имя вычёркивают из книги двора и ведут за межу. Назад ходу нет: за межой он уже не их.",
   звук:"hall_gate", ц:250, тяж:2},
@@ -16985,7 +16976,7 @@ const PUNISH_LIGHT=[
   звук:"body_fall", ц:600, тяж:4},
  {id:"topor",    n:"Топор на плахе",        вина:"убийство при свидетелях",
   как:"Одним ударом. Если палач промахнётся, платит сам — и этого боятся оба.",
-  звук:"axe_chop", ц:800, тяж:5},
+  звук:"craft_axe", ц:800, тяж:5},
  {id:"voda",     n:"Испытание водой",       вина:"обвинение в порче",
   как:"Связанного опускают в реку на счёт сорок. Всплыл — виновен, утонул — оправдан. Оправданных много.",
   звук:"stk_splash", ц:300, тяж:4}];
@@ -17068,8 +17059,8 @@ function markPunishDone(){
 function punishCue(пн,dx,dy){
  safeFn(()=>{
   const g=0.55;
-  if(!Spatial.role(пн.тьма?"drone_dark":"crowd_cheer",dx||0,dy||0,{gain:g,maxSec:6}))
-   Bank.play(пн.тьма?"drone_dark":"crowd_cheer",{gain:g,maxSec:6});
+  if(!Spatial.role(пн.тьма?"drone_dark":"throng_cry",dx||0,dy||0,{gain:g,maxSec:6}))
+   Bank.play(пн.тьма?"drone_dark":"throng_cry",{gain:g,maxSec:6});
   setTimeout(()=>safeFn(()=>{
    if(!Spatial.role(пн.звук,dx||0,dy||0,{gain:0.6,maxSec:5}))Bank.play(пн.звук,{gain:0.6,maxSec:5});}),700);
   setTimeout(()=>safeFn(()=>Bank.play(пн.тьма?"es_alarm":"alarm_drum",{gain:0.4,maxSec:4})),1400);});}
@@ -17236,7 +17227,7 @@ const QUEST_KINDS=[
  {id:"faith",  n:"религия",      о:"обет, паломничество, реликвия",               звук:"temple_choir"},
  {id:"magic",  n:"магия",        о:"чары, разломы и сеть переходов",              звук:"spell_cast"},
  {id:"war",    n:"война",        о:"рейд, снабжение, линия фронта",               звук:"army_horn"},
- {id:"rescue", n:"спасение",     о:"вытащить живым того, кого уже не ждут",       звук:"guard_whistle"},
+ {id:"rescue", n:"спасение",     о:"вытащить живым того, кого уже не ждут",       звук:"signal_beep"},
  {id:"econ",   n:"экономика",    о:"добыть, продать, свести концы",               звук:"shop_till"},
  {id:"random", n:"случайное",    о:"то, что подвернулось по дороге",              звук:"fate_hit"},
  {id:"secret", n:"скрытое",      о:"дело, о котором не говорят вслух",            звук:"fx_lurk"}];
@@ -19020,7 +19011,7 @@ const TRAPS=[
   о:"Плиты впереди сходятся рисунком слишком ровно: так кладут не камень, а морок.",
   бьёт:"Пола там не было вовсе, и вы ушли вниз до следующего свода."},
  {id:"maw",   n:"живая пасть",          урон:14, вид:"живое",род:"living",
-  покой:"beast_breath",сраб:"serpent_hiss",
+  покой:"lug_snarl",сраб:"serpent_hiss",
   о:"Плита под ногой тёплая, и дышит: раз в несколько мгновений она чуть поднимается.",
   бьёт:"Пол разошёлся, и то, что им притворялось, сомкнулось на ноге."}];
 /* ── РОДА ЛОВУШЕК ──
@@ -19365,8 +19356,8 @@ const PROPS=[
    safeFn(()=>Bank.play("knock_soft",{gain:0.5,maxSec:2}));
    narrate(`Стол. На нём остатки чужой работы: черновик, огарок и крошки. ${k?`Из-под бумаг выглядывает строка: «${k.title}».`:""} Читать тут нечего, но видно, что здесь недавно сидели.`);}},
  {id:"rack",n:"стойка с оружием",b:"forge",
-  use:()=>{safeFn(()=>{Bank.play("armor_clank",{gain:0.55,maxSec:3});
-    setTimeout(()=>safeFn(()=>Bank.play("blade_ring",{gain:0.5,maxSec:3})),260);});
+  use:()=>{safeFn(()=>{Bank.play("lug_clank",{gain:0.55,maxSec:3});
+    setTimeout(()=>safeFn(()=>Bank.play("lug_sword",{gain:0.5,maxSec:3})),260);});
    const w=G.equip&&G.equip.weapon;
    narrate(`Стойка с оружием. Древки в гнёздах, клинки на крюках, всё чужое и всё на счету. ${w?`Своё вы поправили: ${w.n||w.type}.`:"Своего оружия у вас с собой нет, и это тут заметно."} Брать чужое со стойки — верный способ поссориться с хозяевами.`);}},
  {id:"circle",n:"магический круг",b:"altar",
@@ -19592,7 +19583,7 @@ const PROPS=[
    refresh();saveGame(true);}},
  {id:"fountain",n:"фонтан",b:"well",
   use:()=>{safeFn(()=>{Bank.play("oc_waterfall",{gain:0.5,maxSec:5})||Bank.play("amb_water",{gain:0.5,maxSec:5});
-    setTimeout(()=>safeFn(()=>Bank.play("stk_splash",{gain:0.4,maxSec:4})||Bank.play("sky_wave",{gain:0.4,maxSec:4})||Bank.play("shore_wash",{gain:0.4,maxSec:4})),260);});
+    setTimeout(()=>safeFn(()=>Bank.play("stk_splash",{gain:0.4,maxSec:4})||Bank.play("sky_wave",{gain:0.4,maxSec:4})||Bank.play("ad_wave_rocky",{gain:0.4,maxSec:4})),260);});
    const было=G.hp;
    const фонЧас=(G.hp<G.hpMax||(Number(G.water)||0)<200)?propRest(1):"";
    G.hp=Math.min(G.hpMax,G.hp+10);
@@ -19612,7 +19603,7 @@ const PROPS=[
    narrate(`Торговые весы: медное коромысло на цепочках, две чаши, столбик гирек. Чаша просела: всего ${мер} мер груза. ${строки.join("; ")}. По здешней цене за всё дали бы ${всего} золотых.`);}},
  {id:"whetstone",n:"точило",b:"forge",
   use:()=>{safeFn(()=>{Bank.play("parry_slide",{gain:0.55,maxSec:3});
-    setTimeout(()=>safeFn(()=>Bank.play("blade_ring",{gain:0.45,maxSec:3})),240);});
+    setTimeout(()=>safeFn(()=>Bank.play("lug_sword",{gain:0.45,maxSec:3})),240);});
    const w=G.equip&&G.equip.weapon;
    if(!w){narrate("Точило на деревянной станине. Круг ходит легко, ногой качается подножка. Точить нечего: оружия при вас нет.");return;}
    if(w.__sharp){narrate(`Точило. ${w.name} уже наточен на этом круге — второй раз камень только съест сталь.`);return;}
@@ -20264,7 +20255,7 @@ function meetPatrol(){
  if(!p){narrate("Разъезда рядом нет. Их держат на военных трактах и царских дорогах — на заброшенных путях не встретишь никого.");return false;}
  safeFn(()=>{Bank.play(p.вид.звук,{seed:p.x+p.y,gain:0.6,maxSec:5});
   setTimeout(()=>safeFn(()=>Bank.play(p.вид.голос,{seed:p.y,gain:0.5,maxSec:4})),340);
-  setTimeout(()=>safeFn(()=>Bank.play("armor_clank",{seed:p.x,gain:0.4,maxSec:3})),620);});
+  setTimeout(()=>safeFn(()=>Bank.play("lug_clank",{seed:p.x,gain:0.4,maxSec:3})),620);});
  const i=Math.max(0,EMPIRES.indexOf(p.emp));
  const войны=safeFn(()=>warsAt(G.day).filter(w=>w.a===i||w.b===i),[]);
  /* Разъезд знает свой отрезок: что впереди по тракту и далеко ли до жилья. */
@@ -20353,7 +20344,7 @@ iact("hollow",{n:"Проверить на пустоту",значок:"🔍",
  можно:o=>!!G.place&&["#","+","X","C","Y"].indexOf(o.плитка)>=0,
  делать:o=>{
   if(safeFn(()=>anomalyIs("living"),false)&&Math.floor(Number(G.hour)||0)%2===0){
-   safeFn(()=>Bank.play("moan_deep",{seed:o.x+o.y,gain:0.5,maxSec:3}));
+   safeFn(()=>Bank.play("wraith_moan",{seed:o.x+o.y,gain:0.5,maxSec:3}));
    narrate(`${o.n}: кладка дышит и держит ход. Живые стены открываются лишь в нечётный час.`,{interrupt:false});return true;}
   const было=safeFn(()=>revealSecret(o.x,o.y,undefined,true),false);
   safeFn(()=>deed("hollow"));
@@ -20368,7 +20359,7 @@ iact("secret",{n:"Искать скрытый отсек",значок:"🕯️"
  можно:o=>!!G.place&&o.плитка==="X",
  делать:o=>{
   if(safeFn(()=>anomalyIs("living"),false)&&Math.floor(Number(G.hour)||0)%2===0){
-   safeFn(()=>Bank.play("moan_deep",{seed:o.x+o.y,gain:0.5,maxSec:3}));
+   safeFn(()=>Bank.play("wraith_moan",{seed:o.x+o.y,gain:0.5,maxSec:3}));
    narrate(`${o.n}: кладка дышит и держит ход. Живые стены открываются лишь в нечётный час.`,{interrupt:false});return true;}
   const было=safeFn(()=>revealSecret(o.x,o.y),false);
   if(!было){
@@ -20925,7 +20916,7 @@ iact("compare",{n:"Сравнить со своим",значок:"⚖️",
   let слова="";
   if(o.вещь==="rack"){const w=G.equip&&G.equip.weapon;const чужой=2+Math.floor(h*10);
    слова=w?`Ваше оружие даёт +${Number(w.val)||0}, лучший клинок на стойке — +${чужой}: ваше ${((Number(w.val)||0)>=чужой)?"не хуже":"слабее"}.`:`На стойке лучший клинок даёт +${чужой}, а у вас оружия нет.`;
-   safeFn(()=>Bank.play("blade_ring",{seed:o.x,gain:0.5,maxSec:2}));}
+   safeFn(()=>Bank.play("lug_sword",{seed:o.x,gain:0.5,maxSec:2}));}
   else if(o.вещь==="shields"){const a=G.equip&&G.equip.armor;const чужой=1+Math.floor(h*8);
    слова=a?`Ваша броня даёт +${Number(a.val)||0}, лучший щит на стойке — +${чужой}: ваша ${((Number(a.val)||0)>=чужой)?"не хуже":"слабее"}.`:`Лучший щит на стойке даёт +${чужой}, а брони на вас нет.`;
    safeFn(()=>Bank.play("oc_shield_wood",{seed:o.x,gain:0.5,maxSec:2}));}
@@ -22145,7 +22136,7 @@ const PROD_BUILDINGS=[
   о:"Шахтная печь, дутьё и жёлоб: здесь порода перестаёт быть камнем и делается металлом."},
  {id:"smithy",   n:"кузница",                         станок:"anvil",      звук:"forge_hammer",цепи:["ore"],
   о:"Горн, наковальня и бочка с водой: слиток уходит в полосу, полоса — во всё прочее."},
- {id:"armory",   n:"оружейная",                       станок:"armory",     звук:"blade_ring",  цепи:["ore"],
+ {id:"armory",   n:"оружейная",                       станок:"armory",     звук:"lug_sword",  цепи:["ore"],
   о:"Тиски, точило и стойки: полосу доводят до клинка, который и вправду держит удар."},
  {id:"tannery",  n:"кожевенная мастерская",           станок:"tanpit",     звук:"craft_hide",  цепи:["hide"],
   о:"Чаны с корьём и ряды растяжек: шкура идёт в кожу за много дней и одним запахом."},
@@ -22234,7 +22225,7 @@ const PROD_STEPS=[
   о:"Нагрев, состав, вода и отпуск. Передержишь — лопнет; недодержишь — согнётся на первом ударе."},
  {id:"pr_blade",цепь:"ore",маст:"smith",ур:4,станки:["armory"],n:"Довести оружие",значок:"🗡️",
   берёт:{"закалённый клинок":1,"клеёный брус":1},вещь:{тип:"Меч"},время:1.4,оп:12,
-  звук:"blade_ring",след:"arte_metal",
+  звук:"lug_sword",след:"arte_metal",
   о:"Заточка, рукоять, оковка. Выходит вещь с рангом и качеством по руке мастера, а не по жребию."},
  {id:"pr_split",цепь:"stone",маст:"jewel",ур:1,станки:["stonebench"],n:"Колоть камень",значок:"🪨",
   берёт:{"камень":2},даёт:{"колотый камень":2},время:0.5,оп:2,звук:"craft_quarry",след:"stone_hit",
@@ -24243,7 +24234,7 @@ const ANOMALIES=[
  {id:"river",n:"подземная река",о:"поток рядом: шум воды, у берега попадаются ракушки",фон:"ad_river_fast",вес:2},
  {id:"platform",n:"движущиеся платформы",о:"плиты под ногами ходят: иной шаг уводит в сторону",фон:"oc_lift_move",вес:2},
  {id:"mechanism",n:"древние механизмы",о:"стены гудят машиной древних: рычаги и механизмы здесь считаются вдвойне",фон:"oc_steam",вес:2},
- {id:"living",n:"живые стены",о:"кладка дышит: тайные ходы открываются лишь в нечётный час",фон:"moan_deep",вес:1},
+ {id:"living",n:"живые стены",о:"кладка дышит: тайные ходы открываются лишь в нечётный час",фон:"wraith_moan",вес:1},
  {id:"loop",n:"временная петля",о:"время стоит: часы не идут, пока вы на ярусе",фон:"stk_clock",вес:1}];
 function dungeonAnomalyAt(p){
  try{
@@ -24395,22 +24386,22 @@ const TREE_GROUP_BY_ID=Object.fromEntries(TREE_GROUPS.map(g=>[g.id,g]));
 function treeMast(id){try{const m=mastOf(id);return (Number(m.ур)||0)*7+(Number(m.дел)||0);}catch(_){return 0;}}
 const TREE_LEAVES=[
  /* ── БОЕВАЯ: чем именно вы бьёте. Растёт только то оружие, что в руке. ── */
- {id:"sword",n:"владение мечом",гр:"war",о:"удары, дошедшие до цели с мечом в руке",звук:"blade_ring",
+ {id:"sword",n:"владение мечом",гр:"war",о:"удары, дошедшие до цели с мечом в руке",звук:"lug_sword",
   счёт:()=>deeds("w_sword"),шаги:[8,25,60,140,300],k:[1,2,3,4,6],связь:["stance","smith"],
   дар:["меч идёт ровнее: +1 к удару","+2 к удару","+3 к удару","+4 к удару","+6 к удару: клинок знает вашу руку"]},
- {id:"axe",n:"владение топором",гр:"war",о:"удары топором",звук:"axe_chop",
+ {id:"axe",n:"владение топором",гр:"war",о:"удары топором",звук:"craft_axe",
   счёт:()=>deeds("w_axe"),шаги:[8,25,60,140,300],k:[1,2,3,4,6],связь:["smith"],
   дар:["+1 к удару","+2 к удару","+3 к удару","+4 к удару","+6 к удару: топор ложится сам"]},
- {id:"spear",n:"владение копьём",гр:"war",о:"удары копьём",звук:"spear_thrust",
+ {id:"spear",n:"владение копьём",гр:"war",о:"удары копьём",звук:"mg_spear",
   счёт:()=>deeds("w_spear"),шаги:[8,25,60,140,300],k:[1,2,3,4,6],связь:["stance","tools"],
   дар:["+1 к удару","+2 к удару","+3 к удару","+4 к удару","+6 к удару: длина стала вашей"]},
- {id:"shield",n:"владение щитом",гр:"war",о:"удары, что доспех и щит приняли на себя",звук:"shield_block",
+ {id:"shield",n:"владение щитом",гр:"war",о:"удары, что доспех и щит приняли на себя",звук:"battle_shield",
   счёт:()=>deeds("w_shield"),шаги:[10,30,75,170,360],k:[1,1,2,3,4],связь:["camp"],
   дар:["+1 к защите","+1 к защите","+2 к защите","+3 к защите","+4 к защите: удар уходит по касательной"]},
  {id:"dagger",n:"владение кинжалом",гр:"war",о:"удары кинжалом",звук:"lug_knife_slice",
   счёт:()=>deeds("w_dagger"),шаги:[8,25,60,140,300],k:[1,2,3,4,6],связь:["hide"],
   дар:["+1 к удару","+2 к удару","+3 к удару","+4 к удару","+6 к удару: коротко и точно"]},
- {id:"bow",n:"владение луком",гр:"war",о:"удары с луком в руке",звук:"bow_release",
+ {id:"bow",n:"владение луком",гр:"war",о:"удары с луком в руке",звук:"battle_bow",
   счёт:()=>deeds("w_bow"),шаги:[8,25,60,140,300],k:[1,2,3,4,6],связь:["tracks"],
   дар:["+1 к удару","+2 к удару","+3 к удару","+4 к удару","+6 к удару: тетива отпускает сама"]},
  {id:"xbow",n:"владение арбалетом",гр:"war",о:"удары арбалетом",звук:"oc_arrow_shoot",
@@ -24460,7 +24451,7 @@ const TREE_LEAVES=[
  {id:"artan",n:"анализ артефактов",гр:"seek",о:"вещи с силой, прошедшие через руки",звук:"artifact_hum",
   счёт:()=>((G.artifacts||[]).length*8+deeds("imprints")*3),шаги:[8,26,70,165,350],k:[1.1,1.22,1.36,1.52,1.7],связь:["read"],
   дар:["разбор вещи даёт на десятую больше","на пятую","на треть","в полтора","почти вдвое: вещь говорит сама"]},
- {id:"beasts",n:"исследование монстров",гр:"seek",о:"побеждённые твари",звук:"beast_growl",
+ {id:"beasts",n:"исследование монстров",гр:"seek",о:"побеждённые твари",звук:"oc_growl",
   счёт:()=>deeds("kills")*3,шаги:[9,30,80,190,400],k:[1.1,1.22,1.36,1.52,1.7],связь:["tracks"],
   дар:["о твари вы узнаёте на десятую больше","на пятую","на треть","в полтора","почти вдвое: вы знаете, где у неё слабо"]},
  {id:"stash",n:"поиск тайников",гр:"seek",о:"найденные тайники и укрытые камеры",звук:"secret_box",
@@ -24476,7 +24467,7 @@ const TREE_LEAVES=[
  {id:"flow",n:"контроль энергии",гр:"arc",о:"мана, прошедшая через руки",звук:"magic_hum",
   счёт:()=>Math.floor(deeds("manaSpent")/4),шаги:[8,26,70,165,350],k:[1,1,2,2,3],связь:["focus","jewel"],
   дар:["чара в бою стоит на единицу меньше","на единицу","на две","на две","на три меньше: сила не расплёскивается"]},
- {id:"shape",n:"формирование заклинания",гр:"arc",о:"сотворённые чары",звук:"spell_bolt",
+ {id:"shape",n:"формирование заклинания",гр:"arc",о:"сотворённые чары",звук:"oc_zap",
   счёт:()=>deeds("casts")*3,шаги:[9,30,80,190,400],k:[1.06,1.12,1.2,1.3,1.42],связь:["read","ench"],
   дар:["чара бьёт на шестнадцатую сильнее","на восьмую","на пятую","на треть","почти в полтора: форма держится"]},
  {id:"focus",n:"магическая концентрация",гр:"arc",о:"чары, сотворённые в бою",звук:"magic_shimmer",
@@ -24488,7 +24479,7 @@ const TREE_LEAVES=[
  {id:"sight",n:"магическое зрение",гр:"arc",о:"разломы и знаки, встреченные в мире",звук:"fx_crystal",
   счёт:()=>deeds("rifts")*6+deeds("sigils")*4,шаги:[6,20,54,130,280],k:[1,1,2,2,3],связь:["jewel","read"],
   дар:["скан называет на одно больше","на одно больше","на два больше","на два больше","на три больше: сила видна"]},
- {id:"read",n:"распознавание плетений",гр:"arc",о:"начертанные и прочитанные знаки",звук:"rune_square",
+ {id:"read",n:"распознавание плетений",гр:"arc",о:"начертанные и прочитанные знаки",звук:"oc_res_rune",
   счёт:()=>deeds("sigils")*6+treeMast("runes"),шаги:[8,26,70,165,350],k:[1.1,1.22,1.36,1.52,1.7],связь:["oldtongue"],
   дар:["знак отдаёт на десятую больше","на пятую","на треть","в полтора","почти вдвое: плетение читается вслух"]},
  {id:"unweave",n:"разрушение плетений",гр:"arc",о:"сорванные чары и снятые магические ловушки",звук:"magic_unwind",
@@ -24513,7 +24504,7 @@ const TREE_LEAVES=[
  {id:"lie",n:"распознавание лжи",гр:"soc",о:"пойманные недомолвки и проверенные слухи",звук:"fx_lurk",
   счёт:()=>deeds("lies")*6,шаги:[5,16,44,105,230],k:[3,6,10,15,22],связь:["talk","sight"],
   дар:["проницательность чужая берёт вас хуже на три","на шесть","на десять","на пятнадцать","на двадцать два"]},
- {id:"fame",n:"управление репутацией",гр:"soc",о:"вес доброго имени по всем народам",звук:"crowd_cheer",
+ {id:"fame",n:"управление репутацией",гр:"soc",о:"вес доброго имени по всем народам",звук:"throng_cry",
   счёт:()=>safeFn(()=>Math.max(0,repSum()),0)*3+deeds("quests")*2,шаги:[9,30,80,190,400],k:[0.9,0.8,0.7,0.6,0.5],связь:["diplo","oldtongue"],
   дар:["дурная слава липнет меньше на десятую","на пятую","на треть","на две пятых","вдвое: вас умеют простить"]},
  /* ── РЕМЕСЛЕННАЯ: рука срывается реже у того, кто много сделал. ── */
@@ -25429,7 +25420,7 @@ const PLACE_TRAITS={
    слово:"Стан слышно из каждого второго двора: тут ткут и красят."},
  ],
  forge:[
-  {id:"arms", n:"оружейная",  вещи:["rack","whetstone"],  товар:["руда"],   звук:"blade_ring",
+  {id:"arms", n:"оружейная",  вещи:["rack","whetstone"],  товар:["руда"],   звук:"lug_sword",
    слово:"Пробуют кромку на слух: клинок звенит, и мастер кивает."},
   {id:"shoe", n:"подковная",  вещи:["anvil","bench"],     товар:["руда"],   звук:"forge_hammer",
    слово:"Подковы висят гроздьями, и в углу ждут своей очереди две лошади."},
@@ -25754,7 +25745,7 @@ const DUNGEON_KINDS=[
  {id:"necropolis",n:"некрополь",звук:"wraith_moan",
   о:"Город мёртвых: улицы саркофагов, площади склепов и ни одного живого угла.",
   примета:"Здесь не тихо: тишина шевелится и отвечает на шаг с опозданием.",
-  голоса:[["wraith_moan",2],["od_undead",1.5],["oc_chain",1],["moan_deep",1]],
+  голоса:[["wraith_moan",2],["od_undead",1.5],["oc_chain",1],["wraith_moan",1]],
   твари:["wraith","banshee","golem"],добыча:["кость","камень"],
   план:{тварей:2,сундуков:1}},
  {id:"fort",n:"подземная крепость",звук:"hall_barracks",
@@ -27006,7 +26997,7 @@ function trainDarkSchool(id){
  let дар="";
  if(g.навык){safeFn(()=>learnSkill(g.навык));const sk=SKILL_BY_ID[g.навык];дар=`Навык «${sk?sk.n:g.навык}».`;}
  else if(g.умение){learnAbility(g.умение);const a=ABILITY_BY_ID[g.умение];дар=`Умение «${a?a.n:g.умение}». ${a?a.d:""}`;}
- safeFn(()=>{Bank.play("hex_charang",{seed:шаг,gain:0.65,maxSec:5})||Bank.play("spell_dark",{gain:0.65,maxSec:5});
+ safeFn(()=>{Bank.play("curse",{seed:шаг,gain:0.65,maxSec:5})||Bank.play("spell_dark",{gain:0.65,maxSec:5});
   setTimeout(()=>safeFn(()=>Bank.play("mtg_fuse",{seed:шаг,gain:0.5,maxSec:4})),380);});
  journal(`Тёмная школа «${sc.n}»: ступень «${ст.n}».`);
  narcareDark(sc,ст,шаг,дар,кровь);
@@ -27247,7 +27238,7 @@ function darkRiteHere(){
  G.darkDeeds[ключ]=1;
  const платой=payDarkPrice(d.плата.id);
  const дар=giveDarkPrize(d.награда);
- safeFn(()=>{Bank.play("es_magic",{gain:0.7,maxSec:6})||Bank.play("hex_charang",{gain:0.7,maxSec:6});
+ safeFn(()=>{Bank.play("es_magic",{gain:0.7,maxSec:6})||Bank.play("curse",{gain:0.7,maxSec:6});
   setTimeout(()=>safeFn(()=>Bank.play("od_heal",{gain:0.6,maxSec:5})||Bank.play("fx_haze",{gain:0.6,maxSec:5})),400);
   setTimeout(()=>safeFn(()=>Bank.play("od_keeper_word",{gain:0.5,maxSec:5})),900);});
  safeFn(()=>{
@@ -27402,13 +27393,13 @@ const DEEP_NODE_BY_D=Object.fromEntries(DEEP_NODES.map(n=>[n.д,n]));
    ════════════════════════════════════════════════════════════════════════ */
 const FLOOR_FOLK=[
  {id:"artel",  n:"артель",              о:"бьют забой посменно и платят за карты ярусов",   звук:"mine_pick",    до:45},
- {id:"hermit", n:"отшельник",           о:"живёт один и знает ярус лучше всех",             звук:"moan_deep",    до:90},
+ {id:"hermit", n:"отшельник",           о:"живёт один и знает ярус лучше всех",             звук:"wraith_moan",    до:90},
  {id:"lost",   n:"пропавшая экспедиция",о:"вышли год назад и до сих пор идут вниз",         звук:"throng_coming",до:100},
  {id:"caught", n:"пленники",            о:"их держат ради выкупа или ради работы",          звук:"throng_cry",   до:70},
  {id:"cult",   n:"культисты",           о:"поют в темноте и не любят свидетелей",           звук:"choir",        до:100},
  {id:"runaway",n:"беглые",              о:"ушли от закона и вниз, и глубже",                звук:"throng_retreat",до:60},
  {id:"digger", n:"старатели",           о:"моют жилу вручную и делят находки на троих",     звук:"craft_ore",    до:55},
- {id:"watch",  n:"надзор",              о:"застава державы: пишут, кто прошёл и с чем",     звук:"watch_call",   до:40},
+ {id:"watch",  n:"надзор",              о:"застава державы: пишут, кто прошёл и с чем",     звук:"guard_shout",   до:40},
  {id:"trader", n:"торговец глубин",     о:"держит прилавок там, где его не ждут",           звук:"trade_m",      до:75},
  {id:"singer", n:"певчие",              о:"поют сводам, чтобы те не сходились",             звук:"temple_piano", до:100},
  {id:"mapper", n:"картографы",          о:"меряют ходы верёвкой и продают чертежи",         звук:"arte_cloth",   до:65},
@@ -27810,7 +27801,7 @@ function guardianAt(bx,by,depth){
 const GUARD_LORDS=[
  {id:"gl_watch",n:"Дозорный Порога",род:"Дозорного Порога",ярус:25,стиль:"натиск",
   история:"Его поставили сторожить первую четверть хода и забыли сменить. Он всё ещё считает, что несёт службу, и что вы — нарушитель.",
-  звуки:{дальний:"march_low",ближний:"guard_march",голос:"warrior_shout",фаза:"war_brass",смерть:"body_fall"},
+  звуки:{дальний:"throng_march",ближний:"guard_march",голос:"warrior_shout",фаза:"war_brass",смерть:"body_fall"},
   фазы:[{n:"оклик",от:1,множ:1,о:"он окликает и бьёт в щит: строй на одного"},
         {n:"натиск",от:0.55,множ:1.35,о:"он пошёл вперёд и не считает ударов"},
         {n:"последний шаг",от:0.2,множ:1.1,механика:"мимо",о:"он бьёт вслепую, но широко: треть ударов мимо"}],
@@ -27819,7 +27810,7 @@ const GUARD_LORDS=[
                         поражение:"порог закрыт: на верхних ярусах стало тесно"}},
  {id:"gl_keeper",n:"Хранитель Свода",род:"Хранителя Свода",ярус:50,стиль:"измор",
   история:"Свод держится на его воле дольше, чем на камне. Он не нападает первым — он ждёт, пока вы устанете, потому что времени у него больше.",
-  звуки:{дальний:"stone_low",ближний:"mtg_stone_hit",голос:"golem_hit",фаза:"deep_thud",смерть:"ad_collapse"},
+  звуки:{дальний:"dungeon_drone",ближний:"mtg_stone_hit",голос:"golem_hit",фаза:"deep_thud",смерть:"ad_collapse"},
   фазы:[{n:"камень",от:1,множ:1,о:"он стоит и принимает: спешить ему некуда"},
         {n:"оседание",от:0.6,множ:1.2,механика:"физика вполсилы",о:"порода садится вокруг: клинок берёт вполсилы"},
         {n:"обвал",от:0.25,множ:1.45,погода:"Гроза",о:"свод трещит, и он бьёт вместе с ним"}],
@@ -27828,7 +27819,7 @@ const GUARD_LORDS=[
                           поражение:"свод пошёл трещинами: обвалы участились"}},
  {id:"gl_warden",n:"Смотритель Тишины",род:"Смотрителя Тишины",ярус:75,стиль:"чары",
   история:"Он следит, чтобы на его ярусах было тихо. Всё, что звучит, он считает непорядком — и вас в том числе.",
-  звуки:{дальний:"pad_hex",ближний:"hex_charang",голос:"wraith_voice",фаза:"magic_hum",смерть:"magic_unwind"},
+  звуки:{дальний:"spell_dark",ближний:"curse",голос:"wraith_voice",фаза:"magic_hum",смерть:"magic_unwind"},
   фазы:[{n:"тишина",от:1,множ:1,механика:"тянет ману",о:"он тянет силу из воздуха и из вас"},
         {n:"глушь",от:0.55,множ:1.25,механика:"магия не берёт",о:"чары гаснут, не долетев: остаётся клинок"},
         {n:"крик",от:0.2,множ:1.5,о:"тишина кончилась, и он кричит впервые за век"}],
@@ -27914,7 +27905,7 @@ const WORLD_BOSSES=[
   история:"Топь спит, и во сне у неё есть лицо. Кто заснул у воды, тот видел его — и наутро не помнил, чьё оно.",
   био:["mire","swamp","fen","mangrove"],x:30899,y:13550,
   предвестники:["лягушки смолкли разом","шёпот, которого никто не произносит","веки тяжелы: час прошёл незаметно"],
-  звуки:{дальний:"amb_wind",ближний:"oc_rustle",голос:"ghost_choir",фаза:"amb_wind",смерть:"moan_deep"},
+  звуки:{дальний:"amb_wind",ближний:"oc_rustle",голос:"ghost_choir",фаза:"amb_wind",смерть:"wraith_moan"},
   фазы:[{n:"морок",от:1,множ:1,механика:"мимо",о:"её образ двоится: треть ударов уходит в морок"},
         {n:"отголоски",от:0.4,множ:1.4,погода:"Туман",о:"топь отвечает эхом: удары чаще и злее"},
         {n:"пробуждение",от:0.15,множ:0.5,о:"она просыпается — и слабеет: сон был её силой"}],
@@ -27944,7 +27935,7 @@ const WORLD_BOSSES=[
   история:"В погибшем городе каждую полночь поют. Поющих не видно, слова не разобрать, а те, кто подпел, остаются петь.",
   био:["lost_city","warfield","ancient_forest"],x:25399,y:39424,
   предвестники:["далёкое пение без слов","хор ближе: слова почти разборчивы","вы понимаете слова — и лучше бы не понимали"],
-  звуки:{дальний:"choir",ближний:"ghost_choir",голос:"wraith_voice",фаза:"moan_deep",смерть:"moan_deep"},
+  звуки:{дальний:"choir",ближний:"ghost_choir",голос:"wraith_voice",фаза:"wraith_moan",смерть:"od_keeper_groan"},
   фазы:[{n:"хор",от:1,множ:1,механика:"тянет ману",о:"хор тянет ману: пять за каждый ваш ход"},
         {n:"соло",от:0.5,множ:1.4,о:"один голос над всеми: удары злее"},
         {n:"тишина",от:0.2,множ:1,механика:"магия не берёт",о:"хор смолк: чары уходят в тишину, но клинок бьёт вдвое"}],
@@ -28355,7 +28346,7 @@ const ART_DIRS=[
   ремёсла:["кузня","зачар"], звук:"artifact_hum", слово:["Рунный камень","Резной обод","Ставка","Насечка","Ключ"],
   о:"Вещь, на которой вырезано слово: сила её в резьбе, и резьбу можно перерезать."},
  {id:"war",   n:"воинское",        своё:["сила","крит","скорость"],
-  ремёсла:["кузня","ритуал"], звук:"blade_ring", слово:["Клык","Клеймо","Гарда","Навершие","Кулак"],
+  ремёсла:["кузня","ритуал"], звук:"lug_sword", слово:["Клык","Клеймо","Гарда","Навершие","Кулак"],
   о:"Вещь для боя и только для боя: всё, что в ней есть, тратится на удар."},
  {id:"def",   n:"защитное",        своё:["защита","здоровье","сопр_огонь","сопр_лёд","сопр_свет","сопр_яд"],
   ремёсла:["кузня","зачар"], звук:"cast_block", слово:["Оплот","Панцирный знак","Щитовик","Опора","Стена"],
@@ -29205,7 +29196,7 @@ function artEnchant(i,enchId){
   G.gold-=цена;
   a.чары=enchId;
   safeFn(()=>{Bank.play("spell_arcane",{gain:0.65,maxSec:5});
-   setTimeout(()=>safeFn(()=>Bank.play("rune_square",{gain:0.55,maxSec:4})),420);});
+   setTimeout(()=>safeFn(()=>Bank.play("oc_res_rune",{gain:0.55,maxSec:4})),420);});
   narrate(`${a.имя} зачаровано ${e.n}: ${e.о}. `+
    (было?`Прежнее зачарование (${было.n}) стёрто: их не бывает двух. `:"")+
    `Отдано ${цена} золота. ${ART.describe(a,true)}`,{interrupt:true});
@@ -29701,7 +29692,7 @@ function flightFlavour(){
  const глубокий=[["Гул идёт из-под ног, ровный и низкий.","drone_low"],
   ["Кто-то шумно вздохнул внизу — или это шахта.","pad_underworld"],
   ["Далёкий зов прокатился по шахте и стих.","deep_call"],
-  ["Камень здесь тёплый, и это неправильно.","stone_low"]];
+  ["Камень здесь тёплый, и это неправильно.","dungeon_drone"]];
  const набор=низ>=3?глубокий.concat(свой.slice(0,2)):свой;
  return набор[Math.floor(Math.random()*набор.length)];}
 function flightStep(dir){
@@ -30044,13 +30035,13 @@ const AMBIENCE_SET={
  coast:{period:[5,10],spots:[["sky_wave",3],["ad_wave_rocky",2],["oc_splash",1],["hall_dock",0.7],["uh_ships_bell",0.5],["wild_raven",0.7],["oc_wind",1]],
   rain:[["oc_rain",2],["stk_thunder",1]],night:[["sky_wave",3],["uh_ships_bell",0.3]]},
  desert:{period:[7,14],spots:[["lug_desert",2],["sky_day",2],["oc_wind",2],["beasts_camel",1],["serpent_hiss",0.5],["oc_rustle",0.5]],night:[["oc_wind",2],["serpent_hiss",1]]},
- dark:{period:[6,12],spots:[["deep_wind",2],["oc_sizzle",1],["moan_deep",1],["od_undead",0.7],["oc_smoke",1],["oc_growl",0.5],["ad_fire_sizzle",1]]},
+ dark:{period:[6,12],spots:[["deep_wind",2],["oc_sizzle",1],["wraith_moan",1],["od_undead",0.7],["oc_smoke",1],["oc_growl",0.5],["ad_fire_sizzle",1]]},
  /* §14: походный лагерь звучит строем, обозом и походной наковальней —
     настоящими записями, ни одной синтезированной сцены. */
  warcamp:{period:[4,9],spots:[["throng_march",2.5],["guard_shout",1.5],["throng_cry",1],
   ["throng_build",1],["siege_garrison",1.2],["anvil",1.5],["wild_hearth",2],["lug_fire",1],
   ["beasts_horse",1.2],["mtg_cart",1.2],["oc_wheels",1],["oc_step_hard",1.5],
-  ["throng_lord",0.7],["blade_ring",0.8],["armor_clank",1]],
+  ["throng_lord",0.7],["lug_sword",0.8],["lug_clank",1]],
   night:[["wild_hearth",2],["guard_shout",1],["throng_march",0.5],["beasts_horse",0.7]]}};
 /* Какой набор здесь: по акустике места и по земле под ногами. */
 function ambienceSetFor(){
@@ -30359,14 +30350,14 @@ const Actors={
     /* Тварь выдаёт себя раньше, чем покажется: дыхание, крадущийся шаг,
        шорох подземной нечисти. Что именно — решает случай, чтобы
        предупреждение не превратилось в один заученный сигнал. */
-    safeFn(()=>{const cue=["lug_growl","lug_snarl","beast_growl"][Math.floor(Math.random()*3)];
+    safeFn(()=>{const cue=["lug_growl","lug_snarl","oc_growl"][Math.floor(Math.random()*3)];
      setTimeout(()=>safeFn(()=>Actors.voice(a,cue,{gain:0.5,maxSec:5})),320);});
     narrate(`Рядом кто-то движется: ${a.name}, ${nearest.d} ${plural(nearest.d,"шаг","шага","шагов")}, ${dir}.`,{interrupt:false});}
    else if(a.kind==="guard"){
     /* Дозор слышно по шагу строя, а не только по голосу. */
     safeFn(()=>{Actors.voice(a,"guard_march",{gain:0.45,maxSec:4});
      /* Ночью дозор не проходит молча: сперва оклик, потом шаг. */
-     if(isNight())Actors.voice(a,"watch_call",{gain:0.5,maxSec:3});});
+     if(isNight())Actors.voice(a,"guard_shout",{gain:0.5,maxSec:3});});
     const race=safeFn(()=>(EMPIRES[empireIndexAt(G.place.bx,G.place.by)]||EMPIRES[0]).race,null);
     const att=race?safeFn(()=>attitudeOf(race),null):null;
     /* Стража окликает живым голосом, а не только барабаном строя. */
@@ -31089,7 +31080,7 @@ function bookSound(state,it){
  return true;}
 const ALTAR_SOUND={
  touch:["deep_stone","oc_soft_touch"],activate:["altar","choir"],bless:["cast_heal","bell_small","choir"],
- sacrifice:["od_take","mtg_fire","choir"],curse:["spell_dark","oc_sizzle","moan_deep"],ritual:["mtg_flint","oc_inflame","stk_dark"],
+ sacrifice:["od_take","mtg_fire","choir"],curse:["spell_dark","oc_sizzle","wraith_moan"],ritual:["mtg_flint","oc_inflame","stk_dark"],
  ritual_done:["temple_bell","od_heal","choir"]};
 function altarSound(state,opts){
  const list=ALTAR_SOUND[state];if(!list)return false;
@@ -31122,7 +31113,7 @@ function openChest(x,y){
    /* Механизм срабатывает с настоящим ударом, а не одним щелчком. */
    setTimeout(()=>safeFn(()=>Bank.play("stk_blast",{seed:x+y,gain:0.6,maxSec:4})),220);
    /* За щелчком идёт осыпь: ловушка звучит на два такта. */
-   setTimeout(()=>safeFn(()=>{Bank.play("ad_collapse",{seed:x+y,gain:0.6,maxSec:5});Bank.play("collapse",{seed:x+y,gain:0.5,maxSec:4});}),260);
+   setTimeout(()=>safeFn(()=>{Bank.play("ad_collapse",{seed:x+y,gain:0.6,maxSec:5});Bank.play("stk_crash",{seed:x+y,gain:0.5,maxSec:4});}),260);
    setTimeout(()=>safeFn(()=>Bank.play("shatter",{seed:x+y,gain:0.5,maxSec:3})),420);
    setTimeout(()=>safeFn(()=>Bank.play("quake_low",{seed:x+y,gain:0.5,maxSec:4})),640);
    UI.hit();vib([40,60,40]);});
@@ -32589,7 +32580,7 @@ function startCombat(c,opts){
  safeFn(()=>{const big=(Number(m.lvl)||1)>=Math.max(6,G.level+3);
   const mid=(Number(m.lvl)||1)>=G.level;
   if(big)setTimeout(()=>safeFn(()=>Bank.play("brute_roar",{kind:"combat",seed:m.lvl,gain:0.75,maxSec:6})),200);
-  else if(mid)setTimeout(()=>safeFn(()=>Bank.play("beast_growl",{kind:"combat",gain:0.55,maxSec:5})),240);
+  else if(mid)setTimeout(()=>safeFn(()=>Bank.play("oc_growl",{kind:"combat",gain:0.55,maxSec:5})),240);
   /* Литавры на крупного противника; в воюющей земле — набат похода. */
   if(big)setTimeout(()=>safeFn(()=>Bank.play("throng_fight",{kind:"combat",seed:m.lvl,gain:0.6,maxSec:5})),420);
   /* «Воюющая земля» — та, у которой хоть с одним соседом война. */
@@ -32660,16 +32651,16 @@ function natShot(role,pan=0,gain=0.8){
 /* У каждого оружия свой голос: клинок звенит, топор рубит, лук отпускает
    тетиву, копьё свистит, посох гудит. Один общий «замах» на всё оружие
    стирал разницу между ними, а разница эта — половина боя на слух. */
-const WEAPON_VOICE={"Меч":"blade_ring","Сабля":"blade_ring","Кинжал":"blade_ring",
- "Топор":"axe_chop","Секира":"axe_chop","Молот":"axe_chop","Булава":"axe_chop",
- "Лук":"bow_release","Арбалет":"bow_release",
- "Копьё":"spear_thrust","Алебарда":"spear_thrust",
+const WEAPON_VOICE={"Меч":"lug_sword","Сабля":"lug_sword","Кинжал":"lug_sword",
+ "Топор":"craft_axe","Секира":"craft_axe","Молот":"craft_axe","Булава":"craft_axe",
+ "Лук":"battle_bow","Арбалет":"battle_bow",
+ "Копьё":"mg_spear","Алебарда":"mg_spear",
  "Посох":"magic_woosh","Жезл":"cast_shoot"};
 function weaponVoiceRole(){
  const w=G.equip&&G.equip.weapon;
  const t=(w&&(w.type||w.n))||"";
  for(const k in WEAPON_VOICE)if(t.indexOf(k)>=0)return WEAPON_VOICE[k];
- return "blade_ring";}
+ return "lug_sword";}
 function playWeaponCombatSfx(hit,dir="N",dmg=6){try{AE.ensure();
  if(Bank.enabled){
   const k=weaponClass(),m=G.combat&&G.combat.m,mat=foeMaterial(m);
@@ -32700,7 +32691,7 @@ function playWoundSfx(dmg=6){try{AE.ensure();
  safeFn(()=>Bank.play(heroVoiceFemale()?"hero_pain_f":"hero_pain_m",{kind:"combat",seed:dmg,gain:0.55,maxSec:2}));
  safeFn(()=>Bank.play("battle_shield",{kind:"combat",seed:dmg,gain:0.4,maxSec:2}));
  /* Доспех отвечает на удар: лязг и глухой толчок в щит. */
- safeFn(()=>Bank.play((Number(dmg)||6)>=12?"oc_shield_metal":((Number(dmg)||0)%2?"armor_clank":"lug_metal"),
+ safeFn(()=>Bank.play((Number(dmg)||6)>=12?"oc_shield_metal":((Number(dmg)||0)%2?"lug_clank":"lug_metal"),
   {seed:Math.floor(Math.random()*97),gain:0.45,maxSec:2}));
  const s=new SFX();const heavy=Math.max(0.6,Math.min(1.5,0.6+(Number(dmg)||6)/14));s.wound(heavy);setTimeout(()=>{try{s.stop(.2);}catch(e){}},650);}catch(e){}}
 function endCombat(){if(G.combat&&G.combat.monsterTimer)clearTimeout(G.combat.monsterTimer);G.inCombat=false;G.combat=null;
@@ -32736,7 +32727,7 @@ function weaponKind(){
    кость у скелета, броня у голема и стража, плоть у прочих.
    ════════════════════════════════════════════════════════════════════════ */
 const WEAPON_SOUND={
- sword:{draw:["lug_knife_draw","blade_ring"],sheathe:["lug_knife_sheathe"],swing:["blade_swing","lug_whoosh"],hit:["lug_sword","battle_sword"],
+ sword:{draw:["lug_knife_draw","lug_sword"],sheathe:["lug_knife_sheathe"],swing:["blade_swing","lug_whoosh"],hit:["lug_sword","battle_sword"],
   block:["oc_shield_block","battle_shield"],parry:["parry_slide","stk_clang"],hit_armor:["metal_hit","oc_metal_light"],hit_flesh:["lug_flesh","dull_hit"],
   hit_bone:["foe_bone_hit","oc_wood_hit"],miss:["lug_whoosh_hit","hit_air"],drop:["lug_clank","oc_metal_dull"],clash:["stk_clang","od_blade"]},
  axe:{draw:["lug_knife_draw","lug_clank"],sheathe:["lug_clank"],swing:["oc_swing","lug_whoosh"],hit:["wood_axe","battle_stab"],
@@ -32816,7 +32807,7 @@ function fight(a){const cb=G.combat;if(!cb)return;const m=cb.m;
   if(Math.random()<safeFn(()=>derived("acc"),0)){
    const чисто=Math.max(1,Math.round(atk()*0.2));
    dmg+=чисто;
-   safeFn(()=>Bank.play("blade_ring",{gain:0.45,maxSec:2}));
+   safeFn(()=>Bank.play("lug_sword",{gain:0.45,maxSec:2}));
    cbLog(`Удар лёг чисто: плюс ${чисто}.`);}
   /* Свойства глубинных вещей: острая чаще бьёт насмерть, тяжёлая — больнее. */
   if(safeFn(()=>gearTrait("keen"),false))critChance+=0.12;
@@ -32881,7 +32872,7 @@ function fight(a){const cb=G.combat;if(!cb)return;const m=cb.m;
   else{if(Math.random()<0.4+G.agi*0.02+0.12*fxLevel("deal")+safeFn(()=>Morpho.fleeK(m),0)){
    safeFn(()=>foeProfileCue(m,"lose",{gain:0.5}));endCombat();narrate("Вы сбежали!");journal(`Побег от «${m.n}».`);refresh();resumeLocationMusic();return;}
   cbLog("Сбежать не вышло!");}
-  safeFn(()=>{Bank.play("oc_shield_block",{seed:G.hp,gain:0.5,maxSec:2});Bank.play("shield_block",{seed:G.hp,gain:0.45,maxSec:3});Play.start("ev","shield_bash",{dur:2});});}
+  safeFn(()=>{Bank.play("oc_shield_block",{seed:G.hp,gain:0.5,maxSec:2});Bank.play("battle_shield",{seed:G.hp,gain:0.45,maxSec:3});Play.start("ev","shield_bash",{dur:2});});}
  safeFn(()=>{const ход=bossPlayerTurn();if(ход)cbLog(cbLog2text()+ход);});
  narrate(cbLog2text());
  safeFn(()=>bossPhaseCheck());
@@ -33208,7 +33199,7 @@ function defeat(){const павший=G.combat&&G.combat.m;safeFn(()=>foeProfileC
   Bank.play(heroVoiceFemale()?"hero_die_f":"hero_die_m",{kind:"combat",seed:G.day,gain:0.7,maxSec:4});
   setTimeout(()=>safeFn(()=>Bank.play("siege_defeat",{kind:"combat",gain:0.6,maxSec:6})),700);
   Play.start("ev","scream",{dur:3});
-  setTimeout(()=>safeFn(()=>Bank.play("moan_deep",{kind:"combat",seed:G.day,gain:0.45,maxSec:5})),700);
+  setTimeout(()=>safeFn(()=>Bank.play("wraith_moan",{kind:"combat",seed:G.day,gain:0.45,maxSec:5})),700);
   setTimeout(()=>safeFn(()=>Bank.play("lament_oboe",{kind:"combat",seed:G.day,gain:0.5,maxSec:7})),1300);});
  const emp=empireAt(G.x,G.y);G.x=emp.cap.x;G.y=emp.cap.y;
  /* Милость Мортаны Тихой: поражение обходится дешевле её последователям. */
@@ -34240,7 +34231,7 @@ const REGIONS=[
  {id:"sunken",n:"Затонувшие государства",о:"Из воды торчат шпили: тут стояли города, и кое-где до них можно донырнуть.",климат:"затопленный",биомы:["lakeland","river_mouth","lost_city"],ресурс:"ракушка",опасность:3,звук:["oc_splash","oc_bubble","uh_bell"],ярус:"strange"},
  {id:"south_sands",n:"Южные пустыни",о:"Песок, зной и караванные колодцы через день пути.",климат:"зной",биомы:["desert","dunes","stony_desert","semidesert"],ресурс:"камень",опасность:3,звук:["lug_desert","beasts_camel","serpent_hiss"],ярус:"wild"},
  {id:"ash_lands",n:"Пепельные земли",о:"Земля тёплая, воздух серый, и дождь оставляет полосы на коже.",климат:"пепел",биомы:["ashland","volcano","stony_desert"],ресурс:"руда",опасность:4,звук:["ad_fire_sizzle","oc_smoke","oc_earthquake"],ярус:"dark"},
- {id:"dark_empires",n:"Тёмные империи",о:"Здесь державы служат тем, кому в остальном мире не молятся; дороги охраняют, но не для вас.",климат:"тень",биомы:["ashland","warfield","lost_city"],ресурс:"кость",опасность:5,звук:["od_undead","moan_deep","stk_dark"],ярус:"dark"}];
+ {id:"dark_empires",n:"Тёмные империи",о:"Здесь державы служат тем, кому в остальном мире не молятся; дороги охраняют, но не для вас.",климат:"тень",биомы:["ashland","warfield","lost_city"],ресурс:"кость",опасность:5,звук:["od_undead","wraith_moan","stk_dark"],ярус:"dark"}];
 function regionIndexAt(x,y){
  const col=Math.max(0,Math.min(4,Math.floor((Number(x)||0)/REGION_W)));
  const row=Math.max(0,Math.min(3,Math.floor((Number(y)||0)/REGION_H)));
@@ -34340,7 +34331,7 @@ const NAMED_CITIES=[
  {id:"elvarn",n:"Эль-Варн",роль:"город дипломатии",x:37100,y:33800,сетка:[5,4],о:"Здесь воюют словами, и каждый посол держит двух переводчиков.",свои:["Двор посольств","Площадь договоров","Улица печатей"],товар:["ягоды","трава"],нужда:["руда","кристалл"],пошлина:0.07,звук:["throng_hail_f","court_harpsi","uh_bell"]},
  {id:"virren",n:"Виррен",роль:"город контрабандистов",x:4200,y:28700,сетка:[5,4],о:"Пошлина низкая, потому что её никто не платит.",свои:["Тайный причал","Двор двойного дна","Улица без фонарей"],товар:["ракушка","кристалл"],нужда:["руда","дерево"],пошлина:0.02,звук:["oc_wood_creak","sky_wave","oc_laugh"]},
  {id:"kassar",n:"Кассар",роль:"город древних архивов",x:14700,y:42600,сетка:[5,4],о:"Полки уходят под воду и под землю; читать здесь учат раньше, чем ходить.",свои:["Двор архивов","Площадь забытых языков","Улица переписчиков"],товар:["камень","ракушка"],нужда:["трава","дерево"],пошлина:0.06,звук:["arte_page","uh_page","deep_wind"]},
- {id:"dormara",n:"Дор-Мара",роль:"город изгнанников",x:45900,y:44300,сетка:[5,4],о:"Сюда приходят те, кого не ждут нигде; здесь не спрашивают почему.",свои:["Двор без гербов","Площадь чужих имён","Улица последнего дома"],товар:["кость","камень"],нужда:["трава","ягоды"],пошлина:0.03,звук:["moan_deep","oc_wind","throng_hail_m"]},
+ {id:"dormara",n:"Дор-Мара",роль:"город изгнанников",x:45900,y:44300,сетка:[5,4],о:"Сюда приходят те, кого не ждут нигде; здесь не спрашивают почему.",свои:["Двор без гербов","Площадь чужих имён","Улица последнего дома"],товар:["кость","камень"],нужда:["трава","ягоды"],пошлина:0.03,звук:["wraith_moan","oc_wind","throng_hail_m"]},
  {id:"asterion",n:"Астерион",роль:"город портальных переходов",x:7600,y:41200,сетка:[5,4],о:"Камни сети стоят прямо на улицах, и по утрам ими пользуются, как мостами.",свои:["Двор смотрителей","Площадь камней","Улица переходов"],товар:["кристалл","ракушка"],нужда:["руда","трава"],пошлина:0.08,звук:["stk_portal","deep_portal","oc_electrical"]},
  {id:"ring",n:"Кольцевой город",роль:"город-организм",x:25120,y:24880,сетка:[7,6],о:"Сорок два района, у каждого своя цена, свой дозор, свои слухи и свой голос; город живёт и без вас.",свои:["Кольцо",  "Двор гильдий","Площадь двенадцати дорог"],товар:["трава","ягоды","камень","дерево"],нужда:["руда","кристалл","кость"],пошлина:0.07,звук:["throng_hail_m","throng_hail_f","mtg_cart","uh_bell","oc_laugh"]}];
 NAMED_CITIES.forEach(c=>{c.полное=`${c.n} — ${c.роль}`;});
@@ -34550,7 +34541,7 @@ const CITY_TRADES=[
  {id:"guard", роль:"сторожевой город", земли:["road","mountains"],
   о:"Город при заставе: ворота считают всех, кто вошёл, и всех, кто не вышел.",
   свои:["Сторожевой двор","Улица караулов","Площадь смотра"],
-  товар:["камень","руда"],нужда:["трава","ягоды"],звук:["throng_march","hall_gate","guard_whistle"]},
+  товар:["камень","руда"],нужда:["трава","ягоды"],звук:["throng_march","hall_gate","signal_beep"]},
  {id:"book",  роль:"книжный город",    земли:["plains","road"],
   о:"Тише прочих: здесь и торгуются вполголоса, чтобы не мешать читающим.",
   свои:["Книжный двор","Улица переписчиков","Площадь списков"],
@@ -34915,7 +34906,7 @@ const HOUSES=[
   ранги:["гость рощи","росток","травник","хранитель рощи","мох Дома"],союзник:"yasen",враг:"cherv",
   дела:["принести камень для ограды рощи","отогнать тварей от зелейного двора","дойти до дальней рощи и вернуться"],
   противник:{n:"Червеход Дома Червивой Короны",snd:"mhiss",fx:"hiss"},слух:"мох в священной роще Дома пожелтел"},
- {id:"sova",n:"Дом Совиного Дозора",тип:"свет",держава:8,dx:1400,dy:700,девиз:"Ночь видит лучше",герб:"сова на тёмно-зелёном",мотив:"watch_call",зал:"hall_gate",
+ {id:"sova",n:"Дом Совиного Дозора",тип:"свет",держава:8,dx:1400,dy:700,девиз:"Ночь видит лучше",герб:"сова на тёмно-зелёном",мотив:"guard_shout",зал:"hall_gate",
   econ:"лесные дозоры, ночные тропы и ловчие",товар:["дерево","грибы"],нужда:["кристалл","ракушка"],вещь:"Плащ Совиного Дозора",стиль:"совиный",школа:"spirit",
   ранги:["гость дозора","дозорный","ночной ловчий","хозяин троп","сова Дома"],союзник:"ogni",враг:"svech",
   дела:["принести кристалл для ночного фонаря","перебить тварей на тропе дозора","дойти до дальней вышки и вернуться"],
@@ -34936,7 +34927,7 @@ const HOUSES=[
   ранги:["нераненый","раненый","ранящий","первый ранящий","рана Дома"],союзник:"tropa",враг:"yasen",
   дела:["принести трав для ран","перебить тварей у стана","дойти до дальнего стана и вернуться"],
   противник:{n:"Лесничий Дома Ясеневой Ветви",snd:"mscreech",fx:"screech"},слух:"в Доме Первой Раны двое ранили друг друга разом"},
- {id:"tropa",n:"Дом Красной Тропы",тип:"тьма",держава:"pered",dx:-120,dy:-70,девиз:"Тропа ведёт к добыче",герб:"красный след на чёрном",мотив:"march_low",зал:"hall_gate",
+ {id:"tropa",n:"Дом Красной Тропы",тип:"тьма",держава:"pered",dx:-120,dy:-70,девиз:"Тропа ведёт к добыче",герб:"красный след на чёрном",мотив:"throng_march",зал:"hall_gate",
   econ:"набеги, засады и перекупка добычи",товар:["руда","камень"],нужда:["дерево","ракушка"],вещь:"Сапоги Красной Тропы",стиль:"тропный",школа:"fire",
   ранги:["сбившийся","идущий","ведущий","хозяин тропы","след Дома"],союзник:"rana",враг:"brod",
   дела:["принести дерево для засады","перебить тварей на тропе","дойти до дальней засады и вернуться"],
@@ -34951,7 +34942,7 @@ const HOUSES=[
   ранги:["безголосый","шепчущий","говорящий","двойной голос","голос Дома"],союзник:"lica",враг:"sova",
   дела:["принести трав для шёпота","перебить тварей у посольства","дойти до дальнего эха и вернуться"],
   противник:{n:"Дозорный Дома Совиного Дозора",snd:"mscreech",fx:"screech"},слух:"посол Двойного Голоса сказал что-то один раз"},
- {id:"cherv",n:"Дом Червивой Короны",тип:"тьма",держава:"gnil",dx:110,dy:-120,девиз:"Всё проходит насквозь",герб:"корона с червём на буром",мотив:"serpent_horn",зал:"hall_farm",
+ {id:"cherv",n:"Дом Червивой Короны",тип:"тьма",держава:"gnil",dx:110,dy:-120,девиз:"Всё проходит насквозь",герб:"корона с червём на буром",мотив:"wyrm_dark",зал:"hall_farm",
   econ:"гниль, ходы и терпеливые захваты",товар:["грибы","дерево"],нужда:["кристалл","камень"],вещь:"Червивая корона Дома",стиль:"червивый",школа:"plants",
   ранги:["целый","подточенный","проеденный","ходовой","червь Дома"],союзник:"svech",враг:"lazur",
   дела:["принести камень для нового хода","перебить тварей в ходах","дойти до дальнего лаза и вернуться"],
@@ -35221,7 +35212,7 @@ const Houses=Modules.register("HOUSES",{
    atk или def. мир — в этот день осады стоят.
    ════════════════════════════════════════════════════════════════════════ */
 const GOD_DOSSIER={
- zarya:{культ:"Круг Разомкнутого Солнца",святое:"восходная ступень на храмовой стене",жрецы:"клятводержцы в золотых поясах",обряд:"клятва вслух на восходной ступени",ключ:"deal",артефакт:"Разомкнутый круг Ауриса",чудо:"клятва, данная при нём, слышна обоим на любом расстоянии",друг:"forge",праздник:36,погода:"Ясно",цена:{res:"целебник",k:0.7},школа:"light",дарМолитвы:"hp",звук:"dawn_birds",мир:true},
+ zarya:{культ:"Круг Разомкнутого Солнца",святое:"восходная ступень на храмовой стене",жрецы:"клятводержцы в золотых поясах",обряд:"клятва вслух на восходной ступени",ключ:"deal",артефакт:"Разомкнутый круг Ауриса",чудо:"клятва, данная при нём, слышна обоим на любом расстоянии",друг:"forge",праздник:36,погода:"Ясно",цена:{res:"целебник",k:0.7},школа:"light",дарМолитвы:"hp",звук:"cast_heal",мир:true},
  forge:{культ:"Гильдия Молота и Меры",святое:"наковальня первого горна",жрецы:"мастера с клеймом на ладони",обряд:"удар молотом по холодному железу",ключ:"trade",артефакт:"Мера Мораха",чудо:"выкованное в его праздник не тупится целый год",друг:"stone",праздник:37,погода:"Зной",цена:{res:"слиток",k:0.75},школа:"forgemagic",дарМолитвы:"atk",звук:"anvil"},
  moon:{культ:"Ликоносные",святое:"лунное зеркало в горном озере",жрецы:"толкователи снов в серебряных полумасках",обряд:"рассказать свой сон до полудня",ключ:"rival",артефакт:"Полумаска Селены",чудо:"сон один раз показывает то, что есть на самом деле",друг:"death",праздник:38,погода:"Туман",цена:{res:"лунный цветок",k:0.7},школа:"dream",дарМолитвы:"mana",звук:"wild_owl"},
  storm:{культ:"Открытое Небо",святое:"расколотая молнией сосна на гребне",жрецы:"громовые вестники с рассечённым пером",обряд:"встать под открытым небом в грозу",ключ:"kill",артефакт:"Расколотое перо Таура",чудо:"крыло не устаёт в бурю до самого заката",друг:"road",праздник:39,погода:"Гроза",цена:{res:"воздушный кристалл",k:0.75},школа:"air",дарМолитвы:"atk",звук:"stk_thunder"},
@@ -35231,11 +35222,11 @@ const GOD_DOSSIER={
  shadow:{культ:"Договор Без Лиц",святое:"безымянная дверь в глухой стене",жрецы:"безликие в серых повязках на глазах",обряд:"сказать своё дело в пустую комнату",ключ:"deal",артефакт:"Печать Умбры",чудо:"одна сделка проходит без свидетелей и без следа",друг:"road",праздник:43,погода:"Туман",цена:{res:"теневой кристалл",k:0.7},школа:"illusion",дарМолитвы:"gold",звук:"wraith_voice"},
  time:{культ:"Счёт Хронара",святое:"солнечные часы без тени",жрецы:"счётчики лет в глухих капюшонах",обряд:"молчать, пока тень не сдвинется",ключ:"deep",артефакт:"Песочный ключ Хронара",чудо:"час, потраченный в его праздник, возвращается делом",друг:"death",праздник:44,погода:"Облачно",цена:{res:"осколок времени",k:0.7},школа:"time",дарМолитвы:"xp",звук:"stk_clock"},
  stone:{культ:"Подгорный Договор",святое:"рунный столб у входа в штольню",жрецы:"рудознатцы с мерным шнуром",обряд:"положить свой камень в кладку",ключ:"gather",артефакт:"Мерный шнур Тарха",чудо:"камень и руда идут в суму легче на треть",друг:"forge",праздник:45,погода:"Облачно",цена:{res:"руда",k:0.75},школа:"earth",дарМолитвы:"def",звук:"oc_rock_hit"},
- death:{культ:"Тихий Ход",святое:"поле упокоения за третьей межой",жрецы:"молчальники в белом",обряд:"назвать имя того, кого больше нет",ключ:"kill",артефакт:"Свеча Мортаны",чудо:"мёртвый называет своё имя один раз",друг:"time",праздник:46,погода:"Туман",цена:{res:"древняя кость",k:0.7},школа:"spirit",дарМолитвы:"def",звук:"moan_deep",мир:true},
+ death:{культ:"Тихий Ход",святое:"поле упокоения за третьей межой",жрецы:"молчальники в белом",обряд:"назвать имя того, кого больше нет",ключ:"kill",артефакт:"Свеча Мортаны",чудо:"мёртвый называет своё имя один раз",друг:"time",праздник:46,погода:"Туман",цена:{res:"древняя кость",k:0.7},школа:"spirit",дарМолитвы:"def",звук:"wraith_moan",мир:true},
  road:{культ:"Долгая Дорога",святое:"верстовой столб на развилке трёх трактов",жрецы:"дорожные братья с посохом и кружкой",обряд:"оставить монету на верстовом столбе",ключ:"trade",артефакт:"Кружка Виа",чудо:"цена на торгу сходится в вашу сторону до заката",друг:"shadow",праздник:47,погода:"Ветрено",цена:{res:"дерево",k:0.8},школа:"space",дарМолитвы:"gold",звук:"tread_gravel"},
- nyxor:{культ:"Слепой Круг",святое:"колодец без дна в пепельной степи",жрецы:"слепцы с зашитыми веками",табу:"не смотреть в глаза говорящему в его праздник",ключ:"rival",артефакт:"Зашитая повязка Никсора",чудо:"чужая память читается один раз как своя",друг:"sarkis",враг:"zarya",праздник:32,погода:"Туман",цена:{res:"теневик",k:0.7},школа:"mind",дарМолитвы:"xp",звук:"hiss_high"},
+ nyxor:{культ:"Слепой Круг",святое:"колодец без дна в пепельной степи",жрецы:"слепцы с зашитыми веками",табу:"не смотреть в глаза говорящему в его праздник",ключ:"rival",артефакт:"Зашитая повязка Никсора",чудо:"чужая память читается один раз как своя",друг:"sarkis",враг:"zarya",праздник:32,погода:"Туман",цена:{res:"теневик",k:0.7},школа:"mind",дарМолитвы:"xp",звук:"deep_call"},
  vermis:{культ:"Червоточные",святое:"осевшая нора под корнем",жрецы:"копатели, не выпрямляющие спины",табу:"не засыпать чужих ходов в его праздник",ключ:"deep",артефакт:"Червоточный бурав Вермиса",чудо:"стена подземелья один раз пропускает насквозь",друг:"stygos",враг:"stone",праздник:33,погода:"Дождь",цена:{res:"глубинный трутник",k:0.7},школа:"space",дарМолитвы:"xp",звук:"oc_organic_hit"},
- kharg:{культ:"Первая Рана",святое:"камень с бурым следом на охотничьей тропе",жрецы:"кровники с рассечённой ладонью",табу:"не уходить с охоты без крови в его праздник",ключ:"kill",артефакт:"Кремень Харга",чудо:"первый удар в бою бьёт вдвое",друг:"skarn",враг:"wood",праздник:35,погода:"Ясно",цена:{res:"кровь",k:0.7},школа:"blood",дарМолитвы:"atk",звук:"serpent_horn"},
+ kharg:{культ:"Первая Рана",святое:"камень с бурым следом на охотничьей тропе",жрецы:"кровники с рассечённой ладонью",табу:"не уходить с охоты без крови в его праздник",ключ:"kill",артефакт:"Кремень Харга",чудо:"первый удар в бою бьёт вдвое",друг:"skarn",враг:"wood",праздник:35,погода:"Ясно",цена:{res:"кровь",k:0.7},школа:"blood",дарМолитвы:"atk",звук:"wyrm_dark"},
  selune:{культ:"Обратные",святое:"зеркальная наледь на северной стене",жрецы:"зеркальщики в двойных масках",табу:"не называть своего имени дважды в его праздник",ключ:"deal",артефакт:"Обратное зеркало Селуны",чудо:"двойник принимает один удар вместо вас",друг:"lamash",враг:"moon",праздник:48,погода:"Снег",цена:{res:"астральный кристалл",k:0.7},школа:"illusion",дарМолитвы:"def",звук:"magic_shimmer"},
  molgur:{культ:"Костяной Счёт",святое:"оссуарий под открытым небом",жрецы:"счётчики с костяными бирками",табу:"не оставлять мёртвых несчитанными в его праздник",ключ:"kill",артефакт:"Костяная бирка Молгура",чудо:"счёт костей называет, сколько вам ещё идти",друг:"omenos",враг:"death",праздник:49,погода:"Облачно",цена:{res:"кость",k:0.7},школа:"necro",дарМолитвы:"xp",звук:"march_snare"},
  thessa:{культ:"Шёпот в Спину",святое:"глухая ниша, где не слышно эха",жрецы:"шептуны, говорящие только на ухо",табу:"не повышать голоса в её праздник",ключ:"deal",артефакт:"Тихая нить Тессы",чудо:"один отказ превращается в согласие",друг:"irenna",враг:"zarya",праздник:50,погода:"Туман",цена:{res:"сон-трава",k:0.7},школа:"mind",дарМолитвы:"gold",звук:"hiss"},
@@ -35289,7 +35280,7 @@ const LESSER_GODS=[
  {id:"lg_zvezd",n:"Астрен Звёздный",ep:"Тот, кто ведёт ночью",тип:"свет",область:18,сфера:"звёзды, ночной путь, обеты",культ:"Звёздные счётчики",святое:"каменный круг на холме",обряд:"обет под звёздами",жрецы:"ночные счётчики",табу:"не молиться его врагу в его праздник",ключ:"rival",артефакт:"Звёздная сеть Астрена",чудо:"путь виден ночью",друг:"moon",враг:"dg_srok",праздник:17,погода:"Ясно",цена:{res:"кристалл",k:0.8},школа:"aether",дар:"mana",звук:"magic_hum"},
  {id:"lg_pamyat",n:"Мнема Памятливая",ep:"Та, что помнит имена",тип:"свет",область:19,сфера:"память, имена, летописи",культ:"Летописцы",святое:"стена имён у старой башни",обряд:"вырезать имя на стене",жрецы:"летописцы с ножами для дерева",табу:"не молиться её врагу в её праздник",ключ:"rival",артефакт:"Перо Мнемы",чудо:"забытое вспоминается",друг:"time",враг:"dg_opis",мир:true,праздник:21,погода:"Облачно",цена:{res:"грибы",k:0.9},школа:"mind",дар:"xp",звук:"uh_bell"},
  /* тёмные малые боги — по тёмным империям */
- {id:"dg_opis",n:"Опись Безмолвная",ep:"Та, что считает молча",тип:"тьма",держава:"kost",сфера:"подсчёт, реестр, забытые",культ:"Молчаливые счётчики",святое:"склеп с длинной описью",обряд:"вписать чужое имя",жрецы:"счётчики без языков",табу:"не убивать несчитанного в её праздник",ключ:"kill",артефакт:"Костяное стило Описи",чудо:"мёртвые не встают",друг:"molgur",враг:"lg_pamyat",праздник:3,погода:"Туман",цена:{res:"кость",k:0.8},школа:"dark",дар:"xp",звук:"wraith_moan"},
+ {id:"dg_opis",n:"Опись Безмолвная",ep:"Та, что считает молча",тип:"тьма",держава:"kost",сфера:"подсчёт, реестр, забытые",культ:"Молчаливые счётчики",святое:"склеп с длинной описью",обряд:"вписать чужое имя",жрецы:"счётчики без языков",табу:"не убивать несчитанного в её праздник",ключ:"kill",артефакт:"Костяное стило Описи",чудо:"мёртвые не встают",друг:"molgur",враг:"lg_pamyat",праздник:3,погода:"Туман",цена:{res:"кость",k:0.8},школа:"dark",дар:"xp",звук:"arte_page"},
  {id:"dg_shram",n:"Шрамар Носящий",ep:"Тот, кто носит все раны",тип:"тьма",держава:"krov",сфера:"шрамы, зарок, месть",культ:"Носящие шрам",святое:"камень с засечками",обряд:"засечка за каждую рану",жрецы:"меченые",табу:"не молиться его врагу в его праздник",ключ:"rival",артефакт:"Засечный нож Шрамара",чудо:"раны не кровоточат",друг:"kharg",враг:"lg_zhat",праздник:7,погода:"Гроза",цена:{res:"руда",k:0.85},школа:"blood",дар:"hp",звук:"oc_growl"},
  {id:"dg_oskol",n:"Осколла Двоящаяся",ep:"Та, что в каждом осколке",тип:"тьма",держава:"zerk",сфера:"осколки, отражения, ложь",культ:"Осколочники",святое:"зал разбитых зеркал",обряд:"разбить своё отражение",жрецы:"безликие",табу:"не торговать в её праздник честно",ключ:"trade",артефакт:"Осколок Осколлы",чудо:"двойник отводит удар",друг:"selune",враг:"lg_sud",праздник:11,погода:"Туман",цена:{res:"кристалл",k:0.8},школа:"illusion",дар:"mana",звук:"oc_glass_hit"},
  {id:"dg_plesn",n:"Плесневик Тихий",ep:"Тот, кто растёт в сырости",тип:"тьма",держава:"gnil",сфера:"плесень, сырость, терпение",культ:"Сырые",святое:"погреб с мохнатыми стенами",обряд:"хлеб оставить гнить",жрецы:"погребные",табу:"не убивать в его праздник",ключ:"kill",артефакт:"Мохнатая чаша Плесневика",чудо:"яд не берёт",друг:"vermis",враг:"lg_pchel",праздник:15,погода:"Дождь",цена:{res:"грибы",k:0.7},школа:"plants",дар:"hp",звук:"oc_bubble"},
@@ -35564,7 +35555,7 @@ const MINOR_REALMS=[
  {id:"mr_step",n:"Степное ханство Ковыльного Ветра",short:"Ковыльный Ветер",тип:"свет",область:8,dx:-1200,dy:-1100,gov:"хан и круг табунщиков",econ:"кони, кость, трава",ресурс:"трава",войско:{полки:4,мораль:79,снабжение:52},звук:"caravan_drum",о:"юрты, табуны и ветер в ковыле"},
  {id:"dr_kurg",n:"Погост Немых Курганов",short:"Немые Курганы",тип:"тьма",держава:"kost",dx:-260,dy:220,gov:"курганный староста и переписчики",econ:"кость, опись, тишина",ресурс:"кость",войско:{полки:2,мораль:58,снабжение:64},звук:"deep_call",о:"курганы с описями у входов"},
  {id:"dr_voda",n:"Зеркальный удел Обратной Воды",short:"Обратная Вода",тип:"тьма",держава:"zerk",dx:240,dy:-230,gov:"наместник и его отражение",econ:"кристалл, отражения, подмены",ресурс:"кристалл",войско:{полки:2,мораль:60,снабжение:70},звук:"bell_small",о:"озеро, в котором отражается не то"},
- {id:"dr_polya",n:"Гнилая марка Червивых Полей",short:"Червивые Поля",тип:"тьма",держава:"gnil",dx:-230,dy:-240,gov:"маркграф-червь и погребные",econ:"грибы, гниль, ходы",ресурс:"грибы",войско:{полки:2,мораль:55,снабжение:76},звук:"serpent_horn",о:"поля, изрытые ходами"},
+ {id:"dr_polya",n:"Гнилая марка Червивых Полей",short:"Червивые Поля",тип:"тьма",держава:"gnil",dx:-230,dy:-240,gov:"маркграф-червь и погребные",econ:"грибы, гниль, ходы",ресурс:"грибы",войско:{полки:2,мораль:55,снабжение:76},звук:"wyrm_dark",о:"поля, изрытые ходами"},
  {id:"dr_kotly",n:"Голодный улус Пустых Котлов",short:"Пустые Котлы",тип:"тьма",держава:"golod",dx:250,dy:230,gov:"улусный едок и котловые",econ:"кость, поборы, котлы",ресурс:"кость",войско:{полки:3,мораль:77,снабжение:40},звук:"throng_march",о:"стойбище вокруг пустых котлов"}];
 MINOR_REALMS.forEach(r=>{
  let cx,cy;
@@ -35820,7 +35811,7 @@ const FACETS=[
    "и слышно, сколько их","и слышно, ранена ли","и слышно, идёт она к вам или мимо",
    "и слышно, чего она боится","живое не подходит незамеченным"],
   условие:"бить и выслеживать зверьё",предел:"нежить и камень молчат по-прежнему",
-  синергия:"с «Тихим следом»",звук:"beast_growl",
+  синергия:"с «Тихим следом»",звук:"oc_growl",
   минус:"чужое дыхание не даёт спать: отдых короче",
   k:[1,2,3,4,5,6,7,8,9,10],
   врата:{4:FACET_GATE("выследить двадцать раз",()=>deeds("tracks")>=20),
@@ -36543,9 +36534,9 @@ const Academy=Modules.register("ACADEMY",{
  rest(){const n=this.need();if(n)return n;if((Number(G.gold)||0)<5)return "Койка в общежитии — пять золотых: не хватает.";G.gold-=5;G.hp=G.hpMax;G.mana=G.manaMax;safeFn(()=>{Energy.ensure();G.will=G.willMax;});G.hour=(Number(G.hour)||0)+8;if(G.hour>=24){G.hour-=24;G.day=(Number(G.day)||1)+1;}
   safeFn(()=>Bank.play("stk_inn",{gain:0.4,maxSec:3}));return "Общежитие: восемь часов сна, здоровье, мана и воля полны.";},
  side(id){const a=this.ensure();const s=ACADEMY_SIDES.find(x=>x.id===id);if(!s)return "Такой стороны нет.";const n=this.need();if(n)return n;if(a.сторона===id)return `Вы и так с «${s.n}».`;const было=a.сторона;a.сторона=id;a.реп=(Number(a.реп)||0)-(было?2:0);
-  safeFn(()=>Bank.play(id==="rectorate"?"temple_bell":"crowd_cheer",{gain:0.45,maxSec:3}));journal(`Академия: сторона — ${s.n}.`);safeFn(()=>Ledger.add("политика",`Академия: вы с «${s.n}»`,"выбор"));return `Вы с «${s.n}»: ${s.о}.${было?" Прежняя сторона это запомнила.":""}`;},
+  safeFn(()=>Bank.play(id==="rectorate"?"temple_bell":"throng_cry",{gain:0.45,maxSec:3}));journal(`Академия: сторона — ${s.n}.`);safeFn(()=>Ledger.add("политика",`Академия: вы с «${s.n}»`,"выбор"));return `Вы с «${s.n}»: ${s.о}.${было?" Прежняя сторона это запомнила.":""}`;},
  duel(){const a=this.ensure();const n=this.need();if(n)return n;if(a.сторона==="rectorate")return "Ректорат дуэли запрещает: вы с ним.";if(G.inCombat)return "Бой уже идёт.";const lvl=Math.max(1,Number(G.level)||1);
-  const m={id:"duelist",n:"Студент-дуэлянт",snd:"mmagic",fx:"spark",lvl,hp:24+lvl*8,dmg:3+lvl,xp:20+lvl*6,gold:0,biomes:[],max:9,дуэль:true};safeFn(()=>Bank.play("herald_trumpet",{gain:0.45,maxSec:3}));narrate("Дуэльный круг Академии: студент напротив поднимает посох. Бой до первой крови.");startCombat({x:G.x,y:G.y,monster:m});return "";},
+  const m={id:"duelist",n:"Студент-дуэлянт",snd:"magic",fx:"spark",lvl,hp:24+lvl*8,dmg:3+lvl,xp:20+lvl*6,gold:0,biomes:[],max:9,дуэль:true};safeFn(()=>Bank.play("herald_trumpet",{gain:0.45,maxSec:3}));narrate("Дуэльный круг Академии: студент напротив поднимает посох. Бой до первой крови.");startCombat({x:G.x,y:G.y,monster:m});return "";},
  onVictory(m){try{if(!m||!m.дуэль)return;const a=this.ensure();a.дуэли=(Number(a.дуэли)||0)+1;a.реп=(Number(a.реп)||0)+2;narrate(`Дуэль выиграна: ${a.дуэли}. Академия это заметила.`,{interrupt:false});}catch(_){}},
  expedition(){const a=this.ensure();const n=this.need();if(n)return n;if((G.quests||[]).some(q=>!q.done&&q.chain==="expedition"))return "Экспедиция уже идёт: сперва вернитесь с неё.";const c=this.here();const npc=getNPC(c.x,c.y,0,"Магистр");
   if(!Array.isArray(G.quests))G.quests=[];const q=makeChainQuest(npc,"expedition",0);if(!q)return "Декан сегодня без дел.";G.quests.push(q);a.экспедиции=(Number(a.экспедиции)||0)+1;safeFn(()=>Bank.play("herald_trumpet",{gain:0.4,maxSec:3}));journal("Академия: экспедиция факультета.");return `Экспедиция факультета: ${q.text}`;},
@@ -36670,7 +36661,7 @@ const SYNDICATES=[
  {id:"spears",n:"Ломаные копья",спец:"наёмники вне закона",правила:"контракт святее клятвы; нанимателя не судить",лидер:"Капитан Дрор",города:["tarvek","rankair"],область:8,конфликт:["ветераны","новобранцы"],звук:"herald_trumpet"},
  {id:"ash",n:"Пепельные скупщики",спец:"скупка краденого и редкого",правила:"платим сразу, спрашиваем никогда",лидер:"Серая Ильма",города:["eshgar","kernash"],область:18,конфликт:["весы","мешки"],звук:"arte_coins"},
  {id:"ears",n:"Тысяча ушей",спец:"информаторы",правила:"слово продаётся один раз; ложь — смерть",лидер:"Слепой Тарн",города:["lioren","dormara"],область:11,конфликт:["слушающие","говорящие"],звук:"amb_wind"},
- {id:"pit",n:"Подпольная яма",спец:"бои без правил",правила:"ставка вперёд; проигравший молчит",лидер:"Ямщик Гурд",города:["norkael","sardorn"],область:12,конфликт:["бойцы","держатели ставок"],звук:"crowd_cheer"}];
+ {id:"pit",n:"Подпольная яма",спец:"бои без правил",правила:"ставка вперёд; проигравший молчит",лидер:"Ямщик Гурд",города:["norkael","sardorn"],область:12,конфликт:["бойцы","держатели ставок"],звук:"throng_cry"}];
 const SYND_BY_ID=Object.fromEntries(SYNDICATES.map(x=>[x.id,x]));
 const Syndicates=Modules.register("SYNDICATES",{
  list:SYNDICATES,byId:id=>SYND_BY_ID[id]||null,
@@ -36710,7 +36701,7 @@ const Oversight=Modules.register("OVERSIGHT",{
  forbids(sp){try{if(!this.inCity())return null;const sc=safeFn(()=>spellSchool(sp),null);if(!sc)return null;const law=this.lawHere();
   if(law.запрет.includes(sc.id))return `В державе «${law.emp.short}» школа «${sc.n}» под запретом Надзора: в городе её не творят. За стенами — на свой страх.`;
   if(law.лицензия.includes(sc.id)&&!this.hasLicense(sc.id,law.emp)){this.violate(law.emp,`чары школы «${sc.n}» без лицензии`);}return null;}catch(_){return null;}},
- violate(emp,что){try{emp=emp||this.lawHere().emp;if(!G.wanted||typeof G.wanted!=="object")G.wanted={};G.wanted[emp.short]=(Number(G.wanted[emp.short])||0)+1;safeFn(()=>addStand("noble",emp.short,-2));safeFn(()=>Bank.play("watch_call",{gain:0.4,maxSec:2}));
+ violate(emp,что){try{emp=emp||this.lawHere().emp;if(!G.wanted||typeof G.wanted!=="object")G.wanted={};G.wanted[emp.short]=(Number(G.wanted[emp.short])||0)+1;safeFn(()=>addStand("noble",emp.short,-2));safeFn(()=>Bank.play("guard_shout",{gain:0.4,maxSec:2}));
   narrate(`Надзор «${emp.short}» заметил: ${что}. Нарушений ${G.wanted[emp.short]}; штраф придёт завтра.`,{interrupt:false});safeFn(()=>Talk.later(1,`Надзор «${emp.short}» взыскал штраф за ${что}: двадцать золотых.`,{золото:-20}));if(G.wanted[emp.short]>=3)safeFn(()=>Ledger.add("политика",`Розыск Надзора «${emp.short}»: три нарушения`,"Надзор"));return true;}catch(_){return false;}},
  license(school){const law=this.lawHere();if(!this.inCity())return "Лицензии выдают в городе, у инспектора Надзора.";if(law.запрет.includes(school))return `«${this.schoolName(school)}» в державе «${law.emp.short}» под запретом: лицензий не дают.`;if(!law.лицензия.includes(school))return `«${this.schoolName(school)}» здесь лицензии не требует.`;if(this.hasLicense(school,law.emp))return "Лицензия уже есть.";
   const нужно=school==="necro"?"звание в Академии или третья ступень артефакторики":"второй уровень";if(school==="necro"&&!(safeFn(()=>Object.values((G.academy||{}).фак||{}).some(f=>f.курс>0),false)||mastLevel("arte")>=3))return `Лицензия на «${this.schoolName(school)}»: нужно ${нужно}.`;
@@ -36721,7 +36712,7 @@ const Oversight=Modules.register("OVERSIGHT",{
  settle(){const law=this.lawHere();const w=this.wanted(law.emp);if(!w)return "Нарушений за вами нет.";const цена=w*40;if((Number(G.gold)||0)<цена)return `Погасить нарушения: ${цена} золота, не хватает.`;G.gold-=цена;G.wanted[law.emp.short]=0;safeFn(()=>Bank.play("arte_coins",{gain:0.45,maxSec:2}));return `Нарушения погашены за ${цена} золота: Надзор «${law.emp.short}» вас больше не ищет.`;},
  onCase(верно){try{const law=this.lawHere();if(верно&&G.ovContract&&G.ovContract[law.emp.short]){G.gold+=40;narrate("Надзор по договору доплачивает сорок золотых за раскрытое дело.",{interrupt:false});}}catch(_){}},
  /* Приход в город разыскиваемого: стража на воротах. */
- arrive(){try{if(!this.inCity()||G.inCombat)return false;const law=this.lawHere();if(this.wanted(law.emp)<3)return false;if(G.ovStop===G.day)return false;G.ovStop=G.day;narrate(`Стража Надзора «${law.emp.short}» узнаёт вас: три нарушения. Или платите (окно Надзора), или бой.`,{pri:1});safeFn(()=>Bank.play("watch_call",{gain:0.5,maxSec:3}));return true;}catch(_){return false;}},
+ arrive(){try{if(!this.inCity()||G.inCombat)return false;const law=this.lawHere();if(this.wanted(law.emp)<3)return false;if(G.ovStop===G.day)return false;G.ovStop=G.day;narrate(`Стража Надзора «${law.emp.short}» узнаёт вас: три нарушения. Или платите (окно Надзора), или бой.`,{pri:1});safeFn(()=>Bank.play("guard_shout",{gain:0.5,maxSec:3}));return true;}catch(_){return false;}},
  text(){const law=this.lawHere();return `Надзор державы «${law.emp.short}»: под запретом — ${law.запрет.map(id=>this.schoolName(id)).join(", ")}; по лицензии — ${law.лицензия.map(id=>`${this.schoolName(id)}${this.hasLicense(id,law.emp)?" (есть)":""}`).join(", ")}. Нарушений за вами ${this.wanted(law.emp)}${G.ovContract&&G.ovContract[law.emp.short]?"; договор заключён":""}. Эсхатическая магия — ${safeFn(()=>Escha.allowedHere(),false)?"разрешена вам":"без лицензии некромантии — нарушение"}.`;},
  npcButtons(n){try{if(!n||n.prof!=="Инспектор Надзора")return "";const law=this.lawHere();return `<div class="list-line" tabindex="0" data-speak="${this.text().replace(/"/g,"&quot;")}">⚖️ Инспектор Надзора.</div>`+law.лицензия.filter(id=>!this.hasLicense(id,law.emp)).map(id=>`<button class="item" data-cmd="ovact:license~${id}" data-speak="Лицензия на ${this.schoolName(id)}: восемьдесят золотых.">📜 Лицензия: ${this.schoolName(id)} (80 з.)</button>`).join("")+`<button class="item" data-cmd="ovact:contract" data-speak="Договор с Надзором.">🤝 Договор</button><button class="item" data-cmd="ovact:settle" data-speak="Погасить нарушения.">🪙 Погасить нарушения</button>`;}catch(_){return "";}},
  daily(){try{Object.keys(G.wanted||{}).forEach(k=>{if(G.wanted[k]>0&&hashName(G.day,k.length,7710)<0.15){G.wanted[k]=Math.max(0,G.wanted[k]-1);}});}catch(_){}}});
@@ -36734,7 +36725,7 @@ const Escha=Modules.register("ESCHA",{
  remainsHere(o){try{if(o&&objProp(o)==="bones")return true;if(G.place&&G.place.stype==="ossuary")return true;const b=G.place?blockAt(G.place.x,G.place.y):null;return !!(b&&b.район==="cemetery");}catch(_){return false;}},
  memory(o){const w=this.why();if(w)return `Чтение остаточной памяти: ${w}.`;if(!this.remainsHere(o))return "Останков рядом нет: память читают у костей, в костнице или на кладбище.";const c=Energy.spend({mana:4});if(!c.ок)return `Чтение памяти: ${c.почему}.`;
   const h=hashName(G.x+(G.place?G.place.x:0),G.y+(G.place?G.place.y:0),7800);const видел=["чью-то спину в плаще с чужим гербом","огонь, который шёл против ветра","руку с перстнем, что закрыла ему рот","дорогу вниз, которой на карте нет","лицо, которое он знал с детства"][Math.floor(h*5)%5];
-  safeFn(()=>{Bank.play("uh_bell",{gain:0.5,maxSec:3});setTimeout(()=>safeFn(()=>Bank.play("moan_deep",{gain:0.35,maxSec:3})),400);});safeFn(()=>deed("rites"));safeFn(()=>Balance.shift(-1,"память мёртвых"));safeFn(()=>Ledger.add("история",`Остаточная память: последним видел ${видел}`,"эсхатическая магия"));
+  safeFn(()=>{Bank.play("uh_bell",{gain:0.5,maxSec:3});setTimeout(()=>safeFn(()=>Bank.play("wraith_moan",{gain:0.35,maxSec:3})),400);});safeFn(()=>deed("rites"));safeFn(()=>Balance.shift(-1,"память мёртвых"));safeFn(()=>Ledger.add("история",`Остаточная память: последним видел ${видел}`,"эсхатическая магия"));
   const дело=safeFn(()=>Cases.here(),null);let хвост="";if(дело&&!дело.st.решено&&дело.t.улики.includes("память")&&!дело.st.улики["память"]){хвост=" "+Cases.find("память");}
   return `Остаточная память: последним он видел ${видел}.${хвост}`;},
  cause(o){const w=this.why();if(w)return `Причина смерти: ${w}.`;if(!this.remainsHere(o))return "Останков рядом нет.";if(safeFn(()=>mastLevel("alchemy"),0)<1&&safeFn(()=>Sci.level("bioeng"),0)<1)return "Причину смерти читают алхимик или биоинженер: нужна первая ступень алхимии или биоинженерии.";
@@ -36997,9 +36988,9 @@ const Devour=Modules.register("DEVOUR",{
    мир выбросит один из них — с треском и по-настоящему. ══════════════ */
 const ECHO_KINDS=[
  {id:"edge", n:"осколок удара",  род:"удара",  о:"чужая злость легла в руку",
-  дар:"удар тяжелее",            звук:"blade_ring",   k:1,    мера:"единиц к удару"},
+  дар:"удар тяжелее",            звук:"lug_sword",   k:1,    мера:"единиц к удару"},
  {id:"hide", n:"осколок шкуры",  род:"шкуры",  о:"чужая шкура помнит, как держать удар",
-  дар:"защита крепче",           звук:"armor_clank",  k:1,    мера:"единиц к защите"},
+  дар:"защита крепче",           звук:"lug_clank",  k:1,    мера:"единиц к защите"},
  {id:"ear",  n:"осколок слуха",  род:"слуха",  о:"чужое ухо слышит то, чего вы не слышали",
   дар:"картина места шире",      звук:"deep_drip",    k:0.6,  мера:"шагов к слышимости"},
  {id:"vein", n:"осколок жилы",   род:"жилы",   о:"чужая жила тянет силу из воздуха",
@@ -37274,7 +37265,7 @@ const ANOM_RULES=[
  {id:"rust",n:"ржавый воздух",о:"железо стареет",маркер:"oc_corrode",как:"клинок темнеет за час",маршрут:"обойти верхом",ресурс:"руда",опасность:"снаряжение изнашивается вдвое"},
  {id:"cold",n:"вечный холод",о:"лето сюда не доходит",маркер:"sky_snow",как:"дыхание видно в полдень",маршрут:"вдоль тёплых камней",ресурс:"кость",опасность:"мёрзнуть и тратить воду"},
  {id:"heat",n:"подземный жар",о:"земля тёплая",маркер:"oc_sizzle",как:"снег не лежит",маршрут:"по мокрому руслу",ресурс:"камень",опасность:"жажда вдвое"},
- {id:"whisper",n:"шепчущая пустошь",о:"кто-то повторяет ваши слова",маркер:"moan_deep",как:"эхо отвечает не тем голосом",маршрут:"молча",ресурс:"грибы",опасность:"чужие слова путают память"},
+ {id:"whisper",n:"шепчущая пустошь",о:"кто-то повторяет ваши слова",маркер:"wraith_moan",как:"эхо отвечает не тем голосом",маршрут:"молча",ресурс:"грибы",опасность:"чужие слова путают память"},
  {id:"drift",n:"ползучая земля",о:"место сдвигается",маркер:"oc_rustle",как:"вчерашняя метка не там",маршрут:"по звёздам",ресурс:"ягоды",опасность:"выйти не туда, откуда шёл"},
  {id:"veil",n:"тонкая Грань",о:"тот мир близко",маркер:"stk_portal",как:"Ядро гудит, разломный слух звенит",маршрут:"быстро и не оглядываясь",ресурс:"кристалл",опасность:"встретить то, что оттуда"},
  {id:"lure",n:"манящая топь",о:"тянет свернуть",маркер:"amb_water",как:"тропа выглядит слишком удобной",маршрут:"держаться жёсткой земли",ресурс:"грибы",опасность:"увязнуть"},
@@ -37323,7 +37314,7 @@ const Zones=Modules.register("ZONES",{
   return `${z.n}: ${r.n}. ${r.о}. Признак: ${r.как}. Безопасный путь: ${r.маршрут}. Ресурс: ${r.ресурс}. Опасность: ${r.опасность}. Радиус ${z.r} ${plural(z.r,"шаг","шага","шагов")}.`;}});
 /* ── МЕСТА СИЛЫ ── */
 const POWER_PLACES=[
- {id:"kurgan",n:"курган",школа:"necro",трава:"кость",погода:"Туман",о:"насыпь над теми, кого помнят",звук:"moan_deep",дар:"мёртвые слышат вас лучше: некромантия и память дешевле"},
+ {id:"kurgan",n:"курган",школа:"necro",трава:"кость",погода:"Туман",о:"насыпь над теми, кого помнят",звук:"wraith_moan",дар:"мёртвые слышат вас лучше: некромантия и память дешевле"},
  {id:"grove",n:"священная роща",школа:"plants",трава:"трава",погода:"Ясно",о:"деревья старше держав",звук:"sky_leaves",дар:"травы растут вдвое, растительная магия дешевле"},
  {id:"spring",n:"источник",школа:"water",трава:"ягоды",погода:"Дождь",о:"вода бьёт из камня и не мёрзнет",звук:"amb_water",дар:"вода полна, лечение дешевле"},
  {id:"peak",n:"горное святилище",школа:"air",трава:"кристалл",погода:"Ветрено",о:"камни поставлены кругом на вершине",звук:"sky_gust",дар:"воздух и свет слушаются, видно дальше"},
@@ -37562,7 +37553,7 @@ const GLOBAL_EVENTS=[
   начать(){safeFn(()=>Balance.shift(-3,"затмение"));return "звери молчат, жрецы не выходят из храмов";},эффект:{встречи:1.5,чары:0.8}},
  {id:"magicstorm",n:"Магическая буря",о:"мана идёт волнами и бьёт по неосторожным",срок:5,звук:"sky_thunder",
   начать(){safeFn(()=>Waves.set("magic",5));return "чары дешевле, но с отдачей";},эффект:{чары:0.75}},
- {id:"plague",n:"Эпидемия",о:"хворь идёт по трактам",срок:9,звук:"moan_deep",
+ {id:"plague",n:"Эпидемия",о:"хворь идёт по трактам",срок:9,звук:"wraith_moan",
   начать(){return "города закрывают ворота, лекарства дорожают";},эффект:{цены:1.25}},
  {id:"schism",n:"Раскол державы",о:"держава разделилась надвое",срок:11,звук:"trombone_alarm",
   начать(){const e=EMPIRES[Math.floor(hashName(G.day,7,8701)*EMPIRES.length)%EMPIRES.length];safeFn(()=>addStand("fact",e.short,-5));return `держава «${e.short}» раскололась: два двора, две пошлины`;},эффект:{цены:1.2}},
@@ -37619,7 +37610,7 @@ const CONJ_BEASTS=[
   о:"крылья не шумят, зато сыплется пепел — по нему его и находят"},
  {id:"cj_iron",n:"Железный пришлец",snd:"mstomp",fx:"stomp",голос:"behemoth",сила:1.4,
   о:"тяжёлый и медленный: каждый его шаг слышно за десять клеток"},
- {id:"cj_choir",n:"Хор без тел",snd:"mmagic",fx:"magic",голос:"ghost",сила:1.1,
+ {id:"cj_choir",n:"Хор без тел",snd:"mwail",fx:"magic",голос:"ghost",сила:1.1,
   о:"голосов много, а тела ни одного; бьёт согласием всех сразу"},
  {id:"cj_maw",n:"Пасть перехода",snd:"mroar",fx:"roar",голос:"dragon",сила:1.6,
   о:"сама дыра, у которой выросли зубы: то, что в неё попало, не возвращается"}];
@@ -37714,7 +37705,7 @@ const MIRTH_EVENTS=[
   звук:"oc_wheels",шутка:"stk_crash",где:"город",
   что:"Бочка прошла весь ряд, снесла шест с вывеской и встала у прилавка бондаря — единственного, кто ей обрадовался."},
  {id:"mirth_rooster",n:"петух не по часам",о:"петух запел в полдень",
-  звук:"bird_rooster",шутка:"crowd_cheer",где:"селение",
+  звук:"bird_rooster",шутка:"throng_cry",где:"селение",
   что:"Полсела решило, что проспало, и вышло на работу второй раз. Петуха сочли начальством и накормили."},
  {id:"mirth_cat",n:"кот на алтаре",о:"кот улёгся там, где кладут дары",
   звук:"temple_bell",шутка:"charm_bell",где:"храм",
@@ -37729,7 +37720,7 @@ const MIRTH_EVENTS=[
   звук:"beast_sheep",шутка:"oc_munch",где:"селение",
   что:"Ест крышу и смотрит на хозяина сверху вниз. Хозяин снизу вверх объясняет ей, что так нельзя."},
  {id:"mirth_pig",n:"поросёнок с базара",о:"поросёнок ушёл из-под руки торговца",
-  звук:"beast_pig",шутка:"throng_cry",где:"город",
+  звук:"beast_pig",шутка:"throng_hail_m",где:"город",
   что:"За ним бежит пол-улицы, поросёнок бежит быстрее всех. Взяли его только потому, что он сам остановился у пекарни."},
  {id:"mirth_bucket",n:"ведро на голове",о:"в кузне подмастерье примерил не то",
   звук:"forge_hammer",шутка:"metal_hit",где:"город",
@@ -37741,7 +37732,7 @@ const MIRTH_EVENTS=[
   звук:"oc_door_open",шутка:"oc_hinge",где:"трактир",
   что:"Полчаса он был уверен, что это его комната и что её заперли назло. Хозяин показал: его — напротив, и открыта."},
  {id:"mirth_boots",n:"сапоги не с той ноги",о:"дозорный идёт обход как-то странно",
-  звук:"guard_march",шутка:"watch_call",где:"город",
+  звук:"guard_march",шутка:"guard_shout",где:"город",
   что:"Весь обход прошёл в чужих сапогах и признался только к утру. Смена хохотала громче, чем положено в дозоре."}];
 const MIRTH_BY_ID=Object.fromEntries(MIRTH_EVENTS.map(m=>[m.id,m]));
 /* Что остаётся после смеха. У каждого случая своё, и это не украшение. */
@@ -37799,7 +37790,7 @@ const RANDOM_EVENTS=[
  {id:"caravan",n:"обоз",о:"обоз идёт мимо и зовёт разделить костёр",звук:"throng_march",когда:()=>!G.place&&!isNight(),делать(){G.inv["Еда в дорогу"]=(Number(G.inv["Еда в дорогу"])||0)+1;return "у костра дали хлеба на дорогу";}},
  {id:"ambush",n:"нападение",о:"на тракте ждали не вас, но сойдёт и вас",звук:"throng_fight",когда:()=>!G.place&&!G.inCombat,делать(){const lvl=Math.max(1,(Number(G.level)||1));startCombat({x:G.x,y:G.y,monster:{id:"bandit",n:"Лихой человек",snd:"mgrowl",fx:"growl",lvl,hp:26+lvl*9,dmg:4+lvl,xp:20+lvl*10,gold:12+lvl*4}});return "бой";}},
  {id:"quarrel",n:"спор",о:"двое не поделили межу и зовут рассудить",звук:"throng_cry",когда:()=>!!G.place,делать(){safeFn(()=>addAxis("уважение",2));return "вы рассудили, и оба согласились";}},
- {id:"feast",n:"праздник",о:"улица пьёт и поёт",звук:"crowd_cheer",когда:()=>!!G.place,делать(){G.hp=Math.min(G.hpMax,G.hp+8);return "вас угостили: здоровье плюс восемь";}},
+ {id:"feast",n:"праздник",о:"улица пьёт и поёт",звук:"throng_cry",когда:()=>!!G.place,делать(){G.hp=Math.min(G.hpMax,G.hp+8);return "вас угостили: здоровье плюс восемь";}},
  {id:"fire",n:"пожар",о:"крыша занялась, и воду носят цепочкой",звук:"oc_fire",когда:()=>!!G.place,делать(){safeFn(()=>{addStand("city",(isCityAt(G.place.bx,G.place.by)||{}).name,3);addAxis("благодарность",2);});return "вы встали в цепочку, и огонь сбили";}},
  {id:"surge",n:"магический выброс",о:"воздух звенит и бьёт по коже",звук:"oc_electrical",когда:()=>true,делать(){Energy.add("aether",3);G.hp=Math.max(1,G.hp-3);safeFn(()=>Balance.shift(-1,"выброс"));return "эфир плюс три, здоровье минус три";}},
  /* §5: пока идёт Сопряжение, по дорогам ходят пришлые и экспедиции. Оба
@@ -37863,7 +37854,7 @@ const RANDOM_EVENTS=[
     return `${e.n} (${e.о}); ведёт их ${e.проф.toLowerCase()}. За ${цена} золота отдали ${e.дар.res} ×${e.дар.n}`;}
    return `${e.n} (${e.о}); ведёт их ${e.проф.toLowerCase()}. Просят ${цена} золота за ${e.дар.res} — у вас столько нет`;}},
  {id:"beast",n:"зверь",о:"кто-то крупный вышел на тропу",звук:"wolf_howl",когда:()=>!G.place&&!G.inCombat,делать(){const c=safeFn(()=>cellContent(G.x,G.y),null);const cand=MONSTERS.filter(m=>m.biomes&&c&&m.biomes.includes(c.terrain[0]));const m=cand.length?cand[Math.floor(Math.random()*cand.length)]:MONSTERS[0];const lvl=Math.max(1,(Number(G.level)||1));startCombat({x:G.x,y:G.y,monster:Object.assign({},m,{lvl,hp:22+lvl*8,dmg:3+lvl,xp:18+lvl*9,gold:4})},{morph:true});return "бой";}},
- {id:"sick",n:"поветрие",о:"в селении кашляют",звук:"moan_deep",когда:()=>!!G.place,делать(){if(invHas("трава",1)){invTake("трава",1);safeFn(()=>addAxis("благодарность",3));return "вы отдали травы, и жар спал";}G.hp=Math.max(1,G.hp-4);return "хворь зацепила и вас: здоровье минус четыре";}},
+ {id:"sick",n:"поветрие",о:"в селении кашляют",звук:"wraith_moan",когда:()=>!!G.place,делать(){if(invHas("трава",1)){invTake("трава",1);safeFn(()=>addAxis("благодарность",3));return "вы отдали травы, и жар спал";}G.hp=Math.max(1,G.hp-4);return "хворь зацепила и вас: здоровье минус четыре";}},
  {id:"snow",n:"снегопад",о:"снег валит стеной",звук:"sky_snow",когда:()=>/Снег|Метель/.test(String(G.weather||"")),делать(){G.hour=(Number(G.hour)||0)+1;if(G.hour>=24){G.hour-=24;G.day++;}return "переждали час";}},
  {id:"flood",n:"наводнение",о:"река вышла из берегов",звук:"stk_splash",когда:()=>/Ливень|Дождь/.test(String(G.weather||"")),делать(){G.water=Math.min(200,(Number(G.water)||0)+40);G.hour=(Number(G.hour)||0)+1;if(G.hour>=24){G.hour-=24;G.day++;}return "воды набрали, но крюк стоил часа";}},
  {id:"riot",n:"волнение",о:"площадь кричит о пошлинах",звук:"throng_cry",когда:()=>!!G.place,делать(){safeFn(()=>addAxis("известность",2));return "вас запомнили в толпе";}},
@@ -37904,7 +37895,7 @@ const ARMY_TRAITS=[
  {id:"командование",n:"командование",      о:"держат ли строй и слушают ли приказ",   звук:"herald_trumpet"},
  {id:"мораль",    n:"мораль",              о:"желание стоять, когда бьют",            звук:"war_brass"},
  {id:"снабжение", n:"снабжение",           о:"хлеб, железо и обозы",                  звук:"deep_cart"},
- {id:"разведка",  n:"разведка",            о:"знают ли, куда идти и кто напротив",    звук:"watch_call"},
+ {id:"разведка",  n:"разведка",            о:"знают ли, куда идти и кто напротив",    звук:"guard_shout"},
  {id:"транспорт", n:"транспорт",           о:"скорость подвоза и переброски",         звук:"mtg_cart"},
  {id:"чары",      n:"магическая поддержка",о:"что могут те, кто за спиной строя",     звук:"spell_battle"},
  {id:"осады",     n:"осадные средства",    о:"чем берут стену, а не поле",            звук:"siege_onager"}];
@@ -37913,7 +37904,7 @@ const WAR_ROLES=[
  {id:"raid",    n:"солдат",    свойство:"мораль",      о:"вылазка на вражеский дозор",
   треб:"оружие в руках и не в бою",           звук:"battle_sword"},
  {id:"scout",   n:"разведчик", свойство:"разведка",    о:"пройти по краю и вернуться со счётом костров",
-  треб:"ничего, кроме ног",                    звук:"watch_call"},
+  треб:"ничего, кроме ног",                    звук:"guard_shout"},
  {id:"diplomat",n:"дипломат",  свойство:"командование",о:"свести штабы и договориться о порядке",
   треб:"дипломатия от второй ступени Древа или обаяние от двенадцати", звук:"herald_trumpet"},
  {id:"saboteur",n:"диверсант", свойство:"осады",       о:"сжечь чужие машины и привезти чертёж",
@@ -38137,7 +38128,7 @@ function renderLiving(){
    Geometry, Survival. */
 const DUNG_TYPES=[
  {id:"mine",n:"шахта",о:"штольни, забои и вагонетки",ресурс:"руда",звук:"craft_stone",опасность:"обвал"},
- {id:"tomb",n:"гробница",о:"камеры, саркофаги и запечатанные ходы",ресурс:"кость",звук:"moan_deep",опасность:"неупокоенные"},
+ {id:"tomb",n:"гробница",о:"камеры, саркофаги и запечатанные ходы",ресурс:"кость",звук:"wraith_moan",опасность:"неупокоенные"},
  {id:"temple",n:"подземный храм",о:"нефы, алтари и купели",ресурс:"самоцвет",звук:"choir",опасность:"обряд, что не кончился"},
  {id:"fort",n:"подземная крепость",о:"казематы, склады и стрельницы",ресурс:"руда",звук:"clang_hard",опасность:"стража, что не ушла"},
  {id:"prison",n:"подземная тюрьма",о:"ярусы клеток и караулки",ресурс:"кость",звук:"clang_hard",опасность:"те, кого забыли выпустить"},
@@ -38250,7 +38241,7 @@ const DEEP_FAMILIES=[
  {id:"prism",n:"кристальные",ест:"кристалл",едят:"магмовые",ярус:[11,70],о:"растут, пока их не сломают",звук:"fx_crystal",страх:"резкий звук"},
  {id:"bonepile",n:"костяные оползни",ест:"кости",едят:"никто",ярус:[12,80],о:"собираются из того, что осталось",звук:"od_undead",страх:"святое"},
  {id:"magma",n:"магмовые пожиратели",ест:"кристальные",едят:"провальные",ярус:[14,90],о:"идут по теплу",звук:"fiend_roar",страх:"вода"},
- {id:"void",n:"провальные",ест:"всё живое",едят:"никто",ярус:[15,100],о:"их слышно позже, чем видно",звук:"moan_deep",страх:"порядок"},
+ {id:"void",n:"провальные",ест:"всё живое",едят:"никто",ярус:[15,100],о:"их слышно позже, чем видно",звук:"wraith_moan",страх:"порядок"},
  {id:"root",n:"корневые",ест:"воду",едят:"ползуны",ярус:[6,50],о:"тянутся из грибного леса",звук:"lug_growl",страх:"соль"},
  {id:"echo",n:"шёпотники",ест:"голоса",едят:"никто",ярус:[20,100],о:"повторяют то, что вы сказали час назад",звук:"amb_wind",страх:"тишина"},
  {id:"smith",n:"машинные стражи",ест:"ничего",едят:"никто",ярус:[25,100],о:"механизмы Предтеч, что всё ещё несут службу",звук:"oc_electrical",страх:"вода и ржа"}];
@@ -38297,7 +38288,7 @@ const DeepRes=Modules.register("DEEPRES",{
 const PARANOIA=[
  {id:"steps",n:"шаги вдали",звук:"lug_step_grass",о:"кто-то идёт там, где вы не были"},
  {id:"scratch",n:"царапанье",звук:"oc_rustle",о:"по камню ведут чем-то твёрдым"},
- {id:"breath",n:"дыхание",звук:"moan_deep",о:"кто-то дышит рядом и не спешит"},
+ {id:"breath",n:"дыхание",звук:"wraith_moan",о:"кто-то дышит рядом и не спешит"},
  {id:"stones",n:"движение камней",звук:"stone_hit",о:"сверху сыплется мелочь"},
  {id:"drop",n:"падение мелочи",звук:"knock_soft",о:"что-то упало и покатилось"},
  {id:"echo",n:"смена эха",звук:"deep_wind",о:"ход за спиной стал шире, чем был"},
@@ -38380,7 +38371,7 @@ const Survival=Modules.register("SURVIVAL",{
   const беды=годные.filter(n=>S[n.id]>=n.порог);
   if(беды.length){const b=беды[0];G.hp=Math.max(1,G.hp-b.урон);
    if(G.needWarn!==`${b.id}:${G.day}`){G.needWarn=`${b.id}:${G.day}`;
-    safeFn(()=>Bank.play(b.id==="cold"?"sky_snow":b.id==="thirst"?"amb_desert":"moan_deep",{gain:0.35,maxSec:3}));
+    safeFn(()=>Bank.play(b.id==="cold"?"sky_snow":b.id==="thirst"?"amb_desert":"wraith_moan",{gain:0.35,maxSec:3}));
     narrate(`${b.n[0].toUpperCase()+b.n.slice(1)}: ${b.о}. Здоровье уходит по ${b.урон} за час. Лечит: ${b.лечит}.`,{interrupt:false});}}
   return true;}catch(_){return false;}},
  rest(){const S=this.state();safeFn(()=>deed("camps"));this.active().forEach(n=>{S[n.id]=Math.max(0,S[n.id]-(n.id==="fatigue"||n.id==="stress"?60:20));});return "Отдых: усталость и стресс сошли, прочее отпустило.";},
@@ -38577,7 +38568,7 @@ const MINE_RULES=[
  {д:10,n:"Верхние крепи",о:"ещё пахнет смолой от факелов артели",звук:"oc_wood_creak",дело:"обвалы редки"},
  {д:20,n:"Пыльный ход",о:"пыль стоит столбом и садится на язык",звук:"vent",дело:"жилы щедрее на треть"},
  {д:30,n:"Последний лагерь",о:"ниже артель не спускается: тут её край",звук:"lug_fire",дело:"последний лагерь шахты"},
- {д:40,n:"Шёпот начинается",о:"кто-то договаривает за вами последнее слово",звук:"hiss_high",дело:"эхо врёт"},
+ {д:40,n:"Шёпот начинается",о:"кто-то договаривает за вами последнее слово",звук:"serpent_hiss",дело:"эхо врёт"},
  {д:50,n:"Зал воротов",о:"машины подгорного народа, и часть из них ещё ходит",звук:"mechanism",дело:"подъёмник цел"},
  {д:60,n:"Живая порода",о:"стена тёплая и слегка подаётся под ладонью",звук:"oc_organic_hit",дело:"живых жил вдвое больше"},
  {д:70,n:"Обвальные ярусы",о:"садится всё: кровля, почва, собственный голос",звук:"oc_earthquake",дело:"обвалы вдвое чаще"},
@@ -38775,7 +38766,7 @@ const FORT_SERVICES=[
    safeFn(()=>{if(G.buffs){delete G.buffs["яд"];delete G.buffs["кровотечение"];}});
    safeFn(()=>buffSet("перевязан",8));
    return `Лекарь промывает, зашивает и бинтует: здоровья прибавилось на ${л}, и восемь часов раны держатся закрытыми.`;}},
- {id:"arsenal",часть:"arsenal",n:"оружие из арсенала",о:"оружейники ведут счёт древкам",цена:8,звук:"armor_clank",осада:true,
+ {id:"arsenal",часть:"arsenal",n:"оружие из арсенала",о:"оружейники ведут счёт древкам",цена:8,звук:"lug_clank",осада:true,
   дело(){const w=G.equip&&G.equip.weapon;
    if(w&&(Number(w.val)||0)>=9)return "Оружейник взвешивает ваш клинок и качает головой: в арсенале хуже, оставайтесь при своём.";
    G.equip=G.equip||{};G.equip.weapon={id:"fortblade",name:"Гарнизонный меч",type:"Меч",val:9};
@@ -39712,7 +39703,7 @@ function spellSchool(sp){try{const id=sp&&(sp.school||SPELL_SCHOOL[sp.n]);return
    оси только раскрывают то, что и так стояло за ними. ── */
 const SPELL_FORMS=[
  {id:"bolt",n:"стрела",имя:"Стрела",род:"стрелы",дальность:6,радиус:0,подготовка:0.2,откат:0,база:9,сем:["урон","контроль"],
-  урон:1,целей:0,держится:0,звук:"spell_bolt",о:"бьёт одну тварь",
+  урон:1,целей:0,держится:0,звук:"oc_zap",о:"бьёт одну тварь",
   ядро:{урон:"strike",контроль:"strike"}},
  {id:"wave",n:"волна",имя:"Волна",род:"волны",дальность:2,радиус:2,подготовка:0.4,откат:1,база:7,сем:["урон","защита","исцеление","контроль"],
   урон:0.65,целей:2,держится:0,звук:"oc_blast",о:"расходится вокруг",
@@ -39721,7 +39712,7 @@ const SPELL_FORMS=[
   урон:0,целей:0,держится:3,звук:"spell_ward",о:"держится на теле",
   ядро:{защита:"ward",исцеление:"heal",скрытность:"veil",контроль:"ease"}},
  {id:"mark",n:"метка",имя:"Метка",род:"метки",дальность:3,радиус:1,подготовка:0.5,откат:1,база:6,сем:["урон","защита","скрытность","контроль"],
-  урон:0.4,целей:0,держится:2,звук:"rune_square",о:"ложится на место",
+  урон:0.4,целей:0,держится:2,звук:"oc_res_rune",о:"ложится на место",
   ядро:{урон:"mark",защита:"seal",скрытность:"veil",контроль:"sense"}},
  {id:"call",n:"зов",имя:"Зов",род:"зова",дальность:0,радиус:3,подготовка:0.6,откат:3,база:10,сем:["урон","исцеление","скрытность","контроль"],
   урон:1.35,целей:1,держится:0,звук:"deep_call",о:"зовёт силу школы",
@@ -40918,7 +40909,7 @@ const ENC_TIERS=[
 /* Способ применения. Цель и риск при нём — не отдельные оси: в пакете у
    каждого способа ровно одна цель и ровно один риск, и это проверено. */
 const ENC_WAYS=[
- {id:"seal",  n:"печать", цель:"местность",           риск:"пространственный сдвиг", звук:"rune_square"},
+ {id:"seal",  n:"печать", цель:"местность",           риск:"пространственный сдвиг", звук:"oc_res_rune"},
  {id:"brew",  n:"состав", цель:"предмет",              риск:"искажение формы",        звук:"oc_boiling"},
  {id:"rite",  n:"ритуал", цель:"конструкция",          риск:"остаточная аура",        звук:"temple"},
  {id:"pulse", n:"импульс",цель:"броня",                риск:"истощение источника",    звук:"cast_shock"},
@@ -42038,7 +42029,7 @@ const SCHOOL_AUDIO={
  ice:{prep:"oc_ice_hit",charge:"cast_ice",cast:"spell_ice",travel:"lug_whoosh",impact:"mtg_ice_break",result:"oc_ice_hit",fade:"oc_wind"},
  lightning:{prep:"oc_electrical",charge:"oc_zap",cast:"cast_shock",travel:"oc_zap",impact:"oc_thunder",result:"stk_thunder",fade:"oc_electrical"},
  light:{prep:"magic_shimmer",charge:"cast_heal",cast:"spell_light",travel:"oc_zap",impact:"cast_heal",result:"bell_small",fade:"magic_rewind"},
- dark:{prep:"oc_sizzle",charge:"stk_dark",cast:"spell_dark",travel:"oc_pshsh",impact:"cast_burn",result:"oc_sizzle",fade:"moan_deep"},
+ dark:{prep:"oc_sizzle",charge:"stk_dark",cast:"spell_dark",travel:"oc_pshsh",impact:"cast_burn",result:"oc_sizzle",fade:"wraith_moan"},
  chaos:{prep:"oc_cracker",charge:"oc_electrical",cast:"spell_dark",travel:"oc_warp",impact:"oc_blast",result:"stk_blast",fade:"oc_smoke"},
  order:{prep:"oc_connect",charge:"cast_shield",cast:"spell_light",travel:"oc_zap",impact:"cast_block",result:"bell_small",fade:"stk_ward"},
  aether:{prep:"oc_electrical",charge:"oc_crystal_comm",cast:"spell_cast",travel:"oc_warp",impact:"cast_teleport",result:"stk_portal",fade:"oc_electrical"},
@@ -42046,7 +42037,7 @@ const SCHOOL_AUDIO={
  sound:{prep:"oc_thunder",charge:"cast_warcry",cast:"cast_thunder",travel:"lug_whoosh",impact:"oc_thunder",result:"stk_horn",fade:"oc_wind"},
  crystal:{prep:"oc_glass_hit",charge:"oc_crystal_comm",cast:"spell_ice",travel:"oc_zap",impact:"oc_glass_break",result:"mtg_glass",fade:"oc_crystal_comm"},
  plants:{prep:"lug_bush",charge:"oc_rustle",cast:"spell_cast",travel:"oc_rustle",impact:"harvest",result:"lug_bush",fade:"oc_rustle"},
- blood:{prep:"oc_organic_hit",charge:"lug_flesh",cast:"spell_dark",travel:"oc_pshsh",impact:"lug_splatter",result:"oc_organic_hit",fade:"moan_deep"},
+ blood:{prep:"oc_organic_hit",charge:"lug_flesh",cast:"spell_dark",travel:"oc_pshsh",impact:"lug_splatter",result:"oc_organic_hit",fade:"wraith_moan"},
  spirit:{prep:"choir",charge:"od_heal",cast:"spell_light",travel:"oc_warp",impact:"cast_heal",result:"choir",fade:"deep_wind"},
  mind:{prep:"oc_electrical",charge:"oc_connect",cast:"spell_cast",travel:"oc_zap",impact:"cast_timestop",result:"oc_electrical",fade:"magic_rewind"},
  gravity:{prep:"oc_quake",charge:"deep_stone",cast:"cast_quake",travel:"lug_thud",impact:"oc_earthquake",result:"deep_rocks",fade:"oc_quake"},
@@ -42058,9 +42049,9 @@ const SCHOOL_AUDIO={
  runes:{prep:"craft_stone",charge:"mtg_flint",cast:"spell_cast",travel:"oc_zap",impact:"oc_rock_hit",result:"stk_ward",fade:"oc_electrical"},
  artefact:{prep:"artifact_hum",charge:"oc_crystal_comm",cast:"spell_cast",travel:"oc_electrical",impact:"oc_diamond",result:"artifact_hum",fade:"oc_crystal_comm"},
  mystic:{prep:"bell_small",charge:"choir",cast:"spell_light",travel:"oc_warp",impact:"cast_heal",result:"bell_small",fade:"deep_wind"},
- demon:{prep:"deep_call",charge:"stk_dark",cast:"spell_summon",travel:"oc_pshsh",impact:"fiend_roar",result:"od_undead",fade:"moan_deep"},
+ demon:{prep:"deep_call",charge:"stk_dark",cast:"spell_summon",travel:"oc_pshsh",impact:"fiend_roar",result:"od_undead",fade:"wraith_moan"},
  alch:{prep:"oc_bubble",charge:"oc_boiling",cast:"cast_potion",travel:"oc_pshsh",impact:"oc_corrode",result:"mtg_explode",fade:"oc_smoke"},
- necro:{prep:"moan_deep",charge:"stk_dark",cast:"spell_dark",travel:"oc_pshsh",impact:"od_undead",result:"oc_corrode",fade:"deep_wind"},
+ necro:{prep:"wraith_moan",charge:"stk_dark",cast:"spell_dark",travel:"oc_pshsh",impact:"od_undead",result:"oc_corrode",fade:"deep_wind"},
  enchant:{prep:"charm_bell",charge:"magic_hum",cast:"spell_cast",travel:"magic_woosh",impact:"oc_diamond",result:"artifact_hum",fade:"magic_rewind"},
  forgemagic:{prep:"oc_inflame",charge:"oc_fire",cast:"spell_cast",travel:"magic_woosh",impact:"clang_hard",result:"oc_blast",fade:"ad_fire_sizzle"},
  homunc:{prep:"oc_bubble",charge:"oc_boiling",cast:"spell_summon",travel:"oc_swim",impact:"oc_splash",result:"wraith_moan",fade:"oc_smoke"},
@@ -42113,7 +42104,7 @@ function castSpell(i){const sp=SPELLS[i];
  if(!sp){narrate(`Слот ${i+1} пока пуст.`);return;}
  if(!G.spells.includes(sp.n)){narrate("Заклинание не изучено.");return;}
  if(sp.custom){const ч=spellCooling(sp);if(ч){safeFn(()=>Bank.play("hero_nomana",{kind:"magic",gain:0.5,maxSec:2}));narrate(`«${sp.n}» ещё перезаряжается: ${ч} ч.`);return;}}
- {const з=safeFn(()=>Oversight.forbids(sp),null);if(з){safeFn(()=>Bank.play("watch_call",{gain:0.45,maxSec:2}));narrate(з);return;}}
+ {const з=safeFn(()=>Oversight.forbids(sp),null);if(з){safeFn(()=>Bank.play("guard_shout",{gain:0.45,maxSec:2}));narrate(з);return;}}
  if(G.mana<sp.cost){safeFn(()=>Bank.play("hero_nomana",{kind:"magic",gain:0.6,maxSec:3}));
   narrate(`Нужно ${sp.cost} маны, у вас ${G.mana}.`);return;}
  МАНА_ДО=Number(G.mana)||0;
@@ -44655,7 +44646,7 @@ const FACTION_TRAITS=[
    return {знач:сила,
     слово:`${a.числ} копий, сила ${сила}; командование ${Math.round(a.командование)}, мораль ${Math.round(a.мораль)}, снабжение ${Math.round(a.снабжение)}`
      +(safeFn(()=>empireAtWar(i,G.day),false)?"; в походе":"; в гарнизонах")};}},
- {id:"spy",n:"разведка",о:"чем заняты соглядатаи этой седмицы",звук:"watch_call",
+ {id:"spy",n:"разведка",о:"чем заняты соглядатаи этой седмицы",звук:"guard_shout",
   дать(i){const op=safeFn(()=>secretOp(i,G.day),{n:"ничем",эффект:""});
    const р=safeFn(()=>Armies.trait(i,"разведка"),0);
    return {знач:р,слово:`тайное дело седмицы: ${op.n} — ${op.эффект}; глаза войска ${р} из ста`};}},
@@ -44749,7 +44740,7 @@ const FACTION_MOVES=[
   о:"держава платит богу, а берёт это с подданных",
   вес:s=>/храм/.test(s.раздор)?6:(s.бог?2:0),
   пошлина:1.25},
- {id:"purge",n:"облава на теневых",звук:"watch_call",
+ {id:"purge",n:"облава на теневых",звук:"guard_shout",
   о:"стража выходит на перекупщиков: запретное дорожает вдвое против обычного",
   вес:s=>3+Math.min(4,s.запретных),
   цена:(res,s)=>safeFn(()=>isContraband(res,s.держава),false)?1.3:1},
@@ -45008,7 +44999,7 @@ const WEVENT_KINDS=[
   конецСлово:"когда стороны перестанут воевать",
   конец:s=>!s.война&&!s.враги.length},
  {id:"revolt",n:"восстание",о:"город поднялся против казны",срок:14,
-  звук:"throng_cry",голоса:["throng_fight","watch_call","guard_shout"],
+  звук:"throng_cry",голоса:["throng_fight","guard_shout","warrior_shout"],
   ступени:["ропот на площадях","камни в стражу","баррикады","усмирение"],
   где:"город",кто:["цеха","чернь","городская стража","наёмники знати"],
   рес:["полотно","пряжа","трава","ягоды"],
@@ -45020,7 +45011,7 @@ const WEVENT_KINDS=[
   конецСлово:"когда цеха договорятся с казной",
   конец:s=>!/знать|цех|подат|жалованье|гильдии/.test(s.раздор)},
  {id:"plague",n:"эпидемия",о:"мор пошёл по кварталам",срок:21,
-  звук:"moan_deep",голоса:["wild_raven","hall_temple","throng_die_m"],
+  звук:"wraith_moan",голоса:["wild_raven","hall_temple","throng_die_m"],
   ступени:["первые больные","закрытые кварталы","мор","выздоровление"],
   где:"город",кто:["лекари","храмы","могильщики"],
   рес:["трава","эссенция","кровь","орган"],
@@ -45099,7 +45090,7 @@ const WEVENT_KINDS=[
   конецСлово:"когда разберут завал",
   конец:s=>false},
  {id:"invasion",n:"нашествие",о:"чужие пришли толпой",срок:18,
-  звук:"throng_march",голоса:["beast_roar","siege_alarm_raid","war_brass"],
+  звук:"throng_march",голоса:["brute_roar","siege_alarm_raid","war_brass"],
   ступени:["следы на окраинах","первые набеги","нашествие","отбились"],
   где:"область",кто:["чужое племя","твари из-за Грани","ополчение"],
   рес:["шкура","кость","орган","яд"],
@@ -45718,7 +45709,7 @@ const LORE_KINDS=[
  {id:"rite",  n:"обряд",               о:"как к этому обращаются",        откуда:"проведённые обряды у алтарей и кругов",
   дар:"благосклонность богов растёт быстрее",  звук:"temple_bell"},
  {id:"weak",  n:"слабость твари",      о:"чем её берут",                  откуда:"биологический отпечаток с четвёртой глубины",
-  дар:"по этой твари вы бьёте сильнее",        звук:"beast_growl"},
+  дар:"по этой твари вы бьёте сильнее",        звук:"oc_growl"},
  {id:"relic", n:"история вещи",        о:"откуда она и чья была",         откуда:"разбор артефакта: родословная прочитана",
   дар:"эту вещь у вас купят дороже",           звук:"artifact_hum"},
  {id:"secret",n:"политический секрет", о:"кто кому чем обязан",           откуда:"расследования и тайны синдикатов",

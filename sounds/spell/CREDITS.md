@@ -17,13 +17,8 @@
 | Роль в игре | Что звучит | Инструмент FluidR3_GM |
 |---|---|---|
 | chant_calliope | напев чар | lead_3_calliope |
-| charm_chiff | дуновение чар | lead_4_chiff |
-| hex_charang | порча | lead_5_charang |
 | old_magic | древние чары | lead_7_fifths |
 | pad_astral | астральная дымка | pad_1_new_age |
-| pad_hex | металл порчи | pad_6_metallic |
-| rune_square | начертание руны | lead_1_square |
-| spell_bolt | боевой разряд | lead_2_sawtooth |
 | spell_harp | арфа заклинания | orchestral_harp |
 | spirit_choir | хор духов | synth_choir |
 | spirit_voice | голос духа | lead_6_voice |

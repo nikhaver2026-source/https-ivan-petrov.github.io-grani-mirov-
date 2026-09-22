@@ -380,6 +380,91 @@ const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(e!==undefined?' :
    молчат.length===0&&маяки.length===0,{зовут:зовут.length,молчат,маяки});
  }
 
+
+ /* ── 22. вещь мира звучит живой записью, а не нотой инструмента ──
+    Папки inst, orch, mood, relic, score, folk — отдельные ноты звукового
+    шрифта FluidR3_GM, снятые по одной и сжатые в 58–64 кбит/с. Оркестру там
+    место: он отмечает события. Но рык твари, лязг доспеха, спуск тетивы,
+    обвал кладки, гул толпы и накат волны — вещи мира, и звучать они обязаны
+    живой записью. Двадцать восемь таких имён держали свою ноту, хотя живая
+    запись в банке уже лежала — под именем той роли, которой она и
+    принадлежит. Имена слиты с этими ролями: имя вещи исчезло, звук остался
+    живым, и ни одна запись не числится в двух ролях сразу. */
+ {
+  const ушли=["beast_roar","beast_growl","shriek","moan_deep","serpent_horn","howl_low",
+   "hiss_high","blade_ring","axe_chop","bow_release","shield_block","armor_clank",
+   "spear_thrust","march_low","watch_call","rune_square","spell_bolt","charm_chiff",
+   "hex_charang","pad_hex","beast_breath","crowd_cheer","dawn_birds","guard_whistle",
+   "isle_market","shore_wash","collapse","stone_low"];
+  const живут=["brute_roar","oc_growl","raptor_cry","wraith_moan","wyrm_dark","wolf_howl",
+   "serpent_hiss","lug_sword","craft_axe","battle_bow","battle_shield","lug_clank",
+   "mg_spear","throng_march","guard_shout","oc_res_rune","oc_zap","spell_light","curse",
+   "spell_dark","lug_snarl","throng_cry","wild_birds","signal_beep","ad_market_sel",
+   "ad_wave_rocky","stk_crash","dungeon_drone"];
+  const итог=await page.evaluate(([ушли,живут])=>{
+   const ноты=/^(inst|orch|mood|relic|score|folk|depth|beast|arms|spell)\//;
+   /* Слова, которые называют вещь мира, а не инструмент и не тему. */
+   const вещь=/рык|рёв|визг|шипен|лязг|обвал|тетив|поступь строя|оклик|рубящ|каменная толща|гул толпы|дыхание твари|накат|свисток|рассветные птицы|звон клинка|щит принял|начертание руны|боевой разряд|стон из глубины|змеиный зов|дуновение чар|металл порчи|свист выпада|островной торг|^вой$|^порча$/i;
+   const нотой=Object.keys(SOUND_BANK).filter(r=>{
+    const b=SOUND_BANK[r]||{};
+    return вещь.test(b.d||"")&&(b.f||[]).some(x=>ноты.test(x));});
+   const записи=[];
+   const мимо=живут.filter(r=>{
+    const b=SOUND_BANK[r];
+    if(!b||!b.f||!b.f.length)return true;
+    b.f.forEach(x=>записи.push(x));
+    return b.f.some(x=>ноты.test(x));});
+   const разделы=(typeof BANK_GROUPS!=="undefined"?BANK_GROUPS:[])
+    .reduce((a,g)=>a.concat(g.dirs||[]),[]);
+   const имена=(typeof BANK_CATS!=="undefined"?Object.keys(BANK_CATS):[]);
+   return {нотой,мимо,записи,
+           остались:ушли.filter(r=>!!SOUND_BANK[r]),
+           опустевшие:["beast","depth"].filter(d=>разделы.includes(d)||имена.includes(d))};
+  },[ушли,живут]);
+  /* Ушедшие имена никто больше не зовёт: иначе звук пропал бы молча. */
+  const src=fs.readFileSync(path.join(__dirname,'..','index.html'),'utf8');
+  const зовут=ушли.filter(r=>new RegExp('(Bank\\.play|Spatial\\.(at|role)|Bank\\.has)\\("'+r+'"').test(src));
+  /* И самих нот на диске больше нет: пустая папка — это старьё. */
+  const нетПапок=!fs.existsSync(path.join(__dirname,'..','sounds','beast'))
+               &&!fs.existsSync(path.join(__dirname,'..','sounds','depth'));
+  const пропали=итог.записи.filter(x=>!fs.existsSync(path.join(__dirname,'..','sounds',x)));
+  check('22. вещь мира звучит живой записью, а не нотой инструмента',
+   итог.нотой.length===0&&итог.мимо.length===0&&итог.остались.length===0
+   &&итог.опустевшие.length===0&&зовут.length===0&&нетПапок&&пропали.length===0,
+   {нотой:итог.нотой,мимо:итог.мимо,остались:итог.остались,опустевшие:итог.опустевшие,
+    зовут,нетПапок,записей:итог.записи.length,пропали:пропали.slice(0,4)});
+ }
+
+
+ /* ── 23. у каждого рода мест свой живой фон ──
+    Войдя в место, игрок слышит его: деревню — скотиной и стройкой, порт —
+    волной и колоколом, кузницу — молотом. Род места без своего набора звучит
+    как чистое поле, и на слух место пропадает. Проверка требует набор
+    каждому роду — светлому и тёмному — и следит, чтобы ни одно имя в этих
+    наборах не оказалось пустым: имя, которого нет в банке, — это молчание. */
+ {
+  const src=fs.readFileSync(path.join(__dirname,'..','index.html'),'utf8');
+  const роды=[...new Set([...src.matchAll(/structure=\{type:"([a-z_]+)"/g)].map(m=>m[1])
+   .concat(["fortress","burg","shrine","ossuary","pit","spire","bazaar","den","hold"]))];
+  const итог=await page.evaluate(роды=>{
+   const сцена=(typeof LIVE_SCENE!=="undefined")?LIVE_SCENE:{};
+   const нет=роды.filter(t=>!(сцена[t]&&сцена[t].length));
+   const молчат=new Set();
+   const пройти=н=>(н||[]).forEach(r=>{let ok=false;try{ok=!!Bank.has(r);}catch(_){}if(!ok)молчат.add(r);});
+   Object.keys(сцена).forEach(k=>пройти(сцена[k]));
+   (typeof LIVE_DEEP!=="undefined"?LIVE_DEEP:[]).forEach(пройти);
+   return {нет,молчат:[...молчат],мест:Object.keys(сцена).length};},роды);
+  /* Фон земель лежит внутри функции — его читаем из самого файла. */
+  const кусок=src.slice(src.indexOf("набор={forest:"),src.indexOf("if(!набор"));
+  const земли=[...new Set([...кусок.matchAll(/"([a-z_0-9]+)"/g)].map(m=>m[1]))];
+  const молчатЗемли=await page.evaluate(с=>с.filter(r=>{
+   let ok=false;try{ok=!!Bank.has(r);}catch(_){}return !ok;}),земли);
+  check('23. у каждого рода мест свой живой фон, и ни одно имя в нём не молчит',
+   итог.нет.length===0&&итог.молчат.length===0&&молчатЗемли.length===0,
+   {родов:роды.length,мест:итог.мест,земель:земли.length,
+    нет:итог.нет,молчат:итог.молчат,молчатЗемли});
+ }
+
  check('страница не бросила ни одной ошибки',errors.length===0,errors.slice(0,3));
  await browser.close();
  results.forEach(r=>console.log(r));

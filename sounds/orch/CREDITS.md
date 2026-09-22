@@ -33,9 +33,7 @@
 | fate_hit | удар судьбы | orchestra_hit |
 | omen_swell | предвестие | reverse_cymbal |
 | market_agogo | рыночный колокольчик | agogo |
-| isle_market | островной торг | steel_drums |
 | charm_bell | колокольчик чар | tinkle_bell |
-| crowd_cheer | гул толпы | applause |
 | temple_bell | храмовый колокол | tubular_bells |
 | temple_organ | орган храма | church_organ |
 | temple_choir | хор храма | choir_aahs |
@@ -48,7 +46,6 @@
 | field_pipe | пастушья свирель | pan_flute |
 | far_flute | флейта дальних земель | shakuhachi |
 | ruin_ocarina | окарина руин | ocarina |
-| guard_whistle | свисток стражи | whistle |
 | village_pipe | деревенская дудка | recorder |
 | clan_pipes | клановые волынки | bagpipe |
 | tavern_fiddle | скрипка таверны | fiddle |
@@ -64,11 +61,7 @@
 | chase_tremolo | тремоло погони | tremolo_strings |
 | sneak_pizz | пиццикато крадущегося | pizzicato_strings |
 | gate_fanfare | фанфары ворот | brass_section |
-| beast_breath | дыхание твари | breath_noise |
 | rustle | шорох | guitar_fret_noise |
-| collapse | обвал | gunshot |
-| shore_wash | накат на берег | seashore |
-| dawn_birds | рассветные птицы | bird_tweet |
 | fx_rain | дождевая пелена | fx_1_rain |
 | fx_omen | знамение | fx_2_soundtrack |
 | fx_crystal | кристальный звон | fx_3_crystal |

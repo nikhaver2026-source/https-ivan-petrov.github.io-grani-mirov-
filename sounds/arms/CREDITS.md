@@ -16,15 +16,7 @@
 
 | Роль в игре | Что звучит | Инструмент FluidR3_GM |
 |---|---|---|
-| armor_clank | лязг доспеха | clavinet |
 | army_horn | рог войска | french_horn |
-| axe_chop | рубящий удар | slap_bass_1 |
-| blade_ring | звон клинка | guitar_harmonics |
-| bow_release | спуск тетивы | electric_guitar_muted |
 | herald_trumpet | труба герольда | trumpet |
-| march_low | поступь строя | tuba |
-| shield_block | щит принял удар | slap_bass_2 |
 | siege_horn | осадный рог | trombone |
-| spear_thrust | свист выпада | blown_bottle |
 | war_brass | медь войны | synth_brass_1 |
-| watch_call | оклик дозора | muted_trumpet |

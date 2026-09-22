@@ -3,7 +3,7 @@
 # Правило: всякая НОВАЯ запись в sounds/ — либо без потерь (flac, wav),
 # либо сжата не ниже 320 кбит/с. Набор проверок 152 это стережёт.
 #
-# Перечисленные ниже 1760 записей пришли раньше правила, из свободных
+# Перечисленные ниже 1701 записей пришли раньше правила, из свободных
 # библиотек, и уже сжаты с потерями. Пережать их в 320 нельзя: пережатие не
 # возвращает того, чего в файле нет, — оно лишь втрое раздувает вес. Весь
 # банк весит 226 МБ; пережатие подняло бы его к 600 МБ без единого нового
@@ -106,33 +106,15 @@ sounds/ambience/amb_road_02.mp3	128
 sounds/ambience/amb_swamp_01.mp3	74
 sounds/ambience/amb_swamp_02.mp3	127
 sounds/ambience/amb_swamp_03.mp3	89
-sounds/arms/armor_clank_01.mp3	58
-sounds/arms/armor_clank_02.mp3	62
 sounds/arms/army_horn_01.mp3	64
 sounds/arms/army_horn_02.mp3	64
 sounds/arms/army_horn_03.mp3	64
-sounds/arms/axe_chop_01.mp3	43
-sounds/arms/axe_chop_02.mp3	45
-sounds/arms/blade_ring_01.mp3	64
-sounds/arms/blade_ring_02.mp3	32
-sounds/arms/blade_ring_03.mp3	32
-sounds/arms/bow_release_01.mp3	36
-sounds/arms/bow_release_02.mp3	36
 sounds/arms/herald_trumpet_01.mp3	64
 sounds/arms/herald_trumpet_02.mp3	64
-sounds/arms/march_low_01.mp3	55
-sounds/arms/march_low_02.mp3	57
-sounds/arms/march_low_03.mp3	64
-sounds/arms/shield_block_01.mp3	42
-sounds/arms/shield_block_02.mp3	52
 sounds/arms/siege_horn_01.mp3	57
 sounds/arms/siege_horn_02.mp3	58
-sounds/arms/spear_thrust_01.mp3	64
-sounds/arms/spear_thrust_02.mp3	64
 sounds/arms/war_brass_01.mp3	64
 sounds/arms/war_brass_02.mp3	64
-sounds/arms/watch_call_01.mp3	64
-sounds/arms/watch_call_02.mp3	64
 sounds/arte/arte_book_01.ogg	49
 sounds/arte/arte_cloth_01.ogg	127
 sounds/arte/arte_coins_01.ogg	129
@@ -175,20 +157,6 @@ sounds/battle/battle_sword_04.ogg	307
 sounds/battle/battle_wood_01.ogg	76
 sounds/battle/battle_wood_02.ogg	73
 sounds/battle/battle_wood_03.ogg	233
-sounds/beast/beast_growl_01.mp3	58
-sounds/beast/beast_growl_02.mp3	58
-sounds/beast/beast_roar_01.mp3	58
-sounds/beast/beast_roar_02.mp3	57
-sounds/beast/hiss_high_01.mp3	64
-sounds/beast/hiss_high_02.mp3	64
-sounds/beast/howl_low_01.mp3	64
-sounds/beast/howl_low_02.mp3	64
-sounds/beast/moan_deep_01.mp3	64
-sounds/beast/moan_deep_02.mp3	64
-sounds/beast/serpent_horn_01.mp3	64
-sounds/beast/serpent_horn_02.mp3	64
-sounds/beast/shriek_01.mp3	64
-sounds/beast/shriek_02.mp3	64
 sounds/beasts/beasts_camel_01.ogg	240
 sounds/beasts/beasts_cattle_01.ogg	178
 sounds/beasts/beasts_fowl_01.ogg	143
@@ -254,8 +222,6 @@ sounds/deep/deep_stairs_01.ogg	81
 sounds/deep/deep_stone_01.ogg	68
 sounds/deep/deep_wind_01.ogg	168
 sounds/deep/deep_wood_01.ogg	109
-sounds/depth/stone_low_01.mp3	64
-sounds/depth/stone_low_02.mp3	64
 sounds/dungeon/deep_1_01.mp3	95
 sounds/dungeon/deep_2_01.mp3	118
 sounds/dungeon/deep_3_01.mp3	129
@@ -1224,8 +1190,6 @@ sounds/od/zombie_9.ogg	142
 sounds/orch/ash_horn_01.mp3	64
 sounds/orch/ash_horn_02.mp3	64
 sounds/orch/ash_horn_03.mp3	64
-sounds/orch/beast_breath_01.mp3	36
-sounds/orch/beast_breath_02.mp3	36
 sounds/orch/caravan_sitar_01.mp3	64
 sounds/orch/caravan_sitar_02.mp3	64
 sounds/orch/charm_bell_01.mp3	37
@@ -1238,15 +1202,9 @@ sounds/orch/chase_tremolo_02.mp3	64
 sounds/orch/chase_tremolo_03.mp3	64
 sounds/orch/clan_pipes_01.mp3	64
 sounds/orch/clan_pipes_02.mp3	64
-sounds/orch/collapse_01.mp3	45
-sounds/orch/collapse_02.mp3	44
 sounds/orch/court_harpsi_01.mp3	56
 sounds/orch/court_harpsi_02.mp3	52
 sounds/orch/court_harpsi_03.mp3	51
-sounds/orch/crowd_cheer_01.mp3	57
-sounds/orch/crowd_cheer_02.mp3	57
-sounds/orch/dawn_birds_01.mp3	41
-sounds/orch/dawn_birds_02.mp3	40
 sounds/orch/desert_reed_01.mp3	60
 sounds/orch/desert_reed_02.mp3	63
 sounds/orch/epic_strings_01.mp3	64
@@ -1284,14 +1242,9 @@ sounds/orch/gate_fanfare_03.mp3	64
 sounds/orch/ghost_choir_01.mp3	64
 sounds/orch/ghost_choir_02.mp3	64
 sounds/orch/ghost_choir_03.mp3	64
-sounds/orch/guard_whistle_01.mp3	59
-sounds/orch/guard_whistle_02.mp3	57
 sounds/orch/hours_xylo_01.mp3	35
 sounds/orch/hours_xylo_02.mp3	35
 sounds/orch/hours_xylo_03.mp3	35
-sounds/orch/isle_market_01.mp3	38
-sounds/orch/isle_market_02.mp3	38
-sounds/orch/isle_market_03.mp3	37
 sounds/orch/omen_swell_01.mp3	57
 sounds/orch/omen_swell_02.mp3	56
 sounds/orch/pad_dread_01.mp3	52
@@ -1307,8 +1260,6 @@ sounds/orch/road_banjo_01.mp3	44
 sounds/orch/road_banjo_02.mp3	41
 sounds/orch/secret_box_01.mp3	39
 sounds/orch/secret_box_02.mp3	39
-sounds/orch/shore_wash_01.mp3	57
-sounds/orch/shore_wash_02.mp3	64
 sounds/orch/sneak_pizz_01.mp3	43
 sounds/orch/sneak_pizz_02.mp3	43
 sounds/orch/spark_glock_01.mp3	42
@@ -1405,16 +1356,6 @@ sounds/sky/sky_thunder_02.ogg	132
 sounds/sky/sky_wave_01.ogg	130
 sounds/sky/sky_wave_02.ogg	131
 sounds/sky/sky_wind_01.ogg	129
-sounds/spell/charm_chiff_01.mp3	56
-sounds/spell/charm_chiff_02.mp3	55
-sounds/spell/hex_charang_01.mp3	64
-sounds/spell/hex_charang_02.mp3	63
-sounds/spell/pad_hex_01.mp3	53
-sounds/spell/pad_hex_02.mp3	63
-sounds/spell/rune_square_01.mp3	64
-sounds/spell/rune_square_02.mp3	64
-sounds/spell/spell_bolt_01.mp3	64
-sounds/spell/spell_bolt_02.mp3	64
 sounds/spell/spell_harp_01.mp3	42
 sounds/spell/spell_harp_02.mp3	40
 sounds/spell/spell_harp_03.mp3	38
