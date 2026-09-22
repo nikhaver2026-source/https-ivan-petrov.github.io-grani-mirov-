@@ -215,7 +215,7 @@ const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(e!==undefined?' :
   G.deeds={kills:20,tracks:10};
   Path.facetTick();
   const o={сказано:__said.find(t=>/Грань «Звериный слух»/.test(t))||"",
-   звук:__played.includes("beast_growl"),
+   звук:__played.includes("oc_growl"),
    летопись:__jt.some(t=>/Грань: Звериный слух/.test(t))};
   __said.length=0;Path.facetTick();
   o.повтор=__said.some(t=>/Грань «Звериный слух»/.test(t));

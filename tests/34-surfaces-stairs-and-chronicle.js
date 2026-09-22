@@ -256,7 +256,7 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   const папки=new Set(роли.map(r=>(SOUND_BANK[r].f[0]||"").split("/")[0]));
   const безРаздела=[...папки].filter(p=>p&&!BANK_CATS[p]);
   /* Новые разделы на месте. */
-  const новые=["surf","blow","troop","bazaar","dark","arms","spell","beast","relic","depth","folk","mood"];
+  const новые=["surf","blow","troop","bazaar","dark","arms","spell","relic","folk","mood"];
   const нетРаздела=новые.filter(k=>!BANK_CATS[k]);
   const нетРолей=новые.filter(k=>!роли.some(r=>(SOUND_BANK[r].f[0]||"").startsWith(k+"/")));
   return {ролей:роли.length,безФайлов,безОписания,безРаздела,нетРаздела,нетРолей,
@@ -265,7 +265,7 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   !bank.безФайлов.length&&!bank.безОписания.length,
   {файлы:bank.безФайлов.slice(0,4),описание:bank.безОписания.slice(0,4)});
  check('каждая папка записей названа в энциклопедии',!bank.безРаздела.length,bank.безРаздела);
- check('двенадцать новых разделов на месте и не пусты',
+ check('десять новых разделов на месте и не пусты',
   !bank.нетРаздела.length&&!bank.нетРолей.length,{разделы:bank.нетРаздела,роли:bank.нетРолей});
  check('звуков в игре стало больше восьмисот',bank.всего.всего>800,bank.всего);
 

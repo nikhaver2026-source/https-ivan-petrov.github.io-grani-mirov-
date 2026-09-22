@@ -320,10 +320,11 @@ const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(e!==undefined?' :
      бы старая игра. Кэш записей НЕ версионируется: они неизменяемы, и 226 МБ
      звука перекачивать ради новой страницы незачем. */
   check('18. служебный работник поднимает кэш страницы и не трогает кэш записей',
-   /const SHELL="grani-shell-v2"/.test(sw)&&/const MEDIA="grani-v1-media"/.test(sw)
+   Number((sw.match(/const SHELL="grani-shell-v(\d+)"/)||[])[1]||0)>=3
+   &&/const MEDIA="grani-v1-media"/.test(sw)
    &&/keys\.filter\(k=>k!==SHELL&&k!==MEDIA\)/.test(sw)
    &&/sounds\//.test(sw),
-   {shell:/grani-shell-v2/.test(sw),media:/grani-v1-media/.test(sw)});
+   {shell:(sw.match(/const SHELL="[^"]*"/)||[])[0],media:/grani-v1-media/.test(sw)});
  }
 
  /* ── 19. живая запись вместо писка ── */
