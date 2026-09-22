@@ -33,7 +33,8 @@
    очистка очереди; приглушение музыки только пока идёт речь; настройки
    речи есть в окне и сохраняются; жест четырьмя пальцами и клавиши;
    темп речи — пять по умолчанию, шкала прежняя, а старые медленные
-   настройки поднимаются к нему ровно один раз.
+   настройки поднимаются к нему ровно один раз; вернувшемуся игроку один
+   раз рассказывают, что изменилось, а новому — ни разу.
    ═══════════════════════════════════════════════════════════════════════ */
 const {chromium}=require('playwright');
 const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(e!==undefined?' :: '+JSON.stringify(e):''));
@@ -381,6 +382,32 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   старое.rate===5&&старое.флаг===1&&старое.вСохранении===5&&старое.флагВСохранении===1,старое);
  check('выбранный быстрый темп и осознанно возвращённый медленный остаются нетронутыми',
   быстрое.rate===3.6&&быстрое.флаг===1&&осознанное.rate===1&&осознанное.флаг===1,{быстрое,осознанное});
+ /* Что изменилось: один раз вернувшемуся игроку, и ни разу новому. */
+ const новости=async(профиль)=>{
+  const p2=await ctx.newPage();
+  await p2.addInitScript(о=>{try{
+   if(о)localStorage.setItem("gm29set",JSON.stringify(о));else localStorage.removeItem("gm29set");}catch(_){}},профиль);
+  await p2.goto(process.argv[2]);
+  await p2.evaluate(()=>{window.__said=[];const о=Speech.say.bind(Speech);
+   Speech.say=function(t,x){window.__said.push(String(t));return о(t,x);};});
+  await p2.waitForTimeout(3800);
+  const r=await p2.evaluate(()=>({
+   сказано:window.__said.filter(t=>/Игра обновилась/.test(t)).length,
+   newsV:Number(settings.newsV)||0,
+   целиком:window.__said.filter(t=>/Игра обновилась/.test(t)).join(" "),
+   пропечатано:window.__said.filter(t=>/Игра обновилась/.test(t)).join(" ").slice(0,120)}));
+  await p2.close();return r;};
+ const вернулся=await новости({rate:1.6});
+ const ужеСлышал=await новости({rate:5,rateFast:1,newsV:2});
+ const новичок=await новости(null);
+ check('вернувшийся игрок один раз слышит, что изменилось, и отметка ложится в сохранение',
+  вернулся.сказано===1&&вернулся.newsV===2
+  &&/скорость пять/.test(вернулся.целиком)&&/двумя пальцами вниз/.test(вернулся.целиком)
+  &&/раздельное касание/.test(вернулся.целиком),
+  {сказано:вернулся.сказано,newsV:вернулся.newsV,начало:вернулся.пропечатано});
+ check('второй раз этого не говорят, а новому игроку — ни разу',
+  ужеСлышал.сказано===0&&новичок.сказано===0&&новичок.newsV===2,{ужеСлышал,новичок});
+
  {
   const fs=require('fs'),path=require('path');
   const корень=path.join(__dirname,'..');
