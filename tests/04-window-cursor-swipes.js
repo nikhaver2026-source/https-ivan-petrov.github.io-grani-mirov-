@@ -168,10 +168,15 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
  const nat=await page.evaluate(()=>({
   ui:Object.keys(UI_BANK).length,
   beacons:Object.keys(BEACON_SAMPLE).length,
-  missing:Object.values(UI_BANK).filter(v=>!v||!/^ui\//.test(v)).length,
+  /* Записи интерфейса лежат в ui/, а две новые — отклик раздельного касания
+     и знак сдвинувшегося списка — в oc/: они пришли из свободной игры
+     OpenClonk и лежат вместе с остальными её записями. Обе папки живые, ни
+     одной синтезированной среди них нет. */
+  missing:Object.values(UI_BANK).filter(v=>!v||!/^(ui|oc)\//.test(v)).length,
+  изOC:Object.values(UI_BANK).filter(v=>/^oc\//.test(v)).length,
   natWorks:UI.nat("ui_select",0.4),
   canPan:Bank.canPan()}));
- check('натуральные записи подключены к интерфейсу и маякам',nat.ui===33&&nat.beacons>=12&&nat.missing===0&&nat.natWorks,nat);
+ check('натуральные записи подключены к интерфейсу и маякам',nat.ui===35&&nat.beacons>=12&&nat.missing===0&&nat.изOC===2&&nat.natWorks,nat);
 
  const files=await page.evaluate(async()=>{
   const paths=Object.values(UI_BANK).slice(0,5);
