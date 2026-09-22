@@ -243,7 +243,7 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
        и молча уводило выбор туда, куда случайно опустился палец. */
  const direct=await page.evaluate(()=>{
   while(activeLayer())closeTopUI();
-  CMD.settings();resetCursor();ensureCursor(activeLayer());
+  CMD.settings("diff");resetCursor();ensureCursor(activeLayer());
   const b=[...activeLayer().querySelectorAll('[data-cmd^="setdiff:"]')].find(x=>x.dataset.cmd==="setdiff:harsh");
   const чужая=[...activeLayer().querySelectorAll('[data-cmd^="setdiff:"]')].find(x=>x.dataset.cmd==="setdiff:calm");
   if(!b||!чужая)return null;
@@ -264,7 +264,7 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
  // 5. Одиночное касание не выполняет НИЧЕГО и не двигает выбор
  const single=await page.evaluate(()=>{
   while(activeLayer())closeTopUI();
-  CMD.settings();resetCursor();ensureCursor(activeLayer());
+  CMD.settings("diff");resetCursor();ensureCursor(activeLayer());
   settings.difficulty="normal";
   const b=[...activeLayer().querySelectorAll('[data-cmd="setdiff:harsh"]')][0];
   b.scrollIntoView({block:"center"});
@@ -336,7 +336,7 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
  // 6. Долгая пауза между касаниями — это два одиночных касания, а не двойное
  const slow=await page.evaluate(()=>{
   while(activeLayer())closeTopUI();
-  CMD.settings();resetCursor();
+  CMD.settings("diff");resetCursor();
   settings.difficulty="normal";
   const b=[...activeLayer().querySelectorAll('[data-cmd="setdiff:calm"]')][0];
   b.scrollIntoView({block:"center"});

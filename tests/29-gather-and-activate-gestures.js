@@ -146,7 +146,7 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
  // ── 8. Внутри окна двойное касание по-прежнему подтверждает выбор ──
  const inWindow=await page.evaluate(()=>{
   while(activeLayer())closeTopUI();
-  CMD.settings();resetCursor();ensureCursor(activeLayer());
+  CMD.settings("diff");resetCursor();ensureCursor(activeLayer());
   settings.difficulty="normal";
   const items=cursorItems(activeLayer());
   return {цель:items.findIndex(x=>x.dataset.cmd==="setdiff:harsh"),всего:items.length};});

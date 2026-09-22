@@ -25,7 +25,7 @@
      GitHub Pages. Там же включается и service worker (см. ниже): игра ставится
      на главный экран и работает без сети. -->
 <meta name="theme-color" content="#10121c">
-<title>Грань Миров Alpha 2.4.0 — Живой динамичный мир</title>
+<title>Грань Миров Alpha 2.5.0 — Живой динамичный мир</title>
 <style>
 /* Палец, положенный на ползунок, не должен его двигать: браузер по умолчанию
    перебрасывает бегунок в точку касания, и незрячий игрок, просто читая
@@ -98,14 +98,16 @@ h3{color:var(--acc2);margin:14px 0 6px;font-size:1.05rem;}
    называет себя и по двойному касанию перескакивает к следующему разделу. */
 .sec-head{cursor:pointer;border-left:4px solid var(--acc2);padding:4px 0 4px 8px;}
 .sec-head:focus{outline:3px solid var(--acc);outline-offset:2px;}
+.punkt small{display:block;color:#aab3e0;font-size:.9em;margin-top:2px;}
+.punkt.empty{opacity:.72;}
 </style>
 </head>
 <body>
 
 <!-- ТИТУЛ -->
 <div id="screen-title" class="screen">
- <h1>🌌 Грань Миров <small style="font-size:.5em;opacity:.75">Alpha 2.4.0</small></h1>
- <p class="sub">Полная хроника I–V · Alpha 2.4.0 — Единый живой мир · Карта 50000×50000</p>
+ <h1>🌌 Грань Миров <small style="font-size:.5em;opacity:.75">Alpha 2.5.0</small></h1>
+ <p class="sub">Полная хроника I–V · Alpha 2.5.0 — Единый живой мир · Карта 50000×50000</p>
  <div class="menu">
   <button type="button" data-cmd="check">🔊 Проверить звук</button>
   <button type="button" data-cmd="encyc" id="btnEncyc">🎧 Энциклопедия звуков</button>
@@ -147,17 +149,48 @@ h3{color:var(--acc2);margin:14px 0 6px;font-size:1.05rem;}
 <!-- НАСТРОЙКИ -->
 <div class="modal" id="modal-settings" role="dialog" aria-modal="true" aria-label="Настройки" hidden><div class="sheet">
  <header><h2>⚙️ Настройки</h2><button type="button" data-cmd="close">⬅️ Назад</button></header>
- <!-- Оглавление окна: незрячий игрок слышит, из чего оно состоит, не листая. -->
- <div class="row"><button type="button" data-cmd="secindex">🧭 Оглавление настроек</button><button type="button" data-cmd="secjump">⏭️ Следующий раздел</button><button type="button" data-cmd="secback">⏮️ Предыдущий раздел</button></div>
- <div class="row"><button type="button" data-cmd="setsave">💾 Сохранить настройки</button><button type="button" data-cmd="setsaved">📋 Что сохранено</button></div>
- <p class="hint">Настройки сохраняются сами, как только их меняют. Кнопка нужна, чтобы убедиться: игра ответит, что и куда записано.</p>
- <p class="hint">Настройки разложены по двенадцати разделам. Заголовок раздела — такой же пункт, как переключатель: свайп его называет вместе с числом настроек внутри, двойное касание по нему перескакивает к следующему разделу.</p>
+ <!-- НАСТРОЙКИ ПУНКТАМИ. Окно открывается списком пунктов, как настройки
+      телефона: звуки, синтезатор речи, речь игры, интерфейс, жесты,
+      сложность, сохранения. Двойное касание по пункту открывает его, и в окне
+      остаются только его настройки. «Назад», свайп двумя пальцами вниз и
+      кнопка «Ко всем пунктам» возвращают к списку. Пункты рисуются из
+      SET_GROUPS; разделы внутри пункта — прежние заголовки sec-head. -->
+ <div id="setMenu">
+  <p class="hint" id="setMenuHint">Настройки разложены по семи пунктам. Двойное касание по пункту открывает его настройки; «Назад» или свайп двумя пальцами вниз возвращает к пунктам.</p>
+  <div id="setMenuList"></div>
+ </div>
+ <div id="setOne" hidden>
+  <div class="row"><button type="button" data-cmd="setgroups">⬅️ Ко всем пунктам настроек</button></div>
+  <p class="hint" id="setOneHint"></p>
+  <!-- Оглавление и перескок — по разделам открытого пункта. В пункте из одного раздела их нет: перескакивать некуда. -->
+  <div class="row" id="setSecRow"><button type="button" data-cmd="secindex">🧭 Оглавление пункта</button><button type="button" data-cmd="secjump">⏭️ Следующий раздел</button><button type="button" data-cmd="secback">⏮️ Предыдущий раздел</button></div>
+  <div class="set-group" data-set-group="sound" hidden>
  <h3 class="sec-head" tabindex="0" data-cmd="secjump" data-sec-title="Что звучит">🔊 Что звучит</h3>
  <p class="hint">Четыре главных выключателя: речь, звуки мира, музыка событий и фон.</p>
  <label class="opt"><input type="checkbox" id="setSpeech" checked><span>🔊 <b>Озвучка</b><small>Встроенная речь игры: работает без VoiceOver и TalkBack</small></span></label>
  <label class="opt"><input type="checkbox" id="setEffects" checked><span>🎵 <b>Эффекты</b><small>Шаги, толпа, маяки и прочие звуки</small></span></label>
  <label class="opt"><input type="checkbox" id="setMusic" checked><span>🎼 <b>Музыка событий</b><small>Новый уровень, дела, награды, достижения, владыки. Музыка — событие, а не подложка</small></span></label>
  <label class="opt"><input type="checkbox" id="setBgMusic"><span>🎻 <b>Фоновая музыка мест</b><small>Темы местностей и глубин подложкой. По умолчанию выключено: место слышно звуками</small></span></label>
+ <h3 class="sec-head" tabindex="0" data-cmd="secjump" data-sec-title="Громкость">🎚️ Громкость</h3>
+ <p class="hint">Десять шкал: общая, речь, мир, фон, музыка, меню, бой, чары, голоса людей и приглушение музыки под речь.</p>
+ <label class="opt">🎚️ Общая громкость <input type="range" id="setMasterVol" min="0" max="100" value="100"><span id="vMaster">100%</span></label>
+ <label class="opt">🔊 Громкость озвучки <input type="range" id="setVoiceVol" min="0" max="100" value="100"><span id="vVoice">100%</span></label>
+ <label class="opt">🎵 Громкость мира <input type="range" id="setFxVol" min="0" max="100" value="100"><span id="vFx">100%</span></label>
+ <label class="opt">🍃 Громкость фона <input type="range" id="setAmbVol" min="0" max="100" value="80"><span id="vAmb">80%</span></label>
+ <label class="opt">🎼 Громкость музыки <input type="range" id="setMusicVol" min="0" max="100" value="100"><span id="vMusic">100%</span></label>
+ <label class="opt">🔔 Громкость меню <input type="range" id="setUiVol" min="0" max="100" value="90"><span id="vUi">90%</span></label>
+ <label class="opt">⚔️ Громкость боя <input type="range" id="setCombatVol" min="0" max="100" value="100"><span id="vCombat">100%</span></label>
+ <label class="opt">✨ Громкость чар <input type="range" id="setMagicVol" min="0" max="100" value="100"><span id="vMagic">100%</span></label>
+ <label class="opt">🗣️ Громкость голосов людей <input type="range" id="setNpcVol" min="0" max="100" value="100"><span id="vNpc">100%</span></label>
+ <label class="opt">🎚️ Приглушение музыки при речи <input type="range" id="setDuck" min="0" max="100" value="50"><span id="vDuck">50%</span></label>
+ <h3 class="sec-head" tabindex="0" data-cmd="secjump" data-sec-title="Объёмный звук и живой мир">🎧 Объёмный звук и живой мир</h3>
+ <p class="hint">Сторона, даль и высота источника; живые голоса народов, весёлые случаи и звуковая картина. 🎧 Пространственный эмбиент, многослойная реверберация, динамический ветер, дождь, толпа, стерео-маяки объектов и акустика локации. Аудио генерируется в реальном времени.</p>
+ <label class="opt"><input type="checkbox" id="setHrtf" checked><span>🧭 <b>Объёмный звук</b><small>Слышно сторону, расстояние и высоту источника: тварь слева и сзади, ступени под ногами. Лучше всего в наушниках. Выключите, если одно ухо слышит хуже другого — тогда останется простая панорама</small></span></label>
+ <label class="opt"><input type="checkbox" id="setFolk" checked><span>🗣️ <b>Живая речь народов</b><small>Житель откликается настоящим голосом на русском: у каждого из ста двенадцати народов свой тембр, у каждого ремесла своё слово, а в разговоре слышно и то, что сказали вы. Выключите, если хотите слышать только рассказчика</small></span></label>
+ <label class="opt"><input type="checkbox" id="setMirth" checked><span>🙂 <b>Весёлые случаи</b><small>Иногда мир не пугает и не требует, а смешит: упрямый вол на тракте, бочка под горку через рынок, коза на крыше, кот на алтаре. Смешно положение, а не человек. У каждого случая две записи — та, что ставит положение, и та, что даёт развязку. Снимите галочку, если хотите мир без шуток</small></span></label>
+ <label class="opt"><input type="checkbox" id="setScape" checked><span>🌍 <b>Живая звуковая картина</b><small>Мир сам подаёт голос с тех сторон, где что-то стоит или ходит: угроза напоминает о себе часто, постройка редко. Выключите, если хотите тишину между действиями</small></span></label>
+  </div>
+  <div class="set-group" data-set-group="tts" hidden>
  <h3 class="sec-head" tabindex="0" data-cmd="secjump" data-sec-title="Синтезатор речи">🗣️ Синтезатор речи</h3>
  <p class="hint">Всё про сам голос в одном разделе: чем игра говорит, каким голосом, с какой скоростью и высотой. Проба — тут же.</p>
  <label class="opt">⚙️ Синтезатор <select id="setTtsEngine" aria-label="Каким синтезатором говорит игра"><option value="device" selected>Синтезатор устройства</option><option value="eleven">Голос ElevenLabs</option></select></label>
@@ -175,22 +208,12 @@ h3{color:var(--acc2);margin:14px 0 6px;font-size:1.05rem;}
  <p class="hint">Ключ хранится только на этом устройстве и никуда, кроме самого ElevenLabs, не уходит. Без ключа игра говорит синтезатором устройства.</p>
  <label class="opt">🎙️ Голос ElevenLabs <select id="setElevenVoice" aria-label="Голос ElevenLabs"></select></label>
  <div class="row"><button type="button" id="btnSpeechSample">📢 Тест озвучки</button><button type="button" id="btnElevenCheck">🔎 Проверить ключ и голоса</button></div>
+  </div>
+  <div class="set-group" data-set-group="speech" hidden>
  <h3 class="sec-head" tabindex="0" data-cmd="secjump" data-sec-title="Голос рассказчика">🗣️ Голос рассказчика</h3>
  <p class="hint">Не про сам голос, а про то, сколько он говорит и что берёт на себя чтец экрана.</p>
  <label class="opt">📏 Подробность речи <select id="setVerbosity" aria-label="Уровень подробности"><option value="min">Минимальная</option><option value="brief">Краткая</option><option value="normal" selected>Стандартная</option><option value="full">Подробная</option></select></label>
  <label class="opt">♿ Объявления VoiceOver и TalkBack <select id="setSrMode" aria-label="Объявления для чтеца экрана"><option value="auto" selected>Автоматически</option><option value="request">По запросу</option><option value="off">Выключены</option></select></label>
- <h3 class="sec-head" tabindex="0" data-cmd="secjump" data-sec-title="Громкость">🎚️ Громкость</h3>
- <p class="hint">Десять шкал: общая, речь, мир, фон, музыка, меню, бой, чары, голоса людей и приглушение музыки под речь.</p>
- <label class="opt">🎚️ Общая громкость <input type="range" id="setMasterVol" min="0" max="100" value="100"><span id="vMaster">100%</span></label>
- <label class="opt">🔊 Громкость озвучки <input type="range" id="setVoiceVol" min="0" max="100" value="100"><span id="vVoice">100%</span></label>
- <label class="opt">🎵 Громкость мира <input type="range" id="setFxVol" min="0" max="100" value="100"><span id="vFx">100%</span></label>
- <label class="opt">🍃 Громкость фона <input type="range" id="setAmbVol" min="0" max="100" value="80"><span id="vAmb">80%</span></label>
- <label class="opt">🎼 Громкость музыки <input type="range" id="setMusicVol" min="0" max="100" value="100"><span id="vMusic">100%</span></label>
- <label class="opt">🔔 Громкость меню <input type="range" id="setUiVol" min="0" max="100" value="90"><span id="vUi">90%</span></label>
- <label class="opt">⚔️ Громкость боя <input type="range" id="setCombatVol" min="0" max="100" value="100"><span id="vCombat">100%</span></label>
- <label class="opt">✨ Громкость чар <input type="range" id="setMagicVol" min="0" max="100" value="100"><span id="vMagic">100%</span></label>
- <label class="opt">🗣️ Громкость голосов людей <input type="range" id="setNpcVol" min="0" max="100" value="100"><span id="vNpc">100%</span></label>
- <label class="opt">🎚️ Приглушение музыки при речи <input type="range" id="setDuck" min="0" max="100" value="50"><span id="vDuck">50%</span></label>
  <h3 class="sec-head" tabindex="0" data-cmd="secjump" data-sec-title="Что игра говорит сама">📢 Что игра говорит сама</h3>
  <p class="hint">Распорядитель речи: что произносится без спроса, что прерывается и чем.</p>
  <p class="hint">Все речевые сообщения идут через одного распорядителя: важное перебивает обычное, новое действие снимает старое описание, мелочь складывается в одну фразу, дубли не повторяются. Остановить речь — свайп четырьмя пальцами вниз или Alt+Пробел; повторить последнее — вверх или Alt+R; состояние игрока — влево или Alt+H; очистить очередь — вправо или Alt+X.</p>
@@ -207,6 +230,8 @@ h3{color:var(--acc2);margin:14px 0 6px;font-size:1.05rem;}
  <label class="opt"><input type="checkbox" id="setSayDir" checked><span>🧭 <b>Называть сторону света при шаге</b><small>«Север», «Юг» — при каждой смене направления, в том числе с крыла. Выключите, если стороны забивают собой место: куда вы идёте, всегда скажет осмотр — три пальца влево, он начинается со слов «лицом на север»</small></span></label>
  <label class="opt">🤚 Жест остановки речи <select id="setStopGesture" aria-label="Жест остановки речи"><option value="four_down" selected>Четыре пальца вниз</option><option value="four_up">Четыре пальца вверх</option></select></label>
  <div class="row"><button type="button" id="btnStopSpeech">🔇 Остановить речь</button><button type="button" id="btnRepeatLast">🔁 Повторить последнее</button><button type="button" id="btnReadStatus">🧍 Состояние игрока</button></div>
+  </div>
+  <div class="set-group" data-set-group="ui" hidden>
  <h3 class="sec-head" tabindex="0" data-cmd="secjump" data-sec-title="Доступность и касания">♿ Доступность и касания</h3>
  <p class="hint">Ощупывание, подсказки расположения, быстрая активация и вибрация.</p>
  <label class="opt"><input type="checkbox" id="setExplore" checked><span>🤚 <b>Режим ощупывания</b><small>Называть элементы под пальцем (для незрячих)</small></span></label>
@@ -214,6 +239,12 @@ h3{color:var(--acc2);margin:14px 0 6px;font-size:1.05rem;}
  <p class="hint">Полные — игра называет, что рядом, где оно и как подойти. Минимальные — только важное: имя места, опасность, первая фраза описания. Только звук — словесные подсказки о расположении выключены: проход слышен ветром, дверь — петлёй, ступени — камнем, вода — водой, кузница — молотом, храм — колоколом, таверна — посудой, тварь — шагом и дыханием со своей стороны; всё со стороной, расстоянием, высотой, затуханием и преградами.</p>
  <label class="opt"><input type="checkbox" id="setFastTap"><span>⚡ <b>Быстрая активация</b><small>Одно касание сразу выполняет действие, без предварительного озвучивания вторым касанием</small></span></label>
  <label class="opt"><input type="checkbox" id="setHaptics" checked><span>📳 <b>Тактильный отклик</b><small>Вибрация при касаниях</small></span></label>
+ <h3 class="sec-head" tabindex="0" data-cmd="secjump" data-sec-title="Субтитры">💬 Субтитры</h3>
+ <p class="hint">Для тех, кто читает с экрана: прохождению они не нужны.</p>
+ <label class="opt">💬 Субтитры <select id="setSubMode" aria-label="Субтитры"><option value="off">Выключены</option><option value="important">Только важные события</option><option value="speech">Все реплики</option><option value="sounds" selected>Все игровые звуки с текстовым описанием</option></select></label>
+ <p class="hint">Субтитры не нужны для прохождения: игра целиком проходится звуком, речью, жестами и вибрацией. Они для тех, кто читает с экрана.</p>
+  </div>
+  <div class="set-group" data-set-group="gest" hidden>
  <h3 class="sec-head" tabindex="0" data-cmd="secjump" data-sec-title="Жесты">🖐️ Жесты</h3>
  <p class="hint">Тридцать три фигуры и тридцать два действия: любое можно переназначить. Три последних — о разделах открытого окна: следующий, предыдущий и оглавление.</p>
  <p class="hint" id="gestHint">Любое значимое действие можно повесить на свою фигуру жеста. Фигуры с удержанием не назначаются: удержание занято ощупыванием — им незрячий игрок находит, что под пальцем. Пока вы ничего не меняли, жесты работают по умолчанию.</p>
@@ -226,24 +257,23 @@ h3{color:var(--acc2);margin:14px 0 6px;font-size:1.05rem;}
  <label class="opt">⏱️ Окно двойного касания <select id="setTapWindow" aria-label="Окно двойного касания"><option value="500">0,5 секунды — быстрая рука</option><option value="800" selected>0,8 секунды — как задумано</option><option value="1200">1,2 секунды</option><option value="1600">1,6 секунды</option><option value="2200">2,2 секунды — сколько угодно не спеша</option></select></label>
  <label class="opt"><input type="checkbox" id="setTapTick" checked><span>🔔 <b>Щелчок при первом касании</b><small>Первое касание молчит словом, но подаёт короткий знак, что оно дошло и второе будет засчитано. Без него взведено двойное или нет — не слышно</small></span></label>
  <div class="row"><button type="button" data-cmd="gesttune">🎯 Что сейчас настроено</button><button type="button" data-cmd="gesttunereset">↩️ Вернуть точность к умолчанию</button></div>
- <h3 class="sec-head" tabindex="0" data-cmd="secjump" data-sec-title="Объёмный звук и живой мир">🎧 Объёмный звук и живой мир</h3>
- <p class="hint">Сторона, даль и высота источника; живые голоса народов, весёлые случаи и звуковая картина. 🎧 Пространственный эмбиент, многослойная реверберация, динамический ветер, дождь, толпа, стерео-маяки объектов и акустика локации. Аудио генерируется в реальном времени.</p>
- <label class="opt"><input type="checkbox" id="setHrtf" checked><span>🧭 <b>Объёмный звук</b><small>Слышно сторону, расстояние и высоту источника: тварь слева и сзади, ступени под ногами. Лучше всего в наушниках. Выключите, если одно ухо слышит хуже другого — тогда останется простая панорама</small></span></label>
- <label class="opt"><input type="checkbox" id="setFolk" checked><span>🗣️ <b>Живая речь народов</b><small>Житель откликается настоящим голосом на русском: у каждого из ста двенадцати народов свой тембр, у каждого ремесла своё слово, а в разговоре слышно и то, что сказали вы. Выключите, если хотите слышать только рассказчика</small></span></label>
- <label class="opt"><input type="checkbox" id="setMirth" checked><span>🙂 <b>Весёлые случаи</b><small>Иногда мир не пугает и не требует, а смешит: упрямый вол на тракте, бочка под горку через рынок, коза на крыше, кот на алтаре. Смешно положение, а не человек. У каждого случая две записи — та, что ставит положение, и та, что даёт развязку. Снимите галочку, если хотите мир без шуток</small></span></label>
- <label class="opt"><input type="checkbox" id="setScape" checked><span>🌍 <b>Живая звуковая картина</b><small>Мир сам подаёт голос с тех сторон, где что-то стоит или ходит: угроза напоминает о себе часто, постройка редко. Выключите, если хотите тишину между действиями</small></span></label>
- <h3 class="sec-head" tabindex="0" data-cmd="secjump" data-sec-title="Субтитры">💬 Субтитры</h3>
- <p class="hint">Для тех, кто читает с экрана: прохождению они не нужны.</p>
- <label class="opt">💬 Субтитры <select id="setSubMode" aria-label="Субтитры"><option value="off">Выключены</option><option value="important">Только важные события</option><option value="speech">Все реплики</option><option value="sounds" selected>Все игровые звуки с текстовым описанием</option></select></label>
- <p class="hint">Субтитры не нужны для прохождения: игра целиком проходится звуком, речью, жестами и вибрацией. Они для тех, кто читает с экрана.</p>
+  </div>
+  <div class="set-group" data-set-group="diff" hidden>
  <h3 class="sec-head" tabindex="0" data-cmd="secjump" data-sec-title="Сложность">⚔️ Сложность</h3>
  <p class="hint">Мера мира: сколько бьют, сколько держат и сколько стоит поражение.</p>
  <p class="hint" id="diffHint">Мир одинаково честен на любом уровне: меняется не то, что происходит, а мера — сколько бьют, сколько держат, как часто встречаются и сколько стоит поражение.</p>
  <div class="row" id="diffRow"></div>
+  </div>
+  <div class="set-group" data-set-group="save" hidden>
  <h3 class="sec-head" tabindex="0" data-cmd="secjump" data-sec-title="Сохранения">💾 Сохранения</h3>
  <p class="hint">Записать сейчас, слоты и выгрузка в файл.</p>
  <p class="hint">Игра сохраняется сама после каждого шага и дела. Здесь — записать сейчас и открыть слоты с выгрузкой в файл.</p>
  <div class="row"><button type="button" data-cmd="am:save">💾 Сохранить сейчас</button><button type="button" data-cmd="am:saves">🗄️ Слоты и файл</button></div>
+  </div>
+  <div class="row"><button type="button" data-cmd="setgroups">⬅️ Ко всем пунктам настроек</button></div>
+ </div>
+ <div class="row"><button type="button" data-cmd="setsave">💾 Сохранить настройки</button><button type="button" data-cmd="setsaved">📋 Что сохранено</button></div>
+ <p class="hint">Настройки сохраняются сами, как только их меняют. Кнопка нужна, чтобы убедиться: игра ответит, что и куда записано.</p>
 </div></div>
 
 <!-- ЭНЦИКЛОПЕДИЯ ЗВУКОВ -->
@@ -275,7 +305,9 @@ h3{color:var(--acc2);margin:14px 0 6px;font-size:1.05rem;}
 <!-- ИНВЕНТАРЬ -->
 <div class="modal" id="modal-inventory" role="dialog" aria-modal="true" aria-label="Инвентарь" hidden><div class="sheet">
  <header><h2>🎒 Инвентарь</h2><button type="button" data-cmd="close">✖️ Закрыть</button></header>
- <p class="hint">Вещи разложены по двадцати разделам: оружие, щиты, броня, шлемы, перчатки, обувь, аксессуары, артефакты, магические предметы, свитки, книги, зелья, ресурсы, материалы, квестовые, инструменты, боеприпасы, еда, ингредиенты и прочее. Двойное касание по вещи — краткая карточка; свайп вверх или вниз на выбранной вещи — действия по вещи и по месту. Недоступное показано с причиной.</p>
+ <!-- ИНВЕНТАРЬ ПУНКТАМИ. Окно открывается списком разделов; раздел
+      открывается двойным касанием, «Назад» возвращает к списку. -->
+ <p class="hint">Вещи разложены по двадцати одному разделу: оружие, щиты, броня, шлемы, перчатки, обувь, аксессуары, артефакты, сокровища, магические предметы, свитки, книги, зелья, ресурсы, материалы, квестовые, инструменты, боеприпасы, еда, ингредиенты и прочее. Двойное касание по разделу открывает его; в разделе двойное касание по вещи — краткая карточка, свайп вверх или вниз на выбранной вещи — действия по вещи и по месту. «Назад» возвращает к разделам.</p>
  <div id="invSections"></div>
  <div id="invEquip" hidden></div><div id="invItems" hidden></div><div id="invGear" hidden></div>
 </div></div>
@@ -4738,8 +4770,9 @@ document.addEventListener('touchend',e=>{
      только короткое и медленное ведение — то, которым и вправду щупают. */
   /* В панели магии свайп одним пальцем — это слот с первого по четвёртый. */
   if(swipe&&magicPanelOpen()){safeFn(()=>magicSlotSwipe(1,dir));return;}
-  /* В инвентаре свайп вверх или вниз — действия с выбранной вещью; вбок — листать. */
-  if(swipe&&(dir==='N'||dir==='S')&&layer.id==='modal-inventory'){safeFn(()=>invActions());return;}
+  /* В разделе инвентаря свайп вверх или вниз — действия с выбранной вещью;
+     вбок — листать. В списке разделов действий нет, и свайп листает. */
+  if(swipe&&(dir==='N'||dir==='S')&&layer.id==='modal-inventory'&&INV.cat){safeFn(()=>invActions());return;}
   const листает=swipe&&(g.fast||dt<=safeFn(()=>gestListMs(),700)||d>=safeFn(()=>gestListPx(),90));
   if(листает){swipeNav((dir==='E'||dir==='S')?'next':'prev');return;}
   if(g.moved){
@@ -5082,7 +5115,12 @@ function secRefresh(layer){
 /* Оглавление окна вслух: сколько разделов, как они зовутся и что в них. */
 function secIndexText(layer){
  const h=secRefresh(layer);
- if(!h.length)return "В этом окне разделов нет: все пункты идут одним списком.";
+ if(!h.length){
+  /* Окно из пунктов — настройки или инвентарь на первом уровне: оглавление
+     называет сами пункты, по порядку и с тем, что в каждом. */
+  const п=punktList(layer);
+  if(п.length)return `Пунктов ${п.length}: `+п.map((el,i)=>`${i+1}. ${punktTitle(el)}`).join("; ")+". Двойное касание по пункту — открыть его.";
+  return "В этом окне разделов нет: все пункты идут одним списком.";}
  return `Разделов ${h.length}. `+
   h.map((el,i)=>`${i+1}. ${secTitle(el)} — ${secCount(el,layer)} ${plural(secCount(el,layer),"пункт","пункта","пунктов")}`).join("; ")+
   ". Двойное касание по заголовку — перескочить к следующему разделу.";}
@@ -5094,7 +5132,9 @@ function secIndexText(layer){
 function secNav(dir,от){
  const lay=navLayer();
  const h=secRefresh(lay);
- if(!h.length){safeFn(()=>narrate("В этом окне разделов нет."));return false;}
+ if(!h.length){safeFn(()=>narrate(punktList(lay).length
+  ?"Здесь пункты, а не разделы: свайп ведёт по пунктам, двойное касание открывает пункт."
+  :"В этом окне разделов нет."));return false;}
  const все=visibleInteractive(lay||document);
  const откуда=(от&&все.indexOf(от)>=0)?от:uiCursor;
  const iк=все.indexOf(откуда);
@@ -5110,6 +5150,16 @@ function secNav(dir,от){
  setCursor(цель,true);
  safeFn(()=>{if(!UI.nat("ui_next",0.5))UI.blip(880,.08,.1);});
  return true;}
+/* Пункты первого уровня: кнопки с data-punkt. Имя пункта для оглавления —
+   data-punkt-title, иначе жирная часть надписи. */
+function punktList(layer){
+ try{return visibleInteractive(layer||navLayer()||document).filter(x=>x.dataset&&x.dataset.punkt);}
+ catch(_){return [];}}
+function punktTitle(el){
+ try{
+  const t=el.dataset.punktTitle||(el.querySelector("b")||{}).textContent||el.textContent;
+  return String(t||"").trim().replace(/\s+/g," ");
+ }catch(_){return "";}}
 const Sections=Modules.register("SECTIONS",{
  cls:()=>SEC_CLASS,
  heads:l=>S(()=>secHeads(l),[]),
@@ -5121,6 +5171,127 @@ const Sections=Modules.register("SECTIONS",{
  menu:()=>AM_GROUPS.map(([t,items])=>({раздел:t,пунктов:items.length})),
  parts:()=>GUIDE_PARTS.map(([t,о,ns])=>({часть:t,о,глав:ns.length})),
  text:()=>S(()=>secIndexText(),"")});
+/* ════════════════════════════════════════════════════════════════════════
+   НАСТРОЙКИ — ПУНКТАМИ
+
+   Двенадцать разделов настроек шли одной лентой в семь десятков пунктов:
+   чтобы добраться до субтитров, незрячий игрок свайпал через звук, голос,
+   речь, касания и жесты — или перескакивал по заголовкам, но всё равно в
+   пределах одной бесконечной ленты.
+
+   Теперь окно открывается списком из семи пунктов, как настройки телефона:
+   звуки, синтезатор речи, речь игры, интерфейс, жесты, сложность,
+   сохранения. Двойное касание по пункту открывает его, и в окне остаются
+   только те настройки, что относятся к нему по названию. «Назад», свайп
+   двумя пальцами вниз или кнопка «Ко всем пунктам» возвращают к списку, и
+   выбор встаёт на тот пункт, из которого вышли.
+
+   Разделы внутри пункта остались разделами: заголовок называет число
+   настроек, перескок ходит между разделами пункта. В пункте из одного
+   раздела заголовок убран — он повторял бы имя пункта. Сами настройки не
+   тронуты: те же поля, те же id, то же сохранение.
+   ════════════════════════════════════════════════════════════════════════ */
+const SET_GROUPS=[
+ {id:"sound", n:"Звуки",           з:"🔊",о:"что звучит, громкость по каналам, объёмный звук и живой мир"},
+ {id:"tts",   n:"Синтезатор речи", з:"🗣️",о:"чем говорит игра: синтезатор устройства или голос ElevenLabs, выбор голоса, темп и высота"},
+ {id:"speech",n:"Речь игры",       з:"📢",о:"сколько говорит рассказчик, что игра произносит сама и что прерывает речь"},
+ {id:"ui",    n:"Интерфейс",       з:"♿",о:"ощупывание, подсказки расположения, быстрая активация, вибрация и субтитры"},
+ {id:"gest",  n:"Жесты",           з:"🖐️",о:"свои фигуры для действий, раздельное касание и точность: насколько далеко может съехать палец"},
+ {id:"diff",  n:"Сложность",       з:"⚔️",о:"мера мира: сколько бьют, сколько держат и сколько стоит поражение"},
+ {id:"save",  n:"Сохранения",      з:"💾",о:"записать игру сейчас, слоты и выгрузка в файл"}];
+const SET_GROUP_BY_ID=Object.fromEntries(SET_GROUPS.map(g=>[g.id,g]));
+const SETG={open:null};
+function setModal(){return document.getElementById("modal-settings");}
+function setGroupBox(id){const m=setModal();return m?m.querySelector(`.set-group[data-set-group="${id}"]`):null;}
+/* Сколько в пункте настроек — по разметке, а не по видимости: закрытый пункт
+   тоже должен знать своё число. Заголовки разделов не считаются. */
+function setGroupCount(id){
+ try{
+  const box=setGroupBox(id);if(!box)return 0;
+  return [...box.querySelectorAll('button,input,select,a,[role="button"],[data-cmd],[tabindex]:not([tabindex="-1"])')]
+   .filter(x=>{if(x.classList.contains(SEC_CLASS)||x.disabled)return false;
+    const h=x.closest("[hidden]");return !h||h===box;}).length;
+ }catch(_){return 0;}}
+function setGroupHeads(id){try{const box=setGroupBox(id);return box?[...box.querySelectorAll("."+SEC_CLASS)]:[];}catch(_){return [];}}
+function setGroupSpeak(g){
+ const r=setGroupHeads(g.id).length,n=setGroupCount(g.id);
+ return `${g.n}: ${g.о}. ${r>1?`${r} ${plural(r,"раздел","раздела","разделов")}, `:""}${n} ${plural(n,"настройка","настройки","настроек")}. Двойное касание — открыть.`;}
+function buildSetMenu(){
+ const list=document.getElementById("setMenuList");if(!list)return false;
+ const q=t=>String(t).replace(/&/g,"&amp;").replace(/"/g,"&quot;").replace(/</g,"&lt;");
+ list.innerHTML=SET_GROUPS.map(g=>{const n=setGroupCount(g.id);
+  return `<button type="button" class="item punkt" data-cmd="setgroup:${g.id}" data-punkt="${g.id}" data-punkt-title="${q(`${g.n} — ${n} ${plural(n,"настройка","настройки","настроек")}`)}" data-speak="${q(setGroupSpeak(g))}">${g.з} <b>${q(g.n)}</b><small>${q(g.о)}</small></button>`;}).join("");
+ return true;}
+/* Кнопка «Назад» в шапке на втором уровне ведёт к пунктам, а не закрывает
+   окно, — и называет себя так, чтобы это было слышно заранее. */
+function setBackLabel(вглубь){
+ try{
+  const cb=setModal().querySelector('header [data-cmd="close"]');if(!cb)return;
+  if(вглубь)cb.dataset.speak="Назад: ко всем пунктам настроек.";else delete cb.dataset.speak;
+ }catch(_){}}
+function setCursorQuiet(){pendingCursor=null;lastExploreEl=null;touchGate.lastUiTap=0;touchGate.lastUiEl=null;}
+/* Первый уровень: список пунктов. от — пункт, из которого вышли: выбор
+   встаёт на него. говорить=false — молча (при открытии окна его имя
+   называет openModal). */
+function setShowMenu(от,говорить){
+ const m=setModal();if(!m)return false;
+ const menu=document.getElementById("setMenu"),one=document.getElementById("setOne");
+ if(!menu||!one)return false;
+ m.querySelectorAll(".set-group").forEach(d=>{d.hidden=true;});
+ one.hidden=true;menu.hidden=false;SETG.open=null;
+ buildSetMenu();setBackLabel(false);
+ if(говорить===false)return true;
+ const b=(от&&menu.querySelector(`[data-punkt="${от}"]`))||menu.querySelector("[data-punkt]");
+ setCursorQuiet();
+ if(b)setCursor(b,false);
+ safeFn(()=>UI.nat("ui_back",0.45));
+ narrate(`Ко всем пунктам настроек.${b?` Выбрано: ${b.dataset.speak}`:""}`,{interrupt:true,pri:1,cat:"ui"});
+ return true;}
+/* Второй уровень: один пункт. В окне остаются только его разделы. */
+function setGroupOpen(id,говорить){
+ const g=SET_GROUP_BY_ID[id];const m=setModal();
+ if(!g||!m)return false;
+ const menu=document.getElementById("setMenu"),one=document.getElementById("setOne");
+ if(!menu||!one)return false;
+ if(id==="gest")safeFn(()=>renderGestBind());
+ if(id==="diff")safeFn(()=>renderDifficulty());
+ m.querySelectorAll(".set-group").forEach(d=>{d.hidden=d.dataset.setGroup!==id;});
+ menu.hidden=true;one.hidden=false;SETG.open=id;
+ setBackLabel(true);
+ /* Раздел в пункте один — его заголовок повторял бы имя пункта. */
+ const все=setGroupHeads(id);
+ все.forEach(h=>{h.hidden=все.length<2;});
+ const heads=secRefresh(m);
+ const row=document.getElementById("setSecRow");if(row)row.hidden=heads.length<2;
+ const n=setGroupCount(id);
+ const hint=document.getElementById("setOneHint");
+ if(hint)hint.textContent=`${g.з} ${g.n}: ${g.о}.${heads.length>1?` Разделов ${heads.length}: ${heads.map(h=>secTitle(h)).join(", ")}.`:""}`;
+ const box=setGroupBox(id);
+ const first=box?visibleInteractive(box)[0]:null;
+ if(говорить===false){if(first){uiCursor=first;uiCursorLayer=navLayer();}return true;}
+ setCursorQuiet();
+ if(first)setCursor(first,false);
+ safeFn(()=>UI.nat("ui_select",0.45));
+ const выбрано=first?safeFn(()=>{const d=first.dataset||{};
+  const t=d.speak||(first.getAttribute&&first.getAttribute("aria-label"))||(first.textContent||"").trim().replace(/\s+/g," ")||labelTextOf(first);
+  const st=controlState(first);return st?`${t}. ${st}`:t;},""):"";
+ narrate(`Пункт «${g.n}»: ${heads.length>1?`${heads.length} ${plural(heads.length,"раздел","раздела","разделов")}, `:""}${n} ${plural(n,"настройка","настройки","настроек")}.${выбрано?` Выбрано: ${выбрано}`:""}`,{interrupt:true,pri:1,cat:"ui"});
+ return true;}
+/* Шаг назад со второго уровня. На первом — false: закрывать окно решает вызвавший. */
+function setBack(){
+ if(!SETG.open)return false;
+ const от=SETG.open;
+ return setShowMenu(от);}
+const SettingsMenu=Modules.register("SETTINGS_MENU",{
+ groups:()=>SET_GROUPS.map(g=>({id:g.id,n:g.n,разделов:setGroupHeads(g.id).length,настроек:setGroupCount(g.id)})),
+ open:id=>S(()=>setGroupOpen(id),false),back:()=>S(()=>setBack(),false),
+ current:()=>SETG.open,
+ text(){return `Настройки: ${SET_GROUPS.length} пунктов — ${SET_GROUPS.map(g=>`${g.n} (${setGroupCount(g.id)})`).join(", ")}.`;}});
+/* Окно с пунктами открывается списком пунктов, каким бы путём его ни
+   открыли: жестом, кнопкой, из меню действий или из кода. */
+function modalOpenReset(id){
+ if(id==="modal-settings")setShowMenu(null,false);
+ else if(id==="modal-inventory"){INV.cat=null;INV.sel=null;}}
 const AM_GROUPS=[
  /* ════════ МЕНЮ ДЕЙСТВИЙ РАЗБИТО ПО СМЫСЛУ ════════
     Было шесть разделов, и в одном из них — «Здесь и сейчас» — лежало пятьдесят
@@ -5482,7 +5653,7 @@ function closeMagicPanel(){const m=document.getElementById('magicPanel');if(!m)r
 /* ════════ РУКОВОДСТВО ════════ */
 const GUIDE=[
 {title:"Глава 1. Добро пожаловать в «Грань Миров»",body:[
- "Версия Alpha 2.4.0 — живой динамичный мир размером 50000 на 50000 клеток: два с половиной миллиарда клеток, и ни одна не хранится в памяти — всякая выводится из своих координат в тот миг, когда об этой клетке спросили. Полная хроника частей с первой по пятую, объединённая в одном мире. Игра полностью доступна незрячим и слабовидящим.",
+ "Версия Alpha 2.5.0 — живой динамичный мир размером 50000 на 50000 клеток: два с половиной миллиарда клеток, и ни одна не хранится в памяти — всякая выводится из своих координат в тот миг, когда об этой клетке спросили. Полная хроника частей с первой по пятую, объединённая в одном мире. Игра полностью доступна незрячим и слабовидящим.",
  "Ведите пальцем по экрану — игра голосом назовёт то, что вы нашли. Двойное касание — действие. Всё озвучивается и имеет свой звук.",
  "Все кнопки игры собраны в меню действий: свайп тремя пальцами вверх. Инвентарь — три пальца вниз, карта — два пальца влево, журнал дел — два пальца вправо."]},
 {title:"Глава 2. Жесты",body:[
@@ -5865,6 +6036,14 @@ const GUIDE=[
  "Вещь растёт. За каждую победу работающий артефакт получает опыт, а на пороге открывает ступень — прибавку, которой у него раньше не было, и всегда из своего направления. Каждая следующая ступень даётся вдвое тяжелее. Если гнёзда кончились, редкую часть можно скормить вещи: она уйдёт в опыт вместо гнезда.",
  "Требования. Ранг задаёт уровень; сверх того вещь может требовать навык, заклинание нужной школы, расположение народа, принадлежность к клану, прочитанное знание или закрытое дело. Вещь, требования которой не выполнены, лежит мёртвым грузом и не даёт ничего — и прямо говорит, чего ей не хватает.",
  "Где всё это. Пункт меню «Артефакты, части и рецепты». В нём видно, каким ремеслом здесь занимаются и каково ваше умение, какие рецепты под рукой и чего не хватает, какие части лежат в суме, и по каждой вещи — всё, что о ней известно, и всё, что с ней можно сделать: вложить, вынуть, зачаровать, скормить, продать."]},
+{title:"Глава 93. Настройки и инвентарь — пунктами",body:[
+ "ЗАЧЕМ. Настройки шли одной лентой в семь десятков пунктов, инвентарь — полусотней строк вперемешку с заголовками. Незрячий игрок свайпал через звук и жесты, чтобы добраться до субтитров, и через оружие и броню, чтобы добраться до зелий. Теперь оба окна открываются списком пунктов, как настройки телефона.",
+ "НАСТРОЙКИ: СЕМЬ ПУНКТОВ. Звуки — что звучит, громкость по каналам, объёмный звук и живой мир. Синтезатор речи — чем говорит игра, голос, темп, высота и ElevenLabs. Речь игры — сколько говорит рассказчик, что игра произносит сама и что прерывает речь. Интерфейс — ощупывание, подсказки расположения, быстрая активация, вибрация и субтитры. Жесты — свои фигуры и точность. Сложность. Сохранения. Свайп по пункту называет, что в нём и сколько настроек.",
+ "ДВОЙНОЕ КАСАНИЕ ОТКРЫВАЕТ ПУНКТ. В окне остаются только его настройки, и выбор встаёт на первую. Внутри пункта разделы остаются разделами: двойное касание по заголовку перескакивает к следующему, оглавление называет разделы пункта. В пункте из одного раздела заголовка нет — он повторял бы имя пункта.",
+ "НАЗАД — К СПИСКУ. Кнопка «Назад» в шапке, свайп двумя пальцами вниз и кнопки «Ко всем пунктам» сверху и снизу возвращают к списку, и выбор встаёт на тот пункт, из которого вышли. Закрывает окно тот же жест, но уже из самого списка. Кнопки «Сохранить настройки» и «Что сохранено» стоят внизу на обоих уровнях. Открытое заново окно всегда начинается со списка.",
+ "ИНВЕНТАРЬ: ДВАДЦАТЬ ОДИН РАЗДЕЛ. Оружие, щиты, броня, шлемы, перчатки, обувь, аксессуары, артефакты, сокровища, магические предметы, свитки, книги, зелья, ресурсы, материалы, квестовые, инструменты, боеприпасы, еда, ингредиенты и прочее. Разделы стоят на своих местах всегда, даже пустые, — рука запоминает, где зелья. У каждого слышно число вещей или «пусто».",
+ "КУДА ЛОЖИТСЯ ВЕЩЬ. По роду, а не по тому, откуда она пришла: найденный меч — в оружие, купленный щит — в щиты, травы и органы твари — в ингредиенты, руда и шкура — в ресурсы, слиток — в материалы, трофей владыки и именная находка казны или глубин — в сокровища, свиток, жезл и талисман с вложенной чарой — к свиткам и магическим предметам. Вещь Дома носится так, как зовётся: кольцо — кольцом, а не мечом. Сокровища продаются по своей мере, а не за восемь монет, как прежде.",
+ "ДЕЙСТВИЯ С ВЕЩЬЮ. Внутри раздела двойное касание по вещи — её карточка, свайп вверх или вниз — что с ней можно сделать здесь и сейчас. В списке разделов свайп вверх и вниз просто листает. Сменили раздел — выбор вещи снят: действия не откроются для вещи из другого раздела."]},
 {title:"Глава 92. Закон глубины: свой на каждый десяток ярусов",body:[
  "ЗАЧЕМ. Досье яруса (глава 89) отвечает на вопрос «что здесь есть». На вопрос «по каким правилам здесь живут» не отвечало ничего: сто ярусов отличались друг от друга только числами урона и щедрости жил. Спуск на семидесятый ярус ощущался так же, как спуск на седьмой, только дороже.",
  "ДЕСЯТЬ ЗАКОНОВ, ПО ОДНОМУ НА ДЕСЯТОК. Обжитые ярусы, Сухой камень, Тяжёлые пласты, Сырые ходы, Рудное поле, Густая мана, Кость и корень, Дрожь, Немая глубина, Сердце. Закон один на весь мир и зависит только от глубины — поэтому его можно выучить и на него можно рассчитывать.",
@@ -5893,7 +6072,7 @@ const GUIDE=[
  "ДВОЙНОЕ КАСАНИЕ ПО ЗАГОЛОВКУ — ПЕРЕСКОК. Не «открыть раздел», а перешагнуть через него целиком, к следующему заголовку. Так до последнего пункта меню добираются четырнадцатью касаниями вместо ста тридцати свайпов.",
  "ОГЛАВЛЕНИЕ ВСЛУХ. В настройках и в руководстве первой кнопкой идёт «Оглавление»: игра называет все разделы подряд с числом пунктов в каждом. Рядом — «Следующий раздел» и «Предыдущий раздел», для тех, кому удобнее кнопкой, а не заголовком.",
  "МЕНЮ ДЕЙСТВИЙ: ЧЕТЫРНАДЦАТЬ РАЗДЕЛОВ. Было шесть, и в одном из них лежало пятьдесят семь пунктов подряд. Стало: начало пути, сейчас под рукой, путь и движение, люди и торговля, бой и опасность, добыча и ремесло, магия, герой, Грань и тьма, мир вокруг, державы и народы, свод знаний, речь и звук, игра и помощь. Самое нужное — первым: осмотреться, что вокруг, действие здесь, взаимодействовать, собрать, эхо-скан, карта, состояние. Пустой раздел не показывается вовсе.",
- "НАСТРОЙКИ: ДЕСЯТЬ РАЗДЕЛОВ. Что звучит; голос рассказчика; громкость; что игра говорит сама; доступность и касания; жесты; объёмный звук и живой мир; субтитры; сложность; сохранения. Каждая настройка попала ровно в один раздел, и ни одна не потерялась: скорость речи ушла к голосу, приглушение музыки под речь — к громкости, жест остановки речи — к тому, что игра говорит сама.",
+ "НАСТРОЙКИ: ДВЕНАДЦАТЬ РАЗДЕЛОВ В СЕМИ ПУНКТАХ. Что звучит, громкость, объёмный звук и живой мир — в пункте «Звуки»; синтезатор речи — в своём пункте; голос рассказчика и что игра говорит сама — в «Речи игры»; доступность и касания и субтитры — в «Интерфейсе»; жесты и точность жестов — в «Жестах»; сложность и сохранения — каждая в своём. Каждая настройка попала ровно в один раздел, и ни одна не потерялась. Как ходить по пунктам — в главе 93.",
  "РУКОВОДСТВО: ДЕВЯТЬ ЧАСТЕЙ. Первые шаги; слушать мир; герой и его силы; магия; мир, народы и знание; дороги, города и ярусы; опасность и бой; хозяйство, торговля и море; Грань, тьма и устройство игры. Порядок чтения теперь по частям: «следующая глава» в конце главы ведёт к следующей по смыслу. Раньше он вёл по месту в списке, а список сложился задом наперёд — после сорок восьмой главы шла восемьдесят девятая.",
  "ГЛАВА ЗНАЕТ СВОЮ ЧАСТЬ ПО НОМЕРУ. Не по месту в списке, а по номеру из заголовка — поэтому новая глава попадает в свою часть, куда бы её ни вписали. Глава, ни к одной части не приписанная, не теряется: ей отводится «Часть X. Прочее» в конце оглавления.",
  "СВОЙ ЖЕСТ НА ПЕРЕСКОК. В списке назначаемых действий появились три: «следующий раздел окна», «предыдущий раздел окна» и «оглавление окна». По умолчанию они не заняты ни одной фигурой — повесьте на ту, что вам ложится, хоть на уголок одним пальцем."]},
@@ -6248,7 +6427,7 @@ const GUIDE=[
    приписанная ни к одной части, не теряется — она уходит в конец списка.
    ════════════════════════════════════════════════════════════════════════ */
 const GUIDE_PARTS=[
- ["Часть I. Первые шаги","Что нажимать, куда идти и как заставить игру замолчать.",[1,2,3,88,91,90,4,49]],
+ ["Часть I. Первые шаги","Что нажимать, куда идти и как заставить игру замолчать.",[1,2,3,88,91,90,93,4,49]],
  ["Часть II. Слушать мир","Игра проходится ухом: чем звучит место, поверхность, оружие, тварь и событие.",[5,21,22,24,25,26,28,29,33,34,50]],
  ["Часть III. Герой и его силы","Опыт, тело, свойства, умения и вещи, которые их меняют.",[6,7,40,48,55,58,62,69,72,76,82]],
  ["Часть IV. Магия","Школы, плетение, резонанс, эхо и две энциклопедии заклинаний.",[64,67,68,70,78,79,81,87]],
@@ -33685,6 +33864,11 @@ function closeTopUI(){
      закрытия должен вернуть к полкам, а не выбросить из книг совсем. */
   const lore=document.getElementById("modal-lore");
   if(lore && !lore.hidden && closeLoreShelf()) return true;
+  /* Так же пункт настроек и раздел инвентаря: жест закрытия возвращает к
+     списку пунктов, и только оттуда — закрывает окно. */
+  const верх=modalStack[modalStack.length-1];
+  if(верх && верх.id==="modal-settings" && setBack()) return true;
+  if(верх && верх.id==="modal-inventory" && invBack()) return true;
   if(modalStack.length){ closeModal(modalStack[modalStack.length-1]); return true; }
   const loot=document.getElementById("lootOverlay");
   if(loot && !loot.hidden){ loot.hidden=true; UI.close(); return true; }
@@ -33731,6 +33915,8 @@ const CMD={
  map(){openModal("modal-map");renderMap();},
  inv(){openModal("modal-inventory");renderInventory();},
  invpick(arg){const i=String(arg).indexOf(":");invPick(String(arg).slice(0,i),String(arg).slice(i+1));},
+ invcat(id){if(!invOpenCat(id))narrate("Такого раздела в инвентаре нет.");},
+ invcats(){if(!invBack())narrate("Вы и так в списке разделов инвентаря.");},
  invact(){invActions();},
  invwhy(arg){const p=String(arg).split(":");invWhy(p[0],p[1],p.slice(2).join(":"));},
  invdo(arg){const p=String(arg).split(":");invDo(p[0],p[1],p.slice(2).join(":"));},
@@ -33900,7 +34086,11 @@ const CMD={
  sellall(arg){const i=String(arg).lastIndexOf(":");sellResource(String(arg).slice(0,i),String(arg).slice(i+1),true);},
  encyc(){openModal("modal-encyclopedia");buildEncycCats();},
  guide(){openGuide();},
- settings(){openModal("modal-settings");safeFn(()=>renderGestBind());safeFn(()=>secRefresh(document.getElementById("modal-settings")));},
+ /* settings:tts — сразу в пункт; без довода — список пунктов. */
+ settings(g){openModal("modal-settings");safeFn(()=>renderGestBind());
+  if(g&&SET_GROUP_BY_ID[g])safeFn(()=>setGroupOpen(g));else safeFn(()=>buildSetMenu());},
+ setgroup(id){if(!safeFn(()=>setGroupOpen(id),false))narrate("Такого пункта в настройках нет.");},
+ setgroups(){if(!safeFn(()=>setBack(),false))narrate("Вы и так в списке пунктов настроек.");},
  gestreset(){gestReset();safeFn(()=>renderGestBind());},
  /* Точность жестов: что настроено сейчас и возврат к умолчанию. */
  gesttune(){narrate(safeFn(()=>gestTuneText(),"Точность жестов настроить не удалось."),{interrupt:true});},
@@ -35360,6 +35550,8 @@ const Houses=Modules.register("HOUSES",{
    if(G.gear.some(g=>g&&g.id==="house_"+id)){narrate(`${h.вещь} у вас уже есть.`);return false;}
    G.gold-=цена;
    const it=genLoot(h.x,h.y,777,Math.max(3,G.level));it.id="house_"+id;it.name=h.вещь;it.rank=Math.max(it.rank,3);it.qual=Math.max(it.qual,3);it.стиль=h.стиль;it.дом=id;
+   /* Род вещи — по её имени, а не по случайному роду из genLoot. */
+   {const т=gearTypeByName(h.вещь);it.type=т[0];it.slot=т[1];it.родПоИмени=1;}
    G.gear.push(it);
    safeFn(()=>Bank.play("xylo_coin",{gain:0.5,maxSec:2}));
    setTimeout(()=>safeFn(()=>eventTheme("reward",{tier:"valuable",gain:0.55})),400);
@@ -42869,7 +43061,7 @@ function stockFor(n){const out=[];
    доспеха. */
 const SHOP_CATS=[
  {id:"weapon",n:"Оружие",з:"🗡️"},{id:"armor",n:"Броня",з:"🥋"},{id:"shield",n:"Щиты",з:"🛡️"},{id:"acc",n:"Аксессуары",з:"💍"},{id:"artifact",n:"Артефакты",з:"💎"},
- {id:"magic",n:"Магические предметы",з:"🔮"},{id:"scroll",n:"Свитки",з:"📜"},{id:"book",n:"Книги",з:"📕"},{id:"potion",n:"Зелья",з:"🧪"},{id:"res",n:"Ресурсы",з:"📦"},
+ {id:"treasure",n:"Сокровища",з:"💰"},{id:"magic",n:"Магические предметы",з:"🔮"},{id:"scroll",n:"Свитки",з:"📜"},{id:"book",n:"Книги",з:"📕"},{id:"potion",n:"Зелья",з:"🧪"},{id:"res",n:"Ресурсы",з:"📦"},
  {id:"material",n:"Материалы",з:"🧱"},{id:"food",n:"Еда",з:"🍞"},{id:"tool",n:"Инструменты",з:"🔧"},{id:"ammo",n:"Боеприпасы",з:"🏹"},{id:"other",n:"Прочее",з:"🎁"}];
 const SHOP_CAT_BY_ID=Object.fromEntries(SHOP_CATS.map(c=>[c.id,c]));
 function shopCatOf(invCat){return ({helm:"armor",gloves:"armor",boots:"armor",ingredient:"res",quest:null})[invCat]===undefined?(SHOP_CAT_BY_ID[invCat]?invCat:"other"):({helm:"armor",gloves:"armor",boots:"armor",ingredient:"res",quest:null})[invCat];}
@@ -43899,7 +44091,9 @@ function modalTitleText(m){
   return (c.textContent||"").trim().replace(/\s+/g," ");
  }catch(_){return "";}}
 function openModal(id){const m=document.getElementById(id);if(!m||!m.hidden)return;
- lastFocused=document.activeElement;m.hidden=false;modalStack.push(m);UI.open();
+ lastFocused=document.activeElement;m.hidden=false;modalStack.push(m);
+ safeFn(()=>modalOpenReset(id));
+ UI.open();
  safeFn(()=>Speech.contextCut("menu"));
  safeFn(()=>resetCursor());
  safeFn(()=>Bank.play("inventory_open",{seed:modalStack.length,gain:0.45}));
@@ -43935,7 +44129,7 @@ function closeModal(m){if(!m)return;
    пальцем вверх или вниз на выбранной вещи — список действий, и он зависит
    от вещи и от места: у наковальни чинят и куют, у горна плавят, у чана и
    очага варят, у алтаря приносят в дар, у торговца продают. */
-const INV={sel:null};
+const INV={sel:null,cat:null};
 /* ════════ ИНВЕНТАРЬ ПО ДВАДЦАТИ РАЗДЕЛАМ ════════
    Вещь лежит в разделе по своему роду, а не по тому, в каком списке
    сохранения она хранится: меч и щит — в разных разделах, хотя оба в G.gear;
@@ -43949,33 +44143,96 @@ const INV={sel:null};
    разделу вещи И по месту: у наковальни чинят, куют и клеймят, у чана варят
    и перегоняют, у алтаря освящают и просят откровения. Недоступное
    показывается с причиной, а не прячется. */
+/* Сокровища — двадцать первый раздел: именные находки казны и глубин и
+   трофеи владык. Они лежали в «Прочих предметах» и продавались за восемь
+   золотых, как пуговица; теперь у них свой раздел и цена по их мере. */
 const INV_CATS=[
  {id:"weapon",n:"Оружие",з:"🗡️"},{id:"shield",n:"Щиты",з:"🛡️"},{id:"armor",n:"Броня",з:"🥋"},{id:"helm",n:"Шлемы",з:"⛑️"},
  {id:"gloves",n:"Перчатки",з:"🧤"},{id:"boots",n:"Обувь",з:"🥾"},{id:"acc",n:"Аксессуары",з:"💍"},{id:"artifact",n:"Артефакты",з:"💎"},
- {id:"magic",n:"Магические предметы",з:"🔮"},{id:"scroll",n:"Свитки",з:"📜"},{id:"book",n:"Книги",з:"📕"},{id:"potion",n:"Зелья",з:"🧪"},
+ {id:"treasure",n:"Сокровища",з:"💰"},{id:"magic",n:"Магические предметы",з:"🔮"},{id:"scroll",n:"Свитки",з:"📜"},{id:"book",n:"Книги",з:"📕"},{id:"potion",n:"Зелья",з:"🧪"},
  {id:"res",n:"Ресурсы",з:"📦"},{id:"material",n:"Материалы",з:"🧱"},{id:"quest",n:"Квестовые предметы",з:"📌"},{id:"tool",n:"Инструменты",з:"🔧"},
  {id:"ammo",n:"Боеприпасы",з:"🏹"},{id:"food",n:"Еда",з:"🍞"},{id:"ingredient",n:"Ингредиенты",з:"🌿"},{id:"other",n:"Прочие предметы",з:"🎁"}];
 const INV_CAT_BY_ID=Object.fromEntries(INV_CATS.map(c=>[c.id,c]));
 /* Правила разбора по имени: первое совпадение решает. Порядок важен: «Свиток: Огненный меч» — свиток, а не меч. */
+/* Границы слова — без \b: в JavaScript \b знает только латиницу, и правило
+   «\bнож» не узнавало «Охотничий нож», «^яд\b» — склянку «Яд», а «\bлук\b» —
+   «Ясеневый лук». Кириллическая граница — «начало строки или не буква» перед
+   словом и «дальше не буква» после. */
 const INV_CAT_RULES=[
- {cat:"scroll",re:/^Свиток: /},
+ {cat:"scroll",re:/^Свиток: |(?:^|[^а-яё])свит(?:ок|ка|ки)(?![а-яё])/i},
  {cat:"quest",re:/^Реликвия/},
- {cat:"potion",re:/зелье|настой|отвар|эликсир|^яд\b|противояд/i},
- {cat:"tool",re:/^(факел|верёвка|свеча|удочка|рыболовная сеть|ключ|кирка|отмычк|фонарь|компас|секстант|ведро)/i},
- {cat:"ammo",re:/стрел|болт|дротик|камни для пращ/i},
- {cat:"book",re:/книга|^том\b|трактат|гримуар|летопис|апокриф|скрижал|^свод|записки|дневник|устав|хроник/i},
+ {cat:"magic",re:/^Знак: /},
+ {cat:"ingredient",re:/^Образец: /},
+ {cat:"treasure",re:/^Доля /},
+ {cat:"potion",re:/зелье|настой|отвар|эликсир|^яд(?![а-яё])|противояд/i},
+ {cat:"tool",re:/факел|верёвк|свеча|свечи|удочк|рыболовная сеть|отмычк|кирк[аи](?![а-яё])|фонарь|компас|секстант|ведро|чернильниц|бирк[аи](?![а-яё])|мерный шнур|молот подмастерья|(?:^|[^а-яё])ключ(?![а-яё])/i},
+ {cat:"ammo",re:/стрел(?!к)|болт|дротик|камни для пращ/i},
+ {cat:"book",re:/книга|(?:^|[^а-яё])том(?![а-яё])|трактат|гримуар|летопис|апокриф|скрижал|^свод(?![а-яё])|записки|дневник|устав|хроник/i},
  {cat:"shield",re:/щит/i},{cat:"helm",re:/шлем|шапка|капюшон/i},{cat:"gloves",re:/перчат|рукавиц/i},{cat:"boots",re:/сапог|ботин|обув|башмак/i},
  {cat:"armor",re:/кольчуг|доспех|панцир|куртк|кираса|бригант|нагрудник/i},
- {cat:"weapon",re:/меч|клинок|кинжал|молот|топор|секир|\bлук\b|копь|посох|булав|\bнож|сабл|челюсть|клык дома|\bрог\b/i},
- {cat:"acc",re:/плащ|кольцо|амулет|ожерель|пояс|серьг|маска|ленты?\b/i},
+ {cat:"weapon",re:/меч(?![а-яё])|меча|мечи|клинок|кинжал|молот|топор|секир|(?:^|[^а-яё])лук(?![а-яё])|копь|посох|булав|(?:^|[^а-яё])нож|сабл|челюсть|клык дома/i},
+ {cat:"acc",re:/плащ|кольцо|амулет|ожерель|пояс|серьг|маска|гривн|(?:^|[^а-яё])лент[аы]?(?![а-яё])/i},
  {cat:"food",re:/еда|хлеб|мясо|сыр|похлёбк|вялен|лепёшк/i},
- {cat:"magic",re:/талисман|оберег|слепок|ядро|руна|эссенц|печать|стрелка|фляга|склянка|чаша|фонарь|компас|секстант|гребень|венок|сеть|перо|стило|уголь|колокольчик|ложка|час\b|осколок|отвес|серп|ведро|гиря|покрывало|монета|кочерга|ларец|клеймо|рог\b|посох|засечн|камень/i}];
+ {cat:"magic",re:/талисман|оберег|слепок|ядро|руна|эссенц|печать|стрелка|фляга|склянка|чаша|фонарь|компас|секстант|гребень|венок|сеть|перо|стило|уголь|колокольчик|ложка|(?:^|[^а-яё])час(?![а-яё])|осколок|отвес|серп|ведро|гиря|покрывало|монета|кочерга|ларец|клеймо|(?:^|[^а-яё])рог(?![а-яё])|засечн|камень|ошейник/i}];
 /* Сырьё — в ресурсы, переработанное и торговое — в материалы. */
-const INV_RAW=new Set(["дерево","трава","ягоды","камень","руда","кристалл","ракушка","грибы","кость"]);
+const INV_RAW=new Set(["дерево","трава","ягоды","камень","руда","кристалл","ракушка","грибы","кость","шкура"]);
+/* Орган, кровь и яд с убитой твари идут в чан, а не в горн: это ингредиенты. */
+const INV_ALCH=new Set(["орган","кровь","яд"]);
+/* Сорт травы, гриба или ягоды (целебник, поганка, морозная ягода) — тоже
+   ингредиент; сорт руды, камня или дерева — материал. Считается по самому
+   реестру сортов, а не списком имён: новый сорт ляжет куда надо сам. */
+let INV_HERBS=null;
+function invHerbGoods(){
+ if(INV_HERBS)return INV_HERBS;
+ const s=new Set();
+ try{["трава","грибы","ягоды"].forEach(r=>(RES_SORTS[r]||[]).forEach(x=>{if(x.товар)s.add(x.товар);}));}catch(_){}
+ return INV_HERBS=s;}
+/* Сокровища: именные находки казны и вех глубины, награда рода и трофеи
+   мировых владык — то, чего не добывают руками и не куют. */
+let INV_TREASURES=null;
+function invTreasureNames(){
+ if(INV_TREASURES)return INV_TREASURES;
+ const s=new Set(["Колокол Заводи"]);
+ try{VAULT_TREASURES.forEach(t=>s.add(t.n));}catch(_){}
+ try{DEEP_EVENTS.forEach(e=>{if(e.вещь)s.add(e.вещь);});}catch(_){}
+ try{DEEP_COMPLEX.forEach(e=>{if(e.вещь)s.add(e.вещь);});}catch(_){}
+ return INV_TREASURES=s;}
+let INV_TROPHIES=null;
+function invBossTrophies(){
+ if(INV_TROPHIES)return INV_TROPHIES;
+ const s=new Set();
+ try{const сорта=new Set();Object.values(RES_SORTS).forEach(л=>(л||[]).forEach(x=>{if(x.товар)сорта.add(x.товар);}));
+  WORLD_BOSSES.forEach(b=>{const p=b.припас;if(p&&!INV_RAW.has(p)&&!сорта.has(p))s.add(p);});}catch(_){}
+ return INV_TROPHIES=s;}
+/* Что сокровище стоит и о чём оно: казна знает свою цену, веха глубины —
+   своё событие. */
+function invTreasureInfo(name){
+ try{
+  const t=VAULT_TREASURES.find(x=>x.n===name);if(t)return {ц:t.ц,о:t.д};
+  const e=DEEP_EVENTS.find(x=>x.вещь===name);if(e)return {ц:600,о:`память о том, что случилось на ярусе: ${String(e.n).toLowerCase()}`};
+  const c=DEEP_COMPLEX.find(x=>x.вещь===name);if(c)return {ц:1500,о:`единственное, что уносят со дна шахты, — ${String(c.n).toLowerCase()}`};
+ }catch(_){}
+ return {ц:150,о:""};}
+/* Род и место снаряжения по имени — для вещей, чьё имя дано заранее (вещь
+   Дома): «Кольцо мытаря» — кольцо и носится как кольцо, а не меч, каким его
+   делал случайный род из genLoot. Чего не узнало ни одно правило снаряжения,
+   носят как оберег. */
+function gearTypeByName(name){
+ const n=String(name||"");let cat=null;
+ for(const r of INV_CAT_RULES){if(["shield","helm","gloves","boots","armor","weapon","acc"].includes(r.cat)&&r.re.test(n)){cat=r.cat;break;}}
+ if(cat==="weapon")return [/посох/i.test(n)?"Посох":/(?:^|[^а-яё])лук(?![а-яё])/i.test(n)?"Лук":/кинжал|(?:^|[^а-яё])нож|клык|челюсть/i.test(n)?"Кинжал":"Меч","weapon"];
+ if(cat==="shield")return ["Щит","armor"];
+ if(cat==="helm")return ["Шлем","armor"];
+ if(cat==="armor")return ["Кольчуга","armor"];
+ if(cat==="gloves")return ["Перчатки","armor"];
+ if(cat==="boots")return ["Сапоги","armor"];
+ return [/плащ/i.test(n)?"Плащ":/кольц/i.test(n)?"Кольцо":"Амулет","acc"];}
 function invCategoryOf(row){
  try{
   const it=row.it,name=String(row.name||"");
   if(row.kind==="art")return "artifact";
+  /* Вложенная чара: свиток — к свиткам, жезл, талисман и фокус — к магическим. */
+  if(row.kind==="charged")return it&&it.вид==="scroll"?"scroll":"magic";
   /* Знак графической магии зовётся по своему символу («знак щита»), и старое
      правило по имени уводило его в щиты. Раздел у знака свой — магия. */
   if(row.kind==="item"&&G.sigils&&G.sigils[name])return "magic";
@@ -43983,8 +44240,18 @@ function invCategoryOf(row){
   if(row.kind==="part")return "material";
   if(row.kind==="plant")return "ingredient";
   if(row.kind==="fish")return "food";
-  if(row.kind==="res"||row.kind==="rare"){if(name==="Еда в дорогу")return "food";return INV_RAW.has(name)?"res":"material";}
+  if(row.kind==="res"||row.kind==="rare"){
+   if(name==="Еда в дорогу")return "food";
+   if(INV_RAW.has(name))return "res";
+   if(INV_ALCH.has(name)||invHerbGoods().has(name))return "ingredient";
+   if(invBossTrophies().has(name))return "treasure";
+   return "material";}
   if(row.kind==="equip"||row.kind==="gear"){
+   /* У вещи Дома и единственной вещи имя дано заранее и говорит о ней
+      больше, чем род: разбираем по имени. */
+   if(it&&typeof it==="object"&&(it.дом||it.единственная)){const nm=String(it.name||"");
+    for(const r of INV_CAT_RULES){if(["shield","helm","gloves","boots","armor","weapon","acc"].includes(r.cat)&&r.re.test(nm))return r.cat;}
+    if(it.дом)return "acc";}
    if(it&&typeof it==="object"){const t=String(it.type||it.name||"");
     for(const r of INV_CAT_RULES){if(["shield","helm","gloves","boots","armor","weapon","acc"].includes(r.cat)&&r.re.test(t))return r.cat;}
     if(it.slot==="weapon")return "weapon";if(it.slot==="armor")return "armor";return "acc";}
@@ -43995,6 +44262,10 @@ function invCategoryOf(row){
   if(safeFn(()=>LESSER_GODS.some(g=>g.артефакт===name),false))return "magic";
   if(safeFn(()=>HOUSES.some(h=>h.вещь===name),false)){for(const r of INV_CAT_RULES){if(["shield","helm","gloves","boots","armor","weapon","acc"].includes(r.cat)&&r.re.test(name))return r.cat;}return "magic";}
   if(typeof SECRET_BLADES!=="undefined"&&SECRET_BLADES.includes(name))return "weapon";
+  /* Вещи Пути — ядро, ключ, печать, око, нить Предтеч — вещи силы; маска
+     Пути носится на лице. Правило по имени уводило ключ и компас в инструменты. */
+  if(typeof PATH_ART_BY_NAME!=="undefined"&&PATH_ART_BY_NAME[name])return /^Маска/.test(name)?"acc":"magic";
+  if(invTreasureNames().has(name))return "treasure";
   for(const r of INV_CAT_RULES){if(r.re.test(name))return r.cat;}
  }catch(_){}
  return "other";}
@@ -44016,7 +44287,10 @@ function invAll(){
   const eq=G.equip||{};
   for(const slot of ["weapon","armor","acc"]){const it=eq[slot];if(it)out.push({kind:"equip",key:slot,label:`${it.name||it} (надето)`,name:it.name||String(it),it,equipped:true});}
   const gear=Array.isArray(G.gear)?G.gear:[];
-  gear.forEach((w,i)=>{if(!w||(eq.weapon&&(w.id&&w.id===eq.weapon.id)))return;out.push({kind:"gear",key:String(i),label:`${w.name}`,name:w.name,it:w});});
+  gear.forEach((w,i)=>{if(!w||(eq.weapon&&(w.id&&w.id===eq.weapon.id)))return;
+   /* Старое сохранение: вещь Дома с чужим родом получает свой — один раз. */
+   if(w.дом&&!w.родПоИмени){const т=gearTypeByName(w.name);w.type=т[0];w.slot=т[1];w.родПоИмени=1;}
+   out.push({kind:"gear",key:String(i),label:`${w.name}`,name:w.name,it:w});});
   const fishNames=new Set((typeof FISH!=="undefined"?FISH:[]).map(f=>f.n));
   for(const [k,v] of Object.entries(G.inv||{})){
    if(!(Number(v)>0)||/^__/.test(k)||/^[a-z0-9-]+$/.test(k))continue;
@@ -44026,22 +44300,104 @@ function invAll(){
   (Array.isArray(G.artifacts)?G.artifacts:[]).forEach((a,i)=>{if(!a||typeof a!=="object")return;out.push({kind:"art",key:String(i),label:`${a.имя}${a.спит?" (спит)":""}`,name:a.имя,it:a});});
   (Array.isArray(G.items)?G.items:[]).forEach((it,i)=>{const n=typeof it==="string"?it:(it&&it.name)||"Предмет";out.push({kind:"item",key:String(i),label:n,name:n,it});});
   Object.keys(G.comps||{}).forEach(k=>{const n=Number(G.comps[k])||0;const p=(typeof ART_PART_BY_ID!=="undefined")&&ART_PART_BY_ID[k];if(n<=0||!p)return;out.push({kind:"part",key:k,label:`${p.n}: ${n} шт.`,name:p.n,n,it:p});});
+  /* Вложенные чары висят в панели магии, но и в котомке их видно: жезл
+     ищут среди магических вещей, а свиток — среди свитков. */
+  (Array.isArray(G.charged)?G.charged:[]).forEach((it,i)=>{const c=(typeof CARRIER_BY_ID!=="undefined")&&CARRIER_BY_ID[it&&it.вид];if(!c)return;
+   const имя=safeFn(()=>chargedName(it),c.n);
+   out.push({kind:"charged",key:String(i),label:`${имя}${c.заряды?` — зарядов ${it.заряд} из ${it.макс}`:""}`,name:имя,it});});
   out.forEach(r=>{r.cat=invCategoryOf(r);const c=INV_CAT_BY_ID[r.cat]||INV_CAT_BY_ID.other;r.label=`${c.з} ${r.label}`;});
  }catch(_){}
  return out;}
 function invRow(kind,key){key=decodeURIComponent(String(key||""));return invAll().find(r=>r.kind===kind&&r.key===key)||null;}
+/* ════════ ИНВЕНТАРЬ — ПУНКТАМИ ════════
+   Двадцать разделов шли одной лентой: заголовок, вещи, заголовок, вещи.
+   В полной котомке это полсотни строк, и незрячий игрок свайпал через
+   оружие и броню, чтобы добраться до зелий.
+
+   Теперь окно открывается списком разделов — оружие, щиты, броня … зелья,
+   ресурсы … прочее, — и у каждого число вещей или «пусто». Разделы стоят
+   всегда на своих местах, даже пустые: рука запоминает, где зелья, и
+   находит их касанием. Двойное касание по разделу открывает его вещи;
+   «Назад», свайп двумя пальцами вниз или кнопка «Ко всем разделам»
+   возвращают к списку, и выбор встаёт на тот раздел, из которого вышли.
+
+   Всё, что игрок подбирает, покупает, мастерит и получает в награду,
+   ложится в раздел по своему роду (invCategoryOf) — и сразу видно в счёте
+   раздела. Выбор вещи принадлежит открытому разделу: сменили раздел —
+   выбор снят, и свайп вверх не откроет действия с вещью из другого. */
+function invCatSummary(rows){
+ const k=rows.length;if(!k)return "пусто";
+ const u=rows.reduce((a,r)=>a+(Number(r.n)>0?Number(r.n):1),0);
+ return u===k?`${k} ${plural(k,"вещь","вещи","вещей")}`:`${k} ${plural(k,"вид","вида","видов")}, всего ${u} ${plural(u,"штука","штуки","штук")}`;}
+function invEmptyText(c){
+ return `Сюда ляжет всё, что относится к разделу «${c.n}»: найденное, купленное, сделанное своими руками и полученное в награду.`;}
+/* Надпись вещи без значка раздела: внутри раздела значок у всех один, и
+   синтезатор, читающий значки словами, повторял бы его на каждой строке. */
+function invSpoken(r){
+ const c=INV_CAT_BY_ID[r.cat]||INV_CAT_BY_ID.other;
+ const t=String(r.label||r.name||"");
+ return (t.startsWith(c.з+" ")?t.slice(c.з.length+1):t).replace(/\.$/,"");}
 function renderInventory(){
  try{
   const box=document.getElementById("invSections");if(!box)return;
   const all=invAll();
-  let html="";
-  INV_CATS.forEach(c=>{const rows=all.filter(x=>x.cat===c.id);if(!rows.length)return;
-   html+=`<h3>${c.з} ${c.n} (${rows.length})</h3>`;
-   html+=rows.map(r=>`<button class="item" data-cmd="invpick:${r.kind}:${encodeURIComponent(r.key)}" data-speak="${r.label.replace(/"/g,"&quot;")}. Двойное касание — о вещи, свайп вверх или вниз — действия.">${INV.sel&&INV.sel.kind===r.kind&&INV.sel.key===r.key?"✔ ":""}${r.label}</button>`).join("");});
-  box.innerHTML=html||`<div class="list-line">🎒 В инвентаре пока нет вещей: ни припасов, ни предметов.</div>`;
-  if(!all.length)narrate("Инвентарь пуст. В нём нет предметов и ресурсов.",{interrupt:true});
+  const по={};all.forEach(r=>{(по[r.cat]=по[r.cat]||[]).push(r);});
+  if(INV.cat&&!INV_CAT_BY_ID[INV.cat])INV.cat=null;
+  const q=t=>String(t).replace(/&/g,"&amp;").replace(/"/g,"&quot;").replace(/</g,"&lt;");
+  const m=document.getElementById("modal-inventory");
+  const cb=m&&m.querySelector('header [data-cmd="close"]');
+  if(!INV.cat){
+   /* Первый уровень: все разделы, каждый на своём месте. */
+   if(cb)delete cb.dataset.speak;
+   const полных=INV_CATS.filter(c=>(по[c.id]||[]).length).length;
+   let html=`<p class="hint" id="invTop">${all.length
+    ?`В котомке ${all.length} ${plural(all.length,"строка","строки","строк")}, заняты ${полных} ${plural(полных,"раздел","раздела","разделов")} из ${INV_CATS.length}.`
+    :"Инвентарь пуст: ни припасов, ни предметов."} Двойное касание по разделу — открыть его.</p>`;
+   html+=INV_CATS.map(c=>{const rows=по[c.id]||[];const сч=invCatSummary(rows);
+    return `<button type="button" class="item punkt${rows.length?"":" empty"}" data-cmd="invcat:${c.id}" data-punkt="${c.id}" data-punkt-title="${q(`${c.n} — ${сч}`)}" data-speak="${q(`${c.n}: ${сч}. Двойное касание — открыть.`)}">${c.з} <b>${q(c.n)}</b><small>${q(сч)}</small></button>`;}).join("");
+   box.innerHTML=html;
+   if(!all.length)narrate("Инвентарь пуст. В нём нет предметов и ресурсов.",{interrupt:true});
+   return;}
+  /* Второй уровень: вещи одного раздела. */
+  if(cb)cb.dataset.speak="Назад: ко всем разделам инвентаря.";
+  const c=INV_CAT_BY_ID[INV.cat];const rows=по[c.id]||[];
+  const назад=`<div class="row"><button type="button" data-cmd="invcats">⬅️ Ко всем разделам инвентаря</button></div>`;
+  let html=назад+`<p class="hint" id="invCatHint">${c.з} ${q(c.n)}: ${q(invCatSummary(rows))}.${rows.length
+   ?" Двойное касание по вещи — о ней; свайп вверх или вниз на выбранной вещи — действия."
+   :` ${q(invEmptyText(c))}`}</p>`;
+  html+=rows.map(r=>`<button class="item" data-cmd="invpick:${r.kind}:${encodeURIComponent(r.key)}" data-speak="${q(invSpoken(r))}. Двойное касание — о вещи, свайп вверх или вниз — действия.">${INV.sel&&INV.sel.kind===r.kind&&INV.sel.key===r.key?"✔ ":""}${q(r.label)}</button>`).join("");
+  if(rows.length)html+=назад;
+  box.innerHTML=html;
  }catch(e){try{console.error('[InventoryGuard]',e);narrate('Инвентарь восстановлен в безопасном режиме.');}catch(_){} }
 }
+/* Открыть раздел: выбор встаёт на первую вещь, а у пустого — на «назад». */
+function invOpenCat(id){
+ const c=INV_CAT_BY_ID[id];if(!c)return false;
+ INV.cat=id;INV.sel=null;INV.confirm=null;
+ renderInventory();
+ const box=document.getElementById("invSections");
+ const first=box&&(box.querySelector('[data-cmd^="invpick:"]')||box.querySelector('[data-cmd="invcats"]'));
+ pendingCursor=null;lastExploreEl=null;touchGate.lastUiTap=0;touchGate.lastUiEl=null;
+ if(first)setCursor(first,false);
+ safeFn(()=>UI.nat("ui_select",0.45));
+ const rows=invAll().filter(r=>r.cat===id);
+ const выбрано=first?String(first.dataset.speak||first.textContent||"").trim():"";
+ narrate(rows.length
+  ?`${c.n}: ${invCatSummary(rows)}. Выбрано: ${выбрано}`
+  :`${c.n}: пусто. ${invEmptyText(c)} Выбрано: ко всем разделам инвентаря.`,{interrupt:true,pri:1,cat:"ui"});
+ return true;}
+/* Шаг назад из раздела к списку разделов. В списке — false: закрыть окно
+   решает тот, кто спрашивал (closeTopUI). */
+function invBack(){
+ if(!INV.cat)return false;
+ const от=INV.cat;INV.cat=null;INV.sel=null;INV.confirm=null;
+ renderInventory();
+ const b=document.querySelector(`#invSections [data-punkt="${от}"]`);
+ pendingCursor=null;lastExploreEl=null;touchGate.lastUiTap=0;touchGate.lastUiEl=null;
+ if(b)setCursor(b,false);
+ safeFn(()=>UI.nat("ui_back",0.45));
+ narrate(`Ко всем разделам инвентаря.${b?` Выбрано: ${b.dataset.speak}`:""}`,{interrupt:true,pri:1,cat:"ui"});
+ return true;}
 function invFind(kind,key){
  try{
   const eq=G.equip||{};
@@ -44050,6 +44406,7 @@ function invFind(kind,key){
   if(kind==="potion")return (G.potions||[])[Number(key)]||null;
   if(kind==="art")return (G.artifacts||[])[Number(key)]||null;
   if(kind==="item")return (G.items||[])[Number(key)]||null;
+  if(kind==="charged")return (G.charged||[])[Number(key)]||null;
   if(kind==="part")return (Number(G.comps&&G.comps[key])||0)>0?key:null;
   return (Number(G.inv&&G.inv[key])||0)>0?key:null;
  }catch(_){return null;}}
@@ -44093,6 +44450,7 @@ function invBrief(kind,key){
   if(kind==="potion"){const pt=POTION_BY_ID[it.id]||{n:it.id,о:""};return `Зелье ${pt.n}: ${pt.о}. Качество ${potionQualityWord(it.q)}, устойчивость ${Math.round(it.стаб*100)} из ста, ${potionExpired(it)?"выдохлось":"годно до "+(it.день+it.срок)+"-го дня"}. Действие — выпить.`;}
   if(kind==="art")return ART.describe(it,true)+(it.спит?" Артефакт спит: его свойства не действуют.":"");
   if(kind==="part")return `${row.name}: часть для гнёзд артефактов, ${row.n} шт. ${it.о||""}`;
+  if(kind==="charged")return safeFn(()=>chargedLine(it),row.name);
   if(kind==="item"){const n=String(typeof it==="string"?it:it.name);
    if(PATH_ART_BY_NAME[n])return safeFn(()=>Path.artifactText(n),n);
    if(G.sigils&&G.sigils[n])return safeFn(()=>Sigils.text(n),n);
@@ -44104,12 +44462,14 @@ function invBrief(kind,key){
    if(n==="Противоядие")return "Противоядие: горький настой. Снимает яд и чуть лечит.";
    if(/^Реликвия/.test(n))return `${n}: святыня бога. Квестовый предмет: её ждёт заказчик или алтарь; выбросить нельзя.`;
    if(row.cat==="quest")return `${n}: квестовый предмет, его ждут по делу. Выбросить нельзя.`;
+   if(row.cat==="treasure"){const t=invTreasureInfo(n);return `${n}: сокровище${t.о?` — ${t.о}`:""}. Стоит около ${t.ц} золота; дороже всех его берут собиратель редкого и старьёвщик.`;}
    if(row.cat==="tool")return `${n}: инструмент. ${({"Факел":"Даёт свет в глубине.","Верёвка":"Пригодится на спуске и у колодца.","Удочка":"Рыбачат на берегу: меню действий, «Рыбачить».","Рыболовная сеть":"Улов больше, чем с удочкой."})[n]||"Применяется по месту."}`;
    if(row.cat==="magic")return `${n}: ${cat.n.toLowerCase()}. ${safeFn(()=>{const g=LESSER_GODS.find(g=>g.артефакт===n);return g?`Артефакт ${g.n}: ${g.чудо}.`:"";},"")||safeFn(()=>{const h=HOUSES.find(h=>h.вещь===n);return h?`Вещь Дома «${h.n}», ${h.стиль}ой работы.`:"";},"")||"Хранит в себе чары."}`;
    if(row.cat==="weapon")return `${n}: именное оружие. Хранится как вещь; в бой идёт то, что надето.`;
    return `${n}: ${cat.n.toLowerCase()}.`;}
   if(kind==="plant"){const p=PLANT_BY_NAME[it];const кат=PLANT_CAT_BY_ID[p.кат]||{n:""};return `${p.n}, ${кат.n}: ${p.о}. В котомке ${G.inv[it]} шт. Идёт в зелья: ${p.рецепты.map(id=>(POTION_BY_ID[id]||{n:id}).n).join(", ")}.${G.pure&&G.pure[it]?" Очищено.":""}`;}
   if(kind==="fish"){const f=(FISH||[]).find(x=>x.n===it);return `${it}: ${f?f.d:"улов"}. ${G.inv[it]} шт., цена около ${f?f.price:RES_BASE[it]||5} золота. Еда.`;}
+  if(row.cat==="treasure")return `${it}: трофей владыки, ${G.inv[it]} шт. Такого не добывают руками: цена около ${(SORT_GOODS[it]||{}).цена||300} золота за штуку.`;
   const сорт=RES_SORTS[it]?"":(SORT_GOODS[it]?"редкий товар, ":"");
   return `${it}: ${G.inv[it]} шт., ${cat.n.toLowerCase()}, ${сорт}цена около ${RES_BASE[it]||6} золота за штуку.`;
  }catch(_){return `${key}.`;}}
@@ -44150,6 +44510,7 @@ const ok=()=>true;
 const нужен=(ctx,...станки)=>станки.some(s=>ctx.станки.has(s));
 function invRemoveItem(row){
  if(row.kind==="item"){G.items.splice(Number(row.key),1);return true;}
+ if(row.kind==="charged"){G.charged.splice(Number(row.key),1);return true;}
  if(row.kind==="gear"){G.gear.splice(Number(row.key),1);return true;}
  if(row.kind==="potion"){G.potions.splice(Number(row.key),1);return true;}
  if(row.kind==="art"){G.artifacts.splice(Number(row.key),1);return true;}
@@ -44354,10 +44715,21 @@ iaction("teach",{n:"Использовать для обучения",значо
   else if(т.дар==="skill"){safeFn(()=>mastGain("lang",6));слово="Древние языки поднялись.";}
   else{G.xp=(Number(G.xp)||0)+15;слово="Опыт +15.";}
   safeFn(()=>checkLevelUp());safeFn(()=>{Bank.play("arte_book",{gain:0.5,maxSec:3});setTimeout(()=>safeFn(()=>Bank.play("magic_shimmer",{kind:"magic",gain:0.45,maxSec:3})),500);});return done(`Учение по книге «${n}»: ${слово}`);}});
-iaction("give",{n:"Передать",значок:"🤲",cats:["scroll","book","potion","tool","other","magic","food"],
+iaction("give",{n:"Передать",значок:"🤲",cats:["scroll","book","potion","tool","other","magic","food","treasure"],
  можно:(row,ctx)=>ctx.житель?true:"рядом нет того, кому передать: подойдите к жителю",
  делать:(row,ctx,done)=>{const n=ctx.житель;const имя=String(row.name);invRemoveItem(row);safeFn(()=>{npcRemember(n,"подарок",имя,5);addRep(n.race,1);addStand("npc",n.key,3,true);});safeFn(()=>Bank.play("arte_cloth",{gain:0.45,maxSec:2}));
   return done(`${имя} передан: ${n.name} принимает и благодарит. Народ «${n.race}» это запомнит.`);}});
+/* вложенные чары */
+iaction("chargeuse",{n:"Применить",значок:"✨",cats:["scroll","magic"],kinds:["charged"],
+ можно:(row)=>{const c=CARRIER_BY_ID[row.it&&row.it.вид];if(!c)return "вещь неизвестна";
+  if(!c.заряды)return "фокус не творит: он делает свою ветвь дешевле, пока вы его несёте";
+  return (Number(row.it.заряд)||0)>0?true:"зарядов не осталось";},
+ делать:(row)=>{safeFn(()=>closeModal(document.getElementById("modal-invact")));chargedUse(Number(row.key));safeFn(()=>renderInventory());return true;}});
+iaction("chargerefill",{n:"Зарядить",значок:"🔋",cats:["scroll","magic"],kinds:["charged"],
+ можно:(row)=>{const c=CARRIER_BY_ID[row.it&&row.it.вид];if(!c||!c.перезаряд)return "эту вещь не заряжают";
+  if((Number(row.it.заряд)||0)>=(Number(row.it.макс)||0))return "заряды и так полны";
+  return (safeFn(()=>Power.here(),null)||(G.place&&["tower","school","temple"].includes(G.place.stype)))?true:"заряжают на месте силы или в башне, школе и храме";},
+ делать:(row)=>{safeFn(()=>closeModal(document.getElementById("modal-invact")));chargedRecharge(Number(row.key));safeFn(()=>renderInventory());return true;}});
 /* артефакты */
 iaction("lore",{n:"Изучить",значок:"📜",cats:["artifact"],можно:ok,делать:(row)=>{narrate(artLoreText(row.it),{interrupt:true});return "keep";}});
 iaction("activate",{n:"Активировать",значок:"🟢",cats:["artifact"],можно:(row)=>row.it.спит?true:"артефакт уже действует",
@@ -44390,7 +44762,7 @@ iaction("altar_pray",{n:"Помолиться",значок:"🙏",cats:ALL_CATS
 iaction("offer",{n:"Принести в дар",значок:"🕯️",cats:["res","material","ingredient","food"],можно:(row,ctx)=>алтарьМожно(ctx),
  делать:(row,ctx,done)=>{const alt=ctx.алтарь;invRemoveItem(row);if(!G.faith)G.faith={};const god=alt&&alt.бог?alt.бог.id:null;if(god)G.faith[god]=(Number(G.faith[god])||0)+1;
   safeFn(()=>{altarSound("sacrifice",{gain:0.5,maxSec:4});deed("rites");});return done(`Принесено в дар: ${row.name}.${god?` ${alt.бог.n} принимает: благосклонность растёт.`:""}`);}});
-iaction("sacrifice",{n:"Принести жертву",значок:"🩸",cats:["food","potion","magic","other"],можно:(row,ctx)=>алтарьМожно(ctx),
+iaction("sacrifice",{n:"Принести жертву",значок:"🩸",cats:["food","potion","magic","other","treasure"],можно:(row,ctx)=>алтарьМожно(ctx),
  делать:(row,ctx,done)=>{const alt=ctx.алтарь;invRemoveItem(row);const god=alt&&alt.бог?alt.бог.id:null;if(god){if(!G.faith)G.faith={};G.faith[god]=(Number(G.faith[god])||0)+2;}safeFn(()=>{altarSound("sacrifice",{gain:0.55,maxSec:4});deed("rites");});return done(`Жертва принесена: ${row.name}.${god?` ${alt.бог.n} доволен: благосклонность +2.`:""}`);}});
 function altarObjIndex(){try{objList=objectsHere();return objList.findIndex(o=>o.плитка==="A"&&o.d<=1);}catch(_){return -1;}}
 iaction("blessing",{n:"Получить благословение",значок:"✨",cats:ALL_CATS,
@@ -44445,6 +44817,9 @@ function invActionsAll(row){
  const ok=[],blocked=[];if(!row)return {ok,blocked};
  const ctx=invContext();
  ITEM_ACTIONS.forEach(a=>{if(!a.cats.includes(row.cat))return;
+  /* Вложенной чаре подходят только её действия и немногие общие: читать её
+     как книгу или ковать из неё нельзя. */
+  if(a.kinds?!a.kinds.includes(row.kind):(row.kind==="charged"&&!["look","drop"].includes(a.id)))return;
   const r=safeFn(()=>a.можно(row,ctx),"не сейчас");
   if(r===true)ok.push({id:a.id,n:`${a.значок} ${a.n}`,а:a});else if(typeof r==="string")blocked.push({id:a.id,n:`${a.значок} ${a.n}`,почему:r,а:a});});
  /* Недоступное — с причиной, но не всё подряд: сперва то, что упирается не в место
@@ -44463,6 +44838,7 @@ function invActConfirm(вопрос,кнопки){
  return true;}
 function invActions(){
  const sel=INV.sel;
+ if(!INV.cat&&!sel){narrate("Здесь разделы инвентаря. Откройте раздел двойным касанием, выберите вещь — и свайп вверх или вниз покажет, что с ней делать.");return false;}
  if(!sel||invFind(sel.kind,sel.key)==null){narrate("Сначала выберите вещь двойным касанием, потом свайп вверх или вниз — действия с ней.");return false;}
  const row=invRow(sel.kind,sel.key);const A=invActionsAll(row);
  const box=document.getElementById("invActBody");if(!box)return false;
@@ -44502,10 +44878,10 @@ function invDo(action,kind,key,arg){
    зелья; книжник — книги и свитки; собиратель — артефакты; лавочник — еду,
    инструмент и сырьё. «Берёт только своё» сужает, «берёт краденое» расширяет. */
 const MERCH_BUYS={
- mech:["weapon","material","res","ammo"],bron:["shield","armor","helm","gloves","boots","material","res"],redk:["weapon","shield","armor","helm","gloves","boots","acc","magic","material"],
- arte:["artifact","magic","material"],star:["weapon","shield","armor","helm","gloves","boots","acc","tool","other"],zapret:["weapon","acc","magic","potion","other","material"],
- pripas:["food","tool","res","ingredient","other"],knigi:["book","scroll"],snadob:["potion","ingredient","food"],instr:["tool","material","res","ammo"],kamni:["material","magic"],
- obshiy:["weapon","shield","armor","helm","gloves","boots","acc","food","tool","res","material","potion","other","ingredient"]};
+ mech:["weapon","material","res","ammo"],bron:["shield","armor","helm","gloves","boots","material","res"],redk:["weapon","shield","armor","helm","gloves","boots","acc","magic","material","treasure"],
+ arte:["artifact","magic","material","treasure"],star:["weapon","shield","armor","helm","gloves","boots","acc","tool","other","treasure"],zapret:["weapon","acc","magic","potion","other","material","treasure"],
+ pripas:["food","tool","res","ingredient","other"],knigi:["book","scroll"],snadob:["potion","ingredient","food"],instr:["tool","material","res","ammo"],kamni:["material","magic","treasure"],
+ obshiy:["weapon","shield","armor","helm","gloves","boots","acc","food","tool","res","material","potion","other","ingredient","treasure"]};
 function merchantBuys(n,row){
  try{
   if(!n||!n.trade)return {ок:false,почему:"этот житель не торгует"};
@@ -44532,6 +44908,7 @@ function sellPriceOf(n,row){
   if(row.cat==="scroll")return Math.round(25*k);
   if(row.cat==="book"){const т=G.tomes&&G.tomes[name];return Math.round((т?т.цена:20)*0.5*k);}
   if(row.cat==="tool")return Math.round(6*k);if(row.cat==="magic")return Math.round(60*k);
+  if(row.cat==="treasure")return Math.max(20,Math.round(invTreasureInfo(name).ц*0.5*k));
   return Math.round(8*k);
  }catch(_){return 1;}}
 function sellRowTo(n,row,done){
@@ -46980,7 +47357,26 @@ function worldSelfCheck(){
    &&["secnext","secprev","secindex"].every(id=>GEST_ACTION_BY_ID[id])
    &&typeof CMD.secjump==="function"&&typeof CMD.secback==="function"&&typeof CMD.secindex==="function"
    &&typeof Modules.get("SECTIONS").text()==="string",
-   "длинные окна разбиты по смыслу: четырнадцать разделов меню действий (было шесть, и в одном пятьдесят семь пунктов), одиннадцать разделов настроек, девять частей руководства; заголовок — пункт, и двойное касание по нему перескакивает через раздел");
+   "длинные окна разбиты по смыслу: четырнадцать разделов меню действий (было шесть, и в одном пятьдесят семь пунктов), двенадцать разделов настроек, девять частей руководства; заголовок — пункт, и двойное касание по нему перескакивает через раздел");
+  /* Настройки и инвентарь — пунктами: каждая настройка ровно в одном пункте,
+     у каждого пункта свои разделы; у инвентаря двадцать один раздел, и вещь
+     ложится в раздел по роду — с кириллической границей слова. */
+  ok("punkty",SET_GROUPS.length===7&&new Set(SET_GROUPS.map(g=>g.id)).size===7
+   &&SET_GROUPS.every(g=>g.n&&g.о&&g.о.length>15&&setGroupBox(g.id)&&setGroupHeads(g.id).length>=1&&setGroupCount(g.id)>=2)
+   &&SET_GROUPS.reduce((n,g)=>n+setGroupHeads(g.id).length,0)===12
+   &&(()=>{try{const м=document.getElementById("modal-settings");
+     const поля=[...м.querySelectorAll("input[id^=set],select[id^=set]")];
+     return поля.length>=30&&поля.every(x=>{const g=x.closest(".set-group");return !!(g&&SET_GROUP_BY_ID[g.dataset.setGroup]);});}catch(_){return false;}})()
+   &&INV_CATS.length===21&&!!INV_CAT_BY_ID.treasure&&new Set(INV_CATS.map(c=>c.id)).size===21
+   &&invCategoryOf({kind:"item",name:"Охотничий нож",it:"Охотничий нож"})==="weapon"
+   &&invCategoryOf({kind:"item",name:"Яд",it:"Яд"})==="potion"
+   &&invCategoryOf({kind:"item",name:"Моток верёвки",it:"Моток верёвки"})==="tool"
+   &&invCategoryOf({kind:"rare",name:"сердце пепла",it:"сердце пепла"})==="treasure"
+   &&gearTypeByName("Кольцо мытаря Брода")[1]==="acc"
+   &&typeof CMD.setgroup==="function"&&typeof CMD.setgroups==="function"
+   &&typeof CMD.invcat==="function"&&typeof CMD.invcats==="function"
+   &&typeof Modules.get("SETTINGS_MENU").text()==="string",
+   "настройки и инвентарь — пунктами: семь пунктов настроек со своими разделами, двадцать один раздел инвентаря; пункт открывается двойным касанием, «Назад» возвращает к списку, и вещь ложится в раздел по роду");
   ok("enc14000",ENC_TOTAL===14000&&ENC_SCHOOLS.length===17
    &&ENC_SCHOOLS.every(sc=>sc.n&&sc.о&&sc.о.length>40&&MSCHOOL_BY_ID[sc.id]
      &&Array.isArray(sc.спец)&&sc.спец.length===4&&new Set(sc.спец).size===4
@@ -48777,7 +49173,12 @@ document.addEventListener("keydown",e=>{
   if(G.loot&&Array.isArray(G.loot)&&G.loot.length){takeLoot();return;}
   if(G.inCombat){fight("flee");return;}
   if(!document.getElementById("screen-intro").hidden){enterGame();return;}
-  if(modalStack.length){closeModal(modalStack[modalStack.length-1]);return;}
+  /* Из пункта настроек и раздела инвентаря Эскейп, как и жест закрытия,
+     сперва возвращает к списку. */
+  if(modalStack.length){const верх=modalStack[modalStack.length-1];
+   if(верх.id==="modal-settings"&&safeFn(()=>setBack(),false))return;
+   if(верх.id==="modal-inventory"&&safeFn(()=>invBack(),false))return;
+   closeModal(верх);return;}
   if(!document.getElementById("guideOverlay").hidden){closeGuide();return;}
   if(!document.getElementById("actionMenu").hidden){closeActionMenu();return;}
   stopEverything();return;}

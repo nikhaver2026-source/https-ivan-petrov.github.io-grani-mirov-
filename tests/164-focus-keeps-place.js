@@ -62,10 +62,12 @@ const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(e!==undefined?' :
  const ждать=ms=>page.waitForTimeout(ms);
  const сброс=()=>page.evaluate(()=>{window.СЛОВА=[];});
  const закрыть=async()=>{await page.evaluate(()=>{try{for(let i=0;i<8&&activeLayer();i++)closeTopUI();}catch(e){}});await ждать(120);};
- const настройки=async()=>{await закрыть();await page.evaluate(()=>CMD.settings());await ждать(300);};
+ /* Настройки — пунктами: замер идёт в том пункте, где лежит нужная настройка;
+    без довода — список пунктов. */
+ const настройки=async(g)=>{await закрыть();await page.evaluate(g=>CMD.settings(g||undefined),g||null);await ждать(300);};
 
  /* ── 1–2. тот же пункт, и свайп идёт от него ── */
- await настройки();
+ await настройки("sound");
  const место=await page.evaluate(async()=>{
   const lay=activeLayer();
   const цель=document.getElementById("setEffects");
@@ -84,7 +86,7 @@ const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(e!==undefined?' :
   место.дальше===место.до+1,место);
 
  /* ── 3. то же настоящими касаниями ── */
- await настройки();
+ await настройки("sound");
  const свайп1=async(x,y,dx,dy)=>{
   await cdp.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[{x,y,id:1}]});
   for(let i=1;i<=5;i++){await cdp.send('Input.dispatchTouchEvent',{type:'touchMove',touchPoints:[{x:Math.round(x+dx*i/5),y:Math.round(y+dy*i/5),id:1}]});await ждать(22);}
@@ -116,7 +118,7 @@ const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(e!==undefined?' :
   {пальцем,доКасания,послеКасания,послеСвайпа});
 
  /* ── 4. десять действий подряд ── */
- await настройки();
+ await настройки("ui");
  const десять=await page.evaluate(async()=>{
   const lay=activeLayer();
   const цель=document.getElementById("setHaptics")||document.getElementById("setEffects");
@@ -184,7 +186,7 @@ const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(e!==undefined?' :
  }
 
  /* ── 7. действие само подвинуло выбор ── */
- await настройки();
+ await настройки("sound");
  const сам=await page.evaluate(async()=>{
   const lay=activeLayer();
   const голова=lay.querySelector("h3."+SEC_CLASS);
@@ -222,7 +224,7 @@ const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(e!==undefined?' :
   !!сменилось.нет||(сменилось.слой!=="modal-settings"&&сменилось.свой),сменилось);
 
  /* ── 10. ползунок ── */
- await настройки();
+ await настройки("tts");
  const ползунок=await page.evaluate(async()=>{
   const lay=activeLayer();
   const el=document.getElementById("setRate");

@@ -74,7 +74,10 @@ const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(e!==undefined?' :
  const снять=()=>page.evaluate(()=>({жур:window.ЖУР.slice(),слова:window.СЛОВА.slice(),
   слой:(function(){try{const l=activeLayer();return l?l.id:null;}catch(e){return "?";}})()}));
  const закрыть=async()=>{await page.evaluate(()=>{try{for(let i=0;i<8&&activeLayer();i++)closeTopUI();}catch(e){}});await ждать(120);};
- const настройки=async()=>{await закрыть();await page.evaluate(()=>CMD.settings());await ждать(350);};
+ /* Настройки — пунктами: кнопки оглавления и перескока видны внутри пункта
+    из нескольких разделов, поэтому по умолчанию открываем «Звуки». Список
+    пунктов — довод null. */
+ const настройки=async(g="sound")=>{await закрыть();await page.evaluate(g=>CMD.settings(g||undefined),g);await ждать(350);};
 
  /* ── Рука: n пальцев, сдвиг, разнобой при постановке и снятии, перекат ── */
  const рука=async(n,dx,dy,o)=>{
@@ -139,7 +142,8 @@ const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(e!==undefined?' :
   р1&&{жур:р1.промежуток.жур,слой:р1.итог.слой,цель});
 
  /* ── 2. окно закрывает свайп двумя пальцами вниз, а не касание ── */
- await настройки();await сброс();
+ /* Из списка пунктов: из пункта тот же свайп сперва возвращает к списку. */
+ await настройки(null);await сброс();
  await рука(2,0,0,{вразнобой:30,x:150,y:300});
  const д2=await снять();
  check('2. касание двумя пальцами в окне его больше не закрывает — это только сбор',

@@ -60,9 +60,11 @@ const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(e!==undefined?' :
   const el=typeof sel==="string"?document.querySelector(sel):sel;
   el.scrollIntoView({block:"center"});const r=el.getBoundingClientRect();
   return {x:r.left+r.width/2,y:r.top+r.height/2};},sel);
- const открытьНастройки=async()=>{await page.evaluate(()=>{
+ /* Настройки — пунктами (набор 167): открываем тот пункт, где лежит нужная
+    настройка; без довода — список пунктов. */
+ const открытьНастройки=async(g)=>{await page.evaluate(g=>{
   for(let i=0;i<30&&activeLayer();i++)closeTopUI();
-  CMD.settings();resetCursor();});await page.waitForTimeout(450);};
+  CMD.settings(g||undefined);resetCursor();},g||null);await page.waitForTimeout(450);};
  /* Пустое место окна: заголовок, в котором нет пунктов. */
  const пусто=()=>page.evaluate(()=>{
   const h=document.querySelector('#modal-settings header h2');const r=h.getBoundingClientRect();
@@ -70,7 +72,7 @@ const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(e!==undefined?' :
 
  /* ── 1. текст флажка ── */
  {
-  await открытьНастройки();
+  await открытьНастройки("speech");
   const т=await page.evaluate(()=>{
    const s=document.querySelector('#setSayHp').closest('label').querySelector('span b');
    s.scrollIntoView({block:"center"});const r=s.getBoundingClientRect();
@@ -87,7 +89,7 @@ const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(e!==undefined?' :
 
  /* ── 2. подпись ползунка ── */
  {
-  await открытьНастройки();
+  await открытьНастройки("sound");
   const т=await page.evaluate(()=>{
    const lab=document.querySelector('#setMasterVol').closest('label');
    lab.scrollIntoView({block:"center"});const r=lab.getBoundingClientRect();
@@ -102,7 +104,7 @@ const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(e!==undefined?' :
 
  /* ── 3. подпись списка ── */
  {
-  await открытьНастройки();
+  await открытьНастройки("speech");
   const т=await page.evaluate(()=>{
    const lab=document.querySelector('#setVerbosity').closest('label');
    lab.scrollIntoView({block:"center"});const r=lab.getBoundingClientRect();
@@ -124,7 +126,7 @@ const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(e!==undefined?' :
 
  /* ── 4. выбранное свайпом выполняется, куда бы ни пришлось двойное касание ── */
  {
-  await открытьНастройки();
+  await открытьНастройки("speech");
   const ид=await page.evaluate(()=>{for(let i=0;i<6;i++)swipeNav('next');
    return uiCursor&&(uiCursor.id||uiCursor.dataset.cmd||(uiCursor.textContent||"").trim().slice(0,30));});
   /* Двойное касание — по соседнему пункту, а не по выбранному. */
@@ -140,7 +142,7 @@ const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(e!==undefined?' :
 
  /* ── 5. названное остаётся фокусом и после паузы ── */
  {
-  await открытьНастройки();
+  await открытьНастройки("speech");
   const т=await точка('#setAutoDescribe');
   await hold(т.x,т.y);
   await page.waitForTimeout(1200);
@@ -153,7 +155,7 @@ const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(e!==undefined?' :
 
  /* ── 6. палец провели по нескольким пунктам — фокус на последнем ── */
  {
-  await открытьНастройки();
+  await открытьНастройки("speech");
   /* Ощупывание ведением — это короткое и неспешное движение: длинный или
      быстрый взмах по правилам игры листает список, а не щупает. Ведём палец
      от одного переключателя к соседнему, медленно. */
@@ -171,34 +173,37 @@ const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(e!==undefined?' :
  }
 
  /* ── 7. сплошной обход окна настроек ── */
+ /* Обходим и список пунктов, и каждый пункт: окно теперь двухуровневое. */
  {
-  await открытьНастройки();
-  const всего=await page.evaluate(()=>cursorItems(navLayer()).length);
-  const шаг=Math.max(1,Math.floor(всего/24));
   const мимо=[];let проверено=0;
-  for(let i=0;i<всего;i+=шаг){
-   const т=await page.evaluate(i=>{const it=cursorItems(navLayer())[i];if(!it)return null;
-    it.scrollIntoView({block:"center"});const r=it.getBoundingClientRect();
-    if(r.width<2||r.height<2)return null;
-    return {x:r.left+Math.min(r.width/2,40),y:r.top+r.height/2};},i);
-   if(!т)continue;
-   await hold(т.x,т.y);
-   const назван=await page.evaluate(()=>{const el=lastExploreEl||lastAnnouncedEl;
-    return el?(el.id||el.dataset.cmd||(el.textContent||"").trim().slice(0,30)):null;});
-   await page.evaluate(()=>{__act.length=0;});
-   const п=await пусто();await dbl(п.x,п.y);
-   const вып=await выполнено();
-   проверено++;
-   if(!назван||назван!==вып)мимо.push({i,назван,выполнено:вып});
-   await page.evaluate(()=>{touchGate.lastUiTap=0;touchGate.lastUiEl=null;});
+  for(const g of [null,"sound","tts","speech","ui","gest","diff","save"]){
+   await открытьНастройки(g);
+   const всего=await page.evaluate(()=>cursorItems(navLayer()).length);
+   const шаг=Math.max(1,Math.floor(всего/6));
+   for(let i=0;i<всего;i+=шаг){
+    const т=await page.evaluate(i=>{const it=cursorItems(navLayer())[i];if(!it)return null;
+     it.scrollIntoView({block:"center"});const r=it.getBoundingClientRect();
+     if(r.width<2||r.height<2)return null;
+     return {x:r.left+Math.min(r.width/2,40),y:r.top+r.height/2};},i);
+    if(!т)continue;
+    await hold(т.x,т.y);
+    const назван=await page.evaluate(()=>{const el=lastExploreEl||lastAnnouncedEl;
+     return el?(el.id||el.dataset.cmd||(el.textContent||"").trim().slice(0,30)):null;});
+    await page.evaluate(()=>{__act.length=0;});
+    const п=await пусто();await dbl(п.x,п.y);
+    const вып=await выполнено();
+    проверено++;
+    if(!назван||назван!==вып)мимо.push({g,i,назван,выполнено:вып});
+    await page.evaluate(()=>{touchGate.lastUiTap=0;touchGate.lastUiEl=null;});
+   }
   }
-  check('7. сплошной обход окна настроек: названное пальцем совпадает с выполненным двойным касанием',
-   проверено>=15&&мимо.length===0,{проверено,мимо:мимо.slice(0,4)});
+  check('7. сплошной обход окна настроек — списка пунктов и каждого пункта: названное пальцем совпадает с выполненным двойным касанием',
+   проверено>=30&&мимо.length===0,{проверено,мимо:мимо.slice(0,4)});
  }
 
  /* ── 8. строка-подпись: фокус и свайп от неё ── */
  {
-  await открытьНастройки();
+  await открытьНастройки("speech");
   /* Строка-подпись без tabindex: палец её называет, а в списке свайпа её
      нет. Кладём такую строку между двумя переключателями. */
   const т=await page.evaluate(()=>{

@@ -142,7 +142,7 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
  /* ── Палец, лежащий на месте: называет и ничего не делает ── */
  await clean();
  const лежит=await page.evaluate(()=>{
-  CMD.settings();resetCursor();
+  CMD.settings("diff");resetCursor();
   const el=[...cursorItems(activeLayer())].find(x=>x.dataset&&x.dataset.cmd==="setdiff:harsh");
   el.scrollIntoView({block:"center"});const r=el.getBoundingClientRect();
   settings.difficulty="normal";window.__said=[];window.__acts=[];window.__cmds=[];
@@ -173,7 +173,7 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
  /* ── Двойное касание по пустому месту выполняет текущий пункт ── */
  await clean();
  const пусто=await page.evaluate(()=>{
-  CMD.settings();resetCursor();ensureCursor(activeLayer());
+  CMD.settings("diff");resetCursor();ensureCursor(activeLayer());
   settings.difficulty="normal";
   const lay=activeLayer();
   for(let y=90;y<760;y+=8)for(const x of [6,384]){
@@ -331,7 +331,7 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
  /* ── Ползунок: касание не двигает, двойное касание шагает и называет ── */
  await clean();
  const пол=await page.evaluate(()=>{
-  CMD.settings();resetCursor();
+  CMD.settings("sound");resetCursor();
   const el=document.getElementById("setFxVol");
   el.scrollIntoView({block:"center"});const r=el.getBoundingClientRect();
   /* Ползунок выбирают свайпом, как любой другой пункт; касание подтверждает. */

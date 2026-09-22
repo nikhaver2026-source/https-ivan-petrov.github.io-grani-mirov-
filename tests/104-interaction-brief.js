@@ -13,7 +13,7 @@
       два пальца вниз ведут к цели или открывают её действия.
    4. Карта места работает и снаружи: сетка и известные точки с маяком;
       журнал дел по разделам с целью, этапом, наградой и последствиями.
-   5. Инвентарь по двадцати разделам: разбор по правилам, карточка вещи с
+   5. Инвентарь по двадцати одному разделу: разбор по правилам, карточка вещи с
       уроном, состоянием, требованием силы и рангом; действия по разделу и
       месту, недоступное с причиной; «Выбросить» с подтверждением и счётом,
       защита квестового; стопки делятся и сходятся; бой снимает состояние;
@@ -146,8 +146,8 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
    const W=invActionsAll(invRow("equip","weapon"));r.poisonBlade=W.ok.some(a=>a.id==="poisonblade");r.poisonWhy=(W.blocked.find(a=>a.id==="poisonblade")||{}).почему;r.itemsNow=G.items.slice();r.pbDbg={cat:invRow("equip","weapon")&&invRow("equip","weapon").cat,it:typeof (G.equip.weapon),ok:W.ok.map(a=>a.id),bl:W.blocked.map(a=>a.id+"|"+a.почему),can:String(safeFn(()=>ITEM_ACTIONS.find(x=>x.id==="poisonblade").можно(invRow("equip","weapon"),invContext()),"exc"))};if(r.poisonBlade){invDo("poisonblade","equip","weapon");r.bladePoisoned=G.equip.weapon.яд;}}
   G.place=null;while(activeLayer())closeTopUI();
   return r;});
- check('двадцать разделов инвентаря, и каждая вещь ложится в свой: меч — оружие, щит — щиты, шлем — шлемы, руда — ресурсы, слиток — материалы, трава — ингредиенты, рыба — еда, зелье, свиток, факел — инструменты, реликвия — квестовое, стрелы — боеприпасы, вещь Дома — оружие, артефакт бога — магическое, книга',
-  инв.catsAll===20&&инв.map.меч==="weapon"&&инв.map.щит==="shield"&&инв.map.шлем==="helm"&&инв.map.руда==="res"&&инв.map.слиток==="material"&&инв.map.трава==="ingredient"&&инв.map.салака==="food"&&инв.map.зелье==="potion"&&инв.map.свиток==="scroll"&&инв.map.факел==="tool"&&инв.map.реликвия==="quest"&&инв.map.стрелы==="ammo"&&инв.map.молот==="weapon"&&инв.map.фляга==="magic"&&инв.map.книга==="book",инв.map);
+ check('двадцать один раздел инвентаря, и каждая вещь ложится в свой: меч — оружие, щит — щиты, шлем — шлемы, руда — ресурсы, слиток — материалы, трава — ингредиенты, рыба — еда, зелье, свиток, факел — инструменты, реликвия — квестовое, стрелы — боеприпасы, вещь Дома — оружие, артефакт бога — магическое, книга',
+  инв.catsAll===21&&инв.map.меч==="weapon"&&инв.map.щит==="shield"&&инв.map.шлем==="helm"&&инв.map.руда==="res"&&инв.map.слиток==="material"&&инв.map.трава==="ingredient"&&инв.map.салака==="food"&&инв.map.зелье==="potion"&&инв.map.свиток==="scroll"&&инв.map.факел==="tool"&&инв.map.реликвия==="quest"&&инв.map.стрелы==="ammo"&&инв.map.молот==="weapon"&&инв.map.фляга==="magic"&&инв.map.книга==="book",инв.map);
  check('карточка вещи: имя, род, урон или защита, состояние, требование силы, ранг',/Одноручное оружие\. Урон: \d+\. Состояние: \d+%\. Требование силы: \d+\. Ранг: /.test(инв.card)&&/Щит\. Защита: 3\. Состояние: 100%/.test(инв.cardShield),{card:инв.card,shield:инв.cardShield});
  check('действия по разделу и месту: у меча вне кузницы — осмотреть, снять, использовать, состояние; недоступное — с причиной; меню вслух называет доступное и число недоступных',
   инв.sword.ok.includes("look")&&инв.sword.ok.includes("unequip")&&инв.sword.ok.includes("condition")&&инв.sword.blocked.includes("repair")&&инв.sword.reasons.every(t=>t.length>3)&&/Недоступно/.test(инв.menuSaid)&&инв.menuBlocked>=1&&/нельзя/.test(инв.why),{sword:инв.sword.ok,why:инв.why,menu:инв.menuSaid.slice(0,120)});
@@ -212,7 +212,7 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
  /* ── 7. торговля ── */
  const торг=await page.evaluate(async()=>{
   const пауза=ms=>new Promise(z=>setTimeout(z,ms));const r={};G.place=null;G.ship=null;
-  r.module=Modules.has("TRADE")&&SHOP_CATS.length===15;
+  r.module=Modules.has("TRADE")&&SHOP_CATS.length===16;
   let npc=null;outer: for(let rr=0;rr<80;rr++)for(let dx=-rr;dx<=rr;dx++)for(let dy=-rr;dy<=rr;dy++){const c=safeFn(()=>cellContent((WORLD>>1)+dx,(WORLD>>1)+dy),null);if(c&&c.structure){const n=safeFn(()=>npcsFor(c),[]).find(x=>x.trade);if(n){G.x=(WORLD>>1)+dx;G.y=(WORLD>>1)+dy;npc=n;break outer;}}}
   if(!npc)return r;r.npc=npc.name;
   G.gold=500;G.inv={"руда":6,"трава":3,"салака":2};G.items=["Свиток: Искра","Реликвия: Аурис Зарний"];G.gear=G.gear.filter(g=>g&&!/^t104/.test(g.id));G.gear.push({id:"t104s",name:"Дубовый щит",type:"Щит",slot:"armor",rank:1,qual:1,val:3,price:40});

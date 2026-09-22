@@ -18,8 +18,8 @@
       вправо — журнал (открыть, закрыть); вниз — действие с найденным.
    3. Три пальца вниз — инвентарь и его закрытие; влево — эхо-скан; вправо —
       «где я»; и всё это работает жестами поверх окна.
-   4. Инвентарь разложен по разделам; двойное касание по вещи говорит о ней;
-      свайп вверх на вещи открывает действия.
+   4. Инвентарь разложен по разделам; двойное касание по разделу открывает
+      его, по вещи — говорит о ней; свайп вверх на вещи открывает действия.
    5. Действия: зелье пьётся, склянка пьётся, руда выбрасывается по одной и
       вся, оружие надевается из сумы; у горна есть «плавить», у алтаря —
       «принести в дар» (и это растит благосклонность), у торговца — «продать».
@@ -91,19 +91,30 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
  const инв=await page.evaluate(()=>{
   G.inv={"руда":3,"рановник":1,"салака":2,"жемчуг":1};G.potions=[{id:"heal",q:1,стаб:0.9,день:G.day,срок:10}];G.items=["Зелье здоровья","Свиток: Искра"];
   toggleWindowGesture("modal-inventory");
-  const r={секции:[...document.querySelectorAll("#invSections h3")].map(h=>h.textContent),кнопок:document.querySelectorAll('#invSections [data-cmd^="invpick:"]').length};
+  /* Инвентарь — пунктами (набор 167): окно открывается списком разделов. */
+  const разд=[...document.querySelectorAll('#invSections [data-punkt]')];
+  const r={секции:разд.filter(x=>!/: пусто\./.test(x.dataset.speak||"")).map(x=>x.dataset.punkt),разделов:разд.length,
+   вещейВСписке:document.querySelectorAll('#invSections [data-cmd^="invpick:"]').length};
+  /* Раздел выбирают, как любой пункт, и открывают двойным касанием. */
+  const p=document.querySelector('#invSections [data-punkt="res"]');p.scrollIntoView({block:"center"});
+  setCursor(p,false);
+  const rc=p.getBoundingClientRect();r.px=rc.left+10;r.py=rc.top+8;
+  return r;});
+ await tap(инв.px,инв.py);await tap(инв.px,инв.py);await page.waitForTimeout(250);
+ const вРазделе=await page.evaluate(()=>{
+  const r={раздел:INV.cat,кнопок:document.querySelectorAll('#invSections [data-cmd^="invpick:"]').length};
   const b=document.querySelector('#invSections [data-cmd="invpick:res:%D1%80%D1%83%D0%B4%D0%B0"]');b.scrollIntoView({block:"center"});
   /* Вещь выбирают свайпом или ощупыванием; одиночного касания одним пальцем в
      игре нет, и двойное подтверждает ВЫБРАННОЕ, а не то, куда попал палец. */
   setCursor(b,false);
   const rc=b.getBoundingClientRect();r.x=rc.left+10;r.y=rc.top+8;
   return r;});
- await tap(инв.x,инв.y);await tap(инв.x,инв.y);await page.waitForTimeout(200);
+ await tap(вРазделе.x,вРазделе.y);await tap(вРазделе.x,вРазделе.y);await page.waitForTimeout(200);
  const выбрано=await page.evaluate(()=>({sel:INV.sel,сказ:SAID.slice(-1)[0]}));
  await multiSwipe(1,0,-170);
  const действия=await page.evaluate(()=>({окно:!document.getElementById("modal-invact").hidden,список:[...document.querySelectorAll('#invActBody button')].map(b=>b.dataset.cmd.split(":")[1])}));
- check('4. инвентарь по разделам; двойное касание по вещи говорит о ней; свайп вверх на вещи открывает действия',
-  инв.секции.length>=6&&инв.кнопок>=7&&выбрано.sel&&выбрано.sel.key==="руда"&&/руда: 3 шт/.test(выбрано.сказ)&&действия.окно&&действия.список.includes("look")&&действия.список.includes("drop"),{секции:инв.секции,выбрано,действия});
+ check('4. инвентарь по разделам: двойное касание по разделу открывает его, по вещи — говорит о ней; свайп вверх на вещи открывает действия',
+  инв.разделов===21&&инв.секции.length>=6&&инв.вещейВСписке===0&&вРазделе.раздел==="res"&&вРазделе.кнопок===1&&выбрано.sel&&выбрано.sel.key==="руда"&&/руда: 3 шт/.test(выбрано.сказ)&&действия.окно&&действия.список.includes("look")&&действия.список.includes("drop"),{секции:инв.секции,вРазделе,выбрано,действия});
 
  /* ── 5. действия ── */
  const дела=await page.evaluate(()=>{
