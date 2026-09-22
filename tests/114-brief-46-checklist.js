@@ -45,12 +45,12 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
    CMD[cmd]();await new Promise(z=>setTimeout(z,90));
    const слой=activeLayer();
    if(!слой||слой.id!==id){плохие.push([cmd,слой?слой.id:"не открылось"]);continue;}
-   handleTwoFingerTap();await new Promise(z=>setTimeout(z,90));
-   if(activeLayer())плохие.push([cmd,"не закрылось двумя пальцами"]);}
+   handleTwoFingerSwipe("S");await new Promise(z=>setTimeout(z,90));
+   if(activeLayer())плохие.push([cmd,"не закрылось свайпом двумя пальцами вниз"]);}
   for(let i=0;i<20&&activeLayer();i++)closeTopUI();
   r.плохие=плохие;r.окон=окна.length;
   return r;});
- check('1. старые жесты не спорят с новыми окнами: карта жестов на месте, и каждое из семи новых окон открывается командой и закрывается двумя пальцами',
+ check('1. старые жесты не спорят с новыми окнами: карта жестов на месте, и каждое из семи новых окон открывается командой и закрывается свайпом двумя пальцами вниз',
   жесты.карта>=10&&жесты.окон===7&&жесты.плохие.length===0,жесты);
 
  /* ── 2 ── */

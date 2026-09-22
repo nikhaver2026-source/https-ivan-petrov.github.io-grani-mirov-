@@ -46,8 +46,8 @@ const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(e!==undefined?' :
   await page.evaluate(c=>CMD[c](),s);
   await page.waitForTimeout(120);
   const opened=await page.evaluate(()=>!!activeLayer());
-  const closed=await page.evaluate(()=>{ /* закрытие двумя пальцами */ return true;});
-  await page.evaluate(()=>handleTwoFingerTap());   /* два пальца закрывают открытое окно */
+  const closed=await page.evaluate(()=>{ /* закрытие свайпом двумя пальцами вниз */ return true;});
+  await page.evaluate(()=>handleTwoFingerSwipe("S"));   /* свайп двумя пальцами вниз закрывает окно */
   await page.waitForTimeout(120);
   const afterClose=await page.evaluate(()=>!!activeLayer());
   check('окно «'+s+'» открывается и закрывается',opened&&!afterClose,{opened,afterClose});
@@ -84,7 +84,7 @@ const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(e!==undefined?' :
  }else check('в строении есть NPC (пропуск)',true);
 
  // сохранение/загрузка
- await page.evaluate(()=>{while(activeLayer())handleTwoFingerTap();saveGame(true);});
+ await page.evaluate(()=>{while(activeLayer())handleTwoFingerSwipe("S");saveGame(true);});
  await page.waitForTimeout(150);
  check('сохранение без ошибок',errors.length===0);
 

@@ -84,8 +84,8 @@ function check(name,cond,extra){results.push((cond?'PASS':'FAIL')+' — '+name+(
  // 2. три пальца вверх → меню действий, два пальца → закрытие
  await multiSwipe(3,0,-170);
  check('свайп тремя пальцами вверх открывает меню действий', await page.evaluate(()=>!document.getElementById('actionMenu').hidden));
- await multiTap(2);
- check('2 пальца закрывают меню действий', await page.evaluate(()=>document.getElementById('actionMenu').hidden));
+ await multiSwipe(2,0,170);
+ check('свайп двумя пальцами вниз закрывает меню действий', await page.evaluate(()=>document.getElementById('actionMenu').hidden));
 
  // 2б. два пальца на игровом поле собирают ресурс под ногами
  const res=await page.evaluate(()=>{

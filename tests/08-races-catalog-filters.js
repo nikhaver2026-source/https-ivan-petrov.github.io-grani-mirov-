@@ -22,7 +22,7 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   await page.waitForTimeout(200);
   const ok=await page.evaluate(i=>{const m=document.getElementById(i);return !!m&&!m.hidden&&m.textContent.length>500;},id);
   check('окно «'+name+'» открывается и заполнено',ok);
-  await page.evaluate(()=>handleTwoFingerTap());await page.waitForTimeout(120);
+  await page.evaluate(()=>handleTwoFingerSwipe("S"));await page.waitForTimeout(120);
  }
  // 2. Каталог показывает все 46 и фильтрует по рангу
  await page.evaluate(()=>CMD.races());
@@ -44,7 +44,7 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
  await page.evaluate(()=>CMD.setrace('dragonborn'));
  const atkAfter=await page.evaluate(()=>atk());
  check('наследие драконидов не ломает расчёт атаки',atkAfter>=atkBefore-10,{atkBefore,atkAfter});
- await page.evaluate(()=>{while(activeLayer())handleTwoFingerTap();});
+ await page.evaluate(()=>{while(activeLayer())handleTwoFingerSwipe("S");});
 
  // 4. Вера: молитва и покровительство
  await page.evaluate(()=>{G.hp=40;CMD.prayto('forge');});

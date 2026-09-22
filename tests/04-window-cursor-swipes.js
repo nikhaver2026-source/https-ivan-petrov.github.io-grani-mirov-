@@ -95,7 +95,7 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
  check('после ощупывания текущим остаётся пункт под пальцем',!!afterExplore&&!!afterTap,{afterExplore,afterTap});
 
  // 7. Свайп прерывает начатое двойное касание (не активирует случайно)
- await page.evaluate(()=>{while(activeLayer())handleTwoFingerTap();CMD.races();raceFilterRank=5;renderRaces();});
+ await page.evaluate(()=>{while(activeLayer())handleTwoFingerSwipe("S");CMD.races();raceFilterRank=5;renderRaces();});
  await page.waitForTimeout(250);
  const r0=await page.evaluate(()=>G.race);
  await tap(200,400);              // первое касание
@@ -106,14 +106,14 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
 
  // 8. Смена окна начинает выбор заново
  const reset=await page.evaluate(()=>{
-  while(activeLayer())handleTwoFingerTap();
+  while(activeLayer())handleTwoFingerSwipe("S");
   CMD.pantheon();
   const first=cursorItems(activeLayer())[0];
   ensureCursor(activeLayer());
   return {cursorIsFirst:uiCursor===first,layerOk:activeLayer().id==="modal-pantheon"};});
  check('в новом окне выбор начинается с первого пункта',reset.cursorIsFirst&&reset.layerOk,reset);
 
- await page.evaluate(()=>{if(window.__origSay)Speech.say=window.__origSay;while(activeLayer())handleTwoFingerTap();});
+ await page.evaluate(()=>{if(window.__origSay)Speech.say=window.__origSay;while(activeLayer())handleTwoFingerSwipe("S");});
 
  // 9. Шаг стал одинарным и быстрым
  const step=await page.evaluate(()=>{
@@ -148,7 +148,7 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
     if(rr&&Math.max(Math.abs(dx),Math.abs(dy))!==rr)continue;
     const c=safeFn(()=>cellContent(G.x+dx,G.y+dy),null);
     if(c&&!c.structure&&c.terrain&&c.terrain[0]==="plain"){x0=G.x+dx;y0=G.y+dy;break ищем;}}
-  const one=(running,dir)=>{while(activeLayer())handleTwoFingerTap();
+  const one=(running,dir)=>{while(activeLayer())handleTwoFingerSwipe("S");
    if(G.inCombat)endCombat();
    G.place=null;G.ship=null;G.weaponDrawn=false;G.metCaravan=null;
    G.x=x0;G.y=y0;
