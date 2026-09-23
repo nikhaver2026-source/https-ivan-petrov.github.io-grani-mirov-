@@ -4,9 +4,17 @@
 
 ## Источники
 
-- **Stendhal** — https://stendhalgame.org · https://github.com/arianne/stendhal: 18 записей.
-- **MegaGlest** — https://megaglest.org · https://github.com/MegaGlest/megaglest-data: 15 записей.
+- **Stendhal** — https://stendhalgame.org · https://github.com/arianne/stendhal: 22 записи.
+- **MegaGlest** — https://megaglest.org · https://github.com/MegaGlest/megaglest-data: 11 записей.
 - **OpenClonk** — https://www.openclonk.org · https://github.com/openclonk/openclonk: 8 записей.
+
+## Чужая речь убрана
+
+Громада и призрачный доспех MegaGlest говорили по-английски: их реплики `behemoth_ack1`,
+`behemoth_select1`, `ghost_armor_ack1`, `ghost_armor_select1` и `ghost_armor_select2` — это
+«Yes!», «What?», «Yes», «What do you want?». Для русской игры это чужая речь посреди
+рыка, и все пять заменены голосами без слов: рёв льва и рык тролля (Stendhal), стон и
+шипение кошмара (Stendhal), призрачный удар доспеха (MegaGlest).
 
 ## Лицензии
 
@@ -31,9 +39,9 @@
 | `cr_bat_death.flac` | крылатая тварь | гибель | предсмертный визг | Stendhal | Kevin Smith (TKZ Productions) | CC BY 3.0 | https://opengameart.org/node/50710 | `data/sounds/lossless_sources/minimare-die.flac` |
 | `cr_bat_sonic_special.flac` | крылатая тварь | звуковая атака | пронзительный писк | OpenClonk | The OpenClonk Team | CC BY 3.0 | — | `planet/Sound.ocg/Animals.ocg/Bat.ocg/Chirp.wav` |
 | `cr_bat_step.flac` | крылатая тварь | шаг | взмахи крыльев | Stendhal | winsx87 | CC0 | https://freesound.org/people/winsx87/sounds/152024/ | `data/sounds/lossless_sources/bird-pigeon-flap-1.flac` |
-| `cr_behemoth_emerge.flac` | громада | появление | рёв громады | MegaGlest | MegaGlest Team | CC BY-SA 3.0 | — | `techs/megapack/factions/magic/units/behemoth/sounds/behemoth_select1.wav` |
+| `cr_behemoth_emerge.flac` | громада | появление | рёв громады | Stendhal | Bidone | CC0 | https://freesound.org/people/Bidone/sounds/69570/ | `data/sounds/lossless_sources/lion-roar-02.flac` |
 | `cr_behemoth_attack.flac` | громада | удар | удар громады | MegaGlest | MegaGlest Team | CC BY-SA 3.0 | — | `techs/megapack/factions/magic/units/behemoth/sounds/behemoth_attack1g.wav` |
-| `cr_behemoth_damage.flac` | громада | боль | рык боли | MegaGlest | MegaGlest Team | CC BY-SA 3.0 | — | `techs/megapack/factions/magic/units/behemoth/sounds/behemoth_ack1.wav` |
+| `cr_behemoth_damage.flac` | громада | боль | рык боли | Stendhal | -sihiL | CC BY 3.0 | https://freesound.org/people/-sihiL/sounds/213846/ | `data/sounds/lossless_sources/troll-growl-03.flac` |
 | `cr_behemoth_death.flac` | громада | гибель | грузное падение | OpenClonk | The OpenClonk Team | CC BY 3.0 | — | `planet/Sound.ocg/Animals.ocg/Mooq.ocg/DieFat.wav` |
 | `cr_behemoth_step.flac` | громада | шаг | тяжёлая поступь | MegaGlest | MegaGlest Team | CC BY-SA 3.0 | — | `techs/megapack/factions/persian/units/elephant/sounds/elewalk2.wav` |
 | `cr_dragon_emerge.flac` | дракон | появление | рык чёрного дракона | MegaGlest | MegaGlest Team | CC BY-SA 3.0 | — | `techs/megapack/factions/magic/units/evil_dragon/sounds/evil_dragon_select1.wav` |
@@ -41,10 +49,10 @@
 | `cr_dragon_damage.flac` | дракон | боль | дракон ранен | MegaGlest | MegaGlest Team | CC BY-SA 3.0 | — | `techs/megapack/factions/magic/units/evil_dragon/sounds/evil_dragon_hit1.wav` |
 | `cr_dragon_death.flac` | дракон | гибель | гибель дракона | MegaGlest | MegaGlest Team | CC BY-SA 3.0 | — | `techs/megapack/factions/magic/units/evil_dragon/sounds/evil_dragon_die1.wav` |
 | `cr_dragon_step.flac` | дракон | шаг | поступь дракона | MegaGlest | MegaGlest Team | CC BY-SA 3.0 | — | `techs/megapack/factions/magic/units/dragon_rider/sounds/dr_walk2.wav` |
-| `cr_ghost_emerge.flac` | призрак | появление | голос призрачного доспеха | MegaGlest | MegaGlest Team | CC BY-SA 3.0 | — | `techs/megapack/factions/magic/units/ghost_armor/sounds/ghost_armor_select1.wav` |
+| `cr_ghost_emerge.flac` | призрак | появление | призрачный доспех возникает | MegaGlest | MegaGlest Team | CC BY-SA 3.0 | — | `techs/megapack/factions/magic/units/ghost_armor/sounds/ghost_armor_attack7.wav` |
 | `cr_ghost_attack.flac` | призрак | удар | удар призрака | MegaGlest | MegaGlest Team | CC BY-SA 3.0 | — | `techs/megapack/factions/magic/units/ghost_armor/sounds/ghost_armor_attack6.wav` |
-| `cr_ghost_damage.flac` | призрак | боль | стон призрака | MegaGlest | MegaGlest Team | CC BY-SA 3.0 | — | `techs/megapack/factions/magic/units/ghost_armor/sounds/ghost_armor_ack1.wav` |
-| `cr_ghost_death.flac` | призрак | гибель | призрак развеивается | MegaGlest | MegaGlest Team | CC BY-SA 3.0 | — | `techs/megapack/factions/magic/units/ghost_armor/sounds/ghost_armor_select2.wav` |
+| `cr_ghost_damage.flac` | призрак | боль | стон призрака | Stendhal | Kevin Smith (TKZ Productions) | CC BY 3.0 | https://opengameart.org/node/50710 | `data/sounds/lossless_sources/minimare-hurt.flac` |
+| `cr_ghost_death.flac` | призрак | гибель | призрак развеивается с шипением | Stendhal | Kevin Smith (TKZ Productions) | CC BY 3.0 | https://opengameart.org/node/50710 | `data/sounds/lossless_sources/minimare-hiss.flac` |
 | `cr_ghost_step.flac` | призрак | шаг | шелест в воздухе | MegaGlest | MegaGlest Team | CC BY-SA 3.0 | — | `techs/megapack/factions/magic/units/ghost_armor/sounds/ghost_armor_attack7.wav` |
 | `cr_hornet_emerge.flac` | рой | появление | гудение роя | Stendhal | nps.gov | общественное достояние | https://soundbible.com/971-Bee.html | `data/sounds/bee-1.ogg` |
 | `cr_hornet_attack.flac` | рой | удар | стрёкот и жало | OpenClonk | The OpenClonk Team | CC BY 3.0 | — | `planet/Sound.ocg/Animals.ocg/Chippie.ocg/Talk1.wav` |

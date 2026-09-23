@@ -17,7 +17,15 @@ Unported (CC BY-SA 3.0): https://creativecommons.org/licenses/by-sa/3.0/
 не изменён.
 
 Голосовые реплики отрядов (`*_ack`, `*_select`) намеренно НЕ взяты: они на
-английском языке и в русской игре звучали бы чужеродно.
+английском языке и в русской игре звучали бы чужеродно. По той же причине
+убраны три записи «работа окончена» (`worker_work_end*.wav`): в них рабочий
+говорит по-английски «I did it!», «Finished» — это тоже речь, а не звук работы.
+Портал звучал английским «It's finished» и «It's over» послушника
+(`initiate_work_end*.wav`), возведение чарами — его же заклинаниями
+(`initiate_build*.wav`): теперь там удары силы без слов (`battlemage_hit1`,
+`initiate_hit1`, `initiate_hit2`, `initiate_hit4`). Пять записей зова с минарета
+(`minarett*.wav`) — пение на чужом языке — убраны совсем: их не звала ни одна
+строка игры.
 
 | Файл | Роль в игре | Исходный файл MegaGlest |
 |---|---|---|
@@ -92,9 +100,8 @@ Unported (CC BY-SA 3.0): https://creativecommons.org/licenses/by-sa/3.0/
 | brute_roar_06 | исполин: рёв | `behemoth_attack1f.wav` |
 | brute_step_01 | исполин: шаг | `behemoth_walk1.wav` |
 | brute_step_02 | исполин: шаг | `behemoth_walk2.wav` |
-| build_magic_01 | возведение чарами | `initiate_build1.wav` |
-| build_magic_02 | возведение чарами | `initiate_build2.wav` |
-| build_magic_03 | возведение чарами | `initiate_build3.wav` |
+| build_magic_01 | возведение чарами: удар силы по камню (FLAC без потерь) | `initiate_hit1.wav` |
+| build_magic_02 | возведение чарами: удар силы по камню (FLAC без потерь) | `initiate_hit2.wav` |
 | build_work_01 | стройка | `worker_build1.wav` |
 | build_work_02 | стройка | `worker_build2.wav` |
 | build_work_03 | стройка | `worker_build3.wav` |
@@ -156,11 +163,6 @@ Unported (CC BY-SA 3.0): https://creativecommons.org/licenses/by-sa/3.0/
 | horse_step_01 | конский шаг | `horseman_walk1.wav` |
 | horse_step_02 | конский шаг | `horseman_walk2.wav` |
 | horse_step_03 | конский шаг | `horseman_walk3.wav` |
-| minaret_01 | зов с башни | `minarett1.wav` |
-| minaret_02 | зов с башни | `minarett2.wav` |
-| minaret_03 | зов с башни | `minarett3.wav` |
-| minaret_04 | зов с башни | `minarett4.wav` |
-| minaret_05 | зов с башни | `minarett5.wav` |
 | mine_pick_01 | кирка по руде | `worker_mine1.wav` |
 | mine_pick_02 | кирка по руде | `worker_mine2.wav` |
 | mine_pick_03 | кирка по руде | `worker_mine3.wav` |
@@ -254,9 +256,6 @@ Unported (CC BY-SA 3.0): https://creativecommons.org/licenses/by-sa/3.0/
 | wood_axe_01 | топор по дереву | `worker_harvest_wood1.wav` |
 | wood_axe_02 | топор по дереву | `worker_harvest_wood2.wav` |
 | wood_axe_03 | топор по дереву | `worker_harvest_wood3.wav` |
-| work_done_01 | работа окончена | `worker_work_end1.wav` |
-| work_done_02 | работа окончена | `worker_work_end2.wav` |
-| work_done_03 | работа окончена | `worker_work_end3.wav` |
 | wraith_die_01 | призрачный доспех: развеян | `ghost_armor_die1.wav` |
 | wraith_die_02 | призрачный доспех: развеян | `ghost_armor_die2.wav` |
 | wraith_die_03 | призрачный доспех: развеян | `ghost_armor_die3.wav` |
@@ -314,5 +313,5 @@ Unported (CC BY-SA 3.0): https://creativecommons.org/licenses/by-sa/3.0/
 | `mg_spell_fire_02.flac` | огненная чара послушника | `initiate_attack8.wav` |
 | `mg_spell_dark_01.flac` | тёмная чара шамана | `shaman_attack.wav` |
 | `mg_spell_dark_02.flac` | тёмная чара ковра-самолёта | `carpet_attack1.wav` |
-| `mg_portal_01.flac` | переход: чары сомкнулись | `initiate_work_end1.wav` |
-| `mg_portal_02.flac` | переход: чары сомкнулись | `initiate_work_end2.wav` |
+| `mg_portal_01.flac` | переход: чары смыкаются с воздушным ударом | `battlemage_hit1.wav` |
+| `mg_portal_02.flac` | переход: чары смыкаются с воздушным ударом | `initiate_hit4.wav` |

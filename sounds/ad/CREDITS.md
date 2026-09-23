@@ -58,10 +58,22 @@
 | ad_wave_rocky_01 | волны о скалы | `audio/ambient/water/waverocky_21.ogg` |
 | ad_rain_long_01 | долгий дождь | `audio/ambient/weather/rain_12.ogg` |
 | ad_windleaves_01 | ветер в листве | `audio/ambient/weather/windleaves_11.ogg` |
-| ad_temple_01 | под сводами храма: голоса и тишина | `audio/interface/select/building/sel_temple.ogg` |
-| ad_temple_02 | под сводами храма: голоса и тишина | `audio/interface/select/building/sel_temple_10.ogg` |
 | ad_forge_sel_01 | кузница за работой | `audio/interface/select/building/sel_forge.ogg` |
 | ad_market_sel_01 | рынок: короткий гомон | `audio/interface/select/building/sel_market.ogg` |
 | ad_farmstead_01 | усадьба | `audio/interface/select/building/sel_farmstead.ogg` |
 | ad_port_sel_01 | порт: короткий шум причала | `audio/interface/select/building/sel_port_10.ogg` |
 | ad_farm_sel_01 | двор: короткий шум | `audio/interface/select/building/sel_farm_10.ogg` |
+
+## Не из 0 A.D.
+
+Храм звучал хором 0 A.D. (`sel_temple.ogg`, `sel_temple_10.ogg`) — пением со словами
+на чужом языке. Словами в игре говорят только по-русски, и музыки в звуках мира
+нет, поэтому хор убран. Под сводами храма теперь воркуют голуби — запись из
+свободной игры **Stendhal** (https://stendhalgame.org), из исходников без потерь
+`data/sounds/lossless_sources`; перекодировано в FLAC без потерь, в один канал.
+Лицензия CC0 1.0 (https://creativecommons.org/publicdomain/zero/1.0/), текст рядом —
+`LICENSE-CC0.txt`.
+
+| Файл | Роль в игре | Автор | Лицензия | Первоисточник | Файл в игре |
+|---|---|---|---|---|---|
+| ad_temple_01 | под сводами храма: голуби и тишина | winsx87 | CC0 | https://freesound.org/people/winsx87/sounds/152024/ | `lossless_sources/bird-pigeon-1.flac` |

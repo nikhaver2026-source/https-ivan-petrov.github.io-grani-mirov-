@@ -22,31 +22,43 @@ const NEW_DIRS=["arte","deep","foe","cast","hero","wild","trade","score",
  for(const d of NEW_DIRS){
   const dir=path.join(ROOT,'sounds',d);
   if(!fs.existsSync(dir)){плохие.push(d+": папки нет");continue;}
-  const files=fs.readdirSync(dir).filter(f=>f.endsWith('.ogg'));
+  /* В throng и trade чужая речь (латынь, греческий, персидский, английский)
+     заменена голосами без слов из Stendhal, OpenClonk и MegaGlest — это
+     записи без потерь (FLAC) под CC0, CC BY 3.0 и CC BY-SA 3.0. Поэтому
+     здесь принимается и FLAC, а титры обязаны назвать ту лицензию и тех
+     авторов, чьи записи в папке на самом деле лежат. */
+  const files=fs.readdirSync(dir).filter(f=>/\.(ogg|flac)$/.test(f));
   if(!files.length)плохие.push(d+": пусто");
   файлов+=files.length;
   for(const f of files){
    const p=path.join(dir,f);
    const buf=fs.readFileSync(p,{start:0,end:4});
-   if(buf.slice(0,4).toString('latin1')!=='OggS')плохие.push(d+'/'+f+": не Ogg");
+   const голова=buf.slice(0,4).toString('latin1');
+   if(f.endsWith('.ogg')&&голова!=='OggS')плохие.push(d+'/'+f+": не Ogg");
+   if(f.endsWith('.flac')&&голова!=='fLaC')плохие.push(d+'/'+f+": не FLAC");
    if(fs.statSync(p).size<200)плохие.push(d+'/'+f+": пустой файл");}
   const cr=path.join(dir,'CREDITS.md');
   if(!fs.existsSync(cr))безКредитов.push(d);
   else{
    const t=fs.readFileSync(cr,'utf8');
    /* Лицензия требует назвать автора и лицензию — оба должны быть в файле. */
-   if(!/CC BY-SA 3\.0/.test(t))безКредитов.push(d+": не названа лицензия");
-   if(!/Clint Bellanger|Wildfire Games/.test(t))безКредитов.push(d+": не назван автор");
+   if(!/CC BY-SA 3\.0|CC BY 3\.0|CC0/.test(t))безКредитов.push(d+": не названа лицензия");
+   if(!/Clint Bellanger|Wildfire Games|OpenClonk Team|Stendhal|MegaGlest/.test(t))безКредитов.push(d+": не назван автор");
    if(!/creativecommons\.org/.test(t))безКредитов.push(d+": нет ссылки на лицензию");
    /* Каждая запись папки должна стоять в таблице. */
-   for(const f of files){const n=f.replace(/\.ogg$/,"");
-    if(!t.includes(n))безКредитов.push(d+"/"+n+": нет строки в CREDITS.md");}}
-  if(!fs.existsSync(path.join(dir,'LICENSE-CC-BY-SA-3.0.txt')))безЛицензии.push(d);}
- check('все новые записи на месте, целы и в формате Ogg',
+   for(const f of files){const n=f.replace(/\.(ogg|flac)$/,"");
+    if(!t.includes(n))безКредитов.push(d+"/"+n+": нет строки в CREDITS.md");}
+   /* Текст каждой названной лицензии лежит рядом. */
+   const рядом=fs.readdirSync(dir);
+   if(/CC BY-SA 3\.0/.test(t)&&!рядом.includes('LICENSE-CC-BY-SA-3.0.txt'))безЛицензии.push(d+": CC BY-SA 3.0");
+   if(/CC BY 3\.0/.test(t)&&!рядом.includes('LICENSE-CC-BY-3.0.txt'))безЛицензии.push(d+": CC BY 3.0");
+   if(/\bCC0\b/.test(t)&&!рядом.includes('LICENSE-CC0.txt'))безЛицензии.push(d+": CC0");}
+  if(!fs.readdirSync(dir).some(f=>/^LICENSE-/.test(f)))безЛицензии.push(d);}
+ check('все новые записи на месте, целы и в формате Ogg или FLAC',
   !плохие.length&&файлов>=250,{плохие:плохие.slice(0,5),файлов});
  check('у каждой папки есть CREDITS.md с автором, лицензией и полным списком',
   !безКредитов.length,безКредитов.slice(0,6));
- check('рядом с записями лежит текст лицензии CC BY-SA 3.0',!безЛицензии.length,безЛицензии);
+ check('рядом с записями лежит текст каждой названной лицензии',!безЛицензии.length,безЛицензии);
 
  /* ── 2. Игра ── */
  const browser=await chromium.launch({args:['--autoplay-policy=no-user-gesture-required']});

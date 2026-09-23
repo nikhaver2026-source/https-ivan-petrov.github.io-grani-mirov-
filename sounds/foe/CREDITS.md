@@ -34,7 +34,6 @@ https://creativecommons.org/licenses/by-sa/3.0/
 | foe_grave_die_01 | могильная тварь упокоена | `fantasycore/soundfx/enemies/grave_die.ogg` |
 | foe_grave_hit_01 | могильная тварь бьёт | `fantasycore/soundfx/enemies/grave_attack.ogg` |
 | foe_grave_pain_01 | могильной твари больно | `fantasycore/soundfx/enemies/grave_hit.ogg` |
-| foe_undead_cast_01 | нежить шепчет | `fantasycore/soundfx/enemies/zombie_ment.ogg` |
 | foe_undead_die_01 | нежить упокоена | `fantasycore/soundfx/enemies/zombie_die.ogg` |
 | foe_undead_die_02 | нежить разорвана | `fantasycore/soundfx/enemies/zombie_critdie.ogg` |
 | foe_undead_hit_01 | нежить бьёт | `fantasycore/soundfx/enemies/zombie_phys.ogg` |
@@ -43,3 +42,16 @@ https://creativecommons.org/licenses/by-sa/3.0/
 | foe_wyrm_die_01 | крылатая тварь падает | `fantasycore/soundfx/enemies/wyvern_die.ogg` |
 | foe_wyrm_hit_01 | крылатая тварь бьёт | `fantasycore/soundfx/enemies/wyvern_phys.ogg` |
 | foe_wyrm_pain_01 | крылатой твари больно | `fantasycore/soundfx/enemies/wyvern_hit.ogg` |
+
+## Не из Flare
+
+Запись Flare `zombie_ment.ogg` — зомби, который по-английски тянет «brains» — убрана:
+словами в игре говорят только по-русски. На её месте — стон нежити из свободной
+игры **Stendhal** (https://stendhalgame.org), из исходников без потерь
+`data/sounds/lossless_sources`; перекодировано в FLAC без потерь, в один канал.
+Лицензия CC0 1.0 (https://creativecommons.org/publicdomain/zero/1.0/), текст рядом —
+`LICENSE-CC0.txt`.
+
+| Файл | Роль в игре | Автор | Лицензия | Первоисточник | Файл в игре |
+|---|---|---|---|---|---|
+| foe_undead_cast_01 | нежить стонет | ArriGD | CC0 | https://freesound.org/people/ArriGD/sounds/144005/ | `lossless_sources/undead-5.flac` |

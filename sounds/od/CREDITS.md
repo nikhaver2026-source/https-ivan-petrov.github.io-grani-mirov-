@@ -9,10 +9,16 @@
 GPL-2 (`click.ogg`) в игру не брался: эта лицензия несовместима с остальным
 собранием.
 
+**Что ушло.** Двадцать восемь записей голоса владыки подземелья (eugeneloza) говорили
+по-английски: «We are under attack», «Objective failed», «Victory», «We'll let you
+live for now». В русской игре это чужая речь, и они убраны. Владыка теперь говорит
+без слов — смехом, рыком и стоном; эти восемь записей взяты из других свободных
+игр и перечислены в конце.
+
 **Изменения:** файлы переименованы; три музыкальные темы перекодированы в Ogg
 Vorbis 80 кбит/с моно, чтобы страница грузилась быстрее. Содержание не менялось.
 
-Всего файлов: 105. Три копии `healspell1` с тем же звуком, что и
+Всего файлов OpenDungeons: 77. Три копии `healspell1` с тем же звуком, что и
 сам `healspell1`, убраны: вариант, который звучит так же, — не вариант.
 
 | Файл | Что это | Автор | Лицензия |
@@ -52,34 +58,6 @@ Vorbis 80 кбит/с моно, чтобы страница грузилась �
 | `healspell3.ogg` | лечебные чары | DoKashiteru | CC BY-SA 3.0 |
 | `inventory1.ogg` | вещь берут в руки | artisticdude | CC BY-SA 3.0 |
 | `inventory2.ogg` | вещь берут в руки | artisticdude | CC BY-SA 3.0 |
-| `keeper_groan_defeat1.ogg` | стон владыки | eugeneloza | CC BY-SA 3.0 |
-| `keeper_groan_defeat2.ogg` | стон владыки | eugeneloza | CC BY-SA 3.0 |
-| `keeper_neutral_allydefeated1.ogg` | весть: союзник пал | eugeneloza | CC BY-SA 3.0 |
-| `keeper_neutral_allydefeated2.ogg` | весть: союзник пал | eugeneloza | CC BY-SA 3.0 |
-| `keeper_neutral_allydefeated3.ogg` | весть: союзник пал | eugeneloza | CC BY-SA 3.0 |
-| `keeper_neutral_allydefeated4.ogg` | весть: союзник пал | eugeneloza | CC BY-SA 3.0 |
-| `keeper_neutral_creaturebed1.ogg` | весть: негде спать | eugeneloza | CC BY-SA 3.0 |
-| `keeper_neutral_creaturebed2v1.ogg` | весть: негде спать | eugeneloza | CC BY-SA 3.0 |
-| `keeper_neutral_creaturebed2v2.ogg` | весть: негде спать | eugeneloza | CC BY-SA 3.0 |
-| `keeper_neutral_creaturehungry1.ogg` | весть: голод | eugeneloza | CC BY-SA 3.0 |
-| `keeper_neutral_creaturehungry3.ogg` | весть: голод | eugeneloza | CC BY-SA 3.0 |
-| `keeper_neutral_creaturenew1.ogg` | весть: пришёл новый | eugeneloza | CC BY-SA 3.0 |
-| `keeper_neutral_creaturenew2.ogg` | весть: пришёл новый | eugeneloza | CC BY-SA 3.0 |
-| `keeper_neutral_creaturenew3.ogg` | весть: пришёл новый | eugeneloza | CC BY-SA 3.0 |
-| `keeper_neutral_defeat1.ogg` | весть: поражение | eugeneloza | CC BY-SA 3.0 |
-| `keeper_neutral_defeat2.ogg` | весть: поражение | eugeneloza | CC BY-SA 3.0 |
-| `keeper_neutral_defeat3.ogg` | весть: поражение | eugeneloza | CC BY-SA 3.0 |
-| `keeper_neutral_objectivefailed1.ogg` | весть: дело провалено | eugeneloza | CC BY-SA 3.0 |
-| `keeper_neutral_objectivefailed2.ogg` | весть: дело провалено | eugeneloza | CC BY-SA 3.0 |
-| `keeper_neutral_objectivemet1.ogg` | весть: дело сделано | eugeneloza | CC BY-SA 3.0 |
-| `keeper_neutral_objectivemet2.ogg` | весть: дело сделано | eugeneloza | CC BY-SA 3.0 |
-| `keeper_neutral_victory1.ogg` | весть: победа | eugeneloza | CC BY-SA 3.0 |
-| `keeper_neutral_victory2.ogg` | весть: победа | eugeneloza | CC BY-SA 3.0 |
-| `keeper_neutral_victory3.ogg` | весть: победа | eugeneloza | CC BY-SA 3.0 |
-| `keeper_neutral_weareunderattack1v1.ogg` | весть: на нас идут | eugeneloza | CC BY-SA 3.0 |
-| `keeper_neutral_weareunderattack1v2.ogg` | весть: на нас идут | eugeneloza | CC BY-SA 3.0 |
-| `keeper_neutral_weareunderattack2.ogg` | весть: на нас идут | eugeneloza | CC BY-SA 3.0 |
-| `keeper_neutral_weareunderattack3.ogg` | весть: на нас идут | eugeneloza | CC BY-SA 3.0 |
 | `opendungeonsmaintheme_pzi.ogg` | тема: подземелья | Pal Zoltan Illes (pZi) | CC BY-SA 3.0 |
 | `pickselector.ogg` | запись OpenDungeons | cameronmusic | CC0 |
 | `rocksfalling01.ogg` | падение тела | Svenskmand | CC BY-SA 3.0 |
@@ -122,3 +100,32 @@ Vorbis 80 кбит/с моно, чтобы страница грузилась �
 | `zombie_7.ogg` | хрип нежити | artisticdude | CC0 |
 | `zombie_8.ogg` | хрип нежити | artisticdude | CC0 |
 | `zombie_9.ogg` | хрип нежити | artisticdude | CC0 |
+
+## Голос владыки без слов — не из OpenDungeons
+
+Перекодированы из WAV и FLAC в FLAC без потерь, в один канал; сам звук не
+изменён. Тексты лицензий рядом: `LICENSE-CC-BY-SA-3.0.txt`, `LICENSE-CC-BY-3.0.txt`
+и `LICENSE-CC0.txt`.
+
+**Stendhal** (https://stendhalgame.org · https://github.com/arianne/stendhal), исходники
+без потерь `data/sounds/lossless_sources`; авторы и лицензии — как в
+`doc/sources/audio-sfx.txt` самой игры.
+
+| Файл | Что это | Автор | Лицензия | Первоисточник |
+|---|---|---|---|---|
+| `keeper_laugh_01.flac` | зловещий смех владыки (`laugh-evil-03.flac`) | klankbeeld | CC BY 3.0 | https://freesound.org/people/klankbeeld/sounds/126113/ |
+| `keeper_laugh_02.flac` | зловещий смех владыки (`laugh-evil-04.flac`) | ShadowFlayer | CC0 | https://freesound.org/people/ShadowFlayer/sounds/401605/ |
+| `keeper_laugh_03.flac` | короткий злой смешок (`imp-laugh-01.flac`) | scorpion67890 | CC0 | https://freesound.org/people/scorpion67890/sounds/205751/ |
+
+**MegaGlest** (https://megaglest.org · https://github.com/MegaGlest/megaglest-data), автор —
+проект MegaGlest и его участники, лицензия CC BY-SA 3.0
+(https://creativecommons.org/licenses/by-sa/3.0/). Исходники — в
+`techs/megapack/commondata/sounds/`.
+
+| Файл | Что это | Исходный файл |
+|---|---|---|
+| `keeper_growl_01.flac` | рык владыки | `daemon_attack3.wav` |
+| `keeper_growl_02.flac` | рык владыки | `daemon_attack5.wav` |
+| `keeper_growl_03.flac` | рык владыки | `daemon_attack6.wav` |
+| `keeper_groan_01.flac` | стон владыки | `worker_die1.wav` |
+| `keeper_groan_02.flac` | стон владыки | `summoner_attack3.wav` |
