@@ -47,8 +47,10 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
 
  // 3. Файлы новых записей читаются
  const avail=await page.evaluate(async()=>{
-  const paths=["monsters/Dragon_Emerge.wav","monsters/Ghost_Death.wav","fantasy/gold_01.mp3",
-   "fantasy/trap_01.mp3","steps/step_water_01.mp3"];
+  /* Пак Fantasy Sound Library ушёл: ловушка, шаг по воде и рык дракона
+     звучат записями свободных игр из папки gamefx. */
+  const paths=["monsters/Dragon_Emerge.wav","monsters/Ghost_Death.wav","gamefx/fx_dragon_growl_01.flac",
+   "gamefx/fx_trap_01.flac","steps/fx_step_water_01.flac"];
   const res=[];
   for(const f of paths){
    const ok=await new Promise(r=>{const a=new Audio("sounds/"+f);

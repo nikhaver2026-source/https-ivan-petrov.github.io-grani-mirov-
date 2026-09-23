@@ -3,10 +3,10 @@
 # Правило: всякая НОВАЯ запись в sounds/ — либо без потерь (flac, wav),
 # либо сжата не ниже 320 кбит/с. Набор проверок 152 это стережёт.
 #
-# Перечисленные ниже 1348 записей пришли раньше правила, из свободных
+# Перечисленные ниже 1306 записей пришли раньше правила, из свободных
 # библиотек, и уже сжаты с потерями. Пережать их в 320 нельзя: пережатие не
 # возвращает того, чего в файле нет, — оно лишь втрое раздувает вес. Весь
-# банк весит 499 МБ (около половины — музыка мест в 320 кбит/с); пережатие
+# банк весит 498 МБ (около половины — музыка мест в 320 кбит/с); пережатие
 # остального подняло бы его к полутора гигабайтам без единого нового
 # слышимого призвука, и игра на телефоне грузилась бы дольше ни за что.
 # Поэтому они остаются как есть и записаны здесь поимённо.
@@ -247,30 +247,6 @@ sounds/es/stagnation_beam.ogg	76
 sounds/es/star_tail.ogg	100
 sounds/es/sunbeam.ogg	74
 sounds/es/torpedo_hit.ogg	94
-sounds/fantasy/cave_deep_01.mp3	192
-sounds/fantasy/dragon_growl_01.mp3	193
-sounds/fantasy/dragon_growl_02.mp3	193
-sounds/fantasy/goblin_voice_01.mp3	193
-sounds/fantasy/goblin_voice_02.mp3	200
-sounds/fantasy/goblin_voice_03.mp3	194
-sounds/fantasy/goblin_voice_04.mp3	198
-sounds/fantasy/goblin_voice_05.mp3	195
-sounds/fantasy/gold_01.mp3	208
-sounds/fantasy/gold_02.mp3	212
-sounds/fantasy/gold_03.mp3	208
-sounds/fantasy/gold_04.mp3	209
-sounds/fantasy/gold_05.mp3	213
-sounds/fantasy/inventory_open_01.mp3	206
-sounds/fantasy/inventory_open_02.mp3	195
-sounds/fantasy/menu_select_01.mp3	226
-sounds/fantasy/spell_arcane_01.mp3	194
-sounds/fantasy/spell_arcane_02.mp3	196
-sounds/fantasy/spell_arcane_03.mp3	193
-sounds/fantasy/spell_arcane_04.mp3	193
-sounds/fantasy/spell_arcane_05.mp3	194
-sounds/fantasy/trap_01.mp3	198
-sounds/fantasy/trap_02.mp3	197
-sounds/fantasy/trap_03.mp3	198
 sounds/foe/foe_bone_die_01.ogg	82
 sounds/foe/foe_bone_die_02.ogg	82
 sounds/foe/foe_bone_hit_01.ogg	83
@@ -1051,24 +1027,6 @@ sounds/sky/sky_thunder_02.ogg	132
 sounds/sky/sky_wave_01.ogg	130
 sounds/sky/sky_wave_02.ogg	131
 sounds/sky/sky_wind_01.ogg	129
-sounds/steps/step_dirt_01.mp3	249
-sounds/steps/step_dirt_02.mp3	212
-sounds/steps/step_dirt_03.mp3	209
-sounds/steps/step_dirt_04.mp3	210
-sounds/steps/step_dirt_05.mp3	213
-sounds/steps/step_dirt_06.mp3	209
-sounds/steps/step_dirt_07.mp3	209
-sounds/steps/step_dirt_08.mp3	208
-sounds/steps/step_dirt_09.mp3	218
-sounds/steps/step_dirt_10.mp3	208
-sounds/steps/step_water_01.mp3	201
-sounds/steps/step_water_02.mp3	201
-sounds/steps/step_water_03.mp3	201
-sounds/steps/step_water_04.mp3	200
-sounds/steps/step_water_05.mp3	200
-sounds/steps/step_water_06.mp3	202
-sounds/steps/step_water_07.mp3	201
-sounds/steps/step_water_08.mp3	201
 sounds/stk/stk_birds_01.ogg	92
 sounds/stk/stk_birds_02.ogg	78
 sounds/stk/stk_blast_01.ogg	95

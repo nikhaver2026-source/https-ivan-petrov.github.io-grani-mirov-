@@ -3478,7 +3478,7 @@ const BANK_CATS={mg:"🐲 Фэнтезийный мир: твари, чары, �
  es:"💥 Взрывы, гулы и переходы Endless Sky",
  stk:"⛰️ Стихии и дали: гром, вода, птицы и ремесло",
  fon:"🌊 Море, земли, места и глубины: фоны из свободных игр",
- fantasy:"🎲 Игровые звуки: монеты, ловушки, заклинания, голоса",steps:"👣 Шаги по земле и воде",
+ gamefx:"🎲 Игровые звуки: чары, ловушки, голоса и меню из свободных игр",steps:"👣 Шаги по земле и воде",
  nat:"🔔 Колокола, дверь, касса лавки, поющее стекло, ворон и пар",
 
 
@@ -3537,7 +3537,7 @@ const BANK_GROUPS=[
  {n:"Находки, вещи и артефакты",icon:"💎", dirs:["arte"]},
  {n:"Ремёсла, добыча и стройка",icon:"🔨", dirs:["craft"]},
  {n:"Герой и природа вокруг", icon:"🧍", dirs:["hero","wild"]},
- {n:"Игровые звуки и голос игры",icon:"🎲", dirs:["fantasy"]},
+ {n:"Игровые звуки и голос игры",icon:"🎲", dirs:["gamefx"]},
  {n:"Музыка мест из фэнтезийных игр",icon:"🎼", dirs:["score","stendhal","solarus","valyria","wyrmsun","evol","tmw","ab"]},
  {n:"Фэнтезийный мир: твари, чары и ремёсла",icon:"🐲", dirs:["mg"]},
  {n:"Механизмы, ворота, сундуки, огонь и вода",icon:"⚙️", dirs:["oc"]},
@@ -3643,7 +3643,7 @@ function buildEncycCats(){
  const t=soundTotals();
  if(hint)hint.textContent=`Разделов: ${grid.children.length}. Всего звуков: ${t.всего} — ${t.сцены} синтезированных сцен и ${t.записи} живых записей. Касание называет раздел, двойное касание открывает его. Внутри раздела — те же жесты, а кнопка «Ко всем разделам» возвращает обратно.`;
  const cr=document.getElementById("encycCredits");
- if(cr)cr.textContent="Живая фэнтезийная библиотека взята из двух свободных игр. Flare (Free/Libre Action Roleplaying Engine), автор Clint Bellanger и участники проекта, flarerpg.org — артефакты и вещи, подземелья и лестницы, твари, заклинания, голос героя, природа и торговцы. 0 A.D. (Empires Ascendant), автор Wildfire Games, play0ad.com — оружие и удары боя, осада, тревога и вести войны, ремёсла и стройка, звери, людские крики и кличи, шаги по поверхностям, погода и вода, здания, рынок и порт. Обе — под лицензией Creative Commons Attribution-ShareAlike 3.0 (CC BY-SA 3.0): указание авторства обязательно и дано здесь, записи остаются под той же лицензией. Разделы разложены по назначению: поверхности под ногой, удары и оружие, двери, механизмы, звери и голоса, боги и знамения, музыка мест. Музыки в звуках мира нет вовсе: ни нот звукового шрифта, ни живых инструментов, ни джинглов, ни хора — награды, уровень, дела, звания, боги, праздники и меню звучат живыми записями свободных игр. Море, земли, глубина и голоса мест — папка fon: настоящие записи Stendhal (авторы с freesound.org: pawsound, MrAuralization, stewdio2003, PoundSound, Félix Blume, InspectorJ, Department64, Inchadney, polymorpheva, andersmmg, Dave Welsh, Xythe, noahpardo, pyro13djt, tylerandbergsd, Lucish_, j1987, qubodup, AntumDeluge, fryzu82, ceoux, Andune; soundbible.com — Adam Webb; Служба рыбы и дикой природы США; лицензии CC0, CC BY 3.0, CC BY 4.0 и общественное достояние), MegaGlest и 0 A.D. (CC BY-SA 3.0), Valyria Tear (Koertes — CC BY-SA 3.0; Blender Foundation, Benboncan и dobroide — CC BY 3.0); пак Neo HQ Mystic Sounds без лицензии из игры убран. Источники записей: Fantasy Sound Library, Classic Monster Sounds (автор Coucassi), пакет uisfx (CC0) для немелодичных щелчков меню, сэмплы Sonic Pi с freesound.org (общественное достояние, CC0 1.0). Голоса богов у алтаря, знамение, храмовые колокола, огонь жертвенника, клад, тревога засады, призрачные голоса, гомон ярмарки, чары льда и света и щелчки меню — из свободной фэнтезийной игры Stendhal (stendhalgame.org): записи freesound.org и OpenGameArt, исходники без потерь; авторы — Samuel Strågefors, lostchocolatelab, NaturesTemper, vonz, pawsound, vibe_crc, JoelAudio, stephan, Jordan Irwin (AntumDeluge), ALLANZ10D, HorrorAudio, foxen10, dauser, dave.des, Natalie, monotraum, qubodup, SmallQuadruped, -sihiL, martinimeniscus, ericlichtenberg, renatalmar, satrebor и Nicole Marie T; лицензии CC0, CC BY 3.0, CC BY 4.0 и общественное достояние. Школы чар звучат голосами магов, шамана и ковра-самолёта MegaGlest (CC BY-SA 3.0), сигнал засады — тревогой 0 A.D. (CC BY-SA 3.0). Указание авторства обязательно, и оно здесь дано. Вещи, с которыми игрок что-то делает, звучат живыми записями ещё четырёх свободных игр. OpenClonk (The OpenClonk Team and contributors, RedWolf Design GmbH, openclonk.org) — сундуки, петли, каменные ворота, цепи, дерево, камень, металл, стекло, чан, огонь, горн, древние механизмы, гром, дождь, ветер, птицы, лук и щит, отклик раздельного касания и знак сдвинувшегося списка (две записи без потерь, FLAC, 44,1 кГц); лицензия Creative Commons Attribution 3.0 Unported (CC BY 3.0). 0 A.D. (Wildfire Games) — каменные ворота, обрушение, листва, мотыга, треск огня, подворье, порт, торговые ряды, день, реки, волны и голоса под сводами храма (CC BY-SA 3.0). Unknown Horizons (The Unknown Horizons Team, unknown-horizons.org) — каменотёс, кузнец, дровосек, выгон, мельница, часовня, трактир, площадь, склад, корабельный колокол и страница (CC BY-SA 3.0). Lugaru (Wolfire Games, wolfire.com, и OSS Lugaru) — костёр, кусты, пустыня, ветер, шаги, лязг, удары, клинки и звери (CC BY-SA 3.0). Ancient Beast (Freezing Moon и участники проекта, AncientBeast.com) — пошаговая фэнтезийная игра о мифических тварях: у неё взяты отклик взведённого касания, знак оборванной речи, раскрытие панели чар, сдача карт в таверне и знак изученной чары; лицензия художественной и звуковой части Creative Commons Attribution-ShareAlike 4.0 (CC BY-SA 4.0), код игры не используется. Все записи этой поставки переведены в FLAC без потерь. МУЗЫКА МЕСТ — темы одиннадцати свободных фэнтезийных игр, у каждого места своя: Stendhal (композиторы Мэтью Пабло, Александр Желанов, Тэд Миллер, RandomMind, LarsG, Geomancer, Pro Sensory, Jonathan Shaw, Bendzer, Leerie, Angus Macnaughton, Otto Halmén, Memoraphile, Tozan; CC0, CC BY 3.0, CC BY 4.0, OGA-BY 3.0), Solarus Free Resource Pack (Эдуардо Дуэньяс и Diarandor, CC BY-SA 4.0), Valyria Tear (yd, Zander Noriega, Ecrivain, Tom Peter, Alexandr Zhelanov, HorrorPen, Eliot Corley, lasercheese; CC0, CC BY 3.0, CC BY-SA 3.0), Wyrmsun (Марсело Фернандес, CC BY 4.0), Ancient Beast (Moonthief, Tad Miller, Agret Brisignr, Jens Kiilstofte; CC BY-SA 4.0), MegaGlest (Aminos, Margaras, команда MegaGlest; CC BY-SA 3.0), OpenDungeons, Flare, OpenClonk, Evol Online (Ledmitz, Aasif Chaudry, Chicka-Maria, Kevin MacLeod, bartk, Eric Matyas; evolonline.org) и The Mana World (Сэй Муцуки, PeriTune; CC BY 4.0). Под GPL не взято ничего. Эти темы — OGG Vorbis 320 кбит/с с выровненной громкостью. Для каждой папки в sounds лежат CREDITS.md с таблицей исходных файлов и текст лицензии.";
+ if(cr)cr.textContent="Живая фэнтезийная библиотека взята из двух свободных игр. Flare (Free/Libre Action Roleplaying Engine), автор Clint Bellanger и участники проекта, flarerpg.org — артефакты и вещи, подземелья и лестницы, твари, заклинания, голос героя, природа и торговцы. 0 A.D. (Empires Ascendant), автор Wildfire Games, play0ad.com — оружие и удары боя, осада, тревога и вести войны, ремёсла и стройка, звери, людские крики и кличи, шаги по поверхностям, погода и вода, здания, рынок и порт. Обе — под лицензией Creative Commons Attribution-ShareAlike 3.0 (CC BY-SA 3.0): указание авторства обязательно и дано здесь, записи остаются под той же лицензией. Разделы разложены по назначению: поверхности под ногой, удары и оружие, двери, механизмы, звери и голоса, боги и знамения, музыка мест. Музыки в звуках мира нет вовсе: ни нот звукового шрифта, ни живых инструментов, ни джинглов, ни хора — награды, уровень, дела, звания, боги, праздники и меню звучат живыми записями свободных игр. Море, земли, глубина и голоса мест — папка fon: настоящие записи Stendhal (авторы с freesound.org: pawsound, MrAuralization, stewdio2003, PoundSound, Félix Blume, InspectorJ, Department64, Inchadney, polymorpheva, andersmmg, Dave Welsh, Xythe, noahpardo, pyro13djt, tylerandbergsd, Lucish_, j1987, qubodup, AntumDeluge, fryzu82, ceoux, Andune; soundbible.com — Adam Webb; Служба рыбы и дикой природы США; лицензии CC0, CC BY 3.0, CC BY 4.0 и общественное достояние), MegaGlest и 0 A.D. (CC BY-SA 3.0), Valyria Tear (Koertes — CC BY-SA 3.0; Blender Foundation, Benboncan и dobroide — CC BY 3.0); пак Neo HQ Mystic Sounds без лицензии из игры убран. Игровые звуки — папка gamefx: драконий рык, голоса гоблинов и кобольдов и шаг по воде из Stendhal (frasbr, ibm5155, spookymodem, ohnobones, apolloaiello, pawsound — CC0), удар архимага и щелчок меню MegaGlest и шаги 0 A.D. (CC BY-SA 3.0), щелчки механизмов OpenClonk (CC BY 3.0), шаги Wyrmsun (TinyWorlds — CC0), шорох сумки и всплеск Valyria Tear (artisticdude, Michel Baradari — CC BY 3.0); пак Fantasy Sound Library без лицензии из игры убран. Источники записей: Classic Monster Sounds (автор Coucassi), пакет uisfx (CC0) для немелодичных щелчков меню, сэмплы Sonic Pi с freesound.org (общественное достояние, CC0 1.0). Голоса богов у алтаря, знамение, храмовые колокола, огонь жертвенника, клад, тревога засады, призрачные голоса, гомон ярмарки, чары льда и света и щелчки меню — из свободной фэнтезийной игры Stendhal (stendhalgame.org): записи freesound.org и OpenGameArt, исходники без потерь; авторы — Samuel Strågefors, lostchocolatelab, NaturesTemper, vonz, pawsound, vibe_crc, JoelAudio, stephan, Jordan Irwin (AntumDeluge), ALLANZ10D, HorrorAudio, foxen10, dauser, dave.des, Natalie, monotraum, qubodup, SmallQuadruped, -sihiL, martinimeniscus, ericlichtenberg, renatalmar, satrebor и Nicole Marie T; лицензии CC0, CC BY 3.0, CC BY 4.0 и общественное достояние. Школы чар звучат голосами магов, шамана и ковра-самолёта MegaGlest (CC BY-SA 3.0), сигнал засады — тревогой 0 A.D. (CC BY-SA 3.0). Указание авторства обязательно, и оно здесь дано. Вещи, с которыми игрок что-то делает, звучат живыми записями ещё четырёх свободных игр. OpenClonk (The OpenClonk Team and contributors, RedWolf Design GmbH, openclonk.org) — сундуки, петли, каменные ворота, цепи, дерево, камень, металл, стекло, чан, огонь, горн, древние механизмы, гром, дождь, ветер, птицы, лук и щит, отклик раздельного касания и знак сдвинувшегося списка (две записи без потерь, FLAC, 44,1 кГц); лицензия Creative Commons Attribution 3.0 Unported (CC BY 3.0). 0 A.D. (Wildfire Games) — каменные ворота, обрушение, листва, мотыга, треск огня, подворье, порт, торговые ряды, день, реки, волны и голоса под сводами храма (CC BY-SA 3.0). Unknown Horizons (The Unknown Horizons Team, unknown-horizons.org) — каменотёс, кузнец, дровосек, выгон, мельница, часовня, трактир, площадь, склад, корабельный колокол и страница (CC BY-SA 3.0). Lugaru (Wolfire Games, wolfire.com, и OSS Lugaru) — костёр, кусты, пустыня, ветер, шаги, лязг, удары, клинки и звери (CC BY-SA 3.0). Ancient Beast (Freezing Moon и участники проекта, AncientBeast.com) — пошаговая фэнтезийная игра о мифических тварях: у неё взяты отклик взведённого касания, знак оборванной речи, раскрытие панели чар, сдача карт в таверне и знак изученной чары; лицензия художественной и звуковой части Creative Commons Attribution-ShareAlike 4.0 (CC BY-SA 4.0), код игры не используется. Все записи этой поставки переведены в FLAC без потерь. МУЗЫКА МЕСТ — темы одиннадцати свободных фэнтезийных игр, у каждого места своя: Stendhal (композиторы Мэтью Пабло, Александр Желанов, Тэд Миллер, RandomMind, LarsG, Geomancer, Pro Sensory, Jonathan Shaw, Bendzer, Leerie, Angus Macnaughton, Otto Halmén, Memoraphile, Tozan; CC0, CC BY 3.0, CC BY 4.0, OGA-BY 3.0), Solarus Free Resource Pack (Эдуардо Дуэньяс и Diarandor, CC BY-SA 4.0), Valyria Tear (yd, Zander Noriega, Ecrivain, Tom Peter, Alexandr Zhelanov, HorrorPen, Eliot Corley, lasercheese; CC0, CC BY 3.0, CC BY-SA 3.0), Wyrmsun (Марсело Фернандес, CC BY 4.0), Ancient Beast (Moonthief, Tad Miller, Agret Brisignr, Jens Kiilstofte; CC BY-SA 4.0), MegaGlest (Aminos, Margaras, команда MegaGlest; CC BY-SA 3.0), OpenDungeons, Flare, OpenClonk, Evol Online (Ledmitz, Aasif Chaudry, Chicka-Maria, Kevin MacLeod, bartk, Eric Matyas; evolonline.org) и The Mana World (Сэй Муцуки, PeriTune; CC BY 4.0). Под GPL не взято ничего. Эти темы — OGG Vorbis 320 кбит/с с выровненной громкостью. Для каждой папки в sounds лежат CREDITS.md с таблицей исходных файлов и текст лицензии.";
 }
 
 /* ── Второй уровень: звуки одного раздела ── */
@@ -6160,7 +6160,7 @@ const GUIDE=[
  "У SuperTuxKart лицензии ПОФАЙЛОВЫЕ и разные: проект ведёт опись по каждой записи отдельно, с именем автора и ссылкой на первоисточник. Здесь встречаются CC BY-SA 3.0, CC BY-SA 4.0, CC BY 3.0, CC0 и общественное достояние. Взято только то, что этими лицензиями и разрешено; записи под GPL из их набора не брались нарочно — с лицензией CC BY-SA остальной библиотеки они не сходятся.",
  "Авторы записей SuperTuxKart поимённо: Claude Werner под именем bollen, Marianne «Auria» Gagnon, Mike Koenig, The Audio Monkey, Daniel Simion и BlastwaveFx, Adam Newns, Leonard «VKProduktion» Graf, James «swiftoid» Swift, Magne «Arthur-D» Djupvik, Fritz Schlüter, ZAQraven, aust_paul, Alcappuccino, mpfeiffer, snottyboi, Tomlija, dADDoiT, kerri, Stephan, 7by7, Natalie, legoluft. Полный список с указанием, кто что сделал, лежит в файле CREDITS.md рядом с записями.",
  "Что означает эта лицензия. Записи можно свободно слушать, копировать, распространять и изменять, в том числе в коммерческих целях, при двух условиях: назвать автора и оставить изменённые записи под той же лицензией. Оба условия соблюдены. Полный текст лицензии лежит рядом с записями в файле LICENSE-CC-BY-SA-3.0.txt, а его краткое изложение — на creativecommons.org/licenses/by-sa/3.0/.",
- "Остальные источники, названные раньше: одиннадцать записей Sonic Pi с freesound.org — колокола, дверь, касса лавки, поющее стекло, ворон и пар (общественное достояние, CC0 1.0); ударные, драм-машина и хор этого набора из игры убраны, как и прежние живые инструменты и оркестр звукового шрифта: все ноты заменены записями из свободных игр. Пакет uisfx (CC0), Fantasy Sound Library и Classic Monster Sounds (автор Coucassi). Пак Neo HQ Mystic Sounds убран целиком: лицензии у него нет, а море, земли, глубина и голоса мест теперь звучат настоящими записями Stendhal, MegaGlest, 0 A.D. и Valyria Tear — полная опись в sounds/fon/CREDITS.md.",
+ "Остальные источники, названные раньше: одиннадцать записей Sonic Pi с freesound.org — колокола, дверь, касса лавки, поющее стекло, ворон и пар (общественное достояние, CC0 1.0); ударные, драм-машина и хор этого набора из игры убраны, как и прежние живые инструменты и оркестр звукового шрифта: все ноты заменены записями из свободных игр. Пакет uisfx (CC0) и Classic Monster Sounds (автор Coucassi). Пак Fantasy Sound Library тоже убран: чары, ловушки, голоса гоблинов, драконий рык, шаги и щелчок меню теперь звучат записями Stendhal, MegaGlest, OpenClonk, 0 A.D., Wyrmsun и Valyria Tear — опись в sounds/gamefx/CREDITS.md и sounds/steps/CREDITS.md. Пак Neo HQ Mystic Sounds убран целиком: лицензии у него нет, а море, земли, глубина и голоса мест теперь звучат настоящими записями Stendhal, MegaGlest, 0 A.D. и Valyria Tear — полная опись в sounds/fon/CREDITS.md.",
  "Всё, что не покрыто записями, игра строит сама: сто двадцать синтезированных сцен работают всегда, даже если папку со звуками не скачали.",
  "Три библиотеки добавились последними. Записи Luanti (Minetest Game) — девяносто семь: шаги по девяти поверхностям, двери и калитки, огонь, лава, стекло, металл, копка и взрыв; лицензия CC BY-SA 3.0, авторы — коллектив Minetest Game, полный список в sounds/mtg/CREDITS.md.",
  "Записи OpenDungeons — сто восемь: голоса владыки подземелья, хрипы нежити, копка породы, обвалы, лечебные чары, звон ссыпаемого золота, удар клинка по клинку и три темы. Лицензии CC BY-SA 3.0, CC BY 3.0 и CC0; авторы — Svenskmand, eugeneloza, remaxim, artisticdude, DoKashiteru, jalastram, Pal Zoltan Illes, Matthew Pablo, yd. Список — sounds/od/CREDITS.md.",
@@ -9667,7 +9667,7 @@ function caravanBuy(res,qty){
  if(!Number.isFinite(total)){narrate("Цену этого товара обоз назвать не берётся.");return;}
  if(G.gold<total){narrate(`Нужно ${total} золота, у вас ${G.gold}.`);return;}
  G.gold-=total;G.inv[res]=(Number(G.inv[res])||0)+n;
- safeFn(()=>{UI.pickup();Bank.play("gold",{seed:total,gain:0.7});Bank.play("arte_coins",{seed:total,gain:0.5,maxSec:3});});
+ safeFn(()=>{UI.pickup();Bank.play("treasure",{seed:total,gain:0.7});Bank.play("arte_coins",{seed:total,gain:0.5,maxSec:3});});
  narrate(`Куплено у обоза: ${res} ×${n} за ${total} золота. Везите туда, где этого не хватает.`);
  journal(`У каравана куплено: ${res} ×${n} за ${total}.`);
  saveGame(true);refresh();meetCaravan(car);
@@ -9686,7 +9686,7 @@ function caravanSell(res,all){
  if(!Number.isFinite(total)){narrate("Цену этого товара обоз назвать не берётся.");return;}
  G.inv[res]=have-qty;if(G.inv[res]<=0)delete G.inv[res];
  G.gold+=total;
- safeFn(()=>{UI.pickup();Bank.play("gold",{seed:total,gain:0.8});});
+ safeFn(()=>{UI.pickup();Bank.play("treasure",{seed:total,gain:0.8});});
  narrate(`Продано обозу: ${res} ×${qty} по ${price} — всего ${total} золота. Золота: ${G.gold}.`);
  journal(`Каравану продано: ${res} ×${qty} за ${total}.`);
  saveGame(true);refresh();meetCaravan(car);
@@ -10689,9 +10689,12 @@ const Spatial={
 };
 
 /* ── ВТОРАЯ ПОСТАВКА ЗАПИСЕЙ ──
-   Fantasy Sound Library: короткие игровые звуки с говорящими именами —
-   заклинания, монеты, ловушки, голоса гоблинов, драконий рык, победные и
-   проигрышные фразы, шаги по земле и воде, глубокая пещера.
+   Пак Fantasy Sound Library (заклинания, монеты, ловушки, голоса гоблинов,
+   драконий рык, шаги по земле и воде, глубокая пещера) убран: лицензии у
+   него нет. Его роли звучат настоящими записями свободных игр из папки
+   gamefx — Stendhal, MegaGlest, OpenClonk, 0 A.D., Wyrmsun и Valyria
+   Tear; звон монет — пригоршня монет Stendhal (роль treasure), фон пещер
+   и домов — капель подземелья Flare и огонь очага.
    Classic Monster Sounds (автор Coucassi): восемь существ, у каждого свои
    реплики появления, удара, боли, смерти и шага. Голос подбирается по виду
    чудовища, поэтому болотная тварь звучит не так, как каменный великан. */
@@ -10922,16 +10925,14 @@ Object.assign(SOUND_BANK,{
  stk_deepsea:{f:["stk/stk_deepsea_01.ogg"],d:"Под водой: глубина и давление"},
 });
 Object.assign(SOUND_BANK,{
- cave_deep:{f:["fantasy/cave_deep_01.mp3"],d:"Глубокая пещера: долгий подземный фон"},
- dragon_growl:{f:["fantasy/dragon_growl_01.mp3","fantasy/dragon_growl_02.mp3"],d:"Драконий рык вблизи"},
- step_dirt:{f:["steps/step_dirt_01.mp3","steps/step_dirt_02.mp3","steps/step_dirt_03.mp3","steps/step_dirt_04.mp3","steps/step_dirt_05.mp3","steps/step_dirt_06.mp3","steps/step_dirt_07.mp3","steps/step_dirt_08.mp3","steps/step_dirt_09.mp3","steps/step_dirt_10.mp3"],d:"Шаг по земле и траве"},
- step_water:{f:["steps/step_water_01.mp3","steps/step_water_02.mp3","steps/step_water_03.mp3","steps/step_water_04.mp3","steps/step_water_05.mp3","steps/step_water_06.mp3","steps/step_water_07.mp3","steps/step_water_08.mp3"],d:"Шаг по воде и мокрым доскам"},
- goblin_voice:{f:["fantasy/goblin_voice_01.mp3","fantasy/goblin_voice_02.mp3","fantasy/goblin_voice_03.mp3","fantasy/goblin_voice_04.mp3","fantasy/goblin_voice_05.mp3"],d:"Голоса гоблинов и разбойников"},
- inventory_open:{f:["fantasy/inventory_open_01.mp3","fantasy/inventory_open_02.mp3"],d:"Открытие окна и сумки"},
- menu_select:{f:["fantasy/menu_select_01.mp3"],d:"Выбор пункта меню"},
- gold:{f:["fantasy/gold_01.mp3","fantasy/gold_02.mp3","fantasy/gold_03.mp3","fantasy/gold_04.mp3","fantasy/gold_05.mp3"],d:"Звон монет: продажа, добыча, находка"},
- spell_arcane:{f:["fantasy/spell_arcane_01.mp3","fantasy/spell_arcane_02.mp3","fantasy/spell_arcane_03.mp3","fantasy/spell_arcane_04.mp3","fantasy/spell_arcane_05.mp3"],d:"Сотворение заклинания: короткий чёткий всплеск силы"},
- trap:{f:["fantasy/trap_01.mp3","fantasy/trap_02.mp3","fantasy/trap_03.mp3"],d:"Ловушка сработала: щелчок механизма и удар"}});
+ dragon_growl:{f:["gamefx/fx_dragon_growl_01.flac","gamefx/fx_dragon_growl_02.flac"],d:"Драконий рык вблизи (Stendhal)"},
+ step_dirt:{f:["steps/fx_step_dirt_01.flac","steps/fx_step_dirt_02.flac","steps/fx_step_dirt_03.flac","steps/fx_step_dirt_04.flac","steps/fx_step_dirt_05.flac","steps/fx_step_dirt_06.flac","steps/fx_step_dirt_07.flac"],d:"Шаг по земле: утоптанная тропа, сор и сырость (0 A.D., Wyrmsun)"},
+ step_water:{f:["steps/fx_step_water_01.flac","steps/fx_step_water_02.flac"],d:"Шаг по воде: всплеск под ногой (Stendhal, Valyria Tear)"},
+ goblin_voice:{f:["gamefx/fx_goblin_voice_01.flac","gamefx/fx_goblin_voice_02.flac","gamefx/fx_goblin_voice_03.flac","gamefx/fx_goblin_voice_04.flac","gamefx/fx_goblin_voice_05.flac"],d:"Голоса гоблинов и кобольдов (Stendhal)"},
+ inventory_open:{f:["gamefx/fx_inventory_open_01.flac"],d:"Открытие сумки: шорох ткани (Valyria Tear)"},
+ menu_select:{f:["gamefx/fx_menu_select_01.flac","gamefx/fx_menu_select_02.flac"],d:"Выбор пункта меню: щелчок (MegaGlest)"},
+ spell_arcane:{f:["gamefx/fx_spell_arcane_01.flac","gamefx/fx_spell_arcane_02.flac","gamefx/fx_spell_arcane_03.flac","gamefx/fx_spell_arcane_04.flac","gamefx/fx_spell_arcane_05.flac"],d:"Сотворение заклинания: удар архимага (MegaGlest)"},
+ trap:{f:["gamefx/fx_trap_01.flac","gamefx/fx_trap_02.flac","gamefx/fx_trap_03.flac"],d:"Ловушка сработала: щелчок взведённого механизма (OpenClonk)"}});
 /* ── ПЯТАЯ ПОСТАВКА ЗАПИСЕЙ: ВЕЩИ ЗВУЧАТ КАК ВЕЩИ ──
    Статуя отвечала светлым куполом синтезатора, алтарь — хоровой подложкой,
    зеркало — челестой, трон — валторной. Для того, кто играет на слух, это
@@ -11504,7 +11505,9 @@ function bankAmbientRole(){
   if(G.place){
    if(G.place.depth>0)return DEPTH_LOOP[Math.min(5,Math.max(1,G.place.depth))-1];
    if(G.place.kind==="city")return "hall_market";
-   return "cave_deep";}
+   /* Под крышей жилого дома — огонь очага, в руинах, пещерном зеве и
+      тёмных постройках — сквозняк камня. */
+   return ({ruins:1,cave_entrance:1,tower:1,pit:1,ossuary:1,spire:1,shrine:1}[G.place.stype]?"deep_wind":"wild_hearth");}
   if(G.ship)return G.ship.storm?"sea_storm":"sea_open";
   const c=cellContent(G.x,G.y);
   if(c.structure&&c.structure.type==="port")return "hall_port";
@@ -11932,7 +11935,7 @@ function hookFish(){
   narrate(`${fish.n} пришлось отпустить обратно в воду: класть некуда.`,{interrupt:false});
   return false;}
  G.inv[fish.n]=(Number(G.inv[fish.n])||0)+qty;
- safeFn(()=>{UI.pickup();Bank.play("gold",{seed:fish.price,gain:0.6});Bank.play("arte_coins",{seed:fish.price,gain:0.45,maxSec:3});});
+ safeFn(()=>{UI.pickup();Bank.play("treasure",{seed:fish.price,gain:0.6});Bank.play("arte_coins",{seed:fish.price,gain:0.45,maxSec:3});});
  narrate(`Есть! ${fish.n}${qty>1?` ×${qty}`:""}. ${fish.d}. В портах за неё дают около ${fish.price} золота.`);
  journal(`Улов: ${fish.n}${qty>1?" ×"+qty:""}.`);
  /* Крупная добыча в открытом море привлекает внимание снизу. */
@@ -11982,7 +11985,7 @@ function buyLot(res,qty){
  if(!cargoFits(n,`Партия «${res}» ×${n}`))return false;
  G.gold-=total;safeFn(()=>deed("deals"));
  G.inv[res]=(Number(G.inv[res])||0)+n;
- safeFn(()=>{UI.pickup();Bank.play("gold",{seed:total,gain:0.8});});
+ safeFn(()=>{UI.pickup();Bank.play("treasure",{seed:total,gain:0.8});});
  const where=bestRoutes(port.x,port.y,G.day,6).find(r=>r.res===res);
  narrate(`Взято оптом: ${res} ×${n} за ${total} золота (по ${Math.round(total/n)} за штуку).`+
   (where?` Дороже всего берут в «${where.to.name}»: ${where.sell} за штуку.`:"")+
@@ -12289,7 +12292,7 @@ function diveRun(site){
     case "cave":if(k===1)return `Такт первый: у входа ${дать("кристалл",1)}.`;if(k===2)return `Такт второй: в нише ${дать("водный кристалл",1)}.`;{safeFn(()=>adaptAdd("мутаген",1));return "Такт третий: тёмная вода в глубине пещеры давит на тело — "+plantTake(PLANT_BY_ID.trutnik,site.x,site.y).trim();}
     case "ruins":if(k===1)return `Такт первый: обломки — ${дать("камень",2)}.`;if(k===2){G.xp+=10;if(!Array.isArray(G.signs))G.signs=[];G.signs.push({id:`dive_${site.x}_${site.y}`,цель:{x:site.x+7,y:site.y-5},откуда:"с плиты под водой",сила:1});return "Такт второй: на плите знак, примета записана, опыт +10.";}
      safeFn(()=>findArtifact({глубина:10,seed:site.x*13+site.y}));return "Такт третий: в нише за аркой лежала вещь.";
-    case "wreck":if(k===1)return `Такт первый: ${дать("дерево",2)}.`;if(k===2){const g=20+Math.floor(H(site.x,site.y,9450)*40);G.gold+=g;safeFn(()=>Bank.play("gold",{gain:0.6}));return `Такт второй: сундук капитана — ${g} золота.`;}
+    case "wreck":if(k===1)return `Такт первый: ${дать("дерево",2)}.`;if(k===2){const g=20+Math.floor(H(site.x,site.y,9450)*40);G.gold+=g;safeFn(()=>Bank.play("treasure",{gain:0.6}));return `Такт второй: сундук капитана — ${g} золота.`;}
      if(!Array.isArray(G.items))G.items=[];G.items.push("Зелье здоровья");return "Такт третий: в каюте уцелела склянка — зелье здоровья.";
     case "field":if(k===1)return `Такт первый: ${дать("ракушка",3)}.`;if(k===2)return `Такт второй: ${дать("кристалл",2)}.`;return "Такт третий: "+plantTake(PLANT_BY_ID.morloza,site.x,site.y).trim();
     case "predators":{if(k===1)return "Такт первый: тени сошлись ближе.";const src=seaFoeByHash(site.x+site.y);бой=makeSeaFoe(src,k===3?1:0);return `Такт ${k===2?"второй":"третий"}: ${src.n} идёт на вас — бой на воде!`;}
@@ -12359,7 +12362,7 @@ function resolvePirates(what){
   if(G.gold<toll){narrate("Столько золота у вас нет. Пираты берут всё, что нашли, и уходят.");
    G.gold=Math.max(0,Math.floor(G.gold*0.5));refresh();saveGame(true);return;}
   G.gold-=toll;
-  safeFn(()=>Bank.play("gold",{seed:toll,gain:0.8}));
+  safeFn(()=>Bank.play("treasure",{seed:toll,gain:0.8}));
   narrate(`Вы отдали ${toll} золота. Капитан пиратов кивает и отпускает судно.`);
   journal(`Откуп пиратам: ${toll} золота.`);
   refresh();saveGame(true);return;}
@@ -12483,7 +12486,7 @@ function maybeSeaEvent(){
  if(r<0.68){
   const gold=15+Math.floor(Math.random()*25);
   G.gold+=gold;
-  safeFn(()=>{Bank.play("sea_calm",{seed:s.leg,gain:0.6,maxSec:6});Bank.play("gold",{seed:gold,gain:0.7});});
+  safeFn(()=>{Bank.play("sea_calm",{seed:s.leg,gain:0.6,maxSec:6});Bank.play("treasure",{seed:gold,gain:0.7});});
   narrate(`Встречный купеческий флот. Капитан обменялся почтой и отдал вам долю за помощь на снастях: +${gold} золота.`);
   return true;}
  if(r<0.82){
@@ -16523,7 +16526,7 @@ const EVENTS=[
    {l:"⚖️ Встать на сторону сборщика",run:()=>{addRep(c.emp.race,2);G.gold+=25;
     narrate(`Сборщик доволен: «Хоть кто-то читал устав». 25 золота и доброе слово от народа ${c.emp.race}.`);}},
    {l:"🤝 Встать на сторону купца",run:()=>{addRep(c.emp.race,-1);G.gold+=45;
-    safeFn(()=>Bank.play("gold",{gain:0.7}));
+    safeFn(()=>Bank.play("treasure",{gain:0.7}));
     narrate("Купец сунул вам 45 золота и увёл товар быстрее, чем сборщик нашёл нужную строку. Держава этого не забудет.");}},
    {l:"🧾 Предложить делить пополам",run:()=>{addRep(c.emp.race,1);G.xp+=xpGain(45);
     narrate("Оба ворчат, но соглашаются. Спор кончился ничем — и потому кончился. Опыт растёт.");}}]},
@@ -22190,7 +22193,7 @@ iact("takeitem",{n:"Взять предмет",значок:"🤏",можно:o=
  делать:o=>{propMark(o.x,o.y,"taken");const s=hashName(o.x*7,o.y*3,8420);
   if(objProp(o)==="rack"||objProp(o)==="shields"){const it=genLoot(G.place.bx+o.x,G.place.by+o.y,4141,Math.max(1,G.level));it.сост=60+Math.floor(hashName(o.x,o.y,8421)*30);G.gear.push(it);safeFn(()=>Bank.play(itemVoice(it),{gain:0.5,maxSec:2}));narrate(`Со стойки снято: ${lootDesc(it)} Состояние ${it.сост} из ста.`);}
   else if(s<0.4){const п=["Свеча","Факел","Верёвка"];const что=п[Math.floor(hashName(o.x,o.y,8422)*п.length)%п.length];G.items.push(что);safeFn(()=>Bank.play("arte_cloth",{gain:0.45,maxSec:2}));narrate(`Со стола взято: ${что}.`);}
-  else if(s<0.7){const з=3+Math.floor(hashName(o.x,o.y,8423)*12);G.gold+=з;safeFn(()=>Bank.play("gold",{gain:0.5,maxSec:2}));narrate(`На столе мелочь: ${з} золота.`);}
+  else if(s<0.7){const з=3+Math.floor(hashName(o.x,o.y,8423)*12);G.gold+=з;safeFn(()=>Bank.play("treasure",{gain:0.5,maxSec:2}));narrate(`На столе мелочь: ${з} золота.`);}
   else{G.inv["трава"]=(Number(G.inv["трава"])||0)+1;safeFn(()=>Bank.play("arte_cloth",{gain:0.45,maxSec:2}));narrate("На столе пучок сухой травы: пригодится в чане.");}
   safeFn(()=>{refresh();saveGame(true);});return true;}});
 iact("readdocs",{n:"Читать документы",значок:"📄",можно:TABLE_LIKE,
@@ -29832,7 +29835,7 @@ function artSell(i,key){
   G.artifacts.splice(i,1);
   G.gold+=дают;
   safeFn(()=>noteTrade(n,дают));
-  safeFn(()=>{Bank.play("gold",{gain:0.7,maxSec:3});
+  safeFn(()=>{Bank.play("treasure",{gain:0.7,maxSec:3});
    setTimeout(()=>safeFn(()=>Bank.play("arte_coins",{gain:0.5,maxSec:3})),200);});
   narrate(`Продано: ${a.имя} за ${дают} золота.`+
    (a.проклятие?" Торговец взял её через тряпку и не смотрел в глаза."
@@ -30852,7 +30855,7 @@ const Scape={
    const ночь=safeFn(()=>isNight(),false);
    const role=
     kind==="deep"?"amb_abyss":
-    kind==="cave"||kind==="dungeon"?"cave_deep":
+    kind==="cave"||kind==="dungeon"?"deep_drip":
     kind==="desert"?"amb_desert":
     kind==="forest"?(ночь?"amb_night":"amb_day"):
     kind==="water"||kind==="ship"?"amb_water":
@@ -33788,7 +33791,7 @@ function takeLoot(){
     else {left.push(l.name);continue;}}
    else if(l?.type==="gear"&&l.item){G.gear.push(l.item);}
   }
-  safeFn(()=>Bank.play("gold",{kind:"combat",seed:Date.now(),gain:0.85}));
+  safeFn(()=>Bank.play("treasure",{kind:"combat",seed:Date.now(),gain:0.85}));
   const gold=loot.filter(l=>l.type==="gold").reduce((n,l)=>n+(Number(l.amount)||0),0);
   const mats=loot.filter(l=>l.type==="mat").map(l=>l.name);
   const gearItems=loot.filter(l=>l.type==="gear"&&l.item).map(l=>l.item);
@@ -36624,7 +36627,7 @@ const Coins=Modules.register("COINS",{
  energy(){return `Кристалл идёт за ${RES_BASE["кристалл"]||30} золота, эссенция — за пятьдесят пять, энергетический жетон — за сто.`;},
  rare(id){if(!G.rareUnits||typeof G.rareUnits!=="object")G.rareUnits={seals:0,debts:0,tokens:0,permits:0};return Number(G.rareUnits[id])||0;},
  addRare(id,n){this.rare(id);G.rareUnits[id]=Math.max(0,(Number(G.rareUnits[id])||0)+(Number(n)||0));return G.rareUnits[id];},
- borrow(n){n=Math.max(1,Math.round(Number(n)||0));G.gold+=n;this.addRare("debts",Math.ceil(n/20));safeFn(()=>Bank.play("gold",{gain:0.5,maxSec:2}));return `Взято вперёд ${n} золота: долговых знаков ${this.rare("debts")}. Каждый день долг растёт на десятую.`;},
+ borrow(n){n=Math.max(1,Math.round(Number(n)||0));G.gold+=n;this.addRare("debts",Math.ceil(n/20));safeFn(()=>Bank.play("treasure",{gain:0.5,maxSec:2}));return `Взято вперёд ${n} золота: долговых знаков ${this.rare("debts")}. Каждый день долг растёт на десятую.`;},
  daily(){try{const d=this.rare("debts");if(d>0){G.gold=Math.max(0,(Number(G.gold)||0)-Math.ceil(d*2));}}catch(_){}},
  text(){return `${this.words(G.gold)}. Редкие единицы: ${RARE_UNITS.map(u=>`${u.n} ${this.rare(u.id)}`).join(", ")}. ${this.energy()}`;}});
 /* ── ЯДРО ОТКЛИКА ── */
@@ -42875,7 +42878,7 @@ function buyItem(key,i){const n=getNPCByKey(key);
  safeFn(()=>noteTrade(n,item.price));
  safeFn(()=>{npcRemember(n,"купил",item.price,5);
   addStand("trade",(EMPIRES[Math.max(0,empireIndexAt(n.x,n.y))]||{}).short,1);});
- UI.pickup();safeFn(()=>{Bank.play("gold",{seed:item.price,gain:0.7});Bank.play("arte_coins",{seed:item.price,gain:0.5,maxSec:3});
+ UI.pickup();safeFn(()=>{Bank.play("treasure",{seed:item.price,gain:0.7});Bank.play("arte_coins",{seed:item.price,gain:0.5,maxSec:3});
   Bank.play("ad_trade",{seed:item.price,gain:0.45,maxSec:3});
   Bank.play(itemVoice(item.gear||item.n),{seed:item.price,gain:0.55,maxSec:3});
   setTimeout(()=>safeFn(()=>Bank.play("arte_coins",{seed:item.price,gain:0.5,maxSec:3})),180);});narrate(`Куплено: ${item.gear?lootDesc(item.gear):item.n}. Осталось золота: ${G.gold}.`);
@@ -42922,7 +42925,7 @@ function sellResource(key,res,all){
  const total=unit*qty;
  G.gold+=total;safeFn(()=>deed("deals"));
  safeFn(()=>addRep(n.race,1));
- safeFn(()=>{UI.pickup();Bank.play("gold",{seed:total,gain:0.8});
+ safeFn(()=>{UI.pickup();Bank.play("treasure",{seed:total,gain:0.8});
   Bank.play("od_gold",{seed:total,gain:0.45,maxSec:3});
   setTimeout(()=>safeFn(()=>Bank.play("trade_m",{seed:total,gain:0.4,maxSec:3})),260);});
  const почему=safeFn(()=>priceWhy(res,empireIndexAt(G.x,G.y),null),"");
@@ -43431,7 +43434,7 @@ function shopYes(){
   if(c.count===1||!r.count){buyItem(n.key,r.i);}
   else{const s=r.s;if(s.res&&!cargoFits(c.count,`«${s.n}»`)){renderShop();return false;}
    G.gold-=итог;G.inv[s.n]=(Number(G.inv[s.n])||0)+c.count;safeFn(()=>addRep(n.race,1));safeFn(()=>noteTrade(n,итог));safeFn(()=>npcRemember(n,"купил",итог,5));
-   safeFn(()=>{UI.pickup();Bank.play("gold",{seed:итог,gain:0.7});Bank.play("arte_coins",{seed:итог,gain:0.5,maxSec:3});});
+   safeFn(()=>{UI.pickup();Bank.play("treasure",{seed:итог,gain:0.7});Bank.play("arte_coins",{seed:итог,gain:0.5,maxSec:3});});
    narrate(`Куплено: ${s.n} ×${c.count} за ${итог} золота. Осталось золота: ${G.gold}.`);journal(`Покупка: ${s.n} ×${c.count} за ${итог}.`);saveGame(true);refresh();}
   SHOP.sel=null;renderShop();return true;}
  const rows=shopSellRows(n).filter(r=>r.ок);const r=rows[SHOP.sel.idx];if(!r){narrate("Этой вещи уже нет.");renderShop();return false;}
@@ -43444,7 +43447,7 @@ function shopSellRes(n,res,qty){
  const have=Number(G.inv[res])||0;qty=Math.max(1,Math.min(have,Number(qty)||1));if(!have){narrate(`У вас нет ресурса «${res}».`);return false;}
  const unit=sellUnit(n,res);const total=unit*qty;
  G.inv[res]=have-qty;if(G.inv[res]<=0)delete G.inv[res];G.gold+=total;safeFn(()=>deed("deals"));safeFn(()=>addRep(n.race,1));safeFn(()=>merchSpend(n,total));
- safeFn(()=>{UI.pickup();Bank.play("gold",{seed:total,gain:0.8});Bank.play("od_gold",{seed:total,gain:0.45,maxSec:3});});
+ safeFn(()=>{UI.pickup();Bank.play("treasure",{seed:total,gain:0.8});Bank.play("od_gold",{seed:total,gain:0.45,maxSec:3});});
  narrate(`Продано: ${res} — ${qty} шт. по ${unit} золота. Получено ${total}. Всего золота: ${G.gold}.`);journal(`Продажа: ${res} ×${qty} за ${total} золота.`);return true;}
 /* После сделки перерисовывается то окно, что открыто: лавка или карточка жителя. */
 function afterTrade(key){
@@ -43922,7 +43925,7 @@ function completeQuestPartial(id){
  q.done=true;q.состояние="частично";
  const п=questPay(q);const gold=Math.round(п.gold*0.45),xp=Math.round(п.xp*0.5);
  G.gold+=gold;G.xp+=xp;
- safeFn(()=>{addRep(q.race,1);Bank.play("gold",{gain:0.5});});
+ safeFn(()=>{addRep(q.race,1);Bank.play("treasure",{gain:0.5});});
  questDelay((Number(G.day)||1)+4,`${q.npc} недоволен половиной дела: имя у народа «${q.race}» упало.`,{rep:q.race,n:-1});
  journal(`Дело сдано частично: ${q.text}`);
  narrate(`Дело сдано частично. ${q.npc} берёт что есть и платит меньше: ${gold} золота, опыт ${xp}. Последствия придут позже.`,{pri:1});
@@ -45519,7 +45522,7 @@ function sellRowTo(n,row,done){
  if(row.kind==="art"){safeFn(()=>closeModal(document.getElementById("modal-invact")));artSell(Number(row.key),n.key);safeFn(()=>renderInventory());return true;}
  const цена=sellPriceOf(n,row);const имя=row.name;
  invRemoveItem(row);G.gold+=цена;safeFn(()=>merchSpend(n,цена));safeFn(()=>deed("deals"));safeFn(()=>addRep(n.race,1));
- safeFn(()=>{UI.pickup();Bank.play("gold",{seed:цена,gain:0.7});Bank.play("od_gold",{seed:цена,gain:0.45,maxSec:3});});
+ safeFn(()=>{UI.pickup();Bank.play("treasure",{seed:цена,gain:0.7});Bank.play("od_gold",{seed:цена,gain:0.45,maxSec:3});});
  journal(`Продажа: ${имя} за ${цена} золота.`);
  return done(`Продано: ${имя} за ${цена} золота. Всего золота: ${G.gold}.`);}
 function renderCharacter(){

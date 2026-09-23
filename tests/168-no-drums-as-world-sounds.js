@@ -69,7 +69,7 @@ const УШЛИ=["body_fall","boom_far","clash_blades","dull_hit","forge_hammer",
  "bazaar_loop","dungeon_haunt","god_chord","market_perc","shield_hit","whip","swing","parry","wild"];
 const ПРИНЯЛИ=["od_fall","oc_thunder","lug_metal","lug_thud","stk_hammer","sky_gust","lug_impact",
  "oc_wood_dull","oc_lock","mtg_metal_hit","od_blade","oc_quake","siege_ram","oc_glass_break",
- "mtg_stone_hit","es_abyss","cave_deep","oc_drone_die","wraith_die","amb_abyss","od_undead",
+ "mtg_stone_hit","es_abyss","deep_drip","oc_drone_die","wraith_die","amb_abyss","od_undead",
  "siege_alarm_city","ad_market_sel","oc_metal_dull","es_boom","beasts_camel","uh_bell",
  "oc_shield_metal","lug_clank","oc_metal_light","stk_clang","battle_sword","arte_coins","oc_rock_hit",
  "stk_dark","deep_1","deep_2","deep_3","deep_4","deep_5","es_hit","ad_forge_sel","hero_step_metal",
