@@ -153,13 +153,15 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   G.place=null;while(activeLayer())closeTopUI();
   CMD.encyc();
   const btns=[...document.querySelectorAll('#encycCats .sound-card')];
-  const i=btns.findIndex(b=>/Голоса чудовищ: записи/.test(b.textContent));
+  /* Голоса чудовищ лежат в разделе назначения «Чудовища и твари». */
+  const i=btns.findIndex(b=>/Чудовища и твари/.test(b.textContent));
   if(i>=0)btns[i].click();
+  const имена=new Set(Object.values(MONSTER_VOICE_NAMES));
   return {разделов:btns.length,
-   голосов:document.querySelectorAll('#encycOneGrid .sound-card').length,
+   голосов:[...document.querySelectorAll('#encycOneGrid .sound-card b')].filter(b=>имена.has(b.textContent)).length,
    заголовок:document.getElementById('encycOneTitle').textContent};});
- check('в энциклопедии есть раздел записанных голосов чудовищ',
-  enc.разделов>=20&&/Голоса чудовищ/.test(enc.заголовок)&&enc.голосов===8,enc);
+ check('в энциклопедии голоса чудовищ стоят в разделе «Чудовища и твари»',
+  enc.разделов>=20&&/Чудовища и твари/.test(enc.заголовок)&&enc.голосов===8,enc);
 
  console.log(results.join('\n'));
  console.log('\nЗапрошено файлов звука: '+reqs.length+' (например '+reqs.slice(0,3).join(', ')+')');

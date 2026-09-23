@@ -3551,15 +3551,15 @@ const MONSTER_VOICE_NAMES={bat:"Летучая тварь: писк и хлоп�
  orc:"Орочья глотка: рык, крик, брань",slime:"Слизь и глубинное: чавканье и всплеск",spider:"Паук: щёлканье жвал"};
 const MONSTER_CUE_NAMES={emerge:"появление",attack:"удар",damage:"боль",death:"смерть",step:"шаг",
  sonic_special:"звуковая атака",netshot_special:"выстрел паутиной"};
-/* Прежние построители трёх длинных сеток удалены: энциклопедия теперь
-   двухуровневая, и всё строится в buildEncycCats и openEncycCat. */
+/* Энциклопедия двухуровневая: разделы по назначению (ENC_SECTIONS) и звуки
+   раздела; всё строится в buildEncycCats и openEncycCat. BANK_GROUPS ниже —
+   опись папок по источникам: по ней проверяют, что каждая папка учтена. */
 /* ════════ ЭНЦИКЛОПЕДИЯ ЗВУКОВ ПО РАЗДЕЛАМ ════════
-   Звуков в игре больше семисот: восемьдесят восемь синтезированных сцен,
-   сто сорок семь ролей звукового банка с пятьюстами семьюдесятью шестью
-   записями, восемь голосов чудовищ и десять маяков построек. Одним списком
-   это не обойти — свайп по нему занимал бы минуты, а найти нужное было
-   нельзя. Поэтому энциклопедия устроена в два уровня: сперва разделы, потом
-   звуки выбранного раздела и кнопка «ко всем разделам». ── */
+   Звуков в игре больше двух тысяч: живые записи банка, сто двадцать сцен
+   мира, голоса чудовищ, маяки и сигналы меню. Одним списком это не обойти,
+   поэтому энциклопедия устроена в два уровня: сперва двадцать разделов по
+   назначению (ENC_SECTIONS), потом звуки выбранного раздела. SCENE_CATS —
+   прежние группы сцен: по ним сцена находит свой раздел назначения. ── */
 const SCENE_CATS=[
  ["Стихии и погода","🌦️",["forest","thunder","birds","rain","wind","fire","stream","sea","crickets",
   "plains","mountains_amb","swamp","desert_amb","snow_weather","fog","storm","cave"]],
@@ -3590,7 +3590,102 @@ function sceneCats(){
  const прочие=Object.keys(SOUNDS).filter(i=>!взято.has(i));
  return прочие.length?SCENE_CATS.concat([["Прочие сцены","🎚️",прочие]]):SCENE_CATS;
 }
+/* Указание авторства для записей под лицензией с обязательной ссылкой: оно
+   видно в самой игре, под списком разделов энциклопедии звуков. */
+const ENC_CREDITS="Живая фэнтезийная библиотека взята из двух свободных игр. Flare (Free/Libre Action Roleplaying Engine), автор Clint Bellanger и участники проекта, flarerpg.org — артефакты и вещи, подземелья и лестницы, твари, заклинания, голос героя, природа и торговцы. 0 A.D. (Empires Ascendant), автор Wildfire Games, play0ad.com — оружие и удары боя, осада, тревога и вести войны, ремёсла и стройка, звери, людские крики и кличи, шаги по поверхностям, погода и вода, здания, рынок и порт. Обе — под лицензией Creative Commons Attribution-ShareAlike 3.0 (CC BY-SA 3.0): указание авторства обязательно и дано здесь, записи остаются под той же лицензией. Разделы разложены по назначению: поверхности под ногой, удары и оружие, двери, механизмы, звери и голоса, боги и знамения, музыка мест. Музыки в звуках мира нет вовсе: ни нот звукового шрифта, ни живых инструментов, ни джинглов, ни хора — награды, уровень, дела, звания, боги, праздники и меню звучат живыми записями свободных игр. Море, земли, глубина и голоса мест — папка fon: настоящие записи Stendhal (авторы с freesound.org: pawsound, MrAuralization, stewdio2003, PoundSound, Félix Blume, InspectorJ, Department64, Inchadney, polymorpheva, andersmmg, Dave Welsh, Xythe, noahpardo, pyro13djt, tylerandbergsd, Lucish_, j1987, qubodup, AntumDeluge, fryzu82, ceoux, Andune; soundbible.com — Adam Webb; Служба рыбы и дикой природы США; лицензии CC0, CC BY 3.0, CC BY 4.0 и общественное достояние), MegaGlest и 0 A.D. (CC BY-SA 3.0), Valyria Tear (Koertes — CC BY-SA 3.0; Blender Foundation, Benboncan и dobroide — CC BY 3.0); пак Neo HQ Mystic Sounds без лицензии из игры убран. Игровые звуки — папка gamefx: драконий рык, голоса гоблинов и кобольдов и шаг по воде из Stendhal (frasbr, ibm5155, spookymodem, ohnobones, apolloaiello, pawsound — CC0), удар архимага и щелчок меню MegaGlest и шаги 0 A.D. (CC BY-SA 3.0), щелчки механизмов OpenClonk (CC BY 3.0), шаги Wyrmsun (TinyWorlds — CC0), шорох сумки и всплеск Valyria Tear (artisticdude, Michel Baradari — CC BY 3.0); пак Fantasy Sound Library без лицензии из игры убран. Источники записей: Classic Monster Sounds (автор Coucassi), пакет uisfx (CC0) для немелодичных щелчков меню, сэмплы Sonic Pi с freesound.org (общественное достояние, CC0 1.0). Голоса богов у алтаря, знамение, храмовые колокола, огонь жертвенника, клад, тревога засады, призрачные голоса, гомон ярмарки, чары льда и света и щелчки меню — из свободной фэнтезийной игры Stendhal (stendhalgame.org): записи freesound.org и OpenGameArt, исходники без потерь; авторы — Samuel Strågefors, lostchocolatelab, NaturesTemper, vonz, pawsound, vibe_crc, JoelAudio, stephan, Jordan Irwin (AntumDeluge), ALLANZ10D, HorrorAudio, foxen10, dauser, dave.des, Natalie, monotraum, qubodup, SmallQuadruped, -sihiL, martinimeniscus, ericlichtenberg, renatalmar, satrebor и Nicole Marie T; лицензии CC0, CC BY 3.0, CC BY 4.0 и общественное достояние. Школы чар звучат голосами магов, шамана и ковра-самолёта MegaGlest (CC BY-SA 3.0), сигнал засады — тревогой 0 A.D. (CC BY-SA 3.0). Указание авторства обязательно, и оно здесь дано. Вещи, с которыми игрок что-то делает, звучат живыми записями ещё четырёх свободных игр. OpenClonk (The OpenClonk Team and contributors, RedWolf Design GmbH, openclonk.org) — сундуки, петли, каменные ворота, цепи, дерево, камень, металл, стекло, чан, огонь, горн, древние механизмы, гром, дождь, ветер, птицы, лук и щит, отклик раздельного касания и знак сдвинувшегося списка (две записи без потерь, FLAC, 44,1 кГц); лицензия Creative Commons Attribution 3.0 Unported (CC BY 3.0). 0 A.D. (Wildfire Games) — каменные ворота, обрушение, листва, мотыга, треск огня, подворье, порт, торговые ряды, день, реки, волны и голоса под сводами храма (CC BY-SA 3.0). Unknown Horizons (The Unknown Horizons Team, unknown-horizons.org) — каменотёс, кузнец, дровосек, выгон, мельница, часовня, трактир, площадь, склад, корабельный колокол и страница (CC BY-SA 3.0). Lugaru (Wolfire Games, wolfire.com, и OSS Lugaru) — костёр, кусты, пустыня, ветер, шаги, лязг, удары, клинки и звери (CC BY-SA 3.0). Ancient Beast (Freezing Moon и участники проекта, AncientBeast.com) — пошаговая фэнтезийная игра о мифических тварях: у неё взяты отклик взведённого касания, знак оборванной речи, раскрытие панели чар, сдача карт в таверне и знак изученной чары; лицензия художественной и звуковой части Creative Commons Attribution-ShareAlike 4.0 (CC BY-SA 4.0), код игры не используется. Все записи этой поставки переведены в FLAC без потерь. МУЗЫКА МЕСТ — темы одиннадцати свободных фэнтезийных игр, у каждого места своя: Stendhal (композиторы Мэтью Пабло, Александр Желанов, Тэд Миллер, RandomMind, LarsG, Geomancer, Pro Sensory, Jonathan Shaw, Bendzer, Leerie, Angus Macnaughton, Otto Halmén, Memoraphile, Tozan; CC0, CC BY 3.0, CC BY 4.0, OGA-BY 3.0), Solarus Free Resource Pack (Эдуардо Дуэньяс и Diarandor, CC BY-SA 4.0), Valyria Tear (yd, Zander Noriega, Ecrivain, Tom Peter, Alexandr Zhelanov, HorrorPen, Eliot Corley, lasercheese; CC0, CC BY 3.0, CC BY-SA 3.0), Wyrmsun (Марсело Фернандес, CC BY 4.0), Ancient Beast (Moonthief, Tad Miller, Agret Brisignr, Jens Kiilstofte; CC BY-SA 4.0), MegaGlest (Aminos, Margaras, команда MegaGlest; CC BY-SA 3.0), OpenDungeons, Flare, OpenClonk, Evol Online (Ledmitz, Aasif Chaudry, Chicka-Maria, Kevin MacLeod, bartk, Eric Matyas; evolonline.org) и The Mana World (Сэй Муцуки, PeriTune; CC BY 4.0). Под GPL не взято ничего. Эти темы — OGG Vorbis 320 кбит/с с выровненной громкостью. Для каждой папки в sounds лежат CREDITS.md с таблицей исходных файлов и текст лицензии.";
 let encycOpen=null;   /* какой раздел сейчас раскрыт */
+
+/* ── РАЗДЕЛЫ ПО НАЗНАЧЕНИЮ ──
+   Разделы шли по источникам: «Механизмы OpenClonk», «Фэнтезийный мир
+   MegaGlest», «Подворье 0 A.D.». Игроку это ничего не говорит: он ищет не
+   игру, из которой взята запись, а то, что звучит, — маяк, фон места, дверь,
+   шаг, чару. Теперь энциклопедия устроена как настройки и меню действий:
+   список разделов по назначению, двойное касание открывает раздел, свайп
+   двумя пальцами вниз или кнопка «Ко всем разделам» возвращает к списку.
+   Каждая запись лежит ровно в одном разделе. */
+const ENC_SECTIONS=[
+ {id:"beacons",   з:"📡",n:"Маяки",о:"по маяку узнают, что за постройка, житель, ресурс или вещь рядом и с какой стороны"},
+ {id:"amb_land",  з:"🌍",n:"Фоновые звуки: земли и погода",о:"лес, горы, пустыня, топи, равнина и тракт, дождь, ветер, гроза"},
+ {id:"amb_sea",   з:"🌊",n:"Фоновые звуки: море, порт и корабли",о:"открытое море, шторм, берег, причал и корабль"},
+ {id:"amb_deep",  з:"🕳️",n:"Фоновые звуки: подземелья и пещеры",о:"капель, сквозняк, гул толщи, обвалы и голоса глубины"},
+ {id:"amb_places",з:"🏛️",n:"Фоновые звуки: города, дворы и мастерские",о:"площадь, рынок, таверна, кузница, подворье, очаг и горн"},
+ {id:"music",     з:"🎼",n:"Музыка мест из фэнтезийных игр",о:"темы земель, построек, подземелий и глубин"},
+ {id:"mech",      з:"🚪",n:"Взаимодействие: двери, сундуки и механизмы",о:"двери, решётки, замки, крышки, ворота, вороты и подъёмники"},
+ {id:"items",     з:"💎",n:"Взаимодействие: вещи, находки и материалы",о:"вещи в руках, монеты, стекло, камень, дерево, металл, огонёк"},
+ {id:"traps",     з:"🪤",n:"Ловушки и поиск опасностей",о:"десять родов ловушек и семь способов их найти"},
+ {id:"craft",     з:"🔨",n:"Ремёсла, добыча и стройка",о:"кирка, топор, пила, серп, наковальня, варево и стройка"},
+ {id:"steps",     з:"👣",n:"Шаги и поверхности",о:"трава, камень, песок, снег, доски, вода и шаг в доспехе"},
+ {id:"combat",    з:"⚔️",n:"Бой и оружие",о:"клинок, лук, копьё, щит, удары и раны"},
+ {id:"war",       з:"🏰",n:"Война, осада и взрывы",о:"таран, камнемёт, баллиста, башни, пушка и взрывы"},
+ {id:"magic",     з:"🔮",n:"Магия и чары",о:"школы чар, касты, порталы, обереги и сила"},
+ {id:"gods",      з:"🕯️",n:"Боги, храмы и знамения",о:"голоса двенадцати богов, алтарь, колокола и знамения"},
+ {id:"monsters",  з:"🐉",n:"Чудовища и твари",о:"драконы, громады, нежить, гоблины, призраки и голоса чудовищ"},
+ {id:"animals",   з:"🦉",n:"Звери и птицы",о:"скот, кони, псы, волки, совы, ястребы и летучие мыши"},
+ {id:"people",    з:"🗣️",n:"Люди: голоса, толпа и торг",о:"голоса жителей, стражи и толпы, зазывалы и таверна"},
+ {id:"events",    з:"🏆",n:"События, вехи и тревоги",о:"победа, поражение, новый уровень, герои, тревоги и поры державы"},
+ {id:"ui",        з:"🎲",n:"Меню и сигналы игры",о:"щелчки меню, окна, переключатели, жесты и короткие сигналы"}];
+const ENC_BY_ID={};ENC_SECTIONS.forEach(s=>ENC_BY_ID[s.id]=s);
+/* Правила раскладки: первое подошедшее решает. Новая роль сама попадёт в
+   свой раздел по имени; не подошедшая ни под одно правило уходит по папке
+   источника, а уж затем — к фону земель, чтобы ни одна не пропала. */
+const ENC_RULES=[
+ [/^mus_/,"music"],
+ [/^oc_res_/,"beacons"],
+ [/^(tread_|step_|mtg_step_|lug_step_|oc_step_|hero_step_)|^(deep_stairs|stk_bridge|lug_land|oc_swim)$/,"steps"],
+ [/^(god|omen|temple|altar|bell_big|bell_small|ad_temple|uh_chapel|oc_sizzle|minaret)$/,"gods"],
+ [/^(siege_victory|siege_defeat|siege_herojoin|siege_herodead|siege_phase|siege_alarm_\w+|hero_levelup|es_alarm|lug_alarm|danger|work_done|od_claim|od_keeper_word|stk_clock|oc_connect|stk_horn)$/,"events"],
+ [/^(menu_select|inventory_open|oc_ui_select)$/,"ui"],
+ [/^(oc_trap_\w+|oc_find_\w+|trap)$/,"traps"],
+ [/^(spell_|cast_|magic_)|^(portal|deep_portal|stk_portal|stk_ward|oc_warp|oc_electrical|oc_fireball|oc_crystal_comm|es_magic|es_gate|es_jump|es_beam|es_meteor|od_heal|hero_nomana|build_magic|artifact_hum)$/,"magic"],
+ [/^(foe_|brute_|golem_|fiend_|mummy_|wraith_|wyrm_)|^(serpent_hiss|dragon_growl|goblin_voice|oc_growl|lug_growl|lug_snarl|lug_claw|beasts_giant|beasts_lion|stomp|od_undead|od_keeper_groan|ghost_wail|stk_goo|oc_zap|lair|oc_group_attack)$/,"monsters"],
+ [/^(beast_|beasts_|bird_|raptor_|oc_dog_)|^(wolf_howl|crow|oc_cattle_snort|oc_bat_flutter|oc_bat_noise|oc_chirp|oc_mosquito|horse_step|oc_munch|lug_bark|wild_owl|wild_raven)$/,"animals"],
+ [/^(throng_|trade_)|^(guard_shout|warrior_shout|oc_laugh|tavern_crowd|shop_till|od_die|oc_die|oc_hurt|mtg_hurt)$/,"people"],
+ [/^(siege_|tower_)|^(od_cannon|oc_catapult|mtg_explode|oc_blast|stk_blast|mtg_fuse|es_boom|es_boom_last|es_hit|hall_fall)$/,"war"],
+ [/^(battle_|blade_|hit_|oc_bow_|oc_arrow_|oc_javelin_|oc_shield_|lug_knife_|lug_staff|lug_whoosh)|^(mg_spear|oc_swing|oc_weapon_hit|oc_general_hit|oc_projectile_hit|oc_organic_hit|lug_clank|lug_flesh|lug_impact|lug_metal|lug_sword|lug_thud|lug_splatter|stk_clang|od_blade|od_fall|hero_swing|hero_pain_f|hero_pain_m|hero_die_f|hero_die_m|hero_heart)$/,"combat"],
+ [/^(sea_|ship_)|^(port|port_horn|sky_wave|ad_wave_rocky|ad_port|ad_port_sel|hall_port|hall_dock|uh_bell|oc_dive|stk_deepsea|oc_splash|stk_splash)$/,"amb_sea"],
+ [/^deep_[1-5]$|^(deep_drip|deep_wind|amb_cave|amb_abyss|stk_dark|oc_waterdrop|es_abyss|es_ion|es_plasma|es_crunch|vent|oc_drone_die|deep_cart|deep_rocks|od_rocks|oc_earthquake|oc_quake|stk_crash|mtg_rubble|oc_rockfall|es_drill)$/,"amb_deep"],
+ [/^(amb_forest|amb_mountain|amb_desert|amb_swamp|amb_plains|amb_road|amb_day|amb_night|amb_rain|amb_wind|amb_water|sky_\w+|wild_birds|wild_rain|wild_river|wild_wind|ad_day|ad_day_long|ad_rain_long|ad_river_fast|ad_river_med|ad_windleaves|ad_tropic|lug_wind|lug_desert|mg_desert|oc_rain|oc_wind|oc_birds|oc_thunder|oc_waterfall|stk_rain|stk_river|stk_thunder|stk_falls|stk_birds|oc_tree_crack|oc_gust|lug_bush)$/,"amb_land"],
+ [/^(amb_city|market|forge|tavern|clanhall|caravan)$|^hall_|^(uh_square|uh_tavern|uh_warehouse|uh_windmill|uh_sheep|uh_lumber_long|ad_farm|ad_farm_sel|ad_farmstead|ad_trade|ad_market_sel|ad_forge_sel|stk_inn|wild_hearth|wild_anvil|wild_fire|oc_fire|lug_fire|lug_fire_start|amb_fire|ad_fire_\w+|mtg_fire|mtg_cart|oc_pumpjack|oc_sawmill|oc_fan|oc_steam|mtg_furnace|oc_furnace|oc_furnace_start)$/,"amb_places"],
+ [/(door|chest|gate|lock|hinge|lift_|seal)|^(oc_wheels|oc_chain|oc_pop|oc_drill|oc_line_snap)$/,"mech"],
+ [/^(craft_|build_|uh_(smith|lumberjack|stonemason|build))|^(mine_pick|harvest|wood_axe|anvil|stk_hammer|oc_chop|oc_dig|oc_spark|mtg_chop|mtg_dig_gravel|mtg_place|mtg_tool_break|mtg_crumble|od_dig|ad_hoe|ad_leaves|oc_boiling|oc_bubble|oc_corrode|oc_fish_munch|ad_collapse)$/,"craft"],
+ [/^arte_|^(treasure|oc_coin_lost|od_take|oc_grab|oc_soft_hit|oc_soft_touch|oc_glass_break|oc_glass_hit|mtg_glass|oc_rock_hit|oc_wood_creak|oc_wood_dull|oc_wood_hit|oc_metal_dull|oc_metal_light|oc_rustle|uh_page|oc_diamond|od_gold|oc_inflame|oc_cracker|oc_smoke|mtg_smoke|mtg_flint|oc_pshsh|mtg_lava|mtg_ice_break|oc_ice_hit|lug_break|lug_broken|stk_break|oc_tree_fall|od_build|mtg_metal_hit|mtg_stone_hit)$/,"items"]];
+/* Папки музыки мест: всё, что в них лежит, — темы, а не звуки мира. */
+const ENC_FOLDER={score:"music",stendhal:"music",solarus:"music",valyria:"music",wyrmsun:"music",
+ evol:"music",tmw:"music",ab:"music",fon:"amb_land",gamefx:"ui",steps:"steps",tread:"steps"};
+function roleSection(r){
+ for(const [rx,s] of ENC_RULES)if(rx.test(r))return s;
+ const пап=((SOUND_BANK[r]&&SOUND_BANK[r].f[0])||"").split("/")[0];
+ return ENC_FOLDER[пап]||"amb_land";}
+/* Сцены мира: у каждой прежней группы сцен свой раздел назначения. */
+const SCENE_SECTION={"Стихии и погода":"amb_land","Птицы и звери":"animals","Голоса людей и крики":"people",
+ "Подземные текстуры":"amb_deep","Вещи с силой и работа чар":"magic","Голоса чудовищ":"monsters",
+ "Оружие и бой":"combat","Ресурсы под ногами":"beacons","Голоса жителей":"people",
+ "Постройки и места":"amb_places","Ремёсла, торг и трактир":"craft","Прочие сцены":"amb_land"};
+function sceneSection(id){
+ for(const [title,,ids] of sceneCats())if(ids.indexOf(id)>=0)return SCENE_SECTION[title]||"amb_land";
+ return "amb_land";}
+/* Короткие сигналы игры: у каждого своё имя, чтобы его можно было выучить. */
+const UI_NAMES={b_altar:"Алтарь рядом",b_chest:"Сундук рядом",b_coin:"Монеты",b_craft:"Ремесло",
+ b_defeat:"Поражение",b_door:"Дверь",b_drop:"Капля",b_forge:"Кузница рядом",b_gate:"Ворота",b_heal:"Исцеление",
+ b_hit:"Удар",b_levelup:"Новый уровень",b_market:"Лавка",b_pickup:"Подобрано",b_portal:"Портал",b_quest:"Задание",
+ b_stairs_down:"Лестница вниз",b_stairs_up:"Лестница вверх",b_temple:"Храм",b_wall:"Стена: тупик",
+ b_warn:"Предупреждение",b_well:"Колодец",ui_activate:"Пункт выполнен",ui_back:"Назад",ui_close:"Окно закрыто",
+ ui_error:"Нельзя",ui_focus:"Фокус на пункте",ui_next:"Следующий пункт",ui_open:"Окно открыто",
+ ui_split:"Раздельное касание",ui_refocus:"Список сдвинулся",ui_arm:"Жест взведён",rank_up:"Новое звание у народа",
+ bet_back:"Ставка возвращена",bounty:"Награда за голову",ui_hush:"Речь оборвана",ui_magic_open:"Панель чар раскрыта",
+ cards_deal:"Карты сданы",spell_learn:"Чара изучена",ui_select:"Выбор в списке",ui_success:"Успех",
+ ui_toggle_off:"Переключатель выключен",ui_toggle_on:"Переключатель включён"};
+/* Опись раздела: что в нём лежит и сколько звуков это даёт. */
+function encSection(id){
+ const out={roles:[],scenes:[],beacons:[],voices:[],ui:[]};
+ Object.keys(SOUND_BANK).forEach(r=>{if(roleSection(r)===id)out.roles.push(r);});
+ Object.keys(SOUNDS).forEach(s=>{if(sceneSection(s)===id)out.scenes.push(s);});
+ if(id==="beacons")out.beacons=Object.keys(BEACONS);
+ if(id==="monsters")out.voices=Object.keys(MONSTER_BANK);
+ if(id==="ui")out.ui=Object.keys(UI_BANK);
+ out.count=out.roles.reduce((k,r)=>k+SOUND_BANK[r].f.length,0)+out.scenes.length+out.beacons.length
+  +out.voices.reduce((k,sp)=>k+Object.keys(MONSTER_BANK[sp]).length,0)+out.ui.length;
+ return out;}
 
 /* Карточка одного звука: единый вид для всех разделов. */
 function soundCard(icon,title,sub,speak,play){
@@ -3608,42 +3703,31 @@ function soundTotals(){
  const сцены=Object.keys(SOUNDS).length;
  const записи=Object.values(SOUND_BANK).reduce((k,e)=>k+e.f.length,0)
   +Object.values(MONSTER_BANK).reduce((k,v)=>k+Object.keys(v).length,0);
- return {сцены,записи,всего:сцены+записи};}
+ const маяки=Object.keys(BEACONS).length,сигналы=Object.keys(UI_BANK).length;
+ return {сцены,записи,маяки,сигналы,всего:сцены+записи+маяки+сигналы};}
 function refreshEncycButton(){
  try{const b=document.getElementById("btnEncyc");if(!b)return;
   const t=soundTotals();
   b.textContent=`🎧 Энциклопедия звуков (${t.всего})`;
-  b.dataset.speak=`Энциклопедия звуков. Всего ${t.всего}: ${t.сцены} синтезированных сцен и ${t.записи} живых записей, разложенных по разделам. Двойное касание — открыть.`;
+  b.dataset.speak=`Энциклопедия звуков. Всего ${t.всего}: ${t.записи} живых записей, ${t.сцены} сцен мира, ${t.маяки} маяков и ${t.сигналы} сигналов меню, в ${ENC_SECTIONS.length} разделах по назначению. Двойное касание — открыть.`;
  }catch(_){}}
 function buildEncycCats(){
  const grid=document.getElementById("encycCats");if(!grid)return;
  grid.innerHTML="";encycOpen=null;
  const one=document.getElementById("encycOne");if(one)one.hidden=true;
  grid.hidden=false;
- const add=(key,icon,title,count,what)=>{
+ ENC_SECTIONS.forEach(s=>{
+  const n=encSection(s.id).count;if(!n)return;
   const b=document.createElement("button");b.type="button";b.className="sound-card";
-  b.dataset.speak=`Раздел: ${title}. Звуков: ${count}. ${what} Двойное касание — открыть.`;
-  b.innerHTML=`<span aria-hidden="true">${icon}</span><b>${title}</b><span class="st" aria-hidden="true">звуков: ${count}</span>`;
-  b.addEventListener("click",()=>openEncycCat(key,title));
-  grid.appendChild(b);};
- sceneCats().forEach(([title,icon,ids],i)=>
-  add("scene:"+i,icon,title,ids.filter(id=>SOUNDS[id]).length,"Синтезированные сцены: работают всегда, даже без интернета."));
- BANK_GROUPS.forEach((g,i)=>{
-  const roles=bankRolesIn(g.dirs);
-  if(!roles.length)return;
-  const files=roles.reduce((k,r)=>k+SOUND_BANK[r].f.length,0);
-  add("bank:"+i,g.icon,g.n,files,
-   `Живые записи, ${roles.length} ${plural(roles.length,"роль","роли","ролей")}.`);});
- add("voices","👹","Голоса чудовищ: записи",
-  Object.keys(MONSTER_BANK).reduce((k,sp)=>k+Object.keys(MONSTER_BANK[sp]).length,0),
-  "Появление, удар, боль, смерть и шаг для восьми существ.");
- add("beacons","📡","Звуковые маяки построек",Object.keys(BEACONS).length,
-  "По ним узнают, что за здание стоит рядом и с какой стороны.");
+  b.dataset.speak=`Раздел: ${s.n}. Звуков: ${n}. ${s.о[0].toUpperCase()+s.о.slice(1)}. Двойное касание — открыть.`;
+  b.innerHTML=`<span aria-hidden="true">${s.з}</span><b>${s.n}</b><span class="st" aria-hidden="true">звуков: ${n}</span>`;
+  b.addEventListener("click",()=>openEncycCat(s.id,s.n));
+  grid.appendChild(b);});
  const hint=document.getElementById("encycHint");
  const t=soundTotals();
- if(hint)hint.textContent=`Разделов: ${grid.children.length}. Всего звуков: ${t.всего} — ${t.сцены} синтезированных сцен и ${t.записи} живых записей. Касание называет раздел, двойное касание открывает его. Внутри раздела — те же жесты, а кнопка «Ко всем разделам» возвращает обратно.`;
+ if(hint)hint.textContent=`Разделов: ${grid.children.length}. Всего звуков: ${t.всего}. Касание — игра назовёт раздел, двойное касание — откроет его, свайп двумя пальцами вниз — вернёт к списку разделов.`;
  const cr=document.getElementById("encycCredits");
- if(cr)cr.textContent="Живая фэнтезийная библиотека взята из двух свободных игр. Flare (Free/Libre Action Roleplaying Engine), автор Clint Bellanger и участники проекта, flarerpg.org — артефакты и вещи, подземелья и лестницы, твари, заклинания, голос героя, природа и торговцы. 0 A.D. (Empires Ascendant), автор Wildfire Games, play0ad.com — оружие и удары боя, осада, тревога и вести войны, ремёсла и стройка, звери, людские крики и кличи, шаги по поверхностям, погода и вода, здания, рынок и порт. Обе — под лицензией Creative Commons Attribution-ShareAlike 3.0 (CC BY-SA 3.0): указание авторства обязательно и дано здесь, записи остаются под той же лицензией. Разделы разложены по назначению: поверхности под ногой, удары и оружие, двери, механизмы, звери и голоса, боги и знамения, музыка мест. Музыки в звуках мира нет вовсе: ни нот звукового шрифта, ни живых инструментов, ни джинглов, ни хора — награды, уровень, дела, звания, боги, праздники и меню звучат живыми записями свободных игр. Море, земли, глубина и голоса мест — папка fon: настоящие записи Stendhal (авторы с freesound.org: pawsound, MrAuralization, stewdio2003, PoundSound, Félix Blume, InspectorJ, Department64, Inchadney, polymorpheva, andersmmg, Dave Welsh, Xythe, noahpardo, pyro13djt, tylerandbergsd, Lucish_, j1987, qubodup, AntumDeluge, fryzu82, ceoux, Andune; soundbible.com — Adam Webb; Служба рыбы и дикой природы США; лицензии CC0, CC BY 3.0, CC BY 4.0 и общественное достояние), MegaGlest и 0 A.D. (CC BY-SA 3.0), Valyria Tear (Koertes — CC BY-SA 3.0; Blender Foundation, Benboncan и dobroide — CC BY 3.0); пак Neo HQ Mystic Sounds без лицензии из игры убран. Игровые звуки — папка gamefx: драконий рык, голоса гоблинов и кобольдов и шаг по воде из Stendhal (frasbr, ibm5155, spookymodem, ohnobones, apolloaiello, pawsound — CC0), удар архимага и щелчок меню MegaGlest и шаги 0 A.D. (CC BY-SA 3.0), щелчки механизмов OpenClonk (CC BY 3.0), шаги Wyrmsun (TinyWorlds — CC0), шорох сумки и всплеск Valyria Tear (artisticdude, Michel Baradari — CC BY 3.0); пак Fantasy Sound Library без лицензии из игры убран. Источники записей: Classic Monster Sounds (автор Coucassi), пакет uisfx (CC0) для немелодичных щелчков меню, сэмплы Sonic Pi с freesound.org (общественное достояние, CC0 1.0). Голоса богов у алтаря, знамение, храмовые колокола, огонь жертвенника, клад, тревога засады, призрачные голоса, гомон ярмарки, чары льда и света и щелчки меню — из свободной фэнтезийной игры Stendhal (stendhalgame.org): записи freesound.org и OpenGameArt, исходники без потерь; авторы — Samuel Strågefors, lostchocolatelab, NaturesTemper, vonz, pawsound, vibe_crc, JoelAudio, stephan, Jordan Irwin (AntumDeluge), ALLANZ10D, HorrorAudio, foxen10, dauser, dave.des, Natalie, monotraum, qubodup, SmallQuadruped, -sihiL, martinimeniscus, ericlichtenberg, renatalmar, satrebor и Nicole Marie T; лицензии CC0, CC BY 3.0, CC BY 4.0 и общественное достояние. Школы чар звучат голосами магов, шамана и ковра-самолёта MegaGlest (CC BY-SA 3.0), сигнал засады — тревогой 0 A.D. (CC BY-SA 3.0). Указание авторства обязательно, и оно здесь дано. Вещи, с которыми игрок что-то делает, звучат живыми записями ещё четырёх свободных игр. OpenClonk (The OpenClonk Team and contributors, RedWolf Design GmbH, openclonk.org) — сундуки, петли, каменные ворота, цепи, дерево, камень, металл, стекло, чан, огонь, горн, древние механизмы, гром, дождь, ветер, птицы, лук и щит, отклик раздельного касания и знак сдвинувшегося списка (две записи без потерь, FLAC, 44,1 кГц); лицензия Creative Commons Attribution 3.0 Unported (CC BY 3.0). 0 A.D. (Wildfire Games) — каменные ворота, обрушение, листва, мотыга, треск огня, подворье, порт, торговые ряды, день, реки, волны и голоса под сводами храма (CC BY-SA 3.0). Unknown Horizons (The Unknown Horizons Team, unknown-horizons.org) — каменотёс, кузнец, дровосек, выгон, мельница, часовня, трактир, площадь, склад, корабельный колокол и страница (CC BY-SA 3.0). Lugaru (Wolfire Games, wolfire.com, и OSS Lugaru) — костёр, кусты, пустыня, ветер, шаги, лязг, удары, клинки и звери (CC BY-SA 3.0). Ancient Beast (Freezing Moon и участники проекта, AncientBeast.com) — пошаговая фэнтезийная игра о мифических тварях: у неё взяты отклик взведённого касания, знак оборванной речи, раскрытие панели чар, сдача карт в таверне и знак изученной чары; лицензия художественной и звуковой части Creative Commons Attribution-ShareAlike 4.0 (CC BY-SA 4.0), код игры не используется. Все записи этой поставки переведены в FLAC без потерь. МУЗЫКА МЕСТ — темы одиннадцати свободных фэнтезийных игр, у каждого места своя: Stendhal (композиторы Мэтью Пабло, Александр Желанов, Тэд Миллер, RandomMind, LarsG, Geomancer, Pro Sensory, Jonathan Shaw, Bendzer, Leerie, Angus Macnaughton, Otto Halmén, Memoraphile, Tozan; CC0, CC BY 3.0, CC BY 4.0, OGA-BY 3.0), Solarus Free Resource Pack (Эдуардо Дуэньяс и Diarandor, CC BY-SA 4.0), Valyria Tear (yd, Zander Noriega, Ecrivain, Tom Peter, Alexandr Zhelanov, HorrorPen, Eliot Corley, lasercheese; CC0, CC BY 3.0, CC BY-SA 3.0), Wyrmsun (Марсело Фернандес, CC BY 4.0), Ancient Beast (Moonthief, Tad Miller, Agret Brisignr, Jens Kiilstofte; CC BY-SA 4.0), MegaGlest (Aminos, Margaras, команда MegaGlest; CC BY-SA 3.0), OpenDungeons, Flare, OpenClonk, Evol Online (Ledmitz, Aasif Chaudry, Chicka-Maria, Kevin MacLeod, bartk, Eric Matyas; evolonline.org) и The Mana World (Сэй Муцуки, PeriTune; CC BY 4.0). Под GPL не взято ничего. Эти темы — OGG Vorbis 320 кбит/с с выровненной громкостью. Для каждой папки в sounds лежат CREDITS.md с таблицей исходных файлов и текст лицензии.";
+ if(cr)cr.textContent=ENC_CREDITS;
 }
 
 /* ── Второй уровень: звуки одного раздела ── */
@@ -3654,55 +3738,58 @@ function openEncycCat(key,title){
   grid=document.getElementById("encycOneGrid"),head=document.getElementById("encycOneTitle"),
   hint=document.getElementById("encycOneHint");
  if(!cats||!one||!grid)return;
+ const s=ENC_BY_ID[key];if(!s)return;
+ const e=encSection(key);
  encycOpen=key;grid.innerHTML="";
  cats.hidden=true;one.hidden=false;
- head.textContent=title;
- let подпись="";
- if(key.startsWith("scene:")){
-  const [,icon,ids]=sceneCats()[Number(key.split(":")[1])];
-  подпись="Синтезированные сцены: их строит сам браузер, интернет не нужен.";
-  ids.filter(id=>SOUNDS[id]).forEach(id=>{
-   const d=SOUNDS[id];
-   const card=soundCard(d.icon,d.name,d.desc,
-    `${d.name}. ${d.desc} Двойное касание — воспроизвести или остановить.`,
-    ()=>{const cur=Play.active.get("main");
-     if(cur&&cur.id===id){Play.stopKey("main");narrate(`Остановлено: ${d.name}.`);}
-     else{["amb0","amb1","w1","w2","ev"].forEach(k=>Play.stopKey(k));
-      Play.start("main",id,{announceEnd:true});vib(25);
-      narrate(`Воспроизводится: ${d.name}. ${d.desc}`);}});
-   card.dataset.scene=id;grid.appendChild(card);});
- }else if(key.startsWith("bank:")){
-  const g=BANK_GROUPS[Number(key.slice(5))];
-  подпись="Живые записи. Если папки со звуками рядом нет, игра звучит синтезированными маяками.";
-  bankRolesIn(g?g.dirs:[]).forEach(r=>{
-   const b=SOUND_BANK[r];
-   const пап=(b.f[0]||"").split("/")[0];
-   grid.appendChild(soundCard((BANK_CATS[пап]||"🎼").slice(0,2).trim()||"🎼",b.d,`вариантов: ${b.f.length}`,
-    `${b.d}. Вариантов: ${b.f.length}. Двойное касание — прослушать.`,
-    ()=>{narrate(b.d);
-     if(!Bank.play(r,{seed:Date.now(),gain:0.8,maxSec:10}))
-      narrate(НЕТ_ЗАПИСИ,{interrupt:false});}));});
- }else if(key==="voices"){
-  подпись="Восемь существ, у каждого свой набор реплик.";
-  Object.keys(MONSTER_BANK).forEach(sp=>{
-   const cues=Object.keys(MONSTER_BANK[sp]);
-   const who=Object.keys(MONSTER_VOICE).filter(id=>MONSTER_VOICE[id]===sp);
-   const name=MONSTER_VOICE_NAMES[sp]||sp;
-   grid.appendChild(soundCard("👹",name,`реплик: ${cues.length} · видов: ${who.length}`,
-    `${name}. Реплики: ${cues.map(c=>MONSTER_CUE_NAMES[c]||c).join(", ")}. Этим голосом говорят ${who.length} ${plural(who.length,"вид","вида","видов")}. Двойное касание — прослушать появление.`,
-    ()=>{narrate(name);
-     if(!Bank.file(MONSTER_BANK[sp].emerge||MONSTER_BANK[sp].attack,{gain:0.85,maxSec:8}))
-      narrate(НЕТ_ЗАПИСИ,{interrupt:false});}));});
- }else if(key==="beacons"){
-  подпись="Маяк говорит, что за объект рядом и с какой стороны он стоит.";
-  Object.keys(BEACONS).forEach(id=>{
-   const info=BEACON_INFO[id]||[id,"Звуковой маяк объекта"];
-   grid.appendChild(soundCard("📡",info[0],info[1],
-    `Маяк: ${info[0]}. ${info[1]}. Двойное касание — прослушать.`,
-    ()=>{if(!settings.effects)return;narrate(`Маяк: ${info[0]}. ${info[1]}`);beacon(id,0,0);}));});
- }
- hint.textContent=`${подпись} Звуков в разделе: ${grid.children.length}.`;
- narrate(`${title}. Звуков: ${grid.children.length}. ${подпись} Свайп — листать, двойное касание — прослушать. Кнопка «Ко всем разделам» возвращает назад.`);
+ head.textContent=title||s.n;
+ /* Маяки — первыми: ради них в этот раздел и приходят. */
+ e.beacons.forEach(id=>{
+  const info=BEACON_INFO[id]||[id,"Звуковой маяк объекта"];
+  grid.appendChild(soundCard("📡",info[0],info[1],
+   `Маяк: ${info[0]}. ${info[1]}. Двойное касание — прослушать.`,
+   ()=>{if(!settings.effects)return;narrate(`Маяк: ${info[0]}. ${info[1]}`);beacon(id,0,0);}));});
+ /* Живые записи банка — по алфавиту описания, у каждой её источник. */
+ e.roles.slice().sort((a,b)=>SOUND_BANK[a].d.localeCompare(SOUND_BANK[b].d,"ru")).forEach(r=>{
+  const b=SOUND_BANK[r];
+  const пап=(b.f[0]||"").split("/")[0];
+  const откуда=(BANK_CATS[пап]||"").replace(/^\S+\s/,"");
+  grid.appendChild(soundCard(s.з,b.d,`вариантов: ${b.f.length}${откуда?" · "+откуда:""}`,
+   `${b.d}. Вариантов: ${b.f.length}. Двойное касание — прослушать.`,
+   ()=>{narrate(b.d);
+    if(!Bank.play(r,{seed:Date.now(),gain:0.8,maxSec:10}))
+     narrate(НЕТ_ЗАПИСИ,{interrupt:false});}));});
+ /* Сцены мира: собраны из тех же живых записей и звучат подольше. */
+ e.scenes.forEach(id=>{
+  const d=SOUNDS[id];
+  const card=soundCard(d.icon,d.name,"сцена мира · "+d.desc,
+   `Сцена мира: ${d.name}. ${d.desc} Двойное касание — воспроизвести или остановить.`,
+   ()=>{const cur=Play.active.get("main");
+    if(cur&&cur.id===id){Play.stopKey("main");narrate(`Остановлено: ${d.name}.`);}
+    else{["amb0","amb1","w1","w2","ev"].forEach(k=>Play.stopKey(k));
+     Play.start("main",id,{announceEnd:true});vib(25);
+     narrate(`Воспроизводится: ${d.name}. ${d.desc}`);}});
+  card.dataset.scene=id;grid.appendChild(card);});
+ /* Голоса чудовищ: у каждого существа свой набор реплик. */
+ e.voices.forEach(sp=>{
+  const cues=Object.keys(MONSTER_BANK[sp]);
+  const who=Object.keys(MONSTER_VOICE).filter(id=>MONSTER_VOICE[id]===sp);
+  const name=MONSTER_VOICE_NAMES[sp]||sp;
+  grid.appendChild(soundCard("👹",name,`реплик: ${cues.length} · видов: ${who.length}`,
+   `${name}. Реплики: ${cues.map(c=>MONSTER_CUE_NAMES[c]||c).join(", ")}. Этим голосом говорят ${who.length} ${plural(who.length,"вид","вида","видов")}. Двойное касание — прослушать появление.`,
+   ()=>{narrate(name);
+    if(!Bank.file(MONSTER_BANK[sp].emerge||MONSTER_BANK[sp].attack,{gain:0.85,maxSec:8}))
+     narrate(НЕТ_ЗАПИСИ,{interrupt:false});}));});
+ /* Сигналы меню и игры: короткие, их узнают по имени. */
+ e.ui.forEach(k=>{
+  const name=UI_NAMES[k]||k;
+  grid.appendChild(soundCard("🔔",name,"сигнал игры",
+   `Сигнал: ${name}. Двойное касание — прослушать.`,
+   ()=>{narrate(name);
+    if(!Bank.file(UI_BANK[k],{gain:0.8,maxSec:4}))narrate(НЕТ_ЗАПИСИ,{interrupt:false});}));});
+ const что=s.о[0].toUpperCase()+s.о.slice(1);
+ hint.textContent=`${что}. Звуков в разделе: ${grid.children.length}.`;
+ narrate(`${title||s.n}. Звуков: ${grid.children.length}. ${что}. Свайп — листать, двойное касание — прослушать, свайп двумя пальцами вниз — к списку разделов.`);
  safeFn(()=>resetCursor());
  safeFn(()=>head.focus({preventScroll:true}));
 }
@@ -5956,7 +6043,7 @@ const GUIDE=[
 {title:"Глава 5. Полное руководство по звукам",body:[
  "Кроме синтезированных звуков у игры есть звуковой банк — коллекция записей, разложенная по ролям: море и корабли, земли и погода, глубина подземелий, школы магии, голоса двенадцати богов, события и места. Записи лежат в папке sounds рядом с игрой и подгружаются по мере надобности; если папки нет, игра целиком работает на синтезированных звуках. Весь банк можно послушать в энциклопедии звуков.",
  "Звуки в игре двух родов. Синтезированные сцены строит сам браузер: они работают всегда, даже без интернета и без папки со звуками. Живые записи лежат в папке sounds рядом с игрой и подгружаются по мере надобности; если папки нет, игра целиком переходит на синтез и ничего не ломается.",
- "Энциклопедия звуков устроена в два уровня, потому что звуков стало слишком много для одного списка. Сначала игра называет разделы: стихии и погода, птицы и звери, голоса чудовищ, именные чудовища, оружие и бой, ресурсы под ногами, голоса жителей, постройки и места, предметы и ремесло, а за ними разделы живых записей — море, порты, земли и глубины, погода и день, подземелья и тьма, магия и касты, боги, храмы и знамения, места и постройки, шаги, оружие и война, твари и звери, люди и торг, находки, ремёсла, игровые звуки, музыка мест из фэнтезийных игр и звуковые маяки построек. Свайп ведёт по разделам, двойное касание открывает выбранный, кнопка «Ко всем разделам» возвращает обратно. Так до нужного звука доходишь за десяток свайпов, а не за две сотни.",
+ "Энциклопедия звуков устроена так же, как настройки и меню действий: сначала список разделов по назначению, потом звуки выбранного раздела. Разделов двадцать: маяки; фоновые звуки земель и погоды, моря и порта, подземелий и пещер, городов и мастерских; музыка мест из фэнтезийных игр; взаимодействие с дверями, сундуками и механизмами; взаимодействие с вещами и находками; ловушки; ремёсла и добыча; шаги; бой и оружие; война и осада; магия; боги, храмы и знамения; чудовища; звери и птицы; люди; события и вехи; меню и сигналы игры. Свайп ведёт по разделам, двойное касание открывает выбранный, свайп двумя пальцами вниз или кнопка «Ко всем разделам» возвращает к списку, а второй такой свайп закрывает энциклопедию. Каждая запись лежит ровно в одном разделе, и у каждой названо, из какой игры она взята.",
  "Точное число звуков игра называет сама при открытии энциклопедии — оно растёт с каждым пополнением, и держать его в тексте руководства значило бы врать при первом же обновлении.",
  "Именные монстры (18): волк, гоблин-налётчик, тролль, огр-громила, рунный голем, молодой дракон, ледяной василиск, дикий виверн, стенающая банши, медведь-старейшина, песчаный червь-исполин, разгневанный энт, прибрежный кракен, дорожный разбойник, паук-тенетник, песчаный змей, гарпия-охотница, призрак пустоши — у каждого свой рык, вой, шипение или клич.",
  "Оружие (4): меч, кинжал, посох и лук — у каждого свой звук взмаха и попадания. Кинжал звучит быстро и легко, посох — тяжело и с магическим призвуком, лук — натяжением и срывом тетивы.",
@@ -34116,6 +34203,9 @@ function closeTopUI(){
   const верх=modalStack[modalStack.length-1];
   if(верх && верх.id==="modal-settings" && setBack()) return true;
   if(верх && верх.id==="modal-inventory" && invBack()) return true;
+  /* Энциклопедия звуков так же: из раскрытого раздела жест закрытия
+     возвращает к списку разделов. */
+  if(верх && верх.id==="modal-encyclopedia" && encycOpen){ closeEncycCat(); return true; }
   if(modalStack.length){ closeModal(modalStack[modalStack.length-1]); return true; }
   const loot=document.getElementById("lootOverlay");
   if(loot && !loot.hidden){ loot.hidden=true; UI.close(); return true; }
@@ -47656,6 +47746,14 @@ function worldSelfCheck(){
   WORLD_BOSSES.forEach(b=>Object.values(b.звуки).forEach(r=>roles.push([b.n,r])));SCHOOLS.forEach(sc=>{roles.push([sc.n,sc.звук]);roles.push([sc.n,sc.голос]);});
   roles.forEach(([n,r])=>{if(!SOUND_BANK[r])без.push(n+":"+r);});
   ok("audio",!без.length,без.length?"без звука: "+без.slice(0,5).join(", "):"у каждого важного объекта есть запись");
+  /* Энциклопедия: каждая папка записей учтена в описи источников и не пуста,
+     а сумма по разделам назначения равна общему числу звуков. */
+  const папкиБанка=new Set(Object.keys(SOUND_BANK).map(r=>(SOUND_BANK[r].f[0]||"").split("/")[0]));
+  const вОписи=new Set();BANK_GROUPS.forEach(g=>{if(bankRolesIn(g.dirs).length)g.dirs.forEach(d=>вОписи.add(d));});
+  const внеОписи=[...папкиБанка].filter(d=>!вОписи.has(d));
+  const поРазделам=ENC_SECTIONS.reduce((k,sec)=>k+encSection(sec.id).count,0);
+  ok("encyclopedia",!внеОписи.length&&поРазделам===soundTotals().всего,
+   внеОписи.length?"папки вне описи: "+внеОписи.join(", "):поРазделам!==soundTotals().всего?"разделы не сходятся с общим числом":"каждая запись в одном разделе назначения");
   ok("bosses",new Set(WORLD_BOSSES.map(b=>b.фазы.map(p=>p.механика||"").join("|")+b.откликСлова)).size===WORLD_BOSSES.length,"у каждого владыки своя механика");
   ok("potions",POTIONS.every(p=>p.из.length===2&&PLANTS.some(x=>x.кат===p.из[0])&&PLANTS.some(x=>x.кат===p.из[1])),"у каждого зелья рецепт из существующих ниш");
   ok("artifacts",(G.artifacts||[]).every(a=>typeof a!=="object"||!!artLore(a)),"у каждого артефакта происхождение");

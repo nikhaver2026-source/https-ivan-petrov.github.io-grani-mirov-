@@ -148,13 +148,14 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   while(activeLayer())closeTopUI();CMD.encyc();
   const разделы=[...document.querySelectorAll('#encycCats .sound-card b')].map(x=>x.textContent);
   /* Открываем раздел живых записей моря и смотрим, что внутри именно роли банка. */
-  const i=разделы.findIndex(t=>/Море, порты/.test(t));
+  /* Разделы идут по назначению: море — среди фоновых звуков. */
+  const i=разделы.findIndex(t=>/море, порт/i.test(t));
   if(i>=0)document.querySelectorAll('#encycCats .sound-card')[i].click();
   return {разделов:разделы.length,разделы,
    вРазделе:document.querySelectorAll('#encycOneGrid .sound-card').length,
    заголовок:document.getElementById('encycOneTitle').textContent};});
  check('энциклопедия разложена по разделам, и раздел моря полон',
-  enc.разделов>=20&&/Море/.test(enc.заголовок)&&enc.вРазделе>=8,enc);
+  enc.разделов>=20&&/море/i.test(enc.заголовок)&&enc.вРазделе>=8,enc);
 
  // 11. Маяки порта и корабля
  const bk=await page.evaluate(()=>({port:!!BEACONS.port,ship:!!BEACONS.ship,

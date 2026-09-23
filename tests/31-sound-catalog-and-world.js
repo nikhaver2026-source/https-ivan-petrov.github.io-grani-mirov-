@@ -53,9 +53,11 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   cats.окно==='modal-encyclopedia'&&cats.разделов>=20&&cats.второйУровеньСкрыт===true,cats);
  check('первый уровень короткий: по нему реально дойти свайпом',
   cats.пунктов<=40,{пунктов:cats.пунктов});
- check('в каталоге есть и синтезированные сцены, и живые записи, и музыка мест, а оркестра нет',
-  cats.имена.some(t=>/Стихии/.test(t))&&!cats.имена.some(t=>/оркестр|инструмент/i.test(t))&&cats.имена.some(t=>/Боги, храмы и знамения/.test(t))
-  &&cats.имена.some(t=>/Музыка мест/.test(t))&&cats.имена.some(t=>/маяки/.test(t)),cats.имена);
+ check('каталог разложен по назначению: маяки, фоновые звуки, взаимодействие, музыка мест, а оркестра нет',
+  /* Разделы по назначению, как в настройках и меню действий: маяки, фоновые
+     звуки, взаимодействие и дальше. */
+  cats.имена.some(t=>/^Фоновые звуки/.test(t))&&!cats.имена.some(t=>/оркестр|инструмент/i.test(t))&&cats.имена.some(t=>/Боги, храмы и знамения/.test(t))
+  &&cats.имена.some(t=>/Музыка мест/.test(t))&&cats.имена[0]==="Маяки"&&cats.имена.some(t=>/^Взаимодействие/.test(t)),cats.имена);
 
  // ── 2. Ни один звук не потерялся между уровнями ──
  const покрытие=await page.evaluate(()=>{
@@ -97,6 +99,21 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   второйСкрыт:document.getElementById('encycOne').hidden}));
  check('из раздела можно вернуться ко всем разделам',
   вернулись.разделыВидны&&вернулись.второйСкрыт,вернулись);
+
+ // жест закрытия из раздела — назад к списку, как в настройках и меню действий
+ const жест=await page.evaluate(()=>{
+  const btns=[...document.querySelectorAll('#encycCats .sound-card')];
+  const i=btns.findIndex(b=>/Шаги и поверхности/.test(b.textContent));if(i>=0)btns[i].click();
+  const открыт=!document.getElementById('encycOne').hidden;
+  const said=[];const o=Speech.say;Speech.say=(t,x)=>{said.push(String(t));return o.call(Speech,t,x);};
+  CMD.close();Speech.say=o;
+  const r1={открыт,разделыВидны:!document.getElementById('encycCats').hidden,
+   окно:(activeLayer()||{}).id,сказано:said.join(" ")};
+  CMD.close();
+  return {...r1,закрылосьВторым:!document.getElementById('modal-encyclopedia')||document.getElementById('modal-encyclopedia').hidden};});
+ check('свайп двумя пальцами вниз из раздела возвращает к списку разделов, а второй — закрывает окно',
+  жест.открыт&&жест.разделыВидны&&жест.окно==='modal-encyclopedia'&&/Все разделы звуков/.test(жест.сказано)&&жест.закрылосьВторым,жест);
+ await page.evaluate(()=>{while(activeLayer())closeTopUI();CMD.encyc();});
 
  // ── 4. Каждый раздел непустой и каждая карточка называет себя ──
  const поРазделам=await page.evaluate(()=>{
