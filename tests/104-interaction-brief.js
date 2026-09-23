@@ -96,7 +96,7 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
  const картаЖурнал=await page.evaluate(async()=>{
   const пауза=ms=>new Promise(z=>setTimeout(z,ms));const r={};G.place=null;G.ship=null;
   r.open=toggleWindowGesture("modal-map");await пауза(50);r.grid=document.querySelectorAll("#mapGrid button").length;r.pts=document.querySelectorAll("#mapPoints button").length;
-  const pts=mapPoints();r.роды=[...new Set(pts.map(p=>p.род))];PLAYED.length=0;SAID.length=0;r.go=mapPointGo(0);await пауза(30);r.goSaid=SAID.slice(-1)[0];
+  const pts=mapPoints();r.роды=[...new Set(pts.map(p=>p.род))];PLAYED.length=0;SAID.length=0;r.go=mapPointGo(0);await пауза(30);/* Не последняя фраза, а фраза точки: у входа в постройку выше есть отложенные реплики, и под нагрузкой одна из них может прийти позже. */r.goSaid=SAID.find(t=>/шаг|вы здесь/.test(t))||SAID.slice(-1)[0];
   r.close=toggleWindowGesture("modal-map");r.closed=document.getElementById("modal-map").hidden;
   /* журнал */
   const npc=getNPC(G.x+3,G.y,0);const q={id:"t104q",npc:npc.name,type:"visit",tx:G.x+5,ty:G.y+5,need:1,text:"Дойти до вехи и вернуться.",reward:{gold:10,xp:5},diplo:2,chain:"t104",chainName:"Проверочная цепь",chainStep:0,chainOf:3};
