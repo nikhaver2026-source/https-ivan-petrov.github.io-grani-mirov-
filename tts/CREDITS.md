@@ -5,7 +5,8 @@
 
 | Часть | Что это | Лицензия |
 |---|---|---|
-| `ru_RU-denis-medium.onnx` | голос «Денис», Piper (VITS), 22 050 Гц. Качается один раз: из папки игры, а если её там нет — с [Hugging Face](https://huggingface.co/rhasspy/piper-voices/tree/v1.0.0/ru/ru_RU/denis/medium) | модель — MIT (Piper), данные для обучения — CC0 ([OHF-Voice/voice-datasets](https://github.com/OHF-Voice/voice-datasets)) |
+| `ru_RU-denis-medium.onnx` | голос «Денис», Piper (VITS), 22 050 Гц, 63 МБ. Лежит в папке игры и качается один раз — дальше голос берёт его из своего кэша и говорит без сети. Если файла в папке нет, запасной путь — [Hugging Face](https://huggingface.co/rhasspy/piper-voices/tree/v1.0.0/ru/ru_RU/denis/medium). Копия взята из поставки [sherpa-onnx](https://github.com/k2-fsa/sherpa-onnx/releases/tag/tts-models) (`vits-piper-ru_RU-denis-medium`): те же веса Piper, только выложенные на GitHub | модель — MIT (Piper), данные для обучения — CC0 ([OHF-Voice/voice-datasets](https://github.com/OHF-Voice/voice-datasets)) |
+| `ru_RU-denis-medium.onnx.json` | настройки голоса: частота, таблица звуков, темп и паузы | MIT (Piper) |
 | `ort/` | [onnxruntime-web](https://github.com/microsoft/onnxruntime) 1.22.0 — движок, который считает модель в браузере | MIT, текст в `ort/LICENSE.txt` |
 | `ru-lex.tsv` | звуки и ударения для всех ~25 000 словоформ, что встречаются в текстах игры | собран для игры |
 | `ru-stress.json` | ударение по окончанию для слов, которых нет в словаре (выучено на словаре игры) | собран для игры |
@@ -18,3 +19,12 @@
 
 Голоса с данными под некоммерческой лицензией (например, `ruslan`) и
 голоса с неизвестной лицензией данных (`irina`) нарочно не взяты.
+
+## Как проверено
+
+Голос проверен на настоящей модели через рабочий поток самой игры: модель
+встаёт за пять-шесть секунд, первый звук фразы приходит через 0,2–1,3 с.
+Разборчивость мерили русским распознавателем речи (GigaAM) на четырнадцати
+фразах из игры: 12,4 % ошибок по словам — чуть лучше, чем у того же голоса с
+официальным разбором eSpeak (13,1 %). Помогла метка после «ю» (`ʲu"`): на ней
+голос учился, и без неё «люк» и «ключ» звучали смазанно.

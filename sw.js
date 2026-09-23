@@ -28,7 +28,7 @@
    Кэш ЗАПИСЕЙ при этом не трогаем нарочно, и имя у него прежнее. Записи
    неизменяемы, их в банке 497 мегабайт, и перекачивать их заново ради новой
    страницы — значит наказать игрока за обновление. */
-const SHELL="grani-shell-v21";
+const SHELL="grani-shell-v22";
 const MEDIA="grani-v1-media";
 /* Модель встроенного голоса кладёт в свой кэш рабочий поток голоса: его
    не трогаем, иначе шестьдесят мегабайт качались бы после каждого обновления. */
@@ -55,9 +55,13 @@ self.addEventListener("fetch",e=>{
  if(req.method!=="GET")return;
  const url=new URL(req.url);
  if(url.origin!==self.location.origin)return;
- /* Записи, движок и модель встроенного голоса неизменяемы: сначала кэш, потом
+ /* Записи и движок встроенного голоса неизменяемы: сначала кэш, потом
     сеть. Словарь и код голоса меняются с обновлениями — им путь страницы. */
- if(url.pathname.includes("/sounds/")||url.pathname.includes("/tts/ort/")||url.pathname.endsWith(".onnx")){e.respondWith(media(req,url));return;}
+ /* Модель голоса (шестьдесят три мегабайта) — мимо: её хранит сам поток голоса
+    в своём кэше grani-tts-v1 и сам же его первым проверяет, так что без сети
+    голос работает; второй копии в кэше записей телефону не нужно. */
+ if(url.pathname.endsWith(".onnx"))return;
+ if(url.pathname.includes("/sounds/")||url.pathname.includes("/tts/ort/")){e.respondWith(media(req,url));return;}
 
  /* Частичная загрузка чего-то другого — мимо кэша, как есть. */
  if(req.headers.has("range"))return;
