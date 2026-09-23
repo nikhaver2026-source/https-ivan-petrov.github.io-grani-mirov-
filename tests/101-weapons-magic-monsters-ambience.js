@@ -69,14 +69,20 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   G.weaponDrawn=false;PLAYED.length=0;drawWeapon();r.вынуть=G.lastWeaponSound&&G.lastWeaponSound.state;
   sheatheWeapon();r.убрать=G.lastWeaponSound&&G.lastWeaponSound.state;
   while(activeLayer())closeTopUI();
+  r.W=WEAPON_SOUND;
   return r;});
  check('удар по кости звучит костью каналом боя; неизвестное состояние — «нет»',
   удары.кость===true&&удары.костьРоли[0]==="foe_bone_hit"&&удары.костьРоли.length>0
   &&удары.костьКанал.every(k=>k==="combat")&&удары.нет===false,
   {боевые:удары.костьРоли,всё:удары.костьВсё});
- check('тяжёлый удар по голему: замах героя, попадание, броня и тяжесть',
-  удары.голем.includes("hero_swing")&&удары.голем.includes("lug_sword")&&удары.голем.includes("mtg_metal_hit")&&удары.голем.includes("lug_impact"),удары.голем);
- check('промах свистит, а не бьёт',удары.промах.includes("lug_whoosh_hit")&&!удары.промах.includes("lug_sword"),удары.промах);
+ /* Удар звучит одной записью из каждого списка, по очереди, а не стопкой
+    (свист — в самом ударе, weaponSwingSound): одно попадание клинка, один
+    звук брони и тяжесть сильного удара. */
+ const W=удары.W;
+ check('тяжёлый удар по голему: одно попадание, один звук брони и тяжесть',
+  удары.голем.filter(r=>W.sword.hit.includes(r)).length===1&&удары.голем.filter(r=>W.sword.hit_armor.includes(r)).length===1
+  &&удары.голем.includes("lug_impact")&&!удары.голем.includes("hero_swing"),удары.голем);
+ check('промах свистит, а не бьёт',удары.промах.filter(r=>W.sword.miss.includes(r)).length===1&&!удары.промах.some(r=>W.sword.hit.includes(r)),удары.промах);
  check('вынуть и убрать оружие — свои состояния модели',удары.вынуть==="draw"&&удары.убрать==="sheathe",{вынуть:удары.вынуть,убрать:удары.убрать});
 
  /* ── 3. Чары ── */

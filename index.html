@@ -33940,7 +33940,7 @@ function playWoundSfx(dmg=6){try{AE.ensure();
  safeFn(()=>Bank.play("battle_shield",{kind:"combat",seed:dmg,gain:0.4,maxSec:2}));
  /* Доспех отвечает на удар: лязг и глухой толчок в щит. */
  safeFn(()=>Bank.play((Number(dmg)||6)>=12?"oc_shield_metal":((Number(dmg)||0)%2?"lug_clank":"lug_metal"),
-  {seed:Math.floor(Math.random()*97),gain:0.45,maxSec:2}));
+  {kind:"combat",seed:Math.floor(Math.random()*97),gain:0.45,maxSec:2}));
  const s=new SFX();const heavy=Math.max(0.6,Math.min(1.5,0.6+(Number(dmg)||6)/14));s.wound(heavy);setTimeout(()=>{try{s.stop(.2);}catch(e){}},650);}catch(e){}}
 function endCombat(){if(G.combat&&G.combat.monsterTimer)clearTimeout(G.combat.monsterTimer);safeFn(()=>Arena.stop());G.inCombat=false;G.combat=null;
  /* Отметка «этот бой идёт за такое-то логово» ставится в startInsideCombat и
