@@ -62,7 +62,6 @@
 | sneak_pizz | пиццикато крадущегося | pizzicato_strings |
 | gate_fanfare | фанфары ворот | brass_section |
 | rustle | шорох | guitar_fret_noise |
-| fx_rain | дождевая пелена | fx_1_rain |
 | fx_omen | знамение | fx_2_soundtrack |
 | fx_crystal | кристальный звон | fx_3_crystal |
 | fx_haze | дымка чар | fx_4_atmosphere |
@@ -73,7 +72,6 @@
 | pad_sanctum | святилище | pad_4_choir |
 | pad_dread | дурное место | pad_5_bowed |
 | pad_halo | ореол бога | pad_7_halo |
-| pad_rift | переход Грани | pad_8_sweep |
 | forge_muted | глухая труба литейщиков | muted_trumpet |
 | hours_xylo | ксилофон тихих часов | xylophone |
 | road_accordion | дорожная гармонь | accordion |

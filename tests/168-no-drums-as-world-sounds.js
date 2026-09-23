@@ -73,7 +73,7 @@ const ПРИНЯЛИ=["od_fall","oc_thunder","lug_metal","lug_thud","stk_hammer"
  "siege_alarm_city","ad_market_sel","oc_metal_dull","es_boom","beasts_camel","uh_bell",
  "oc_shield_metal","lug_clank","oc_metal_light","stk_clang","battle_sword","arte_coins","oc_rock_hit",
  "stk_dark","deep_1","deep_2","deep_3","deep_4","deep_5","es_hit","ad_forge_sel","hero_step_metal",
- "stk_goo","oc_soft_hit","lug_whoosh_hit","score_lucid","deep_portal","es_ion","oc_electrical",
+ "stk_goo","oc_soft_hit","lug_whoosh_hit","mus_tower_steklo","deep_portal","es_ion","oc_electrical",
  "arte_find","oc_crystal_comm","uh_chapel","foe_undead_cast","oc_splash","oc_trap_illusion",
  "throng_march","guard_shout","od_gold","ad_trade","trade_m","oc_ui_select","oc_trap_magic",
  "oc_wheels","oc_wood_hit","oc_res_venom","sky_storm","spell_initiate","lug_knife_slice"];

@@ -91,6 +91,35 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
  check('у темы ордена есть настоящая запись',!башни.нетЗаписи.length,башни.нетЗаписи);
  check('орден не звучит общей темой башен',!башни.сОбщей.length,башни.сОбщей);
 
+ /* ── 4в. Музыка мест из фэнтезийных игр ──
+    Ни одна запись не звучит в двух местах; под землёй первые десять ярусов
+    звучат родом подземелья; за Гранью круг ярусов звучит темой своей земли;
+    тема из нескольких записей идёт по кругу, а не крутит одну. */
+ const фэнтези=await page.evaluate(()=>{
+  const файлы=[];Object.values(MUSIC_TRACK).forEach(r=>(SOUND_BANK[r]?SOUND_BANK[r].f:[]).forEach(f=>файлы.push(f)));
+  const дубли=файлы.filter((f,i)=>файлы.indexOf(f)!==i);
+  const роды=DUNGEON_KINDS.map(k=>k.id).filter(id=>!MUSIC_TRACK["dk_"+id]);
+  const было=G.dark;G.dark=true;
+  const круги=[5,15,25,35,45,55,65,75,85,95].map(d=>depthTrack(d));
+  G.dark=было;
+  const тёмныеКруги=["bone","ash","vein","mirror","drown","rot","scar"].every(k=>круги.includes(k));
+  const мест=["tavern","castle","clanhall","temple","school","market","forge","village","port","ruins",
+   "fortress","warcamp","smugglers","eyrie","peakshrine","citadel","burg","shrine","ossuary","pit","spire","bazaar","den","hold"]
+   .filter(t=>!MUSIC_TRACK["pl_"+t]);
+  settings.bgMusic=1;settings.music=1;Music.stop();Music.start("town");
+  const rec=Bank.loops.get("score");const до=rec&&rec.file;
+  if(rec)rec.el.dispatchEvent(new Event("ended"));
+  const после=Bank.loops.get("score")&&Bank.loops.get("score").file;Music.stop();
+  const новые=файлы.filter(f=>/^(stendhal|solarus|valyria|wyrmsun|evol|tmw)\//.test(f)||/^(ab\/ab_mus_|mg\/mg_mus_)/.test(f));
+  return {файлов:файлы.length,дубли,роды,круги,тёмныеКруги,мест,до,после,новых:новые.length,
+   underTrackЕсть:typeof underTrack==="function"};});
+ check('ни одна запись музыки не звучит в двух местах',!фэнтези.дубли.length,фэнтези.дубли.slice(0,5));
+ check('у всех четырнадцати родов подземелий своя тема',!фэнтези.роды.length&&фэнтези.underTrackЕсть,фэнтези.роды);
+ check('за Гранью круг ярусов звучит темой своей тёмной земли',фэнтези.тёмныеКруги,фэнтези.круги);
+ check('у построек, и светлых, и тёмных, свои темы',!фэнтези.мест.length,фэнтези.мест);
+ check('тема города идёт по кругу из нескольких записей',!!фэнтези.до&&!!фэнтези.после&&фэнтези.до!==фэнтези.после,{до:фэнтези.до,после:фэнтези.после});
+ check('музыка мест — из фэнтезийных игр: не меньше семидесяти новых записей',фэнтези.новых>=70,фэнтези.новых);
+
  /* ── 5. События: награды, достижения, опыт ── */
  const события=await page.evaluate(()=>{
   const ids=Object.keys(EVENT_THEME);

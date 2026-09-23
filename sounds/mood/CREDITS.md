@@ -17,7 +17,6 @@
 | Роль в игре | Что звучит | Инструмент FluidR3_GM |
 |---|---|---|
 | dusk_sax | сумеречный напев | tenor_sax |
-| frost_keys | морозные клавиши | electric_piano_1 |
 | glade_clarinet | кларнет поляны | clarinet |
 | lament_oboe | плач гобоя | oboe |
 | mist_keys | туманные клавиши | electric_piano_2 |

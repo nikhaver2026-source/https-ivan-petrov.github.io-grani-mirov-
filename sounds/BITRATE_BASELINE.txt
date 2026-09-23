@@ -3,7 +3,7 @@
 # Правило: всякая НОВАЯ запись в sounds/ — либо без потерь (flac, wav),
 # либо сжата не ниже 320 кбит/с. Набор проверок 152 это стережёт.
 #
-# Перечисленные ниже 1688 записей пришли раньше правила, из свободных
+# Перечисленные ниже 1658 записей пришли раньше правила, из свободных
 # библиотек, и уже сжаты с потерями. Пережать их в 320 нельзя: пережатие не
 # возвращает того, чего в файле нет, — оно лишь втрое раздувает вес. Весь
 # банк весит 206 МБ; пережатие подняло бы его к 550 МБ без единого нового
@@ -435,17 +435,13 @@ sounds/inst/bard_01.mp3	192
 sounds/inst/bard_02.mp3	192
 sounds/inst/bard_03.mp3	192
 sounds/inst/bard_04.mp3	192
-sounds/inst/bassoon_death_01.mp3	192
-sounds/inst/bassoon_dusk_01.mp3	192
 sounds/inst/cello_defeat_01.mp3	192
 sounds/inst/cello_stone_01.mp3	192
-sounds/inst/clarinet_shadow_01.mp3	192
 sounds/inst/contrabass_deep_01.mp3	192
 sounds/inst/contrabass_deep_02.mp3	192
 sounds/inst/flute_dawn_01.mp3	192
 sounds/inst/harmonium_drone_01.mp3	192
 sounds/inst/harmonium_drone_02.mp3	192
-sounds/inst/harmonium_low_01.mp3	192
 sounds/inst/harp_high_01.mp3	192
 sounds/inst/harp_light_01.mp3	192
 sounds/inst/harp_light_02.mp3	192
@@ -795,8 +791,6 @@ sounds/mg/wyrm_roar_02.ogg	76
 sounds/mg/wyrm_roar_03.ogg	74
 sounds/mg/wyrm_roar_04.ogg	84
 sounds/mg/wyrm_wing_01.ogg	83
-sounds/mood/frost_keys_01.mp3	45
-sounds/mood/frost_keys_02.mp3	51
 sounds/mood/lament_oboe_01.mp3	64
 sounds/mood/lament_oboe_02.mp3	64
 sounds/mood/mist_keys_01.mp3	64
@@ -1221,8 +1215,6 @@ sounds/orch/fx_lurk_01.mp3	61
 sounds/orch/fx_lurk_02.mp3	64
 sounds/orch/fx_omen_01.mp3	62
 sounds/orch/fx_omen_02.mp3	64
-sounds/orch/fx_rain_01.mp3	62
-sounds/orch/fx_rain_02.mp3	64
 sounds/orch/fx_rift_01.mp3	51
 sounds/orch/fx_rift_02.mp3	56
 sounds/orch/gate_fanfare_01.mp3	64
@@ -1240,8 +1232,6 @@ sounds/orch/pad_dread_01.mp3	52
 sounds/orch/pad_dread_02.mp3	63
 sounds/orch/pad_halo_01.mp3	64
 sounds/orch/pad_halo_02.mp3	64
-sounds/orch/pad_rift_01.mp3	51
-sounds/orch/pad_rift_02.mp3	54
 sounds/orch/road_accordion_01.mp3	64
 sounds/orch/road_accordion_02.mp3	64
 sounds/orch/road_accordion_03.mp3	64
@@ -1366,22 +1356,6 @@ sounds/steps/step_water_05.mp3	200
 sounds/steps/step_water_06.mp3	202
 sounds/steps/step_water_07.mp3	201
 sounds/steps/step_water_08.mp3	201
-sounds/stk/score_bay_01.ogg	126
-sounds/stk/score_celtic_01.ogg	124
-sounds/stk/score_demonhill_01.ogg	138
-sounds/stk/score_farm_01.ogg	272
-sounds/stk/score_frontier_01.ogg	179
-sounds/stk/score_garden_01.ogg	194
-sounds/stk/score_gate_01.ogg	124
-sounds/stk/score_hacienda_01.ogg	140
-sounds/stk/score_lava_01.ogg	189
-sounds/stk/score_mansion_01.ogg	123
-sounds/stk/score_overworld_01.ogg	129
-sounds/stk/score_paradiso_01.ogg	124
-sounds/stk/score_sands_01.ogg	127
-sounds/stk/score_snowy_01.ogg	121
-sounds/stk/score_valley_01.ogg	194
-sounds/stk/score_xeon_01.ogg	145
 sounds/stk/stk_birds_01.ogg	92
 sounds/stk/stk_birds_02.ogg	78
 sounds/stk/stk_blast_01.ogg	95
@@ -1455,10 +1429,6 @@ sounds/tread/tread_snow_03.ogg	227
 sounds/tread/tread_wood_01.ogg	82
 sounds/tread/tread_wood_02.ogg	65
 sounds/tread/tread_wood_03.ogg	87
-sounds/uh/score_newland_01.ogg	108
-sounds/uh/score_night_01.ogg	109
-sounds/uh/score_seafight_01.ogg	106
-sounds/uh/score_settle_01.ogg	114
 sounds/uh/uh_bell_01.ogg	203
 sounds/uh/uh_build_01.ogg	182
 sounds/uh/uh_chapel_01.ogg	50

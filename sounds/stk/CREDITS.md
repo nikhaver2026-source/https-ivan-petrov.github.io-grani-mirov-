@@ -1,6 +1,6 @@
 # Записи SuperTuxKart в «Грани Миров»
 
-В этой папке лежат 40 записей из свободной игры
+В этой папке лежат 24 записи из свободной игры
 **SuperTuxKart** — [supertuxkart.net](https://supertuxkart.net),
 исходники: [github.com/supertuxkart/stk-code](https://github.com/supertuxkart/stk-code).
 
@@ -10,9 +10,14 @@
 их набора **не брались нарочно** — с лицензией CC BY-SA остальной библиотеки
 игры они не сходятся.
 
+Шестнадцать музыкальных тем SuperTuxKart отсюда убраны: игра гоночная, а не
+фэнтезийная, и музыку мест теперь дают темы фэнтезийных игр (папки
+`stendhal`, `solarus`, `valyria`, `wyrmsun`, `evol`, `tmw`, `ab`, `mg`, `od`,
+`score`, `oc`).
+
 Что здесь по лицензиям:
 
-- **CC-BY-SA-3.0** — 19 записей
+- **CC-BY-SA-3.0** — 3 записи
 - **CC0** — 8 записей
 - **CC-BY-3.0** — 7 записей
 - **CC-BY-SA-4.0** — 4 записи
@@ -52,22 +57,6 @@
 | `stk_splash_01.ogg` | `stk_splash` | Всплеск: тело или камень в воду | CC-BY-SA-4.0 | 2017 The Audio Monkey |
 | `stk_thunder_01.ogg` | `stk_thunder` | Гром: раскат над головой | CC-BY-3.0 | 2009 Mike Koenig 2011 Marianne "Auria" Gagnon <auria.mg@gmail.com> |
 | `stk_ward_01.ogg` | `stk_ward` | Оберег: гудение защитных чар | CC0 | 2007 aust_paul |
-| `score_bay_01.ogg` | `score_bay` | Тема залива: вода и паруса | CC-BY-SA-3.0 | 0zone0ne |
-| `score_celtic_01.ogg` | `score_celtic` | Кельтская тема: дорога и вересковые пустоши | CC-BY-SA-3.0 | 0zone0ne and Krobonil |
-| `score_demonhill_01.ogg` | `score_demonhill` | Тема недоброго холма: тревога | CC-BY-SA-3.0 | 0zone0ne |
-| `score_farm_01.ogg` | `score_farm` | Тема поля: труд и урожай | CC-BY-SA-3.0 | 0zone0ne and Krobonil |
-| `score_frontier_01.ogg` | `score_frontier` | Тема окраин: сухая земля и одиночество | CC-BY-SA-3.0 | Chris Leutwyler (Krobonil) |
-| `score_garden_01.ogg` | `score_garden` | Тема сада: покой и рост | CC-BY-SA-3.0 | DJHelium |
-| `score_gate_01.ogg` | `score_gate` | Тема порога: перед началом пути | CC-BY-SA-3.0 | Claude Werner (bollen) |
-| `score_hacienda_01.ogg` | `score_hacienda` | Тема усадьбы: тёплый южный двор | CC-BY-SA-3.0 | Claude Werner (bollen) |
-| `score_lava_01.ogg` | `score_lava` | Тема огня: жар и пепел | CC-BY-SA-3.0 | Kalsan |
-| `score_mansion_01.ogg` | `score_mansion` | Тема старого дома: пыль и память | CC-BY-SA-3.0 | 2017 0zone0ne and Krobonil |
-| `score_overworld_01.ogg` | `score_overworld` | Тема простора: открытый мир | CC-BY-SA-3.0 | 0zone0ne |
-| `score_paradiso_01.ogg` | `score_paradiso` | Тема прибытия: высокая долина | CC-BY-SA-3.0 | Ozoneone & Krobonil |
-| `score_sands_01.ogg` | `score_sands` | Тема песков: пустыня и зной | CC-BY-SA-3.0 | 0zone0ne |
-| `score_snowy_01.ogg` | `score_snowy` | Тема снегов: холод и тишина | CC-BY-SA-3.0 | Chris Leutwyler (Krobonil) |
-| `score_valley_01.ogg` | `score_valley` | Тема долины: широкий свет | CC-BY-SA-3.0 | DJHelium |
-| `score_xeon_01.ogg` | `score_xeon` | Тема иного: чужое и незнакомое | CC-BY-SA-3.0 | commissioned by Bart Kelsey (http://opengameart.org) |
 
 ## Откуда взято
 
@@ -79,22 +68,6 @@
 
 | наше имя | исходное имя |
 |---|---|
-| `score_bay_01.ogg` | `data/music/bay.ogg` |
-| `score_celtic_01.ogg` | `data/music/celtic.ogg` |
-| `score_demonhill_01.ogg` | `data/music/demonhill.ogg` |
-| `score_farm_01.ogg` | `data/music/farm.ogg` |
-| `score_frontier_01.ogg` | `data/music/West.ogg` |
-| `score_garden_01.ogg` | `data/music/garden.ogg` |
-| `score_gate_01.ogg` | `data/music/menutheme.ogg` |
-| `score_hacienda_01.ogg` | `data/music/hacienda.ogg` |
-| `score_lava_01.ogg` | `data/music/Lava.ogg` |
-| `score_mansion_01.ogg` | `data/music/ravenbridge_mansion.ogg` |
-| `score_overworld_01.ogg` | `data/music/overworld.ogg` |
-| `score_paradiso_01.ogg` | `data/music/landing_in_gran_paradiso.ogg` |
-| `score_sands_01.ogg` | `data/music/egypt.ogg` |
-| `score_snowy_01.ogg` | `data/music/Snowy.ogg` |
-| `score_valley_01.ogg` | `data/music/valley.ogg` |
-| `score_xeon_01.ogg` | `data/music/xeon6.ogg` |
 | `stk_birds_01.ogg` | `data/sfx/exotic-birds.ogg` |
 | `stk_birds_02.ogg` | `data/sfx/exotic-birds_2.ogg` |
 | `stk_blast_01.ogg` | `data/sfx/explosion.ogg` |
@@ -119,3 +92,4 @@
 | `stk_splash_01.ogg` | `data/sfx/splash.ogg` |
 | `stk_thunder_01.ogg` | `data/sfx/thunder.ogg` |
 | `stk_ward_01.ogg` | `data/sfx/forcefield.ogg` |
+

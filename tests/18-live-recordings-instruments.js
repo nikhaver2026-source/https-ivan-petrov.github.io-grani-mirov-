@@ -90,7 +90,7 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
     и orch, а музыка мира стоит своим разделом. */
  check('в каталоге есть разделы живых записей, инструментов и оркестра',
   cat.heads.some(h=>/Живые инструменты и оркестр/.test(h))
-  &&cat.heads.some(h=>/Музыка мира/.test(h))
+  &&cat.heads.some(h=>/Музыка мест/.test(h))
   &&cat.heads.some(h=>/Шаги и поверхности/.test(h)),cat.heads);
  check('раздел живых инструментов не пуст',cat.инструментов>=10,cat.инструментов);
  check('указание авторства CC BY видно в игре',cat.attribution===true&&cat.флюид===true,cat);

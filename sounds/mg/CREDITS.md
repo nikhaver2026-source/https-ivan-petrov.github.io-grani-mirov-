@@ -283,3 +283,17 @@ Unported (CC BY-SA 3.0): https://creativecommons.org/licenses/by-sa/3.0/
 | wyrm_roar_03 | дракон: рык атаки | `dragon_attack3.wav` |
 | wyrm_roar_04 | дракон: рык атаки | `dragon_attack4.wav` |
 | wyrm_wing_01 | крылья дракона | `evil_dragon_fly.wav` |
+
+## Музыка мест
+
+Пять тем держав и меню MegaGlest. Все данные игры — CC BY-SA 3.0 (`docs/README.data-license.txt`); авторы — по `docs/AUTHORS.data.txt`: Aminos (индейцы и персы), Margaras (египтяне), команда MegaGlest (маги и меню). Тема римлян (Mattias Westlund, лицензия не указана) не бралась.
+
+Все записи этой поставки перекодированы в **OGG Vorbis 320 кбит/с** (правило банка: новое — не ниже 320 кбит/с или без потерь), громкость выровнена к −22 LUFS, чтобы темы разных игр звучали ровно. Темы длиннее 2 мин 15 с укорочены до двух минут с затуханием в шесть секунд: в игре тема места идёт по кругу, и две минуты — полный круг. Больше ничего не менялось.
+
+| Файл | Где звучит | Тема и автор | Лицензия | Исходный файл игры | Обработка |
+|---|---|---|---|---|---|
+| `mg_mus_magic.ogg` | Чары | «тема державы магов» — команда MegaGlest | CC BY-SA 3.0 | `techs/megapack/factions/magic/music/music_magic.ogg` | укорочено до 2:00, затухание 6 с (исходник 6:59) |
+| `mg_mus_persian.ogg` | Тёмный базар | «Together Together (тема персов)» — Aminos | CC BY-SA 3.0 | `techs/megapack/factions/persian/music/aminos-together_together.ogg` | укорочено до 2:00, затухание 6 с (исходник 3:50) |
+| `mg_mus_menu.ogg` | Орден шва | «тема главного меню» — команда MegaGlest | CC BY-SA 3.0 | `data/core/menu/music/menu_music.ogg` | — |
+| `mg_mus_egypt.ogg` | Древний храм | «Asak (тема египтян)» — Margaras | CC BY-SA 3.0 | `techs/megapack/factions/egypt/music/asak-jadeflange.ogg` | — |
+| `mg_mus_indian.ogg` | Живое | «тема индейцев» — Aminos | CC BY-SA 3.0 | `techs/megapack/factions/indian/music/music_indian.ogg` | укорочено до 2:00, затухание 6 с (исходник 3:05) |

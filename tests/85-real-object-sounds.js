@@ -54,7 +54,7 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
  for(const d of ['oc','ad','uh','lug']){
   const p=path.join(ROOT,'sounds',d);
   const files=fs.existsSync(p)?fs.readdirSync(p):[];
-  check('папка sounds/'+d+' с записями и CREDITS',files.includes('CREDITS.md')&&files.some(f=>/^LICENSE-CC-BY(-SA)?-3\.0\.txt$/.test(f))&&files.filter(f=>f.endsWith('.ogg')).length>=15,files.length);
+  check('папка sounds/'+d+' с записями и CREDITS',files.includes('CREDITS.md')&&files.some(f=>/^LICENSE-CC-BY(-SA)?-3\.0\.txt$/.test(f))&&files.filter(f=>f.endsWith('.ogg')).length>=(d==='uh'?10:15),files.length);
   const cr=fs.existsSync(path.join(p,'CREDITS.md'))?fs.readFileSync(path.join(p,'CREDITS.md'),'utf8'):'';
   const oggs=files.filter(f=>f.endsWith('.ogg'));
   check('CREDITS sounds/'+d+' перечисляет каждый файл',oggs.every(f=>cr.indexOf(f.replace('.ogg',''))>=0),oggs.length);}
@@ -81,7 +81,9 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
  check('новых ролей полторы сотни',банк.roles>=150,банк.roles);
  банк.bad=банк.list.filter(f=>!fs.existsSync(path.join(ROOT,'sounds',f)));
  check('файлов больше двухсот пятидесяти и каждый лежит на диске',банк.files>=250&&банк.bad.length===0,{files:банк.files,bad:банк.bad.slice(0,5)});
- check('записи в четырёх папках',['oc','ad','uh','lug'].every(d=>банк.byDir[d]>=15),банк.byDir);
+ /* Четыре темы Unknown Horizons ушли вместе с прочей не-фэнтезийной музыкой:
+    в uh остались тринадцать живых записей, у остальных папок — не меньше пятнадцати. */
+ check('записи в четырёх папках',['oc','ad','uh','lug'].every(d=>банк.byDir[d]>=(d==='uh'?10:15)),банк.byDir);
  check('энциклопедия: два новых раздела с десятками ролей, первый уровень по-прежнему проходится свайпом',банк.groups.length===2&&банк.groups.every(g=>g[1]>=40)&&банк.sections<=40,{groups:банк.groups,sections:банк.sections});
  /* Ни одна новая роль не лежит мёртвым грузом: каждая упомянута в коде вне банка. */
  const bankStart=src.indexOf('const SOUND_BANK={'),bankEnd=src.indexOf('const MONSTER_BANK={',bankStart);
