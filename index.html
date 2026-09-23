@@ -139,8 +139,9 @@ h3{color:var(--acc2);margin:14px 0 6px;font-size:1.05rem;}
    <div class="cb-col cb-enemy" id="cbEnemyCol" role="group" aria-label="Параметры противника" tabindex="0"></div>
    <div class="cb-col cb-player" id="cbPlayerCol" role="group" aria-label="Параметры персонажа" tabindex="0"></div>
   </div>
+  <div id="cbArena" class="list-line" tabindex="0" hidden></div>
   <div id="cbLog" class="list-line" aria-live="polite" aria-atomic="true"></div>
-  <p class="hint">Свайп при вынутом оружии — удар. Двойное касание тремя пальцами — вынуть или убрать оружие. Свайп тремя пальцами вверх — меню действий, там же побег.</p>
+  <p class="hint">Свайп — шаг по полю боя: отойти, уйти из-под замаха, догнать. Вынутое оружие бьёт свайпом в сторону твари, если достаёт. Касание двумя пальцами — где тварь. Двойное касание тремя пальцами — вынуть или убрать оружие. Свайп тремя пальцами вверх — меню действий, там же побег.</p>
  </div>
  <p class="hint" style="text-align:center;">Свайп: ⬆️ север · ⬇️ юг · ⬅️ запад · ➡️ восток.<br>
  Свайп и удержание — <b>бег</b>. Свайп тремя пальцами вверх — <b>меню действий</b>, где собраны все кнопки игры. Касание двумя пальцами — <b>собрать ресурс</b>.</p>
@@ -263,6 +264,9 @@ h3{color:var(--acc2);margin:14px 0 6px;font-size:1.05rem;}
  <p class="hint">Мера мира: сколько бьют, сколько держат и сколько стоит поражение.</p>
  <p class="hint" id="diffHint">Мир одинаково честен на любом уровне: меняется не то, что происходит, а мера — сколько бьют, сколько держат, как часто встречаются и сколько стоит поражение.</p>
  <div class="row" id="diffRow"></div>
+ <p class="hint">Темп боя: живой — тварь ходит и бьёт сама, и её замах слышно заранее; неспешный — то же, но медленнее; пошаговый — время стоит, пока вы не сделаете шаг, удар или чару.</p>
+ <p class="hint" id="paceHint"></p>
+ <div class="row" id="paceRow"></div>
   </div>
   <div class="set-group" data-set-group="save" hidden>
  <h3 class="sec-head" tabindex="0" data-cmd="secjump" data-sec-title="Сохранения">💾 Сохранения</h3>
@@ -813,7 +817,7 @@ if(!settings.rateFast){
    нечего: он прежнего и не слышал, — ему отметка ставится молча.
    NEWS_V поднимается, когда есть о чём сказать; кто уже слышал, второй раз
    не услышит. */
-const NEWS_V=6;
+const NEWS_V=7;
 if(!Object.keys(savedSet).length){settings.newsV=NEWS_V;saveSettings();}
 else if((Number(settings.newsV)||0)<NEWS_V){
  /* Слышавший прошлые новости слышит только новые: пересказывать ему то,
@@ -830,9 +834,11 @@ else if((Number(settings.newsV)||0)<NEWS_V){
   "На теле тринадцать мест — голова, уши, шея, торс, руки, пальцы, ноги и другие, — и всё надетое вместе идёт в удар, защиту и характеристики. Свайп вверх или вниз на вещи открывает только то, что с ней можно сделать здесь и сейчас. ":"";
  const пятое=было<5?"Меню действий теперь открывается списком разделов, как настройки: персонаж, квесты и журнал, книги и знания и другие. "+
   "Двойное касание открывает раздел, свайп двумя пальцами вниз возвращает к списку. ":"";
- const новое="Музыка теперь звучит только темой места: у деревни, подземелья, храма и порта своя тема из свободных фэнтезийных игр. "+
-  "Новый уровень, дела, награды, боги и границы держав звучат живыми звуками мира — монетами, колоколом, толпой, рогом победы, — без фанфар и нот.";
- setTimeout(()=>safeFn(()=>narrate(прежнее+третье+четвёртое+пятое+новое,{pri:1,interrupt:false})),3000);
+ const шестое=было<6?"Музыка теперь звучит только темой места: у деревни, подземелья, храма и порта своя тема из свободных фэнтезийных игр. "+
+  "Новый уровень, дела, награды, боги и границы держав звучат живыми звуками мира — монетами, колоколом, толпой, рогом победы, — без фанфар и нот. ":"";
+ const новое="Бой теперь подвижный: свайп в бою — шаг, тварь сама ходит, гонится и бьёт, а её замах и чару слышно заранее с её стороны — отойдите. "+
+  "Вынутое оружие бьёт в сторону твари, когда достаёт; касание двумя пальцами в бою — где она. Темп боя — в настройках, раздел «Сложность и темп боя». ";
+ setTimeout(()=>safeFn(()=>narrate(прежнее+третье+четвёртое+пятое+шестое+новое,{pri:1,interrupt:false})),3000);
 }
 if(!settings.subMode)settings.subMode=settings.subtitles===0?"off":"sounds";
 settings.subtitles=settings.subMode==="off"?0:1;
@@ -4255,10 +4261,10 @@ function activateElement(el){if(!el||el.disabled)return false;try{
    пальцем — список, а не шаг; при вынутом оружии — удар, а не шаг. */
 const GESTURE_MAP=[
  {fingers:1,kind:"hold",n:"ощупывание: назвать то, что под пальцем",prio:1,где:"везде"},
- {fingers:1,kind:"swipe",n:"шаг по полю; в окне — следующий или предыдущий пункт; при вынутом оружии — удар; в инвентаре вверх или вниз — действия с вещью",prio:2,где:"поле, окно, бой"},
+ {fingers:1,kind:"swipe",n:"шаг по полю; в бою — шаг и уворот, а вынутое оружие бьёт в сторону твари, если достаёт; в окне — следующий или предыдущий пункт; в инвентаре вверх или вниз — действия с вещью",prio:2,где:"поле, окно, бой"},
  {fingers:1,kind:"tap2",n:"выполнить названный пункт окна; поле на касания одним пальцем не отвечает",prio:2,где:"окно"},
  {fingers:2,kind:"split",n:"раздельное касание: палец держит названный пункт, второй стукает рядом — пункт выполняется, палец остаётся на месте",prio:2,где:"окно"},
- {fingers:2,kind:"tap",n:"собрать ресурс под ногами: руду, травы, дерево, камень, кристаллы",prio:3,где:"поле"},
+ {fingers:2,kind:"tap",n:"собрать ресурс под ногами: руду, травы, дерево, камень, кристаллы; в бою — где тварь и чем она занята",prio:3,где:"поле, бой"},
  {fingers:2,kind:"swipe",dir:"S",n:"закрыть открытое окно; на поле — взаимодействие: с объектом, выбранным при осмотре, или с тем, что под ногами",prio:3,где:"везде"},
  {fingers:2,kind:"swipe",dir:"N",n:"повторить последнее сообщение; если речь идёт — оборвать её",prio:3,где:"везде"},
  {fingers:2,kind:"swipe",dir:"W",n:"карта места; тем же жестом закрыть",prio:3,где:"везде"},
@@ -5089,9 +5095,11 @@ document.addEventListener('touchend',e=>{
  if(!gameActive())return;
  if(G.weaponDrawn&&swipe){e.preventDefault();safeFn(()=>weaponSwing(dir));return;}
  if(G.inCombat){
-  /* Бой больше не открывает окно, поэтому шаг в сторону здесь невозможен: подсказываем,
-     чем бить, вместо прежнего молчания. */
-  if(swipe){e.preventDefault();safeFn(()=>narrate(G.weaponDrawn?'Взмах не распознан. Проведите пальцем чётче в сторону удара.':'Оружие в ножнах. Двойное касание тремя пальцами — вынуть оружие, затем свайп в сторону — удар.'));}
+  /* Бой не открывает окна, и свайп в нём — шаг по полю схватки: отойти,
+     уйти из-под замаха, догнать. Вынутое оружие перехвачено строкой выше. */
+  if(swipe){e.preventDefault();
+   if(G.combat&&G.combat.arena){safeFn(()=>Arena.step(dir));return;}
+   safeFn(()=>narrate(G.weaponDrawn?'Взмах не распознан. Проведите пальцем чётче в сторону удара.':'Оружие в ножнах. Двойное касание тремя пальцами — вынуть оружие, затем свайп в сторону — удар.'));}
   return;
  }
  if(swipe){e.preventDefault();safeFn(()=>move(dir));return;}
@@ -5473,7 +5481,7 @@ const SET_GROUPS=[
  {id:"speech",n:"Речь игры",       з:"📢",о:"сколько говорит рассказчик, что игра произносит сама и что прерывает речь"},
  {id:"ui",    n:"Интерфейс",       з:"♿",о:"ощупывание, подсказки расположения, быстрая активация, вибрация и субтитры"},
  {id:"gest",  n:"Жесты",           з:"🖐️",о:"свои фигуры для действий, раздельное касание и точность: насколько далеко может съехать палец"},
- {id:"diff",  n:"Сложность",       з:"⚔️",о:"мера мира: сколько бьют, сколько держат и сколько стоит поражение"},
+ {id:"diff",  n:"Сложность и темп боя",з:"⚔️",о:"мера мира: сколько бьют, сколько держат и сколько стоит поражение; темп боя: живой, неспешный или пошаговый"},
  {id:"save",  n:"Сохранения",      з:"💾",о:"записать игру сейчас, слоты и выгрузка в файл"}];
 const SET_GROUP_BY_ID=Object.fromEntries(SET_GROUPS.map(g=>[g.id,g]));
 const SETG={open:null};
@@ -6020,7 +6028,7 @@ const GUIDE=[
  "ТРИ ПАЛЬЦА. Двойное касание — вынуть или убрать оружие; одиночное касание тремя пальцами ничего не делает и лишь щёлкает. Свайп вниз — инвентарь по разделам, тем же свайпом закрывается. Свайп влево — осмотреться: эхо-скан. Свайп вверх — меню действий, где собраны все кнопки игры. Свайп вниз или вбок — сводка «где я»: место, уровень подземелья, координаты, здоровье, мана, золото, день, час и ближайшее задание.",
  "Почему сбор переехал на два пальца. Раньше ресурс собирался одним касанием одного пальца — тем самым, которым игра называет пункты. Игрок, привыкший подтверждать выбор двумя касаниями, на игровом поле собирал ресурс дважды и слышал два ответа подряд. Теперь правило одно для всего: одно касание называет, двойное выполняет, а сбор — отдельный жест двумя пальцами.",
  "ЧЕТЫРЕ ПАЛЬЦА. Двойное касание — открыть или закрыть панель заклинаний; одиночное лишь щёлкает. В открытой панели двенадцать слотов по свайпам: одним пальцем вверх, вправо, вниз, влево — с первого по четвёртый; двумя пальцами так же — с пятого по восьмой; тремя пальцами вверх, вправо, влево, вниз — с девятого по двенадцатый. Свайп сразу творит заклинание слота. Свайпы четырьмя пальцами и при открытой панели остаются речи.",
- "Отдельно: свайп одним пальцем при вынутом оружии — боевой взмах в эту сторону, а в окнах и меню свайп листает пункты. Все эти действия продублированы кнопками в меню действий, если жест почему-то неудобен."]},
+ "Отдельно: в бою свайп одним пальцем — шаг по полю схватки, а при вынутом оружии — удар в сторону твари, если оружие до неё достаёт; касание двумя пальцами в бою называет, где тварь. В окнах и меню свайп листает пункты. Все эти действия продублированы кнопками в меню действий, если жест почему-то неудобен."]},
 {title:"Глава 3. Движение и стороны света",body:[
  "При движении озвучивается только направление взгляда: вперёд — север, вправо — восток, вниз — юг, влево — запад.",
  "Направление всегда абсолютное: север, юг, запад, восток.",
@@ -6072,7 +6080,7 @@ const GUIDE=[
  "Правители дают важные задания, стража просит очистить дороги, жители — принести ресурсы."]},
 {title:"Глава 11. Монстры и бой",body:[
  "Монстра слышно заранее: его звук и маяк звучат при приближении.",
- "Бой не открывает окон и ничем не перекрывает экран: сводка о противнике и о себе появляется прямо на игровом экране, её можно ощупать пальцем. Выньте оружие касанием тремя пальцами и бейте свайпами в сторону удара; магия управляется панелью заклинаний (касание четырьмя пальцами). Побег — в меню действий (свайп тремя пальцами вверх) или клавиша Эскейп. Победа даёт опыт, золото и добычу.",
+ "Бой не открывает окон и ничем не перекрывает экран: сводка о противнике и о себе появляется прямо на игровом экране, её можно ощупать пальцем. Бой подвижный: свайп — шаг по полю схватки, тварь тоже ходит, гонится, замахивается и плетёт чары издали, и всякий её удар слышно заранее. Выньте оружие двойным касанием тремя пальцами и бейте свайпом в сторону твари, когда оружие до неё достаёт; касание двумя пальцами говорит, где она. Магия — панелью заклинаний (двойное касание четырьмя пальцами). Побег — в меню действий (свайп тремя пальцами вверх) или клавиша Эскейп, а в открытом поле от медленной твари можно просто уйти. Подробно — в главе 96 «Подвижный бой». Победа даёт опыт, золото и добычу.",
  "Поражение возвращает в столицу ближайшей империи.",
  "Убитая тварь мертва окончательно. Клетка, где она стояла, освобождается: можно спокойно оставить оружие в руке, взмахнуть ещё раз, уйти и вернуться — тварь не поднимется. Это верно и для логова в подземелье: после победы оно становится обычным полом. Раньше победа над зверем не оставляла в мире никакого следа, и взмах оружием на той же клетке начинал бой заново — с тем же зверем, с тем же опытом и той же добычей."]},
 {title:"Глава 12. Города, здания и подземелья",body:[
@@ -6389,6 +6397,17 @@ const GUIDE=[
  "Вещь растёт. За каждую победу работающий артефакт получает опыт, а на пороге открывает ступень — прибавку, которой у него раньше не было, и всегда из своего направления. Каждая следующая ступень даётся вдвое тяжелее. Если гнёзда кончились, редкую часть можно скормить вещи: она уйдёт в опыт вместо гнезда.",
  "Требования. Ранг задаёт уровень; сверх того вещь может требовать навык, заклинание нужной школы, расположение народа, принадлежность к клану, прочитанное знание или закрытое дело. Вещь, требования которой не выполнены, лежит мёртвым грузом и не даёт ничего — и прямо говорит, чего ей не хватает.",
  "Где всё это. Пункт меню «Артефакты, части и рецепты». В нём видно, каким ремеслом здесь занимаются и каково ваше умение, какие рецепты под рукой и чего не хватает, какие части лежат в суме, и по каждой вещи — всё, что о ней известно, и всё, что с ней можно сделать: вложить, вынуть, зачаровать, скормить, продать."]},
+{title:"Глава 96. Подвижный бой",body:[
+ "ЗАЧЕМ. Бой стоял на месте: тварь «преграждала путь» и звучала в середине головы, свайп без оружия в бою не делал ничего, а тварь била ровно тогда, когда били вы, — как ход в настольной игре. Теперь у схватки есть поле, и на нём у вас и у твари своё место. Оба ходят.",
+ "ГДЕ ТВАРЬ. Её голос, шаги, замах и чара идут с той стороны, где она стоит, и тише, когда она дальше. Касание двумя пальцами в бою называет, где она и чем занята: «Огр: в 2 шагах, впереди справа, замахивается». Та же строка стоит в сводке боя, её можно ощупать.",
+ "ШАГ. Свайп одним пальцем в бою — шаг по полю: отойти, уйти из-под удара, зайти сбоку, догнать. После шага игра коротко называет, где тварь. Стрелки клавиатуры делают то же.",
+ "УДАР. Вынутое оружие бьёт свайпом в сторону твари, если достаёт: клинок, топор, булава, посох и кинжал — вплотную, копьё — на два шага, лук — на шесть. Не достаёт — тот же свайп делает шаг к ней. Рука после удара возвращается не сразу: кинжал быстрее всех, булава и лук медленнее.",
+ "ТВАРЬ ХОДИТ САМА. Боец и громада подходят и бьют вплотную, громада — медленно и тяжело. Хищник — волк, паук, змея — быстр, прыгает с двух шагов и доводит удар броском. Колдун — призрак, банши, шаман, бес — держится поодаль и плетёт чару. Дракон дышит пламенем. Птица и гарпия бьют и отскакивают. Трусливая тварь — гоблин, разбойник, крыса, — раненная до четверти, бросается прочь: догоните или отпустите.",
+ "ВСЯКИЙ УДАР ПРЕДУПРЕЖДЁН. Перед ударом слышно замах, прыжок, чару или пламя с её стороны, и игра говорит одно слово со стороной: «Замах справа!». От замаха уходят прочь — шаг вбок у самой твари не спасает. От прыжка и от чары спасает шаг в любую сторону. От пламени — два шага. Промахнувшаяся тварь открыта: удар в этот миг проходит без ответа. Сокрушительный удар сбивает её с замаха.",
+ "ОТВЕТ ВПЛОТНУЮ. Если вы бьёте тварь, которая стоит вплотную и наготове, она отвечает сразу. Вдали, в замахе или открытая после промаха — не отвечает.",
+ "УЙТИ. В открытом поле от медленной твари можно просто уйти: на семи шагах она теряет вас, и бой кончается. Засадная тварь дальше пяти шагов не гонится, хищник не отстаёт. Под крышей и в подземелье поле семь на семь, на палубе — пять на пять: у стены и у борта дальше не отступить. Побег из меню действий удаётся тем легче, чем дальше вы от твари.",
+ "ТЕМП. В настройках, в разделе «Сложность и темп боя», три кнопки. Живой — тварь ходит и бьёт в своём ритме. Неспешный — то же, но в полтора раза медленнее: больше времени услышать и уйти. Пошаговый — время стоит, пока вы не сделаете шаг, удар или чару; тварь отвечает своим ходом, а её чара, прыжок и пламя копятся ход — успейте отойти.",
+ "ОКНО ОСТАНАВЛИВАЕТ ВРЕМЯ. Пока открыто меню действий, панель чар или инвентарь, тварь ждёт: выбирать пункт под ударом никого не заставляют. Первые три боя игра подсказывает жесты при начале схватки, дальше называет только тварь и где она."]},
 {title:"Глава 95. Меню действий — пунктами",body:[
  "ЗАЧЕМ. Сто тридцать пунктов меню шли одной лентой: разделы были заголовками внутри неё, и квесты лежали в «Герое», книги — в «Своде знаний», проповедник — среди торговцев, знаки и чернила — среди держав. Теперь меню устроено как настройки телефона: сперва список разделов, потом пункты одного раздела.",
  "СПИСОК РАЗДЕЛОВ. Три пальца вверх открывают меню, и в нём только разделы. Свайп по разделу называет его, число пунктов и то, что в нём лежит: «Персонаж: семь пунктов — лист героя, тело, инвентарь, мастерства, Путь Грани, ветви силы и достижения». Последний пункт списка — «Закрыть меню». В бою первым пунктом идёт «Попытаться сбежать» — его не ищут по разделам.",
@@ -6809,7 +6828,7 @@ const GUIDE_PARTS=[
  ["Часть IV. Магия","Школы, плетение, резонанс, эхо и две энциклопедии заклинаний.",[64,67,68,70,78,79,81,87]],
  ["Часть V. Мир, народы и знание","Кто здесь живёт, кто правит, во что верит и что об этом написано.",[8,9,10,18,19,30,31,36,37,38,39,51,60,83,84,85,86]],
  ["Часть VI. Дороги, города и ярусы","Как устроено место под ногами: тракты, кварталы, службы, ступени и сто ярусов.",[12,23,27,32,35,42,52,53,57,63,75,89,92]],
- ["Часть VII. Опасность и бой","Твари, владыки, войско, дела и цепочки, которые могут кончиться плохо.",[11,13,41,54,59,65]],
+ ["Часть VII. Опасность и бой","Твари, владыки, войско, дела и цепочки, которые могут кончиться плохо.",[11,96,13,41,54,59,65]],
  ["Часть VIII. Хозяйство, торговля и море","Цена, караван, порт, передел и одиннадцать родов договоров.",[14,15,16,17,20,73,74,77,80]],
  ["Часть IX. Грань, тьма и устройство игры","Тёмные земли, Сопряжение, Предтечи и то, из чего игра сложена изнутри.",[43,44,45,46,47,56,61,66,71]]];
 /* Глава по номеру из заголовка. */
@@ -11315,6 +11334,9 @@ function foeSpot(){
  try{
   const c=G.combat;if(!c)return точка;
   точка.dz=Number(c.alt)||0;
+  /* Поле схватки знает место твари точно: оттуда и голос. */
+  if(c.arena){точка.dx=(c.arena.fx-c.arena.px)||0;точка.dy=(c.arena.fy-c.arena.py)||0;
+   if(!точка.dx&&!точка.dy)точка.dy=-0.6;return точка;}
   const k=String(c.key||"").split(",");
   if(!G.place&&k.length===2){
    const x=Number(k[0]),y=Number(k[1]);
@@ -25927,6 +25949,12 @@ function weaponSwing(dir){
  if(!gameActive()||!G.weaponDrawn)return false;
  const w=G.equip.weapon;
  if(!w){G.weaponDrawn=false;narrate("Оружие потеряно из экипировки.");return false;}
+ /* В бою свайп сперва спрашивает поле: достаёт ли оружие до твари в эту
+    сторону. Не достаёт — это шаг туда же, а не взмах по воздуху. */
+ if(G.inCombat&&G.combat&&G.combat.arena){
+  const цель=safeFn(()=>Arena.aim(dir),"strike");
+  if(цель==="step"){safeFn(()=>Arena.step(dir));return true;}
+  if(цель==="wait")return true;}
  const labels={N:"вверх",S:"назад",E:"вправо",W:"влево"};
  AE.ensure();
  try{
@@ -25949,7 +25977,7 @@ function weaponSwing(dir){
      Внутри постройки и на борту корабля взмах вообще не должен смотреть на
      клетку мира под ногами — там свои противники. */
   try{ const c=cellContent(G.x,G.y);
-   if(c.monster&&!G.cleared[G.x+","+G.y]){startCombat(c);
+   if(c.monster&&!G.cleared[G.x+","+G.y]){startCombat(c,{dir,close:true});
     setTimeout(()=>{if(G.inCombat){try{fight("atk");}catch(e){}}},100);}}catch(e){} }
  return true;
 }
@@ -32090,6 +32118,8 @@ function move(dir){
   narrate(`Шаг не проходит: сверху ${layerName(слой)}. Свайп вниз двумя пальцами — закрыть, и шаг снова пойдёт по миру.`);
   return false;}
  if(!DIRV[dir])return false;
+ /* В бою шаг идёт по полю схватки, где бы она ни шла: в поле, в подземелье, на палубе. */
+ if(G.inCombat&&G.combat&&G.combat.arena)return !!safeFn(()=>Arena.step(dir),false);
  safeFn(()=>{Speech.contextCut("move");Speech.ctxTag("desc");});
  /* На борту корабля шаг превращается в морской переход: судно идёт своим курсом. */
  if(G.ship)return sailLeg();
@@ -33283,6 +33313,8 @@ function startCombat(c,opts){
   :safeFn(()=>foeAlt(m),0);
  safeFn(()=>Morpho.apply(m,c,opts&&opts.morph));
  G.inCombat=true;G.combat={m,hp:m.hp,key:c.x+","+c.y,own:своя,alt:высота,ai:monsterAIProfile(m)};
+ /* Поле схватки: у игрока и у твари своё место (см. «ПОДВИЖНЫЙ БОЙ»). */
+ safeFn(()=>Arena.init(G.combat,opts));
  /* Схватка с тем, кто заметно сильнее, начинается с клича: игрок слышит,
     во что ввязался, раньше, чем прочтёт уровень противника. */
  safeFn(()=>{if((Number(m.lvl)||1)>=(Number(G.level)||1)+2)Play.start("ev","battle_cry",{dur:4});});
@@ -33322,7 +33354,13 @@ function startCombat(c,opts){
  Music.start((Number(m.lvl)||1)>=(Number(G.level)||1)+3?"boss":"battle");
  vib([50,60,50]);sub(`⚔️ ${m.n}!`,"important");
  updateCombat();
- narrate(`Бой! ${m.n} ${m.lvl} уровня преграждает путь. Оружие не вынимается автоматически: двойное касание тремя пальцами — вынуть оружие, затем свайп в сторону — удар. Свайп тремя пальцами вверх — меню действий, там же попытка побега.`);
+ /* Где тварь — первое, что нужно услышать. Подробная подсказка звучит в
+    первых боях, дальше — коротко: жесты к тому времени уже в руке. */
+ const гдеТварь=safeFn(()=>Arena.where(),"");
+ G.fightsSeen=(Number(G.fightsSeen)||0)+1;
+ narrate(G.fightsSeen<=3
+  ?`Бой! ${m.n} ${m.lvl} уровня, ${гдеТварь}. Свайп — шаг: отойти, уйти из-под удара, догнать. Двойное касание тремя пальцами — вынуть оружие; вынутое бьёт свайпом в сторону твари. Касание двумя пальцами — где она. Свайп тремя пальцами вверх — меню действий, там же побег.`
+  :`Бой! ${m.n} ${m.lvl} уровня, ${гдеТварь}.`);
  safeFn(()=>document.getElementById("cbTitle").focus({preventScroll:true}));}
 function updateCombat(){const cb=G.combat;if(!cb||!document.getElementById("cbTitle"))return;const m=cb.m;
  const eHp=Math.max(0,cb.hp),eMax=Math.max(1,m.hp),ePct=Math.round(100*eHp/eMax);
@@ -33350,9 +33388,334 @@ function updateCombat(){const cb=G.combat;if(!cb||!document.getElementById("cbTi
    <div class="cb-hpbar" aria-hidden="true"><span style="width:${pPct}%"></span></div>
    <div class="list-line">Мана: ${G.mana} / ${G.manaMax}</div>
    <div class="list-line">Сила ${G.str} · Ловкость ${G.agi} · Разум ${G.mind} · Харизма ${G.cha}</div>
-   <div class="list-line">${weaponName}${G.weaponDrawn?" (в руках)":" (в ножнах)"}</div>`;}
+   <div class="list-line">${weaponName}${G.weaponDrawn?" (в руках)":" (в ножнах)"}</div>`;
+ safeFn(()=>updateArenaLine());}
 function cbLog(t){const el=document.getElementById("cbLog");if(el)el.textContent=t;}
+/* Строка поля в сводке боя: где тварь, чем занята и какой темп. */
+function updateArenaLine(){
+ const el=document.getElementById("cbArena");if(!el)return;
+ const t=safeFn(()=>Arena.text(),"")||"";
+ el.textContent=t?"🧭 "+t:"";el.dataset.speak=t;el.hidden=!t;}
 function monsterAIProfile(m){const id=String(m?.id||'');if(['wolf','goblin','troll','ogre'].includes(id))return {aggressive:true,chase:0.78};if(['dragon','harpy'].includes(id))return {aggressive:true,chase:0.58};if(['ghost','spider','snake'].includes(id))return {aggressive:false,chase:0.28};return {aggressive:false,chase:0.18};}
+/* ════════════════════════════════════════════════════════════════════════
+   ПОДВИЖНЫЙ БОЙ
+
+   Бой стоял на месте. Тварь «преграждала путь» и звучала у игрока в голове,
+   свайп без оружия в бою не делал ничего, а ответный удар приходил ровно
+   тогда, когда игрок бил сам, — как ход в настольной игре. Ни отойти, ни
+   уйти из-под удара, ни догнать.
+
+   Теперь у схватки есть поле, и на нём у игрока и у твари своё место.
+   · Свайп в бою — шаг: отойти, уйти из-под замаха, зайти сбоку, догнать.
+   · Вынутое оружие бьёт в сторону твари, если достаёт до неё: клинок —
+     вплотную, копьё — на два шага, лук — на шесть. Не достаёт — тот же
+     свайп ведёт к ней.
+   · Тварь живёт сама: подходит, гонится, замахивается, прыгает, плетёт
+     чару издали, дышит пламенем, бьёт и отскакивает, а раненая трусливая
+     бежит, и её можно догнать.
+   · Всякий удар твари предупреждён: замах, прыжок, чару и пламя слышно с
+     той стороны, где она стоит, и есть миг, чтобы уйти. От замаха уходят
+     прочь, от чары — в любую сторону, от пламени — на два шага.
+   · Промахнувшаяся тварь открыта: удар в этот миг проходит без ответа.
+   · Вдали от стен от медленной твари можно просто уйти.
+
+   Место твари — точка звука: все её голоса идут оттуда (см. foeSpot).
+   Темп — в настройках: живой, неспешный и пошаговый. В пошаговом время
+   стоит, пока игрок не сделает шаг, удар или чару, а чара и пламя твари
+   копятся ход. Любое открытое окно — меню действий, панель чар,
+   инвентарь — останавливает время боя: выбирать пункт под ударом не
+   заставляют никого.
+   ════════════════════════════════════════════════════════════════════════ */
+const COMBAT_PACE={
+ live:{n:"Живой",k:1,
+  d:"Тварь ходит и бьёт сама, в своём ритме. Замах, прыжок, чару и пламя слышно заранее с её стороны — есть миг, чтобы уйти."},
+ calm:{n:"Неспешный",k:1.6,
+  d:"Тоже живой, но тварь думает, ходит и замахивается в полтора раза дольше: больше времени услышать и уйти."},
+ turn:{n:"Пошаговый",k:1,
+  d:"Время стоит, пока вы не сделаете шаг, удар или чару; тварь отвечает своим ходом. Её чара, прыжок и пламя копятся ход — успейте отойти."}};
+function combatPace(){return COMBAT_PACE[settings.combatPace]?settings.combatPace:"live";}
+/* Как тварь дерётся. step — мс на шаг, wind — замах, rec — сколько она
+   открыта после удара, start — на скольких шагах начинается схватка, keep —
+   на каком расстоянии она хочет держаться, cast и breath — дальность чары и
+   пламени, dmgK — во сколько раз её удар тяжелее обычного. */
+const ARENA_ROLE={
+ melee: {n:"боец",       step:900, wind:1000,rec:900, start:1,keep:1,dmgK:1},
+ fast:  {n:"хищник",     step:480, wind:750, rec:700, start:2,keep:1,dmgK:0.85,lunge:true},
+ brute: {n:"громада",    step:1300,wind:1400,rec:1200,start:2,keep:1,dmgK:1.3},
+ caster:{n:"колдун",     step:1000,wind:1400,rec:1100,start:3,keep:3,dmgK:0.6,cast:5},
+ breath:{n:"огнедышащий",step:1000,wind:1600,rec:1300,start:2,keep:2,dmgK:1,breath:3},
+ skirm: {n:"налётчик",   step:600, wind:850, rec:800, start:2,keep:1,dmgK:0.9,hitrun:true}};
+function arenaRole(m){
+ const id=String((m&&m.id)||"")+" "+String((m&&m.n)||"");
+ if(/cast|mage|shaman|witch|lich|siren|banshee|wraith|колдун|шаман|ведьм|чарод|жрец/i.test(id))return "caster";
+ const f=safeFn(()=>foeFamily(m),"beast");
+ if(f==="spirit"||f==="fiend")return "caster";
+ if(f==="dragon")return "breath";
+ if(f==="bird")return "skirm";
+ if(f==="giant"||f==="construct")return "brute";
+ if(/wolf|spider|snake|serpent|basilisk|rat|lynx|hornet|jackal|hound|волк|паук|змей|змея|крыс|рыс/i.test(id))return "fast";
+ if(/bear|boar|kraken|worm|troll|ogre|медвед|кабан/i.test(id))return "brute";
+ return "melee";}
+/* Досягаемость и темп оружия игрока. */
+function weaponReach(){const k=safeFn(()=>weaponClass(),"sword");return k==="bow"?6:k==="spear"?2:1;}
+function weaponSpeedMs(){
+ return ({dagger:450,sword:600,staff:650,spear:700,axe:800,mace:850,bow:900})[safeFn(()=>weaponClass(),"sword")]||600;}
+const Arena={
+ ESC:7,          /* на скольких шагах тварь теряет вас в открытом поле */
+ R_PLACE:3,      /* под крышей и в подземелье поле семь на семь */
+ R_SHIP:2,       /* палуба тесна: пять на пять */
+ iv:null,
+ now(){return Date.now();},
+ k(){return (COMBAT_PACE[combatPace()]||COMBAT_PACE.live).k;},
+ live(){return combatPace()!=="turn";},
+ cur(){return G.inCombat&&G.combat&&G.combat.arena||null;},
+ dist(a){return Math.max(Math.abs(a.fx-a.px),Math.abs(a.fy-a.py));},
+ init(cb,opts){
+  const m=cb.m,role=arenaRole(m),R=ARENA_ROLE[role];
+  const dir=(opts&&DIRV[opts.dir])?opts.dir:(DIRV[lastMoveDir]?lastMoveDir:"N");
+  const r=G.ship?this.R_SHIP:(G.place?this.R_PLACE:0);
+  /* На тесной палубе и в комнате тварь не встаёт за бортом или в стене. */
+  const d=Math.min(opts&&opts.close?1:R.start,r||99);
+  const v=DIRV[dir];
+  const id=String(m.id||"")+" "+String(m.n||"");
+  const a={px:0,py:0,fx:v[0]*d,fy:v[1]*d,role,r,
+   /* Первый ход твари — не раньше, чем договорено начало боя. */
+   readyAt:this.now()+2600*this.k(),wind:null,recTurns:0,
+   stepAt:0,swingAt:0,last:this.now(),
+   coward:!m.boss&&/goblin|kobold|bandit|cutpurse|rat|jackal|гоблин|кобольд|разбойн|крыс|шакал/i.test(id),
+   fleeing:false,chase:Number(cb.ai&&cb.ai.chase)||0.3,close:false,taught:false};
+  cb.arena=a;
+  if(this.live())this.start();else this.stop();
+  return a;},
+ start(){this.stop();this.iv=setInterval(()=>safeFn(()=>this.tick()),120);},
+ stop(){if(this.iv){clearInterval(this.iv);this.iv=null;}},
+ /* Время боя стоит, пока открыто окно, спрятана вкладка или игра не идёт. */
+ paused(){return !!(document.hidden||safeFn(()=>activeLayer(),null)||!safeFn(()=>gameActive(),true));},
+ tick(now){
+  const a=this.cur();
+  if(!a||!this.live()){this.stop();return false;}
+  now=now||this.now();
+  const dt=Math.max(0,now-a.last);a.last=now;
+  if(this.paused()){a.readyAt+=dt;if(a.wind)a.wind.until+=dt;return false;}
+  if(a.wind){if(now>=a.wind.until)this.resolve(now);return true;}
+  if(now>=a.readyAt)this.decide(now);
+  return true;},
+ /* ── Слова о месте ── */
+ side(a,x,y){
+  const dx=(x===undefined?a.fx:x)-a.px,dy=(y===undefined?a.fy:y)-a.py;
+  const в=dy<0?"впереди":dy>0?"позади":"",г=dx>0?"справа":dx<0?"слева":"";
+  return [в,г].filter(Boolean).join(" ")||"рядом";},
+ distWord(d){return d<=1?"вплотную":`в ${d} ${plural(d,"шаге","шагах","шагах")}`;},
+ where(a){a=a||this.cur();if(!a)return "";return `${this.distWord(this.dist(a))}, ${this.side(a)}`;},
+ say(pri){
+  const a=this.cur();if(!a)return;const m=G.combat.m;
+  narrate(`${m.n}: ${this.where(a)}.`,{key:"arena",pri:pri===undefined?2:pri,cat:"combat",ttl:2500});
+  safeFn(()=>updateCombat());},
+ /* Касание двумя пальцами в бою: где тварь, чем она занята, и её голос с её стороны. */
+ report(){
+  const a=this.cur();if(!a)return false;const m=G.combat.m;
+  const что=a.wind?({melee:"замахивается",lunge:"готовится прыгнуть",bolt:"плетёт чару",breath:"набирает пламя"})[a.wind.kind]
+   :a.fleeing?"бежит прочь":this.now()<a.readyAt&&a.state==="rec"?"открыта после удара":"";
+  safeFn(()=>foeProfileCue(m,"breath",{gain:0.5}));
+  const оруж=G.weaponDrawn?(this.dist(a)<=weaponReach()?" Оружие достаёт.":" Оружие не достаёт: подойдите."):"";
+  narrate(`${m.n}: ${this.where(a)}${что?", "+что:""}.${оруж}`,{key:"arena",pri:1,cat:"combat",interrupt:true});
+  return true;},
+ /* ── Ход твари ── */
+ canStep(a,x,y){
+  if(x===a.px&&y===a.py)return false;
+  if(a.r&&(Math.abs(x)>a.r||Math.abs(y)>a.r))return false;
+  return true;},
+ foeStep(sign){
+  const a=this.cur();if(!a)return false;
+  let best=null,bd=null;
+  for(let dx=-1;dx<=1;dx++)for(let dy=-1;dy<=1;dy++){
+   if(!dx&&!dy)continue;
+   const x=a.fx+dx,y=a.fy+dy;if(!this.canStep(a,x,y))continue;
+   const ch=Math.max(Math.abs(x-a.px),Math.abs(y-a.py)),eu=Math.hypot(x-a.px,y-a.py);
+   const score=sign>0?ch*10+eu:-(ch*10+eu);
+   if(bd===null||score<bd){bd=score;best=[x,y];}}
+  if(!best)return false;
+  const было=this.dist(a);
+  const станет=Math.max(Math.abs(best[0]-a.px),Math.abs(best[1]-a.py));
+  if(sign>0?станет>=было:станет<=было)return false;
+  a.fx=best[0];a.fy=best[1];
+  safeFn(()=>foeProfileCue(G.combat.m,"step",{gain:0.45}));
+  return true;},
+ decide(now){
+  const cb=G.combat,a=this.cur();if(!a)return;
+  const m=cb.m,R=ARENA_ROLE[a.role],k=this.k();
+  now=now||this.now();
+  /* Путы держат тварь на месте: её ход пропадает. */
+  if((Number(cb.путы)||0)>0){cb.путы-=1;a.readyAt=now+R.rec*k;
+   safeFn(()=>Bank.play("oc_chain",{kind:"combat",gain:0.5,maxSec:2}));return;}
+  const d=this.dist(a);
+  /* Трусливая тварь, раненая до четверти, бросается прочь — догоняйте. */
+  if(a.coward&&!a.fleeing&&cb.hp>0&&cb.hp<=Math.max(1,m.hp*0.25)){
+   a.fleeing=true;safeFn(()=>foeProfileCue(m,"fear",{gain:0.6}));
+   narrate(`${m.n} бросается прочь! Догоняйте или отпустите.`,{key:"arena",pri:1,cat:"combat"});}
+  if(a.fleeing){
+   this.foeStep(-1);
+   if(!a.r&&this.dist(a)>=this.ESC){this.foeEscaped();return;}
+   a.readyAt=now+R.step*k;return;}
+  /* Колдун держит расстояние: вплотную ему неуютно. */
+  if(R.cast&&d<R.keep&&Math.random()<0.65&&this.foeStep(-1)){a.readyAt=now+R.step*k;return;}
+  if(R.cast&&d>=2&&d<=R.cast){this.windup("bolt",now);return;}
+  if(R.breath&&d<=R.breath&&Math.random()<(d<=1?0.35:0.6)){this.windup("breath",now);return;}
+  if(R.lunge&&d===2){this.windup("lunge",now);return;}
+  if(d<=1){this.windup("melee",now);return;}
+  /* Засадная тварь далеко не гонится: отошли на пять шагов — отпустила. */
+  if(d>=5&&a.chase<0.3&&!a.r){a.readyAt=now+R.step*k;return;}
+  const шагнула=this.foeStep(1);
+  if(шагнула&&R.lunge&&!this.live()&&this.dist(a)>1)this.foeStep(1); /* хищник в пошаговом бою бежит вдвое */
+  a.readyAt=now+R.step*k;
+  const dn=this.dist(a);
+  if(dn<=1&&!a.close){a.close=true;
+   narrate(`${m.n} вплотную, ${this.side(a)}!`,{key:"arena",pri:1,cat:"combat",ttl:2000});}
+  else if(dn>1)a.close=false;
+  safeFn(()=>updateCombat());},
+ /* Замах: тварь выбрала удар и цель — клетку, где вы стоите сейчас. */
+ windup(kind,now){
+  const cb=G.combat,a=this.cur();if(!a)return;
+  const m=cb.m,R=ARENA_ROLE[a.role];
+  now=now||this.now();
+  const base=kind==="breath"?1600:kind==="bolt"?1400:kind==="lunge"?750:R.wind;
+  a.wind={kind,tx:a.px,ty:a.py,at:now,until:now+base*this.k()};a.state="wind";
+  const слово={melee:"Замах",lunge:"Прыжок",bolt:"Чара",breath:"Пламя"}[kind];
+  safeFn(()=>{
+   if(kind==="melee")foeProfileCue(m,"warcry",{gain:0.7});
+   else if(kind==="lunge")foeProfileCue(m,"aggro",{gain:0.7});
+   else if(kind==="bolt"){if(!foeProfileCue(m,"unique",{gain:0.65}))foeCue("spell_arcane",{gain:0.65,maxSec:3});}
+   else{foeProfileCue(m,"aggro",{gain:0.7});setTimeout(()=>safeFn(()=>foeCue("cast_burn",{gain:0.55,maxSec:3})),300);}});
+  vib(kind==="melee"?[30,40,30]:[60,40,60]);
+  /* Первое предупреждение в бою учит, куда уходить; дальше — одно слово и сторона. */
+  const куда={melee:"отойдите прочь",lunge:"шаг в сторону",bolt:"шаг в любую сторону",breath:"два шага прочь"}[kind];
+  narrate(`${слово} ${this.side(a)}!${a.taught?"":" "+куда[0].toUpperCase()+куда.slice(1)+"."}`,
+   {key:"foeTell",pri:1,cat:"combat",ttl:2000,interrupt:true});
+  a.taught=true;
+  cbLog(`${m.n}: ${слово.toLowerCase()}, ${this.side(a)}.`);
+  safeFn(()=>updateCombat());
+  /* В пошаговом бою удар вплотную не ждёт: он и есть ход твари. */
+  if(!this.live()&&kind==="melee")this.resolve(now);},
+ resolve(now){
+  const cb=G.combat,a=this.cur();if(!a||!a.wind)return;
+  const m=cb.m,R=ARENA_ROLE[a.role],w=a.wind,k=this.k();
+  now=now||this.now();a.wind=null;
+  let hit=false;
+  if(w.kind==="melee"){
+   /* Хищник доводит удар броском: от него на шаг не уйти. */
+   if(R.lunge&&this.dist(a)===2)this.foeStep(1);
+   hit=this.dist(a)<=1;}
+  else if(w.kind==="lunge"){
+   /* Прыжок — туда, где вы стояли: тварь приземляется рядом с той клеткой. */
+   for(let i=0;i<2&&Math.max(Math.abs(a.fx-w.tx),Math.abs(a.fy-w.ty))>1;i++){
+    const dx=Math.sign(w.tx-a.fx),dy=Math.sign(w.ty-a.fy);
+    if(this.canStep(a,a.fx+dx,a.fy+dy)){a.fx+=dx;a.fy+=dy;}else break;}
+   hit=a.px===w.tx&&a.py===w.ty&&this.dist(a)<=1;}
+  else if(w.kind==="bolt")hit=a.px===w.tx&&a.py===w.ty;
+  else if(w.kind==="breath")hit=Math.max(Math.abs(a.px-w.tx),Math.abs(a.py-w.ty))<=1;
+  a.state="rec";
+  if(hit){
+   safeFn(()=>foeStrike({kind:w.kind}));
+   a.readyAt=now+R.rec*k;}
+  else{
+   /* Мимо. Свист проходит там, где вы стояли, а тварь открыта: удар в этот
+      миг проходит без ответа. */
+   safeFn(()=>{if(!Spatial.role(w.kind==="breath"?"cast_burn":"hit_air",w.tx-a.px,w.ty-a.py,{gain:0.55,maxSec:2}))
+    Bank.play("hit_air",{gain:0.5,maxSec:2});});
+   safeFn(()=>deed("dodges"));
+   const открыта=R.rec*k*(w.kind==="melee"?1.4:1.2);
+   a.readyAt=now+открыта;a.openUntil=now+открыта;
+   if(!this.live())a.recTurns=1;
+   narrate(a.missTaught?"Мимо!":"Мимо! Тварь открылась — бейте, пока она не собралась.",
+    {key:"foeTell",pri:1,cat:"combat",ttl:1800,interrupt:true});
+   a.missTaught=true;
+   cbLog(`${m.n} промахивается.`);}
+  /* Налётчик бьёт и отскакивает. */
+  if(R.hitrun&&G.inCombat&&G.combat===cb){this.foeStep(-1);this.foeStep(-1);}
+  safeFn(()=>updateCombat());},
+ /* Сокрушительный удар сбивает тварь с замаха. */
+ stagger(){
+  const a=this.cur();if(!a||!a.wind)return false;
+  a.wind=null;a.state="rec";a.readyAt=this.now()+ARENA_ROLE[a.role].rec*this.k();
+  cbLog(cbLog2text()+" Замах сбит!");return true;},
+ /* Ответ на ход игрока. «strike» — тварь отвечает ударом сейчас же. */
+ reply(act){
+  const a=this.cur();if(!a)return "strike";
+  if(!this.live())return this.foeTurn();
+  const now=this.now();
+  if(a.fleeing||a.wind)return null;
+  if(this.dist(a)<=1&&now>=a.readyAt){a.readyAt=now+ARENA_ROLE[a.role].rec*this.k();a.state="rec";return "strike";}
+  return null;},
+ /* Пошаговый бой: ход твари после хода игрока. */
+ foeTurn(){
+  const a=this.cur();if(!a)return null;
+  if(a.wind){this.resolve();return "done";}
+  if(a.recTurns>0){a.recTurns--;return "done";}
+  this.decide();
+  return "done";},
+ /* ── Ход игрока ── */
+ stepMs(){return Math.max(320,Math.round(480-(Number(G.agi)||0)*3));},
+ step(dir){
+  const a=this.cur();if(!a)return false;
+  const v=DIRV[dir];if(!v)return false;
+  const now=this.now();
+  if(this.live()&&now<a.stepAt)return false;
+  const nx=a.px+v[0],ny=a.py+v[1];
+  const m=G.combat.m;
+  if(nx===a.fx&&ny===a.fy){
+   narrate(G.weaponDrawn?`${m.n} прямо на пути: свайп в её сторону бьёт.`
+    :`${m.n} вплотную на пути. Двойное касание тремя пальцами — вынуть оружие, и тот же свайп ударит.`,
+    {key:"arena",pri:1,cat:"combat"});
+   return false;}
+  if(a.r&&(Math.abs(nx)>a.r||Math.abs(ny)>a.r)){
+   safeFn(()=>beaconAt("wall",v[0],v[1],0,1));
+   narrate(G.ship?"Борт: дальше некуда.":"Стена: дальше не отступить.",{key:"arena",pri:1,cat:"combat"});
+   return false;}
+  a.px=nx;a.py=ny;a.stepAt=now+this.stepMs();
+  safeFn(()=>stepSound());
+  safeFn(()=>deed("combatSteps"));
+  if(!a.r&&this.dist(a)>=this.ESC){this.playerEscaped();return true;}
+  a.close=this.dist(a)<=1;
+  this.say();
+  if(!this.live())this.foeTurn();
+  return true;},
+ /* Свайп с вынутым оружием: удар, если оружие достаёт в эту сторону;
+    иначе — шаг туда же. «wait» — рука ещё не вернулась после удара. */
+ aim(dir){
+  const a=this.cur();if(!a)return "strike";
+  const v=DIRV[dir];if(!v)return "step";
+  const rx=a.fx-a.px,ry=a.fy-a.py,d=Math.max(Math.abs(rx),Math.abs(ry));
+  const reach=weaponReach(),dot=v[0]*rx+v[1]*ry,len=Math.hypot(rx,ry)||1;
+  const вСторону=reach>1?dot/len>=0.7:dot>0;
+  if(!вСторону||d>reach)return "step";
+  const now=this.now();
+  if(this.live()&&now<a.swingAt){safeFn(()=>Bank.play("lug_whoosh",{gain:0.2,maxSec:1}));return "wait";}
+  a.swingAt=now+weaponSpeedMs();
+  return "strike";},
+ /* Побег по-настоящему: чем дальше вы от твари, тем легче уйти. */
+ fleeBonus(){const a=this.cur();return a?Math.min(0.4,Math.max(0,this.dist(a)-1)*0.08):0;},
+ playerEscaped(){
+  const cb=G.combat;if(!cb)return;const m=cb.m;
+  safeFn(()=>foeProfileCue(m,"lose",{gain:0.5}));
+  endCombat();
+  narrate(`Вы оторвались: ${m.n} больше не гонится. Бой окончен.`,{interrupt:true});
+  journal(`Ушли от «${m.n}».`);
+  safeFn(()=>refresh());safeFn(()=>resumeLocationMusic());},
+ foeEscaped(){
+  const cb=G.combat;if(!cb)return;const m=cb.m;
+  endCombat();
+  narrate(`${m.n} скрывается из слуха: упустили. Бой окончен.`,{interrupt:true});
+  journal(`Упустили «${m.n}».`);
+  safeFn(()=>refresh());safeFn(()=>resumeLocationMusic());},
+ dmgK(kind){
+  const a=this.cur();const R=a&&ARENA_ROLE[a.role];
+  if(kind==="bolt")return 1;
+  if(kind==="breath")return 1.25;
+  if(kind==="lunge")return 1.1;
+  return R?R.dmgK:1;},
+ text(){const a=this.cur();if(!a)return "";
+  const R=ARENA_ROLE[a.role];
+  return `Поле боя: ${G.combat.m.n}, ${R.n}, ${this.where(a)}${a.wind?", "+({melee:"замах",lunge:"прыжок",bolt:"чара",breath:"пламя"})[a.wind.kind]:""}. Темп: ${COMBAT_PACE[combatPace()].n}.`;}};
 function playMonsterSound(m){try{
  /* Профиль твари: случайный голос или движение из её точки; рисованный
     зов остаётся только без папки записей. */
@@ -33406,7 +33769,7 @@ function playWoundSfx(dmg=6){try{AE.ensure();
  safeFn(()=>Bank.play((Number(dmg)||6)>=12?"oc_shield_metal":((Number(dmg)||0)%2?"lug_clank":"lug_metal"),
   {seed:Math.floor(Math.random()*97),gain:0.45,maxSec:2}));
  const s=new SFX();const heavy=Math.max(0.6,Math.min(1.5,0.6+(Number(dmg)||6)/14));s.wound(heavy);setTimeout(()=>{try{s.stop(.2);}catch(e){}},650);}catch(e){}}
-function endCombat(){if(G.combat&&G.combat.monsterTimer)clearTimeout(G.combat.monsterTimer);G.inCombat=false;G.combat=null;
+function endCombat(){if(G.combat&&G.combat.monsterTimer)clearTimeout(G.combat.monsterTimer);safeFn(()=>Arena.stop());G.inCombat=false;G.combat=null;
  /* Отметка «этот бой идёт за такое-то логово» ставится в startInsideCombat и
     снималась ТОЛЬКО победой. После побега она оставалась висеть: игрок
     спускался на уровень ниже, побеждал там кого угодно — и мёртвым
@@ -33548,6 +33911,7 @@ function fight(a){const cb=G.combat;if(!cb)return;const m=cb.m;
    safeFn(()=>{delete G.buffs.forgecall;});}
   critChance+=safeFn(()=>Tree.критK(),0);
   const crit=critChance>0&&Math.random()<critChance;
+  if(crit)safeFn(()=>Arena.stagger());
   if(crit){dmg*=2;safeFn(()=>{Bank.play("lug_impact",{seed:dmg,gain:0.6,maxSec:2});Bank.play("battle_sword",{seed:dmg,gain:0.7,maxSec:3});
    Bank.play("cast_warcry",{seed:dmg,gain:0.5,maxSec:3});
    setTimeout(()=>safeFn(()=>Bank.play("lug_metal",{seed:dmg,gain:0.6,maxSec:3})),120);});}
@@ -33580,7 +33944,7 @@ function fight(a){const cb=G.combat;if(!cb)return;const m=cb.m;
  else if(a==="potion"){if(G.water<20){narrate("Нет воды для зелья.");return;}
   G.water-=20;G.hp=Math.min(G.hpMax,G.hp+15);UI.drink();cbLog("Зелье: +15 здоровья.");}
  else if(a==="flee"){if(safeFn(()=>{const p=bossPhaseOf(cb.m);return p&&p.механика==="без бегства";},false)){cbLog("Якорь брошен: бежать некуда.");}
-  else{if(Math.random()<0.4+G.agi*0.02+0.12*fxLevel("deal")+safeFn(()=>Morpho.fleeK(m),0)){
+  else{if(Math.random()<0.4+G.agi*0.02+0.12*fxLevel("deal")+safeFn(()=>Morpho.fleeK(m),0)+safeFn(()=>Arena.fleeBonus(),0)){
    safeFn(()=>foeProfileCue(m,"lose",{gain:0.5}));endCombat();narrate("Вы сбежали!");journal(`Побег от «${m.n}».`);refresh();resumeLocationMusic();return;}
   cbLog("Сбежать не вышло!");}
   safeFn(()=>{Bank.play("oc_shield_block",{seed:G.hp,gain:0.5,maxSec:2});Bank.play("battle_shield",{seed:G.hp,gain:0.45,maxSec:3});Play.start("ev","shield_bash",{dur:2});});}
@@ -33589,20 +33953,34 @@ function fight(a){const cb=G.combat;if(!cb)return;const m=cb.m;
  safeFn(()=>bossPhaseCheck());
  if(cb.hp<=0){victory();return;}
  /* Путы ядра «путы»: связанная тварь свой ход теряет, и это слышно. */
- if((Number(cb.путы)||0)>0){
+ /* В живом бою путы тратит сама тварь, на своём ходу (Arena.decide). */
+ if((Number(cb.путы)||0)>0&&!(cb.arena&&Arena.live())){
   cb.путы-=1;
   safeFn(()=>Bank.play("oc_chain",{kind:"combat",gain:0.5,maxSec:2}));
   cbLog(cbLog2text()+` ${m.n} рвётся из пут и свой ход теряет${cb.путы>0?`; осталось ${cb.путы}`:""}.`);
   narrate(cbLog2text());updateCombat();refresh();return;}
+ /* Ответ твари. Раньше он шёл на каждый ход игрока, как в настольной игре.
+    Теперь его решает поле: вплотную и наготове — тварь отвечает сразу;
+    вдали, в замахе или открытая после промаха — нет, она действует сама,
+    в своём ритме (Arena). В пошаговом темпе здесь же идёт её ход. */
+ const ответ=safeFn(()=>Arena.reply(a),"strike");
+ if(ответ!=="strike"){updateCombat();refresh();return;}
+ foeStrike({kind:"melee",counter:true});}
+/* Удар твари по игроку. Род: melee — вплотную, lunge — прыжок, bolt — чара
+   издали, breath — пламя. Зовут его ответ на ход игрока и поле боя. */
+function foeStrike(o){const cb=G.combat;if(!cb)return 0;const m=cb.m;
+ const род=(o&&o.kind)||"melee";
  /* Мера сложности: во сколько раз больнее бьёт мир. */
  let mdmg=Math.max(1,Math.round((m.dmg-Math.floor(def()/2)+Math.floor(Math.random()*3))*diff().dmg));
+ /* Род удара: громада бьёт тяжелее, хищник легче, чара и пламя — своей мерой. */
+ mdmg=Math.max(1,Math.round(mdmg*(Number(o&&o.k)||safeFn(()=>Arena.dmgK(род),1))));
  if(hasSkill("warded"))mdmg=Math.max(1,Math.round(mdmg*0.8));  /* навык «Оберег» держит удар */
  /* Порча ядра «порча»: тварь бьёт слабее, пока порча держится. */
  if((Number(cb.порча)||0)>0&&(Number(cb.порчаХод)||0)>0){
   mdmg=Math.max(1,Math.round(mdmg*(1-Math.min(0.5,cb.порча))));
   cb.порчаХод-=1;if(cb.порчаХод<=0){cb.порча=0;cbLog(cbLog2text()+" Порча сошла.");}}
  /* Древо Граней: доспех и щит учатся принимать удар, тело — держать чужую чару. */
- mdmg=safeFn(()=>Tree.принял(mdmg,/cast|mage|wraith|undead|goblin_cast|wyrm_cast|колдун|маг|чарод/i.test(String((m&&(m.id+m.n))||""))),mdmg);
+ mdmg=safeFn(()=>Tree.принял(mdmg,род==="bolt"||род==="breath"||/cast|mage|wraith|undead|goblin_cast|wyrm_cast|колдун|маг|чарод/i.test(String((m&&(m.id+m.n))||""))),mdmg);
  /* Усвоенные черты и состояние тела: холодная кровь за Гранью, яд в крови
     против змей, аномальное тело — раны глубже, эволюционировавшее — легче. */
  mdmg=Math.max(1,Math.round(mdmg*(1-(G.dark?safeFn(()=>assimBonus("dark"),0):0)
@@ -33612,7 +33990,7 @@ function fight(a){const cb=G.combat;if(!cb)return;const m=cb.m;
     и слышно дерево или железо самого щита. Против чар щит не помогает. */
  let щитПринял=false;
  safeFn(()=>{const щ=G.equip&&G.equip.shield;if(!щ||typeof щ!=="object")return;
-  if(/cast|mage|wraith|колдун|маг|чарод/i.test(String((m&&(m.id+m.n))||"")))return;
+  if(род==="bolt"||род==="breath"||/cast|mage|wraith|колдун|маг|чарод/i.test(String((m&&(m.id+m.n))||"")))return;
   if(Math.random()<shieldBlockChance(щ)){mdmg=Math.max(1,Math.round(mdmg/2));щитПринял=true;щ.сост=Math.max(5,itemCondition(щ)-1);}});
  /* Удар по игроку слышен: за Гранью тяжелее, на Грани — короче. */
  safeFn(()=>Bank.play(G.dark?"es_hit":(/wolf|bear|spider|drake|harpy|cat|rat|волк|медвед|паук|кош|крыс/i.test(String(m.id||m.kind||m.n||""))?"lug_claw":((Number(mdmg)||0)%2?"mtg_hurt":"oc_hurt")),{gain:0.55,maxSec:3}));
@@ -33673,10 +34051,11 @@ function fight(a){const cb=G.combat;if(!cb)return;const m=cb.m;
    setTimeout(()=>safeFn(()=>Bank.play("hero_heart",{seed:2,gain:0.55,maxSec:5})),700);
    narrate("Здоровье на исходе: четверть и меньше. Зелье или бегство.",{pri:0,key:"hplow",cat:"combat"});}});
  if(!safeFn(()=>playRealMonsterCue(m,"attack",0.7),false))playMonsterSound(m);
-  if(cb.ai?.chase&&Math.random()<cb.ai.chase){sub(`${m.n} преследует вас.`);}
- narrate(` ${m.n} бьёт вас: −${mdmg}.${щитПринял?" Щит принял удар.":""}`,{key:"enemyhit",pri:3,ttl:1500,cat:"combat"});
+ const как={lunge:"сбивает вас прыжком",bolt:"бьёт вас чарой",breath:"обдаёт вас пламенем"}[род]||"бьёт вас";
+ narrate(` ${m.n} ${как}: −${mdmg}.${щитПринял?" Щит принял удар.":""}`,{key:"enemyhit",pri:o&&o.counter?3:1,ttl:1500,cat:"combat"});
  updateCombat();refresh();
- if(G.hp<=0)defeat();}
+ if(G.hp<=0)defeat();
+ return mdmg;}
 function cbLog2text(){const el=document.getElementById("cbLog");return el?el.textContent:"";}
 function questMonsterProgress(monster){
  try{
@@ -34032,7 +34411,10 @@ function gatherCurrent(source="tap"){
      самое, что зависшая игра. Отказ теперь называется вслух и подсказывает,
      чем бой заканчивают. */
   if(G.inCombat){
-   if(source==="tap"){safeFn(()=>resourceEmptyFeedback());
+   /* В бою то же касание говорит, где тварь и чем она занята. */
+   if(source==="tap"){
+    if(safeFn(()=>Arena.report(),false))return false;
+    safeFn(()=>resourceEmptyFeedback());
     narrate("Идёт бой — не до сбора. Свайп тремя пальцами вверх — меню действий, там же попытка побега.");}
    return false;}
   /* С палубы траву не рвут. Под килем идёт вода, а клетка мира под судном —
@@ -34737,6 +35119,9 @@ const CMD={
   if(!G.inCombat||!G.combat){narrate("Боя сейчас нет — бить некого. Взмах оружием в сторону начинает схватку с тем, кто там стоит.");return;}
   if(a!=="atk"&&a!=="magic"&&a!=="potion"&&a!=="flee"){
    narrate("В бою есть четыре хода: удар, чары, зелье и побег. Свайп тремя пальцами вверх — меню действий.");return;}
+  /* Удар из меню подчиняется полю так же, как свайп: издали клинком не достать. */
+  if(a==="atk"&&G.combat.arena&&Arena.dist(G.combat.arena)>weaponReach()){
+   narrate(`Не достать: ${Arena.where()}. Подойдите свайпом в её сторону.`);return;}
   fight(a);},
  cityplan(){cityPlan();},
  cityorgs(){return cityOrgsHere();},
@@ -34744,6 +35129,7 @@ const CMD={
  wonder(){return wonderTake();},
  wilds(){narrate(Wilds.text());},
  setdiff(k){setDifficulty(k);},
+ setpace(k){setCombatPace(k);},
  tutor(){Tutor.on?Tutor.stop():Tutor.start();},
  warm(){Warm.busy?Warm.cancel():Warm.run();},
  tutorstart(){
@@ -42931,6 +43317,8 @@ function castSpell(i){const sp=SPELLS[i];
     отдача, а не само заклинание. */
  итог+=safeFn(()=>Resonance.бросок(sp),"");
  narrate(`Заклинание «${sp.n}» сотворено.${итог}`);journal("Заклинание: "+sp.n);
+ /* В пошаговом бою чара — ваш ход, и тварь отвечает своим. */
+ safeFn(()=>{if(G.inCombat&&G.combat&&G.combat.arena&&!Arena.live())Arena.foeTurn();});
  refresh();renderCharacter();}
 /* equipGear(index-в-сыром-G.gear) была удалена: кнопка «Экипировать» в инвентаре
    передаёт индекс из weaponList() (дедуплицированный список), а не из G.gear —
@@ -47759,6 +48147,12 @@ function worldSelfCheck(){
   const поРазделам=ENC_SECTIONS.reduce((k,sec)=>k+encSection(sec.id).count,0);
   ok("encyclopedia",!внеОписи.length&&поРазделам===soundTotals().всего,
    внеОписи.length?"папки вне описи: "+внеОписи.join(", "):поРазделам!==soundTotals().всего?"разделы не сходятся с общим числом":"каждая запись в одном разделе назначения");
+  /* Подвижный бой: у каждого рода тварей свой способ драться, и каждое
+     существо мира попадает в один из них; три темпа боя. */
+  {const роли=new Set(MONSTERS.map(m=>arenaRole(m)));
+   const бездела=Object.keys(ARENA_ROLE).filter(k=>!(ARENA_ROLE[k].step>0&&ARENA_ROLE[k].wind>0&&ARENA_ROLE[k].rec>0));
+   ok("arena",!бездела.length&&[...роли].every(r=>ARENA_ROLE[r])&&роли.size>=4&&Object.keys(COMBAT_PACE).length===3,
+    бездела.length?"роды без ритма: "+бездела.join(", "):"поле боя: "+роли.size+" родов схватки среди тварей мира, три темпа");}
   ok("bosses",new Set(WORLD_BOSSES.map(b=>b.фазы.map(p=>p.механика||"").join("|")+b.откликСлова)).size===WORLD_BOSSES.length,"у каждого владыки своя механика");
   ok("potions",POTIONS.every(p=>p.из.length===2&&PLANTS.some(x=>x.кат===p.из[0])&&PLANTS.some(x=>x.кат===p.из[1])),"у каждого зелья рецепт из существующих ниш");
   ok("artifacts",(G.artifacts||[]).every(a=>typeof a!=="object"||!!artLore(a)),"у каждого артефакта происхождение");
@@ -49018,7 +49412,7 @@ function renderGestures(){
 
   "<b>ТРИ ПАЛЬЦА — бой и сведения</b>",
   "🤟 Двойное касание тремя пальцами — вынуть оружие, если оно убрано, либо убрать в ножны. Одиночное касание тремя пальцами ничего не делает.",
-  "⚔️ Свайп одним пальцем при вынутом оружии — боевой взмах в направлении свайпа. В бою — удар со звуком попадания.",
+  "⚔️ В бою свайп одним пальцем — шаг по полю схватки: отойти, уйти из-под замаха, догнать. При вынутом оружии свайп в сторону твари — удар, если оружие достаёт; не достаёт — шаг к ней. Касание двумя пальцами в бою — где тварь и чем она занята.",
   "🎒 Свайп тремя пальцами вниз — <b>инвентарь по разделам</b>: двойное касание по вещи — о ней, свайп вверх или вниз на ней — действия по вещи и месту; тем же свайпом инвентарь закрывается. 🔊 Свайп тремя пальцами влево — <b>осмотреться</b>: эхо-скан маяков. 🧭 Свайп тремя пальцами вправо — <b>«где я»</b>: место, здоровье, золото, день, задание.",
 
   "<b>ЧЕТЫРЕ ПАЛЬЦА — магия</b>",
@@ -49218,7 +49612,24 @@ function renderDifficulty(){
  const cur=diff();
  const hint=document.getElementById("diffHint");
  if(hint)hint.textContent=`Сейчас: ${cur.n}. ${cur.d}`;
+ /* Темп боя — тремя такими же кнопками. */
+ const pr=document.getElementById("paceRow");
+ if(pr)pr.innerHTML=Object.keys(COMBAT_PACE).map(k=>{
+  const d=COMBAT_PACE[k],on=combatPace()===k;
+  return `<button type="button" data-cmd="setpace:${k}" aria-pressed="${on}"
+   data-speak="Темп боя ${d.n}${on?", выбран сейчас":""}. ${d.d}">${on?"✅":"▫️"} ${d.n}</button>`;}).join("");
+ const ph=document.getElementById("paceHint");
+ if(ph)ph.textContent=`Темп боя сейчас: ${COMBAT_PACE[combatPace()].n}. ${COMBAT_PACE[combatPace()].d}`;
 }
+function setCombatPace(k){
+ if(!COMBAT_PACE[k]){narrate("Такого темпа боя нет.");return false;}
+ settings.combatPace=k;saveSettings();
+ /* Идущий бой подхватывает темп сразу: живому нужно время, пошаговому — нет. */
+ safeFn(()=>{if(G.inCombat&&G.combat&&G.combat.arena){if(Arena.live())Arena.start();else Arena.stop();}});
+ renderDifficulty();
+ safeFn(()=>Bank.play("ui_toggle_on",{gain:0.5,maxSec:2}));
+ narrate(`Темп боя: ${COMBAT_PACE[k].n}. ${COMBAT_PACE[k].d}`);
+ return true;}
 function setDifficulty(k){
  if(!DIFFICULTY[k]){narrate("Такого уровня сложности нет.");return false;}
  settings.difficulty=k;saveSettings();
@@ -49939,7 +50350,9 @@ document.addEventListener("keydown",e=>{
  if(e.altKey&&e.key.toLowerCase()==="h"){e.preventDefault();Speech.status();return;}
  if(e.altKey&&e.key.toLowerCase()==="x"){e.preventDefault();const n=Speech.flush();Speech.request(n?`Очередь речи очищена: ${n}.`:"Очередь речи пуста.",{key:"flush"});return;}
  const dirMap={ArrowUp:"N",ArrowDown:"S",ArrowLeft:"W",ArrowRight:"E"};
- if(dirMap[e.key]&&gameActive()&&!activeLayer()){e.preventDefault();move(dirMap[e.key]);return;}
+ if(dirMap[e.key]&&gameActive()&&!activeLayer()){e.preventDefault();
+  /* В бою с вынутым оружием стрелка — то же, что свайп: удар в сторону твари или шаг. */
+  if(G.inCombat&&G.weaponDrawn)weaponSwing(dirMap[e.key]);else move(dirMap[e.key]);return;}
  if((e.ctrlKey||e.altKey)&&e.key.toLowerCase()==="g"){e.preventDefault();openGuide();}
  else if((e.ctrlKey||e.altKey)&&e.key.toLowerCase()==="m"){e.preventDefault();openActionMenu();}
  else if(e.altKey&&e.key.toLowerCase()==="s"){e.preventDefault();stopEverything();}});

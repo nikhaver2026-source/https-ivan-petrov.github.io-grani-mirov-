@@ -116,6 +116,8 @@ function check(name,cond,extra){results.push((cond?'PASS':'FAIL')+' — '+name+(
  // 5. удар свайпом в бою
  await multiDouble(3); // вынуть оружие двойным касанием
  check('оружие вынимается прямо в бою', await page.evaluate(()=>G.weaponDrawn===true));
+ /* Бой подвижный: удар проходит туда, где стоит тварь. Ставим её вплотную справа. */
+ await page.evaluate(()=>{const a=G.combat.arena;if(a){a.fx=a.px+1;a.fy=a.py;a.swingAt=0;a.readyAt=Date.now()+60000;}});
  const hpBefore=await page.evaluate(()=>G.combat.hp);
  await swipe(200,400,330,400);
  await page.waitForTimeout(400);

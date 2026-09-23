@@ -63,11 +63,14 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
    let всего=0;
    for(let i=0;i<20;i++){
     G.hp=1000;G.hpMax=1000;
+    /* Бой подвижный: тварь отвечает, только когда вплотную и наготове.
+       Здесь она каждый раз наготове — меряется сам удар, а не ритм. */
+    if(G.combat&&G.combat.arena){G.combat.arena.fx=G.combat.arena.px;G.combat.arena.fy=G.combat.arena.py-1;G.combat.arena.readyAt=0;G.combat.arena.wind=null;}
     try{fight("atk");}catch(e){}
     всего+=Math.max(0,1000-G.hp);}
    G.inCombat=false;G.combat=null;G.hp=G.hpMax;
    return всего;};
-  const хук=String(fight).indexOf('buffActive("гнёт")')>=0;
+  const хук=String(foeStrike).indexOf('buffActive("гнёт")')>=0;
   const без=бой(null),сГнётом=бой("гнёт");
   /* Скорость: час короче. */
   G.buffs={};G.day=5;G.hour=0;
