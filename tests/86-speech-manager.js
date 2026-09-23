@@ -464,6 +464,31 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   return {прямых,adapter:Speech._adapter().name,narrateIsSpeech:narrate.toString().indexOf("Speech.say")>=0};});
  check('синтезатор зовут только из адаптера, narrate идёт через распорядителя',единый.прямых===1&&единый.narrateIsSpeech,единый);
 
+ /* ── Отложенный старт: итог хода разговора ждёт, пока договорят голоса ──
+    Реплика с «ждать» стоит в очереди, но не звучит раньше срока и никого не
+    обрывает; обычная реплика, пришедшая в это время, звучит сразу. */
+ await fresh();
+ const отложено=await page.evaluate(async()=>{
+  Speech.say("Итог хода.",{interrupt:true,ждать:600});
+  const сразу=FAKE.log.slice();
+  Speech.say("Пункт списка.",{pri:1,user:true});
+  const междуТем=FAKE.log.slice();
+  FAKE.end();
+  await new Promise(r=>setTimeout(r,250));
+  const рано=FAKE.log.slice();
+  await new Promise(r=>setTimeout(r,550));
+  return {сразу,междуТем,рано,потом:FAKE.log.slice()};});
+ check('отложенная реплика не звучит раньше срока, а обычная тем временем звучит сразу',
+  отложено.сразу.length===0&&отложено.междуТем.join("|")==="Пункт списка."
+  &&отложено.рано.length===1&&отложено.потом.join("|")==="Пункт списка.|Итог хода.",отложено);
+ await fresh();
+ const снята=await page.evaluate(async()=>{
+  Speech.say("Итог, который не дождались.",{ждать:400});
+  Speech.userCut();
+  await new Promise(r=>setTimeout(r,600));
+  return FAKE.log.slice();});
+ check('любое действие игрока снимает и ждущую реплику',снята.length===0,снята);
+
  check('без ошибок страницы',errors.length===0,errors.slice(0,3));
  await browser.close();
  results.forEach(r=>console.log(r));

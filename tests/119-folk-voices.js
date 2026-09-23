@@ -173,15 +173,23 @@ const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(e!==undefined?' :
  const герой=await page.evaluate(async()=>{
   const n=getNPC(260,260,0);
   Folk.когда=0;Folk.было.clear();VOICED.length=0;
+  const t0=Date.now();
   const вышло=dlgDo(n,"rassprosit");
   const сразуПосле=VOICED.map(v=>v.f);
-  await new Promise(r=>setTimeout(r,2200));
-  return {вышло:typeof вышло==="boolean",сразуПосле,всё:VOICED.map(v=>v.f)};});
+  /* Житель отвечает, когда герой договорил: ждём длину реплики героя и
+     ещё немного (раньше ответ шёл через 1,5 с — поверх героя). */
+  const герояМс=Math.round(Folk.длина("hero_rassprosit")*1000);
+  await new Promise(r=>setTimeout(r,герояМс+1600));
+  const ответ=VOICED.find(v=>v.f.indexOf("voice/say_")===0);
+  return {вышло:typeof вышло==="boolean",сразуПосле,всё:VOICED.map(v=>v.f),
+   герояМс,ответЧерез:ответ?ответ.t-t0:null};});
  check('ход разговора звучит голосом героя',
   герой.сразуПосле[0]==="voice/hero_rassprosit.mp3",герой);
  check('голос героя идёт раньше ответа собеседника',
   герой.всё.length>=2&&герой.всё[0].indexOf("voice/hero_")===0
   &&герой.всё.slice(1).some(f=>f.indexOf("voice/say_")===0),герой.всё);
+ check('ответ жителя не наслаивается на героя: начинается, когда тот договорил',
+  герой.ответЧерез!==null&&герой.ответЧерез>=герой.герояМс,{ответЧерез:герой.ответЧерез,герояМс:герой.герояМс});
 
  /* Слово ремесла и общее слово идут в высоте народа. */
  const высоты=await page.evaluate(async()=>{

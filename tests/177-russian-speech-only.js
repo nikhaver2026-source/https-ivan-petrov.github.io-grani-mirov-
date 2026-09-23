@@ -32,7 +32,8 @@
       портал, призрак и громада — на месте и звучат живыми записями, чьи
       файлы лежат на диске.
    4. Каждая строка живой речи в sounds/voice написана по-русски: в титрах у
-      каждой записи русский текст.
+      каждой записи русский текст; длина каждой записи известна игре точно —
+      по ней ответ жителя встаёт в очередь после реплики героя.
    5. Руководство и энциклопедия говорят, что словами в игре говорят только
       по-русски, и называют авторов голосов без слов.
    ═══════════════════════════════════════════════════════════════════════ */
@@ -124,6 +125,22 @@ const РОЛИ=['throng_hail_m','throng_hail_f','throng_yes','throng_lord','thro
  const файлов=fs.readdirSync(path.join(ЗВУКИ,'voice')).filter(f=>f.endsWith('.mp3')).length;
  check('4. у каждой записи живой речи в титрах русский текст',
   строки.length>=180&&нерусские.length===0&&файлов===193,{строк:строки.length,файлов,нерусские:нерусские.slice(0,3)});
+
+ /* ── 4б. длина каждой записи известна игре точно ──
+    По VOICE_LEN реплики встают в очередь: житель отвечает, когда герой
+    договорил, а голос игры читает итог, когда договорил житель. Длина
+    сверяется с самим файлом. */
+ const cp=require('child_process');
+ const html2=fs.readFileSync(path.join(ROOT,'index.html'),'utf8');
+ const mLen=html2.match(/const VOICE_LEN=(\{[^}]*\});/);
+ let длины={};try{длины=JSON.parse(mLen[1]);}catch(_){}
+ const расхождения=[];
+ for(const f of fs.readdirSync(path.join(ЗВУКИ,'voice')).filter(f=>f.endsWith('.mp3'))){
+  const k=f.replace(/\.mp3$/,'');
+  let d=null;try{d=parseFloat(cp.execFileSync('ffprobe',['-v','error','-show_entries','format=duration','-of','csv=p=0',path.join(ЗВУКИ,'voice',f)],{encoding:'utf8'}));}catch(_){}
+  if(!(k in длины)||d===null||Math.abs(d-длины[k])>0.05)расхождения.push([k,длины[k],d]);}
+ check('4б. длина каждой записи живой речи известна игре с точностью до пяти сотых секунды',
+  Object.keys(длины).length===193&&расхождения.length===0,{записей:Object.keys(длины).length,расхождения:расхождения.slice(0,4)});
 
  /* ── 3 и 5 — в игре ── */
  const browser=await chromium.launch();

@@ -1304,7 +1304,7 @@ const Speech={voice:null,keepAlive:null,
  request(text,o={}){return this.say(text,Object.assign({pri:1,user:true,interrupt:true},o));},
  /* Пространственное событие: по умолчанию его передаёт звук, а не слово. */
  spatial(text,o={}){if(settings.soundFirst!==0||settings.saySpatial===0)return null;return this.say(text,Object.assign({pri:3,cat:"spatial",ttl:1500},o));},
- enqueue(text,{interrupt=true,onDone=null,pri=null,cat=null,key=null,ttl=null,user=false,persistent=false}={}){
+ enqueue(text,{interrupt=true,onDone=null,pri=null,cat=null,key=null,ttl=null,user=false,persistent=false,ждать=0}={}){
   text=String(text==null?"":text).replace(/\s+/g," ").trim();
   const done=cb=>{if(cb)setTimeout(()=>{try{cb();}catch(e){}},10);};
   if(!text){done(onDone);return null;}
@@ -1333,6 +1333,16 @@ const Speech={voice:null,keepAlive:null,
    }else{m.state="DEDUPED";this.stats.deduped++;done(onDone);return m;}}
   this.recent.set(dk,{text:m.text,at:Date.now()});
   if(this.recent.size>80){const k0=this.recent.keys().next().value;this.recent.delete(k0);}
+  /* ── ОТЛОЖЕННЫЙ СТАРТ ──
+     Реплику ставят в очередь сейчас, а звучать она начинает не раньше
+     указанного: в разговоре итог хода читается ПОСЛЕ того, как договорили
+     герой и житель, а не поверх них. Отложенная реплика никого не обрывает —
+     она ждёт своей минуты и тишины; любое действие игрока снимает её, как
+     и всякую ждущую речь. */
+  if(Number(ждать)>0){
+   m.notBefore=Date.now()+Number(ждать);m.createdAt=m.notBefore;
+   if(key){const q=this.queue.find(x=>x.key===key);if(q){q.state="REPLACED";this.queue=this.queue.filter(x=>x!==q);this.stats.replaced++;done(q.onDone);}}
+   this._push(m);this._later(m.notBefore);return m;}
   if(key){const q=this.queue.find(x=>x.key===key);if(q){q.state="REPLACED";this.queue=this.queue.filter(x=>x!==q);this.stats.replaced++;done(q.onDone);}}
   const cur=this.current;
   if(cur&&this.speaking){
@@ -1359,10 +1369,21 @@ const Speech={voice:null,keepAlive:null,
  _expired(m){return m.ttl>0&&!m.user&&Date.now()-m.createdAt>m.ttl;},
  _pump(){
   if(this.speaking||this.current)return;
-  while(this.queue.length){
-   const m=this.queue.shift();
+  const now=Date.now();
+  let рано=0;
+  for(let i=0;i<this.queue.length;i++){
+   const m=this.queue[i];
+   /* Отложенная реплика ещё не созрела — её место ждёт, остальные идут. */
+   if(m.notBefore&&m.notBefore>now){рано=рано?Math.min(рано,m.notBefore):m.notBefore;continue;}
+   this.queue.splice(i,1);i--;
    if(this._expired(m)){m.state="EXPIRED";this.stats.expired++;if(m.onDone)setTimeout(()=>{try{m.onDone();}catch(e){}},10);continue;}
-   this._speak(m);return;}},
+   this._speak(m);return;}
+  if(рано)this._later(рано);},
+ _later(t){
+  const ждать=Math.max(0,Number(t)-Date.now())+5;
+  if(this._laterAt&&this._laterAt<=t)return;
+  clearTimeout(this._laterTimer);this._laterAt=t;
+  this._laterTimer=setTimeout(()=>{this._laterAt=0;this._pump();},ждать);},
  _speak(m){
   const a=this._adapter();if(!a){this._finish(m,"FAILED");return;}
   /* Субтитр реплики: важное — на уровне событий, прочее — на уровне реплик. */
@@ -15097,6 +15118,10 @@ function soulLine(n,полно){
    sounds/voice/CREDITS.md и в главе руководства «Кто написал эти звуки».
    ════════════════════════════════════════════════════════════════════════ */
 const VOICE_DIR="voice/";
+/* Длительность каждой записи, секунд — по ней реплики встают в очередь:
+   житель отвечает, когда герой договорил, а голос игры — когда договорил
+   житель. Замерено по самим файлам (ffprobe); набор 177 сверяет. */
+const VOICE_LEN={"hero_diplom":2.61,"hero_kultura":2.72,"hero_nedoskazat":2.72,"hero_obeshat":2.64,"hero_obman":1.54,"hero_otkaz":2.19,"hero_podkup":2.01,"hero_prosit":2.64,"hero_provoc":1.75,"hero_rassprosit":2.04,"hero_shantazh":2.35,"hero_sluhi":1.65,"hero_sobytiya":1.65,"hero_sporit":2.40,"hero_torg":2.19,"hero_ubedit":2.22,"hero_utochnit":3.03,"hero_vera":2.04,"hero_vlast":2.12,"hero_zapugat":2.27,"hero_znanie":2.77,"prof_arhivist":2.51,"prof_celitelnica":1.52,"prof_dezertir":2.35,"prof_fermer":1.99,"prof_glava_klana":2.14,"prof_gruzchik":2.64,"prof_hranitel_pamyati":2.35,"prof_hranitel_pamyati_f":2.38,"prof_inspektor_nadzora":2.95,"prof_inspektor_nadzora_f":3.42,"prof_izgnannik_doma":2.87,"prof_kapitan":3.27,"prof_komendant":4.15,"prof_komendant_f":4.18,"prof_kontrabandist":1.99,"prof_kuznec":3.00,"prof_lekar":2.59,"prof_lekar_f":2.87,"prof_mag_otshelnik":1.91,"prof_magistr":2.95,"prof_master_yader":2.66,"prof_menyala_klyatv":2.30,"prof_nadsmotrschik":1.52,"prof_naslednik_pavshego_doma":2.46,"prof_nastavnik_puti":2.66,"prof_obryadchik":2.27,"prof_ohotnik_na_morfozverey":2.69,"prof_otstupnik":2.90,"prof_otverzhennyy":1.59,"prof_poglotitel":3.53,"prof_portalnyy_inzhener":2.38,"prof_posetitel":1.80,"prof_pravitel":3.06,"prof_pravitel_f":3.84,"prof_prigovorennyy":2.04,"prof_schetchik_kostey":2.25,"prof_shahter_issledovatel":3.27,"prof_shepchuschiy":1.83,"prof_sluzhka":2.30,"prof_sotnik_zastavy":2.40,"prof_sovetnik":2.93,"prof_sovetnik_f":2.93,"prof_stareyshina":2.72,"prof_strannik":2.43,"prof_strazhnik":3.13,"prof_strazhnik_f":3.53,"prof_torgovec":3.32,"prof_traktirschik":2.22,"prof_uchenik":2.69,"prof_vladyka":1.88,"prof_voennyy_kartograf":2.53,"prof_voin_klana":2.35,"prof_zhrec":1.91,"race_aasimary":2.61,"race_aeronidy":2.64,"race_arakokry":2.69,"race_bezymyannye":2.06,"race_chervehody":1.20,"race_ciklopy":1.67,"race_drakonidy":1.28,"race_drakony_praroditeli":1.28,"race_drevnie_bezymyannye":2.25,"race_drevnie_enty":1.72,"race_drevnie_krylatye":2.69,"race_driady":2.40,"race_dvoyniki":2.46,"race_dzhinny":3.63,"race_efirnye_stranniki":2.56,"race_elfy":2.51,"race_favny":2.22,"race_fei":2.56,"race_feniksy":2.48,"race_garpii":2.38,"race_glubinnye_leviafany":2.69,"race_gnilokoronnye":1.20,"race_gnilokrylye":3.24,"race_gnomy":2.43,"race_gobliny":2.59,"race_golemy":1.72,"race_golodnye":2.69,"race_gribozhory":1.67,"race_hronoscy":2.48,"race_kamennorozhdennye":1.20,"race_kentavry":1.83,"race_koboldy":1.96,"race_kostokrylye":2.19,"race_kostyanki":2.25,"race_kostyanye_schetchiki":1.72,"race_kostyanye_shamany":2.25,"race_kozhany":2.38,"race_kristallidy":2.46,"race_krovavaya_znat":2.77,"race_krovavye_fei":2.66,"race_krovniki":2.51,"race_krovostrizhi":2.51,"race_leprekony":3.19,"race_lesoviki":3.50,"race_lunnye_elfy":2.38,"race_lunnye_obratnye":2.30,"race_lyudi":2.46,"race_minotavry":2.69,"race_mnogoglazye_vestniki":3.21,"race_mnogokrylye":2.22,"race_mnogorukie":1.28,"race_moroznye_veyry":1.99,"race_motylkovye":2.80,"race_nagi":2.48,"race_nasledniki_harga":1.67,"race_nebesnye_tabunschiki":2.59,"race_oblachnye_skakuny":2.80,"race_ogry":2.51,"race_orki":2.59,"race_padalschiki_korvaksa":3.00,"race_pegasy":1.54,"race_pepelnye_deti":2.72,"race_pepelnye_kuznecy":2.69,"race_pepelnye_pegasy":2.69,"race_pepelnye_velikany":1.67,"race_pepelokrylye":2.61,"race_pervorozhdennye_zari":2.66,"race_peschanye_dzhinny":1.96,"race_polurosliki":3.53,"race_poslednie":2.25,"race_poslednie_krylya":2.25,"race_provozvestniki":2.35,"race_provozvestniki_neba":1.93,"race_pustokrylye":2.40,"race_pustotelye":1.67,"race_pustotniki":2.53,"race_runnye_karly":2.69,"race_rusalki":2.80,"race_salamandry":2.95,"race_satiry":3.58,"race_shelkopryady_snov":3.32,"race_shepchuschie":2.56,"race_shepotokrylye":3.74,"race_shtormovye_virmy":1.20,"race_silfy":2.64,"race_slepcy_niksora":2.17,"race_snovidcy":2.64,"race_solyanye_krachki":2.90,"race_solyanye_vdovy":3.47,"race_sonnye_skaty":1.72,"race_steklyannye_silfidy":2.48,"race_sumerechniki":3.27,"race_svetlorozhdennye":3.21,"race_tenehodcy":2.87,"race_terzayuschie":1.28,"race_terzayuschie_v_nebe":1.20,"race_tiflingi":2.64,"race_titany_grani":2.25,"race_tleyuschie":1.80,"race_trolli":1.67,"race_uglekrylye":3.03,"race_uglezhogi_izoldy":2.27,"race_undiny":2.85,"race_utoplenniki":1.72,"race_vervolfy":2.25,"race_vyvodok_ulury":2.87,"race_yadokrylye":2.14,"race_yascherolyudy":1.28,"race_zerkalcy":3.71,"race_zerkalnye_pticy":2.64,"race_zverolyudy":1.20,"race_zvezdnye_tkachi":3.03,"say_bol":1.18,"say_otkaz":1.28,"say_proschanie":1.20,"say_soglasie":2.25,"say_somnenie":1.67,"say_torg":1.72,"say_ugroza":2.69};
 const VOICE_RACES={
  "Люди":["lyudi",1.0,"м",1],"Эльфы":["elfy",1.04,"ж",1],"Гномы":["gnomy",0.92,"м",0],"Орки":["orki",0.88,"м",0],
  "Полурослики":["polurosliki",1.08,"м",1],"Гоблины":["gobliny",1.08,"ж",1],"Тролли":["trolli",0.88,"м",0],"Огры":["ogry",0.88,"м",0],
@@ -15153,6 +15178,10 @@ const VOICE_MOOD={"да":"soglasie","спор":"otkaz","страх":"somnenie","
  "прощание":"proschanie","угроза":"ugroza","боль":"bol"};
 const Folk={
  когда:0,было:new Map(),
+ /* Очередь голосов. «геройДо» — когда договорит герой; «занятоДо» — когда
+    смолкнет последний голос вообще; «эпоха» растёт с каждой репликой героя:
+    всё, что житель собирался сказать раньше, после неё уже не звучит. */
+ геройДо:0,занятоДо:0,эпоха:0,ждут:[],ПАУЗА:280,
  on(){try{return !!(settings.effects&&settings.folk!==0&&Bank.enabled);}catch(_){return false;}},
  /* Народ ветви говорит голосом своего народа: «Лунные эльфы» — эльфийским. */
  раса(имя){
@@ -15168,6 +15197,22 @@ const Folk={
   this.когда=t;this.было.set(путь,t);
   if(this.было.size>64)this.было.clear();
   return true;},
+ /* Сколько звучит запись с поправкой темпа, секунд. */
+ длина(путь,rate){const r=Number(rate)||1;return (Number(VOICE_LEN[путь])||2.5)/Math.max(0.5,Math.min(2,r));},
+ /* Через сколько миллисекунд договорит герой (с паузой после него). */
+ послеГероя(){const d=this.геройДо-Date.now();return d>0?d+this.ПАУЗА:0;},
+ /* Через сколько смолкнут все голоса (с паузой). */
+ послеВсех(){const d=this.занятоДо-Date.now();return d>0?d+this.ПАУЗА:0;},
+ /* Сколько звучит общее слово этого жителя (ответ в разговоре). */
+ длинаОбщего(n,ключ){const г=this.голос(n);return this.длина("say_"+ключ,(г?г[1]:1)*this.тембр(n));},
+ /* Житель смолкает: реплика героя обрывает его недоговорённое и снимает
+    всё, что он ещё собирался сказать. */
+ смолкнуть(){
+  const жителя=/voice\/(race|prof|say)_/;
+  safeFn(()=>Spatial.live.forEach(r=>{if(r&&r.voice&&!r.done&&r.el&&жителя.test(r.el.src||""))r.stop();}));
+  safeFn(()=>(Bank.shots||[]).slice().forEach(el=>{if(el&&el.__voice&&жителя.test(el.src||"")){Bank.kill(el);Bank.shots=Bank.shots.filter(x=>x!==el);}}));
+  this.ждут.forEach(t=>clearTimeout(t));this.ждут=[];
+  this.занятоДо=Math.min(this.занятоДо,Date.now());},
  /* Голос приходит оттуда, где житель стоит; плоский путь — запасной. */
  сказать(путь,n,o){
   try{
@@ -15178,13 +15223,30 @@ const Folk={
       речь игры — иначе житель звучал тише кассы у него за спиной. */
    const оп={gain:o.gain||VOICE_MIX.gain,maxSec:o.maxSec||9,kind:"npc",prio:"high",rate:o.rate||0,voice:true};
    const файл=VOICE_DIR+путь+".mp3";
+   const герой=/^hero_/.test(путь);
+   /* ── СНАЧАЛА ГОВОРИТ ГЕРОЙ ──
+      Житель, которому есть что сказать, пока герой ещё говорит, ждёт, пока
+      тот договорит, — а не перебивает его на полуслове. Если герой успеет
+      сказать новое, прежний ответ уже не звучит. */
+   if(!герой&&this.геройДо>Date.now()){
+    const эп=this.эпоха,ждать=this.послеГероя();
+    const t=setTimeout(()=>safeFn(()=>{this.ждут=this.ждут.filter(x=>x!==t);if(эп===this.эпоха)this._звук(путь,файл,n,оп);}),ждать);
+    this.ждут.push(t);
+    this.занятоДо=Math.max(this.занятоДо,Date.now()+ждать+this.длина(путь,оп.rate)*1000);
+    return true;}
+   return this._звук(путь,файл,n,оп);
+  }catch(_){return false;}},
+ _звук(путь,файл,n,оп){
+  try{
+   const конец=()=>{const до=Date.now()+this.длина(путь,оп.rate)*1000;
+    this.занятоДо=Math.max(this.занятоДо,до);if(/^hero_/.test(путь))this.геройДо=до;};
    if(n){
     const p=G.place;
     const dx=p?((Number(n.px)||p.x)-p.x):((n.x|0)-(G.x|0));
     const dy=p?((Number(n.py)||p.y)-p.y):((n.y|0)-(G.y|0));
-    if(safeFn(()=>Spatial.at(файл,dx,dy,оп),false)){this.last=путь;return true;}}
+    if(safeFn(()=>Spatial.at(файл,dx,dy,оп),false)){this.last=путь;конец();return true;}}
    const el=safeFn(()=>this.плоско(файл,оп),null);
-   if(el)this.last=путь;
+   if(el){this.last=путь;конец();}
    return !!el;
   }catch(_){return false;}},
  /* Без объёмного звука голос всё равно идёт через сжатие; если и шины
@@ -15278,6 +15340,9 @@ const Folk={
  /* Голос героя: двадцать один ход разговора. */
  герой(ход,o){
   if(VOICE_HERO.indexOf(ход)<0)return false;
+  /* Герой заговорил — житель смолкает и то, что он собирался сказать до
+     этого, уже не звучит: ответит он на новое, после героя. */
+  this.эпоха++;this.смолкнуть();
   return this.сказать("hero_"+ход,null,Object.assign({gain:1,всегда:true},o||{}));},
  /* Сколько народов говорят своей строкой, а сколько пока общей. */
  счёт(){
@@ -15328,7 +15393,9 @@ function npcVoice(n,какой,раз){
       второго — оклик не пропадает целиком. */
    let с=0,было=false;
    while(с<ходы.length&&!было){было=слово(ходы[с]);с++;}
-   if(было)ходы.slice(с).forEach((х,i)=>setTimeout(()=>safeFn(()=>слово(х,{gain:VOICE_MIX.gain*0.95,всегда:true})),1400*(i+1)));
+   /* Продолжение оклика не звучит, если герой успел заговорить сам. */
+   const эп=Folk.эпоха;
+   if(было)ходы.slice(с).forEach((х,i)=>setTimeout(()=>safeFn(()=>{if(Folk.эпоха===эп)слово(х,{gain:VOICE_MIX.gain*0.95,всегда:true});}),1400*(i+1)));
    return было;}
   if(какой==="важно")return Folk.ремесло(n);
   return Folk.общее(n,VOICE_MOOD[какой]||"soglasie");},false);
@@ -16179,6 +16246,7 @@ function dlgOutcome(n,move,успех,перевес){
 /* ── ХОД СДЕЛАН ──
    Одна дверь: проверка, последствия, звук со стороны говорящего, запись в
    память и в круги. Второго пути у разговора нет. */
+const dlgTimers=[];
 function dlgDo(n,moveId){
  try{
   if(!n){narrate("Этого жителя здесь больше нет.");return false;}
@@ -16197,8 +16265,15 @@ function dlgDo(n,moveId){
     return false;}
    mem.ходы[moveId]=Number(G.day)||1;}
   safeFn(()=>Arcs.note(n));
-  /* Сначала слышно, что сказали вы, и только потом — что ответили. */
+  /* ── СНАЧАЛА ГЕРОЙ, ПОТОМ ЖИТЕЛЬ, ПОТОМ ИТОГ ──
+     Прежде ответ жителя шёл через полторы секунды — поверх реплики героя,
+     которая длится две-три, — а итог хода голос игры читал сразу, поверх
+     обоих. Теперь по очереди, по настоящей длине записей: герой договорил —
+     отвечает житель, житель договорил — голос игры читает итог. Новый ход
+     снимает всё, что осталось от прежнего. */
+  dlgTimers.forEach(t=>clearTimeout(t));dlgTimers.length=0;
   safeFn(()=>Folk.герой(moveId));
+  const ответЧерез=safeFn(()=>Folk.послеГероя(),0)||0;
   const соп=dlgResist(n,m.против),сил=dlgPush(m.против);
   const перевес=сил-соп;
   const шанс=Math.max(0.05,Math.min(0.95,0.5+перевес/100));
@@ -16206,9 +16281,11 @@ function dlgDo(n,moveId){
   const фикс=safeFn(()=>Talk.fixed(n,m),null);
   const успех=фикс==null?Math.random()<шанс:!!фикс;
   const o=dlgOutcome(n,m,успех,перевес);
-  /* Голос — с той стороны, где он стоит. */
-  setTimeout(()=>safeFn(()=>{npcVoice(n,успех?"да":"спор");
-   if(o.звук)setTimeout(()=>safeFn(()=>npcCue(n,o.звук,{gain:0.5})),320);}),1500);
+  /* Голос — с той стороны, где он стоит, и когда герой договорил. */
+  dlgTimers.push(setTimeout(()=>safeFn(()=>{npcVoice(n,успех?"да":"спор");
+   if(o.звук)dlgTimers.push(setTimeout(()=>safeFn(()=>npcCue(n,o.звук,{gain:0.5})),320));}),ответЧерез));
+  const итогЧерез=ответЧерез+(safeFn(()=>Folk.on(),false)
+   ?Math.round(safeFn(()=>Folk.длинаОбщего(n,VOICE_MOOD[успех?"да":"спор"]),0)*1000)+Folk.ПАУЗА:0);
   /* Память, круги, оси и весть. */
   if(o.память)safeFn(()=>npcRemember(n,o.память[0],moveId,o.память[1]));
   (o.круги||[]).forEach(([с,id,v])=>safeFn(()=>{
@@ -16234,7 +16311,7 @@ function dlgDo(n,moveId){
   const шансСлово=шанс>=0.75?"легко":шанс>=0.5?"с трудом":шанс>=0.25?"почти безнадёжно":"против всего";
   narrate(`${m.n}. ${o.слова}`+
    (o.слова?"":" Ничего не вышло.")+
-   ` (${успех?"вышло":"не вышло"}, ${шансСлово}: ваше ${сил} против его ${соп}.)`,{interrupt:true});
+   ` (${успех?"вышло":"не вышло"}, ${шансСлово}: ваше ${сил} против его ${соп}.)`,{interrupt:true,ждать:итогЧерез});
   safeFn(()=>{refresh();saveGame(true);});
   return успех;
  }catch(_){narrate("Разговор сорвался.");return false;}}
@@ -45565,6 +45642,8 @@ function closeModal(m){if(!m)return;
  const имя=safeFn(()=>modalTitleText(m),"");
  /* Уходя от жителя, герой слышит его прощание — или угрозу вслед. */
  if(m.id==="modal-npc"&&npcOpenKey){const k=npcOpenKey;npcOpenKey=null;
+  /* Недосказанный ответ на ход разговора не наслаивается на прощание. */
+  safeFn(()=>{dlgTimers.forEach(t=>clearTimeout(t));dlgTimers.length=0;});
   safeFn(()=>{const n=getNPCByKey(k);if(n)Folk.прощание(n);});}
  m.hidden=true;UI.close();safeFn(()=>resetCursor());
  safeFn(()=>Speech.contextCut("menu"));
