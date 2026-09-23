@@ -215,27 +215,39 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
  check('свайп доводит до «Побег», двойное касание уводит из боя',
   onFlee==='am:flee'&&fled.бой===false,{курсор:onFlee,...fled});
 
- /* ── 10. Бой без окна: свайп бьёт, а не листает ── */
+ /* ── 10. Бой без окна: свайп в сторону твари бьёт, а не листает ──
+    Бой подвижный: у твари есть место, и удар идёт туда, где она стоит.
+    Ставим её вплотную справа — туда, куда ведёт свайп. */
  await clear();
  const hit=await page.evaluate(()=>{
   G.hp=G.hpMax;
   const c={x:G.x,y:G.y,monster:{n:"Волк",lvl:2,hp:60,dmg:1,xp:10,gold:5}};
-  startCombat(c);G.weaponDrawn=true;
+  startCombat(c,{dir:"E",close:true});G.weaponDrawn=true;
   G.equip.weapon=G.equip.weapon||{name:"Меч",type:"Меч",atk:5,rarity:"обычный"};
+  const a=G.combat.arena;if(a){a.readyAt=Date.now()+60000;a.swingAt=0;}
   return {окно:activeLayer()&&activeLayer().id,здоровье:G.combat.hp};});
  await fwd();
  await page.waitForTimeout(400);
  const afterHit=await page.evaluate(()=>({здоровье:G.combat&&G.combat.hp,бой:G.inCombat}));
- check('в бою без окна свайп наносит удар, а не листает список',
+ check('в бою без окна свайп в сторону твари наносит удар, а не листает список',
   hit.окно===null&&afterHit.здоровье<hit.здоровье,{было:hit.здоровье,стало:afterHit.здоровье});
 
- /* ── 11. Бой без оружия: свайп объясняет, а не молчит ── */
- await page.evaluate(()=>{G.weaponDrawn=false;window.__said=[];});
+ /* ── 11. Бой без оружия: свайп — шаг по полю, и он не молчит ──
+    Тварь вплотную справа, свайп вправо упирается в неё: игра объясняет,
+    чем бить. Свайп в свободную сторону — шаг, и игра называет, где тварь. */
+ await page.evaluate(()=>{G.weaponDrawn=false;window.__said=[];const a=G.combat.arena;if(a){a.fx=a.px+1;a.fy=a.py;a.stepAt=0;}});
  await fwd();
  await page.waitForTimeout(200);
  const noWeapon=await said();
- check('в бою с убранным оружием свайп подсказывает, чем бить',
-  noWeapon.length>=1&&/ножн|трем/i.test(noWeapon.join(' ')),noWeapon.slice(0,2));
+ check('в бою с убранным оружием свайп в тварь подсказывает, чем бить',
+  noWeapon.length>=1&&/тремя пальцами/i.test(noWeapon.join(' ')),noWeapon.slice(0,2));
+ await page.evaluate(()=>{window.__said=[];const a=G.combat.arena;if(a)a.stepAt=0;});
+ await swipe(330,420,120,420);
+ await page.waitForTimeout(200);
+ const stepped=await page.evaluate(()=>({px:G.combat&&G.combat.arena&&G.combat.arena.px}));
+ const stepSaid=await said();
+ check('в бою с убранным оружием свайп в свободную сторону — шаг, и игра называет, где тварь',
+  stepped.px===-1&&/Волк: в 2 шагах, справа/.test(stepSaid.join(' ')),{stepped,сказано:stepSaid.slice(0,2)});
  const summary=await page.evaluate(()=>[document.getElementById('cbTitle').dataset.speak,
   document.getElementById('cbEnemyCol').dataset.speak,
   document.getElementById('cbYouCol')&&document.getElementById('cbYouCol').dataset.speak].filter(Boolean));
