@@ -277,7 +277,9 @@ const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(e!==undefined?' :
   invDo("wear","gear",row("Простой стальной щит").key);
   const шанс=shieldBlockChance(G.equip.shield);
   G.hp=G.hpMax=500;
-  startCombat({x:G.x,y:G.y,monster:{id:"wolf",n:"Волк",snd:"mgrowl",fx:"growl",lvl:2,hp:99999,dmg:40,xp:1,gold:0,biomes:["forest"]}});
+  startCombat({x:G.x,y:G.y,monster:{id:"wolf",n:"Волк",snd:"mgrowl",fx:"growl",lvl:2,hp:99999,dmg:40,xp:1,gold:0,biomes:["forest"]}},{dir:"N",close:true});
+  /* Бой подвижный: тварь отвечает, только когда вплотную и наготове. */
+  if(G.combat.arena){G.combat.arena.readyAt=0;G.combat.arena.wind=null;}
   const rnd=Math.random;Math.random=()=>0.01;
   СКАЗАНО.length=0;ЗВУЧАЛО.length=0;const hp0=G.hp;
   try{fight("atk");}catch(e){}
