@@ -91,7 +91,8 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
  const инв=await page.evaluate(()=>{
   G.inv={"руда":3,"рановник":1,"салака":2,"жемчуг":1};G.potions=[{id:"heal",q:1,стаб:0.9,день:G.day,срок:10}];G.items=["Зелье здоровья","Свиток: Искра"];
   toggleWindowGesture("modal-inventory");
-  /* Инвентарь — пунктами (набор 167): окно открывается списком разделов. */
+  /* Инвентарь — пунктами (набор 167): окно открывается списком из шестнадцати
+     разделов (набор 171); трава рановник лежит в ресурсах вместе с рудой. */
   const разд=[...document.querySelectorAll('#invSections [data-punkt]')];
   const r={секции:разд.filter(x=>!/: пусто\./.test(x.dataset.speak||"")).map(x=>x.dataset.punkt),разделов:разд.length,
    вещейВСписке:document.querySelectorAll('#invSections [data-cmd^="invpick:"]').length};
@@ -114,7 +115,7 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
  await multiSwipe(1,0,-170);
  const действия=await page.evaluate(()=>({окно:!document.getElementById("modal-invact").hidden,список:[...document.querySelectorAll('#invActBody button')].map(b=>b.dataset.cmd.split(":")[1])}));
  check('4. инвентарь по разделам: двойное касание по разделу открывает его, по вещи — говорит о ней; свайп вверх на вещи открывает действия',
-  инв.разделов===21&&инв.секции.length>=6&&инв.вещейВСписке===0&&вРазделе.раздел==="res"&&вРазделе.кнопок===1&&выбрано.sel&&выбрано.sel.key==="руда"&&/руда: 3 шт/.test(выбрано.сказ)&&действия.окно&&действия.список.includes("look")&&действия.список.includes("drop"),{секции:инв.секции,вРазделе,выбрано,действия});
+  инв.разделов===16&&инв.секции.length>=5&&инв.вещейВСписке===0&&вРазделе.раздел==="res"&&вРазделе.кнопок===2&&выбрано.sel&&выбрано.sel.key==="руда"&&/руда: 3 шт/.test(выбрано.сказ)&&действия.окно&&действия.список.includes("look")&&действия.список.includes("drop"),{секции:инв.секции,вРазделе,выбрано,действия});
 
  /* ── 5. действия ── */
  const дела=await page.evaluate(()=>{

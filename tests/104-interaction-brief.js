@@ -123,6 +123,7 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   const B=invActionsAll(invRow("item",String(G.items.indexOf("Реликвия: Аурис Зарний"))));r.relic={ok:B.ok.map(a=>a.id),drop:(B.blocked.find(a=>a.id==="drop")||{}).почему};
   /* меню вслух */
   invPick("res","руда");SAID.length=0;invActions();await пауза(30);r.menuSaid=SAID.slice(-1)[0];r.menuBlocked=document.querySelectorAll('#invActBody [data-cmd^="invwhy:"]').length;
+  r.menuItems=[...document.querySelectorAll('#invActBody [data-cmd^="invdo:"]')].map(b=>b.dataset.cmd.split(":")[1]);r.menuOk=invActionsAll(invRow("res","руда")).ok.map(a=>a.id);
   SAID.length=0;invWhy("melt","res","руда");r.why=SAID.slice(-1)[0];
   /* выброс */
   SAID.length=0;invDo("drop","res","руда");await пауза(30);r.dropQ=SAID.slice(-1)[0];r.dropBtns=[...document.querySelectorAll('#invActBody button')].map(b=>b.dataset.cmd.split(":").slice(0,2).join(":"));
@@ -149,8 +150,9 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
  check('двадцать один раздел инвентаря, и каждая вещь ложится в свой: меч — оружие, щит — щиты, шлем — шлемы, руда — ресурсы, слиток — материалы, трава — ингредиенты, рыба — еда, зелье, свиток, факел — инструменты, реликвия — квестовое, стрелы — боеприпасы, вещь Дома — оружие, артефакт бога — магическое, книга',
   инв.catsAll===21&&инв.map.меч==="weapon"&&инв.map.щит==="shield"&&инв.map.шлем==="helm"&&инв.map.руда==="res"&&инв.map.слиток==="material"&&инв.map.трава==="ingredient"&&инв.map.салака==="food"&&инв.map.зелье==="potion"&&инв.map.свиток==="scroll"&&инв.map.факел==="tool"&&инв.map.реликвия==="quest"&&инв.map.стрелы==="ammo"&&инв.map.молот==="weapon"&&инв.map.фляга==="magic"&&инв.map.книга==="book",инв.map);
  check('карточка вещи: имя, род, урон или защита, состояние, требование силы, ранг',/Одноручное оружие\. Урон: \d+\. Состояние: \d+%\. Требование силы: \d+\. Ранг: /.test(инв.card)&&/Щит\. Защита: 3\. Состояние: 100%/.test(инв.cardShield),{card:инв.card,shield:инв.cardShield});
- check('действия по разделу и месту: у меча вне кузницы — осмотреть, снять, использовать, состояние; недоступное — с причиной; меню вслух называет доступное и число недоступных',
-  инв.sword.ok.includes("look")&&инв.sword.ok.includes("unequip")&&инв.sword.ok.includes("condition")&&инв.sword.blocked.includes("repair")&&инв.sword.reasons.every(t=>t.length>3)&&/Недоступно/.test(инв.menuSaid)&&инв.menuBlocked>=1&&/нельзя/.test(инв.why),{sword:инв.sword.ok,why:инв.why,menu:инв.menuSaid.slice(0,120)});
+ check('действия по роду и месту: у меча в руке вне кузницы — осмотреть, взять в руки, состояние; в меню только возможное, а причина невозможного помнится для invWhy',
+  инв.sword.ok.includes("look")&&инв.sword.ok.includes("draw")&&!инв.sword.ok.includes("unequip")&&инв.sword.ok.includes("condition")&&инв.sword.blocked.includes("repair")&&инв.sword.reasons.every(t=>t.length>3)
+  &&!/Недоступно/.test(инв.menuSaid)&&инв.menuBlocked===0&&инв.menuItems.join()===инв.menuOk.join()&&/нельзя/.test(инв.why),{sword:инв.sword.ok,why:инв.why,menu:инв.menuSaid.slice(0,120),items:инв.menuItems});
  check('«Выбросить»: для стопки — вопрос «сколько» с одной, несколькими, половиной и всей; для вещи — «да или нет»; квестовое защищено',
   /Выбросить сколько\?/.test(инв.dropQ)&&инв.dropBtns.includes("invdo:dropn")&&инв.oreAfter===1&&/защищён/.test(инв.relicRefuse)&&инв.relicStill&&/Выбросить «Факел»\?/.test(инв.torchQ)&&инв.torchGone&&инв.relic.ok.includes("look")&&/защищён/.test(инв.relic.drop||""),{dropQ:инв.dropQ,relic:инв.relicRefuse});
  check('стопка делится на землю и сходится обратно; бой снимает состояние; книга изучается',инв.split[0]===2&&инв.split[1]===1&&инв.merge[0]===4&&инв.merge[1]===0&&инв.wear<100&&инв.book.includes("read")&&инв.book.includes("study")&&инв.book.includes("chapters")&&инв.studied,{split:инв.split,merge:инв.merge,wear:инв.wear,book:инв.book});
