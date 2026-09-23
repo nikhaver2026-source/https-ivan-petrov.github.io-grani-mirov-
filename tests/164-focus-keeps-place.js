@@ -354,7 +354,9 @@ const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(e!==undefined?' :
   const лицAB=fs.existsSync(path.join(__dirname,'..','sounds','ab','LICENSE-CC-BY-SA-4.0.txt'));
   check('20. у нового источника есть титры с автором, лицензией и таблицей файлов, и текст лицензии рядом',
    /Ancient Beast/.test(крAB)&&/CC BY-SA 4\.0/.test(крAB)&&/ab_hush_01/.test(крAB)
-   &&/ab_spell_learn_01/.test(крAB)&&лицAB
+   /* Изученная чара ушла вместе с музыкой событий: теперь её отмечает голос
+      послушника MegaGlest, а из Ancient Beast остались три записи. */
+   &&/ab_magic_open_01/.test(крAB)&&/ab_cards_deal_01/.test(крAB)&&!/ab_spell_learn_01/.test(крAB)&&лицAB
    &&/Ancient Beast/.test(src),
    {титры:/Ancient Beast/.test(крAB),лицензия:лицAB,вИгре:/Ancient Beast/.test(src)});
  }
