@@ -131,7 +131,9 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   while(activeLayer())closeTopUI();CMD.encyc();
   return document.getElementById('encycCredits').textContent;});
  check('в игре указаны все источники записей с их лицензиями',
-  /FluidR3_GM/.test(права)&&/tonejs-instruments/.test(права)&&/Attribution/.test(права)
+  /* Ноты звукового шрифта и живые инструменты ушли вместе с музыкой событий:
+     их в титрах больше нет, зато названы Stendhal и его авторы. */
+  !/FluidR3_GM|tonejs-instruments/.test(права)&&/Stendhal/.test(права)&&/Attribution/.test(права)
   &&/CC0/.test(права)&&/Sonic Pi/.test(права),права.slice(0,80));
 
  // ── 7. Новые записи звучат в мире, а не лежат мёртвым грузом ──
