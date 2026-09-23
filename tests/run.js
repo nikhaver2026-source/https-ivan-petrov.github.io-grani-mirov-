@@ -21,7 +21,11 @@ const PREFIX="/"+path.basename(ROOT);
 const TYPES={".html":"text/html; charset=utf-8",".js":"text/javascript; charset=utf-8",
  ".json":"application/manifest+json",".png":"image/png",".mp3":"audio/mpeg",
  ".wav":"audio/wav",".flac":"audio/flac",".ogg":"audio/ogg",".md":"text/plain; charset=utf-8",
- ".txt":"text/plain; charset=utf-8"};
+ ".txt":"text/plain; charset=utf-8",
+ /* Встроенный голос: модуль onnxruntime грузится как модуль, а браузер не
+    примет модуль с типом «произвольные данные»; wasm — со своим типом. */
+ ".mjs":"text/javascript; charset=utf-8",".wasm":"application/wasm",
+ ".tsv":"text/tab-separated-values; charset=utf-8",".onnx":"application/octet-stream"};
 
 function serve(){
  return new Promise(res=>{

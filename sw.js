@@ -28,8 +28,11 @@
    Кэш ЗАПИСЕЙ при этом не трогаем нарочно, и имя у него прежнее. Записи
    неизменяемы, их в банке 226 мегабайт, и перекачивать их заново ради новой
    страницы — значит наказать игрока за обновление. */
-const SHELL="grani-shell-v8";
+const SHELL="grani-shell-v9";
 const MEDIA="grani-v1-media";
+/* Модель встроенного голоса кладёт в свой кэш рабочий поток голоса: его
+   не трогаем, иначе шестьдесят мегабайт качались бы после каждого обновления. */
+const VOICE="grani-tts-v1";
 const SHELL_FILES=["./","./index.html","./manifest.json"];
 
 self.addEventListener("install",e=>{
@@ -42,7 +45,7 @@ self.addEventListener("install",e=>{
 self.addEventListener("activate",e=>{
  e.waitUntil((async()=>{
   const keys=await caches.keys();
-  await Promise.all(keys.filter(k=>k!==SHELL&&k!==MEDIA).map(k=>caches.delete(k)));
+  await Promise.all(keys.filter(k=>k!==SHELL&&k!==MEDIA&&k!==VOICE).map(k=>caches.delete(k)));
   await self.clients.claim();
  })());
 });
@@ -52,8 +55,9 @@ self.addEventListener("fetch",e=>{
  if(req.method!=="GET")return;
  const url=new URL(req.url);
  if(url.origin!==self.location.origin)return;
- /* Записи неизменяемы: сначала кэш, потом сеть, с поддержкой кусков. */
- if(url.pathname.includes("/sounds/")){e.respondWith(media(req,url));return;}
+ /* Записи, движок и модель встроенного голоса неизменяемы: сначала кэш, потом
+    сеть. Словарь и код голоса меняются с обновлениями — им путь страницы. */
+ if(url.pathname.includes("/sounds/")||url.pathname.includes("/tts/ort/")||url.pathname.endsWith(".onnx")){e.respondWith(media(req,url));return;}
 
  /* Частичная загрузка чего-то другого — мимо кэша, как есть. */
  if(req.headers.has("range"))return;
@@ -62,7 +66,7 @@ self.addEventListener("fetch",e=>{
  e.respondWith((async()=>{
   try{
    const res=await fetch(req);
-   if(res&&res.ok&&res.status===200&&(req.mode==="navigate"||url.pathname.endsWith(".html")||url.pathname.endsWith("/")||url.pathname.endsWith("manifest.json"))){
+   if(res&&res.ok&&res.status===200&&(req.mode==="navigate"||url.pathname.endsWith(".html")||url.pathname.endsWith("/")||url.pathname.endsWith("manifest.json")||url.pathname.includes("/tts/"))){
     const c=await caches.open(SHELL);c.put(req,res.clone()).catch(()=>{});}
    return res;
   }catch(err){

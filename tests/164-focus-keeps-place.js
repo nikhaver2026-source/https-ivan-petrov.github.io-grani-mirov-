@@ -330,7 +330,7 @@ const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(e!==undefined?' :
   check('18. служебный работник поднимает кэш страницы и не трогает кэш записей',
    Number((sw.match(/const SHELL="grani-shell-v(\d+)"/)||[])[1]||0)>=3
    &&/const MEDIA="grani-v1-media"/.test(sw)
-   &&/keys\.filter\(k=>k!==SHELL&&k!==MEDIA\)/.test(sw)
+   &&/keys\.filter\(k=>k!==SHELL&&k!==MEDIA(&&k!==VOICE)?\)/.test(sw)
    &&/sounds\//.test(sw),
    {shell:(sw.match(/const SHELL="[^"]*"/)||[])[0],media:/grani-v1-media/.test(sw)});
  }

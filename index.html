@@ -25,7 +25,7 @@
      GitHub Pages. Там же включается и service worker (см. ниже): игра ставится
      на главный экран и работает без сети. -->
 <meta name="theme-color" content="#10121c">
-<title>Грань Миров Alpha 2.5.2 — Живой динамичный мир</title>
+<title>Грань Миров Alpha 2.6.0 — Живой динамичный мир</title>
 <style>
 /* Палец, положенный на ползунок, не должен его двигать: браузер по умолчанию
    перебрасывает бегунок в точку касания, и незрячий игрок, просто читая
@@ -106,8 +106,8 @@ h3{color:var(--acc2);margin:14px 0 6px;font-size:1.05rem;}
 
 <!-- ТИТУЛ -->
 <div id="screen-title" class="screen">
- <h1>🌌 Грань Миров <small style="font-size:.5em;opacity:.75">Alpha 2.5.2</small></h1>
- <p class="sub">Полная хроника I–V · Alpha 2.5.2 — Единый живой мир · Карта 50000×50000</p>
+ <h1>🌌 Грань Миров <small style="font-size:.5em;opacity:.75">Alpha 2.6.0</small></h1>
+ <p class="sub">Полная хроника I–V · Alpha 2.6.0 — Единый живой мир · Карта 50000×50000</p>
  <div class="menu">
   <button type="button" data-cmd="check">🔊 Проверить звук</button>
   <button type="button" data-cmd="encyc" id="btnEncyc">🎧 Энциклопедия звуков</button>
@@ -193,8 +193,8 @@ h3{color:var(--acc2);margin:14px 0 6px;font-size:1.05rem;}
   <div class="set-group" data-set-group="tts" hidden>
  <h3 class="sec-head" tabindex="0" data-cmd="secjump" data-sec-title="Синтезатор речи">🗣️ Синтезатор речи</h3>
  <p class="hint">Всё про сам голос в одном разделе: чем игра говорит, каким голосом, с какой скоростью и высотой. Проба — тут же.</p>
- <label class="opt">⚙️ Синтезатор <select id="setTtsEngine" aria-label="Каким синтезатором говорит игра"><option value="device" selected>Синтезатор устройства</option><option value="eleven">Голос ElevenLabs</option></select></label>
- <p class="hint" id="ttsEngineHint">Синтезатор устройства — тот, что стоит в самом телефоне: на iPhone это голоса VoiceOver, на Android — Google, Samsung, Acapela или любой другой установленный. Он отвечает сразу и работает без сети. Голос ElevenLabs звучит живее, но ходит в сеть и требует ключа.</p>
+ <label class="opt">⚙️ Синтезатор <select id="setTtsEngine" aria-label="Каким синтезатором говорит игра"><option value="device" selected>Синтезатор устройства</option><option value="grani">Встроенный голос игры</option><option value="eleven">Голос ElevenLabs</option></select></label>
+ <p class="hint" id="ttsEngineHint">Встроенный голос игры — русская нейросеть, которая говорит прямо на устройстве, одним голосом на любом телефоне и без чужого сервера: один раз скачивается (около шестидесяти мегабайт), дальше работает без сети; пока качается, говорит синтезатор устройства. Синтезатор устройства — тот, что стоит в самом телефоне: на iPhone это голоса VoiceOver, на Android — Google, Samsung, Acapela или любой другой установленный. Он отвечает сразу и работает без сети. Голос ElevenLabs звучит живее, но ходит в сеть и требует ключа.</p>
  <label class="opt"><input type="checkbox" id="setVoiceLocal" checked><span>📴 <b>Только голоса с устройства</b><small>Онлайн-голоса отсеиваются: они ждут сеть и отвечают с задержкой, а без сети молчат совсем</small></span></label>
  <label class="opt">🌐 Язык голоса <select id="setVoiceLang" aria-label="Язык голоса"><option value="ru" selected>Русский</option><option value="all">Все языки</option></select></label>
  <label class="opt">🎤 Голос <select id="setVoice" aria-label="Выбор голоса"></select></label>
@@ -990,6 +990,13 @@ const Speech={voice:null,keepAlive:null,
    return;}
   const pick=()=>{try{this.fillVoices();}catch(e){try{console.warn('[Speech.pick]',e);}catch(_){}}};
   pick();speechSynthesis.onvoiceschanged=pick;
+  /* Выбран встроенный голос — модель начинает грузиться сразу, а не на
+     первой фразе: к первому слову игры она, скорее всего, уже в памяти. */
+  if(settings.ttsEngine==="grani")setTimeout(()=>{try{this.graniStart();}catch(_){}},1200);
+  /* Русского голоса на устройстве нет вовсе — игра не остаётся немой и не
+     говорит по-русски английским голосом: сама включает встроенный голос. */
+  /* Браузер-автомат (проверки) голосов не имеет вовсе — ему это не нужно. */
+  setTimeout(()=>{try{if(!navigator.webdriver)this._graniAutoCheck();}catch(_){}},3500);
   /* iOS и часть андроидных браузеров отдают список не сразу и без события:
      перечитываем ещё дважды, иначе первый голос достаётся не тот. */
   setTimeout(pick,400);setTimeout(pick,1500);},
@@ -1018,6 +1025,8 @@ const Speech={voice:null,keepAlive:null,
  /* Какой синтезатор нужен сейчас: выбор игрока, а не то, что попалось
     первым при запуске. Смена настройки меняет адаптер на следующей фразе. */
  _wantKind(){
+  try{if((settings.ttsEngine==="grani"||(this._graniAuto&&settings.ttsEngine!=="eleven"))
+      &&typeof Worker==="function"&&location.protocol!=="file:")return "grani";}catch(_){}
   try{if(settings.ttsEngine==="eleven"&&String(settings.elevenKey||"").length>=8
       &&String(settings.elevenVoice||""))return "eleven";}catch(_){}
   return "device";},
@@ -1027,9 +1036,107 @@ const Speech={voice:null,keepAlive:null,
   try{if(this.adapter&&this.adapter.cancel)this.adapter.cancel();}catch(_){}
   this.adapter=null;this._kind=род;
   if(род==="eleven")return this.adapter=this._elevenAdapter();
+  if(род==="grani")return this.adapter=this._graniAdapter();
   try{if(window.GraniTTS&&typeof window.GraniTTS.speak==="function")return this.adapter=this._nativeAdapter();}catch(_){}
   if("speechSynthesis" in window)return this.adapter=this._webAdapter();
   return null;},
+ /* ── ВСТРОЕННЫЙ ГОЛОС ИГРЫ ──
+    Русская нейросеть Piper (голос «Денис», данные CC0) считается прямо на
+    устройстве, в отдельном потоке (tts/grani-tts-worker.js), через
+    onnxruntime-web (MIT). Звуки для всех слов игры собраны заранее в
+    словарь с ударениями, незнакомые слова разбираются своими правилами —
+    без eSpeak и без чего-либо под GPL. Голос одинаков на любом телефоне и
+    не зависит от того, какие голоса поставлены в системе.
+    Модель весит около шестидесяти мегабайт и качается один раз: сперва из
+    папки игры, а если её там нет — с Hugging Face; дальше лежит в памяти
+    устройства. Пока она качается или если скачать не вышло, говорит
+    синтезатор устройства: игра не замолкает никогда. */
+ GRANI_MODELS:["tts/ru_RU-denis-medium.onnx",
+  "https://huggingface.co/rhasspy/piper-voices/resolve/v1.0.0/ru/ru_RU/denis/medium/ru_RU-denis-medium.onnx"],
+ _grani:null,
+ graniState(){return this._grani?this._grani.state:"off";},
+ graniStart(){
+  if(this._grani)return this._grani;
+  const g=this._grani={state:"loading",worker:null,seq:0,job:null,шаг:0};
+  try{
+   const base=new URL("tts/",location.href).href;
+   const w=g.worker=new Worker(base+"grani-tts-worker.js");
+   w.onmessage=e=>{try{this._graniMsg(e.data||{});}catch(_){}};
+   w.onerror=()=>{if(g.state!=="ready"){g.state="failed";this._graniSay("fail");}};
+   const модели=(window.GRANI_TTS_MODELS||this.GRANI_MODELS).map(u=>new URL(u,location.href).href);
+   w.postMessage({type:"init",base,models:модели});
+  }catch(_){g.state="failed";}
+  return g;},
+ _graniAuto:false,
+ _graniAutoCheck(){
+  if(settings.ttsEngine!=="device"||this._graniAuto)return false;
+  if(typeof Worker!=="function"||location.protocol==="file:")return false;
+  let ru=0;try{ru=(speechSynthesis.getVoices()||[]).filter(v=>/^ru/i.test(v.lang||"")).length;}catch(_){}
+  if(ru>0)return false;
+  this._graniAuto=true;this.adapter=null;this._kind=null;
+  this.graniStart();
+  this.say("На устройстве нет русского голоса. Игра включает свой встроенный голос: он скачается один раз, около шестидесяти мегабайт. Выбрать другой — в настройках, раздел «Синтезатор речи».",{pri:1,interrupt:false});
+  return true;},
+ _graniSay(что,доля){
+  if(settings.ttsEngine!=="grani"&&!this._graniAuto)return;
+  const t={ready:"Встроенный голос готов и говорит.",
+   fail:"Встроенный голос не скачался: для первой загрузки нужна сеть. Пока говорит синтезатор устройства; попытка повторится при следующем запуске.",
+   progress:`Встроенный голос скачивается: ${доля} процентов.`}[что];
+  if(t)this.say(t,{pri:что==="progress"?3:2,key:"graniLoad",interrupt:false,ttl:что==="progress"?4000:0});},
+ _graniMsg(m){
+  const g=this._grani;if(!g)return;
+  if(m.type==="progress"){if(g.state!=="loading"||!m.total)return;
+   const доля=Math.floor(m.loaded/m.total*4)*25;
+   if(доля>g.шаг&&доля<100){g.шаг=доля;this._graniSay("progress",доля);}return;}
+  if(m.type==="ready"){g.state="ready";this.adapter=null;this._kind=null;this._graniSay("ready");return;}
+  if(m.type==="fail"){g.state="failed";this._graniSay("fail");return;}
+  const j=g.job;if(!j||j.id!==m.id||j.dead)return;
+  if(m.type==="audio"){
+   const ctx=AE.ensure();if(!ctx)return;
+   const buf=ctx.createBuffer(1,m.pcm.length,m.rate||22050);
+   buf.getChannelData(0).set(m.pcm);
+   const src=ctx.createBufferSource();src.buffer=buf;
+   const gn=ctx.createGain();gn.gain.value=Math.max(0,Math.min(1,+j.o.volume));
+   src.connect(gn);gn.connect(AE.master||ctx.destination);
+   const t=Math.max(ctx.currentTime+0.02,j.t);src.start(t);j.t=t+buf.duration;
+   j.nodes.push(src);j.playing++;
+   if(!j.started){j.started=true;if(j.o.onstart)j.o.onstart();}
+   src.onended=()=>{j.playing--;if(j.done&&j.playing<=0)this._graniEnd(j);};
+   return;}
+  if(m.type==="error"){j.failed=true;return;}
+  if(m.type==="done"){j.done=true;
+   if(j.playing<=0){if(!j.started&&(j.failed||m.skipped)){const o=j.o;this._graniEnd(j,true);if(o.onerror)o.onerror();}
+    else this._graniEnd(j);}}},
+ _graniEnd(j,тихо){
+  const g=this._grani;if(!g||g.job!==j||j.dead)return;
+  j.dead=true;g.job=null;if(!тихо&&j.o.onend)j.o.onend();},
+ _graniAdapter(){
+  const self=this;
+  const запас=("speechSynthesis" in window)?this._webAdapter():null;
+  const запасом=(text,o)=>{if(запас)return запас.speak(text,o);if(o.onerror)o.onerror();return true;};
+  const стоп=()=>{const g=self._grani;const j=g&&g.job;if(!j)return;j.dead=true;g.job=null;
+   try{g.worker.postMessage({type:"cancel",id:j.id});}catch(_){}
+   j.nodes.forEach(n=>{try{n.onended=null;n.stop(0);}catch(_){}});};
+  return {name:"grani",
+   speak(text,o){
+    const g=self.graniStart();
+    if(g.state!=="ready")return запасом(text,o);
+    стоп();
+    /* Звуковой движок браузера спит (iPhone после звонка, свёрнутое окно) —
+       эта фраза уходит синтезатору устройства, а движок будится к следующей:
+       волна в спящий движок ушла бы в тишину. */
+    const ctx=AE.ensure();
+    if(!ctx)return запасом(text,o);
+    if(ctx.state!=="running"){try{ctx.resume();}catch(_){}return запасом(text,o);}
+    const j=g.job={id:++g.seq,o,nodes:[],t:0,started:false,done:false,playing:0,dead:false};
+    /* Темп игрока: единица — обычная речь, выше — быстрее, но не втрое
+       сильнее: дальше нейросеть глотает слоги. */
+    const r=+o.rate||1,темп=r<=1?r:1+(r-1)*0.5;
+    try{g.worker.postMessage({type:"speak",id:j.id,text:String(text),speed:темп});}
+    catch(_){g.job=null;return запасом(text,o);}
+    return true;},
+   cancel(){стоп();if(запас)запас.cancel();},
+   speaking(){const g=self._grani;return !!(g&&g.job&&!g.job.dead);}};},
  /* ── ГОЛОС ELEVENLABS ──
     Синтезатор устройства отвечает мгновенно и работает без сети, но звучит
     так, как звучит. ElevenLabs даёт живую речь — ценой похода в сеть и
@@ -5707,7 +5814,7 @@ function closeMagicPanel(){const m=document.getElementById('magicPanel');if(!m)r
 /* ════════ РУКОВОДСТВО ════════ */
 const GUIDE=[
 {title:"Глава 1. Добро пожаловать в «Грань Миров»",body:[
- "Версия Alpha 2.5.2 — живой динамичный мир размером 50000 на 50000 клеток: два с половиной миллиарда клеток, и ни одна не хранится в памяти — всякая выводится из своих координат в тот миг, когда об этой клетке спросили. Полная хроника частей с первой по пятую, объединённая в одном мире. Игра полностью доступна незрячим и слабовидящим.",
+ "Версия Alpha 2.6.0 — живой динамичный мир размером 50000 на 50000 клеток: два с половиной миллиарда клеток, и ни одна не хранится в памяти — всякая выводится из своих координат в тот миг, когда об этой клетке спросили. Полная хроника частей с первой по пятую, объединённая в одном мире. Игра полностью доступна незрячим и слабовидящим.",
  "Ведите пальцем по экрану — игра голосом назовёт то, что вы нашли. Двойное касание — действие. Всё озвучивается и имеет свой звук.",
  "Все кнопки игры собраны в меню действий: свайп тремя пальцами вверх. Инвентарь — три пальца вниз, карта — два пальца влево, журнал дел — два пальца вправо."]},
 {title:"Глава 2. Жесты",body:[
@@ -5740,6 +5847,7 @@ const GUIDE=[
  "Скорость озвучки по умолчанию — пять: это рабочий темп чтеца экрана, а не темп диктора. Шкала идёт от 0,6 до 6,0 шагом в две десятых и по кругу: дойдя до шести, следующее касание ставит 0,6. Ползунок отвечает выбранным темпом — «Раз, два, три», — так что подобрать свой можно на слух, ничего не запоминая. Кто играл до этого обновления на медленной речи, будет поднят к пяти один раз и об этом услышит; выбранное после — остаётся навсегда.",
  "Всё про сам голос собрано в отдельный раздел «Синтезатор речи»: чем говорить, каким голосом, с какой скоростью и высотой, и тут же проба. Раньше это лежало в трёх разных разделах.",
  "Синтезатор можно выбрать. «Синтезатор устройства» — тот, что стоит в самом телефоне: на iPhone это голоса VoiceOver, на Android — Google, Samsung, Acapela или любой другой установленный. Он отвечает сразу и работает без сети. «Голос ElevenLabs» звучит живее, но ходит в сеть и требует ключа, который игрок заводит сам; на любой осечке фраза тут же уходит синтезатору устройства, и игра не замолкает.",
+ "«Встроенный голос игры» — русская нейросеть, которая говорит прямо на устройстве: одним голосом на любом телефоне, без чужого сервера и, после первой загрузки, без сети. Один раз скачивается около шестидесяти мегабайт — пока качается, говорит синтезатор устройства, а о готовности игра скажет сама. Если на устройстве нет ни одного русского голоса, игра включает встроенный голос без просьбы. Слова игры он произносит с правильным ударением: для всех двадцати пяти тысяч словоформ, что встречаются в её текстах, звуки собраны заранее; незнакомое имя он разбирает по правилам русского произношения.",
  "Онлайн-голоса по умолчанию отсеяны. Браузер показывает вперемешку два рода голосов: те, что лежат в телефоне, и сетевые. Сетевой на каждое слово меню ходит на чужой сервер — полсекунды задержки на каждый пункт списка, а без сети молчание. Выключатель «Только голоса с устройства» их убирает; включить обратно можно там же.",
  "Высота голоса — отдельный ползунок, от 0,5 до 2,0. Не всякий синтезатор слушается высоты: голоса Apple слушаются, часть андроидных — нет.",
  "Кнопка «Сохранить настройки» есть наверху окна. Настройки сохраняются и сами, при каждой правке; кнопка нужна, чтобы игра ответила словом, что записано. Рядом «Что сохранено» — она называет движок, голос, темп, высоту и отсев онлайн-голосов.",
@@ -34107,7 +34215,7 @@ const CMD={
  setsaved(){
   const было=safeFn(()=>JSON.parse(store.get("gm29set")||"{}"),null);
   if(!было||!Object.keys(было).length){narrate("В памяти устройства настроек пока нет: они запишутся при первой правке.",{interrupt:true});return;}
-  const голос=(settings.ttsEngine==="eleven")?"голос ElevenLabs":"синтезатор устройства";
+  const голос=(settings.ttsEngine==="eleven")?"голос ElevenLabs":(settings.ttsEngine==="grani")?"встроенный голос игры":"синтезатор устройства";
   narrate(`Записано ${Object.keys(было).length} настроек. Говорит ${голос}. `+
    `Голос: ${(Speech.voice&&Speech.voice.name)||settings.voice||"выбран по умолчанию"}. `+
    `Темп ${(+settings.rate).toFixed(1).replace(".",",")}, высота ${(+settings.pitch||1).toFixed(1).replace(".",",")}. `+
@@ -48603,6 +48711,11 @@ function bindSettings(){const $=id=>document.getElementById(id);
  {const e=$("setTtsEngine");if(e){e.value=settings.ttsEngine||"device";
   e.addEventListener("change",ev=>{settings.ttsEngine=ev.target.value;saveSettings();
    safeFn(()=>{Speech.adapter=null;Speech._kind=null;});
+   if(settings.ttsEngine==="grani"){const g=Speech.graniStart();
+    narrate(g.state==="ready"?"Говорит встроенный голос игры."
+     :g.state==="failed"?"Встроенный голос не скачался: нужна сеть для первой загрузки. Пока говорит синтезатор устройства."
+     :"Встроенный голос скачивается, это около шестидесяти мегабайт и один раз. Пока говорит синтезатор устройства; когда голос будет готов, игра скажет.",{interrupt:true});
+    return;}
    narrate(settings.ttsEngine==="eleven"
     ?(String(settings.elevenKey||"").length>=8&&String(settings.elevenVoice||"")
       ?"Говорит голос ElevenLabs. Если сеть подведёт, фраза уйдёт синтезатору устройства."
