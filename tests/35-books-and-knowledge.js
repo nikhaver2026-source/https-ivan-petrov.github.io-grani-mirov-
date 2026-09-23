@@ -326,9 +326,13 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
  await tap(195,600);
  await page.waitForTimeout(600);
  const послеДвух=await page.evaluate(()=>({страниц:knowRead().length,окно:!document.getElementById("modal-read").hidden}));
- check('второе касание одним пальцем по полю тоже ничего не изучает: двойное касание на поле снято',
-  послеДвух.страниц===одно&&послеДвух.окно===false,послеДвух);
- /* Изучение — свайп двумя пальцами вниз (взаимодействие с тем, что под ногами). */
+ /* Второе касание складывается в двойное — действие здесь: книга под ногами
+    изучается (набор 176). */
+ check('двойное касание одним пальцем по полю изучает книгу под ногами',
+  послеДвух.страниц>одно&&послеДвух.окно===true,послеДвух);
+ await page.evaluate(()=>{while(activeLayer())closeTopUI();});
+ const доСвайпа=await page.evaluate(()=>knowRead().length);
+ /* Свайп двумя пальцами вниз на поле больше ничего не изучает: он только закрывает окна. */
  {const pts=[{x:150,y:600,id:0},{x:210,y:600,id:1}];
   await cdp.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[pts[0]]});await page.waitForTimeout(35);
   await cdp.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:pts});await page.waitForTimeout(60);
@@ -338,8 +342,8 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   await cdp.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[{x:152,y:761,id:0}]});}
  await page.waitForTimeout(600);
  const послеСвайпа=await page.evaluate(()=>({страниц:knowRead().length,окно:!document.getElementById("modal-read").hidden}));
- check('свайп двумя пальцами вниз изучает книгу под ногами',
-  послеСвайпа.страниц>одно&&послеСвайпа.окно===true,послеСвайпа);
+ check('свайп двумя пальцами вниз на поле книгу не изучает: он только закрывает окна',
+  послеСвайпа.страниц===доСвайпа&&послеСвайпа.окно===false,послеСвайпа);
  await page.evaluate(()=>{while(activeLayer())closeTopUI();});
 
  check('игра не выбрасывала ошибок за весь прогон',errors.length===0,errors.slice(0,3));

@@ -83,7 +83,7 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   if(adj>=0){SAID.length=0;Look.select(adj);await пауза(40);r.adjTitle=document.getElementById("objTitle").textContent;r.adjBtns=document.querySelectorAll('#objBody [data-cmd^="objact:"]').length;}
   while(activeLayer())closeTopUI();
   const far=Look.list.findIndex(o=>o.d>=3&&!o.живое&&!o.проход);r.farIdx=far;
-  if(far>=0){Look.open();await пауза(30);Look.select(far);while(activeLayer())closeTopUI();r.target=Look.target&&Look.target.n;SAID.length=0;handleTwoFingerSwipe("S");await пауза(60);r.farGuide=SAID.find(t=>/^Цель:/.test(t))||"";}
+  if(far>=0){Look.open();await пауза(30);Look.select(far);while(activeLayer())closeTopUI();r.target=Look.target&&Look.target.n;SAID.length=0;fieldInteract();await пауза(60);r.farGuide=SAID.find(t=>/^Цель:/.test(t))||"";}
   leavePlace();await пауза(50);while(activeLayer())closeTopUI();
   return r;});
  check('сектора считаются от взгляда: лицом на север — север впереди, юг позади, запад слева, восток справа',осмотр.sect.N==="впереди"&&осмотр.sect.S==="позади"&&осмотр.sect.W==="слева"&&осмотр.sect.E==="справа",осмотр.sect);

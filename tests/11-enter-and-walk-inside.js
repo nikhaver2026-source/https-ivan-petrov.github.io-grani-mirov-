@@ -39,6 +39,8 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   await page.waitForTimeout(ms);
   await cdp.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[{x:200,y:400,id:0}]});
   await page.waitForTimeout(250);}
+ /* Действие здесь — двойное касание одним пальцем (набор 176). */
+ async function dbl(){await tap();await tap();await page.waitForTimeout(300);}
 
  // встаём на постройку с входом
  await page.evaluate(()=>{
@@ -47,10 +49,10 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
    if(c.structure&&PLACE_KIND[c.structure.type]){G.x+=dx;G.y+=dy;break outer;}}
   G.place=null;});
 
- // 1. Свайп двумя пальцами вниз — вход внутрь
- await multi(2,'S');
+ // 1. Двойное касание одним пальцем — вход внутрь
+ await dbl();
  const inside=await page.evaluate(()=>G.place&&{kind:G.place.kind,depth:G.place.depth,name:G.place.name});
- check('свайп двумя пальцами вниз вводит в постройку',!!inside,inside);
+ check('двойное касание одним пальцем вводит в постройку',!!inside,inside);
 
  // 2. Свайп одним пальцем — шаг внутри
  const before=await page.evaluate(()=>G.place&&[G.place.x,G.place.y]);
@@ -66,24 +68,23 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
  await multi(2,'N');
  const послеВверх=await page.evaluate(()=>!!G.place);
  check('свайп двумя пальцами вверх больше не выводит наружу (это повтор речи)',послеВверх===true);
- await multi(2,'S');
- check('свайп двумя пальцами вниз на воротах выводит наружу', await page.evaluate(()=>G.place===null));
+ await dbl();
+ check('двойное касание на воротах выводит наружу', await page.evaluate(()=>G.place===null));
 
- // 4. Вход — свайп двумя пальцами вниз (взаимодействие). Касания одним
- //    пальцем на игровом поле — одиночное, двойное, долгое — ничего не делают:
- //    прежний вход двойным касанием спорил с активацией кнопок в окнах.
+ // 4. Вход — двойное касание одним пальцем. Долгое касание и свайп двумя
+ //    пальцами вниз никуда не входят: первое — ощупывание, второй только
+ //    закрывает окна (набор 176).
  await hold(900);
  const послеУдержания=await page.evaluate(()=>!!G.place);
  check('долгое касание само по себе никуда не входит',послеУдержания===false,
   {вошли:послеУдержания});
- await tap();await tap();
- await page.waitForTimeout(300);
- const послеДвойного=await page.evaluate(()=>!!G.place);
- check('двойное касание одним пальцем на поле ничего не делает',послеДвойного===false);
  await multi(2,'S');
  await page.waitForTimeout(300);
+ const послеСвайпа=await page.evaluate(()=>!!G.place);
+ check('свайп двумя пальцами вниз на поле больше не входит: он только закрывает окна',послеСвайпа===false);
+ await dbl();
  const held=await page.evaluate(()=>!!G.place);
- check('свайп двумя пальцами вниз входит в постройку под ногами',held);
+ check('двойное касание одним пальцем входит в постройку под ногами',held);
 
  // 5. Свайп тремя пальцами — «где я»
  const said=await page.evaluate(()=>{window.__said=[];const o=Speech.say;Speech.say=t=>{window.__said.push(t);o&&null;};window.__restore=()=>Speech.say=o;return true;});

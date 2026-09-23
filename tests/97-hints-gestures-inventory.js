@@ -72,9 +72,12 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
  await multiSwipe(2,-170,0);const картаЗакр=await page.evaluate(()=>document.getElementById("modal-map").hidden);
  await multiSwipe(2,170,0);const журнОткр=await page.evaluate(()=>!document.getElementById("modal-quests").hidden);
  await multiSwipe(2,170,0);const журнЗакр=await page.evaluate(()=>document.getElementById("modal-quests").hidden);
- await page.evaluate(()=>{LOG.length=0;});await multiSwipe(2,0,170);const действие=await page.evaluate(()=>LOG.includes("useHere"));
- check('2. два пальца: вверх — повтор, влево — карта (открыть и закрыть), вправо — журнал (открыть и закрыть), вниз — действие с найденным',
-  повтор&&картаОткр&&картаЗакр&&журнОткр&&журнЗакр&&действие,{повтор,картаОткр,картаЗакр,журнОткр,журнЗакр,действие});
+ await page.evaluate(()=>{LOG.length=0;});await multiSwipe(2,0,170);const свайпВниз=await page.evaluate(()=>LOG.includes("useHere"));
+ /* Действие с найденным — двойное касание одним пальцем; свайп вниз только закрывает (набор 176). */
+ await page.evaluate(()=>{LOG.length=0;});await tap(195,430);await tap(195,430);await page.waitForTimeout(250);
+ const действие=await page.evaluate(()=>LOG.includes("useHere"));
+ check('2. два пальца: вверх — повтор, влево — карта (открыть и закрыть), вправо — журнал (открыть и закрыть), вниз — только закрыть; действие с найденным — двойное касание',
+  повтор&&картаОткр&&картаЗакр&&журнОткр&&журнЗакр&&!свайпВниз&&действие,{повтор,картаОткр,картаЗакр,журнОткр,журнЗакр,свайпВниз,действие});
 
  /* ── 3. три пальца ── */
  await page.evaluate(()=>{LOG.length=0;});

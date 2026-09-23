@@ -87,9 +87,15 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   window.__said=[];
   useProp(точка.x,точка.y);
   const второе=речь();
+  /* Второе касание вводит в саму палату (набор 176): находку берут, дойдя
+     до неё, — двойным касанием, то есть действием здесь. */
+  const вПалате=!!G.place.тайник;
+  const н=вПалате?curLevel().находка:null;
+  if(н){G.place.x=н.x;G.place.y=н.y;useHere();}
   const добра=(G.artifacts||[]).length+(G.items||[]).length+(G.abilities||[]).length+
    (G.skills||[]).length+((G.spells||[]).length-1)+(G.mounts||[]).length;
   const золото=G.gold;
+  if(G.place.тайник)exitSecret();
   window.__said=[];
   useProp(точка.x,точка.y);
   const третье=речь();
@@ -97,10 +103,10 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
    (G.skills||[]).length+((G.spells||[]).length-1)+(G.mounts||[]).length;
   while(activeLayer())closeTopUI();G.place=null;
   return {постоянна,нашёл:/щёлкнуло|открывается ход/i.test(первое),
-   взял:/находка|палат/i.test(второе),добра,золото,
+   взял:вПалате&&/находка|палат/i.test(второе),добра,золото,
    ещёРаз:добраПосле===добра&&G.gold===золото};});
  check('палата постоянна: одна и та же вещь скрывает одно и то же',палата.постоянна===true,палата);
- check('вещь сперва выдаёт ход, а второе касание вводит в палату',
+ check('вещь сперва выдаёт ход, а второе касание переносит героя в палату',
   палата.нашёл===true&&палата.взял===true,палата);
  check('в палате лежит и находка, и золото',палата.добра>=1&&палата.золото>0,палата);
  check('опустошённая палата больше ничего не даёт',палата.ещёРаз===true,палата);

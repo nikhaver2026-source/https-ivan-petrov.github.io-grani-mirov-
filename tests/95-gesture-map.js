@@ -57,7 +57,7 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
  const одно=await page.evaluate(()=>LOG.slice());
  await tap(200,520);await tap(200,520);
  const два=await page.evaluate(()=>LOG.slice());
- check('1а. касание поля одним пальцем — одиночное и двойное — ничего не выполняет: ни действия здесь, ни сбора',одно.length===0&&!два.includes("useHere")&&!два.includes("gather"),{одно,два});
+ check('1а. одиночное касание поля ничего не выполняет, двойное — действие здесь (набор 176)',одно.length===0&&два.includes("useHere"),{одно,два});
  await page.evaluate(()=>{safeFn(()=>openActionMenu("here"));});await page.waitForTimeout(200);
  const кн=await page.evaluate(()=>{const b=[...document.querySelectorAll("#actionMenu button[data-cmd]")].find(x=>x.dataset.cmd==="am:hud");const r=b.getBoundingClientRect();window.HUDSAID=0;const ae=activateElement;window.activateElement=function(el){HUDSAID++;return ae.apply(this,arguments);};b.scrollIntoView();const r2=b.getBoundingClientRect();return {x:r2.left+10,y:r2.top+8};});
  await tap(кн.x,кн.y);await page.waitForTimeout(900);
