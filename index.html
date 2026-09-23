@@ -813,16 +813,20 @@ if(!settings.rateFast){
    нечего: он прежнего и не слышал, — ему отметка ставится молча.
    NEWS_V поднимается, когда есть о чём сказать; кто уже слышал, второй раз
    не услышит. */
-const NEWS_V=2;
+const NEWS_V=3;
 if(!Object.keys(savedSet).length){settings.newsV=NEWS_V;saveSettings();}
 else if((Number(settings.newsV)||0)<NEWS_V){
+ /* Слышавший прошлые новости слышит только новые: пересказывать ему то,
+    к чему рука уже привыкла, — значит заставлять слушать лишнее. */
+ const было=Number(settings.newsV)||0;
  settings.newsV=NEWS_V;saveSettings();
- setTimeout(()=>safeFn(()=>narrate(
-  "Игра обновилась, и три привычки придётся поправить. Первое: речь стала быстрее — скорость пять; медленнее в настройках, раздел «Голос рассказчика», первый ползунок. "+
+ const прежнее=было<2?"Игра обновилась, и три привычки придётся поправить. Первое: речь стала быстрее — скорость пять; медленнее в настройках, раздел «Голос рассказчика», первый ползунок. "+
   "Второе: окно теперь закрывает свайп двумя пальцами вниз, а касание двумя пальцами только собирает. "+
   "Третье, новое: раздельное касание, как в чтеце экрана, — держите палец на пункте, пока игра его не назовёт, и стукните рядом вторым пальцем: пункт выполнится, а палец останется на месте. "+
-  "И ещё: выбор больше не возвращается в начало списка после каждого действия. Подробности — в руководстве, глава два.",
-  {pri:1,interrupt:false})),3000);
+  "И ещё: выбор больше не возвращается в начало списка после каждого действия. Подробности — в руководстве, глава два. ":"Игра обновилась. ";
+ const новое="Настройки и инвентарь теперь открываются списком разделов: двойное касание открывает раздел, свайп двумя пальцами вниз возвращает к списку разделов. "+
+  "Звуки мира стали настоящими записями: на ходу больше не звучит ни барабан, ни нота оркестра.";
+ setTimeout(()=>safeFn(()=>narrate(прежнее+новое,{pri:1,interrupt:false})),3000);
 }
 if(!settings.subMode)settings.subMode=settings.subtitles===0?"off":"sounds";
 settings.subtitles=settings.subMode==="off"?0:1;
@@ -9608,7 +9612,6 @@ const SOUND_BANK={
  fate_hit:{f:["orch/fate_hit_01.mp3","orch/fate_hit_02.mp3"],d:"Удар судьбы: оркестровый акцент поворота"},
  field_pipe:{f:["orch/field_pipe_01.mp3","orch/field_pipe_02.mp3","orch/field_pipe_03.mp3"],d:"Пастушья свирель: поля и стада"},
  fx_crystal:{f:["orch/fx_crystal_01.mp3","orch/fx_crystal_02.mp3"],d:"Кристальный звон: жила и артефакт"},
- fx_echo:{f:["orch/fx_echo_01.mp3","orch/fx_echo_02.mp3"],d:"Эхо: отклик пустого пространства"},
  fx_haze:{f:["orch/fx_haze_01.mp3","orch/fx_haze_02.mp3"],d:"Дымка чар: воздух густеет"},
  fx_lurk:{f:["orch/fx_lurk_01.mp3","orch/fx_lurk_02.mp3"],d:"Нечисть рядом: крадущийся шорох подземелья"},
  fx_omen:{f:["orch/fx_omen_01.mp3","orch/fx_omen_02.mp3"],d:"Знамение: далёкая тема судьбы"},
@@ -12253,10 +12256,10 @@ function addRep(raceName,n){const r=RACE_BY_NAME[raceName];if(!r)return;if(!G.re
  G.rep[r.id]=Math.max(-20,Math.min(20,было+n));if(n>0)safeFn(()=>deed("repGains"));
  const стало=G.rep[r.id];
  if(стало===было)return;
- /* Отношение народа слышно сразу: вверх — светлый перебор, вниз — глухой
+ /* Отношение народа слышно сразу: вверх — людское «слушаюсь», вниз — глухой
     удар. Порог отношения (свой, ровный, холодный, враждебный) отмечается
     отдельно: это уже не мелочь, а поворот. */
- safeFn(()=>Bank.play(стало>было?"spark_glock":"oc_trap_magic",
+ safeFn(()=>Bank.play(стало>было?"throng_yes":"lug_thud",
   {seed:Math.abs(стало),gain:0.42,maxSec:3}));
  safeFn(()=>{
   const порог=v=>v>=10?3:v>=0?2:v>=-8?1:0;
@@ -16184,13 +16187,13 @@ const EVENTS=[
       if(!nd||portalKnown(nd.x,nd.y))continue;
       const d=Math.max(Math.abs(dx),Math.abs(dy));
       if(d<d0){d0=d;ближ=nd;}}}
-    safeFn(()=>Bank.play("fx_echo",{gain:0.6,maxSec:6}));
+    safeFn(()=>Bank.play("oc_crystal_comm",{gain:0.6,maxSec:6}));
     if(ближ)narrate(`Камень отвечает гулом с одной стороны: ${ближ.name}, ${d0} ${plural(d0,"шаг","шага","шагов")}, ${dirBetween(ближ.x-G.x,ближ.y-G.y)}. Дойдите — и сеть его запомнит.`);
     else narrate(`Гул ровный со всех сторон: поблизости все узлы вам уже открыты. Их у вас ${было}.`);}},
    {l:"🪙 Положить монету на камень (10 золота)",run:()=>{
     if(G.gold<10){narrate("Десяти золотых нет. Камень гудит дальше, ему всё равно.");return;}
     G.gold-=10;G.xp+=xpGain(20);
-    safeFn(()=>Bank.play("charm_bell",{gain:0.6,maxSec:5}));
+    safeFn(()=>Bank.play("arte_coins",{gain:0.6,maxSec:5}));
     narrate("Монета легла в выемку и осталась там. Гул стал тише и как будто теплее. Опыт растёт: вы поняли о сети чуть больше.");}},
    {l:"🚶 Отойти",run:()=>narrate("Вы отошли. Гул остался позади и скоро стих.")}]},
 
@@ -16229,8 +16232,8 @@ const EVENTS=[
    {l:"💠 Вставить кристалл",run:()=>{
     if((Number(G.inv["кристалл"])||0)<1){narrate("Кристалла у вас нет. Камень мигает и гаснет: сегодня отсюда только пешком.");return;}
     evTake("кристалл",1);G.xp+=xpGain(60);
-    safeFn(()=>{Bank.play("fx_crystal",{gain:0.7,maxSec:6});
-     setTimeout(()=>safeFn(()=>Bank.play("pad_halo",{gain:0.5,maxSec:6})),500);});
+    safeFn(()=>{Bank.play("oc_glass_hit",{gain:0.7,maxSec:6});
+     setTimeout(()=>safeFn(()=>Bank.play("magic_hum",{gain:0.5,maxSec:6})),500);});
     narrate("Кристалл встал в гнездо, и жилы налились ровным светом. Узел снова слышит сеть. Опыт растёт.");}},
    {l:"🔎 Осмотреть гнездо",run:()=>{
     G.xp+=xpGain(15);
@@ -16258,7 +16261,7 @@ const EVENTS=[
     G.gold-=80;
     if(Math.random()<0.6){
      G.clanRep=(Number(G.clanRep)||0)+5;G.xp+=xpGain(40);
-     safeFn(()=>Bank.play("fx_haze",{gain:0.6,maxSec:6}));
+     safeFn(()=>Bank.play("oc_crystal_comm",{gain:0.6,maxSec:6}));
      narrate("Слово оказалось настоящим: следующий переход сеть зачла вам как свой. Слава в узких кругах растёт.");}
     else{
      addRep(c.emp.race,-3);
@@ -16277,13 +16280,13 @@ const EVENTS=[
     G.xp+=xpGain(50);
     const узлы=portalsKnown().map(portalNodeByKey).filter(Boolean).slice(0,4);
     safeFn(()=>узлы.forEach((nd,i)=>setTimeout(()=>safeFn(()=>
-     Bank.play(nd.kind==="gate"?"temple_bell":"charm_bell",{seed:nd.x+i,gain:0.55,maxSec:4})),i*420)));
+     Bank.play(nd.kind==="gate"?"bell_big":"bell_small",{seed:nd.x+i,gain:0.55,maxSec:4})),i*420)));
     narrate(`Вы запомнили голоса: ${узлы.map(nd=>nd.name).join("; ")}. Теперь узлы различимы на слух. Опыт растёт.`);}},
    {l:"💠 Поймать вспышку в кристалл",run:()=>{
     if((Number(G.inv["кристалл"])||0)<1){narrate("Кристалла под рукой нет, и вспышка ушла впустую.");return;}
     evTake("кристалл",1);
     G.mana=G.manaMax;G.xp+=xpGain(35);
-    safeFn(()=>Bank.play("spark_glock",{gain:0.7,maxSec:5}));
+    safeFn(()=>Bank.play("magic_shimmer",{gain:0.7,maxSec:5}));
     narrate("Кристалл вобрал вспышку и рассыпался искрами: мана полна до края.");}},
    {l:"🚶 Переждать",run:()=>narrate("Вспышка прошла по жилам и ушла дальше по сети.")}]},
  {id:"holyday",w:3,snd:"bell_big",ok:c=>!c.inside,
@@ -16628,15 +16631,15 @@ const EVENTS=[
   choices:c=>[
    {l:"⭐ Загадать на звезду",run:()=>{
     G.faith.time=godFavor("time")+2;G.manaMax+=2;G.mana=G.manaMax;
-    safeFn(()=>{Bank.play("piano_star",{gain:0.6,maxSec:6});
-     setTimeout(()=>safeFn(()=>Bank.play("harp_light",{seed:3,gain:0.6,maxSec:5})),700);});
+    safeFn(()=>{godVoice("time",{gain:0.6,maxSec:6});
+     setTimeout(()=>safeFn(()=>Bank.play("magic_shimmer",{seed:3,gain:0.5,maxSec:4})),700);});
     narrate("Вы загадали и не сказали вслух. Хронар слышит и такое: предел маны +2, мана полна.");}},
    {l:"📝 Запомнить ход звёзд",run:()=>{G.xp+=xpGain(45);G.faith.time=godFavor("time")+1;
     narrate("Вы считали падения и запоминали стороны. Такие приметы потом складываются в карту: опыт растёт.");}},
    {l:"😴 Лечь спать",run:()=>{
     G.hour=7;G.day++;G.hp=G.hpMax;G.mana=G.manaMax;
-    safeFn(()=>Bank.play("pad_dream",{seed:G.day,gain:0.4,maxSec:8}));
-    safeFn(()=>Bank.play("flute_dawn",{gain:0.6,maxSec:6}));
+    safeFn(()=>Bank.play("amb_night",{seed:G.day,gain:0.4,maxSec:6}));
+    safeFn(()=>setTimeout(()=>safeFn(()=>Bank.play("wild_birds",{gain:0.6,maxSec:6})),2500));
     narrate("Вы уснули под падающими звёздами и проснулись на рассвете отдохнувшим: здоровье и мана полны.");}}]},
 
  /* ── Городская жизнь ── */
@@ -16673,7 +16676,7 @@ const EVENTS=[
     if(Math.random()<0.5){G.gold=Math.max(0,G.gold-25);
      safeFn(()=>{Bank.play("lug_alarm",{gain:0.5,maxSec:3});Bank.play("siege_alarm_city",{gain:0.8,maxSec:4});});
      narrate("Вас отвели в караулку, обыскали и взяли штраф в 25 золотых. Могло быть хуже.");}
-    else{safeFn(()=>Bank.play("trombone_alarm",{gain:0.8,maxSec:5}));
+    else{safeFn(()=>Bank.play("siege_alarm_city",{gain:0.8,maxSec:5}));
      narrate("Старший свистнул, и на свист прибежали ещё двое!");
      evFight("Городская стража",1.1);}}}]},
 
@@ -16705,7 +16708,7 @@ const EVENTS=[
     G.hp=Math.max(1,G.hp-8);addRep(c.emp.race,3);nudgeDiplo(c.idx,2);G.xp+=xpGain(50);
     narrate("Два часа в цепочке с вёдрами: спина не разгибается, руки в саже. Город это запомнит.");}},
    {l:"⚔️ Встать со стражей на стену",run:()=>{
-    safeFn(()=>Bank.play("trombone_war",{gain:0.8,maxSec:6}));
+    safeFn(()=>Bank.play("throng_fight",{gain:0.8,maxSec:6}));
     narrate("Вам сунули копьё и место у зубца. Первый из нападавших уже лезет по лестнице!");
     evFight("Воин державы «"+c.foe.short+"»",1.2);}},
    {l:"🚪 Уйти дворами",run:()=>{addRep(c.emp.race,-1);
@@ -16867,7 +16870,7 @@ const EVENTS=[
   choices:c=>[
    {l:"🤝 Дать обет верности",run:()=>{
     G.faith[c.patron.id]=godFavor(c.patron.id)+4;G.hpMax+=5;G.hp=G.hpMax;
-    safeFn(()=>{Bank.play("harmonium_drone",{gain:0.7,maxSec:8});
+    safeFn(()=>{Bank.play("bell_small",{gain:0.7,maxSec:6});
      setTimeout(()=>safeFn(()=>godVoice(c.patron.id,{gain:0.7,maxSec:6})),800);});
     narrate(`Вы положили ладонь на знак и сказали вслух. ${c.patron.n} слышит: благосклонность +4, предел здоровья +5. ${c.patron.boon}`);}},
    {l:"📿 Помолиться без обета",run:()=>{G.faith[c.patron.id]=godFavor(c.patron.id)+1;G.hp=Math.min(G.hpMax,G.hp+10);
@@ -16882,7 +16885,7 @@ const EVENTS=[
     const cl=CLAN_BY_NAME[G.clan];
     G.xp+=xpGain(70);G.gold+=40;
     if(cl&&cl.god)G.faith[cl.god]=godFavor(cl.god)+2;
-    safeFn(()=>Bank.play("trombone_war",{seed:1,gain:0.75,maxSec:6}));
+    safeFn(()=>Bank.play("warrior_shout",{seed:1,gain:0.75,maxSec:6}));
     narrate(`Вы пошли с вестником и вернулись через день: 40 золота, опыт и слово клана за вами.${cl&&cl.god?" Покровитель клана это отметил.":""}`);
     G.hour+=6;while(G.hour>=24){G.hour-=24;G.day++;}}},
    {l:"⚔️ Прикрыть отход своих",run:()=>{
@@ -21924,7 +21927,7 @@ iact("readdocs",{n:"Читать документы",значок:"📄",мож�
 iact("welldrink",{n:"Набрать воды",значок:"🪣",своё:true,можно:o=>!!G.place&&o.плитка==="W",
  делать:o=>{G.water=Math.min(200,(Number(G.water)||0)+40);safeFn(()=>{beaconAt("well",o.dx,o.dy,0,o.d);Bank.play("oc_waterdrop",{gain:0.5,maxSec:3});});narrate("Ведро поднято: запас воды пополнен.");refresh();saveGame(true);return true;}});
 iact("wellcoin",{n:"Бросить монету",значок:"🪙",можно:o=>!!G.place&&o.плитка==="W"&&(Number(G.gold)||0)>=1,почему:o=>"нет ни монеты",
- делать:o=>{G.gold-=1;safeFn(()=>{Bank.play("xylo_coin",{gain:0.4,maxSec:1});setTimeout(()=>safeFn(()=>Bank.play("oc_waterdrop",{gain:0.5,maxSec:2})),700);});safeFn(()=>buffSet("удача",2));narrate("Монета летела долго и плеснула глубоко. Два часа удача на вашей стороне.");return true;}});
+ делать:o=>{G.gold-=1;safeFn(()=>{Bank.play("arte_coins",{gain:0.4,maxSec:1});setTimeout(()=>safeFn(()=>Bank.play("oc_waterdrop",{gain:0.5,maxSec:2})),700);});safeFn(()=>buffSet("удача",2));narrate("Монета летела долго и плеснула глубоко. Два часа удача на вашей стороне.");return true;}});
 iact("welllisten",{n:"Прислушаться к колодцу",значок:"👂",можно:o=>!!G.place&&o.плитка==="W",
  делать:o=>{const s=hashName(o.x*3,o.y*7,8440);safeFn(()=>Bank.play(s<0.3?"deep_drip":s<0.6?"deep_wind":"oc_bubble",{gain:0.45,maxSec:4}));
   narrate(s<0.3?"Внизу капель и далёкий гул: колодец глубок и сух на дне.":s<0.6?"Из глубины тянет сквозняком: колодец сообщается с ходом.":"Вода бурлит и что-то в ней движется. Спускаться не стоит.");return true;}});
@@ -27102,7 +27105,7 @@ function abilityGateWeave(){
    if(safeFn(()=>riftAt(x,y),false))цель={x,y,d:r};}
  if(!цель)return "Разломов поблизости нет: ворота не на что опереть.";
  G.x=цель.x;G.y=цель.y;
- safeFn(()=>{Bank.play("fx_rift",{gain:0.7,maxSec:6});arrive("N");});
+ safeFn(()=>{Bank.play("es_gate",{gain:0.7,maxSec:6});arrive("N");});
  return `Ворота вынесли вас к разлому за ${цель.d} ${plural(цель.d,"клетку","клетки","клеток")}.`;}
 function abilitySkyCall(){
  if(G.place||G.ship)return "Зов неба берётся под открытым небом.";
@@ -30690,7 +30693,7 @@ const Actors={
    else if(a.kind==="soldier"){
     /* Гарнизон слышно строем и железом: их больше одного, и они идут в ногу. */
     safeFn(()=>{Actors.voice(a,"hero_step_metal",{gain:0.55,maxSec:4});
-     setTimeout(()=>safeFn(()=>Actors.voice(a,"war_brass",{gain:0.4,maxSec:4})),300);
+     setTimeout(()=>safeFn(()=>Actors.voice(a,"lug_clank",{gain:0.4,maxSec:4})),300);
      setTimeout(()=>safeFn(()=>Actors.voice(a,"throng_lord",{gain:0.45,maxSec:3})),650);});
     narrate(`Солдат гарнизона, ${dir}: «${DARK_SOLDIER_LINES[Math.floor(Math.random()*DARK_SOLDIER_LINES.length)]}»`,{interrupt:false});}
    else{
@@ -35487,7 +35490,7 @@ const Houses=Modules.register("HOUSES",{
    /* Род вещи — по её имени, а не по случайному роду из genLoot. */
    {const т=gearTypeByName(h.вещь);it.type=т[0];it.slot=т[1];it.родПоИмени=1;}
    G.gear.push(it);
-   safeFn(()=>Bank.play("xylo_coin",{gain:0.5,maxSec:2}));
+   safeFn(()=>Bank.play("arte_find",{gain:0.5,maxSec:2}));
    setTimeout(()=>safeFn(()=>eventTheme("reward",{tier:"valuable",gain:0.55})),400);
    narrate(`Куплено: ${h.вещь}, ${h.стиль}ой работы, за ${цена} золота. Вещь лежит в снаряжении.`);journal(`Куплена вещь Дома: ${h.вещь}.`);refresh();return true;
   }catch(_){return false;}},
@@ -35720,7 +35723,7 @@ const Gods=Modules.register("GODS",{
    else {const v=праздник?30:15;G.xp=(Number(G.xp)||0)+v;слово=`Опыт +${v}.`;}
    this.addFavor(id,праздник?2:1);safeFn(()=>Balance.shift(2,"молитва"));
    safeFn(()=>Bank.play(g.звук,{gain:0.6,maxSec:6}));
-   safeFn(()=>Bank.play("temple_bell",{gain:0.35,maxSec:4}));
+   safeFn(()=>Bank.play("bell_small",{gain:0.35,maxSec:4}));
    narrate(`${g.n}, ${g.ep}. ${g.обряд}. ${слово} Благосклонность ${this.favor(id)}: вы — ${this.title(id)}.${праздник?" Сегодня праздник этого бога: дар удвоен.":""}`);
    journal(`Молитва малому богу: ${g.n}.`);
    safeFn(()=>checkLevelUp());refresh();saveGame(true);return true;
@@ -36446,7 +36449,7 @@ const Path=Modules.register("PATH",{
   safeFn(()=>Bank.play(sp.звук,{kind:"magic",gain:0.55,maxSec:4}));safeFn(()=>deed("casts"));
   if(Math.random()<sp.риск){const урон=2+Math.floor(Math.random()*3);G.hp=Math.max(1,G.hp-урон);G.will=Math.max(0,(Number(G.will)||0)-1);safeFn(()=>Bank.play("oc_pshsh",{kind:"magic",gain:0.5,maxSec:2}));return `${sp.n} сорвались: энергия ушла, отдача ударила по телу — урон ${урон}, воля минус один.`;}
   const t=safeFn(()=>sp.делать(),"Чары ушли в пустоту.");safeFn(()=>{refresh();saveGame(true);});return `${sp.n}: ${t}`;},
- wear(name){const m=MASK_BY_NAME[name];if(!m)return "Это не маска.";if(!(G.items||[]).includes(name))return "Этой маски у вас нет.";if(G.mask===m.id)return `${m.n} уже на лице.`;if((Number(G.will)||0)<1)return "Маска берёт волю: её нет.";G.mask=m.id;if(m.k.mana)G.manaMax=(Number(G.manaMax)||10)+m.k.mana;if(m.k.str)G.str=(Number(G.str)||10)+m.k.str;safeFn(()=>{Bank.play("arte_cloth",{gain:0.45,maxSec:2});setTimeout(()=>safeFn(()=>Bank.play("charm_bell",{gain:0.5,maxSec:3})),300);});journal(`Надета ${m.n}.`);return `${m.n} на лице: ${m.эффект}. Даёт взаимодействие «${m.взаимодействие}». Берёт волю по единице в час.`;},
+ wear(name){const m=MASK_BY_NAME[name];if(!m)return "Это не маска.";if(!(G.items||[]).includes(name))return "Этой маски у вас нет.";if(G.mask===m.id)return `${m.n} уже на лице.`;if((Number(G.will)||0)<1)return "Маска берёт волю: её нет.";G.mask=m.id;if(m.k.mana)G.manaMax=(Number(G.manaMax)||10)+m.k.mana;if(m.k.str)G.str=(Number(G.str)||10)+m.k.str;safeFn(()=>{Bank.play("arte_cloth",{gain:0.45,maxSec:2});setTimeout(()=>safeFn(()=>Bank.play("magic_shimmer",{gain:0.5,maxSec:3})),300);});journal(`Надета ${m.n}.`);return `${m.n} на лице: ${m.эффект}. Даёт взаимодействие «${m.взаимодействие}». Берёт волю по единице в час.`;},
  takeOff(){const m=MASK_BY_ID[G.mask];if(!m)return "Маски на лице нет.";G.mask=null;if(m.k.mana)G.manaMax=Math.max(1,(Number(G.manaMax)||10)-m.k.mana);if(m.k.str)G.str=Math.max(1,(Number(G.str)||10)-m.k.str);G.mana=Math.min(G.mana,G.manaMax);safeFn(()=>Bank.play("arte_cloth",{gain:0.45,maxSec:2}));return `${m.n} снята.`;},
  maskK(key){const m=MASK_BY_ID[G.mask];return m&&m.k[key]!=null?m.k[key]:(key==="trade"?1:0);},
  artifactText(name){const a=PATH_ART_BY_NAME[name];if(!a)return "";return `${a.n} — ${a.роль}. ${a.история} Происхождение: ${a.происхождение}; владельцы: ${a.владельцы}. Ограничения: ${a.ограничения}. Ремонт: ${a.ремонт}. Развитие: ${a.развитие.join(", ")}.`;},
@@ -36489,7 +36492,7 @@ const Path=Modules.register("PATH",{
  npcLine(n){const t=this.trace();if(!t.length||!n)return "";const s=`О вас идёт след силы: ${t.map(x=>x.b.n).join(", ")}. ${n.prof} это чувствует.`;return `<div class="list-line" tabindex="0" data-speak="${s.replace(/"/g,"&quot;")}">👣 ${s}</div>`;},
  npcAct(key,act){const n=getNPCByKey(key);if(!n){narrate("Этого человека здесь больше нет.");return false;}const say=t=>{narrate(t,{interrupt:true});return true;};
   if(act==="path"){openModal("modal-path");renderPath();return true;}
-  if(act==="trial"){safeFn(()=>Bank.play("temple_bell",{gain:0.4,maxSec:3}));return say(`${n.name} слушает ваш след. ${this.statusLine()}${this.next()} ${this.traceText()}`);}
+  if(act==="trial"){safeFn(()=>Bank.play("bell_big",{gain:0.4,maxSec:3}));return say(`${n.name} слушает ваш след. ${this.statusLine()}${this.next()} ${this.traceText()}`);}
   if(act==="forerunners"){safeFn(()=>Bank.play("arte_page",{gain:0.5,maxSec:3}));safeFn(()=>Ledger.add("история","Предтечи Грани: комплексы, станции, луны, архивы, машины, стражи; сеть разбита, узлы открывают по одному",n.name));if(!G.loreForerunners){G.loreForerunners=1;G.xp=(Number(G.xp)||0)+15;safeFn(()=>checkLevelUp());}return say(`${n.name}: «Предтечи Грани оставили подземные комплексы, портальные станции, искусственные луны, архивы, машины и автономных стражей. Их сеть когда-то давала развитие всякому разумному; сейчас она разбита, и узлы её открывают по одному — ключом, знанием, языком, энергией и разрешением фракции». ${G.loreForerunners===1?"Опыт +15 за первый рассказ.":""}`);}
   if(act==="depths"){safeFn(()=>Bank.play("deep_wind",{gain:0.45,maxSec:4}));return say(`${n.name}: «До десятого яруса — шахты и брошенные забои; ниже — поселения, что ушли под землю; ещё ниже — грибные леса, вода, старые мастерские, катакомбы, живые пещеры, кристалл, кривое пространство и то, чем Предтечи управляли всем этим. Костегрызы идут на кровь, глубинники слышат шаг, шёпотники повторяют ваши голоса. Ниже сотого никто из моих не возвращался».`);}
   if(act==="beasts"){safeFn(()=>Bank.play("wolf_howl",{gain:0.4,maxSec:3}));return say(`${n.name}: «Морфозвери меняют форму по еде, ране, жару, страху и соседям: лесной становится степным за месяц в ковыле. Изучайте останки — Ядро прочтёт отпечаток: где живёт, чем питается, чего боится».`);}
@@ -36886,7 +36889,7 @@ const Academy=Modules.register("ACADEMY",{
  rest(){const n=this.need();if(n)return n;if((Number(G.gold)||0)<5)return "Койка в общежитии — пять золотых: не хватает.";G.gold-=5;G.hp=G.hpMax;G.mana=G.manaMax;safeFn(()=>{Energy.ensure();G.will=G.willMax;});G.hour=(Number(G.hour)||0)+8;if(G.hour>=24){G.hour-=24;G.day=(Number(G.day)||1)+1;}
   safeFn(()=>Bank.play("stk_inn",{gain:0.4,maxSec:3}));return "Общежитие: восемь часов сна, здоровье, мана и воля полны.";},
  side(id){const a=this.ensure();const s=ACADEMY_SIDES.find(x=>x.id===id);if(!s)return "Такой стороны нет.";const n=this.need();if(n)return n;if(a.сторона===id)return `Вы и так с «${s.n}».`;const было=a.сторона;a.сторона=id;a.реп=(Number(a.реп)||0)-(было?2:0);
-  safeFn(()=>Bank.play(id==="rectorate"?"temple_bell":"throng_cry",{gain:0.45,maxSec:3}));journal(`Академия: сторона — ${s.n}.`);safeFn(()=>Ledger.add("политика",`Академия: вы с «${s.n}»`,"выбор"));return `Вы с «${s.n}»: ${s.о}.${было?" Прежняя сторона это запомнила.":""}`;},
+  safeFn(()=>Bank.play(id==="rectorate"?"bell_big":"throng_cry",{gain:0.45,maxSec:3}));journal(`Академия: сторона — ${s.n}.`);safeFn(()=>Ledger.add("политика",`Академия: вы с «${s.n}»`,"выбор"));return `Вы с «${s.n}»: ${s.о}.${было?" Прежняя сторона это запомнила.":""}`;},
  duel(){const a=this.ensure();const n=this.need();if(n)return n;if(a.сторона==="rectorate")return "Ректорат дуэли запрещает: вы с ним.";if(G.inCombat)return "Бой уже идёт.";const lvl=Math.max(1,Number(G.level)||1);
   const m={id:"duelist",n:"Студент-дуэлянт",snd:"magic",fx:"spark",lvl,hp:24+lvl*8,dmg:3+lvl,xp:20+lvl*6,gold:0,biomes:[],max:9,дуэль:true};safeFn(()=>Bank.play("herald_trumpet",{gain:0.45,maxSec:3}));narrate("Дуэльный круг Академии: студент напротив поднимает посох. Бой до первой крови.");startCombat({x:G.x,y:G.y,monster:m});return "";},
  onVictory(m){try{if(!m||!m.дуэль)return;const a=this.ensure();a.дуэли=(Number(a.дуэли)||0)+1;a.реп=(Number(a.реп)||0)+2;narrate(`Дуэль выиграна: ${a.дуэли}. Академия это заметила.`,{interrupt:false});}catch(_){}},
@@ -37060,7 +37063,7 @@ const Oversight=Modules.register("OVERSIGHT",{
   if((Number(G.level)||1)<2)return `Лицензия: нужен ${нужно}.`;if(this.wanted(law.emp)>=3)return "Лицензий разыскиваемым не выдают: сперва погасите нарушения.";if((Number(G.gold)||0)<80)return "Лицензия стоит восемьдесят золотых: не хватает.";
   G.gold-=80;this.licenses()[law.emp.short+":"+school]=Number(G.day)||1;safeFn(()=>{Bank.play("arte_page",{gain:0.5,maxSec:3});addStand("noble",law.emp.short,2);});journal(`Лицензия Надзора: ${this.schoolName(school)}, ${law.emp.short}.`);safeFn(()=>Ledger.add("политика",`Лицензия: ${this.schoolName(school)} в державе «${law.emp.short}»`,"Надзор"));return `Лицензия выдана: «${this.schoolName(school)}» в державе «${law.emp.short}». Надзор ждёт, что о происшествиях вы будете сообщать.`;},
  contract(){const law=this.lawHere();if(!this.inCity())return "Договор с Надзором заключают в городе.";if(!G.ovContract||typeof G.ovContract!=="object")G.ovContract={};if(G.ovContract[law.emp.short])return `Договор с Надзором «${law.emp.short}» уже есть.`;if(this.wanted(law.emp)>=3)return "С разыскиваемыми договоров не заключают.";
-  G.ovContract[law.emp.short]=Number(G.day)||1;safeFn(()=>{addStand("noble",law.emp.short,3);Bank.play("temple_bell",{gain:0.4,maxSec:3});});journal(`Договор с Надзором: ${law.emp.short}.`);return `Договор: вы сообщаете Надзору «${law.emp.short}» о магических происшествиях, раскрытые дела оплачиваются вдвое, а нарушение договора — двойное нарушение.`;},
+  G.ovContract[law.emp.short]=Number(G.day)||1;safeFn(()=>{addStand("noble",law.emp.short,3);Bank.play("bell_big",{gain:0.4,maxSec:3});});journal(`Договор с Надзором: ${law.emp.short}.`);return `Договор: вы сообщаете Надзору «${law.emp.short}» о магических происшествиях, раскрытые дела оплачиваются вдвое, а нарушение договора — двойное нарушение.`;},
  settle(){const law=this.lawHere();const w=this.wanted(law.emp);if(!w)return "Нарушений за вами нет.";const цена=w*40;if((Number(G.gold)||0)<цена)return `Погасить нарушения: ${цена} золота, не хватает.`;G.gold-=цена;G.wanted[law.emp.short]=0;safeFn(()=>Bank.play("arte_coins",{gain:0.45,maxSec:2}));return `Нарушения погашены за ${цена} золота: Надзор «${law.emp.short}» вас больше не ищет.`;},
  onCase(верно){try{const law=this.lawHere();if(верно&&G.ovContract&&G.ovContract[law.emp.short]){G.gold+=40;narrate("Надзор по договору доплачивает сорок золотых за раскрытое дело.",{interrupt:false});}}catch(_){}},
  /* Приход в город разыскиваемого: стража на воротах. */
@@ -37138,7 +37141,7 @@ const DECISIONS={
   seal:{n:"Запечатать сеть",о:"разломы утихнут",effect(q){safeFn(()=>addAxis("уважение",6));return "Сеть запечатана: разломы утихли.";}},
   claim:{n:"Взять сеть себе",о:"Путь без конца — ваш",effect(q){safeFn(()=>Coins.addRare("permits",3));safeFn(()=>addAxis("влияние",8));safeFn(()=>Energy.add("aether",20));return "Сеть ваша: три разрешения, эфир +20, и Путь без конца начинается.";}}}};
 function questDecide(id,k){try{const q=(G.quests||[]).find(x=>x.id===id);if(!q)return "Дело не найдено.";if(q.done)return "Дело уже сдано.";if(!q.решения)return "Здесь нечего решать.";const r=q.решения.find(x=>x.id===k);if(!r)return "Такой развязки нет.";q.решение=k;
- safeFn(()=>Bank.play("temple_bell",{gain:0.4,maxSec:3}));journal(`Решение по делу «${q.chainName||q.text.slice(0,30)}»: ${r.n}.`);return `Решено: ${r.n} — ${r.о}. Сдайте дело заказчику, и развязка вступит в силу.`;}catch(_){return "Решение не принято.";}}
+ safeFn(()=>Bank.play("bell_big",{gain:0.4,maxSec:3}));journal(`Решение по делу «${q.chainName||q.text.slice(0,30)}»: ${r.n}.`);return `Решено: ${r.n} — ${r.о}. Сдайте дело заказчику, и развязка вступит в силу.`;}catch(_){return "Решение не принято.";}}
 function questApplyDecision(q){try{if(!q||!q.решения||!q.решение)return "";const D=DECISIONS[q.chain]||{};const f=D[q.решение];if(!f)return "";const t=safeFn(()=>f.effect(q),"")||"";safeFn(()=>Ledger.add("история",`${q.chainName}: ${f.n}`,"развязка"));return t?` Развязка: ${t}`:"";}catch(_){return "";}}
 function decisionsFor(chain,ids){const D=DECISIONS[chain]||{};return (ids||Object.keys(D)).map(id=>({id,n:D[id].n,о:D[id].о}));}
 function renderCases(){
@@ -37687,7 +37690,7 @@ const Power=Modules.register("POWER",{
  herb(){const p=this.here();return p?this.kind(p).трава:null;},
  arrive(){try{const p=this.here();const было=G.powerNow||null;if((p&&p.id)===было)return false;G.powerNow=p?p.id:null;if(!p)return false;const k=this.kind(p);
   if(!G.seenPower||typeof G.seenPower!=="object")G.seenPower={};const первый=!G.seenPower[p.id];G.seenPower[p.id]=1;
-  safeFn(()=>{Bank.play(k.звук,{gain:0.5,maxSec:4});setTimeout(()=>safeFn(()=>Bank.play("charm_bell",{gain:0.4,maxSec:3})),450);Balance.shift(1,"место силы");});
+  safeFn(()=>{Bank.play(k.звук,{gain:0.5,maxSec:4});setTimeout(()=>safeFn(()=>Bank.play("magic_shimmer",{gain:0.4,maxSec:3})),450);Balance.shift(1,"место силы");});
   if(первый)safeFn(()=>{G.xp=(Number(G.xp)||0)+15;checkLevelUp();Ledger.add("координаты",`Место силы: ${k.n} (${p.x}; ${p.y}) — ${k.дар}`,"место силы");journal(`Место силы: ${k.n}.`);});
   narrate(`Место силы: ${k.n}. ${k.о[0].toUpperCase()+k.о.slice(1)}. ${k.дар[0].toUpperCase()+k.дар.slice(1)}. Погода здесь тянется к «${k.погода.toLowerCase()}», и родится ${k.трава}.${первый?" Найдено впервые: опыт плюс пятнадцать.":""}`,{pri:1});return true;}catch(_){return false;}},
  rite(){const p=this.here();if(!p)return "Места силы рядом нет: их ищут по кургану, роще, источнику, вершине и пещере предков.";const k=this.kind(p);
@@ -38092,7 +38095,7 @@ const MIRTH_GIFTS=[
  {id:"mirth_ox",     ось:"благодарность",на:2, дар(){G.inv["ягоды"]=(Number(G.inv["ягоды"])||0)+2;return "возница отсыпал ягод из своего короба";}},
  {id:"mirth_barrel", ось:"уважение",    на:2, дар(){G.gold=(Number(G.gold)||0)+12;return "бондарь дал двенадцать золотых за спасённую бочку";}},
  {id:"mirth_rooster",ось:"известность", на:2, дар(){return "село запомнило вас как того, кто не смеялся первым";}},
- {id:"mirth_cat",    ось:"доверие",     на:2, дар(){safeFn(()=>Bank.play("temple_choir",{gain:0.35,maxSec:4}));return "жрец благословил заодно и вас";}},
+ {id:"mirth_cat",    ось:"доверие",     на:2, дар(){safeFn(()=>Bank.play("choir",{gain:0.35,maxSec:4}));return "жрец благословил заодно и вас";}},
  {id:"mirth_herald", ось:"известность", на:3, дар(){return "теперь вас объявляют первым, чтобы не сбиться";}},
  {id:"mirth_lute",   ось:"уважение",    на:2, дар(){G.gold=(Number(G.gold)||0)+6;return "певец поделился монетой из шапки: слушателей прибавилось";}},
  {id:"mirth_goat",   ось:"благодарность",на:2,дар(){G.inv["Еда в дорогу"]=(Number(G.inv["Еда в дорогу"])||0)+1;return "хозяин отдал вам хлеб — за козу, снятую с крыши";}},
@@ -38358,7 +38361,7 @@ const Armies=Modules.register("ARMIES",{
    a.транспорт=Math.min(100,(Number(a.транспорт)||0)+10);
    const выручка=55+Math.round((Number(a.снабжение)||0)/5);
    G.gold+=выручка;
-   safeFn(()=>{addStand("army",e.short,3);Bank.play("xylo_coin",{gain:0.5,maxSec:4});deed("deals");});
+   safeFn(()=>{addStand("army",e.short,3);Bank.play("arte_coins",{gain:0.5,maxSec:4});deed("deals");});
    return `Торговец при войске «${e.short}»: подводы и упряжь пригнаны. Транспорт ${a.транспорт}, выручка ${выручка} золотых за сорок вложенных.`;}
   if(what==="raid"){if(G.inCombat){G.serveDay=null;return "Бой уже идёт.";}const lvl=Math.max(2,(Number(G.level)||1)+1);a.мораль=Math.min(100,a.мораль+5);startCombat({x:G.x,y:G.y,monster:{id:"war_scout",n:"Вражеский дозор",snd:"mstomp",fx:"stomp",lvl,hp:34+lvl*12,dmg:5+lvl*2,xp:28+lvl*14,gold:18+lvl*6}});return "";}
   if(what==="command"){const бар=this.roleBar("command");if(бар){G.serveDay=null;return бар;}a.мораль=Math.min(100,a.мораль+8);a.фронт=Math.max(-100,Math.min(100,a.фронт+5));safeFn(()=>{addStand("army",e.short,6);deed("quests");});return `Вы вели полк «${e.short}»: мораль ${a.мораль}, фронт сдвинут на пять.`;}
@@ -39461,7 +39464,7 @@ const Res=Modules.register("RES",{
   {const кл=Object.keys(G.zoneTake);if(кл.length>40)кл.slice(0,кл.length-40).forEach(k=>{delete G.zoneTake[k];});}
   const п=safeFn(()=>Path.facetTier("loot"),0)>=2?2:1;
   G.inv[что]=(Number(G.inv[что])||0)+п;
-  safeFn(()=>{Bank.play("fx_crystal",{gain:0.5,maxSec:4});deed("gathers");Ledger.add("рецепты",`${что}: берут в зоне «${z.n}»`,"ресурс");saveGame(true);});
+  safeFn(()=>{Bank.play("oc_diamond",{gain:0.5,maxSec:4});deed("gathers");Ledger.add("рецепты",`${что}: берут в зоне «${z.n}»`,"ресурс");saveGame(true);});
   return `${z.n}: взято ${что} ×${п}. ${this.text(что)}`;}catch(_){return "Взять не вышло.";}},
  /* Рунный камень лежит в руинах: там его и вырубают из старой кладки. */
  fromRuins(){try{
@@ -39836,7 +39839,7 @@ function campDeed(act){
   if(G.zoneTake[ключ]){narrate("Сегодня вас уже благословили. Дважды в день не просят.");return true;}
   G.zoneTake[ключ]=1;
   G.mana=Math.min(G.manaMax,(Number(G.mana)||0)+12);
-  safeFn(()=>Bank.play("temple_choir",{gain:0.5,maxSec:6}));
+  safeFn(()=>Bank.play("choir",{gain:0.5,maxSec:6}));
   narrate("Паломники делятся благословением: мана +12.");
   safeFn(()=>{refresh();saveGame(true);});return true;}
  if(act==="war"){
@@ -44684,7 +44687,7 @@ iaction("identify",{n:"Определить свойства",значок:"🔍
  делать:(row,ctx,done)=>{if(row.kind==="art"){row.it.опознан=true;safeFn(()=>Bank.play("magic_hum",{kind:"magic",gain:0.5,maxSec:3}));return done(`${ART.describe(row.it)} Скрытого больше нет.`);}
   return done(invBrief(row.kind,row.key));}});
 iaction("charge",{n:"Зарядить",значок:"🔋",cats:["artifact"],можно:(row)=>invHas("кристалл",1)?true:"нужен кристалл",
- делать:(row,ctx,done)=>{invTake("кристалл",1);row.it.заряд=(Number(row.it.заряд)||0)+3;safeFn(()=>{Bank.play("fx_crystal",{gain:0.55,maxSec:3});});return done(`${row.it.имя} заряжен: зарядов ${row.it.заряд}.`);}});
+ делать:(row,ctx,done)=>{invTake("кристалл",1);row.it.заряд=(Number(row.it.заряд)||0)+3;safeFn(()=>{Bank.play("oc_glass_hit",{gain:0.55,maxSec:3});});return done(`${row.it.имя} заряжен: зарядов ${row.it.заряд}.`);}});
 iaction("artsell",{n:"Продать",значок:"🪙",cats:[],можно:ok,делать:(row,ctx,done)=>invDo("sell",row.kind,row.key)});
 iaction("artwin",{n:"Части, чары и гнёзда",значок:"💎",cats:[],можно:ok,делать:(row,ctx,done)=>invDo("configure",row.kind,row.key)});
 iaction("mend",{n:"Починить",значок:"🩹",cats:[],можно:ok,делать:(row,ctx,done)=>invDo("repair",row.kind,row.key)});

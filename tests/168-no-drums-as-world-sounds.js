@@ -44,6 +44,10 @@
   11. Постоянный фон пещеры, подземелья и глубины — долгая запись, а не
       щелчок; роли из щелчков по сотой доле секунды в банке нет.
   12. Одна запись — одна роль: среди звуков игры нет побайтовых двойников.
+  13. Исход встречи в пути — тоже мир: монета на камне звенит монетой,
+      сон под звёздами кончается птицами рассвета, ответ на зов клана —
+      кличем; нот оркестра в исходах нет, кроме того, что играют в самом
+      мире (сказитель, рог колонны).
    ═══════════════════════════════════════════════════════════════════════ */
 const {chromium}=require('playwright');
 const fs=require('fs'),path=require('path'),crypto=require('crypto');
@@ -252,6 +256,16 @@ const НОТЫ=/^(inst|orch|arms|spell|relic|mood|folk|score|blow|troop|bazaar|d
  const двойники=Object.values(хеши).filter(v=>v.length>1);
  check('12. одна запись — одна роль: среди звуков игры нет побайтовых двойников',
   двойники.length===0,двойники.slice(0,5));
+
+ /* ── 13. исходы встреч ── */
+ const исходы=await page.evaluate(()=>{
+  const ноты=Object.keys(SOUND_BANK).filter(r=>SOUND_BANK[r].f.some(f=>/^(inst|orch|arms|spell|relic|mood|folk|score)\//.test(f)));
+  const СВОИ=["bard","horn_gate"];
+  const out=[];
+  EVENTS.forEach(e=>{const src=String(e.choices);
+   ноты.forEach(r=>{if(!СВОИ.includes(r)&&src.includes('"'+r+'"'))out.push(e.id+": "+r);});});
+  return out;});
+ check('13. исход встречи в пути звучит миром, а не нотой оркестра',исходы.length===0,исходы.slice(0,8));
 
  check('страница не бросила ни одной ошибки',errors.length===0,errors.slice(0,3));
  await browser.close();

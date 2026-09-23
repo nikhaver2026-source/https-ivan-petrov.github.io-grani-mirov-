@@ -68,7 +68,6 @@
 | fx_haze | дымка чар | fx_4_atmosphere |
 | fx_blessing | благословение | fx_5_brightness |
 | fx_lurk | крадущаяся нечисть | fx_6_goblins |
-| fx_echo | эхо пустоты | fx_7_echoes |
 | fx_rift | ветер разлома | fx_8_scifi |
 | pad_hearth | тепло очага | pad_2_warm |
 | pad_sanctum | святилище | pad_4_choir |

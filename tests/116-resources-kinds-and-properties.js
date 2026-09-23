@@ -119,7 +119,7 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   PLAYED.length=0;
   r.первое=Res.fromZone();
   r.взято=Object.keys(G.inv).join();
-  r.звук=PLAYED.includes("fx_crystal");
+  r.звук=PLAYED.includes("oc_diamond");
   r.второе=Res.fromZone();
   G.day=11;r.назавтра=Res.fromZone();
   /* разные правила — разные ресурсы */
