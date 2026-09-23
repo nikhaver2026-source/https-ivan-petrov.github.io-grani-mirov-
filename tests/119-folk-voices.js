@@ -60,6 +60,9 @@ const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(e!==undefined?' :
   Spatial.at=(p,dx,dy,o)=>{VOICED.push({f:p,gain:(o||{}).gain,rate:(o||{}).rate,t:Date.now()});return at(p,dx,dy,o);};
   const bf=Bank.file.bind(Bank);
   Bank.file=(p,o)=>{VOICED.push({f:p,gain:(o||{}).gain,rate:(o||{}).rate,t:Date.now()});return bf(p,o);};
+  /* Плоский путь голоса теперь свой — через сжатие (набор 175). */
+  const fp=Folk.плоско.bind(Folk);
+  Folk.плоско=(p,o)=>{VOICED.push({f:p,gain:(o||{}).gain,rate:(o||{}).rate,t:Date.now()});return fp(p,o);};
   const bp=Bank.play.bind(Bank);
   Bank.play=(r,o)=>{CUED.push({r,gain:(o||{}).gain,t:Date.now()});return bp(r,o);};
   const sr=Spatial.role.bind(Spatial);
@@ -186,9 +189,10 @@ const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(e!==undefined?' :
   Folk.когда=0;Folk.было.clear();VOICED.length=0;
   Folk.ремесло(n,{всегда:true});
   const г=Folk.раса(n.race);
-  return {rate:VOICED.length?VOICED[0].rate:null,ждём:г[1]};});
+  /* Высота народа, сдвинутая тембром самого жителя (±5 %, набор 175). */
+  return {rate:VOICED.length?VOICED[0].rate:null,ждём:г[1]*Folk.тембр(n),тембр:Folk.тембр(n)};});
  check('слово ремесла звучит в высоте народа',
-  высоты.rate===высоты.ждём,высоты);
+  высоты.rate!==null&&Math.abs(высоты.rate-высоты.ждём)<1e-9&&высоты.тембр>=0.95&&высоты.тембр<=1.05,высоты);
 
  /* ── 8. самопроверка мира и руководство ── */
  const свод=await page.evaluate(()=>{
