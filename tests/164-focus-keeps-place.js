@@ -486,7 +486,7 @@ const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(e!==undefined?' :
  {
   const src=fs.readFileSync(path.join(__dirname,'..','index.html'),'utf8');
   const итог=await page.evaluate(()=>{
-   const живые=/^(tread|steps|lug|oc|mtg|deep|hero|monsters|stk)\//;
+   const живые=/^(tread|steps|lug|oc|mtg|deep|hero|creatures|stk)\//;
    const роли=new Set();
    [SURF_ROLE,SURF_FALLBACK,STEP_ALT,DARK_STEP_ROLE].forEach(t=>Object.values(t).forEach(r=>роли.add(r)));
    Object.values(STEP_LAYER).forEach(([r])=>роли.add(r));

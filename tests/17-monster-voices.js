@@ -49,7 +49,8 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
  const avail=await page.evaluate(async()=>{
   /* Пак Fantasy Sound Library ушёл: ловушка, шаг по воде и рык дракона
      звучат записями свободных игр из папки gamefx. */
-  const paths=["monsters/Dragon_Emerge.wav","monsters/Ghost_Death.wav","gamefx/fx_dragon_growl_01.flac",
+  /* Голоса существ — записи свободных игр в папке creatures, без потерь. */
+  const paths=["creatures/cr_dragon_emerge.flac","creatures/cr_ghost_death.flac","gamefx/fx_dragon_growl_01.flac",
    "gamefx/fx_trap_01.flac","steps/fx_step_water_01.flac"];
   const res=[];
   for(const f of paths){
@@ -68,7 +69,7 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
    out[id]=el?el.src.split("/sounds/")[1]:null;});
   return out;});
  check('реплика появления берётся по виду чудовища',
-  cue.wolf&&cue.wraith&&cue.kraken&&cue.dragon&&/Ghost/.test(cue.wraith)&&/Dragon/.test(cue.dragon),cue);
+  cue.wolf&&cue.wraith&&cue.kraken&&cue.dragon&&/ghost/i.test(cue.wraith)&&/dragon/i.test(cue.dragon),cue);
 
  // 5. Морской бестиарий и пираты
  const sea=await page.evaluate(()=>({
