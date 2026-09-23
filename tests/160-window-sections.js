@@ -8,14 +8,10 @@
 
    ЧТО ПРОВЕРЯЕТСЯ.
 
-   1. Меню действий разбито на четырнадцать разделов, и все пункты целы.
+   1. Меню действий разбито на шестнадцать разделов, и все пункты целы.
    2. Ни один раздел не длиннее шестнадцати пунктов, и самое нужное первым.
-   3. Заголовок в меню — настоящий пункт окна, и он называет число пунктов.
-   4. Число пунктов считается по живому окну, а не по массиву.
-   5. Двойное касание по заголовку перескакивает к следующему разделу.
-   6. Перескок ходит по кругу и умеет назад.
-   7. Оглавление вслух называет все разделы с числами.
-   8. Перескок отсчитывается от того заголовка, которого коснулись.
+   3. С набора 172 меню двухуровневое, как настройки: список разделов,
+      раздел открывает свои пункты, назад — на тот же раздел.
    9. Пустой раздел не показывается.
    9. Настройки разбиты на двенадцать разделов внутри семи пунктов, и ни
       одна не пропала.
@@ -46,7 +42,9 @@ const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(e!==undefined?' :
   window.SAID=[];const o=Speech.say.bind(Speech);
   Speech.say=(t,x)=>{SAID.push(String(t));return o(t,x);};});
 
- /* ── 1–2. Разбивка меню действий ── */
+ /* ── 1–8. Меню действий — пунктами (набор 172) ──
+    Меню больше не лента с заголовками-перескоками, а два уровня, как
+    настройки: список разделов, потом пункты одного раздела. */
  const меню=await page.evaluate(()=>({
   разделов:AM_GROUPS.length,
   имена:AM_GROUPS.map(g=>g[0]),
@@ -56,105 +54,38 @@ const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(e!==undefined?' :
   самыйБольшой:Math.max(...AM_GROUPS.map(g=>g[1].length)),
   пустые:AM_GROUPS.filter(g=>!g[1].length).map(g=>g[0]),
   безПодписи:AM_ITEMS.filter(x=>!(x[1]&&x[1].length>3)).map(x=>x[0]),
-  первыеПодРукой:(AM_GROUPS.find(g=>g[0]==="Сейчас под рукой")||[,[]])[1].map(x=>x[0])}));
- check('меню действий разбито на четырнадцать разделов с разными именами, и все сто тридцать пунктов целы',
-  меню.разделов===14&&меню.уникИмён===14&&меню.пунктов===130&&меню.уникПунктов===130
+  первыеПодРукой:(AM_GROUP_BY_ID.here||[,[]])[1].map(x=>x[0])}));
+ check('меню действий разбито на шестнадцать разделов с разными именами, и все сто тридцать пунктов целы',
+  меню.разделов===16&&меню.уникИмён===16&&меню.пунктов===130&&меню.уникПунктов===130
   &&меню.пустые.length===0&&меню.безПодписи.length===0,меню);
- check('ни один раздел не длиннее шестнадцати пунктов, а под рукой — то, что нужно на каждом шагу',
+ check('ни один раздел не длиннее шестнадцати пунктов, а «Здесь и сейчас» — то, что нужно на каждом шагу',
   меню.самыйБольшой<=16
   &&["look","objects","usehere","interact","gather","echo","map","hud"]
     .every(id=>меню.первыеПодРукой.includes(id)),меню);
-
- /* ── 3–4. Заголовок как пункт ── */
- const заголовки=await page.evaluate(()=>{
+ const уровни=await page.evaluate(()=>{
   openActionMenu();
   const lay=document.getElementById("actionMenu");
-  const h=[...lay.querySelectorAll("."+SEC_CLASS)];
-  const все=visibleInteractive(lay);
-  const первый=h[0];
-  /* Сколько пунктов игра насчитала первому заголовку и сколько их на деле. */
-  const сказано=(/(\d+)\s+пункт/.exec(первый.dataset.speak||"")||[])[1];
-  let руками=0;
-  for(let i=все.indexOf(первый)+1;i<все.length;i++){
-   if(все[i].classList.contains(SEC_CLASS))break;
-   руками++;}
-  const r={есть:h.length,вСписке:h.every(x=>все.includes(x)),
-   скомандой:h.every(x=>x.dataset.cmd==="secjump"),
-   назван:/Раздел «/.test(первый.dataset.speak||""),
-   сказано:Number(сказано),руками,
-   имена:h.map(x=>x.dataset.secTitle)};
-  closeActionMenu();
+  const видно=()=>visibleInteractive(lay).map(x=>x.dataset.cmd);
+  const r={первый:видно(),заголовков:lay.querySelectorAll("."+SEC_CLASS).length};
+  CMD.amgroup("here");r.раздел=видно();r.курсор=uiCursor&&uiCursor.dataset.cmd;r.своих=AM_GROUP_BY_ID.here[1].map(x=>"am:"+x[0]);
+  closeTopUI();r.назад={открыто:!lay.hidden,курсор:uiCursor&&uiCursor.dataset.cmd};
+  closeTopUI();r.закрыто=lay.hidden;
   return r;});
- check('заголовок раздела — настоящий пункт окна: курсор его берёт, у него есть команда и имя',
-  заголовки.есть>=8&&заголовки.вСписке&&заголовки.скомандой&&заголовки.назван
-  &&new Set(заголовки.имена).size===заголовки.есть,заголовки);
- check('число пунктов в заголовке считается по живому окну, а не по массиву',
-  заголовки.сказано>0&&заголовки.сказано===заголовки.руками,заголовки);
-
- /* ── 5–6. Перескок ── */
- const перескок=await page.evaluate(()=>{
-  openActionMenu();
-  const lay=document.getElementById("actionMenu");
-  ensureCursor(lay);
-  const h=[...lay.querySelectorAll("."+SEC_CLASS)];
-  const имя=el=>el&&el.dataset?el.dataset.secTitle||el.textContent:null;
-  /* Ставим курсор в середину первого раздела и перескакиваем. */
-  const все=visibleInteractive(lay);
-  setCursor(все[все.indexOf(h[0])+2],false);
-  const откуда=uiCursor.dataset.cmd;
-  secNav("next");const после=имя(uiCursor);
-  secNav("next");const вторая=имя(uiCursor);
-  secNav("prev");const назад=имя(uiCursor);
-  /* По кругу: с последнего — на первый. */
-  setCursor(h[h.length-1],false);
-  secNav("next");const круг=имя(uiCursor);
-  const оглавление=secIndexText(lay);
-  closeActionMenu();
-  return {откуда,после,вторая,назад,круг,первый:имя(h[0]),второй:имя(h[1]),
-   оглавление,разделов:h.length};});
- check('двойное касание по заголовку перескакивает через весь раздел к следующему',
-  перескок.откуда&&/^am:/.test(перескок.откуда)
-  &&перескок.после===перескок.второй&&перескок.после!==перескок.первый,перескок);
- check('перескок умеет назад и ходит по кругу: с последнего раздела — на первый',
-  перескок.назад===перескок.второй&&перескок.вторая!==перескок.после
-  &&перескок.круг===перескок.первый,перескок);
- check('оглавление вслух называет все разделы с числом пунктов в каждом',
-  new RegExp('Разделов '+перескок.разделов).test(перескок.оглавление)
-  &&(перескок.оглавление.match(/пункт/g)||[]).length>=перескок.разделов,
-  перескок.оглавление.slice(0,160));
-
- /* ── 7а. Перескок отсчитывается от того заголовка, которого коснулись ── */
- const отЗаголовка=await page.evaluate(()=>{
-  openActionMenu();
-  const lay=document.getElementById("actionMenu");
-  const h=[...lay.querySelectorAll("."+SEC_CLASS)];
-  const имя=el=>el&&el.dataset?el.dataset.secTitle||el.textContent:null;
-  /* Курсор нарочно стоит в самом начале, а касание — по пятому заголовку. */
-  ensureCursor(lay);setCursor(h[0],false);
-  CMD.secjump("",h[4]);
-  const после=имя(uiCursor);
-  setCursor(h[0],false);
-  CMD.secback("",h[4]);
-  const назад=имя(uiCursor);
-  closeActionMenu();
-  return {после,назад,пятый:имя(h[4]),шестой:имя(h[5]),четвёртый:имя(h[3])};});
- check('перескок ведёт от того заголовка, которого коснулись, а не от того, где стоит курсор',
-  отЗаголовка.после===отЗаголовка.шестой&&отЗаголовка.назад===отЗаголовка.четвёртый,
-  отЗаголовка);
-
- /* ── 8. Пустой раздел не показывается ── */
+ check('первый уровень — только разделы и «Закрыть», без заголовков-перескоков; раздел открывает только свои пункты; назад — на тот же раздел',
+  уровни.первый.every(c=>/^amgroup:/.test(c)||c==="am:close")&&уровни.первый.length>=10&&уровни.заголовков===0
+  &&уровни.раздел.filter(c=>/^am:/.test(c)).every(c=>уровни.своих.includes(c))
+  &&уровни.курсор==="am:look"&&уровни.назад.открыто&&уровни.назад.курсор==="amgroup:here"&&уровни.закрыто,уровни);
  const пустой=await page.evaluate(()=>{
   /* «Начало пути» исчезает, как только ремесло выбрано. */
   const было=G.startCraft;
   G.startCraft="crafter";
   openActionMenu();
-  const есть=[...document.getElementById("actionMenu").querySelectorAll("."+SEC_CLASS)]
-   .map(x=>x.dataset.secTitle);
+  const есть=[...document.querySelectorAll("#amMenu [data-punkt]")].map(x=>x.dataset.punkt);
   closeActionMenu();
   G.startCraft=было;
-  return {есть,ремесло:"crafter"};});
+  return {есть};});
  check('раздел, в котором сейчас нет ни одного уместного пункта, не показывается вовсе',
-  !пустой.есть.includes("Начало пути")&&пустой.есть.length>=8,пустой);
+  !пустой.есть.includes("start")&&пустой.есть.length>=8,пустой);
 
  /* ── 9–10. Настройки ── */
  /* Настройки теперь пунктами (набор 167): разделы живут внутри пунктов, и
@@ -272,7 +203,7 @@ const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(e!==undefined?' :
   return {есть:!!r,ok:r&&r.ok,
    плохие:rows.filter(x=>!x.ok).map(x=>x.id),
    модуль:!!m&&typeof m.nav==="function"&&typeof m.refresh==="function"
-    &&m.menu().length===14&&m.parts().length===9,
+    &&m.menu().length===16&&m.parts().length===9,
    текст:m?m.text():"",
    глава:GUIDE.some(g=>/Глава 90\. Разделы длинных окон/.test(g.title)&&g.body.length>=7)};});
  check('самопроверка держит строку sections, модуль SECTIONS отвечает, глава 90 на месте',
