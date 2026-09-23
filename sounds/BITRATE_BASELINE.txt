@@ -3,7 +3,7 @@
 # Правило: всякая НОВАЯ запись в sounds/ — либо без потерь (flac, wav),
 # либо сжата не ниже 320 кбит/с. Набор проверок 152 это стережёт.
 #
-# Перечисленные ниже 1306 записей пришли раньше правила, из свободных
+# Перечисленные ниже 1303 записи пришли раньше правила, из свободных
 # библиотек, и уже сжаты с потерями. Пережать их в 320 нельзя: пережатие не
 # возвращает того, чего в файле нет, — оно лишь втрое раздувает вес. Весь
 # банк весит 497 МБ (около половины — музыка мест в 320 кбит/с); пережатие
@@ -1087,9 +1087,6 @@ sounds/tread/tread_gravel_03.ogg	130
 sounds/tread/tread_hoof_01.ogg	87
 sounds/tread/tread_hoof_02.ogg	77
 sounds/tread/tread_hoof_03.ogg	81
-sounds/tread/tread_rock_01.ogg	131
-sounds/tread/tread_rock_02.ogg	132
-sounds/tread/tread_rock_03.ogg	130
 sounds/tread/tread_sand_01.ogg	116
 sounds/tread/tread_sand_02.ogg	129
 sounds/tread/tread_sand_03.ogg	127

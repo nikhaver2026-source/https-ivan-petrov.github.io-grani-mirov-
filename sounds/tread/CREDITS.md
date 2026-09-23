@@ -22,9 +22,6 @@
 | tread_hoof_01 | копыта | `audio/actor/mounted/movement/mstep110.ogg` |
 | tread_hoof_02 | копыта | `audio/actor/mounted/movement/mstep111.ogg` |
 | tread_hoof_03 | копыта | `audio/actor/mounted/movement/mstep112.ogg` |
-| tread_rock_01 | шаг: камень | `audio/actor/singlesteps/fs_rock1.ogg` |
-| tread_rock_02 | шаг: камень | `audio/actor/singlesteps/fs_rock2.ogg` |
-| tread_rock_03 | шаг: камень | `audio/actor/singlesteps/fs_rock3.ogg` |
 | tread_sand_01 | шаг: песок | `audio/actor/singlesteps/fs_sand1.ogg` |
 | tread_sand_02 | шаг: песок | `audio/actor/singlesteps/fs_sand2.ogg` |
 | tread_sand_03 | шаг: песок | `audio/actor/singlesteps/fs_sand3.ogg` |

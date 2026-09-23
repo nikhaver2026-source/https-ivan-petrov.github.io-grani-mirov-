@@ -222,12 +222,14 @@ h3{color:var(--acc2);margin:14px 0 6px;font-size:1.05rem;}
  <label class="opt"><input type="checkbox" id="setAutoDescribe" checked><span>🏞️ <b>Автоописание окружения</b><small>Описывать место после шага</small></span></label>
  <label class="opt"><input type="checkbox" id="setDescribeObjects" checked><span>📦 <b>Описывать объекты голосом</b><small>Иначе — звуком и по запросу</small></span></label>
  <label class="opt"><input type="checkbox" id="setSoundFirst" checked><span>🔈 <b>Звук вместо описаний</b><small>Шорохи, шаги и механизмы не дублируются словами</small></span></label>
+ <label class="opt"><input type="checkbox" id="setStopOnAction" checked><span>✋ <b>Любое действие обрывает речь</b><small>Свайп, касание, жест или клавиша сразу замолкают игру, как чтец экрана, — даже посреди важного. Ощупывание пункта его имя не обрывает</small></span></label>
  <label class="opt"><input type="checkbox" id="setStopOnMove" checked><span>🚶 <b>Прерывать речь при движении</b></span></label>
  <label class="opt"><input type="checkbox" id="setStopOnMenu" checked><span>📋 <b>Прерывать речь при меню</b></span></label>
  <label class="opt"><input type="checkbox" id="setStopOnGather" checked><span>🌿 <b>Прерывать речь при сборе</b></span></label>
  <label class="opt"><input type="checkbox" id="setSayXp" checked><span>✨ <b>Озвучивать мелкие изменения опыта</b></span></label>
  <label class="opt"><input type="checkbox" id="setSayHp" checked><span>❤️ <b>Озвучивать мелкие изменения здоровья</b></span></label>
  <label class="opt"><input type="checkbox" id="setSaySpatial" checked><span>🧭 <b>Озвучивать пространственные события</b><small>Только если «звук вместо описаний» выключен</small></span></label>
+ <label class="opt"><input type="checkbox" id="setCompass" checked><span>🧭 <b>Стороны света</b><small>Север, юг, запад, восток. Снимите галочку — и игра будет называть стороны так же, как свайпы: впереди — свайп вверх, справа — вправо, позади — вниз, слева — влево. «Шкаф справа, сундук впереди»</small></span></label>
  <label class="opt"><input type="checkbox" id="setSayDir" checked><span>🧭 <b>Называть сторону света при шаге</b><small>«Север», «Юг» — при каждой смене направления, в том числе с крыла. Выключите, если стороны забивают собой место: куда вы идёте, всегда скажет осмотр — три пальца влево, он начинается со слов «лицом на север»</small></span></label>
  <label class="opt">🤚 Жест остановки речи <select id="setStopGesture" aria-label="Жест остановки речи"><option value="four_down" selected>Четыре пальца вниз</option><option value="four_up">Четыре пальца вверх</option></select></label>
  <div class="row"><button type="button" id="btnStopSpeech">🔇 Остановить речь</button><button type="button" id="btnRepeatLast">🔁 Повторить последнее</button><button type="button" id="btnReadStatus">🧍 Состояние игрока</button></div>
@@ -703,7 +705,7 @@ const store={
 /* ════════ НАСТРОЙКИ ════════ */
 let savedSet={};try{savedSet=JSON.parse(store.get("gm29set")||"{}")||{};}catch(e){}
 const settings=Object.assign({speech:1,effects:1,music:1,subtitles:1,explore:1,fastTap:0,haptics:1,
- autoSpeech:1,verbosity:"normal",hints:1,autoDescribe:1,describeObjects:1,soundFirst:1,stopOnMove:1,stopOnMenu:1,stopOnGather:1,sayXp:1,sayHp:1,saySpatial:1,srMode:"auto",duck:0.5,stopGesture:"four_down",
+ autoSpeech:1,verbosity:"normal",hints:1,autoDescribe:1,describeObjects:1,soundFirst:1,stopOnMove:1,stopOnMenu:1,stopOnGather:1,stopOnAction:1,sayXp:1,sayHp:1,saySpatial:1,srMode:"auto",duck:0.5,stopGesture:"four_down",
  /* hrtf — позиционный звук: сторона, расстояние и высота источника считаются
     свёрткой с откликом головы. scape — живая звуковая картина вокруг: мир
     сам подаёт голос с тех сторон, где что-то стоит или ходит. */
@@ -757,6 +759,10 @@ const settings=Object.assign({speech:1,effects:1,music:1,subtitles:1,explore:1,f
     у того, кто держит карту в голове, стороны отнимают слух у построек,
     ресурсов и тварей. Выключается; узнать направление можно осмотром. */
  sayDir:1,
+ /* Стороны света или стороны свайпа. compass=0 — игра не говорит «север»,
+    «юг», «запад», «восток»: всё называется так же, как свайпы, — впереди
+    (свайп вверх), справа, позади, слева. «Шкаф справа, сундук впереди». */
+ compass:1,
  /* Раздельное касание чтеца экрана: палец держит названный пункт, второй
     коротко стукает рядом, пункт выполняется. Включено; снимается теми, у
     кого второй палец нет-нет да и ляжет на экран сам. */
@@ -817,7 +823,7 @@ if(!settings.rateFast){
    нечего: он прежнего и не слышал, — ему отметка ставится молча.
    NEWS_V поднимается, когда есть о чём сказать; кто уже слышал, второй раз
    не услышит. */
-const NEWS_V=7;
+const NEWS_V=8;
 if(!Object.keys(savedSet).length){settings.newsV=NEWS_V;saveSettings();}
 else if((Number(settings.newsV)||0)<NEWS_V){
  /* Слышавший прошлые новости слышит только новые: пересказывать ему то,
@@ -836,9 +842,12 @@ else if((Number(settings.newsV)||0)<NEWS_V){
   "Двойное касание открывает раздел, свайп двумя пальцами вниз возвращает к списку. ":"";
  const шестое=было<6?"Музыка теперь звучит только темой места: у деревни, подземелья, храма и порта своя тема из свободных фэнтезийных игр. "+
   "Новый уровень, дела, награды, боги и границы держав звучат живыми звуками мира — монетами, колоколом, толпой, рогом победы, — без фанфар и нот. ":"";
- const новое="Бой теперь подвижный: свайп в бою — шаг, тварь сама ходит, гонится и бьёт, а её замах и чару слышно заранее с её стороны — отойдите. "+
-  "Вынутое оружие бьёт в сторону твари, когда достаёт; касание двумя пальцами в бою — где она. Темп боя — в настройках, раздел «Сложность и темп боя». ";
- setTimeout(()=>safeFn(()=>narrate(прежнее+третье+четвёртое+пятое+шестое+новое,{pri:1,interrupt:false})),3000);
+ const седьмое=было<7?"Бой теперь подвижный: свайп в бою — шаг, тварь сама ходит, гонится и бьёт, а её замах и чару слышно заранее с её стороны — отойдите. "+
+  "Вынутое оружие бьёт в сторону твари, когда достаёт; касание двумя пальцами в бою — где она. Темп боя — в настройках, раздел «Сложность и темп боя». ":"";
+ const новое="Теперь любой свайп, касание, жест или клавиша сразу обрывает речь, даже посреди важного. "+
+  "В настройках речи появилась галочка «Стороны света»: снимите её — и игра будет говорить, как свайпы: впереди, справа, позади, слева. "+
+  "Павший в подземелье очнётся у стен столицы, звук стены больше не пропадает, шаги звучат ровно, меч — настоящей записью. ";
+ setTimeout(()=>safeFn(()=>narrate(прежнее+третье+четвёртое+пятое+шестое+седьмое+новое,{pri:1,interrupt:false})),3000);
 }
 if(!settings.subMode)settings.subMode=settings.subtitles===0?"off":"sounds";
 settings.subtitles=settings.subMode==="off"?0:1;
@@ -1427,6 +1436,23 @@ const Speech={voice:null,keepAlive:null,
   if(this.current&&(this.current.key===what||this.current.id===what))this._cut(this.current,"CANCELLED");
   this._pump();return q.length;},
  clearContext(minPri=2){return this.interrupt(minPri);},
+ /* ── ЛЮБОЕ ДЕЙСТВИЕ ОБРЫВАЕТ РЕЧЬ ──
+    Прежде жест обрывал только «обычные» реплики (interrupt(2)), и только
+    шаг, меню и сбор: всё важное — бой, вести, события, длинные сводки —
+    договаривалось до конца, что бы игрок ни делал, и перебить игру было
+    нечем, кроме особого жеста четырьмя пальцами. Чтец экрана так не
+    поступает: любое касание, свайп или клавиша сразу замолкают его. Теперь
+    так же и здесь: текущая реплика любой важности обрывается, недосказанная
+    очередь снимается, а ответ на само действие звучит уже после обрыва.
+    Беречь остаётся только отмеченное «persistent» и критичное из очереди.
+    Выключается в настройках речи. */
+ userCut(){
+  if(settings.stopOnAction===0)return false;
+  const cur=this.current;
+  if(cur&&!cur.persistent)this._cut(cur,"CANCELLED");
+  const снято=this._dropQueued(1,"CANCELLED");
+  if(cur||снято)this.stats.userCuts=(this.stats.userCuts||0)+1;
+  return !!cur;},
  /* Новое действие игрока снимает старое описание — по настройкам. */
  contextCut(reason){
   try{
@@ -4944,6 +4970,14 @@ document.addEventListener('touchend',e=>{
  if(runState.hold){clearTimeout(runState.hold);runState.hold=null;}
  runState.pendingDir=null;
  const fingers=g.maxCount||g.count;
+ /* Любой жест сперва обрывает речь (см. Speech.userCut). Не обрывают только
+    раздельное касание — его пункт уже выполнен — и речевые жесты «повторить
+    или оборвать», «стоп», «ещё раз», «состояние», «очистить очередь»: им
+    нужно знать, идёт ли речь сейчас. */
+ if(fingers>1&&!g.splitDone)safeFn(()=>{
+  const фигура=g.moved&&g.dir?fingers+"swipe"+g.dir:null;
+  const речевой=фигура&&["repeat","stop","again","flush","state"].indexOf(gestActionId(фигура))>=0;
+  if(!речевой)Speech.userCut();});
  if(fingers>1){
   e.preventDefault();
   /* Раздельное касание уже выполнило пункт: отрыв лежавшего пальца не должен
@@ -5039,6 +5073,14 @@ document.addEventListener('touchend',e=>{
     зоны, иначе касание не считается ни тем, ни другим. */
  const порог=safeFn(()=>gestSwipePx(),38);
  const swipe=d>=порог&&dt<=safeFn(()=>gestSwipeMs(),1200),tap=d<порог&&dt<safeFn(()=>gestTapMaxMs(),3000);
+ /* Свайп и касание одним пальцем обрывают речь. Ощупывание — нет: палец,
+    полежавший на пункте или медленно ведомый по окну, сам и вызвал эту
+    речь, и отрыв пальца не должен съедать только что названное имя. */
+ safeFn(()=>{
+  if(holdSpoke)return;
+  const слойСейчас=navLayer();
+  const листает=swipe&&(!слойСейчас||g.fast||dt<=safeFn(()=>gestListMs(),700)||d>=safeFn(()=>gestListPx(),90));
+  if((tap&&!g.moved)||листает)Speech.userCut();});
  /* Поклёвка: подсекает любое касание или свайп — важна скорость, а не точность. */
  if(G.fishing&&G.fishing.active&&G.fishing.bite&&!activeLayer()){e.preventDefault();safeFn(()=>hookFish());return;}
  if(runState.active){stopRun();e.preventDefault();return;}
@@ -6032,6 +6074,7 @@ const GUIDE=[
 {title:"Глава 3. Движение и стороны света",body:[
  "При движении озвучивается только направление взгляда: вперёд — север, вправо — восток, вниз — юг, влево — запад.",
  "Направление всегда абсолютное: север, юг, запад, восток.",
+ "СТОРОНЫ СВЕТА МОЖНО ВЫКЛЮЧИТЬ. В настройках речи снимите галочку «Стороны света» — и игра будет называть всё так же, как свайпы: впереди — свайп вверх, справа — вправо, позади — вниз, слева — влево. «Шкаф справа, сундук впереди», «стена впереди», «шагните ещё раз вправо». Подробно — глава 97.",
  "СТОРОНА НАЗЫВАЕТСЯ ТОЛЬКО ПРИ ПОВОРОТЕ. Шаг за шагом в одну сторону идёт молча: повторять «север» на каждом шаге значит забивать место, ресурсы и тварей одним и тем же словом. Слово звучит на первом шаге в новую сторону — и на этом всё.",
  "СТОРОНУ МОЖНО ВЫКЛЮЧИТЬ СОВСЕМ. В настройках, в разделе «Что игра говорит сама», есть «Называть сторону света при шаге». Снимите галочку — и шаг перестанет называть сторону и на земле, и с крыла. Тем, кто держит карту в голове, стороны мешают больше, чем помогают.",
  "НАПРАВЛЕНИЕ ПРИ ЭТОМ НИКУДА НЕ ДЕВАЕТСЯ. Осмотр — три пальца влево — начинается со слов «лицом на север» и называет сторону всегда, выключена настройка или нет. То же делает сводка «где я» — три пальца вправо. Сторону можно спросить в любую минуту, её просто перестают говорить без спроса.",
@@ -6397,6 +6440,14 @@ const GUIDE=[
  "Вещь растёт. За каждую победу работающий артефакт получает опыт, а на пороге открывает ступень — прибавку, которой у него раньше не было, и всегда из своего направления. Каждая следующая ступень даётся вдвое тяжелее. Если гнёзда кончились, редкую часть можно скормить вещи: она уйдёт в опыт вместо гнезда.",
  "Требования. Ранг задаёт уровень; сверх того вещь может требовать навык, заклинание нужной школы, расположение народа, принадлежность к клану, прочитанное знание или закрытое дело. Вещь, требования которой не выполнены, лежит мёртвым грузом и не даёт ничего — и прямо говорит, чего ей не хватает.",
  "Где всё это. Пункт меню «Артефакты, части и рецепты». В нём видно, каким ремеслом здесь занимаются и каково ваше умение, какие рецепты под рукой и чего не хватает, какие части лежат в суме, и по каждой вещи — всё, что о ней известно, и всё, что с ней можно сделать: вложить, вынуть, зачаровать, скормить, продать."]},
+{title:"Глава 97. Речь замолкает от любого действия, стороны — как свайпы",body:[
+ "ЛЮБОЕ ДЕЙСТВИЕ ОБРЫВАЕТ РЕЧЬ. Раньше жест обрывал только обычные реплики, а важное — бой, вести, события, длинные сводки — договаривалось до конца, что бы вы ни делали. Теперь как в чтеце экрана: свайп, касание, жест любым числом пальцев или клавиша сразу замолкают игру, даже посреди важного, а ответ на само действие звучит уже после обрыва.",
+ "ЧТО НЕ ОБРЫВАЕТ. Ощупывание: палец, полежавший на пункте или медленно ведомый по окну, сам вызвал имя, и отрыв пальца его не съест. Речевые жесты — два пальца вверх (повторить или оборвать), четыре пальца (стоп, повтор, состояние, очистить очередь): им нужно знать, идёт ли речь. Выключается в настройках речи: «Любое действие обрывает речь».",
+ "СТОРОНЫ КАК СВАЙПЫ. Галочка «Стороны света» в настройках речи. Снята — игра не говорит «север», «юг», «запад», «восток»: всё называется так же, как свайпы. Впереди — свайп вверх, позади — вниз, справа — вправо, слева — влево; наискось — «впереди справа». Осмотр делит вокруг на те же стороны и начинается просто со слова «Осмотр». Слова привязаны к свайпу, а не к повороту героя: так слово сразу говорит, куда вести палец, и совпадает с объёмным звуком.",
+ "ВОЗРОЖДЕНИЕ. Павший в подземелье слышал «вы очнулись в цитадели» — и стоял у той же лестницы вниз. Теперь герой выходит из подземелья и постройки, сходит с палубы и с крыла и очнётся у стен столицы, как и сказано.",
+ "ЗВУК НЕ ПРОПАДАЕТ. В подземелье после нескольких минут игры переставал звучать удар о стену, а за ним и другие звуки: отыгравшие записи держали плееры браузера, а их у страницы ограниченно. Теперь каждая запись, доиграв, отдаёт плеер сразу.",
+ "ШАГИ РОВНЫЕ. Записи шагов из разных игр звучали с разницей до тридцати децибел: каждый второй шаг по земле пропадал, трава звучала вдвое тише гравия. Теперь у каждой записи шага своя поправка, и все звучат вровень. Каменная плита больше не хрустит щебнем — у неё звонкий шаг, доски и мостки стучат ясно, со скрипом настила.",
+ "МЕЧ — ЗАПИСЬЮ. Поверх настоящих записей клинка звучал синтезатор, и удар складывался из семи звуков сразу. Синтезатор убран, удар звучит одним свистом, одним ударом и одним звуком того, во что пришёлся клинок."]},
 {title:"Глава 96. Подвижный бой",body:[
  "ЗАЧЕМ. Бой стоял на месте: тварь «преграждала путь» и звучала в середине головы, свайп без оружия в бою не делал ничего, а тварь била ровно тогда, когда били вы, — как ход в настольной игре. Теперь у схватки есть поле, и на нём у вас и у твари своё место. Оба ходят.",
  "ГДЕ ТВАРЬ. Её голос, шаги, замах и чара идут с той стороны, где она стоит, и тише, когда она дальше. Касание двумя пальцами в бою называет, где она и чем занята: «Огр: в 2 шагах, впереди справа, замахивается». Та же строка стоит в сводке боя, её можно ощупать.",
@@ -6822,7 +6873,7 @@ const GUIDE=[
    приписанная ни к одной части, не теряется — она уходит в конец списка.
    ════════════════════════════════════════════════════════════════════════ */
 const GUIDE_PARTS=[
- ["Часть I. Первые шаги","Что нажимать, куда идти и как заставить игру замолчать.",[1,2,3,88,91,90,93,94,95,4,49]],
+ ["Часть I. Первые шаги","Что нажимать, куда идти и как заставить игру замолчать.",[1,2,3,97,88,91,90,93,94,95,4,49]],
  ["Часть II. Слушать мир","Игра проходится ухом: чем звучит место, поверхность, оружие, тварь и событие.",[5,21,22,24,25,26,28,29,33,34,50]],
  ["Часть III. Герой и его силы","Опыт, тело, свойства, умения и вещи, которые их меняют.",[6,7,40,48,55,58,62,69,72,76,82]],
  ["Часть IV. Магия","Школы, плетение, резонанс, эхо и две энциклопедии заклинаний.",[64,67,68,70,78,79,81,87]],
@@ -10207,7 +10258,6 @@ const SOUND_BANK={
  tread_grass:{f:["tread/tread_grass_01.ogg","tread/tread_grass_02.ogg","tread/tread_grass_03.ogg"],d:"Шаг: трава"},
  tread_gravel:{f:["tread/tread_gravel_01.ogg","tread/tread_gravel_02.ogg","tread/tread_gravel_03.ogg"],d:"Шаг: гравий"},
  tread_hoof:{f:["tread/tread_hoof_01.ogg","tread/tread_hoof_02.ogg","tread/tread_hoof_03.ogg"],d:"Копыта"},
- tread_rock:{f:["tread/tread_rock_01.ogg","tread/tread_rock_02.ogg","tread/tread_rock_03.ogg"],d:"Шаг: камень"},
  tread_sand:{f:["tread/tread_sand_01.ogg","tread/tread_sand_02.ogg","tread/tread_sand_03.ogg"],d:"Шаг: песок"},
  tread_snow:{f:["tread/tread_snow_01.ogg","tread/tread_snow_02.ogg","tread/tread_snow_03.ogg"],d:"Шаг: снег"},
  tread_wood:{f:["tread/tread_wood_01.ogg","tread/tread_wood_02.ogg","tread/tread_wood_03.ogg"],d:"Шаг: доски"},
@@ -10381,7 +10431,8 @@ const Bank={
     i=(i+1)%b.f.length;
     const ne=this.make(b.f[i],this.vol(rec.kind)*rec.gain,false);
     if(!ne)return;
-    rec.el=ne;rec.file=b.f[i];
+    const было=rec.el;rec.el=ne;rec.file=b.f[i];
+    this.kill(было);      /* доигравшая тема отдаёт плеер */
     ne.addEventListener("ended",next,{once:true});};
    el.addEventListener("ended",next,{once:true});}
   return el;},
@@ -10410,12 +10461,16 @@ const Bank={
    if(ctx.createStereoPanner){const pn=ctx.createStereoPanner();pn.pan.value=Math.max(-1,Math.min(1,pan));node.connect(pn);node=pn;}
    node.connect(g);g.connect(AE.fx||ctx.destination);
    const pr=el.play();if(pr&&pr.catch)pr.catch(()=>{});
+   /* Доиграв, маяк отдаёт плеер (см. Spatial.at). */
+   el.addEventListener("ended",()=>{try{el.__stopped=true;src.disconnect();g.disconnect();el.removeAttribute("src");el.load();}catch(_){}},{once:true});
    /* Живая нота инструмента не обрывается на полуслове: перед остановкой
       громкость сводится к нулю за четверть секунды, иначе слышен щелчок. */
    if(maxSec>0){
     const fade=Math.min(0.25,maxSec*0.3);
     setTimeout(()=>{try{g.gain.setTargetAtTime(0.0001,ctx.currentTime,fade/3);}catch(_){}},Math.max(0,(maxSec-fade)*1000));
-    setTimeout(()=>{try{el.__stopped=true;el.pause();src.disconnect();g.disconnect();}catch(_){}},maxSec*1000+120);}
+    /* Отыгравший маяк отдаёт плеер сразу (см. Spatial.at). */
+    setTimeout(()=>{try{el.__stopped=true;el.pause();src.disconnect();g.disconnect();}catch(_){}
+     try{el.removeAttribute("src");el.load();}catch(_){}},maxSec*1000+120);}
    return el;
   }catch(e){return null;}},
  /* Запись по прямому пути: реплики чудовищ разложены по видам, а не по ролям. */
@@ -10426,7 +10481,10 @@ const Bank={
   const rec={el,kind,prio:Voices.prioOf(kind,o.prio),dist:Number(o.dist)||0,t:Date.now(),
    stop:()=>{Bank.kill(el);Bank.shots=Bank.shots.filter(x=>x!==el);}};
   Voices.add(rec);
-  el.addEventListener("ended",()=>{this.shots=this.shots.filter(x=>x!==el);Voices.forget(rec);},{once:true});
+  /* Доигравшая запись отдаёт плеер сразу, а не ждёт сборки мусора: плееров
+     у страницы ограниченно, и без этого звуки через несколько минут игры
+     переставали загружаться (см. Spatial.at). */
+  el.addEventListener("ended",()=>{this.kill(el);this.shots=this.shots.filter(x=>x!==el);Voices.forget(rec);},{once:true});
   if(maxSec>0)setTimeout(()=>{this.kill(el);
    this.shots=this.shots.filter(x=>x!==el);Voices.forget(rec);},maxSec*1000);
   return el;},
@@ -10774,10 +10832,20 @@ const Spatial={
    g.connect(Room.dry);
    const wet=ctx.createGain();wet.gain.value=прегр>0?Math.min(1.6,1+прегр*0.3):1;g.connect(wet);wet.connect(Room.conv);
    const rec={el,src,g,pan,lp,wet,occl:прегр,kind,dist,prio:Voices.prioOf(kind,prio),t:Date.now(),
-    stop(){try{this.el.__stopped=true;this.el.pause();
+    /* Отыгравший элемент отдаёт плеер сразу. Раньше он только вставал на
+       паузу и держал плеер до сборки мусора; браузер держит их
+       ограниченно — на Android около сорока на страницу, — и в подземелье,
+       где после каждого шага отзываются стены, двери и сундуки, запас
+       кончался за несколько минут: новые записи молча не загружались, а
+       запасной синтез не вступал, потому что звук «пошёл». Так пропадал
+       удар о стену. Пустой src и load() разрушают плеер немедленно. */
+    stop(){if(this.done)return;this.done=true;
+     try{this.el.__stopped=true;this.el.pause();
      this.src.disconnect();this.pan.disconnect();this.g.disconnect();if(this.lp)this.lp.disconnect();this.wet.disconnect();}catch(_){}
+     try{this.el.removeAttribute("src");this.el.load();}catch(_){}
      Spatial.live=Spatial.live.filter(x=>x!==this);Voices.forget(this);}};
    this.live.push(rec);this.trim(10);Voices.add(rec);
+   el.addEventListener("ended",()=>rec.stop(),{once:true});
    const pr=el.play();if(pr&&pr.catch)pr.catch(()=>{});
    const life=Math.max(0.4,maxSec||3);
    const fade=Math.min(0.3,life*0.3);
@@ -18129,7 +18197,7 @@ function questFor(npc){
   if(держ)return держ;}
  if(h<0.3){const pool=LAND_RES,res=pool[Math.floor(H(x,y,61)*pool.length)],need=2+npc.tier,d=resourceDestination(npc,res);
   return {id,npc:npc.name,type:'fetch',res,need,tx:d.tx,ty:d.ty,location:`роща или участок возле (${d.tx}; ${d.ty})`,text:`Принеси мне ${need} шт. «${res}». Ищи их в районе (${d.tx}; ${d.ty}), там почва влажнее и этот ресурс встречается чаще. Когда соберёшь всё, возвращайся ко мне.`,reward:{gold:20*npc.tier+need*5,xp:25*npc.tier+need*8}};}
- if(h<0.5){const need=1+Math.ceil(npc.tier/2);return {id,npc:npc.name,type:'kill',need,text:`Очисти округу: убей ${need} монстров. Иди на ${DIRN[Math.floor(H(x,y,64)*4)]}, держись примерно ${4+npc.tier} переходов от поселения и возвращайся, когда услышишь, что цель выполнена.`,reward:{gold:30*npc.tier,xp:35*npc.tier}};}
+ if(h<0.5){const need=1+Math.ceil(npc.tier/2);return {id,npc:npc.name,type:'kill',need,text:`Очисти округу: убей ${need} монстров. Иди ${dirWhither(["N","S","W","E"][Math.floor(H(x,y,64)*4)])}, держись примерно ${4+npc.tier} переходов от поселения и возвращайся, когда услышишь, что цель выполнена.`,reward:{gold:30*npc.tier,xp:35*npc.tier}};}
  if(h<0.75){
   /* Именной охотничий квест — конкретный вид, а не «любой монстр»: даёт
      тематическое разнообразие и позволяет использовать всех расширенных
@@ -25003,7 +25071,7 @@ function anomalyStep(dir){
     if(t!=="#"&&t!=="+"&&t!=="G"&&t!=="Y"){
      p.x=nx;p.y=ny;
      safeFn(()=>{Bank.play("oc_lift_move",{gain:0.5,maxSec:2});setTimeout(()=>safeFn(()=>Bank.play("oc_lift_stop",{gain:0.45,maxSec:2})),700);});
-     narrate(`Плита под ногами поехала и увела вас на ${DIRN[k].split(",")[0]}.`,{pri:2,key:"platform"});
+     narrate(`Плита под ногами поехала и увела вас ${dirWhither(k)}.`,{pri:2,key:"platform"});
      return true;}}}
   return false;
  }catch(_){return false;}}
@@ -25957,13 +26025,12 @@ function weaponSwing(dir){
   if(цель==="wait")return true;}
  const labels={N:"вверх",S:"назад",E:"вправо",W:"влево"};
  AE.ensure();
- try{
-   const s=new SFX();
-   const swingByType={"Лук":"bowShot","Кинжал":"daggerSwing","Посох":"staffSwing"};
-   const fn=swingByType[w.type]||"bladeSwing";
-   s[fn](dir);
-   setTimeout(()=>{try{s.stop(.12);}catch(e){}},700);
- }catch(e){}
+ /* Взмах звучит настоящей записью клинка, посоха или тетивы. Синтезатор,
+    игравший здесь «свист» поверх записей, убран: вместе с ними он и давал
+    искусственный звук меча. В бою свист звучит в самом ударе (fight),
+    поэтому здесь — только взмах по пустому месту. */
+ const бьём=G.inCombat||(!G.place&&!G.ship&&safeFn(()=>{const c=cellContent(G.x,G.y);return !!(c.monster&&!G.cleared[G.x+","+G.y]);},false));
+ if(!бьём)safeFn(()=>weaponSwingSound(false));
  /* Было «Взмах Простой стальной меч вправо» — три слова подряд без падежа.
     Ставить имя вещи в творительный пришлось бы склонением всего словаря;
     вместо этого имя вынесено отдельной частью и стоит в своём именительном. */
@@ -30293,11 +30360,11 @@ function describeHere(full){
  const p=G.place,t=tileAt(lvl,p.x,p.y);
  if(G.flight){
   const f=G.flight;
-  return `Вы на лестничном марше: пройдено ${f.i} ${plural(f.i,"ступень","ступени","ступеней")} из ${f.n}, осталось ${f.n-f.i}. Ход ${f.d>0?"вниз":"вверх"} — на ${DIRN[f.md].split(",")[0]}; обратно — на ${DIRN[FLIGHT_OPP[f.md]].split(",")[0]}. Здесь нет ни поворотов, ни дверей: только ступени.`;}
+  return `Вы на лестничном марше: пройдено ${f.i} ${plural(f.i,"ступень","ступени","ступеней")} из ${f.n}, осталось ${f.n-f.i}. Ход ${f.d>0?"вниз":"вверх"} — ${dirWhither(f.md)}; обратно — ${dirWhither(FLIGHT_OPP[f.md])}. Здесь нет ни поворотов, ни дверей: только ступени.`;}
  const parts=[];
  if(t!==".")parts.push(`Здесь: ${tileLabel(t,p.x,p.y)}.`);
  const ways=[];
- for(const [d,dx,dy] of [["север",0,-1],["юг",0,1],["запад",-1,0],["восток",1,0]]){
+ for(const [d,dx,dy] of [[dirWord("N"),0,-1],[dirWord("S"),0,1],[dirWord("W"),-1,0],[dirWord("E"),1,0]]){
   const n=tileAt(lvl,p.x+dx,p.y+dy);
   if(n==="#")continue;
   ways.push(n==="."?d:`${d} — ${tileLabel(n,p.x+dx,p.y+dy)}`);
@@ -30417,7 +30484,7 @@ function startFlight(delta,dir){
  safeFn(()=>beacon(delta>0?"stairs_down":"stairs_up",0,0));
  /* Шахта вертикальна, и это стоит сказать: игрок должен знать, что вернётся
     ровно сюда же, а не «куда-нибудь». */
- narrate(`Марш лестницы: ${n} ${plural(n,"ступень","ступени","ступеней")} ${delta>0?"вниз":"вверх"}. Шахта идёт отвесно: выйдете ровно под этой клеткой${delta>0?"":", то есть там, откуда спускались"}. Идите на ${DIRN[dir].split(",")[0]}; шаг в обратную сторону вернёт вас обратно.`);
+ narrate(`Марш лестницы: ${n} ${plural(n,"ступень","ступени","ступеней")} ${delta>0?"вниз":"вверх"}. Шахта идёт отвесно: выйдете ровно под этой клеткой${delta>0?"":", то есть там, откуда спускались"}. Идите ${dirWhither(dir)}; шаг в обратную сторону вернёт вас обратно.`);
  return true;}
 /* Что слышно на марше: чем ниже, тем меньше живого и больше камня. */
 function flightFlavour(){
@@ -30518,10 +30585,10 @@ function moveInside(dir){
  const nx=p.x+DIRV[dir][0],ny=p.y+DIRV[dir][1];
  const t=tileAt(lvl,nx,ny);
  if(t==="#"){safeFn(()=>beaconAt("wall",DIRV[dir][0],DIRV[dir][1],0,1));
-  if(settings.hints!==0)narrate(`Стена на ${DIRN[dir].split(",")[0]}е.`);return false;}
+  if(settings.hints!==0)narrate(`Стена ${dirWhere(dir)}.`);return false;}
  if(t==="+"&&placeMark(nx,ny)==="locked"){
   safeFn(()=>{beaconAt("door",DIRV[dir][0],DIRV[dir][1],0,1);doorSound(doorKindHere("+"),"locked",{dx:DIRV[dir][0],dy:DIRV[dir][1]});});
-  narrate(`Дверь на ${DIRN[dir].split(",")[0]}е заперта. Ключ, отмычка или чары — в действиях двери.`);
+  narrate(`Дверь ${dirWhere(dir)} заперта. Ключ, отмычка или чары — в действиях двери.`);
   return false;}
  if(t==="+"&&placeMark(nx,ny)!=="open"){
   setPlaceMark(nx,ny,"open");
@@ -30539,7 +30606,7 @@ function moveInside(dir){
   safeFn(()=>beaconAt("gate",DIRV[dir][0],DIRV[dir][1],0,1));
   safeFn(()=>openVault(nx,ny));
   if(safeFn(()=>vaultIsOpen(nx,ny),false))
-   narrate(`Створка отошла на ${DIRN[dir].split(",")[0]}е. Шагните ещё раз — войдёте в палату.`);
+   narrate(`Створка ${dirWhere(dir)} отошла. Шагните ещё раз — войдёте в палату.`);
   return false;}
  if(t==="G"&&p.kind==="city"&&placeMark(nx,ny)!=="open"){
   setPlaceMark(nx,ny,"open");
@@ -30581,7 +30648,7 @@ function moveInside(dir){
   p.arm={x:p.x,y:p.y,dir,t:cur};
   const what=cur===">"?"Ступени уходят вниз":cur==="<"?(p.depth>0?"Ступени ведут наверх":"Порог наружу"):"Вы в городских воротах";
   const act=cur===">"?"спуститесь на уровень ниже":cur==="<"?(p.depth>0?"подниметесь выше":"выйдете наружу"):"выйдете за стену";
-  narrate(`${what}. Шагните ещё раз на ${DIRN[dir].split(",")[0]} — ${act}.`,{interrupt:true});
+  narrate(`${what}. Шагните ещё раз ${dirWhither(dir)} — ${act}.`,{interrupt:true});
  }else{
   p.arm=null;
   /* Переход в другой квартал или с улицы во двор называется отдельно —
@@ -30761,7 +30828,7 @@ const AMBIENCE_SET={
   rain:[["oc_rain",2],["oc_thunder",0.7]],night:[["wild_owl",1],["oc_bat_noise",1],["oc_mosquito",2]]},
  cave:{period:[6,12],spots:[["deep_drip",3],["oc_waterdrop",2],["deep_wind",2],["deep_rocks",1],["oc_bat_flutter",1.5],["oc_bat_noise",1],["od_dig",0.7],["mtg_rubble",0.6],["oc_waterfall",0.5],["foe_burrow_pain",0.3],["oc_earthquake",0.15]]},
  dungeon:{period:[6,12],spots:[["deep_drip",2],["oc_waterdrop",1.5],["deep_wind",2],["deep_rocks",0.8],["oc_chain",0.6],["mtg_door_close",0.3],["od_undead",0.3],["oc_bat_noise",0.6],["mtg_rubble",0.5],["oc_step_hard",0.5]]},
- city:{period:[4,9],spots:[["throng_hail_m",2],["throng_hail_f",2],["trade_m",1.5],["trade_f",1.5],["tread_rock",2],["mtg_cart",1.5],["oc_wheels",1],["beasts_horse",1],["oc_dog_bark",1],["anvil",1.5],["hall_market",1],["mtg_door_open",1],["mtg_door_close",1],["uh_bell",0.7],["guard_shout",1],["craft_saw",0.8],["uh_lumberjack",0.5],["uh_tavern",0.7],["oc_laugh",0.7],["oc_chop",0.5]],
+ city:{period:[4,9],spots:[["throng_hail_m",2],["throng_hail_f",2],["trade_m",1.5],["trade_f",1.5],["oc_step_hard",2],["mtg_cart",1.5],["oc_wheels",1],["beasts_horse",1],["oc_dog_bark",1],["anvil",1.5],["hall_market",1],["mtg_door_open",1],["mtg_door_close",1],["uh_bell",0.7],["guard_shout",1],["craft_saw",0.8],["uh_lumberjack",0.5],["uh_tavern",0.7],["oc_laugh",0.7],["oc_chop",0.5]],
   night:[["oc_dog_bark",1],["wild_owl",0.5],["guard_shout",0.5],["mtg_door_close",0.5]]},
  village:{period:[5,10],spots:[["beasts_cattle",2],["oc_cattle_snort",2],["beasts_sheep",1.5],["beasts_fowl",1.5],["oc_dog_bark",1.5],["oc_dog_snuff",0.7],["oc_chop",1],["oc_tree_fall",0.2],["uh_windmill",0.7],["throng_hail_f",1],["mtg_door_open",0.6],["oc_wheels",0.7]]},
  tavern:{period:[3,7],spots:[["throng_hail_m",2],["throng_hail_f",2],["oc_laugh",3],["oc_glass_hit",2.5],["oc_soft_touch",1.5],["oc_step_hard",1.5],["oc_wood_creak",2],["mtg_door_open",0.8],["mtg_door_close",0.8],["wild_hearth",1.5],["lug_fire",1],["oc_boiling",1],["oc_munch",1],["throng_yes",1],["uh_tavern",1.5]]},
@@ -32070,6 +32137,24 @@ const DEEP_TRADER=["старьёвщик с мешком чужих находо
  "гном-оценщик с лупой из горного стекла","бывший каторжник, торгующий верёвкой и факелами"];
 /* ════════ ДВИЖЕНИЕ ════════ */
 const DIRN={N:"север, вперёд",S:"юг, назад",W:"запад, влево",E:"восток, вправо"};
+/* ── СТОРОНЫ СВЕТА ИЛИ СТОРОНЫ СВАЙПА ──
+   Кому-то опора — стороны света, кому-то они лишние: игроку, который
+   держит в голове не карту, а руку, нужно не «сундук на северо-востоке»,
+   а «сундук впереди справа». Настройка «Стороны света» (compass) это
+   решает. Без неё стороны называются так же, как свайпы: впереди — вверх,
+   позади — вниз, справа — вправо, слева — влево. Привязка к свайпу, а не к
+   повороту героя, нарочная: свайп в игре абсолютный, и слово тогда сразу
+   говорит, куда вести палец; объёмный звук слушается так же, лицом вверх. */
+function компас(){return settings.compass!==0;}
+const DIR_REL={N:"вперёд",S:"назад",W:"влево",E:"вправо"};
+const DIR_REL_AT={N:"впереди",S:"позади",W:"слева",E:"справа"};
+const DIR_ABS_AT={N:"на севере",S:"на юге",W:"на западе",E:"на востоке"};
+/* «стена на севере» или «стена впереди» */
+function dirWhere(d){return компас()?DIR_ABS_AT[d]||"":DIR_REL_AT[d]||"";}
+/* «иди на север» или «иди вперёд» */
+function dirWhither(d){return компас()?"на "+String(DIRN[d]||"").split(",")[0]:DIR_REL[d]||"";}
+/* одно слово: «север» или «вперёд» */
+function dirWord(d){return компас()?String(DIRN[d]||"").split(",")[0]:DIR_REL[d]||"";}
 const DIRV={N:[0,-1],S:[0,1],W:[-1,0],E:[1,0]};
 const recentBeacons=new Map();
 /* Имя открытого слоя вслух: окно, меню действий, панель чар, свод или добыча.
@@ -32136,7 +32221,7 @@ function move(dir){
  const oldX=G.x,oldY=G.y;
  G.x=Math.max(0,Math.min(WORLD-1,G.x+DIRV[dir][0]));
  G.y=Math.max(0,Math.min(WORLD-1,G.y+DIRV[dir][1]));
- if(G.x===oldX&&G.y===oldY){narrate(`Край мира. Дальше на ${DIRN[dir]} идти нельзя.`);return;}
+ if(G.x===oldX&&G.y===oldY){narrate(`Край мира. Дальше ${dirWhither(dir)} идти нельзя.`);return;}
  safeFn(()=>{deed("steps");safeFn(()=>Tree.шаг());if(G.dark)adaptAdd("среда",0.5);
   if(adaptState()==="unstable"&&deeds("steps")%5===0&&G.mana>0)G.mana=Math.max(0,(Number(G.mana)||0)-1);});
  /* На крыле дорога короче: под вами и топь, и вода, и хребет — всё одинаково.
@@ -32155,7 +32240,7 @@ function move(dir){
    if(G.x!==сх||G.y!==су){
     safeFn(()=>{Spatial.role("sky_gust",DIRV[вбок][0]*2,DIRV[вбок][1]*2,
       {dz:(Number(G.alt)||0)+1,gain:0.5,maxSec:3})||Bank.play("sky_gust",{gain:0.5,maxSec:3});});
-    safeFn(()=>narrate(`Порыв снёс на ${DIRN[вбок].split(",")[0]}.`,{interrupt:false}));}}
+    safeFn(()=>narrate(`Порыв снёс ${dirWhither(вбок)}.`,{interrupt:false}));}}
   safeFn(()=>wingBeat());
   safeFn(()=>Tutor.note("move:"+dir));
   return arriveSky(dir);}
@@ -32195,17 +32280,21 @@ function move(dir){
 /* Живые шаги-дублёры: каждый третий шаг по траве, снегу, камню, доскам и
    мягкой земле берётся из записей Lugaru и OpenClonk — поступь перестаёт
    быть одной и той же парой файлов. */
-const STEP_ALT={grass:"lug_step_grass",snow:"lug_step_snow",stone:"lug_step_stone",cave:"lug_step_stone",
- marble:"oc_step_hard",plank:"oc_step_hard",dirt:"oc_step_soft",leaves:"oc_step_soft",mud:"oc_step_soft",
+const STEP_ALT={grass:"lug_step_grass",snow:"lug_step_snow",stone:"oc_step_hard",cave:"lug_step_stone",
+ marble:"lug_step_stone",plank:"mtg_step_wood",bridge:"tread_wood",dirt:"oc_step_soft",leaves:"oc_step_soft",mud:"oc_step_soft",
  straw:"oc_step_soft",water:"oc_swim",
  tallgrass:"lug_step_grass",wetdirt:"oc_step_soft",wood:"oc_step_hard",swamp:"oc_swim",deepwater:"oc_dive"};
-const SURF_ROLE={grass:"tread_grass",dirt:"step_dirt",stone:"tread_rock",sand:"tread_sand",
+/* Камень звучал гравием: записи «камня» 0 A.D. оказались теми же файлами,
+   что и гравий, и плита тракта хрустела щебнем. Теперь камень — звонкий
+   шаг Lugaru, а доски и мостки, записанные глухими ударами без верхов, —
+   ясный стук OpenClonk и деревянный шаг со скрипом настила. */
+const SURF_ROLE={grass:"tread_grass",dirt:"step_dirt",stone:"lug_step_stone",sand:"tread_sand",
  water:"step_water",cave:"tread_gravel",snow:"tread_snow",ice:"mtg_step_ice",leaves:"oc_step_soft",
- mud:"step_water",plank:"tread_wood",straw:"oc_step_soft",marble:"oc_step_hard",bone:"tread_gravel",
+ mud:"step_water",plank:"oc_step_hard",straw:"oc_step_soft",marble:"oc_step_hard",bone:"tread_gravel",
  crystal:"mtg_step_glass",metal:"mtg_step_metal",gravel:"tread_gravel",ash:"tread_sand",
  /* Мостки: настил причала и переброшенного через реку моста. Прежняя роль
     остаётся запасной — она ниже, в SURF_FALLBACK. */
- bridge:"stk_bridge",
+ bridge:"mtg_step_wood",
  /* ── ПО ТЗ: восемнадцать поверхностей ──
     Высокая трава, мокрая земля, дерево (не пол, а настил и брёвна),
     ступени, болото и глубокая вода добавлены к прежним двенадцати. */
@@ -32216,10 +32305,10 @@ const SURF_ROLE={grass:"tread_grass",dirt:"step_dirt",stone:"tread_rock",sand:"t
    лестничного марша. */
 const STEP_LAYER={tallgrass:["oc_rustle",0.3],swamp:["oc_bubble",0.22],deepwater:["oc_splash",0.35],
  stairs:["hero_step_echo",0.25],wetdirt:["step_water",0.18],ice:["oc_ice_hit",0.12],bridge:["oc_wood_creak",0.2],
- plank:["oc_wood_creak",0.1],wood:["oc_wood_creak",0.14],water:["oc_splash",0.15],mud:["oc_bubble",0.1]};
+ plank:["oc_wood_creak",0.2],wood:["oc_wood_creak",0.18],water:["oc_splash",0.15],mud:["oc_bubble",0.1]};
 /* Прежние роли остались запасными: если живой записи нет, звучит старая. */
-const SURF_FALLBACK={grass:"lug_step_grass",stone:"lug_step_stone",sand:"mtg_step_sand",cave:"mtg_step_gravel",
- snow:"lug_step_snow",plank:"oc_step_hard",gravel:"mtg_step_gravel",bridge:"tread_wood",
+const SURF_FALLBACK={grass:"lug_step_grass",stone:"mtg_step_hard",sand:"mtg_step_sand",cave:"mtg_step_gravel",
+ snow:"lug_step_snow",plank:"tread_wood",gravel:"mtg_step_gravel",bridge:"stk_bridge",
  tallgrass:"lug_step_grass",wetdirt:"step_dirt",wood:"oc_step_hard",stairs:"lug_step_stone",swamp:"step_water",deepwater:"step_water"};
 const SURF_NAME={grass:"трава",dirt:"утоптанная земля",stone:"каменная плита",sand:"песок",
  water:"мелкая вода",cave:"пещерный щебень",snow:"снег",ice:"лёд",leaves:"палая листва",
@@ -32636,6 +32725,85 @@ function stepProfile(пов){
   p.gain=Math.max(0.1,Math.min(0.9,p.gain));
  }catch(_){}
  return p;}
+/* ── РОВНЫЙ ШАГ ──
+   Записи шагов пришли из разных игр и сведены как попало: у одних пик у
+   самого края шкалы, у других на тридцать децибел ниже. В одной роли
+   «утоптанная земля» стояли рядом звонкий шаг 0 A.D. и почти неслышный
+   шорох Wyrmsun — и каждый второй-третий шаг по той же земле пропадал,
+   а шаг по траве звучал вдвое тише шага по гравию. Перекодировать сжатые
+   записи ради громкости значило бы портить их, поэтому громкость
+   выравнивается при проигрывании: у каждой записи шага записан её пик
+   (STEP_PEAK), и она звучит с таким усилением, чтобы пик встал на −3 дБ.
+   Громкие записи играют прежним путём, чуть тише; тихие идут через
+   звуковую шину — у простого элемента усилителя нет, а у шины есть. */
+const STEP_PEAK={
+ "deep/deep_stairs_01.ogg":-20.4,"hero/hero_step_cloth_01.ogg":-35.3,"hero/hero_step_cloth_02.ogg":-36.2,
+ "hero/hero_step_echo_01.ogg":-36.4,"hero/hero_step_echo_02.ogg":-33.1,"hero/hero_step_leather_01.ogg":-32.5,
+ "hero/hero_step_leather_02.ogg":-32.8,"hero/hero_step_metal_01.ogg":-38.1,"hero/hero_step_metal_02.ogg":-38.5,
+ "lug/lug_step_grass_01.ogg":-0.4,"lug/lug_step_grass_02.ogg":-0.1,"lug/lug_step_snow_01.ogg":-1.3,
+ "lug/lug_step_snow_02.ogg":-0.3,"lug/lug_step_stone_01.ogg":-0.8,"lug/lug_step_stone_02.ogg":-0.4,
+ "mtg/dirt_footstep_1.ogg":-13.5,"mtg/dirt_footstep_2.ogg":-14.2,"mtg/glass_footstep.ogg":-3.0,
+ "mtg/grass_footstep_1.ogg":-18.0,"mtg/grass_footstep_2.ogg":-16.8,"mtg/grass_footstep_3.ogg":-19.5,
+ "mtg/gravel_footstep_1.ogg":-2.8,"mtg/gravel_footstep_2.ogg":-3.4,"mtg/gravel_footstep_3.ogg":-3.1,
+ "mtg/gravel_footstep_4.ogg":-3.1,"mtg/hard_footstep_1.ogg":-0.9,"mtg/hard_footstep_2.ogg":-0.9,
+ "mtg/hard_footstep_3.ogg":-1.0,"mtg/ice_footstep_1.ogg":-1.0,"mtg/ice_footstep_2.ogg":-1.0,
+ "mtg/ice_footstep_3.ogg":-1.0,"mtg/metal_footstep_1.ogg":-1.0,"mtg/metal_footstep_2.ogg":-1.0,
+ "mtg/metal_footstep_3.ogg":-0.9,"mtg/sand_footstep_1.ogg":-0.9,"mtg/sand_footstep_2.ogg":-1.0,
+ "mtg/sand_footstep_3.ogg":-0.9,"mtg/snow_footstep_1.ogg":-4.8,"mtg/snow_footstep_2.ogg":-7.7,
+ "mtg/snow_footstep_3.ogg":-4.3,"mtg/snow_footstep_4.ogg":-8.8,"mtg/snow_footstep_5.ogg":-3.4,
+ "mtg/water_footstep_1.ogg":-3.8,"mtg/water_footstep_2.ogg":-2.9,"mtg/water_footstep_3.ogg":-6.9,
+ "mtg/wood_footstep_1.ogg":-3.2,"mtg/wood_footstep_2.ogg":-3.0,"oc/oc_bubble_01.ogg":-5.7,"oc/oc_bubble_02.ogg":-16.2,
+ "oc/oc_bubble_03.ogg":-15.5,"oc/oc_dive_01.ogg":-32.9,"oc/oc_dive_02.ogg":-35.2,"oc/oc_dive_03.ogg":-35.1,
+ "oc/oc_ice_hit_01.ogg":0.0,"oc/oc_ice_hit_02.ogg":-0.5,"oc/oc_rustle_01.ogg":-26.2,"oc/oc_rustle_02.ogg":-26.9,
+ "oc/oc_rustle_03.ogg":-14.1,"oc/oc_rustle_04.ogg":-18.9,"oc/oc_splash_01.ogg":0.0,"oc/oc_splash_02.ogg":0.0,
+ "oc/oc_splash_03.ogg":0.0,"oc/oc_step_hard_01.ogg":-21.3,"oc/oc_step_hard_02.ogg":-23.6,
+ "oc/oc_step_hard_03.ogg":-21.0,"oc/oc_step_hard_04.ogg":-20.0,"oc/oc_step_hard_05.ogg":-14.8,
+ "oc/oc_step_soft_01.ogg":-20.8,"oc/oc_step_soft_02.ogg":-22.6,"oc/oc_step_soft_03.ogg":-22.4,
+ "oc/oc_step_soft_04.ogg":-20.7,"oc/oc_step_soft_05.ogg":-13.6,"oc/oc_step_soft_06.ogg":-16.0,
+ "oc/oc_swim_01.ogg":-5.5,"oc/oc_swim_02.ogg":-6.2,"oc/oc_swim_03.ogg":-7.7,"oc/oc_wood_creak_01.ogg":-29.5,
+ "oc/oc_wood_creak_02.ogg":-23.5,"oc/oc_wood_creak_03.ogg":-22.3,"steps/fx_step_dirt_01.flac":-7.4,
+ "steps/fx_step_dirt_02.flac":-10.9,"steps/fx_step_dirt_03.flac":-7.4,"steps/fx_step_dirt_04.flac":-10.4,
+ "steps/fx_step_dirt_05.flac":-22.6,"steps/fx_step_dirt_06.flac":-29.9,"steps/fx_step_dirt_07.flac":-24.2,
+ "steps/fx_step_water_01.flac":0.0,"steps/fx_step_water_02.flac":-0.2,"stk/stk_bridge_01.ogg":0.0,
+ "tread/tread_grass_01.ogg":-13.0,"tread/tread_grass_02.ogg":-18.5,"tread/tread_grass_03.ogg":-13.9,
+ "tread/tread_gravel_01.ogg":-6.0,"tread/tread_gravel_02.ogg":-7.6,"tread/tread_gravel_03.ogg":-9.2,
+ "tread/tread_sand_01.ogg":-14.8,"tread/tread_sand_02.ogg":-10.6,"tread/tread_sand_03.ogg":-7.0,
+ "tread/tread_snow_01.ogg":-19.4,"tread/tread_snow_02.ogg":-14.6,"tread/tread_snow_03.ogg":-17.7,
+ "tread/tread_wood_01.ogg":-9.1,"tread/tread_wood_02.ogg":-9.4,"tread/tread_wood_03.ogg":-9.3};
+const STEP_TARGET=-3;
+function stepLevelK(file){
+ const p=STEP_PEAK[file];if(typeof p!=="number")return 1;
+ return Math.max(0.25,Math.min(16,Math.pow(10,(STEP_TARGET-p)/20)));}
+function playLeveled(role,o){
+ const {gain=0.55,rate=0,maxSec=1.2,kind="fx",prio="mid"}=o||{};
+ if(!Bank.enabled||!Bank.has(role)||!settings.effects)return null;
+ const file=Vary.file(role);if(!file)return null;
+ const k=stepLevelK(file);
+ safeFn(()=>subSound(role));
+ if(k>1&&Bank.canPan()){
+  try{
+   const ctx=AE.ensure();
+   const el=new Audio(Bank.url(file));
+   if(rate&&rate!==1){try{el.preservesPitch=false;el.mozPreservesPitch=false;el.playbackRate=Math.max(0.5,Math.min(2,rate));}catch(_){}}
+   el.addEventListener("error",()=>{if(el.__stopped)return;Bank.fails++;},{once:true});
+   el.addEventListener("loadeddata",()=>{Bank.plays++;Bank.fails=0;},{once:true});
+   const src=ctx.createMediaElementSource(el);
+   const g=ctx.createGain();
+   /* Шина эффектов уже несёт громкость эффектов и общую: здесь — только
+      сам шаг, усиление записи и аномалия места. */
+   g.gain.value=Math.max(0,gain*k*safeFn(()=>anomalyGain("world"),1)/0.9);
+   src.connect(g);g.connect(AE.fx);
+   const уйти=()=>{try{src.disconnect();g.disconnect();}catch(_){}};
+   el.addEventListener("ended",уйти,{once:true});
+   el.__role=role;el.__file=file;el.__k=k;
+   const pr=el.play();if(pr&&pr.catch)pr.catch(()=>{});
+   Bank._shot(el,kind,{prio},maxSec);
+   if(maxSec>0)setTimeout(уйти,maxSec*1000+60);
+   return el;
+  }catch(_){}}
+ const el=Bank.file(file,{gain:gain*Math.min(1,k),rate,maxSec,kind,prio});
+ if(el){el.__role=role;el.__file=file;el.__k=Math.min(1,k);}
+ return el;}
 function playStep(пов){
  try{
   if(!settings.effects||!Bank.enabled)return false;
@@ -32646,9 +32814,10 @@ function playStep(пов){
   if(!role)role=SURF_ROLE[пов]||SURF_FALLBACK[пов]||(пов==="water"?"step_water":"step_dirt");
   if(!Bank.has(role))role=SURF_FALLBACK[пов]||"step_dirt";
   if(!Bank.has(role))return false;
-  const el=Bank.play(role,{gain:pr.gain,maxSec:1.1,rate:pr.rate,kind:"fx",prio:"mid"});
+  const el=playLeveled(role,{gain:pr.gain,maxSec:1.1,rate:pr.rate,kind:"fx",prio:"mid"});
   if(!el)return false;
-  pr.layers.forEach(([r,g],i)=>setTimeout(()=>safeFn(()=>Bank.play(r,{gain:Math.min(0.8,g*pr.gain/0.55),maxSec:1.2,rate:pr.rate,kind:"fx",prio:"low"})),40+i*50));
+  /* Слои выровнены тем же способом и стоят под шагом, а не вровень с ним. */
+  pr.layers.forEach(([r,g],i)=>setTimeout(()=>safeFn(()=>playLeveled(r,{gain:Math.min(0.8,g*pr.gain/0.55*0.7),maxSec:1.2,rate:pr.rate,kind:"fx",prio:"low"})),40+i*50));
   G.lastStep={surface:пов,role,file:el.__file,rate:pr.rate,wear:pr.wear,wet:pr.wet,run:pr.run,layers:pr.layers.map(l=>l[0])};
   return true;
  }catch(_){return false;}}
@@ -32669,6 +32838,9 @@ function stepSound(){AE.ensure();
  s.footstep(G.stepFoot?0.2:-0.2,surface);
  setTimeout(()=>s.stop(0.15),runState.active?240:340);}
 function dirBetween(dx,dy){
+ if(!компас()){
+  const в=dy<0?"впереди":dy>0?"позади":"",г=dx>0?"справа":dx<0?"слева":"";
+  return [в,г].filter(Boolean).join(" ");}
  const ns=dy<0?"север":dy>0?"юг":"";const ew=dx>0?"восток":dx<0?"запад":"";
  if(ns&&ew)return `${ns}о-${ew}`;return ns||ew;}
 function cellDesc(c){const parts=[];
@@ -32707,7 +32879,7 @@ function arriveSky(dir){
  const части=[];
  /* С крыла сторона нужна не меньше, чем на земле, и выключается той же
     настройкой: иначе игрок выключил бы её внизу и снова слышал наверху. */
- if(смена&&settings.sayDir!==0)части.push(DIRN[dir].split(",")[0]+".");
+ if(смена&&settings.sayDir!==0){const w=dirWord(dir);части.push(w[0].toUpperCase()+w.slice(1)+".");}
  /* Что под крылом. Земля звучит снизу — этим и занимается узел размещения. */
  if(c.structure){
   части.push(`Под вами ${c.structure.name}.`);
@@ -32855,7 +33027,7 @@ function arrive(dir){
     проходит молча. А кому и смена не нужна — выключает совсем: настройка
     «Называть сторону света при шаге». Само направление при этом никуда не
     девается, его называет осмотр. */
- if(isNewDir&&settings.sayDir!==0)narrate(`${DIRN[dir].split(",")[0]}.`);
+ if(isNewDir&&settings.sayDir!==0){const w=dirWord(dir);narrate(`${w[0].toUpperCase()+w.slice(1)}.`);}
  safeFn(()=>maybeEvent("step"));
  sub(`📍 ${c.terrain[1]} · ${cellDesc(c)}`);
  if(c.monster&&!G.cleared[G.x+","+G.y]){
@@ -32926,7 +33098,7 @@ function arrive(dir){
   G.atDoor={x:G.x,y:G.y,dir};
   stopRun();
   safeFn(()=>beacon(PLACE_KIND[c.structure.type]==="dungeon"?"stairs_down":"door",0,0));
-  narrate(`${c.structure.name}: вы у входа. Шагните ещё раз на ${DIRN[dir].split(",")[0]} — войдёте внутрь.`,{interrupt:false});
+  narrate(`${c.structure.name}: вы у входа. Шагните ещё раз ${dirWhither(dir)} — войдёте внутрь.`,{interrupt:false});
  }else G.atDoor=null;
  safeFn(()=>dayPhaseCue());
  /* На перекрёстке событий больше: там сходятся дороги, а с ними и люди. */
@@ -33739,10 +33911,11 @@ function natShot(role,pan=0,gain=0.8){
 function playWeaponCombatSfx(hit,dir="N",dmg=6){try{AE.ensure();
  if(Bank.enabled){
   const k=weaponClass(),m=G.combat&&G.combat.m,mat=foeMaterial(m);
-  safeFn(()=>Bank.play("hero_swing",{kind:"combat",gain:0.4,maxSec:2,pitchVar:0.06}));
-  if(!hit){setTimeout(()=>safeFn(()=>weaponSound("miss",{gain:0.5})),160);return;}
-  setTimeout(()=>safeFn(()=>{weaponSound("hit",{gain:0.55});
-   setTimeout(()=>safeFn(()=>weaponSound("hit_"+mat,{gain:0.45})),90);}),150);
+  /* Свист уже прозвучал (weaponSwingSound). Здесь — только то, во что
+     пришёлся клинок: один удар и один звук материала, настоящими записями. */
+  if(!hit){setTimeout(()=>safeFn(()=>weaponSound("miss",{gain:0.5,one:true})),160);return;}
+  setTimeout(()=>safeFn(()=>{weaponSound("hit",{gain:0.6,one:true});
+   setTimeout(()=>safeFn(()=>weaponSound("hit_"+mat,{gain:0.4,one:true})),90);}),150);
   if((Number(dmg)||6)>=12)setTimeout(()=>safeFn(()=>Bank.play("lug_impact",{kind:"combat",gain:0.45,maxSec:2})),240);
   return;}
  /* Без папки записей остаётся прежний синтез. */
@@ -33845,6 +34018,14 @@ function weaponSound(state,opts){
  const m=WEAPON_SOUND[cls]||WEAPON_SOUND.sword;
  const list=m[state]||(state==="swing"&&m.shoot)||null;
  if(!list||!list.length)return false;
+ /* one — одна запись из списка, по очереди: удар звучит одним ударом, а не
+    стопкой из двух свистов и двух клинков, наложенных друг на друга. */
+ if(o.one){
+  const есть=list.filter(r=>Bank.has(r));
+  const r=есть.length?есть[Math.floor(Math.random()*есть.length)]:list[0];
+  safeFn(()=>Bank.play(r,{kind:"combat",gain:o.gain,maxSec:o.maxSec,prio:"high"}));
+  G.lastWeaponSound={cls,state,role:r};
+  return true;}
  safeFn(()=>Bank.play(list[0],{kind:"combat",gain:o.gain,maxSec:o.maxSec,pitchVar:0.06,prio:"high"}));
  if(list[1])setTimeout(()=>safeFn(()=>Bank.play(list[1],{kind:"combat",gain:o.gain*0.7,maxSec:o.maxSec,pitchVar:0.06})),o.delay);
  G.lastWeaponSound={cls,state,role:list[0]};
@@ -33852,8 +34033,8 @@ function weaponSound(state,opts){
 function weaponSwingSound(hit){
  try{
   const k=weaponClass();
-  if(k==="bow"||k==="spear"){weaponSound("shoot",{gain:0.6});setTimeout(()=>safeFn(()=>weaponSound("fly",{gain:0.45})),120);return true;}
-  weaponSound("swing",{gain:0.5});return true;}catch(_){return false;}}
+  if(k==="bow"||k==="spear"){weaponSound("shoot",{gain:0.6,one:true});setTimeout(()=>safeFn(()=>weaponSound("fly",{gain:0.45,one:true})),120);return true;}
+  weaponSound("swing",{gain:0.5,one:true});return true;}catch(_){return false;}}
 function fight(a){const cb=G.combat;if(!cb)return;const m=cb.m;
  /* ── Разрыв высот ──
     Клинком до того, кто идёт на две клетки выше, не достать — и это надо
@@ -34299,14 +34480,27 @@ function defeat(){const павший=G.combat&&G.combat.m;safeFn(()=>foeProfileC
   Play.start("ev","scream",{dur:3});
   setTimeout(()=>safeFn(()=>Bank.play("wraith_moan",{kind:"combat",seed:G.day,gain:0.45,maxSec:5})),700);});
  const emp=empireAt(G.x,G.y);G.x=emp.cap.x;G.y=emp.cap.y;
+ /* Очнуться надо там, где сказано. Раньше менялись только координаты мира,
+    а место оставалось прежним: павший в подземелье слышал «вы очнулись в
+    цитадели» и стоял у той же лестницы вниз. Теперь герой выходит из
+    подземелья и постройки, сходит с палубы и с крыла — и оказывается у
+    стен столицы. */
+ safeFn(()=>{Scape.stop();});safeFn(()=>Actors.stop());
+ G.place=null;G.ship=null;G.flight=null;G.alt=0;G.wingTired=0;
+ if(G.fishing)G.fishing.active=false;
+ safeFn(()=>stopRun());
+ safeFn(()=>{while(activeLayer())closeTopUI();});
+ safeFn(()=>{const c=cellContent(G.x,G.y);Play.stopKey("amb0");Play.stopKey("amb1");
+  if(settings.effects)Play.start("amb0",(AMB[c.terrain[0]]||["wind"])[0],{loop:true});
+  bankUpdateAmbient();});
  /* Милость Мортаны Тихой: поражение обходится дешевле её последователям. */
  const mercy=Math.min(0.09,0.03*fxLevel("mercy"));
  /* Мера сложности: сколько стоит поражение. На спокойном теряется малость,
     на суровом — заметная доля кошеля. */
  const keep=Math.max(0,Math.min(1,1-(0.1-mercy)*diff().loss));
  G.hp=50+Math.round(20*fxLevel("mercy"));G.gold=Math.floor(G.gold*keep);
- narrate(`Поражение... Вы очнулись в цитадели «${emp.short}». Потеряна часть золота.${mercy?" Мортана смягчила утрату.":""}`);
- journal("Поражение в бою.");refresh();resumeLocationMusic();}
+ narrate(`Поражение... Вы очнулись у стен столицы «${emp.short}», под открытым небом. Потеряна часть золота.${mercy?" Мортана смягчила утрату.":""}`);
+ journal("Поражение в бою.");refresh();resumeLocationMusic();safeFn(()=>saveGame(true));}
 /* ── СТАРЫЕ СОХРАНЕНИЯ ──
    До этой поры артефакт был строкой. Такие сохранения есть у игроков, и
    терять их нельзя. Строка превращается в настоящую запись: имя остаётся
@@ -35205,7 +35399,7 @@ function interactHere(){
 const LOOK_KIND={"+":"дверь","G":"ворота","Y":"дверь палаты","<":"лестница вверх",">":"лестница вниз","C":"сундук","A":"алтарь","N":"житель","P":"торговец","S":"лавка","F":"горн","B":"стража","K":"книги","W":"колодец","R":"жила","M":"логово","L":"голубятня","T":"факел","X":"обстановка","H":"лечебница","J":"тюрьма","D":"торговый дом","U":"люк","V":"трактир","#":"стена"};
 const Look=Modules.register("LOOK",{
  target:null,list:[],
- facing(){return DIRV[lastMoveDir]?lastMoveDir:"N";},
+ facing(){if(!компас())return "N";return DIRV[lastMoveDir]?lastMoveDir:"N";},
  /* Сторона объекта относительно взгляда: впереди, слева, справа, позади. */
  sector(dx,dy){
   const f=this.facing();const v=DIRV[f]||[0,-1];
@@ -35225,7 +35419,7 @@ const Look=Modules.register("LOOK",{
      out.push({n:(a.m&&a.m.n)||a.n||"живое существо",род:a.m?"тварь":"житель",x:a.x,y:a.y,dx,dy,d,dir:dirBetween(dx,dy),bid:a.m?"danger":"npc",живое:true,опасно:!!a.m});});});
     safeFn(()=>{const л=trapFound();if(л)out.push({n:л.n,род:"ловушка",x:л.x,y:л.y,dx:л.x-p.x,dy:л.y-p.y,d:Math.max(Math.abs(л.x-p.x),Math.abs(л.y-p.y)),dir:dirBetween(л.x-p.x,л.y-p.y)||"здесь",bid:"danger",опасно:true});});
     /* Проходы: открытые стороны на расстоянии шага — это тоже сведение. */
-    ["N","E","S","W"].forEach(d=>{const t=tileAt(lvl,p.x+DIRV[d][0],p.y+DIRV[d][1]);if(t==="."&&!out.some(o=>o.dx===DIRV[d][0]&&o.dy===DIRV[d][1]))out.push({n:"проход",род:"проход",x:p.x+DIRV[d][0],y:p.y+DIRV[d][1],dx:DIRV[d][0],dy:DIRV[d][1],d:1,dir:DIRN[d].split(",")[0],bid:null,проход:true});});
+    ["N","E","S","W"].forEach(d=>{const t=tileAt(lvl,p.x+DIRV[d][0],p.y+DIRV[d][1]);if(t==="."&&!out.some(o=>o.dx===DIRV[d][0]&&o.dy===DIRV[d][1]))out.push({n:"проход",род:"проход",x:p.x+DIRV[d][0],y:p.y+DIRV[d][1],dx:DIRV[d][0],dy:DIRV[d][1],d:1,dir:dirWord(d),bid:null,проход:true});});
    }else{
     const R=(rad||4)+safeFn(()=>Path.maskK("look"),0);
     for(let dx=-R;dx<=R;dx++)for(let dy=-R;dy<=R;dy++){const x=G.x+dx,y=G.y+dy;if(x<0||y<0||x>=WORLD||y>=WORLD)continue;
@@ -35254,10 +35448,11 @@ const Look=Modules.register("LOOK",{
      стороны: не «на севере», а «где-то рядом». За Гранью так же ищут врата. */
   const грань=(!G.place&&!G.ship&&safeFn(()=>riftNear(G.x,G.y,10),false))
    ?` ${G.dark?"Врата":"Разлом Грани"} где-то рядом, не дальше десяти шагов.`:"";
-  if(!list.length)return `Осмотр, лицом на ${DIRN[f].split(",")[0]}. Вокруг ничего заметного.${грань}`;
+  const лицом=компас()?`Осмотр, лицом на ${DIRN[f].split(",")[0]}.`:"Осмотр.";
+  if(!list.length)return `${лицом} Вокруг ничего заметного.${грань}`;
   const по={};list.slice(0,8).forEach(o=>{(по[o.сектор]=по[o.сектор]||[]).push(this.brief(o));});
   const части=[];["здесь","впереди","слева","справа","позади"].forEach(k=>{if(по[k])части.push(`${k[0].toUpperCase()+k.slice(1)}: ${по[k].join("; ")}.`);});
-  return `Осмотр, лицом на ${DIRN[f].split(",")[0]}. ${части.join(" ")}${list.length>8?` И ещё ${list.length-8}.`:""}${грань}`;},
+  return `${лицом} ${части.join(" ")}${list.length>8?` И ещё ${list.length-8}.`:""}${грань}`;},
  open(){
   try{
    if(!gameActive())return false;
@@ -37143,7 +37338,7 @@ const PATH_SPELLS=[
  {id:"impulse",n:"Импульс",о:"короткий кинетический удар",цена:{will:2,aether:1},риск:0.1,бой:true,звук:"lug_impact",
   делать(){if(!G.inCombat||!G.combat||!G.combat.m)return "Импульс нужен в бою: цели нет.";const d=6+Math.floor((Number(G.level)||1)/2)+2*safeFn(()=>Sci.level("kinetics"),0);G.combat.hp=Math.max(0,(Number(G.combat.hp)||0)-d);if(G.combat.hp<=0){safeFn(()=>victory());return `Импульс сбил ${G.combat.m.n} с ног — и добил.`;}return `Импульс ударил ${G.combat.m.n}: урон ${d}.`;}},
  {id:"cut",n:"Разрез пространства",о:"короткий разрыв: шаг сквозь стену",get цена(){return {space:Math.max(1,4-safeFn(()=>Sci.level("topology"),0))};},риск:0.15,звук:"stk_portal",
-  делать(){const d=lastMoveDir||"N";const v=DIRV[d];if(G.place){const lvl=curLevel();const nx=G.place.x+v[0]*2,ny=G.place.y+v[1]*2;const t=tileAt(lvl,nx,ny);if(t===undefined||t==="#")return "Разрез упёрся в сплошной камень.";G.place.x=nx;G.place.y=ny;safeFn(()=>refresh());return `Разрез: вы на две клетки к ${DIRN[d].split(",")[0]}у, сквозь стену.`;}if(G.ship)return "На воде пространство не режется.";G.x=Math.max(0,Math.min(WORLD-1,G.x+v[0]*2));G.y=Math.max(0,Math.min(WORLD-1,G.y+v[1]*2));safeFn(()=>{arrive(d);refresh();});return `Разрез: две клетки к ${DIRN[d].split(",")[0]}у одним шагом.`;}},
+  делать(){const d=lastMoveDir||"N";const v=DIRV[d];if(G.place){const lvl=curLevel();const nx=G.place.x+v[0]*2,ny=G.place.y+v[1]*2;const t=tileAt(lvl,nx,ny);if(t===undefined||t==="#")return "Разрез упёрся в сплошной камень.";G.place.x=nx;G.place.y=ny;safeFn(()=>refresh());return `Разрез: вы на две клетки ${компас()?"к "+DIRN[d].split(",")[0]+"у":DIR_REL[d]}, сквозь стену.`;}if(G.ship)return "На воде пространство не режется.";G.x=Math.max(0,Math.min(WORLD-1,G.x+v[0]*2));G.y=Math.max(0,Math.min(WORLD-1,G.y+v[1]*2));safeFn(()=>{arrive(d);refresh();});return `Разрез: две клетки ${компас()?"к "+DIRN[d].split(",")[0]+"у":DIR_REL[d]} одним шагом.`;}},
  {id:"echo",n:"Эхо",о:"повторить последние чары",get цена(){return {aether:Math.max(1,3-safeFn(()=>Sci.level("chrono"),0))};},риск:0.2,звук:"oc_drone_die",
   делать(){const n=typeof G.lastSpell==="string"?G.lastSpell:(G.lastSpell&&G.lastSpell.n);if(!n)return "Повторять нечего: чар ещё не было.";const i=SPELLS.findIndex(sp=>sp.n===n);if(i<0)return "Эхо не находит этих чар.";safeFn(()=>castSpell(i));return `Эхо: «${n}» звучит снова.`;}},
  {id:"seal",n:"Печать тела",о:"временная защита",цена:{will:3},риск:0.05,звук:"stk_ward",делать(){safeFn(()=>buffSet("оберег",3));return "Печать легла на тело: оберег на три часа.";}},
@@ -42756,7 +42951,7 @@ function weaveAct(sp,sc,f,c,el,md,k){
    const шаг=1+Math.round(k);
    G.x=Math.max(0,Math.min(WORLD-1,(Number(G.x)||0)+шаг));
    safeFn(()=>{Bank.play("oc_warp",{gain:0.5,maxSec:3});refresh();});
-   return ` Перенос ${el.род}: вы сдвинулись на ${шаг} ${plural(шаг,"клетку","клетки","клеток")} к востоку.`;}
+   return ` Перенос ${el.род}: вы сдвинулись на ${шаг} ${plural(шаг,"клетку","клетки","клеток")} ${компас()?"к востоку":"вправо"}.`;}
  }
  return " Чары прошли, и ничего не изменилось.";}
 /* Отзвучное вправду возвращается: час спустя оно срабатывает вполсилы. */
@@ -48147,6 +48342,12 @@ function worldSelfCheck(){
   const поРазделам=ENC_SECTIONS.reduce((k,sec)=>k+encSection(sec.id).count,0);
   ok("encyclopedia",!внеОписи.length&&поРазделам===soundTotals().всего,
    внеОписи.length?"папки вне описи: "+внеОписи.join(", "):поРазделам!==soundTotals().всего?"разделы не сходятся с общим числом":"каждая запись в одном разделе назначения");
+  /* Ровный шаг: у каждой записи, которой звучит шаг, есть поправка громкости. */
+  {const роли=new Set();
+   [SURF_ROLE,STEP_ALT,SURF_FALLBACK,DARK_STEP_ROLE].forEach(t=>Object.values(t).forEach(x=>роли.add(x)));
+   Object.values(STEP_LAYER).forEach(x=>роли.add(x[0]));
+   const без=[...роли].flatMap(ro=>(SOUND_BANK[ro]||{f:[]}).f).filter(f=>typeof STEP_PEAK[f]!=="number");
+   ok("steps",!без.length,без.length?"шаги без поправки громкости: "+без.slice(0,3).join(", "):"у каждой записи шага своя поправка громкости");}
   /* Подвижный бой: у каждого рода тварей свой способ драться, и каждое
      существо мира попадает в один из них; три темпа боя. */
   {const роли=new Set(MONSTERS.map(m=>arenaRole(m)));
@@ -49657,12 +49858,14 @@ function bindSpeechSettings($){
  chk("setAutoDescribe","autoDescribe","Автоописание окружения включено.","Автоописание окружения выключено.");
  chk("setDescribeObjects","describeObjects","Объекты описываются голосом.","Объекты голосом не описываются: только звуком и по запросу.");
  chk("setSoundFirst","soundFirst","Звук вместо описаний: пространственные события передаёт звук.","Пространственные события дублируются словом.");
+ chk("setStopOnAction","stopOnAction","Любое действие обрывает речь.","Речь обрывается только особыми жестами и движением.");
  chk("setStopOnMove","stopOnMove","Речь прерывается при движении.","Речь при движении не прерывается.");
  chk("setStopOnMenu","stopOnMenu","Речь прерывается при открытии меню.","Речь меню не прерывается.");
  chk("setStopOnGather","stopOnGather","Речь прерывается при сборе.","Речь сбором не прерывается.");
  chk("setSayXp","sayXp","Мелкие изменения опыта озвучиваются.","Мелкие изменения опыта не озвучиваются.");
  chk("setSayHp","sayHp","Мелкие изменения здоровья озвучиваются.","Мелкие изменения здоровья не озвучиваются.");
  chk("setSaySpatial","saySpatial","Пространственные события озвучиваются.","Пространственные события — только звуком.");
+ chk("setCompass","compass","Стороны света: север, юг, запад, восток.","Стороны как свайпы: впереди, позади, справа, слева — без сторон света.");
  chk("setSayDir","sayDir","Сторона света при шаге называется.","Сторона света при шаге не называется. Куда вы идёте, скажет осмотр — три пальца влево.");
  chk("setSplitTap","splitTap",
   "Раздельное касание включено: держите палец на пункте, пока игра его не назовёт, и стукните рядом вторым — пункт выполнится.",
@@ -50330,6 +50533,9 @@ function enterGame(){if(entered){showScreen("screen-game");normalizeWeaponState(
    narrate("Если вы здесь впервые: в меню действий есть пункт «Обучение жестам» — восемь коротких уроков, по одному жесту каждый.",{interrupt:false});}),7000);}
  refresh();saveGame(true);}
 document.addEventListener("keydown",e=>{
+ /* Любая клавиша, кроме модификаторов и речевых сочетаний, обрывает речь. */
+ if(!/^(Shift|Control|Alt|Meta|AltGraph|CapsLock|OS)$/.test(e.key)&&!(e.altKey&&/^(r|h|x)$/i.test(e.key)))
+  safeFn(()=>Speech.userCut());
  if(e.key==="Escape"){
   if(G.loot&&Array.isArray(G.loot)&&G.loot.length){takeLoot();return;}
   if(G.inCombat){fight("flee");return;}
