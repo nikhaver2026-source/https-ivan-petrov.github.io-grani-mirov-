@@ -20,7 +20,7 @@
    ЧТО ПРОВЕРЯЕТСЯ.
 
    1. Папок-подмен blow, troop, bazaar и dark нет ни на диске, ни в
-      разделах энциклопедии; в nat остались одиннадцать записей настоящих
+      разделах энциклопедии; в nat остались десять записей настоящих
       предметов, и каждая принадлежит своей роли.
    2. Ни одни титры не называют источником бочку, тарелку, хай-хэт,
       малый барабан, таблу, драм-машину, винил, робота, синтезаторный бас
@@ -101,9 +101,9 @@ const НОТЫ=/^(inst|orch|arms|spell|relic|mood|folk|score|blow|troop|bazaar|d
    natВРазделах:разделы.includes("nat")&&!!BANK_CATS.nat};},ПОДМЕНЫ);
  const наДиске=ПОДМЕНЫ.filter(d=>fs.existsSync(path.join(ЗВУКИ,d)));
  const ничьи=naт.filter(f=>!папки.владельцы['nat/'+f]);
- check('1. папок-подмен нет ни на диске, ни в энциклопедии; в nat одиннадцать записей настоящих предметов, у каждой своя роль',
-  наДиске.length===0&&папки.вРазделах.length===0&&naт.length===11&&ничьи.length===0&&папки.natВРазделах
-  &&naт.join(",")==="artifact_hum_01.flac,bell_big_01.flac,bell_small_01.flac,choir_01.flac,crow_01.flac,door_wood_01.flac,magic_hum_01.flac,magic_shimmer_01.flac,magic_woosh_01.flac,shop_till_01.flac,vent_01.flac",
+ check('1. папок-подмен нет ни на диске, ни в энциклопедии; в nat десять записей настоящих предметов, у каждой своя роль (хор ушёл: пение — тоже музыка)',
+  наДиске.length===0&&папки.вРазделах.length===0&&naт.length===10&&ничьи.length===0&&папки.natВРазделах
+  &&naт.join(",")==="artifact_hum_01.flac,bell_big_01.flac,bell_small_01.flac,crow_01.flac,door_wood_01.flac,magic_hum_01.flac,magic_shimmer_01.flac,magic_woosh_01.flac,shop_till_01.flac,vent_01.flac",
   {наДиске,вРазделах:папки.вРазделах,nat:naт,ничьи});
 
  /* ── 2. титры ── */

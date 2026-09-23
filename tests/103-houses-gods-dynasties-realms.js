@@ -75,9 +75,9 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   const r={};const было={x:G.x,y:G.y,dark:G.dark};
   G.dark=false;G.place=null;G.ship=null;G.seenHouses={};Houses._last=null;
   const h=HOUSE_BY_ID.brod;G.x=h.x+3;G.y=h.y+1;if(G.x%29===0)G.x++;
-  SAID.length=0;PLAYED.length=0;Jingle.last=null;
+  SAID.length=0;PLAYED.length=0;EventPick.last=null;
   const ок=Houses.arrive(cellContent(G.x,G.y));await пауза(1000);
-  r.вход={ок,сказано:SAID.find(t=>/Земли Дома/.test(t))||"",впервые:!!SAID.find(t=>/впервые/.test(t)),сигнал:PLAYED.includes(h.мотив),музыка:Jingle.last&&Jingle.last.id,ярус:Jingle.last&&Jingle.last.tier};
+  r.вход={ок,сказано:SAID.find(t=>/Земли Дома/.test(t))||"",впервые:!!SAID.find(t=>/впервые/.test(t)),сигнал:PLAYED.includes(h.мотив),музыка:EventPick.last&&EventPick.last.id,ярус:EventPick.last&&EventPick.last.tier};
   r.второй=Houses.arrive(cellContent(G.x,G.y));
   r.память=!!G.seenHouses[h.id];
   /* где я */
@@ -126,8 +126,8 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   /* клятва: рано, потом со второй ступени */
   SAID.length=0;r.клятваРано=Houses.join(h.id);r.клятваРаноСлово=SAID.find(t=>/ступени/.test(t))||"";
   Houses.add(h.id,30,true);
-  SAID.length=0;PLAYED.length=0;Jingle.last=null;r.клятва=Houses.join(h.id);await пауза(900);
-  r.клятваИтог={дом:G.house,сигнал:PLAYED.includes(h.мотив),зал:PLAYED.includes(h.зал),музыка:Jingle.last&&Jingle.last.id,сказано:SAID.find(t=>/Клятва принята/.test(t))||""};
+  SAID.length=0;PLAYED.length=0;EventPick.last=null;r.клятва=Houses.join(h.id);await пауза(900);
+  r.клятваИтог={дом:G.house,сигнал:PLAYED.includes(h.мотив),зал:PLAYED.includes(h.зал),музыка:EventPick.last&&EventPick.last.id,сказано:SAID.find(t=>/Клятва принята/.test(t))||""};
   /* скидка на ману своей школы */
   r.мана=Houses.manaDiscount({n:"x",school:h.школа,школа:h.школа,custom:true});
   /* вызов бойцу и победа */
@@ -196,9 +196,9 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   G.day=g.праздник+круг;r.мана=Gods.manaDiscount({n:"x",школа:g.школа,school:g.школа,custom:true});
   r.перемирие={мир:Gods.truceToday(LESSER_GODS.find(x=>x.мир).праздник),нет:Gods.truceToday(1)};
   /* объявление праздника музыкой */
-  G.festivalDay=null;SAID.length=0;PLAYED.length=0;Jingle.last=null;
+  G.festivalDay=null;SAID.length=0;PLAYED.length=0;EventPick.last=null;
   r.такт=Gods.tick();await пауза(1100);
-  r.объявление={сказано:SAID.find(t=>/Сегодня праздник/.test(t))||"",голос:PLAYED.includes(g.звук),музыка:Jingle.last&&Jingle.last.id,ярус:Jingle.last&&Jingle.last.tier,повтор:Gods.tick()};
+  r.объявление={сказано:SAID.find(t=>/Сегодня праздник/.test(t))||"",голос:PLAYED.includes(g.звук),музыка:EventPick.last&&EventPick.last.id,ярус:EventPick.last&&EventPick.last.tier,повтор:Gods.tick()};
   r.новости=worldNews(G.day).some(t=>t.includes(g.n));
   G.day=было.day;
   /* молитва в храме */
@@ -215,9 +215,9 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
    r.молитваИтог={благ:Gods.favor(местный.id),голос:PLAYED.includes(местный.звук),сказано:SAID.find(t=>t.includes(местный.n))||"",титул:Gods.title(местный.id)};
    r.повторМолитвы=Gods.pray(местный.id);
    /* чудо */
-   G.items=(G.items||[]).filter(x=>x!==местный.артефакт);SAID.length=0;Jingle.last=null;
+   G.items=(G.items||[]).filter(x=>x!==местный.артефакт);SAID.length=0;EventPick.last=null;
    Gods.addFavor(местный.id,9);await пауза(700);
-   r.чудо={вещь:G.items.includes(местный.артефакт),сказано:SAID.find(t=>/Чудо/.test(t))||"",музыка:Jingle.last&&Jingle.last.id,запись:!!G.godGifts[местный.id]};
+   r.чудо={вещь:G.items.includes(местный.артефакт),сказано:SAID.find(t=>/Чудо/.test(t))||"",музыка:EventPick.last&&EventPick.last.id,запись:!!G.godGifts[местный.id]};
    /* паломничество */
    const npc=getNPC(G.x,G.y,0,"Жрец");const q=Gods.questFor(npc);
    r.паломничество=q?{тип:q.type,бог:q.малыйБог,текст:/Паломничество/.test(q.text)}:null;
@@ -287,9 +287,9 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   r.область=regionIndexAt(k.x,k.y)===k.область;
   r.наМесте=realmAt(k.x,k.y)&&realmAt(k.x,k.y).id===k.id;
   r.далеко=realmAt(k.x+2400,k.y+2400)===null||realmAt(k.x+2400,k.y+2400).id!==k.id;
-  G.x=k.x+2;G.y=k.y;G.seenRealms={};Realms._last=null;SAID.length=0;PLAYED.length=0;Jingle.last=null;
+  G.x=k.x+2;G.y=k.y;G.seenRealms={};Realms._last=null;SAID.length=0;PLAYED.length=0;EventPick.last=null;
   r.вход=Realms.arrive(cellContent(G.x,G.y));await пауза(900);
-  r.входИтог={сказано:SAID.find(t=>/Малое королевство/.test(t))||"",голос:PLAYED.includes(k.звук),музыка:Jingle.last&&Jingle.last.id,впервые:!!G.seenRealms[k.id],повтор:Realms.arrive(cellContent(G.x,G.y))};
+  r.входИтог={сказано:SAID.find(t=>/Малое королевство/.test(t))||"",голос:PLAYED.includes(k.звук),музыка:EventPick.last&&EventPick.last.id,впервые:!!G.seenRealms[k.id],повтор:Realms.arrive(cellContent(G.x,G.y))};
   r.ценаК={своё:Realms.priceK(k.ресурс),чужое:Realms.priceK(k.ресурс==="кость"?"трава":"кость")};
   G.dark=true;const kd=MINOR_REALMS.find(x=>x.тип==="тьма");r.тёмное=realmAt(kd.x,kd.y)&&realmAt(kd.x,kd.y).id===kd.id&&realmAt(k.x,k.y)===null;G.dark=false;
   r.тексты=MINOR_REALMS.every(x=>Realms.text(x).includes(x.n));

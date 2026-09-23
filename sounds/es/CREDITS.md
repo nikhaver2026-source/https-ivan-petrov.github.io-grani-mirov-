@@ -71,9 +71,6 @@ domain sounds taken from freesound.org»); отдельные записи ид�
 | `moonbeam.ogg` | лунный луч | endless-sky contributors, freesound.org | общественное достояние |
 | `nucleolysis.ogg` | распад | endless-sky contributors, freesound.org | общественное достояние |
 | `nuke_alarm.ogg` | сигнал беды | endless-sky contributors, freesound.org | общественное достояние |
-| `organ_drive.ogg` | органный гул | endless-sky contributors, freesound.org | общественное достояние |
-| `organ_drive_in.ogg` | органный гул | endless-sky contributors, freesound.org | общественное достояние |
-| `organ_drive_out.ogg` | органный гул | endless-sky contributors, freesound.org | общественное достояние |
 | `plankton_bite.ogg` | укус мелочи | endless-sky contributors, freesound.org | общественное достояние |
 | `plasma_huge.ogg` | плазменный гул | endless-sky contributors, freesound.org | общественное достояние |
 | `plasma_large.ogg` | плазменный гул | endless-sky contributors, freesound.org | общественное достояние |

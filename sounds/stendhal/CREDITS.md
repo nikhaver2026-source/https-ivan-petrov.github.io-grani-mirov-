@@ -34,3 +34,4 @@
 | `st_ice_cave.ogg` | Орден стужи | «Ice Cave» — Tad Miller | CC BY 4.0 · https://opengameart.org/node/109496 | `data/music/ice_cave.flac` | исходник без потерь (FLAC) |
 | `st_sylvan_waltz.ogg` | Орден корней | «Sylvan Waltz» — Otto Halmén | OGA-BY 3.0 · https://opengameart.org/node/39388 | `data/music/sylvan_waltz.ogg` | — |
 | `st_casket.ogg` | Гробница | «Casket» — Tozan | CC0 1.0 (общественное достояние) · https://opengameart.org/node/68090 | `data/music/casket.ogg` | — |
+

@@ -57,7 +57,7 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
  check('2в. чары звучат стихией, а не челестой',дин.чары.includes("cast_fire")&&!дин.чары.some(x=>инстр.test(x)),дин.чары);
 
  /* ── 3. заменяющие роли настоящие ── */
- const роли=["uh_page","arte_page","arte_gem","arte_metal","arte_coins","artifact_hum","oc_chest_open","choir","ad_temple","uh_chapel","bell_small","od_gold","stk_hammer","deep_cart","hall_house","ad_trade","beasts_camel","hero_heart","lug_growl","lug_snarl","oc_growl","ad_leaves","lug_bush","oc_glass_hit","cast_heal","cast_shock","cast_ice","cast_fire","magic_woosh","magic_shimmer","es_magic","od_undead","oc_warp","raptor_wing","mtg_door_close","amb_fire","stk_dark","stk_rain","sky_gust","amb_wind","stk_clang"];
+ const роли=["uh_page","arte_page","arte_gem","arte_metal","arte_coins","artifact_hum","oc_chest_open","ad_temple","uh_chapel","bell_small","od_gold","stk_hammer","deep_cart","hall_house","ad_trade","beasts_camel","hero_heart","lug_growl","lug_snarl","oc_growl","ad_leaves","lug_bush","oc_glass_hit","cast_heal","cast_shock","cast_ice","cast_fire","magic_woosh","magic_shimmer","es_magic","od_undead","oc_warp","raptor_wing","mtg_door_close","amb_fire","stk_dark","stk_rain","sky_gust","amb_wind","stk_clang"];
  const файлы=await page.evaluate(роли=>роли.map(r=>[r,(SOUND_BANK[r]&&SOUND_BANK[r].f||[])[0]||null]),роли);
  const dir=path.dirname(process.argv[2].replace(/^http:\/\/[^/]+\//,'/home/user/'));
  const плохие=файлы.filter(([r,f])=>!f||/^(inst|orch|mood|relic|score|folk|depth|blow|troop|bazaar|dark)\//.test(f)||!fs.existsSync(path.join('/home/user/https-ivan-petrov.github.io-grani-mirov-/sounds',f.replace(/%d/,'1'))));

@@ -150,12 +150,12 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   SAID.length=0;r.ask=Mentor.ask(кузнец,"smith");r.ур=mastLevel("smith");r.руда=Number(G.inv["руда"])||0;r.trial=G.mentorTrial?{маст:G.mentorTrial.маст,need:G.mentorTrial.need}:null;r.сказ=SAID.find(t=>/три работы/.test(t))||"";
   r.status1=Mentor.status();r.gain0=Mentor.gainK("smith");
   G.mast.smith.дел=(G.mast.smith.дел||0)+2;SAID.length=0;r.work2=Mentor.onWork("smith");r.progress=SAID.find(t=>/работ 2 из 3/.test(t))||"";G.mast.smith.дел+=1;PLAYED.length=0;r.work3=Mentor.onWork("smith");
-  r.mentor=G.mentor?{name:G.mentor.name,маст:G.mentor.маст}:null;r.gain1=Mentor.gainK("smith");r.bonus=Mentor.bonus(кузнец,"smith");r.звук=PLAYED.includes("gate_fanfare");r.status2=Mentor.status();
+  r.mentor=G.mentor?{name:G.mentor.name,маст:G.mentor.маст}:null;r.gain1=Mentor.gainK("smith");r.bonus=Mentor.bonus(кузнец,"smith");r.звук=PLAYED.includes("throng_hail_m");r.status2=Mentor.status();
   r.btns=Mentor.npcButtons(кузнец);G.gold=0;r.btnsNo=Mentor.npcButtons(кузнец);
   return r;});
  check('наставник проверяет ученика: без золота — цена, со второй ступени — материалы, чужое ремесло — отказ; урок берёт материалы и даёт ступень и испытание в три работы',
   наставник.нашёлся&&наставник.teaches.includes("smith")&&наставник.noGold.ок===false&&/урок стоит/.test(наставник.noGold.почему)&&наставник.ok0.ок===true&&наставник.noMat.ок===false&&/материалы.*руда ×2/.test(наставник.noMat.почему)&&наставник.ok1.ок===true&&/не учит/.test(наставник.notHis.почему)&&наставник.ask===true&&наставник.ур===2&&наставник.руда===0&&наставник.trial&&наставник.trial.маст==="smith"&&наставник.trial.need===3&&наставник.сказ.length>0,{noGold:наставник.noGold,noMat:наставник.noMat,ask:наставник.ask,ур:наставник.ур,руда:наставник.руда,trial:наставник.trial});
- check('испытание считает работы и по третьей делает наставником: фанфара, ремесло на четверть быстрее, ступень выше обычной; кнопки урока с ценой, а без золота — с причиной',
+ check('испытание считает работы и по третьей делает наставником: приветствие, ремесло на четверть быстрее, ступень выше обычной; кнопки урока с ценой, а без золота — с причиной',
   /Испытание наставника/.test(наставник.status1)&&наставник.gain0===1&&наставник.work2===false&&наставник.progress.length>0&&наставник.work3===true&&наставник.mentor&&наставник.mentor.маст==="smith"&&наставник.gain1===1.25&&наставник.bonus===1&&наставник.звук&&/Наставник: /.test(наставник.status2)&&/lesson:/.test(наставник.btns)&&/tutorwhy:.*урок стоит/.test(наставник.btnsNo),{status:[наставник.status1,наставник.status2],work:[наставник.work2,наставник.work3],gain:наставник.gain1,btns:наставник.btnsNo.slice(0,120)});
 
  /* ── 8. Академия ── */
@@ -164,14 +164,14 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   G.x=1000;G.y=1000;r.here0=Academy.here();r.enrollFar=Academy.enroll();
   const c=NAMED_CITIES.find(x=>x.id==="mellian");G.x=c.x;G.y=c.y;r.here=!!Academy.here();r.name=Academy.name();
   G.level=1;r.lvl=Academy.enroll();G.level=3;G.lore=[];r.pages=Academy.enroll();G.lore=[1,2,3];G.gold=50;r.gold=Academy.enroll();
-  G.gold=200;JT.length=0;PLAYED.length=0;r.enroll=Academy.enroll();r.goldAfter=G.gold;r.enrolled=Academy.enrolled();r.звук=PLAYED.includes("gate_fanfare");r.летопись=JT.some(t=>/Академия: поступление/.test(t));
+  G.gold=200;JT.length=0;PLAYED.length=0;r.enroll=Academy.enroll();r.goldAfter=G.gold;r.enrolled=Academy.enrolled();r.звук=PLAYED.includes("throng_hail_m");r.летопись=JT.some(t=>/Академия: поступление/.test(t));
   /* лекция */
   G.day=10;r.lect=Academy.lecture("alch");r.mastAlch=mastLevel("alchemy");r.bio=Sci.progress("bioeng");r.lectAgain=Academy.lecture("alch");
   G.day=11;Academy.lecture("alch");G.day=12;Academy.lecture("alch");r.лекций=Academy.fac("alch").лекций;r.mastAfter=mastLevel("alchemy");
   /* экзамен */
   G.sciProg.bioeng=1;r.examNoSci=Academy.exam("alch");G.sciProg.bioeng=3;G.day=13;r.exam=Academy.exam("alch");const q=G.academy.вопрос;r.вопрос=q?{вариантов:q.варианты.length,верно:q.верно}:null;
   const wrong=q?(q.верно+1)%3:0;r.wrong=Academy.answer(wrong);r.курс0=Academy.fac("alch").курс;
-  G.day=14;G.gold=100;r.exam2=Academy.exam("alch");const q2=G.academy.вопрос;if(!q2)return r;PLAYED.length=0;r.right=Academy.answer(q2.верно);r.курс1=Academy.fac("alch").курс;r.bioLevel=Sci.level("bioeng");r.фанфара=PLAYED.includes("gate_fanfare");r.title=/бакалавр|студент/.test(r.right);
+  G.day=14;G.gold=100;r.exam2=Academy.exam("alch");const q2=G.academy.вопрос;if(!q2)return r;PLAYED.length=0;r.right=Academy.answer(q2.верно);r.курс1=Academy.fac("alch").курс;r.bioLevel=Sci.level("bioeng");r.фанфара=PLAYED.includes("throng_hail_m");r.title=/бакалавр|студент/.test(r.right);
   /* библиотека, лаборатория, общежитие */
   const было=knowRead().length;r.lib=Academy.library("alch");r.libPages=knowRead().length-было;r.libAgain=Academy.library("alch");
   G.gold=100;const дел=Number((G.mast.alchemy||{}).дел)||0;r.lab=Academy.lab("alch");r.labGold=G.gold;r.labWork=(Number((G.mast.alchemy||{}).дел)||0)-дел;r.labNoMast=Academy.lab("kinetics");
@@ -189,7 +189,7 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   return r;});
  check('Академия стоит в Меллиане: издали — куда идти, на месте — поступление по уровню, трём страницам и взносу со звуком и летописью; лекция даёт первый урок ремесла и лекцию науки, раз в день',
   академия.here0===null&&/Поступают на месте.*Меллиан/.test(академия.enrollFar)&&академия.here&&/Меллиан/.test(академия.name)&&/второго уровня/.test(академия.lvl)&&/Три страницы/.test(академия.pages)&&/сто золотых/.test(академия.gold)&&/Принято/.test(академия.enroll)&&академия.goldAfter===100&&академия.enrolled&&академия.звук&&академия.летопись&&/первый урок ремесла «алхимия»/.test(академия.lect)&&академия.mastAlch===1&&академия.bio===1&&/уже была/.test(академия.lectAgain)&&академия.лекций===3,{far:академия.enrollFar,lect:академия.lect,лекций:академия.лекций});
- check('экзамен: наука должна быть дослушана; вопрос о прочитанном с тремя ответами; неверный — не сдан, верный — курс, ступень науки, фанфара и звание',
+ check('экзамен: наука должна быть дослушана; вопрос о прочитанном с тремя ответами; неверный — не сдан, верный — курс, ступень науки, приветствие и звание',
   /лекций к экзамену/.test(академия.examNoSci)&&/Экзамен факультета «Алхимии»/.test(академия.exam)&&академия.вопрос&&академия.вопрос.вариантов===3&&/Неверно/.test(академия.wrong)&&академия.курс0===0&&/Верно/.test(академия.right)&&академия.курс1===1&&академия.bioLevel===1&&академия.фанфара&&академия.title,{exam:(академия.exam||"").slice(0,120),wrong:(академия.wrong||"").slice(0,80),exam2:(академия.exam2||"").slice(0,80),right:(академия.right||"").slice(0,120)});
  check('библиотека даёт страницу с полки факультета раз в день; лаборатория за десять золотых растит ремесло и считает работу; общежитие за пять — полное восстановление; сторона, дуэль со студентом и её счёт, запрет Ректората, экспедиция в три шага; окно с шестью разделами и строка в меню',
   /изучена/.test(академия.lib)&&академия.libPages===1&&/по одной странице/.test(академия.libAgain)&&/растёт/.test(академия.lab)&&академия.labGold===90&&академия.labWork===1&&/лекционная/.test(академия.labNoMast)&&/восемь часов/.test(академия.rest)&&академия.hp&&академия.restGold===85&&/Вольная кафедра/.test(академия.side)&&академия.сторона==="free"&&/и так/.test(академия.sideAgain)&&академия.бой&&академия.дуэли===1&&академия.после===false&&/Ректорат дуэли запрещает/.test(академия.duelNo)&&/Экспедиция факультета/.test(академия.exp)&&академия.expQuest&&академия.expQuest.шагов===3&&/уже идёт/.test(академия.expAgain)&&/Слушатель с/.test(академия.status)&&академия.окно==="modal-academy"&&академия.секции.length===0&&академия.кнопки===12&&/Академия и знания/.test(академия.сказано)&&академия.меню,академия);

@@ -46,7 +46,6 @@
 | `stk_dark_01.ogg` | `stk_dark` | Тьма: низкий гул подземелья | CC0 | Not applicable---public domain by 7by7 (date of publication unknown) |
 | `stk_deepsea_01.ogg` | `stk_deepsea` | Под водой: глубина и давление | CC-BY-SA-3.0 | Claude Werner (bollen) |
 | `stk_falls_01.ogg` | `stk_falls` | Водопад: тяжёлая падающая вода | CC0 | 2014 Leonard "VKProduktion" Graf <www.facebook.com/gleichbergpictures> |
-| `stk_flute_01.ogg` | `stk_flute` | Флейта: короткий наигрыш | CC-BY-3.0 | 2006 "kerri" |
 | `stk_goo_01.ogg` | `stk_goo` | Слизь: вязкий хлюп | CC-BY-3.0 | 2009 Mike Koenig 2010 Marianne "Auria" Gagnon <auria.mg@gmail.com> |
 | `stk_hammer_01.ogg` | `stk_hammer` | Молот по наковальне | CC-BY-3.0 | 2010 snottyboi 2010 Tomlija 2009 Mike Koenig 2006 Stickinthemud 2012 Marianne "Auria" Gagnon <auria.mg@gmail.com> |
 | `stk_horn_01.ogg` | `stk_horn` | Рог: одиночный зов | CC-BY-3.0 | 2009 Mike Koenig 2009 Marianne "Auria" Gagnon <auria.mg@gmail.com> 2011 Magne "Arthur" Djupvik <magned@users.sf.net> |
@@ -81,7 +80,6 @@
 | `stk_dark_01.ogg` | `data/sfx/dark.ogg` |
 | `stk_deepsea_01.ogg` | `data/sfx/subsea.ogg` |
 | `stk_falls_01.ogg` | `data/sfx/waterfall_loop_2.ogg` |
-| `stk_flute_01.ogg` | `data/sfx/gnu_flute.ogg` |
 | `stk_goo_01.ogg` | `data/sfx/goo.ogg` |
 | `stk_hammer_01.ogg` | `data/sfx/hammer.ogg` |
 | `stk_horn_01.ogg` | `data/sfx/horn.ogg` |

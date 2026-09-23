@@ -70,12 +70,12 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   G.deeds={hits:12,kills:3};r.безДок=Path.rankIndex();
   G.deeds.steps=30;r.ученик=Path.rankIndex();
   PLAYED.length=0;JT.length=0;SAID.length=0;
-  r.check1=Path.check();r.звук=PLAYED.includes("gate_fanfare");r.летопись=JT.some(t=>/Путь Грани: ступень «Ученик»/.test(t));r.сказано=SAID.some(t=>/поднялись на ступень «Ученик»/.test(t));
+  r.check1=Path.check();r.звук=PLAYED.includes("throng_hail_m");r.летопись=JT.some(t=>/Путь Грани: ступень «Ученик»/.test(t));r.сказано=SAID.some(t=>/поднялись на ступень «Ученик»/.test(t));
   r.check2=Path.check();
   G.deeds={hits:35,kills:9,casts:4,manaSpent:72,steps:30};r.score=Path.score();r.практикБезДок=Path.rankIndex();r.next1=Path.next();
   G.deeds.quests=2;r.практик=Path.rankIndex();
   return r;});
- check('ступень: Искра на старте, порог ветвей без доказательства не даёт Ученика, тридцать шагов дают; подъём звучит фанфарой, пишется в летопись и объявляется один раз',
+ check('ступень: Искра на старте, порог ветвей без доказательства не даёт Ученика, тридцать шагов дают; подъём звучит приветствием толпы, пишется в летопись и объявляется один раз',
   ступень.старт==="iskra"&&/Ученик/.test(ступень.next0)&&ступень.безДок===0&&ступень.ученик===1&&ступень.check1===true&&ступень.звук&&ступень.летопись&&ступень.сказано&&ступень.check2===false,ступень);
  check('Практик: сумма ветвей от пяти без доказательства не даётся, слова называют, чего не хватает; два сданных дела открывают',
   ступень.score>=5&&ступень.практикБезДок===1&&/доказательство/.test(ступень.next1)&&ступень.практик===2,{score:ступень.score,next:ступень.next1,i:ступень.практик});
@@ -93,7 +93,7 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   /* след силы и пути */
   G.deeds={};r.следПусто=Path.traceText();G.deeds={hits:35,kills:9};r.след=Path.traceText();
   G.paths=[];r.слабый=Path.declare("mage");
-  PLAYED.length=0;r.объявлен=Path.declare("blade");r.труба=PLAYED.includes("herald_trumpet");r.paths1=(G.paths||[]).slice();
+  PLAYED.length=0;r.объявлен=Path.declare("blade");r.труба=PLAYED.includes("throng_lord");r.paths1=(G.paths||[]).slice();
   r.повторно=Path.declare("blade");
   G.deeds={hits:35,kills:9,casts:12,manaSpent:80,steps:100};r.второй=Path.declare("mage");r.третий=Path.declare("hunter");r.paths=(G.paths||[]).slice();
   r.оставлен=Path.renounce("mage");r.paths2=(G.paths||[]).slice();
@@ -138,7 +138,7 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
  /* ── 6. Ядро ── */
  const ядро=await page.evaluate(async()=>{
   const r={};G.core=null;r.has0=Core.has();r.need=Core.need();r.status0=Core.status();r.mark0=Core.mark();
-  const бm=G.manaMax;PLAYED.length=0;JT.length=0;Core.grant("amulet");r.has=Core.has();r.form=Core.form().id;r.mana=G.manaMax-бm;r.звук=PLAYED.includes("fx_crystal");r.летопись=JT.some(t=>/Ядро Отклика: амулет/.test(t));
+  const бm=G.manaMax;PLAYED.length=0;JT.length=0;Core.grant("amulet");r.has=Core.has();r.form=Core.form().id;r.mana=G.manaMax-бm;r.звук=PLAYED.includes("oc_glass_hit");r.летопись=JT.some(t=>/Ядро Отклика: амулет/.test(t));
   r.status=Core.status();
   G.place=null;G.ship=null;G.inCombat=false;const бx=G.x,бy=G.y;G.x=200;G.y=200;
   r.mark1=Core.mark("дом");G.x=210;r.mark2=Core.mark();G.x=220;r.mark3=Core.mark();r.точки=G.core.точки.length;

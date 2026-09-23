@@ -29,3 +29,12 @@
 | siege_ram_01 | таран бьёт в ворота | `audio/attack/siege/ram_attack.ogg` |
 | siege_ram_02 | таран катят | `audio/attack/siege/ram_move.ogg` |
 | siege_victory_01 | победа объявлена | `audio/interface/alarm/alarmvictory_1.ogg` |
+
+## Тревога засады и нападение диких
+
+Две сигнальные записи 0 A.D. (Wildfire Games, CC BY-SA 3.0) — без мелодии, шум и удары. Переложены из OGG в FLAC без потерь, звук не менялся. Звучат в роли `danger` вместе с оскалом и рыком тварей Stendhal.
+
+| Файл | Что это | Исходный файл 0 A.D. |
+|---|---|---|
+| `siege_alarm_ambush_01.flac` | тревога: на отряд напали | `audio/interface/alarm/alarmattackunit_1.ogg` |
+| `siege_alarm_wild_01.flac` | тревога: напали дикие | `audio/interface/alarm/alarm_attacked_gaia_01.ogg` |

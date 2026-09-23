@@ -55,9 +55,9 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   G.seenRegions={};Regions._last=null;
   const было={x:G.x,y:G.y};
   const цель=REGIONS[7];const c=regionCenter(цель);G.x=Math.round(c.x)+1;G.y=Math.round(c.y)+1;if(G.x%29===0)G.x++;if(G.y%29===0)G.y++;
-  SAID.length=0;PLAYED.length=0;Jingle.last=null;
+  SAID.length=0;PLAYED.length=0;EventPick.last=null;
   const ок=Regions.arrive(cellContent(G.x,G.y));await пауза(900);
-  r.вход={ок,сказано:SAID.find(t=>/Область:/.test(t))||"",впервые:!!SAID.find(t=>/впервые/.test(t)),голос:PLAYED.includes(цель.звук[0]),музыка:Jingle.last&&Jingle.last.id,ярус:Jingle.last&&Jingle.last.tier,ярусОжид:цель.ярус,запомнено:!!G.seenRegions[цель.id]};
+  r.вход={ок,сказано:SAID.find(t=>/Область:/.test(t))||"",впервые:!!SAID.find(t=>/впервые/.test(t)),голос:PLAYED.includes(цель.звук[0]),музыка:EventPick.last&&EventPick.last.id,ярус:EventPick.last&&EventPick.last.tier,ярусОжид:цель.ярус,запомнено:!!G.seenRegions[цель.id]};
   const снова=Regions.arrive(cellContent(G.x,G.y));r.второйРаз=снова;
   r.окружение=Ambience.spots(ambienceSetFor()).some(([role])=>цель.звук.includes(role));
   r.цена=regionPriceK(цель.ресурс);
@@ -294,10 +294,10 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   for(const f of FORESTS){for(let dx=-f.r;dx<=f.r&&!найден;dx+=97)for(let dy=-f.r;dy<=f.r&&!найден;dy+=97){const x=f.x+dx,y=f.y+dy;if(x<2||y<2||x>=WORLD-2||y>=WORLD-2)continue;if(terrainAt(x,y)[0]==="forest"&&forestAt(x,y)===f)найден={f,x,y};}if(найден)break;}
   if(!найден)return {всего:r.всего,нетЛеса:true};
   const бx=G.x,бy=G.y;G.place=null;G.ship=null;G.x=найден.x;G.y=найден.y;if(G.x%29===0)G.x++;
-  G.seenForests={};Forests._last=null;SAID.length=0;PLAYED.length=0;Jingle.last=null;
+  G.seenForests={};Forests._last=null;SAID.length=0;PLAYED.length=0;EventPick.last=null;
   const ок=Forests.arrive(cellContent(G.x,G.y));await пауза(800);
   const K=FOREST_KINDS[найден.f.kind];
-  r.вход={ок,сказано:SAID.find(t=>t.includes(найден.f.n))||"",голос:PLAYED.includes(K.звук[0]),музыка:Jingle.last&&Jingle.last.id,ярус:Jingle.last&&Jingle.last.tier,запомнено:!!G.seenForests[найден.f.id]};
+  r.вход={ок,сказано:SAID.find(t=>t.includes(найден.f.n))||"",голос:PLAYED.includes(K.звук[0]),музыка:EventPick.last&&EventPick.last.id,ярус:EventPick.last&&EventPick.last.tier,запомнено:!!G.seenForests[найден.f.id]};
   r.окружение=Forests.spots().some(([role])=>role===K.птицы);
   r.хищник=Forests.predatorK(K.хищник);r.чужой=Forests.predatorK("kraken");r.редкость=Forests.rareK(K.редкость);
   r.гдея=(()=>{SAID.length=0;handleThreeFingerSwipe("E");return SAID.find(t=>/Вы здесь/.test(t))||"";})();
@@ -336,9 +336,9 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   /* бой с капитаном */
   while(activeLayer())closeTopUI();G.inCombat=false;G.combat=null;
   r.бой=Forts.capture(f.id);r.капитан=G.inCombat&&G.combat&&G.combat.m&&G.combat.m.взятие&&G.combat.m.взятие.fort===f.id;
-  if(r.капитан){G.combat.hp=0;Jingle.last=null;PLAYED.length=0;victory();await пауза(700);
+  if(r.капитан){G.combat.hp=0;EventPick.last=null;PLAYED.length=0;victory();await пауза(700);
    const ov=document.getElementById("lootOverlay");if(ov)ov.hidden=true;G.loot=null;while(activeLayer())closeTopUI();}
-  r.взята=Forts.state(f.id).owner==="player";r.взятиеМузыка=Jingle.last&&Jingle.last.id;r.взятиеЗвук=PLAYED.includes("siege_victory");
+  r.взята=Forts.state(f.id).owner==="player";r.взятиеМузыка=EventPick.last&&EventPick.last.id;r.взятиеЗвук=PLAYED.includes("siege_victory");
   /* восстановить, укрепить, база, передать */
   G.gold=1000;G.inv["кристалл"]=5;
   PLAYED.length=0;r.восст=Forts.restore(f.id);r.стены=Forts.state(f.id).walls;r.восстЗвук=PLAYED.includes("build_work");

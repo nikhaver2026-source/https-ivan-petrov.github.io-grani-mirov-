@@ -30,7 +30,7 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
 
  /* ── 1. Каналы ── */
  const каналы=await page.evaluate(()=>{
-  const виды=["music","jingle","ambient","ui","combat","magic","npc","fx","world","чужой"];
+  const виды=["music","event","ambient","ui","combat","magic","npc","fx","world","чужой"];
   const по={};виды.forEach(k=>по[k]=Bank.chanOf(k));
   const было={...settings};
   const снимок=()=>({music:Bank.vol("music"),amb:Bank.vol("ambient"),ui:Bank.vol("ui"),combat:Bank.vol("combat"),magic:Bank.vol("magic"),npc:Bank.vol("npc"),fx:Bank.vol("fx")});
@@ -51,7 +51,7 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
    речьНеТрогает:Object.keys(база).every(k=>близко(речь[k],база[k])),
    ползунки:["setMasterVol","setCombatVol","setMagicVol","setNpcVol","setBgMusic"].filter(id=>!document.getElementById(id))};});
  check('девять видов разложены по каналам: бой, чары и люди — свои',
-  каналы.по.combat==="combat"&&каналы.по.magic==="magic"&&каналы.по.npc==="npc"&&каналы.по.jingle==="music"&&каналы.по["чужой"]==="world",каналы.по);
+  каналы.по.combat==="combat"&&каналы.по.magic==="magic"&&каналы.по.npc==="npc"&&каналы.по.event==="world"&&каналы.по["чужой"]==="world",каналы.по);
  check('ползунок боя двигает только бой',каналы.бойСвой);
  check('ползунок чар двигает только чары',каналы.чарыСвои);
  check('ползунок голосов людей двигает только людей',каналы.людиСвои);
@@ -143,11 +143,11 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   settings.bgMusic=1;Music.stop();Music.start("forest");const звучит=!!Music.track;Music.stop();
   settings.bgMusic=было;
   const событие=eventTheme("levelup",{gain:0});
-  const канал=Bank.chanOf("jingle");
+  const канал=Bank.chanOf("event");
   return {молчит,звучит,умолч:Number(settings.bgMusic)||0,событие,канал,поле:!!document.getElementById("setBgMusic")};});
  check('в игре фоновая музыка мест молчит, пока её не включили',фон.молчит&&фон.умолч===0,фон);
  check('включённая фоновая музыка звучит записью темы',фон.звучит);
- check('музыка событий при этом на месте и идёт каналом музыки',фон.событие===true&&фон.канал==="music",фон);
+ check('звук события при этом на месте и идёт каналом мира, а не музыки',фон.событие===true&&фон.канал==="world",фон);
 
  /* ── 6. Бой, чары и люди — своими каналами ── */
  const кто=await page.evaluate(async()=>{

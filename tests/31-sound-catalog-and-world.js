@@ -53,8 +53,8 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   cats.окно==='modal-encyclopedia'&&cats.разделов>=20&&cats.второйУровеньСкрыт===true,cats);
  check('первый уровень короткий: по нему реально дойти свайпом',
   cats.пунктов<=40,{пунктов:cats.пунктов});
- check('в каталоге есть и синтезированные сцены, и живые записи, и оркестр',
-  cats.имена.some(t=>/Стихии/.test(t))&&cats.имена.some(t=>/Живые инструменты и оркестр/.test(t))
+ check('в каталоге есть и синтезированные сцены, и живые записи, и музыка мест, а оркестра нет',
+  cats.имена.some(t=>/Стихии/.test(t))&&!cats.имена.some(t=>/оркестр|инструмент/i.test(t))&&cats.имена.some(t=>/Боги, храмы и знамения/.test(t))
   &&cats.имена.some(t=>/Музыка мест/.test(t))&&cats.имена.some(t=>/маяки/.test(t)),cats.имена);
 
  // ── 2. Ни один звук не потерялся между уровнями ──
@@ -75,7 +75,7 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
  // ── 3. Раздел открывается двойным касанием и закрывается кнопкой ──
  await page.evaluate(()=>{resetCursor();ensureCursor(activeLayer());});
  const цель=await page.evaluate(()=>cursorItems(activeLayer())
-  .findIndex(x=>/Живые инструменты и оркестр/.test(x.textContent||"")));
+  .findIndex(x=>/Музыка мест из фэнтезийных игр/.test(x.textContent||"")));
  for(let i=0;i<цель;i++)await fwd();
  const наРазделе=await page.evaluate(()=>(uiCursor.textContent||"").slice(0,20));
  await doubleTap();
@@ -84,7 +84,7 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   разделыСкрыты:document.getElementById('encycCats').hidden,
   пунктов:cursorItems(activeLayer()).length}));
  check('свайп доводит до раздела, двойное касание его открывает',
-  /Живые инструменты/.test(наРазделе)&&/оркестр/i.test(внутри.заголовок)&&внутри.звуков>=50
+  /Музыка мест/.test(наРазделе)&&/Музыка мест/.test(внутри.заголовок)&&внутри.звуков>=50
   &&внутри.разделыСкрыты===true,{курсор:наРазделе,...внутри});
 
  // возврат кнопкой «Ко всем разделам»
@@ -140,14 +140,15 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   /* Роль считается задействованной, если её имя встречается в коде игры
      где-то ещё, кроме собственного объявления в банке. */
   const код=document.documentElement.innerHTML;
+  /* Оркестра в игре больше нет: ни одна роль не берёт ноты из orch/. */
   const новые=Object.keys(SOUND_BANK).filter(r=>(SOUND_BANK[r].f[0]||"").startsWith("orch/"));
   const молчат=новые.filter(r=>{
    const все=(код.match(new RegExp("(?<![A-Za-z_])"+r+"(?![A-Za-z_0-9])","g"))||[]).length;
    const объявление=(код.match(new RegExp("[\\s{]"+r+":\\{f:","g"))||[]).length;
    return все-объявление<=0;});
   return {новых:новые.length,молчат};});
- check('каждая новая оркестровая запись где-то звучит в игре',
-  вМире.новых>=30&&!вМире.молчат.length,вМире);
+ check('оркестровых записей в банке не осталось ни одной',
+  вМире.новых===0,вМире);
 
  // ── 8. Ресурсы под ногами получили живые записи вместо одного синтеза ──
  const маяки=await page.evaluate(()=>{

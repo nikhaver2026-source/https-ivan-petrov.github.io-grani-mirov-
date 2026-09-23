@@ -47,7 +47,7 @@ const BASE=process.argv[2].replace(/index\.html$/,'');
    a.addEventListener("error",()=>res(0),{once:true});
    a.play().catch(()=>{});setTimeout(()=>res(2),4000);});
   await play("nat/door_wood_01.flac");
-  await play("inst/harp_light_01.mp3");});
+  await play("nat/magic_shimmer_01.flac");});
  await page.waitForTimeout(900);
  const cached=await page.evaluate(async()=>{
   const names=await caches.keys();
@@ -55,7 +55,7 @@ const BASE=process.argv[2].replace(/index\.html$/,'');
   for(const n of names){const c=await caches.open(n);out[n]=(await c.keys()).length;}
   const shell=await caches.match("./index.html");
   const media=await caches.match(new URL("sounds/nat/door_wood_01.flac",location.href).toString());
-  const media2=await caches.match(new URL("sounds/inst/harp_light_01.mp3",location.href).toString());
+  const media2=await caches.match(new URL("sounds/nat/magic_shimmer_01.flac",location.href).toString());
   return {names,out,shell:!!shell,media:!!media,media2:!!media2};});
  check('страница и записи попали в кэш',cached.shell===true&&cached.media===true&&cached.media2===true,{кэши:cached.out,страница:cached.shell,запись:cached.media});
 
@@ -88,7 +88,7 @@ const BASE=process.argv[2].replace(/index\.html$/,'');
  const play=await page.evaluate(()=>{
   const said=[];const o=Speech.say;Speech.say=t=>said.push(t);
   move("E");move("E");
-  const ok=!!Bank.play("harp_light",{gain:0.02,maxSec:1});
+  const ok=!!Bank.play("magic_shimmer",{gain:0.02,maxSec:1});
   Speech.say=o;
   return {pos:[G.x,G.y],said:said.length,sound:ok};});
  check('после установки работника игра ходит и звучит',play.said>0&&play.sound===true,play);

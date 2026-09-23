@@ -23,7 +23,6 @@ https://creativecommons.org/licenses/by-sa/4.0/ — полный текст ря
 | ab_hush_01 | речь оборвана: короткий знак, что голос замолчал по вашей воле | `assets/sounds/tick.ogg` |
 | ab_magic_open_01 | панель заклинаний раскрылась | `assets/sounds/swing3.ogg` |
 | ab_cards_deal_01 | карты сданы: игра в таверне | `assets/sounds/flip.ogg` |
-| ab_spell_learn_01 | чара изучена: новое заклинание легло в память | `assets/sounds/upgrade.ogg` |
 
 ## Музыка мест
 

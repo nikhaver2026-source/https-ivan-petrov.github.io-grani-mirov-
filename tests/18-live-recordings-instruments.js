@@ -20,8 +20,9 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
    nat:files.filter(f=>f.startsWith("nat/")).length,
    ударные:files.filter(f=>/^(blow|troop|bazaar|dark|surf)\//.test(f)).length};});
  /* В nat остались только записи настоящих предметов — колокола, дверь, касса,
-    стекло, хор, ворон и пар; бочки, тарелки и драм-машина ушли из игры. */
- check('банк ролей вырос: живые записи и инструменты внутри, ударных под видом мира нет',bank.files>=320&&bank.roles>=140&&bank.inst>=38&&bank.nat>=10&&bank.ударные===0,bank);
+    стекло, ворон и пар; бочки, тарелки, драм-машина и хор ушли из игры.
+    Живых инструментов в банке больше нет вовсе: ноты заменены записями мира. */
+ check('банк ролей: живые записи, ни инструментов, ни ударных под видом мира',bank.files>=320&&bank.roles>=140&&bank.inst===0&&bank.nat>=10&&bank.ударные===0,bank);
 
  // 2. Каждый файл банка реально загружается
  const load=await page.evaluate(async()=>{
@@ -78,22 +79,22 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   CMD.encyc();
   const heads=[...document.querySelectorAll('#encycCats .sound-card b')].map(x=>x.textContent);
   const credits=document.getElementById("encycCredits").textContent;
-  /* Открываем раздел живых инструментов и считаем карточки внутри. */
+  /* Открываем раздел богов и знамений и считаем карточки внутри. */
   const btns=[...document.querySelectorAll('#encycCats .sound-card')];
-  const i=btns.findIndex(b=>/Живые инструменты/.test(b.textContent));
+  const i=btns.findIndex(b=>/Боги, храмы и знамения/.test(b.textContent));
   if(i>=0)btns[i].click();
-  return {heads,инструментов:document.querySelectorAll('#encycOneGrid .sound-card').length,
-   attribution:/tonejs-instruments/.test(credits)&&/Attribution/.test(credits),
-   флюид:/FluidR3_GM/.test(credits)};});
+  return {heads,богов:document.querySelectorAll('#encycOneGrid .sound-card').length,
+   attribution:/Stendhal/.test(credits)&&/CC BY/.test(credits),
+   нетНот:!/FluidR3_GM|tonejs-instruments/.test(credits)};});
  /* Папки записей сведены в тематические разделы, поэтому раздел зовётся не
     по папке, а по делу: «Живые инструменты и оркестр» держит и nat, и inst,
     и orch, а музыка мира стоит своим разделом. */
- check('в каталоге есть разделы живых записей, инструментов и оркестра',
-  cat.heads.some(h=>/Живые инструменты и оркестр/.test(h))
+ check('в каталоге есть разделы живых записей и музыки мест, а инструментов и оркестра нет',
+  !cat.heads.some(h=>/Живые инструменты|оркестр/i.test(h))&&cat.heads.some(h=>/Боги, храмы и знамения/.test(h))
   &&cat.heads.some(h=>/Музыка мест/.test(h))
   &&cat.heads.some(h=>/Шаги и поверхности/.test(h)),cat.heads);
- check('раздел живых инструментов не пуст',cat.инструментов>=10,cat.инструментов);
- check('указание авторства CC BY видно в игре',cat.attribution===true&&cat.флюид===true,cat);
+ check('раздел богов и знамений не пуст',cat.богов>=8,cat.богов);
+ check('указание авторства CC BY видно в игре, а нот звукового шрифта в титрах нет',cat.attribution===true&&cat.нетНот===true,cat);
 
  // 7. Ни одного битого запроса к звукам и ни одной ошибки
  await page.waitForTimeout(400);

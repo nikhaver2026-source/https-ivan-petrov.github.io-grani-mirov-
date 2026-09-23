@@ -1,8 +1,9 @@
 /* ═══════════════════════════════════════════════════════════════════════
-   НАБОР 99: МУЗЫКА — СОБЫТИЮ, И КАЖДЫЙ РАЗ ДРУГАЯ
+   НАБОР 99: У СОБЫТИЯ СВОЙ ЗВУК, И КАЖДЫЙ РАЗ ДРУГОЙ
 
-   По ТЗ музыка звучит только на значимое событие, у каждого события пул
-   вариантов по ярусам значимости, и один и тот же вариант не идёт подряд.
+   Значимое событие звучит связкой живых записей (музыки в событиях больше
+   нет), у каждого события пул вариантов по ярусам значимости, и один и тот
+   же вариант не идёт подряд.
 
    1. Пулы собраны: у каждого события не меньше трёх вариантов, все записи
       есть в банке, ярусы покрывают требуемые наборы.
@@ -11,7 +12,7 @@
    3. Новый уровень: обычный, каждый пятый — редкий, каждый десятый —
       эпический; рост уровня и вправду зовёт пул.
    4. Дела: ярус сдачи по кругу дела, цепочка — цепочкой, тёмное — тайным.
-   5. Рядовая победа — без музыки; победа над много сильнейшим — музыкой.
+   5. Рядовая победа — без звука события; победа над много сильнейшим — с ним.
    6. Новая держава и новый род места звучат один раз; награда — по рангу
       вещи, обычная — звуком вещи.
    ═══════════════════════════════════════════════════════════════════════ */
@@ -28,8 +29,8 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
  /* ── 1. Пулы ── */
  const пулы=await page.evaluate(()=>{
   const out={мало:[],нет:[],ярусы:{}};
-  for(const id of Object.keys(MUSIC_POOL)){
-   const p=MUSIC_POOL[id];
+  for(const id of Object.keys(EVENT_POOL)){
+   const p=EVENT_POOL[id];
    if(p.length<3)out.мало.push(id+":"+p.length);
    p.forEach(v=>{if(!Bank.has(v.роль))out.нет.push(id+"→"+v.роль);(v.следом||[]).forEach(([r])=>{if(!Bank.has(r))out.нет.push(id+"→"+r);});});
    out.ярусы[id]=[...new Set(p.map(v=>v.ярус).filter(Boolean))];}
@@ -38,28 +39,28 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
    reward:["common","valuable","rare","unique","legendary","artifact","story"]};
   out.нехватка=[];
   for(const id in надо)надо[id].forEach(t=>{if(!(out.ярусы[id]||[]).includes(t))out.нехватка.push(id+":"+t);});
-  out.событий=Object.keys(MUSIC_POOL).length;
-  out.обычныхУровня=MUSIC_POOL.levelup.filter(v=>v.ярус==="normal").length;
+  out.событий=Object.keys(EVENT_POOL).length;
+  out.обычныхУровня=EVENT_POOL.levelup.filter(v=>v.ярус==="normal").length;
   return out;});
- check('пулов музыки не меньше двенадцати событий',пулы.событий>=12,пулы.событий);
+ check('пулов звука событий не меньше двенадцати',пулы.событий>=12,пулы.событий);
  check('у каждого события не меньше трёх вариантов',!пулы.мало.length,пулы.мало);
  check('каждая запись пула есть в банке',!пулы.нет.length,пулы.нет.slice(0,8));
  check('ярусы покрывают: уровень, сдача, взятие, достижение, награда',!пулы.нехватка.length,пулы.нехватка);
- check('у обычного уровня не меньше пяти тем: героическая, магическая, торжественная, спокойная, храмовая',пулы.обычныхУровня>=5,пулы.обычныхУровня);
+ check('у обычного уровня не меньше пяти вариантов: героический, целительный, магический, спокойный, храмовый',пулы.обычныхУровня>=5,пулы.обычныхУровня);
 
  /* ── 2. Выбор без повторов ── */
  const выбор=await page.evaluate(()=>{
-  Jingle.reset();
-  const ряд=[];for(let i=0;i<30;i++){eventTheme("levelup",{tier:"normal",gain:0});ряд.push(Jingle.last.i);}
+  EventPick.reset();
+  const ряд=[];for(let i=0;i<30;i++){eventTheme("levelup",{tier:"normal",gain:0});ряд.push(EventPick.last.i);}
   const подряд=ряд.some((v,i)=>i>0&&v===ряд[i-1]);
-  const обычные=new Set(MUSIC_POOL.levelup.map((v,i)=>v.ярус==="normal"?i:-1).filter(i=>i>=0));
+  const обычные=new Set(EVENT_POOL.levelup.map((v,i)=>v.ярус==="normal"?i:-1).filter(i=>i>=0));
   const всеОбычные=[...обычные].every(i=>ряд.includes(i));
   const толькоОбычные=ряд.every(i=>обычные.has(i));
-  const эпик=[];for(let i=0;i<6;i++){eventTheme("levelup",{tier:"epic",gain:0});эпик.push(MUSIC_POOL.levelup[Jingle.last.i].ярус);}
+  const эпик=[];for(let i=0;i<6;i++){eventTheme("levelup",{tier:"epic",gain:0});эпик.push(EVENT_POOL.levelup[EventPick.last.i].ярус);}
   const чужой=eventTheme("levelup",{tier:"нет-такого",gain:0});
   let сырое={};try{сырое=JSON.parse(store.get("gm29jh")||"{}");}catch(_){}
-  const награда=[];for(let i=0;i<8;i++){eventTheme("reward",{tier:"rare",gain:0});награда.push(Jingle.last.i);}
-  const rareIdx=MUSIC_POOL.reward.map((v,i)=>v.ярус==="rare"?i:-1).filter(i=>i>=0);
+  const награда=[];for(let i=0;i<8;i++){eventTheme("reward",{tier:"rare",gain:0});награда.push(EventPick.last.i);}
+  const rareIdx=EVENT_POOL.reward.map((v,i)=>v.ярус==="rare"?i:-1).filter(i=>i>=0);
   return {ряд,подряд,всеОбычные,толькоОбычные,эпик,чужой,помнит:Array.isArray(сырое.levelup)&&сырое.levelup.length>0,
    награда,двеРедкие:rareIdx.length===2&&!награда.some((v,i)=>i>0&&v===награда[i-1])};});
  check('тридцать уровней подряд — ни одного повтора варианта',!выбор.подряд,выбор.ряд.slice(0,12));
@@ -73,16 +74,16 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
  const уровень=await page.evaluate(()=>{
   const ярусы=[1,4,5,7,10,15,20].map(l=>l+":"+levelTier(l));
   const роли=[];const o=Bank.play;Bank.play=function(r,opts){роли.push([r,(opts&&opts.kind)||"fx"]);return o.call(this,r,Object.assign({},opts||{},{gain:0,maxSec:0.3}));};
-  const было=G.level;G.level=9;G.xp=xpNeed(9)+1;Jingle.last=null;
+  const было=G.level;G.level=9;G.xp=xpNeed(9)+1;EventPick.last=null;
   checkLevelUp();
   Bank.play=o;
-  const муз=роли.filter(x=>x[1]==="jingle").map(x=>x[0]);
-  const first=Jingle.last&&MUSIC_POOL.levelup[Jingle.last.i];
-  return {ярусы,стало:G.level,событие:Jingle.last&&Jingle.last.id,ярус:Jingle.last&&Jingle.last.tier,муз,первый:first&&first.роль};});
+  const муз=роли.filter(x=>x[1]==="event").map(x=>x[0]);
+  const first=EventPick.last&&EVENT_POOL.levelup[EventPick.last.i];
+  return {ярусы,стало:G.level,событие:EventPick.last&&EventPick.last.id,ярус:EventPick.last&&EventPick.last.tier,муз,первый:first&&first.роль};});
  check('ярус уровня: пятый и пятнадцатый — редкий, десятый и двадцатый — эпический, прочие — обычный',
   uровняOk(уровень.ярусы),уровень.ярусы);
  function uровняOk(a){return a.join()==="1:normal,4:normal,5:rare,7:normal,10:epic,15:rare,20:epic";}
- check('рост до десятого уровня зовёт эпическую тему пула каналом музыки',
+ check('рост до десятого уровня зовёт эпический вариант пула каналом событий',
   уровень.стало===10&&уровень.событие==="levelup"&&уровень.ярус==="epic"&&уровень.муз.includes(уровень.первый),уровень);
 
  /* ── 4. Дела ── */
@@ -100,43 +101,44 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
  /* ── 5. Победы ── */
  const победы=await page.evaluate(async()=>{
   const пауза=ms=>new Promise(z=>setTimeout(z,ms));
-  const муз=/^(trumpet_|jingle_win|victory$|epic_strings|siege_victory|war_brass|war_timpani|crowd_cheer|wide_strings|temple_choir|gate_fanfare|harp_)/;
+  /* Звук события узнаётся по каналу событий: строй и клич звучат в мире и
+     сами по себе, поэтому смотрим не на имя записи, а на то, что её позвал пул. */
   const бой=async(lvl)=>{
    while(activeLayer())closeTopUI();G.inCombat=false;G.combat=null;
    const m=Object.assign({},MONSTERS.find(x=>!x.fly)||MONSTERS[0],{lvl,hp:5,xp:10});
    const роли=[];const o=Bank.play;Bank.play=function(r,opts){роли.push([r,(opts&&opts.kind)||"fx"]);return o.call(this,r,Object.assign({},opts||{},{gain:0,maxSec:0.3}));};
-   Jingle.last=null;
+   EventPick.last=null;
    startCombat({x:G.x,y:G.y,monster:m});
    G.combat.hp=0;victory();
    await пауза(700);
    Bank.play=o;
    const ov=document.getElementById("lootOverlay");if(ov)ov.hidden=true;G.loot=null;
-   return {музыки:роли.filter(x=>муз.test(x[0])).map(x=>x[0]),событие:Jingle.last&&Jingle.last.id};};
+   return {музыки:роли.filter(x=>x[1]==="event").map(x=>x[0]),событие:EventPick.last&&EventPick.last.id};};
   const обычная=await бой(Math.max(1,G.level-1));
   const великая=await бой(G.level+6);
   return {обычная,великая};});
- check('рядовая победа обходится без музыки: только звук',победы.обычная.музыки.length===0&&победы.обычная.событие!=="victory_great",победы.обычная);
- check('победа над много сильнейшим зовёт музыку победы из пула',победы.великая.событие==="victory_great"&&победы.великая.музыки.length>0,победы.великая);
+ check('рядовая победа обходится без звука события: только сам бой',победы.обычная.музыки.length===0&&победы.обычная.событие!=="victory_great",победы.обычная);
+ check('победа над много сильнейшим зовёт звук великой победы из пула',победы.великая.событие==="victory_great"&&победы.великая.музыки.length>0,победы.великая);
 
  /* ── 6. Земли, места, награды ── */
  const земли=await page.evaluate(async()=>{
   const пауза=ms=>new Promise(z=>setTimeout(z,ms));
-  G.seenEmp={};G.seenKinds={};Jingle.last=null;
+  G.seenEmp={};G.seenKinds={};EventPick.last=null;
   const первая=regionDiscovered("Проверочная держава"),вторая=regionDiscovered("Проверочная держава");
   await пауза(1100);
-  const земля=Jingle.last&&Jingle.last.id;
-  Jingle.last=null;
+  const земля=EventPick.last&&EventPick.last.id;
+  EventPick.last=null;
   const храм=placeDiscovered("temple","house"),храм2=placeDiscovered("temple","house"),дом=placeDiscovered("house","house");
   await пауза(1400);
-  const место=Jingle.last&&{id:Jingle.last.id,tier:Jingle.last.tier};
+  const место=EventPick.last&&{id:EventPick.last.id,tier:EventPick.last.tier};
   const ранги=[0,1,2,3,4,5].map(r=>rewardTierOf({rank:r}));
-  Jingle.last=null;G.loot=[{type:"gold",amount:3},{type:"gear",item:{name:"Проверочный клинок",rank:3,qual:2,val:1,slot:"weapon"}}];
+  EventPick.last=null;G.loot=[{type:"gold",amount:3},{type:"gear",item:{name:"Проверочный клинок",rank:3,qual:2,val:1,slot:"weapon"}}];
   takeLoot();await пауза(600);
-  const добыча=Jingle.last&&{id:Jingle.last.id,tier:Jingle.last.tier};
-  Jingle.last=null;G.loot=[{type:"gear",item:{name:"Простой нож",rank:0,qual:1,val:1,slot:"weapon"}}];
+  const добыча=EventPick.last&&{id:EventPick.last.id,tier:EventPick.last.tier};
+  EventPick.last=null;G.loot=[{type:"gear",item:{name:"Простой нож",rank:0,qual:1,val:1,slot:"weapon"}}];
   const роли=[];const o=Bank.play;Bank.play=function(r,opts){роли.push(r);return o.call(this,r,Object.assign({},opts||{},{gain:0,maxSec:0.3}));};
   takeLoot();await пауза(600);Bank.play=o;
-  const обычная=Jingle.last&&{id:Jingle.last.id,tier:Jingle.last.tier};
+  const обычная=EventPick.last&&{id:EventPick.last.id,tier:EventPick.last.tier};
   return {первая,вторая,земля,храм,храм2,дом,место,ранги,добыча,обычная,обычныеРоли:роли.slice(0,6)};});
  check('новая держава звучит один раз: второй вход молчит',земли.первая===true&&земли.вторая===false&&земли.земля==="region_new",земли);
  check('новый род места звучит своим ярусом один раз, а дом — не событие',земли.храм===true&&земли.храм2===false&&земли.дом===false&&земли.место&&земли.место.id==="place_new"&&земли.место.tier==="temple",земли.место);

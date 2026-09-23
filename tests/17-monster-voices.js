@@ -48,7 +48,7 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
  // 3. Файлы новых записей читаются
  const avail=await page.evaluate(async()=>{
   const paths=["monsters/Dragon_Emerge.wav","monsters/Ghost_Death.wav","fantasy/gold_01.mp3",
-   "fantasy/trap_01.mp3","steps/step_water_01.mp3","fantasy/jingle_win_01.mp3"];
+   "fantasy/trap_01.mp3","steps/step_water_01.mp3"];
   const res=[];
   for(const f of paths){
    const ok=await new Promise(r=>{const a=new Audio("sounds/"+f);

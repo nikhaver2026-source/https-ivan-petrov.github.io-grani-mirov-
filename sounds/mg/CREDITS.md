@@ -297,3 +297,22 @@ Unported (CC BY-SA 3.0): https://creativecommons.org/licenses/by-sa/3.0/
 | `mg_mus_menu.ogg` | Орден шва | «тема главного меню» — команда MegaGlest | CC BY-SA 3.0 | `data/core/menu/music/menu_music.ogg` | — |
 | `mg_mus_egypt.ogg` | Древний храм | «Asak (тема египтян)» — Margaras | CC BY-SA 3.0 | `techs/megapack/factions/egypt/music/asak-jadeflange.ogg` | — |
 | `mg_mus_indian.ogg` | Живое | «тема индейцев» — Aminos | CC BY-SA 3.0 | `techs/megapack/factions/indian/music/music_indian.ogg` | укорочено до 2:00, затухание 6 с (исходник 3:05) |
+
+## Чары MegaGlest вместо синтезированных школ
+
+Школы чар звучали записями без авторства с музыкальными переливами. Теперь у них голоса державы магов, индейцев и персов MegaGlest (CC BY-SA 3.0). WAV игры переложены в FLAC без потерь.
+
+| Файл | Что это | Исходный файл MegaGlest |
+|---|---|---|
+| `mg_spell_cast_01.flac` | сотворение чары: удар архимага | `archmage_attack19.wav` |
+| `mg_spell_cast_02.flac` | сотворение чары: удар архимага | `archmage_attack20.wav` |
+| `mg_spell_cast_03.flac` | сотворение чары: удар архимага | `archmage_attack21.wav` |
+| `mg_spell_cast_04.flac` | сотворение чары: удар архимага | `archmage_attack22.wav` |
+| `mg_spell_cast_05.flac` | сотворение чары: удар архимага | `archmage_attack23.wav` |
+| `mg_spell_cast_06.flac` | сотворение чары: удар архимага | `archmage_attack24.wav` |
+| `mg_spell_fire_01.flac` | огненная чара послушника | `initiate_attack7.wav` |
+| `mg_spell_fire_02.flac` | огненная чара послушника | `initiate_attack8.wav` |
+| `mg_spell_dark_01.flac` | тёмная чара шамана | `shaman_attack.wav` |
+| `mg_spell_dark_02.flac` | тёмная чара ковра-самолёта | `carpet_attack1.wav` |
+| `mg_portal_01.flac` | переход: чары сомкнулись | `initiate_work_end1.wav` |
+| `mg_portal_02.flac` | переход: чары сомкнулись | `initiate_work_end2.wav` |
