@@ -25,7 +25,7 @@
      GitHub Pages. Там же включается и service worker (см. ниже): игра ставится
      на главный экран и работает без сети. -->
 <meta name="theme-color" content="#10121c">
-<title>Грань Миров Alpha 2.5.1 — Живой динамичный мир</title>
+<title>Грань Миров Alpha 2.5.2 — Живой динамичный мир</title>
 <style>
 /* Палец, положенный на ползунок, не должен его двигать: браузер по умолчанию
    перебрасывает бегунок в точку касания, и незрячий игрок, просто читая
@@ -106,8 +106,8 @@ h3{color:var(--acc2);margin:14px 0 6px;font-size:1.05rem;}
 
 <!-- ТИТУЛ -->
 <div id="screen-title" class="screen">
- <h1>🌌 Грань Миров <small style="font-size:.5em;opacity:.75">Alpha 2.5.1</small></h1>
- <p class="sub">Полная хроника I–V · Alpha 2.5.1 — Единый живой мир · Карта 50000×50000</p>
+ <h1>🌌 Грань Миров <small style="font-size:.5em;opacity:.75">Alpha 2.5.2</small></h1>
+ <p class="sub">Полная хроника I–V · Alpha 2.5.2 — Единый живой мир · Карта 50000×50000</p>
  <div class="menu">
   <button type="button" data-cmd="check">🔊 Проверить звук</button>
   <button type="button" data-cmd="encyc" id="btnEncyc">🎧 Энциклопедия звуков</button>
@@ -1083,8 +1083,12 @@ const Speech={voice:null,keepAlive:null,
   try{
    const ключ=String(settings.elevenKey||""),голос=String(settings.elevenVoice||"");
    if(!ключ||!голос||typeof fetch!=="function")return Promise.resolve(null);
+   /* Сеть думает не дольше десяти секунд: дальше фраза уходит голосу
+      устройства, а не висит в очереди. */
+   const стоп=typeof AbortController==="function"?new AbortController():null;
+   if(стоп)setTimeout(()=>{try{стоп.abort();}catch(_){}},10000);
    return fetch(`https://api.elevenlabs.io/v1/text-to-speech/${encodeURIComponent(голос)}?output_format=mp3_44100_128`,
-    {method:"POST",headers:{"xi-api-key":ключ,"Content-Type":"application/json"},
+    {method:"POST",signal:стоп?стоп.signal:undefined,headers:{"xi-api-key":ключ,"Content-Type":"application/json"},
      body:JSON.stringify({text:String(text),model_id:"eleven_multilingual_v2",
       voice_settings:{stability:0.5,similarity_boost:0.75}})})
     .then(r=>r.ok?r.arrayBuffer():null)
@@ -1107,6 +1111,9 @@ const Speech={voice:null,keepAlive:null,
   }catch(_){return Promise.resolve([]);}},
  _webAdapter(){const self=this;return {name:"web",
   speak(text,o){try{const u=new SpeechSynthesisUtterance(text);
+    /* Ссылка на высказывание: без неё Chrome собирает его как мусор посреди
+       фразы, и конец фразы не приходит никогда. */
+    self._utt=u;
     if(self.voice){u.voice=self.voice;u.lang=self.voice.lang;}else u.lang="ru-RU";
     u.rate=+o.rate;u.volume=+o.volume;
     u.pitch=Math.max(0.5,Math.min(2,+settings.pitch||1));
@@ -1136,7 +1143,12 @@ const Speech={voice:null,keepAlive:null,
    else if(/новый уровень|легендарн|божественн|достижени|звание|титул|навык (получен|поднялся)|выучен|цепочка пройдена/i.test(text))pri=1;
    else pri=o.interrupt===false?3:2;}
   pri=Math.max(0,Math.min(4,Number(pri)||0));
-  const cat=o.cat||this._ctx||(pri<=1?"important":pri===2?"result":"context");
+  /* Метка такта («desc» после шага) не цепляется к речи окна: встреча в
+     пути открывается прямо в такте шага, и её текст, помеченный как
+     описание места, резался до первой фразы при минимальных подсказках и
+     не звучал вовсе при подсказках «только звук». */
+  const вОкне=safeFn(()=>typeof activeLayer==="function"&&!!activeLayer(),false);
+  const cat=o.cat||(вОкне?null:this._ctx)||(pri<=1?"important":pri===2?"result":"context");
   return {pri,cat};},
  _shape(text,m){
   try{
@@ -1206,7 +1218,7 @@ const Speech={voice:null,keepAlive:null,
   return gone.length;},
  _cut(m,state){
   if(!m)return;
-  m.state=state;this.stats.cut++;this.gen++;
+  m.state=state;this.stats.cut++;this.gen++;this._stopWatch();
   this.speaking=false;this.current=null;this._stopKeepAlive();this._duck(false);
   try{const a=this._adapter();if(a)a.cancel();}catch(_){}
   if(m.onDone)setTimeout(()=>{try{m.onDone();}catch(e){}},10);},
@@ -1229,14 +1241,48 @@ const Speech={voice:null,keepAlive:null,
   if(gen!==this.gen||this.current!==m)return;
   if(i>=m.parts.length){this._finish(m,"COMPLETED");return;}
   const a=this._adapter();
+  /* Кусок закрывается ровно один раз: концом, ошибкой или сторожем. */
+  let закрыт=false;
+  const дальше=()=>{if(закрыт)return;закрыт=true;this._stopWatch();
+   if(gen!==this.gen||this.current!==m)return;this._part(m,i+1);};
   const ok=a&&a.speak(m.parts[i],{rate:+settings.rate||1,volume:+settings.voiceVol,
    onstart:()=>{if(gen!==this.gen||this.current!==m)return;m.state="SPEAKING";this._keepAlive();},
-   onend:()=>{if(gen!==this.gen||this.current!==m)return;this._part(m,i+1);},
-   onerror:()=>{if(gen!==this.gen||this.current!==m)return;this._finish(m,i>0?"COMPLETED":"FAILED");}});
-  if(!ok)this._finish(m,"FAILED");},
+   onend:дальше,
+   onerror:()=>{if(закрыт)return;закрыт=true;this._stopWatch();
+    if(gen!==this.gen||this.current!==m)return;
+    /* Ошибка на середине длинного текста не глушит остальное: следующий кусок. */
+    if(i+1<m.parts.length)this._part(m,i+1);else this._finish(m,i>0?"COMPLETED":"FAILED");}});
+  if(!ok){this._finish(m,"FAILED");return;}
+  this._watch(m,a,m.parts[i],дальше);},
+ /* ── СТОРОЖ ──
+    Синтезатор устройства иногда не присылает конца фразы: Chrome теряет
+    событие, если высказывание собрал сборщик мусора, Android глохнет после
+    паузы, iOS — после свёрнутого окна. Раньше игра ждала этот конец вечно:
+    текущая реплика «говорилась» бесконечно, очередь стояла, и после длинного
+    перечня в инвентаре или события игра замолкала до перезапуска. Теперь
+    сторож следит за каждым куском: синтезатор уже молчит, а конца нет — идём
+    дальше; кусок звучит втрое дольше, чем мог бы, — снимаем его и будим
+    синтезатор. */
+ _watch(m,a,text,дальше){
+  this._stopWatch();
+  const темп=Math.max(0.5,Math.min(3,+settings.rate||1));
+  const предел=4000+Math.round(String(text).length/(14*темп)*1000*3);
+  const t0=Date.now();let тихо=0;
+  this._wd=setInterval(()=>{
+   if(this.current!==m){this._stopWatch();return;}
+   const прошло=Date.now()-t0;
+   let говорит=true;
+   if(a&&a.name==="web")говорит=safeFn(()=>!!(speechSynthesis.speaking||speechSynthesis.pending),true);
+   тихо=говорит?0:тихо+1;
+   const умолк=a&&a.name==="web"&&тихо>=2&&прошло>1500;
+   if(!умолк&&прошло<=предел)return;
+   this.stats.rescued=(this.stats.rescued||0)+1;
+   if(!умолк)safeFn(()=>{a.cancel();if(a.name==="web"&&speechSynthesis.resume)speechSynthesis.resume();});
+   дальше();},700);},
+ _stopWatch(){if(this._wd){clearInterval(this._wd);this._wd=null;}},
  _finish(m,state,silent){
   m.state=state;
-  if(this.current===m){this.current=null;this.speaking=false;this._stopKeepAlive();this._duck(false);}
+  if(this.current===m){this.current=null;this.speaking=false;this._stopKeepAlive();this._stopWatch();this._duck(false);}
   if(state==="COMPLETED"){this.stats.spoken++;this.last=m;this.history.push(m);if(this.history.length>20)this.history.shift();}
   if(m.onDone)setTimeout(()=>{try{m.onDone();}catch(e){}},10);
   if(!silent)this._pump();},
@@ -1246,7 +1292,7 @@ const Speech={voice:null,keepAlive:null,
   if(cur)this._cut(cur,"CANCELLED");
   else{this.gen++;try{const a=this._adapter();if(a)a.cancel();}catch(_){}}
   this._dropQueued(0,"CANCELLED");
-  this.speaking=false;this.current=null;this._stopKeepAlive();this._duck(false);
+  this.speaking=false;this.current=null;this._stopKeepAlive();this._stopWatch();this._duck(false);
   if(user)this.stats.userStops++;
   return true;},
  /* Игра свёрнута или потеряла звук: текущее режем, обычную очередь снимаем,
@@ -1329,8 +1375,12 @@ const Speech={voice:null,keepAlive:null,
   }catch(_){}},
  _keepAlive(){
   if(this.keepAlive)return;
-  const isChrome=/Chrome\//.test(navigator.userAgent)&&!/Edg\//.test(navigator.userAgent);
-  if(!isChrome)return;
+  const ua=navigator.userAgent||"";
+  const isChrome=/Chrome\//.test(ua)&&!/Edg\//.test(ua);
+  /* Приём «пауза и сразу продолжение» лечит обрыв длинной фразы на
+     настольном Chrome, а на Android и iPhone пауза снимает фразу совсем, и
+     синтезатор замолкал до перезапуска игры. Там он не нужен вовсе. */
+  if(!isChrome||/Android|iPhone|iPad|Mobile/i.test(ua))return;
   this.keepAlive=setInterval(()=>{
    try{if(typeof AudioLife!=="undefined"&&AudioLife.hushed)return;
     if(speechSynthesis.speaking&&!speechSynthesis.paused){speechSynthesis.pause();speechSynthesis.resume();}}catch(e){}
@@ -5657,7 +5707,7 @@ function closeMagicPanel(){const m=document.getElementById('magicPanel');if(!m)r
 /* ════════ РУКОВОДСТВО ════════ */
 const GUIDE=[
 {title:"Глава 1. Добро пожаловать в «Грань Миров»",body:[
- "Версия Alpha 2.5.1 — живой динамичный мир размером 50000 на 50000 клеток: два с половиной миллиарда клеток, и ни одна не хранится в памяти — всякая выводится из своих координат в тот миг, когда об этой клетке спросили. Полная хроника частей с первой по пятую, объединённая в одном мире. Игра полностью доступна незрячим и слабовидящим.",
+ "Версия Alpha 2.5.2 — живой динамичный мир размером 50000 на 50000 клеток: два с половиной миллиарда клеток, и ни одна не хранится в памяти — всякая выводится из своих координат в тот миг, когда об этой клетке спросили. Полная хроника частей с первой по пятую, объединённая в одном мире. Игра полностью доступна незрячим и слабовидящим.",
  "Ведите пальцем по экрану — игра голосом назовёт то, что вы нашли. Двойное касание — действие. Всё озвучивается и имеет свой звук.",
  "Все кнопки игры собраны в меню действий: свайп тремя пальцами вверх. Инвентарь — три пальца вниз, карта — два пальца влево, журнал дел — два пальца вправо."]},
 {title:"Глава 2. Жесты",body:[
@@ -16942,7 +16992,7 @@ function openEvent(e,c){
  body.innerHTML=`<div class="list-line" tabindex="0" data-speak="${(e.title(c)+". "+e.text(c)).replace(/"/g,"&quot;")}">${e.text(c)}</div>`+
   curEvent.choices.map((ch,i)=>`<button class="item" data-cmd="evt:${i}" data-speak="${String(ch.l).replace(/"/g,"&quot;")}">${ch.l}</button>`).join("");
  openModal("modal-event");
- narrate(`${e.title(c)}. ${e.text(c)} Вариантов: ${curEvent.choices.length}. Свайп — листать, двойное касание — выбрать.`);
+ narrate(`${e.title(c)}. ${e.text(c)} Вариантов: ${curEvent.choices.length}. Свайп — листать, двойное касание — выбрать.`,{cat:"event",pri:1,interrupt:false});
 }
 function resolveEvent(i){
  if(!curEvent){narrate("Событие уже завершено.");return;}
