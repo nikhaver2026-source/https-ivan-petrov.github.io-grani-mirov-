@@ -235,7 +235,10 @@ const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(e!==undefined?' :
   G.deeds.w_sword=60;Tree._n=7;Tree.tick();
   return {played:__played.slice(),said:__said.slice(),
    ждали:[TREE_BY_ID.sword.звук,TREE_GROUP_BY_ID.war.звук]};});
- await page.waitForTimeout(700);
+ /* Голос ветви идёт через 420 мс после записи умения. Ждём его до 2,5 с, а не
+    ровно 700 мс: под нагрузкой (параллельный прогон) таймер страницы
+    запаздывает, и жёсткое ожидание ловило не поломку, а медленную машину. */
+ await page.waitForFunction(ж=>__played.includes(ж),слышно.ждали[1],{timeout:2500}).catch(()=>{});
  const слышно2=await page.evaluate(()=>({played:__played.slice(),said:__said.slice()}));
  check('при подъёме звучит запись самого умения и следом голос его ветви',
   слышно2.played.includes(слышно.ждали[0])&&слышно2.played.includes(слышно.ждали[1]),
