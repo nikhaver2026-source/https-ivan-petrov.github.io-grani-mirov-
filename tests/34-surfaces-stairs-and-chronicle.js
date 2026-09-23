@@ -258,18 +258,22 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   /* Новые разделы на месте. */
   /* surf ушла целиком: её «шаги» были хай-хэтами ударной установки. blow,
      troop, bazaar и dark — тоже: бочки, тарелки, табла, драм-машина и
-     робот-голоса под видом ударов, строя, рынка и голосов из тьмы. */
-  const новые=["arms","spell","relic","folk","mood"];
+     робот-голоса под видом ударов, строя, рынка и голосов из тьмы.
+     Следом ушла и музыка событий: медь войны, арфа чар, реликвии, напевы
+     держав и пады (arms, spell, relic, folk, mood) вместе с нотами inst и
+     orch, джинглами events, голосами-инструментами gods и magic. Их место
+     заняли живые звуки Stendhal и музыка мест из фэнтезийных игр. */
+  const новые=["stendhalfx","stendhal","solarus","valyria","wyrmsun"];
   const нетРаздела=новые.filter(k=>!BANK_CATS[k]);
   const нетРолей=новые.filter(k=>!роли.some(r=>(SOUND_BANK[r].f[0]||"").startsWith(k+"/")));
-  const ударные=["surf","blow","troop","bazaar","dark"].filter(k=>BANK_CATS[k]||роли.some(r=>(SOUND_BANK[r].f[0]||"").startsWith(k+"/")));
+  const ударные=["surf","blow","troop","bazaar","dark","arms","spell","relic","folk","mood","inst","orch","events","gods","magic"].filter(k=>BANK_CATS[k]||роли.some(r=>(SOUND_BANK[r].f[0]||"").startsWith(k+"/")));
   return {ролей:роли.length,безФайлов,безОписания,безРаздела,нетРаздела,нетРолей,ударные,
    всего:soundTotals()};});
  check('у каждой роли банка есть файлы и описание',
   !bank.безФайлов.length&&!bank.безОписания.length,
   {файлы:bank.безФайлов.slice(0,4),описание:bank.безОписания.slice(0,4)});
  check('каждая папка записей названа в энциклопедии',!bank.безРаздела.length,bank.безРаздела);
- check('пять разделов живых записей на месте и не пусты, а ударные разделы ушли совсем',
+ check('пять новых разделов живых записей и музыки мест на месте и не пусты, а ударные и нотные разделы ушли совсем',
   !bank.нетРаздела.length&&!bank.нетРолей.length&&!bank.ударные.length,{разделы:bank.нетРаздела,роли:bank.нетРолей,ударные:bank.ударные});
  check('звуков в игре стало больше восьмисот',bank.всего.всего>800,bank.всего);
 
