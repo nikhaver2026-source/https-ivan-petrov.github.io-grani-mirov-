@@ -63,7 +63,9 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   G.ship=null;
   return out;});
  check('фон подбирается по месту: земля, глубина, город, море, шторм',
-  amb.deep==='deep_4'&&amb.city==='amb_city'&&amb.sea==='sea_open'&&amb.storm==='sea_storm'&&/^(amb_|sea_|port)/.test(amb.land),amb);
+  /* Долгий фон глубины и города — настоящие петли: давление глубины на
+     четвёртом поясе, торговые ряды 0 A.D. в городе. */
+  amb.deep==='stk_deepsea'&&amb.city==='hall_market'&&amb.sea==='sea_open'&&amb.storm==='sea_storm'&&/^(amb_|sea_|hall_port|deep_wind)/.test(amb.land),amb);
 
  // 4. Банк реально проигрывает и подгружает файлы
  const played=await page.evaluate(()=>{

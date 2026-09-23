@@ -3,10 +3,10 @@
 # Правило: всякая НОВАЯ запись в sounds/ — либо без потерь (flac, wav),
 # либо сжата не ниже 320 кбит/с. Набор проверок 152 это стережёт.
 #
-# Перечисленные ниже 1428 записей пришли раньше правила, из свободных
+# Перечисленные ниже 1348 записей пришли раньше правила, из свободных
 # библиотек, и уже сжаты с потерями. Пережать их в 320 нельзя: пережатие не
 # возвращает того, чего в файле нет, — оно лишь втрое раздувает вес. Весь
-# банк весит 459 МБ (больше половины — музыка мест в 320 кбит/с); пережатие
+# банк весит 499 МБ (около половины — музыка мест в 320 кбит/с); пережатие
 # остального подняло бы его к полутора гигабайтам без единого нового
 # слышимого призвука, и игра на телефоне грузилась бы дольше ни за что.
 # Поэтому они остаются как есть и записаны здесь поимённо.
@@ -71,42 +71,6 @@ sounds/ad/ad_trade_02.ogg	71
 sounds/ad/ad_tropic_01.ogg	130
 sounds/ad/ad_wave_rocky_01.ogg	130
 sounds/ad/ad_windleaves_01.ogg	136
-sounds/ambience/amb_cave_01.mp3	128
-sounds/ambience/amb_cave_02.mp3	128
-sounds/ambience/amb_cave_03.mp3	99
-sounds/ambience/amb_cave_04.mp3	127
-sounds/ambience/amb_cave_05.mp3	128
-sounds/ambience/amb_city_01.mp3	128
-sounds/ambience/amb_city_02.mp3	128
-sounds/ambience/amb_city_03.mp3	64
-sounds/ambience/amb_city_04.mp3	128
-sounds/ambience/amb_city_05.mp3	152
-sounds/ambience/amb_desert_01.mp3	128
-sounds/ambience/amb_desert_02.mp3	128
-sounds/ambience/amb_desert_03.mp3	128
-sounds/ambience/amb_forest_01.mp3	128
-sounds/ambience/amb_forest_02.mp3	128
-sounds/ambience/amb_forest_03.mp3	128
-sounds/ambience/amb_forest_04.mp3	108
-sounds/ambience/amb_forest_05.mp3	103
-sounds/ambience/amb_forest_06.mp3	131
-sounds/ambience/amb_forest_07.mp3	92
-sounds/ambience/amb_mountain_01.mp3	106
-sounds/ambience/amb_mountain_02.mp3	128
-sounds/ambience/amb_mountain_03.mp3	128
-sounds/ambience/amb_mountain_04.mp3	102
-sounds/ambience/amb_mountain_05.mp3	128
-sounds/ambience/amb_plains_01.mp3	128
-sounds/ambience/amb_plains_02.mp3	80
-sounds/ambience/amb_plains_03.mp3	128
-sounds/ambience/amb_plains_04.mp3	124
-sounds/ambience/amb_plains_05.mp3	128
-sounds/ambience/amb_plains_06.mp3	128
-sounds/ambience/amb_road_01.mp3	86
-sounds/ambience/amb_road_02.mp3	128
-sounds/ambience/amb_swamp_01.mp3	74
-sounds/ambience/amb_swamp_02.mp3	127
-sounds/ambience/amb_swamp_03.mp3	89
 sounds/arte/arte_book_01.ogg	49
 sounds/arte/arte_cloth_01.ogg	127
 sounds/arte/arte_coins_01.ogg	129
@@ -214,14 +178,6 @@ sounds/deep/deep_stairs_01.ogg	81
 sounds/deep/deep_stone_01.ogg	68
 sounds/deep/deep_wind_01.ogg	168
 sounds/deep/deep_wood_01.ogg	109
-sounds/dungeon/deep_1_01.mp3	95
-sounds/dungeon/deep_2_01.mp3	118
-sounds/dungeon/deep_3_01.mp3	129
-sounds/dungeon/deep_4_01.mp3	100
-sounds/dungeon/deep_5_01.mp3	101
-sounds/dungeon/lair_01.mp3	128
-sounds/dungeon/lair_02.mp3	128
-sounds/dungeon/lair_03.mp3	128
 sounds/es/acuit.ogg	84
 sounds/es/alarm.ogg	90
 sounds/es/archonteleport.ogg	84
@@ -1055,16 +1011,6 @@ sounds/od/zombie_6.ogg	159
 sounds/od/zombie_7.ogg	148
 sounds/od/zombie_8.ogg	132
 sounds/od/zombie_9.ogg	142
-sounds/places/caravan_01.mp3	128
-sounds/places/caravan_02.mp3	84
-sounds/places/clanhall_01.mp3	128
-sounds/places/clanhall_02.mp3	128
-sounds/places/forge_01.mp3	74
-sounds/places/forge_02.mp3	128
-sounds/places/market_01.mp3	128
-sounds/places/market_02.mp3	69
-sounds/places/tavern_01.mp3	128
-sounds/places/tavern_02.mp3	128
 sounds/score/score_battle_01.ogg	129
 sounds/score/score_boss_01.ogg	129
 sounds/score/score_cave_01.ogg	129
@@ -1076,32 +1022,6 @@ sounds/score/score_title_01.ogg	130
 sounds/score/score_town_01.ogg	129
 sounds/score/score_unrest_01.ogg	129
 sounds/score/score_wind_01.ogg	65
-sounds/sea/port_01.mp3	95
-sounds/sea/port_02.mp3	79
-sounds/sea/port_03.mp3	76
-sounds/sea/port_04.mp3	128
-sounds/sea/port_05.mp3	128
-sounds/sea/port_horn_01.mp3	113
-sounds/sea/port_horn_02.mp3	128
-sounds/sea/sea_calm_01.mp3	106
-sounds/sea/sea_calm_02.mp3	118
-sounds/sea/sea_open_01.mp3	130
-sounds/sea/sea_open_02.mp3	89
-sounds/sea/sea_open_03.mp3	95
-sounds/sea/sea_open_04.mp3	89
-sounds/sea/sea_open_05.mp3	134
-sounds/sea/sea_open_06.mp3	128
-sounds/sea/sea_open_07.mp3	129
-sounds/sea/sea_storm_01.mp3	66
-sounds/sea/sea_storm_02.mp3	79
-sounds/sea/sea_storm_03.mp3	63
-sounds/sea/ship_arrive_01.mp3	114
-sounds/sea/ship_arrive_02.mp3	106
-sounds/sea/ship_creak_01.mp3	73
-sounds/sea/ship_creak_02.mp3	67
-sounds/sea/ship_creak_03.mp3	128
-sounds/sea/ship_depart_01.mp3	128
-sounds/sea/ship_depart_02.mp3	86
 sounds/siege/siege_alarm_city_01.ogg	94
 sounds/siege/siege_alarm_raid_01.ogg	145
 sounds/siege/siege_ballista_01.ogg	265

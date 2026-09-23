@@ -3477,8 +3477,7 @@ const BANK_CATS={mg:"🐲 Фэнтезийный мир: твари, чары, �
  od:"🏰 Подземный мир OpenDungeons: голоса владыки, нежить, копка, обвалы",
  es:"💥 Взрывы, гулы и переходы Endless Sky",
  stk:"⛰️ Стихии и дали: гром, вода, птицы и ремесло",
- sea:"🌊 Море, порты и корабли",ambience:"🌍 Земли и погода",dungeon:"🕳️ Подземелья по глубине",
- places:"🏛️ Места и ремёсла",
+ fon:"🌊 Море, земли, места и глубины: фоны из свободных игр",
  fantasy:"🎲 Игровые звуки: монеты, ловушки, заклинания, голоса",steps:"👣 Шаги по земле и воде",
  nat:"🔔 Колокола, дверь, касса лавки, поющее стекло, ворон и пар",
 
@@ -3521,16 +3520,16 @@ const BANK_CATS={mg:"🐲 Фэнтезийный мир: твари, чары, �
    внутри — записи всех своих папок. Каждая папка обязана попасть хотя бы в
    один раздел, и это проверяется набором. */
 const BANK_GROUPS=[
- {n:"Море, порты и корабли",  icon:"🌊", dirs:["sea"]},
- {n:"Земли, погода и день",   icon:"🌍", dirs:["ambience","sky"]},
+ {n:"Море, порты, земли и глубины: фоны из свободных игр",icon:"🌊", dirs:["fon"]},
+ {n:"Земли, погода и день",   icon:"🌍", dirs:["sky"]},
  {n:"Стихии и дали",       icon:"⛰️", dirs:["stk"]},
  {n:"Ремесло, огонь и камень",icon:"🪓", dirs:["mtg"]},
  {n:"Подземный мир и тёмные голоса",icon:"🏰", dirs:["od"]},
  {n:"Взрывы, гулы и переходы",  icon:"💥", dirs:["es"]},
- {n:"Подземелья и тьма",      icon:"🕳️", dirs:["dungeon","deep"]},
+ {n:"Подземелья и тьма",      icon:"🕳️", dirs:["deep"]},
  {n:"Магия, чары и касты",    icon:"🔮", dirs:["cast"]},
  {n:"Боги, храмы и знамения", icon:"🕯️", dirs:["stendhalfx"]},
- {n:"Места, здания и постройки",icon:"🏛️", dirs:["places","hall","nat"]},
+ {n:"Места, здания и постройки",icon:"🏛️", dirs:["hall","nat"]},
  {n:"Шаги и поверхности",     icon:"👣", dirs:["steps","tread"]},
  {n:"Оружие, удары и война",  icon:"⚔️", dirs:["battle","siege"]},
  {n:"Твари, звери и птицы",   icon:"🐉", dirs:["foe","beasts","monsters"]},
@@ -3644,7 +3643,7 @@ function buildEncycCats(){
  const t=soundTotals();
  if(hint)hint.textContent=`Разделов: ${grid.children.length}. Всего звуков: ${t.всего} — ${t.сцены} синтезированных сцен и ${t.записи} живых записей. Касание называет раздел, двойное касание открывает его. Внутри раздела — те же жесты, а кнопка «Ко всем разделам» возвращает обратно.`;
  const cr=document.getElementById("encycCredits");
- if(cr)cr.textContent="Живая фэнтезийная библиотека взята из двух свободных игр. Flare (Free/Libre Action Roleplaying Engine), автор Clint Bellanger и участники проекта, flarerpg.org — артефакты и вещи, подземелья и лестницы, твари, заклинания, голос героя, природа и торговцы. 0 A.D. (Empires Ascendant), автор Wildfire Games, play0ad.com — оружие и удары боя, осада, тревога и вести войны, ремёсла и стройка, звери, людские крики и кличи, шаги по поверхностям, погода и вода, здания, рынок и порт. Обе — под лицензией Creative Commons Attribution-ShareAlike 3.0 (CC BY-SA 3.0): указание авторства обязательно и дано здесь, записи остаются под той же лицензией. Разделы разложены по назначению: поверхности под ногой, удары и оружие, двери, механизмы, звери и голоса, боги и знамения, музыка мест. Музыки в звуках мира нет вовсе: ни нот звукового шрифта, ни живых инструментов, ни джинглов, ни хора — награды, уровень, дела, звания, боги, праздники и меню звучат живыми записями свободных игр. Источники записей: Neo HQ Mystic Sounds, Fantasy Sound Library, Classic Monster Sounds (автор Coucassi), пакет uisfx (CC0) для немелодичных щелчков меню, сэмплы Sonic Pi с freesound.org (общественное достояние, CC0 1.0). Голоса богов у алтаря, знамение, храмовые колокола, огонь жертвенника, клад, тревога засады, призрачные голоса, гомон ярмарки, чары льда и света и щелчки меню — из свободной фэнтезийной игры Stendhal (stendhalgame.org): записи freesound.org и OpenGameArt, исходники без потерь; авторы — Samuel Strågefors, lostchocolatelab, NaturesTemper, vonz, pawsound, vibe_crc, JoelAudio, stephan, Jordan Irwin (AntumDeluge), ALLANZ10D, HorrorAudio, foxen10, dauser, dave.des, Natalie, monotraum, qubodup, SmallQuadruped, -sihiL, martinimeniscus, ericlichtenberg, renatalmar, satrebor и Nicole Marie T; лицензии CC0, CC BY 3.0, CC BY 4.0 и общественное достояние. Школы чар звучат голосами магов, шамана и ковра-самолёта MegaGlest (CC BY-SA 3.0), сигнал засады — тревогой 0 A.D. (CC BY-SA 3.0). Указание авторства обязательно, и оно здесь дано. Вещи, с которыми игрок что-то делает, звучат живыми записями ещё четырёх свободных игр. OpenClonk (The OpenClonk Team and contributors, RedWolf Design GmbH, openclonk.org) — сундуки, петли, каменные ворота, цепи, дерево, камень, металл, стекло, чан, огонь, горн, древние механизмы, гром, дождь, ветер, птицы, лук и щит, отклик раздельного касания и знак сдвинувшегося списка (две записи без потерь, FLAC, 44,1 кГц); лицензия Creative Commons Attribution 3.0 Unported (CC BY 3.0). 0 A.D. (Wildfire Games) — каменные ворота, обрушение, листва, мотыга, треск огня, подворье, порт, торговые ряды, день, реки, волны и голоса под сводами храма (CC BY-SA 3.0). Unknown Horizons (The Unknown Horizons Team, unknown-horizons.org) — каменотёс, кузнец, дровосек, выгон, мельница, часовня, трактир, площадь, склад, корабельный колокол и страница (CC BY-SA 3.0). Lugaru (Wolfire Games, wolfire.com, и OSS Lugaru) — костёр, кусты, пустыня, ветер, шаги, лязг, удары, клинки и звери (CC BY-SA 3.0). Ancient Beast (Freezing Moon и участники проекта, AncientBeast.com) — пошаговая фэнтезийная игра о мифических тварях: у неё взяты отклик взведённого касания, знак оборванной речи, раскрытие панели чар, сдача карт в таверне и знак изученной чары; лицензия художественной и звуковой части Creative Commons Attribution-ShareAlike 4.0 (CC BY-SA 4.0), код игры не используется. Все записи этой поставки переведены в FLAC без потерь. МУЗЫКА МЕСТ — темы одиннадцати свободных фэнтезийных игр, у каждого места своя: Stendhal (композиторы Мэтью Пабло, Александр Желанов, Тэд Миллер, RandomMind, LarsG, Geomancer, Pro Sensory, Jonathan Shaw, Bendzer, Leerie, Angus Macnaughton, Otto Halmén, Memoraphile, Tozan; CC0, CC BY 3.0, CC BY 4.0, OGA-BY 3.0), Solarus Free Resource Pack (Эдуардо Дуэньяс и Diarandor, CC BY-SA 4.0), Valyria Tear (yd, Zander Noriega, Ecrivain, Tom Peter, Alexandr Zhelanov, HorrorPen, Eliot Corley, lasercheese; CC0, CC BY 3.0, CC BY-SA 3.0), Wyrmsun (Марсело Фернандес, CC BY 4.0), Ancient Beast (Moonthief, Tad Miller, Agret Brisignr, Jens Kiilstofte; CC BY-SA 4.0), MegaGlest (Aminos, Margaras, команда MegaGlest; CC BY-SA 3.0), OpenDungeons, Flare, OpenClonk, Evol Online (Ledmitz, Aasif Chaudry, Chicka-Maria, Kevin MacLeod, bartk, Eric Matyas; evolonline.org) и The Mana World (Сэй Муцуки, PeriTune; CC BY 4.0). Под GPL не взято ничего. Эти темы — OGG Vorbis 320 кбит/с с выровненной громкостью. Для каждой папки в sounds лежат CREDITS.md с таблицей исходных файлов и текст лицензии.";
+ if(cr)cr.textContent="Живая фэнтезийная библиотека взята из двух свободных игр. Flare (Free/Libre Action Roleplaying Engine), автор Clint Bellanger и участники проекта, flarerpg.org — артефакты и вещи, подземелья и лестницы, твари, заклинания, голос героя, природа и торговцы. 0 A.D. (Empires Ascendant), автор Wildfire Games, play0ad.com — оружие и удары боя, осада, тревога и вести войны, ремёсла и стройка, звери, людские крики и кличи, шаги по поверхностям, погода и вода, здания, рынок и порт. Обе — под лицензией Creative Commons Attribution-ShareAlike 3.0 (CC BY-SA 3.0): указание авторства обязательно и дано здесь, записи остаются под той же лицензией. Разделы разложены по назначению: поверхности под ногой, удары и оружие, двери, механизмы, звери и голоса, боги и знамения, музыка мест. Музыки в звуках мира нет вовсе: ни нот звукового шрифта, ни живых инструментов, ни джинглов, ни хора — награды, уровень, дела, звания, боги, праздники и меню звучат живыми записями свободных игр. Море, земли, глубина и голоса мест — папка fon: настоящие записи Stendhal (авторы с freesound.org: pawsound, MrAuralization, stewdio2003, PoundSound, Félix Blume, InspectorJ, Department64, Inchadney, polymorpheva, andersmmg, Dave Welsh, Xythe, noahpardo, pyro13djt, tylerandbergsd, Lucish_, j1987, qubodup, AntumDeluge, fryzu82, ceoux, Andune; soundbible.com — Adam Webb; Служба рыбы и дикой природы США; лицензии CC0, CC BY 3.0, CC BY 4.0 и общественное достояние), MegaGlest и 0 A.D. (CC BY-SA 3.0), Valyria Tear (Koertes — CC BY-SA 3.0; Blender Foundation, Benboncan и dobroide — CC BY 3.0); пак Neo HQ Mystic Sounds без лицензии из игры убран. Источники записей: Fantasy Sound Library, Classic Monster Sounds (автор Coucassi), пакет uisfx (CC0) для немелодичных щелчков меню, сэмплы Sonic Pi с freesound.org (общественное достояние, CC0 1.0). Голоса богов у алтаря, знамение, храмовые колокола, огонь жертвенника, клад, тревога засады, призрачные голоса, гомон ярмарки, чары льда и света и щелчки меню — из свободной фэнтезийной игры Stendhal (stendhalgame.org): записи freesound.org и OpenGameArt, исходники без потерь; авторы — Samuel Strågefors, lostchocolatelab, NaturesTemper, vonz, pawsound, vibe_crc, JoelAudio, stephan, Jordan Irwin (AntumDeluge), ALLANZ10D, HorrorAudio, foxen10, dauser, dave.des, Natalie, monotraum, qubodup, SmallQuadruped, -sihiL, martinimeniscus, ericlichtenberg, renatalmar, satrebor и Nicole Marie T; лицензии CC0, CC BY 3.0, CC BY 4.0 и общественное достояние. Школы чар звучат голосами магов, шамана и ковра-самолёта MegaGlest (CC BY-SA 3.0), сигнал засады — тревогой 0 A.D. (CC BY-SA 3.0). Указание авторства обязательно, и оно здесь дано. Вещи, с которыми игрок что-то делает, звучат живыми записями ещё четырёх свободных игр. OpenClonk (The OpenClonk Team and contributors, RedWolf Design GmbH, openclonk.org) — сундуки, петли, каменные ворота, цепи, дерево, камень, металл, стекло, чан, огонь, горн, древние механизмы, гром, дождь, ветер, птицы, лук и щит, отклик раздельного касания и знак сдвинувшегося списка (две записи без потерь, FLAC, 44,1 кГц); лицензия Creative Commons Attribution 3.0 Unported (CC BY 3.0). 0 A.D. (Wildfire Games) — каменные ворота, обрушение, листва, мотыга, треск огня, подворье, порт, торговые ряды, день, реки, волны и голоса под сводами храма (CC BY-SA 3.0). Unknown Horizons (The Unknown Horizons Team, unknown-horizons.org) — каменотёс, кузнец, дровосек, выгон, мельница, часовня, трактир, площадь, склад, корабельный колокол и страница (CC BY-SA 3.0). Lugaru (Wolfire Games, wolfire.com, и OSS Lugaru) — костёр, кусты, пустыня, ветер, шаги, лязг, удары, клинки и звери (CC BY-SA 3.0). Ancient Beast (Freezing Moon и участники проекта, AncientBeast.com) — пошаговая фэнтезийная игра о мифических тварях: у неё взяты отклик взведённого касания, знак оборванной речи, раскрытие панели чар, сдача карт в таверне и знак изученной чары; лицензия художественной и звуковой части Creative Commons Attribution-ShareAlike 4.0 (CC BY-SA 4.0), код игры не используется. Все записи этой поставки переведены в FLAC без потерь. МУЗЫКА МЕСТ — темы одиннадцати свободных фэнтезийных игр, у каждого места своя: Stendhal (композиторы Мэтью Пабло, Александр Желанов, Тэд Миллер, RandomMind, LarsG, Geomancer, Pro Sensory, Jonathan Shaw, Bendzer, Leerie, Angus Macnaughton, Otto Halmén, Memoraphile, Tozan; CC0, CC BY 3.0, CC BY 4.0, OGA-BY 3.0), Solarus Free Resource Pack (Эдуардо Дуэньяс и Diarandor, CC BY-SA 4.0), Valyria Tear (yd, Zander Noriega, Ecrivain, Tom Peter, Alexandr Zhelanov, HorrorPen, Eliot Corley, lasercheese; CC0, CC BY 3.0, CC BY-SA 3.0), Wyrmsun (Марсело Фернандес, CC BY 4.0), Ancient Beast (Moonthief, Tad Miller, Agret Brisignr, Jens Kiilstofte; CC BY-SA 4.0), MegaGlest (Aminos, Margaras, команда MegaGlest; CC BY-SA 3.0), OpenDungeons, Flare, OpenClonk, Evol Online (Ledmitz, Aasif Chaudry, Chicka-Maria, Kevin MacLeod, bartk, Eric Matyas; evolonline.org) и The Mana World (Сэй Муцуки, PeriTune; CC BY 4.0). Под GPL не взято ничего. Эти темы — OGG Vorbis 320 кбит/с с выровненной громкостью. Для каждой папки в sounds лежат CREDITS.md с таблицей исходных файлов и текст лицензии.";
 }
 
 /* ── Второй уровень: звуки одного раздела ── */
@@ -5957,7 +5956,7 @@ const GUIDE=[
 {title:"Глава 5. Полное руководство по звукам",body:[
  "Кроме синтезированных звуков у игры есть звуковой банк — коллекция записей, разложенная по ролям: море и корабли, земли и погода, глубина подземелий, школы магии, голоса двенадцати богов, события и места. Записи лежат в папке sounds рядом с игрой и подгружаются по мере надобности; если папки нет, игра целиком работает на синтезированных звуках. Весь банк можно послушать в энциклопедии звуков.",
  "Звуки в игре двух родов. Синтезированные сцены строит сам браузер: они работают всегда, даже без интернета и без папки со звуками. Живые записи лежат в папке sounds рядом с игрой и подгружаются по мере надобности; если папки нет, игра целиком переходит на синтез и ничего не ломается.",
- "Энциклопедия звуков устроена в два уровня, потому что звуков стало слишком много для одного списка. Сначала игра называет разделы: стихии и погода, птицы и звери, голоса чудовищ, именные чудовища, оружие и бой, ресурсы под ногами, голоса жителей, постройки и места, предметы и ремесло, а за ними разделы живых записей — море и корабли, земли и погода, подземелья по глубине, школы магии, боги и знамения, события, места и ремёсла, игровые звуки, шаги, живые записи мира, музыка мест из фэнтезийных игр, голоса чудовищ и звуковые маяки построек. Свайп ведёт по разделам, двойное касание открывает выбранный, кнопка «Ко всем разделам» возвращает обратно. Так до нужного звука доходишь за десяток свайпов, а не за две сотни.",
+ "Энциклопедия звуков устроена в два уровня, потому что звуков стало слишком много для одного списка. Сначала игра называет разделы: стихии и погода, птицы и звери, голоса чудовищ, именные чудовища, оружие и бой, ресурсы под ногами, голоса жителей, постройки и места, предметы и ремесло, а за ними разделы живых записей — море, порты, земли и глубины, погода и день, подземелья и тьма, магия и касты, боги, храмы и знамения, места и постройки, шаги, оружие и война, твари и звери, люди и торг, находки, ремёсла, игровые звуки, музыка мест из фэнтезийных игр и звуковые маяки построек. Свайп ведёт по разделам, двойное касание открывает выбранный, кнопка «Ко всем разделам» возвращает обратно. Так до нужного звука доходишь за десяток свайпов, а не за две сотни.",
  "Точное число звуков игра называет сама при открытии энциклопедии — оно растёт с каждым пополнением, и держать его в тексте руководства значило бы врать при первом же обновлении.",
  "Именные монстры (18): волк, гоблин-налётчик, тролль, огр-громила, рунный голем, молодой дракон, ледяной василиск, дикий виверн, стенающая банши, медведь-старейшина, песчаный червь-исполин, разгневанный энт, прибрежный кракен, дорожный разбойник, паук-тенетник, песчаный змей, гарпия-охотница, призрак пустоши — у каждого свой рык, вой, шипение или клич.",
  "Оружие (4): меч, кинжал, посох и лук — у каждого свой звук взмаха и попадания. Кинжал звучит быстро и легко, посох — тяжело и с магическим призвуком, лук — натяжением и срывом тетивы.",
@@ -6161,7 +6160,7 @@ const GUIDE=[
  "У SuperTuxKart лицензии ПОФАЙЛОВЫЕ и разные: проект ведёт опись по каждой записи отдельно, с именем автора и ссылкой на первоисточник. Здесь встречаются CC BY-SA 3.0, CC BY-SA 4.0, CC BY 3.0, CC0 и общественное достояние. Взято только то, что этими лицензиями и разрешено; записи под GPL из их набора не брались нарочно — с лицензией CC BY-SA остальной библиотеки они не сходятся.",
  "Авторы записей SuperTuxKart поимённо: Claude Werner под именем bollen, Marianne «Auria» Gagnon, Mike Koenig, The Audio Monkey, Daniel Simion и BlastwaveFx, Adam Newns, Leonard «VKProduktion» Graf, James «swiftoid» Swift, Magne «Arthur-D» Djupvik, Fritz Schlüter, ZAQraven, aust_paul, Alcappuccino, mpfeiffer, snottyboi, Tomlija, dADDoiT, kerri, Stephan, 7by7, Natalie, legoluft. Полный список с указанием, кто что сделал, лежит в файле CREDITS.md рядом с записями.",
  "Что означает эта лицензия. Записи можно свободно слушать, копировать, распространять и изменять, в том числе в коммерческих целях, при двух условиях: назвать автора и оставить изменённые записи под той же лицензией. Оба условия соблюдены. Полный текст лицензии лежит рядом с записями в файле LICENSE-CC-BY-SA-3.0.txt, а его краткое изложение — на creativecommons.org/licenses/by-sa/3.0/.",
- "Остальные источники, названные раньше: одиннадцать записей Sonic Pi с freesound.org — колокола, дверь, касса лавки, поющее стекло, ворон и пар (общественное достояние, CC0 1.0); ударные, драм-машина и хор этого набора из игры убраны, как и прежние живые инструменты и оркестр звукового шрифта: все ноты заменены записями из свободных игр. Пакет uisfx (CC0), Neo HQ Mystic Sounds, Fantasy Sound Library и Classic Monster Sounds (автор Coucassi).",
+ "Остальные источники, названные раньше: одиннадцать записей Sonic Pi с freesound.org — колокола, дверь, касса лавки, поющее стекло, ворон и пар (общественное достояние, CC0 1.0); ударные, драм-машина и хор этого набора из игры убраны, как и прежние живые инструменты и оркестр звукового шрифта: все ноты заменены записями из свободных игр. Пакет uisfx (CC0), Fantasy Sound Library и Classic Monster Sounds (автор Coucassi). Пак Neo HQ Mystic Sounds убран целиком: лицензии у него нет, а море, земли, глубина и голоса мест теперь звучат настоящими записями Stendhal, MegaGlest, 0 A.D. и Valyria Tear — полная опись в sounds/fon/CREDITS.md.",
  "Всё, что не покрыто записями, игра строит сама: сто двадцать синтезированных сцен работают всегда, даже если папку со звуками не скачали.",
  "Три библиотеки добавились последними. Записи Luanti (Minetest Game) — девяносто семь: шаги по девяти поверхностям, двери и калитки, огонь, лава, стекло, металл, копка и взрыв; лицензия CC BY-SA 3.0, авторы — коллектив Minetest Game, полный список в sounds/mtg/CREDITS.md.",
  "Записи OpenDungeons — сто восемь: голоса владыки подземелья, хрипы нежити, копка породы, обвалы, лечебные чары, звон ссыпаемого золота, удар клинка по клинку и три темы. Лицензии CC BY-SA 3.0, CC BY 3.0 и CC0; авторы — Svenskmand, eugeneloza, remaxim, artisticdude, DoKashiteru, jalastram, Pal Zoltan Illes, Matthew Pablo, yd. Список — sounds/od/CREDITS.md.",
@@ -9778,40 +9777,41 @@ function renderTrade(){
 
 
 /* ════════════════════════════════════════════════════════════════════════
-   ЗВУКОВОЙ БАНК: 134 записи, разложенные по ролям
-   Файлы лежат рядом с игрой, в папке sounds, и разобраны по смыслу:
-   sea — море, порты и корабли; ambience — земли; dungeon — глубина;
-   magic — школы заклинаний; gods — боги, алтари и знамения;
-   events — победа, поражение, находки и тревога; places — рынок, кузница,
-   таверна, зал клана, обоз.
+   ЗВУКОВОЙ БАНК: записи, разложенные по ролям
+   Файлы лежат рядом с игрой, в папке sounds, и разобраны по смыслу и по
+   источнику. Первым банком был пак Neo HQ Mystic Sounds — море, земли,
+   глубина, чары, боги, события и места; он ушёл целиком: лицензии у пака
+   нет, а записи оказались мистическими подкладками, а не звуком мира.
+   Море, земли, глубина и голоса мест теперь в папке fon — настоящие
+   записи из Stendhal, MegaGlest, 0 A.D. и Valyria Tear.
    Записи подгружаются по требованию: игра берёт только то, что звучит
    сейчас. Если папки рядом нет (игру открыли одним файлом), банк молча
    отключается, и всё продолжает звучать прежними синтезированными
    маяками и эффектами — ни одна функция игры от этого не ломается.
    ════════════════════════════════════════════════════════════════════════ */
 const SOUND_BANK={
- sea_open:{f:["sea/sea_open_01.mp3","sea/sea_open_02.mp3","sea/sea_open_03.mp3","sea/sea_open_04.mp3","sea/sea_open_05.mp3","sea/sea_open_06.mp3","sea/sea_open_07.mp3"],d:"Открытое море: ход волны и ветер над водой"},
- sea_storm:{f:["sea/sea_storm_01.mp3","sea/sea_storm_02.mp3","sea/sea_storm_03.mp3"],d:"Шторм: тяжёлая вода и рвущий ветер"},
- sea_calm:{f:["sea/sea_calm_01.mp3","sea/sea_calm_02.mp3"],d:"Штиль: ровная зыбь и скрип снастей"},
- port:{f:["sea/port_01.mp3","sea/port_02.mp3","sea/port_03.mp3","sea/port_04.mp3","sea/port_05.mp3"],d:"Порт: причалы, снасти, голоса на пирсе"},
- ship_creak:{f:["sea/ship_creak_01.mp3","sea/ship_creak_02.mp3","sea/ship_creak_03.mp3"],d:"Корабельный корпус: скрип дерева и снастей"},
- ship_depart:{f:["sea/ship_depart_01.mp3","sea/ship_depart_02.mp3"],d:"Отплытие: рог, шкоты и удар волны о борт"},
- ship_arrive:{f:["sea/ship_arrive_01.mp3","sea/ship_arrive_02.mp3"],d:"Швартовка: канаты, сходни, гомон причала"},
- port_horn:{f:["sea/port_horn_01.mp3","sea/port_horn_02.mp3"],d:"Портовый рог: низкий протяжный сигнал"},
- amb_forest:{f:["ambience/amb_forest_01.mp3","ambience/amb_forest_02.mp3","ambience/amb_forest_03.mp3","ambience/amb_forest_04.mp3","ambience/amb_forest_05.mp3","ambience/amb_forest_06.mp3","ambience/amb_forest_07.mp3"],d:"Лес: кроны, шорохи, дальние птицы"},
- amb_mountain:{f:["ambience/amb_mountain_01.mp3","ambience/amb_mountain_02.mp3","ambience/amb_mountain_03.mp3","ambience/amb_mountain_04.mp3","ambience/amb_mountain_05.mp3"],d:"Горы: свист ветра в ущельях"},
- amb_desert:{f:["ambience/amb_desert_01.mp3","ambience/amb_desert_02.mp3","ambience/amb_desert_03.mp3"],d:"Пустыня: песок под ветром, дальний зной"},
- amb_swamp:{f:["ambience/amb_swamp_01.mp3","ambience/amb_swamp_02.mp3","ambience/amb_swamp_03.mp3"],d:"Топи: булькающая вода и стрёкот"},
- amb_plains:{f:["ambience/amb_plains_01.mp3","ambience/amb_plains_02.mp3","ambience/amb_plains_03.mp3","ambience/amb_plains_04.mp3","ambience/amb_plains_05.mp3","ambience/amb_plains_06.mp3"],d:"Равнина: травы и открытый ветер"},
- amb_road:{f:["ambience/amb_road_01.mp3","ambience/amb_road_02.mp3"],d:"Дорога: утоптанный тракт, дальние повозки"},
- amb_city:{f:["ambience/amb_city_01.mp3","ambience/amb_city_02.mp3","ambience/amb_city_03.mp3","ambience/amb_city_04.mp3","ambience/amb_city_05.mp3"],d:"Город: гул улиц за стенами"},
- amb_cave:{f:["ambience/amb_cave_01.mp3","ambience/amb_cave_02.mp3","ambience/amb_cave_03.mp3","ambience/amb_cave_04.mp3","ambience/amb_cave_05.mp3"],d:"Пещеры: сырость, эхо, дальние капли"},
- deep_1:{f:["dungeon/deep_1_01.mp3"],d:"Первый уровень подземелья"},
- deep_2:{f:["dungeon/deep_2_01.mp3"],d:"Второй уровень: камень отвечает глуше"},
- deep_3:{f:["dungeon/deep_3_01.mp3"],d:"Третий уровень: гул в основании горы"},
- deep_4:{f:["dungeon/deep_4_01.mp3"],d:"Четвёртый уровень: что-то дышит в темноте"},
- deep_5:{f:["dungeon/deep_5_01.mp3"],d:"Пятый уровень: корни мира"},
- lair:{f:["dungeon/lair_01.mp3","dungeon/lair_02.mp3","dungeon/lair_03.mp3"],d:"Логово: рык и возня в темноте"},
+ sea_open:{f:["fon/fon_sea_open_01.flac"],d:"Открытое море: вода плещет о борт (Stendhal)"},
+ sea_storm:{f:["fon/fon_sea_storm_01.flac","fon/fon_sea_storm_02.flac","fon/fon_sea_storm_03.flac"],d:"Шторм: ветер, ливень и гроза (Stendhal, MegaGlest)"},
+ sea_calm:{f:["fon/fon_sea_calm_01.flac"],d:"Тихий берег: лёгкий ветер над водой (Stendhal)"},
+ port:{f:["fon/fon_port_01.flac","fon/fon_port_02.flac"],d:"Порт: снасти, вода и склад у причала (0 A.D.)"},
+ ship_creak:{f:["fon/fon_ship_creak_01.flac"],d:"Корабельный корпус: долгий скрип дерева (Stendhal)"},
+ ship_depart:{f:["fon/fon_ship_depart_01.flac","fon/fon_ship_depart_02.flac"],d:"Отплытие: вода у борта, корабль трогается (0 A.D.)"},
+ ship_arrive:{f:["fon/fon_ship_arrive_01.flac","fon/fon_ship_arrive_02.flac"],d:"Швартовка: корабль подходит к причалу (0 A.D.)"},
+ port_horn:{f:["fon/fon_port_horn_01.flac"],d:"Портовый гудок: паром у пристани (Stendhal)"},
+ amb_forest:{f:["fon/fon_amb_forest_01.ogg","fon/fon_amb_forest_02.ogg","fon/fon_amb_forest_03.ogg"],d:"Лес днём: березняк, чаща и птичья песня (MegaGlest, Valyria Tear)"},
+ amb_mountain:{f:["fon/fon_amb_mountain_01.flac","fon/fon_amb_mountain_02.ogg","fon/fon_amb_mountain_03.ogg"],d:"Горы: ветер на высоте (Stendhal, Valyria Tear)"},
+ amb_desert:{f:["fon/fon_amb_desert_01.ogg","fon/fon_amb_desert_02.ogg"],d:"Пустыня днём и ночью (MegaGlest)"},
+ amb_swamp:{f:["fon/fon_amb_swamp_01.ogg","fon/fon_amb_swamp_02.ogg","fon/fon_amb_swamp_03.ogg"],d:"Топи: лягушки, сверчки и сырая ночь (MegaGlest, Valyria Tear)"},
+ amb_plains:{f:["fon/fon_amb_plains_01.ogg","fon/fon_amb_plains_02.ogg"],d:"Равнина: день в поле и весенний луг (0 A.D., MegaGlest)"},
+ amb_road:{f:["fon/fon_amb_road_01.ogg"],d:"Тракт: день у дороги (0 A.D.)"},
+ amb_city:{f:["fon/fon_amb_city_01.flac","fon/fon_amb_city_02.flac"],d:"Город: площадь и гул горожан (0 A.D.)"},
+ amb_cave:{f:["fon/fon_amb_cave_01.flac","fon/fon_amb_cave_02.flac"],d:"Пещеры: вода в каменной чаше, летучая мышь (Stendhal)"},
+ deep_1:{f:["fon/fon_deep_1_01.flac","fon/fon_deep_1_02.flac"],d:"Первый уровень подземелья: летучие мыши в подвале (Stendhal)"},
+ deep_2:{f:["fon/fon_deep_2_01.flac"],d:"Второй уровень: лопата в плотном грунте (Stendhal)"},
+ deep_3:{f:["fon/fon_deep_3_01.flac","fon/fon_deep_3_02.flac"],d:"Третий уровень: гул в основании горы (Stendhal)"},
+ deep_4:{f:["fon/fon_deep_4_01.flac","fon/fon_deep_4_02.flac"],d:"Четвёртый уровень: что-то дышит в темноте (Stendhal)"},
+ deep_5:{f:["fon/fon_deep_5_01.ogg","fon/fon_deep_5_02.flac"],d:"Пятый уровень: голоса из-под корней мира (Stendhal)"},
+ lair:{f:["fon/fon_lair_01.flac","fon/fon_lair_02.flac","fon/fon_lair_03.flac"],d:"Логово зверя: рык и ворчание (Stendhal)"},
  spell_cast:{f:["mg/mg_spell_cast_01.flac","mg/mg_spell_cast_02.flac","mg/mg_spell_cast_03.flac","mg/mg_spell_cast_04.flac","mg/mg_spell_cast_05.flac","mg/mg_spell_cast_06.flac"],d:"Сотворение заклинания: удар архимага"},
  spell_fire:{f:["mg/mg_spell_fire_01.flac","mg/mg_spell_fire_02.flac"],d:"Огненная школа: чара послушника"},
  spell_ice:{f:["stendhalfx/st_ice_break.flac"],d:"Ледяная школа: звонкий скол"},
@@ -9826,11 +9826,11 @@ const SOUND_BANK={
  omen:{f:["stendhalfx/st_omen_raven.flac","stendhalfx/st_omen_wings.flac"],d:"Знамение покровителя: крик ворона и взмах больших крыльев"},
  treasure:{f:["stendhalfx/st_coins.flac"],d:"Сундук с добычей: пригоршня монет"},
  danger:{f:["stendhalfx/st_danger_orc.flac","stendhalfx/st_danger_growl.flac","stendhalfx/st_danger_troll.flac","siege/siege_alarm_ambush_01.flac","siege/siege_alarm_wild_01.flac"],d:"Тревога: оскал и рык твари, сигнал засады"},
- market:{f:["places/market_01.mp3","places/market_02.mp3"],d:"Рынок и торговые ряды"},
- forge:{f:["places/forge_01.mp3","places/forge_02.mp3"],d:"Кузница и горн"},
- tavern:{f:["places/tavern_01.mp3","places/tavern_02.mp3"],d:"Таверна: очаг и разговоры"},
- clanhall:{f:["places/clanhall_01.mp3","places/clanhall_02.mp3"],d:"Зал клана"},
- caravan:{f:["places/caravan_01.mp3","places/caravan_02.mp3"],d:"Обоз на дороге"},
+ market:{f:["fon/fon_market_01.flac"],d:"Рынок: звон выручки (Stendhal)"},
+ forge:{f:["fon/fon_forge_01.flac","fon/fon_forge_02.flac"],d:"Кузница: точильный камень и металл (Stendhal)"},
+ tavern:{f:["fon/fon_tavern_01.flac","fon/fon_tavern_02.flac","fon/fon_tavern_03.flac","fon/fon_tavern_04.flac"],d:"Таверна: смех, пробка и икота (Stendhal)"},
+ clanhall:{f:["fon/fon_clanhall_01.flac","fon/fon_clanhall_02.flac"],d:"Зал клана: казарма и оплот (0 A.D.)"},
+ caravan:{f:["fon/fon_caravan_01.flac","fon/fon_caravan_02.flac"],d:"Обоз: фырканье и ржание вьючных лошадей (Stendhal)"},
  /* ── Натуральные записи (CC0, sounds/nat): удары, шаги, двери, колокола,
     гулы подземелья, магия и голоса мира. Живой звук вместо синтеза. ── */
  magic_woosh:{f:["nat/magic_woosh_01.flac"],d:"Заклинание: тёмный воздушный ход"},
@@ -11407,7 +11407,7 @@ const BEACON_SAMPLE={
  /* маяки живого мира и подземелья: стук, перезвон и отрыжка драм-машины
     ушли — стена звучит камнем под рукой, колодец водой, кузня кузней,
     перекрёсток колоколом, указатель деревом, бродячая тварь рыком */
- dungeon:"dungeon/deep_3_01.mp3", torch:"ad/ad_fire_crackle_01.ogg",
+ dungeon:"deep/deep_wind_01.ogg", torch:"ad/ad_fire_crackle_01.ogg",
  guard:"oc/oc_step_soft_01.ogg", roamer:"lug/lug_growl_01.ogg",
  artifact:"nat/artifact_hum_01.flac", crossroads:"uh/uh_bell_01.ogg",
  signpost:"oc/oc_wood_hit_01.ogg", trader_deep:"nat/shop_till_01.flac",
@@ -11491,18 +11491,25 @@ function godVoice(id,{gain=0.8,pan=0,maxSec=6}={}){
   return !!Bank.play(role,{seed:PANTHEON.findIndex(x=>x.id===id),gain,maxSec});
  }catch(_){return false;}}
 
+/* Фон глубины по поясам: капель, сквозняк, гул толщи, давление, бездна. */
+const DEPTH_LOOP=["deep_drip","deep_wind","stk_dark","stk_deepsea","amb_abyss"];
 /* Роль фона для места, где находится игрок. */
 function bankAmbientRole(){
  try{
+  /* Долгий фон под землёй, в городе, у пещеры и в порту — настоящие петли:
+     капель и сквозняк подземелья (Flare), гул толщи и давление глубины
+     (SuperTuxKart), бездна (MegaGlest), торговые ряды и причалы (0 A.D.).
+     Роли deep_1…deep_5, amb_city, amb_cave и port остались голосами этих
+     мест: короткие записи, которые звучат поверх фона. */
   if(G.place){
-   if(G.place.depth>0)return "deep_"+Math.min(5,Math.max(1,G.place.depth));
-   if(G.place.kind==="city")return "amb_city";
+   if(G.place.depth>0)return DEPTH_LOOP[Math.min(5,Math.max(1,G.place.depth))-1];
+   if(G.place.kind==="city")return "hall_market";
    return "cave_deep";}
   if(G.ship)return G.ship.storm?"sea_storm":"sea_open";
   const c=cellContent(G.x,G.y);
-  if(c.structure&&c.structure.type==="port")return "port";
+  if(c.structure&&c.structure.type==="port")return "hall_port";
   return {forest:"amb_forest",mountains:"amb_mountain",desert:"amb_desert",swamp:"amb_swamp",
-   plains:"amb_plains",road:"amb_road",coast:"sea_calm",cave:"amb_cave"}[c.terrain[0]]||"amb_plains";
+   plains:"amb_plains",road:"amb_road",coast:"sea_calm",cave:"deep_wind"}[c.terrain[0]]||"amb_plains";
  }catch(_){return "amb_plains";}
 }
 /* Фон обновляется при каждом переходе: земля, город, глубина, палуба корабля. */
