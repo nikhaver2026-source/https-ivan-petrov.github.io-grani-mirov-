@@ -3848,7 +3848,7 @@ const runState={active:false,dir:null,iv:null,hold:null,pendingDir:null};
    ощупыванием или началом свайпа. */
 let exploreHold=null;
 function cancelExploreHold(){if(exploreHold){clearTimeout(exploreHold);exploreHold=null;}}
-const touchGate={lastUiTap:0,lastUiEl:null,suppressClickUntil:0};
+const touchGate={lastUiTap:0,lastUiEl:null,suppressClickUntil:0,lastTouch:0};
 /* ── РАЗДЕЛЬНОЕ КАСАНИЕ: КАК В TALKBACK И VOICEOVER ──
    У обоих чтецов экрана есть жест, которым незрячие пользуются каждый день:
    палец лежит на пункте и слушает его имя, а второй палец коротко стукает
@@ -4875,7 +4875,7 @@ function handleSingleTap(el,x,y,началось){
    код помечал жест как «сдвинутый» и отменял тап. Именно поэтому касание тремя пальцами
    (вынуть или убрать оружие), двумя (меню действий) и четырьмя (заклинания) срабатывало
    через раз или не срабатывало вовсе. */
-document.addEventListener('touchstart',e=>{safeFn(()=>AE.ensure());const n=e.touches.length;
+document.addEventListener('touchstart',e=>{touchGate.lastTouch=Date.now();safeFn(()=>AE.ensure());const n=e.touches.length;
  if(n>4){resetGesture();return;}
  const t=e.touches[0];if(!t)return;
  /* Бегунок ползунка браузер двигает сам, по касанию, и никакой CSS его не
@@ -4994,7 +4994,8 @@ document.addEventListener('touchmove',e=>{
    касания, да ещё и дважды. Теперь любое короткое касание — тап, любое длинное — свайп,
    и оба варианта гасят родной клик через preventDefault. */
 document.addEventListener('touchend',e=>{
- if(!gesture.maxCount)return;
+ touchGate.lastTouch=Date.now();
+ if(!gesture.maxCount){if(e.cancelable&&!settings.fastTap)e.preventDefault();return;}
  if(e.touches.length>0){
   gesture.count=e.touches.length;
   /* Раздельное касание выполняется в тот самый миг, когда снялся второй
@@ -5157,17 +5158,33 @@ document.addEventListener('touchend',e=>{
     activateElement(взведено);
     return;}
    /* Ощупывание: текущим становится пункт, на котором палец оторвался. Список
-      при этом не двигаем — палец на нём и так стоит. */
-   if(pendingCursor&&layer.contains(pendingCursor)){
-    touchGate.lastUiTap=Date.now();touchGate.lastUiEl=pendingCursor;
-    setCursor(pendingCursor,false,онНаЭкране(pendingCursor)?false:undefined);}
+      при этом не двигаем — палец на нём и так стоит.
+      ДВОЙНОЕ КАСАНИЕ ОН НЕ ВЗВОДИТ. Раньше отрыв пальца после ощупывания
+      считался первым касанием, и ОДНО касание следом выполняло пункт: игрок
+      наводил палец, слышал имя, стукал раз — и пункт срабатывал. Как в
+      TalkBack и VoiceOver: наведение выбирает, выполняют только два касания. */
+   if(pendingCursor&&layer.contains(pendingCursor))
+    setCursor(pendingCursor,false,онНаЭкране(pendingCursor)?false:undefined);
+   touchGate.lastUiTap=0;touchGate.lastUiEl=null;
    pendingCursor=null;
    return;}
-  /* Палец, полежавший на пункте, его уже назвал — пункт и становится текущим,
-     а следующее касание где угодно его выполнит. */
-  if(holdSpoke&&pendingCursor&&layer.contains(pendingCursor)&&pendingCursor!==uiCursor){
-   setCursor(pendingCursor,false,онНаЭкране(pendingCursor)?false:undefined);
-   touchGate.lastUiTap=Date.now();touchGate.lastUiEl=pendingCursor;
+  /* Палец, полежавший на пункте, его уже назвал — пункт и становится текущим.
+     Это ощупывание, а не касание: оно НЕ взводит двойное касание, и одно
+     касание следом ничего не выполнит — выполнят два. Исключение одно:
+     неспешное второе касание по тому самому пункту, что взвело первое, — это
+     всё ещё двойное касание, просто палец задержался. */
+  if(holdSpoke){
+   const взведено=touchGate.lastUiEl;
+   if(взведено&&!settings.fastTap&&layer.contains(взведено)&&!взведено.disabled
+      &&g.t-touchGate.lastUiTap<safeFn(()=>gestTapMs(),800)
+      &&(pendingCursor===взведено||g.ui===взведено)){
+    touchGate.lastUiTap=0;touchGate.lastUiEl=null;pendingCursor=null;
+    if(uiCursor!==взведено)setCursor(взведено,false,false);
+    activateElement(взведено);
+    return;}
+   if(pendingCursor&&layer.contains(pendingCursor)&&pendingCursor!==uiCursor)
+    setCursor(pendingCursor,false,онНаЭкране(pendingCursor)?false:undefined);
+   touchGate.lastUiTap=0;touchGate.lastUiEl=null;
    pendingCursor=null;
    return;}
   pendingCursor=null;
@@ -5176,7 +5193,10 @@ document.addEventListener('touchend',e=>{
   if(tap)handleSingleTap(g.ui||null,t.clientX,t.clientY,g.t);
   return;
  }
- if(!gameActive())return;
+ /* Касание, которое игра не разбирает, всё равно гасится: иначе браузер
+    досылает по следу пальца свой клик, и кнопка под пальцем срабатывала от
+    ОДНОГО касания — в бою и на экранах до входа в игру. */
+ if(!gameActive()){if(tap)e.preventDefault();return;}
  if(G.weaponDrawn&&swipe){e.preventDefault();safeFn(()=>weaponSwing(dir));return;}
  if(G.inCombat){
   /* Бой не открывает окна, и свайп в нём — шаг по полю схватки: отойти,
@@ -5184,6 +5204,7 @@ document.addEventListener('touchend',e=>{
   if(swipe){e.preventDefault();
    if(G.combat&&G.combat.arena){safeFn(()=>Arena.step(dir));return;}
    safeFn(()=>narrate(G.weaponDrawn?'Взмах не распознан. Проведите пальцем чётче в сторону удара.':'Оружие в ножнах. Двойное касание тремя пальцами — вынуть оружие, затем свайп в сторону — удар.'));}
+  else if(tap)e.preventDefault();
   return;
  }
  if(swipe){e.preventDefault();safeFn(()=>move(dir));return;}
@@ -5196,6 +5217,16 @@ document.addEventListener('click',e=>{
     иначе игрок, только что подтвердивший что-то касанием, на протяжении почти
     секунды впустую жал Enter. */
  if(e.detail>0&&Date.now()<touchGate.suppressClickUntil){e.preventDefault();e.stopPropagation();return;}
+ /* ── КЛИК ПО СЛЕДУ ПАЛЬЦА НЕ ВЫПОЛНЯЕТ НИЧЕГО ──
+    На сенсорном экране пункт выполняет только двойное касание, и выполняет
+    его сама игра (activateElement: команда напрямую или el.click() с detail
+    равным нулю). Клик, который браузер досылает после касания, — это одно
+    касание, и пропустить его значит выполнить пункт от одного касания. Он
+    гасится всегда, когда палец только что был на экране; мышь и клавиатура
+    (касаний рядом нет) работают как прежде. Быстрая активация — нарочное
+    исключение, её игрок включает сам. */
+ if(e.detail>0&&!settings.fastTap&&(e.pointerType==='touch'||Date.now()-(touchGate.lastTouch||0)<1500)){
+  e.preventDefault();e.stopPropagation();return;}
  const t=e.target?.closest?.('[data-cmd]');if(!t||t.disabled)return;
  const parts=(t.dataset.cmd||'').split(':');const fn=parts[0]&&CMD[parts[0]];
  if(!fn)return;

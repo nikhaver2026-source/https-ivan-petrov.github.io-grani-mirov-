@@ -170,6 +170,69 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   дубль.сложность==="harsh"&&дубль.акт.length===1,дубль);
  await page.evaluate(()=>{setDifficulty("normal");while(activeLayer())closeTopUI();});
 
+ /* ── Навёл палец, услышал имя, стукнул ОДИН раз — ничего ──
+    Жалоба игрока: «навожусь на элемент, касаюсь один раз — и он
+    активируется». Отрыв пальца после ощупывания взводил двойное касание, и
+    одно касание следом выполняло пункт. Теперь наведение только выбирает. */
+ await clean();
+ const навёл=await page.evaluate(()=>{
+  CMD.settings("diff");resetCursor();
+  const el=[...cursorItems(activeLayer())].find(x=>x.dataset&&x.dataset.cmd==="setdiff:harsh");
+  el.scrollIntoView({block:"center"});const r=el.getBoundingClientRect();
+  settings.difficulty="normal";window.__acts=[];window.__cmds=[];
+  return {x:Math.round(r.x+r.width/2),y:Math.round(r.y+r.height/2)};});
+ await tap(навёл.x,навёл.y,700);          /* палец полежал — ощупывание */
+ await tap(навёл.x,навёл.y);              /* и сразу одно касание */
+ await page.waitForTimeout(300);
+ const послеНаведения=await page.evaluate(()=>({сложность:settings.difficulty,акт:window.__acts.slice(),
+  кмд:window.__cmds.slice(),курсор:uiCursor&&uiCursor.dataset.cmd}));
+ check('навёл палец и стукнул один раз — пункт не выполняется, но остаётся выбранным',
+  послеНаведения.сложность==="normal"&&!послеНаведения.акт.length&&!послеНаведения.кмд.length
+  &&послеНаведения.курсор==="setdiff:harsh",послеНаведения);
+ await tap(навёл.x,навёл.y);              /* второе касание — теперь это двойное */
+ await page.waitForTimeout(300);
+ const второе=await page.evaluate(()=>({сложность:settings.difficulty,акт:window.__acts.slice()}));
+ check('а вторым касанием — выполняется: наведение, затем два касания',
+  второе.сложность==="harsh"&&второе.акт.length===1,второе);
+ await page.evaluate(()=>{setDifficulty("normal");while(activeLayer())closeTopUI();});
+
+ /* То же при скольжении пальцем по списку: отрыв после ведения — выбор, не взвод. */
+ await clean();
+ const вёл=await page.evaluate(()=>{
+  CMD.settings("diff");resetCursor();
+  const items=[...cursorItems(activeLayer())];
+  const el=items.find(x=>x.dataset&&x.dataset.cmd==="setdiff:harsh");
+  el.scrollIntoView({block:"center"});const r=el.getBoundingClientRect();
+  settings.difficulty="normal";window.__acts=[];window.__cmds=[];
+  return {x:Math.round(r.x+r.width/2),y:Math.round(r.y+r.height/2)};});
+ await cdp.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[{x:вёл.x,y:вёл.y-24,id:0}]});
+ for(let i=1;i<=6;i++){await cdp.send('Input.dispatchTouchEvent',{type:'touchMove',touchPoints:[{x:вёл.x,y:вёл.y-24+i*4,id:0}]});await page.waitForTimeout(60);}
+ await cdp.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[{x:вёл.x,y:вёл.y,id:0}]});
+ await page.waitForTimeout(120);
+ await tap(вёл.x,вёл.y);
+ await page.waitForTimeout(300);
+ const послеВедения=await page.evaluate(()=>({сложность:settings.difficulty,акт:window.__acts.slice(),кмд:window.__cmds.slice()}));
+ check('провёл пальцем по пункту и стукнул один раз — ничего не выполняется',
+  послеВедения.сложность==="normal"&&!послеВедения.акт.length&&!послеВедения.кмд.length,послеВедения);
+ await page.evaluate(()=>{setDifficulty("normal");while(activeLayer())closeTopUI();});
+
+ /* Клик, который браузер досылает по следу пальца, — тоже одно касание.
+    Он гасится в любом месте: в окне, на поле, в бою. */
+ await clean();
+ const призрак=await page.evaluate(()=>{
+  CMD.settings("diff");resetCursor();settings.difficulty="normal";window.__acts=[];window.__cmds=[];
+  const el=[...cursorItems(activeLayer())].find(x=>x.dataset&&x.dataset.cmd==="setdiff:harsh");
+  touchGate.lastTouch=Date.now();touchGate.suppressClickUntil=0;
+  el.dispatchEvent(new MouseEvent("click",{bubbles:true,cancelable:true,detail:1}));
+  const послеКасания={сложность:settings.difficulty,кмд:window.__cmds.slice()};
+  /* мышь без касаний рядом работает как прежде */
+  touchGate.lastTouch=0;
+  el.dispatchEvent(new MouseEvent("click",{bubbles:true,cancelable:true,detail:1}));
+  return {послеКасания,мышью:settings.difficulty};});
+ check('клик браузера по следу пальца ничего не выполняет, а клик мышью — выполняет',
+  призрак.послеКасания.сложность==="normal"&&!призрак.послеКасания.кмд.length&&призрак.мышью==="harsh",призрак);
+ await page.evaluate(()=>{setDifficulty("normal");while(activeLayer())closeTopUI();});
+
  /* ── Двойное касание по пустому месту выполняет текущий пункт ── */
  await clean();
  const пусто=await page.evaluate(()=>{
