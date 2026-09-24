@@ -200,7 +200,7 @@ h3{color:var(--acc2);margin:14px 0 6px;font-size:1.05rem;}
  <label class="opt">🌐 Язык голоса <select id="setVoiceLang" aria-label="Язык голоса"><option value="ru" selected>Русский</option><option value="all">Все языки</option></select></label>
  <label class="opt">🎤 Голос <select id="setVoice" aria-label="Выбор голоса"></select></label>
  <p class="hint" id="voiceHint">Список — то, что установлено на этом устройстве.</p>
- <div class="row"><button type="button" id="btnVoiceRefresh">🔄 Перечитать голоса устройства</button></div>
+ <div class="row"><button type="button" id="btnVoiceList" data-cmd="voicelist">🎤 Все голоса телефона — списком</button><button type="button" id="btnVoiceRefresh">🔄 Перечитать голоса устройства</button></div>
  <label class="opt">🗣️ Скорость озвучки <input type="range" id="setRate" min="0.6" max="6" step="0.2" data-tap-step="0.2" value="5"><span id="vRate">5.0×</span></label>
  <p class="hint">Шкала от 0,6 до 6,0 шагом в две десятых, по умолчанию пять. Ползунок отвечает тем самым темпом, который выбран: «Раз, два, три» — это проба, а не подсказка. Дойдя до шести, шкала возвращается к началу, так что до медленного темпа добираться недалеко.</p>
  <label class="opt">🎚️ Высота голоса <input type="range" id="setPitch" min="50" max="200" step="5" data-tap-step="5" value="100"><span id="vPitch">1,0</span></label>
@@ -329,6 +329,10 @@ h3{color:var(--acc2);margin:14px 0 6px;font-size:1.05rem;}
 </div></div>
 
 <!-- ЗЕЛЬЯ -->
+<div class="modal" id="modal-voices" role="dialog" aria-modal="true" aria-label="Голоса телефона" hidden><div class="sheet">
+ <header><h2>🎤 Голоса телефона</h2><button type="button" data-cmd="close">✖️ Закрыть</button></header>
+ <div id="voiceListBody"></div>
+</div></div>
 <div class="modal" id="modal-potions" role="dialog" aria-modal="true" aria-label="Зелья" hidden><div class="sheet">
  <header><h2>⚗️ Зелья</h2><button type="button" data-cmd="close">✖️ Закрыть</button></header>
  <div id="potBody"></div>
@@ -823,7 +827,7 @@ if(!settings.rateFast){
    нечего: он прежнего и не слышал, — ему отметка ставится молча.
    NEWS_V поднимается, когда есть о чём сказать; кто уже слышал, второй раз
    не услышит. */
-const NEWS_V=11;
+const NEWS_V=12;
 if(!Object.keys(savedSet).length){settings.newsV=NEWS_V;saveSettings();}
 else if((Number(settings.newsV)||0)<NEWS_V){
  /* Слышавший прошлые новости слышит только новые: пересказывать ему то,
@@ -853,11 +857,13 @@ else if((Number(settings.newsV)||0)<NEWS_V){
  const десятое=было<10?"Действие с сундуком, статуей, рычагом, дверью и жителем теперь — двойное касание одним пальцем по полю. "+
   "Свайп двумя пальцами вниз только закрывает окна; кто хочет по-старому, повесит на него «взаимодействие» в настройках жестов. "+
   "Тайный ход теперь ведёт внутрь: двойное касание рядом с открытым ходом переносит вас в тайную палату, находку берут, дойдя до неё, а выбираются шагом в стену с лаза. ":"";
- const новое="Одно касание больше никогда ничего не выполняет — ни в меню, ни в разговоре, ни в окнах: оно только называет пункт, выполняет двойное. "+
+ const одиннадцатое=было<11?"Одно касание больше никогда ничего не выполняет — ни в меню, ни в разговоре, ни в окнах: оно только называет пункт, выполняет двойное. "+
   "В разговоре сначала звучит ваша реплика, потом ответ жителя — они больше не накладываются. "+
   "Жители говорят по-разному: у каждого ремесла свои рассказы, о своём народе каждый говорит своими словами и в новый раз — о другом. "+
-  "Все голоса — только по-русски, а встроенный голос рассказчика теперь лежит в самой игре и работает без сети. ";
- setTimeout(()=>safeFn(()=>narrate(прежнее+третье+четвёртое+пятое+шестое+седьмое+восьмое+девятое+десятое+новое,{pri:1,interrupt:false})),3000);
+  "Все голоса — только по-русски, а встроенный голос рассказчика теперь лежит в самой игре и работает без сети. ":"";
+ const новое="Любой голос, установленный в телефоне, теперь выбирается списком: настройки, «Синтезатор речи», «Все голоса телефона — списком». "+
+  "Каждый голос — пункт, двойное касание выбирает, и он сразу говорит сам; улучшенные голоса iPhone больше не путаются с обычными. ";
+ setTimeout(()=>safeFn(()=>narrate(прежнее+третье+четвёртое+пятое+шестое+седьмое+восьмое+девятое+десятое+одиннадцатое+новое,{pri:1,interrupt:false})),3000);
 }
 if(!settings.subMode)settings.subMode=settings.subtitles===0?"off":"sounds";
 settings.subtitles=settings.subMode==="off"?0:1;
@@ -953,15 +959,76 @@ const Speech={voice:null,keepAlive:null,
     false) каждую фразу гоняют на чужой сервер: полсекунды задержки на
     каждое слово меню, а без сети — молчание. Для игры, где речью идёт
     всё, второй род негоден, и по умолчанию он отсеян. */
+ /* ── КАКОЙ ИМЕННО ГОЛОС ──
+    Голос выбирался по имени, а имя не единственно. На iPhone обычный и
+    улучшенный голос часто зовутся одинаково («Милена» и «Милена»), и выбор
+    второго всякий раз возвращал первый; на Android то же бывает у голосов
+    разных движков. Единственно только voiceURI — по нему и выбираем; имя
+    остаётся запасным ключом для настроек, сохранённых прежней версией. */
+ voiceKey(v){try{return v?String(v.voiceURI||((v.name||"")+"|"+(v.lang||""))):"";}catch(_){return "";}},
+ /* Все голоса устройства: браузерные и — в приложении для Android — те, что
+    отдаёт родной мост (GraniTTS.getVoices, если он его умеет). Одинаковые
+    записи браузер иногда повторяет дважды: такие склеиваются. */
+ allVoices(){
+  const out=[],был=new Set();
+  const взять=v=>{const k=this.voiceKey(v);if(!k||был.has(k))return;был.add(k);out.push(v);};
+  try{(speechSynthesis.getVoices()||[]).forEach(взять);}catch(_){}
+  try{if(window.GraniTTS&&typeof window.GraniTTS.getVoices==="function"){
+   const r=window.GraniTTS.getVoices();const a=typeof r==="string"?JSON.parse(r||"[]"):r;
+   (Array.isArray(a)?a:[]).forEach(x=>{if(!x||!(x.id||x.name))return;
+    взять({name:String(x.name||x.id),lang:String(x.lang||""),localService:x.local!==false&&x.localService!==false,
+     voiceURI:"native:"+String(x.id||x.name),default:!!x.default,native:true,engine:String(x.engine||"")});});}}catch(_){}
+  return out;},
+ voiceFind(key,vs){
+  if(!key)return null;vs=vs||this.allVoices();
+  return vs.find(v=>this.voiceKey(v)===key)||vs.find(v=>v.name===key)||null;},
+ /* Подпись голоса для слуха: имя, язык по-русски и то, чем голос отличается
+    от соседа с тем же именем, — улучшенный, премиум, по умолчанию, онлайн. */
+ voiceLabel(v){
+  if(!v)return "";
+  let язык=v.lang||"";
+  try{if(язык&&typeof Intl!=="undefined"&&Intl.DisplayNames)язык=new Intl.DisplayNames(["ru"],{type:"language"}).of(язык)||язык;}catch(_){}
+  const ид=String(v.voiceURI||"")+" "+String(v.name||"");
+  const черты=[];
+  if(/premium|премиум/i.test(ид))черты.push("премиум");
+  else if(/enhanced|улучш|высок(ое|ого) качеств/i.test(ид))черты.push("улучшенный");
+  else if(/compact|компакт/i.test(ид))черты.push("компактный");
+  if(v.native)черты.push(v.engine?"движок "+v.engine:"системный движок");
+  if(v.default)черты.push("по умолчанию");
+  черты.push(v.localService===false?"онлайн":"без сети");
+  return `${v.name}${язык?` — ${язык}`:""}, ${черты.join(", ")}`;},
  voices(){
   try{
-   let vs=(speechSynthesis.getVoices()||[]).slice();
+   let vs=this.allVoices();
    if(settings.voiceLocal!==0)vs=vs.filter(v=>v.localService!==false);
    if((settings.voiceLang||"ru")==="ru"){
     const ru=vs.filter(v=>/^ru/i.test(v.lang||""));
     if(ru.length)vs=ru;}
-   return vs;
+   /* Порядок для слуха: русские первыми, среди них — лучшие по качеству и
+      голос системы по умолчанию; дальше — по языку и имени. */
+   const вес=v=>(/^ru/i.test(v.lang||"")?0:10)+(/premium/i.test(v.voiceURI||"")?0:/enhanced/i.test(v.voiceURI||"")?1:2)+(v.default?0:0.5);
+   return vs.map((v,i)=>[v,i]).sort((a,b)=>(вес(a[0])-вес(b[0]))||String(a[0].lang||"").localeCompare(String(b[0].lang||""))||(a[1]-b[1])).map(x=>x[0]);
   }catch(_){return [];}},
+ /* Выбор голоса игроком — одна дверь для списка, выпадающего поля и
+    проверок. Выбранный голос устройства — это и выбор синтезатора: если
+    говорил встроенный голос (по выбору или сам, потому что при запуске
+    список голосов был ещё пуст) или ElevenLabs, говорить начинает телефон.
+    Иначе игрок выбирал голос — и продолжал слышать прежний. */
+ pickVoice(key,o){
+  o=o||{};
+  const v=this.voiceFind(key);
+  if(!v)return false;
+  settings.voice=this.voiceKey(v);this.voice=v.native?null:v;this._nativeVoice=v.native?v:null;
+  const былДвижок=settings.ttsEngine;
+  if(settings.ttsEngine!=="device")settings.ttsEngine="device";
+  this._graniAuto=false;this.adapter=null;this._kind=null;
+  try{if(v.native&&window.GraniTTS&&typeof window.GraniTTS.setVoice==="function")window.GraniTTS.setVoice(String(v.voiceURI).slice(7));}catch(_){}
+  saveSettings();
+  try{const e=document.getElementById("setTtsEngine");if(e)e.value="device";}catch(_){}
+  try{const sel=document.getElementById("setVoice");if(sel&&[...sel.options].some(x=>x.value===settings.voice))sel.value=settings.voice;}catch(_){}
+  if(o.say!==false)this.say(`Голос: ${this.voiceLabel(v)}.${былДвижок!=="device"?" Говорит синтезатор телефона.":""} Здравствуйте, путник.`,
+   {interrupt:true,pri:1,user:true,cat:"ui"});
+  return true;},
  fillVoices(){
   let vs=[];
   try{vs=this.voices();}catch(_){}
@@ -969,11 +1036,16 @@ const Speech={voice:null,keepAlive:null,
   if(sel){
    sel.innerHTML="";
    if(!vs.length){const o=document.createElement("option");o.value="";o.textContent="Голосов не найдено";sel.appendChild(o);}
-   vs.forEach(v=>{const o=document.createElement("option");o.value=v.name;
-    o.textContent=`${v.name} (${v.lang}${v.localService===false?", онлайн":""})`;sel.appendChild(o);});}
+   vs.forEach(v=>{const o=document.createElement("option");o.value=this.voiceKey(v);
+    o.textContent=this.voiceLabel(v);sel.appendChild(o);});}
   const ru=vs.find(v=>/^ru/i.test(v.lang||""));
-  this.voice=(settings.voice&&vs.find(v=>v.name===settings.voice))||ru||vs[0]||null;
-  if(this.voice&&sel)sel.value=this.voice.name;
+  /* Сохранённый выбор ищется по ключу среди ВСЕХ голосов, а не только
+     показанных: снятый фильтр языка не должен молча менять голос. */
+  const свой=settings.voice?this.voiceFind(settings.voice):null;
+  const выбран=свой||ru||vs[0]||null;
+  this.voice=выбран&&!выбран.native?выбран:null;this._nativeVoice=выбран&&выбран.native?выбран:null;
+  if(свой&&settings.voice!==this.voiceKey(свой)){settings.voice=this.voiceKey(свой);safeFn(()=>saveSettings());}
+  if(выбран&&sel)sel.value=this.voiceKey(выбран);
   const h=document.getElementById("voiceHint");
   if(h)h.textContent=vs.length
    ?`Найдено голосов: ${vs.length}. ${settings.voiceLocal!==0?"Показаны только те, что говорят без сети.":"Показаны все, включая онлайновые."}`
@@ -1019,7 +1091,12 @@ const Speech={voice:null,keepAlive:null,
      settings.subMode="all";saveSettings();}
    }catch(_){}
    return;}
-  const pick=()=>{try{this.fillVoices();}catch(e){try{console.warn('[Speech.pick]',e);}catch(_){}}};
+  const pick=()=>{try{this.fillVoices();}catch(e){try{console.warn('[Speech.pick]',e);}catch(_){}}
+   /* Встроенный голос включился сам, потому что русского голоса не было, —
+      а теперь он нашёлся (голоса пришли позже или игрок поставил голос в
+      системе): говорит телефон, как и стоит в настройках. */
+   try{if(this._graniAuto&&settings.ttsEngine==="device"&&this.allVoices().some(v=>/^ru/i.test(v.lang||""))){
+    this._graniAuto=false;this.adapter=null;this._kind=null;}}catch(_){}};
   pick();speechSynthesis.onvoiceschanged=pick;
   /* Выбран встроенный голос — модель начинает грузиться сразу, а не на
      первой фразе: к первому слову игры она, скорее всего, уже в памяти. */
@@ -1068,7 +1145,12 @@ const Speech={voice:null,keepAlive:null,
   this.adapter=null;this._kind=род;
   if(род==="eleven")return this.adapter=this._elevenAdapter();
   if(род==="grani")return this.adapter=this._graniAdapter();
-  try{if(window.GraniTTS&&typeof window.GraniTTS.speak==="function")return this.adapter=this._nativeAdapter();}catch(_){}
+  /* В приложении для Android речь идёт родным мостом, и он говорит голосом
+     системы по умолчанию. Если игрок выбрал голос, который показывает сам
+     WebView, — говорит браузерный синтезатор этим голосом, иначе выбор не
+     доходил бы до уха. Голос, отданный мостом, мост и произносит. */
+  const свойВеб=!!(this.voice&&settings.voice&&this.voiceKey(this.voice)===settings.voice&&"speechSynthesis" in window);
+  try{if(!свойВеб&&window.GraniTTS&&typeof window.GraniTTS.speak==="function")return this.adapter=this._nativeAdapter();}catch(_){}
   if("speechSynthesis" in window)return this.adapter=this._webAdapter();
   return null;},
  /* ── ВСТРОЕННЫЙ ГОЛОС ИГРЫ ──
@@ -1099,11 +1181,19 @@ const Speech={voice:null,keepAlive:null,
   }catch(_){g.state="failed";}
   return g;},
  _graniAuto:false,
+ _graniTries:0,
  _graniAutoCheck(){
   if(settings.ttsEngine!=="device"||this._graniAuto)return false;
   if(typeof Worker!=="function"||location.protocol==="file:")return false;
-  let ru=0;try{ru=(speechSynthesis.getVoices()||[]).filter(v=>/^ru/i.test(v.lang||"")).length;}catch(_){}
+  let всех=0,ru=0;
+  try{const vs=this.allVoices();всех=vs.length;ru=vs.filter(v=>/^ru/i.test(v.lang||"")).length;}catch(_){}
   if(ru>0)return false;
+  /* Пустой список — ещё не ответ: Chrome на Android отдаёт голоса через
+     несколько секунд после запуска. Прежде игра на пустом списке сразу
+     включала встроенный голос, и выбранный потом голос телефона молча не
+     звучал. Ждём ещё дважды; нет голосов и тогда — значит, их нет. */
+  if(!всех&&this._graniTries<2){this._graniTries++;
+   setTimeout(()=>{try{this._graniAutoCheck();}catch(_){}},4000);return false;}
   this._graniAuto=true;this.adapter=null;this._kind=null;
   this.graniStart();
   this.say("На устройстве нет русского голоса. Игра включает свой встроенный голос: он скачается один раз, около шестидесяти мегабайт. Выбрать другой — в настройках, раздел «Синтезатор речи».",{pri:1,interrupt:false});
@@ -1268,6 +1358,7 @@ const Speech={voice:null,keepAlive:null,
  _nativeAdapter(){const self=this;const cbs={};
   window.GraniTTSDone=id=>{const c=cbs[id];delete cbs[id];if(c&&c.onend)c.onend();};
   window.GraniTTSError=id=>{const c=cbs[id];delete cbs[id];if(c&&c.onerror)c.onerror();};
+  try{if(self._nativeVoice&&typeof window.GraniTTS.setVoice==="function")window.GraniTTS.setVoice(String(self._nativeVoice.voiceURI).slice(7));}catch(_){}
   return {name:"native",
    speak(text,o){const id=String(++self.seq);cbs[id]=o;
     try{window.GraniTTS.speak(text,+o.rate,+o.volume,id);if(o.onstart)setTimeout(o.onstart,0);return true;}catch(e){delete cbs[id];return false;}},
@@ -13441,6 +13532,35 @@ function drinkPotion(i){
   return true;
  }catch(e){return false;}}
 function openPotions(){openModal("modal-potions");renderPotions();return true;}
+/* Окно голосов телефона. держать — ключ голоса или команда пункта, на
+   котором оставить выбор после перерисовки. */
+const VOICE_HELP_ANDROID="На Android браузер Chrome показывает по одному голосу на язык — того движка речи, что выбран в телефоне по умолчанию. "+
+ "Чтобы говорить голосом другого установленного движка — RHVoice, Vocalizer, Acapela, Samsung, — выберите его в настройках телефона: "+
+ "Специальные возможности, Синтез речи, Предпочитаемый движок, там же — голос и язык; потом вернитесь сюда и перечитайте голоса. Firefox показывает каждый голос движка отдельно.";
+const VOICE_HELP_IOS="На iPhone и iPad новые голоса, в том числе улучшенные и премиум, ставятся в Настройках: Универсальный доступ, Устная речь, Голоса, Русский. "+
+ "Скачанный голос появляется в этом списке после перезапуска браузера. Голоса Siri браузеру недоступны — это ограничение Apple.";
+function renderVoiceList(держать,кнопка){
+ const box=document.getElementById("voiceListBody");if(!box)return 0;
+ const q=t=>String(t).replace(/&/g,"&amp;").replace(/"/g,"&quot;").replace(/</g,"&lt;");
+ const vs=safeFn(()=>Speech.voices(),[]);const все=safeFn(()=>Speech.allVoices(),[]);
+ Speech._listed=vs.map(v=>Speech.voiceKey(v));
+ const тек=settings.voice||"";
+ const говорит=settings.ttsEngine==="grani"||Speech._graniAuto?"встроенный голос игры":settings.ttsEngine==="eleven"?"голос ElevenLabs":"синтезатор телефона";
+ const скрыто=все.length-vs.length;
+ let html=`<div class="list-line" tabindex="0" data-speak="${q(`Голосов в телефоне: ${все.length}, в списке: ${vs.length}${скрыто>0?`, скрыто фильтрами: ${скрыто}`:""}. Сейчас говорит ${говорит}.`)}">🎤 Голосов в телефоне: ${все.length}, в списке: ${vs.length}. Говорит ${q(говорит)}.</div>`;
+ html+=vs.map((v,i)=>{const k=Speech.voiceKey(v),мой=k===тек&&settings.ttsEngine==="device"&&!Speech._graniAuto;
+  const имя=Speech.voiceLabel(v);
+  return `<button type="button" class="item" data-cmd="voicepick:${i}" data-voice-key="${q(k)}" data-speak="${q(`${имя}.${мой?" Сейчас выбран.":""}`)}">${мой?"✅":"🗣️"} ${q(имя)}</button>`;}).join("");
+ if(!vs.length)html+=`<div class="list-line" tabindex="0" data-speak="Ни одного голоса не нашлось.">Ни одного голоса не нашлось.</div>`;
+ const ru=(settings.voiceLang||"ru")==="ru",свои=settings.voiceLocal!==0;
+ html+=`<button type="button" class="item" data-cmd="voicelistlang" data-speak="${ru?"Показать голоса всех языков.":"Показать только русские голоса."}">🌐 ${ru?"Показать голоса всех языков":"Только русские голоса"}</button>`;
+ html+=`<button type="button" class="item" data-cmd="voicelistlocal" data-speak="${свои?"Показать и онлайн-голоса: они отвечают с задержкой и молчат без сети.":"Показать только голоса, что говорят без сети."}">📴 ${свои?"Показать и онлайн-голоса":"Только голоса без сети"}</button>`;
+ html+=`<div class="list-line" tabindex="0" data-speak="${q(VOICE_HELP_ANDROID)}">🤖 ${q(VOICE_HELP_ANDROID)}</div>`;
+ html+=`<div class="list-line" tabindex="0" data-speak="${q(VOICE_HELP_IOS)}">🍏 ${q(VOICE_HELP_IOS)}</div>`;
+ box.innerHTML=html;
+ const на=держать?box.querySelector(`[data-voice-key="${держать.replace(/["\\]/g,"\\$&")}"]`):кнопка?box.querySelector(`[data-cmd="${кнопка}"]`):null;
+ if(на)safeFn(()=>{setCursorQuiet();setCursor(на,false);});
+ return vs.length;}
 function renderPotions(){
  const box=document.getElementById("potBody");if(!box)return;
  const ур=safeFn(()=>mastLevel("alchemy"),0);
@@ -35775,6 +35895,27 @@ const CMD={
     должен помнить про кнопку. Но «само» незрячему игроку не слышно — он
     меняет голос, закрывает окно и не знает, запомнилось ли. Кнопка ничего
     нового не делает: она записывает ещё раз и ОТВЕЧАЕТ, что записано. */
+ /* ── ГОЛОСА ТЕЛЕФОНА СПИСКОМ ──
+    Выпадающее поле голосов перебиралось двойным касанием по одному, по
+    кругу: при тридцати голосах всех языков до нужного было не дойти. Здесь
+    каждый голос — пункт: свайп называет его, двойное касание выбирает, и он
+    тут же говорит сам — слышно, чем он отличается от соседа. */
+ voicelist(){openModal("modal-voices");safeFn(()=>renderVoiceList());
+  const n=(Speech._listed||[]).length;
+  narrate(n?`Голосов в списке: ${n}. Свайп — следующий, двойное касание — выбрать и послушать.`
+   :"Голосов не нашлось. Внизу списка — как поставить голос в телефоне.",{interrupt:false,pri:2,cat:"ui"});},
+ voicepick(i){const k=(Speech._listed||[])[+i];
+  if(!k||!Speech.pickVoice(k)){narrate("Этого голоса больше нет в телефоне. Список перечитан.",{interrupt:true});}
+  safeFn(()=>renderVoiceList(k));},
+ voicelistlang(){settings.voiceLang=(settings.voiceLang||"ru")==="ru"?"all":"ru";saveSettings();
+  safeFn(()=>{const g=document.getElementById("setVoiceLang");if(g)g.value=settings.voiceLang;});
+  safeFn(()=>Speech.fillVoices());safeFn(()=>renderVoiceList(null,"voicelistlang"));
+  narrate(`${settings.voiceLang==="ru"?"Только русские голоса":"Голоса всех языков"}: ${(Speech._listed||[]).length}.`,{interrupt:true});},
+ voicelistlocal(){settings.voiceLocal=settings.voiceLocal!==0?0:1;saveSettings();
+  safeFn(()=>{const l=document.getElementById("setVoiceLocal");if(l)l.checked=settings.voiceLocal!==0;});
+  safeFn(()=>Speech.fillVoices());safeFn(()=>renderVoiceList(null,"voicelistlocal"));
+  narrate(settings.voiceLocal!==0?`Только голоса без сети: ${(Speech._listed||[]).length}.`
+   :`Показаны и онлайн-голоса: ${(Speech._listed||[]).length}. Они отвечают с задержкой и молчат без сети.`,{interrupt:true});},
  setsave(){
   /* store.set возвращает правду: в приватном окне и при переполненном
      хранилище запись не проходит, и обещать «сохранено» нельзя. */
@@ -50858,9 +50999,7 @@ function bindSettings(){const $=id=>document.getElementById(id);
   $("vAmb").textContent=e.target.value+"%";AE.applyVolumes();});
  $("setUiVol").addEventListener("input",e=>{settings.uiVol=e.target.value/100;saveSettings();
   $("vUi").textContent=e.target.value+"%";safeFn(()=>UI.nat("ui_select",0.5));});
- $("setVoice").addEventListener("change",e=>{settings.voice=e.target.value;saveSettings();
-  const vs=speechSynthesis.getVoices();Speech.voice=vs.find(v=>v.name===settings.voice)||null;
-  narrate("Голос изменён. Здравствуйте, путник.");});
+ $("setVoice").addEventListener("change",e=>{safeFn(()=>Speech.pickVoice(e.target.value));});
  $("btnSpeechSample").addEventListener("click",()=>narrate("Это образец озвучивания. Грань Миров говорит с вами."));
  /* ── РАЗДЕЛ «СИНТЕЗАТОР РЕЧИ» ── */
  {const e=$("setTtsEngine");if(e){e.value=settings.ttsEngine||"device";
