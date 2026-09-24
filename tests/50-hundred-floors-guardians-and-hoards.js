@@ -253,7 +253,7 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   const растут=цены.every((c,i)=>i===0||c>цены[i-1]);
   /* Припас казны — не грибы из ящика: слитки и самоцветы имеют цену. */
   const торгуются=(RES_BASE["слиток"]||0)>50&&(RES_BASE["самоцвет"]||0)>50&&
-   !!RESICON["слиток"]&&!!RESICON["самоцвет"];
+   ("слиток" in RESICON)&&("самоцвет" in RESICON);
   G.trove={};
   return {ряд,взято:имена.length,повторов,описаны,растут,торгуются,
    всего:VAULT_TREASURES.length};});

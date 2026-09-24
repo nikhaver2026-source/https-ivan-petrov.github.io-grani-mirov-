@@ -26,7 +26,7 @@ const sleep=ms=>new Promise(r=>setTimeout(r,ms));
  const goods=await page.evaluate(()=>{
   const fish=FISH.map(f=>f.n);
   return {fish:fish.length,
-   icons:fish.filter(n=>!RESICON[n]),
+   icons:fish.filter(n=>!(n in RESICON)),
    base:fish.filter(n=>!RES_BASE[n]),
    priced:fish.map(n=>marketPrice(n,0,G.day)).every(p=>p>0),
    inTrade:fish.filter(n=>TRADE_GOODS.includes(n)).length,

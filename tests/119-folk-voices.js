@@ -35,7 +35,7 @@ const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(e!==undefined?' :
  /* ── 3. титры рядом с записями ── */
  const files=fs.existsSync(VOICE)?fs.readdirSync(VOICE):[];
  const mp3=files.filter(f=>f.endsWith('.mp3'));
- check('папка sounds/voice со ста девяноста тремя записями',mp3.length===193,mp3.length);
+ check('папка sounds/voice с тремястами шестьюдесятью одной записью',mp3.length===361,mp3.length);
  const cr=fs.existsSync(path.join(VOICE,'CREDITS.md'))?fs.readFileSync(path.join(VOICE,'CREDITS.md'),'utf8'):'';
  check('CREDITS.md называет ElevenLabs и условия',
   /ElevenLabs/.test(cr)&&/Terms of Service/.test(cr)&&/eleven_multilingual_v2/.test(cr));
@@ -86,10 +86,10 @@ const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(e!==undefined?' :
    безРемесла:ремёсла.filter(p=>!VOICE_PROFS[p]),
    безХода:DLG_MOVES.filter(m=>VOICE_HERO.indexOf(m.id)<0).map(m=>m.id),
    ветвь:(()=>{const b=Object.keys(RACE_BRANCH)[0];return b?{ветка:b,есть:!!Folk.раса(b)}:{ветка:null,есть:true};})()};});
- check('сто двенадцать народов, и у каждого свой файл',
-  полнота.счёт.народов===112&&полнота.всего===112&&полнота.безГолоса.length===0
-  &&полнота.лишние.length===0&&полнота.файлыРазные===112,полнота);
- check('все сто двенадцать народов говорят своей строкой',полнота.счёт.своих===112,полнота.счёт.своих);
+ check('двести восемьдесят рас и народов, и у каждого свой файл',
+  полнота.счёт.народов===280&&полнота.всего===280&&полнота.безГолоса.length===0
+  &&полнота.лишние.length===0&&полнота.файлыРазные===280,полнота);
+ check('все двести восемьдесят рас и народов говорят своей строкой',полнота.счёт.своих===280,полнота.счёт.своих);
  check('у народа есть регистр и разумный темп',
   полнота.регистры.join(",")==="ж,м"&&полнота.темпы,полнота.регистры);
  check('сорок шесть ремёсел, и ни одно не без слова',
@@ -113,7 +113,7 @@ const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(e!==undefined?' :
   return out;});
  const нетНаДиске=пути.filter(p=>!fs.existsSync(path.join(ROOT,'sounds',p)));
  check('каждая запись речи лежит на диске',
-  пути.length===193&&нетНаДиске.length===0,нетНаДиске.slice(0,5));
+  пути.length===361&&нетНаДиске.length===0,нетНаДиске.slice(0,5));
  const лишниеФайлы=mp3.filter(f=>пути.indexOf('voice/'+f)<0);
  check('в папке нет записей, которые игра не зовёт',лишниеФайлы.length===0,лишниеФайлы.slice(0,5));
  const читается=await page.evaluate(async(список)=>{

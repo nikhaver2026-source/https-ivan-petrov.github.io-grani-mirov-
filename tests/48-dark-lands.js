@@ -46,7 +46,7 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
    if(!r.черта||r.черта.length<10)беды.push(r.id+": нет черты");
    if(!(r.rank>=0&&r.rank<=4))беды.push(r.id+": ранг вне меры");});
   DARK_MONSTERS.forEach(m=>{if(!m.n||!m.snd||!(m.min>0))беды.push("тварь "+m.id);});
-  DARK_RES.forEach(r=>{if(!RESICON[r.name])беды.push("ресурс без значка: "+r.name);});
+  DARK_RES.forEach(r=>{if(!(r.name in RESICON))беды.push("ресурс без значка: "+r.name);});
   Object.keys(DARK_PLACES).forEach(k=>{
    if(!DARK_PLACE_NAME[k])беды.push("место без имён: "+k);
    if(!PLACE_KIND[k])беды.push("место без вида: "+k);
@@ -180,7 +180,7 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
     if(!q||!q.text||q.text.length<40)беды.push(d.подпись+" шаг "+st+": куцый текст");
     if(!q.reward||!q.reward.gold)беды.push(d.подпись+" шаг "+st+": нет награды");
     if(["fetch","hunt","kill"].indexOf(q.type)<0)беды.push(d.подпись+" шаг "+st+": тип "+q.type);
-    if(q.type==="fetch"&&!RESICON[q.res])беды.push(d.подпись+": нет ресурса "+q.res);
+    if(q.type==="fetch"&&!(q.res in RESICON))беды.push(d.подпись+": нет ресурса "+q.res);
     if(q.type==="hunt"&&!DARK_MONSTER_BY_ID[q.monsterId])беды.push(d.подпись+": нет твари");
     if(st===d.ступеней-1&&!q.тёмнаяНаграда)беды.push(d.подпись+": последний шаг без награды");}}
   return {разных:подписи.size,родов:роды.size,богов:боги.size,наград:награды.size,

@@ -187,7 +187,7 @@ const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(e!==undefined?' :
   const box=document.getElementById("sfBody");
   if(!box)return {нет:true};
   const немых=box.querySelectorAll('button:not([data-speak]),.list-line:not([data-speak])').length;
-  const естьШапка=/📖 Гримуар/.test(box.innerHTML);
+  const естьШапка=/<h3>Гримуар/.test(box.innerHTML);
   const школКн=box.querySelectorAll('[data-cmd^="grimschool:"]').length;
   /* Без отбора специализаций не показывают: их сто пятьдесят две. */
   const спецДо=box.querySelectorAll('[data-cmd^="grimspec:"]').length;

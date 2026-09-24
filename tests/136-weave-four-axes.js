@@ -332,7 +332,7 @@ const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(e!==undefined?' :
   r.ядер=кн("sfcore:");r.стихий=кн("sfelem:");
   /* «по школе» — это выбор, и он отмечен галочкой, пока своё не взяли */
   const поШколеЯдро=document.querySelector('#sfBody [data-cmd="sfcore:"]');
-  r.поШколе=!!поШколеЯдро&&/✔/.test(поШколеЯдро.textContent);
+  r.поШколе=!!поШколеЯдро&&/Выбрано/.test(поШколеЯдро.textContent);
   document.querySelector('#sfBody [data-cmd="sfschool:fire"]').click();
   document.querySelector('#sfBody [data-cmd="sfform:bolt"]').click();
   document.querySelector('#sfBody [data-cmd="sfelem:e_ice"]').click();

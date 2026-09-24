@@ -233,7 +233,7 @@ const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(e!==undefined?' :
   safeOpenMagicPanel();
   const list=document.getElementById("magicSlots");
   const все=Array.from(list.querySelectorAll("button"));
-  const нос=все.filter(b=>/^🔮/.test(b.textContent));
+  const нос=все.filter(b=>/ — \d+ из \d+$/.test(b.textContent));
   const немых=все.filter(b=>!b.dataset.speak).length;
   const было=G.charged[0].заряд;
   if(нос[0])нос[0].click();

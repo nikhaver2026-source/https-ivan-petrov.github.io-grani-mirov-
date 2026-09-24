@@ -179,7 +179,7 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
     if(!t.n||!t.слово||t.слово.length<25)беды.push(`${st}/${t.id}: нет слова`);
     if(t.звук&&!SOUND_BANK[t.звук])беды.push(`${st}/${t.id}: нет звука «${t.звук}»`);
     (t.вещи||[]).forEach(v=>{if(!PROP_BY_ID[v])беды.push(`${st}/${t.id}: нет вещи «${v}»`);});
-    (t.товар||[]).forEach(r=>{if(!RESICON[r])беды.push(`${st}/${t.id}: нет товара «${r}»`);});}
+    (t.товар||[]).forEach(r=>{if(!(r in RESICON))беды.push(`${st}/${t.id}: нет товара «${r}»`);});}
    if(имена.size!==список.length)беды.push(`${st}: повторяющиеся имена промыслов`);}
   /* Соседние постройки одного вида различаются. */
   const найти=(вид,n)=>{const r=[];

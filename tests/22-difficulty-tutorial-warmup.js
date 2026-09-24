@@ -111,9 +111,9 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
 
  const stop=await page.evaluate(()=>{
   Tutor.start();const on=Tutor.on;
-  const label1=amLabel("tutor","🎓 Обучение жестам");
+  const label1=amLabel("tutor","Обучение жестам");
   Tutor.stop(true);
-  const label2=amLabel("tutor","🎓 Обучение жестам");
+  const label2=amLabel("tutor","Обучение жестам");
   // жест после остановки не должен ничего двигать
   const i0=Tutor.i;move("E");
   return {on,label1,label2,off:!Tutor.on,iStable:Tutor.i===i0};});
@@ -144,7 +144,7 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   Warm.list=()=>real.call(Warm).slice(0,50);
   const p=Warm.run();
   const wasBusy=Warm.busy;
-  const label=amLabel("warm","⬇️ Скачать все записи на устройство");
+  const label=amLabel("warm","Скачать все записи на устройство");
   Warm.cancel();
   await p;
   Warm.list=real;

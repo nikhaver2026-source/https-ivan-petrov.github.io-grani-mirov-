@@ -90,7 +90,7 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   openObjActions(0);
   const t=сказ.join(" ");
   const кнопок=document.querySelectorAll('#objBody [data-cmd^="objact:"]').length;
-  const замков=[...document.querySelectorAll('#objBody [data-cmd^="objact:"]')].filter(b=>/🔒/.test(b.textContent)).length;
+  const замков=[...document.querySelectorAll('#objBody [data-cmd^="objact:"]')].filter(b=>/нужна ступень/.test(b.textContent)).length;
   while(activeLayer())closeTopUI();
   Speech.say=был;
   return {делится:/Действий: \d+:/.test(t)&&/Выше вашей ступени ещё \d+/.test(t),кнопок,замков};});

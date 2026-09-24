@@ -37,7 +37,7 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   const новые=["шкура","орган","кровь","яд","эссенция","эфир","осколок времени","тяжёлый минерал","рунный камень"];
   r.новых=новые.length;
   r.безЦены=новые.filter(x=>!RES_BASE[x]);
-  r.безЗначка=новые.filter(x=>!RESICON[x]);
+  r.безЗначка=новые.filter(x=>!(x in RESICON));
   r.безМаяка=новые.filter(x=>!SOUND_BANK[BEACON_ROLE[RESBEACON[x]]]);
   r.безРода=новые.filter(x=>!RES_KIND_BY_RES[x]);
   r.зоныБез=ANOM_RULES.filter(x=>!ZONE_RES[x.id]).map(x=>x.id);

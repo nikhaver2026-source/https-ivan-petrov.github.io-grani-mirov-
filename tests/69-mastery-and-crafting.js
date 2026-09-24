@@ -35,7 +35,7 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
  const таблицы=await page.evaluate(()=>{
   const плохиеМ=MASTERY.filter(m=>!m.id||!m.n||!m.о||!Array.isArray(m.станки)||!m.станки.length)
    .map(m=>m.id||"?");
-  const плохиеТ=TECHS.filter(t=>!t.id||!t.n||!t.о||!t.значок||!MAST_BY_ID[t.маст]
+  const плохиеТ=TECHS.filter(t=>!t.id||!t.n||!t.о||!MAST_BY_ID[t.маст]
    ||!Array.isArray(t.станки)||!t.станки.length||!SOUND_BANK[t.звук]
    ||(t.след&&!SOUND_BANK[t.след])).map(t=>t.id||"?");
   /* Станок каждой техники обязан быть в списке станков её мастерства. */

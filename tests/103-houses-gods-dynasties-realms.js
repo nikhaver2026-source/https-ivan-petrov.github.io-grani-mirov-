@@ -44,7 +44,7 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   r.мотивы=new Set(HOUSES.map(h=>h.мотив)).size;
   r.школы=HOUSES.filter(h=>!SCHOOLS.some(s=>s.id===h.школа)).map(h=>h.id);
   r.связи=HOUSES.filter(h=>!HOUSE_BY_ID[h.союзник]||!HOUSE_BY_ID[h.враг]||h.союзник===h.id||h.враг===h.id).map(h=>h.id);
-  r.товар=HOUSES.filter(h=>h.товар.concat(h.нужда).some(x=>!RESICON[x])).map(h=>h.id);
+  r.товар=HOUSES.filter(h=>h.товар.concat(h.нужда).some(x=>!(x in RESICON))).map(h=>h.id);
   r.державы=HOUSES.filter(h=>h.тип==="свет"?!EMPIRES[h.держава]:!DARK_EMPIRES.some(e=>e.id===h.держава)).map(h=>h.id);
   r.сиденья=HOUSES.every(h=>h.x>=0&&h.x<WORLD&&h.y>=0&&h.y<WORLD);
   r.держСвет=new Set(HOUSES.filter(h=>h.тип==="свет").map(h=>h.держава)).size;r.держТьма=new Set(HOUSES.filter(h=>h.тип==="тьма").map(h=>h.держава)).size;

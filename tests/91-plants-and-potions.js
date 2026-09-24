@@ -51,7 +51,7 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   const плохие=PLANTS.filter(p=>!p.n||!p.о||!PLANT_CAT_BY_ID[p.кат]||!(p.редкость>=1&&p.редкость<=5)||!p.способ||!p.рецепты||!p.рецепты.length
    ||p.рецепты.some(id=>!POTION_BY_ID[id])||(p.био&&p.био.some(id=>id!=="dark"&&id!=="alt"&&!bio.has(id)))).map(p=>p.id);
   const безВида=PLANT_CATS.filter(c=>!PLANTS.some(p=>p.кат===c.id)).map(c=>c.id);
-  const безЦены=PLANTS.filter(p=>!(RES_BASE[p.n]>0)||!RESICON[p.n]).map(p=>p.n);
+  const безЦены=PLANTS.filter(p=>!(RES_BASE[p.n]>0)||!(p.n in RESICON)).map(p=>p.n);
   return {ниш:PLANT_CATS.length,видов:PLANTS.length,плохие,безВида,безЦены,опасных:PLANTS.filter(p=>p.опасность).length};});
  check('1. восемнадцать ниш, у каждой вид; поля, биомы и рецепты настоящие; растения — товар с ценой',
   реестр.ниш===18&&реестр.видов>=20&&!реестр.плохие.length&&!реестр.безВида.length&&!реестр.безЦены.length&&реестр.опасных>=5,реестр);
@@ -183,7 +183,7 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   G.mast={alchemy:{ур:1,оп:0}};G.potions=[{id:"heal",q:1.2,стаб:0.8,день:G.day,срок:10}];G.inv["рановник"]=1;G.inv["топяной хвощ"]=1;
   r.работа=techDo(t,"cauldron");r.видно=!document.getElementById("modal-potions").hidden;
   r.вСумке=document.querySelectorAll('#potBody [data-cmd^="drinkpotion:"]').length;r.рецептов=document.querySelectorAll('#potBody [data-cmd^="brewpotion:"]').length;
-  r.можно=[...document.querySelectorAll('#potBody [data-cmd^="brewpotion:"]')].filter(b=>/✅/.test(b.textContent)).map(b=>b.dataset.cmd);
+  r.можно=[...document.querySelectorAll('#potBody [data-cmd^="brewpotion:"]')].filter(b=>/можно сварить/.test(b.textContent)).map(b=>b.dataset.cmd);
   /* Прежде число родов зелий брали у potionsText — строки, которую игра не
      показывала нигде. Теперь берём то, что игрок слышит на самом деле:
      первую строку окна зелий и сами кнопки рецептов. */

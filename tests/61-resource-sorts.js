@@ -40,7 +40,7 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
     if(!(с.вес>0))беды.push(имя+"/"+с.id+": нет веса");
     (с.био||[]).forEach(b=>{if(!BIOME_BY_ID[b])беды.push(имя+"/"+с.id+": нет биома "+b);});});}
   const безЦены=Object.keys(SORT_GOODS).filter(k=>!(RES_BASE[k]>0));
-  const безЗнака=Object.keys(SORT_GOODS).filter(k=>!RESICON[k]);
+  const безЗнака=Object.keys(SORT_GOODS).filter(k=>!(k in RESICON));
   /* у каждого сорта с товаром товар должен быть описан ценой */
   const сироты=[];
   for(const имя in RES_SORTS)RES_SORTS[имя].forEach(с=>{

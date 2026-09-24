@@ -76,13 +76,13 @@ const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(e!==undefined?' :
     ||!t.станки.every(st=>MAST_BY_ID[t.маст].станки.indexOf(st)>=0)).map(t=>t.id),
   безЗаписи:PROD_STEPS.filter(t=>!SOUND_BANK[t.звук]||!SOUND_BANK[t.след]).map(t=>t.id),
   инструмент:PROD_STEPS.filter(t=>[t.звук,t.след].some(r=>(SOUND_BANK[r]||{f:[]}).f.some(f=>инстр.test(f)))).map(t=>t.id),
-  безПолей:PROD_STEPS.filter(t=>!t.n||!t.о||!t.значок||!PROD_CHAIN_BY_ID[t.цепь]).map(t=>t.id),
+  безПолей:PROD_STEPS.filter(t=>!t.n||!t.о||!PROD_CHAIN_BY_ID[t.цепь]).map(t=>t.id),
   пустоеЗдание:PROD_BUILDINGS.filter(b=>!PROD_STEPS.some(t=>t.станки.indexOf(b.станок)>=0)).map(b=>b.id),
   пустаяЦепь:PROD_CHAINS.filter(c=>!PROD_STEPS.some(t=>t.цепь===c.id)).map(c=>c.id),
   ниоткуда:PROD_GOODS.filter(g=>!PROD_STEPS.some(t=>t.даёт&&t.даёт[g.n])).map(g=>g.n),
   вникуда:PROD_GOODS.filter(g=>!PROD_STEPS.some(t=>t.берёт&&t.берёт[g.n])).map(g=>g.n),
   безЦены:PROD_GOODS.filter(g=>!(RES_BASE[g.n]>0)).map(g=>g.n),
-  безЗначка:PROD_GOODS.filter(g=>!RESICON[g.n]).map(g=>g.n)};});
+  безЗначка:PROD_GOODS.filter(g=>!(g.n in RESICON)).map(g=>g.n)};});
  check('каждый передел лежит в общей таблице техник, а не в своей',
   связь.неВТехниках.length===0,связь.неВТехниках);
  check('станок передела принадлежит его же ремеслу',связь.чужойСтанок.length===0,связь.чужойСтанок);
@@ -261,15 +261,15 @@ const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(e!==undefined?' :
    вОкне:(()=>{try{openModal("modal-craft");renderCraft();
     const el=document.getElementById("craftList");
     const немые=[...el.querySelectorAll(".list-line")].filter(e=>!e.getAttribute("data-speak")).length;
-    const цепей=(el.innerHTML.match(/⛓️/g)||[]).length;
-    const домов=(el.innerHTML.match(/🏭/g)||[]).length;
+    const цепей=PROD_CHAINS.filter(c=>el.textContent.includes(c.n)).length;
+    const домов=PROD_BUILDINGS.filter(b=>el.textContent.includes(b.n)).length;
     while(activeLayer())closeTopUI();
     return {немые,цепей,домов};}catch(e){return {ошибка:String(e)};}})()};});
  check('самопроверка мира держит строку «prod» и она зелёная',свод.есть&&свод.ok,свод);
  check('вся остальная самопроверка мира тоже зелёная',свод.плохие.length===0,свод.плохие);
  check('в руководстве есть глава о производстве',свод.глава&&свод.строк>=8,свод);
  check('окно крафта показывает все цепи и все мастерские, и ни одна строка не нема',
-  свод.вОкне.цепей===10&&свод.вОкне.домов>=14&&свод.вОкне.немые===0,свод.вОкне);
+  свод.вОкне.цепей===10&&свод.вОкне.домов===13&&свод.вОкне.немые===0,свод.вОкне);
 
  const ROOT=path.resolve(__dirname,'..');
  const readme=fs.readFileSync(path.join(ROOT,'README.md'),'utf8');

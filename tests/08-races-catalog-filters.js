@@ -28,11 +28,11 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
  await page.evaluate(()=>CMD.races());
  await page.waitForTimeout(250);
  const cards=await page.evaluate(()=>document.querySelectorAll('#raceList .list-line').length);
- check('в каталоге 46 карточек народов',cards===46,cards);
+ check('в каталоге 98 карточек рас',cards===98,cards);
  await page.evaluate(()=>CMD.racefilter('5'));
  await page.waitForTimeout(200);
  const divine=await page.evaluate(()=>document.querySelectorAll('#raceList .list-line').length);
- check('фильтр по божественному рангу показывает 5 народов',divine===5,divine);
+ check('фильтр по божественному рангу показывает 9 рас',divine===9,divine);
  const speakLen=await page.evaluate(()=>{const el=document.querySelector('#raceList .list-line');return el?el.dataset.speak.length:0;});
  check('карточка озвучивает полное досье',speakLen>400,speakLen);
  // 3. Выбор происхождения меняет наследие и характеристики

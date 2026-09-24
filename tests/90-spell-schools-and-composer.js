@@ -104,7 +104,7 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   r.собрать=!!document.querySelector('#sfBody [data-cmd="sfbuild"]');
   SAID.length=0;document.querySelector('#sfBody [data-cmd="sfschool:fire"]').click();r.сказШкола=SAID.slice(-1)[0]||"";
   SAID.length=0;document.querySelector('#sfBody [data-cmd="sfform:bolt"]').click();r.сказФорма=SAID.slice(-1)[0]||"";
-  r.галочка=/✔/.test(document.querySelector('#sfBody [data-cmd="sfschool:fire"]').textContent);
+  r.галочка=/Выбрано/.test(document.querySelector('#sfBody [data-cmd="sfschool:fire"]').textContent);
   delete G.inv["кристалл"];G.mana=40;SAID.length=0;r.безКристалла=spellForgeBuild();r.безКристаллаСказ=SAID.slice(-1)[0]||"";
   G.inv["кристалл"]=3;G.mana=5;SAID.length=0;r.безМаны=spellForgeBuild();r.безМаныСказ=SAID.slice(-1)[0]||"";
   G.mana=40;SAID.length=0;PLAYED.length=0;r.ok=spellForgeBuild();r.сказ=SAID.find(t=>/Составлено/.test(t))||"";

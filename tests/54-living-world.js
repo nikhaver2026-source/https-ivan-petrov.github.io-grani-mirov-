@@ -371,7 +371,7 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   openNPC(n.key,true);
   const тело=document.getElementById("npcBody");
   const текст=тело?тело.textContent||"":"";
-  const немые=тело?[...тело.querySelectorAll(".list-line")].filter(e=>!e.getAttribute("data-speak")&&!e.textContent.trim().startsWith("📜")).length:0;
+  const немые=тело?[...тело.querySelectorAll(".list-line")].filter(e=>!e.getAttribute("data-speak")&&!/^(Квест|Одноразовые свитки):/.test(e.textContent.trim())).length:0;
   const встреч=((G.npcMem[n.key]||{}).в)||0;
   while(activeLayer())closeTopUI();
   return {естьДуша:/Нрав|Положение/.test(текст),

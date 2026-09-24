@@ -82,13 +82,13 @@ const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(e!==undefined?' :
   const дважды=Object.keys(где).filter(c=>где[c].length!==1);
   const в=(c)=>(где[c]||[])[0];
   return {ids:AM_GROUPS.map(g=>g[2].id),имена:AM_GROUPS.map(g=>g[0]),пунктов:Object.keys(где).length,дважды,
-   мета:AM_GROUPS.every(g=>g[2].з&&g[2].о&&g[2].о.length>10),
+   мета:AM_GROUPS.every(g=>g[2].о&&g[2].о.length>10),
    в:{char:в("char"),inv:в("inv"),bodystate:в("bodystate"),quests:в("quests"),journal:в("journal"),questlist:в("questlist"),
     lore:в("lore"),academy:в("academy"),best:в("best"),plants:в("plants"),preacher:в("preacher"),pantheon:в("pantheon"),
     sigils:в("sigils"),fish:в("fish"),resinfo:в("resinfo"),settings:в("settings"),hud:в("hud"),cases:в("cases")}};});
  check('1. шестнадцать разделов по смыслу, у каждого значок и что в нём; каждый пункт ровно в одном; персонаж, квесты и книги — где их ищут',
   раскладка.ids.join(",")==="start,here,move,fight,hero,quests,craft,people,magic,faith,books,world,realms,dark,sound,game"
-  &&раскладка.пунктов===130&&раскладка.дважды.length===0&&раскладка.мета
+  &&раскладка.пунктов===131&&раскладка.дважды.length===0&&раскладка.мета
   &&раскладка.в.char==="hero"&&раскладка.в.inv==="hero"&&раскладка.в.bodystate==="hero"
   &&раскладка.в.quests==="quests"&&раскладка.в.journal==="quests"&&раскладка.в.questlist==="quests"&&раскладка.в.cases==="quests"
   &&раскладка.в.lore==="books"&&раскладка.в.academy==="books"&&раскладка.в.best==="books"&&раскладка.в.plants==="books"
@@ -167,10 +167,10 @@ const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(e!==undefined?' :
 
  /* ── 7. пустые разделы ── */
  const пустые=await page.evaluate(()=>{
-  const было=G.startCraft;G.startCraft="crafter";
+  const было=G.startCraft,былРод=G.raceChosen;G.startCraft="crafter";G.raceChosen=1;
   openActionMenu();
   const есть=[...document.querySelectorAll("#amMenu [data-punkt]")].map(x=>x.dataset.punkt);
-  closeActionMenu();G.startCraft=было;
+  closeActionMenu();G.startCraft=было;G.raceChosen=былРод;
   return {есть,разлом:safeFn(()=>riftAt(G.x,G.y),false)};});
  check('7. пустой раздел в списке не стоит: «Начало пути» после выбора ремесла, «Грань и тьма» вдали от разлома',
   !пустые.есть.includes("start")&&(пустые.разлом||!пустые.есть.includes("dark"))&&пустые.есть.includes("hero"),пустые);

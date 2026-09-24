@@ -53,7 +53,7 @@ const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(e!==undefined?' :
   тварьПолна:CONJ_BEASTS.every(b=>b.n&&b.о&&b.snd&&b.fx&&b.голос&&b.сила>0),
   голосовРазных:new Set(CONJ_BEASTS.map(b=>b.snd)).size,
   товары:CONJ_RES.slice(),
-  ценаЗначок:CONJ_RES.every(r=>RES_BASE[r]>0&&!!RESICON[r]),
+  ценаЗначок:CONJ_RES.every(r=>RES_BASE[r]>0&&!!(r in RESICON)),
   ремёсла:CONJ_PROFS.slice(),
   экспедиции:CONJ_EXPED.length,
   экспПолна:CONJ_EXPED.every(e=>e.n&&e.о&&SOUND_BANK[e.звук]&&RES_BASE[e.дар.res]&&e.плата>0),
