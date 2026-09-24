@@ -12,7 +12,8 @@
      предложение звучало, пока считается второе.
 
    Составные части и их лицензии:
-     модель ru_RU-denis-medium — Piper, данные CC0 (OHF-Voice/voice-datasets);
+     модели ru_RU-sova200-medium (женский) и ru_RU-igm3804-medium (мужской) —
+       Piper, rraaww/ru_piper, Apache-2.0;
      onnxruntime-web — MIT (Microsoft);
      словарь звуков tts/ru-lex.tsv и таблица ударений tts/ru-stress.json —
        собраны для слов самой игры;
@@ -28,7 +29,7 @@
               {type:"audio", id, pcm(Float32Array), rate, last}
               {type:"done", id}
    ════════════════════════════════════════════════════════════════════════ */
-let движок=null,сессия=null,словарь=null,карта=null,готово=false,отменён=new Set();
+let движок=null,сессия=null,словарь=null,карта=null,готово=false,отменён=new Set(),частота=22050;
 
 const КАРТА_ПО_УМОЛЧАНИЮ=(()=>{
  /* Общая карта звуков всех голосов Piper с разбором eSpeak: у голосов
@@ -157,7 +158,7 @@ async function init(base,models){
   try{
    const буф=await скачать(url,(l,t)=>postMessage({type:"progress",loaded:l,total:t}));
    сессия=await движок.InferenceSession.create(буф,{executionProviders:["wasm"],graphOptimizationLevel:"all"});
-   try{const j=await fetch(url+".json").then(r=>r.ok?r.json():null);if(j&&j.phoneme_id_map)карта=j.phoneme_id_map;}catch(_){}
+   try{const j=await fetch(url+".json").then(r=>r.ok?r.json():null);if(j&&j.phoneme_id_map)карта=j.phoneme_id_map;if(j&&j.audio&&+j.audio.sample_rate)частота=+j.audio.sample_rate;}catch(_){}
    готово=true;postMessage({type:"ready",model:url});return;
   }catch(e){последняяОшибка=e;}}
  postMessage({type:"fail",error:String(последняяОшибка||"нет модели")});}
@@ -175,7 +176,7 @@ async function сказать(id,текст,speed){
   if(отменён.has(id))break;
   const pcm=r.output.data;
   const копия=new Float32Array(pcm.length);копия.set(pcm);
-  postMessage({type:"audio",id,pcm:копия,rate:22050,last:i===части.length-1},[копия.buffer]);}
+  postMessage({type:"audio",id,pcm:копия,rate:частота,last:i===части.length-1},[копия.buffer]);}
  отменён.delete(id);
  postMessage({type:"done",id});}
 

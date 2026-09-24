@@ -196,6 +196,7 @@ h3{color:var(--acc2);margin:14px 0 6px;font-size:1.05rem;}
  <p class="hint">Всё про сам голос в одном разделе: чем игра говорит, каким голосом, с какой скоростью и высотой. Проба — тут же.</p>
  <label class="opt">Синтезатор <select id="setTtsEngine" aria-label="Каким синтезатором говорит игра"><option value="device" selected>Синтезатор устройства</option><option value="grani">Встроенный голос игры</option><option value="eleven">Голос ElevenLabs</option></select></label>
  <p class="hint" id="ttsEngineHint">Встроенный голос игры — русская нейросеть, которая говорит прямо на устройстве, одним голосом на любом телефоне и без чужого сервера: один раз скачивается (около шестидесяти мегабайт), дальше работает без сети; пока качается, говорит синтезатор устройства. Синтезатор устройства — тот, что стоит в самом телефоне: на iPhone это голоса VoiceOver, на Android — Google, Samsung, Acapela или любой другой установленный. Он отвечает сразу и работает без сети. Голос ElevenLabs звучит живее, но ходит в сеть и требует ключа.</p>
+ <label class="opt">Встроенный голос <select id="setGraniVoice" aria-label="Какой встроенный голос говорит"><option value="sova" selected>Женский — самый разборчивый</option><option value="igm">Мужской</option></select></label>
  <label class="opt"><input type="checkbox" id="setVoiceLocal" checked><span><b>Только голоса с устройства</b><small>Онлайн-голоса отсеиваются: они ждут сеть и отвечают с задержкой, а без сети молчат совсем</small></span></label>
  <label class="opt">Язык голоса <select id="setVoiceLang" aria-label="Язык голоса"><option value="ru" selected>Русский</option><option value="all">Все языки</option></select></label>
  <label class="opt">Голос <select id="setVoice" aria-label="Выбор голоса"></select></label>
@@ -867,7 +868,9 @@ const NEWS=[
  {v:14,н:"чувствительность жестов — от самой мягкой до самой строгой, по умолчанию средняя",
   т:"Чувствительность жестов теперь названа прямо: настройки, раздел «Жесты», «Чувствительность жестов», пять ступеней от самой мягкой до самой строгой. Самая мягкая прощает дрожь руки, на самой строгой короткий взмах уже жест. По умолчанию — средняя; всем, кто играл раньше, она выставлена один раз, дальше выбирайте сами."},
  {v:15,н:"в начале пути можно выбрать народ: сто пятьдесят рас и сто тридцать народов, значки убраны",
-  т:"В начале пути теперь выбирают не только ремесло, но и народ: меню действий, раздел «Начало пути», пункт «Выбрать народ». Рас в мире теперь сто пятьдесят — девяносто восемь светлых земель и пятьдесят две тёмных, народов-ветвей сто тридцать; все новые — свои, из преданий и земель Грани: болотники, домовики, сирины, громовники и другие. Каждый пункт называет разряд, покровителя, наследие и народы расы, двойное касание выбирает, и выбор делается один раз. У всех новых рас и народов свой русский голос. И ещё: из подписей убраны значки — звёздочки, блёстки, компасы, стрелки, — чтец экрана больше не зачитывает их вместо дела."}];
+  т:"В начале пути теперь выбирают не только ремесло, но и народ: меню действий, раздел «Начало пути», пункт «Выбрать народ». Рас в мире теперь сто пятьдесят — девяносто восемь светлых земель и пятьдесят две тёмных, народов-ветвей сто тридцать; все новые — свои, из преданий и земель Грани: болотники, домовики, сирины, громовники и другие. Каждый пункт называет разряд, покровителя, наследие и народы расы, двойное касание выбирает, и выбор делается один раз. У всех новых рас и народов свой русский голос. И ещё: из подписей убраны значки — звёздочки, блёстки, компасы, стрелки, — чтец экрана больше не зачитывает их вместо дела."},
+ {v:16,н:"новый встроенный голос разборчивее, лестница больше не зацикливается и слышна",
+  т:"Встроенный голос игры сменился: вместо «Дениса» говорит женский голос, самый разборчивый из двадцати проверенных; мужской выбирается в настройках, раздел «Синтезатор речи», пункт «Встроенный голос». Лестница больше не ходит по кругу: если шахту держит страж, двойное касание сразу начинает бой, а не марш из полутора десятков ступеней. Каждая ступень теперь звучит настоящим шагом по камню. Проверка ключа ElevenLabs называет настоящую причину, если голос не отвечает."}];
 const NEWS_V=NEWS[NEWS.length-1].v;
 /* Одна фраза: главное из последнего выпуска и сколько ещё новостей ждёт в меню. */
 function newsBrief(было){
@@ -1172,7 +1175,7 @@ const Speech={voice:null,keepAlive:null,
   if("speechSynthesis" in window)return this.adapter=this._webAdapter();
   return null;},
  /* ── ВСТРОЕННЫЙ ГОЛОС ИГРЫ ──
-    Русская нейросеть Piper (голос «Денис», данные CC0) считается прямо на
+    Русская нейросеть Piper (голоса sova200 и igm3804, Apache-2.0) считается прямо на
     устройстве, в отдельном потоке (tts/grani-tts-worker.js), через
     onnxruntime-web (MIT). Звуки для всех слов игры собраны заранее в
     словарь с ударениями, незнакомые слова разбираются своими правилами —
@@ -1182,8 +1185,24 @@ const Speech={voice:null,keepAlive:null,
     папки игры, а если её там нет — с Hugging Face; дальше лежит в памяти
     устройства. Пока она качается или если скачать не вышло, говорит
     синтезатор устройства: игра не замолкает никогда. */
- GRANI_MODELS:["tts/ru_RU-denis-medium.onnx",
-  "https://huggingface.co/rhasspy/piper-voices/resolve/v1.0.0/ru/ru_RU/denis/medium/ru_RU-denis-medium.onnx"],
+ /* ── КАКИМ ГОЛОСОМ ──
+    Прежде встроенным голосом был Piper «Денис», и игроки справедливо звали
+    его некачественным. Двадцать русских голосов Piper прочли одни и те же
+    двадцать фраз игры через разбор самой игры, и их слушали два русских
+    распознавателя речи (Whisper и GigaAM) и DNSMOS. «Денис» оказался среди
+    худших: распознаватели путали каждое второе и седьмое слово (0,49 и
+    0,15). Самый разборчивый — женский голос sova200 (0,25 и 0,08), лучший
+    мужской — igm3804 (0,29 и 0,12); оба из rraaww/ru_piper под Apache-2.0.
+    Женский звучит по умолчанию, мужской выбирается в настройках. */
+ GRANI_VOICES:{
+  sova:{n:"женский",file:"tts/ru_RU-sova200-medium.onnx"},
+  igm:{n:"мужской",file:"tts/ru_RU-igm3804-medium.onnx"}},
+ get GRANI_MODELS(){const v=this.GRANI_VOICES[settings.graniVoice]||this.GRANI_VOICES.sova;return [v.file];},
+ /* Смена голоса: поток с прежней моделью закрывается, новый поднимается. */
+ graniRestart(){
+  try{if(this._grani&&this._grani.worker)this._grani.worker.terminate();}catch(_){}
+  this._grani=null;this.adapter=null;this._kind=null;
+  if(settings.ttsEngine==="grani"||this._graniAuto)this.graniStart();},
  _grani:null,
  graniState(){return this._grani?this._grani.state:"off";},
  graniStart(){
@@ -1344,6 +1363,31 @@ const Speech={voice:null,keepAlive:null,
      return new Promise(ok=>{try{ctx.decodeAudioData(ab,ok,()=>ok(null));}catch(_){ok(null);}});})
     .catch(()=>null);
   }catch(_){return Promise.resolve(null);}},
+ /* Проверка ключа с причиной. Прежде любая осечка звучала одинаково —
+    «ElevenLabs не ответил». Настоящая причина почти всегда одна: политика
+    безопасности страницы закрывает ей сеть (connect-src 'none'), и запрос
+    не уходит вовсе, какой бы ключ ни был. Теперь игра так и говорит, а если
+    сеть открыта — называет ответ сервера: ключ не принят, ключу не дано
+    права читать голоса, кончился запас символов. */
+ elevenNetClosed(){
+  try{const m=document.querySelector('meta[http-equiv="Content-Security-Policy"]');
+   const c=m?String(m.getAttribute("content")||""):"";
+   return /connect-src\s+'none'/.test(c)||(/connect-src/.test(c)&&!/api\.elevenlabs\.io/.test(c));}catch(_){return false;}},
+ elevenCheck(){
+  const ключ=String(settings.elevenKey||"").trim();
+  if(!ключ)return Promise.resolve({ok:false,why:"нет ключа",list:[]});
+  if(this.elevenNetClosed())return Promise.resolve({ok:false,why:"закрыто",list:[]});
+  if(typeof fetch!=="function")return Promise.resolve({ok:false,why:"сеть",list:[]});
+  return fetch("https://api.elevenlabs.io/v1/voices",{headers:{"xi-api-key":ключ}})
+   .then(r=>r.ok
+    ?r.json().then(j=>({ok:true,why:"",list:((j&&j.voices)||[]).map(v=>({id:v.voice_id,n:v.name,
+      lang:(v.labels&&(v.labels.language||v.labels.accent))||""}))}))
+    :r.text().catch(()=>"").then(t=>{
+      if(r.status===401&&/missing_permissions|voices_read/i.test(t))return {ok:false,why:"права",list:[]};
+      if(r.status===401||r.status===403)return {ok:false,why:"ключ",list:[]};
+      if(r.status===429||/quota/i.test(t))return {ok:false,why:"запас",list:[]};
+      return {ok:false,why:"код "+r.status,list:[]};}))
+   .catch(()=>({ok:false,why:"сеть",list:[]}));},
  /* Какие голоса доступны по этому ключу. */
  elevenVoices(){
   try{
@@ -31816,16 +31860,41 @@ function flightLen(delta){
  return 6+Math.floor(H(p.bx,p.by,300+Math.max(0,слой)*7)*13);}
 function startFlight(delta,dir){
  const p=G.place;if(!p)return false;
+ /* ── ЧТО ЗАКРЫВАЕТ ШАХТУ, ГОВОРИТСЯ ДО МАРША ──
+    Прежде страж и дно проверялись только на последней ступени: игрок
+    проходил полтора десятка ступеней, слышал «вниз хода нет… действие
+    здесь — принять бой», а «действие здесь» на лестнице снова начинало тот
+    же марш — и так по кругу, будто игра зависла. Теперь закрытая шахта
+    отвечает сразу, а страж на ней — это бой, как и обещано. */
+ if(p.тайник){narrate("Сначала выберитесь из тайной палаты: лаз — у западной стены.");return false;}
+ if(delta>0){
+  /* Сперва дно: у последнего яруса шахты вниз нет, и биться за неё не с кем. */
+  if(p.depth+1>safeFn(()=>maxDepthHere(),MAX_DEPTH)){
+   narrate(G.dark?"Дно. Ниже сотого яруса нет ничего — и это единственное «ничего», которое можно потрогать."
+    :"Глубже хода нет: дальше сплошной камень.");
+   return false;}
+  const g=safeFn(()=>guardianHere(),null);
+  if(g)return fightGuardian();}
+ else if(p.depth+delta<0){narrate("Выше подниматься некуда.");return false;}
  const n=flightLen(delta);
  G.flight={d:delta,i:0,n,md:dir,x:p.x,y:p.y};
- /* Марш начинается настоящим звуком каменных ступеней. */
- safeFn(()=>{Bank.play("deep_stairs",{seed:n,gain:0.6,maxSec:4});setTimeout(()=>safeFn(()=>Bank.play("lug_land",{seed:n,gain:0.45,maxSec:1})),700);});
+ /* Марш начинается настоящим звуком каменных ступеней: шаг ногой по
+    камню, а за ним — отзвук самой лестницы. Запись ступеней тихая
+    (в среднем −37 дБ), и одна она на ходу почти не слышна. */
+ safeFn(()=>{stairFootstep(0,delta>0);Bank.play("deep_stairs",{seed:n,gain:1,maxSec:4});setTimeout(()=>safeFn(()=>Bank.play("lug_land",{seed:n,gain:0.45,maxSec:1})),700);});
  safeFn(()=>Bank.play("deep_stairs",{seed:1,gain:0.55,maxSec:1.4}));
  safeFn(()=>beacon(delta>0?"stairs_down":"stairs_up",0,0));
  /* Шахта вертикальна, и это стоит сказать: игрок должен знать, что вернётся
     ровно сюда же, а не «куда-нибудь». */
  narrate(`Марш лестницы: ${n} ${plural(n,"ступень","ступени","ступеней")} ${delta>0?"вниз":"вверх"}. Шахта идёт отвесно: выйдете ровно под этой клеткой${delta>0?"":", то есть там, откуда спускались"}. Идите ${dirWhither(dir)}; шаг в обратную сторону вернёт вас обратно.`);
  return true;}
+/* Шаг по ступени — настоящая запись шага по камню, по очереди из двух
+   наборов, чтобы соседние ступени не звучали одним щелчком; ставится чуть
+   ниже уха при спуске и чуть выше при подъёме. */
+function stairFootstep(i,вниз){
+ const роль=(Number(i)||0)%2?"lug_step_stone":"mtg_step_hard";
+ return Spatial.role(роль,0,0,{dz:вниз?-0.3:0.3,gain:0.8,maxSec:0.8,seed:i})
+  ||Bank.play(роль,{seed:i,gain:0.8,maxSec:0.8});}
 /* Что слышно на марше: чем ниже, тем меньше живого и больше камня. */
 function flightFlavour(){
  const f=G.flight,p=G.place;if(!f||!p)return null;
@@ -31848,12 +31917,12 @@ function flightStep(dir){
  G.hour+=0.04;if(G.hour>=24){G.hour-=24;G.day++;}
  if(f.i<=0){
   G.flight=null;
-  safeFn(()=>Bank.play("deep_stairs",{seed:2,gain:0.5,maxSec:1.4}));
+  safeFn(()=>{stairFootstep(1,f.d<0);Bank.play("deep_stairs",{seed:2,gain:0.9,maxSec:1.4});});
   narrate(`Вы вернулись на площадку: ${placeTitle()}. ${describeHere(true)}`);
   refresh();saveGame(true);return true;}
  if(f.i>=f.n){
   const d=f.d;G.flight=null;
-  safeFn(()=>Bank.play("deep_stairs",{seed:3,gain:0.6,maxSec:1.4}));
+  safeFn(()=>{stairFootstep(f.n,d>0);Bank.play("deep_stairs",{seed:3,gain:1,maxSec:1.4});});
   safeFn(()=>Bank.play("deep_wind",{seed:f.n,gain:0.4,maxSec:6}));
   return changeDepth(d);}
  /* ── МАРШ СЛЫШЕН ПО ВЫСОТЕ ──
@@ -31866,9 +31935,11 @@ function flightStep(dir){
  safeFn(()=>{
   const доля=f.i/Math.max(1,f.n);
   const вниз=f.d>0;
-  /* Шаг: слышен под ногой, с лёгким наклоном по ходу движения. */
-  if(!Spatial.role("deep_stairs",0,0,{dz:вниз?-0.4:0.4,gain:0.5,maxSec:1.4,seed:f.i*5}))
-   Bank.play("deep_stairs",{seed:f.i*5,gain:0.5,maxSec:1.4});
+  /* Шаг: слышен под ногой, с лёгким наклоном по ходу движения, а за ним
+     тихий отзвук лестничной клетки. */
+  stairFootstep(f.i,вниз);
+  if(!Spatial.role("deep_stairs",0,0,{dz:вниз?-0.4:0.4,gain:0.9,maxSec:1.4,seed:f.i*5}))
+   Bank.play("deep_stairs",{seed:f.i*5,gain:0.9,maxSec:1.4});
   /* Позади — то, что покинули; впереди — то, куда идёте. */
   const позадиZ=(вниз?1:-1)*(0.6+доля*2.4);
   const впередиZ=(вниз?-1:1)*(0.6+(1-доля)*2.4);
@@ -51636,6 +51707,10 @@ function bindSettings(){const $=id=>document.getElementById(id);
  $("setVoice").addEventListener("change",e=>{safeFn(()=>Speech.pickVoice(e.target.value));});
  $("btnSpeechSample").addEventListener("click",()=>narrate("Это образец озвучивания. Грань Миров говорит с вами."));
  /* ── РАЗДЕЛ «СИНТЕЗАТОР РЕЧИ» ── */
+ {const g=$("setGraniVoice");if(g){g.value=Speech.GRANI_VOICES[settings.graniVoice]?settings.graniVoice:"sova";
+  g.addEventListener("change",ev=>{settings.graniVoice=Speech.GRANI_VOICES[ev.target.value]?ev.target.value:"sova";saveSettings();
+   safeFn(()=>Speech.graniRestart());
+   narrate(`Встроенный голос: ${Speech.GRANI_VOICES[settings.graniVoice].n}. Он заговорит, как только загрузится.`,{interrupt:true});});}}
  {const e=$("setTtsEngine");if(e){e.value=settings.ttsEngine||"device";
   e.addEventListener("change",ev=>{settings.ttsEngine=ev.target.value;saveSettings();
    safeFn(()=>{Speech.adapter=null;Speech._kind=null;});
@@ -51685,11 +51760,17 @@ function bindSettings(){const $=id=>document.getElementById(id);
   if(b)b.addEventListener("click",()=>{
    if(!String(settings.elevenKey||"")){narrate("Ключ не задан: задайте его строкой выше.",{interrupt:true});return;}
    narrate("Спрашиваю ElevenLabs…",{interrupt:true});
-   safeFn(()=>Speech.elevenVoices().then(список=>{
-    const n=нарисовать(список||[]);
-    narrate(n?`Ключ принят. Голосов доступно: ${n}. Выберите голос в списке ниже.`
-             :"ElevenLabs не ответил или ключ не подошёл. Игра продолжит говорить синтезатором устройства.",{interrupt:true});
-   }).catch(()=>narrate("ElevenLabs не ответил. Игра продолжит говорить синтезатором устройства.",{interrupt:true})));});}}
+   safeFn(()=>Speech.elevenCheck().then(о=>{
+    const n=нарисовать(о.list||[]);
+    const слово={
+     "закрыто":"Эта сборка игры закрыта для сети ради безопасности: к ElevenLabs она не обращается вовсе, и ключ тут ни при чём. Игра говорит встроенным голосом или синтезатором устройства.",
+     "сеть":"До ElevenLabs не достучаться: нет интернета или сервер недоступен. Игра говорит синтезатором устройства.",
+     "ключ":"ElevenLabs не принял ключ. Проверьте, что он скопирован целиком, без пробелов, и не отозван в кабинете ElevenLabs.",
+     "запас":"Ключ принят, но у него кончился запас символов или слишком много запросов разом. Попробуйте позже.",
+     "права":"Ключ принят, но ему не разрешено читать список голосов: разрешите это в кабинете ElevenLabs."}[о.why];
+    narrate(о.ok?(n?`Ключ принят. Голосов доступно: ${n}. Выберите голос в списке ниже.`:"Ключ принят, но голосов на нём нет.")
+     :(слово||`ElevenLabs ответил ошибкой (${о.why}). Игра говорит синтезатором устройства.`),{interrupt:true});
+   }).catch(()=>narrate("До ElevenLabs не достучаться. Игра говорит синтезатором устройства.",{interrupt:true})));});}}
  }
 
 /* ════════ СОХРАНЕНИЕ ════════ */

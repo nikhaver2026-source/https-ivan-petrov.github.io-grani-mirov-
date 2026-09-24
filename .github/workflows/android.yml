@@ -17,6 +17,9 @@ name: Сборка Android
 
 on:
   workflow_dispatch:
+  # Раз в пять дней — только освежить ключ сборки в кэше (см. задачу keepkey).
+  schedule:
+    - cron: '17 3 */5 * *'
   push:
     branches: [main]
     paths:
@@ -36,7 +39,21 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  # Ключ сборки живёт в кэше Actions, а кэш, к которому не обращались семь
+  # дней, GitHub удаляет. Эта задача раз в пять дней достаёт ключ из кэша —
+  # и он не стареет: все сборки подписаны одним ключом и ставятся поверх.
+  keepkey:
+    if: ${{ github.event_name == 'schedule' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Освежить ключ сборки в кэше
+        uses: actions/cache/restore@v4
+        with:
+          path: ~/.grani-signing
+          key: grani-signing-v1
+
   build:
+    if: ${{ github.event_name != 'schedule' }}
     runs-on: ubuntu-latest
     timeout-minutes: 60
     steps:

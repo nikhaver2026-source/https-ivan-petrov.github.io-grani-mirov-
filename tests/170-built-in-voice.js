@@ -175,7 +175,7 @@ async function страница(browser,модель){
     через раз, поэтому голос не должен зависеть от него: модель и её
     настройки идут вместе с игрой, а служебный работник не кладёт шестьдесят
     мегабайт второй копией в кэш записей (их хранит сам поток голоса). */
- const модель=path.join(КОРЕНЬ,'tts','ru_RU-denis-medium.onnx');
+ const модель=path.join(КОРЕНЬ,'tts','ru_RU-sova200-medium.onnx');
  const весМодели=fs.existsSync(модель)?fs.statSync(модель).size:0;
  let настройки=null;
  try{настройки=JSON.parse(fs.readFileSync(модель+'.json','utf8'));}catch(_){}
@@ -184,6 +184,27 @@ async function страница(browser,модель){
   весМодели>50e6&&настройки&&настройки.audio&&настройки.audio.sample_rate===22050
   &&Array.isArray(карта['"'])&&карта['"'][0]===150&&/pathname\.endsWith\("\.onnx"\)\)return;/.test(sw),
   {мб:Math.round(весМодели/1e6),частота:настройки&&настройки.audio&&настройки.audio.sample_rate,метка:карта['"']});
+
+ /* ── 11. два встроенных голоса, женский по умолчанию ── Прежний «Денис»
+    распознавался хуже всех; теперь женский sova200 и мужской igm3804. */
+ const голоса=Object.values({sova:'ru_RU-sova200-medium.onnx',igm:'ru_RU-igm3804-medium.onnx'})
+  .map(f=>{const p=path.join(КОРЕНЬ,'tts',f);let j=null;try{j=JSON.parse(fs.readFileSync(p+'.json','utf8'));}catch(_){}
+   return {f,мб:fs.existsSync(p)?Math.round(fs.statSync(p).size/1e6):0,частота:j&&j.audio&&j.audio.sample_rate,метка:j&&j.phoneme_id_map&&j.phoneme_id_map['"']};});
+ const выбор=await (async()=>{const p=await browser.newPage();await p.goto(process.argv[2]);await p.waitForTimeout(600);
+  const r=await p.evaluate(()=>{const был=settings.graniVoice;
+   settings.graniVoice=undefined;const поУмолчанию=Speech.GRANI_MODELS[0];
+   settings.graniVoice="igm";const мужской=Speech.GRANI_MODELS[0];
+   settings.graniVoice="чепуха";const запас=Speech.GRANI_MODELS[0];settings.graniVoice=был;
+   const sel=document.getElementById("setGraniVoice");
+   return {поУмолчанию,мужской,запас,пункты:sel?[...sel.options].map(o=>o.value):[],имя:sel&&sel.getAttribute("aria-label"),
+    дениса:document.documentElement.innerHTML.indexOf("denis")>=0};});
+  await p.close();return r;})();
+ const денисНет=!fs.existsSync(path.join(КОРЕНЬ,'tts','ru_RU-denis-medium.onnx'));
+ check('11. два встроенных голоса в папке игры: женский sova200 и мужской igm3804, 22 050 Гц, та же таблица звуков',
+  голоса.every(g=>g.мб>50&&g.частота===22050&&Array.isArray(g.метка)&&g.метка[0]===150),голоса);
+ check('11б. по умолчанию говорит женский, мужской выбирается в настройках, прежнего «Дениса» нет',
+  /sova200/.test(выбор.поУмолчанию)&&/igm3804/.test(выбор.мужской)&&/sova200/.test(выбор.запас)
+  &&выбор.пункты.join()==="sova,igm"&&!!выбор.имя&&!выбор.дениса&&денисНет,{выбор,денисНет});
 
  await browser.close();
  results.forEach(r=>console.log(r));

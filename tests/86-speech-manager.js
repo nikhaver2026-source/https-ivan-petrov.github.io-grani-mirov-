@@ -59,7 +59,10 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   Speech.adapter=window.FAKE;Speech._chunk=t=>[String(t)];Speech.stop();Speech.recent.clear();
   settings.speech=1;settings.autoSpeech=1;settings.verbosity="normal";settings.soundFirst=1;settings.srMode="auto";
   settings.stopOnMove=1;settings.stopOnMenu=1;settings.stopOnGather=1;});
- const fresh=()=>page.evaluate(()=>{Speech.stop();Speech.recent.clear();Speech.agg.items=null;clearTimeout(Speech.agg.timer);Speech.last=null;Speech.history=[];FAKE.reset();});
+ /* Бродячая тварь могла завязать бой посреди замеров, и её замахи и удары
+    ложились в запись синтезатора чужими строками. Перед каждой проверкой
+    бой, если он есть, закрывается. */
+ const fresh=()=>page.evaluate(()=>{try{if(G.inCombat||G.combat)endCombat();}catch(_){}Speech.stop();Speech.recent.clear();Speech.agg.items=null;clearTimeout(Speech.agg.timer);Speech.last=null;Speech.history=[];FAKE.reset();});
  const state=()=>page.evaluate(()=>({log:FAKE.log.slice(),cancels:FAKE.cancels,speaking:Speech.isSpeaking(),
   cur:Speech.current&&Speech.current.text,queue:Speech.queue.map(m=>m.text),stats:Object.assign({},Speech.stats)}));
 
@@ -453,14 +456,15 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
     12:/Все голоса телефона — списком/.test(т(12)),
     13:/своя строка/.test(т(13)),
     14:/самой мягкой до самой строгой/.test(т(14)),
-    15:/Выбрать народ/.test(т(15))&&/сто пятьдесят/.test(т(15))&&/значки/.test(т(15))};
+    15:/Выбрать народ/.test(т(15))&&/сто пятьдесят/.test(т(15))&&/значки/.test(т(15)),
+    16:/Встроенный голос/.test(т(16))&&/Лестница/.test(т(16))&&/шагом по камню/.test(т(16))};
    return out;});
   await p3.close();
   check('«Что нового» — последний пункт меню действий перед «Закрыть», с числом новых',
-   м.пункт==="am:whatsnew"&&м.закрыть==="am:close"&&/Что нового \(новых: 6\)/.test(м.подпись||""),м);
+   м.пункт==="am:whatsnew"&&м.закрыть==="am:close"&&/Что нового \(новых: 7\)/.test(м.подпись||""),м);
   check('окно «Что нового»: выпуски от нового к старому, новые помечены, пропущенные читаются подряд',
-   м.открыто&&м.выпуски[0]==="newsread:fresh"&&м.выпуски[1]==="newsread:"+NV&&м.выпуски.length===NV&&м.новые===6
-   &&/Выбрать народ/.test(м.последний)&&/Действие с сундуком/.test(м.подряд)&&/Все голоса телефона/.test(м.подряд),м);
+   м.открыто&&м.выпуски[0]==="newsread:fresh"&&м.выпуски[1]==="newsread:"+NV&&м.выпуски.length===NV&&м.новые===7
+   &&/Встроенный голос игры сменился/.test(м.последний)&&/Действие с сундуком/.test(м.подряд)&&/Все голоса телефона/.test(м.подряд),м);
   check('каждый выпуск сохранил полный текст',Object.values(м.тексты).every(Boolean),м.тексты);
  }
 
