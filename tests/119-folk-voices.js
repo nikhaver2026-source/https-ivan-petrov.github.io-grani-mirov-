@@ -41,7 +41,8 @@ const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(e!==undefined?' :
   /ElevenLabs/.test(cr)&&/Terms of Service/.test(cr)&&/eleven_multilingual_v2/.test(cr));
  const нетВТитрах=mp3.filter(f=>cr.indexOf(f)<0);
  check('CREDITS.md перечисляет каждую запись',нетВТитрах.length===0,нетВТитрах.slice(0,5));
- check('CREDITS.md честно говорит о недостающих строках',/тридцати семи|Тридцати семи/i.test(cr));
+ check('CREDITS.md честно называет, чем озвучены тридцать четыре народа: голоса Piper и их лицензия',
+  /Тридцать четыре народа/.test(cr)&&/Piper/.test(cr)&&/Apache-2\.0/.test(cr)&&/rraaww\/ru_piper/.test(cr));
 
  const browser=await chromium.launch();
  const ctx=await browser.newContext({hasTouch:true,isMobile:true,viewport:{width:390,height:780}});
@@ -88,7 +89,7 @@ const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(e!==undefined?' :
  check('сто двенадцать народов, и у каждого свой файл',
   полнота.счёт.народов===112&&полнота.всего===112&&полнота.безГолоса.length===0
   &&полнота.лишние.length===0&&полнота.файлыРазные===112,полнота);
- check('семьдесят пять народов говорят своей строкой',полнота.счёт.своих===75,полнота.счёт.своих);
+ check('все сто двенадцать народов говорят своей строкой',полнота.счёт.своих===112,полнота.счёт.своих);
  check('у народа есть регистр и разумный темп',
   полнота.регистры.join(",")==="ж,м"&&полнота.темпы,полнота.регистры);
  check('сорок шесть ремёсел, и ни одно не без слова',
