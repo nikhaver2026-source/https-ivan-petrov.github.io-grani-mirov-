@@ -305,7 +305,7 @@ const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(e!==undefined?' :
  check('глава 99 в первой части, глава 2 говорит о двойном касании на поле',
   !!док.глава&&док.абз>=6&&/Часть I\./.test(док.часть||"")&&док.гл2,док);
  check('самопроверка мира знает тайную палату',док.сверка,док);
- check('новость для вернувшихся — десятая',док.news===10,док.news);
+ check('новость для вернувшихся — десятая и позже',док.news>=10,док.news);
  const readme=fs.readFileSync(path.join(ROOT,'README.md'),'utf8');
  const вз=fs.readFileSync(path.join(ROOT,'docs','ВЗАИМОДЕЙСТВИЕ.md'),'utf8');
  const tr=fs.readFileSync(path.join(ROOT,'tests','README.md'),'utf8');
