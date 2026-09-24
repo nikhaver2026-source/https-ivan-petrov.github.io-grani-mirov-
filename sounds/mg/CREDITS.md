@@ -192,8 +192,6 @@ Unported (CC BY-SA 3.0): https://creativecommons.org/licenses/by-sa/3.0/
 | siege_roll_02 | осадная машина катится | `catapult_walk2.wav` |
 | siege_roll_03 | осадная машина катится | `catapult_walk3.wav` |
 | siege_roll_04 | осадная машина катится | `catapult_walk4.wav` |
-| siege_shot_01 | выстрел камнемёта | `catapult_attack1.wav` |
-| siege_shot_02 | выстрел камнемёта | `catapult_attack2.wav` |
 | spear_thrust_01 | выпад копья | `spearman_attack1.wav` |
 | spear_thrust_02 | выпад копья | `spearman_attack2.wav` |
 | spear_thrust_03 | выпад копья | `spearman_attack3.wav` |
@@ -235,9 +233,6 @@ Unported (CC BY-SA 3.0): https://creativecommons.org/licenses/by-sa/3.0/
 | tower_fall_03 | башня рушится | `magic_building_fall5.wav` |
 | tower_fall_04 | башня рушится | `magic_building_fall6.wav` |
 | tower_fall_05 | башня рушится | `magic_building_fall7.wav` |
-| tower_hit_01 | попадание по башне | `tower_hit1.wav` |
-| tower_hit_02 | попадание по башне | `tower_hit2.wav` |
-| tower_hit_03 | попадание по башне | `tower_hit3.wav` |
 | tower_shot_01 | выстрел башни | `tower_attack1.wav` |
 | tower_shot_02 | выстрел башни | `tower_attack2.wav` |
 | tower_shot_03 | выстрел башни | `tower_attack3.wav` |
@@ -256,17 +251,11 @@ Unported (CC BY-SA 3.0): https://creativecommons.org/licenses/by-sa/3.0/
 | wood_axe_01 | топор по дереву | `worker_harvest_wood1.wav` |
 | wood_axe_02 | топор по дереву | `worker_harvest_wood2.wav` |
 | wood_axe_03 | топор по дереву | `worker_harvest_wood3.wav` |
-| wraith_die_01 | призрачный доспех: развеян | `ghost_armor_die1.wav` |
-| wraith_die_02 | призрачный доспех: развеян | `ghost_armor_die2.wav` |
-| wraith_die_03 | призрачный доспех: развеян | `ghost_armor_die3.wav` |
-| wraith_die_04 | призрачный доспех: развеян | `ghost_armor_die4.wav` |
-| wraith_die_05 | призрачный доспех: развеян | `ghost_armor_die5.wav` |
-| wraith_moan_01 | призрачный доспех: стон | `ghost_armor_attack1.wav` |
-| wraith_moan_02 | призрачный доспех: стон | `ghost_armor_attack10.wav` |
-| wraith_moan_03 | призрачный доспех: стон | `ghost_armor_attack2.wav` |
-| wraith_moan_04 | призрачный доспех: стон | `ghost_armor_attack3.wav` |
-| wraith_moan_05 | призрачный доспех: стон | `ghost_armor_attack4.wav` |
-| wraith_moan_06 | призрачный доспех: стон | `ghost_armor_attack5.wav` |
+| wraith_die_01.flac | призрак развеян | `ghost_armor_die1.wav` |
+| wraith_die_02.flac | призрак развеян | `ghost_armor_die2.wav` |
+| wraith_die_03.flac | призрак развеян | `ghost_armor_die3.wav` |
+| wraith_die_04.flac | призрак развеян | `ghost_armor_die4.wav` |
+| wraith_die_05.flac | призрак развеян | `ghost_armor_die5.wav` |
 | wyrm_dark_01 | чёрный дракон: рык | `evil_dragon_attack1.wav` |
 | wyrm_dark_02 | чёрный дракон: рык | `evil_dragon_attack2.wav` |
 | wyrm_dark_03 | чёрный дракон: рык | `evil_dragon_attack3.wav` |
@@ -315,3 +304,26 @@ Unported (CC BY-SA 3.0): https://creativecommons.org/licenses/by-sa/3.0/
 | `mg_spell_dark_02.flac` | тёмная чара ковра-самолёта | `carpet_attack1.wav` |
 | `mg_portal_01.flac` | переход: чары смыкаются с воздушным ударом | `battlemage_hit1.wav` |
 | `mg_portal_02.flac` | переход: чары смыкаются с воздушным ударом | `initiate_hit4.wav` |
+
+## Версия 3.3: призраки без потерь
+
+Гибель призрака (`wraith_die_01…05.flac`) взята заново из исходных WAV
+MegaGlest (`techs/megapack/factions/magic/units/ghost_armor/sounds/`), без
+сжатия с потерями: раньше она лежала здесь в OGG около 90 кбит/с. Громкость
+выровнена по пику −1 дБ, динамика мягко сжата — звук стал плотнее и ярче;
+лицензия прежняя, CC BY-SA 3.0.
+
+Стон призрака (`wraith_moan_07…09.flac`) — три призрачных голоса из свободной
+игры **Stendhal** (https://stendhalgame.org), из её исходников без потерь
+`data/sounds/lossless_sources`. Прежние стоны призрачного доспеха MegaGlest
+(OGG около 90 кбит/с, скорее лязг, чем голос) убраны. Лицензия записей
+Stendhal — CC0 1.0 (общественное достояние), текст — `../foe/LICENSE-CC0.txt`.
+
+| Файл | Что это | Автор | Лицензия | Первоисточник | Файл в Stendhal |
+|---|---|---|---|---|---|
+| `wraith_moan_07.flac` | призрачный голос | HorrorAudio | CC0 | https://freesound.org/people/HorrorAudio/sounds/431979/ | `lossless_sources/ghost-01.flac` |
+| `wraith_moan_08.flac` | вздох из-за края | HorrorAudio | CC0 | https://freesound.org/people/HorrorAudio/sounds/431980/ | `lossless_sources/ghost-02.flac` |
+| `wraith_moan_09.flac` | призрачный вой | HorrorAudio | CC0 | https://freesound.org/people/HorrorAudio/sounds/431981/ | `lossless_sources/ghost-03.flac` |
+
+Выстрел камнемёта и попадание по башне из этой папки переехали в `../siege`,
+собранные заново из исходников без потерь.

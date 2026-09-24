@@ -197,9 +197,7 @@ sounds/es/excavator.ogg	99
 sounds/es/explosion_huge.ogg	95
 sounds/es/explosion_large.ogg	121
 sounds/es/explosion_medium.ogg	120
-sounds/es/explosion_nuke.ogg	76
 sounds/es/explosion_small.ogg	124
-sounds/es/explosion_tiny.ogg	129
 sounds/es/fate_fire.ogg	114
 sounds/es/final_explosion_large.ogg	85
 sounds/es/final_explosion_medium.ogg	83
@@ -245,7 +243,6 @@ sounds/es/stagnation_beam.ogg	76
 sounds/es/star_tail.ogg	100
 sounds/es/sunbeam.ogg	74
 sounds/es/torpedo_hit.ogg	94
-sounds/foe/foe_bone_die_01.ogg	82
 sounds/foe/foe_bone_die_02.ogg	82
 sounds/foe/foe_bone_hit_01.ogg	83
 sounds/foe/foe_bone_pain_01.ogg	121
@@ -264,10 +261,6 @@ sounds/foe/foe_goblin_pain_01.ogg	218
 sounds/foe/foe_grave_die_01.ogg	148
 sounds/foe/foe_grave_hit_01.ogg	164
 sounds/foe/foe_grave_pain_01.ogg	164
-sounds/foe/foe_undead_die_01.ogg	65
-sounds/foe/foe_undead_die_02.ogg	95
-sounds/foe/foe_undead_hit_01.ogg	75
-sounds/foe/foe_undead_pain_01.ogg	137
 sounds/foe/foe_wyrm_cast_01.ogg	135
 sounds/foe/foe_wyrm_die_01.ogg	112
 sounds/foe/foe_wyrm_hit_01.ogg	131
@@ -510,8 +503,6 @@ sounds/mg/siege_roll_01.ogg	86
 sounds/mg/siege_roll_02.ogg	89
 sounds/mg/siege_roll_03.ogg	92
 sounds/mg/siege_roll_04.ogg	84
-sounds/mg/siege_shot_01.ogg	63
-sounds/mg/siege_shot_02.ogg	64
 sounds/mg/spear_thrust_01.ogg	120
 sounds/mg/spear_thrust_02.ogg	120
 sounds/mg/spear_thrust_03.ogg	139
@@ -553,9 +544,6 @@ sounds/mg/tower_fall_02.ogg	64
 sounds/mg/tower_fall_03.ogg	71
 sounds/mg/tower_fall_04.ogg	69
 sounds/mg/tower_fall_05.ogg	67
-sounds/mg/tower_hit_01.ogg	64
-sounds/mg/tower_hit_02.ogg	71
-sounds/mg/tower_hit_03.ogg	67
 sounds/mg/tower_shot_01.ogg	68
 sounds/mg/tower_shot_02.ogg	66
 sounds/mg/tower_shot_03.ogg	69
@@ -574,17 +562,6 @@ sounds/mg/wolf_howl_01.ogg	46
 sounds/mg/wood_axe_01.ogg	227
 sounds/mg/wood_axe_02.ogg	192
 sounds/mg/wood_axe_03.ogg	171
-sounds/mg/wraith_die_01.ogg	94
-sounds/mg/wraith_die_02.ogg	75
-sounds/mg/wraith_die_03.ogg	78
-sounds/mg/wraith_die_04.ogg	84
-sounds/mg/wraith_die_05.ogg	74
-sounds/mg/wraith_moan_01.ogg	89
-sounds/mg/wraith_moan_02.ogg	99
-sounds/mg/wraith_moan_03.ogg	92
-sounds/mg/wraith_moan_04.ogg	96
-sounds/mg/wraith_moan_05.ogg	101
-sounds/mg/wraith_moan_06.ogg	88
 sounds/mg/wyrm_dark_01.ogg	83
 sounds/mg/wyrm_dark_02.ogg	76
 sounds/mg/wyrm_dark_03.ogg	74
@@ -689,7 +666,6 @@ sounds/oc/oc_bat_noise_02.ogg	99
 sounds/oc/oc_bat_noise_03.ogg	101
 sounds/oc/oc_birds_01.ogg	159
 sounds/oc/oc_blast_02.ogg	229
-sounds/oc/oc_blast_03.ogg	54
 sounds/oc/oc_blast_04.ogg	129
 sounds/oc/oc_boiling_01.ogg	66
 sounds/oc/oc_bow_arrow_01.ogg	211

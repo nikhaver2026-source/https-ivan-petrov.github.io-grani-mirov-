@@ -15,7 +15,6 @@ https://creativecommons.org/licenses/by-sa/3.0/
 
 | Файл | Роль в игре | Исходный файл Flare |
 |---|---|---|
-| foe_bone_die_01 | костяк рассыпается | `fantasycore/soundfx/enemies/skeleton_die.ogg` |
 | foe_bone_die_02 | костяк разбит вдребезги | `fantasycore/soundfx/enemies/skeleton_critdie.ogg` |
 | foe_bone_hit_01 | костяк бьёт | `fantasycore/soundfx/enemies/skeleton_phys.ogg` |
 | foe_bone_pain_01 | костяку больно | `fantasycore/soundfx/enemies/skeleton_hit.ogg` |
@@ -34,10 +33,6 @@ https://creativecommons.org/licenses/by-sa/3.0/
 | foe_grave_die_01 | могильная тварь упокоена | `fantasycore/soundfx/enemies/grave_die.ogg` |
 | foe_grave_hit_01 | могильная тварь бьёт | `fantasycore/soundfx/enemies/grave_attack.ogg` |
 | foe_grave_pain_01 | могильной твари больно | `fantasycore/soundfx/enemies/grave_hit.ogg` |
-| foe_undead_die_01 | нежить упокоена | `fantasycore/soundfx/enemies/zombie_die.ogg` |
-| foe_undead_die_02 | нежить разорвана | `fantasycore/soundfx/enemies/zombie_critdie.ogg` |
-| foe_undead_hit_01 | нежить бьёт | `fantasycore/soundfx/enemies/zombie_phys.ogg` |
-| foe_undead_pain_01 | нежити больно | `fantasycore/soundfx/enemies/zombie_hit.ogg` |
 | foe_wyrm_cast_01 | крылатая тварь дышит силой | `fantasycore/soundfx/enemies/wyvern_ment.ogg` |
 | foe_wyrm_die_01 | крылатая тварь падает | `fantasycore/soundfx/enemies/wyvern_die.ogg` |
 | foe_wyrm_hit_01 | крылатая тварь бьёт | `fantasycore/soundfx/enemies/wyvern_phys.ogg` |
@@ -55,3 +50,21 @@ https://creativecommons.org/licenses/by-sa/3.0/
 | Файл | Роль в игре | Автор | Лицензия | Первоисточник | Файл в игре |
 |---|---|---|---|---|---|
 | foe_undead_cast_01 | нежить стонет | ArriGD | CC0 | https://freesound.org/people/ArriGD/sounds/144005/ | `lossless_sources/undead-5.flac` |
+
+## Версия 3.3: нежить и костяки ярче
+
+Удар, боль и гибель нежити Flare были записаны в 22 кГц и сжаты около
+65–100 кбит/с — глухо и тускло. Их сменили записи из исходников без потерь
+Stendhal (`data/sounds/lossless_sources`), выровненные по пику −1 дБ с мягким
+сжатием динамики; FLAC, один канал, 44,1 кГц. Там же костяк получил сухой
+стук рассыпающихся костей и скрипучий смех. Тексты лицензий рядом:
+`LICENSE-CC0.txt`, `LICENSE-CC-BY-3.0.txt`.
+
+| Файл | Роль в игре | Автор | Лицензия | Первоисточник | Файл в Stendhal |
+|---|---|---|---|---|---|
+| foe_undead_hit_02 | нежить бьёт: рык | Ogrebane | CC0 | https://opengameart.org/content/monster-sound-effects-2 | `lossless_sources/monster-1.flac` |
+| foe_undead_pain_02 | нежити больно | Ogrebane | CC0 | https://opengameart.org/content/monster-sound-effects-2 | `lossless_sources/monster-2.flac` |
+| foe_undead_die_03 | нежить упокоена: рык и предсмертный стон | Ogrebane; Dorothy Jean Thompson (pyro13djt) | CC0; CC BY 3.0 | https://opengameart.org/content/monster-sound-effects-2 · https://freesound.org/people/pyro13djt/sounds/256032/ | `lossless_sources/monster-16.flac` + `lossless_sources/undead-06.flac` |
+| foe_undead_die_04 | нежить упокоена: предсмертный стон | Dorothy Jean Thompson (pyro13djt) | CC BY 3.0 | https://freesound.org/people/pyro13djt/sounds/256032/ | `lossless_sources/undead-06.flac` |
+| foe_bone_die_03 | костяк рассыпается | Jordan Irwin (AntumDeluge) | CC0 | https://opengameart.org/node/16324 | `lossless_sources/bones-2.flac` |
+| foe_bone_pain_02 | костяк скрипуче смеётся | Nanakisan | CC BY 3.0 | https://freesound.org/people/Nanakisan/sounds/253524/ | `lossless_sources/skeleton-laugh-01.flac` |

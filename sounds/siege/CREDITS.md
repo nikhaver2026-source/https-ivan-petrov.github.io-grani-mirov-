@@ -38,3 +38,32 @@
 |---|---|---|
 | `siege_alarm_ambush_01.flac` | тревога: на отряд напали | `audio/interface/alarm/alarmattackunit_1.ogg` |
 | `siege_alarm_wild_01.flac` | тревога: напали дикие | `audio/interface/alarm/alarm_attacked_gaia_01.ogg` |
+
+## Версия 3.3: камнемёт и попадание по башне
+
+Выстрел камнемёта и удар по башне собраны заново из записей без потерь трёх
+свободных игр. Прежние (OGG около 65 кбит/с, 22 кГц) звучали глухо. Теперь
+каждая запись — настоящий слой за слоем: скрип натянутого рычага, выстрел,
+дальний удар камня; удар камня в кладку и осыпь обломков. Громкость выровнена
+по пику −1 дБ, динамика мягко сжата; FLAC, один канал, 44,1 кГц.
+
+Источники и лицензии:
+- **MegaGlest** (https://megaglest.org, проект MegaGlest и участники) — CC BY-SA 3.0,
+  исходные WAV из `techs/megapack/commondata/sounds/`; текст — `LICENSE-CC-BY-SA-3.0.txt`.
+- **OpenClonk** (https://www.openclonk.org, The OpenClonk Team) — CC BY 3.0,
+  `planet/Sound.ocg/Hits.ocg/Materials.ocg/`; текст — `LICENSE-CC-BY-3.0.txt`.
+- **Stendhal** (https://stendhalgame.org), `data/sounds/lossless_sources/rocks-1.flac`,
+  автор Allan K Zepeda (ALLANZ10D), CC0 — https://freesound.org/people/ALLANZ10D/sounds/155934/;
+  текст — `LICENSE-CC0.txt`.
+
+Сведённые записи распространяются под CC BY-SA 3.0.
+
+| Файл | Что это | Из чего собрано |
+|---|---|---|
+| `siege_catapult_01.flac` | камнемёт: скрип рычага и выстрел | OpenClonk `Wood.ocg/WoodCreak3.ogg` + MegaGlest `catapult_attack1.wav` |
+| `siege_catapult_02.flac` | камнемёт: скрип рычага и выстрел | OpenClonk `Wood.ocg/WoodCreak2.ogg` + MegaGlest `catapult_attack2.wav` |
+| `siege_catapult_03.flac` | камнемёт: выстрел и дальний удар камня | OpenClonk `Wood.ocg/WoodCreak1.ogg` + MegaGlest `catapult_attack1.wav` + `catapult_hit2.wav` |
+| `siege_tower_hit_01.flac` | камень бьёт в башню, сыплются обломки | MegaGlest `tower_hit1.wav` + OpenClonk `Rock.ocg/Rockfall1.wav` |
+| `siege_tower_hit_02.flac` | камень бьёт в башню, сыплются обломки | MegaGlest `tower_hit2.wav` + OpenClonk `Rock.ocg/Rockfall2.wav` |
+| `siege_tower_hit_03.flac` | камень бьёт в башню, осыпь | MegaGlest `tower_hit3.wav` + Stendhal `rocks-1.flac` |
+| `siege_tower_hit_04.flac` | тяжёлый снаряд в стену, обломки | MegaGlest `catapult_hit1.wav` + OpenClonk `Rock.ocg/Rockfall1.wav` |

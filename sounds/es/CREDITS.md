@@ -35,9 +35,7 @@ domain sounds taken from freesound.org»); отдельные записи ид�
 | `explosion_huge.ogg` | взрыв | Mike Koenig | CC BY-SA 3.0 |
 | `explosion_large.ogg` | взрыв | endless-sky contributors, freesound.org | общественное достояние |
 | `explosion_medium.ogg` | взрыв | endless-sky contributors, freesound.org | общественное достояние |
-| `explosion_nuke.ogg` | взрыв | endless-sky contributors, freesound.org | общественное достояние |
 | `explosion_small.ogg` | взрыв | endless-sky contributors, freesound.org | общественное достояние |
-| `explosion_tiny.ogg` | взрыв | endless-sky contributors, freesound.org | общественное достояние |
 | `fate_fire.ogg` | огонь судьбы | endless-sky contributors, freesound.org | общественное достояние |
 | `final_explosion_large.ogg` | последний взрыв | endless-sky contributors, freesound.org | общественное достояние |
 | `final_explosion_medium.ogg` | последний взрыв | endless-sky contributors, freesound.org | общественное достояние |

@@ -870,7 +870,9 @@ const NEWS=[
  {v:15,н:"в начале пути можно выбрать народ: сто пятьдесят рас и сто тридцать народов, значки убраны",
   т:"В начале пути теперь выбирают не только ремесло, но и народ: меню действий, раздел «Начало пути», пункт «Выбрать народ». Рас в мире теперь сто пятьдесят — девяносто восемь светлых земель и пятьдесят две тёмных, народов-ветвей сто тридцать; все новые — свои, из преданий и земель Грани: болотники, домовики, сирины, громовники и другие. Каждый пункт называет разряд, покровителя, наследие и народы расы, двойное касание выбирает, и выбор делается один раз. У всех новых рас и народов свой русский голос. И ещё: из подписей убраны значки — звёздочки, блёстки, компасы, стрелки, — чтец экрана больше не зачитывает их вместо дела."},
  {v:16,н:"новый встроенный голос разборчивее, лестница больше не зацикливается и слышна",
-  т:"Встроенный голос игры сменился: вместо «Дениса» говорит женский голос, самый разборчивый из двадцати проверенных; мужской выбирается в настройках, раздел «Синтезатор речи», пункт «Встроенный голос». Лестница больше не ходит по кругу: если шахту держит страж, двойное касание сразу начинает бой, а не марш из полутора десятков ступеней. Каждая ступень теперь звучит настоящим шагом по камню. Проверка ключа ElevenLabs называет настоящую причину, если голос не отвечает."}];
+  т:"Встроенный голос игры сменился: вместо «Дениса» говорит женский голос, самый разборчивый из двадцати проверенных; мужской выбирается в настройках, раздел «Синтезатор речи», пункт «Встроенный голос». Лестница больше не ходит по кругу: если шахту держит страж, двойное касание сразу начинает бой, а не марш из полутора десятков ступеней. Каждая ступень теперь звучит настоящим шагом по камню. Проверка ключа ElevenLabs называет настоящую причину, если голос не отвечает."},
+ {v:17,н:"камнемёт, удар по башне, нежить, призраки и взрыв звучат ярче, тихие звуки стали слышны",
+  т:"Сто семь записей, которые звучали слишком тихо и в энциклопедии звуков почти не слышались, выровнены по громкости: шаги героя, наковальня, скрип петель, звуки леса, капель и ветер подземелий. Камнемёт теперь слышен целиком: скрип натянутого рычага, выстрел и дальний удар камня; попадание по башне — удар в кладку и осыпь обломков. Раньше эти два звука в игре не звучали вовсе, теперь их слышно при осаде города, а если вы стоите в осаждённой крепости — каждый день обстрела. Нежить рычит и стонет живыми записями вместо глухих, костяк скрипуче смеётся и рассыпается сухим стуком костей, призраки стонут призрачными голосами. Самый слабый взрыв заменён раскатистым, обвал и разлом гремят настоящими взрывами вместо космических. Все новые записи — без потерь."}];
 const NEWS_V=NEWS[NEWS.length-1].v;
 /* Одна фраза: главное из последнего выпуска и сколько ещё новостей ждёт в меню. */
 function newsBrief(было){
@@ -10910,9 +10912,9 @@ const SOUND_BANK={
  deep_stone:{f:["deep/deep_stone_01.ogg"],d:"Каменная плита отходит"},
  deep_wind:{f:["deep/deep_wind_01.ogg"],d:"Сквозняк в подземелье"},
  deep_wood:{f:["deep/deep_wood_01.ogg"],d:"Деревянная створка"},
- foe_bone_die:{f:["foe/foe_bone_die_01.ogg","foe/foe_bone_die_02.ogg"],d:"Костяк рассыпается"},
+ foe_bone_die:{f:["foe/foe_bone_die_03.flac","foe/foe_bone_die_02.ogg"],d:"Костяк рассыпается"},
  foe_bone_hit:{f:["foe/foe_bone_hit_01.ogg"],d:"Костяк бьёт"},
- foe_bone_pain:{f:["foe/foe_bone_pain_01.ogg"],d:"Костяку больно"},
+ foe_bone_pain:{f:["foe/foe_bone_pain_01.ogg","foe/foe_bone_pain_02.flac"],d:"Костяку больно"},
  foe_brute_die:{f:["foe/foe_brute_die_01.ogg","foe/foe_brute_die_02.ogg"],d:"Громада падает"},
  foe_brute_hit:{f:["foe/foe_brute_hit_01.ogg"],d:"Громада бьёт"},
  foe_brute_pain:{f:["foe/foe_brute_pain_01.ogg"],d:"Громаде больно"},
@@ -10927,9 +10929,9 @@ const SOUND_BANK={
  foe_grave_hit:{f:["foe/foe_grave_hit_01.ogg"],d:"Могильная тварь бьёт"},
  foe_grave_pain:{f:["foe/foe_grave_pain_01.ogg"],d:"Могильной твари больно"},
  foe_undead_cast:{f:["foe/foe_undead_cast_01.flac"],d:"Нежить стонет"},
- foe_undead_die:{f:["foe/foe_undead_die_01.ogg","foe/foe_undead_die_02.ogg"],d:"Нежить упокоена"},
- foe_undead_hit:{f:["foe/foe_undead_hit_01.ogg"],d:"Нежить бьёт"},
- foe_undead_pain:{f:["foe/foe_undead_pain_01.ogg"],d:"Нежити больно"},
+ foe_undead_die:{f:["foe/foe_undead_die_03.flac","foe/foe_undead_die_04.flac"],d:"Нежить упокоена"},
+ foe_undead_hit:{f:["foe/foe_undead_hit_02.flac"],d:"Нежить бьёт"},
+ foe_undead_pain:{f:["foe/foe_undead_pain_02.flac"],d:"Нежити больно"},
  foe_wyrm_cast:{f:["foe/foe_wyrm_cast_01.ogg"],d:"Крылатая тварь дышит силой"},
  foe_wyrm_die:{f:["foe/foe_wyrm_die_01.ogg"],d:"Крылатая тварь падает"},
  foe_wyrm_hit:{f:["foe/foe_wyrm_hit_01.ogg"],d:"Крылатая тварь бьёт"},
@@ -11795,7 +11797,7 @@ Object.assign(SOUND_BANK,{
  raptor_wing:{f:["mg/raptor_wing_01.ogg"],d:"Хищная птица: крылья"},
  serpent_hiss:{f:["mg/serpent_hiss_01.ogg","mg/serpent_hiss_02.ogg","mg/serpent_hiss_03.ogg","mg/serpent_hiss_04.ogg","mg/serpent_hiss_05.ogg"],d:"Змей: шипение"},
  siege_roll:{f:["mg/siege_roll_01.ogg","mg/siege_roll_02.ogg","mg/siege_roll_03.ogg","mg/siege_roll_04.ogg"],d:"Осадная машина катится"},
- siege_shot:{f:["mg/siege_shot_01.ogg","mg/siege_shot_02.ogg"],d:"Выстрел камнемёта"},
+ siege_shot:{f:["siege/siege_catapult_01.flac","siege/siege_catapult_02.flac","siege/siege_catapult_03.flac"],d:"Выстрел камнемёта"},
  mg_spear:{f:["mg/spear_thrust_01.ogg","mg/spear_thrust_02.ogg","mg/spear_thrust_03.ogg","mg/spear_thrust_04.ogg","mg/spear_thrust_05.ogg","mg/spear_thrust_06.ogg"],d:"Выпад копья"},
  spell_arch:{f:["mg/spell_arch_01.ogg","mg/spell_arch_02.ogg","mg/spell_arch_03.ogg","mg/spell_arch_04.ogg","mg/spell_arch_05.ogg","mg/spell_arch_06.ogg","mg/spell_arch_07.ogg","mg/spell_arch_08.ogg"],d:"Чары архимага"},
  spell_battle:{f:["mg/spell_battle_01.ogg","mg/spell_battle_02.ogg","mg/spell_battle_03.ogg","mg/spell_battle_04.ogg","mg/spell_battle_05.ogg","mg/spell_battle_06.ogg"],d:"Боевые чары"},
@@ -11805,13 +11807,13 @@ Object.assign(SOUND_BANK,{
  spell_summon:{f:["mg/spell_summon_01.ogg","mg/spell_summon_02.ogg","mg/spell_summon_03.ogg","mg/spell_summon_04.ogg"],d:"Призыв из-за грани"},
  spell_ward:{f:["mg/spell_ward_01.ogg"],d:"Оберег"},
  tower_fall:{f:["mg/tower_fall_01.ogg","mg/tower_fall_02.ogg","mg/tower_fall_03.ogg","mg/tower_fall_04.ogg","mg/tower_fall_05.ogg"],d:"Башня рушится"},
- tower_hit:{f:["mg/tower_hit_01.ogg","mg/tower_hit_02.ogg","mg/tower_hit_03.ogg"],d:"Попадание по башне"},
+ tower_hit:{f:["siege/siege_tower_hit_01.flac","siege/siege_tower_hit_02.flac","siege/siege_tower_hit_03.flac","siege/siege_tower_hit_04.flac"],d:"Попадание по башне"},
  tower_shot:{f:["mg/tower_shot_01.ogg","mg/tower_shot_02.ogg","mg/tower_shot_03.ogg","mg/tower_shot_04.ogg","mg/tower_shot_05.ogg","mg/tower_shot_06.ogg"],d:"Выстрел с башни"},
  warrior_shout:{f:["mg/warrior_shout_01.ogg","mg/warrior_shout_02.ogg","mg/warrior_shout_03.ogg","mg/warrior_shout_04.ogg","mg/warrior_shout_05.ogg","mg/warrior_shout_06.ogg","mg/warrior_shout_07.ogg","mg/warrior_shout_08.ogg"],d:"Клич воина"},
  wolf_howl:{f:["mg/wolf_howl_01.ogg"],d:"Волчий вой"},
  wood_axe:{f:["mg/wood_axe_01.ogg","mg/wood_axe_02.ogg","mg/wood_axe_03.ogg"],d:"Топор по дереву"},
- wraith_die:{f:["mg/wraith_die_01.ogg","mg/wraith_die_02.ogg","mg/wraith_die_03.ogg","mg/wraith_die_04.ogg","mg/wraith_die_05.ogg"],d:"Призрак развеян"},
- wraith_moan:{f:["mg/wraith_moan_01.ogg","mg/wraith_moan_02.ogg","mg/wraith_moan_03.ogg","mg/wraith_moan_04.ogg","mg/wraith_moan_05.ogg","mg/wraith_moan_06.ogg"],d:"Призрачный доспех: стон"},
+ wraith_die:{f:["mg/wraith_die_01.flac","mg/wraith_die_02.flac","mg/wraith_die_03.flac","mg/wraith_die_04.flac","mg/wraith_die_05.flac"],d:"Призрак развеян"},
+ wraith_moan:{f:["mg/wraith_moan_07.flac","mg/wraith_moan_08.flac","mg/wraith_moan_09.flac"],d:"Призрак стонет"},
  wyrm_dark:{f:["mg/wyrm_dark_01.ogg","mg/wyrm_dark_02.ogg","mg/wyrm_dark_03.ogg","mg/wyrm_dark_04.ogg"],d:"Чёрный дракон: рык"},
  wyrm_die:{f:["mg/wyrm_die_01.ogg","mg/wyrm_die_02.ogg"],d:"Дракон: гибель"},
  wyrm_pain:{f:["mg/wyrm_pain_01.ogg","mg/wyrm_pain_02.ogg","mg/wyrm_pain_03.ogg","mg/wyrm_pain_04.ogg"],d:"Дракон: боль"},
@@ -11913,7 +11915,7 @@ Object.assign(SOUND_BANK,{
    Семьдесят две записи: взрывы всех размеров, удары, гулы, переходы,
    тревога и копка. За Гранью они звучат как обряд, разрыв Грани и голос
    пустоты. Авторы и лицензии — sounds/es/CREDITS.md. */
- es_boom:{f:["es/explosion_huge.ogg","es/explosion_large.ogg","es/explosion_medium.ogg","es/explosion_nuke.ogg","es/explosion_small.ogg","es/explosion_tiny.ogg"],d:"Взрыв"},
+ es_boom:{f:["es/explosion_huge.ogg","es/explosion_large.ogg","es/explosion_medium.ogg","oc/oc_blast_05.flac","es/explosion_small.ogg","oc/oc_blast_06.flac"],d:"Взрыв"},
  es_boom_last:{f:["es/final_explosion_large.ogg","es/final_explosion_medium.ogg","es/final_explosion_small.ogg"],d:"Последний взрыв"},
  es_crunch:{f:["es/asteroid_crunch_large.ogg","es/asteroid_crunch_medium.ogg","es/asteroid_crunch_small.ogg","es/crunch.ogg","es/bounce.ogg"],d:"Камень крошится"},
  es_hit:{f:["es/bludgeon_impact.ogg","es/ember_tear_hit.ogg","es/firelight_hit.ogg","es/firestorm_hit.ogg","es/heaver_shard_hit.ogg","es/heavy_rocket_hit.ogg","es/ion_impact.ogg","es/missile_hit.ogg","es/torpedo_hit.ogg"],d:"Тяжёлое попадание"},
@@ -12010,7 +12012,7 @@ Object.assign(SOUND_BANK,{
  oc_inflame:{f:["oc/oc_inflame_01.ogg"],d:"огонёк занялся: свеча, лампада"},
  oc_cracker:{f:["oc/oc_cracker_01.ogg"],d:"треск искры"},
  oc_fireball:{f:["oc/oc_fireball_01.ogg"],d:"огненный шар"},
- oc_blast:{f:["oc/oc_blast_01.ogg", "oc/oc_blast_02.ogg", "oc/oc_blast_03.ogg", "oc/oc_blast_04.ogg"],d:"взрыв: колба, зелье, разлом"},
+ oc_blast:{f:["oc/oc_blast_01.ogg", "oc/oc_blast_02.ogg", "oc/oc_blast_03.flac", "oc/oc_blast_04.ogg"],d:"взрыв: колба, зелье, разлом"},
  oc_furnace_start:{f:["oc/oc_furnace_start_01.ogg"],d:"горн разгорается"},
  oc_furnace:{f:["oc/oc_furnace_01.ogg"],d:"горн гудит"},
  oc_lift_start:{f:["oc/oc_lift_start_01.ogg"],d:"древний механизм тронулся"},
@@ -15541,9 +15543,10 @@ function warWatch(){
   if(!начались.length&&стало.length&&G.day%7===0)
    safeFn(()=>{Bank.play("siege_alarm_city",{seed:G.day,gain:0.55,maxSec:6});
     setTimeout(()=>safeFn(()=>Bank.play("siege_ballista",{seed:G.day,gain:0.5,maxSec:5})),1200);
-    setTimeout(()=>safeFn(()=>Bank.play(G.day%2?"siege_onager":"oc_catapult",{seed:G.day,gain:0.5,maxSec:5})),2100);
-    setTimeout(()=>safeFn(()=>Bank.play("siege_fire",{seed:G.day,gain:0.45,maxSec:5})),3000);
-    narrate("Где-то далеко бьют в набат: город под осадой. Слышны баллиста, камнемёт и огонь по стенам.",{interrupt:false});});
+    setTimeout(()=>safeFn(()=>Bank.play("siege_shot",{seed:G.day,gain:0.55,maxSec:5})),2100);
+    setTimeout(()=>safeFn(()=>Bank.play("tower_hit",{seed:G.day,gain:0.5,maxSec:3})),3700);
+    setTimeout(()=>safeFn(()=>Bank.play("siege_fire",{seed:G.day,gain:0.45,maxSec:5})),4600);
+    narrate("Где-то далеко бьют в набат: город под осадой. Слышны баллиста, камнемёт, удар камня в башню и огонь по стенам.",{interrupt:false});});
   /* Затяжная война слышна и без новостей: раз в несколько дней с той стороны
      доносится поступь дальнего строя, а следом тревога набега. */
   if(!начались.length&&!кончились.length&&стало.length&&G.day%3===0)
@@ -37737,6 +37740,12 @@ const Forts=Modules.register("FORTRESSES",{
    /* Осады игрока и держав: припасы и стены. */
    if(G.forts)for(const id of Object.keys(G.forts)){const st=G.forts[id];if(!st||!st.siege)continue;
     const k=st.ward?0.5:1;st.supplies=Math.max(0,st.supplies-Math.round(15*k));st.walls=Math.max(0,st.walls-Math.round(10*k));
+    /* Игрок в осаждённой крепости слышит сам обстрел: выстрел камнемёта и
+       удар камня в башню. */
+    const тут=safeFn(()=>this.here(),null);
+    if(тут&&тут.id===id)safeFn(()=>{Bank.play(day%3===0?"oc_catapult":day%3===1?"siege_onager":"siege_shot",{seed:day,gain:0.55,maxSec:5});
+     setTimeout(()=>safeFn(()=>Bank.play("tower_hit",{seed:day,gain:0.6,maxSec:3})),1600);
+     narrate(`Камнемёт бьёт по крепости: камень ударил в башню. Стены ${st.walls} из ста.`,{interrupt:false});});
     if(st.siege.by!=="player"&&(st.walls<=0||st.supplies<=0)){
      const кто=st.siege.by;const f=FORT_BY_ID[id];
      st.owner=кто;st.siege=null;st.walls=40;st.supplies=50;st.garrison=15;

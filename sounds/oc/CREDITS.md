@@ -58,7 +58,9 @@ https://creativecommons.org/licenses/by/3.0/ — текст лицензии р�
 | oc_fireball_01 | огненный шар | `Sound.ocg/Fire.ocg/Fireball.ogg` |
 | oc_blast_01 | взрыв: колба, зелье, разлом | `Sound.ocg/Fire.ocg/BlastLiquid1.ogg` |
 | oc_blast_02 | взрыв: колба, зелье, разлом | `Sound.ocg/Fire.ocg/BlastLiquid2.ogg` |
-| oc_blast_03 | взрыв: колба, зелье, разлом | `Sound.ocg/Fire.ocg/BlastLiquid3.ogg` |
+| oc_blast_03.flac | взрыв: мощный, раскатистый | `Sound.ocg/Fire.ocg/Blast3.wav` (без потерь, громкость выровнена) |
+| oc_blast_05.flac | взрыв: обвал, разлом | `Sound.ocg/Fire.ocg/Blast1.wav` (без потерь, громкость выровнена) |
+| oc_blast_06.flac | взрыв: обвал, разлом | `Sound.ocg/Fire.ocg/Blast2.wav` (без потерь, громкость выровнена) |
 | oc_blast_04 | взрыв: колба, зелье, разлом | `Sound.ocg/Fire.ocg/BlastFirework.ogg` |
 | oc_furnace_start_01 | горн разгорается | `Sound.ocg/Structures.ocg/Furnace.ocg/Start.ogg` |
 | oc_furnace_01 | горн гудит | `Sound.ocg/Structures.ocg/Furnace.ocg/Loop.ogg` |
@@ -283,3 +285,11 @@ https://creativecommons.org/licenses/by/3.0/ — текст лицензии р�
 | oc_ui_shift_01 | список сдвинулся: пункт исчез, выбор встал на соседний | `Sound.ocg/UI.ocg/Close.ogg` (перекодировано из OGG в FLAC без потерь, содержимое не менялось) |
 | oc_ui_arm_01 | взвод касания: пальцы поставлены, второе касание будет засчитано | `Sound.ocg/UI.ocg/Click.wav` (перекодировано из WAV в FLAC без потерь, содержимое не менялось) |
 | oc_bet_back_01 | ничья за столом: ставка возвращается | `Sound.ocg/UI.ocg/Cash.ogg` (перекодировано в FLAC без потерь) |
+
+## Версия 3.3: взрыв без потерь
+
+Третий взрыв (`BlastLiquid3.ogg`, 54 кбит/с — самый слабый звук взрыва в игре)
+заменён настоящим раскатистым взрывом `Blast3.wav` из той же игры, без сжатия с
+потерями. Ещё два взрыва OpenClonk (`Blast1.wav`, `Blast2.wav`) встали в роль
+обвала и разлома вместо двух космических взрывов Endless Sky. Громкость
+выровнена по пику −1 дБ, динамика мягко сжата; FLAC, 44,1 кГц.
