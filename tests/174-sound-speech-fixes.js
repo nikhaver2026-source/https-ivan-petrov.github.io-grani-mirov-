@@ -238,7 +238,12 @@ const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(e!==undefined?' :
   const lvl=genLevel(1700,1700,2,"cave_entrance");let pos=null;
   outer:for(let y=1;y<lvl.g.length-1;y++)for(let x=1;x<lvl.g[y].length-1;x++)if(lvl.g[y][x]==="."&&tileAt(lvl,x,y-1)==="#"){pos={x,y};break outer;}
   G.place={kind:"dungeon",bx:1700,by:1700,stype:"cave_entrance",name:"проба",depth:2,x:pos.x,y:pos.y};
+  /* Живой мир идёт по своим часам: под нагрузкой (полный прогон в три
+     потока) к этому мигу успевала начаться встреча, и шаг отвечал «сначала
+     завершите бой», а не «стена». Стена проверяется в спокойной обстановке. */
+  if(G.inCombat)safeFn(()=>endCombat());G.flight=null;while(activeLayer())closeTopUI();
   settings.hints=1;window.__said=[];moveInside("N");
+  r.сказано=window.__said.slice(-3);
   r.стена=window.__said.filter(t=>/Стена/.test(t)).slice(-1)[0]||"";
   r.проходы=describeHere(false);
   r.осмотр=Look.summary(Look.scan());
