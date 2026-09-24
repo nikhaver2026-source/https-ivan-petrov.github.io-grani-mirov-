@@ -95,7 +95,9 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   r.род=м.s.стан;G.x=м.x;G.y=м.y;G.place=null;
   G.hp=Math.max(1,G.hpMax-30);const было=G.hp,часБыл=Number(G.hour)||0,деньБыл=Number(G.day)||1;
   SAID.length=0;PLAYED.length=0;r.греться=CMD.camp("warm");await пауза(120);
-  r.сказГреться=SAID.slice(-1)[0]||"";r.лечит=G.hp>было;
+  /* Под нагрузкой полного прогона в этот миг может договорить и чужое
+     объявление (приглашение выбрать ремесло начала) — ищем своё слово. */
+  r.сказГреться=SAID.find(t=>/Здоровье \+\d+/.test(t))||SAID.slice(-1)[0]||"";r.лечит=G.hp>было;
   r.часПошёл=((Number(G.hour)||0)!==часБыл)||((Number(G.day)||1)!==деньБыл);
   SAID.length=0;r.спрос=CMD.camp("ask");await пауза(120);
   r.сказСпрос=(SAID.slice(-1)[0]||"").slice(0,160);
