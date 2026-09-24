@@ -1,0 +1,14 @@
+/* Пакет ресурсов «gamedata»: записи мира, голоса и музыка (папка sounds).
+   Ставится вместе с приложением (install-time), и игра видит эти файлы как
+   обычные assets/www/sounds — никакой догрузки по сети. Сами файлы кладёт
+   рабочий процесс сборки. */
+plugins {
+    id 'com.android.asset-pack'
+}
+
+assetPack {
+    packName = "gamedata"
+    dynamicDelivery {
+        deliveryType = "install-time"
+    }
+}

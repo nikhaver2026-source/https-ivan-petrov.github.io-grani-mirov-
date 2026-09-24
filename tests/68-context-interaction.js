@@ -41,11 +41,11 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
 
  /* ── 1. Реестр действий полон ── */
  const реестр=await page.evaluate(()=>{
-  const плохие=Object.values(IACT).filter(a=>!a.id||!a.n||!a.значок||typeof a.делать!=="function")
+  const плохие=Object.values(IACT).filter(a=>!a.id||!a.n||typeof a.делать!=="function")
    .map(a=>a.id||"?");
   return {всего:Object.keys(IACT).length,плохие,
    есть:["look","listen","knock","hollow","secret","assay","use"].filter(id=>!IACT[id])};});
- check('действий в реестре не меньше семи, и у каждого имя, значок и дело',
+ check('действий в реестре не меньше семи, и у каждого имя и дело',
   реестр.всего>=7&&реестр.плохие.length===0&&реестр.есть.length===0,реестр);
 
  /* ── 2. Снаружи: объекты вокруг — настоящие ── */

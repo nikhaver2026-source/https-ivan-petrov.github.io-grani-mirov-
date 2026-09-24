@@ -1,0 +1,9 @@
+# Игру внутрь приложения складывает рабочий процесс сборки — в git её нет.
+app/src/main/assets/
+app/src/main/res/mipmap-*/
+.gradle/
+build/
+app/build/
+local.properties
+gamedata/src/
+gamedata/build/

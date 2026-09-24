@@ -1,0 +1,67 @@
+/* Приложение «Грань Миров» для Android: вся игра лежит внутри, в assets/www,
+   и открывается в WebView без сети. Папку www собирает рабочий процесс
+   .github/workflows/android.yml из корня репозитория — в git её нет: код игры
+   и встроенный голос (index.html, tts) — в этом модуле, записи (sounds) — в
+   пакете ресурсов :gamedata.
+
+   Требования Google Play на 2026 год: целевой API 36, пакет AAB, 64-битный
+   код (родного кода нет вовсе), подпись ключом загрузки. */
+plugins {
+    id 'com.android.application'
+}
+
+android {
+    namespace 'io.github.granimirov'
+    compileSdk 36
+
+    defaultConfig {
+        applicationId 'io.github.granimirov'
+        minSdk 24
+        targetSdk 36
+        /* 3.0 — первая версия приложения со всей игрой внутри. Номер сборки
+           растёт с каждым запуском рабочего процесса: Play требует, чтобы
+           versionCode только рос. */
+        versionCode(30000000 + ((System.getenv('BUILD_NUMBER') ?: '0') as int))
+        versionName '3.0'
+    }
+
+    /* Ключ подписи приходит только из окружения сборки: в репозитории
+       ключей нет. Рабочий процесс android.yml берёт ключ загрузки из
+       секретов репозитория, а без них — собственный ключ сборки из кэша. */
+    signingConfigs {
+        release {
+            if (System.getenv('KS_FILE')) {
+                storeFile file(System.getenv('KS_FILE'))
+                storePassword System.getenv('KS_PASS')
+                keyAlias System.getenv('KS_ALIAS')
+                keyPassword System.getenv('KS_KEY_PASS')
+            }
+        }
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            signingConfig signingConfigs.release
+        }
+    }
+
+    assetPacks = [':gamedata']
+
+    androidResources {
+        /* Записи и модель речи уже сжаты: жать их ещё раз — только время. */
+        noCompress += ['mp3', 'onnx', 'ogg', 'flac', 'wav']
+        /* По умолчанию сборщик выбрасывает файлы и папки на «_» и «.»; в игре
+           таких нет, но пусть ни один файл не пропадёт молча. */
+        ignoreAssetsPattern = '!.svn:!.git:!.ds_store'
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+}
+
+dependencies {
+    implementation 'androidx.webkit:webkit:1.11.0'
+}

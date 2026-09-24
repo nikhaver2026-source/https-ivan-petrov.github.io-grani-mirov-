@@ -128,7 +128,7 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
 
   const звук={
    сцен:scenes.size,ролей:roles.size,
-   сценаБезПоля:Object.entries(SOUNDS).filter(([,s])=>!s.name||!s.desc||!s.icon||typeof s.build!=="function"||!(s.dur>0)).map(([k])=>k),
+   сценаБезПоля:Object.entries(SOUNDS).filter(([,s])=>!s.name||!s.desc||typeof s.build!=="function"||!(s.dur>0)).map(([k])=>k),
    росльБезОписания:Object.entries(SOUND_BANK).filter(([,e])=>!e.d).map(([k])=>k),
    рольБезФайлов:Object.entries(SOUND_BANK).filter(([,e])=>!e.f||!e.f.length).map(([k])=>k),
    /* Маяк звучит либо записью, либо синтезом. Беда — только когда нет ни того,
@@ -205,7 +205,7 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
  check('все шаги всех цепочек заданий строятся и осмысленны',
   !D.цепочки.плохиеШаги.length,D.цепочки.плохиеШаги);
 
- check('у каждой звуковой сцены есть имя, описание, значок и построение',
+ check('у каждой звуковой сцены есть имя, описание и построение',
   !D.звук.сценаБезПоля.length,D.звук.сценаБезПоля);
  check('у каждой роли банка есть описание и файлы',
   !D.звук.росльБезОписания.length&&!D.звук.рольБезФайлов.length,

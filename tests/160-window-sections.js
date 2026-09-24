@@ -76,13 +76,13 @@ const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(e!==undefined?' :
   &&уровни.раздел.filter(c=>/^am:/.test(c)).every(c=>уровни.своих.includes(c))
   &&уровни.курсор==="am:look"&&уровни.назад.открыто&&уровни.назад.курсор==="amgroup:here"&&уровни.закрыто,уровни);
  const пустой=await page.evaluate(()=>{
-  /* «Начало пути» исчезает, как только ремесло выбрано. */
-  const было=G.startCraft;
-  G.startCraft="crafter";
+  /* «Начало пути» исчезает, как только выбраны ремесло и народ. */
+  const было=G.startCraft,былРод=G.raceChosen;
+  G.startCraft="crafter";G.raceChosen=1;
   openActionMenu();
   const есть=[...document.querySelectorAll("#amMenu [data-punkt]")].map(x=>x.dataset.punkt);
   closeActionMenu();
-  G.startCraft=было;
+  G.startCraft=было;G.raceChosen=былРод;
   return {есть};});
  check('раздел, в котором сейчас нет ни одного уместного пункта, не показывается вовсе',
   !пустой.есть.includes("start")&&пустой.есть.length>=8,пустой);

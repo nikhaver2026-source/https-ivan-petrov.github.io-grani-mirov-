@@ -40,7 +40,7 @@ const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(e!==undefined?' :
   const out={};
   /* ── 1. народ ── */
   const по={};
-  for(let x=100;x<12000;x+=13){const n=getNPC(x,(x*7)%1999,0);if(n)(по[n.race]=по[n.race]||[]).push(n);}
+  let больше=0;for(let x=100;x<400000&&больше<30;x+=13){const n=getNPC(x,(x*7)%1999,0);if(n){(по[n.race]=по[n.race]||[]).push(n);больше=Math.max(больше,по[n.race].length);}}
   const раса=Object.keys(по).sort((a,b)=>по[b].length-по[a].length)[0];
   const ж=по[раса].slice(0,30);
   const взгляды=ж.map(n=>raceView(n,0));

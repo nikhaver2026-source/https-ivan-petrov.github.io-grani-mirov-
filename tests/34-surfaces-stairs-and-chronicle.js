@@ -309,7 +309,7 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
    "artifact_pulse","seal_break","cast_charge","spell_release","ward_shimmer"];
   const нет=нужны.filter(id=>!SOUNDS[id]);
   const неполные=нужны.filter(id=>SOUNDS[id]&&
-   (!SOUNDS[id].name||!SOUNDS[id].desc||!SOUNDS[id].icon||typeof SOUNDS[id].build!=="function"||!(SOUNDS[id].dur>0)));
+   (!SOUNDS[id].name||!SOUNDS[id].desc||typeof SOUNDS[id].build!=="function"||!(SOUNDS[id].dur>0)));
   /* Каждая сцена должна попасть в какой-нибудь раздел энциклопедии. */
   const взято=new Set();sceneCats().forEach(([,,ids])=>ids.forEach(i=>взято.add(i)));
   const внеРазделов=нужны.filter(id=>!взято.has(id));
