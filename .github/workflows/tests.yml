@@ -1,6 +1,7 @@
-# Проверки «Грани Миров» на каждый толчок в main и на каждый запрос слияния.
-# Прогон поднимает локальный сервер по тому же подпути, что и GitHub Pages,
-# и запускает все наборы из папки tests в настоящем браузере.
+# Проверки «Грани Миров». На каждый толчок в main и на каждый запрос слияния —
+# быстрые: синтаксис игры и все записи на месте. Полный прогон (локальный
+# сервер по тому же подпути, что и GitHub Pages, и все наборы из папки tests
+# в настоящем браузере) идёт часами — он запускается кнопкой Run workflow.
 name: Проверки игры
 
 on:
@@ -12,7 +13,9 @@ on:
 jobs:
   tests:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    # Полный прогон — сто восемьдесят с лишним наборов в настоящем браузере,
+    # это часы; на каждом толчке идут только быстрые проверки.
+    timeout-minutes: 300
     steps:
       - name: Забрать репозиторий
         uses: actions/checkout@v4
@@ -46,7 +49,12 @@ jobs:
           node - <<'JS'
           const fs=require('fs'),path=require('path');
           const html=fs.readFileSync('index.html','utf8');
-          const refs=new Set([...html.matchAll(/"((?:sea|ambience|dungeon|magic|gods|events|places|fantasy|steps|ui|monsters|nat|inst|orch|surf|blow|troop|bazaar|dark|arms|spell|beast|relic|depth|folk|mood|arte|deep|foe|cast|hero|wild|trade|score|battle|siege|craft|beasts|throng|tread|sky|hall|mg|stk|mtg|od|es)\/[^"]+\.(?:mp3|wav|flac|ogg))"/g)].map(m=>m[1]));
+          /* Любая папка: имя вида «папка/файл.mp3» в кавычках. Голоса народов,
+             ремёсел и героя игра собирает из имени на лету («race_»+имя),
+             зато каждый из них назван ключом в VOICE_LEN. */
+          const refs=new Set([...html.matchAll(/["'`/]([a-z0-9_]+\/[A-Za-z0-9_.\-]+\.(?:mp3|wav|flac|ogg))["'`]/g)].map(m=>m[1]));
+          const vl=(html.match(/const VOICE_LEN=(\{[^\n]*?\});/)||[])[1];
+          if(vl)Object.keys(JSON.parse(vl)).forEach(k=>refs.add('voice/'+k+'.mp3'));
           const missing=[...refs].filter(f=>!fs.existsSync(path.join('sounds',f)));
           const walk=d=>fs.readdirSync(d,{withFileTypes:true}).flatMap(e=>e.isDirectory()?walk(path.join(d,e.name)):[path.join(d,e.name)]);
           const have=walk('sounds').filter(f=>/\.(mp3|wav|flac|ogg)$/.test(f)).map(f=>path.relative('sounds',f));
@@ -57,5 +65,6 @@ jobs:
           console.log('Все записи на месте и все задействованы');
           JS
 
-      - name: Прогон всех наборов
+      - name: Прогон всех наборов (по кнопке Run workflow)
+        if: ${{ github.event_name == 'workflow_dispatch' }}
         run: npm test
