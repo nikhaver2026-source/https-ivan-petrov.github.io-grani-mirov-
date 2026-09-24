@@ -228,9 +228,23 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   /* мышь без касаний рядом работает как прежде */
   touchGate.lastTouch=0;
   el.dispatchEvent(new MouseEvent("click",{bubbles:true,cancelable:true,detail:1}));
-  return {послеКасания,мышью:settings.difficulty};});
+  const мышью=settings.difficulty;
+  /* браузер, назвавший клик по следу пальца мышиным, выдаёт его точкой:
+     клик лёг туда, где палец только что снялся, — гасится; мышь в другом
+     месте экрана сразу после касания — работает */
+  settings.difficulty="normal";window.__cmds=[];
+  const el2=[...cursorItems(activeLayer())].find(x=>x.dataset&&x.dataset.cmd==="setdiff:harsh")||el;
+  const р=el2.getBoundingClientRect(),cx=р.left+р.width/2,cy=р.top+р.height/2;
+  touchGate.lastTouch=Date.now();touchGate.lastX=cx;touchGate.lastY=cy;
+  el2.dispatchEvent(new PointerEvent("click",{bubbles:true,cancelable:true,detail:1,pointerType:"mouse",clientX:cx,clientY:cy}));
+  const мышиныйПоСледу=settings.difficulty;
+  touchGate.lastX=cx+200;touchGate.lastY=cy+200;
+  el2.dispatchEvent(new PointerEvent("click",{bubbles:true,cancelable:true,detail:1,pointerType:"mouse",clientX:cx,clientY:cy}));
+  return {послеКасания,мышью,мышиныйПоСледу,мышьВдали:settings.difficulty};});
  check('клик браузера по следу пальца ничего не выполняет, а клик мышью — выполняет',
   призрак.послеКасания.сложность==="normal"&&!призрак.послеКасания.кмд.length&&призрак.мышью==="harsh",призрак);
+ check('клик, названный мышиным, но лёгший под снятый палец, гасится; мышь в стороне сразу после касания работает',
+  призрак.мышиныйПоСледу==="normal"&&призрак.мышьВдали==="harsh",призрак);
  await page.evaluate(()=>{setDifficulty("normal");while(activeLayer())closeTopUI();});
 
  /* ── Двойное касание по пустому месту выполняет текущий пункт ── */

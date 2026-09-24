@@ -3873,7 +3873,7 @@ const runState={active:false,dir:null,iv:null,hold:null,pendingDir:null};
    ощупыванием или началом свайпа. */
 let exploreHold=null;
 function cancelExploreHold(){if(exploreHold){clearTimeout(exploreHold);exploreHold=null;}}
-const touchGate={lastUiTap:0,lastUiEl:null,suppressClickUntil:0,lastTouch:0};
+const touchGate={lastUiTap:0,lastUiEl:null,suppressClickUntil:0,lastTouch:0,lastX:-1e4,lastY:-1e4};
 /* ── РАЗДЕЛЬНОЕ КАСАНИЕ: КАК В TALKBACK И VOICEOVER ──
    У обоих чтецов экрана есть жест, которым незрячие пользуются каждый день:
    палец лежит на пункте и слушает его имя, а второй палец коротко стукает
@@ -5020,6 +5020,7 @@ document.addEventListener('touchmove',e=>{
    и оба варианта гасят родной клик через preventDefault. */
 document.addEventListener('touchend',e=>{
  touchGate.lastTouch=Date.now();
+ {const c=e.changedTouches&&e.changedTouches[0];if(c){touchGate.lastX=c.clientX;touchGate.lastY=c.clientY;}}
  if(!gesture.maxCount){if(e.cancelable&&!settings.fastTap)e.preventDefault();return;}
  if(e.touches.length>0){
   gesture.count=e.touches.length;
@@ -5249,9 +5250,18 @@ document.addEventListener('click',e=>{
     касание, и пропустить его значит выполнить пункт от одного касания. Он
     гасится всегда, когда палец только что был на экране; мышь и клавиатура
     (касаний рядом нет) работают как прежде. Быстрая активация — нарочное
-    исключение, её игрок включает сам. */
- if(e.detail>0&&!settings.fastTap&&(e.pointerType==='touch'||Date.now()-(touchGate.lastTouch||0)<1500)){
-  e.preventDefault();e.stopPropagation();return;}
+    исключение, её игрок включает сам.
+    Как узнать клик по следу пальца: браузер либо прямо называет его касанием
+    (pointerType «touch»), либо не называет никак (старый MouseEvent), и тогда
+    хватает того, что палец только что снялся. Если же браузер назвал клик
+    мышиным, гасим его, только когда он лёг туда, где палец только что был:
+    настоящая мышь на гибридном устройстве жмёт там, куда наведена, а не под
+    последним касанием. */
+ if(e.detail>0&&!settings.fastTap){
+  const тип=e.pointerType||"",давно=Date.now()-(touchGate.lastTouch||0);
+  const рядом=Math.hypot((e.clientX||0)-touchGate.lastX,(e.clientY||0)-touchGate.lastY)<48;
+  if(тип==="touch"||(тип!=="mouse"&&тип!=="pen"&&давно<1500)||(давно<1000&&рядом)){
+   e.preventDefault();e.stopPropagation();return;}}
  const t=e.target?.closest?.('[data-cmd]');if(!t||t.disabled)return;
  const parts=(t.dataset.cmd||'').split(':');const fn=parts[0]&&CMD[parts[0]];
  if(!fn)return;
