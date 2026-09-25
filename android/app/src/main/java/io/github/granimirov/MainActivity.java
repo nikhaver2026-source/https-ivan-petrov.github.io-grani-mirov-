@@ -163,7 +163,11 @@ public class MainActivity extends Activity {
         tts.setSpeechRate(Math.max(0.1f, Math.min(6f, rate > 0 ? rate : 1f)));
         Bundle p = new Bundle();
         p.putFloat(TextToSpeech.Engine.KEY_PARAM_VOLUME, Math.max(0f, Math.min(1f, volume >= 0 ? volume : 1f)));
-        if (tts.speak(text, TextToSpeech.QUEUE_ADD, p, id) != TextToSpeech.SUCCESS) callJs("GraniTTSError", id);
+        /* Очередь ведёт сама игра и шлёт по одной фразе, дождавшись конца прежней.
+           QUEUE_FLUSH снимает всё недосказанное в самом синтезаторе в тот же миг,
+           что и новая фраза: при быстром листании устаревший пункт больше не
+           успевает прозвучать поверх нужного. */
+        if (tts.speak(text, TextToSpeech.QUEUE_FLUSH, p, id) != TextToSpeech.SUCCESS) callJs("GraniTTSError", id);
     }
 
     private class Bridge {

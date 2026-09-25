@@ -40,5 +40,5 @@
 | `st_holy_water.flac` | льющаяся вода благословения | ericlichtenberg | CC0 | https://freesound.org/people/ericlichtenberg/sounds/432350/ | `data/sounds/lossless_sources/liquid-fill-01.flac` |
 | `st_heal.flac` | исцеление | renatalmar | CC0 | https://freesound.org/people/renatalmar/sounds/264981/ | `data/sounds/lossless_sources/heal-01.flac` |
 | `st_ui_click.flac` | щелчок: фокус на пункте | satrebor | CC0 | https://freesound.org/people/satrebor/sounds/113218/ | `data/sounds/lossless_sources/click-1.flac` |
-| `st_ui_clack.flac` | двойной щелчок: следующий пункт | satrebor | CC0 | https://freesound.org/people/satrebor/sounds/113218/ | `data/sounds/lossless_sources/click-clack-1.flac` |
+| `st_ui_clack_one.flac` | один щелчок листания в меню и окнах (первый удар записи: второй удар убран, чтобы на пункт приходился ровно один щелчок) | satrebor | CC0 | https://freesound.org/people/satrebor/sounds/113218/ | `data/sounds/lossless_sources/click-clack-1.flac`, первые 0,26 с |
 | `st_ui_fold.flac` | шорох свёрнутого листа: назад | Nicole Marie T | CC BY 4.0 | https://opengameart.org/node/92701 | `data/sounds/lossless_sources/ui/window_fold.flac` |

@@ -30,6 +30,25 @@
               {type:"done", id}
    ════════════════════════════════════════════════════════════════════════ */
 let движок=null,сессия=null,словарь=null,карта=null,готово=false,отменён=new Set(),частота=22050;
+/* ── ОТКЛИК ПРИ БЫСТРОМ ЛИСТАНИИ ──
+   Страница хочет слышать только последнюю фразу. Прежде каждая фраза, даже
+   уже отменённая, досчитывала свой кусок: пролистал десять пунктов — модель
+   десять раз считала устаревшее, и голос молчал, пока не догонит. Теперь
+   новая фраза сразу снимает все прежние, а перед каждым куском поток
+   уступает очередь сообщений, чтобы успеть узнать об отмене.
+   Кроме того, звук кусков помнится: пункты меню и настроек повторяются сотни
+   раз, и второй раз звучат сразу, без расчёта. Память ограничена по длине
+   звука (около двух минут), старое вытесняется первым. */
+const идут=new Set();
+const ПАМЯТЬ=new Map();let памятьОтсчётов=0;const ПАМЯТЬ_ПРЕДЕЛ=2600000;
+let модельКлюч="";
+function изПамяти(k){const v=ПАМЯТЬ.get(k);if(!v)return null;ПАМЯТЬ.delete(k);ПАМЯТЬ.set(k,v);return v;}
+function вПамять(k,pcm){
+ if(pcm.length>ПАМЯТЬ_ПРЕДЕЛ/4)return;
+ if(ПАМЯТЬ.has(k))return;
+ ПАМЯТЬ.set(k,pcm);памятьОтсчётов+=pcm.length;
+ while(памятьОтсчётов>ПАМЯТЬ_ПРЕДЕЛ&&ПАМЯТЬ.size){const [k0,v0]=ПАМЯТЬ.entries().next().value;ПАМЯТЬ.delete(k0);памятьОтсчётов-=v0.length;}}
+const уступить=()=>new Promise(r=>setTimeout(r,0));
 
 const КАРТА_ПО_УМОЛЧАНИЮ=(()=>{
  /* Общая карта звуков всех голосов Piper с разбором eSpeak: у голосов
@@ -158,26 +177,37 @@ async function init(base,models){
   try{
    const буф=await скачать(url,(l,t)=>postMessage({type:"progress",loaded:l,total:t}));
    сессия=await движок.InferenceSession.create(буф,{executionProviders:["wasm"],graphOptimizationLevel:"all"});
+   модельКлюч=url;ПАМЯТЬ.clear();памятьОтсчётов=0;
    try{const j=await fetch(url+".json").then(r=>r.ok?r.json():null);if(j&&j.phoneme_id_map)карта=j.phoneme_id_map;if(j&&j.audio&&+j.audio.sample_rate)частота=+j.audio.sample_rate;}catch(_){}
    готово=true;postMessage({type:"ready",model:url});return;
   }catch(e){последняяОшибка=e;}}
  postMessage({type:"fail",error:String(последняяОшибка||"нет модели")});}
 
 async function сказать(id,текст,speed){
- const части=звуки(текст);
- const ls=Math.max(0.25,Math.min(2,1/Math.max(0.5,+speed||1)));
- for(let i=0;i<части.length;i++){
-  if(отменён.has(id))break;
-  const ids=номера(части[i]);
-  const input=new движок.Tensor("int64",BigInt64Array.from(ids.map(BigInt)),[1,ids.length]);
-  const lens=new движок.Tensor("int64",BigInt64Array.from([BigInt(ids.length)]),[1]);
-  const scales=new движок.Tensor("float32",Float32Array.from([0.667,ls,0.8]),[3]);
-  const r=await сессия.run({input,input_lengths:lens,scales});
-  if(отменён.has(id))break;
-  const pcm=r.output.data;
-  const копия=new Float32Array(pcm.length);копия.set(pcm);
-  postMessage({type:"audio",id,pcm:копия,rate:частота,last:i===части.length-1},[копия.buffer]);}
- отменён.delete(id);
+ /* Новая фраза снимает все прежние: слышна только последняя. */
+ идут.forEach(x=>{if(x!==id)отменён.add(x);});
+ идут.add(id);
+ try{
+  const части=звуки(текст);
+  const ls=Math.max(0.25,Math.min(2,1/Math.max(0.5,+speed||1)));
+  for(let i=0;i<части.length;i++){
+   /* Сперва узнать, не отменили ли нас, пока ждали. */
+   await уступить();
+   if(отменён.has(id))break;
+   const ключ=модельКлюч+"|"+ls.toFixed(3)+"|"+части[i];
+   let pcm=изПамяти(ключ);
+   if(!pcm){
+    const ids=номера(части[i]);
+    const input=new движок.Tensor("int64",BigInt64Array.from(ids.map(BigInt)),[1,ids.length]);
+    const lens=new движок.Tensor("int64",BigInt64Array.from([BigInt(ids.length)]),[1]);
+    const scales=new движок.Tensor("float32",Float32Array.from([0.667,ls,0.8]),[3]);
+    const r=await сессия.run({input,input_lengths:lens,scales});
+    pcm=new Float32Array(r.output.data.length);pcm.set(r.output.data);
+    вПамять(ключ,pcm);}
+   if(отменён.has(id))break;
+   const копия=new Float32Array(pcm.length);копия.set(pcm);
+   postMessage({type:"audio",id,pcm:копия,rate:частота,last:i===части.length-1},[копия.buffer]);}
+ }finally{идут.delete(id);отменён.delete(id);}
  postMessage({type:"done",id});}
 
 onmessage=e=>{

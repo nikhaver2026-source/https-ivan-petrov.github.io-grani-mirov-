@@ -79,12 +79,12 @@ const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(e!==undefined?' :
  check('при умолчаниях все пороги в точности равны прежним числам игры',
   ступени.norm.swipe===38&&ступени.norm.move===16&&ступени.norm.multi===45
   &&ступени.norm.multiMs===1400&&ступени.norm.swipeMs===1200&&ступени.norm.tapMax===3000
-  &&ступени.norm.listPx===90&&ступени.norm.listMs===700&&ступени.norm.hold===250
+  &&ступени.norm.listPx===90&&ступени.norm.listMs===700&&ступени.norm.hold===180
   &&ступени.norm.fast===0.55&&ступени.norm.slow===0.25,ступени.norm);
  check('спокойная рука получает широкие пороги, чуткая — узкие',
   ступени.vcalm.swipe>38&&ступени.vhigh.swipe<38&&ступени.vcalm.swipe>ступени.vhigh.swipe
   &&ступени.vcalm.move>16&&ступени.vhigh.move<16
-  &&ступени.vcalm.hold>250&&ступени.vhigh.hold<250,
+  &&ступени.vcalm.hold>180&&ступени.vhigh.hold<180,
   {спокойные:ступени.vcalm,чуткие:ступени.vhigh});
 
  /* ── 4–7. Окно двойного касания ── */
