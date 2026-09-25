@@ -87,7 +87,7 @@ const SND=path.join(__dirname,'..','sounds');
  /* ── 6. титры ── */
  const титры=fs.existsSync(path.join(SND,"intro/CREDITS.md"))?fs.readFileSync(path.join(SND,"intro/CREDITS.md"),"utf8"):"";
  check('6. титры называют музыку, автора, лицензию, голос и источники эффектов',
-  /Road to Victory/.test(титры)&&/Moonthief/.test(титры)&&/CC BY-SA 4\.0/.test(титры)&&/Gemini/.test(титры)&&/Sadaltager/.test(титры)
+  /Road to Victory/.test(титры)&&/Moonthief/.test(титры)&&/CC BY-SA 4\.0/.test(титры)&&/Gemini/.test(титры)&&/Charon/.test(титры)
   &&/Sonic Pi/.test(титры)&&/CC0/.test(титры)&&/OpenClonk/.test(титры)&&/CC BY 3\.0/.test(титры),титры.slice(0,200));
 
  /* ── 7. автоматика без просьбы ── */
