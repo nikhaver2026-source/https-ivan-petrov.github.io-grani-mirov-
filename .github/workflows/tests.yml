@@ -55,6 +55,10 @@ jobs:
           const refs=new Set([...html.matchAll(/["'`/]([a-z0-9_]+\/[A-Za-z0-9_.\-]+\.(?:mp3|wav|flac|ogg))["'`]/g)].map(m=>m[1]));
           const vl=(html.match(/const VOICE_LEN=(\{[^\n]*?\});/)||[])[1];
           if(vl)Object.keys(JSON.parse(vl)).forEach(k=>refs.add('voice/'+k+'.mp3'));
+          /* Записи голоса Gemini (с 3.9) игра зовёт по описи sounds/gvoice/bank_1.js. */
+          const gv=path.join('sounds','gvoice','bank_1.js');
+          if(fs.existsSync(gv)){const t=fs.readFileSync(gv,'utf8');
+            Object.values(JSON.parse(t.slice(t.indexOf('{'),t.lastIndexOf('}')+1)).p).forEach(id=>refs.add('gvoice/'+id+'.flac'));}
           const missing=[...refs].filter(f=>!fs.existsSync(path.join('sounds',f)));
           const walk=d=>fs.readdirSync(d,{withFileTypes:true}).flatMap(e=>e.isDirectory()?walk(path.join(d,e.name)):[path.join(d,e.name)]);
           const have=walk('sounds').filter(f=>/\.(mp3|wav|flac|ogg)$/.test(f)).map(f=>path.relative('sounds',f));
