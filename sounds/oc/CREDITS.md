@@ -281,7 +281,6 @@ https://creativecommons.org/licenses/by/3.0/ — текст лицензии р�
 | oc_dig_04 | копать: лопата в грунт | `Sound.ocg/Clonk.ocg/Action.ocg/Dig.ocg/Dig4.wav` (перекодировано из WAV в OGG, содержимое не менялось) |
 | oc_dig_05 | копать: лопата в грунт | `Sound.ocg/Clonk.ocg/Action.ocg/Dig.ocg/Dig5.wav` (перекодировано из WAV в OGG, содержимое не менялось) |
 | oc_chest_close_01 | крышка сундука закрывается | `Sound.ocg/Structures.ocg/Chest.ocg/Close.ogg` |
-| oc_ui_confirm_01 | раздельное касание: пункт выполнен вторым пальцем | `Sound.ocg/UI.ocg/Confirmed.ogg` (перекодировано из OGG в FLAC без потерь, содержимое не менялось) |
 | oc_ui_shift_01 | список сдвинулся: пункт исчез, выбор встал на соседний | `Sound.ocg/UI.ocg/Close.ogg` (перекодировано из OGG в FLAC без потерь, содержимое не менялось) |
 | oc_ui_arm_01 | взвод касания: пальцы поставлены, второе касание будет засчитано | `Sound.ocg/UI.ocg/Click.wav` (перекодировано из WAV в FLAC без потерь, содержимое не менялось) |
 | oc_bet_back_01 | ничья за столом: ставка возвращается | `Sound.ocg/UI.ocg/Cash.ogg` (перекодировано в FLAC без потерь) |

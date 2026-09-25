@@ -297,6 +297,10 @@ const NEW_DIRS=["arte","deep","foe","cast","hero","wild","trade","score",
   const re=/"([a-z]+\/[^"]+\.(?:mp3|wav|flac|ogg))"/g;
   const ссылки=new Set([...html.matchAll(re)].map(m=>m[1]));
   голоса.forEach(f=>ссылки.add(f));
+  /* Записи голоса Gemini (с 3.8) игра зовёт по описи sounds/gvoice/bank_1.js:
+     нормализованная фраза → файл. */
+  try{const b=fs.readFileSync(path.join(корень,"sounds","gvoice","bank_1.js"),"utf8");
+   Object.values(JSON.parse(b.slice(b.indexOf("{"),b.lastIndexOf("}")+1)).p).forEach(id=>ссылки.add("gvoice/"+id+".flac"));}catch(_){}
   const обход=d=>fs.readdirSync(d,{withFileTypes:true})
    .flatMap(e=>e.isDirectory()?обход(path.join(d,e.name)):[path.join(d,e.name)]);
   const файлы=обход(path.join(корень,"sounds"))

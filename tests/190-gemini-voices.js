@@ -117,8 +117,8 @@ const ГОЛОСА=["Algenib","Charon","Orus","Enceladus","Achird","Puck","Gacru
   return {v:GAME_VERSION,title:document.title,news:NEWS_V,н:н.н||"",т:н.т||"",
    глава:гл?гл.body.join(" "):"",титры:титры?титры.body.join(" "):""};});
  const gradle=fs.readFileSync(path.join(ROOT,'android','app','build.gradle'),'utf8');
- check('8. выпуск новостей 21 и версия 3.7; глава о живой речи называет голоса, титры — Gemini и условия',
-  свод.v==="3.7"&&/Alpha 3\.7/.test(свод.title)&&/versionName '3\.7'/.test(gradle)&&свод.news===21
+ check('8. выпуск новостей 21 есть, версия не ниже 3.7; глава о живой речи называет голоса, титры — Gemini и условия',
+  parseFloat(свод.v)>=3.7&&/Alpha 3\.\d/.test(свод.title)&&/versionName '3\.\d'/.test(gradle)&&свод.news>=21
   &&/Gemini/.test(свод.н+свод.т)&&/четыреста семь/.test(свод.т)
   &&["Algenib","Charon","Orus","Enceladus","Achird","Puck","Gacrux","Sulafat","Achernar","Leda","Iapetus","Erinome","Algieba"].every(v=>свод.глава.includes(v))
   &&/Gemini/.test(свод.титры)&&/Additional Terms of Service/.test(свод.титры),

@@ -3,7 +3,7 @@
 # Правило: всякая НОВАЯ запись в sounds/ — либо без потерь (flac, wav),
 # либо сжата не ниже 320 кбит/с. Набор проверок 152 это стережёт.
 #
-# Перечисленные ниже 1039 записей пришли раньше правила, из свободных
+# Перечисленные ниже 1034 записи пришли раньше правила, из свободных
 # библиотек, и уже сжаты с потерями. Пережать их в 320 нельзя: пережатие не
 # возвращает того, чего в файле нет, — оно лишь втрое раздувает вес. Весь
 # банк весит 497 МБ (около половины — музыка мест в 320 кбит/с); пережатие
@@ -166,12 +166,10 @@ sounds/craft/craft_wood_02.ogg	259
 sounds/craft/craft_wood_03.ogg	258
 sounds/deep/deep_cart_01.ogg	42
 sounds/deep/deep_door_01.ogg	107
-sounds/deep/deep_drip_01.ogg	128
 sounds/deep/deep_portal_01.ogg	84
 sounds/deep/deep_rocks_01.ogg	85
 sounds/deep/deep_stairs_01.ogg	81
 sounds/deep/deep_stone_01.ogg	68
-sounds/deep/deep_wind_01.ogg	168
 sounds/deep/deep_wood_01.ogg	109
 sounds/es/acuit.ogg	84
 sounds/es/alarm.ogg	90
@@ -337,7 +335,6 @@ sounds/lug/lug_whoosh_04.ogg	166
 sounds/lug/lug_whoosh_05.ogg	85
 sounds/lug/lug_whoosh_hit_01.ogg	285
 sounds/lug/lug_wind_01.ogg	58
-sounds/mg/amb_abyss_01.ogg	85
 sounds/mg/amb_day_01.ogg	66
 sounds/mg/amb_day_02.ogg	65
 sounds/mg/amb_desert_01.ogg	85
@@ -989,8 +986,6 @@ sounds/stk/stk_clang_01.ogg	154
 sounds/stk/stk_clock_01.ogg	103
 sounds/stk/stk_crash_01.ogg	267
 sounds/stk/stk_crash_02.ogg	297
-sounds/stk/stk_dark_01.ogg	142
-sounds/stk/stk_deepsea_01.ogg	137
 sounds/stk/stk_falls_01.ogg	90
 sounds/stk/stk_goo_01.ogg	113
 sounds/stk/stk_hammer_01.ogg	110

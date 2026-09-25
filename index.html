@@ -25,7 +25,7 @@
      GitHub Pages. Там же включается и service worker (см. ниже): игра ставится
      на главный экран и работает без сети. -->
 <meta name="theme-color" content="#10121c">
-<title>Грань Миров Alpha 3.7 — Живой динамичный мир</title>
+<title>Грань Миров Alpha 3.9 — Живой динамичный мир</title>
 <style>
 /* Палец, положенный на ползунок, не должен его двигать: браузер по умолчанию
    перебрасывает бегунок в точку касания, и незрячий игрок, просто читая
@@ -106,8 +106,8 @@ h3{color:var(--acc2);margin:14px 0 6px;font-size:1.05rem;}
 
 <!-- ТИТУЛ -->
 <div id="screen-title" class="screen">
- <h1>Грань Миров <small id="gameVersion" style="font-size:.5em;opacity:.75">Alpha 3.7</small></h1>
- <p class="sub">Полная хроника I–V · Alpha 3.7 — Единый живой мир · Карта 50000×50000</p>
+ <h1>Грань Миров <small id="gameVersion" style="font-size:.5em;opacity:.75">Alpha 3.9</small></h1>
+ <p class="sub">Полная хроника I–V · Alpha 3.9 — Единый живой мир · Карта 50000×50000</p>
  <div class="menu">
   <button type="button" data-cmd="check">Проверить звук</button>
   <button type="button" data-cmd="intro">Прослушать заставку</button>
@@ -196,8 +196,8 @@ h3{color:var(--acc2);margin:14px 0 6px;font-size:1.05rem;}
   <div class="set-group" data-set-group="tts" hidden>
  <h3 class="sec-head" tabindex="0" data-cmd="secjump" data-sec-title="Синтезатор речи">Синтезатор речи</h3>
  <p class="hint">Всё про сам голос в одном разделе: чем игра говорит, каким голосом, с какой скоростью и высотой. Проба — тут же.</p>
- <label class="opt">Синтезатор <select id="setTtsEngine" aria-label="Каким синтезатором говорит игра"><option value="device" selected>Синтезатор устройства</option><option value="grani">Встроенный голос игры</option><option value="eleven">Голос ElevenLabs</option></select></label>
- <p class="hint" id="ttsEngineHint">Встроенный голос игры — русская нейросеть, которая говорит прямо на устройстве, одним голосом на любом телефоне и без чужого сервера: один раз скачивается (около шестидесяти мегабайт), дальше работает без сети; пока качается, говорит синтезатор устройства. Синтезатор устройства — тот, что стоит в самом телефоне: на iPhone это голоса VoiceOver, на Android — Google, Samsung, Acapela или любой другой установленный. Он отвечает сразу и работает без сети. Голос ElevenLabs звучит живее, но ходит в сеть и требует ключа.</p>
+ <label class="opt">Синтезатор <select id="setTtsEngine" aria-label="Каким синтезатором говорит игра"><option value="gemini" selected>Голос Gemini — мгновенно</option><option value="device">Синтезатор устройства</option><option value="grani">Встроенный голос игры</option><option value="eleven">Голос ElevenLabs</option></select></label>
+ <p class="hint" id="ttsEngineHint"><span id="gvHint">Голос Gemini — по умолчанию: постоянные фразы игры — пункты меню, настроек и инвентаря, имена окон, частые сообщения — заранее прочитаны голосом Gemini и звучат записями сразу, без сети; то, чего нет в записях (числа, имена), договаривает синтезатор устройства; скорость — тот же ползунок. </span>Встроенный голос игры — русская нейросеть, которая говорит прямо на устройстве, одним голосом на любом телефоне и без чужого сервера: один раз скачивается (около шестидесяти мегабайт), дальше работает без сети; пока качается, говорит синтезатор устройства. Синтезатор устройства — тот, что стоит в самом телефоне: на iPhone это голоса VoiceOver, на Android — Google, Samsung, Acapela или любой другой установленный. Он отвечает сразу и работает без сети. Голос ElevenLabs звучит живее, но ходит в сеть и требует ключа.</p>
  <label class="opt">Встроенный голос <select id="setGraniVoice" aria-label="Какой встроенный голос говорит"><option value="sova" selected>Женский — самый разборчивый</option><option value="igm">Мужской</option></select></label>
  <label class="opt"><input type="checkbox" id="setVoiceLocal" checked><span><b>Только голоса с устройства</b><small>Онлайн-голоса отсеиваются: они ждут сеть и отвечают с задержкой, а без сети молчат совсем</small></span></label>
  <label class="opt">Язык голоса <select id="setVoiceLang" aria-label="Язык голоса"><option value="ru" selected>Русский</option><option value="all">Все языки</option></select></label>
@@ -255,7 +255,6 @@ h3{color:var(--acc2);margin:14px 0 6px;font-size:1.05rem;}
  <h3 class="sec-head" tabindex="0" data-cmd="secjump" data-sec-title="Жесты">Жесты</h3>
  <p class="hint">Тридцать три фигуры и тридцать три действия: любое можно переназначить. Три последних — о разделах открытого окна: следующий, предыдущий и оглавление.</p>
  <p class="hint" id="gestHint">Любое значимое действие можно повесить на свою фигуру жеста. Фигуры с удержанием не назначаются: удержание занято ощупыванием — им незрячий игрок находит, что под пальцем. Пока вы ничего не меняли, жесты работают по умолчанию.</p>
- <label class="opt"><input type="checkbox" id="setSplitTap" checked><span><b>Раздельное касание</b><small>Как в TalkBack и VoiceOver: держите палец на пункте, пока игра его не назовёт, и стукните рядом вторым пальцем — пункт выполнится, а палец останется на месте. Только в окнах и только после того, как пункт назван: на поле два пальца по-прежнему собирают, а закрывает окно свайп двумя пальцами вниз</small></span></label>
  <div class="row" id="gestRow"></div>
  <div class="row"><button type="button" data-cmd="gestreset">Вернуть жесты к умолчанию</button></div>
  <h3 class="sec-head" tabindex="0" data-cmd="secjump" data-sec-title="Точность жестов">Точность жестов</h3>
@@ -714,7 +713,14 @@ h3{color:var(--acc2);margin:14px 0 6px;font-size:1.05rem;}
    застряла на старой альфе 2.8, пока приложение уходило к 3.x. Набор 164
    сверяет все места между собой, а заставку и заголовок вкладки игра
    выправляет сама, по этой строке. */
-const GAME_VERSION="3.7";
+/* Браузер и приложение для Android идут одной версией. Приложение
+   узнаётся по родному мосту речи GraniTTS (он есть с первой строки
+   страницы); на случай, если версии придётся развести, у каждой своя
+   строка. Голос Gemini (GVOICE_ON) звучит и там и там. */
+const IN_APP=(()=>{try{return !!(window.GraniTTS&&typeof window.GraniTTS.speak==="function");}catch(_){return false;}})();
+const WEB_VERSION="3.9",APP_VERSION="3.9";
+const GAME_VERSION=IN_APP?APP_VERSION:WEB_VERSION;
+const GVOICE_ON=true;
 try{
  const v="Alpha "+GAME_VERSION;
  document.title=document.title.replace(/Alpha [\d.]+/,v);
@@ -733,6 +739,11 @@ const store={
  keys(){try{return Object.keys(localStorage);}catch(e){return [];}}};
 
 /* ════════ НАСТРОЙКИ ════════ */
+/* Умолчание синтезатора. Под управлением автоматики (navigator.webdriver —
+   так открывают страницу проверки игры) голос Gemini сам не включается,
+   пока его не попросили явно (window.__gvAuto): проверки речи слушают
+   синтезатор устройства. У игрока этого флага нет — у него Gemini. */
+function gvDefaultEngine(){try{if(!GVOICE_ON)return "device";return navigator.webdriver===true&&window.__gvAuto!==true?"device":"gemini";}catch(_){return "gemini";}}
 let savedSet={};try{savedSet=JSON.parse(store.get("gm29set")||"{}")||{};}catch(e){}
 const settings=Object.assign({speech:1,effects:1,music:1,subtitles:1,explore:1,fastTap:0,haptics:1,
  autoSpeech:1,verbosity:"normal",hints:1,autoDescribe:1,describeObjects:1,soundFirst:1,stopOnMove:1,stopOnMenu:1,stopOnGather:1,stopOnAction:1,sayXp:1,sayHp:1,saySpatial:1,srMode:"auto",duck:0.5,stopGesture:"four_down",
@@ -761,11 +772,13 @@ const settings=Object.assign({speech:1,effects:1,music:1,subtitles:1,explore:1,f
     0,6 до 6,0: кому пять быстро, ставит своё, и это запоминается. */
  rate:5,voiceVol:1,fxVol:1,musicVol:1,ambVol:0.8,uiVol:0.9,
  /* ── СИНТЕЗАТОР ──
-    ttsEngine — чем говорить: «device» (то, что стоит на телефоне) или
-    «eleven» (живой голос по своему ключу). voiceLocal — отсев онлайновых
+    ttsEngine — чем говорить: «gemini» (записи голоса Gemini, остальное —
+    синтезатор устройства; по умолчанию с 3.9), «device» (то, что стоит на
+    телефоне), «grani» (встроенная нейросеть) или «eleven» (живой голос по
+    своему ключу). voiceLocal — отсев онлайновых
     голосов: они ждут сеть и отвечают с задержкой на каждое слово меню.
     voiceLang — искать ли только русские голоса. pitch — высота. */
- ttsEngine:"device",voiceLocal:1,voiceLang:"ru",pitch:1,elevenKey:"",elevenVoice:"",
+ ttsEngine:gvDefaultEngine(),voiceLocal:1,voiceLang:"ru",pitch:1,elevenKey:"",elevenVoice:"",
  /* ── КАНАЛЫ ПО ТЗ ЗВУКА ──
     Каналов девять: общий (master), музыка, фон, мир (sfx), голоса людей
     (npc), речь игры (tts — это voiceVol), бой, меню и чары. У каждого своя
@@ -800,10 +813,6 @@ const settings=Object.assign({speech:1,effects:1,music:1,subtitles:1,explore:1,f
     «юг», «запад», «восток»: всё называется так же, как свайпы, — впереди
     (свайп вверх), справа, позади, слева. «Шкаф справа, сундук впереди». */
  compass:1,
- /* Раздельное касание чтеца экрана: палец держит названный пункт, второй
-    коротко стукает рядом, пункт выполняется. Включено; снимается теми, у
-    кого второй палец нет-нет да и ляжет на экран сам. */
- splitTap:1,
  gestSens:"norm",   /* чуткость: множитель к расстояниям и скоростям */
  tapWindow:800,     /* окно двойного касания, мс — ритм руки, а не размах */
  tapTick:1          /* щелчок при первом касании: подтверждение взвода */
@@ -849,6 +858,16 @@ if(!settings.rateFast){
  const медленно=!было||было<=RATE_SLOW;
  if(медленно)settings.rate=RATE_FAST;
  settings.rateFast=1;saveSettings();
+}
+/* ── ГОЛОС GEMINI ВКЛЮЧАЕТСЯ ОДИН РАЗ ──
+   С 3.9 по умолчанию говорит голос Gemini. У того, кто уже играл, в
+   настройках лежит прежний выбор — синтезатор устройства или встроенный
+   голос, на который игроки жаловались; его один раз меняем на Gemini.
+   Голос ElevenLabs по своему ключу не трогаем. Отметка gvOn остаётся, так
+   что вернувший себе прежний синтезатор второй раз переключён не будет. */
+if(!settings.gvOn&&gvDefaultEngine()==="gemini"){
+ if(settings.ttsEngine==="device"||settings.ttsEngine==="grani")settings.ttsEngine="gemini";
+ settings.gvOn=1;saveSettings();
 }
 /* ── ЧТО НОВОГО ──
    Игра обновляется молча, и это правильно: никто не любит окно «что нового».
@@ -904,7 +923,11 @@ const NEWS=[
  {v:20,н:"короткие названия пунктов, новая заставка с эффектами, женские голоса ремёсел, выверенные ударения",
   т:"Пункты меню, настроек и разделов теперь звучат одним именем: «Настройки», «Энциклопедия звуков», «Речь», «Интерфейс», «Магия», «Бой» — без чисел, пояснений и подсказки «двойное касание — открыть»; сколько где пунктов, по-прежнему называет оглавление окна. Заставка озвучена заново: голос — нейросеть Supertonic 3 в полосе 44 килогерц, выбранная из двух десятков русских голосов по разборчивости, чистоте и естественной мелодике фразы; под словами — ветер, нарастающий вихрь, колокол с дальним громом, стеклянное мерцание, хор под сводами и колокол в конце. Женщины сорока шести ремёсел и все общие ответы — «Ладно, будь по-твоему», «Нет, и не проси» — говорят теперь женским голосом, а не мужским, поднятым вверх. Тридцать одна фраза народов со словами вроде «кровь», «соль», «только», «конь» переозвучена с мягкими согласными на своих местах. Ударения сверены нейросетью silero-stress и вычитаны вручную: в словаре встроенного голоса исправлено около ста слов — «уже́», «пото́м», «плати́», «прислу́шайся», «предначе́ртанного», — и переозвучены фразы народов и мест, где ударение стояло не там."},
  {v:21,н:"все четыреста семь реплик жителей и героя — новые голоса Gemini",
-  т:"Жители и герой заговорили новыми голосами: все четыреста семь реплик — оклики двухсот восьмидесяти народов, слова ремёсел, общие слова и двадцать один ход разговора — озвучены заново нейроголосами Gemini. Голос подобран под народ: хриплый низкий у огров, орков и троллей, величавый у великанов и драконов, твёрдый у гномов и кентавров, таинственный, с придыханием, у тенеходцев и вещунов, дружелюбный у людей, живой у полуросликов; у народов женского голоса — зрелый, тёплый, мягкий или звонкий. У каждой реплики своя интонация: Шепчущий шепчет, Приговорённый говорит устало, от боли стонут. Каждая реплика проверена распознавателем речи и по темпу, тексты остались прежними."}];
+  т:"Жители и герой заговорили новыми голосами: все четыреста семь реплик — оклики двухсот восьмидесяти народов, слова ремёсел, общие слова и двадцать один ход разговора — озвучены заново нейроголосами Gemini. Голос подобран под народ: хриплый низкий у огров, орков и троллей, величавый у великанов и драконов, твёрдый у гномов и кентавров, таинственный, с придыханием, у тенеходцев и вещунов, дружелюбный у людей, живой у полуросликов; у народов женского голоса — зрелый, тёплый, мягкий или звонкий. У каждой реплики своя интонация: Шепчущий шепчет, Приговорённый говорит устало, от боли стонут. Каждая реплика проверена распознавателем речи и по темпу, тексты остались прежними."},
+ {v:22,н:"торжественная заставка, раздельного касания больше нет, подземелья слышно сквозь музыку",
+  т:"Заставка стала торжественнее: пафосный голос Gemini, новая тема с фанфарами, хором и литаврами, больше эффектов — колокола, гром, каменные ворота, клинок и рёв из глубины. Раздельного касания больше нет: второй палец спорил с двойным касанием, и теперь пункт выполняет только двойное касание одним пальцем. И подземелья слышно сквозь музыку: тихие петли глубины выровнены по громкости, а музыка под землёй звучит тише."},
+ {v:23,н:"игра говорит голосом Gemini",
+  т:"Игра заговорила голосом Gemini. Постоянные фразы — пункты меню и настроек, имена окон, частые сообщения — прочёл голос Gemini, и они звучат записями сразу, без задержки; то, чего в записях нет, например числа и имена, договаривает синтезатор телефона. Скорость — тот же ползунок, запись ускоряется без смены высоты голоса. Вернуть прежний синтезатор можно в настройках, раздел «Синтезатор речи»."}];
 const NEWS_V=NEWS[NEWS.length-1].v;
 /* Одна фраза: главное из последнего выпуска и сколько ещё новостей ждёт в меню. */
 function newsBrief(было){
@@ -997,6 +1020,16 @@ safeFn(()=>AudioLife.bind());
    Синтезатор — за адаптером: браузерный speechSynthesis или родной мост
    window.GraniTTS на iOS/Android. Музыка и фон при речи приглушаются, мир,
    шаги и сигналы — нет. */
+/* ── ПОДЗЕМЕЛЬЕ СЛЫШНО СКВОЗЬ МУЗЫКУ ──
+   Жалоба игрока (3.9): фоновые звуки подземелья очень тихие, и с музыкой их
+   не слышно. Так и было: капель первого яруса записана на −29,5 LUFS, бездна
+   пятого — на −29,2, а музыка звучит около −16; сверх того фон места шёл с
+   долей 0,55. Теперь петли глубины выровнены по громкости (копии без потерь
+   с суффиксом «_n», −18…−22 LUFS), под землёй фон идёт с долей 0,95, живой
+   слой — 0,6, а музыка там звучит на 0,6 своей громкости (−4,4 дБ): глубина
+   слышна и с музыкой, а музыка остаётся. */
+const DEPTH_MUSIC_DUCK=0.6;
+function depthMusicDuck(){try{return typeof G!=="undefined"&&G&&G.place&&G.place.depth>0?DEPTH_MUSIC_DUCK:1;}catch(_){return 1;}}
 function speechDuck(chan){
  try{if(typeof Speech==="undefined"||!Speech.ducking)return 1;
   const d=Math.max(0,Math.min(1,Number(settings.duck)));
@@ -1004,8 +1037,10 @@ function speechDuck(chan){
 /* ── ЗАСТАВКА ──
    Просьба игрока: при запуске — заставка, красивая музыка и торжественный
    русский голос: «Добро пожаловать в Грань Миров. Мир, где всё возможно» — и
-   несколько слов о мире. Звучит раз за запуск, на главном экране, под
-   заглавную тему игры «Land of Fearless» Александра Желанова. Любое касание,
+   несколько слов о мире. Звучит раз за запуск, на главном экране. С 3.9 —
+   пафосный голос Gemini (Sadaltager) под торжественную тему «Road to
+   Victory» (Moonthief) и больше эффектов: чары, рёв из глубины, каменные
+   ворота, клинок, гром и колокола; опись — sounds/intro/CREDITS.md. Любое касание,
    свайп или клавиша обрывает её, как речь игры, а речь игры ждёт её конца.
    Если браузер не даёт звучать до первого касания, заставка молчит — её
    можно послушать кнопкой «Прослушать заставку» на главном экране.
@@ -1135,13 +1170,15 @@ const Speech={voice:null,keepAlive:null,
   if(!v)return false;
   settings.voice=this.voiceKey(v);this.voice=v.native?null:v;this._nativeVoice=v.native?v:null;
   const былДвижок=settings.ttsEngine;
-  if(settings.ttsEngine!=="device")settings.ttsEngine="device";
+  /* При голосе Gemini выбранный голос телефона договаривает незаписанное:
+     движок остаётся прежним. */
+  if(settings.ttsEngine!=="device"&&settings.ttsEngine!=="gemini")settings.ttsEngine="device";
   this._graniAuto=false;this.adapter=null;this._kind=null;
   try{if(v.native&&window.GraniTTS&&typeof window.GraniTTS.setVoice==="function")window.GraniTTS.setVoice(String(v.voiceURI).slice(7));}catch(_){}
   saveSettings();
-  try{const e=document.getElementById("setTtsEngine");if(e)e.value="device";}catch(_){}
+  try{const e=document.getElementById("setTtsEngine");if(e)e.value=settings.ttsEngine;}catch(_){}
   try{const sel=document.getElementById("setVoice");if(sel&&[...sel.options].some(x=>x.value===settings.voice))sel.value=settings.voice;}catch(_){}
-  if(o.say!==false)this.say(`Голос: ${this.voiceLabel(v)}.${былДвижок!=="device"?" Говорит синтезатор телефона.":""} Здравствуйте, путник.`,
+  if(o.say!==false)this.say(`Голос: ${this.voiceLabel(v)}.${settings.ttsEngine==="gemini"?" Он договаривает то, чего нет в записях голоса Gemini.":былДвижок!=="device"?" Говорит синтезатор телефона.":""} Здравствуйте, путник.`,
    {interrupt:true,pri:1,user:true,cat:"ui"});
   return true;},
  fillVoices(){
@@ -1210,12 +1247,13 @@ const Speech={voice:null,keepAlive:null,
    /* Встроенный голос включился сам, потому что русского голоса не было, —
       а теперь он нашёлся (голоса пришли позже или игрок поставил голос в
       системе): говорит телефон, как и стоит в настройках. */
-   try{if(this._graniAuto&&settings.ttsEngine==="device"&&this.allVoices().some(v=>/^ru/i.test(v.lang||""))){
+   try{if(this._graniAuto&&(settings.ttsEngine==="device"||settings.ttsEngine==="gemini")&&this.allVoices().some(v=>/^ru/i.test(v.lang||""))){
     this._graniAuto=false;this.adapter=null;this._kind=null;}}catch(_){}};
   pick();speechSynthesis.onvoiceschanged=pick;
   /* Выбран встроенный голос — модель начинает грузиться сразу, а не на
      первой фразе: к первому слову игры она, скорее всего, уже в памяти. */
   if(settings.ttsEngine==="grani")setTimeout(()=>{try{this.graniStart();}catch(_){}},1200);
+  if(settings.ttsEngine==="gemini"&&GVOICE_ON)try{this.gvLoad();}catch(_){}
   /* Русского голоса на устройстве нет вовсе — игра не остаётся немой и не
      говорит по-русски английским голосом: сама включает встроенный голос. */
   /* Браузер-автомат (проверки) голосов не имеет вовсе — ему это не нужно. */
@@ -1248,6 +1286,7 @@ const Speech={voice:null,keepAlive:null,
  /* Какой синтезатор нужен сейчас: выбор игрока, а не то, что попалось
     первым при запуске. Смена настройки меняет адаптер на следующей фразе. */
  _wantKind(){
+  try{if(settings.ttsEngine==="gemini"&&GVOICE_ON)return "gemini";}catch(_){}
   try{if((settings.ttsEngine==="grani"||(this._graniAuto&&settings.ttsEngine!=="eleven"))
       &&typeof Worker==="function"&&location.protocol!=="file:")return "grani";}catch(_){}
   try{if(settings.ttsEngine==="eleven"&&String(settings.elevenKey||"").length>=8
@@ -1258,6 +1297,7 @@ const Speech={voice:null,keepAlive:null,
   if(this.adapter&&this._kind===род)return this.adapter;
   try{if(this.adapter&&this.adapter.cancel)this.adapter.cancel();}catch(_){}
   this.adapter=null;this._kind=род;
+  if(род==="gemini")return this.adapter=this._geminiAdapter();
   if(род==="eleven")return this.adapter=this._elevenAdapter();
   if(род==="grani")return this.adapter=this._graniAdapter();
   /* В приложении для Android речь идёт родным мостом, и он говорит голосом
@@ -1314,7 +1354,7 @@ const Speech={voice:null,keepAlive:null,
  _graniAuto:false,
  _graniTries:0,
  _graniAutoCheck(){
-  if(settings.ttsEngine!=="device"||this._graniAuto)return false;
+  if((settings.ttsEngine!=="device"&&settings.ttsEngine!=="gemini")||this._graniAuto)return false;
   if(typeof Worker!=="function"||location.protocol==="file:")return false;
   let всех=0,ru=0;
   try{const vs=this.allVoices();всех=vs.length;ru=vs.filter(v=>/^ru/i.test(v.lang||"")).length;}catch(_){}
@@ -1438,6 +1478,108 @@ const Speech={voice:null,keepAlive:null,
     return true;},
    cancel(){текущий++;стоп();if(запас)запас.cancel();},
    speaking(){return !!узел;}};},
+ /* ── ГОЛОС GEMINI ──
+    Просьба игрока (3.9): встроенный голос игры неразборчив и медленно
+    отвечает, а голос нужен качественный и мгновенный. Нейросеть Gemini
+    живёт только на серверах Google: в игру её не встроишь, а по сети каждая
+    фраза ждала бы ответа секунды. Поэтому голос Gemini (Iapetus) заранее
+    прочёл все постоянные фразы игры — пункты меню и настроек, имена окон,
+    частые сообщения, — и каждая лежит отдельной записью без потерь
+    (sounds/gvoice). Игра разбирает, что сказать, по предложениям: то, что
+    есть в записях, звучит записью сразу, без синтеза и без сети; то, чего
+    нет (числа, имена, меняющийся текст), договаривает синтезатор
+    устройства — тем же тактом, без паузы. Темп — тот же ползунок скорости:
+    запись ускоряется с сохранением высоты голоса. */
+ GVOICE:{url:"sounds/gvoice/bank_1.js",dir:"sounds/gvoice/",map:null,state:"off"},
+ gvKey(t){return String(t==null?"":t).toLowerCase().replace(/ё/g,"е").replace(/[^а-яa-z0-9]+/g," ").trim();},
+ /* Опись записей — скриптом с того же сайта, а не запросом fetch:
+    политика безопасности страницы закрывает ей сеть (connect-src 'none'). */
+ gvLoad(){
+  const g=this.GVOICE;if(g.state!=="off")return g;
+  g.state="loading";
+  const готово=()=>{const j=window.GVOICE_BANK;
+   if(j&&j.p){g.map=j.p;g.state="ready";
+    /* Первые пункты, которые слышат чаще всего, готовятся заранее. */
+    (j.top||[]).slice(0,12).forEach(id=>{try{const a=new Audio(g.dir+id+".flac");a.preload="auto";a.load();}catch(_){}});}
+   else g.state="failed";};
+  if(window.GVOICE_BANK){готово();return g;}
+  try{const sc=document.createElement("script");sc.src=g.url;sc.async=true;
+   sc.onload=готово;sc.onerror=()=>{g.state="failed";};
+   (document.head||document.documentElement).appendChild(sc);}catch(_){g.state="failed";}
+  return g;},
+ gvClip(t){const g=this.GVOICE;if(!g.map)return null;const k=this.gvKey(t);const id=k&&g.map[k];return id?g.dir+id+".flac":null;},
+ /* Текст — в куски: записанные предложения по одному, незаписанные соседи
+    склеиваются в одну фразу синтезатора, чтобы голоса не чередовались
+    через слово. */
+ gvParts(text){
+  const whole=this.gvClip(text);if(whole)return [{t:String(text),url:whole}];
+  const ss=String(text).match(/[^.!?…]+[.!?…]*/g)||[String(text)];
+  const out=[];
+  ss.forEach(s0=>{const s=s0.trim();if(!s)return;const url=this.gvClip(s);const last=out[out.length-1];
+   if(!url&&last&&!last.url)last.t+=" "+s;else out.push({t:s,url});});
+  return out;},
+ gvCover(text){const ч=this.gvParts(text);const все=ч.reduce((n,x)=>n+x.t.length,0)||1;
+  return ч.filter(x=>x.url).reduce((n,x)=>n+x.t.length,0)/все;},
+ /* Скорость игрока (0,6…6) — в темп записи: единица — как прочитано,
+    выше — быстрее, но вдвое мягче, чем у синтезатора: запись, ускоренная
+    втрое с лишним, начинает звенеть. */
+ gvTempo(r){r=+r||1;const t=r<=1?r:1+(r-1)*0.45;return Math.max(0.6,Math.min(3.5,t));},
+ /* Синтезатор устройства — для незаписанного: тот же выбор, что у «device». */
+ _deviceAdapter(){
+  try{if(this._graniAuto&&typeof Worker==="function"&&location.protocol!=="file:")return this._graniAdapter();}catch(_){}
+  const свойВеб=!!(this.voice&&settings.voice&&this.voiceKey(this.voice)===settings.voice&&"speechSynthesis" in window);
+  try{if(!свойВеб&&window.GraniTTS&&typeof window.GraniTTS.speak==="function")return this._nativeAdapter();}catch(_){}
+  if("speechSynthesis" in window)return this._webAdapter();
+  return null;},
+ _geminiAdapter(){
+  const self=this;
+  const запас=this._deviceAdapter();
+  const пул=new Map();
+  let ток=0,эл=null,идёт=false;
+  const стоп=()=>{const a=эл;эл=null;if(a){try{a.onended=null;a.onerror=null;a.pause();}catch(_){}}};
+  const аудио=url=>{let a=пул.get(url);
+   if(a){пул.delete(url);пул.set(url,a);return a;}
+   a=new Audio(url);a.preload="auto";пул.set(url,a);
+   /* Плееров немного: на Android число живых медиаплееров ограничено, а
+      звуки мира держат свои. Вытесненный плеер отпускает запись. */
+   if(пул.size>24){const [k,v]=пул.entries().next().value;пул.delete(k);if(v!==эл)try{v.removeAttribute("src");v.load();}catch(_){}}
+   return a;};
+  return {name:"gemini",
+   speak(text,o){
+    const g=self.gvLoad();
+    if(g.state!=="ready")return запас?запас.speak(text,o):false;
+    const части=self.gvParts(text);
+    if(!части.some(x=>x.url))return запас?запас.speak(text,o):false;
+    const мой=++ток;стоп();идёт=true;
+    let начато=false;
+    const старт=()=>{if(!начато){начато=true;if(o.onstart)o.onstart();}};
+    const темп=self.gvTempo(o.rate);
+    let шаг=null;
+    const голосом=(t,i)=>{
+     if(!запас){шаг(i+1);return;}
+     старт();
+     const ok=запас.speak(t,{rate:o.rate,volume:o.volume,onstart(){},
+      onend(){if(мой===ток)шаг(i+1);},onerror(){if(мой===ток)шаг(i+1);}});
+     if(!ok)шаг(i+1);};
+    шаг=i=>{
+     if(мой!==ток)return;
+     if(i>=части.length){идёт=false;if(o.onend)o.onend();return;}
+     const ч=части[i];
+     if(!ч.url){голосом(ч.t,i);return;}
+     const a=аудио(ч.url);эл=a;
+     try{a.preservesPitch=true;a.mozPreservesPitch=true;a.webkitPreservesPitch=true;}catch(_){}
+     try{a.defaultPlaybackRate=темп;a.playbackRate=темп;}catch(_){}
+     try{a.volume=Math.max(0,Math.min(1,+o.volume));}catch(_){}
+     a.onended=()=>{if(мой===ток&&эл===a){эл=null;шаг(i+1);}};
+     /* Запись не открылась — этот кусок договаривает синтезатор. */
+     a.onerror=()=>{if(мой===ток&&эл===a){эл=null;голосом(ч.t,i);}};
+     try{a.currentTime=0;}catch(_){}
+     let pr=null;try{pr=a.play();}catch(_){эл=null;голосом(ч.t,i);return;}
+     старт();
+     if(pr&&pr.catch)pr.catch(()=>{if(мой===ток&&эл===a){эл=null;голосом(ч.t,i);}});};
+    шаг(0);return true;},
+   cancel(){ток++;идёт=false;стоп();if(запас)запас.cancel();},
+   speaking(){return идёт;}};},
  _elevenFetch(text){
   try{
    const ключ=String(settings.elevenKey||""),голос=String(settings.elevenVoice||"");
@@ -1895,7 +2037,7 @@ const AE={ctx:null,master:null,fx:null,musicBus:null,dry:null,convolver:null,cac
  applyVolumes(){if(!this.ctx)return;
   this.master.gain.setTargetAtTime(0.9*safeFn(()=>Bank.master(),1),this.ctx.currentTime,0.05);
   this.fx.gain.setTargetAtTime(settings.effects?settings.fxVol:0,this.ctx.currentTime,0.05);
-  this.musicBus.gain.setTargetAtTime(settings.music?settings.musicVol*speechDuck("music"):0,this.ctx.currentTime,0.05);
+  this.musicBus.gain.setTargetAtTime(settings.music?settings.musicVol*speechDuck("music")*depthMusicDuck():0,this.ctx.currentTime,0.05);
   try{if(typeof Bank!=="undefined")Bank.refresh();}catch(_){}},
  impulse(sec,decay){const rate=this.ctx.sampleRate,len=rate*sec,buf=this.ctx.createBuffer(2,len,rate);
   for(let c=0;c<2;c++){const d=buf.getChannelData(c);for(let i=0;i<len;i++)d[i]=(Math.random()*2-1)*Math.pow(1-i/len,decay);}return buf;},
@@ -3933,7 +4075,7 @@ function sceneCats(){
 }
 /* Указание авторства для записей под лицензией с обязательной ссылкой: оно
    видно в самой игре, под списком разделов энциклопедии звуков. */
-const ENC_CREDITS="Живая фэнтезийная библиотека взята из двух свободных игр. Flare (Free/Libre Action Roleplaying Engine), автор Clint Bellanger и участники проекта, flarerpg.org — артефакты и вещи, подземелья и лестницы, твари, заклинания, голос героя и природа. 0 A.D. (Empires Ascendant), автор Wildfire Games, play0ad.com — оружие и удары боя, осада, тревога и вести войны, ремёсла и стройка, звери, предсмертные крики, шаги по поверхностям, погода и вода, здания, рынок и порт. Обе — под лицензией Creative Commons Attribution-ShareAlike 3.0 (CC BY-SA 3.0): указание авторства обязательно и дано здесь, записи остаются под той же лицензией. Голоса людей без слов — смешок, оклик, покашливание, хохот торговца, кличи — из Stendhal (CC0 и CC BY 3.0), OpenClonk (CC BY 3.0) и MegaGlest (CC BY-SA 3.0): словами в игре говорят только по-русски. Разделы разложены по назначению: поверхности под ногой, удары и оружие, двери, механизмы, звери и голоса, боги и знамения, музыка мест. Музыки в звуках мира нет вовсе: ни нот звукового шрифта, ни живых инструментов, ни джинглов, ни хора — награды, уровень, дела, звания, боги, праздники и меню звучат живыми записями свободных игр. Море, земли, глубина и голоса мест — папка fon: настоящие записи Stendhal (авторы с freesound.org: pawsound, MrAuralization, stewdio2003, PoundSound, Félix Blume, InspectorJ, Department64, Inchadney, polymorpheva, andersmmg, Dave Welsh, Xythe, noahpardo, pyro13djt, tylerandbergsd, Lucish_, j1987, qubodup, AntumDeluge, fryzu82, ceoux, Andune; soundbible.com — Adam Webb; Служба рыбы и дикой природы США; лицензии CC0, CC BY 3.0, CC BY 4.0 и общественное достояние), MegaGlest и 0 A.D. (CC BY-SA 3.0), Valyria Tear (Koertes — CC BY-SA 3.0; Blender Foundation, Benboncan и dobroide — CC BY 3.0); пак Neo HQ Mystic Sounds без лицензии из игры убран. Игровые звуки — папка gamefx: драконий рык, голоса гоблинов и кобольдов и шаг по воде из Stendhal (frasbr, ibm5155, spookymodem, ohnobones, apolloaiello, pawsound — CC0), удар архимага и щелчок меню MegaGlest и шаги 0 A.D. (CC BY-SA 3.0), щелчки механизмов OpenClonk (CC BY 3.0), шаги Wyrmsun (TinyWorlds — CC0), шорох сумки и всплеск Valyria Tear (artisticdude, Michel Baradari — CC BY 3.0); пак Fantasy Sound Library без лицензии из игры убран. Голоса восьми существ — папка creatures, все записи FLAC: громада, чёрный дракон, призрачный доспех, поступь слона и драконьего всадника MegaGlest (CC BY-SA 3.0); горгулья, вампиресса, минимара, циклоп, огр, нага, ползучая слизь, чудища Ogrebane, крыса, голубиные крылья, шорох, гремучая змея и пчела Stendhal (lazr2012, Kevin Smith, dersuperanton, Tim Kahn, columbia23 — CC BY 3.0; Zabuhailo, JoseAgudelo, SmallQuadruped, pandaplague, altfuture, Ogrebane, winsx87, Jordan Irwin — CC0; fws.gov и nps.gov — общественное достояние); летучая мышь, чиппи, мук и пука OpenClonk (CC BY 3.0); пак Classic Monster Sounds без лицензии из игры убран. Источники записей: пакет uisfx (CC0) для немелодичных щелчков меню, сэмплы Sonic Pi с freesound.org (общественное достояние, CC0 1.0). Голоса богов у алтаря, знамение, храмовые колокола, огонь жертвенника, клад, тревога засады, призрачные голоса, гомон ярмарки, чары льда и света и щелчки меню — из свободной фэнтезийной игры Stendhal (stendhalgame.org): записи freesound.org и OpenGameArt, исходники без потерь; авторы — Samuel Strågefors, lostchocolatelab, NaturesTemper, vonz, pawsound, vibe_crc, JoelAudio, stephan, Jordan Irwin (AntumDeluge), ALLANZ10D, HorrorAudio, foxen10, dauser, dave.des, Natalie, monotraum, qubodup, SmallQuadruped, -sihiL, martinimeniscus, ericlichtenberg, renatalmar, satrebor и Nicole Marie T; лицензии CC0, CC BY 3.0, CC BY 4.0 и общественное достояние. Школы чар звучат голосами магов, шамана и ковра-самолёта MegaGlest (CC BY-SA 3.0), сигнал засады — тревогой 0 A.D. (CC BY-SA 3.0). Указание авторства обязательно, и оно здесь дано. Вещи, с которыми игрок что-то делает, звучат живыми записями ещё четырёх свободных игр. OpenClonk (The OpenClonk Team and contributors, RedWolf Design GmbH, openclonk.org) — сундуки, петли, каменные ворота, цепи, дерево, камень, металл, стекло, чан, огонь, горн, древние механизмы, гром, дождь, ветер, птицы, лук и щит, отклик раздельного касания и знак сдвинувшегося списка (две записи без потерь, FLAC, 44,1 кГц); лицензия Creative Commons Attribution 3.0 Unported (CC BY 3.0). 0 A.D. (Wildfire Games) — каменные ворота, обрушение, листва, мотыга, треск огня, подворье, порт, торговые ряды, день, реки, волны и голоса под сводами храма (CC BY-SA 3.0). Unknown Horizons (The Unknown Horizons Team, unknown-horizons.org) — каменотёс, кузнец, дровосек, выгон, мельница, часовня, трактир, площадь, склад, корабельный колокол и страница (CC BY-SA 3.0). Lugaru (Wolfire Games, wolfire.com, и OSS Lugaru) — костёр, кусты, пустыня, ветер, шаги, лязг, удары, клинки и звери (CC BY-SA 3.0). Ancient Beast (Freezing Moon и участники проекта, AncientBeast.com) — пошаговая фэнтезийная игра о мифических тварях: у неё взяты отклик взведённого касания, знак оборванной речи, раскрытие панели чар, сдача карт в таверне и знак изученной чары; лицензия художественной и звуковой части Creative Commons Attribution-ShareAlike 4.0 (CC BY-SA 4.0), код игры не используется. Все записи этой поставки переведены в FLAC без потерь. МУЗЫКА МЕСТ — темы одиннадцати свободных фэнтезийных игр, у каждого места своя: Stendhal (композиторы Мэтью Пабло, Александр Желанов, Тэд Миллер, RandomMind, LarsG, Geomancer, Pro Sensory, Jonathan Shaw, Bendzer, Leerie, Angus Macnaughton, Otto Halmén, Memoraphile, Tozan; CC0, CC BY 3.0, CC BY 4.0, OGA-BY 3.0), Solarus Free Resource Pack (Эдуардо Дуэньяс и Diarandor, CC BY-SA 4.0), Valyria Tear (yd, Zander Noriega, Ecrivain, Tom Peter, Alexandr Zhelanov, HorrorPen, Eliot Corley, lasercheese; CC0, CC BY 3.0, CC BY-SA 3.0), Wyrmsun (Марсело Фернандес, CC BY 4.0), Ancient Beast (Moonthief, Tad Miller, Agret Brisignr, Jens Kiilstofte; CC BY-SA 4.0), MegaGlest (Aminos, Margaras, команда MegaGlest; CC BY-SA 3.0), OpenDungeons, Flare, OpenClonk, Evol Online (Ledmitz, Aasif Chaudry, Chicka-Maria, Kevin MacLeod, bartk, Eric Matyas; evolonline.org) и The Mana World (Сэй Муцуки, PeriTune; CC BY 4.0). Под GPL не взято ничего. Эти темы — OGG Vorbis 320 кбит/с с выровненной громкостью. Для каждой папки в sounds лежат CREDITS.md с таблицей исходных файлов и текст лицензии.";
+const ENC_CREDITS="Живая фэнтезийная библиотека взята из двух свободных игр. Flare (Free/Libre Action Roleplaying Engine), автор Clint Bellanger и участники проекта, flarerpg.org — артефакты и вещи, подземелья и лестницы, твари, заклинания, голос героя и природа. 0 A.D. (Empires Ascendant), автор Wildfire Games, play0ad.com — оружие и удары боя, осада, тревога и вести войны, ремёсла и стройка, звери, предсмертные крики, шаги по поверхностям, погода и вода, здания, рынок и порт. Обе — под лицензией Creative Commons Attribution-ShareAlike 3.0 (CC BY-SA 3.0): указание авторства обязательно и дано здесь, записи остаются под той же лицензией. Голоса людей без слов — смешок, оклик, покашливание, хохот торговца, кличи — из Stendhal (CC0 и CC BY 3.0), OpenClonk (CC BY 3.0) и MegaGlest (CC BY-SA 3.0): словами в игре говорят только по-русски. Разделы разложены по назначению: поверхности под ногой, удары и оружие, двери, механизмы, звери и голоса, боги и знамения, музыка мест. Музыки в звуках мира нет вовсе: ни нот звукового шрифта, ни живых инструментов, ни джинглов, ни хора — награды, уровень, дела, звания, боги, праздники и меню звучат живыми записями свободных игр. Море, земли, глубина и голоса мест — папка fon: настоящие записи Stendhal (авторы с freesound.org: pawsound, MrAuralization, stewdio2003, PoundSound, Félix Blume, InspectorJ, Department64, Inchadney, polymorpheva, andersmmg, Dave Welsh, Xythe, noahpardo, pyro13djt, tylerandbergsd, Lucish_, j1987, qubodup, AntumDeluge, fryzu82, ceoux, Andune; soundbible.com — Adam Webb; Служба рыбы и дикой природы США; лицензии CC0, CC BY 3.0, CC BY 4.0 и общественное достояние), MegaGlest и 0 A.D. (CC BY-SA 3.0), Valyria Tear (Koertes — CC BY-SA 3.0; Blender Foundation, Benboncan и dobroide — CC BY 3.0); пак Neo HQ Mystic Sounds без лицензии из игры убран. Игровые звуки — папка gamefx: драконий рык, голоса гоблинов и кобольдов и шаг по воде из Stendhal (frasbr, ibm5155, spookymodem, ohnobones, apolloaiello, pawsound — CC0), удар архимага и щелчок меню MegaGlest и шаги 0 A.D. (CC BY-SA 3.0), щелчки механизмов OpenClonk (CC BY 3.0), шаги Wyrmsun (TinyWorlds — CC0), шорох сумки и всплеск Valyria Tear (artisticdude, Michel Baradari — CC BY 3.0); пак Fantasy Sound Library без лицензии из игры убран. Голоса восьми существ — папка creatures, все записи FLAC: громада, чёрный дракон, призрачный доспех, поступь слона и драконьего всадника MegaGlest (CC BY-SA 3.0); горгулья, вампиресса, минимара, циклоп, огр, нага, ползучая слизь, чудища Ogrebane, крыса, голубиные крылья, шорох, гремучая змея и пчела Stendhal (lazr2012, Kevin Smith, dersuperanton, Tim Kahn, columbia23 — CC BY 3.0; Zabuhailo, JoseAgudelo, SmallQuadruped, pandaplague, altfuture, Ogrebane, winsx87, Jordan Irwin — CC0; fws.gov и nps.gov — общественное достояние); летучая мышь, чиппи, мук и пука OpenClonk (CC BY 3.0); пак Classic Monster Sounds без лицензии из игры убран. Источники записей: пакет uisfx (CC0) для немелодичных щелчков меню, сэмплы Sonic Pi с freesound.org (общественное достояние, CC0 1.0). Голоса богов у алтаря, знамение, храмовые колокола, огонь жертвенника, клад, тревога засады, призрачные голоса, гомон ярмарки, чары льда и света и щелчки меню — из свободной фэнтезийной игры Stendhal (stendhalgame.org): записи freesound.org и OpenGameArt, исходники без потерь; авторы — Samuel Strågefors, lostchocolatelab, NaturesTemper, vonz, pawsound, vibe_crc, JoelAudio, stephan, Jordan Irwin (AntumDeluge), ALLANZ10D, HorrorAudio, foxen10, dauser, dave.des, Natalie, monotraum, qubodup, SmallQuadruped, -sihiL, martinimeniscus, ericlichtenberg, renatalmar, satrebor и Nicole Marie T; лицензии CC0, CC BY 3.0, CC BY 4.0 и общественное достояние. Школы чар звучат голосами магов, шамана и ковра-самолёта MegaGlest (CC BY-SA 3.0), сигнал засады — тревогой 0 A.D. (CC BY-SA 3.0). Указание авторства обязательно, и оно здесь дано. Вещи, с которыми игрок что-то делает, звучат живыми записями ещё четырёх свободных игр. OpenClonk (The OpenClonk Team and contributors, RedWolf Design GmbH, openclonk.org) — сундуки, петли, каменные ворота, цепи, дерево, камень, металл, стекло, чан, огонь, горн, древние механизмы, гром, дождь, ветер, птицы, лук и щит, знак сдвинувшегося списка (запись без потерь, FLAC, 44,1 кГц); лицензия Creative Commons Attribution 3.0 Unported (CC BY 3.0). 0 A.D. (Wildfire Games) — каменные ворота, обрушение, листва, мотыга, треск огня, подворье, порт, торговые ряды, день, реки, волны и голоса под сводами храма (CC BY-SA 3.0). Unknown Horizons (The Unknown Horizons Team, unknown-horizons.org) — каменотёс, кузнец, дровосек, выгон, мельница, часовня, трактир, площадь, склад, корабельный колокол и страница (CC BY-SA 3.0). Lugaru (Wolfire Games, wolfire.com, и OSS Lugaru) — костёр, кусты, пустыня, ветер, шаги, лязг, удары, клинки и звери (CC BY-SA 3.0). Ancient Beast (Freezing Moon и участники проекта, AncientBeast.com) — пошаговая фэнтезийная игра о мифических тварях: у неё взяты отклик взведённого касания, знак оборванной речи, раскрытие панели чар, сдача карт в таверне и знак изученной чары; лицензия художественной и звуковой части Creative Commons Attribution-ShareAlike 4.0 (CC BY-SA 4.0), код игры не используется. Все записи этой поставки переведены в FLAC без потерь. МУЗЫКА МЕСТ — темы одиннадцати свободных фэнтезийных игр, у каждого места своя: Stendhal (композиторы Мэтью Пабло, Александр Желанов, Тэд Миллер, RandomMind, LarsG, Geomancer, Pro Sensory, Jonathan Shaw, Bendzer, Leerie, Angus Macnaughton, Otto Halmén, Memoraphile, Tozan; CC0, CC BY 3.0, CC BY 4.0, OGA-BY 3.0), Solarus Free Resource Pack (Эдуардо Дуэньяс и Diarandor, CC BY-SA 4.0), Valyria Tear (yd, Zander Noriega, Ecrivain, Tom Peter, Alexandr Zhelanov, HorrorPen, Eliot Corley, lasercheese; CC0, CC BY 3.0, CC BY-SA 3.0), Wyrmsun (Марсело Фернандес, CC BY 4.0), Ancient Beast (Moonthief, Tad Miller, Agret Brisignr, Jens Kiilstofte; CC BY-SA 4.0), MegaGlest (Aminos, Margaras, команда MegaGlest; CC BY-SA 3.0), OpenDungeons, Flare, OpenClonk, Evol Online (Ledmitz, Aasif Chaudry, Chicka-Maria, Kevin MacLeod, bartk, Eric Matyas; evolonline.org) и The Mana World (Сэй Муцуки, PeriTune; CC BY 4.0). Под GPL не взято ничего. Эти темы — OGG Vorbis 320 кбит/с с выровненной громкостью. Для каждой папки в sounds лежат CREDITS.md с таблицей исходных файлов и текст лицензии.";
 let encycOpen=null;   /* какой раздел сейчас раскрыт */
 
 /* ── РАЗДЕЛЫ ПО НАЗНАЧЕНИЮ ──
@@ -4017,7 +4159,7 @@ const UI_NAMES={b_altar:"Алтарь рядом",b_chest:"Сундук рядо
  b_stairs_down:"Лестница вниз",b_stairs_up:"Лестница вверх",b_temple:"Храм",b_wall:"Стена: тупик",
  b_warn:"Предупреждение",b_well:"Колодец",ui_activate:"Пункт выполнен",ui_back:"Назад",ui_close:"Окно закрыто",
  ui_error:"Нельзя",ui_focus:"Фокус на пункте",ui_next:"Следующий пункт в меню",ui_next_set:"Следующий пункт в настройках",ui_open:"Окно открыто",
- ui_split:"Раздельное касание",ui_refocus:"Список сдвинулся",ui_arm:"Жест взведён",rank_up:"Новое звание у народа",
+ ui_refocus:"Список сдвинулся",ui_arm:"Жест взведён",rank_up:"Новое звание у народа",
  bet_back:"Ставка возвращена",bounty:"Награда за голову",ui_hush:"Речь оборвана",ui_magic_open:"Панель чар раскрыта",
  cards_deal:"Карты сданы",spell_learn:"Чара изучена",ui_select:"Выбор в списке",ui_success:"Успех",
  ui_toggle_off:"Переключатель выключен",ui_toggle_on:"Переключатель включён"};
@@ -4157,51 +4299,6 @@ const runState={active:false,dir:null,iv:null,hold:null,pendingDir:null};
 let exploreHold=null;
 function cancelExploreHold(){if(exploreHold){clearTimeout(exploreHold);exploreHold=null;}}
 const touchGate={lastUiTap:0,lastUiEl:null,suppressClickUntil:0,lastTouch:0,lastX:-1e4,lastY:-1e4};
-/* ── РАЗДЕЛЬНОЕ КАСАНИЕ: КАК В TALKBACK И VOICEOVER ──
-   У обоих чтецов экрана есть жест, которым незрячие пользуются каждый день:
-   палец лежит на пункте и слушает его имя, а второй палец коротко стукает
-   рядом — пункт выполняется, и рука не отрывается от найденного. Это быстрее
-   и вернее двойного касания: попадать по одному и тому же месту дважды, не
-   видя экрана, трудно, и второе касание часто съезжает.
-   В игре этого жеста не было. Второй палец на экране означал «два пальца» —
-   то есть сбор или закрытие окна, — и человек, пришедший из чтеца, вместо
-   выполнения пункта закрывал окно.
-   Условия нарочно узкие, чтобы обычное касание двумя пальцами не пострадало:
-   открыто окно (на поле два пальца собирают ресурс и должны собирать
-   дальше); первый палец пролежал достаточно, чтобы игра успела назвать
-   пункт; он всё ещё на нём; второй палец пришёл ПОСЛЕ первого, а не вместе
-   с ним. При быстром касании двумя пальцами ни одно из условий не
-   выполняется, и окно закрывается, как закрывалось. */
-let splitReady=null;
-/* Пока поднят — activateElement отвечает голосом раздельного касания. */
-let splitNow=false;
-const SPLIT_SEL='button,a,input,select,textarea,[role="button"],[data-cmd],[data-magic-index],[tabindex]:not([tabindex="-1"])';
-function splitArm(t){
- splitReady=null;
- try{
-  if(settings.splitTap===0)return;
-  if(!holdSpoke)return;                    /* палец ещё не назвал, чего касается */
-  const lay=navLayer();if(!lay)return;     /* на поле два пальца — это сбор */
-  const el=lastExploreEl;
-  if(!el||el.disabled||el.hidden||!lay.contains(el))return;
-  /* Палец обязан всё ещё лежать на том самом пункте: ушёл в сторону — жеста нет. */
-  const под=t&&document.elementFromPoint(t.clientX,t.clientY);
-  const свой=под&&(под===el||el.contains(под)||(под.closest&&под.closest(SPLIT_SEL)===el));
-  if(!свой)return;
-  splitReady={el,t:Date.now()};
- }catch(_){splitReady=null;}}
-function splitFire(){
- try{
-  const s=splitReady;splitReady=null;
-  if(!s||!s.el)return false;
-  if(Date.now()-s.t>safeFn(()=>gestMultiMs(),1400))return false;
-  const lay=navLayer();
-  if(!lay||!lay.contains(s.el)||s.el.disabled||s.el.hidden)return false;
-  if(!s.el.getClientRects||!s.el.getClientRects().length)return false;
-  safeFn(()=>setCursor(s.el,false,false));
-  splitNow=true;
-  try{return !!activateElement(s.el);}finally{splitNow=false;}
- }catch(_){splitNow=false;return false;}}
 /* Двойное касание несколькими пальцами: первое касание только взводит, второе выполняет. */
 const multiTap={n:0,t:0,c:0,p:0,pt:0};
 function gameActive(){const el=document.getElementById('screen-game');return !!(el&&!el.hidden&&entered);}
@@ -4533,9 +4630,7 @@ function activateElement(el){if(!el||el.disabled)return false;try{
  /* Куда вернуть фокус, когда действие отработает (см. ФОКУС НЕ УБЕГАЕТ). */
  const метка=safeFn(()=>cursorMark(el),null);
  touchGate.lastUiTap=0;touchGate.lastUiEl=null;
- /* Раздельное касание отвечает своим голосом: иначе на слух оно
-    неотличимо от двойного, и игрок не знает, какой жест сработал. */
- safeFn(()=>UI.nat(splitNow?"ui_split":"ui_activate",splitNow?0.6:0.55));
+ safeFn(()=>UI.nat("ui_activate",0.55));
  if(stepControl(el)){touchGate.suppressClickUntil=Date.now()+700;return true;}
  el.focus?.({preventScroll:true});
  let handled=false;
@@ -4604,7 +4699,6 @@ const GESTURE_MAP=[
  {fingers:1,kind:"hold",n:"ощупывание: назвать то, что под пальцем",prio:1,где:"везде"},
  {fingers:1,kind:"swipe",n:"шаг по полю; в бою — шаг и уворот, а вынутое оружие бьёт в сторону твари, если достаёт; в окне — следующий или предыдущий пункт; в инвентаре вверх или вниз — действия с вещью",prio:2,где:"поле, окно, бой"},
  {fingers:1,kind:"tap2",n:"выполнить названный пункт окна; на поле — действие: с объектом, выбранным при осмотре, или с тем, что под ногами",prio:2,где:"окно, поле"},
- {fingers:2,kind:"split",n:"раздельное касание: палец держит названный пункт, второй стукает рядом — пункт выполняется, палец остаётся на месте",prio:2,где:"окно"},
  {fingers:2,kind:"tap",n:"собрать ресурс под ногами: руду, травы, дерево, камень, кристаллы; в бою — где тварь и чем она занята",prio:3,где:"поле, бой"},
  {fingers:2,kind:"swipe",dir:"S",n:"закрыть открытое окно; на поле ничего не делает — только напоминает, что действие теперь двойным касанием",prio:3,где:"везде"},
  {fingers:2,kind:"swipe",dir:"N",n:"повторить последнее сообщение; если речь идёт — оборвать её",prio:3,где:"везде"},
@@ -4622,7 +4716,7 @@ const Gestures=Modules.register("GESTURES",{
  /* Один диспетчер на каждый род события: второго нет и быть не должно. */
  handlers:{touchstart:1,touchmove:1,touchend:1,click:1,keydown:1},
  word(g){const пальцы=g.fingers===1?"один палец":g.fingers===2?"два пальца":g.fingers===3?"три пальца":"четыре пальца";
-  const род=g.kind==="hold"?"удержание":g.kind==="tap"?"одно касание":g.kind==="tap2"?"двойное касание":g.kind==="split"?"раздельное касание":g.dir?`свайп ${({N:"вверх",S:"вниз",W:"влево",E:"вправо"})[g.dir]}`:"свайп";
+  const род=g.kind==="hold"?"удержание":g.kind==="tap"?"одно касание":g.kind==="tap2"?"двойное касание":g.dir?`свайп ${({N:"вверх",S:"вниз",W:"влево",E:"вправо"})[g.dir]}`:"свайп";
   return `${пальцы}, ${род} — ${g.n}`;},
  text(){return "Карта жестов. "+GESTURE_MAP.map(g=>this.word(g)).join(". ")+".";},
  /* Два жеста спорят, если совпали пальцы, род и сторона; таблица обязана быть без споров. */
@@ -5239,12 +5333,6 @@ document.addEventListener('touchstart',e=>{touchGate.lastTouch=Date.now();safeFn
     касанием пустого места и АКТИВИРОВАЛО предыдущий выбранный пункт вместо
     того, чтобы назвать карточку. */
  const ui=pickTarget(e.target);
- /* Раздельное касание взводится ДО того, как жест перепишется: нужен ещё
-    прежний счёт пальцев — второй палец пришёл к одному лежащему, а не лёг
-    вместе с ним. */
- if(n===2&&(gesture.maxCount||0)===1)
-  safeFn(()=>splitArm([...e.touches].find(x=>x.identifier===gesture.id)||e.touches[0]));
- else if(n!==1)splitReady=null;
  gesture={count:n,maxCount:Math.max(gesture.maxCount||0,n),id:t.identifier,x:t.clientX,y:t.clientY,t:Date.now(),moved:false,dir:null,target:e.target,ui,runArmed:false,fast:false,speed:0,lastX:t.clientX,lastY:t.clientY,lastT:Date.now(),slowT:0};
  if(n!==1){
   /* Второй палец на экране означает: начатое двойное касание отменяется.
@@ -5350,11 +5438,6 @@ document.addEventListener('touchend',e=>{
  if(!gesture.maxCount){if(e.cancelable&&!settings.fastTap)e.preventDefault();return;}
  if(e.touches.length>0){
   gesture.count=e.touches.length;
-  /* Раздельное касание выполняется в тот самый миг, когда снялся второй
-     палец: первый ещё лежит на пункте, и ждать его отрыва незачем — чтец
-     экрана отвечает тогда же. */
-  if(e.touches.length===1&&(gesture.maxCount||0)===2&&!gesture.moved&&!gesture.splitDone
-     &&splitReady&&safeFn(()=>splitFire(),false)){gesture.splitDone=true;e.preventDefault();}
   return;} /* пальцы поднимают по очереди — ждём последний */
  /* Палец уже оторвался — ждать, «не ощупывание ли это», больше нечего: иначе
     отложенное называние срабатывало уже после короткого касания и добавляло
@@ -5366,18 +5449,15 @@ document.addEventListener('touchend',e=>{
  runState.pendingDir=null;
  const fingers=g.maxCount||g.count;
  /* Любой жест сперва обрывает речь (см. Speech.userCut). Не обрывают только
-    раздельное касание — его пункт уже выполнен — и речевые жесты «повторить
+    речевые жесты «повторить
     или оборвать», «стоп», «ещё раз», «состояние», «очистить очередь»: им
     нужно знать, идёт ли речь сейчас. */
- if(fingers>1&&!g.splitDone)safeFn(()=>{
+ if(fingers>1)safeFn(()=>{
   const фигура=g.moved&&g.dir?fingers+"swipe"+g.dir:null;
   const речевой=фигура&&["repeat","stop","again","flush","state"].indexOf(gestActionId(фигура))>=0;
   if(!речевой)Speech.userCut();});
  if(fingers>1){
   e.preventDefault();
-  /* Раздельное касание уже выполнило пункт: отрыв лежавшего пальца не должен
-     вдобавок закрыть окно. */
-  if(g.splitDone){multiTap.n=0;multiTap.c=0;splitReady=null;return;}
   /* Многопальцевый тап: важна только длительность, «сдвиг» меряется по якорному пальцу
      с мягким порогом (см. touchmove). 800 мс не хватало, чтобы вслепую поставить три пальца. */
   if(!g.moved&&Date.now()-g.t<safeFn(()=>gestMultiMs(),1400)){
@@ -6008,7 +6088,7 @@ const SET_GROUPS=[
  {id:"tts",   n:"Синтезатор", з:"",о:"чем говорит игра: синтезатор устройства или голос ElevenLabs, выбор голоса, темп и высота"},
  {id:"speech",n:"Речь",       з:"",о:"сколько говорит рассказчик, что игра произносит сама и что прерывает речь"},
  {id:"ui",    n:"Интерфейс",  з:"",о:"ощупывание, подсказки расположения, быстрая активация, вибрация и субтитры"},
- {id:"gest",  n:"Жесты",      з:"",о:"свои фигуры для действий, раздельное касание и точность: насколько далеко может съехать палец"},
+ {id:"gest",  n:"Жесты",      з:"",о:"свои фигуры для действий и точность: насколько далеко может съехать палец"},
  {id:"diff",  n:"Сложность",  з:"",о:"мера мира: сколько бьют, сколько держат и сколько стоит поражение; темп боя: живой, неспешный или пошаговый"},
  {id:"save",  n:"Сохранения", з:"",о:"записать игру сейчас, слоты и выгрузка в файл"}];
 const SET_GROUP_BY_ID=Object.fromEntries(SET_GROUPS.map(g=>[g.id,g]));
@@ -6544,7 +6624,7 @@ function closeMagicPanel(){const m=document.getElementById('magicPanel');if(!m)r
 /* ════════ РУКОВОДСТВО ════════ */
 const GUIDE=[
 {title:"Глава 1. Добро пожаловать в «Грань Миров»",body:[
- "Версия Alpha 3.7 — живой динамичный мир размером 50000 на 50000 клеток: два с половиной миллиарда клеток, и ни одна не хранится в памяти — всякая выводится из своих координат в тот миг, когда об этой клетке спросили. Полная хроника частей с первой по пятую, объединённая в одном мире. Игра полностью доступна незрячим и слабовидящим.",
+ "Версия Alpha "+GAME_VERSION+" — живой динамичный мир размером 50000 на 50000 клеток: два с половиной миллиарда клеток, и ни одна не хранится в памяти — всякая выводится из своих координат в тот миг, когда об этой клетке спросили. Полная хроника частей с первой по пятую, объединённая в одном мире. Игра полностью доступна незрячим и слабовидящим.",
  "Ведите пальцем по экрану — игра голосом назовёт то, что вы нашли. Двойное касание — действие. Всё озвучивается и имеет свой звук.",
  "При запуске звучит заставка: заглавная тема, голос и живые эффекты — ветер, нарастающий вихрь, колокол с дальним громом на словах «Добро пожаловать в Грань Миров», стеклянное мерцание, хор под сводами и колокол в конце. Голос — нейросеть Supertonic 3 в полосе 44 килогерц; из двух десятков русских голосов он выбран по разборчивости, чистоте и естественной мелодике фразы. Любое касание, свайп или клавиша обрывает её, а речь игры ждёт, пока она не кончится. Выключить — настройки, раздел «Что звучит», «Заставка при запуске»; послушать снова — кнопка «Прослушать заставку» на главном экране.",
  "Все кнопки игры собраны в меню действий: свайп тремя пальцами вверх. Инвентарь — три пальца вниз, карта — два пальца влево, журнал дел — два пальца вправо."]},
@@ -6558,7 +6638,6 @@ const GUIDE=[
  "Игра отвечает на всё. Нет такого касания, свайпа или пункта меню, после которого была бы тишина: если действие не подошло, вы услышите почему. Закрывать нечего — так и скажут. Бить некого — скажут и это. Жителя, который предлагал дело, уже нет на месте — вам сообщат, а не оставят гадать. Молчание в этой игре означает только одно: жест до неё не дошёл, и его стоит повторить чётче.",
  "ГДЕ КАСАТЬСЯ — НЕ ВАЖНО. В окне и в меню место касания не значит ничего: двойное касание в любой точке экрана выполняет текущий пункт — тот, что назвал свайп или ощупывание. Не нужно попадать пальцем в кнопку и не нужно знать, где она. Выбор двигают только два жеста, и оба намеренные: свайп — на пункт вперёд или назад, и ощупывание — палец, который ведут по экрану или держат на месте пятую долю секунды. Быстрое касание выбор не двигает никогда.",
  "Двойное касание отвечает на ЛЮБОМ пункте, до которого достаёт курсор. У части строк своего действия нет — это справки: строка досье народа, бога, зверя, державы. Такая строка на двойное касание читает себя целиком, и в окнах не остаётся пунктов, которые молчат.",
- "РАЗДЕЛЬНОЕ КАСАНИЕ — как в TalkBack и в VoiceOver. В окне задержите палец на пункте, пока игра его не назовёт, и, НЕ ОТРЫВАЯ его, коротко стукните рядом вторым пальцем: пункт выполнится, а палец останется там, где нашёл. Это вернее двойного касания — попадать в одно и то же место дважды вслепую трудно. Работает только в окнах и только после того, как пункт назван: на поле два пальца собирают, как собирали. Выключается галочкой «Раздельное касание» в настройках, раздел «Жесты».",
  "ДВА ПАЛЬЦА. Касание — собрать ресурс под ногами: руду, травы, дерево, камень, кристаллы. Только сбор: окно это касание больше не закрывает. Свайп вниз — закрыть открытое окно, а на поле, когда окон нет, — взаимодействовать с найденным: войти в дверь или ворота, спуститься по лестнице, открыть сундук, заговорить, помолиться у алтаря. Свайп вверх — повторить последнее сообщение, а если речь идёт — оборвать её. Свайп влево — карта места; свайп вправо — журнал дел; тот же свайп окно и закрывает. Подняться или выйти — в меню действий. Эхо-скан переехал на три пальца влево: игра перечислит объекты вокруг и проиграет их маяки с той стороны, где они стоят.",
  "Свайп тремя пальцами вверх открывает меню действий откуда угодно — и с поля, и в бою, и поверх любого открытого окна: одно движение закрывает всё лишнее и открывает меню. Тем же жестом меню и закрывается.",
  "ТРИ ПАЛЬЦА. Двойное касание — вынуть или убрать оружие; одиночное касание тремя пальцами ничего не делает и лишь щёлкает. Свайп вниз — инвентарь по разделам, тем же свайпом закрывается. Свайп влево — осмотреться: эхо-скан. Свайп вверх — меню действий, где собраны все кнопки игры. Свайп вниз или вбок — сводка «где я»: место, уровень подземелья, координаты, здоровье, мана, золото, день, час и ближайшее задание.",
@@ -6805,7 +6884,7 @@ const GUIDE=[
  "Записи OpenDungeons — семьдесят семь: хрипы нежити, копка породы, обвалы, лечебные чары, звон ссыпаемого золота, удар клинка по клинку и три темы. Лицензии CC BY-SA 3.0, CC BY 3.0 и CC0; авторы — Svenskmand, remaxim, artisticdude, DoKashiteru, jalastram, Pal Zoltan Illes, Matthew Pablo, yd. Список — sounds/od/CREDITS.md. Двадцать восемь записей голоса владыки подземелья оттуда убраны: владыка говорил по-английски. Теперь он смеётся, рычит и стонет без слов — смех из Stendhal (klankbeeld, CC BY 3.0; ShadowFlayer и scorpion67890, CC0), рык и стон из MegaGlest (CC BY-SA 3.0).",
  "Записи Endless Sky — семьдесят две: взрывы всех размеров, удары, гулы, переходы, тревога и копка. Папка их звуков объявлена общественным достоянием, отдельные записи идут под CC BY-SA 3.0 (Mike Koenig, 18hiltc). Список — sounds/es/CREDITS.md. За Гранью они звучат как обряд, разрыв Грани и голос пустоты.",
  "ГОЛОСА БЕЗ СЛОВ. Словами в игре говорят только по-русски: живыми голосами народов и голосом, которым игра читает текст. Всё остальное, что издают люди, — без слов. Смешок и «м-гм» жительницы, покашливание старшего, хохот торговца и смех торговки взяты из Stendhal (stendhalgame.org): авторы Ch0cchi (CC BY 3.0), esperar, FrostyFrost и canucklovingbrit (CC0). Весёлый оклик, испуганный вскрик и смех у прилавка — из OpenClonk (The OpenClonk Team, CC BY 3.0). Кличи толпы — из MegaGlest (CC BY-SA 3.0). Раньше на их месте звучали реплики отрядов 0 A.D. на латыни, греческом и персидском, английские зазывы Flare и английское «работа окончена» из MegaGlest — чужая речь посреди русской; все двадцать пять убраны. Списки — в CREDITS.md папок throng, trade и od.",
- "ЖИВАЯ РЕЧЬ НАРОДОВ — единственное, что в игре не взято из чужих библиотек и не построено синтезатором мира: четыреста семь записей русской речи. С версии 3.7 все они произнесены нейроголосами Gemini (Google, модель gemini-3.8-flash-tts) через Gemini API на ключах автора игры; голоса — тринадцать готовых голосов Gemini, синтетические, и не воспроизводят голос живого человека. По условиям Gemini API Additional Terms of Service Google не заявляет прав на созданное содержимое, отдельной лицензии на файлы не требуется. Прежние поколения речи — ElevenLabs, Piper и Supertonic 3 — заменены. ГОЛОС ЗАСТАВКИ произнесён нейросетью Supertonic 3 (Supertone Inc., 2026; код MIT, модель OpenRAIL-M, из официального выпуска sherpa-onnx), мужским голосом M4, в полосе 44 килогерц. Опись всех реплик со строками и голосами — sounds/voice/CREDITS.md, заставки — sounds/intro/CREDITS.md.",
+ "ЖИВАЯ РЕЧЬ НАРОДОВ — единственное, что в игре не взято из чужих библиотек и не построено синтезатором мира: четыреста семь записей русской речи. С версии 3.7 все они произнесены нейроголосами Gemini (Google, модель gemini-3.8-flash-tts) через Gemini API на ключах автора игры; голоса — тринадцать готовых голосов Gemini, синтетические, и не воспроизводят голос живого человека. По условиям Gemini API Additional Terms of Service Google не заявляет прав на созданное содержимое, отдельной лицензии на файлы не требуется. Прежние поколения речи — ElevenLabs, Piper и Supertonic 3 — заменены. ГОЛОС ЗАСТАВКИ с версии 3.8 — тоже Gemini: голос Sadaltager, торжественная подача, под тему «Road to Victory» (Moonthief, CC BY-SA 4.0, из игры Ancient Beast). ГОЛОС ИГРЫ по умолчанию — Gemini, голос Iapetus: постоянные фразы игры записаны заранее (sounds/gvoice) и звучат сразу, остальное договаривает синтезатор устройства. Опись всех реплик со строками и голосами — sounds/voice/CREDITS.md, заставки — sounds/intro/CREDITS.md.",
  "Почему речь синтезирована, когда всё остальное — живые записи. Правило «никаких синтезированных звуков» относится к звукам мира: шагу, удару, двери, ветру. Речь — другое дело: живых русских записей на двести восемьдесят рас и народов взять негде, и озвучку заказал сам автор игры. Тембр каждого народа сделан сдвигом высоты с сохранением формант, поэтому темп речи везде остаётся человеческим — меняется голос, а не скорость. ТРИДЦАТЬ ЧЕТЫРЕ ОКЛИКА НАРОДОВ — тролли, големы, титаны, энты, дракониды, утопленники и другие тяжёлые и тёмные народы — произнесены свободными русскими нейроголосами Piper nara426, pvo240 и igm3804 (набор rraaww/ru_piper, лицензия Apache-2.0): запас ElevenLabs кончился, и прежде эти народы окликали героя чужим общим словом, сильно опущенным по высоте. Настоящей русской озвучки фэнтезийных ролей под свободной лицензией не нашлось. Голоса низкие от природы, высота не сдвигалась; строка разобрана словарём ударений встроенного голоса игры. СТО ШЕСТЬДЕСЯТ ВОСЕМЬ НОВЫХ РАС И НАРОДОВ — болотники, домовики, сирины, громовники и другие — окликают своей строкой теми же свободными голосами Piper и ещё пятью: dict, terra5871, mari, sova200 и kat580 (тот же набор, та же лицензия Apache-2.0), четыре мужских голоса и четыре женских; лучший из трёх дублей выбран двумя русскими распознавателями речи. Подробно — sounds/voice/CREDITS.md.",
  "МУЗЫКА МЕСТ — темы одиннадцати свободных фэнтезийных игр. STENDHAL (stendhalgame.org): Мэтью Пабло, Александр Желанов, Тэд Миллер, RandomMind, LarsG, Geomancer, Alex McCulloch (Pro Sensory), Jonathan Shaw (InspectorJ), Bendzer, Leerie, Angus Macnaughton, Otto Halmén, Memoraphile и Tozan; лицензии CC0, CC BY 3.0, CC BY 4.0 и OGA-BY 3.0. SOLARUS FREE RESOURCE PACK (solarus-games.org): Эдуардо Дуэньяс и Diarandor, CC BY-SA 4.0. VALYRIA TEAR: yd, Zander Noriega, Ecrivain, Tom Peter, Alexandr Zhelanov, HorrorPen, Eliot Corley и lasercheese; CC0, CC BY 3.0 и CC BY-SA 3.0. WYRMSUN: Марсело Фернандес, CC BY 4.0. ANCIENT BEAST: Moonthief, Tad Miller, Agret Brisignr и Jens Kiilstofte, CC BY-SA 4.0. MEGAGLEST: Aminos, Margaras и команда MegaGlest, CC BY-SA 3.0. EVOL ONLINE (evolonline.org): Ledmitz, Aasif Chaudry, Chicka-Maria, Kevin MacLeod, bartk и Eric Matyas; CC BY 4.0, CC BY 3.0 и CC BY-SA 3.0. THE MANA WORLD: Сэй Муцуки (PeriTune), CC BY 4.0. К ним — темы OpenDungeons, Flare и OpenClonk, названные выше. Все новые темы перекодированы в OGG Vorbis 320 кбит/с с выровненной громкостью, длинные укорочены до двух минут с затуханием. Под GPL не взято ничего; пофайловые таблицы — в CREDITS.md папок stendhal, solarus, valyria, wyrmsun, evol, tmw, ab и mg.",
  "Библиотеку Veloren в игру не брали, хотя она больше всех перечисленных: их звуковые записи идут под GPL-3, а музыка — под CC BY-NC-SA 4.0 с прямой оговоркой «не использовать в других играх». Ни то, ни другое не совместимо с собранием «Грани Миров»."]},
@@ -7370,6 +7449,7 @@ const GUIDE=[
  "МОЛИТВА И ЧУДО. Молятся в храме, раз в день на месте, любому богу: великому, малому или тёмному. Дар зависит от бога — здоровье, мана, вода, золото, опыт, удар или защита; в праздник он вдвое. Благосклонность великого пишется в общую книгу веры, малого и тёмного — в свою. На десятой благосклонности приходит чудо: бог кладёт в суму свой артефакт, и это случается один раз.",
  "ГДЕ СМОТРЕТЬ. Окно пантеона показывает всех семьдесят одного: ранг, сферу, культ, день праздника, вашу благосклонность и кнопку молитвы, если вы в храме. Там же видно, чей праздник сегодня и кого чтут в этих землях."]},
 {title:"Глава 50. Живая речь народов",body:[
+ "ГОЛОС ИГРЫ — GEMINI. С версии 3.9 игра по умолчанию говорит голосом Gemini (голос Iapetus). Нейросеть Gemini живёт на серверах Google, и по сети каждая фраза ждала бы ответа секунды, поэтому голос сделан записями: постоянные фразы игры — пункты меню, настроек и инвентаря, имена окон, частые сообщения — прочитаны заранее и звучат сразу, без синтеза и без сети. То, чего в записях нет, — числа, имена, меняющийся текст — договаривает синтезатор устройства, тем же тактом. Скорость — тот же ползунок, запись ускоряется без смены высоты голоса. Вернуть прежний синтезатор — настройки, раздел «Синтезатор речи».",
  "Житель отзывался гулом толпы — одним и тем же у эльфа, у тролля и у соляной вдовы. Для того, кто играет на слух, все встречные звучали одинаково, а разговор был текстом рассказчика поверх шума. Теперь говорит человек: живая запись на русском, среднего темпа — так, как говорит обычный человек.",
  "У КАЖДОГО НАРОДА СВОЙ ГОЛОС. Рас и народов двести восемьдесят: девяносто восемь рас по эту сторону Грани, пятьдесят две за ней и сто тридцать народов-ветвей. У каждого своя высота и свой тембр, и по одному этому слышно, кто перед вами, ещё до того как игра назовёт народ. И каждый говорит при этом своей собственной строкой — той, которую сказал бы именно этот народ и никто другой.",
  "ТРИ РОДА РЕПЛИК. Оклик — слово народа: с него начинается встреча. Через полторы секунды приходит слово ремесла: комендант говорит о воротах, лекарь о ране, меняла клятв о доплате — сорок шесть ремёсел, и каждое звучит в высоте своего народа. Третье — общее слово: согласие, отказ, сомнение, торг, прощание, угроза и боль; это отвечает всякий, чем бы он ни занимался. Так житель представляется при первой встрече; дальше оклик меняется от раза к разу, и у каждого жителя свой тембр — об этом глава 98.",
@@ -10979,7 +11059,7 @@ const SOUND_BANK={
  amb_plains:{f:["fon/fon_amb_plains_01.ogg","fon/fon_amb_plains_02.ogg"],d:"Равнина: день в поле и весенний луг (0 A.D., MegaGlest)"},
  amb_road:{f:["fon/fon_amb_road_01.ogg"],d:"Тракт: день у дороги (0 A.D.)"},
  amb_city:{f:["fon/fon_amb_city_01.flac","fon/fon_amb_city_02.flac"],d:"Город: площадь и гул горожан (0 A.D.)"},
- amb_cave:{f:["fon/fon_amb_cave_01.flac","fon/fon_amb_cave_02.flac"],d:"Пещеры: вода в каменной чаше, летучая мышь (Stendhal)"},
+ amb_cave:{f:["fon/fon_amb_cave_01_n.flac","fon/fon_amb_cave_02_n.flac"],d:"Пещеры: вода в каменной чаше, летучая мышь (Stendhal)"},
  deep_1:{f:["fon/fon_deep_1_01.flac","fon/fon_deep_1_02.flac"],d:"Первый уровень подземелья: летучие мыши в подвале (Stendhal)"},
  deep_2:{f:["fon/fon_deep_2_01.flac"],d:"Второй уровень: лопата в плотном грунте (Stendhal)"},
  deep_3:{f:["fon/fon_deep_3_01.flac","fon/fon_deep_3_02.flac"],d:"Третий уровень: гул в основании горы (Stendhal)"},
@@ -11093,12 +11173,12 @@ const SOUND_BANK={
  craft_wood:{f:["craft/craft_wood_01.ogg","craft/craft_wood_02.ogg"],d:"Плотницкая работа"},
  deep_cart:{f:["deep/deep_cart_01.ogg"],d:"Рудничная вагонетка"},
  deep_door:{f:["deep/deep_door_01.ogg"],d:"Дверь открывается"},
- deep_drip:{f:["deep/deep_drip_01.ogg"],d:"Капель в пещере"},
+ deep_drip:{f:["deep/deep_drip_01_n.flac"],d:"Капель в пещере"},
  deep_portal:{f:["deep/deep_portal_01.ogg"],d:"Переход портала"},
  deep_rocks:{f:["deep/deep_rocks_01.ogg"],d:"Осыпь камней"},
  deep_stairs:{f:["deep/deep_stairs_01.ogg"],d:"Шаги по каменным ступеням"},
  deep_stone:{f:["deep/deep_stone_01.ogg"],d:"Каменная плита отходит"},
- deep_wind:{f:["deep/deep_wind_01.ogg"],d:"Сквозняк в подземелье"},
+ deep_wind:{f:["deep/deep_wind_01_n.flac"],d:"Сквозняк в подземелье"},
  deep_wood:{f:["deep/deep_wood_01.ogg"],d:"Деревянная створка"},
  foe_bone_die:{f:["foe/foe_bone_die_03.flac","foe/foe_bone_die_02.ogg"],d:"Костяк рассыпается"},
  foe_bone_hit:{f:["foe/foe_bone_hit_01.ogg"],d:"Костяк бьёт"},
@@ -11294,7 +11374,7 @@ const SOUND_BANK={
  wild_river:{f:["wild/wild_river_01.ogg"],d:"Река"},
  wild_wind:{f:["wild/wild_wind_01.ogg"],d:"Ветер в поле"},
  /* Заставка при запуске: голос и заглавная тема (sounds/intro/CREDITS.md). */
- intro:{f:["intro/intro_02.ogg"],d:"Заставка: «Добро пожаловать в Грань Миров. Мир, где всё возможно» — голос Supertonic 3 под заглавную тему, колокол, гром, вихрь и хор"},
+ intro:{f:["intro/intro_03.ogg"],d:"Заставка: «Добро пожаловать в Грань Миров. Мир, где всё возможно» — торжественный голос Gemini (Sadaltager) под тему «Road to Victory», колокола, гром, хор, ворота, клинок и рёв из глубины"},
  /* ── ФОНЫ МЕСТ ──
     Жалоба игрока: в кузнице и трактире фон «проигрался, пауза, снова», а
     все дома звучали одним очагом в две с половиной секунды. Теперь у каждого
@@ -11470,7 +11550,7 @@ const Bank={
  vol(kind){
   try{
    const c=this.chanOf(kind),m=this.master();
-   if(c==="music")return settings.music?Math.min(1,(Number(settings.musicVol)||0.5))*speechDuck("music")*m:0;
+   if(c==="music")return settings.music?Math.min(1,(Number(settings.musicVol)||0.5))*speechDuck("music")*depthMusicDuck()*m:0;
    if(!settings.effects)return 0;
    if(c==="ambient")return Math.min(1,Number(settings.ambVol)===0?0:(Number(settings.ambVol)||0.8))*speechDuck("ambient")*anomalyGain("ambient")*m;
    if(c==="ui")return Math.min(1,Number(settings.uiVol)===0?0:(Number(settings.uiVol)||0.9))*m;
@@ -12093,7 +12173,7 @@ const Spatial={
    моно-источник — стороны и расстояние ему считает HRTF, а готовая стереопара
    в записи этому только мешала бы. */
 Object.assign(SOUND_BANK,{
- amb_abyss:{f:["mg/amb_abyss_01.ogg"],d:"Бездна"},
+ amb_abyss:{f:["mg/amb_abyss_01_n.flac"],d:"Бездна"},
  amb_day:{f:["mg/amb_day_01.ogg","mg/amb_day_02.ogg"],d:"День"},
  mg_desert:{f:["mg/amb_desert_01.ogg"],d:"Пустыня: полдневный зной"},
  amb_fire:{f:["mg/amb_fire_01.ogg"],d:"Огонь"},
@@ -12225,7 +12305,7 @@ Object.assign(SOUND_BANK,{
  stk_portal:{f:["stk/stk_portal_01.ogg"],d:"Портал: открытие прохода"},
  stk_clock:{f:["stk/stk_clock_01.ogg"],d:"Ход часов: мерный тик"},
  stk_horn:{f:["stk/stk_horn_01.ogg"],d:"Рог: одиночный зов"},
- stk_dark:{f:["stk/stk_dark_01.ogg"],d:"Тьма: низкий гул подземелья"},
+ stk_dark:{f:["stk/stk_dark_01_n.flac"],d:"Тьма: низкий гул подземелья"},
  stk_goo:{f:["stk/stk_goo_01.ogg"],d:"Слизь: вязкий хлюп"},
  stk_ward:{f:["stk/stk_ward_01.ogg"],d:"Оберег: гудение защитных чар"},
 /* ── ЗАПИСИ LUANTI (MINETEST GAME), CC BY-SA 3.0 ──
@@ -12308,7 +12388,7 @@ Object.assign(SOUND_BANK,{
  mtg_smoke:{f:["mtg/item_smoke.ogg"],d:"Дымок"},
  stk_bridge:{f:["stk/stk_bridge_01.ogg"],d:"Деревянный мост под ногой"},
  stk_inn:{f:["stk/stk_inn_01.ogg"],d:"Трактир: гомон и посуда"},
- stk_deepsea:{f:["stk/stk_deepsea_01.ogg"],d:"Под водой: глубина и давление"},
+ stk_deepsea:{f:["stk/stk_deepsea_01_n.flac"],d:"Под водой: глубина и давление"},
 });
 Object.assign(SOUND_BANK,{
  dragon_growl:{f:["gamefx/fx_dragon_growl_01.flac","gamefx/fx_dragon_growl_02.flac"],d:"Драконий рык вблизи (Stendhal)"},
@@ -12769,11 +12849,9 @@ const UI_BANK={
  ui_next:"stendhalfx/st_ui_clack_one.flac",
  ui_next_set:"mg/mg_menu_click_01.flac",
  ui_open:"ui/ui_open.mp3",
- /* Две настоящие записи для двух новых событий (см. РАЗДЕЛЬНОЕ КАСАНИЕ и
-    ФОКУС НЕ УБЕГАЕТ). Взяты из свободной игры OpenClonk, звуковой набор
-    интерфейса, лицензия CC BY 3.0 — авторство указано в титрах и в
-    sounds/oc/CREDITS.md. Формат FLAC: без потерь, 44,1 кГц. */
- ui_split:"oc/oc_ui_confirm_01.flac",
+ /* Настоящая запись для сдвига выбора (см. ФОКУС НЕ УБЕГАЕТ). Взята из
+    свободной игры OpenClonk, звуковой набор интерфейса, лицензия CC BY 3.0 —
+    авторство указано в титрах и в sounds/oc/CREDITS.md. FLAC, 44,1 кГц. */
  ui_refocus:"oc/oc_ui_shift_01.flac",
  /* Восемь событий, которые до сих пор отвечали синтезированным писком.
     Теперь у каждого своя живая запись из свободной фэнтезийной игры:
@@ -12801,7 +12879,7 @@ const BEACON_SAMPLE={
  /* маяки живого мира и подземелья: стук, перезвон и отрыжка драм-машины
     ушли — стена звучит камнем под рукой, колодец водой, кузня кузней,
     перекрёсток колоколом, указатель деревом, бродячая тварь рыком */
- dungeon:"deep/deep_wind_01.ogg", torch:"ad/ad_fire_crackle_01.ogg",
+ dungeon:"deep/deep_wind_01_n.flac", torch:"ad/ad_fire_crackle_01.ogg",
  guard:"oc/oc_step_soft_01.ogg", roamer:"lug/lug_growl_01.ogg",
  artifact:"nat/artifact_hum_01.flac", crossroads:"uh/uh_bell_01.ogg",
  signpost:"oc/oc_wood_hit_01.ogg", trader_deep:"nat/shop_till_01.flac",
@@ -12812,7 +12890,7 @@ const BEACON_SAMPLE={
  castle:"hall/hall_fort_01.ogg", village:"hall/hall_farm_01.ogg",
  tavern:"uh/uh_tavern_01.ogg", clanhall:"hall/hall_barracks_01.ogg",
  tower:"nat/magic_hum_01.flac", ruins:"mg/hall_fall_01.ogg",
- cave_entrance:"deep/deep_drip_01.ogg", port:"hall/hall_port_01.ogg",
+ cave_entrance:"deep/deep_drip_01_n.flac", port:"hall/hall_port_01.ogg",
  traveler:"tread/tread_gravel_01.ogg", city:"hall/hall_gate_01.ogg",
  caravan:"ad/ad_trade_01.ogg", school:"uh/uh_page_01.ogg"};
 /* Маяк по РОЛИ, а не по одному файлу: у роли несколько записей, и объект
@@ -13048,7 +13126,10 @@ function bankUpdateAmbient(){
   if(!Bank.enabled)return;
   const role=bankAmbientRole();
   const seed=G.place?(G.place.bx+G.place.by+G.place.depth):(G.ship?G.ship.leg:(G.x+G.y));
-  Bank.loop("place",role,{seed,gain:0.55,kind:"ambient"});
+  /* Под землёй фон — главный голос места: он громче, чем наверху (см.
+     ПОДЗЕМЕЛЬЕ СЛЫШНО СКВОЗЬ МУЗЫКУ). */
+  const подЗемлёй=!!(G.place&&G.place.depth>0);
+  Bank.loop("place",role,{seed,gain:подЗемлёй?0.95:0.55,kind:"ambient"});
   safeFn(()=>placeColour(seed));
   safeFn(()=>livingScene());
   safeFn(()=>liveAmbient(seed));
@@ -13088,7 +13169,7 @@ function liveAmbient(seed){
    else if(G.weather==="Дождь")role=pick(["wild_rain","ad_rain_long","oc_rain"]);
    else if(isNight())role=t==="forest"?"wild_owl":(t==="desert"?"lug_desert":"wild_raven");
    else role=pick(LIVE_AMB_LAND[t]||LIVE_AMB_LAND.plains);}
-  if(role)Bank.loop("live",role,{seed:Number(seed)||0,gain:0.32,kind:"ambient"});
+  if(role)Bank.loop("live",role,{seed:Number(seed)||0,gain:p&&p.depth>0?0.6:0.32,kind:"ambient"});
  }catch(_){}}
 /* ── КРАСКА МЕСТА ──
    Фон под ногами один на весь рельеф, и земли сливались: лес звучал как
@@ -14540,7 +14621,7 @@ function renderVoiceList(держать,кнопка){
  const vs=safeFn(()=>Speech.voices(),[]);const все=safeFn(()=>Speech.allVoices(),[]);
  Speech._listed=vs.map(v=>Speech.voiceKey(v));
  const тек=settings.voice||"";
- const говорит=settings.ttsEngine==="grani"||Speech._graniAuto?"встроенный голос игры":settings.ttsEngine==="eleven"?"голос ElevenLabs":"синтезатор телефона";
+ const говорит=settings.ttsEngine==="gemini"?"голос Gemini":settings.ttsEngine==="grani"||Speech._graniAuto?"встроенный голос игры":settings.ttsEngine==="eleven"?"голос ElevenLabs":"синтезатор телефона";
  const скрыто=все.length-vs.length;
  let html=`<div class="list-line" tabindex="0" data-speak="${q(`Голосов в телефоне: ${все.length}, в списке: ${vs.length}${скрыто>0?`, скрыто фильтрами: ${скрыто}`:""}. Сейчас говорит ${говорит}.`)}">Голосов в телефоне: ${все.length}, в списке: ${vs.length}. Говорит ${q(говорит)}.</div>`;
  html+=vs.map((v,i)=>{const k=Speech.voiceKey(v),мой=k===тек&&settings.ttsEngine==="device"&&!Speech._graniAuto;
@@ -37189,7 +37270,7 @@ const CMD={
  setsaved(){
   const было=safeFn(()=>JSON.parse(store.get("gm29set")||"{}"),null);
   if(!было||!Object.keys(было).length){narrate("В памяти устройства настроек пока нет: они запишутся при первой правке.",{interrupt:true});return;}
-  const голос=(settings.ttsEngine==="eleven")?"голос ElevenLabs":(settings.ttsEngine==="grani")?"встроенный голос игры":"синтезатор устройства";
+  const голос=(settings.ttsEngine==="gemini")?"голос Gemini":(settings.ttsEngine==="eleven")?"голос ElevenLabs":(settings.ttsEngine==="grani")?"встроенный голос игры":"синтезатор устройства";
   narrate(`Записано ${Object.keys(было).length} настроек. Говорит ${голос}. `+
    `Голос: ${(Speech.voice&&Speech.voice.name)||settings.voice||"выбран по умолчанию"}. `+
    `Темп ${(+settings.rate).toFixed(1).replace(".",",")}, высота ${(+settings.pitch||1).toFixed(1).replace(".",",")}. `+
@@ -51911,7 +51992,6 @@ function renderGestures(){
   "Свайп и удержание пальца — бег в эту сторону. Отпустите палец — остановка.",
   "Во время поклёвки любое касание или свайп — <b>подсечка</b>: игра сама скажет «Клюёт!» и подаст звук, а у вас будет около двух секунд.",
   "Одиночное касание одним пальцем не делает ничего — ни действия, ни имени, и <b>выбор оно не двигает</b>: куда бы палец ни попал, выбранным остаётся тот пункт, который назвали свайп или ощупывание. Что под ногами и что под пальцем, называют ощупывание и палец, полежавший на месте пятую долю секунды.",
-  "<b>Раздельное касание</b>, как в TalkBack и VoiceOver: держите палец на пункте, пока игра его не назовёт, и, не отрывая, стукните рядом вторым пальцем — пункт выполнится, а палец останется на месте. Только в окнах и только после того, как пункт назван. Выключается в настройках, раздел «Жесты».",
   "Двойное касание — выполнить <b>выбранный</b> пункт окна, где бы палец ни опустился: на кнопке, мимо неё, в пустом месте. Попадать пальцем в кнопку не нужно и знать, где она, не нужно. На игровом поле двойное касание одним пальцем — <b>действие здесь</b>: открыть сундук, тронуть статую, потянуть рычаг, войти, спуститься, заговорить; одиночное касание поля не делает ничего.",
   "Палец, лежащий на месте, через пятую долю секунды называет то, чего касается, — и этот пункт становится выбранным. Так выбирают пальцем: подержать и отпустить. Ни одно одиночное касание в игре ничего не выполняет: сколько бы палец ни лежал, при отрыве ничего не произойдёт.",
   "<b>Вход своим ходом.</b> Дойдя до города, дома или пещеры, вы встаёте на пороге — игра говорит: «вы у входа». Шагните ещё раз в ту же сторону, и вы войдёте сами. Внутри так же: встали на ступени — шаг в ту же сторону спускает вас ниже или поднимает выше; встали в воротах — шаг наружу выводит из города. Меню действий по-прежнему работает, но ходить теперь можно ногами.",
@@ -52185,9 +52265,6 @@ function bindSpeechSettings($){
  chk("setIntro","intro","Заставка при запуске включена.","Заставка при запуске выключена.");
  chk("setStairCount","stairCount","Ступени на лестнице считаются вслух.","Ступени на лестнице не считаются: слышны шаги и площадки марша.");
  chk("setSayDir","sayDir","Сторона света при шаге называется.","Сторона света при шаге не называется. Куда вы идёте, скажет осмотр — три пальца влево.");
- chk("setSplitTap","splitTap",
-  "Раздельное касание включено: держите палец на пункте, пока игра его не назовёт, и стукните рядом вторым — пункт выполнится.",
-  "Раздельное касание выключено: пункт выполняет двойное касание.");
  const sel=(id,key,say)=>{const el=$(id);if(!el)return;el.value=String(settings[key]);
   el.addEventListener("change",e=>{settings[key]=e.target.value;saveSettings();Speech.request(say(e.target.value),{key:"set:"+key});});};
  sel("setVerbosity","verbosity",v=>({min:"Подробность: минимальная — только важное и результат действия.",brief:"Подробность: краткая — первые две фразы.",normal:"Подробность: стандартная.",full:"Подробность: полная."}[v]||"Подробность изменена."));
@@ -52289,7 +52366,11 @@ function bindSettings(){const $=id=>document.getElementById(id);
   g.addEventListener("change",ev=>{settings.graniVoice=Speech.GRANI_VOICES[ev.target.value]?ev.target.value:"sova";saveSettings();
    safeFn(()=>Speech.graniRestart());
    narrate(`Встроенный голос: ${Speech.GRANI_VOICES[settings.graniVoice].n}. Он заговорит, как только загрузится.`,{interrupt:true});});}}
- {const e=$("setTtsEngine");if(e){e.value=settings.ttsEngine||"device";
+ {const e=$("setTtsEngine");if(e){
+  /* В приложении голоса Gemini пока нет: пункт и строка о нём убираются. */
+  if(!GVOICE_ON){const o=e.querySelector('option[value="gemini"]');if(o)o.remove();const h=$("gvHint");if(h)h.remove();
+   if(settings.ttsEngine==="gemini"){settings.ttsEngine="device";saveSettings();}}
+  e.value=GVOICE_ON?(settings.ttsEngine||"gemini"):(settings.ttsEngine||"device");
   e.addEventListener("change",ev=>{settings.ttsEngine=ev.target.value;saveSettings();
    safeFn(()=>{Speech.adapter=null;Speech._kind=null;});
    if(settings.ttsEngine==="grani"){const g=Speech.graniStart();
@@ -52297,6 +52378,8 @@ function bindSettings(){const $=id=>document.getElementById(id);
      :g.state==="failed"?"Встроенный голос не скачался: нужна сеть для первой загрузки. Пока говорит синтезатор устройства."
      :"Встроенный голос скачивается, это около шестидесяти мегабайт и один раз. Пока говорит синтезатор устройства; когда голос будет готов, игра скажет.",{interrupt:true});
     return;}
+   if(settings.ttsEngine==="gemini"){safeFn(()=>Speech.gvLoad());
+    narrate("Говорит голос Gemini: постоянные фразы игры звучат записями сразу, остальное договаривает синтезатор устройства.",{interrupt:true});return;}
    narrate(settings.ttsEngine==="eleven"
     ?(String(settings.elevenKey||"").length>=8&&String(settings.elevenVoice||"")
       ?"Говорит голос ElevenLabs. Если сеть подведёт, фраза уйдёт синтезатору устройства."

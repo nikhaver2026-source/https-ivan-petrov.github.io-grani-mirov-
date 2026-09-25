@@ -131,7 +131,7 @@ const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(e!==undefined?' :
    setTtsEngine:"tts",setVoice:"tts",setVoiceLocal:"tts",setRate:"tts",setPitch:"tts",setElevenKey:"tts",setElevenVoice:"tts",
    setVerbosity:"speech",setSrMode:"speech",setAutoSpeech:"speech",setSayHp:"speech",setStopGesture:"speech",
    setExplore:"ui",setHintMode:"ui",setFastTap:"ui",setHaptics:"ui",setSubMode:"ui",
-   setSplitTap:"gest",setGestSens:"gest",setTapWindow:"gest",setTapTick:"gest",gestRow:"gest",diffRow:"diff"};
+   setGestSens:"gest",setTapWindow:"gest",setTapTick:"gest",gestRow:"gest",diffRow:"diff"};
   const мимо=Object.entries(ожидание).filter(([id,g])=>где(id)!==g).map(([id,g])=>({id,ждали:g,лежит:где(id)}));
   const сохр=(m.querySelector('[data-cmd="am:save"]').closest(".set-group")||{}).dataset;
   return {полей:поля.length,вне,головы,мимо,сохр:сохр&&сохр.setGroup,

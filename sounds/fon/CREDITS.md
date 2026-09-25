@@ -56,8 +56,8 @@
 | `fon_amb_road_01.ogg` | `amb_road` | день у дороги | 0 A.D. | Wildfire Games | CC BY-SA 3.0 | — | `audio/ambient/dayscape/day_temperate_gen_03.ogg` |
 | `fon_amb_city_01.flac` | `amb_city` | городская площадь | 0 A.D. | Wildfire Games | CC BY-SA 3.0 | — | `audio/interface/select/building/sel_civ_center.ogg` |
 | `fon_amb_city_02.flac` | `amb_city` | гул собравшихся горожан | 0 A.D. | Wildfire Games | CC BY-SA 3.0 | — | `audio/interface/select/building/sel_theater.ogg` |
-| `fon_amb_cave_01.flac` | `amb_cave` | вода в каменной чаше | Stendhal | pawsound | CC0 | https://freesound.org/people/pawsound/sounds/154881/ | `data/sounds/lossless_sources/water-slosh-02.flac` |
-| `fon_amb_cave_02.flac` | `amb_cave` | летучая мышь под сводом | Stendhal | polymorpheva | CC0 | https://freesound.org/people/polymorpheva/sounds/104205/ | `data/sounds/lossless_sources/bat-3.flac` |
+| `fon_amb_cave_01_n.flac` | `amb_cave` | вода в каменной чаше | Stendhal | pawsound | CC0 | https://freesound.org/people/pawsound/sounds/154881/ | `data/sounds/lossless_sources/water-slosh-02.flac` |
+| `fon_amb_cave_02_n.flac` | `amb_cave` | летучая мышь под сводом | Stendhal | polymorpheva | CC0 | https://freesound.org/people/polymorpheva/sounds/104205/ | `data/sounds/lossless_sources/bat-3.flac` |
 | `fon_deep_1_01.flac` | `deep_1` | летучие мыши в подвале | Stendhal | polymorpheva | CC0 | https://freesound.org/people/polymorpheva/sounds/104205/ | `data/sounds/lossless_sources/bat-1.flac` |
 | `fon_deep_1_02.flac` | `deep_1` | крылья в темноте | Stendhal | polymorpheva | CC0 | https://freesound.org/people/polymorpheva/sounds/104205/ | `data/sounds/lossless_sources/bat-2.flac` |
 | `fon_deep_2_01.flac` | `deep_2` | лопата в плотном грунте | Stendhal | andersmmg | CC BY 3.0 | https://freesound.org/s/516318/ | `data/sounds/lossless_sources/shovel_dig.flac` |
@@ -83,3 +83,12 @@
 | `fon_caravan_02.flac` | `caravan` | ржание в обозе | Stendhal | Jonathan Shaw (InspectorJ) | CC BY 3.0 | https://freesound.org/people/InspectorJ/sounds/419231/ | `data/sounds/lossless_sources/horse-whinny-02.flac` |
 
 Долгие фоны подземелья, города, пещеры и порта взяты из уже имеющихся настоящих петель: капель и сквозняк подземелья (Flare, папка `deep`), гул толщи и давление глубины (SuperTuxKart, папка `stk`), бездна (MegaGlest, папка `mg`), торговые ряды и причалы (0 A.D., папка `hall`). Роли `deep_1`…`deep_5`, `amb_city`, `amb_cave` и `port` остались голосами этих мест и звучат записями из таблицы выше.
+
+## Версия 3.9: громкость глубины
+
+Петли глубины звучали слишком тихо под музыкой, поэтому заменены копиями, выровненными по громкости (EBU R128, линейное усиление и ограничитель пиков), без потерь, FLAC, 16 бит; суффикс «_n». Сам звук не менялся, только громкость. Прежние файлы убраны.
+
+| Файл | Было | Стало |
+|---|---|---|
+| fon_amb_cave_01_n.flac | −20,4 LUFS | −18,5 LUFS |
+| fon_amb_cave_02_n.flac | −26,5 LUFS | −19,1 LUFS |

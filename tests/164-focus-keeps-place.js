@@ -168,8 +168,8 @@ const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(e!==undefined?' :
   исчез.звук.indexOf("ui_refocus")>=0,исчез.звук);
  {
   const cp=require('child_process');
-  const роли=await page.evaluate(()=>({split:UI_BANK.ui_split||"",refocus:UI_BANK.ui_refocus||""}));
-  const пробы=[роли.split,роли.refocus].map(rel=>{
+  const роли=await page.evaluate(()=>({refocus:UI_BANK.ui_refocus||""}));
+  const пробы=[роли.refocus].map(rel=>{
    const f=path.join(__dirname,'..','sounds',rel);
    if(!rel||!fs.existsSync(f))return {rel,нет:true};
    let код="",частота="";
@@ -179,10 +179,10 @@ const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(e!==undefined?' :
    }catch(_){}
    return {rel,байт:fs.statSync(f).size,код};});
   const кредиты=fs.readFileSync(path.join(__dirname,'..','sounds','oc','CREDITS.md'),'utf8');
-  check('6б. обе новые записи лежат в банке, без потерь, 44,1 кГц, и записаны в титрах папки',
+  check('6б. запись сдвига лежит в банке, без потерь, 44,1 кГц, и записана в титрах папки',
    пробы.every(x=>!x.нет&&x.байт>2000&&/^flac,44100/.test(x.код))
-   &&/oc_ui_confirm_01/.test(кредиты)&&/oc_ui_shift_01/.test(кредиты)
-   &&/CC BY 3\.0/.test(кредиты),{пробы,вТитрах:/oc_ui_confirm_01/.test(кредиты)});
+   &&/oc_ui_shift_01/.test(кредиты)
+   &&/CC BY 3\.0/.test(кредиты),{пробы,вТитрах:/oc_ui_shift_01/.test(кредиты)});
  }
 
  /* ── 7. действие само подвинуло выбор ── */
@@ -319,10 +319,14 @@ const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(e!==undefined?' :
      приложение для Android. Прежде заставка застряла на 2.8, пока
      приложение уходило к 3.x. */
   const версии=[...src.matchAll(/Alpha (\d+\.\d+(?:\.\d+)?)/g)].map(m=>m[1]);
-  const константа=(src.match(/const GAME_VERSION="([\d.]+)"/)||[])[1]||"";
+  /* С 3.9 версий две: браузерная (WEB_VERSION) и приложения для Android
+     (APP_VERSION, она же versionName). В файле и на заставке браузера —
+     браузерная; приложение показывает свою. */
+  const константа=(src.match(/WEB_VERSION="([\d.]+)"/)||[])[1]||"";
+  const приложение=(src.match(/APP_VERSION="([\d.]+)"/)||[])[1]||"";
   const грэдл=fs.readFileSync(path.join(__dirname,'..','android','app','build.gradle'),'utf8');
   const андроид=(грэдл.match(/versionName '([\d.]+)'/)||[])[1]||"";
-  const одна=версии.length>=3&&new Set(версии).size===1&&версии[0]===константа&&константа===андроид;
+  const одна=версии.length>=3&&new Set(версии).size===1&&версии[0]===константа&&приложение===андроид;
   const вИгре=await page.evaluate(()=>{
    const t=(document.title.match(/Alpha (\d+\.\d+(?:\.\d+)?)/)||[])[1]||"";
    const h=((document.querySelector("h1")||{}).textContent||"").match(/Alpha (\d+\.\d+(?:\.\d+)?)/);
