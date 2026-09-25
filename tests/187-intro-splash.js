@@ -86,8 +86,9 @@ const SND=path.join(__dirname,'..','sounds');
 
  /* ── 6. титры ── */
  const титры=fs.existsSync(path.join(SND,"intro/CREDITS.md"))?fs.readFileSync(path.join(SND,"intro/CREDITS.md"),"utf8"):"";
- check('6. титры называют музыку, автора, лицензию и голос',
-  /Land of Fearless/.test(титры)&&/Желанов|Zhelanov/.test(титры)&&/CC BY 4\.0/.test(титры)&&/Piper/.test(титры),титры.slice(0,200));
+ check('6. титры называют музыку, автора, лицензию, голос и источники эффектов',
+  /Land of Fearless/.test(титры)&&/Желанов|Zhelanov/.test(титры)&&/CC BY 4\.0/.test(титры)&&/Supertonic 3/.test(титры)
+  &&/Sonic Pi/.test(титры)&&/CC0/.test(титры)&&/OpenClonk/.test(титры)&&/CC BY 3\.0/.test(титры),титры.slice(0,200));
 
  /* ── 7. автоматика без просьбы ── */
  {const p2=await ctx.newPage();

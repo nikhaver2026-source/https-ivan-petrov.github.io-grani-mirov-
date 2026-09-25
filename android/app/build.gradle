@@ -22,7 +22,7 @@ android {
            растёт с каждым запуском рабочего процесса: Play требует, чтобы
            versionCode только рос. */
         versionCode(30000000 + ((System.getenv('BUILD_NUMBER') ?: '0') as int))
-        versionName '3.5'
+        versionName '3.6'
     }
 
     /* Ключ подписи приходит только из окружения сборки: в репозитории

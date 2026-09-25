@@ -35,7 +35,7 @@ const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(e!==undefined?' :
  /* ── 3. титры рядом с записями ── */
  const files=fs.existsSync(VOICE)?fs.readdirSync(VOICE):[];
  const mp3=files.filter(f=>f.endsWith('.mp3'));
- check('папка sounds/voice с тремястами шестьюдесятью одной записью',mp3.length===361,mp3.length);
+ check('папка sounds/voice с четырьмястами семью записями',mp3.length===407,mp3.length);
  const cr=fs.existsSync(path.join(VOICE,'CREDITS.md'))?fs.readFileSync(path.join(VOICE,'CREDITS.md'),'utf8'):'';
  check('CREDITS.md называет ElevenLabs и условия',
   /ElevenLabs/.test(cr)&&/Terms of Service/.test(cr)&&/eleven_multilingual_v2/.test(cr));
@@ -108,12 +108,12 @@ const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(e!==undefined?' :
   Object.values(VOICE_RACES).forEach(v=>out.push(VOICE_DIR+"race_"+v[0]+".mp3"));
   Object.values(VOICE_PROFS).forEach(v=>{out.push(VOICE_DIR+"prof_"+v[0]+".mp3");
    if(v[1])out.push(VOICE_DIR+"prof_"+v[0]+"_f.mp3");});
-  VOICE_SAY.forEach(k=>out.push(VOICE_DIR+"say_"+k+".mp3"));
+  VOICE_SAY.forEach(k=>{out.push(VOICE_DIR+"say_"+k+".mp3");out.push(VOICE_DIR+"say_"+k+"_f.mp3");});
   VOICE_HERO.forEach(k=>out.push(VOICE_DIR+"hero_"+k+".mp3"));
   return out;});
  const нетНаДиске=пути.filter(p=>!fs.existsSync(path.join(ROOT,'sounds',p)));
  check('каждая запись речи лежит на диске',
-  пути.length===361&&нетНаДиске.length===0,нетНаДиске.slice(0,5));
+  пути.length===407&&нетНаДиске.length===0,нетНаДиске.slice(0,5));
  const лишниеФайлы=mp3.filter(f=>пути.indexOf('voice/'+f)<0);
  check('в папке нет записей, которые игра не зовёт',лишниеФайлы.length===0,лишниеФайлы.slice(0,5));
  const читается=await page.evaluate(async(список)=>{
@@ -206,10 +206,13 @@ const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(e!==undefined?' :
   Folk.когда=0;Folk.было.clear();VOICED.length=0;
   Folk.ремесло(n,{всегда:true});
   /* Голос идёт очередью: ждём, пока он зазвучит. */
-  for(let i=0;i<40&&!VOICED.length;i++)await new Promise(r=>setTimeout(r,100));
+  /* Ждём именно запись ремесла: раньше неё может прозвучать шум мира
+     (окрик стражи, птица), а голос жителя ждёт, пока договорит игра. */
+  const рем=()=>VOICED.find(v=>/voice\/prof_/.test(v.f));
+  for(let i=0;i<80&&!рем();i++)await new Promise(r=>setTimeout(r,100));
   const г=Folk.раса(n.race);
   /* Высота народа, сдвинутая тембром самого жителя (±5 %, набор 175). */
-  return {rate:VOICED.length?VOICED[0].rate:null,ждём:г[1]*Folk.тембр(n),тембр:Folk.тембр(n)};});
+  return {rate:рем()?рем().rate:null,файл:рем()&&рем().f,ждём:г[1]*Folk.тембр(n),тембр:Folk.тембр(n)};});
  check('слово ремесла звучит в высоте народа',
   высоты.rate!==null&&Math.abs(высоты.rate-высоты.ждём)<1e-9&&высоты.тембр>=0.95&&высоты.тембр<=1.05,высоты);
 

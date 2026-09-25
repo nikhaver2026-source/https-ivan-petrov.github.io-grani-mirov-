@@ -55,6 +55,12 @@
 
 Короткие фразы произнесены свободными русскими нейроголосами **Piper** (зеркало Rotem12/piper-russian-voices, выпуск `russian-voices-2026-09-15-r2`; голоса из rraaww/ru_piper — Apache-2.0, `dmitri` из rhasspy/piper-voices — CC0), озвучены офлайн, распознаны обратно для проверки разборчивости, пропущены через отклик своего места. MP3 320 кбит/с.
 
+В версии 3.6 тридцать шесть фраз переозвучены тем же голосом с верным
+ударением (файлы с окончанием `_2`): ударения сверены нейросетью
+silero-stress (MIT) и вычитаны вручную — «раздува́й», «нале́й», «сади́сь»,
+«принесу́», «говорю́», «береги́сь», «бревно́» и другие; прежние записи
+ударяли по неверному правилу.
+
 | Файл | Голос (модель, лицензия) | Фраза |
 |---|---|---|
 | `pv_bazaar_01.mp3` | ru_RU-sova200-medium, Apache-2.0 | Редкий товар, из-за Грани! |
@@ -65,29 +71,29 @@
 | `pv_burg_02.mp3` | ru_RU-terra5871-medium, Apache-2.0 | Дорогу, дорогу! |
 | `pv_burg_03.mp3` | ru_RU-nara426-medium, Apache-2.0 | Почём соль нынче? |
 | `pv_camp_army_01.mp3` | ru_RU-nara426-medium, Apache-2.0 | Часовой, не спать! |
-| `pv_camp_army_02.mp3` | ru_RU-nara426-medium, Apache-2.0 | Строиться у знамени! |
+| `pv_camp_army_02_2.mp3` | ru_RU-nara426-medium, Apache-2.0 | Строиться у знамени! |
 | `pv_camp_army_03.mp3` | ru_RU-nara426-medium, Apache-2.0 | Обоз задерживается, ждём. |
 | `pv_camp_band_01.mp3` | ru_RU-pvo240-medium, Apache-2.0 | Тихо, кто-то идёт. |
 | `pv_camp_band_02.mp3` | ru_RU-nara426-medium, Apache-2.0 | Делим поровну. |
 | `pv_camp_band_03.mp3` | ru_RU-dict-medium_epoch3874, Apache-2.0 | Нож убери. |
 | `pv_camp_dig_01.mp3` | ru_RU-nara426-medium, Apache-2.0 | Жила пошла! |
-| `pv_camp_dig_02.mp3` | ru_RU-nara426-medium, Apache-2.0 | Промывай, не ленись. |
+| `pv_camp_dig_02_2.mp3` | ru_RU-nara426-medium, Apache-2.0 | Промывай, не ленись. |
 | `pv_camp_dig_03.mp3` | ru_RU-igm3804-medium, Apache-2.0 | Кирку подай. |
 | `pv_camp_drov_01.mp3` | ru_RU-igm3804-medium, Apache-2.0 | Но, пошла! |
-| `pv_camp_drov_02.mp3` | ru_RU-nara426-medium, Apache-2.0 | Напои быков, пора в путь. |
+| `pv_camp_drov_02_2.mp3` | ru_RU-nara426-medium, Apache-2.0 | Напои быков, пора в путь. |
 | `pv_camp_drov_03.mp3` | ru_RU-nara426-medium, Apache-2.0 | Ставь телеги в круг. |
 | `pv_camp_exil_01.mp3` | ru_RU-igm3804-medium, Apache-2.0 | Котёл общий. |
 | `pv_camp_exil_02.mp3` | ru_RU-terra5871-medium, Apache-2.0 | Тише, не буди. |
 | `pv_camp_exil_03.mp3` | ru_RU-nara426-medium, Apache-2.0 | Здесь имён не спрашивают. |
-| `pv_camp_hunt_01.mp3` | ru_RU-dict-medium_epoch3874, Apache-2.0 | Собак придержи. |
+| `pv_camp_hunt_01_2.mp3` | ru_RU-dict-medium_epoch3874, Apache-2.0 | Собак придержи. |
 | `pv_camp_hunt_02.mp3` | ru_RU-pvo240-medium, Apache-2.0 | След свежий. |
-| `pv_camp_hunt_03.mp3` | ru_RU-igm3804-medium, Apache-2.0 | Шкуру растяни. |
+| `pv_camp_hunt_03_2.mp3` | ru_RU-igm3804-medium, Apache-2.0 | Шкуру растяни. |
 | `pv_camp_pilg_01.mp3` | ru_RU-terra5871-medium, Apache-2.0 | Далеко ли до святыни? |
 | `pv_camp_pilg_02.mp3` | ru_RU-nara426-medium, Apache-2.0 | Помолимся на ночь. |
 | `pv_camp_pilg_03.mp3` | ru_RU-mari-medium_epoch5699, Apache-2.0 | Хлеба на всех хватит. |
-| `pv_camp_wood_01.mp3` | ru_RU-igm3804-medium, Apache-2.0 | Берегись, падает! |
-| `pv_camp_wood_02.mp3` | ru_RU-pvo240-medium, Apache-2.0 | Пилу тяни на себя. |
-| `pv_camp_wood_03.mp3` | ru_RU-nara426-medium, Apache-2.0 | Ещё бревно. |
+| `pv_camp_wood_01_2.mp3` | ru_RU-igm3804-medium, Apache-2.0 | Берегись, падает! |
+| `pv_camp_wood_02_2.mp3` | ru_RU-pvo240-medium, Apache-2.0 | Пилу тяни на себя. |
+| `pv_camp_wood_03_2.mp3` | ru_RU-nara426-medium, Apache-2.0 | Ещё бревно. |
 | `pv_castle_01.mp3` | ru_RU-pvo240-medium, Apache-2.0 | Стража, на стены! |
 | `pv_castle_02.mp3` | ru_RU-nara426-medium, Apache-2.0 | Стой, кто идёт? |
 | `pv_castle_03.mp3` | ru_RU-igm3804-medium, Apache-2.0 | На стенах тихо. |
@@ -98,15 +104,15 @@
 | `pv_citadel_02.mp3` | ru_RU-nara426-medium, Apache-2.0 | Приказ владыки! |
 | `pv_citadel_03.mp3` | ru_RU-igm3804-medium, Apache-2.0 | Проход закрыт. |
 | `pv_clanhall_01.mp3` | ru_RU-nara426-medium, Apache-2.0 | За наш клан, до дна! |
-| `pv_clanhall_02.mp3` | ru_RU-pvo240-medium, Apache-2.0 | Наливай старшему! |
+| `pv_clanhall_02_2.mp3` | ru_RU-pvo240-medium, Apache-2.0 | Наливай старшему! |
 | `pv_clanhall_03.mp3` | ru_RU-nara426-medium, Apache-2.0 | Слава предкам! |
-| `pv_clanhall_04.mp3` | ru_RU-igm3804-medium, Apache-2.0 | Кто вызовется первым? |
-| `pv_clanhall_05.mp3` | ru_RU-nara426-medium, Apache-2.0 | Песню, давай песню! |
+| `pv_clanhall_04_2.mp3` | ru_RU-igm3804-medium, Apache-2.0 | Кто вызовется первым? |
+| `pv_clanhall_05_2.mp3` | ru_RU-nara426-medium, Apache-2.0 | Песню, давай песню! |
 | `pv_den_01.mp3` | ru_RU-dict-medium_epoch3874, Apache-2.0 | Ставь или уходи. |
-| `pv_den_02.mp3` | ru_RU-kat580-medium, Apache-2.0 | Ещё вина! |
+| `pv_den_02_2.mp3` | ru_RU-kat580-medium, Apache-2.0 | Ещё вина! |
 | `pv_den_03.mp3` | ru_RU-pvo240-medium, Apache-2.0 | Кости не врут. |
-| `pv_den_04.mp3` | ru_RU-igm3804-medium, Apache-2.0 | Кто тут жульничает? |
-| `pv_forge_01.mp3` | ru_RU-nara426-medium, Apache-2.0 | Раздувай мехи, живее! |
+| `pv_den_04_2.mp3` | ru_RU-igm3804-medium, Apache-2.0 | Кто тут жульничает? |
+| `pv_forge_01_2.mp3` | ru_RU-nara426-medium, Apache-2.0 | Раздувай мехи, живее! |
 | `pv_forge_02.mp3` | ru_RU-nara426-medium, Apache-2.0 | Подай клещи. |
 | `pv_forge_03.mp3` | ru_RU-igm3804-medium, Apache-2.0 | Жару ещё добавить? |
 | `pv_forge_04.mp3` | ru_RU-nara426-medium, Apache-2.0 | Куй, пока горячо. |
@@ -123,10 +129,10 @@
 | `pv_hold_02.mp3` | ru_RU-nara426-medium, Apache-2.0 | Ворота! |
 | `pv_hold_03.mp3` | ru_RU-nara426-medium, Apache-2.0 | Дозорный, что видно? |
 | `pv_market_01.mp3` | ru_RU-pvo240-medium, Apache-2.0 | Свежий хлеб, горячий! |
-| `pv_market_02.mp3` | ru_RU-mari-medium_epoch5699, Apache-2.0 | Налетай, не скупись! |
+| `pv_market_02_2.mp3` | ru_RU-mari-medium_epoch5699, Apache-2.0 | Налетай, не скупись! |
 | `pv_market_03.mp3` | ru_RU-nara426-medium, Apache-2.0 | Почём мера? |
 | `pv_market_04.mp3` | ru_RU-sova200-medium, Apache-2.0 | Ткани заморские, смотрите! |
-| `pv_market_05.mp3` | ru_RU-dict-medium_epoch3874, Apache-2.0 | Дёшево отдам, бери! |
+| `pv_market_05_2.mp3` | ru_RU-dict-medium_epoch3874, Apache-2.0 | Дёшево отдам, бери! |
 | `pv_market_06.mp3` | ru_RU-terra5871-medium, Apache-2.0 | Кому яблок? Сладкие! |
 | `pv_market_07.mp3` | ru_RU-nara426-medium, Apache-2.0 | Весы не врут, смотри сам. |
 | `pv_market_08.mp3` | ru_RU-terra5871-medium, Apache-2.0 | Не толкайтесь, всем хватит. |
@@ -135,56 +141,56 @@
 | `pv_peakshrine_03.mp3` | ru_RU-nara426-medium, Apache-2.0 | Снег здесь не тает. |
 | `pv_pit_01.mp3` | ru_RU-nara426-medium, Apache-2.0 | Бей крепче, тут жила! |
 | `pv_pit_02.mp3` | ru_RU-nara426-medium, Apache-2.0 | Подпирай свод, осыпается! |
-| `pv_pit_03.mp3` | ru_RU-igm3804-medium, Apache-2.0 | Тачку давай! |
+| `pv_pit_03_2.mp3` | ru_RU-igm3804-medium, Apache-2.0 | Тачку давай! |
 | `pv_port_01.mp3` | ru_RU-pvo240-medium, Apache-2.0 | Отдать концы! |
-| `pv_port_02.mp3` | ru_RU-igm3804-medium, Apache-2.0 | Тяни, раз-два, взяли! |
+| `pv_port_02_2.mp3` | ru_RU-igm3804-medium, Apache-2.0 | Тяни, раз-два, взяли! |
 | `pv_port_03.mp3` | ru_RU-dict-medium_epoch3874, Apache-2.0 | Груз на борт! |
-| `pv_port_04.mp3` | ru_RU-nara426-medium, Apache-2.0 | Бочки катите к сходням. |
-| `pv_port_05.mp3` | ru_RU-pvo240-medium, Apache-2.0 | Ветер попутный, отчаливаем. |
-| `pv_port_06.mp3` | ru_RU-igm3804-medium, Apache-2.0 | Эй, на сходнях, поберегись! |
+| `pv_port_04_2.mp3` | ru_RU-nara426-medium, Apache-2.0 | Бочки катите к сходням. |
+| `pv_port_05_2.mp3` | ru_RU-pvo240-medium, Apache-2.0 | Ветер попутный, отчаливаем. |
+| `pv_port_06_2.mp3` | ru_RU-igm3804-medium, Apache-2.0 | Эй, на сходнях, поберегись! |
 | `pv_school_01.mp3` | ru_RU-dict-medium_epoch3874, Apache-2.0 | Тише, идёт урок. |
 | `pv_school_02.mp3` | ru_RU-sova200-medium, Apache-2.0 | Где мой свиток? |
 | `pv_school_03.mp3` | ru_RU-dict-medium_epoch3874, Apache-2.0 | Повторяй за мной. |
 | `pv_school_04.mp3` | ru_RU-kat580-medium, Apache-2.0 | Я уже переписала. |
-| `pv_school_05.mp3` | ru_RU-igm3804-medium, Apache-2.0 | Перепиши это начисто. |
-| `pv_shrine_01.mp3` | ru_RU-nara426-medium, Apache-2.0 | Огонь примет всё. |
+| `pv_school_05_2.mp3` | ru_RU-igm3804-medium, Apache-2.0 | Перепиши это начисто. |
+| `pv_shrine_01_2.mp3` | ru_RU-nara426-medium, Apache-2.0 | Огонь примет всё. |
 | `pv_shrine_02.mp3` | ru_RU-nara426-medium, Apache-2.0 | Пламя не гаснет веками. |
 | `pv_shrine_03.mp3` | ru_RU-nara426-medium, Apache-2.0 | Огонь принял дар. |
 | `pv_smugglers_01.mp3` | ru_RU-pvo240-medium, Apache-2.0 | Прячь товар, быстро. |
 | `pv_smugglers_02.mp3` | ru_RU-igm3804-medium, Apache-2.0 | Тише ты! |
 | `pv_smugglers_03.mp3` | ru_RU-nara426-medium, Apache-2.0 | Стража далеко? |
-| `pv_smugglers_04.mp3` | ru_RU-dmitri-medium, CC0 | Считай монеты. |
+| `pv_smugglers_04_2.mp3` | ru_RU-dmitri-medium, CC0 | Считай монеты. |
 | `pv_tavern_01.mp3` | ru_RU-pvo240-medium, Apache-2.0 | Ещё кружку сюда! |
 | `pv_tavern_02.mp3` | ru_RU-mari-medium_epoch5699, Apache-2.0 | Похлёбка горячая, кому? |
 | `pv_tavern_03.mp3` | ru_RU-dict-medium_epoch3874, Apache-2.0 | Ну, будем здоровы! |
-| `pv_tavern_04.mp3` | ru_RU-igm3804-medium, Apache-2.0 | Садись, в ногах правды нет. |
-| `pv_tavern_05.mp3` | ru_RU-terra5871-medium, Apache-2.0 | Сейчас принесу, не шуми. |
-| `pv_tavern_06.mp3` | ru_RU-pvo240-medium, Apache-2.0 | Хозяйка, налей ещё кружку! |
+| `pv_tavern_04_2.mp3` | ru_RU-igm3804-medium, Apache-2.0 | Садись, в ногах правды нет. |
+| `pv_tavern_05_2.mp3` | ru_RU-terra5871-medium, Apache-2.0 | Сейчас принесу, не шуми. |
+| `pv_tavern_06_2.mp3` | ru_RU-pvo240-medium, Apache-2.0 | Хозяйка, налей ещё кружку! |
 | `pv_tavern_07.mp3` | ru_RU-dict-medium_epoch3874, Apache-2.0 | Кости бросай, твой черёд. |
-| `pv_tavern_08.mp3` | ru_RU-nara426-medium, Apache-2.0 | А я ему и говорю: не лезь! |
+| `pv_tavern_08_2.mp3` | ru_RU-nara426-medium, Apache-2.0 | А я ему и говорю: не лезь! |
 | `pv_tavern_09.mp3` | ru_RU-terra5871-medium, Apache-2.0 | Кто за пиво не платил? |
-| `pv_tavern_10.mp3` | ru_RU-nara426-medium, Apache-2.0 | Эх, хорошо сидим. |
-| `pv_temple_01.mp3` | ru_RU-nara426-medium, Apache-2.0 | Благословен свет. |
+| `pv_tavern_10_2.mp3` | ru_RU-nara426-medium, Apache-2.0 | Эх, хорошо сидим. |
+| `pv_temple_01_2.mp3` | ru_RU-nara426-medium, Apache-2.0 | Благословен свет. |
 | `pv_temple_02.mp3` | ru_RU-dict-medium_epoch3874, Apache-2.0 | Тише, здесь молятся. |
 | `pv_temple_03.mp3` | ru_RU-nara426-medium, Apache-2.0 | Мир входящему. |
 | `pv_temple_04.mp3` | ru_RU-terra5871-medium, Apache-2.0 | Да хранят нас боги. |
 | `pv_temple_05.mp3` | ru_RU-nara426-medium, Apache-2.0 | Помолимся, братья. |
-| `pv_temple_06.mp3` | ru_RU-igm3804-medium, Apache-2.0 | Зажги свечу у алтаря. |
+| `pv_temple_06_2.mp3` | ru_RU-igm3804-medium, Apache-2.0 | Зажги свечу у алтаря. |
 | `pv_tower_01.mp3` | ru_RU-igm3804-medium, Apache-2.0 | Руна не та… |
 | `pv_tower_02.mp3` | ru_RU-dict-medium_epoch3874, Apache-2.0 | Ещё один опыт. |
-| `pv_tower_03.mp3` | ru_RU-dict-medium_epoch3874, Apache-2.0 | Не трогай склянки! |
+| `pv_tower_03_2.mp3` | ru_RU-dict-medium_epoch3874, Apache-2.0 | Не трогай склянки! |
 | `pv_tower_04.mp3` | ru_RU-dict-medium_epoch3874, Apache-2.0 | Где же эта страница? |
 | `pv_village_01.mp3` | ru_RU-sova200-medium, Apache-2.0 | Гони корову в хлев! |
 | `pv_village_02.mp3` | ru_RU-nara426-medium, Apache-2.0 | Сено ворошить пора. |
 | `pv_village_03.mp3` | ru_RU-terra5871-medium, Apache-2.0 | Кормить кур пора! |
 | `pv_village_04.mp3` | ru_RU-dict-medium_epoch3874, Apache-2.0 | Дождь будет, спину ломит. |
-| `pv_village_05.mp3` | ru_RU-sova200-medium, Apache-2.0 | Дети, обедать! |
+| `pv_village_05_2.mp3` | ru_RU-sova200-medium, Apache-2.0 | Дети, обедать! |
 | `pv_village_06.mp3` | ru_RU-nara426-medium, Apache-2.0 | Воды принеси из колодца. |
 | `pv_warcamp_01.mp3` | ru_RU-nara426-medium, Apache-2.0 | Сотня, в строй! |
-| `pv_warcamp_02.mp3` | ru_RU-nara426-medium, Apache-2.0 | Кашу раздают! |
-| `pv_warcamp_03.mp3` | ru_RU-igm3804-medium, Apache-2.0 | Точи клинок, завтра бой. |
+| `pv_warcamp_02_2.mp3` | ru_RU-nara426-medium, Apache-2.0 | Кашу раздают! |
+| `pv_warcamp_03_2.mp3` | ru_RU-igm3804-medium, Apache-2.0 | Точи клинок, завтра бой. |
 | `pv_warcamp_04.mp3` | ru_RU-nara426-medium, Apache-2.0 | Где обоз, скажи на милость? |
-| `pv_warcamp_05.mp3` | ru_RU-nara426-medium, Apache-2.0 | Коней напоить! |
+| `pv_warcamp_05_2.mp3` | ru_RU-nara426-medium, Apache-2.0 | Коней напоить! |
 | `pv_warcamp_06.mp3` | ru_RU-nara426-medium, Apache-2.0 | Дозор, на смену! |
 
 ## Из чего собраны фоны

@@ -279,7 +279,10 @@ const NEW_DIRS=["arte","deep","foe","cast","hero","wild","trade","score",
   Object.values(VOICE_RACES).forEach(v=>out.push(VOICE_DIR+"race_"+v[0]+".mp3"));
   Object.values(VOICE_PROFS).forEach(v=>{out.push(VOICE_DIR+"prof_"+v[0]+".mp3");
    if(v[1])out.push(VOICE_DIR+"prof_"+v[0]+"_f.mp3");});
-  VOICE_SAY.forEach(k=>out.push(VOICE_DIR+"say_"+k+".mp3"));
+  /* Общие слова у народа женского голоса — свои записи (say_…_f), путь
+     к ним складывает Folk.общееФайл. */
+  VOICE_SAY.forEach(k=>{out.push(VOICE_DIR+"say_"+k+".mp3");
+   if(VOICE_LEN["say_"+k+"_f"])out.push(VOICE_DIR+"say_"+k+"_f.mp3");});
   VOICE_HERO.forEach(k=>out.push(VOICE_DIR+"hero_"+k+".mp3"));
   return out;});
  const опись=(()=>{

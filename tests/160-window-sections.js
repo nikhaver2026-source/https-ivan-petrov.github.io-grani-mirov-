@@ -105,7 +105,8 @@ const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(e!==undefined?' :
    const видно=visibleInteractive(m);
    const головы=secHeads(m);
    r.видныхГолов+=головы.length;
-   r.подписи+=головы.filter(x=>/Раздел «/.test(x.dataset.speak||"")).length;
+   /* С 3.6 заголовок называет только своё имя. */
+   r.подписи+=головы.filter(x=>(x.dataset.speak||"")===x.dataset.secTitle).length;
    /* Всё, что стоит выше первой настройки пункта, — служебное: закрыть,
       к пунктам, оглавление и перескок. Ни одна настройка не выше. */
    const box=setGroupBox(g.id);

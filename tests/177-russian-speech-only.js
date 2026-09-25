@@ -119,12 +119,12 @@ const РОЛИ=['throng_hail_m','throng_hail_f','throng_yes','throng_lord','thro
 
  /* ── 4. живая речь по-русски ── */
  const голос=fs.readFileSync(path.join(ЗВУКИ,'voice','CREDITS.md'),'utf8');
- const строки=голос.split('\n').filter(l=>/^\| [a-z_]+\.mp3/.test(l));
+ const строки=голос.split('\n').filter(l=>/^\| [a-z0-9_]+\.mp3/.test(l));
  const нерусские=строки.filter(l=>{const m=l.match(/«([^»]+)»/);
   return !m||!/^[А-Яа-яЁё0-9 ,.!?—–\-:;]+$/.test(m[1])||!/[А-Яа-яЁё]/.test(m[1]);});
  const файлов=fs.readdirSync(path.join(ЗВУКИ,'voice')).filter(f=>f.endsWith('.mp3')).length;
  check('4. у каждой записи живой речи в титрах русский текст',
-  строки.length>=180&&нерусские.length===0&&файлов===361,{строк:строки.length,файлов,нерусские:нерусские.slice(0,3)});
+  строки.length>=180&&нерусские.length===0&&файлов===407,{строк:строки.length,файлов,нерусские:нерусские.slice(0,3)});
 
  /* ── 4б. длина каждой записи известна игре точно ──
     По VOICE_LEN реплики встают в очередь: житель отвечает, когда герой
@@ -140,7 +140,7 @@ const РОЛИ=['throng_hail_m','throng_hail_f','throng_yes','throng_lord','thro
   let d=null;try{d=parseFloat(cp.execFileSync('ffprobe',['-v','error','-show_entries','format=duration','-of','csv=p=0',path.join(ЗВУКИ,'voice',f)],{encoding:'utf8'}));}catch(_){}
   if(!(k in длины)||d===null||Math.abs(d-длины[k])>0.05)расхождения.push([k,длины[k],d]);}
  check('4б. длина каждой записи живой речи известна игре с точностью до пяти сотых секунды',
-  Object.keys(длины).length===361&&расхождения.length===0,{записей:Object.keys(длины).length,расхождения:расхождения.slice(0,4)});
+  Object.keys(длины).length===407&&расхождения.length===0,{записей:Object.keys(длины).length,расхождения:расхождения.slice(0,4)});
 
  /* ── 3 и 5 — в игре ── */
  const browser=await chromium.launch();

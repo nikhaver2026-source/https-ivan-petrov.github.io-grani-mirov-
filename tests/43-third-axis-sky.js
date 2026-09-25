@@ -291,9 +291,11 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
  check('на земле крылатому предлагают подняться, а снизиться и сесть — нет',
   меню.земля.includes('am:takeoff')&&!меню.земля.includes('am:flydown')&&
   !меню.земля.includes('am:land'),меню.земля.filter(c=>/takeoff|flydown|land/.test(c)));
- check('в небе доступны все три действия высоты и подписаны состоянием',
+ /* С 3.6 пункты меню — короткие имена; высоту и запас крыла игра называет,
+    когда действие выполнено. */
+ check('в небе доступны все три действия высоты, каждое — коротким именем',
   меню.небо.includes('am:takeoff')&&меню.небо.includes('am:flydown')&&
-  меню.небо.includes('am:land')&&меню.подписи.every(t=>t.length>10),меню.подписи);
+  меню.небо.includes('am:land')&&меню.подписи.length===3&&меню.подписи.every(t=>t.length>=8&&!/\(|\d/.test(t)),меню.подписи);
  check('бескрылому народу пункты неба не предлагаются вовсе',
   !меню.бескрылый.some(c=>/takeoff|flydown|land/.test(c||'')),
   меню.бескрылый.filter(c=>/takeoff|flydown|land/.test(c||'')));
