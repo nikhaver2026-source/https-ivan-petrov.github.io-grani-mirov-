@@ -21,8 +21,6 @@ License: CC-BY-SA-3.0`).
 | uh_stonemason_01 | каменотёс за работой | `content/audio/sounds/stonemason.ogg` |
 | uh_smith_01 | кузнец бьёт по железу | `content/audio/sounds/smith.ogg` |
 | uh_lumberjack_01 | топор дровосека | `content/audio/sounds/lumberjack.ogg` |
-| uh_lumber_long_01 | лесосека: долгая работа | `content/audio/sounds/lumberjack_long.ogg` |
-| uh_sheep_01 | овечий выгон | `content/audio/sounds/sheepfield.ogg` |
 | uh_windmill_01 | мельница вращается | `content/audio/sounds/windmill.ogg` |
 | uh_chapel_01 | часовня: тихий неф | `content/audio/sounds/chapel.ogg` |
 | uh_tavern_01 | трактир: гомон и кружки | `content/audio/sounds/tavern.ogg` |

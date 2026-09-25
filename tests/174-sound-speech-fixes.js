@@ -122,7 +122,7 @@ const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(e!==undefined?' :
  const шаги=await page.evaluate(()=>{
   const r={};
   const роли=new Set();
-  [SURF_ROLE,STEP_ALT,SURF_FALLBACK,DARK_STEP_ROLE].forEach(t=>Object.values(t).forEach(x=>роли.add(x)));
+  [SURF_ROLE,SURF_FALLBACK,DARK_STEP_ROLE].forEach(t=>Object.values(t).forEach(x=>роли.add(x)));
   Object.values(STEP_LAYER).forEach(x=>роли.add(x[0]));
   ["hero_step_metal","hero_step_leather","hero_step_cloth","hero_step_echo"].forEach(x=>роли.add(x));
   const файлы=[...роли].flatMap(ro=>(SOUND_BANK[ro]||{f:[]}).f);
@@ -148,8 +148,10 @@ const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(e!==undefined?' :
  check('3. у каждой записи шага есть поправка, и после неё все шаги звучат вровень',
   шаги.безПоправки.length===0&&шаги.файлов>90&&шаги.размахДо>=30&&шаги.послеПоправки===0&&шаги.вровень,шаги);
  check('3. тихий шаг идёт через усилитель, громкий — прежним путём',шаги.тихаяУсилена&&шаги.громкаяНеУсилена,шаги);
- check('3. камень — звонкий шаг, а не копия гравия; доски и мостки — ясный стук',
-  шаги.камень==="lug_step_stone"&&шаги.доски==="oc_step_hard"&&шаги.мостки==="mtg_step_wood"&&!шаги.копииКамня
+ /* С версии 3.4 у каждой поверхности свой шаг (набор 186): доски — шаг по
+    доскам, мостки — деревянный мост, а не общие с камнем и подвалом записи. */
+ check('3. камень — звонкий шаг, а не копия гравия; доски и мостки — свой деревянный стук',
+  шаги.камень==="lug_step_stone"&&шаги.доски==="tread_wood"&&шаги.мостки==="stk_bridge"&&!шаги.копииКамня
   &&/lug_step_stone|oc_step_hard/.test(шаги.шагПоКамню||""),шаги);
 
  /* ── 4. Меч ── */

@@ -132,18 +132,19 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
  check('изучить алтарь: камень и голоса под сводами',алтарь.study&&алтарь.study.includes('deep_stone')&&!алтарь.study.includes('pad_sanctum'),алтарь.study);
  check('приношение: вещь положена и дым, без синтезатора «altar»',алтарь.offer&&!алтарь.offer.includes('altar')&&!алтарь.offer.includes('chant_calliope'),алтарь.offer);
 
- /* ── 5. живой фон мест ── */
+ /* ── 5. живой фон мест ──
+    Версия 3.4: у каждой постройки свой долгий фон (bed_*) в канале места, а
+    второй «живой» слой под крышей снят — фон уже несёт огонь, людей и
+    работу. Храм звучит колоколами и хором, а не голубями. */
  const фон=await page.evaluate(()=>{
   const loops=[];const orig=Bank.loop.bind(Bank);
   Bank.loop=(ch,role,o)=>{loops.push([ch,role]);return true;};
+  const stops=[];const origStop=Bank.stop.bind(Bank);Bank.stop=ch=>{stops.push(ch);return origStop(ch);};
   const out={};
   for(const st of ["forge","market","village","temple","tavern"]){
-   const seen=new Set();
-   for(let seed=0;seed<9;seed++){
-    G.place={kind:"house",bx:1000,by:1000,stype:st,name:"x",depth:0,x:1,y:1};
-    loops.length=0;liveAmbient(seed);
-    loops.filter(l=>l[0]==="live").forEach(l=>seen.add(l[1]));}
-   out[st]=[...seen];}
+   G.place={kind:PLACE_KIND[st]||"house",bx:1000,by:1000,stype:st,name:"x",depth:0,x:1,y:1};
+   loops.length=0;stops.length=0;liveAmbient(3);
+   out[st]={фон:bankAmbientRole(),живой:loops.filter(l=>l[0]==="live").map(l=>l[1]),снят:stops.includes("live")};}
   G.place=null;
   const земли={};
   for(const t of ["forest","plains","mountains","desert"]){
@@ -153,13 +154,15 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
     try{G.weather="Ясно";G.hour=12;liveAmbient(seed);}finally{window.cellContent=cc;}
     loops.filter(l=>l[0]==="live").forEach(l=>seen.add(l[1]));}
    земли[t]=[...seen];}
-  Bank.loop=orig;
-  return {места:out,земли};});
- check('кузница: три живых фона',фон.места.forge.length===3&&фон.места.forge.includes('uh_smith'),фон.места.forge);
- check('рынок: три живых фона',фон.места.market.length===3,фон.места.market);
- check('деревня: подворье, двор, выгон, мельница и лесосека',фон.места.village.length===5&&фон.места.village.includes('uh_sheep')&&фон.места.village.includes('uh_windmill'),фон.места.village);
- check('храм: часовня среди фонов',фон.места.temple.includes('uh_chapel'),фон.места.temple);
- check('у кузницы и рынка разные наборы',!фон.места.forge.some(r=>фон.места.market.includes(r)));
+  Bank.loop=orig;Bank.stop=origStop;
+  const храм=SOUND_BANK.ad_temple;
+  return {места:out,земли,храм:{f:храм.f,d:храм.d}};});
+ check('кузница, рынок, деревня, храм и трактир — каждый своим долгим фоном',
+  ["forge","market","village","temple"].every(st=>фон.места[st].фон==="bed_"+st)&&/^bed_tavern/.test(фон.места.tavern.фон),фон.места);
+ check('под крышей второй живой слой снят: фон места звучит один',
+  Object.values(фон.места).every(m=>m.живой.length===0&&m.снят),фон.места);
+ check('храм звучит колоколом и хором, а не голубями',
+  фон.храм.f.every(f=>/^bed\/temple_hall_0\d\.flac$/.test(f))&&/колокол/.test(фон.храм.d)&&!/голуб/.test(фон.храм.d),фон.храм);
  check('земли: у леса, равнины, гор и пустыни по несколько фонов',Object.values(фон.земли).every(a=>a.length>=2),фон.земли);
 
  check('без ошибок страницы',errors.length===0,errors.slice(0,3));

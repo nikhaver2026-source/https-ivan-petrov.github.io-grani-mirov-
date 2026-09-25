@@ -57,9 +57,6 @@ sounds/ad/ad_leaves_04.ogg	277
 sounds/ad/ad_leaves_05.ogg	291
 sounds/ad/ad_leaves_06.ogg	288
 sounds/ad/ad_market_sel_01.ogg	119
-sounds/ad/ad_port_01.ogg	72
-sounds/ad/ad_port_02.ogg	69
-sounds/ad/ad_port_03.ogg	71
 sounds/ad/ad_port_sel_01.ogg	72
 sounds/ad/ad_rain_long_01.ogg	129
 sounds/ad/ad_river_fast_01.ogg	131
@@ -288,14 +285,8 @@ sounds/hero/hero_levelup_01.ogg	126
 sounds/hero/hero_nomana_01.ogg	167
 sounds/hero/hero_pain_f_01.ogg	256
 sounds/hero/hero_pain_m_01.ogg	206
-sounds/hero/hero_step_cloth_01.ogg	167
-sounds/hero/hero_step_cloth_02.ogg	168
 sounds/hero/hero_step_echo_01.ogg	81
 sounds/hero/hero_step_echo_02.ogg	81
-sounds/hero/hero_step_leather_01.ogg	169
-sounds/hero/hero_step_leather_02.ogg	169
-sounds/hero/hero_step_metal_01.ogg	164
-sounds/hero/hero_step_metal_02.ogg	162
 sounds/hero/hero_swing_01.ogg	276
 sounds/lug/lug_alarm_01.ogg	72
 sounds/lug/lug_bark_01.ogg	150
@@ -1039,10 +1030,8 @@ sounds/tread/tread_wood_03.ogg	87
 sounds/uh/uh_bell_01.ogg	203
 sounds/uh/uh_build_01.ogg	182
 sounds/uh/uh_chapel_01.ogg	50
-sounds/uh/uh_lumber_long_01.ogg	60
 sounds/uh/uh_lumberjack_01.ogg	142
 sounds/uh/uh_page_01.ogg	136
-sounds/uh/uh_sheep_01.ogg	72
 sounds/uh/uh_smith_01.ogg	202
 sounds/uh/uh_square_01.ogg	173
 sounds/uh/uh_stonemason_01.ogg	138

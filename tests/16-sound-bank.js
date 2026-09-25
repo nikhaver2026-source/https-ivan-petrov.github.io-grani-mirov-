@@ -64,8 +64,9 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   return out;});
  check('фон подбирается по месту: земля, глубина, город, море, шторм',
   /* Долгий фон глубины и города — настоящие петли: давление глубины на
-     четвёртом поясе, торговые ряды 0 A.D. в городе. */
-  amb.deep==='stk_deepsea'&&amb.city==='hall_market'&&amb.sea==='sea_open'&&amb.storm==='sea_storm'&&/^(amb_|sea_|hall_port|deep_wind)/.test(amb.land),amb);
+     четвёртом поясе, а у деревни свой долгий фон — птицы, скотина, топор у
+     поленницы (версия 3.4: у каждой постройки свой фон). */
+  amb.deep==='stk_deepsea'&&amb.city==='bed_village'&&amb.sea==='sea_open'&&amb.storm==='sea_storm'&&/^(amb_|sea_|hall_port|deep_wind)/.test(amb.land),amb);
 
  // 4. Банк реально проигрывает и подгружает файлы
  const played=await page.evaluate(()=>{

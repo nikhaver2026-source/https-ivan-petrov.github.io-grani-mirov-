@@ -298,21 +298,28 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   дела.память.после>дела.память.до,дела.память);
 
  /* ── 10. Житель звучит со своей стороны ── */
- const звук=await page.evaluate(()=>{
+ const звук=await page.evaluate(async()=>{
   settings.effects=1;settings.hrtf=1;
-  const точки=[],плоско=[];
-  const оR=Spatial.role.bind(Spatial),оP=Bank.play.bind(Bank);
+  /* Живая речь жителя идёт записью голоса (Spatial.at, путь voice/…), прочие
+     звуки мира — ролями банка (Spatial.role). Слушаем и то и другое. */
+  const точки=[],голос=[],плоско=[];
+  const оR=Spatial.role.bind(Spatial),оA=Spatial.at.bind(Spatial),оF=Folk.плоско.bind(Folk);
   Spatial.role=(role,dx,dy,o)=>{точки.push({role,dx,dy});return true;};
-  Bank.play=(role,o)=>{плоско.push(role);return true;};
+  Spatial.at=(p,dx,dy,o)=>{if(/^voice\//.test(String(p)))голос.push({role:p,dx,dy});return true;};
+  Folk.плоско=(p,o)=>{плоско.push(p);return null;};
   let out={};
   try{
    while(activeLayer())closeTopUI();
    G.place={kind:"city",bx:700,by:700,stype:"castle",depth:0,name:"Ц",x:5,y:5};
    const n=getNPC(700,700,0,"Правитель");
    n.px=9;n.py=5;
-   точки.length=0;плоско.length=0;
+   /* С версии 3.4 голоса жителей идут очередью и начинают, когда смолкнет
+      голос игры, — оклик ждём до шести секунд. */
+   try{Speech.userCut();}catch(_){}
+   голос.length=0;плоско.length=0;
    npcVoice(n,"оклик");
-   out.вДоме=точки.slice();
+   for(let i=0;i<60&&!голос.length;i++)await new Promise(r=>setTimeout(r,100));
+   out.вДоме=голос.slice();
    out.плоскоВДоме=плоско.slice();
    /* Снаружи сторона берётся от клетки мира. */
    G.place=null;G.x=700;G.y=700;
@@ -320,7 +327,7 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
    точки.length=0;плоско.length=0;
    npcCue(m,"hero_step_metal",{gain:0.5});
    out.вПоле=точки.slice();
-  }finally{Spatial.role=оR;Bank.play=оP;settings.effects=0;
+  }finally{Spatial.role=оR;Spatial.at=оA;Folk.плоско=оF;settings.effects=0;
    while(activeLayer())closeTopUI();G.place=null;}
   return out;});
  check('в доме голос жителя приходит с его клетки, а не из середины головы',

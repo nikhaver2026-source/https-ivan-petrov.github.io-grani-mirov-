@@ -43,9 +43,6 @@
 | ad_farm_01 | подворье: скот и работа | `audio/ambient/building/amb_farm_11.ogg` |
 | ad_farm_02 | подворье: скот и работа | `audio/ambient/building/amb_farm_12.ogg` |
 | ad_farm_03 | подворье: скот и работа | `audio/ambient/building/amb_farm_13.ogg` |
-| ad_port_01 | причалы: снасти и голоса | `audio/ambient/building/amb_port_11.ogg` |
-| ad_port_02 | причалы: снасти и голоса | `audio/ambient/building/amb_port_12.ogg` |
-| ad_port_03 | причалы: снасти и голоса | `audio/ambient/building/amb_port_21.ogg` |
 | ad_trade_01 | торговые ряды | `audio/ambient/building/amb_trade_12.ogg` |
 | ad_trade_02 | торговые ряды | `audio/ambient/building/amb_trade_13.ogg` |
 | ad_day_01 | день в умеренных землях | `audio/ambient/dayscape/day_temperate_12.ogg` |
@@ -64,16 +61,11 @@
 | ad_port_sel_01 | порт: короткий шум причала | `audio/interface/select/building/sel_port_10.ogg` |
 | ad_farm_sel_01 | двор: короткий шум | `audio/interface/select/building/sel_farm_10.ogg` |
 
-## Не из 0 A.D.
+## Храм
 
 Храм звучал хором 0 A.D. (`sel_temple.ogg`, `sel_temple_10.ogg`) — пением со словами
-на чужом языке. Словами в игре говорят только по-русски, и музыки в звуках мира
-нет, поэтому хор убран. Под сводами храма теперь воркуют голуби — запись из
-свободной игры **Stendhal** (https://stendhalgame.org), из исходников без потерь
-`data/sounds/lossless_sources`; перекодировано в FLAC без потерь, в один канал.
-Лицензия CC0 1.0 (https://creativecommons.org/publicdomain/zero/1.0/), текст рядом —
-`LICENSE-CC0.txt`.
-
-| Файл | Роль в игре | Автор | Лицензия | Первоисточник | Файл в игре |
-|---|---|---|---|---|---|
-| ad_temple_01 | под сводами храма: голуби и тишина | winsx87 | CC0 | https://freesound.org/people/winsx87/sounds/152024/ | `lossless_sources/bird-pigeon-1.flac` |
+на чужом языке; хор убран. Потом под сводами ворковали голуби Stendhal, но игрок
+просил, чтобы храм звучал храмом. Роль `ad_temple` теперь — удар колокола и
+перезвон малых колоколов под каменным сводом с хором вполголоса; эти записи
+лежат в `sounds/bed` (`temple_hall_01.flac`, `temple_hall_02.flac`), их источники
+и лицензии — в `sounds/bed/CREDITS.md`.

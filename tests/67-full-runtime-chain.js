@@ -480,6 +480,10 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   try{
    settings.speech=1;settings.music=1;settings.musicVol=1;settings.effects=1;settings.duck=0.5;settings.verbosity="normal";
    const музыка0=Bank.vol("music"),мир0=Bank.vol("fx");
+   /* С версии 3.4 голос игры ждёт, пока договорят записанные голоса жителей.
+      Ответ жителя из прежнего шага ещё в очереди — снимаем его: здесь
+      проверяется сама речь игры. */
+   try{Folk.смолкнуть(true);}catch(_){}
    narrate("Сундук открыт. Золото: 120.");await wait(30);fake.end();await wait(30);
    narrate("Перед вами длинный коридор с древними знаками на стенах.",{interrupt:false});await wait(30);
    const говорило=Speech.isSpeaking();Speech.stop();const стихло=!Speech.isSpeaking();

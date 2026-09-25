@@ -71,42 +71,41 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   surf.совпало.length===0,surf.совпало.slice(0,4));
  check('в грозу земля раскисает',surf.гроза==="mud",surf.гроза);
 
- /* Пол внутри — не одна поверхность на всё место, а СМЕСЬ: у каждого вида
-    построек и у каждой глубины своя, а какая под ногой именно здесь, решают
-    координаты клетки. Прежде тут проверялось одно значение на постройку, и
-    три разных подвала звучали совершенно одинаково. Теперь проверяется то,
-    что и должно: смесь узнаваема (в ней есть подпись места), места
-    различаются между собой, и внутри одного места пол не однообразен. */
+ /* Пол внутри — ОДИН на всё место. Жалоба игрока (версия 3.4): «в одном и
+    том же месте шаги меняются, а в разных местах одинаковые». Прежде пол
+    выбирался заново на каждой клетке из смеси трёх-четырёх поверхностей.
+    Теперь у каждого вида построек свой пол, у подвала и яруса — порода из
+    смеси его глубины, одна на весь ярус, а подвалы одной глубины в разных
+    местах звучат по-разному. */
  const surfIn=await page.evaluate(()=>{
-  const набор=(stype,depth)=>{
+  const набор=(stype,depth,bx=600,by=600)=>{
    G.place={kind:depth?"dungeon":(PLACE_KIND[stype]||"house"),
-    bx:600,by:600,stype,name:"Проба",depth,x:1,y:1};
+    bx,by,stype,name:"Проба",depth,x:1,y:1};
    const s=new Set();
    for(let x=1;x<18;x++)for(let y=1;y<12;y++){G.place.x=x;G.place.y=y;s.add(indoorSurface());}
    return [...s].sort();};
   const out={храм:набор("temple",0),кузня:набор("forge",0),рынок:набор("market",0),
    таверна:набор("tavern",0),порт:набор("port",0),
-   верх:набор("ruins",1),середина:набор("ruins",3),дно:набор("ruins",5)};
-  /* Два разных подвала одной глубины раскладывают смесь по-своему. */
-  const ряд=(bx,by)=>{G.place={kind:"dungeon",bx,by,stype:"ruins",name:"м",depth:2,x:1,y:1};
-   const r=[];for(let x=1;x<14;x++){G.place.x=x;G.place.y=5;r.push(indoorSurface());}return r.join(",");};
-  out.подвалА=ряд(1,1);out.подвалБ=ряд(9,2);
+   верх:набор("ruins",1),середина:набор("ruins",3),дно:набор("ruins",5),смеси:DEPTH_MIX};
+  const подвалы=new Set();
+  for(let i=0;i<12;i++)подвалы.add(набор("ruins",2,1+i*7,2+i*5).join());
+  out.подвалов=подвалы.size;
   G.place=null;
   return out;});
- check('пол внутри узнаётся по смеси: у каждой постройки своя подпись',
-  surfIn.храм.includes("marble")&&surfIn.кузня.includes("metal")&&
-  surfIn.рынок.includes("straw")&&surfIn.таверна.includes("plank")&&
-  surfIn.порт.includes("bridge"),surfIn);
+ check('пол внутри узнаётся: у каждой постройки свой',
+  surfIn.храм.join()==="marble"&&surfIn.кузня.join()==="metal"&&
+  surfIn.рынок.join()==="straw"&&surfIn.таверна.join()==="plank"&&
+  surfIn.порт.join()==="bridge",surfIn);
  check('разные постройки различаются полом, а не звучат одинаково',
   new Set([surfIn.храм.join(),surfIn.кузня.join(),surfIn.рынок.join(),
    surfIn.таверна.join(),surfIn.порт.join()]).size===5,surfIn);
- check('внутри одного места пол не однообразен',
-  surfIn.храм.length>=2&&surfIn.кузня.length>=2&&surfIn.верх.length>=2,surfIn);
- check('глубина слышна по шагу: щебень наверху, кости в середине, хрусталь на дне',
-  surfIn.верх.includes("gravel")&&surfIn.середина.includes("bone")&&
-  surfIn.дно.includes("crystal")&&!surfIn.верх.includes("crystal"),surfIn);
- check('два подвала одной глубины звучат по-разному',
-  surfIn.подвалА!==surfIn.подвалБ,{а:surfIn.подвалА.slice(0,40),б:surfIn.подвалБ.slice(0,40)});
+ check('в одном месте пол один: на всём ярусе шаг одинаковый',
+  [surfIn.храм,surfIn.кузня,surfIn.рынок,surfIn.таверна,surfIn.порт,surfIn.верх,surfIn.середина,surfIn.дно].every(a=>a.length===1),surfIn);
+ check('глубина слышна по шагу: порода яруса — из смеси своей глубины, хрусталя наверху нет',
+  surfIn.смеси[1].includes(surfIn.верх[0])&&surfIn.смеси[3].includes(surfIn.середина[0])&&
+  surfIn.смеси[5].includes(surfIn.дно[0])&&surfIn.верх[0]!=="crystal",surfIn);
+ check('подвалы одной глубины в разных местах звучат по-разному',
+  surfIn.подвалов>=2,{подвалов:surfIn.подвалов});
 
  const surfSay=await page.evaluate(()=>{
   const плохие=[];

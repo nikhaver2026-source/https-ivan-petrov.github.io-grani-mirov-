@@ -222,9 +222,14 @@ const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(e!==undefined?' :
   const слышно=[];const оA=Spatial.at.bind(Spatial),оF=Folk.плоско.bind(Folk);
   Spatial.at=(p,dx,dy,o)=>{if(/^voice\//.test(p))слышно.push(p);return оA(p,dx,dy,o);};
   Folk.плоско=(p,o)=>{слышно.push(p);return оF(p,o);};
-  try{Folk.когда=0;Folk.было.clear();npcVoice(ж,"оклик",5);await new Promise(res=>setTimeout(res,1700));}
-  finally{Spatial.at=оA;Folk.плоско=оF;}
+  /* С версии 3.4 голоса жителей идут очередью и начинают, когда смолкнет
+     голос игры: ждём оклик до восьми секунд, а не полторы. */
   const ждём=Folk.оклик(ж,5).map(х=>х[0]==="народ"?"race_"+Folk.голос(ж)[0]:х[0]==="ремесло"?"prof_"+VOICE_PROFS[ж.prof][0]:"say_"+х[1]);
+  /* Очередь голосов от прежних шагов проверки снимаем: слушаем только этот оклик. */
+  try{Speech.userCut();}catch(_){}try{Folk.смолкнуть(true);}catch(_){}слышно.length=0;
+  try{Folk.когда=0;Folk.было.clear();npcVoice(ж,"оклик",5);
+   for(let i=0;i<80&&!ждём.every(w=>слышно.some(p=>p.indexOf("voice/"+w)===0));i++)await new Promise(res=>setTimeout(res,100));}
+  finally{Spatial.at=оA;Folk.плоско=оF;}
   r.живой={слышно:[...new Set(слышно)],ждём};
   r.живойСовпал=ждём.every(w=>слышно.some(p=>p.indexOf("voice/"+w)===0))&&слышно.length>0&&слышно[0].indexOf("voice/"+ждём[0])===0;
   return r;});
@@ -251,7 +256,11 @@ const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(e!==undefined?' :
    await new Promise(res=>setTimeout(res,1200));
    Folk.когда=0;Folk.было.clear();слышно.length=0;
    closeModal(document.getElementById("modal-npc"));
-   r.ровно=слышно.slice();
+   /* Голоса жителей идут очередью: прощание звучит, когда договорит голос
+      игры о закрытом окне. Ждём его до восьми секунд. */
+   const t0=Date.now();
+   for(let i=0;i<80&&!слышно.length;i++)await new Promise(res=>setTimeout(res,100));
+   r.ровно=слышно.slice();r.мс=Date.now()-t0;
    /* Холодный молчит. */
    const х=getNPC(540,540,0,"Трактирщик");
    const сохр=JSON.stringify(G.rep||{});
@@ -262,6 +271,8 @@ const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(e!==undefined?' :
    await new Promise(res=>setTimeout(res,1200));
    Folk.когда=0;Folk.было.clear();слышно.length=0;
    closeModal(document.getElementById("modal-npc"));
+   /* Молчит — значит, не звучит и тогда, когда прощание тёплого уже пришло бы. */
+   await new Promise(res=>setTimeout(res,Math.max(3000,(r.мс||0)+1500)));
    r.холод=слышно.slice();
    G.rep=JSON.parse(сохр);
   }finally{Spatial.at=оA;Folk.плоско=оF;}

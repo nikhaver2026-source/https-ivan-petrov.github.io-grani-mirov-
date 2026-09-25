@@ -133,18 +133,25 @@ const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(e!==undefined?' :
  await page.waitForTimeout(400);
  const оклик=await page.evaluate(async()=>{
   const n=getNPC(120,120,0);
+  try{Speech.userCut();}catch(_){}try{Folk.смолкнуть(true);}catch(_){}
   VOICED.length=0;CUED.length=0;
   npcVoice(n,"оклик");
-  await new Promise(r=>setTimeout(r,1800));
-  return {народ:n.race,ремесло:n.prof,речь:VOICED.map(v=>v.f),гул:CUED.map(c=>c.gain),
+  /* С версии 3.4 голоса идут очередью: слово ремесла звучит, когда договорено
+     слово народа. Ждём его до восьми секунд. */
+  const рем="voice/prof_"+VOICE_PROFS[n.prof][0];
+  for(let i=0;i<80&&!VOICED.some(v=>v.f.indexOf(рем)===0);i++)await new Promise(r=>setTimeout(r,100));
+  /* Гул толпы — роли throng_*; прочее (стража, зверьё вокруг) — не он. */
+  return {народ:n.race,ремесло:n.prof,речь:VOICED.map(v=>v.f),гул:CUED.filter(c=>/^throng/.test(c.r)).map(c=>c.gain),
    ожидалась:"voice/race_"+Folk.раса(n.race)[0]+".mp3",
    ремФайл:"voice/prof_"+VOICE_PROFS[n.prof][0]};});
  check('оклик жителя — запись его народа',
   оклик.речь[0]===оклик.ожидалась,оклик);
  check('следом идёт слово его ремесла',
   оклик.речь.some(f=>f.indexOf(оклик.ремФайл)===0),оклик.речь);
- check('под живую речь гул толпы приглушён',
-  оклик.гул.length>0&&оклик.гул[0]<=0.15,оклик.гул);
+ /* С версии 3.4 под записанный голос гул толпы не кладётся вовсе (он сливался
+    с речью); если он и звучит, то вполголоса. */
+ check('под живую речь гул толпы молчит или приглушён',
+  оклик.гул.every(g=>g<=0.15),оклик.гул);
 
  /* ── 7. мера: повтор не проходит, выключатель гасит ── */
  const мера=await page.evaluate(async()=>{
@@ -195,8 +202,11 @@ const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(e!==undefined?' :
  /* Слово ремесла и общее слово идут в высоте народа. */
  const высоты=await page.evaluate(async()=>{
   const n=getNPC(300,300,0);
+  try{Folk.смолкнуть(true);}catch(_){}
   Folk.когда=0;Folk.было.clear();VOICED.length=0;
   Folk.ремесло(n,{всегда:true});
+  /* Голос идёт очередью: ждём, пока он зазвучит. */
+  for(let i=0;i<40&&!VOICED.length;i++)await new Promise(r=>setTimeout(r,100));
   const г=Folk.раса(n.race);
   /* Высота народа, сдвинутая тембром самого жителя (±5 %, набор 175). */
   return {rate:VOICED.length?VOICED[0].rate:null,ждём:г[1]*Folk.тембр(n),тембр:Folk.тембр(n)};});

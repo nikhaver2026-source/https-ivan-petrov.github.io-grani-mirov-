@@ -315,15 +315,21 @@ const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(e!==undefined?' :
  {
   const src=fs.readFileSync(path.join(__dirname,'..','index.html'),'utf8');
   const sw=fs.readFileSync(path.join(__dirname,'..','sw.js'),'utf8');
-  const версии=[...src.matchAll(/Alpha (\d+\.\d+\.\d+)/g)].map(m=>m[1]);
-  const одна=версии.length>=3&&new Set(версии).size===1;
+  /* Версия одна: GAME_VERSION, заголовок, заставка, руководство и
+     приложение для Android. Прежде заставка застряла на 2.8, пока
+     приложение уходило к 3.x. */
+  const версии=[...src.matchAll(/Alpha (\d+\.\d+(?:\.\d+)?)/g)].map(m=>m[1]);
+  const константа=(src.match(/const GAME_VERSION="([\d.]+)"/)||[])[1]||"";
+  const грэдл=fs.readFileSync(path.join(__dirname,'..','android','app','build.gradle'),'utf8');
+  const андроид=(грэдл.match(/versionName '([\d.]+)'/)||[])[1]||"";
+  const одна=версии.length>=3&&new Set(версии).size===1&&версии[0]===константа&&константа===андроид;
   const вИгре=await page.evaluate(()=>{
-   const t=(document.title.match(/Alpha (\d+\.\d+\.\d+)/)||[])[1]||"";
-   const h=((document.querySelector("h1")||{}).textContent||"").match(/Alpha (\d+\.\d+\.\d+)/);
-   return {заголовок:t,заставка:h?h[1]:""};});
-  check('17. версия игры одна и та же во всех местах файла и на заставке',
-   одна&&вИгре.заголовок===версии[0]&&вИгре.заставка===версии[0]&&версии[0]!=="2.0.1",
-   {версии:[...new Set(версии)],вИгре});
+   const t=(document.title.match(/Alpha (\d+\.\d+(?:\.\d+)?)/)||[])[1]||"";
+   const h=((document.querySelector("h1")||{}).textContent||"").match(/Alpha (\d+\.\d+(?:\.\d+)?)/);
+   return {заголовок:t,заставка:h?h[1]:"",константа:typeof GAME_VERSION==="string"?GAME_VERSION:""};});
+  check('17. версия игры одна и та же во всех местах файла, на заставке и в приложении',
+   одна&&вИгре.заголовок===константа&&вИгре.заставка===константа&&вИгре.константа===константа&&константа!=="2.8.0",
+   {версии:[...new Set(версии)],константа,андроид,вИгре});
   /* Кэш страницы версионируется — иначе у зашедшего без сети навсегда осталась
      бы старая игра. Кэш записей НЕ версионируется: они неизменяемы, и 226 МБ
      звука перекачивать ради новой страницы незачем. */
@@ -486,9 +492,9 @@ const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(e!==undefined?' :
  {
   const src=fs.readFileSync(path.join(__dirname,'..','index.html'),'utf8');
   const итог=await page.evaluate(()=>{
-   const живые=/^(tread|steps|lug|oc|mtg|deep|hero|creatures|stk)\//;
+   const живые=/^(tread|steps|lug|oc|mtg|deep|hero|creatures|stk|gear)\//;
    const роли=new Set();
-   [SURF_ROLE,SURF_FALLBACK,STEP_ALT,DARK_STEP_ROLE].forEach(t=>Object.values(t).forEach(r=>роли.add(r)));
+   [SURF_ROLE,SURF_FALLBACK,DARK_STEP_ROLE].forEach(t=>Object.values(t).forEach(r=>роли.add(r)));
    Object.values(STEP_LAYER).forEach(([r])=>роли.add(r));
    ["hero_step_metal","hero_step_leather","hero_step_cloth","hero_step_echo","stomp"].forEach(r=>роли.add(r));
    const нет=[],мимо=[];
