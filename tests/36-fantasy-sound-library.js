@@ -276,14 +276,17 @@ const NEW_DIRS=["arte","deep","foe","cast","hero","wild","trade","score",
     путь складывается в коде. Поэтому её опись берётся из самих таблиц. */
  const голоса=await page.evaluate(()=>{
   const out=[];
-  Object.values(VOICE_RACES).forEach(v=>out.push(VOICE_DIR+"race_"+v[0]+".mp3"));
-  Object.values(VOICE_PROFS).forEach(v=>{out.push(VOICE_DIR+"prof_"+v[0]+".mp3");
-   if(v[1])out.push(VOICE_DIR+"prof_"+v[0]+"_f.mp3");});
+  /* К имени приписано поколение записей (VOICE_GEN): записи неизменяемы,
+     и новое поколение голосов живёт под новыми именами. */
+  const G=VOICE_GEN;
+  Object.values(VOICE_RACES).forEach(v=>out.push(VOICE_DIR+"race_"+v[0]+G+".mp3"));
+  Object.values(VOICE_PROFS).forEach(v=>{out.push(VOICE_DIR+"prof_"+v[0]+G+".mp3");
+   if(v[1])out.push(VOICE_DIR+"prof_"+v[0]+"_f"+G+".mp3");});
   /* Общие слова у народа женского голоса — свои записи (say_…_f), путь
      к ним складывает Folk.общееФайл. */
-  VOICE_SAY.forEach(k=>{out.push(VOICE_DIR+"say_"+k+".mp3");
-   if(VOICE_LEN["say_"+k+"_f"])out.push(VOICE_DIR+"say_"+k+"_f.mp3");});
-  VOICE_HERO.forEach(k=>out.push(VOICE_DIR+"hero_"+k+".mp3"));
+  VOICE_SAY.forEach(k=>{out.push(VOICE_DIR+"say_"+k+G+".mp3");
+   if(VOICE_LEN["say_"+k+"_f"+G])out.push(VOICE_DIR+"say_"+k+"_f"+G+".mp3");});
+  VOICE_HERO.forEach(k=>out.push(VOICE_DIR+"hero_"+k+G+".mp3"));
   return out;});
  const опись=(()=>{
   const корень=path.join(__dirname,"..");

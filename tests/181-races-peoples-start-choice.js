@@ -43,7 +43,7 @@ const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(e!==undefined?' :
    пустые:новые.filter(r=>!(r.hist&&r.econ&&r.pol&&r.war&&r.myth&&r.tr&&r.res.length&&r.sell.length&&r.buy.length)).map(r=>r.n),
    безБога:новые.filter(r=>!GOD_BY_ID[r.god]).map(r=>r.n),безКлана:новые.filter(r=>!CLAN_BY_NAME[r.clan]).map(r=>r.n),
    безГолоса:все.filter(n=>!VOICE_RACES[n]),
-   файлы:все.map(n=>VOICE_RACES[n]&&VOICE_RACES[n][0]).filter(Boolean),
+   файлы:все.map(n=>VOICE_RACES[n]&&VOICE_RACES[n][0]+VOICE_GEN).filter(Boolean),
    описаний:Object.keys(PEOPLE_INFO).length};});
  const нетФайла=счёт.файлы.filter(f=>!fs.existsSync(path.join(__dirname,'..','sounds','voice','race_'+f+'.mp3')));
  check('1. рас сто пятьдесят: девяносто восемь светлых и пятьдесят две тёмных',

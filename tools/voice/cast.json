@@ -1,0 +1,2920 @@
+{
+ "model": "gemini-3.8-flash-tts",
+ "gen": "_g",
+ "batches": [
+  {
+   "id": "g1",
+   "speakers": [
+    "Algenib",
+    "Gacrux"
+   ],
+   "lines": [
+    "race_orki_g",
+    "race_nagi_g",
+    "race_trolli_g",
+    "race_moroznye_veyry_g",
+    "race_ogry_g",
+    "race_shepchuschie_g",
+    "race_minotavry_g",
+    "race_krovniki_g",
+    "race_yascherolyudy_g",
+    "race_krovavaya_znat_g",
+    "race_ciklopy_g",
+    "race_solyanye_vdovy_g",
+    "race_golemy_g",
+    "race_mnogoglazye_vestniki_g",
+    "race_kamennorozhdennye_g",
+    "race_pepelnye_pegasy_g",
+    "race_kostyanye_shamany_g",
+    "race_micelidy_g",
+    "race_drakonidy_g",
+    "race_beznachalnye_g",
+    "race_gribozhory_g",
+    "race_metelnye_veyry_g",
+    "race_utoplenniki_g",
+    "race_gribnicy_glubin_g",
+    "race_chervehody_g",
+    "race_svideteli_g",
+    "race_golodnye_g",
+    "race_yadovitye_kvakshi_g",
+    "race_mnogorukie_g",
+    "race_gnilokoronnye_g",
+    "race_terzayuschie_g",
+    "race_terzayuschie_v_nebe_g",
+    "race_vodyaniki_g",
+    "race_ineeviki_g",
+    "race_pancirniki_g",
+    "race_stepnye_orki_g",
+    "race_labirintniki_g",
+    "race_omutniki_g",
+    "race_naledniki_g",
+    "race_pribrezhnye_pancirniki_g",
+    "race_glubinnye_korni_g",
+    "race_pepelnye_orki_g",
+    "race_rogatye_strazhi_g",
+    "race_pastuhi_ciklopy_g",
+    "race_berlozhniki_g"
+   ]
+  },
+  {
+   "id": "g2",
+   "speakers": [
+    "Charon",
+    "Sulafat"
+   ],
+   "lines": [
+    "race_pepelnye_velikany_g",
+    "race_rusalki_g",
+    "race_drevnie_enty_g",
+    "race_lunnye_elfy_g",
+    "race_shtormovye_virmy_g",
+    "race_svetlorozhdennye_g",
+    "race_glubinnye_leviafany_g",
+    "race_pervorozhdennye_zari_g",
+    "race_titany_grani_g",
+    "race_pepelnye_deti_g",
+    "race_drakony_praroditeli_g",
+    "race_zerkalcy_g",
+    "race_pustotelye_g",
+    "race_lunnye_obratnye_g",
+    "race_pepelnye_kuznecy_g",
+    "race_kovylniki_g",
+    "race_drevnie_bezymyannye_g",
+    "race_deltoviki_g",
+    "race_sonnye_skaty_g",
+    "race_pryadilschiki_g",
+    "race_drevnie_krylatye_g",
+    "race_lamii_g",
+    "race_poslednie_krylya_g",
+    "race_tumanniki_g",
+    "race_skalogrudye_velikany_g",
+    "race_srebrorogi_g",
+    "race_inistye_velikany_g",
+    "race_yantarniki_g",
+    "race_gromovniki_g",
+    "race_moroki_g",
+    "race_gorynychi_g",
+    "race_poludennicy_g",
+    "race_hraniteli_poroga_g",
+    "race_hramovye_nagi_g",
+    "race_oblachnye_kity_g",
+    "race_serebryanye_elfy_g",
+    "race_korni_mira_g",
+    "race_rassvetnye_g",
+    "race_pervye_zveri_g",
+    "race_shelkopryady_tishiny_g",
+    "race_spyaschie_gory_g",
+    "race_oazisnye_lamii_g",
+    "race_kuznechnye_ciklopy_g",
+    "race_rassvetnye_tumanniki_g",
+    "race_tleyuschie_ispoliny_g",
+    "race_belye_lani_g",
+    "race_shkvalnye_virmy_g",
+    "race_yantarnye_ozherelniki_g",
+    "race_bezdonnye_g",
+    "race_zerkalnye_moroki_g",
+    "race_stolpy_grani_g",
+    "race_zhneicy_poludnya_g",
+    "race_drevneyshie_krylya_g",
+    "race_lesnye_kentavry_g",
+    "race_nakovalschiki_g",
+    "race_klyukvenniki_g",
+    "race_yarly_vyugi_g",
+    "race_kamyshniki_g",
+    "race_raskatnye_g",
+    "race_syrovary_g",
+    "race_trehglavye_g",
+    "race_privratniki_g",
+    "race_oblachnye_pastuhi_g",
+    "race_zverinye_praotcy_g",
+    "race_sny_kamnya_g"
+   ]
+  },
+  {
+   "id": "g3",
+   "speakers": [
+    "Orus",
+    "Achernar"
+   ],
+   "lines": [
+    "race_gnomy_g",
+    "race_elfy_g",
+    "race_zverolyudy_g",
+    "race_driady_g",
+    "race_kentavry_g",
+    "race_fei_g",
+    "race_vervolfy_g",
+    "race_krovavye_fei_g",
+    "race_tiflingi_g",
+    "race_undiny_g",
+    "race_runnye_karly_g",
+    "race_pegasy_g",
+    "race_tleyuschie_g",
+    "race_oblachnye_skakuny_g",
+    "race_uglezhogi_izoldy_g",
+    "race_silfy_g",
+    "race_nasledniki_harga_g",
+    "race_motylkovye_g",
+    "race_bolotniki_g",
+    "race_steklyannye_silfidy_g",
+    "race_bobrecy_g",
+    "race_kristallidy_g",
+    "race_zemleroyki_g",
+    "race_feniksy_g",
+    "race_zhabolyudy_g",
+    "race_zvezdnye_tkachi_g",
+    "race_medvelaki_g",
+    "race_snovidcy_g",
+    "race_polozy_g",
+    "race_shelkopryady_snov_g",
+    "race_ognekrovnye_g",
+    "race_pepelokrylye_g",
+    "race_grifony_g",
+    "race_zerkalnye_pticy_g",
+    "race_runovedy_g",
+    "race_solyanye_krachki_g",
+    "race_mednoborcy_g",
+    "race_shepotokrylye_g",
+    "race_kovylnye_kentavry_g",
+    "race_aeronidy_g",
+    "race_lunnye_volkolaki_g",
+    "race_vetrenicy_g",
+    "race_tinnye_yaschery_g",
+    "race_siriny_g",
+    "race_pechatniki_run_g",
+    "race_nochnicy_g",
+    "race_mednocheshuynye_g",
+    "race_alkonosty_g",
+    "race_melniki_zaprud_g",
+    "race_zhemchuzhnye_sireny_g",
+    "race_kornesluhi_g",
+    "race_zhar_pticy_g",
+    "race_trostnikovye_pevcy_g",
+    "race_sumerechnye_elfy_g",
+    "race_bortniki_g",
+    "race_zvonkie_kristallidy_g",
+    "race_mednye_polozy_g",
+    "race_plamennye_vestniki_g",
+    "race_gornokrovnye_g",
+    "race_tkachi_sozvezdiy_g",
+    "race_strazhi_zolotyh_gor_g",
+    "race_ognehvostye_g",
+    "race_zheleznoborodye_g",
+    "race_vyuzhnicy_g",
+    "race_barsuchi_lyudi_g",
+    "race_roschevye_siriny_g",
+    "race_serye_bratya_g",
+    "race_peschernye_nochnicy_g",
+    "race_peschanye_yaschery_g",
+    "race_uteshitelnicy_g",
+    "race_plotinschiki_g",
+    "race_sadovnicy_glubin_g",
+    "race_zhilniki_g",
+    "race_sadovye_zhar_pticy_g"
+   ]
+  },
+  {
+   "id": "g4",
+   "speakers": [
+    "Enceladus",
+    "Leda"
+   ],
+   "lines": [
+    "race_tenehodcy_g",
+    "race_gobliny_g",
+    "race_pustotniki_g",
+    "race_koboldy_g",
+    "race_padalschiki_korvaksa_g",
+    "race_garpii_g",
+    "race_bezymyannye_g",
+    "race_vyvodok_ulury_g",
+    "race_kostyanki_g",
+    "race_krovostrizhi_g",
+    "race_slepcy_niksora_g",
+    "race_yadokrylye_g",
+    "race_kostyanye_schetchiki_g",
+    "race_norushki_g",
+    "race_poslednie_g",
+    "race_lisoviny_g",
+    "race_pustokrylye_g",
+    "race_kikimory_g",
+    "race_sfinksy_g",
+    "race_murashniki_g",
+    "race_kamneglazy_g",
+    "race_svechnye_koboldy_g",
+    "race_veschuny_g",
+    "race_skalistye_garpii_g",
+    "race_kurgannye_shamany_g",
+    "race_sosnovye_kunyaki_g",
+    "race_polnochnye_hodoki_g",
+    "race_ambarnye_norushki_g",
+    "race_deti_bezmolviya_g",
+    "race_osochnicy_g",
+    "race_hraniteli_zagadok_g",
+    "race_lesnye_murashi_g",
+    "race_molchuny_vzglyada_g",
+    "race_rechnye_polurosliki_g",
+    "race_sshivateli_grani_g",
+    "race_vetrenye_garpii_g",
+    "race_voroni_veschuny_g",
+    "race_beregovye_arakokry_g",
+    "race_podpolnye_norushki_g"
+   ]
+  },
+  {
+   "id": "g5",
+   "speakers": [
+    "Achird",
+    "Puck"
+   ],
+   "lines": [
+    "race_lyudi_g",
+    "race_polurosliki_g",
+    "race_dzhinny_g",
+    "race_satiry_g",
+    "race_salamandry_g",
+    "race_favny_g",
+    "race_aasimary_g",
+    "race_leprekony_g",
+    "race_dvoyniki_g",
+    "race_arakokry_g",
+    "race_provozvestniki_g",
+    "race_nebesnye_tabunschiki_g",
+    "race_provozvestniki_neba_g",
+    "race_peschanye_dzhinny_g",
+    "race_berestyaniki_g",
+    "race_efirnye_stranniki_g",
+    "race_skalniki_g",
+    "race_lesoviki_g",
+    "race_sychi_g",
+    "race_hronoscy_g",
+    "race_solevary_g",
+    "race_kozhany_g",
+    "race_rechane_g",
+    "race_kostokrylye_g",
+    "race_rysi_lyudi_g",
+    "race_gnilokrylye_g",
+    "race_pogranichnye_tiflingi_g",
+    "race_uglekrylye_g",
+    "race_gornovye_salamandry_g",
+    "race_mnogokrylye_g",
+    "race_chasovschiki_vechnosti_g",
+    "race_sumerechniki_g",
+    "race_gateviki_g",
+    "race_kunyaki_g",
+    "race_tabunschiki_kovylya_g",
+    "race_domoviki_g",
+    "race_gramotei_beresty_g",
+    "race_poleviki_g",
+    "race_plotogony_g",
+    "race_holmichi_g",
+    "race_karnizniki_g",
+    "race_svalochniki_g",
+    "race_bashennye_sychi_g",
+    "race_gornye_arakokry_g",
+    "race_varnichane_g",
+    "race_zvezdnye_skitalcy_g",
+    "race_gorcy_g",
+    "race_zapechniki_g",
+    "race_tisovye_elfy_g",
+    "race_mezheviki_g",
+    "race_kumysniki_g",
+    "race_peschernye_gobliny_g",
+    "race_lykodery_g",
+    "race_lovushechniki_g",
+    "race_lesnye_sychi_g",
+    "race_skalnye_kunyaki_g",
+    "race_morskie_solevary_g"
+   ]
+  },
+  {
+   "id": "g6",
+   "speakers": [
+    "Iapetus",
+    "Erinome"
+   ],
+   "lines": [
+    "prof_komendant_g",
+    "prof_komendant_f_g",
+    "prof_strazhnik_g",
+    "prof_strazhnik_f_g",
+    "prof_lekar_g",
+    "prof_lekar_f_g",
+    "prof_pravitel_g",
+    "prof_pravitel_f_g",
+    "prof_sovetnik_g",
+    "prof_sovetnik_f_g",
+    "prof_hranitel_pamyati_g",
+    "prof_hranitel_pamyati_f_g",
+    "prof_inspektor_nadzora_g",
+    "prof_inspektor_nadzora_f_g",
+    "prof_stareyshina_g",
+    "prof_stareyshina_f_g",
+    "prof_fermer_g",
+    "prof_fermer_f_g",
+    "prof_celitelnica_g",
+    "prof_celitelnica_f_g",
+    "prof_shahter_issledovatel_g",
+    "prof_shahter_issledovatel_f_g",
+    "prof_ohotnik_na_morfozverey_g",
+    "prof_ohotnik_na_morfozverey_f_g",
+    "prof_strannik_g",
+    "prof_strannik_f_g",
+    "prof_poglotitel_g",
+    "prof_poglotitel_f_g",
+    "prof_kapitan_g",
+    "prof_kapitan_f_g",
+    "prof_torgovec_g",
+    "prof_torgovec_f_g",
+    "prof_gruzchik_g",
+    "prof_gruzchik_f_g",
+    "prof_portalnyy_inzhener_g",
+    "prof_portalnyy_inzhener_f_g",
+    "prof_izgnannik_doma_g",
+    "prof_izgnannik_doma_f_g",
+    "prof_voennyy_kartograf_g",
+    "prof_voennyy_kartograf_f_g",
+    "prof_naslednik_pavshego_doma_g",
+    "prof_traktirschik_g",
+    "prof_posetitel_g",
+    "prof_glava_klana_g",
+    "prof_voin_klana_g",
+    "prof_magistr_g",
+    "prof_uchenik_g",
+    "prof_nastavnik_puti_g",
+    "prof_arhivist_g",
+    "prof_zhrec_g",
+    "prof_kuznec_g",
+    "prof_master_yader_g",
+    "prof_mag_otshelnik_g",
+    "prof_obryadchik_g",
+    "prof_sluzhka_g",
+    "prof_schetchik_kostey_g",
+    "prof_nadsmotrschik_g",
+    "prof_shepchuschiy_g",
+    "prof_menyala_klyatv_g",
+    "prof_otverzhennyy_g",
+    "prof_vladyka_g",
+    "prof_kontrabandist_g",
+    "prof_sotnik_zastavy_g",
+    "prof_dezertir_g",
+    "prof_prigovorennyy_g",
+    "prof_otstupnik_g",
+    "say_soglasie_g",
+    "say_otkaz_g",
+    "say_somnenie_g",
+    "say_torg_g",
+    "say_proschanie_g",
+    "say_ugroza_g",
+    "say_bol_g"
+   ]
+  },
+  {
+   "id": "g7",
+   "speakers": [
+    "Algieba",
+    "Erinome"
+   ],
+   "lines": [
+    "hero_znanie_g",
+    "prof_naslednik_pavshego_doma_f_g",
+    "hero_kultura_g",
+    "prof_traktirschik_f_g",
+    "hero_nedoskazat_g",
+    "prof_posetitel_f_g",
+    "hero_rassprosit_g",
+    "prof_glava_klana_f_g",
+    "hero_utochnit_g",
+    "prof_voin_klana_f_g",
+    "hero_sluhi_g",
+    "prof_magistr_f_g",
+    "hero_sobytiya_g",
+    "prof_uchenik_f_g",
+    "hero_ubedit_g",
+    "prof_nastavnik_puti_f_g",
+    "hero_diplom_g",
+    "prof_arhivist_f_g",
+    "hero_prosit_g",
+    "prof_zhrec_f_g",
+    "hero_obeshat_g",
+    "prof_kuznec_f_g",
+    "hero_sporit_g",
+    "prof_master_yader_f_g",
+    "hero_vera_g",
+    "prof_mag_otshelnik_f_g",
+    "hero_vlast_g",
+    "prof_obryadchik_f_g",
+    "hero_torg_g",
+    "prof_sluzhka_f_g",
+    "hero_podkup_g",
+    "prof_schetchik_kostey_f_g",
+    "hero_obman_g",
+    "prof_nadsmotrschik_f_g",
+    "hero_zapugat_g",
+    "prof_shepchuschiy_f_g",
+    "hero_shantazh_g",
+    "prof_menyala_klyatv_f_g",
+    "hero_provoc_g",
+    "prof_otverzhennyy_f_g",
+    "hero_otkaz_g",
+    "prof_vladyka_f_g",
+    "prof_kontrabandist_f_g",
+    "prof_sotnik_zastavy_f_g",
+    "prof_dezertir_f_g",
+    "prof_prigovorennyy_f_g",
+    "prof_otstupnik_f_g",
+    "say_soglasie_f_g",
+    "say_otkaz_f_g",
+    "say_somnenie_f_g",
+    "say_torg_f_g",
+    "say_proschanie_f_g",
+    "say_ugroza_f_g",
+    "say_bol_f_g"
+   ]
+  }
+ ],
+ "lines": {
+  "race_lyudi_g": {
+   "who": "Люди",
+   "text": "Чужак в наших полях виден издалека",
+   "voice": "Achird",
+   "style": "friendly and natural"
+  },
+  "race_elfy_g": {
+   "who": "Эльфы",
+   "text": "Ты ступаешь громко даже когда молчишь",
+   "voice": "Achernar",
+   "style": "soft and melodic, natural pace"
+  },
+  "race_gnomy_g": {
+   "who": "Гномы",
+   "text": "Долг записан в камне, а камень терпелив",
+   "voice": "Orus",
+   "style": "firm and grounded, natural pace"
+  },
+  "race_orki_g": {
+   "who": "Орки",
+   "text": "Кто не держит слово, тот не удержит и топор",
+   "voice": "Algenib",
+   "style": "rough and gruff, natural pace"
+  },
+  "race_polurosliki_g": {
+   "who": "Полурослики",
+   "text": "Дорога кормит идущего, садись и ешь",
+   "voice": "Puck",
+   "style": "lively and quick"
+  },
+  "race_gobliny_g": {
+   "who": "Гоблины",
+   "text": "Мне бы твой сапог, а тебе бы мой нож",
+   "voice": "Leda",
+   "style": "lively and playful"
+  },
+  "race_trolli_g": {
+   "who": "Тролли",
+   "text": "Камень я переживу, тебя тем более",
+   "voice": "Algenib",
+   "style": "rough and gruff, natural pace"
+  },
+  "race_ogry_g": {
+   "who": "Огры",
+   "text": "Мало говорю, много ем, редко ошибаюсь",
+   "voice": "Algenib",
+   "style": "rough and gruff, natural pace"
+  },
+  "race_koboldy_g": {
+   "who": "Кобольды",
+   "text": "Мы копали тут раньше вас всех",
+   "voice": "Leda",
+   "style": "lively and playful"
+  },
+  "race_zverolyudy_g": {
+   "who": "Зверолюды",
+   "text": "Ты пахнешь дорогой и чужим страхом",
+   "voice": "Orus",
+   "style": "firm and grounded, natural pace"
+  },
+  "race_garpii_g": {
+   "who": "Гарпии",
+   "text": "Сверху всё видно, и тебя тоже видели",
+   "voice": "Leda",
+   "style": "lively and playful"
+  },
+  "race_minotavry_g": {
+   "who": "Минотавры",
+   "text": "В лабиринте прямых путей не бывает",
+   "voice": "Algenib",
+   "style": "rough and gruff, natural pace"
+  },
+  "race_kentavry_g": {
+   "who": "Кентавры",
+   "text": "Пешему со мной не по пути",
+   "voice": "Orus",
+   "style": "firm and grounded, natural pace"
+  },
+  "race_vervolfy_g": {
+   "who": "Вервольфы",
+   "text": "Днём мы соседи, ночью я за себя не отвечаю",
+   "voice": "Orus",
+   "style": "firm and grounded, natural pace"
+  },
+  "race_driady_g": {
+   "who": "Дриады",
+   "text": "Бери столько, сколько вырастет снова",
+   "voice": "Achernar",
+   "style": "soft and melodic, natural pace"
+  },
+  "race_satiry_g": {
+   "who": "Сатиры",
+   "text": "Сначала выпьем, потом решим, враги мы или нет",
+   "voice": "Puck",
+   "style": "lively and quick"
+  },
+  "race_favny_g": {
+   "who": "Фавны",
+   "text": "Свирель слышна дальше, чем крик",
+   "voice": "Puck",
+   "style": "lively and quick"
+  },
+  "race_fei_g": {
+   "who": "Феи",
+   "text": "Кто нас не видит, тот про нас и не врёт",
+   "voice": "Achernar",
+   "style": "soft and melodic, natural pace"
+  },
+  "race_leprekony_g": {
+   "who": "Лепреконы",
+   "text": "Счёт дружбе не помеха, а основа",
+   "voice": "Puck",
+   "style": "lively and quick"
+  },
+  "race_krovavye_fei_g": {
+   "who": "Кровавые феи",
+   "text": "Мы берём мелочью, но берём всегда",
+   "voice": "Achernar",
+   "style": "soft and melodic, natural pace"
+  },
+  "race_rusalki_g": {
+   "who": "Русалки",
+   "text": "Море возвращает своё, и тебя вернёт",
+   "voice": "Sulafat",
+   "style": "warm, natural pace"
+  },
+  "race_undiny_g": {
+   "who": "Ундины",
+   "text": "Вода не держит следов, а память держит",
+   "voice": "Achernar",
+   "style": "soft and melodic, natural pace"
+  },
+  "race_arakokry_g": {
+   "who": "Аракокры",
+   "text": "Небо не делится, и дорога тоже",
+   "voice": "Puck",
+   "style": "lively and quick"
+  },
+  "race_pegasy_g": {
+   "who": "Пегасы",
+   "text": "Тяжёлого я не понесу",
+   "voice": "Achernar",
+   "style": "soft and melodic, natural pace"
+  },
+  "race_nebesnye_tabunschiki_g": {
+   "who": "Небесные табунщики",
+   "text": "Табун ходит там, где ветер ровный",
+   "voice": "Puck",
+   "style": "lively and quick"
+  },
+  "race_oblachnye_skakuny_g": {
+   "who": "Облачные скакуны",
+   "text": "Держись крепче или не держись вовсе",
+   "voice": "Achernar",
+   "style": "soft and melodic, natural pace"
+  },
+  "race_yascherolyudy_g": {
+   "who": "Ящеролюды",
+   "text": "Холодная кровь не значит пустое сердце",
+   "voice": "Algenib",
+   "style": "rough and gruff, natural pace"
+  },
+  "race_ciklopy_g": {
+   "who": "Циклопы",
+   "text": "Один глаз, зато смотрит прямо",
+   "voice": "Algenib",
+   "style": "rough and gruff, natural pace"
+  },
+  "race_nagi_g": {
+   "who": "Наги",
+   "text": "Суди сам, но судить будут и тебя",
+   "voice": "Gacrux",
+   "style": "cool and confident, natural pace"
+  },
+  "race_tiflingi_g": {
+   "who": "Тифлинги",
+   "text": "За мою кровь мне уже заплатили сполна",
+   "voice": "Orus",
+   "style": "firm and grounded, natural pace"
+  },
+  "race_dzhinny_g": {
+   "who": "Джинны",
+   "text": "Имя — это договор, и ты его уже подписал",
+   "voice": "Achird",
+   "style": "friendly and natural"
+  },
+  "race_peschanye_dzhinny_g": {
+   "who": "Песчаные джинны",
+   "text": "В песках слово дороже воды",
+   "voice": "Puck",
+   "style": "lively and quick"
+  },
+  "race_golemy_g": {
+   "who": "Големы",
+   "text": "Мне приказали стоять, и я стою",
+   "voice": "Algenib",
+   "style": "rough and gruff, natural pace"
+  },
+  "race_kamennorozhdennye_g": {
+   "who": "Каменнорождённые",
+   "text": "Мы старше ваших имён и переживём их",
+   "voice": "Algenib",
+   "style": "rough and gruff, natural pace"
+  },
+  "race_silfy_g": {
+   "who": "Сильфы",
+   "text": "Мы бываем там, где вы только дышите",
+   "voice": "Achernar",
+   "style": "soft and melodic, natural pace"
+  },
+  "race_motylkovye_g": {
+   "who": "Мотыльковые",
+   "text": "На свет летят не от глупости, а от нужды",
+   "voice": "Achernar",
+   "style": "soft and melodic, natural pace"
+  },
+  "race_steklyannye_silfidy_g": {
+   "who": "Стеклянные сильфиды",
+   "text": "Тронешь — зазвенит, и все услышат",
+   "voice": "Achernar",
+   "style": "soft and melodic, natural pace"
+  },
+  "race_salamandry_g": {
+   "who": "Саламандры",
+   "text": "Сгори и начни заново, это не угроза",
+   "voice": "Achird",
+   "style": "friendly and natural"
+  },
+  "race_runnye_karly_g": {
+   "who": "Рунные карлы",
+   "text": "Рука дрогнет — руна солжёт",
+   "voice": "Orus",
+   "style": "firm and grounded, natural pace"
+  },
+  "race_kostyanye_shamany_g": {
+   "who": "Костяные шаманы",
+   "text": "Кость помнит дольше, чем мясо",
+   "voice": "Algenib",
+   "style": "rough and gruff, natural pace"
+  },
+  "race_drakonidy_g": {
+   "who": "Дракониды",
+   "text": "Кровь предков горяча, а долг холоден",
+   "voice": "Algenib",
+   "style": "rough and gruff, natural pace"
+  },
+  "race_tenehodcy_g": {
+   "who": "Тенеходцы",
+   "text": "Всё имеет цену, включая молчание",
+   "voice": "Enceladus",
+   "style": "quiet and mysterious, natural pace"
+  },
+  "race_pepelnye_velikany_g": {
+   "who": "Пепельные великаны",
+   "text": "Мы ходим там, где всё уже сгорело",
+   "voice": "Charon",
+   "style": "deep and majestic, natural pace"
+  },
+  "race_moroznye_veyry_g": {
+   "who": "Морозные вейры",
+   "text": "Зима рассудит, кто был прав",
+   "voice": "Gacrux",
+   "style": "cool and confident, natural pace"
+  },
+  "race_kristallidy_g": {
+   "who": "Кристаллиды",
+   "text": "Свет проходит сквозь нас и не врёт",
+   "voice": "Achernar",
+   "style": "soft and melodic, natural pace"
+  },
+  "race_efirnye_stranniki_g": {
+   "who": "Эфирные странники",
+   "text": "Мы здесь ненадолго, как и ты",
+   "voice": "Puck",
+   "style": "lively and quick"
+  },
+  "race_lunnye_elfy_g": {
+   "who": "Лунные эльфы",
+   "text": "Ночью видно больше, чем днём",
+   "voice": "Sulafat",
+   "style": "warm, natural pace"
+  },
+  "race_feniksy_g": {
+   "who": "Фениксы",
+   "text": "Я уже умирал, это не страшно",
+   "voice": "Achernar",
+   "style": "soft and melodic, natural pace"
+  },
+  "race_svetlorozhdennye_g": {
+   "who": "Светлорождённые",
+   "text": "Клятва дороже жизни, и жизнь это знает",
+   "voice": "Sulafat",
+   "style": "warm, natural pace"
+  },
+  "race_aasimary_g": {
+   "who": "Аасимары",
+   "text": "Мне велено помогать, а не выбирать кому",
+   "voice": "Achird",
+   "style": "friendly and natural"
+  },
+  "race_drevnie_enty_g": {
+   "who": "Древние энты",
+   "text": "Спешка — болезнь коротко живущих",
+   "voice": "Charon",
+   "style": "deep and majestic, natural pace"
+  },
+  "race_lesoviki_g": {
+   "who": "Лесовики",
+   "text": "Лес пропустил тебя, значит и я пропущу",
+   "voice": "Puck",
+   "style": "lively and quick"
+  },
+  "race_shtormovye_virmy_g": {
+   "who": "Штормовые вирмы",
+   "text": "Гром идёт впереди нас, а мы не спешим",
+   "voice": "Charon",
+   "style": "deep and majestic, natural pace"
+  },
+  "race_zvezdnye_tkachi_g": {
+   "who": "Звёздные ткачи",
+   "text": "Нить уже протянута, ты просто её не видишь",
+   "voice": "Achernar",
+   "style": "soft and melodic, natural pace"
+  },
+  "race_glubinnye_leviafany_g": {
+   "who": "Глубинные левиафаны",
+   "text": "На нашей глубине свет — чужак",
+   "voice": "Charon",
+   "style": "deep and majestic, natural pace"
+  },
+  "race_hronoscy_g": {
+   "who": "Хроносцы",
+   "text": "Мы уже говорили это, ты просто не помнишь",
+   "voice": "Puck",
+   "style": "lively and quick"
+  },
+  "race_pustotniki_g": {
+   "who": "Пустотники",
+   "text": "Там, откуда мы, нет ни верха, ни низа",
+   "voice": "Enceladus",
+   "style": "quiet and mysterious, natural pace"
+  },
+  "race_pervorozhdennye_zari_g": {
+   "who": "Перворождённые Зари",
+   "text": "Первый свет был наш, остальное ваше",
+   "voice": "Sulafat",
+   "style": "warm, natural pace"
+  },
+  "race_titany_grani_g": {
+   "who": "Титаны Грани",
+   "text": "Мы держали небо, пока вы учились ходить",
+   "voice": "Charon",
+   "style": "deep and majestic, natural pace"
+  },
+  "race_drakony_praroditeli_g": {
+   "who": "Драконы-прародители",
+   "text": "Имя, которым ты нас зовёшь, мы дали себе сами",
+   "voice": "Charon",
+   "style": "deep and majestic, natural pace"
+  },
+  "race_gribozhory_g": {
+   "who": "Грибожоры",
+   "text": "Сырость кормит, а свет только сушит",
+   "voice": "Algenib",
+   "style": "rough and gruff, natural pace"
+  },
+  "race_pepelnye_deti_g": {
+   "who": "Пепельные дети",
+   "text": "Пепел тёплый, садись, пока не остыл",
+   "voice": "Sulafat",
+   "style": "warm, natural pace"
+  },
+  "race_kozhany_g": {
+   "who": "Кожаны",
+   "text": "Днём нас нет, и ночью нас тоже нет",
+   "voice": "Puck",
+   "style": "lively and quick"
+  },
+  "race_utoplenniki_g": {
+   "who": "Утопленники",
+   "text": "Вода нас не отпустила, и тебя не отпустит",
+   "voice": "Algenib",
+   "style": "rough and gruff, natural pace"
+  },
+  "race_padalschiki_korvaksa_g": {
+   "who": "Падальщики Корвакса",
+   "text": "Мы приходим после, и нам всегда есть что взять",
+   "voice": "Enceladus",
+   "style": "quiet and mysterious, natural pace"
+  },
+  "race_chervehody_g": {
+   "who": "Червеходы",
+   "text": "Ход прорыт, а идти или нет — твоё дело",
+   "voice": "Algenib",
+   "style": "rough and gruff, natural pace"
+  },
+  "race_bezymyannye_g": {
+   "who": "Безымянные",
+   "text": "Имени нет, спрашивать нечего",
+   "voice": "Enceladus",
+   "style": "quiet, natural pace"
+  },
+  "race_golodnye_g": {
+   "who": "Голодные",
+   "text": "Мы не злые, мы просто никогда не сыты",
+   "voice": "Algenib",
+   "style": "rough and gruff, natural pace"
+  },
+  "race_kostyanki_g": {
+   "who": "Костянки",
+   "text": "Мясо уходит, кость остаётся",
+   "voice": "Enceladus",
+   "style": "quiet, natural pace"
+  },
+  "race_shepchuschie_g": {
+   "who": "Шепчущие",
+   "text": "Слушай ниже, я говорю не сюда",
+   "voice": "Gacrux",
+   "style": "cool and confident, natural pace"
+  },
+  "race_krovniki_g": {
+   "who": "Кровники",
+   "text": "Долг крови считают до последней капли",
+   "voice": "Gacrux",
+   "style": "cool and confident, natural pace"
+  },
+  "race_zerkalcy_g": {
+   "who": "Зеркальцы",
+   "text": "Посмотри на меня и скажи, кто из нас настоящий",
+   "voice": "Sulafat",
+   "style": "warm, natural pace"
+  },
+  "race_snovidcy_g": {
+   "who": "Сновидцы",
+   "text": "Ты спишь, просто ещё не заметил",
+   "voice": "Achernar",
+   "style": "soft and melodic, natural pace"
+  },
+  "race_mnogorukie_g": {
+   "who": "Многорукие",
+   "text": "Чем больше рук, тем меньше споров",
+   "voice": "Algenib",
+   "style": "rough and gruff, natural pace"
+  },
+  "race_tleyuschie_g": {
+   "who": "Тлеющие",
+   "text": "Горим медленно, зато давно",
+   "voice": "Orus",
+   "style": "firm and grounded, natural pace"
+  },
+  "race_slepcy_niksora_g": {
+   "who": "Слепцы Никсора",
+   "text": "Глаза нам мешали, мы их отдали",
+   "voice": "Enceladus",
+   "style": "quiet and mysterious, natural pace"
+  },
+  "race_vyvodok_ulury_g": {
+   "who": "Выводок Улуры",
+   "text": "Нас много, и мать считает каждого",
+   "voice": "Leda",
+   "style": "lively and playful"
+  },
+  "race_pustotelye_g": {
+   "who": "Пустотелые",
+   "text": "Внутри у нас место, и оно не занято",
+   "voice": "Charon",
+   "style": "deep and majestic, natural pace"
+  },
+  "race_krovavaya_znat_g": {
+   "who": "Кровавая знать",
+   "text": "Кровь бывает голубой, а бывает нужной",
+   "voice": "Gacrux",
+   "style": "cool and confident, natural pace"
+  },
+  "race_kostyanye_schetchiki_g": {
+   "who": "Костяные счётчики",
+   "text": "Мы считаем всё, и тебя уже посчитали",
+   "voice": "Enceladus",
+   "style": "quiet and mysterious, natural pace"
+  },
+  "race_dvoyniki_g": {
+   "who": "Двойники",
+   "text": "Я уже был тобой, и мне не понравилось",
+   "voice": "Achird",
+   "style": "friendly and natural"
+  },
+  "race_shelkopryady_snov_g": {
+   "who": "Шелкопряды снов",
+   "text": "Нить сна тонка, но держит крепче верёвки",
+   "voice": "Achernar",
+   "style": "soft and melodic, natural pace"
+  },
+  "race_gnilokoronnye_g": {
+   "who": "Гнилокоронные",
+   "text": "Корона осталась, голова не обязательна",
+   "voice": "Algenib",
+   "style": "rough and gruff, natural pace"
+  },
+  "race_solyanye_vdovy_g": {
+   "who": "Соляные вдовы",
+   "text": "Соль сушит слёзы, поэтому мы их не льём",
+   "voice": "Gacrux",
+   "style": "cool and confident, natural pace"
+  },
+  "race_pepelnye_kuznecy_g": {
+   "who": "Пепельные кузнецы",
+   "text": "Горн остыл, а заказы остались",
+   "voice": "Charon",
+   "style": "deep and majestic, natural pace"
+  },
+  "race_drevnie_bezymyannye_g": {
+   "who": "Древние безымянные",
+   "text": "Имени нет, а память есть",
+   "voice": "Charon",
+   "style": "deep and majestic, natural pace"
+  },
+  "race_terzayuschie_g": {
+   "who": "Терзающие",
+   "text": "Мы не спорим, мы разбираем",
+   "voice": "Algenib",
+   "style": "rough and gruff, natural pace"
+  },
+  "race_uglezhogi_izoldy_g": {
+   "who": "Углежоги Изольды",
+   "text": "Уголь горит, пока о нём не вспомнят",
+   "voice": "Orus",
+   "style": "firm and grounded, natural pace"
+  },
+  "race_provozvestniki_g": {
+   "who": "Провозвестники",
+   "text": "День назначен, и он уже близко",
+   "voice": "Achird",
+   "style": "friendly and natural"
+  },
+  "race_nasledniki_harga_g": {
+   "who": "Наследники Харга",
+   "text": "Харг ушёл, а счёт остался за нами",
+   "voice": "Orus",
+   "style": "firm and grounded, natural pace"
+  },
+  "race_lunnye_obratnye_g": {
+   "who": "Лунные обратные",
+   "text": "Мы растём, когда луна убывает",
+   "voice": "Sulafat",
+   "style": "warm, natural pace"
+  },
+  "race_poslednie_g": {
+   "who": "Последние",
+   "text": "После нас никого, и это не жалоба",
+   "voice": "Enceladus",
+   "style": "quiet and mysterious, natural pace"
+  },
+  "race_pepelokrylye_g": {
+   "who": "Пепелокрылые",
+   "text": "Крылья в пепле, а летим выше вас",
+   "voice": "Achernar",
+   "style": "soft and melodic, natural pace"
+  },
+  "race_kostokrylye_g": {
+   "who": "Костокрылые",
+   "text": "Кость лёгкая, если её выточить",
+   "voice": "Puck",
+   "style": "lively and quick"
+  },
+  "race_zerkalnye_pticy_g": {
+   "who": "Зеркальные птицы",
+   "text": "В небе отражается то, чего внизу нет",
+   "voice": "Achernar",
+   "style": "soft and melodic, natural pace"
+  },
+  "race_krovostrizhi_g": {
+   "who": "Кровострижи",
+   "text": "Мы бьём на лету и не возвращаемся",
+   "voice": "Leda",
+   "style": "lively and playful"
+  },
+  "race_gnilokrylye_g": {
+   "who": "Гнилокрылые",
+   "text": "Летим низко, пахнем скверно, зато долетаем",
+   "voice": "Puck",
+   "style": "lively and quick"
+  },
+  "race_solyanye_krachki_g": {
+   "who": "Соляные крачки",
+   "text": "Над солью ветер ровный, держись за нами",
+   "voice": "Achernar",
+   "style": "soft and melodic, natural pace"
+  },
+  "race_uglekrylye_g": {
+   "who": "Углекрылые",
+   "text": "Искры с крыльев падают, берегись",
+   "voice": "Puck",
+   "style": "lively and quick"
+  },
+  "race_sonnye_skaty_g": {
+   "who": "Сонные скаты",
+   "text": "Мы спим в полёте, и это никому не мешает",
+   "voice": "Charon",
+   "style": "deep and majestic, natural pace"
+  },
+  "race_shepotokrylye_g": {
+   "who": "Шёпотокрылые",
+   "text": "Наши крылья не шумят, потому и слышно нас поздно",
+   "voice": "Achernar",
+   "style": "soft and melodic, natural pace"
+  },
+  "race_mnogokrylye_g": {
+   "who": "Многокрылые",
+   "text": "Считать крылья бесполезно, их больше",
+   "voice": "Puck",
+   "style": "lively and quick"
+  },
+  "race_provozvestniki_neba_g": {
+   "who": "Провозвестники неба",
+   "text": "Сверху срок виден раньше",
+   "voice": "Achird",
+   "style": "friendly and natural"
+  },
+  "race_pustokrylye_g": {
+   "who": "Пустокрылые",
+   "text": "Под нами нет тени, посмотри сам",
+   "voice": "Enceladus",
+   "style": "quiet and mysterious, natural pace"
+  },
+  "race_terzayuschie_v_nebe_g": {
+   "who": "Терзающие в небе",
+   "text": "Сверху выбирают, снизу только ждут",
+   "voice": "Algenib",
+   "style": "rough and gruff, natural pace"
+  },
+  "race_drevnie_krylatye_g": {
+   "who": "Древние крылатые",
+   "text": "Небо было нашим до того, как стало вашим",
+   "voice": "Charon",
+   "style": "deep and majestic, natural pace"
+  },
+  "race_aeronidy_g": {
+   "who": "Аэрониды",
+   "text": "Нас носит ветер, а не своя воля",
+   "voice": "Achernar",
+   "style": "soft and melodic, natural pace"
+  },
+  "race_sumerechniki_g": {
+   "who": "Сумеречники",
+   "text": "Между днём и ночью есть полоса, мы в ней живём",
+   "voice": "Puck",
+   "style": "lively and quick"
+  },
+  "race_yadokrylye_g": {
+   "who": "Ядокрылые",
+   "text": "Не дыши глубоко рядом с нами",
+   "voice": "Leda",
+   "style": "lively and playful"
+  },
+  "race_mnogoglazye_vestniki_g": {
+   "who": "Многоглазые вестники",
+   "text": "Смотрим всеми глазами и всё равно не всё видим",
+   "voice": "Gacrux",
+   "style": "cool and confident, natural pace"
+  },
+  "race_pepelnye_pegasy_g": {
+   "who": "Пепельные пегасы",
+   "text": "Возим только тех, кто не боится золы",
+   "voice": "Gacrux",
+   "style": "cool and confident, natural pace"
+  },
+  "race_poslednie_krylya_g": {
+   "who": "Последние крылья",
+   "text": "Нас мало, поэтому мы считаем каждого",
+   "voice": "Charon",
+   "style": "deep and majestic, natural pace"
+  },
+  "race_bolotniki_g": {
+   "who": "Болотники",
+   "text": "Иди за мной след в след, иначе болото тебя оставит",
+   "voice": "Orus",
+   "style": "firm and grounded, natural pace"
+  },
+  "race_kovylniki_g": {
+   "who": "Ковыльники",
+   "text": "Ветер в степи один, а дорог под ним тысяча",
+   "voice": "Sulafat",
+   "style": "warm, natural pace"
+  },
+  "race_berestyaniki_g": {
+   "who": "Берестяники",
+   "text": "Что записано на бересте, то и было",
+   "voice": "Achird",
+   "style": "friendly and natural"
+  },
+  "race_deltoviki_g": {
+   "who": "Дельтовики",
+   "text": "Река всегда знает, куда ей течь",
+   "voice": "Sulafat",
+   "style": "warm, natural pace"
+  },
+  "race_kunyaki_g": {
+   "who": "Куньяки",
+   "text": "Меня тут не было, и ты меня не видел",
+   "voice": "Puck",
+   "style": "lively and quick"
+  },
+  "race_bobrecy_g": {
+   "who": "Бобрецы",
+   "text": "Сначала плотина, разговоры потом",
+   "voice": "Orus",
+   "style": "firm and grounded, natural pace"
+  },
+  "race_skalniki_g": {
+   "who": "Скальники",
+   "text": "На перевал без меня не ходи",
+   "voice": "Achird",
+   "style": "friendly and natural"
+  },
+  "race_norushki_g": {
+   "who": "Норушки",
+   "text": "Под полом всё слышно, и я всё слышала",
+   "voice": "Leda",
+   "style": "lively and playful"
+  },
+  "race_zemleroyki_g": {
+   "who": "Землеройки",
+   "text": "Глаза врут, а земля никогда",
+   "voice": "Orus",
+   "style": "firm and grounded, natural pace"
+  },
+  "race_zhabolyudy_g": {
+   "who": "Жаболюды",
+   "text": "Ква — это не песня, это предупреждение",
+   "voice": "Orus",
+   "style": "firm and grounded, natural pace"
+  },
+  "race_sychi_g": {
+   "who": "Сычи",
+   "text": "Ночью видно то, что днём прячется",
+   "voice": "Achird",
+   "style": "friendly and natural"
+  },
+  "race_solevary_g": {
+   "who": "Солевары",
+   "text": "Соль и хлеб, путник, а там поговорим",
+   "voice": "Achird",
+   "style": "friendly and natural"
+  },
+  "race_medvelaki_g": {
+   "who": "Медвелаки",
+   "text": "Разбудишь зря — пожалеешь до весны",
+   "voice": "Orus",
+   "style": "firm and grounded, natural pace"
+  },
+  "race_lisoviny_g": {
+   "who": "Лисовины",
+   "text": "Честная цена? Какая честная, такая и цена",
+   "voice": "Leda",
+   "style": "lively and playful"
+  },
+  "race_vodyaniki_g": {
+   "who": "Водяники",
+   "text": "Без поклона в мою воду не заходи",
+   "voice": "Algenib",
+   "style": "rough and gruff, natural pace"
+  },
+  "race_kikimory_g": {
+   "who": "Кикиморы",
+   "text": "Шорох в осоке — это я, а не ветер",
+   "voice": "Leda",
+   "style": "lively and playful"
+  },
+  "race_domoviki_g": {
+   "who": "Домовики",
+   "text": "Кто печь бережёт, того и печь бережёт",
+   "voice": "Puck",
+   "style": "lively and quick"
+  },
+  "race_poleviki_g": {
+   "who": "Полевики",
+   "text": "Межу не трогай, и хлеб будет",
+   "voice": "Puck",
+   "style": "lively and quick"
+  },
+  "race_vetrenicy_g": {
+   "who": "Ветреницы",
+   "text": "Ветер принёс вести, а ты слушай",
+   "voice": "Achernar",
+   "style": "soft and melodic, natural pace"
+  },
+  "race_polozy_g": {
+   "who": "Полозы",
+   "text": "Жилу покажу тому, кто не жаден",
+   "voice": "Orus",
+   "style": "firm and grounded, natural pace"
+  },
+  "race_ineeviki_g": {
+   "who": "Инеевики",
+   "text": "Холод не злой, он честный",
+   "voice": "Algenib",
+   "style": "rough and gruff, natural pace"
+  },
+  "race_murashniki_g": {
+   "who": "Мурашники",
+   "text": "Нас много, и каждый знает своё дело",
+   "voice": "Leda",
+   "style": "lively and playful"
+  },
+  "race_pryadilschiki_g": {
+   "who": "Прядильщики",
+   "text": "Каждая нить куда-нибудь ведёт",
+   "voice": "Sulafat",
+   "style": "warm, natural pace"
+  },
+  "race_lamii_g": {
+   "who": "Ламии",
+   "text": "Послушай песню, путник, она недолгая",
+   "voice": "Sulafat",
+   "style": "warm, natural pace"
+  },
+  "race_siriny_g": {
+   "who": "Сирины",
+   "text": "Не слушай меня долго, дорогу забудешь",
+   "voice": "Achernar",
+   "style": "soft and melodic, natural pace"
+  },
+  "race_sfinksy_g": {
+   "who": "Сфинксы",
+   "text": "Ответь, и пройдёшь. Не ответишь — останешься",
+   "voice": "Enceladus",
+   "style": "quiet and mysterious, natural pace"
+  },
+  "race_ognekrovnye_g": {
+   "who": "Огнекровные",
+   "text": "Тронешь — обожжёшься. Предупреждаю один раз",
+   "voice": "Orus",
+   "style": "firm and grounded, natural pace"
+  },
+  "race_kamneglazy_g": {
+   "who": "Камнеглазы",
+   "text": "Смотри в сторону, когда говоришь со мной",
+   "voice": "Enceladus",
+   "style": "quiet and mysterious, natural pace"
+  },
+  "race_tumanniki_g": {
+   "who": "Туманники",
+   "text": "Меня не видно, но я здесь",
+   "voice": "Sulafat",
+   "style": "warm, natural pace"
+  },
+  "race_nochnicy_g": {
+   "who": "Ночницы",
+   "text": "Темнота мне дом, а тебе дорога",
+   "voice": "Achernar",
+   "style": "soft and melodic, natural pace"
+  },
+  "race_pancirniki_g": {
+   "who": "Панцирники",
+   "text": "Куда спешить? Я ещё успею",
+   "voice": "Algenib",
+   "style": "rough and gruff, natural pace"
+  },
+  "race_micelidy_g": {
+   "who": "Мицелиды",
+   "text": "Все мы из одного корня, путник",
+   "voice": "Gacrux",
+   "style": "cool and confident, natural pace"
+  },
+  "race_srebrorogi_g": {
+   "who": "Сребророги",
+   "text": "Иди за светом, и выйдешь",
+   "voice": "Sulafat",
+   "style": "warm, natural pace"
+  },
+  "race_yantarniki_g": {
+   "who": "Янтарники",
+   "text": "В янтаре всё хранится, и ты тоже сохранишься",
+   "voice": "Sulafat",
+   "style": "warm, natural pace"
+  },
+  "race_alkonosty_g": {
+   "who": "Алконосты",
+   "text": "Поплачь, путник, а потом я спою",
+   "voice": "Achernar",
+   "style": "soft and melodic, natural pace"
+  },
+  "race_grifony_g": {
+   "who": "Грифоны",
+   "text": "Выбери высоту, и я выберу тебя",
+   "voice": "Orus",
+   "style": "firm and grounded, natural pace"
+  },
+  "race_skalogrudye_velikany_g": {
+   "who": "Скалогрудые великаны",
+   "text": "Моя наковальня — эта гора",
+   "voice": "Charon",
+   "style": "deep and majestic, natural pace"
+  },
+  "race_moroki_g": {
+   "who": "Мороки",
+   "text": "Ты видишь меня таким, каким хочешь",
+   "voice": "Sulafat",
+   "style": "warm, natural pace"
+  },
+  "race_poludennicy_g": {
+   "who": "Полуденницы",
+   "text": "В полдень работают, а не бродят",
+   "voice": "Sulafat",
+   "style": "warm, natural pace"
+  },
+  "race_zhemchuzhnye_sireny_g": {
+   "who": "Жемчужные сирены",
+   "text": "Море помнит всех, кто в нём пел",
+   "voice": "Achernar",
+   "style": "soft and melodic, natural pace"
+  },
+  "race_runovedy_g": {
+   "who": "Руноведы",
+   "text": "Каждая трещина в мире — это строка",
+   "voice": "Orus",
+   "style": "firm and grounded, natural pace"
+  },
+  "race_inistye_velikany_g": {
+   "who": "Инистые великаны",
+   "text": "Зима не спешит, и я не спешу",
+   "voice": "Charon",
+   "style": "deep and majestic, natural pace"
+  },
+  "race_zhar_pticy_g": {
+   "who": "Жар-птицы",
+   "text": "Одно перо — и ночь не страшна",
+   "voice": "Achernar",
+   "style": "soft and melodic, natural pace"
+  },
+  "race_gromovniki_g": {
+   "who": "Громовники",
+   "text": "Слышишь раскат? Это я здороваюсь",
+   "voice": "Charon",
+   "style": "deep and majestic, natural pace"
+  },
+  "race_gorynychi_g": {
+   "who": "Горынычи",
+   "text": "Три головы, а решать всё равно мне",
+   "voice": "Charon",
+   "style": "deep and majestic, natural pace"
+  },
+  "race_veschuny_g": {
+   "who": "Вещуны",
+   "text": "Завтра я уже видел, а ты ещё нет",
+   "voice": "Enceladus",
+   "style": "quiet and mysterious, natural pace"
+  },
+  "race_hraniteli_poroga_g": {
+   "who": "Хранители Порога",
+   "text": "Проходи, если пора. А если нет — возвращайся",
+   "voice": "Charon",
+   "style": "deep and majestic, natural pace"
+  },
+  "race_oblachnye_kity_g": {
+   "who": "Облачные киты",
+   "text": "Я плыву, а берег сам ко мне приходит",
+   "voice": "Charon",
+   "style": "deep and majestic, natural pace"
+  },
+  "race_korni_mira_g": {
+   "who": "Корни Мира",
+   "text": "Под тобой мы, путник, и мы держим",
+   "voice": "Charon",
+   "style": "deep and majestic, natural pace"
+  },
+  "race_beznachalnye_g": {
+   "who": "Безначальные",
+   "text": "Я помню, как ты родился, и как ещё родишься",
+   "voice": "Gacrux",
+   "style": "cool and confident, natural pace"
+  },
+  "race_pervye_zveri_g": {
+   "who": "Первые Звери",
+   "text": "Каждый зверь в лесу — мой внук",
+   "voice": "Charon",
+   "style": "deep and majestic, natural pace"
+  },
+  "race_spyaschie_gory_g": {
+   "who": "Спящие Горы",
+   "text": "Не буди меня без нужды, я держу мир",
+   "voice": "Charon",
+   "style": "deep and majestic, natural pace"
+  },
+  "race_rechane_g": {
+   "who": "Речане",
+   "text": "Река кормит, река и судит",
+   "voice": "Achird",
+   "style": "friendly and natural"
+  },
+  "race_sumerechnye_elfy_g": {
+   "who": "Сумеречные эльфы",
+   "text": "На опушке видно обе стороны мира",
+   "voice": "Achernar",
+   "style": "soft and melodic, natural pace"
+  },
+  "race_mednoborcy_g": {
+   "who": "Медноборцы",
+   "text": "Медь поёт, если её правильно ударить",
+   "voice": "Orus",
+   "style": "firm and grounded, natural pace"
+  },
+  "race_stepnye_orki_g": {
+   "who": "Степные орки",
+   "text": "Вепрь бежит, орк правит, степь молчит",
+   "voice": "Algenib",
+   "style": "rough and gruff, natural pace"
+  },
+  "race_holmichi_g": {
+   "who": "Холмичи",
+   "text": "Сначала обед, потом приключения",
+   "voice": "Puck",
+   "style": "lively and quick"
+  },
+  "race_svalochniki_g": {
+   "who": "Свалочники",
+   "text": "Выбросил? Значит, моё",
+   "voice": "Puck",
+   "style": "lively and quick"
+  },
+  "race_svechnye_koboldy_g": {
+   "who": "Свечные кобольды",
+   "text": "Без свечи в шахте ни шагу",
+   "voice": "Leda",
+   "style": "lively and playful"
+  },
+  "race_rysi_lyudi_g": {
+   "who": "Рысьи люди",
+   "text": "Рысь ждёт, а потом не промахивается",
+   "voice": "Achird",
+   "style": "friendly and natural"
+  },
+  "race_skalistye_garpii_g": {
+   "who": "Скалистые гарпии",
+   "text": "Кричу громче бури, и буря слушает",
+   "voice": "Leda",
+   "style": "lively and playful"
+  },
+  "race_labirintniki_g": {
+   "who": "Лабиринтники",
+   "text": "Выход есть всегда, но не для всех",
+   "voice": "Algenib",
+   "style": "rough and gruff, natural pace"
+  },
+  "race_kovylnye_kentavry_g": {
+   "who": "Ковыльные кентавры",
+   "text": "Стрела быстрее ветра, если её пустил кентавр",
+   "voice": "Orus",
+   "style": "firm and grounded, natural pace"
+  },
+  "race_lunnye_volkolaki_g": {
+   "who": "Лунные волколаки",
+   "text": "Сегодня луна не полная, тебе повезло",
+   "voice": "Orus",
+   "style": "firm and grounded, natural pace"
+  },
+  "race_gornye_arakokry_g": {
+   "who": "Горные аракокры",
+   "text": "С высоты видно, кто врёт",
+   "voice": "Puck",
+   "style": "lively and quick"
+  },
+  "race_tinnye_yaschery_g": {
+   "who": "Тинные ящеры",
+   "text": "Ил тёплый, а ты замёрз",
+   "voice": "Orus",
+   "style": "firm and grounded, natural pace"
+  },
+  "race_kuznechnye_ciklopy_g": {
+   "who": "Кузнечные циклопы",
+   "text": "Один глаз, одна наковальня, один удар",
+   "voice": "Charon",
+   "style": "deep and majestic, natural pace"
+  },
+  "race_hramovye_nagi_g": {
+   "who": "Храмовые наги",
+   "text": "Храм затоплен, но боги в нём не утонули",
+   "voice": "Sulafat",
+   "style": "warm, natural pace"
+  },
+  "race_pogranichnye_tiflingi_g": {
+   "who": "Пограничные тифлинги",
+   "text": "Грань близко, а страх далеко",
+   "voice": "Achird",
+   "style": "friendly and natural"
+  },
+  "race_gornovye_salamandry_g": {
+   "who": "Горновые саламандры",
+   "text": "Холодно мне только без огня",
+   "voice": "Achird",
+   "style": "friendly and natural"
+  },
+  "race_pechatniki_run_g": {
+   "who": "Печатники рун",
+   "text": "Печать поставлена — дверь молчит",
+   "voice": "Orus",
+   "style": "firm and grounded, natural pace"
+  },
+  "race_kurgannye_shamany_g": {
+   "who": "Курганные шаманы",
+   "text": "Курган помнит больше, чем летопись",
+   "voice": "Enceladus",
+   "style": "quiet and mysterious, natural pace"
+  },
+  "race_mednocheshuynye_g": {
+   "who": "Медночешуйные",
+   "text": "Слово драконида крепче чешуи",
+   "voice": "Orus",
+   "style": "firm and grounded, natural pace"
+  },
+  "race_polnochnye_hodoki_g": {
+   "who": "Полночные ходоки",
+   "text": "Полночь — моя дорога",
+   "voice": "Enceladus",
+   "style": "quiet and mysterious, natural pace"
+  },
+  "race_tleyuschie_ispoliny_g": {
+   "who": "Тлеющие исполины",
+   "text": "Пепел тёплый, пока я здесь",
+   "voice": "Charon",
+   "style": "deep and majestic, natural pace"
+  },
+  "race_metelnye_veyry_g": {
+   "who": "Метельные вейры",
+   "text": "Метель за мной, а ты вперёд иди",
+   "voice": "Gacrux",
+   "style": "cool and confident, natural pace"
+  },
+  "race_zvonkie_kristallidy_g": {
+   "who": "Звонкие кристаллиды",
+   "text": "Слышишь звон? Это я отвечаю",
+   "voice": "Achernar",
+   "style": "soft and melodic, natural pace"
+  },
+  "race_zvezdnye_skitalcy_g": {
+   "who": "Звёздные скитальцы",
+   "text": "Между звёздами тоже есть дороги",
+   "voice": "Puck",
+   "style": "lively and quick"
+  },
+  "race_serebryanye_elfy_g": {
+   "who": "Серебряные эльфы",
+   "text": "Луна — наша память о свете",
+   "voice": "Sulafat",
+   "style": "warm, natural pace"
+  },
+  "race_plamennye_vestniki_g": {
+   "who": "Пламенные вестники",
+   "text": "Сгорю и вернусь с новостями",
+   "voice": "Achernar",
+   "style": "soft and melodic, natural pace"
+  },
+  "race_shkvalnye_virmy_g": {
+   "who": "Шквальные вирмы",
+   "text": "Шторм — это мой шаг",
+   "voice": "Charon",
+   "style": "deep and majestic, natural pace"
+  },
+  "race_tkachi_sozvezdiy_g": {
+   "who": "Ткачи созвездий",
+   "text": "Одна нить от звезды к тебе",
+   "voice": "Achernar",
+   "style": "soft and melodic, natural pace"
+  },
+  "race_bezdonnye_g": {
+   "who": "Бездонные",
+   "text": "Там, где я живу, нет дна",
+   "voice": "Charon",
+   "style": "deep and majestic, natural pace"
+  },
+  "race_chasovschiki_vechnosti_g": {
+   "who": "Часовщики вечности",
+   "text": "Минута у тебя, а вечность у меня",
+   "voice": "Achird",
+   "style": "friendly and natural"
+  },
+  "race_deti_bezmolviya_g": {
+   "who": "Дети безмолвия",
+   "text": "Тишина говорит громче слов",
+   "voice": "Enceladus",
+   "style": "quiet and mysterious, natural pace"
+  },
+  "race_rassvetnye_g": {
+   "who": "Рассветные",
+   "text": "Первый луч мой, остальные твои",
+   "voice": "Sulafat",
+   "style": "warm, natural pace"
+  },
+  "race_stolpy_grani_g": {
+   "who": "Столпы Грани",
+   "text": "Небо тяжёлое, но я держу",
+   "voice": "Charon",
+   "style": "deep and majestic, natural pace"
+  },
+  "race_drevneyshie_krylya_g": {
+   "who": "Древнейшие крылья",
+   "text": "Я помню, когда горы были молоды",
+   "voice": "Charon",
+   "style": "deep and majestic, natural pace"
+  },
+  "race_gateviki_g": {
+   "who": "Гатевики",
+   "text": "Гать держит тех, кто её уважает",
+   "voice": "Achird",
+   "style": "friendly and natural"
+  },
+  "race_tabunschiki_kovylya_g": {
+   "who": "Табунщики ковыля",
+   "text": "Конь чует дорогу раньше всадника",
+   "voice": "Achird",
+   "style": "friendly and natural, clear diction"
+  },
+  "race_gramotei_beresty_g": {
+   "who": "Грамотеи бересты",
+   "text": "Каждое слово на бересте живёт сто лет",
+   "voice": "Achird",
+   "style": "friendly and natural"
+  },
+  "race_plotogony_g": {
+   "who": "Плотогоны",
+   "text": "Плот не тонет, если держать течение",
+   "voice": "Achird",
+   "style": "friendly and natural"
+  },
+  "race_sosnovye_kunyaki_g": {
+   "who": "Сосновые куньяки",
+   "text": "На сосне меня никто не достанет",
+   "voice": "Leda",
+   "style": "lively and playful"
+  },
+  "race_melniki_zaprud_g": {
+   "who": "Мельники запруд",
+   "text": "Вода крутит колесо, а колесо кормит",
+   "voice": "Orus",
+   "style": "firm and grounded, natural pace"
+  },
+  "race_karnizniki_g": {
+   "who": "Карнизники",
+   "text": "Шаг на карнизе один, и он верный",
+   "voice": "Achird",
+   "style": "friendly and natural"
+  },
+  "race_ambarnye_norushki_g": {
+   "who": "Амбарные норушки",
+   "text": "Зерно пересчитано, не беспокойся",
+   "voice": "Leda",
+   "style": "lively and playful"
+  },
+  "race_kornesluhi_g": {
+   "who": "Корнеслухи",
+   "text": "Корень скажет, где вода",
+   "voice": "Orus",
+   "style": "firm and grounded, natural pace"
+  },
+  "race_trostnikovye_pevcy_g": {
+   "who": "Тростниковые певцы",
+   "text": "Закат спели, теперь можно спать",
+   "voice": "Orus",
+   "style": "firm and grounded, natural pace"
+  },
+  "race_bashennye_sychi_g": {
+   "who": "Башенные сычи",
+   "text": "С башни видно все звёзды и все беды",
+   "voice": "Achird",
+   "style": "friendly and natural"
+  },
+  "race_varnichane_g": {
+   "who": "Варничане",
+   "text": "Варница дымит — значит, соль будет",
+   "voice": "Achird",
+   "style": "friendly and natural"
+  },
+  "race_bortniki_g": {
+   "who": "Бортники",
+   "text": "Мёд мой, пчёлы мои, а ты гость",
+   "voice": "Orus",
+   "style": "firm and grounded, natural pace"
+  },
+  "race_ognehvostye_g": {
+   "who": "Огнехвостые",
+   "text": "Хвост видишь? Больше ничего не увидишь",
+   "voice": "Achernar",
+   "style": "soft and melodic, natural pace"
+  },
+  "race_omutniki_g": {
+   "who": "Омутники",
+   "text": "Омут тихий, пока ты тихий",
+   "voice": "Algenib",
+   "style": "rough and gruff, natural pace"
+  },
+  "race_osochnicy_g": {
+   "who": "Осочницы",
+   "text": "В осоке тропа, а в тропе я",
+   "voice": "Leda",
+   "style": "lively and playful"
+  },
+  "race_zapechniki_g": {
+   "who": "Запечники",
+   "text": "Печь тёплая, и мне тепло",
+   "voice": "Puck",
+   "style": "lively and quick"
+  },
+  "race_mezheviki_g": {
+   "who": "Межевики",
+   "text": "Межа не для того, чтобы её топтать",
+   "voice": "Puck",
+   "style": "lively and quick"
+  },
+  "race_vyuzhnicy_g": {
+   "who": "Вьюжницы",
+   "text": "Вьюга поёт, а я подпеваю",
+   "voice": "Achernar",
+   "style": "soft and melodic, natural pace"
+  },
+  "race_mednye_polozy_g": {
+   "who": "Медные полозы",
+   "text": "Медь мне сестра, а ты мне кто?",
+   "voice": "Orus",
+   "style": "firm and grounded, natural pace"
+  },
+  "race_naledniki_g": {
+   "who": "Наледники",
+   "text": "Наледь крепкая, пока я на ней",
+   "voice": "Algenib",
+   "style": "rough and gruff, natural pace"
+  },
+  "race_lesnye_murashi_g": {
+   "who": "Лесные мураши",
+   "text": "Холм растёт, и мы растём",
+   "voice": "Leda",
+   "style": "lively and playful"
+  },
+  "race_shelkopryady_tishiny_g": {
+   "who": "Шелкопряды тишины",
+   "text": "Тише, нить не любит шума",
+   "voice": "Sulafat",
+   "style": "warm, natural pace"
+  },
+  "race_oazisnye_lamii_g": {
+   "who": "Оазисные ламии",
+   "text": "Вода есть, но за песню",
+   "voice": "Sulafat",
+   "style": "warm, natural pace"
+  },
+  "race_roschevye_siriny_g": {
+   "who": "Рощевые сирины",
+   "text": "В роще поют, а не спорят",
+   "voice": "Achernar",
+   "style": "soft and melodic, natural pace"
+  },
+  "race_hraniteli_zagadok_g": {
+   "who": "Хранители загадок",
+   "text": "Загадка у меня одна, ответов много",
+   "voice": "Enceladus",
+   "style": "quiet and mysterious, natural pace"
+  },
+  "race_gornokrovnye_g": {
+   "who": "Горнокровные",
+   "text": "Лава мне по колено",
+   "voice": "Orus",
+   "style": "firm and grounded, natural pace"
+  },
+  "race_molchuny_vzglyada_g": {
+   "who": "Молчуны взгляда",
+   "text": "Я уже сказал. Взглядом",
+   "voice": "Enceladus",
+   "style": "quiet and mysterious, natural pace"
+  },
+  "race_rassvetnye_tumanniki_g": {
+   "who": "Рассветные туманники",
+   "text": "Солнце встанет, и меня не станет",
+   "voice": "Sulafat",
+   "style": "warm, natural pace"
+  },
+  "race_peschernye_nochnicy_g": {
+   "who": "Пещерные ночницы",
+   "text": "В пещере эхо — мой второй голос",
+   "voice": "Achernar",
+   "style": "soft and melodic, natural pace"
+  },
+  "race_pribrezhnye_pancirniki_g": {
+   "who": "Прибрежные панцирники",
+   "text": "Отмель тёплая, спешить некуда",
+   "voice": "Algenib",
+   "style": "rough and gruff, natural pace"
+  },
+  "race_gribnicy_glubin_g": {
+   "who": "Грибницы глубин",
+   "text": "Сад под землёй растёт в темноте",
+   "voice": "Gacrux",
+   "style": "cool and confident, natural pace"
+  },
+  "race_belye_lani_g": {
+   "who": "Белые лани",
+   "text": "Я пришла — значит, беда рядом. Иди за мной",
+   "voice": "Sulafat",
+   "style": "warm, natural pace"
+  },
+  "race_yantarnye_ozherelniki_g": {
+   "who": "Янтарные ожерельники",
+   "text": "На каждой бусине — прадед",
+   "voice": "Sulafat",
+   "style": "warm, natural pace"
+  },
+  "race_uteshitelnicy_g": {
+   "who": "Утешительницы",
+   "text": "Горе уйдёт, песня останется",
+   "voice": "Achernar",
+   "style": "soft and melodic, natural pace"
+  },
+  "race_strazhi_zolotyh_gor_g": {
+   "who": "Стражи золотых гор",
+   "text": "Золото тут есть. Тебе не достанется",
+   "voice": "Orus",
+   "style": "firm and grounded, natural pace"
+  },
+  "race_nakovalschiki_g": {
+   "who": "Наковальщики",
+   "text": "Бью раз, и гора звенит",
+   "voice": "Charon",
+   "style": "deep and majestic, natural pace"
+  },
+  "race_zerkalnye_moroki_g": {
+   "who": "Зеркальные мороки",
+   "text": "Посмотри в воду. Видишь? Это я",
+   "voice": "Sulafat",
+   "style": "warm, natural pace"
+  },
+  "race_zhneicy_poludnya_g": {
+   "who": "Жнеицы полудня",
+   "text": "Жни, пока солнце высоко",
+   "voice": "Sulafat",
+   "style": "warm, natural pace"
+  },
+  "race_sadovnicy_glubin_g": {
+   "who": "Садовницы глубин",
+   "text": "В саду на дне всегда тихо",
+   "voice": "Achernar",
+   "style": "soft and melodic, natural pace"
+  },
+  "race_sshivateli_grani_g": {
+   "who": "Сшиватели Грани",
+   "text": "Трещина есть, а нить у меня",
+   "voice": "Enceladus",
+   "style": "quiet and mysterious, natural pace"
+  },
+  "race_yarly_vyugi_g": {
+   "who": "Ярлы вьюги",
+   "text": "Ярл сказал — вьюга пришла",
+   "voice": "Charon",
+   "style": "deep and majestic, natural pace"
+  },
+  "race_sadovye_zhar_pticy_g": {
+   "who": "Садовые жар-птицы",
+   "text": "В саду светло и ночью",
+   "voice": "Achernar",
+   "style": "soft and melodic, natural pace"
+  },
+  "race_raskatnye_g": {
+   "who": "Раскатные",
+   "text": "Первый гром — это мой",
+   "voice": "Charon",
+   "style": "deep and majestic, natural pace"
+  },
+  "race_trehglavye_g": {
+   "who": "Трёхглавые",
+   "text": "Три головы, три мнения",
+   "voice": "Charon",
+   "style": "deep and majestic, natural pace"
+  },
+  "race_voroni_veschuny_g": {
+   "who": "Вороньи вещуны",
+   "text": "Будет так, как я сказал",
+   "voice": "Enceladus",
+   "style": "quiet and mysterious, natural pace"
+  },
+  "race_privratniki_g": {
+   "who": "Привратники",
+   "text": "Дверь открою, но не сегодня",
+   "voice": "Charon",
+   "style": "deep and majestic, natural pace"
+  },
+  "race_oblachnye_pastuhi_g": {
+   "who": "Облачные пастухи",
+   "text": "Туча за мной, и дождь за тучей",
+   "voice": "Charon",
+   "style": "deep and majestic, natural pace"
+  },
+  "race_glubinnye_korni_g": {
+   "who": "Глубинные корни",
+   "text": "Земля бьётся, и я слышу",
+   "voice": "Algenib",
+   "style": "rough and gruff, natural pace"
+  },
+  "race_svideteli_g": {
+   "who": "Свидетели",
+   "text": "Я видел это раньше тебя",
+   "voice": "Gacrux",
+   "style": "cool and confident, natural pace"
+  },
+  "race_zverinye_praotcy_g": {
+   "who": "Звериные праотцы",
+   "text": "Лес зовёт меня отцом",
+   "voice": "Charon",
+   "style": "deep and majestic, natural pace"
+  },
+  "race_sny_kamnya_g": {
+   "who": "Сны камня",
+   "text": "Сплю и вижу камень",
+   "voice": "Charon",
+   "style": "deep and majestic, natural pace"
+  },
+  "race_gorcy_g": {
+   "who": "Горцы",
+   "text": "Горы держат слово, и мы тоже",
+   "voice": "Achird",
+   "style": "friendly and natural"
+  },
+  "race_tisovye_elfy_g": {
+   "who": "Тисовые эльфы",
+   "text": "Тис гнётся, но не ломается",
+   "voice": "Achird",
+   "style": "friendly and natural"
+  },
+  "race_zheleznoborodye_g": {
+   "who": "Железнобородые",
+   "text": "Борода железная, слово тоже",
+   "voice": "Orus",
+   "style": "firm and grounded, natural pace"
+  },
+  "race_pepelnye_orki_g": {
+   "who": "Пепельные орки",
+   "text": "Пепел во рту, огонь в сердце",
+   "voice": "Algenib",
+   "style": "rough and gruff, natural pace"
+  },
+  "race_rechnye_polurosliki_g": {
+   "who": "Речные полурослики",
+   "text": "Лодка — это дом, который плавает",
+   "voice": "Leda",
+   "style": "lively and playful"
+  },
+  "race_peschernye_gobliny_g": {
+   "who": "Пещерные гоблины",
+   "text": "В темноте я вижу, а ты нет",
+   "voice": "Puck",
+   "style": "lively and quick"
+  },
+  "race_lovushechniki_g": {
+   "who": "Ловушечники",
+   "text": "Не наступай туда. И туда тоже",
+   "voice": "Puck",
+   "style": "lively and quick"
+  },
+  "race_barsuchi_lyudi_g": {
+   "who": "Барсучьи люди",
+   "text": "Нора моя, и спорить не о чем",
+   "voice": "Orus",
+   "style": "firm and grounded, natural pace"
+  },
+  "race_vetrenye_garpii_g": {
+   "who": "Ветреные гарпии",
+   "text": "Ветер в лицо — лучший ветер",
+   "voice": "Leda",
+   "style": "lively and playful"
+  },
+  "race_rogatye_strazhi_g": {
+   "who": "Рогатые стражи",
+   "text": "Ворота мои, рога мои",
+   "voice": "Algenib",
+   "style": "rough and gruff, natural pace"
+  },
+  "race_lesnye_kentavry_g": {
+   "who": "Лесные кентавры",
+   "text": "Лес лечит, а я помогаю",
+   "voice": "Sulafat",
+   "style": "warm, natural pace"
+  },
+  "race_serye_bratya_g": {
+   "who": "Серые братья",
+   "text": "Стая рядом, даже когда её не видно",
+   "voice": "Orus",
+   "style": "firm and grounded, natural pace"
+  },
+  "race_beregovye_arakokry_g": {
+   "who": "Береговые аракокры",
+   "text": "Море внизу, небо вверху, я посередине",
+   "voice": "Leda",
+   "style": "lively and playful"
+  },
+  "race_peschanye_yaschery_g": {
+   "who": "Песчаные ящеры",
+   "text": "Жара — это просто тепло",
+   "voice": "Orus",
+   "style": "firm and grounded, natural pace"
+  },
+  "race_pastuhi_ciklopy_g": {
+   "who": "Пастухи-циклопы",
+   "text": "Овцы считаны, все на месте",
+   "voice": "Algenib",
+   "style": "rough and gruff, natural pace"
+  },
+  "race_klyukvenniki_g": {
+   "who": "Клюквенники",
+   "text": "Клюква кислая, а жизнь сладкая",
+   "voice": "Sulafat",
+   "style": "warm, natural pace"
+  },
+  "race_kumysniki_g": {
+   "who": "Кумысники",
+   "text": "Кумыс пьют сидя, а скачут стоя",
+   "voice": "Achird",
+   "style": "friendly and natural"
+  },
+  "race_lykodery_g": {
+   "who": "Лыкодеры",
+   "text": "Лапти сплету, дорога сама пойдёт",
+   "voice": "Achird",
+   "style": "friendly and natural"
+  },
+  "race_kamyshniki_g": {
+   "who": "Камышники",
+   "text": "Камыш шумит — значит, всё спокойно",
+   "voice": "Sulafat",
+   "style": "warm, natural pace"
+  },
+  "race_skalnye_kunyaki_g": {
+   "who": "Скальные куньяки",
+   "text": "В расщелине меня не найти",
+   "voice": "Puck",
+   "style": "lively and quick"
+  },
+  "race_plotinschiki_g": {
+   "who": "Плотинщики",
+   "text": "Плотина стоит, пока я стою",
+   "voice": "Orus",
+   "style": "firm and grounded, natural pace"
+  },
+  "race_syrovary_g": {
+   "who": "Сыровары",
+   "text": "Сыр с горы вкуснее, проверь",
+   "voice": "Sulafat",
+   "style": "warm, natural pace"
+  },
+  "race_podpolnye_norushki_g": {
+   "who": "Подпольные норушки",
+   "text": "Под половицей всё слышно",
+   "voice": "Leda",
+   "style": "lively and playful"
+  },
+  "race_berlozhniki_g": {
+   "who": "Берложники",
+   "text": "Зима длинная, а я терпеливый",
+   "voice": "Algenib",
+   "style": "rough and gruff, natural pace"
+  },
+  "race_lesnye_sychi_g": {
+   "who": "Лесные сычи",
+   "text": "Ельник спит, а я за него не сплю",
+   "voice": "Achird",
+   "style": "friendly and natural"
+  },
+  "race_morskie_solevary_g": {
+   "who": "Морские солевары",
+   "text": "Море отдаёт соль тому, кто ждёт",
+   "voice": "Achird",
+   "style": "friendly and natural"
+  },
+  "race_zhilniki_g": {
+   "who": "Жильники",
+   "text": "Жила вон там, под твоими ногами",
+   "voice": "Orus",
+   "style": "firm and grounded, natural pace"
+  },
+  "race_yadovitye_kvakshi_g": {
+   "who": "Ядовитые квакши",
+   "text": "Не трогай меня, и я не трону",
+   "voice": "Gacrux",
+   "style": "cool and confident, natural pace"
+  },
+  "prof_komendant_g": {
+   "who": "Комендант",
+   "text": "Ворота закрываются на закате, опоздаешь — ночуй под стеной",
+   "voice": "Iapetus",
+   "style": "natural, conversational"
+  },
+  "prof_komendant_f_g": {
+   "who": "Комендант",
+   "text": "Ворота закрываются на закате, опоздаешь — ночуй под стеной",
+   "voice": "Erinome",
+   "style": "natural, conversational"
+  },
+  "prof_strazhnik_g": {
+   "who": "Стражник",
+   "text": "Оружие на виду держи, так спокойнее нам обоим",
+   "voice": "Iapetus",
+   "style": "natural, conversational"
+  },
+  "prof_strazhnik_f_g": {
+   "who": "Стражник",
+   "text": "Оружие на виду держи, так спокойнее нам обоим",
+   "voice": "Erinome",
+   "style": "natural, conversational"
+  },
+  "prof_lekar_g": {
+   "who": "Лекарь",
+   "text": "Рану покажи сразу, а не когда почернеет",
+   "voice": "Iapetus",
+   "style": "natural, conversational"
+  },
+  "prof_lekar_f_g": {
+   "who": "Лекарь",
+   "text": "Рану покажи сразу, а не когда почернеет",
+   "voice": "Erinome",
+   "style": "natural, conversational"
+  },
+  "prof_pravitel_g": {
+   "who": "Правитель",
+   "text": "Говори коротко, у меня таких как ты с утра дюжина",
+   "voice": "Iapetus",
+   "style": "natural, conversational"
+  },
+  "prof_pravitel_f_g": {
+   "who": "Правитель",
+   "text": "Говори коротко, у меня таких как ты с утра дюжина",
+   "voice": "Erinome",
+   "style": "natural, conversational"
+  },
+  "prof_sovetnik_g": {
+   "who": "Советник",
+   "text": "Это можно решить, но не сегодня и не даром",
+   "voice": "Iapetus",
+   "style": "natural, conversational"
+  },
+  "prof_sovetnik_f_g": {
+   "who": "Советник",
+   "text": "Это можно решить, но не сегодня и не даром",
+   "voice": "Erinome",
+   "style": "natural, conversational"
+  },
+  "prof_hranitel_pamyati_g": {
+   "who": "Хранитель Памяти",
+   "text": "Я помню тех, кого уже некому помнить",
+   "voice": "Iapetus",
+   "style": "quiet, melancholic"
+  },
+  "prof_hranitel_pamyati_f_g": {
+   "who": "Хранитель Памяти",
+   "text": "Я помню тех, кого уже некому помнить",
+   "voice": "Erinome",
+   "style": "quiet, melancholic"
+  },
+  "prof_inspektor_nadzora_g": {
+   "who": "Инспектор Надзора",
+   "text": "Лицензия есть, или будем считать, что нет",
+   "voice": "Iapetus",
+   "style": "natural, conversational"
+  },
+  "prof_inspektor_nadzora_f_g": {
+   "who": "Инспектор Надзора",
+   "text": "Лицензия есть, или будем считать, что нет",
+   "voice": "Erinome",
+   "style": "natural, conversational"
+  },
+  "prof_stareyshina_g": {
+   "who": "Старейшина",
+   "text": "Слушай сюда, потом переспрашивать не будешь",
+   "voice": "Iapetus",
+   "style": "stern, elderly"
+  },
+  "prof_stareyshina_f_g": {
+   "who": "Старейшина",
+   "text": "Слушай сюда, потом переспрашивать не будешь",
+   "voice": "Erinome",
+   "style": "stern, elderly"
+  },
+  "prof_fermer_g": {
+   "who": "Фермер",
+   "text": "Укос вышел худой, зато свой",
+   "voice": "Iapetus",
+   "style": "natural, conversational"
+  },
+  "prof_fermer_f_g": {
+   "who": "Фермер",
+   "text": "Укос вышел худой, зато свой",
+   "voice": "Erinome",
+   "style": "natural, conversational"
+  },
+  "prof_celitelnica_g": {
+   "who": "Целительница",
+   "text": "Пей до дна и не морщись",
+   "voice": "Iapetus",
+   "style": "natural, conversational"
+  },
+  "prof_celitelnica_f_g": {
+   "who": "Целительница",
+   "text": "Пей до дна и не морщись",
+   "voice": "Erinome",
+   "style": "natural, conversational"
+  },
+  "prof_shahter_issledovatel_g": {
+   "who": "Шахтёр-исследователь",
+   "text": "Ниже сорокового яруса я не хожу и тебе не советую",
+   "voice": "Iapetus",
+   "style": "natural, conversational"
+  },
+  "prof_shahter_issledovatel_f_g": {
+   "who": "Шахтёр-исследователь",
+   "text": "Ниже сорокового яруса я не хожу и тебе не советую",
+   "voice": "Erinome",
+   "style": "natural, conversational"
+  },
+  "prof_ohotnik_na_morfozverey_g": {
+   "who": "Охотник на морфозверей",
+   "text": "Тварь меняет облик, а повадку не меняет",
+   "voice": "Iapetus",
+   "style": "natural, conversational"
+  },
+  "prof_ohotnik_na_morfozverey_f_g": {
+   "who": "Охотник на морфозверей",
+   "text": "Тварь меняет облик, а повадку не меняет",
+   "voice": "Erinome",
+   "style": "natural, conversational"
+  },
+  "prof_strannik_g": {
+   "who": "Странник",
+   "text": "Иду откуда шёл и туда же вернусь",
+   "voice": "Iapetus",
+   "style": "natural, conversational"
+  },
+  "prof_strannik_f_g": {
+   "who": "Странник",
+   "text": "Иду откуда шла и туда же вернусь",
+   "voice": "Erinome",
+   "style": "natural, conversational"
+  },
+  "prof_poglotitel_g": {
+   "who": "Поглотитель",
+   "text": "Не подходи близко, я не всегда успеваю остановиться",
+   "voice": "Iapetus",
+   "style": "tense, warning"
+  },
+  "prof_poglotitel_f_g": {
+   "who": "Поглотитель",
+   "text": "Не подходи близко, я не всегда успеваю остановиться",
+   "voice": "Erinome",
+   "style": "tense, warning"
+  },
+  "prof_kapitan_g": {
+   "who": "Капитан",
+   "text": "На борт берём с грузом, без груза плати вдвое",
+   "voice": "Iapetus",
+   "style": "natural, conversational"
+  },
+  "prof_kapitan_f_g": {
+   "who": "Капитан",
+   "text": "На борт берём с грузом, без груза плати вдвое",
+   "voice": "Erinome",
+   "style": "natural, conversational"
+  },
+  "prof_torgovec_g": {
+   "who": "Торговец",
+   "text": "Цена моя честная, торговаться будешь у соседа",
+   "voice": "Iapetus",
+   "style": "natural, conversational"
+  },
+  "prof_torgovec_f_g": {
+   "who": "Торговец",
+   "text": "Цена моя честная, торговаться будешь у соседа",
+   "voice": "Erinome",
+   "style": "natural, conversational"
+  },
+  "prof_gruzchik_g": {
+   "who": "Грузчик",
+   "text": "Отойди, уроню — сам виноват",
+   "voice": "Iapetus",
+   "style": "strained, busy"
+  },
+  "prof_gruzchik_f_g": {
+   "who": "Грузчик",
+   "text": "Отойди, уроню — сам виноват",
+   "voice": "Erinome",
+   "style": "strained, busy"
+  },
+  "prof_portalnyy_inzhener_g": {
+   "who": "Портальный инженер",
+   "text": "Разлом дышит ровно, входить можно",
+   "voice": "Iapetus",
+   "style": "natural, conversational"
+  },
+  "prof_portalnyy_inzhener_f_g": {
+   "who": "Портальный инженер",
+   "text": "Разлом дышит ровно, входить можно",
+   "voice": "Erinome",
+   "style": "natural, conversational"
+  },
+  "prof_izgnannik_doma_g": {
+   "who": "Изгнанник Дома",
+   "text": "Дома у меня больше нет, а память осталась",
+   "voice": "Iapetus",
+   "style": "natural, conversational"
+  },
+  "prof_izgnannik_doma_f_g": {
+   "who": "Изгнанник Дома",
+   "text": "Дома у меня больше нет, а память осталась",
+   "voice": "Erinome",
+   "style": "natural, conversational"
+  },
+  "prof_voennyy_kartograf_g": {
+   "who": "Военный картограф",
+   "text": "Карта свежая, вчерашняя уже врёт",
+   "voice": "Iapetus",
+   "style": "natural, conversational"
+  },
+  "prof_voennyy_kartograf_f_g": {
+   "who": "Военный картограф",
+   "text": "Карта свежая, вчерашняя уже врёт",
+   "voice": "Erinome",
+   "style": "natural, conversational"
+  },
+  "prof_naslednik_pavshego_doma_g": {
+   "who": "Наследник павшего Дома",
+   "text": "Мой Дом сожгли, имя не сожгли",
+   "voice": "Iapetus",
+   "style": "natural, conversational"
+  },
+  "prof_naslednik_pavshego_doma_f_g": {
+   "who": "Наследник павшего Дома",
+   "text": "Мой Дом сожгли, имя не сожгли",
+   "voice": "Erinome",
+   "style": "natural, conversational"
+  },
+  "prof_traktirschik_g": {
+   "who": "Трактирщик",
+   "text": "Похлёбка горячая, слухи тоже",
+   "voice": "Iapetus",
+   "style": "cheerful and welcoming"
+  },
+  "prof_traktirschik_f_g": {
+   "who": "Трактирщик",
+   "text": "Похлёбка горячая, слухи тоже",
+   "voice": "Erinome",
+   "style": "cheerful and welcoming"
+  },
+  "prof_posetitel_g": {
+   "who": "Посетитель",
+   "text": "Садись, если не будешь мешать",
+   "voice": "Iapetus",
+   "style": "natural, conversational"
+  },
+  "prof_posetitel_f_g": {
+   "who": "Посетитель",
+   "text": "Садись, если не будешь мешать",
+   "voice": "Erinome",
+   "style": "natural, conversational"
+  },
+  "prof_glava_klana_g": {
+   "who": "Глава клана",
+   "text": "В клан входят делом, а не словом",
+   "voice": "Iapetus",
+   "style": "natural, conversational"
+  },
+  "prof_glava_klana_f_g": {
+   "who": "Глава клана",
+   "text": "В клан входят делом, а не словом",
+   "voice": "Erinome",
+   "style": "natural, conversational"
+  },
+  "prof_voin_klana_g": {
+   "who": "Воин клана",
+   "text": "За своих стою, чужих не трогаю первым",
+   "voice": "Iapetus",
+   "style": "natural, conversational"
+  },
+  "prof_voin_klana_f_g": {
+   "who": "Воин клана",
+   "text": "За своих стою, чужих не трогаю первой",
+   "voice": "Erinome",
+   "style": "natural, conversational"
+  },
+  "prof_magistr_g": {
+   "who": "Магистр",
+   "text": "Сначала докажи, что понял, потом проси научить",
+   "voice": "Iapetus",
+   "style": "natural, conversational"
+  },
+  "prof_magistr_f_g": {
+   "who": "Магистр",
+   "text": "Сначала докажи, что понял, потом проси научить",
+   "voice": "Erinome",
+   "style": "natural, conversational"
+  },
+  "prof_uchenik_g": {
+   "who": "Ученик",
+   "text": "Мне ещё нельзя, но я всё равно попробую",
+   "voice": "Iapetus",
+   "style": "eager, youthful"
+  },
+  "prof_uchenik_f_g": {
+   "who": "Ученик",
+   "text": "Мне ещё нельзя, но я всё равно попробую",
+   "voice": "Erinome",
+   "style": "eager, youthful"
+  },
+  "prof_nastavnik_puti_g": {
+   "who": "Наставник Пути",
+   "text": "Ступень не даётся, ступень берётся",
+   "voice": "Iapetus",
+   "style": "natural, conversational"
+  },
+  "prof_nastavnik_puti_f_g": {
+   "who": "Наставник Пути",
+   "text": "Ступень не даётся, ступень берётся",
+   "voice": "Erinome",
+   "style": "natural, conversational"
+  },
+  "prof_arhivist_g": {
+   "who": "Архивист",
+   "text": "Это записано, только записано неправильно",
+   "voice": "Iapetus",
+   "style": "natural, conversational"
+  },
+  "prof_arhivist_f_g": {
+   "who": "Архивист",
+   "text": "Это записано, только записано неправильно",
+   "voice": "Erinome",
+   "style": "natural, conversational"
+  },
+  "prof_zhrec_g": {
+   "who": "Жрец",
+   "text": "Бог слышит, даже когда молчит",
+   "voice": "Iapetus",
+   "style": "calm and solemn"
+  },
+  "prof_zhrec_f_g": {
+   "who": "Жрец",
+   "text": "Бог слышит, даже когда молчит",
+   "voice": "Erinome",
+   "style": "calm and solemn"
+  },
+  "prof_kuznec_g": {
+   "who": "Кузнец",
+   "text": "Железо не любит спешки и не прощает её",
+   "voice": "Iapetus",
+   "style": "natural, conversational"
+  },
+  "prof_kuznec_f_g": {
+   "who": "Кузнец",
+   "text": "Железо не любит спешки и не прощает её",
+   "voice": "Erinome",
+   "style": "natural, conversational"
+  },
+  "prof_master_yader_g": {
+   "who": "Мастер Ядер",
+   "text": "Ядро откликается на руку, а не на золото",
+   "voice": "Iapetus",
+   "style": "natural, conversational"
+  },
+  "prof_master_yader_f_g": {
+   "who": "Мастер Ядер",
+   "text": "Ядро откликается на руку, а не на золото",
+   "voice": "Erinome",
+   "style": "natural, conversational"
+  },
+  "prof_mag_otshelnik_g": {
+   "who": "Маг-отшельник",
+   "text": "Я ушёл сюда не для разговоров",
+   "voice": "Iapetus",
+   "style": "natural, conversational"
+  },
+  "prof_mag_otshelnik_f_g": {
+   "who": "Маг-отшельник",
+   "text": "Я ушла сюда не для разговоров",
+   "voice": "Erinome",
+   "style": "natural, conversational"
+  },
+  "prof_obryadchik_g": {
+   "who": "Обрядчик",
+   "text": "Обряд начат, выйти уже нельзя",
+   "voice": "Iapetus",
+   "style": "solemn"
+  },
+  "prof_obryadchik_f_g": {
+   "who": "Обрядчик",
+   "text": "Обряд начат, выйти уже нельзя",
+   "voice": "Erinome",
+   "style": "solemn"
+  },
+  "prof_sluzhka_g": {
+   "who": "Служка",
+   "text": "Мне велено проводить, дальше сами",
+   "voice": "Iapetus",
+   "style": "natural, conversational"
+  },
+  "prof_sluzhka_f_g": {
+   "who": "Служка",
+   "text": "Мне велено проводить, дальше сами",
+   "voice": "Erinome",
+   "style": "natural, conversational"
+  },
+  "prof_schetchik_kostey_g": {
+   "who": "Счётчик костей",
+   "text": "Считаю всех, и тебя посчитаю",
+   "voice": "Iapetus",
+   "style": "natural, conversational"
+  },
+  "prof_schetchik_kostey_f_g": {
+   "who": "Счётчик костей",
+   "text": "Считаю всех, и тебя посчитаю",
+   "voice": "Erinome",
+   "style": "natural, conversational"
+  },
+  "prof_nadsmotrschik_g": {
+   "who": "Надсмотрщик",
+   "text": "Работать будешь молча",
+   "voice": "Iapetus",
+   "style": "harsh and curt"
+  },
+  "prof_nadsmotrschik_f_g": {
+   "who": "Надсмотрщик",
+   "text": "Работать будешь молча",
+   "voice": "Erinome",
+   "style": "harsh and curt"
+  },
+  "prof_shepchuschiy_g": {
+   "who": "Шепчущий",
+   "text": "Наклонись, я не повторяю",
+   "voice": "Iapetus",
+   "style": "whispering"
+  },
+  "prof_shepchuschiy_f_g": {
+   "who": "Шепчущий",
+   "text": "Наклонись, я не повторяю",
+   "voice": "Erinome",
+   "style": "whispering"
+  },
+  "prof_menyala_klyatv_g": {
+   "who": "Меняла клятв",
+   "text": "Одну клятву на другую меняю с доплатой",
+   "voice": "Iapetus",
+   "style": "natural, conversational"
+  },
+  "prof_menyala_klyatv_f_g": {
+   "who": "Меняла клятв",
+   "text": "Одну клятву на другую меняю с доплатой",
+   "voice": "Erinome",
+   "style": "natural, conversational"
+  },
+  "prof_otverzhennyy_g": {
+   "who": "Отверженный",
+   "text": "Меня не звали и ты не зови",
+   "voice": "Iapetus",
+   "style": "natural, conversational"
+  },
+  "prof_otverzhennyy_f_g": {
+   "who": "Отверженный",
+   "text": "Меня не звали и ты не зови",
+   "voice": "Erinome",
+   "style": "natural, conversational"
+  },
+  "prof_vladyka_g": {
+   "who": "Владыка",
+   "text": "Ты стоишь передо мной по моей воле",
+   "voice": "Iapetus",
+   "style": "cold and imperious"
+  },
+  "prof_vladyka_f_g": {
+   "who": "Владыка",
+   "text": "Ты стоишь передо мной по моей воле",
+   "voice": "Erinome",
+   "style": "cold and imperious"
+  },
+  "prof_kontrabandist_g": {
+   "who": "Контрабандист",
+   "text": "Через Грань вожу всё, кроме совести",
+   "voice": "Iapetus",
+   "style": "sly, conspiratorial"
+  },
+  "prof_kontrabandist_f_g": {
+   "who": "Контрабандист",
+   "text": "Через Грань вожу всё, кроме совести",
+   "voice": "Erinome",
+   "style": "sly, conspiratorial"
+  },
+  "prof_sotnik_zastavy_g": {
+   "who": "Сотник заставы",
+   "text": "Застава пропускает по счёту, а не по лицу",
+   "voice": "Iapetus",
+   "style": "natural, conversational"
+  },
+  "prof_sotnik_zastavy_f_g": {
+   "who": "Сотник заставы",
+   "text": "Застава пропускает по счёту, а не по лицу",
+   "voice": "Erinome",
+   "style": "natural, conversational"
+  },
+  "prof_dezertir_g": {
+   "who": "Дезертир",
+   "text": "Я оттуда ушёл, и тебе бы не ходить",
+   "voice": "Iapetus",
+   "style": "nervous, low voice"
+  },
+  "prof_dezertir_f_g": {
+   "who": "Дезертир",
+   "text": "Я оттуда ушла, и тебе бы не ходить",
+   "voice": "Erinome",
+   "style": "nervous, low voice"
+  },
+  "prof_prigovorennyy_g": {
+   "who": "Приговорённый",
+   "text": "Срок назначен, осталось дожить",
+   "voice": "Iapetus",
+   "style": "weary and resigned"
+  },
+  "prof_prigovorennyy_f_g": {
+   "who": "Приговорённый",
+   "text": "Срок назначен, осталось дожить",
+   "voice": "Erinome",
+   "style": "weary and resigned"
+  },
+  "prof_otstupnik_g": {
+   "who": "Отступник",
+   "text": "От своих я отрёкся сам, не спрашивай почему",
+   "voice": "Iapetus",
+   "style": "natural, conversational"
+  },
+  "prof_otstupnik_f_g": {
+   "who": "Отступник",
+   "text": "От своих я отреклась сама, не спрашивай почему",
+   "voice": "Erinome",
+   "style": "natural, conversational"
+  },
+  "say_soglasie_g": {
+   "who": "soglasie",
+   "text": "Ладно, будь по-твоему",
+   "voice": "Iapetus",
+   "style": "natural, conversational"
+  },
+  "say_soglasie_f_g": {
+   "who": "soglasie",
+   "text": "Ладно, будь по-твоему",
+   "voice": "Erinome",
+   "style": "natural, conversational"
+  },
+  "say_otkaz_g": {
+   "who": "otkaz",
+   "text": "Нет, и не проси",
+   "voice": "Iapetus",
+   "style": "firm refusal"
+  },
+  "say_otkaz_f_g": {
+   "who": "otkaz",
+   "text": "Нет, и не проси",
+   "voice": "Erinome",
+   "style": "firm refusal"
+  },
+  "say_somnenie_g": {
+   "who": "somnenie",
+   "text": "Не знаю, надо подумать",
+   "voice": "Iapetus",
+   "style": "hesitant, thoughtful"
+  },
+  "say_somnenie_f_g": {
+   "who": "somnenie",
+   "text": "Не знаю, надо подумать",
+   "voice": "Erinome",
+   "style": "hesitant, thoughtful"
+  },
+  "say_torg_g": {
+   "who": "torg",
+   "text": "Такую цену я не назову",
+   "voice": "Iapetus",
+   "style": "natural, conversational"
+  },
+  "say_torg_f_g": {
+   "who": "torg",
+   "text": "Такую цену я не назову",
+   "voice": "Erinome",
+   "style": "natural, conversational"
+  },
+  "say_proschanie_g": {
+   "who": "proschanie",
+   "text": "Ступай с миром",
+   "voice": "Iapetus",
+   "style": "warm"
+  },
+  "say_proschanie_f_g": {
+   "who": "proschanie",
+   "text": "Ступай с миром",
+   "voice": "Erinome",
+   "style": "warm"
+  },
+  "say_ugroza_g": {
+   "who": "ugroza",
+   "text": "Ещё слово, и разговор пойдёт иначе",
+   "voice": "Iapetus",
+   "style": "menacing"
+  },
+  "say_ugroza_f_g": {
+   "who": "ugroza",
+   "text": "Ещё слово, и разговор пойдёт иначе",
+   "voice": "Erinome",
+   "style": "threatening, natural pace"
+  },
+  "say_bol_g": {
+   "who": "bol",
+   "text": "Ох, больно же",
+   "voice": "Iapetus",
+   "style": "in pain"
+  },
+  "say_bol_f_g": {
+   "who": "bol",
+   "text": "Ох, больно же",
+   "voice": "Erinome",
+   "style": "in pain, short"
+  },
+  "hero_znanie_g": {
+   "who": "znanie",
+   "text": "Я знаю про эти земли больше, чем ты думаешь",
+   "voice": "Algieba",
+   "style": "confident, natural"
+  },
+  "hero_kultura_g": {
+   "who": "kultura",
+   "text": "У твоего народа так не принято, я помню",
+   "voice": "Algieba",
+   "style": "confident, natural"
+  },
+  "hero_nedoskazat_g": {
+   "who": "nedoskazat",
+   "text": "Скажу половину, остальное додумай сам",
+   "voice": "Algieba",
+   "style": "sly"
+  },
+  "hero_rassprosit_g": {
+   "who": "rassprosit",
+   "text": "Расскажи, что тут у вас творится",
+   "voice": "Algieba",
+   "style": "confident, natural"
+  },
+  "hero_utochnit_g": {
+   "who": "utochnit",
+   "text": "Повтори, я хочу услышать это ещё раз",
+   "voice": "Algieba",
+   "style": "attentive"
+  },
+  "hero_sluhi_g": {
+   "who": "sluhi",
+   "text": "Что говорят в этих краях",
+   "voice": "Algieba",
+   "style": "confident, natural"
+  },
+  "hero_sobytiya_g": {
+   "who": "sobytiya",
+   "text": "Как там война и цены",
+   "voice": "Algieba",
+   "style": "confident, natural"
+  },
+  "hero_ubedit_g": {
+   "who": "ubedit",
+   "text": "Послушай меня и подумай ещё раз",
+   "voice": "Algieba",
+   "style": "confident, natural"
+  },
+  "hero_diplom_g": {
+   "who": "diplom",
+   "text": "Давай сойдёмся на середине",
+   "voice": "Algieba",
+   "style": "conciliatory"
+  },
+  "hero_prosit_g": {
+   "who": "prosit",
+   "text": "Прошу об одолжении, и я его не забуду",
+   "voice": "Algieba",
+   "style": "earnest"
+  },
+  "hero_obeshat_g": {
+   "who": "obeshat",
+   "text": "Даю слово, и слово моё держится",
+   "voice": "Algieba",
+   "style": "confident, natural"
+  },
+  "hero_sporit_g": {
+   "who": "sporit",
+   "text": "Тут ты неправ, и я это докажу",
+   "voice": "Algieba",
+   "style": "assertive"
+  },
+  "hero_vera_g": {
+   "who": "vera",
+   "text": "Твой бог тебя об этом не просил",
+   "voice": "Algieba",
+   "style": "stern"
+  },
+  "hero_vlast_g": {
+   "who": "vlast",
+   "text": "Власть здесь держится не на тебе",
+   "voice": "Algieba",
+   "style": "cold"
+  },
+  "hero_torg_g": {
+   "who": "torg",
+   "text": "Это дорого, и мы оба знаем",
+   "voice": "Algieba",
+   "style": "confident, natural"
+  },
+  "hero_podkup_g": {
+   "who": "podkup",
+   "text": "Возьми и забудь, что видел меня",
+   "voice": "Algieba",
+   "style": "conspiratorial, low voice"
+  },
+  "hero_obman_g": {
+   "who": "obman",
+   "text": "Всё было совсем не так",
+   "voice": "Algieba",
+   "style": "casual, evasive"
+  },
+  "hero_zapugat_g": {
+   "who": "zapugat",
+   "text": "Подумай, чем это кончится для тебя",
+   "voice": "Algieba",
+   "style": "menacing"
+  },
+  "hero_shantazh_g": {
+   "who": "shantazh",
+   "text": "Я знаю о тебе то, что знать не должен",
+   "voice": "Algieba",
+   "style": "quiet and menacing"
+  },
+  "hero_provoc_g": {
+   "who": "provoc",
+   "text": "Ну давай, скажи это вслух",
+   "voice": "Algieba",
+   "style": "taunting"
+  },
+  "hero_otkaz_g": {
+   "who": "otkaz",
+   "text": "Нет, и разговор окончен",
+   "voice": "Algieba",
+   "style": "firm"
+  }
+ }
+}

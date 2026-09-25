@@ -1,11 +1,11 @@
-# Сборка приложения «Грань Миров» 3.6 для Android на серверах GitHub.
+# Сборка приложения «Грань Миров» 3.7 для Android на серверах GitHub.
 #
 # Вся игра — index.html, записи sounds, встроенный голос tts — лежит внутри
 # приложения, и оно работает без сети. Собираются два файла:
-#   grani-mirov-3.6.aab — для Google Play (целевой API 36, записи вынесены в
+#   grani-mirov-3.7.aab — для Google Play (целевой API 36, записи вынесены в
 #                          пакет ресурсов, который Play ставит вместе с
 #                          приложением);
-#   grani-mirov-3.6.apk — полный, для установки прямо на телефон.
+#   grani-mirov-3.7.apk — полный, для установки прямо на телефон.
 # Оба выкладываются в выпуск «android-latest» (Releases).
 #
 # Подпись. Ключей в репозитории нет. Если в Settings → Secrets and variables
@@ -148,20 +148,20 @@ jobs:
           curl -sSL -o "$RUNNER_TEMP/bundletool.jar" \
             https://github.com/google/bundletool/releases/download/1.18.1/bundletool-all-1.18.1.jar
           AAB=android/app/build/outputs/bundle/release/app-release.aab
-          cp "$AAB" grani-mirov-3.6.aab
+          cp "$AAB" grani-mirov-3.7.aab
           java -jar "$RUNNER_TEMP/bundletool.jar" build-apks --mode=universal \
             --bundle="$AAB" --output="$RUNNER_TEMP/u.apks" \
             --ks="$KS_FILE" --ks-pass="pass:$KS_PASS" --ks-key-alias="$KS_ALIAS" --key-pass="pass:$KS_KEY_PASS"
-          unzip -p "$RUNNER_TEMP/u.apks" universal.apk > grani-mirov-3.6.apk
-          ls -la grani-mirov-3.6.aab grani-mirov-3.6.apk
-          "$ANDROID_HOME/build-tools/36.0.0/apksigner" verify --print-certs grani-mirov-3.6.apk | head -5
+          unzip -p "$RUNNER_TEMP/u.apks" universal.apk > grani-mirov-3.7.apk
+          ls -la grani-mirov-3.7.aab grani-mirov-3.7.apk
+          "$ANDROID_HOME/build-tools/36.0.0/apksigner" verify --print-certs grani-mirov-3.7.apk | head -5
 
       - name: Выложить в выпуск «android-latest»
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           gh release delete android-latest --cleanup-tag -y || true
-          gh release create android-latest grani-mirov-3.6.apk grani-mirov-3.6.aab \
+          gh release create android-latest grani-mirov-3.7.apk grani-mirov-3.7.aab \
             --target "$GITHUB_SHA" \
-            --title "Грань Миров 3.6 для Android (сборка ${GITHUB_RUN_NUMBER})" \
-            --notes "Свежая сборка из main ($GITHUB_SHA); ${KEY_NOTE}. grani-mirov-3.6.apk — поставить на телефон: скачайте и откройте, Android попросит разрешить установку из этого источника. grani-mirov-3.6.aab — загрузить в Google Play Console. Вся игра внутри, сеть не нужна."
+            --title "Грань Миров 3.7 для Android (сборка ${GITHUB_RUN_NUMBER})" \
+            --notes "Свежая сборка из main ($GITHUB_SHA); ${KEY_NOTE}. grani-mirov-3.7.apk — поставить на телефон: скачайте и откройте, Android попросит разрешить установку из этого источника. grani-mirov-3.7.aab — загрузить в Google Play Console. Вся игра внутри, сеть не нужна."

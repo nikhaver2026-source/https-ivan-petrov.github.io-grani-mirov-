@@ -23,13 +23,13 @@
    5. Заставка: intro_02.ogg — голос Supertonic 3 и эффекты, 320 кбит/с,
       стерео, 44,1 кГц, 30–45 с; прежней записи нет; титры полные.
       Повторная просьба, пока запись грузится, не запускает вторую.
-   6. Тридцать одна фраза народов переозвучена под новыми именами файлов
-      (_2), прежних файлов нет, длины известны игре, титры и опись строк
-      совпадают.
+   6. У каждого народа своя запись под именем поколения (VOICE_GEN; с 3.7
+      все записи речи переозвучены заново — набор 190), прежних файлов «_2»
+      нет, длины известны игре, титры называют каждую.
    7. Женский голос: у всех сорока шести ремёсел и семи общих слов есть
-      женская запись; народ женского голоса говорит ею, мужского — прежней.
-   8. Новые записи речи — от 320 кбит/с, моно, 44,1 кГц.
-   9. Версия 3.6, выпуск новостей 20.
+      женская запись; народ женского голоса говорит ею, мужского — мужской.
+   8. Женские записи речи — от 320 кбит/с, моно, 44,1 кГц.
+   9. Версия не ниже 3.6, выпуск новостей 20 на месте.
   10. Ударения словаря встроенного голоса исправлены; у переозвученных фраз
       мест прежних файлов нет.
    ═══════════════════════════════════════════════════════════════════════ */
@@ -142,15 +142,17 @@ const КОРОТКО=t=>typeof t==="string"&&t.length>0&&!/\d|\(|\)|Двойно
  check('5б. повторная просьба, пока заставка грузится, не запускает вторую поверх первой',
   дважды.один&&дважды.звучит&&дважды.сказано.some(t=>/загружается/.test(t)),дважды);
 
- /* ── 6. тридцать одна фраза народов ── */
- const народы=await page.evaluate(()=>Object.entries(VOICE_RACES).filter(([n,v])=>/_2$/.test(v[0])).map(([n,v])=>({n,f:"race_"+v[0],len:VOICE_LEN["race_"+v[0]],old:VOICE_LEN["race_"+v[0].replace(/_2$/,"")]})));
+ /* ── 6. фразы народов ──
+    В 3.6 тридцать одна фраза переозвучена ради мягкости и шестьдесят ради
+    ударений; с 3.7 все записи речи — новое поколение (набор 190). Здесь
+    проверяется то, что от 3.6 осталось в силе: у каждого народа своя
+    запись под именем поколения, длина известна игре, титры её называют. */
+ const народы=await page.evaluate(()=>Object.entries(VOICE_RACES).map(([n,v])=>({n,f:"race_"+v[0]+VOICE_GEN,len:VOICE_LEN["race_"+v[0]+VOICE_GEN]})));
  const титрыГолос=fs.readFileSync(path.join(SND,'voice','CREDITS.md'),'utf8');
- const строки=JSON.parse(fs.readFileSync(path.join(ROOT,'tools','voice','lines.json'),'utf8'));
- const плохо=народы.filter(x=>!fs.existsSync(path.join(SND,'voice',x.f+'.mp3'))||fs.existsSync(path.join(SND,'voice',x.f.replace(/_2$/,'')+'.mp3'))
-  ||!(x.len>0)||x.old!==undefined||!титрыГолос.includes('| '+x.f+'.mp3 |')||!строки[x.f]);
- const новые=народы.map(x=>probe(path.join(SND,'voice',x.f+'.mp3'))).filter(Boolean);
- check('6. фразы народов переозвучены под новыми именами (тридцать одна — мягкость, остальные — ударения): файлы есть, прежних нет, длины и титры на месте',
-  народы.length>=31&&плохо.length===0&&новые.length===народы.length&&новые.every(i=>i.br>=320&&i.ch===1&&i.sr===44100),{всего:народы.length,плохо:плохо.slice(0,4)});
+ const плохо=народы.filter(x=>!fs.existsSync(path.join(SND,'voice',x.f+'.mp3'))||!(x.len>0)||!титрыГолос.includes('| '+x.f+'.mp3 |'));
+ const прежних=fs.readdirSync(path.join(SND,'voice')).filter(f=>/^race_.*_2\.mp3$/.test(f));
+ check('6. у каждого из двухсот восьмидесяти народов своя запись под именем поколения; прежних файлов «_2» нет, длины и титры на месте',
+  народы.length===280&&плохо.length===0&&прежних.length===0,{плохо:плохо.slice(0,4),прежних:прежних.slice(0,3)});
 
  /* ── 7. женский голос ── */
  const жен=await page.evaluate(()=>{
@@ -164,22 +166,24 @@ const КОРОТКО=t=>typeof t==="string"&&t.length>0&&!/\d|\(|\)|Двойно
   Folk.ремесло({race:женНарод,key:"ж2",prof:"Торговец"});Folk.ремесло({race:мужНарод,key:"м2",prof:"Торговец"});
   Folk.ремесло({race:женНарод,key:"ж3",prof:"Целительница"});
   Folk.сказать=s0;
-  r.пути=путь;r.женНарод=женНарод;r.мужНарод=мужНарод;
-  r.длинаЖ=Folk.длинаОбщего({race:женНарод,key:"ж1"},"otkaz");r.lenF=VOICE_LEN.say_otkaz_f;
+  r.пути=путь;r.женНарод=женНарод;r.мужНарод=мужНарод;r.G=VOICE_GEN;
+  r.длинаЖ=Folk.длинаОбщего({race:женНарод,key:"ж1"},"otkaz");r.lenF=VOICE_LEN["say_otkaz_f"+VOICE_GEN];
   return r;});
- const нетФайла=[...жен.ремёсла.map(s=>'prof_'+s+'_f.mp3'),...['soglasie','otkaz','somnenie','torg','proschanie','ugroza','bol'].map(k=>'say_'+k+'_f.mp3')]
+ const G=жен.G;
+ const нетФайла=[...жен.ремёсла.map(s=>'prof_'+s+'_f'+G+'.mp3'),...['soglasie','otkaz','somnenie','torg','proschanie','ugroza','bol'].map(k=>'say_'+k+'_f'+G+'.mp3')]
   .filter(f=>!fs.existsSync(path.join(SND,'voice',f)));
- check('7. у всех сорока шести ремёсел и семи общих слов есть женская запись; народ женского голоса говорит ею, мужского — прежней',
+ const ждёмПути=["say_soglasie_f","say_soglasie","prof_torgovec_f","prof_torgovec","prof_celitelnica_f"].map(x=>x+G).join(",");
+ check('7. у всех сорока шести ремёсел и семи общих слов есть женская запись; народ женского голоса говорит ею, мужского — мужской',
   жен.ремёсла.length===46&&жен.безЖенского.length===0&&нетФайла.length===0
-  &&жен.пути.join(",")==="say_soglasie_f,say_soglasie,prof_torgovec_f,prof_torgovec,prof_celitelnica_f"
+  &&жен.пути.join(",")===ждёмПути
   &&жен.lenF>0&&Math.abs(жен.длинаЖ*1000)>0,{пути:жен.пути,нетФайла:нетФайла.slice(0,5)});
 
- /* ── 8. качество новых записей ── */
- const женские=fs.readdirSync(path.join(SND,'voice')).filter(f=>/_f\.mp3$/.test(f)&&(/^say_/.test(f)||!/^prof_(komendant|strazhnik|lekar|pravitel|sovetnik|hranitel_pamyati|inspektor_nadzora)_f/.test(f)));
+ /* ── 8. качество женских записей ── */
+ const женские=fs.readdirSync(path.join(SND,'voice')).filter(f=>new RegExp('_f'+G+'\\.mp3$').test(f));
  const слабые=женские.map(f=>({f,i:probe(path.join(SND,'voice',f))})).filter(x=>!x.i||x.i.br<320||x.i.ch!==1||x.i.sr!==44100);
- const заголовок=титрыГолос.includes('Supertonic 3')&&/prof_stareyshina_f\.mp3/.test(титрыГолос)&&/say_soglasie_f\.mp3/.test(титрыГолос);
- check('8. сорок шесть новых женских записей — от 320 кбит/с, моно, 44,1 кГц; титры называют Supertonic 3 и каждую запись',
-  женские.length===46&&слабые.length===0&&заголовок,{всего:женские.length,слабые:слабые.slice(0,3)});
+ const заголовок=/prof_stareyshina_f_g\.mp3/.test(титрыГолос)&&/say_soglasie_f_g\.mp3/.test(титрыГолос);
+ check('8. пятьдесят три женские записи (46 ремёсел и 7 общих слов) — от 320 кбит/с, моно, 44,1 кГц; титры называют каждую',
+  женские.length===53&&слабые.length===0&&заголовок,{всего:женские.length,слабые:слабые.slice(0,3)});
 
  /* ── 10. ударения словаря встроенного голоса ── */
  const лекс={};fs.readFileSync(path.join(ROOT,'tts','ru-lex.tsv'),'utf8').split('\n').forEach(l=>{const i=l.indexOf('\t');if(i>0)лекс[l.slice(0,i)]=l.slice(i+1);});
@@ -194,8 +198,8 @@ const КОРОТКО=t=>typeof t==="string"&&t.length>0&&!/\d|\(|\)|Двойно
  /* ── 9. версия и новость ── */
  const версия=await page.evaluate(()=>({v:GAME_VERSION,title:document.title,news:NEWS_V,т:(NEWS.find(n=>n.v===20)||{}).т||""}));
  const gradle=fs.readFileSync(path.join(ROOT,'android','app','build.gradle'),'utf8');
- check('9. версия 3.6 везде, выпуск новостей 20 рассказывает о переменах',
-  версия.v==="3.6"&&/Alpha 3\.6/.test(версия.title)&&/versionName '3\.6'/.test(gradle)&&версия.news===20
+ check('9. версия не ниже 3.6, выпуск новостей 20 рассказывает о переменах',
+  parseFloat(версия.v)>=3.6&&/Alpha 3\.\d/.test(версия.title)&&/versionName '3\.\d'/.test(gradle)&&версия.news>=20
   &&/одним именем/.test(версия.т)&&/Supertonic 3/.test(версия.т),версия);
 
  check('страница не бросила ни одной ошибки',errors.length===0,errors.slice(0,3));

@@ -3,7 +3,7 @@
 # Правило: всякая НОВАЯ запись в sounds/ — либо без потерь (flac, wav),
 # либо сжата не ниже 320 кбит/с. Набор проверок 152 это стережёт.
 #
-# Перечисленные ниже 1303 записи пришли раньше правила, из свободных
+# Перечисленные ниже 1039 записей пришли раньше правила, из свободных
 # библиотек, и уже сжаты с потерями. Пережать их в 320 нельзя: пережатие не
 # возвращает того, чего в файле нет, — оно лишь втрое раздувает вес. Весь
 # банк весит 497 МБ (около половины — музыка мест в 320 кбит/с); пережатие
@@ -12,9 +12,9 @@
 # Поэтому они остаются как есть и записаны здесь поимённо.
 #
 # Что с ними всё-таки можно сделать честно:
-#   1. Голоса (sounds/voice, 193 записей) делаются ElevenLabs по запросу —
-#      их можно переснять в 320 кбит/с, когда обновится квота. Это настоящая
-#      прибавка: источник синтезируется заново, а не пережимается.
+#   1. Голоса (sounds/voice) с 3.7 синтезированы заново (Gemini) и лежат
+#      в 320 кбит/с — в этом списке их больше нет. Так и надо: источник
+#      синтезируется заново, а не пережимается.
 #   2. Остальные — только пересборкой из исходников свободных библиотек,
 #      если те отдают их в лучшем качестве.
 #
@@ -1049,165 +1049,6 @@ sounds/ui/ui_close.mp3	70
 sounds/ui/ui_open.mp3	70
 sounds/ui/ui_toggle_off.mp3	70
 sounds/ui/ui_toggle_on.mp3	70
-sounds/voice/hero_diplom.mp3	161
-sounds/voice/hero_kultura.mp3	161
-sounds/voice/hero_nedoskazat.mp3	161
-sounds/voice/hero_obeshat.mp3	161
-sounds/voice/hero_obman.mp3	162
-sounds/voice/hero_otkaz.mp3	162
-sounds/voice/hero_podkup.mp3	162
-sounds/voice/hero_prosit.mp3	161
-sounds/voice/hero_provoc.mp3	162
-sounds/voice/hero_rassprosit.mp3	162
-sounds/voice/hero_shantazh.mp3	161
-sounds/voice/hero_sluhi.mp3	162
-sounds/voice/hero_sobytiya.mp3	162
-sounds/voice/hero_sporit.mp3	161
-sounds/voice/hero_torg.mp3	162
-sounds/voice/hero_ubedit.mp3	162
-sounds/voice/hero_utochnit.mp3	161
-sounds/voice/hero_vera.mp3	162
-sounds/voice/hero_vlast.mp3	162
-sounds/voice/hero_zapugat.mp3	161
-sounds/voice/hero_znanie.mp3	161
-sounds/voice/prof_arhivist.mp3	161
-sounds/voice/prof_celitelnica.mp3	162
-sounds/voice/prof_dezertir.mp3	161
-sounds/voice/prof_fermer.mp3	162
-sounds/voice/prof_glava_klana.mp3	162
-sounds/voice/prof_gruzchik.mp3	161
-sounds/voice/prof_hranitel_pamyati.mp3	161
-sounds/voice/prof_hranitel_pamyati_f.mp3	161
-sounds/voice/prof_inspektor_nadzora.mp3	161
-sounds/voice/prof_inspektor_nadzora_f.mp3	161
-sounds/voice/prof_izgnannik_doma.mp3	161
-sounds/voice/prof_kapitan.mp3	161
-sounds/voice/prof_komendant.mp3	161
-sounds/voice/prof_komendant_f.mp3	161
-sounds/voice/prof_kontrabandist.mp3	162
-sounds/voice/prof_kuznec.mp3	161
-sounds/voice/prof_lekar.mp3	161
-sounds/voice/prof_lekar_f.mp3	161
-sounds/voice/prof_mag_otshelnik.mp3	162
-sounds/voice/prof_magistr.mp3	161
-sounds/voice/prof_master_yader.mp3	161
-sounds/voice/prof_menyala_klyatv.mp3	161
-sounds/voice/prof_nadsmotrschik.mp3	162
-sounds/voice/prof_naslednik_pavshego_doma.mp3	161
-sounds/voice/prof_nastavnik_puti.mp3	161
-sounds/voice/prof_obryadchik.mp3	161
-sounds/voice/prof_ohotnik_na_morfozverey.mp3	161
-sounds/voice/prof_otstupnik.mp3	161
-sounds/voice/prof_otverzhennyy.mp3	162
-sounds/voice/prof_poglotitel.mp3	161
-sounds/voice/prof_portalnyy_inzhener.mp3	161
-sounds/voice/prof_posetitel.mp3	162
-sounds/voice/prof_pravitel.mp3	161
-sounds/voice/prof_pravitel_f.mp3	161
-sounds/voice/prof_prigovorennyy.mp3	162
-sounds/voice/prof_schetchik_kostey.mp3	162
-sounds/voice/prof_shahter_issledovatel.mp3	161
-sounds/voice/prof_shepchuschiy.mp3	162
-sounds/voice/prof_sluzhka.mp3	161
-sounds/voice/prof_sotnik_zastavy.mp3	161
-sounds/voice/prof_sovetnik.mp3	161
-sounds/voice/prof_sovetnik_f.mp3	161
-sounds/voice/prof_stareyshina.mp3	161
-sounds/voice/prof_strannik.mp3	161
-sounds/voice/prof_strazhnik.mp3	161
-sounds/voice/prof_strazhnik_f.mp3	161
-sounds/voice/prof_torgovec.mp3	161
-sounds/voice/prof_traktirschik.mp3	162
-sounds/voice/prof_uchenik.mp3	161
-sounds/voice/prof_vladyka.mp3	162
-sounds/voice/prof_voennyy_kartograf.mp3	161
-sounds/voice/prof_voin_klana.mp3	161
-sounds/voice/prof_zhrec.mp3	162
-sounds/voice/race_aasimary.mp3	161
-sounds/voice/race_aeronidy.mp3	161
-sounds/voice/race_arakokry.mp3	161
-sounds/voice/race_bezymyannye.mp3	162
-sounds/voice/race_driady.mp3	161
-sounds/voice/race_dvoyniki.mp3	161
-sounds/voice/race_dzhinny.mp3	161
-sounds/voice/race_efirnye_stranniki.mp3	161
-sounds/voice/race_elfy.mp3	161
-sounds/voice/race_favny.mp3	162
-sounds/voice/race_fei.mp3	161
-sounds/voice/race_feniksy.mp3	161
-sounds/voice/race_garpii.mp3	161
-sounds/voice/race_gnilokrylye.mp3	161
-sounds/voice/race_gnomy.mp3	192
-sounds/voice/race_gobliny.mp3	161
-sounds/voice/race_hronoscy.mp3	161
-sounds/voice/race_kentavry.mp3	162
-sounds/voice/race_koboldy.mp3	162
-sounds/voice/race_kostokrylye.mp3	162
-sounds/voice/race_kozhany.mp3	161
-sounds/voice/race_kristallidy.mp3	161
-sounds/voice/race_krovavaya_znat.mp3	161
-sounds/voice/race_krovavye_fei.mp3	161
-sounds/voice/race_krovniki.mp3	161
-sounds/voice/race_krovostrizhi.mp3	161
-sounds/voice/race_leprekony.mp3	161
-sounds/voice/race_lesoviki.mp3	161
-sounds/voice/race_lunnye_elfy.mp3	161
-sounds/voice/race_lunnye_obratnye.mp3	161
-sounds/voice/race_lyudi.mp3	161
-sounds/voice/race_mnogoglazye_vestniki.mp3	161
-sounds/voice/race_mnogokrylye.mp3	162
-sounds/voice/race_moroznye_veyry.mp3	162
-sounds/voice/race_motylkovye.mp3	161
-sounds/voice/race_nagi.mp3	161
-sounds/voice/race_nebesnye_tabunschiki.mp3	161
-sounds/voice/race_oblachnye_skakuny.mp3	161
-sounds/voice/race_ogry.mp3	192
-sounds/voice/race_orki.mp3	192
-sounds/voice/race_padalschiki_korvaksa.mp3	161
-sounds/voice/race_pegasy.mp3	162
-sounds/voice/race_pepelnye_deti.mp3	161
-sounds/voice/race_pepelnye_pegasy.mp3	161
-sounds/voice/race_pepelokrylye.mp3	161
-sounds/voice/race_pervorozhdennye_zari.mp3	161
-sounds/voice/race_peschanye_dzhinny.mp3	162
-sounds/voice/race_polurosliki.mp3	161
-sounds/voice/race_poslednie.mp3	162
-sounds/voice/race_provozvestniki.mp3	161
-sounds/voice/race_provozvestniki_neba.mp3	162
-sounds/voice/race_pustokrylye.mp3	161
-sounds/voice/race_pustotniki.mp3	161
-sounds/voice/race_rusalki.mp3	161
-sounds/voice/race_salamandry.mp3	161
-sounds/voice/race_satiry.mp3	161
-sounds/voice/race_shelkopryady_snov.mp3	161
-sounds/voice/race_shepchuschie.mp3	161
-sounds/voice/race_shepotokrylye.mp3	161
-sounds/voice/race_silfy.mp3	161
-sounds/voice/race_slepcy_niksora.mp3	162
-sounds/voice/race_snovidcy.mp3	161
-sounds/voice/race_solyanye_krachki.mp3	161
-sounds/voice/race_solyanye_vdovy.mp3	161
-sounds/voice/race_steklyannye_silfidy.mp3	161
-sounds/voice/race_sumerechniki.mp3	161
-sounds/voice/race_svetlorozhdennye.mp3	161
-sounds/voice/race_tenehodcy.mp3	161
-sounds/voice/race_tiflingi.mp3	161
-sounds/voice/race_tleyuschie.mp3	162
-sounds/voice/race_uglekrylye.mp3	161
-sounds/voice/race_uglezhogi_izoldy.mp3	161
-sounds/voice/race_undiny.mp3	161
-sounds/voice/race_vyvodok_ulury.mp3	161
-sounds/voice/race_yadokrylye.mp3	162
-sounds/voice/race_zerkalcy.mp3	161
-sounds/voice/race_zerkalnye_pticy.mp3	161
-sounds/voice/race_zvezdnye_tkachi.mp3	161
-sounds/voice/say_bol.mp3	163
-sounds/voice/say_otkaz.mp3	163
-sounds/voice/say_proschanie.mp3	163
-sounds/voice/say_soglasie.mp3	162
-sounds/voice/say_somnenie.mp3	162
-sounds/voice/say_torg.mp3	162
-sounds/voice/say_ugroza.mp3	161
 sounds/wild/wild_anvil_01.ogg	92
 sounds/wild/wild_birds_01.ogg	190
 sounds/wild/wild_fire_01.ogg	61

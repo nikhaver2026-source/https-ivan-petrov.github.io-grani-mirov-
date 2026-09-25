@@ -11,9 +11,9 @@
       слов, двадцать один ход разговора — и ни одного народа, ремесла или
       хода без записи.
    2. Каждая запись и вправду лежит на сервере: ни одной битой ссылки среди
-      ста девяноста трёх файлов.
-   3. Рядом лежит CREDITS.md, он называет ElevenLabs, условия и перечисляет
-      каждый файл; титры энциклопедии говорят то же.
+      четырёхсот семи файлов (имена нового поколения, VOICE_GEN).
+   3. Рядом лежит CREDITS.md, он называет Gemini, модель, условия, тринадцать
+      голосов и перечисляет каждый файл; титры энциклопедии говорят то же.
    4. Вживую: оклик жителя звучит записью его народа, а следом — записью его
       ремесла; ответ в разговоре — общим словом.
    5. Голос героя звучит на ход разговора, и звучит ПЕРВЫМ.
@@ -37,12 +37,13 @@ const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(e!==undefined?' :
  const mp3=files.filter(f=>f.endsWith('.mp3'));
  check('папка sounds/voice с четырьмястами семью записями',mp3.length===407,mp3.length);
  const cr=fs.existsSync(path.join(VOICE,'CREDITS.md'))?fs.readFileSync(path.join(VOICE,'CREDITS.md'),'utf8'):'';
- check('CREDITS.md называет ElevenLabs и условия',
-  /ElevenLabs/.test(cr)&&/Terms of Service/.test(cr)&&/eleven_multilingual_v2/.test(cr));
+ check('CREDITS.md называет Gemini, модель и условия',
+  /Gemini/.test(cr)&&/gemini-3\.8-flash-tts/.test(cr)&&/Additional Terms of Service/.test(cr)&&/Prohibited Use Policy/.test(cr));
  const нетВТитрах=mp3.filter(f=>cr.indexOf(f)<0);
  check('CREDITS.md перечисляет каждую запись',нетВТитрах.length===0,нетВТитрах.slice(0,5));
- check('CREDITS.md честно называет, чем озвучены тридцать четыре народа: голоса Piper и их лицензия',
-  /Тридцать четыре народа/.test(cr)&&/Piper/.test(cr)&&/Apache-2\.0/.test(cr)&&/rraaww\/ru_piper/.test(cr));
+ check('CREDITS.md называет все тринадцать голосов Gemini и кто каким говорит',
+  ["Algenib","Charon","Orus","Enceladus","Achird","Puck","Gacrux","Sulafat","Achernar","Leda","Iapetus","Erinome","Algieba"]
+   .every(v=>new RegExp("\\| "+v+" \\|").test(cr)));
 
  const browser=await chromium.launch();
  const ctx=await browser.newContext({hasTouch:true,isMobile:true,viewport:{width:390,height:780}});
@@ -105,11 +106,12 @@ const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(e!==undefined?' :
     проигрывает: через элемент Audio. */
  const пути=await page.evaluate(()=>{
   const out=[];
-  Object.values(VOICE_RACES).forEach(v=>out.push(VOICE_DIR+"race_"+v[0]+".mp3"));
-  Object.values(VOICE_PROFS).forEach(v=>{out.push(VOICE_DIR+"prof_"+v[0]+".mp3");
-   if(v[1])out.push(VOICE_DIR+"prof_"+v[0]+"_f.mp3");});
-  VOICE_SAY.forEach(k=>{out.push(VOICE_DIR+"say_"+k+".mp3");out.push(VOICE_DIR+"say_"+k+"_f.mp3");});
-  VOICE_HERO.forEach(k=>out.push(VOICE_DIR+"hero_"+k+".mp3"));
+  const G=VOICE_GEN;
+  Object.values(VOICE_RACES).forEach(v=>out.push(VOICE_DIR+"race_"+v[0]+G+".mp3"));
+  Object.values(VOICE_PROFS).forEach(v=>{out.push(VOICE_DIR+"prof_"+v[0]+G+".mp3");
+   if(v[1])out.push(VOICE_DIR+"prof_"+v[0]+"_f"+G+".mp3");});
+  VOICE_SAY.forEach(k=>{out.push(VOICE_DIR+"say_"+k+G+".mp3");out.push(VOICE_DIR+"say_"+k+"_f"+G+".mp3");});
+  VOICE_HERO.forEach(k=>out.push(VOICE_DIR+"hero_"+k+G+".mp3"));
   return out;});
  const нетНаДиске=пути.filter(p=>!fs.existsSync(path.join(ROOT,'sounds',p)));
  check('каждая запись речи лежит на диске',
@@ -142,7 +144,7 @@ const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(e!==undefined?' :
   for(let i=0;i<80&&!VOICED.some(v=>v.f.indexOf(рем)===0);i++)await new Promise(r=>setTimeout(r,100));
   /* Гул толпы — роли throng_*; прочее (стража, зверьё вокруг) — не он. */
   return {народ:n.race,ремесло:n.prof,речь:VOICED.map(v=>v.f),гул:CUED.filter(c=>/^throng/.test(c.r)).map(c=>c.gain),
-   ожидалась:"voice/race_"+Folk.раса(n.race)[0]+".mp3",
+   ожидалась:"voice/race_"+Folk.раса(n.race)[0]+VOICE_GEN+".mp3",
    ремФайл:"voice/prof_"+VOICE_PROFS[n.prof][0]};});
  check('оклик жителя — запись его народа',
   оклик.речь[0]===оклик.ожидалась,оклик);
@@ -186,13 +188,13 @@ const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(e!==undefined?' :
   const сразуПосле=VOICED.map(v=>v.f);
   /* Житель отвечает, когда герой договорил: ждём длину реплики героя и
      ещё немного (раньше ответ шёл через 1,5 с — поверх героя). */
-  const герояМс=Math.round(Folk.длина("hero_rassprosit")*1000);
+  const герояМс=Math.round(Folk.длина("hero_rassprosit"+VOICE_GEN)*1000);
   await new Promise(r=>setTimeout(r,герояМс+1600));
   const ответ=VOICED.find(v=>v.f.indexOf("voice/say_")===0);
   return {вышло:typeof вышло==="boolean",сразуПосле,всё:VOICED.map(v=>v.f),
    герояМс,ответЧерез:ответ?ответ.t-t0:null};});
  check('ход разговора звучит голосом героя',
-  герой.сразуПосле[0]==="voice/hero_rassprosit.mp3",герой);
+  герой.сразуПосле[0]==="voice/hero_rassprosit_g.mp3",герой);
  check('голос героя идёт раньше ответа собеседника',
   герой.всё.length>=2&&герой.всё[0].indexOf("voice/hero_")===0
   &&герой.всё.slice(1).some(f=>f.indexOf("voice/say_")===0),герой.всё);
@@ -224,10 +226,10 @@ const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(e!==undefined?' :
   const титры=GUIDE.find(g=>/Кто написал эти звуки/i.test(g.title));
   return {строка:строка||null,сырое:JSON.stringify(c).indexOf("folk")>=0,
    глава:!!гл,строк:гл?гл.body.length:0,
-   титрыElevenLabs:!!титры&&титры.body.some(t=>/ElevenLabs/.test(t))};});
+   титрыGemini:!!титры&&титры.body.some(t=>/Gemini/.test(t))};});
  check('самопроверка мира знает строку «folk»',свод.сырое,свод);
  check('в руководстве есть глава о живой речи',свод.глава&&свод.строк>=6,свод);
- check('титры энциклопедии называют ElevenLabs',свод.титрыElevenLabs);
+ check('титры энциклопедии называют Gemini',свод.титрыGemini);
 
  check('ошибок на странице нет',errors.length===0,errors.slice(0,3));
 
