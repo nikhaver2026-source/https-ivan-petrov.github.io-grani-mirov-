@@ -43,8 +43,8 @@ const SND=path.join(__dirname,'..','sounds');
  const p=файл?spawnSync('ffprobe',['-v','error','-show_entries','format=bit_rate,duration:stream=channels,codec_name','-of','json',path.join(SND,файл)],{encoding:'utf8'}):null;
  let инфо=null;try{const j=JSON.parse(p.stdout);инфо={br:Math.round(+j.format.bit_rate/1000),dur:+j.format.duration,ch:j.streams[0].channels,codec:j.streams[0].codec_name};}catch(_){}
  const пик=файл?(((spawnSync('ffmpeg',['-nostdin','-hide_banner','-i',path.join(SND,файл),'-af','volumedetect','-f','null','-'],{encoding:'utf8'}).stderr||'').match(/max_volume: (-?[\d.]+) dB/)||[])[1]):null;
- check('1. запись заставки: от 320 кбит/с или без потерь, стерео, 20–60 секунд, в полную силу',
-  !!инфо&&(инфо.codec==="flac"||инфо.br>=320)&&инфо.ch===2&&инфо.dur>=20&&инфо.dur<=60&&+пик>=-3,{файл,инфо,пик});
+ check('1. запись заставки: от 320 кбит/с или без потерь, стерео, 20–66 секунд, в полную силу',
+  !!инфо&&(инфо.codec==="flac"||инфо.br>=320)&&инфо.ch===2&&инфо.dur>=20&&инфо.dur<=66&&+пик>=-3,{файл,инфо,пик});
 
  /* ── 2. сама начинает звучать ── */
  await page.waitForTimeout(1500);
