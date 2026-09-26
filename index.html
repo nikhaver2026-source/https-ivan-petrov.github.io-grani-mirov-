@@ -1004,6 +1004,36 @@ const AudioLife={
   safeFn(()=>window.addEventListener("focus",()=>{
    if(!document.hidden)AudioLife.wake();}));}};
 safeFn(()=>AudioLife.bind());
+/* ── ОТКРЫТЫЕ ПЛЕЕРЫ (iPhone) ──
+   На iPhone (все браузеры там — WebKit) каждый плеер звучит, только если его
+   хоть раз запустили из касания. Звук, созданный в таймере — шаг твари, фон
+   нового места, ответ жителя, записанная фраза голоса, — молчал, и без
+   VoiceOver игра казалась немой. Поэтому каждое касание заводит запас
+   плееров: каждый пускается пустой записью прямо в касании и с этой минуты
+   открыт. Игра берёт плеер из запаса и ставит ему свою запись; запас пуст —
+   обычный плеер, как прежде. На Android и в компьютерах запас не нужен:
+   там ключ, полученный касанием, действует на всю страницу. */
+const Плееры={
+ запас:[],N:12,вкл:false,
+ тишина:"data:audio/wav;base64,UklGRrQBAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YZABAACAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICA",
+ iOS(){try{const ua=String(navigator.userAgent||"");
+  return /iPad|iPhone|iPod/.test(ua)||(/Macintosh/.test(ua)&&(Number(navigator.maxTouchPoints)||0)>1);}catch(_){return false;}},
+ /* Только из обработчика касания (Speech.prime). */
+ пополнить(){
+  if(!this.вкл||typeof Audio!=="function")return 0;
+  let n=0;
+  while(this.запас.length<this.N){
+   let a;try{a=new Audio();a.src=this.тишина;const pr=a.play();if(pr&&pr.catch)pr.catch(()=>{});}catch(_){break;}
+   this.запас.push(a);n++;}
+  return n;},
+ /* Плеер для записи: открытый из запаса или новый. */
+ взять(url){
+  const a=this.вкл?this.запас.pop():null;
+  if(!a)return new Audio(url);
+  try{a.pause();a.loop=false;a.muted=false;a.volume=1;a.defaultPlaybackRate=1;a.playbackRate=1;
+   a.preservesPitch=true;a.preload="auto";a.src=url;}catch(_){}
+  return a;}};
+safeFn(()=>{Плееры.вкл=Плееры.iOS();});
 
 /* ════════ РЕЧЬ (очередь фраз, нарезка, защита от обрыва в 15 секунд) ════════ */
 /* ════════ РАСПОРЯДИТЕЛЬ РЕЧИ ════════
@@ -1061,7 +1091,7 @@ const Intro={
   /* Прежняя ещё угасает — обрываем её сразу, чтобы не звучали две. */
   if(this.el)this.finish(true);
   let el;
-  try{el=new Audio(Bank.url(Bank.pick("intro",0)));}catch(_){return false;}
+  try{el=Плееры.взять(Bank.url(Bank.pick("intro",0)));}catch(_){return false;}
   el.preload="auto";el.volume=this.vol();
   this.el=el;this.done=false;this.cut=false;
   el.addEventListener("ended",()=>{if(this.el===el)this.finish(false);},{once:true});
@@ -1213,17 +1243,63 @@ const Speech={voice:null,keepAlive:null,
     фразу: она ничего не произносит, но снимает замок. Тем же касанием
     будится звуковой движок: iOS держит его на том же ключе. */
  primed:false,
- prime(){
-  if(this.primed)return true;
-  this.primed=true;
-  try{AE.ensure();}catch(_){}
+ /* ── iPhone без VoiceOver молчал ──
+    Жалоба игрока (3.9): на Android игра говорит, а на iPhone с выключенным
+    VoiceOver молчит совсем. Причин было три.
+    1. Замок снимался первым же событием из списка — а первым приходит
+       pointerdown. Палец, опустившийся на стекло, по правилам WebKit ещё не
+       касание: ключ даёт только отпускание (touchend, pointerup, click).
+       Замок «снимался» вхолостую, помечался снятым, и настоящее касание его
+       уже не трогало. Теперь ключ берётся только настоящим касанием и
+       пробуется на каждом, пока все три двери не открыты.
+    2. Записи голоса Gemini звучат отдельными плеерами, а iPhone пускает
+       плеер, только если его запустили из касания. Реплика, пришедшая из
+       таймера (итог хода, ответ жителя), молчала. Теперь первым касанием
+       заводится один общий плеер, и отказ любого другого плеера отдаёт
+       запись ему — он уже открыт.
+    3. Звуковой движок на iPhone слушается беззвучного переключателя; с 17-й
+       версии страница может сказать, что она проигрыватель, и звук идёт
+       и при выключенном звонке.
+    Слушает окно, на стадии захвата: обработчики жестов игры гасят события
+    (stopPropagation), и до документа касание могло не дойти вовсе. */
+ _открыто:{звук:false,речь:false,плеер:false},
+ /* Даёт ли это событие ключ к звуку (правила HTML: user activation). */
+ _ключ(e){
+  const t=e&&e.type;if(!t)return true;
+  if(t==="pointerdown")return e.pointerType==="mouse";
+  if(t==="pointerup")return e.pointerType!=="mouse";
+  return t==="touchend"||t==="click"||t==="mousedown"||t==="keydown";},
+ prime(e){
+  if(e&&!this._ключ(e))return false;
+  const о=this._открыто;
+  try{if(navigator.audioSession&&navigator.audioSession.type!=="playback")navigator.audioSession.type="playback";}catch(_){}
+  try{const c=AE.ensure();
+   if(c&&!о.звук){
+    /* Одна пустая выборка, пущенная из касания, — и движок звучит. */
+    const b=c.createBuffer(1,1,22050),ист=c.createBufferSource();
+    ист.buffer=b;ист.connect(c.destination);ист.start(0);
+    if(c.state==="running")о.звук=true;
+    else if(c.resume)c.resume().then(()=>{о.звук=true;},()=>{});}}catch(_){}
   try{
    /* Пустая фраза идёт тем же путём, что и всякая другая: через адаптер.
-      Иначе в файле завелась бы вторая дверь к синтезатору. */
-   if("speechSynthesis" in window)this._webAdapter().speak(" ",{rate:1,volume:0});
+      Иначе в файле завелась бы вторая дверь к синтезатору. Отсрочка после
+      cancel() вынесла бы её из касания — сбрасываем её. */
+   if(!о.речь&&"speechSynthesis" in window){this._cancelAt=0;
+    this._webAdapter().speak(" ",{rate:1,volume:0});о.речь=true;}
   }catch(_){}
-  try{this.fillVoices();}catch(_){}
+  try{
+   if(!о.плеер&&typeof Audio==="function"){
+    const a=this._плеер||(this._плеер=new Audio());
+    a.src=Плееры.тишина;a.volume=0;
+    const pr=a.play();
+    const есть=()=>{о.плеер=true;try{a.pause();a.volume=1;}catch(_){}};
+    if(pr&&pr.then)pr.then(есть,()=>{});else есть();}
+  }catch(_){}
+  try{Плееры.пополнить();}catch(_){}
+  if(!this.primed){this.primed=true;try{this.fillVoices();}catch(_){}}
   return true;},
+ /* Все ли двери открыты: тогда слушать касания больше незачем. */
+ _открытоВсё(){const о=this._открыто;return о.звук&&о.речь&&(о.плеер||typeof Audio!=="function");},
  /* Что умеет это устройство: по этому игра решает, чем говорить. */
  capabilities(){
   let голосов=0;
@@ -1234,8 +1310,11 @@ const Speech={voice:null,keepAlive:null,
    голосов,звук:!!(window.AudioContext||window.webkitAudioContext)};},
  init(){
   /* Замок снимается любым первым касанием, кнопкой или клавишей. */
-  try{["pointerdown","touchend","mousedown","keydown"].forEach(t=>
-   document.addEventListener(t,()=>{try{this.prime();}catch(_){}},{once:true,passive:true}));}catch(_){}
+  try{const типы=["pointerdown","pointerup","touchend","click","mousedown","keydown"];
+   const слух=e=>{try{this.prime(e);}catch(_){}
+    /* На iPhone касания слушаются всегда: каждое пополняет запас плееров. */
+    if(this._открытоВсё()&&!Плееры.вкл)типы.forEach(t=>window.removeEventListener(t,слух,true));};
+   типы.forEach(t=>window.addEventListener(t,слух,{capture:true,passive:true}));}catch(_){}
   if(!("speechSynthesis" in window)){
    /* Синтезатора нет вовсе — такое бывает на Firefox для Android. Игра не
       должна молчать без объяснения: включаем субтитры и говорим, что делать. */
@@ -1540,7 +1619,7 @@ const Speech={voice:null,keepAlive:null,
   const стоп=()=>{const a=эл;эл=null;if(a){try{a.onended=null;a.onerror=null;a.pause();}catch(_){}}};
   const аудио=url=>{let a=пул.get(url);
    if(a){пул.delete(url);пул.set(url,a);return a;}
-   a=new Audio(url);a.preload="auto";пул.set(url,a);
+   a=Плееры.взять(url);a.preload="auto";пул.set(url,a);
    /* Плееров немного: на Android число живых медиаплееров ограничено, а
       звуки мира держат свои. Вытесненный плеер отпускает запись. */
    if(пул.size>24){const [k,v]=пул.entries().next().value;пул.delete(k);if(v!==эл)try{v.removeAttribute("src");v.load();}catch(_){}}
@@ -1567,17 +1646,28 @@ const Speech={voice:null,keepAlive:null,
      if(i>=части.length){идёт=false;if(o.onend)o.onend();return;}
      const ч=части[i];
      if(!ч.url){голосом(ч.t,i);return;}
-     const a=аудио(ч.url);эл=a;
-     try{a.preservesPitch=true;a.mozPreservesPitch=true;a.webkitPreservesPitch=true;}catch(_){}
-     try{a.defaultPlaybackRate=темп;a.playbackRate=темп;}catch(_){}
-     try{a.volume=Math.max(0,Math.min(1,+o.volume));}catch(_){}
-     a.onended=()=>{if(мой===ток&&эл===a){эл=null;шаг(i+1);}};
-     /* Запись не открылась — этот кусок договаривает синтезатор. */
-     a.onerror=()=>{if(мой===ток&&эл===a){эл=null;голосом(ч.t,i);}};
-     try{a.currentTime=0;}catch(_){}
-     let pr=null;try{pr=a.play();}catch(_){эл=null;голосом(ч.t,i);return;}
-     старт();
-     if(pr&&pr.catch)pr.catch(()=>{if(мой===ток&&эл===a){эл=null;голосом(ч.t,i);}});};
+     /* Плеер, открытый первым касанием (см. prime): на iPhone новый плеер
+        вне касания молчит, а этот звучит всегда. Однажды отказавший — и
+        дальше записи идут сразу через него, без лишней осечки. */
+     const общий=()=>{const b=self._плеер;return b&&self._открыто.плеер?b:null;};
+     const пуск=a=>{эл=a;
+      try{a.preservesPitch=true;a.mozPreservesPitch=true;a.webkitPreservesPitch=true;}catch(_){}
+      try{a.defaultPlaybackRate=темп;a.playbackRate=темп;}catch(_){}
+      try{a.volume=Math.max(0,Math.min(1,+o.volume));}catch(_){}
+      a.onended=()=>{if(мой===ток&&эл===a){эл=null;шаг(i+1);}};
+      /* Запись не открылась — этот кусок договаривает синтезатор. */
+      a.onerror=()=>{if(мой===ток&&эл===a){эл=null;голосом(ч.t,i);}};
+      try{a.currentTime=0;}catch(_){}
+      let pr=null;try{pr=a.play();}catch(_){отказ(a);return;}
+      старт();
+      if(pr&&pr.catch)pr.catch(()=>{if(мой===ток&&эл===a)отказ(a);});};
+     /* Плеер не пустили — та же запись общим плеером; не вышло и так —
+        кусок договаривает синтезатор. */
+     const отказ=a=>{эл=null;const b=общий();
+      if(b&&a!==b){self._черезОбщий=true;try{b.src=ч.url;}catch(_){голосом(ч.t,i);return;}пуск(b);return;}
+      голосом(ч.t,i);};
+     const b0=self._черезОбщий?общий():null;
+     if(b0){try{b0.src=ч.url;}catch(_){}пуск(b0);}else пуск(аудио(ч.url));};
     шаг(0);return true;},
    cancel(){ток++;идёт=false;стоп();if(запас)запас.cancel();},
    speaking(){return идёт;}};},
@@ -5149,7 +5239,7 @@ const NavClick={
   if(a)return a;
   const f=typeof UI_BANK!=="undefined"&&UI_BANK[this.ROLE[k]];
   if(!f||typeof Bank==="undefined")return null;
-  try{a=new Audio(Bank.url(f));a.preload="auto";try{a.preservesPitch=false;a.mozPreservesPitch=false;}catch(_){}
+  try{a=Плееры.взять(Bank.url(f));a.preload="auto";try{a.preservesPitch=false;a.mozPreservesPitch=false;}catch(_){}
    this.el[k]=a;try{a.load();}catch(_){}}catch(_){return null;}
   return a;},
  /* Загрузить оба щелчка заранее, чтобы первый свайп не ждал файла. */
@@ -11571,7 +11661,7 @@ const Bank={
   this.loops.forEach(c=>{c.paused=false;[c.el,c.el2].forEach(e=>{try{if(e){const pr=e.play();if(pr&&pr.catch)pr.catch(()=>{});}}catch(_){}});});},
  make(file,volume,loop,rate){
   try{
-   const a=new Audio(this.url(file));
+   const a=Плееры.взять(this.url(file));
    a.loop=!!loop;a.preload="auto";a.volume=Math.max(0,Math.min(1,volume));
    /* Скорость — это высота и вес: тяжёлый шаг чуть ниже, быстрый чуть выше.
       Небольшой разброс делает два одинаковых файла двумя разными звуками. */
@@ -11699,7 +11789,7 @@ const Bank={
  panned(path,{pan=0,gain=1,maxSec=3}={}){
   if(!this.enabled||!path||!settings.effects)return null;
   try{
-   const el=new Audio(this.url(path));
+   const el=Плееры.взять(this.url(path));
    /* Одна ненайденная запись не гасит весь банк: считаем неудачи, как в make(). */
    el.addEventListener("error",()=>{if(el.__stopped)return;this.fails++;
     if(this.plays===0&&this.fails>=4)this.enabled=false;},{once:true});
@@ -12091,7 +12181,7 @@ const Spatial={
   if(dist>MAXCELL)return false;
   try{
    const ctx=this.ensure();if(!ctx)return false;
-   const el=new Audio(Bank.url(path));
+   const el=Плееры.взять(Bank.url(path));
    /* Скорость нужна речи: общее слово и слово ремесла идут в высоте народа. */
    if(rate&&rate!==1){try{el.preservesPitch=false;el.mozPreservesPitch=false;el.playbackRate=Math.max(0.5,Math.min(2,rate));}catch(_){}}
    el.addEventListener("error",()=>{if(el.__stopped)return;Bank.fails++;
@@ -16576,7 +16666,7 @@ const Folk={
   if(Bank.canPan()){
    try{
     const ctx=AE.ensure();
-    const el=new Audio(Bank.url(файл));
+    const el=Плееры.взять(Bank.url(файл));
     const r=Number(оп.rate)||0;
     if(r&&r!==1){try{el.preservesPitch=false;el.mozPreservesPitch=false;el.playbackRate=Math.max(0.5,Math.min(2,r));}catch(_){}}
     el.addEventListener("error",()=>{if(el.__stopped)return;Bank.fails++;},{once:true});
@@ -34947,7 +35037,7 @@ function playLeveled(role,o){
  if(k>1&&Bank.canPan()){
   try{
    const ctx=AE.ensure();
-   const el=new Audio(Bank.url(file));
+   const el=Плееры.взять(Bank.url(file));
    if(rate&&rate!==1){try{el.preservesPitch=false;el.mozPreservesPitch=false;el.playbackRate=Math.max(0.5,Math.min(2,rate));}catch(_){}}
    el.addEventListener("error",()=>{if(el.__stopped)return;Bank.fails++;},{once:true});
    el.addEventListener("loadeddata",()=>{Bank.plays++;Bank.fails=0;},{once:true});
