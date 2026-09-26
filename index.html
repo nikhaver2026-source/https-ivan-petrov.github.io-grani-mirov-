@@ -1570,7 +1570,10 @@ const Speech={voice:null,keepAlive:null,
     нет (числа, имена, меняющийся текст), договаривает синтезатор
     устройства — тем же тактом, без паузы. Темп — тот же ползунок скорости:
     запись ускоряется с сохранением высоты голоса. */
- GVOICE:{url:"sounds/gvoice/bank_1.js",dir:"sounds/gvoice/",map:null,state:"off"},
+ /* Номер описи растёт с каждым пополнением банка: всё в sounds/ служебный
+    работник держит «сначала кэш», и опись под прежним именем у игрока
+    осталась бы старой. 3.9 — bank_1 (2987 фраз), затем bank_2 (4995). */
+ GVOICE:{url:"sounds/gvoice/bank_2.js",dir:"sounds/gvoice/",map:null,state:"off"},
  gvKey(t){return String(t==null?"":t).toLowerCase().replace(/ё/g,"е").replace(/[^а-яa-z0-9]+/g," ").trim();},
  /* Опись записей — скриптом с того же сайта, а не запросом fetch:
     политика безопасности страницы закрывает ей сеть (connect-src 'none'). */

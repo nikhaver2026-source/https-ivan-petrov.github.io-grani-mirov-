@@ -7,7 +7,7 @@
    подземелья — с музыкой их не слышно».
 
    ЧТО ПРОВЕРЯЕТСЯ.
-   1. Опись записей (sounds/gvoice/bank_1.js) грузится; записей не меньше
+   1. Опись записей (sounds/gvoice/bank_2.js) грузится; записей не меньше
       тысячи; у каждой есть файл, лишних файлов нет; все — FLAC без потерь,
       моно, 24 кГц.
    2. Титры папки называют Gemini, голос Iapetus и условия Gemini API; число
@@ -47,7 +47,7 @@ function lufs(file){
 
 (async()=>{
  /* ── 1. опись и файлы ── */
- const js=fs.readFileSync(path.join(GV,'bank_1.js'),'utf8');
+ const js=fs.readFileSync(path.join(GV,'bank_2.js'),'utf8');
  const bank=JSON.parse(js.slice(js.indexOf('{'),js.lastIndexOf('}')+1));
  const ids=Object.values(bank.p);const файлы=fs.readdirSync(GV).filter(f=>f.endsWith('.flac'));
  const нет=ids.filter(id=>!fs.existsSync(path.join(GV,id+'.flac')));

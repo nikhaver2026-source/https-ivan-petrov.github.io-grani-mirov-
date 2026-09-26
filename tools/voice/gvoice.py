@@ -18,7 +18,7 @@
 паузам, склеить куски во фразы по распознанному тексту (GigaAM), каждой
 фразе — не больше 15 % ошибочных букв; годные — FLAC 24 кГц моно 16 бит,
 края тишины срезаны, −18 LUFS, пик не выше −1 дБ; имя — gvNNNN.flac; опись —
-sounds/gvoice/bank_1.js (нормализованная фраза → имя): нижний регистр, «ё» →
+sounds/gvoice/bank_2.js (нормализованная фраза → имя): нижний регистр, «ё» →
 «е», всё, кроме русских и латинских букв и цифр, — пробел. Та же нормализация
 в игре — Speech.gvKey.
 """
@@ -37,7 +37,7 @@ def ключ_фразы(t):
 
 
 def записано():
-    p = os.path.join(КОРЕНЬ, "sounds", "gvoice", "bank_1.js")
+    p = os.path.join(КОРЕНЬ, "sounds", "gvoice", "bank_2.js")
     if not os.path.exists(p): return {}
     t = open(p, encoding="utf-8").read()
     return json.loads(t[t.index("{"):t.rindex("}") + 1])["p"]
