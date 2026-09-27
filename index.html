@@ -196,22 +196,25 @@ h3{color:var(--acc2);margin:14px 0 6px;font-size:1.05rem;}
   <div class="set-group" data-set-group="tts" hidden>
  <h3 class="sec-head" tabindex="0" data-cmd="secjump" data-sec-title="Синтезатор речи">Синтезатор речи</h3>
  <p class="hint">Всё про сам голос в одном разделе: чем игра говорит, каким голосом, с какой скоростью и высотой. Проба — тут же.</p>
- <label class="opt">Синтезатор <select id="setTtsEngine" aria-label="Каким синтезатором говорит игра"><option value="gemini" selected>Голос Gemini — мгновенно</option><option value="device">Синтезатор устройства</option><option value="grani">Встроенный голос игры</option><option value="eleven">Голос ElevenLabs</option></select></label>
- <p class="hint" id="ttsEngineHint"><span id="gvHint">Голос Gemini — по умолчанию: постоянные фразы игры — пункты меню, настроек и инвентаря, имена окон, частые сообщения — заранее прочитаны голосом Gemini и звучат записями сразу, без сети; то, чего нет в записях (числа, имена), договаривает синтезатор устройства; скорость — тот же ползунок. </span>Встроенный голос игры — русская нейросеть, которая говорит прямо на устройстве, одним голосом на любом телефоне и без чужого сервера: один раз скачивается (около шестидесяти мегабайт), дальше работает без сети; пока качается, говорит синтезатор устройства. Синтезатор устройства — тот, что стоит в самом телефоне: на iPhone это голоса VoiceOver, на Android — Google, Samsung, Acapela или любой другой установленный. Он отвечает сразу и работает без сети. Голос ElevenLabs звучит живее, но ходит в сеть и требует ключа.</p>
- <label class="opt">Встроенный голос <select id="setGraniVoice" aria-label="Какой встроенный голос говорит"><option value="sova" selected>Женский — самый разборчивый</option><option value="igm">Мужской</option></select></label>
- <label class="opt"><input type="checkbox" id="setVoiceLocal" checked><span><b>Только голоса с устройства</b><small>Онлайн-голоса отсеиваются: они ждут сеть и отвечают с задержкой, а без сети молчат совсем</small></span></label>
- <label class="opt">Язык голоса <select id="setVoiceLang" aria-label="Язык голоса"><option value="ru" selected>Русский</option><option value="all">Все языки</option></select></label>
- <label class="opt">Голос <select id="setVoice" aria-label="Выбор голоса"></select></label>
- <p class="hint" id="voiceHint">Список — то, что установлено на этом устройстве.</p>
- <div class="row"><button type="button" id="btnVoiceList" data-cmd="voicelist">Все голоса телефона — списком</button><button type="button" id="btnVoiceRefresh">Перечитать голоса устройства</button></div>
+ <label class="opt"><input type="checkbox" id="setEngBuiltin" checked><span><b>Встроенный голос</b><small>Живые записи голоса Gemini: пункты меню, настроек и инвентаря, имена окон, частые сообщения звучат сразу, без сети; то, чего нет в записях (числа, имена), договаривает голос устройства</small></span></label>
+ <label class="opt" data-eng="gemini">Выбор голоса <select id="setGvVoice" aria-label="Выбор голоса встроенного голоса"><option value="f">Женский</option><option value="m" selected>Мужской</option></select></label>
+ <label class="opt"><input type="checkbox" id="setEngDevice"><span><b>Голос устройства</b><small>Синтезатор самого телефона: на iPhone — голоса VoiceOver, на Android — Google, Samsung, Acapela или любой установленный; отвечает сразу и без сети</small></span></label>
+ <label class="opt" data-eng="device">Выбор голоса устройства <select id="setVoice" aria-label="Выбор голоса устройства"></select></label>
+ <p class="hint" id="voiceHint" data-eng="device">Список — то, что установлено на этом устройстве.</p>
+ <label class="opt" hidden>Синтезатор <select id="setTtsEngine" aria-label="Каким синтезатором говорит игра"><option value="gemini" selected>Голос Gemini — мгновенно</option><option value="device">Синтезатор устройства</option><option value="grani">Встроенный голос игры</option><option value="eleven">Голос ElevenLabs</option></select></label>
+ <p class="hint" id="ttsEngineHint" hidden><span id="gvHint">Голос Gemini — по умолчанию: постоянные фразы игры — пункты меню, настроек и инвентаря, имена окон, частые сообщения — заранее прочитаны голосом Gemini и звучат записями сразу, без сети; то, чего нет в записях (числа, имена), договаривает синтезатор устройства; скорость — тот же ползунок. </span>Встроенный голос игры — русская нейросеть, которая говорит прямо на устройстве, одним голосом на любом телефоне и без чужого сервера: один раз скачивается (около шестидесяти мегабайт), дальше работает без сети; пока качается, говорит синтезатор устройства. Синтезатор устройства — тот, что стоит в самом телефоне: на iPhone это голоса VoiceOver, на Android — Google, Samsung, Acapela или любой другой установленный. Он отвечает сразу и работает без сети. Голос ElevenLabs звучит живее, но ходит в сеть и требует ключа.</p>
+ <label class="opt" data-eng="device"><input type="checkbox" id="setVoiceLocal" checked><span><b>Только голоса с устройства</b><small>Онлайн-голоса отсеиваются: они ждут сеть и отвечают с задержкой, а без сети молчат совсем</small></span></label>
+ <label class="opt" data-eng="device">Язык голоса <select id="setVoiceLang" aria-label="Язык голоса"><option value="ru" selected>Русский</option><option value="all">Все языки</option></select></label>
+ <div class="row" data-eng="device"><button type="button" id="btnVoiceList" data-cmd="voicelist">Все голоса телефона — списком</button><button type="button" id="btnVoiceRefresh">Перечитать голоса устройства</button></div>
  <label class="opt">Скорость озвучки <input type="range" id="setRate" min="0.6" max="6" step="0.2" data-tap-step="0.2" value="5"><span id="vRate">5.0×</span></label>
  <p class="hint">Шкала от 0,6 до 6,0 шагом в две десятых, по умолчанию пять. Ползунок отвечает тем самым темпом, который выбран: «Раз, два, три» — это проба, а не подсказка. Дойдя до шести, шкала возвращается к началу, так что до медленного темпа добираться недалеко.</p>
  <label class="opt">Высота голоса <input type="range" id="setPitch" min="50" max="200" step="5" data-tap-step="5" value="100"><span id="vPitch">1,0</span></label>
  <p class="hint">От 0,5 до 2,0. Единица — как задумано голосом; ниже — глуше, выше — звонче. Не всякий синтезатор слушается высоты: голоса Apple слушаются, часть андроидных — нет.</p>
- <label class="opt">Ключ ElevenLabs <input type="password" id="setElevenKey" autocomplete="off" spellcheck="false" aria-label="Ключ доступа ElevenLabs" placeholder="не задан"></label>
- <p class="hint">Ключ хранится только на этом устройстве и никуда, кроме самого ElevenLabs, не уходит. Без ключа игра говорит синтезатором устройства.</p>
- <label class="opt">Голос ElevenLabs <select id="setElevenVoice" aria-label="Голос ElevenLabs"></select></label>
- <div class="row"><button type="button" id="btnSpeechSample">Тест озвучки</button><button type="button" id="btnElevenCheck">Проверить ключ и голоса</button></div>
+ <label class="opt"><input type="checkbox" id="setEngEleven"><span><b>Голос ElevenLabs</b><small>Звучит живее, но ходит в сеть и требует ключа; без сети фраза уходит голосу устройства</small></span></label>
+ <label class="opt" data-eng="eleven">Ключ ElevenLabs <input type="password" id="setElevenKey" autocomplete="off" spellcheck="false" aria-label="Ключ доступа ElevenLabs" placeholder="не задан"></label>
+ <p class="hint" data-eng="eleven">Ключ хранится только на этом устройстве и никуда, кроме самого ElevenLabs, не уходит. Без ключа игра говорит синтезатором устройства.</p>
+ <label class="opt" data-eng="eleven">Голос ElevenLabs <select id="setElevenVoice" aria-label="Голос ElevenLabs"></select></label>
+ <div class="row"><button type="button" id="btnSpeechSample">Тест озвучки</button><button type="button" id="btnElevenCheck" data-eng="eleven">Проверить ключ и голоса</button></div>
   </div>
   <div class="set-group" data-set-group="speech" hidden>
  <h3 class="sec-head" tabindex="0" data-cmd="secjump" data-sec-title="Голос рассказчика">Голос рассказчика</h3>
@@ -778,7 +781,7 @@ const settings=Object.assign({speech:1,effects:1,music:1,subtitles:1,explore:1,f
     своему ключу). voiceLocal — отсев онлайновых
     голосов: они ждут сеть и отвечают с задержкой на каждое слово меню.
     voiceLang — искать ли только русские голоса. pitch — высота. */
- ttsEngine:gvDefaultEngine(),voiceLocal:1,voiceLang:"ru",pitch:1,elevenKey:"",elevenVoice:"",
+ ttsEngine:gvDefaultEngine(),gvVoice:"m",voiceLocal:1,voiceLang:"ru",pitch:1,elevenKey:"",elevenVoice:"",
  /* ── КАНАЛЫ ПО ТЗ ЗВУКА ──
     Каналов девять: общий (master), музыка, фон, мир (sfx), голоса людей
     (npc), речь игры (tts — это voiceVol), бой, меню и чары. У каждого своя
@@ -927,7 +930,9 @@ const NEWS=[
  {v:22,н:"торжественная заставка, раздельного касания больше нет, подземелья слышно сквозь музыку",
   т:"Заставка стала торжественнее: торжественный и при этом живой голос Gemini, новая тема с фанфарами, хором и литаврами и яркие эффекты — магический переход, удары, крик ястреба, волчий вой, водопад, ворон, призраки, летучие мыши и цепи, рык демона из глубины, портал, драконье пламя, конь, свист стрелы, огненный шквал, колокола, гром, каменные ворота, клинок и рёв из глубины. Раздельного касания больше нет: второй палец спорил с двойным касанием, и теперь пункт выполняет только двойное касание одним пальцем. И подземелья слышно сквозь музыку: тихие петли глубины выровнены по громкости, а музыка под землёй звучит тише."},
  {v:23,н:"игра говорит голосом Gemini",
-  т:"Игра заговорила голосом Gemini. Постоянные фразы — пункты меню и настроек, имена окон, частые сообщения — прочёл голос Gemini, и они звучат записями сразу, без задержки; то, чего в записях нет, например числа и имена, договаривает синтезатор телефона. Скорость — тот же ползунок, запись ускоряется без смены высоты голоса. Вернуть прежний синтезатор можно в настройках, раздел «Синтезатор речи»."}];
+  т:"Игра заговорила голосом Gemini. Постоянные фразы — пункты меню и настроек, имена окон, частые сообщения — прочёл голос Gemini, и они звучат записями сразу, без задержки; то, чего в записях нет, например числа и имена, договаривает синтезатор телефона. Скорость — тот же ползунок, запись ускоряется без смены высоты голоса. Вернуть прежний синтезатор можно в настройках, раздел «Синтезатор речи»."},
+ {v:24,н:"встроенный голос — женский или мужской; голос устройства — отдельным пунктом",
+  т:"В настройках, пункт «Синтезатор речи», голос выбирается проще. «Встроенный голос» — живые записи голоса Gemini; под ним «Выбор голоса»: женский или мужской. «Голос устройства» — синтезатор самого телефона, и только при нём видны голоса телефона. Включён всегда один голос. Женский голос Callirrhoe заново читает все постоянные фразы игры и уже звучит там, где записан; мужской Iapetus прочёл почти пять тысяч фраз. Того, чего нет в записях, договаривает голос устройства."}];
 const NEWS_V=NEWS[NEWS.length-1].v;
 /* Одна фраза: главное из последнего выпуска и сколько ещё новостей ждёт в меню. */
 function newsBrief(было){
@@ -1207,7 +1212,7 @@ const Speech={voice:null,keepAlive:null,
   this._graniAuto=false;this.adapter=null;this._kind=null;
   try{if(v.native&&window.GraniTTS&&typeof window.GraniTTS.setVoice==="function")window.GraniTTS.setVoice(String(v.voiceURI).slice(7));}catch(_){}
   saveSettings();
-  try{const e=document.getElementById("setTtsEngine");if(e)e.value=settings.ttsEngine;}catch(_){}
+  try{const e=document.getElementById("setTtsEngine");if(e)e.value=settings.ttsEngine;if(window.engUi)window.engUi();}catch(_){}
   try{const sel=document.getElementById("setVoice");if(sel&&[...sel.options].some(x=>x.value===settings.voice))sel.value=settings.voice;}catch(_){}
   if(o.say!==false)this.say(`Голос: ${this.voiceLabel(v)}.${settings.ttsEngine==="gemini"?" Он договаривает то, чего нет в записях голоса Gemini.":былДвижок!=="device"?" Говорит синтезатор телефона.":""} Здравствуйте, путник.`,
    {interrupt:true,pri:1,user:true,cat:"ui"});
@@ -1573,19 +1578,25 @@ const Speech={voice:null,keepAlive:null,
  /* Номер описи растёт с каждым пополнением банка: всё в sounds/ служебный
     работник держит «сначала кэш», и опись под прежним именем у игрока
     осталась бы старой. 3.9 — bank_1 (2987 фраз), затем bank_2 (4995). */
- GVOICE:{url:"sounds/gvoice/bank_2.js",dir:"sounds/gvoice/",map:null,state:"off"},
+ /* Два голоса записей: мужской (Iapetus, sounds/gvoice) и женский (Callirrhoe,
+    sounds/gvoice_f). Выбор — настройки, «Синтезатор», «Выбор голоса». Каждая
+    опись задаёт свою глобальную переменную, поэтому обе могут лежать в
+    памяти сразу, и переключение голоса не перезагружает страницу. */
+ GVOICES:{m:{url:"sounds/gvoice/bank_2.js",dir:"sounds/gvoice/",glob:"GVOICE_BANK",map:null,state:"off"},
+  f:{url:"sounds/gvoice_f/bank_f1.js",dir:"sounds/gvoice_f/",glob:"GVOICE_BANK_F",map:null,state:"off"}},
+ get GVOICE(){return this.GVOICES[settings.gvVoice==="f"?"f":"m"];},
  gvKey(t){return String(t==null?"":t).toLowerCase().replace(/ё/g,"е").replace(/[^а-яa-z0-9]+/g," ").trim();},
  /* Опись записей — скриптом с того же сайта, а не запросом fetch:
     политика безопасности страницы закрывает ей сеть (connect-src 'none'). */
  gvLoad(){
   const g=this.GVOICE;if(g.state!=="off")return g;
   g.state="loading";
-  const готово=()=>{const j=window.GVOICE_BANK;
+  const готово=()=>{const j=window[g.glob];
    if(j&&j.p){g.map=j.p;g.state="ready";
     /* Первые пункты, которые слышат чаще всего, готовятся заранее. */
     (j.top||[]).slice(0,12).forEach(id=>{try{const a=new Audio(g.dir+id+".flac");a.preload="auto";a.load();}catch(_){}});}
    else g.state="failed";};
-  if(window.GVOICE_BANK){готово();return g;}
+  if(window[g.glob]){готово();return g;}
   try{const sc=document.createElement("script");sc.src=g.url;sc.async=true;
    sc.onload=готово;sc.onerror=()=>{g.state="failed";};
    (document.head||document.documentElement).appendChild(sc);}catch(_){g.state="failed";}
@@ -52456,10 +52467,30 @@ function bindSettings(){const $=id=>document.getElementById(id);
  $("setVoice").addEventListener("change",e=>{safeFn(()=>Speech.pickVoice(e.target.value));});
  $("btnSpeechSample").addEventListener("click",()=>narrate("Это образец озвучивания. Грань Миров говорит с вами."));
  /* ── РАЗДЕЛ «СИНТЕЗАТОР РЕЧИ» ── */
- {const g=$("setGraniVoice");if(g){g.value=Speech.GRANI_VOICES[settings.graniVoice]?settings.graniVoice:"sova";
-  g.addEventListener("change",ev=>{settings.graniVoice=Speech.GRANI_VOICES[ev.target.value]?ev.target.value:"sova";saveSettings();
-   safeFn(()=>Speech.graniRestart());
-   narrate(`Встроенный голос: ${Speech.GRANI_VOICES[settings.graniVoice].n}. Он заговорит, как только загрузится.`,{interrupt:true});});}}
+ /* Пункты «Встроенный голос», «Голос устройства» и «Голос ElevenLabs» — одна
+    настройка ttsEngine, показанная тремя переключателями: включён ровно один.
+    Выключить включённый — значит вернуться к встроенному голосу (а его —
+    к голосу устройства). Скрытый выбор setTtsEngine остаётся хранителем. */
+ function engUi(){
+  const e=settings.ttsEngine;const b=$("setEngBuiltin"),d=$("setEngDevice"),x=$("setEngEleven"),t=$("setTtsEngine");
+  if(b)b.checked=e==="gemini"||e==="grani";if(d)d.checked=e==="device";if(x)x.checked=e==="eleven";if(t)t.value=e;
+  /* Видно только то, что относится к выбранному голосу (просьба игрока, 4.0):
+     при встроенном — «Выбор голоса», при голосе устройства — голоса телефона,
+     при ElevenLabs — ключ и голос. */
+  const вид=e==="grani"?"gemini":e;
+  document.querySelectorAll("[data-eng]").forEach(el=>{el.hidden=el.dataset.eng!==вид;});}
+ window.engUi=engUi;
+ function engSet(v){const t=$("setTtsEngine");if(!t)return;t.value=v;t.dispatchEvent(new Event("change"));engUi();}
+ {const b=$("setEngBuiltin");if(b)b.addEventListener("change",ev=>engSet(ev.target.checked?(GVOICE_ON?"gemini":"grani"):"device"));}
+ {const d=$("setEngDevice");if(d)d.addEventListener("change",ev=>engSet(ev.target.checked?"device":(GVOICE_ON?"gemini":"grani")));}
+ {const x=$("setEngEleven");if(x)x.addEventListener("change",ev=>engSet(ev.target.checked?"eleven":(GVOICE_ON?"gemini":"grani")));}
+ /* «Выбор голоса» встроенного голоса: женский — записи Callirrhoe и нейросеть
+    sova, мужской — записи Iapetus и нейросеть igm. */
+ {const g=$("setGvVoice");if(g){g.value=settings.gvVoice==="f"?"f":"m";
+  g.addEventListener("change",ev=>{settings.gvVoice=ev.target.value==="f"?"f":"m";
+   settings.graniVoice=settings.gvVoice==="f"?"sova":"igm";saveSettings();
+   safeFn(()=>{Speech.adapter=null;Speech._kind=null;Speech.gvLoad();Speech.graniRestart();});
+   narrate(settings.gvVoice==="f"?"Встроенный голос: женский.":"Встроенный голос: мужской.",{interrupt:true});});}}
  {const e=$("setTtsEngine");if(e){
   /* В приложении голоса Gemini пока нет: пункт и строка о нём убираются. */
   if(!GVOICE_ON){const o=e.querySelector('option[value="gemini"]');if(o)o.remove();const h=$("gvHint");if(h)h.remove();
@@ -52479,6 +52510,7 @@ function bindSettings(){const $=id=>document.getElementById(id);
       ?"Говорит голос ElevenLabs. Если сеть подведёт, фраза уйдёт синтезатору устройства."
       :"Голос ElevenLabs выбран, но ключ или голос не заданы: пока говорит синтезатор устройства.")
     :"Говорит синтезатор устройства.",{interrupt:true});});}}
+ engUi();
  {const l=$("setVoiceLocal");if(l){l.checked=settings.voiceLocal!==0;
   l.addEventListener("change",ev=>{settings.voiceLocal=ev.target.checked?1:0;saveSettings();
    const n=safeFn(()=>Speech.fillVoices(),0);

@@ -209,7 +209,7 @@ async function страница(browser,модель){
    settings.graniVoice=undefined;const поУмолчанию=Speech.GRANI_MODELS[0];
    settings.graniVoice="igm";const мужской=Speech.GRANI_MODELS[0];
    settings.graniVoice="чепуха";const запас=Speech.GRANI_MODELS[0];settings.graniVoice=был;
-   const sel=document.getElementById("setGraniVoice");
+   const sel=document.getElementById("setGvVoice");  /* с 4.0 — «Выбор голоса» встроенного голоса: женский и мужской */
    return {поУмолчанию,мужской,запас,пункты:sel?[...sel.options].map(o=>o.value):[],имя:sel&&sel.getAttribute("aria-label"),
     дениса:document.documentElement.innerHTML.indexOf("denis")>=0};});
   await p.close();return r;})();
@@ -218,7 +218,7 @@ async function страница(browser,модель){
   голоса.every(g=>g.мб>50&&g.частота===22050&&Array.isArray(g.метка)&&g.метка[0]===150),голоса);
  check('11б. по умолчанию говорит женский, мужской выбирается в настройках, прежнего «Дениса» нет',
   /sova200/.test(выбор.поУмолчанию)&&/igm3804/.test(выбор.мужской)&&/sova200/.test(выбор.запас)
-  &&выбор.пункты.join()==="sova,igm"&&!!выбор.имя&&!выбор.дениса&&денисНет,{выбор,денисНет});
+  &&выбор.пункты.join()==="f,m"&&!!выбор.имя&&!выбор.дениса&&денисНет,{выбор,денисНет});
 
  await browser.close();
  results.forEach(r=>console.log(r));
