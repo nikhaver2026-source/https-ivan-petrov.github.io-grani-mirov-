@@ -26,6 +26,9 @@
       слово народа.
    6. Все уличные оклики идут через Folk.реплика, строка в кавычках
       остаётся лишь запасной; реплика героя обрывает и записи voice_npc.
+   7. Ответы жителя в разговоре (DLG_SAY со всеми вариантами под нрав) —
+      у каждой строки мужская и женская запись; в разговоре житель
+      отвечает своей записью, а голос игры — без цитаты.
    ═══════════════════════════════════════════════════════════════════════ */
 const {chromium}=require('playwright');
 const {spawnSync}=require('child_process');const path=require('path');const fs=require('fs');
@@ -51,11 +54,15 @@ function probe(file){
    if(!r)нет.push(р+": "+t);else if(/folk/.test(р)&&!r[1])безЖен.push(р+": "+t);});
   Object.values(NPC_GREET).forEach(арр=>арр.forEach(t=>{строк++;const r=VOICE_NPC.greet&&VOICE_NPC.greet[t];
    if(!r)нет.push("greet: "+t);else if(!r[1])безЖен.push("greet: "+t);}));
+  const ответы=new Set(["Я на вас рассчитывал"]);
+  Object.values(DLG_SAY).forEach(арр=>арр.forEach(x=>ответы.add(typeof x==="string"?x:x[1])));
+  ответы.forEach(t=>{строк++;const r=VOICE_NPC.dlg&&VOICE_NPC.dlg[t];
+   if(!r)нет.push("dlg: "+t);else if(!r[1])безЖен.push("dlg: "+t);});
   const файлы=[];
   Object.values(VOICE_NPC).forEach(mp=>Object.values(mp).forEach(([b,f])=>{файлы.push(b+VOICE_GEN);if(f)файлы.push(b+"_f"+VOICE_GEN);}));
   return {строк,нет,безЖен,файлы,len:VOICE_NPC_LEN,dir:VOICE_NPC_DIR,роли:Object.keys(VOICE_NPC)};});
  check('1. у каждой строки приветствия и уличного оклика своя запись, у горожан и приветствий — мужская и женская',
-  игра.строк>=170&&игра.нет.length===0&&игра.безЖен.length===0&&игра.dir==="voice_npc/",
+  игра.строк>=350&&игра.нет.length===0&&игра.безЖен.length===0&&игра.dir==="voice_npc/",
   {строк:игра.строк,нет:игра.нет.slice(0,4),безЖен:игра.безЖен.slice(0,4),роли:игра.роли});
 
  /* ── 2. файлы на диске ── */
@@ -69,7 +76,7 @@ function probe(file){
   else if(Math.abs((игра.len[k]||0)-i.dur)>0.06)расхождения.push({k,в_игре:игра.len[k],файл:i.dur});});
  const безДлины=нужны.filter(k=>!(игра.len[k]>0));
  check('2. каждая запись в sounds/voice_npc: MP3 моно 44,1 кГц 320 кбит/с, длительность сходится, лишних файлов нет',
-  нужны.length>=280&&безФайла.length===0&&лишние.length===0&&плохие.length===0&&расхождения.length===0&&безДлины.length===0
+  нужны.length>=650&&безФайла.length===0&&лишние.length===0&&плохие.length===0&&расхождения.length===0&&безДлины.length===0
   &&mp3.length===нужны.length,{записей:нужны.length,файлов:mp3.length,безФайла:безФайла.slice(0,3),лишние:лишние.slice(0,3),плохие:плохие.slice(0,2),расхождения:расхождения.slice(0,3)});
 
  /* ── 3. титры ── */
@@ -130,6 +137,27 @@ function probe(file){
  const смолк=await page.evaluate(()=>String(Folk.смолкнуть));
  check('6. все уличные оклики идут через Folk.реплика, строка в кавычках — лишь запасная; реплика героя обрывает и voice_npc',
   сайты.every(s=>html.includes(s))&&голыхКавычек.length===0&&/voice_npc/.test(смолк),{нет:сайты.filter(s=>!html.includes(s)),голыхКавычек:голыхКавычек.slice(0,2)});
+
+ /* ── 7. ответ жителя в разговоре ── */
+ const разговор=await page.evaluate(()=>{
+  outer: for(let r=0;r<60;r++)for(let dx=-r;dx<=r;dx++)for(let dy=-r;dy<=r;dy++){
+   const c=cellContent(G.x+dx,G.y+dy);
+   if(c.structure&&npcsFor(c).length){G.x+=dx;G.y+=dy;break outer;}}
+  const npc=npcsFor(cellContent(G.x,G.y))[0];if(!npc)return {нет:true};
+  const было={on:Folk.on,сказать:Folk.сказать,say:Speech.say,rnd:Math.random,st:window.setTimeout};
+  const голос=[],речь=[];
+  Folk.on=()=>true;Folk.сказать=function(путь,n,o){голос.push({путь,dir:o&&o.dir});return true;};
+  Speech.say=function(t){речь.push(String(t));return true;};
+  Math.random=()=>0.99;  /* ход не удаётся: «Нет. И не уговаривайте» и его варианты */
+  window.setTimeout=(f,ms)=>{try{f();}catch(_){}return 0;};
+  const ход=(DLG_MOVES.find(m=>m.id==="ubedit")||{}).id||"ubedit";
+  try{if(G.npcMem&&G.npcMem[npc.key]&&G.npcMem[npc.key].ходы)delete G.npcMem[npc.key].ходы[ход];dlgDo(npc,ход);}
+  finally{Folk.on=было.on;Folk.сказать=было.сказать;Speech.say=было.say;Math.random=было.rnd;window.setTimeout=было.st;}
+  while(activeLayer())closeTopUI();
+  return {голос,итог:речь.filter(t=>/не вышло|вышло/.test(t)).pop()||"",все:речь.slice(-3)};});
+ const отв=(разговор.голос||[]).find(x=>/^dlg_/.test(x.путь));
+ check('7. в разговоре житель отвечает своей записью (dlg_ из voice_npc), а голос игры называет исход без цитаты',
+  !разговор.нет&&!!отв&&отв.dir==="voice_npc/"&&!!разговор.итог&&разговор.итог.indexOf("«")<0,разговор);
 
  check('страница не бросила ни одной ошибки',errors.length===0,errors.slice(0,3));
  await browser.close();
