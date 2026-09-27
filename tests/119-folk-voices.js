@@ -191,14 +191,16 @@ const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(e!==undefined?' :
      ещё немного (раньше ответ шёл через 1,5 с — поверх героя). */
   const герояМс=Math.round(Folk.длина("hero_rassprosit"+VOICE_GEN)*1000);
   await new Promise(r=>setTimeout(r,герояМс+1600));
-  const ответ=VOICED.find(v=>v.f.indexOf("voice/say_")===0);
+  /* Ответ — общее слово (voice/say_) или, если у слов ответа есть запись,
+     сами слова жителя (voice_npc/dlg_). */
+  const ответ=VOICED.find(v=>/^voice\/say_|^voice_npc\/dlg_/.test(v.f));
   return {вышло:typeof вышло==="boolean",сразуПосле,всё:VOICED.map(v=>v.f),
    герояМс,ответЧерез:ответ?ответ.t-t0:null};});
  check('ход разговора звучит голосом героя',
   герой.сразуПосле[0]==="voice/hero_rassprosit_g.mp3",герой);
  check('голос героя идёт раньше ответа собеседника',
   герой.всё.length>=2&&герой.всё[0].indexOf("voice/hero_")===0
-  &&герой.всё.slice(1).some(f=>f.indexOf("voice/say_")===0),герой.всё);
+  &&герой.всё.slice(1).some(f=>/^voice\/say_|^voice_npc\/dlg_/.test(f)),герой.всё);
  check('ответ жителя не наслаивается на героя: начинается, когда тот договорил',
   герой.ответЧерез!==null&&герой.ответЧерез>=герой.герояМс,{ответЧерез:герой.ответЧерез,герояМс:герой.герояМс});
 
