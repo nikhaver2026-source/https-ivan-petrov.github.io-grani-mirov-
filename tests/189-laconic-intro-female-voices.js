@@ -199,7 +199,7 @@ const КОРОТКО=t=>typeof t==="string"&&t.length>0&&!/\d|\(|\)|Двойно
  const версия=await page.evaluate(()=>({v:GAME_VERSION,title:document.title,news:NEWS_V,т:(NEWS.find(n=>n.v===20)||{}).т||""}));
  const gradle=fs.readFileSync(path.join(ROOT,'android','app','build.gradle'),'utf8');
  check('9. версия не ниже 3.6, выпуск новостей 20 рассказывает о переменах',
-  parseFloat(версия.v)>=3.6&&/Alpha 3\.\d/.test(версия.title)&&/versionName '3\.\d'/.test(gradle)&&версия.news>=20
+  (v=>{const[a,b]=String(v).split('.').map(Number);return a*100+(b||0);})(версия.v)>=306&&/Alpha 3\.\d+/.test(версия.title)&&/versionName '3\.\d+'/.test(gradle)&&версия.news>=20
   &&/одним именем/.test(версия.т)&&/Supertonic 3/.test(версия.т),версия);
 
  check('страница не бросила ни одной ошибки',errors.length===0,errors.slice(0,3));

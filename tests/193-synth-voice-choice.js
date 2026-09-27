@@ -96,7 +96,8 @@ function probe(file){
   &&после.v==="f"&&после.поле==="f",{выбор,после});
 
  /* ── 4. женский банк на диске ── */
- const js=fs.readFileSync(path.join(GF,'bank_f1.js'),'utf8');
+ const опись=(fs.readFileSync(path.join(__dirname,'..','index.html'),'utf8').match(/url:"sounds\/gvoice_f\/(bank_f\d+\.js)"/)||[])[1]||'bank_f1.js';
+ const js=fs.readFileSync(path.join(GF,опись),'utf8');
  const bank=JSON.parse(js.slice(js.indexOf('{'),js.lastIndexOf('}')+1));
  const ids=Object.values(bank.p);const файлы=fs.readdirSync(GF).filter(f=>f.endsWith('.flac'));
  const нет=ids.filter(id=>!fs.existsSync(path.join(GF,id+'.flac')));const лишние=файлы.filter(f=>ids.indexOf(f.slice(0,-5))<0);
