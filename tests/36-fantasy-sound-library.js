@@ -301,7 +301,7 @@ const NEW_DIRS=["arte","deep","foe","cast","hero","wild","trade","score",
      нормализованная фраза → файл. */
   try{const b=fs.readFileSync(path.join(корень,"sounds","gvoice","bank_2.js"),"utf8");
    Object.values(JSON.parse(b.slice(b.indexOf("{"),b.lastIndexOf("}")+1)).p).forEach(id=>ссылки.add("gvoice/"+id+".flac"));}catch(_){}
-  /* Женский голос тех же фраз (с 4.0) — опись sounds/gvoice_f/bank_f1.js. */
+  /* Женский голос тех же фраз (с выпуска 24) — опись sounds/gvoice_f/bank_f1.js. */
   try{const b=fs.readFileSync(path.join(корень,"sounds","gvoice_f","bank_f1.js"),"utf8");
    Object.values(JSON.parse(b.slice(b.indexOf("{"),b.lastIndexOf("}")+1)).p).forEach(id=>ссылки.add("gvoice_f/"+id+".flac"));}catch(_){}
   const обход=d=>fs.readdirSync(d,{withFileTypes:true})

@@ -1,7 +1,7 @@
 /* ═══════════════════════════════════════════════════════════════════════
    НАБОР 193: «СИНТЕЗАТОР» — ВСТРОЕННЫЙ ГОЛОС (ЖЕНСКИЙ И МУЖСКОЙ) И ГОЛОС УСТРОЙСТВА
 
-   Просьба игрока (4.0): «Раздели, чтобы в настройках был пункт „Встроенный
+   Просьба игрока (выпуск новостей 24): «Раздели, чтобы в настройках был пункт „Встроенный
    голос", затем пункт „Выбор голоса" — „Женский" и „Мужской". Также пункт
    „Голос устройства" и рядом „Выбор голоса устройства". Всё это — в пункте
    „Синтезатор"». И: «записывать фразы живыми голосами Gemini и внедрять их во
@@ -12,8 +12,8 @@
       «Выбор голоса», «Голос устройства», «Выбор голоса устройства»; у
       «Выбора голоса» ровно два варианта — «Женский» и «Мужской». При
       встроенном голосе виден только «Выбор голоса»; голоса телефона — только
-      при голосе устройства; ключ ElevenLabs — только при ElevenLabs.
-   2. «Встроенный голос», «Голос устройства» и «Голос ElevenLabs» — одна
+      при голосе устройства.
+   2. «Встроенный голос» и «Голос устройства» — одна
       настройка: включён ровно один; выключить включённый — вернуться к
       встроенному голосу.
    3. «Женский» — записи Callirrhoe (sounds/gvoice_f) и нейросеть sova;
@@ -45,40 +45,37 @@ function probe(file){
   const все=[...box.querySelectorAll("input,select")].filter(x=>!x.closest("label[hidden]:not([data-eng])")&&!(x.closest("label")&&x.closest("label").querySelector("#setTtsEngine")));
   const имя=x=>{const l=x.closest("label");const b=l&&l.querySelector("b");return (b?b.textContent:(l?l.childNodes[0].textContent:"")).trim();};
   const видно=()=>[...box.querySelectorAll("input,select,button")].filter(x=>{const h=x.closest("[hidden]");return !h||h===box;}).map(x=>x.id);
-  const g=document.getElementById("setGvVoice");const b=document.getElementById("setEngBuiltin"),d=document.getElementById("setEngDevice"),x=document.getElementById("setEngEleven");
+  const g=document.getElementById("setGvVoice");const b=document.getElementById("setEngBuiltin"),d=document.getElementById("setEngDevice");
   if(!b.checked)b.click();const вст=видно();
   d.click();const устр=видно();
-  x.click();const эл=видно();
   b.click();
   return {id:все.slice(0,4).map(x=>x.id),имена:все.slice(0,4).map(имя),
-   варианты:g?[...g.options].map(o=>o.textContent.trim()):[],группа:(SET_GROUPS.find(x=>x.id==="tts")||{}).n,вст,устр,эл};});
- const устрПоля=["setVoice","setVoiceLocal","setVoiceLang","btnVoiceList"],элПоля=["setElevenKey","setElevenVoice","btnElevenCheck"];
+   варианты:g?[...g.options].map(o=>o.textContent.trim()):[],группа:(SET_GROUPS.find(x=>x.id==="tts")||{}).n,вст,устр};});
+ const устрПоля=["setVoice","setVoiceLocal","setVoiceLang","btnVoiceList"];
  check('1. в «Синтезаторе» по порядку: Встроенный голос, Выбор голоса (Женский, Мужской), Голос устройства, Выбор голоса устройства',
   пункты.имена.join("|")==="Встроенный голос|Выбор голоса|Голос устройства|Выбор голоса устройства"
   &&пункты.варианты.join()==="Женский,Мужской"&&/Синтезатор/.test(пункты.группа||""),пункты);
- check('1б. при встроенном голосе виден только «Выбор голоса»; голоса телефона — только при голосе устройства; ключ ElevenLabs — только при ElevenLabs',
-  пункты.вст.includes("setGvVoice")&&устрПоля.every(i=>!пункты.вст.includes(i))&&элПоля.every(i=>!пункты.вст.includes(i))
-  &&!пункты.устр.includes("setGvVoice")&&устрПоля.every(i=>пункты.устр.includes(i))&&элПоля.every(i=>!пункты.устр.includes(i))
-  &&!пункты.эл.includes("setGvVoice")&&устрПоля.every(i=>!пункты.эл.includes(i))&&элПоля.every(i=>пункты.эл.includes(i))
-  &&["setEngBuiltin","setEngDevice","setEngEleven"].every(i=>пункты.вст.includes(i)&&пункты.устр.includes(i)&&пункты.эл.includes(i)),
-  {вст:пункты.вст,устр:пункты.устр,эл:пункты.эл});
+ check('1б. при встроенном голосе виден только «Выбор голоса»; голоса телефона — только при голосе устройства; ElevenLabs нет',
+  пункты.вст.includes("setGvVoice")&&устрПоля.every(i=>!пункты.вст.includes(i))
+  &&!пункты.устр.includes("setGvVoice")&&устрПоля.every(i=>пункты.устр.includes(i))
+  &&["setEngBuiltin","setEngDevice"].every(i=>пункты.вст.includes(i)&&пункты.устр.includes(i))
+  &&!пункты.вст.some(i=>/Eleven/.test(i))&&!пункты.устр.some(i=>/Eleven/.test(i)),
+  {вст:пункты.вст,устр:пункты.устр});
 
  /* ── 2. переключатели — одна настройка ── */
  const пере=await page.evaluate(()=>{
-  const b=document.getElementById("setEngBuiltin"),d=document.getElementById("setEngDevice"),x=document.getElementById("setEngEleven");
-  const снимок=()=>({e:settings.ttsEngine,b:b.checked,d:d.checked,x:x.checked});const r={};
+  const b=document.getElementById("setEngBuiltin"),d=document.getElementById("setEngDevice");
+  const снимок=()=>({e:settings.ttsEngine,b:b.checked,d:d.checked});const r={};
   if(!d.checked)d.click();r.устройство=снимок();
   b.click();r.встроенный=снимок();
-  x.click();r.eleven=снимок();
-  x.click();r.безEleven=снимок();
   b.click();r.безВстроенного=снимок();
-  b.click();return r;});
- check('2. включён ровно один: встроенный, устройство или ElevenLabs; выключить включённый — вернуться к встроенному',
+  d.click();r.безУстройства=снимок();
+  return r;});
+ check('2. включён ровно один: встроенный голос или голос устройства; выключить включённый — включить другой',
   пере.устройство.e==="device"&&пере.устройство.d&&!пере.устройство.b
-  &&пере.встроенный.e==="gemini"&&пере.встроенный.b&&!пере.встроенный.d&&!пере.встроенный.x
-  &&пере.eleven.e==="eleven"&&пере.eleven.x&&!пере.eleven.b
-  &&пере.безEleven.e==="gemini"&&пере.безEleven.b
-  &&пере.безВстроенного.e==="device"&&пере.безВстроенного.d,пере);
+  &&пере.встроенный.e==="gemini"&&пере.встроенный.b&&!пере.встроенный.d
+  &&пере.безВстроенного.e==="device"&&пере.безВстроенного.d&&!пере.безВстроенного.b
+  &&пере.безУстройства.e==="gemini"&&пере.безУстройства.b,пере);
 
  /* ── 3. женский и мужской ── */
  const выбор=await page.evaluate(async()=>{

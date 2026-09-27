@@ -18,10 +18,10 @@
    5. Высота голоса доходит до самого высказывания.
    6. Короткая фраза уходит одним куском, длинная — режется; первое слово
       отдаётся синтезатору тем же тактом, без прежней задержки.
-   7. Движок ElevenLabs включается только при ключе и голосе; без них
-      игра продолжает говорить синтезатором устройства.
-   8. Осечка сети у ElevenLabs не оставляет игру немой: фраза уходит
-      синтезатору устройства.
+   7. ElevenLabs убран (выпуск 24): странице закрыта сеть, голос не мог
+      прозвучать. Ни пунктов, ни движка, ни запросов к api.elevenlabs.io.
+   8. Сохранённый прежде выбор ElevenLabs переезжает на встроенный голос,
+      а ключ стирается с устройства.
    9. Замок первого касания снимается касанием, и игра знает, что умеет
       это устройство.
   10. Настройки синтезатора переживают перезагрузку страницы.
@@ -48,11 +48,11 @@ const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(e!==undefined?' :
    CMD.settings();
    const m=document.getElementById("modal-settings");
    const h=[...m.querySelectorAll(".sec-head")].map(x=>x.dataset.secTitle);
-   const поля=["setTtsEngine","setVoiceLocal","setVoiceLang","setVoice","setRate","setPitch","setElevenKey","setElevenVoice"];
-   const кнопки=['[data-cmd="setsave"]','[data-cmd="setsaved"]','#btnVoiceRefresh','#btnElevenCheck','#btnSpeechSample'];
+   const поля=["setTtsEngine","setEngBuiltin","setGvVoice","setEngDevice","setVoiceLocal","setVoiceLang","setVoice","setRate","setPitch"];
+   const кнопки=['[data-cmd="setsave"]','[data-cmd="setsaved"]','#btnVoiceRefresh','#btnSpeechSample'];
    const out={разделов:h.length,синтезатор:h.includes("Синтезатор речи"),рассказчик:h.includes("Голос рассказчика"),
     нет:поля.filter(id=>!m.querySelector("#"+id)),безКнопок:кнопки.filter(s=>!m.querySelector(s)),
-    немые:[...m.querySelectorAll("#setTtsEngine,#setVoiceLang,#setVoice,#setElevenVoice,#setElevenKey")]
+    немые:[...m.querySelectorAll("#setTtsEngine,#setVoiceLang,#setVoice,#setGvVoice")]
      .filter(x=>!x.getAttribute("aria-label")).length};
    if(activeLayer())closeTopUI();
    return out;});
@@ -146,44 +146,30 @@ const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(e!==undefined?' :
    r.коротко===1&&r.длинно>=3&&r.сразу===true,r);
  }
 
- /* ── 7. когда включается ElevenLabs ── */
+ /* ── 7. ElevenLabs больше нет ── */
  {
   const r=await page.evaluate(()=>{
-   const б={e:settings.ttsEngine,k:settings.elevenKey,v:settings.elevenVoice};
-   settings.ttsEngine="eleven";settings.elevenKey="";settings.elevenVoice="";
-   const безКлюча=Speech._wantKind();
-   settings.elevenKey="0123456789abcdef";
-   const безГолоса=Speech._wantKind();
-   settings.elevenVoice="voice-1";
-   const сВсем=Speech._wantKind();
-   settings.ttsEngine="device";
-   const выключен=Speech._wantKind();
-   settings.ttsEngine=б.e;settings.elevenKey=б.k;settings.elevenVoice=б.v;
+   const б=settings.ttsEngine;settings.ttsEngine="eleven";settings.elevenKey="0123456789abcdef";settings.elevenVoice="voice-1";
+   const род=Speech._wantKind();settings.ttsEngine=б;delete settings.elevenKey;delete settings.elevenVoice;
    Speech.adapter=null;Speech._kind=null;
-   return {безКлюча,безГолоса,сВсем,выключен};});
-  check('7. ElevenLabs включается только при ключе и голосе, иначе говорит устройство',
-   r.безКлюча==="device"&&r.безГолоса==="device"&&r.сВсем==="eleven"&&r.выключен==="device",r);
+   const html=document.documentElement.innerHTML;
+   return {род,пункты:["setEngEleven","setElevenKey","setElevenVoice","btnElevenCheck"].filter(id=>document.getElementById(id)),
+    вариант:!!document.querySelector('#setTtsEngine option[value="eleven"]'),адрес:html.indexOf("api.elevenlabs.io")>=0,
+    методы:["_elevenAdapter","_elevenFetch","elevenCheck","elevenVoices"].filter(k=>typeof Speech[k]==="function")};});
+  check('7. ElevenLabs убран: ни пунктов, ни варианта, ни движка, ни адреса api.elevenlabs.io',
+   r.род!=="eleven"&&!r.пункты.length&&!r.вариант&&!r.адрес&&!r.методы.length,r);
  }
 
- /* ── 8. осечка сети не оставляет игру немой ── */
+ /* ── 8. прежний выбор ElevenLabs переезжает, ключ стирается ── */
  {
-  const r=await page.evaluate(async()=>{
-   const б={e:settings.ttsEngine,k:settings.elevenKey,v:settings.elevenVoice,f:window.fetch};
-   settings.ttsEngine="eleven";settings.elevenKey="0123456789abcdef";settings.elevenVoice="voice-1";
-   window.fetch=()=>Promise.reject(new Error("сети нет"));
-   let запасом=0;const было=speechSynthesis.speak;
-   speechSynthesis.speak=u=>{запасом++;setTimeout(()=>{if(u.onend)u.onend();},1);};
-   Speech.adapter=null;Speech._kind=null;
-   const род=Speech._adapter()&&Speech._adapter().name;
-   Speech.stop({user:true});
-   Speech.say("Сеть подвела.",{pri:1,user:true,interrupt:true});
-   await new Promise(r=>setTimeout(r,260));
-   speechSynthesis.speak=было;window.fetch=б.f;
-   settings.ttsEngine=б.e;settings.elevenKey=б.k;settings.elevenVoice=б.v;
-   Speech.adapter=null;Speech._kind=null;
-   return {род,запасом};});
-  check('8. осечка ElevenLabs не оставляет игру немой: фраза уходит синтезатору устройства',
-   r.род==="eleven"&&r.запасом>0,r);
+  const p2=await ctx.newPage();
+  await p2.addInitScript(()=>{try{localStorage.setItem("gm29set",JSON.stringify({ttsEngine:"eleven",elevenKey:"0123456789abcdef",elevenVoice:"voice-1",gvOn:1}));}catch(_){}});
+  await p2.goto(process.argv[2]);await p2.waitForTimeout(700);
+  const r=await p2.evaluate(()=>{let сохр={};try{сохр=JSON.parse(localStorage.getItem("gm29set")||"{}");}catch(_){}
+   return {движок:settings.ttsEngine,ключ:"elevenKey" in settings,голос:"elevenVoice" in settings,вПамяти:"elevenKey" in сохр,движокВПамяти:сохр.ttsEngine};});
+  await p2.close();
+  check('8. сохранённый выбор ElevenLabs становится встроенным голосом, ключ стёрт и из памяти',
+   r.движок!=="eleven"&&!r.ключ&&!r.голос&&!r.вПамяти&&r.движокВПамяти!=="eleven",r);
  }
 
  /* ── 9. замок первого касания и знание об устройстве ── */
@@ -193,7 +179,7 @@ const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(e!==undefined?' :
    const снял=Speech.prime();
    const у=Speech.capabilities();
    return {снял,заведён:Speech.primed,умеет:у,
-    ключи:["web","native","eleven","голосов","звук"].filter(k=>!(k in у))};});
+    ключи:["web","native","голосов","звук"].filter(k=>!(k in у))};});
   check('9. замок синтезатора снимается первым касанием, и игра знает, что умеет устройство',
    r.снял===true&&r.заведён===true&&!r.ключи.length&&r.умеет.web===true,r);
  }

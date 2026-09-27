@@ -16,7 +16,7 @@
       умолчанию, под автоматикой — нет (проверки слушают синтезатор
       устройства).
    4. Прежний выбор «синтезатор устройства» или «встроенный голос» один раз
-      меняется на Gemini; голос ElevenLabs не трогается.
+      меняется на Gemini; прежний ElevenLabs (убран в выпуске 24) — тоже.
    5. Записанная фраза звучит записью сразу — меньше чем через 30 мс после
       команды, без синтезатора; темп — ползунок скорости, высота голоса
       сохраняется.
@@ -82,7 +82,7 @@ function lufs(file){
 
  /* ── 4. перенос прежнего выбора ── */
  const перенос=[];
- for(const [было,ждём] of [["grani","gemini"],["device","gemini"],["eleven","eleven"]]){
+ for(const [было,ждём] of [["grani","gemini"],["device","gemini"],["eleven","gemini"]]){
   const c2=await browser.newContext();
   await c2.addInitScript(b=>{try{window.__gvAuto=true;window.__introAuto=false;
    localStorage.setItem("gm29set",JSON.stringify({ttsEngine:b,rateFast:1,elevenKey:"ключ-для-проверки",elevenVoice:"v"}));}catch(_){}},было);
@@ -90,7 +90,7 @@ function lufs(file){
   const r=await p2.evaluate(()=>({e:settings.ttsEngine,f:settings.gvOn}));
   перенос.push([было,r.e,r.f]);await c2.close();
   if(r.e!==ждём||r.f!==1)перенос.push("ПРОМАХ");}
- check('4. прежний синтезатор устройства и встроенный голос один раз меняются на Gemini, ElevenLabs остаётся',
+ check('4. прежний синтезатор устройства, встроенный голос и убранный ElevenLabs один раз меняются на Gemini',
   перенос.indexOf("ПРОМАХ")<0&&перенос.length===3,перенос);
 
  /* ── 5–8. адаптер ── */

@@ -209,7 +209,7 @@ async function страница(browser,модель){
    settings.graniVoice=undefined;const поУмолчанию=Speech.GRANI_MODELS[0];
    settings.graniVoice="igm";const мужской=Speech.GRANI_MODELS[0];
    settings.graniVoice="чепуха";const запас=Speech.GRANI_MODELS[0];settings.graniVoice=был;
-   const sel=document.getElementById("setGvVoice");  /* с 4.0 — «Выбор голоса» встроенного голоса: женский и мужской */
+   const sel=document.getElementById("setGvVoice");  /* с выпуска 24 — «Выбор голоса» встроенного голоса: женский и мужской */
    return {поУмолчанию,мужской,запас,пункты:sel?[...sel.options].map(o=>o.value):[],имя:sel&&sel.getAttribute("aria-label"),
     дениса:document.documentElement.innerHTML.indexOf("denis")>=0};});
   await p.close();return r;})();
