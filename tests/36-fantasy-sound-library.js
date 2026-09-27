@@ -287,6 +287,10 @@ const NEW_DIRS=["arte","deep","foe","cast","hero","wild","trade","score",
   VOICE_SAY.forEach(k=>{out.push(VOICE_DIR+"say_"+k+G+".mp3");
    if(VOICE_LEN["say_"+k+"_f"+G])out.push(VOICE_DIR+"say_"+k+"_f"+G+".mp3");});
   VOICE_HERO.forEach(k=>out.push(VOICE_DIR+"hero_"+k+G+".mp3"));
+  /* Приветствия жителей и оклики улицы — по описи VOICE_NPC (папка voice_npc):
+     мужская запись и, где отмечено, женская. */
+  Object.values(VOICE_NPC).forEach(mp=>Object.values(mp).forEach(([b,f])=>{
+   out.push(VOICE_NPC_DIR+b+G+".mp3");if(f)out.push(VOICE_NPC_DIR+b+"_f"+G+".mp3");}));
   return out;});
  const опись=(()=>{
   const корень=path.join(__dirname,"..");
