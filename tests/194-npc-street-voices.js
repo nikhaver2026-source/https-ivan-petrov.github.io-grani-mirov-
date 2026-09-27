@@ -26,7 +26,8 @@
       слово народа.
    6. Все уличные оклики идут через Folk.реплика, строка в кавычках
       остаётся лишь запасной; реплика героя обрывает и записи voice_npc.
-   7. Ответы жителя в разговоре (DLG_SAY со всеми вариантами под нрав) —
+   7. Ответы жителя в разговоре (DLG_SAY со всеми вариантами под нрав и
+      под обстоятельства — DLG_SAY_CTX) —
       у каждой строки мужская и женская запись; в разговоре житель
       отвечает своей записью, а голос игры — без цитаты.
    ═══════════════════════════════════════════════════════════════════════ */
@@ -58,6 +59,8 @@ function probe(file){
   Object.values(DLG_SAY).forEach(арр=>арр.forEach(x=>ответы.add(typeof x==="string"?x:x[1])));
   ответы.forEach(t=>{строк++;const r=VOICE_NPC.dlg&&VOICE_NPC.dlg[t];
    if(!r)нет.push("dlg: "+t);else if(!r[1])безЖен.push("dlg: "+t);});
+  /* Ходы героя новее двадцати одного — голосом героя из voice_npc. */
+  DLG_MOVES.filter(m=>VOICE_HERO.indexOf(m.id)<0).forEach(m=>{if(!(VOICE_NPC.hero&&VOICE_NPC.hero[m.id]))нет.push("hero: "+m.id);});
   const файлы=[];
   Object.values(VOICE_NPC).forEach(mp=>Object.values(mp).forEach(([b,f])=>{файлы.push(b+VOICE_GEN);if(f)файлы.push(b+"_f"+VOICE_GEN);}));
   return {строк,нет,безЖен,файлы,len:VOICE_NPC_LEN,dir:VOICE_NPC_DIR,роли:Object.keys(VOICE_NPC)};});
@@ -158,6 +161,25 @@ function probe(file){
  const отв=(разговор.голос||[]).find(x=>/^dlg_/.test(x.путь));
  check('7. в разговоре житель отвечает своей записью (dlg_ из voice_npc), а голос игры называет исход без цитаты',
   !разговор.нет&&!!отв&&отв.dir==="voice_npc/"&&!!разговор.итог&&разговор.итог.indexOf("«")<0,разговор);
+
+ /* ── 8. обстоятельства: память о поступке меняет ответ и приветствие; история мира ── */
+ const обст=await page.evaluate(()=>{
+  outer: for(let r=0;r<60;r++)for(let dx=-r;dx<=r;dx++)for(let dy=-r;dy<=r;dy++){
+   const c=cellContent(G.x+dx,G.y+dy);if(c.structure&&npcsFor(c).length){G.x+=dx;G.y+=dy;break outer;}}
+  const n=npcsFor(cellContent(G.x,G.y))[0];if(!n)return {нет:true};
+  const до=dlgCtx(n);
+  npcRemember(n,"обманул","проверка",5);
+  const после=dlgCtx(n);
+  const злые=new Set(DLG_SAY_CTX["Нет. И не уговаривайте"].filter(x=>x[0]==="@зло").map(x=>x[1]));
+  let попаданий=0;
+  for(let i=0;i<30;i++){const t=dlgVary(n,"ubedit"+i,false,`${n.name} качает головой: «Нет. И не уговаривайте».`,npcSoul(n));
+   const ц=(t.match(/«([^»]+)»/)||[])[1];if(злые.has(ц))попаданий++;}
+  let обиды=0;for(let i=0;i<40;i++)if(NPC_GREET.зло.indexOf(npcGreeting(n,2))>=0)обиды++;
+  const ист=[0,1,2,3].map(()=>dlgHistory(n));
+  const ход=DLG_MOVE_BY_ID.istoriya;
+  return {до,после,попаданий,обиды,ист,ход:!!ход,разные:new Set(ист).size};});
+ check('8. после обмана житель отвечает и здоровается с обидой («@зло», пул «зло»); о прошлом рассказывает всякий раз новое предание',
+  !обст.нет&&обст.до.след!=="зло"&&обст.после.след==="зло"&&обст.попаданий>=8&&обст.обиды>=10&&обст.ход&&обст.разные===4&&обст.ист.every(t=>t.length>20),обст);
 
  check('страница не бросила ни одной ошибки',errors.length===0,errors.slice(0,3));
  await browser.close();
