@@ -48,7 +48,7 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   const u=useHere;window.useHere=function(){LOG.push("useHere");return u.apply(this,arguments);};
   const gc=gatherCurrent;window.gatherCurrent=function(){LOG.push("gather");return gc.apply(this,arguments);};
   const cs=castSpell;window.castSpell=function(i){LOG.push("cast:"+i);return cs.apply(this,arguments);};
-  const st=Speech.stop.bind(Speech);Speech.stop=function(){LOG.push("speechstop");return st();};
+  const st=Speech.stop.bind(Speech);Speech.stop=function(){LOG.push("speechstop");return st();};const rl=Speech.repeatLast.bind(Speech);Speech.repeatLast=function(){LOG.push("speechrepeat");return rl();};
   G.place=null;G.ship=null;G.inCombat=false;G.combat=null;G.weaponDrawn=false;G.loot=null;settings.fastTap=0;});
 
  /* ── 1. одиночное касание ничего не делает, двойное активирует ── */
@@ -97,7 +97,8 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
  const меню=await page.evaluate(()=>!document.getElementById('actionMenu').hidden);
  await page.evaluate(()=>{LOG.length=0;});
  await multiSwipe(4,0,170);await page.waitForTimeout(200);
- const речь=await page.evaluate(()=>({стоп:LOG.includes("speechstop"),панель:magicPanelOpen()}));
+ /* С 4.0 четыре пальца вниз — «повторить или прервать»: идёт речь — стоп, тишина — повтор. */
+ const речь=await page.evaluate(()=>({стоп:LOG.includes("speechstop")||LOG.includes("speechrepeat"),панель:magicPanelOpen()}));
  check('4. двенадцать свайпов творят слоты с первого по двенадцатый один к одному; тремя вверх — девятый, а не меню; четырьмя — речь',
   слоты.join()==="0,1,2,3,4,5,6,7,8,9,10,11"&&меню===false&&речь.стоп&&речь.панель,{слоты,меню,речь});
  await multiDouble(4);await page.waitForTimeout(200);

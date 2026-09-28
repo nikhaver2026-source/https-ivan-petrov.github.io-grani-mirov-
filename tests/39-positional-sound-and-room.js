@@ -55,7 +55,8 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   const было=Spatial.live.length;
   const ok=Spatial.at("mg/wyrm_roar_01.ogg",4,-3,{gain:0.4,maxSec:1});
   await new Promise(z=>setTimeout(z,150));
-  const узел=Spatial.live[Spatial.live.length-1];
+  /* Узел именно этой записи: капель подземелья и шаги живых тоже встают в список. */
+  const узел=Spatial.live.slice().reverse().find(o=>/wyrm_roar/.test((o.el&&o.el.src)||""));
   const r={получилось:ok,сталоЖивых:Spatial.live.length>было,
    место:узел?{x:+узел.pan.positionX.value.toFixed(2),z:+узел.pan.positionZ.value.toFixed(2)}:null,
    поРоли:Spatial.role("wolf_howl",-5,2,{gain:0.3,maxSec:1})};

@@ -38348,7 +38348,7 @@ const TargetBeacon={
    if(голосом&&t.bid){beaconAt(t.bid,r.dx,r.dy,t.dz||0,r.d);return;}
    const f=Bank.pick("bell_small",this.n);
    if(!(f&&Spatial.at(f,r.dx,r.dy,{dz:t.dz||0,gain:0.55,maxSec:0.45,kind:"ui"})))
-    beacon(t.bid||"chest",Math.max(-1,Math.min(1,r.dx/3)),r.d,0.7);});},
+    beaconAt(t.bid||"chest",r.dx,r.dy,t.dz||0,r.d);});},
  tick(){
   clearTimeout(this.timer);this.timer=null;
   const t=this.t;if(!t)return;
