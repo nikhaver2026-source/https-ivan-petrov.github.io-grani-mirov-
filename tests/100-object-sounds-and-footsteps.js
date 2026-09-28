@@ -138,12 +138,18 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
  check('дождь мочит шаг, глубина даёт эхо, высокая трава шуршит по голени',
   проф.дождь.wet&&проф.дождь.слои.includes("step_water")&&проф.глубина.includes("hero_step_echo")&&проф.трава.includes("oc_rustle"),проф);
 
- /* ── 7. Шаги без повторов; топь, дождь и ступени ── */
+ /* ── 7. Один шаг на место; топь, дождь и ступени ── */
  const шаги=await page.evaluate(async()=>{
   const r={};
   G.place=null;
   const ряд=[];for(let i=0;i<14;i++){playStep("gravel");ряд.push(G.lastStep.role+"/"+G.lastStep.file);}
-  r.повторов=ряд.filter((v,i)=>i>0&&v===ряд[i-1]).length;r.ряд=ряд.slice(0,6);
+  /* Один естественный шаг на место: в одном месте на одной поверхности — одна запись. */
+  r.записей=new Set(ряд).size;r.ряд=ряд.slice(0,6);
+  const было=G.place;G.place={bx:3,by:4,depth:0,kind:"house",stype:"temple",x:2,y:2};
+  const храм=[];for(let i=0;i<14;i++){playStep("marble");храм.push(G.lastStep.file);}
+  r.храм=new Set(храм).size;G.place={bx:9,by:2,depth:0,kind:"house",stype:"temple",x:2,y:2};
+  const другой=[];for(let i=0;i<30;i++){G.place.bx=9+i;playStep("marble");другой.push(G.lastStep.file);}
+  r.разныеМеста=new Set(другой).size;G.place=было;
   /* топь */
   const б={x:G.x,y:G.y,w:G.weather};
   let топь=null;outer:for(let y=40;y<WORLD-40&&!топь;y+=23)for(let x=40;x<WORLD-40;x+=23){
@@ -168,7 +174,8 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
    else r.ступени="нет лестницы на уровне";
    G.place=null;}
   return r;});
- check('четырнадцать шагов по гравию — без повтора варианта подряд',шаги.повторов===0,{повторов:шаги.повторов,ряд:шаги.ряд});
+ check('в одном месте на одной поверхности — один естественный шаг: четырнадцать шагов по гравию и по мрамору храма — одна запись; в разных храмах записи свои',
+  шаги.записей===1&&шаги.храм===1&&шаги.разныеМеста>=2,{записей:шаги.записей,храм:шаги.храм,разныеМеста:шаги.разныеМеста,ряд:шаги.ряд});
  check('топь — не одна грязь: болото и глубокая вода тоже встречаются',Array.isArray(шаги.топь)&&шаги.топь.includes("mud")&&(шаги.топь.includes("swamp")||шаги.топь.includes("deepwater")),шаги.топь);
  check('дождь на равнине — мокрая земля, ясно — трава',шаги.дождь==="wetdirt"&&["grass","tallgrass"].includes(шаги.ясно),{дождь:шаги.дождь,ясно:шаги.ясно});
  check('шаг на ступени слышен как ступени',шаги.ступени==="stairs",шаги);

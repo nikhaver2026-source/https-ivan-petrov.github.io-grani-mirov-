@@ -20,9 +20,10 @@ android {
         targetSdk 36
         /* 3.0 — первая версия приложения со всей игрой внутри. Номер сборки
            растёт с каждым запуском рабочего процесса: Play требует, чтобы
-           versionCode только рос. */
-        versionCode(30000000 + ((System.getenv('BUILD_NUMBER') ?: '0') as int))
-        versionName '3.10'
+           versionCode только рос. С 4.0 основа — 40000000: коды 4.0 выше
+           любых кодов 3.x. */
+        versionCode(40000000 + ((System.getenv('BUILD_NUMBER') ?: '0') as int))
+        versionName '4.0'
     }
 
     /* Ключ подписи приходит только из окружения сборки: в репозитории

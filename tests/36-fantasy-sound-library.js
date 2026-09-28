@@ -289,8 +289,12 @@ const NEW_DIRS=["arte","deep","foe","cast","hero","wild","trade","score",
   VOICE_HERO.forEach(k=>out.push(VOICE_DIR+"hero_"+k+G+".mp3"));
   /* Приветствия жителей и оклики улицы — по описи VOICE_NPC (папка voice_npc):
      мужская запись и, где отмечено, женская. */
-  Object.values(VOICE_NPC).forEach(mp=>Object.values(mp).forEach(([b,f])=>{
-   out.push(VOICE_NPC_DIR+b+G+".mp3");if(f)out.push(VOICE_NPC_DIR+b+"_f"+G+".mp3");}));
+  /* Строка стражи записана несколькими голосами: третье поле — маска
+     (бит k — файл с суффиксом «_vk», бит 0 — без суффикса). */
+  Object.values(VOICE_NPC).forEach(mp=>Object.values(mp).forEach(([b,f,m])=>{
+   const маска=Number(m)||1;
+   for(let k=0;k<8;k++)if((маска>>k)&1){const bk=b+(k?"_v"+k:"");
+    out.push(VOICE_NPC_DIR+bk+G+".mp3");if(f)out.push(VOICE_NPC_DIR+bk+"_f"+G+".mp3");}}));
   return out;});
  const опись=(()=>{
   const корень=path.join(__dirname,"..");

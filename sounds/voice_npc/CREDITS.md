@@ -4,7 +4,7 @@
 бросают стражник, латник, солдат гарнизона, горожанин и житель посада. Прежде эти строки читал голос
 игры в кавычках; теперь у каждой своя запись и своя интонация.
 
-Записей: 1130
+Записей: 1338
 
 Речь синтезирована 27 сентября 2026 года нейроголосами **Gemini** (Google),
 модель `gemini-3.8-flash-tts`, через Gemini API (Interactions API,
@@ -28,8 +28,11 @@ Policy (https://policies.google.com/terms/generative-ai/use-policy). Отдел�
 
 | Голос Gemini | Каков | Кто говорит | Записей |
 |---|---|---|---|
-| Alnilam | твёрдый | стражник на обходе и ночной дозор | 29 |
-| Charon | низкий, ровный | латник смены и солдат гарнизона за Гранью | 12 |
+| Alnilam | твёрдый | стражник на обходе и ночной дозор (первый голос стражи) | 73 |
+| Orus | твёрдый, пониже | стражник на обходе (второй голос стражи) | 73 |
+| Algenib | с хрипотцой | стражник на обходе (третий голос стражи) | 73 |
+| Charon | низкий, ровный | латник смены и солдат гарнизона за Гранью | 18 |
+| Schedar | ровный, холодный | латник смены за Гранью (второй голос) | 12 |
 | Achird | дружелюбный | горожанин и житель посада | 30 |
 | Sulafat | тёплый | горожанка и жительница посада | 30 |
 | Umbriel | лёгкий, разговорный | приветствие и ответ в разговоре жителя, мужской голос | 514 |
@@ -48,16 +51,21 @@ Policy (https://policies.google.com/terms/generative-ai/use-policy). Отдел�
   friendly» у своего, «grateful, warm» у того, кому герой недавно помог,
   «resentful, bitter» у того, кому навредил. У всех — «natural
   pace»: без неё интонации «шёпотом» и «угрожающе» растягивали речь.
+- **У каждого стражника свой голос.** Строки стражи Грани записаны тремя
+  голосами (Alnilam, Orus, Algenib), строки латника смены — двумя (Charon,
+  Schedar): стражник говорит своим голосом при каждой встрече, а двое
+  стражников на одной улице — разными. Второй и третий голос — файлы с
+  суффиксом `_v1` и `_v2`.
 - **Женский род.** Женский голос говорит о себе в женском роде («Рада тебя
   видеть», «Я вас не видела»): в описи ниже — то, что произнесено; в игре
   строка ищется по исходному тексту. Обращённое к герою («пока цел») не менялось.
 - **Пакетами.** В одном запросе два голоса и до семидесяти четырёх строк; всё —
-  18 пакетов и переозвучки неудачных дублей.
+  22 пакетов и переозвучки неудачных дублей.
 - **Разрезка и разборчивость.** Запись пакета дробится по паузам и склеивается
   в строки по распознанному тексту; каждую строку распознаёт русская модель
   GigaAM (sherpa-onnx, `nemo-ctc-giga-am-v2-russian`): не больше 15 % ошибочных
   букв и не медленнее шести знаков в секунду.
-- **Громкость.** −18 LUFS по EBU R128 (у записей от -18.8 до -17.6),
+- **Громкость.** −18 LUFS по EBU R128 (у записей от -19.1 до -17.6),
   пики не выше -1.0 дБ; моно 44,1 кГц, MP3 320 кбит/с.
 
 ## Все записи
@@ -85,12 +93,6 @@ Policy (https://policies.google.com/terms/generative-ai/use-policy). Отдел�
 | street_guardcold_0_g.mp3 | стражник недругу | Alnilam | cold, suspicious, threatening | Я тебя запомнил. Веди себя тихо. |
 | street_guardcold_1_g.mp3 | стражник недругу | Alnilam | cold, suspicious, threatening | Глаз с тебя не спущу. |
 | street_guardcold_2_g.mp3 | стражник недругу | Alnilam | cold, suspicious, threatening | Ещё раз увижу — спрошу по-другому. |
-| street_guardfriend_0_g.mp3 | стражник своему | Alnilam | warm, friendly, relaxed | Рад тебя видеть, друг. |
-| street_guardfriend_1_g.mp3 | стражник своему | Alnilam | warm, friendly, relaxed | Для тебя — всегда время. |
-| street_guardfriend_2_g.mp3 | стражник своему | Alnilam | warm, friendly, relaxed | А вот и ты! Заходи. |
-| street_guardfriend_3_g.mp3 | стражник своему | Alnilam | warm, friendly, relaxed | Своих не забываем. Садись. |
-| street_guardfriend_4_g.mp3 | стражник своему | Alnilam | warm, friendly, relaxed | О, наш человек! Что нового? |
-| street_guardfriend_5_g.mp3 | стражник своему | Alnilam | warm, friendly, relaxed | Для тебя отложил кое-что. Смотри. |
 | street_guardfriend_6_g.mp3 | стражник своему | Alnilam | warm, friendly, relaxed | Доброго дня. Если что — зовите. |
 | street_night_0_g.mp3 | ночной дозор | Alnilam | stern, wary, calling out at night | Поздно бродишь. Назови себя или ступай своей дорогой. |
 | street_darkguard_0_g.mp3 | латник смены | Charon | cold, flat, commanding | Имя. Смену назови. |
@@ -1194,3 +1196,217 @@ Policy (https://policies.google.com/terms/generative-ai/use-policy). Отдел�
 | dlg_42_5_g.mp3 | ответ в разговоре (свой) | Umbriel | dismissive, busy, warm, friendly | Прости, друг, не мастак я рассказывать |
 | dlg_42_5_f_g.mp3 | ответ в разговоре (свой) | Despina | dismissive, busy, warm, friendly | Прости, друг, не мастак я рассказывать |
 | hero_istoriya_g.mp3 | герой: ход «Спросить об истории» | Algieba | curious, respectful | Расскажи, что было в этих краях прежде. |
+| street_guard_0_v1_g.mp3 | стражник | Orus | watchful, gruff warning | Ходи да оглядывайся. |
+| street_guard_0_v2_g.mp3 | стражник | Algenib | watchful, gruff warning | Ходи да оглядывайся. |
+| street_guard_1_v1_g.mp3 | стражник | Orus | proud, dutiful | Порядок на улицах — моя забота. |
+| street_guard_1_v2_g.mp3 | стражник | Algenib | proud, dutiful | Порядок на улицах — моя забота. |
+| street_guard_2_v1_g.mp3 | стражник | Orus | serious, caring advice | Ночью держись освещённых улиц. |
+| street_guard_2_v2_g.mp3 | стражник | Algenib | serious, caring advice | Ночью держись освещённых улиц. |
+| street_guard_3_v1_g.mp3 | стражник | Orus | impatient, brusque | Проходи, не задерживайся у ворот. |
+| street_guard_3_v2_g.mp3 | стражник | Algenib | impatient, brusque | Проходи, не задерживайся у ворот. |
+| street_guard_4_v1_g.mp3 | стражник | Orus | alert, a little worried | Слышал шум у дальнего квартала? Проверю. |
+| street_guard_4_v2_g.mp3 | стражник | Algenib | alert, a little worried | Слышал шум у дальнего квартала? Проверю. |
+| street_guard_5_v1_g.mp3 | стражник | Orus | dry, stern warning | Оружие в ножнах держи — целее будешь. |
+| street_guard_5_v2_g.mp3 | стражник | Algenib | dry, stern warning | Оружие в ножнах держи — целее будешь. |
+| street_guard_6_v1_g.mp3 | стражник | Orus | helpful, lowered voice, warning | Карманники нынче у рынка. Кошель к поясу. |
+| street_guard_6_v2_g.mp3 | стражник | Algenib | helpful, lowered voice, warning | Карманники нынче у рынка. Кошель к поясу. |
+| street_guard_7_v1_g.mp3 | стражник | Orus | dry, matter-of-fact | Драк не затевать. Остальное — твоё дело. |
+| street_guard_7_v2_g.mp3 | стражник | Algenib | dry, matter-of-fact | Драк не затевать. Остальное — твоё дело. |
+| street_guard_8_v1_g.mp3 | стражник | Orus | businesslike, stern | Видел что подозрительное — скажи. |
+| street_guard_8_v2_g.mp3 | стражник | Algenib | businesslike, stern | Видел что подозрительное — скажи. |
+| street_guard_9_v1_g.mp3 | стражник | Orus | tired, sighing | Смена кончается, а ночь только начинается. |
+| street_guard_9_v2_g.mp3 | стражник | Algenib | tired, sighing | Смена кончается, а ночь только начинается. |
+| street_guard_10_v1_g.mp3 | стражник | Orus | strict, official | Кто без огня после заката — того спрашиваем. |
+| street_guard_10_v2_g.mp3 | стражник | Algenib | strict, official | Кто без огня после заката — того спрашиваем. |
+| street_guard_11_v1_g.mp3 | стражник | Orus | firm reminder | Ворота на ночь запираем. Не опоздай. |
+| street_guard_11_v2_g.mp3 | стражник | Algenib | firm reminder | Ворота на ночь запираем. Не опоздай. |
+| street_guard_12_v1_g.mp3 | стражник | Orus | loud, commanding the crowd | Не толпиться! Проходим по одному. |
+| street_guard_12_v2_g.mp3 | стражник | Algenib | loud, commanding the crowd | Не толпиться! Проходим по одному. |
+| street_guard_13_v1_g.mp3 | стражник | Orus | dry, sardonic | Жалобы — к сотнику. А лучше без жалоб. |
+| street_guard_13_v2_g.mp3 | стражник | Algenib | dry, sardonic | Жалобы — к сотнику. А лучше без жалоб. |
+| street_guard_14_v1_g.mp3 | стражник | Orus | annoyed, grumbling | Опять телега на мостовой. Чья, не знаешь? |
+| street_guard_14_v2_g.mp3 | стражник | Algenib | annoyed, grumbling | Опять телега на мостовой. Чья, не знаешь? |
+| street_guard_15_v1_g.mp3 | стражник | Orus | dry humour, suspicious | Спокойно у нас. Пока ты тут не появился. |
+| street_guard_15_v2_g.mp3 | стражник | Algenib | dry humour, suspicious | Спокойно у нас. Пока ты тут не появился. |
+| street_guard_16_v1_g.mp3 | стражник | Orus | gruff, decisive | Пьяных — в холодную до утра. Всех. |
+| street_guard_16_v2_g.mp3 | стражник | Algenib | gruff, decisive | Пьяных — в холодную до утра. Всех. |
+| street_guard_17_v1_g.mp3 | стражник | Orus | concerned, lowered voice | Слыхал, за стеной волков видели. Держись дорог. |
+| street_guard_17_v2_g.mp3 | стражник | Algenib | concerned, lowered voice | Слыхал, за стеной волков видели. Держись дорог. |
+| street_guardcold_0_v1_g.mp3 | стражник недругу | Orus | cold, suspicious, threatening | Я тебя запомнил. Веди себя тихо. |
+| street_guardcold_0_v2_g.mp3 | стражник недругу | Algenib | cold, suspicious, threatening | Я тебя запомнил. Веди себя тихо. |
+| street_guardcold_1_v1_g.mp3 | стражник недругу | Orus | cold, suspicious, threatening | Глаз с тебя не спущу. |
+| street_guardcold_1_v2_g.mp3 | стражник недругу | Algenib | cold, suspicious, threatening | Глаз с тебя не спущу. |
+| street_guardcold_2_v1_g.mp3 | стражник недругу | Orus | cold, suspicious, threatening | Ещё раз увижу — спрошу по-другому. |
+| street_guardcold_2_v2_g.mp3 | стражник недругу | Algenib | cold, suspicious, threatening | Ещё раз увижу — спрошу по-другому. |
+| street_guardfriend_6_v1_g.mp3 | стражник своему | Orus | warm, friendly, relaxed | Доброго дня. Если что — зовите. |
+| street_guardfriend_6_v2_g.mp3 | стражник своему | Algenib | warm, friendly, relaxed | Доброго дня. Если что — зовите. |
+| street_night_0_v1_g.mp3 | ночной дозор | Orus | stern, wary, calling out at night | Поздно бродишь. Назови себя или ступай своей дорогой. |
+| street_night_0_v2_g.mp3 | ночной дозор | Algenib | stern, wary, calling out at night | Поздно бродишь. Назови себя или ступай своей дорогой. |
+| street_darkguard_0_v1_g.mp3 | латник смены | Schedar | cold, flat, commanding | Имя. Смену назови. |
+| street_darkguard_1_v1_g.mp3 | латник смены | Schedar | cold, ominous, quiet | Ты не записан. Пока не записан. |
+| street_darkguard_2_v1_g.mp3 | латник смены | Schedar | cold, detached, menacing | Ходишь — ходи. Остановишься — сочтут. |
+| street_darkguard_3_v1_g.mp3 | латник смены | Schedar | flat, clipped, advising | К стене ближе. По середине ходят те, кого ищут. |
+| street_darkguard_4_v1_g.mp3 | латник смены | Schedar | cold, grim, ominous | Ночью ворота закрыты изнутри. Снаружи их не закрывают. |
+| street_darkguard_5_v1_g.mp3 | латник смены | Schedar | flat, strangely approving | Оружие видно. Это хорошо: прятать хуже. |
+| street_guard_18_g.mp3 | стражник | Alnilam | curt, stern | Доброго дня. Не шуми тут. |
+| street_guard_18_v1_g.mp3 | стражник | Orus | curt, stern | Доброго дня. Не шуми тут. |
+| street_guard_18_v2_g.mp3 | стражник | Algenib | curt, stern | Доброго дня. Не шуми тут. |
+| street_guard_19_g.mp3 | стражник | Alnilam | impatient, brusque | Проходи, проходи. Тут тебе не ярмарка. |
+| street_guard_19_v1_g.mp3 | стражник | Orus | impatient, brusque | Проходи, проходи. Тут тебе не ярмарка. |
+| street_guard_19_v2_g.mp3 | стражник | Algenib | impatient, brusque | Проходи, проходи. Тут тебе не ярмарка. |
+| street_guard_20_g.mp3 | стражник | Alnilam | uneasy, watchful | Тихо сегодня. Даже слишком тихо. |
+| street_guard_20_v1_g.mp3 | стражник | Orus | uneasy, watchful | Тихо сегодня. Даже слишком тихо. |
+| street_guard_20_v2_g.mp3 | стражник | Algenib | uneasy, watchful | Тихо сегодня. Даже слишком тихо. |
+| street_guard_21_g.mp3 | стражник | Alnilam | suspicious, then dismissive | Что в мешке? Ладно, ступай. |
+| street_guard_21_v1_g.mp3 | стражник | Orus | suspicious, then dismissive | Что в мешке? Ладно, ступай. |
+| street_guard_21_v2_g.mp3 | стражник | Algenib | suspicious, then dismissive | Что в мешке? Ладно, ступай. |
+| street_guard_22_g.mp3 | стражник | Alnilam | dry, dutiful | Капитан велел глядеть в оба. Вот и гляжу. |
+| street_guard_22_v1_g.mp3 | стражник | Orus | dry, dutiful | Капитан велел глядеть в оба. Вот и гляжу. |
+| street_guard_22_v2_g.mp3 | стражник | Algenib | dry, dutiful | Капитан велел глядеть в оба. Вот и гляжу. |
+| street_guard_23_g.mp3 | стражник | Alnilam | gruff, commanding | Проход не загораживай. |
+| street_guard_23_v1_g.mp3 | стражник | Orus | gruff, commanding | Проход не загораживай. |
+| street_guard_23_v2_g.mp3 | стражник | Algenib | gruff, commanding | Проход не загораживай. |
+| street_guard_24_g.mp3 | стражник | Alnilam | reassuring, protective | Пристанет кто — кричи. Мы рядом. |
+| street_guard_24_v1_g.mp3 | стражник | Orus | reassuring, protective | Пристанет кто — кричи. Мы рядом. |
+| street_guard_24_v2_g.mp3 | стражник | Algenib | reassuring, protective | Пристанет кто — кричи. Мы рядом. |
+| street_guard_25_g.mp3 | стражник | Alnilam | grumbling, warning | Вчера на рынке опять кошель срезали. |
+| street_guard_25_v1_g.mp3 | стражник | Orus | grumbling, warning | Вчера на рынке опять кошель срезали. |
+| street_guard_25_v2_g.mp3 | стражник | Algenib | grumbling, warning | Вчера на рынке опять кошель срезали. |
+| street_guard_26_g.mp3 | стражник | Alnilam | dry, meaningful warning | Мы тебя видим. Помни об этом. |
+| street_guard_26_v1_g.mp3 | стражник | Orus | dry, meaningful warning | Мы тебя видим. Помни об этом. |
+| street_guard_26_v2_g.mp3 | стражник | Algenib | dry, meaningful warning | Мы тебя видим. Помни об этом. |
+| street_guard_27_g.mp3 | стражник | Alnilam | calm, neutral | Иди своей дорогой, путник. |
+| street_guard_27_v1_g.mp3 | стражник | Orus | calm, neutral | Иди своей дорогой, путник. |
+| street_guard_27_v2_g.mp3 | стражник | Algenib | calm, neutral | Иди своей дорогой, путник. |
+| street_guard_28_g.mp3 | стражник | Alnilam | strict, official | Клинок не обнажать. Закон для всех один. |
+| street_guard_28_v1_g.mp3 | стражник | Orus | strict, official | Клинок не обнажать. Закон для всех один. |
+| street_guard_28_v2_g.mp3 | стражник | Algenib | strict, official | Клинок не обнажать. Закон для всех один. |
+| street_guard_29_g.mp3 | стражник | Alnilam | loud, annoyed shout | Эй, не бегать! Людей посшибаешь. |
+| street_guard_29_v1_g.mp3 | стражник | Orus | loud, annoyed shout | Эй, не бегать! Людей посшибаешь. |
+| street_guard_29_v2_g.mp3 | стражник | Algenib | loud, annoyed shout | Эй, не бегать! Людей посшибаешь. |
+| street_guard_30_g.mp3 | стражник | Alnilam | proud, stern | Этот квартал под нашим присмотром. |
+| street_guard_30_v1_g.mp3 | стражник | Orus | proud, stern | Этот квартал под нашим присмотром. |
+| street_guard_30_v2_g.mp3 | стражник | Algenib | proud, stern | Этот квартал под нашим присмотром. |
+| street_guard_31_g.mp3 | стражник | Alnilam | weary, wry | Доспех тяжёлый, а служба ещё тяжелее. |
+| street_guard_31_v1_g.mp3 | стражник | Orus | weary, wry | Доспех тяжёлый, а служба ещё тяжелее. |
+| street_guard_31_v2_g.mp3 | стражник | Algenib | weary, wry | Доспех тяжёлый, а служба ещё тяжелее. |
+| street_guard_32_g.mp3 | стражник | Alnilam | tired, grumbling | Третий обход за день. Ноги гудят. |
+| street_guard_32_v1_g.mp3 | стражник | Orus | tired, grumbling | Третий обход за день. Ноги гудят. |
+| street_guard_32_v2_g.mp3 | стражник | Algenib | tired, grumbling | Третий обход за день. Ноги гудят. |
+| street_guard_33_g.mp3 | стражник | Alnilam | concerned, lowered voice | На тракте опять разбойники. Слыхал? |
+| street_guard_33_v1_g.mp3 | стражник | Orus | concerned, lowered voice | На тракте опять разбойники. Слыхал? |
+| street_guard_33_v2_g.mp3 | стражник | Algenib | concerned, lowered voice | На тракте опять разбойники. Слыхал? |
+| street_guard_34_g.mp3 | стражник | Alnilam | dry, sardonic advice | Не ищи неприятностей — они сами найдут. |
+| street_guard_34_v1_g.mp3 | стражник | Orus | dry, sardonic advice | Не ищи неприятностей — они сами найдут. |
+| street_guard_34_v2_g.mp3 | стражник | Algenib | dry, sardonic advice | Не ищи неприятностей — они сами найдут. |
+| street_guard_35_g.mp3 | стражник | Alnilam | calm, routine | Всё спокойно. Проходи. |
+| street_guard_35_v1_g.mp3 | стражник | Orus | calm, routine | Всё спокойно. Проходи. |
+| street_guard_35_v2_g.mp3 | стражник | Algenib | calm, routine | Всё спокойно. Проходи. |
+| street_guard_36_g.mp3 | стражник | Alnilam | friendly, slightly amused | Приезжий? Смотри, не заблудись в переулках. |
+| street_guard_36_v1_g.mp3 | стражник | Orus | friendly, slightly amused | Приезжий? Смотри, не заблудись в переулках. |
+| street_guard_36_v2_g.mp3 | стражник | Algenib | friendly, slightly amused | Приезжий? Смотри, не заблудись в переулках. |
+| street_guard_37_g.mp3 | стражник | Alnilam | suspicious, watchful | Чужих нынче много. Смотрю за каждым. |
+| street_guard_37_v1_g.mp3 | стражник | Orus | suspicious, watchful | Чужих нынче много. Смотрю за каждым. |
+| street_guard_37_v2_g.mp3 | стражник | Algenib | suspicious, watchful | Чужих нынче много. Смотрю за каждым. |
+| street_guard_38_g.mp3 | стражник | Alnilam | stern, then satisfied | Пошлину у ворот заплатил? То-то же. |
+| street_guard_38_v1_g.mp3 | стражник | Orus | stern, then satisfied | Пошлину у ворот заплатил? То-то же. |
+| street_guard_38_v2_g.mp3 | стражник | Algenib | stern, then satisfied | Пошлину у ворот заплатил? То-то же. |
+| street_guard_39_g.mp3 | стражник | Alnilam | brusque, impatient | Шагай, шагай. Не на что тут глазеть. |
+| street_guard_39_v1_g.mp3 | стражник | Orus | brusque, impatient | Шагай, шагай. Не на что тут глазеть. |
+| street_guard_39_v2_g.mp3 | стражник | Algenib | brusque, impatient | Шагай, шагай. Не на что тут глазеть. |
+| street_guardnight_0_g.mp3 | стражник ночью | Alnilam | sharp challenge, then relaxed | Стой! Кто идёт? А, путник. Ступай. |
+| street_guardnight_0_v1_g.mp3 | стражник ночью | Orus | sharp challenge, then relaxed | Стой! Кто идёт? А, путник. Ступай. |
+| street_guardnight_0_v2_g.mp3 | стражник ночью | Algenib | sharp challenge, then relaxed | Стой! Кто идёт? А, путник. Ступай. |
+| street_guardnight_1_g.mp3 | стражник ночью | Alnilam | stern, wary | Поздно гуляешь. Шёл бы под крышу. |
+| street_guardnight_1_v1_g.mp3 | стражник ночью | Orus | stern, wary | Поздно гуляешь. Шёл бы под крышу. |
+| street_guardnight_1_v2_g.mp3 | стражник ночью | Algenib | stern, wary | Поздно гуляешь. Шёл бы под крышу. |
+| street_guardnight_2_g.mp3 | стражник ночью | Alnilam | gruff, caring | Фонарь бы тебе. В темноте всякое бывает. |
+| street_guardnight_2_v1_g.mp3 | стражник ночью | Orus | gruff, caring | Фонарь бы тебе. В темноте всякое бывает. |
+| street_guardnight_2_v2_g.mp3 | стражник ночью | Algenib | gruff, caring | Фонарь бы тебе. В темноте всякое бывает. |
+| street_guardnight_3_g.mp3 | стражник ночью | Alnilam | stern warning | Ночью по переулкам не шастай. |
+| street_guardnight_3_v1_g.mp3 | стражник ночью | Orus | stern warning | Ночью по переулкам не шастай. |
+| street_guardnight_3_v2_g.mp3 | стражник ночью | Algenib | stern warning | Ночью по переулкам не шастай. |
+| street_guardnight_4_g.mp3 | стражник ночью | Alnilam | hushed, stern | Тише. Город спит. |
+| street_guardnight_4_v1_g.mp3 | стражник ночью | Orus | hushed, stern | Тише. Город спит. |
+| street_guardnight_4_v2_g.mp3 | стражник ночью | Algenib | hushed, stern | Тише. Город спит. |
+| street_guardnight_5_g.mp3 | стражник ночью | Alnilam | tired, sighing | Ночь длинная, а смена ещё длиннее. |
+| street_guardnight_5_v1_g.mp3 | стражник ночью | Orus | tired, sighing | Ночь длинная, а смена ещё длиннее. |
+| street_guardnight_5_v2_g.mp3 | стражник ночью | Algenib | tired, sighing | Ночь длинная, а смена ещё длиннее. |
+| street_guardnight_6_g.mp3 | стражник ночью | Alnilam | suspicious, demanding | Что забыл на улице в такой час? |
+| street_guardnight_6_v1_g.mp3 | стражник ночью | Orus | suspicious, demanding | Что забыл на улице в такой час? |
+| street_guardnight_6_v2_g.mp3 | стражник ночью | Algenib | suspicious, demanding | Что забыл на улице в такой час? |
+| street_guardnight_7_g.mp3 | стражник ночью | Alnilam | lowered voice, warning | Держись света. В тени нынче неспокойно. |
+| street_guardnight_7_v1_g.mp3 | стражник ночью | Orus | lowered voice, warning | Держись света. В тени нынче неспокойно. |
+| street_guardnight_7_v2_g.mp3 | стражник ночью | Algenib | lowered voice, warning | Держись света. В тени нынче неспокойно. |
+| street_guardnight_8_g.mp3 | стражник ночью | Alnilam | firm, official | Ворота заперты до рассвета. |
+| street_guardnight_8_v1_g.mp3 | стражник ночью | Orus | firm, official | Ворота заперты до рассвета. |
+| street_guardnight_8_v2_g.mp3 | стражник ночью | Algenib | firm, official | Ворота заперты до рассвета. |
+| street_guardnight_9_g.mp3 | стражник ночью | Alnilam | calm, confident | Ступай. Ночной дозор своё дело знает. |
+| street_guardnight_9_v1_g.mp3 | стражник ночью | Orus | calm, confident | Ступай. Ночной дозор своё дело знает. |
+| street_guardnight_9_v2_g.mp3 | стражник ночью | Algenib | calm, confident | Ступай. Ночной дозор своё дело знает. |
+| street_guardfriend_7_g.mp3 | стражник своему | Alnilam | glad, warm | А, это ты! Рад видеть. |
+| street_guardfriend_7_v1_g.mp3 | стражник своему | Orus | glad, warm | А, это ты! Рад видеть. |
+| street_guardfriend_7_v2_g.mp3 | стражник своему | Algenib | glad, warm | А, это ты! Рад видеть. |
+| street_guardfriend_8_g.mp3 | стражник своему | Alnilam | relaxed, friendly | Спокойно у нас, друг. Отдыхай. |
+| street_guardfriend_8_v1_g.mp3 | стражник своему | Orus | relaxed, friendly | Спокойно у нас, друг. Отдыхай. |
+| street_guardfriend_8_v2_g.mp3 | стражник своему | Algenib | relaxed, friendly | Спокойно у нас, друг. Отдыхай. |
+| street_guardfriend_9_g.mp3 | стражник своему | Alnilam | protective, friendly | Будут обижать — только скажи. |
+| street_guardfriend_9_v1_g.mp3 | стражник своему | Orus | protective, friendly | Будут обижать — только скажи. |
+| street_guardfriend_9_v2_g.mp3 | стражник своему | Algenib | protective, friendly | Будут обижать — только скажи. |
+| street_guardfriend_10_g.mp3 | стражник своему | Alnilam | warm, welcoming | Своим у нас всегда рады. |
+| street_guardfriend_10_v1_g.mp3 | стражник своему | Orus | warm, welcoming | Своим у нас всегда рады. |
+| street_guardfriend_10_v2_g.mp3 | стражник своему | Algenib | warm, welcoming | Своим у нас всегда рады. |
+| street_guardfriend_11_g.mp3 | стражник своему | Alnilam | cheerful greeting | Здорово! Как дорога? |
+| street_guardfriend_11_v1_g.mp3 | стражник своему | Orus | cheerful greeting | Здорово! Как дорога? |
+| street_guardfriend_11_v2_g.mp3 | стражник своему | Algenib | cheerful greeting | Здорово! Как дорога? |
+| street_guardfriend_12_g.mp3 | стражник своему | Alnilam | respectful, admiring | Слыхал о твоих делах. Уважаю. |
+| street_guardfriend_12_v1_g.mp3 | стражник своему | Orus | respectful, admiring | Слыхал о твоих делах. Уважаю. |
+| street_guardfriend_12_v2_g.mp3 | стражник своему | Algenib | respectful, admiring | Слыхал о твоих делах. Уважаю. |
+| street_guardfriend_13_g.mp3 | стражник своему | Alnilam | hearty, inviting | Заглядывай в караулку, угостим. |
+| street_guardfriend_13_v1_g.mp3 | стражник своему | Orus | hearty, inviting | Заглядывай в караулку, угостим. |
+| street_guardfriend_13_v2_g.mp3 | стражник своему | Algenib | hearty, inviting | Заглядывай в караулку, угостим. |
+| street_guardcold_3_g.mp3 | стражник недругу | Alnilam | cold, suspicious, commanding | Руки держи на виду. |
+| street_guardcold_3_v1_g.mp3 | стражник недругу | Orus | cold, suspicious, commanding | Руки держи на виду. |
+| street_guardcold_3_v2_g.mp3 | стражник недругу | Algenib | cold, suspicious, commanding | Руки держи на виду. |
+| street_guardcold_4_g.mp3 | стражник недругу | Alnilam | contemptuous, cold | Таких, как ты, у нас не жалуют. |
+| street_guardcold_4_v1_g.mp3 | стражник недругу | Orus | contemptuous, cold | Таких, как ты, у нас не жалуют. |
+| street_guardcold_4_v2_g.mp3 | стражник недругу | Algenib | contemptuous, cold | Таких, как ты, у нас не жалуют. |
+| street_guardcold_5_g.mp3 | стражник недругу | Alnilam | threatening, low voice | Одно неверное движение — и в холодную. |
+| street_guardcold_5_v1_g.mp3 | стражник недругу | Orus | threatening, low voice | Одно неверное движение — и в холодную. |
+| street_guardcold_5_v2_g.mp3 | стражник недругу | Algenib | threatening, low voice | Одно неверное движение — и в холодную. |
+| street_guardcold_6_g.mp3 | стражник недругу | Alnilam | hostile, menacing | Проваливай, пока цел. |
+| street_guardcold_6_v1_g.mp3 | стражник недругу | Orus | hostile, menacing | Проваливай, пока цел. |
+| street_guardcold_6_v2_g.mp3 | стражник недругу | Algenib | hostile, menacing | Проваливай, пока цел. |
+| street_guardcold_7_g.mp3 | стражник недругу | Alnilam | cold, hostile | Тебе здесь не рады. Запомни. |
+| street_guardcold_7_v1_g.mp3 | стражник недругу | Orus | cold, hostile | Тебе здесь не рады. Запомни. |
+| street_guardcold_7_v2_g.mp3 | стражник недругу | Algenib | cold, hostile | Тебе здесь не рады. Запомни. |
+| street_guardhurt_0_g.mp3 | стражник раненому | Alnilam | concerned, urging | Ранен? Лекарь в городе есть, не тяни. |
+| street_guardhurt_0_v1_g.mp3 | стражник раненому | Orus | concerned, urging | Ранен? Лекарь в городе есть, не тяни. |
+| street_guardhurt_0_v2_g.mp3 | стражник раненому | Algenib | concerned, urging | Ранен? Лекарь в городе есть, не тяни. |
+| street_guardhurt_1_g.mp3 | стражник раненому | Alnilam | sympathetic, gruff | Эк тебя потрепало. Сходи к лекарю. |
+| street_guardhurt_1_v1_g.mp3 | стражник раненому | Orus | sympathetic, gruff | Эк тебя потрепало. Сходи к лекарю. |
+| street_guardhurt_1_v2_g.mp3 | стражник раненому | Algenib | sympathetic, gruff | Эк тебя потрепало. Сходи к лекарю. |
+| street_guardhurt_2_g.mp3 | стражник раненому | Alnilam | suspicious, surprised | Кровь на тебе. Дрался, что ли? |
+| street_guardhurt_2_v1_g.mp3 | стражник раненому | Orus | suspicious, surprised | Кровь на тебе. Дрался, что ли? |
+| street_guardhurt_2_v2_g.mp3 | стражник раненому | Algenib | suspicious, surprised | Кровь на тебе. Дрался, что ли? |
+| street_guardrain_0_g.mp3 | стражник под дождём | Alnilam | grumbling, wet and miserable | Льёт как из ведра, а служба идёт. |
+| street_guardrain_0_v1_g.mp3 | стражник под дождём | Orus | grumbling, wet and miserable | Льёт как из ведра, а служба идёт. |
+| street_guardrain_0_v2_g.mp3 | стражник под дождём | Algenib | grumbling, wet and miserable | Льёт как из ведра, а служба идёт. |
+| street_guardrain_1_g.mp3 | стражник под дождём | Alnilam | annoyed, grumbling | Доспех ржавеет от такой сырости. |
+| street_guardrain_1_v1_g.mp3 | стражник под дождём | Orus | annoyed, grumbling | Доспех ржавеет от такой сырости. |
+| street_guardrain_1_v2_g.mp3 | стражник под дождём | Algenib | annoyed, grumbling | Доспех ржавеет от такой сырости. |
+| street_guardrain_2_g.mp3 | стражник под дождём | Alnilam | weary, sighing | Под навес бы, да смена не кончилась. |
+| street_guardrain_2_v1_g.mp3 | стражник под дождём | Orus | weary, sighing | Под навес бы, да смена не кончилась. |
+| street_guardrain_2_v2_g.mp3 | стражник под дождём | Algenib | weary, sighing | Под навес бы, да смена не кончилась. |
+| street_darkguard_6_g.mp3 | латник смены | Charon | cold, clipped command | Стоять. Глаза вниз. |
+| street_darkguard_6_v1_g.mp3 | латник смены | Schedar | cold, clipped command | Стоять. Глаза вниз. |
+| street_darkguard_7_g.mp3 | латник смены | Charon | cold, ominous | Твоё имя уже в списке. Или скоро будет. |
+| street_darkguard_7_v1_g.mp3 | латник смены | Schedar | cold, ominous | Твоё имя уже в списке. Или скоро будет. |
+| street_darkguard_8_g.mp3 | латник смены | Charon | flat, menacing | Шаг в сторону — и смена тебя запомнит. |
+| street_darkguard_8_v1_g.mp3 | латник смены | Schedar | flat, menacing | Шаг в сторону — и смена тебя запомнит. |
+| street_darkguard_9_g.mp3 | латник смены | Charon | cold, flat | Здесь не ходят без дела. |
+| street_darkguard_9_v1_g.mp3 | латник смены | Schedar | cold, flat | Здесь не ходят без дела. |
+| street_darkguard_10_g.mp3 | латник смены | Charon | cold, suspicious, ominous | Ты чужой. Чужих у нас считают дважды. |
+| street_darkguard_10_v1_g.mp3 | латник смены | Schedar | cold, suspicious, ominous | Ты чужой. Чужих у нас считают дважды. |
+| street_darkguard_11_g.mp3 | латник смены | Charon | cold, grudging | Проходи. Пока проходи. |
+| street_darkguard_11_v1_g.mp3 | латник смены | Schedar | cold, grudging | Проходи. Пока проходи. |

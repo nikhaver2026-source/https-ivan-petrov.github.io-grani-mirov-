@@ -4,8 +4,8 @@
    Подсказки, где что находится, выключаются в настройках: тогда описания
    после шага молчат, стена не называется, а проходы слышны ветром с их
    стороны, дверь — петлёй, ступени — камнем. Осмотреться — три пальца
-   влево. Два пальца: вниз — взаимодействовать с найденным, вверх —
-   повторить или оборвать речь, влево — карта места, вправо — журнал дел;
+   влево. Два пальца: вниз — закрыть окно, вверх — что рядом (объекты
+   поблизости со стороной и расстоянием), влево — карта места, вправо — журнал дел;
    тот же свайп окно закрывает. Три пальца вниз — инвентарь по разделам:
    двойное касание по вещи — о ней, свайп вверх или вниз на ней — действия
    по вещи и по месту.
@@ -14,7 +14,7 @@
 
    1. Без подсказок шаг молчит, стена молчит, проходы слышны с их стороны;
       с подсказками всё называется.
-   2. Два пальца вверх — повтор или стоп; влево — карта (открыть, закрыть);
+   2. Два пальца вверх — что рядом; влево — карта (открыть, закрыть);
       вправо — журнал (открыть, закрыть); вниз — действие с найденным.
    3. Три пальца вниз — инвентарь и его закрытие; влево — эхо-скан; вправо —
       «где я»; и всё это работает жестами поверх окна.
@@ -45,7 +45,7 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   window.SPOKEN=[];const ps=Speech._push.bind(Speech);Speech._push=function(m){SPOKEN.push(String(m&&m.text));return ps(m);};const pf=Speech._pushFront.bind(Speech);Speech._pushFront=function(m){SPOKEN.push(String(m&&m.text));return pf(m);};
   window.PLAYED=[];const p=Bank.play.bind(Bank);Bank.play=(r,o)=>{PLAYED.push(String(r));return p(r,o);};const sr=Spatial.role.bind(Spatial);Spatial.role=(r,dx,dy,o)=>{PLAYED.push("sp:"+r+":"+dx+","+dy);return sr(r,dx,dy,o);};
   window.LOG=[];const u=useHere;window.useHere=function(){LOG.push("useHere");return u.apply(this,arguments);};const sc=scanSpeak;window.scanSpeak=function(){LOG.push("scan");return sc.apply(this,arguments);};const lo=Look.open.bind(Look);Look.open=function(){LOG.push("scan");return lo();};
-  const st=Speech.status.bind(Speech);Speech.status=function(){LOG.push("status");return st();};const rl=Speech.repeatLast.bind(Speech);Speech.repeatLast=function(){LOG.push("repeat");return rl();};
+  const st=Speech.status.bind(Speech);Speech.status=function(){LOG.push("status");return st();};const rl=Speech.repeatLast.bind(Speech);Speech.repeatLast=function(){LOG.push("repeat");return rl();};const ns=nearSummary;window.nearSummary=function(){LOG.push("near");return ns.apply(this,arguments);};
   G.place=null;G.ship=null;G.inCombat=false;G.combat=null;G.weaponDrawn=false;settings.fastTap=0;});
 
  /* ── 1. без подсказок ── */
@@ -67,7 +67,7 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
  /* ── 2. два пальца ── */
  await page.evaluate(()=>{Speech.stop();LOG.length=0;});
  await multiSwipe(2,0,-170);
- const повтор=await page.evaluate(()=>LOG.includes("repeat"));
+ const повтор=await page.evaluate(()=>LOG.includes("near"));
  await multiSwipe(2,-170,0);const картаОткр=await page.evaluate(()=>!document.getElementById("modal-map").hidden);
  await multiSwipe(2,-170,0);const картаЗакр=await page.evaluate(()=>document.getElementById("modal-map").hidden);
  await multiSwipe(2,170,0);const журнОткр=await page.evaluate(()=>!document.getElementById("modal-quests").hidden);
@@ -76,7 +76,7 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
  /* Действие с найденным — двойное касание одним пальцем; свайп вниз только закрывает (набор 176). */
  await page.evaluate(()=>{LOG.length=0;});await tap(195,430);await tap(195,430);await page.waitForTimeout(250);
  const действие=await page.evaluate(()=>LOG.includes("useHere"));
- check('2. два пальца: вверх — повтор, влево — карта (открыть и закрыть), вправо — журнал (открыть и закрыть), вниз — только закрыть; действие с найденным — двойное касание',
+ check('2. два пальца: вверх — что рядом, влево — карта (открыть и закрыть), вправо — журнал (открыть и закрыть), вниз — только закрыть; действие с найденным — двойное касание',
   повтор&&картаОткр&&картаЗакр&&журнОткр&&журнЗакр&&!свайпВниз&&действие,{повтор,картаОткр,картаЗакр,журнОткр,журнЗакр,свайпВниз,действие});
 
  /* ── 3. три пальца ── */

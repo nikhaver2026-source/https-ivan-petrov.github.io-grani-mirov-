@@ -156,11 +156,15 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
  st=await state();
  check('9. без чтеца экрана: окно названо встроенной речью, стоп кнопкой работает, живая область молчит',без.layer&&без.log.some(t=>/Окно «Настройки»/.test(t))&&без.live===""&&!st.speaking&&st.stats.userStops>=1,{log:без.log,live:без.live});
  await page.evaluate(()=>{settings.srMode="auto";while(activeLayer())closeTopUI();});
+ /* Отчёт о закрытом окне («Окно „Настройки“ закрыто. Игровое поле.») уходит
+    в живую область с задержкой; пусть он отзвучит здесь, а не попадёт в
+    подсчёт следующей проверки. */
+ await page.waitForTimeout(700);
 
  /* ── 10. живая область: каждый текст ровно раз ── */
  await fresh();
  const дубли=await page.evaluate(async()=>{
-  const live=document.getElementById("liveRegion");const seen=[];
+  const live=document.getElementById("liveRegion");const seen=[];live.textContent="";
   const mo=new MutationObserver(()=>{if(live.textContent)seen.push(live.textContent);});
   mo.observe(live,{childList:true,characterData:true,subtree:true});
   Speech.say("Первое сообщение.",{pri:2});await new Promise(r=>setTimeout(r,60));FAKE.end();

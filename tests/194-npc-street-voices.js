@@ -17,7 +17,7 @@
    2. Каждая названная запись лежит в sounds/voice_npc: MP3 моно 44,1 кГц,
       320 кбит/с; длительность в VOICE_NPC_LEN совпадает с файлом; лишних
       файлов нет.
-   3. Титры называют Gemini, модель, условия и все шесть голосов; число
+   3. Титры называют Gemini, модель, условия и все голоса; число
       записей в титрах сходится с папкой; у каждой записи строка с текстом.
    4. Folk.реплика берёт запись своей роли и нужного пола из voice_npc;
       строки без записи не звучат записью (false — голос игры читает сам).
@@ -49,7 +49,8 @@ function probe(file){
 
  /* ── 1. у каждой строки своя запись ── */
  const игра=await page.evaluate(()=>{
-  const пулы={guard:GUARD_LINES,folk:FOLK_LINES,dark_guard:DARK_GUARD_LINES,dark_soldier:DARK_SOLDIER_LINES,dark_folk:DARK_FOLK_LINES};
+  const пулы={guard:GUARD_LINES,folk:FOLK_LINES,dark_guard:DARK_GUARD_LINES,dark_soldier:DARK_SOLDIER_LINES,dark_folk:DARK_FOLK_LINES,
+   guard_night:GUARD_NIGHT_LINES,guard_friend:GUARD_FRIEND_LINES,guard_cold:GUARD_COLD_LINES,guard_hurt:GUARD_HURT_LINES,guard_rain:GUARD_RAIN_LINES};
   const нет=[],безЖен=[];let строк=0;
   for(const [р,арр] of Object.entries(пулы))арр.forEach(t=>{строк++;const r=VOICE_NPC[р]&&VOICE_NPC[р][t];
    if(!r)нет.push(р+": "+t);else if(/folk/.test(р)&&!r[1])безЖен.push(р+": "+t);});
@@ -62,7 +63,10 @@ function probe(file){
   /* Ходы героя новее двадцати одного — голосом героя из voice_npc. */
   DLG_MOVES.filter(m=>VOICE_HERO.indexOf(m.id)<0).forEach(m=>{if(!(VOICE_NPC.hero&&VOICE_NPC.hero[m.id]))нет.push("hero: "+m.id);});
   const файлы=[];
-  Object.values(VOICE_NPC).forEach(mp=>Object.values(mp).forEach(([b,f])=>{файлы.push(b+VOICE_GEN);if(f)файлы.push(b+"_f"+VOICE_GEN);}));
+  /* Строка стражи записана несколькими голосами: третье поле — маска
+     (бит k — файл с суффиксом «_vk», бит 0 — без суффикса). */
+  Object.values(VOICE_NPC).forEach(mp=>Object.values(mp).forEach(([b,f,m])=>{const маска=Number(m)||1;
+   for(let k=0;k<8;k++)if((маска>>k)&1){const bk=b+(k?"_v"+k:"");файлы.push(bk+VOICE_GEN);if(f)файлы.push(bk+"_f"+VOICE_GEN);}}));
   return {строк,нет,безЖен,файлы,len:VOICE_NPC_LEN,dir:VOICE_NPC_DIR,роли:Object.keys(VOICE_NPC)};});
  check('1. у каждой строки приветствия и уличного оклика своя запись, у горожан и приветствий — мужская и женская',
   игра.строк>=350&&игра.нет.length===0&&игра.безЖен.length===0&&игра.dir==="voice_npc/",
@@ -85,9 +89,9 @@ function probe(file){
  /* ── 3. титры ── */
  const титры=fs.readFileSync(path.join(DIR,'CREDITS.md'),'utf8');
  const число=+((титры.match(/Записей:\s*(\d+)/)||[])[1]||0);
- const голоса=['Alnilam','Charon','Achird','Sulafat','Umbriel','Despina'];
+ const голоса=['Alnilam','Orus','Algenib','Charon','Schedar','Achird','Sulafat','Umbriel','Despina'];
  const безСтроки=нужны.filter(k=>титры.indexOf('| '+k+'.mp3 |')<0);
- check('3. титры: Gemini, модель, условия, шесть голосов; число записей сходится; у каждой записи строка',
+ check('3. титры: Gemini, модель, условия, все голоса; число записей сходится; у каждой записи строка',
   /Gemini/.test(титры)&&/gemini-3\.8-flash-tts/.test(титры)&&/ai\.google\.dev\/gemini-api\/terms/.test(титры)
   &&голоса.every(v=>титры.includes(v))&&число===mp3.length&&безСтроки.length===0,{число,файлов:mp3.length,безСтроки:безСтроки.slice(0,3)});
 
@@ -99,13 +103,13 @@ function probe(file){
   r.страж=Folk.реплика("guard",GUARD_LINES[0],{x:1,y:1},false);
   r.горожанка=Folk.реплика("folk",FOLK_LINES[0],{x:1,y:1},true);
   r.горожанин=Folk.реплика("folk",FOLK_LINES[0],{x:1,y:1},false);
-  r.свойСтраж=Folk.реплика("guard_friend",NPC_GREET.свой[0],{x:1,y:1},false);
+  r.свойСтраж=Folk.реплика("guard_friend",GUARD_FRIEND_LINES[1],{x:1,y:1},false);
   r.свойПрилавок=Folk.реплика("greet",NPC_GREET.свой[0],{x:1,y:1},false);
   r.чужая=Folk.реплика("guard","Такой строки в игре нет.",{x:1,y:1},false);
   Folk.сказать=было;
   return {r,вызовы};});
  const в=реп.вызовы;
- check('4. Folk.реплика: запись своей роли и пола из voice_npc; одна строка у стражника и у прилавка — разные записи; строки без записи — false',
+ check('4. Folk.реплика: запись своей роли и пола из voice_npc; у стражника и у прилавка свои записи; строки без записи — false',
   реп.r.страж&&реп.r.горожанка&&реп.r.горожанин&&реп.r.свойСтраж&&реп.r.свойПрилавок&&реп.r.чужая===false&&в.length===5
   &&в.every(x=>x.dir==="voice_npc/")&&/^street_guard_0_g$/.test(в[0].путь)&&/^street_folk_0_f_g$/.test(в[1].путь)
   &&/^street_folk_0_g$/.test(в[2].путь)&&/^street_guardfriend_/.test(в[3].путь)&&/^greet_svoy_0_g$/.test(в[4].путь),реп);

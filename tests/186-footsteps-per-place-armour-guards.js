@@ -124,8 +124,12 @@ const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(e!==undefined?' :
   r.замок=уровень("castle");
   const g=Actors.list.find(a=>a.kind==="guard");const f=Actors.list.find(a=>a.kind==="folk");
   r.пол=indoorSurface();r.рольПола=SURF_ROLE[r.пол];
-  if(g){звуки.length=0;Actors.step(g,2);await new Promise(t=>setTimeout(t,900));r.стражник=звуки.slice();r.след=Actors.lastStep;}
-  if(f){звуки.length=0;Actors.step(f,2);await new Promise(t=>setTimeout(t,700));r.горожанин=звуки.slice();}
+  /* Шаг слышен, пока живой в пределах слуха: ставим обоих в двух клетках. */
+  if(g){g.x=G.place.x+2;g.y=G.place.y;g.шагДо=0;звуки.length=0;Actors.step(g,2);await new Promise(t=>setTimeout(t,900));r.стражник=звуки.slice();r.след=Actors.lastStep;}
+  /* Шаги стражника расписаны на весь ход (1,5 с): пусть дозвучат, чтобы его
+     железо не попало в замер горожанина. */
+  await new Promise(t=>setTimeout(t,800));
+  if(f){f.x=G.place.x-2;f.y=G.place.y;f.шагДо=0;звуки.length=0;Actors.step(f,2);await new Promise(t=>setTimeout(t,700));r.горожанин=звуки.slice();}
   /* Двое ближних шагавших — слышны оба. */
   const p=G.place;const люди=Actors.list.filter(a=>a.kind!=="mob");
   люди.forEach((a,i)=>{a.x=p.x+(i%2?1:-1);a.y=p.y+Math.floor(i/2)%3;});
@@ -138,9 +142,9 @@ const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(e!==undefined?' :
   const g2=Actors.list.find(a=>a.kind==="guard");r.деревняСнаряжение=g2?Actors.gear(g2):null;
   Spatial.role=s0;Bank.play=b0;G.place=null;return r;});
  check('6. стражник ступает по полу замка, звенит кольчугой и лязгает сапогами',
-  стража.замок&&Array.isArray(стража.стражник)&&стража.стражник.includes(стража.рольПола)&&стража.стражник.includes("hero_step_metal")&&стража.стражник.includes("gear_plate"),стража);
+  стража.замок&&Array.isArray(стража.стражник)&&стража.стражник.includes(стража.рольПола)&&стража.стражник.includes("gear_guard_mail")&&стража.стражник.includes("gear_guard_plate"),стража);
  check('6б. горожанин ступает без железа; в деревне стража в коже',
-  Array.isArray(стража.горожанин)&&стража.горожанин.length>=1&&!стража.горожанин.includes("hero_step_metal")
+  Array.isArray(стража.горожанин)&&стража.горожанин.length>=1&&!стража.горожанин.includes("gear_guard_mail")
   &&стража.деревняСнаряжение&&стража.деревняСнаряжение.доспех==="hero_step_leather",стража);
  check('7. слышны двое ближних шагавших, а стража не звучит в картине мира тварью',стража.шагали===2&&стража.твари===0,стража);
 
