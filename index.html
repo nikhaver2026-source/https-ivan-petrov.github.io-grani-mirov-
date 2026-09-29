@@ -41185,9 +41185,13 @@ const Langs=Modules.register("LANGS",{
   const now=Date.now();if(this._cueAt&&now-this._cueAt<1500)return null;this._cueAt=now;
   const c=this.cueRoles(id,why);
   const длина=c.вид==="talk"?1.1:2.2;
-  c.роли.forEach((роль,i)=>setTimeout(()=>safeFn(()=>{
-   const o={dz:-0.4,gain:роль==="magic_shimmer"?0.42:0.62,maxSec:роль==="lang_page"?1.6:длина,kind:"fx"};
-   Spatial.role(роль,0,-0.7,o)||Bank.play(роль,{gain:o.gain,maxSec:o.maxSec});}),i*(роль==="lang_page"?0:650)+(i&&c.роли[0]==="lang_page"?700:0)));
+  c.роли.forEach((роль,i)=>{
+   const звук=()=>safeFn(()=>{
+    const o={dz:-0.4,gain:роль==="magic_shimmer"?0.42:0.62,maxSec:роль==="lang_page"?1.6:длина,kind:"fx"};
+    Spatial.role(роль,0,-0.7,o)||Bank.play(роль,{gain:o.gain,maxSec:o.maxSec});});
+   /* Первый звук — сразу, со словом о уроке; остальные — следом. */
+   const ждать=i*(роль==="lang_page"?0:650)+(i&&c.роли[0]==="lang_page"?700:0);
+   if(ждать>0)setTimeout(звук,ждать);else звук();});
   this.lastCue=c;return c;},
  /* Разговор с носителем — тоже урок, раз в день с каждого. */
  practice(n){try{const l=this.ofNPC(n);if(l.id==="common"||this.level(l.id)>=3)return false;if(!G.langTalk||typeof G.langTalk!=="object")G.langTalk={};const k=n.key+"@"+G.day;if(G.langTalk[k])return false;G.langTalk[k]=1;

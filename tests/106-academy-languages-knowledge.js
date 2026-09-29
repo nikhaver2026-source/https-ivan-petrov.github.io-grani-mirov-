@@ -38,6 +38,8 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
  await page.evaluate(()=>enterGame());await page.waitForTimeout(500);
  await page.evaluate(()=>{window.SAID=[];const o=Speech.say.bind(Speech);Speech.say=(t,x)=>{SAID.push(String(t));return o(t,x);};
   window.PLAYED=[];const p=Bank.play.bind(Bank);Bank.play=(r,o)=>{PLAYED.push(String(r));return p(r,Object.assign({},o||{},{gain:0,maxSec:0.4}));};
+  /* С 4.3 звук урока идёт объёмно, чуть впереди, — ловим и его. */
+  const sr0=Spatial.role.bind(Spatial);Spatial.role=(r,dx,dy,o)=>{PLAYED.push(String(r));return sr0(r,dx,dy,Object.assign({},o||{},{gain:0,maxSec:0.4}));};
   window.JT=window.JT||[];const j=window.journal;window.journal=t=>{JT.push(String(t));return j(t);};});
 
  /* ── 1. данные ── */
@@ -69,7 +71,7 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   r.garble=Langs.garble("один два три четыре пять шесть");
   r.tradeNo=Langs.tradeK(простой);r.tradeYes=Langs.tradeK(купец);
   const ask0=npcAsk(простой,"руда");
-  PLAYED.length=0;SAID.length=0;JT.length=0;r.up1=Langs.learn("north",20,"проба");r.lvl1=Langs.level("north");r.звук=PLAYED.includes("arte_page");r.сказ=SAID.find(t=>/Северное наречие: теперь вы разбираете/.test(t))||"";r.летопись=JT.some(t=>/Язык: северное наречие, разбираете/.test(t));r.реестр=Ledger.has("языки",/северное наречие/);
+  PLAYED.length=0;SAID.length=0;JT.length=0;r.up1=Langs.learn("north",20,"проба");r.lvl1=Langs.level("north");r.звук=PLAYED.some(x=>/^(lang_|oc_res_rune$|arte_page$)/.test(x));r.сказ=SAID.find(t=>/Северное наречие: теперь вы разбираете/.test(t))||"";r.летопись=JT.some(t=>/Язык: северное наречие, разбираете/.test(t));r.реестр=Ledger.has("языки",/северное наречие/);
   r.up2=Langs.learn("north",5);r.lvl2=Langs.level("north");r.оп=G.langs.north.оп;
   Langs.learn("north",40);r.lvl3=Langs.level("north");r.после=Langs.check(простой);const ask1=npcAsk(простой,"руда");r.ask=[ask0,ask1];
   r.commonNo=Langs.learn("common",99);
