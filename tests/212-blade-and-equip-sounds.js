@@ -11,7 +11,8 @@
       в их ударе нет глухих записей (lug_thud, lug_impact, lug_sword).
    3. В бою меч по плоти звучит режущим ударом клинка — и тяжёлый удар
       тоже без глухого отзвука; по голему — звон по броне; кинжал — укол,
-      топор — рубка; булава по-прежнему бьёт глухо.
+      топор — рубка; булава бьёт глухо, тяжёлый удар — с глухим отзвуком;
+      у меча, топора, кинжала и булавы свой взмах.
    4. Блок щитом звучит оковкой или деревом; без щита — парирование клинком.
    5. Род звука надевания: кольцо, амулет, браслет, щит, кольчуга, латы,
       кожа, ткань.
@@ -32,7 +33,7 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   window.PLAYED=[];const bp=Bank.play.bind(Bank);Bank.play=function(r,o){PLAYED.push(r);return bp(r,o);};});
 
  /* ── 1. файлы ── */
- const роли=await page.evaluate(()=>Object.keys(SOUND_BANK).filter(r=>/^(blade_(flesh|armor|clash|dagger|spear|axe|shield_metal|shield_wood)|equip_)/.test(r))
+ const роли=await page.evaluate(()=>Object.keys(SOUND_BANK).filter(r=>/^(blade_|equip_)/.test(r)&&SOUND_BANK[r].f.every(x=>/^(blade|equip)\//.test(x)))
   .map(r=>({r,f:SOUND_BANK[r].f})));
  const нет=[],неFlac=[],безОписи=[];
  const описи={blade:fs.readFileSync(path.join(ROOT,'sounds/blade/CREDITS.md'),'utf8'),equip:fs.readFileSync(path.join(ROOT,'sounds/equip/CREDITS.md'),'utf8')};
@@ -52,10 +53,12 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   const r={};["sword","axe","dagger","spear"].forEach(k=>{const m=WEAPON_SOUND[k];
    r[k]={solo:!!m.solo,глухих:["hit","hit_flesh","hit_armor"].flatMap(s=>m[s]||[]).filter(x=>глухие.test(x)),
     клинок:["hit","hit_flesh"].every(s=>(m[s]||[]).every(x=>/^blade_/.test(x)))};});
-  r.mace=!WEAPON_SOUND.mace.solo&&WEAPON_SOUND.mace.hit.indexOf("lug_impact")>=0;
+  r.mace=!!WEAPON_SOUND.mace.тяжесть&&WEAPON_SOUND.mace.hit_flesh.indexOf("blade_blunt")>=0&&WEAPON_SOUND.staff.hit_flesh.indexOf("blade_blunt")>=0;
+  r.взмахи={меч:WEAPON_SOUND.sword.swing[0],топор:WEAPON_SOUND.axe.swing[0],кинжал:WEAPON_SOUND.dagger.swing[0],булава:WEAPON_SOUND.mace.swing[0]};
   return r;});
- check('2. клинки бьют записью клинка, без глухих ударов; булава — глухо',
-  ["sword","axe","dagger","spear"].every(k=>табл[k].solo&&!табл[k].глухих.length&&табл[k].клинок)&&табл.mace,табл);
+ check('2. клинки бьют записью клинка, без глухих ударов; булава и посох — глухим дробящим ударом; у каждого рода свой взмах',
+  ["sword","axe","dagger","spear"].every(k=>табл[k].solo&&!табл[k].глухих.length&&табл[k].клинок)&&табл.mace
+  &&табл.взмахи.меч==="blade_swing_cut"&&табл.взмахи.топор==="blade_swing_blunt"&&табл.взмахи.кинжал==="blade_swing_stab"&&табл.взмахи.булава==="blade_swing_blunt",табл);
 
  /* ── 3. бой ── */
  const бой=await page.evaluate(async()=>{

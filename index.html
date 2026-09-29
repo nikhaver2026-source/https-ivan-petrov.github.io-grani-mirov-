@@ -7255,9 +7255,9 @@ const GUIDE_SRC=[
  "ПЕРЕКЛЮЧАТЕЛИ И ВЕЩИ. Каждый переключатель в настройках звучит своей записью: включение — одной, выключение — другой. Стартовый стальной меч продаётся, как любое оружие, а разобранный или проданный больше не появляется в сумке снова.",
  "ЖЕСТЫ ВО ВРЕМЯ БОЯ. Пока идёт бой и сверху нет окна, свайп двумя пальцами влево выпивает зелье здоровья (а нет зелья — отвар на воде); вне боя этот жест, как прежде, — «осмотреться». В настройках, в разделе «Жесты», есть подраздел «Жесты во время боя»: любую из тридцати трёх фигур можно назначить на выпить зелье, удар оружием, удар чарами, бегство, вынуть оружие, «где тварь» или «моё здоровье»; «как вне боя» оставляет фигуре её обычное дело.",
  "ШАГ В ДОСПЕХЕ. Кольчуга и латы звучат настоящими записями брони: прежние слои были сведены из «лязга металла» и связки ключей и звенели, как монеты. У стражи те же записи ниже и тяжелее.",
- "ЗВУК КЛИНКА. Меч бьёт режущим ударом со звоном стали, а не глухо, как молот: по плоти — рассекающий удар, по броне — звон стали о сталь, по кости — удар и сухой треск. Кинжал колет коротко, топор рубит тяжело, копьё бьёт выпадом, булава и посох — глухо, как им и положено. Щит принимает удар звоном оковки или стуком дерева, без щита удар парирует клинок.",
+ "ЗВУК КЛИНКА. Меч бьёт режущим ударом со звоном стали, а не глухо, как молот: по плоти — рассекающий удар, по броне — звон стали о сталь, по кости — удар и сухой треск. Кинжал колет коротко, топор рубит тяжело, копьё бьёт выпадом, булава и посох — глухим дробящим ударом, как им и положено. У каждого рода оружия свой взмах: свист клинка, тяжёлый взмах булавы и топора, короткий выпад кинжала. Щит принимает удар звоном оковки или стуком дерева, без щита удар парирует клинок. Все записи — без потерь, 48 кГц.",
  "ПОЛ ГОЛОСА. Выбранный голос игры — мужской или женский — не меняется посреди речи: то, чего нет в записях, договаривает встроенный голос того же пола, а не голос телефона. Житель говорит голосом своего пола: мужчина — мужским, женщина — женским, какого бы народа он ни был; народ задаёт только высоту. Если у фразы ещё нет записи нужного пола, житель не говорит её чужим голосом — её читает голос игры.",
- "НАДЕТЬ И СНЯТЬ. У каждой вещи свой звук: кольчуга звенит кольцами, латы лязгают пластинами, кожа скрипит ремнями, ткань шуршит, щит стучит о ремни, амулет — тонкой цепочкой, кольцо — коротким звоном, браслет — звяканьем. Надеть и снять звучат по-разному.",
+ "НАДЕТЬ И СНЯТЬ. У каждой вещи свой звук: кольчуга звенит кольцами, латы лязгают пластинами и щёлкают пряжкой, кожаный доспех скрипит кожей и ремнями (у кожи и ткани по три разных записи), ткань шуршит, щит стучит о ремни, амулет — тонкой цепочкой, кольцо — коротким звоном, браслет — звяканьем. Надеть и снять звучат по-разному.",
  "РУКОВОДСТВО. Сто шесть глав собраны в тридцать одну: близкие главы стали разделами одной, номера идут подряд в порядке чтения, по разделам внутри главы можно перескакивать так же, как по частям в оглавлении."]},
 {title:"Глава 105. Версия 4.4: свой голос у каждой твари, живая капель, тяжёлый шаг стражи, зелья и требования вещей",body:[
  "СВОЙ ГОЛОС У ТВАРИ. Раньше голос в покое и боевой клич давал твари её род, и две твари одного рода, стоя рядом и порыкивая, звучали одним горлом. Теперь у каждого вида своя запись из голосов его рода, свой вариант этой записи и своя высота: крупные — громада, владыка, рух — звучат ниже, мелкие — мышь, сойка, рой — выше. Боевой клич и злоба — другая запись того же горла, так что вид узнаётся и в покое, и в ярости. Тот же голос слышен, когда тварь стоит за дверью, сторожит шахту или бродит в картине вокруг.",
@@ -11718,14 +11718,21 @@ const SOUND_BANK={
  /* ── КЛИНКИ И ЩИТЫ (4.6) ──
     Прежний удар меча звучал глухо, как молот. Теперь у клинка режущий удар
     со звоном стали, у кинжала — укол, у копья — выпад, у топора — тяжёлая
-    рубка, у щита — оковка или дерево. Записи 0 A.D. (sounds/blade/CREDITS.md). */
- blade_flesh:{f:["blade/blade_flesh_01.flac","blade/blade_flesh_02.flac","blade/blade_flesh_03.flac","blade/blade_flesh_04.flac","blade/blade_flesh_05.flac","blade/blade_flesh_06.flac","blade/blade_flesh_07.flac","blade/blade_flesh_08.flac"],d:"Клинок рассекает плоть: режущий удар и короткий звон стали"},
+    рубка, у булавы — глухой удар, у щита — оковка или дерево; у каждого
+    рода свой взмах. Записи Freesound (CC0 и CC BY 3.0, через CC-Sounds),
+    исходные WAV 0 A.D. и Kenney (CC0); опись — sounds/blade/CREDITS.md. */
+ blade_flesh:{f:["blade/blade_flesh_01.flac","blade/blade_flesh_02.flac","blade/blade_flesh_03.flac","blade/blade_flesh_04.flac","blade/blade_flesh_05.flac","blade/blade_flesh_06.flac","blade/blade_flesh_07.flac","blade/blade_flesh_08.flac"],d:"Клинок рассекает плоть: режущий удар (Freesound) и вход клинка со звоном стали (0 A.D.)"},
  blade_armor:{f:["blade/blade_armor_01.flac","blade/blade_armor_02.flac","blade/blade_armor_03.flac","blade/blade_armor_04.flac","blade/blade_armor_05.flac","blade/blade_armor_06.flac","blade/blade_armor_07.flac","blade/blade_armor_08.flac"],d:"Клинок бьёт по броне: звон стали о сталь"},
  blade_clash:{f:["blade/blade_clash_01.flac","blade/blade_clash_02.flac","blade/blade_clash_03.flac","blade/blade_clash_04.flac","blade/blade_clash_05.flac","blade/blade_clash_06.flac"],d:"Клинок о клинок: парирование с долгим звоном"},
- blade_dagger:{f:["blade/dagger_stab_01.flac","blade/dagger_stab_02.flac","blade/dagger_stab_03.flac","blade/dagger_stab_04.flac","blade/dagger_stab_05.flac","blade/dagger_stab_06.flac"],d:"Кинжал входит в тело: короткий укол"},
- blade_spear:{f:["blade/spear_thrust_01.flac","blade/spear_thrust_02.flac","blade/spear_thrust_03.flac","blade/spear_thrust_04.flac","blade/spear_thrust_05.flac","blade/spear_thrust_06.flac"],d:"Выпад копьём: древко и наконечник"},
- blade_axe:{f:["blade/axe_chop_01.flac","blade/axe_chop_02.flac","blade/axe_chop_03.flac","blade/axe_chop_04.flac","blade/axe_chop_05.flac","blade/axe_chop_06.flac"],d:"Топор врубается: тяжёлый рубящий удар"},
+ blade_dagger:{f:["blade/dagger_stab_01.flac","blade/dagger_stab_02.flac","blade/dagger_stab_03.flac","blade/dagger_stab_04.flac","blade/dagger_stab_05.flac","blade/dagger_stab_06.flac","blade/dagger_stab_07.flac","blade/dagger_stab_08.flac"],d:"Кинжал: короткий укол и рез"},
+ blade_spear:{f:["blade/spear_thrust_01.flac","blade/spear_thrust_02.flac","blade/spear_thrust_03.flac","blade/spear_thrust_04.flac","blade/spear_thrust_05.flac","blade/spear_thrust_06.flac"],d:"Копьё: вход наконечника и выпад"},
+ blade_axe:{f:["blade/axe_chop_01.flac","blade/axe_chop_02.flac","blade/axe_chop_03.flac","blade/axe_chop_04.flac","blade/axe_chop_05.flac","blade/axe_chop_06.flac"],d:"Топор: тяжёлая рубка с хрустом"},
  blade_shield_metal:{f:["blade/shield_metal_01.flac","blade/shield_metal_02.flac","blade/shield_metal_03.flac","blade/shield_metal_04.flac","blade/shield_metal_05.flac","blade/shield_metal_06.flac"],d:"Щит с железной оковкой принял удар"},
+ blade_blunt:{f:["blade/blunt_flesh_01.flac","blade/blunt_flesh_02.flac","blade/blunt_flesh_03.flac","blade/blunt_flesh_04.flac","blade/blunt_flesh_05.flac","blade/blunt_flesh_06.flac"],d:"Булава и посох: глухой дробящий удар по телу"},
+ blade_swing_cut:{f:["blade/swing_blade_01.flac","blade/swing_blade_02.flac","blade/swing_blade_03.flac"],d:"Свист клинка в замахе"},
+ blade_swing_blunt:{f:["blade/swing_blunt_01.flac","blade/swing_blunt_02.flac","blade/swing_blunt_03.flac","blade/swing_blunt_04.flac","blade/swing_blunt_05.flac","blade/swing_blunt_06.flac"],d:"Тяжёлый взмах булавы, топора или посоха"},
+ blade_swing_stab:{f:["blade/swing_stab_01.flac","blade/swing_stab_02.flac","blade/swing_stab_03.flac","blade/swing_stab_04.flac","blade/swing_stab_05.flac"],d:"Короткий выпад кинжалом или копьём"},
+ blade_draw_knife:{f:["blade/draw_knife_01.flac","blade/draw_knife_02.flac","blade/draw_knife_03.flac"],d:"Клинок выходит из ножен"},
  blade_shield_wood:{f:["blade/shield_wood_01.flac","blade/shield_wood_02.flac","blade/shield_wood_03.flac","blade/shield_wood_04.flac","blade/shield_wood_05.flac","blade/shield_wood_06.flac"],d:"Деревянный щит принял удар"},
  /* ── НАДЕТЬ И СНЯТЬ (4.6) ──
     У каждой вещи свой звук надевания и снятия: кольчуга, латы, кожа, ткань,
@@ -11734,10 +11741,10 @@ const SOUND_BANK={
  equip_chain_off:{f:["equip/equip_chain_off.flac"],d:"Снять — кольчуга: звон колец"},
  equip_plate_on:{f:["equip/equip_plate_on.flac"],d:"Надеть — латы: лязг пластин и пряжек"},
  equip_plate_off:{f:["equip/equip_plate_off.flac"],d:"Снять — латы: лязг пластин и пряжек"},
- equip_leather_on:{f:["equip/equip_leather_on.flac"],d:"Надеть — кожаный доспех: скрип ремней"},
- equip_leather_off:{f:["equip/equip_leather_off.flac"],d:"Снять — кожаный доспех: скрип ремней"},
- equip_cloth_on:{f:["equip/equip_cloth_on.flac"],d:"Надеть — ткань: шорох одежды"},
- equip_cloth_off:{f:["equip/equip_cloth_off.flac"],d:"Снять — ткань: шорох одежды"},
+ equip_leather_on:{f:["equip/equip_leather_on_01.flac","equip/equip_leather_on_02.flac","equip/equip_leather_on_03.flac"],d:"Надеть — кожаный доспех: ремни и скрип кожи"},
+ equip_leather_off:{f:["equip/equip_leather_off_01.flac","equip/equip_leather_off_02.flac","equip/equip_leather_off_03.flac"],d:"Снять — кожаный доспех: ремни и скрип кожи"},
+ equip_cloth_on:{f:["equip/equip_cloth_on_01.flac","equip/equip_cloth_on_02.flac","equip/equip_cloth_on_03.flac"],d:"Надеть — ткань: шорох одежды и пояса"},
+ equip_cloth_off:{f:["equip/equip_cloth_off_01.flac","equip/equip_cloth_off_02.flac","equip/equip_cloth_off_03.flac"],d:"Снять — ткань: шорох одежды и пояса"},
  equip_heavy_on:{f:["equip/equip_heavy_on.flac"],d:"Надеть — тяжёлый доспех: глухой лязг"},
  equip_heavy_off:{f:["equip/equip_heavy_off.flac"],d:"Снять — тяжёлый доспех: глухой лязг"},
  equip_shield_on:{f:["equip/equip_shield_on.flac"],d:"Надеть — щит: ремни и стук дерева"},
@@ -37951,7 +37958,7 @@ function playWeaponCombatSfx(hit,dir="N",dmg=6){try{AE.ensure();
     setTimeout(()=>safeFn(()=>foeCue("hit_firearrow",{gain:0.5,maxSec:2.5})),130);}),150);
   /* Тяжёлый удар булавой или посохом отдаётся глухим ударом; клинку глухой
      отзвук не нужен — он и делал меч похожим на молот. */
-  if((Number(dmg)||6)>=12&&!род.solo)setTimeout(()=>safeFn(()=>Bank.play("lug_impact",{kind:"combat",gain:0.45,maxSec:2})),240);
+  if((Number(dmg)||6)>=12&&(!род.solo||род.тяжесть))setTimeout(()=>safeFn(()=>Bank.play("lug_impact",{kind:"combat",gain:0.45,maxSec:2})),240);
   return;}
  /* Без папки записей остаётся прежний синтез. */
  const pan=dir==="E"?0.35:dir==="W"?-0.35:0;
@@ -38010,23 +38017,24 @@ function weaponKind(){
    кость у скелета, броня у голема и стража, плоть у прочих.
    ════════════════════════════════════════════════════════════════════════ */
 const WEAPON_SOUND={
- /* solo — у клинков удар звучит одной записью по материалу: режущий удар со
+ /* solo — удар звучит одной записью по материалу: у клинка режущий удар со
     звоном стали по плоти, звон по броне. Прежде к нему подмешивался глухой
-    удар, и меч бил как молот. Булава и посох бьют глухо — так и должно быть. */
- sword:{solo:true,draw:["lug_knife_draw"],sheathe:["lug_knife_sheathe"],swing:["blade_swing","lug_whoosh"],hit:["blade_flesh"],
+    удар, и меч бил как молот. Булава и посох бьют глухо — так и должно быть:
+    у них «тяжесть», и сильный удар добавляет глухой отзвук. */
+ sword:{solo:true,draw:["lug_knife_draw","blade_draw_knife"],sheathe:["lug_knife_sheathe"],swing:["blade_swing_cut","blade_swing"],hit:["blade_flesh"],
   block:["blade_shield_metal","blade_shield_wood"],parry:["blade_clash","od_blade"],hit_armor:["blade_armor"],hit_flesh:["blade_flesh"],
   hit_bone:["foe_bone_hit"],miss:["lug_whoosh_hit","hit_air"],drop:["lug_clank","oc_metal_dull"],clash:["blade_clash"]},
- axe:{solo:true,draw:["lug_knife_draw","lug_clank"],sheathe:["lug_clank"],swing:["oc_swing","lug_whoosh"],hit:["blade_axe"],
+ axe:{solo:true,draw:["lug_knife_draw","lug_clank"],sheathe:["lug_clank"],swing:["blade_swing_blunt","oc_swing"],hit:["blade_axe"],
   block:["blade_shield_wood","blade_shield_metal"],parry:["blade_clash","oc_weapon_hit"],hit_armor:["blade_armor","oc_metal_dull"],hit_flesh:["blade_axe"],
   hit_bone:["foe_bone_hit","oc_wood_hit"],miss:["hit_air","lug_whoosh"],drop:["lug_thud"],clash:["blade_clash","oc_weapon_hit"]},
- dagger:{solo:true,draw:["lug_knife_draw"],sheathe:["lug_knife_sheathe"],swing:["lug_whoosh"],hit:["blade_dagger"],
+ dagger:{solo:true,draw:["blade_draw_knife","lug_knife_draw"],sheathe:["lug_knife_sheathe"],swing:["blade_swing_stab","lug_whoosh"],hit:["blade_dagger"],
   block:["blade_shield_metal","od_blade"],parry:["blade_clash","od_blade"],hit_armor:["blade_armor"],hit_flesh:["blade_dagger"],
   hit_bone:["foe_bone_hit"],miss:["lug_whoosh_hit"],drop:["oc_metal_light"],clash:["blade_clash","od_blade"]},
- mace:{draw:["lug_clank"],sheathe:["lug_clank","lug_thud"],swing:["oc_swing","lug_whoosh"],hit:["lug_impact","oc_general_hit"],
-  block:["blade_shield_wood","blade_shield_metal"],parry:["oc_weapon_hit"],hit_armor:["blade_shield_metal","mtg_metal_hit"],hit_flesh:["oc_organic_hit","lug_flesh"],
+ mace:{solo:true,тяжесть:true,draw:["lug_clank"],sheathe:["lug_clank","lug_thud"],swing:["blade_swing_blunt","oc_swing"],hit:["blade_blunt","lug_impact"],
+  block:["blade_shield_wood","blade_shield_metal"],parry:["oc_weapon_hit"],hit_armor:["blade_shield_metal","mtg_metal_hit"],hit_flesh:["blade_blunt"],
   hit_bone:["oc_rock_hit","foe_bone_hit"],miss:["hit_air"],drop:["lug_thud"],clash:["oc_weapon_hit","oc_metal_dull"]},
- staff:{draw:["lug_staff"],sheathe:["lug_thud"],swing:["oc_swing"],hit:["lug_staff","oc_weapon_hit"],
-  block:["blade_shield_wood","lug_staff"],parry:["oc_wood_hit"],hit_armor:["oc_metal_dull"],hit_flesh:["lug_thud"],
+ staff:{solo:true,тяжесть:true,draw:["lug_staff"],sheathe:["lug_thud"],swing:["blade_swing_blunt","oc_swing"],hit:["lug_staff","blade_blunt"],
+  block:["blade_shield_wood","lug_staff"],parry:["oc_wood_hit"],hit_armor:["oc_metal_dull"],hit_flesh:["blade_blunt"],
   hit_bone:["oc_wood_hit"],miss:["hit_air"],drop:["oc_wood_dull"],clash:["oc_wood_hit","lug_staff"]},
  bow:{draw:["oc_bow_draw"],sheathe:["oc_bow_away"],shoot:["oc_bow_shoot","battle_bow"],fly:["oc_arrow_shoot","battle_arrowfly"],
   hit:["hit_arrow","battle_arrowhit"],miss:["oc_arrow_ground"],hit_armor:["oc_metal_light","hit_arrow"],hit_flesh:["hit_arrow","oc_projectile_hit"],
