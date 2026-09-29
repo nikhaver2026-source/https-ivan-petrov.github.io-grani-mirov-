@@ -248,6 +248,9 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   const пауза=ms=>new Promise(z=>setTimeout(z,ms));
   settings.effects=1;settings.hrtf=1;
   AE.ensure();Spatial.ensure();
+  /* С 4.3 капель подземелья звучит из своих мест каждые несколько секунд: здесь
+     она мешала бы узнать, откуда звучит именно то, что проверяется. */
+  const капель0=Drips.tick;Drips.tick=function(){this.timer=null;};Drips.stop();
   const было=Spatial.node.bind(Spatial);
   const точки=[];
   Spatial.node=(dx,dy,dz,roll)=>{точки.push({dx,dy,dz});return было(dx,dy,dz,roll);};
@@ -295,7 +298,7 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
     if(cellContent(x+dx,y+dy).structure){G.x=x;G.y=y;break outer2;}}
   recentBeacons.clear();точки.length=0;scanNearbyBeacons();
   await пауза(120);out.рядом=точки.slice();
-  Spatial.node=было;Spatial.stopAll();G.place=null;
+  Spatial.node=было;Drips.tick=капель0;Spatial.stopAll();G.place=null;
   return out;});
  check('бродящая тварь звучит с той клетки, где она стоит',
   точкиМест.тварь&&точкиМест.тварь.dx===4&&точкиМест.тварь.dy===-2,точкиМест.тварь);

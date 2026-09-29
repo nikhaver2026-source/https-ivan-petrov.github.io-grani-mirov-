@@ -4082,7 +4082,7 @@ const BANK_GROUPS=[
  {n:"Оружие, удары и война",  icon:"", dirs:["battle","siege"]},
  {n:"Твари, звери и птицы",   icon:"", dirs:["foe","beasts","creatures"]},
  {n:"Люди, рынок и торг",     icon:"", dirs:["throng","trade"]},
- {n:"Находки, вещи и артефакты",icon:"", dirs:["arte"]},
+ {n:"Находки, вещи и артефакты",icon:"", dirs:["arte","lang"]},
  {n:"Ремёсла, добыча и стройка",icon:"", dirs:["craft"]},
  {n:"Герой и природа вокруг", icon:"", dirs:["hero","wild"]},
  {n:"Игровые звуки и голос игры",icon:"", dirs:["gamefx"]},
@@ -54613,4 +54613,7 @@ window.addEventListener("beforeunload",()=>{try{stopRun();saveGame(true);}catch(
 
  setInterval(()=>safe(repairState,null,'interval'),6000);
  setTimeout(()=>safe(()=>{repairState();if(typeof normalizeWeaponState==='function')normalizeWeaponState();if(typeof refresh==='function')refresh();},null,'init'),0);
-})()
+})();
+</script>
+</body>
+</html>
