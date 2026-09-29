@@ -99,7 +99,7 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   const r={акустика:Room.kind};
   const f=(Object.values(VOICE_NPC.hero||{})[0]||[])[0];
   r.файл=f;
-  const el=f?Folk.плоско(VOICE_NPC_DIR+f+VOICE_GEN+".mp3",{gain:1,maxSec:1}):null;
+  const el=f?Folk.плоско(VOICE_NPC_DIR+f+VOICE_GEN+".flac",{gain:1,maxSec:1}):null;
   r.героя=!!(el&&el.__room);
   G.place=null;Room.set(null,true);
   return r;});

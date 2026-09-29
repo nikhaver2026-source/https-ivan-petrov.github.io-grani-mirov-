@@ -211,6 +211,30 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
  check('10. в бою свайп двумя пальцами влево выпивает зелье, вне боя и поверх окна — нет; в настройках раздел «Жесты во время боя» на все 33 фигуры, переназначение и сброс',
   жб.внеБоя===false&&жб.зелье===true&&жб.полечился&&жб.прочее===false&&жб.назначено&&жб.одноМесто&&жб.сброс&&жб.списков===33&&жб.окноМешает===false,жб);
 
+ /* ── 11. осмотреться при тихом шаге; достижение не обрывается шагом ── */
+ const ос=await page.evaluate(()=>{
+  const r={};for(let i=0;i<20&&activeLayer();i++)closeTopUI();
+  settings.quietWalk=1;G.inCombat=false;G.combat=null;
+  /* в мире */
+  handleTwoFingerSwipe("W");let l=activeLayer();r.мир=!!(l&&l.id==="modal-object")&&document.querySelectorAll('#objBody .list-line').length>0;
+  for(let i=0;i<20&&activeLayer();i++)closeTopUI();
+  /* в поселении */
+  enterPlace({x:700,y:700,structure:{type:"village",name:"Проба",beacon:"village"}});
+  handleTwoFingerSwipe("W");l=activeLayer();r.вМесте=!!(l&&l.id==="modal-object")&&Look.list.length>0;
+  for(let i=0;i<20&&activeLayer();i++)closeTopUI();
+  safeFn(()=>leavePlace());G.place=null;
+  /* достижение: действие игрока его не снимает */
+  settings.speech=1;settings.sayAchieve=undefined;settings.verbosity="normal";
+  const m=Speech.say("Новый уровень! Вы достигли 7 уровня.");
+  r.род=m&&m.cat;r.держится=!!(m&&m.persistent);
+  Speech.userCut();
+  r.живо=!!m&&m.state!=="CANCELLED"&&m.state!=="DROPPED";
+  settings.verbosity="brief";const m2=Speech.say("Достижение: первый клад.");r.кратко=!!m2&&m2.state!=="DROPPED";
+  settings.verbosity="normal";
+  return r;});
+ check('11. «осмотреться» работает при «Тихом шаге» — в мире и внутри места; достижение звучит и не обрывается следующим действием игрока',
+  ос.мир&&ос.вМесте&&ос.род==="achieve"&&ос.держится&&ос.живо&&ос.кратко,ос);
+
  check('Ошибок страницы нет',errors.length===0,errors.slice(0,3));
  await browser.close();
  console.log(results.join('\n'));

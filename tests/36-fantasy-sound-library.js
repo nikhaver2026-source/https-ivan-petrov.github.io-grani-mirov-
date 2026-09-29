@@ -294,7 +294,7 @@ const NEW_DIRS=["arte","deep","foe","cast","hero","wild","trade","score",
   Object.values(VOICE_NPC).forEach(mp=>Object.values(mp).forEach(([b,f,m])=>{
    const маска=Number(m)||1;
    for(let k=0;k<8;k++)if((маска>>k)&1){const bk=b+(k?"_v"+k:"");
-    out.push(VOICE_NPC_DIR+bk+G+".mp3");if(f)out.push(VOICE_NPC_DIR+bk+"_f"+G+".mp3");}}));
+    out.push(VOICE_NPC_DIR+bk+G+".flac");if(f)out.push(VOICE_NPC_DIR+bk+"_f"+G+".flac");}}));
   return out;});
  const опись=(()=>{
   const корень=path.join(__dirname,"..");

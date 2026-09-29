@@ -152,7 +152,7 @@ function probe(file){
    if(!e||((Number(e[2])||1)&нужно)!==нужно){нет.push(р+": "+t);return;}
    for(let k=0;k<3;k++)if((нужно>>k)&1)файлы.push(e[0]+(k?"_v"+k:"")+VOICE_GEN);});
   return {строк,нет,файлы,дни:GUARD_LINES.length,ночи:GUARD_NIGHT_LINES.length,лен:файлы.filter(f=>!(VOICE_NPC_LEN[f]>0))};});
- const безФайла=опись.файлы.filter(f=>!fs.existsSync(path.join(ROOT,'sounds','voice_npc',f+'.mp3')));
+ const безФайла=опись.файлы.filter(f=>!fs.existsSync(path.join(ROOT,'sounds','voice_npc',f+'.flac')));
  check('7. все строки стражи записаны всеми голосами стражи (три у стражи Грани, два у латников), файлы на месте',
   опись.строк>=80&&опись.дни>=40&&опись.ночи>=10&&опись.нет.length===0&&безФайла.length===0&&опись.лен.length===0,
   {строк:опись.строк,нет:опись.нет.slice(0,4),безФайла:безФайла.slice(0,3),безДлины:опись.лен.slice(0,3)});

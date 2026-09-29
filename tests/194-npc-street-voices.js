@@ -14,8 +14,8 @@
    ЧТО ПРОВЕРЯЕТСЯ.
    1. У каждой такой строки есть запись в VOICE_NPC под своей ролью; у
       горожан, жителей посада и приветствий — мужская и женская.
-   2. Каждая названная запись лежит в sounds/voice_npc: MP3 моно 44,1 кГц,
-      320 кбит/с; длительность в VOICE_NPC_LEN совпадает с файлом; лишних
+   2. Каждая названная запись лежит в sounds/voice_npc: FLAC моно 24 кГц
+      без потерь (с 4.6; Gemini отдаёт речь в 24 кГц); длительность в VOICE_NPC_LEN совпадает с файлом; лишних
       файлов нет.
    3. Титры называют Gemini, модель, условия и все голоса; число
       записей в титрах сходится с папкой; у каждой записи строка с текстом.
@@ -73,16 +73,16 @@ function probe(file){
   {строк:игра.строк,нет:игра.нет.slice(0,4),безЖен:игра.безЖен.slice(0,4),роли:игра.роли});
 
  /* ── 2. файлы на диске ── */
- const mp3=fs.readdirSync(DIR).filter(f=>f.endsWith('.mp3'));
+ const mp3=fs.readdirSync(DIR).filter(f=>f.endsWith('.flac'));
  const нужны=[...new Set(игра.файлы)];
- const безФайла=нужны.filter(k=>!fs.existsSync(path.join(DIR,k+'.mp3')));
- const лишние=mp3.filter(f=>нужны.indexOf(f.slice(0,-4))<0);
+ const безФайла=нужны.filter(k=>!fs.existsSync(path.join(DIR,k+'.flac')));
+ const лишние=mp3.filter(f=>нужны.indexOf(f.slice(0,-5))<0);
  const плохие=[],расхождения=[];
- нужны.filter((_,i)=>i%3===0).forEach(k=>{const i=probe(path.join(DIR,k+'.mp3'));
-  if(!i||i.c!=='mp3'||i.ch!==1||i.sr!==44100||i.br<315)плохие.push({k,i});
+ нужны.filter((_,i)=>i%3===0).forEach(k=>{const i=probe(path.join(DIR,k+'.flac'));
+  if(!i||i.c!=='flac'||i.ch!==1||i.sr!==24000)плохие.push({k,i});
   else if(Math.abs((игра.len[k]||0)-i.dur)>0.06)расхождения.push({k,в_игре:игра.len[k],файл:i.dur});});
  const безДлины=нужны.filter(k=>!(игра.len[k]>0));
- check('2. каждая запись в sounds/voice_npc: MP3 моно 44,1 кГц 320 кбит/с, длительность сходится, лишних файлов нет',
+ check('2. каждая запись в sounds/voice_npc: FLAC моно 24 кГц без потерь, длительность сходится, лишних файлов нет',
   нужны.length>=650&&безФайла.length===0&&лишние.length===0&&плохие.length===0&&расхождения.length===0&&безДлины.length===0
   &&mp3.length===нужны.length,{записей:нужны.length,файлов:mp3.length,безФайла:безФайла.slice(0,3),лишние:лишние.slice(0,3),плохие:плохие.slice(0,2),расхождения:расхождения.slice(0,3)});
 
@@ -90,7 +90,7 @@ function probe(file){
  const титры=fs.readFileSync(path.join(DIR,'CREDITS.md'),'utf8');
  const число=+((титры.match(/Записей:\s*(\d+)/)||[])[1]||0);
  const голоса=['Alnilam','Orus','Algenib','Charon','Schedar','Achird','Sulafat','Umbriel','Despina'];
- const безСтроки=нужны.filter(k=>титры.indexOf('| '+k+'.mp3 |')<0);
+ const безСтроки=нужны.filter(k=>титры.indexOf('| '+k+'.flac |')<0);
  check('3. титры: Gemini, модель, условия, все голоса; число записей сходится; у каждой записи строка',
   /Gemini/.test(титры)&&/gemini-3\.8-flash-tts/.test(титры)&&/ai\.google\.dev\/gemini-api\/terms/.test(титры)
   &&голоса.every(v=>титры.includes(v))&&число===mp3.length&&безСтроки.length===0,{число,файлов:mp3.length,безСтроки:безСтроки.slice(0,3)});
