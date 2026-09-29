@@ -162,18 +162,18 @@ const КОРОТКО=t=>typeof t==="string"&&t.length>0&&!/\d|\(|\)|Двойно
   const женНарод=Object.entries(VOICE_RACES).find(([n,v])=>v[2]==="ж")[0];
   const мужНарод=Object.entries(VOICE_RACES).find(([n,v])=>v[2]==="м")[0];
   const путь=[];const s0=Folk.сказать;Folk.сказать=function(p){путь.push(p);return true;};
-  Folk.общее({race:женНарод,key:"ж1"},"soglasie");Folk.общее({race:мужНарод,key:"м1"},"soglasie");
-  Folk.ремесло({race:женНарод,key:"ж2",prof:"Торговец"});Folk.ремесло({race:мужНарод,key:"м2",prof:"Торговец"});
-  Folk.ремесло({race:женНарод,key:"ж3",prof:"Целительница"});
+  Folk.общее({race:женНарод,key:"ж1",пол:"ж"},"soglasie");Folk.общее({race:мужНарод,key:"м1",пол:"м"},"soglasie");
+  Folk.ремесло({race:женНарод,key:"ж2",prof:"Торговец",пол:"ж"});Folk.ремесло({race:мужНарод,key:"м2",prof:"Торговец",пол:"м"});
+  Folk.ремесло({race:женНарод,key:"ж3",prof:"Целительница",пол:"ж"});
   Folk.сказать=s0;
   r.пути=путь;r.женНарод=женНарод;r.мужНарод=мужНарод;r.G=VOICE_GEN;
-  r.длинаЖ=Folk.длинаОбщего({race:женНарод,key:"ж1"},"otkaz");r.lenF=VOICE_LEN["say_otkaz_f"+VOICE_GEN];
+  r.длинаЖ=Folk.длинаОбщего({race:женНарод,key:"ж1",пол:"ж"},"otkaz");r.lenF=VOICE_LEN["say_otkaz_f"+VOICE_GEN];
   return r;});
  const G=жен.G;
  const нетФайла=[...жен.ремёсла.map(s=>'prof_'+s+'_f'+G+'.mp3'),...['soglasie','otkaz','somnenie','torg','proschanie','ugroza','bol'].map(k=>'say_'+k+'_f'+G+'.mp3')]
   .filter(f=>!fs.existsSync(path.join(SND,'voice',f)));
  const ждёмПути=["say_soglasie_f","say_soglasie","prof_torgovec_f","prof_torgovec","prof_celitelnica_f"].map(x=>x+G).join(",");
- check('7. у всех сорока шести ремёсел и семи общих слов есть женская запись; народ женского голоса говорит ею, мужского — мужской',
+ check('7. у всех сорока шести ремёсел и семи общих слов есть женская запись; женщина говорит ею, мужчина — мужской (4.6: пол — жителя)',
   жен.ремёсла.length===46&&жен.безЖенского.length===0&&нетФайла.length===0
   &&жен.пути.join(",")===ждёмПути
   &&жен.lenF>0&&Math.abs(жен.длинаЖ*1000)>0,{пути:жен.пути,нетФайла:нетФайла.slice(0,5)});

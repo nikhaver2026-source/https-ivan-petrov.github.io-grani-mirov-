@@ -88,9 +88,9 @@ const ГОЛОСА=["Algenib","Charon","Orus","Enceladus","Achird","Puck","Gacru
   const мужНарод="Люди";
   const путь=[];const s0=Folk.сказать;Folk.сказать=function(p){путь.push(p);return true;};
   try{
-   Folk.народ({race:мужНарод,key:"м0"});Folk.народ({race:женНарод,key:"ж0"});
-   Folk.ремесло({race:мужНарод,key:"м1",prof:"Кузнец"});Folk.ремесло({race:женНарод,key:"ж1",prof:"Кузнец"});
-   Folk.общее({race:мужНарод,key:"м2"},"torg");Folk.общее({race:женНарод,key:"ж2"},"torg");
+   Folk.народ({race:мужНарод,пол:"м",key:"м0"});Folk.народ({race:женНарод,пол:"ж",key:"ж0"});
+   Folk.ремесло({race:мужНарод,пол:"м",key:"м1",prof:"Кузнец"});Folk.ремесло({race:женНарод,пол:"ж",key:"ж1",prof:"Кузнец"});
+   Folk.общее({race:мужНарод,пол:"м",key:"м2"},"torg");Folk.общее({race:женНарод,пол:"ж",key:"ж2"},"torg");
    Folk.герой("torg");
   }finally{Folk.сказать=s0;}
   return {путь,жен:VOICE_RACES[женНарод][0],муж:VOICE_RACES[мужНарод][0]};});

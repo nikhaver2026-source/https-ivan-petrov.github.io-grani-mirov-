@@ -231,7 +231,7 @@ const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(e!==undefined?' :
   r.врагЗло=r.враг.every(x=>/otkaz|ugroza/.test(x));
   /* И вживую: оклик на пятой встрече звучит по чередованию. */
   G.rep=JSON.parse(сохр);
-  const ж=getNPC(500,500,0,"Лекарь");
+  let ж=null;for(let x=500;x<900&&!ж;x++){const c=getNPC(x,500,0,"Лекарь");if(Folk.жен(c)===(Folk.раса(c.race)[2]==="ж"))ж=c;}
   const слышно=[];const оA=Spatial.at.bind(Spatial),оF=Folk.плоско.bind(Folk);
   Spatial.at=(p,dx,dy,o)=>{if(/^voice\//.test(p))слышно.push(p);return оA(p,dx,dy,o);};
   Folk.плоско=(p,o)=>{слышно.push(p);return оF(p,o);};

@@ -135,7 +135,10 @@ const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(e!==undefined?' :
  await page.evaluate(()=>{try{enterGame();}catch(e){}});
  await page.waitForTimeout(400);
  const оклик=await page.evaluate(async()=>{
-  const n=getNPC(120,120,0);
+  /* 4.6: пол голоса — пол жителя; оклик народа записан полом народа, и
+     житель другого пола его пока не произносит. Берём жителя, чей пол
+     совпадает с записью его народа. */
+  let n=null;for(let x=120;x<600&&!n;x++){const c=getNPC(x,120,0);if(Folk.жен(c)===(Folk.раса(c.race)[2]==="ж"))n=c;}
   try{Speech.userCut();}catch(_){}try{Folk.смолкнуть(true);}catch(_){}
   VOICED.length=0;CUED.length=0;
   npcVoice(n,"оклик");
