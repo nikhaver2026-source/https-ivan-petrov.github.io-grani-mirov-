@@ -28361,6 +28361,8 @@ function equipWeaponIndex(i){
  try{
   const list=weaponList(); const w=list[Number(i)];
   if(!w){narrate("Оружие не найдено.");return false;}
+  /* Не по силам — не берётся в руку, откуда бы ни звали. */
+  if(w!==G.equip.weapon){const отказ=itemReqRefuse(w);if(отказ){narrate(отказ);return false;}}
   G.equip.weapon=w; G.weaponDrawn=false; normalizeWeaponState();safeFn(()=>Bank.play(weaponKind()==="bow"?"oc_bow_away":"lug_knife_sheathe",{gain:0.4,maxSec:2}));
   safeFn(()=>{Bank.play(itemVoice(w),{seed:1,gain:0.6,maxSec:3});const k=weaponKind();setTimeout(()=>safeFn(()=>Bank.play(k==="bow"?"oc_bow_arrow":k==="javelin"?"oc_javelin_draw":"lug_knife_draw",{seed:2,gain:0.5,maxSec:2})),220);});
   saveGame(true); refresh();
@@ -37539,8 +37541,14 @@ function fight(a){const cb=G.combat;if(!cb)return;const m=cb.m;
   const dmg=Math.round((G.mind*2+G.level*2+Math.floor(Math.random()*6))*(1+усил)*safeFn(()=>bossDamageK("magic"),1)*safeFn(()=>Tree.чарыK("сила"),1));G.lastDamageKind="magic";cb.hp-=dmg;
   safeFn(()=>spellAudio(null,{school:"generic",gain:0.9}));
   cbLog(`Магия: −${dmg}.`);}
- else if(a==="potion"){if(G.water<20){narrate("Нет воды для зелья.");return;}
-  G.water-=20;G.hp=Math.min(G.hpMax,G.hp+15);UI.drink();cbLog("Зелье: +15 здоровья.");}
+ else if(a==="potion"){
+  /* Сперва — настоящее зелье здоровья из сумки; нет его — прежний травяной
+     отвар на воде. */
+  const есть=invHas("Зелье здоровья",1)?"inv":(Array.isArray(G.items)&&G.items.indexOf("Зелье здоровья")>=0)?"item":"";
+  if(есть){if(есть==="inv")invTake("Зелье здоровья",1);else G.items.splice(G.items.indexOf("Зелье здоровья"),1);
+   const h=Math.min(G.hpMax,G.hp+15)-G.hp;G.hp+=h;UI.drink();safeFn(()=>Bank.play("cast_potion",{gain:0.5,maxSec:2}));cbLog(`Зелье здоровья: +${h} здоровья.`);}
+  else{if(G.water<20){narrate("Нет ни зелья здоровья, ни воды для отвара.");return;}
+   G.water-=20;G.hp=Math.min(G.hpMax,G.hp+15);UI.drink();cbLog("Отвар на воде: +15 здоровья.");}}
  else if(a==="flee"){if(safeFn(()=>{const p=bossPhaseOf(cb.m);return p&&p.механика==="без бегства";},false)){cbLog("Якорь брошен: бежать некуда.");}
   else{if(Math.random()<0.4+G.agi*0.02+0.12*fxLevel("deal")+safeFn(()=>Morpho.fleeK(m),0)+safeFn(()=>Arena.fleeBonus(),0)){
    safeFn(()=>foeProfileCue(m,"lose",{gain:0.5}));endCombat();narrate("Вы сбежали!");journal(`Побег от «${m.n}».`);refresh();resumeLocationMusic();return;}
@@ -47619,7 +47627,7 @@ function shopStockRows(n){
   stockFor(n).forEach((s,i)=>{
    let cat="other",name=s.gear?s.gear.name:s.n,card="",count=null,треб="",доступно="доступно";
    if(s.gear){cat=shopCatOf(gearCat(s.gear));const c=gearCat(s.gear);const слово=gearWordOf(c,s.gear);card=`${слово[0].toUpperCase()+слово.slice(1)}. ${c==="weapon"?"Урон":c==="acc"?"Бонус":"Защита"}: ${s.gear.val}. Состояние: ${itemCondition(s.gear)}%. Ранг: ${String(RANKS[s.gear.rank]||"обычный").toLowerCase()}, качество ${String(QUAL[s.gear.qual]||"простое").toLowerCase()}.`;
-    const тр=itemStrReq(s.gear);треб=`Требование силы ${тр}${(Number(G.str)||0)>=тр?"":" — вам не хватает"}.`;}
+    треб=`${itemReqText(s.gear)}.`;}
    else if(s.артефакт){cat="artifact";card=ART.describe(s.артефакт,true);}
    else if(s.часть){cat="material";card="Часть для гнёзд артефактов: вкладывается у верстака.";}
    else if(s.том){cat="book";card=s.том.строка||"Книга.";}
@@ -49163,6 +49171,8 @@ function gearTypeByName(name){
  if(cat==="gloves")return ["Перчатки","armor"];
  if(cat==="boots")return ["Сапоги","armor"];
  return [/плащ|накидк/i.test(n)?"Плащ":/кольц|перстен/i.test(n)?"Кольцо":/браслет/i.test(n)?"Браслет":/пояс/i.test(n)?"Пояс":"Амулет","acc"];}
+/* Что по имени — зелье: «Зелье здоровья», эликсир, настой, противоядие, яд. */
+const POTION_NAME_RE=/(?:^|[^а-яё])(?:зелье|эликсир|настой|отвар|противояди[ея])(?![а-яё])|^яд$/i;
 function invCategoryOf(row){
  try{
   const it=row.it,name=String(row.name||"");
@@ -49178,6 +49188,9 @@ function invCategoryOf(row){
   if(row.kind==="fish")return "food";
   if(row.kind==="res"||row.kind==="rare"){
    if(name==="Еда в дорогу")return "food";
+   /* Зелье с прилавка (и из добычи) лежит в запасе штуками, как ресурс, и
+      прежде разбиралось в материалы — выпить его было нельзя. Зелье — к зельям. */
+   if(POTION_NAME_RE.test(name))return "potion";
    if(INV_RAW.has(name))return "res";
    if(INV_ALCH.has(name)||invHerbGoods().has(name))return "ingredient";
    if(invBossTrophies().has(name))return "treasure";
@@ -49372,6 +49385,37 @@ function itemCondition(it){if(!it||typeof it!=="object")return 100;const v=Numbe
 function itemStrReq(it){if(!it||typeof it!=="object")return 0;
  return Math.max(0,6+(Number(it.rank)||0)*3+(Number(it.qual)||0)+(Number(it.треб)||0));}
 function gearCat(it){return invCategoryOf({kind:"gear",it,name:it&&it.name});}
+/* ── ТРЕБОВАНИЕ ВЕЩИ ──
+   У вещи своё требование, и не всегда силы: тяжёлое оружие, латы, щит и
+   шлем держат силой; лук, кинжал, перчатки, обувь, плащ и кожаный доспех —
+   ловкостью; посох, жезл, кольцо, браслет, амулет, серьги и тканое платье —
+   разумом. Величина — по рангу, качеству и чертам вещи (itemStrReq).
+   Надеть можно, если не хватает не больше единицы: нужна сила 12, у героя
+   11 — наденет; 10 и меньше — вещь не идёт, об этом говорится и звучит отказ. */
+const REQ_STAT_WORD={str:["сила","силы","Нужна"],agi:["ловкость","ловкости","Нужна"],mind:["разум","разума","Нужен"]};
+function itemReq(it){
+ if(!it||typeof it!=="object")return {stat:"str",n:0};
+ const n=itemStrReq(it),t=`${it.name||""} ${it.type||""}`.toLowerCase();
+ const место=safeFn(()=>equipPlaceOf(it),"");let stat="str";
+ if(it.slot==="weapon"){
+  if(/(?:^|[^а-яё])(лук|арбалет|кинжал|нож|рапир|стилет|праща|дротик|серп)/.test(t))stat="agi";
+  else if(/посох|жезл|скипетр|волшебн|чароде/.test(t))stat="mind";}
+ else if(["ring","bracelet","amulet","ears"].includes(место))stat="mind";
+ else if(["gloves","boots","cloak","belt"].includes(место))stat="agi";
+ else{const м=equipMaterial(it);if(м==="leather")stat="agi";else if(м==="cloth")stat="mind";}
+ return {stat,n};}
+function itemReqCheck(it){const r=itemReq(it);const have=Number(G[r.stat])||0;
+ return {stat:r.stat,n:r.n,have,ok:have>=r.n-1,полно:have>=r.n};}
+/* Не по силам — отказ словом и звуком: глухой удар вещи о землю и сигнал «нельзя». */
+function itemReqRefuse(it){
+ const c=itemReqCheck(it);if(c.ok)return "";
+ const w=REQ_STAT_WORD[c.stat];
+ safeFn(()=>{Bank.play(c.stat==="str"?"oc_metal_dull":"oc_wood_dull",{gain:0.6,maxSec:1.2,flat:true});
+  setTimeout(()=>safeFn(()=>UI.empty()),160);});
+ safeFn(()=>vib([50,40,50]));
+ return `Не надеть: ${it.name} требует ${w[1]} ${c.n}, а у вас ${c.have}. Можно, если не хватает не больше единицы: нужно поднять ${w[0]} хотя бы до ${c.n-1}.`;}
+function itemReqText(it){const c=itemReqCheck(it),w=REQ_STAT_WORD[c.stat];
+ return `Требование: ${w[0]} ${c.n}, у вас ${c.have}${c.полно?"":c.ok?" — хватит, хоть и впритык":" — не наденете"}`;}
 function gearWordOf(cat,it){
  const t=String((it&&(it.type||it.name))||"").toLowerCase();
  if(cat==="weapon")return /посох|лук|копь|алебард/.test(t)?"двуручное оружие":"одноручное оружие";
@@ -49408,7 +49452,7 @@ function invBrief(kind,key){
    const даёт=место?equipGiveText(место.id,it):"";
    const где=!место?"":row.equipped?` Надето ${место.где}.${даёт?` ${даёт}.`:""}`
     :` Носится ${место.id==="ring"?"на пальце; колец два — по одному на руку":место.где}.${даёт?` Надетое даст: ${даёт.replace(/^Даёт: /,"")}.`:""}`;
-   return `${it.name}. ${слово[0].toUpperCase()+слово.slice(1)}. ${стат}: ${it.val}. Состояние: ${itemCondition(it)}%. Требование силы: ${треб}${(Number(G.str)||0)>=треб?"":" — вам не хватает силы"}. Ранг: ${String(RANKS[it.rank]||"обычный").toLowerCase()}, качество ${String(QUAL[it.qual]||"простое").toLowerCase()}.${где}${it.чары?` Зачаровано: ${it.чары}.`:""}${it.руна?" С руной.":""}${it.освящён?" Освящено.":""}${it.яд?" Смазано ядом.":""}${it.клеймо?` Клеймо: ${it.клеймо}.`:""}${it.улучшений?` Улучшений: ${it.улучшений}.`:""}`;}
+   return `${it.name}. ${слово[0].toUpperCase()+слово.slice(1)}. ${стат}: ${it.val}. Состояние: ${itemCondition(it)}%. ${itemReqText(it)}. Ранг: ${String(RANKS[it.rank]||"обычный").toLowerCase()}, качество ${String(QUAL[it.qual]||"простое").toLowerCase()}.${где}${it.чары?` Зачаровано: ${it.чары}.`:""}${it.руна?" С руной.":""}${it.освящён?" Освящено.":""}${it.яд?" Смазано ядом.":""}${it.клеймо?` Клеймо: ${it.клеймо}.`:""}${it.улучшений?` Улучшений: ${it.улучшений}.`:""}`;}
   if(kind==="potion"){const pt=POTION_BY_ID[it.id]||{n:it.id,о:""};return `Зелье ${pt.n}: ${pt.о}. Качество ${potionQualityWord(it.q)}, устойчивость ${Math.round(it.стаб*100)} из ста, ${potionExpired(it)?"выдохлось":"годно до "+(it.день+it.срок)+"-го дня"}. Действие — выпить.`;}
   if(kind==="art")return ART.describe(it,true)+(it.спит?" Артефакт спит: его свойства не действуют.":"");
   if(kind==="part")return `${row.name}: часть для гнёзд артефактов, ${row.n} шт. ${it.о||""}`;
@@ -49507,22 +49551,25 @@ function invWearPlace(row,второе){
  return второе?места[1]:места[0];}
 function invWearDo(row,м,done){
  const w=row.it;const p=EQUIP_PLACE_BY_ID[м];if(!w||typeof w!=="object"||!p)return done("Надеть не вышло.");
+ {const отказ=itemReqRefuse(w);if(отказ)return done(отказ);}
  const prev=G.equip[м]||null;
  const gi=(G.gear||[]).indexOf(w);if(gi>=0)G.gear.splice(gi,1);
  G.equip[м]=w;if(prev&&prev!==w)G.gear.push(prev);
- const треб=itemStrReq(w),слаб=(Number(G.str)||0)<треб;
+ const тр=itemReqCheck(w),треб=тр.n,слаб=!тр.полно;
  safeFn(()=>Bank.play(itemVoice(w),{gain:0.5,maxSec:2}));
  const д=equipGiveText(м,w);
- return done(`Надето ${p.где}: ${w.name}.${д?` ${д}.`:""}${prev&&prev!==w?` Прежнее — ${prev.name} — в суме.`:""}${слаб?` Требование силы ${треб}, у вас ${G.str}: носить тяжело.`:""}`);}
+ return done(`Надето ${p.где}: ${w.name}.${д?` ${д}.`:""}${prev&&prev!==w?` Прежнее — ${prev.name} — в суме.`:""}${слаб?` ${REQ_STAT_WORD[тр.stat][2]} ${REQ_STAT_WORD[тр.stat][0]} ${треб}, у вас ${тр.have}: носить можно, но впритык.`:""}`);}
 iaction("equip",{n:"Экипировать",значок:"",cats:GEAR_CATS,
  можно:(row)=>{if(row.kind==="equip")return row.key==="weapon"?"уже в руке":"уже надето";
   if(row.kind!=="gear"||typeof row.it!=="object")return "это вещь в сумке, а не снаряжение: в бой идёт то, что сковано по мерке";
   return row.it.slot==="weapon"?true:"это не оружие: его надевают";},
- делать:(row,ctx,done)=>{const w=row.it;const треб=itemStrReq(w);
+ делать:(row,ctx,done)=>{const w=row.it;
+  {const отказ=itemReqRefuse(w);if(отказ)return done(отказ);}
+  const тр=itemReqCheck(w);
   const i=weaponList().findIndex(x=>x===w||(w.id&&x.id===w.id));
   safeFn(()=>closeModal(document.getElementById("modal-invact")));
   equipWeaponIndex(i);
-  if((Number(G.str)||0)<треб)narrate(`Требование силы ${треб}, у вас ${G.str}: в руках держится тяжело.`,{interrupt:false});
+  if(!тр.полно)narrate(`${REQ_STAT_WORD[тр.stat][2]} ${REQ_STAT_WORD[тр.stat][0]} ${тр.n}, у вас ${тр.have}: в руках держится, но впритык.`,{interrupt:false});
   return true;}});
 iaction("wear",{n:"Надеть",значок:"",cats:GEAR_CATS,
  имя:(row)=>{const м=invWearPlace(row);const prev=м&&G.equip[м];const два=!!invWearPlace(row,true);
