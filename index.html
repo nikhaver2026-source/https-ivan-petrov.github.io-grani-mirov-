@@ -1837,9 +1837,11 @@ const Speech={voice:null,keepAlive:null,
   this._pushFront(m);this._pump();return m;},
  _push(m){m.state="QUEUED";this.queue.push(m);this.queue.sort((a,b)=>a.pri-b.pri||a.id-b.id);this.stats.queued++;},
  _pushFront(m){m.state="QUEUED";this.queue.unshift(m);},
- _dropQueued(minPri,state){
+ /* всё — явный «стоп» и очистка: снимается и то, что бережётся от
+    случайного касания (достижения). */
+ _dropQueued(minPri,state,всё){
   const keep=[],gone=[];
-  this.queue.forEach(x=>(x.pri>=minPri&&!x.persistent?gone:keep).push(x));
+  this.queue.forEach(x=>(x.pri>=minPri&&(всё||!x.persistent)?gone:keep).push(x));
   this.queue=keep;
   gone.forEach(x=>{x.state=state;this.stats.dropped++;if(x.onDone)setTimeout(()=>{try{x.onDone();}catch(e){}},10);});
   return gone.length;},
@@ -1945,7 +1947,7 @@ const Speech={voice:null,keepAlive:null,
   const cur=this.current;
   if(cur)this._cut(cur,"CANCELLED");
   else{this.gen++;try{const a=this._adapter();if(a)a.cancel();}catch(_){}}
-  this._dropQueued(0,"CANCELLED");
+  this._dropQueued(0,"CANCELLED",true);
   this.speaking=false;this.current=null;this._stopKeepAlive();this._stopWatch();this._duck(false);
   if(user)this.stats.userStops++;
   return true;},
@@ -1953,7 +1955,7 @@ const Speech={voice:null,keepAlive:null,
     а вернувшись, ничего устаревшего не договариваем. */
  hush(){if(this.current)this._cut(this.current,"CANCELLED");else{this.gen++;try{const a=this._adapter();if(a)a.cancel();}catch(_){}}
   this._dropQueued(2,"EXPIRED");},
- flush(){return this._dropQueued(0,"CANCELLED");},
+ flush(){return this._dropQueued(0,"CANCELLED",true);},
  interrupt(minPri=2){if(this.current&&this.current.pri>=minPri)this._cut(this.current,"CANCELLED");this._dropQueued(minPri,"CANCELLED");this._pump();return true;},
  cancel(what){
   const q=this.queue.filter(x=>x.key===what||x.id===what);
@@ -5045,11 +5047,13 @@ function gestCombatText(){
  const занято=GEST_SHAPES.filter(x=>gestCombatId(x.id)!=="none");
  return занято.length?"Жесты во время боя: "+занято.map(x=>`${gestShapeWord(x)} — ${GEST_COMBAT_BY_ID[gestCombatId(x.id)].n}`).join("; ")+"."
   :"Во время боя все жесты делают то же, что и вне боя.";}
+/* Подпись фигуры — та же, что в разделе «Жесты»: она записана голосом
+   Gemini и звучит сразу; что это жесты боя, говорит заголовок раздела. */
 function renderGestCombat(){
  try{
   const row=document.getElementById("gestCombatRow");if(!row)return false;
   row.innerHTML=GEST_SHAPES.map(x=>{const cur=gestCombatId(x.id),сл=gestShapeWord(x);
-   return `<label class="opt">${сл}<select data-gestc="${x.id}" aria-label="В бою: ${сл}">`+
+   return `<label class="opt">${сл}<select data-gestc="${x.id}" aria-label="${сл}">`+
     GEST_COMBAT_ACTIONS.map(a=>`<option value="${a.id}"${a.id===cur?" selected":""}>${a.n}</option>`).join("")+`</select></label>`;}).join("");
   row.querySelectorAll("select[data-gestc]").forEach(sel=>sel.addEventListener("change",()=>{
    gestCombatBind(sel.dataset.gestc,sel.value);setTimeout(()=>safeFn(()=>renderGestCombat()),400);}));
@@ -33891,6 +33895,11 @@ const GUARD_LINES=["Ходи да оглядывайся.","Порядок на 
  "Приезжий? Смотри, не заблудись в переулках.","Чужих нынче много. Смотрю за каждым.",
  "Пошлину у ворот заплатил? То-то же.","Шагай, шагай. Не на что тут глазеть.",
  "Не толпимся, проходим!","Видел кого подозрительного — сразу к нам.","Сапоги стоптал, а смена всё не кончается.","Ночью ворота закрыты. Кто не успел — ночует в поле.","Держи руки на виду. Порядок такой.","Пьяных в канаву, драчунов в холодную. Всё по уставу.","Капитан опять не в духе. Лучше ему не попадаться.","На тракте неспокойно. Один не ходи.","Оружие в ножнах держи. Здесь город, а не поле боя.","Эх, горячего бы сейчас. Третий час на ветру.","Проходи, проходи, не задерживай."];
+/* (4.6) Строка стражи звучит, только когда записана всеми тремя голосами
+   стражи: новые строки, которые ещё ждут записи Gemini, в обход не идут и
+   голосом игры не читаются — появятся сами, как только запись ляжет в банк. */
+for(let i=GUARD_LINES.length-1;i>=0;i--){const e=VOICE_NPC.guard&&VOICE_NPC.guard[GUARD_LINES[i]];
+ if(!e||((Number(e[2])||1)&7)!==7)GUARD_LINES.splice(i,1);}
 /* ── СТРАЖА ГОВОРИТ ПО ОБСТОЯТЕЛЬСТВАМ ──
    Ночью обход окликает иначе, чем днём; своему стражник рад, недругу
    грозит; раненому велит идти к лекарю; под дождём ворчит на сырость. Все
