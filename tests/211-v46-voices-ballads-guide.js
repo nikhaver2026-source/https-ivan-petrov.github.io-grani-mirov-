@@ -192,6 +192,25 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
  check('9. руководство: не больше 32 глав с номерами подряд в девяти частях; все прежние главы — разделы; есть раздел о 4.6',
   рук.глав<=32&&рук.подряд&&рук.частей===9&&рук.все>=100&&рук.версия&&/Жесты/.test(рук.жесты||""),рук);
 
+ /* ── 10. жесты во время боя ── */
+ const жб=await page.evaluate(()=>{
+  const r={};G.gestBindCombat={};for(let i=0;i<20&&activeLayer();i++)closeTopUI();
+  r.внеБоя=gestCombatRun(2,"swipe","W");
+  const m=Object.assign({hp:200},MONSTERS.find(x=>x.id==="wolf"));m.hp=200;
+  G.inCombat=true;G.combat={m,hp:200,key:"0,0",alt:0};safeFn(()=>Arena.init(G.combat,{}));Arena.stop();
+  G.hp=Math.max(1,G.hpMax-40);G.water=100;
+  const до=G.hp;r.зелье=gestCombatRun(2,"swipe","W");r.полечился=G.hp>до;
+  r.прочее=gestCombatRun(2,"swipe","E");
+  gestCombatBind("3swipeE","flee");r.назначено=gestCombatId("3swipeE")==="flee";
+  gestCombatBind("2swipeE","potion");r.одноМесто=gestCombatId("2swipeW")==="none"&&gestCombatId("2swipeE")==="potion";
+  gestCombatReset();r.сброс=gestCombatId("2swipeW")==="potion"&&gestCombatId("3swipeE")==="none";
+  openModal("modal-settings");renderGestCombat();r.списков=document.querySelectorAll('#gestCombatRow select[data-gestc]').length;
+  r.окноМешает=gestCombatRun(2,"swipe","W");safeFn(()=>closeModal(document.getElementById("modal-settings")));
+  G.inCombat=false;G.combat=null;G.hp=G.hpMax;
+  return r;});
+ check('10. в бою свайп двумя пальцами влево выпивает зелье, вне боя и поверх окна — нет; в настройках раздел «Жесты во время боя» на все 33 фигуры, переназначение и сброс',
+  жб.внеБоя===false&&жб.зелье===true&&жб.полечился&&жб.прочее===false&&жб.назначено&&жб.одноМесто&&жб.сброс&&жб.списков===33&&жб.окноМешает===false,жб);
+
  check('Ошибок страницы нет',errors.length===0,errors.slice(0,3));
  await browser.close();
  console.log(results.join('\n'));

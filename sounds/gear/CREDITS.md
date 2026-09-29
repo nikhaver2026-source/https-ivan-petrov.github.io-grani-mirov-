@@ -11,14 +11,14 @@
 | `gear_blade_03.flac` | Бен Бёрнс (Ben Burnes), набор «Kitchen Knives»: `Big Knife - Tap 3.wav` (CC0) |
 | `gear_blade_04.flac` | Kenney (www.kenney.nl), набор «RPG Audio»: `metalClick.ogg` (CC0) |
 | `gear_blade_05.flac` | Kenney (www.kenney.nl), набор «RPG Audio»: `metalLatch.ogg` (CC0) |
-| `gear_chain_01.flac` | rubberduck (OpenGameArt), набор «80 CC0 RPG SFX»: `chain_01.ogg` (CC0) |
-| `gear_chain_02.flac` | rubberduck (OpenGameArt), набор «80 CC0 RPG SFX»: `chain_02.ogg` (CC0) |
-| `gear_chain_03.flac` | rubberduck (OpenGameArt), набор «80 CC0 RPG SFX»: `chain_03.ogg` (CC0) |
-| `gear_chain_04.flac` | Бен Бёрнс (Ben Burnes), набор «Retail Therapy»: `Metal Rattling 1.wav` (CC0) |
-| `gear_chain_05.flac` | Бен Бёрнс (Ben Burnes), набор «Retail Therapy»: `Metal Rattling 2.wav` (CC0); rubberduck (OpenGameArt), набор «80 CC0 RPG SFX»: `chain_02.ogg` (CC0) |
-| `gear_chain_06.flac` | rubberduck (OpenGameArt), набор «80 CC0 RPG SFX»: `chain_01.ogg` (CC0); rubberduck (OpenGameArt), набор «80 CC0 RPG SFX»: `chain_03.ogg` (CC0) |
-| `gear_chain_07.flac` | rubberduck (OpenGameArt), набор «80 CC0 RPG SFX»: `chain_02.ogg` (CC0); Бен Бёрнс (Ben Burnes), набор «Retail Therapy»: `Metal Rattling 1.wav` (CC0) |
-| `gear_chain_08.flac` | rubberduck (OpenGameArt), набор «80 CC0 RPG SFX»: `chain_03.ogg` (CC0); Бен Бёрнс (Ben Burnes), набор «Retail Therapy»: `Metal Rattling 2.wav` (CC0) |
+| `gear_chain_01.flac` | artisticdude (OpenGameArt), «RPG Sound Pack», кольчуга — надевают (CC0), из MineClone2 `mcl_armor_equip_chainmail.ogg`, отрезок 0.00–0.30 с |
+| `gear_chain_02.flac` | artisticdude (OpenGameArt), «RPG Sound Pack», кольчуга — надевают (CC0), из MineClone2 `mcl_armor_equip_chainmail.ogg`, отрезок 0.15–0.45 с |
+| `gear_chain_03.flac` | artisticdude (OpenGameArt), «RPG Sound Pack», кольчуга — надевают (CC0), из MineClone2 `mcl_armor_equip_chainmail.ogg`, отрезок 0.30–0.58 с |
+| `gear_chain_04.flac` | artisticdude (OpenGameArt), «RPG Sound Pack», кольчуга — снимают (CC0), из MineClone2 `mcl_armor_unequip_chainmail.ogg`, отрезок 0.00–0.36 с |
+| `gear_chain_05.flac` | artisticdude (OpenGameArt), «RPG Sound Pack», кольчуга — снимают (CC0), из MineClone2 `mcl_armor_unequip_chainmail.ogg`, отрезок 0.33–0.75 с |
+| `gear_chain_06.flac` | artisticdude (OpenGameArt), «RPG Sound Pack», кольчуга — надевают (CC0), из MineClone2 `mcl_armor_equip_chainmail.ogg`, отрезок 0.00–0.30 с, высота ×0.96 |
+| `gear_chain_07.flac` | artisticdude (OpenGameArt), «RPG Sound Pack», кольчуга — снимают (CC0), из MineClone2 `mcl_armor_unequip_chainmail.ogg`, отрезок 0.00–0.36 с, высота ×1.04 |
+| `gear_chain_08.flac` | artisticdude (OpenGameArt), «RPG Sound Pack», кольчуга — надевают (CC0), из MineClone2 `mcl_armor_equip_chainmail.ogg`, отрезок 0.15–0.45 с, высота ×1.03 |
 | `gear_cloth_01.flac` | Kenney (www.kenney.nl), набор «RPG Audio»: `cloth1.ogg` (CC0) |
 | `gear_cloth_02.flac` | Kenney (www.kenney.nl), набор «RPG Audio»: `cloth2.ogg` (CC0) |
 | `gear_cloth_03.flac` | Kenney (www.kenney.nl), набор «RPG Audio»: `cloth3.ogg` (CC0) |
@@ -29,12 +29,12 @@
 | `gear_leather_04.flac` | Kenney (www.kenney.nl), набор «RPG Audio»: `handleSmallLeather2.ogg` (CC0) |
 | `gear_leather_05.flac` | Kenney (www.kenney.nl), набор «RPG Audio»: `clothBelt.ogg` (CC0) |
 | `gear_leather_06.flac` | Kenney (www.kenney.nl), набор «RPG Audio»: `clothBelt2.ogg` (CC0) |
-| `gear_plate_01.flac` | OpenClonk `DullMetalHit1.ogg` (CC BY 3.0); rubberduck (OpenGameArt), набор «80 CC0 RPG SFX»: `chain_01.ogg` (CC0) |
-| `gear_plate_02.flac` | OpenClonk `DullMetalHit3.ogg` (CC BY 3.0); rubberduck (OpenGameArt), набор «80 CC0 RPG SFX»: `chain_02.ogg` (CC0) |
-| `gear_plate_03.flac` | OpenClonk `LightMetalHit2.ogg` (CC BY 3.0); rubberduck (OpenGameArt), набор «80 CC0 RPG SFX»: `chain_03.ogg` (CC0) |
-| `gear_plate_04.flac` | OpenClonk `MetalHit1.ogg` (CC BY 3.0); Бен Бёрнс (Ben Burnes), набор «Retail Therapy»: `Metal Rattling 1.wav` (CC0) |
-| `gear_plate_05.flac` | OpenClonk `MetalHit3.ogg` (CC BY 3.0); Бен Бёрнс (Ben Burnes), набор «Retail Therapy»: `Metal Rattling 2.wav` (CC0) |
-| `gear_plate_06.flac` | OpenClonk `DullMetalHit1.ogg` (CC BY 3.0); rubberduck (OpenGameArt), набор «80 CC0 RPG SFX»: `chain_01.ogg` (CC0) |
+| `gear_plate_01.flac` | mitchanary (Freesound, 506148), латы — надевают (CC0), из MineClone2 `mcl_armor_equip_iron.ogg`, отрезок 0.00–0.20 с |
+| `gear_plate_02.flac` | mitchanary (Freesound, 506148), латы — надевают (CC0), из MineClone2 `mcl_armor_equip_iron.ogg`, отрезок 0.19–0.45 с |
+| `gear_plate_03.flac` | mitchanary (Freesound, 506148), латы — снимают (CC0), из MineClone2 `mcl_armor_unequip_iron.ogg`, отрезок 0.00–0.20 с |
+| `gear_plate_04.flac` | mitchanary (Freesound, 506148), латы — снимают (CC0), из MineClone2 `mcl_armor_unequip_iron.ogg`, отрезок 0.13–0.34 с |
+| `gear_plate_05.flac` | mitchanary (Freesound, 506148), латы — снимают (CC0), из MineClone2 `mcl_armor_unequip_iron.ogg`, отрезок 0.33–0.56 с |
+| `gear_plate_06.flac` | mitchanary (Freesound, 506148), латы — надевают (CC0), из MineClone2 `mcl_armor_equip_iron.ogg`, отрезок 0.00–0.20 с, высота ×0.95 |
 
 ## Стражник на ходу (с версии 4.0)
 
@@ -50,20 +50,20 @@
 
 | Файл | Что слышно | Исходные записи |
 |---|---|---|
-| `guard_mail_01.flac` | кольчуга стражника в миг шага и отголосок, когда вес переходит на ногу | rubberduck (OpenGameArt), набор «100 CC0 wood and metal SFX»: `keys_02.ogg` (CC0), замедлено до 0.72; rubberduck (OpenGameArt), набор «100 CC0 wood and metal SFX»: `keys_03.ogg` (CC0), замедлено до 0.76 |
-| `guard_mail_02.flac` | кольчуга стражника в миг шага и отголосок, когда вес переходит на ногу | rubberduck (OpenGameArt), набор «100 CC0 wood and metal SFX»: `keys_03.ogg` (CC0), замедлено до 0.75; rubberduck (OpenGameArt), набор «100 CC0 wood and metal SFX»: `keys_01.ogg` (CC0), замедлено до 0.72 |
-| `guard_mail_03.flac` | кольчуга стражника в миг шага и отголосок, когда вес переходит на ногу | rubberduck (OpenGameArt), набор «100 CC0 wood and metal SFX»: `keys_01.ogg` (CC0), замедлено до 0.7; rubberduck (OpenGameArt), набор «100 CC0 wood and metal SFX»: `keys_04.ogg` (CC0), замедлено до 0.74 |
-| `guard_mail_04.flac` | кольчуга стражника в миг шага и отголосок, когда вес переходит на ногу | rubberduck (OpenGameArt), набор «100 CC0 wood and metal SFX»: `keys_04.ogg` (CC0), замедлено до 0.73; rubberduck (OpenGameArt), набор «100 CC0 wood and metal SFX»: `keys_02.ogg` (CC0), замедлено до 0.7 |
-| `guard_mail_05.flac` | кольчуга стражника в миг шага и отголосок, когда вес переходит на ногу | rubberduck (OpenGameArt), набор «100 CC0 wood and metal SFX»: `keys_06.ogg` (CC0), замедлено до 0.68; rubberduck (OpenGameArt), набор «100 CC0 wood and metal SFX»: `keys_03.ogg` (CC0), замедлено до 0.72 |
-| `guard_mail_06.flac` | кольчуга стражника в миг шага и отголосок, когда вес переходит на ногу | rubberduck (OpenGameArt), набор «100 CC0 wood and metal SFX»: `keys_07.ogg` (CC0), замедлено до 0.71; rubberduck (OpenGameArt), набор «100 CC0 wood and metal SFX»: `keys_04.ogg` (CC0), замедлено до 0.76 |
-| `guard_mail_07.flac` | кольчуга стражника в миг шага и отголосок, когда вес переходит на ногу | rubberduck (OpenGameArt), набор «100 CC0 wood and metal SFX»: `keys_05.ogg` (CC0), замедлено до 0.69; rubberduck (OpenGameArt), набор «100 CC0 wood and metal SFX»: `keys_01.ogg` (CC0), замедлено до 0.74 |
-| `guard_mail_08.flac` | кольчуга стражника в миг шага и отголосок, когда вес переходит на ногу | rubberduck (OpenGameArt), набор «100 CC0 wood and metal SFX»: `keys_02.ogg` (CC0), замедлено до 0.78; rubberduck (OpenGameArt), набор «100 CC0 wood and metal SFX»: `keys_06.ogg` (CC0), замедлено до 0.7 |
-| `guard_plate_01.flac` | глухой лязг лат и поножей через шаг | Бен Бёрнс (Ben Burnes), набор «Retail Therapy»: `Metal Lid 6.wav` (CC0), замедлено до 0.64; rubberduck (OpenGameArt), набор «100 CC0 wood and metal SFX»: `keys_03.ogg` (CC0), замедлено до 0.7 |
-| `guard_plate_02.flac` | глухой лязг лат и поножей через шаг | Бен Бёрнс (Ben Burnes), набор «Retail Therapy»: `Metal Lid 5.wav` (CC0), замедлено до 0.66; rubberduck (OpenGameArt), набор «100 CC0 wood and metal SFX»: `keys_01.ogg` (CC0), замедлено до 0.7 |
-| `guard_plate_03.flac` | глухой лязг лат и поножей через шаг | rubberduck (OpenGameArt), набор «100 CC0 wood and metal SFX»: `metal_hit_03.ogg` (CC0), замедлено до 0.72; rubberduck (OpenGameArt), набор «100 CC0 wood and metal SFX»: `keys_04.ogg` (CC0), замедлено до 0.7 |
-| `guard_plate_04.flac` | глухой лязг лат и поножей через шаг | Бен Бёрнс (Ben Burnes), набор «Retail Therapy»: `Metal Lid 1.wav` (CC0), замедлено до 0.62; rubberduck (OpenGameArt), набор «100 CC0 wood and metal SFX»: `keys_06.ogg` (CC0), замедлено до 0.7 |
-| `guard_plate_05.flac` | глухой лязг лат и поножей через шаг | rubberduck (OpenGameArt), набор «100 CC0 wood and metal SFX»: `metal_hit_01.ogg` (CC0), замедлено до 0.68; rubberduck (OpenGameArt), набор «100 CC0 wood and metal SFX»: `keys_07.ogg` (CC0), замедлено до 0.7 |
-| `guard_plate_06.flac` | глухой лязг лат и поножей через шаг | Бен Бёрнс (Ben Burnes), набор «Retail Therapy»: `Metal Lid 3.wav` (CC0), замедлено до 0.65; rubberduck (OpenGameArt), набор «100 CC0 wood and metal SFX»: `keys_05.ogg` (CC0), замедлено до 0.7 |
+| `guard_mail_01.flac` | кольчуга стражника в миг шага и отголосок, когда вес переходит на ногу | artisticdude (OpenGameArt), «RPG Sound Pack», кольчуга — надевают (CC0), из MineClone2 `mcl_armor_equip_chainmail.ogg`, отрезок 0.00–0.30 с, замедлено до 0.84 |
+| `guard_mail_02.flac` | кольчуга стражника в миг шага и отголосок, когда вес переходит на ногу | artisticdude (OpenGameArt), «RPG Sound Pack», кольчуга — надевают (CC0), из MineClone2 `mcl_armor_equip_chainmail.ogg`, отрезок 0.15–0.45 с, замедлено до 0.84 |
+| `guard_mail_03.flac` | кольчуга стражника в миг шага и отголосок, когда вес переходит на ногу | artisticdude (OpenGameArt), «RPG Sound Pack», кольчуга — надевают (CC0), из MineClone2 `mcl_armor_equip_chainmail.ogg`, отрезок 0.30–0.58 с, замедлено до 0.84 |
+| `guard_mail_04.flac` | кольчуга стражника в миг шага и отголосок, когда вес переходит на ногу | artisticdude (OpenGameArt), «RPG Sound Pack», кольчуга — снимают (CC0), из MineClone2 `mcl_armor_unequip_chainmail.ogg`, отрезок 0.00–0.36 с, замедлено до 0.84 |
+| `guard_mail_05.flac` | кольчуга стражника в миг шага и отголосок, когда вес переходит на ногу | artisticdude (OpenGameArt), «RPG Sound Pack», кольчуга — снимают (CC0), из MineClone2 `mcl_armor_unequip_chainmail.ogg`, отрезок 0.33–0.75 с, замедлено до 0.84 |
+| `guard_mail_06.flac` | кольчуга стражника в миг шага и отголосок, когда вес переходит на ногу | artisticdude (OpenGameArt), «RPG Sound Pack», кольчуга — надевают (CC0), из MineClone2 `mcl_armor_equip_chainmail.ogg`, отрезок 0.00–0.30 с, высота ×0.96, замедлено до 0.84 |
+| `guard_mail_07.flac` | кольчуга стражника в миг шага и отголосок, когда вес переходит на ногу | artisticdude (OpenGameArt), «RPG Sound Pack», кольчуга — снимают (CC0), из MineClone2 `mcl_armor_unequip_chainmail.ogg`, отрезок 0.00–0.36 с, высота ×1.04, замедлено до 0.84 |
+| `guard_mail_08.flac` | кольчуга стражника в миг шага и отголосок, когда вес переходит на ногу | artisticdude (OpenGameArt), «RPG Sound Pack», кольчуга — надевают (CC0), из MineClone2 `mcl_armor_equip_chainmail.ogg`, отрезок 0.15–0.45 с, высота ×1.03, замедлено до 0.84 |
+| `guard_plate_01.flac` | глухой лязг лат и поножей через шаг | mitchanary (Freesound, 506148), латы — надевают (CC0), из MineClone2 `mcl_armor_equip_iron.ogg`, отрезок 0.00–0.20 с, замедлено до 0.74 |
+| `guard_plate_02.flac` | глухой лязг лат и поножей через шаг | mitchanary (Freesound, 506148), латы — надевают (CC0), из MineClone2 `mcl_armor_equip_iron.ogg`, отрезок 0.19–0.45 с, замедлено до 0.74 |
+| `guard_plate_03.flac` | глухой лязг лат и поножей через шаг | mitchanary (Freesound, 506148), латы — снимают (CC0), из MineClone2 `mcl_armor_unequip_iron.ogg`, отрезок 0.00–0.20 с, замедлено до 0.74 |
+| `guard_plate_04.flac` | глухой лязг лат и поножей через шаг | mitchanary (Freesound, 506148), латы — снимают (CC0), из MineClone2 `mcl_armor_unequip_iron.ogg`, отрезок 0.13–0.34 с, замедлено до 0.74 |
+| `guard_plate_05.flac` | глухой лязг лат и поножей через шаг | mitchanary (Freesound, 506148), латы — снимают (CC0), из MineClone2 `mcl_armor_unequip_iron.ogg`, отрезок 0.33–0.56 с, замедлено до 0.74 |
+| `guard_plate_06.flac` | глухой лязг лат и поножей через шаг | mitchanary (Freesound, 506148), латы — надевают (CC0), из MineClone2 `mcl_armor_equip_iron.ogg`, отрезок 0.00–0.20 с, высота ×0.95, замедлено до 0.74 |
 | `guard_sword_01.flac` | ножны о бедро: скрип ремня, стук обтянутого кожей дерева, тонкий звон гарды | Kenney (www.kenney.nl), набор «RPG Audio»: `handleSmallLeather.ogg` (CC0); rubberduck (OpenGameArt), набор «100 CC0 wood and metal SFX»: `wood_hit_03.ogg` (CC0), замедлено до 0.78; rubberduck (OpenGameArt), набор «100 CC0 wood and metal SFX»: `metal_hit_02.ogg` (CC0), замедлено до 0.9 |
 | `guard_sword_02.flac` | ножны о бедро: скрип ремня, стук обтянутого кожей дерева, тонкий звон гарды | Kenney (www.kenney.nl), набор «RPG Audio»: `handleSmallLeather2.ogg` (CC0); rubberduck (OpenGameArt), набор «100 CC0 wood and metal SFX»: `wood_hit_01.ogg` (CC0), замедлено до 0.74; rubberduck (OpenGameArt), набор «100 CC0 wood and metal SFX»: `metal_hit_05.ogg` (CC0), замедлено до 0.9 |
 | `guard_sword_03.flac` | ножны о бедро: скрип ремня, стук обтянутого кожей дерева, тонкий звон гарды | Kenney (www.kenney.nl), набор «RPG Audio»: `beltHandle1.ogg` (CC0); rubberduck (OpenGameArt), набор «100 CC0 wood and metal SFX»: `wood_hit_04.ogg` (CC0), замедлено до 0.76; rubberduck (OpenGameArt), набор «100 CC0 wood and metal SFX»: `metal_hit_02.ogg` (CC0), замедлено до 0.9 |
@@ -73,3 +73,14 @@
 | `guard_thud_02.flac` | вес тяжёлого сапога под шагом по твёрдому полу | Бен Бёрнс (Ben Burnes), набор «Retail Therapy»: `Good Thunk 2.wav` (CC0), замедлено до 0.66 |
 | `guard_thud_03.flac` | вес тяжёлого сапога под шагом по твёрдому полу | Бен Бёрнс (Ben Burnes), набор «Retail Therapy»: `Good Thunk 3.wav` (CC0), замедлено до 0.6 |
 | `guard_thud_04.flac` | вес тяжёлого сапога под шагом по твёрдому полу | Бен Бёрнс (Ben Burnes), набор «Toolbox Rummaging»: `Good Thunk.wav` (CC0), замедлено до 0.58 |
+
+
+## 4.6: кольчуга и латы — настоящие записи брони
+
+Прежние слои кольчуги и лат были сведены из записей «металлический лязг» из
+магазинного набора (Retail Therapy) и связки ключей — на слух это был звон
+монет. Теперь `gear_chain_*`, `guard_mail_*` — настоящая кольчуга
+(artisticdude, RPG Sound Pack, CC0), `gear_plate_*`, `guard_plate_*` —
+настоящие латы (mitchanary, Freesound 506148, CC0); обе записи взяты из
+MineClone2 (mods/ITEMS/mcl_armor/sounds, CC0 по README мода). У стражи те же
+записи ниже и тяжелее (замедлены до 0,84 и 0,74). Пик −1 дБ, FLAC 44,1 кГц.

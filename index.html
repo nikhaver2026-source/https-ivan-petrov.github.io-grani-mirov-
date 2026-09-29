@@ -261,6 +261,10 @@ h3{color:var(--acc2);margin:14px 0 6px;font-size:1.05rem;}
  <p class="hint" id="gestHint">Любое значимое действие можно повесить на свою фигуру жеста. Фигуры с удержанием не назначаются: удержание занято ощупыванием — им незрячий игрок находит, что под пальцем. Пока вы ничего не меняли, жесты работают по умолчанию.</p>
  <div class="row" id="gestRow"></div>
  <div class="row"><button type="button" data-cmd="gestreset">Вернуть жесты к умолчанию</button></div>
+ <h3 class="sec-head" tabindex="0" data-cmd="secjump" data-sec-title="Жесты во время боя">Жесты во время боя</h3>
+ <p class="hint">Пока идёт бой и сверху нет окна, фигура делает то, что назначено здесь; «как вне боя» оставляет ей обычное дело. По умолчанию: свайп двумя пальцами влево — выпить зелье.</p>
+ <div class="row" id="gestCombatRow"></div>
+ <div class="row"><button type="button" data-cmd="gestcombatreset">Вернуть жесты боя к умолчанию</button></div>
  <h3 class="sec-head" tabindex="0" data-cmd="secjump" data-sec-title="Точность жестов">Точность жестов</h3>
  <p class="hint">Насколько далеко палец может съехать, прежде чем касание станет свайпом, и сколько времени даётся на второе касание. Рука у каждого своя: у одного палец ходит коротко и точно, у другого дрожит и ведёт вкось. Умолчания — прежние пороги игры до единицы.</p>
  <label class="opt">Чувствительность жестов <select id="setGestSens" aria-label="Чувствительность жестов, от самой мягкой до самой строгой"><option value="vcalm">1 из 5. Самая мягкая — прощает дрожь руки, жест нужен широкий</option><option value="calm">2 из 5. Мягкая — палец может заметно съехать</option><option value="norm" selected>3 из 5. Средняя — по умолчанию</option><option value="high">4 из 5. Строгая — жест распознаётся раньше</option><option value="vhigh">5 из 5. Самая строгая — короткий взмах уже жест, касание точное</option></select></label>
@@ -975,7 +979,7 @@ const NEWS=[
  {v:31,н:"у каждой твари свой голос, живая капель пещеры, тяжёлый шаг стражи, зелья пьются, вещи требуют силы",
   т:"Версия 4.4. У каждой из девяноста пяти тварей свой голос: своя запись, свой её вариант и своя высота — две твари одного рода больше не рычат одним горлом, крупные звучат ниже, мелкие выше, а боевой клич — другая запись того же горла; тот же голос слышен и за дверью, и в картине вокруг. Пятьдесят с лишним тёмных и глубинных тварей узнали свой род: крылатые кричат птицей, стонущие — духом, огненные владыки ревут бесом. Капель в подземелье — живая запись настоящей пещеры (Red Eclipse), без потерь; прежние записи убраны. Стражник ходит тяжело: сапог ниже тоном, вес удара, звон кольчуги, лязг лат и стук ножен; дозор у стен города больше не ступает лёгким шагом горожанина, а стража на улице слышна раньше прохожих. Купленное зелье здоровья лежит в «Зельях» и выпивается, в бою тоже. У вещи есть требование силы, ловкости или разума: не хватает единицы — надеть можно, больше — отказ словом и звуком. Забытые записи зазвучали: осадная машина и выстрел башни в осаде, гибель мечника у разбойника, огненная стрела у огненного лука."},
  {v:32,н:"враги говорят в бою, заказчик сам называет поручение, свои голоса обозам и жителям, баллады сказителей, тихий шаг",
-  т:"Версия 4.6. Разбойник, корсар, гоблин, исполин, дракон, владыка нежити, бес, дух, сирена и страж Предтеч говорят в бою: грозят в начале, бросают слово при ударе, ругаются от раны, молят или клянутся вернуться на краю, насмехаются над слабеющим героем и говорят последнее; большие и древние — страшным голосом, ниже и в гулком эхе. Взяв дело, вы слышите от заказчика, что нужно: принести руду или травы, идти на север, выследить зверя, поклониться алтарю; дело сразу видно в журнале. У жителей три пары голосов, у обозов — свой старший по роду. Сказитель у дороги и певец в таверне поют восемь баллад о мире. Настройка «Тихий шаг»: на ходу не называются проходы и стороны света. Переключатели звучат по-разному на включение и выключение; стартовый меч продаётся и не возвращается после разбора. Руководство собрано в тридцать одну главу с номерами подряд."},
+  т:"Версия 4.6. Разбойник, корсар, гоблин, исполин, дракон, владыка нежити, бес, дух, сирена и страж Предтеч говорят в бою: грозят в начале, бросают слово при ударе, ругаются от раны, молят или клянутся вернуться на краю, насмехаются над слабеющим героем и говорят последнее; большие и древние — страшным голосом, ниже и в гулком эхе. Взяв дело, вы слышите от заказчика, что нужно: принести руду или травы, идти на север, выследить зверя, поклониться алтарю; дело сразу видно в журнале. У жителей три пары голосов, у обозов — свой старший по роду. Сказитель у дороги и певец в таверне поют восемь баллад о мире. Настройка «Тихий шаг»: на ходу не называются проходы и стороны света. Переключатели звучат по-разному на включение и выключение; стартовый меч продаётся и не возвращается после разбора. Руководство собрано в тридцать одну главу с номерами подряд. В бою свайп двумя пальцами влево выпивает зелье, а жесты боя переназначаются в настройках; шаг в кольчуге и латах звучит настоящей бронёй, а не монетами."},
 ];
 const NEWS_V=NEWS[NEWS.length-1].v;
 /* Одна фраза: главное из последнего выпуска и сколько ещё новостей ждёт в меню. */
@@ -4978,6 +4982,76 @@ const GestBind=Modules.register("GESTUREBIND",{
  run:(f,k,d)=>S(()=>gestRun(f,k,d),false),
  line:id=>S(()=>gestLine(id),""),
  text(){return S(()=>gestText(),"Жесты молчат.");}});
+/* ════════════════════════════════════════════════════════════════════════
+   ЖЕСТЫ ВО ВРЕМЯ БОЯ (4.6)
+   В бою руки заняты одним: бить, пить, бежать. Своя таблица привязок
+   работает только пока идёт схватка и сверху нет окна; вне боя те же
+   фигуры делают прежнее. По умолчанию занята одна фигура: свайп двумя
+   пальцами влево — выпить зелье (вне боя он по-прежнему «осмотреться»).
+   Любую фигуру можно переназначить в настройках, раздел «Жесты во время
+   боя»; «как вне боя» оставляет фигуре её обычное дело.
+   ════════════════════════════════════════════════════════════════════════ */
+const GEST_COMBAT_ACTIONS=[
+ {id:"none",  n:"как вне боя",            о:"фигура делает то же, что и вне боя", делать:()=>false},
+ {id:"potion",n:"выпить зелье",           о:"зелье здоровья из сумки, а нет его — отвар на воде", делать:()=>{fight("potion");return true;}},
+ {id:"attack",n:"ударить оружием",        о:"удар по твари вынутым клинком",      делать:()=>{fight("atk");return true;}},
+ {id:"cast",  n:"ударить чарами",         о:"удар магией, достаёт и до крылатой твари", делать:()=>{fight("magic");return true;}},
+ {id:"flee",  n:"бежать из боя",          о:"попытка вырваться",                  делать:()=>{fight("flee");return true;}},
+ {id:"weapon",n:"вынуть или убрать оружие",о:"перекинуть руку на клинок",         делать:()=>{handleThreeFingerTap(true);return true;}},
+ {id:"foe",   n:"где тварь и сколько у неё сил",о:"сторона, расстояние и здоровье противника", делать:()=>{const cb=G.combat;if(!cb)return false;
+   narrate(`${cb.m.n}: ${safeFn(()=>Arena.where(),"рядом")}, здоровье ${Math.max(0,cb.hp)} из ${cb.m.hp}.`,{interrupt:true,cat:"combat"});return true;}},
+ {id:"self",  n:"моё здоровье и мана",    о:"сколько сил осталось у героя",       делать:()=>{narrate(`Здоровье ${G.hp} из ${G.hpMax}, мана ${G.mana} из ${G.manaMax}.`,{interrupt:true,cat:"combat"});return true;}}];
+const GEST_COMBAT_BY_ID=Object.fromEntries(GEST_COMBAT_ACTIONS.map(a=>[a.id,a]));
+const GEST_COMBAT_DEFAULTS={"2swipeW":"potion"};
+function gestCombatBinds(){
+ if(!G.gestBindCombat||typeof G.gestBindCombat!=="object"||Array.isArray(G.gestBindCombat))G.gestBindCombat={};
+ return G.gestBindCombat;}
+function gestCombatId(shapeId){
+ const b=gestCombatBinds();
+ if(Object.prototype.hasOwnProperty.call(b,shapeId))return b[shapeId];
+ return GEST_COMBAT_DEFAULTS[shapeId]||"none";}
+/* Одно боевое действие — на одной фигуре, как и в обычной таблице. */
+function gestCombatBind(shapeId,actionId){
+ try{
+  const sh=GEST_SHAPE_BY_ID[shapeId],a=GEST_COMBAT_BY_ID[actionId];
+  if(!sh||!a){narrate("Такой фигуры или такого действия нет.");return false;}
+  const b=gestCombatBinds();
+  if(a.id!=="none")GEST_SHAPES.forEach(x=>{if(x.id!==shapeId&&gestCombatId(x.id)===a.id)b[x.id]="none";});
+  b[shapeId]=a.id;
+  safeFn(()=>Bank.play("oc_ui_select",{gain:0.45,maxSec:1}));
+  narrate(`В бою: ${gestShapeWord(sh)} — ${a.n}. ${a.о}.`,{interrupt:true});
+  return true;}catch(_){return false;}}
+function gestCombatReset(){G.gestBindCombat={};safeFn(()=>Bank.play("menu_select",{gain:0.45,maxSec:1}));
+ narrate("Жесты боя возвращены к умолчанию: свайп двумя пальцами влево — выпить зелье.",{interrupt:true});return true;}
+/* Дверь из обработчика касаний: жест разобран здесь, только если идёт бой,
+   сверху нет окна и фигуре назначено боевое действие. */
+function gestCombatRun(пальцы,род,dir){
+ try{
+  if(!G.inCombat||!G.combat)return false;
+  if(safeFn(()=>activeLayer(),null))return false;
+  const id=род==="corner"?`corner${dir}`:(род==="swipe"?`${пальцы}swipe${dir}`:`${пальцы}${род}`);
+  if(!GEST_SHAPE_BY_ID[id])return false;
+  const a=GEST_COMBAT_BY_ID[gestCombatId(id)];
+  if(!a||a.id==="none")return false;
+  GestCombat.last={id,a:a.id,t:Date.now()};
+  return !!safeFn(()=>a.делать(),false);}catch(_){return false;}}
+function gestCombatText(){
+ const занято=GEST_SHAPES.filter(x=>gestCombatId(x.id)!=="none");
+ return занято.length?"Жесты во время боя: "+занято.map(x=>`${gestShapeWord(x)} — ${GEST_COMBAT_BY_ID[gestCombatId(x.id)].n}`).join("; ")+"."
+  :"Во время боя все жесты делают то же, что и вне боя.";}
+function renderGestCombat(){
+ try{
+  const row=document.getElementById("gestCombatRow");if(!row)return false;
+  row.innerHTML=GEST_SHAPES.map(x=>{const cur=gestCombatId(x.id),сл=gestShapeWord(x);
+   return `<label class="opt">${сл}<select data-gestc="${x.id}" aria-label="В бою: ${сл}">`+
+    GEST_COMBAT_ACTIONS.map(a=>`<option value="${a.id}"${a.id===cur?" selected":""}>${a.n}</option>`).join("")+`</select></label>`;}).join("");
+  row.querySelectorAll("select[data-gestc]").forEach(sel=>sel.addEventListener("change",()=>{
+   gestCombatBind(sel.dataset.gestc,sel.value);setTimeout(()=>safeFn(()=>renderGestCombat()),400);}));
+  return true;}catch(_){return false;}}
+const GestCombat=Modules.register("GESTURECOMBAT",{actions:GEST_COMBAT_ACTIONS,defaults:GEST_COMBAT_DEFAULTS,
+ of:id=>S(()=>gestCombatId(id),"none"),bind:(sh,a)=>S(()=>gestCombatBind(sh,a),false),reset:()=>S(()=>gestCombatReset(),false),
+ run:(f,k,d)=>S(()=>gestCombatRun(f,k,d),false),text:()=>S(()=>gestCombatText(),"")});
+GestCombat.last=null;
 /* Раздел настроек: у каждой фигуры свой список действий. Список, а не
    перебор по кругу: незрячему игроку нужно услышать все варианты и выбрать
    один, а не щёлкать тридцать два раза. */
@@ -5591,6 +5665,7 @@ document.addEventListener('touchend',e=>{
        нельзя, иначе он начнёт запаздывать почти на секунду. */
     const n=тройка();
     multiTap.n=0;
+    if(gestCombatRun(2,n>=3?"tap3":n===2?"tap2":"tap",null))return;
     if(gestRun(2,n>=3?"tap3":n===2?"tap2":"tap",null))return;
     handleTwoFingerTap();return;}
    const двойное=multiTap.n===fingers&&now-multiTap.t<safeFn(()=>gestMultiTapMs(),900);
@@ -5598,6 +5673,7 @@ document.addEventListener('touchend',e=>{
    multiTap.n=двойное?0:fingers;multiTap.t=now;
    /* Переназначенная фигура забирает жест себе. Пока привязка — умолчание,
       gestRun возвращает ложь, и всё идёт прежним путём. */
+   if(gestCombatRun(fingers,n>=3?"tap3":двойное?"tap2":"tap",null))return;
    if(gestRun(fingers,n>=3?"tap3":двойное?"tap2":"tap",null))return;
    if(fingers===3)handleThreeFingerTap(двойное);
    else if(fingers===4)handleFourFingerTap(двойное);
@@ -5616,6 +5692,8 @@ document.addEventListener('touchend',e=>{
    multiTap.n=0;multiTap.c=0;
    const слой=activeLayer();
    /* Панель магии забирает свайпы себе и до привязок: она модальна. */
+   /* (4.6) В бою — сперва таблица жестов боя. */
+   if(!(fingers<4&&magicPanelOpen())&&gestCombatRun(fingers,"swipe",g.dir))return;
    if(!(fingers<4&&magicPanelOpen())&&gestRun(fingers,"swipe",g.dir))return;
    /* Пока открыта панель магии, свайпы одним, двумя и тремя пальцами — это
       её двенадцать слотов, и меню действий тремя пальцами вверх ей уступает. */
@@ -5639,6 +5717,7 @@ document.addEventListener('touchend',e=>{
   return;
  }
  /* Назначенный уголок выполняется здесь; неназначенный молчит и не мешает. */
+ if(g.leg1&&g.leg2&&safeFn(()=>gestCombatRun(1,"corner",g.leg1+g.leg2),false))return;
  if(g.leg1&&g.leg2&&safeFn(()=>gestRun(1,"corner",g.leg1+g.leg2),false))return;
  const t=e.changedTouches[0];if(!t)return;
  const dx=t.clientX-g.x,dy=t.clientY-g.y,d=Math.hypot(dx,dy),dt=Date.now()-g.t;
@@ -6254,7 +6333,7 @@ function setGroupOpen(id,говорить){
  if(!g||!m)return false;
  const menu=document.getElementById("setMenu"),one=document.getElementById("setOne");
  if(!menu||!one)return false;
- if(id==="gest")safeFn(()=>renderGestBind());
+ if(id==="gest"){safeFn(()=>renderGestBind());safeFn(()=>renderGestCombat());}
  if(id==="diff")safeFn(()=>renderDifficulty());
  m.querySelectorAll(".set-group").forEach(d=>{d.hidden=d.dataset.setGroup!==id;});
  menu.hidden=true;one.hidden=false;SETG.open=id;
@@ -7140,6 +7219,8 @@ const GUIDE_SRC=[
  "БАЛЛАДЫ. Бродячий сказитель у дороги и певец в таверне (кнопка «Попросить певца спеть», три золотых) поют настоящие песни о мире — восемь баллад: «Песнь о Грани», «Сопряжение», «Предтечи», «Виа Странница», «Морах Кузнец», «Вольные Острова», «Баллада о Неизбранном» и «Мортана Тихая». Песня не повторяется, пока не спеты остальные; шаг или бой обрывают её.",
  "ТИХИЙ ШАГ. Новая настройка «Тихий шаг» (включена): при ходьбе не называются проходы и стороны света — только смена места и то, что впереди на выбранное число шагов: «Сундук справа, два шага». Выключите её, если хотите слышать описание каждой клетки, как прежде.",
  "ПЕРЕКЛЮЧАТЕЛИ И ВЕЩИ. Каждый переключатель в настройках звучит своей записью: включение — одной, выключение — другой. Стартовый стальной меч продаётся, как любое оружие, а разобранный или проданный больше не появляется в сумке снова.",
+ "ЖЕСТЫ ВО ВРЕМЯ БОЯ. Пока идёт бой и сверху нет окна, свайп двумя пальцами влево выпивает зелье здоровья (а нет зелья — отвар на воде); вне боя этот жест, как прежде, — «осмотреться». В настройках, в разделе «Жесты», есть подраздел «Жесты во время боя»: любую из тридцати трёх фигур можно назначить на выпить зелье, удар оружием, удар чарами, бегство, вынуть оружие, «где тварь» или «моё здоровье»; «как вне боя» оставляет фигуре её обычное дело.",
+ "ШАГ В ДОСПЕХЕ. Кольчуга и латы звучат настоящими записями брони: прежние слои были сведены из «лязга металла» и связки ключей и звенели, как монеты. У стражи те же записи ниже и тяжелее.",
  "РУКОВОДСТВО. Сто шесть глав собраны в тридцать одну: близкие главы стали разделами одной, номера идут подряд в порядке чтения, по разделам внутри главы можно перескакивать так же, как по частям в оглавлении."]},
 {title:"Глава 105. Версия 4.4: свой голос у каждой твари, живая капель, тяжёлый шаг стражи, зелья и требования вещей",body:[
  "СВОЙ ГОЛОС У ТВАРИ. Раньше голос в покое и боевой клич давал твари её род, и две твари одного рода, стоя рядом и порыкивая, звучали одним горлом. Теперь у каждого вида своя запись из голосов его рода, свой вариант этой записи и своя высота: крупные — громада, владыка, рух — звучат ниже, мелкие — мышь, сойка, рой — выше. Боевой клич и злоба — другая запись того же горла, так что вид узнаётся и в покое, и в ярости. Тот же голос слышен, когда тварь стоит за дверью, сторожит шахту или бродит в картине вокруг.",
@@ -11579,7 +11660,9 @@ const SOUND_BANK={
     Слои шага героя и стражи. Прежние записи Flare были на тридцать пять
     децибел тише шага, и доспех не был слышен вовсе. Теперь это короткие
     записи без потерь из наборов CC0 (Kenney, Бен Бёрнс, 100 CC0 SFX) и
-    OpenClonk (CC BY 3.0): звенья кольчуги, лязг лат и кованых сапог, скрип
+    OpenClonk (CC BY 3.0). С 4.6 кольчуга и латы — настоящие записи брони
+    (RPG Sound Pack и Freesound 506148, CC0): прежние, сведённые из
+    «лязга металла» и ключей, звенели монетами. Звенья кольчуги, лязг лат, скрип
     кожаных ремней, шорох ткани, стук ножен (sounds/gear/CREDITS.md). */
  hero_step_cloth:{f:["gear/gear_cloth_01.flac","gear/gear_cloth_02.flac","gear/gear_cloth_03.flac","gear/gear_cloth_04.flac"],d:"Шаг в лёгком: шорох ткани"},
  hero_step_echo:{f:["hero/hero_step_echo_01.ogg","hero/hero_step_echo_02.ogg"],d:"Шаг с эхом"},
@@ -38841,11 +38924,12 @@ const CMD={
  encyc(){openModal("modal-encyclopedia");buildEncycCats();},
  guide(){openGuide();},
  /* settings:tts — сразу в пункт; без довода — список пунктов. */
- settings(g){openModal("modal-settings");safeFn(()=>renderGestBind());
+ settings(g){openModal("modal-settings");safeFn(()=>renderGestBind());safeFn(()=>renderGestCombat());
   if(g&&SET_GROUP_BY_ID[g])safeFn(()=>setGroupOpen(g));else safeFn(()=>buildSetMenu());},
  setgroup(id){if(!safeFn(()=>setGroupOpen(id),false))narrate("Такого пункта в настройках нет.");},
  setgroups(){if(!safeFn(()=>setBack(),false))narrate("Вы и так в списке пунктов настроек.");},
  gestreset(){gestReset();safeFn(()=>renderGestBind());},
+ gestcombatreset(){gestCombatReset();safeFn(()=>renderGestCombat());},
  /* Точность жестов: что настроено сейчас и возврат к умолчанию. */
  gesttune(){narrate(safeFn(()=>gestTuneText(),"Точность жестов настроить не удалось."),{interrupt:true});},
  gesttunereset(){
