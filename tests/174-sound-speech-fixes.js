@@ -137,7 +137,8 @@ const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(e!==undefined?' :
   r.вровень=файлы.filter(f=>STEP_PEAK[f]>=-27).every(f=>Math.abs(STEP_PEAK[f]+20*Math.log10(stepLevelK(f))-STEP_TARGET)<=0.6);
   /* тихая запись — через усилитель шины, громкая — прежним путём */
   const тихая=Object.keys(STEP_PEAK).find(f=>STEP_PEAK[f]<-20&&f.indexOf("tread_grass")<0)||"";
-  const el1=playLeveled("oc_step_soft",{gain:0.5,maxSec:0.5});
+  /* 4.3: поправки пересчитаны по самим файлам (в 4.2 тихие записи подняты), и самая тихая роль шага теперь — трава Luanti. */
+  const el1=playLeveled("mtg_step_grass",{gain:0.5,maxSec:0.5});
   const el2=playLeveled("lug_step_stone",{gain:0.5,maxSec:0.5});
   r.тихаяУсилена=!!el1&&el1.__k>1;r.громкаяНеУсилена=!!el2&&el2.__k<=1;
   r.камень=SURF_ROLE.stone;r.доски=SURF_ROLE.plank;r.мостки=SURF_ROLE.bridge;
@@ -146,7 +147,7 @@ const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(e!==undefined?' :
   playStep("stone");r.шагПоКамню=G.lastStep&&G.lastStep.role;
   return r;});
  check('3. у каждой записи шага есть поправка, и после неё все шаги звучат вровень',
-  шаги.безПоправки.length===0&&шаги.файлов>90&&шаги.размахДо>=30&&шаги.послеПоправки===0&&шаги.вровень,шаги);
+  шаги.безПоправки.length===0&&шаги.файлов>90&&шаги.размахДо>=20&&шаги.послеПоправки===0&&шаги.вровень,шаги);
  check('3. тихий шаг идёт через усилитель, громкий — прежним путём',шаги.тихаяУсилена&&шаги.громкаяНеУсилена,шаги);
  /* С версии 3.4 у каждой поверхности свой шаг (набор 186): доски — шаг по
     доскам, мостки — деревянный мост, а не общие с камнем и подвалом записи. */

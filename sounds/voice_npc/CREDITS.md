@@ -1,10 +1,11 @@
 # sounds/voice_npc — жители говорят сами
 
 Приветствие жителя у прилавка, его ответ в разговоре и то, что на ходу
-бросают стражник, латник, солдат гарнизона, горожанин и житель посада. Прежде эти строки читал голос
+бросают стражник, латник, солдат гарнизона, горожанин и житель посада, и то, чем встречает на пороге места
+стражник у ворот, жрец, трактирщик, староста, кузнец, торговец, наставник, смотритель порта. Прежде эти строки читал голос
 игры в кавычках; теперь у каждой своя запись и своя интонация.
 
-Записей: 1941
+Записей: 2251
 
 Речь синтезирована 27–29 сентября 2026 года нейроголосами **Gemini** (Google),
 модель `gemini-3.8-flash-tts`, через Gemini API (Interactions API,
@@ -28,20 +29,30 @@ Policy (https://policies.google.com/terms/generative-ai/use-policy). Отдел�
 
 | Голос Gemini | Каков | Кто говорит | Записей |
 |---|---|---|---|
-| Alnilam | твёрдый | стражник на обходе и ночной дозор (первый голос стражи) | 93 |
-| Orus | твёрдый, пониже | стражник на обходе (второй голос стражи) | 93 |
-| Algenib | с хрипотцой | стражник на обходе (третий голос стражи) | 93 |
-| Charon | низкий, ровный | латник смены и солдат гарнизона за Гранью | 18 |
-| Schedar | ровный, холодный | латник смены за Гранью (второй голос) | 12 |
-| Achird | дружелюбный | горожанин и житель посада | 30 |
-| Sulafat | тёплый | горожанка и жительница посада | 30 |
-| Umbriel | лёгкий, разговорный | приветствие и ответ в разговоре жителя, мужской голос | 721 |
+| Alnilam | твёрдый | стражник на обходе и ночной дозор (первый голос стражи) | 139 |
+| Orus | твёрдый, пониже | стражник на обходе (второй голос стражи) | 139 |
+| Algenib | с хрипотцой | стражник на обходе (третий голос стражи) | 139 |
+| Charon | низкий, ровный | латник смены и солдат гарнизона за Гранью | 38 |
+| Schedar | ровный, холодный | латник смены за Гранью (второй голос) | 32 |
+| Achird | дружелюбный | горожанин и житель посада, староста деревни | 38 |
+| Sulafat | тёплый | горожанка и жительница посада, старостиха | 38 |
+| Umbriel | лёгкий, разговорный | приветствие и ответ в разговоре жителя, мужской голос; кузнец на пороге кузни | 729 |
 | Despina | мягкий | приветствие и ответ в разговоре жительницы, женский голос | 722 |
 | Algieba | ровный, уверенный | голос героя: ход «Спросить об истории» (остальные двадцать один — в sounds/voice) | 1 |
-| Rasalgethi | зрелый, дорожный | старший обоза, мужской голос | 52 |
-| Gacrux | зрелый, твёрдый | старшая обоза, женский голос | 52 |
+| Rasalgethi | зрелый, дорожный | старший обоза, мужской голос; наставник школы, смотритель порта | 66 |
+| Gacrux | зрелый, твёрдый | старшая обоза, женский голос; смотрительница порта | 60 |
 | Fenrir | резкий, возбуждённый | разбойник (первый голос) | 12 |
-| Enceladus | с придыханием | разбойник (второй голос) | 12 |
+| Enceladus | с придыханием | разбойник (второй голос), хозяин схрона | 18 |
+| Zubenelgenubi | спокойный, неспешный | жрец на пороге храма, хранитель башни | 14 |
+| Vindemiatrix | мягкий, тихий | жрица на пороге храма | 8 |
+| Puck | бодрый | трактирщик | 8 |
+| Pulcherrima | напористый | трактирщица | 8 |
+| Kore | твёрдый | кузнечиха | 8 |
+| Sadachbia | живой | торговец на рынке | 8 |
+| Laomedeia | бойкий | торговка на рынке | 8 |
+| Erinome | ясный | наставница школы | 6 |
+| Autonoe | звонкий | хранительница башни | 6 |
+| Achernar | мягкий, приглушённый | хозяйка схрона | 6 |
 
 ## Как сделано и как проверено
 
@@ -64,7 +75,7 @@ Policy (https://policies.google.com/terms/generative-ai/use-policy). Отдел�
   видеть», «Я вас не видела»): в описи ниже — то, что произнесено; в игре
   строка ищется по исходному тексту. Обращённое к герою («пока цел») не менялось.
 - **Пакетами.** В одном запросе два голоса и до семидесяти четырёх строк; всё —
-  33 пакетов и переозвучки неудачных дублей.
+  44 пакетов и переозвучки неудачных дублей.
 - **Разрезка и разборчивость.** Запись пакета дробится по паузам и склеивается
   в строки по распознанному тексту; каждую строку распознаёт русская модель
   GigaAM (sherpa-onnx, `nemo-ctc-giga-am-v2-russian`): не больше 15 % ошибочных
@@ -2017,3 +2028,313 @@ Policy (https://policies.google.com/terms/generative-ai/use-policy). Отдел�
 | bandit_flee_2_v1_g.mp3 | разбойник: просит пощады | Enceladus | frightened, gasping | Всё, всё, сдаюсь! |
 | bandit_flee_3_g.mp3 | разбойник: просит пощады | Fenrir | panicked, loud | Братцы, спасайся кто может! |
 | bandit_flee_3_v1_g.mp3 | разбойник: просит пощады | Enceladus | panicked, loud | Братцы, спасайся кто может! |
+| enter_castle_0_g.mp3 | на пороге: стражник у ворот замка | Alnilam | stern, checking, then allowing | Стой. Кто таков? Ладно, проходи, только без глупостей. |
+| enter_castle_0_v1_g.mp3 | на пороге: стражник у ворот замка | Orus | stern, checking, then allowing | Стой. Кто таков? Ладно, проходи, только без глупостей. |
+| enter_castle_0_v2_g.mp3 | на пороге: стражник у ворот замка | Algenib | stern, checking, then allowing | Стой. Кто таков? Ладно, проходи, только без глупостей. |
+| enter_castle_1_g.mp3 | на пороге: стражник у ворот замка | Alnilam | formal, firm | Добро пожаловать в замок. Оружие держи в ножнах. |
+| enter_castle_1_v1_g.mp3 | на пороге: стражник у ворот замка | Orus | formal, firm | Добро пожаловать в замок. Оружие держи в ножнах. |
+| enter_castle_1_v2_g.mp3 | на пороге: стражник у ворот замка | Algenib | formal, firm | Добро пожаловать в замок. Оружие держи в ножнах. |
+| enter_castle_2_g.mp3 | на пороге: стражник у ворот замка | Alnilam | dutiful, matter-of-fact | Проходи. Лорд нынче не принимает, но двор открыт. |
+| enter_castle_2_v1_g.mp3 | на пороге: стражник у ворот замка | Orus | dutiful, matter-of-fact | Проходи. Лорд нынче не принимает, но двор открыт. |
+| enter_castle_2_v2_g.mp3 | на пороге: стражник у ворот замка | Algenib | dutiful, matter-of-fact | Проходи. Лорд нынче не принимает, но двор открыт. |
+| enter_castle_3_g.mp3 | на пороге: стражник у ворот замка | Alnilam | gruff, advising | Ворота открыты до заката. Не задерживайся у казарм. |
+| enter_castle_3_v1_g.mp3 | на пороге: стражник у ворот замка | Orus | gruff, advising | Ворота открыты до заката. Не задерживайся у казарм. |
+| enter_castle_3_v2_g.mp3 | на пороге: стражник у ворот замка | Algenib | gruff, advising | Ворота открыты до заката. Не задерживайся у казарм. |
+| enter_castle_4_g.mp3 | на пороге: стражник у ворот замка | Alnilam | watchful, stern | Гость? Проходи. За порядком тут смотрят строго. |
+| enter_castle_4_v1_g.mp3 | на пороге: стражник у ворот замка | Orus | watchful, stern | Гость? Проходи. За порядком тут смотрят строго. |
+| enter_castle_4_v2_g.mp3 | на пороге: стражник у ворот замка | Algenib | watchful, stern | Гость? Проходи. За порядком тут смотрят строго. |
+| enter_castle_5_g.mp3 | на пороге: стражник у ворот замка | Alnilam | loud call to other guards | Путник в замок! Пропустить! |
+| enter_castle_5_v1_g.mp3 | на пороге: стражник у ворот замка | Orus | loud call to other guards | Путник в замок! Пропустить! |
+| enter_castle_5_v2_g.mp3 | на пороге: стражник у ворот замка | Algenib | loud call to other guards | Путник в замок! Пропустить! |
+| enter_castle_6_g.mp3 | на пороге: стражник у ворот замка | Alnilam | serious, warning | Держись дороги к двору. На стены чужим нельзя. |
+| enter_castle_6_v1_g.mp3 | на пороге: стражник у ворот замка | Orus | serious, warning | Держись дороги к двору. На стены чужим нельзя. |
+| enter_castle_6_v2_g.mp3 | на пороге: стражник у ворот замка | Algenib | serious, warning | Держись дороги к двору. На стены чужим нельзя. |
+| enter_castle_7_g.mp3 | на пороге: стражник у ворот замка | Alnilam | proud, dutiful | Замок стоит, пока мы стоим. Входи с миром. |
+| enter_castle_7_v1_g.mp3 | на пороге: стражник у ворот замка | Orus | proud, dutiful | Замок стоит, пока мы стоим. Входи с миром. |
+| enter_castle_7_v2_g.mp3 | на пороге: стражник у ворот замка | Algenib | proud, dutiful | Замок стоит, пока мы стоим. Входи с миром. |
+| enter_fort_0_g.mp3 | на пороге: стражник у ворот крепости | Alnilam | tense, brusque | Крепость на военном положении. Проходи и не мешайся. |
+| enter_fort_0_v1_g.mp3 | на пороге: стражник у ворот крепости | Orus | tense, brusque | Крепость на военном положении. Проходи и не мешайся. |
+| enter_fort_0_v2_g.mp3 | на пороге: стражник у ворот крепости | Algenib | tense, brusque | Крепость на военном положении. Проходи и не мешайся. |
+| enter_fort_1_g.mp3 | на пороге: стражник у ворот крепости | Alnilam | wary, then relieved | Стой! Свой? Ну проходи, гарнизон рад живой душе. |
+| enter_fort_1_v1_g.mp3 | на пороге: стражник у ворот крепости | Orus | wary, then relieved | Стой! Свой? Ну проходи, гарнизон рад живой душе. |
+| enter_fort_1_v2_g.mp3 | на пороге: стражник у ворот крепости | Algenib | wary, then relieved | Стой! Свой? Ну проходи, гарнизон рад живой душе. |
+| enter_fort_2_g.mp3 | на пороге: стражник у ворот крепости | Alnilam | hard, commanding | В крепости порядок один — наш. Уяснил? |
+| enter_fort_2_v1_g.mp3 | на пороге: стражник у ворот крепости | Orus | hard, commanding | В крепости порядок один — наш. Уяснил? |
+| enter_fort_2_v2_g.mp3 | на пороге: стражник у ворот крепости | Algenib | hard, commanding | В крепости порядок один — наш. Уяснил? |
+| enter_fort_3_g.mp3 | на пороге: стражник у ворот крепости | Alnilam | dry, warning | Проходи. У арсенала не стой, стрелки нервные. |
+| enter_fort_3_v1_g.mp3 | на пороге: стражник у ворот крепости | Orus | dry, warning | Проходи. У арсенала не стой, стрелки нервные. |
+| enter_fort_3_v2_g.mp3 | на пороге: стражник у ворот крепости | Algenib | dry, warning | Проходи. У арсенала не стой, стрелки нервные. |
+| enter_fort_4_g.mp3 | на пороге: стражник у ворот крепости | Alnilam | suspicious, muttering | Ещё один странник. Лишь бы не лазутчик. |
+| enter_fort_4_v1_g.mp3 | на пороге: стражник у ворот крепости | Orus | suspicious, muttering | Ещё один странник. Лишь бы не лазутчик. |
+| enter_fort_4_v2_g.mp3 | на пороге: стражник у ворот крепости | Algenib | suspicious, muttering | Ещё один странник. Лишь бы не лазутчик. |
+| enter_fort_5_g.mp3 | на пороге: стражник у ворот крепости | Alnilam | reassuring, gruff | Добро пожаловать за стены. Здесь безопаснее, чем в поле. |
+| enter_fort_5_v1_g.mp3 | на пороге: стражник у ворот крепости | Orus | reassuring, gruff | Добро пожаловать за стены. Здесь безопаснее, чем в поле. |
+| enter_fort_5_v2_g.mp3 | на пороге: стражник у ворот крепости | Algenib | reassuring, gruff | Добро пожаловать за стены. Здесь безопаснее, чем в поле. |
+| enter_fort_6_g.mp3 | на пороге: стражник у ворот крепости | Alnilam | hurried, impatient | Проходи быстрее, ворота закрываем. |
+| enter_fort_6_v1_g.mp3 | на пороге: стражник у ворот крепости | Orus | hurried, impatient | Проходи быстрее, ворота закрываем. |
+| enter_fort_6_v2_g.mp3 | на пороге: стражник у ворот крепости | Algenib | hurried, impatient | Проходи быстрее, ворота закрываем. |
+| enter_fort_7_g.mp3 | на пороге: стражник у ворот крепости | Alnilam | weary, proud | Крепость видела осады и похуже. Входи. |
+| enter_fort_7_v1_g.mp3 | на пороге: стражник у ворот крепости | Orus | weary, proud | Крепость видела осады и похуже. Входи. |
+| enter_fort_7_v2_g.mp3 | на пороге: стражник у ворот крепости | Algenib | weary, proud | Крепость видела осады и похуже. Входи. |
+| enter_gate_friend_0_g.mp3 | на пороге: стражник своему | Alnilam | warm, glad | А, это ты! Проходи, для тебя ворота всегда открыты. |
+| enter_gate_friend_0_v1_g.mp3 | на пороге: стражник своему | Orus | warm, glad | А, это ты! Проходи, для тебя ворота всегда открыты. |
+| enter_gate_friend_0_v2_g.mp3 | на пороге: стражник своему | Algenib | warm, glad | А, это ты! Проходи, для тебя ворота всегда открыты. |
+| enter_gate_friend_1_g.mp3 | на пороге: стражник своему | Alnilam | friendly, hearty | Своих пропускаем без вопросов. С возвращением! |
+| enter_gate_friend_1_v1_g.mp3 | на пороге: стражник своему | Orus | friendly, hearty | Своих пропускаем без вопросов. С возвращением! |
+| enter_gate_friend_1_v2_g.mp3 | на пороге: стражник своему | Algenib | friendly, hearty | Своих пропускаем без вопросов. С возвращением! |
+| enter_gate_friend_2_g.mp3 | на пороге: стражник своему | Alnilam | sincere, friendly | Рад видеть! Про тебя тут только доброе говорят. |
+| enter_gate_friend_2_v1_g.mp3 | на пороге: стражник своему | Orus | sincere, friendly | Рад видеть! Про тебя тут только доброе говорят. |
+| enter_gate_friend_2_v2_g.mp3 | на пороге: стражник своему | Algenib | sincere, friendly | Рад видеть! Про тебя тут только доброе говорят. |
+| enter_gate_friend_3_g.mp3 | на пороге: стражник своему | Alnilam | cheerful call | Эй, ребята, это наш друг! Пропустите. |
+| enter_gate_friend_3_v1_g.mp3 | на пороге: стражник своему | Orus | cheerful call | Эй, ребята, это наш друг! Пропустите. |
+| enter_gate_friend_3_v2_g.mp3 | на пороге: стражник своему | Algenib | cheerful call | Эй, ребята, это наш друг! Пропустите. |
+| enter_gate_friend_4_g.mp3 | на пороге: стражник своему | Alnilam | warm, protective | Проходи, проходи. Если что — зови стражу, поможем. |
+| enter_gate_friend_4_v1_g.mp3 | на пороге: стражник своему | Orus | warm, protective | Проходи, проходи. Если что — зови стражу, поможем. |
+| enter_gate_friend_4_v2_g.mp3 | на пороге: стражник своему | Algenib | warm, protective | Проходи, проходи. Если что — зови стражу, поможем. |
+| enter_gate_friend_5_g.mp3 | на пороге: стражник своему | Alnilam | respectful, warm | О, наш герой вернулся. Добро пожаловать домой. |
+| enter_gate_friend_5_v1_g.mp3 | на пороге: стражник своему | Orus | respectful, warm | О, наш герой вернулся. Добро пожаловать домой. |
+| enter_gate_friend_5_v2_g.mp3 | на пороге: стражник своему | Algenib | respectful, warm | О, наш герой вернулся. Добро пожаловать домой. |
+| enter_gate_cold_0_g.mp3 | на пороге: стражник недругу | Alnilam | cold, suspicious | Тебя тут не ждали. Проходи, но я смотрю за тобой. |
+| enter_gate_cold_0_v1_g.mp3 | на пороге: стражник недругу | Orus | cold, suspicious | Тебя тут не ждали. Проходи, но я смотрю за тобой. |
+| enter_gate_cold_0_v2_g.mp3 | на пороге: стражник недругу | Algenib | cold, suspicious | Тебя тут не ждали. Проходи, но я смотрю за тобой. |
+| enter_gate_cold_1_g.mp3 | на пороге: стражник недругу | Alnilam | cold, threatening | Одно лишнее движение — и в темницу. |
+| enter_gate_cold_1_v1_g.mp3 | на пороге: стражник недругу | Orus | cold, threatening | Одно лишнее движение — и в темницу. |
+| enter_gate_cold_1_v2_g.mp3 | на пороге: стражник недругу | Algenib | cold, threatening | Одно лишнее движение — и в темницу. |
+| enter_gate_cold_2_g.mp3 | на пороге: стражник недругу | Alnilam | hostile, curt | Наслышаны о тебе. Недоброе слышали. |
+| enter_gate_cold_2_v1_g.mp3 | на пороге: стражник недругу | Orus | hostile, curt | Наслышаны о тебе. Недоброе слышали. |
+| enter_gate_cold_2_v2_g.mp3 | на пороге: стражник недругу | Algenib | hostile, curt | Наслышаны о тебе. Недоброе слышали. |
+| enter_gate_cold_3_g.mp3 | на пороге: стражник недругу | Alnilam | cold, dismissive | Проходи молча. И не задерживайся. |
+| enter_gate_cold_3_v1_g.mp3 | на пороге: стражник недругу | Orus | cold, dismissive | Проходи молча. И не задерживайся. |
+| enter_gate_cold_3_v2_g.mp3 | на пороге: стражник недругу | Algenib | cold, dismissive | Проходи молча. И не задерживайся. |
+| enter_gate_cold_4_g.mp3 | на пороге: стражник недругу | Alnilam | hard, distrustful | Держи руки на виду, чужак. |
+| enter_gate_cold_4_v1_g.mp3 | на пороге: стражник недругу | Orus | hard, distrustful | Держи руки на виду, чужак. |
+| enter_gate_cold_4_v2_g.mp3 | на пороге: стражник недругу | Algenib | hard, distrustful | Держи руки на виду, чужак. |
+| enter_gate_cold_5_g.mp3 | на пороге: стражник недругу | Alnilam | resentful, muttering | Будь моя воля — не пустил бы. |
+| enter_gate_cold_5_v1_g.mp3 | на пороге: стражник недругу | Orus | resentful, muttering | Будь моя воля — не пустил бы. |
+| enter_gate_cold_5_v2_g.mp3 | на пороге: стражник недругу | Algenib | resentful, muttering | Будь моя воля — не пустил бы. |
+| enter_gate_night_0_g.mp3 | на пороге: ночной стражник | Alnilam | sharp, alarmed, night call | Кто идёт в такой час? Назовись! |
+| enter_gate_night_0_v1_g.mp3 | на пороге: ночной стражник | Orus | sharp, alarmed, night call | Кто идёт в такой час? Назовись! |
+| enter_gate_night_0_v2_g.mp3 | на пороге: ночной стражник | Algenib | sharp, alarmed, night call | Кто идёт в такой час? Назовись! |
+| enter_gate_night_1_g.mp3 | на пороге: ночной стражник | Alnilam | grumbling, sleepy | Ночью ворота на засове. Ладно, проходи, раз пришёл. |
+| enter_gate_night_1_v1_g.mp3 | на пороге: ночной стражник | Orus | grumbling, sleepy | Ночью ворота на засове. Ладно, проходи, раз пришёл. |
+| enter_gate_night_1_v2_g.mp3 | на пороге: ночной стражник | Algenib | grumbling, sleepy | Ночью ворота на засове. Ладно, проходи, раз пришёл. |
+| enter_gate_night_2_g.mp3 | на пороге: ночной стражник | Alnilam | hushed, stern | Тише. Город спит. Не шуми на улицах. |
+| enter_gate_night_2_v1_g.mp3 | на пороге: ночной стражник | Orus | hushed, stern | Тише. Город спит. Не шуми на улицах. |
+| enter_gate_night_2_v2_g.mp3 | на пороге: ночной стражник | Algenib | hushed, stern | Тише. Город спит. Не шуми на улицах. |
+| enter_gate_night_3_g.mp3 | на пороге: ночной стражник | Alnilam | wry, wary | Ночь тёмная, а ты один. Храбрый или глупый? |
+| enter_gate_night_3_v1_g.mp3 | на пороге: ночной стражник | Orus | wry, wary | Ночь тёмная, а ты один. Храбрый или глупый? |
+| enter_gate_night_3_v2_g.mp3 | на пороге: ночной стражник | Algenib | wry, wary | Ночь тёмная, а ты один. Храбрый или глупый? |
+| enter_gate_night_4_g.mp3 | на пороге: ночной стражник | Alnilam | low voice, cautionary | Факел держи ближе. Ночью всякое бродит. |
+| enter_gate_night_4_v1_g.mp3 | на пороге: ночной стражник | Orus | low voice, cautionary | Факел держи ближе. Ночью всякое бродит. |
+| enter_gate_night_4_v2_g.mp3 | на пороге: ночной стражник | Algenib | low voice, cautionary | Факел держи ближе. Ночью всякое бродит. |
+| enter_gate_night_5_g.mp3 | на пороге: ночной стражник | Alnilam | tired, helpful | Поздно гуляешь, путник. Трактир ещё открыт. |
+| enter_gate_night_5_v1_g.mp3 | на пороге: ночной стражник | Orus | tired, helpful | Поздно гуляешь, путник. Трактир ещё открыт. |
+| enter_gate_night_5_v2_g.mp3 | на пороге: ночной стражник | Algenib | tired, helpful | Поздно гуляешь, путник. Трактир ещё открыт. |
+| enter_clanhall_0_g.mp3 | на пороге: страж чертога клана | Alnilam | solemn, proud | Дом клана. Здесь чтут старших и помнят кровь. |
+| enter_clanhall_0_v1_g.mp3 | на пороге: страж чертога клана | Orus | solemn, proud | Дом клана. Здесь чтут старших и помнят кровь. |
+| enter_clanhall_0_v2_g.mp3 | на пороге: страж чертога клана | Algenib | solemn, proud | Дом клана. Здесь чтут старших и помнят кровь. |
+| enter_clanhall_1_g.mp3 | на пороге: страж чертога клана | Alnilam | hospitable, gruff | Входи. За столом клана гостю место найдётся. |
+| enter_clanhall_1_v1_g.mp3 | на пороге: страж чертога клана | Orus | hospitable, gruff | Входи. За столом клана гостю место найдётся. |
+| enter_clanhall_1_v2_g.mp3 | на пороге: страж чертога клана | Algenib | hospitable, gruff | Входи. За столом клана гостю место найдётся. |
+| enter_clanhall_2_g.mp3 | на пороге: страж чертога клана | Alnilam | stern, reverent | Сними шапку, чужак. Это чертог предков. |
+| enter_clanhall_2_v1_g.mp3 | на пороге: страж чертога клана | Orus | stern, reverent | Сними шапку, чужак. Это чертог предков. |
+| enter_clanhall_2_v2_g.mp3 | на пороге: страж чертога клана | Algenib | stern, reverent | Сними шапку, чужак. Это чертог предков. |
+| enter_clanhall_3_g.mp3 | на пороге: страж чертога клана | Alnilam | hushed, firm | Старейшины совещаются. Не шуми. |
+| enter_clanhall_3_v1_g.mp3 | на пороге: страж чертога клана | Orus | hushed, firm | Старейшины совещаются. Не шуми. |
+| enter_clanhall_3_v2_g.mp3 | на пороге: страж чертога клана | Algenib | hushed, firm | Старейшины совещаются. Не шуми. |
+| enter_clanhall_4_g.mp3 | на пороге: страж чертога клана | Alnilam | measured, warning | Клан гостя не обидит, если гость не обидит клан. |
+| enter_clanhall_4_v1_g.mp3 | на пороге: страж чертога клана | Orus | measured, warning | Клан гостя не обидит, если гость не обидит клан. |
+| enter_clanhall_4_v2_g.mp3 | на пороге: страж чертога клана | Algenib | measured, warning | Клан гостя не обидит, если гость не обидит клан. |
+| enter_clanhall_5_g.mp3 | на пороге: страж чертога клана | Alnilam | jovial, hearty | Ещё один на пир? Проходи, мёда хватит. |
+| enter_clanhall_5_v1_g.mp3 | на пороге: страж чертога клана | Orus | jovial, hearty | Ещё один на пир? Проходи, мёда хватит. |
+| enter_clanhall_5_v2_g.mp3 | на пороге: страж чертога клана | Algenib | jovial, hearty | Ещё один на пир? Проходи, мёда хватит. |
+| enter_warcamp_0_g.mp3 | на пороге: часовой лагеря | Alnilam | busy, gruff | Лагерь войска. Кто пустил? А, ладно, проходи. |
+| enter_warcamp_0_v1_g.mp3 | на пороге: часовой лагеря | Orus | busy, gruff | Лагерь войска. Кто пустил? А, ладно, проходи. |
+| enter_warcamp_0_v2_g.mp3 | на пороге: часовой лагеря | Algenib | busy, gruff | Лагерь войска. Кто пустил? А, ладно, проходи. |
+| enter_warcamp_1_g.mp3 | на пороге: часовой лагеря | Alnilam | brusque, hurried | Не путайся под ногами, у нас сборы. |
+| enter_warcamp_1_v1_g.mp3 | на пороге: часовой лагеря | Orus | brusque, hurried | Не путайся под ногами, у нас сборы. |
+| enter_warcamp_1_v2_g.mp3 | на пороге: часовой лагеря | Algenib | brusque, hurried | Не путайся под ногами, у нас сборы. |
+| enter_warcamp_2_g.mp3 | на пороге: часовой лагеря | Alnilam | matter-of-fact, directing | К интенданту — налево. К лекарю — за шатрами. |
+| enter_warcamp_2_v1_g.mp3 | на пороге: часовой лагеря | Orus | matter-of-fact, directing | К интенданту — налево. К лекарю — за шатрами. |
+| enter_warcamp_2_v2_g.mp3 | на пороге: часовой лагеря | Algenib | matter-of-fact, directing | К интенданту — налево. К лекарю — за шатрами. |
+| enter_warcamp_3_g.mp3 | на пороге: часовой лагеря | Alnilam | interested, businesslike | Наёмник? Командиру такие нужны. |
+| enter_warcamp_3_v1_g.mp3 | на пороге: часовой лагеря | Orus | interested, businesslike | Наёмник? Командиру такие нужны. |
+| enter_warcamp_3_v2_g.mp3 | на пороге: часовой лагеря | Algenib | interested, businesslike | Наёмник? Командиру такие нужны. |
+| enter_warcamp_4_g.mp3 | на пороге: часовой лагеря | Alnilam | lowered voice, warning | Тише у шатра воеводы. Он не спал две ночи. |
+| enter_warcamp_4_v1_g.mp3 | на пороге: часовой лагеря | Orus | lowered voice, warning | Тише у шатра воеводы. Он не спал две ночи. |
+| enter_warcamp_4_v2_g.mp3 | на пороге: часовой лагеря | Algenib | lowered voice, warning | Тише у шатра воеводы. Он не спал две ночи. |
+| enter_warcamp_5_g.mp3 | на пороге: часовой лагеря | Alnilam | determined, rousing | Скоро выступаем. Хочешь с нами — готовь меч. |
+| enter_warcamp_5_v1_g.mp3 | на пороге: часовой лагеря | Orus | determined, rousing | Скоро выступаем. Хочешь с нами — готовь меч. |
+| enter_warcamp_5_v2_g.mp3 | на пороге: часовой лагеря | Algenib | determined, rousing | Скоро выступаем. Хочешь с нами — готовь меч. |
+| enter_dark_city_0_g.mp3 | на пороге: латник смены за Гранью | Charon | cold, flat, commanding | Стоять. Печать. Нет печати? Проходи. Пока. |
+| enter_dark_city_0_v1_g.mp3 | на пороге: латник смены за Гранью | Schedar | cold, flat, commanding | Стоять. Печать. Нет печати? Проходи. Пока. |
+| enter_dark_city_1_g.mp3 | на пороге: латник смены за Гранью | Charon | cold, ominous, quiet | За Гранью гостей не любят. Помни это. |
+| enter_dark_city_1_v1_g.mp3 | на пороге: латник смены за Гранью | Schedar | cold, ominous, quiet | За Гранью гостей не любят. Помни это. |
+| enter_dark_city_2_g.mp3 | на пороге: латник смены за Гранью | Charon | cold, detached, menacing | Ты в посаде Владыки. Здесь живут по его слову. |
+| enter_dark_city_2_v1_g.mp3 | на пороге: латник смены за Гранью | Schedar | cold, detached, menacing | Ты в посаде Владыки. Здесь живут по его слову. |
+| enter_dark_city_3_g.mp3 | на пороге: латник смены за Гранью | Charon | flat, grim | Проходи. Мёртвые на улицах не твоя забота. |
+| enter_dark_city_3_v1_g.mp3 | на пороге: латник смены за Гранью | Schedar | flat, grim | Проходи. Мёртвые на улицах не твоя забота. |
+| enter_dark_city_4_g.mp3 | на пороге: латник смены за Гранью | Charon | cold, menacing | Смена видит всё. Даже то, чего ты не делал. |
+| enter_dark_city_4_v1_g.mp3 | на пороге: латник смены за Гранью | Schedar | cold, menacing | Смена видит всё. Даже то, чего ты не делал. |
+| enter_dark_city_5_g.mp3 | на пороге: латник смены за Гранью | Charon | flat, clipped report | Чужак за воротами. Отметить. |
+| enter_dark_city_5_v1_g.mp3 | на пороге: латник смены за Гранью | Schedar | flat, clipped report | Чужак за воротами. Отметить. |
+| enter_dark_city_6_g.mp3 | на пороге: латник смены за Гранью | Charon | cold, dark humour | Войти легко. Выйти — как повезёт. |
+| enter_dark_city_6_v1_g.mp3 | на пороге: латник смены за Гранью | Schedar | cold, dark humour | Войти легко. Выйти — как повезёт. |
+| enter_dark_city_7_g.mp3 | на пороге: латник смены за Гранью | Charon | low, ominous advice | Держись света. В тени у нас свои хозяева. |
+| enter_dark_city_7_v1_g.mp3 | на пороге: латник смены за Гранью | Schedar | low, ominous advice | Держись света. В тени у нас свои хозяева. |
+| enter_dark_shrine_0_g.mp3 | на пороге: служитель святилища Тьмы | Charon | cold, solemn, commanding | Святилище Тьмы. Преклони голову или уходи. |
+| enter_dark_shrine_0_v1_g.mp3 | на пороге: служитель святилища Тьмы | Schedar | cold, solemn, commanding | Святилище Тьмы. Преклони голову или уходи. |
+| enter_dark_shrine_1_g.mp3 | на пороге: служитель святилища Тьмы | Charon | hollow, ominous | Здесь молятся тому, кто не прощает. |
+| enter_dark_shrine_1_v1_g.mp3 | на пороге: служитель святилища Тьмы | Schedar | hollow, ominous | Здесь молятся тому, кто не прощает. |
+| enter_dark_shrine_2_g.mp3 | на пороге: служитель святилища Тьмы | Charon | flat, grim, quiet | Кровь на алтаре свежая. Не спрашивай чья. |
+| enter_dark_shrine_2_v1_g.mp3 | на пороге: служитель святилища Тьмы | Schedar | flat, grim, quiet | Кровь на алтаре свежая. Не спрашивай чья. |
+| enter_dark_shrine_3_g.mp3 | на пороге: служитель святилища Тьмы | Charon | hushed, cold | Тихо. Жрецы слушают шёпот из-за Грани. |
+| enter_dark_shrine_3_v1_g.mp3 | на пороге: служитель святилища Тьмы | Schedar | hushed, cold | Тихо. Жрецы слушают шёпот из-за Грани. |
+| enter_dark_shrine_4_g.mp3 | на пороге: служитель святилища Тьмы | Charon | cold, demanding | Дар принёс? Без дара тут не отвечают. |
+| enter_dark_shrine_4_v1_g.mp3 | на пороге: служитель святилища Тьмы | Schedar | cold, demanding | Дар принёс? Без дара тут не отвечают. |
+| enter_dark_shrine_5_g.mp3 | на пороге: служитель святилища Тьмы | Charon | cold, warning whisper | Свечи чёрные не трогай. Это не для живых. |
+| enter_dark_shrine_5_v1_g.mp3 | на пороге: служитель святилища Тьмы | Schedar | cold, warning whisper | Свечи чёрные не трогай. Это не для живых. |
+| enter_dark_bazaar_0_g.mp3 | на пороге: надсмотрщик базара теней | Charon | cold, sly | Базар теней. Всё продаётся, всё покупается. |
+| enter_dark_bazaar_0_v1_g.mp3 | на пороге: надсмотрщик базара теней | Schedar | cold, sly | Базар теней. Всё продаётся, всё покупается. |
+| enter_dark_bazaar_1_g.mp3 | на пороге: надсмотрщик базара теней | Charon | dry, grim warning | Кошель держи крепче. Здесь режут не только цены. |
+| enter_dark_bazaar_1_v1_g.mp3 | на пороге: надсмотрщик базара теней | Schedar | dry, grim warning | Кошель держи крепче. Здесь режут не только цены. |
+| enter_dark_bazaar_2_g.mp3 | на пороге: надсмотрщик базара теней | Charon | low, conspiratorial | Не спрашивай, откуда товар. И тебя не спросят. |
+| enter_dark_bazaar_2_v1_g.mp3 | на пороге: надсмотрщик базара теней | Schedar | low, conspiratorial | Не спрашивай, откуда товар. И тебя не спросят. |
+| enter_dark_bazaar_3_g.mp3 | на пороге: надсмотрщик базара теней | Charon | cold, menacing | Долги здесь отдают кровью. Помни. |
+| enter_dark_bazaar_3_v1_g.mp3 | на пороге: надсмотрщик базара теней | Schedar | cold, menacing | Долги здесь отдают кровью. Помни. |
+| enter_dark_bazaar_4_g.mp3 | на пороге: надсмотрщик базара теней | Charon | tense, hurried | Торгуй быстро. Смена скоро обходит ряды. |
+| enter_dark_bazaar_4_v1_g.mp3 | на пороге: надсмотрщик базара теней | Schedar | tense, hurried | Торгуй быстро. Смена скоро обходит ряды. |
+| enter_dark_bazaar_5_g.mp3 | на пороге: надсмотрщик базара теней | Charon | cold, dark humour | Души не принимаем. Пока. |
+| enter_dark_bazaar_5_v1_g.mp3 | на пороге: надсмотрщик базара теней | Schedar | cold, dark humour | Души не принимаем. Пока. |
+| enter_temple_0_g.mp3 | на пороге: жрец, жрица | Zubenelgenubi | calm, gentle, serene | Мир тебе, путник. Боги видят входящего. |
+| enter_temple_0_f_g.mp3 | на пороге: жрец, жрица | Vindemiatrix | calm, gentle, serene | Мир тебе, путник. Боги видят входящего. |
+| enter_temple_1_g.mp3 | на пороге: жрец, жрица | Zubenelgenubi | warm, soft | Войди с миром. Здесь всякий найдёт утешение. |
+| enter_temple_1_f_g.mp3 | на пороге: жрец, жрица | Vindemiatrix | warm, soft | Войди с миром. Здесь всякий найдёт утешение. |
+| enter_temple_2_g.mp3 | на пороге: жрец, жрица | Zubenelgenubi | hushed, kind | Тише, дитя. Идёт служба. |
+| enter_temple_2_f_g.mp3 | на пороге: жрец, жрица | Vindemiatrix | hushed, kind | Тише, дитя. Идёт служба. |
+| enter_temple_3_g.mp3 | на пороге: жрец, жрица | Zubenelgenubi | gentle, sorrowful | Свеча у алтаря — за тех, кто не вернулся. Поставишь? |
+| enter_temple_3_f_g.mp3 | на пороге: жрец, жрица | Vindemiatrix | gentle, sorrowful | Свеча у алтаря — за тех, кто не вернулся. Поставишь? |
+| enter_temple_4_g.mp3 | на пороге: жрец, жрица | Zubenelgenubi | caring, reassuring | Ранен? Лекари при храме помогут. Боги милостивы. |
+| enter_temple_4_f_g.mp3 | на пороге: жрец, жрица | Vindemiatrix | caring, reassuring | Ранен? Лекари при храме помогут. Боги милостивы. |
+| enter_temple_5_g.mp3 | на пороге: жрец, жрица | Zubenelgenubi | solemn, blessing | Благословляю твой путь. Пусть Грань будет к тебе добра. |
+| enter_temple_5_f_g.mp3 | на пороге: жрец, жрица | Vindemiatrix | solemn, blessing | Благословляю твой путь. Пусть Грань будет к тебе добра. |
+| enter_temple_6_g.mp3 | на пороге: жрец, жрица | Zubenelgenubi | gentle, knowing | Давно ты не заходил под эти своды. |
+| enter_temple_6_f_g.mp3 | на пороге: жрец, жрица | Vindemiatrix | gentle, knowing | Давно ты не заходила под эти своды. |
+| enter_temple_7_g.mp3 | на пороге: жрец, жрица | Zubenelgenubi | calm, firm | Оставь гнев у порога. Здесь ему не место. |
+| enter_temple_7_f_g.mp3 | на пороге: жрец, жрица | Vindemiatrix | calm, firm | Оставь гнев у порога. Здесь ему не место. |
+| enter_tavern_0_g.mp3 | на пороге: трактирщик, трактирщица | Puck | hearty, welcoming, loud | Заходи, заходи! Садись поближе к огню. |
+| enter_tavern_0_f_g.mp3 | на пороге: трактирщик, трактирщица | Pulcherrima | hearty, welcoming, loud | Заходи, заходи! Садись поближе к огню. |
+| enter_tavern_1_g.mp3 | на пороге: трактирщик, трактирщица | Puck | cheerful, busy | Эль свежий, похлёбка горячая. Чего желаешь? |
+| enter_tavern_1_f_g.mp3 | на пороге: трактирщик, трактирщица | Pulcherrima | cheerful, busy | Эль свежий, похлёбка горячая. Чего желаешь? |
+| enter_tavern_2_g.mp3 | на пороге: трактирщик, трактирщица | Puck | friendly, curious | А, новое лицо! Свободная койка наверху найдётся. |
+| enter_tavern_2_f_g.mp3 | на пороге: трактирщик, трактирщица | Pulcherrima | friendly, curious | А, новое лицо! Свободная койка наверху найдётся. |
+| enter_tavern_3_g.mp3 | на пороге: трактирщик, трактирщица | Puck | good-humoured warning | Только без драк. Вышибала у нас злой. |
+| enter_tavern_3_f_g.mp3 | на пороге: трактирщик, трактирщица | Pulcherrima | good-humoured warning | Только без драк. Вышибала у нас злой. |
+| enter_tavern_4_g.mp3 | на пороге: трактирщик, трактирщица | Puck | warm, chatty | Садись, отдохни с дороги. Новостей — полный зал. |
+| enter_tavern_4_f_g.mp3 | на пороге: трактирщик, трактирщица | Pulcherrima | warm, chatty | Садись, отдохни с дороги. Новостей — полный зал. |
+| enter_tavern_5_g.mp3 | на пороге: трактирщик, трактирщица | Puck | businesslike, jovial | Плати вперёд — и хоть до утра пей. |
+| enter_tavern_5_f_g.mp3 | на пороге: трактирщик, трактирщица | Pulcherrima | businesslike, jovial | Плати вперёд — и хоть до утра пей. |
+| enter_tavern_6_g.mp3 | на пороге: трактирщик, трактирщица | Puck | enthusiastic | Бард сегодня в ударе. Послушай, не пожалеешь. |
+| enter_tavern_6_f_g.mp3 | на пороге: трактирщик, трактирщица | Pulcherrima | enthusiastic | Бард сегодня в ударе. Послушай, не пожалеешь. |
+| enter_tavern_7_g.mp3 | на пороге: трактирщик, трактирщица | Puck | kind, knowing | Устал? По глазам вижу. Налью покрепче. |
+| enter_tavern_7_f_g.mp3 | на пороге: трактирщик, трактирщица | Pulcherrima | kind, knowing | Устал? По глазам вижу. Налью покрепче. |
+| enter_village_0_g.mp3 | на пороге: староста | Achird | warm, rustic, elder | Здравствуй, путник. Деревня у нас тихая, живём трудом. |
+| enter_village_0_f_g.mp3 | на пороге: староста | Sulafat | warm, rustic, elder | Здравствуй, путник. Деревня у нас тихая, живём трудом. |
+| enter_village_1_g.mp3 | на пороге: староста | Achird | hospitable, simple | Гостю рады. Хлеб есть, вода в колодце чистая. |
+| enter_village_1_f_g.mp3 | на пороге: староста | Sulafat | hospitable, simple | Гостю рады. Хлеб есть, вода в колодце чистая. |
+| enter_village_2_g.mp3 | на пороге: староста | Achird | worried, curious | Ты с тракта? Волков по дороге не видал? |
+| enter_village_2_f_g.mp3 | на пороге: староста | Sulafat | worried, curious | Ты с тракта? Волков по дороге не видал? |
+| enter_village_3_g.mp3 | на пороге: староста | Achird | friendly, rustic humour | Проходи. Только скотину не пугай. |
+| enter_village_3_f_g.mp3 | на пороге: староста | Sulafat | friendly, rustic humour | Проходи. Только скотину не пугай. |
+| enter_village_4_g.mp3 | на пороге: староста | Achird | sighing, generous | Урожай нынче скудный. Но гостя накормим. |
+| enter_village_4_f_g.mp3 | на пороге: староста | Sulafat | sighing, generous | Урожай нынче скудный. Но гостя накормим. |
+| enter_village_5_g.mp3 | на пороге: староста | Achird | dignified, friendly | Коли по делу — ко мне. Я тут за старосту. |
+| enter_village_5_f_g.mp3 | на пороге: староста | Sulafat | dignified, friendly | Коли по делу — ко мне. Я тут за старосту. |
+| enter_village_6_g.mp3 | на пороге: староста | Achird | practical, direct | Мужики в поле, так что говори со мной. |
+| enter_village_6_f_g.mp3 | на пороге: староста | Sulafat | practical, direct | Мужики в поле, так что говори со мной. |
+| enter_village_7_g.mp3 | на пороге: староста | Achird | hopeful, pleading | Добрый человек? Нам бы помощь не помешала. |
+| enter_village_7_f_g.mp3 | на пороге: староста | Sulafat | hopeful, pleading | Добрый человек? Нам бы помощь не помешала. |
+| enter_forge_0_g.mp3 | на пороге: кузнец | Umbriel | loud, gruff, busy | Осторожно, горн горячий! Чего надо? |
+| enter_forge_0_f_g.mp3 | на пороге: кузнец | Kore | loud, gruff, busy | Осторожно, горн горячий! Чего надо? |
+| enter_forge_1_g.mp3 | на пороге: кузнец | Umbriel | shouting over hammering | Клинок наточить или новый выковать? Говори громче! |
+| enter_forge_1_f_g.mp3 | на пороге: кузнец | Kore | shouting over hammering | Клинок наточить или новый выковать? Говори громче! |
+| enter_forge_2_g.mp3 | на пороге: кузнец | Umbriel | gruff, matter-of-fact | Металл нынче дорог. Но работа честная. |
+| enter_forge_2_f_g.mp3 | на пороге: кузнец | Kore | gruff, matter-of-fact | Металл нынче дорог. Но работа честная. |
+| enter_forge_3_g.mp3 | на пороге: кузнец | Umbriel | busy, focused | Подожди, дострою подкову. Потом поговорим. |
+| enter_forge_3_f_g.mp3 | на пороге: кузнец | Kore | busy, focused | Подожди, дострою подкову. Потом поговорим. |
+| enter_forge_4_g.mp3 | на пороге: кузнец | Umbriel | appraising, gruff | Доспех твой видал виды. Починить? |
+| enter_forge_4_f_g.mp3 | на пороге: кузнец | Kore | appraising, gruff | Доспех твой видал виды. Починить? |
+| enter_forge_5_g.mp3 | на пороге: кузнец | Umbriel | gruff, proud | В кузне говорят мало. Молот за меня скажет. |
+| enter_forge_5_f_g.mp3 | на пороге: кузнец | Kore | gruff, proud | В кузне говорят мало. Молот за меня скажет. |
+| enter_forge_6_g.mp3 | на пороге: кузнец | Umbriel | complaining, weary | Руды бы побольше — ковал бы вдвое. |
+| enter_forge_6_f_g.mp3 | на пороге: кузнец | Kore | complaining, weary | Руды бы побольше — ковал бы вдвое. |
+| enter_forge_7_g.mp3 | на пороге: кузнец | Umbriel | confident, gruff | Добрая сталь жизнь спасает. Заходи. |
+| enter_forge_7_f_g.mp3 | на пороге: кузнец | Kore | confident, gruff | Добрая сталь жизнь спасает. Заходи. |
+| enter_market_0_g.mp3 | на пороге: торговец на рынке | Sadachbia | loud, lively barker | Подходи, не стесняйся! Товар со всех земель! |
+| enter_market_0_f_g.mp3 | на пороге: торговец на рынке | Laomedeia | loud, lively barker | Подходи, не стесняйся! Товар со всех земель! |
+| enter_market_1_g.mp3 | на пороге: торговец на рынке | Sadachbia | persuasive, loud | Лучшие цены на рынке — у меня! |
+| enter_market_1_f_g.mp3 | на пороге: торговец на рынке | Laomedeia | persuasive, loud | Лучшие цены на рынке — у меня! |
+| enter_market_2_g.mp3 | на пороге: торговец на рынке | Sadachbia | eager, lively | Свежий привоз! Смотри, пока не разобрали. |
+| enter_market_2_f_g.mp3 | на пороге: торговец на рынке | Laomedeia | eager, lively | Свежий привоз! Смотри, пока не разобрали. |
+| enter_market_3_g.mp3 | на пороге: торговец на рынке | Sadachbia | friendly warning, lowered voice | Кошель береги, тут карманники шныряют. |
+| enter_market_3_f_g.mp3 | на пороге: торговец на рынке | Laomedeia | friendly warning, lowered voice | Кошель береги, тут карманники шныряют. |
+| enter_market_4_g.mp3 | на пороге: торговец на рынке | Sadachbia | brisk, businesslike | Торг идёт бойко. Что ищешь, путник? |
+| enter_market_4_f_g.mp3 | на пороге: торговец на рынке | Laomedeia | brisk, businesslike | Торг идёт бойко. Что ищешь, путник? |
+| enter_market_5_g.mp3 | на пороге: торговец на рынке | Sadachbia | cheerful, rapid | Меняю, продаю, покупаю. Спрашивай! |
+| enter_market_5_f_g.mp3 | на пороге: торговец на рынке | Laomedeia | cheerful, rapid | Меняю, продаю, покупаю. Спрашивай! |
+| enter_market_6_g.mp3 | на пороге: торговец на рынке | Sadachbia | loud barker call | Пряности с юга! Ткани с востока! |
+| enter_market_6_f_g.mp3 | на пороге: торговец на рынке | Laomedeia | loud barker call | Пряности с юга! Ткани с востока! |
+| enter_market_7_g.mp3 | на пороге: торговец на рынке | Sadachbia | sly, persuasive | Не проходи мимо, для тебя скидку найду. |
+| enter_market_7_f_g.mp3 | на пороге: торговец на рынке | Laomedeia | sly, persuasive | Не проходи мимо, для тебя скидку найду. |
+| enter_school_0_g.mp3 | на пороге: наставник школы | Rasalgethi | calm, scholarly | Добро пожаловать в школу. Знание — лучший щит. |
+| enter_school_0_f_g.mp3 | на пороге: наставник школы | Erinome | calm, scholarly | Добро пожаловать в школу. Знание — лучший щит. |
+| enter_school_1_g.mp3 | на пороге: наставник школы | Rasalgethi | encouraging, teacherly | Учиться пришёл? Похвально. Начни с азов. |
+| enter_school_1_f_g.mp3 | на пороге: наставник школы | Erinome | encouraging, teacherly | Учиться пришёл? Похвально. Начни с азов. |
+| enter_school_2_g.mp3 | на пороге: наставник школы | Rasalgethi | hushed, strict | Тише, ученики занимаются. |
+| enter_school_2_f_g.mp3 | на пороге: наставник школы | Erinome | hushed, strict | Тише, ученики занимаются. |
+| enter_school_3_g.mp3 | на пороге: наставник школы | Rasalgethi | strict, dry | Книги не рвать, свечи не ронять. Это правило. |
+| enter_school_3_f_g.mp3 | на пороге: наставник школы | Erinome | strict, dry | Книги не рвать, свечи не ронять. Это правило. |
+| enter_school_4_g.mp3 | на пороге: наставник школы | Rasalgethi | helpful, polite | Наставник свободен. Можешь спросить о ступенях. |
+| enter_school_4_f_g.mp3 | на пороге: наставник школы | Erinome | helpful, polite | Наставник свободен. Можешь спросить о ступенях. |
+| enter_school_5_g.mp3 | на пороге: наставник школы | Rasalgethi | wise, measured | Знание дорого стоит. Но незнание дороже. |
+| enter_school_5_f_g.mp3 | на пороге: наставник школы | Erinome | wise, measured | Знание дорого стоит. Но незнание дороже. |
+| enter_tower_0_g.mp3 | на пороге: хранитель башни | Zubenelgenubi | mysterious, warning | Башня ордена. Не трогай то, что светится. |
+| enter_tower_0_f_g.mp3 | на пороге: хранитель башни | Autonoe | mysterious, warning | Башня ордена. Не трогай то, что светится. |
+| enter_tower_1_g.mp3 | на пороге: хранитель башни | Zubenelgenubi | awed, hushed | Магия здесь в самих стенах. Чувствуешь? |
+| enter_tower_1_f_g.mp3 | на пороге: хранитель башни | Autonoe | awed, hushed | Магия здесь в самих стенах. Чувствуешь? |
+| enter_tower_2_g.mp3 | на пороге: хранитель башни | Zubenelgenubi | stern, arcane | Кто пришёл к ордену? Говори, зачем ты здесь. |
+| enter_tower_2_f_g.mp3 | на пороге: хранитель башни | Autonoe | stern, arcane | Кто пришёл к ордену? Говори, зачем ты здесь. |
+| enter_tower_3_g.mp3 | на пороге: хранитель башни | Zubenelgenubi | mysterious, calm | Лестница долгая. Наверху — те, кто знает. |
+| enter_tower_3_f_g.mp3 | на пороге: хранитель башни | Autonoe | mysterious, calm | Лестница долгая. Наверху — те, кто знает. |
+| enter_tower_4_g.mp3 | на пороге: хранитель башни | Zubenelgenubi | urgent, warning | Руны на полу не топчи. Они ещё не остыли. |
+| enter_tower_4_f_g.mp3 | на пороге: хранитель башни | Autonoe | urgent, warning | Руны на полу не топчи. Они ещё не остыли. |
+| enter_tower_5_g.mp3 | на пороге: хранитель башни | Zubenelgenubi | solemn, mysterious | Орден помнит всех, кто сюда поднимался. |
+| enter_tower_5_f_g.mp3 | на пороге: хранитель башни | Autonoe | solemn, mysterious | Орден помнит всех, кто сюда поднимался. |
+| enter_port_0_g.mp3 | на пороге: смотритель порта | Rasalgethi | loud, busy, seafaring | Порт! Смотри под ноги, тут канаты. |
+| enter_port_0_f_g.mp3 | на пороге: смотритель порта | Gacrux | loud, busy, seafaring | Порт! Смотри под ноги, тут канаты. |
+| enter_port_1_g.mp3 | на пороге: смотритель порта | Rasalgethi | helpful, brisk | Корабль ищешь? Спроси у причала, кто куда идёт. |
+| enter_port_1_f_g.mp3 | на пороге: смотритель порта | Gacrux | helpful, brisk | Корабль ищешь? Спроси у причала, кто куда идёт. |
+| enter_port_2_g.mp3 | на пороге: смотритель порта | Rasalgethi | grim, weary | Шторм был ночью. Два судна не вернулись. |
+| enter_port_2_f_g.mp3 | на пороге: смотритель порта | Gacrux | grim, weary | Шторм был ночью. Два судна не вернулись. |
+| enter_port_3_g.mp3 | на пороге: смотритель порта | Rasalgethi | firm, official | Пошлину плати у конторы. Без неё — на борт ни ногой. |
+| enter_port_3_f_g.mp3 | на пороге: смотритель порта | Gacrux | firm, official | Пошлину плати у конторы. Без неё — на борт ни ногой. |
+| enter_port_4_g.mp3 | на пороге: смотритель порта | Rasalgethi | wry, jovial | Рыба свежая, моряки пьяные. Добро пожаловать! |
+| enter_port_4_f_g.mp3 | на пороге: смотритель порта | Gacrux | wry, jovial | Рыба свежая, моряки пьяные. Добро пожаловать! |
+| enter_port_5_g.mp3 | на пороге: смотритель порта | Rasalgethi | cheerful, confident | Ветер попутный. Хороший день для отплытия. |
+| enter_port_5_f_g.mp3 | на пороге: смотритель порта | Gacrux | cheerful, confident | Ветер попутный. Хороший день для отплытия. |
+| enter_port_6_g.mp3 | на пороге: смотритель порта | Rasalgethi | businesslike, offering | Грузчики нужны. Не хочешь подзаработать? |
+| enter_port_6_f_g.mp3 | на пороге: смотритель порта | Gacrux | businesslike, offering | Грузчики нужны. Не хочешь подзаработать? |
+| enter_port_7_g.mp3 | на пороге: смотритель порта | Rasalgethi | grim, sailor wisdom | Море всех принимает. Не всех отпускает. |
+| enter_port_7_f_g.mp3 | на пороге: смотритель порта | Gacrux | grim, sailor wisdom | Море всех принимает. Не всех отпускает. |
+| enter_smugglers_0_g.mp3 | на пороге: хозяин схрона | Enceladus | hushed, suspicious | Тихо. Кто тебя сюда навёл? |
+| enter_smugglers_0_f_g.mp3 | на пороге: хозяин схрона | Achernar | hushed, suspicious | Тихо. Кто тебя сюда навёл? |
+| enter_smugglers_1_g.mp3 | на пороге: хозяин схрона | Enceladus | low, conspiratorial | Здесь не спрашивают имён. И ты не спрашивай. |
+| enter_smugglers_1_f_g.mp3 | на пороге: хозяин схрона | Achernar | low, conspiratorial | Здесь не спрашивают имён. И ты не спрашивай. |
+| enter_smugglers_2_g.mp3 | на пороге: хозяин схрона | Enceladus | whisper, sly | Товар через Грань. Цена — не для слабых. |
+| enter_smugglers_2_f_g.mp3 | на пороге: хозяин схрона | Achernar | whisper, sly | Товар через Грань. Цена — не для слабых. |
+| enter_smugglers_3_g.mp3 | на пороге: хозяин схрона | Enceladus | whispered threat | Страже ни слова. Иначе сам понимаешь. |
+| enter_smugglers_3_f_g.mp3 | на пороге: хозяин схрона | Achernar | whispered threat | Страже ни слова. Иначе сам понимаешь. |
+| enter_smugglers_4_g.mp3 | на пороге: хозяин схрона | Enceladus | wry, hushed | Раз дошёл — значит свой. Или глупый. |
+| enter_smugglers_4_f_g.mp3 | на пороге: хозяин схрона | Achernar | wry, hushed | Раз дошёл — значит свой. Или глупый. |
+| enter_smugglers_5_g.mp3 | на пороге: хозяин схрона | Enceladus | tense, hurried whisper | Быстро говори, чего надо. Тут долго не стоят. |
+| enter_smugglers_5_f_g.mp3 | на пороге: хозяин схрона | Achernar | tense, hurried whisper | Быстро говори, чего надо. Тут долго не стоят. |

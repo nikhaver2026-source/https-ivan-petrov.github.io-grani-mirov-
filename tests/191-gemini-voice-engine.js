@@ -178,10 +178,11 @@ function lufs(file){
    n23:NEWS.some(n=>n.v===23),nv:NEWS_V,движок:settings.ttsEngine};});
  await cA.close();
  const сборка=fs.readFileSync(path.join(ROOT,'.github','workflows','android.yml'),'utf8');
- check('12. приложение для Android и браузер — одна версия 4.0; в приложении тоже голос Gemini, записи идут в сборку',
-  браузер.v==="4.0"&&/Alpha 4\.0/.test(браузер.title)&&браузер.on&&браузер.n23
-  &&прил.v==="4.0"&&/Alpha 4\.0/.test(прил.title)&&прил.on&&прил.вид==="gemini"&&прил.пункт&&прил.n23&&прил.движок==="gemini"
-  &&!/sounds\/gvoice/.test(сборка)&&/cp -r sounds/.test(сборка)&&/grani-mirov-4\.0\.apk/.test(сборка),{браузер,прил});
+ check('12. приложение для Android и браузер — одна версия (4.x); в приложении тоже голос Gemini, записи идут в сборку',
+  /* Версия не прибита гвоздём: браузер, приложение и сборка просто совпадают (с 4.0 и дальше). */
+  /^4\.\d+$/.test(браузер.v)&&браузер.title.includes("Alpha "+браузер.v)&&браузер.on&&браузер.n23
+  &&прил.v===браузер.v&&прил.title.includes("Alpha "+браузер.v)&&прил.on&&прил.вид==="gemini"&&прил.пункт&&прил.n23&&прил.движок==="gemini"
+  &&!/sounds\/gvoice/.test(сборка)&&/cp -r sounds/.test(сборка)&&сборка.includes("grani-mirov-"+браузер.v+".apk"),{браузер,прил});
 
  check('страница не бросила ни одной ошибки',errors.length===0,errors.slice(0,3));
  await browser.close();
