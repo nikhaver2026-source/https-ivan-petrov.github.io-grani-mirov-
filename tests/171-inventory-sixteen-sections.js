@@ -388,13 +388,13 @@ const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(e!==undefined?' :
   const герой=[...document.querySelectorAll("#modal-character [data-speak]")].map(x=>x.dataset.speak).find(t=>/^Надето \d+ из 13 мест/.test(t))||"";
   while(activeLayer())closeTopUI();
   return {есть:!!r,ok:r&&r.ok,плохие:rows.filter(x=>!x.ok).map(x=>x.id),герой,
-   глава:GUIDE.some(g=>/Глава 94\. Инвентарь: шестнадцать разделов и тринадцать мест на теле/.test(g.title)&&g.body.length>=10),
-   часть:guidePartOf(GUIDE_BY_NUM[94]),модуль:Inventory.sections.length===16&&Inventory.places.length===13&&typeof Inventory.text()==="string"};});
+   глава:guideHas(/Инвентарь: шестнадцать разделов и тринадцать мест на теле/,10),
+   часть:guidePartOf(GUIDE_OLD[94]),модуль:Inventory.sections.length===16&&Inventory.places.length===13&&typeof Inventory.text()==="string"};});
  const корень=path.join(__dirname,'..');
  const readme=fs.readFileSync(path.join(корень,'README.md'),'utf8');
  const вз=fs.readFileSync(path.join(корень,'docs','ВЗАИМОДЕЙСТВИЕ.md'),'utf8');
- check('15. карточка героя называет надетое; самопроверка держит строку inv16; глава 94 в первой части; модуль отвечает',
-  свод.есть&&свод.ok&&/в руке — /.test(свод.герой)&&свод.глава&&свод.часть==="Часть I. Первые шаги"&&свод.модуль,свод);
+ check('15. карточка героя называет надетое; самопроверка держит строку inv16; раздел о котомке — в части о герое и вещах; модуль отвечает',
+  свод.есть&&свод.ok&&/в руке — /.test(свод.герой)&&свод.глава&&/* (4.5) раздел о котомке — в главе о снаряжении */свод.часть==="Часть III. Герой и его силы"&&свод.модуль,свод);
  check('ни одна строка самопроверки не покраснела',свод.плохие.length===0,свод.плохие);
  check('README и docs/ВЗАИМОДЕЙСТВИЕ.md описывают котомку из шестнадцати разделов (набор 171)',
   /Котомка из шестнадцати разделов/.test(readme)&&/## Котомка из шестнадцати разделов и тринадцать мест на теле \(набор 171\)/.test(вз)

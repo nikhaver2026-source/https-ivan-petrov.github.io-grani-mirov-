@@ -292,8 +292,8 @@ const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(e!==undefined?' :
    модуль:!!m&&m.levels.length===5&&typeof m.set==="function"&&typeof m.window==="function"
     &&typeof m.reset==="function"&&m.swipePx()===38&&m.tapMs()===800,
    текст:m?m.text():"",
-   глава:GUIDE.some(g=>/Глава 91\. Точность жестов/.test(g.title)&&g.body.length>=7),
-   вЧасти:(()=>{try{return guidePartOf(GUIDE_BY_NUM[91]);}catch(_){return "";}})()};});
+   глава:guideHas(/Точность жестов/,7),
+   вЧасти:(()=>{try{return guidePartOf(GUIDE_OLD[91]);}catch(_){return "";}})()};});
  check('самопроверка держит строку gesttune, модуль GESTTUNE отвечает, глава 91 в первой части',
   свод.есть&&свод.ok&&свод.модуль&&свод.глава&&свод.вЧасти==="Часть I. Первые шаги"
   &&свод.текст.length>80,свод);

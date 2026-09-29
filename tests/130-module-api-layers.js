@@ -170,7 +170,7 @@ const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(e!==undefined?' :
 
  /* ── 8. самопроверка и тексты ── */
  const свод=await page.evaluate(()=>{const r=worldSelfCheck();
-  const гл=GUIDE.find(g=>/Тридцать четыре двери/i.test(g.title));
+  const гл=guideSec(/Тридцать четыре двери/i);
   return {api:r.find(x=>x.id==="api"),плохие:r.filter(x=>!x.ok).map(x=>x.id),
    глава:!!гл,строк:гл?гл.body.length:0};});
  check('самопроверка мира держит зелёную строку «api»',

@@ -207,8 +207,8 @@ const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(e!==undefined?' :
  const свод=await page.evaluate(()=>{
   const rows=worldSelfCheck();const r=rows.find(x=>x.id==="ampunkty");
   return {есть:!!r,ok:r&&r.ok,плохие:rows.filter(x=>!x.ok).map(x=>x.id),
-   глава:GUIDE.some(g=>/Глава 95\. Меню действий — пунктами/.test(g.title)&&g.body.length>=6),
-   часть:guidePartOf(GUIDE_BY_NUM[95]),модуль:Sections.menu().length===16};});
+   глава:guideHas(/Меню действий — пунктами/,6),
+   часть:guidePartOf(GUIDE_OLD[95]),модуль:Sections.menu().length===16};});
  const корень=path.join(__dirname,'..');
  const readme=fs.readFileSync(path.join(корень,'README.md'),'utf8');
  const вз=fs.readFileSync(path.join(корень,'docs','ВЗАИМОДЕЙСТВИЕ.md'),'utf8');

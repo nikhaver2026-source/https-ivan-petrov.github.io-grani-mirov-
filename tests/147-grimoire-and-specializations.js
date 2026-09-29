@@ -249,7 +249,7 @@ const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(e!==undefined?' :
  const свод=await page.evaluate(()=>{
   const rows=worldSelfCheck();
   const r=rows.find(x=>x.id==="grimoire");
-  const гл=GUIDE.find(g=>/Гримуар/.test(g.title));
+  const гл=guideSec(/Гримуар/);
   return {строка:!!r,ок:r&&r.ок!==false&&r.ok!==false,нота:r&&String(r.note).slice(0,60),
    красные:rows.filter(x=>!x.ok).map(x=>x.id),
    модуль:Modules.has("GRIMOIRE"),

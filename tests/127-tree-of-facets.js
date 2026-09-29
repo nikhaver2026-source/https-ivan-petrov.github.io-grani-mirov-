@@ -270,7 +270,7 @@ const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(e!==undefined?' :
 
  /* ── 11. самопроверка, руководство, тексты ── */
  const свод=await page.evaluate(()=>{const r=worldSelfCheck();
-  const гл=GUIDE.find(g=>/Древо Граней/i.test(g.title));
+  const гл=guideSec(/Древо Граней/i);
   return {tree:r.find(x=>x.id==="tree"),плохие:r.filter(x=>!x.ok).map(x=>x.id),
    глава:!!гл,строк:гл?гл.body.length:0};});
  check('самопроверка мира держит зелёную строку «tree»',

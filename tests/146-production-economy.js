@@ -192,7 +192,7 @@ const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(e!==undefined?' :
  const свод=await page.evaluate(()=>{
   const rows=worldSelfCheck();
   const r=rows.find(x=>x.id==="prodecon");
-  const гл=GUIDE.find(g=>/Производственная экономика/i.test(g.title));
+  const гл=guideSec(/Производственная экономика/i);
   return {есть:!!r,ok:r&&r.ok,всего:rows.length,
    плохие:rows.filter(x=>!x.ok).map(x=>x.id),
    глава:!!гл,строк:гл?гл.body.length:0,

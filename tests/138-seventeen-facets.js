@@ -231,7 +231,7 @@ const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(e!==undefined?' :
 
  /* ── 12. самопроверка и тексты ── */
  const свод=await page.evaluate(()=>{const r=worldSelfCheck();
-  const гл=GUIDE.find(g=>/Семнадцать Граней/i.test(g.title));
+  const гл=guideSec(/Семнадцать Граней/i);
   return {f:r.find(x=>x.id==="facets"),p:r.find(x=>x.id==="path"),
    плохие:r.filter(x=>!x.ok).map(x=>x.id),
    глава:!!гл,строк:гл?гл.body.length:0};});

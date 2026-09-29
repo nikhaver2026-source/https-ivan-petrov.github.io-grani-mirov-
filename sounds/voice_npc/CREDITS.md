@@ -5,7 +5,7 @@
 стражник у ворот, жрец, трактирщик, староста, кузнец, торговец, наставник, смотритель порта. Прежде эти строки читал голос
 игры в кавычках; теперь у каждой своя запись и своя интонация.
 
-Записей: 2251
+Записей: 2613
 
 Речь синтезирована 27–29 сентября 2026 года нейроголосами **Gemini** (Google),
 модель `gemini-3.8-flash-tts`, через Gemini API (Interactions API,
@@ -29,11 +29,11 @@ Policy (https://policies.google.com/terms/generative-ai/use-policy). Отдел�
 
 | Голос Gemini | Каков | Кто говорит | Записей |
 |---|---|---|---|
-| Alnilam | твёрдый | стражник на обходе и ночной дозор (первый голос стражи) | 139 |
-| Orus | твёрдый, пониже | стражник на обходе (второй голос стражи) | 139 |
-| Algenib | с хрипотцой | стражник на обходе (третий голос стражи) | 139 |
-| Charon | низкий, ровный | латник смены и солдат гарнизона за Гранью | 38 |
-| Schedar | ровный, холодный | латник смены за Гранью (второй голос) | 32 |
+| Alnilam | твёрдый | стражник на обходе и ночной дозор (первый голос стражи) | 157 |
+| Orus | твёрдый, пониже | стражник на обходе (второй голос стражи) | 159 |
+| Algenib | с хрипотцой | стражник на обходе (третий голос стражи) | 161 |
+| Charon | низкий, ровный | латник смены и солдат гарнизона за Гранью | 67 |
+| Schedar | ровный, холодный | латник смены за Гранью (второй голос) | 60 |
 | Achird | дружелюбный | горожанин и житель посада, староста деревни | 38 |
 | Sulafat | тёплый | горожанка и жительница посада, старостиха | 38 |
 | Umbriel | лёгкий, разговорный | приветствие и ответ в разговоре жителя, мужской голос; кузнец на пороге кузни | 729 |
@@ -41,18 +41,34 @@ Policy (https://policies.google.com/terms/generative-ai/use-policy). Отдел�
 | Algieba | ровный, уверенный | голос героя: ход «Спросить об истории» (остальные двадцать один — в sounds/voice) | 1 |
 | Rasalgethi | зрелый, дорожный | старший обоза, мужской голос; наставник школы, смотритель порта | 66 |
 | Gacrux | зрелый, твёрдый | старшая обоза, женский голос; смотрительница порта | 60 |
-| Fenrir | резкий, возбуждённый | разбойник (первый голос) | 12 |
-| Enceladus | с придыханием | разбойник (второй голос), хозяин схрона | 18 |
-| Zubenelgenubi | спокойный, неспешный | жрец на пороге храма, хранитель башни | 14 |
-| Vindemiatrix | мягкий, тихий | жрица на пороге храма | 8 |
-| Puck | бодрый | трактирщик | 8 |
+| Fenrir | резкий, возбуждённый | разбойник (первый голос) | 41 |
+| Enceladus | с придыханием | разбойник (второй голос), хозяин схрона | 74 |
+| Zubenelgenubi | спокойный, неспешный | жрец на пороге храма, хранитель башни | 48 |
+| Vindemiatrix | мягкий, тихий | жрица на пороге храма | 37 |
+| Puck | бодрый | трактирщик | 30 |
 | Pulcherrima | напористый | трактирщица | 8 |
 | Kore | твёрдый | кузнечиха | 8 |
 | Sadachbia | живой | торговец на рынке | 8 |
 | Laomedeia | бойкий | торговка на рынке | 8 |
 | Erinome | ясный | наставница школы | 6 |
-| Autonoe | звонкий | хранительница башни | 6 |
-| Achernar | мягкий, приглушённый | хозяйка схрона | 6 |
+| Autonoe | звонкий | хранительница башни | 30 |
+| Achernar | мягкий, приглушённый | хозяйка схрона; разбойница в бою | 35 |
+| Sadachbia | живой | второй голос жителя (приветствие, разговор, торг, дело) | 8 |
+| Leda | молодой | второй голос жительницы | 0 |
+| Schedar | ровный | третий голос жителя; владыка нежити в бою (ниже на два полутона, в гулком зале) | 60 |
+| Aoede | лёгкий | третий голос жительницы | 0 |
+| Zephyr | яркий | корсарша в бою | 22 |
+| Kore | твёрдый | старшая войскового обоза | 8 |
+| Charon | низкий | старший войскового обоза; дракон в бою (ниже на пять полутонов, в пещере) | — |
+| Vindemiatrix | тихий | старшая паломничьего каравана; дух в бою (шёпот с эхом) | — |
+| Zubenelgenubi | неспешный | старший паломничьего каравана; страж Предтеч в бою (ниже, с металлом) | — |
+| Achird / Erinome | дружелюбный / ясный | старший и старшая рудного обоза | — |
+| Alnilam | твёрдый | исполин в бою (ниже на пять полутонов, тяжелее) | — |
+| Orus | пониже | бес из-за Грани в бою (ниже на четыре полутона, с хрипом и хором) | — |
+| Puck | бодрый | гоблин в бою (выше на пять полутонов) | — |
+| Algenib | с хрипотцой | корсар в бою | — |
+| Autonoe | звонкий | сирена в бою (с хором и эхом воды) | — |
+| Enceladus / Fenrir | с придыханием / резкий | разбойники в бою; Enceladus ещё и дух (шёпот с эхом) | — |
 
 ## Как сделано и как проверено
 
@@ -75,7 +91,7 @@ Policy (https://policies.google.com/terms/generative-ai/use-policy). Отдел�
   видеть», «Я вас не видела»): в описи ниже — то, что произнесено; в игре
   строка ищется по исходному тексту. Обращённое к герою («пока цел») не менялось.
 - **Пакетами.** В одном запросе два голоса и до семидесяти четырёх строк; всё —
-  44 пакетов и переозвучки неудачных дублей.
+  107 пакетов и переозвучки неудачных дублей.
 - **Разрезка и разборчивость.** Запись пакета дробится по паузам и склеивается
   в строки по распознанному тексту; каждую строку распознаёт русская модель
   GigaAM (sherpa-onnx, `nemo-ctc-giga-am-v2-russian`): не больше 15 % ошибочных
@@ -2338,3 +2354,365 @@ Policy (https://policies.google.com/terms/generative-ai/use-policy). Отдел�
 | enter_smugglers_4_f_g.mp3 | на пороге: хозяин схрона | Achernar | wry, hushed | Раз дошёл — значит свой. Или глупый. |
 | enter_smugglers_5_g.mp3 | на пороге: хозяин схрона | Enceladus | tense, hurried whisper | Быстро говори, чего надо. Тут долго не стоят. |
 | enter_smugglers_5_f_g.mp3 | на пороге: хозяин схрона | Achernar | tense, hurried whisper | Быстро говори, чего надо. Тут долго не стоят. |
+| foe_bandit_start_0_g.mp3 | в бою: разбойник, начало боя | Fenrir | menacing, sneering | Кошелёк или жизнь! Выбирай быстро. |
+| foe_bandit_start_0_v1_g.mp3 | в бою: разбойник, начало боя | Enceladus | menacing, sneering | Кошелёк или жизнь! Выбирай быстро. |
+| foe_bandit_start_0_v2_g.mp3 | в бою: разбойник, начало боя | Achernar | menacing, sneering | Кошелёк или жизнь! Выбирай быстро. |
+| foe_bandit_start_1_g.mp3 | в бою: разбойник, начало боя | Fenrir | mocking, cold | Ну всё, путник, приехали. |
+| foe_bandit_start_1_v1_g.mp3 | в бою: разбойник, начало боя | Enceladus | mocking, cold | Ну всё, путник, приехали. |
+| foe_bandit_start_2_g.mp3 | в бою: разбойник, начало боя | Fenrir | shouting to accomplices | Окружай его! Не дай уйти! |
+| foe_bandit_start_2_v1_g.mp3 | в бою: разбойник, начало боя | Enceladus | shouting to accomplices | Окружай его! Не дай уйти! |
+| foe_bandit_start_2_v2_g.mp3 | в бою: разбойник, начало боя | Achernar | shouting to accomplices | Окружай его! Не дай уйти! |
+| foe_bandit_start_3_g.mp3 | в бою: разбойник, начало боя | Fenrir | low, threatening | Зря ты свернул на эту дорогу. |
+| foe_bandit_start_3_v1_g.mp3 | в бою: разбойник, начало боя | Enceladus | low, threatening | Зря ты свернул на эту дорогу. |
+| foe_bandit_start_3_v2_g.mp3 | в бою: разбойник, начало боя | Achernar | low, threatening | Зря ты свернул на эту дорогу. |
+| foe_bandit_start_4_g.mp3 | в бою: разбойник, начало боя | Fenrir | greedy, commanding | Снимай всё, что блестит. И без глупостей. |
+| foe_bandit_start_4_v1_g.mp3 | в бою: разбойник, начало боя | Enceladus | greedy, commanding | Снимай всё, что блестит. И без глупостей. |
+| foe_bandit_start_4_v2_g.mp3 | в бою: разбойник, начало боя | Achernar | greedy, commanding | Снимай всё, что блестит. И без глупостей. |
+| foe_bandit_start_5_g.mp3 | в бою: разбойник, начало боя | Fenrir | gleeful, loud | Гляди-ка, сам пришёл. Бери его! |
+| foe_bandit_start_5_v1_g.mp3 | в бою: разбойник, начало боя | Enceladus | gleeful, loud | Гляди-ка, сам пришёл. Бери его! |
+| foe_bandit_start_5_v2_g.mp3 | в бою: разбойник, начало боя | Achernar | gleeful, loud | Гляди-ка, сам пришёл. Бери его! |
+| foe_bandit_start_6_v1_g.mp3 | в бою: разбойник, начало боя | Enceladus | cruel, grinning | Дорога платная. Плати кровью. |
+| foe_bandit_start_6_v2_g.mp3 | в бою: разбойник, начало боя | Achernar | cruel, grinning | Дорога платная. Плати кровью. |
+| foe_bandit_start_7_g.mp3 | в бою: разбойник, начало боя | Fenrir | whisper then shout | Тихо, тихо… А теперь — ножом! |
+| foe_bandit_start_7_v1_g.mp3 | в бою: разбойник, начало боя | Enceladus | whisper then shout | Тихо, тихо… А теперь — ножом! |
+| foe_bandit_start_7_v2_g.mp3 | в бою: разбойник, начало боя | Achernar | whisper then shout | Тихо, тихо… А теперь — ножом! |
+| foe_bandit_attack_0_g.mp3 | в бою: разбойник, удар | Fenrir | aggressive shout, effort | Получай! |
+| foe_bandit_attack_0_v1_g.mp3 | в бою: разбойник, удар | Enceladus | aggressive shout, effort | Получай! |
+| foe_bandit_attack_0_v2_g.mp3 | в бою: разбойник, удар | Achernar | aggressive shout, effort | Получай! |
+| foe_bandit_attack_1_g.mp3 | в бою: разбойник, удар | Fenrir | grunting, striking | На, держи! |
+| foe_bandit_attack_1_v1_g.mp3 | в бою: разбойник, удар | Enceladus | grunting, striking | На, держи! |
+| foe_bandit_attack_1_v2_g.mp3 | в бою: разбойник, удар | Achernar | grunting, striking | На, держи! |
+| foe_bandit_attack_2_g.mp3 | в бою: разбойник, удар | Fenrir | angry, strained | Стой смирно, хуже будет! |
+| foe_bandit_attack_2_v1_g.mp3 | в бою: разбойник, удар | Enceladus | angry, strained | Стой смирно, хуже будет! |
+| foe_bandit_attack_2_v2_g.mp3 | в бою: разбойник, удар | Achernar | angry, strained | Стой смирно, хуже будет! |
+| foe_bandit_attack_3_g.mp3 | в бою: разбойник, удар | Fenrir | vicious, striking | Это тебе за дорогу! |
+| foe_bandit_attack_3_v1_g.mp3 | в бою: разбойник, удар | Enceladus | vicious, striking | Это тебе за дорогу! |
+| foe_bandit_attack_3_v2_g.mp3 | в бою: разбойник, удар | Achernar | vicious, striking | Это тебе за дорогу! |
+| foe_bandit_attack_4_g.mp3 | в бою: разбойник, удар | Fenrir | furious | Не вертись, зарежу! |
+| foe_bandit_attack_4_v1_g.mp3 | в бою: разбойник, удар | Enceladus | furious | Не вертись, зарежу! |
+| foe_bandit_attack_4_v2_g.mp3 | в бою: разбойник, удар | Achernar | furious | Не вертись, зарежу! |
+| foe_bandit_attack_5_g.mp3 | в бою: разбойник, удар | Fenrir | savage, excited | Вот так! И ещё! |
+| foe_bandit_attack_5_v1_g.mp3 | в бою: разбойник, удар | Enceladus | savage, excited | Вот так! И ещё! |
+| foe_bandit_attack_5_v2_g.mp3 | в бою: разбойник, удар | Achernar | savage, excited | Вот так! И ещё! |
+| foe_bandit_attack_6_g.mp3 | в бою: разбойник, удар | Fenrir | chasing, shouting | Куда пятишься? Стоять! |
+| foe_bandit_attack_6_v1_g.mp3 | в бою: разбойник, удар | Enceladus | chasing, shouting | Куда пятишься? Стоять! |
+| foe_bandit_attack_6_v2_g.mp3 | в бою: разбойник, удар | Achernar | chasing, shouting | Куда пятишься? Стоять! |
+| foe_bandit_attack_7_g.mp3 | в бою: разбойник, удар | Fenrir | frenzied shout | Бей его, бей! |
+| foe_bandit_attack_7_v1_g.mp3 | в бою: разбойник, удар | Enceladus | frenzied shout | Бей его, бей! |
+| foe_bandit_hurt_0_g.mp3 | в бою: разбойник, ранен | Fenrir | pain, rage | Ах ты гад! Кровь пустил! |
+| foe_bandit_hurt_0_v1_g.mp3 | в бою: разбойник, ранен | Enceladus | pain, rage | Ах ты гад! Кровь пустил! |
+| foe_bandit_hurt_0_v2_g.mp3 | в бою: разбойник, ранен | Achernar | pain, rage | Ах ты гад! Кровь пустил! |
+| foe_bandit_hurt_1_g.mp3 | в бою: разбойник, ранен | Fenrir | hissing in pain | Больно, зараза! |
+| foe_bandit_hurt_1_v1_g.mp3 | в бою: разбойник, ранен | Enceladus | hissing in pain | Больно, зараза! |
+| foe_bandit_hurt_1_v2_g.mp3 | в бою: разбойник, ранен | Achernar | hissing in pain | Больно, зараза! |
+| foe_bandit_hurt_2_g.mp3 | в бою: разбойник, ранен | Fenrir | surprised, hurt | Он кусается, ребята! |
+| foe_bandit_hurt_2_v1_g.mp3 | в бою: разбойник, ранен | Enceladus | surprised, hurt | Он кусается, ребята! |
+| foe_bandit_hurt_2_v2_g.mp3 | в бою: разбойник, ранен | Achernar | surprised, hurt | Он кусается, ребята! |
+| foe_bandit_hurt_3_g.mp3 | в бою: разбойник, ранен | Fenrir | through gritted teeth | Ничего, заживёт. А тебя — нет! |
+| foe_bandit_hurt_3_v1_g.mp3 | в бою: разбойник, ранен | Enceladus | through gritted teeth | Ничего, заживёт. А тебя — нет! |
+| foe_bandit_hurt_3_v2_g.mp3 | в бою: разбойник, ранен | Achernar | through gritted teeth | Ничего, заживёт. А тебя — нет! |
+| foe_bandit_hurt_4_g.mp3 | в бою: разбойник, ранен | Fenrir | panting, angry | Проклятье, крепкий попался! |
+| foe_bandit_hurt_4_v1_g.mp3 | в бою: разбойник, ранен | Enceladus | panting, angry | Проклятье, крепкий попался! |
+| foe_bandit_hurt_4_v2_g.mp3 | в бою: разбойник, ранен | Achernar | panting, angry | Проклятье, крепкий попался! |
+| foe_bandit_low_0_g.mp3 | в бою: разбойник, на исходе | Fenrir | panicked, begging | Стой! Хватит! Забирай всё! |
+| foe_bandit_low_0_v1_g.mp3 | в бою: разбойник, на исходе | Enceladus | panicked, begging | Стой! Хватит! Забирай всё! |
+| foe_bandit_low_0_v2_g.mp3 | в бою: разбойник, на исходе | Achernar | panicked, begging | Стой! Хватит! Забирай всё! |
+| foe_bandit_low_1_g.mp3 | в бою: разбойник, на исходе | Fenrir | terrified, pleading | Пощади, у меня дети! |
+| foe_bandit_low_1_v1_g.mp3 | в бою: разбойник, на исходе | Enceladus | terrified, pleading | Пощади, у меня дети! |
+| foe_bandit_low_1_v2_g.mp3 | в бою: разбойник, на исходе | Achernar | terrified, pleading | Пощади, у меня дети! |
+| foe_bandit_low_2_g.mp3 | в бою: разбойник, на исходе | Fenrir | frightened, backing off | Всё, всё, ухожу! Не бей! |
+| foe_bandit_low_2_v1_g.mp3 | в бою: разбойник, на исходе | Enceladus | frightened, backing off | Всё, всё, ухожу! Не бей! |
+| foe_bandit_low_2_v2_g.mp3 | в бою: разбойник, на исходе | Achernar | frightened, backing off | Всё, всё, ухожу! Не бей! |
+| foe_bandit_low_3_g.mp3 | в бою: разбойник, на исходе | Fenrir | panicked shout | Братцы, бежим, он нас всех положит! |
+| foe_bandit_low_3_v1_g.mp3 | в бою: разбойник, на исходе | Enceladus | panicked shout | Братцы, бежим, он нас всех положит! |
+| foe_bandit_low_3_v2_g.mp3 | в бою: разбойник, на исходе | Achernar | panicked shout | Братцы, бежим, он нас всех положит! |
+| foe_bandit_low_4_g.mp3 | в бою: разбойник, на исходе | Fenrir | desperate, breathless | Не убивай, я всё скажу! |
+| foe_bandit_low_4_v1_g.mp3 | в бою: разбойник, на исходе | Enceladus | desperate, breathless | Не убивай, я всё скажу! |
+| foe_bandit_low_4_v2_g.mp3 | в бою: разбойник, на исходе | Achernar | desperate, breathless | Не убивай, я всё скажу! |
+| foe_bandit_taunt_0_g.mp3 | в бою: разбойник, герой слабеет | Fenrir | cruel, gloating | Шатаешься? Сейчас упадёшь. |
+| foe_bandit_taunt_0_v1_g.mp3 | в бою: разбойник, герой слабеет | Enceladus | cruel, gloating | Шатаешься? Сейчас упадёшь. |
+| foe_bandit_taunt_0_v2_g.mp3 | в бою: разбойник, герой слабеет | Achernar | cruel, gloating | Шатаешься? Сейчас упадёшь. |
+| foe_bandit_taunt_1_v1_g.mp3 | в бою: разбойник, герой слабеет | Enceladus | greedy, gloating | Ещё удар — и всё твоё станет моим. |
+| foe_bandit_taunt_1_v2_g.mp3 | в бою: разбойник, герой слабеет | Achernar | greedy, gloating | Ещё удар — и всё твоё станет моим. |
+| foe_bandit_taunt_2_g.mp3 | в бою: разбойник, герой слабеет | Fenrir | mocking laugh | Кровью харкаешь, герой? |
+| foe_bandit_taunt_2_v1_g.mp3 | в бою: разбойник, герой слабеет | Enceladus | mocking laugh | Кровью харкаешь, герой? |
+| foe_bandit_taunt_2_v2_g.mp3 | в бою: разбойник, герой слабеет | Achernar | mocking laugh | Кровью харкаешь, герой? |
+| foe_bandit_death_0_v1_g.mp3 | в бою: разбойник, гибель | Enceladus | dying, weak, bitter | Будь ты проклят… |
+| foe_bandit_death_0_v2_g.mp3 | в бою: разбойник, гибель | Achernar | dying, weak, bitter | Будь ты проклят… |
+| foe_bandit_death_1_g.mp3 | в бою: разбойник, гибель | Fenrir | dying whisper, regret | Надо было… в деревне сидеть… |
+| foe_bandit_death_1_v1_g.mp3 | в бою: разбойник, гибель | Enceladus | dying whisper, regret | Надо было… в деревне сидеть… |
+| foe_bandit_death_1_v2_g.mp3 | в бою: разбойник, гибель | Achernar | dying whisper, regret | Надо было… в деревне сидеть… |
+| foe_bandit_death_2_g.mp3 | в бою: разбойник, гибель | Fenrir | dying, faint whisper | Мать… прости… |
+| foe_bandit_death_2_v1_g.mp3 | в бою: разбойник, гибель | Enceladus | dying, faint whisper | Мать… прости… |
+| foe_pirate_start_0_g.mp3 | в бою: корсар, начало боя | Algenib | roaring command | Абордаж! Все на палубу! |
+| foe_pirate_start_0_v1_g.mp3 | в бою: корсар, начало боя | Zephyr | roaring command | Абордаж! Все на палубу! |
+| foe_pirate_start_1_g.mp3 | в бою: корсар, начало боя | Algenib | gleeful, loud | Свистать всех наверх! Добыча сама плывёт! |
+| foe_pirate_start_1_v1_g.mp3 | в бою: корсар, начало боя | Zephyr | gleeful, loud | Свистать всех наверх! Добыча сама плывёт! |
+| foe_pirate_start_2_g.mp3 | в бою: корсар, начало боя | Algenib | mocking, commanding | Спускай паруса, сухопутная крыса! |
+| foe_pirate_start_2_v1_g.mp3 | в бою: корсар, начало боя | Zephyr | mocking, commanding | Спускай паруса, сухопутная крыса! |
+| foe_pirate_start_3_g.mp3 | в бою: корсар, начало боя | Algenib | boisterous, threatening | Этот груз теперь наш! Кто против — за борт! |
+| foe_pirate_start_3_v1_g.mp3 | в бою: корсар, начало боя | Zephyr | boisterous, threatening | Этот груз теперь наш! Кто против — за борт! |
+| foe_pirate_start_4_g.mp3 | в бою: корсар, начало боя | Algenib | savage joy | Море нынче щедрое. Руби их! |
+| foe_pirate_start_4_v1_g.mp3 | в бою: корсар, начало боя | Zephyr | savage joy | Море нынче щедрое. Руби их! |
+| foe_pirate_start_5_g.mp3 | в бою: корсар, начало боя | Algenib | fierce, proud | Красные паруса пощады не знают! |
+| foe_pirate_start_5_v1_g.mp3 | в бою: корсар, начало боя | Zephyr | fierce, proud | Красные паруса пощады не знают! |
+| foe_pirate_attack_0_g.mp3 | в бою: корсар, удар | Algenib | fierce, striking | Отведай стали! |
+| foe_pirate_attack_0_v1_g.mp3 | в бою: корсар, удар | Zephyr | fierce, striking | Отведай стали! |
+| foe_pirate_attack_1_g.mp3 | в бою: корсар, удар | Algenib | shouting | За борт его! |
+| foe_pirate_attack_2_g.mp3 | в бою: корсар, удар | Algenib | frenzied | Руби канаты, руби его! |
+| foe_pirate_attack_2_v1_g.mp3 | в бою: корсар, удар | Zephyr | frenzied | Руби канаты, руби его! |
+| foe_pirate_attack_3_g.mp3 | в бою: корсар, удар | Algenib | mocking, striking | Вот тебе морской привет! |
+| foe_pirate_attack_3_v1_g.mp3 | в бою: корсар, удар | Zephyr | mocking, striking | Вот тебе морской привет! |
+| foe_pirate_attack_4_g.mp3 | в бою: корсар, удар | Algenib | angry, effort | Держи, крыса палубная! |
+| foe_pirate_attack_4_v1_g.mp3 | в бою: корсар, удар | Zephyr | angry, effort | Держи, крыса палубная! |
+| foe_pirate_attack_5_g.mp3 | в бою: корсар, удар | Algenib | taunting | Не качайся, всё равно достану! |
+| foe_pirate_hurt_0_g.mp3 | в бою: корсар, ранен | Algenib | pain, cursing | Акулья требуха! Задел! |
+| foe_pirate_hurt_0_v1_g.mp3 | в бою: корсар, ранен | Zephyr | pain, cursing | Акулья требуха! Задел! |
+| foe_pirate_hurt_1_g.mp3 | в бою: корсар, ранен | Algenib | angry, hurt | Кровь на палубе — моя! Ну держись! |
+| foe_pirate_hurt_1_v1_g.mp3 | в бою: корсар, ранен | Zephyr | angry, hurt | Кровь на палубе — моя! Ну держись! |
+| foe_pirate_hurt_2_g.mp3 | в бою: корсар, ранен | Algenib | cursing in pain | Тысяча чертей, больно! |
+| foe_pirate_hurt_2_v1_g.mp3 | в бою: корсар, ранен | Zephyr | cursing in pain | Тысяча чертей, больно! |
+| foe_pirate_hurt_3_g.mp3 | в бою: корсар, ранен | Algenib | gritted teeth, defiant | Режешь метко, да меня так не возьмёшь! |
+| foe_pirate_hurt_3_v1_g.mp3 | в бою: корсар, ранен | Zephyr | gritted teeth, defiant | Режешь метко, да меня так не возьмёшь! |
+| foe_pirate_low_0_g.mp3 | в бою: корсар, на исходе | Algenib | panicked | Сдаюсь! Шлюпку мне, шлюпку! |
+| foe_pirate_low_0_v1_g.mp3 | в бою: корсар, на исходе | Zephyr | panicked | Сдаюсь! Шлюпку мне, шлюпку! |
+| foe_pirate_low_1_g.mp3 | в бою: корсар, на исходе | Algenib | begging | Бери добычу, только отпусти! |
+| foe_pirate_low_1_v1_g.mp3 | в бою: корсар, на исходе | Zephyr | begging | Бери добычу, только отпусти! |
+| foe_pirate_low_2_g.mp3 | в бою: корсар, на исходе | Algenib | panicked shout | Все в шлюпки! Бросай корабль! |
+| foe_pirate_low_2_v1_g.mp3 | в бою: корсар, на исходе | Zephyr | panicked shout | Все в шлюпки! Бросай корабль! |
+| foe_pirate_low_3_g.mp3 | в бою: корсар, на исходе | Algenib | terrified | Не топи меня, я плавать не умею! |
+| foe_pirate_taunt_0_v1_g.mp3 | в бою: корсар, герой слабеет | Zephyr | mocking laugh | Шатает тебя, как в шторм! |
+| foe_pirate_taunt_1_g.mp3 | в бою: корсар, герой слабеет | Algenib | gloating | Скоро пойдёшь кормить рыб! |
+| foe_pirate_taunt_2_v1_g.mp3 | в бою: корсар, герой слабеет | Zephyr | cruel, gloating | Держишься за борт? Недолго осталось! |
+| foe_pirate_death_0_v1_g.mp3 | в бою: корсар, гибель | Zephyr | dying whisper | Море… забирает… |
+| foe_pirate_death_1_v1_g.mp3 | в бою: корсар, гибель | Zephyr | dying, resigned | К рыбам… так к рыбам… |
+| foe_pirate_death_2_g.mp3 | в бою: корсар, гибель | Algenib | dying, faint | Паруса… опустите… |
+| foe_pirate_death_2_v1_g.mp3 | в бою: корсар, гибель | Zephyr | dying, faint | Паруса… опустите… |
+| foe_goblin_start_0_g.mp3 | в бою: гоблин, начало боя | Puck | giggling, greedy, high | Хи-хи! Мясо пришло! |
+| foe_goblin_start_1_g.mp3 | в бою: гоблин, начало боя | Puck | excited, greedy | Блестяшки! У него блестяшки! |
+| foe_goblin_start_2_g.mp3 | в бою: гоблин, начало боя | Puck | shrill, angry | Наш лес! Наша тропа! Твоя смерть! |
+| foe_goblin_start_3_g.mp3 | в бою: гоблин, начало боя | Puck | frantic, gleeful | Режь его, режь, пока толстый! |
+| foe_goblin_start_4_g.mp3 | в бою: гоблин, начало боя | Puck | shrieking call | Все сюда! Тут большой, глупый! |
+| foe_goblin_start_5_g.mp3 | в бою: гоблин, начало боя | Puck | shrill chant | Гоблины не прощают! Гоблины не забывают! |
+| foe_goblin_attack_0_g.mp3 | в бою: гоблин, удар | Puck | gleeful, stabbing | Тык! Тык-тык! |
+| foe_goblin_attack_2_g.mp3 | в бою: гоблин, удар | Puck | mocking, fast | Ай, какой медленный! |
+| foe_goblin_attack_4_g.mp3 | в бою: гоблин, удар | Puck | feral, excited | Кусь его! |
+| foe_goblin_attack_5_g.mp3 | в бою: гоблин, удар | Puck | frenzied, shrill | Ещё! Ещё! |
+| foe_goblin_hurt_0_g.mp3 | в бою: гоблин, ранен | Puck | squealing | Ай-ай-ай! Больно! |
+| foe_goblin_hurt_1_g.mp3 | в бою: гоблин, ранен | Puck | whining, angry | Нечестно! Нечестно! |
+| foe_goblin_hurt_2_g.mp3 | в бою: гоблин, ранен | Puck | scared, whining | Он злой! Он очень злой! |
+| foe_goblin_hurt_3_g.mp3 | в бою: гоблин, ранен | Puck | shrill pain | Моё ухо! Ухо порезал! |
+| foe_goblin_low_0_g.mp3 | в бою: гоблин, на исходе | Puck | whimpering | Не надо! Отдаю! Всё отдаю! |
+| foe_goblin_low_1_g.mp3 | в бою: гоблин, на исходе | Puck | panicked squeal | Бежим! Бежим в нору! |
+| foe_goblin_low_2_g.mp3 | в бою: гоблин, на исходе | Puck | pathetic, hiding | Я маленький! Меня не видно! |
+| foe_goblin_low_3_g.mp3 | в бою: гоблин, на исходе | Puck | wheedling, desperate | Пощади! Я покажу, где клад! |
+| foe_goblin_taunt_0_g.mp3 | в бою: гоблин, герой слабеет | Puck | cackling | Хи-хи! Устал, большой? |
+| foe_goblin_taunt_1_g.mp3 | в бою: гоблин, герой слабеет | Puck | chanting, gleeful | Падай, падай, падай! |
+| foe_goblin_taunt_2_g.mp3 | в бою: гоблин, герой слабеет | Puck | greedy giggle | Скоро будешь наш ужин! |
+| foe_goblin_death_1_g.mp3 | в бою: гоблин, гибель | Puck | whimpering, dying | Мама… гоблин… |
+| foe_giant_start_0_g.mp3 | в бою: исполин, начало боя | Alnilam | booming, menacing | Кто топчет мою землю? |
+| foe_giant_start_1_g.mp3 | в бою: исполин, начало боя | Alnilam | hungry, deep | Маленький. Хрустящий. |
+| foe_giant_start_3_g.mp3 | в бою: исполин, начало боя | Alnilam | deep, contemptuous | Раздавлю, как жука. |
+| foe_giant_start_4_g.mp3 | в бою: исполин, начало боя | Alnilam | sinister | Давно никто не приходил. Иди сюда. |
+| foe_giant_start_5_g.mp3 | в бою: исполин, начало боя | Alnilam | ancient, menacing | Мои кости помнят горы. Твои — сломаются. |
+| foe_giant_attack_0_g.mp3 | в бою: исполин, удар | Alnilam | roaring | Раздавлю! |
+| foe_giant_attack_1_g.mp3 | в бою: исполин, удар | Alnilam | bellowing | Получай, мелюзга! |
+| foe_giant_attack_3_g.mp3 | в бою: исполин, удар | Alnilam | roaring command | Лежать! |
+| foe_giant_attack_4_g.mp3 | в бою: исполин, удар | Alnilam | bellowing | Прочь с дороги! |
+| foe_giant_attack_5_g.mp3 | в бою: исполин, удар | Alnilam | furious roar | Размажу по камням! |
+| foe_giant_hurt_0_g.mp3 | в бою: исполин, ранен | Alnilam | angry, surprised, deep | Жжётся! Маленький жжётся! |
+| foe_giant_hurt_1_g.mp3 | в бою: исполин, ранен | Alnilam | deep fury | Ты делаешь больно. Я сделаю больнее. |
+| foe_giant_low_0_g.mp3 | в бою: исполин, на исходе | Alnilam | heavy breathing, deep | Не уйдёшь… не уйдёшь живым… |
+| foe_giant_low_3_g.mp3 | в бою: исполин, на исходе | Alnilam | grudging, deep | Ты сильный. Для маленького. |
+| foe_giant_taunt_0_g.mp3 | в бою: исполин, герой слабеет | Alnilam | deep, cruel | Ломаешься. Все ломаются. |
+| foe_giant_taunt_1_g.mp3 | в бою: исполин, герой слабеет | Alnilam | deep, mocking | Устал, маленький? Ложись. |
+| foe_giant_taunt_2_g.mp3 | в бою: исполин, герой слабеет | Alnilam | sinister, deep | Я слышу, как бьётся твоё сердце. Всё тише. |
+| foe_giant_death_2_g.mp3 | в бою: исполин, гибель | Alnilam | dying, deep whisper | Земля… прими… |
+| foe_dragon_start_0_g.mp3 | в бою: дракон, начало боя | Charon | ancient, regal, contemptuous | Ты пришёл к моему золоту. Смело. Глупо. |
+| foe_dragon_start_1_g.mp3 | в бою: дракон, начало боя | Charon | ancient, ominous | Я видел, как рождались твои царства. Увижу и твой конец. |
+| foe_dragon_start_2_g.mp3 | в бою: дракон, начало боя | Charon | amused, cruel, deep | Ещё один рыцарь. Их кости согревают моё логово. |
+| foe_dragon_start_3_g.mp3 | в бою: дракон, начало боя | Charon | regal, commanding | Склонись, смертный, и умри на коленях. |
+| foe_dragon_start_4_g.mp3 | в бою: дракон, начало боя | Charon | proud, ominous | Мой огонь старше твоих богов. |
+| foe_dragon_start_5_g.mp3 | в бою: дракон, начало боя | Charon | predatory, sinister | Ты пахнешь страхом. Мне нравится этот запах. |
+| foe_dragon_attack_1_g.mp3 | в бою: дракон, удар | Charon | booming, furious | Пламя очистит тебя! |
+| foe_dragon_attack_2_g.mp3 | в бою: дракон, удар | Charon | fierce, booming | Пепел к пеплу! |
+| foe_dragon_attack_3_g.mp3 | в бою: дракон, удар | Charon | snarling | Ощути мои когти! |
+| foe_dragon_attack_4_g.mp3 | в бою: дракон, удар | Charon | mocking roar | Беги, если сможешь! |
+| foe_dragon_attack_5_g.mp3 | в бою: дракон, удар | Charon | furious roar | Сгори дотла! |
+| foe_dragon_hurt_0_g.mp3 | в бою: дракон, ранен | Charon | outraged, booming | Ты посмел ранить меня? |
+| foe_dragon_hurt_1_g.mp3 | в бою: дракон, ранен | Charon | cold fury | Кровь дракона дорого стоит, смертный. |
+| foe_dragon_hurt_2_g.mp3 | в бою: дракон, ранен | Charon | icy, menacing | Эта рана будет стоить тебе жизни. |
+| foe_dragon_hurt_3_g.mp3 | в бою: дракон, ранен | Charon | surprised, cold, amused | Любопытно. Ты не так слаб, как кажешься. |
+| foe_dragon_low_2_g.mp3 | в бою: дракон, на исходе | Charon | wounded, vengeful | Я уйду в небо… и вернусь… |
+| foe_dragon_low_3_g.mp3 | в бою: дракон, на исходе | Charon | furious curse | Проклинаю твой род до седьмого колена! |
+| foe_dragon_taunt_0_g.mp3 | в бою: дракон, герой слабеет | Charon | cruel amusement | Ты уже дымишься, смертный. |
+| foe_dragon_taunt_1_g.mp3 | в бою: дракон, герой слабеет | Charon | predatory, mocking | Твоё сердце бьётся, как у зайца. |
+| foe_dragon_taunt_2_g.mp3 | в бою: дракон, герой слабеет | Charon | cold, menacing | Ещё один вздох — и он будет последним. |
+| foe_lich_start_0_g.mp3 | в бою: владыка нежити, начало боя | Schedar | cold, hollow whisper, longing | Живое тепло… как давно я его не чувствовал. |
+| foe_lich_start_1_g.mp3 | в бою: владыка нежити, начало боя | Schedar | cold, dry, ominous | Твоё имя уже записано. Осталось поставить дату. |
+| foe_lich_start_2_g.mp3 | в бою: владыка нежити, начало боя | Schedar | commanding, hollow | Встаньте, мёртвые. У нас гость. |
+| foe_lich_start_3_g.mp3 | в бою: владыка нежити, начало боя | Schedar | calm, chilling | Смерть — лишь дверь. Я провожу тебя. |
+| foe_lich_start_4_g.mp3 | в бою: владыка нежити, начало боя | Schedar | greedy, hollow | Ещё одна душа в мою корону. |
+| foe_lich_start_5_g.mp3 | в бою: владыка нежити, начало боя | Schedar | cold, amused whisper | Ты дышишь. Это ненадолго. |
+| foe_lich_attack_1_g.mp3 | в бою: владыка нежити, удар | Schedar | hollow, commanding | Холод могилы! |
+| foe_lich_attack_2_g.mp3 | в бою: владыка нежити, удар | Schedar | cruel, hollow | Твои кости — мои! |
+| foe_lich_hurt_0_g.mp3 | в бою: владыка нежити, ранен | Schedar | surprised, hollow | Боль… я забыл, что такое боль. |
+| foe_lich_hurt_1_g.mp3 | в бою: владыка нежити, ранен | Schedar | cold, mocking | Ты режешь мёртвую плоть. Она не кровоточит. |
+| foe_lich_hurt_2_g.mp3 | в бою: владыка нежити, ранен | Schedar | dry, hollow laugh | Смешно. Меня уже убивали. |
+| foe_lich_hurt_3_g.mp3 | в бою: владыка нежити, ранен | Schedar | cold, calm | Ты лишь отсрочил неизбежное. |
+| foe_lich_low_0_g.mp3 | в бою: владыка нежити, на исходе | Schedar | fading, vengeful whisper | Я вернусь… я всегда возвращаюсь… |
+| foe_lich_low_1_g.mp3 | в бою: владыка нежити, на исходе | Schedar | desperate hiss | Корона… не отдам… |
+| foe_lich_low_2_g.mp3 | в бою: владыка нежити, на исходе | Schedar | fading whisper | Тьма, прими меня обратно… |
+| foe_lich_low_3_g.mp3 | в бою: владыка нежити, на исходе | Schedar | furious, hollow | Меня нельзя убить дважды! |
+| foe_lich_taunt_0_g.mp3 | в бою: владыка нежити, герой слабеет | Schedar | hungry whisper | Твоя жизнь уходит. Я чувствую её вкус. |
+| foe_lich_taunt_1_g.mp3 | в бою: владыка нежити, герой слабеет | Schedar | cold, promising | Скоро ты встанешь рядом со мной. |
+| foe_lich_taunt_2_g.mp3 | в бою: владыка нежити, герой слабеет | Schedar | chilling whisper | Твоё сердце замедляется. Слушай. |
+| foe_fiend_start_0_g.mp3 | в бою: бес из-за Грани, начало боя | Orus | silky, menacing | Сделка? Нет. Сегодня только плата. |
+| foe_fiend_start_1_g.mp3 | в бою: бес из-за Грани, начало боя | Orus | delighted, sinister | Я слышу, как кричит твоя душа. |
+| foe_fiend_start_2_g.mp3 | в бою: бес из-за Грани, начало боя | Orus | ominous, deep | Из-за Грани пришли мы. За тобой. |
+| foe_fiend_start_3_g.mp3 | в бою: бес из-за Грани, начало боя | Orus | hungry, purring, sinister | Твои страхи пахнут сладко. |
+| foe_fiend_start_4_g.mp3 | в бою: бес из-за Грани, начало боя | Orus | mocking, grand | Добро пожаловать в пекло, смертный. |
+| foe_fiend_start_5_g.mp3 | в бою: бес из-за Грани, начало боя | Orus | whispering, menacing | Я знаю твоё имя. И имена всех, кого ты любишь. |
+| foe_fiend_attack_3_g.mp3 | в бою: бес из-за Грани, удар | Orus | gleeful, cruel | Боль — это только начало! |
+| foe_fiend_attack_4_g.mp3 | в бою: бес из-за Грани, удар | Orus | hissing, furious | Твоя кровь закипит! |
+| foe_fiend_attack_5_g.mp3 | в бою: бес из-за Грани, удар | Orus | whispering, maddening | Я внутри тебя! |
+| foe_fiend_hurt_0_g.mp3 | в бою: бес из-за Грани, ранен | Orus | amused, cold | Ты ранишь меня сталью? Забавно. |
+| foe_fiend_hurt_1_g.mp3 | в бою: бес из-за Грани, ранен | Orus | vengeful, low | За каждую рану заплатишь втрое. |
+| foe_fiend_hurt_2_g.mp3 | в бою: бес из-за Грани, ранен | Orus | maniacal, ecstatic | Больно… Ещё! Сделай ещё больнее! |
+| foe_fiend_hurt_3_g.mp3 | в бою: бес из-за Грани, ранен | Orus | roaring | Ярость моя растёт! |
+| foe_fiend_low_0_g.mp3 | в бою: бес из-за Грани, на исходе | Orus | screaming, desperate | Нет! Грань… зовёт назад… |
+| foe_fiend_low_1_g.mp3 | в бою: бес из-за Грани, на исходе | Orus | vengeful shriek | Я вернусь в твоих снах! |
+| foe_fiend_low_2_g.mp3 | в бою: бес из-за Грани, на исходе | Orus | furious curse | Ты проклят! Проклят навеки! |
+| foe_fiend_low_3_g.mp3 | в бою: бес из-за Грани, на исходе | Orus | desperate, pleading | Хозяин… помоги! |
+| foe_fiend_taunt_2_g.mp3 | в бою: бес из-за Грани, герой слабеет | Orus | delighted whisper | Я чувствую твой страх. Он растёт. |
+| foe_fiend_death_0_g.mp3 | в бою: бес из-за Грани, гибель | Orus | dying hiss | Обратно… в пламя… |
+| foe_fiend_death_2_g.mp3 | в бою: бес из-за Грани, гибель | Orus | fading, wailing | Грань… закрывается… |
+| foe_spirit_start_0_g.mp3 | в бою: дух, начало боя | Enceladus | ghostly whisper, mournful | Зачем ты пришёл туда, где нет живых? |
+| foe_spirit_start_0_v1_g.mp3 | в бою: дух, начало боя | Vindemiatrix | ghostly whisper, mournful | Зачем ты пришёл туда, где нет живых? |
+| foe_spirit_start_1_g.mp3 | в бою: дух, начало боя | Enceladus | eerie, pleading whisper | Останься с нами… навсегда… |
+| foe_spirit_start_1_v1_g.mp3 | в бою: дух, начало боя | Vindemiatrix | eerie, pleading whisper | Останься с нами… навсегда… |
+| foe_spirit_start_2_g.mp3 | в бою: дух, начало боя | Enceladus | ghostly, shivering whisper | Холодно… мне так холодно… согрей меня… |
+| foe_spirit_start_2_v1_g.mp3 | в бою: дух, начало боя | Vindemiatrix | ghostly, shivering whisper | Холодно… мне так холодно… согрей меня… |
+| foe_spirit_start_3_g.mp3 | в бою: дух, начало боя | Enceladus | hollow warning whisper | Уходи… или стань одним из нас… |
+| foe_spirit_start_3_v1_g.mp3 | в бою: дух, начало боя | Vindemiatrix | hollow warning whisper | Уходи… или стань одним из нас… |
+| foe_spirit_start_4_g.mp3 | в бою: дух, начало боя | Enceladus | eerie, distant | Мы помним этот день. Ты — нет. |
+| foe_spirit_start_4_v1_g.mp3 | в бою: дух, начало боя | Vindemiatrix | eerie, distant | Мы помним этот день. Ты — нет. |
+| foe_spirit_start_5_g.mp3 | в бою: дух, начало боя | Enceladus | whisper, sinister | Ты слышишь нас? Скоро будешь слышать всегда. |
+| foe_spirit_start_5_v1_g.mp3 | в бою: дух, начало боя | Vindemiatrix | whisper, sinister | Ты слышишь нас? Скоро будешь слышать всегда. |
+| foe_spirit_attack_0_g.mp3 | в бою: дух, удар | Enceladus | icy whisper | Замри… |
+| foe_spirit_attack_0_v1_g.mp3 | в бою: дух, удар | Vindemiatrix | icy whisper | Замри… |
+| foe_spirit_attack_1_g.mp3 | в бою: дух, удар | Enceladus | hungry whisper | Отдай своё тепло… |
+| foe_spirit_attack_1_v1_g.mp3 | в бою: дух, удар | Vindemiatrix | hungry whisper | Отдай своё тепло… |
+| foe_spirit_attack_2_g.mp3 | в бою: дух, удар | Enceladus | chilling whisper | Холод… войди в него… |
+| foe_spirit_attack_2_v1_g.mp3 | в бою: дух, удар | Vindemiatrix | chilling whisper | Холод… войди в него… |
+| foe_spirit_attack_4_g.mp3 | в бою: дух, удар | Enceladus | echoing whisper | Мы рядом… мы внутри… |
+| foe_spirit_attack_5_g.mp3 | в бою: дух, удар | Enceladus | hollow whisper | Пустота зовёт… |
+| foe_spirit_attack_5_v1_g.mp3 | в бою: дух, удар | Vindemiatrix | hollow whisper | Пустота зовёт… |
+| foe_spirit_hurt_0_g.mp3 | в бою: дух, ранен | Enceladus | wailing, faint | Больно… даже нам больно… |
+| foe_spirit_hurt_0_v1_g.mp3 | в бою: дух, ранен | Vindemiatrix | wailing, faint | Больно… даже нам больно… |
+| foe_spirit_hurt_1_g.mp3 | в бою: дух, ранен | Enceladus | mournful, hurt | Ты рвёшь то, что осталось… |
+| foe_spirit_hurt_1_v1_g.mp3 | в бою: дух, ранен | Vindemiatrix | mournful, hurt | Ты рвёшь то, что осталось… |
+| foe_spirit_hurt_2_g.mp3 | в бою: дух, ранен | Enceladus | sorrowful whisper | Почему… почему ты это делаешь? |
+| foe_spirit_hurt_2_v1_g.mp3 | в бою: дух, ранен | Vindemiatrix | sorrowful whisper | Почему… почему ты это делаешь? |
+| foe_spirit_hurt_3_g.mp3 | в бою: дух, ранен | Enceladus | hissing, pained whisper | Свет… жжёт… |
+| foe_spirit_low_0_g.mp3 | в бою: дух, на исходе | Enceladus | pleading whisper | Отпусти… отпусти нас… |
+| foe_spirit_low_0_v1_g.mp3 | в бою: дух, на исходе | Vindemiatrix | pleading whisper | Отпусти… отпусти нас… |
+| foe_spirit_low_1_g.mp3 | в бою: дух, на исходе | Enceladus | fading whisper | Мы растворяемся… |
+| foe_spirit_low_1_v1_g.mp3 | в бою: дух, на исходе | Vindemiatrix | fading whisper | Мы растворяемся… |
+| foe_spirit_low_2_g.mp3 | в бою: дух, на исходе | Enceladus | sorrowful plea | Не надо… мы тоже были живыми… |
+| foe_spirit_low_2_v1_g.mp3 | в бою: дух, на исходе | Vindemiatrix | sorrowful plea | Не надо… мы тоже были живыми… |
+| foe_spirit_low_3_g.mp3 | в бою: дух, на исходе | Enceladus | fading, mournful | Помни нас… хоть ты помни… |
+| foe_spirit_low_3_v1_g.mp3 | в бою: дух, на исходе | Vindemiatrix | fading, mournful | Помни нас… хоть ты помни… |
+| foe_spirit_taunt_0_g.mp3 | в бою: дух, герой слабеет | Enceladus | eerie whisper | Твоя тень уже с нами. |
+| foe_spirit_taunt_0_v1_g.mp3 | в бою: дух, герой слабеет | Vindemiatrix | eerie whisper | Твоя тень уже с нами. |
+| foe_spirit_taunt_1_g.mp3 | в бою: дух, герой слабеет | Enceladus | hungry whisper | Ещё немного… и ты останешься здесь. |
+| foe_spirit_taunt_1_v1_g.mp3 | в бою: дух, герой слабеет | Vindemiatrix | hungry whisper | Ещё немного… и ты останешься здесь. |
+| foe_spirit_taunt_2_g.mp3 | в бою: дух, герой слабеет | Enceladus | chilling whisper | Сердце стучит всё тише… слушай… |
+| foe_spirit_taunt_2_v1_g.mp3 | в бою: дух, герой слабеет | Vindemiatrix | chilling whisper | Сердце стучит всё тише… слушай… |
+| foe_spirit_death_0_g.mp3 | в бою: дух, гибель | Enceladus | relieved sigh, fading | Свобода… |
+| foe_spirit_death_1_g.mp3 | в бою: дух, гибель | Enceladus | peaceful, fading whisper | Наконец… покой… |
+| foe_siren_start_0_g.mp3 | в бою: сирена, начало боя | Autonoe | alluring, sweet, eerie | Иди ко мне… вода тёплая… |
+| foe_siren_start_1_g.mp3 | в бою: сирена, начало боя | Autonoe | seductive, sing-song | Ты слышишь мою песню? Иди на голос… |
+| foe_siren_start_2_g.mp3 | в бою: сирена, начало боя | Autonoe | sweet, sinister | Столько моряков… и ни один не вернулся. |
+| foe_siren_start_3_g.mp3 | в бою: сирена, начало боя | Autonoe | eerie, longing, tender | Жених мой… наконец-то ты пришёл. |
+| foe_siren_start_4_g.mp3 | в бою: сирена, начало боя | Autonoe | whisper, alluring | Море знает твоё имя. Я тоже. |
+| foe_siren_start_5_g.mp3 | в бою: сирена, начало боя | Autonoe | soothing, sinister | Не бойся глубины… в ней так тихо… |
+| foe_siren_attack_0_g.mp3 | в бою: сирена, удар | Autonoe | shrieking | На дно! |
+| foe_siren_attack_1_g.mp3 | в бою: сирена, удар | Autonoe | commanding, furious | Вода, возьми его! |
+| foe_siren_attack_2_g.mp3 | в бою: сирена, удар | Autonoe | sweet then shrieking | Утони в моих объятиях! |
+| foe_siren_attack_3_g.mp3 | в бою: сирена, удар | Autonoe | hissing | Соль тебе в раны! |
+| foe_siren_hurt_0_g.mp3 | в бою: сирена, ранен | Autonoe | hurt, betrayed | Ты ранишь меня? Меня, что любила тебя? |
+| foe_siren_hurt_1_g.mp3 | в бою: сирена, ранен | Autonoe | cold, hissing | Кровь в воде… акулы услышат. |
+| foe_siren_hurt_2_g.mp3 | в бою: сирена, ранен | Autonoe | bitter, hurt | Жестокий… как все живые. |
+| foe_siren_hurt_3_g.mp3 | в бою: сирена, ранен | Autonoe | sorrowful, eerie | Больно… как в ту ночь… |
+| foe_siren_low_0_g.mp3 | в бою: сирена, на исходе | Autonoe | fading, pleading | Море… забери меня домой… |
+| foe_siren_low_1_g.mp3 | в бою: сирена, на исходе | Autonoe | sorrowful whisper | Не оставляй меня одну… |
+| foe_siren_low_2_g.mp3 | в бою: сирена, на исходе | Autonoe | fading, eerie | Я уйду в глубину… и буду ждать… |
+| foe_siren_low_3_g.mp3 | в бою: сирена, на исходе | Autonoe | desperate, wailing | Верни… верни мне сердце… |
+| foe_siren_taunt_0_g.mp3 | в бою: сирена, герой слабеет | Autonoe | sweet, cruel | Ты уже тонешь, милый. Просто не знаешь. |
+| foe_siren_taunt_1_g.mp3 | в бою: сирена, герой слабеет | Autonoe | lulling, sinister | Слышишь прибой? Это твоя колыбельная. |
+| foe_siren_taunt_2_g.mp3 | в бою: сирена, герой слабеет | Autonoe | whisper, alluring | Ещё шаг… и вода сомкнётся. |
+| foe_siren_death_0_g.mp3 | в бою: сирена, гибель | Autonoe | fading whisper | Прилив… уносит… |
+| foe_siren_death_1_g.mp3 | в бою: сирена, гибель | Autonoe | peaceful, fading | Наконец… тишина глубины… |
+| foe_siren_death_2_g.mp3 | в бою: сирена, гибель | Autonoe | sorrowful, dying | Жених мой… прощай… |
+| foe_construct_start_0_g.mp3 | в бою: страж Предтеч, начало боя | Zubenelgenubi | flat, mechanical, monotone | Нарушитель. Обнаружен. |
+| foe_construct_start_1_g.mp3 | в бою: страж Предтеч, начало боя | Zubenelgenubi | flat, monotone, cold | Проход закрыт. Приказ Предтеч. |
+| foe_construct_start_2_g.mp3 | в бою: страж Предтеч, начало боя | Zubenelgenubi | flat, mechanical | Чужак в охраняемом ярусе. Устранить. |
+| foe_construct_start_3_g.mp3 | в бою: страж Предтеч, начало боя | Zubenelgenubi | cold, monotone | Стража пробуждена. Сопротивление бесполезно. |
+| foe_construct_start_4_g.mp3 | в бою: страж Предтеч, начало боя | Zubenelgenubi | flat, emotionless | Ты не значишься в списках. Ты будешь стёрт. |
+| foe_construct_start_5_g.mp3 | в бою: страж Предтеч, начало боя | Zubenelgenubi | monotone, mechanical | Сеть приказывает: защищать. |
+| foe_construct_attack_0_g.mp3 | в бою: страж Предтеч, удар | Zubenelgenubi | flat, mechanical | Удар. |
+| foe_construct_attack_1_g.mp3 | в бою: страж Предтеч, удар | Zubenelgenubi | flat, monotone | Подавление. |
+| foe_construct_attack_2_g.mp3 | в бою: страж Предтеч, удар | Zubenelgenubi | cold, mechanical | Устранение цели. |
+| foe_construct_attack_3_g.mp3 | в бою: страж Предтеч, удар | Zubenelgenubi | flat, monotone | Сила увеличена. |
+| foe_construct_attack_4_g.mp3 | в бою: страж Предтеч, удар | Zubenelgenubi | mechanical | Цель в досягаемости. |
+| foe_construct_attack_5_g.mp3 | в бою: страж Предтеч, удар | Zubenelgenubi | flat, monotone | Исполняю. |
+| foe_construct_hurt_0_g.mp3 | в бою: страж Предтеч, ранен | Zubenelgenubi | flat, mechanical | Повреждение корпуса. |
+| foe_construct_hurt_1_g.mp3 | в бою: страж Предтеч, ранен | Zubenelgenubi | monotone, cold | Трещина в рунах. Продолжаю. |
+| foe_construct_hurt_2_g.mp3 | в бою: страж Предтеч, ранен | Zubenelgenubi | flat, emotionless | Урон принят. Задача не изменилась. |
+| foe_construct_hurt_3_g.mp3 | в бою: страж Предтеч, ранен | Zubenelgenubi | monotone, mechanical | Руны гаснут. Перенаправляю силу. |
+| foe_construct_low_0_g.mp3 | в бою: страж Предтеч, на исходе | Zubenelgenubi | flat | Критическое повреждение. |
+| foe_construct_low_1_g.mp3 | в бою: страж Предтеч, на исходе | Zubenelgenubi | fading, mechanical | Связь с сетью… теряется… |
+| foe_construct_low_2_g.mp3 | в бою: страж Предтеч, на исходе | Zubenelgenubi | flat, fading | Приказ… не выполнен… |
+| foe_construct_low_3_g.mp3 | в бою: страж Предтеч, на исходе | Zubenelgenubi | flat, cold | Резерв исчерпан. Последний удар. |
+| foe_construct_taunt_0_g.mp3 | в бою: страж Предтеч, герой слабеет | Zubenelgenubi | flat, mechanical | Цель ослаблена. Завершаю. |
+| foe_construct_taunt_1_g.mp3 | в бою: страж Предтеч, герой слабеет | Zubenelgenubi | cold, monotone | Твоё сопротивление падает. |
+| foe_construct_taunt_2_g.mp3 | в бою: страж Предтеч, герой слабеет | Zubenelgenubi | flat, emotionless | Расчёт: ты не выстоишь. |
+| foe_construct_death_0_g.mp3 | в бою: страж Предтеч, гибель | Zubenelgenubi | fading | Отключение… |
+| foe_construct_death_1_g.mp3 | в бою: страж Предтеч, гибель | Zubenelgenubi | fading, mechanical | Сеть… молчит… |
+| foe_construct_death_2_g.mp3 | в бою: страж Предтеч, гибель | Zubenelgenubi | fading | Страж… уснул… |
+| quest_fetch_derevo_0_v2_g.mp3 | заказчик: принести — дерево | Schedar | practical, worried | Дров и бруса не хватает — зима близко. Принеси дерева, сколько сказал. |
+| quest_fetch_derevo_1_v2_g.mp3 | заказчик: принести — дерево | Schedar | businesslike, earnest | Мне нужно хорошее дерево, сухое, без гнили. Найдёшь — заплачу честно. |
+| quest_fetch_trava_0_v2_g.mp3 | заказчик: принести — травы | Schedar | worried, pleading | Травы кончились, а люди болеют. Собери мне трав, прошу тебя. |
+| quest_fetch_trava_1_v2_g.mp3 | заказчик: принести — травы | Schedar | brisk, instructive | Нужны травы, свежие, не вялые. Где растут — я сказал. |
+| quest_fetch_yagody_0_v2_g.mp3 | заказчик: принести — ягоды | Schedar | warm, homely | Ягод бы мне. Детям на зиму, да и на настойку хватит. |
+| quest_fetch_yagody_1_v2_g.mp3 | заказчик: принести — ягоды | Schedar | fussy, friendly | Собери ягод, только спелых. Зелёные не возьму. |
+| quest_fetch_kamen_0_v2_g.mp3 | заказчик: принести — камень | Schedar | tired, practical | Стена осыпается, камня нет. Принеси камня — поправим. |
+| quest_fetch_kamen_1_v2_g.mp3 | заказчик: принести — камень | Schedar | firm, businesslike | Мне нужен камень, крепкий, без трещин. Остальное — моя забота. |
+| quest_fetch_ruda_0_v2_g.mp3 | заказчик: принести — руда | Schedar | gruff, urgent | Горн стынет без руды. Добудь мне руды, и я в долгу не останусь. |
+| car_meet_0_v1_g.mp3 | старший обоза: встреча | Charon | loud, friendly call | Эй, путник! Обоз идёт. Торговать будешь? |
+| car_meet_0_v2_g.mp3 | старший обоза: встреча | Zubenelgenubi | loud, friendly call | Эй, путник! Обоз идёт. Торговать будешь? |
+| car_meet_0_v2_f_g.mp3 | старший обоза: встреча | Vindemiatrix | loud, friendly call | Эй, путник! Обоз идёт. Торговать будешь? |
+| car_meet_1_v1_g.mp3 | старший обоза: встреча | Charon | reassuring, friendly | Стой, не пугайся, мы купцы. Глянешь на товар? |
+| car_meet_1_v2_g.mp3 | старший обоза: встреча | Zubenelgenubi | reassuring, friendly | Стой, не пугайся, мы купцы. Глянешь на товар? |
+| car_meet_1_v2_f_g.mp3 | старший обоза: встреча | Vindemiatrix | reassuring, friendly | Стой, не пугайся, мы купцы. Глянешь на товар? |
+| car_meet_2_v1_g.mp3 | старший обоза: встреча | Charon | cheerful, welcoming | Доброй дороги! У нас есть чем поторговать. |
+| car_meet_2_v2_g.mp3 | старший обоза: встреча | Zubenelgenubi | cheerful, welcoming | Доброй дороги! У нас есть чем поторговать. |
+| car_meet_2_v2_f_g.mp3 | старший обоза: встреча | Vindemiatrix | cheerful, welcoming | Доброй дороги! У нас есть чем поторговать. |
+| car_meet_3_v1_g.mp3 | старший обоза: встреча | Charon | relaxed, inviting | Караван на привале. Подходи, пока стоим. |
+| car_meet_3_v2_g.mp3 | старший обоза: встреча | Zubenelgenubi | relaxed, inviting | Караван на привале. Подходи, пока стоим. |
+| car_meet_3_v2_f_g.mp3 | старший обоза: встреча | Vindemiatrix | relaxed, inviting | Караван на привале. Подходи, пока стоим. |
+| car_meet_4_v1_g.mp3 | старший обоза: встреча | Charon | wary, then relieved | Не разбойник? Ну и славно. Меняться будем? |
+| car_meet_4_v2_g.mp3 | старший обоза: встреча | Zubenelgenubi | wary, then relieved | Не разбойник? Ну и славно. Меняться будем? |
+| car_meet_4_v2_f_g.mp3 | старший обоза: встреча | Vindemiatrix | wary, then relieved | Не разбойник? Ну и славно. Меняться будем? |
+| car_meet_5_v1_g.mp3 | старший обоза: встреча | Charon | proud, persuasive | Товар с дальних земель! Смотри, пока не ушли. |
+| car_meet_5_v2_g.mp3 | старший обоза: встреча | Zubenelgenubi | proud, persuasive | Товар с дальних земель! Смотри, пока не ушли. |
+| car_meet_5_v2_f_g.mp3 | старший обоза: встреча | Vindemiatrix | proud, persuasive | Товар с дальних земель! Смотри, пока не ушли. |
+| car_meet_6_v1_g.mp3 | старший обоза: встреча | Charon | tired, hurried | Мы с утра в пути. Покупай, продавай — только быстро. |
+| car_meet_6_v2_g.mp3 | старший обоза: встреча | Zubenelgenubi | tired, hurried | Мы с утра в пути. Покупай, продавай — только быстро. |
+| car_meet_6_v2_f_g.mp3 | старший обоза: встреча | Vindemiatrix | tired, hurried | Мы с утра в пути. Покупай, продавай — только быстро. |
+| car_meet_7_v1_g.mp3 | старший обоза: встреча | Charon | brisk trader | Путник, нужна соль, железо, ткань? Всё есть. |
+| car_meet_7_v2_f_g.mp3 | старший обоза: встреча | Vindemiatrix | brisk trader | Путник, нужна соль, железо, ткань? Всё есть. |
+| car_meet_8_v1_g.mp3 | старший обоза: встреча | Charon | calming, commanding, then friendly | Охрана, спокойно, это не разбойник. Подходи, добрый человек. |
+| car_meet_8_v2_g.mp3 | старший обоза: встреча | Zubenelgenubi | calming, commanding, then friendly | Охрана, спокойно, это не разбойник. Подходи, добрый человек. |
+| car_meet_8_v2_f_g.mp3 | старший обоза: встреча | Vindemiatrix | calming, commanding, then friendly | Охрана, спокойно, это не разбойник. Подходи, добрый человек. |

@@ -261,7 +261,7 @@ const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(e!==undefined?' :
  check('свод осей читается голосом',окно.озвучено,окно);
 
  const свод=await page.evaluate(()=>{const r=worldSelfCheck();
-  const гл=GUIDE.find(g=>/Четыре оси/i.test(g.title));
+  const гл=guideSec(/Четыре оси/i);
   return {axes:r.find(x=>x.id==="axes"),плохие:r.filter(x=>!x.ok).map(x=>x.id),
    глава:!!гл,строк:гл?гл.body.length:0};});
  check('самопроверка мира держит зелёную строку «axes»',

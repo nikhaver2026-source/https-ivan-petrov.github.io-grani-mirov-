@@ -238,7 +238,7 @@ const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(e!==undefined?' :
 
  /* ── 12. самопроверка и тексты ── */
  const свод=await page.evaluate(()=>{const r=worldSelfCheck();
-  const гл=GUIDE.find(g=>/Резонанс/i.test(g.title));
+  const гл=guideSec(/Резонанс/i);
   return {r:r.find(x=>x.id==="resonance"),плохие:r.filter(x=>!x.ok).map(x=>x.id),
    глава:!!гл,строк:гл?гл.body.length:0,
    модуль:Modules.has("RESONANCE"),текст:String(Modules.get("RESONANCE").text())};});

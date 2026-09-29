@@ -246,7 +246,7 @@ const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(e!==undefined?' :
    модуль:!!m&&m.laws.length===10&&m.levers.length===7
     &&typeof m.at==="function"&&typeof m.k==="function"&&typeof m.line==="function",
    текст:m?m.text():"",
-   глава:GUIDE.some(g=>/Глава 92\. Закон глубины/.test(g.title)&&g.body.length>=6)};});
+   глава:guideHas(/Закон глубины/,6)};});
  check('самопроверка держит строку deeplaws, модуль DEEPLAWS отвечает, глава 92 на месте',
   свод.есть&&свод.ok&&свод.модуль&&свод.глава&&свод.текст.length>60,свод);
  check('ни одна другая строка самопроверки не покраснела',свод.плохие.length===0,свод.плохие);

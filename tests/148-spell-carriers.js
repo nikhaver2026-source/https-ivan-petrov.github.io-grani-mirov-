@@ -259,7 +259,7 @@ const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(e!==undefined?' :
  const свод=await page.evaluate(()=>{
   const rows=worldSelfCheck();
   const r=rows.find(x=>x.id==="carriers");
-  const гл=GUIDE.find(g=>/Вложенная чара/i.test(g.title));
+  const гл=guideSec(/Вложенная чара/i);
   return {строка:!!r,ок:r&&r.ok===true,
    красные:rows.filter(x=>!x.ok).map(x=>x.id),
    модуль:Modules.has("CARRIERS"),

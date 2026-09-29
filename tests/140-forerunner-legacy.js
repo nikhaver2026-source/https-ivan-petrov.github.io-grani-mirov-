@@ -214,7 +214,7 @@ const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(e!==undefined?' :
 
  /* ── 12. самопроверка и тексты ── */
  const свод=await page.evaluate(()=>{const r=worldSelfCheck();
-  const гл=GUIDE.find(g=>/Наследие Предтеч/i.test(g.title));
+  const гл=guideSec(/Наследие Предтеч/i);
   return {f:r.find(x=>x.id==="forerunners"),плохие:r.filter(x=>!x.ok).map(x=>x.id),
    глава:!!гл,строк:гл?гл.body.length:0,
    модуль:Modules.has("FORERUNNERS"),текст:String(Modules.get("FORERUNNERS").text()).slice(0,180)};});

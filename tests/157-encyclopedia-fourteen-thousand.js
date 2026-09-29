@@ -261,7 +261,7 @@ const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(e!==undefined?' :
    модуль:!!m&&m.total===14000&&m.schools.length===17&&m.tiers.length===8
     &&typeof m.at==="function"&&typeof m.learn==="function"&&typeof m.cast==="function",
    текст:m?m.text():"",
-   глава:GUIDE.some(g=>/Глава 87\. Энциклопедия четырнадцати тысяч/.test(g.title)&&g.body.length>=6),
+   глава:guideHas(/Энциклопедия четырнадцати тысяч/,6),
    кнопка:JSON.stringify(AM_GROUPS).indexOf("encspells")>0,
    команда:typeof CMD.encspells==="function",
    сохранение:(()=>{try{G.enc={книга:[1,2],школа:0,ступень:1,стр:0};saveGame(true);

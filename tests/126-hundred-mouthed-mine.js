@@ -220,7 +220,7 @@ const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(e!==undefined?' :
  /* ── 10. самопроверка, руководство, README ── */
  const свод=await page.evaluate(()=>{
   const c=worldSelfCheck();const r=(c.rows||c);
-  const гл=GUIDE.find(g=>/Стоустый Рудник/i.test(g.title));
+  const гл=guideSec(/Стоустый Рудник/i);
   return {whisper:(r.find?r.find(x=>x&&x.id==="mine"):null)||null,
    плохие:(r.filter?r.filter(x=>x&&x.ok===false).map(x=>x.id):[]),
    глава:!!гл,строк:гл?гл.body.length:0};});

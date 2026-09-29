@@ -111,8 +111,8 @@ const ГОЛОСА=["Algenib","Charon","Orus","Enceladus","Achird","Puck","Gacru
 
  /* ── 8. новость, версия, руководство ── */
  const свод=await page.evaluate(()=>{
-  const гл=GUIDE.find(g=>/Живая речь народов/i.test(g.title));
-  const титры=GUIDE.find(g=>/Кто написал эти звуки/i.test(g.title));
+  const гл=guideSec(/Живая речь народов/i);
+  const титры=guideSec(/Кто написал эти звуки/i);
   const н=NEWS.find(n=>n.v===21)||{};
   return {v:GAME_VERSION,title:document.title,news:NEWS_V,н:н.н||"",т:н.т||"",
    глава:гл?гл.body.join(" "):"",титры:титры?титры.body.join(" "):""};});

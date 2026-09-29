@@ -130,7 +130,7 @@ const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(e!==undefined?' :
   startCraftPick("seeker");
   const raw=safeFn(()=>serializeSave(),"")||"";
   const c=worldSelfCheck();const r=(c.rows||c);
-  const гл=GUIDE.find(g=>/Неизбранный/i.test(g.title));
+  const гл=guideSec(/Неизбранный/i);
   return {вСохранении:raw.indexOf("startCraft")>=0&&/seeker/.test(raw),
    startcraft:(r.find?r.find(x=>x&&x.id==="startcraft"):null)||null,
    плохие:(r.filter?r.filter(x=>x&&x.ok===false).map(x=>x.id):[]),

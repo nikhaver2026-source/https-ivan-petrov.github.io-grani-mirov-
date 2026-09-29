@@ -135,7 +135,7 @@ const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(e!==undefined?' :
   const было=Object.keys(G.deepMarks||{}).length;
   const raw=safeFn(()=>serializeSave(),"")||"";
   const c=worldSelfCheck();const r=(c.rows||c);
-  const гл=GUIDE.find(g=>/Вехи ста ярусов/i.test(g.title));
+  const гл=guideSec(/Вехи ста ярусов/i);
   return {вМарках:было,вСохранении:raw.indexOf("deepMarks")>=0,
    floors:(r.find?r.find(x=>x&&x.id==="floors"):null)||null,
    плохие:(r.filter?r.filter(x=>x&&x.ok===false).map(x=>x.id):[]),

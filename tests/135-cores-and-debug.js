@@ -272,7 +272,7 @@ const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(e!==undefined?' :
 
  /* ── 12. самопроверка и тексты ── */
  const свод=await page.evaluate(()=>{const r=worldSelfCheck();
-  const гл=GUIDE.find(g=>/Ядра мира/i.test(g.title));
+  const гл=guideSec(/Ядра мира/i);
   return {c:r.find(x=>x.id==="cores"),плохие:r.filter(x=>!x.ok).map(x=>x.id),строк:r.length,
    глава:!!гл,главаСтрок:гл?гл.body.length:0};});
  check('самопроверка мира держит зелёную строку «cores»',

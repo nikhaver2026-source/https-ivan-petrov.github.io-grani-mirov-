@@ -349,10 +349,10 @@ const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(e!==undefined?' :
 
  /* ── 9. Руководство, новости, документы ── */
  const док=await page.evaluate(()=>{
-  const гл=GUIDE.find(g=>/Глава 98\. Жители говорят громче/.test(g.title));
-  const часть=GUIDE_PARTS.find(p=>p[2].indexOf(98)>=0);
+  const гл=guideSec(/Жители говорят громче/);
+  const часть=GUIDE_PARTS.find(p=>p[2].indexOf(guideNum(GUIDE_OLD[98]))>=0);
   return {глава:!!гл,абзацев:гл?гл.body.length:0,часть:часть?часть[0]:null,news:NEWS_V,
-   гл50:GUIDE.find(g=>/Глава 50\./.test(g.title)).body.some(t=>/глава 98/.test(t)),
+   гл50:guideSec(/Живая речь народов/).body.some(t=>new RegExp("глава "+guideNum(GUIDE_OLD[98])+"\\b").test(t)),
    самопроверка:(()=>{const c=worldSelfCheck();const s=JSON.stringify(c);return s.indexOf('"folk"')>=0;})()};});
  check('глава 98 во второй части, и глава 50 на неё ссылается',
   док.глава&&док.абзацев>=7&&/Часть II/.test(док.часть||"")&&док.гл50,док);

@@ -203,7 +203,7 @@ const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(e!==undefined?' :
 
  /* ── 9. самопроверка и тексты ── */
  const свод=await page.evaluate(()=>{const r=worldSelfCheck();
-  const гл=GUIDE.find(g=>/Из чего сложен ярус/i.test(g.title));
+  const гл=guideSec(/Из чего сложен ярус/i);
   return {gen:r.find(x=>x.id==="gen"),плохие:r.filter(x=>!x.ok).map(x=>x.id),
    глава:!!гл,строк:гл?гл.body.length:0};});
  check('самопроверка мира держит зелёную строку «gen»',

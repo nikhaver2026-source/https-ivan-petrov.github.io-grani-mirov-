@@ -264,7 +264,7 @@ const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(e!==undefined?' :
 
  /* ── 12. самопроверка и тексты ── */
  const свод=await page.evaluate(()=>{const r=worldSelfCheck();
-  const гл=GUIDE.find(g=>/Эхо: осколки/i.test(g.title));
+  const гл=guideSec(/Эхо: осколки/i);
   return {e:r.find(x=>x.id==="echo"),плохие:r.filter(x=>!x.ok).map(x=>x.id),
    глава:!!гл,строк:гл?гл.body.length:0,
    модуль:Modules.has("ECHO"),текст:String(Modules.get("ECHO").text()).slice(0,200)};});

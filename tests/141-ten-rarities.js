@@ -160,7 +160,7 @@ const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(e!==undefined?' :
 
  /* ── 11. самопроверка и тексты ── */
  const свод=await page.evaluate(()=>{const r=worldSelfCheck();
-  const гл=GUIDE.find(g=>/Десять редкостей/i.test(g.title));
+  const гл=guideSec(/Десять редкостей/i);
   return {r:r.find(x=>x.id==="rarity"),m:r.find(x=>x.id==="merit"),
    плохие:r.filter(x=>!x.ok).map(x=>x.id),
    глава:!!гл,строк:гл?гл.body.length:0};});

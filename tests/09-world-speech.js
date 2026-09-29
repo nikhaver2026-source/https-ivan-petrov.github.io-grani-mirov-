@@ -25,7 +25,7 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
  const prose=await page.evaluate(()=>PROSE.join(" "));
  check('пролог говорит о 12 державах, 46 народах и 12 богах',/двенадцати державах/.test(prose)&&/сорока шести народах/.test(prose)&&/двенадцати богах/.test(prose));
 
- const guide=await page.evaluate(()=>GUIDE.map(g=>g.title).join(" | "));
+ const guide=await page.evaluate(()=>GUIDE.map(g=>[g.title].concat((g.secs||[]).map(x=>x.t)).join(" | ")).join(" | "));
  check('в руководстве есть главы о народах, богах и политике',/Сорок шесть народов/.test(guide)&&/Двенадцать богов/.test(guide)&&/Политика, войны и торговля/.test(guide),guide.split(" | ").length+" глав");
  const dupCh=await page.evaluate(()=>{const nums=GUIDE.map(g=>(g.title.match(/Глава (\d+)/)||[])[1]);return nums.filter((v,i,a)=>a.indexOf(v)!==i);});
  check('нумерация глав руководства без повторов',dupCh.length===0,dupCh);

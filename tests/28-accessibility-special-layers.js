@@ -149,7 +149,7 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
  await doubleTap();
  const chapter=await page.evaluate(()=>({номер:chIndex,
   заголовок:document.getElementById('chTitle').textContent,
-  пунктов:cursorItems(activeLayer()).length,
+  пунктов:cursorItems(activeLayer()).length,разделов:document.querySelectorAll('#chBody h3').length,
   тексты:cursorItems(activeLayer()).map(x=>(x.textContent||'').trim().slice(0,10))}));
  check('оглавление руководства состоит только из своих пунктов: главы, части и три кнопки о самом оглавлении',
   toc.пунктов===toc.глав+toc.частей+4,{пунктов:toc.пунктов,глав:toc.глав,частей:toc.частей});
@@ -157,7 +157,8 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   chapter.номер===toc.ждём&&onChapter.startsWith('Глава 3')&&chapter.заголовок.startsWith('Глава 3'),
   {курсорБыл:onChapter,открылась:chapter.заголовок});
  check('в открытой главе свайп не уходит в скрытое оглавление',
-  chapter.пунктов<=6&&!chapter.тексты.some(t=>/^Глава 1\./.test(t)),chapter);
+  /* (4.5) В сборной главе к кнопкам добавились заголовки её разделов. */
+  chapter.пунктов<=6+chapter.разделов&&!chapter.тексты.some(t=>/^Глава 1\./.test(t)),chapter);
 
  /* ── 6. В главе свайп доходит до «След.» и переключает главу ── */
  await page.evaluate(()=>{resetCursor();ensureCursor(activeLayer());});

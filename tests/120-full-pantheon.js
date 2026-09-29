@@ -187,7 +187,7 @@ const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(e!==undefined?' :
   Gods.renderPantheon();
   const el=document.getElementById("godSmall");
   const строк=el?el.querySelectorAll(".list-line").length:0;
-  const гл=GUIDE.find(g=>/Весь пантеон|Боги и праздник/i.test(g.title));
+  const гл=guideSec(/Весь пантеон|Боги и праздник/i);
   return {pantheon:p,плохие:(строки.filter?строки.filter(r=>r&&r.ok===false).map(r=>r.id):[]),
    строкОкна:строк,глава:!!гл,строкГлавы:гл?гл.body.length:0};});
  check('самопроверка мира держит зелёную строку «pantheon»',

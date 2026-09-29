@@ -581,7 +581,7 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
 
  /* ── 15. Свод правил рассказывает о небе ── */
  const свод=await page.evaluate(()=>{
-  const гл=GUIDE.find(g=>/Третья координата/i.test(g.title));
+  const гл=guideSec(/Третья координата/i);
   const номера=GUIDE.map(g=>(g.title.match(/Глава (\d+)/)||[])[1]);
   return {есть:!!гл,строк:гл?гл.body.length:0,
    дубли:номера.filter((v,i,a)=>a.indexOf(v)!==i),

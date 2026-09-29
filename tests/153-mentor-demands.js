@@ -204,7 +204,7 @@ const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(e!==undefined?' :
  const свод=await page.evaluate(()=>{
   const rows=worldSelfCheck();
   const r=rows.find(x=>x.id==="teach");
-  const гл=GUIDE.find(g=>/Чего хочет наставник/i.test(g.title));
+  const гл=guideSec(/Чего хочет наставник/i);
   const M=Modules.get("MENTOR");
   return {строка:!!r,ок:r&&r.ok===true,
    красные:rows.filter(x=>!x.ok).map(x=>x.id),

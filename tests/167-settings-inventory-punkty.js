@@ -448,8 +448,8 @@ const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(e!==undefined?' :
   return {есть:!!r,ok:r&&r.ok,плохие:rows.filter(x=>!x.ok).map(x=>x.id),
    модуль:!!m&&m.groups().length===7&&typeof m.open==="function"&&typeof m.back==="function",
    текст:m?m.text():"",
-   глава:GUIDE.some(g=>/Глава 93\. Настройки и инвентарь — пунктами/.test(g.title)&&g.body.length>=6),
-   часть:guidePartOf(GUIDE_BY_NUM[93])};});
+   глава:guideHas(/Настройки и инвентарь — пунктами/,6),
+   часть:guidePartOf(GUIDE_OLD[93])};});
  check('18. самопроверка держит строку punkty, модуль SETTINGS_MENU отвечает, глава 93 в первой части',
   свод.есть&&свод.ok&&свод.модуль&&свод.глава&&свод.часть==="Часть I. Первые шаги"&&свод.текст.length>40,свод);
  check('ни одна другая строка самопроверки не покраснела',свод.плохие.length===0,свод.плохие);

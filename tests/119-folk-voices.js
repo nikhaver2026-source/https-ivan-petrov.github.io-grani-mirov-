@@ -225,8 +225,8 @@ const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(e!==undefined?' :
  const свод=await page.evaluate(()=>{
   const c=worldSelfCheck();
   const строка=(c.rows||c.строки||c).find?((c.rows||c.строки||c).find(r=>r.id==="folk"||r.k==="folk"||r[0]==="folk")):null;
-  const гл=GUIDE.find(g=>/Живая речь народов/i.test(g.title));
-  const титры=GUIDE.find(g=>/Кто написал эти звуки/i.test(g.title));
+  const гл=guideSec(/Живая речь народов/i);
+  const титры=guideSec(/Кто написал эти звуки/i);
   return {строка:строка||null,сырое:JSON.stringify(c).indexOf("folk")>=0,
    глава:!!гл,строк:гл?гл.body.length:0,
    титрыGemini:!!титры&&титры.body.some(t=>/Gemini/.test(t))};});

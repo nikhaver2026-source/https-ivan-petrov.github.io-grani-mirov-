@@ -177,7 +177,7 @@ const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(e!==undefined?' :
  const свод=await page.evaluate(()=>{
   const rows=worldSelfCheck();
   const r=rows.find(x=>x.id==="loot");
-  const гл=GUIDE.find(g=>/Девять слагаемых/i.test(g.title));
+  const гл=guideSec(/Девять слагаемых/i);
   const L=Modules.get("LOOT");
   return {строка:!!r,ок:r&&r.ok===true,
    красные:rows.filter(x=>!x.ok).map(x=>x.id),

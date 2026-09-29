@@ -296,10 +296,10 @@ const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(e!==undefined?' :
 
  /* ── 10. Руководство, самопроверка, документы ── */
  const док=await page.evaluate(()=>{
-  const гл=GUIDE.find(g=>/Глава 99\./.test(g.title));
-  const гл2=GUIDE.find(g=>/Глава 2\. Жесты/.test(g.title));
+  const гл=guideSec(/Действие — двойным касанием/);
+  const гл2=guideSec(/Жесты/);
   const c=JSON.stringify(worldSelfCheck());
-  return {глава:гл?гл.title:null,абз:гл?гл.body.length:0,часть:GUIDE_PARTS.find(p=>p[2].indexOf(99)>=0)?.[0]||null,
+  return {глава:гл?гл.title:null,абз:гл?гл.body.length:0,часть:GUIDE_PARTS.find(p=>p[2].indexOf(guideNum(GUIDE_OLD[99]))>=0)?.[0]||null,
    гл2:гл2&&гл2.body.some(t=>/на игровом поле — действие здесь/.test(t)),
    сверка:/"secretroom"/.test(c)&&!/"secretroom","ok":false/.test(c),news:NEWS_V};});
  check('глава 99 в первой части, глава 2 говорит о двойном касании на поле',

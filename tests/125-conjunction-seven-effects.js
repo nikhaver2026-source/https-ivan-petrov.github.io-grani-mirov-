@@ -176,7 +176,7 @@ const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(e!==undefined?' :
  /* ── 9. самопроверка, руководство, README ── */
  const свод=await page.evaluate(()=>{
   const c=worldSelfCheck();const r=(c.rows||c);
-  const гл=GUIDE.find(g=>/Сопряжение Грани/i.test(g.title));
+  const гл=guideSec(/Сопряжение Грани/i);
   return {conjunction:(r.find?r.find(x=>x&&x.id==="conjunction"):null)||null,
    плохие:(r.filter?r.filter(x=>x&&x.ok===false).map(x=>x.id):[]),
    глава:!!гл,строк:гл?гл.body.length:0};});

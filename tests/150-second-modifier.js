@@ -193,7 +193,7 @@ const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(e!==undefined?' :
  const свод=await page.evaluate(()=>{
   const rows=worldSelfCheck();
   const r=rows.find(x=>x.id==="modpair");
-  const гл=GUIDE.find(g=>/Второе усиление/i.test(g.title));
+  const гл=guideSec(/Второе усиление/i);
   const W=Modules.get("WEAVE");
   return {строка:!!r,ок:r&&r.ok===true,
    красные:rows.filter(x=>!x.ok).map(x=>x.id),

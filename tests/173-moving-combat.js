@@ -287,7 +287,7 @@ const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(e!==undefined?' :
  const слова=await page.evaluate(()=>{
   const g=GESTURE_MAP.find(x=>x.fingers===1&&x.kind==="swipe");
   const g2=GESTURE_MAP.find(x=>x.fingers===2&&x.kind==="tap");
-  const гл=GUIDE_BY_NUM[96];
+  const гл=GUIDE_OLD[96];
   const row=worldSelfCheck().find(x=>x.id==="arena");
   return {свайп:g&&g.n,два:g2&&g2.n,подсказка:(document.querySelector('#combatBar .hint')||{}).textContent||"",
    глава:гл!==undefined&&GUIDE[гл].body.length>=8,часть:гл!==undefined&&guidePartOf(гл),

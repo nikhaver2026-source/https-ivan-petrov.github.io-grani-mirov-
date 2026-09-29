@@ -168,7 +168,7 @@ const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(e!==undefined?' :
    модуль:!!m&&m.folk.length===12&&m.bosses.length===14&&m.prizes.length===14
     &&typeof m.at==="function"&&typeof m.here==="function"&&typeof m.line==="function",
    текст:m?m.text():"",
-   глава:GUIDE.some(g=>/Глава 89\. Досье яруса/.test(g.title)&&g.body.length>=5)};});
+   глава:guideHas(/Досье яруса/,5)};});
  check('самопроверка держит строку floors13, модуль FLOORS отвечает, глава 89 на месте',
   свод.есть&&свод.ok&&свод.модуль&&свод.глава&&свод.текст.length>40,свод);
  check('ни одна другая строка самопроверки не покраснела',свод.плохие.length===0,свод.плохие);

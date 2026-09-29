@@ -265,7 +265,7 @@ const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(e!==undefined?' :
 
  /* ── 7. Настройки, руководство, документы ── */
  const н=await page.evaluate(()=>{
-  const g=GUIDE_BY_NUM[97];
+  const g=GUIDE_OLD[97];
   return {флажкиЕсть:!!document.getElementById("setCompass")&&!!document.getElementById("setStopOnAction"),
    умолчания:settings.compass===1&&settings.stopOnAction===1,
    глава:g!==undefined&&GUIDE[g].body.length>=6,часть:g!==undefined&&guidePartOf(g)};});

@@ -174,7 +174,7 @@ const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(e!==undefined?' :
  /* ── 6. самопроверка, руководство, README ── */
  const свод=await page.evaluate(()=>{
   const c=worldSelfCheck();const r=(c.rows||c);
-  const гл=GUIDE.find(g=>/Шестнадцать родов дел/i.test(g.title));
+  const гл=guideSec(/Шестнадцать родов дел/i);
   return {questkinds:(r.find?r.find(x=>x&&x.id==="questkinds"):null)||null,
    плохие:(r.filter?r.filter(x=>x&&x.ok===false).map(x=>x.id):[]),
    глава:!!гл,строк:гл?гл.body.length:0};});

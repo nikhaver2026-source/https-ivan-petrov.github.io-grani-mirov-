@@ -163,7 +163,7 @@ const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(e!==undefined?' :
 
  /* ── 9. самопроверка и тексты ── */
  const свод=await page.evaluate(()=>{const r=worldSelfCheck();
-  const гл=GUIDE.find(g=>/Владыки ярусов/i.test(g.title));
+  const гл=guideSec(/Владыки ярусов/i);
   return {g:r.find(x=>x.id==="guards"),плохие:r.filter(x=>!x.ok).map(x=>x.id),
    глава:!!гл,строк:гл?гл.body.length:0,
    текст:safeFn(()=>Guards.text(50),"").slice(0,120),
