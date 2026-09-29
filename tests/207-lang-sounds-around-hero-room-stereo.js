@@ -67,7 +67,7 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
  const банк=await page.evaluate(()=>({роли:["lang_pen","lang_brush","lang_page"].map(r=>SOUND_BANK[r]&&SOUND_BANK[r].f.length),
   раздел:["lang_pen","lang_brush","lang_page"].map(r=>roleSection(r)),папка:!!BANK_CATS.lang}));
  const титры=fs.existsSync(path.join(ROOT,'sounds/lang/CREDITS.md'))&&fs.existsSync(path.join(ROOT,'sounds/lang/LICENSE-CC0.txt'));
- const файлов=fs.readdirSync(path.join(ROOT,'sounds/lang')).filter(f=>f.endsWith('.ogg')).length;
+ const файлов=fs.readdirSync(path.join(ROOT,'sounds/lang')).filter(f=>f.endsWith('.flac')).length;
  check('3. перо (4), вязь (3) и страница (3) — в банке и в разделе «вещи», папка названа, титры и лицензия CC0 на месте',
   банк.роли.join()==="4,3,3"&&банк.раздел.every(x=>x==="items")&&банк.папка&&титры&&файлов===10,{банк,титры,файлов});
 
