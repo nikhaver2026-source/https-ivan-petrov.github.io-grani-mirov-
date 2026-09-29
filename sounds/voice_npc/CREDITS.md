@@ -5,7 +5,7 @@
 стражник у ворот, жрец, трактирщик, староста, кузнец, торговец, наставник, смотритель порта. Прежде эти строки читал голос
 игры в кавычках; теперь у каждой своя запись и своя интонация.
 
-Записей: 2613
+Записей: 6272
 
 Речь синтезирована 27–29 сентября 2026 года нейроголосами **Gemini** (Google),
 модель `gemini-3.8-flash-tts`, через Gemini API (Interactions API,
@@ -29,36 +29,36 @@ Policy (https://policies.google.com/terms/generative-ai/use-policy). Отдел�
 
 | Голос Gemini | Каков | Кто говорит | Записей |
 |---|---|---|---|
-| Alnilam | твёрдый | стражник на обходе и ночной дозор (первый голос стражи) | 157 |
-| Orus | твёрдый, пониже | стражник на обходе (второй голос стражи) | 159 |
-| Algenib | с хрипотцой | стражник на обходе (третий голос стражи) | 161 |
-| Charon | низкий, ровный | латник смены и солдат гарнизона за Гранью | 67 |
-| Schedar | ровный, холодный | латник смены за Гранью (второй голос) | 60 |
-| Achird | дружелюбный | горожанин и житель посада, староста деревни | 38 |
-| Sulafat | тёплый | горожанка и жительница посада, старостиха | 38 |
-| Umbriel | лёгкий, разговорный | приветствие и ответ в разговоре жителя, мужской голос; кузнец на пороге кузни | 729 |
-| Despina | мягкий | приветствие и ответ в разговоре жительницы, женский голос | 722 |
+| Alnilam | твёрдый | стражник на обходе и ночной дозор (первый голос стражи) | 159 |
+| Orus | твёрдый, пониже | стражник на обходе (второй голос стражи) | 161 |
+| Algenib | с хрипотцой | стражник на обходе (третий голос стражи) | 163 |
+| Charon | низкий, ровный | латник смены и солдат гарнизона за Гранью | 112 |
+| Schedar | ровный, холодный | латник смены за Гранью (второй голос) | 834 |
+| Achird | дружелюбный | горожанин и житель посада, староста деревни | 105 |
+| Sulafat | тёплый | горожанка и жительница посада, старостиха | 54 |
+| Umbriel | лёгкий, разговорный | приветствие и ответ в разговоре жителя, мужской голос; кузнец на пороге кузни | 811 |
+| Despina | мягкий | приветствие и ответ в разговоре жительницы, женский голос | 804 |
 | Algieba | ровный, уверенный | голос героя: ход «Спросить об истории» (остальные двадцать один — в sounds/voice) | 1 |
 | Rasalgethi | зрелый, дорожный | старший обоза, мужской голос; наставник школы, смотритель порта | 66 |
 | Gacrux | зрелый, твёрдый | старшая обоза, женский голос; смотрительница порта | 60 |
-| Fenrir | резкий, возбуждённый | разбойник (первый голос) | 41 |
+| Fenrir | резкий, возбуждённый | разбойник (первый голос) | 43 |
 | Enceladus | с придыханием | разбойник (второй голос), хозяин схрона | 74 |
-| Zubenelgenubi | спокойный, неспешный | жрец на пороге храма, хранитель башни | 48 |
-| Vindemiatrix | мягкий, тихий | жрица на пороге храма | 37 |
-| Puck | бодрый | трактирщик | 30 |
+| Zubenelgenubi | спокойный, неспешный | жрец на пороге храма, хранитель башни | 91 |
+| Vindemiatrix | мягкий, тихий | жрица на пороге храма | 83 |
+| Puck | бодрый | трактирщик | 32 |
 | Pulcherrima | напористый | трактирщица | 8 |
-| Kore | твёрдый | кузнечиха | 8 |
-| Sadachbia | живой | торговец на рынке | 8 |
+| Kore | твёрдый | кузнечиха | 60 |
+| Sadachbia | живой | торговец на рынке | 799 |
 | Laomedeia | бойкий | торговка на рынке | 8 |
-| Erinome | ясный | наставница школы | 6 |
-| Autonoe | звонкий | хранительница башни | 30 |
-| Achernar | мягкий, приглушённый | хозяйка схрона; разбойница в бою | 35 |
-| Sadachbia | живой | второй голос жителя (приветствие, разговор, торг, дело) | 8 |
-| Leda | молодой | второй голос жительницы | 0 |
-| Schedar | ровный | третий голос жителя; владыка нежити в бою (ниже на два полутона, в гулком зале) | 60 |
-| Aoede | лёгкий | третий голос жительницы | 0 |
-| Zephyr | яркий | корсарша в бою | 22 |
-| Kore | твёрдый | старшая войскового обоза | 8 |
+| Erinome | ясный | наставница школы | 58 |
+| Autonoe | звонкий | хранительница башни | 31 |
+| Achernar | мягкий, приглушённый | хозяйка схрона; разбойница в бою | 38 |
+| Sadachbia | живой | второй голос жителя (приветствие, разговор, торг, дело) | 799 |
+| Leda | молодой | второй голос жительницы | 796 |
+| Schedar | ровный | третий голос жителя; владыка нежити в бою (ниже на два полутона, в гулком зале) | 834 |
+| Aoede | лёгкий | третий голос жительницы | 797 |
+| Zephyr | яркий | корсарша в бою | 24 |
+| Kore | твёрдый | старшая войскового обоза | 60 |
 | Charon | низкий | старший войскового обоза; дракон в бою (ниже на пять полутонов, в пещере) | — |
 | Vindemiatrix | тихий | старшая паломничьего каравана; дух в бою (шёпот с эхом) | — |
 | Zubenelgenubi | неспешный | старший паломничьего каравана; страж Предтеч в бою (ниже, с металлом) | — |
@@ -96,7 +96,7 @@ Policy (https://policies.google.com/terms/generative-ai/use-policy). Отдел�
   в строки по распознанному тексту; каждую строку распознаёт русская модель
   GigaAM (sherpa-onnx, `nemo-ctc-giga-am-v2-russian`): не больше 15 % ошибочных
   букв и не медленнее шести знаков в секунду.
-- **Громкость.** −18 LUFS по EBU R128 (у записей от -19.1 до -17.6),
+- **Громкость.** −18 LUFS по EBU R128 (у записей от -19.2 до -17.6),
   пики не выше -1.0 дБ; моно 44,1 кГц, MP3 320 кбит/с.
 
 ## Все записи
@@ -2359,6 +2359,7 @@ Policy (https://policies.google.com/terms/generative-ai/use-policy). Отдел�
 | foe_bandit_start_0_v2_g.mp3 | в бою: разбойник, начало боя | Achernar | menacing, sneering | Кошелёк или жизнь! Выбирай быстро. |
 | foe_bandit_start_1_g.mp3 | в бою: разбойник, начало боя | Fenrir | mocking, cold | Ну всё, путник, приехали. |
 | foe_bandit_start_1_v1_g.mp3 | в бою: разбойник, начало боя | Enceladus | mocking, cold | Ну всё, путник, приехали. |
+| foe_bandit_start_1_v2_g.mp3 | в бою: разбойник, начало боя | Achernar | mocking, cold | Ну всё, путник, приехали. |
 | foe_bandit_start_2_g.mp3 | в бою: разбойник, начало боя | Fenrir | shouting to accomplices | Окружай его! Не дай уйти! |
 | foe_bandit_start_2_v1_g.mp3 | в бою: разбойник, начало боя | Enceladus | shouting to accomplices | Окружай его! Не дай уйти! |
 | foe_bandit_start_2_v2_g.mp3 | в бою: разбойник, начало боя | Achernar | shouting to accomplices | Окружай его! Не дай уйти! |
@@ -2399,6 +2400,7 @@ Policy (https://policies.google.com/terms/generative-ai/use-policy). Отдел�
 | foe_bandit_attack_6_v2_g.mp3 | в бою: разбойник, удар | Achernar | chasing, shouting | Куда пятишься? Стоять! |
 | foe_bandit_attack_7_g.mp3 | в бою: разбойник, удар | Fenrir | frenzied shout | Бей его, бей! |
 | foe_bandit_attack_7_v1_g.mp3 | в бою: разбойник, удар | Enceladus | frenzied shout | Бей его, бей! |
+| foe_bandit_attack_7_v2_g.mp3 | в бою: разбойник, удар | Achernar | frenzied shout | Бей его, бей! |
 | foe_bandit_hurt_0_g.mp3 | в бою: разбойник, ранен | Fenrir | pain, rage | Ах ты гад! Кровь пустил! |
 | foe_bandit_hurt_0_v1_g.mp3 | в бою: разбойник, ранен | Enceladus | pain, rage | Ах ты гад! Кровь пустил! |
 | foe_bandit_hurt_0_v2_g.mp3 | в бою: разбойник, ранен | Achernar | pain, rage | Ах ты гад! Кровь пустил! |
@@ -2432,11 +2434,13 @@ Policy (https://policies.google.com/terms/generative-ai/use-policy). Отдел�
 | foe_bandit_taunt_0_g.mp3 | в бою: разбойник, герой слабеет | Fenrir | cruel, gloating | Шатаешься? Сейчас упадёшь. |
 | foe_bandit_taunt_0_v1_g.mp3 | в бою: разбойник, герой слабеет | Enceladus | cruel, gloating | Шатаешься? Сейчас упадёшь. |
 | foe_bandit_taunt_0_v2_g.mp3 | в бою: разбойник, герой слабеет | Achernar | cruel, gloating | Шатаешься? Сейчас упадёшь. |
+| foe_bandit_taunt_1_g.mp3 | в бою: разбойник, герой слабеет | Fenrir | greedy, gloating | Ещё удар — и всё твоё станет моим. |
 | foe_bandit_taunt_1_v1_g.mp3 | в бою: разбойник, герой слабеет | Enceladus | greedy, gloating | Ещё удар — и всё твоё станет моим. |
 | foe_bandit_taunt_1_v2_g.mp3 | в бою: разбойник, герой слабеет | Achernar | greedy, gloating | Ещё удар — и всё твоё станет моим. |
 | foe_bandit_taunt_2_g.mp3 | в бою: разбойник, герой слабеет | Fenrir | mocking laugh | Кровью харкаешь, герой? |
 | foe_bandit_taunt_2_v1_g.mp3 | в бою: разбойник, герой слабеет | Enceladus | mocking laugh | Кровью харкаешь, герой? |
 | foe_bandit_taunt_2_v2_g.mp3 | в бою: разбойник, герой слабеет | Achernar | mocking laugh | Кровью харкаешь, герой? |
+| foe_bandit_death_0_g.mp3 | в бою: разбойник, гибель | Fenrir | dying, weak, bitter | Будь ты проклят… |
 | foe_bandit_death_0_v1_g.mp3 | в бою: разбойник, гибель | Enceladus | dying, weak, bitter | Будь ты проклят… |
 | foe_bandit_death_0_v2_g.mp3 | в бою: разбойник, гибель | Achernar | dying, weak, bitter | Будь ты проклят… |
 | foe_bandit_death_1_g.mp3 | в бою: разбойник, гибель | Fenrir | dying whisper, regret | Надо было… в деревне сидеть… |
@@ -2444,6 +2448,7 @@ Policy (https://policies.google.com/terms/generative-ai/use-policy). Отдел�
 | foe_bandit_death_1_v2_g.mp3 | в бою: разбойник, гибель | Achernar | dying whisper, regret | Надо было… в деревне сидеть… |
 | foe_bandit_death_2_g.mp3 | в бою: разбойник, гибель | Fenrir | dying, faint whisper | Мать… прости… |
 | foe_bandit_death_2_v1_g.mp3 | в бою: разбойник, гибель | Enceladus | dying, faint whisper | Мать… прости… |
+| foe_bandit_death_2_v2_g.mp3 | в бою: разбойник, гибель | Achernar | dying, faint whisper | Мать… прости… |
 | foe_pirate_start_0_g.mp3 | в бою: корсар, начало боя | Algenib | roaring command | Абордаж! Все на палубу! |
 | foe_pirate_start_0_v1_g.mp3 | в бою: корсар, начало боя | Zephyr | roaring command | Абордаж! Все на палубу! |
 | foe_pirate_start_1_g.mp3 | в бою: корсар, начало боя | Algenib | gleeful, loud | Свистать всех наверх! Добыча сама плывёт! |
@@ -2481,10 +2486,14 @@ Policy (https://policies.google.com/terms/generative-ai/use-policy). Отдел�
 | foe_pirate_low_2_g.mp3 | в бою: корсар, на исходе | Algenib | panicked shout | Все в шлюпки! Бросай корабль! |
 | foe_pirate_low_2_v1_g.mp3 | в бою: корсар, на исходе | Zephyr | panicked shout | Все в шлюпки! Бросай корабль! |
 | foe_pirate_low_3_g.mp3 | в бою: корсар, на исходе | Algenib | terrified | Не топи меня, я плавать не умею! |
+| foe_pirate_low_3_v1_g.mp3 | в бою: корсар, на исходе | Zephyr | terrified | Не топи меня, я плавать не умею! |
 | foe_pirate_taunt_0_v1_g.mp3 | в бою: корсар, герой слабеет | Zephyr | mocking laugh | Шатает тебя, как в шторм! |
 | foe_pirate_taunt_1_g.mp3 | в бою: корсар, герой слабеет | Algenib | gloating | Скоро пойдёшь кормить рыб! |
+| foe_pirate_taunt_1_v1_g.mp3 | в бою: корсар, герой слабеет | Zephyr | gloating | Скоро пойдёшь кормить рыб! |
+| foe_pirate_taunt_2_g.mp3 | в бою: корсар, герой слабеет | Algenib | cruel, gloating | Держишься за борт? Недолго осталось! |
 | foe_pirate_taunt_2_v1_g.mp3 | в бою: корсар, герой слабеет | Zephyr | cruel, gloating | Держишься за борт? Недолго осталось! |
 | foe_pirate_death_0_v1_g.mp3 | в бою: корсар, гибель | Zephyr | dying whisper | Море… забирает… |
+| foe_pirate_death_1_g.mp3 | в бою: корсар, гибель | Algenib | dying, resigned | К рыбам… так к рыбам… |
 | foe_pirate_death_1_v1_g.mp3 | в бою: корсар, гибель | Zephyr | dying, resigned | К рыбам… так к рыбам… |
 | foe_pirate_death_2_g.mp3 | в бою: корсар, гибель | Algenib | dying, faint | Паруса… опустите… |
 | foe_pirate_death_2_v1_g.mp3 | в бою: корсар, гибель | Zephyr | dying, faint | Паруса… опустите… |
@@ -2509,7 +2518,9 @@ Policy (https://policies.google.com/terms/generative-ai/use-policy). Отдел�
 | foe_goblin_taunt_0_g.mp3 | в бою: гоблин, герой слабеет | Puck | cackling | Хи-хи! Устал, большой? |
 | foe_goblin_taunt_1_g.mp3 | в бою: гоблин, герой слабеет | Puck | chanting, gleeful | Падай, падай, падай! |
 | foe_goblin_taunt_2_g.mp3 | в бою: гоблин, герой слабеет | Puck | greedy giggle | Скоро будешь наш ужин! |
+| foe_goblin_death_0_g.mp3 | в бою: гоблин, гибель | Puck | squeaky, fading | Ой… темно… |
 | foe_goblin_death_1_g.mp3 | в бою: гоблин, гибель | Puck | whimpering, dying | Мама… гоблин… |
+| foe_goblin_death_2_g.mp3 | в бою: гоблин, гибель | Puck | dying whine | Не… честно… |
 | foe_giant_start_0_g.mp3 | в бою: исполин, начало боя | Alnilam | booming, menacing | Кто топчет мою землю? |
 | foe_giant_start_1_g.mp3 | в бою: исполин, начало боя | Alnilam | hungry, deep | Маленький. Хрустящий. |
 | foe_giant_start_3_g.mp3 | в бою: исполин, начало боя | Alnilam | deep, contemptuous | Раздавлю, как жука. |
@@ -2517,12 +2528,14 @@ Policy (https://policies.google.com/terms/generative-ai/use-policy). Отдел�
 | foe_giant_start_5_g.mp3 | в бою: исполин, начало боя | Alnilam | ancient, menacing | Мои кости помнят горы. Твои — сломаются. |
 | foe_giant_attack_0_g.mp3 | в бою: исполин, удар | Alnilam | roaring | Раздавлю! |
 | foe_giant_attack_1_g.mp3 | в бою: исполин, удар | Alnilam | bellowing | Получай, мелюзга! |
+| foe_giant_attack_2_g.mp3 | в бою: исполин, удар | Alnilam | grunting, heavy | Хрусь! |
 | foe_giant_attack_3_g.mp3 | в бою: исполин, удар | Alnilam | roaring command | Лежать! |
 | foe_giant_attack_4_g.mp3 | в бою: исполин, удар | Alnilam | bellowing | Прочь с дороги! |
 | foe_giant_attack_5_g.mp3 | в бою: исполин, удар | Alnilam | furious roar | Размажу по камням! |
 | foe_giant_hurt_0_g.mp3 | в бою: исполин, ранен | Alnilam | angry, surprised, deep | Жжётся! Маленький жжётся! |
 | foe_giant_hurt_1_g.mp3 | в бою: исполин, ранен | Alnilam | deep fury | Ты делаешь больно. Я сделаю больнее. |
 | foe_giant_low_0_g.mp3 | в бою: исполин, на исходе | Alnilam | heavy breathing, deep | Не уйдёшь… не уйдёшь живым… |
+| foe_giant_low_2_g.mp3 | в бою: исполин, на исходе | Alnilam | desperate, deep | Горы… дайте силы… |
 | foe_giant_low_3_g.mp3 | в бою: исполин, на исходе | Alnilam | grudging, deep | Ты сильный. Для маленького. |
 | foe_giant_taunt_0_g.mp3 | в бою: исполин, герой слабеет | Alnilam | deep, cruel | Ломаешься. Все ломаются. |
 | foe_giant_taunt_1_g.mp3 | в бою: исполин, герой слабеет | Alnilam | deep, mocking | Устал, маленький? Ложись. |
@@ -2543,11 +2556,13 @@ Policy (https://policies.google.com/terms/generative-ai/use-policy). Отдел�
 | foe_dragon_hurt_1_g.mp3 | в бою: дракон, ранен | Charon | cold fury | Кровь дракона дорого стоит, смертный. |
 | foe_dragon_hurt_2_g.mp3 | в бою: дракон, ранен | Charon | icy, menacing | Эта рана будет стоить тебе жизни. |
 | foe_dragon_hurt_3_g.mp3 | в бою: дракон, ранен | Charon | surprised, cold, amused | Любопытно. Ты не так слаб, как кажешься. |
+| foe_dragon_low_1_g.mp3 | в бою: дракон, на исходе | Charon | desperate, snarling | Моё золото… не получишь… |
 | foe_dragon_low_2_g.mp3 | в бою: дракон, на исходе | Charon | wounded, vengeful | Я уйду в небо… и вернусь… |
 | foe_dragon_low_3_g.mp3 | в бою: дракон, на исходе | Charon | furious curse | Проклинаю твой род до седьмого колена! |
 | foe_dragon_taunt_0_g.mp3 | в бою: дракон, герой слабеет | Charon | cruel amusement | Ты уже дымишься, смертный. |
 | foe_dragon_taunt_1_g.mp3 | в бою: дракон, герой слабеет | Charon | predatory, mocking | Твоё сердце бьётся, как у зайца. |
 | foe_dragon_taunt_2_g.mp3 | в бою: дракон, герой слабеет | Charon | cold, menacing | Ещё один вздох — и он будет последним. |
+| foe_dragon_death_1_g.mp3 | в бою: дракон, гибель | Charon | dying, fading | Моё пламя… гаснет… |
 | foe_lich_start_0_g.mp3 | в бою: владыка нежити, начало боя | Schedar | cold, hollow whisper, longing | Живое тепло… как давно я его не чувствовал. |
 | foe_lich_start_1_g.mp3 | в бою: владыка нежити, начало боя | Schedar | cold, dry, ominous | Твоё имя уже записано. Осталось поставить дату. |
 | foe_lich_start_2_g.mp3 | в бою: владыка нежити, начало боя | Schedar | commanding, hollow | Встаньте, мёртвые. У нас гость. |
@@ -2567,6 +2582,7 @@ Policy (https://policies.google.com/terms/generative-ai/use-policy). Отдел�
 | foe_lich_taunt_0_g.mp3 | в бою: владыка нежити, герой слабеет | Schedar | hungry whisper | Твоя жизнь уходит. Я чувствую её вкус. |
 | foe_lich_taunt_1_g.mp3 | в бою: владыка нежити, герой слабеет | Schedar | cold, promising | Скоро ты встанешь рядом со мной. |
 | foe_lich_taunt_2_g.mp3 | в бою: владыка нежити, герой слабеет | Schedar | chilling whisper | Твоё сердце замедляется. Слушай. |
+| foe_lich_death_2_g.mp3 | в бою: владыка нежити, гибель | Schedar | fading, awed whisper | Мортана… встречает… |
 | foe_fiend_start_0_g.mp3 | в бою: бес из-за Грани, начало боя | Orus | silky, menacing | Сделка? Нет. Сегодня только плата. |
 | foe_fiend_start_1_g.mp3 | в бою: бес из-за Грани, начало боя | Orus | delighted, sinister | Я слышу, как кричит твоя душа. |
 | foe_fiend_start_2_g.mp3 | в бою: бес из-за Грани, начало боя | Orus | ominous, deep | Из-за Грани пришли мы. За тобой. |
@@ -2584,6 +2600,8 @@ Policy (https://policies.google.com/terms/generative-ai/use-policy). Отдел�
 | foe_fiend_low_1_g.mp3 | в бою: бес из-за Грани, на исходе | Orus | vengeful shriek | Я вернусь в твоих снах! |
 | foe_fiend_low_2_g.mp3 | в бою: бес из-за Грани, на исходе | Orus | furious curse | Ты проклят! Проклят навеки! |
 | foe_fiend_low_3_g.mp3 | в бою: бес из-за Грани, на исходе | Orus | desperate, pleading | Хозяин… помоги! |
+| foe_fiend_taunt_0_g.mp3 | в бою: бес из-за Грани, герой слабеет | Orus | purring, sinister | Твоя душа почти моя. |
+| foe_fiend_taunt_1_g.mp3 | в бою: бес из-за Грани, герой слабеет | Orus | mocking, silky | Падай. Я подхвачу. |
 | foe_fiend_taunt_2_g.mp3 | в бою: бес из-за Грани, герой слабеет | Orus | delighted whisper | Я чувствую твой страх. Он растёт. |
 | foe_fiend_death_0_g.mp3 | в бою: бес из-за Грани, гибель | Orus | dying hiss | Обратно… в пламя… |
 | foe_fiend_death_2_g.mp3 | в бою: бес из-за Грани, гибель | Orus | fading, wailing | Грань… закрывается… |
@@ -2606,6 +2624,7 @@ Policy (https://policies.google.com/terms/generative-ai/use-policy). Отдел�
 | foe_spirit_attack_2_g.mp3 | в бою: дух, удар | Enceladus | chilling whisper | Холод… войди в него… |
 | foe_spirit_attack_2_v1_g.mp3 | в бою: дух, удар | Vindemiatrix | chilling whisper | Холод… войди в него… |
 | foe_spirit_attack_4_g.mp3 | в бою: дух, удар | Enceladus | echoing whisper | Мы рядом… мы внутри… |
+| foe_spirit_attack_4_v1_g.mp3 | в бою: дух, удар | Vindemiatrix | echoing whisper | Мы рядом… мы внутри… |
 | foe_spirit_attack_5_g.mp3 | в бою: дух, удар | Enceladus | hollow whisper | Пустота зовёт… |
 | foe_spirit_attack_5_v1_g.mp3 | в бою: дух, удар | Vindemiatrix | hollow whisper | Пустота зовёт… |
 | foe_spirit_hurt_0_g.mp3 | в бою: дух, ранен | Enceladus | wailing, faint | Больно… даже нам больно… |
@@ -2630,7 +2649,9 @@ Policy (https://policies.google.com/terms/generative-ai/use-policy). Отдел�
 | foe_spirit_taunt_2_g.mp3 | в бою: дух, герой слабеет | Enceladus | chilling whisper | Сердце стучит всё тише… слушай… |
 | foe_spirit_taunt_2_v1_g.mp3 | в бою: дух, герой слабеет | Vindemiatrix | chilling whisper | Сердце стучит всё тише… слушай… |
 | foe_spirit_death_0_g.mp3 | в бою: дух, гибель | Enceladus | relieved sigh, fading | Свобода… |
+| foe_spirit_death_0_v1_g.mp3 | в бою: дух, гибель | Vindemiatrix | relieved sigh, fading | Свобода… |
 | foe_spirit_death_1_g.mp3 | в бою: дух, гибель | Enceladus | peaceful, fading whisper | Наконец… покой… |
+| foe_spirit_death_1_v1_g.mp3 | в бою: дух, гибель | Vindemiatrix | peaceful, fading whisper | Наконец… покой… |
 | foe_siren_start_0_g.mp3 | в бою: сирена, начало боя | Autonoe | alluring, sweet, eerie | Иди ко мне… вода тёплая… |
 | foe_siren_start_1_g.mp3 | в бою: сирена, начало боя | Autonoe | seductive, sing-song | Ты слышишь мою песню? Иди на голос… |
 | foe_siren_start_2_g.mp3 | в бою: сирена, начало боя | Autonoe | sweet, sinister | Столько моряков… и ни один не вернулся. |
@@ -2641,6 +2662,7 @@ Policy (https://policies.google.com/terms/generative-ai/use-policy). Отдел�
 | foe_siren_attack_1_g.mp3 | в бою: сирена, удар | Autonoe | commanding, furious | Вода, возьми его! |
 | foe_siren_attack_2_g.mp3 | в бою: сирена, удар | Autonoe | sweet then shrieking | Утони в моих объятиях! |
 | foe_siren_attack_3_g.mp3 | в бою: сирена, удар | Autonoe | hissing | Соль тебе в раны! |
+| foe_siren_attack_4_g.mp3 | в бою: сирена, удар | Autonoe | cruel, sweet | Задержи дыхание… навсегда! |
 | foe_siren_hurt_0_g.mp3 | в бою: сирена, ранен | Autonoe | hurt, betrayed | Ты ранишь меня? Меня, что любила тебя? |
 | foe_siren_hurt_1_g.mp3 | в бою: сирена, ранен | Autonoe | cold, hissing | Кровь в воде… акулы услышат. |
 | foe_siren_hurt_2_g.mp3 | в бою: сирена, ранен | Autonoe | bitter, hurt | Жестокий… как все живые. |
@@ -2681,38 +2703,3675 @@ Policy (https://policies.google.com/terms/generative-ai/use-policy). Отдел�
 | foe_construct_death_0_g.mp3 | в бою: страж Предтеч, гибель | Zubenelgenubi | fading | Отключение… |
 | foe_construct_death_1_g.mp3 | в бою: страж Предтеч, гибель | Zubenelgenubi | fading, mechanical | Сеть… молчит… |
 | foe_construct_death_2_g.mp3 | в бою: страж Предтеч, гибель | Zubenelgenubi | fading | Страж… уснул… |
+| quest_fetch_derevo_0_g.mp3 | заказчик: принести — дерево | Umbriel | practical, worried | Дров и бруса не хватает — зима близко. Принеси дерева, сколько сказал. |
+| quest_fetch_derevo_0_f_g.mp3 | заказчик: принести — дерево | Despina | practical, worried | Дров и бруса не хватает — зима близко. Принеси дерева, сколько сказал. |
+| quest_fetch_derevo_0_v1_g.mp3 | заказчик: принести — дерево | Sadachbia | practical, worried | Дров и бруса не хватает — зима близко. Принеси дерева, сколько сказал. |
+| quest_fetch_derevo_0_v1_f_g.mp3 | заказчик: принести — дерево | Leda | practical, worried | Дров и бруса не хватает — зима близко. Принеси дерева, сколько сказал. |
 | quest_fetch_derevo_0_v2_g.mp3 | заказчик: принести — дерево | Schedar | practical, worried | Дров и бруса не хватает — зима близко. Принеси дерева, сколько сказал. |
+| quest_fetch_derevo_0_v2_f_g.mp3 | заказчик: принести — дерево | Aoede | practical, worried | Дров и бруса не хватает — зима близко. Принеси дерева, сколько сказал. |
+| quest_fetch_derevo_1_g.mp3 | заказчик: принести — дерево | Umbriel | businesslike, earnest | Мне нужно хорошее дерево, сухое, без гнили. Найдёшь — заплачу честно. |
+| quest_fetch_derevo_1_f_g.mp3 | заказчик: принести — дерево | Despina | businesslike, earnest | Мне нужно хорошее дерево, сухое, без гнили. Найдёшь — заплачу честно. |
+| quest_fetch_derevo_1_v1_g.mp3 | заказчик: принести — дерево | Sadachbia | businesslike, earnest | Мне нужно хорошее дерево, сухое, без гнили. Найдёшь — заплачу честно. |
+| quest_fetch_derevo_1_v1_f_g.mp3 | заказчик: принести — дерево | Leda | businesslike, earnest | Мне нужно хорошее дерево, сухое, без гнили. Найдёшь — заплачу честно. |
 | quest_fetch_derevo_1_v2_g.mp3 | заказчик: принести — дерево | Schedar | businesslike, earnest | Мне нужно хорошее дерево, сухое, без гнили. Найдёшь — заплачу честно. |
+| quest_fetch_derevo_1_v2_f_g.mp3 | заказчик: принести — дерево | Aoede | businesslike, earnest | Мне нужно хорошее дерево, сухое, без гнили. Найдёшь — заплачу честно. |
+| quest_fetch_trava_0_g.mp3 | заказчик: принести — травы | Umbriel | worried, pleading | Травы кончились, а люди болеют. Собери мне трав, прошу тебя. |
+| quest_fetch_trava_0_f_g.mp3 | заказчик: принести — травы | Despina | worried, pleading | Травы кончились, а люди болеют. Собери мне трав, прошу тебя. |
+| quest_fetch_trava_0_v1_g.mp3 | заказчик: принести — травы | Sadachbia | worried, pleading | Травы кончились, а люди болеют. Собери мне трав, прошу тебя. |
+| quest_fetch_trava_0_v1_f_g.mp3 | заказчик: принести — травы | Leda | worried, pleading | Травы кончились, а люди болеют. Собери мне трав, прошу тебя. |
 | quest_fetch_trava_0_v2_g.mp3 | заказчик: принести — травы | Schedar | worried, pleading | Травы кончились, а люди болеют. Собери мне трав, прошу тебя. |
+| quest_fetch_trava_0_v2_f_g.mp3 | заказчик: принести — травы | Aoede | worried, pleading | Травы кончились, а люди болеют. Собери мне трав, прошу тебя. |
+| quest_fetch_trava_1_g.mp3 | заказчик: принести — травы | Umbriel | brisk, instructive | Нужны травы, свежие, не вялые. Где растут — я сказал. |
+| quest_fetch_trava_1_f_g.mp3 | заказчик: принести — травы | Despina | brisk, instructive | Нужны травы, свежие, не вялые. Где растут — я сказал. |
+| quest_fetch_trava_1_v1_g.mp3 | заказчик: принести — травы | Sadachbia | brisk, instructive | Нужны травы, свежие, не вялые. Где растут — я сказал. |
+| quest_fetch_trava_1_v1_f_g.mp3 | заказчик: принести — травы | Leda | brisk, instructive | Нужны травы, свежие, не вялые. Где растут — я сказал. |
 | quest_fetch_trava_1_v2_g.mp3 | заказчик: принести — травы | Schedar | brisk, instructive | Нужны травы, свежие, не вялые. Где растут — я сказал. |
+| quest_fetch_trava_1_v2_f_g.mp3 | заказчик: принести — травы | Aoede | brisk, instructive | Нужны травы, свежие, не вялые. Где растут — я сказал. |
+| quest_fetch_yagody_0_g.mp3 | заказчик: принести — ягоды | Umbriel | warm, homely | Ягод бы мне. Детям на зиму, да и на настойку хватит. |
+| quest_fetch_yagody_0_f_g.mp3 | заказчик: принести — ягоды | Despina | warm, homely | Ягод бы мне. Детям на зиму, да и на настойку хватит. |
+| quest_fetch_yagody_0_v1_g.mp3 | заказчик: принести — ягоды | Sadachbia | warm, homely | Ягод бы мне. Детям на зиму, да и на настойку хватит. |
+| quest_fetch_yagody_0_v1_f_g.mp3 | заказчик: принести — ягоды | Leda | warm, homely | Ягод бы мне. Детям на зиму, да и на настойку хватит. |
 | quest_fetch_yagody_0_v2_g.mp3 | заказчик: принести — ягоды | Schedar | warm, homely | Ягод бы мне. Детям на зиму, да и на настойку хватит. |
+| quest_fetch_yagody_0_v2_f_g.mp3 | заказчик: принести — ягоды | Aoede | warm, homely | Ягод бы мне. Детям на зиму, да и на настойку хватит. |
+| quest_fetch_yagody_1_g.mp3 | заказчик: принести — ягоды | Umbriel | fussy, friendly | Собери ягод, только спелых. Зелёные не возьму. |
+| quest_fetch_yagody_1_f_g.mp3 | заказчик: принести — ягоды | Despina | fussy, friendly | Собери ягод, только спелых. Зелёные не возьму. |
+| quest_fetch_yagody_1_v1_g.mp3 | заказчик: принести — ягоды | Sadachbia | fussy, friendly | Собери ягод, только спелых. Зелёные не возьму. |
+| quest_fetch_yagody_1_v1_f_g.mp3 | заказчик: принести — ягоды | Leda | fussy, friendly | Собери ягод, только спелых. Зелёные не возьму. |
 | quest_fetch_yagody_1_v2_g.mp3 | заказчик: принести — ягоды | Schedar | fussy, friendly | Собери ягод, только спелых. Зелёные не возьму. |
+| quest_fetch_yagody_1_v2_f_g.mp3 | заказчик: принести — ягоды | Aoede | fussy, friendly | Собери ягод, только спелых. Зелёные не возьму. |
+| quest_fetch_kamen_0_g.mp3 | заказчик: принести — камень | Umbriel | tired, practical | Стена осыпается, камня нет. Принеси камня — поправим. |
+| quest_fetch_kamen_0_f_g.mp3 | заказчик: принести — камень | Despina | tired, practical | Стена осыпается, камня нет. Принеси камня — поправим. |
+| quest_fetch_kamen_0_v1_g.mp3 | заказчик: принести — камень | Sadachbia | tired, practical | Стена осыпается, камня нет. Принеси камня — поправим. |
+| quest_fetch_kamen_0_v1_f_g.mp3 | заказчик: принести — камень | Leda | tired, practical | Стена осыпается, камня нет. Принеси камня — поправим. |
 | quest_fetch_kamen_0_v2_g.mp3 | заказчик: принести — камень | Schedar | tired, practical | Стена осыпается, камня нет. Принеси камня — поправим. |
+| quest_fetch_kamen_0_v2_f_g.mp3 | заказчик: принести — камень | Aoede | tired, practical | Стена осыпается, камня нет. Принеси камня — поправим. |
+| quest_fetch_kamen_1_g.mp3 | заказчик: принести — камень | Umbriel | firm, businesslike | Мне нужен камень, крепкий, без трещин. Остальное — моя забота. |
+| quest_fetch_kamen_1_f_g.mp3 | заказчик: принести — камень | Despina | firm, businesslike | Мне нужен камень, крепкий, без трещин. Остальное — моя забота. |
+| quest_fetch_kamen_1_v1_g.mp3 | заказчик: принести — камень | Sadachbia | firm, businesslike | Мне нужен камень, крепкий, без трещин. Остальное — моя забота. |
+| quest_fetch_kamen_1_v1_f_g.mp3 | заказчик: принести — камень | Leda | firm, businesslike | Мне нужен камень, крепкий, без трещин. Остальное — моя забота. |
 | quest_fetch_kamen_1_v2_g.mp3 | заказчик: принести — камень | Schedar | firm, businesslike | Мне нужен камень, крепкий, без трещин. Остальное — моя забота. |
+| quest_fetch_kamen_1_v2_f_g.mp3 | заказчик: принести — камень | Aoede | firm, businesslike | Мне нужен камень, крепкий, без трещин. Остальное — моя забота. |
+| quest_fetch_ruda_0_g.mp3 | заказчик: принести — руда | Umbriel | gruff, urgent | Горн стынет без руды. Добудь мне руды, и я в долгу не останусь. |
+| quest_fetch_ruda_0_f_g.mp3 | заказчик: принести — руда | Despina | gruff, urgent | Горн стынет без руды. Добудь мне руды, и я в долгу не останусь. |
+| quest_fetch_ruda_0_v1_g.mp3 | заказчик: принести — руда | Sadachbia | gruff, urgent | Горн стынет без руды. Добудь мне руды, и я в долгу не останусь. |
+| quest_fetch_ruda_0_v1_f_g.mp3 | заказчик: принести — руда | Leda | gruff, urgent | Горн стынет без руды. Добудь мне руды, и я в долгу не останусь. |
 | quest_fetch_ruda_0_v2_g.mp3 | заказчик: принести — руда | Schedar | gruff, urgent | Горн стынет без руды. Добудь мне руды, и я в долгу не останусь. |
+| quest_fetch_ruda_0_v2_f_g.mp3 | заказчик: принести — руда | Aoede | gruff, urgent | Горн стынет без руды. Добудь мне руды, и я в долгу не останусь. |
+| quest_fetch_ruda_1_g.mp3 | заказчик: принести — руда | Umbriel | gruff, wry | Руда нужна, да побольше. Кузня без неё — просто сарай. |
+| quest_fetch_ruda_1_f_g.mp3 | заказчик: принести — руда | Despina | gruff, wry | Руда нужна, да побольше. Кузня без неё — просто сарай. |
+| quest_fetch_ruda_1_v1_g.mp3 | заказчик: принести — руда | Sadachbia | gruff, wry | Руда нужна, да побольше. Кузня без неё — просто сарай. |
+| quest_fetch_ruda_1_v1_f_g.mp3 | заказчик: принести — руда | Leda | gruff, wry | Руда нужна, да побольше. Кузня без неё — просто сарай. |
+| quest_fetch_ruda_1_v2_g.mp3 | заказчик: принести — руда | Schedar | gruff, wry | Руда нужна, да побольше. Кузня без неё — просто сарай. |
+| quest_fetch_ruda_1_v2_f_g.mp3 | заказчик: принести — руда | Aoede | gruff, wry | Руда нужна, да побольше. Кузня без неё — просто сарай. |
+| quest_fetch_kristall_0_g.mp3 | заказчик: принести — кристаллы | Umbriel | hushed, mysterious | Кристаллы нужны для обряда. Найди их — только осторожно, они поют. |
+| quest_fetch_kristall_0_f_g.mp3 | заказчик: принести — кристаллы | Despina | hushed, mysterious | Кристаллы нужны для обряда. Найди их — только осторожно, они поют. |
+| quest_fetch_kristall_0_v1_g.mp3 | заказчик: принести — кристаллы | Sadachbia | hushed, mysterious | Кристаллы нужны для обряда. Найди их — только осторожно, они поют. |
+| quest_fetch_kristall_0_v1_f_g.mp3 | заказчик: принести — кристаллы | Leda | hushed, mysterious | Кристаллы нужны для обряда. Найди их — только осторожно, они поют. |
+| quest_fetch_kristall_0_v2_g.mp3 | заказчик: принести — кристаллы | Schedar | hushed, mysterious | Кристаллы нужны для обряда. Найди их — только осторожно, они поют. |
+| quest_fetch_kristall_0_v2_f_g.mp3 | заказчик: принести — кристаллы | Aoede | hushed, mysterious | Кристаллы нужны для обряда. Найди их — только осторожно, они поют. |
+| quest_fetch_kristall_1_g.mp3 | заказчик: принести — кристаллы | Umbriel | precise, thoughtful | Принеси кристаллов. Чистых, светлых. Мутные мне ни к чему. |
+| quest_fetch_kristall_1_f_g.mp3 | заказчик: принести — кристаллы | Despina | precise, thoughtful | Принеси кристаллов. Чистых, светлых. Мутные мне ни к чему. |
+| quest_fetch_kristall_1_v1_g.mp3 | заказчик: принести — кристаллы | Sadachbia | precise, thoughtful | Принеси кристаллов. Чистых, светлых. Мутные мне ни к чему. |
+| quest_fetch_kristall_1_v1_f_g.mp3 | заказчик: принести — кристаллы | Leda | precise, thoughtful | Принеси кристаллов. Чистых, светлых. Мутные мне ни к чему. |
+| quest_fetch_kristall_1_v2_g.mp3 | заказчик: принести — кристаллы | Schedar | precise, thoughtful | Принеси кристаллов. Чистых, светлых. Мутные мне ни к чему. |
+| quest_fetch_kristall_1_v2_f_g.mp3 | заказчик: принести — кристаллы | Aoede | precise, thoughtful | Принеси кристаллов. Чистых, светлых. Мутные мне ни к чему. |
+| quest_fetch_rakushka_0_g.mp3 | заказчик: принести — ракушки | Umbriel | light, friendly | Ракушек бы мне, перламутровых. На берегу их полно, если знать места. |
+| quest_fetch_rakushka_0_f_g.mp3 | заказчик: принести — ракушки | Despina | light, friendly | Ракушек бы мне, перламутровых. На берегу их полно, если знать места. |
+| quest_fetch_rakushka_0_v1_g.mp3 | заказчик: принести — ракушки | Sadachbia | light, friendly | Ракушек бы мне, перламутровых. На берегу их полно, если знать места. |
+| quest_fetch_rakushka_0_v1_f_g.mp3 | заказчик: принести — ракушки | Leda | light, friendly | Ракушек бы мне, перламутровых. На берегу их полно, если знать места. |
+| quest_fetch_rakushka_0_v2_g.mp3 | заказчик: принести — ракушки | Schedar | light, friendly | Ракушек бы мне, перламутровых. На берегу их полно, если знать места. |
+| quest_fetch_rakushka_0_v2_f_g.mp3 | заказчик: принести — ракушки | Aoede | light, friendly | Ракушек бы мне, перламутровых. На берегу их полно, если знать места. |
+| quest_fetch_rakushka_1_g.mp3 | заказчик: принести — ракушки | Umbriel | cheerful, explaining | Собери ракушек. Из них у нас и пуговицы, и обереги. |
+| quest_fetch_rakushka_1_f_g.mp3 | заказчик: принести — ракушки | Despina | cheerful, explaining | Собери ракушек. Из них у нас и пуговицы, и обереги. |
+| quest_fetch_rakushka_1_v1_g.mp3 | заказчик: принести — ракушки | Sadachbia | cheerful, explaining | Собери ракушек. Из них у нас и пуговицы, и обереги. |
+| quest_fetch_rakushka_1_v1_f_g.mp3 | заказчик: принести — ракушки | Leda | cheerful, explaining | Собери ракушек. Из них у нас и пуговицы, и обереги. |
+| quest_fetch_rakushka_1_v2_g.mp3 | заказчик: принести — ракушки | Schedar | cheerful, explaining | Собери ракушек. Из них у нас и пуговицы, и обереги. |
+| quest_fetch_rakushka_1_v2_f_g.mp3 | заказчик: принести — ракушки | Aoede | cheerful, explaining | Собери ракушек. Из них у нас и пуговицы, и обереги. |
+| quest_fetch_griby_0_g.mp3 | заказчик: принести — грибы | Umbriel | warning, friendly | Грибов принеси. Только не бледных — те не для еды. |
+| quest_fetch_griby_0_f_g.mp3 | заказчик: принести — грибы | Despina | warning, friendly | Грибов принеси. Только не бледных — те не для еды. |
+| quest_fetch_griby_0_v1_g.mp3 | заказчик: принести — грибы | Sadachbia | warning, friendly | Грибов принеси. Только не бледных — те не для еды. |
+| quest_fetch_griby_0_v1_f_g.mp3 | заказчик: принести — грибы | Leda | warning, friendly | Грибов принеси. Только не бледных — те не для еды. |
+| quest_fetch_griby_0_v2_g.mp3 | заказчик: принести — грибы | Schedar | warning, friendly | Грибов принеси. Только не бледных — те не для еды. |
+| quest_fetch_griby_0_v2_f_g.mp3 | заказчик: принести — грибы | Aoede | warning, friendly | Грибов принеси. Только не бледных — те не для еды. |
+| quest_fetch_griby_1_g.mp3 | заказчик: принести — грибы | Umbriel | instructive, calm | Нужны грибы для зелья. Ищи в сырых местах, у корней. |
+| quest_fetch_griby_1_f_g.mp3 | заказчик: принести — грибы | Despina | instructive, calm | Нужны грибы для зелья. Ищи в сырых местах, у корней. |
+| quest_fetch_griby_1_v1_g.mp3 | заказчик: принести — грибы | Sadachbia | instructive, calm | Нужны грибы для зелья. Ищи в сырых местах, у корней. |
+| quest_fetch_griby_1_v1_f_g.mp3 | заказчик: принести — грибы | Leda | instructive, calm | Нужны грибы для зелья. Ищи в сырых местах, у корней. |
+| quest_fetch_griby_1_v2_g.mp3 | заказчик: принести — грибы | Schedar | instructive, calm | Нужны грибы для зелья. Ищи в сырых местах, у корней. |
+| quest_fetch_griby_1_v2_f_g.mp3 | заказчик: принести — грибы | Aoede | instructive, calm | Нужны грибы для зелья. Ищи в сырых местах, у корней. |
+| quest_fetch_kost_0_g.mp3 | заказчик: принести — кости | Umbriel | curt, secretive | Кости нужны. Не спрашивай зачем — просто принеси. |
+| quest_fetch_kost_0_f_g.mp3 | заказчик: принести — кости | Despina | curt, secretive | Кости нужны. Не спрашивай зачем — просто принеси. |
+| quest_fetch_kost_0_v1_g.mp3 | заказчик: принести — кости | Sadachbia | curt, secretive | Кости нужны. Не спрашивай зачем — просто принеси. |
+| quest_fetch_kost_0_v1_f_g.mp3 | заказчик: принести — кости | Leda | curt, secretive | Кости нужны. Не спрашивай зачем — просто принеси. |
+| quest_fetch_kost_0_v2_g.mp3 | заказчик: принести — кости | Schedar | curt, secretive | Кости нужны. Не спрашивай зачем — просто принеси. |
+| quest_fetch_kost_0_v2_f_g.mp3 | заказчик: принести — кости | Aoede | curt, secretive | Кости нужны. Не спрашивай зачем — просто принеси. |
+| quest_fetch_kost_1_g.mp3 | заказчик: принести — кости | Umbriel | businesslike | Принеси кости зверя, крепкие. Резчику работы на месяц. |
+| quest_fetch_kost_1_f_g.mp3 | заказчик: принести — кости | Despina | businesslike | Принеси кости зверя, крепкие. Резчику работы на месяц. |
+| quest_fetch_kost_1_v1_g.mp3 | заказчик: принести — кости | Sadachbia | businesslike | Принеси кости зверя, крепкие. Резчику работы на месяц. |
+| quest_fetch_kost_1_v1_f_g.mp3 | заказчик: принести — кости | Leda | businesslike | Принеси кости зверя, крепкие. Резчику работы на месяц. |
+| quest_fetch_kost_1_v2_g.mp3 | заказчик: принести — кости | Schedar | businesslike | Принеси кости зверя, крепкие. Резчику работы на месяц. |
+| quest_fetch_kost_1_v2_f_g.mp3 | заказчик: принести — кости | Aoede | businesslike | Принеси кости зверя, крепкие. Резчику работы на месяц. |
+| quest_kill_sever_0_g.mp3 | заказчик: очистить округу — север | Umbriel | grim, urgent | На севере твари расплодились, житья не дают. Иди туда и перебей их. |
+| quest_kill_sever_0_f_g.mp3 | заказчик: очистить округу — север | Despina | grim, urgent | На севере твари расплодились, житья не дают. Иди туда и перебей их. |
+| quest_kill_sever_0_v1_g.mp3 | заказчик: очистить округу — север | Sadachbia | grim, urgent | На севере твари расплодились, житья не дают. Иди туда и перебей их. |
+| quest_kill_sever_0_v1_f_g.mp3 | заказчик: очистить округу — север | Leda | grim, urgent | На севере твари расплодились, житья не дают. Иди туда и перебей их. |
+| quest_kill_sever_0_v2_g.mp3 | заказчик: очистить округу — север | Schedar | grim, urgent | На севере твари расплодились, житья не дают. Иди туда и перебей их. |
+| quest_kill_sever_0_v2_f_g.mp3 | заказчик: очистить округу — север | Aoede | grim, urgent | На севере твари расплодились, житья не дают. Иди туда и перебей их. |
+| quest_kill_sever_1_g.mp3 | заказчик: очистить округу — север | Umbriel | angry, determined | Ступай на север. Там зверьё совсем обнаглело — проучи его. |
+| quest_kill_sever_1_f_g.mp3 | заказчик: очистить округу — север | Despina | angry, determined | Ступай на север. Там зверьё совсем обнаглело — проучи его. |
+| quest_kill_sever_1_v1_g.mp3 | заказчик: очистить округу — север | Sadachbia | angry, determined | Ступай на север. Там зверьё совсем обнаглело — проучи его. |
+| quest_kill_sever_1_v1_f_g.mp3 | заказчик: очистить округу — север | Leda | angry, determined | Ступай на север. Там зверьё совсем обнаглело — проучи его. |
+| quest_kill_sever_1_v2_g.mp3 | заказчик: очистить округу — север | Schedar | angry, determined | Ступай на север. Там зверьё совсем обнаглело — проучи его. |
+| quest_kill_sever_1_v2_f_g.mp3 | заказчик: очистить округу — север | Aoede | angry, determined | Ступай на север. Там зверьё совсем обнаглело — проучи его. |
+| quest_kill_yug_0_g.mp3 | заказчик: очистить округу — юг | Umbriel | worried, urgent | С юга приходят твари, режут скот. Иди на юг и очисти округу. |
+| quest_kill_yug_0_f_g.mp3 | заказчик: очистить округу — юг | Despina | worried, urgent | С юга приходят твари, режут скот. Иди на юг и очисти округу. |
+| quest_kill_yug_0_v1_g.mp3 | заказчик: очистить округу — юг | Sadachbia | worried, urgent | С юга приходят твари, режут скот. Иди на юг и очисти округу. |
+| quest_kill_yug_0_v1_f_g.mp3 | заказчик: очистить округу — юг | Leda | worried, urgent | С юга приходят твари, режут скот. Иди на юг и очисти округу. |
+| quest_kill_yug_0_v2_g.mp3 | заказчик: очистить округу — юг | Schedar | worried, urgent | С юга приходят твари, режут скот. Иди на юг и очисти округу. |
+| quest_kill_yug_0_v2_f_g.mp3 | заказчик: очистить округу — юг | Aoede | worried, urgent | С юга приходят твари, режут скот. Иди на юг и очисти округу. |
+| quest_kill_yug_1_g.mp3 | заказчик: очистить округу — юг | Umbriel | businesslike, grim | Ступай на юг. Сколько тварей там положишь — столько и заплачу. |
+| quest_kill_yug_1_f_g.mp3 | заказчик: очистить округу — юг | Despina | businesslike, grim | Ступай на юг. Сколько тварей там положишь — столько и заплачу. |
+| quest_kill_yug_1_v1_g.mp3 | заказчик: очистить округу — юг | Sadachbia | businesslike, grim | Ступай на юг. Сколько тварей там положишь — столько и заплачу. |
+| quest_kill_yug_1_v1_f_g.mp3 | заказчик: очистить округу — юг | Leda | businesslike, grim | Ступай на юг. Сколько тварей там положишь — столько и заплачу. |
+| quest_kill_yug_1_v2_g.mp3 | заказчик: очистить округу — юг | Schedar | businesslike, grim | Ступай на юг. Сколько тварей там положишь — столько и заплачу. |
+| quest_kill_yug_1_v2_f_g.mp3 | заказчик: очистить округу — юг | Aoede | businesslike, grim | Ступай на юг. Сколько тварей там положишь — столько и заплачу. |
+| quest_kill_zapad_0_g.mp3 | заказчик: очистить округу — запад | Umbriel | stern, grim | На западе завелась нечисть. Иди туда и не возвращайся, пока не очистишь. |
+| quest_kill_zapad_0_f_g.mp3 | заказчик: очистить округу — запад | Despina | stern, grim | На западе завелась нечисть. Иди туда и не возвращайся, пока не очистишь. |
+| quest_kill_zapad_0_v1_g.mp3 | заказчик: очистить округу — запад | Sadachbia | stern, grim | На западе завелась нечисть. Иди туда и не возвращайся, пока не очистишь. |
+| quest_kill_zapad_0_v1_f_g.mp3 | заказчик: очистить округу — запад | Leda | stern, grim | На западе завелась нечисть. Иди туда и не возвращайся, пока не очистишь. |
+| quest_kill_zapad_0_v2_g.mp3 | заказчик: очистить округу — запад | Schedar | stern, grim | На западе завелась нечисть. Иди туда и не возвращайся, пока не очистишь. |
+| quest_kill_zapad_0_v2_f_g.mp3 | заказчик: очистить округу — запад | Aoede | stern, grim | На западе завелась нечисть. Иди туда и не возвращайся, пока не очистишь. |
+| quest_kill_zapad_1_g.mp3 | заказчик: очистить округу — запад | Umbriel | uneasy, lowered voice | Ступай на запад. Там по ночам воют — разберись. |
+| quest_kill_zapad_1_f_g.mp3 | заказчик: очистить округу — запад | Despina | uneasy, lowered voice | Ступай на запад. Там по ночам воют — разберись. |
+| quest_kill_zapad_1_v1_g.mp3 | заказчик: очистить округу — запад | Sadachbia | uneasy, lowered voice | Ступай на запад. Там по ночам воют — разберись. |
+| quest_kill_zapad_1_v1_f_g.mp3 | заказчик: очистить округу — запад | Leda | uneasy, lowered voice | Ступай на запад. Там по ночам воют — разберись. |
+| quest_kill_zapad_1_v2_g.mp3 | заказчик: очистить округу — запад | Schedar | uneasy, lowered voice | Ступай на запад. Там по ночам воют — разберись. |
+| quest_kill_zapad_1_v2_f_g.mp3 | заказчик: очистить округу — запад | Aoede | uneasy, lowered voice | Ступай на запад. Там по ночам воют — разберись. |
+| quest_kill_vostok_0_g.mp3 | заказчик: очистить округу — восток | Umbriel | urgent, fearful | С востока лезут твари. Иди на восток и перебей их, пока не дошли до нас. |
+| quest_kill_vostok_0_f_g.mp3 | заказчик: очистить округу — восток | Despina | urgent, fearful | С востока лезут твари. Иди на восток и перебей их, пока не дошли до нас. |
+| quest_kill_vostok_0_v1_g.mp3 | заказчик: очистить округу — восток | Sadachbia | urgent, fearful | С востока лезут твари. Иди на восток и перебей их, пока не дошли до нас. |
+| quest_kill_vostok_0_v1_f_g.mp3 | заказчик: очистить округу — восток | Leda | urgent, fearful | С востока лезут твари. Иди на восток и перебей их, пока не дошли до нас. |
+| quest_kill_vostok_0_v2_g.mp3 | заказчик: очистить округу — восток | Schedar | urgent, fearful | С востока лезут твари. Иди на восток и перебей их, пока не дошли до нас. |
+| quest_kill_vostok_0_v2_f_g.mp3 | заказчик: очистить округу — восток | Aoede | urgent, fearful | С востока лезут твари. Иди на восток и перебей их, пока не дошли до нас. |
+| quest_kill_vostok_1_g.mp3 | заказчик: очистить округу — восток | Umbriel | earnest, grim | Ступай на восток. Люди туда ходить боятся — сделай так, чтобы перестали. |
+| quest_kill_vostok_1_f_g.mp3 | заказчик: очистить округу — восток | Despina | earnest, grim | Ступай на восток. Люди туда ходить боятся — сделай так, чтобы перестали. |
+| quest_kill_vostok_1_v1_g.mp3 | заказчик: очистить округу — восток | Sadachbia | earnest, grim | Ступай на восток. Люди туда ходить боятся — сделай так, чтобы перестали. |
+| quest_kill_vostok_1_v1_f_g.mp3 | заказчик: очистить округу — восток | Leda | earnest, grim | Ступай на восток. Люди туда ходить боятся — сделай так, чтобы перестали. |
+| quest_kill_vostok_1_v2_g.mp3 | заказчик: очистить округу — восток | Schedar | earnest, grim | Ступай на восток. Люди туда ходить боятся — сделай так, чтобы перестали. |
+| quest_kill_vostok_1_v2_f_g.mp3 | заказчик: очистить округу — восток | Aoede | earnest, grim | Ступай на восток. Люди туда ходить боятся — сделай так, чтобы перестали. |
+| quest_type_hunt_0_g.mp3 | заказчик: выследить зверя | Umbriel | serious, emphatic | Есть одна тварь, особая. Обычного зверя не надо — мне нужна именно она. |
+| quest_type_hunt_0_f_g.mp3 | заказчик: выследить зверя | Despina | serious, emphatic | Есть одна тварь, особая. Обычного зверя не надо — мне нужна именно она. |
+| quest_type_hunt_0_v1_g.mp3 | заказчик: выследить зверя | Sadachbia | serious, emphatic | Есть одна тварь, особая. Обычного зверя не надо — мне нужна именно она. |
+| quest_type_hunt_0_v1_f_g.mp3 | заказчик: выследить зверя | Leda | serious, emphatic | Есть одна тварь, особая. Обычного зверя не надо — мне нужна именно она. |
+| quest_type_hunt_0_v2_g.mp3 | заказчик: выследить зверя | Schedar | serious, emphatic | Есть одна тварь, особая. Обычного зверя не надо — мне нужна именно она. |
+| quest_type_hunt_0_v2_f_g.mp3 | заказчик: выследить зверя | Aoede | serious, emphatic | Есть одна тварь, особая. Обычного зверя не надо — мне нужна именно она. |
+| quest_type_hunt_1_g.mp3 | заказчик: выследить зверя | Umbriel | stern, instructive | Выследи ту тварь, о которой я говорю. Остальных не трогай — зря потратишь силы. |
+| quest_type_hunt_1_f_g.mp3 | заказчик: выследить зверя | Despina | stern, instructive | Выследи ту тварь, о которой я говорю. Остальных не трогай — зря потратишь силы. |
+| quest_type_hunt_1_v1_g.mp3 | заказчик: выследить зверя | Sadachbia | stern, instructive | Выследи ту тварь, о которой я говорю. Остальных не трогай — зря потратишь силы. |
+| quest_type_hunt_1_v1_f_g.mp3 | заказчик: выследить зверя | Leda | stern, instructive | Выследи ту тварь, о которой я говорю. Остальных не трогай — зря потратишь силы. |
+| quest_type_hunt_1_v2_g.mp3 | заказчик: выследить зверя | Schedar | stern, instructive | Выследи ту тварь, о которой я говорю. Остальных не трогай — зря потратишь силы. |
+| quest_type_hunt_1_v2_f_g.mp3 | заказчик: выследить зверя | Aoede | stern, instructive | Выследи ту тварь, о которой я говорю. Остальных не трогай — зря потратишь силы. |
+| quest_type_hunt_2_g.mp3 | заказчик: выследить зверя | Umbriel | grim, angry | Эта тварь уже троих задрала. Найди её. Только её. |
+| quest_type_hunt_2_f_g.mp3 | заказчик: выследить зверя | Despina | grim, angry | Эта тварь уже троих задрала. Найди её. Только её. |
+| quest_type_hunt_2_v1_g.mp3 | заказчик: выследить зверя | Sadachbia | grim, angry | Эта тварь уже троих задрала. Найди её. Только её. |
+| quest_type_hunt_2_v1_f_g.mp3 | заказчик: выследить зверя | Leda | grim, angry | Эта тварь уже троих задрала. Найди её. Только её. |
+| quest_type_hunt_2_v2_g.mp3 | заказчик: выследить зверя | Schedar | grim, angry | Эта тварь уже троих задрала. Найди её. Только её. |
+| quest_type_hunt_2_v2_f_g.mp3 | заказчик: выследить зверя | Aoede | grim, angry | Эта тварь уже троих задрала. Найди её. Только её. |
+| quest_type_hunt_3_g.mp3 | заказчик: выследить зверя | Umbriel | warning, intent | Охота не простая: зверь хитрый и следы путает. Не упусти. |
+| quest_type_hunt_3_f_g.mp3 | заказчик: выследить зверя | Despina | warning, intent | Охота не простая: зверь хитрый и следы путает. Не упусти. |
+| quest_type_hunt_3_v1_g.mp3 | заказчик: выследить зверя | Sadachbia | warning, intent | Охота не простая: зверь хитрый и следы путает. Не упусти. |
+| quest_type_hunt_3_v1_f_g.mp3 | заказчик: выследить зверя | Leda | warning, intent | Охота не простая: зверь хитрый и следы путает. Не упусти. |
+| quest_type_hunt_3_v2_g.mp3 | заказчик: выследить зверя | Schedar | warning, intent | Охота не простая: зверь хитрый и следы путает. Не упусти. |
+| quest_type_hunt_3_v2_f_g.mp3 | заказчик: выследить зверя | Aoede | warning, intent | Охота не простая: зверь хитрый и следы путает. Не упусти. |
+| quest_type_visit_2_g.mp3 | заказчик: сходить и посмотреть | Umbriel | curious, earnest | Сходи туда и посмотри своими глазами. Потом расскажешь мне, что видел. |
+| quest_type_visit_2_f_g.mp3 | заказчик: сходить и посмотреть | Despina | curious, earnest | Сходи туда и посмотри своими глазами. Потом расскажешь мне, что видел. |
+| quest_type_visit_2_v1_g.mp3 | заказчик: сходить и посмотреть | Sadachbia | curious, earnest | Сходи туда и посмотри своими глазами. Потом расскажешь мне, что видел. |
+| quest_type_visit_2_v1_f_g.mp3 | заказчик: сходить и посмотреть | Leda | curious, earnest | Сходи туда и посмотри своими глазами. Потом расскажешь мне, что видел. |
+| quest_type_visit_2_v2_g.mp3 | заказчик: сходить и посмотреть | Schedar | curious, earnest | Сходи туда и посмотри своими глазами. Потом расскажешь мне, что видел. |
+| quest_type_visit_2_v2_f_g.mp3 | заказчик: сходить и посмотреть | Aoede | curious, earnest | Сходи туда и посмотри своими глазами. Потом расскажешь мне, что видел. |
+| quest_type_visit_3_g.mp3 | заказчик: сходить и посмотреть | Umbriel | anxious, brisk | Мне нужно знать, что там творится. Дойди до места — и назад. |
+| quest_type_visit_3_f_g.mp3 | заказчик: сходить и посмотреть | Despina | anxious, brisk | Мне нужно знать, что там творится. Дойди до места — и назад. |
+| quest_type_visit_3_v1_g.mp3 | заказчик: сходить и посмотреть | Sadachbia | anxious, brisk | Мне нужно знать, что там творится. Дойди до места — и назад. |
+| quest_type_visit_3_v1_f_g.mp3 | заказчик: сходить и посмотреть | Leda | anxious, brisk | Мне нужно знать, что там творится. Дойди до места — и назад. |
+| quest_type_visit_3_v2_g.mp3 | заказчик: сходить и посмотреть | Schedar | anxious, brisk | Мне нужно знать, что там творится. Дойди до места — и назад. |
+| quest_type_visit_3_v2_f_g.mp3 | заказчик: сходить и посмотреть | Aoede | anxious, brisk | Мне нужно знать, что там творится. Дойди до места — и назад. |
+| quest_type_visit_4_g.mp3 | заказчик: сходить и посмотреть | Umbriel | worried, thoughtful | Туда давно никто не ходил. Проверь, цело ли всё, и возвращайся. |
+| quest_type_visit_4_f_g.mp3 | заказчик: сходить и посмотреть | Despina | worried, thoughtful | Туда давно никто не ходил. Проверь, цело ли всё, и возвращайся. |
+| quest_type_visit_4_v1_g.mp3 | заказчик: сходить и посмотреть | Sadachbia | worried, thoughtful | Туда давно никто не ходил. Проверь, цело ли всё, и возвращайся. |
+| quest_type_visit_4_v1_f_g.mp3 | заказчик: сходить и посмотреть | Leda | worried, thoughtful | Туда давно никто не ходил. Проверь, цело ли всё, и возвращайся. |
+| quest_type_visit_4_v2_g.mp3 | заказчик: сходить и посмотреть | Schedar | worried, thoughtful | Туда давно никто не ходил. Проверь, цело ли всё, и возвращайся. |
+| quest_type_visit_4_v2_f_g.mp3 | заказчик: сходить и посмотреть | Aoede | worried, thoughtful | Туда давно никто не ходил. Проверь, цело ли всё, и возвращайся. |
+| quest_type_visit_5_g.mp3 | заказчик: сходить и посмотреть | Umbriel | mysterious, hushed | Дойди до отметки, что я назвал. Там кое-что есть — поймёшь, когда увидишь. |
+| quest_type_visit_5_f_g.mp3 | заказчик: сходить и посмотреть | Despina | mysterious, hushed | Дойди до отметки, что я назвал. Там кое-что есть — поймёшь, когда увидишь. |
+| quest_type_visit_5_v1_g.mp3 | заказчик: сходить и посмотреть | Sadachbia | mysterious, hushed | Дойди до отметки, что я назвал. Там кое-что есть — поймёшь, когда увидишь. |
+| quest_type_visit_5_v1_f_g.mp3 | заказчик: сходить и посмотреть | Leda | mysterious, hushed | Дойди до отметки, что я назвал. Там кое-что есть — поймёшь, когда увидишь. |
+| quest_type_visit_5_v2_g.mp3 | заказчик: сходить и посмотреть | Schedar | mysterious, hushed | Дойди до отметки, что я назвал. Там кое-что есть — поймёшь, когда увидишь. |
+| quest_type_visit_5_v2_f_g.mp3 | заказчик: сходить и посмотреть | Aoede | mysterious, hushed | Дойди до отметки, что я назвал. Там кое-что есть — поймёшь, когда увидишь. |
+| quest_type_god_altar_0_g.mp3 | заказчик: алтарь бога | Umbriel | reverent, earnest | Алтарь заброшен, и бог недоволен. Сходи, поклонись и принеси дар. |
+| quest_type_god_altar_0_f_g.mp3 | заказчик: алтарь бога | Despina | reverent, earnest | Алтарь заброшен, и бог недоволен. Сходи, поклонись и принеси дар. |
+| quest_type_god_altar_0_v1_g.mp3 | заказчик: алтарь бога | Sadachbia | reverent, earnest | Алтарь заброшен, и бог недоволен. Сходи, поклонись и принеси дар. |
+| quest_type_god_altar_0_v1_f_g.mp3 | заказчик: алтарь бога | Leda | reverent, earnest | Алтарь заброшен, и бог недоволен. Сходи, поклонись и принеси дар. |
+| quest_type_god_altar_0_v2_g.mp3 | заказчик: алтарь бога | Schedar | reverent, earnest | Алтарь заброшен, и бог недоволен. Сходи, поклонись и принеси дар. |
+| quest_type_god_altar_0_v2_f_g.mp3 | заказчик: алтарь бога | Aoede | reverent, earnest | Алтарь заброшен, и бог недоволен. Сходи, поклонись и принеси дар. |
+| quest_type_god_altar_1_g.mp3 | заказчик: алтарь бога | Umbriel | solemn, calm | Боги ждут. Дойди до алтаря и соверши обряд, как положено. |
+| quest_type_god_altar_1_f_g.mp3 | заказчик: алтарь бога | Despina | solemn, calm | Боги ждут. Дойди до алтаря и соверши обряд, как положено. |
+| quest_type_god_altar_1_v1_g.mp3 | заказчик: алтарь бога | Sadachbia | solemn, calm | Боги ждут. Дойди до алтаря и соверши обряд, как положено. |
+| quest_type_god_altar_1_v1_f_g.mp3 | заказчик: алтарь бога | Leda | solemn, calm | Боги ждут. Дойди до алтаря и соверши обряд, как положено. |
+| quest_type_god_altar_1_v2_g.mp3 | заказчик: алтарь бога | Schedar | solemn, calm | Боги ждут. Дойди до алтаря и соверши обряд, как положено. |
+| quest_type_god_altar_1_v2_f_g.mp3 | заказчик: алтарь бога | Aoede | solemn, calm | Боги ждут. Дойди до алтаря и соверши обряд, как положено. |
+| quest_type_god_altar_2_g.mp3 | заказчик: алтарь бога | Umbriel | quiet, reverent | У старого алтаря давно не горел огонь. Зажги его снова. |
+| quest_type_god_altar_2_f_g.mp3 | заказчик: алтарь бога | Despina | quiet, reverent | У старого алтаря давно не горел огонь. Зажги его снова. |
+| quest_type_god_altar_2_v1_g.mp3 | заказчик: алтарь бога | Sadachbia | quiet, reverent | У старого алтаря давно не горел огонь. Зажги его снова. |
+| quest_type_god_altar_2_v1_f_g.mp3 | заказчик: алтарь бога | Leda | quiet, reverent | У старого алтаря давно не горел огонь. Зажги его снова. |
+| quest_type_god_altar_2_v2_g.mp3 | заказчик: алтарь бога | Schedar | quiet, reverent | У старого алтаря давно не горел огонь. Зажги его снова. |
+| quest_type_god_altar_2_v2_f_g.mp3 | заказчик: алтарь бога | Aoede | quiet, reverent | У старого алтаря давно не горел огонь. Зажги его снова. |
+| quest_type_god_relic_0_g.mp3 | заказчик: святыня | Umbriel | urgent, reverent | Святыня пропала. Найди её и верни в храм — боги отблагодарят. |
+| quest_type_god_relic_0_f_g.mp3 | заказчик: святыня | Despina | urgent, reverent | Святыня пропала. Найди её и верни в храм — боги отблагодарят. |
+| quest_type_god_relic_0_v1_g.mp3 | заказчик: святыня | Sadachbia | urgent, reverent | Святыня пропала. Найди её и верни в храм — боги отблагодарят. |
+| quest_type_god_relic_0_v1_f_g.mp3 | заказчик: святыня | Leda | urgent, reverent | Святыня пропала. Найди её и верни в храм — боги отблагодарят. |
+| quest_type_god_relic_0_v2_g.mp3 | заказчик: святыня | Schedar | urgent, reverent | Святыня пропала. Найди её и верни в храм — боги отблагодарят. |
+| quest_type_god_relic_0_v2_f_g.mp3 | заказчик: святыня | Aoede | urgent, reverent | Святыня пропала. Найди её и верни в храм — боги отблагодарят. |
+| quest_type_god_relic_1_g.mp3 | заказчик: святыня | Umbriel | pained, pleading | Реликвию унесли недостойные руки. Верни её, прошу тебя. |
+| quest_type_god_relic_1_f_g.mp3 | заказчик: святыня | Despina | pained, pleading | Реликвию унесли недостойные руки. Верни её, прошу тебя. |
+| quest_type_god_relic_1_v1_g.mp3 | заказчик: святыня | Sadachbia | pained, pleading | Реликвию унесли недостойные руки. Верни её, прошу тебя. |
+| quest_type_god_relic_1_v1_f_g.mp3 | заказчик: святыня | Leda | pained, pleading | Реликвию унесли недостойные руки. Верни её, прошу тебя. |
+| quest_type_god_relic_1_v2_g.mp3 | заказчик: святыня | Schedar | pained, pleading | Реликвию унесли недостойные руки. Верни её, прошу тебя. |
+| quest_type_god_relic_1_v2_f_g.mp3 | заказчик: святыня | Aoede | pained, pleading | Реликвию унесли недостойные руки. Верни её, прошу тебя. |
+| quest_type_god_relic_2_g.mp3 | заказчик: святыня | Umbriel | solemn, sad | Без святыни храм пустеет. Найди её, где бы она ни была. |
+| quest_type_god_relic_2_f_g.mp3 | заказчик: святыня | Despina | solemn, sad | Без святыни храм пустеет. Найди её, где бы она ни была. |
+| quest_type_god_relic_2_v1_g.mp3 | заказчик: святыня | Sadachbia | solemn, sad | Без святыни храм пустеет. Найди её, где бы она ни была. |
+| quest_type_god_relic_2_v1_f_g.mp3 | заказчик: святыня | Leda | solemn, sad | Без святыни храм пустеет. Найди её, где бы она ни была. |
+| quest_type_god_relic_2_v2_g.mp3 | заказчик: святыня | Schedar | solemn, sad | Без святыни храм пустеет. Найди её, где бы она ни была. |
+| quest_type_god_relic_2_v2_f_g.mp3 | заказчик: святыня | Aoede | solemn, sad | Без святыни храм пустеет. Найди её, где бы она ни была. |
+| quest_type_hoard_0_g.mp3 | заказчик: клад | Umbriel | sly, conspiratorial | Говорят, там клад лежит. Найдёшь — поделим по-честному. |
+| quest_type_hoard_0_f_g.mp3 | заказчик: клад | Despina | sly, conspiratorial | Говорят, там клад лежит. Найдёшь — поделим по-честному. |
+| quest_type_hoard_0_v1_g.mp3 | заказчик: клад | Sadachbia | sly, conspiratorial | Говорят, там клад лежит. Найдёшь — поделим по-честному. |
+| quest_type_hoard_0_v1_f_g.mp3 | заказчик: клад | Leda | sly, conspiratorial | Говорят, там клад лежит. Найдёшь — поделим по-честному. |
+| quest_type_hoard_0_v2_g.mp3 | заказчик: клад | Schedar | sly, conspiratorial | Говорят, там клад лежит. Найдёшь — поделим по-честному. |
+| quest_type_hoard_0_v2_f_g.mp3 | заказчик: клад | Aoede | sly, conspiratorial | Говорят, там клад лежит. Найдёшь — поделим по-честному. |
+| quest_type_hoard_1_g.mp3 | заказчик: клад | Umbriel | hushed, eager | Старый тайник где-то рядом. Раскопай его, а я скажу, что с ним делать. |
+| quest_type_hoard_1_f_g.mp3 | заказчик: клад | Despina | hushed, eager | Старый тайник где-то рядом. Раскопай его, а я скажу, что с ним делать. |
+| quest_type_hoard_1_v1_g.mp3 | заказчик: клад | Sadachbia | hushed, eager | Старый тайник где-то рядом. Раскопай его, а я скажу, что с ним делать. |
+| quest_type_hoard_1_v1_f_g.mp3 | заказчик: клад | Leda | hushed, eager | Старый тайник где-то рядом. Раскопай его, а я скажу, что с ним делать. |
+| quest_type_hoard_1_v2_g.mp3 | заказчик: клад | Schedar | hushed, eager | Старый тайник где-то рядом. Раскопай его, а я скажу, что с ним делать. |
+| quest_type_hoard_1_v2_f_g.mp3 | заказчик: клад | Aoede | hushed, eager | Старый тайник где-то рядом. Раскопай его, а я скажу, что с ним делать. |
+| quest_type_hoard_2_g.mp3 | заказчик: клад | Umbriel | whisper, secretive | Там припрятано добро. Только никому ни слова, понял? |
+| quest_type_hoard_2_f_g.mp3 | заказчик: клад | Despina | whisper, secretive | Там припрятано добро. Только никому ни слова, поняла? |
+| quest_type_hoard_2_v1_g.mp3 | заказчик: клад | Sadachbia | whisper, secretive | Там припрятано добро. Только никому ни слова, понял? |
+| quest_type_hoard_2_v1_f_g.mp3 | заказчик: клад | Leda | whisper, secretive | Там припрятано добро. Только никому ни слова, поняла? |
+| quest_type_hoard_2_v2_g.mp3 | заказчик: клад | Schedar | whisper, secretive | Там припрятано добро. Только никому ни слова, понял? |
+| quest_type_hoard_2_v2_f_g.mp3 | заказчик: клад | Aoede | whisper, secretive | Там припрятано добро. Только никому ни слова, поняла? |
+| quest_type_craft_0_g.mp3 | заказчик: работа мастера | Umbriel | businesslike, hopeful | Мне нужна работа мастера. Сделай, как умеешь, а я оценю. |
+| quest_type_craft_0_f_g.mp3 | заказчик: работа мастера | Despina | businesslike, hopeful | Мне нужна работа мастера. Сделай, как умеешь, а я оценю. |
+| quest_type_craft_0_v1_g.mp3 | заказчик: работа мастера | Sadachbia | businesslike, hopeful | Мне нужна работа мастера. Сделай, как умеешь, а я оценю. |
+| quest_type_craft_0_v1_f_g.mp3 | заказчик: работа мастера | Leda | businesslike, hopeful | Мне нужна работа мастера. Сделай, как умеешь, а я оценю. |
+| quest_type_craft_0_v2_g.mp3 | заказчик: работа мастера | Schedar | businesslike, hopeful | Мне нужна работа мастера. Сделай, как умеешь, а я оценю. |
+| quest_type_craft_0_v2_f_g.mp3 | заказчик: работа мастера | Aoede | businesslike, hopeful | Мне нужна работа мастера. Сделай, как умеешь, а я оценю. |
+| quest_type_craft_1_g.mp3 | заказчик: работа мастера | Umbriel | friendly, appraising | Руки у тебя, вижу, откуда надо растут. Выручи — сработай мне вещь. |
+| quest_type_craft_1_f_g.mp3 | заказчик: работа мастера | Despina | friendly, appraising | Руки у тебя, вижу, откуда надо растут. Выручи — сработай мне вещь. |
+| quest_type_craft_1_v1_g.mp3 | заказчик: работа мастера | Sadachbia | friendly, appraising | Руки у тебя, вижу, откуда надо растут. Выручи — сработай мне вещь. |
+| quest_type_craft_1_v1_f_g.mp3 | заказчик: работа мастера | Leda | friendly, appraising | Руки у тебя, вижу, откуда надо растут. Выручи — сработай мне вещь. |
+| quest_type_craft_1_v2_g.mp3 | заказчик: работа мастера | Schedar | friendly, appraising | Руки у тебя, вижу, откуда надо растут. Выручи — сработай мне вещь. |
+| quest_type_craft_1_v2_f_g.mp3 | заказчик: работа мастера | Aoede | friendly, appraising | Руки у тебя, вижу, откуда надо растут. Выручи — сработай мне вещь. |
+| quest_type_craft_2_g.mp3 | заказчик: работа мастера | Umbriel | hurried, businesslike | Заказ срочный. Сделаешь быстро — заплачу сверху. |
+| quest_type_craft_2_f_g.mp3 | заказчик: работа мастера | Despina | hurried, businesslike | Заказ срочный. Сделаешь быстро — заплачу сверху. |
+| quest_type_craft_2_v1_g.mp3 | заказчик: работа мастера | Sadachbia | hurried, businesslike | Заказ срочный. Сделаешь быстро — заплачу сверху. |
+| quest_type_craft_2_v1_f_g.mp3 | заказчик: работа мастера | Leda | hurried, businesslike | Заказ срочный. Сделаешь быстро — заплачу сверху. |
+| quest_type_craft_2_v2_g.mp3 | заказчик: работа мастера | Schedar | hurried, businesslike | Заказ срочный. Сделаешь быстро — заплачу сверху. |
+| quest_type_craft_2_v2_f_g.mp3 | заказчик: работа мастера | Aoede | hurried, businesslike | Заказ срочный. Сделаешь быстро — заплачу сверху. |
+| quest_type_trapwork_0_g.mp3 | заказчик: ловушки | Umbriel | worried, earnest | Там ловушки стоят, старые. Обезвредь их, пока кто-нибудь не покалечился. |
+| quest_type_trapwork_0_f_g.mp3 | заказчик: ловушки | Despina | worried, earnest | Там ловушки стоят, старые. Обезвредь их, пока кто-нибудь не покалечился. |
+| quest_type_trapwork_0_v1_g.mp3 | заказчик: ловушки | Sadachbia | worried, earnest | Там ловушки стоят, старые. Обезвредь их, пока кто-нибудь не покалечился. |
+| quest_type_trapwork_0_v1_f_g.mp3 | заказчик: ловушки | Leda | worried, earnest | Там ловушки стоят, старые. Обезвредь их, пока кто-нибудь не покалечился. |
+| quest_type_trapwork_0_v2_g.mp3 | заказчик: ловушки | Schedar | worried, earnest | Там ловушки стоят, старые. Обезвредь их, пока кто-нибудь не покалечился. |
+| quest_type_trapwork_0_v2_f_g.mp3 | заказчик: ловушки | Aoede | worried, earnest | Там ловушки стоят, старые. Обезвредь их, пока кто-нибудь не покалечился. |
+| quest_type_trapwork_1_g.mp3 | заказчик: ловушки | Umbriel | warning, concerned | Кто-то наставил капканов на тропе. Разберись с ними — только осторожно. |
+| quest_type_trapwork_1_f_g.mp3 | заказчик: ловушки | Despina | warning, concerned | Кто-то наставил капканов на тропе. Разберись с ними — только осторожно. |
+| quest_type_trapwork_1_v1_g.mp3 | заказчик: ловушки | Sadachbia | warning, concerned | Кто-то наставил капканов на тропе. Разберись с ними — только осторожно. |
+| quest_type_trapwork_1_v1_f_g.mp3 | заказчик: ловушки | Leda | warning, concerned | Кто-то наставил капканов на тропе. Разберись с ними — только осторожно. |
+| quest_type_trapwork_1_v2_g.mp3 | заказчик: ловушки | Schedar | warning, concerned | Кто-то наставил капканов на тропе. Разберись с ними — только осторожно. |
+| quest_type_trapwork_1_v2_f_g.mp3 | заказчик: ловушки | Aoede | warning, concerned | Кто-то наставил капканов на тропе. Разберись с ними — только осторожно. |
+| quest_type_trapwork_2_g.mp3 | заказчик: ловушки | Umbriel | practical, instructive | Проверь ловушки. Какие сломаны — почини, какие чужие — сними. |
+| quest_type_trapwork_2_f_g.mp3 | заказчик: ловушки | Despina | practical, instructive | Проверь ловушки. Какие сломаны — почини, какие чужие — сними. |
+| quest_type_trapwork_2_v1_g.mp3 | заказчик: ловушки | Sadachbia | practical, instructive | Проверь ловушки. Какие сломаны — почини, какие чужие — сними. |
+| quest_type_trapwork_2_v1_f_g.mp3 | заказчик: ловушки | Leda | practical, instructive | Проверь ловушки. Какие сломаны — почини, какие чужие — сними. |
+| quest_type_trapwork_2_v2_g.mp3 | заказчик: ловушки | Schedar | practical, instructive | Проверь ловушки. Какие сломаны — почини, какие чужие — сними. |
+| quest_type_trapwork_2_v2_f_g.mp3 | заказчик: ловушки | Aoede | practical, instructive | Проверь ловушки. Какие сломаны — почини, какие чужие — сними. |
+| quest_type_delivery_0_g.mp3 | заказчик: доставка груза | Umbriel | businesslike, shrewd | Довези груз в целости. Там за него дадут втрое больше, чем здесь. |
+| quest_type_delivery_0_f_g.mp3 | заказчик: доставка груза | Despina | businesslike, shrewd | Довези груз в целости. Там за него дадут втрое больше, чем здесь. |
+| quest_type_delivery_0_v1_g.mp3 | заказчик: доставка груза | Sadachbia | businesslike, shrewd | Довези груз в целости. Там за него дадут втрое больше, чем здесь. |
+| quest_type_delivery_0_v1_f_g.mp3 | заказчик: доставка груза | Leda | businesslike, shrewd | Довези груз в целости. Там за него дадут втрое больше, чем здесь. |
+| quest_type_delivery_0_v2_g.mp3 | заказчик: доставка груза | Schedar | businesslike, shrewd | Довези груз в целости. Там за него дадут втрое больше, чем здесь. |
+| quest_type_delivery_0_v2_f_g.mp3 | заказчик: доставка груза | Aoede | businesslike, shrewd | Довези груз в целости. Там за него дадут втрое больше, чем здесь. |
+| quest_type_delivery_1_g.mp3 | заказчик: доставка груза | Umbriel | shrewd, warning | Отвезёшь товар — получишь долю. Только в дороге не зевай. |
+| quest_type_delivery_1_f_g.mp3 | заказчик: доставка груза | Despina | shrewd, warning | Отвезёшь товар — получишь долю. Только в дороге не зевай. |
+| quest_type_delivery_1_v1_g.mp3 | заказчик: доставка груза | Sadachbia | shrewd, warning | Отвезёшь товар — получишь долю. Только в дороге не зевай. |
+| quest_type_delivery_1_v1_f_g.mp3 | заказчик: доставка груза | Leda | shrewd, warning | Отвезёшь товар — получишь долю. Только в дороге не зевай. |
+| quest_type_delivery_1_v2_g.mp3 | заказчик: доставка груза | Schedar | shrewd, warning | Отвезёшь товар — получишь долю. Только в дороге не зевай. |
+| quest_type_delivery_1_v2_f_g.mp3 | заказчик: доставка груза | Aoede | shrewd, warning | Отвезёшь товар — получишь долю. Только в дороге не зевай. |
+| quest_type_delivery_2_g.mp3 | заказчик: доставка груза | Umbriel | earnest, businesslike | Груз ценный, путь неблизкий. Доставишь — будем друзьями. |
+| quest_type_delivery_2_f_g.mp3 | заказчик: доставка груза | Despina | earnest, businesslike | Груз ценный, путь неблизкий. Доставишь — будем друзьями. |
+| quest_type_delivery_2_v1_g.mp3 | заказчик: доставка груза | Sadachbia | earnest, businesslike | Груз ценный, путь неблизкий. Доставишь — будем друзьями. |
+| quest_type_delivery_2_v1_f_g.mp3 | заказчик: доставка груза | Leda | earnest, businesslike | Груз ценный, путь неблизкий. Доставишь — будем друзьями. |
+| quest_type_delivery_2_v2_g.mp3 | заказчик: доставка груза | Schedar | earnest, businesslike | Груз ценный, путь неблизкий. Доставишь — будем друзьями. |
+| quest_type_delivery_2_v2_f_g.mp3 | заказчик: доставка груза | Aoede | earnest, businesslike | Груз ценный, путь неблизкий. Доставишь — будем друзьями. |
+| quest_war_2_g.mp3 | заказчик: война | Umbriel | urgent, grave | Война у ворот. Нам нужен каждый клинок — встань за нас. |
+| quest_war_2_f_g.mp3 | заказчик: война | Despina | urgent, grave | Война у ворот. Нам нужен каждый клинок — встань за нас. |
+| quest_war_2_v1_g.mp3 | заказчик: война | Sadachbia | urgent, grave | Война у ворот. Нам нужен каждый клинок — встань за нас. |
+| quest_war_2_v1_f_g.mp3 | заказчик: война | Leda | urgent, grave | Война у ворот. Нам нужен каждый клинок — встань за нас. |
+| quest_war_2_v2_g.mp3 | заказчик: война | Schedar | urgent, grave | Война у ворот. Нам нужен каждый клинок — встань за нас. |
+| quest_war_2_v2_f_g.mp3 | заказчик: война | Aoede | urgent, grave | Война у ворот. Нам нужен каждый клинок — встань за нас. |
+| quest_war_3_g.mp3 | заказчик: война | Umbriel | commanding, grave | Враг наступает. Выполни приказ — и держава тебя не забудет. |
+| quest_war_3_f_g.mp3 | заказчик: война | Despina | commanding, grave | Враг наступает. Выполни приказ — и держава тебя не забудет. |
+| quest_war_3_v1_g.mp3 | заказчик: война | Sadachbia | commanding, grave | Враг наступает. Выполни приказ — и держава тебя не забудет. |
+| quest_war_3_v1_f_g.mp3 | заказчик: война | Leda | commanding, grave | Враг наступает. Выполни приказ — и держава тебя не забудет. |
+| quest_war_3_v2_g.mp3 | заказчик: война | Schedar | commanding, grave | Враг наступает. Выполни приказ — и держава тебя не забудет. |
+| quest_war_3_v2_f_g.mp3 | заказчик: война | Aoede | commanding, grave | Враг наступает. Выполни приказ — и держава тебя не забудет. |
+| quest_war_4_g.mp3 | заказчик: война | Umbriel | grim, earnest | На фронте тяжело. Помоги нашим, и получишь по заслугам. |
+| quest_war_4_f_g.mp3 | заказчик: война | Despina | grim, earnest | На фронте тяжело. Помоги нашим, и получишь по заслугам. |
+| quest_war_4_v1_g.mp3 | заказчик: война | Sadachbia | grim, earnest | На фронте тяжело. Помоги нашим, и получишь по заслугам. |
+| quest_war_4_v1_f_g.mp3 | заказчик: война | Leda | grim, earnest | На фронте тяжело. Помоги нашим, и получишь по заслугам. |
+| quest_war_4_v2_g.mp3 | заказчик: война | Schedar | grim, earnest | На фронте тяжело. Помоги нашим, и получишь по заслугам. |
+| quest_war_4_v2_f_g.mp3 | заказчик: война | Aoede | grim, earnest | На фронте тяжело. Помоги нашим, и получишь по заслугам. |
+| quest_rescue_2_g.mp3 | заказчик: спасение | Umbriel | desperate, urgent | Человек пропал. Найди его, пока не поздно. |
+| quest_rescue_2_f_g.mp3 | заказчик: спасение | Despina | desperate, urgent | Человек пропал. Найди его, пока не поздно. |
+| quest_rescue_2_v1_g.mp3 | заказчик: спасение | Sadachbia | desperate, urgent | Человек пропал. Найди его, пока не поздно. |
+| quest_rescue_2_v1_f_g.mp3 | заказчик: спасение | Leda | desperate, urgent | Человек пропал. Найди его, пока не поздно. |
+| quest_rescue_2_v2_g.mp3 | заказчик: спасение | Schedar | desperate, urgent | Человек пропал. Найди его, пока не поздно. |
+| quest_rescue_2_v2_f_g.mp3 | заказчик: спасение | Aoede | desperate, urgent | Человек пропал. Найди его, пока не поздно. |
+| quest_rescue_3_g.mp3 | заказчик: спасение | Umbriel | pleading, urgent | Там наши, в беде. Выручи их — больше некому. |
+| quest_rescue_3_f_g.mp3 | заказчик: спасение | Despina | pleading, urgent | Там наши, в беде. Выручи их — больше некому. |
+| quest_rescue_3_v1_g.mp3 | заказчик: спасение | Sadachbia | pleading, urgent | Там наши, в беде. Выручи их — больше некому. |
+| quest_rescue_3_v1_f_g.mp3 | заказчик: спасение | Leda | pleading, urgent | Там наши, в беде. Выручи их — больше некому. |
+| quest_rescue_3_v2_g.mp3 | заказчик: спасение | Schedar | pleading, urgent | Там наши, в беде. Выручи их — больше некому. |
+| quest_rescue_3_v2_f_g.mp3 | заказчик: спасение | Aoede | pleading, urgent | Там наши, в беде. Выручи их — больше некому. |
+| quest_secret_2_g.mp3 | заказчик: скрытое | Umbriel | whisper, secretive | Дело тихое. Сделаешь — забудь, что я тебя просил. |
+| quest_secret_2_f_g.mp3 | заказчик: скрытое | Despina | whisper, secretive | Дело тихое. Сделаешь — забудь, что я тебя просил. |
+| quest_secret_2_v1_g.mp3 | заказчик: скрытое | Sadachbia | whisper, secretive | Дело тихое. Сделаешь — забудь, что я тебя просил. |
+| quest_secret_2_v1_f_g.mp3 | заказчик: скрытое | Leda | whisper, secretive | Дело тихое. Сделаешь — забудь, что я тебя просил. |
+| quest_secret_2_v2_g.mp3 | заказчик: скрытое | Schedar | whisper, secretive | Дело тихое. Сделаешь — забудь, что я тебя просил. |
+| quest_secret_2_v2_f_g.mp3 | заказчик: скрытое | Aoede | whisper, secretive | Дело тихое. Сделаешь — забудь, что я тебя просил. |
+| quest_secret_3_g.mp3 | заказчик: скрытое | Umbriel | hushed, tense | Об этом никто не должен знать. Ни стража, ни соседи. |
+| quest_secret_3_f_g.mp3 | заказчик: скрытое | Despina | hushed, tense | Об этом никто не должен знать. Ни стража, ни соседи. |
+| quest_secret_3_v1_g.mp3 | заказчик: скрытое | Sadachbia | hushed, tense | Об этом никто не должен знать. Ни стража, ни соседи. |
+| quest_secret_3_v1_f_g.mp3 | заказчик: скрытое | Leda | hushed, tense | Об этом никто не должен знать. Ни стража, ни соседи. |
+| quest_secret_3_v2_g.mp3 | заказчик: скрытое | Schedar | hushed, tense | Об этом никто не должен знать. Ни стража, ни соседи. |
+| quest_secret_3_v2_f_g.mp3 | заказчик: скрытое | Aoede | hushed, tense | Об этом никто не должен знать. Ни стража, ни соседи. |
+| quest_diplom_2_g.mp3 | заказчик: дипломатия | Umbriel | calm, diplomatic | Нужно поговорить с соседями. Словом тут можно больше, чем мечом. |
+| quest_diplom_2_f_g.mp3 | заказчик: дипломатия | Despina | calm, diplomatic | Нужно поговорить с соседями. Словом тут можно больше, чем мечом. |
+| quest_diplom_2_v1_g.mp3 | заказчик: дипломатия | Sadachbia | calm, diplomatic | Нужно поговорить с соседями. Словом тут можно больше, чем мечом. |
+| quest_diplom_2_v1_f_g.mp3 | заказчик: дипломатия | Leda | calm, diplomatic | Нужно поговорить с соседями. Словом тут можно больше, чем мечом. |
+| quest_diplom_2_v2_g.mp3 | заказчик: дипломатия | Schedar | calm, diplomatic | Нужно поговорить с соседями. Словом тут можно больше, чем мечом. |
+| quest_diplom_2_v2_f_g.mp3 | заказчик: дипломатия | Aoede | calm, diplomatic | Нужно поговорить с соседями. Словом тут можно больше, чем мечом. |
+| quest_diplom_3_g.mp3 | заказчик: дипломатия | Umbriel | earnest, measured | Отнеси им моё слово. И постарайся, чтобы его услышали. |
+| quest_diplom_3_f_g.mp3 | заказчик: дипломатия | Despina | earnest, measured | Отнеси им моё слово. И постарайся, чтобы его услышали. |
+| quest_diplom_3_v1_g.mp3 | заказчик: дипломатия | Sadachbia | earnest, measured | Отнеси им моё слово. И постарайся, чтобы его услышали. |
+| quest_diplom_3_v1_f_g.mp3 | заказчик: дипломатия | Leda | earnest, measured | Отнеси им моё слово. И постарайся, чтобы его услышали. |
+| quest_diplom_3_v2_g.mp3 | заказчик: дипломатия | Schedar | earnest, measured | Отнеси им моё слово. И постарайся, чтобы его услышали. |
+| quest_diplom_3_v2_f_g.mp3 | заказчик: дипломатия | Aoede | earnest, measured | Отнеси им моё слово. И постарайся, чтобы его услышали. |
+| quest_case_2_g.mp3 | заказчик: расследование | Umbriel | suspicious, serious | Тут дело тёмное. Разберись, кто виноват, — а я уж решу, что с ним делать. |
+| quest_case_2_f_g.mp3 | заказчик: расследование | Despina | suspicious, serious | Тут дело тёмное. Разберись, кто виноват, — а я уж решу, что с ним делать. |
+| quest_case_2_v1_g.mp3 | заказчик: расследование | Sadachbia | suspicious, serious | Тут дело тёмное. Разберись, кто виноват, — а я уж решу, что с ним делать. |
+| quest_case_2_v1_f_g.mp3 | заказчик: расследование | Leda | suspicious, serious | Тут дело тёмное. Разберись, кто виноват, — а я уж решу, что с ним делать. |
+| quest_case_2_v2_g.mp3 | заказчик: расследование | Schedar | suspicious, serious | Тут дело тёмное. Разберись, кто виноват, — а я уж решу, что с ним делать. |
+| quest_case_2_v2_f_g.mp3 | заказчик: расследование | Aoede | suspicious, serious | Тут дело тёмное. Разберись, кто виноват, — а я уж решу, что с ним делать. |
+| quest_case_3_g.mp3 | заказчик: расследование | Umbriel | irritated, determined | Кто-то врёт, и я хочу знать кто. Поспрашивай, погляди. |
+| quest_case_3_f_g.mp3 | заказчик: расследование | Despina | irritated, determined | Кто-то врёт, и я хочу знать кто. Поспрашивай, погляди. |
+| quest_case_3_v1_g.mp3 | заказчик: расследование | Sadachbia | irritated, determined | Кто-то врёт, и я хочу знать кто. Поспрашивай, погляди. |
+| quest_case_3_v1_f_g.mp3 | заказчик: расследование | Leda | irritated, determined | Кто-то врёт, и я хочу знать кто. Поспрашивай, погляди. |
+| quest_case_3_v2_g.mp3 | заказчик: расследование | Schedar | irritated, determined | Кто-то врёт, и я хочу знать кто. Поспрашивай, погляди. |
+| quest_case_3_v2_f_g.mp3 | заказчик: расследование | Aoede | irritated, determined | Кто-то врёт, и я хочу знать кто. Поспрашивай, погляди. |
+| quest_study_2_g.mp3 | заказчик: исследование | Umbriel | scholarly, eager | Мне нужны сведения. Разузнай всё, что сможешь, и запиши. |
+| quest_study_2_f_g.mp3 | заказчик: исследование | Despina | scholarly, eager | Мне нужны сведения. Разузнай всё, что сможешь, и запиши. |
+| quest_study_2_v1_g.mp3 | заказчик: исследование | Sadachbia | scholarly, eager | Мне нужны сведения. Разузнай всё, что сможешь, и запиши. |
+| quest_study_2_v1_f_g.mp3 | заказчик: исследование | Leda | scholarly, eager | Мне нужны сведения. Разузнай всё, что сможешь, и запиши. |
+| quest_study_2_v2_g.mp3 | заказчик: исследование | Schedar | scholarly, eager | Мне нужны сведения. Разузнай всё, что сможешь, и запиши. |
+| quest_study_2_v2_f_g.mp3 | заказчик: исследование | Aoede | scholarly, eager | Мне нужны сведения. Разузнай всё, что сможешь, и запиши. |
+| quest_study_3_g.mp3 | заказчик: исследование | Umbriel | thoughtful, precise | Изучи это место. Каждая мелочь может оказаться важной. |
+| quest_study_3_f_g.mp3 | заказчик: исследование | Despina | thoughtful, precise | Изучи это место. Каждая мелочь может оказаться важной. |
+| quest_study_3_v1_g.mp3 | заказчик: исследование | Sadachbia | thoughtful, precise | Изучи это место. Каждая мелочь может оказаться важной. |
+| quest_study_3_v1_f_g.mp3 | заказчик: исследование | Leda | thoughtful, precise | Изучи это место. Каждая мелочь может оказаться важной. |
+| quest_study_3_v2_g.mp3 | заказчик: исследование | Schedar | thoughtful, precise | Изучи это место. Каждая мелочь может оказаться важной. |
+| quest_study_3_v2_f_g.mp3 | заказчик: исследование | Aoede | thoughtful, precise | Изучи это место. Каждая мелочь может оказаться важной. |
+| quest_archeo_2_g.mp3 | заказчик: археология | Umbriel | eager, careful | В старых руинах есть то, что мне нужно. Раскопай, но бережно. |
+| quest_archeo_2_f_g.mp3 | заказчик: археология | Despina | eager, careful | В старых руинах есть то, что мне нужно. Раскопай, но бережно. |
+| quest_archeo_2_v1_g.mp3 | заказчик: археология | Sadachbia | eager, careful | В старых руинах есть то, что мне нужно. Раскопай, но бережно. |
+| quest_archeo_2_v1_f_g.mp3 | заказчик: археология | Leda | eager, careful | В старых руинах есть то, что мне нужно. Раскопай, но бережно. |
+| quest_archeo_2_v2_g.mp3 | заказчик: археология | Schedar | eager, careful | В старых руинах есть то, что мне нужно. Раскопай, но бережно. |
+| quest_archeo_2_v2_f_g.mp3 | заказчик: археология | Aoede | eager, careful | В старых руинах есть то, что мне нужно. Раскопай, но бережно. |
+| quest_archeo_3_g.mp3 | заказчик: археология | Umbriel | awed, curious | Предтечи оставили там что-то. Найди — и мир станет немного понятнее. |
+| quest_archeo_3_f_g.mp3 | заказчик: археология | Despina | awed, curious | Предтечи оставили там что-то. Найди — и мир станет немного понятнее. |
+| quest_archeo_3_v1_g.mp3 | заказчик: археология | Sadachbia | awed, curious | Предтечи оставили там что-то. Найди — и мир станет немного понятнее. |
+| quest_archeo_3_v1_f_g.mp3 | заказчик: археология | Leda | awed, curious | Предтечи оставили там что-то. Найди — и мир станет немного понятнее. |
+| quest_archeo_3_v2_g.mp3 | заказчик: археология | Schedar | awed, curious | Предтечи оставили там что-то. Найди — и мир станет немного понятнее. |
+| quest_archeo_3_v2_f_g.mp3 | заказчик: археология | Aoede | awed, curious | Предтечи оставили там что-то. Найди — и мир станет немного понятнее. |
+| quest_magic_2_g.mp3 | заказчик: магия | Umbriel | mysterious, warning | Эфир там неспокоен. Узнай почему — и не трогай руками, что светится. |
+| quest_magic_2_f_g.mp3 | заказчик: магия | Despina | mysterious, warning | Эфир там неспокоен. Узнай почему — и не трогай руками, что светится. |
+| quest_magic_2_v1_g.mp3 | заказчик: магия | Sadachbia | mysterious, warning | Эфир там неспокоен. Узнай почему — и не трогай руками, что светится. |
+| quest_magic_2_v1_f_g.mp3 | заказчик: магия | Leda | mysterious, warning | Эфир там неспокоен. Узнай почему — и не трогай руками, что светится. |
+| quest_magic_2_v2_g.mp3 | заказчик: магия | Schedar | mysterious, warning | Эфир там неспокоен. Узнай почему — и не трогай руками, что светится. |
+| quest_magic_2_v2_f_g.mp3 | заказчик: магия | Aoede | mysterious, warning | Эфир там неспокоен. Узнай почему — и не трогай руками, что светится. |
+| quest_magic_3_g.mp3 | заказчик: магия | Umbriel | appraising, wry | Мне нужен кто-то, кто не боится чар. Похоже, это ты. |
+| quest_magic_3_f_g.mp3 | заказчик: магия | Despina | appraising, wry | Мне нужен кто-то, кто не боится чар. Похоже, это ты. |
+| quest_magic_3_v1_g.mp3 | заказчик: магия | Sadachbia | appraising, wry | Мне нужен кто-то, кто не боится чар. Похоже, это ты. |
+| quest_magic_3_v1_f_g.mp3 | заказчик: магия | Leda | appraising, wry | Мне нужен кто-то, кто не боится чар. Похоже, это ты. |
+| quest_magic_3_v2_g.mp3 | заказчик: магия | Schedar | appraising, wry | Мне нужен кто-то, кто не боится чар. Похоже, это ты. |
+| quest_magic_3_v2_f_g.mp3 | заказчик: магия | Aoede | appraising, wry | Мне нужен кто-то, кто не боится чар. Похоже, это ты. |
+| quest_econ_2_g.mp3 | заказчик: экономика | Umbriel | shrewd, worried | Цены скачут, товар пропадает. Помоги наладить дело — не пожалеешь. |
+| quest_econ_2_f_g.mp3 | заказчик: экономика | Despina | shrewd, worried | Цены скачут, товар пропадает. Помоги наладить дело — не пожалеешь. |
+| quest_econ_2_v1_g.mp3 | заказчик: экономика | Sadachbia | shrewd, worried | Цены скачут, товар пропадает. Помоги наладить дело — не пожалеешь. |
+| quest_econ_2_v1_f_g.mp3 | заказчик: экономика | Leda | shrewd, worried | Цены скачут, товар пропадает. Помоги наладить дело — не пожалеешь. |
+| quest_econ_2_v2_g.mp3 | заказчик: экономика | Schedar | shrewd, worried | Цены скачут, товар пропадает. Помоги наладить дело — не пожалеешь. |
+| quest_econ_2_v2_f_g.mp3 | заказчик: экономика | Aoede | shrewd, worried | Цены скачут, товар пропадает. Помоги наладить дело — не пожалеешь. |
+| quest_econ_3_g.mp3 | заказчик: экономика | Umbriel | businesslike, frustrated | Торговля встала. Разберись, в чём загвоздка, и я заплачу. |
+| quest_econ_3_f_g.mp3 | заказчик: экономика | Despina | businesslike, frustrated | Торговля встала. Разберись, в чём загвоздка, и я заплачу. |
+| quest_econ_3_v1_g.mp3 | заказчик: экономика | Sadachbia | businesslike, frustrated | Торговля встала. Разберись, в чём загвоздка, и я заплачу. |
+| quest_econ_3_v1_f_g.mp3 | заказчик: экономика | Leda | businesslike, frustrated | Торговля встала. Разберись, в чём загвоздка, и я заплачу. |
+| quest_econ_3_v2_g.mp3 | заказчик: экономика | Schedar | businesslike, frustrated | Торговля встала. Разберись, в чём загвоздка, и я заплачу. |
+| quest_econ_3_v2_f_g.mp3 | заказчик: экономика | Aoede | businesslike, frustrated | Торговля встала. Разберись, в чём загвоздка, и я заплачу. |
+| quest_faction_2_g.mp3 | заказчик: фракционное | Umbriel | earnest, proud | Наши люди просят помощи. Сделаешь — станешь одним из нас. |
+| quest_faction_2_f_g.mp3 | заказчик: фракционное | Despina | earnest, proud | Наши люди просят помощи. Сделаешь — станешь одной из нас. |
+| quest_faction_2_v1_g.mp3 | заказчик: фракционное | Sadachbia | earnest, proud | Наши люди просят помощи. Сделаешь — станешь одним из нас. |
+| quest_faction_2_v1_f_g.mp3 | заказчик: фракционное | Leda | earnest, proud | Наши люди просят помощи. Сделаешь — станешь одной из нас. |
+| quest_faction_2_v2_g.mp3 | заказчик: фракционное | Schedar | earnest, proud | Наши люди просят помощи. Сделаешь — станешь одним из нас. |
+| quest_faction_2_v2_f_g.mp3 | заказчик: фракционное | Aoede | earnest, proud | Наши люди просят помощи. Сделаешь — станешь одной из нас. |
+| quest_faction_3_g.mp3 | заказчик: фракционное | Umbriel | solemn, loyal | Братство помнит тех, кто ему помог. Не подведи. |
+| quest_faction_3_f_g.mp3 | заказчик: фракционное | Despina | solemn, loyal | Братство помнит тех, кто ему помог. Не подведи. |
+| quest_faction_3_v1_g.mp3 | заказчик: фракционное | Sadachbia | solemn, loyal | Братство помнит тех, кто ему помог. Не подведи. |
+| quest_faction_3_v1_f_g.mp3 | заказчик: фракционное | Leda | solemn, loyal | Братство помнит тех, кто ему помог. Не подведи. |
+| quest_faction_3_v2_g.mp3 | заказчик: фракционное | Schedar | solemn, loyal | Братство помнит тех, кто ему помог. Не подведи. |
+| quest_faction_3_v2_f_g.mp3 | заказчик: фракционное | Aoede | solemn, loyal | Братство помнит тех, кто ему помог. Не подведи. |
+| quest_story_2_g.mp3 | заказчик: сюжетное | Umbriel | grave, portentous | Это дело больше, чем кажется. С него всё только начинается. |
+| quest_story_2_f_g.mp3 | заказчик: сюжетное | Despina | grave, portentous | Это дело больше, чем кажется. С него всё только начинается. |
+| quest_story_2_v1_g.mp3 | заказчик: сюжетное | Sadachbia | grave, portentous | Это дело больше, чем кажется. С него всё только начинается. |
+| quest_story_2_v1_f_g.mp3 | заказчик: сюжетное | Leda | grave, portentous | Это дело больше, чем кажется. С него всё только начинается. |
+| quest_story_2_v2_g.mp3 | заказчик: сюжетное | Schedar | grave, portentous | Это дело больше, чем кажется. С него всё только начинается. |
+| quest_story_2_v2_f_g.mp3 | заказчик: сюжетное | Aoede | grave, portentous | Это дело больше, чем кажется. С него всё только начинается. |
+| quest_story_3_g.mp3 | заказчик: сюжетное | Umbriel | serious, lowered voice | Слушай внимательно. От этого зависит больше, чем ты думаешь. |
+| quest_story_3_f_g.mp3 | заказчик: сюжетное | Despina | serious, lowered voice | Слушай внимательно. От этого зависит больше, чем ты думаешь. |
+| quest_story_3_v1_g.mp3 | заказчик: сюжетное | Sadachbia | serious, lowered voice | Слушай внимательно. От этого зависит больше, чем ты думаешь. |
+| quest_story_3_v1_f_g.mp3 | заказчик: сюжетное | Leda | serious, lowered voice | Слушай внимательно. От этого зависит больше, чем ты думаешь. |
+| quest_story_3_v2_g.mp3 | заказчик: сюжетное | Schedar | serious, lowered voice | Слушай внимательно. От этого зависит больше, чем ты думаешь. |
+| quest_story_3_v2_f_g.mp3 | заказчик: сюжетное | Aoede | serious, lowered voice | Слушай внимательно. От этого зависит больше, чем ты думаешь. |
+| quest_random_2_g.mp3 | заказчик: случайное | Umbriel | casual, wry | Дело так себе, но платят исправно. Возьмёшься? |
+| quest_random_2_f_g.mp3 | заказчик: случайное | Despina | casual, wry | Дело так себе, но платят исправно. Возьмёшься? |
+| quest_random_2_v1_g.mp3 | заказчик: случайное | Sadachbia | casual, wry | Дело так себе, но платят исправно. Возьмёшься? |
+| quest_random_2_v1_f_g.mp3 | заказчик: случайное | Leda | casual, wry | Дело так себе, но платят исправно. Возьмёшься? |
+| quest_random_2_v2_g.mp3 | заказчик: случайное | Schedar | casual, wry | Дело так себе, но платят исправно. Возьмёшься? |
+| quest_random_2_v2_f_g.mp3 | заказчик: случайное | Aoede | casual, wry | Дело так себе, но платят исправно. Возьмёшься? |
+| quest_random_3_g.mp3 | заказчик: случайное | Umbriel | plain, businesslike | Работа есть, работа простая. Главное — сделать. |
+| quest_random_3_f_g.mp3 | заказчик: случайное | Despina | plain, businesslike | Работа есть, работа простая. Главное — сделать. |
+| quest_random_3_v1_g.mp3 | заказчик: случайное | Sadachbia | plain, businesslike | Работа есть, работа простая. Главное — сделать. |
+| quest_random_3_v1_f_g.mp3 | заказчик: случайное | Leda | plain, businesslike | Работа есть, работа простая. Главное — сделать. |
+| quest_random_3_v2_g.mp3 | заказчик: случайное | Schedar | plain, businesslike | Работа есть, работа простая. Главное — сделать. |
+| quest_random_3_v2_f_g.mp3 | заказчик: случайное | Aoede | plain, businesslike | Работа есть, работа простая. Главное — сделать. |
+| quest_have_2_g.mp3 | заказчик: дело уже взято | Umbriel | patient, reminding | Ты уже взялся за моё дело. Сперва закончи его. |
+| quest_have_2_f_g.mp3 | заказчик: дело уже взято | Despina | patient, reminding | Ты уже взялась за моё дело. Сперва закончи его. |
+| quest_have_2_v1_g.mp3 | заказчик: дело уже взято | Sadachbia | patient, reminding | Ты уже взялся за моё дело. Сперва закончи его. |
+| quest_have_2_v1_f_g.mp3 | заказчик: дело уже взято | Leda | patient, reminding | Ты уже взялась за моё дело. Сперва закончи его. |
+| quest_have_2_v2_g.mp3 | заказчик: дело уже взято | Schedar | patient, reminding | Ты уже взялся за моё дело. Сперва закончи его. |
+| quest_have_2_v2_f_g.mp3 | заказчик: дело уже взято | Aoede | patient, reminding | Ты уже взялась за моё дело. Сперва закончи его. |
+| quest_have_3_g.mp3 | заказчик: дело уже взято | Umbriel | impatient, reminding | Я жду. Дело-то моё ещё не сделано. |
+| quest_have_3_f_g.mp3 | заказчик: дело уже взято | Despina | impatient, reminding | Я жду. Дело-то моё ещё не сделано. |
+| quest_have_3_v1_g.mp3 | заказчик: дело уже взято | Sadachbia | impatient, reminding | Я жду. Дело-то моё ещё не сделано. |
+| quest_have_3_v1_f_g.mp3 | заказчик: дело уже взято | Leda | impatient, reminding | Я жду. Дело-то моё ещё не сделано. |
+| quest_have_3_v2_g.mp3 | заказчик: дело уже взято | Schedar | impatient, reminding | Я жду. Дело-то моё ещё не сделано. |
+| quest_have_3_v2_f_g.mp3 | заказчик: дело уже взято | Aoede | impatient, reminding | Я жду. Дело-то моё ещё не сделано. |
+| quest_have_4_g.mp3 | заказчик: дело уже взято | Umbriel | wry, reminding | Не торопись с новым — старое ещё за тобой. |
+| quest_have_4_f_g.mp3 | заказчик: дело уже взято | Despina | wry, reminding | Не торопись с новым — старое ещё за тобой. |
+| quest_have_4_v1_g.mp3 | заказчик: дело уже взято | Sadachbia | wry, reminding | Не торопись с новым — старое ещё за тобой. |
+| quest_have_4_v1_f_g.mp3 | заказчик: дело уже взято | Leda | wry, reminding | Не торопись с новым — старое ещё за тобой. |
+| quest_have_4_v2_g.mp3 | заказчик: дело уже взято | Schedar | wry, reminding | Не торопись с новым — старое ещё за тобой. |
+| quest_have_4_v2_f_g.mp3 | заказчик: дело уже взято | Aoede | wry, reminding | Не торопись с новым — старое ещё за тобой. |
+| quest_full_3_g.mp3 | заказчик: дел слишком много | Umbriel | sympathetic, wry | У тебя и так дел по горло. Разгребись сначала. |
+| quest_full_3_f_g.mp3 | заказчик: дел слишком много | Despina | sympathetic, wry | У тебя и так дел по горло. Разгребись сначала. |
+| quest_full_3_v1_g.mp3 | заказчик: дел слишком много | Sadachbia | sympathetic, wry | У тебя и так дел по горло. Разгребись сначала. |
+| quest_full_3_v1_f_g.mp3 | заказчик: дел слишком много | Leda | sympathetic, wry | У тебя и так дел по горло. Разгребись сначала. |
+| quest_full_3_v2_g.mp3 | заказчик: дел слишком много | Schedar | sympathetic, wry | У тебя и так дел по горло. Разгребись сначала. |
+| quest_full_3_v2_f_g.mp3 | заказчик: дел слишком много | Aoede | sympathetic, wry | У тебя и так дел по горло. Разгребись сначала. |
+| quest_full_4_g.mp3 | заказчик: дел слишком много | Umbriel | kind, advising | Столько поручений разом никто не унесёт. Приходи, как освободишься. |
+| quest_full_4_f_g.mp3 | заказчик: дел слишком много | Despina | kind, advising | Столько поручений разом никто не унесёт. Приходи, как освободишься. |
+| quest_full_4_v1_g.mp3 | заказчик: дел слишком много | Sadachbia | kind, advising | Столько поручений разом никто не унесёт. Приходи, как освободишься. |
+| quest_full_4_v1_f_g.mp3 | заказчик: дел слишком много | Leda | kind, advising | Столько поручений разом никто не унесёт. Приходи, как освободишься. |
+| quest_full_4_v2_g.mp3 | заказчик: дел слишком много | Schedar | kind, advising | Столько поручений разом никто не унесёт. Приходи, как освободишься. |
+| quest_full_4_v2_f_g.mp3 | заказчик: дел слишком много | Aoede | kind, advising | Столько поручений разом никто не унесёт. Приходи, как освободишься. |
+| street_folk_24_g.mp3 | горожанин | Achird | grumbling | Опять цены подняли. Скоро хлеб на вес золота будет. |
+| street_folk_24_f_g.mp3 | горожанин | Sulafat | grumbling | Опять цены подняли. Скоро хлеб на вес золота будет. |
+| street_folk_25_g.mp3 | горожанин | Achird | excited gossip | Слыхал? У мельника корова двухголовая отелилась. |
+| street_folk_25_f_g.mp3 | горожанин | Sulafat | excited gossip | Слыхал? У мельника корова двухголовая отелилась. |
+| street_folk_26_g.mp3 | горожанин | Achird | uneasy, superstitious | Ночью опять огни над лесом. Не к добру это. |
+| street_folk_26_f_g.mp3 | горожанин | Sulafat | uneasy, superstitious | Ночью опять огни над лесом. Не к добру это. |
+| street_folk_27_g.mp3 | горожанин | Achird | joyful, proud | Дочка замуж выходит. Всем городом гулять будем! |
+| street_folk_27_f_g.mp3 | горожанин | Sulafat | joyful, proud | Дочка замуж выходит. Всем городом гулять будем! |
+| street_folk_28_g.mp3 | горожанин | Achird | tired, groaning | Спина не гнётся. Годы, будь они неладны. |
+| street_folk_28_f_g.mp3 | горожанин | Sulafat | tired, groaning | Спина не гнётся. Годы, будь они неладны. |
+| street_folk_29_g.mp3 | горожанин | Achird | worried | Караван третий день не идёт. Не случилось бы чего. |
+| street_folk_29_f_g.mp3 | горожанин | Sulafat | worried | Караван третий день не идёт. Не случилось бы чего. |
+| street_folk_30_g.mp3 | горожанин | Achird | annoyed | Сосед опять за стенкой молотком стучит. С утра до ночи. |
+| street_folk_30_f_g.mp3 | горожанин | Sulafat | annoyed | Сосед опять за стенкой молотком стучит. С утра до ночи. |
+| street_folk_31_g.mp3 | горожанин | Achird | cheerful, casual | Говорят, в трактире нынче сказитель. Схожу вечером. |
+| street_folk_31_f_g.mp3 | горожанин | Sulafat | cheerful, casual | Говорят, в трактире нынче сказитель. Схожу вечером. |
+| street_folk_32_g.mp3 | горожанин | Achird | sighing, worried | Дождь бы. Огород совсем пересох. |
+| street_folk_32_f_g.mp3 | горожанин | Sulafat | sighing, worried | Дождь бы. Огород совсем пересох. |
+| street_folk_33_g.mp3 | горожанин | Achird | suspicious grumbling | Храм опять собирает на крышу. А куда прошлое делось? |
+| street_folk_33_f_g.mp3 | горожанин | Sulafat | suspicious grumbling | Храм опять собирает на крышу. А куда прошлое делось? |
+| street_folk_34_g.mp3 | горожанин | Achird | indignant | Вчера на рынке у меня кошель срезали. Среди бела дня! |
+| street_folk_34_f_g.mp3 | горожанин | Sulafat | indignant | Вчера на рынке у меня кошель срезали. Среди бела дня! |
+| street_folk_35_g.mp3 | горожанин | Achird | worried yet proud | Мой-то в ополчение записался. Храбрец нашёлся. |
+| street_folk_35_f_g.mp3 | горожанин | Sulafat | worried yet proud | Мой-то в ополчение записался. Храбрец нашёлся. |
+| street_folk_36_g.mp3 | горожанин | Achird | content, friendly | Хорошая погода. Только бы до праздника простояла. |
+| street_folk_36_f_g.mp3 | горожанин | Sulafat | content, friendly | Хорошая погода. Только бы до праздника простояла. |
+| street_folk_37_g.mp3 | горожанин | Achird | irritated | Эй, не толкайся! Места всем хватит. |
+| street_folk_37_f_g.mp3 | горожанин | Sulafat | irritated | Эй, не толкайся! Места всем хватит. |
+| street_folk_38_g.mp3 | горожанин | Achird | hushed, fearful | Про Грань опять шепчутся. Мол, тоньше стала. |
+| street_folk_38_f_g.mp3 | горожанин | Sulafat | hushed, fearful | Про Грань опять шепчутся. Мол, тоньше стала. |
+| street_folk_39_g.mp3 | горожанин | Achird | warm, a bit lonely | Пироги нынче удались. Жаль, угостить некого. |
+| street_folk_39_f_g.mp3 | горожанин | Sulafat | warm, a bit lonely | Пироги нынче удались. Жаль, угостить некого. |
 | car_meet_0_v1_g.mp3 | старший обоза: встреча | Charon | loud, friendly call | Эй, путник! Обоз идёт. Торговать будешь? |
 | car_meet_0_v2_g.mp3 | старший обоза: встреча | Zubenelgenubi | loud, friendly call | Эй, путник! Обоз идёт. Торговать будешь? |
+| car_meet_0_v3_g.mp3 | старший обоза: встреча | Achird | loud, friendly call | Эй, путник! Обоз идёт. Торговать будешь? |
+| car_meet_0_v1_f_g.mp3 | старший обоза: встреча | Kore | loud, friendly call | Эй, путник! Обоз идёт. Торговать будешь? |
 | car_meet_0_v2_f_g.mp3 | старший обоза: встреча | Vindemiatrix | loud, friendly call | Эй, путник! Обоз идёт. Торговать будешь? |
+| car_meet_0_v3_f_g.mp3 | старший обоза: встреча | Erinome | loud, friendly call | Эй, путник! Обоз идёт. Торговать будешь? |
 | car_meet_1_v1_g.mp3 | старший обоза: встреча | Charon | reassuring, friendly | Стой, не пугайся, мы купцы. Глянешь на товар? |
 | car_meet_1_v2_g.mp3 | старший обоза: встреча | Zubenelgenubi | reassuring, friendly | Стой, не пугайся, мы купцы. Глянешь на товар? |
+| car_meet_1_v3_g.mp3 | старший обоза: встреча | Achird | reassuring, friendly | Стой, не пугайся, мы купцы. Глянешь на товар? |
+| car_meet_1_v1_f_g.mp3 | старший обоза: встреча | Kore | reassuring, friendly | Стой, не пугайся, мы купцы. Глянешь на товар? |
 | car_meet_1_v2_f_g.mp3 | старший обоза: встреча | Vindemiatrix | reassuring, friendly | Стой, не пугайся, мы купцы. Глянешь на товар? |
+| car_meet_1_v3_f_g.mp3 | старший обоза: встреча | Erinome | reassuring, friendly | Стой, не пугайся, мы купцы. Глянешь на товар? |
 | car_meet_2_v1_g.mp3 | старший обоза: встреча | Charon | cheerful, welcoming | Доброй дороги! У нас есть чем поторговать. |
 | car_meet_2_v2_g.mp3 | старший обоза: встреча | Zubenelgenubi | cheerful, welcoming | Доброй дороги! У нас есть чем поторговать. |
+| car_meet_2_v3_g.mp3 | старший обоза: встреча | Achird | cheerful, welcoming | Доброй дороги! У нас есть чем поторговать. |
+| car_meet_2_v1_f_g.mp3 | старший обоза: встреча | Kore | cheerful, welcoming | Доброй дороги! У нас есть чем поторговать. |
 | car_meet_2_v2_f_g.mp3 | старший обоза: встреча | Vindemiatrix | cheerful, welcoming | Доброй дороги! У нас есть чем поторговать. |
+| car_meet_2_v3_f_g.mp3 | старший обоза: встреча | Erinome | cheerful, welcoming | Доброй дороги! У нас есть чем поторговать. |
 | car_meet_3_v1_g.mp3 | старший обоза: встреча | Charon | relaxed, inviting | Караван на привале. Подходи, пока стоим. |
 | car_meet_3_v2_g.mp3 | старший обоза: встреча | Zubenelgenubi | relaxed, inviting | Караван на привале. Подходи, пока стоим. |
+| car_meet_3_v3_g.mp3 | старший обоза: встреча | Achird | relaxed, inviting | Караван на привале. Подходи, пока стоим. |
+| car_meet_3_v1_f_g.mp3 | старший обоза: встреча | Kore | relaxed, inviting | Караван на привале. Подходи, пока стоим. |
 | car_meet_3_v2_f_g.mp3 | старший обоза: встреча | Vindemiatrix | relaxed, inviting | Караван на привале. Подходи, пока стоим. |
+| car_meet_3_v3_f_g.mp3 | старший обоза: встреча | Erinome | relaxed, inviting | Караван на привале. Подходи, пока стоим. |
 | car_meet_4_v1_g.mp3 | старший обоза: встреча | Charon | wary, then relieved | Не разбойник? Ну и славно. Меняться будем? |
 | car_meet_4_v2_g.mp3 | старший обоза: встреча | Zubenelgenubi | wary, then relieved | Не разбойник? Ну и славно. Меняться будем? |
+| car_meet_4_v3_g.mp3 | старший обоза: встреча | Achird | wary, then relieved | Не разбойник? Ну и славно. Меняться будем? |
+| car_meet_4_v1_f_g.mp3 | старший обоза: встреча | Kore | wary, then relieved | Не разбойник? Ну и славно. Меняться будем? |
 | car_meet_4_v2_f_g.mp3 | старший обоза: встреча | Vindemiatrix | wary, then relieved | Не разбойник? Ну и славно. Меняться будем? |
+| car_meet_4_v3_f_g.mp3 | старший обоза: встреча | Erinome | wary, then relieved | Не разбойник? Ну и славно. Меняться будем? |
 | car_meet_5_v1_g.mp3 | старший обоза: встреча | Charon | proud, persuasive | Товар с дальних земель! Смотри, пока не ушли. |
 | car_meet_5_v2_g.mp3 | старший обоза: встреча | Zubenelgenubi | proud, persuasive | Товар с дальних земель! Смотри, пока не ушли. |
+| car_meet_5_v3_g.mp3 | старший обоза: встреча | Achird | proud, persuasive | Товар с дальних земель! Смотри, пока не ушли. |
+| car_meet_5_v1_f_g.mp3 | старший обоза: встреча | Kore | proud, persuasive | Товар с дальних земель! Смотри, пока не ушли. |
 | car_meet_5_v2_f_g.mp3 | старший обоза: встреча | Vindemiatrix | proud, persuasive | Товар с дальних земель! Смотри, пока не ушли. |
+| car_meet_5_v3_f_g.mp3 | старший обоза: встреча | Erinome | proud, persuasive | Товар с дальних земель! Смотри, пока не ушли. |
 | car_meet_6_v1_g.mp3 | старший обоза: встреча | Charon | tired, hurried | Мы с утра в пути. Покупай, продавай — только быстро. |
 | car_meet_6_v2_g.mp3 | старший обоза: встреча | Zubenelgenubi | tired, hurried | Мы с утра в пути. Покупай, продавай — только быстро. |
+| car_meet_6_v3_g.mp3 | старший обоза: встреча | Achird | tired, hurried | Мы с утра в пути. Покупай, продавай — только быстро. |
+| car_meet_6_v1_f_g.mp3 | старший обоза: встреча | Kore | tired, hurried | Мы с утра в пути. Покупай, продавай — только быстро. |
 | car_meet_6_v2_f_g.mp3 | старший обоза: встреча | Vindemiatrix | tired, hurried | Мы с утра в пути. Покупай, продавай — только быстро. |
+| car_meet_6_v3_f_g.mp3 | старший обоза: встреча | Erinome | tired, hurried | Мы с утра в пути. Покупай, продавай — только быстро. |
 | car_meet_7_v1_g.mp3 | старший обоза: встреча | Charon | brisk trader | Путник, нужна соль, железо, ткань? Всё есть. |
+| car_meet_7_v2_g.mp3 | старший обоза: встреча | Zubenelgenubi | brisk trader | Путник, нужна соль, железо, ткань? Всё есть. |
+| car_meet_7_v3_g.mp3 | старший обоза: встреча | Achird | brisk trader | Путник, нужна соль, железо, ткань? Всё есть. |
+| car_meet_7_v1_f_g.mp3 | старший обоза: встреча | Kore | brisk trader | Путник, нужна соль, железо, ткань? Всё есть. |
 | car_meet_7_v2_f_g.mp3 | старший обоза: встреча | Vindemiatrix | brisk trader | Путник, нужна соль, железо, ткань? Всё есть. |
+| car_meet_7_v3_f_g.mp3 | старший обоза: встреча | Erinome | brisk trader | Путник, нужна соль, железо, ткань? Всё есть. |
 | car_meet_8_v1_g.mp3 | старший обоза: встреча | Charon | calming, commanding, then friendly | Охрана, спокойно, это не разбойник. Подходи, добрый человек. |
 | car_meet_8_v2_g.mp3 | старший обоза: встреча | Zubenelgenubi | calming, commanding, then friendly | Охрана, спокойно, это не разбойник. Подходи, добрый человек. |
+| car_meet_8_v3_g.mp3 | старший обоза: встреча | Achird | calming, commanding, then friendly | Охрана, спокойно, это не разбойник. Подходи, добрый человек. |
+| car_meet_8_v1_f_g.mp3 | старший обоза: встреча | Kore | calming, commanding, then friendly | Охрана, спокойно, это не разбойник. Подходи, добрый человек. |
 | car_meet_8_v2_f_g.mp3 | старший обоза: встреча | Vindemiatrix | calming, commanding, then friendly | Охрана, спокойно, это не разбойник. Подходи, добрый человек. |
+| car_meet_8_v3_f_g.mp3 | старший обоза: встреча | Erinome | calming, commanding, then friendly | Охрана, спокойно, это не разбойник. Подходи, добрый человек. |
+| car_meet_9_v1_g.mp3 | старший обоза: встреча | Charon | hopeful, friendly | Дорога длинная, а покупатель редкий. Заглянешь? |
+| car_meet_9_v2_g.mp3 | старший обоза: встреча | Zubenelgenubi | hopeful, friendly | Дорога длинная, а покупатель редкий. Заглянешь? |
+| car_meet_9_v3_g.mp3 | старший обоза: встреча | Achird | hopeful, friendly | Дорога длинная, а покупатель редкий. Заглянешь? |
+| car_meet_9_v1_f_g.mp3 | старший обоза: встреча | Kore | hopeful, friendly | Дорога длинная, а покупатель редкий. Заглянешь? |
+| car_meet_9_v2_f_g.mp3 | старший обоза: встреча | Vindemiatrix | hopeful, friendly | Дорога длинная, а покупатель редкий. Заглянешь? |
+| car_meet_9_v3_f_g.mp3 | старший обоза: встреча | Erinome | hopeful, friendly | Дорога длинная, а покупатель редкий. Заглянешь? |
+| car_meet_war_0_v1_g.mp3 | старший обоза: встреча на войне | Charon | tense, hushed | Тише. Мы идём через фронт. Торгуй, но не мешкай. |
+| car_meet_war_0_v2_g.mp3 | старший обоза: встреча на войне | Zubenelgenubi | tense, hushed | Тише. Мы идём через фронт. Торгуй, но не мешкай. |
+| car_meet_war_0_v3_g.mp3 | старший обоза: встреча на войне | Achird | tense, hushed | Тише. Мы идём через фронт. Торгуй, но не мешкай. |
+| car_meet_war_0_v1_f_g.mp3 | старший обоза: встреча на войне | Kore | tense, hushed | Тише. Мы идём через фронт. Торгуй, но не мешкай. |
+| car_meet_war_0_v2_f_g.mp3 | старший обоза: встреча на войне | Vindemiatrix | tense, hushed | Тише. Мы идём через фронт. Торгуй, но не мешкай. |
+| car_meet_war_0_v3_f_g.mp3 | старший обоза: встреча на войне | Erinome | tense, hushed | Тише. Мы идём через фронт. Торгуй, но не мешкай. |
+| car_meet_war_1_v1_g.mp3 | старший обоза: встреча на войне | Charon | grim, apologetic | Война кругом, а торговать надо. Цены, уж извини, злые. |
+| car_meet_war_1_v2_g.mp3 | старший обоза: встреча на войне | Zubenelgenubi | grim, apologetic | Война кругом, а торговать надо. Цены, уж извини, злые. |
+| car_meet_war_1_v3_g.mp3 | старший обоза: встреча на войне | Achird | grim, apologetic | Война кругом, а торговать надо. Цены, уж извини, злые. |
+| car_meet_war_1_v1_f_g.mp3 | старший обоза: встреча на войне | Kore | grim, apologetic | Война кругом, а торговать надо. Цены, уж извини, злые. |
+| car_meet_war_1_v2_f_g.mp3 | старший обоза: встреча на войне | Vindemiatrix | grim, apologetic | Война кругом, а торговать надо. Цены, уж извини, злые. |
+| car_meet_war_1_v3_f_g.mp3 | старший обоза: встреча на войне | Erinome | grim, apologetic | Война кругом, а торговать надо. Цены, уж извини, злые. |
+| car_meet_war_2_v1_g.mp3 | старший обоза: встреча на войне | Charon | nervous, hurried | Солдат по дороге не видно? Тогда быстро меняемся. |
+| car_meet_war_2_v2_g.mp3 | старший обоза: встреча на войне | Zubenelgenubi | nervous, hurried | Солдат по дороге не видно? Тогда быстро меняемся. |
+| car_meet_war_2_v3_g.mp3 | старший обоза: встреча на войне | Achird | nervous, hurried | Солдат по дороге не видно? Тогда быстро меняемся. |
+| car_meet_war_2_v1_f_g.mp3 | старший обоза: встреча на войне | Kore | nervous, hurried | Солдат по дороге не видно? Тогда быстро меняемся. |
+| car_meet_war_2_v2_f_g.mp3 | старший обоза: встреча на войне | Vindemiatrix | nervous, hurried | Солдат по дороге не видно? Тогда быстро меняемся. |
+| car_meet_war_2_v3_f_g.mp3 | старший обоза: встреча на войне | Erinome | nervous, hurried | Солдат по дороге не видно? Тогда быстро меняемся. |
+| car_meet_war_3_v1_g.mp3 | старший обоза: встреча на войне | Charon | grim, serious | На такой дороге каждая рука с оружием на счету. |
+| car_meet_war_3_v2_g.mp3 | старший обоза: встреча на войне | Zubenelgenubi | grim, serious | На такой дороге каждая рука с оружием на счету. |
+| car_meet_war_3_v3_g.mp3 | старший обоза: встреча на войне | Achird | grim, serious | На такой дороге каждая рука с оружием на счету. |
+| car_meet_war_3_v1_f_g.mp3 | старший обоза: встреча на войне | Kore | grim, serious | На такой дороге каждая рука с оружием на счету. |
+| car_meet_war_3_v2_f_g.mp3 | старший обоза: встреча на войне | Vindemiatrix | grim, serious | На такой дороге каждая рука с оружием на счету. |
+| car_meet_war_3_v3_f_g.mp3 | старший обоза: встреча на войне | Erinome | grim, serious | На такой дороге каждая рука с оружием на счету. |
+| car_meet_night_0_v1_g.mp3 | старший обоза: встреча ночью | Charon | alarmed, sharp | Кто там в темноте? Назовись! |
+| car_meet_night_0_v2_g.mp3 | старший обоза: встреча ночью | Zubenelgenubi | alarmed, sharp | Кто там в темноте? Назовись! |
+| car_meet_night_0_v3_g.mp3 | старший обоза: встреча ночью | Achird | alarmed, sharp | Кто там в темноте? Назовись! |
+| car_meet_night_0_v1_f_g.mp3 | старший обоза: встреча ночью | Kore | alarmed, sharp | Кто там в темноте? Назовись! |
+| car_meet_night_0_v2_f_g.mp3 | старший обоза: встреча ночью | Vindemiatrix | alarmed, sharp | Кто там в темноте? Назовись! |
+| car_meet_night_0_v3_f_g.mp3 | старший обоза: встреча ночью | Erinome | alarmed, sharp | Кто там в темноте? Назовись! |
+| car_meet_night_1_v1_g.mp3 | старший обоза: встреча ночью | Charon | sleepy, grudging | Ночью обоз не торгует. Но для тебя сделаем исключение. |
+| car_meet_night_1_v2_g.mp3 | старший обоза: встреча ночью | Zubenelgenubi | sleepy, grudging | Ночью обоз не торгует. Но для тебя сделаем исключение. |
+| car_meet_night_1_v3_g.mp3 | старший обоза: встреча ночью | Achird | sleepy, grudging | Ночью обоз не торгует. Но для тебя сделаем исключение. |
+| car_meet_night_1_v1_f_g.mp3 | старший обоза: встреча ночью | Kore | sleepy, grudging | Ночью обоз не торгует. Но для тебя сделаем исключение. |
+| car_meet_night_1_v2_f_g.mp3 | старший обоза: встреча ночью | Vindemiatrix | sleepy, grudging | Ночью обоз не торгует. Но для тебя сделаем исключение. |
+| car_meet_night_1_v3_f_g.mp3 | старший обоза: встреча ночью | Erinome | sleepy, grudging | Ночью обоз не торгует. Но для тебя сделаем исключение. |
+| car_meet_night_2_v1_g.mp3 | старший обоза: встреча ночью | Charon | wary, then welcoming | Поздно бродишь. Ладно, подходи к огню. |
+| car_meet_night_2_v2_g.mp3 | старший обоза: встреча ночью | Zubenelgenubi | wary, then welcoming | Поздно бродишь. Ладно, подходи к огню. |
+| car_meet_night_2_v3_g.mp3 | старший обоза: встреча ночью | Achird | wary, then welcoming | Поздно бродишь. Ладно, подходи к огню. |
+| car_meet_night_2_v1_f_g.mp3 | старший обоза: встреча ночью | Kore | wary, then welcoming | Поздно бродишь. Ладно, подходи к огню. |
+| car_meet_night_2_v2_f_g.mp3 | старший обоза: встреча ночью | Vindemiatrix | wary, then welcoming | Поздно бродишь. Ладно, подходи к огню. |
+| car_meet_night_2_v3_f_g.mp3 | старший обоза: встреча ночью | Erinome | wary, then welcoming | Поздно бродишь. Ладно, подходи к огню. |
+| car_buy_0_v1_g.mp3 | старший обоза: продаёт | Charon | confident, sly | Твоё. Довезёшь — втрое продашь. |
+| car_buy_0_v2_g.mp3 | старший обоза: продаёт | Zubenelgenubi | confident, sly | Твоё. Довезёшь — втрое продашь. |
+| car_buy_0_v3_g.mp3 | старший обоза: продаёт | Achird | confident, sly | Твоё. Довезёшь — втрое продашь. |
+| car_buy_0_v1_f_g.mp3 | старший обоза: продаёт | Kore | confident, sly | Твоё. Довезёшь — втрое продашь. |
+| car_buy_0_v2_f_g.mp3 | старший обоза: продаёт | Vindemiatrix | confident, sly | Твоё. Довезёшь — втрое продашь. |
+| car_buy_0_v3_f_g.mp3 | старший обоза: продаёт | Erinome | confident, sly | Твоё. Довезёшь — втрое продашь. |
+| car_buy_1_v1_g.mp3 | старший обоза: продаёт | Charon | persuasive | Бери, пока есть. До города такого не сыщешь. |
+| car_buy_1_v2_g.mp3 | старший обоза: продаёт | Zubenelgenubi | persuasive | Бери, пока есть. До города такого не сыщешь. |
+| car_buy_1_v3_g.mp3 | старший обоза: продаёт | Achird | persuasive | Бери, пока есть. До города такого не сыщешь. |
+| car_buy_1_v1_f_g.mp3 | старший обоза: продаёт | Kore | persuasive | Бери, пока есть. До города такого не сыщешь. |
+| car_buy_1_v2_f_g.mp3 | старший обоза: продаёт | Vindemiatrix | persuasive | Бери, пока есть. До города такого не сыщешь. |
+| car_buy_1_v3_f_g.mp3 | старший обоза: продаёт | Erinome | persuasive | Бери, пока есть. До города такого не сыщешь. |
+| car_buy_2_v1_g.mp3 | старший обоза: продаёт | Charon | cheerful, brisk | Взято! Деньги в сундук, товар — тебе. |
+| car_buy_2_v2_g.mp3 | старший обоза: продаёт | Zubenelgenubi | cheerful, brisk | Взято! Деньги в сундук, товар — тебе. |
+| car_buy_2_v3_g.mp3 | старший обоза: продаёт | Achird | cheerful, brisk | Взято! Деньги в сундук, товар — тебе. |
+| car_buy_2_v1_f_g.mp3 | старший обоза: продаёт | Kore | cheerful, brisk | Взято! Деньги в сундук, товар — тебе. |
+| car_buy_2_v2_f_g.mp3 | старший обоза: продаёт | Vindemiatrix | cheerful, brisk | Взято! Деньги в сундук, товар — тебе. |
+| car_buy_2_v3_f_g.mp3 | старший обоза: продаёт | Erinome | cheerful, brisk | Взято! Деньги в сундук, товар — тебе. |
+| car_buy_3_v1_g.mp3 | старший обоза: продаёт | Charon | approving | Добрый выбор. Там, куда идём, это на вес золота. |
+| car_buy_3_v2_g.mp3 | старший обоза: продаёт | Zubenelgenubi | approving | Добрый выбор. Там, куда идём, это на вес золота. |
+| car_buy_3_v3_g.mp3 | старший обоза: продаёт | Achird | approving | Добрый выбор. Там, куда идём, это на вес золота. |
+| car_buy_3_v1_f_g.mp3 | старший обоза: продаёт | Kore | approving | Добрый выбор. Там, куда идём, это на вес золота. |
+| car_buy_3_v2_f_g.mp3 | старший обоза: продаёт | Vindemiatrix | approving | Добрый выбор. Там, куда идём, это на вес золота. |
+| car_buy_3_v3_f_g.mp3 | старший обоза: продаёт | Erinome | approving | Добрый выбор. Там, куда идём, это на вес золота. |
+| car_buy_4_v1_g.mp3 | старший обоза: продаёт | Charon | friendly, joking | По рукам. Только в дороге не растеряй. |
+| car_buy_4_v2_g.mp3 | старший обоза: продаёт | Zubenelgenubi | friendly, joking | По рукам. Только в дороге не растеряй. |
+| car_buy_4_v3_g.mp3 | старший обоза: продаёт | Achird | friendly, joking | По рукам. Только в дороге не растеряй. |
+| car_buy_4_v1_f_g.mp3 | старший обоза: продаёт | Kore | friendly, joking | По рукам. Только в дороге не растеряй. |
+| car_buy_4_v2_f_g.mp3 | старший обоза: продаёт | Vindemiatrix | friendly, joking | По рукам. Только в дороге не растеряй. |
+| car_buy_4_v3_f_g.mp3 | старший обоза: продаёт | Erinome | friendly, joking | По рукам. Только в дороге не растеряй. |
+| car_buy_5_v1_g.mp3 | старший обоза: продаёт | Charon | sincere, warm | Держи. Мы честные купцы, без обмана. |
+| car_buy_5_v2_g.mp3 | старший обоза: продаёт | Zubenelgenubi | sincere, warm | Держи. Мы честные купцы, без обмана. |
+| car_buy_5_v3_g.mp3 | старший обоза: продаёт | Achird | sincere, warm | Держи. Мы честные купцы, без обмана. |
+| car_buy_5_v1_f_g.mp3 | старший обоза: продаёт | Kore | sincere, warm | Держи. Мы честные купцы, без обмана. |
+| car_buy_5_v2_f_g.mp3 | старший обоза: продаёт | Vindemiatrix | sincere, warm | Держи. Мы честные купцы, без обмана. |
+| car_buy_5_v3_f_g.mp3 | старший обоза: продаёт | Erinome | sincere, warm | Держи. Мы честные купцы, без обмана. |
+| car_sell_0_v1_g.mp3 | старший обоза: скупает | Charon | businesslike | Беру. В городе пригодится. |
+| car_sell_0_v2_g.mp3 | старший обоза: скупает | Zubenelgenubi | businesslike | Беру. В городе пригодится. |
+| car_sell_0_v3_g.mp3 | старший обоза: скупает | Achird | businesslike | Беру. В городе пригодится. |
+| car_sell_0_v1_f_g.mp3 | старший обоза: скупает | Kore | businesslike | Беру. В городе пригодится. |
+| car_sell_0_v2_f_g.mp3 | старший обоза: скупает | Vindemiatrix | businesslike | Беру. В городе пригодится. |
+| car_sell_0_v3_f_g.mp3 | старший обоза: скупает | Erinome | businesslike | Беру. В городе пригодится. |
+| car_sell_1_v1_g.mp3 | старший обоза: скупает | Charon | agreeable | Хорошо, заберём. Вот плата. |
+| car_sell_1_v2_g.mp3 | старший обоза: скупает | Zubenelgenubi | agreeable | Хорошо, заберём. Вот плата. |
+| car_sell_1_v3_g.mp3 | старший обоза: скупает | Achird | agreeable | Хорошо, заберём. Вот плата. |
+| car_sell_1_v1_f_g.mp3 | старший обоза: скупает | Kore | agreeable | Хорошо, заберём. Вот плата. |
+| car_sell_1_v2_f_g.mp3 | старший обоза: скупает | Vindemiatrix | agreeable | Хорошо, заберём. Вот плата. |
+| car_sell_1_v3_f_g.mp3 | старший обоза: скупает | Erinome | agreeable | Хорошо, заберём. Вот плата. |
+| car_sell_2_v1_g.mp3 | старший обоза: скупает | Charon | pleased | Как раз этого нам в дорогу и не хватало. |
+| car_sell_2_v2_g.mp3 | старший обоза: скупает | Zubenelgenubi | pleased | Как раз этого нам в дорогу и не хватало. |
+| car_sell_2_v3_g.mp3 | старший обоза: скупает | Achird | pleased | Как раз этого нам в дорогу и не хватало. |
+| car_sell_2_v1_f_g.mp3 | старший обоза: скупает | Kore | pleased | Как раз этого нам в дорогу и не хватало. |
+| car_sell_2_v2_f_g.mp3 | старший обоза: скупает | Vindemiatrix | pleased | Как раз этого нам в дорогу и не хватало. |
+| car_sell_2_v3_f_g.mp3 | старший обоза: скупает | Erinome | pleased | Как раз этого нам в дорогу и не хватало. |
+| car_sell_3_v1_g.mp3 | старший обоза: скупает | Charon | loud, commanding, pleased | Грузите на третий воз! Беру всё. |
+| car_sell_3_v2_g.mp3 | старший обоза: скупает | Zubenelgenubi | loud, commanding, pleased | Грузите на третий воз! Беру всё. |
+| car_sell_3_v3_g.mp3 | старший обоза: скупает | Achird | loud, commanding, pleased | Грузите на третий воз! Беру всё. |
+| car_sell_3_v1_f_g.mp3 | старший обоза: скупает | Kore | loud, commanding, pleased | Грузите на третий воз! Беру всё. |
+| car_sell_3_v2_f_g.mp3 | старший обоза: скупает | Vindemiatrix | loud, commanding, pleased | Грузите на третий воз! Беру всё. |
+| car_sell_3_v3_f_g.mp3 | старший обоза: скупает | Erinome | loud, commanding, pleased | Грузите на третий воз! Беру всё. |
+| car_sell_4_v1_g.mp3 | старший обоза: скупает | Charon | fair, calm | Честная цена. Держи монеты. |
+| car_sell_4_v2_g.mp3 | старший обоза: скупает | Zubenelgenubi | fair, calm | Честная цена. Держи монеты. |
+| car_sell_4_v3_g.mp3 | старший обоза: скупает | Achird | fair, calm | Честная цена. Держи монеты. |
+| car_sell_4_v1_f_g.mp3 | старший обоза: скупает | Kore | fair, calm | Честная цена. Держи монеты. |
+| car_sell_4_v2_f_g.mp3 | старший обоза: скупает | Vindemiatrix | fair, calm | Честная цена. Держи монеты. |
+| car_sell_4_v3_f_g.mp3 | старший обоза: скупает | Erinome | fair, calm | Честная цена. Держи монеты. |
+| car_sell_5_v1_g.mp3 | старший обоза: скупает | Charon | eager | Годится. Ещё что-нибудь есть? |
+| car_sell_5_v2_g.mp3 | старший обоза: скупает | Zubenelgenubi | eager | Годится. Ещё что-нибудь есть? |
+| car_sell_5_v3_g.mp3 | старший обоза: скупает | Achird | eager | Годится. Ещё что-нибудь есть? |
+| car_sell_5_v1_f_g.mp3 | старший обоза: скупает | Kore | eager | Годится. Ещё что-нибудь есть? |
+| car_sell_5_v2_f_g.mp3 | старший обоза: скупает | Vindemiatrix | eager | Годится. Ещё что-нибудь есть? |
+| car_sell_5_v3_f_g.mp3 | старший обоза: скупает | Erinome | eager | Годится. Ещё что-нибудь есть? |
+| car_poor_0_v1_g.mp3 | старший обоза: золота не хватает | Charon | dry, firm | Золота не хватит. Мы в долг не возим. |
+| car_poor_0_v2_g.mp3 | старший обоза: золота не хватает | Zubenelgenubi | dry, firm | Золота не хватит. Мы в долг не возим. |
+| car_poor_0_v3_g.mp3 | старший обоза: золота не хватает | Achird | dry, firm | Золота не хватит. Мы в долг не возим. |
+| car_poor_0_v1_f_g.mp3 | старший обоза: золота не хватает | Kore | dry, firm | Золота не хватит. Мы в долг не возим. |
+| car_poor_0_v2_f_g.mp3 | старший обоза: золота не хватает | Vindemiatrix | dry, firm | Золота не хватит. Мы в долг не возим. |
+| car_poor_0_v3_f_g.mp3 | старший обоза: золота не хватает | Erinome | dry, firm | Золота не хватит. Мы в долг не возим. |
+| car_poor_1_v1_g.mp3 | старший обоза: золота не хватает | Charon | sympathetic | Кошель пустоват. Ну, может, в другой раз. |
+| car_poor_1_v2_g.mp3 | старший обоза: золота не хватает | Zubenelgenubi | sympathetic | Кошель пустоват. Ну, может, в другой раз. |
+| car_poor_1_v3_g.mp3 | старший обоза: золота не хватает | Achird | sympathetic | Кошель пустоват. Ну, может, в другой раз. |
+| car_poor_1_v1_f_g.mp3 | старший обоза: золота не хватает | Kore | sympathetic | Кошель пустоват. Ну, может, в другой раз. |
+| car_poor_1_v2_f_g.mp3 | старший обоза: золота не хватает | Vindemiatrix | sympathetic | Кошель пустоват. Ну, может, в другой раз. |
+| car_poor_1_v3_f_g.mp3 | старший обоза: золота не хватает | Erinome | sympathetic | Кошель пустоват. Ну, может, в другой раз. |
+| car_pass_0_v1_g.mp3 | старший обоза: обоз пропустили | Charon | easygoing, friendly | Ну, как знаешь. Доброй дороги! |
+| car_pass_0_v2_g.mp3 | старший обоза: обоз пропустили | Zubenelgenubi | easygoing, friendly | Ну, как знаешь. Доброй дороги! |
+| car_pass_0_v3_g.mp3 | старший обоза: обоз пропустили | Achird | easygoing, friendly | Ну, как знаешь. Доброй дороги! |
+| car_pass_0_v1_f_g.mp3 | старший обоза: обоз пропустили | Kore | easygoing, friendly | Ну, как знаешь. Доброй дороги! |
+| car_pass_0_v2_f_g.mp3 | старший обоза: обоз пропустили | Vindemiatrix | easygoing, friendly | Ну, как знаешь. Доброй дороги! |
+| car_pass_0_v3_f_g.mp3 | старший обоза: обоз пропустили | Erinome | easygoing, friendly | Ну, как знаешь. Доброй дороги! |
+| car_pass_1_v1_g.mp3 | старший обоза: обоз пропустили | Charon | loud command to drivers | Трогай! Обоз идёт дальше. |
+| car_pass_1_v2_g.mp3 | старший обоза: обоз пропустили | Zubenelgenubi | loud command to drivers | Трогай! Обоз идёт дальше. |
+| car_pass_1_v3_g.mp3 | старший обоза: обоз пропустили | Achird | loud command to drivers | Трогай! Обоз идёт дальше. |
+| car_pass_1_v1_f_g.mp3 | старший обоза: обоз пропустили | Kore | loud command to drivers | Трогай! Обоз идёт дальше. |
+| car_pass_1_v2_f_g.mp3 | старший обоза: обоз пропустили | Vindemiatrix | loud command to drivers | Трогай! Обоз идёт дальше. |
+| car_pass_1_v3_f_g.mp3 | старший обоза: обоз пропустили | Erinome | loud command to drivers | Трогай! Обоз идёт дальше. |
+| car_pass_2_v1_g.mp3 | старший обоза: обоз пропустили | Charon | warm, parting | Счастливо оставаться. Может, свидимся. |
+| car_pass_2_v2_g.mp3 | старший обоза: обоз пропустили | Zubenelgenubi | warm, parting | Счастливо оставаться. Может, свидимся. |
+| car_pass_2_v3_g.mp3 | старший обоза: обоз пропустили | Achird | warm, parting | Счастливо оставаться. Может, свидимся. |
+| car_pass_2_v1_f_g.mp3 | старший обоза: обоз пропустили | Kore | warm, parting | Счастливо оставаться. Может, свидимся. |
+| car_pass_2_v2_f_g.mp3 | старший обоза: обоз пропустили | Vindemiatrix | warm, parting | Счастливо оставаться. Может, свидимся. |
+| car_pass_2_v3_f_g.mp3 | старший обоза: обоз пропустили | Erinome | warm, parting | Счастливо оставаться. Может, свидимся. |
+| car_pass_3_v1_g.mp3 | старший обоза: обоз пропустили | Charon | shrugging, friendly | Ничего не нужно? Ладно, нам пора. |
+| car_pass_3_v2_g.mp3 | старший обоза: обоз пропустили | Zubenelgenubi | shrugging, friendly | Ничего не нужно? Ладно, нам пора. |
+| car_pass_3_v3_g.mp3 | старший обоза: обоз пропустили | Achird | shrugging, friendly | Ничего не нужно? Ладно, нам пора. |
+| car_pass_3_v1_f_g.mp3 | старший обоза: обоз пропустили | Kore | shrugging, friendly | Ничего не нужно? Ладно, нам пора. |
+| car_pass_3_v2_f_g.mp3 | старший обоза: обоз пропустили | Vindemiatrix | shrugging, friendly | Ничего не нужно? Ладно, нам пора. |
+| car_pass_3_v3_f_g.mp3 | старший обоза: обоз пропустили | Erinome | shrugging, friendly | Ничего не нужно? Ладно, нам пора. |
+| car_pass_4_v1_g.mp3 | старший обоза: обоз пропустили | Charon | loud, cheerful command | Пропускаем путника! Эй, возчики, трогай! |
+| car_pass_4_v2_g.mp3 | старший обоза: обоз пропустили | Zubenelgenubi | loud, cheerful command | Пропускаем путника! Эй, возчики, трогай! |
+| car_pass_4_v3_g.mp3 | старший обоза: обоз пропустили | Achird | loud, cheerful command | Пропускаем путника! Эй, возчики, трогай! |
+| car_pass_4_v1_f_g.mp3 | старший обоза: обоз пропустили | Kore | loud, cheerful command | Пропускаем путника! Эй, возчики, трогай! |
+| car_pass_4_v2_f_g.mp3 | старший обоза: обоз пропустили | Vindemiatrix | loud, cheerful command | Пропускаем путника! Эй, возчики, трогай! |
+| car_pass_4_v3_f_g.mp3 | старший обоза: обоз пропустили | Erinome | loud, cheerful command | Пропускаем путника! Эй, возчики, трогай! |
+| car_pass_5_v1_g.mp3 | старший обоза: обоз пропустили | Charon | caring warning | Береги себя на тракте. Разбойники шалят. |
+| car_pass_5_v2_g.mp3 | старший обоза: обоз пропустили | Zubenelgenubi | caring warning | Береги себя на тракте. Разбойники шалят. |
+| car_pass_5_v3_g.mp3 | старший обоза: обоз пропустили | Achird | caring warning | Береги себя на тракте. Разбойники шалят. |
+| car_pass_5_v1_f_g.mp3 | старший обоза: обоз пропустили | Kore | caring warning | Береги себя на тракте. Разбойники шалят. |
+| car_pass_5_v2_f_g.mp3 | старший обоза: обоз пропустили | Vindemiatrix | caring warning | Береги себя на тракте. Разбойники шалят. |
+| car_pass_5_v3_f_g.mp3 | старший обоза: обоз пропустили | Erinome | caring warning | Береги себя на тракте. Разбойники шалят. |
+| car_hire_0_v1_g.mp3 | старший обоза: нанимает в охрану | Charon | decisive, commanding | Нанят! Держись у последнего воза. |
+| car_hire_0_v2_g.mp3 | старший обоза: нанимает в охрану | Zubenelgenubi | decisive, commanding | Нанят! Держись у последнего воза. |
+| car_hire_0_v3_g.mp3 | старший обоза: нанимает в охрану | Achird | decisive, commanding | Нанят! Держись у последнего воза. |
+| car_hire_0_v1_f_g.mp3 | старший обоза: нанимает в охрану | Kore | decisive, commanding | Нанят! Держись у последнего воза. |
+| car_hire_0_v2_f_g.mp3 | старший обоза: нанимает в охрану | Vindemiatrix | decisive, commanding | Нанят! Держись у последнего воза. |
+| car_hire_0_v3_f_g.mp3 | старший обоза: нанимает в охрану | Erinome | decisive, commanding | Нанят! Держись у последнего воза. |
+| car_hire_1_v1_g.mp3 | старший обоза: нанимает в охрану | Charon | appraising, businesslike | Меч при тебе? Отлично. Плата в городе. |
+| car_hire_1_v2_g.mp3 | старший обоза: нанимает в охрану | Zubenelgenubi | appraising, businesslike | Меч при тебе? Отлично. Плата в городе. |
+| car_hire_1_v3_g.mp3 | старший обоза: нанимает в охрану | Achird | appraising, businesslike | Меч при тебе? Отлично. Плата в городе. |
+| car_hire_1_v1_f_g.mp3 | старший обоза: нанимает в охрану | Kore | appraising, businesslike | Меч при тебе? Отлично. Плата в городе. |
+| car_hire_1_v2_f_g.mp3 | старший обоза: нанимает в охрану | Vindemiatrix | appraising, businesslike | Меч при тебе? Отлично. Плата в городе. |
+| car_hire_1_v3_f_g.mp3 | старший обоза: нанимает в охрану | Erinome | appraising, businesslike | Меч при тебе? Отлично. Плата в городе. |
+| car_hire_2_v1_g.mp3 | старший обоза: нанимает в охрану | Charon | relieved, welcoming | Лишняя рука с оружием — в самый раз. Добро пожаловать. |
+| car_hire_2_v2_g.mp3 | старший обоза: нанимает в охрану | Zubenelgenubi | relieved, welcoming | Лишняя рука с оружием — в самый раз. Добро пожаловать. |
+| car_hire_2_v3_g.mp3 | старший обоза: нанимает в охрану | Achird | relieved, welcoming | Лишняя рука с оружием — в самый раз. Добро пожаловать. |
+| car_hire_2_v1_f_g.mp3 | старший обоза: нанимает в охрану | Kore | relieved, welcoming | Лишняя рука с оружием — в самый раз. Добро пожаловать. |
+| car_hire_2_v2_f_g.mp3 | старший обоза: нанимает в охрану | Vindemiatrix | relieved, welcoming | Лишняя рука с оружием — в самый раз. Добро пожаловать. |
+| car_hire_2_v3_f_g.mp3 | старший обоза: нанимает в охрану | Erinome | relieved, welcoming | Лишняя рука с оружием — в самый раз. Добро пожаловать. |
+| car_hire_3_v1_g.mp3 | старший обоза: нанимает в охрану | Charon | businesslike, fair | Договорились. Довезём груз — получишь сполна. |
+| car_hire_3_v2_g.mp3 | старший обоза: нанимает в охрану | Zubenelgenubi | businesslike, fair | Договорились. Довезём груз — получишь сполна. |
+| car_hire_3_v3_g.mp3 | старший обоза: нанимает в охрану | Achird | businesslike, fair | Договорились. Довезём груз — получишь сполна. |
+| car_hire_3_v1_f_g.mp3 | старший обоза: нанимает в охрану | Kore | businesslike, fair | Договорились. Довезём груз — получишь сполна. |
+| car_hire_3_v2_f_g.mp3 | старший обоза: нанимает в охрану | Vindemiatrix | businesslike, fair | Договорились. Довезём груз — получишь сполна. |
+| car_hire_3_v3_f_g.mp3 | старший обоза: нанимает в охрану | Erinome | businesslike, fair | Договорились. Довезём груз — получишь сполна. |
+| car_hire_4_v1_g.mp3 | старший обоза: нанимает в охрану | Charon | serious, warning | Охранник? Хорошо. Гляди в оба — на тракте неспокойно. |
+| car_hire_4_v2_g.mp3 | старший обоза: нанимает в охрану | Zubenelgenubi | serious, warning | Охранник? Хорошо. Гляди в оба — на тракте неспокойно. |
+| car_hire_4_v3_g.mp3 | старший обоза: нанимает в охрану | Achird | serious, warning | Охранник? Хорошо. Гляди в оба — на тракте неспокойно. |
+| car_hire_4_v1_f_g.mp3 | старший обоза: нанимает в охрану | Kore | serious, warning | Охранник? Хорошо. Гляди в оба — на тракте неспокойно. |
+| car_hire_4_v2_f_g.mp3 | старший обоза: нанимает в охрану | Vindemiatrix | serious, warning | Охранник? Хорошо. Гляди в оба — на тракте неспокойно. |
+| car_hire_4_v3_f_g.mp3 | старший обоза: нанимает в охрану | Erinome | serious, warning | Охранник? Хорошо. Гляди в оба — на тракте неспокойно. |
+| car_hire_5_v1_g.mp3 | старший обоза: нанимает в охрану | Charon | friendly, reassuring | По рукам. Если что — кричи, ребята прибегут. |
+| car_hire_5_v2_g.mp3 | старший обоза: нанимает в охрану | Zubenelgenubi | friendly, reassuring | По рукам. Если что — кричи, ребята прибегут. |
+| car_hire_5_v3_g.mp3 | старший обоза: нанимает в охрану | Achird | friendly, reassuring | По рукам. Если что — кричи, ребята прибегут. |
+| car_hire_5_v1_f_g.mp3 | старший обоза: нанимает в охрану | Kore | friendly, reassuring | По рукам. Если что — кричи, ребята прибегут. |
+| car_hire_5_v2_f_g.mp3 | старший обоза: нанимает в охрану | Vindemiatrix | friendly, reassuring | По рукам. Если что — кричи, ребята прибегут. |
+| car_hire_5_v3_f_g.mp3 | старший обоза: нанимает в охрану | Erinome | friendly, reassuring | По рукам. Если что — кричи, ребята прибегут. |
+| car_hire_busy_0_v1_g.mp3 | старший обоза: уже при обозе | Charon | dry, reasonable | У тебя уже есть наниматель. Двух обозов не сторожат. |
+| car_hire_busy_0_v2_g.mp3 | старший обоза: уже при обозе | Zubenelgenubi | dry, reasonable | У тебя уже есть наниматель. Двух обозов не сторожат. |
+| car_hire_busy_0_v3_g.mp3 | старший обоза: уже при обозе | Achird | dry, reasonable | У тебя уже есть наниматель. Двух обозов не сторожат. |
+| car_hire_busy_0_v1_f_g.mp3 | старший обоза: уже при обозе | Kore | dry, reasonable | У тебя уже есть наниматель. Двух обозов не сторожат. |
+| car_hire_busy_0_v2_f_g.mp3 | старший обоза: уже при обозе | Vindemiatrix | dry, reasonable | У тебя уже есть наниматель. Двух обозов не сторожат. |
+| car_hire_busy_0_v3_f_g.mp3 | старший обоза: уже при обозе | Erinome | dry, reasonable | У тебя уже есть наниматель. Двух обозов не сторожат. |
+| car_hire_busy_1_v1_g.mp3 | старший обоза: уже при обозе | Charon | firm, friendly | Ты другой обоз ведёшь. Сперва доведи его. |
+| car_hire_busy_1_v2_g.mp3 | старший обоза: уже при обозе | Zubenelgenubi | firm, friendly | Ты другой обоз ведёшь. Сперва доведи его. |
+| car_hire_busy_1_v3_g.mp3 | старший обоза: уже при обозе | Achird | firm, friendly | Ты другой обоз ведёшь. Сперва доведи его. |
+| car_hire_busy_1_v1_f_g.mp3 | старший обоза: уже при обозе | Kore | firm, friendly | Ты другой обоз ведёшь. Сперва доведи его. |
+| car_hire_busy_1_v2_f_g.mp3 | старший обоза: уже при обозе | Vindemiatrix | firm, friendly | Ты другой обоз ведёшь. Сперва доведи его. |
+| car_hire_busy_1_v3_f_g.mp3 | старший обоза: уже при обозе | Erinome | firm, friendly | Ты другой обоз ведёшь. Сперва доведи его. |
+| car_news_0_v1_g.mp3 | старший обоза: новости | Charon | conversational, confiding | Слушай, что на дорогах делается. |
+| car_news_0_v2_g.mp3 | старший обоза: новости | Zubenelgenubi | conversational, confiding | Слушай, что на дорогах делается. |
+| car_news_0_v3_g.mp3 | старший обоза: новости | Achird | conversational, confiding | Слушай, что на дорогах делается. |
+| car_news_0_v1_f_g.mp3 | старший обоза: новости | Kore | conversational, confiding | Слушай, что на дорогах делается. |
+| car_news_0_v2_f_g.mp3 | старший обоза: новости | Vindemiatrix | conversational, confiding | Слушай, что на дорогах делается. |
+| car_news_0_v3_f_g.mp3 | старший обоза: новости | Erinome | conversational, confiding | Слушай, что на дорогах делается. |
+| car_news_1_v1_g.mp3 | старший обоза: новости | Charon | friendly, storyteller | Расскажу, что знаю. Мы много где бываем. |
+| car_news_1_v2_g.mp3 | старший обоза: новости | Zubenelgenubi | friendly, storyteller | Расскажу, что знаю. Мы много где бываем. |
+| car_news_1_v3_g.mp3 | старший обоза: новости | Achird | friendly, storyteller | Расскажу, что знаю. Мы много где бываем. |
+| car_news_1_v1_f_g.mp3 | старший обоза: новости | Kore | friendly, storyteller | Расскажу, что знаю. Мы много где бываем. |
+| car_news_1_v2_f_g.mp3 | старший обоза: новости | Vindemiatrix | friendly, storyteller | Расскажу, что знаю. Мы много где бываем. |
+| car_news_1_v3_f_g.mp3 | старший обоза: новости | Erinome | friendly, storyteller | Расскажу, что знаю. Мы много где бываем. |
+| car_news_2_v1_g.mp3 | старший обоза: новости | Charon | amused, chatty | Новости? Их у нас больше, чем товара. |
+| car_news_2_v1_f_g.mp3 | старший обоза: новости | Kore | amused, chatty | Новости? Их у нас больше, чем товара. |
+| car_news_2_v2_f_g.mp3 | старший обоза: новости | Vindemiatrix | amused, chatty | Новости? Их у нас больше, чем товара. |
+| car_news_2_v3_f_g.mp3 | старший обоза: новости | Erinome | amused, chatty | Новости? Их у нас больше, чем товара. |
+| car_arrive_0_v1_g.mp3 | старший обоза: дошли, плата | Charon | relieved, grateful | Дошли! Держи плату, заслужено. |
+| car_arrive_0_v2_g.mp3 | старший обоза: дошли, плата | Zubenelgenubi | relieved, grateful | Дошли! Держи плату, заслужено. |
+| car_arrive_0_v3_g.mp3 | старший обоза: дошли, плата | Achird | relieved, grateful | Дошли! Держи плату, заслужено. |
+| car_arrive_0_v1_f_g.mp3 | старший обоза: дошли, плата | Kore | relieved, grateful | Дошли! Держи плату, заслужено. |
+| car_arrive_0_v2_f_g.mp3 | старший обоза: дошли, плата | Vindemiatrix | relieved, grateful | Дошли! Держи плату, заслужено. |
+| car_arrive_0_v3_f_g.mp3 | старший обоза: дошли, плата | Erinome | relieved, grateful | Дошли! Держи плату, заслужено. |
+| car_arrive_1_v1_g.mp3 | старший обоза: дошли, плата | Charon | sincere, grateful | Спасибо за охрану. Без тебя бы не дошли. |
+| car_arrive_1_v2_g.mp3 | старший обоза: дошли, плата | Zubenelgenubi | sincere, grateful | Спасибо за охрану. Без тебя бы не дошли. |
+| car_arrive_1_v3_g.mp3 | старший обоза: дошли, плата | Achird | sincere, grateful | Спасибо за охрану. Без тебя бы не дошли. |
+| car_arrive_1_v1_f_g.mp3 | старший обоза: дошли, плата | Kore | sincere, grateful | Спасибо за охрану. Без тебя бы не дошли. |
+| car_arrive_1_v2_f_g.mp3 | старший обоза: дошли, плата | Vindemiatrix | sincere, grateful | Спасибо за охрану. Без тебя бы не дошли. |
+| car_arrive_1_v3_f_g.mp3 | старший обоза: дошли, плата | Erinome | sincere, grateful | Спасибо за охрану. Без тебя бы не дошли. |
+| car_arrive_2_v1_g.mp3 | старший обоза: дошли, плата | Charon | satisfied, friendly | Вот твоё золото. Будешь рядом — нанимайся снова. |
+| car_arrive_2_v2_g.mp3 | старший обоза: дошли, плата | Zubenelgenubi | satisfied, friendly | Вот твоё золото. Будешь рядом — нанимайся снова. |
+| car_arrive_2_v3_g.mp3 | старший обоза: дошли, плата | Achird | satisfied, friendly | Вот твоё золото. Будешь рядом — нанимайся снова. |
+| car_arrive_2_v1_f_g.mp3 | старший обоза: дошли, плата | Kore | satisfied, friendly | Вот твоё золото. Будешь рядом — нанимайся снова. |
+| car_arrive_2_v2_f_g.mp3 | старший обоза: дошли, плата | Vindemiatrix | satisfied, friendly | Вот твоё золото. Будешь рядом — нанимайся снова. |
+| car_arrive_2_v3_f_g.mp3 | старший обоза: дошли, плата | Erinome | satisfied, friendly | Вот твоё золото. Будешь рядом — нанимайся снова. |
+| car_arrive_3_v1_g.mp3 | старший обоза: дошли, плата | Charon | relieved, satisfied | Живы, груз цел. Честно заработано. |
+| car_arrive_3_v2_g.mp3 | старший обоза: дошли, плата | Zubenelgenubi | relieved, satisfied | Живы, груз цел. Честно заработано. |
+| car_arrive_3_v3_g.mp3 | старший обоза: дошли, плата | Achird | relieved, satisfied | Живы, груз цел. Честно заработано. |
+| car_arrive_3_v1_f_g.mp3 | старший обоза: дошли, плата | Kore | relieved, satisfied | Живы, груз цел. Честно заработано. |
+| car_arrive_3_v2_f_g.mp3 | старший обоза: дошли, плата | Vindemiatrix | relieved, satisfied | Живы, груз цел. Честно заработано. |
+| car_arrive_3_v3_f_g.mp3 | старший обоза: дошли, плата | Erinome | relieved, satisfied | Живы, груз цел. Честно заработано. |
+| greet_torg_0_v1_g.mp3 | приветствие: торговец | Sadachbia | brisk, lively market trader, persuasive | Смотри, выбирай. Руками не мни. |
+| greet_torg_0_v2_g.mp3 | приветствие: торговец | Schedar | brisk, lively market trader, persuasive | Смотри, выбирай. Руками не мни. |
+| greet_torg_0_v1_f_g.mp3 | приветствие: торговец | Leda | brisk, lively market trader, persuasive | Смотри, выбирай. Руками не мни. |
+| greet_torg_0_v2_f_g.mp3 | приветствие: торговец | Aoede | brisk, lively market trader, persuasive | Смотри, выбирай. Руками не мни. |
+| greet_torg_1_v1_g.mp3 | приветствие: торговец | Sadachbia | brisk, lively market trader, persuasive | Товар свежий, цена честная — почти. |
+| greet_torg_1_v2_g.mp3 | приветствие: торговец | Schedar | brisk, lively market trader, persuasive | Товар свежий, цена честная — почти. |
+| greet_torg_1_v1_f_g.mp3 | приветствие: торговец | Leda | brisk, lively market trader, persuasive | Товар свежий, цена честная — почти. |
+| greet_torg_1_v2_f_g.mp3 | приветствие: торговец | Aoede | brisk, lively market trader, persuasive | Товар свежий, цена честная — почти. |
+| greet_torg_2_v1_g.mp3 | приветствие: торговец | Sadachbia | brisk, lively market trader, persuasive | Золото есть? Тогда поговорим. |
+| greet_torg_2_v2_g.mp3 | приветствие: торговец | Schedar | brisk, lively market trader, persuasive | Золото есть? Тогда поговорим. |
+| greet_torg_2_v1_f_g.mp3 | приветствие: торговец | Leda | brisk, lively market trader, persuasive | Золото есть? Тогда поговорим. |
+| greet_torg_2_v2_f_g.mp3 | приветствие: торговец | Aoede | brisk, lively market trader, persuasive | Золото есть? Тогда поговорим. |
+| greet_torg_3_v1_g.mp3 | приветствие: торговец | Sadachbia | brisk, lively market trader, persuasive | Заходи, заходи. Сегодня уступлю, если не жадничать. |
+| greet_torg_3_v2_g.mp3 | приветствие: торговец | Schedar | brisk, lively market trader, persuasive | Заходи, заходи. Сегодня уступлю, если не жадничать. |
+| greet_torg_3_v1_f_g.mp3 | приветствие: торговец | Leda | brisk, lively market trader, persuasive | Заходи, заходи. Сегодня уступлю, если не жадничать. |
+| greet_torg_3_v2_f_g.mp3 | приветствие: торговец | Aoede | brisk, lively market trader, persuasive | Заходи, заходи. Сегодня уступлю, если не жадничать. |
+| greet_torg_4_v1_g.mp3 | приветствие: торговец | Sadachbia | brisk, lively market trader, persuasive | Что ищешь — то и найдём. Чего нет — достанем. |
+| greet_torg_4_v2_g.mp3 | приветствие: торговец | Schedar | brisk, lively market trader, persuasive | Что ищешь — то и найдём. Чего нет — достанем. |
+| greet_torg_4_v1_f_g.mp3 | приветствие: торговец | Leda | brisk, lively market trader, persuasive | Что ищешь — то и найдём. Чего нет — достанем. |
+| greet_torg_4_v2_f_g.mp3 | приветствие: торговец | Aoede | brisk, lively market trader, persuasive | Что ищешь — то и найдём. Чего нет — достанем. |
+| greet_torg_5_v1_g.mp3 | приветствие: торговец | Sadachbia | brisk, lively market trader, persuasive | Не стой в проходе, покупатели за тобой. |
+| greet_torg_5_v2_g.mp3 | приветствие: торговец | Schedar | brisk, lively market trader, persuasive | Не стой в проходе, покупатели за тобой. |
+| greet_torg_5_v1_f_g.mp3 | приветствие: торговец | Leda | brisk, lively market trader, persuasive | Не стой в проходе, покупатели за тобой. |
+| greet_torg_5_v2_f_g.mp3 | приветствие: торговец | Aoede | brisk, lively market trader, persuasive | Не стой в проходе, покупатели за тобой. |
+| greet_torg_6_v1_g.mp3 | приветствие: торговец | Sadachbia | brisk, lively market trader, persuasive | За погляд денег не беру. Пока. |
+| greet_torg_6_v2_g.mp3 | приветствие: торговец | Schedar | brisk, lively market trader, persuasive | За погляд денег не беру. Пока. |
+| greet_torg_6_v1_f_g.mp3 | приветствие: торговец | Leda | brisk, lively market trader, persuasive | За погляд денег не беру. Пока. |
+| greet_torg_6_v2_f_g.mp3 | приветствие: торговец | Aoede | brisk, lively market trader, persuasive | За погляд денег не беру. Пока. |
+| greet_torg_7_v1_g.mp3 | приветствие: торговец | Sadachbia | brisk, lively market trader, persuasive | С дороги? Значит, есть что продать. |
+| greet_torg_7_v2_g.mp3 | приветствие: торговец | Schedar | brisk, lively market trader, persuasive | С дороги? Значит, есть что продать. |
+| greet_torg_7_v1_f_g.mp3 | приветствие: торговец | Leda | brisk, lively market trader, persuasive | С дороги? Значит, есть что продать. |
+| greet_torg_7_v2_f_g.mp3 | приветствие: торговец | Aoede | brisk, lively market trader, persuasive | С дороги? Значит, есть что продать. |
+| greet_torg_8_v1_g.mp3 | приветствие: торговец | Sadachbia | brisk, lively market trader, persuasive | Меняю, покупаю, продаю. Спрашивай. |
+| greet_torg_8_v2_g.mp3 | приветствие: торговец | Schedar | brisk, lively market trader, persuasive | Меняю, покупаю, продаю. Спрашивай. |
+| greet_torg_8_v1_f_g.mp3 | приветствие: торговец | Leda | brisk, lively market trader, persuasive | Меняю, покупаю, продаю. Спрашивай. |
+| greet_torg_8_v2_f_g.mp3 | приветствие: торговец | Aoede | brisk, lively market trader, persuasive | Меняю, покупаю, продаю. Спрашивай. |
+| greet_torg_9_v1_g.mp3 | приветствие: торговец | Sadachbia | brisk, lively market trader, persuasive | Весы у меня верные, не сомневайся. |
+| greet_torg_9_v2_g.mp3 | приветствие: торговец | Schedar | brisk, lively market trader, persuasive | Весы у меня верные, не сомневайся. |
+| greet_torg_9_v1_f_g.mp3 | приветствие: торговец | Leda | brisk, lively market trader, persuasive | Весы у меня верные, не сомневайся. |
+| greet_torg_9_v2_f_g.mp3 | приветствие: торговец | Aoede | brisk, lively market trader, persuasive | Весы у меня верные, не сомневайся. |
+| greet_torg_10_v1_g.mp3 | приветствие: торговец | Sadachbia | brisk, lively market trader, persuasive | Тише, не торгуйся вслух — соседи услышат, цены поднимут. |
+| greet_torg_10_v2_g.mp3 | приветствие: торговец | Schedar | brisk, lively market trader, persuasive | Тише, не торгуйся вслух — соседи услышат, цены поднимут. |
+| greet_torg_10_v1_f_g.mp3 | приветствие: торговец | Leda | brisk, lively market trader, persuasive | Тише, не торгуйся вслух — соседи услышат, цены поднимут. |
+| greet_torg_10_v2_f_g.mp3 | приветствие: торговец | Aoede | brisk, lively market trader, persuasive | Тише, не торгуйся вслух — соседи услышат, цены поднимут. |
+| greet_torg_11_v1_g.mp3 | приветствие: торговец | Sadachbia | brisk, lively market trader, persuasive | Последний такой остался. Правда последний. |
+| greet_torg_11_v2_g.mp3 | приветствие: торговец | Schedar | brisk, lively market trader, persuasive | Последний такой остался. Правда последний. |
+| greet_torg_11_v1_f_g.mp3 | приветствие: торговец | Leda | brisk, lively market trader, persuasive | Последний такой остался. Правда последний. |
+| greet_torg_11_v2_f_g.mp3 | приветствие: торговец | Aoede | brisk, lively market trader, persuasive | Последний такой остался. Правда последний. |
+| greet_kuznya_0_v1_g.mp3 | приветствие: кузнец | Sadachbia | loud, gruff blacksmith, busy | Осторожно, окалина летит. |
+| greet_kuznya_0_v2_g.mp3 | приветствие: кузнец | Schedar | loud, gruff blacksmith, busy | Осторожно, окалина летит. |
+| greet_kuznya_0_v1_f_g.mp3 | приветствие: кузнец | Leda | loud, gruff blacksmith, busy | Осторожно, окалина летит. |
+| greet_kuznya_0_v2_f_g.mp3 | приветствие: кузнец | Aoede | loud, gruff blacksmith, busy | Осторожно, окалина летит. |
+| greet_kuznya_1_v1_g.mp3 | приветствие: кузнец | Sadachbia | loud, gruff blacksmith, busy | Клинок принёс? Покажи, где зазубрина. |
+| greet_kuznya_1_v2_g.mp3 | приветствие: кузнец | Schedar | loud, gruff blacksmith, busy | Клинок принёс? Покажи, где зазубрина. |
+| greet_kuznya_1_v1_f_g.mp3 | приветствие: кузнец | Leda | loud, gruff blacksmith, busy | Клинок принёс? Покажи, где зазубрина. |
+| greet_kuznya_1_v2_f_g.mp3 | приветствие: кузнец | Aoede | loud, gruff blacksmith, busy | Клинок принёс? Покажи, где зазубрина. |
+| greet_kuznya_2_v1_g.mp3 | приветствие: кузнец | Sadachbia | loud, gruff blacksmith, busy | Горн горячий, говори быстро. |
+| greet_kuznya_2_v2_g.mp3 | приветствие: кузнец | Schedar | loud, gruff blacksmith, busy | Горн горячий, говори быстро. |
+| greet_kuznya_2_v1_f_g.mp3 | приветствие: кузнец | Leda | loud, gruff blacksmith, busy | Горн горячий, говори быстро. |
+| greet_kuznya_2_v2_f_g.mp3 | приветствие: кузнец | Aoede | loud, gruff blacksmith, busy | Горн горячий, говори быстро. |
+| greet_kuznya_3_v1_g.mp3 | приветствие: кузнец | Sadachbia | loud, gruff blacksmith, busy | Подкову, гвоздь или меч — всё куётся. |
+| greet_kuznya_3_v2_g.mp3 | приветствие: кузнец | Schedar | loud, gruff blacksmith, busy | Подкову, гвоздь или меч — всё куётся. |
+| greet_kuznya_3_v1_f_g.mp3 | приветствие: кузнец | Leda | loud, gruff blacksmith, busy | Подкову, гвоздь или меч — всё куётся. |
+| greet_kuznya_3_v2_f_g.mp3 | приветствие: кузнец | Aoede | loud, gruff blacksmith, busy | Подкову, гвоздь или меч — всё куётся. |
+| greet_kuznya_4_v1_g.mp3 | приветствие: кузнец | Sadachbia | loud, gruff blacksmith, busy | Железо слушает руку, а не язык. |
+| greet_kuznya_4_v2_g.mp3 | приветствие: кузнец | Schedar | loud, gruff blacksmith, busy | Железо слушает руку, а не язык. |
+| greet_kuznya_4_v1_f_g.mp3 | приветствие: кузнец | Leda | loud, gruff blacksmith, busy | Железо слушает руку, а не язык. |
+| greet_kuznya_4_v2_f_g.mp3 | приветствие: кузнец | Aoede | loud, gruff blacksmith, busy | Железо слушает руку, а не язык. |
+| greet_kuznya_5_v1_g.mp3 | приветствие: кузнец | Sadachbia | loud, gruff blacksmith, busy | Погоди, докую — остынет. |
+| greet_kuznya_5_v2_g.mp3 | приветствие: кузнец | Schedar | loud, gruff blacksmith, busy | Погоди, докую — остынет. |
+| greet_kuznya_5_v1_f_g.mp3 | приветствие: кузнец | Leda | loud, gruff blacksmith, busy | Погоди, докую — остынет. |
+| greet_kuznya_5_v2_f_g.mp3 | приветствие: кузнец | Aoede | loud, gruff blacksmith, busy | Погоди, докую — остынет. |
+| greet_kuznya_6_v1_g.mp3 | приветствие: кузнец | Sadachbia | loud, gruff blacksmith, busy | Доспех править будем или новый ковать? |
+| greet_kuznya_6_v2_g.mp3 | приветствие: кузнец | Schedar | loud, gruff blacksmith, busy | Доспех править будем или новый ковать? |
+| greet_kuznya_6_v1_f_g.mp3 | приветствие: кузнец | Leda | loud, gruff blacksmith, busy | Доспех править будем или новый ковать? |
+| greet_kuznya_6_v2_f_g.mp3 | приветствие: кузнец | Aoede | loud, gruff blacksmith, busy | Доспех править будем или новый ковать? |
+| greet_kuznya_7_v1_g.mp3 | приветствие: кузнец | Sadachbia | loud, gruff blacksmith, busy | Сталь у меня звонкая. Послушай. |
+| greet_kuznya_7_v2_g.mp3 | приветствие: кузнец | Schedar | loud, gruff blacksmith, busy | Сталь у меня звонкая. Послушай. |
+| greet_kuznya_7_v1_f_g.mp3 | приветствие: кузнец | Leda | loud, gruff blacksmith, busy | Сталь у меня звонкая. Послушай. |
+| greet_kuznya_7_v2_f_g.mp3 | приветствие: кузнец | Aoede | loud, gruff blacksmith, busy | Сталь у меня звонкая. Послушай. |
+| greet_traktir_0_v1_g.mp3 | приветствие: трактирщик | Sadachbia | warm, hospitable innkeeper, cheerful | Садись к огню, похлёбка горячая. |
+| greet_traktir_0_v2_g.mp3 | приветствие: трактирщик | Schedar | warm, hospitable innkeeper, cheerful | Садись к огню, похлёбка горячая. |
+| greet_traktir_0_v1_f_g.mp3 | приветствие: трактирщик | Leda | warm, hospitable innkeeper, cheerful | Садись к огню, похлёбка горячая. |
+| greet_traktir_0_v2_f_g.mp3 | приветствие: трактирщик | Aoede | warm, hospitable innkeeper, cheerful | Садись к огню, похлёбка горячая. |
+| greet_traktir_1_v1_g.mp3 | приветствие: трактирщик | Sadachbia | warm, hospitable innkeeper, cheerful | Комната наверху свободна, если не храпишь. |
+| greet_traktir_1_v2_g.mp3 | приветствие: трактирщик | Schedar | warm, hospitable innkeeper, cheerful | Комната наверху свободна, если не храпишь. |
+| greet_traktir_1_v1_f_g.mp3 | приветствие: трактирщик | Leda | warm, hospitable innkeeper, cheerful | Комната наверху свободна, если не храпишь. |
+| greet_traktir_1_v2_f_g.mp3 | приветствие: трактирщик | Aoede | warm, hospitable innkeeper, cheerful | Комната наверху свободна, если не храпишь. |
+| greet_traktir_2_v1_g.mp3 | приветствие: трактирщик | Sadachbia | warm, hospitable innkeeper, cheerful | Чего налить? Пиво у нас своё. |
+| greet_traktir_2_v2_g.mp3 | приветствие: трактирщик | Schedar | warm, hospitable innkeeper, cheerful | Чего налить? Пиво у нас своё. |
+| greet_traktir_2_v1_f_g.mp3 | приветствие: трактирщик | Leda | warm, hospitable innkeeper, cheerful | Чего налить? Пиво у нас своё. |
+| greet_traktir_2_v2_f_g.mp3 | приветствие: трактирщик | Aoede | warm, hospitable innkeeper, cheerful | Чего налить? Пиво у нас своё. |
+| greet_traktir_3_v1_g.mp3 | приветствие: трактирщик | Sadachbia | warm, hospitable innkeeper, cheerful | Новости? Здесь их больше, чем пива. |
+| greet_traktir_3_v2_g.mp3 | приветствие: трактирщик | Schedar | warm, hospitable innkeeper, cheerful | Новости? Здесь их больше, чем пива. |
+| greet_traktir_3_v1_f_g.mp3 | приветствие: трактирщик | Leda | warm, hospitable innkeeper, cheerful | Новости? Здесь их больше, чем пива. |
+| greet_traktir_3_v2_f_g.mp3 | приветствие: трактирщик | Aoede | warm, hospitable innkeeper, cheerful | Новости? Здесь их больше, чем пива. |
+| greet_traktir_4_v1_g.mp3 | приветствие: трактирщик | Sadachbia | warm, hospitable innkeeper, cheerful | Ноги вытирай, пол только выскоблили. |
+| greet_traktir_4_v2_g.mp3 | приветствие: трактирщик | Schedar | warm, hospitable innkeeper, cheerful | Ноги вытирай, пол только выскоблили. |
+| greet_traktir_4_v1_f_g.mp3 | приветствие: трактирщик | Leda | warm, hospitable innkeeper, cheerful | Ноги вытирай, пол только выскоблили. |
+| greet_traktir_4_v2_f_g.mp3 | приветствие: трактирщик | Aoede | warm, hospitable innkeeper, cheerful | Ноги вытирай, пол только выскоблили. |
+| greet_traktir_5_v1_g.mp3 | приветствие: трактирщик | Sadachbia | warm, hospitable innkeeper, cheerful | Грей руки. Ночь нынче злая. |
+| greet_traktir_5_v2_g.mp3 | приветствие: трактирщик | Schedar | warm, hospitable innkeeper, cheerful | Грей руки. Ночь нынче злая. |
+| greet_traktir_5_v1_f_g.mp3 | приветствие: трактирщик | Leda | warm, hospitable innkeeper, cheerful | Грей руки. Ночь нынче злая. |
+| greet_traktir_5_v2_f_g.mp3 | приветствие: трактирщик | Aoede | warm, hospitable innkeeper, cheerful | Грей руки. Ночь нынче злая. |
+| greet_traktir_6_v1_g.mp3 | приветствие: трактирщик | Sadachbia | warm, hospitable innkeeper, cheerful | Платят вперёд. Ничего личного. |
+| greet_traktir_6_v2_g.mp3 | приветствие: трактирщик | Schedar | warm, hospitable innkeeper, cheerful | Платят вперёд. Ничего личного. |
+| greet_traktir_6_v1_f_g.mp3 | приветствие: трактирщик | Leda | warm, hospitable innkeeper, cheerful | Платят вперёд. Ничего личного. |
+| greet_traktir_6_v2_f_g.mp3 | приветствие: трактирщик | Aoede | warm, hospitable innkeeper, cheerful | Платят вперёд. Ничего личного. |
+| greet_traktir_7_v1_g.mp3 | приветствие: трактирщик | Sadachbia | warm, hospitable innkeeper, cheerful | О дороге спроси — здесь все с дороги. |
+| greet_traktir_7_v2_g.mp3 | приветствие: трактирщик | Schedar | warm, hospitable innkeeper, cheerful | О дороге спроси — здесь все с дороги. |
+| greet_traktir_7_v1_f_g.mp3 | приветствие: трактирщик | Leda | warm, hospitable innkeeper, cheerful | О дороге спроси — здесь все с дороги. |
+| greet_traktir_7_v2_f_g.mp3 | приветствие: трактирщик | Aoede | warm, hospitable innkeeper, cheerful | О дороге спроси — здесь все с дороги. |
+| greet_strazha_0_v1_g.mp3 | приветствие: страж у дела | Sadachbia | stern, dry, official guard | Стой. Кто таков и зачем? |
+| greet_strazha_0_v2_g.mp3 | приветствие: страж у дела | Schedar | stern, dry, official guard | Стой. Кто таков и зачем? |
+| greet_strazha_0_v1_f_g.mp3 | приветствие: страж у дела | Leda | stern, dry, official guard | Стой. Кто таков и зачем? |
+| greet_strazha_0_v2_f_g.mp3 | приветствие: страж у дела | Aoede | stern, dry, official guard | Стой. Кто таков и зачем? |
+| greet_strazha_1_v1_g.mp3 | приветствие: страж у дела | Sadachbia | stern, dry, official guard | Оружие в ножнах держи. |
+| greet_strazha_1_v2_g.mp3 | приветствие: страж у дела | Schedar | stern, dry, official guard | Оружие в ножнах держи. |
+| greet_strazha_1_v1_f_g.mp3 | приветствие: страж у дела | Leda | stern, dry, official guard | Оружие в ножнах держи. |
+| greet_strazha_1_v2_f_g.mp3 | приветствие: страж у дела | Aoede | stern, dry, official guard | Оружие в ножнах держи. |
+| greet_strazha_2_v1_g.mp3 | приветствие: страж у дела | Sadachbia | stern, dry, official guard | Проходи, но без шума. |
+| greet_strazha_2_v2_g.mp3 | приветствие: страж у дела | Schedar | stern, dry, official guard | Проходи, но без шума. |
+| greet_strazha_2_v1_f_g.mp3 | приветствие: страж у дела | Leda | stern, dry, official guard | Проходи, но без шума. |
+| greet_strazha_2_v2_f_g.mp3 | приветствие: страж у дела | Aoede | stern, dry, official guard | Проходи, но без шума. |
+| greet_strazha_3_v1_g.mp3 | приветствие: страж у дела | Sadachbia | stern, dry, official guard | Жалобы — к старшему. Дело — ко мне. |
+| greet_strazha_3_v2_g.mp3 | приветствие: страж у дела | Schedar | stern, dry, official guard | Жалобы — к старшему. Дело — ко мне. |
+| greet_strazha_3_v1_f_g.mp3 | приветствие: страж у дела | Leda | stern, dry, official guard | Жалобы — к старшему. Дело — ко мне. |
+| greet_strazha_3_v2_f_g.mp3 | приветствие: страж у дела | Aoede | stern, dry, official guard | Жалобы — к старшему. Дело — ко мне. |
+| greet_strazha_4_v1_g.mp3 | приветствие: страж у дела | Sadachbia | stern, dry, official guard | Ночью по одному не ходи. |
+| greet_strazha_4_v2_g.mp3 | приветствие: страж у дела | Schedar | stern, dry, official guard | Ночью по одному не ходи. |
+| greet_strazha_4_v1_f_g.mp3 | приветствие: страж у дела | Leda | stern, dry, official guard | Ночью по одному не ходи. |
+| greet_strazha_4_v2_f_g.mp3 | приветствие: страж у дела | Aoede | stern, dry, official guard | Ночью по одному не ходи. |
+| greet_strazha_5_v1_g.mp3 | приветствие: страж у дела | Sadachbia | stern, dry, official guard | Приказ есть приказ. Чего надо? |
+| greet_strazha_5_v2_g.mp3 | приветствие: страж у дела | Schedar | stern, dry, official guard | Приказ есть приказ. Чего надо? |
+| greet_strazha_5_v1_f_g.mp3 | приветствие: страж у дела | Leda | stern, dry, official guard | Приказ есть приказ. Чего надо? |
+| greet_strazha_5_v2_f_g.mp3 | приветствие: страж у дела | Aoede | stern, dry, official guard | Приказ есть приказ. Чего надо? |
+| greet_strazha_6_v1_g.mp3 | приветствие: страж у дела | Sadachbia | stern, dry, official guard | Смена долгая, говори короче. |
+| greet_strazha_6_v2_g.mp3 | приветствие: страж у дела | Schedar | stern, dry, official guard | Смена долгая, говори короче. |
+| greet_strazha_6_v1_f_g.mp3 | приветствие: страж у дела | Leda | stern, dry, official guard | Смена долгая, говори короче. |
+| greet_strazha_6_v2_f_g.mp3 | приветствие: страж у дела | Aoede | stern, dry, official guard | Смена долгая, говори короче. |
+| greet_strazha_7_v1_g.mp3 | приветствие: страж у дела | Sadachbia | stern, dry, official guard | Бумаги есть? Покажи. |
+| greet_strazha_7_v2_g.mp3 | приветствие: страж у дела | Schedar | stern, dry, official guard | Бумаги есть? Покажи. |
+| greet_strazha_7_v1_f_g.mp3 | приветствие: страж у дела | Leda | stern, dry, official guard | Бумаги есть? Покажи. |
+| greet_strazha_7_v2_f_g.mp3 | приветствие: страж у дела | Aoede | stern, dry, official guard | Бумаги есть? Покажи. |
+| greet_strazha_8_v1_g.mp3 | приветствие: страж у дела | Sadachbia | stern, dry, official guard | Спокойно у ворот — и слава богам. |
+| greet_strazha_8_v2_g.mp3 | приветствие: страж у дела | Schedar | stern, dry, official guard | Спокойно у ворот — и слава богам. |
+| greet_strazha_8_v1_f_g.mp3 | приветствие: страж у дела | Leda | stern, dry, official guard | Спокойно у ворот — и слава богам. |
+| greet_strazha_8_v2_f_g.mp3 | приветствие: страж у дела | Aoede | stern, dry, official guard | Спокойно у ворот — и слава богам. |
+| greet_lekar_0_v1_g.mp3 | приветствие: лекарь | Sadachbia | caring, gentle healer, calm | Где болит? Показывай. |
+| greet_lekar_0_v2_g.mp3 | приветствие: лекарь | Schedar | caring, gentle healer, calm | Где болит? Показывай. |
+| greet_lekar_0_v1_f_g.mp3 | приветствие: лекарь | Leda | caring, gentle healer, calm | Где болит? Показывай. |
+| greet_lekar_0_v2_f_g.mp3 | приветствие: лекарь | Aoede | caring, gentle healer, calm | Где болит? Показывай. |
+| greet_lekar_1_v1_g.mp3 | приветствие: лекарь | Sadachbia | caring, gentle healer, calm | Сядь. Руку дай, пульс послушаю. |
+| greet_lekar_1_v2_g.mp3 | приветствие: лекарь | Schedar | caring, gentle healer, calm | Сядь. Руку дай, пульс послушаю. |
+| greet_lekar_1_v1_f_g.mp3 | приветствие: лекарь | Leda | caring, gentle healer, calm | Сядь. Руку дай, пульс послушаю. |
+| greet_lekar_1_v2_f_g.mp3 | приветствие: лекарь | Aoede | caring, gentle healer, calm | Сядь. Руку дай, пульс послушаю. |
+| greet_lekar_2_v1_g.mp3 | приветствие: лекарь | Sadachbia | caring, gentle healer, calm | Раны промывать надо, а не ждать. |
+| greet_lekar_2_v2_g.mp3 | приветствие: лекарь | Schedar | caring, gentle healer, calm | Раны промывать надо, а не ждать. |
+| greet_lekar_2_v1_f_g.mp3 | приветствие: лекарь | Leda | caring, gentle healer, calm | Раны промывать надо, а не ждать. |
+| greet_lekar_2_v2_f_g.mp3 | приветствие: лекарь | Aoede | caring, gentle healer, calm | Раны промывать надо, а не ждать. |
+| greet_lekar_3_v1_g.mp3 | приветствие: лекарь | Sadachbia | caring, gentle healer, calm | Отвар горький, зато живой уйдёшь. |
+| greet_lekar_3_v2_g.mp3 | приветствие: лекарь | Schedar | caring, gentle healer, calm | Отвар горький, зато живой уйдёшь. |
+| greet_lekar_3_v1_f_g.mp3 | приветствие: лекарь | Leda | caring, gentle healer, calm | Отвар горький, зато живой уйдёшь. |
+| greet_lekar_3_v2_f_g.mp3 | приветствие: лекарь | Aoede | caring, gentle healer, calm | Отвар горький, зато живой уйдёшь. |
+| greet_lekar_4_v1_g.mp3 | приветствие: лекарь | Sadachbia | caring, gentle healer, calm | Не трогай склянки, в них не вода. |
+| greet_lekar_4_v2_g.mp3 | приветствие: лекарь | Schedar | caring, gentle healer, calm | Не трогай склянки, в них не вода. |
+| greet_lekar_4_v1_f_g.mp3 | приветствие: лекарь | Leda | caring, gentle healer, calm | Не трогай склянки, в них не вода. |
+| greet_lekar_4_v2_f_g.mp3 | приветствие: лекарь | Aoede | caring, gentle healer, calm | Не трогай склянки, в них не вода. |
+| greet_lekar_5_v1_g.mp3 | приветствие: лекарь | Sadachbia | caring, gentle healer, calm | Опять порезы? Береги себя. |
+| greet_lekar_5_v2_g.mp3 | приветствие: лекарь | Schedar | caring, gentle healer, calm | Опять порезы? Береги себя. |
+| greet_lekar_5_v1_f_g.mp3 | приветствие: лекарь | Leda | caring, gentle healer, calm | Опять порезы? Береги себя. |
+| greet_lekar_5_v2_f_g.mp3 | приветствие: лекарь | Aoede | caring, gentle healer, calm | Опять порезы? Береги себя. |
+| greet_lekar_6_v1_g.mp3 | приветствие: лекарь | Sadachbia | caring, gentle healer, calm | Дыши ровно. Сейчас посмотрим. |
+| greet_lekar_6_v2_g.mp3 | приветствие: лекарь | Schedar | caring, gentle healer, calm | Дыши ровно. Сейчас посмотрим. |
+| greet_lekar_6_v1_f_g.mp3 | приветствие: лекарь | Leda | caring, gentle healer, calm | Дыши ровно. Сейчас посмотрим. |
+| greet_lekar_6_v2_f_g.mp3 | приветствие: лекарь | Aoede | caring, gentle healer, calm | Дыши ровно. Сейчас посмотрим. |
+| greet_lekar_7_v1_g.mp3 | приветствие: лекарь | Sadachbia | caring, gentle healer, calm | Бледный ты. Давно ел? |
+| greet_lekar_7_v2_g.mp3 | приветствие: лекарь | Schedar | caring, gentle healer, calm | Бледный ты. Давно ел? |
+| greet_lekar_7_v1_f_g.mp3 | приветствие: лекарь | Leda | caring, gentle healer, calm | Бледный ты. Давно ел? |
+| greet_lekar_7_v2_f_g.mp3 | приветствие: лекарь | Aoede | caring, gentle healer, calm | Бледный ты. Давно ел? |
+| greet_zhrec_0_v1_g.mp3 | приветствие: жрец | Sadachbia | quiet, reverent, serene | Мир тебе, путник. |
+| greet_zhrec_0_v2_g.mp3 | приветствие: жрец | Schedar | quiet, reverent, serene | Мир тебе, путник. |
+| greet_zhrec_0_v1_f_g.mp3 | приветствие: жрец | Leda | quiet, reverent, serene | Мир тебе, путник. |
+| greet_zhrec_0_v2_f_g.mp3 | приветствие: жрец | Aoede | quiet, reverent, serene | Мир тебе, путник. |
+| greet_zhrec_1_v1_g.mp3 | приветствие: жрец | Sadachbia | quiet, reverent, serene | Боги слышат. Говори тише. |
+| greet_zhrec_1_v2_g.mp3 | приветствие: жрец | Schedar | quiet, reverent, serene | Боги слышат. Говори тише. |
+| greet_zhrec_1_v1_f_g.mp3 | приветствие: жрец | Leda | quiet, reverent, serene | Боги слышат. Говори тише. |
+| greet_zhrec_1_v2_f_g.mp3 | приветствие: жрец | Aoede | quiet, reverent, serene | Боги слышат. Говори тише. |
+| greet_zhrec_2_v1_g.mp3 | приветствие: жрец | Sadachbia | quiet, reverent, serene | Свеча горит — значит, ты не один. |
+| greet_zhrec_2_v2_g.mp3 | приветствие: жрец | Schedar | quiet, reverent, serene | Свеча горит — значит, ты не один. |
+| greet_zhrec_2_v1_f_g.mp3 | приветствие: жрец | Leda | quiet, reverent, serene | Свеча горит — значит, ты не один. |
+| greet_zhrec_2_v2_f_g.mp3 | приветствие: жрец | Aoede | quiet, reverent, serene | Свеча горит — значит, ты не один. |
+| greet_zhrec_3_v1_g.mp3 | приветствие: жрец | Sadachbia | quiet, reverent, serene | С чем пришёл: с молитвой или с бедой? |
+| greet_zhrec_3_v2_g.mp3 | приветствие: жрец | Schedar | quiet, reverent, serene | С чем пришёл: с молитвой или с бедой? |
+| greet_zhrec_3_v1_f_g.mp3 | приветствие: жрец | Leda | quiet, reverent, serene | С чем пришёл: с молитвой или с бедой? |
+| greet_zhrec_3_v2_f_g.mp3 | приветствие: жрец | Aoede | quiet, reverent, serene | С чем пришёл: с молитвой или с бедой? |
+| greet_zhrec_4_v1_g.mp3 | приветствие: жрец | Sadachbia | quiet, reverent, serene | Здесь не лгут. Здесь и так всё видно. |
+| greet_zhrec_4_v2_g.mp3 | приветствие: жрец | Schedar | quiet, reverent, serene | Здесь не лгут. Здесь и так всё видно. |
+| greet_zhrec_4_v1_f_g.mp3 | приветствие: жрец | Leda | quiet, reverent, serene | Здесь не лгут. Здесь и так всё видно. |
+| greet_zhrec_4_v2_f_g.mp3 | приветствие: жрец | Aoede | quiet, reverent, serene | Здесь не лгут. Здесь и так всё видно. |
+| greet_zhrec_5_v1_g.mp3 | приветствие: жрец | Sadachbia | quiet, reverent, serene | Сними шапку, путник. Здесь святое место. |
+| greet_zhrec_5_v2_g.mp3 | приветствие: жрец | Schedar | quiet, reverent, serene | Сними шапку, путник. Здесь святое место. |
+| greet_zhrec_5_v1_f_g.mp3 | приветствие: жрец | Leda | quiet, reverent, serene | Сними шапку, путник. Здесь святое место. |
+| greet_zhrec_5_v2_f_g.mp3 | приветствие: жрец | Aoede | quiet, reverent, serene | Сними шапку, путник. Здесь святое место. |
+| greet_zhrec_6_v1_g.mp3 | приветствие: жрец | Sadachbia | quiet, reverent, serene | Кто кается — того слушают. |
+| greet_zhrec_6_v2_g.mp3 | приветствие: жрец | Schedar | quiet, reverent, serene | Кто кается — того слушают. |
+| greet_zhrec_6_v1_f_g.mp3 | приветствие: жрец | Leda | quiet, reverent, serene | Кто кается — того слушают. |
+| greet_zhrec_6_v2_f_g.mp3 | приветствие: жрец | Aoede | quiet, reverent, serene | Кто кается — того слушают. |
+| greet_zhrec_7_v1_g.mp3 | приветствие: жрец | Sadachbia | quiet, reverent, serene | Благослови тебя небо. Чем помочь? |
+| greet_zhrec_7_v2_g.mp3 | приветствие: жрец | Schedar | quiet, reverent, serene | Благослови тебя небо. Чем помочь? |
+| greet_zhrec_7_v1_f_g.mp3 | приветствие: жрец | Leda | quiet, reverent, serene | Благослови тебя небо. Чем помочь? |
+| greet_zhrec_7_v2_f_g.mp3 | приветствие: жрец | Aoede | quiet, reverent, serene | Благослови тебя небо. Чем помочь? |
+| greet_znanie_0_v1_g.mp3 | приветствие: учёный | Sadachbia | thoughtful scholar, soft, a bit absent-minded | Не шуми, я считаю. |
+| greet_znanie_0_v2_g.mp3 | приветствие: учёный | Schedar | thoughtful scholar, soft, a bit absent-minded | Не шуми, я считаю. |
+| greet_znanie_0_v1_f_g.mp3 | приветствие: учёный | Leda | thoughtful scholar, soft, a bit absent-minded | Не шуми, я считаю. |
+| greet_znanie_0_v2_f_g.mp3 | приветствие: учёный | Aoede | thoughtful scholar, soft, a bit absent-minded | Не шуми, я считаю. |
+| greet_znanie_1_v1_g.mp3 | приветствие: учёный | Sadachbia | thoughtful scholar, soft, a bit absent-minded | Книги любят тишину и чистые руки. |
+| greet_znanie_1_v2_g.mp3 | приветствие: учёный | Schedar | thoughtful scholar, soft, a bit absent-minded | Книги любят тишину и чистые руки. |
+| greet_znanie_1_v1_f_g.mp3 | приветствие: учёный | Leda | thoughtful scholar, soft, a bit absent-minded | Книги любят тишину и чистые руки. |
+| greet_znanie_1_v2_f_g.mp3 | приветствие: учёный | Aoede | thoughtful scholar, soft, a bit absent-minded | Книги любят тишину и чистые руки. |
+| greet_znanie_2_v1_g.mp3 | приветствие: учёный | Sadachbia | thoughtful scholar, soft, a bit absent-minded | Спрашивай. Если знаю — скажу. |
+| greet_znanie_2_v2_g.mp3 | приветствие: учёный | Schedar | thoughtful scholar, soft, a bit absent-minded | Спрашивай. Если знаю — скажу. |
+| greet_znanie_2_v1_f_g.mp3 | приветствие: учёный | Leda | thoughtful scholar, soft, a bit absent-minded | Спрашивай. Если знаю — скажу. |
+| greet_znanie_2_v2_f_g.mp3 | приветствие: учёный | Aoede | thoughtful scholar, soft, a bit absent-minded | Спрашивай. Если знаю — скажу. |
+| greet_znanie_3_v1_g.mp3 | приветствие: учёный | Sadachbia | thoughtful scholar, soft, a bit absent-minded | Ученье долгое. Разговор — короче. |
+| greet_znanie_3_v2_g.mp3 | приветствие: учёный | Schedar | thoughtful scholar, soft, a bit absent-minded | Ученье долгое. Разговор — короче. |
+| greet_znanie_3_v1_f_g.mp3 | приветствие: учёный | Leda | thoughtful scholar, soft, a bit absent-minded | Ученье долгое. Разговор — короче. |
+| greet_znanie_3_v2_f_g.mp3 | приветствие: учёный | Aoede | thoughtful scholar, soft, a bit absent-minded | Ученье долгое. Разговор — короче. |
+| greet_znanie_4_v1_g.mp3 | приветствие: учёный | Sadachbia | thoughtful scholar, soft, a bit absent-minded | Чернила сохнут, говори по делу. |
+| greet_znanie_4_v2_g.mp3 | приветствие: учёный | Schedar | thoughtful scholar, soft, a bit absent-minded | Чернила сохнут, говори по делу. |
+| greet_znanie_4_v1_f_g.mp3 | приветствие: учёный | Leda | thoughtful scholar, soft, a bit absent-minded | Чернила сохнут, говори по делу. |
+| greet_znanie_4_v2_f_g.mp3 | приветствие: учёный | Aoede | thoughtful scholar, soft, a bit absent-minded | Чернила сохнут, говори по делу. |
+| greet_znanie_5_v1_g.mp3 | приветствие: учёный | Sadachbia | thoughtful scholar, soft, a bit absent-minded | Любопытство — первая ступень знания. Проходи. |
+| greet_znanie_5_v2_g.mp3 | приветствие: учёный | Schedar | thoughtful scholar, soft, a bit absent-minded | Любопытство — первая ступень знания. Проходи. |
+| greet_znanie_5_v1_f_g.mp3 | приветствие: учёный | Leda | thoughtful scholar, soft, a bit absent-minded | Любопытство — первая ступень знания. Проходи. |
+| greet_znanie_5_v2_f_g.mp3 | приветствие: учёный | Aoede | thoughtful scholar, soft, a bit absent-minded | Любопытство — первая ступень знания. Проходи. |
+| greet_znanie_6_v1_g.mp3 | приветствие: учёный | Sadachbia | thoughtful scholar, soft, a bit absent-minded | Осторожно, свитки не сшиты. |
+| greet_znanie_6_v2_g.mp3 | приветствие: учёный | Schedar | thoughtful scholar, soft, a bit absent-minded | Осторожно, свитки не сшиты. |
+| greet_znanie_6_v1_f_g.mp3 | приветствие: учёный | Leda | thoughtful scholar, soft, a bit absent-minded | Осторожно, свитки не сшиты. |
+| greet_znanie_6_v2_f_g.mp3 | приветствие: учёный | Aoede | thoughtful scholar, soft, a bit absent-minded | Осторожно, свитки не сшиты. |
+| greet_znanie_7_v1_g.mp3 | приветствие: учёный | Sadachbia | thoughtful scholar, soft, a bit absent-minded | Ты грамоте учён? Хорошо. |
+| greet_znanie_7_v2_g.mp3 | приветствие: учёный | Schedar | thoughtful scholar, soft, a bit absent-minded | Ты грамоте учён? Хорошо. |
+| greet_znanie_7_v1_f_g.mp3 | приветствие: учёный | Leda | thoughtful scholar, soft, a bit absent-minded | Ты грамоте учён? Хорошо. |
+| greet_znanie_7_v2_f_g.mp3 | приветствие: учёный | Aoede | thoughtful scholar, soft, a bit absent-minded | Ты грамоте учён? Хорошо. |
+| greet_glub_0_v1_g.mp3 | приветствие: торговец глубин | Sadachbia | low voice, wary, secretive trader | Тише. Здесь торгуют без свидетелей. |
+| greet_glub_0_v2_g.mp3 | приветствие: торговец глубин | Schedar | low voice, wary, secretive trader | Тише. Здесь торгуют без свидетелей. |
+| greet_glub_0_v1_f_g.mp3 | приветствие: торговец глубин | Leda | low voice, wary, secretive trader | Тише. Здесь торгуют без свидетелей. |
+| greet_glub_0_v2_f_g.mp3 | приветствие: торговец глубин | Aoede | low voice, wary, secretive trader | Тише. Здесь торгуют без свидетелей. |
+| greet_glub_1_v1_g.mp3 | приветствие: торговец глубин | Sadachbia | low voice, wary, secretive trader | Живой? Уже хорошо. Что берёшь? |
+| greet_glub_1_v2_g.mp3 | приветствие: торговец глубин | Schedar | low voice, wary, secretive trader | Живой? Уже хорошо. Что берёшь? |
+| greet_glub_1_v1_f_g.mp3 | приветствие: торговец глубин | Leda | low voice, wary, secretive trader | Живой? Уже хорошо. Что берёшь? |
+| greet_glub_1_v2_f_g.mp3 | приветствие: торговец глубин | Aoede | low voice, wary, secretive trader | Живой? Уже хорошо. Что берёшь? |
+| greet_glub_2_v1_g.mp3 | приветствие: торговец глубин | Sadachbia | low voice, wary, secretive trader | Факелы, верёвка, хлеб. Остальное — дорого. |
+| greet_glub_2_v2_g.mp3 | приветствие: торговец глубин | Schedar | low voice, wary, secretive trader | Факелы, верёвка, хлеб. Остальное — дорого. |
+| greet_glub_2_v1_f_g.mp3 | приветствие: торговец глубин | Leda | low voice, wary, secretive trader | Факелы, верёвка, хлеб. Остальное — дорого. |
+| greet_glub_2_v2_f_g.mp3 | приветствие: торговец глубин | Aoede | low voice, wary, secretive trader | Факелы, верёвка, хлеб. Остальное — дорого. |
+| greet_glub_3_v1_g.mp3 | приветствие: торговец глубин | Sadachbia | low voice, wary, secretive trader | Наверх далеко, а я рядом. За это и плата. |
+| greet_glub_3_v2_g.mp3 | приветствие: торговец глубин | Schedar | low voice, wary, secretive trader | Наверх далеко, а я рядом. За это и плата. |
+| greet_glub_3_v1_f_g.mp3 | приветствие: торговец глубин | Leda | low voice, wary, secretive trader | Наверх далеко, а я рядом. За это и плата. |
+| greet_glub_3_v2_f_g.mp3 | приветствие: торговец глубин | Aoede | low voice, wary, secretive trader | Наверх далеко, а я рядом. За это и плата. |
+| greet_glub_4_v1_g.mp3 | приветствие: торговец глубин | Sadachbia | low voice, wary, secretive trader | Садись у огня, погрейся. Потом о цене. |
+| greet_glub_4_v2_g.mp3 | приветствие: торговец глубин | Schedar | low voice, wary, secretive trader | Садись у огня, погрейся. Потом о цене. |
+| greet_glub_4_v1_f_g.mp3 | приветствие: торговец глубин | Leda | low voice, wary, secretive trader | Садись у огня, погрейся. Потом о цене. |
+| greet_glub_4_v2_f_g.mp3 | приветствие: торговец глубин | Aoede | low voice, wary, secretive trader | Садись у огня, погрейся. Потом о цене. |
+| greet_glub_5_v1_g.mp3 | приветствие: торговец глубин | Sadachbia | low voice, wary, secretive trader | Что нашёл внизу — покажи. Может, куплю. |
+| greet_glub_5_v2_g.mp3 | приветствие: торговец глубин | Schedar | low voice, wary, secretive trader | Что нашёл внизу — покажи. Может, куплю. |
+| greet_glub_5_v1_f_g.mp3 | приветствие: торговец глубин | Leda | low voice, wary, secretive trader | Что нашёл внизу — покажи. Может, куплю. |
+| greet_glub_5_v2_f_g.mp3 | приветствие: торговец глубин | Aoede | low voice, wary, secretive trader | Что нашёл внизу — покажи. Может, куплю. |
+| greet_glub_6_v1_g.mp3 | приветствие: торговец глубин | Sadachbia | low voice, wary, secretive trader | Не оглядывайся. Твари сюда не суются — огня боятся. |
+| greet_glub_6_v2_g.mp3 | приветствие: торговец глубин | Schedar | low voice, wary, secretive trader | Не оглядывайся. Твари сюда не суются — огня боятся. |
+| greet_glub_6_v1_f_g.mp3 | приветствие: торговец глубин | Leda | low voice, wary, secretive trader | Не оглядывайся. Твари сюда не суются — огня боятся. |
+| greet_glub_6_v2_f_g.mp3 | приветствие: торговец глубин | Aoede | low voice, wary, secretive trader | Не оглядывайся. Твари сюда не суются — огня боятся. |
+| greet_glub_7_v1_g.mp3 | приветствие: торговец глубин | Sadachbia | low voice, wary, secretive trader | Я тут давно. Дольше, чем ты думаешь. |
+| greet_glub_7_v2_g.mp3 | приветствие: торговец глубин | Schedar | low voice, wary, secretive trader | Я тут давно. Дольше, чем ты думаешь. |
+| greet_glub_7_v1_f_g.mp3 | приветствие: торговец глубин | Leda | low voice, wary, secretive trader | Я тут давно. Дольше, чем ты думаешь. |
+| greet_glub_7_v2_f_g.mp3 | приветствие: торговец глубин | Aoede | low voice, wary, secretive trader | Я тут давно. Дольше, чем ты думаешь. |
+| greet_glub_8_v1_g.mp3 | приветствие: торговец глубин | Sadachbia | low voice, wary, secretive trader | Кто спустился, тот платит. Такое правило. |
+| greet_glub_8_v2_g.mp3 | приветствие: торговец глубин | Schedar | low voice, wary, secretive trader | Кто спустился, тот платит. Такое правило. |
+| greet_glub_8_v1_f_g.mp3 | приветствие: торговец глубин | Leda | low voice, wary, secretive trader | Кто спустился, тот платит. Такое правило. |
+| greet_glub_8_v2_f_g.mp3 | приветствие: торговец глубин | Aoede | low voice, wary, secretive trader | Кто спустился, тот платит. Такое правило. |
+| greet_glub_9_v1_g.mp3 | приветствие: торговец глубин | Sadachbia | low voice, wary, secretive trader | Руду беру, кости беру. Вопросов не задаю. |
+| greet_glub_9_v2_g.mp3 | приветствие: торговец глубин | Schedar | low voice, wary, secretive trader | Руду беру, кости беру. Вопросов не задаю. |
+| greet_glub_9_v1_f_g.mp3 | приветствие: торговец глубин | Leda | low voice, wary, secretive trader | Руду беру, кости беру. Вопросов не задаю. |
+| greet_glub_9_v2_f_g.mp3 | приветствие: торговец глубин | Aoede | low voice, wary, secretive trader | Руду беру, кости беру. Вопросов не задаю. |
+| greet_tma_0_v1_g.mp3 | приветствие: житель тёмных земель | Sadachbia | hushed, fearful, hurried | Говори быстро. Нас считают. |
+| greet_tma_0_v2_g.mp3 | приветствие: житель тёмных земель | Schedar | hushed, fearful, hurried | Говори быстро. Нас считают. |
+| greet_tma_0_v1_f_g.mp3 | приветствие: житель тёмных земель | Leda | hushed, fearful, hurried | Говори быстро. Нас считают. |
+| greet_tma_0_v2_f_g.mp3 | приветствие: житель тёмных земель | Aoede | hushed, fearful, hurried | Говори быстро. Нас считают. |
+| greet_tma_1_v1_g.mp3 | приветствие: житель тёмных земель | Sadachbia | hushed, fearful, hurried | Ты не отсюда. Это слышно. |
+| greet_tma_1_v2_g.mp3 | приветствие: житель тёмных земель | Schedar | hushed, fearful, hurried | Ты не отсюда. Это слышно. |
+| greet_tma_1_v1_f_g.mp3 | приветствие: житель тёмных земель | Leda | hushed, fearful, hurried | Ты не отсюда. Это слышно. |
+| greet_tma_1_v2_f_g.mp3 | приветствие: житель тёмных земель | Aoede | hushed, fearful, hurried | Ты не отсюда. Это слышно. |
+| greet_tma_2_v1_g.mp3 | приветствие: житель тёмных земель | Sadachbia | hushed, fearful, hurried | Цена — не в золоте. Но золото тоже возьму. |
+| greet_tma_2_v2_g.mp3 | приветствие: житель тёмных земель | Schedar | hushed, fearful, hurried | Цена — не в золоте. Но золото тоже возьму. |
+| greet_tma_2_v1_f_g.mp3 | приветствие: житель тёмных земель | Leda | hushed, fearful, hurried | Цена — не в золоте. Но золото тоже возьму. |
+| greet_tma_2_v2_f_g.mp3 | приветствие: житель тёмных земель | Aoede | hushed, fearful, hurried | Цена — не в золоте. Но золото тоже возьму. |
+| greet_tma_3_v1_g.mp3 | приветствие: житель тёмных земель | Sadachbia | hushed, fearful, hurried | Тише. Надсмотрщик близко. |
+| greet_tma_3_v2_g.mp3 | приветствие: житель тёмных земель | Schedar | hushed, fearful, hurried | Тише. Надсмотрщик близко. |
+| greet_tma_3_v1_f_g.mp3 | приветствие: житель тёмных земель | Leda | hushed, fearful, hurried | Тише. Надсмотрщик близко. |
+| greet_tma_3_v2_f_g.mp3 | приветствие: житель тёмных земель | Aoede | hushed, fearful, hurried | Тише. Надсмотрщик близко. |
+| greet_tma_4_v1_g.mp3 | приветствие: житель тёмных земель | Sadachbia | hushed, fearful, hurried | Спросишь лишнее — забуду, что видел тебя. |
+| greet_tma_4_v2_g.mp3 | приветствие: житель тёмных земель | Schedar | hushed, fearful, hurried | Спросишь лишнее — забуду, что видел тебя. |
+| greet_tma_4_v1_f_g.mp3 | приветствие: житель тёмных земель | Leda | hushed, fearful, hurried | Спросишь лишнее — забуду, что видела тебя. |
+| greet_tma_4_v2_f_g.mp3 | приветствие: житель тёмных земель | Aoede | hushed, fearful, hurried | Спросишь лишнее — забуду, что видела тебя. |
+| greet_tma_5_v1_g.mp3 | приветствие: житель тёмных земель | Sadachbia | hushed, fearful, hurried | Живым здесь не рады. Но я — не здесь. |
+| greet_tma_5_v2_g.mp3 | приветствие: житель тёмных земель | Schedar | hushed, fearful, hurried | Живым здесь не рады. Но я — не здесь. |
+| greet_tma_5_v1_f_g.mp3 | приветствие: житель тёмных земель | Leda | hushed, fearful, hurried | Живым здесь не рады. Но я — не здесь. |
+| greet_tma_5_v2_f_g.mp3 | приветствие: житель тёмных земель | Aoede | hushed, fearful, hurried | Живым здесь не рады. Но я — не здесь. |
+| greet_tma_6_v1_g.mp3 | приветствие: житель тёмных земель | Sadachbia | hushed, fearful, hurried | Что принёс с той стороны? Покажи. |
+| greet_tma_6_v2_g.mp3 | приветствие: житель тёмных земель | Schedar | hushed, fearful, hurried | Что принёс с той стороны? Покажи. |
+| greet_tma_6_v1_f_g.mp3 | приветствие: житель тёмных земель | Leda | hushed, fearful, hurried | Что принёс с той стороны? Покажи. |
+| greet_tma_6_v2_f_g.mp3 | приветствие: житель тёмных земель | Aoede | hushed, fearful, hurried | Что принёс с той стороны? Покажи. |
+| greet_tma_7_v1_g.mp3 | приветствие: житель тёмных земель | Sadachbia | hushed, fearful, hurried | Не называй имени. Имя — это долг. |
+| greet_tma_7_v2_g.mp3 | приветствие: житель тёмных земель | Schedar | hushed, fearful, hurried | Не называй имени. Имя — это долг. |
+| greet_tma_7_v1_f_g.mp3 | приветствие: житель тёмных земель | Leda | hushed, fearful, hurried | Не называй имени. Имя — это долг. |
+| greet_tma_7_v2_f_g.mp3 | приветствие: житель тёмных земель | Aoede | hushed, fearful, hurried | Не называй имени. Имя — это долг. |
+| greet_obshiy_0_v1_g.mp3 | приветствие: всякий житель | Sadachbia | plain, friendly, natural | Доброго дня. |
+| greet_obshiy_0_v2_g.mp3 | приветствие: всякий житель | Schedar | plain, friendly, natural | Доброго дня. |
+| greet_obshiy_0_v1_f_g.mp3 | приветствие: всякий житель | Leda | plain, friendly, natural | Доброго дня. |
+| greet_obshiy_0_v2_f_g.mp3 | приветствие: всякий житель | Aoede | plain, friendly, natural | Доброго дня. |
+| greet_obshiy_1_v1_g.mp3 | приветствие: всякий житель | Sadachbia | plain, friendly, natural | А, путник. Чем могу? |
+| greet_obshiy_1_v2_g.mp3 | приветствие: всякий житель | Schedar | plain, friendly, natural | А, путник. Чем могу? |
+| greet_obshiy_1_v1_f_g.mp3 | приветствие: всякий житель | Leda | plain, friendly, natural | А, путник. Чем могу? |
+| greet_obshiy_1_v2_f_g.mp3 | приветствие: всякий житель | Aoede | plain, friendly, natural | А, путник. Чем могу? |
+| greet_obshiy_2_v1_g.mp3 | приветствие: всякий житель | Sadachbia | plain, friendly, natural | Здравствуй. Нечасто к нам заходят. |
+| greet_obshiy_2_v2_g.mp3 | приветствие: всякий житель | Schedar | plain, friendly, natural | Здравствуй. Нечасто к нам заходят. |
+| greet_obshiy_2_v1_f_g.mp3 | приветствие: всякий житель | Leda | plain, friendly, natural | Здравствуй. Нечасто к нам заходят. |
+| greet_obshiy_2_v2_f_g.mp3 | приветствие: всякий житель | Aoede | plain, friendly, natural | Здравствуй. Нечасто к нам заходят. |
+| greet_obshiy_3_v1_g.mp3 | приветствие: всякий житель | Sadachbia | plain, friendly, natural | Слушаю тебя. |
+| greet_obshiy_3_v2_g.mp3 | приветствие: всякий житель | Schedar | plain, friendly, natural | Слушаю тебя. |
+| greet_obshiy_3_v1_f_g.mp3 | приветствие: всякий житель | Leda | plain, friendly, natural | Слушаю тебя. |
+| greet_obshiy_3_v2_f_g.mp3 | приветствие: всякий житель | Aoede | plain, friendly, natural | Слушаю тебя. |
+| greet_obshiy_4_v1_g.mp3 | приветствие: всякий житель | Sadachbia | plain, friendly, natural | Говори, только недолго — дела. |
+| greet_obshiy_4_v2_g.mp3 | приветствие: всякий житель | Schedar | plain, friendly, natural | Говори, только недолго — дела. |
+| greet_obshiy_4_v1_f_g.mp3 | приветствие: всякий житель | Leda | plain, friendly, natural | Говори, только недолго — дела. |
+| greet_obshiy_4_v2_f_g.mp3 | приветствие: всякий житель | Aoede | plain, friendly, natural | Говори, только недолго — дела. |
+| greet_obshiy_5_v1_g.mp3 | приветствие: всякий житель | Sadachbia | plain, friendly, natural | Опять дожди, а у меня крыша течёт. |
+| greet_obshiy_5_v2_g.mp3 | приветствие: всякий житель | Schedar | plain, friendly, natural | Опять дожди, а у меня крыша течёт. |
+| greet_obshiy_5_v1_f_g.mp3 | приветствие: всякий житель | Leda | plain, friendly, natural | Опять дожди, а у меня крыша течёт. |
+| greet_obshiy_5_v2_f_g.mp3 | приветствие: всякий житель | Aoede | plain, friendly, natural | Опять дожди, а у меня крыша течёт. |
+| greet_obshiy_6_v1_g.mp3 | приветствие: всякий житель | Sadachbia | plain, friendly, natural | Новое лицо. Откуда будешь? |
+| greet_obshiy_6_v2_g.mp3 | приветствие: всякий житель | Schedar | plain, friendly, natural | Новое лицо. Откуда будешь? |
+| greet_obshiy_6_v1_f_g.mp3 | приветствие: всякий житель | Leda | plain, friendly, natural | Новое лицо. Откуда будешь? |
+| greet_obshiy_6_v2_f_g.mp3 | приветствие: всякий житель | Aoede | plain, friendly, natural | Новое лицо. Откуда будешь? |
+| greet_obshiy_7_v1_g.mp3 | приветствие: всякий житель | Sadachbia | plain, friendly, natural | Проходи, раз пришёл. |
+| greet_obshiy_7_v2_g.mp3 | приветствие: всякий житель | Schedar | plain, friendly, natural | Проходи, раз пришёл. |
+| greet_obshiy_7_v1_f_g.mp3 | приветствие: всякий житель | Leda | plain, friendly, natural | Проходи, раз пришёл. |
+| greet_obshiy_7_v2_f_g.mp3 | приветствие: всякий житель | Aoede | plain, friendly, natural | Проходи, раз пришёл. |
+| greet_svoy_0_v1_g.mp3 | приветствие: старый знакомый | Sadachbia | joyful, warm, glad to see a friend | Рад тебя видеть, друг. |
+| greet_svoy_0_v2_g.mp3 | приветствие: старый знакомый | Schedar | joyful, warm, glad to see a friend | Рад тебя видеть, друг. |
+| greet_svoy_0_v1_f_g.mp3 | приветствие: старый знакомый | Leda | joyful, warm, glad to see a friend | Рада тебя видеть, друг. |
+| greet_svoy_0_v2_f_g.mp3 | приветствие: старый знакомый | Aoede | joyful, warm, glad to see a friend | Рада тебя видеть, друг. |
+| greet_svoy_1_v1_g.mp3 | приветствие: старый знакомый | Sadachbia | joyful, warm, glad to see a friend | Для тебя — всегда время. |
+| greet_svoy_1_v2_g.mp3 | приветствие: старый знакомый | Schedar | joyful, warm, glad to see a friend | Для тебя — всегда время. |
+| greet_svoy_1_v1_f_g.mp3 | приветствие: старый знакомый | Leda | joyful, warm, glad to see a friend | Для тебя — всегда время. |
+| greet_svoy_1_v2_f_g.mp3 | приветствие: старый знакомый | Aoede | joyful, warm, glad to see a friend | Для тебя — всегда время. |
+| greet_svoy_2_v1_g.mp3 | приветствие: старый знакомый | Sadachbia | joyful, warm, glad to see a friend | А вот и ты! Заходи. |
+| greet_svoy_2_v2_g.mp3 | приветствие: старый знакомый | Schedar | joyful, warm, glad to see a friend | А вот и ты! Заходи. |
+| greet_svoy_2_v1_f_g.mp3 | приветствие: старый знакомый | Leda | joyful, warm, glad to see a friend | А вот и ты! Заходи. |
+| greet_svoy_2_v2_f_g.mp3 | приветствие: старый знакомый | Aoede | joyful, warm, glad to see a friend | А вот и ты! Заходи. |
+| greet_svoy_3_v1_g.mp3 | приветствие: старый знакомый | Sadachbia | joyful, warm, glad to see a friend | Своих не забываем. Садись. |
+| greet_svoy_3_v1_f_g.mp3 | приветствие: старый знакомый | Leda | joyful, warm, glad to see a friend | Своих не забываем. Садись. |
+| greet_svoy_3_v2_f_g.mp3 | приветствие: старый знакомый | Aoede | joyful, warm, glad to see a friend | Своих не забываем. Садись. |
+| greet_svoy_4_v1_g.mp3 | приветствие: старый знакомый | Sadachbia | joyful, warm, glad to see a friend | О, наш человек! Что нового? |
+| greet_svoy_4_v1_f_g.mp3 | приветствие: старый знакомый | Leda | joyful, warm, glad to see a friend | О, наш человек! Что нового? |
+| greet_svoy_4_v2_f_g.mp3 | приветствие: старый знакомый | Aoede | joyful, warm, glad to see a friend | О, наш человек! Что нового? |
+| greet_svoy_5_v1_g.mp3 | приветствие: старый знакомый | Sadachbia | joyful, warm, glad to see a friend | Для тебя отложил кое-что. Смотри. |
+| greet_svoy_5_v2_g.mp3 | приветствие: старый знакомый | Schedar | joyful, warm, glad to see a friend | Для тебя отложил кое-что. Смотри. |
+| greet_svoy_5_v1_f_g.mp3 | приветствие: старый знакомый | Leda | joyful, warm, glad to see a friend | Для тебя отложила кое-что. Смотри. |
+| greet_svoy_5_v2_f_g.mp3 | приветствие: старый знакомый | Aoede | joyful, warm, glad to see a friend | Для тебя отложила кое-что. Смотри. |
+| greet_holod_0_v1_g.mp3 | приветствие: холодный | Sadachbia | cold, irritated, impatient | Чего тебе? |
+| greet_holod_0_v2_g.mp3 | приветствие: холодный | Schedar | cold, irritated, impatient | Чего тебе? |
+| greet_holod_0_v1_f_g.mp3 | приветствие: холодный | Leda | cold, irritated, impatient | Чего тебе? |
+| greet_holod_0_v2_f_g.mp3 | приветствие: холодный | Aoede | cold, irritated, impatient | Чего тебе? |
+| greet_holod_1_v1_g.mp3 | приветствие: холодный | Sadachbia | cold, irritated, impatient | Быстрее. Мне некогда. |
+| greet_holod_1_v2_g.mp3 | приветствие: холодный | Schedar | cold, irritated, impatient | Быстрее. Мне некогда. |
+| greet_holod_1_v1_f_g.mp3 | приветствие: холодный | Leda | cold, irritated, impatient | Быстрее. Мне некогда. |
+| greet_holod_1_v2_f_g.mp3 | приветствие: холодный | Aoede | cold, irritated, impatient | Быстрее. Мне некогда. |
+| greet_holod_2_v1_g.mp3 | приветствие: холодный | Sadachbia | cold, irritated, impatient | Говори и уходи. |
+| greet_holod_2_v2_g.mp3 | приветствие: холодный | Schedar | cold, irritated, impatient | Говори и уходи. |
+| greet_holod_2_v1_f_g.mp3 | приветствие: холодный | Leda | cold, irritated, impatient | Говори и уходи. |
+| greet_holod_2_v2_f_g.mp3 | приветствие: холодный | Aoede | cold, irritated, impatient | Говори и уходи. |
+| greet_holod_3_v1_g.mp3 | приветствие: холодный | Sadachbia | cold, irritated, impatient | Знаем тебя. Не с лучшей стороны. |
+| greet_holod_3_v2_g.mp3 | приветствие: холодный | Schedar | cold, irritated, impatient | Знаем тебя. Не с лучшей стороны. |
+| greet_holod_3_v1_f_g.mp3 | приветствие: холодный | Leda | cold, irritated, impatient | Знаем тебя. Не с лучшей стороны. |
+| greet_holod_3_v2_f_g.mp3 | приветствие: холодный | Aoede | cold, irritated, impatient | Знаем тебя. Не с лучшей стороны. |
+| greet_holod_4_v1_g.mp3 | приветствие: холодный | Sadachbia | cold, irritated, impatient | Ну? Я слушаю. Недолго. |
+| greet_holod_4_v2_g.mp3 | приветствие: холодный | Schedar | cold, irritated, impatient | Ну? Я слушаю. Недолго. |
+| greet_holod_4_v1_f_g.mp3 | приветствие: холодный | Leda | cold, irritated, impatient | Ну? Я слушаю. Недолго. |
+| greet_holod_4_v2_f_g.mp3 | приветствие: холодный | Aoede | cold, irritated, impatient | Ну? Я слушаю. Недолго. |
+| greet_holod_5_v1_g.mp3 | приветствие: холодный | Sadachbia | cold, irritated, impatient | Опять ты. Ладно, говори. |
+| greet_holod_5_v2_g.mp3 | приветствие: холодный | Schedar | cold, irritated, impatient | Опять ты. Ладно, говори. |
+| greet_holod_5_v1_f_g.mp3 | приветствие: холодный | Leda | cold, irritated, impatient | Опять ты. Ладно, говори. |
+| greet_holod_5_v2_f_g.mp3 | приветствие: холодный | Aoede | cold, irritated, impatient | Опять ты. Ладно, говори. |
+| greet_vrazhda_0_v1_g.mp3 | приветствие: недруг | Sadachbia | hostile, menacing, tense | Уходи, пока цел. |
+| greet_vrazhda_0_v2_g.mp3 | приветствие: недруг | Schedar | hostile, menacing, tense | Уходи, пока цел. |
+| greet_vrazhda_0_v1_f_g.mp3 | приветствие: недруг | Leda | hostile, menacing, tense | Уходи, пока цел. |
+| greet_vrazhda_0_v2_f_g.mp3 | приветствие: недруг | Aoede | hostile, menacing, tense | Уходи, пока цел. |
+| greet_vrazhda_1_v1_g.mp3 | приветствие: недруг | Sadachbia | hostile, menacing, tense | Тебе здесь не рады. |
+| greet_vrazhda_1_v2_g.mp3 | приветствие: недруг | Schedar | hostile, menacing, tense | Тебе здесь не рады. |
+| greet_vrazhda_1_v1_f_g.mp3 | приветствие: недруг | Leda | hostile, menacing, tense | Тебе здесь не рады. |
+| greet_vrazhda_1_v2_f_g.mp3 | приветствие: недруг | Aoede | hostile, menacing, tense | Тебе здесь не рады. |
+| greet_vrazhda_2_v1_g.mp3 | приветствие: недруг | Sadachbia | hostile, menacing, tense | Ещё шаг — и позову стражу. |
+| greet_vrazhda_2_v2_g.mp3 | приветствие: недруг | Schedar | hostile, menacing, tense | Ещё шаг — и позову стражу. |
+| greet_vrazhda_2_v1_f_g.mp3 | приветствие: недруг | Leda | hostile, menacing, tense | Ещё шаг — и позову стражу. |
+| greet_vrazhda_2_v2_f_g.mp3 | приветствие: недруг | Aoede | hostile, menacing, tense | Ещё шаг — и позову стражу. |
+| greet_vrazhda_3_v1_g.mp3 | приветствие: недруг | Sadachbia | hostile, menacing, tense | С такими, как ты, не говорю. |
+| greet_vrazhda_3_v2_g.mp3 | приветствие: недруг | Schedar | hostile, menacing, tense | С такими, как ты, не говорю. |
+| greet_vrazhda_3_v1_f_g.mp3 | приветствие: недруг | Leda | hostile, menacing, tense | С такими, как ты, не говорю. |
+| greet_vrazhda_3_v2_f_g.mp3 | приветствие: недруг | Aoede | hostile, menacing, tense | С такими, как ты, не говорю. |
+| greet_vrazhda_4_v1_g.mp3 | приветствие: недруг | Sadachbia | hostile, menacing, tense | Не подходи. Я всё про тебя знаю. |
+| greet_vrazhda_4_v2_g.mp3 | приветствие: недруг | Schedar | hostile, menacing, tense | Не подходи. Я всё про тебя знаю. |
+| greet_vrazhda_4_v1_f_g.mp3 | приветствие: недруг | Leda | hostile, menacing, tense | Не подходи. Я всё про тебя знаю. |
+| greet_vrazhda_4_v2_f_g.mp3 | приветствие: недруг | Aoede | hostile, menacing, tense | Не подходи. Я всё про тебя знаю. |
+| greet_vrazhda_5_v1_g.mp3 | приветствие: недруг | Sadachbia | hostile, menacing, tense | Руки держи на виду. |
+| greet_vrazhda_5_v2_g.mp3 | приветствие: недруг | Schedar | hostile, menacing, tense | Руки держи на виду. |
+| greet_vrazhda_5_v1_f_g.mp3 | приветствие: недруг | Leda | hostile, menacing, tense | Руки держи на виду. |
+| greet_vrazhda_5_v2_f_g.mp3 | приветствие: недруг | Aoede | hostile, menacing, tense | Руки держи на виду. |
+| greet_snova_0_v1_g.mp3 | приветствие: при новой встрече | Sadachbia | wry, slightly amused | Снова ты? Ну, заходи. |
+| greet_snova_0_v2_g.mp3 | приветствие: при новой встрече | Schedar | wry, slightly amused | Снова ты? Ну, заходи. |
+| greet_snova_0_v1_f_g.mp3 | приветствие: при новой встрече | Leda | wry, slightly amused | Снова ты? Ну, заходи. |
+| greet_snova_0_v2_f_g.mp3 | приветствие: при новой встрече | Aoede | wry, slightly amused | Снова ты? Ну, заходи. |
+| greet_snova_1_v1_g.mp3 | приветствие: при новой встрече | Sadachbia | wry, slightly amused | Вернулся? Значит, понравилось. |
+| greet_snova_1_v1_f_g.mp3 | приветствие: при новой встрече | Leda | wry, slightly amused | Вернулся? Значит, понравилось. |
+| greet_snova_1_v2_f_g.mp3 | приветствие: при новой встрече | Aoede | wry, slightly amused | Вернулся? Значит, понравилось. |
+| greet_snova_2_v1_g.mp3 | приветствие: при новой встрече | Sadachbia | wry, slightly amused | Опять пришёл. Что на этот раз? |
+| greet_snova_2_v2_g.mp3 | приветствие: при новой встрече | Schedar | wry, slightly amused | Опять пришёл. Что на этот раз? |
+| greet_snova_2_v1_f_g.mp3 | приветствие: при новой встрече | Leda | wry, slightly amused | Опять пришёл. Что на этот раз? |
+| greet_snova_2_v2_f_g.mp3 | приветствие: при новой встрече | Aoede | wry, slightly amused | Опять пришёл. Что на этот раз? |
+| greet_snova_3_v1_g.mp3 | приветствие: при новой встрече | Sadachbia | wry, slightly amused | Помню тебя. Садись. |
+| greet_snova_3_v2_g.mp3 | приветствие: при новой встрече | Schedar | wry, slightly amused | Помню тебя. Садись. |
+| greet_snova_3_v1_f_g.mp3 | приветствие: при новой встрече | Leda | wry, slightly amused | Помню тебя. Садись. |
+| greet_snova_3_v2_f_g.mp3 | приветствие: при новой встрече | Aoede | wry, slightly amused | Помню тебя. Садись. |
+| greet_snova_4_v1_g.mp3 | приветствие: при новой встрече | Sadachbia | wry, slightly amused | А, это ты. С прошлого раза ничего не изменилось. |
+| greet_snova_4_v2_g.mp3 | приветствие: при новой встрече | Schedar | wry, slightly amused | А, это ты. С прошлого раза ничего не изменилось. |
+| greet_snova_4_v1_f_g.mp3 | приветствие: при новой встрече | Leda | wry, slightly amused | А, это ты. С прошлого раза ничего не изменилось. |
+| greet_snova_4_v2_f_g.mp3 | приветствие: при новой встрече | Aoede | wry, slightly amused | А, это ты. С прошлого раза ничего не изменилось. |
+| greet_dobro_0_v1_g.mp3 | приветствие: помнит добро | Sadachbia | grateful, warm, welcoming | А, это вы! Спасибо за прошлое. |
+| greet_dobro_0_v2_g.mp3 | приветствие: помнит добро | Schedar | grateful, warm, welcoming | А, это вы! Спасибо за прошлое. |
+| greet_dobro_0_v1_f_g.mp3 | приветствие: помнит добро | Leda | grateful, warm, welcoming | А, это вы! Спасибо за прошлое. |
+| greet_dobro_0_v2_f_g.mp3 | приветствие: помнит добро | Aoede | grateful, warm, welcoming | А, это вы! Спасибо за прошлое. |
+| greet_dobro_1_v1_g.mp3 | приветствие: помнит добро | Sadachbia | grateful, warm, welcoming | Помню добро. Заходите. |
+| greet_dobro_1_v2_g.mp3 | приветствие: помнит добро | Schedar | grateful, warm, welcoming | Помню добро. Заходите. |
+| greet_dobro_1_v1_f_g.mp3 | приветствие: помнит добро | Leda | grateful, warm, welcoming | Помню добро. Заходите. |
+| greet_dobro_1_v2_f_g.mp3 | приветствие: помнит добро | Aoede | grateful, warm, welcoming | Помню добро. Заходите. |
+| greet_dobro_2_v1_g.mp3 | приветствие: помнит добро | Sadachbia | grateful, warm, welcoming | Вам здесь всегда рады. |
+| greet_dobro_2_v2_g.mp3 | приветствие: помнит добро | Schedar | grateful, warm, welcoming | Вам здесь всегда рады. |
+| greet_dobro_2_v1_f_g.mp3 | приветствие: помнит добро | Leda | grateful, warm, welcoming | Вам здесь всегда рады. |
+| greet_dobro_2_v2_f_g.mp3 | приветствие: помнит добро | Aoede | grateful, warm, welcoming | Вам здесь всегда рады. |
+| greet_dobro_3_v1_g.mp3 | приветствие: помнит добро | Sadachbia | grateful, warm, welcoming | О, вот кто нас выручил! |
+| greet_dobro_3_v2_g.mp3 | приветствие: помнит добро | Schedar | grateful, warm, welcoming | О, вот кто нас выручил! |
+| greet_dobro_3_v1_f_g.mp3 | приветствие: помнит добро | Leda | grateful, warm, welcoming | О, вот кто нас выручил! |
+| greet_dobro_3_v2_f_g.mp3 | приветствие: помнит добро | Aoede | grateful, warm, welcoming | О, вот кто нас выручил! |
+| greet_dobro_4_v1_g.mp3 | приветствие: помнит добро | Sadachbia | grateful, warm, welcoming | Для вас — всё самое лучшее. |
+| greet_dobro_4_v2_g.mp3 | приветствие: помнит добро | Schedar | grateful, warm, welcoming | Для вас — всё самое лучшее. |
+| greet_dobro_4_v1_f_g.mp3 | приветствие: помнит добро | Leda | grateful, warm, welcoming | Для вас — всё самое лучшее. |
+| greet_dobro_4_v2_f_g.mp3 | приветствие: помнит добро | Aoede | grateful, warm, welcoming | Для вас — всё самое лучшее. |
+| greet_dobro_5_v1_g.mp3 | приветствие: помнит добро | Sadachbia | grateful, warm, welcoming | Не забуду, что вы для нас сделали. |
+| greet_dobro_5_v2_g.mp3 | приветствие: помнит добро | Schedar | grateful, warm, welcoming | Не забуду, что вы для нас сделали. |
+| greet_dobro_5_v1_f_g.mp3 | приветствие: помнит добро | Leda | grateful, warm, welcoming | Не забуду, что вы для нас сделали. |
+| greet_dobro_5_v2_f_g.mp3 | приветствие: помнит добро | Aoede | grateful, warm, welcoming | Не забуду, что вы для нас сделали. |
+| greet_zlo_0_v1_g.mp3 | приветствие: помнит обиду | Sadachbia | resentful, bitter, cold | Опять вы. После того, что было... |
+| greet_zlo_0_v2_g.mp3 | приветствие: помнит обиду | Schedar | resentful, bitter, cold | Опять вы. После того, что было... |
+| greet_zlo_0_v1_f_g.mp3 | приветствие: помнит обиду | Leda | resentful, bitter, cold | Опять вы. После того, что было... |
+| greet_zlo_0_v2_f_g.mp3 | приветствие: помнит обиду | Aoede | resentful, bitter, cold | Опять вы. После того, что было... |
+| greet_zlo_1_v1_g.mp3 | приветствие: помнит обиду | Sadachbia | resentful, bitter, cold | Не думайте, что всё забыто. |
+| greet_zlo_1_v2_g.mp3 | приветствие: помнит обиду | Schedar | resentful, bitter, cold | Не думайте, что всё забыто. |
+| greet_zlo_1_v1_f_g.mp3 | приветствие: помнит обиду | Leda | resentful, bitter, cold | Не думайте, что всё забыто. |
+| greet_zlo_1_v2_f_g.mp3 | приветствие: помнит обиду | Aoede | resentful, bitter, cold | Не думайте, что всё забыто. |
+| greet_zlo_2_v1_g.mp3 | приветствие: помнит обиду | Sadachbia | resentful, bitter, cold | Чего пришли? Мало вам? |
+| greet_zlo_2_v2_g.mp3 | приветствие: помнит обиду | Schedar | resentful, bitter, cold | Чего пришли? Мало вам? |
+| greet_zlo_2_v1_f_g.mp3 | приветствие: помнит обиду | Leda | resentful, bitter, cold | Чего пришли? Мало вам? |
+| greet_zlo_2_v2_f_g.mp3 | приветствие: помнит обиду | Aoede | resentful, bitter, cold | Чего пришли? Мало вам? |
+| greet_zlo_3_v1_g.mp3 | приветствие: помнит обиду | Sadachbia | resentful, bitter, cold | Помню, как вы со мной обошлись. |
+| greet_zlo_3_v2_g.mp3 | приветствие: помнит обиду | Schedar | resentful, bitter, cold | Помню, как вы со мной обошлись. |
+| greet_zlo_3_v1_f_g.mp3 | приветствие: помнит обиду | Leda | resentful, bitter, cold | Помню, как вы со мной обошлись. |
+| greet_zlo_3_v2_f_g.mp3 | приветствие: помнит обиду | Aoede | resentful, bitter, cold | Помню, как вы со мной обошлись. |
+| greet_zlo_4_v1_g.mp3 | приветствие: помнит обиду | Sadachbia | resentful, bitter, cold | Держитесь подальше. Всё помню. |
+| greet_zlo_4_v2_g.mp3 | приветствие: помнит обиду | Schedar | resentful, bitter, cold | Держитесь подальше. Всё помню. |
+| greet_zlo_4_v1_f_g.mp3 | приветствие: помнит обиду | Leda | resentful, bitter, cold | Держитесь подальше. Всё помню. |
+| greet_zlo_4_v2_f_g.mp3 | приветствие: помнит обиду | Aoede | resentful, bitter, cold | Держитесь подальше. Всё помню. |
+| greet_zlo_5_v1_g.mp3 | приветствие: помнит обиду | Sadachbia | resentful, bitter, cold | Вы ещё смеете сюда приходить? |
+| greet_zlo_5_v2_g.mp3 | приветствие: помнит обиду | Schedar | resentful, bitter, cold | Вы ещё смеете сюда приходить? |
+| greet_zlo_5_v1_f_g.mp3 | приветствие: помнит обиду | Leda | resentful, bitter, cold | Вы ещё смеете сюда приходить? |
+| greet_zlo_5_v2_f_g.mp3 | приветствие: помнит обиду | Aoede | resentful, bitter, cold | Вы ещё смеете сюда приходить? |
+| greet_utro_0_v1_g.mp3 | приветствие: утром | Sadachbia | fresh, friendly morning greeting | Доброе утро. Рано вы. |
+| greet_utro_0_v2_g.mp3 | приветствие: утром | Schedar | fresh, friendly morning greeting | Доброе утро. Рано вы. |
+| greet_utro_0_v1_f_g.mp3 | приветствие: утром | Leda | fresh, friendly morning greeting | Доброе утро. Рано вы. |
+| greet_utro_0_v2_f_g.mp3 | приветствие: утром | Aoede | fresh, friendly morning greeting | Доброе утро. Рано вы. |
+| greet_utro_1_v1_g.mp3 | приветствие: утром | Sadachbia | fresh, friendly morning greeting | С утра пораньше — и уже по делам? |
+| greet_utro_1_v2_g.mp3 | приветствие: утром | Schedar | fresh, friendly morning greeting | С утра пораньше — и уже по делам? |
+| greet_utro_1_v1_f_g.mp3 | приветствие: утром | Leda | fresh, friendly morning greeting | С утра пораньше — и уже по делам? |
+| greet_utro_1_v2_f_g.mp3 | приветствие: утром | Aoede | fresh, friendly morning greeting | С утра пораньше — и уже по делам? |
+| greet_utro_2_v1_g.mp3 | приветствие: утром | Sadachbia | fresh, friendly morning greeting | Утро доброе. Только открылись. |
+| greet_utro_2_v2_g.mp3 | приветствие: утром | Schedar | fresh, friendly morning greeting | Утро доброе. Только открылись. |
+| greet_utro_2_v1_f_g.mp3 | приветствие: утром | Leda | fresh, friendly morning greeting | Утро доброе. Только открылись. |
+| greet_utro_2_v2_f_g.mp3 | приветствие: утром | Aoede | fresh, friendly morning greeting | Утро доброе. Только открылись. |
+| greet_utro_3_v1_g.mp3 | приветствие: утром | Sadachbia | fresh, friendly morning greeting | Доброе утро, путник. |
+| greet_utro_3_v2_g.mp3 | приветствие: утром | Schedar | fresh, friendly morning greeting | Доброе утро, путник. |
+| greet_utro_3_v1_f_g.mp3 | приветствие: утром | Leda | fresh, friendly morning greeting | Доброе утро, путник. |
+| greet_utro_3_v2_f_g.mp3 | приветствие: утром | Aoede | fresh, friendly morning greeting | Доброе утро, путник. |
+| greet_vecher_0_v1_g.mp3 | приветствие: вечером | Sadachbia | tired evening greeting | Добрый вечер. Скоро закрываемся. |
+| greet_vecher_0_v2_g.mp3 | приветствие: вечером | Schedar | tired evening greeting | Добрый вечер. Скоро закрываемся. |
+| greet_vecher_0_v1_f_g.mp3 | приветствие: вечером | Leda | tired evening greeting | Добрый вечер. Скоро закрываемся. |
+| greet_vecher_0_v2_f_g.mp3 | приветствие: вечером | Aoede | tired evening greeting | Добрый вечер. Скоро закрываемся. |
+| greet_vecher_1_v1_g.mp3 | приветствие: вечером | Sadachbia | tired evening greeting | Вечер уже. Чего так поздно? |
+| greet_vecher_1_v2_g.mp3 | приветствие: вечером | Schedar | tired evening greeting | Вечер уже. Чего так поздно? |
+| greet_vecher_1_v1_f_g.mp3 | приветствие: вечером | Leda | tired evening greeting | Вечер уже. Чего так поздно? |
+| greet_vecher_1_v2_f_g.mp3 | приветствие: вечером | Aoede | tired evening greeting | Вечер уже. Чего так поздно? |
+| greet_vecher_2_v1_g.mp3 | приветствие: вечером | Sadachbia | tired evening greeting | Добрый вечер, путник. |
+| greet_vecher_2_v2_g.mp3 | приветствие: вечером | Schedar | tired evening greeting | Добрый вечер, путник. |
+| greet_vecher_2_v1_f_g.mp3 | приветствие: вечером | Leda | tired evening greeting | Добрый вечер, путник. |
+| greet_vecher_2_v2_f_g.mp3 | приветствие: вечером | Aoede | tired evening greeting | Добрый вечер, путник. |
+| greet_vecher_3_v1_g.mp3 | приветствие: вечером | Sadachbia | tired evening greeting | К ночи дело, говорите быстрее. |
+| greet_vecher_3_v2_g.mp3 | приветствие: вечером | Schedar | tired evening greeting | К ночи дело, говорите быстрее. |
+| greet_vecher_3_v1_f_g.mp3 | приветствие: вечером | Leda | tired evening greeting | К ночи дело, говорите быстрее. |
+| greet_vecher_3_v2_f_g.mp3 | приветствие: вечером | Aoede | tired evening greeting | К ночи дело, говорите быстрее. |
+| greet_noch_0_v1_g.mp3 | приветствие: ночью | Sadachbia | sleepy, hushed night greeting | Ночь на дворе. Чего не спится? |
+| greet_noch_0_v2_g.mp3 | приветствие: ночью | Schedar | sleepy, hushed night greeting | Ночь на дворе. Чего не спится? |
+| greet_noch_0_v1_f_g.mp3 | приветствие: ночью | Leda | sleepy, hushed night greeting | Ночь на дворе. Чего не спится? |
+| greet_noch_0_v2_f_g.mp3 | приветствие: ночью | Aoede | sleepy, hushed night greeting | Ночь на дворе. Чего не спится? |
+| greet_noch_1_v1_g.mp3 | приветствие: ночью | Sadachbia | sleepy, hushed night greeting | Тише, люди спят. |
+| greet_noch_1_v2_g.mp3 | приветствие: ночью | Schedar | sleepy, hushed night greeting | Тише, люди спят. |
+| greet_noch_1_v1_f_g.mp3 | приветствие: ночью | Leda | sleepy, hushed night greeting | Тише, люди спят. |
+| greet_noch_1_v2_f_g.mp3 | приветствие: ночью | Aoede | sleepy, hushed night greeting | Тише, люди спят. |
+| greet_noch_2_v1_g.mp3 | приветствие: ночью | Sadachbia | sleepy, hushed night greeting | В такой час? Ну, заходи. |
+| greet_noch_2_v2_g.mp3 | приветствие: ночью | Schedar | sleepy, hushed night greeting | В такой час? Ну, заходи. |
+| greet_noch_2_v1_f_g.mp3 | приветствие: ночью | Leda | sleepy, hushed night greeting | В такой час? Ну, заходи. |
+| greet_noch_2_v2_f_g.mp3 | приветствие: ночью | Aoede | sleepy, hushed night greeting | В такой час? Ну, заходи. |
+| greet_noch_3_v1_g.mp3 | приветствие: ночью | Sadachbia | sleepy, hushed night greeting | Ночью добрые люди дома сидят. |
+| greet_noch_3_v2_g.mp3 | приветствие: ночью | Schedar | sleepy, hushed night greeting | Ночью добрые люди дома сидят. |
+| greet_noch_3_v1_f_g.mp3 | приветствие: ночью | Leda | sleepy, hushed night greeting | Ночью добрые люди дома сидят. |
+| greet_noch_3_v2_f_g.mp3 | приветствие: ночью | Aoede | sleepy, hushed night greeting | Ночью добрые люди дома сидят. |
+| dlg_0_0_v1_g.mp3 | ответ в разговоре | Sadachbia | evasive, dismissive | Я в такие дела не лезу |
+| dlg_0_0_v2_g.mp3 | ответ в разговоре | Schedar | evasive, dismissive | Я в такие дела не лезу |
+| dlg_0_0_v1_f_g.mp3 | ответ в разговоре | Leda | evasive, dismissive | Я в такие дела не лезу |
+| dlg_0_0_v2_f_g.mp3 | ответ в разговоре | Aoede | evasive, dismissive | Я в такие дела не лезу |
+| dlg_0_1_v1_g.mp3 | ответ в разговоре | Sadachbia | evasive, dismissive | Спросите кого другого, я тут сбоку |
+| dlg_0_1_v2_g.mp3 | ответ в разговоре | Schedar | evasive, dismissive | Спросите кого другого, я тут сбоку |
+| dlg_0_1_v1_f_g.mp3 | ответ в разговоре | Leda | evasive, dismissive | Спросите кого другого, я тут сбоку |
+| dlg_0_1_v2_f_g.mp3 | ответ в разговоре | Aoede | evasive, dismissive | Спросите кого другого, я тут сбоку |
+| dlg_0_2_v1_g.mp3 | ответ в разговоре | Sadachbia | evasive, dismissive | Моё дело маленькое — ничего не знаю |
+| dlg_0_2_v2_g.mp3 | ответ в разговоре | Schedar | evasive, dismissive | Моё дело маленькое — ничего не знаю |
+| dlg_0_2_v1_f_g.mp3 | ответ в разговоре | Leda | evasive, dismissive | Моё дело маленькое — ничего не знаю |
+| dlg_0_2_v2_f_g.mp3 | ответ в разговоре | Aoede | evasive, dismissive | Моё дело маленькое — ничего не знаю |
+| dlg_0_3_v1_g.mp3 | ответ в разговоре | Sadachbia | evasive, dismissive | Не моего ума дело, и не вашего, по-хорошему |
+| dlg_0_3_v2_g.mp3 | ответ в разговоре | Schedar | evasive, dismissive | Не моего ума дело, и не вашего, по-хорошему |
+| dlg_0_3_v1_f_g.mp3 | ответ в разговоре | Leda | evasive, dismissive | Не моего ума дело, и не вашего, по-хорошему |
+| dlg_0_3_v2_f_g.mp3 | ответ в разговоре | Aoede | evasive, dismissive | Не моего ума дело, и не вашего, по-хорошему |
+| dlg_0_4_v1_g.mp3 | ответ в разговоре (трус) | Sadachbia | evasive, dismissive, timid, nervous | Тише вы… Не знаю ничего и знать не хочу |
+| dlg_0_4_v2_g.mp3 | ответ в разговоре (трус) | Schedar | evasive, dismissive, timid, nervous | Тише вы… Не знаю ничего и знать не хочу |
+| dlg_0_4_v1_f_g.mp3 | ответ в разговоре (трус) | Leda | evasive, dismissive, timid, nervous | Тише вы… Не знаю ничего и знать не хочу |
+| dlg_0_5_v1_g.mp3 | ответ в разговоре (подозрительный) | Sadachbia | evasive, dismissive, suspicious | А вам-то зачем? Нет, не скажу |
+| dlg_0_5_v2_g.mp3 | ответ в разговоре (подозрительный) | Schedar | evasive, dismissive, suspicious | А вам-то зачем? Нет, не скажу |
+| dlg_0_5_v1_f_g.mp3 | ответ в разговоре (подозрительный) | Leda | evasive, dismissive, suspicious | А вам-то зачем? Нет, не скажу |
+| dlg_0_5_v2_f_g.mp3 | ответ в разговоре (подозрительный) | Aoede | evasive, dismissive, suspicious | А вам-то зачем? Нет, не скажу |
+| dlg_0_6_v1_g.mp3 | ответ в разговоре (высокомерный) | Sadachbia | evasive, dismissive, haughty | Я не пересказываю базарные сплетни |
+| dlg_0_6_v2_g.mp3 | ответ в разговоре (высокомерный) | Schedar | evasive, dismissive, haughty | Я не пересказываю базарные сплетни |
+| dlg_0_6_v1_f_g.mp3 | ответ в разговоре (высокомерный) | Leda | evasive, dismissive, haughty | Я не пересказываю базарные сплетни |
+| dlg_0_6_v2_f_g.mp3 | ответ в разговоре (высокомерный) | Aoede | evasive, dismissive, haughty | Я не пересказываю базарные сплетни |
+| dlg_0_7_v1_g.mp3 | ответ в разговоре (жадный) | Sadachbia | evasive, dismissive, greedy, calculating | Бесплатно я даже время не говорю |
+| dlg_0_7_v2_g.mp3 | ответ в разговоре (жадный) | Schedar | evasive, dismissive, greedy, calculating | Бесплатно я даже время не говорю |
+| dlg_0_7_v1_f_g.mp3 | ответ в разговоре (жадный) | Leda | evasive, dismissive, greedy, calculating | Бесплатно я даже время не говорю |
+| dlg_0_7_v2_f_g.mp3 | ответ в разговоре (жадный) | Aoede | evasive, dismissive, greedy, calculating | Бесплатно я даже время не говорю |
+| dlg_0_8_v1_g.mp3 | ответ в разговоре (хитрый) | Sadachbia | evasive, dismissive, sly | Может, и знаю. Но не вам и не сегодня |
+| dlg_0_8_v2_g.mp3 | ответ в разговоре (хитрый) | Schedar | evasive, dismissive, sly | Может, и знаю. Но не вам и не сегодня |
+| dlg_0_8_v1_f_g.mp3 | ответ в разговоре (хитрый) | Leda | evasive, dismissive, sly | Может, и знаю. Но не вам и не сегодня |
+| dlg_0_8_v2_f_g.mp3 | ответ в разговоре (хитрый) | Aoede | evasive, dismissive, sly | Может, и знаю. Но не вам и не сегодня |
+| dlg_0_9_v1_g.mp3 | ответ в разговоре (рациональный) | Sadachbia | evasive, dismissive, calm, rational | Наверняка не знаю, а гадать не стану |
+| dlg_0_9_v2_g.mp3 | ответ в разговоре (рациональный) | Schedar | evasive, dismissive, calm, rational | Наверняка не знаю, а гадать не стану |
+| dlg_0_9_v1_f_g.mp3 | ответ в разговоре (рациональный) | Leda | evasive, dismissive, calm, rational | Наверняка не знаю, а гадать не стану |
+| dlg_0_9_v2_f_g.mp3 | ответ в разговоре (рациональный) | Aoede | evasive, dismissive, calm, rational | Наверняка не знаю, а гадать не стану |
+| dlg_0_10_v1_g.mp3 | ответ в разговоре (жестокий) | Sadachbia | evasive, dismissive, harsh, cruel | Проваливай с такими вопросами |
+| dlg_0_10_v2_g.mp3 | ответ в разговоре (жестокий) | Schedar | evasive, dismissive, harsh, cruel | Проваливай с такими вопросами |
+| dlg_0_10_v1_f_g.mp3 | ответ в разговоре (жестокий) | Leda | evasive, dismissive, harsh, cruel | Проваливай с такими вопросами |
+| dlg_0_10_v2_f_g.mp3 | ответ в разговоре (жестокий) | Aoede | evasive, dismissive, harsh, cruel | Проваливай с такими вопросами |
+| dlg_0_11_v1_g.mp3 | ответ в разговоре (недруг) | Sadachbia | evasive, dismissive, hostile | С вами я ни о чём говорить не стану |
+| dlg_0_11_v2_g.mp3 | ответ в разговоре (недруг) | Schedar | evasive, dismissive, hostile | С вами я ни о чём говорить не стану |
+| dlg_0_11_v1_f_g.mp3 | ответ в разговоре (недруг) | Leda | evasive, dismissive, hostile | С вами я ни о чём говорить не стану |
+| dlg_0_11_v2_f_g.mp3 | ответ в разговоре (недруг) | Aoede | evasive, dismissive, hostile | С вами я ни о чём говорить не стану |
+| dlg_0_12_v1_g.mp3 | ответ в разговоре (недруг) | Sadachbia | evasive, dismissive, hostile | Ищите дураков в другом месте |
+| dlg_0_12_v2_g.mp3 | ответ в разговоре (недруг) | Schedar | evasive, dismissive, hostile | Ищите дураков в другом месте |
+| dlg_0_12_v1_f_g.mp3 | ответ в разговоре (недруг) | Leda | evasive, dismissive, hostile | Ищите дураков в другом месте |
+| dlg_0_12_v2_f_g.mp3 | ответ в разговоре (недруг) | Aoede | evasive, dismissive, hostile | Ищите дураков в другом месте |
+| dlg_0_13_v1_g.mp3 | ответ в разговоре (холоден) | Sadachbia | evasive, dismissive, cold, curt | Спрашивайте кого другого |
+| dlg_0_13_v2_g.mp3 | ответ в разговоре (холоден) | Schedar | evasive, dismissive, cold, curt | Спрашивайте кого другого |
+| dlg_0_13_v1_f_g.mp3 | ответ в разговоре (холоден) | Leda | evasive, dismissive, cold, curt | Спрашивайте кого другого |
+| dlg_0_13_v2_f_g.mp3 | ответ в разговоре (холоден) | Aoede | evasive, dismissive, cold, curt | Спрашивайте кого другого |
+| dlg_0_14_v1_g.mp3 | ответ в разговоре (холоден) | Sadachbia | evasive, dismissive, cold, curt | Не до вас сейчас |
+| dlg_0_14_v2_g.mp3 | ответ в разговоре (холоден) | Schedar | evasive, dismissive, cold, curt | Не до вас сейчас |
+| dlg_0_14_v1_f_g.mp3 | ответ в разговоре (холоден) | Leda | evasive, dismissive, cold, curt | Не до вас сейчас |
+| dlg_0_14_v2_f_g.mp3 | ответ в разговоре (холоден) | Aoede | evasive, dismissive, cold, curt | Не до вас сейчас |
+| dlg_0_15_v1_g.mp3 | ответ в разговоре (свой) | Sadachbia | evasive, dismissive, warm, friendly | Тебе бы сказать, да нечего |
+| dlg_0_15_v2_g.mp3 | ответ в разговоре (свой) | Schedar | evasive, dismissive, warm, friendly | Тебе бы сказать, да нечего |
+| dlg_0_15_v1_f_g.mp3 | ответ в разговоре (свой) | Leda | evasive, dismissive, warm, friendly | Тебе бы сказать, да нечего |
+| dlg_0_15_v2_f_g.mp3 | ответ в разговоре (свой) | Aoede | evasive, dismissive, warm, friendly | Тебе бы сказать, да нечего |
+| dlg_0_16_v1_g.mp3 | ответ в разговоре (помнит обиду) | Sadachbia | evasive, dismissive, resentful, bitter | После того, что было? Ничего вам не скажу |
+| dlg_0_16_v2_g.mp3 | ответ в разговоре (помнит обиду) | Schedar | evasive, dismissive, resentful, bitter | После того, что было? Ничего вам не скажу |
+| dlg_0_16_v1_f_g.mp3 | ответ в разговоре (помнит обиду) | Leda | evasive, dismissive, resentful, bitter | После того, что было? Ничего вам не скажу |
+| dlg_0_16_v2_f_g.mp3 | ответ в разговоре (помнит обиду) | Aoede | evasive, dismissive, resentful, bitter | После того, что было? Ничего вам не скажу |
+| dlg_0_17_v1_g.mp3 | ответ в разговоре (помнит добро) | Sadachbia | evasive, dismissive, grateful, warm | Вам бы помочь, да правда не знаю |
+| dlg_0_17_v2_g.mp3 | ответ в разговоре (помнит добро) | Schedar | evasive, dismissive, grateful, warm | Вам бы помочь, да правда не знаю |
+| dlg_0_17_v1_f_g.mp3 | ответ в разговоре (помнит добро) | Leda | evasive, dismissive, grateful, warm | Вам бы помочь, да правда не знаю |
+| dlg_0_17_v2_f_g.mp3 | ответ в разговоре (помнит добро) | Aoede | evasive, dismissive, grateful, warm | Вам бы помочь, да правда не знаю |
+| dlg_1_0_v1_g.mp3 | ответ в разговоре | Sadachbia | shrugging, dismissive | Мало ли что болтают |
+| dlg_1_0_v2_g.mp3 | ответ в разговоре | Schedar | shrugging, dismissive | Мало ли что болтают |
+| dlg_1_0_v1_f_g.mp3 | ответ в разговоре | Leda | shrugging, dismissive | Мало ли что болтают |
+| dlg_1_0_v2_f_g.mp3 | ответ в разговоре | Aoede | shrugging, dismissive | Мало ли что болтают |
+| dlg_1_1_v1_g.mp3 | ответ в разговоре | Sadachbia | shrugging, dismissive | Слухов тут больше, чем людей, — не собираю |
+| dlg_1_1_v2_g.mp3 | ответ в разговоре | Schedar | shrugging, dismissive | Слухов тут больше, чем людей, — не собираю |
+| dlg_1_1_v1_f_g.mp3 | ответ в разговоре | Leda | shrugging, dismissive | Слухов тут больше, чем людей, — не собираю |
+| dlg_1_1_v2_f_g.mp3 | ответ в разговоре | Aoede | shrugging, dismissive | Слухов тут больше, чем людей, — не собираю |
+| dlg_1_2_v1_g.mp3 | ответ в разговоре | Sadachbia | shrugging, dismissive | Язык без костей, а у меня память на чужие басни короткая |
+| dlg_1_2_v2_g.mp3 | ответ в разговоре | Schedar | shrugging, dismissive | Язык без костей, а у меня память на чужие басни короткая |
+| dlg_1_2_v1_f_g.mp3 | ответ в разговоре | Leda | shrugging, dismissive | Язык без костей, а у меня память на чужие басни короткая |
+| dlg_1_2_v2_f_g.mp3 | ответ в разговоре | Aoede | shrugging, dismissive | Язык без костей, а у меня память на чужие басни короткая |
+| dlg_1_3_v1_g.mp3 | ответ в разговоре | Sadachbia | shrugging, dismissive | Не слышал. А и слышал бы — не повторил |
+| dlg_1_3_v2_g.mp3 | ответ в разговоре | Schedar | shrugging, dismissive | Не слышал. А и слышал бы — не повторил |
+| dlg_1_3_v1_f_g.mp3 | ответ в разговоре | Leda | shrugging, dismissive | Не слышала. А и слышала бы — не повторила |
+| dlg_1_3_v2_f_g.mp3 | ответ в разговоре | Aoede | shrugging, dismissive | Не слышала. А и слышала бы — не повторила |
+| dlg_1_4_v1_g.mp3 | ответ в разговоре (честный) | Sadachbia | shrugging, dismissive, sincere | Врать не хочу, а правды не знаю |
+| dlg_1_4_v2_g.mp3 | ответ в разговоре (честный) | Schedar | shrugging, dismissive, sincere | Врать не хочу, а правды не знаю |
+| dlg_1_4_v1_f_g.mp3 | ответ в разговоре (честный) | Leda | shrugging, dismissive, sincere | Врать не хочу, а правды не знаю |
+| dlg_1_4_v2_f_g.mp3 | ответ в разговоре (честный) | Aoede | shrugging, dismissive, sincere | Врать не хочу, а правды не знаю |
+| dlg_1_5_v1_g.mp3 | ответ в разговоре (трус) | Sadachbia | shrugging, dismissive, timid, nervous | Про такое вслух не говорят. Не спрашивайте |
+| dlg_1_5_v2_g.mp3 | ответ в разговоре (трус) | Schedar | shrugging, dismissive, timid, nervous | Про такое вслух не говорят. Не спрашивайте |
+| dlg_1_5_v1_f_g.mp3 | ответ в разговоре (трус) | Leda | shrugging, dismissive, timid, nervous | Про такое вслух не говорят. Не спрашивайте |
+| dlg_1_5_v2_f_g.mp3 | ответ в разговоре (трус) | Aoede | shrugging, dismissive, timid, nervous | Про такое вслух не говорят. Не спрашивайте |
+| dlg_1_6_v1_g.mp3 | ответ в разговоре (фанатик) | Sadachbia | shrugging, dismissive, zealous, fervent | Пустое это всё. Слушайте лучше, что говорят боги |
+| dlg_1_6_v2_g.mp3 | ответ в разговоре (фанатик) | Schedar | shrugging, dismissive, zealous, fervent | Пустое это всё. Слушайте лучше, что говорят боги |
+| dlg_1_6_v1_f_g.mp3 | ответ в разговоре (фанатик) | Leda | shrugging, dismissive, zealous, fervent | Пустое это всё. Слушайте лучше, что говорят боги |
+| dlg_1_6_v2_f_g.mp3 | ответ в разговоре (фанатик) | Aoede | shrugging, dismissive, zealous, fervent | Пустое это всё. Слушайте лучше, что говорят боги |
+| dlg_1_7_v1_g.mp3 | ответ в разговоре (подозрительный) | Sadachbia | shrugging, dismissive, suspicious | Кто вас подослал выспрашивать? |
+| dlg_1_7_v2_g.mp3 | ответ в разговоре (подозрительный) | Schedar | shrugging, dismissive, suspicious | Кто вас подослал выспрашивать? |
+| dlg_1_7_v1_f_g.mp3 | ответ в разговоре (подозрительный) | Leda | shrugging, dismissive, suspicious | Кто вас подослал выспрашивать? |
+| dlg_1_7_v2_f_g.mp3 | ответ в разговоре (подозрительный) | Aoede | shrugging, dismissive, suspicious | Кто вас подослал выспрашивать? |
+| dlg_1_8_v1_g.mp3 | ответ в разговоре (недруг) | Sadachbia | shrugging, dismissive, hostile | Вам — ни слова |
+| dlg_1_8_v2_g.mp3 | ответ в разговоре (недруг) | Schedar | shrugging, dismissive, hostile | Вам — ни слова |
+| dlg_1_8_v1_f_g.mp3 | ответ в разговоре (недруг) | Leda | shrugging, dismissive, hostile | Вам — ни слова |
+| dlg_1_8_v2_f_g.mp3 | ответ в разговоре (недруг) | Aoede | shrugging, dismissive, hostile | Вам — ни слова |
+| dlg_1_9_v1_g.mp3 | ответ в разговоре (холоден) | Sadachbia | shrugging, dismissive, cold, curt | Сплетен не держу |
+| dlg_1_9_v2_g.mp3 | ответ в разговоре (холоден) | Schedar | shrugging, dismissive, cold, curt | Сплетен не держу |
+| dlg_1_9_v1_f_g.mp3 | ответ в разговоре (холоден) | Leda | shrugging, dismissive, cold, curt | Сплетен не держу |
+| dlg_1_9_v2_f_g.mp3 | ответ в разговоре (холоден) | Aoede | shrugging, dismissive, cold, curt | Сплетен не держу |
+| dlg_1_10_v1_g.mp3 | ответ в разговоре (свой) | Sadachbia | shrugging, dismissive, warm, friendly | Врать не стану: ничего путного не слышно |
+| dlg_1_10_v2_g.mp3 | ответ в разговоре (свой) | Schedar | shrugging, dismissive, warm, friendly | Врать не стану: ничего путного не слышно |
+| dlg_1_10_v1_f_g.mp3 | ответ в разговоре (свой) | Leda | shrugging, dismissive, warm, friendly | Врать не стану: ничего путного не слышно |
+| dlg_1_10_v2_f_g.mp3 | ответ в разговоре (свой) | Aoede | shrugging, dismissive, warm, friendly | Врать не стану: ничего путного не слышно |
+| dlg_1_11_v1_g.mp3 | ответ в разговоре (помнит обиду) | Sadachbia | shrugging, dismissive, resentful, bitter | Чтобы вы потом разнесли? Нет уж |
+| dlg_1_11_v2_g.mp3 | ответ в разговоре (помнит обиду) | Schedar | shrugging, dismissive, resentful, bitter | Чтобы вы потом разнесли? Нет уж |
+| dlg_1_11_v1_f_g.mp3 | ответ в разговоре (помнит обиду) | Leda | shrugging, dismissive, resentful, bitter | Чтобы вы потом разнесли? Нет уж |
+| dlg_1_11_v2_f_g.mp3 | ответ в разговоре (помнит обиду) | Aoede | shrugging, dismissive, resentful, bitter | Чтобы вы потом разнесли? Нет уж |
+| dlg_2_0_v1_g.mp3 | ответ в разговоре | Sadachbia | thoughtful, agreeing | Пожалуй, вы правы |
+| dlg_2_0_v2_g.mp3 | ответ в разговоре | Schedar | thoughtful, agreeing | Пожалуй, вы правы |
+| dlg_2_0_v1_f_g.mp3 | ответ в разговоре | Leda | thoughtful, agreeing | Пожалуй, вы правы |
+| dlg_2_0_v2_f_g.mp3 | ответ в разговоре | Aoede | thoughtful, agreeing | Пожалуй, вы правы |
+| dlg_2_1_v1_g.mp3 | ответ в разговоре | Sadachbia | thoughtful, agreeing | Убедили. Сделаю по-вашему |
+| dlg_2_1_v2_g.mp3 | ответ в разговоре | Schedar | thoughtful, agreeing | Убедили. Сделаю по-вашему |
+| dlg_2_1_v1_f_g.mp3 | ответ в разговоре | Leda | thoughtful, agreeing | Убедили. Сделаю по-вашему |
+| dlg_2_1_v2_f_g.mp3 | ответ в разговоре | Aoede | thoughtful, agreeing | Убедили. Сделаю по-вашему |
+| dlg_2_2_v1_g.mp3 | ответ в разговоре | Sadachbia | thoughtful, agreeing | Что ж, в ваших словах есть толк |
+| dlg_2_2_v2_g.mp3 | ответ в разговоре | Schedar | thoughtful, agreeing | Что ж, в ваших словах есть толк |
+| dlg_2_2_v1_f_g.mp3 | ответ в разговоре | Leda | thoughtful, agreeing | Что ж, в ваших словах есть толк |
+| dlg_2_2_v2_f_g.mp3 | ответ в разговоре | Aoede | thoughtful, agreeing | Что ж, в ваших словах есть толк |
+| dlg_2_3_v1_g.mp3 | ответ в разговоре | Sadachbia | thoughtful, agreeing | Может, и правда пора посмотреть иначе |
+| dlg_2_3_v2_g.mp3 | ответ в разговоре | Schedar | thoughtful, agreeing | Может, и правда пора посмотреть иначе |
+| dlg_2_3_v1_f_g.mp3 | ответ в разговоре | Leda | thoughtful, agreeing | Может, и правда пора посмотреть иначе |
+| dlg_2_3_v2_f_g.mp3 | ответ в разговоре | Aoede | thoughtful, agreeing | Может, и правда пора посмотреть иначе |
+| dlg_2_4_v2_g.mp3 | ответ в разговоре (рациональный) | Schedar | thoughtful, agreeing, calm, rational | Доводы весомые. Принимаю |
+| dlg_2_4_v1_f_g.mp3 | ответ в разговоре (рациональный) | Leda | thoughtful, agreeing, calm, rational | Доводы весомые. Принимаю |
+| dlg_2_4_v2_f_g.mp3 | ответ в разговоре (рациональный) | Aoede | thoughtful, agreeing, calm, rational | Доводы весомые. Принимаю |
+| dlg_2_5_v1_g.mp3 | ответ в разговоре (высокомерный) | Sadachbia | thoughtful, agreeing, haughty | Редко признаю чужую правоту, но тут — да |
+| dlg_2_5_v2_g.mp3 | ответ в разговоре (высокомерный) | Schedar | thoughtful, agreeing, haughty | Редко признаю чужую правоту, но тут — да |
+| dlg_2_5_v1_f_g.mp3 | ответ в разговоре (высокомерный) | Leda | thoughtful, agreeing, haughty | Редко признаю чужую правоту, но тут — да |
+| dlg_2_5_v2_f_g.mp3 | ответ в разговоре (высокомерный) | Aoede | thoughtful, agreeing, haughty | Редко признаю чужую правоту, но тут — да |
+| dlg_2_6_v1_g.mp3 | ответ в разговоре (добрый) | Sadachbia | thoughtful, agreeing, kind, warm | Раз вы так считаете — так и быть |
+| dlg_2_6_v2_g.mp3 | ответ в разговоре (добрый) | Schedar | thoughtful, agreeing, kind, warm | Раз вы так считаете — так и быть |
+| dlg_2_6_v1_f_g.mp3 | ответ в разговоре (добрый) | Leda | thoughtful, agreeing, kind, warm | Раз вы так считаете — так и быть |
+| dlg_2_6_v2_f_g.mp3 | ответ в разговоре (добрый) | Aoede | thoughtful, agreeing, kind, warm | Раз вы так считаете — так и быть |
+| dlg_2_7_v1_g.mp3 | ответ в разговоре (подозрительный) | Sadachbia | thoughtful, agreeing, suspicious | Ладно. Но если окажется не так, я вспомню этот разговор |
+| dlg_2_7_v2_g.mp3 | ответ в разговоре (подозрительный) | Schedar | thoughtful, agreeing, suspicious | Ладно. Но если окажется не так, я вспомню этот разговор |
+| dlg_2_7_v1_f_g.mp3 | ответ в разговоре (подозрительный) | Leda | thoughtful, agreeing, suspicious | Ладно. Но если окажется не так, я вспомню этот разговор |
+| dlg_2_7_v2_f_g.mp3 | ответ в разговоре (подозрительный) | Aoede | thoughtful, agreeing, suspicious | Ладно. Но если окажется не так, я вспомню этот разговор |
+| dlg_2_8_v1_g.mp3 | ответ в разговоре (традиционалист) | Sadachbia | thoughtful, agreeing, stern, old-fashioned | Деды бы поспорили, но я соглашусь |
+| dlg_2_8_v2_g.mp3 | ответ в разговоре (традиционалист) | Schedar | thoughtful, agreeing, stern, old-fashioned | Деды бы поспорили, но я соглашусь |
+| dlg_2_8_v1_f_g.mp3 | ответ в разговоре (традиционалист) | Leda | thoughtful, agreeing, stern, old-fashioned | Деды бы поспорили, но я соглашусь |
+| dlg_2_8_v2_f_g.mp3 | ответ в разговоре (традиционалист) | Aoede | thoughtful, agreeing, stern, old-fashioned | Деды бы поспорили, но я соглашусь |
+| dlg_2_9_v1_g.mp3 | ответ в разговоре (реформатор) | Sadachbia | thoughtful, agreeing, eager | Вот это дело! Давно пора было так думать |
+| dlg_2_9_v2_g.mp3 | ответ в разговоре (реформатор) | Schedar | thoughtful, agreeing, eager | Вот это дело! Давно пора было так думать |
+| dlg_2_9_v1_f_g.mp3 | ответ в разговоре (реформатор) | Leda | thoughtful, agreeing, eager | Вот это дело! Давно пора было так думать |
+| dlg_2_9_v2_f_g.mp3 | ответ в разговоре (реформатор) | Aoede | thoughtful, agreeing, eager | Вот это дело! Давно пора было так думать |
+| dlg_2_10_v1_g.mp3 | ответ в разговоре (жадный) | Sadachbia | thoughtful, agreeing, greedy, calculating | Согласен, если мне с этого не убыток |
+| dlg_2_10_v2_g.mp3 | ответ в разговоре (жадный) | Schedar | thoughtful, agreeing, greedy, calculating | Согласен, если мне с этого не убыток |
+| dlg_2_10_v1_f_g.mp3 | ответ в разговоре (жадный) | Leda | thoughtful, agreeing, greedy, calculating | Согласна, если мне с этого не убыток |
+| dlg_2_10_v2_f_g.mp3 | ответ в разговоре (жадный) | Aoede | thoughtful, agreeing, greedy, calculating | Согласна, если мне с этого не убыток |
+| dlg_2_11_v1_g.mp3 | ответ в разговоре (недруг) | Sadachbia | thoughtful, agreeing, hostile | Не люблю вас, но тут вы правы |
+| dlg_2_11_v2_g.mp3 | ответ в разговоре (недруг) | Schedar | thoughtful, agreeing, hostile | Не люблю вас, но тут вы правы |
+| dlg_2_11_v1_f_g.mp3 | ответ в разговоре (недруг) | Leda | thoughtful, agreeing, hostile | Не люблю вас, но тут вы правы |
+| dlg_2_11_v2_f_g.mp3 | ответ в разговоре (недруг) | Aoede | thoughtful, agreeing, hostile | Не люблю вас, но тут вы правы |
+| dlg_2_12_v1_g.mp3 | ответ в разговоре (холоден) | Sadachbia | thoughtful, agreeing, cold, curt | Ладно. На этот раз соглашусь |
+| dlg_2_12_v2_g.mp3 | ответ в разговоре (холоден) | Schedar | thoughtful, agreeing, cold, curt | Ладно. На этот раз соглашусь |
+| dlg_2_12_v1_f_g.mp3 | ответ в разговоре (холоден) | Leda | thoughtful, agreeing, cold, curt | Ладно. На этот раз соглашусь |
+| dlg_2_12_v2_f_g.mp3 | ответ в разговоре (холоден) | Aoede | thoughtful, agreeing, cold, curt | Ладно. На этот раз соглашусь |
+| dlg_2_13_v1_g.mp3 | ответ в разговоре (свой) | Sadachbia | thoughtful, agreeing, warm, friendly | С тобой спорить — себе дороже. Прав ты |
+| dlg_2_13_v2_g.mp3 | ответ в разговоре (свой) | Schedar | thoughtful, agreeing, warm, friendly | С тобой спорить — себе дороже. Прав ты |
+| dlg_2_13_v1_f_g.mp3 | ответ в разговоре (свой) | Leda | thoughtful, agreeing, warm, friendly | С тобой спорить — себе дороже. Прав ты |
+| dlg_2_13_v2_f_g.mp3 | ответ в разговоре (свой) | Aoede | thoughtful, agreeing, warm, friendly | С тобой спорить — себе дороже. Прав ты |
+| dlg_2_14_v1_g.mp3 | ответ в разговоре (помнит добро) | Sadachbia | thoughtful, agreeing, grateful, warm | Вам я верю. Будь по-вашему |
+| dlg_2_14_v2_g.mp3 | ответ в разговоре (помнит добро) | Schedar | thoughtful, agreeing, grateful, warm | Вам я верю. Будь по-вашему |
+| dlg_2_14_v1_f_g.mp3 | ответ в разговоре (помнит добро) | Leda | thoughtful, agreeing, grateful, warm | Вам я верю. Будь по-вашему |
+| dlg_2_14_v2_f_g.mp3 | ответ в разговоре (помнит добро) | Aoede | thoughtful, agreeing, grateful, warm | Вам я верю. Будь по-вашему |
+| dlg_2_15_v1_g.mp3 | ответ в разговоре (помнит обиду) | Sadachbia | thoughtful, agreeing, resentful, bitter | Правы. Хоть и не хочется это признавать |
+| dlg_2_15_v2_g.mp3 | ответ в разговоре (помнит обиду) | Schedar | thoughtful, agreeing, resentful, bitter | Правы. Хоть и не хочется это признавать |
+| dlg_2_15_v1_f_g.mp3 | ответ в разговоре (помнит обиду) | Leda | thoughtful, agreeing, resentful, bitter | Правы. Хоть и не хочется это признавать |
+| dlg_2_15_v2_f_g.mp3 | ответ в разговоре (помнит обиду) | Aoede | thoughtful, agreeing, resentful, bitter | Правы. Хоть и не хочется это признавать |
+| dlg_3_0_v1_g.mp3 | ответ в разговоре | Sadachbia | firm refusal | Нет. И не уговаривайте |
+| dlg_3_0_v2_g.mp3 | ответ в разговоре | Schedar | firm refusal | Нет. И не уговаривайте |
+| dlg_3_0_v1_f_g.mp3 | ответ в разговоре | Leda | firm refusal | Нет. И не уговаривайте |
+| dlg_3_0_v2_f_g.mp3 | ответ в разговоре | Aoede | firm refusal | Нет. И не уговаривайте |
+| dlg_3_1_v1_g.mp3 | ответ в разговоре | Sadachbia | firm refusal | Сказал нет — значит нет |
+| dlg_3_1_v2_g.mp3 | ответ в разговоре | Schedar | firm refusal | Сказал нет — значит нет |
+| dlg_3_1_v1_f_g.mp3 | ответ в разговоре | Leda | firm refusal | Сказала нет — значит нет |
+| dlg_3_1_v2_f_g.mp3 | ответ в разговоре | Aoede | firm refusal | Сказала нет — значит нет |
+| dlg_3_2_v1_g.mp3 | ответ в разговоре | Sadachbia | firm refusal | Красиво говорите, но я останусь при своём |
+| dlg_3_2_v2_g.mp3 | ответ в разговоре | Schedar | firm refusal | Красиво говорите, но я останусь при своём |
+| dlg_3_2_v1_f_g.mp3 | ответ в разговоре | Leda | firm refusal | Красиво говорите, но я останусь при своём |
+| dlg_3_2_v2_f_g.mp3 | ответ в разговоре | Aoede | firm refusal | Красиво говорите, но я останусь при своём |
+| dlg_3_3_v1_g.mp3 | ответ в разговоре | Sadachbia | firm refusal | Зря стараетесь. Не сегодня |
+| dlg_3_3_v2_g.mp3 | ответ в разговоре | Schedar | firm refusal | Зря стараетесь. Не сегодня |
+| dlg_3_3_v1_f_g.mp3 | ответ в разговоре | Leda | firm refusal | Зря стараетесь. Не сегодня |
+| dlg_3_3_v2_f_g.mp3 | ответ в разговоре | Aoede | firm refusal | Зря стараетесь. Не сегодня |
+| dlg_3_4_v1_g.mp3 | ответ в разговоре (фанатик) | Sadachbia | firm refusal, zealous, fervent | Моя правда крепче ваших слов |
+| dlg_3_4_v2_g.mp3 | ответ в разговоре (фанатик) | Schedar | firm refusal, zealous, fervent | Моя правда крепче ваших слов |
+| dlg_3_4_v1_f_g.mp3 | ответ в разговоре (фанатик) | Leda | firm refusal, zealous, fervent | Моя правда крепче ваших слов |
+| dlg_3_4_v2_f_g.mp3 | ответ в разговоре (фанатик) | Aoede | firm refusal, zealous, fervent | Моя правда крепче ваших слов |
+| dlg_3_5_v1_g.mp3 | ответ в разговоре (рациональный) | Sadachbia | firm refusal, calm, rational | Доводы слабые. Нет |
+| dlg_3_5_v2_g.mp3 | ответ в разговоре (рациональный) | Schedar | firm refusal, calm, rational | Доводы слабые. Нет |
+| dlg_3_5_v1_f_g.mp3 | ответ в разговоре (рациональный) | Leda | firm refusal, calm, rational | Доводы слабые. Нет |
+| dlg_3_5_v2_f_g.mp3 | ответ в разговоре (рациональный) | Aoede | firm refusal, calm, rational | Доводы слабые. Нет |
+| dlg_3_6_v1_g.mp3 | ответ в разговоре (жестокий) | Sadachbia | firm refusal, harsh, cruel | Ещё раз начнёте — пожалеете |
+| dlg_3_6_v2_g.mp3 | ответ в разговоре (жестокий) | Schedar | firm refusal, harsh, cruel | Ещё раз начнёте — пожалеете |
+| dlg_3_6_v1_f_g.mp3 | ответ в разговоре (жестокий) | Leda | firm refusal, harsh, cruel | Ещё раз начнёте — пожалеете |
+| dlg_3_6_v2_f_g.mp3 | ответ в разговоре (жестокий) | Aoede | firm refusal, harsh, cruel | Ещё раз начнёте — пожалеете |
+| dlg_3_7_v1_g.mp3 | ответ в разговоре (высокомерный) | Sadachbia | firm refusal, haughty | Не вам мне указывать |
+| dlg_3_7_v2_g.mp3 | ответ в разговоре (высокомерный) | Schedar | firm refusal, haughty | Не вам мне указывать |
+| dlg_3_7_v1_f_g.mp3 | ответ в разговоре (высокомерный) | Leda | firm refusal, haughty | Не вам мне указывать |
+| dlg_3_7_v2_f_g.mp3 | ответ в разговоре (высокомерный) | Aoede | firm refusal, haughty | Не вам мне указывать |
+| dlg_3_8_v1_g.mp3 | ответ в разговоре (традиционалист) | Sadachbia | firm refusal, stern, old-fashioned | Так не заведено, и так не будет |
+| dlg_3_8_v2_g.mp3 | ответ в разговоре (традиционалист) | Schedar | firm refusal, stern, old-fashioned | Так не заведено, и так не будет |
+| dlg_3_8_v1_f_g.mp3 | ответ в разговоре (традиционалист) | Leda | firm refusal, stern, old-fashioned | Так не заведено, и так не будет |
+| dlg_3_8_v2_f_g.mp3 | ответ в разговоре (традиционалист) | Aoede | firm refusal, stern, old-fashioned | Так не заведено, и так не будет |
+| dlg_3_9_v1_g.mp3 | ответ в разговоре (добрый) | Sadachbia | firm refusal, kind, warm | Не сердитесь, но нет. Не могу |
+| dlg_3_9_v2_g.mp3 | ответ в разговоре (добрый) | Schedar | firm refusal, kind, warm | Не сердитесь, но нет. Не могу |
+| dlg_3_9_v1_f_g.mp3 | ответ в разговоре (добрый) | Leda | firm refusal, kind, warm | Не сердитесь, но нет. Не могу |
+| dlg_3_9_v2_f_g.mp3 | ответ в разговоре (добрый) | Aoede | firm refusal, kind, warm | Не сердитесь, но нет. Не могу |
+| dlg_3_10_v1_g.mp3 | ответ в разговоре (мятежник) | Sadachbia | firm refusal, rebellious | Меня уже раз уговорили — хватило на всю жизнь |
+| dlg_3_10_v2_g.mp3 | ответ в разговоре (мятежник) | Schedar | firm refusal, rebellious | Меня уже раз уговорили — хватило на всю жизнь |
+| dlg_3_10_v1_f_g.mp3 | ответ в разговоре (мятежник) | Leda | firm refusal, rebellious | Меня уже раз уговорили — хватило на всю жизнь |
+| dlg_3_10_v2_f_g.mp3 | ответ в разговоре (мятежник) | Aoede | firm refusal, rebellious | Меня уже раз уговорили — хватило на всю жизнь |
+| dlg_3_11_v1_g.mp3 | ответ в разговоре (недруг) | Sadachbia | firm refusal, hostile | С вами? Никогда |
+| dlg_3_11_v2_g.mp3 | ответ в разговоре (недруг) | Schedar | firm refusal, hostile | С вами? Никогда |
+| dlg_3_11_v1_f_g.mp3 | ответ в разговоре (недруг) | Leda | firm refusal, hostile | С вами? Никогда |
+| dlg_3_11_v2_f_g.mp3 | ответ в разговоре (недруг) | Aoede | firm refusal, hostile | С вами? Никогда |
+| dlg_3_12_v1_g.mp3 | ответ в разговоре (холоден) | Sadachbia | firm refusal, cold, curt | Нет. Разговор окончен |
+| dlg_3_12_v2_g.mp3 | ответ в разговоре (холоден) | Schedar | firm refusal, cold, curt | Нет. Разговор окончен |
+| dlg_3_12_v1_f_g.mp3 | ответ в разговоре (холоден) | Leda | firm refusal, cold, curt | Нет. Разговор окончен |
+| dlg_3_12_v2_f_g.mp3 | ответ в разговоре (холоден) | Aoede | firm refusal, cold, curt | Нет. Разговор окончен |
+| dlg_3_13_v1_g.mp3 | ответ в разговоре (свой) | Sadachbia | firm refusal, warm, friendly | Прости, друг, но тут не уступлю |
+| dlg_3_13_v2_g.mp3 | ответ в разговоре (свой) | Schedar | firm refusal, warm, friendly | Прости, друг, но тут не уступлю |
+| dlg_3_13_v1_f_g.mp3 | ответ в разговоре (свой) | Leda | firm refusal, warm, friendly | Прости, друг, но тут не уступлю |
+| dlg_3_13_v2_f_g.mp3 | ответ в разговоре (свой) | Aoede | firm refusal, warm, friendly | Прости, друг, но тут не уступлю |
+| dlg_3_14_v1_g.mp3 | ответ в разговоре (помнит обиду) | Sadachbia | firm refusal, resentful, bitter | Вам, после всего? Нет |
+| dlg_3_14_v2_g.mp3 | ответ в разговоре (помнит обиду) | Schedar | firm refusal, resentful, bitter | Вам, после всего? Нет |
+| dlg_3_14_v1_f_g.mp3 | ответ в разговоре (помнит обиду) | Leda | firm refusal, resentful, bitter | Вам, после всего? Нет |
+| dlg_3_14_v2_f_g.mp3 | ответ в разговоре (помнит обиду) | Aoede | firm refusal, resentful, bitter | Вам, после всего? Нет |
+| dlg_3_15_v1_g.mp3 | ответ в разговоре (помнит добро) | Sadachbia | firm refusal, grateful, warm | Уважаю вас, но нет |
+| dlg_3_15_v2_g.mp3 | ответ в разговоре (помнит добро) | Schedar | firm refusal, grateful, warm | Уважаю вас, но нет |
+| dlg_3_15_v1_f_g.mp3 | ответ в разговоре (помнит добро) | Leda | firm refusal, grateful, warm | Уважаю вас, но нет |
+| dlg_3_15_v2_f_g.mp3 | ответ в разговоре (помнит добро) | Aoede | firm refusal, grateful, warm | Уважаю вас, но нет |
+| dlg_4_0_v1_g.mp3 | ответ в разговоре | Sadachbia | reluctant, sighing | Ладно. Но это в последний раз |
+| dlg_4_0_v2_g.mp3 | ответ в разговоре | Schedar | reluctant, sighing | Ладно. Но это в последний раз |
+| dlg_4_0_v1_f_g.mp3 | ответ в разговоре | Leda | reluctant, sighing | Ладно. Но это в последний раз |
+| dlg_4_0_v2_f_g.mp3 | ответ в разговоре | Aoede | reluctant, sighing | Ладно. Но это в последний раз |
+| dlg_4_1_v1_g.mp3 | ответ в разговоре | Sadachbia | reluctant, sighing | Помогу. Но вы теперь мне должны |
+| dlg_4_1_v2_g.mp3 | ответ в разговоре | Schedar | reluctant, sighing | Помогу. Но вы теперь мне должны |
+| dlg_4_1_v1_f_g.mp3 | ответ в разговоре | Leda | reluctant, sighing | Помогу. Но вы теперь мне должны |
+| dlg_4_1_v2_f_g.mp3 | ответ в разговоре | Aoede | reluctant, sighing | Помогу. Но вы теперь мне должны |
+| dlg_4_2_v1_g.mp3 | ответ в разговоре | Sadachbia | reluctant, sighing | Так и быть, только никому ни слова |
+| dlg_4_2_v2_g.mp3 | ответ в разговоре | Schedar | reluctant, sighing | Так и быть, только никому ни слова |
+| dlg_4_2_v1_f_g.mp3 | ответ в разговоре | Leda | reluctant, sighing | Так и быть, только никому ни слова |
+| dlg_4_2_v2_f_g.mp3 | ответ в разговоре | Aoede | reluctant, sighing | Так и быть, только никому ни слова |
+| dlg_4_3_v1_g.mp3 | ответ в разговоре | Sadachbia | reluctant, sighing | Хорошо. Но больше с таким не приходите |
+| dlg_4_3_v2_g.mp3 | ответ в разговоре | Schedar | reluctant, sighing | Хорошо. Но больше с таким не приходите |
+| dlg_4_3_v1_f_g.mp3 | ответ в разговоре | Leda | reluctant, sighing | Хорошо. Но больше с таким не приходите |
+| dlg_4_3_v2_f_g.mp3 | ответ в разговоре | Aoede | reluctant, sighing | Хорошо. Но больше с таким не приходите |
+| dlg_4_4_v1_g.mp3 | ответ в разговоре (сострадательный) | Sadachbia | reluctant, sighing, compassionate, gentle | Конечно помогу. Как не помочь |
+| dlg_4_4_v2_g.mp3 | ответ в разговоре (сострадательный) | Schedar | reluctant, sighing, compassionate, gentle | Конечно помогу. Как не помочь |
+| dlg_4_4_v1_f_g.mp3 | ответ в разговоре (сострадательный) | Leda | reluctant, sighing, compassionate, gentle | Конечно помогу. Как не помочь |
+| dlg_4_4_v2_f_g.mp3 | ответ в разговоре (сострадательный) | Aoede | reluctant, sighing, compassionate, gentle | Конечно помогу. Как не помочь |
+| dlg_4_5_v1_g.mp3 | ответ в разговоре (добрый) | Sadachbia | reluctant, sighing, kind, warm | Для хорошего человека не жалко |
+| dlg_4_5_v2_g.mp3 | ответ в разговоре (добрый) | Schedar | reluctant, sighing, kind, warm | Для хорошего человека не жалко |
+| dlg_4_5_v1_f_g.mp3 | ответ в разговоре (добрый) | Leda | reluctant, sighing, kind, warm | Для хорошего человека не жалко |
+| dlg_4_5_v2_f_g.mp3 | ответ в разговоре (добрый) | Aoede | reluctant, sighing, kind, warm | Для хорошего человека не жалко |
+| dlg_4_6_v2_g.mp3 | ответ в разговоре (жадный) | Schedar | reluctant, sighing, greedy, calculating | Сделаю. Сочтёмся потом — я запомню |
+| dlg_4_6_v1_f_g.mp3 | ответ в разговоре (жадный) | Leda | reluctant, sighing, greedy, calculating | Сделаю. Сочтёмся потом — я запомню |
+| dlg_4_6_v2_f_g.mp3 | ответ в разговоре (жадный) | Aoede | reluctant, sighing, greedy, calculating | Сделаю. Сочтёмся потом — я запомню |
+| dlg_4_7_v1_g.mp3 | ответ в разговоре (прагматик) | Sadachbia | reluctant, sighing, matter-of-fact | Помогу, если и мне с того что-то будет. Будет? |
+| dlg_4_7_v2_g.mp3 | ответ в разговоре (прагматик) | Schedar | reluctant, sighing, matter-of-fact | Помогу, если и мне с того что-то будет. Будет? |
+| dlg_4_7_v1_f_g.mp3 | ответ в разговоре (прагматик) | Leda | reluctant, sighing, matter-of-fact | Помогу, если и мне с того что-то будет. Будет? |
+| dlg_4_7_v2_f_g.mp3 | ответ в разговоре (прагматик) | Aoede | reluctant, sighing, matter-of-fact | Помогу, если и мне с того что-то будет. Будет? |
+| dlg_4_8_v1_g.mp3 | ответ в разговоре (трус) | Sadachbia | reluctant, sighing, timid, nervous | Ох… ладно, только чтобы без неприятностей |
+| dlg_4_8_v2_g.mp3 | ответ в разговоре (трус) | Schedar | reluctant, sighing, timid, nervous | Ох… ладно, только чтобы без неприятностей |
+| dlg_4_8_v1_f_g.mp3 | ответ в разговоре (трус) | Leda | reluctant, sighing, timid, nervous | Ох… ладно, только чтобы без неприятностей |
+| dlg_4_8_v2_f_g.mp3 | ответ в разговоре (трус) | Aoede | reluctant, sighing, timid, nervous | Ох… ладно, только чтобы без неприятностей |
+| dlg_4_9_v2_g.mp3 | ответ в разговоре (свой) | Schedar | reluctant, sighing, warm, friendly | Для тебя — хоть сто раз |
+| dlg_4_9_v2_f_g.mp3 | ответ в разговоре (свой) | Aoede | reluctant, sighing, warm, friendly | Для тебя — хоть сто раз |
+| dlg_4_10_v1_g.mp3 | ответ в разговоре (помнит добро) | Sadachbia | reluctant, sighing, grateful, warm | Вам не откажу: вы меня выручали |
+| dlg_4_10_v2_g.mp3 | ответ в разговоре (помнит добро) | Schedar | reluctant, sighing, grateful, warm | Вам не откажу: вы меня выручали |
+| dlg_4_10_v1_f_g.mp3 | ответ в разговоре (помнит добро) | Leda | reluctant, sighing, grateful, warm | Вам не откажу: вы меня выручали |
+| dlg_4_10_v2_f_g.mp3 | ответ в разговоре (помнит добро) | Aoede | reluctant, sighing, grateful, warm | Вам не откажу: вы меня выручали |
+| dlg_4_11_v1_g.mp3 | ответ в разговоре (холоден) | Sadachbia | reluctant, sighing, cold, curt | Держите. И больше не просите |
+| dlg_4_11_v2_g.mp3 | ответ в разговоре (холоден) | Schedar | reluctant, sighing, cold, curt | Держите. И больше не просите |
+| dlg_4_11_v1_f_g.mp3 | ответ в разговоре (холоден) | Leda | reluctant, sighing, cold, curt | Держите. И больше не просите |
+| dlg_4_11_v2_f_g.mp3 | ответ в разговоре (холоден) | Aoede | reluctant, sighing, cold, curt | Держите. И больше не просите |
+| dlg_4_12_v1_g.mp3 | ответ в разговоре (недруг) | Sadachbia | reluctant, sighing, hostile | Бери и уходи |
+| dlg_4_12_v2_g.mp3 | ответ в разговоре (недруг) | Schedar | reluctant, sighing, hostile | Бери и уходи |
+| dlg_4_13_v1_g.mp3 | ответ в разговоре (помнит обиду) | Sadachbia | reluctant, sighing, resentful, bitter | Помогу. Но помнить буду всё |
+| dlg_4_13_v2_g.mp3 | ответ в разговоре (помнит обиду) | Schedar | reluctant, sighing, resentful, bitter | Помогу. Но помнить буду всё |
+| dlg_4_13_v2_f_g.mp3 | ответ в разговоре (помнит обиду) | Aoede | reluctant, sighing, resentful, bitter | Помогу. Но помнить буду всё |
+| dlg_5_0_v1_g.mp3 | ответ в разговоре | Sadachbia | helpless, sad | Мне бы кто помог |
+| dlg_5_0_v2_g.mp3 | ответ в разговоре | Schedar | helpless, sad | Мне бы кто помог |
+| dlg_5_0_v1_f_g.mp3 | ответ в разговоре | Leda | helpless, sad | Мне бы кто помог |
+| dlg_5_0_v2_f_g.mp3 | ответ в разговоре | Aoede | helpless, sad | Мне бы кто помог |
+| dlg_5_1_v1_g.mp3 | ответ в разговоре | Sadachbia | helpless, sad | Самому бы кто подсобил |
+| dlg_5_1_v2_g.mp3 | ответ в разговоре | Schedar | helpless, sad | Самому бы кто подсобил |
+| dlg_5_1_v2_f_g.mp3 | ответ в разговоре | Aoede | helpless, sad | Самой бы кто подсобил |
+| dlg_5_2_v1_g.mp3 | ответ в разговоре | Sadachbia | helpless, sad | Не могу. Своих забот по горло |
+| dlg_5_2_v2_g.mp3 | ответ в разговоре | Schedar | helpless, sad | Не могу. Своих забот по горло |
+| dlg_5_2_v2_f_g.mp3 | ответ в разговоре | Aoede | helpless, sad | Не могу. Своих забот по горло |
+| dlg_5_3_v1_g.mp3 | ответ в разговоре | Sadachbia | helpless, sad | Не просите, не выйдет |
+| dlg_5_3_v2_g.mp3 | ответ в разговоре | Schedar | helpless, sad | Не просите, не выйдет |
+| dlg_5_3_v1_f_g.mp3 | ответ в разговоре | Leda | helpless, sad | Не просите, не выйдет |
+| dlg_5_3_v2_f_g.mp3 | ответ в разговоре | Aoede | helpless, sad | Не просите, не выйдет |
+| dlg_5_4_v1_g.mp3 | ответ в разговоре (жадный) | Sadachbia | helpless, sad, greedy, calculating | Задаром? Нет уж |
+| dlg_5_4_v2_g.mp3 | ответ в разговоре (жадный) | Schedar | helpless, sad, greedy, calculating | Задаром? Нет уж |
+| dlg_5_4_v1_f_g.mp3 | ответ в разговоре (жадный) | Leda | helpless, sad, greedy, calculating | Задаром? Нет уж |
+| dlg_5_4_v2_f_g.mp3 | ответ в разговоре (жадный) | Aoede | helpless, sad, greedy, calculating | Задаром? Нет уж |
+| dlg_5_5_v1_g.mp3 | ответ в разговоре (подозрительный) | Sadachbia | helpless, sad, suspicious | С чего бы мне вам помогать? |
+| dlg_5_5_v2_g.mp3 | ответ в разговоре (подозрительный) | Schedar | helpless, sad, suspicious | С чего бы мне вам помогать? |
+| dlg_5_5_v1_f_g.mp3 | ответ в разговоре (подозрительный) | Leda | helpless, sad, suspicious | С чего бы мне вам помогать? |
+| dlg_5_5_v2_f_g.mp3 | ответ в разговоре (подозрительный) | Aoede | helpless, sad, suspicious | С чего бы мне вам помогать? |
+| dlg_5_6_v1_g.mp3 | ответ в разговоре (высокомерный) | Sadachbia | helpless, sad, haughty | Я не бегаю по поручениям чужаков |
+| dlg_5_6_v2_g.mp3 | ответ в разговоре (высокомерный) | Schedar | helpless, sad, haughty | Я не бегаю по поручениям чужаков |
+| dlg_5_6_v1_f_g.mp3 | ответ в разговоре (высокомерный) | Leda | helpless, sad, haughty | Я не бегаю по поручениям чужаков |
+| dlg_5_6_v2_f_g.mp3 | ответ в разговоре (высокомерный) | Aoede | helpless, sad, haughty | Я не бегаю по поручениям чужаков |
+| dlg_5_7_v1_g.mp3 | ответ в разговоре (сострадательный) | Sadachbia | helpless, sad, compassionate, gentle | Рад бы, правда, но сейчас никак |
+| dlg_5_7_v2_g.mp3 | ответ в разговоре (сострадательный) | Schedar | helpless, sad, compassionate, gentle | Рад бы, правда, но сейчас никак |
+| dlg_5_7_v1_f_g.mp3 | ответ в разговоре (сострадательный) | Leda | helpless, sad, compassionate, gentle | Рада бы, правда, но сейчас никак |
+| dlg_5_7_v2_f_g.mp3 | ответ в разговоре (сострадательный) | Aoede | helpless, sad, compassionate, gentle | Рада бы, правда, но сейчас никак |
+| dlg_5_8_v1_g.mp3 | ответ в разговоре (трус) | Sadachbia | helpless, sad, timid, nervous | Помог бы, но боюсь ввязаться в беду |
+| dlg_5_8_v2_g.mp3 | ответ в разговоре (трус) | Schedar | helpless, sad, timid, nervous | Помог бы, но боюсь ввязаться в беду |
+| dlg_5_8_v1_f_g.mp3 | ответ в разговоре (трус) | Leda | helpless, sad, timid, nervous | Помог бы, но боюсь ввязаться в беду |
+| dlg_5_8_v2_f_g.mp3 | ответ в разговоре (трус) | Aoede | helpless, sad, timid, nervous | Помог бы, но боюсь ввязаться в беду |
+| dlg_5_9_v1_g.mp3 | ответ в разговоре (свой) | Sadachbia | helpless, sad, warm, friendly | Прости, друг, сейчас нечем помочь |
+| dlg_5_9_v2_g.mp3 | ответ в разговоре (свой) | Schedar | helpless, sad, warm, friendly | Прости, друг, сейчас нечем помочь |
+| dlg_5_9_v1_f_g.mp3 | ответ в разговоре (свой) | Leda | helpless, sad, warm, friendly | Прости, друг, сейчас нечем помочь |
+| dlg_5_9_v2_f_g.mp3 | ответ в разговоре (свой) | Aoede | helpless, sad, warm, friendly | Прости, друг, сейчас нечем помочь |
+| dlg_5_10_v1_g.mp3 | ответ в разговоре (недруг) | Sadachbia | helpless, sad, hostile | Вам? Даже не просите |
+| dlg_5_10_v2_g.mp3 | ответ в разговоре (недруг) | Schedar | helpless, sad, hostile | Вам? Даже не просите |
+| dlg_5_10_v1_f_g.mp3 | ответ в разговоре (недруг) | Leda | helpless, sad, hostile | Вам? Даже не просите |
+| dlg_5_10_v2_f_g.mp3 | ответ в разговоре (недруг) | Aoede | helpless, sad, hostile | Вам? Даже не просите |
+| dlg_5_11_v1_g.mp3 | ответ в разговоре (холоден) | Sadachbia | helpless, sad, cold, curt | Не могу и не хочу |
+| dlg_5_11_v2_g.mp3 | ответ в разговоре (холоден) | Schedar | helpless, sad, cold, curt | Не могу и не хочу |
+| dlg_5_11_v1_f_g.mp3 | ответ в разговоре (холоден) | Leda | helpless, sad, cold, curt | Не могу и не хочу |
+| dlg_5_11_v2_f_g.mp3 | ответ в разговоре (холоден) | Aoede | helpless, sad, cold, curt | Не могу и не хочу |
+| dlg_5_12_v1_g.mp3 | ответ в разговоре (помнит обиду) | Sadachbia | helpless, sad, resentful, bitter | После того, как вы со мной обошлись? Нет |
+| dlg_5_12_v2_g.mp3 | ответ в разговоре (помнит обиду) | Schedar | helpless, sad, resentful, bitter | После того, как вы со мной обошлись? Нет |
+| dlg_5_12_v1_f_g.mp3 | ответ в разговоре (помнит обиду) | Leda | helpless, sad, resentful, bitter | После того, как вы со мной обошлись? Нет |
+| dlg_5_12_v2_f_g.mp3 | ответ в разговоре (помнит обиду) | Aoede | helpless, sad, resentful, bitter | После того, как вы со мной обошлись? Нет |
+| dlg_6_0_v1_g.mp3 | ответ в разговоре | Sadachbia | serious, trusting | Запомню. Слово дороже золота |
+| dlg_6_0_v2_g.mp3 | ответ в разговоре | Schedar | serious, trusting | Запомню. Слово дороже золота |
+| dlg_6_0_v1_f_g.mp3 | ответ в разговоре | Leda | serious, trusting | Запомню. Слово дороже золота |
+| dlg_6_0_v2_f_g.mp3 | ответ в разговоре | Aoede | serious, trusting | Запомню. Слово дороже золота |
+| dlg_6_1_v1_g.mp3 | ответ в разговоре | Sadachbia | serious, trusting | Ловлю на слове. Не подведите |
+| dlg_6_1_v2_g.mp3 | ответ в разговоре | Schedar | serious, trusting | Ловлю на слове. Не подведите |
+| dlg_6_1_v1_f_g.mp3 | ответ в разговоре | Leda | serious, trusting | Ловлю на слове. Не подведите |
+| dlg_6_1_v2_f_g.mp3 | ответ в разговоре | Aoede | serious, trusting | Ловлю на слове. Не подведите |
+| dlg_6_2_v1_g.mp3 | ответ в разговоре | Sadachbia | serious, trusting | Хорошо. Буду ждать, что сдержите |
+| dlg_6_2_v2_g.mp3 | ответ в разговоре | Schedar | serious, trusting | Хорошо. Буду ждать, что сдержите |
+| dlg_6_2_v1_f_g.mp3 | ответ в разговоре | Leda | serious, trusting | Хорошо. Буду ждать, что сдержите |
+| dlg_6_2_v2_f_g.mp3 | ответ в разговоре | Aoede | serious, trusting | Хорошо. Буду ждать, что сдержите |
+| dlg_6_3_v1_g.mp3 | ответ в разговоре | Sadachbia | serious, trusting | Договорились. Время покажет |
+| dlg_6_3_v2_g.mp3 | ответ в разговоре | Schedar | serious, trusting | Договорились. Время покажет |
+| dlg_6_3_v1_f_g.mp3 | ответ в разговоре | Leda | serious, trusting | Договорились. Время покажет |
+| dlg_6_3_v2_f_g.mp3 | ответ в разговоре | Aoede | serious, trusting | Договорились. Время покажет |
+| dlg_6_4_v1_g.mp3 | ответ в разговоре (честный) | Sadachbia | serious, trusting, sincere | Слово — это всё, что у нас есть. Верю |
+| dlg_6_4_v2_g.mp3 | ответ в разговоре (честный) | Schedar | serious, trusting, sincere | Слово — это всё, что у нас есть. Верю |
+| dlg_6_4_v1_f_g.mp3 | ответ в разговоре (честный) | Leda | serious, trusting, sincere | Слово — это всё, что у нас есть. Верю |
+| dlg_6_4_v2_f_g.mp3 | ответ в разговоре (честный) | Aoede | serious, trusting, sincere | Слово — это всё, что у нас есть. Верю |
+| dlg_6_5_v1_g.mp3 | ответ в разговоре (хитрый) | Sadachbia | serious, trusting, sly | Запомню. Я всё запоминаю |
+| dlg_6_5_v2_g.mp3 | ответ в разговоре (хитрый) | Schedar | serious, trusting, sly | Запомню. Я всё запоминаю |
+| dlg_6_5_v1_f_g.mp3 | ответ в разговоре (хитрый) | Leda | serious, trusting, sly | Запомню. Я всё запоминаю |
+| dlg_6_5_v2_f_g.mp3 | ответ в разговоре (хитрый) | Aoede | serious, trusting, sly | Запомню. Я всё запоминаю |
+| dlg_6_6_v1_g.mp3 | ответ в разговоре (рациональный) | Sadachbia | serious, trusting, calm, rational | Принято. Проверю, когда придёт срок |
+| dlg_6_6_v2_g.mp3 | ответ в разговоре (рациональный) | Schedar | serious, trusting, calm, rational | Принято. Проверю, когда придёт срок |
+| dlg_6_6_v1_f_g.mp3 | ответ в разговоре (рациональный) | Leda | serious, trusting, calm, rational | Принято. Проверю, когда придёт срок |
+| dlg_6_6_v2_f_g.mp3 | ответ в разговоре (рациональный) | Aoede | serious, trusting, calm, rational | Принято. Проверю, когда придёт срок |
+| dlg_6_7_v1_g.mp3 | ответ в разговоре (добрый) | Sadachbia | serious, trusting, kind, warm | Верю вам. Не знаю почему, но верю |
+| dlg_6_7_v2_g.mp3 | ответ в разговоре (добрый) | Schedar | serious, trusting, kind, warm | Верю вам. Не знаю почему, но верю |
+| dlg_6_7_v1_f_g.mp3 | ответ в разговоре (добрый) | Leda | serious, trusting, kind, warm | Верю вам. Не знаю почему, но верю |
+| dlg_6_7_v2_f_g.mp3 | ответ в разговоре (добрый) | Aoede | serious, trusting, kind, warm | Верю вам. Не знаю почему, но верю |
+| dlg_6_8_v1_g.mp3 | ответ в разговоре (свой) | Sadachbia | serious, trusting, warm, friendly | Верю тебе, как себе |
+| dlg_6_8_v2_g.mp3 | ответ в разговоре (свой) | Schedar | serious, trusting, warm, friendly | Верю тебе, как себе |
+| dlg_6_8_v1_f_g.mp3 | ответ в разговоре (свой) | Leda | serious, trusting, warm, friendly | Верю тебе, как себе |
+| dlg_6_8_v2_f_g.mp3 | ответ в разговоре (свой) | Aoede | serious, trusting, warm, friendly | Верю тебе, как себе |
+| dlg_6_9_v1_g.mp3 | ответ в разговоре (помнит добро) | Sadachbia | serious, trusting, grateful, warm | Вы уже держали слово. Верю |
+| dlg_6_9_v2_g.mp3 | ответ в разговоре (помнит добро) | Schedar | serious, trusting, grateful, warm | Вы уже держали слово. Верю |
+| dlg_6_9_v1_f_g.mp3 | ответ в разговоре (помнит добро) | Leda | serious, trusting, grateful, warm | Вы уже держали слово. Верю |
+| dlg_6_9_v2_f_g.mp3 | ответ в разговоре (помнит добро) | Aoede | serious, trusting, grateful, warm | Вы уже держали слово. Верю |
+| dlg_6_10_v1_g.mp3 | ответ в разговоре (холоден) | Sadachbia | serious, trusting, cold, curt | Посмотрим, чего оно стоит |
+| dlg_6_10_v2_g.mp3 | ответ в разговоре (холоден) | Schedar | serious, trusting, cold, curt | Посмотрим, чего оно стоит |
+| dlg_6_10_v1_f_g.mp3 | ответ в разговоре (холоден) | Leda | serious, trusting, cold, curt | Посмотрим, чего оно стоит |
+| dlg_6_10_v2_f_g.mp3 | ответ в разговоре (холоден) | Aoede | serious, trusting, cold, curt | Посмотрим, чего оно стоит |
+| dlg_6_11_v1_g.mp3 | ответ в разговоре (недруг) | Sadachbia | serious, trusting, hostile | Сдержите — может, и помиримся |
+| dlg_6_11_v2_g.mp3 | ответ в разговоре (недруг) | Schedar | serious, trusting, hostile | Сдержите — может, и помиримся |
+| dlg_6_11_v1_f_g.mp3 | ответ в разговоре (недруг) | Leda | serious, trusting, hostile | Сдержите — может, и помиримся |
+| dlg_6_11_v2_f_g.mp3 | ответ в разговоре (недруг) | Aoede | serious, trusting, hostile | Сдержите — может, и помиримся |
+| dlg_7_0_v1_g.mp3 | ответ в разговоре | Sadachbia | skeptical, wry | Обещать вы горазды. Посмотрим |
+| dlg_7_0_v2_g.mp3 | ответ в разговоре | Schedar | skeptical, wry | Обещать вы горазды. Посмотрим |
+| dlg_7_0_v1_f_g.mp3 | ответ в разговоре | Leda | skeptical, wry | Обещать вы горазды. Посмотрим |
+| dlg_7_0_v2_f_g.mp3 | ответ в разговоре | Aoede | skeptical, wry | Обещать вы горазды. Посмотрим |
+| dlg_7_1_v1_g.mp3 | ответ в разговоре | Sadachbia | skeptical, wry | Слова ничего не стоят |
+| dlg_7_1_v2_g.mp3 | ответ в разговоре | Schedar | skeptical, wry | Слова ничего не стоят |
+| dlg_7_1_v1_f_g.mp3 | ответ в разговоре | Leda | skeptical, wry | Слова ничего не стоят |
+| dlg_7_1_v2_f_g.mp3 | ответ в разговоре | Aoede | skeptical, wry | Слова ничего не стоят |
+| dlg_7_2_v1_g.mp3 | ответ в разговоре | Sadachbia | skeptical, wry | Много вас тут обещало |
+| dlg_7_2_v2_g.mp3 | ответ в разговоре | Schedar | skeptical, wry | Много вас тут обещало |
+| dlg_7_2_v1_f_g.mp3 | ответ в разговоре | Leda | skeptical, wry | Много вас тут обещало |
+| dlg_7_2_v2_f_g.mp3 | ответ в разговоре | Aoede | skeptical, wry | Много вас тут обещало |
+| dlg_7_3_v1_g.mp3 | ответ в разговоре | Sadachbia | skeptical, wry | Посмотрим, что от этого останется завтра |
+| dlg_7_3_v2_g.mp3 | ответ в разговоре | Schedar | skeptical, wry | Посмотрим, что от этого останется завтра |
+| dlg_7_3_v1_f_g.mp3 | ответ в разговоре | Leda | skeptical, wry | Посмотрим, что от этого останется завтра |
+| dlg_7_3_v2_f_g.mp3 | ответ в разговоре | Aoede | skeptical, wry | Посмотрим, что от этого останется завтра |
+| dlg_7_4_v1_g.mp3 | ответ в разговоре (подозрительный) | Sadachbia | skeptical, wry, suspicious | Кто обещает легко, тот легко и забывает |
+| dlg_7_4_v2_g.mp3 | ответ в разговоре (подозрительный) | Schedar | skeptical, wry, suspicious | Кто обещает легко, тот легко и забывает |
+| dlg_7_4_v1_f_g.mp3 | ответ в разговоре (подозрительный) | Leda | skeptical, wry, suspicious | Кто обещает легко, тот легко и забывает |
+| dlg_7_4_v2_f_g.mp3 | ответ в разговоре (подозрительный) | Aoede | skeptical, wry, suspicious | Кто обещает легко, тот легко и забывает |
+| dlg_7_5_v1_g.mp3 | ответ в разговоре (жадный) | Sadachbia | skeptical, wry, greedy, calculating | Обещаниями сыт не будешь |
+| dlg_7_5_v2_g.mp3 | ответ в разговоре (жадный) | Schedar | skeptical, wry, greedy, calculating | Обещаниями сыт не будешь |
+| dlg_7_5_v1_f_g.mp3 | ответ в разговоре (жадный) | Leda | skeptical, wry, greedy, calculating | Обещаниями сыт не будешь |
+| dlg_7_5_v2_f_g.mp3 | ответ в разговоре (жадный) | Aoede | skeptical, wry, greedy, calculating | Обещаниями сыт не будешь |
+| dlg_7_6_v1_g.mp3 | ответ в разговоре (высокомерный) | Sadachbia | skeptical, wry, haughty | Ваши обещания мне ни к чему |
+| dlg_7_6_v2_g.mp3 | ответ в разговоре (высокомерный) | Schedar | skeptical, wry, haughty | Ваши обещания мне ни к чему |
+| dlg_7_6_v1_f_g.mp3 | ответ в разговоре (высокомерный) | Leda | skeptical, wry, haughty | Ваши обещания мне ни к чему |
+| dlg_7_6_v2_f_g.mp3 | ответ в разговоре (высокомерный) | Aoede | skeptical, wry, haughty | Ваши обещания мне ни к чему |
+| dlg_7_7_v1_g.mp3 | ответ в разговоре (помнит обиду) | Sadachbia | skeptical, wry, resentful, bitter | Прошлое слово вы уже нарушили |
+| dlg_7_7_v2_g.mp3 | ответ в разговоре (помнит обиду) | Schedar | skeptical, wry, resentful, bitter | Прошлое слово вы уже нарушили |
+| dlg_7_7_v1_f_g.mp3 | ответ в разговоре (помнит обиду) | Leda | skeptical, wry, resentful, bitter | Прошлое слово вы уже нарушили |
+| dlg_7_7_v2_f_g.mp3 | ответ в разговоре (помнит обиду) | Aoede | skeptical, wry, resentful, bitter | Прошлое слово вы уже нарушили |
+| dlg_7_8_v1_g.mp3 | ответ в разговоре (недруг) | Sadachbia | skeptical, wry, hostile | Ваши обещания — ветер |
+| dlg_7_8_v2_g.mp3 | ответ в разговоре (недруг) | Schedar | skeptical, wry, hostile | Ваши обещания — ветер |
+| dlg_7_8_v1_f_g.mp3 | ответ в разговоре (недруг) | Leda | skeptical, wry, hostile | Ваши обещания — ветер |
+| dlg_7_8_v2_f_g.mp3 | ответ в разговоре (недруг) | Aoede | skeptical, wry, hostile | Ваши обещания — ветер |
+| dlg_7_9_v1_g.mp3 | ответ в разговоре (свой) | Sadachbia | skeptical, wry, warm, friendly | Ты уж не подведи |
+| dlg_7_9_v2_g.mp3 | ответ в разговоре (свой) | Schedar | skeptical, wry, warm, friendly | Ты уж не подведи |
+| dlg_7_9_v1_f_g.mp3 | ответ в разговоре (свой) | Leda | skeptical, wry, warm, friendly | Ты уж не подведи |
+| dlg_7_9_v2_f_g.mp3 | ответ в разговоре (свой) | Aoede | skeptical, wry, warm, friendly | Ты уж не подведи |
+| dlg_8_0_v1_g.mp3 | ответ в разговоре | Sadachbia | surprised, conceding | Не думал об этом так |
+| dlg_8_0_v2_g.mp3 | ответ в разговоре | Schedar | surprised, conceding | Не думал об этом так |
+| dlg_8_0_v1_f_g.mp3 | ответ в разговоре | Leda | surprised, conceding | Не думала об этом так |
+| dlg_8_0_v2_f_g.mp3 | ответ в разговоре | Aoede | surprised, conceding | Не думала об этом так |
+| dlg_8_1_v1_g.mp3 | ответ в разговоре | Sadachbia | surprised, conceding | А ведь вы правы |
+| dlg_8_1_v2_g.mp3 | ответ в разговоре | Schedar | surprised, conceding | А ведь вы правы |
+| dlg_8_1_v1_f_g.mp3 | ответ в разговоре | Leda | surprised, conceding | А ведь вы правы |
+| dlg_8_1_v2_f_g.mp3 | ответ в разговоре | Aoede | surprised, conceding | А ведь вы правы |
+| dlg_8_2_v1_g.mp3 | ответ в разговоре | Sadachbia | surprised, conceding | Сдаюсь — тут вы меня переспорили |
+| dlg_8_2_v2_g.mp3 | ответ в разговоре | Schedar | surprised, conceding | Сдаюсь — тут вы меня переспорили |
+| dlg_8_2_v1_f_g.mp3 | ответ в разговоре | Leda | surprised, conceding | Сдаюсь — тут вы меня переспорили |
+| dlg_8_2_v2_f_g.mp3 | ответ в разговоре | Aoede | surprised, conceding | Сдаюсь — тут вы меня переспорили |
+| dlg_8_3_v1_g.mp3 | ответ в разговоре | Sadachbia | surprised, conceding | Что ж, умеете вы спорить |
+| dlg_8_3_v2_g.mp3 | ответ в разговоре | Schedar | surprised, conceding | Что ж, умеете вы спорить |
+| dlg_8_3_v1_f_g.mp3 | ответ в разговоре | Leda | surprised, conceding | Что ж, умеете вы спорить |
+| dlg_8_3_v2_f_g.mp3 | ответ в разговоре | Aoede | surprised, conceding | Что ж, умеете вы спорить |
+| dlg_8_4_v1_g.mp3 | ответ в разговоре (фанатик) | Sadachbia | surprised, conceding, zealous, fervent | …Мне надо это обдумать. Одному |
+| dlg_8_4_v2_g.mp3 | ответ в разговоре (фанатик) | Schedar | surprised, conceding, zealous, fervent | …Мне надо это обдумать. Одному |
+| dlg_8_4_v1_f_g.mp3 | ответ в разговоре (фанатик) | Leda | surprised, conceding, zealous, fervent | …Мне надо это обдумать. Одному |
+| dlg_8_4_v2_f_g.mp3 | ответ в разговоре (фанатик) | Aoede | surprised, conceding, zealous, fervent | …Мне надо это обдумать. Одному |
+| dlg_8_5_v1_g.mp3 | ответ в разговоре (высокомерный) | Sadachbia | surprised, conceding, haughty | Неприятно признавать, но вы правы |
+| dlg_8_5_v2_g.mp3 | ответ в разговоре (высокомерный) | Schedar | surprised, conceding, haughty | Неприятно признавать, но вы правы |
+| dlg_8_5_v1_f_g.mp3 | ответ в разговоре (высокомерный) | Leda | surprised, conceding, haughty | Неприятно признавать, но вы правы |
+| dlg_8_5_v2_f_g.mp3 | ответ в разговоре (высокомерный) | Aoede | surprised, conceding, haughty | Неприятно признавать, но вы правы |
+| dlg_8_6_v1_g.mp3 | ответ в разговоре (рациональный) | Sadachbia | surprised, conceding, calm, rational | Логика на вашей стороне. Признаю |
+| dlg_8_6_v2_g.mp3 | ответ в разговоре (рациональный) | Schedar | surprised, conceding, calm, rational | Логика на вашей стороне. Признаю |
+| dlg_8_6_v1_f_g.mp3 | ответ в разговоре (рациональный) | Leda | surprised, conceding, calm, rational | Логика на вашей стороне. Признаю |
+| dlg_8_6_v2_f_g.mp3 | ответ в разговоре (рациональный) | Aoede | surprised, conceding, calm, rational | Логика на вашей стороне. Признаю |
+| dlg_8_7_v1_g.mp3 | ответ в разговоре (мятежник) | Sadachbia | surprised, conceding, rebellious | Вот! Я всегда чувствовал, что всё не так, как нам говорят |
+| dlg_8_7_v2_g.mp3 | ответ в разговоре (мятежник) | Schedar | surprised, conceding, rebellious | Вот! Я всегда чувствовал, что всё не так, как нам говорят |
+| dlg_8_7_v1_f_g.mp3 | ответ в разговоре (мятежник) | Leda | surprised, conceding, rebellious | Вот! Я всегда чувствовала, что всё не так, как нам говорят |
+| dlg_8_7_v2_f_g.mp3 | ответ в разговоре (мятежник) | Aoede | surprised, conceding, rebellious | Вот! Я всегда чувствовала, что всё не так, как нам говорят |
+| dlg_8_8_v1_g.mp3 | ответ в разговоре (недруг) | Sadachbia | surprised, conceding, hostile | Правы. Но это ничего не меняет |
+| dlg_8_8_v2_g.mp3 | ответ в разговоре (недруг) | Schedar | surprised, conceding, hostile | Правы. Но это ничего не меняет |
+| dlg_8_8_v1_f_g.mp3 | ответ в разговоре (недруг) | Leda | surprised, conceding, hostile | Правы. Но это ничего не меняет |
+| dlg_8_8_v2_f_g.mp3 | ответ в разговоре (недруг) | Aoede | surprised, conceding, hostile | Правы. Но это ничего не меняет |
+| dlg_8_9_v1_g.mp3 | ответ в разговоре (свой) | Sadachbia | surprised, conceding, warm, friendly | Вот за что тебя ценю: голова у тебя светлая |
+| dlg_8_9_v2_g.mp3 | ответ в разговоре (свой) | Schedar | surprised, conceding, warm, friendly | Вот за что тебя ценю: голова у тебя светлая |
+| dlg_8_9_v1_f_g.mp3 | ответ в разговоре (свой) | Leda | surprised, conceding, warm, friendly | Вот за что тебя ценю: голова у тебя светлая |
+| dlg_8_9_v2_f_g.mp3 | ответ в разговоре (свой) | Aoede | surprised, conceding, warm, friendly | Вот за что тебя ценю: голова у тебя светлая |
+| dlg_8_10_v1_g.mp3 | ответ в разговоре (холоден) | Sadachbia | surprised, conceding, cold, curt | Допустим. Убедили |
+| dlg_8_10_v1_f_g.mp3 | ответ в разговоре (холоден) | Leda | surprised, conceding, cold, curt | Допустим. Убедили |
+| dlg_8_10_v2_f_g.mp3 | ответ в разговоре (холоден) | Aoede | surprised, conceding, cold, curt | Допустим. Убедили |
+| dlg_9_0_v1_g.mp3 | ответ в разговоре | Sadachbia | grudging, conceding | Ваша взяла. Уступлю |
+| dlg_9_0_v2_g.mp3 | ответ в разговоре | Schedar | grudging, conceding | Ваша взяла. Уступлю |
+| dlg_9_0_v1_f_g.mp3 | ответ в разговоре | Leda | grudging, conceding | Ваша взяла. Уступлю |
+| dlg_9_0_v2_f_g.mp3 | ответ в разговоре | Aoede | grudging, conceding | Ваша взяла. Уступлю |
+| dlg_9_1_v1_g.mp3 | ответ в разговоре | Sadachbia | grudging, conceding | Ладно, по рукам, — но себе в убыток |
+| dlg_9_1_v2_g.mp3 | ответ в разговоре | Schedar | grudging, conceding | Ладно, по рукам, — но себе в убыток |
+| dlg_9_1_v1_f_g.mp3 | ответ в разговоре | Leda | grudging, conceding | Ладно, по рукам, — но себе в убыток |
+| dlg_9_1_v2_f_g.mp3 | ответ в разговоре | Aoede | grudging, conceding | Ладно, по рукам, — но себе в убыток |
+| dlg_9_2_v1_g.mp3 | ответ в разговоре | Sadachbia | grudging, conceding | Грабёж, но пусть будет так |
+| dlg_9_2_v2_g.mp3 | ответ в разговоре | Schedar | grudging, conceding | Грабёж, но пусть будет так |
+| dlg_9_2_v1_f_g.mp3 | ответ в разговоре | Leda | grudging, conceding | Грабёж, но пусть будет так |
+| dlg_9_2_v2_f_g.mp3 | ответ в разговоре | Aoede | grudging, conceding | Грабёж, но пусть будет так |
+| dlg_9_3_v1_g.mp3 | ответ в разговоре | Sadachbia | grudging, conceding | Уговорили. Только другим не рассказывайте |
+| dlg_9_3_v2_g.mp3 | ответ в разговоре | Schedar | grudging, conceding | Уговорили. Только другим не рассказывайте |
+| dlg_9_3_v1_f_g.mp3 | ответ в разговоре | Leda | grudging, conceding | Уговорили. Только другим не рассказывайте |
+| dlg_9_3_v2_f_g.mp3 | ответ в разговоре | Aoede | grudging, conceding | Уговорили. Только другим не рассказывайте |
+| dlg_9_4_v1_g.mp3 | ответ в разговоре (жадный) | Sadachbia | grudging, conceding, greedy, calculating | Режете меня без ножа… ладно, берите |
+| dlg_9_4_v2_g.mp3 | ответ в разговоре (жадный) | Schedar | grudging, conceding, greedy, calculating | Режете меня без ножа… ладно, берите |
+| dlg_9_4_v1_f_g.mp3 | ответ в разговоре (жадный) | Leda | grudging, conceding, greedy, calculating | Режете меня без ножа… ладно, берите |
+| dlg_9_4_v2_f_g.mp3 | ответ в разговоре (жадный) | Aoede | grudging, conceding, greedy, calculating | Режете меня без ножа… ладно, берите |
+| dlg_9_5_v1_g.mp3 | ответ в разговоре (хитрый) | Sadachbia | grudging, conceding, sly | Хорошо торгуетесь. Уступлю — на этот раз |
+| dlg_9_5_v2_g.mp3 | ответ в разговоре (хитрый) | Schedar | grudging, conceding, sly | Хорошо торгуетесь. Уступлю — на этот раз |
+| dlg_9_5_v1_f_g.mp3 | ответ в разговоре (хитрый) | Leda | grudging, conceding, sly | Хорошо торгуетесь. Уступлю — на этот раз |
+| dlg_9_6_v1_g.mp3 | ответ в разговоре (добрый) | Sadachbia | grudging, conceding, kind, warm | Для вас — скину. Носите на здоровье |
+| dlg_9_6_v2_g.mp3 | ответ в разговоре (добрый) | Schedar | grudging, conceding, kind, warm | Для вас — скину. Носите на здоровье |
+| dlg_9_6_v1_f_g.mp3 | ответ в разговоре (добрый) | Leda | grudging, conceding, kind, warm | Для вас — скину. Носите на здоровье |
+| dlg_9_6_v2_f_g.mp3 | ответ в разговоре (добрый) | Aoede | grudging, conceding, kind, warm | Для вас — скину. Носите на здоровье |
+| dlg_9_7_v1_g.mp3 | ответ в разговоре (рациональный) | Sadachbia | grudging, conceding, calm, rational | По такой цене я ещё в прибытке. Согласен |
+| dlg_9_7_v2_g.mp3 | ответ в разговоре (рациональный) | Schedar | grudging, conceding, calm, rational | По такой цене я ещё в прибытке. Согласен |
+| dlg_9_7_v1_f_g.mp3 | ответ в разговоре (рациональный) | Leda | grudging, conceding, calm, rational | По такой цене я ещё в прибытке. Согласна |
+| dlg_9_7_v2_f_g.mp3 | ответ в разговоре (рациональный) | Aoede | grudging, conceding, calm, rational | По такой цене я ещё в прибытке. Согласна |
+| dlg_9_8_v1_g.mp3 | ответ в разговоре (свой) | Sadachbia | grudging, conceding, warm, friendly | Своему — со скидкой |
+| dlg_9_8_v2_g.mp3 | ответ в разговоре (свой) | Schedar | grudging, conceding, warm, friendly | Своему — со скидкой |
+| dlg_9_8_v1_f_g.mp3 | ответ в разговоре (свой) | Leda | grudging, conceding, warm, friendly | Своему — со скидкой |
+| dlg_9_8_v2_f_g.mp3 | ответ в разговоре (свой) | Aoede | grudging, conceding, warm, friendly | Своему — со скидкой |
+| dlg_9_9_v1_g.mp3 | ответ в разговоре (помнит добро) | Sadachbia | grudging, conceding, grateful, warm | За прошлое — уступлю |
+| dlg_9_9_v2_g.mp3 | ответ в разговоре (помнит добро) | Schedar | grudging, conceding, grateful, warm | За прошлое — уступлю |
+| dlg_9_9_v1_f_g.mp3 | ответ в разговоре (помнит добро) | Leda | grudging, conceding, grateful, warm | За прошлое — уступлю |
+| dlg_9_9_v2_f_g.mp3 | ответ в разговоре (помнит добро) | Aoede | grudging, conceding, grateful, warm | За прошлое — уступлю |
+| dlg_9_10_v1_g.mp3 | ответ в разговоре (холоден) | Sadachbia | grudging, conceding, cold, curt | Уступлю, но только сейчас |
+| dlg_9_10_v2_g.mp3 | ответ в разговоре (холоден) | Schedar | grudging, conceding, cold, curt | Уступлю, но только сейчас |
+| dlg_9_10_v1_f_g.mp3 | ответ в разговоре (холоден) | Leda | grudging, conceding, cold, curt | Уступлю, но только сейчас |
+| dlg_9_10_v2_f_g.mp3 | ответ в разговоре (холоден) | Aoede | grudging, conceding, cold, curt | Уступлю, но только сейчас |
+| dlg_9_11_v1_g.mp3 | ответ в разговоре (недруг) | Sadachbia | grudging, conceding, hostile | Забирайте и не возвращайтесь |
+| dlg_9_11_v2_g.mp3 | ответ в разговоре (недруг) | Schedar | grudging, conceding, hostile | Забирайте и не возвращайтесь |
+| dlg_9_11_v1_f_g.mp3 | ответ в разговоре (недруг) | Leda | grudging, conceding, hostile | Забирайте и не возвращайтесь |
+| dlg_9_11_v2_f_g.mp3 | ответ в разговоре (недруг) | Aoede | grudging, conceding, hostile | Забирайте и не возвращайтесь |
+| dlg_10_0_v1_g.mp3 | ответ в разговоре | Sadachbia | firm, businesslike | Цена одна для всех. Берёте или нет? |
+| dlg_10_0_v2_g.mp3 | ответ в разговоре | Schedar | firm, businesslike | Цена одна для всех. Берёте или нет? |
+| dlg_10_0_v1_f_g.mp3 | ответ в разговоре | Leda | firm, businesslike | Цена одна для всех. Берёте или нет? |
+| dlg_10_0_v2_f_g.mp3 | ответ в разговоре | Aoede | firm, businesslike | Цена одна для всех. Берёте или нет? |
+| dlg_10_1_v1_g.mp3 | ответ в разговоре | Sadachbia | firm, businesslike | Ниже не опущу |
+| dlg_10_1_v2_g.mp3 | ответ в разговоре | Schedar | firm, businesslike | Ниже не опущу |
+| dlg_10_1_v1_f_g.mp3 | ответ в разговоре | Leda | firm, businesslike | Ниже не опущу |
+| dlg_10_1_v2_f_g.mp3 | ответ в разговоре | Aoede | firm, businesslike | Ниже не опущу |
+| dlg_10_2_v1_g.mp3 | ответ в разговоре | Sadachbia | firm, businesslike | Не нравится — идите к соседу |
+| dlg_10_2_v2_g.mp3 | ответ в разговоре | Schedar | firm, businesslike | Не нравится — идите к соседу |
+| dlg_10_2_v1_f_g.mp3 | ответ в разговоре | Leda | firm, businesslike | Не нравится — идите к соседу |
+| dlg_10_2_v2_f_g.mp3 | ответ в разговоре | Aoede | firm, businesslike | Не нравится — идите к соседу |
+| dlg_10_3_v1_g.mp3 | ответ в разговоре | Sadachbia | firm, businesslike | Товар хороший, и цена у него своя |
+| dlg_10_3_v2_g.mp3 | ответ в разговоре | Schedar | firm, businesslike | Товар хороший, и цена у него своя |
+| dlg_10_3_v1_f_g.mp3 | ответ в разговоре | Leda | firm, businesslike | Товар хороший, и цена у него своя |
+| dlg_10_3_v2_f_g.mp3 | ответ в разговоре | Aoede | firm, businesslike | Товар хороший, и цена у него своя |
+| dlg_10_4_v1_g.mp3 | ответ в разговоре (жадный) | Sadachbia | firm, businesslike, greedy, calculating | Скорее удавлюсь, чем уступлю |
+| dlg_10_4_v2_g.mp3 | ответ в разговоре (жадный) | Schedar | firm, businesslike, greedy, calculating | Скорее удавлюсь, чем уступлю |
+| dlg_10_4_v1_f_g.mp3 | ответ в разговоре (жадный) | Leda | firm, businesslike, greedy, calculating | Скорее удавлюсь, чем уступлю |
+| dlg_10_4_v2_f_g.mp3 | ответ в разговоре (жадный) | Aoede | firm, businesslike, greedy, calculating | Скорее удавлюсь, чем уступлю |
+| dlg_10_5_v1_g.mp3 | ответ в разговоре (высокомерный) | Sadachbia | firm, businesslike, haughty | Я не торгуюсь, как на базаре |
+| dlg_10_5_v2_g.mp3 | ответ в разговоре (высокомерный) | Schedar | firm, businesslike, haughty | Я не торгуюсь, как на базаре |
+| dlg_10_5_v1_f_g.mp3 | ответ в разговоре (высокомерный) | Leda | firm, businesslike, haughty | Я не торгуюсь, как на базаре |
+| dlg_10_5_v2_f_g.mp3 | ответ в разговоре (высокомерный) | Aoede | firm, businesslike, haughty | Я не торгуюсь, как на базаре |
+| dlg_10_6_v1_g.mp3 | ответ в разговоре (честный) | Sadachbia | firm, businesslike, sincere | Цена честная, клянусь. Меньше — себе в убыток |
+| dlg_10_6_v2_g.mp3 | ответ в разговоре (честный) | Schedar | firm, businesslike, sincere | Цена честная, клянусь. Меньше — себе в убыток |
+| dlg_10_6_v1_f_g.mp3 | ответ в разговоре (честный) | Leda | firm, businesslike, sincere | Цена честная, клянусь. Меньше — себе в убыток |
+| dlg_10_6_v2_f_g.mp3 | ответ в разговоре (честный) | Aoede | firm, businesslike, sincere | Цена честная, клянусь. Меньше — себе в убыток |
+| dlg_10_7_v1_g.mp3 | ответ в разговоре (рациональный) | Sadachbia | firm, businesslike, calm, rational | Посчитайте сами: дешевле не выходит |
+| dlg_10_7_v2_g.mp3 | ответ в разговоре (рациональный) | Schedar | firm, businesslike, calm, rational | Посчитайте сами: дешевле не выходит |
+| dlg_10_7_v1_f_g.mp3 | ответ в разговоре (рациональный) | Leda | firm, businesslike, calm, rational | Посчитайте сами: дешевле не выходит |
+| dlg_10_7_v2_f_g.mp3 | ответ в разговоре (рациональный) | Aoede | firm, businesslike, calm, rational | Посчитайте сами: дешевле не выходит |
+| dlg_10_8_v1_g.mp3 | ответ в разговоре (недруг) | Sadachbia | firm, businesslike, hostile | Вам — вдвое. Не нравится — дверь там |
+| dlg_10_8_v2_g.mp3 | ответ в разговоре (недруг) | Schedar | firm, businesslike, hostile | Вам — вдвое. Не нравится — дверь там |
+| dlg_10_8_v1_f_g.mp3 | ответ в разговоре (недруг) | Leda | firm, businesslike, hostile | Вам — вдвое. Не нравится — дверь там |
+| dlg_10_8_v2_f_g.mp3 | ответ в разговоре (недруг) | Aoede | firm, businesslike, hostile | Вам — вдвое. Не нравится — дверь там |
+| dlg_10_9_v1_g.mp3 | ответ в разговоре (свой) | Sadachbia | firm, businesslike, warm, friendly | Уступить бы тебе, да и так в убыток торгую |
+| dlg_10_9_v2_g.mp3 | ответ в разговоре (свой) | Schedar | firm, businesslike, warm, friendly | Уступить бы тебе, да и так в убыток торгую |
+| dlg_10_9_v1_f_g.mp3 | ответ в разговоре (свой) | Leda | firm, businesslike, warm, friendly | Уступить бы тебе, да и так в убыток торгую |
+| dlg_10_9_v2_f_g.mp3 | ответ в разговоре (свой) | Aoede | firm, businesslike, warm, friendly | Уступить бы тебе, да и так в убыток торгую |
+| dlg_10_10_v1_g.mp3 | ответ в разговоре (помнит обиду) | Sadachbia | firm, businesslike, resentful, bitter | С вами торговаться не буду |
+| dlg_10_10_v2_g.mp3 | ответ в разговоре (помнит обиду) | Schedar | firm, businesslike, resentful, bitter | С вами торговаться не буду |
+| dlg_10_10_v1_f_g.mp3 | ответ в разговоре (помнит обиду) | Leda | firm, businesslike, resentful, bitter | С вами торговаться не буду |
+| dlg_10_10_v2_f_g.mp3 | ответ в разговоре (помнит обиду) | Aoede | firm, businesslike, resentful, bitter | С вами торговаться не буду |
+| dlg_10_11_v1_g.mp3 | ответ в разговоре (холоден) | Sadachbia | firm, businesslike, cold, curt | Цена сказана |
+| dlg_10_11_v2_g.mp3 | ответ в разговоре (холоден) | Schedar | firm, businesslike, cold, curt | Цена сказана |
+| dlg_10_11_v1_f_g.mp3 | ответ в разговоре (холоден) | Leda | firm, businesslike, cold, curt | Цена сказана |
+| dlg_10_11_v2_f_g.mp3 | ответ в разговоре (холоден) | Aoede | firm, businesslike, cold, curt | Цена сказана |
+| dlg_11_0_v1_g.mp3 | ответ в разговоре | Sadachbia | conspiratorial, low voice | Я вас не видел |
+| dlg_11_0_v2_g.mp3 | ответ в разговоре | Schedar | conspiratorial, low voice | Я вас не видел |
+| dlg_11_0_v1_f_g.mp3 | ответ в разговоре | Leda | conspiratorial, low voice | Я вас не видела |
+| dlg_11_0_v2_f_g.mp3 | ответ в разговоре | Aoede | conspiratorial, low voice | Я вас не видела |
+| dlg_11_1_v1_g.mp3 | ответ в разговоре | Sadachbia | conspiratorial, low voice | Какие деньги? Ничего не было |
+| dlg_11_1_v2_g.mp3 | ответ в разговоре | Schedar | conspiratorial, low voice | Какие деньги? Ничего не было |
+| dlg_11_1_v1_f_g.mp3 | ответ в разговоре | Leda | conspiratorial, low voice | Какие деньги? Ничего не было |
+| dlg_11_1_v2_f_g.mp3 | ответ в разговоре | Aoede | conspiratorial, low voice | Какие деньги? Ничего не было |
+| dlg_11_2_v1_g.mp3 | ответ в разговоре | Sadachbia | conspiratorial, low voice | Считайте, мы не встречались |
+| dlg_11_2_v2_g.mp3 | ответ в разговоре | Schedar | conspiratorial, low voice | Считайте, мы не встречались |
+| dlg_11_2_v1_f_g.mp3 | ответ в разговоре | Leda | conspiratorial, low voice | Считайте, мы не встречались |
+| dlg_11_2_v2_f_g.mp3 | ответ в разговоре | Aoede | conspiratorial, low voice | Считайте, мы не встречались |
+| dlg_11_3_v1_g.mp3 | ответ в разговоре | Sadachbia | conspiratorial, low voice | Я глух, слеп и очень занят |
+| dlg_11_3_v2_g.mp3 | ответ в разговоре | Schedar | conspiratorial, low voice | Я глух, слеп и очень занят |
+| dlg_11_3_v1_f_g.mp3 | ответ в разговоре | Leda | conspiratorial, low voice | Я глуха, слепа и очень занята |
+| dlg_11_3_v2_f_g.mp3 | ответ в разговоре | Aoede | conspiratorial, low voice | Я глуха, слепа и очень занята |
+| dlg_11_4_v1_g.mp3 | ответ в разговоре (жадный) | Sadachbia | conspiratorial, low voice, greedy, calculating | Щедро. Для вас — что угодно |
+| dlg_11_4_v2_g.mp3 | ответ в разговоре (жадный) | Schedar | conspiratorial, low voice, greedy, calculating | Щедро. Для вас — что угодно |
+| dlg_11_4_v1_f_g.mp3 | ответ в разговоре (жадный) | Leda | conspiratorial, low voice, greedy, calculating | Щедро. Для вас — что угодно |
+| dlg_11_4_v2_f_g.mp3 | ответ в разговоре (жадный) | Aoede | conspiratorial, low voice, greedy, calculating | Щедро. Для вас — что угодно |
+| dlg_11_5_v1_g.mp3 | ответ в разговоре (трус) | Sadachbia | conspiratorial, low voice, timid, nervous | Только быстро, пока никто не смотрит |
+| dlg_11_5_v2_g.mp3 | ответ в разговоре (трус) | Schedar | conspiratorial, low voice, timid, nervous | Только быстро, пока никто не смотрит |
+| dlg_11_5_v1_f_g.mp3 | ответ в разговоре (трус) | Leda | conspiratorial, low voice, timid, nervous | Только быстро, пока никто не смотрит |
+| dlg_11_5_v2_f_g.mp3 | ответ в разговоре (трус) | Aoede | conspiratorial, low voice, timid, nervous | Только быстро, пока никто не смотрит |
+| dlg_11_6_v1_g.mp3 | ответ в разговоре (хитрый) | Sadachbia | conspiratorial, low voice, sly | Разумный подход. Я умею молчать |
+| dlg_11_6_v2_g.mp3 | ответ в разговоре (хитрый) | Schedar | conspiratorial, low voice, sly | Разумный подход. Я умею молчать |
+| dlg_11_6_v1_f_g.mp3 | ответ в разговоре (хитрый) | Leda | conspiratorial, low voice, sly | Разумный подход. Я умею молчать |
+| dlg_11_6_v2_f_g.mp3 | ответ в разговоре (хитрый) | Aoede | conspiratorial, low voice, sly | Разумный подход. Я умею молчать |
+| dlg_11_7_v1_g.mp3 | ответ в разговоре (свой) | Sadachbia | conspiratorial, low voice, warm, friendly | Для тебя — могила. Никому ни слова |
+| dlg_11_7_v2_g.mp3 | ответ в разговоре (свой) | Schedar | conspiratorial, low voice, warm, friendly | Для тебя — могила. Никому ни слова |
+| dlg_11_7_v1_f_g.mp3 | ответ в разговоре (свой) | Leda | conspiratorial, low voice, warm, friendly | Для тебя — могила. Никому ни слова |
+| dlg_11_7_v2_f_g.mp3 | ответ в разговоре (свой) | Aoede | conspiratorial, low voice, warm, friendly | Для тебя — могила. Никому ни слова |
+| dlg_11_8_v1_g.mp3 | ответ в разговоре (холоден) | Sadachbia | conspiratorial, low voice, cold, curt | Деньги взяты. Разговора не было |
+| dlg_11_8_v2_g.mp3 | ответ в разговоре (холоден) | Schedar | conspiratorial, low voice, cold, curt | Деньги взяты. Разговора не было |
+| dlg_11_8_v1_f_g.mp3 | ответ в разговоре (холоден) | Leda | conspiratorial, low voice, cold, curt | Деньги взяты. Разговора не было |
+| dlg_11_8_v2_f_g.mp3 | ответ в разговоре (холоден) | Aoede | conspiratorial, low voice, cold, curt | Деньги взяты. Разговора не было |
+| dlg_11_9_v1_g.mp3 | ответ в разговоре (недруг) | Sadachbia | conspiratorial, low voice, hostile | Деньги возьму, но друзьями нам не быть |
+| dlg_11_9_v2_g.mp3 | ответ в разговоре (недруг) | Schedar | conspiratorial, low voice, hostile | Деньги возьму, но друзьями нам не быть |
+| dlg_11_9_v1_f_g.mp3 | ответ в разговоре (недруг) | Leda | conspiratorial, low voice, hostile | Деньги возьму, но друзьями нам не быть |
+| dlg_11_9_v2_f_g.mp3 | ответ в разговоре (недруг) | Aoede | conspiratorial, low voice, hostile | Деньги возьму, но друзьями нам не быть |
+| dlg_12_0_v1_g.mp3 | ответ в разговоре | Sadachbia | offended, indignant | За кого вы меня держите? |
+| dlg_12_0_v2_g.mp3 | ответ в разговоре | Schedar | offended, indignant | За кого вы меня держите? |
+| dlg_12_0_v1_f_g.mp3 | ответ в разговоре | Leda | offended, indignant | За кого вы меня держите? |
+| dlg_12_0_v2_f_g.mp3 | ответ в разговоре | Aoede | offended, indignant | За кого вы меня держите? |
+| dlg_12_1_v1_g.mp3 | ответ в разговоре | Sadachbia | offended, indignant | Уберите это, пока я не позвал стражу |
+| dlg_12_1_v2_g.mp3 | ответ в разговоре | Schedar | offended, indignant | Уберите это, пока я не позвал стражу |
+| dlg_12_1_v1_f_g.mp3 | ответ в разговоре | Leda | offended, indignant | Уберите это, пока я не позвала стражу |
+| dlg_12_1_v2_f_g.mp3 | ответ в разговоре | Aoede | offended, indignant | Уберите это, пока я не позвала стражу |
+| dlg_12_2_v1_g.mp3 | ответ в разговоре | Sadachbia | offended, indignant | Меня не купишь |
+| dlg_12_2_v2_g.mp3 | ответ в разговоре | Schedar | offended, indignant | Меня не купишь |
+| dlg_12_2_v1_f_g.mp3 | ответ в разговоре | Leda | offended, indignant | Меня не купишь |
+| dlg_12_2_v2_f_g.mp3 | ответ в разговоре | Aoede | offended, indignant | Меня не купишь |
+| dlg_12_3_v1_g.mp3 | ответ в разговоре | Sadachbia | offended, indignant | Деньги держите при себе |
+| dlg_12_3_v2_g.mp3 | ответ в разговоре | Schedar | offended, indignant | Деньги держите при себе |
+| dlg_12_3_v1_f_g.mp3 | ответ в разговоре | Leda | offended, indignant | Деньги держите при себе |
+| dlg_12_3_v2_f_g.mp3 | ответ в разговоре | Aoede | offended, indignant | Деньги держите при себе |
+| dlg_12_4_v1_g.mp3 | ответ в разговоре (честный) | Sadachbia | offended, indignant, sincere | Честь не продаётся. Ступайте |
+| dlg_12_4_v2_g.mp3 | ответ в разговоре (честный) | Schedar | offended, indignant, sincere | Честь не продаётся. Ступайте |
+| dlg_12_4_v1_f_g.mp3 | ответ в разговоре (честный) | Leda | offended, indignant, sincere | Честь не продаётся. Ступайте |
+| dlg_12_4_v2_f_g.mp3 | ответ в разговоре (честный) | Aoede | offended, indignant, sincere | Честь не продаётся. Ступайте |
+| dlg_12_5_v1_g.mp3 | ответ в разговоре (высокомерный) | Sadachbia | offended, indignant, haughty | Вы смеете? Мне? |
+| dlg_12_5_v1_f_g.mp3 | ответ в разговоре (высокомерный) | Leda | offended, indignant, haughty | Вы смеете? Мне? |
+| dlg_12_6_v1_g.mp3 | ответ в разговоре (фанатик) | Sadachbia | offended, indignant, zealous, fervent | Боги видят, что вы сделали |
+| dlg_12_6_v2_g.mp3 | ответ в разговоре (фанатик) | Schedar | offended, indignant, zealous, fervent | Боги видят, что вы сделали |
+| dlg_12_6_v1_f_g.mp3 | ответ в разговоре (фанатик) | Leda | offended, indignant, zealous, fervent | Боги видят, что вы сделали |
+| dlg_12_6_v2_f_g.mp3 | ответ в разговоре (фанатик) | Aoede | offended, indignant, zealous, fervent | Боги видят, что вы сделали |
+| dlg_12_7_v1_g.mp3 | ответ в разговоре (трус) | Sadachbia | offended, indignant, timid, nervous | Нет-нет, я в таком не участвую! |
+| dlg_12_7_v2_g.mp3 | ответ в разговоре (трус) | Schedar | offended, indignant, timid, nervous | Нет-нет, я в таком не участвую! |
+| dlg_12_7_v1_f_g.mp3 | ответ в разговоре (трус) | Leda | offended, indignant, timid, nervous | Нет-нет, я в таком не участвую! |
+| dlg_12_7_v2_f_g.mp3 | ответ в разговоре (трус) | Aoede | offended, indignant, timid, nervous | Нет-нет, я в таком не участвую! |
+| dlg_12_8_v1_g.mp3 | ответ в разговоре (свой) | Sadachbia | offended, indignant, warm, friendly | От тебя — и такое? Обидно |
+| dlg_12_8_v2_g.mp3 | ответ в разговоре (свой) | Schedar | offended, indignant, warm, friendly | От тебя — и такое? Обидно |
+| dlg_12_8_v1_f_g.mp3 | ответ в разговоре (свой) | Leda | offended, indignant, warm, friendly | От тебя — и такое? Обидно |
+| dlg_12_8_v2_f_g.mp3 | ответ в разговоре (свой) | Aoede | offended, indignant, warm, friendly | От тебя — и такое? Обидно |
+| dlg_12_9_v1_g.mp3 | ответ в разговоре (недруг) | Sadachbia | offended, indignant, hostile | Ещё раз — и позову стражу |
+| dlg_12_9_v2_g.mp3 | ответ в разговоре (недруг) | Schedar | offended, indignant, hostile | Ещё раз — и позову стражу |
+| dlg_12_9_v1_f_g.mp3 | ответ в разговоре (недруг) | Leda | offended, indignant, hostile | Ещё раз — и позову стражу |
+| dlg_12_9_v2_f_g.mp3 | ответ в разговоре (недруг) | Aoede | offended, indignant, hostile | Ещё раз — и позову стражу |
+| dlg_12_10_v1_g.mp3 | ответ в разговоре (помнит добро) | Sadachbia | offended, indignant, grateful, warm | Вам я и так помогаю, зачем деньги? |
+| dlg_12_10_v2_g.mp3 | ответ в разговоре (помнит добро) | Schedar | offended, indignant, grateful, warm | Вам я и так помогаю, зачем деньги? |
+| dlg_12_10_v1_f_g.mp3 | ответ в разговоре (помнит добро) | Leda | offended, indignant, grateful, warm | Вам я и так помогаю, зачем деньги? |
+| dlg_12_10_v2_f_g.mp3 | ответ в разговоре (помнит добро) | Aoede | offended, indignant, grateful, warm | Вам я и так помогаю, зачем деньги? |
+| dlg_13_0_v1_g.mp3 | ответ в разговоре | Sadachbia | correcting, slightly condescending | Вы путаете. Так говорят приезжие |
+| dlg_13_0_v2_g.mp3 | ответ в разговоре | Schedar | correcting, slightly condescending | Вы путаете. Так говорят приезжие |
+| dlg_13_0_v1_f_g.mp3 | ответ в разговоре | Leda | correcting, slightly condescending | Вы путаете. Так говорят приезжие |
+| dlg_13_0_v2_f_g.mp3 | ответ в разговоре | Aoede | correcting, slightly condescending | Вы путаете. Так говорят приезжие |
+| dlg_13_1_v1_g.mp3 | ответ в разговоре | Sadachbia | correcting, slightly condescending | Это вы где-то не то прочитали |
+| dlg_13_1_v2_g.mp3 | ответ в разговоре | Schedar | correcting, slightly condescending | Это вы где-то не то прочитали |
+| dlg_13_1_v1_f_g.mp3 | ответ в разговоре | Leda | correcting, slightly condescending | Это вы где-то не то прочитали |
+| dlg_13_1_v2_f_g.mp3 | ответ в разговоре | Aoede | correcting, slightly condescending | Это вы где-то не то прочитали |
+| dlg_13_2_v1_g.mp3 | ответ в разговоре | Sadachbia | correcting, slightly condescending | У нас так не говорят |
+| dlg_13_2_v2_g.mp3 | ответ в разговоре | Schedar | correcting, slightly condescending | У нас так не говорят |
+| dlg_13_2_v1_f_g.mp3 | ответ в разговоре | Leda | correcting, slightly condescending | У нас так не говорят |
+| dlg_13_2_v2_f_g.mp3 | ответ в разговоре | Aoede | correcting, slightly condescending | У нас так не говорят |
+| dlg_13_3_v1_g.mp3 | ответ в разговоре | Sadachbia | correcting, slightly condescending | Близко, но нет |
+| dlg_13_3_v2_g.mp3 | ответ в разговоре | Schedar | correcting, slightly condescending | Близко, но нет |
+| dlg_13_3_v1_f_g.mp3 | ответ в разговоре | Leda | correcting, slightly condescending | Близко, но нет |
+| dlg_13_3_v2_f_g.mp3 | ответ в разговоре | Aoede | correcting, slightly condescending | Близко, но нет |
+| dlg_13_4_v1_g.mp3 | ответ в разговоре (высокомерный) | Sadachbia | correcting, slightly condescending, haughty | Нахватались по верхам. Бывает у чужаков |
+| dlg_13_4_v2_g.mp3 | ответ в разговоре (высокомерный) | Schedar | correcting, slightly condescending, haughty | Нахватались по верхам. Бывает у чужаков |
+| dlg_13_4_v1_f_g.mp3 | ответ в разговоре (высокомерный) | Leda | correcting, slightly condescending, haughty | Нахватались по верхам. Бывает у чужаков |
+| dlg_13_4_v2_f_g.mp3 | ответ в разговоре (высокомерный) | Aoede | correcting, slightly condescending, haughty | Нахватались по верхам. Бывает у чужаков |
+| dlg_13_5_v1_g.mp3 | ответ в разговоре (рациональный) | Sadachbia | correcting, slightly condescending, calm, rational | Неверно. Проверьте, откуда вы это взяли |
+| dlg_13_5_v2_g.mp3 | ответ в разговоре (рациональный) | Schedar | correcting, slightly condescending, calm, rational | Неверно. Проверьте, откуда вы это взяли |
+| dlg_13_5_v1_f_g.mp3 | ответ в разговоре (рациональный) | Leda | correcting, slightly condescending, calm, rational | Неверно. Проверьте, откуда вы это взяли |
+| dlg_13_5_v2_f_g.mp3 | ответ в разговоре (рациональный) | Aoede | correcting, slightly condescending, calm, rational | Неверно. Проверьте, откуда вы это взяли |
+| dlg_13_6_v1_g.mp3 | ответ в разговоре (традиционалист) | Sadachbia | correcting, slightly condescending, stern, old-fashioned | Так только в новых книжках пишут, у нас по-другому |
+| dlg_13_6_v2_g.mp3 | ответ в разговоре (традиционалист) | Schedar | correcting, slightly condescending, stern, old-fashioned | Так только в новых книжках пишут, у нас по-другому |
+| dlg_13_6_v1_f_g.mp3 | ответ в разговоре (традиционалист) | Leda | correcting, slightly condescending, stern, old-fashioned | Так только в новых книжках пишут, у нас по-другому |
+| dlg_13_6_v2_f_g.mp3 | ответ в разговоре (традиционалист) | Aoede | correcting, slightly condescending, stern, old-fashioned | Так только в новых книжках пишут, у нас по-другому |
+| dlg_13_7_v1_g.mp3 | ответ в разговоре (холоден) | Sadachbia | correcting, slightly condescending, cold, curt | Прежде чем умничать, узнайте хоть что-то |
+| dlg_13_7_v2_g.mp3 | ответ в разговоре (холоден) | Schedar | correcting, slightly condescending, cold, curt | Прежде чем умничать, узнайте хоть что-то |
+| dlg_13_7_v1_f_g.mp3 | ответ в разговоре (холоден) | Leda | correcting, slightly condescending, cold, curt | Прежде чем умничать, узнайте хоть что-то |
+| dlg_13_7_v2_f_g.mp3 | ответ в разговоре (холоден) | Aoede | correcting, slightly condescending, cold, curt | Прежде чем умничать, узнайте хоть что-то |
+| dlg_13_8_v1_g.mp3 | ответ в разговоре (свой) | Sadachbia | correcting, slightly condescending, warm, friendly | Не то, друг. Но за старание спасибо |
+| dlg_13_8_v2_g.mp3 | ответ в разговоре (свой) | Schedar | correcting, slightly condescending, warm, friendly | Не то, друг. Но за старание спасибо |
+| dlg_13_8_v1_f_g.mp3 | ответ в разговоре (свой) | Leda | correcting, slightly condescending, warm, friendly | Не то, друг. Но за старание спасибо |
+| dlg_13_8_v2_f_g.mp3 | ответ в разговоре (свой) | Aoede | correcting, slightly condescending, warm, friendly | Не то, друг. Но за старание спасибо |
+| dlg_14_0_v1_g.mp3 | ответ в разговоре | Sadachbia | pleasantly surprised, warm | Редко кто из чужих знает это |
+| dlg_14_0_v2_g.mp3 | ответ в разговоре | Schedar | pleasantly surprised, warm | Редко кто из чужих знает это |
+| dlg_14_0_v1_f_g.mp3 | ответ в разговоре | Leda | pleasantly surprised, warm | Редко кто из чужих знает это |
+| dlg_14_0_v2_f_g.mp3 | ответ в разговоре | Aoede | pleasantly surprised, warm | Редко кто из чужих знает это |
+| dlg_14_1_v1_g.mp3 | ответ в разговоре | Sadachbia | pleasantly surprised, warm | Вот это да — будто свой |
+| dlg_14_1_v2_g.mp3 | ответ в разговоре | Schedar | pleasantly surprised, warm | Вот это да — будто свой |
+| dlg_14_1_v1_f_g.mp3 | ответ в разговоре | Leda | pleasantly surprised, warm | Вот это да — будто свой |
+| dlg_14_1_v2_f_g.mp3 | ответ в разговоре | Aoede | pleasantly surprised, warm | Вот это да — будто свой |
+| dlg_14_2_v1_g.mp3 | ответ в разговоре | Sadachbia | pleasantly surprised, warm | Где вы этому научились? |
+| dlg_14_2_v2_g.mp3 | ответ в разговоре | Schedar | pleasantly surprised, warm | Где вы этому научились? |
+| dlg_14_2_v1_f_g.mp3 | ответ в разговоре | Leda | pleasantly surprised, warm | Где вы этому научились? |
+| dlg_14_2_v2_f_g.mp3 | ответ в разговоре | Aoede | pleasantly surprised, warm | Где вы этому научились? |
+| dlg_14_3_v1_g.mp3 | ответ в разговоре | Sadachbia | pleasantly surprised, warm | Теперь с вами можно говорить по-настоящему |
+| dlg_14_3_v2_g.mp3 | ответ в разговоре | Schedar | pleasantly surprised, warm | Теперь с вами можно говорить по-настоящему |
+| dlg_14_3_v1_f_g.mp3 | ответ в разговоре | Leda | pleasantly surprised, warm | Теперь с вами можно говорить по-настоящему |
+| dlg_14_3_v2_f_g.mp3 | ответ в разговоре | Aoede | pleasantly surprised, warm | Теперь с вами можно говорить по-настоящему |
+| dlg_14_4_v1_g.mp3 | ответ в разговоре (традиционалист) | Sadachbia | pleasantly surprised, warm, stern, old-fashioned | Уважаю. Обычай — это корни |
+| dlg_14_4_v2_g.mp3 | ответ в разговоре (традиционалист) | Schedar | pleasantly surprised, warm, stern, old-fashioned | Уважаю. Обычай — это корни |
+| dlg_14_4_v1_f_g.mp3 | ответ в разговоре (традиционалист) | Leda | pleasantly surprised, warm, stern, old-fashioned | Уважаю. Обычай — это корни |
+| dlg_14_4_v2_f_g.mp3 | ответ в разговоре (традиционалист) | Aoede | pleasantly surprised, warm, stern, old-fashioned | Уважаю. Обычай — это корни |
+| dlg_14_5_v1_g.mp3 | ответ в разговоре (добрый) | Sadachbia | pleasantly surprised, warm, kind, warm | Приятно! Садитесь, поговорим |
+| dlg_14_5_v2_g.mp3 | ответ в разговоре (добрый) | Schedar | pleasantly surprised, warm, kind, warm | Приятно! Садитесь, поговорим |
+| dlg_14_5_v1_f_g.mp3 | ответ в разговоре (добрый) | Leda | pleasantly surprised, warm, kind, warm | Приятно! Садитесь, поговорим |
+| dlg_14_5_v2_f_g.mp3 | ответ в разговоре (добрый) | Aoede | pleasantly surprised, warm, kind, warm | Приятно! Садитесь, поговорим |
+| dlg_14_6_v1_f_g.mp3 | ответ в разговоре (высокомерный) | Leda | pleasantly surprised, warm, haughty | Не ожидала от чужака |
+| dlg_14_6_v2_f_g.mp3 | ответ в разговоре (высокомерный) | Aoede | pleasantly surprised, warm, haughty | Не ожидала от чужака |
+| dlg_14_7_v2_g.mp3 | ответ в разговоре (недруг) | Schedar | pleasantly surprised, warm, hostile | Даже недруг, а обычай знает. Уважаю |
+| dlg_14_7_v1_f_g.mp3 | ответ в разговоре (недруг) | Leda | pleasantly surprised, warm, hostile | Даже недруг, а обычай знает. Уважаю |
+| dlg_14_7_v2_f_g.mp3 | ответ в разговоре (недруг) | Aoede | pleasantly surprised, warm, hostile | Даже недруг, а обычай знает. Уважаю |
+| dlg_14_8_v1_g.mp3 | ответ в разговоре (свой) | Sadachbia | pleasantly surprised, warm, warm, friendly | Ты у нас уже почти свой |
+| dlg_14_8_v2_g.mp3 | ответ в разговоре (свой) | Schedar | pleasantly surprised, warm, warm, friendly | Ты у нас уже почти свой |
+| dlg_14_8_v1_f_g.mp3 | ответ в разговоре (свой) | Leda | pleasantly surprised, warm, warm, friendly | Ты у нас уже почти свой |
+| dlg_14_8_v2_f_g.mp3 | ответ в разговоре (свой) | Aoede | pleasantly surprised, warm, warm, friendly | Ты у нас уже почти свой |
+| dlg_14_9_v1_g.mp3 | ответ в разговоре (холоден) | Sadachbia | pleasantly surprised, warm, cold, curt | Хм. Удивили |
+| dlg_14_9_v2_g.mp3 | ответ в разговоре (холоден) | Schedar | pleasantly surprised, warm, cold, curt | Хм. Удивили |
+| dlg_14_9_v1_f_g.mp3 | ответ в разговоре (холоден) | Leda | pleasantly surprised, warm, cold, curt | Хм. Удивили |
+| dlg_15_0_v1_g.mp3 | ответ в разговоре | Sadachbia | suspicious, slow | Вы чего-то не договариваете? |
+| dlg_15_0_v2_g.mp3 | ответ в разговоре | Schedar | suspicious, slow | Вы чего-то не договариваете? |
+| dlg_15_0_v1_f_g.mp3 | ответ в разговоре | Leda | suspicious, slow | Вы чего-то не договариваете? |
+| dlg_15_0_v2_f_g.mp3 | ответ в разговоре | Aoede | suspicious, slow | Вы чего-то не договариваете? |
+| dlg_15_1_v1_g.mp3 | ответ в разговоре | Sadachbia | suspicious, slow | Что-то в вашем рассказе не сходится |
+| dlg_15_1_v2_g.mp3 | ответ в разговоре | Schedar | suspicious, slow | Что-то в вашем рассказе не сходится |
+| dlg_15_1_v1_f_g.mp3 | ответ в разговоре | Leda | suspicious, slow | Что-то в вашем рассказе не сходится |
+| dlg_15_1_v2_f_g.mp3 | ответ в разговоре | Aoede | suspicious, slow | Что-то в вашем рассказе не сходится |
+| dlg_15_2_v1_g.mp3 | ответ в разговоре | Sadachbia | suspicious, slow | А дальше? Где остальное? |
+| dlg_15_2_v2_g.mp3 | ответ в разговоре | Schedar | suspicious, slow | А дальше? Где остальное? |
+| dlg_15_2_v1_f_g.mp3 | ответ в разговоре | Leda | suspicious, slow | А дальше? Где остальное? |
+| dlg_15_2_v2_f_g.mp3 | ответ в разговоре | Aoede | suspicious, slow | А дальше? Где остальное? |
+| dlg_15_3_v1_g.mp3 | ответ в разговоре | Sadachbia | suspicious, slow | Полуправда хуже лжи, знаете ли |
+| dlg_15_3_v2_g.mp3 | ответ в разговоре | Schedar | suspicious, slow | Полуправда хуже лжи, знаете ли |
+| dlg_15_3_v1_f_g.mp3 | ответ в разговоре | Leda | suspicious, slow | Полуправда хуже лжи, знаете ли |
+| dlg_15_3_v2_f_g.mp3 | ответ в разговоре | Aoede | suspicious, slow | Полуправда хуже лжи, знаете ли |
+| dlg_15_4_v1_g.mp3 | ответ в разговоре (подозрительный) | Sadachbia | suspicious, slow, suspicious | Я так и знал, что вы темните |
+| dlg_15_4_v2_g.mp3 | ответ в разговоре (подозрительный) | Schedar | suspicious, slow, suspicious | Я так и знал, что вы темните |
+| dlg_15_4_v1_f_g.mp3 | ответ в разговоре (подозрительный) | Leda | suspicious, slow, suspicious | Я так и знала, что вы темните |
+| dlg_15_4_v2_f_g.mp3 | ответ в разговоре (подозрительный) | Aoede | suspicious, slow, suspicious | Я так и знала, что вы темните |
+| dlg_15_5_v1_g.mp3 | ответ в разговоре (рациональный) | Sadachbia | suspicious, slow, calm, rational | Нет второй половины. Где она? |
+| dlg_15_5_v2_g.mp3 | ответ в разговоре (рациональный) | Schedar | suspicious, slow, calm, rational | Нет второй половины. Где она? |
+| dlg_15_5_v1_f_g.mp3 | ответ в разговоре (рациональный) | Leda | suspicious, slow, calm, rational | Нет второй половины. Где она? |
+| dlg_15_5_v2_f_g.mp3 | ответ в разговоре (рациональный) | Aoede | suspicious, slow, calm, rational | Нет второй половины. Где она? |
+| dlg_15_6_v1_g.mp3 | ответ в разговоре (хитрый) | Sadachbia | suspicious, slow, sly | Недомолвки — мой хлеб. Меня так не проведёшь |
+| dlg_15_6_v2_g.mp3 | ответ в разговоре (хитрый) | Schedar | suspicious, slow, sly | Недомолвки — мой хлеб. Меня так не проведёшь |
+| dlg_15_6_v1_f_g.mp3 | ответ в разговоре (хитрый) | Leda | suspicious, slow, sly | Недомолвки — мой хлеб. Меня так не проведёшь |
+| dlg_15_6_v2_f_g.mp3 | ответ в разговоре (хитрый) | Aoede | suspicious, slow, sly | Недомолвки — мой хлеб. Меня так не проведёшь |
+| dlg_15_7_v1_g.mp3 | ответ в разговоре (свой) | Sadachbia | suspicious, slow, warm, friendly | Друг, от меня-то зачем таиться? |
+| dlg_15_7_v2_g.mp3 | ответ в разговоре (свой) | Schedar | suspicious, slow, warm, friendly | Друг, от меня-то зачем таиться? |
+| dlg_15_7_v1_f_g.mp3 | ответ в разговоре (свой) | Leda | suspicious, slow, warm, friendly | Друг, от меня-то зачем таиться? |
+| dlg_15_7_v2_f_g.mp3 | ответ в разговоре (свой) | Aoede | suspicious, slow, warm, friendly | Друг, от меня-то зачем таиться? |
+| dlg_15_8_v1_g.mp3 | ответ в разговоре (недруг) | Sadachbia | suspicious, slow, hostile | Опять хитрите. Всё вижу |
+| dlg_15_8_v2_g.mp3 | ответ в разговоре (недруг) | Schedar | suspicious, slow, hostile | Опять хитрите. Всё вижу |
+| dlg_15_8_v1_f_g.mp3 | ответ в разговоре (недруг) | Leda | suspicious, slow, hostile | Опять хитрите. Всё вижу |
+| dlg_15_8_v2_f_g.mp3 | ответ в разговоре (недруг) | Aoede | suspicious, slow, hostile | Опять хитрите. Всё вижу |
+| dlg_15_9_v1_g.mp3 | ответ в разговоре (помнит обиду) | Sadachbia | suspicious, slow, resentful, bitter | Один раз вы уже обманули. Хватит |
+| dlg_15_9_v2_g.mp3 | ответ в разговоре (помнит обиду) | Schedar | suspicious, slow, resentful, bitter | Один раз вы уже обманули. Хватит |
+| dlg_15_9_v1_f_g.mp3 | ответ в разговоре (помнит обиду) | Leda | suspicious, slow, resentful, bitter | Один раз вы уже обманули. Хватит |
+| dlg_15_9_v2_f_g.mp3 | ответ в разговоре (помнит обиду) | Aoede | suspicious, slow, resentful, bitter | Один раз вы уже обманули. Хватит |
+| dlg_16_0_v1_g.mp3 | ответ в разговоре | Sadachbia | contemptuous, cold | Врёте. И плохо врёте |
+| dlg_16_0_v2_g.mp3 | ответ в разговоре | Schedar | contemptuous, cold | Врёте. И плохо врёте |
+| dlg_16_0_v1_f_g.mp3 | ответ в разговоре | Leda | contemptuous, cold | Врёте. И плохо врёте |
+| dlg_16_0_v2_f_g.mp3 | ответ в разговоре | Aoede | contemptuous, cold | Врёте. И плохо врёте |
+| dlg_16_1_v1_g.mp3 | ответ в разговоре | Sadachbia | contemptuous, cold | Сказки рассказывайте детям |
+| dlg_16_1_v2_g.mp3 | ответ в разговоре | Schedar | contemptuous, cold | Сказки рассказывайте детям |
+| dlg_16_1_v1_f_g.mp3 | ответ в разговоре | Leda | contemptuous, cold | Сказки рассказывайте детям |
+| dlg_16_1_v2_f_g.mp3 | ответ в разговоре | Aoede | contemptuous, cold | Сказки рассказывайте детям |
+| dlg_16_2_v1_g.mp3 | ответ в разговоре | Sadachbia | contemptuous, cold | Не держите меня за дурака |
+| dlg_16_2_v2_g.mp3 | ответ в разговоре | Schedar | contemptuous, cold | Не держите меня за дурака |
+| dlg_16_2_v1_f_g.mp3 | ответ в разговоре | Leda | contemptuous, cold | Не держите меня за дурака |
+| dlg_16_2_v2_f_g.mp3 | ответ в разговоре | Aoede | contemptuous, cold | Не держите меня за дурака |
+| dlg_16_3_v1_g.mp3 | ответ в разговоре | Sadachbia | contemptuous, cold | Ложь у вас на лбу написана |
+| dlg_16_3_v2_g.mp3 | ответ в разговоре | Schedar | contemptuous, cold | Ложь у вас на лбу написана |
+| dlg_16_3_v1_f_g.mp3 | ответ в разговоре | Leda | contemptuous, cold | Ложь у вас на лбу написана |
+| dlg_16_3_v2_f_g.mp3 | ответ в разговоре | Aoede | contemptuous, cold | Ложь у вас на лбу написана |
+| dlg_16_4_v1_g.mp3 | ответ в разговоре (честный) | Sadachbia | contemptuous, cold, sincere | Лгать мне в лицо? Как не стыдно |
+| dlg_16_4_v2_g.mp3 | ответ в разговоре (честный) | Schedar | contemptuous, cold, sincere | Лгать мне в лицо? Как не стыдно |
+| dlg_16_4_v1_f_g.mp3 | ответ в разговоре (честный) | Leda | contemptuous, cold, sincere | Лгать мне в лицо? Как не стыдно |
+| dlg_16_4_v2_f_g.mp3 | ответ в разговоре (честный) | Aoede | contemptuous, cold, sincere | Лгать мне в лицо? Как не стыдно |
+| dlg_16_5_v1_g.mp3 | ответ в разговоре (хитрый) | Sadachbia | contemptuous, cold, sly | Врать надо тоньше. Учитесь |
+| dlg_16_5_v2_g.mp3 | ответ в разговоре (хитрый) | Schedar | contemptuous, cold, sly | Врать надо тоньше. Учитесь |
+| dlg_16_5_v1_f_g.mp3 | ответ в разговоре (хитрый) | Leda | contemptuous, cold, sly | Врать надо тоньше. Учитесь |
+| dlg_16_5_v2_f_g.mp3 | ответ в разговоре (хитрый) | Aoede | contemptuous, cold, sly | Врать надо тоньше. Учитесь |
+| dlg_16_6_v1_g.mp3 | ответ в разговоре (жестокий) | Sadachbia | contemptuous, cold, harsh, cruel | Ещё одно враньё — и язык укорочу |
+| dlg_16_6_v2_g.mp3 | ответ в разговоре (жестокий) | Schedar | contemptuous, cold, harsh, cruel | Ещё одно враньё — и язык укорочу |
+| dlg_16_6_v1_f_g.mp3 | ответ в разговоре (жестокий) | Leda | contemptuous, cold, harsh, cruel | Ещё одно враньё — и язык укорочу |
+| dlg_16_6_v2_f_g.mp3 | ответ в разговоре (жестокий) | Aoede | contemptuous, cold, harsh, cruel | Ещё одно враньё — и язык укорочу |
+| dlg_16_7_v1_g.mp3 | ответ в разговоре (подозрительный) | Sadachbia | contemptuous, cold, suspicious | Я с первого слова знал, что врёте |
+| dlg_16_7_v2_g.mp3 | ответ в разговоре (подозрительный) | Schedar | contemptuous, cold, suspicious | Я с первого слова знал, что врёте |
+| dlg_16_7_v1_f_g.mp3 | ответ в разговоре (подозрительный) | Leda | contemptuous, cold, suspicious | Я с первого слова знала, что врёте |
+| dlg_16_7_v2_f_g.mp3 | ответ в разговоре (подозрительный) | Aoede | contemptuous, cold, suspicious | Я с первого слова знала, что врёте |
+| dlg_16_8_v1_g.mp3 | ответ в разговоре (свой) | Sadachbia | contemptuous, cold, warm, friendly | Зачем врёшь своему? Обидно |
+| dlg_16_8_v2_g.mp3 | ответ в разговоре (свой) | Schedar | contemptuous, cold, warm, friendly | Зачем врёшь своему? Обидно |
+| dlg_16_8_v1_f_g.mp3 | ответ в разговоре (свой) | Leda | contemptuous, cold, warm, friendly | Зачем врёшь своему? Обидно |
+| dlg_16_8_v2_f_g.mp3 | ответ в разговоре (свой) | Aoede | contemptuous, cold, warm, friendly | Зачем врёшь своему? Обидно |
+| dlg_16_9_v1_g.mp3 | ответ в разговоре (помнит обиду) | Sadachbia | contemptuous, cold, resentful, bitter | Опять за старое? Второй раз не поверю |
+| dlg_16_9_v2_g.mp3 | ответ в разговоре (помнит обиду) | Schedar | contemptuous, cold, resentful, bitter | Опять за старое? Второй раз не поверю |
+| dlg_16_9_v1_f_g.mp3 | ответ в разговоре (помнит обиду) | Leda | contemptuous, cold, resentful, bitter | Опять за старое? Второй раз не поверю |
+| dlg_16_9_v2_f_g.mp3 | ответ в разговоре (помнит обиду) | Aoede | contemptuous, cold, resentful, bitter | Опять за старое? Второй раз не поверю |
+| dlg_16_10_v1_g.mp3 | ответ в разговоре (недруг) | Sadachbia | contemptuous, cold, hostile | Лгун. Все будут знать |
+| dlg_16_10_v2_g.mp3 | ответ в разговоре (недруг) | Schedar | contemptuous, cold, hostile | Лгун. Все будут знать |
+| dlg_16_10_v1_f_g.mp3 | ответ в разговоре (недруг) | Leda | contemptuous, cold, hostile | Лгун. Все будут знать |
+| dlg_16_10_v2_f_g.mp3 | ответ в разговоре (недруг) | Aoede | contemptuous, cold, hostile | Лгун. Все будут знать |
+| dlg_17_0_v1_g.mp3 | ответ в разговоре | Sadachbia | frightened, pleading | Только не надо... я скажу |
+| dlg_17_0_v1_f_g.mp3 | ответ в разговоре | Leda | frightened, pleading | Только не надо... я скажу |
+| dlg_17_0_v2_f_g.mp3 | ответ в разговоре | Aoede | frightened, pleading | Только не надо... я скажу |
+| dlg_17_1_v1_g.mp3 | ответ в разговоре | Sadachbia | frightened, pleading | Хорошо, хорошо! Всё скажу |
+| dlg_17_1_v2_g.mp3 | ответ в разговоре | Schedar | frightened, pleading | Хорошо, хорошо! Всё скажу |
+| dlg_17_1_v1_f_g.mp3 | ответ в разговоре | Leda | frightened, pleading | Хорошо, хорошо! Всё скажу |
+| dlg_17_1_v2_f_g.mp3 | ответ в разговоре | Aoede | frightened, pleading | Хорошо, хорошо! Всё скажу |
+| dlg_17_2_v1_g.mp3 | ответ в разговоре | Sadachbia | frightened, pleading | Не трогайте меня, я всё сделаю |
+| dlg_17_2_v2_g.mp3 | ответ в разговоре | Schedar | frightened, pleading | Не трогайте меня, я всё сделаю |
+| dlg_17_2_v1_f_g.mp3 | ответ в разговоре | Leda | frightened, pleading | Не трогайте меня, я всё сделаю |
+| dlg_17_2_v2_f_g.mp3 | ответ в разговоре | Aoede | frightened, pleading | Не трогайте меня, я всё сделаю |
+| dlg_17_3_v1_g.mp3 | ответ в разговоре | Sadachbia | frightened, pleading | Спокойно… договоримся |
+| dlg_17_3_v2_g.mp3 | ответ в разговоре | Schedar | frightened, pleading | Спокойно… договоримся |
+| dlg_17_3_v1_f_g.mp3 | ответ в разговоре | Leda | frightened, pleading | Спокойно… договоримся |
+| dlg_17_3_v2_f_g.mp3 | ответ в разговоре | Aoede | frightened, pleading | Спокойно… договоримся |
+| dlg_17_4_v1_g.mp3 | ответ в разговоре (трус) | Sadachbia | frightened, pleading, timid, nervous | Пощадите! Всё, что хотите! |
+| dlg_17_4_v2_g.mp3 | ответ в разговоре (трус) | Schedar | frightened, pleading, timid, nervous | Пощадите! Всё, что хотите! |
+| dlg_17_4_v1_f_g.mp3 | ответ в разговоре (трус) | Leda | frightened, pleading, timid, nervous | Пощадите! Всё, что хотите! |
+| dlg_17_4_v2_f_g.mp3 | ответ в разговоре (трус) | Aoede | frightened, pleading, timid, nervous | Пощадите! Всё, что хотите! |
+| dlg_17_5_v1_g.mp3 | ответ в разговоре (высокомерный) | Sadachbia | frightened, pleading, haughty | …Вы об этом пожалеете. Но — ладно |
+| dlg_17_5_v2_g.mp3 | ответ в разговоре (высокомерный) | Schedar | frightened, pleading, haughty | …Вы об этом пожалеете. Но — ладно |
+| dlg_17_5_v1_f_g.mp3 | ответ в разговоре (высокомерный) | Leda | frightened, pleading, haughty | …Вы об этом пожалеете. Но — ладно |
+| dlg_17_5_v2_f_g.mp3 | ответ в разговоре (высокомерный) | Aoede | frightened, pleading, haughty | …Вы об этом пожалеете. Но — ладно |
+| dlg_17_6_v1_g.mp3 | ответ в разговоре (смелый) | Sadachbia | frightened, pleading, bold, confident | Ладно. Ваша сила. Пока |
+| dlg_17_6_v2_g.mp3 | ответ в разговоре (смелый) | Schedar | frightened, pleading, bold, confident | Ладно. Ваша сила. Пока |
+| dlg_17_6_v1_f_g.mp3 | ответ в разговоре (смелый) | Leda | frightened, pleading, bold, confident | Ладно. Ваша сила. Пока |
+| dlg_17_6_v2_f_g.mp3 | ответ в разговоре (смелый) | Aoede | frightened, pleading, bold, confident | Ладно. Ваша сила. Пока |
+| dlg_17_7_v1_g.mp3 | ответ в разговоре (недруг) | Sadachbia | frightened, pleading, hostile | Ненавижу вас. Но скажу |
+| dlg_17_7_v2_g.mp3 | ответ в разговоре (недруг) | Schedar | frightened, pleading, hostile | Ненавижу вас. Но скажу |
+| dlg_17_7_v1_f_g.mp3 | ответ в разговоре (недруг) | Leda | frightened, pleading, hostile | Ненавижу вас. Но скажу |
+| dlg_17_7_v2_f_g.mp3 | ответ в разговоре (недруг) | Aoede | frightened, pleading, hostile | Ненавижу вас. Но скажу |
+| dlg_17_8_v1_g.mp3 | ответ в разговоре (холоден) | Sadachbia | frightened, pleading, cold, curt | Уберите. Всё скажу |
+| dlg_17_8_v2_g.mp3 | ответ в разговоре (холоден) | Schedar | frightened, pleading, cold, curt | Уберите. Всё скажу |
+| dlg_17_8_v1_f_g.mp3 | ответ в разговоре (холоден) | Leda | frightened, pleading, cold, curt | Уберите. Всё скажу |
+| dlg_17_8_v2_f_g.mp3 | ответ в разговоре (холоден) | Aoede | frightened, pleading, cold, curt | Уберите. Всё скажу |
+| dlg_18_0_v1_g.mp3 | ответ в разговоре | Sadachbia | defiant, threatening | Убери железо, пока цел |
+| dlg_18_0_v2_g.mp3 | ответ в разговоре | Schedar | defiant, threatening | Убери железо, пока цел |
+| dlg_18_0_v1_f_g.mp3 | ответ в разговоре | Leda | defiant, threatening | Убери железо, пока цел |
+| dlg_18_0_v2_f_g.mp3 | ответ в разговоре | Aoede | defiant, threatening | Убери железо, пока цел |
+| dlg_18_1_v1_g.mp3 | ответ в разговоре | Sadachbia | defiant, threatening | Не на того напал |
+| dlg_18_1_v2_g.mp3 | ответ в разговоре | Schedar | defiant, threatening | Не на того напал |
+| dlg_18_1_v1_f_g.mp3 | ответ в разговоре | Leda | defiant, threatening | Не на того напал |
+| dlg_18_1_v2_f_g.mp3 | ответ в разговоре | Aoede | defiant, threatening | Не на того напал |
+| dlg_18_2_v1_g.mp3 | ответ в разговоре | Sadachbia | defiant, threatening | Пугать меня вздумал? Стража! |
+| dlg_18_2_v2_g.mp3 | ответ в разговоре | Schedar | defiant, threatening | Пугать меня вздумал? Стража! |
+| dlg_18_2_v1_f_g.mp3 | ответ в разговоре | Leda | defiant, threatening | Пугать меня вздумал? Стража! |
+| dlg_18_2_v2_f_g.mp3 | ответ в разговоре | Aoede | defiant, threatening | Пугать меня вздумал? Стража! |
+| dlg_18_3_v1_g.mp3 | ответ в разговоре | Sadachbia | defiant, threatening | Сейчас ты об этом пожалеешь |
+| dlg_18_3_v2_g.mp3 | ответ в разговоре | Schedar | defiant, threatening | Сейчас ты об этом пожалеешь |
+| dlg_18_3_v1_f_g.mp3 | ответ в разговоре | Leda | defiant, threatening | Сейчас ты об этом пожалеешь |
+| dlg_18_3_v2_f_g.mp3 | ответ в разговоре | Aoede | defiant, threatening | Сейчас ты об этом пожалеешь |
+| dlg_18_4_v1_g.mp3 | ответ в разговоре (смелый) | Sadachbia | defiant, threatening, bold, confident | Я и не таких видал. Стража! |
+| dlg_18_4_v2_g.mp3 | ответ в разговоре (смелый) | Schedar | defiant, threatening, bold, confident | Я и не таких видал. Стража! |
+| dlg_18_4_v1_f_g.mp3 | ответ в разговоре (смелый) | Leda | defiant, threatening, bold, confident | Я и не таких видала. Стража! |
+| dlg_18_4_v2_f_g.mp3 | ответ в разговоре (смелый) | Aoede | defiant, threatening, bold, confident | Я и не таких видала. Стража! |
+| dlg_18_5_v1_g.mp3 | ответ в разговоре (жестокий) | Sadachbia | defiant, threatening, harsh, cruel | Попробуй только — останешься без руки |
+| dlg_18_5_v2_g.mp3 | ответ в разговоре (жестокий) | Schedar | defiant, threatening, harsh, cruel | Попробуй только — останешься без руки |
+| dlg_18_5_v1_f_g.mp3 | ответ в разговоре (жестокий) | Leda | defiant, threatening, harsh, cruel | Попробуй только — останешься без руки |
+| dlg_18_5_v2_f_g.mp3 | ответ в разговоре (жестокий) | Aoede | defiant, threatening, harsh, cruel | Попробуй только — останешься без руки |
+| dlg_18_6_v1_g.mp3 | ответ в разговоре (честный) | Sadachbia | defiant, threatening, sincere | Угроз я не боюсь. Стража, сюда! |
+| dlg_18_6_v2_g.mp3 | ответ в разговоре (честный) | Schedar | defiant, threatening, sincere | Угроз я не боюсь. Стража, сюда! |
+| dlg_18_6_v1_f_g.mp3 | ответ в разговоре (честный) | Leda | defiant, threatening, sincere | Угроз я не боюсь. Стража, сюда! |
+| dlg_18_6_v2_f_g.mp3 | ответ в разговоре (честный) | Aoede | defiant, threatening, sincere | Угроз я не боюсь. Стража, сюда! |
+| dlg_18_7_v1_g.mp3 | ответ в разговоре (свой) | Sadachbia | defiant, threatening, warm, friendly | Ты что, своего пугать вздумал? |
+| dlg_18_7_v2_g.mp3 | ответ в разговоре (свой) | Schedar | defiant, threatening, warm, friendly | Ты что, своего пугать вздумал? |
+| dlg_18_7_v1_f_g.mp3 | ответ в разговоре (свой) | Leda | defiant, threatening, warm, friendly | Ты что, своего пугать вздумал? |
+| dlg_18_7_v2_f_g.mp3 | ответ в разговоре (свой) | Aoede | defiant, threatening, warm, friendly | Ты что, своего пугать вздумал? |
+| dlg_18_8_v1_g.mp3 | ответ в разговоре (помнит обиду) | Sadachbia | defiant, threatening, resentful, bitter | Вот оно, твоё настоящее лицо |
+| dlg_18_8_v2_g.mp3 | ответ в разговоре (помнит обиду) | Schedar | defiant, threatening, resentful, bitter | Вот оно, твоё настоящее лицо |
+| dlg_18_8_v1_f_g.mp3 | ответ в разговоре (помнит обиду) | Leda | defiant, threatening, resentful, bitter | Вот оно, твоё настоящее лицо |
+| dlg_18_8_v2_f_g.mp3 | ответ в разговоре (помнит обиду) | Aoede | defiant, threatening, resentful, bitter | Вот оно, твоё настоящее лицо |
+| dlg_19_0_v1_g.mp3 | ответ в разговоре | Sadachbia | tense, hushed, nervous | Чего вы хотите? Только тихо |
+| dlg_19_0_v2_g.mp3 | ответ в разговоре | Schedar | tense, hushed, nervous | Чего вы хотите? Только тихо |
+| dlg_19_0_v1_f_g.mp3 | ответ в разговоре | Leda | tense, hushed, nervous | Чего вы хотите? Только тихо |
+| dlg_19_0_v2_f_g.mp3 | ответ в разговоре | Aoede | tense, hushed, nervous | Чего вы хотите? Только тихо |
+| dlg_19_1_v1_g.mp3 | ответ в разговоре | Sadachbia | tense, hushed, nervous | Ладно… Что вам нужно? |
+| dlg_19_1_v2_g.mp3 | ответ в разговоре | Schedar | tense, hushed, nervous | Ладно… Что вам нужно? |
+| dlg_19_1_v1_f_g.mp3 | ответ в разговоре | Leda | tense, hushed, nervous | Ладно… Что вам нужно? |
+| dlg_19_1_v2_f_g.mp3 | ответ в разговоре | Aoede | tense, hushed, nervous | Ладно… Что вам нужно? |
+| dlg_19_2_v1_g.mp3 | ответ в разговоре | Sadachbia | tense, hushed, nervous | Не здесь. Говорите, чего хотите |
+| dlg_19_2_v2_g.mp3 | ответ в разговоре | Schedar | tense, hushed, nervous | Не здесь. Говорите, чего хотите |
+| dlg_19_2_v1_f_g.mp3 | ответ в разговоре | Leda | tense, hushed, nervous | Не здесь. Говорите, чего хотите |
+| dlg_19_2_v2_f_g.mp3 | ответ в разговоре | Aoede | tense, hushed, nervous | Не здесь. Говорите, чего хотите |
+| dlg_19_3_v1_g.mp3 | ответ в разговоре | Sadachbia | tense, hushed, nervous | Тише. Договоримся |
+| dlg_19_3_v2_g.mp3 | ответ в разговоре | Schedar | tense, hushed, nervous | Тише. Договоримся |
+| dlg_19_3_v1_f_g.mp3 | ответ в разговоре | Leda | tense, hushed, nervous | Тише. Договоримся |
+| dlg_19_3_v2_f_g.mp3 | ответ в разговоре | Aoede | tense, hushed, nervous | Тише. Договоримся |
+| dlg_19_4_v1_g.mp3 | ответ в разговоре (трус) | Sadachbia | tense, hushed, nervous, timid, nervous | Только никому! Я сделаю, что скажете |
+| dlg_19_4_v2_g.mp3 | ответ в разговоре (трус) | Schedar | tense, hushed, nervous, timid, nervous | Только никому! Я сделаю, что скажете |
+| dlg_19_4_v1_f_g.mp3 | ответ в разговоре (трус) | Leda | tense, hushed, nervous, timid, nervous | Только никому! Я сделаю, что скажете |
+| dlg_19_4_v2_f_g.mp3 | ответ в разговоре (трус) | Aoede | tense, hushed, nervous, timid, nervous | Только никому! Я сделаю, что скажете |
+| dlg_19_5_v1_g.mp3 | ответ в разговоре (хитрый) | Sadachbia | tense, hushed, nervous, sly | Хорошо сыграно. Каковы условия? |
+| dlg_19_5_v2_g.mp3 | ответ в разговоре (хитрый) | Schedar | tense, hushed, nervous, sly | Хорошо сыграно. Каковы условия? |
+| dlg_19_5_v1_f_g.mp3 | ответ в разговоре (хитрый) | Leda | tense, hushed, nervous, sly | Хорошо сыграно. Каковы условия? |
+| dlg_19_5_v2_f_g.mp3 | ответ в разговоре (хитрый) | Aoede | tense, hushed, nervous, sly | Хорошо сыграно. Каковы условия? |
+| dlg_19_6_v1_g.mp3 | ответ в разговоре (высокомерный) | Sadachbia | tense, hushed, nervous, haughty | Вы пожалеете об этом. Но — говорите |
+| dlg_19_6_v2_g.mp3 | ответ в разговоре (высокомерный) | Schedar | tense, hushed, nervous, haughty | Вы пожалеете об этом. Но — говорите |
+| dlg_19_6_v1_f_g.mp3 | ответ в разговоре (высокомерный) | Leda | tense, hushed, nervous, haughty | Вы пожалеете об этом. Но — говорите |
+| dlg_19_6_v2_f_g.mp3 | ответ в разговоре (высокомерный) | Aoede | tense, hushed, nervous, haughty | Вы пожалеете об этом. Но — говорите |
+| dlg_19_7_v1_g.mp3 | ответ в разговоре (недруг) | Sadachbia | tense, hushed, nervous, hostile | Будьте вы прокляты. Говорите, что нужно |
+| dlg_19_7_v2_g.mp3 | ответ в разговоре (недруг) | Schedar | tense, hushed, nervous, hostile | Будьте вы прокляты. Говорите, что нужно |
+| dlg_19_7_v1_f_g.mp3 | ответ в разговоре (недруг) | Leda | tense, hushed, nervous, hostile | Будьте вы прокляты. Говорите, что нужно |
+| dlg_19_7_v2_f_g.mp3 | ответ в разговоре (недруг) | Aoede | tense, hushed, nervous, hostile | Будьте вы прокляты. Говорите, что нужно |
+| dlg_20_0_v1_g.mp3 | ответ в разговоре | Sadachbia | defiant, bitter | Рассказывайте кому хотите. Мне терять нечего |
+| dlg_20_0_v2_g.mp3 | ответ в разговоре | Schedar | defiant, bitter | Рассказывайте кому хотите. Мне терять нечего |
+| dlg_20_0_v1_f_g.mp3 | ответ в разговоре | Leda | defiant, bitter | Рассказывайте кому хотите. Мне терять нечего |
+| dlg_20_0_v2_f_g.mp3 | ответ в разговоре | Aoede | defiant, bitter | Рассказывайте кому хотите. Мне терять нечего |
+| dlg_20_1_v1_g.mp3 | ответ в разговоре | Sadachbia | defiant, bitter | Шантажом меня не возьмёшь |
+| dlg_20_1_v2_g.mp3 | ответ в разговоре | Schedar | defiant, bitter | Шантажом меня не возьмёшь |
+| dlg_20_1_v1_f_g.mp3 | ответ в разговоре | Leda | defiant, bitter | Шантажом меня не возьмёшь |
+| dlg_20_1_v2_f_g.mp3 | ответ в разговоре | Aoede | defiant, bitter | Шантажом меня не возьмёшь |
+| dlg_20_2_v1_g.mp3 | ответ в разговоре | Sadachbia | defiant, bitter | Иди и рассказывай. Я не боюсь |
+| dlg_20_2_v2_g.mp3 | ответ в разговоре | Schedar | defiant, bitter | Иди и рассказывай. Я не боюсь |
+| dlg_20_2_v1_f_g.mp3 | ответ в разговоре | Leda | defiant, bitter | Иди и рассказывай. Я не боюсь |
+| dlg_20_2_v2_f_g.mp3 | ответ в разговоре | Aoede | defiant, bitter | Иди и рассказывай. Я не боюсь |
+| dlg_20_3_v1_g.mp3 | ответ в разговоре | Sadachbia | defiant, bitter | Ищите кого попугливее |
+| dlg_20_3_v2_g.mp3 | ответ в разговоре | Schedar | defiant, bitter | Ищите кого попугливее |
+| dlg_20_3_v1_f_g.mp3 | ответ в разговоре | Leda | defiant, bitter | Ищите кого попугливее |
+| dlg_20_3_v2_f_g.mp3 | ответ в разговоре | Aoede | defiant, bitter | Ищите кого попугливее |
+| dlg_20_4_v1_g.mp3 | ответ в разговоре (смелый) | Sadachbia | defiant, bitter, bold, confident | Пусть знают все. Мне скрывать нечего |
+| dlg_20_4_v2_g.mp3 | ответ в разговоре (смелый) | Schedar | defiant, bitter, bold, confident | Пусть знают все. Мне скрывать нечего |
+| dlg_20_4_v1_f_g.mp3 | ответ в разговоре (смелый) | Leda | defiant, bitter, bold, confident | Пусть знают все. Мне скрывать нечего |
+| dlg_20_4_v2_f_g.mp3 | ответ в разговоре (смелый) | Aoede | defiant, bitter, bold, confident | Пусть знают все. Мне скрывать нечего |
+| dlg_20_5_v1_g.mp3 | ответ в разговоре (честный) | Sadachbia | defiant, bitter, sincere | Лучше правда, чем жить у вас на крючке |
+| dlg_20_5_v2_g.mp3 | ответ в разговоре (честный) | Schedar | defiant, bitter, sincere | Лучше правда, чем жить у вас на крючке |
+| dlg_20_5_v1_f_g.mp3 | ответ в разговоре (честный) | Leda | defiant, bitter, sincere | Лучше правда, чем жить у вас на крючке |
+| dlg_20_5_v2_f_g.mp3 | ответ в разговоре (честный) | Aoede | defiant, bitter, sincere | Лучше правда, чем жить у вас на крючке |
+| dlg_20_6_v1_g.mp3 | ответ в разговоре (жестокий) | Sadachbia | defiant, bitter, harsh, cruel | Скажешь хоть слово — и тебя не найдут |
+| dlg_20_6_v2_g.mp3 | ответ в разговоре (жестокий) | Schedar | defiant, bitter, harsh, cruel | Скажешь хоть слово — и тебя не найдут |
+| dlg_20_6_v1_f_g.mp3 | ответ в разговоре (жестокий) | Leda | defiant, bitter, harsh, cruel | Скажешь хоть слово — и тебя не найдут |
+| dlg_20_6_v2_f_g.mp3 | ответ в разговоре (жестокий) | Aoede | defiant, bitter, harsh, cruel | Скажешь хоть слово — и тебя не найдут |
+| dlg_20_7_v1_g.mp3 | ответ в разговоре (помнит обиду) | Sadachbia | defiant, bitter, resentful, bitter | Я вас больше не боюсь |
+| dlg_20_7_v2_g.mp3 | ответ в разговоре (помнит обиду) | Schedar | defiant, bitter, resentful, bitter | Я вас больше не боюсь |
+| dlg_20_7_v1_f_g.mp3 | ответ в разговоре (помнит обиду) | Leda | defiant, bitter, resentful, bitter | Я вас больше не боюсь |
+| dlg_20_7_v2_f_g.mp3 | ответ в разговоре (помнит обиду) | Aoede | defiant, bitter, resentful, bitter | Я вас больше не боюсь |
+| dlg_21_0_v1_g.mp3 | ответ в разговоре | Sadachbia | angry, threatening | Ещё слово — и будет драка |
+| dlg_21_0_v2_g.mp3 | ответ в разговоре | Schedar | angry, threatening | Ещё слово — и будет драка |
+| dlg_21_0_v1_f_g.mp3 | ответ в разговоре | Leda | angry, threatening | Ещё слово — и будет драка |
+| dlg_21_0_v2_f_g.mp3 | ответ в разговоре | Aoede | angry, threatening | Ещё слово — и будет драка |
+| dlg_21_1_v1_g.mp3 | ответ в разговоре | Sadachbia | angry, threatening | Не зли меня |
+| dlg_21_1_v2_g.mp3 | ответ в разговоре | Schedar | angry, threatening | Не зли меня |
+| dlg_21_1_v1_f_g.mp3 | ответ в разговоре | Leda | angry, threatening | Не зли меня |
+| dlg_21_1_v2_f_g.mp3 | ответ в разговоре | Aoede | angry, threatening | Не зли меня |
+| dlg_21_2_v1_g.mp3 | ответ в разговоре | Sadachbia | angry, threatening | Думаешь, я дам себя разозлить? Не выйдет |
+| dlg_21_2_v2_g.mp3 | ответ в разговоре | Schedar | angry, threatening | Думаешь, я дам себя разозлить? Не выйдет |
+| dlg_21_2_v1_f_g.mp3 | ответ в разговоре | Leda | angry, threatening | Думаешь, я дам себя разозлить? Не выйдет |
+| dlg_21_2_v2_f_g.mp3 | ответ в разговоре | Aoede | angry, threatening | Думаешь, я дам себя разозлить? Не выйдет |
+| dlg_21_3_v1_g.mp3 | ответ в разговоре | Sadachbia | angry, threatening | Иди своей дорогой |
+| dlg_21_3_v2_g.mp3 | ответ в разговоре | Schedar | angry, threatening | Иди своей дорогой |
+| dlg_21_3_v1_f_g.mp3 | ответ в разговоре | Leda | angry, threatening | Иди своей дорогой |
+| dlg_21_3_v2_f_g.mp3 | ответ в разговоре | Aoede | angry, threatening | Иди своей дорогой |
+| dlg_21_4_v1_g.mp3 | ответ в разговоре (жестокий) | Sadachbia | angry, threatening, harsh, cruel | Язык свой придержи, а то вырву |
+| dlg_21_4_v2_g.mp3 | ответ в разговоре (жестокий) | Schedar | angry, threatening, harsh, cruel | Язык свой придержи, а то вырву |
+| dlg_21_4_v1_f_g.mp3 | ответ в разговоре (жестокий) | Leda | angry, threatening, harsh, cruel | Язык свой придержи, а то вырву |
+| dlg_21_4_v2_f_g.mp3 | ответ в разговоре (жестокий) | Aoede | angry, threatening, harsh, cruel | Язык свой придержи, а то вырву |
+| dlg_21_5_v1_g.mp3 | ответ в разговоре (добрый) | Sadachbia | angry, threatening, kind, warm | Не надо так. Я не хочу ссоры |
+| dlg_21_5_v2_g.mp3 | ответ в разговоре (добрый) | Schedar | angry, threatening, kind, warm | Не надо так. Я не хочу ссоры |
+| dlg_21_5_v1_f_g.mp3 | ответ в разговоре (добрый) | Leda | angry, threatening, kind, warm | Не надо так. Я не хочу ссоры |
+| dlg_21_5_v2_f_g.mp3 | ответ в разговоре (добрый) | Aoede | angry, threatening, kind, warm | Не надо так. Я не хочу ссоры |
+| dlg_21_6_v1_g.mp3 | ответ в разговоре (свой) | Sadachbia | angry, threatening, warm, friendly | Не надо, друг. Не порти то, что было |
+| dlg_21_6_v2_g.mp3 | ответ в разговоре (свой) | Schedar | angry, threatening, warm, friendly | Не надо, друг. Не порти то, что было |
+| dlg_21_6_v1_f_g.mp3 | ответ в разговоре (свой) | Leda | angry, threatening, warm, friendly | Не надо, друг. Не порти то, что было |
+| dlg_21_6_v2_f_g.mp3 | ответ в разговоре (свой) | Aoede | angry, threatening, warm, friendly | Не надо, друг. Не порти то, что было |
+| dlg_21_7_v1_g.mp3 | ответ в разговоре (недруг) | Sadachbia | angry, threatening, hostile | Давно хочется дать вам по зубам |
+| dlg_21_7_v2_g.mp3 | ответ в разговоре (недруг) | Schedar | angry, threatening, hostile | Давно хочется дать вам по зубам |
+| dlg_21_7_v1_f_g.mp3 | ответ в разговоре (недруг) | Leda | angry, threatening, hostile | Давно хочется дать вам по зубам |
+| dlg_21_7_v2_f_g.mp3 | ответ в разговоре (недруг) | Aoede | angry, threatening, hostile | Давно хочется дать вам по зубам |
+| dlg_22_0_v1_g.mp3 | ответ в разговоре | Sadachbia | easygoing, indifferent | Бывает |
+| dlg_22_0_v2_g.mp3 | ответ в разговоре | Schedar | easygoing, indifferent | Бывает |
+| dlg_22_0_v1_f_g.mp3 | ответ в разговоре | Leda | easygoing, indifferent | Бывает |
+| dlg_22_0_v2_f_g.mp3 | ответ в разговоре | Aoede | easygoing, indifferent | Бывает |
+| dlg_22_1_v1_g.mp3 | ответ в разговоре | Sadachbia | easygoing, indifferent | Что ж, не всякий разговор к добру |
+| dlg_22_1_v2_g.mp3 | ответ в разговоре | Schedar | easygoing, indifferent | Что ж, не всякий разговор к добру |
+| dlg_22_1_v1_f_g.mp3 | ответ в разговоре | Leda | easygoing, indifferent | Что ж, не всякий разговор к добру |
+| dlg_22_1_v2_f_g.mp3 | ответ в разговоре | Aoede | easygoing, indifferent | Что ж, не всякий разговор к добру |
+| dlg_22_2_v1_g.mp3 | ответ в разговоре | Sadachbia | easygoing, indifferent | Ваше право |
+| dlg_22_2_v2_g.mp3 | ответ в разговоре | Schedar | easygoing, indifferent | Ваше право |
+| dlg_22_2_v1_f_g.mp3 | ответ в разговоре | Leda | easygoing, indifferent | Ваше право |
+| dlg_22_2_v2_f_g.mp3 | ответ в разговоре | Aoede | easygoing, indifferent | Ваше право |
+| dlg_22_3_v1_g.mp3 | ответ в разговоре | Sadachbia | easygoing, indifferent | Понимаю |
+| dlg_22_3_v2_g.mp3 | ответ в разговоре | Schedar | easygoing, indifferent | Понимаю |
+| dlg_22_3_v1_f_g.mp3 | ответ в разговоре | Leda | easygoing, indifferent | Понимаю |
+| dlg_22_3_v2_f_g.mp3 | ответ в разговоре | Aoede | easygoing, indifferent | Понимаю |
+| dlg_22_4_v1_g.mp3 | ответ в разговоре (добрый) | Sadachbia | easygoing, indifferent, kind, warm | Ничего, в другой раз |
+| dlg_22_4_v2_g.mp3 | ответ в разговоре (добрый) | Schedar | easygoing, indifferent, kind, warm | Ничего, в другой раз |
+| dlg_22_4_v1_f_g.mp3 | ответ в разговоре (добрый) | Leda | easygoing, indifferent, kind, warm | Ничего, в другой раз |
+| dlg_22_4_v2_f_g.mp3 | ответ в разговоре (добрый) | Aoede | easygoing, indifferent, kind, warm | Ничего, в другой раз |
+| dlg_22_5_v1_g.mp3 | ответ в разговоре (высокомерный) | Sadachbia | easygoing, indifferent, haughty | Как угодно |
+| dlg_22_5_v2_g.mp3 | ответ в разговоре (высокомерный) | Schedar | easygoing, indifferent, haughty | Как угодно |
+| dlg_22_5_v1_f_g.mp3 | ответ в разговоре (высокомерный) | Leda | easygoing, indifferent, haughty | Как угодно |
+| dlg_22_5_v2_f_g.mp3 | ответ в разговоре (высокомерный) | Aoede | easygoing, indifferent, haughty | Как угодно |
+| dlg_22_6_v1_g.mp3 | ответ в разговоре (свой) | Sadachbia | easygoing, indifferent, warm, friendly | Ничего, друг. В другой раз |
+| dlg_22_6_v2_g.mp3 | ответ в разговоре (свой) | Schedar | easygoing, indifferent, warm, friendly | Ничего, друг. В другой раз |
+| dlg_22_6_v1_f_g.mp3 | ответ в разговоре (свой) | Leda | easygoing, indifferent, warm, friendly | Ничего, друг. В другой раз |
+| dlg_22_6_v2_f_g.mp3 | ответ в разговоре (свой) | Aoede | easygoing, indifferent, warm, friendly | Ничего, друг. В другой раз |
+| dlg_22_7_v1_g.mp3 | ответ в разговоре (помнит добро) | Sadachbia | easygoing, indifferent, grateful, warm | Не беда. Вы и так много сделали |
+| dlg_22_7_v2_g.mp3 | ответ в разговоре (помнит добро) | Schedar | easygoing, indifferent, grateful, warm | Не беда. Вы и так много сделали |
+| dlg_22_7_v1_f_g.mp3 | ответ в разговоре (помнит добро) | Leda | easygoing, indifferent, grateful, warm | Не беда. Вы и так много сделали |
+| dlg_22_7_v2_f_g.mp3 | ответ в разговоре (помнит добро) | Aoede | easygoing, indifferent, grateful, warm | Не беда. Вы и так много сделали |
+| dlg_22_8_v2_g.mp3 | ответ в разговоре (холоден) | Schedar | easygoing, indifferent, cold, curt | Как знаете |
+| dlg_22_8_v1_f_g.mp3 | ответ в разговоре (холоден) | Leda | easygoing, indifferent, cold, curt | Как знаете |
+| dlg_22_8_v2_f_g.mp3 | ответ в разговоре (холоден) | Aoede | easygoing, indifferent, cold, curt | Как знаете |
+| dlg_23_0_v1_g.mp3 | ответ в разговоре | Sadachbia | impatient, tired | Мы об этом говорили |
+| dlg_23_0_v2_g.mp3 | ответ в разговоре | Schedar | impatient, tired | Мы об этом говорили |
+| dlg_23_0_v1_f_g.mp3 | ответ в разговоре | Leda | impatient, tired | Мы об этом говорили |
+| dlg_23_0_v2_f_g.mp3 | ответ в разговоре | Aoede | impatient, tired | Мы об этом говорили |
+| dlg_23_1_v1_g.mp3 | ответ в разговоре | Sadachbia | impatient, tired | Я уже ответил вам сегодня |
+| dlg_23_1_v2_g.mp3 | ответ в разговоре | Schedar | impatient, tired | Я уже ответил вам сегодня |
+| dlg_23_1_v1_f_g.mp3 | ответ в разговоре | Leda | impatient, tired | Я уже ответила вам сегодня |
+| dlg_23_1_v2_f_g.mp3 | ответ в разговоре | Aoede | impatient, tired | Я уже ответила вам сегодня |
+| dlg_23_2_v1_g.mp3 | ответ в разговоре | Sadachbia | impatient, tired | Опять вы с тем же? |
+| dlg_23_2_v2_g.mp3 | ответ в разговоре | Schedar | impatient, tired | Опять вы с тем же? |
+| dlg_23_2_v1_f_g.mp3 | ответ в разговоре | Leda | impatient, tired | Опять вы с тем же? |
+| dlg_23_2_v2_f_g.mp3 | ответ в разговоре | Aoede | impatient, tired | Опять вы с тем же? |
+| dlg_23_3_v1_g.mp3 | ответ в разговоре | Sadachbia | impatient, tired | Сегодня — хватит об этом |
+| dlg_23_3_v2_g.mp3 | ответ в разговоре | Schedar | impatient, tired | Сегодня — хватит об этом |
+| dlg_23_3_v1_f_g.mp3 | ответ в разговоре | Leda | impatient, tired | Сегодня — хватит об этом |
+| dlg_23_3_v2_f_g.mp3 | ответ в разговоре | Aoede | impatient, tired | Сегодня — хватит об этом |
+| dlg_23_4_v1_g.mp3 | ответ в разговоре (подозрительный) | Sadachbia | impatient, tired, suspicious | Зачем спрашивать дважды? |
+| dlg_23_4_v2_g.mp3 | ответ в разговоре (подозрительный) | Schedar | impatient, tired, suspicious | Зачем спрашивать дважды? |
+| dlg_23_4_v1_f_g.mp3 | ответ в разговоре (подозрительный) | Leda | impatient, tired, suspicious | Зачем спрашивать дважды? |
+| dlg_23_4_v2_f_g.mp3 | ответ в разговоре (подозрительный) | Aoede | impatient, tired, suspicious | Зачем спрашивать дважды? |
+| dlg_23_5_v1_g.mp3 | ответ в разговоре (добрый) | Sadachbia | impatient, tired, kind, warm | Я же сказал уже — не сердитесь |
+| dlg_23_5_v2_g.mp3 | ответ в разговоре (добрый) | Schedar | impatient, tired, kind, warm | Я же сказал уже — не сердитесь |
+| dlg_23_5_v1_f_g.mp3 | ответ в разговоре (добрый) | Leda | impatient, tired, kind, warm | Я же сказала уже — не сердитесь |
+| dlg_23_5_v2_f_g.mp3 | ответ в разговоре (добрый) | Aoede | impatient, tired, kind, warm | Я же сказала уже — не сердитесь |
+| dlg_23_6_v1_g.mp3 | ответ в разговоре (жадный) | Sadachbia | impatient, tired, greedy, calculating | За второй ответ — отдельная плата |
+| dlg_23_6_v2_g.mp3 | ответ в разговоре (жадный) | Schedar | impatient, tired, greedy, calculating | За второй ответ — отдельная плата |
+| dlg_23_6_v1_f_g.mp3 | ответ в разговоре (жадный) | Leda | impatient, tired, greedy, calculating | За второй ответ — отдельная плата |
+| dlg_23_6_v2_f_g.mp3 | ответ в разговоре (жадный) | Aoede | impatient, tired, greedy, calculating | За второй ответ — отдельная плата |
+| dlg_23_7_v1_g.mp3 | ответ в разговоре (свой) | Sadachbia | impatient, tired, warm, friendly | Друг, ты повторяешься |
+| dlg_23_7_v2_g.mp3 | ответ в разговоре (свой) | Schedar | impatient, tired, warm, friendly | Друг, ты повторяешься |
+| dlg_23_7_v1_f_g.mp3 | ответ в разговоре (свой) | Leda | impatient, tired, warm, friendly | Друг, ты повторяешься |
+| dlg_23_7_v2_f_g.mp3 | ответ в разговоре (свой) | Aoede | impatient, tired, warm, friendly | Друг, ты повторяешься |
+| dlg_23_8_v1_g.mp3 | ответ в разговоре (недруг) | Sadachbia | impatient, tired, hostile | Сколько можно? Уходите |
+| dlg_23_8_v2_g.mp3 | ответ в разговоре (недруг) | Schedar | impatient, tired, hostile | Сколько можно? Уходите |
+| dlg_23_8_v1_f_g.mp3 | ответ в разговоре (недруг) | Leda | impatient, tired, hostile | Сколько можно? Уходите |
+| dlg_23_8_v2_f_g.mp3 | ответ в разговоре (недруг) | Aoede | impatient, tired, hostile | Сколько можно? Уходите |
+| dlg_24_0_v1_g.mp3 | ответ в разговоре | Sadachbia | disappointed, hurt | Я на вас рассчитывал |
+| dlg_24_0_v2_g.mp3 | ответ в разговоре | Schedar | disappointed, hurt | Я на вас рассчитывал |
+| dlg_24_0_v1_f_g.mp3 | ответ в разговоре | Leda | disappointed, hurt | Я на вас рассчитывала |
+| dlg_24_0_v2_f_g.mp3 | ответ в разговоре | Aoede | disappointed, hurt | Я на вас рассчитывала |
+| dlg_24_1_v1_g.mp3 | ответ в разговоре (свой) | Sadachbia | disappointed, hurt, warm, friendly | От друга — и такое |
+| dlg_24_1_v2_g.mp3 | ответ в разговоре (свой) | Schedar | disappointed, hurt, warm, friendly | От друга — и такое |
+| dlg_24_1_v1_f_g.mp3 | ответ в разговоре (свой) | Leda | disappointed, hurt, warm, friendly | От друга — и такое |
+| dlg_24_1_v2_f_g.mp3 | ответ в разговоре (свой) | Aoede | disappointed, hurt, warm, friendly | От друга — и такое |
+| dlg_24_2_v1_g.mp3 | ответ в разговоре (помнит обиду) | Sadachbia | disappointed, hurt, resentful, bitter | Опять подвели. Как всегда |
+| dlg_24_2_v2_g.mp3 | ответ в разговоре (помнит обиду) | Schedar | disappointed, hurt, resentful, bitter | Опять подвели. Как всегда |
+| dlg_24_2_v1_f_g.mp3 | ответ в разговоре (помнит обиду) | Leda | disappointed, hurt, resentful, bitter | Опять подвели. Как всегда |
+| dlg_24_2_v2_f_g.mp3 | ответ в разговоре (помнит обиду) | Aoede | disappointed, hurt, resentful, bitter | Опять подвели. Как всегда |
+| dlg_25_0_v1_g.mp3 | ответ в разговоре | Sadachbia | willing, open, conversational | Слушайте, расскажу, что знаю |
+| dlg_25_0_v2_g.mp3 | ответ в разговоре | Schedar | willing, open, conversational | Слушайте, расскажу, что знаю |
+| dlg_25_0_v1_f_g.mp3 | ответ в разговоре | Leda | willing, open, conversational | Слушайте, расскажу, что знаю |
+| dlg_25_0_v2_f_g.mp3 | ответ в разговоре | Aoede | willing, open, conversational | Слушайте, расскажу, что знаю |
+| dlg_25_1_v1_g.mp3 | ответ в разговоре | Sadachbia | willing, open, conversational | Спрашиваете — отвечу |
+| dlg_25_1_v2_g.mp3 | ответ в разговоре | Schedar | willing, open, conversational | Спрашиваете — отвечу |
+| dlg_25_1_v1_f_g.mp3 | ответ в разговоре | Leda | willing, open, conversational | Спрашиваете — отвечу |
+| dlg_25_1_v2_f_g.mp3 | ответ в разговоре | Aoede | willing, open, conversational | Спрашиваете — отвечу |
+| dlg_25_2_v1_g.mp3 | ответ в разговоре | Sadachbia | willing, open, conversational | Садитесь, раз интересно |
+| dlg_25_2_v2_g.mp3 | ответ в разговоре | Schedar | willing, open, conversational | Садитесь, раз интересно |
+| dlg_25_2_v1_f_g.mp3 | ответ в разговоре | Leda | willing, open, conversational | Садитесь, раз интересно |
+| dlg_25_2_v2_f_g.mp3 | ответ в разговоре | Aoede | willing, open, conversational | Садитесь, раз интересно |
+| dlg_25_3_v1_g.mp3 | ответ в разговоре (жадный) | Sadachbia | willing, open, conversational, greedy, calculating | Скажу. Но в следующий раз — за монету |
+| dlg_25_3_v2_g.mp3 | ответ в разговоре (жадный) | Schedar | willing, open, conversational, greedy, calculating | Скажу. Но в следующий раз — за монету |
+| dlg_25_3_v1_f_g.mp3 | ответ в разговоре (жадный) | Leda | willing, open, conversational, greedy, calculating | Скажу. Но в следующий раз — за монету |
+| dlg_25_3_v2_f_g.mp3 | ответ в разговоре (жадный) | Aoede | willing, open, conversational, greedy, calculating | Скажу. Но в следующий раз — за монету |
+| dlg_25_4_v1_g.mp3 | ответ в разговоре (трус) | Sadachbia | willing, open, conversational, timid, nervous | Только тихо, ладно? Вот что тут творится |
+| dlg_25_4_v2_g.mp3 | ответ в разговоре (трус) | Schedar | willing, open, conversational, timid, nervous | Только тихо, ладно? Вот что тут творится |
+| dlg_25_4_v1_f_g.mp3 | ответ в разговоре (трус) | Leda | willing, open, conversational, timid, nervous | Только тихо, ладно? Вот что тут творится |
+| dlg_25_4_v2_f_g.mp3 | ответ в разговоре (трус) | Aoede | willing, open, conversational, timid, nervous | Только тихо, ладно? Вот что тут творится |
+| dlg_25_5_v1_g.mp3 | ответ в разговоре (высокомерный) | Sadachbia | willing, open, conversational, haughty | Так и быть, просвещу вас |
+| dlg_25_5_v2_g.mp3 | ответ в разговоре (высокомерный) | Schedar | willing, open, conversational, haughty | Так и быть, просвещу вас |
+| dlg_25_5_v1_f_g.mp3 | ответ в разговоре (высокомерный) | Leda | willing, open, conversational, haughty | Так и быть, просвещу вас |
+| dlg_25_5_v2_f_g.mp3 | ответ в разговоре (высокомерный) | Aoede | willing, open, conversational, haughty | Так и быть, просвещу вас |
+| dlg_25_6_v1_g.mp3 | ответ в разговоре (свой) | Sadachbia | willing, open, conversational, warm, friendly | Тебе — всё как есть |
+| dlg_25_6_v2_g.mp3 | ответ в разговоре (свой) | Schedar | willing, open, conversational, warm, friendly | Тебе — всё как есть |
+| dlg_25_6_v1_f_g.mp3 | ответ в разговоре (свой) | Leda | willing, open, conversational, warm, friendly | Тебе — всё как есть |
+| dlg_25_6_v2_f_g.mp3 | ответ в разговоре (свой) | Aoede | willing, open, conversational, warm, friendly | Тебе — всё как есть |
+| dlg_25_7_v1_g.mp3 | ответ в разговоре (помнит добро) | Sadachbia | willing, open, conversational, grateful, warm | Вам расскажу без утайки |
+| dlg_25_7_v2_g.mp3 | ответ в разговоре (помнит добро) | Schedar | willing, open, conversational, grateful, warm | Вам расскажу без утайки |
+| dlg_25_7_v1_f_g.mp3 | ответ в разговоре (помнит добро) | Leda | willing, open, conversational, grateful, warm | Вам расскажу без утайки |
+| dlg_25_7_v2_f_g.mp3 | ответ в разговоре (помнит добро) | Aoede | willing, open, conversational, grateful, warm | Вам расскажу без утайки |
+| dlg_25_8_v1_g.mp3 | ответ в разговоре (холоден) | Sadachbia | willing, open, conversational, cold, curt | Коротко: вот что тут было |
+| dlg_25_8_v2_g.mp3 | ответ в разговоре (холоден) | Schedar | willing, open, conversational, cold, curt | Коротко: вот что тут было |
+| dlg_25_8_v1_f_g.mp3 | ответ в разговоре (холоден) | Leda | willing, open, conversational, cold, curt | Коротко: вот что тут было |
+| dlg_25_8_v2_f_g.mp3 | ответ в разговоре (холоден) | Aoede | willing, open, conversational, cold, curt | Коротко: вот что тут было |
+| dlg_26_0_v1_g.mp3 | ответ в разговоре | Sadachbia | patient, explaining again | Да, про это уже шла речь. Вот как было |
+| dlg_26_0_v2_g.mp3 | ответ в разговоре | Schedar | patient, explaining again | Да, про это уже шла речь. Вот как было |
+| dlg_26_0_v1_f_g.mp3 | ответ в разговоре | Leda | patient, explaining again | Да, про это уже шла речь. Вот как было |
+| dlg_26_0_v2_f_g.mp3 | ответ в разговоре | Aoede | patient, explaining again | Да, про это уже шла речь. Вот как было |
+| dlg_26_1_v1_g.mp3 | ответ в разговоре | Sadachbia | patient, explaining again | Повторю, раз не расслышали |
+| dlg_26_1_v2_g.mp3 | ответ в разговоре | Schedar | patient, explaining again | Повторю, раз не расслышали |
+| dlg_26_1_v1_f_g.mp3 | ответ в разговоре | Leda | patient, explaining again | Повторю, раз не расслышали |
+| dlg_26_1_v2_f_g.mp3 | ответ в разговоре | Aoede | patient, explaining again | Повторю, раз не расслышали |
+| dlg_26_2_v1_g.mp3 | ответ в разговоре | Sadachbia | patient, explaining again | Слушайте ещё раз, внимательнее |
+| dlg_26_2_v2_g.mp3 | ответ в разговоре | Schedar | patient, explaining again | Слушайте ещё раз, внимательнее |
+| dlg_26_2_v1_f_g.mp3 | ответ в разговоре | Leda | patient, explaining again | Слушайте ещё раз, внимательнее |
+| dlg_26_2_v2_f_g.mp3 | ответ в разговоре | Aoede | patient, explaining again | Слушайте ещё раз, внимательнее |
+| dlg_26_3_v1_g.mp3 | ответ в разговоре (рациональный) | Sadachbia | patient, explaining again, calm, rational | По порядку, ещё раз |
+| dlg_26_3_v2_g.mp3 | ответ в разговоре (рациональный) | Schedar | patient, explaining again, calm, rational | По порядку, ещё раз |
+| dlg_26_3_v1_f_g.mp3 | ответ в разговоре (рациональный) | Leda | patient, explaining again, calm, rational | По порядку, ещё раз |
+| dlg_26_3_v2_f_g.mp3 | ответ в разговоре (рациональный) | Aoede | patient, explaining again, calm, rational | По порядку, ещё раз |
+| dlg_26_4_v1_g.mp3 | ответ в разговоре (свой) | Sadachbia | patient, explaining again, warm, friendly | Для тебя — хоть дважды |
+| dlg_26_4_v2_g.mp3 | ответ в разговоре (свой) | Schedar | patient, explaining again, warm, friendly | Для тебя — хоть дважды |
+| dlg_26_4_v1_f_g.mp3 | ответ в разговоре (свой) | Leda | patient, explaining again, warm, friendly | Для тебя — хоть дважды |
+| dlg_26_4_v2_f_g.mp3 | ответ в разговоре (свой) | Aoede | patient, explaining again, warm, friendly | Для тебя — хоть дважды |
+| dlg_26_5_v1_g.mp3 | ответ в разговоре (холоден) | Sadachbia | patient, explaining again, cold, curt | Последний раз повторяю |
+| dlg_26_5_v2_g.mp3 | ответ в разговоре (холоден) | Schedar | patient, explaining again, cold, curt | Последний раз повторяю |
+| dlg_26_5_v1_f_g.mp3 | ответ в разговоре (холоден) | Leda | patient, explaining again, cold, curt | Последний раз повторяю |
+| dlg_26_5_v2_f_g.mp3 | ответ в разговоре (холоден) | Aoede | patient, explaining again, cold, curt | Последний раз повторяю |
+| dlg_27_0_v1_g.mp3 | ответ в разговоре | Sadachbia | curt, closing the topic | Больше мне добавить нечего |
+| dlg_27_0_v2_g.mp3 | ответ в разговоре | Schedar | curt, closing the topic | Больше мне добавить нечего |
+| dlg_27_0_v1_f_g.mp3 | ответ в разговоре | Leda | curt, closing the topic | Больше мне добавить нечего |
+| dlg_27_0_v2_f_g.mp3 | ответ в разговоре | Aoede | curt, closing the topic | Больше мне добавить нечего |
+| dlg_27_1_v1_g.mp3 | ответ в разговоре | Sadachbia | curt, closing the topic | Что было — рассказано |
+| dlg_27_1_v2_g.mp3 | ответ в разговоре | Schedar | curt, closing the topic | Что было — рассказано |
+| dlg_27_1_v1_f_g.mp3 | ответ в разговоре | Leda | curt, closing the topic | Что было — рассказано |
+| dlg_27_1_v2_f_g.mp3 | ответ в разговоре | Aoede | curt, closing the topic | Что было — рассказано |
+| dlg_27_2_v1_g.mp3 | ответ в разговоре | Sadachbia | curt, closing the topic | Больше ничего не знаю |
+| dlg_27_2_v2_g.mp3 | ответ в разговоре | Schedar | curt, closing the topic | Больше ничего не знаю |
+| dlg_27_2_v1_f_g.mp3 | ответ в разговоре | Leda | curt, closing the topic | Больше ничего не знаю |
+| dlg_27_2_v2_f_g.mp3 | ответ в разговоре | Aoede | curt, closing the topic | Больше ничего не знаю |
+| dlg_27_3_v1_g.mp3 | ответ в разговоре (недруг) | Sadachbia | curt, closing the topic, hostile | Отстаньте со своими расспросами |
+| dlg_27_3_v2_g.mp3 | ответ в разговоре (недруг) | Schedar | curt, closing the topic, hostile | Отстаньте со своими расспросами |
+| dlg_27_3_v1_f_g.mp3 | ответ в разговоре (недруг) | Leda | curt, closing the topic, hostile | Отстаньте со своими расспросами |
+| dlg_27_3_v2_f_g.mp3 | ответ в разговоре (недруг) | Aoede | curt, closing the topic, hostile | Отстаньте со своими расспросами |
+| dlg_27_4_v1_g.mp3 | ответ в разговоре (свой) | Sadachbia | curt, closing the topic, warm, friendly | Честно, друг, больше ничего не знаю |
+| dlg_27_4_v2_g.mp3 | ответ в разговоре (свой) | Schedar | curt, closing the topic, warm, friendly | Честно, друг, больше ничего не знаю |
+| dlg_27_4_v1_f_g.mp3 | ответ в разговоре (свой) | Leda | curt, closing the topic, warm, friendly | Честно, друг, больше ничего не знаю |
+| dlg_27_4_v2_f_g.mp3 | ответ в разговоре (свой) | Aoede | curt, closing the topic, warm, friendly | Честно, друг, больше ничего не знаю |
+| dlg_28_0_v1_g.mp3 | ответ в разговоре | Sadachbia | worried, grave | Времена неспокойные, вот что скажу |
+| dlg_28_0_v2_g.mp3 | ответ в разговоре | Schedar | worried, grave | Времена неспокойные, вот что скажу |
+| dlg_28_0_v1_f_g.mp3 | ответ в разговоре | Leda | worried, grave | Времена неспокойные, вот что скажу |
+| dlg_28_0_v2_f_g.mp3 | ответ в разговоре | Aoede | worried, grave | Времена неспокойные, вот что скажу |
+| dlg_28_1_v1_g.mp3 | ответ в разговоре | Sadachbia | worried, grave | В мире всякое творится, слушайте |
+| dlg_28_1_v1_f_g.mp3 | ответ в разговоре | Leda | worried, grave | В мире всякое творится, слушайте |
+| dlg_28_1_v2_f_g.mp3 | ответ в разговоре | Aoede | worried, grave | В мире всякое творится, слушайте |
+| dlg_28_2_v1_g.mp3 | ответ в разговоре | Sadachbia | worried, grave | Цены растут, войны не кончаются — вот вам и новости |
+| dlg_28_2_v1_f_g.mp3 | ответ в разговоре | Leda | worried, grave | Цены растут, войны не кончаются — вот вам и новости |
+| dlg_28_2_v2_f_g.mp3 | ответ в разговоре | Aoede | worried, grave | Цены растут, войны не кончаются — вот вам и новости |
+| dlg_28_3_v1_g.mp3 | ответ в разговоре (фанатик) | Sadachbia | worried, grave, zealous, fervent | Боги гневаются, вот и неспокойно |
+| dlg_28_3_v1_f_g.mp3 | ответ в разговоре (фанатик) | Leda | worried, grave, zealous, fervent | Боги гневаются, вот и неспокойно |
+| dlg_28_3_v2_f_g.mp3 | ответ в разговоре (фанатик) | Aoede | worried, grave, zealous, fervent | Боги гневаются, вот и неспокойно |
+| dlg_28_4_v1_g.mp3 | ответ в разговоре (прагматик) | Sadachbia | worried, grave, matter-of-fact | Торговля встала, вот главное |
+| dlg_28_4_v1_f_g.mp3 | ответ в разговоре (прагматик) | Leda | worried, grave, matter-of-fact | Торговля встала, вот главное |
+| dlg_28_4_v2_f_g.mp3 | ответ в разговоре (прагматик) | Aoede | worried, grave, matter-of-fact | Торговля встала, вот главное |
+| dlg_28_5_v1_g.mp3 | ответ в разговоре (мятежник) | Sadachbia | worried, grave, rebellious | Власть жиреет, народ беднеет — вот и все новости |
+| dlg_28_5_v1_f_g.mp3 | ответ в разговоре (мятежник) | Leda | worried, grave, rebellious | Власть жиреет, народ беднеет — вот и все новости |
+| dlg_28_5_v2_f_g.mp3 | ответ в разговоре (мятежник) | Aoede | worried, grave, rebellious | Власть жиреет, народ беднеет — вот и все новости |
+| dlg_28_6_v1_g.mp3 | ответ в разговоре (свой) | Sadachbia | worried, grave, warm, friendly | Тебе скажу как есть: худо в мире |
+| dlg_28_6_v1_f_g.mp3 | ответ в разговоре (свой) | Leda | worried, grave, warm, friendly | Тебе скажу как есть: худо в мире |
+| dlg_28_6_v2_f_g.mp3 | ответ в разговоре (свой) | Aoede | worried, grave, warm, friendly | Тебе скажу как есть: худо в мире |
+| dlg_29_0_v1_g.mp3 | ответ в разговоре | Sadachbia | dismissive, grumbling | Моё дело — свой двор, а не весь мир |
+| dlg_29_0_v1_f_g.mp3 | ответ в разговоре | Leda | dismissive, grumbling | Моё дело — свой двор, а не весь мир |
+| dlg_29_0_v2_f_g.mp3 | ответ в разговоре | Aoede | dismissive, grumbling | Моё дело — свой двор, а не весь мир |
+| dlg_29_1_v1_g.mp3 | ответ в разговоре | Sadachbia | dismissive, grumbling | Не знаю я, что там за горами |
+| dlg_29_1_v2_g.mp3 | ответ в разговоре | Schedar | dismissive, grumbling | Не знаю я, что там за горами |
+| dlg_29_1_v1_f_g.mp3 | ответ в разговоре | Leda | dismissive, grumbling | Не знаю я, что там за горами |
+| dlg_29_1_v2_f_g.mp3 | ответ в разговоре | Aoede | dismissive, grumbling | Не знаю я, что там за горами |
+| dlg_29_2_v1_g.mp3 | ответ в разговоре | Sadachbia | dismissive, grumbling | Мне бы тут управиться, не до мира |
+| dlg_29_2_v2_g.mp3 | ответ в разговоре | Schedar | dismissive, grumbling | Мне бы тут управиться, не до мира |
+| dlg_29_2_v1_f_g.mp3 | ответ в разговоре | Leda | dismissive, grumbling | Мне бы тут управиться, не до мира |
+| dlg_29_2_v2_f_g.mp3 | ответ в разговоре | Aoede | dismissive, grumbling | Мне бы тут управиться, не до мира |
+| dlg_29_3_v1_g.mp3 | ответ в разговоре (недруг) | Sadachbia | dismissive, grumbling, hostile | Про мир спросите у кого-нибудь другого |
+| dlg_29_3_v2_g.mp3 | ответ в разговоре (недруг) | Schedar | dismissive, grumbling, hostile | Про мир спросите у кого-нибудь другого |
+| dlg_29_3_v1_f_g.mp3 | ответ в разговоре (недруг) | Leda | dismissive, grumbling, hostile | Про мир спросите у кого-нибудь другого |
+| dlg_29_3_v2_f_g.mp3 | ответ в разговоре (недруг) | Aoede | dismissive, grumbling, hostile | Про мир спросите у кого-нибудь другого |
+| dlg_29_4_v1_g.mp3 | ответ в разговоре (холоден) | Sadachbia | dismissive, grumbling, cold, curt | Не интересуюсь |
+| dlg_29_4_v2_g.mp3 | ответ в разговоре (холоден) | Schedar | dismissive, grumbling, cold, curt | Не интересуюсь |
+| dlg_29_4_v1_f_g.mp3 | ответ в разговоре (холоден) | Leda | dismissive, grumbling, cold, curt | Не интересуюсь |
+| dlg_29_4_v2_f_g.mp3 | ответ в разговоре (холоден) | Aoede | dismissive, grumbling, cold, curt | Не интересуюсь |
+| dlg_30_0_v1_g.mp3 | ответ в разговоре | Sadachbia | knowing, reassuring | Понимаю. Можете на меня положиться |
+| dlg_30_0_v2_g.mp3 | ответ в разговоре | Schedar | knowing, reassuring | Понимаю. Можете на меня положиться |
+| dlg_30_0_v1_f_g.mp3 | ответ в разговоре | Leda | knowing, reassuring | Понимаю. Можете на меня положиться |
+| dlg_30_0_v2_f_g.mp3 | ответ в разговоре | Aoede | knowing, reassuring | Понимаю. Можете на меня положиться |
+| dlg_30_1_v1_g.mp3 | ответ в разговоре | Sadachbia | knowing, reassuring | Можно не продолжать, всё ясно |
+| dlg_30_1_v2_g.mp3 | ответ в разговоре | Schedar | knowing, reassuring | Можно не продолжать, всё ясно |
+| dlg_30_1_v1_f_g.mp3 | ответ в разговоре | Leda | knowing, reassuring | Можно не продолжать, всё ясно |
+| dlg_30_1_v2_f_g.mp3 | ответ в разговоре | Aoede | knowing, reassuring | Можно не продолжать, всё ясно |
+| dlg_30_2_v1_g.mp3 | ответ в разговоре | Sadachbia | knowing, reassuring | Намёк понят |
+| dlg_30_2_v2_g.mp3 | ответ в разговоре | Schedar | knowing, reassuring | Намёк понят |
+| dlg_30_2_v1_f_g.mp3 | ответ в разговоре | Leda | knowing, reassuring | Намёк понят |
+| dlg_30_2_v2_f_g.mp3 | ответ в разговоре | Aoede | knowing, reassuring | Намёк понят |
+| dlg_30_3_v1_g.mp3 | ответ в разговоре (хитрый) | Sadachbia | knowing, reassuring, sly | Понимаю больше, чем вы сказали |
+| dlg_30_3_v2_g.mp3 | ответ в разговоре (хитрый) | Schedar | knowing, reassuring, sly | Понимаю больше, чем вы сказали |
+| dlg_30_3_v1_f_g.mp3 | ответ в разговоре (хитрый) | Leda | knowing, reassuring, sly | Понимаю больше, чем вы сказали |
+| dlg_30_3_v2_f_g.mp3 | ответ в разговоре (хитрый) | Aoede | knowing, reassuring, sly | Понимаю больше, чем вы сказали |
+| dlg_30_4_v1_g.mp3 | ответ в разговоре (свой) | Sadachbia | knowing, reassuring, warm, friendly | Для тебя — сделаю |
+| dlg_30_4_v2_g.mp3 | ответ в разговоре (свой) | Schedar | knowing, reassuring, warm, friendly | Для тебя — сделаю |
+| dlg_30_4_v1_f_g.mp3 | ответ в разговоре (свой) | Leda | knowing, reassuring, warm, friendly | Для тебя — сделаю |
+| dlg_30_4_v2_f_g.mp3 | ответ в разговоре (свой) | Aoede | knowing, reassuring, warm, friendly | Для тебя — сделаю |
+| dlg_31_0_v1_g.mp3 | ответ в разговоре | Sadachbia | convinced, trusting | Раз так — верю вам |
+| dlg_31_0_v2_g.mp3 | ответ в разговоре | Schedar | convinced, trusting | Раз так — верю вам |
+| dlg_31_0_v1_f_g.mp3 | ответ в разговоре | Leda | convinced, trusting | Раз так — верю вам |
+| dlg_31_0_v2_f_g.mp3 | ответ в разговоре | Aoede | convinced, trusting | Раз так — верю вам |
+| dlg_31_1_v1_g.mp3 | ответ в разговоре | Sadachbia | convinced, trusting | Ну, если так, другое дело |
+| dlg_31_1_v2_g.mp3 | ответ в разговоре | Schedar | convinced, trusting | Ну, если так, другое дело |
+| dlg_31_1_v1_f_g.mp3 | ответ в разговоре | Leda | convinced, trusting | Ну, если так, другое дело |
+| dlg_31_1_v2_f_g.mp3 | ответ в разговоре | Aoede | convinced, trusting | Ну, если так, другое дело |
+| dlg_31_2_v1_g.mp3 | ответ в разговоре | Sadachbia | convinced, trusting | Что ж, похоже на правду |
+| dlg_31_2_v2_g.mp3 | ответ в разговоре | Schedar | convinced, trusting | Что ж, похоже на правду |
+| dlg_31_2_v1_f_g.mp3 | ответ в разговоре | Leda | convinced, trusting | Что ж, похоже на правду |
+| dlg_31_2_v2_f_g.mp3 | ответ в разговоре | Aoede | convinced, trusting | Что ж, похоже на правду |
+| dlg_31_3_v1_g.mp3 | ответ в разговоре (добрый) | Sadachbia | convinced, trusting, kind, warm | Верю. Людям надо верить |
+| dlg_31_3_v2_g.mp3 | ответ в разговоре (добрый) | Schedar | convinced, trusting, kind, warm | Верю. Людям надо верить |
+| dlg_31_3_v1_f_g.mp3 | ответ в разговоре (добрый) | Leda | convinced, trusting, kind, warm | Верю. Людям надо верить |
+| dlg_31_3_v2_f_g.mp3 | ответ в разговоре (добрый) | Aoede | convinced, trusting, kind, warm | Верю. Людям надо верить |
+| dlg_31_4_v1_g.mp3 | ответ в разговоре (свой) | Sadachbia | convinced, trusting, warm, friendly | Тебе — верю |
+| dlg_31_4_v1_f_g.mp3 | ответ в разговоре (свой) | Leda | convinced, trusting, warm, friendly | Тебе — верю |
+| dlg_31_4_v2_f_g.mp3 | ответ в разговоре (свой) | Aoede | convinced, trusting, warm, friendly | Тебе — верю |
+| dlg_32_0_v1_g.mp3 | ответ в разговоре | Sadachbia | angry outburst, losing temper | Да что вы понимаете! Ладно, слушайте |
+| dlg_32_0_v2_g.mp3 | ответ в разговоре | Schedar | angry outburst, losing temper | Да что вы понимаете! Ладно, слушайте |
+| dlg_32_0_v1_f_g.mp3 | ответ в разговоре | Leda | angry outburst, losing temper | Да что вы понимаете! Ладно, слушайте |
+| dlg_32_0_v2_f_g.mp3 | ответ в разговоре | Aoede | angry outburst, losing temper | Да что вы понимаете! Ладно, слушайте |
+| dlg_32_1_v1_g.mp3 | ответ в разговоре | Sadachbia | angry outburst, losing temper | Довели! Так знайте же |
+| dlg_32_1_v2_g.mp3 | ответ в разговоре | Schedar | angry outburst, losing temper | Довели! Так знайте же |
+| dlg_32_1_v1_f_g.mp3 | ответ в разговоре | Leda | angry outburst, losing temper | Довели! Так знайте же |
+| dlg_32_1_v2_f_g.mp3 | ответ в разговоре | Aoede | angry outburst, losing temper | Довели! Так знайте же |
+| dlg_32_2_v1_g.mp3 | ответ в разговоре | Sadachbia | angry outburst, losing temper | Хватит! Скажу, раз так хотите |
+| dlg_32_2_v2_g.mp3 | ответ в разговоре | Schedar | angry outburst, losing temper | Хватит! Скажу, раз так хотите |
+| dlg_32_2_v1_f_g.mp3 | ответ в разговоре | Leda | angry outburst, losing temper | Хватит! Скажу, раз так хотите |
+| dlg_32_2_v2_f_g.mp3 | ответ в разговоре | Aoede | angry outburst, losing temper | Хватит! Скажу, раз так хотите |
+| dlg_32_3_v1_g.mp3 | ответ в разговоре (жестокий) | Sadachbia | angry outburst, losing temper, harsh, cruel | Ах так? Получайте правду |
+| dlg_32_3_v2_g.mp3 | ответ в разговоре (жестокий) | Schedar | angry outburst, losing temper, harsh, cruel | Ах так? Получайте правду |
+| dlg_32_3_v1_f_g.mp3 | ответ в разговоре (жестокий) | Leda | angry outburst, losing temper, harsh, cruel | Ах так? Получайте правду |
+| dlg_32_3_v2_f_g.mp3 | ответ в разговоре (жестокий) | Aoede | angry outburst, losing temper, harsh, cruel | Ах так? Получайте правду |
+| dlg_32_4_v1_g.mp3 | ответ в разговоре (недруг) | Sadachbia | angry outburst, losing temper, hostile | Ненавижу вас. Но слушайте |
+| dlg_32_4_v2_g.mp3 | ответ в разговоре (недруг) | Schedar | angry outburst, losing temper, hostile | Ненавижу вас. Но слушайте |
+| dlg_32_4_v1_f_g.mp3 | ответ в разговоре (недруг) | Leda | angry outburst, losing temper, hostile | Ненавижу вас. Но слушайте |
+| dlg_33_0_v1_g.mp3 | ответ в разговоре | Sadachbia | heated, arguing loudly | Вы не знаете, о чём говорите! |
+| dlg_33_0_v2_g.mp3 | ответ в разговоре | Schedar | heated, arguing loudly | Вы не знаете, о чём говорите! |
+| dlg_33_0_v1_f_g.mp3 | ответ в разговоре | Leda | heated, arguing loudly | Вы не знаете, о чём говорите! |
+| dlg_33_0_v2_f_g.mp3 | ответ в разговоре | Aoede | heated, arguing loudly | Вы не знаете, о чём говорите! |
+| dlg_33_1_v1_g.mp3 | ответ в разговоре | Sadachbia | heated, arguing loudly | Чушь! Всё не так |
+| dlg_33_1_v2_g.mp3 | ответ в разговоре | Schedar | heated, arguing loudly | Чушь! Всё не так |
+| dlg_33_1_v1_f_g.mp3 | ответ в разговоре | Leda | heated, arguing loudly | Чушь! Всё не так |
+| dlg_33_1_v2_f_g.mp3 | ответ в разговоре | Aoede | heated, arguing loudly | Чушь! Всё не так |
+| dlg_33_2_v1_g.mp3 | ответ в разговоре | Sadachbia | heated, arguing loudly | Спорить с вами — время терять |
+| dlg_33_2_v2_g.mp3 | ответ в разговоре | Schedar | heated, arguing loudly | Спорить с вами — время терять |
+| dlg_33_2_v1_f_g.mp3 | ответ в разговоре | Leda | heated, arguing loudly | Спорить с вами — время терять |
+| dlg_33_2_v2_f_g.mp3 | ответ в разговоре | Aoede | heated, arguing loudly | Спорить с вами — время терять |
+| dlg_33_3_v1_g.mp3 | ответ в разговоре (высокомерный) | Sadachbia | heated, arguing loudly, haughty | Куда вам со мной спорить |
+| dlg_33_3_v2_g.mp3 | ответ в разговоре (высокомерный) | Schedar | heated, arguing loudly, haughty | Куда вам со мной спорить |
+| dlg_33_3_v1_f_g.mp3 | ответ в разговоре (высокомерный) | Leda | heated, arguing loudly, haughty | Куда вам со мной спорить |
+| dlg_33_3_v2_f_g.mp3 | ответ в разговоре (высокомерный) | Aoede | heated, arguing loudly, haughty | Куда вам со мной спорить |
+| dlg_33_4_v1_g.mp3 | ответ в разговоре (свой) | Sadachbia | heated, arguing loudly, warm, friendly | Нет, друг, тут ты неправ |
+| dlg_33_4_v2_g.mp3 | ответ в разговоре (свой) | Schedar | heated, arguing loudly, warm, friendly | Нет, друг, тут ты неправ |
+| dlg_33_4_v1_f_g.mp3 | ответ в разговоре (свой) | Leda | heated, arguing loudly, warm, friendly | Нет, друг, тут ты неправ |
+| dlg_33_4_v2_f_g.mp3 | ответ в разговоре (свой) | Aoede | heated, arguing loudly, warm, friendly | Нет, друг, тут ты неправ |
+| dlg_33_5_v1_g.mp3 | ответ в разговоре (недруг) | Sadachbia | heated, arguing loudly, hostile | От вас другого и не ждёшь |
+| dlg_33_5_v2_g.mp3 | ответ в разговоре (недруг) | Schedar | heated, arguing loudly, hostile | От вас другого и не ждёшь |
+| dlg_33_5_v1_f_g.mp3 | ответ в разговоре (недруг) | Leda | heated, arguing loudly, hostile | От вас другого и не ждёшь |
+| dlg_33_5_v2_f_g.mp3 | ответ в разговоре (недруг) | Aoede | heated, arguing loudly, hostile | От вас другого и не ждёшь |
+| dlg_34_0_v1_g.mp3 | ответ в разговоре | Sadachbia | thoughtful, reverent, conceding | Может, боги и вправду так рассудили |
+| dlg_34_0_v2_g.mp3 | ответ в разговоре | Schedar | thoughtful, reverent, conceding | Может, боги и вправду так рассудили |
+| dlg_34_0_v1_f_g.mp3 | ответ в разговоре | Leda | thoughtful, reverent, conceding | Может, боги и вправду так рассудили |
+| dlg_34_0_v2_f_g.mp3 | ответ в разговоре | Aoede | thoughtful, reverent, conceding | Может, боги и вправду так рассудили |
+| dlg_34_1_v1_g.mp3 | ответ в разговоре | Sadachbia | thoughtful, reverent, conceding | Над этим стоит помолиться |
+| dlg_34_1_v2_g.mp3 | ответ в разговоре | Schedar | thoughtful, reverent, conceding | Над этим стоит помолиться |
+| dlg_34_1_v1_f_g.mp3 | ответ в разговоре | Leda | thoughtful, reverent, conceding | Над этим стоит помолиться |
+| dlg_34_1_v2_f_g.mp3 | ответ в разговоре | Aoede | thoughtful, reverent, conceding | Над этим стоит помолиться |
+| dlg_34_2_v1_g.mp3 | ответ в разговоре | Sadachbia | thoughtful, reverent, conceding | В ваших словах есть вера |
+| dlg_34_2_v2_g.mp3 | ответ в разговоре | Schedar | thoughtful, reverent, conceding | В ваших словах есть вера |
+| dlg_34_2_v1_f_g.mp3 | ответ в разговоре | Leda | thoughtful, reverent, conceding | В ваших словах есть вера |
+| dlg_34_2_v2_f_g.mp3 | ответ в разговоре | Aoede | thoughtful, reverent, conceding | В ваших словах есть вера |
+| dlg_34_3_v1_g.mp3 | ответ в разговоре (фанатик) | Sadachbia | thoughtful, reverent, conceding, zealous, fervent | Вы говорите, как истинно верующий |
+| dlg_34_3_v2_g.mp3 | ответ в разговоре (фанатик) | Schedar | thoughtful, reverent, conceding, zealous, fervent | Вы говорите, как истинно верующий |
+| dlg_34_3_v1_f_g.mp3 | ответ в разговоре (фанатик) | Leda | thoughtful, reverent, conceding, zealous, fervent | Вы говорите, как истинно верующий |
+| dlg_34_3_v2_f_g.mp3 | ответ в разговоре (фанатик) | Aoede | thoughtful, reverent, conceding, zealous, fervent | Вы говорите, как истинно верующий |
+| dlg_34_4_v1_g.mp3 | ответ в разговоре (свой) | Sadachbia | thoughtful, reverent, conceding, warm, friendly | С тобой и о богах говорить легко |
+| dlg_34_4_v2_g.mp3 | ответ в разговоре (свой) | Schedar | thoughtful, reverent, conceding, warm, friendly | С тобой и о богах говорить легко |
+| dlg_34_4_v1_f_g.mp3 | ответ в разговоре (свой) | Leda | thoughtful, reverent, conceding, warm, friendly | С тобой и о богах говорить легко |
+| dlg_34_4_v2_f_g.mp3 | ответ в разговоре (свой) | Aoede | thoughtful, reverent, conceding, warm, friendly | С тобой и о богах говорить легко |
+| dlg_35_0_v1_g.mp3 | ответ в разговоре | Sadachbia | outraged, indignant, pious | Не вам судить о богах! |
+| dlg_35_0_v2_g.mp3 | ответ в разговоре | Schedar | outraged, indignant, pious | Не вам судить о богах! |
+| dlg_35_0_v1_f_g.mp3 | ответ в разговоре | Leda | outraged, indignant, pious | Не вам судить о богах! |
+| dlg_35_0_v2_f_g.mp3 | ответ в разговоре | Aoede | outraged, indignant, pious | Не вам судить о богах! |
+| dlg_35_1_v1_g.mp3 | ответ в разговоре | Sadachbia | outraged, indignant, pious | Святотатство! |
+| dlg_35_1_v2_g.mp3 | ответ в разговоре | Schedar | outraged, indignant, pious | Святотатство! |
+| dlg_35_1_v1_f_g.mp3 | ответ в разговоре | Leda | outraged, indignant, pious | Святотатство! |
+| dlg_35_1_v2_f_g.mp3 | ответ в разговоре | Aoede | outraged, indignant, pious | Святотатство! |
+| dlg_35_2_v1_g.mp3 | ответ в разговоре | Sadachbia | outraged, indignant, pious | Боги вам этого не простят |
+| dlg_35_2_v2_g.mp3 | ответ в разговоре | Schedar | outraged, indignant, pious | Боги вам этого не простят |
+| dlg_35_2_v1_f_g.mp3 | ответ в разговоре | Leda | outraged, indignant, pious | Боги вам этого не простят |
+| dlg_35_2_v2_f_g.mp3 | ответ в разговоре | Aoede | outraged, indignant, pious | Боги вам этого не простят |
+| dlg_35_3_v1_g.mp3 | ответ в разговоре (фанатик) | Sadachbia | outraged, indignant, pious, zealous, fervent | Замолчите, пока небо не услышало! |
+| dlg_35_3_v2_g.mp3 | ответ в разговоре (фанатик) | Schedar | outraged, indignant, pious, zealous, fervent | Замолчите, пока небо не услышало! |
+| dlg_35_3_v1_f_g.mp3 | ответ в разговоре (фанатик) | Leda | outraged, indignant, pious, zealous, fervent | Замолчите, пока небо не услышало! |
+| dlg_35_3_v2_f_g.mp3 | ответ в разговоре (фанатик) | Aoede | outraged, indignant, pious, zealous, fervent | Замолчите, пока небо не услышало! |
+| dlg_35_4_v1_g.mp3 | ответ в разговоре (рациональный) | Sadachbia | outraged, indignant, pious, calm, rational | Вера не спор, её не переспоришь |
+| dlg_35_4_v2_g.mp3 | ответ в разговоре (рациональный) | Schedar | outraged, indignant, pious, calm, rational | Вера не спор, её не переспоришь |
+| dlg_35_4_v1_f_g.mp3 | ответ в разговоре (рациональный) | Leda | outraged, indignant, pious, calm, rational | Вера не спор, её не переспоришь |
+| dlg_35_4_v2_f_g.mp3 | ответ в разговоре (рациональный) | Aoede | outraged, indignant, pious, calm, rational | Вера не спор, её не переспоришь |
+| dlg_35_5_v1_g.mp3 | ответ в разговоре (свой) | Sadachbia | outraged, indignant, pious, warm, friendly | Не надо, друг. Это святое |
+| dlg_35_5_v2_g.mp3 | ответ в разговоре (свой) | Schedar | outraged, indignant, pious, warm, friendly | Не надо, друг. Это святое |
+| dlg_35_5_v1_f_g.mp3 | ответ в разговоре (свой) | Leda | outraged, indignant, pious, warm, friendly | Не надо, друг. Это святое |
+| dlg_35_5_v2_f_g.mp3 | ответ в разговоре (свой) | Aoede | outraged, indignant, pious, warm, friendly | Не надо, друг. Это святое |
+| dlg_36_0_v1_g.mp3 | ответ в разговоре | Sadachbia | thoughtful, grudging agreement | В этом есть правда, как ни крути |
+| dlg_36_0_v2_g.mp3 | ответ в разговоре | Schedar | thoughtful, grudging agreement | В этом есть правда, как ни крути |
+| dlg_36_0_v1_f_g.mp3 | ответ в разговоре | Leda | thoughtful, grudging agreement | В этом есть правда, как ни крути |
+| dlg_36_0_v2_f_g.mp3 | ответ в разговоре | Aoede | thoughtful, grudging agreement | В этом есть правда, как ни крути |
+| dlg_36_1_v1_g.mp3 | ответ в разговоре | Sadachbia | thoughtful, grudging agreement | С податями и вправду перегнули |
+| dlg_36_1_v2_g.mp3 | ответ в разговоре | Schedar | thoughtful, grudging agreement | С податями и вправду перегнули |
+| dlg_36_1_v1_f_g.mp3 | ответ в разговоре | Leda | thoughtful, grudging agreement | С податями и вправду перегнули |
+| dlg_36_1_v2_f_g.mp3 | ответ в разговоре | Aoede | thoughtful, grudging agreement | С податями и вправду перегнули |
+| dlg_36_2_v1_g.mp3 | ответ в разговоре | Sadachbia | thoughtful, grudging agreement | Может, и вправду пора менять порядки |
+| dlg_36_2_v2_g.mp3 | ответ в разговоре | Schedar | thoughtful, grudging agreement | Может, и вправду пора менять порядки |
+| dlg_36_2_v1_f_g.mp3 | ответ в разговоре | Leda | thoughtful, grudging agreement | Может, и вправду пора менять порядки |
+| dlg_36_2_v2_f_g.mp3 | ответ в разговоре | Aoede | thoughtful, grudging agreement | Может, и вправду пора менять порядки |
+| dlg_36_3_v1_g.mp3 | ответ в разговоре (традиционалист) | Sadachbia | thoughtful, grudging agreement, stern, old-fashioned | Не люблю перемен, но тут вы правы |
+| dlg_36_3_v2_g.mp3 | ответ в разговоре (традиционалист) | Schedar | thoughtful, grudging agreement, stern, old-fashioned | Не люблю перемен, но тут вы правы |
+| dlg_36_3_v1_f_g.mp3 | ответ в разговоре (традиционалист) | Leda | thoughtful, grudging agreement, stern, old-fashioned | Не люблю перемен, но тут вы правы |
+| dlg_36_3_v2_f_g.mp3 | ответ в разговоре (традиционалист) | Aoede | thoughtful, grudging agreement, stern, old-fashioned | Не люблю перемен, но тут вы правы |
+| dlg_36_4_v1_g.mp3 | ответ в разговоре (реформатор) | Sadachbia | thoughtful, grudging agreement, eager | Наконец-то кто-то говорит дело |
+| dlg_36_4_v2_g.mp3 | ответ в разговоре (реформатор) | Schedar | thoughtful, grudging agreement, eager | Наконец-то кто-то говорит дело |
+| dlg_36_4_v1_f_g.mp3 | ответ в разговоре (реформатор) | Leda | thoughtful, grudging agreement, eager | Наконец-то кто-то говорит дело |
+| dlg_36_4_v2_f_g.mp3 | ответ в разговоре (реформатор) | Aoede | thoughtful, grudging agreement, eager | Наконец-то кто-то говорит дело |
+| dlg_36_5_v1_g.mp3 | ответ в разговоре (свой) | Sadachbia | thoughtful, grudging agreement, warm, friendly | Вот и у меня те же мысли |
+| dlg_36_5_v2_g.mp3 | ответ в разговоре (свой) | Schedar | thoughtful, grudging agreement, warm, friendly | Вот и у меня те же мысли |
+| dlg_36_5_v1_f_g.mp3 | ответ в разговоре (свой) | Leda | thoughtful, grudging agreement, warm, friendly | Вот и у меня те же мысли |
+| dlg_36_5_v2_f_g.mp3 | ответ в разговоре (свой) | Aoede | thoughtful, grudging agreement, warm, friendly | Вот и у меня те же мысли |
+| dlg_37_0_v1_g.mp3 | ответ в разговоре | Sadachbia | stern, warning, uneasy | Власть — не вашего ума дело |
+| dlg_37_0_v2_g.mp3 | ответ в разговоре | Schedar | stern, warning, uneasy | Власть — не вашего ума дело |
+| dlg_37_0_v1_f_g.mp3 | ответ в разговоре | Leda | stern, warning, uneasy | Власть — не вашего ума дело |
+| dlg_37_0_v2_f_g.mp3 | ответ в разговоре | Aoede | stern, warning, uneasy | Власть — не вашего ума дело |
+| dlg_37_1_v1_g.mp3 | ответ в разговоре | Sadachbia | stern, warning, uneasy | Про такое вслух не говорят |
+| dlg_37_1_v2_g.mp3 | ответ в разговоре | Schedar | stern, warning, uneasy | Про такое вслух не говорят |
+| dlg_37_1_v1_f_g.mp3 | ответ в разговоре | Leda | stern, warning, uneasy | Про такое вслух не говорят |
+| dlg_37_1_v2_f_g.mp3 | ответ в разговоре | Aoede | stern, warning, uneasy | Про такое вслух не говорят |
+| dlg_37_2_v1_g.mp3 | ответ в разговоре | Sadachbia | stern, warning, uneasy | Держава как стояла, так и будет стоять |
+| dlg_37_2_v2_g.mp3 | ответ в разговоре | Schedar | stern, warning, uneasy | Держава как стояла, так и будет стоять |
+| dlg_37_2_v1_f_g.mp3 | ответ в разговоре | Leda | stern, warning, uneasy | Держава как стояла, так и будет стоять |
+| dlg_37_2_v2_f_g.mp3 | ответ в разговоре | Aoede | stern, warning, uneasy | Держава как стояла, так и будет стоять |
+| dlg_37_3_v1_g.mp3 | ответ в разговоре (мятежник) | Sadachbia | stern, warning, uneasy, rebellious | Власть? Да она нас и не спрашивает |
+| dlg_37_3_v2_g.mp3 | ответ в разговоре (мятежник) | Schedar | stern, warning, uneasy, rebellious | Власть? Да она нас и не спрашивает |
+| dlg_37_3_v1_f_g.mp3 | ответ в разговоре (мятежник) | Leda | stern, warning, uneasy, rebellious | Власть? Да она нас и не спрашивает |
+| dlg_37_3_v2_f_g.mp3 | ответ в разговоре (мятежник) | Aoede | stern, warning, uneasy, rebellious | Власть? Да она нас и не спрашивает |
+| dlg_37_4_v1_g.mp3 | ответ в разговоре (традиционалист) | Sadachbia | stern, warning, uneasy, stern, old-fashioned | Порядок заведён не нами |
+| dlg_37_4_v2_g.mp3 | ответ в разговоре (традиционалист) | Schedar | stern, warning, uneasy, stern, old-fashioned | Порядок заведён не нами |
+| dlg_37_4_v1_f_g.mp3 | ответ в разговоре (традиционалист) | Leda | stern, warning, uneasy, stern, old-fashioned | Порядок заведён не нами |
+| dlg_37_4_v2_f_g.mp3 | ответ в разговоре (традиционалист) | Aoede | stern, warning, uneasy, stern, old-fashioned | Порядок заведён не нами |
+| dlg_37_5_v1_g.mp3 | ответ в разговоре (недруг) | Sadachbia | stern, warning, uneasy, hostile | Донести бы на вас за такие речи |
+| dlg_37_5_v2_g.mp3 | ответ в разговоре (недруг) | Schedar | stern, warning, uneasy, hostile | Донести бы на вас за такие речи |
+| dlg_37_5_v1_f_g.mp3 | ответ в разговоре (недруг) | Leda | stern, warning, uneasy, hostile | Донести бы на вас за такие речи |
+| dlg_37_5_v2_f_g.mp3 | ответ в разговоре (недруг) | Aoede | stern, warning, uneasy, hostile | Донести бы на вас за такие речи |
+| dlg_38_0_v1_g.mp3 | ответ в разговоре | Sadachbia | offended, cold | У нас так не кланяются |
+| dlg_38_0_v2_g.mp3 | ответ в разговоре | Schedar | offended, cold | У нас так не кланяются |
+| dlg_38_0_v1_f_g.mp3 | ответ в разговоре | Leda | offended, cold | У нас так не кланяются |
+| dlg_38_0_v2_f_g.mp3 | ответ в разговоре | Aoede | offended, cold | У нас так не кланяются |
+| dlg_38_1_v1_g.mp3 | ответ в разговоре | Sadachbia | offended, cold | Это что, насмешка? |
+| dlg_38_1_v2_g.mp3 | ответ в разговоре | Schedar | offended, cold | Это что, насмешка? |
+| dlg_38_1_v1_f_g.mp3 | ответ в разговоре | Leda | offended, cold | Это что, насмешка? |
+| dlg_38_1_v2_f_g.mp3 | ответ в разговоре | Aoede | offended, cold | Это что, насмешка? |
+| dlg_38_2_v1_g.mp3 | ответ в разговоре | Sadachbia | offended, cold | Не знаете обычаев — не берите |
+| dlg_38_2_v2_g.mp3 | ответ в разговоре | Schedar | offended, cold | Не знаете обычаев — не берите |
+| dlg_38_2_v1_f_g.mp3 | ответ в разговоре | Leda | offended, cold | Не знаете обычаев — не берите |
+| dlg_38_2_v2_f_g.mp3 | ответ в разговоре | Aoede | offended, cold | Не знаете обычаев — не берите |
+| dlg_38_3_v1_g.mp3 | ответ в разговоре (высокомерный) | Sadachbia | offended, cold, haughty | Чужакам наших обычаев не понять |
+| dlg_38_3_v2_g.mp3 | ответ в разговоре (высокомерный) | Schedar | offended, cold, haughty | Чужакам наших обычаев не понять |
+| dlg_38_3_v1_f_g.mp3 | ответ в разговоре (высокомерный) | Leda | offended, cold, haughty | Чужакам наших обычаев не понять |
+| dlg_38_3_v2_f_g.mp3 | ответ в разговоре (высокомерный) | Aoede | offended, cold, haughty | Чужакам наших обычаев не понять |
+| dlg_38_4_v1_g.mp3 | ответ в разговоре (свой) | Sadachbia | offended, cold, warm, friendly | Ничего, научишься |
+| dlg_38_4_v2_g.mp3 | ответ в разговоре (свой) | Schedar | offended, cold, warm, friendly | Ничего, научишься |
+| dlg_38_4_v1_f_g.mp3 | ответ в разговоре (свой) | Leda | offended, cold, warm, friendly | Ничего, научишься |
+| dlg_38_4_v2_f_g.mp3 | ответ в разговоре (свой) | Aoede | offended, cold, warm, friendly | Ничего, научишься |
+| dlg_39_0_v1_g.mp3 | ответ в разговоре | Sadachbia | satisfied, businesslike | По рукам, договорились |
+| dlg_39_0_v2_g.mp3 | ответ в разговоре | Schedar | satisfied, businesslike | По рукам, договорились |
+| dlg_39_0_v1_f_g.mp3 | ответ в разговоре | Leda | satisfied, businesslike | По рукам, договорились |
+| dlg_39_0_v2_f_g.mp3 | ответ в разговоре | Aoede | satisfied, businesslike | По рукам, договорились |
+| dlg_39_1_v1_g.mp3 | ответ в разговоре | Sadachbia | satisfied, businesslike | Что ж, такое обоим подходит |
+| dlg_39_1_v2_g.mp3 | ответ в разговоре | Schedar | satisfied, businesslike | Что ж, такое обоим подходит |
+| dlg_39_1_v1_f_g.mp3 | ответ в разговоре | Leda | satisfied, businesslike | Что ж, такое обоим подходит |
+| dlg_39_1_v2_f_g.mp3 | ответ в разговоре | Aoede | satisfied, businesslike | Что ж, такое обоим подходит |
+| dlg_39_2_v1_g.mp3 | ответ в разговоре | Sadachbia | satisfied, businesslike | Уговор так уговор |
+| dlg_39_2_v2_g.mp3 | ответ в разговоре | Schedar | satisfied, businesslike | Уговор так уговор |
+| dlg_39_2_v1_f_g.mp3 | ответ в разговоре | Leda | satisfied, businesslike | Уговор так уговор |
+| dlg_39_2_v2_f_g.mp3 | ответ в разговоре | Aoede | satisfied, businesslike | Уговор так уговор |
+| dlg_39_3_v1_g.mp3 | ответ в разговоре (жадный) | Sadachbia | satisfied, businesslike, greedy, calculating | По рукам, но моя доля побольше |
+| dlg_39_3_v2_g.mp3 | ответ в разговоре (жадный) | Schedar | satisfied, businesslike, greedy, calculating | По рукам, но моя доля побольше |
+| dlg_39_3_v1_f_g.mp3 | ответ в разговоре (жадный) | Leda | satisfied, businesslike, greedy, calculating | По рукам, но моя доля побольше |
+| dlg_39_3_v2_f_g.mp3 | ответ в разговоре (жадный) | Aoede | satisfied, businesslike, greedy, calculating | По рукам, но моя доля побольше |
+| dlg_39_4_v1_g.mp3 | ответ в разговоре (свой) | Sadachbia | satisfied, businesslike, warm, friendly | Со своим всегда договоримся |
+| dlg_39_4_v2_g.mp3 | ответ в разговоре (свой) | Schedar | satisfied, businesslike, warm, friendly | Со своим всегда договоримся |
+| dlg_39_4_v1_f_g.mp3 | ответ в разговоре (свой) | Leda | satisfied, businesslike, warm, friendly | Со своим всегда договоримся |
+| dlg_39_4_v2_f_g.mp3 | ответ в разговоре (свой) | Aoede | satisfied, businesslike, warm, friendly | Со своим всегда договоримся |
+| dlg_39_5_v1_g.mp3 | ответ в разговоре (недруг) | Sadachbia | satisfied, businesslike, hostile | Договорились. Но глаз с вас не спущу |
+| dlg_39_5_v2_g.mp3 | ответ в разговоре (недруг) | Schedar | satisfied, businesslike, hostile | Договорились. Но глаз с вас не спущу |
+| dlg_39_5_v1_f_g.mp3 | ответ в разговоре (недруг) | Leda | satisfied, businesslike, hostile | Договорились. Но глаз с вас не спущу |
+| dlg_39_5_v2_f_g.mp3 | ответ в разговоре (недруг) | Aoede | satisfied, businesslike, hostile | Договорились. Но глаз с вас не спущу |
+| dlg_40_0_v1_g.mp3 | ответ в разговоре | Sadachbia | firm, dissatisfied | Так не договоримся |
+| dlg_40_0_v1_f_g.mp3 | ответ в разговоре | Leda | firm, dissatisfied | Так не договоримся |
+| dlg_40_0_v2_f_g.mp3 | ответ в разговоре | Aoede | firm, dissatisfied | Так не договоримся |
+| dlg_40_1_v1_g.mp3 | ответ в разговоре | Sadachbia | firm, dissatisfied | Мне это не с руки |
+| dlg_40_1_v1_f_g.mp3 | ответ в разговоре | Leda | firm, dissatisfied | Мне это не с руки |
+| dlg_40_1_v2_f_g.mp3 | ответ в разговоре | Aoede | firm, dissatisfied | Мне это не с руки |
+| dlg_40_2_v1_g.mp3 | ответ в разговоре | Sadachbia | firm, dissatisfied | Ищите другой уговор |
+| dlg_40_2_v1_f_g.mp3 | ответ в разговоре | Leda | firm, dissatisfied | Ищите другой уговор |
+| dlg_40_2_v2_f_g.mp3 | ответ в разговоре | Aoede | firm, dissatisfied | Ищите другой уговор |
+| dlg_40_3_v1_g.mp3 | ответ в разговоре (недруг) | Sadachbia | firm, dissatisfied, hostile | С вами никаких уговоров |
+| dlg_40_3_v1_f_g.mp3 | ответ в разговоре (недруг) | Leda | firm, dissatisfied, hostile | С вами никаких уговоров |
+| dlg_40_3_v2_f_g.mp3 | ответ в разговоре (недруг) | Aoede | firm, dissatisfied, hostile | С вами никаких уговоров |
+| dlg_40_4_v1_g.mp3 | ответ в разговоре (свой) | Sadachbia | firm, dissatisfied, warm, friendly | Прости, друг, так не выйдет |
+| dlg_40_4_v1_f_g.mp3 | ответ в разговоре (свой) | Leda | firm, dissatisfied, warm, friendly | Прости, друг, так не выйдет |
+| dlg_40_4_v2_f_g.mp3 | ответ в разговоре (свой) | Aoede | firm, dissatisfied, warm, friendly | Прости, друг, так не выйдет |
+| dlg_41_0_v1_g.mp3 | ответ в разговоре | Sadachbia | storyteller, unhurried, a little mysterious | Давняя это история. Слушайте |
+| dlg_41_0_v2_g.mp3 | ответ в разговоре | Schedar | storyteller, unhurried, a little mysterious | Давняя это история. Слушайте |
+| dlg_41_0_v1_f_g.mp3 | ответ в разговоре | Leda | storyteller, unhurried, a little mysterious | Давняя это история. Слушайте |
+| dlg_41_0_v2_f_g.mp3 | ответ в разговоре | Aoede | storyteller, unhurried, a little mysterious | Давняя это история. Слушайте |
+| dlg_41_1_v1_g.mp3 | ответ в разговоре | Sadachbia | storyteller, unhurried, a little mysterious | Было это давно, слушайте |
+| dlg_41_1_v2_g.mp3 | ответ в разговоре | Schedar | storyteller, unhurried, a little mysterious | Было это давно, слушайте |
+| dlg_41_1_v1_f_g.mp3 | ответ в разговоре | Leda | storyteller, unhurried, a little mysterious | Было это давно, слушайте |
+| dlg_41_1_v2_f_g.mp3 | ответ в разговоре | Aoede | storyteller, unhurried, a little mysterious | Было это давно, слушайте |
+| dlg_41_2_v1_g.mp3 | ответ в разговоре | Sadachbia | storyteller, unhurried, a little mysterious | Старики так рассказывают |
+| dlg_41_2_v2_g.mp3 | ответ в разговоре | Schedar | storyteller, unhurried, a little mysterious | Старики так рассказывают |
+| dlg_41_2_v1_f_g.mp3 | ответ в разговоре | Leda | storyteller, unhurried, a little mysterious | Старики так рассказывают |
+| dlg_41_2_v2_f_g.mp3 | ответ в разговоре | Aoede | storyteller, unhurried, a little mysterious | Старики так рассказывают |
+| dlg_41_3_v1_g.mp3 | ответ в разговоре | Sadachbia | storyteller, unhurried, a little mysterious | Про это у нас каждый ребёнок знает |
+| dlg_41_3_v2_g.mp3 | ответ в разговоре | Schedar | storyteller, unhurried, a little mysterious | Про это у нас каждый ребёнок знает |
+| dlg_41_3_v1_f_g.mp3 | ответ в разговоре | Leda | storyteller, unhurried, a little mysterious | Про это у нас каждый ребёнок знает |
+| dlg_41_3_v2_f_g.mp3 | ответ в разговоре | Aoede | storyteller, unhurried, a little mysterious | Про это у нас каждый ребёнок знает |
+| dlg_41_4_v1_g.mp3 | ответ в разговоре (фанатик) | Sadachbia | storyteller, unhurried, a little mysterious, zealous, fervent | Слушайте, и да будут боги свидетелями |
+| dlg_41_4_v2_g.mp3 | ответ в разговоре (фанатик) | Schedar | storyteller, unhurried, a little mysterious, zealous, fervent | Слушайте, и да будут боги свидетелями |
+| dlg_41_4_v1_f_g.mp3 | ответ в разговоре (фанатик) | Leda | storyteller, unhurried, a little mysterious, zealous, fervent | Слушайте, и да будут боги свидетелями |
+| dlg_41_4_v2_f_g.mp3 | ответ в разговоре (фанатик) | Aoede | storyteller, unhurried, a little mysterious, zealous, fervent | Слушайте, и да будут боги свидетелями |
+| dlg_41_5_v1_g.mp3 | ответ в разговоре (высокомерный) | Sadachbia | storyteller, unhurried, a little mysterious, haughty | Вам, приезжим, полезно знать |
+| dlg_41_5_v2_g.mp3 | ответ в разговоре (высокомерный) | Schedar | storyteller, unhurried, a little mysterious, haughty | Вам, приезжим, полезно знать |
+| dlg_41_5_v1_f_g.mp3 | ответ в разговоре (высокомерный) | Leda | storyteller, unhurried, a little mysterious, haughty | Вам, приезжим, полезно знать |
+| dlg_41_5_v2_f_g.mp3 | ответ в разговоре (высокомерный) | Aoede | storyteller, unhurried, a little mysterious, haughty | Вам, приезжим, полезно знать |
+| dlg_41_6_v1_g.mp3 | ответ в разговоре (рациональный) | Sadachbia | storyteller, unhurried, a little mysterious, calm, rational | По летописям было так |
+| dlg_41_6_v2_g.mp3 | ответ в разговоре (рациональный) | Schedar | storyteller, unhurried, a little mysterious, calm, rational | По летописям было так |
+| dlg_41_6_v1_f_g.mp3 | ответ в разговоре (рациональный) | Leda | storyteller, unhurried, a little mysterious, calm, rational | По летописям было так |
+| dlg_41_6_v2_f_g.mp3 | ответ в разговоре (рациональный) | Aoede | storyteller, unhurried, a little mysterious, calm, rational | По летописям было так |
+| dlg_41_7_v1_g.mp3 | ответ в разговоре (трус) | Sadachbia | storyteller, unhurried, a little mysterious, timid, nervous | Только это между нами, ладно? |
+| dlg_41_7_v2_g.mp3 | ответ в разговоре (трус) | Schedar | storyteller, unhurried, a little mysterious, timid, nervous | Только это между нами, ладно? |
+| dlg_41_7_v1_f_g.mp3 | ответ в разговоре (трус) | Leda | storyteller, unhurried, a little mysterious, timid, nervous | Только это между нами, ладно? |
+| dlg_41_7_v2_f_g.mp3 | ответ в разговоре (трус) | Aoede | storyteller, unhurried, a little mysterious, timid, nervous | Только это между нами, ладно? |
+| dlg_41_8_v1_g.mp3 | ответ в разговоре (свой) | Sadachbia | storyteller, unhurried, a little mysterious, warm, friendly | Тебе расскажу, как деды рассказывали |
+| dlg_41_8_v2_g.mp3 | ответ в разговоре (свой) | Schedar | storyteller, unhurried, a little mysterious, warm, friendly | Тебе расскажу, как деды рассказывали |
+| dlg_41_8_v1_f_g.mp3 | ответ в разговоре (свой) | Leda | storyteller, unhurried, a little mysterious, warm, friendly | Тебе расскажу, как деды рассказывали |
+| dlg_41_8_v2_f_g.mp3 | ответ в разговоре (свой) | Aoede | storyteller, unhurried, a little mysterious, warm, friendly | Тебе расскажу, как деды рассказывали |
+| dlg_41_9_v1_g.mp3 | ответ в разговоре (помнит добро) | Sadachbia | storyteller, unhurried, a little mysterious, grateful, warm | Вам — с удовольствием расскажу |
+| dlg_41_9_v2_g.mp3 | ответ в разговоре (помнит добро) | Schedar | storyteller, unhurried, a little mysterious, grateful, warm | Вам — с удовольствием расскажу |
+| dlg_41_9_v1_f_g.mp3 | ответ в разговоре (помнит добро) | Leda | storyteller, unhurried, a little mysterious, grateful, warm | Вам — с удовольствием расскажу |
+| dlg_41_9_v2_f_g.mp3 | ответ в разговоре (помнит добро) | Aoede | storyteller, unhurried, a little mysterious, grateful, warm | Вам — с удовольствием расскажу |
+| dlg_41_10_v1_g.mp3 | ответ в разговоре (холоден) | Sadachbia | storyteller, unhurried, a little mysterious, cold, curt | Коротко расскажу, и хватит |
+| dlg_41_10_v2_g.mp3 | ответ в разговоре (холоден) | Schedar | storyteller, unhurried, a little mysterious, cold, curt | Коротко расскажу, и хватит |
+| dlg_41_10_v1_f_g.mp3 | ответ в разговоре (холоден) | Leda | storyteller, unhurried, a little mysterious, cold, curt | Коротко расскажу, и хватит |
+| dlg_41_10_v2_f_g.mp3 | ответ в разговоре (холоден) | Aoede | storyteller, unhurried, a little mysterious, cold, curt | Коротко расскажу, и хватит |
+| dlg_41_11_v1_g.mp3 | ответ в разговоре (недруг) | Sadachbia | storyteller, unhurried, a little mysterious, hostile | Расскажу. Может, поумнеете |
+| dlg_41_11_v2_g.mp3 | ответ в разговоре (недруг) | Schedar | storyteller, unhurried, a little mysterious, hostile | Расскажу. Может, поумнеете |
+| dlg_41_11_v1_f_g.mp3 | ответ в разговоре (недруг) | Leda | storyteller, unhurried, a little mysterious, hostile | Расскажу. Может, поумнеете |
+| dlg_41_11_v2_f_g.mp3 | ответ в разговоре (недруг) | Aoede | storyteller, unhurried, a little mysterious, hostile | Расскажу. Может, поумнеете |
+| dlg_42_0_v1_g.mp3 | ответ в разговоре | Sadachbia | dismissive, busy | Историю пусть книжники рассказывают |
+| dlg_42_0_v2_g.mp3 | ответ в разговоре | Schedar | dismissive, busy | Историю пусть книжники рассказывают |
+| dlg_42_0_v1_f_g.mp3 | ответ в разговоре | Leda | dismissive, busy | Историю пусть книжники рассказывают |
+| dlg_42_0_v2_f_g.mp3 | ответ в разговоре | Aoede | dismissive, busy | Историю пусть книжники рассказывают |
+| dlg_42_1_v1_g.mp3 | ответ в разговоре | Sadachbia | dismissive, busy | Не до сказок мне сейчас |
+| dlg_42_1_v2_g.mp3 | ответ в разговоре | Schedar | dismissive, busy | Не до сказок мне сейчас |
+| dlg_42_1_v1_f_g.mp3 | ответ в разговоре | Leda | dismissive, busy | Не до сказок мне сейчас |
+| dlg_42_1_v2_f_g.mp3 | ответ в разговоре | Aoede | dismissive, busy | Не до сказок мне сейчас |
+| dlg_42_2_v1_g.mp3 | ответ в разговоре | Sadachbia | dismissive, busy | Не знаю я старины |
+| dlg_42_2_v2_g.mp3 | ответ в разговоре | Schedar | dismissive, busy | Не знаю я старины |
+| dlg_42_2_v1_f_g.mp3 | ответ в разговоре | Leda | dismissive, busy | Не знаю я старины |
+| dlg_42_2_v2_f_g.mp3 | ответ в разговоре | Aoede | dismissive, busy | Не знаю я старины |
+| dlg_42_3_v1_g.mp3 | ответ в разговоре (высокомерный) | Sadachbia | dismissive, busy, haughty | Не для чужих ушей наша история |
+| dlg_42_3_v2_g.mp3 | ответ в разговоре (высокомерный) | Schedar | dismissive, busy, haughty | Не для чужих ушей наша история |
+| dlg_42_3_v1_f_g.mp3 | ответ в разговоре (высокомерный) | Leda | dismissive, busy, haughty | Не для чужих ушей наша история |
+| dlg_42_3_v2_f_g.mp3 | ответ в разговоре (высокомерный) | Aoede | dismissive, busy, haughty | Не для чужих ушей наша история |
+| dlg_42_4_v1_g.mp3 | ответ в разговоре (недруг) | Sadachbia | dismissive, busy, hostile | С вами прошлым делиться? Нет |
+| dlg_42_4_v2_g.mp3 | ответ в разговоре (недруг) | Schedar | dismissive, busy, hostile | С вами прошлым делиться? Нет |
+| dlg_42_4_v1_f_g.mp3 | ответ в разговоре (недруг) | Leda | dismissive, busy, hostile | С вами прошлым делиться? Нет |
+| dlg_42_4_v2_f_g.mp3 | ответ в разговоре (недруг) | Aoede | dismissive, busy, hostile | С вами прошлым делиться? Нет |
+| dlg_42_5_v1_g.mp3 | ответ в разговоре (свой) | Sadachbia | dismissive, busy, warm, friendly | Прости, друг, не мастак я рассказывать |
+| dlg_42_5_v2_g.mp3 | ответ в разговоре (свой) | Schedar | dismissive, busy, warm, friendly | Прости, друг, не мастак я рассказывать |
+| dlg_42_5_v1_f_g.mp3 | ответ в разговоре (свой) | Leda | dismissive, busy, warm, friendly | Прости, друг, не мастак я рассказывать |
+| dlg_42_5_v2_f_g.mp3 | ответ в разговоре (свой) | Aoede | dismissive, busy, warm, friendly | Прости, друг, не мастак я рассказывать |
+| greet_postoyan_0_v1_g.mp3 | приветствие: постоянному покупателю | Sadachbia | warm, delighted | А, мой лучший покупатель! Заходи. |
+| greet_postoyan_0_v2_g.mp3 | приветствие: постоянному покупателю | Schedar | warm, delighted | А, мой лучший покупатель! Заходи. |
+| greet_postoyan_0_v1_f_g.mp3 | приветствие: постоянному покупателю | Leda | warm, delighted | А, мой лучший покупатель! Заходи. |
+| greet_postoyan_0_v2_f_g.mp3 | приветствие: постоянному покупателю | Aoede | warm, delighted | А, мой лучший покупатель! Заходи. |
+| greet_postoyan_1_v1_g.mp3 | приветствие: постоянному покупателю | Sadachbia | proud, pleased | Снова ко мне? Правильно, у меня лучше всех. |
+| greet_postoyan_1_v2_g.mp3 | приветствие: постоянному покупателю | Schedar | proud, pleased | Снова ко мне? Правильно, у меня лучше всех. |
+| greet_postoyan_1_v1_f_g.mp3 | приветствие: постоянному покупателю | Leda | proud, pleased | Снова ко мне? Правильно, у меня лучше всех. |
+| greet_postoyan_1_v2_f_g.mp3 | приветствие: постоянному покупателю | Aoede | proud, pleased | Снова ко мне? Правильно, у меня лучше всех. |
+| greet_postoyan_2_v1_g.mp3 | приветствие: постоянному покупателю | Sadachbia | confidential, friendly | Для постоянных — цена особая. Смотри. |
+| greet_postoyan_2_v2_g.mp3 | приветствие: постоянному покупателю | Schedar | confidential, friendly | Для постоянных — цена особая. Смотри. |
+| greet_postoyan_2_v1_f_g.mp3 | приветствие: постоянному покупателю | Leda | confidential, friendly | Для постоянных — цена особая. Смотри. |
+| greet_postoyan_2_v2_f_g.mp3 | приветствие: постоянному покупателю | Aoede | confidential, friendly | Для постоянных — цена особая. Смотри. |
+| greet_postoyan_3_v1_g.mp3 | приветствие: постоянному покупателю | Sadachbia | teasing, relieved | Я уж думал, ты к соседу переметнулся. |
+| greet_postoyan_3_v2_g.mp3 | приветствие: постоянному покупателю | Schedar | teasing, relieved | Я уж думал, ты к соседу переметнулся. |
+| greet_postoyan_3_v1_f_g.mp3 | приветствие: постоянному покупателю | Leda | teasing, relieved | Я уж думала, ты к соседу переметнулся. |
+| greet_postoyan_3_v2_f_g.mp3 | приветствие: постоянному покупателю | Aoede | teasing, relieved | Я уж думала, ты к соседу переметнулся. |
+| greet_postoyan_4_v1_g.mp3 | приветствие: постоянному покупателю | Sadachbia | knowing, friendly | Узнаю тебя. Опять за припасами? |
+| greet_postoyan_4_v2_g.mp3 | приветствие: постоянному покупателю | Schedar | knowing, friendly | Узнаю тебя. Опять за припасами? |
+| greet_postoyan_4_v1_f_g.mp3 | приветствие: постоянному покупателю | Leda | knowing, friendly | Узнаю тебя. Опять за припасами? |
+| greet_postoyan_4_v2_f_g.mp3 | приветствие: постоянному покупателю | Aoede | knowing, friendly | Узнаю тебя. Опять за припасами? |
+| greet_postoyan_5_v1_g.mp3 | приветствие: постоянному покупателю | Sadachbia | courteous, welcoming | Постоянному покупателю — первый выбор. Прошу. |
+| greet_postoyan_5_v2_g.mp3 | приветствие: постоянному покупателю | Schedar | courteous, welcoming | Постоянному покупателю — первый выбор. Прошу. |
+| greet_postoyan_5_v1_f_g.mp3 | приветствие: постоянному покупателю | Leda | courteous, welcoming | Постоянному покупателю — первый выбор. Прошу. |
+| greet_postoyan_5_v2_f_g.mp3 | приветствие: постоянному покупателю | Aoede | courteous, welcoming | Постоянному покупателю — первый выбор. Прошу. |
+| greet_postoyan_6_v1_g.mp3 | приветствие: постоянному покупателю | Sadachbia | joking, warm | Твоё золото у меня в сундуке уже место греет. |
+| greet_postoyan_6_v2_g.mp3 | приветствие: постоянному покупателю | Schedar | joking, warm | Твоё золото у меня в сундуке уже место греет. |
+| greet_postoyan_6_v1_f_g.mp3 | приветствие: постоянному покупателю | Leda | joking, warm | Твоё золото у меня в сундуке уже место греет. |
+| greet_postoyan_6_v2_f_g.mp3 | приветствие: постоянному покупателю | Aoede | joking, warm | Твоё золото у меня в сундуке уже место греет. |
+| greet_postoyan_7_v1_g.mp3 | приветствие: постоянному покупателю | Sadachbia | cheerful | Опять ты! Я как раз свежий товар разложил. |
+| greet_postoyan_7_v2_g.mp3 | приветствие: постоянному покупателю | Schedar | cheerful | Опять ты! Я как раз свежий товар разложил. |
+| greet_postoyan_7_v1_f_g.mp3 | приветствие: постоянному покупателю | Leda | cheerful | Опять ты! Я как раз свежий товар разложила. |
+| greet_postoyan_7_v2_f_g.mp3 | приветствие: постоянному покупателю | Aoede | cheerful | Опять ты! Я как раз свежий товар разложила. |
+| greet_postoyan_8_v1_g.mp3 | приветствие: постоянному покупателю | Sadachbia | sincere, pleased | С тобой торговать — одно удовольствие. |
+| greet_postoyan_8_v2_g.mp3 | приветствие: постоянному покупателю | Schedar | sincere, pleased | С тобой торговать — одно удовольствие. |
+| greet_postoyan_8_v1_f_g.mp3 | приветствие: постоянному покупателю | Leda | sincere, pleased | С тобой торговать — одно удовольствие. |
+| greet_postoyan_8_v2_f_g.mp3 | приветствие: постоянному покупателю | Aoede | sincere, pleased | С тобой торговать — одно удовольствие. |
+| greet_postoyan_9_v1_g.mp3 | приветствие: постоянному покупателю | Sadachbia | helpful, friendly | Запомнил, что ты берёшь. Отложил кое-что. |
+| greet_postoyan_9_v2_g.mp3 | приветствие: постоянному покупателю | Schedar | helpful, friendly | Запомнил, что ты берёшь. Отложил кое-что. |
+| greet_postoyan_9_v1_f_g.mp3 | приветствие: постоянному покупателю | Leda | helpful, friendly | Запомнила, что ты берёшь. Отложила кое-что. |
+| greet_postoyan_9_v2_f_g.mp3 | приветствие: постоянному покупателю | Aoede | helpful, friendly | Запомнила, что ты берёшь. Отложила кое-что. |
+| greet_prodavec_0_v1_g.mp3 | приветствие: постоянному поставщику | Sadachbia | eager, businesslike | С добычей? Показывай, что там у тебя. |
+| greet_prodavec_0_v2_g.mp3 | приветствие: постоянному поставщику | Schedar | eager, businesslike | С добычей? Показывай, что там у тебя. |
+| greet_prodavec_0_v1_f_g.mp3 | приветствие: постоянному поставщику | Leda | eager, businesslike | С добычей? Показывай, что там у тебя. |
+| greet_prodavec_0_v2_f_g.mp3 | приветствие: постоянному поставщику | Aoede | eager, businesslike | С добычей? Показывай, что там у тебя. |
+| greet_prodavec_1_v1_g.mp3 | приветствие: постоянному поставщику | Sadachbia | amused, chuckling | Полсклада уже твоим добром забито. Неси ещё. |
+| greet_prodavec_1_v2_g.mp3 | приветствие: постоянному поставщику | Schedar | amused, chuckling | Полсклада уже твоим добром забито. Неси ещё. |
+| greet_prodavec_1_v1_f_g.mp3 | приветствие: постоянному поставщику | Leda | amused, chuckling | Полсклада уже твоим добром забито. Неси ещё. |
+| greet_prodavec_1_v2_f_g.mp3 | приветствие: постоянному поставщику | Aoede | amused, chuckling | Полсклада уже твоим добром забито. Неси ещё. |
+| greet_prodavec_2_v1_g.mp3 | приветствие: постоянному поставщику | Sadachbia | businesslike, friendly | Своему поставщику плачу честно. Что сегодня? |
+| greet_prodavec_2_v2_g.mp3 | приветствие: постоянному поставщику | Schedar | businesslike, friendly | Своему поставщику плачу честно. Что сегодня? |
+| greet_prodavec_2_v1_f_g.mp3 | приветствие: постоянному поставщику | Leda | businesslike, friendly | Своему поставщику плачу честно. Что сегодня? |
+| greet_prodavec_2_v2_f_g.mp3 | приветствие: постоянному поставщику | Aoede | businesslike, friendly | Своему поставщику плачу честно. Что сегодня? |
+| greet_prodavec_3_v1_g.mp3 | приветствие: постоянному поставщику | Sadachbia | curious, eager | Опять с мешком? Ну-ка, развязывай. |
+| greet_prodavec_3_v2_g.mp3 | приветствие: постоянному поставщику | Schedar | curious, eager | Опять с мешком? Ну-ка, развязывай. |
+| greet_prodavec_3_v1_f_g.mp3 | приветствие: постоянному поставщику | Leda | curious, eager | Опять с мешком? Ну-ка, развязывай. |
+| greet_prodavec_3_v2_f_g.mp3 | приветствие: постоянному поставщику | Aoede | curious, eager | Опять с мешком? Ну-ка, развязывай. |
+| greet_prodavec_4_v1_g.mp3 | приветствие: постоянному поставщику | Sadachbia | warm, businesslike | Хороший товар всегда возьму. Особенно у тебя. |
+| greet_prodavec_4_v2_g.mp3 | приветствие: постоянному поставщику | Schedar | warm, businesslike | Хороший товар всегда возьму. Особенно у тебя. |
+| greet_prodavec_4_v1_f_g.mp3 | приветствие: постоянному поставщику | Leda | warm, businesslike | Хороший товар всегда возьму. Особенно у тебя. |
+| greet_prodavec_4_v2_f_g.mp3 | приветствие: постоянному поставщику | Aoede | warm, businesslike | Хороший товар всегда возьму. Особенно у тебя. |
+| greet_prodavec_5_v1_g.mp3 | приветствие: постоянному поставщику | Sadachbia | playful, appreciative | С тобой и артели не надо. Что на продажу? |
+| greet_prodavec_5_v2_g.mp3 | приветствие: постоянному поставщику | Schedar | playful, appreciative | С тобой и артели не надо. Что на продажу? |
+| greet_prodavec_5_v1_f_g.mp3 | приветствие: постоянному поставщику | Leda | playful, appreciative | С тобой и артели не надо. Что на продажу? |
+| greet_prodavec_5_v2_f_g.mp3 | приветствие: постоянному поставщику | Aoede | playful, appreciative | С тобой и артели не надо. Что на продажу? |
+| greet_bogat_0_v1_g.mp3 | приветствие: богатому | Sadachbia | greedy, fawning | О, кошель-то тяжёлый. Проходи, проходи! |
+| greet_bogat_0_v2_g.mp3 | приветствие: богатому | Schedar | greedy, fawning | О, кошель-то тяжёлый. Проходи, проходи! |
+| greet_bogat_0_v1_f_g.mp3 | приветствие: богатому | Leda | greedy, fawning | О, кошель-то тяжёлый. Проходи, проходи! |
+| greet_bogat_0_v2_f_g.mp3 | приветствие: богатому | Aoede | greedy, fawning | О, кошель-то тяжёлый. Проходи, проходи! |
+| greet_bogat_1_v1_g.mp3 | приветствие: богатому | Sadachbia | sly, fawning | Звон слышу издалека. Для тебя — лучшее. |
+| greet_bogat_1_v2_g.mp3 | приветствие: богатому | Schedar | sly, fawning | Звон слышу издалека. Для тебя — лучшее. |
+| greet_bogat_1_v1_f_g.mp3 | приветствие: богатому | Leda | sly, fawning | Звон слышу издалека. Для тебя — лучшее. |
+| greet_bogat_1_v2_f_g.mp3 | приветствие: богатому | Aoede | sly, fawning | Звон слышу издалека. Для тебя — лучшее. |
+| greet_bogat_2_v1_g.mp3 | приветствие: богатому | Sadachbia | obsequious, eager | Богатому гостю — лучший угол и лучший товар. |
+| greet_bogat_2_v2_g.mp3 | приветствие: богатому | Schedar | obsequious, eager | Богатому гостю — лучший угол и лучший товар. |
+| greet_bogat_2_v1_f_g.mp3 | приветствие: богатому | Leda | obsequious, eager | Богатому гостю — лучший угол и лучший товар. |
+| greet_bogat_2_v2_f_g.mp3 | приветствие: богатому | Aoede | obsequious, eager | Богатому гостю — лучший угол и лучший товар. |
+| greet_bogat_3_v1_g.mp3 | приветствие: богатому | Sadachbia | persuasive, smooth | С таким кошелём грех уйти с пустыми руками. |
+| greet_bogat_3_v2_g.mp3 | приветствие: богатому | Schedar | persuasive, smooth | С таким кошелём грех уйти с пустыми руками. |
+| greet_bogat_3_v1_f_g.mp3 | приветствие: богатому | Leda | persuasive, smooth | С таким кошелём грех уйти с пустыми руками. |
+| greet_bogat_3_v2_f_g.mp3 | приветствие: богатому | Aoede | persuasive, smooth | С таким кошелём грех уйти с пустыми руками. |
+| greet_bogat_4_v1_g.mp3 | приветствие: богатому | Sadachbia | sly, jovial | Вижу, дела идут в гору. Может, и мне перепадёт? |
+| greet_bogat_4_v2_g.mp3 | приветствие: богатому | Schedar | sly, jovial | Вижу, дела идут в гору. Может, и мне перепадёт? |
+| greet_bogat_4_v1_f_g.mp3 | приветствие: богатому | Leda | sly, jovial | Вижу, дела идут в гору. Может, и мне перепадёт? |
+| greet_bogat_4_v2_f_g.mp3 | приветствие: богатому | Aoede | sly, jovial | Вижу, дела идут в гору. Может, и мне перепадёт? |
+| greet_bogat_5_v1_g.mp3 | приветствие: богатому | Sadachbia | confidential, lowered voice | Для важного гостя найдётся кое-что особенное. |
+| greet_bogat_5_v2_g.mp3 | приветствие: богатому | Schedar | confidential, lowered voice | Для важного гостя найдётся кое-что особенное. |
+| greet_bogat_5_v1_f_g.mp3 | приветствие: богатому | Leda | confidential, lowered voice | Для важного гостя найдётся кое-что особенное. |
+| greet_bogat_5_v2_f_g.mp3 | приветствие: богатому | Aoede | confidential, lowered voice | Для важного гостя найдётся кое-что особенное. |
+| greet_bedn_0_v1_g.mp3 | приветствие: без гроша | Sadachbia | dry, a bit sympathetic | Карманы пустые? Посмотреть-то можно. |
+| greet_bedn_0_v2_g.mp3 | приветствие: без гроша | Schedar | dry, a bit sympathetic | Карманы пустые? Посмотреть-то можно. |
+| greet_bedn_0_v1_f_g.mp3 | приветствие: без гроша | Leda | dry, a bit sympathetic | Карманы пустые? Посмотреть-то можно. |
+| greet_bedn_0_v2_f_g.mp3 | приветствие: без гроша | Aoede | dry, a bit sympathetic | Карманы пустые? Посмотреть-то можно. |
+| greet_bedn_1_v1_g.mp3 | приветствие: без гроша | Sadachbia | dry, firm | В долг не даю. Но поглядеть не запрещаю. |
+| greet_bedn_1_v2_g.mp3 | приветствие: без гроша | Schedar | dry, firm | В долг не даю. Но поглядеть не запрещаю. |
+| greet_bedn_1_v1_f_g.mp3 | приветствие: без гроша | Leda | dry, firm | В долг не даю. Но поглядеть не запрещаю. |
+| greet_bedn_1_v2_f_g.mp3 | приветствие: без гроша | Aoede | dry, firm | В долг не даю. Но поглядеть не запрещаю. |
+| greet_bedn_2_v1_g.mp3 | приветствие: без гроша | Sadachbia | sympathetic, practical | Небогато нынче? Бывает. Продать есть что? |
+| greet_bedn_2_v2_g.mp3 | приветствие: без гроша | Schedar | sympathetic, practical | Небогато нынче? Бывает. Продать есть что? |
+| greet_bedn_2_v1_f_g.mp3 | приветствие: без гроша | Leda | sympathetic, practical | Небогато нынче? Бывает. Продать есть что? |
+| greet_bedn_2_v2_f_g.mp3 | приветствие: без гроша | Aoede | sympathetic, practical | Небогато нынче? Бывает. Продать есть что? |
+| greet_bedn_3_v1_g.mp3 | приветствие: без гроша | Sadachbia | businesslike, curt | Без золота разговор короткий. Что есть на обмен? |
+| greet_bedn_3_v2_g.mp3 | приветствие: без гроша | Schedar | businesslike, curt | Без золота разговор короткий. Что есть на обмен? |
+| greet_bedn_3_v1_f_g.mp3 | приветствие: без гроша | Leda | businesslike, curt | Без золота разговор короткий. Что есть на обмен? |
+| greet_bedn_3_v2_f_g.mp3 | приветствие: без гроша | Aoede | businesslike, curt | Без золота разговор короткий. Что есть на обмен? |
+| greet_bedn_4_v1_g.mp3 | приветствие: без гроша | Sadachbia | wry, dry humour | Пустой кошель — не порок. Но и не покупка. |
+| greet_bedn_4_v2_g.mp3 | приветствие: без гроша | Schedar | wry, dry humour | Пустой кошель — не порок. Но и не покупка. |
+| greet_bedn_4_v1_f_g.mp3 | приветствие: без гроша | Leda | wry, dry humour | Пустой кошель — не порок. Но и не покупка. |
+| greet_bedn_4_v2_f_g.mp3 | приветствие: без гроша | Aoede | wry, dry humour | Пустой кошель — не порок. Но и не покупка. |
+| greet_bedn_5_v1_g.mp3 | приветствие: без гроша | Sadachbia | kindly, encouraging | Заработаешь — приходи. Я никуда не денусь. |
+| greet_bedn_5_v2_g.mp3 | приветствие: без гроша | Schedar | kindly, encouraging | Заработаешь — приходи. Я никуда не денусь. |
+| greet_bedn_5_v1_f_g.mp3 | приветствие: без гроша | Leda | kindly, encouraging | Заработаешь — приходи. Я никуда не денусь. |
+| greet_bedn_5_v2_f_g.mp3 | приветствие: без гроша | Aoede | kindly, encouraging | Заработаешь — приходи. Я никуда не денусь. |
+| greet_ranen_0_v1_g.mp3 | приветствие: раненому | Sadachbia | alarmed, caring | Ох, да ты весь в крови! Садись, отдышись. |
+| greet_ranen_0_v2_g.mp3 | приветствие: раненому | Schedar | alarmed, caring | Ох, да ты весь в крови! Садись, отдышись. |
+| greet_ranen_0_v1_f_g.mp3 | приветствие: раненому | Leda | alarmed, caring | Ох, да ты весь в крови! Садись, отдышись. |
+| greet_ranen_0_v2_f_g.mp3 | приветствие: раненому | Aoede | alarmed, caring | Ох, да ты весь в крови! Садись, отдышись. |
+| greet_ranen_1_v1_g.mp3 | приветствие: раненому | Sadachbia | concerned | Кто ж тебя так? Лекарь тут недалеко. |
+| greet_ranen_1_v2_g.mp3 | приветствие: раненому | Schedar | concerned | Кто ж тебя так? Лекарь тут недалеко. |
+| greet_ranen_1_v1_f_g.mp3 | приветствие: раненому | Leda | concerned | Кто ж тебя так? Лекарь тут недалеко. |
+| greet_ranen_1_v2_f_g.mp3 | приветствие: раненому | Aoede | concerned | Кто ж тебя так? Лекарь тут недалеко. |
+| greet_ranen_2_v1_g.mp3 | приветствие: раненому | Sadachbia | worried | На ногах едва стоишь. Может, сперва к лекарю? |
+| greet_ranen_2_v2_g.mp3 | приветствие: раненому | Schedar | worried | На ногах едва стоишь. Может, сперва к лекарю? |
+| greet_ranen_2_v1_f_g.mp3 | приветствие: раненому | Leda | worried | На ногах едва стоишь. Может, сперва к лекарю? |
+| greet_ranen_2_v2_f_g.mp3 | приветствие: раненому | Aoede | worried | На ногах едва стоишь. Может, сперва к лекарю? |
+| greet_ranen_3_v1_g.mp3 | приветствие: раненому | Sadachbia | gruff, concerned | Перевяжись хоть. Кровью весь пол закапаешь. |
+| greet_ranen_3_v2_g.mp3 | приветствие: раненому | Schedar | gruff, concerned | Перевяжись хоть. Кровью весь пол закапаешь. |
+| greet_ranen_3_v1_f_g.mp3 | приветствие: раненому | Leda | gruff, concerned | Перевяжись хоть. Кровью весь пол закапаешь. |
+| greet_ranen_3_v2_f_g.mp3 | приветствие: раненому | Aoede | gruff, concerned | Перевяжись хоть. Кровью весь пол закапаешь. |
+| greet_ranen_4_v1_g.mp3 | приветствие: раненому | Sadachbia | relieved, caring | Живой — и то ладно. Потом о делах. |
+| greet_ranen_4_v2_g.mp3 | приветствие: раненому | Schedar | relieved, caring | Живой — и то ладно. Потом о делах. |
+| greet_ranen_4_v1_f_g.mp3 | приветствие: раненому | Leda | relieved, caring | Живой — и то ладно. Потом о делах. |
+| greet_ranen_4_v2_f_g.mp3 | приветствие: раненому | Aoede | relieved, caring | Живой — и то ладно. Потом о делах. |
+| greet_ranen_5_v1_g.mp3 | приветствие: раненому | Sadachbia | sympathetic | Эк тебя потрепало. Воды дать? |
+| greet_ranen_5_v2_g.mp3 | приветствие: раненому | Schedar | sympathetic | Эк тебя потрепало. Воды дать? |
+| greet_ranen_5_v1_f_g.mp3 | приветствие: раненому | Leda | sympathetic | Эк тебя потрепало. Воды дать? |
+| greet_ranen_5_v2_f_g.mp3 | приветствие: раненому | Aoede | sympathetic | Эк тебя потрепало. Воды дать? |
+| greet_slava_0_v1_g.mp3 | приветствие: знаменитому | Sadachbia | awed, excited | Неужто это вы? Наслышаны, наслышаны! |
+| greet_slava_0_v2_g.mp3 | приветствие: знаменитому | Schedar | awed, excited | Неужто это вы? Наслышаны, наслышаны! |
+| greet_slava_0_v1_f_g.mp3 | приветствие: знаменитому | Leda | awed, excited | Неужто это вы? Наслышаны, наслышаны! |
+| greet_slava_0_v2_f_g.mp3 | приветствие: знаменитому | Aoede | awed, excited | Неужто это вы? Наслышаны, наслышаны! |
+| greet_slava_1_v1_g.mp3 | приветствие: знаменитому | Sadachbia | respectful, impressed | О вас уже песни поют. Чем могу служить? |
+| greet_slava_1_v2_g.mp3 | приветствие: знаменитому | Schedar | respectful, impressed | О вас уже песни поют. Чем могу служить? |
+| greet_slava_1_v1_f_g.mp3 | приветствие: знаменитому | Leda | respectful, impressed | О вас уже песни поют. Чем могу служить? |
+| greet_slava_1_v2_f_g.mp3 | приветствие: знаменитому | Aoede | respectful, impressed | О вас уже песни поют. Чем могу служить? |
+| greet_slava_2_v1_g.mp3 | приветствие: знаменитому | Sadachbia | honored, formal | Такой гость — честь для нашего дома. |
+| greet_slava_2_v2_g.mp3 | приветствие: знаменитому | Schedar | honored, formal | Такой гость — честь для нашего дома. |
+| greet_slava_2_v1_f_g.mp3 | приветствие: знаменитому | Leda | honored, formal | Такой гость — честь для нашего дома. |
+| greet_slava_2_v2_f_g.mp3 | приветствие: знаменитому | Aoede | honored, formal | Такой гость — честь для нашего дома. |
+| greet_slava_3_v1_g.mp3 | приветствие: знаменитому | Sadachbia | excited, eager | Весь город о вас говорит. Проходите! |
+| greet_slava_3_v2_g.mp3 | приветствие: знаменитому | Schedar | excited, eager | Весь город о вас говорит. Проходите! |
+| greet_slava_3_v1_f_g.mp3 | приветствие: знаменитому | Leda | excited, eager | Весь город о вас говорит. Проходите! |
+| greet_slava_3_v2_f_g.mp3 | приветствие: знаменитому | Aoede | excited, eager | Весь город о вас говорит. Проходите! |
+| greet_slava_4_v1_g.mp3 | приветствие: знаменитому | Sadachbia | delighted, chuckling | Знаменитость у меня! Соседи обзавидуются. |
+| greet_slava_4_v2_g.mp3 | приветствие: знаменитому | Schedar | delighted, chuckling | Знаменитость у меня! Соседи обзавидуются. |
+| greet_slava_4_v2_f_g.mp3 | приветствие: знаменитому | Aoede | delighted, chuckling | Знаменитость у меня! Соседи обзавидуются. |
+| greet_slava_5_v1_g.mp3 | приветствие: знаменитому | Sadachbia | respectful, warm | Слава бежит впереди вас. Рады видеть. |
+| greet_slava_5_v2_g.mp3 | приветствие: знаменитому | Schedar | respectful, warm | Слава бежит впереди вас. Рады видеть. |
+| greet_slava_5_v1_f_g.mp3 | приветствие: знаменитому | Leda | respectful, warm | Слава бежит впереди вас. Рады видеть. |
+| greet_slava_5_v2_f_g.mp3 | приветствие: знаменитому | Aoede | respectful, warm | Слава бежит впереди вас. Рады видеть. |
+| greet_durn_0_v1_g.mp3 | приветствие: с дурной славой | Sadachbia | wary, cold | Слыхали мы о вас. Всякое слыхали. |
+| greet_durn_0_v2_g.mp3 | приветствие: с дурной славой | Schedar | wary, cold | Слыхали мы о вас. Всякое слыхали. |
+| greet_durn_0_v1_f_g.mp3 | приветствие: с дурной славой | Leda | wary, cold | Слыхали мы о вас. Всякое слыхали. |
+| greet_durn_0_v2_f_g.mp3 | приветствие: с дурной славой | Aoede | wary, cold | Слыхали мы о вас. Всякое слыхали. |
+| greet_durn_1_v1_g.mp3 | приветствие: с дурной славой | Sadachbia | suspicious, slow | Говорят о вас недоброе. Посмотрим, правда ли. |
+| greet_durn_1_v2_g.mp3 | приветствие: с дурной славой | Schedar | suspicious, slow | Говорят о вас недоброе. Посмотрим, правда ли. |
+| greet_durn_1_v1_f_g.mp3 | приветствие: с дурной славой | Leda | suspicious, slow | Говорят о вас недоброе. Посмотрим, правда ли. |
+| greet_durn_1_v2_f_g.mp3 | приветствие: с дурной славой | Aoede | suspicious, slow | Говорят о вас недоброе. Посмотрим, правда ли. |
+| greet_durn_2_v1_g.mp3 | приветствие: с дурной славой | Sadachbia | nervous, wary | Держите руки на виду. На всякий случай. |
+| greet_durn_2_v2_g.mp3 | приветствие: с дурной славой | Schedar | nervous, wary | Держите руки на виду. На всякий случай. |
+| greet_durn_2_v1_f_g.mp3 | приветствие: с дурной славой | Leda | nervous, wary | Держите руки на виду. На всякий случай. |
+| greet_durn_2_v2_f_g.mp3 | приветствие: с дурной славой | Aoede | nervous, wary | Держите руки на виду. На всякий случай. |
+| greet_durn_3_v1_g.mp3 | приветствие: с дурной славой | Sadachbia | disapproving, stern | С вашей славой в честный дом не ходят. |
+| greet_durn_3_v2_g.mp3 | приветствие: с дурной славой | Schedar | disapproving, stern | С вашей славой в честный дом не ходят. |
+| greet_durn_3_v1_f_g.mp3 | приветствие: с дурной славой | Leda | disapproving, stern | С вашей славой в честный дом не ходят. |
+| greet_durn_3_v2_f_g.mp3 | приветствие: с дурной славой | Aoede | disapproving, stern | С вашей славой в честный дом не ходят. |
+| greet_durn_4_v1_g.mp3 | приветствие: с дурной славой | Sadachbia | defiant, tense | Вас тут боятся. Я — пока нет. |
+| greet_durn_4_v2_g.mp3 | приветствие: с дурной славой | Schedar | defiant, tense | Вас тут боятся. Я — пока нет. |
+| greet_durn_4_v1_f_g.mp3 | приветствие: с дурной славой | Leda | defiant, tense | Вас тут боятся. Я — пока нет. |
+| greet_durn_4_v2_f_g.mp3 | приветствие: с дурной славой | Aoede | defiant, tense | Вас тут боятся. Я — пока нет. |
+| greet_davno_0_v1_g.mp3 | приветствие: после долгой разлуки | Sadachbia | surprised, glad | Давненько тебя видно не было! Где носило? |
+| greet_davno_0_v2_g.mp3 | приветствие: после долгой разлуки | Schedar | surprised, glad | Давненько тебя видно не было! Где носило? |
+| greet_davno_0_v1_f_g.mp3 | приветствие: после долгой разлуки | Leda | surprised, glad | Давненько тебя видно не было! Где носило? |
+| greet_davno_0_v2_f_g.mp3 | приветствие: после долгой разлуки | Aoede | surprised, glad | Давненько тебя видно не было! Где носило? |
+| greet_davno_1_v1_g.mp3 | приветствие: после долгой разлуки | Sadachbia | joyful, warm | Сколько лет, сколько зим! Проходи. |
+| greet_davno_1_v2_g.mp3 | приветствие: после долгой разлуки | Schedar | joyful, warm | Сколько лет, сколько зим! Проходи. |
+| greet_davno_1_v1_f_g.mp3 | приветствие: после долгой разлуки | Leda | joyful, warm | Сколько лет, сколько зим! Проходи. |
+| greet_davno_1_v2_f_g.mp3 | приветствие: после долгой разлуки | Aoede | joyful, warm | Сколько лет, сколько зим! Проходи. |
+| greet_davno_2_v1_g.mp3 | приветствие: после долгой разлуки | Sadachbia | relieved, warm | А я уж боялся, что тракт тебя забрал. |
+| greet_davno_2_v2_g.mp3 | приветствие: после долгой разлуки | Schedar | relieved, warm | А я уж боялся, что тракт тебя забрал. |
+| greet_davno_2_v1_f_g.mp3 | приветствие: после долгой разлуки | Leda | relieved, warm | А я уж боялась, что тракт тебя забрал. |
+| greet_davno_2_v2_f_g.mp3 | приветствие: после долгой разлуки | Aoede | relieved, warm | А я уж боялась, что тракт тебя забрал. |
+| greet_davno_3_v1_g.mp3 | приветствие: после долгой разлуки | Sadachbia | mock reproach, warm | Давно не заходишь. Забываешь старых знакомых. |
+| greet_davno_3_v2_g.mp3 | приветствие: после долгой разлуки | Schedar | mock reproach, warm | Давно не заходишь. Забываешь старых знакомых. |
+| greet_davno_3_v1_f_g.mp3 | приветствие: после долгой разлуки | Leda | mock reproach, warm | Давно не заходишь. Забываешь старых знакомых. |
+| greet_davno_3_v2_f_g.mp3 | приветствие: после долгой разлуки | Aoede | mock reproach, warm | Давно не заходишь. Забываешь старых знакомых. |
+| greet_davno_4_v1_g.mp3 | приветствие: после долгой разлуки | Sadachbia | surprised, relieved | Живой! А мы уж и гадать перестали. |
+| greet_davno_4_v2_g.mp3 | приветствие: после долгой разлуки | Schedar | surprised, relieved | Живой! А мы уж и гадать перестали. |
+| greet_davno_4_v1_f_g.mp3 | приветствие: после долгой разлуки | Leda | surprised, relieved | Живой! А мы уж и гадать перестали. |
+| greet_davno_4_v2_f_g.mp3 | приветствие: после долгой разлуки | Aoede | surprised, relieved | Живой! А мы уж и гадать перестали. |
+| greet_davno_5_v1_g.mp3 | приветствие: после долгой разлуки | Sadachbia | curious, friendly | Тебя не узнать. Долгой была дорога? |
+| greet_davno_5_v2_g.mp3 | приветствие: после долгой разлуки | Schedar | curious, friendly | Тебя не узнать. Долгой была дорога? |
+| greet_davno_5_v1_f_g.mp3 | приветствие: после долгой разлуки | Leda | curious, friendly | Тебя не узнать. Долгой была дорога? |
+| greet_davno_5_v2_f_g.mp3 | приветствие: после долгой разлуки | Aoede | curious, friendly | Тебя не узнать. Долгой была дорога? |
+| greet_dozhd_0_v1_g.mp3 | приветствие: в дождь | Sadachbia | hospitable, warm | Мокро снаружи? Вставай ближе к огню. |
+| greet_dozhd_0_v2_g.mp3 | приветствие: в дождь | Schedar | hospitable, warm | Мокро снаружи? Вставай ближе к огню. |
+| greet_dozhd_0_v1_f_g.mp3 | приветствие: в дождь | Leda | hospitable, warm | Мокро снаружи? Вставай ближе к огню. |
+| greet_dozhd_0_v2_f_g.mp3 | приветствие: в дождь | Aoede | hospitable, warm | Мокро снаружи? Вставай ближе к огню. |
+| greet_dozhd_1_v1_g.mp3 | приветствие: в дождь | Sadachbia | dry, matter-of-fact | В такой дождь только по делу и ходят. |
+| greet_dozhd_1_v2_g.mp3 | приветствие: в дождь | Schedar | dry, matter-of-fact | В такой дождь только по делу и ходят. |
+| greet_dozhd_1_v1_f_g.mp3 | приветствие: в дождь | Leda | dry, matter-of-fact | В такой дождь только по делу и ходят. |
+| greet_dozhd_1_v2_f_g.mp3 | приветствие: в дождь | Aoede | dry, matter-of-fact | В такой дождь только по делу и ходят. |
+| greet_dozhd_2_v1_g.mp3 | приветствие: в дождь | Sadachbia | fussy, mildly annoyed | Отряхнись у порога, с тебя течёт. |
+| greet_dozhd_2_v2_g.mp3 | приветствие: в дождь | Schedar | fussy, mildly annoyed | Отряхнись у порога, с тебя течёт. |
+| greet_dozhd_2_v1_f_g.mp3 | приветствие: в дождь | Leda | fussy, mildly annoyed | Отряхнись у порога, с тебя течёт. |
+| greet_dozhd_2_v2_f_g.mp3 | приветствие: в дождь | Aoede | fussy, mildly annoyed | Отряхнись у порога, с тебя течёт. |
+| greet_dozhd_3_v1_g.mp3 | приветствие: в дождь | Sadachbia | weary, sighing | Льёт и льёт. Хоть торговля под крышей. |
+| greet_dozhd_3_v2_g.mp3 | приветствие: в дождь | Schedar | weary, sighing | Льёт и льёт. Хоть торговля под крышей. |
+| greet_dozhd_3_v1_f_g.mp3 | приветствие: в дождь | Leda | weary, sighing | Льёт и льёт. Хоть торговля под крышей. |
+| greet_dozhd_3_v2_f_g.mp3 | приветствие: в дождь | Aoede | weary, sighing | Льёт и льёт. Хоть торговля под крышей. |
+| greet_dozhd_4_v1_g.mp3 | приветствие: в дождь | Sadachbia | cheerful | Дождь делу не помеха — заходи. |
+| greet_dozhd_4_v2_g.mp3 | приветствие: в дождь | Schedar | cheerful | Дождь делу не помеха — заходи. |
+| greet_dozhd_4_v1_f_g.mp3 | приветствие: в дождь | Leda | cheerful | Дождь делу не помеха — заходи. |
+| greet_dozhd_4_v2_f_g.mp3 | приветствие: в дождь | Aoede | cheerful | Дождь делу не помеха — заходи. |
+| greet_dozhd_5_v1_g.mp3 | приветствие: в дождь | Sadachbia | grumbling, friendly | Вот погодка! Сапоги у порога оставь. |
+| greet_dozhd_5_v2_g.mp3 | приветствие: в дождь | Schedar | grumbling, friendly | Вот погодка! Сапоги у порога оставь. |
+| greet_dozhd_5_v1_f_g.mp3 | приветствие: в дождь | Leda | grumbling, friendly | Вот погодка! Сапоги у порога оставь. |
+| greet_dozhd_5_v2_f_g.mp3 | приветствие: в дождь | Aoede | grumbling, friendly | Вот погодка! Сапоги у порога оставь. |
+| greet_zemlyak_0_v1_g.mp3 | приветствие: земляку | Sadachbia | joyful, warm | Свой! По говору слышу. Здравствуй, земляк. |
+| greet_zemlyak_0_v2_g.mp3 | приветствие: земляку | Schedar | joyful, warm | Свой! По говору слышу. Здравствуй, земляк. |
+| greet_zemlyak_0_v1_f_g.mp3 | приветствие: земляку | Leda | joyful, warm | Свой! По говору слышу. Здравствуй, земляк. |
+| greet_zemlyak_0_v2_f_g.mp3 | приветствие: земляку | Aoede | joyful, warm | Свой! По говору слышу. Здравствуй, земляк. |
+| greet_zemlyak_1_v1_g.mp3 | приветствие: земляку | Sadachbia | warm, welcoming | Родная кровь! Для земляка — всегда пожалуйста. |
+| greet_zemlyak_1_v2_g.mp3 | приветствие: земляку | Schedar | warm, welcoming | Родная кровь! Для земляка — всегда пожалуйста. |
+| greet_zemlyak_1_v1_f_g.mp3 | приветствие: земляку | Leda | warm, welcoming | Родная кровь! Для земляка — всегда пожалуйста. |
+| greet_zemlyak_1_v2_f_g.mp3 | приветствие: земляку | Aoede | warm, welcoming | Родная кровь! Для земляка — всегда пожалуйста. |
+| greet_zemlyak_2_v1_g.mp3 | приветствие: земляку | Sadachbia | pleasantly surprised | Из наших будешь? Тогда и разговор другой. |
+| greet_zemlyak_2_v2_g.mp3 | приветствие: земляку | Schedar | pleasantly surprised | Из наших будешь? Тогда и разговор другой. |
+| greet_zemlyak_2_v1_f_g.mp3 | приветствие: земляку | Leda | pleasantly surprised | Из наших будешь? Тогда и разговор другой. |
+| greet_zemlyak_2_v2_f_g.mp3 | приветствие: земляку | Aoede | pleasantly surprised | Из наших будешь? Тогда и разговор другой. |
+| greet_zemlyak_3_v1_g.mp3 | приветствие: земляку | Sadachbia | friendly, confidential | Земляку и цена своя. Проходи. |
+| greet_zemlyak_3_v2_g.mp3 | приветствие: земляку | Schedar | friendly, confidential | Земляку и цена своя. Проходи. |
+| greet_zemlyak_3_v1_f_g.mp3 | приветствие: земляку | Leda | friendly, confidential | Земляку и цена своя. Проходи. |
+| greet_zemlyak_3_v2_f_g.mp3 | приветствие: земляку | Aoede | friendly, confidential | Земляку и цена своя. Проходи. |
+| greet_zemlyak_4_v1_g.mp3 | приветствие: земляку | Sadachbia | warm, nostalgic | Своих издалека видно. Как там дома? |
+| greet_zemlyak_4_v2_g.mp3 | приветствие: земляку | Schedar | warm, nostalgic | Своих издалека видно. Как там дома? |
+| greet_zemlyak_4_v1_f_g.mp3 | приветствие: земляку | Leda | warm, nostalgic | Своих издалека видно. Как там дома? |
+| greet_zemlyak_4_v2_f_g.mp3 | приветствие: земляку | Aoede | warm, nostalgic | Своих издалека видно. Как там дома? |
+| greet_zemlyak_5_v1_g.mp3 | приветствие: земляку | Sadachbia | glad, warm | Нечасто наших тут встретишь. Садись. |
+| greet_zemlyak_5_v2_g.mp3 | приветствие: земляку | Schedar | glad, warm | Нечасто наших тут встретишь. Садись. |
+| greet_zemlyak_5_v1_f_g.mp3 | приветствие: земляку | Leda | glad, warm | Нечасто наших тут встретишь. Садись. |
+| greet_zemlyak_5_v2_f_g.mp3 | приветствие: земляку | Aoede | glad, warm | Нечасто наших тут встретишь. Садись. |
+| greet_zhdet_0_v1_g.mp3 | приветствие: про взятое дело | Sadachbia | expectant, curious | Ну что, как с моим делом? |
+| greet_zhdet_0_v2_g.mp3 | приветствие: про взятое дело | Schedar | expectant, curious | Ну что, как с моим делом? |
+| greet_zhdet_0_v1_f_g.mp3 | приветствие: про взятое дело | Leda | expectant, curious | Ну что, как с моим делом? |
+| greet_zhdet_0_v2_f_g.mp3 | приветствие: про взятое дело | Aoede | expectant, curious | Ну что, как с моим делом? |
+| greet_zhdet_1_v1_g.mp3 | приветствие: про взятое дело | Sadachbia | reminding, slightly stern | Помнишь, о чём договаривались? |
+| greet_zhdet_1_v2_g.mp3 | приветствие: про взятое дело | Schedar | reminding, slightly stern | Помнишь, о чём договаривались? |
+| greet_zhdet_1_v1_f_g.mp3 | приветствие: про взятое дело | Leda | reminding, slightly stern | Помнишь, о чём договаривались? |
+| greet_zhdet_1_v2_f_g.mp3 | приветствие: про взятое дело | Aoede | reminding, slightly stern | Помнишь, о чём договаривались? |
+| greet_zhdet_2_v1_g.mp3 | приветствие: про взятое дело | Sadachbia | impatient, sighing | Жду, жду. Дело само не сделается. |
+| greet_zhdet_2_v2_g.mp3 | приветствие: про взятое дело | Schedar | impatient, sighing | Жду, жду. Дело само не сделается. |
+| greet_zhdet_2_v1_f_g.mp3 | приветствие: про взятое дело | Leda | impatient, sighing | Жду, жду. Дело само не сделается. |
+| greet_zhdet_2_v2_f_g.mp3 | приветствие: про взятое дело | Aoede | impatient, sighing | Жду, жду. Дело само не сделается. |
+| greet_zhdet_3_v1_g.mp3 | приветствие: про взятое дело | Sadachbia | worried, reminding | Не забыто ли моё поручение? |
+| greet_zhdet_3_v2_g.mp3 | приветствие: про взятое дело | Schedar | worried, reminding | Не забыто ли моё поручение? |
+| greet_zhdet_3_v1_f_g.mp3 | приветствие: про взятое дело | Leda | worried, reminding | Не забыто ли моё поручение? |
+| greet_zhdet_3_v2_f_g.mp3 | приветствие: про взятое дело | Aoede | worried, reminding | Не забыто ли моё поручение? |
+| greet_zhdet_4_v1_g.mp3 | приветствие: про взятое дело | Sadachbia | hopeful, eager | Вести есть? Как там с тем делом? |
+| greet_zhdet_4_v2_g.mp3 | приветствие: про взятое дело | Schedar | hopeful, eager | Вести есть? Как там с тем делом? |
+| greet_zhdet_4_v1_f_g.mp3 | приветствие: про взятое дело | Leda | hopeful, eager | Вести есть? Как там с тем делом? |
+| greet_zhdet_4_v2_f_g.mp3 | приветствие: про взятое дело | Aoede | hopeful, eager | Вести есть? Как там с тем делом? |
+| greet_zhdet_5_v1_g.mp3 | приветствие: про взятое дело | Sadachbia | hopeful, curious | Вижу тебя — значит, есть новости? |
+| greet_zhdet_5_v2_g.mp3 | приветствие: про взятое дело | Schedar | hopeful, curious | Вижу тебя — значит, есть новости? |
+| greet_zhdet_5_v1_f_g.mp3 | приветствие: про взятое дело | Leda | hopeful, curious | Вижу тебя — значит, есть новости? |
+| greet_zhdet_5_v2_f_g.mp3 | приветствие: про взятое дело | Aoede | hopeful, curious | Вижу тебя — значит, есть новости? |
+| greet_torg_12_v1_g.mp3 | приветствие: торговец | Sadachbia | brisk, lively market trader | Подходи, не стесняйся! Товар лицом покажу. |
+| greet_torg_12_v2_g.mp3 | приветствие: торговец | Schedar | brisk, lively market trader | Подходи, не стесняйся! Товар лицом покажу. |
+| greet_torg_12_v1_f_g.mp3 | приветствие: торговец | Leda | brisk, lively market trader | Подходи, не стесняйся! Товар лицом покажу. |
+| greet_torg_12_v2_f_g.mp3 | приветствие: торговец | Aoede | brisk, lively market trader | Подходи, не стесняйся! Товар лицом покажу. |
+| greet_torg_13_v1_g.mp3 | приветствие: торговец | Sadachbia | playful, persuasive | Купишь — не пожалеешь, не купишь — пожалеешь. |
+| greet_torg_13_v2_g.mp3 | приветствие: торговец | Schedar | playful, persuasive | Купишь — не пожалеешь, не купишь — пожалеешь. |
+| greet_torg_13_v1_f_g.mp3 | приветствие: торговец | Leda | playful, persuasive | Купишь — не пожалеешь, не купишь — пожалеешь. |
+| greet_torg_13_v2_f_g.mp3 | приветствие: торговец | Aoede | playful, persuasive | Купишь — не пожалеешь, не купишь — пожалеешь. |
+| greet_torg_14_v1_g.mp3 | приветствие: торговец | Sadachbia | proud, lively | У меня сегодня привоз. Свежее не найдёшь. |
+| greet_torg_14_v2_g.mp3 | приветствие: торговец | Schedar | proud, lively | У меня сегодня привоз. Свежее не найдёшь. |
+| greet_torg_14_v1_f_g.mp3 | приветствие: торговец | Leda | proud, lively | У меня сегодня привоз. Свежее не найдёшь. |
+| greet_torg_14_v2_f_g.mp3 | приветствие: торговец | Aoede | proud, lively | У меня сегодня привоз. Свежее не найдёшь. |
+| greet_torg_15_v1_g.mp3 | приветствие: торговец | Sadachbia | sly, playful | Торгуюсь до последнего медяка, так и знай. |
+| greet_torg_15_v2_g.mp3 | приветствие: торговец | Schedar | sly, playful | Торгуюсь до последнего медяка, так и знай. |
+| greet_torg_15_v1_f_g.mp3 | приветствие: торговец | Leda | sly, playful | Торгуюсь до последнего медяка, так и знай. |
+| greet_torg_15_v2_f_g.mp3 | приветствие: торговец | Aoede | sly, playful | Торгуюсь до последнего медяка, так и знай. |
+| greet_torg_16_v1_g.mp3 | приветствие: торговец | Sadachbia | admiring, persuasive | Глянь, какая работа! Такое не каждый день. |
+| greet_torg_16_v2_g.mp3 | приветствие: торговец | Schedar | admiring, persuasive | Глянь, какая работа! Такое не каждый день. |
+| greet_torg_16_v1_f_g.mp3 | приветствие: торговец | Leda | admiring, persuasive | Глянь, какая работа! Такое не каждый день. |
+| greet_torg_16_v2_f_g.mp3 | приветствие: торговец | Aoede | admiring, persuasive | Глянь, какая работа! Такое не каждый день. |
+| greet_torg_17_v1_g.mp3 | приветствие: торговец | Sadachbia | wise, sly | Деньги любят счёт, а товар — хозяина. |
+| greet_torg_17_v2_g.mp3 | приветствие: торговец | Schedar | wise, sly | Деньги любят счёт, а товар — хозяина. |
+| greet_torg_17_v1_f_g.mp3 | приветствие: торговец | Leda | wise, sly | Деньги любят счёт, а товар — хозяина. |
+| greet_torg_17_v2_f_g.mp3 | приветствие: торговец | Aoede | wise, sly | Деньги любят счёт, а товар — хозяина. |
+| greet_obshiy_8_v1_g.mp3 | приветствие: всякий житель | Sadachbia | friendly, curious | Здравствуй, здравствуй. Каким ветром? |
+| greet_obshiy_8_v2_g.mp3 | приветствие: всякий житель | Schedar | friendly, curious | Здравствуй, здравствуй. Каким ветром? |
+| greet_obshiy_8_v1_f_g.mp3 | приветствие: всякий житель | Leda | friendly, curious | Здравствуй, здравствуй. Каким ветром? |
+| greet_obshiy_8_v2_f_g.mp3 | приветствие: всякий житель | Aoede | friendly, curious | Здравствуй, здравствуй. Каким ветром? |
+| greet_obshiy_9_v1_g.mp3 | приветствие: всякий житель | Sadachbia | friendly, sympathetic | Путник? Дорога дальняя, небось. |
+| greet_obshiy_9_v2_g.mp3 | приветствие: всякий житель | Schedar | friendly, sympathetic | Путник? Дорога дальняя, небось. |
+| greet_obshiy_9_v1_f_g.mp3 | приветствие: всякий житель | Leda | friendly, sympathetic | Путник? Дорога дальняя, небось. |
+| greet_obshiy_9_v2_f_g.mp3 | приветствие: всякий житель | Aoede | friendly, sympathetic | Путник? Дорога дальняя, небось. |
+| greet_obshiy_10_v1_g.mp3 | приветствие: всякий житель | Sadachbia | curious, easygoing | Ну, здравствуй. Что нового на свете? |
+| greet_obshiy_10_v2_g.mp3 | приветствие: всякий житель | Schedar | curious, easygoing | Ну, здравствуй. Что нового на свете? |
+| greet_obshiy_10_v1_f_g.mp3 | приветствие: всякий житель | Leda | curious, easygoing | Ну, здравствуй. Что нового на свете? |
+| greet_obshiy_10_v2_f_g.mp3 | приветствие: всякий житель | Aoede | curious, easygoing | Ну, здравствуй. Что нового на свете? |
+| greet_obshiy_11_v1_g.mp3 | приветствие: всякий житель | Sadachbia | calm, hospitable | Мир дому и тому, кто входит. |
+| greet_obshiy_11_v2_g.mp3 | приветствие: всякий житель | Schedar | calm, hospitable | Мир дому и тому, кто входит. |
+| greet_obshiy_11_v1_f_g.mp3 | приветствие: всякий житель | Leda | calm, hospitable | Мир дому и тому, кто входит. |
+| greet_obshiy_11_v2_f_g.mp3 | приветствие: всякий житель | Aoede | calm, hospitable | Мир дому и тому, кто входит. |
+| greet_obshiy_12_v1_g.mp3 | приветствие: всякий житель | Sadachbia | hospitable, warm | О, гость. Проходи, не стой на пороге. |
+| greet_obshiy_12_v2_g.mp3 | приветствие: всякий житель | Schedar | hospitable, warm | О, гость. Проходи, не стой на пороге. |
+| greet_obshiy_12_v1_f_g.mp3 | приветствие: всякий житель | Leda | hospitable, warm | О, гость. Проходи, не стой на пороге. |
+| greet_obshiy_12_v2_f_g.mp3 | приветствие: всякий житель | Aoede | hospitable, warm | О, гость. Проходи, не стой на пороге. |
+| greet_obshiy_13_v1_g.mp3 | приветствие: всякий житель | Sadachbia | cautious, then friendly | Добрый человек? Тогда поговорим. |
+| greet_obshiy_13_v2_g.mp3 | приветствие: всякий житель | Schedar | cautious, then friendly | Добрый человек? Тогда поговорим. |
+| greet_obshiy_13_v1_f_g.mp3 | приветствие: всякий житель | Leda | cautious, then friendly | Добрый человек? Тогда поговорим. |
+| greet_obshiy_13_v2_f_g.mp3 | приветствие: всякий житель | Aoede | cautious, then friendly | Добрый человек? Тогда поговорим. |
+| greet_kuznya_8_v1_g.mp3 | приветствие: кузнец | Sadachbia | loud, gruff blacksmith, busy | Молот не ждёт. Чего тебе? |
+| greet_kuznya_8_v2_g.mp3 | приветствие: кузнец | Schedar | loud, gruff blacksmith, busy | Молот не ждёт. Чего тебе? |
+| greet_kuznya_8_v1_f_g.mp3 | приветствие: кузнец | Leda | loud, gruff blacksmith, busy | Молот не ждёт. Чего тебе? |
+| greet_kuznya_8_v2_f_g.mp3 | приветствие: кузнец | Aoede | loud, gruff blacksmith, busy | Молот не ждёт. Чего тебе? |
+| greet_kuznya_9_v1_g.mp3 | приветствие: кузнец | Sadachbia | gruff, businesslike | Кольчугу латать или клинок точить? |
+| greet_kuznya_9_v2_g.mp3 | приветствие: кузнец | Schedar | gruff, businesslike | Кольчугу латать или клинок точить? |
+| greet_kuznya_9_v1_f_g.mp3 | приветствие: кузнец | Leda | gruff, businesslike | Кольчугу латать или клинок точить? |
+| greet_kuznya_9_v2_f_g.mp3 | приветствие: кузнец | Aoede | gruff, businesslike | Кольчугу латать или клинок точить? |
+| greet_kuznya_10_v1_g.mp3 | приветствие: кузнец | Sadachbia | gruff, amused | Искры не боишься? Подходи. |
+| greet_kuznya_10_v2_g.mp3 | приветствие: кузнец | Schedar | gruff, amused | Искры не боишься? Подходи. |
+| greet_kuznya_10_v1_f_g.mp3 | приветствие: кузнец | Leda | gruff, amused | Искры не боишься? Подходи. |
+| greet_kuznya_10_v2_f_g.mp3 | приветствие: кузнец | Aoede | gruff, amused | Искры не боишься? Подходи. |
+| greet_traktir_8_v1_g.mp3 | приветствие: трактирщик | Sadachbia | warm, hospitable innkeeper | Заходи, у нас тепло и сухо. |
+| greet_traktir_8_v2_g.mp3 | приветствие: трактирщик | Schedar | warm, hospitable innkeeper | Заходи, у нас тепло и сухо. |
+| greet_traktir_8_v1_f_g.mp3 | приветствие: трактирщик | Leda | warm, hospitable innkeeper | Заходи, у нас тепло и сухо. |
+| greet_traktir_8_v2_f_g.mp3 | приветствие: трактирщик | Aoede | warm, hospitable innkeeper | Заходи, у нас тепло и сухо. |
+| greet_traktir_9_v1_g.mp3 | приветствие: трактирщик | Sadachbia | cheerful innkeeper | Кружку пива для начала? |
+| greet_traktir_9_v2_g.mp3 | приветствие: трактирщик | Schedar | cheerful innkeeper | Кружку пива для начала? |
+| greet_traktir_9_v1_f_g.mp3 | приветствие: трактирщик | Leda | cheerful innkeeper | Кружку пива для начала? |
+| greet_traktir_9_v2_f_g.mp3 | приветствие: трактирщик | Aoede | cheerful innkeeper | Кружку пива для начала? |
+| greet_traktir_10_v1_g.mp3 | приветствие: трактирщик | Sadachbia | friendly, hospitable | Свободный стол у окна. Садись. |
+| greet_traktir_10_v2_g.mp3 | приветствие: трактирщик | Schedar | friendly, hospitable | Свободный стол у окна. Садись. |
+| greet_traktir_10_v1_f_g.mp3 | приветствие: трактирщик | Leda | friendly, hospitable | Свободный стол у окна. Садись. |
+| greet_traktir_10_v2_f_g.mp3 | приветствие: трактирщик | Aoede | friendly, hospitable | Свободный стол у окна. Садись. |
+| greet_lekar_8_v1_g.mp3 | приветствие: лекарь | Sadachbia | gentle, hushed | Тише, тише. Здесь больные спят. |
+| greet_lekar_8_v2_g.mp3 | приветствие: лекарь | Schedar | gentle, hushed | Тише, тише. Здесь больные спят. |
+| greet_lekar_8_v1_f_g.mp3 | приветствие: лекарь | Leda | gentle, hushed | Тише, тише. Здесь больные спят. |
+| greet_lekar_8_v2_f_g.mp3 | приветствие: лекарь | Aoede | gentle, hushed | Тише, тише. Здесь больные спят. |
+| greet_lekar_9_v1_g.mp3 | приветствие: лекарь | Sadachbia | calm, caring | Покажи руки. Раны чистые? |
+| greet_lekar_9_v2_g.mp3 | приветствие: лекарь | Schedar | calm, caring | Покажи руки. Раны чистые? |
+| greet_lekar_9_v1_f_g.mp3 | приветствие: лекарь | Leda | calm, caring | Покажи руки. Раны чистые? |
+| greet_lekar_9_v2_f_g.mp3 | приветствие: лекарь | Aoede | calm, caring | Покажи руки. Раны чистые? |
+| greet_lekar_10_v1_g.mp3 | приветствие: лекарь | Sadachbia | gentle, attentive | Травы свежие, отвар готов. Что беспокоит? |
+| greet_lekar_10_v2_g.mp3 | приветствие: лекарь | Schedar | gentle, attentive | Травы свежие, отвар готов. Что беспокоит? |
+| greet_lekar_10_v1_f_g.mp3 | приветствие: лекарь | Leda | gentle, attentive | Травы свежие, отвар готов. Что беспокоит? |
+| greet_lekar_10_v2_f_g.mp3 | приветствие: лекарь | Aoede | gentle, attentive | Травы свежие, отвар готов. Что беспокоит? |
+| greet_zhrec_8_v1_g.mp3 | приветствие: жрец | Sadachbia | serene, reverent | Входи с миром, уходи с надеждой. |
+| greet_zhrec_8_v2_g.mp3 | приветствие: жрец | Schedar | serene, reverent | Входи с миром, уходи с надеждой. |
+| greet_zhrec_8_v1_f_g.mp3 | приветствие: жрец | Leda | serene, reverent | Входи с миром, уходи с надеждой. |
+| greet_zhrec_8_v2_f_g.mp3 | приветствие: жрец | Aoede | serene, reverent | Входи с миром, уходи с надеждой. |
+| greet_zhrec_9_v1_g.mp3 | приветствие: жрец | Sadachbia | quiet, solemn | Боги видят всякого, кто переступает порог. |
+| greet_zhrec_9_v2_g.mp3 | приветствие: жрец | Schedar | quiet, solemn | Боги видят всякого, кто переступает порог. |
+| greet_zhrec_9_v1_f_g.mp3 | приветствие: жрец | Leda | quiet, solemn | Боги видят всякого, кто переступает порог. |
+| greet_zhrec_9_v2_f_g.mp3 | приветствие: жрец | Aoede | quiet, solemn | Боги видят всякого, кто переступает порог. |
+| greet_zhrec_10_v1_g.mp3 | приветствие: жрец | Sadachbia | gentle, reverent | Помолишься с нами или пришёл за советом? |
+| greet_zhrec_10_v2_g.mp3 | приветствие: жрец | Schedar | gentle, reverent | Помолишься с нами или пришёл за советом? |
+| greet_zhrec_10_v1_f_g.mp3 | приветствие: жрец | Leda | gentle, reverent | Помолишься с нами или пришёл за советом? |
+| greet_zhrec_10_v2_f_g.mp3 | приветствие: жрец | Aoede | gentle, reverent | Помолишься с нами или пришёл за советом? |
+| greet_znanie_8_v1_g.mp3 | приветствие: учёный | Sadachbia | absent-minded scholar | А, посетитель. Осторожно, чернила. |
+| greet_znanie_8_v2_g.mp3 | приветствие: учёный | Schedar | absent-minded scholar | А, посетитель. Осторожно, чернила. |
+| greet_znanie_8_v1_f_g.mp3 | приветствие: учёный | Leda | absent-minded scholar | А, посетитель. Осторожно, чернила. |
+| greet_znanie_8_v2_f_g.mp3 | приветствие: учёный | Aoede | absent-minded scholar | А, посетитель. Осторожно, чернила. |
+| greet_znanie_9_v1_g.mp3 | приветствие: учёный | Sadachbia | fussy, scholarly | Любую книгу — только после того, как руки вымоешь. |
+| greet_znanie_9_v2_g.mp3 | приветствие: учёный | Schedar | fussy, scholarly | Любую книгу — только после того, как руки вымоешь. |
+| greet_znanie_9_v1_f_g.mp3 | приветствие: учёный | Leda | fussy, scholarly | Любую книгу — только после того, как руки вымоешь. |
+| greet_znanie_9_v2_f_g.mp3 | приветствие: учёный | Aoede | fussy, scholarly | Любую книгу — только после того, как руки вымоешь. |
+| greet_znanie_10_v1_g.mp3 | приветствие: учёный | Sadachbia | delighted, scholarly | Вопрос? Прекрасно. Вопросы я люблю. |
+| greet_znanie_10_v2_g.mp3 | приветствие: учёный | Schedar | delighted, scholarly | Вопрос? Прекрасно. Вопросы я люблю. |
+| greet_znanie_10_v1_f_g.mp3 | приветствие: учёный | Leda | delighted, scholarly | Вопрос? Прекрасно. Вопросы я люблю. |
+| greet_znanie_10_v2_f_g.mp3 | приветствие: учёный | Aoede | delighted, scholarly | Вопрос? Прекрасно. Вопросы я люблю. |
+| greet_strazha_9_v1_g.mp3 | приветствие: страж у дела | Sadachbia | stern, official | Порядок знаешь? Тогда проходи. |
+| greet_strazha_9_v2_g.mp3 | приветствие: страж у дела | Schedar | stern, official | Порядок знаешь? Тогда проходи. |
+| greet_strazha_9_v1_f_g.mp3 | приветствие: страж у дела | Leda | stern, official | Порядок знаешь? Тогда проходи. |
+| greet_strazha_9_v2_f_g.mp3 | приветствие: страж у дела | Aoede | stern, official | Порядок знаешь? Тогда проходи. |
+| greet_strazha_10_v1_g.mp3 | приветствие: страж у дела | Sadachbia | dry, stern | Держи руки на виду, и мы поладим. |
+| greet_strazha_10_v2_g.mp3 | приветствие: страж у дела | Schedar | dry, stern | Держи руки на виду, и мы поладим. |
+| greet_strazha_10_v1_f_g.mp3 | приветствие: страж у дела | Leda | dry, stern | Держи руки на виду, и мы поладим. |
+| greet_strazha_10_v2_f_g.mp3 | приветствие: страж у дела | Aoede | dry, stern | Держи руки на виду, и мы поладим. |
+| greet_strazha_11_v1_g.mp3 | приветствие: страж у дела | Sadachbia | curt, official | Без дела не задерживайся. |
+| greet_strazha_11_v2_g.mp3 | приветствие: страж у дела | Schedar | curt, official | Без дела не задерживайся. |
+| greet_strazha_11_v1_f_g.mp3 | приветствие: страж у дела | Leda | curt, official | Без дела не задерживайся. |
+| greet_strazha_11_v2_f_g.mp3 | приветствие: страж у дела | Aoede | curt, official | Без дела не задерживайся. |
+| trade_buy_0_v1_g.mp3 | торговец: покупка | Sadachbia | warm, satisfied | Хороший выбор. Носи на здоровье. |
+| trade_buy_0_v2_g.mp3 | торговец: покупка | Schedar | warm, satisfied | Хороший выбор. Носи на здоровье. |
+| trade_buy_0_v1_f_g.mp3 | торговец: покупка | Leda | warm, satisfied | Хороший выбор. Носи на здоровье. |
+| trade_buy_0_v2_f_g.mp3 | торговец: покупка | Aoede | warm, satisfied | Хороший выбор. Носи на здоровье. |
+| trade_buy_1_v1_g.mp3 | торговец: покупка | Sadachbia | confident, proud | Держи. Сносу не будет. |
+| trade_buy_1_v2_g.mp3 | торговец: покупка | Schedar | confident, proud | Держи. Сносу не будет. |
+| trade_buy_1_v1_f_g.mp3 | торговец: покупка | Leda | confident, proud | Держи. Сносу не будет. |
+| trade_buy_1_v2_f_g.mp3 | торговец: покупка | Aoede | confident, proud | Держи. Сносу не будет. |
+| trade_buy_2_v1_g.mp3 | торговец: покупка | Sadachbia | cheerful, businesslike | По рукам! Приятно иметь дело. |
+| trade_buy_2_v2_g.mp3 | торговец: покупка | Schedar | cheerful, businesslike | По рукам! Приятно иметь дело. |
+| trade_buy_2_v1_f_g.mp3 | торговец: покупка | Leda | cheerful, businesslike | По рукам! Приятно иметь дело. |
+| trade_buy_2_v2_f_g.mp3 | торговец: покупка | Aoede | cheerful, businesslike | По рукам! Приятно иметь дело. |
+| trade_buy_3_v1_g.mp3 | торговец: покупка | Sadachbia | friendly, persuasive | Бери, бери. Не пожалеешь. |
+| trade_buy_3_v2_g.mp3 | торговец: покупка | Schedar | friendly, persuasive | Бери, бери. Не пожалеешь. |
+| trade_buy_3_v1_f_g.mp3 | торговец: покупка | Leda | friendly, persuasive | Бери, бери. Не пожалеешь. |
+| trade_buy_3_v2_f_g.mp3 | торговец: покупка | Aoede | friendly, persuasive | Бери, бери. Не пожалеешь. |
+| trade_buy_4_v1_g.mp3 | торговец: покупка | Sadachbia | businesslike, fair | С тебя золото — с меня товар. Честно. |
+| trade_buy_4_v2_g.mp3 | торговец: покупка | Schedar | businesslike, fair | С тебя золото — с меня товар. Честно. |
+| trade_buy_4_v1_f_g.mp3 | торговец: покупка | Leda | businesslike, fair | С тебя золото — с меня товар. Честно. |
+| trade_buy_4_v2_f_g.mp3 | торговец: покупка | Aoede | businesslike, fair | С тебя золото — с меня товар. Честно. |
+| trade_buy_5_v1_g.mp3 | торговец: покупка | Sadachbia | pleased, warm | Вот и славно. Заходи ещё. |
+| trade_buy_5_v2_g.mp3 | торговец: покупка | Schedar | pleased, warm | Вот и славно. Заходи ещё. |
+| trade_buy_5_v1_f_g.mp3 | торговец: покупка | Leda | pleased, warm | Вот и славно. Заходи ещё. |
+| trade_buy_5_v2_f_g.mp3 | торговец: покупка | Aoede | pleased, warm | Вот и славно. Заходи ещё. |
+| trade_buy_6_v1_g.mp3 | торговец: покупка | Sadachbia | proud, serious | Твоё. Береги, второго такого нет. |
+| trade_buy_6_v2_g.mp3 | торговец: покупка | Schedar | proud, serious | Твоё. Береги, второго такого нет. |
+| trade_buy_6_v1_f_g.mp3 | торговец: покупка | Leda | proud, serious | Твоё. Береги, второго такого нет. |
+| trade_buy_6_v2_f_g.mp3 | торговец: покупка | Aoede | proud, serious | Твоё. Береги, второго такого нет. |
+| trade_buy_7_v1_g.mp3 | торговец: покупка | Sadachbia | cheerful | Взято! Пусть служит верно. |
+| trade_buy_7_v2_g.mp3 | торговец: покупка | Schedar | cheerful | Взято! Пусть служит верно. |
+| trade_buy_7_v1_f_g.mp3 | торговец: покупка | Leda | cheerful | Взято! Пусть служит верно. |
+| trade_buy_7_v2_f_g.mp3 | торговец: покупка | Aoede | cheerful | Взято! Пусть служит верно. |
+| trade_buy_8_v1_g.mp3 | торговец: покупка | Sadachbia | approving, sincere | Отличная покупка. Я бы и сам взял. |
+| trade_buy_8_v2_g.mp3 | торговец: покупка | Schedar | approving, sincere | Отличная покупка. Я бы и сам взял. |
+| trade_buy_8_v1_f_g.mp3 | торговец: покупка | Leda | approving, sincere | Отличная покупка. Я бы и сама взяла. |
+| trade_buy_8_v2_f_g.mp3 | торговец: покупка | Aoede | approving, sincere | Отличная покупка. Я бы и сама взяла. |
+| trade_buy_9_v1_g.mp3 | торговец: покупка | Sadachbia | confidential, generous | Забирай. Цену сбавил только для тебя. |
+| trade_buy_9_v2_g.mp3 | торговец: покупка | Schedar | confidential, generous | Забирай. Цену сбавил только для тебя. |
+| trade_buy_9_v1_f_g.mp3 | торговец: покупка | Leda | confidential, generous | Забирай. Цену сбавила только для тебя. |
+| trade_buy_9_v2_f_g.mp3 | торговец: покупка | Aoede | confidential, generous | Забирай. Цену сбавила только для тебя. |
+| trade_buy_10_v1_g.mp3 | торговец: покупка | Sadachbia | grateful, warm | Спасибо за золото. Удачи в дороге. |
+| trade_buy_10_v2_g.mp3 | торговец: покупка | Schedar | grateful, warm | Спасибо за золото. Удачи в дороге. |
+| trade_buy_10_v1_f_g.mp3 | торговец: покупка | Leda | grateful, warm | Спасибо за золото. Удачи в дороге. |
+| trade_buy_10_v2_f_g.mp3 | торговец: покупка | Aoede | grateful, warm | Спасибо за золото. Удачи в дороге. |
+| trade_buy_11_v2_g.mp3 | торговец: покупка | Schedar | lively, joking | Сделка! Смотри не потеряй. |
+| trade_buy_11_v1_f_g.mp3 | торговец: покупка | Leda | lively, joking | Сделка! Смотри не потеряй. |
+| trade_buy_11_v2_f_g.mp3 | торговец: покупка | Aoede | lively, joking | Сделка! Смотри не потеряй. |
+| trade_buy_big_0_v2_g.mp3 | торговец: крупная покупка | Schedar | delighted, laughing | Ого, сколько! Сегодня у меня праздник. |
+| trade_buy_big_0_v1_f_g.mp3 | торговец: крупная покупка | Leda | delighted, laughing | Ого, сколько! Сегодня у меня праздник. |
+| trade_buy_big_0_v2_f_g.mp3 | торговец: крупная покупка | Aoede | delighted, laughing | Ого, сколько! Сегодня у меня праздник. |
+| trade_buy_big_1_v2_g.mp3 | торговец: крупная покупка | Schedar | excited, fawning | Вот это покупатель! Всё завернём в лучшем виде. |
+| trade_buy_big_1_v1_f_g.mp3 | торговец: крупная покупка | Leda | excited, fawning | Вот это покупатель! Всё завернём в лучшем виде. |
+| trade_buy_big_1_v2_f_g.mp3 | торговец: крупная покупка | Aoede | excited, fawning | Вот это покупатель! Всё завернём в лучшем виде. |
+| trade_buy_big_2_v1_g.mp3 | торговец: крупная покупка | Sadachbia | grateful, generous | Щедро! За такое — скидка в следующий раз. |
+| trade_buy_big_2_v2_g.mp3 | торговец: крупная покупка | Schedar | grateful, generous | Щедро! За такое — скидка в следующий раз. |
+| trade_buy_big_2_v1_f_g.mp3 | торговец: крупная покупка | Leda | grateful, generous | Щедро! За такое — скидка в следующий раз. |
+| trade_buy_big_2_v2_f_g.mp3 | торговец: крупная покупка | Aoede | grateful, generous | Щедро! За такое — скидка в следующий раз. |
+| trade_buy_big_3_v1_g.mp3 | торговец: крупная покупка | Sadachbia | amazed, delighted | Полприлавка разом! Вот это размах. |
+| trade_buy_big_3_v2_g.mp3 | торговец: крупная покупка | Schedar | amazed, delighted | Полприлавка разом! Вот это размах. |
+| trade_buy_big_3_v1_f_g.mp3 | торговец: крупная покупка | Leda | amazed, delighted | Полприлавка разом! Вот это размах. |
+| trade_buy_big_3_v2_f_g.mp3 | торговец: крупная покупка | Aoede | amazed, delighted | Полприлавка разом! Вот это размах. |
+| trade_buy_big_4_v1_g.mp3 | торговец: крупная покупка | Sadachbia | happy, warm | С таким покупателем и год не страшен. |
+| trade_buy_big_4_v2_g.mp3 | торговец: крупная покупка | Schedar | happy, warm | С таким покупателем и год не страшен. |
+| trade_buy_big_4_v1_f_g.mp3 | торговец: крупная покупка | Leda | happy, warm | С таким покупателем и год не страшен. |
+| trade_buy_big_4_v2_f_g.mp3 | торговец: крупная покупка | Aoede | happy, warm | С таким покупателем и год не страшен. |
+| trade_sell_0_v1_g.mp3 | торговец: скупает у героя | Sadachbia | businesslike, firm | Возьму. Цена честная, не спорь. |
+| trade_sell_0_v2_g.mp3 | торговец: скупает у героя | Schedar | businesslike, firm | Возьму. Цена честная, не спорь. |
+| trade_sell_0_v1_f_g.mp3 | торговец: скупает у героя | Leda | businesslike, firm | Возьму. Цена честная, не спорь. |
+| trade_sell_0_v2_f_g.mp3 | торговец: скупает у героя | Aoede | businesslike, firm | Возьму. Цена честная, не спорь. |
+| trade_sell_1_v1_g.mp3 | торговец: скупает у героя | Sadachbia | appraising, satisfied | Неплохая вещица. Держи золото. |
+| trade_sell_1_v2_g.mp3 | торговец: скупает у героя | Schedar | appraising, satisfied | Неплохая вещица. Держи золото. |
+| trade_sell_1_v1_f_g.mp3 | торговец: скупает у героя | Leda | appraising, satisfied | Неплохая вещица. Держи золото. |
+| trade_sell_1_v2_f_g.mp3 | торговец: скупает у героя | Aoede | appraising, satisfied | Неплохая вещица. Держи золото. |
+| trade_sell_2_v1_g.mp3 | торговец: скупает у героя | Sadachbia | businesslike | Беру. Такое всегда найдёт покупателя. |
+| trade_sell_2_v2_g.mp3 | торговец: скупает у героя | Schedar | businesslike | Беру. Такое всегда найдёт покупателя. |
+| trade_sell_2_v1_f_g.mp3 | торговец: скупает у героя | Leda | businesslike | Беру. Такое всегда найдёт покупателя. |
+| trade_sell_2_v2_f_g.mp3 | торговец: скупает у героя | Aoede | businesslike | Беру. Такое всегда найдёт покупателя. |
+| trade_sell_3_v1_g.mp3 | торговец: скупает у героя | Sadachbia | appraising, a bit grudging | Хм, сойдёт. Вот твои монеты. |
+| trade_sell_3_v2_g.mp3 | торговец: скупает у героя | Schedar | appraising, a bit grudging | Хм, сойдёт. Вот твои монеты. |
+| trade_sell_3_v1_f_g.mp3 | торговец: скупает у героя | Leda | appraising, a bit grudging | Хм, сойдёт. Вот твои монеты. |
+| trade_sell_3_v2_f_g.mp3 | торговец: скупает у героя | Aoede | appraising, a bit grudging | Хм, сойдёт. Вот твои монеты. |
+| trade_sell_4_v1_g.mp3 | торговец: скупает у героя | Sadachbia | eager, businesslike | По рукам. Ещё что-нибудь есть? |
+| trade_sell_4_v2_g.mp3 | торговец: скупает у героя | Schedar | eager, businesslike | По рукам. Ещё что-нибудь есть? |
+| trade_sell_4_v1_f_g.mp3 | торговец: скупает у героя | Leda | eager, businesslike | По рукам. Ещё что-нибудь есть? |
+| trade_sell_4_v2_f_g.mp3 | торговец: скупает у героя | Aoede | eager, businesslike | По рукам. Ещё что-нибудь есть? |
+| trade_sell_5_v1_g.mp3 | торговец: скупает у героя | Sadachbia | approving | Товар годный. Приноси ещё. |
+| trade_sell_5_v2_g.mp3 | торговец: скупает у героя | Schedar | approving | Товар годный. Приноси ещё. |
+| trade_sell_5_v1_f_g.mp3 | торговец: скупает у героя | Leda | approving | Товар годный. Приноси ещё. |
+| trade_sell_5_v2_f_g.mp3 | торговец: скупает у героя | Aoede | approving | Товар годный. Приноси ещё. |
+| trade_sell_6_v1_g.mp3 | торговец: скупает у героя | Sadachbia | wry, sighing | Ладно, беру. Хоть и переплачиваю. |
+| trade_sell_6_v2_g.mp3 | торговец: скупает у героя | Schedar | wry, sighing | Ладно, беру. Хоть и переплачиваю. |
+| trade_sell_6_v1_f_g.mp3 | торговец: скупает у героя | Leda | wry, sighing | Ладно, беру. Хоть и переплачиваю. |
+| trade_sell_6_v2_f_g.mp3 | торговец: скупает у героя | Aoede | wry, sighing | Ладно, беру. Хоть и переплачиваю. |
+| trade_sell_7_v1_g.mp3 | торговец: скупает у героя | Sadachbia | dry, grudging | Держи золото. Считай, повезло тебе. |
+| trade_sell_7_v2_g.mp3 | торговец: скупает у героя | Schedar | dry, grudging | Держи золото. Считай, повезло тебе. |
+| trade_sell_7_v1_f_g.mp3 | торговец: скупает у героя | Leda | dry, grudging | Держи золото. Считай, повезло тебе. |
+| trade_sell_7_v2_f_g.mp3 | торговец: скупает у героя | Aoede | dry, grudging | Держи золото. Считай, повезло тебе. |
+| trade_sell_8_v1_g.mp3 | торговец: скупает у героя | Sadachbia | playful, cheerful | Добро пожаловать на мой склад, вещица! |
+| trade_sell_8_v2_g.mp3 | торговец: скупает у героя | Schedar | playful, cheerful | Добро пожаловать на мой склад, вещица! |
+| trade_sell_8_v1_f_g.mp3 | торговец: скупает у героя | Leda | playful, cheerful | Добро пожаловать на мой склад, вещица! |
+| trade_sell_8_v2_f_g.mp3 | торговец: скупает у героя | Aoede | playful, cheerful | Добро пожаловать на мой склад, вещица! |
+| trade_sell_9_v1_g.mp3 | торговец: скупает у героя | Sadachbia | sly, firm | Возьму, если больше торговаться не станешь. |
+| trade_sell_9_v2_g.mp3 | торговец: скупает у героя | Schedar | sly, firm | Возьму, если больше торговаться не станешь. |
+| trade_sell_9_v1_f_g.mp3 | торговец: скупает у героя | Leda | sly, firm | Возьму, если больше торговаться не станешь. |
+| trade_sell_9_v2_f_g.mp3 | торговец: скупает у героя | Aoede | sly, firm | Возьму, если больше торговаться не станешь. |
+| trade_sell_10_v1_g.mp3 | торговец: скупает у героя | Sadachbia | curt, businesslike | Это пойдёт. Вот плата. |
+| trade_sell_10_v2_g.mp3 | торговец: скупает у героя | Schedar | curt, businesslike | Это пойдёт. Вот плата. |
+| trade_sell_10_v1_f_g.mp3 | торговец: скупает у героя | Leda | curt, businesslike | Это пойдёт. Вот плата. |
+| trade_sell_10_v2_f_g.mp3 | торговец: скупает у героя | Aoede | curt, businesslike | Это пойдёт. Вот плата. |
+| trade_sell_11_v1_g.mp3 | торговец: скупает у героя | Sadachbia | pleased, surprised | Как раз этого и не хватало. Беру. |
+| trade_sell_11_v2_g.mp3 | торговец: скупает у героя | Schedar | pleased, surprised | Как раз этого и не хватало. Беру. |
+| trade_sell_11_v1_f_g.mp3 | торговец: скупает у героя | Leda | pleased, surprised | Как раз этого и не хватало. Беру. |
+| trade_sell_11_v2_f_g.mp3 | торговец: скупает у героя | Aoede | pleased, surprised | Как раз этого и не хватало. Беру. |
+| trade_sell_big_0_v1_g.mp3 | торговец: скупает много | Sadachbia | amazed, amused | Целый мешок! Ну, считай, разбогатеешь. |
+| trade_sell_big_0_v2_g.mp3 | торговец: скупает много | Schedar | amazed, amused | Целый мешок! Ну, считай, разбогатеешь. |
+| trade_sell_big_0_v1_f_g.mp3 | торговец: скупает много | Leda | amazed, amused | Целый мешок! Ну, считай, разбогатеешь. |
+| trade_sell_big_0_v2_f_g.mp3 | торговец: скупает много | Aoede | amazed, amused | Целый мешок! Ну, считай, разбогатеешь. |
+| trade_sell_big_1_v1_g.mp3 | торговец: скупает много | Sadachbia | wry, sighing, amused | Всё беру. Кошель мой худеет на глазах. |
+| trade_sell_big_1_v2_g.mp3 | торговец: скупает много | Schedar | wry, sighing, amused | Всё беру. Кошель мой худеет на глазах. |
+| trade_sell_big_1_v1_f_g.mp3 | торговец: скупает много | Leda | wry, sighing, amused | Всё беру. Кошель мой худеет на глазах. |
+| trade_sell_big_1_v2_f_g.mp3 | торговец: скупает много | Aoede | wry, sighing, amused | Всё беру. Кошель мой худеет на глазах. |
+| trade_sell_big_2_v1_g.mp3 | торговец: скупает много | Sadachbia | surprised, agreeable | Столько добра разом? Ладно, по рукам. |
+| trade_sell_big_2_v2_g.mp3 | торговец: скупает много | Schedar | surprised, agreeable | Столько добра разом? Ладно, по рукам. |
+| trade_sell_big_2_v1_f_g.mp3 | торговец: скупает много | Leda | surprised, agreeable | Столько добра разом? Ладно, по рукам. |
+| trade_sell_big_2_v2_f_g.mp3 | торговец: скупает много | Aoede | surprised, agreeable | Столько добра разом? Ладно, по рукам. |
+| trade_sell_big_3_v1_g.mp3 | торговец: скупает много | Sadachbia | mock complaining, amused | Ты меня разоришь, но товар хорош. |
+| trade_sell_big_3_v1_f_g.mp3 | торговец: скупает много | Leda | mock complaining, amused | Ты меня разоришь, но товар хорош. |
+| trade_sell_big_3_v2_f_g.mp3 | торговец: скупает много | Aoede | mock complaining, amused | Ты меня разоришь, но товар хорош. |
+| trade_sell_big_4_v1_g.mp3 | торговец: скупает много | Sadachbia | wry, resigned | Опустошаешь мне кассу. Но беру всё. |
+| trade_sell_big_4_v2_g.mp3 | торговец: скупает много | Schedar | wry, resigned | Опустошаешь мне кассу. Но беру всё. |
+| trade_sell_big_4_v1_f_g.mp3 | торговец: скупает много | Leda | wry, resigned | Опустошаешь мне кассу. Но беру всё. |
+| trade_sell_big_4_v2_f_g.mp3 | торговец: скупает много | Aoede | wry, resigned | Опустошаешь мне кассу. Но беру всё. |
+| trade_poor_0_v1_g.mp3 | торговец: золота не хватает | Sadachbia | dry, matter-of-fact | Золота маловато. Доложишь — отдам. |
+| trade_poor_0_v2_g.mp3 | торговец: золота не хватает | Schedar | dry, matter-of-fact | Золота маловато. Доложишь — отдам. |
+| trade_poor_0_v1_f_g.mp3 | торговец: золота не хватает | Leda | dry, matter-of-fact | Золота маловато. Доложишь — отдам. |
+| trade_poor_0_v2_f_g.mp3 | торговец: золота не хватает | Aoede | dry, matter-of-fact | Золота маловато. Доложишь — отдам. |
+| trade_poor_1_v1_g.mp3 | торговец: золота не хватает | Sadachbia | firm, curt | Не хватает монет. Без денег не отдаю. |
+| trade_poor_1_v2_g.mp3 | торговец: золота не хватает | Schedar | firm, curt | Не хватает монет. Без денег не отдаю. |
+| trade_poor_1_v1_f_g.mp3 | торговец: золота не хватает | Leda | firm, curt | Не хватает монет. Без денег не отдаю. |
+| trade_poor_1_v2_f_g.mp3 | торговец: золота не хватает | Aoede | firm, curt | Не хватает монет. Без денег не отдаю. |
+| trade_poor_2_v1_g.mp3 | торговец: золота не хватает | Sadachbia | sympathetic, sighing | Эх, на это кошель тонковат. |
+| trade_poor_2_v2_g.mp3 | торговец: золота не хватает | Schedar | sympathetic, sighing | Эх, на это кошель тонковат. |
+| trade_poor_2_v2_f_g.mp3 | торговец: золота не хватает | Aoede | sympathetic, sighing | Эх, на это кошель тонковат. |
+| trade_poor_3_v1_g.mp3 | торговец: золота не хватает | Sadachbia | firm, stern | В долг не торгую, не проси. |
+| trade_poor_3_v2_g.mp3 | торговец: золота не хватает | Schedar | firm, stern | В долг не торгую, не проси. |
+| trade_poor_3_v1_f_g.mp3 | торговец: золота не хватает | Leda | firm, stern | В долг не торгую, не проси. |
+| trade_poor_3_v2_f_g.mp3 | торговец: золота не хватает | Aoede | firm, stern | В долг не торгую, не проси. |
+| trade_poor_4_v1_g.mp3 | торговец: золота не хватает | Sadachbia | kindly, encouraging | Подкопи ещё немного и возвращайся. |
+| trade_poor_4_v2_g.mp3 | торговец: золота не хватает | Schedar | kindly, encouraging | Подкопи ещё немного и возвращайся. |
+| trade_poor_4_v1_f_g.mp3 | торговец: золота не хватает | Leda | kindly, encouraging | Подкопи ещё немного и возвращайся. |
+| trade_poor_4_v2_f_g.mp3 | торговец: золота не хватает | Aoede | kindly, encouraging | Подкопи ещё немного и возвращайся. |
+| trade_poor_5_v1_g.mp3 | торговец: золота не хватает | Sadachbia | wry, proverb | Даром только ветер в поле. |
+| trade_poor_5_v2_g.mp3 | торговец: золота не хватает | Schedar | wry, proverb | Даром только ветер в поле. |
+| trade_poor_5_v1_f_g.mp3 | торговец: золота не хватает | Leda | wry, proverb | Даром только ветер в поле. |
+| trade_poor_5_v2_f_g.mp3 | торговец: золота не хватает | Aoede | wry, proverb | Даром только ветер в поле. |
+| trade_refuse_0_v1_g.mp3 | торговец: не берёт | Sadachbia | dismissive | Это мне не нужно. Неси кому другому. |
+| trade_refuse_0_v2_g.mp3 | торговец: не берёт | Schedar | dismissive | Это мне не нужно. Неси кому другому. |
+| trade_refuse_0_v1_f_g.mp3 | торговец: не берёт | Leda | dismissive | Это мне не нужно. Неси кому другому. |
+| trade_refuse_0_v2_f_g.mp3 | торговец: не берёт | Aoede | dismissive | Это мне не нужно. Неси кому другому. |
+| trade_refuse_1_v1_g.mp3 | торговец: не берёт | Sadachbia | firm, curt | Нет, такое не беру. |
+| trade_refuse_1_v2_g.mp3 | торговец: не берёт | Schedar | firm, curt | Нет, такое не беру. |
+| trade_refuse_1_v1_f_g.mp3 | торговец: не берёт | Leda | firm, curt | Нет, такое не беру. |
+| trade_refuse_1_v2_f_g.mp3 | торговец: не берёт | Aoede | firm, curt | Нет, такое не беру. |
+| trade_refuse_2_v1_g.mp3 | торговец: не берёт | Sadachbia | dismissive, weary | Такого у меня и так полон склад. |
+| trade_refuse_2_v2_g.mp3 | торговец: не берёт | Schedar | dismissive, weary | Такого у меня и так полон склад. |
+| trade_refuse_2_v1_f_g.mp3 | торговец: не берёт | Leda | dismissive, weary | Такого у меня и так полон склад. |
+| trade_refuse_2_v2_f_g.mp3 | торговец: не берёт | Aoede | dismissive, weary | Такого у меня и так полон склад. |
+| trade_refuse_3_v1_g.mp3 | торговец: не берёт | Sadachbia | neutral, helpful | Не мой товар. Попробуй у соседа. |
+| trade_refuse_3_v2_g.mp3 | торговец: не берёт | Schedar | neutral, helpful | Не мой товар. Попробуй у соседа. |
+| trade_refuse_3_v1_f_g.mp3 | торговец: не берёт | Leda | neutral, helpful | Не мой товар. Попробуй у соседа. |
+| trade_refuse_3_v2_f_g.mp3 | торговец: не берёт | Aoede | neutral, helpful | Не мой товар. Попробуй у соседа. |
+| trade_bye_0_v1_g.mp3 | торговец: прощание после торга | Sadachbia | warm, friendly | Заходи ещё, всегда рад. |
+| trade_bye_0_v2_g.mp3 | торговец: прощание после торга | Schedar | warm, friendly | Заходи ещё, всегда рад. |
+| trade_bye_0_v1_f_g.mp3 | торговец: прощание после торга | Leda | warm, friendly | Заходи ещё, всегда рада. |
+| trade_bye_0_v2_f_g.mp3 | торговец: прощание после торга | Aoede | warm, friendly | Заходи ещё, всегда рада. |
+| trade_bye_1_v1_g.mp3 | торговец: прощание после торга | Sadachbia | friendly | Доброй дороги. Возвращайся за новым. |
+| trade_bye_1_v2_g.mp3 | торговец: прощание после торга | Schedar | friendly | Доброй дороги. Возвращайся за новым. |
+| trade_bye_1_v1_f_g.mp3 | торговец: прощание после торга | Leda | friendly | Доброй дороги. Возвращайся за новым. |
+| trade_bye_1_v2_f_g.mp3 | торговец: прощание после торга | Aoede | friendly | Доброй дороги. Возвращайся за новым. |
+| trade_bye_2_v1_g.mp3 | торговец: прощание после торга | Sadachbia | grateful, warm | Спасибо за торг. Не забывай меня. |
+| trade_bye_2_v2_g.mp3 | торговец: прощание после торга | Schedar | grateful, warm | Спасибо за торг. Не забывай меня. |
+| trade_bye_2_v1_f_g.mp3 | торговец: прощание после торга | Leda | grateful, warm | Спасибо за торг. Не забывай меня. |
+| trade_bye_2_v2_f_g.mp3 | торговец: прощание после торга | Aoede | grateful, warm | Спасибо за торг. Не забывай меня. |
+| trade_bye_3_v1_g.mp3 | торговец: прощание после торга | Sadachbia | cheerful, sly | Удачи! И помни, где лучшие цены. |
+| trade_bye_3_v2_g.mp3 | торговец: прощание после торга | Schedar | cheerful, sly | Удачи! И помни, где лучшие цены. |
+| trade_bye_3_v1_f_g.mp3 | торговец: прощание после торга | Leda | cheerful, sly | Удачи! И помни, где лучшие цены. |
+| trade_bye_3_v2_f_g.mp3 | торговец: прощание после торга | Aoede | cheerful, sly | Удачи! И помни, где лучшие цены. |
+| trade_bye_4_v1_g.mp3 | торговец: прощание после торга | Sadachbia | friendly, easygoing | Будешь рядом — загляни. |
+| trade_bye_4_v2_g.mp3 | торговец: прощание после торга | Schedar | friendly, easygoing | Будешь рядом — загляни. |
+| trade_bye_4_v1_f_g.mp3 | торговец: прощание после торга | Leda | friendly, easygoing | Будешь рядом — загляни. |
+| trade_bye_4_v2_f_g.mp3 | торговец: прощание после торга | Aoede | friendly, easygoing | Будешь рядом — загляни. |
+| trade_bye_5_v1_g.mp3 | торговец: прощание после торга | Sadachbia | polite, satisfied | Приятно было иметь дело. |
+| trade_bye_5_v2_g.mp3 | торговец: прощание после торга | Schedar | polite, satisfied | Приятно было иметь дело. |
+| trade_bye_5_v1_f_g.mp3 | торговец: прощание после торга | Leda | polite, satisfied | Приятно было иметь дело. |
+| trade_bye_5_v2_f_g.mp3 | торговец: прощание после торга | Aoede | polite, satisfied | Приятно было иметь дело. |
+| trade_regular_0_v1_g.mp3 | торговец: постоянному покупателю | Sadachbia | courteous, warm | Для постоянного покупателя — с поклоном. |
+| trade_regular_0_v2_g.mp3 | торговец: постоянному покупателю | Schedar | courteous, warm | Для постоянного покупателя — с поклоном. |
+| trade_regular_0_v1_f_g.mp3 | торговец: постоянному покупателю | Leda | courteous, warm | Для постоянного покупателя — с поклоном. |
+| trade_regular_0_v2_f_g.mp3 | торговец: постоянному покупателю | Aoede | courteous, warm | Для постоянного покупателя — с поклоном. |
+| trade_regular_1_v1_g.mp3 | торговец: постоянному покупателю | Sadachbia | warm, generous | Постоянным — от души. Приходи снова. |
+| trade_regular_1_v2_g.mp3 | торговец: постоянному покупателю | Schedar | warm, generous | Постоянным — от души. Приходи снова. |
+| trade_regular_1_v1_f_g.mp3 | торговец: постоянному покупателю | Leda | warm, generous | Постоянным — от души. Приходи снова. |
+| trade_regular_1_v2_f_g.mp3 | торговец: постоянному покупателю | Aoede | warm, generous | Постоянным — от души. Приходи снова. |
+| trade_regular_2_v1_g.mp3 | торговец: постоянному покупателю | Sadachbia | playful, laughing | Ещё немного — и я тебе медаль вручу. |
+| trade_regular_2_v2_g.mp3 | торговец: постоянному покупателю | Schedar | playful, laughing | Ещё немного — и я тебе медаль вручу. |
+| trade_regular_2_v1_f_g.mp3 | торговец: постоянному покупателю | Leda | playful, laughing | Ещё немного — и я тебе медаль вручу. |
+| trade_regular_2_v2_f_g.mp3 | торговец: постоянному покупателю | Aoede | playful, laughing | Ещё немного — и я тебе медаль вручу. |
+| trade_regular_3_v1_g.mp3 | торговец: постоянному покупателю | Sadachbia | amused, fond | Я твои покупки уже на память знаю. |
+| trade_regular_3_v2_g.mp3 | торговец: постоянному покупателю | Schedar | amused, fond | Я твои покупки уже на память знаю. |
+| trade_regular_3_v1_f_g.mp3 | торговец: постоянному покупателю | Leda | amused, fond | Я твои покупки уже на память знаю. |
+| trade_regular_3_v2_f_g.mp3 | торговец: постоянному покупателю | Aoede | amused, fond | Я твои покупки уже на память знаю. |
+| trade_regular_4_v1_g.mp3 | торговец: постоянному покупателю | Sadachbia | grateful, jovial | Вот кто меня кормит! Спасибо. |
+| trade_regular_4_v2_g.mp3 | торговец: постоянному покупателю | Schedar | grateful, jovial | Вот кто меня кормит! Спасибо. |
+| trade_regular_4_v1_f_g.mp3 | торговец: постоянному покупателю | Leda | grateful, jovial | Вот кто меня кормит! Спасибо. |
+| trade_regular_4_v2_f_g.mp3 | торговец: постоянному покупателю | Aoede | grateful, jovial | Вот кто меня кормит! Спасибо. |
+| quest_take_0_v1_g.mp3 | заказчик: даёт дело | Sadachbia | serious, confiding | Есть для тебя дело. Слушай внимательно. |
+| quest_take_0_v2_g.mp3 | заказчик: даёт дело | Schedar | serious, confiding | Есть для тебя дело. Слушай внимательно. |
+| quest_take_0_v1_f_g.mp3 | заказчик: даёт дело | Leda | serious, confiding | Есть для тебя дело. Слушай внимательно. |
+| quest_take_0_v2_f_g.mp3 | заказчик: даёт дело | Aoede | serious, confiding | Есть для тебя дело. Слушай внимательно. |
+| quest_take_1_v1_g.mp3 | заказчик: даёт дело | Sadachbia | earnest, hopeful | Выручишь — не забуду. Вот что нужно. |
+| quest_take_1_v2_g.mp3 | заказчик: даёт дело | Schedar | earnest, hopeful | Выручишь — не забуду. Вот что нужно. |
+| quest_take_1_v1_f_g.mp3 | заказчик: даёт дело | Leda | earnest, hopeful | Выручишь — не забуду. Вот что нужно. |
+| quest_take_1_v2_f_g.mp3 | заказчик: даёт дело | Aoede | earnest, hopeful | Выручишь — не забуду. Вот что нужно. |
+| quest_take_2_v2_g.mp3 | заказчик: даёт дело | Schedar | businesslike | Работа есть, плата будет. Слушай. |
+| quest_take_2_v1_f_g.mp3 | заказчик: даёт дело | Leda | businesslike | Работа есть, плата будет. Слушай. |
+| quest_take_2_v2_f_g.mp3 | заказчик: даёт дело | Aoede | businesslike | Работа есть, плата будет. Слушай. |
+| quest_take_3_v2_g.mp3 | заказчик: даёт дело | Schedar | earnest, a little worried | Мне нужна помощь. Вот в чём дело. |
+| quest_take_3_v1_f_g.mp3 | заказчик: даёт дело | Leda | earnest, a little worried | Мне нужна помощь. Вот в чём дело. |
+| quest_take_3_v2_f_g.mp3 | заказчик: даёт дело | Aoede | earnest, a little worried | Мне нужна помощь. Вот в чём дело. |
+| quest_story_0_v1_g.mp3 | заказчик: сюжетное | Sadachbia | grave, meaningful | Это только начало. Дело большое, слушай с самого начала. |
+| quest_story_0_v2_g.mp3 | заказчик: сюжетное | Schedar | grave, meaningful | Это только начало. Дело большое, слушай с самого начала. |
+| quest_story_0_v1_f_g.mp3 | заказчик: сюжетное | Leda | grave, meaningful | Это только начало. Дело большое, слушай с самого начала. |
+| quest_story_0_v2_f_g.mp3 | заказчик: сюжетное | Aoede | grave, meaningful | Это только начало. Дело большое, слушай с самого начала. |
+| quest_story_1_v1_g.mp3 | заказчик: сюжетное | Sadachbia | serious, intense | От этого многое зависит. Не подведи. |
+| quest_story_1_v2_g.mp3 | заказчик: сюжетное | Schedar | serious, intense | От этого многое зависит. Не подведи. |
+| quest_story_1_v1_f_g.mp3 | заказчик: сюжетное | Leda | serious, intense | От этого многое зависит. Не подведи. |
+| quest_story_1_v2_f_g.mp3 | заказчик: сюжетное | Aoede | serious, intense | От этого многое зависит. Не подведи. |
+| quest_faction_0_v1_g.mp3 | заказчик: фракционное | Sadachbia | official, measured | Это поручение не от меня — от тех, кому я служу. |
+| quest_faction_0_v2_g.mp3 | заказчик: фракционное | Schedar | official, measured | Это поручение не от меня — от тех, кому я служу. |
+| quest_faction_0_v1_f_g.mp3 | заказчик: фракционное | Leda | official, measured | Это поручение не от меня — от тех, кому я служу. |
+| quest_faction_0_v2_f_g.mp3 | заказчик: фракционное | Aoede | official, measured | Это поручение не от меня — от тех, кому я служу. |
+| quest_faction_1_v1_g.mp3 | заказчик: фракционное | Sadachbia | dry, dutiful | Служба есть служба. Задание такое. |
+| quest_faction_1_v2_g.mp3 | заказчик: фракционное | Schedar | dry, dutiful | Служба есть служба. Задание такое. |
+| quest_faction_1_v1_f_g.mp3 | заказчик: фракционное | Leda | dry, dutiful | Служба есть служба. Задание такое. |
+| quest_faction_1_v2_f_g.mp3 | заказчик: фракционное | Aoede | dry, dutiful | Служба есть служба. Задание такое. |
+| quest_case_0_v1_g.mp3 | заказчик: расследование | Sadachbia | suspicious, lowered voice | Здесь что-то нечисто. Нужно разобраться. |
+| quest_case_0_v2_g.mp3 | заказчик: расследование | Schedar | suspicious, lowered voice | Здесь что-то нечисто. Нужно разобраться. |
+| quest_case_0_v1_f_g.mp3 | заказчик: расследование | Leda | suspicious, lowered voice | Здесь что-то нечисто. Нужно разобраться. |
+| quest_case_0_v2_f_g.mp3 | заказчик: расследование | Aoede | suspicious, lowered voice | Здесь что-то нечисто. Нужно разобраться. |
+| quest_case_1_v1_g.mp3 | заказчик: расследование | Sadachbia | sharp, investigative | Нужны улики, а не слухи. Поищешь? |
+| quest_case_1_v2_g.mp3 | заказчик: расследование | Schedar | sharp, investigative | Нужны улики, а не слухи. Поищешь? |
+| quest_case_1_v1_f_g.mp3 | заказчик: расследование | Leda | sharp, investigative | Нужны улики, а не слухи. Поищешь? |
+| quest_case_1_v2_f_g.mp3 | заказчик: расследование | Aoede | sharp, investigative | Нужны улики, а не слухи. Поищешь? |
+| quest_hunt_0_v1_g.mp3 | заказчик: охота | Sadachbia | grim, determined | Тварь повадилась. Выследи её и убей. |
+| quest_hunt_0_v2_g.mp3 | заказчик: охота | Schedar | grim, determined | Тварь повадилась. Выследи её и убей. |
+| quest_hunt_0_v1_f_g.mp3 | заказчик: охота | Leda | grim, determined | Тварь повадилась. Выследи её и убей. |
+| quest_hunt_0_v2_f_g.mp3 | заказчик: охота | Aoede | grim, determined | Тварь повадилась. Выследи её и убей. |
+| quest_hunt_1_v1_g.mp3 | заказчик: охота | Sadachbia | concerned, serious | Зверь опасный. Будь осторожен на охоте. |
+| quest_hunt_1_v2_g.mp3 | заказчик: охота | Schedar | concerned, serious | Зверь опасный. Будь осторожен на охоте. |
+| quest_hunt_1_v1_f_g.mp3 | заказчик: охота | Leda | concerned, serious | Зверь опасный. Будь осторожен на охоте. |
+| quest_hunt_1_v2_f_g.mp3 | заказчик: охота | Aoede | concerned, serious | Зверь опасный. Будь осторожен на охоте. |
+| quest_hunt_2_v1_g.mp3 | заказчик: охота | Sadachbia | cold, determined | Принеси мне весть, что она мертва. |
+| quest_hunt_2_v2_g.mp3 | заказчик: охота | Schedar | cold, determined | Принеси мне весть, что она мертва. |
+| quest_hunt_2_v1_f_g.mp3 | заказчик: охота | Leda | cold, determined | Принеси мне весть, что она мертва. |
+| quest_hunt_2_v2_f_g.mp3 | заказчик: охота | Aoede | cold, determined | Принеси мне весть, что она мертва. |
+| quest_delivery_0_v1_g.mp3 | заказчик: доставка | Sadachbia | businesslike, urgent | Груз нужно доставить. Ждут его давно. |
+| quest_delivery_0_v2_g.mp3 | заказчик: доставка | Schedar | businesslike, urgent | Груз нужно доставить. Ждут его давно. |
+| quest_delivery_0_v1_f_g.mp3 | заказчик: доставка | Leda | businesslike, urgent | Груз нужно доставить. Ждут его давно. |
+| quest_delivery_0_v2_f_g.mp3 | заказчик: доставка | Aoede | businesslike, urgent | Груз нужно доставить. Ждут его давно. |
+| quest_delivery_1_v2_g.mp3 | заказчик: доставка | Schedar | businesslike, reassuring | Довези товар целым — там заплатят. |
+| quest_delivery_1_v1_f_g.mp3 | заказчик: доставка | Leda | businesslike, reassuring | Довези товар целым — там заплатят. |
+| quest_delivery_1_v2_f_g.mp3 | заказчик: доставка | Aoede | businesslike, reassuring | Довези товар целым — там заплатят. |
+| quest_craft_0_v1_g.mp3 | заказчик: ремесло | Sadachbia | appraising, friendly | Руки у тебя, говорят, умелые. Нужна работа. |
+| quest_craft_0_v2_g.mp3 | заказчик: ремесло | Schedar | appraising, friendly | Руки у тебя, говорят, умелые. Нужна работа. |
+| quest_craft_0_v1_f_g.mp3 | заказчик: ремесло | Leda | appraising, friendly | Руки у тебя, говорят, умелые. Нужна работа. |
+| quest_craft_0_v2_f_g.mp3 | заказчик: ремесло | Aoede | appraising, friendly | Руки у тебя, говорят, умелые. Нужна работа. |
+| quest_craft_1_v1_g.mp3 | заказчик: ремесло | Sadachbia | earnest, demanding | Сделай мне вещь — хорошую, на совесть. |
+| quest_craft_1_v2_g.mp3 | заказчик: ремесло | Schedar | earnest, demanding | Сделай мне вещь — хорошую, на совесть. |
+| quest_craft_1_v1_f_g.mp3 | заказчик: ремесло | Leda | earnest, demanding | Сделай мне вещь — хорошую, на совесть. |
+| quest_craft_1_v2_f_g.mp3 | заказчик: ремесло | Aoede | earnest, demanding | Сделай мне вещь — хорошую, на совесть. |
+| quest_diplom_0_v1_g.mp3 | заказчик: дипломатия | Sadachbia | thoughtful, measured | Тут словом надо, а не мечом. |
+| quest_diplom_0_v2_g.mp3 | заказчик: дипломатия | Schedar | thoughtful, measured | Тут словом надо, а не мечом. |
+| quest_diplom_0_v1_f_g.mp3 | заказчик: дипломатия | Leda | thoughtful, measured | Тут словом надо, а не мечом. |
+| quest_diplom_0_v2_f_g.mp3 | заказчик: дипломатия | Aoede | thoughtful, measured | Тут словом надо, а не мечом. |
+| quest_diplom_1_v1_g.mp3 | заказчик: дипломатия | Sadachbia | frustrated, hopeful | Поговори с ними. Меня они слушать не станут. |
+| quest_diplom_1_v2_g.mp3 | заказчик: дипломатия | Schedar | frustrated, hopeful | Поговори с ними. Меня они слушать не станут. |
+| quest_diplom_1_v1_f_g.mp3 | заказчик: дипломатия | Leda | frustrated, hopeful | Поговори с ними. Меня они слушать не станут. |
+| quest_diplom_1_v2_f_g.mp3 | заказчик: дипломатия | Aoede | frustrated, hopeful | Поговори с ними. Меня они слушать не станут. |
+| quest_study_0_v1_g.mp3 | заказчик: исследование | Sadachbia | curious, eager | Мне нужно знать. Разузнай, прочти, дойди. |
+| quest_study_0_v2_g.mp3 | заказчик: исследование | Schedar | curious, eager | Мне нужно знать. Разузнай, прочти, дойди. |
+| quest_study_0_v1_f_g.mp3 | заказчик: исследование | Leda | curious, eager | Мне нужно знать. Разузнай, прочти, дойди. |
+| quest_study_0_v2_f_g.mp3 | заказчик: исследование | Aoede | curious, eager | Мне нужно знать. Разузнай, прочти, дойди. |
+| quest_study_1_v1_g.mp3 | заказчик: исследование | Sadachbia | curious, instructive | Сходи и посмотри своими глазами. Потом расскажешь. |
+| quest_study_1_v2_g.mp3 | заказчик: исследование | Schedar | curious, instructive | Сходи и посмотри своими глазами. Потом расскажешь. |
+| quest_study_1_v1_f_g.mp3 | заказчик: исследование | Leda | curious, instructive | Сходи и посмотри своими глазами. Потом расскажешь. |
+| quest_study_1_v2_f_g.mp3 | заказчик: исследование | Aoede | curious, instructive | Сходи и посмотри своими глазами. Потом расскажешь. |
+| quest_archeo_0_v1_g.mp3 | заказчик: археология | Sadachbia | mysterious, low | Под землёй лежит старое. Подними его. |
+| quest_archeo_0_v2_g.mp3 | заказчик: археология | Schedar | mysterious, low | Под землёй лежит старое. Подними его. |
+| quest_archeo_0_v1_f_g.mp3 | заказчик: археология | Leda | mysterious, low | Под землёй лежит старое. Подними его. |
+| quest_archeo_0_v2_f_g.mp3 | заказчик: археология | Aoede | mysterious, low | Под землёй лежит старое. Подними его. |
+| quest_archeo_1_v1_g.mp3 | заказчик: археология | Sadachbia | intrigued, mysterious | Древность ждёт того, кто не побоится копать. |
+| quest_archeo_1_v2_g.mp3 | заказчик: археология | Schedar | intrigued, mysterious | Древность ждёт того, кто не побоится копать. |
+| quest_archeo_1_v1_f_g.mp3 | заказчик: археология | Leda | intrigued, mysterious | Древность ждёт того, кто не побоится копать. |
+| quest_archeo_1_v2_f_g.mp3 | заказчик: археология | Aoede | intrigued, mysterious | Древность ждёт того, кто не побоится копать. |
+| quest_faith_0_v1_g.mp3 | заказчик: религия | Sadachbia | reverent, solemn | Боги ждут знака. Исполни обет. |
+| quest_faith_0_v2_g.mp3 | заказчик: религия | Schedar | reverent, solemn | Боги ждут знака. Исполни обет. |
+| quest_faith_0_v1_f_g.mp3 | заказчик: религия | Leda | reverent, solemn | Боги ждут знака. Исполни обет. |
+| quest_faith_0_v2_f_g.mp3 | заказчик: религия | Aoede | reverent, solemn | Боги ждут знака. Исполни обет. |
+| quest_faith_1_v1_g.mp3 | заказчик: религия | Sadachbia | serene, earnest | Святое дело. Не для корысти — для души. |
+| quest_faith_1_v2_g.mp3 | заказчик: религия | Schedar | serene, earnest | Святое дело. Не для корысти — для души. |
+| quest_faith_1_v1_f_g.mp3 | заказчик: религия | Leda | serene, earnest | Святое дело. Не для корысти — для души. |
+| quest_faith_1_v2_f_g.mp3 | заказчик: религия | Aoede | serene, earnest | Святое дело. Не для корысти — для души. |
+| quest_magic_0_v1_g.mp3 | заказчик: магия | Sadachbia | uneasy, lowered voice | Тут чары замешаны. Без знающего не справиться. |
+| quest_magic_0_v2_g.mp3 | заказчик: магия | Schedar | uneasy, lowered voice | Тут чары замешаны. Без знающего не справиться. |
+| quest_magic_0_v1_f_g.mp3 | заказчик: магия | Leda | uneasy, lowered voice | Тут чары замешаны. Без знающего не справиться. |
+| quest_magic_0_v2_f_g.mp3 | заказчик: магия | Aoede | uneasy, lowered voice | Тут чары замешаны. Без знающего не справиться. |
+| quest_magic_1_v1_g.mp3 | заказчик: магия | Sadachbia | tense, mysterious | Сила неспокойна. Нужно её унять. |
+| quest_magic_1_v2_g.mp3 | заказчик: магия | Schedar | tense, mysterious | Сила неспокойна. Нужно её унять. |
+| quest_magic_1_v1_f_g.mp3 | заказчик: магия | Leda | tense, mysterious | Сила неспокойна. Нужно её унять. |
+| quest_magic_1_v2_f_g.mp3 | заказчик: магия | Aoede | tense, mysterious | Сила неспокойна. Нужно её унять. |
+| quest_war_0_v1_g.mp3 | заказчик: война | Sadachbia | urgent, grim | Война не ждёт. Нужны люди и припасы. |
+| quest_war_0_v2_g.mp3 | заказчик: война | Schedar | urgent, grim | Война не ждёт. Нужны люди и припасы. |
+| quest_war_0_v1_f_g.mp3 | заказчик: война | Leda | urgent, grim | Война не ждёт. Нужны люди и припасы. |
+| quest_war_0_v2_f_g.mp3 | заказчик: война | Aoede | urgent, grim | Война не ждёт. Нужны люди и припасы. |
+| quest_war_1_v1_g.mp3 | заказчик: война | Sadachbia | tense, pleading | Фронт близко. Помоги, чем сможешь. |
+| quest_war_1_v2_g.mp3 | заказчик: война | Schedar | tense, pleading | Фронт близко. Помоги, чем сможешь. |
+| quest_war_1_v1_f_g.mp3 | заказчик: война | Leda | tense, pleading | Фронт близко. Помоги, чем сможешь. |
+| quest_war_1_v2_f_g.mp3 | заказчик: война | Aoede | tense, pleading | Фронт близко. Помоги, чем сможешь. |
+| quest_rescue_0_v1_g.mp3 | заказчик: спасение | Sadachbia | anxious, pleading | Человек пропал. Найди его, пока не поздно. |
+| quest_rescue_0_v2_g.mp3 | заказчик: спасение | Schedar | anxious, pleading | Человек пропал. Найди его, пока не поздно. |
+| quest_rescue_0_v1_f_g.mp3 | заказчик: спасение | Leda | anxious, pleading | Человек пропал. Найди его, пока не поздно. |
+| quest_rescue_0_v2_f_g.mp3 | заказчик: спасение | Aoede | anxious, pleading | Человек пропал. Найди его, пока не поздно. |
+| quest_rescue_1_v1_g.mp3 | заказчик: спасение | Sadachbia | desperate, pleading | Вытащи его живым. Прошу тебя. |
+| quest_rescue_1_v2_g.mp3 | заказчик: спасение | Schedar | desperate, pleading | Вытащи его живым. Прошу тебя. |
+| quest_rescue_1_v1_f_g.mp3 | заказчик: спасение | Leda | desperate, pleading | Вытащи его живым. Прошу тебя. |
+| quest_rescue_1_v2_f_g.mp3 | заказчик: спасение | Aoede | desperate, pleading | Вытащи его живым. Прошу тебя. |
+| quest_econ_0_v1_g.mp3 | заказчик: экономика | Sadachbia | shrewd, businesslike | Дело денежное. Добудь — и в накладе не останешься. |
+| quest_econ_0_v2_g.mp3 | заказчик: экономика | Schedar | shrewd, businesslike | Дело денежное. Добудь — и в накладе не останешься. |
+| quest_econ_0_v1_f_g.mp3 | заказчик: экономика | Leda | shrewd, businesslike | Дело денежное. Добудь — и в накладе не останешься. |
+| quest_econ_0_v2_f_g.mp3 | заказчик: экономика | Aoede | shrewd, businesslike | Дело денежное. Добудь — и в накладе не останешься. |
+| quest_econ_1_v1_g.mp3 | заказчик: экономика | Sadachbia | brisk, urgent | Нужен товар. Много и быстро. |
+| quest_econ_1_v2_g.mp3 | заказчик: экономика | Schedar | brisk, urgent | Нужен товар. Много и быстро. |
+| quest_econ_1_v1_f_g.mp3 | заказчик: экономика | Leda | brisk, urgent | Нужен товар. Много и быстро. |
+| quest_econ_1_v2_f_g.mp3 | заказчик: экономика | Aoede | brisk, urgent | Нужен товар. Много и быстро. |
+| quest_random_0_v1_g.mp3 | заказчик: случайное | Sadachbia | casual, curious | Подвернулось тут одно дело. Возьмёшься? |
+| quest_random_0_v2_g.mp3 | заказчик: случайное | Schedar | casual, curious | Подвернулось тут одно дело. Возьмёшься? |
+| quest_random_0_v1_f_g.mp3 | заказчик: случайное | Leda | casual, curious | Подвернулось тут одно дело. Возьмёшься? |
+| quest_random_0_v2_f_g.mp3 | заказчик: случайное | Aoede | casual, curious | Подвернулось тут одно дело. Возьмёшься? |
+| quest_random_1_v1_g.mp3 | заказчик: случайное | Sadachbia | puzzled, honest | Странное дело, но заплачу честно. |
+| quest_random_1_v2_g.mp3 | заказчик: случайное | Schedar | puzzled, honest | Странное дело, но заплачу честно. |
+| quest_random_1_v1_f_g.mp3 | заказчик: случайное | Leda | puzzled, honest | Странное дело, но заплачу честно. |
+| quest_random_1_v2_f_g.mp3 | заказчик: случайное | Aoede | puzzled, honest | Странное дело, но заплачу честно. |
+| quest_secret_0_v1_g.mp3 | заказчик: скрытое | Sadachbia | whisper, conspiratorial | Только тихо. Об этом — никому. |
+| quest_secret_0_v2_g.mp3 | заказчик: скрытое | Schedar | whisper, conspiratorial | Только тихо. Об этом — никому. |
+| quest_secret_0_v1_f_g.mp3 | заказчик: скрытое | Leda | whisper, conspiratorial | Только тихо. Об этом — никому. |
+| quest_secret_0_v2_f_g.mp3 | заказчик: скрытое | Aoede | whisper, conspiratorial | Только тихо. Об этом — никому. |
+| quest_secret_1_v1_g.mp3 | заказчик: скрытое | Sadachbia | hushed, serious | Дело тайное. Если спросят — ты ничего не знаешь. |
+| quest_secret_1_v2_g.mp3 | заказчик: скрытое | Schedar | hushed, serious | Дело тайное. Если спросят — ты ничего не знаешь. |
+| quest_secret_1_v1_f_g.mp3 | заказчик: скрытое | Leda | hushed, serious | Дело тайное. Если спросят — ты ничего не знаешь. |
+| quest_secret_1_v2_f_g.mp3 | заказчик: скрытое | Aoede | hushed, serious | Дело тайное. Если спросят — ты ничего не знаешь. |
+| quest_type_fetch_0_v1_g.mp3 | заказчик: принести | Sadachbia | businesslike, clear | Принеси, что прошу. Сколько сказано — столько и неси. |
+| quest_type_fetch_0_v2_g.mp3 | заказчик: принести | Schedar | businesslike, clear | Принеси, что прошу. Сколько сказано — столько и неси. |
+| quest_type_fetch_0_v1_f_g.mp3 | заказчик: принести | Leda | businesslike, clear | Принеси, что прошу. Сколько сказано — столько и неси. |
+| quest_type_fetch_0_v2_f_g.mp3 | заказчик: принести | Aoede | businesslike, clear | Принеси, что прошу. Сколько сказано — столько и неси. |
+| quest_type_fetch_1_v1_g.mp3 | заказчик: принести | Sadachbia | worried, friendly | Запасы кончаются. Добудь, будь другом. |
+| quest_type_fetch_1_v2_g.mp3 | заказчик: принести | Schedar | worried, friendly | Запасы кончаются. Добудь, будь другом. |
+| quest_type_fetch_1_v1_f_g.mp3 | заказчик: принести | Leda | worried, friendly | Запасы кончаются. Добудь, будь другом. |
+| quest_type_fetch_1_v2_f_g.mp3 | заказчик: принести | Aoede | worried, friendly | Запасы кончаются. Добудь, будь другом. |
+| quest_type_kill_0_v1_g.mp3 | заказчик: очистить округу | Sadachbia | grim, urgent | Округу заполонили твари. Очисти её. |
+| quest_type_kill_0_v2_g.mp3 | заказчик: очистить округу | Schedar | grim, urgent | Округу заполонили твари. Очисти её. |
+| quest_type_kill_0_v1_f_g.mp3 | заказчик: очистить округу | Leda | grim, urgent | Округу заполонили твари. Очисти её. |
+| quest_type_kill_0_v2_f_g.mp3 | заказчик: очистить округу | Aoede | grim, urgent | Округу заполонили твари. Очисти её. |
+| quest_type_visit_0_v1_g.mp3 | заказчик: сходить и посмотреть | Sadachbia | uneasy, curious | Сходи туда и погляди, что там творится. |
+| quest_type_visit_0_v2_g.mp3 | заказчик: сходить и посмотреть | Schedar | uneasy, curious | Сходи туда и погляди, что там творится. |
+| quest_type_visit_0_v1_f_g.mp3 | заказчик: сходить и посмотреть | Leda | uneasy, curious | Сходи туда и погляди, что там творится. |
+| quest_type_visit_0_v2_f_g.mp3 | заказчик: сходить и посмотреть | Aoede | uneasy, curious | Сходи туда и погляди, что там творится. |
+| quest_type_visit_1_v1_g.mp3 | заказчик: сходить и посмотреть | Sadachbia | worried, serious | Там неладно. Проверь и возвращайся. |
+| quest_type_visit_1_v2_g.mp3 | заказчик: сходить и посмотреть | Schedar | worried, serious | Там неладно. Проверь и возвращайся. |
+| quest_type_visit_1_v1_f_g.mp3 | заказчик: сходить и посмотреть | Leda | worried, serious | Там неладно. Проверь и возвращайся. |
+| quest_type_visit_1_v2_f_g.mp3 | заказчик: сходить и посмотреть | Aoede | worried, serious | Там неладно. Проверь и возвращайся. |
+| quest_full_0_v1_g.mp3 | заказчик: дел слишком много | Sadachbia | amused, refusing | Куда тебе ещё? У тебя и так десяток дел. |
+| quest_full_0_v2_g.mp3 | заказчик: дел слишком много | Schedar | amused, refusing | Куда тебе ещё? У тебя и так десяток дел. |
+| quest_full_0_v1_f_g.mp3 | заказчик: дел слишком много | Leda | amused, refusing | Куда тебе ещё? У тебя и так десяток дел. |
+| quest_full_0_v2_f_g.mp3 | заказчик: дел слишком много | Aoede | amused, refusing | Куда тебе ещё? У тебя и так десяток дел. |
+| quest_full_1_v1_g.mp3 | заказчик: дел слишком много | Sadachbia | firm, reasonable | Сперва закончи начатое, потом приходи. |
+| quest_full_1_v2_g.mp3 | заказчик: дел слишком много | Schedar | firm, reasonable | Сперва закончи начатое, потом приходи. |
+| quest_full_1_v1_f_g.mp3 | заказчик: дел слишком много | Leda | firm, reasonable | Сперва закончи начатое, потом приходи. |
+| quest_full_1_v2_f_g.mp3 | заказчик: дел слишком много | Aoede | firm, reasonable | Сперва закончи начатое, потом приходи. |
+| quest_full_2_v1_g.mp3 | заказчик: дел слишком много | Sadachbia | dry, friendly | Дел у тебя по горло. Разгрузись — тогда поговорим. |
+| quest_full_2_v2_g.mp3 | заказчик: дел слишком много | Schedar | dry, friendly | Дел у тебя по горло. Разгрузись — тогда поговорим. |
+| quest_full_2_v1_f_g.mp3 | заказчик: дел слишком много | Leda | dry, friendly | Дел у тебя по горло. Разгрузись — тогда поговорим. |
+| quest_full_2_v2_f_g.mp3 | заказчик: дел слишком много | Aoede | dry, friendly | Дел у тебя по горло. Разгрузись — тогда поговорим. |
+| quest_have_0_v1_g.mp3 | заказчик: дело уже взято | Sadachbia | patient, reminding | Моё дело уже у тебя. Сделай сначала его. |
+| quest_have_0_v2_g.mp3 | заказчик: дело уже взято | Schedar | patient, reminding | Моё дело уже у тебя. Сделай сначала его. |
+| quest_have_0_v1_f_g.mp3 | заказчик: дело уже взято | Leda | patient, reminding | Моё дело уже у тебя. Сделай сначала его. |
+| quest_have_0_v2_f_g.mp3 | заказчик: дело уже взято | Aoede | patient, reminding | Моё дело уже у тебя. Сделай сначала его. |
+| quest_have_1_v1_g.mp3 | заказчик: дело уже взято | Sadachbia | mildly impatient | Моё поручение и так при тебе. |
+| quest_have_1_v2_g.mp3 | заказчик: дело уже взято | Schedar | mildly impatient | Моё поручение и так при тебе. |
+| quest_have_1_v1_f_g.mp3 | заказчик: дело уже взято | Leda | mildly impatient | Моё поручение и так при тебе. |
+| quest_have_1_v2_f_g.mp3 | заказчик: дело уже взято | Aoede | mildly impatient | Моё поручение и так при тебе. |
+| quest_done_0_v1_g.mp3 | заказчик: дело сдано | Sadachbia | delighted, grateful | Сделано? Вот это дело! Держи награду. |
+| quest_done_0_v2_g.mp3 | заказчик: дело сдано | Schedar | delighted, grateful | Сделано? Вот это дело! Держи награду. |
+| quest_done_0_v1_f_g.mp3 | заказчик: дело сдано | Leda | delighted, grateful | Сделано? Вот это дело! Держи награду. |
+| quest_done_0_v2_f_g.mp3 | заказчик: дело сдано | Aoede | delighted, grateful | Сделано? Вот это дело! Держи награду. |
+| quest_done_1_v1_g.mp3 | заказчик: дело сдано | Sadachbia | grateful, sincere | Спасибо. Выручка твоя дорогого стоит. |
+| quest_done_1_v2_g.mp3 | заказчик: дело сдано | Schedar | grateful, sincere | Спасибо. Выручка твоя дорогого стоит. |
+| quest_done_1_v1_f_g.mp3 | заказчик: дело сдано | Leda | grateful, sincere | Спасибо. Выручка твоя дорогого стоит. |
+| quest_done_1_v2_f_g.mp3 | заказчик: дело сдано | Aoede | grateful, sincere | Спасибо. Выручка твоя дорогого стоит. |
+| quest_done_2_v1_g.mp3 | заказчик: дело сдано | Sadachbia | satisfied, businesslike | Честно заработано. Держи. |
+| quest_done_2_v2_g.mp3 | заказчик: дело сдано | Schedar | satisfied, businesslike | Честно заработано. Держи. |
+| quest_done_2_v1_f_g.mp3 | заказчик: дело сдано | Leda | satisfied, businesslike | Честно заработано. Держи. |
+| quest_done_2_v2_f_g.mp3 | заказчик: дело сдано | Aoede | satisfied, businesslike | Честно заработано. Держи. |
+| quest_done_3_v1_g.mp3 | заказчик: дело сдано | Sadachbia | proud, warm | Знал, что на тебя можно положиться. |
+| quest_done_3_v2_g.mp3 | заказчик: дело сдано | Schedar | proud, warm | Знал, что на тебя можно положиться. |
+| quest_done_3_v1_f_g.mp3 | заказчик: дело сдано | Leda | proud, warm | Знала, что на тебя можно положиться. |
+| quest_done_3_v2_f_g.mp3 | заказчик: дело сдано | Aoede | proud, warm | Знала, что на тебя можно положиться. |
+| quest_done_4_v1_g.mp3 | заказчик: дело сдано | Sadachbia | enthusiastic | Вот это работа! Приходи ещё. |
+| quest_done_4_v2_g.mp3 | заказчик: дело сдано | Schedar | enthusiastic | Вот это работа! Приходи ещё. |
+| quest_done_4_v1_f_g.mp3 | заказчик: дело сдано | Leda | enthusiastic | Вот это работа! Приходи ещё. |
+| quest_done_4_v2_f_g.mp3 | заказчик: дело сдано | Aoede | enthusiastic | Вот это работа! Приходи ещё. |
+| quest_done_5_v1_g.mp3 | заказчик: дело сдано | Sadachbia | respectful, warm | Слово своё держишь. Это ценю. |
+| quest_done_5_v2_g.mp3 | заказчик: дело сдано | Schedar | respectful, warm | Слово своё держишь. Это ценю. |
+| quest_done_5_v1_f_g.mp3 | заказчик: дело сдано | Leda | respectful, warm | Слово своё держишь. Это ценю. |
+| quest_done_5_v2_f_g.mp3 | заказчик: дело сдано | Aoede | respectful, warm | Слово своё держишь. Это ценю. |
