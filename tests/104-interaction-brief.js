@@ -85,6 +85,8 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   const far=Look.list.findIndex(o=>o.d>=3&&!o.живое&&!o.проход);r.farIdx=far;
   if(far>=0){Look.open();await пауза(30);Look.select(far);while(activeLayer())closeTopUI();r.target=Look.target&&Look.target.n;SAID.length=0;fieldInteract();await пауза(60);r.farGuide=SAID.find(t=>/^Цель:/.test(t))||"";}
   leavePlace();await пауза(50);while(activeLayer())closeTopUI();
+  /* Дальняя цель своё отработала: маяк снят, чтобы его весть «цель осталась позади» не легла в чужие проверки. */
+  TargetBeacon.stop(true);Look.target=null;
   return r;});
  check('сектора считаются от взгляда: лицом на север — север впереди, юг позади, запад слева, восток справа',осмотр.sect.N==="впереди"&&осмотр.sect.S==="позади"&&осмотр.sect.W==="слева"&&осмотр.sect.E==="справа",осмотр.sect);
  check('осмотр снаружи: короткая сводка по секторам, список объектов с кнопками выбора',осмотр.out===true&&/^Осмотр, лицом на север/.test(осмотр.outSaid)&&осмотр.outN>0&&осмотр.outBtns===осмотр.outN&&осмотр.short,{said:осмотр.outSaid.slice(0,140),n:осмотр.outN});

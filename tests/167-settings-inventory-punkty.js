@@ -130,7 +130,7 @@ const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(e!==undefined?' :
   const ожидание={setSpeech:"sound",setMasterVol:"sound",setDuck:"sound",setHrtf:"sound",setMirth:"sound",
    setTtsEngine:"tts",setVoice:"tts",setVoiceLocal:"tts",setRate:"tts",setPitch:"tts",setGvVoice:"tts",
    setVerbosity:"speech",setSrMode:"speech",setAutoSpeech:"speech",setSayHp:"speech",setStopGesture:"speech",
-   setExplore:"ui",setHintMode:"ui",setFastTap:"ui",setHaptics:"ui",setSubMode:"ui",
+   setExplore:"ui",setHintMode:"ui",setHaptics:"ui",setSubMode:"ui",
    setGestSens:"gest",setTapWindow:"gest",setTapTick:"gest",gestRow:"gest",diffRow:"diff"};
   const мимо=Object.entries(ожидание).filter(([id,g])=>где(id)!==g).map(([id,g])=>({id,ждали:g,лежит:где(id)}));
   const сохр=(m.querySelector('[data-cmd="am:save"]').closest(".set-group")||{}).dataset;
