@@ -1042,8 +1042,6 @@ sounds/ui/b_wall.mp3	69
 sounds/ui/ui_activate.mp3	73
 sounds/ui/ui_close.mp3	70
 sounds/ui/ui_open.mp3	70
-sounds/ui/ui_toggle_off.mp3	70
-sounds/ui/ui_toggle_on.mp3	70
 sounds/wild/wild_anvil_01.ogg	92
 sounds/wild/wild_birds_01.ogg	190
 sounds/wild/wild_fire_01.ogg	61

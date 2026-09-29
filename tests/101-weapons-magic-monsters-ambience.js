@@ -79,9 +79,11 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
     (свист — в самом ударе, weaponSwingSound): одно попадание клинка, один
     звук брони и тяжесть сильного удара. */
  const W=удары.W;
- check('тяжёлый удар по голему: одно попадание, один звук брони и тяжесть',
-  удары.голем.filter(r=>W.sword.hit.includes(r)).length===1&&удары.голем.filter(r=>W.sword.hit_armor.includes(r)).length===1
-  &&удары.голем.includes("lug_impact")&&!удары.голем.includes("hero_swing"),удары.голем);
+ /* 4.6: клинок по броне — одна запись звона стали о сталь, без глухого
+    отзвука: прежний «lug_impact» и делал меч похожим на молот. */
+ check('тяжёлый удар мечом по голему: один звон клинка о броню, без глухого удара молота',
+  удары.голем.filter(r=>W.sword.hit_armor.includes(r)).length===1
+  &&!удары.голем.includes("lug_impact")&&!удары.голем.includes("lug_thud")&&!удары.голем.includes("hero_swing"),удары.голем);
  check('промах свистит, а не бьёт',удары.промах.filter(r=>W.sword.miss.includes(r)).length===1&&!удары.промах.some(r=>W.sword.hit.includes(r)),удары.промах);
  check('вынуть и убрать оружие — свои состояния модели',удары.вынуть==="draw"&&удары.убрать==="sheathe",{вынуть:удары.вынуть,убрать:удары.убрать});
 
