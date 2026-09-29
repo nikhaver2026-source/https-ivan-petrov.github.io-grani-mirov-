@@ -4,9 +4,9 @@
 бросают стражник, латник, солдат гарнизона, горожанин и житель посада. Прежде эти строки читал голос
 игры в кавычках; теперь у каждой своя запись и своя интонация.
 
-Записей: 1338
+Записей: 1941
 
-Речь синтезирована 27 сентября 2026 года нейроголосами **Gemini** (Google),
+Речь синтезирована 27–29 сентября 2026 года нейроголосами **Gemini** (Google),
 модель `gemini-3.8-flash-tts`, через Gemini API (Interactions API,
 https://ai.google.dev/gemini-api/docs/speech-generation) ключами API автора игры.
 Голоса — готовые голоса Gemini (prebuilt voices); они синтетические и не
@@ -28,16 +28,20 @@ Policy (https://policies.google.com/terms/generative-ai/use-policy). Отдел�
 
 | Голос Gemini | Каков | Кто говорит | Записей |
 |---|---|---|---|
-| Alnilam | твёрдый | стражник на обходе и ночной дозор (первый голос стражи) | 73 |
-| Orus | твёрдый, пониже | стражник на обходе (второй голос стражи) | 73 |
-| Algenib | с хрипотцой | стражник на обходе (третий голос стражи) | 73 |
+| Alnilam | твёрдый | стражник на обходе и ночной дозор (первый голос стражи) | 93 |
+| Orus | твёрдый, пониже | стражник на обходе (второй голос стражи) | 93 |
+| Algenib | с хрипотцой | стражник на обходе (третий голос стражи) | 93 |
 | Charon | низкий, ровный | латник смены и солдат гарнизона за Гранью | 18 |
 | Schedar | ровный, холодный | латник смены за Гранью (второй голос) | 12 |
 | Achird | дружелюбный | горожанин и житель посада | 30 |
 | Sulafat | тёплый | горожанка и жительница посада | 30 |
-| Umbriel | лёгкий, разговорный | приветствие и ответ в разговоре жителя, мужской голос | 514 |
-| Despina | мягкий | приветствие и ответ в разговоре жительницы, женский голос | 514 |
+| Umbriel | лёгкий, разговорный | приветствие и ответ в разговоре жителя, мужской голос | 721 |
+| Despina | мягкий | приветствие и ответ в разговоре жительницы, женский голос | 722 |
 | Algieba | ровный, уверенный | голос героя: ход «Спросить об истории» (остальные двадцать один — в sounds/voice) | 1 |
+| Rasalgethi | зрелый, дорожный | старший обоза, мужской голос | 52 |
+| Gacrux | зрелый, твёрдый | старшая обоза, женский голос | 52 |
+| Fenrir | резкий, возбуждённый | разбойник (первый голос) | 12 |
+| Enceladus | с придыханием | разбойник (второй голос) | 12 |
 
 ## Как сделано и как проверено
 
@@ -60,7 +64,7 @@ Policy (https://policies.google.com/terms/generative-ai/use-policy). Отдел�
   видеть», «Я вас не видела»): в описи ниже — то, что произнесено; в игре
   строка ищется по исходному тексту. Обращённое к герою («пока цел») не менялось.
 - **Пакетами.** В одном запросе два голоса и до семидесяти четырёх строк; всё —
-  22 пакетов и переозвучки неудачных дублей.
+  33 пакетов и переозвучки неудачных дублей.
 - **Разрезка и разборчивость.** Запись пакета дробится по паузам и склеивается
   в строки по распознанному тексту; каждую строку распознаёт русская модель
   GigaAM (sherpa-onnx, `nemo-ctc-giga-am-v2-russian`): не больше 15 % ошибочных
@@ -1410,3 +1414,606 @@ Policy (https://policies.google.com/terms/generative-ai/use-policy). Отдел�
 | street_darkguard_10_v1_g.mp3 | латник смены | Schedar | cold, suspicious, ominous | Ты чужой. Чужих у нас считают дважды. |
 | street_darkguard_11_g.mp3 | латник смены | Charon | cold, grudging | Проходи. Пока проходи. |
 | street_darkguard_11_v1_g.mp3 | латник смены | Schedar | cold, grudging | Проходи. Пока проходи. |
+| greet_postoyan_0_g.mp3 | приветствие: постоянному покупателю | Umbriel | warm, delighted | А, мой лучший покупатель! Заходи. |
+| greet_postoyan_0_f_g.mp3 | приветствие: постоянному покупателю | Despina | warm, delighted | А, мой лучший покупатель! Заходи. |
+| greet_postoyan_1_g.mp3 | приветствие: постоянному покупателю | Umbriel | proud, pleased | Снова ко мне? Правильно, у меня лучше всех. |
+| greet_postoyan_1_f_g.mp3 | приветствие: постоянному покупателю | Despina | proud, pleased | Снова ко мне? Правильно, у меня лучше всех. |
+| greet_postoyan_2_g.mp3 | приветствие: постоянному покупателю | Umbriel | confidential, friendly | Для постоянных — цена особая. Смотри. |
+| greet_postoyan_2_f_g.mp3 | приветствие: постоянному покупателю | Despina | confidential, friendly | Для постоянных — цена особая. Смотри. |
+| greet_postoyan_3_g.mp3 | приветствие: постоянному покупателю | Umbriel | teasing, relieved | Я уж думал, ты к соседу переметнулся. |
+| greet_postoyan_3_f_g.mp3 | приветствие: постоянному покупателю | Despina | teasing, relieved | Я уж думала, ты к соседу переметнулся. |
+| greet_postoyan_4_g.mp3 | приветствие: постоянному покупателю | Umbriel | knowing, friendly | Узнаю тебя. Опять за припасами? |
+| greet_postoyan_4_f_g.mp3 | приветствие: постоянному покупателю | Despina | knowing, friendly | Узнаю тебя. Опять за припасами? |
+| greet_postoyan_5_g.mp3 | приветствие: постоянному покупателю | Umbriel | courteous, welcoming | Постоянному покупателю — первый выбор. Прошу. |
+| greet_postoyan_5_f_g.mp3 | приветствие: постоянному покупателю | Despina | courteous, welcoming | Постоянному покупателю — первый выбор. Прошу. |
+| greet_postoyan_6_g.mp3 | приветствие: постоянному покупателю | Umbriel | joking, warm | Твоё золото у меня в сундуке уже место греет. |
+| greet_postoyan_6_f_g.mp3 | приветствие: постоянному покупателю | Despina | joking, warm | Твоё золото у меня в сундуке уже место греет. |
+| greet_postoyan_7_g.mp3 | приветствие: постоянному покупателю | Umbriel | cheerful | Опять ты! Я как раз свежий товар разложил. |
+| greet_postoyan_7_f_g.mp3 | приветствие: постоянному покупателю | Despina | cheerful | Опять ты! Я как раз свежий товар разложила. |
+| greet_postoyan_8_g.mp3 | приветствие: постоянному покупателю | Umbriel | sincere, pleased | С тобой торговать — одно удовольствие. |
+| greet_postoyan_8_f_g.mp3 | приветствие: постоянному покупателю | Despina | sincere, pleased | С тобой торговать — одно удовольствие. |
+| greet_postoyan_9_g.mp3 | приветствие: постоянному покупателю | Umbriel | helpful, friendly | Запомнил, что ты берёшь. Отложил кое-что. |
+| greet_postoyan_9_f_g.mp3 | приветствие: постоянному покупателю | Despina | helpful, friendly | Запомнила, что ты берёшь. Отложила кое-что. |
+| greet_prodavec_0_g.mp3 | приветствие: постоянному поставщику | Umbriel | eager, businesslike | С добычей? Показывай, что там у тебя. |
+| greet_prodavec_0_f_g.mp3 | приветствие: постоянному поставщику | Despina | eager, businesslike | С добычей? Показывай, что там у тебя. |
+| greet_prodavec_1_g.mp3 | приветствие: постоянному поставщику | Umbriel | amused, chuckling | Полсклада уже твоим добром забито. Неси ещё. |
+| greet_prodavec_1_f_g.mp3 | приветствие: постоянному поставщику | Despina | amused, chuckling | Полсклада уже твоим добром забито. Неси ещё. |
+| greet_prodavec_2_g.mp3 | приветствие: постоянному поставщику | Umbriel | businesslike, friendly | Своему поставщику плачу честно. Что сегодня? |
+| greet_prodavec_2_f_g.mp3 | приветствие: постоянному поставщику | Despina | businesslike, friendly | Своему поставщику плачу честно. Что сегодня? |
+| greet_prodavec_3_g.mp3 | приветствие: постоянному поставщику | Umbriel | curious, eager | Опять с мешком? Ну-ка, развязывай. |
+| greet_prodavec_3_f_g.mp3 | приветствие: постоянному поставщику | Despina | curious, eager | Опять с мешком? Ну-ка, развязывай. |
+| greet_prodavec_4_g.mp3 | приветствие: постоянному поставщику | Umbriel | warm, businesslike | Хороший товар всегда возьму. Особенно у тебя. |
+| greet_prodavec_4_f_g.mp3 | приветствие: постоянному поставщику | Despina | warm, businesslike | Хороший товар всегда возьму. Особенно у тебя. |
+| greet_prodavec_5_g.mp3 | приветствие: постоянному поставщику | Umbriel | playful, appreciative | С тобой и артели не надо. Что на продажу? |
+| greet_prodavec_5_f_g.mp3 | приветствие: постоянному поставщику | Despina | playful, appreciative | С тобой и артели не надо. Что на продажу? |
+| greet_bogat_0_g.mp3 | приветствие: богатому | Umbriel | greedy, fawning | О, кошель-то тяжёлый. Проходи, проходи! |
+| greet_bogat_0_f_g.mp3 | приветствие: богатому | Despina | greedy, fawning | О, кошель-то тяжёлый. Проходи, проходи! |
+| greet_bogat_1_g.mp3 | приветствие: богатому | Umbriel | sly, fawning | Звон слышу издалека. Для тебя — лучшее. |
+| greet_bogat_1_f_g.mp3 | приветствие: богатому | Despina | sly, fawning | Звон слышу издалека. Для тебя — лучшее. |
+| greet_bogat_2_g.mp3 | приветствие: богатому | Umbriel | obsequious, eager | Богатому гостю — лучший угол и лучший товар. |
+| greet_bogat_2_f_g.mp3 | приветствие: богатому | Despina | obsequious, eager | Богатому гостю — лучший угол и лучший товар. |
+| greet_bogat_3_g.mp3 | приветствие: богатому | Umbriel | persuasive, smooth | С таким кошелём грех уйти с пустыми руками. |
+| greet_bogat_3_f_g.mp3 | приветствие: богатому | Despina | persuasive, smooth | С таким кошелём грех уйти с пустыми руками. |
+| greet_bogat_4_g.mp3 | приветствие: богатому | Umbriel | sly, jovial | Вижу, дела идут в гору. Может, и мне перепадёт? |
+| greet_bogat_4_f_g.mp3 | приветствие: богатому | Despina | sly, jovial | Вижу, дела идут в гору. Может, и мне перепадёт? |
+| greet_bogat_5_g.mp3 | приветствие: богатому | Umbriel | confidential, lowered voice | Для важного гостя найдётся кое-что особенное. |
+| greet_bogat_5_f_g.mp3 | приветствие: богатому | Despina | confidential, lowered voice | Для важного гостя найдётся кое-что особенное. |
+| greet_bedn_0_g.mp3 | приветствие: без гроша | Umbriel | dry, a bit sympathetic | Карманы пустые? Посмотреть-то можно. |
+| greet_bedn_0_f_g.mp3 | приветствие: без гроша | Despina | dry, a bit sympathetic | Карманы пустые? Посмотреть-то можно. |
+| greet_bedn_1_g.mp3 | приветствие: без гроша | Umbriel | dry, firm | В долг не даю. Но поглядеть не запрещаю. |
+| greet_bedn_1_f_g.mp3 | приветствие: без гроша | Despina | dry, firm | В долг не даю. Но поглядеть не запрещаю. |
+| greet_bedn_2_g.mp3 | приветствие: без гроша | Umbriel | sympathetic, practical | Небогато нынче? Бывает. Продать есть что? |
+| greet_bedn_2_f_g.mp3 | приветствие: без гроша | Despina | sympathetic, practical | Небогато нынче? Бывает. Продать есть что? |
+| greet_bedn_3_g.mp3 | приветствие: без гроша | Umbriel | businesslike, curt | Без золота разговор короткий. Что есть на обмен? |
+| greet_bedn_3_f_g.mp3 | приветствие: без гроша | Despina | businesslike, curt | Без золота разговор короткий. Что есть на обмен? |
+| greet_bedn_4_g.mp3 | приветствие: без гроша | Umbriel | wry, dry humour | Пустой кошель — не порок. Но и не покупка. |
+| greet_bedn_4_f_g.mp3 | приветствие: без гроша | Despina | wry, dry humour | Пустой кошель — не порок. Но и не покупка. |
+| greet_bedn_5_g.mp3 | приветствие: без гроша | Umbriel | kindly, encouraging | Заработаешь — приходи. Я никуда не денусь. |
+| greet_bedn_5_f_g.mp3 | приветствие: без гроша | Despina | kindly, encouraging | Заработаешь — приходи. Я никуда не денусь. |
+| greet_ranen_0_g.mp3 | приветствие: раненому | Umbriel | alarmed, caring | Ох, да ты весь в крови! Садись, отдышись. |
+| greet_ranen_0_f_g.mp3 | приветствие: раненому | Despina | alarmed, caring | Ох, да ты весь в крови! Садись, отдышись. |
+| greet_ranen_1_g.mp3 | приветствие: раненому | Umbriel | concerned | Кто ж тебя так? Лекарь тут недалеко. |
+| greet_ranen_1_f_g.mp3 | приветствие: раненому | Despina | concerned | Кто ж тебя так? Лекарь тут недалеко. |
+| greet_ranen_2_g.mp3 | приветствие: раненому | Umbriel | worried | На ногах едва стоишь. Может, сперва к лекарю? |
+| greet_ranen_2_f_g.mp3 | приветствие: раненому | Despina | worried | На ногах едва стоишь. Может, сперва к лекарю? |
+| greet_ranen_3_g.mp3 | приветствие: раненому | Umbriel | gruff, concerned | Перевяжись хоть. Кровью весь пол закапаешь. |
+| greet_ranen_3_f_g.mp3 | приветствие: раненому | Despina | gruff, concerned | Перевяжись хоть. Кровью весь пол закапаешь. |
+| greet_ranen_4_g.mp3 | приветствие: раненому | Umbriel | relieved, caring | Живой — и то ладно. Потом о делах. |
+| greet_ranen_4_f_g.mp3 | приветствие: раненому | Despina | relieved, caring | Живой — и то ладно. Потом о делах. |
+| greet_ranen_5_g.mp3 | приветствие: раненому | Umbriel | sympathetic | Эк тебя потрепало. Воды дать? |
+| greet_ranen_5_f_g.mp3 | приветствие: раненому | Despina | sympathetic | Эк тебя потрепало. Воды дать? |
+| greet_slava_0_g.mp3 | приветствие: знаменитому | Umbriel | awed, excited | Неужто это вы? Наслышаны, наслышаны! |
+| greet_slava_0_f_g.mp3 | приветствие: знаменитому | Despina | awed, excited | Неужто это вы? Наслышаны, наслышаны! |
+| greet_slava_1_g.mp3 | приветствие: знаменитому | Umbriel | respectful, impressed | О вас уже песни поют. Чем могу служить? |
+| greet_slava_1_f_g.mp3 | приветствие: знаменитому | Despina | respectful, impressed | О вас уже песни поют. Чем могу служить? |
+| greet_slava_2_g.mp3 | приветствие: знаменитому | Umbriel | honored, formal | Такой гость — честь для нашего дома. |
+| greet_slava_2_f_g.mp3 | приветствие: знаменитому | Despina | honored, formal | Такой гость — честь для нашего дома. |
+| greet_slava_3_g.mp3 | приветствие: знаменитому | Umbriel | excited, eager | Весь город о вас говорит. Проходите! |
+| greet_slava_3_f_g.mp3 | приветствие: знаменитому | Despina | excited, eager | Весь город о вас говорит. Проходите! |
+| greet_slava_4_g.mp3 | приветствие: знаменитому | Umbriel | delighted, chuckling | Знаменитость у меня! Соседи обзавидуются. |
+| greet_slava_4_f_g.mp3 | приветствие: знаменитому | Despina | delighted, chuckling | Знаменитость у меня! Соседи обзавидуются. |
+| greet_slava_5_g.mp3 | приветствие: знаменитому | Umbriel | respectful, warm | Слава бежит впереди вас. Рады видеть. |
+| greet_slava_5_f_g.mp3 | приветствие: знаменитому | Despina | respectful, warm | Слава бежит впереди вас. Рады видеть. |
+| greet_durn_0_g.mp3 | приветствие: с дурной славой | Umbriel | wary, cold | Слыхали мы о вас. Всякое слыхали. |
+| greet_durn_0_f_g.mp3 | приветствие: с дурной славой | Despina | wary, cold | Слыхали мы о вас. Всякое слыхали. |
+| greet_durn_1_g.mp3 | приветствие: с дурной славой | Umbriel | suspicious, slow | Говорят о вас недоброе. Посмотрим, правда ли. |
+| greet_durn_1_f_g.mp3 | приветствие: с дурной славой | Despina | suspicious, slow | Говорят о вас недоброе. Посмотрим, правда ли. |
+| greet_durn_2_g.mp3 | приветствие: с дурной славой | Umbriel | nervous, wary | Держите руки на виду. На всякий случай. |
+| greet_durn_2_f_g.mp3 | приветствие: с дурной славой | Despina | nervous, wary | Держите руки на виду. На всякий случай. |
+| greet_durn_3_g.mp3 | приветствие: с дурной славой | Umbriel | disapproving, stern | С вашей славой в честный дом не ходят. |
+| greet_durn_3_f_g.mp3 | приветствие: с дурной славой | Despina | disapproving, stern | С вашей славой в честный дом не ходят. |
+| greet_durn_4_g.mp3 | приветствие: с дурной славой | Umbriel | defiant, tense | Вас тут боятся. Я — пока нет. |
+| greet_durn_4_f_g.mp3 | приветствие: с дурной славой | Despina | defiant, tense | Вас тут боятся. Я — пока нет. |
+| greet_davno_0_g.mp3 | приветствие: после долгой разлуки | Umbriel | surprised, glad | Давненько тебя видно не было! Где носило? |
+| greet_davno_0_f_g.mp3 | приветствие: после долгой разлуки | Despina | surprised, glad | Давненько тебя видно не было! Где носило? |
+| greet_davno_1_g.mp3 | приветствие: после долгой разлуки | Umbriel | joyful, warm | Сколько лет, сколько зим! Проходи. |
+| greet_davno_1_f_g.mp3 | приветствие: после долгой разлуки | Despina | joyful, warm | Сколько лет, сколько зим! Проходи. |
+| greet_davno_2_g.mp3 | приветствие: после долгой разлуки | Umbriel | relieved, warm | А я уж боялся, что тракт тебя забрал. |
+| greet_davno_2_f_g.mp3 | приветствие: после долгой разлуки | Despina | relieved, warm | А я уж боялась, что тракт тебя забрал. |
+| greet_davno_3_g.mp3 | приветствие: после долгой разлуки | Umbriel | mock reproach, warm | Давно не заходишь. Забываешь старых знакомых. |
+| greet_davno_3_f_g.mp3 | приветствие: после долгой разлуки | Despina | mock reproach, warm | Давно не заходишь. Забываешь старых знакомых. |
+| greet_davno_4_g.mp3 | приветствие: после долгой разлуки | Umbriel | surprised, relieved | Живой! А мы уж и гадать перестали. |
+| greet_davno_4_f_g.mp3 | приветствие: после долгой разлуки | Despina | surprised, relieved | Живой! А мы уж и гадать перестали. |
+| greet_davno_5_g.mp3 | приветствие: после долгой разлуки | Umbriel | curious, friendly | Тебя не узнать. Долгой была дорога? |
+| greet_davno_5_f_g.mp3 | приветствие: после долгой разлуки | Despina | curious, friendly | Тебя не узнать. Долгой была дорога? |
+| greet_dozhd_0_g.mp3 | приветствие: в дождь | Umbriel | hospitable, warm | Мокро снаружи? Вставай ближе к огню. |
+| greet_dozhd_0_f_g.mp3 | приветствие: в дождь | Despina | hospitable, warm | Мокро снаружи? Вставай ближе к огню. |
+| greet_dozhd_1_g.mp3 | приветствие: в дождь | Umbriel | dry, matter-of-fact | В такой дождь только по делу и ходят. |
+| greet_dozhd_1_f_g.mp3 | приветствие: в дождь | Despina | dry, matter-of-fact | В такой дождь только по делу и ходят. |
+| greet_dozhd_2_g.mp3 | приветствие: в дождь | Umbriel | fussy, mildly annoyed | Отряхнись у порога, с тебя течёт. |
+| greet_dozhd_2_f_g.mp3 | приветствие: в дождь | Despina | fussy, mildly annoyed | Отряхнись у порога, с тебя течёт. |
+| greet_dozhd_3_g.mp3 | приветствие: в дождь | Umbriel | weary, sighing | Льёт и льёт. Хоть торговля под крышей. |
+| greet_dozhd_3_f_g.mp3 | приветствие: в дождь | Despina | weary, sighing | Льёт и льёт. Хоть торговля под крышей. |
+| greet_dozhd_4_g.mp3 | приветствие: в дождь | Umbriel | cheerful | Дождь делу не помеха — заходи. |
+| greet_dozhd_4_f_g.mp3 | приветствие: в дождь | Despina | cheerful | Дождь делу не помеха — заходи. |
+| greet_dozhd_5_g.mp3 | приветствие: в дождь | Umbriel | grumbling, friendly | Вот погодка! Сапоги у порога оставь. |
+| greet_dozhd_5_f_g.mp3 | приветствие: в дождь | Despina | grumbling, friendly | Вот погодка! Сапоги у порога оставь. |
+| greet_zemlyak_0_g.mp3 | приветствие: земляку | Umbriel | joyful, warm | Свой! По говору слышу. Здравствуй, земляк. |
+| greet_zemlyak_0_f_g.mp3 | приветствие: земляку | Despina | joyful, warm | Свой! По говору слышу. Здравствуй, земляк. |
+| greet_zemlyak_1_g.mp3 | приветствие: земляку | Umbriel | warm, welcoming | Родная кровь! Для земляка — всегда пожалуйста. |
+| greet_zemlyak_1_f_g.mp3 | приветствие: земляку | Despina | warm, welcoming | Родная кровь! Для земляка — всегда пожалуйста. |
+| greet_zemlyak_2_g.mp3 | приветствие: земляку | Umbriel | pleasantly surprised | Из наших будешь? Тогда и разговор другой. |
+| greet_zemlyak_2_f_g.mp3 | приветствие: земляку | Despina | pleasantly surprised | Из наших будешь? Тогда и разговор другой. |
+| greet_zemlyak_3_g.mp3 | приветствие: земляку | Umbriel | friendly, confidential | Земляку и цена своя. Проходи. |
+| greet_zemlyak_3_f_g.mp3 | приветствие: земляку | Despina | friendly, confidential | Земляку и цена своя. Проходи. |
+| greet_zemlyak_4_g.mp3 | приветствие: земляку | Umbriel | warm, nostalgic | Своих издалека видно. Как там дома? |
+| greet_zemlyak_4_f_g.mp3 | приветствие: земляку | Despina | warm, nostalgic | Своих издалека видно. Как там дома? |
+| greet_zemlyak_5_g.mp3 | приветствие: земляку | Umbriel | glad, warm | Нечасто наших тут встретишь. Садись. |
+| greet_zemlyak_5_f_g.mp3 | приветствие: земляку | Despina | glad, warm | Нечасто наших тут встретишь. Садись. |
+| greet_zhdet_0_g.mp3 | приветствие: про взятое дело | Umbriel | expectant, curious | Ну что, как с моим делом? |
+| greet_zhdet_0_f_g.mp3 | приветствие: про взятое дело | Despina | expectant, curious | Ну что, как с моим делом? |
+| greet_zhdet_1_g.mp3 | приветствие: про взятое дело | Umbriel | reminding, slightly stern | Помнишь, о чём договаривались? |
+| greet_zhdet_1_f_g.mp3 | приветствие: про взятое дело | Despina | reminding, slightly stern | Помнишь, о чём договаривались? |
+| greet_zhdet_2_g.mp3 | приветствие: про взятое дело | Umbriel | impatient, sighing | Жду, жду. Дело само не сделается. |
+| greet_zhdet_2_f_g.mp3 | приветствие: про взятое дело | Despina | impatient, sighing | Жду, жду. Дело само не сделается. |
+| greet_zhdet_3_g.mp3 | приветствие: про взятое дело | Umbriel | worried, reminding | Не забыто ли моё поручение? |
+| greet_zhdet_3_f_g.mp3 | приветствие: про взятое дело | Despina | worried, reminding | Не забыто ли моё поручение? |
+| greet_zhdet_4_g.mp3 | приветствие: про взятое дело | Umbriel | hopeful, eager | Вести есть? Как там с тем делом? |
+| greet_zhdet_4_f_g.mp3 | приветствие: про взятое дело | Despina | hopeful, eager | Вести есть? Как там с тем делом? |
+| greet_zhdet_5_g.mp3 | приветствие: про взятое дело | Umbriel | hopeful, curious | Вижу тебя — значит, есть новости? |
+| greet_zhdet_5_f_g.mp3 | приветствие: про взятое дело | Despina | hopeful, curious | Вижу тебя — значит, есть новости? |
+| greet_torg_12_g.mp3 | приветствие: торговец | Umbriel | brisk, lively market trader | Подходи, не стесняйся! Товар лицом покажу. |
+| greet_torg_12_f_g.mp3 | приветствие: торговец | Despina | brisk, lively market trader | Подходи, не стесняйся! Товар лицом покажу. |
+| greet_torg_13_g.mp3 | приветствие: торговец | Umbriel | playful, persuasive | Купишь — не пожалеешь, не купишь — пожалеешь. |
+| greet_torg_13_f_g.mp3 | приветствие: торговец | Despina | playful, persuasive | Купишь — не пожалеешь, не купишь — пожалеешь. |
+| greet_torg_14_g.mp3 | приветствие: торговец | Umbriel | proud, lively | У меня сегодня привоз. Свежее не найдёшь. |
+| greet_torg_14_f_g.mp3 | приветствие: торговец | Despina | proud, lively | У меня сегодня привоз. Свежее не найдёшь. |
+| greet_torg_15_g.mp3 | приветствие: торговец | Umbriel | sly, playful | Торгуюсь до последнего медяка, так и знай. |
+| greet_torg_15_f_g.mp3 | приветствие: торговец | Despina | sly, playful | Торгуюсь до последнего медяка, так и знай. |
+| greet_torg_16_g.mp3 | приветствие: торговец | Umbriel | admiring, persuasive | Глянь, какая работа! Такое не каждый день. |
+| greet_torg_16_f_g.mp3 | приветствие: торговец | Despina | admiring, persuasive | Глянь, какая работа! Такое не каждый день. |
+| greet_torg_17_g.mp3 | приветствие: торговец | Umbriel | wise, sly | Деньги любят счёт, а товар — хозяина. |
+| greet_torg_17_f_g.mp3 | приветствие: торговец | Despina | wise, sly | Деньги любят счёт, а товар — хозяина. |
+| greet_obshiy_8_g.mp3 | приветствие: всякий житель | Umbriel | friendly, curious | Здравствуй, здравствуй. Каким ветром? |
+| greet_obshiy_8_f_g.mp3 | приветствие: всякий житель | Despina | friendly, curious | Здравствуй, здравствуй. Каким ветром? |
+| greet_obshiy_9_g.mp3 | приветствие: всякий житель | Umbriel | friendly, sympathetic | Путник? Дорога дальняя, небось. |
+| greet_obshiy_9_f_g.mp3 | приветствие: всякий житель | Despina | friendly, sympathetic | Путник? Дорога дальняя, небось. |
+| greet_obshiy_10_g.mp3 | приветствие: всякий житель | Umbriel | curious, easygoing | Ну, здравствуй. Что нового на свете? |
+| greet_obshiy_10_f_g.mp3 | приветствие: всякий житель | Despina | curious, easygoing | Ну, здравствуй. Что нового на свете? |
+| greet_obshiy_11_g.mp3 | приветствие: всякий житель | Umbriel | calm, hospitable | Мир дому и тому, кто входит. |
+| greet_obshiy_11_f_g.mp3 | приветствие: всякий житель | Despina | calm, hospitable | Мир дому и тому, кто входит. |
+| greet_obshiy_12_g.mp3 | приветствие: всякий житель | Umbriel | hospitable, warm | О, гость. Проходи, не стой на пороге. |
+| greet_obshiy_12_f_g.mp3 | приветствие: всякий житель | Despina | hospitable, warm | О, гость. Проходи, не стой на пороге. |
+| greet_obshiy_13_g.mp3 | приветствие: всякий житель | Umbriel | cautious, then friendly | Добрый человек? Тогда поговорим. |
+| greet_obshiy_13_f_g.mp3 | приветствие: всякий житель | Despina | cautious, then friendly | Добрый человек? Тогда поговорим. |
+| greet_kuznya_8_g.mp3 | приветствие: кузнец | Umbriel | loud, gruff blacksmith, busy | Молот не ждёт. Чего тебе? |
+| greet_kuznya_8_f_g.mp3 | приветствие: кузнец | Despina | loud, gruff blacksmith, busy | Молот не ждёт. Чего тебе? |
+| greet_kuznya_9_g.mp3 | приветствие: кузнец | Umbriel | gruff, businesslike | Кольчугу латать или клинок точить? |
+| greet_kuznya_9_f_g.mp3 | приветствие: кузнец | Despina | gruff, businesslike | Кольчугу латать или клинок точить? |
+| greet_kuznya_10_g.mp3 | приветствие: кузнец | Umbriel | gruff, amused | Искры не боишься? Подходи. |
+| greet_kuznya_10_f_g.mp3 | приветствие: кузнец | Despina | gruff, amused | Искры не боишься? Подходи. |
+| greet_traktir_8_g.mp3 | приветствие: трактирщик | Umbriel | warm, hospitable innkeeper | Заходи, у нас тепло и сухо. |
+| greet_traktir_8_f_g.mp3 | приветствие: трактирщик | Despina | warm, hospitable innkeeper | Заходи, у нас тепло и сухо. |
+| greet_traktir_9_g.mp3 | приветствие: трактирщик | Umbriel | cheerful innkeeper | Кружку пива для начала? |
+| greet_traktir_9_f_g.mp3 | приветствие: трактирщик | Despina | cheerful innkeeper | Кружку пива для начала? |
+| greet_traktir_10_g.mp3 | приветствие: трактирщик | Umbriel | friendly, hospitable | Свободный стол у окна. Садись. |
+| greet_traktir_10_f_g.mp3 | приветствие: трактирщик | Despina | friendly, hospitable | Свободный стол у окна. Садись. |
+| greet_lekar_8_g.mp3 | приветствие: лекарь | Umbriel | gentle, hushed | Тише, тише. Здесь больные спят. |
+| greet_lekar_8_f_g.mp3 | приветствие: лекарь | Despina | gentle, hushed | Тише, тише. Здесь больные спят. |
+| greet_lekar_9_g.mp3 | приветствие: лекарь | Umbriel | calm, caring | Покажи руки. Раны чистые? |
+| greet_lekar_9_f_g.mp3 | приветствие: лекарь | Despina | calm, caring | Покажи руки. Раны чистые? |
+| greet_lekar_10_g.mp3 | приветствие: лекарь | Umbriel | gentle, attentive | Травы свежие, отвар готов. Что беспокоит? |
+| greet_lekar_10_f_g.mp3 | приветствие: лекарь | Despina | gentle, attentive | Травы свежие, отвар готов. Что беспокоит? |
+| greet_zhrec_8_g.mp3 | приветствие: жрец | Umbriel | serene, reverent | Входи с миром, уходи с надеждой. |
+| greet_zhrec_8_f_g.mp3 | приветствие: жрец | Despina | serene, reverent | Входи с миром, уходи с надеждой. |
+| greet_zhrec_9_g.mp3 | приветствие: жрец | Umbriel | quiet, solemn | Боги видят всякого, кто переступает порог. |
+| greet_zhrec_9_f_g.mp3 | приветствие: жрец | Despina | quiet, solemn | Боги видят всякого, кто переступает порог. |
+| greet_zhrec_10_g.mp3 | приветствие: жрец | Umbriel | gentle, reverent | Помолишься с нами или пришёл за советом? |
+| greet_zhrec_10_f_g.mp3 | приветствие: жрец | Despina | gentle, reverent | Помолишься с нами или пришёл за советом? |
+| greet_znanie_8_g.mp3 | приветствие: учёный | Umbriel | absent-minded scholar | А, посетитель. Осторожно, чернила. |
+| greet_znanie_8_f_g.mp3 | приветствие: учёный | Despina | absent-minded scholar | А, посетитель. Осторожно, чернила. |
+| greet_znanie_9_g.mp3 | приветствие: учёный | Umbriel | fussy, scholarly | Любую книгу — только после того, как руки вымоешь. |
+| greet_znanie_9_f_g.mp3 | приветствие: учёный | Despina | fussy, scholarly | Любую книгу — только после того, как руки вымоешь. |
+| greet_znanie_10_g.mp3 | приветствие: учёный | Umbriel | delighted, scholarly | Вопрос? Прекрасно. Вопросы я люблю. |
+| greet_znanie_10_f_g.mp3 | приветствие: учёный | Despina | delighted, scholarly | Вопрос? Прекрасно. Вопросы я люблю. |
+| greet_strazha_9_g.mp3 | приветствие: страж у дела | Umbriel | stern, official | Порядок знаешь? Тогда проходи. |
+| greet_strazha_9_f_g.mp3 | приветствие: страж у дела | Despina | stern, official | Порядок знаешь? Тогда проходи. |
+| greet_strazha_10_g.mp3 | приветствие: страж у дела | Umbriel | dry, stern | Держи руки на виду, и мы поладим. |
+| greet_strazha_10_f_g.mp3 | приветствие: страж у дела | Despina | dry, stern | Держи руки на виду, и мы поладим. |
+| greet_strazha_11_g.mp3 | приветствие: страж у дела | Umbriel | curt, official | Без дела не задерживайся. |
+| greet_strazha_11_f_g.mp3 | приветствие: страж у дела | Despina | curt, official | Без дела не задерживайся. |
+| trade_buy_0_g.mp3 | торговец: покупка | Umbriel | warm, satisfied | Хороший выбор. Носи на здоровье. |
+| trade_buy_0_f_g.mp3 | торговец: покупка | Despina | warm, satisfied | Хороший выбор. Носи на здоровье. |
+| trade_buy_1_g.mp3 | торговец: покупка | Umbriel | confident, proud | Держи. Сносу не будет. |
+| trade_buy_1_f_g.mp3 | торговец: покупка | Despina | confident, proud | Держи. Сносу не будет. |
+| trade_buy_2_g.mp3 | торговец: покупка | Umbriel | cheerful, businesslike | По рукам! Приятно иметь дело. |
+| trade_buy_2_f_g.mp3 | торговец: покупка | Despina | cheerful, businesslike | По рукам! Приятно иметь дело. |
+| trade_buy_3_g.mp3 | торговец: покупка | Umbriel | friendly, persuasive | Бери, бери. Не пожалеешь. |
+| trade_buy_3_f_g.mp3 | торговец: покупка | Despina | friendly, persuasive | Бери, бери. Не пожалеешь. |
+| trade_buy_4_g.mp3 | торговец: покупка | Umbriel | businesslike, fair | С тебя золото — с меня товар. Честно. |
+| trade_buy_4_f_g.mp3 | торговец: покупка | Despina | businesslike, fair | С тебя золото — с меня товар. Честно. |
+| trade_buy_5_g.mp3 | торговец: покупка | Umbriel | pleased, warm | Вот и славно. Заходи ещё. |
+| trade_buy_5_f_g.mp3 | торговец: покупка | Despina | pleased, warm | Вот и славно. Заходи ещё. |
+| trade_buy_6_g.mp3 | торговец: покупка | Umbriel | proud, serious | Твоё. Береги, второго такого нет. |
+| trade_buy_6_f_g.mp3 | торговец: покупка | Despina | proud, serious | Твоё. Береги, второго такого нет. |
+| trade_buy_7_g.mp3 | торговец: покупка | Umbriel | cheerful | Взято! Пусть служит верно. |
+| trade_buy_7_f_g.mp3 | торговец: покупка | Despina | cheerful | Взято! Пусть служит верно. |
+| trade_buy_8_g.mp3 | торговец: покупка | Umbriel | approving, sincere | Отличная покупка. Я бы и сам взял. |
+| trade_buy_8_f_g.mp3 | торговец: покупка | Despina | approving, sincere | Отличная покупка. Я бы и сама взяла. |
+| trade_buy_9_g.mp3 | торговец: покупка | Umbriel | confidential, generous | Забирай. Цену сбавил только для тебя. |
+| trade_buy_9_f_g.mp3 | торговец: покупка | Despina | confidential, generous | Забирай. Цену сбавила только для тебя. |
+| trade_buy_10_g.mp3 | торговец: покупка | Umbriel | grateful, warm | Спасибо за золото. Удачи в дороге. |
+| trade_buy_10_f_g.mp3 | торговец: покупка | Despina | grateful, warm | Спасибо за золото. Удачи в дороге. |
+| trade_buy_11_g.mp3 | торговец: покупка | Umbriel | lively, joking | Сделка! Смотри не потеряй. |
+| trade_buy_11_f_g.mp3 | торговец: покупка | Despina | lively, joking | Сделка! Смотри не потеряй. |
+| trade_buy_big_0_g.mp3 | торговец: крупная покупка | Umbriel | delighted, laughing | Ого, сколько! Сегодня у меня праздник. |
+| trade_buy_big_0_f_g.mp3 | торговец: крупная покупка | Despina | delighted, laughing | Ого, сколько! Сегодня у меня праздник. |
+| trade_buy_big_1_g.mp3 | торговец: крупная покупка | Umbriel | excited, fawning | Вот это покупатель! Всё завернём в лучшем виде. |
+| trade_buy_big_1_f_g.mp3 | торговец: крупная покупка | Despina | excited, fawning | Вот это покупатель! Всё завернём в лучшем виде. |
+| trade_buy_big_2_g.mp3 | торговец: крупная покупка | Umbriel | grateful, generous | Щедро! За такое — скидка в следующий раз. |
+| trade_buy_big_2_f_g.mp3 | торговец: крупная покупка | Despina | grateful, generous | Щедро! За такое — скидка в следующий раз. |
+| trade_buy_big_3_g.mp3 | торговец: крупная покупка | Umbriel | amazed, delighted | Полприлавка разом! Вот это размах. |
+| trade_buy_big_3_f_g.mp3 | торговец: крупная покупка | Despina | amazed, delighted | Полприлавка разом! Вот это размах. |
+| trade_buy_big_4_g.mp3 | торговец: крупная покупка | Umbriel | happy, warm | С таким покупателем и год не страшен. |
+| trade_buy_big_4_f_g.mp3 | торговец: крупная покупка | Despina | happy, warm | С таким покупателем и год не страшен. |
+| trade_sell_0_g.mp3 | торговец: скупает у героя | Umbriel | businesslike, firm | Возьму. Цена честная, не спорь. |
+| trade_sell_0_f_g.mp3 | торговец: скупает у героя | Despina | businesslike, firm | Возьму. Цена честная, не спорь. |
+| trade_sell_1_g.mp3 | торговец: скупает у героя | Umbriel | appraising, satisfied | Неплохая вещица. Держи золото. |
+| trade_sell_1_f_g.mp3 | торговец: скупает у героя | Despina | appraising, satisfied | Неплохая вещица. Держи золото. |
+| trade_sell_2_g.mp3 | торговец: скупает у героя | Umbriel | businesslike | Беру. Такое всегда найдёт покупателя. |
+| trade_sell_2_f_g.mp3 | торговец: скупает у героя | Despina | businesslike | Беру. Такое всегда найдёт покупателя. |
+| trade_sell_3_g.mp3 | торговец: скупает у героя | Umbriel | appraising, a bit grudging | Хм, сойдёт. Вот твои монеты. |
+| trade_sell_3_f_g.mp3 | торговец: скупает у героя | Despina | appraising, a bit grudging | Хм, сойдёт. Вот твои монеты. |
+| trade_sell_4_g.mp3 | торговец: скупает у героя | Umbriel | eager, businesslike | По рукам. Ещё что-нибудь есть? |
+| trade_sell_4_f_g.mp3 | торговец: скупает у героя | Despina | eager, businesslike | По рукам. Ещё что-нибудь есть? |
+| trade_sell_5_g.mp3 | торговец: скупает у героя | Umbriel | approving | Товар годный. Приноси ещё. |
+| trade_sell_5_f_g.mp3 | торговец: скупает у героя | Despina | approving | Товар годный. Приноси ещё. |
+| trade_sell_6_g.mp3 | торговец: скупает у героя | Umbriel | wry, sighing | Ладно, беру. Хоть и переплачиваю. |
+| trade_sell_6_f_g.mp3 | торговец: скупает у героя | Despina | wry, sighing | Ладно, беру. Хоть и переплачиваю. |
+| trade_sell_7_g.mp3 | торговец: скупает у героя | Umbriel | dry, grudging | Держи золото. Считай, повезло тебе. |
+| trade_sell_7_f_g.mp3 | торговец: скупает у героя | Despina | dry, grudging | Держи золото. Считай, повезло тебе. |
+| trade_sell_8_g.mp3 | торговец: скупает у героя | Umbriel | playful, cheerful | Добро пожаловать на мой склад, вещица! |
+| trade_sell_8_f_g.mp3 | торговец: скупает у героя | Despina | playful, cheerful | Добро пожаловать на мой склад, вещица! |
+| trade_sell_9_g.mp3 | торговец: скупает у героя | Umbriel | sly, firm | Возьму, если больше торговаться не станешь. |
+| trade_sell_9_f_g.mp3 | торговец: скупает у героя | Despina | sly, firm | Возьму, если больше торговаться не станешь. |
+| trade_sell_10_g.mp3 | торговец: скупает у героя | Umbriel | curt, businesslike | Это пойдёт. Вот плата. |
+| trade_sell_10_f_g.mp3 | торговец: скупает у героя | Despina | curt, businesslike | Это пойдёт. Вот плата. |
+| trade_sell_11_g.mp3 | торговец: скупает у героя | Umbriel | pleased, surprised | Как раз этого и не хватало. Беру. |
+| trade_sell_11_f_g.mp3 | торговец: скупает у героя | Despina | pleased, surprised | Как раз этого и не хватало. Беру. |
+| trade_sell_big_0_g.mp3 | торговец: скупает много | Umbriel | amazed, amused | Целый мешок! Ну, считай, разбогатеешь. |
+| trade_sell_big_0_f_g.mp3 | торговец: скупает много | Despina | amazed, amused | Целый мешок! Ну, считай, разбогатеешь. |
+| trade_sell_big_1_g.mp3 | торговец: скупает много | Umbriel | wry, sighing, amused | Всё беру. Кошель мой худеет на глазах. |
+| trade_sell_big_1_f_g.mp3 | торговец: скупает много | Despina | wry, sighing, amused | Всё беру. Кошель мой худеет на глазах. |
+| trade_sell_big_2_g.mp3 | торговец: скупает много | Umbriel | surprised, agreeable | Столько добра разом? Ладно, по рукам. |
+| trade_sell_big_2_f_g.mp3 | торговец: скупает много | Despina | surprised, agreeable | Столько добра разом? Ладно, по рукам. |
+| trade_sell_big_3_g.mp3 | торговец: скупает много | Umbriel | mock complaining, amused | Ты меня разоришь, но товар хорош. |
+| trade_sell_big_3_f_g.mp3 | торговец: скупает много | Despina | mock complaining, amused | Ты меня разоришь, но товар хорош. |
+| trade_sell_big_4_g.mp3 | торговец: скупает много | Umbriel | wry, resigned | Опустошаешь мне кассу. Но беру всё. |
+| trade_sell_big_4_f_g.mp3 | торговец: скупает много | Despina | wry, resigned | Опустошаешь мне кассу. Но беру всё. |
+| trade_poor_0_g.mp3 | торговец: золота не хватает | Umbriel | dry, matter-of-fact | Золота маловато. Доложишь — отдам. |
+| trade_poor_0_f_g.mp3 | торговец: золота не хватает | Despina | dry, matter-of-fact | Золота маловато. Доложишь — отдам. |
+| trade_poor_1_g.mp3 | торговец: золота не хватает | Umbriel | firm, curt | Не хватает монет. Без денег не отдаю. |
+| trade_poor_1_f_g.mp3 | торговец: золота не хватает | Despina | firm, curt | Не хватает монет. Без денег не отдаю. |
+| trade_poor_2_g.mp3 | торговец: золота не хватает | Umbriel | sympathetic, sighing | Эх, на это кошель тонковат. |
+| trade_poor_2_f_g.mp3 | торговец: золота не хватает | Despina | sympathetic, sighing | Эх, на это кошель тонковат. |
+| trade_poor_3_g.mp3 | торговец: золота не хватает | Umbriel | firm, stern | В долг не торгую, не проси. |
+| trade_poor_3_f_g.mp3 | торговец: золота не хватает | Despina | firm, stern | В долг не торгую, не проси. |
+| trade_poor_4_g.mp3 | торговец: золота не хватает | Umbriel | kindly, encouraging | Подкопи ещё немного и возвращайся. |
+| trade_poor_4_f_g.mp3 | торговец: золота не хватает | Despina | kindly, encouraging | Подкопи ещё немного и возвращайся. |
+| trade_poor_5_g.mp3 | торговец: золота не хватает | Umbriel | wry, proverb | Даром только ветер в поле. |
+| trade_poor_5_f_g.mp3 | торговец: золота не хватает | Despina | wry, proverb | Даром только ветер в поле. |
+| trade_refuse_0_g.mp3 | торговец: не берёт | Umbriel | dismissive | Это мне не нужно. Неси кому другому. |
+| trade_refuse_0_f_g.mp3 | торговец: не берёт | Despina | dismissive | Это мне не нужно. Неси кому другому. |
+| trade_refuse_1_g.mp3 | торговец: не берёт | Umbriel | firm, curt | Нет, такое не беру. |
+| trade_refuse_1_f_g.mp3 | торговец: не берёт | Despina | firm, curt | Нет, такое не беру. |
+| trade_refuse_2_g.mp3 | торговец: не берёт | Umbriel | dismissive, weary | Такого у меня и так полон склад. |
+| trade_refuse_2_f_g.mp3 | торговец: не берёт | Despina | dismissive, weary | Такого у меня и так полон склад. |
+| trade_refuse_3_g.mp3 | торговец: не берёт | Umbriel | neutral, helpful | Не мой товар. Попробуй у соседа. |
+| trade_refuse_3_f_g.mp3 | торговец: не берёт | Despina | neutral, helpful | Не мой товар. Попробуй у соседа. |
+| trade_bye_0_g.mp3 | торговец: прощание после торга | Umbriel | warm, friendly | Заходи ещё, всегда рад. |
+| trade_bye_0_f_g.mp3 | торговец: прощание после торга | Despina | warm, friendly | Заходи ещё, всегда рада. |
+| trade_bye_1_g.mp3 | торговец: прощание после торга | Umbriel | friendly | Доброй дороги. Возвращайся за новым. |
+| trade_bye_1_f_g.mp3 | торговец: прощание после торга | Despina | friendly | Доброй дороги. Возвращайся за новым. |
+| trade_bye_2_g.mp3 | торговец: прощание после торга | Umbriel | grateful, warm | Спасибо за торг. Не забывай меня. |
+| trade_bye_2_f_g.mp3 | торговец: прощание после торга | Despina | grateful, warm | Спасибо за торг. Не забывай меня. |
+| trade_bye_3_g.mp3 | торговец: прощание после торга | Umbriel | cheerful, sly | Удачи! И помни, где лучшие цены. |
+| trade_bye_3_f_g.mp3 | торговец: прощание после торга | Despina | cheerful, sly | Удачи! И помни, где лучшие цены. |
+| trade_bye_4_g.mp3 | торговец: прощание после торга | Umbriel | friendly, easygoing | Будешь рядом — загляни. |
+| trade_bye_4_f_g.mp3 | торговец: прощание после торга | Despina | friendly, easygoing | Будешь рядом — загляни. |
+| trade_bye_5_g.mp3 | торговец: прощание после торга | Umbriel | polite, satisfied | Приятно было иметь дело. |
+| trade_bye_5_f_g.mp3 | торговец: прощание после торга | Despina | polite, satisfied | Приятно было иметь дело. |
+| trade_regular_0_g.mp3 | торговец: постоянному покупателю | Umbriel | courteous, warm | Для постоянного покупателя — с поклоном. |
+| trade_regular_0_f_g.mp3 | торговец: постоянному покупателю | Despina | courteous, warm | Для постоянного покупателя — с поклоном. |
+| trade_regular_1_g.mp3 | торговец: постоянному покупателю | Umbriel | warm, generous | Постоянным — от души. Приходи снова. |
+| trade_regular_1_f_g.mp3 | торговец: постоянному покупателю | Despina | warm, generous | Постоянным — от души. Приходи снова. |
+| trade_regular_2_f_g.mp3 | торговец: постоянному покупателю | Despina | playful, laughing | Ещё немного — и я тебе медаль вручу. |
+| trade_regular_3_g.mp3 | торговец: постоянному покупателю | Umbriel | amused, fond | Я твои покупки уже на память знаю. |
+| trade_regular_3_f_g.mp3 | торговец: постоянному покупателю | Despina | amused, fond | Я твои покупки уже на память знаю. |
+| trade_regular_4_g.mp3 | торговец: постоянному покупателю | Umbriel | grateful, jovial | Вот кто меня кормит! Спасибо. |
+| trade_regular_4_f_g.mp3 | торговец: постоянному покупателю | Despina | grateful, jovial | Вот кто меня кормит! Спасибо. |
+| quest_take_0_g.mp3 | заказчик: даёт дело | Umbriel | serious, confiding | Есть для тебя дело. Слушай внимательно. |
+| quest_take_0_f_g.mp3 | заказчик: даёт дело | Despina | serious, confiding | Есть для тебя дело. Слушай внимательно. |
+| quest_take_1_g.mp3 | заказчик: даёт дело | Umbriel | earnest, hopeful | Выручишь — не забуду. Вот что нужно. |
+| quest_take_1_f_g.mp3 | заказчик: даёт дело | Despina | earnest, hopeful | Выручишь — не забуду. Вот что нужно. |
+| quest_take_2_g.mp3 | заказчик: даёт дело | Umbriel | businesslike | Работа есть, плата будет. Слушай. |
+| quest_take_2_f_g.mp3 | заказчик: даёт дело | Despina | businesslike | Работа есть, плата будет. Слушай. |
+| quest_take_3_g.mp3 | заказчик: даёт дело | Umbriel | earnest, a little worried | Мне нужна помощь. Вот в чём дело. |
+| quest_take_3_f_g.mp3 | заказчик: даёт дело | Despina | earnest, a little worried | Мне нужна помощь. Вот в чём дело. |
+| quest_story_0_g.mp3 | заказчик: сюжетное | Umbriel | grave, meaningful | Это только начало. Дело большое, слушай с самого начала. |
+| quest_story_0_f_g.mp3 | заказчик: сюжетное | Despina | grave, meaningful | Это только начало. Дело большое, слушай с самого начала. |
+| quest_story_1_g.mp3 | заказчик: сюжетное | Umbriel | serious, intense | От этого многое зависит. Не подведи. |
+| quest_story_1_f_g.mp3 | заказчик: сюжетное | Despina | serious, intense | От этого многое зависит. Не подведи. |
+| quest_faction_0_g.mp3 | заказчик: фракционное | Umbriel | official, measured | Это поручение не от меня — от тех, кому я служу. |
+| quest_faction_0_f_g.mp3 | заказчик: фракционное | Despina | official, measured | Это поручение не от меня — от тех, кому я служу. |
+| quest_faction_1_g.mp3 | заказчик: фракционное | Umbriel | dry, dutiful | Служба есть служба. Задание такое. |
+| quest_faction_1_f_g.mp3 | заказчик: фракционное | Despina | dry, dutiful | Служба есть служба. Задание такое. |
+| quest_case_0_g.mp3 | заказчик: расследование | Umbriel | suspicious, lowered voice | Здесь что-то нечисто. Нужно разобраться. |
+| quest_case_0_f_g.mp3 | заказчик: расследование | Despina | suspicious, lowered voice | Здесь что-то нечисто. Нужно разобраться. |
+| quest_case_1_g.mp3 | заказчик: расследование | Umbriel | sharp, investigative | Нужны улики, а не слухи. Поищешь? |
+| quest_case_1_f_g.mp3 | заказчик: расследование | Despina | sharp, investigative | Нужны улики, а не слухи. Поищешь? |
+| quest_hunt_0_g.mp3 | заказчик: охота | Umbriel | grim, determined | Тварь повадилась. Выследи её и убей. |
+| quest_hunt_0_f_g.mp3 | заказчик: охота | Despina | grim, determined | Тварь повадилась. Выследи её и убей. |
+| quest_hunt_1_g.mp3 | заказчик: охота | Umbriel | concerned, serious | Зверь опасный. Будь осторожен на охоте. |
+| quest_hunt_1_f_g.mp3 | заказчик: охота | Despina | concerned, serious | Зверь опасный. Будь осторожен на охоте. |
+| quest_hunt_2_g.mp3 | заказчик: охота | Umbriel | cold, determined | Принеси мне весть, что она мертва. |
+| quest_hunt_2_f_g.mp3 | заказчик: охота | Despina | cold, determined | Принеси мне весть, что она мертва. |
+| quest_delivery_0_g.mp3 | заказчик: доставка | Umbriel | businesslike, urgent | Груз нужно доставить. Ждут его давно. |
+| quest_delivery_0_f_g.mp3 | заказчик: доставка | Despina | businesslike, urgent | Груз нужно доставить. Ждут его давно. |
+| quest_delivery_1_g.mp3 | заказчик: доставка | Umbriel | businesslike, reassuring | Довези товар целым — там заплатят. |
+| quest_delivery_1_f_g.mp3 | заказчик: доставка | Despina | businesslike, reassuring | Довези товар целым — там заплатят. |
+| quest_craft_0_g.mp3 | заказчик: ремесло | Umbriel | appraising, friendly | Руки у тебя, говорят, умелые. Нужна работа. |
+| quest_craft_0_f_g.mp3 | заказчик: ремесло | Despina | appraising, friendly | Руки у тебя, говорят, умелые. Нужна работа. |
+| quest_craft_1_g.mp3 | заказчик: ремесло | Umbriel | earnest, demanding | Сделай мне вещь — хорошую, на совесть. |
+| quest_craft_1_f_g.mp3 | заказчик: ремесло | Despina | earnest, demanding | Сделай мне вещь — хорошую, на совесть. |
+| quest_diplom_0_g.mp3 | заказчик: дипломатия | Umbriel | thoughtful, measured | Тут словом надо, а не мечом. |
+| quest_diplom_0_f_g.mp3 | заказчик: дипломатия | Despina | thoughtful, measured | Тут словом надо, а не мечом. |
+| quest_diplom_1_g.mp3 | заказчик: дипломатия | Umbriel | frustrated, hopeful | Поговори с ними. Меня они слушать не станут. |
+| quest_diplom_1_f_g.mp3 | заказчик: дипломатия | Despina | frustrated, hopeful | Поговори с ними. Меня они слушать не станут. |
+| quest_study_0_g.mp3 | заказчик: исследование | Umbriel | curious, eager | Мне нужно знать. Разузнай, прочти, дойди. |
+| quest_study_0_f_g.mp3 | заказчик: исследование | Despina | curious, eager | Мне нужно знать. Разузнай, прочти, дойди. |
+| quest_study_1_g.mp3 | заказчик: исследование | Umbriel | curious, instructive | Сходи и посмотри своими глазами. Потом расскажешь. |
+| quest_study_1_f_g.mp3 | заказчик: исследование | Despina | curious, instructive | Сходи и посмотри своими глазами. Потом расскажешь. |
+| quest_archeo_0_g.mp3 | заказчик: археология | Umbriel | mysterious, low | Под землёй лежит старое. Подними его. |
+| quest_archeo_0_f_g.mp3 | заказчик: археология | Despina | mysterious, low | Под землёй лежит старое. Подними его. |
+| quest_archeo_1_g.mp3 | заказчик: археология | Umbriel | intrigued, mysterious | Древность ждёт того, кто не побоится копать. |
+| quest_archeo_1_f_g.mp3 | заказчик: археология | Despina | intrigued, mysterious | Древность ждёт того, кто не побоится копать. |
+| quest_faith_0_g.mp3 | заказчик: религия | Umbriel | reverent, solemn | Боги ждут знака. Исполни обет. |
+| quest_faith_0_f_g.mp3 | заказчик: религия | Despina | reverent, solemn | Боги ждут знака. Исполни обет. |
+| quest_faith_1_g.mp3 | заказчик: религия | Umbriel | serene, earnest | Святое дело. Не для корысти — для души. |
+| quest_faith_1_f_g.mp3 | заказчик: религия | Despina | serene, earnest | Святое дело. Не для корысти — для души. |
+| quest_magic_0_g.mp3 | заказчик: магия | Umbriel | uneasy, lowered voice | Тут чары замешаны. Без знающего не справиться. |
+| quest_magic_0_f_g.mp3 | заказчик: магия | Despina | uneasy, lowered voice | Тут чары замешаны. Без знающего не справиться. |
+| quest_magic_1_g.mp3 | заказчик: магия | Umbriel | tense, mysterious | Сила неспокойна. Нужно её унять. |
+| quest_magic_1_f_g.mp3 | заказчик: магия | Despina | tense, mysterious | Сила неспокойна. Нужно её унять. |
+| quest_war_0_g.mp3 | заказчик: война | Umbriel | urgent, grim | Война не ждёт. Нужны люди и припасы. |
+| quest_war_0_f_g.mp3 | заказчик: война | Despina | urgent, grim | Война не ждёт. Нужны люди и припасы. |
+| quest_war_1_g.mp3 | заказчик: война | Umbriel | tense, pleading | Фронт близко. Помоги, чем сможешь. |
+| quest_war_1_f_g.mp3 | заказчик: война | Despina | tense, pleading | Фронт близко. Помоги, чем сможешь. |
+| quest_rescue_0_g.mp3 | заказчик: спасение | Umbriel | anxious, pleading | Человек пропал. Найди его, пока не поздно. |
+| quest_rescue_0_f_g.mp3 | заказчик: спасение | Despina | anxious, pleading | Человек пропал. Найди его, пока не поздно. |
+| quest_rescue_1_g.mp3 | заказчик: спасение | Umbriel | desperate, pleading | Вытащи его живым. Прошу тебя. |
+| quest_rescue_1_f_g.mp3 | заказчик: спасение | Despina | desperate, pleading | Вытащи его живым. Прошу тебя. |
+| quest_econ_0_g.mp3 | заказчик: экономика | Umbriel | shrewd, businesslike | Дело денежное. Добудь — и в накладе не останешься. |
+| quest_econ_0_f_g.mp3 | заказчик: экономика | Despina | shrewd, businesslike | Дело денежное. Добудь — и в накладе не останешься. |
+| quest_econ_1_g.mp3 | заказчик: экономика | Umbriel | brisk, urgent | Нужен товар. Много и быстро. |
+| quest_econ_1_f_g.mp3 | заказчик: экономика | Despina | brisk, urgent | Нужен товар. Много и быстро. |
+| quest_random_0_g.mp3 | заказчик: случайное | Umbriel | casual, curious | Подвернулось тут одно дело. Возьмёшься? |
+| quest_random_0_f_g.mp3 | заказчик: случайное | Despina | casual, curious | Подвернулось тут одно дело. Возьмёшься? |
+| quest_random_1_g.mp3 | заказчик: случайное | Umbriel | puzzled, honest | Странное дело, но заплачу честно. |
+| quest_random_1_f_g.mp3 | заказчик: случайное | Despina | puzzled, honest | Странное дело, но заплачу честно. |
+| quest_secret_0_g.mp3 | заказчик: скрытое | Umbriel | whisper, conspiratorial | Только тихо. Об этом — никому. |
+| quest_secret_0_f_g.mp3 | заказчик: скрытое | Despina | whisper, conspiratorial | Только тихо. Об этом — никому. |
+| quest_secret_1_g.mp3 | заказчик: скрытое | Umbriel | hushed, serious | Дело тайное. Если спросят — ты ничего не знаешь. |
+| quest_secret_1_f_g.mp3 | заказчик: скрытое | Despina | hushed, serious | Дело тайное. Если спросят — ты ничего не знаешь. |
+| quest_type_fetch_0_g.mp3 | заказчик: принести | Umbriel | businesslike, clear | Принеси, что прошу. Сколько сказано — столько и неси. |
+| quest_type_fetch_0_f_g.mp3 | заказчик: принести | Despina | businesslike, clear | Принеси, что прошу. Сколько сказано — столько и неси. |
+| quest_type_fetch_1_g.mp3 | заказчик: принести | Umbriel | worried, friendly | Запасы кончаются. Добудь, будь другом. |
+| quest_type_fetch_1_f_g.mp3 | заказчик: принести | Despina | worried, friendly | Запасы кончаются. Добудь, будь другом. |
+| quest_type_kill_0_g.mp3 | заказчик: очистить округу | Umbriel | grim, urgent | Округу заполонили твари. Очисти её. |
+| quest_type_kill_0_f_g.mp3 | заказчик: очистить округу | Despina | grim, urgent | Округу заполонили твари. Очисти её. |
+| quest_type_kill_1_g.mp3 | заказчик: очистить округу | Umbriel | angry, desperate | Житья от тварей нет. Перебей их. |
+| quest_type_kill_1_f_g.mp3 | заказчик: очистить округу | Despina | angry, desperate | Житья от тварей нет. Перебей их. |
+| quest_type_visit_0_g.mp3 | заказчик: сходить и посмотреть | Umbriel | uneasy, curious | Сходи туда и погляди, что там творится. |
+| quest_type_visit_0_f_g.mp3 | заказчик: сходить и посмотреть | Despina | uneasy, curious | Сходи туда и погляди, что там творится. |
+| quest_type_visit_1_g.mp3 | заказчик: сходить и посмотреть | Umbriel | worried, serious | Там неладно. Проверь и возвращайся. |
+| quest_type_visit_1_f_g.mp3 | заказчик: сходить и посмотреть | Despina | worried, serious | Там неладно. Проверь и возвращайся. |
+| quest_full_0_g.mp3 | заказчик: дел слишком много | Umbriel | amused, refusing | Куда тебе ещё? У тебя и так десяток дел. |
+| quest_full_0_f_g.mp3 | заказчик: дел слишком много | Despina | amused, refusing | Куда тебе ещё? У тебя и так десяток дел. |
+| quest_full_1_g.mp3 | заказчик: дел слишком много | Umbriel | firm, reasonable | Сперва закончи начатое, потом приходи. |
+| quest_full_1_f_g.mp3 | заказчик: дел слишком много | Despina | firm, reasonable | Сперва закончи начатое, потом приходи. |
+| quest_full_2_g.mp3 | заказчик: дел слишком много | Umbriel | dry, friendly | Дел у тебя по горло. Разгрузись — тогда поговорим. |
+| quest_full_2_f_g.mp3 | заказчик: дел слишком много | Despina | dry, friendly | Дел у тебя по горло. Разгрузись — тогда поговорим. |
+| quest_have_0_g.mp3 | заказчик: дело уже взято | Umbriel | patient, reminding | Моё дело уже у тебя. Сделай сначала его. |
+| quest_have_0_f_g.mp3 | заказчик: дело уже взято | Despina | patient, reminding | Моё дело уже у тебя. Сделай сначала его. |
+| quest_have_1_g.mp3 | заказчик: дело уже взято | Umbriel | mildly impatient | Моё поручение и так при тебе. |
+| quest_have_1_f_g.mp3 | заказчик: дело уже взято | Despina | mildly impatient | Моё поручение и так при тебе. |
+| quest_done_0_g.mp3 | заказчик: дело сдано | Umbriel | delighted, grateful | Сделано? Вот это дело! Держи награду. |
+| quest_done_0_f_g.mp3 | заказчик: дело сдано | Despina | delighted, grateful | Сделано? Вот это дело! Держи награду. |
+| quest_done_1_g.mp3 | заказчик: дело сдано | Umbriel | grateful, sincere | Спасибо. Выручка твоя дорогого стоит. |
+| quest_done_1_f_g.mp3 | заказчик: дело сдано | Despina | grateful, sincere | Спасибо. Выручка твоя дорогого стоит. |
+| quest_done_2_g.mp3 | заказчик: дело сдано | Umbriel | satisfied, businesslike | Честно заработано. Держи. |
+| quest_done_2_f_g.mp3 | заказчик: дело сдано | Despina | satisfied, businesslike | Честно заработано. Держи. |
+| quest_done_3_g.mp3 | заказчик: дело сдано | Umbriel | proud, warm | Знал, что на тебя можно положиться. |
+| quest_done_3_f_g.mp3 | заказчик: дело сдано | Despina | proud, warm | Знала, что на тебя можно положиться. |
+| quest_done_4_g.mp3 | заказчик: дело сдано | Umbriel | enthusiastic | Вот это работа! Приходи ещё. |
+| quest_done_4_f_g.mp3 | заказчик: дело сдано | Despina | enthusiastic | Вот это работа! Приходи ещё. |
+| quest_done_5_g.mp3 | заказчик: дело сдано | Umbriel | respectful, warm | Слово своё держишь. Это ценю. |
+| quest_done_5_f_g.mp3 | заказчик: дело сдано | Despina | respectful, warm | Слово своё держишь. Это ценю. |
+| car_meet_0_g.mp3 | старший обоза: встреча | Rasalgethi | loud, friendly call | Эй, путник! Обоз идёт. Торговать будешь? |
+| car_meet_0_f_g.mp3 | старший обоза: встреча | Gacrux | loud, friendly call | Эй, путник! Обоз идёт. Торговать будешь? |
+| car_meet_1_g.mp3 | старший обоза: встреча | Rasalgethi | reassuring, friendly | Стой, не пугайся, мы купцы. Глянешь на товар? |
+| car_meet_1_f_g.mp3 | старший обоза: встреча | Gacrux | reassuring, friendly | Стой, не пугайся, мы купцы. Глянешь на товар? |
+| car_meet_2_g.mp3 | старший обоза: встреча | Rasalgethi | cheerful, welcoming | Доброй дороги! У нас есть чем поторговать. |
+| car_meet_2_f_g.mp3 | старший обоза: встреча | Gacrux | cheerful, welcoming | Доброй дороги! У нас есть чем поторговать. |
+| car_meet_3_g.mp3 | старший обоза: встреча | Rasalgethi | relaxed, inviting | Караван на привале. Подходи, пока стоим. |
+| car_meet_3_f_g.mp3 | старший обоза: встреча | Gacrux | relaxed, inviting | Караван на привале. Подходи, пока стоим. |
+| car_meet_4_g.mp3 | старший обоза: встреча | Rasalgethi | wary, then relieved | Не разбойник? Ну и славно. Меняться будем? |
+| car_meet_4_f_g.mp3 | старший обоза: встреча | Gacrux | wary, then relieved | Не разбойник? Ну и славно. Меняться будем? |
+| car_meet_5_g.mp3 | старший обоза: встреча | Rasalgethi | proud, persuasive | Товар с дальних земель! Смотри, пока не ушли. |
+| car_meet_5_f_g.mp3 | старший обоза: встреча | Gacrux | proud, persuasive | Товар с дальних земель! Смотри, пока не ушли. |
+| car_meet_6_g.mp3 | старший обоза: встреча | Rasalgethi | tired, hurried | Мы с утра в пути. Покупай, продавай — только быстро. |
+| car_meet_6_f_g.mp3 | старший обоза: встреча | Gacrux | tired, hurried | Мы с утра в пути. Покупай, продавай — только быстро. |
+| car_meet_7_g.mp3 | старший обоза: встреча | Rasalgethi | brisk trader | Путник, нужна соль, железо, ткань? Всё есть. |
+| car_meet_7_f_g.mp3 | старший обоза: встреча | Gacrux | brisk trader | Путник, нужна соль, железо, ткань? Всё есть. |
+| car_meet_8_g.mp3 | старший обоза: встреча | Rasalgethi | calming, commanding, then friendly | Охрана, спокойно, это не разбойник. Подходи, добрый человек. |
+| car_meet_8_f_g.mp3 | старший обоза: встреча | Gacrux | calming, commanding, then friendly | Охрана, спокойно, это не разбойник. Подходи, добрый человек. |
+| car_meet_9_g.mp3 | старший обоза: встреча | Rasalgethi | hopeful, friendly | Дорога длинная, а покупатель редкий. Заглянешь? |
+| car_meet_9_f_g.mp3 | старший обоза: встреча | Gacrux | hopeful, friendly | Дорога длинная, а покупатель редкий. Заглянешь? |
+| car_meet_war_0_g.mp3 | старший обоза: встреча на войне | Rasalgethi | tense, hushed | Тише. Мы идём через фронт. Торгуй, но не мешкай. |
+| car_meet_war_0_f_g.mp3 | старший обоза: встреча на войне | Gacrux | tense, hushed | Тише. Мы идём через фронт. Торгуй, но не мешкай. |
+| car_meet_war_1_g.mp3 | старший обоза: встреча на войне | Rasalgethi | grim, apologetic | Война кругом, а торговать надо. Цены, уж извини, злые. |
+| car_meet_war_1_f_g.mp3 | старший обоза: встреча на войне | Gacrux | grim, apologetic | Война кругом, а торговать надо. Цены, уж извини, злые. |
+| car_meet_war_2_g.mp3 | старший обоза: встреча на войне | Rasalgethi | nervous, hurried | Солдат по дороге не видно? Тогда быстро меняемся. |
+| car_meet_war_2_f_g.mp3 | старший обоза: встреча на войне | Gacrux | nervous, hurried | Солдат по дороге не видно? Тогда быстро меняемся. |
+| car_meet_war_3_g.mp3 | старший обоза: встреча на войне | Rasalgethi | grim, serious | На такой дороге каждая рука с оружием на счету. |
+| car_meet_war_3_f_g.mp3 | старший обоза: встреча на войне | Gacrux | grim, serious | На такой дороге каждая рука с оружием на счету. |
+| car_meet_night_0_g.mp3 | старший обоза: встреча ночью | Rasalgethi | alarmed, sharp | Кто там в темноте? Назовись! |
+| car_meet_night_0_f_g.mp3 | старший обоза: встреча ночью | Gacrux | alarmed, sharp | Кто там в темноте? Назовись! |
+| car_meet_night_1_g.mp3 | старший обоза: встреча ночью | Rasalgethi | sleepy, grudging | Ночью обоз не торгует. Но для тебя сделаем исключение. |
+| car_meet_night_1_f_g.mp3 | старший обоза: встреча ночью | Gacrux | sleepy, grudging | Ночью обоз не торгует. Но для тебя сделаем исключение. |
+| car_meet_night_2_g.mp3 | старший обоза: встреча ночью | Rasalgethi | wary, then welcoming | Поздно бродишь. Ладно, подходи к огню. |
+| car_meet_night_2_f_g.mp3 | старший обоза: встреча ночью | Gacrux | wary, then welcoming | Поздно бродишь. Ладно, подходи к огню. |
+| car_buy_0_g.mp3 | старший обоза: продаёт | Rasalgethi | confident, sly | Твоё. Довезёшь — втрое продашь. |
+| car_buy_0_f_g.mp3 | старший обоза: продаёт | Gacrux | confident, sly | Твоё. Довезёшь — втрое продашь. |
+| car_buy_1_g.mp3 | старший обоза: продаёт | Rasalgethi | persuasive | Бери, пока есть. До города такого не сыщешь. |
+| car_buy_1_f_g.mp3 | старший обоза: продаёт | Gacrux | persuasive | Бери, пока есть. До города такого не сыщешь. |
+| car_buy_2_g.mp3 | старший обоза: продаёт | Rasalgethi | cheerful, brisk | Взято! Деньги в сундук, товар — тебе. |
+| car_buy_2_f_g.mp3 | старший обоза: продаёт | Gacrux | cheerful, brisk | Взято! Деньги в сундук, товар — тебе. |
+| car_buy_3_g.mp3 | старший обоза: продаёт | Rasalgethi | approving | Добрый выбор. Там, куда идём, это на вес золота. |
+| car_buy_3_f_g.mp3 | старший обоза: продаёт | Gacrux | approving | Добрый выбор. Там, куда идём, это на вес золота. |
+| car_buy_4_g.mp3 | старший обоза: продаёт | Rasalgethi | friendly, joking | По рукам. Только в дороге не растеряй. |
+| car_buy_4_f_g.mp3 | старший обоза: продаёт | Gacrux | friendly, joking | По рукам. Только в дороге не растеряй. |
+| car_buy_5_g.mp3 | старший обоза: продаёт | Rasalgethi | sincere, warm | Держи. Мы честные купцы, без обмана. |
+| car_buy_5_f_g.mp3 | старший обоза: продаёт | Gacrux | sincere, warm | Держи. Мы честные купцы, без обмана. |
+| car_sell_0_g.mp3 | старший обоза: скупает | Rasalgethi | businesslike | Беру. В городе пригодится. |
+| car_sell_0_f_g.mp3 | старший обоза: скупает | Gacrux | businesslike | Беру. В городе пригодится. |
+| car_sell_1_g.mp3 | старший обоза: скупает | Rasalgethi | agreeable | Хорошо, заберём. Вот плата. |
+| car_sell_1_f_g.mp3 | старший обоза: скупает | Gacrux | agreeable | Хорошо, заберём. Вот плата. |
+| car_sell_2_g.mp3 | старший обоза: скупает | Rasalgethi | pleased | Как раз этого нам в дорогу и не хватало. |
+| car_sell_2_f_g.mp3 | старший обоза: скупает | Gacrux | pleased | Как раз этого нам в дорогу и не хватало. |
+| car_sell_3_g.mp3 | старший обоза: скупает | Rasalgethi | loud, commanding, pleased | Грузите на третий воз! Беру всё. |
+| car_sell_3_f_g.mp3 | старший обоза: скупает | Gacrux | loud, commanding, pleased | Грузите на третий воз! Беру всё. |
+| car_sell_4_g.mp3 | старший обоза: скупает | Rasalgethi | fair, calm | Честная цена. Держи монеты. |
+| car_sell_4_f_g.mp3 | старший обоза: скупает | Gacrux | fair, calm | Честная цена. Держи монеты. |
+| car_sell_5_g.mp3 | старший обоза: скупает | Rasalgethi | eager | Годится. Ещё что-нибудь есть? |
+| car_sell_5_f_g.mp3 | старший обоза: скупает | Gacrux | eager | Годится. Ещё что-нибудь есть? |
+| car_poor_0_g.mp3 | старший обоза: золота не хватает | Rasalgethi | dry, firm | Золота не хватит. Мы в долг не возим. |
+| car_poor_0_f_g.mp3 | старший обоза: золота не хватает | Gacrux | dry, firm | Золота не хватит. Мы в долг не возим. |
+| car_poor_1_g.mp3 | старший обоза: золота не хватает | Rasalgethi | sympathetic | Кошель пустоват. Ну, может, в другой раз. |
+| car_poor_1_f_g.mp3 | старший обоза: золота не хватает | Gacrux | sympathetic | Кошель пустоват. Ну, может, в другой раз. |
+| car_pass_0_g.mp3 | старший обоза: обоз пропустили | Rasalgethi | easygoing, friendly | Ну, как знаешь. Доброй дороги! |
+| car_pass_0_f_g.mp3 | старший обоза: обоз пропустили | Gacrux | easygoing, friendly | Ну, как знаешь. Доброй дороги! |
+| car_pass_1_g.mp3 | старший обоза: обоз пропустили | Rasalgethi | loud command to drivers | Трогай! Обоз идёт дальше. |
+| car_pass_1_f_g.mp3 | старший обоза: обоз пропустили | Gacrux | loud command to drivers | Трогай! Обоз идёт дальше. |
+| car_pass_2_g.mp3 | старший обоза: обоз пропустили | Rasalgethi | warm, parting | Счастливо оставаться. Может, свидимся. |
+| car_pass_2_f_g.mp3 | старший обоза: обоз пропустили | Gacrux | warm, parting | Счастливо оставаться. Может, свидимся. |
+| car_pass_3_g.mp3 | старший обоза: обоз пропустили | Rasalgethi | shrugging, friendly | Ничего не нужно? Ладно, нам пора. |
+| car_pass_3_f_g.mp3 | старший обоза: обоз пропустили | Gacrux | shrugging, friendly | Ничего не нужно? Ладно, нам пора. |
+| car_pass_4_g.mp3 | старший обоза: обоз пропустили | Rasalgethi | loud, cheerful command | Пропускаем путника! Эй, возчики, трогай! |
+| car_pass_4_f_g.mp3 | старший обоза: обоз пропустили | Gacrux | loud, cheerful command | Пропускаем путника! Эй, возчики, трогай! |
+| car_pass_5_g.mp3 | старший обоза: обоз пропустили | Rasalgethi | caring warning | Береги себя на тракте. Разбойники шалят. |
+| car_pass_5_f_g.mp3 | старший обоза: обоз пропустили | Gacrux | caring warning | Береги себя на тракте. Разбойники шалят. |
+| car_hire_0_g.mp3 | старший обоза: нанимает в охрану | Rasalgethi | decisive, commanding | Нанят! Держись у последнего воза. |
+| car_hire_0_f_g.mp3 | старший обоза: нанимает в охрану | Gacrux | decisive, commanding | Нанят! Держись у последнего воза. |
+| car_hire_1_g.mp3 | старший обоза: нанимает в охрану | Rasalgethi | appraising, businesslike | Меч при тебе? Отлично. Плата в городе. |
+| car_hire_1_f_g.mp3 | старший обоза: нанимает в охрану | Gacrux | appraising, businesslike | Меч при тебе? Отлично. Плата в городе. |
+| car_hire_2_g.mp3 | старший обоза: нанимает в охрану | Rasalgethi | relieved, welcoming | Лишняя рука с оружием — в самый раз. Добро пожаловать. |
+| car_hire_2_f_g.mp3 | старший обоза: нанимает в охрану | Gacrux | relieved, welcoming | Лишняя рука с оружием — в самый раз. Добро пожаловать. |
+| car_hire_3_g.mp3 | старший обоза: нанимает в охрану | Rasalgethi | businesslike, fair | Договорились. Довезём груз — получишь сполна. |
+| car_hire_3_f_g.mp3 | старший обоза: нанимает в охрану | Gacrux | businesslike, fair | Договорились. Довезём груз — получишь сполна. |
+| car_hire_4_g.mp3 | старший обоза: нанимает в охрану | Rasalgethi | serious, warning | Охранник? Хорошо. Гляди в оба — на тракте неспокойно. |
+| car_hire_4_f_g.mp3 | старший обоза: нанимает в охрану | Gacrux | serious, warning | Охранник? Хорошо. Гляди в оба — на тракте неспокойно. |
+| car_hire_5_g.mp3 | старший обоза: нанимает в охрану | Rasalgethi | friendly, reassuring | По рукам. Если что — кричи, ребята прибегут. |
+| car_hire_5_f_g.mp3 | старший обоза: нанимает в охрану | Gacrux | friendly, reassuring | По рукам. Если что — кричи, ребята прибегут. |
+| car_hire_busy_0_g.mp3 | старший обоза: уже при обозе | Rasalgethi | dry, reasonable | У тебя уже есть наниматель. Двух обозов не сторожат. |
+| car_hire_busy_0_f_g.mp3 | старший обоза: уже при обозе | Gacrux | dry, reasonable | У тебя уже есть наниматель. Двух обозов не сторожат. |
+| car_hire_busy_1_g.mp3 | старший обоза: уже при обозе | Rasalgethi | firm, friendly | Ты другой обоз ведёшь. Сперва доведи его. |
+| car_hire_busy_1_f_g.mp3 | старший обоза: уже при обозе | Gacrux | firm, friendly | Ты другой обоз ведёшь. Сперва доведи его. |
+| car_news_0_g.mp3 | старший обоза: новости | Rasalgethi | conversational, confiding | Слушай, что на дорогах делается. |
+| car_news_0_f_g.mp3 | старший обоза: новости | Gacrux | conversational, confiding | Слушай, что на дорогах делается. |
+| car_news_1_g.mp3 | старший обоза: новости | Rasalgethi | friendly, storyteller | Расскажу, что знаю. Мы много где бываем. |
+| car_news_1_f_g.mp3 | старший обоза: новости | Gacrux | friendly, storyteller | Расскажу, что знаю. Мы много где бываем. |
+| car_news_2_g.mp3 | старший обоза: новости | Rasalgethi | amused, chatty | Новости? Их у нас больше, чем товара. |
+| car_news_2_f_g.mp3 | старший обоза: новости | Gacrux | amused, chatty | Новости? Их у нас больше, чем товара. |
+| car_arrive_0_g.mp3 | старший обоза: дошли, плата | Rasalgethi | relieved, grateful | Дошли! Держи плату, заслужено. |
+| car_arrive_0_f_g.mp3 | старший обоза: дошли, плата | Gacrux | relieved, grateful | Дошли! Держи плату, заслужено. |
+| car_arrive_1_g.mp3 | старший обоза: дошли, плата | Rasalgethi | sincere, grateful | Спасибо за охрану. Без тебя бы не дошли. |
+| car_arrive_1_f_g.mp3 | старший обоза: дошли, плата | Gacrux | sincere, grateful | Спасибо за охрану. Без тебя бы не дошли. |
+| car_arrive_2_g.mp3 | старший обоза: дошли, плата | Rasalgethi | satisfied, friendly | Вот твоё золото. Будешь рядом — нанимайся снова. |
+| car_arrive_2_f_g.mp3 | старший обоза: дошли, плата | Gacrux | satisfied, friendly | Вот твоё золото. Будешь рядом — нанимайся снова. |
+| car_arrive_3_g.mp3 | старший обоза: дошли, плата | Rasalgethi | relieved, satisfied | Живы, груз цел. Честно заработано. |
+| car_arrive_3_f_g.mp3 | старший обоза: дошли, плата | Gacrux | relieved, satisfied | Живы, груз цел. Честно заработано. |
+| guard_quest_0_g.mp3 | стражник: дело на разбойников | Alnilam | stern, businesslike | Разбойники на тракте совсем обнаглели. Очисти округу — головы принесёшь в доказательство. |
+| guard_quest_0_v1_g.mp3 | стражник: дело на разбойников | Orus | stern, businesslike | Разбойники на тракте совсем обнаглели. Очисти округу — головы принесёшь в доказательство. |
+| guard_quest_0_v2_g.mp3 | стражник: дело на разбойников | Algenib | stern, businesslike | Разбойники на тракте совсем обнаглели. Очисти округу — головы принесёшь в доказательство. |
+| guard_quest_1_g.mp3 | стражник: дело на разбойников | Alnilam | tired, hopeful | Нам людей не хватает. Возьмёшься за разбойников на дороге? |
+| guard_quest_1_v1_g.mp3 | стражник: дело на разбойников | Orus | tired, hopeful | Нам людей не хватает. Возьмёшься за разбойников на дороге? |
+| guard_quest_1_v2_g.mp3 | стражник: дело на разбойников | Algenib | tired, hopeful | Нам людей не хватает. Возьмёшься за разбойников на дороге? |
+| guard_quest_2_g.mp3 | стражник: дело на разбойников | Alnilam | grim, commanding | На тракте грабят обозы. Найди эту шайку и покончи с ней. |
+| guard_quest_2_v1_g.mp3 | стражник: дело на разбойников | Orus | grim, commanding | На тракте грабят обозы. Найди эту шайку и покончи с ней. |
+| guard_quest_2_v2_g.mp3 | стражник: дело на разбойников | Algenib | grim, commanding | На тракте грабят обозы. Найди эту шайку и покончи с ней. |
+| guard_quest_3_g.mp3 | стражник: дело на разбойников | Alnilam | dry, official | Капитан платит за каждую голову разбойника. Слово стражи. |
+| guard_quest_3_v1_g.mp3 | стражник: дело на разбойников | Orus | dry, official | Капитан платит за каждую голову разбойника. Слово стражи. |
+| guard_quest_3_v2_g.mp3 | стражник: дело на разбойников | Algenib | dry, official | Капитан платит за каждую голову разбойника. Слово стражи. |
+| guard_quest_4_g.mp3 | стражник: дело на разбойников | Alnilam | earnest, dutiful | Дорога должна быть безопасной. Помоги нам с этим. |
+| guard_quest_4_v1_g.mp3 | стражник: дело на разбойников | Orus | earnest, dutiful | Дорога должна быть безопасной. Помоги нам с этим. |
+| guard_quest_4_v2_g.mp3 | стражник: дело на разбойников | Algenib | earnest, dutiful | Дорога должна быть безопасной. Помоги нам с этим. |
+| guard_quest_5_g.mp3 | стражник: дело на разбойников | Alnilam | stern, matter-of-fact | Бандиты засели у тракта. Принеси их головы — получишь награду. |
+| guard_quest_5_v1_g.mp3 | стражник: дело на разбойников | Orus | stern, matter-of-fact | Бандиты засели у тракта. Принеси их головы — получишь награду. |
+| guard_quest_5_v2_g.mp3 | стражник: дело на разбойников | Algenib | stern, matter-of-fact | Бандиты засели у тракта. Принеси их головы — получишь награду. |
+| guard_quest_wait_0_g.mp3 | стражник: голов мало | Alnilam | dry, impatient | Ещё не всех? Разбойники сами не кончатся. |
+| guard_quest_wait_0_v1_g.mp3 | стражник: голов мало | Orus | dry, impatient | Ещё не всех? Разбойники сами не кончатся. |
+| guard_quest_wait_0_v2_g.mp3 | стражник: голов мало | Algenib | dry, impatient | Ещё не всех? Разбойники сами не кончатся. |
+| guard_quest_wait_1_g.mp3 | стражник: голов мало | Alnilam | stern, dissatisfied | Голов маловато. Тракт всё ещё неспокоен. |
+| guard_quest_wait_1_v1_g.mp3 | стражник: голов мало | Orus | stern, dissatisfied | Голов маловато. Тракт всё ещё неспокоен. |
+| guard_quest_wait_1_v2_g.mp3 | стражник: голов мало | Algenib | stern, dissatisfied | Голов маловато. Тракт всё ещё неспокоен. |
+| guard_quest_done_0_g.mp3 | стражник: разбойники побиты | Alnilam | pleased, gruff | Вот это работа! Тракт теперь чище. Держи плату. |
+| guard_quest_done_0_v1_g.mp3 | стражник: разбойники побиты | Orus | pleased, gruff | Вот это работа! Тракт теперь чище. Держи плату. |
+| guard_quest_done_0_v2_g.mp3 | стражник: разбойники побиты | Algenib | pleased, gruff | Вот это работа! Тракт теперь чище. Держи плату. |
+| guard_quest_done_1_g.mp3 | стражник: разбойники побиты | Alnilam | satisfied, grim | Головы на месте. Капитан будет доволен. |
+| guard_quest_done_1_v1_g.mp3 | стражник: разбойники побиты | Orus | satisfied, grim | Головы на месте. Капитан будет доволен. |
+| guard_quest_done_1_v2_g.mp3 | стражник: разбойники побиты | Algenib | satisfied, grim | Головы на месте. Капитан будет доволен. |
+| guard_quest_done_2_g.mp3 | стражник: разбойники побиты | Alnilam | grateful, official | Спасибо от всей стражи. Дорога снова безопасна. |
+| guard_quest_done_2_v1_g.mp3 | стражник: разбойники побиты | Orus | grateful, official | Спасибо от всей стражи. Дорога снова безопасна. |
+| guard_quest_done_2_v2_g.mp3 | стражник: разбойники побиты | Algenib | grateful, official | Спасибо от всей стражи. Дорога снова безопасна. |
+| guard_quest_done_3_g.mp3 | стражник: разбойники побиты | Alnilam | respectful, gruff | Честная работа. Если понадобишься — позовём. |
+| guard_quest_done_3_v1_g.mp3 | стражник: разбойники побиты | Orus | respectful, gruff | Честная работа. Если понадобишься — позовём. |
+| guard_quest_done_3_v2_g.mp3 | стражник: разбойники побиты | Algenib | respectful, gruff | Честная работа. Если понадобишься — позовём. |
+| patrol_0_g.mp3 | дорожный дозор | Alnilam | loud, commanding shout | Дозор державы! Дорогу! |
+| patrol_0_v1_g.mp3 | дорожный дозор | Orus | loud, commanding shout | Дозор державы! Дорогу! |
+| patrol_0_v2_g.mp3 | дорожный дозор | Algenib | loud, commanding shout | Дозор державы! Дорогу! |
+| patrol_1_g.mp3 | дорожный дозор | Alnilam | stern, then dismissive | Стой! Проверка. Ладно, проходи. |
+| patrol_1_v1_g.mp3 | дорожный дозор | Orus | stern, then dismissive | Стой! Проверка. Ладно, проходи. |
+| patrol_1_v2_g.mp3 | дорожный дозор | Algenib | stern, then dismissive | Стой! Проверка. Ладно, проходи. |
+| patrol_2_g.mp3 | дорожный дозор | Alnilam | watchful, questioning | Разбойников на пути не видно было? |
+| patrol_2_v1_g.mp3 | дорожный дозор | Orus | watchful, questioning | Разбойников на пути не видно было? |
+| patrol_2_v2_g.mp3 | дорожный дозор | Algenib | watchful, questioning | Разбойников на пути не видно было? |
+| patrol_3_g.mp3 | дорожный дозор | Alnilam | reassuring, stern | Держись тракта, путник. Мы рядом. |
+| patrol_3_v1_g.mp3 | дорожный дозор | Orus | reassuring, stern | Держись тракта, путник. Мы рядом. |
+| patrol_3_v2_g.mp3 | дорожный дозор | Algenib | reassuring, stern | Держись тракта, путник. Мы рядом. |
+| patrol_4_g.mp3 | дорожный дозор | Alnilam | loud military command | Шагом марш! Не растягиваться! |
+| patrol_4_v1_g.mp3 | дорожный дозор | Orus | loud military command | Шагом марш! Не растягиваться! |
+| patrol_4_v2_g.mp3 | дорожный дозор | Algenib | loud military command | Шагом марш! Не растягиваться! |
+| patrol_5_g.mp3 | дорожный дозор | Alnilam | rhythmic marching command, loud | Левой! Левой! Держать строй! |
+| patrol_5_v1_g.mp3 | дорожный дозор | Orus | rhythmic marching command, loud | Левой! Левой! Держать строй! |
+| patrol_5_v2_g.mp3 | дорожный дозор | Algenib | rhythmic marching command, loud | Левой! Левой! Держать строй! |
+| patrol_6_g.mp3 | дорожный дозор | Alnilam | gruff warning | На обочине не стой — строй идёт. |
+| patrol_6_v1_g.mp3 | дорожный дозор | Orus | gruff warning | На обочине не стой — строй идёт. |
+| patrol_6_v2_g.mp3 | дорожный дозор | Algenib | gruff warning | На обочине не стой — строй идёт. |
+| patrol_7_g.mp3 | дорожный дозор | Alnilam | calm, proud | Дорога под охраной. Можно не бояться. |
+| patrol_7_v1_g.mp3 | дорожный дозор | Orus | calm, proud | Дорога под охраной. Можно не бояться. |
+| patrol_7_v2_g.mp3 | дорожный дозор | Algenib | calm, proud | Дорога под охраной. Можно не бояться. |
+| bandit_0_g.mp3 | разбойник: угроза | Fenrir | menacing shout | Кошелёк или жизнь! |
+| bandit_0_v1_g.mp3 | разбойник: угроза | Enceladus | menacing shout | Кошелёк или жизнь! |
+| bandit_1_g.mp3 | разбойник: угроза | Fenrir | mocking, threatening | Стой! Дальше дорога платная. |
+| bandit_1_v1_g.mp3 | разбойник: угроза | Enceladus | mocking, threatening | Стой! Дальше дорога платная. |
+| bandit_2_g.mp3 | разбойник: угроза | Fenrir | gloating, sly | Гляди-ка, одинокий путник. Нам повезло. |
+| bandit_2_v1_g.mp3 | разбойник: угроза | Enceladus | gloating, sly | Гляди-ка, одинокий путник. Нам повезло. |
+| bandit_3_g.mp3 | разбойник: угроза | Fenrir | menacing, calm | Выкладывай всё, что есть, и разойдёмся миром. |
+| bandit_3_v1_g.mp3 | разбойник: угроза | Enceladus | menacing, calm | Выкладывай всё, что есть, и разойдёмся миром. |
+| bandit_4_g.mp3 | разбойник: угроза | Fenrir | threatening, low | Тихо, тихо. Руки от оружия. |
+| bandit_4_v1_g.mp3 | разбойник: угроза | Enceladus | threatening, low | Тихо, тихо. Руки от оружия. |
+| bandit_5_g.mp3 | разбойник: угроза | Fenrir | mocking, loud | Ребята, у нас гость. Встречайте! |
+| bandit_5_v1_g.mp3 | разбойник: угроза | Enceladus | mocking, loud | Ребята, у нас гость. Встречайте! |
+| bandit_6_g.mp3 | разбойник: угроза | Fenrir | sneering | Плати пошлину — нашу, дорожную. |
+| bandit_6_v1_g.mp3 | разбойник: угроза | Enceladus | sneering | Плати пошлину — нашу, дорожную. |
+| bandit_7_g.mp3 | разбойник: угроза | Fenrir | menacing, gloating | Некуда бежать. Мы тут везде. |
+| bandit_7_v1_g.mp3 | разбойник: угроза | Enceladus | menacing, gloating | Некуда бежать. Мы тут везде. |
+| bandit_flee_0_g.mp3 | разбойник: просит пощады | Fenrir | panicked shout | Уходим! Этот не по зубам! |
+| bandit_flee_0_v1_g.mp3 | разбойник: просит пощады | Enceladus | panicked shout | Уходим! Этот не по зубам! |
+| bandit_flee_1_g.mp3 | разбойник: просит пощады | Fenrir | begging, terrified | Пощади! Всё отдам! |
+| bandit_flee_1_v1_g.mp3 | разбойник: просит пощады | Enceladus | begging, terrified | Пощади! Всё отдам! |
+| bandit_flee_2_g.mp3 | разбойник: просит пощады | Fenrir | frightened, gasping | Всё, всё, сдаюсь! |
+| bandit_flee_2_v1_g.mp3 | разбойник: просит пощады | Enceladus | frightened, gasping | Всё, всё, сдаюсь! |
+| bandit_flee_3_g.mp3 | разбойник: просит пощады | Fenrir | panicked, loud | Братцы, спасайся кто может! |
+| bandit_flee_3_v1_g.mp3 | разбойник: просит пощады | Enceladus | panicked, loud | Братцы, спасайся кто может! |
