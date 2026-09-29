@@ -235,6 +235,25 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
  check('11. «осмотреться» работает при «Тихом шаге» — в мире и внутри места; достижение звучит и не обрывается следующим действием игрока',
   ос.мир&&ос.вМесте&&ос.род==="achieve"&&ос.держится&&ос.живо&&ос.кратко,ос);
 
+ /* ── 12. уличные голоса в фоне ── */
+ const фон=await page.evaluate(()=>{
+  const r={};settings.effects=1;settings.folk=1;
+  Folk.смолкнуть(true);Folk.занятоДо=0;Folk.звучитДо=0;
+  const t=Object.keys(VOICE_NPC.guard||{})[0];
+  r.сказал=Folk.реплика("guard",t,{x:G.x+2,y:G.y},false,{всегда:true,фон:true});
+  const now=Date.now();
+  r.неДержит=Folk.занятоДо<=now+5&&Folk.звучитДо<=now+5;
+  r.вФоне=Folk.фонПути.size>0;
+  Folk.смолкнуть(true);r.пережил=Folk.фонПути.size>0;
+  /* обычная реплика по-прежнему в очереди */
+  const t2=Object.keys(VOICE_NPC.greet||{})[0];
+  Folk.приветствие({key:"1,1,1",race:"Люди",name:"Проба"},t2,{всегда:true});
+  r.приветствиеДержит=Math.max(Folk.занятоДо,Folk.звучитДо)>Date.now();
+  Folk.смолкнуть(true);
+  return r;});
+ check('12. уличная реплика стражи и горожан звучит в фоне: голос игры её не ждёт, действие игрока её не обрывает; приветствие у прилавка — по-прежнему по очереди',
+  фон.сказал&&фон.неДержит&&фон.вФоне&&фон.пережил&&фон.приветствиеДержит,фон);
+
  check('Ошибок страницы нет',errors.length===0,errors.slice(0,3));
  await browser.close();
  console.log(results.join('\n'));
