@@ -268,8 +268,11 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   const lvl=curLevel();
   outer:for(let y=1;y<lvl.h-1;y++)for(let x=1;x<lvl.w-1;x++)
    if(tileAt(lvl,x,y)==="."&&tileAt(lvl,x+1,y)==="#"){G.place.x=x;G.place.y=y;break outer;}
+  /* Голос твари выше может отозваться с задержкой (шаг, затем движение):
+     даём ему отзвучать, чтобы он не попал в замер стены. */
+  await пауза(600);
   точки.length=0;moveInside("E");
-  await пауза(100);out.стена=точки.slice(-1)[0]||null;
+  await пауза(100);out.стена=точки.find(t=>t.dx>0&&t.dy===0)||точки.slice(-1)[0]||null;
   /* Подсказка о лестнице вниз. Её подаёт звуковая картина места, а у картины
      свой размеренный такт: у лестницы отклик раз в семь секунд, и между
      любыми двумя откликами — общий промежуток. Ждать его вживую значило бы
@@ -401,10 +404,13 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   Spatial.at("mg/wyrm_roar_01.ogg",3,-2,{gain:0.3,maxSec:6});
   Spatial.at("mg/wolf_howl_01.ogg",-4,1,{gain:0.3,maxSec:6});
   await пауза(150);
-  const было=Spatial.live.length;
+  /* Считаются именно эти два источника: мир вокруг живёт своими часами и
+     может заговорить заново уже после «тишины» — это не остаток прежнего. */
+  const свои=()=>Spatial.live.filter(r=>/wyrm_roar_01|wolf_howl_01/.test(String(r.el&&r.el.src||""))).length;
+  const было=свои();
   stopEverything();
   await пауза(150);
-  return {было,стало:Spatial.live.length};});
+  return {было,стало:свои()};});
  check('«тишина» гасит и позиционные источники, а не только прежние каналы',
   тишина.было>0&&тишина.стало===0,тишина);
 

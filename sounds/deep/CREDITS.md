@@ -17,7 +17,6 @@ https://creativecommons.org/licenses/by-sa/3.0/
 |---|---|---|
 | deep_cart_01 | рудничная вагонетка | `empyrean_campaign/soundfx/environment/minecart.ogg` |
 | deep_door_01 | дверь открывается | `fantasycore/soundfx/door_open.ogg` |
-| deep_drip_01_n | капель в пещере | `fantasycore/soundfx/environment/cave_droplets_loop.ogg` |
 | deep_portal_01 | переход портала | `fantasycore/soundfx/environment/teleporter.ogg` |
 | deep_rocks_01 | осыпь камней | `empyrean_campaign/soundfx/environment/falling_rocks.ogg` |
 | deep_stairs_01 | шаги по каменным ступеням | `fantasycore/soundfx/environment/stairs.ogg` |
@@ -31,5 +30,4 @@ https://creativecommons.org/licenses/by-sa/3.0/
 
 | Файл | Было | Стало |
 |---|---|---|
-| deep_drip_01_n.flac | −29,5 LUFS | −21,8 LUFS |
 | deep_wind_01_n.flac | −17,9 LUFS | −18,0 LUFS |

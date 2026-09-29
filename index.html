@@ -25,7 +25,7 @@
      GitHub Pages. Там же включается и service worker (см. ниже): игра ставится
      на главный экран и работает без сети. -->
 <meta name="theme-color" content="#10121c">
-<title>Грань Миров Alpha 4.3 — Живой динамичный мир</title>
+<title>Грань Миров Alpha 4.4 — Живой динамичный мир</title>
 <style>
 /* Палец, положенный на ползунок, не должен его двигать: браузер по умолчанию
    перебрасывает бегунок в точку касания, и незрячий игрок, просто читая
@@ -106,8 +106,8 @@ h3{color:var(--acc2);margin:14px 0 6px;font-size:1.05rem;}
 
 <!-- ТИТУЛ -->
 <div id="screen-title" class="screen">
- <h1>Грань Миров <small id="gameVersion" style="font-size:.5em;opacity:.75">Alpha 4.3</small></h1>
- <p class="sub">Полная хроника I–V · Alpha 4.3 — Единый живой мир · Карта 50000×50000</p>
+ <h1>Грань Миров <small id="gameVersion" style="font-size:.5em;opacity:.75">Alpha 4.4</small></h1>
+ <p class="sub">Полная хроника I–V · Alpha 4.4 — Единый живой мир · Карта 50000×50000</p>
  <div class="menu">
   <button type="button" data-cmd="check">Проверить звук</button>
   <button type="button" data-cmd="intro">Прослушать заставку</button>
@@ -721,7 +721,7 @@ h3{color:var(--acc2);margin:14px 0 6px;font-size:1.05rem;}
    страницы); на случай, если версии придётся развести, у каждой своя
    строка. Голос Gemini (GVOICE_ON) звучит и там и там. */
 const IN_APP=(()=>{try{return !!(window.GraniTTS&&typeof window.GraniTTS.speak==="function");}catch(_){return false;}})();
-const WEB_VERSION="4.3",APP_VERSION="4.3";
+const WEB_VERSION="4.4",APP_VERSION="4.4";
 const GAME_VERSION=IN_APP?APP_VERSION:WEB_VERSION;
 const GVOICE_ON=true;
 try{
@@ -968,6 +968,8 @@ const NEWS=[
   т:"Версия 4.2. Маяк цели звенит во всю громкость и ярко, без приглушения стеной; его запуск звучит стеклянным перезвоном и ясным колокольчиком, остановка — колокольчиком ниже тоном и глухим касанием. Свайп четырьмя пальцами вверх гасит маяк, вниз — как прежде, прерывает или повторяет речь. Караван, чей старший говорит голосом Gemini, теперь ещё и слышен в пути: при встрече он подъезжает к вам, а когда вы его пропускаете или нанимаетесь в охрану — трогается и уезжает: скрип колёс, копыта, фырканье лошадей уходят вдаль; обоз на тракте в шести шагах слышен, пока едет. Процессия костяных шаманов, беженцы, отряд, колонна и военный патруль проходят мимо шагами, стуком костей и звоном железа. Тварь в подземелье ступает на каждом ходу шагом своего рода. Чара твари звучит своей стихией — огонь, лёд, тьма, яд, молния, свет, природа или тайное знание: сбор чары с её стороны, полёт и попадание или хлопок мимо; голос называет стихию. Шестьдесят слишком тихих записей тварей, шагов, копыт и чар подняты до общей громкости."},
  {v:30,н:"на пороге встречают живым голосом, объявления при входе не перебивают друг друга, шаги под сводом звучат естественно",
   т:"Версия 4.3. Входя в место, вы слышите того, кто там главный или стоит у входа, — живым голосом Gemini: стражника у ворот замка и крепости, стража чертога клана, часового походного лагеря, жреца или жрицу в храме, трактирщика, старосту деревни, кузнеца, торговца на рынке, наставника школы, хранителя башни, смотрителя порта, хозяина схрона, а за Гранью — латника смены, служителя святилища и надсмотрщика базара теней. Триста десять новых записей; у ворот стражник встречает по вашей славе — тепло своего, холодно недруга, окриком ночью. Сообщения при входе больше не налезают друг на друга: сначала «Вы вошли», потом встречающий, потом не больше двух вестей, уместных именно здесь. Решение совета державы объявляют в замке, крепости, цитадели, посаде и доме клана, а не в таверне; о разбитой шахте и нехватке судачат на рынке, в кузне, в деревне, в порту, в таверне и на базаре, но не в храме и не в башне. Шаги в храме, на лестнице и в подземелье больше не двоятся: прежде под шаг подкладывалась чужая запись «шаг с эхом», да ещё усиленная вшестнадцатеро; теперь эхо у шага своё — сам шаг звучит в отклике помещения. Капель в подземелье больше не похожа на протекающую крышу: в ярусе три места, где с высокого свода капает вода, у каждого свой тон и ритм, капли звучат в долгом тёмном отклике пещеры и остаются на своём месте, когда вы идёте. Изучение языка теперь слышно: из книги — шелест страницы и письмо этого народа (руны и клинья — резцом по камню, светящиеся знаки — звоном чар, вязь — мягким пером, прочее — пером по бумаге), на уроке — письмо учителя, в разговоре с носителем — росчерк пера. Толпа, колокол, оклик стражи, скот, молот в кузне и обвал звучат со своей стороны — справа, слева, впереди или позади; двадцать девять старых фонов (море, реки, дождь, рынок, порт, ветер, ночь, трактир) стали стереофоническими. Голос героя в храме и любом другом помещении звучит в той же акустике, что и голос жителя."},
+ {v:31,н:"у каждой твари свой голос, живая капель пещеры, тяжёлый шаг стражи, зелья пьются, вещи требуют силы",
+  т:"Версия 4.4. У каждой из девяноста пяти тварей свой голос: своя запись, свой её вариант и своя высота — две твари одного рода больше не рычат одним горлом, крупные звучат ниже, мелкие выше, а боевой клич — другая запись того же горла; тот же голос слышен и за дверью, и в картине вокруг. Пятьдесят с лишним тёмных и глубинных тварей узнали свой род: крылатые кричат птицей, стонущие — духом, огненные владыки ревут бесом. Капель в подземелье — живая запись настоящей пещеры (Red Eclipse), без потерь; прежние записи убраны. Стражник ходит тяжело: сапог ниже тоном, вес удара, звон кольчуги, лязг лат и стук ножен; дозор у стен города больше не ступает лёгким шагом горожанина, а стража на улице слышна раньше прохожих. Купленное зелье здоровья лежит в «Зельях» и выпивается, в бою тоже. У вещи есть требование силы, ловкости или разума: не хватает единицы — надеть можно, больше — отказ словом и звуком. Забытые записи зазвучали: осадная машина и выстрел башни в осаде, гибель мечника у разбойника, огненная стрела у огненного лука."},
 ];
 const NEWS_V=NEWS[NEWS.length-1].v;
 /* Одна фраза: главное из последнего выпуска и сколько ещё новостей ждёт в меню. */
@@ -3015,7 +3017,7 @@ const LIVE_INSTEAD={
  stream:        ["wild_river","stk_river","sky_river"],
  sea:           ["sea_open","sky_wave","sea_calm"],
  crickets:      ["amb_night"],
- cave:          ["amb_cave","deep_drip"],
+ cave:          ["amb_cave","cave_leak"],
  swamp:         ["amb_swamp","stk_goo"],
  plains:        ["amb_plains","wild_wind"],
  mountains_amb: ["amb_mountain","sky_wind"],
@@ -4030,6 +4032,7 @@ const BANK_CATS={mg:"Фэнтезийный мир: твари, чары, рем
 
  arte:"Артефакты, вещи и находки",
  lang:"Учение языков: перо, вязь и страницы (Ben Burnes, CC0)",
+ cave:"Капель пещеры: живая запись под сводом (Red Eclipse, CC BY-SA 4.0)",
  deep:"Подземелья: лестницы, двери, камень",
  foe:"Твари: удары, боль, гибель",
  creatures:"Голоса и поступь тварей: появление, удар, боль, гибель, шаг",
@@ -4074,7 +4077,7 @@ const BANK_GROUPS=[
  {n:"Ремесло, огонь и камень",icon:"", dirs:["mtg"]},
  {n:"Подземный мир и тёмные голоса",icon:"", dirs:["od"]},
  {n:"Взрывы, гулы и переходы",  icon:"", dirs:["es"]},
- {n:"Подземелья и тьма",      icon:"", dirs:["deep"]},
+ {n:"Подземелья и тьма",      icon:"", dirs:["deep","cave"]},
  {n:"Магия, чары и касты",    icon:"", dirs:["cast"]},
  {n:"Боги, храмы и знамения", icon:"", dirs:["stendhalfx"]},
  {n:"Места, здания и постройки",icon:"", dirs:["hall","nat"]},
@@ -4198,7 +4201,7 @@ const ENC_RULES=[
  [/^(siege_|tower_)|^(od_cannon|oc_catapult|mtg_explode|oc_blast|stk_blast|mtg_fuse|es_boom|es_boom_last|es_hit|hall_fall)$/,"war"],
  [/^(battle_|blade_|hit_|oc_bow_|oc_arrow_|oc_javelin_|oc_shield_|lug_knife_|lug_staff|lug_whoosh)|^(mg_spear|oc_swing|oc_weapon_hit|oc_general_hit|oc_projectile_hit|oc_organic_hit|lug_clank|lug_flesh|lug_impact|lug_metal|lug_sword|lug_thud|lug_splatter|stk_clang|od_blade|od_fall|hero_swing|hero_pain_f|hero_pain_m|hero_die_f|hero_die_m|hero_heart)$/,"combat"],
  [/^(sea_|ship_)|^(port|port_horn|sky_wave|ad_wave_rocky|ad_port_sel|hall_port|hall_dock|uh_bell|oc_dive|stk_deepsea|oc_splash|stk_splash)$/,"amb_sea"],
- [/^deep_[1-5]$|^(deep_drip|deep_wind|amb_cave|amb_abyss|stk_dark|oc_waterdrop|es_abyss|es_ion|es_plasma|es_crunch|vent|oc_drone_die|deep_cart|deep_rocks|od_rocks|oc_earthquake|oc_quake|stk_crash|mtg_rubble|oc_rockfall|es_drill)$/,"amb_deep"],
+ [/^deep_[1-5]$|^(deep_drip|cave_leak|deep_wind|amb_cave|amb_abyss|stk_dark|oc_waterdrop|es_abyss|es_ion|es_plasma|es_crunch|vent|oc_drone_die|deep_cart|deep_rocks|od_rocks|oc_earthquake|oc_quake|stk_crash|mtg_rubble|oc_rockfall|es_drill)$/,"amb_deep"],
  [/^(amb_forest|amb_mountain|amb_desert|amb_swamp|amb_plains|amb_road|amb_day|amb_night|amb_rain|amb_wind|amb_water|sky_\w+|wild_birds|wild_rain|wild_river|wild_wind|ad_day|ad_day_long|ad_rain_long|ad_river_fast|ad_river_med|ad_windleaves|ad_tropic|lug_wind|lug_desert|mg_desert|oc_rain|oc_wind|oc_birds|oc_thunder|oc_waterfall|stk_rain|stk_river|stk_thunder|stk_falls|stk_birds|oc_tree_crack|oc_gust|lug_bush)$/,"amb_land"],
  [/^(amb_city|market|forge|tavern|clanhall|caravan)$|^hall_|^(uh_square|uh_tavern|uh_warehouse|uh_windmill|ad_farm|ad_farm_sel|ad_farmstead|ad_trade|ad_market_sel|ad_forge_sel|stk_inn|wild_hearth|wild_anvil|wild_fire|oc_fire|lug_fire|lug_fire_start|amb_fire|ad_fire_\w+|mtg_fire|mtg_cart|oc_pumpjack|oc_sawmill|oc_fan|oc_steam|mtg_furnace|oc_furnace|oc_furnace_start)$/,"amb_places"],
  [/(door|chest|gate|lock|hinge|lift_|seal)|^(oc_wheels|oc_chain|oc_pop|oc_drill|oc_line_snap)$/,"mech"],
@@ -7124,6 +7127,14 @@ const GUIDE=[
  "Вещь растёт. За каждую победу работающий артефакт получает опыт, а на пороге открывает ступень — прибавку, которой у него раньше не было, и всегда из своего направления. Каждая следующая ступень даётся вдвое тяжелее. Если гнёзда кончились, редкую часть можно скормить вещи: она уйдёт в опыт вместо гнезда.",
  "Требования. Ранг задаёт уровень; сверх того вещь может требовать навык, заклинание нужной школы, расположение народа, принадлежность к клану, прочитанное знание или закрытое дело. Вещь, требования которой не выполнены, лежит мёртвым грузом и не даёт ничего — и прямо говорит, чего ей не хватает.",
  "Где всё это. Пункт меню «Артефакты, части и рецепты». В нём видно, каким ремеслом здесь занимаются и каково ваше умение, какие рецепты под рукой и чего не хватает, какие части лежат в суме, и по каждой вещи — всё, что о ней известно, и всё, что с ней можно сделать: вложить, вынуть, зачаровать, скормить, продать."]},
+{title:"Глава 105. Версия 4.4: свой голос у каждой твари, живая капель, тяжёлый шаг стражи, зелья и требования вещей",body:[
+ "СВОЙ ГОЛОС У ТВАРИ. Раньше голос в покое и боевой клич давал твари её род, и две твари одного рода, стоя рядом и порыкивая, звучали одним горлом. Теперь у каждого вида своя запись из голосов его рода, свой вариант этой записи и своя высота: крупные — громада, владыка, рух — звучат ниже, мелкие — мышь, сойка, рой — выше. Боевой клич и злоба — другая запись того же горла, так что вид узнаётся и в покое, и в ярости. Тот же голос слышен, когда тварь стоит за дверью, сторожит шахту или бродит в картине вокруг.",
+ "РОД ТВАРИ. Пятьдесят с лишним тёмных тварей неба, тварей Грани и глубинных тварей прежде считались зверями и лаяли одной собакой. Теперь крылатые кричат птицей, стонущие и зеркальные — духом, огненные владыки и пасти — бесом, корневые исполины — громадой, смотрители ходов — механизмом.",
+ "ЖИВАЯ КАПЕЛЬ. В подземелье капает живая запись настоящей пещеры (Red Eclipse, CC BY-SA 4.0): вода падает в лужу под сводом, и отзвук у неё свой, записанный. Запись разрезана без потерь на четыре отрывка; у каждого из трёх мест капели в ярусе свой отрывок, место стоит на полу и не ходит за вами. Прежние записи капели убраны. Наверху, у входа в пещеру, звучит та же запись целиком.",
+ "ТЯЖЁЛЫЙ ШАГ СТРАЖИ. Стражник ступает тяжело: сапог по полу ниже тоном, глухой вес удара на любом полу, звон кольчуги вровень с шагом, лязг лат через шаг и стук ножен каждый четвёртый. Дозор у городских стен больше не ступает лёгким шагом горожанина, а на улице стражу слышно раньше прохожих, даже если прохожие ближе. Все записи стражи — без потерь.",
+ "ЗЕЛЬЯ. Купленное у торговца зелье здоровья лежит в разделе «Зелья», у него есть «Выпить», и оно лечит; в бою «зелье» тратит сперва настоящее зелье здоровья из сумки. Еда остаётся в расходниках.",
+ "ТРЕБОВАНИЯ ВЕЩЕЙ. У вещи есть требование: латы и тяжёлое оружие — сила, лук и перчатки — ловкость, кольцо, браслет, посох — разум. Не хватает одной единицы — вещь надевается с оговоркой; больше — отказ словом и глухим звуком, вещь остаётся в сумке. Требование и ваша характеристика названы в описании вещи и у торговца.",
+ "ЗАБЫТЫЕ ЗАПИСИ. Записи, лежавшие без дела, зазвучали там, где им место: в осаде города подкатывают осадные машины и отвечает выстрелом башня, разбойник, пират и работорговец гибнут как люди с оружием в руке, огненная стрела из огненного лука попадает с шипением пламени."]},
 {title:"Глава 104. Версия 4.3: кто встречает на пороге, объявления по очереди, шаги под сводом",body:[
  "ВСТРЕЧАЮТ НА ПОРОГЕ. Войдя в место, вы слышите того, кто там главный или стоит у входа, — живым голосом: стражник у ворот замка и крепости, страж чертога клана, часовой походного лагеря, жрец или жрица в храме, трактирщик, староста деревни, кузнец, торговец на рынке, наставник школы, хранитель башни, смотритель порта, хозяин схрона. За Гранью встречают латник смены в цитадели и посаде, служитель святилища и надсмотрщик базара теней. У каждого места свой человек, и, вернувшись, вы услышите того же. Вышли и вернулись в пределах двух минут — второй раз не встречают.",
  "У ВОРОТ — ПО СЛАВЕ. У ворот замка, крепости и порта стражник встречает по тому, как к вам относится народ этой земли: своего — тепло, недруга — холодно и с угрозой, а ночью — окриком ночной стражи.",
@@ -7623,7 +7634,7 @@ const GUIDE=[
    приписанная ни к одной части, не теряется — она уходит в конец списка.
    ════════════════════════════════════════════════════════════════════════ */
 const GUIDE_PARTS=[
- ["Часть I. Первые шаги","Что нажимать, куда идти и как заставить игру замолчать.",[1,2,3,104,103,102,101,99,100,97,88,91,90,93,94,95,4,49]],
+ ["Часть I. Первые шаги","Что нажимать, куда идти и как заставить игру замолчать.",[1,2,3,105,104,103,102,101,99,100,97,88,91,90,93,94,95,4,49]],
  ["Часть II. Слушать мир","Игра проходится ухом: чем звучит место, поверхность, оружие, тварь и событие.",[5,21,22,24,25,26,28,29,33,34,50,98]],
  ["Часть III. Герой и его силы","Опыт, тело, свойства, умения и вещи, которые их меняют.",[6,7,40,48,55,58,62,69,72,76,82]],
  ["Часть IV. Магия","Школы, плетение, резонанс, эхо и две энциклопедии заклинаний.",[64,67,68,70,78,79,81,87]],
@@ -11467,7 +11478,8 @@ const SOUND_BANK={
  craft_wood:{f:["craft/craft_wood_01.ogg","craft/craft_wood_02.ogg"],d:"Плотницкая работа"},
  deep_cart:{f:["deep/deep_cart_01.ogg"],d:"Рудничная вагонетка"},
  deep_door:{f:["deep/deep_door_01.ogg"],d:"Дверь открывается"},
- deep_drip:{f:["deep/deep_drip_01_n.flac"],d:"Капель в пещере"},
+ cave_leak:{f:["cave/cave_leak_bed.ogg"],d:"Капель пещеры: долгая живая запись (Red Eclipse)"},
+ deep_drip:{f:["cave/cave_drip_01.flac","cave/cave_drip_02.flac","cave/cave_drip_03.flac","cave/cave_drip_04.flac"],d:"Капель в пещере: живая запись под сводом (Red Eclipse)"},
  deep_portal:{f:["deep/deep_portal_01.ogg"],d:"Переход портала"},
  deep_rocks:{f:["deep/deep_rocks_01.ogg"],d:"Осыпь камней"},
  deep_stairs:{f:["deep/deep_stairs_01.ogg"],d:"Шаги по каменным ступеням"},
@@ -11902,6 +11914,11 @@ const Bank={
     Громкость у записей из разных игр разная: у роли может быть свой
     множитель g, и он входит в громкость так же, как gain. */
  loop(channel,role,{seed=0,gain=1,kind="music"}={}){
+  /* Капель петлёй: наверху — долгой пещерной записью (короткие отрывки
+     для петли не годятся), под землёй — не петлёй вовсе: там капают свои
+     места свода (Drips), и сплошная капель звучала бы протечкой крыши. */
+  if(role==="deep_drip"||role==="oc_waterdrop")role="cave_leak";
+  if(role==="cave_leak"&&safeFn(()=>Drips.on(),false)){safeFn(()=>Drips.ensure());this.stop(channel);return null;}
   if(!this.enabled||!this.has(role))return null;
   const b=SOUND_BANK[role];
   const g=gain*(Number(b.g)>0?Number(b.g):1);
@@ -12987,10 +13004,20 @@ const SCAPE_FOE={
 function bankFoeRole(m){
  try{
   const id=m&&m.id;
+  /* Свой голос вида (FoeVoices) главнее общего по роду: тролль и огр,
+     стоя за дверью, больше не ревут одной записью. */
+  const V=id?safeFn(()=>FoeVoices.of(m),null):null;
+  if(V&&Bank.has(V.idle))return V.idle;
   if(id&&SCAPE_FOE[id]&&Bank.has(SCAPE_FOE[id]))return SCAPE_FOE[id];
   /* Своего голоса нет — пусть хотя бы звучит как угроза. */
   return Bank.has("danger")?"danger":null;
  }catch(_){return null;}}
+/* Вариант записи и высота голоса вида — к любому вызову звука твари. */
+function foeVoiceOpts(m,o){
+ const V=m&&m.id?safeFn(()=>FoeVoices.of(m),null):null;
+ const r=Object.assign({},o||{});
+ if(V){r.fixed=true;r.seed=V.v;r.rate=V.rate;}
+ return r;}
 /* ── ГДЕ СТОИТ ПРОТИВНИК ──
    Бой был единственным местом, где мир терял объём: тварь рычала ровно из
    середины головы, хотя игра прекрасно знает, с какой клетки она пришла и на
@@ -13046,8 +13073,24 @@ const MONSTER_PROFILE={
  bird:{breath:"raptor_wing",move:"raptor_wing",step:"raptor_wing",idle:"raptor_cry",warcry:"raptor_cry",attack:"foe_wyrm_hit",hurt:"foe_wyrm_pain",wound:"raptor_cry",death:"foe_wyrm_die",aggro:"raptor_cry",detect:"raptor_wing",lose:"raptor_wing",fear:"raptor_cry",victory:"raptor_cry",unique:"bird_hawk"},
  deep:{breath:"oc_bubble",move:"oc_swim",step:"oc_splash",idle:"es_abyss",warcry:"foe_grave_hit",attack:"foe_grave_hit",hurt:"foe_grave_pain",wound:"es_abyss",death:"foe_grave_die",aggro:"es_abyss",detect:"oc_splash",lose:"oc_dive",fear:"oc_bubble",victory:"es_abyss",unique:"oc_dive"},
  fiend:{breath:"fiend_roar",move:"ad_fire_sizzle",step:"oc_step_hard",idle:"oc_growl",warcry:"fiend_roar",attack:"cast_burn",hurt:"oc_hurt",wound:"fiend_roar",death:"fiend_die",aggro:"fiend_roar",detect:"oc_sizzle",lose:"oc_smoke",fear:"oc_hurt",victory:"fiend_roar",unique:"spell_summon"}};
+/* Тёмные твари неба, твари Грани и глубинные твари с Grань-именами (df_,
+   d_, deep_) под общие правила не подпадали и все до одной считались
+   «зверем» — пятьдесят с лишним чудовищ лаяли одной собакой. Их род назван
+   прямо, по тому, что они есть: крыло — птица, стон — дух, пасть углей —
+   бес, корневой исполин — громада. */
+const FOE_FAMILY_ID={
+ df_ashkite:"dragon",df_mirrorjay:"bird",df_bloodbat:"bird",df_rotmoth:"spirit",df_saltgull:"bird",
+ df_emberkite:"bird",df_shriek:"spirit",df_nightmare:"beast",df_flayerwing:"bird",df_hollowbird:"bird",
+ df_dreamray:"deep",df_oathcrow:"bird",df_wailer:"spirit",df_swarm:"crawler",df_ashroc:"bird",
+ df_mirrorlord:"spirit",df_drownwing:"undead",df_emberlord:"fiend",df_voidmaw:"fiend",df_bloodheir:"dragon",
+ df_lunarwing:"spirit",df_lastwing:"dragon",
+ d_gnawer:"beast",d_mirror:"spirit",d_brood:"crawler",d_hollow:"undead",d_flayer:"fiend",
+ d_herald:"spirit",d_heir:"giant",d_lunar:"spirit",d_last:"giant",d_maw:"fiend",
+ deep_crawler:"crawler",deep_warden:"construct",deep_prism:"construct",deep_magma:"fiend",deep_void:"spirit",
+ deep_root:"giant",deep_echo:"spirit",deep_smith:"construct",deep_edge:"fiend",deep_first:"giant"};
 function foeFamily(m){
  const id=String((m&&m.id)||"");
+ if(FOE_FAMILY_ID[id])return FOE_FAMILY_ID[id];
  if(/^demon_|fiend|imp|d_ashborn|d_emberhound|d_nameless|ashlord|choir|dreamer|d_whisper/.test(id))return "fiend";
  if(/dragon|wyvern|wyrm|drake|heraldwing/.test(id))return "dragon";
  if(/harpy|rocbird|stormhawk|aarakocra|pegasus|hawk|raven/.test(id))return "bird";
@@ -13059,7 +13102,104 @@ function foeFamily(m){
  if(/zombie|drowned|desecrated|mummy|d_skinless|d_crowned|undead/.test(id))return "undead";
  if(/spider|serpent|basilisk|sandworm|snake|worm|d_wormling|hornet/.test(id))return "crawler";
  if(/goblin|bandit|kobold|pirate|slaver|cutpurse|guard|orc|d_veinborn/.test(id))return "humanoid";
+ /* Неизвестный вид — по голосу, который ему дан: шип, стон, визг, топот. */
+ const fx=String((m&&m.fx)||"");
+ if(fx==="hiss")return "crawler";if(fx==="wail")return "spirit";if(fx==="screech")return "bird";if(fx==="stomp")return "giant";
  return "beast";}
+/* ── СВОЙ ГОЛОС У КАЖДОЙ ТВАРИ (4.4) ──
+   Род давал твари всё: и рык в покое, и боевой клич. Поэтому два зверя, две
+   птицы, два духа, стоя рядом и порыкивая, звучали одним голосом. Теперь у
+   каждого вида свой голос: своя запись из голосов его рода, свой вариант
+   этой записи и своя высота (крупный — ниже, мелкий — выше). Боевой клич и
+   злоба — другая запись того же горла: вид узнаётся и в покое, и в ярости.
+   Раскладка детерминирована: виды одного рода перебирают сначала записи,
+   затем их варианты и лишь потом высоту; занятый голос (запись, вариант,
+   высота) другому виду — даже из чужого рода — уже не достаётся. */
+const FOE_VOICE_POOL={
+ beast:["lug_growl","oc_growl","lug_snarl","beasts_lion","lug_bark","beasts_giant","wolf_howl","beast_bull","beast_pig"],
+ crawler:["serpent_hiss","beast_bees","wyrm_dark","foe_burrow_pain"],
+ humanoid:["goblin_voice","warrior_shout","oc_laugh","guard_shout"],
+ bone:["foe_bone_pain","wraith_die","od_undead","od_keeper_groan"],
+ spirit:["wraith_moan","od_undead","ghost_wail","od_keeper_word","foe_undead_pain"],
+ undead:["od_undead","od_keeper_groan","mummy_hit","foe_undead_pain"],
+ giant:["brute_roar","beasts_giant","lug_snarl","lug_growl","oc_growl"],
+ construct:["oc_electrical","oc_crystal_comm","oc_steam","golem_step"],
+ dragon:["dragon_growl","wyrm_roar","wyrm_dark","brute_roar","oc_growl"],
+ bird:["raptor_cry","bird_hawk","bird_owl","ghost_wail"],
+ deep:["es_abyss","wyrm_dark","oc_bubble","serpent_hiss"],
+ fiend:["fiend_roar","od_keeper_word","oc_laugh","oc_growl","brute_roar"]};
+/* Виды, чей голос известен заранее: волк воет, ночной конь ржёт, медведь
+   ревёт по-звериному, тварь с крылом мыши — визжит. */
+const FOE_VOICE_OWN={wolf:"lug_bark",direbear:"beasts_lion",df_nightmare:"beasts_horse",df_bloodbat:"raptor_cry",
+ dragon:"dragon_growl",goblin:"goblin_voice",bandit:"warrior_shout"};
+/* Высота голоса в порядке перебора: сначала заметно разные. */
+const FOE_VOICE_RATES=[1,0.86,1.14,0.78,1.24,0.93,1.07];
+const FoeVoices={
+ map:null,
+ lists(){const out=[];
+  [typeof MONSTERS!=="undefined"&&MONSTERS,typeof SEA_MONSTERS!=="undefined"&&SEA_MONSTERS,
+   typeof DARK_MONSTERS!=="undefined"&&DARK_MONSTERS,typeof DEEP_MONSTERS!=="undefined"&&DEEP_MONSTERS]
+   .forEach(L=>{if(Array.isArray(L))L.forEach(m=>{if(m&&m.id)out.push(m);});});
+  return out;},
+ files(role){const b=SOUND_BANK[role];return b&&b.f?b.f.length:0;},
+ pool(fam){return (FOE_VOICE_POOL[fam]||FOE_VOICE_POOL.beast).filter(r=>this.files(r)>0);},
+ /* Крупность: громада, дракон, исполин — ниже; мелочь и рой — выше. */
+ size(m){const t=String((m&&m.id)||"")+" "+String((m&&m.n)||"");
+  if(/исполин|громад|владык|старейшин|кракен|behemoth|giant|lord|first|root|maw|пасть|рух/i.test(t))return -1;
+  if(/мышь|сойка|чайка|рой|выводок|мотыл|swarm|brood|bat|jay|gull|moth|imp/i.test(t))return 1;
+  return 0;},
+ build(){
+  const map={},fams={},seen=new Set();
+  this.lists().forEach(m=>{if(seen.has(m.id))return;seen.add(m.id);const f=foeFamily(m);(fams[f]=fams[f]||[]).push(m);});
+  const taken=new Set();
+  for(const f in fams){
+   const pool=this.pool(f);if(!pool.length)continue;
+   /* Все сочетания рода: запись, высота, вариант — в порядке перебора. */
+   const combos=[];const maxV=Math.max(...pool.map(r=>this.files(r)));
+   FOE_VOICE_RATES.forEach(rate=>{for(let v=0;v<maxV;v++)pool.forEach(role=>{if(v<this.files(role))combos.push({role,v,rate});});});
+   const key=c=>c.role+"#"+c.v+"@"+c.rate;
+   const members=fams[f].slice().sort((a,b)=>a.id<b.id?-1:a.id>b.id?1:0);
+   /* Известные голоса ставятся первыми, чтобы их никто не занял. */
+   members.sort((a,b)=>(FOE_VOICE_OWN[b.id]?1:0)-(FOE_VOICE_OWN[a.id]?1:0));
+   const use={};
+   members.forEach(m=>{
+    let c=null;
+    const own=FOE_VOICE_OWN[m.id];
+    if(own&&this.files(own))c=combos.find(x=>x.role===own&&!taken.has(key(x)))||{role:own,v:0,rate:1};
+    /* Лучший свободный голос: сперва естественная высота, затем запись,
+       которой в роду звучало меньше всего, затем ранний вариант. Крупным —
+       не выше обычного, мелким — не ниже. */
+    const sz=this.size(m);
+    const best=strict=>{let bx=null,bs=null;
+     combos.forEach((x,n)=>{if(taken.has(key(x)))return;
+      if(strict&&((sz<0&&x.rate>1.001)||(sz>0&&x.rate<0.999)))return;
+      const sc=[FOE_VOICE_RATES.indexOf(x.rate),use[x.role]||0,x.v,n];
+      if(!bs||(()=>{for(let j=0;j<sc.length;j++)if(sc[j]!==bs[j])return sc[j]<bs[j];return false;})()){bx=x;bs=sc;}});
+     return bx;};
+    if(!c)c=best(true)||best(false)||combos[0];
+    use[c.role]=(use[c.role]||0)+1;
+    taken.add(key(c));
+    /* Клич — соседняя запись того же рода на той же высоте. */
+    const k=pool.indexOf(c.role),cry=pool[(k+1)%pool.length];
+    map[m.id]={family:f,idle:c.role,v:c.v,rate:c.rate,cry,cryV:c.v%Math.max(1,this.files(cry))};});}
+  this.map=map;return map;},
+ of(m){
+  if(!m||!m.id)return null;
+  if(!this.map)this.build();
+  if(this.map[m.id])return this.map[m.id];
+  /* Вид вне списков (обряд, событие) — по хешу имени, тем же родом. */
+  const f=foeFamily(m),pool=this.pool(f);if(!pool.length)return null;
+  let h=0;const s=String(m.id);for(let j=0;j<s.length;j++)h=(h*31+s.charCodeAt(j))>>>0;
+  const role=pool[h%pool.length],rate=FOE_VOICE_RATES[(h>>>4)%FOE_VOICE_RATES.length];
+  const cry=pool[(h+1)%pool.length];
+  return (this.map[m.id]={family:f,idle:role,v:(h>>>8)%Math.max(1,this.files(role)),rate,cry,cryV:0});}};
+/* Реплики, которые звучат голосом вида, а не рода. Дыхание — голосом лишь у
+   тех родов, чьё дыхание и есть голос (зверь, громада, дракон, бес, дух). */
+const FOE_OWN_CUES={idle:"idle",warcry:"cry",aggro:"cry",breath:"idle"};
+/* Люди (разбойник, пират, работорговец, карманник, стражник) гибнут как
+   люди — с оружием в руке, а не гоблинским визгом. */
+const FOE_CUE_BY_ID={death:{bandit:"blade_die",pirate:"blade_die",slaver:"blade_die",cutpurse:"blade_die",guard:"blade_die",ghostpirate:null}};
+const FOE_VOCAL_BREATH={beast:1,giant:1,dragon:1,fiend:1,spirit:1,undead:1};
 /* ── ЧАРЫ ТВАРИ ЗВУЧАТ СВОЕЙ СТИХИЕЙ (4.1) ──
    Чару твари называл голос, а звучала она одной общей записью, а то и
    рыком вместо чары: огонь дракона и морок призрака были на слух одним и тем
@@ -13097,10 +13237,24 @@ function foeSpellCue(m,этап,dx,dy){
 function foeProfileCue(m,cue,opts){
  try{
   if(!settings.effects||!Bank.enabled||!m)return false;
-  const prof=MONSTER_PROFILE[foeFamily(m)];const role=prof&&prof[cue];
+  const fam=foeFamily(m);
+  /* Свой голос вида: запись, вариант и высота — его собственные. */
+  const own=FOE_OWN_CUES[cue];
+  if(own&&(cue!=="breath"||FOE_VOCAL_BREATH[fam])){
+   const V=FoeVoices.of(m);
+   if(V){const role=own==="cry"?V.cry:V.idle,v=own==="cry"?V.cryV:V.v;
+    if(Bank.has(role)){
+     const rate=V.rate*(1+(Math.random()*2-1)*0.025);
+     const o=Object.assign({gain:0.55,maxSec:4,kind:"combat"},opts||{},{fixed:true,seed:v,rate,pitchVar:0});
+     if(cue==="breath")o.gain=(Number(o.gain)||0.5)*0.7;
+     G.lastFoeCue={id:m.id,family:fam,cue,role,v,rate:V.rate,own:true};
+     return foeCue(role,o);}}}
+  const prof=MONSTER_PROFILE[fam];
+  const byId=FOE_CUE_BY_ID[cue]&&FOE_CUE_BY_ID[cue][m.id];
+  const role=byId&&Bank.has(byId)?byId:prof&&prof[cue];
   if(!role||!Bank.has(role))return false;
   const o=Object.assign({gain:0.55,maxSec:4,kind:"combat",pitchVar:0.05},opts||{});
-  G.lastFoeCue={id:m.id,family:foeFamily(m),cue,role};
+  G.lastFoeCue={id:m.id,family:fam,cue,role};
   return foeCue(role,o);
  }catch(_){return false;}}
 function foeVoice(m,cue,vol){
@@ -13238,7 +13392,7 @@ const BEACON_SAMPLE={
  castle:"hall/hall_fort_01.ogg", village:"hall/hall_farm_01.ogg",
  tavern:"uh/uh_tavern_01.ogg", clanhall:"hall/hall_barracks_01.ogg",
  tower:"nat/magic_hum_01.flac", ruins:"mg/hall_fall_01.ogg",
- cave_entrance:"deep/deep_drip_01_n.flac", port:"hall/hall_port_01.ogg",
+ cave_entrance:"cave/cave_leak_bed.ogg", port:"hall/hall_port_01.ogg",
  traveler:"tread/tread_gravel_01.ogg", city:"hall/hall_gate_01.ogg",
  caravan:"ad/ad_trade_01.ogg", school:"uh/uh_page_01.ogg"};
 /* Маяк по РОЛИ, а не по одному файлу: у роли несколько записей, и объект
@@ -13501,6 +13655,15 @@ function livingScene(){
    (около четырёх секунд), тёмном, с задержкой первого отражения, как под
    высоким сводом, — и отзвука в нём больше, чем самой капли. Плоской
    записи капели под землёй больше нет. */
+/* ── 4.4: НАСТОЯЩАЯ ПЕЩЕРА ВМЕСТО ДОСТРОЕННОЙ ──
+   И так капель звучала неестественно: сухой щелчок, опущенный по высоте и
+   утопленный в рассчитанном отклике, всё равно оставался щелчком. Прежние
+   записи убраны. Теперь капает живая запись пещеры (Red Eclipse, CC BY-SA
+   4.0, 555 кбит/с): вода падает в лужу под настоящим сводом, и отзвук у
+   неё свой, записанный, а не досчитанный. Запись разрезана на четыре
+   отрывка без потерь; у каждого из трёх мест капели в ярусе свой отрывок,
+   в родной высоте, сверху, в лёгком отклике яруса. Своей свёртки больше
+   нет — пещера уже в самой записи. */
 /* ── СО СВОЕЙ СТОРОНЫ ──
    Жалоба: многие звуки мира звучали «в голове» — плоско, без стороны, хотя
    толпа, колокол, лай, оклик стражи, молот в кузне или обвал всегда откуда-то
@@ -13529,27 +13692,16 @@ const Around={mem:{},last:null,
   this.last={role,dx:d.dx,dy:d.dy};
   return AROUND_STUB;}};
 /* var, а не const: Bank и Spatial объявлены выше и могут позвать проверку раньше этой строки. */
-var DRIP_ROLES={deep_drip:1,oc_waterdrop:1};
+var DRIP_ROLES={deep_drip:1,oc_waterdrop:1,cave_leak:1};
 /* Что возвращает Bank.play вместо элемента, когда капель ушла в Drips: вызывающему
    достаточно знать, что звук есть; остановить его нечем и незачем. */
 var DRIP_STUB={__role:"drips",__drips:true,paused:false,volume:0,pause(){},play(){return Promise.resolve();},addEventListener(){}};
-const Drips={timer:null,spots:[],key:"",conv:null,
+const Drips={timer:null,spots:[],key:"",
  on(){try{return !!(settings.effects&&G.place&&Number(G.place.depth)>0&&!G.place.тайник&&roomKind()!=="d_void"&&Spatial.on());}catch(_){return false;}},
  ensure(){if(this.on()){this.place();if(!this.timer)this.schedule();}else this.stop();},
  stop(){clearTimeout(this.timer);this.timer=null;},
  schedule(){clearTimeout(this.timer);this.timer=setTimeout(()=>this.tick(),400);},
- files(){return ((SOUND_BANK.oc_waterdrop||{}).f||[]);},
- /* Отклик свода: свой, общий для всех капель — долгий, тёмный, с задержкой. */
- cave(){
-  try{
-   if(this.conv)return this.conv;
-   const ctx=AE.ensure();if(!ctx)return null;
-   const conv=ctx.createConvolver();conv.buffer=Room.impulse(4.2,1.35,1900,0);
-   const pre=ctx.createDelay(0.25);pre.delayTime.value=0.055;
-   const out=ctx.createGain();out.gain.value=0.55;
-   pre.connect(conv);conv.connect(out);out.connect(AE.fx);
-   this.conv=pre;return pre;
-  }catch(_){return null;}},
+ files(){return ((SOUND_BANK.deep_drip||{}).f||[]);},
  /* Три места капели на полу яруса — по ярусу, а не наугад при каждом входе. */
  place(){
   try{
@@ -13566,8 +13718,9 @@ const Drips={timer:null,spots:[],key:"",conv:null,
      if(tileAt(lvl,x,y)===".")pt={x,y};}
     if(!pt)continue;
     const h=hashName(pt.x+i,pt.y,5103);
-    this.spots.push({x:pt.x,y:pt.y,f:Math.floor(h*n)%n,rate:0.6+h*0.28,период:3200+hashName(pt.y,pt.x+i,5104)*5800,
-     g:0.26+hashName(i,pt.x,5105)*0.12,next:Date.now()+600+i*1300+Math.random()*1500});}
+    /* Свой отрывок у каждого места; высота родная, с едва заметным сдвигом. */
+    this.spots.push({x:pt.x,y:pt.y,f:(Math.floor(h*n)+i)%n,rate:0.97+h*0.06,период:4200+hashName(pt.y,pt.x+i,5104)*5200,
+     g:0.34+hashName(i,pt.x,5105)*0.12,next:Date.now()+600+i*1300+Math.random()*1500});}
    return this.spots;
   }catch(_){return this.spots;}},
  tick(){this.timer=null;if(!this.on())return;
@@ -13583,21 +13736,18 @@ const Drips={timer:null,spots:[],key:"",conv:null,
   if(sp&&G.place){dx=sp.x-G.place.x;dy=sp.y-G.place.y;f=files[sp.f%files.length];rate=sp.rate;g=sp.g;}
   else{const угол=Math.random()*Math.PI*2,r=3+Math.random()*6;
    dx=Math.round(Math.cos(угол)*r*10)/10;dy=Math.round(Math.sin(угол)*r*10)/10;
-   f=files[Math.floor(Math.random()*files.length)];rate=0.6+Math.random()*0.28;g=0.26+Math.random()*0.12;}
+   f=files[Math.floor(Math.random()*files.length)];rate=0.97+Math.random()*0.06;g=0.34+Math.random()*0.12;}
   if(Math.hypot(dx,dy)>MAXCELL-1)return false;
-  const conv=this.cave();
-  const o={dz:2.6,gain:g,maxSec:0.5,kind:"ambient",rate,wetK:3,conv};
+  const o={dz:2.2,gain:g,maxSec:3.6,kind:"ambient",rate,wetK:1};
   const ok=Spatial.at(f,dx,dy,o);
   if(!ok)return false;
-  this.last={dx,dy,rate,wetK:3,dz:2.6,conv:!!conv};
-  /* Изредка капля срывается вдогонку — чуть выше и тише: «кап-кап». */
-  if(Math.random()<0.15)setTimeout(()=>safeFn(()=>Spatial.at(f,dx,dy,Object.assign({},o,{gain:g*0.5,rate:rate*1.08}))),90+Math.random()*80);
+  this.last={dx,dy,rate,wetK:1,dz:2.2,conv:false,f};
   return true;},
  /* Капля там, куда её позвали (из картины места, из примет яруса). */
  dropAt(dx,dy){
   const n=this.files().length;if(!n)return false;
   const h=Math.abs(hashName(Math.round(dx*10),Math.round(dy*10),5106));
-  return this.drop({x:(G.place?G.place.x:0)+(Number(dx)||0),y:(G.place?G.place.y:0)+(Number(dy)||0),f:Math.floor(h*n)%n,rate:0.6+h*0.28,g:0.3});},
+  return this.drop({x:(G.place?G.place.x:0)+(Number(dx)||0),y:(G.place?G.place.y:0)+(Number(dy)||0),f:Math.floor(h*n)%n,rate:0.97+h*0.06,g:0.36});},
  /* Несколько капель подряд — примета места на глубине. */
  burst(){for(let i=0;i<3;i++)setTimeout(()=>safeFn(()=>{if(this.on())this.drop(this.place()[i]||null);}),i*(700+Math.random()*900));}};
 function bankUpdateAmbient(){
@@ -13626,7 +13776,7 @@ const LIVE_AMB_LAND={
  forest:["wild_birds","oc_birds","ad_day","ad_windleaves"], plains:["wild_wind","ad_day_long","oc_birds"],
  mountains:["sky_wind","oc_wind","lug_wind"], coast:["sky_wave","ad_wave_rocky"],
  swamp:["wild_river","ad_river_med","oc_waterfall","ad_river_fast"], desert:["sky_day","lug_desert","ad_tropic"],
- cave:["deep_drip","deep_wind","oc_waterfall","stk_falls"], road:["wild_birds","ad_day","ad_day_long"],
+ cave:["cave_leak","deep_wind","oc_waterfall","stk_falls"], road:["wild_birds","ad_day","ad_day_long"],
  /* Тёмные земли: пепел трещит огнём, кость свистит ветром, гниль булькает,
     зеркало потрескивает силой и зовёт сигналами древних, жила гудит
     механикой, утопь дышит толщей воды, шрам воет высотным ветром. */
@@ -16480,11 +16630,13 @@ function warWatch(){
      стенам. Такое случается редко и потому запоминается. */
   if(!начались.length&&стало.length&&G.day%7===0)
    safeFn(()=>{Bank.play("siege_alarm_city",{seed:G.day,gain:0.55,maxSec:6});
-    setTimeout(()=>safeFn(()=>Bank.play("siege_ballista",{seed:G.day,gain:0.5,maxSec:5})),1200);
-    setTimeout(()=>safeFn(()=>Bank.play("siege_shot",{seed:G.day,gain:0.55,maxSec:5})),2100);
-    setTimeout(()=>safeFn(()=>Bank.play("tower_hit",{seed:G.day,gain:0.5,maxSec:3})),3700);
-    setTimeout(()=>safeFn(()=>Bank.play("siege_fire",{seed:G.day,gain:0.45,maxSec:5})),4600);
-    narrate("Где-то далеко бьют в набат: город под осадой. Слышны баллиста, камнемёт, удар камня в башню и огонь по стенам.",{interrupt:false});});
+    setTimeout(()=>safeFn(()=>Bank.play("siege_roll",{seed:G.day,gain:0.45,maxSec:4})),700);
+    setTimeout(()=>safeFn(()=>Bank.play("siege_ballista",{seed:G.day,gain:0.5,maxSec:5})),1900);
+    setTimeout(()=>safeFn(()=>Bank.play("siege_shot",{seed:G.day,gain:0.55,maxSec:5})),2800);
+    setTimeout(()=>safeFn(()=>Bank.play("tower_hit",{seed:G.day,gain:0.5,maxSec:3})),4400);
+    setTimeout(()=>safeFn(()=>Bank.play("tower_shot",{seed:G.day,gain:0.45,maxSec:3})),5200);
+    setTimeout(()=>safeFn(()=>Bank.play("siege_fire",{seed:G.day,gain:0.45,maxSec:5})),6100);
+    narrate("Где-то далеко бьют в набат: город под осадой. Подкатывают осадные машины, бьют баллиста и камнемёт, камень попадает в башню, башня отвечает выстрелом, по стенам идёт огонь.",{interrupt:false});});
   /* Затяжная война слышна и без новостей: раз в несколько дней с той стороны
      доносится поступь дальнего строя, а следом тревога набега. */
   if(!начались.length&&!кончились.length&&стало.length&&G.day%3===0)
@@ -24921,7 +25073,7 @@ iact("dspell",{n:"Использовать заклинание",значок:""
 iact("eavesdrop",{n:"Подслушать",значок:"",
  можно:o=>!!G.place&&DOOR_TILES.includes(o.плитка)&&doorState(o)!=="open",почему:o=>"дверь открыта: слушать нечего, всё слышно и так",
  делать:o=>{const з=behindDoor(o);
-  if(з){safeFn(()=>{const role=з.m?safeFn(()=>bankFoeRole(з.m),"danger")||"danger":"npc_common";Spatial.role(role,o.dx*2,o.dy*2,{gain:0.4,maxSec:3})||Bank.play(role,{gain:0.4,maxSec:3});});
+  if(з){safeFn(()=>{const role=з.m?safeFn(()=>bankFoeRole(з.m),"danger")||"danger":"npc_common";const vo=з.m?foeVoiceOpts(з.m,{gain:0.4,maxSec:3}):{gain:0.4,maxSec:3};Spatial.role(role,o.dx*2,o.dy*2,vo)||Bank.play(role,vo);});
    narrate(`За дверью ${з.вид==="тварь"?"кто-то тяжело дышит и ходит":"слышны голоса и шаги"}: ${з.n}, ${з.d} ${plural(з.d,"шаг","шага","шагов")} за створкой.`);}
   else{safeFn(()=>Bank.play("deep_wind",{gain:0.3,maxSec:3}));narrate("За дверью тихо: только сквозняк и капель. Похоже, там никого.");}
   return true;}});
@@ -31286,7 +31438,7 @@ function fightGuardian(){
  const p=G.place;
  safeFn(()=>{
   const роль=safeFn(()=>bankFoeRole(g),null)||"foe_brute_hit";
-  Spatial.role(роль,0,0,{dz:-0.4,gain:0.8,maxSec:4})||Bank.play(роль,{gain:0.8,maxSec:4});
+  Spatial.role(роль,0,0,foeVoiceOpts(g,{dz:-0.4,gain:0.8,maxSec:4}))||Bank.play(роль,foeVoiceOpts(g,{gain:0.8,maxSec:4}));
   setTimeout(()=>safeFn(()=>Bank.play("es_alarm",{gain:0.5,maxSec:4})),400);});
  G.place.pendingGuard={bx:p.bx,by:p.by,depth:p.depth};
  narrate(`${g.n} загораживает шахту. Он не отойдёт: ${g.lvl} уровень, и он здесь ровно за этим.`);
@@ -32886,7 +33038,7 @@ function changeDepth(delta){
   if(g){
    safeFn(()=>{
     const роль=safeFn(()=>bankFoeRole(g),null)||"foe_brute_hit";
-    Spatial.role(роль,0,0,{dz:-0.5,gain:0.75,maxSec:4})||Bank.play(роль,{gain:0.75,maxSec:4});});
+    Spatial.role(роль,0,0,foeVoiceOpts(g,{dz:-0.5,gain:0.75,maxSec:4}))||Bank.play(роль,foeVoiceOpts(g,{gain:0.75,maxSec:4}));});
    narrate(`Вниз хода нет: на шахте стоит ${g.n}. Пока он жив, ярус ниже закрыт. Действие здесь — принять бой.`);
    return false;}}
  const шахта=safeFn(()=>shaftSpot(p.bx,p.by,delta>0?p.depth:nd),null);
@@ -32960,7 +33112,7 @@ function changeDepth(delta){
   const dx=ш?ш.x-p.x:0,dy=ш?ш.y-p.y:0;
   setTimeout(()=>safeFn(()=>{
    const роль=safeFn(()=>bankFoeRole(g),null)||"foe_brute_hit";
-   Spatial.role(роль,dx,dy,{gain:0.6,maxSec:4})||Bank.play(роль,{gain:0.6,maxSec:4});
+   Spatial.role(роль,dx,dy,foeVoiceOpts(g,{gain:0.6,maxSec:4}))||Bank.play(роль,foeVoiceOpts(g,{gain:0.6,maxSec:4}));
    narrate(`На шахте вниз стоит ${g.n}. ${dirBetween(dx,dy)?"Отсюда "+dirBetween(dx,dy)+".":"Он рядом."} Пока он жив, ниже не спуститься.`,
     {interrupt:false});}),2600);});
  safeFn(()=>Actors.ensure());
@@ -33890,7 +34042,7 @@ const Scape={
      const dx=a.x-p.x,dy=a.y-p.y,d=Math.max(Math.abs(dx),Math.abs(dy));
      if(d>scapeRad())return;
      out.push({key:"a"+i,kind:"monster",dx,dy,d,
-      role:safeFn(()=>bankFoeRole(a.m),"danger")||"danger",seed:a.x+a.y});});});
+      role:safeFn(()=>bankFoeRole(a.m),"danger")||"danger",seed:a.x+a.y,voice:safeFn(()=>FoeVoices.of(a.m),null)});});});
     return out;}
    /* Снаружи: постройки, ресурсы, твари и обозы вокруг. С крыла круг
       слышимости шире: с высоты голос доносится оттуда, куда с земли не
@@ -33907,7 +34059,7 @@ const Scape={
         над собой, а поднявшийся — вровень. Ради этого небо и затевалось. */
      out.push({key:"m"+x+","+y,kind:"monster",dx,dy,d,
       dz:safeFn(()=>foeAlt(c.monster),0),
-      role:safeFn(()=>bankFoeRole(c.monster),"danger")||"danger",seed:x+y});continue;}
+      role:safeFn(()=>bankFoeRole(c.monster),"danger")||"danger",seed:x+y,voice:safeFn(()=>FoeVoices.of(c.monster),null)});continue;}
     if(c.structure){
      out.push({key:"s"+x+","+y,kind:"structure",dx,dy,d,
       role:null,bid:c.structure.beacon,seed:x*7+y});continue;}
@@ -33957,7 +34109,7 @@ const Scape={
    const dz=(o.dz!==undefined&&o.dz!==null)?o.dz:(v.dz||0);
    const gain=v.gain*Math.max(0.25,1-o.d/(scapeRad()+3));
    let ok=false;
-   if(o.role)ok=Spatial.role(o.role,o.dx,o.dy,{dz,gain,maxSec:2.4,seed:o.seed});
+   if(o.role)ok=Spatial.role(o.role,o.dx,o.dy,o.voice&&o.voice.idle===o.role?{dz,gain,maxSec:2.4,fixed:true,seed:o.voice.v,rate:o.voice.rate}:{dz,gain,maxSec:2.4,seed:o.seed});
    /* Разъезд державы в железе: вслед за копытами звенят кольчуги. */
    if(ok&&o.kind==="patrol")setTimeout(()=>safeFn(()=>Spatial.role("hero_step_metal",o.dx,o.dy,{dz,gain:gain*0.7,maxSec:1.2})),220);
    /* Примета не имеет права промолчать: нет записи — звучит маяк, нет и
@@ -34087,9 +34239,12 @@ const Actors={
    if(a.kind==="mob"&&d===0){this.attack(a);return;}}
   if(nearest&&nearest.a.kind==="mob"&&nearest.d<=safeFn(()=>beastRad(),8))this.sound(nearest.a,nearest.d);
   /* Люди на ходу: слышны двое ближних из тех, кто сделал шаг. */
-  this.list.filter(a=>a.kind!=="mob"&&a.шёл)
+  /* Стража и гарнизон в железе слышны первыми: горожане рядом не должны
+     заглушать тяжёлый шаг стражника (раньше звучали двое ближних любых). */
+  const идут=this.list.filter(a=>a.kind!=="mob"&&a.шёл)
    .map(a=>({a,d:Math.max(Math.abs(a.x-p.x),Math.abs(a.y-p.y))}))
-   .filter(o=>o.d<=ACTOR_HEAR).sort((x,y)=>x.d-y.d).slice(0,2)
+   .filter(o=>o.d<=ACTOR_HEAR).sort((x,y)=>x.d-y.d);
+  идут.filter(o=>o.a.kind!=="folk").concat(идут.filter(o=>o.a.kind==="folk")).slice(0,2)
    .forEach(o=>safeFn(()=>this.step(o.a,o.d)));
   /* Глубина разговаривает сама с собой: далёкий голос без источника. */
   if(G.place.depth>=3&&Math.random()<0.03)
@@ -34202,7 +34357,7 @@ const Actors={
   a.шагДо=t;
   const твёрдый=ACTOR_HARD_FLOOR.test(пол);
   план.forEach(tt=>setTimeout(()=>safeFn(()=>this.шаг(a,роль,с,твёрдый)),Math.max(0,tt-сейчас)));
-  this.lastStep={kind:a.kind,пол,роль,доспех:с.доспех,латы:с.латы,ножны:с.ножны,вес:твёрдый?с.вес:null,тон:с.тон,темп,d,шагов:план.length,t:сейчас};
+  this.lastStep={kind:a.kind,пол,роль,доспех:с.доспех,латы:с.латы,ножны:с.ножны,вес:с.вес,твёрдый,тон:с.тон,темп,d,шагов:план.length,t:сейчас};
   return true;},
  шаг(a,роль,с,твёрдый){
   const p=G.place;if(!p||!settings.effects)return false;
@@ -34218,10 +34373,12 @@ const Actors={
   /* Шаг — одна и та же запись у этого живого на каждой ноге, чуть разный
      тон левой и правой: ровный шаг одного человека, а не пять разных. */
   там(роль,gain*(a.kind==="folk"?0.65:0.9),{rate:с.тон*(нога?1.012:0.988),fixed:true,seed:(Number(a.id)||0)*7+нога});
-  if(с.вес&&твёрдый)там(с.вес,gain*0.55);
-  if(с.доспех)setTimeout(()=>там(с.доспех,gain*(с.латы?0.62:0.5)),8);
-  if(с.латы&&нога===1)setTimeout(()=>там(с.латы,gain*0.42),14);
-  if(с.ножны&&n%4===2)setTimeout(()=>там(с.ножны,gain*0.5),90);
+  /* (4.4) Вес сапога слышен на любом полу (на мягком — глуше), железо —
+     вровень с шагом, а не подслоем под ним. */
+  if(с.вес)там(с.вес,gain*(твёрдый?0.6:0.4));
+  if(с.доспех)setTimeout(()=>там(с.доспех,gain*(с.латы?0.75:0.6)),8);
+  if(с.латы&&нога===1)setTimeout(()=>там(с.латы,gain*0.55),14);
+  if(с.ножны&&n%4===2)setTimeout(()=>там(с.ножны,gain*0.55),90);
   this.lastStepAt={id:a.id,n,нога,t:Date.now()};
   return true;},
  /* Остановился — железо коротко оседает: тихий звон, без шага. */
@@ -34277,6 +34434,7 @@ const Actors={
      const f=heavy?Bank.pick("stomp",a.id):((set&&(set.step||set.emerge))||"oc/oc_step_hard_01.ogg");
      if(Spatial.at(f,dx,dy,{gain,maxSec:2.4}))return;
      if(Bank.panned(f,{pan,gain}))return;}
+    else if(a.kind==="guard"||a.kind==="soldier"){if(guardFootfalls(dx,dy,{шагов:2,gain,seed:a.id}))return;}
     else{
      const f="oc/oc_step_soft_0"+(1+(a.id%6))+".ogg";
      if(Spatial.at(f,dx,dy,{gain,maxSec:2}))return;
@@ -34328,6 +34486,31 @@ function maybeWildlife(c){
   beaconAt("npc_common",dx,dy,0,d);});
  narrate(`${night?"В темноте":"В стороне"} кто-то движется: похоже на «${m.n}», ${dirBetween(dx,dy)||"рядом"}, шагах в ${d}.`,{interrupt:false});
 }
+/* ── ТЯЖЁЛЫЙ ШАГ СТРАЖИ (4.4) ──
+   Несколько шагов стражника в железе из точки dx,dy: сапог по полу места
+   на тон ниже, глухой вес удара, звон кольчуги в миг шага, лязг лат через
+   шаг и стук ножен о бедро. Всё — записи без потерь (sounds/gear). */
+function guardFootfalls(dx,dy,o){
+ try{
+  if(!settings.effects||!Bank.enabled)return false;
+  o=Object.assign({шагов:4,темп:650,gain:0.7,пол:null,seed:0},o||{});
+  const пол=o.пол||safeFn(()=>indoorSurface(),"stone");
+  const роль=(typeof SURF_ROLE!=="undefined"&&SURF_ROLE[пол])||"tread_gravel";
+  const там=(r,g,extra)=>safeFn(()=>Spatial.role(r,dx,dy,Object.assign({gain:g,maxSec:1.2,seed:o.seed},extra||{})),false)
+   ||!!safeFn(()=>Bank.play(r,Object.assign({gain:g*0.7,maxSec:1.2},extra||{})),null);
+  let ok=false;
+  for(let n=0;n<o.шагов;n++)setTimeout(()=>safeFn(()=>{
+   const нога=n%2,g=o.gain*(0.85+0.15*Math.min(1,n/2));
+   if(там(роль,g*0.85,{rate:0.82*(нога?1.012:0.988),fixed:true,seed:(o.seed|0)*7+нога}))ok=true;
+   там("gear_guard_thud",g*0.6);
+   setTimeout(()=>там("gear_guard_mail",g*0.72),8);
+   if(нога===1)setTimeout(()=>там("gear_guard_plate",g*0.55),14);
+   if(n%4===2)setTimeout(()=>там("gear_guard_sword",g*0.55),90);
+   GuardSteps.last={dx,dy,роль,n,t:Date.now()};}),n*o.темп);
+  GuardSteps.count++;
+  return true;
+ }catch(_){return false;}}
+const GuardSteps={last:null,count:0};
 /* ── Дозоры снаружи: стража поселений ходит по дорогам вокруг стен ── */
 function maybeGuardPatrol(){
  if(G.place||G.ship||G.inCombat||activeLayer())return;
@@ -34337,8 +34520,8 @@ function maybeGuardPatrol(){
  const c=near[0],dx=c.x-G.x,dy=c.y-G.y;
  const pan=Math.max(-1,Math.min(1,dx/4));
  safeFn(()=>{
-  if(Spatial.at("oc/oc_step_soft_02.ogg",dx,dy,{gain:0.6,maxSec:2}))return;
-  if(Bank.enabled&&Bank.canPan()&&Bank.panned("oc/oc_step_soft_02.ogg",{pan,gain:0.6}))return;
+  /* Дозор у стен — тяжёлым шагом в железе, а не лёгким шагом горожанина. */
+  if(guardFootfalls(dx,dy,{шагов:6,gain:0.75,пол:"gravel"}))return;
   beaconAt("npc_guard",dx,dy,0,c.d);});
  const dir=dirBetween(c.x-G.x,c.y-G.y)||"рядом";
  if(isNight())
@@ -36427,7 +36610,7 @@ function arrive(dir){
    if(шанс>0&&Math.random()<шанс){
     stopRun();
     safeFn(()=>{const роль=safeFn(()=>bankFoeRole(c.monster),null);
-     if(роль)Spatial.role(роль,0,0,{dz:в,gain:0.75,maxSec:3});
+     if(роль)Spatial.role(роль,0,0,foeVoiceOpts(c.monster,{dz:в,gain:0.75,maxSec:3}));
      setTimeout(()=>safeFn(()=>{
       Spatial.role("sky_gust",0,0,{dz:Math.max(1,в-1),gain:0.7,maxSec:3})
        ||Bank.play("sky_gust",{gain:0.7,maxSec:3});
@@ -36443,7 +36626,7 @@ function arrive(dir){
     setTimeout(()=>safeFn(()=>{startCombat(c,{alt:0});refresh();}),520);
     refresh();return;}
    safeFn(()=>{const роль=safeFn(()=>bankFoeRole(c.monster),null);
-    if(роль&&Spatial.role(роль,0,0,{dz:в,gain:0.6,maxSec:4}))return;
+    if(роль&&Spatial.role(роль,0,0,foeVoiceOpts(c.monster,{dz:в,gain:0.6,maxSec:4})))return;
     beaconAt("roamer",0,0,в,1);});
    narrate(`${c.monster.n} идёт над вами, ${altWord(в)}: снизу не достать.${skyHunter(c.monster)?" Но он вас заметил — под открытым небом такие падают сверху." : " Вас оттуда не тронут."}${wingSpan()?" Свайп двумя пальцами вверх — подняться на крыло." : ""}`,{interrupt:false});
    refresh();return;}
@@ -37334,7 +37517,10 @@ function playWeaponCombatSfx(hit,dir="N",dmg=6){try{AE.ensure();
      пришёлся клинок: один удар и один звук материала, настоящими записями. */
   if(!hit){setTimeout(()=>safeFn(()=>weaponSound("miss",{gain:0.5,one:true})),160);return;}
   setTimeout(()=>safeFn(()=>{weaponSound("hit",{gain:0.6,one:true});
-   setTimeout(()=>safeFn(()=>weaponSound("hit_"+mat,{gain:0.4,one:true})),90);}),150);
+   setTimeout(()=>safeFn(()=>weaponSound("hit_"+mat,{gain:0.4,one:true})),90);
+   /* Огненная стрела — лук с огнём в имени — попадает с шипением пламени. */
+   if(k==="bow"&&/огн|пламен|жар|пепел|угол/i.test(String((G.equip&&G.equip.weapon&&(G.equip.weapon.name||G.equip.weapon.n))||"")))
+    setTimeout(()=>safeFn(()=>foeCue("hit_firearrow",{gain:0.5,maxSec:2.5})),130);}),150);
   if((Number(dmg)||6)>=12)setTimeout(()=>safeFn(()=>Bank.play("lug_impact",{kind:"combat",gain:0.45,maxSec:2})),240);
   return;}
  /* Без папки записей остаётся прежний синтез. */
