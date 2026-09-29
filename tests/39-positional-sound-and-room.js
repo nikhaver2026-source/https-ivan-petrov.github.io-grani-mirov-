@@ -437,6 +437,9 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   while(activeLayer())closeTopUI();
   G.place=null;G.ship=null;G.inCombat=false;
   Scape.last.clear();Scape.lastAny=0;Spatial.stopAll();
+  /* Проверяется сама звуковая картина: строй дозора и обоз на тракте (4.2) звучат
+     своим тактом, пока они рядом, — здесь их не будит. */
+  const тикД=PatrolMarch.tick,тикО=CaravanRoll.tick;PatrolMarch.tick=()=>false;CaravanRoll.tick=()=>false;hushSoon();
   let тактов=0;
   for(let i=0;i<60;i++){Scape.lastAny=0;тактов+=Scape.tick();await пауза(25);}
   const наПике=Spatial.live.length;
@@ -444,6 +447,7 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   const послеОтдыха=Spatial.live.length;
   /* и кэш откликов не растёт без предела */
   for(let i=0;i<60;i++)Room.buffer("dungeon",0.5+i*0.03);
+  PatrolMarch.tick=тикД;CaravanRoll.tick=тикО;
   return {тактов,наПике,послеОтдыха,кэш:Room.cache.size};});
  check('долгий прогон не копит источники: их число ограничено и спадает',
   прогонДолгий.тактов>0&&прогонДолгий.наПике<=10&&прогонДолгий.послеОтдыха<=2,

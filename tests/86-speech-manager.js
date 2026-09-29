@@ -277,7 +277,7 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
 
  /* ── настройки ── */
  const настройки=await page.evaluate(()=>{
-  const ids=["setAutoSpeech","setAutoDescribe","setDescribeObjects","setSoundFirst","setStopOnMove","setStopOnMenu","setStopOnGather","setSayXp","setSayHp","setSaySpatial","setVerbosity","setSrMode","setStopGesture","setDuck","btnStopSpeech","btnRepeatLast","btnReadStatus"];
+  const ids=["setAutoSpeech","setAutoDescribe","setDescribeObjects","setSoundFirst","setStopOnMove","setStopOnMenu","setStopOnGather","setSayXp","setSayHp","setSaySpatial","setVerbosity","setSrMode","setDuck","btnStopSpeech","btnRepeatLast","btnReadStatus"];
   const нет=ids.filter(i=>!document.getElementById(i));
   const el=document.getElementById("setStopOnMove");el.checked=false;el.dispatchEvent(new Event("change"));
   const v=document.getElementById("setVerbosity");v.value="brief";v.dispatchEvent(new Event("change"));

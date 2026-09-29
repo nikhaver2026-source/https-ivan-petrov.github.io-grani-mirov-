@@ -129,7 +129,7 @@ const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(e!==undefined?' :
   const головы=[...m.querySelectorAll("."+SEC_CLASS)].map(h=>({t:h.dataset.secTitle,g:h.closest(".set-group")&&h.closest(".set-group").dataset.setGroup}));
   const ожидание={setSpeech:"sound",setMasterVol:"sound",setDuck:"sound",setHrtf:"sound",setMirth:"sound",
    setTtsEngine:"tts",setVoice:"tts",setVoiceLocal:"tts",setRate:"tts",setPitch:"tts",setGvVoice:"tts",
-   setVerbosity:"speech",setSrMode:"speech",setAutoSpeech:"speech",setSayHp:"speech",setStopGesture:"speech",
+   setVerbosity:"speech",setSrMode:"speech",setAutoSpeech:"speech",setSayHp:"speech",
    setExplore:"ui",setHintMode:"ui",setHaptics:"ui",setSubMode:"ui",
    setGestSens:"gest",setTapWindow:"gest",setTapTick:"gest",gestRow:"gest",diffRow:"diff"};
   const мимо=Object.entries(ожидание).filter(([id,g])=>где(id)!==g).map(([id,g])=>({id,ждали:g,лежит:где(id)}));
