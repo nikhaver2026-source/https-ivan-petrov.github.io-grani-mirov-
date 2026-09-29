@@ -16,7 +16,7 @@
       с подсказками всё называется.
    2. Два пальца вверх — что рядом; влево — карта (открыть, закрыть);
       вправо — журнал (открыть, закрыть); вниз — действие с найденным.
-   3. Три пальца вниз — инвентарь и его закрытие; влево — эхо-скан; вправо —
+   3. Три пальца вниз — инвентарь и его закрытие; влево — карта (два влево — эхо-скан); вправо —
       «где я»; и всё это работает жестами поверх окна.
    4. Инвентарь разложен по разделам; двойное касание по разделу открывает
       его, по вещи — говорит о ней; свайп вверх на вещи открывает действия.
@@ -68,16 +68,19 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
  await page.evaluate(()=>{Speech.stop();LOG.length=0;});
  await multiSwipe(2,0,-170);
  const повтор=await page.evaluate(()=>LOG.includes("near"));
- await multiSwipe(2,-170,0);const картаОткр=await page.evaluate(()=>!document.getElementById("modal-map").hidden);
- await multiSwipe(2,-170,0);const картаЗакр=await page.evaluate(()=>document.getElementById("modal-map").hidden);
+ /* С 4.0 карта — три пальца влево, а два влево — осмотреться (ближайшие объекты). */
+ await multiSwipe(3,-170,0);const картаОткр=await page.evaluate(()=>!document.getElementById("modal-map").hidden);
+ await multiSwipe(3,-170,0);const картаЗакр=await page.evaluate(()=>document.getElementById("modal-map").hidden);
+ await multiSwipe(2,-170,0);const осмотр=await page.evaluate(()=>!document.getElementById("modal-object").hidden);
+ await page.evaluate(()=>{while(activeLayer())closeTopUI();});
  await multiSwipe(2,170,0);const журнОткр=await page.evaluate(()=>!document.getElementById("modal-quests").hidden);
  await multiSwipe(2,170,0);const журнЗакр=await page.evaluate(()=>document.getElementById("modal-quests").hidden);
  await page.evaluate(()=>{LOG.length=0;});await multiSwipe(2,0,170);const свайпВниз=await page.evaluate(()=>LOG.includes("useHere"));
  /* Действие с найденным — двойное касание одним пальцем; свайп вниз только закрывает (набор 176). */
  await page.evaluate(()=>{LOG.length=0;});await tap(195,430);await tap(195,430);await page.waitForTimeout(250);
  const действие=await page.evaluate(()=>LOG.includes("useHere"));
- check('2. два пальца: вверх — что рядом, влево — карта (открыть и закрыть), вправо — журнал (открыть и закрыть), вниз — только закрыть; действие с найденным — двойное касание',
-  повтор&&картаОткр&&картаЗакр&&журнОткр&&журнЗакр&&!свайпВниз&&действие,{повтор,картаОткр,картаЗакр,журнОткр,журнЗакр,свайпВниз,действие});
+ check('2. два пальца: вверх — что рядом, влево — осмотреться, три влево — карта (открыть и закрыть), вправо — журнал (открыть и закрыть), вниз — только закрыть; действие с найденным — двойное касание',
+  повтор&&картаОткр&&картаЗакр&&осмотр&&журнОткр&&журнЗакр&&!свайпВниз&&действие,{повтор,картаОткр,картаЗакр,осмотр,журнОткр,журнЗакр,свайпВниз,действие});
 
  /* ── 3. три пальца ── */
  await page.evaluate(()=>{LOG.length=0;});
@@ -85,10 +88,13 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
  await multiSwipe(2,170,0);const журнПоверх=await page.evaluate(()=>!document.getElementById("modal-quests").hidden&&document.getElementById("modal-inventory").hidden);
  await multiSwipe(3,0,170);const инвПоверх=await page.evaluate(()=>!document.getElementById("modal-inventory").hidden);
  await multiSwipe(3,0,170);const инвЗакр=await page.evaluate(()=>document.getElementById("modal-inventory").hidden);
- await multiSwipe(3,-170,0);await page.evaluate(()=>{SAID.length=0;});await multiSwipe(3,170,0);
+ /* С 4.0 три влево — карта (дальние точки с маяком), осмотр — два влево. */
+ await multiSwipe(3,-170,0);const картаТри=await page.evaluate(()=>!document.getElementById("modal-map").hidden);
+ await page.evaluate(()=>{while(activeLayer())closeTopUI();});
+ await multiSwipe(2,-170,0);await page.evaluate(()=>{while(activeLayer())closeTopUI();SAID.length=0;});await multiSwipe(3,170,0);
  const лог=await page.evaluate(()=>LOG.slice());const гдеЯ=await page.evaluate(()=>SAID.some(t=>/Вы здесь/.test(t)));
- check('3. три пальца: вниз — инвентарь и его закрытие, и поверх другого окна тоже; влево — эхо-скан; вправо — «где я»',
-  инвОткр&&журнПоверх&&инвПоверх&&инвЗакр&&лог.includes("scan")&&гдеЯ,{инвОткр,журнПоверх,инвПоверх,инвЗакр,лог,гдеЯ});
+ check('3. три пальца: вниз — инвентарь и его закрытие, и поверх другого окна тоже; влево — карта; два влево — осмотр (эхо-скан); вправо — «где я»',
+  инвОткр&&журнПоверх&&инвПоверх&&инвЗакр&&картаТри&&лог.includes("scan")&&гдеЯ,{инвОткр,журнПоверх,инвПоверх,инвЗакр,картаТри,лог,гдеЯ});
 
  /* ── 4. инвентарь ── */
  const инв=await page.evaluate(()=>{

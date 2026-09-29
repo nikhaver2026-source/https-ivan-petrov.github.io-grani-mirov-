@@ -51,11 +51,11 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
  await page.evaluate(()=>{while(activeLayer())closeTopUI();});
  await multi(3,'S');const инв=await page.evaluate(()=>activeLayer()&&activeLayer().id);
  await multi(3,'S');const закрыт=await page.evaluate(()=>!activeLayer());
- await multi(2,'W');const карта=await page.evaluate(()=>activeLayer()&&activeLayer().id);
+ await multi(3,'W');const карта=await page.evaluate(()=>activeLayer()&&activeLayer().id);
  await page.evaluate(()=>{while(activeLayer())closeTopUI();});
  await multi(3,'N');const меню=await page.evaluate(()=>activeLayer()&&activeLayer().id);
  await page.evaluate(()=>{while(activeLayer())closeTopUI();});
- check('жесты: три пальца вниз — инвентарь и он же закрывает, два влево — карта, три вверх — меню действий; ни один жест не спорит с другим',
+ check('жесты: три пальца вниз — инвентарь и он же закрывает, три влево — карта, три вверх — меню действий; ни один жест не спорит с другим',
   инв==="modal-inventory"&&закрыт&&карта==="modal-map"&&меню&&/modal|actionMenu/.test(String(меню)),{инв,закрыт,карта,меню});
 
  /* ── 3. ориентация, движение, столкновение ── */

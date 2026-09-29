@@ -73,7 +73,7 @@ const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(e!==undefined?' :
   return {сколько:Object.keys(d).length,
    всеЖивые:Object.keys(d).every(k=>GEST_SHAPE_BY_ID[k]&&GEST_ACTION_BY_ID[d[k]]),
    инвентарь:d["3swipeS"],оружие:d["3tap2"],взаимодействие:d["2swipeS"],
-   повтор:d["2swipeN"],карта:d["2swipeW"],журнал:d["2swipeE"],
+   повтор:d["2swipeN"],карта:d["3swipeW"],осмотр:d["2swipeW"],журнал:d["2swipeE"],
    магия:d["4tap2"],меню:d["3swipeN"],
    всёПоУмолчанию:GEST_SHAPES.every(s=>gestIsDefault(s.id)),
    молчит:[gestRun(3,"swipe","S"),gestRun(3,"tap2",null),gestRun(2,"swipe","S"),
@@ -83,7 +83,7 @@ const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(e!==undefined?' :
   умолчания.сколько===15&&умолчания.всеЖивые
   &&умолчания.инвентарь==="inv"&&умолчания.оружие==="weapon"
   &&умолчания.взаимодействие==="close"&&умолчания.повтор==="near"
-  &&умолчания.карта==="map"&&умолчания.журнал==="journal"
+  &&умолчания.карта==="map"&&умолчания.осмотр==="look"&&умолчания.журнал==="journal"
   &&умолчания.магия==="magic"&&умолчания.меню==="actions"
   &&умолчания.споров===0,умолчания);
  check('пока ничего не переназначено, слой молчит и обработчики идут прежним путём',
