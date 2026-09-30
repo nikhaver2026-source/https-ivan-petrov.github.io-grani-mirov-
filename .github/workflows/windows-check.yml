@@ -1,0 +1,48 @@
+# Проверка приложения для Windows на настоящей Windows, без выпуска сборки:
+# мост голосов Windows (SAPI 5 и голоса Windows 10/11), выбор синтезатора и
+# голоса в игре, все клавиши по умолчанию настоящими нажатиями.
+name: Проверка Windows
+
+on:
+  workflow_dispatch:
+  push:
+    branches: ['claude/**']
+    paths:
+      - 'desktop/**'
+      - '.github/workflows/windows-check.yml'
+
+jobs:
+  check:
+    runs-on: windows-latest
+    timeout-minutes: 30
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: |
+            desktop
+            tests
+            tts
+            sounds/gvoice
+            sounds/gvoice_f
+            index.html
+            manifest.json
+            icon-192.png
+            icon-512.png
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Electron
+        working-directory: desktop
+        run: npm install --no-audit --no-fund
+      - name: Голоса Windows через мост SAPI
+        working-directory: desktop
+        run: node sapi-test.js
+      - name: Выбор синтезатора и голоса в игре
+        working-directory: desktop
+        run: npx electron voicecheck.js
+      - name: Все клавиши по умолчанию
+        working-directory: desktop
+        run: npx electron keycheck.js

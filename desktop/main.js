@@ -4,11 +4,16 @@
 const { app, BrowserWindow, protocol, Menu, shell, ipcMain } = require('electron');
 const path = require('path');
 const fs = require('fs');
+const { Sapi } = require('./sapi.js');
 
 protocol.registerSchemesAsPrivileged([{
   scheme: 'app',
   privileges: { standard: true, secure: true, supportFetchAPI: true, stream: true, corsEnabled: true }
 }]);
+// Голоса, установленные у игрока в Windows (SAPI 5 и голоса Windows 10/11):
+// мост поднимается сразу, пока Electron готовит окно.
+const sapi = new Sapi();
+const sapiReady = sapi.start(8000).catch(() => false);
 // Звук с первой секунды, без щелчка мышью: игроку нечем «разрешить» звук.
 app.commandLine.appendSwitch('autoplay-policy', 'no-user-gesture-required');
 
@@ -78,11 +83,27 @@ function createWindow() {
   });
   win.webContents.on('will-navigate', (e, url) => { if (!url.startsWith('app://')) e.preventDefault(); });
   win.once('ready-to-show', () => { win.show(); win.focus(); win.webContents.focus(); });
-  win.loadURL('app://grani/index.html');
+  // Конец фразы голосом Windows — в игру, тем же вызовом, что на Android.
+  sapi.onDone = (kind, id) => {
+    if (win.isDestroyed() || kind === 'cancel') return;
+    const fn = kind === 'done' ? 'GraniTTSDone' : 'GraniTTSError';
+    win.webContents.executeJavaScript(`window.${fn}&&window.${fn}(${JSON.stringify(String(id))})`).catch(() => { });
+  };
+  // Игру открываем, когда мост голосов ответил (или не ответил за 8 секунд):
+  // список голосов должен быть готов к первому слову.
+  sapiReady.then(() => win.loadURL('app://grani/index.html'));
 }
 
+// Мост голосов Windows для окна игры (window.GraniTTS в preload.js).
+ipcMain.on('tts-info', e => { e.returnValue = { ready: sapi.ready, voices: sapi.list() }; });
+ipcMain.on('tts-voices', e => { e.returnValue = JSON.stringify(sapi.list()); });
+ipcMain.on('tts-speaking', e => { e.returnValue = sapi.speaking.size > 0; });
+ipcMain.on('tts-speak', (e, text, rate, volume, id) => sapi.speak(String(text || ''), rate, volume, String(id)));
+ipcMain.on('tts-stop', () => sapi.stop());
+ipcMain.on('tts-voice', (e, name) => sapi.setVoice(String(name || '')));
+
 const single = app.requestSingleInstanceLock();
-if (!single) { app.quit(); }
+if (!single) { sapi.quit(); app.quit(); }
 else {
   app.on('second-instance', () => {
     const w = BrowserWindow.getAllWindows()[0];
@@ -95,4 +116,5 @@ else {
     createWindow();
   });
   app.on('window-all-closed', () => app.quit());
+  app.on('will-quit', () => sapi.quit());
 }

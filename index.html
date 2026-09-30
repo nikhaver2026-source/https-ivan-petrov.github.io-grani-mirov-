@@ -1226,7 +1226,11 @@ const Speech={voice:null,keepAlive:null,
   try{(speechSynthesis.getVoices()||[]).forEach(взять);}catch(_){}
   try{if(window.GraniTTS&&typeof window.GraniTTS.getVoices==="function"){
    const r=window.GraniTTS.getVoices();const a=typeof r==="string"?JSON.parse(r||"[]"):r;
-   (Array.isArray(a)?a:[]).forEach(x=>{if(!x||!(x.id||x.name))return;
+   /* В приложении для Windows голос, который Chromium уже показал под тем же
+      именем («Microsoft Irina Desktop — Russian»), второй раз не выводится. */
+   const имя=n=>String(n||"").toLowerCase().replace(/\s+-\s.*$/,"").replace(/\bdesktop\b/g,"").replace(/\s+/g," ").trim();
+   const веб=new Set(isDesktopApp()?out.map(v=>имя(v.name)):[]);
+   (Array.isArray(a)?a:[]).forEach(x=>{if(!x||!(x.id||x.name))return;if(веб.has(имя(x.name||x.id)))return;
     взять({name:String(x.name||x.id),lang:String(x.lang||""),localService:x.local!==false&&x.localService!==false,
      voiceURI:"native:"+String(x.id||x.name),default:!!x.default,native:true,engine:String(x.engine||"")});});}}catch(_){}
   return out;},
@@ -1296,7 +1300,10 @@ const Speech={voice:null,keepAlive:null,
      показанных: снятый фильтр языка не должен молча менять голос. */
   const свой=settings.voice?this.voiceFind(settings.voice):null;
   const выбран=свой||ru||vs[0]||null;
+  const былМост=!!this._nativeVoice;
   this.voice=выбран&&!выбран.native?выбран:null;this._nativeVoice=выбран&&выбран.native?выбран:null;
+  /* Голос сменил дорогу (мост ↔ браузер) — синтезатор выбирается заново. */
+  if(былМост!==!!this._nativeVoice&&this._kind==="device"){safeFn(()=>{if(this.adapter&&this.adapter.cancel)this.adapter.cancel();});this.adapter=null;this._kind=null;}
   if(свой&&settings.voice!==this.voiceKey(свой)){settings.voice=this.voiceKey(свой);safeFn(()=>saveSettings());}
   if(выбран&&sel)sel.value=this.voiceKey(выбран);
   const h=document.getElementById("voiceHint");
@@ -1439,6 +1446,15 @@ const Speech={voice:null,keepAlive:null,
   try{if((settings.ttsEngine==="grani"||this._graniAuto)
       &&typeof Worker==="function"&&location.protocol!=="file:")return "grani";}catch(_){}
   return "device";},
+ /* Говорить ли родным мостом. На Android — всегда, кроме голоса, который
+    показывает сам WebView. В приложении для Windows мост — это голоса
+    Windows (SAPI 5 и голоса Windows 10/11): им говорим, когда игрок выбрал
+    такой голос или когда Chromium не видит ни одного голоса; иначе говорит
+    синтезатор Chromium, который берёт те же голоса SAPI. */
+ _useNative(свойВеб){
+  if(свойВеб||!(window.GraniTTS&&typeof window.GraniTTS.speak==="function"))return false;
+  if(isDesktopApp()&&!this._nativeVoice){try{if((speechSynthesis.getVoices()||[]).length)return false;}catch(_){}}
+  return true;},
  _adapter(){
   const род=this._wantKind();
   if(this.adapter&&this._kind===род)return this.adapter;
@@ -1451,7 +1467,7 @@ const Speech={voice:null,keepAlive:null,
      WebView, — говорит браузерный синтезатор этим голосом, иначе выбор не
      доходил бы до уха. Голос, отданный мостом, мост и произносит. */
   const свойВеб=!!(this.voice&&settings.voice&&this.voiceKey(this.voice)===settings.voice&&"speechSynthesis" in window);
-  try{if(!свойВеб&&window.GraniTTS&&typeof window.GraniTTS.speak==="function")return this.adapter=this._nativeAdapter();}catch(_){}
+  try{if(this._useNative(свойВеб))return this.adapter=this._nativeAdapter();}catch(_){}
   if("speechSynthesis" in window)return this.adapter=this._webAdapter();
   return null;},
  /* ── ВСТРОЕННЫЙ ГОЛОС ИГРЫ ──
@@ -1634,7 +1650,7 @@ const Speech={voice:null,keepAlive:null,
  _deviceAdapter(){
   try{if(this._graniAuto&&typeof Worker==="function"&&location.protocol!=="file:")return this._graniAdapter();}catch(_){}
   const свойВеб=!!(this.voice&&settings.voice&&this.voiceKey(this.voice)===settings.voice&&"speechSynthesis" in window);
-  try{if(!свойВеб&&window.GraniTTS&&typeof window.GraniTTS.speak==="function")return this._nativeAdapter();}catch(_){}
+  try{if(this._useNative(свойВеб))return this._nativeAdapter();}catch(_){}
   if("speechSynthesis" in window)return this._webAdapter();
   return null;},
  /* ── НЕЗАПИСАННОЕ — ТЕМ ЖЕ ПОЛОМ (4.6) ──

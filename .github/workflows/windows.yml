@@ -49,6 +49,14 @@ jobs:
         working-directory: desktop
         run: npm install --no-audit --no-fund
 
+      - name: Проверить голоса Windows, выбор синтезатора и клавиши
+        continue-on-error: true
+        working-directory: desktop
+        run: |
+          node sapi-test.js
+          npx electron voicecheck.js
+          npx electron keycheck.js
+
       - name: Значок приложения
         working-directory: desktop
         run: |
@@ -72,7 +80,7 @@ jobs:
             --executable-name=GraniMirov --app-version=4.7.0 --build-version=4.7.${GITHUB_RUN_NUMBER} \
             --win32metadata.ProductName="Грань Миров" --win32metadata.FileDescription="Грань Миров" \
             --win32metadata.CompanyName="Грань Миров" \
-            --extra-resource=../build/game --ignore='out' --ignore='icon\.ico' $ICONARG
+            --extra-resource=../build/game --ignore='out' --ignore='icon\.ico' --ignore='(key|voice)check\.js' --ignore='sapi-test\.js' $ICONARG
           D=out/GraniMirov-win32-x64
           # Языки интерфейса Chromium: оставить русский и английский.
           find "$D/locales" -name '*.pak' ! -name 'ru.pak' ! -name 'en-US.pak' -delete
