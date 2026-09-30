@@ -7,7 +7,7 @@
    sounds/gvoice_pack и выходит отдельным файлом GraniMirov-voicepack.zip.
 
    1. Пакет подключается сам: обе описи (мужская и женская) грузятся, в каждой
-      не меньше тысячи фраз, у каждой фразы файл; с описями сборок пакет не
+      не меньше пятисот фраз (в 4.9 пункты настроек переехали в сборку), у каждой фразы файл; с описями сборок пакет не
       пересекается.
    2. Фраза из пакета звучит записью пакета, фраза из сборки — записью сборки.
    3. В «Синтезаторе» сказано, что пакет подключён; в приложении — кнопка
@@ -36,8 +36,8 @@ const опись=f=>{const t=fs.readFileSync(f,'utf8');return JSON.parse(t.slice
   return {m:Speech.GVOICES.m.pack.state,f:Speech.GVOICES.f.pack.state,nm:Speech.GVOICES.m.pack.n,nf:Speech.GVOICES.f.pack.n};});
  const безФайла=v=>Object.values(P[v].p).filter(id=>!fs.existsSync(path.join(ROOT,'sounds/gvoice_pack',v,id+'.flac'))).length;
  const пересеч=v=>Object.keys(P[v].p).filter(k=>k in B[v]).length;
- check('1. обе описи пакета грузятся сами; в каждой ≥1000 фраз, у каждой файл, со сборкой не пересекаются',
-  загрузка.m==="ready"&&загрузка.f==="ready"&&загрузка.nm>=1000&&загрузка.nf>=1000&&!безФайла('m')&&!безФайла('f')&&!пересеч('m')&&!пересеч('f'),
+ check('1. обе описи пакета грузятся сами; в каждой ≥500 фраз, у каждой файл, со сборкой не пересекаются',
+  загрузка.m==="ready"&&загрузка.f==="ready"&&загрузка.nm>=500&&загрузка.nf>=500&&!безФайла('m')&&!безФайла('f')&&!пересеч('m')&&!пересеч('f'),
   {загрузка,безФайла:[безФайла('m'),безФайла('f')],пересеч:[пересеч('m'),пересеч('f')]});
 
  /* ── 2 ── */
@@ -50,7 +50,7 @@ const опись=f=>{const t=fs.readFileSync(f,'utf8');return JSON.parse(t.slice
  /* ── 3 ── */
  const строка=await page.evaluate(()=>{gvPackUi();return {h:document.getElementById("gvPackHint").textContent,b:document.getElementById("btnGvPack").textContent};});
  const стол=await (await browser.newContext()).newPage();
- await стол.addInitScript(()=>{window.__vp=0;window.graniDesktop={version:"4.8",platform:"win32",quit(){},installVoicePack(){window.__vp++;return Promise.resolve(true);}};});
+ await стол.addInitScript(()=>{window.__vp=0;window.graniDesktop={version:"4.9",platform:"win32",quit(){},installVoicePack(){window.__vp++;return Promise.resolve(true);}};});
  await стол.goto(process.argv[2]);await стол.waitForTimeout(900);
  const уст=await стол.evaluate(async()=>{try{enterGame();}catch(_){}while(activeLayer())closeTopUI();
   Speech.gvLoad();await new Promise(z=>setTimeout(z,800));gvPackUi();const кнопка=document.getElementById("btnGvPack").textContent;

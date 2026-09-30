@@ -1,10 +1,10 @@
-# Сборка приложения «Грань Миров» 4.8 для Windows на серверах GitHub.
+# Сборка приложения «Грань Миров» 4.9 для Windows на серверах GitHub.
 #
 # Приложение — Electron: вся игра (index.html и записи sounds) лежит рядом, в resources/game, и открывается по своему адресу
 # app://grani — сеть не нужна. Управление целиком с клавиатуры, мышь не
 # нужна (глава «Игра на компьютере» в руководстве).
 #
-# Выходит архив GraniMirov-4.8-windows.zip: распаковать и открыть
+# Выходит архив GraniMirov-4.9-windows.zip: распаковать и открыть
 # GraniMirov.exe. Архив выкладывается в выпуск «windows-latest» (Releases).
 # Если однажды он перерастёт предел GitHub на один файл (2 ГиБ), голоса
 # жителей уйдут вторым архивом, который распаковывают в ту же папку.
@@ -78,7 +78,7 @@ jobs:
         run: |
           ICONARG=""; [ -n "$ICON" ] && ICONARG="--icon=$ICON"
           npx @electron/packager . GraniMirov --platform=win32 --arch=x64 --out=out --overwrite \
-            --executable-name=GraniMirov --app-version=4.8.0 --build-version=4.8.${GITHUB_RUN_NUMBER} \
+            --executable-name=GraniMirov --app-version=4.9.0 --build-version=4.9.${GITHUB_RUN_NUMBER} \
             --win32metadata.ProductName="Грань Миров" --win32metadata.FileDescription="Грань Миров" \
             --win32metadata.CompanyName="Грань Миров" \
             --extra-resource=../build/game --ignore='out' --ignore='icon\.ico' --ignore='(key|voice)check\.js' --ignore='sapi-test\.js' $ICONARG
@@ -95,34 +95,34 @@ jobs:
         run: |
           mv GraniMirov-win32-x64 "GraniMirov"
           # Записи уже сжаты (FLAC, MP3, OGG): быстрое сжатие, качество не меняется.
-          7z a -tzip -mx=1 ../../GraniMirov-4.8-windows.zip "GraniMirov" > /dev/null
+          7z a -tzip -mx=1 ../../GraniMirov-4.9-windows.zip "GraniMirov" > /dev/null
           cd ../..
-          SIZE=$(stat -c %s GraniMirov-4.8-windows.zip)
+          SIZE=$(stat -c %s GraniMirov-4.9-windows.zip)
           echo "архив: $SIZE байт"
           echo "SIZE=$SIZE" >> "$GITHUB_ENV"
 
       - name: Если архив больше предела — голоса жителей отдельно
         if: ${{ env.SIZE > 2140000000 }}
         run: |
-          rm -f GraniMirov-4.8-windows.zip
+          rm -f GraniMirov-4.9-windows.zip
           cd desktop/out
-          7z a -tzip -mx=0 ../../GraniMirov-4.8-windows.zip "GraniMirov" -xr!'voice_npc' > /dev/null
-          7z a -tzip -mx=0 ../../GraniMirov-4.8-voices.zip "GraniMirov/resources/game/sounds/voice_npc" > /dev/null
+          7z a -tzip -mx=0 ../../GraniMirov-4.9-windows.zip "GraniMirov" -xr!'voice_npc' > /dev/null
+          7z a -tzip -mx=0 ../../GraniMirov-4.9-voices.zip "GraniMirov/resources/game/sounds/voice_npc" > /dev/null
           cd ../..
-          ls -la GraniMirov-4.8-*.zip
+          ls -la GraniMirov-4.9-*.zip
 
       - name: Проверить архив
         run: |
-          7z l GraniMirov-4.8-windows.zip | grep -E "GraniMirov.exe|resources[\\/]game[\\/]index.html|resources[\\/]app.asar|resources[\\/]app[\\/]main.js" | head
-          ls -la GraniMirov-4.8-*.zip
+          7z l GraniMirov-4.9-windows.zip | grep -E "GraniMirov.exe|resources[\\/]game[\\/]index.html|resources[\\/]app.asar|resources[\\/]app[\\/]main.js" | head
+          ls -la GraniMirov-4.9-*.zip
 
       - name: Выложить в выпуск «windows-latest»
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           gh release delete windows-latest --cleanup-tag -y || true
-          FILES=$(ls GraniMirov-4.8-*.zip)
-          NOTE="Свежая сборка из main ($GITHUB_SHA). Распакуйте GraniMirov-4.8-windows.zip в любую папку и откройте GraniMirov.exe — сеть и мышь не нужны, всё управляется клавиатурой: стрелки — шаг, Shift со стрелкой — бег, E — действие, I или Alt+E — инвентарь, Tab — карта, M или Esc — меню, Shift+F1 — все клавиши. Windows может предупредить о неизвестном издателе: «Подробнее» → «Выполнить в любом случае»."
-          if [ -f GraniMirov-4.8-voices.zip ]; then NOTE="$NOTE Голоса жителей — во втором архиве GraniMirov-4.8-voices.zip: распакуйте его в ту же папку."; fi
+          FILES=$(ls GraniMirov-4.9-*.zip)
+          NOTE="Свежая сборка из main ($GITHUB_SHA). Распакуйте GraniMirov-4.9-windows.zip в любую папку и откройте GraniMirov.exe — сеть и мышь не нужны, всё управляется клавиатурой: стрелки — шаг, Shift со стрелкой — бег, E — действие, I или Alt+E — инвентарь, Tab — карта, M или Esc — меню, Shift+F1 — все клавиши. Windows может предупредить о неизвестном издателе: «Подробнее» → «Выполнить в любом случае»."
+          if [ -f GraniMirov-4.9-voices.zip ]; then NOTE="$NOTE Голоса жителей — во втором архиве GraniMirov-4.9-voices.zip: распакуйте его в ту же папку."; fi
           gh release create windows-latest $FILES --target "$GITHUB_SHA" \
-            --title "Грань Миров 4.8 для Windows (сборка ${GITHUB_RUN_NUMBER})" --notes "$NOTE"
+            --title "Грань Миров 4.9 для Windows (сборка ${GITHUB_RUN_NUMBER})" --notes "$NOTE"

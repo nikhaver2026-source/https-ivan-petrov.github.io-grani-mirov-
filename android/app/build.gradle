@@ -23,7 +23,7 @@ android {
            versionCode только рос. С 4.0 основа — 40000000: коды 4.0 выше
            любых кодов 3.x. */
         versionCode(40000000 + ((System.getenv('BUILD_NUMBER') ?: '0') as int))
-        versionName '4.8'
+        versionName '4.9'
     }
 
     /* Ключ подписи приходит только из окружения сборки: в репозитории
