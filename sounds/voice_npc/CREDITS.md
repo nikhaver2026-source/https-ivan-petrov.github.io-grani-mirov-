@@ -5,7 +5,7 @@
 стражник у ворот, жрец, трактирщик, староста, кузнец, торговец, наставник, смотритель порта. Прежде эти строки читал голос
 игры в кавычках; теперь у каждой своя запись и своя интонация.
 
-Записей: 6218
+Записей: 6351
 
 Речь синтезирована 27–29 сентября 2026 года нейроголосами **Gemini** (Google),
 модель `gemini-3.8-flash-tts`, через Gemini API (Interactions API,
@@ -29,35 +29,35 @@ Policy (https://policies.google.com/terms/generative-ai/use-policy). Отдел�
 
 | Голос Gemini | Каков | Кто говорит | Записей |
 |---|---|---|---|
-| Alnilam | твёрдый | стражник на обходе и ночной дозор (первый голос стражи) | 159 |
-| Orus | твёрдый, пониже | стражник на обходе (второй голос стражи) | 161 |
-| Algenib | с хрипотцой | стражник на обходе (третий голос стражи) | 163 |
-| Charon | низкий, ровный | латник смены и солдат гарнизона за Гранью | 112 |
-| Schedar | ровный, холодный | латник смены за Гранью (второй голос) | 834 |
-| Achird | дружелюбный | горожанин и житель посада, староста деревни | 105 |
+| Alnilam | твёрдый | стражник на обходе и ночной дозор (первый голос стражи) | 164 |
+| Orus | твёрдый, пониже | стражник на обходе (второй голос стражи) | 165 |
+| Algenib | с хрипотцой | стражник на обходе (третий голос стражи) | 165 |
+| Charon | низкий, ровный | латник смены и солдат гарнизона за Гранью | 116 |
+| Schedar | ровный, холодный | латник смены за Гранью (второй голос) | 859 |
+| Achird | дружелюбный | горожанин и житель посада, староста деревни | 106 |
 | Sulafat | тёплый | горожанка и жительница посада, старостиха | 54 |
-| Umbriel | лёгкий, разговорный | приветствие и ответ в разговоре жителя, мужской голос; кузнец на пороге кузни | 811 |
+| Umbriel | лёгкий, разговорный | приветствие и ответ в разговоре жителя, мужской голос; кузнец на пороге кузни | 812 |
 | Despina | мягкий | приветствие и ответ в разговоре жительницы, женский голос | 804 |
 | Algieba | ровный, уверенный | голос героя: ход «Спросить об истории» (остальные двадцать один — в sounds/voice) | 1 |
 | Rasalgethi | зрелый, дорожный | старший обоза, мужской голос; наставник школы, смотритель порта | 66 |
 | Gacrux | зрелый, твёрдый | старшая обоза, женский голос; смотрительница порта | 60 |
-| Fenrir | резкий, возбуждённый | разбойник (первый голос) | 43 |
-| Enceladus | с придыханием | разбойник (второй голос), хозяин схрона | 74 |
-| Zubenelgenubi | спокойный, неспешный | жрец на пороге храма, хранитель башни | 91 |
-| Vindemiatrix | мягкий, тихий | жрица на пороге храма | 83 |
-| Puck | бодрый | трактирщик | 32 |
+| Fenrir | резкий, возбуждённый | разбойник (первый голос) | 44 |
+| Enceladus | с придыханием | разбойник (второй голос), хозяин схрона | 76 |
+| Zubenelgenubi | спокойный, неспешный | жрец на пороге храма, хранитель башни | 92 |
+| Vindemiatrix | мягкий, тихий | жрица на пороге храма | 85 |
+| Puck | бодрый | трактирщик | 34 |
 | Pulcherrima | напористый | трактирщица | 8 |
 | Kore | твёрдый | кузнечиха | 60 |
-| Sadachbia | живой | торговец на рынке | 799 |
+| Sadachbia | живой | торговец на рынке | 811 |
 | Laomedeia | бойкий | торговка на рынке | 8 |
 | Erinome | ясный | наставница школы | 58 |
-| Autonoe | звонкий | хранительница башни | 31 |
+| Autonoe | звонкий | хранительница башни | 32 |
 | Achernar | мягкий, приглушённый | хозяйка схрона; разбойница в бою | 38 |
-| Sadachbia | живой | второй голос жителя (приветствие, разговор, торг, дело) | 799 |
-| Leda | молодой | второй голос жительницы | 796 |
-| Schedar | ровный | третий голос жителя; владыка нежити в бою (ниже на два полутона, в гулком зале) | 834 |
-| Aoede | лёгкий | третий голос жительницы | 797 |
-| Zephyr | яркий | корсарша в бою | 24 |
+| Sadachbia | живой | второй голос жителя (приветствие, разговор, торг, дело) | 811 |
+| Leda | молодой | второй голос жительницы | 804 |
+| Schedar | ровный | третий голос жителя; владыка нежити в бою (ниже на два полутона, в гулком зале) | 859 |
+| Aoede | лёгкий | третий голос жительницы | 803 |
+| Zephyr | яркий | корсарша в бою | 26 |
 | Kore | твёрдый | старшая войскового обоза | 60 |
 | Charon | низкий | старший войскового обоза; дракон в бою (ниже на пять полутонов, в пещере) | — |
 | Vindemiatrix | тихий | старшая паломничьего каравана; дух в бою (шёпот с эхом) | — |
@@ -97,7 +97,7 @@ Policy (https://policies.google.com/terms/generative-ai/use-policy). Отдел�
   GigaAM (sherpa-onnx, `nemo-ctc-giga-am-v2-russian`): не больше 15 % ошибочных
   букв и не медленнее шести знаков в секунду.
 - **Громкость.** −18 LUFS по EBU R128 (у записей от -19.2 до -17.6),
-  пики не выше -1.0 дБ; FLAC моно 24 кГц без потерь — как речь и отдаёт Gemini (с 4.6; прежде MP3 320 кбит/с 44,1 кГц, но выше 12 кГц в записи ничего нет).
+  пики не выше -0.9 дБ; FLAC моно 24 кГц без потерь — как речь и отдаёт Gemini (с 4.6; прежде MP3 320 кбит/с 44,1 кГц, но выше 12 кГц в записи ничего нет, и лишний объём ничего не давал).
 
 ## Все записи
 
@@ -1743,6 +1743,7 @@ Policy (https://policies.google.com/terms/generative-ai/use-policy). Отдел�
 | trade_regular_0_f_g.flac | торговец: постоянному покупателю | Despina | courteous, warm | Для постоянного покупателя — с поклоном. |
 | trade_regular_1_g.flac | торговец: постоянному покупателю | Umbriel | warm, generous | Постоянным — от души. Приходи снова. |
 | trade_regular_1_f_g.flac | торговец: постоянному покупателю | Despina | warm, generous | Постоянным — от души. Приходи снова. |
+| trade_regular_2_g.flac | торговец: постоянному покупателю | Umbriel | playful, laughing | Ещё немного — и я тебе медаль вручу. |
 | trade_regular_2_f_g.flac | торговец: постоянному покупателю | Despina | playful, laughing | Ещё немного — и я тебе медаль вручу. |
 | trade_regular_3_g.flac | торговец: постоянному покупателю | Umbriel | amused, fond | Я твои покупки уже на память знаю. |
 | trade_regular_3_f_g.flac | торговец: постоянному покупателю | Despina | amused, fond | Я твои покупки уже на память знаю. |
@@ -2372,6 +2373,7 @@ Policy (https://policies.google.com/terms/generative-ai/use-policy). Отдел�
 | foe_bandit_start_5_g.flac | в бою: разбойник, начало боя | Fenrir | gleeful, loud | Гляди-ка, сам пришёл. Бери его! |
 | foe_bandit_start_5_v1_g.flac | в бою: разбойник, начало боя | Enceladus | gleeful, loud | Гляди-ка, сам пришёл. Бери его! |
 | foe_bandit_start_5_v2_g.flac | в бою: разбойник, начало боя | Achernar | gleeful, loud | Гляди-ка, сам пришёл. Бери его! |
+| foe_bandit_start_6_g.flac | в бою: разбойник, начало боя | Fenrir | cruel, grinning | Дорога платная. Плати кровью. |
 | foe_bandit_start_6_v1_g.flac | в бою: разбойник, начало боя | Enceladus | cruel, grinning | Дорога платная. Плати кровью. |
 | foe_bandit_start_6_v2_g.flac | в бою: разбойник, начало боя | Achernar | cruel, grinning | Дорога платная. Плати кровью. |
 | foe_bandit_start_7_g.flac | в бою: разбойник, начало боя | Fenrir | whisper then shout | Тихо, тихо… А теперь — ножом! |
@@ -2464,6 +2466,7 @@ Policy (https://policies.google.com/terms/generative-ai/use-policy). Отдел�
 | foe_pirate_attack_0_g.flac | в бою: корсар, удар | Algenib | fierce, striking | Отведай стали! |
 | foe_pirate_attack_0_v1_g.flac | в бою: корсар, удар | Zephyr | fierce, striking | Отведай стали! |
 | foe_pirate_attack_1_g.flac | в бою: корсар, удар | Algenib | shouting | За борт его! |
+| foe_pirate_attack_1_v1_g.flac | в бою: корсар, удар | Zephyr | shouting | За борт его! |
 | foe_pirate_attack_2_g.flac | в бою: корсар, удар | Algenib | frenzied | Руби канаты, руби его! |
 | foe_pirate_attack_2_v1_g.flac | в бою: корсар, удар | Zephyr | frenzied | Руби канаты, руби его! |
 | foe_pirate_attack_3_g.flac | в бою: корсар, удар | Algenib | mocking, striking | Вот тебе морской привет! |
@@ -2471,6 +2474,7 @@ Policy (https://policies.google.com/terms/generative-ai/use-policy). Отдел�
 | foe_pirate_attack_4_g.flac | в бою: корсар, удар | Algenib | angry, effort | Держи, крыса палубная! |
 | foe_pirate_attack_4_v1_g.flac | в бою: корсар, удар | Zephyr | angry, effort | Держи, крыса палубная! |
 | foe_pirate_attack_5_g.flac | в бою: корсар, удар | Algenib | taunting | Не качайся, всё равно достану! |
+| foe_pirate_attack_5_v1_g.flac | в бою: корсар, удар | Zephyr | taunting | Не качайся, всё равно достану! |
 | foe_pirate_hurt_0_g.flac | в бою: корсар, ранен | Algenib | pain, cursing | Акулья требуха! Задел! |
 | foe_pirate_hurt_0_v1_g.flac | в бою: корсар, ранен | Zephyr | pain, cursing | Акулья требуха! Задел! |
 | foe_pirate_hurt_1_g.flac | в бою: корсар, ранен | Algenib | angry, hurt | Кровь на палубе — моя! Ну держись! |
@@ -2487,11 +2491,13 @@ Policy (https://policies.google.com/terms/generative-ai/use-policy). Отдел�
 | foe_pirate_low_2_v1_g.flac | в бою: корсар, на исходе | Zephyr | panicked shout | Все в шлюпки! Бросай корабль! |
 | foe_pirate_low_3_g.flac | в бою: корсар, на исходе | Algenib | terrified | Не топи меня, я плавать не умею! |
 | foe_pirate_low_3_v1_g.flac | в бою: корсар, на исходе | Zephyr | terrified | Не топи меня, я плавать не умею! |
+| foe_pirate_taunt_0_g.flac | в бою: корсар, герой слабеет | Algenib | mocking laugh | Шатает тебя, как в шторм! |
 | foe_pirate_taunt_0_v1_g.flac | в бою: корсар, герой слабеет | Zephyr | mocking laugh | Шатает тебя, как в шторм! |
 | foe_pirate_taunt_1_g.flac | в бою: корсар, герой слабеет | Algenib | gloating | Скоро пойдёшь кормить рыб! |
 | foe_pirate_taunt_1_v1_g.flac | в бою: корсар, герой слабеет | Zephyr | gloating | Скоро пойдёшь кормить рыб! |
 | foe_pirate_taunt_2_g.flac | в бою: корсар, герой слабеет | Algenib | cruel, gloating | Держишься за борт? Недолго осталось! |
 | foe_pirate_taunt_2_v1_g.flac | в бою: корсар, герой слабеет | Zephyr | cruel, gloating | Держишься за борт? Недолго осталось! |
+| foe_pirate_death_0_g.flac | в бою: корсар, гибель | Algenib | dying whisper | Море… забирает… |
 | foe_pirate_death_0_v1_g.flac | в бою: корсар, гибель | Zephyr | dying whisper | Море… забирает… |
 | foe_pirate_death_1_g.flac | в бою: корсар, гибель | Algenib | dying, resigned | К рыбам… так к рыбам… |
 | foe_pirate_death_1_v1_g.flac | в бою: корсар, гибель | Zephyr | dying, resigned | К рыбам… так к рыбам… |
@@ -2504,7 +2510,9 @@ Policy (https://policies.google.com/terms/generative-ai/use-policy). Отдел�
 | foe_goblin_start_4_g.flac | в бою: гоблин, начало боя | Puck | shrieking call | Все сюда! Тут большой, глупый! |
 | foe_goblin_start_5_g.flac | в бою: гоблин, начало боя | Puck | shrill chant | Гоблины не прощают! Гоблины не забывают! |
 | foe_goblin_attack_0_g.flac | в бою: гоблин, удар | Puck | gleeful, stabbing | Тык! Тык-тык! |
+| foe_goblin_attack_1_g.flac | в бою: гоблин, удар | Puck | cackling | Получи ножиком! |
 | foe_goblin_attack_2_g.flac | в бою: гоблин, удар | Puck | mocking, fast | Ай, какой медленный! |
+| foe_goblin_attack_3_g.flac | в бою: гоблин, удар | Puck | sneaky giggle | Сзади! Я сзади! |
 | foe_goblin_attack_4_g.flac | в бою: гоблин, удар | Puck | feral, excited | Кусь его! |
 | foe_goblin_attack_5_g.flac | в бою: гоблин, удар | Puck | frenzied, shrill | Ещё! Ещё! |
 | foe_goblin_hurt_0_g.flac | в бою: гоблин, ранен | Puck | squealing | Ай-ай-ай! Больно! |
@@ -2534,12 +2542,17 @@ Policy (https://policies.google.com/terms/generative-ai/use-policy). Отдел�
 | foe_giant_attack_5_g.flac | в бою: исполин, удар | Alnilam | furious roar | Размажу по камням! |
 | foe_giant_hurt_0_g.flac | в бою: исполин, ранен | Alnilam | angry, surprised, deep | Жжётся! Маленький жжётся! |
 | foe_giant_hurt_1_g.flac | в бою: исполин, ранен | Alnilam | deep fury | Ты делаешь больно. Я сделаю больнее. |
+| foe_giant_hurt_2_g.flac | в бою: исполин, ранен | Alnilam | growling, deep | Злишь меня! |
+| foe_giant_hurt_3_g.flac | в бою: исполин, ранен | Alnilam | dazed, deep | Кровь… моя кровь… |
 | foe_giant_low_0_g.flac | в бою: исполин, на исходе | Alnilam | heavy breathing, deep | Не уйдёшь… не уйдёшь живым… |
+| foe_giant_low_1_g.flac | в бою: исполин, на исходе | Alnilam | straining, deep | Я… ещё… стою! |
 | foe_giant_low_2_g.flac | в бою: исполин, на исходе | Alnilam | desperate, deep | Горы… дайте силы… |
 | foe_giant_low_3_g.flac | в бою: исполин, на исходе | Alnilam | grudging, deep | Ты сильный. Для маленького. |
 | foe_giant_taunt_0_g.flac | в бою: исполин, герой слабеет | Alnilam | deep, cruel | Ломаешься. Все ломаются. |
 | foe_giant_taunt_1_g.flac | в бою: исполин, герой слабеет | Alnilam | deep, mocking | Устал, маленький? Ложись. |
 | foe_giant_taunt_2_g.flac | в бою: исполин, герой слабеет | Alnilam | sinister, deep | Я слышу, как бьётся твоё сердце. Всё тише. |
+| foe_giant_death_0_g.flac | в бою: исполин, гибель | Alnilam | dying, deep | Горы… зовут… |
+| foe_giant_death_1_g.flac | в бою: исполин, гибель | Alnilam | dying | Я… ухожу… в камень… |
 | foe_giant_death_2_g.flac | в бою: исполин, гибель | Alnilam | dying, deep whisper | Земля… прими… |
 | foe_dragon_start_0_g.flac | в бою: дракон, начало боя | Charon | ancient, regal, contemptuous | Ты пришёл к моему золоту. Смело. Глупо. |
 | foe_dragon_start_1_g.flac | в бою: дракон, начало боя | Charon | ancient, ominous | Я видел, как рождались твои царства. Увижу и твой конец. |
@@ -2547,6 +2560,7 @@ Policy (https://policies.google.com/terms/generative-ai/use-policy). Отдел�
 | foe_dragon_start_3_g.flac | в бою: дракон, начало боя | Charon | regal, commanding | Склонись, смертный, и умри на коленях. |
 | foe_dragon_start_4_g.flac | в бою: дракон, начало боя | Charon | proud, ominous | Мой огонь старше твоих богов. |
 | foe_dragon_start_5_g.flac | в бою: дракон, начало боя | Charon | predatory, sinister | Ты пахнешь страхом. Мне нравится этот запах. |
+| foe_dragon_attack_0_g.flac | в бою: дракон, удар | Charon | roaring | Гори! |
 | foe_dragon_attack_1_g.flac | в бою: дракон, удар | Charon | booming, furious | Пламя очистит тебя! |
 | foe_dragon_attack_2_g.flac | в бою: дракон, удар | Charon | fierce, booming | Пепел к пеплу! |
 | foe_dragon_attack_3_g.flac | в бою: дракон, удар | Charon | snarling | Ощути мои когти! |
@@ -2556,13 +2570,16 @@ Policy (https://policies.google.com/terms/generative-ai/use-policy). Отдел�
 | foe_dragon_hurt_1_g.flac | в бою: дракон, ранен | Charon | cold fury | Кровь дракона дорого стоит, смертный. |
 | foe_dragon_hurt_2_g.flac | в бою: дракон, ранен | Charon | icy, menacing | Эта рана будет стоить тебе жизни. |
 | foe_dragon_hurt_3_g.flac | в бою: дракон, ранен | Charon | surprised, cold, amused | Любопытно. Ты не так слаб, как кажешься. |
+| foe_dragon_low_0_g.flac | в бою: дракон, на исходе | Charon | disbelief, straining | Нет… я древнее этих гор… |
 | foe_dragon_low_1_g.flac | в бою: дракон, на исходе | Charon | desperate, snarling | Моё золото… не получишь… |
 | foe_dragon_low_2_g.flac | в бою: дракон, на исходе | Charon | wounded, vengeful | Я уйду в небо… и вернусь… |
 | foe_dragon_low_3_g.flac | в бою: дракон, на исходе | Charon | furious curse | Проклинаю твой род до седьмого колена! |
 | foe_dragon_taunt_0_g.flac | в бою: дракон, герой слабеет | Charon | cruel amusement | Ты уже дымишься, смертный. |
 | foe_dragon_taunt_1_g.flac | в бою: дракон, герой слабеет | Charon | predatory, mocking | Твоё сердце бьётся, как у зайца. |
 | foe_dragon_taunt_2_g.flac | в бою: дракон, герой слабеет | Charon | cold, menacing | Ещё один вздох — и он будет последним. |
+| foe_dragon_death_0_g.flac | в бою: дракон, гибель | Charon | dying, vast | Небо… погасло… |
 | foe_dragon_death_1_g.flac | в бою: дракон, гибель | Charon | dying, fading | Моё пламя… гаснет… |
+| foe_dragon_death_2_g.flac | в бою: дракон, гибель | Charon | dying whisper, greedy | Золото… моё… |
 | foe_lich_start_0_g.flac | в бою: владыка нежити, начало боя | Schedar | cold, hollow whisper, longing | Живое тепло… как давно я его не чувствовал. |
 | foe_lich_start_1_g.flac | в бою: владыка нежити, начало боя | Schedar | cold, dry, ominous | Твоё имя уже записано. Осталось поставить дату. |
 | foe_lich_start_2_g.flac | в бою: владыка нежити, начало боя | Schedar | commanding, hollow | Встаньте, мёртвые. У нас гость. |
@@ -2571,6 +2588,8 @@ Policy (https://policies.google.com/terms/generative-ai/use-policy). Отдел�
 | foe_lich_start_5_g.flac | в бою: владыка нежити, начало боя | Schedar | cold, amused whisper | Ты дышишь. Это ненадолго. |
 | foe_lich_attack_1_g.flac | в бою: владыка нежити, удар | Schedar | hollow, commanding | Холод могилы! |
 | foe_lich_attack_2_g.flac | в бою: владыка нежити, удар | Schedar | cruel, hollow | Твои кости — мои! |
+| foe_lich_attack_4_g.flac | в бою: владыка нежити, удар | Schedar | chanting, cold | Прах к праху! |
+| foe_lich_attack_5_g.flac | в бою: владыка нежити, удар | Schedar | hissing curse | Истлей! |
 | foe_lich_hurt_0_g.flac | в бою: владыка нежити, ранен | Schedar | surprised, hollow | Боль… я забыл, что такое боль. |
 | foe_lich_hurt_1_g.flac | в бою: владыка нежити, ранен | Schedar | cold, mocking | Ты режешь мёртвую плоть. Она не кровоточит. |
 | foe_lich_hurt_2_g.flac | в бою: владыка нежити, ранен | Schedar | dry, hollow laugh | Смешно. Меня уже убивали. |
@@ -2582,6 +2601,8 @@ Policy (https://policies.google.com/terms/generative-ai/use-policy). Отдел�
 | foe_lich_taunt_0_g.flac | в бою: владыка нежити, герой слабеет | Schedar | hungry whisper | Твоя жизнь уходит. Я чувствую её вкус. |
 | foe_lich_taunt_1_g.flac | в бою: владыка нежити, герой слабеет | Schedar | cold, promising | Скоро ты встанешь рядом со мной. |
 | foe_lich_taunt_2_g.flac | в бою: владыка нежити, герой слабеет | Schedar | chilling whisper | Твоё сердце замедляется. Слушай. |
+| foe_lich_death_0_g.flac | в бою: владыка нежити, гибель | Schedar | relieved, fading whisper | Наконец… тишина… |
+| foe_lich_death_1_g.flac | в бою: владыка нежити, гибель | Schedar | crumbling, fading | Кости… в пыль… |
 | foe_lich_death_2_g.flac | в бою: владыка нежити, гибель | Schedar | fading, awed whisper | Мортана… встречает… |
 | foe_fiend_start_0_g.flac | в бою: бес из-за Грани, начало боя | Orus | silky, menacing | Сделка? Нет. Сегодня только плата. |
 | foe_fiend_start_1_g.flac | в бою: бес из-за Грани, начало боя | Orus | delighted, sinister | Я слышу, как кричит твоя душа. |
@@ -2589,6 +2610,9 @@ Policy (https://policies.google.com/terms/generative-ai/use-policy). Отдел�
 | foe_fiend_start_3_g.flac | в бою: бес из-за Грани, начало боя | Orus | hungry, purring, sinister | Твои страхи пахнут сладко. |
 | foe_fiend_start_4_g.flac | в бою: бес из-за Грани, начало боя | Orus | mocking, grand | Добро пожаловать в пекло, смертный. |
 | foe_fiend_start_5_g.flac | в бою: бес из-за Грани, начало боя | Orus | whispering, menacing | Я знаю твоё имя. И имена всех, кого ты любишь. |
+| foe_fiend_attack_0_g.flac | в бою: бес из-за Грани, удар | Orus | roaring | Пылай! |
+| foe_fiend_attack_1_g.flac | в бою: бес из-за Грани, удар | Orus | snarling | Разорву! |
+| foe_fiend_attack_2_g.flac | в бою: бес из-за Грани, удар | Orus | sadistic laugh | Кричи громче! |
 | foe_fiend_attack_3_g.flac | в бою: бес из-за Грани, удар | Orus | gleeful, cruel | Боль — это только начало! |
 | foe_fiend_attack_4_g.flac | в бою: бес из-за Грани, удар | Orus | hissing, furious | Твоя кровь закипит! |
 | foe_fiend_attack_5_g.flac | в бою: бес из-за Грани, удар | Orus | whispering, maddening | Я внутри тебя! |
@@ -2604,6 +2628,7 @@ Policy (https://policies.google.com/terms/generative-ai/use-policy). Отдел�
 | foe_fiend_taunt_1_g.flac | в бою: бес из-за Грани, герой слабеет | Orus | mocking, silky | Падай. Я подхвачу. |
 | foe_fiend_taunt_2_g.flac | в бою: бес из-за Грани, герой слабеет | Orus | delighted whisper | Я чувствую твой страх. Он растёт. |
 | foe_fiend_death_0_g.flac | в бою: бес из-за Грани, гибель | Orus | dying hiss | Обратно… в пламя… |
+| foe_fiend_death_1_g.flac | в бою: бес из-за Грани, гибель | Orus | fading, menacing | Это… не конец… |
 | foe_fiend_death_2_g.flac | в бою: бес из-за Грани, гибель | Orus | fading, wailing | Грань… закрывается… |
 | foe_spirit_start_0_g.flac | в бою: дух, начало боя | Enceladus | ghostly whisper, mournful | Зачем ты пришёл туда, где нет живых? |
 | foe_spirit_start_0_v1_g.flac | в бою: дух, начало боя | Vindemiatrix | ghostly whisper, mournful | Зачем ты пришёл туда, где нет живых? |
@@ -2623,6 +2648,8 @@ Policy (https://policies.google.com/terms/generative-ai/use-policy). Отдел�
 | foe_spirit_attack_1_v1_g.flac | в бою: дух, удар | Vindemiatrix | hungry whisper | Отдай своё тепло… |
 | foe_spirit_attack_2_g.flac | в бою: дух, удар | Enceladus | chilling whisper | Холод… войди в него… |
 | foe_spirit_attack_2_v1_g.flac | в бою: дух, удар | Vindemiatrix | chilling whisper | Холод… войди в него… |
+| foe_spirit_attack_3_g.flac | в бою: дух, удар | Enceladus | lulling, sinister whisper | Тише… тише… усни… |
+| foe_spirit_attack_3_v1_g.flac | в бою: дух, удар | Vindemiatrix | lulling, sinister whisper | Тише… тише… усни… |
 | foe_spirit_attack_4_g.flac | в бою: дух, удар | Enceladus | echoing whisper | Мы рядом… мы внутри… |
 | foe_spirit_attack_4_v1_g.flac | в бою: дух, удар | Vindemiatrix | echoing whisper | Мы рядом… мы внутри… |
 | foe_spirit_attack_5_g.flac | в бою: дух, удар | Enceladus | hollow whisper | Пустота зовёт… |
@@ -2652,6 +2679,8 @@ Policy (https://policies.google.com/terms/generative-ai/use-policy). Отдел�
 | foe_spirit_death_0_v1_g.flac | в бою: дух, гибель | Vindemiatrix | relieved sigh, fading | Свобода… |
 | foe_spirit_death_1_g.flac | в бою: дух, гибель | Enceladus | peaceful, fading whisper | Наконец… покой… |
 | foe_spirit_death_1_v1_g.flac | в бою: дух, гибель | Vindemiatrix | peaceful, fading whisper | Наконец… покой… |
+| foe_spirit_death_2_g.flac | в бою: дух, гибель | Enceladus | fading echo | Мы… уходим… |
+| foe_spirit_death_2_v1_g.flac | в бою: дух, гибель | Vindemiatrix | fading echo | Мы… уходим… |
 | foe_siren_start_0_g.flac | в бою: сирена, начало боя | Autonoe | alluring, sweet, eerie | Иди ко мне… вода тёплая… |
 | foe_siren_start_1_g.flac | в бою: сирена, начало боя | Autonoe | seductive, sing-song | Ты слышишь мою песню? Иди на голос… |
 | foe_siren_start_2_g.flac | в бою: сирена, начало боя | Autonoe | sweet, sinister | Столько моряков… и ни один не вернулся. |
@@ -2663,6 +2692,7 @@ Policy (https://policies.google.com/terms/generative-ai/use-policy). Отдел�
 | foe_siren_attack_2_g.flac | в бою: сирена, удар | Autonoe | sweet then shrieking | Утони в моих объятиях! |
 | foe_siren_attack_3_g.flac | в бою: сирена, удар | Autonoe | hissing | Соль тебе в раны! |
 | foe_siren_attack_4_g.flac | в бою: сирена, удар | Autonoe | cruel, sweet | Задержи дыхание… навсегда! |
+| foe_siren_attack_5_g.flac | в бою: сирена, удар | Autonoe | shrieking command | Волна, накрой! |
 | foe_siren_hurt_0_g.flac | в бою: сирена, ранен | Autonoe | hurt, betrayed | Ты ранишь меня? Меня, что любила тебя? |
 | foe_siren_hurt_1_g.flac | в бою: сирена, ранен | Autonoe | cold, hissing | Кровь в воде… акулы услышат. |
 | foe_siren_hurt_2_g.flac | в бою: сирена, ранен | Autonoe | bitter, hurt | Жестокий… как все живые. |
@@ -3033,6 +3063,12 @@ Policy (https://policies.google.com/terms/generative-ai/use-policy). Отдел�
 | quest_war_4_v1_f_g.flac | заказчик: война | Leda | grim, earnest | На фронте тяжело. Помоги нашим, и получишь по заслугам. |
 | quest_war_4_v2_g.flac | заказчик: война | Schedar | grim, earnest | На фронте тяжело. Помоги нашим, и получишь по заслугам. |
 | quest_war_4_v2_f_g.flac | заказчик: война | Aoede | grim, earnest | На фронте тяжело. Помоги нашим, и получишь по заслугам. |
+| quest_rescue_2_g.flac | заказчик: спасение | Umbriel | desperate, urgent | Человек пропал. Найди его, пока не поздно. |
+| quest_rescue_2_f_g.flac | заказчик: спасение | Despina | desperate, urgent | Человек пропал. Найди его, пока не поздно. |
+| quest_rescue_2_v1_g.flac | заказчик: спасение | Sadachbia | desperate, urgent | Человек пропал. Найди его, пока не поздно. |
+| quest_rescue_2_v1_f_g.flac | заказчик: спасение | Leda | desperate, urgent | Человек пропал. Найди его, пока не поздно. |
+| quest_rescue_2_v2_g.flac | заказчик: спасение | Schedar | desperate, urgent | Человек пропал. Найди его, пока не поздно. |
+| quest_rescue_2_v2_f_g.flac | заказчик: спасение | Aoede | desperate, urgent | Человек пропал. Найди его, пока не поздно. |
 | quest_rescue_3_g.flac | заказчик: спасение | Umbriel | pleading, urgent | Там наши, в беде. Выручи их — больше некому. |
 | quest_rescue_3_f_g.flac | заказчик: спасение | Despina | pleading, urgent | Там наши, в беде. Выручи их — больше некому. |
 | quest_rescue_3_v1_g.flac | заказчик: спасение | Sadachbia | pleading, urgent | Там наши, в беде. Выручи их — больше некому. |
@@ -3504,7 +3540,11 @@ Policy (https://policies.google.com/terms/generative-ai/use-policy). Отдел�
 | car_news_1_v2_f_g.flac | старший обоза: новости | Vindemiatrix | friendly, storyteller | Расскажу, что знаю. Мы много где бываем. |
 | car_news_1_v3_f_g.flac | старший обоза: новости | Erinome | friendly, storyteller | Расскажу, что знаю. Мы много где бываем. |
 | car_news_2_v1_g.flac | старший обоза: новости | Charon | amused, chatty | Новости? Их у нас больше, чем товара. |
+| car_news_2_v2_g.flac | старший обоза: новости | Zubenelgenubi | amused, chatty | Новости? Их у нас больше, чем товара. |
+| car_news_2_v3_g.flac | старший обоза: новости | Achird | amused, chatty | Новости? Их у нас больше, чем товара. |
 | car_news_2_v1_f_g.flac | старший обоза: новости | Kore | amused, chatty | Новости? Их у нас больше, чем товара. |
+| car_news_2_v2_f_g.flac | старший обоза: новости | Vindemiatrix | amused, chatty | Новости? Их у нас больше, чем товара. |
+| car_news_2_v3_f_g.flac | старший обоза: новости | Erinome | amused, chatty | Новости? Их у нас больше, чем товара. |
 | car_arrive_0_v1_g.flac | старший обоза: дошли, плата | Charon | relieved, grateful | Дошли! Держи плату, заслужено. |
 | car_arrive_0_v2_g.flac | старший обоза: дошли, плата | Zubenelgenubi | relieved, grateful | Дошли! Держи плату, заслужено. |
 | car_arrive_0_v3_g.flac | старший обоза: дошли, плата | Achird | relieved, grateful | Дошли! Держи плату, заслужено. |
@@ -3890,9 +3930,13 @@ Policy (https://policies.google.com/terms/generative-ai/use-policy). Отдел�
 | greet_svoy_2_v1_f_g.flac | приветствие: старый знакомый | Leda | joyful, warm, glad to see a friend | А вот и ты! Заходи. |
 | greet_svoy_2_v2_f_g.flac | приветствие: старый знакомый | Aoede | joyful, warm, glad to see a friend | А вот и ты! Заходи. |
 | greet_svoy_3_v1_g.flac | приветствие: старый знакомый | Sadachbia | joyful, warm, glad to see a friend | Своих не забываем. Садись. |
+| greet_svoy_3_v2_g.flac | приветствие: старый знакомый | Schedar | joyful, warm, glad to see a friend | Своих не забываем. Садись. |
 | greet_svoy_3_v1_f_g.flac | приветствие: старый знакомый | Leda | joyful, warm, glad to see a friend | Своих не забываем. Садись. |
+| greet_svoy_3_v2_f_g.flac | приветствие: старый знакомый | Aoede | joyful, warm, glad to see a friend | Своих не забываем. Садись. |
 | greet_svoy_4_v1_g.flac | приветствие: старый знакомый | Sadachbia | joyful, warm, glad to see a friend | О, наш человек! Что нового? |
+| greet_svoy_4_v2_g.flac | приветствие: старый знакомый | Schedar | joyful, warm, glad to see a friend | О, наш человек! Что нового? |
 | greet_svoy_4_v1_f_g.flac | приветствие: старый знакомый | Leda | joyful, warm, glad to see a friend | О, наш человек! Что нового? |
+| greet_svoy_4_v2_f_g.flac | приветствие: старый знакомый | Aoede | joyful, warm, glad to see a friend | О, наш человек! Что нового? |
 | greet_svoy_5_v1_g.flac | приветствие: старый знакомый | Sadachbia | joyful, warm, glad to see a friend | Для тебя отложил кое-что. Смотри. |
 | greet_svoy_5_v2_g.flac | приветствие: старый знакомый | Schedar | joyful, warm, glad to see a friend | Для тебя отложил кое-что. Смотри. |
 | greet_svoy_5_v1_f_g.flac | приветствие: старый знакомый | Leda | joyful, warm, glad to see a friend | Для тебя отложила кое-что. Смотри. |
@@ -3950,7 +3994,9 @@ Policy (https://policies.google.com/terms/generative-ai/use-policy). Отдел�
 | greet_snova_0_v1_f_g.flac | приветствие: при новой встрече | Leda | wry, slightly amused | Снова ты? Ну, заходи. |
 | greet_snova_0_v2_f_g.flac | приветствие: при новой встрече | Aoede | wry, slightly amused | Снова ты? Ну, заходи. |
 | greet_snova_1_v1_g.flac | приветствие: при новой встрече | Sadachbia | wry, slightly amused | Вернулся? Значит, понравилось. |
+| greet_snova_1_v2_g.flac | приветствие: при новой встрече | Schedar | wry, slightly amused | Вернулся? Значит, понравилось. |
 | greet_snova_1_v1_f_g.flac | приветствие: при новой встрече | Leda | wry, slightly amused | Вернулся? Значит, понравилось. |
+| greet_snova_1_v2_f_g.flac | приветствие: при новой встрече | Aoede | wry, slightly amused | Вернулся? Значит, понравилось. |
 | greet_snova_2_v1_g.flac | приветствие: при новой встрече | Sadachbia | wry, slightly amused | Опять пришёл. Что на этот раз? |
 | greet_snova_2_v2_g.flac | приветствие: при новой встрече | Schedar | wry, slightly amused | Опять пришёл. Что на этот раз? |
 | greet_snova_2_v1_f_g.flac | приветствие: при новой встрече | Leda | wry, slightly amused | Опять пришёл. Что на этот раз? |
@@ -4076,7 +4122,9 @@ Policy (https://policies.google.com/terms/generative-ai/use-policy). Отдел�
 | dlg_0_3_v1_f_g.flac | ответ в разговоре | Leda | evasive, dismissive | Не моего ума дело, и не вашего, по-хорошему |
 | dlg_0_3_v2_f_g.flac | ответ в разговоре | Aoede | evasive, dismissive | Не моего ума дело, и не вашего, по-хорошему |
 | dlg_0_4_v1_g.flac | ответ в разговоре (трус) | Sadachbia | evasive, dismissive, timid, nervous | Тише вы… Не знаю ничего и знать не хочу |
+| dlg_0_4_v2_g.flac | ответ в разговоре (трус) | Schedar | evasive, dismissive, timid, nervous | Тише вы… Не знаю ничего и знать не хочу |
 | dlg_0_4_v1_f_g.flac | ответ в разговоре (трус) | Leda | evasive, dismissive, timid, nervous | Тише вы… Не знаю ничего и знать не хочу |
+| dlg_0_4_v2_f_g.flac | ответ в разговоре (трус) | Aoede | evasive, dismissive, timid, nervous | Тише вы… Не знаю ничего и знать не хочу |
 | dlg_0_5_v1_g.flac | ответ в разговоре (подозрительный) | Sadachbia | evasive, dismissive, suspicious | А вам-то зачем? Нет, не скажу |
 | dlg_0_5_v2_g.flac | ответ в разговоре (подозрительный) | Schedar | evasive, dismissive, suspicious | А вам-то зачем? Нет, не скажу |
 | dlg_0_5_v1_f_g.flac | ответ в разговоре (подозрительный) | Leda | evasive, dismissive, suspicious | А вам-то зачем? Нет, не скажу |
@@ -4193,7 +4241,9 @@ Policy (https://policies.google.com/terms/generative-ai/use-policy). Отдел�
 | dlg_2_3_v2_g.flac | ответ в разговоре | Schedar | thoughtful, agreeing | Может, и правда пора посмотреть иначе |
 | dlg_2_3_v1_f_g.flac | ответ в разговоре | Leda | thoughtful, agreeing | Может, и правда пора посмотреть иначе |
 | dlg_2_3_v2_f_g.flac | ответ в разговоре | Aoede | thoughtful, agreeing | Может, и правда пора посмотреть иначе |
+| dlg_2_4_v1_g.flac | ответ в разговоре (рациональный) | Sadachbia | thoughtful, agreeing, calm, rational | Доводы весомые. Принимаю |
 | dlg_2_4_v2_g.flac | ответ в разговоре (рациональный) | Schedar | thoughtful, agreeing, calm, rational | Доводы весомые. Принимаю |
+| dlg_2_4_v1_f_g.flac | ответ в разговоре (рациональный) | Leda | thoughtful, agreeing, calm, rational | Доводы весомые. Принимаю |
 | dlg_2_4_v2_f_g.flac | ответ в разговоре (рациональный) | Aoede | thoughtful, agreeing, calm, rational | Доводы весомые. Принимаю |
 | dlg_2_5_v1_g.flac | ответ в разговоре (высокомерный) | Sadachbia | thoughtful, agreeing, haughty | Редко признаю чужую правоту, но тут — да |
 | dlg_2_5_v2_g.flac | ответ в разговоре (высокомерный) | Schedar | thoughtful, agreeing, haughty | Редко признаю чужую правоту, но тут — да |
@@ -4327,7 +4377,9 @@ Policy (https://policies.google.com/terms/generative-ai/use-policy). Отдел�
 | dlg_4_5_v2_g.flac | ответ в разговоре (добрый) | Schedar | reluctant, sighing, kind, warm | Для хорошего человека не жалко |
 | dlg_4_5_v1_f_g.flac | ответ в разговоре (добрый) | Leda | reluctant, sighing, kind, warm | Для хорошего человека не жалко |
 | dlg_4_5_v2_f_g.flac | ответ в разговоре (добрый) | Aoede | reluctant, sighing, kind, warm | Для хорошего человека не жалко |
+| dlg_4_6_v1_g.flac | ответ в разговоре (жадный) | Sadachbia | reluctant, sighing, greedy, calculating | Сделаю. Сочтёмся потом — я запомню |
 | dlg_4_6_v2_g.flac | ответ в разговоре (жадный) | Schedar | reluctant, sighing, greedy, calculating | Сделаю. Сочтёмся потом — я запомню |
+| dlg_4_6_v1_f_g.flac | ответ в разговоре (жадный) | Leda | reluctant, sighing, greedy, calculating | Сделаю. Сочтёмся потом — я запомню |
 | dlg_4_6_v2_f_g.flac | ответ в разговоре (жадный) | Aoede | reluctant, sighing, greedy, calculating | Сделаю. Сочтёмся потом — я запомню |
 | dlg_4_7_v1_g.flac | ответ в разговоре (прагматик) | Sadachbia | reluctant, sighing, matter-of-fact | Помогу, если и мне с того что-то будет. Будет? |
 | dlg_4_7_v2_g.flac | ответ в разговоре (прагматик) | Schedar | reluctant, sighing, matter-of-fact | Помогу, если и мне с того что-то будет. Будет? |
@@ -4337,7 +4389,9 @@ Policy (https://policies.google.com/terms/generative-ai/use-policy). Отдел�
 | dlg_4_8_v2_g.flac | ответ в разговоре (трус) | Schedar | reluctant, sighing, timid, nervous | Ох… ладно, только чтобы без неприятностей |
 | dlg_4_8_v1_f_g.flac | ответ в разговоре (трус) | Leda | reluctant, sighing, timid, nervous | Ох… ладно, только чтобы без неприятностей |
 | dlg_4_8_v2_f_g.flac | ответ в разговоре (трус) | Aoede | reluctant, sighing, timid, nervous | Ох… ладно, только чтобы без неприятностей |
+| dlg_4_9_v1_g.flac | ответ в разговоре (свой) | Sadachbia | reluctant, sighing, warm, friendly | Для тебя — хоть сто раз |
 | dlg_4_9_v2_g.flac | ответ в разговоре (свой) | Schedar | reluctant, sighing, warm, friendly | Для тебя — хоть сто раз |
+| dlg_4_9_v1_f_g.flac | ответ в разговоре (свой) | Leda | reluctant, sighing, warm, friendly | Для тебя — хоть сто раз |
 | dlg_4_9_v2_f_g.flac | ответ в разговоре (свой) | Aoede | reluctant, sighing, warm, friendly | Для тебя — хоть сто раз |
 | dlg_4_10_v1_g.flac | ответ в разговоре (помнит добро) | Sadachbia | reluctant, sighing, grateful, warm | Вам не откажу: вы меня выручали |
 | dlg_4_10_v2_g.flac | ответ в разговоре (помнит добро) | Schedar | reluctant, sighing, grateful, warm | Вам не откажу: вы меня выручали |
@@ -4347,15 +4401,25 @@ Policy (https://policies.google.com/terms/generative-ai/use-policy). Отдел�
 | dlg_4_11_v2_g.flac | ответ в разговоре (холоден) | Schedar | reluctant, sighing, cold, curt | Держите. И больше не просите |
 | dlg_4_11_v1_f_g.flac | ответ в разговоре (холоден) | Leda | reluctant, sighing, cold, curt | Держите. И больше не просите |
 | dlg_4_11_v2_f_g.flac | ответ в разговоре (холоден) | Aoede | reluctant, sighing, cold, curt | Держите. И больше не просите |
+| dlg_4_12_v1_g.flac | ответ в разговоре (недруг) | Sadachbia | reluctant, sighing, hostile | Бери и уходи |
+| dlg_4_12_v2_g.flac | ответ в разговоре (недруг) | Schedar | reluctant, sighing, hostile | Бери и уходи |
+| dlg_4_12_v1_f_g.flac | ответ в разговоре (недруг) | Leda | reluctant, sighing, hostile | Бери и уходи |
+| dlg_4_12_v2_f_g.flac | ответ в разговоре (недруг) | Aoede | reluctant, sighing, hostile | Бери и уходи |
+| dlg_4_13_v1_g.flac | ответ в разговоре (помнит обиду) | Sadachbia | reluctant, sighing, resentful, bitter | Помогу. Но помнить буду всё |
 | dlg_4_13_v2_g.flac | ответ в разговоре (помнит обиду) | Schedar | reluctant, sighing, resentful, bitter | Помогу. Но помнить буду всё |
+| dlg_4_13_v1_f_g.flac | ответ в разговоре (помнит обиду) | Leda | reluctant, sighing, resentful, bitter | Помогу. Но помнить буду всё |
 | dlg_4_13_v2_f_g.flac | ответ в разговоре (помнит обиду) | Aoede | reluctant, sighing, resentful, bitter | Помогу. Но помнить буду всё |
 | dlg_5_0_v1_g.flac | ответ в разговоре | Sadachbia | helpless, sad | Мне бы кто помог |
 | dlg_5_0_v2_g.flac | ответ в разговоре | Schedar | helpless, sad | Мне бы кто помог |
 | dlg_5_0_v1_f_g.flac | ответ в разговоре | Leda | helpless, sad | Мне бы кто помог |
 | dlg_5_0_v2_f_g.flac | ответ в разговоре | Aoede | helpless, sad | Мне бы кто помог |
+| dlg_5_1_v1_g.flac | ответ в разговоре | Sadachbia | helpless, sad | Самому бы кто подсобил |
 | dlg_5_1_v2_g.flac | ответ в разговоре | Schedar | helpless, sad | Самому бы кто подсобил |
+| dlg_5_1_v1_f_g.flac | ответ в разговоре | Leda | helpless, sad | Самой бы кто подсобил |
 | dlg_5_1_v2_f_g.flac | ответ в разговоре | Aoede | helpless, sad | Самой бы кто подсобил |
+| dlg_5_2_v1_g.flac | ответ в разговоре | Sadachbia | helpless, sad | Не могу. Своих забот по горло |
 | dlg_5_2_v2_g.flac | ответ в разговоре | Schedar | helpless, sad | Не могу. Своих забот по горло |
+| dlg_5_2_v1_f_g.flac | ответ в разговоре | Leda | helpless, sad | Не могу. Своих забот по горло |
 | dlg_5_2_v2_f_g.flac | ответ в разговоре | Aoede | helpless, sad | Не могу. Своих забот по горло |
 | dlg_5_3_v1_g.flac | ответ в разговоре | Sadachbia | helpless, sad | Не просите, не выйдет |
 | dlg_5_3_v2_g.flac | ответ в разговоре | Schedar | helpless, sad | Не просите, не выйдет |
@@ -4526,7 +4590,9 @@ Policy (https://policies.google.com/terms/generative-ai/use-policy). Отдел�
 | dlg_8_9_v1_f_g.flac | ответ в разговоре (свой) | Leda | surprised, conceding, warm, friendly | Вот за что тебя ценю: голова у тебя светлая |
 | dlg_8_9_v2_f_g.flac | ответ в разговоре (свой) | Aoede | surprised, conceding, warm, friendly | Вот за что тебя ценю: голова у тебя светлая |
 | dlg_8_10_v1_g.flac | ответ в разговоре (холоден) | Sadachbia | surprised, conceding, cold, curt | Допустим. Убедили |
+| dlg_8_10_v2_g.flac | ответ в разговоре (холоден) | Schedar | surprised, conceding, cold, curt | Допустим. Убедили |
 | dlg_8_10_v1_f_g.flac | ответ в разговоре (холоден) | Leda | surprised, conceding, cold, curt | Допустим. Убедили |
+| dlg_8_10_v2_f_g.flac | ответ в разговоре (холоден) | Aoede | surprised, conceding, cold, curt | Допустим. Убедили |
 | dlg_9_0_v1_g.flac | ответ в разговоре | Sadachbia | grudging, conceding | Ваша взяла. Уступлю |
 | dlg_9_0_v2_g.flac | ответ в разговоре | Schedar | grudging, conceding | Ваша взяла. Уступлю |
 | dlg_9_0_v1_f_g.flac | ответ в разговоре | Leda | grudging, conceding | Ваша взяла. Уступлю |
@@ -4548,7 +4614,9 @@ Policy (https://policies.google.com/terms/generative-ai/use-policy). Отдел�
 | dlg_9_4_v1_f_g.flac | ответ в разговоре (жадный) | Leda | grudging, conceding, greedy, calculating | Режете меня без ножа… ладно, берите |
 | dlg_9_4_v2_f_g.flac | ответ в разговоре (жадный) | Aoede | grudging, conceding, greedy, calculating | Режете меня без ножа… ладно, берите |
 | dlg_9_5_v1_g.flac | ответ в разговоре (хитрый) | Sadachbia | grudging, conceding, sly | Хорошо торгуетесь. Уступлю — на этот раз |
+| dlg_9_5_v2_g.flac | ответ в разговоре (хитрый) | Schedar | grudging, conceding, sly | Хорошо торгуетесь. Уступлю — на этот раз |
 | dlg_9_5_v1_f_g.flac | ответ в разговоре (хитрый) | Leda | grudging, conceding, sly | Хорошо торгуетесь. Уступлю — на этот раз |
+| dlg_9_5_v2_f_g.flac | ответ в разговоре (хитрый) | Aoede | grudging, conceding, sly | Хорошо торгуетесь. Уступлю — на этот раз |
 | dlg_9_6_v1_g.flac | ответ в разговоре (добрый) | Sadachbia | grudging, conceding, kind, warm | Для вас — скину. Носите на здоровье |
 | dlg_9_6_v2_g.flac | ответ в разговоре (добрый) | Schedar | grudging, conceding, kind, warm | Для вас — скину. Носите на здоровье |
 | dlg_9_6_v1_f_g.flac | ответ в разговоре (добрый) | Leda | grudging, conceding, kind, warm | Для вас — скину. Носите на здоровье |
@@ -4682,7 +4750,9 @@ Policy (https://policies.google.com/terms/generative-ai/use-policy). Отдел�
 | dlg_12_4_v1_f_g.flac | ответ в разговоре (честный) | Leda | offended, indignant, sincere | Честь не продаётся. Ступайте |
 | dlg_12_4_v2_f_g.flac | ответ в разговоре (честный) | Aoede | offended, indignant, sincere | Честь не продаётся. Ступайте |
 | dlg_12_5_v1_g.flac | ответ в разговоре (высокомерный) | Sadachbia | offended, indignant, haughty | Вы смеете? Мне? |
+| dlg_12_5_v2_g.flac | ответ в разговоре (высокомерный) | Schedar | offended, indignant, haughty | Вы смеете? Мне? |
 | dlg_12_5_v1_f_g.flac | ответ в разговоре (высокомерный) | Leda | offended, indignant, haughty | Вы смеете? Мне? |
+| dlg_12_5_v2_f_g.flac | ответ в разговоре (высокомерный) | Aoede | offended, indignant, haughty | Вы смеете? Мне? |
 | dlg_12_6_v1_g.flac | ответ в разговоре (фанатик) | Sadachbia | offended, indignant, zealous, fervent | Боги видят, что вы сделали |
 | dlg_12_6_v2_g.flac | ответ в разговоре (фанатик) | Schedar | offended, indignant, zealous, fervent | Боги видят, что вы сделали |
 | dlg_12_6_v1_f_g.flac | ответ в разговоре (фанатик) | Leda | offended, indignant, zealous, fervent | Боги видят, что вы сделали |
@@ -4763,14 +4833,22 @@ Policy (https://policies.google.com/terms/generative-ai/use-policy). Отдел�
 | dlg_14_5_v2_g.flac | ответ в разговоре (добрый) | Schedar | pleasantly surprised, warm, kind, warm | Приятно! Садитесь, поговорим |
 | dlg_14_5_v1_f_g.flac | ответ в разговоре (добрый) | Leda | pleasantly surprised, warm, kind, warm | Приятно! Садитесь, поговорим |
 | dlg_14_5_v2_f_g.flac | ответ в разговоре (добрый) | Aoede | pleasantly surprised, warm, kind, warm | Приятно! Садитесь, поговорим |
+| dlg_14_6_v1_g.flac | ответ в разговоре (высокомерный) | Sadachbia | pleasantly surprised, warm, haughty | Не ожидал от чужака |
+| dlg_14_6_v2_g.flac | ответ в разговоре (высокомерный) | Schedar | pleasantly surprised, warm, haughty | Не ожидал от чужака |
+| dlg_14_6_v1_f_g.flac | ответ в разговоре (высокомерный) | Leda | pleasantly surprised, warm, haughty | Не ожидала от чужака |
+| dlg_14_6_v2_f_g.flac | ответ в разговоре (высокомерный) | Aoede | pleasantly surprised, warm, haughty | Не ожидала от чужака |
+| dlg_14_7_v1_g.flac | ответ в разговоре (недруг) | Sadachbia | pleasantly surprised, warm, hostile | Даже недруг, а обычай знает. Уважаю |
 | dlg_14_7_v2_g.flac | ответ в разговоре (недруг) | Schedar | pleasantly surprised, warm, hostile | Даже недруг, а обычай знает. Уважаю |
+| dlg_14_7_v1_f_g.flac | ответ в разговоре (недруг) | Leda | pleasantly surprised, warm, hostile | Даже недруг, а обычай знает. Уважаю |
 | dlg_14_7_v2_f_g.flac | ответ в разговоре (недруг) | Aoede | pleasantly surprised, warm, hostile | Даже недруг, а обычай знает. Уважаю |
 | dlg_14_8_v1_g.flac | ответ в разговоре (свой) | Sadachbia | pleasantly surprised, warm, warm, friendly | Ты у нас уже почти свой |
 | dlg_14_8_v2_g.flac | ответ в разговоре (свой) | Schedar | pleasantly surprised, warm, warm, friendly | Ты у нас уже почти свой |
 | dlg_14_8_v1_f_g.flac | ответ в разговоре (свой) | Leda | pleasantly surprised, warm, warm, friendly | Ты у нас уже почти свой |
 | dlg_14_8_v2_f_g.flac | ответ в разговоре (свой) | Aoede | pleasantly surprised, warm, warm, friendly | Ты у нас уже почти свой |
 | dlg_14_9_v1_g.flac | ответ в разговоре (холоден) | Sadachbia | pleasantly surprised, warm, cold, curt | Хм. Удивили |
+| dlg_14_9_v2_g.flac | ответ в разговоре (холоден) | Schedar | pleasantly surprised, warm, cold, curt | Хм. Удивили |
 | dlg_14_9_v1_f_g.flac | ответ в разговоре (холоден) | Leda | pleasantly surprised, warm, cold, curt | Хм. Удивили |
+| dlg_14_9_v2_f_g.flac | ответ в разговоре (холоден) | Aoede | pleasantly surprised, warm, cold, curt | Хм. Удивили |
 | dlg_15_0_v1_g.flac | ответ в разговоре | Sadachbia | suspicious, slow | Вы чего-то не договариваете? |
 | dlg_15_0_v2_g.flac | ответ в разговоре | Schedar | suspicious, slow | Вы чего-то не договариваете? |
 | dlg_15_0_v1_f_g.flac | ответ в разговоре | Leda | suspicious, slow | Вы чего-то не договариваете? |
@@ -4856,7 +4934,9 @@ Policy (https://policies.google.com/terms/generative-ai/use-policy). Отдел�
 | dlg_16_10_v1_f_g.flac | ответ в разговоре (недруг) | Leda | contemptuous, cold, hostile | Лгун. Все будут знать |
 | dlg_16_10_v2_f_g.flac | ответ в разговоре (недруг) | Aoede | contemptuous, cold, hostile | Лгун. Все будут знать |
 | dlg_17_0_v1_g.flac | ответ в разговоре | Sadachbia | frightened, pleading | Только не надо... я скажу |
+| dlg_17_0_v2_g.flac | ответ в разговоре | Schedar | frightened, pleading | Только не надо... я скажу |
 | dlg_17_0_v1_f_g.flac | ответ в разговоре | Leda | frightened, pleading | Только не надо... я скажу |
+| dlg_17_0_v2_f_g.flac | ответ в разговоре | Aoede | frightened, pleading | Только не надо... я скажу |
 | dlg_17_1_v1_g.flac | ответ в разговоре | Sadachbia | frightened, pleading | Хорошо, хорошо! Всё скажу |
 | dlg_17_1_v2_g.flac | ответ в разговоре | Schedar | frightened, pleading | Хорошо, хорошо! Всё скажу |
 | dlg_17_1_v1_f_g.flac | ответ в разговоре | Leda | frightened, pleading | Хорошо, хорошо! Всё скажу |
@@ -5053,7 +5133,9 @@ Policy (https://policies.google.com/terms/generative-ai/use-policy). Отдел�
 | dlg_22_7_v2_g.flac | ответ в разговоре (помнит добро) | Schedar | easygoing, indifferent, grateful, warm | Не беда. Вы и так много сделали |
 | dlg_22_7_v1_f_g.flac | ответ в разговоре (помнит добро) | Leda | easygoing, indifferent, grateful, warm | Не беда. Вы и так много сделали |
 | dlg_22_7_v2_f_g.flac | ответ в разговоре (помнит добро) | Aoede | easygoing, indifferent, grateful, warm | Не беда. Вы и так много сделали |
+| dlg_22_8_v1_g.flac | ответ в разговоре (холоден) | Sadachbia | easygoing, indifferent, cold, curt | Как знаете |
 | dlg_22_8_v2_g.flac | ответ в разговоре (холоден) | Schedar | easygoing, indifferent, cold, curt | Как знаете |
+| dlg_22_8_v1_f_g.flac | ответ в разговоре (холоден) | Leda | easygoing, indifferent, cold, curt | Как знаете |
 | dlg_22_8_v2_f_g.flac | ответ в разговоре (холоден) | Aoede | easygoing, indifferent, cold, curt | Как знаете |
 | dlg_23_0_v1_g.flac | ответ в разговоре | Sadachbia | impatient, tired | Мы об этом говорили |
 | dlg_23_0_v2_g.flac | ответ в разговоре | Schedar | impatient, tired | Мы об этом говорили |
@@ -5188,19 +5270,33 @@ Policy (https://policies.google.com/terms/generative-ai/use-policy). Отдел�
 | dlg_28_0_v1_f_g.flac | ответ в разговоре | Leda | worried, grave | Времена неспокойные, вот что скажу |
 | dlg_28_0_v2_f_g.flac | ответ в разговоре | Aoede | worried, grave | Времена неспокойные, вот что скажу |
 | dlg_28_1_v1_g.flac | ответ в разговоре | Sadachbia | worried, grave | В мире всякое творится, слушайте |
+| dlg_28_1_v2_g.flac | ответ в разговоре | Schedar | worried, grave | В мире всякое творится, слушайте |
 | dlg_28_1_v1_f_g.flac | ответ в разговоре | Leda | worried, grave | В мире всякое творится, слушайте |
+| dlg_28_1_v2_f_g.flac | ответ в разговоре | Aoede | worried, grave | В мире всякое творится, слушайте |
 | dlg_28_2_v1_g.flac | ответ в разговоре | Sadachbia | worried, grave | Цены растут, войны не кончаются — вот вам и новости |
+| dlg_28_2_v2_g.flac | ответ в разговоре | Schedar | worried, grave | Цены растут, войны не кончаются — вот вам и новости |
 | dlg_28_2_v1_f_g.flac | ответ в разговоре | Leda | worried, grave | Цены растут, войны не кончаются — вот вам и новости |
+| dlg_28_2_v2_f_g.flac | ответ в разговоре | Aoede | worried, grave | Цены растут, войны не кончаются — вот вам и новости |
 | dlg_28_3_v1_g.flac | ответ в разговоре (фанатик) | Sadachbia | worried, grave, zealous, fervent | Боги гневаются, вот и неспокойно |
+| dlg_28_3_v2_g.flac | ответ в разговоре (фанатик) | Schedar | worried, grave, zealous, fervent | Боги гневаются, вот и неспокойно |
 | dlg_28_3_v1_f_g.flac | ответ в разговоре (фанатик) | Leda | worried, grave, zealous, fervent | Боги гневаются, вот и неспокойно |
+| dlg_28_3_v2_f_g.flac | ответ в разговоре (фанатик) | Aoede | worried, grave, zealous, fervent | Боги гневаются, вот и неспокойно |
 | dlg_28_4_v1_g.flac | ответ в разговоре (прагматик) | Sadachbia | worried, grave, matter-of-fact | Торговля встала, вот главное |
+| dlg_28_4_v2_g.flac | ответ в разговоре (прагматик) | Schedar | worried, grave, matter-of-fact | Торговля встала, вот главное |
 | dlg_28_4_v1_f_g.flac | ответ в разговоре (прагматик) | Leda | worried, grave, matter-of-fact | Торговля встала, вот главное |
+| dlg_28_4_v2_f_g.flac | ответ в разговоре (прагматик) | Aoede | worried, grave, matter-of-fact | Торговля встала, вот главное |
 | dlg_28_5_v1_g.flac | ответ в разговоре (мятежник) | Sadachbia | worried, grave, rebellious | Власть жиреет, народ беднеет — вот и все новости |
+| dlg_28_5_v2_g.flac | ответ в разговоре (мятежник) | Schedar | worried, grave, rebellious | Власть жиреет, народ беднеет — вот и все новости |
 | dlg_28_5_v1_f_g.flac | ответ в разговоре (мятежник) | Leda | worried, grave, rebellious | Власть жиреет, народ беднеет — вот и все новости |
+| dlg_28_5_v2_f_g.flac | ответ в разговоре (мятежник) | Aoede | worried, grave, rebellious | Власть жиреет, народ беднеет — вот и все новости |
 | dlg_28_6_v1_g.flac | ответ в разговоре (свой) | Sadachbia | worried, grave, warm, friendly | Тебе скажу как есть: худо в мире |
+| dlg_28_6_v2_g.flac | ответ в разговоре (свой) | Schedar | worried, grave, warm, friendly | Тебе скажу как есть: худо в мире |
 | dlg_28_6_v1_f_g.flac | ответ в разговоре (свой) | Leda | worried, grave, warm, friendly | Тебе скажу как есть: худо в мире |
+| dlg_28_6_v2_f_g.flac | ответ в разговоре (свой) | Aoede | worried, grave, warm, friendly | Тебе скажу как есть: худо в мире |
 | dlg_29_0_v1_g.flac | ответ в разговоре | Sadachbia | dismissive, grumbling | Моё дело — свой двор, а не весь мир |
+| dlg_29_0_v2_g.flac | ответ в разговоре | Schedar | dismissive, grumbling | Моё дело — свой двор, а не весь мир |
 | dlg_29_0_v1_f_g.flac | ответ в разговоре | Leda | dismissive, grumbling | Моё дело — свой двор, а не весь мир |
+| dlg_29_0_v2_f_g.flac | ответ в разговоре | Aoede | dismissive, grumbling | Моё дело — свой двор, а не весь мир |
 | dlg_29_1_v1_g.flac | ответ в разговоре | Sadachbia | dismissive, grumbling | Не знаю я, что там за горами |
 | dlg_29_1_v2_g.flac | ответ в разговоре | Schedar | dismissive, grumbling | Не знаю я, что там за горами |
 | dlg_29_1_v1_f_g.flac | ответ в разговоре | Leda | dismissive, grumbling | Не знаю я, что там за горами |
@@ -5254,7 +5350,9 @@ Policy (https://policies.google.com/terms/generative-ai/use-policy). Отдел�
 | dlg_31_3_v1_f_g.flac | ответ в разговоре (добрый) | Leda | convinced, trusting, kind, warm | Верю. Людям надо верить |
 | dlg_31_3_v2_f_g.flac | ответ в разговоре (добрый) | Aoede | convinced, trusting, kind, warm | Верю. Людям надо верить |
 | dlg_31_4_v1_g.flac | ответ в разговоре (свой) | Sadachbia | convinced, trusting, warm, friendly | Тебе — верю |
+| dlg_31_4_v2_g.flac | ответ в разговоре (свой) | Schedar | convinced, trusting, warm, friendly | Тебе — верю |
 | dlg_31_4_v1_f_g.flac | ответ в разговоре (свой) | Leda | convinced, trusting, warm, friendly | Тебе — верю |
+| dlg_31_4_v2_f_g.flac | ответ в разговоре (свой) | Aoede | convinced, trusting, warm, friendly | Тебе — верю |
 | dlg_32_0_v1_g.flac | ответ в разговоре | Sadachbia | angry outburst, losing temper | Да что вы понимаете! Ладно, слушайте |
 | dlg_32_0_v2_g.flac | ответ в разговоре | Schedar | angry outburst, losing temper | Да что вы понимаете! Ладно, слушайте |
 | dlg_32_0_v1_f_g.flac | ответ в разговоре | Leda | angry outburst, losing temper | Да что вы понимаете! Ладно, слушайте |
@@ -5272,7 +5370,9 @@ Policy (https://policies.google.com/terms/generative-ai/use-policy). Отдел�
 | dlg_32_3_v1_f_g.flac | ответ в разговоре (жестокий) | Leda | angry outburst, losing temper, harsh, cruel | Ах так? Получайте правду |
 | dlg_32_3_v2_f_g.flac | ответ в разговоре (жестокий) | Aoede | angry outburst, losing temper, harsh, cruel | Ах так? Получайте правду |
 | dlg_32_4_v1_g.flac | ответ в разговоре (недруг) | Sadachbia | angry outburst, losing temper, hostile | Ненавижу вас. Но слушайте |
+| dlg_32_4_v2_g.flac | ответ в разговоре (недруг) | Schedar | angry outburst, losing temper, hostile | Ненавижу вас. Но слушайте |
 | dlg_32_4_v1_f_g.flac | ответ в разговоре (недруг) | Leda | angry outburst, losing temper, hostile | Ненавижу вас. Но слушайте |
+| dlg_32_4_v2_f_g.flac | ответ в разговоре (недруг) | Aoede | angry outburst, losing temper, hostile | Ненавижу вас. Но слушайте |
 | dlg_33_0_v1_g.flac | ответ в разговоре | Sadachbia | heated, arguing loudly | Вы не знаете, о чём говорите! |
 | dlg_33_0_v2_g.flac | ответ в разговоре | Schedar | heated, arguing loudly | Вы не знаете, о чём говорите! |
 | dlg_33_0_v1_f_g.flac | ответ в разговоре | Leda | heated, arguing loudly | Вы не знаете, о чём говорите! |
@@ -5434,15 +5534,25 @@ Policy (https://policies.google.com/terms/generative-ai/use-policy). Отдел�
 | dlg_39_5_v1_f_g.flac | ответ в разговоре (недруг) | Leda | satisfied, businesslike, hostile | Договорились. Но глаз с вас не спущу |
 | dlg_39_5_v2_f_g.flac | ответ в разговоре (недруг) | Aoede | satisfied, businesslike, hostile | Договорились. Но глаз с вас не спущу |
 | dlg_40_0_v1_g.flac | ответ в разговоре | Sadachbia | firm, dissatisfied | Так не договоримся |
+| dlg_40_0_v2_g.flac | ответ в разговоре | Schedar | firm, dissatisfied | Так не договоримся |
 | dlg_40_0_v1_f_g.flac | ответ в разговоре | Leda | firm, dissatisfied | Так не договоримся |
+| dlg_40_0_v2_f_g.flac | ответ в разговоре | Aoede | firm, dissatisfied | Так не договоримся |
 | dlg_40_1_v1_g.flac | ответ в разговоре | Sadachbia | firm, dissatisfied | Мне это не с руки |
+| dlg_40_1_v2_g.flac | ответ в разговоре | Schedar | firm, dissatisfied | Мне это не с руки |
 | dlg_40_1_v1_f_g.flac | ответ в разговоре | Leda | firm, dissatisfied | Мне это не с руки |
+| dlg_40_1_v2_f_g.flac | ответ в разговоре | Aoede | firm, dissatisfied | Мне это не с руки |
 | dlg_40_2_v1_g.flac | ответ в разговоре | Sadachbia | firm, dissatisfied | Ищите другой уговор |
+| dlg_40_2_v2_g.flac | ответ в разговоре | Schedar | firm, dissatisfied | Ищите другой уговор |
 | dlg_40_2_v1_f_g.flac | ответ в разговоре | Leda | firm, dissatisfied | Ищите другой уговор |
+| dlg_40_2_v2_f_g.flac | ответ в разговоре | Aoede | firm, dissatisfied | Ищите другой уговор |
 | dlg_40_3_v1_g.flac | ответ в разговоре (недруг) | Sadachbia | firm, dissatisfied, hostile | С вами никаких уговоров |
+| dlg_40_3_v2_g.flac | ответ в разговоре (недруг) | Schedar | firm, dissatisfied, hostile | С вами никаких уговоров |
 | dlg_40_3_v1_f_g.flac | ответ в разговоре (недруг) | Leda | firm, dissatisfied, hostile | С вами никаких уговоров |
+| dlg_40_3_v2_f_g.flac | ответ в разговоре (недруг) | Aoede | firm, dissatisfied, hostile | С вами никаких уговоров |
 | dlg_40_4_v1_g.flac | ответ в разговоре (свой) | Sadachbia | firm, dissatisfied, warm, friendly | Прости, друг, так не выйдет |
+| dlg_40_4_v2_g.flac | ответ в разговоре (свой) | Schedar | firm, dissatisfied, warm, friendly | Прости, друг, так не выйдет |
 | dlg_40_4_v1_f_g.flac | ответ в разговоре (свой) | Leda | firm, dissatisfied, warm, friendly | Прости, друг, так не выйдет |
+| dlg_40_4_v2_f_g.flac | ответ в разговоре (свой) | Aoede | firm, dissatisfied, warm, friendly | Прости, друг, так не выйдет |
 | dlg_41_0_v1_g.flac | ответ в разговоре | Sadachbia | storyteller, unhurried, a little mysterious | Давняя это история. Слушайте |
 | dlg_41_0_v2_g.flac | ответ в разговоре | Schedar | storyteller, unhurried, a little mysterious | Давняя это история. Слушайте |
 | dlg_41_0_v1_f_g.flac | ответ в разговоре | Leda | storyteller, unhurried, a little mysterious | Давняя это история. Слушайте |
@@ -5667,7 +5777,9 @@ Policy (https://policies.google.com/terms/generative-ai/use-policy). Отдел�
 | greet_slava_3_v2_g.flac | приветствие: знаменитому | Schedar | excited, eager | Весь город о вас говорит. Проходите! |
 | greet_slava_3_v1_f_g.flac | приветствие: знаменитому | Leda | excited, eager | Весь город о вас говорит. Проходите! |
 | greet_slava_3_v2_f_g.flac | приветствие: знаменитому | Aoede | excited, eager | Весь город о вас говорит. Проходите! |
+| greet_slava_4_v1_g.flac | приветствие: знаменитому | Sadachbia | delighted, chuckling | Знаменитость у меня! Соседи обзавидуются. |
 | greet_slava_4_v2_g.flac | приветствие: знаменитому | Schedar | delighted, chuckling | Знаменитость у меня! Соседи обзавидуются. |
+| greet_slava_4_v1_f_g.flac | приветствие: знаменитому | Leda | delighted, chuckling | Знаменитость у меня! Соседи обзавидуются. |
 | greet_slava_4_v2_f_g.flac | приветствие: знаменитому | Aoede | delighted, chuckling | Знаменитость у меня! Соседи обзавидуются. |
 | greet_slava_5_v1_g.flac | приветствие: знаменитому | Sadachbia | respectful, warm | Слава бежит впереди вас. Рады видеть. |
 | greet_slava_5_v2_g.flac | приветствие: знаменитому | Schedar | respectful, warm | Слава бежит впереди вас. Рады видеть. |
@@ -5953,11 +6065,17 @@ Policy (https://policies.google.com/terms/generative-ai/use-policy). Отдел�
 | trade_buy_10_v2_g.flac | торговец: покупка | Schedar | grateful, warm | Спасибо за золото. Удачи в дороге. |
 | trade_buy_10_v1_f_g.flac | торговец: покупка | Leda | grateful, warm | Спасибо за золото. Удачи в дороге. |
 | trade_buy_10_v2_f_g.flac | торговец: покупка | Aoede | grateful, warm | Спасибо за золото. Удачи в дороге. |
+| trade_buy_11_v1_g.flac | торговец: покупка | Sadachbia | lively, joking | Сделка! Смотри не потеряй. |
 | trade_buy_11_v2_g.flac | торговец: покупка | Schedar | lively, joking | Сделка! Смотри не потеряй. |
+| trade_buy_11_v1_f_g.flac | торговец: покупка | Leda | lively, joking | Сделка! Смотри не потеряй. |
 | trade_buy_11_v2_f_g.flac | торговец: покупка | Aoede | lively, joking | Сделка! Смотри не потеряй. |
+| trade_buy_big_0_v1_g.flac | торговец: крупная покупка | Sadachbia | delighted, laughing | Ого, сколько! Сегодня у меня праздник. |
 | trade_buy_big_0_v2_g.flac | торговец: крупная покупка | Schedar | delighted, laughing | Ого, сколько! Сегодня у меня праздник. |
+| trade_buy_big_0_v1_f_g.flac | торговец: крупная покупка | Leda | delighted, laughing | Ого, сколько! Сегодня у меня праздник. |
 | trade_buy_big_0_v2_f_g.flac | торговец: крупная покупка | Aoede | delighted, laughing | Ого, сколько! Сегодня у меня праздник. |
+| trade_buy_big_1_v1_g.flac | торговец: крупная покупка | Sadachbia | excited, fawning | Вот это покупатель! Всё завернём в лучшем виде. |
 | trade_buy_big_1_v2_g.flac | торговец: крупная покупка | Schedar | excited, fawning | Вот это покупатель! Всё завернём в лучшем виде. |
+| trade_buy_big_1_v1_f_g.flac | торговец: крупная покупка | Leda | excited, fawning | Вот это покупатель! Всё завернём в лучшем виде. |
 | trade_buy_big_1_v2_f_g.flac | торговец: крупная покупка | Aoede | excited, fawning | Вот это покупатель! Всё завернём в лучшем виде. |
 | trade_buy_big_2_v1_g.flac | торговец: крупная покупка | Sadachbia | grateful, generous | Щедро! За такое — скидка в следующий раз. |
 | trade_buy_big_2_v2_g.flac | торговец: крупная покупка | Schedar | grateful, generous | Щедро! За такое — скидка в следующий раз. |
@@ -6032,7 +6150,9 @@ Policy (https://policies.google.com/terms/generative-ai/use-policy). Отдел�
 | trade_sell_big_2_v1_f_g.flac | торговец: скупает много | Leda | surprised, agreeable | Столько добра разом? Ладно, по рукам. |
 | trade_sell_big_2_v2_f_g.flac | торговец: скупает много | Aoede | surprised, agreeable | Столько добра разом? Ладно, по рукам. |
 | trade_sell_big_3_v1_g.flac | торговец: скупает много | Sadachbia | mock complaining, amused | Ты меня разоришь, но товар хорош. |
+| trade_sell_big_3_v2_g.flac | торговец: скупает много | Schedar | mock complaining, amused | Ты меня разоришь, но товар хорош. |
 | trade_sell_big_3_v1_f_g.flac | торговец: скупает много | Leda | mock complaining, amused | Ты меня разоришь, но товар хорош. |
+| trade_sell_big_3_v2_f_g.flac | торговец: скупает много | Aoede | mock complaining, amused | Ты меня разоришь, но товар хорош. |
 | trade_sell_big_4_v1_g.flac | торговец: скупает много | Sadachbia | wry, resigned | Опустошаешь мне кассу. Но беру всё. |
 | trade_sell_big_4_v2_g.flac | торговец: скупает много | Schedar | wry, resigned | Опустошаешь мне кассу. Но беру всё. |
 | trade_sell_big_4_v1_f_g.flac | торговец: скупает много | Leda | wry, resigned | Опустошаешь мне кассу. Но беру всё. |
@@ -6045,7 +6165,9 @@ Policy (https://policies.google.com/terms/generative-ai/use-policy). Отдел�
 | trade_poor_1_v2_g.flac | торговец: золота не хватает | Schedar | firm, curt | Не хватает монет. Без денег не отдаю. |
 | trade_poor_1_v1_f_g.flac | торговец: золота не хватает | Leda | firm, curt | Не хватает монет. Без денег не отдаю. |
 | trade_poor_1_v2_f_g.flac | торговец: золота не хватает | Aoede | firm, curt | Не хватает монет. Без денег не отдаю. |
+| trade_poor_2_v1_g.flac | торговец: золота не хватает | Sadachbia | sympathetic, sighing | Эх, на это кошель тонковат. |
 | trade_poor_2_v2_g.flac | торговец: золота не хватает | Schedar | sympathetic, sighing | Эх, на это кошель тонковат. |
+| trade_poor_2_v1_f_g.flac | торговец: золота не хватает | Leda | sympathetic, sighing | Эх, на это кошель тонковат. |
 | trade_poor_2_v2_f_g.flac | торговец: золота не хватает | Aoede | sympathetic, sighing | Эх, на это кошель тонковат. |
 | trade_poor_3_v1_g.flac | торговец: золота не хватает | Sadachbia | firm, stern | В долг не торгую, не проси. |
 | trade_poor_3_v2_g.flac | торговец: золота не хватает | Schedar | firm, stern | В долг не торгую, не проси. |
@@ -6107,6 +6229,10 @@ Policy (https://policies.google.com/terms/generative-ai/use-policy). Отдел�
 | trade_regular_1_v2_g.flac | торговец: постоянному покупателю | Schedar | warm, generous | Постоянным — от души. Приходи снова. |
 | trade_regular_1_v1_f_g.flac | торговец: постоянному покупателю | Leda | warm, generous | Постоянным — от души. Приходи снова. |
 | trade_regular_1_v2_f_g.flac | торговец: постоянному покупателю | Aoede | warm, generous | Постоянным — от души. Приходи снова. |
+| trade_regular_2_v1_g.flac | торговец: постоянному покупателю | Sadachbia | playful, laughing | Ещё немного — и я тебе медаль вручу. |
+| trade_regular_2_v2_g.flac | торговец: постоянному покупателю | Schedar | playful, laughing | Ещё немного — и я тебе медаль вручу. |
+| trade_regular_2_v1_f_g.flac | торговец: постоянному покупателю | Leda | playful, laughing | Ещё немного — и я тебе медаль вручу. |
+| trade_regular_2_v2_f_g.flac | торговец: постоянному покупателю | Aoede | playful, laughing | Ещё немного — и я тебе медаль вручу. |
 | trade_regular_3_v1_g.flac | торговец: постоянному покупателю | Sadachbia | amused, fond | Я твои покупки уже на память знаю. |
 | trade_regular_3_v2_g.flac | торговец: постоянному покупателю | Schedar | amused, fond | Я твои покупки уже на память знаю. |
 | trade_regular_3_v1_f_g.flac | торговец: постоянному покупателю | Leda | amused, fond | Я твои покупки уже на память знаю. |
@@ -6123,9 +6249,13 @@ Policy (https://policies.google.com/terms/generative-ai/use-policy). Отдел�
 | quest_take_1_v2_g.flac | заказчик: даёт дело | Schedar | earnest, hopeful | Выручишь — не забуду. Вот что нужно. |
 | quest_take_1_v1_f_g.flac | заказчик: даёт дело | Leda | earnest, hopeful | Выручишь — не забуду. Вот что нужно. |
 | quest_take_1_v2_f_g.flac | заказчик: даёт дело | Aoede | earnest, hopeful | Выручишь — не забуду. Вот что нужно. |
+| quest_take_2_v1_g.flac | заказчик: даёт дело | Sadachbia | businesslike | Работа есть, плата будет. Слушай. |
 | quest_take_2_v2_g.flac | заказчик: даёт дело | Schedar | businesslike | Работа есть, плата будет. Слушай. |
+| quest_take_2_v1_f_g.flac | заказчик: даёт дело | Leda | businesslike | Работа есть, плата будет. Слушай. |
 | quest_take_2_v2_f_g.flac | заказчик: даёт дело | Aoede | businesslike | Работа есть, плата будет. Слушай. |
+| quest_take_3_v1_g.flac | заказчик: даёт дело | Sadachbia | earnest, a little worried | Мне нужна помощь. Вот в чём дело. |
 | quest_take_3_v2_g.flac | заказчик: даёт дело | Schedar | earnest, a little worried | Мне нужна помощь. Вот в чём дело. |
+| quest_take_3_v1_f_g.flac | заказчик: даёт дело | Leda | earnest, a little worried | Мне нужна помощь. Вот в чём дело. |
 | quest_take_3_v2_f_g.flac | заказчик: даёт дело | Aoede | earnest, a little worried | Мне нужна помощь. Вот в чём дело. |
 | quest_story_0_v1_g.flac | заказчик: сюжетное | Sadachbia | grave, meaningful | Это только начало. Дело большое, слушай с самого начала. |
 | quest_story_0_v2_g.flac | заказчик: сюжетное | Schedar | grave, meaningful | Это только начало. Дело большое, слушай с самого начала. |
@@ -6167,7 +6297,9 @@ Policy (https://policies.google.com/terms/generative-ai/use-policy). Отдел�
 | quest_delivery_0_v2_g.flac | заказчик: доставка | Schedar | businesslike, urgent | Груз нужно доставить. Ждут его давно. |
 | quest_delivery_0_v1_f_g.flac | заказчик: доставка | Leda | businesslike, urgent | Груз нужно доставить. Ждут его давно. |
 | quest_delivery_0_v2_f_g.flac | заказчик: доставка | Aoede | businesslike, urgent | Груз нужно доставить. Ждут его давно. |
+| quest_delivery_1_v1_g.flac | заказчик: доставка | Sadachbia | businesslike, reassuring | Довези товар целым — там заплатят. |
 | quest_delivery_1_v2_g.flac | заказчик: доставка | Schedar | businesslike, reassuring | Довези товар целым — там заплатят. |
+| quest_delivery_1_v1_f_g.flac | заказчик: доставка | Leda | businesslike, reassuring | Довези товар целым — там заплатят. |
 | quest_delivery_1_v2_f_g.flac | заказчик: доставка | Aoede | businesslike, reassuring | Довези товар целым — там заплатят. |
 | quest_craft_0_v1_g.flac | заказчик: ремесло | Sadachbia | appraising, friendly | Руки у тебя, говорят, умелые. Нужна работа. |
 | quest_craft_0_v2_g.flac | заказчик: ремесло | Schedar | appraising, friendly | Руки у тебя, говорят, умелые. Нужна работа. |
@@ -6269,6 +6401,7 @@ Policy (https://policies.google.com/terms/generative-ai/use-policy). Отдел�
 | quest_type_kill_0_v2_g.flac | заказчик: очистить округу | Schedar | grim, urgent | Округу заполонили твари. Очисти её. |
 | quest_type_kill_0_v1_f_g.flac | заказчик: очистить округу | Leda | grim, urgent | Округу заполонили твари. Очисти её. |
 | quest_type_kill_0_v2_f_g.flac | заказчик: очистить округу | Aoede | grim, urgent | Округу заполонили твари. Очисти её. |
+| quest_type_kill_1_v1_f_g.flac | заказчик: очистить округу | Leda | angry, desperate | Житья от тварей нет. Перебей их. |
 | quest_type_visit_0_v1_g.flac | заказчик: сходить и посмотреть | Sadachbia | uneasy, curious | Сходи туда и погляди, что там творится. |
 | quest_type_visit_0_v2_g.flac | заказчик: сходить и посмотреть | Schedar | uneasy, curious | Сходи туда и погляди, что там творится. |
 | quest_type_visit_0_v1_f_g.flac | заказчик: сходить и посмотреть | Leda | uneasy, curious | Сходи туда и погляди, что там творится. |
