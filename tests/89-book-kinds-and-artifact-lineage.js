@@ -57,7 +57,7 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
  const дары=await page.evaluate(()=>{
   const L=knowLayout();const r={};
   const найти=id=>{for(let i=0;i<L.total;i++){const e=knowEntry(i);if(e&&bookKind(e).id===id)return {i,e};}return null;};
-  G.level=20;G.x=WORLD>>1;G.y=WORLD>>1;G.bookGifts={};G.signs=[];G.beastNotes={};G.alch={};G.rumors=[];
+  G.level=20;G.x=OLD_WORLD>>1;G.y=OLD_WORLD>>1;G.bookGifts={};G.signs=[];G.beastNotes={};G.alch={};G.rumors=[];
   G.mast=G.mast||{};for(const k of ["smith","jewel","alchemy","runes","arte","cook","lang","demon"])G.mast[k]={ур:0,оп:0};
   /* рецептурник */
   const rc=найти("recipes");const зналДо=Object.keys(G.alch||{}).length;
@@ -101,8 +101,8 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   const r={};
   let npc=null;
   outer: for(let rr=0;rr<80;rr++)for(let dx=-rr;dx<=rr;dx++)for(let dy=-rr;dy<=rr;dy++){
-   const c=safeFn(()=>cellContent((WORLD>>1)+dx,(WORLD>>1)+dy),null);
-   if(c&&c.structure){const ns=safeFn(()=>npcsFor(c),[]);const n=ns.find(x=>x.race&&RACES_DB.some(r=>r.n===x.race));if(n){G.x=(WORLD>>1)+dx;G.y=(WORLD>>1)+dy;npc=n;break outer;}}}
+   const c=safeFn(()=>cellContent((OLD_WORLD>>1)+dx,(OLD_WORLD>>1)+dy),null);
+   if(c&&c.structure){const ns=safeFn(()=>npcsFor(c),[]);const n=ns.find(x=>x.race&&RACES_DB.some(r=>r.n===x.race));if(n){G.x=(OLD_WORLD>>1)+dx;G.y=(OLD_WORLD>>1)+dy;npc=n;break outer;}}}
   if(!npc)return {нет:"жителя"};
   r.race=npc.race;
   const L=knowLayout();const row=L.rows.find(x=>x.sh.id==="race");
@@ -151,8 +151,8 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   const a=ART.make({дом:"war",ранг:1,кач:2,seed:777});a.износ=11;G.artifacts=[a];
   const работает=ART.works(a);
   const c=safeFn(()=>{for(let r=1;r<200;r++)for(let dy=-r;dy<=r;dy++)for(let dx=-r;dx<=r;dx++){
-   const cc=cellContent((WORLD>>1)+dx,(WORLD>>1)+dy);
-   if(cc.monster&&!cc.structure){G.x=(WORLD>>1)+dx;G.y=(WORLD>>1)+dy;return cc;}}return null;},null);
+   const cc=cellContent((OLD_WORLD>>1)+dx,(OLD_WORLD>>1)+dy);
+   if(cc.monster&&!cc.structure){G.x=(OLD_WORLD>>1)+dx;G.y=(OLD_WORLD>>1)+dy;return cc;}}return null;},null);
   if(!c)return {нет:"твари"};
   startCombat(c);G.combat.hp=0;SAID.length=0;victory();
   const после=Number(a.износ);const сказ=SAID.find(t=>/теперь потёртая/.test(t))||"";

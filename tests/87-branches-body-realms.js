@@ -64,7 +64,7 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   const до=Object.assign({},G.deeds);
   G.mana=G.manaMax=50;const i=SPELLS.findIndex(sp=>sp.n==="Искра");castSpell(i);
   const casts=deeds("casts"),mana=deeds("manaSpent");
-  G.x=WORLD>>1;G.y=WORLD>>1;let шаг=0;for(let k=0;k<12&&!шаг;k++){safeFn(()=>{if(G.inCombat)G.inCombat=false;});const bx=G.x;move(k%2?"N":"E");if(G.x!==bx||G.y!==(WORLD>>1))шаг=deeds("steps");}
+  G.x=OLD_WORLD>>1;G.y=OLD_WORLD>>1;let шаг=0;for(let k=0;k<12&&!шаг;k++){safeFn(()=>{if(G.inCombat)G.inCombat=false;});const bx=G.x;move(k%2?"N":"E");if(G.x!==bx||G.y!==(OLD_WORLD>>1))шаг=deeds("steps");}
   addRep("Люди",2);const rep=deeds("repGains");
   return {casts,mana,шаг,rep};});
  check('3. заклинание, шаг и доброе имя ложатся в счёт дел',дела.casts===1&&дела.mana===5&&дела.шаг>=1&&дела.rep===1,дела);

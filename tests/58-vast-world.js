@@ -35,7 +35,7 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
  /* ── 1. Размер и начало пути ── */
  const размер=await page.evaluate(()=>({
   world:WORLD,клеток:WORLD*WORLD,
-  старт:{x:G.x,y:G.y},середина:WORLD>>1}));
+  старт:{x:G.x,y:G.y},середина:OLD_WORLD>>1}));
  check('мир — пятьдесят тысяч клеток по стороне',размер.world>=50000,размер.world);
  check('в мире больше двух миллиардов клеток',размер.клеток>=2e9,размер.клеток);
  check('путь начинается в середине мира, а не в углу старого',
@@ -46,7 +46,7 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
     дальний угол оказался бы пуст или однообразен. */
  const углы=await page.evaluate(()=>{
   const точки=[[5,5],[WORLD-6,5],[5,WORLD-6],[WORLD-6,WORLD-6],
-   [WORLD>>1,WORLD>>1],[40000,7000],[12345,48321]];
+   [OLD_WORLD>>1,OLD_WORLD>>1],[40000,7000],[12345,48321]];
   const о=точки.map(([x,y])=>{
    const c=safeFn(()=>cellContent(x,y),null);
    return c?{x,y,t:c.terrain&&c.terrain[0],имя:c.empire&&c.empire.short,
@@ -144,7 +144,7 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   G.x=0;G.y=0;
   safeFn(()=>step("з"));safeFn(()=>step("с"));
   const уголБлижний={x:G.x,y:G.y};
-  G.x=WORLD>>1;G.y=WORLD>>1;
+  G.x=OLD_WORLD>>1;G.y=OLD_WORLD>>1;
   return {уголДальний,уголБлижний,предел:WORLD-1};});
  check('за дальний край мира не уйти',
   край.уголДальний.x===край.предел&&край.уголДальний.y===край.предел,край.уголДальний);

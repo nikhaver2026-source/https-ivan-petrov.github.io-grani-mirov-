@@ -212,7 +212,7 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   const беды=[],молчали=[];
   const базово=()=>{
    G.inCombat=false;G.combat=null;G.ship=null;G.place=null;G.flight=null;
-   G.x=WORLD>>1;G.y=WORLD>>1;G.hp=G.hpMax=300;G.mp=G.mpMax=120;G.gold=2000;
+   G.x=OLD_WORLD>>1;G.y=OLD_WORLD>>1;G.hp=G.hpMax=300;G.mp=G.mpMax=120;G.gold=2000;
    G.level=12;G.str=30;G.agi=30;G.mind=30;G.food=150;G.water=150;
    G.items=[];G.inv={};G.equip={weapon:null,armor:null};G.marks={};G.vaults={};
    G.alt=0;G.wingTired=0;
@@ -231,7 +231,7 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
      проверок: того, что в светлом мире есть, хватает с избытком, а чего нет,
      не найдётся и за вдесятеро больший круг. */
   const найти=(вид)=>{
-   const C=WORLD>>1;
+   const C=OLD_WORLD>>1;
    for(let r=1;r<90;r++)for(let dy=-r;dy<=r;dy++)for(let dx=-r;dx<=r;dx++){
     if(Math.max(Math.abs(dx),Math.abs(dy))!==r)continue;
     const c=safeFn(()=>cellContent(C+dx,C+dy),null);
@@ -267,8 +267,8 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
     G.ship={name:"Проверочная ладья",toName:"Дальний порт",toX:1050,toY:1050,left:4};},
    "в бою":()=>{базово();
     const c=safeFn(()=>{for(let r=1;r<200;r++)for(let dy=-r;dy<=r;dy++)for(let dx=-r;dx<=r;dx++){
-      const cc=cellContent((WORLD>>1)+dx,(WORLD>>1)+dy);
-      if(cc.monster&&!cc.structure){G.x=(WORLD>>1)+dx;G.y=(WORLD>>1)+dy;return cc;}}return null;},null);
+      const cc=cellContent((OLD_WORLD>>1)+dx,(OLD_WORLD>>1)+dy);
+      if(cc.monster&&!cc.structure){G.x=(OLD_WORLD>>1)+dx;G.y=(OLD_WORLD>>1)+dy;return cc;}}return null;},null);
     if(c)safeFn(()=>startCombat(c));},
    "с открытым окном":()=>{базово();safeFn(()=>openModal("modal-inv"));},
    /* ── Небо: три положения, в которых игра обязана вести себя разумно ── */

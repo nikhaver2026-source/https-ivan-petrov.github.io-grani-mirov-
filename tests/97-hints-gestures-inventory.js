@@ -141,7 +141,7 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   let A=null;for(bx=3;bx<60&&!A;bx++)for(by=3;by<60&&!A;by++){const l=genLevel(bx,by,2,"ruins");if(l){for(let y=0;y<l.h;y++)for(let x=0;x<l.w;x++)if(tileAt(l,x,y)==="A")A={l,x,y,bx,by};}}
   if(A){G.place={kind:"dungeon",bx:A.bx,by:A.by,stype:"ruins",name:"м",depth:2,x:A.x,y:A.y};G.faith={};G.inv["руда"]=5;r.алтарь=invActionList("res","руда").map(a=>a.id);invDo("offer","res","руда");r.вера=Object.values(G.faith).reduce((s,v)=>s+v,0);}
   G.place=null;
-  let npc=null;outer: for(let rr=0;rr<80;rr++)for(let dx=-rr;dx<=rr;dx++)for(let dy=-rr;dy<=rr;dy++){const c=safeFn(()=>cellContent((WORLD>>1)+dx,(WORLD>>1)+dy),null);if(c&&c.structure){const n=safeFn(()=>npcsFor(c),[]).find(x=>x.trade);if(n){G.x=(WORLD>>1)+dx;G.y=(WORLD>>1)+dy;npc=n;break outer;}}}
+  let npc=null;outer: for(let rr=0;rr<80;rr++)for(let dx=-rr;dx<=rr;dx++)for(let dy=-rr;dy<=rr;dy++){const c=safeFn(()=>cellContent((OLD_WORLD>>1)+dx,(OLD_WORLD>>1)+dy),null);if(c&&c.structure){const n=safeFn(()=>npcsFor(c),[]).find(x=>x.trade);if(n){G.x=(OLD_WORLD>>1)+dx;G.y=(OLD_WORLD>>1)+dy;npc=n;break outer;}}}
   if(npc){G.inv["руда"]=5;r.торг=invActionList("res","руда").map(a=>a.id);}
   return r;});
  check('5а. зелье и склянка пьются, руда выбрасывается по одной и вся, меч из сумы надевается',

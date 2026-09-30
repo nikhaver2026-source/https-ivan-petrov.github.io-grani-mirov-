@@ -51,7 +51,7 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
  /* ── 2. Снаружи: объекты вокруг — настоящие ── */
  const снаружи=await page.evaluate(()=>{
   G.dark=false;G.place=null;G.ship=null;G.alt=0;G.day=10;G.hour=12;
-  const O=WORLD>>1;
+  const O=OLD_WORLD>>1;
   /* Ищем клетку, где есть ресурс, — чтобы список не был пуст. */
   let точка=null;
   outer: for(let x=O-120;x<O+120;x++)for(let y=O-120;y<O+120;y++){
@@ -165,7 +165,7 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
  const окно=await page.evaluate(()=>{
   while(activeLayer())closeTopUI();
   G.dark=false;G.place=null;G.ship=null;
-  const O=WORLD>>1;
+  const O=OLD_WORLD>>1;
   let точка=null;
   outer: for(let x=O-120;x<O+120;x++)for(let y=O-120;y<O+120;y++){
    const c=cellContent(x,y);
@@ -207,7 +207,7 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
  const быстро=await page.evaluate(()=>{
   while(activeLayer())closeTopUI();
   G.dark=false;G.place=null;G.ship=null;G.inCombat=false;
-  const O=WORLD>>1;
+  const O=OLD_WORLD>>1;
   let точка=null;
   outer: for(let x=O-150;x<O+150;x++)for(let y=O-150;y<O+150;y++){
    const c=cellContent(x,y);

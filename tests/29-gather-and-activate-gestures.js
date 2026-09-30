@@ -198,7 +198,7 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   /* Окно поиска стоит у середины мира, где стоит герой. Прежде здесь была
      тысяча: в мире два на две тысячи это была середина, а в нынешнем — угол,
      и в квадрате девяносто на девяносто построек могло не оказаться вовсе. */
-  const C=WORLD>>1;
+  const C=OLD_WORLD>>1;
   for(let r=0;r<8000;r++){const x=C-45+(r%90),y=C-45+Math.floor(r/90);
    const c=cellContent(x,y);
    if(c.structure&&PLACE_KIND[c.structure.type]){
@@ -236,7 +236,7 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
     где мир передан звуком, немое действие — это действие, которого как будто
     не было. */
  const звукСбора=await page.evaluate(()=>{
-  const C=WORLD>>1;
+  const C=OLD_WORLD>>1;
   let место=null;
   outer: for(let r=0;r<200;r++)for(let dy=-r;dy<=r;dy++)for(let dx=-r;dx<=r;dx++){
    if(Math.max(Math.abs(dx),Math.abs(dy))!==r)continue;

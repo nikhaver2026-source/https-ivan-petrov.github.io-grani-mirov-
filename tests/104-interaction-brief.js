@@ -76,7 +76,7 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   SAID.length=0;PLAYED.length=0;r.out=Look.open();await пауза(80);r.outSaid=SAID.find(t=>/^Осмотр, лицом на/.test(t))||"";r.outN=Look.list.length;r.outBtns=document.querySelectorAll('#objBody [data-cmd^="looksel:"]').length;
   r.short=r.outSaid.length<600;while(activeLayer())closeTopUI();
   /* внутрь города */
-  let ok=false;for(let rr=0;rr<80&&!ok;rr++)for(let dx=-rr;dx<=rr&&!ok;dx++)for(let dy=-rr;dy<=rr&&!ok;dy++){const c=safeFn(()=>cellContent((WORLD>>1)+dx,(WORLD>>1)+dy),null);if(c&&c.structure&&PLACE_KIND[c.structure.type]==="city"){G.x=(WORLD>>1)+dx;G.y=(WORLD>>1)+dy;ok=true;}}
+  let ok=false;for(let rr=0;rr<80&&!ok;rr++)for(let dx=-rr;dx<=rr&&!ok;dx++)for(let dy=-rr;dy<=rr&&!ok;dy++){const c=safeFn(()=>cellContent((OLD_WORLD>>1)+dx,(OLD_WORLD>>1)+dy),null);if(c&&c.structure&&PLACE_KIND[c.structure.type]==="city"){G.x=(OLD_WORLD>>1)+dx;G.y=(OLD_WORLD>>1)+dy;ok=true;}}
   if(!ok)return r;enterPlace(cellContent(G.x,G.y));await пауза(100);while(activeLayer())closeTopUI();
   SAID.length=0;Look.open();await пауза(60);r.inSaid=SAID.find(t=>/^Осмотр/.test(t))||"";r.kinds=[...new Set(Look.list.map(o=>o.род))];r.sectors=[...new Set(Look.list.map(o=>o.сектор))];
   const adj=Look.list.findIndex(o=>Look.adjacent(o.dx,o.dy)&&o.d>0&&!o.живое&&!o.проход&&o.род!=="опасность"&&o.род!=="проход");r.adjIdx=adj;
@@ -166,7 +166,7 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   const пауза=ms=>new Promise(z=>setTimeout(z,ms));const r={};
   r.module=Modules.has("INTERACTION")&&typeof Interact.actions==="function"&&typeof Interact.why==="function";
   /* уровень с дверью, сундуком, шкафом, столом и колодцем: берём город */
-  G.place=null;G.ship=null;let ok=false;for(let rr=0;rr<80&&!ok;rr++)for(let dx=-rr;dx<=rr&&!ok;dx++)for(let dy=-rr;dy<=rr&&!ok;dy++){const c=safeFn(()=>cellContent((WORLD>>1)+dx,(WORLD>>1)+dy),null);if(c&&c.structure&&PLACE_KIND[c.structure.type]==="city"){G.x=(WORLD>>1)+dx;G.y=(WORLD>>1)+dy;ok=true;}}
+  G.place=null;G.ship=null;let ok=false;for(let rr=0;rr<80&&!ok;rr++)for(let dx=-rr;dx<=rr&&!ok;dx++)for(let dy=-rr;dy<=rr&&!ok;dy++){const c=safeFn(()=>cellContent((OLD_WORLD>>1)+dx,(OLD_WORLD>>1)+dy),null);if(c&&c.structure&&PLACE_KIND[c.structure.type]==="city"){G.x=(OLD_WORLD>>1)+dx;G.y=(OLD_WORLD>>1)+dy;ok=true;}}
   if(!ok)return r;enterPlace(cellContent(G.x,G.y));await пауза(80);while(activeLayer())closeTopUI();
   const lvl=curLevel();const p=G.place;
   const find=(pred)=>{for(let y=1;y<lvl.h-1;y++)for(let x=1;x<lvl.w-1;x++){const t=tileAt(lvl,x,y);if(pred(t,x,y))return {x,y,t};}return null;};
@@ -217,7 +217,7 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
  const торг=await page.evaluate(async()=>{
   const пауза=ms=>new Promise(z=>setTimeout(z,ms));const r={};G.place=null;G.ship=null;
   r.module=Modules.has("TRADE")&&SHOP_CATS.length===16;
-  let npc=null;outer: for(let rr=0;rr<80;rr++)for(let dx=-rr;dx<=rr;dx++)for(let dy=-rr;dy<=rr;dy++){const c=safeFn(()=>cellContent((WORLD>>1)+dx,(WORLD>>1)+dy),null);if(c&&c.structure){const n=safeFn(()=>npcsFor(c),[]).find(x=>x.trade);if(n){G.x=(WORLD>>1)+dx;G.y=(WORLD>>1)+dy;npc=n;break outer;}}}
+  let npc=null;outer: for(let rr=0;rr<80;rr++)for(let dx=-rr;dx<=rr;dx++)for(let dy=-rr;dy<=rr;dy++){const c=safeFn(()=>cellContent((OLD_WORLD>>1)+dx,(OLD_WORLD>>1)+dy),null);if(c&&c.structure){const n=safeFn(()=>npcsFor(c),[]).find(x=>x.trade);if(n){G.x=(OLD_WORLD>>1)+dx;G.y=(OLD_WORLD>>1)+dy;npc=n;break outer;}}}
   if(!npc)return r;r.npc=npc.name;
   G.gold=500;G.inv={"руда":6,"трава":3,"салака":2};G.items=["Свиток: Искра","Реликвия: Аурис Зарний"];G.gear=G.gear.filter(g=>g&&!/^t104/.test(g.id));G.gear.push({id:"t104s",name:"Дубовый щит",type:"Щит",slot:"armor",rank:1,qual:1,val:3,price:40});
   openNPC(npc.key,true);await пауза(40);r.npcBtn=!!document.querySelector('#npcBody [data-cmd^="shop:"]');r.oldBtns=!!document.querySelector('#npcBody [data-cmd^="buy:"]');while(activeLayer())closeTopUI();

@@ -102,7 +102,7 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
 
  const report=[];
  for(const [name,open] of WINDOWS){
-  await page.evaluate(()=>{while(activeLayer())closeTopUI();G.place=null;G.ship=null;G.x=WORLD>>1;G.y=WORLD>>1;});
+  await page.evaluate(()=>{while(activeLayer())closeTopUI();G.place=null;G.ship=null;G.x=OLD_WORLD>>1;G.y=OLD_WORLD>>1;});
   const opened=await page.evaluate(fn=>{try{const r=(new Function("return ("+fn+")"))()();return r===false?false:!!activeLayer();}catch(e){return "ошибка: "+e.message;}},open.toString());
   if(opened!==true){report.push({окно:name,открылось:opened});continue;}
   const info=await page.evaluate(()=>{
@@ -200,7 +200,7 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
  // 2. Диалог с жителем: дойти свайпом до «Взять квест» и подтвердить
  const dialog=await page.evaluate(()=>{
   while(activeLayer())closeTopUI();
-  G.quests=[];G.chainTaken={};G.x=WORLD>>1;G.y=WORLD>>1;G.place=null;
+  G.quests=[];G.chainTaken={};G.x=OLD_WORLD>>1;G.y=OLD_WORLD>>1;G.place=null;
   const n=getNPC(G.x,G.y,0,"Старейшина");
   openNPC(n.key,true);resetCursor();ensureCursor(activeLayer());
   const items=cursorItems(activeLayer());

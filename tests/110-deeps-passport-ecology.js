@@ -147,7 +147,7 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   /* Считаем входы на окне в четырёхстах клетках с шагом пять и переносим
      на весь мир: перебирать два с половиной миллиарда клеток незачем, а
      плотность входов от места не зависит. */
-  const шаг=5,сторона=400;const x0=(WORLD>>1)-200,y0=(WORLD>>1)-200;
+  const шаг=5,сторона=400;const x0=(OLD_WORLD>>1)-200,y0=(OLD_WORLD>>1)-200;
   let входов=0,проб=0;
   for(let x=x0;x<x0+сторона;x+=шаг)for(let y=y0;y<y0+сторона;y+=шаг){
    проб++;const c=cellContent(x,y);const s=c&&c.structure;

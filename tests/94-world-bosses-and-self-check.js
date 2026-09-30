@@ -73,7 +73,7 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   на("dreamer");G.hour=12;SAID.length=0;r.день=bossFight();r.деньСказ=SAID.slice(-1)[0];
   на("giant");G.hour=23;G.level=20;SAID.length=0;r.ночь=bossFight();r.ночьСказ=SAID.slice(-1)[0];
   на("engine");G.mast={};SAID.length=0;r.ремесло=bossFight();r.ремеслоСказ=SAID.slice(-1)[0];
-  G.x=WORLD>>1;G.y=WORLD>>1;r.нигде=bossFight();r.менюНигде=amAvailable("bossfight");
+  G.x=OLD_WORLD>>1;G.y=OLD_WORLD>>1;r.нигде=bossFight();r.менюНигде=amAvailable("bossfight");
   на("ashlord");G.level=20;G.hour=12;SAID.length=0;r.вызов=bossFight();r.бой=!!G.inCombat;r.флаг=G.combat&&G.combat.m&&G.combat.m.boss;r.вызовСказ=SAID.find(t=>/принимает вызов/.test(t))||"";
   return r;});
  check('3. доступ отказывает словами: низкий уровень, день для ночного, ночь для дневного, без ремесла для механизма; вне логова вызова нет; на логове вызов начинает бой с первой фазой',

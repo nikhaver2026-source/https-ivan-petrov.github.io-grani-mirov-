@@ -52,7 +52,7 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   G.place=null;G.ship=null;G.inCombat=false;G.combat=null;G.weaponDrawn=false;G.loot=null;settings.fastTap=0;});
 
  /* ── 1. одиночное касание ничего не делает, двойное активирует ── */
- await page.evaluate(()=>{G.x=WORLD>>1;G.y=WORLD>>1;LOG.length=0;});
+ await page.evaluate(()=>{G.x=OLD_WORLD>>1;G.y=OLD_WORLD>>1;LOG.length=0;});
  await tap(200,520);await page.waitForTimeout(900);
  const одно=await page.evaluate(()=>LOG.slice());
  await tap(200,520);await tap(200,520);
@@ -105,7 +105,7 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
  const закрыта=await page.evaluate(()=>!magicPanelOpen());
 
  /* ── 5. без панели ── */
- await page.evaluate(()=>{G.weaponDrawn=false;G.x=WORLD>>1;G.y=WORLD>>1;LOG.length=0;});
+ await page.evaluate(()=>{G.weaponDrawn=false;G.x=OLD_WORLD>>1;G.y=OLD_WORLD>>1;LOG.length=0;});
  const x0=await page.evaluate(()=>G.x);
  await multiSwipe(1,170,0);await page.waitForTimeout(200);
  const шаг=await page.evaluate(()=>G.x);

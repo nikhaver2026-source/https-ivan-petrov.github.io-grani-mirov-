@@ -57,7 +57,7 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
  /* ── 2. Морок: встреч вдвое меньше, и это видно на счёте ── */
  const морок=await page.evaluate(()=>{
   G.dark=false;G.place=null;G.ship=null;G.day=10;G.hour=12;G.buffs={};
-  const O=WORLD>>1;
+  const O=OLD_WORLD>>1;
   const счёт=()=>{let n=0;
    for(let x=O-60;x<O+60;x++)for(let y=O-60;y<O+60;y++){
     contentCache.clear();
@@ -96,7 +96,7 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
  const время=await page.evaluate(()=>{
   while(activeLayer())closeTopUI();
   G.place=null;G.ship=null;G.dark=false;G.inCombat=false;G.alt=0;
-  const O=WORLD>>1;
+  const O=OLD_WORLD>>1;
   const шаг=()=>{
    for(let i=0;i<25&&activeLayer();i++)closeTopUI();
    G.x=O;G.y=O;const a=G.day*24+G.hour;move("E");

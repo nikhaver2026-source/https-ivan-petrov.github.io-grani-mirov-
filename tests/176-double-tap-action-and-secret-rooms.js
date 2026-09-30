@@ -67,7 +67,7 @@ const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(e!==undefined?' :
  /* ── 1. Двойное касание по полю — вход в постройку ── */
  const вход=await page.evaluate(()=>{
   G.place=null;G.ship=null;G.inCombat=false;G.alt=0;
-  const W=WORLD>>1;
+  const W=OLD_WORLD>>1;
   for(let r=0;r<400;r++)for(let dy=-r;dy<=r;dy++)for(let dx=-r;dx<=r;dx++){
    if(Math.max(Math.abs(dx),Math.abs(dy))!==r)continue;
    const c=cellContent(W+dx,W+dy);

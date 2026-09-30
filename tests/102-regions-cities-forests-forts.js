@@ -44,7 +44,7 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   r.поля=REGIONS.filter(x=>!x.n||!x.о||!x.климат||!x.биомы.length||!x.ресурс||!x.опасность||!x.звук.length).map(x=>x.id);
   r.нетЗаписи=[];REGIONS.forEach(x=>x.звук.forEach(z=>{if(!Bank.has(z))r.нетЗаписи.push(x.id+":"+z);}));
   r.биомы=[];REGIONS.forEach(x=>x.биомы.forEach(b=>{if(!BIOMES.find(y=>y.id===b))r.биомы.push(x.id+":"+b);}));
-  r.углы=[regionAt(0,0).id,regionAt(WORLD-1,0).id,regionAt(0,WORLD-1).id,regionAt(WORLD-1,WORLD-1).id,regionAt(WORLD>>1,WORLD>>1).id];
+  r.углы=[regionAt(0,0).id,regionAt(WORLD-1,0).id,regionAt(0,WORLD-1).id,regionAt(WORLD-1,WORLD-1).id,regionAt(OLD_WORLD>>1,OLD_WORLD>>1).id];
   const покрытие=new Set();for(let x=0;x<WORLD;x+=2500)for(let y=0;y<WORLD;y+=2500)покрытие.add(regionAt(x,y).id);
   r.покрытие=покрытие.size;
   /* где я */

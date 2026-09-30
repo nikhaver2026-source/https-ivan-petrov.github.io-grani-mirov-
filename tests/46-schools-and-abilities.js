@@ -149,7 +149,7 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   while(activeLayer())closeTopUI();
   const out={};
   G.abilities=ABILITIES.map(a=>a.id);G.buffs={};G.daily={};
-  G.place=null;G.ship=null;G.alt=0;G.x=WORLD>>1;G.y=WORLD>>1;G.mana=999;G.hp=10;G.hpMax=100;
+  G.place=null;G.ship=null;G.alt=0;G.x=OLD_WORLD>>1;G.y=OLD_WORLD>>1;G.mana=999;G.hp=10;G.hpMax=100;
   /* Раз в день — только раз. */
   out.разВДень=[useAbility("lastrite"),useAbility("lastrite")];
   out.лечит=G.hp;
@@ -165,7 +165,7 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
      его честно нет и в полутора сотнях клеток. Проверяем умение, а не везение
      с местом: находим лес и отходим от него на несколько шагов. */
   const лесРядом=(()=>{
-   const C=WORLD>>1;
+   const C=OLD_WORLD>>1;
    for(let r=1;r<=600;r++)for(let dy=-r;dy<=r;dy++)for(let dx=-r;dx<=r;dx++){
     if(Math.max(Math.abs(dx),Math.abs(dy))!==r)continue;
     const x=C+dx,y=C+dy;
@@ -206,7 +206,7 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
  const дары=await page.evaluate(()=>{
   const out={};
   while(activeLayer())closeTopUI();
-  G.buffs={};G.place=null;G.x=WORLD>>1;G.y=WORLD>>1;
+  G.buffs={};G.place=null;G.x=OLD_WORLD>>1;G.y=OLD_WORLD>>1;
   /* Перо ветра: потолок и цена крыла. */
   G.race="Аракокры";G.abilities=[];
   const пБез=wingSpan(),цБез=wingCost();

@@ -81,7 +81,7 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
  const где=await page.evaluate(()=>{
   const r={};G.place=null;G.mast=G.mast||{};G.mast.runes={ур:0,оп:0};G.mast.arte={ур:0,оп:0};
   SAID.length=0;r.поле=spellForgeOpen();r.полеСказ=SAID.slice(-1)[0]||"";r.полеМеню=amAvailable("spellforge");
-  const найти=(вид)=>{const C=WORLD>>1;for(let rr=1;rr<140;rr++)for(let dy=-rr;dy<=rr;dy++)for(let dx=-rr;dx<=rr;dx++){if(Math.max(Math.abs(dx),Math.abs(dy))!==rr)continue;const c=safeFn(()=>cellContent(C+dx,C+dy),null);if(c&&c.structure&&c.structure.type===вид)return {x:C+dx,y:C+dy,c};}return null;};
+  const найти=(вид)=>{const C=OLD_WORLD>>1;for(let rr=1;rr<140;rr++)for(let dy=-rr;dy<=rr;dy++)for(let dx=-rr;dx<=rr;dx++){if(Math.max(Math.abs(dx),Math.abs(dy))!==rr)continue;const c=safeFn(()=>cellContent(C+dx,C+dy),null);if(c&&c.structure&&c.structure.type===вид)return {x:C+dx,y:C+dy,c};}return null;};
   const м=найти("tower")||найти("school")||найти("temple");if(!м)return {нет:"башни"};
   G.x=м.x;G.y=м.y;enterPlace(м.c);r.вид=G.place&&G.place.stype;
   SAID.length=0;r.безУрока=spellForgeOpen();r.безУрокаСказ=SAID.slice(-1)[0]||"";
@@ -138,8 +138,8 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   G.inCombat=false;G.combat=null;SAID.length=0;castSpell(iStrela);r.пустота=SAID.slice(-1)[0]||"";
   /* в бою */
   const c=safeFn(()=>{for(let rr=1;rr<200;rr++)for(let dy=-rr;dy<=rr;dy++)for(let dx=-rr;dx<=rr;dx++){
-   const cc=cellContent((WORLD>>1)+dx,(WORLD>>1)+dy);
-   if(cc.monster&&!cc.structure){G.x=(WORLD>>1)+dx;G.y=(WORLD>>1)+dy;return cc;}}return null;},null);
+   const cc=cellContent((OLD_WORLD>>1)+dx,(OLD_WORLD>>1)+dy);
+   if(cc.monster&&!cc.structure){G.x=(OLD_WORLD>>1)+dx;G.y=(OLD_WORLD>>1)+dy;return cc;}}return null;},null);
   if(!c)return {нет:"твари"};
   startCombat(c);G.combat.hp=500;G.combat.hpMax=500;
   SAID.length=0;PLAYED.length=0;castSpell(iStrela);r.урон=500-G.combat.hp;r.уронСказ=SAID.find(t=>/сотворено/.test(t))||"";r.голос=PLAYED.includes("oc_fireball");

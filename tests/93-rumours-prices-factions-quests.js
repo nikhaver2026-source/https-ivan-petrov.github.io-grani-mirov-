@@ -119,8 +119,8 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   /* взять дело у жителя */
   G.quests=[];G.chainTaken={};
   let npc=null;outer: for(let rr=0;rr<80;rr++)for(let dx=-rr;dx<=rr;dx++)for(let dy=-rr;dy<=rr;dy++){
-   const c=safeFn(()=>cellContent((WORLD>>1)+dx,(WORLD>>1)+dy),null);
-   if(c&&c.structure){const ns=safeFn(()=>npcsFor(c),[]);if(ns.length){G.x=(WORLD>>1)+dx;G.y=(WORLD>>1)+dy;npc=ns[0];break outer;}}}
+   const c=safeFn(()=>cellContent((OLD_WORLD>>1)+dx,(OLD_WORLD>>1)+dy),null);
+   if(c&&c.structure){const ns=safeFn(()=>npcsFor(c),[]);if(ns.length){G.x=(OLD_WORLD>>1)+dx;G.y=(OLD_WORLD>>1)+dy;npc=ns[0];break outer;}}}
   if(!npc)return {нет:"жителя"};
   G.day=10;SAID.length=0;takeNPCQuest(npc);
   const q=G.quests[0];if(!q)return {нет:"дела"};

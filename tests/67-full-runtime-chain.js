@@ -38,7 +38,7 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   G.npcMem={};G.rumors=[];G.standing={};G.axes={};G.merch={};G.merit={};
   G.rep={};G.market={};G.quests=[];G.gold=5000;G.level=20;G.cha=25;G.mind=20;
   G.day=5;G.liveDay=5;G.hour=12;G.weather="Ясно";G.weaponDrawn=false;
-  const O=WORLD>>1;
+  const O=OLD_WORLD>>1;
   G.x=O;G.y=O;
 
   /* ── 1. ЖИТЕЛЬ ── */
@@ -275,7 +275,7 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
    вещей:(G.artifacts||[]).length};
 
   /* 8. Торговля: слиток дороже руды, и цена — число. */
-  const город=findCities(WORLD>>1,WORLD>>1,60,3)[0];
+  const город=findCities(OLD_WORLD>>1,OLD_WORLD>>1,60,3)[0];
   ш.торг=город?{руда:citySellPrice("руда",город,G.day),
    слиток:citySellPrice("слиток",город,G.day)}:null;
   ш.торгЧисла=!!ш.торг&&Number.isFinite(ш.торг.руда)&&Number.isFinite(ш.торг.слиток);
@@ -323,7 +323,7 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   while(activeLayer())closeTopUI();
   G.dark=false;G.place=null;G.ship=null;G.inCombat=false;
   G.day=12;G.hour=12;G.weather="Ясно";G.finds={};G.signs=[];
-  const O=WORLD>>1;
+  const O=OLD_WORLD>>1;
   const out={};
   /* дорога → переправа → поверхность → шаг */
   let мост=null;
@@ -536,7 +536,7 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   try{
    G.place=null;G.ship=null;G.dark=false;G.inCombat=false;G.combat=null;G.alt=0;G.level=20;G.hp=900;G.hpMax=900;G.mana=100;G.manaMax=100;G.gold=500;G.hour=12;G.weather="Ясно";
    /* 1. движение */
-   G.x=WORLD>>1;G.y=WORLD>>1;const x0=G.x;PLAYED.length=0;move("E");if(G.inCombat){endCombat();G.inCombat=false;G.combat=null;}
+   G.x=OLD_WORLD>>1;G.y=OLD_WORLD>>1;const x0=G.x;PLAYED.length=0;move("E");if(G.inCombat){endCombat();G.inCombat=false;G.combat=null;}
    ш.движение=G.x===x0+1;ш.звук=PLAYED.length>0;
    /* 2. ориентация: что вокруг и с какой стороны */
    const круг=Scape.around();ш.ориентация=Array.isArray(круг)&&круг.every(o=>typeof o.dx==="number"&&typeof o.dy==="number");
@@ -552,12 +552,12 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
    G.place=null;
    /* 5–6. NPC и квест */
    let npc=null,cellS=null;outer: for(let rr=0;rr<80;rr++)for(let dx=-rr;dx<=rr;dx++)for(let dy=-rr;dy<=rr;dy++){
-    const c=safeFn(()=>cellContent((WORLD>>1)+dx,(WORLD>>1)+dy),null);
-    if(c&&c.structure){const ns=safeFn(()=>npcsFor(c),[]);if(ns.length){G.x=(WORLD>>1)+dx;G.y=(WORLD>>1)+dy;npc=ns[0];cellS=c;break outer;}}}
+    const c=safeFn(()=>cellContent((OLD_WORLD>>1)+dx,(OLD_WORLD>>1)+dy),null);
+    if(c&&c.structure){const ns=safeFn(()=>npcsFor(c),[]);if(ns.length){G.x=(OLD_WORLD>>1)+dx;G.y=(OLD_WORLD>>1)+dy;npc=ns[0];cellS=c;break outer;}}}
    openNPC(npc.key,true);ш.npc=document.querySelectorAll("#npcBody button").length>0;safeFn(()=>closeModal(document.getElementById("modal-npc")));
    G.quests=[];G.chainTaken={};takeNPCQuest(npc);ш.квест=G.quests.length===1&&!!G.quests[0].ярус&&!!G.quests[0].до;
    /* 7. бой */
-   const c=safeFn(()=>{for(let r=1;r<200;r++)for(let dy=-r;dy<=r;dy++)for(let dx=-r;dx<=r;dx++){const cc=cellContent((WORLD>>1)+dx,(WORLD>>1)+dy);if(cc.monster&&!cc.structure&&safeFn(()=>foeAlt(cc.monster),0)===0){G.x=(WORLD>>1)+dx;G.y=(WORLD>>1)+dy;return cc;}}return null;},null);
+   const c=safeFn(()=>{for(let r=1;r<200;r++)for(let dy=-r;dy<=r;dy++)for(let dx=-r;dx<=r;dx++){const cc=cellContent((OLD_WORLD>>1)+dx,(OLD_WORLD>>1)+dy);if(cc.monster&&!cc.structure&&safeFn(()=>foeAlt(cc.monster),0)===0){G.x=(OLD_WORLD>>1)+dx;G.y=(OLD_WORLD>>1)+dy;return cc;}}return null;},null);
    G.weaponDrawn=true;startCombat(c);const hp0=G.combat.hp;fight("atk");ш.удар=G.combat.hp<hp0;const xp0=G.xp;G.combat.hp=1;fight("atk");ш.бой=!G.inCombat&&G.xp>xp0;
    /* 8. магия */
    if(!G.spells.includes("Искра"))G.spells.push("Искра");const m0=G.mana;castSpell(SPELLS.findIndex(s=>s.n==="Искра"));ш.магия=G.mana<m0;

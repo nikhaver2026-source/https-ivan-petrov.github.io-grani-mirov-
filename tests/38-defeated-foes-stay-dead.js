@@ -38,7 +38,7 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
      не попасть: «клинок бьёт в пустоту». Набор проверяет, что побеждённая
      тварь не встаёт, а не то, достаёт ли меч до неба, — значит и цель нужна
      та, которую меч достаёт. */
-  const найтиТварь=()=>{const C=WORLD>>1;
+  const найтиТварь=()=>{const C=OLD_WORLD>>1;
    for(let r=0;r<300;r++)for(let dy=-r;dy<=r;dy++)for(let dx=-r;dx<=r;dx++){
     if(Math.max(Math.abs(dx),Math.abs(dy))!==r)continue;
     const x=C+dx,y=C+dy;const c=cellContent(x,y);

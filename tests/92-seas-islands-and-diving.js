@@ -91,7 +91,7 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
  /* ── 3. острова с борта ── */
  const остров=await page.evaluate(()=>{
   const r={};maybeSeaEvent=()=>false;maybeEvent=()=>false;
-  G.x=WORLD>>1;G.y=WORLD>>1;const s=судно(G.x+30,G.y+5);s.leg=1;s.left=7;
+  G.x=OLD_WORLD>>1;G.y=OLD_WORLD>>1;const s=судно(G.x+30,G.y+5);s.leg=1;s.left=7;
   r.менюДо=amAvailable("landisle");
   let n=0;while(!s.island&&n<80){s.leg=1+(n%6);G.day=1+n;islandSight(s);n++;}
   r.нашли=!!s.island;r.менюПосле=amAvailable("landisle");r.сказ=SAID.find(t=>/По курсу остров/.test(t))||"";
@@ -129,7 +129,7 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   SAID.length=0;islandCheck();r.повтор=SAID.some(t=>/^Остров/.test(t));
   r.k=islandEncounterK();
   const тип=i&&i.type.id;r.kОжид=тип==="pirate"?1.5:тип==="desert"?0.6:тип==="military"?0.5:1;
-  G.x=WORLD>>1;G.y=WORLD>>1;r.вПоле=islandHere();
+  G.x=OLD_WORLD>>1;G.y=OLD_WORLD>>1;r.вПоле=islandHere();
   return r;});
  check('4. клетка архипелага принадлежит острову: он объявляется раз при входе, встречи меняются по его роду, в поле острова нет',
   !суша.нет&&/^Остров .* — /.test(суша.сказ)&&suша_ok(суша),суша);
@@ -158,7 +158,7 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
  /* ── 6. погружения ── */
  const ныр=await page.evaluate(async()=>{
   const r={};G.place=null;G.ship=null;G.inCombat=false;G.combat=null;G.buffs={};G.race="Люди";G.level=5;G.hpMax=100;G.hp=100;G.dark=false;
-  G.x=WORLD>>1;G.y=WORLD>>1;
+  G.x=OLD_WORLD>>1;G.y=OLD_WORLD>>1;
   const нырнуть=(kind,T,подг)=>{G.buffs={};if(T>=3)buffSet("дыхание",4);G.inv={};if(подг)подг();G.inCombat=false;G.combat=null;SAID.length=0;PLAYED.length=0;const ok=diveRun({kind,x:G.x+kind.length,y:G.y+7});return {ok,сказ:SAID.find(t=>/Погружение/.test(t))||"",звук:PLAYED.includes("oc_dive")};};
   r.coral1=нырнуть("coral",1);r.coral1Ракушка=G.inv["ракушка"];r.coral1Жемчуг=G.inv["жемчуг"];
   r.coral3=нырнуть("coral",3);r.coral3=[G.inv["ракушка"],G.inv["жемчуг"],G.inv["морская лоза"],r.coral3.сказ.slice(0,60),r.coral3.звук];

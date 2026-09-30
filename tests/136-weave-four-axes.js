@@ -318,7 +318,7 @@ const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(e!==undefined?' :
  const окно=await page.evaluate(()=>{
   const r={};
   G.mast=G.mast||{};G.mast.runes={ур:1,оп:0};
-  const найти=вид=>{const C=WORLD>>1;for(let rr=1;rr<140;rr++)for(let dy=-rr;dy<=rr;dy++)for(let dx=-rr;dx<=rr;dx++){
+  const найти=вид=>{const C=OLD_WORLD>>1;for(let rr=1;rr<140;rr++)for(let dy=-rr;dy<=rr;dy++)for(let dx=-rr;dx<=rr;dx++){
     if(Math.max(Math.abs(dx),Math.abs(dy))!==rr)continue;
     const c=safeFn(()=>cellContent(C+dx,C+dy),null);
     if(c&&c.structure&&c.structure.type===вид)return {x:C+dx,y:C+dy,c};}return null;};

@@ -28,7 +28,7 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
  await page.evaluate(()=>CMD.races());
  await page.waitForTimeout(250);
  const cards=await page.evaluate(()=>document.querySelectorAll('#raceList .list-line').length);
- check('в каталоге 98 карточек рас',cards===98,cards);
+ check('в каталоге 123 карточки рас (98 Средоточия и 25 Дальнего Круга)',cards===123,cards);
  await page.evaluate(()=>CMD.racefilter('5'));
  await page.waitForTimeout(200);
  const divine=await page.evaluate(()=>document.querySelectorAll('#raceList .list-line').length);
