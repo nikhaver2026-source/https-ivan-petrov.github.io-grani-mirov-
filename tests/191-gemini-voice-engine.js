@@ -184,7 +184,7 @@ function lufs(file){
   /* Версия не прибита гвоздём: браузер, приложение и сборка просто совпадают (с 4.0 и дальше). */
   /^4\.\d+$/.test(браузер.v)&&браузер.title.includes("Alpha "+браузер.v)&&браузер.on&&браузер.n23
   &&прил.v===браузер.v&&прил.title.includes("Alpha "+браузер.v)&&прил.on&&прил.вид==="gemini"&&прил.пункт&&прил.n23&&прил.движок==="gemini"
-  &&!/sounds\/gvoice/.test(сборка)&&/cp -r sounds/.test(сборка)&&сборка.includes("grani-mirov-"+браузер.v+".apk"),{браузер,прил});
+  &&!/sounds\/gvoice(_f)?\b/.test(сборка)&&/cp -r sounds/.test(сборка)&&сборка.includes("grani-mirov-"+браузер.v+".apk"),{браузер,прил});
 
  check('страница не бросила ни одной ошибки',errors.length===0,errors.slice(0,3));
  await browser.close();

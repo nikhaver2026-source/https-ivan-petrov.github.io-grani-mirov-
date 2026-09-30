@@ -57,7 +57,7 @@ jobs:
           if(vl)Object.keys(JSON.parse(vl)).forEach(k=>refs.add('voice/'+k+'.mp3'));
           /* Записи голоса Gemini — по описям, которые игра грузит сама
              (GVOICES: url:"sounds/<папка>/<опись>.js"), какой бы номер ни был у описи. */
-          for(const m of html.matchAll(/url:"sounds\/([a-z_]+)\/([A-Za-z0-9_]+\.js)"/g)){
+          for(const m of html.matchAll(/url:"sounds\/([a-z_\/]+)\/([A-Za-z0-9_]+\.js)"/g)){
             const f=path.join('sounds',m[1],m[2]);if(!fs.existsSync(f))continue;const t=fs.readFileSync(f,'utf8');
             Object.values(JSON.parse(t.slice(t.indexOf('{'),t.lastIndexOf('}')+1)).p).forEach(id=>refs.add(m[1]+'/'+id+'.flac'));}
           /* Голоса жителей, героя и прочие описи длин: ключ — имя файла в своей папке. */

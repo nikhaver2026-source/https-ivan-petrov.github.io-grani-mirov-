@@ -1,0 +1,39 @@
+# Проверка приложения для Android без выпуска: код приложения собирается
+# (компиляция Java), игра и записи в него не кладутся.
+name: Проверка Android
+
+on:
+  workflow_dispatch:
+  push:
+    branches: ['claude/**']
+    paths:
+      - 'android/app/src/**'
+      - '.github/workflows/android-check.yml'
+
+jobs:
+  compile:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: android
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.14.3'
+      - name: Платформа Android 36
+        run: |
+          SDKM="$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager"
+          yes | "$SDKM" --licenses > /dev/null || true
+          "$SDKM" "platforms;android-36" "build-tools;36.0.0" > /dev/null
+      - name: Собрать код приложения
+        working-directory: android
+        run: |
+          mkdir -p app/src/main/assets/www gamedata/src/main/assets/www
+          echo '<!doctype html>' > app/src/main/assets/www/index.html
+          gradle :app:compileReleaseJavaWithJavac --no-daemon -q
+          echo "Java собирается без ошибок"

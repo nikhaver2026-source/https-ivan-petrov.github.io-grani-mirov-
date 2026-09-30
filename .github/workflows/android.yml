@@ -27,6 +27,7 @@ on:
       - 'sw.js'
       - 'manifest.json'
       - 'sounds/**'
+      - '!sounds/gvoice_pack/**'
       - 'tts/**'
       - 'android/**'
       - '.github/workflows/android.yml'
@@ -85,6 +86,8 @@ jobs:
           cp index.html sw.js manifest.json icon-192.png icon-512.png "$W"/
           cp -r tts "$W"/
           cp -r sounds "$P"/
+          # Голосовой пакет Gemini — отдельным файлом (выпуск «voicepack-latest»), не в APK.
+          rm -rf "$P"/sounds/gvoice_pack
           R=android/app/src/main/res
           mkdir -p $R/mipmap-xxhdpi $R/mipmap-xxxhdpi
           cp icon-192.png $R/mipmap-xxhdpi/ic_launcher.png

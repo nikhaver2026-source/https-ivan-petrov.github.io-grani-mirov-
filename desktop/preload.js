@@ -4,7 +4,10 @@ const { contextBridge, ipcRenderer } = require('electron');
 contextBridge.exposeInMainWorld('graniDesktop', {
   version: '4.8', platform: process.platform,
   // «Выход» в меню действий: игра уже сохранилась — закрываем приложение.
-  quit: () => ipcRenderer.send('grani-quit')
+  quit: () => ipcRenderer.send('grani-quit'),
+  // Голосовой пакет Gemini: выбрать скачанный файл и поставить.
+  installVoicePack: () => ipcRenderer.invoke('grani-voicepack-install'),
+  voicePackInfo: () => { try { return ipcRenderer.sendSync('grani-voicepack-info'); } catch (_) { return { installed: false }; } }
 });
 // Голоса, установленные в Windows: тот же мост GraniTTS, что в приложении
 // для Android. Мост есть, только если голоса Windows ответили при запуске;

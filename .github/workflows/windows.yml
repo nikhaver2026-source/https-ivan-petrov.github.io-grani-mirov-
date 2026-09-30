@@ -18,6 +18,7 @@ on:
     paths:
       - 'index.html'
       - 'sounds/**'
+      - '!sounds/gvoice_pack/**'
       - 'tts/**'
       - 'desktop/**'
       - '.github/workflows/windows.yml'
@@ -70,6 +71,8 @@ jobs:
           rm -rf "$G" && mkdir -p "$G"
           cp index.html manifest.json icon-192.png icon-512.png "$G"/
           cp -r sounds tts "$G"/
+          # Голосовой пакет Gemini — отдельным файлом (выпуск «voicepack-latest»), не в архиве.
+          rm -rf "$G"/sounds/gvoice_pack
           du -sh "$G"
 
       - name: Упаковать приложение

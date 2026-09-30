@@ -1,0 +1,52 @@
+# Голосовой пакет Gemini «Грани Миров» — отдельным файлом.
+#
+# Всё, что голос Gemini прочёл сверх записей, вшитых в APK и архив для
+# Windows (им мешает предел GitHub в 2 ГиБ на файл), лежит в
+# sounds/gvoice_pack. Здесь оно складывается в GraniMirov-voicepack.zip
+# (без сжатия: записи уже FLAC без потерь) и выкладывается в выпуск
+# «voicepack-latest». Приложения читают пакет прямо из этого файла:
+# Windows — положить в «Загрузки» или выбрать кнопкой «Установить голосовой
+# пакет», Android — той же кнопкой. В веб-версии пакет подключается сам.
+name: Голосовой пакет
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'sounds/gvoice_pack/**'
+      - '.github/workflows/voicepack.yml'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: voicepack
+  cancel-in-progress: true
+
+jobs:
+  pack:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: sounds/gvoice_pack
+      - name: Собрать пакет
+        run: |
+          cd sounds
+          test -f gvoice_pack/m/bank.js && test -f gvoice_pack/f/bank.js
+          zip -0 -q -r ../GraniMirov-voicepack.zip gvoice_pack
+          cd ..
+          ls -la GraniMirov-voicepack.zip
+          unzip -l GraniMirov-voicepack.zip | tail -1
+          echo "M=$(grep -o '"n":[0-9]*' sounds/gvoice_pack/m/bank.js | tail -1 | cut -d: -f2)" >> "$GITHUB_ENV"
+          echo "F=$(grep -o '"n":[0-9]*' sounds/gvoice_pack/f/bank.js | tail -1 | cut -d: -f2)" >> "$GITHUB_ENV"
+      - name: Выложить в выпуск «voicepack-latest»
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release delete voicepack-latest --cleanup-tag -y || true
+          gh release create voicepack-latest GraniMirov-voicepack.zip --target "$GITHUB_SHA" \
+            --title "Голосовой пакет Gemini для Грани Миров (мужской голос — $M фраз, женский — $F)" \
+            --notes "Все записи голоса Gemini сверх тех, что вшиты в игру. Windows: скачайте GraniMirov-voicepack.zip в папку «Загрузки» — приложение найдёт его само при следующем запуске (или Настройки → Синтезатор → «Установить голосовой пакет» и выберите файл). Android: Настройки → Синтезатор → «Установить голосовой пакет» и выберите скачанный файл. Распаковывать не нужно. В веб-версии пакет подключается сам."

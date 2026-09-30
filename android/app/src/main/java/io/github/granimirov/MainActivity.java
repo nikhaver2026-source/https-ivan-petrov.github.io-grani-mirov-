@@ -21,6 +21,13 @@ import android.widget.FrameLayout;
 import androidx.webkit.WebViewAssetLoader;
 import androidx.webkit.WebViewClientCompat;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipFile;
+
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -41,7 +48,13 @@ import java.util.Set;
    isSpeaking(), getVoices() и setVoice(имя); о конце фразы приложение
    сообщает вызовом GraniTTSDone(номер), об ошибке — GraniTTSError(номер).
    Темп приходит в той же шкале, что у Web Speech API в Chrome для Android:
-   единица — обычная речь. */
+   единица — обычная речь.
+
+   Голосовой пакет Gemini (4.8) — отдельный файл GraniMirov-voicepack.zip:
+   installVoicePack() открывает выбор файла, приложение проверяет его и кладёт
+   копию в свою папку, а записи отдаёт странице по тому же адресу
+   sounds/gvoice_pack/, что и на сайте. О конце установки — вызов
+   GraniVoicePackDone(true | false | "cancel"). */
 public class MainActivity extends Activity {
     private static final String START = "https://appassets.androidplatform.net/assets/www/index.html";
 
@@ -49,6 +62,8 @@ public class MainActivity extends Activity {
     private TextToSpeech tts;
     private volatile boolean ready = false;
     private final List<String[]> pending = new ArrayList<>();
+    private static final int REQ_PACK = 7101;
+    private ZipFile pack;
 
     @Override
     protected void onCreate(Bundle state) {
@@ -70,6 +85,16 @@ public class MainActivity extends Activity {
         });
 
         final WebViewAssetLoader loader = new WebViewAssetLoader.Builder()
+                // Голосовой пакет — из установленного файла, раньше записей самой игры.
+                .addPathHandler("/assets/www/sounds/gvoice_pack/", path -> {
+                    ZipFile z = pack();
+                    if (z == null) return null;
+                    ZipEntry e = z.getEntry("gvoice_pack/" + path);
+                    if (e == null) return null;
+                    try {
+                        return new WebResourceResponse(path.endsWith(".js") ? "text/javascript" : "audio/flac", "utf-8", z.getInputStream(e));
+                    } catch (Exception ex) { return null; }
+                })
                 .addPathHandler("/assets/", new WebViewAssetLoader.AssetsPathHandler(this))
                 .build();
 
@@ -163,6 +188,47 @@ public class MainActivity extends Activity {
         super.onDestroy();
     }
 
+    private synchronized ZipFile pack() {
+        if (pack == null) {
+            File f = new File(getFilesDir(), "voicepack.zip");
+            if (f.exists()) { try { pack = new ZipFile(f); } catch (Exception ignored) { } }
+        }
+        return pack;
+    }
+
+    private void packDone(String v) {
+        final String js = "window.GraniVoicePackDone&&window.GraniVoicePackDone(" + v + ")";
+        web.post(() -> web.evaluateJavascript(js, null));
+    }
+
+    @Override
+    protected void onActivityResult(int req, int res, Intent data) {
+        super.onActivityResult(req, res, data);
+        if (req != REQ_PACK) return;
+        if (res != RESULT_OK || data == null || data.getData() == null) { packDone("\"cancel\""); return; }
+        final Uri u = data.getData();
+        new Thread(() -> {
+            File tmp = new File(getFilesDir(), "voicepack.part");
+            try (InputStream in = getContentResolver().openInputStream(u); OutputStream out = new FileOutputStream(tmp)) {
+                byte[] b = new byte[1 << 16]; int n;
+                while ((n = in.read(b)) > 0) out.write(b, 0, n);
+            } catch (Exception e) { tmp.delete(); packDone("false"); return; }
+            boolean ok;
+            try (ZipFile z = new ZipFile(tmp)) {
+                ok = z.getEntry("gvoice_pack/m/bank.js") != null || z.getEntry("gvoice_pack/f/bank.js") != null;
+            } catch (Exception e) { ok = false; }
+            if (ok) {
+                synchronized (MainActivity.this) {
+                    if (pack != null) { try { pack.close(); } catch (Exception ignored) { } pack = null; }
+                    File dst = new File(getFilesDir(), "voicepack.zip");
+                    dst.delete();
+                    ok = tmp.renameTo(dst);
+                }
+            } else tmp.delete();
+            packDone(ok ? "true" : "false");
+        }).start();
+    }
+
     private void callJs(String fn, String id) {
         final String js = "window." + fn + "&&window." + fn + "(" + JSONObject.quote(id) + ")";
         web.post(() -> web.evaluateJavascript(js, null));
@@ -221,6 +287,18 @@ public class MainActivity extends Activity {
                 }
             } catch (Exception ignored) { }
             return a.toString();
+        }
+
+        /* «Установить голосовой пакет»: выбор скачанного файла. */
+        @JavascriptInterface
+        public void installVoicePack() {
+            runOnUiThread(() -> {
+                Intent i = new Intent(Intent.ACTION_OPEN_DOCUMENT);
+                i.addCategory(Intent.CATEGORY_OPENABLE);
+                i.setType("*/*");
+                i.putExtra(Intent.EXTRA_MIME_TYPES, new String[]{"application/zip", "application/x-zip-compressed", "application/octet-stream"});
+                try { startActivityForResult(i, REQ_PACK); } catch (Exception e) { packDone("false"); }
+            });
         }
 
         /* «Выход» в меню действий: игра уже сохранилась — закрываем приложение. */

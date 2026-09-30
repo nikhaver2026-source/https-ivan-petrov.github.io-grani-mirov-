@@ -1,10 +1,11 @@
 // «Грань Миров» для компьютера (Windows). Вся игра лежит рядом, в resources/game,
 // и открывается по своему адресу app://grani — сеть не нужна. Мышь не нужна:
 // управление целиком с клавиатуры (см. главу «Игра на компьютере» в руководстве).
-const { app, BrowserWindow, protocol, Menu, shell, ipcMain } = require('electron');
+const { app, BrowserWindow, protocol, Menu, shell, ipcMain, dialog } = require('electron');
 const path = require('path');
 const fs = require('fs');
 const { Sapi } = require('./sapi.js');
+const { VoicePack } = require('./voicepack.js');
 
 protocol.registerSchemesAsPrivileged([{
   scheme: 'app',
@@ -26,10 +27,19 @@ const MIME = {
   '.md': 'text/plain; charset=utf-8'
 };
 
+// Голосовой пакет Gemini — отдельным файлом (см. voicepack.js).
+const voicePack = new VoicePack(app);
+
 async function serve(request) {
   const u = new URL(request.url);
   let rel = decodeURIComponent(u.pathname);
   if (!rel || rel === '/') rel = '/index.html';
+  if (rel.startsWith('/sounds/gvoice_pack/') && !fs.existsSync(path.join(ROOT, rel))) {
+    const data = await voicePack.read(rel.slice('/sounds/gvoice_pack/'.length));
+    if (!data) return new Response('not found', { status: 404 });
+    const type = MIME[path.extname(rel).toLowerCase()] || 'application/octet-stream';
+    return new Response(data, { status: 200, headers: { 'Content-Type': type, 'Content-Length': String(data.length) } });
+  }
   const file = path.normalize(path.join(ROOT, rel));
   if (!file.startsWith(ROOT)) return new Response('forbidden', { status: 403 });
   let st;
@@ -101,6 +111,17 @@ ipcMain.on('tts-speaking', e => { e.returnValue = sapi.speaking.size > 0; });
 ipcMain.on('tts-speak', (e, text, rate, volume, id) => sapi.speak(String(text || ''), rate, volume, String(id)));
 ipcMain.on('tts-stop', () => sapi.stop());
 ipcMain.on('tts-voice', (e, name) => sapi.setVoice(String(name || '')));
+// «Установить голосовой пакет»: игрок выбирает скачанный файл, приложение
+// проверяет его и кладёт копию в свою папку данных.
+ipcMain.handle('grani-voicepack-install', async e => {
+  const win = BrowserWindow.fromWebContents(e.sender);
+  let dl = ''; try { dl = app.getPath('downloads'); } catch (_) { }
+  const r = await dialog.showOpenDialog(win, { title: 'Голосовой пакет Грани Миров', defaultPath: dl,
+    filters: [{ name: 'Голосовой пакет', extensions: ['zip'] }], properties: ['openFile'] });
+  if (r.canceled || !r.filePaths.length) return 'cancel';
+  try { return voicePack.install(r.filePaths[0]); } catch (_) { return false; }
+});
+ipcMain.on('grani-voicepack-info', e => { e.returnValue = voicePack.info(); });
 
 const single = app.requestSingleInstanceLock();
 if (!single) { sapi.quit(); app.quit(); }
@@ -110,6 +131,7 @@ else {
     if (w) { if (w.isMinimized()) w.restore(); w.focus(); }
   });
   app.whenReady().then(() => {
+    try { voicePack.load(); } catch (_) { }
     protocol.handle('app', serve);
     ipcMain.on('grani-quit', () => app.quit());
     Menu.setApplicationMenu(null);

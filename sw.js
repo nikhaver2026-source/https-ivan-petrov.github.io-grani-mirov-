@@ -28,7 +28,7 @@
    Кэш ЗАПИСЕЙ при этом не трогаем нарочно, и имя у него прежнее. Записи
    неизменяемы, их в банке 497 мегабайт, и перекачивать их заново ради новой
    страницы — значит наказать игрока за обновление. */
-const SHELL="grani-shell-v43";
+const SHELL="grani-shell-v44";
 const MEDIA="grani-v1-media";
 /* Модель встроенного голоса кладёт в свой кэш рабочий поток голоса: его
    не трогаем, иначе шестьдесят мегабайт качались бы после каждого обновления. */
@@ -82,7 +82,9 @@ self.addEventListener("fetch",e=>{
 
 /* ── Запись целиком в кэше, игроку — запрошенный кусок ── */
 async function media(req,url){
- const key=new Request(url.origin+url.pathname,{credentials:"same-origin"});
+ /* Опись голосового пакета пополняется: её номер в адресе (?v=) — часть ключа,
+    иначе в кэше навсегда осталась бы первая опись. Записи неизменяемы — по пути. */
+ const key=new Request(url.origin+url.pathname+(url.pathname.endsWith(".js")?url.search:""),{credentials:"same-origin"});
  const range=req.headers.get("range");
  let res=null;
  try{
