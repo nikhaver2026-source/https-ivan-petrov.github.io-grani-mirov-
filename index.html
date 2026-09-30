@@ -743,7 +743,7 @@ const WEB_VERSION="5.0",APP_VERSION="5.0";
 const GAME_VERSION=IN_APP?APP_VERSION:WEB_VERSION;
 const GVOICE_ON=true;
 /* Номер голосового пакета: растёт, когда пакет пополнился (обходит кэш). */
-const GV_PACK_V=2;
+const GV_PACK_V=3;
 try{
  const v="Alpha "+GAME_VERSION;
  document.title=document.title.replace(/Alpha [\d.]+/,v);
@@ -1495,7 +1495,7 @@ const Speech={voice:null,keepAlive:null,
     запись ускоряется с сохранением высоты голоса. */
  /* Номер описи растёт с каждым пополнением банка: всё в sounds/ служебный
     работник держит «сначала кэш», и опись под прежним именем у игрока
-    осталась бы старой. 3.9 — bank_1 (2987 фраз), затем bank_2 (4995), в 4.8 — bank_3 (5506) и женская bank_f4 (5488), в 4.9 — bank_4 (6164) и bank_f5 (6199). */
+    осталась бы старой. 3.9 — bank_1 (2987 фраз), затем bank_2 (4995), в 4.8 — bank_3 (5506) и женская bank_f4 (5488), в 4.9 — bank_4 (6164) и bank_f5 (6199), в 5.0 — bank_5 (6631) и bank_f6 (6636). */
  /* Два голоса записей: мужской (Iapetus, sounds/gvoice) и женский (Callirrhoe,
     sounds/gvoice_f). Выбор — настройки, «Синтезатор», «Выбор голоса». Каждая
     опись задаёт свою глобальную переменную, поэтому обе могут лежать в
@@ -1505,9 +1505,9 @@ const Speech={voice:null,keepAlive:null,
     подключается сам; в приложениях для Windows и Android его ставят один раз
     (настройки, «Синтезатор», «Голосовой пакет»), и приложение отдаёт его по
     тому же адресу sounds/gvoice_pack/. Нет пакета — звучит то, что вшито. */
- GVOICES:{m:{url:"sounds/gvoice/bank_4.js",dir:"sounds/gvoice/",glob:"GVOICE_BANK",map:null,state:"off",
+ GVOICES:{m:{url:"sounds/gvoice/bank_5.js",dir:"sounds/gvoice/",glob:"GVOICE_BANK",map:null,state:"off",
    pack:{url:"sounds/gvoice_pack/m/bank.js",dir:"sounds/gvoice_pack/m/",glob:"GVOICE_PACK_M",map:null,state:"off"}},
-  f:{url:"sounds/gvoice_f/bank_f5.js",dir:"sounds/gvoice_f/",glob:"GVOICE_BANK_F",map:null,state:"off",
+  f:{url:"sounds/gvoice_f/bank_f6.js",dir:"sounds/gvoice_f/",glob:"GVOICE_BANK_F",map:null,state:"off",
    pack:{url:"sounds/gvoice_pack/f/bank.js",dir:"sounds/gvoice_pack/f/",glob:"GVOICE_PACK_F",map:null,state:"off"}}},
  get GVOICE(){return this.GVOICES[settings.gvVoice==="f"?"f":"m"];},
  gvKey(t){return String(t==null?"":t).toLowerCase().replace(/ё/g,"е").replace(/[^а-яa-z0-9]+/g," ").trim();},
