@@ -12149,14 +12149,6 @@ const SOUND_BANK={
  hero_nomana:{f:["hero/hero_nomana_01.ogg"],d:"Силы не хватает"},
  hero_pain_f:{f:["hero/hero_pain_f_01.ogg"],d:"Героине больно"},
  hero_pain_m:{f:["hero/hero_pain_m_01.ogg"],d:"Герою больно"},
- /* (5.0) Крик героя от удара — не одна запись на всю игру, а несколько. */
- cry_hero_m:{f:["hero/hero_pain_m_01.ogg","oc/oc_hurt_01.ogg","oc/oc_hurt_02.ogg"],d:"Герой вскрикивает от удара"},
- cry_hero_f:{f:["hero/hero_pain_f_01.ogg"],d:"Героиня вскрикивает от удара"},
- /* Разбойник и корсар — люди: вскрикивают и умирают по-человечески, а не
-    голосом гоблина. */
- cry_foe_m:{f:["throng/throng_retreat_01.flac","throng/throng_retreat_02.flac","mtg/player_damage.ogg"],d:"Разбойник вскрикивает от удара"},
- die_foe_m:{f:["throng/throng_die_m_01.ogg","throng/throng_die_m_02.ogg","throng/throng_die_m_03.ogg","throng/throng_die_m_04.ogg"],d:"Разбойник падает с криком"},
- die_foe_f:{f:["throng/throng_die_f_01.ogg","throng/throng_die_f_02.ogg","throng/throng_die_f_03.ogg"],d:"Разбойница падает с криком"},
  /* ── СНАРЯЖЕНИЕ НА ХОДУ ──
     Слои шага героя и стражи. Прежние записи Flare были на тридцать пять
     децибел тише шага, и доспех не был слышен вовсе. Теперь это короткие
@@ -38551,6 +38543,19 @@ const REAL_MONSTER_SFX={
  goblin:{emerge:"goblin_emerge",attack:"goblin_attack",damage:"goblin_damage",death:"goblin_death"},
  ogre:{emerge:"ogre_emerge",attack:"ogre_attack",damage:"ogre_damage",death:"ogre_death"}
 };
+/* (5.0) Крики: у героя от удара — не одна запись на всю игру, а несколько
+   ролей вперемешку; разбойник и корсар — люди: вскрикивают и падают с
+   человеческим криком, мужским или женским, а не голосом гоблина. Каждая
+   запись живёт в одной роли, поэтому крик собирается из ролей. Записанные
+   голосами героя крики (cry_hero_<голос>) встают первыми, когда появятся. */
+const КРИК={
+ роли:{hero_m:["hero_pain_m","oc_hurt"],hero_f:["hero_pain_f"],foe_m:["throng_retreat","mtg_hurt"],
+  die_foe_m:["throng_die_m"],die_foe_f:["throng_die_f"]},
+ роль(вид){if(!вид)return "";
+  const свой=/^hero_/.test(вид)&&G.hero&&G.hero.voice?"cry_hero_"+G.hero.voice:"";
+  if(свой&&safeFn(()=>Bank.has(свой),false))return свой;
+  const r=(this.роли[вид]||[]).filter(x=>safeFn(()=>Bank.has(x),false));
+  return r.length?r[Math.floor(Math.random()*r.length)]:"";}};
 function playRealMonsterCue(m,cue,vol=0.7){
  try{
   /* (5.0) Люди среди врагов кричат по-человечески: разбойник от удара
@@ -38559,7 +38564,7 @@ function playRealMonsterCue(m,cue,vol=0.7){
    const p=safeFn(()=>FoeTalk.who(m),null);
    if(p==="bandit"||p==="pirate"){
     const жен=p==="bandit"&&safeFn(()=>FoeTalk.голос(m,p),0)===2;
-    const role=cue==="death"?(жен?"die_foe_f":"die_foe_m"):(жен?null:"cry_foe_m");
+    const role=КРИК.роль(cue==="death"?(жен?"die_foe_f":"die_foe_m"):(жен?"":"foe_m"));
     if(role&&Bank.has(role)){G.lastFoeCry={id:m.id,cue,role};return foeCue(role,{gain:Math.min(0.95,vol+0.15),maxSec:3,kind:"combat",pitchVar:0.05,seed:Math.floor(Math.random()*97)});}}}
   const set=m&&REAL_MONSTER_SFX[m.id];
   if(set&&set[cue]){
@@ -39069,7 +39074,7 @@ function playWoundSfx(dmg=6){try{AE.ensure();
  safeFn(()=>natShot("oc_soft_hit",0,0.6));
  /* Живой голос героя: ему больно, и это слышно. */
  /* Голос героя выбирается по народу и остаётся тем же всю игру. */
- safeFn(()=>Bank.play(heroVoiceFemale()?"cry_hero_f":"cry_hero_m",{kind:"combat",seed:Math.floor(Math.random()*97),gain:0.6,maxSec:2,pitchVar:0.04}));
+ safeFn(()=>Bank.play(КРИК.роль(heroVoiceFemale()?"hero_f":"hero_m"),{kind:"combat",seed:Math.floor(Math.random()*97),gain:0.6,maxSec:2,pitchVar:0.04}));
  safeFn(()=>Bank.play("battle_shield",{kind:"combat",seed:dmg,gain:0.4,maxSec:2}));
  /* Доспех отвечает на удар: лязг и глухой толчок в щит. */
  safeFn(()=>Bank.play((Number(dmg)||6)>=12?"oc_shield_metal":((Number(dmg)||0)%2?"lug_clank":"lug_metal"),
