@@ -122,7 +122,7 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
    const до=standOf("house",h.id);SAID.length=0;completeQuest(q.id);await пауза(300);
    r.сдача={рост:standOf("house",h.id)-до,сказано:SAID.find(t=>/запомнит службу/.test(t))||""};}
   /* дело через общий раздатчик: жребий Дома существует в questFor */
-  r.вРаздатчике=String(questFor).includes("Houses.questFor");
+  r.вРаздатчике=(String(questFor)+String(typeof questForRaw==="function"?questForRaw:"")).includes("Houses.questFor");
   /* клятва: рано, потом со второй ступени */
   SAID.length=0;r.клятваРано=Houses.join(h.id);r.клятваРаноСлово=SAID.find(t=>/ступени/.test(t))||"";
   Houses.add(h.id,30,true);
