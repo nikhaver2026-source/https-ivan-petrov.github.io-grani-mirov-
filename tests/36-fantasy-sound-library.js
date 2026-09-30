@@ -313,7 +313,8 @@ const NEW_DIRS=["arte","deep","foe","cast","hero","wild","trade","score",
   голоса.forEach(f=>ссылки.add(f));
   /* Записи голоса Gemini (с 3.8) игра зовёт по описи sounds/gvoice/bank_2.js:
      нормализованная фраза → файл. */
-  try{const b=fs.readFileSync(path.join(корень,"sounds","gvoice","bank_2.js"),"utf8");
+  try{const опись=(html.match(/url:"sounds\/gvoice\/(bank_\d+\.js)"/)||[])[1]||"bank_2.js";
+   const b=fs.readFileSync(path.join(корень,"sounds","gvoice",опись),"utf8");
    Object.values(JSON.parse(b.slice(b.indexOf("{"),b.lastIndexOf("}")+1)).p).forEach(id=>ссылки.add("gvoice/"+id+".flac"));}catch(_){}
   /* Женский голос тех же фраз (с выпуска 24) — опись sounds/gvoice_f/bank_f1.js. */
   try{const опись=(html.match(/url:"sounds\/gvoice_f\/(bank_f\d+\.js)"/)||[])[1]||"bank_f1.js";

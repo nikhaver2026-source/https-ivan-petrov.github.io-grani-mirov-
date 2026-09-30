@@ -47,7 +47,9 @@ function lufs(file){
 
 (async()=>{
  /* ── 1. опись и файлы ── */
- const js=fs.readFileSync(path.join(GV,'bank_2.js'),'utf8');
+ /* Опись растёт с номером (bank_2, bank_3, …): имя берётся из самой игры. */
+ const опись=(fs.readFileSync(path.join(__dirname,'..','index.html'),'utf8').match(/url:"sounds\/gvoice\/(bank_\d+\.js)"/)||[])[1]||'bank_2.js';
+ const js=fs.readFileSync(path.join(GV,опись),'utf8');
  const bank=JSON.parse(js.slice(js.indexOf('{'),js.lastIndexOf('}')+1));
  const ids=Object.values(bank.p);const файлы=fs.readdirSync(GV).filter(f=>f.endsWith('.flac'));
  const нет=ids.filter(id=>!fs.existsSync(path.join(GV,id+'.flac')));
