@@ -50,7 +50,7 @@ const опись=f=>{const t=fs.readFileSync(f,'utf8');return JSON.parse(t.slice
  /* ── 3 ── */
  const строка=await page.evaluate(()=>{gvPackUi();return {h:document.getElementById("gvPackHint").textContent,b:document.getElementById("btnGvPack").textContent};});
  const стол=await (await browser.newContext()).newPage();
- await стол.addInitScript(()=>{window.__vp=0;window.graniDesktop={version:"4.9",platform:"win32",quit(){},installVoicePack(){window.__vp++;return Promise.resolve(true);}};});
+ await стол.addInitScript(()=>{window.__vp=0;window.graniDesktop={version:"5.0",platform:"win32",quit(){},installVoicePack(){window.__vp++;return Promise.resolve(true);}};});
  await стол.goto(process.argv[2]);await стол.waitForTimeout(900);
  const уст=await стол.evaluate(async()=>{try{enterGame();}catch(_){}while(activeLayer())closeTopUI();
   Speech.gvLoad();await new Promise(z=>setTimeout(z,800));gvPackUi();const кнопка=document.getElementById("btnGvPack").textContent;

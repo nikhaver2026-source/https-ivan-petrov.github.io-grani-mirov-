@@ -22,7 +22,7 @@ const fs=require('fs'),path=require('path');
 const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(e!==undefined?' :: '+JSON.stringify(e):''));
 /* Поддельные голоса: Chromium видит один голос SAPI, мост — его же и голос Windows 10/11. */
 const ПОДДЕЛКА=(вебГолоса)=>`(()=>{
- window.graniDesktop={version:"4.9",platform:"win32",quit(){}};
+ window.graniDesktop={version:"5.0",platform:"win32",quit(){}};
  const веб=${JSON.stringify(вебГолоса)}.map(n=>({name:n,lang:"ru-RU",localService:true,default:false,voiceURI:n}));
  try{Object.defineProperty(speechSynthesis,"getVoices",{value:()=>веб});}catch(_){}
  window.__said=[];window.__voice=null;
