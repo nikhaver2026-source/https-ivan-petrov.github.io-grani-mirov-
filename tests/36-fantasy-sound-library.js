@@ -280,6 +280,8 @@ const NEW_DIRS=["arte","deep","foe","cast","hero","wild","trade","score",
      и новое поколение голосов живёт под новыми именами. */
   const G=VOICE_GEN;
   Object.values(VOICE_RACES).forEach(v=>out.push(VOICE_DIR+"race_"+v[0]+G+".mp3"));
+  /* (4.7) Оклик народа голосом другого пола — race_<имя>_x (VOICE_RACE_ALT). */
+  Object.keys(VOICE_RACE_ALT).forEach(id=>out.push(VOICE_DIR+"race_"+id+"_x"+G+".mp3"));
   Object.values(VOICE_PROFS).forEach(v=>{out.push(VOICE_DIR+"prof_"+v[0]+G+".mp3");
    if(v[1])out.push(VOICE_DIR+"prof_"+v[0]+"_f"+G+".mp3");});
   /* Общие слова у народа женского голоса — свои записи (say_…_f), путь
@@ -295,6 +297,10 @@ const NEW_DIRS=["arte","deep","foe","cast","hero","wild","trade","score",
    const маска=Number(m)||1;
    for(let k=0;k<8;k++)if((маска>>k)&1){const bk=b+(k?"_v"+k:"");
     out.push(VOICE_NPC_DIR+bk+G+".flac");if(f)out.push(VOICE_NPC_DIR+bk+"_f"+G+".flac");}}));
+  /* (4.7) Голоса героя из «Настроек персонажа»: ходы разговора по описи
+     HERO_VOICE_LINES и образец каждого голоса (папка voice_hero). */
+  Object.entries(HERO_VOICE_LINES).forEach(([id,ходы])=>ходы.forEach(х=>out.push(HERO_VOICE_DIR+"hero_"+х+"_"+id+G+".flac")));
+  HERO_VOICES["м"].concat(HERO_VOICES["ж"]).forEach(v=>out.push(HERO_VOICE_DIR+"obrazec_"+v.id+G+".flac"));
   return out;});
  const опись=(()=>{
   const корень=path.join(__dirname,"..");
