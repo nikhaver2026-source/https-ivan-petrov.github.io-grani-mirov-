@@ -17,7 +17,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          sparse-checkout: android
+          sparse-checkout: |
+            android
+            icon-192.png
+            icon-512.png
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
@@ -35,5 +38,7 @@ jobs:
         run: |
           mkdir -p app/src/main/assets/www gamedata/src/main/assets/www
           echo '<!doctype html>' > app/src/main/assets/www/index.html
+          R=app/src/main/res; mkdir -p $R/mipmap-xxhdpi $R/mipmap-xxxhdpi
+          cp ../icon-192.png $R/mipmap-xxhdpi/ic_launcher.png; cp ../icon-512.png $R/mipmap-xxxhdpi/ic_launcher.png
           gradle :app:compileReleaseJavaWithJavac --no-daemon -q
           echo "Java собирается без ошибок"
