@@ -5,7 +5,7 @@
 стражник у ворот, жрец, трактирщик, староста, кузнец, торговец, наставник, смотритель порта. Прежде эти строки читал голос
 игры в кавычках; теперь у каждой своя запись и своя интонация.
 
-Записей: 6384
+Записей: 6377
 
 Речь синтезирована 27–29 сентября 2026 года нейроголосами **Gemini** (Google),
 модель `gemini-3.8-flash-tts`, через Gemini API (Interactions API,
@@ -3063,12 +3063,6 @@ Policy (https://policies.google.com/terms/generative-ai/use-policy). Отдел�
 | quest_war_4_v1_f_g.flac | заказчик: война | Leda | grim, earnest | На фронте тяжело. Помоги нашим, и получишь по заслугам. |
 | quest_war_4_v2_g.flac | заказчик: война | Schedar | grim, earnest | На фронте тяжело. Помоги нашим, и получишь по заслугам. |
 | quest_war_4_v2_f_g.flac | заказчик: война | Aoede | grim, earnest | На фронте тяжело. Помоги нашим, и получишь по заслугам. |
-| quest_rescue_2_g.flac | заказчик: спасение | Umbriel | desperate, urgent | Человек пропал. Найди его, пока не поздно. |
-| quest_rescue_2_f_g.flac | заказчик: спасение | Despina | desperate, urgent | Человек пропал. Найди его, пока не поздно. |
-| quest_rescue_2_v1_g.flac | заказчик: спасение | Sadachbia | desperate, urgent | Человек пропал. Найди его, пока не поздно. |
-| quest_rescue_2_v1_f_g.flac | заказчик: спасение | Leda | desperate, urgent | Человек пропал. Найди его, пока не поздно. |
-| quest_rescue_2_v2_g.flac | заказчик: спасение | Schedar | desperate, urgent | Человек пропал. Найди его, пока не поздно. |
-| quest_rescue_2_v2_f_g.flac | заказчик: спасение | Aoede | desperate, urgent | Человек пропал. Найди его, пока не поздно. |
 | quest_rescue_3_g.flac | заказчик: спасение | Umbriel | pleading, urgent | Там наши, в беде. Выручи их — больше некому. |
 | quest_rescue_3_f_g.flac | заказчик: спасение | Despina | pleading, urgent | Там наши, в беде. Выручи их — больше некому. |
 | quest_rescue_3_v1_g.flac | заказчик: спасение | Sadachbia | pleading, urgent | Там наши, в беде. Выручи их — больше некому. |
@@ -6401,7 +6395,6 @@ Policy (https://policies.google.com/terms/generative-ai/use-policy). Отдел�
 | quest_type_kill_0_v2_g.flac | заказчик: очистить округу | Schedar | grim, urgent | Округу заполонили твари. Очисти её. |
 | quest_type_kill_0_v1_f_g.flac | заказчик: очистить округу | Leda | grim, urgent | Округу заполонили твари. Очисти её. |
 | quest_type_kill_0_v2_f_g.flac | заказчик: очистить округу | Aoede | grim, urgent | Округу заполонили твари. Очисти её. |
-| quest_type_kill_1_v1_f_g.flac | заказчик: очистить округу | Leda | angry, desperate | Житья от тварей нет. Перебей их. |
 | quest_type_visit_0_v1_g.flac | заказчик: сходить и посмотреть | Sadachbia | uneasy, curious | Сходи туда и погляди, что там творится. |
 | quest_type_visit_0_v2_g.flac | заказчик: сходить и посмотреть | Schedar | uneasy, curious | Сходи туда и погляди, что там творится. |
 | quest_type_visit_0_v1_f_g.flac | заказчик: сходить и посмотреть | Leda | uneasy, curious | Сходи туда и погляди, что там творится. |
