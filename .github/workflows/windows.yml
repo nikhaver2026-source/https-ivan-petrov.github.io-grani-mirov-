@@ -56,7 +56,9 @@ jobs:
 
       - name: Сложить игру рядом с приложением
         run: |
-          G=desktop/game
+          # Игра — вне папки приложения: иначе упаковщик положил бы её и в само
+          # приложение, и архив вышел бы вдвое больше.
+          G=build/game
           rm -rf "$G" && mkdir -p "$G"
           cp index.html manifest.json icon-192.png icon-512.png "$G"/
           cp -r sounds tts "$G"/
@@ -70,12 +72,14 @@ jobs:
             --executable-name=GraniMirov --app-version=4.7.0 --build-version=4.7.${GITHUB_RUN_NUMBER} \
             --win32metadata.ProductName="Грань Миров" --win32metadata.FileDescription="Грань Миров" \
             --win32metadata.CompanyName="Грань Миров" \
-            --extra-resource=game --ignore='^/game' --ignore='^/out' --ignore='icon.ico' $ICONARG
+            --extra-resource=../build/game --ignore='out' --ignore='icon\.ico' $ICONARG
           D=out/GraniMirov-win32-x64
           # Языки интерфейса Chromium: оставить русский и английский.
           find "$D/locales" -name '*.pak' ! -name 'ru.pak' ! -name 'en-US.pak' -delete
           cp README.txt "$D/Прочти меня.txt"
-          ls "$D"; du -sh "$D"
+          ls "$D"; du -sh "$D" "$D/resources"/*
+          # Приложение само должно быть маленьким: игра лежит в resources/game.
+          test $(du -sm "$D/resources/app"* | awk '{s+=$1} END {print s}') -lt 50
 
       - name: Архив
         working-directory: desktop/out

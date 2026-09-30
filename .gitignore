@@ -13,3 +13,4 @@ desktop/game/
 desktop/out/
 desktop/icon.ico
 desktop/package-lock.json
+build/
