@@ -134,6 +134,8 @@ const РОЛИ=['throng_hail_m','throng_hail_f','throng_yes','throng_lord','thro
  const html2=fs.readFileSync(path.join(ROOT,'index.html'),'utf8');
  const mLen=html2.match(/const VOICE_LEN=(\{[^}]*\});/);
  let длины={};try{длины=JSON.parse(mLen[1]);}catch(_){}
+ /* 6.0: дописанные позже длины (оклики Дальнего Круга) лежат в Object.assign(VOICE_LEN,{…}). */
+ for(const m of html2.matchAll(/Object\.assign\(VOICE_LEN,(\{[^}]*\})\);/g)){try{Object.assign(длины,JSON.parse(m[1]));}catch(_){}}
  const расхождения=[];
  for(const f of fs.readdirSync(path.join(ЗВУКИ,'voice')).filter(f=>f.endsWith('.mp3'))){
   const k=f.replace(/\.mp3$/,'');

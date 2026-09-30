@@ -111,7 +111,7 @@ const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(e!==undefined?' :
     if(с.id==="truce")пер.push(из(i,j));}
    дни.push({d,совпало:сводка===дипл.sort().join(","),войн:warsAt(d).length,перемирий:пер.length,
     /* перемирная пара не значится в сводке войн */
-    чисто:пер.every(k=>сводка.indexOf(k)<0)||warsAt(d).length===1});}
+    чисто:пер.every(k=>сводка.split(",").indexOf(k)<0)||warsAt(d).length===1});}
   return {расхождений:дни.filter(x=>!x.совпало).length,
    безВойн:дни.filter(x=>x.войн===0).length,
    сПеремирием:дни.filter(x=>x.перемирий>0).length,

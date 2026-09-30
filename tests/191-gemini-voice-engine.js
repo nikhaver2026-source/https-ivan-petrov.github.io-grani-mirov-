@@ -180,9 +180,9 @@ function lufs(file){
    n23:NEWS.some(n=>n.v===23),nv:NEWS_V,движок:settings.ttsEngine};});
  await cA.close();
  const сборка=fs.readFileSync(path.join(ROOT,'.github','workflows','android.yml'),'utf8');
- check('12. приложение для Android и браузер — одна версия (4.x–5.x); в приложении тоже голос Gemini, записи идут в сборку',
+ check('12. приложение для Android и браузер — одна версия (4.x–6.x); в приложении тоже голос Gemini, записи идут в сборку',
   /* Версия не прибита гвоздём: браузер, приложение и сборка просто совпадают (с 4.0 и дальше). */
-  /^[45]\.\d+$/.test(браузер.v)&&браузер.title.includes("Alpha "+браузер.v)&&браузер.on&&браузер.n23
+  /^[456]\.\d+$/.test(браузер.v)&&браузер.title.includes("Alpha "+браузер.v)&&браузер.on&&браузер.n23
   &&прил.v===браузер.v&&прил.title.includes("Alpha "+браузер.v)&&прил.on&&прил.вид==="gemini"&&прил.пункт&&прил.n23&&прил.движок==="gemini"
   &&!/sounds\/gvoice(_f)?\b/.test(сборка)&&/cp -r sounds/.test(сборка)&&сборка.includes("grani-mirov-"+браузер.v+".apk"),{браузер,прил});
 

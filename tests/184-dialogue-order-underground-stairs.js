@@ -33,7 +33,10 @@ const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(e!==undefined?' :
   try{Object.defineProperty(window,'speechSynthesis',{value:undefined,configurable:true});}catch(_){}
   window.__log=[];const T0=performance.now();const now=()=>Math.round(performance.now()-T0);
   window.__now=now;window.__tts=[];
+  /* Как родные мосты (Android QUEUE_FLUSH, SAPI SpeakAsyncCancelAll): новая
+     фраза обрывает недосказанную, а не ложится на неё. */
   window.GraniTTS={speak(t,r,v,id){const d=Math.max(400,String(t).length*62);
+    {const l=window.__log.filter(x=>x.k==="tts").pop();if(l&&l.t1>now())l.t1=now();clearTimeout(window.__ttsTimer);}
     window.__tts.push(String(t));window.__log.push({k:"tts",t0:now(),t1:now()+d,s:String(t).slice(0,70)});
     window.__ttsTimer=setTimeout(()=>window.GraniTTSDone&&window.GraniTTSDone(id),d);},
    stop(){clearTimeout(window.__ttsTimer);const l=window.__log.filter(x=>x.k==="tts").pop();if(l&&l.t1>now())l.t1=now();},
@@ -80,10 +83,12 @@ const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(e!==undefined?' :
  await page.evaluate(k=>openNPC(k),key);await page.waitForTimeout(5000);
  const ход=await снять(`CMD.dlg(${JSON.stringify(key)}+":rassprosit")`,12000);
  const герой=ход.гл.find(x=>/^voice\/hero_/.test(x.src));
- const житель=ход.гл.find(x=>/^voice\/(say_|race_|prof_)/.test(x.src)&&(!герой||x.t0>=герой.t0));
+ /* Ответ жителя — его запись (оклик, слово ремесла) или, где записи нет,
+    голос игры, читающий ответ: любой голос после реплики героя. */
+ const житель=ход.гл.find(x=>x!==герой&&(/^voice\/(say_|race_|prof_)/.test(x.src)||x.k==="tts")&&(!герой||x.t0>=герой.t0));
  check('3. ход разговора: сперва герой, ответ жителя — после него, и на ответ не ложится другой голос',
   !!герой&&!!житель&&житель.t0>=герой.t1-150&&ход.over.length===0,
-  {герой:герой&&[герой.src,герой.t0,герой.t1],житель:житель&&[житель.src,житель.t0,житель.t1],наложения:ход.over});
+  {герой:герой&&[герой.src,герой.t0,герой.t1],житель:житель&&[житель.src,житель.t0,житель.t1],наложения:ход.over,голоса:ход.гл.map(x=>[x.src||"TTS:"+x.s.slice(0,30),x.t0,x.t1])});
  await page.evaluate(()=>{while(activeLayer())closeTopUI();});
 
  /* ── 4. подземелье без птиц и погоды ── */

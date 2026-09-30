@@ -1,7 +1,7 @@
 // «Грань Миров» для компьютера (Windows). Вся игра лежит рядом, в resources/game,
 // и открывается по своему адресу app://grani — сеть не нужна. Мышь не нужна:
 // управление целиком с клавиатуры (см. главу «Игра на компьютере» в руководстве).
-const { app, BrowserWindow, protocol, Menu, shell, ipcMain, dialog } = require('electron');
+const { app, BrowserWindow, protocol, Menu, shell, ipcMain, dialog, net } = require('electron');
 const path = require('path');
 const fs = require('fs');
 const { Sapi } = require('./sapi.js');
@@ -14,7 +14,7 @@ protocol.registerSchemesAsPrivileged([{
 // Голоса, установленные у игрока в Windows (SAPI 5 и голоса Windows 10/11):
 // мост поднимается сразу, пока Electron готовит окно.
 const sapi = new Sapi();
-const sapiReady = sapi.start(8000).catch(() => false);
+const sapiReady = sapi.start(12000).catch(() => false);
 // Звук с первой секунды, без щелчка мышью: игроку нечем «разрешить» звук.
 app.commandLine.appendSwitch('autoplay-policy', 'no-user-gesture-required');
 
@@ -102,6 +102,11 @@ function createWindow() {
   // Игру открываем, когда мост голосов ответил (или не ответил за 8 секунд):
   // список голосов должен быть готов к первому слову.
   sapiReady.then(() => win.loadURL('app://grani/index.html'));
+  // Голосовой пакет Gemini — сам, в фоне (см. VoicePack.autoFetch).
+  setTimeout(() => voicePack.autoFetch(net, ok => {
+    if (!ok || win.isDestroyed()) return;
+    win.webContents.executeJavaScript('window.GraniVoicePackDone&&window.GraniVoicePackDone("auto")').catch(() => { });
+  }), 4000);
 }
 
 // Мост голосов Windows для окна игры (window.GraniTTS в preload.js).

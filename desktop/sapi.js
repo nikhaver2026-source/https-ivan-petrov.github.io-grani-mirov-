@@ -128,23 +128,40 @@ public static class GraniSapi {
     q.Add(new string[] { "quit" }); th.Join(2000);
   }
 }`;
+// Сборка кода моста (Add-Type) на обычном компьютере занимает от пяти до
+// двадцати секунд, а при двух процессах сразу — и дольше. Прежде мост собирался
+// заново при каждом запуске и не успевал к открытию игры: игра оставалась с
+// голосами, которые видит сам Chromium, — только голосами Microsoft, без RHVoice,
+// Acapela и прочих SAPI 5. Теперь собранная библиотека кладётся во временную
+// папку (своя для 32 и 64 бит, в имени — отпечаток кода) и со второго запуска
+// поднимается мгновенно.
+const crypto = require('crypto');
+const TAG = crypto.createHash('sha1').update(CS).digest('hex').slice(0, 10);
 const PS1 = `
+param([string]$Dll)
 $ErrorActionPreference = 'Stop'
 [Console]::InputEncoding = [System.Text.Encoding]::UTF8
 [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
-Add-Type -ReferencedAssemblies System.Core, Microsoft.CSharp -TypeDefinition @'
+$ok = $false
+if ($Dll -and (Test-Path $Dll)) { try { Add-Type -Path $Dll; $ok = $true } catch { $ok = $false } }
+if (-not $ok) {
+  $src = @'
 ${CS}
 '@
+  $built = $false
+  if ($Dll) { try { Add-Type -ReferencedAssemblies System.Core, Microsoft.CSharp -TypeDefinition $src -OutputAssembly $Dll -OutputType Library; Add-Type -Path $Dll; $built = $true } catch { $built = $false } }
+  if (-not $built) { Add-Type -ReferencedAssemblies System.Core, Microsoft.CSharp -TypeDefinition $src }
+}
 [GraniSapi]::Run()
 `;
 
 // Один процесс PowerShell с его голосами (64- или 32-битный).
 class Proc {
   constructor(exe, bits) { this.exe = exe; this.bits = bits; this.proc = null; this.ready = false; this.voices = []; this.buf = ''; this.waiters = []; this.onDone = null; }
-  start(file, timeoutMs) {
+  start(file, timeoutMs, dll) {
     return new Promise(resolve => {
       let settled = false; const done = ok => { if (!settled) { settled = true; resolve(ok); } };
-      try { this.proc = spawn(this.exe, ['-NoProfile', '-NonInteractive', '-ExecutionPolicy', 'Bypass', '-File', file], { windowsHide: true }); }
+      try { this.proc = spawn(this.exe, ['-NoProfile', '-NonInteractive', '-ExecutionPolicy', 'Bypass', '-File', file, '-Dll', dll || ''], { windowsHide: true }); }
       catch (_) { return done(false); }
       this.proc.on('error', () => done(false));
       this.proc.on('exit', () => { this.ready = false; done(false); });
@@ -165,7 +182,7 @@ class Proc {
       });
       return;
     }
-    if (l === 'ready') { this.ready = true; if (done) done(this.voices.length > 0); return; }
+    if (l === 'ready') { this.ready = true; if (done) done(this.voices.length > 0); if (this.onReady) this.onReady(); return; }
     if (l.startsWith('fatal')) { this.ready = false; if (done) done(false); return; }
     const m = /^(done|cancel|error) (\S*)/.exec(l);
     if (m) { if (this.onDone && m[2]) this.onDone(m[1], m[2]); return; }
@@ -189,18 +206,24 @@ class Sapi {
     this.procs = [new Proc(fs.existsSync(ps64) ? ps64 : 'powershell.exe', 64)];
     if (fs.existsSync(ps32)) this.procs.push(new Proc(ps32, 32));
     this.procs.forEach(p => { p.onDone = (kind, id) => { this.speaking.delete(id); if (this.onDone) this.onDone(kind, id); }; });
-    return Promise.all(this.procs.map(p => p.start(file, timeoutMs).catch(() => false))).then(() => {
-      // Голос, который видят оба процесса, говорит 64-битный.
-      this.voices = []; this.owner.clear();
-      for (const p of this.procs) for (const v of p.voices) {
-        if (this.owner.has(v.name)) continue;
-        this.owner.set(v.name, p); this.voices.push(v);
-      }
-      this.ready = this.voices.length > 0;
-      const d = this.voices.find(v => v.default) || this.voices[0];
-      this.cur = d ? d.name : null;
-      return this.ready;
-    });
+    // Процесс, ответивший позже срока, всё равно добавляет свои голоса.
+    this.procs.forEach(p => { p.onReady = () => this.merge(); });
+    const cached = this.procs.every(p => fs.existsSync(this.dll(p.bits)));
+    // Первый запуск — сборка моста, ждём дольше; дальше библиотека готова.
+    const wait = cached ? timeoutMs : Math.max(timeoutMs, 30000);
+    return Promise.all(this.procs.map(p => p.start(file, wait, this.dll(p.bits)).catch(() => false))).then(() => this.merge());
+  }
+  dll(bits) { return path.join(os.tmpdir(), 'grani-sapi-' + TAG + '-' + bits + '.dll'); }
+  merge() {
+    // Голос, который видят оба процесса, говорит 64-битный.
+    this.voices = []; this.owner.clear();
+    for (const p of this.procs) for (const v of p.voices) {
+      if (this.owner.has(v.name)) continue;
+      this.owner.set(v.name, p); this.voices.push(v);
+    }
+    this.ready = this.voices.length > 0;
+    if (!this.cur || !this.owner.has(this.cur)) { const d = this.voices.find(v => v.default) || this.voices[0]; this.cur = d ? d.name : null; }
+    return this.ready;
   }
   proc(name) { return this.owner.get(name || this.cur) || this.procs[0]; }
   // Темп игры (шкала Web Speech: единица — обычный) — в шкалу SAPI (−10…10)

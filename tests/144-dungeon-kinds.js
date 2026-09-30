@@ -83,7 +83,7 @@ const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(e!==undefined?' :
   const нетРода=["tavern","castle","village","forge","school","market","port"]
    .map(st=>dungeonKindAt(4000,4000,st)).filter(Boolean).length;
   const было={};
-  for(let i=0;i<6000;i++){const k=dungeonKindAt(i*11+7,i*17+3,"ruins");if(k)было[k.id]=1;}
+  for(let i=0;i<6000;i++){const k=dungeonKindAt((i*11+7)%OLD_WORLD,(i*17+3)%OLD_WORLD,"ruins");if(k)было[k.id]=1;}
   return {устойчив:!!a&&a===b,общийСПещерой:a===пещера,сосед,нетРода,
    встретилось:Object.keys(было).length};});
  check('род выводится из координат и одинаков при повторном спросе',вывод.устойчив,вывод);
@@ -93,7 +93,7 @@ const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(e!==undefined?' :
   !!вывод.сосед,вывод);
  check('рода нет там, где нет подземелья: подвал под таверной — не род',
   вывод.нетРода===0,вывод);
- check('на выборке в шесть тысяч мест встречаются все четырнадцать',
+ check('на выборке в шесть тысяч мест Средоточия встречаются все четырнадцать',
   вывод.встретилось===14,вывод);
 
  /* ── 7–12. Род в живой игре ── */

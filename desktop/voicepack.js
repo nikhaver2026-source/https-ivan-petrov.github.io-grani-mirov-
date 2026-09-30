@@ -118,6 +118,40 @@ class VoicePack {
       return null;
     } finally { await fh.close(); }
   }
-  info() { return { installed: !!(this.idx || this.dir), file: this.file || this.dir || '' }; }
+  // Пакет ставится сам: игроку не нужно ни скачивать, ни выбирать файл.
+  // Весь пакет в архив приложения не входит — GitHub не принимает файлы больше
+  // 2 ГиБ, а игра с пакетом весит больше, — поэтому при первом запуске (и при
+  // следующих, пока не получится) приложение тихо загружает его из выпуска
+  // «voicepack-latest» в свою папку данных и подключает, не прерывая игру.
+  // Без сети игра говорит вшитыми записями и дозагрузит пакет в другой раз.
+  autoFetch(net, onDone) {
+    if (this.idx || this.dir || this.fetching) return false;
+    const url = 'https://github.com/nikhaver2026-source/https-ivan-petrov.github.io-grani-mirov-/releases/download/voicepack-latest/GraniMirov-voicepack.zip';
+    let dst; try { dst = path.join(this.app.getPath('userData'), 'GraniMirov-voicepack.zip'); } catch (_) { return false; }
+    const tmp = dst + '.part';
+    try { fs.mkdirSync(path.dirname(dst), { recursive: true }); } catch (_) { }
+    this.fetching = true;
+    const fin = ok => { this.fetching = false; try { if (!ok) fs.rmSync(tmp, { force: true }); } catch (_) { } if (onDone) onDone(ok); };
+    try {
+      const req = net.request({ url, redirect: 'follow' });
+      req.on('response', res => {
+        if (res.statusCode !== 200) { res.on('data', () => { }); res.on('end', () => fin(false)); return; }
+        const out = fs.createWriteStream(tmp);
+        res.on('data', ch => out.write(ch));
+        res.on('end', () => out.end(() => {
+          try {
+            const idx = readZipIndex(tmp);
+            if (!idx || !(idx.has('gvoice_pack/m/bank.js') || idx.has('gvoice_pack/f/bank.js'))) return fin(false);
+            fs.renameSync(tmp, dst); fin(this.load());
+          } catch (_) { fin(false); }
+        }));
+        res.on('error', () => { try { out.destroy(); } catch (_) { } fin(false); });
+      });
+      req.on('error', () => fin(false));
+      req.end();
+    } catch (_) { fin(false); }
+    return true;
+  }
+  info() { return { installed: !!(this.idx || this.dir), fetching: !!this.fetching, file: this.file || this.dir || '' }; }
 }
 module.exports = { VoicePack, readZipIndex };

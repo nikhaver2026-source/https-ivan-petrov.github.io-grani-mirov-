@@ -39,7 +39,7 @@ const ГОЛОСА=["Algenib","Charon","Orus","Enceladus","Achird","Puck","Gacru
  const mp3=fs.readdirSync(VOICE).filter(f=>f.endsWith('.mp3')&&!/_x_g\.mp3$/.test(f));
  const прежние=mp3.filter(f=>!/_g\.mp3$/.test(f));
  check('1. в sounds/voice четыреста семь записей, все нового поколения («_g»), прежних нет',
-  mp3.length===407&&прежние.length===0,{всего:mp3.length,прежние:прежние.slice(0,4)});
+  mp3.length>=407&&прежние.length===0,{всего:mp3.length,прежние:прежние.slice(0,4)});
 
  const browser=await chromium.launch();
  const ctx=await browser.newContext({hasTouch:true,isMobile:true,viewport:{width:390,height:780}});
@@ -52,7 +52,8 @@ const ГОЛОСА=["Algenib","Charon","Orus","Enceladus","Achird","Puck","Gacru
  /* ── 2. поколение в игре ── */
  const игра=await page.evaluate(()=>{
   const G=VOICE_GEN,need=[];
-  Object.values(VOICE_RACES).forEach(v=>need.push("race_"+v[0]+G));
+  /* 6.0: флаг 2 — оклик расы Дальнего Круга ещё не записан, раса пока молчит. */
+  Object.values(VOICE_RACES).filter(v=>v[3]!==2).forEach(v=>need.push("race_"+v[0]+G));
   Object.values(VOICE_PROFS).forEach(v=>{need.push("prof_"+v[0]+G);if(v[1])need.push("prof_"+v[0]+"_f"+G);});
   VOICE_SAY.forEach(k=>{need.push("say_"+k+G);need.push("say_"+k+"_f"+G);});
   VOICE_HERO.forEach(k=>need.push("hero_"+k+G));
@@ -61,8 +62,8 @@ const ГОЛОСА=["Algenib","Charon","Orus","Enceladus","Achird","Puck","Gacru
  const безДлины=игра.need.filter(k=>!(игра.len[k]>0));
  const ключи=Object.keys(игра.len).filter(k=>!/_x_g$/.test(k));
  check('2. VOICE_GEN — «_g»; каждый народ, ремесло, общее слово и ход героя находит свой файл и длину; в именах народов нет «_2»',
-  игра.G==="_g"&&игра.need.length===407&&new Set(игра.need).size===407&&безФайла.length===0&&безДлины.length===0
-  &&ключи.length===407&&ключи.every(k=>/_g$/.test(k))&&игра.слагов2.length===0,
+  игра.G==="_g"&&new Set(игра.need).size>=407&&безФайла.length===0&&безДлины.length===0
+  &&ключи.length===new Set(игра.need).size&&ключи.every(k=>/_g$/.test(k))&&игра.слагов2.length===0,
   {G:игра.G,нужно:игра.need.length,безФайла:безФайла.slice(0,3),безДлины:безДлины.slice(0,3),слагов2:игра.слагов2.slice(0,3)});
 
  /* ── 3. качество записей ── */
@@ -73,14 +74,18 @@ const ГОЛОСА=["Algenib","Charon","Orus","Enceladus","Achird","Puck","Gacru
  /* ── 4. титры ── */
  const титры=fs.readFileSync(path.join(VOICE,'CREDITS.md'),'utf8');
  const строки=титры.split('\n').filter(l=>/^\| [a-z0-9_]+_g\.mp3 \|/.test(l)&&!/^\| [a-z0-9_]+_x_g\.mp3/.test(l));
+ /* 6.0: оклики Дальнего Круга — своим разделом и своими голосами Gemini; 407 — счёт до него. */
+ const доКруга=титры.split('## 6.0')[0];
+ const строкиДо=строки.filter(l=>доКруга.includes(l));
+ const голосКруга=g=>ГОЛОСА.indexOf(g)>=0||/^[A-Z][a-z]+$/.test(g);
  const поГолосам={};let сумма=0;
  for(const v of ГОЛОСА){const m=титры.match(new RegExp("\\| "+v+" \\| [^|]+\\| [^|]+\\| (\\d+) \\|"));поГолосам[v]=m?+m[1]:0;сумма+=поГолосам[v];}
  const безСтроки=mp3.filter(f=>!строки.some(l=>l.startsWith('| '+f+' |')));
  const плохиеСтроки=строки.filter(l=>{const t=(l.match(/«([^»]+)»/)||[])[1]||"";const g=l.trim().replace(/\|\s*$/,'').split('|').pop().trim();
-  return !/^[А-Яа-яЁё0-9 ,.!?—–\-:;]+$/.test(t)||ГОЛОСА.indexOf(g)<0;});
+  return !/^[А-Яа-яЁё0-9 ,.!?—–\-:;]+$/.test(t)||(строкиДо.indexOf(l)>=0?ГОЛОСА.indexOf(g)<0:!голосКруга(g));});
  check('4. титры называют Gemini, модель, условия и все тринадцать голосов; записей по голосам 407; у каждой записи строка с русским текстом и голосом',
   /Gemini/.test(титры)&&/gemini-3\.8-flash-tts/.test(титры)&&/Additional Terms of Service/.test(титры)&&/ai\.google\.dev\/gemini-api\/terms/.test(титры)
-  &&сумма===407&&ГОЛОСА.every(v=>поГолосам[v]>0)&&строки.length===407&&безСтроки.length===0&&плохиеСтроки.length===0,
+  &&сумма===407&&ГОЛОСА.every(v=>поГолосам[v]>0)&&строкиДо.length===407&&строки.length===mp3.filter(f=>!/_x_g\.mp3$/.test(f)).length&&безСтроки.length===0&&плохиеСтроки.length===0,
   {поГолосам,сумма,строк:строки.length,безСтроки:безСтроки.slice(0,3),плохиеСтроки:плохиеСтроки.slice(0,2)});
 
  /* ── 5. игра зовёт новое поколение ── */
@@ -103,7 +108,7 @@ const ГОЛОСА=["Algenib","Charon","Orus","Enceladus","Achird","Puck","Gacru
  const тексты={};строки.forEach(l=>{const f=l.slice(2,l.indexOf('.mp3'));const t=(l.match(/«([^»]+)»/)||[])[1];if(t)тексты[f]=t;});
  const медленные=Object.entries(тексты).map(([k,t])=>({k,темп:t.length/Math.max(0.3,(игра.len[k]||9)-0.18)})).filter(x=>x.темп<6).map(x=>[x.k,Math.round(x.темп*10)/10]);
  check('6. ни одна реплика не растянута: не медленнее шести знаков в секунду',
-  Object.keys(тексты).length===407&&медленные.length===0,медленные.slice(0,5));
+  Object.keys(тексты).length===строки.length&&строки.length>=407&&медленные.length===0,медленные.slice(0,5));
 
  /* ── 7. список битрейтов ── */
  const база=fs.readFileSync(path.join(SND,'BITRATE_BASELINE.txt'),'utf8');

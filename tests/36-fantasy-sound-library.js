@@ -279,7 +279,7 @@ const NEW_DIRS=["arte","deep","foe","cast","hero","wild","trade","score",
   /* К имени приписано поколение записей (VOICE_GEN): записи неизменяемы,
      и новое поколение голосов живёт под новыми именами. */
   const G=VOICE_GEN;
-  Object.values(VOICE_RACES).forEach(v=>out.push(VOICE_DIR+"race_"+v[0]+G+".mp3"));
+  Object.values(VOICE_RACES).filter(v=>v[3]!==2).forEach(v=>out.push(VOICE_DIR+"race_"+v[0]+G+".mp3"));
   /* (4.7) Оклик народа голосом другого пола — race_<имя>_x (VOICE_RACE_ALT). */
   Object.keys(VOICE_RACE_ALT).forEach(id=>out.push(VOICE_DIR+"race_"+id+"_x"+G+".mp3"));
   Object.values(VOICE_PROFS).forEach(v=>{out.push(VOICE_DIR+"prof_"+v[0]+G+".mp3");

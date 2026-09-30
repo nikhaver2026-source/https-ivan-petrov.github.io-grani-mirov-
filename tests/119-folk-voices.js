@@ -36,7 +36,7 @@ const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(e!==undefined?' :
  const files=fs.existsSync(VOICE)?fs.readdirSync(VOICE):[];
  const mp3=files.filter(f=>f.endsWith('.mp3'));
  /* (4.7) и 280 окликов народов голосом второго пола (race_*_x). */
- check('папка sounds/voice с четырьмястами семью записями и 280 окликами второго пола',mp3.length===407+280,mp3.length);
+ check('папка sounds/voice с четырьмястами семью записями и 280 окликами второго пола',mp3.length>=407+280,mp3.length);
  const cr=fs.existsSync(path.join(VOICE,'CREDITS.md'))?fs.readFileSync(path.join(VOICE,'CREDITS.md'),'utf8'):'';
  check('CREDITS.md называет Gemini, модель и условия',
   /Gemini/.test(cr)&&/gemini-3\.8-flash-tts/.test(cr)&&/Additional Terms of Service/.test(cr)&&/Prohibited Use Policy/.test(cr));
@@ -82,6 +82,8 @@ const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(e!==undefined?' :
    безГолоса:все.filter(n=>!VOICE_RACES[n]),
    лишние:Object.keys(VOICE_RACES).filter(n=>все.indexOf(n)<0),
    файлыРазные:new Set(Object.values(VOICE_RACES).map(v=>v[0])).size,
+   /* 6.0: у каждой расы свой файл; народы Дальнего Круга (флаг 0) говорят записью своей расы. */
+   своиФайлы:(()=>{const e=Object.values(VOICE_RACES).filter(v=>v[3]===1),ж=new Set(Object.values(VOICE_RACES).filter(v=>v[3]===2).map(v=>v[0]));return new Set(e.map(v=>v[0])).size===e.length&&e.every(v=>!ж.has(v[0]));})(),
    регистры:[...new Set(Object.values(VOICE_RACES).map(v=>v[2]))].sort(),
    темпы:Object.values(VOICE_RACES).every(v=>v[1]>=0.5&&v[1]<=2),
    ремёсел:ремёсла.length,
@@ -90,9 +92,9 @@ const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(e!==undefined?' :
    безХода:DLG_MOVES.filter(m=>VOICE_HERO.indexOf(m.id)<0&&!(VOICE_NPC.hero&&VOICE_NPC.hero[m.id])).map(m=>m.id),
    ветвь:(()=>{const b=Object.keys(RACE_BRANCH)[0];return b?{ветка:b,есть:!!Folk.раса(b)}:{ветка:null,есть:true};})()};});
  check('двести восемьдесят рас и народов, и у каждого свой файл',
-  полнота.счёт.народов===280&&полнота.всего===280&&полнота.безГолоса.length===0
-  &&полнота.лишние.length===0&&полнота.файлыРазные===280,полнота);
- check('все двести восемьдесят рас и народов говорят своей строкой',полнота.счёт.своих===280,полнота.счёт.своих);
+  полнота.счёт.народов===полнота.всего&&полнота.всего>=280&&полнота.безГолоса.length===0
+  &&полнота.лишние.length===0&&полнота.файлыРазные>=280&&полнота.своиФайлы,полнота);
+ check('все двести восемьдесят рас и народов говорят своей строкой',полнота.счёт.своих>=280,полнота.счёт.своих);
  check('у народа есть регистр и разумный темп',
   полнота.регистры.join(",")==="ж,м"&&полнота.темпы,полнота.регистры);
  check('сорок шесть ремёсел, и ни одно не без слова',
@@ -109,7 +111,8 @@ const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(e!==undefined?' :
  const пути=await page.evaluate(()=>{
   const out=[];
   const G=VOICE_GEN;
-  Object.values(VOICE_RACES).forEach(v=>out.push(VOICE_DIR+"race_"+v[0]+G+".mp3"));
+  /* 6.0: флаг 2 — оклик ещё не записан (раса молчит, пока не будет записи). */
+  Object.values(VOICE_RACES).filter(v=>v[3]!==2).forEach(v=>out.push(VOICE_DIR+"race_"+v[0]+G+".mp3"));
   Object.values(VOICE_PROFS).forEach(v=>{out.push(VOICE_DIR+"prof_"+v[0]+G+".mp3");
    if(v[1])out.push(VOICE_DIR+"prof_"+v[0]+"_f"+G+".mp3");});
   VOICE_SAY.forEach(k=>{out.push(VOICE_DIR+"say_"+k+G+".mp3");out.push(VOICE_DIR+"say_"+k+"_f"+G+".mp3");});
@@ -118,7 +121,7 @@ const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(e!==undefined?' :
   return out;});
  const нетНаДиске=пути.filter(p=>!fs.existsSync(path.join(ROOT,'sounds',p)));
  check('каждая запись речи лежит на диске',
-  пути.length===407+280&&нетНаДиске.length===0,нетНаДиске.slice(0,5));
+  new Set(пути).size>=407+280&&нетНаДиске.length===0,нетНаДиске.slice(0,5));
  const лишниеФайлы=mp3.filter(f=>пути.indexOf('voice/'+f)<0);
  check('в папке нет записей, которые игра не зовёт',лишниеФайлы.length===0,лишниеФайлы.slice(0,5));
  const читается=await page.evaluate(async(список)=>{

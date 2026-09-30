@@ -78,7 +78,10 @@ function удары(file){
    window.__snd.length=0;
    swipeNav("next");
    await new Promise(t=>setTimeout(t,300));
-   r[где]=window.__snd.map(x=>x.src);}
+   /* Мир живёт и при открытом меню (мимо может проехать всадник): считаются
+      только звуки интерфейса — записи из UI_BANK. */
+   const уи=new Set(Object.values(UI_BANK));
+   r[где]=window.__snd.map(x=>x.src).filter(x=>уи.has(x));}
   while(activeLayer())closeTopUI();
   return r;});
  check('2. один свайп — ровно один щелчок: в настройках свой, в меню свой',

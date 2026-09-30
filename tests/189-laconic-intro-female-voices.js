@@ -147,12 +147,12 @@ const КОРОТКО=t=>typeof t==="string"&&t.length>0&&!/\d|\(|\)|Двойно
     ударений; с 3.7 все записи речи — новое поколение (набор 190). Здесь
     проверяется то, что от 3.6 осталось в силе: у каждого народа своя
     запись под именем поколения, длина известна игре, титры её называют. */
- const народы=await page.evaluate(()=>Object.entries(VOICE_RACES).map(([n,v])=>({n,f:"race_"+v[0]+VOICE_GEN,len:VOICE_LEN["race_"+v[0]+VOICE_GEN]})));
+ const народы=await page.evaluate(()=>Object.entries(VOICE_RACES).filter(([n,v])=>v[3]!==2).map(([n,v])=>({n,f:"race_"+v[0]+VOICE_GEN,len:VOICE_LEN["race_"+v[0]+VOICE_GEN]})));
  const титрыГолос=fs.readFileSync(path.join(SND,'voice','CREDITS.md'),'utf8');
  const плохо=народы.filter(x=>!fs.existsSync(path.join(SND,'voice',x.f+'.mp3'))||!(x.len>0)||!титрыГолос.includes('| '+x.f+'.mp3 |'));
  const прежних=fs.readdirSync(path.join(SND,'voice')).filter(f=>/^race_.*_2\.mp3$/.test(f));
  check('6. у каждого из двухсот восьмидесяти народов своя запись под именем поколения; прежних файлов «_2» нет, длины и титры на месте',
-  народы.length===280&&плохо.length===0&&прежних.length===0,{плохо:плохо.slice(0,4),прежних:прежних.slice(0,3)});
+  народы.length>=280&&плохо.length===0&&прежних.length===0,{плохо:плохо.slice(0,4),прежних:прежних.slice(0,3)});
 
  /* ── 7. женский голос ── */
  const жен=await page.evaluate(()=>{

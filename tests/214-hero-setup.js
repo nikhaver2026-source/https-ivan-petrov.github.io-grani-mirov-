@@ -115,12 +115,13 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   bank.length=0;пути.length=0;
   h.пол="м";h.voice="fenrir";Folk.герой("sporit");r.муж=пути.slice();
   h.voice="algieba";пути.length=0;Folk.герой("sporit");r.мужПрежний=пути.slice();
-  playWoundSfx(8);r.стонМ=bank.filter(x=>/^hero_pain/.test(x));
+  /* (5.0) у героя от удара несколько мужских криков вперемешку (КРИК.роли.hero_m), у героини — свой. */
+  playWoundSfx(8);r.стонМ=bank.filter(x=>КРИК.роли.hero_m.includes(x)||/^hero_pain/.test(x));
   Folk.сказать=было;Bank.play=bp;
   return r;});
  check('6. герой говорит выбранным голосом своего пола; стон от раны — голосом пола героя',
   речь.жен[0]==="voice_hero/hero_torg_kore_g"&&речь.женАльгиеба===false&&!речь.женАльгиебаПути.length
-  &&речь.стонЖ[0]==="hero_pain_f"&&речь.муж[0]==="voice_hero/hero_sporit_fenrir_g"&&речь.мужПрежний[0]==="hero_sporit_g"&&речь.стонМ[0]==="hero_pain_m",речь);
+  &&речь.стонЖ[0]==="hero_pain_f"&&речь.муж[0]==="voice_hero/hero_sporit_fenrir_g"&&речь.мужПрежний[0]==="hero_sporit_g"&&["hero_pain_m","oc_hurt"].includes(речь.стонМ[0]),речь);
 
  /* ── 7. ── */
  const впечатление=await page.evaluate(()=>{

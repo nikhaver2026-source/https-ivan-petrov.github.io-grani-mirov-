@@ -127,14 +127,18 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   r.банк=Speech.gvLoad().state;
   const фраза="Настройки";
   r.естьЗапись=Speech.gvParts(фраза).some(x=>x.url);
-  const запас=[];const dev=Speech._deviceAdapter;
-  Speech._deviceAdapter=()=>({name:"fake",speak(t,o){запас.push(t);setTimeout(()=>o.onend&&o.onend(),20);return true;},cancel(){},speaking(){return false;}});
+  /* Запас голоса Gemini — голос устройства, выбранный в настройках: адаптер
+     его берётся в миг, когда запись не зазвучала (_voiceAdapter), поэтому
+     подмена держится всё ожидание. */
+  const запас=[];const dev=Speech._voiceAdapter;
+  Speech._voiceAdapter=()=>({name:"fake",speak(t,o){запас.push(t);setTimeout(()=>o.onend&&o.onend(),20);return true;},cancel(){},speaking(){return false;}});
   const play=HTMLMediaElement.prototype.play;
   HTMLMediaElement.prototype.play=function(){return new Promise(()=>{});};
-  const a=Speech._geminiAdapter();Speech._deviceAdapter=dev;
+  const a=Speech._geminiAdapter();
   let конец=0;const t0=Date.now();
   a.speak(фраза,{rate:1,volume:1,onend(){конец=Date.now()-t0;}});
   await w(1600);
+  Speech._voiceAdapter=dev;
   HTMLMediaElement.prototype.play=play;
   r.запас=запас.slice();r.конец=конец;
   const src=document.documentElement.innerHTML;
