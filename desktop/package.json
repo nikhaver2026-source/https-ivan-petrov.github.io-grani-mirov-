@@ -1,0 +1,14 @@
+{
+  "name": "grani-mirov",
+  "productName": "Грань Миров",
+  "version": "4.7.0",
+  "description": "Грань Миров — аудиоигра: приложение для компьютера, управление с клавиатуры",
+  "main": "main.js",
+  "author": "Грань Миров",
+  "license": "SEE LICENSE IN ../README.md",
+  "private": true,
+  "devDependencies": {
+    "@electron/packager": "20.3.0",
+    "electron": "44.5.1"
+  }
+}

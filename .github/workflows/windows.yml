@@ -1,0 +1,115 @@
+# Сборка приложения «Грань Миров» 4.7 для Windows на серверах GitHub.
+#
+# Приложение — Electron: вся игра (index.html, записи sounds, встроенный голос
+# tts) лежит рядом, в resources/game, и открывается по своему адресу
+# app://grani — сеть не нужна. Управление целиком с клавиатуры, мышь не
+# нужна (глава «Игра на компьютере» в руководстве).
+#
+# Выходит архив GraniMirov-4.7-windows.zip: распаковать и открыть
+# GraniMirov.exe. Архив выкладывается в выпуск «windows-latest» (Releases).
+# Если однажды он перерастёт предел GitHub на один файл (2 ГиБ), голоса
+# жителей уйдут вторым архивом, который распаковывают в ту же папку.
+name: Сборка Windows
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - 'index.html'
+      - 'sounds/**'
+      - 'tts/**'
+      - 'desktop/**'
+      - '.github/workflows/windows.yml'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: windows
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: windows-latest
+    timeout-minutes: 90
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - name: Забрать репозиторий
+        uses: actions/checkout@v4
+
+      - name: Поставить Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Electron и упаковщик
+        working-directory: desktop
+        run: npm install --no-audit --no-fund
+
+      - name: Значок приложения
+        working-directory: desktop
+        run: |
+          magick ../icon-512.png -define icon:auto-resize=256,128,64,48,32,16 icon.ico && echo "ICON=icon.ico" >> "$GITHUB_ENV" || echo "значок не собран — приложение будет со значком Electron"
+
+      - name: Сложить игру рядом с приложением
+        run: |
+          G=desktop/game
+          rm -rf "$G" && mkdir -p "$G"
+          cp index.html manifest.json icon-192.png icon-512.png "$G"/
+          cp -r sounds tts "$G"/
+          du -sh "$G"
+
+      - name: Упаковать приложение
+        working-directory: desktop
+        run: |
+          ICONARG=""; [ -n "$ICON" ] && ICONARG="--icon=$ICON"
+          npx @electron/packager . GraniMirov --platform=win32 --arch=x64 --out=out --overwrite \
+            --executable-name=GraniMirov --app-version=4.7.0 --build-version=4.7.${GITHUB_RUN_NUMBER} \
+            --win32metadata.ProductName="Грань Миров" --win32metadata.FileDescription="Грань Миров" \
+            --win32metadata.CompanyName="Грань Миров" \
+            --extra-resource=game --ignore='^/game' --ignore='^/out' --ignore='icon.ico' $ICONARG
+          D=out/GraniMirov-win32-x64
+          # Языки интерфейса Chromium: оставить русский и английский.
+          find "$D/locales" -name '*.pak' ! -name 'ru.pak' ! -name 'en-US.pak' -delete
+          cp README.txt "$D/Прочти меня.txt"
+          ls "$D"; du -sh "$D"
+
+      - name: Архив
+        working-directory: desktop/out
+        run: |
+          mv GraniMirov-win32-x64 "GraniMirov"
+          # Записи уже сжаты (FLAC, MP3, OGG): быстрое сжатие, качество не меняется.
+          7z a -tzip -mx=1 ../../GraniMirov-4.7-windows.zip "GraniMirov" > /dev/null
+          cd ../..
+          SIZE=$(stat -c %s GraniMirov-4.7-windows.zip)
+          echo "архив: $SIZE байт"
+          echo "SIZE=$SIZE" >> "$GITHUB_ENV"
+
+      - name: Если архив больше предела — голоса жителей отдельно
+        if: ${{ env.SIZE > 2140000000 }}
+        run: |
+          rm -f GraniMirov-4.7-windows.zip
+          cd desktop/out
+          7z a -tzip -mx=0 ../../GraniMirov-4.7-windows.zip "GraniMirov" -xr!'voice_npc' > /dev/null
+          7z a -tzip -mx=0 ../../GraniMirov-4.7-voices.zip "GraniMirov/resources/game/sounds/voice_npc" > /dev/null
+          cd ../..
+          ls -la GraniMirov-4.7-*.zip
+
+      - name: Проверить архив
+        run: |
+          7z l GraniMirov-4.7-windows.zip | grep -E "GraniMirov.exe|resources[\\/]game[\\/]index.html|resources[\\/]app.asar|resources[\\/]app[\\/]main.js" | head
+          ls -la GraniMirov-4.7-*.zip
+
+      - name: Выложить в выпуск «windows-latest»
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release delete windows-latest --cleanup-tag -y || true
+          FILES=$(ls GraniMirov-4.7-*.zip)
+          NOTE="Свежая сборка из main ($GITHUB_SHA). Распакуйте GraniMirov-4.7-windows.zip в любую папку и откройте GraniMirov.exe — сеть и мышь не нужны, всё управляется клавиатурой: стрелки — шаг, Shift со стрелкой — бег, E — действие, I или Alt+E — инвентарь, Tab — карта, M или Esc — меню, Shift+F1 — все клавиши. Windows может предупредить о неизвестном издателе: «Подробнее» → «Выполнить в любом случае»."
+          if [ -f GraniMirov-4.7-voices.zip ]; then NOTE="$NOTE Голоса жителей — во втором архиве GraniMirov-4.7-voices.zip: распакуйте его в ту же папку."; fi
+          gh release create windows-latest $FILES --target "$GITHUB_SHA" \
+            --title "Грань Миров 4.7 для Windows (сборка ${GITHUB_RUN_NUMBER})" --notes "$NOTE"

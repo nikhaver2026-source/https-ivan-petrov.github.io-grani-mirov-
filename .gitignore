@@ -9,3 +9,7 @@ playwright-report/
 *-tmp.py
 __pycache__/
 *.pyc
+desktop/game/
+desktop/out/
+desktop/icon.ico
+desktop/package-lock.json

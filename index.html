@@ -266,6 +266,10 @@ h3{color:var(--acc2);margin:14px 0 6px;font-size:1.05rem;}
  <p class="hint">Пока идёт бой и сверху нет окна, фигура делает то, что назначено здесь; «как вне боя» оставляет ей обычное дело. По умолчанию: свайп двумя пальцами влево — выпить зелье.</p>
  <div class="row" id="gestCombatRow"></div>
  <div class="row"><button type="button" data-cmd="gestcombatreset">Вернуть жесты боя к умолчанию</button></div>
+ <h3 class="sec-head" tabindex="0" data-cmd="secjump" data-sec-title="Клавиатура">Клавиатура</h3>
+ <p class="hint">Для игры на компьютере без мыши. Стрелки или WASD — шаг, Shift со стрелкой — бег, E или Enter — действие с объектом, I или Alt+E — инвентарь, Tab — карта (по ней — стрелками), M или Esc — меню. В окнах: стрелки — пункты, Enter или пробел — выбрать, Esc или Backspace — назад, Page Up и Page Down — разделы. Ctrl — замолчать, Shift+F1 — все клавиши. Клавиши определяются по месту, поэтому русская раскладка работает так же, как английская. Enter на действии — назначить ему другую клавишу или сочетание.</p>
+ <div class="row" id="keyRow"></div>
+ <div class="row"><button type="button" data-cmd="keyhelp">Прочитать все клавиши</button><button type="button" data-cmd="keyreset">Вернуть клавиши к умолчанию</button></div>
  <h3 class="sec-head" tabindex="0" data-cmd="secjump" data-sec-title="Точность жестов">Точность жестов</h3>
  <p class="hint">Насколько далеко палец может съехать, прежде чем касание станет свайпом, и сколько времени даётся на второе касание. Рука у каждого своя: у одного палец ходит коротко и точно, у другого дрожит и ведёт вкось. Умолчания — прежние пороги игры до единицы.</p>
  <label class="opt">Чувствительность жестов <select id="setGestSens" aria-label="Чувствительность жестов, от самой мягкой до самой строгой"><option value="vcalm">1 из 5. Самая мягкая — прощает дрожь руки, жест нужен широкий</option><option value="calm">2 из 5. Мягкая — палец может заметно съехать</option><option value="norm" selected>3 из 5. Средняя — по умолчанию</option><option value="high">4 из 5. Строгая — жест распознаётся раньше</option><option value="vhigh">5 из 5. Самая строгая — короткий взмах уже жест, касание точное</option></select></label>
@@ -990,7 +994,7 @@ const NEWS=[
  {v:32,н:"враги говорят в бою, заказчик сам называет поручение, свои голоса обозам и жителям, баллады сказителей, тихий шаг",
   т:"Версия 4.6. Разбойник, корсар, гоблин, исполин, дракон, владыка нежити, бес, дух, сирена и страж Предтеч говорят в бою: грозят в начале, бросают слово при ударе, ругаются от раны, молят или клянутся вернуться на краю, насмехаются над слабеющим героем и говорят последнее; большие и древние — страшным голосом, ниже и в гулком эхе. Взяв дело, вы слышите от заказчика, что нужно: принести руду или травы, идти на север, выследить зверя, поклониться алтарю; дело сразу видно в журнале. У жителей три пары голосов, у обозов — свой старший по роду. Сказитель у дороги и певец в таверне поют восемь баллад о мире. Настройка «Тихий шаг»: на ходу не называются проходы и стороны света. Переключатели звучат по-разному на включение и выключение; стартовый меч продаётся и не возвращается после разбора. Руководство собрано в тридцать одну главу с номерами подряд. В бою свайп двумя пальцами влево выпивает зелье, а жесты боя переназначаются в настройках; шаг в кольчуге и латах звучит настоящей бронёй, а не монетами. Меч бьёт режущим ударом со звоном стали, а не как молот; у кинжала, топора, копья и щита свои удары; надевание и снятие доспеха, щита, амулета, кольца и браслета звучит по-своему. Голос не меняет пол посреди речи: незаписанное договаривает встроенный голос того же пола, а житель говорит голосом своего пола, мужчина — мужским, женщина — женским. Голоса улицы и реплики тварей звучат в фоне и не прерывают голос игры; достижения договариваются до конца; «осмотреться» работает при тихом шаге."},
  {v:33,н:"настройки персонажа: пол, раса, народ, внешность по расе и живой голос героя",
-  т:"Версия 4.7. В главном меню появились «Настройки персонажа»: до входа в мир вы выбираете пол, расу и народ, настраиваете внешность и голос. У каждой расы свои параметры облика — от цвета кожи, меха, чешуи или пера до роста, телосложения и особенности, которой нет у других, а народ добавляет свой родовой цвет и примету. Голосов героя двенадцать, все живые: шесть мужских и шесть женских, и при выборе показываются только голоса пола героя; женщина говорит женским голосом, мужчина — мужским. От расы, характера и примет зависит первое впечатление в разных землях: земляки теплее, давние враги народа холоднее — а дальше решают дела."},];
+  т:"Версия 4.7. В главном меню появились «Настройки персонажа»: до входа в мир вы выбираете пол, расу и народ, настраиваете внешность и голос. У каждой расы свои параметры облика — от цвета кожи, меха, чешуи или пера до роста, телосложения и особенности, которой нет у других, а народ добавляет свой родовой цвет и примету. Голосов героя двенадцать, все живые: шесть мужских и шесть женских, и при выборе показываются только голоса пола героя; женщина говорит женским голосом, мужчина — мужским. От расы, характера и примет зависит первое впечатление в разных землях: земляки теплее, давние враги народа холоднее — а дальше решают дела. Появилось приложение для компьютера с Windows: вся игра управляется клавиатурой без мыши — стрелки, Shift со стрелкой для бега, E для действия, I или Alt+E для инвентаря, Tab для карты; Shift+F1 читает все клавиши, а назначить свои можно в настройках."},];
 const NEWS_V=NEWS[NEWS.length-1].v;
 /* Одна фраза: главное из последнего выпуска и сколько ещё новостей ждёт в меню. */
 function newsBrief(было){
@@ -6318,7 +6322,7 @@ const SET_GROUPS=[
  {id:"tts",   n:"Синтезатор", з:"",о:"чем говорит игра: встроенный голос — женский или мужской — или голос устройства, темп и высота"},
  {id:"speech",n:"Речь",       з:"",о:"сколько говорит рассказчик, что игра произносит сама и что прерывает речь"},
  {id:"ui",    n:"Интерфейс",  з:"",о:"ощупывание, подсказки расположения, вибрация и субтитры"},
- {id:"gest",  n:"Жесты",      з:"",о:"свои фигуры для действий и точность: насколько далеко может съехать палец"},
+ {id:"gest",  n:"Жесты и клавиши",з:"",о:"свои фигуры для действий, точность жестов и клавиши для игры на компьютере"},
  {id:"diff",  n:"Сложность",  з:"",о:"мера мира: сколько бьют, сколько держат и сколько стоит поражение; темп боя: живой, неспешный или пошаговый"},
  {id:"save",  n:"Сохранения", з:"",о:"записать игру сейчас, слоты и выгрузка в файл"}];
 const SET_GROUP_BY_ID=Object.fromEntries(SET_GROUPS.map(g=>[g.id,g]));
@@ -7267,6 +7271,7 @@ const GUIDE_SRC=[
  "ПОЛ ГОЛОСА. Выбранный голос игры — мужской или женский — не меняется посреди речи: то, чего нет в записях, договаривает встроенный голос того же пола, а не голос телефона. Житель говорит голосом своего пола: мужчина — мужским, женщина — женским, какого бы народа он ни был; народ задаёт только высоту. Если у фразы ещё нет записи нужного пола, житель не говорит её чужим голосом — её читает голос игры.",
  "НАДЕТЬ И СНЯТЬ. У каждой вещи свой звук: кольчуга звенит кольцами, латы лязгают пластинами и щёлкают пряжкой, кожаный доспех скрипит кожей и ремнями (у кожи и ткани по три разных записи), ткань шуршит, щит стучит о ремни, амулет — тонкой цепочкой, кольцо — коротким звоном, браслет — звяканьем. Надеть и снять звучат по-разному.",
  "НАСТРОЙКИ ПЕРСОНАЖА. В главном меню, до входа в мир, собирается герой. Пункты: пол персонажа, раса, народ, настройки внешности, голос персонажа, описание героя и «Готово». Новая история («Начать историю» или «Без пролога») сперва открывает эти настройки. Сначала выбираются раса и народ: от них зависит облик. У каждой расы свой род тела — человеческий облик, мех, перья и крылья, чешуя, облик вод, кора и листва, тело из стихии, облик духа, крылья феи, панцирь или конское тело — и свои параметры: характер, телосложение, рост (у полурослика — сантиметры, у титана — метры), цвет глаз, кожа, мех, чешуя или перо, волосы, причёска, черты лица, приметы и особенность, которой нет у других рас (борода гнома, клыки орка, рога тифлинга, род чешуи драконида). Народ добавляет родовой цвет и примету народа. Голос героя живой: шесть мужских и шесть женских голосов; при выборе голоса видны только голоса выбранного пола, а встав на голос, вы слышите его образец. Мужчина говорит мужским голосом, женщина — женским: и в разговоре, и в стоне от раны. Раса, народ, характер и приметы дают первое впечатление: земляки встречают теплее, давние враги вашего народа — холоднее, грозные приметы уважают воинственные народы и настораживают мирные; в державе, где живёт ваш народ, вы свой для всех, а в земле, чей главный народ — давний враг вашего, чужой. Дальше всё решают ваши дела. После начала пути меняются только голос и характер.",
+ "ИГРА НА КОМПЬЮТЕРЕ. Есть приложение для Windows: вся игра внутри, сеть не нужна, мышь не нужна — всё делается клавишами, и они определяются по месту на клавиатуре, так что русская раскладка работает так же, как английская. Чтецу экрана (NVDA, JAWS) окно игры объявляется приложением, поэтому клавиши идут прямо в игру. ХОДЬБА: стрелки или W, A, S, D — шаг; Shift со стрелкой — бег, пока держите. ДЕЙСТВИЯ: E или Enter — действие с тем, что перед вами (сундук, книга, стойка с оружием, дверь, житель — как двойное касание одним пальцем); F — собрать ресурс; R — вынуть или убрать оружие; Q — выпить зелье; V — осмотреться; N — что рядом; G — где я; H — состояние героя; B — погасить маяк; цифры 1–9, 0, минус и равно — заклинания слотов с первого по двенадцатый. ОКНА: I или Alt+E — инвентарь; Tab — карта места, по клеткам карты ходят стрелками, Enter называет клетку и проигрывает её маяк, Page Down — к известным точкам; J — журнал; L — список дел; C — окно героя; K — ремесло; X — панель магии; M или Esc — меню действий; O — меню мира; T — досье державы; Y — вести мира; U — вести о вас; P — политика; F1 — руководство; Shift+F1 — прочитать все клавиши; F2 — настройки; F3 — энциклопедия заклинаний; F4 — бестиарий; F6 — сохранения; F5 или Ctrl+S — быстрое сохранение; F9 — загрузить. В ОКНЕ: стрелки — пункт за пунктом, Enter или пробел — выбрать, Esc или Backspace — назад, Home и End — первый и последний пункт, Page Up и Page Down — разделы окна, стрелки влево и вправо двигают ползунок. БОЙ: стрелки — удар в сторону твари с вынутым оружием или шаг, пробел — удар, F — удар чарами, Q — зелье, T — где тварь, H — моё здоровье, Backspace или Esc — бежать. РЕЧЬ: Ctrl — замолчать, пробел на поле — повторить или прервать, Alt+R — повторить последнее, Alt+X — очистить очередь, Alt+H — что с речью. Любую клавишу можно переназначить: Настройки → Жесты и клавиши → Клавиатура, Enter на действии — и нажмите новую клавишу или сочетание.",
  "РУКОВОДСТВО. Сто шесть глав собраны в тридцать одну: близкие главы стали разделами одной, номера идут подряд в порядке чтения, по разделам внутри главы можно перескакивать так же, как по частям в оглавлении."]},
 {title:"Глава 105. Версия 4.4: свой голос у каждой твари, живая капель, тяжёлый шаг стражи, зелья и требования вещей",body:[
  "СВОЙ ГОЛОС У ТВАРИ. Раньше голос в покое и боевой клич давал твари её род, и две твари одного рода, стоя рядом и порыкивая, звучали одним горлом. Теперь у каждого вида своя запись из голосов его рода, свой вариант этой записи и своя высота: крупные — громада, владыка, рух — звучат ниже, мелкие — мышь, сойка, рой — выше. Боевой клич и злоба — другая запись того же горла, так что вид узнаётся и в покое, и в ярости. Тот же голос слышен, когда тварь стоит за дверью, сторожит шахту или бродит в картине вокруг.",
@@ -39381,6 +39386,9 @@ const CMD={
  story(){if(heroNeedsCreation()){openHeroSetup("story");return;}startIntro();},
  enter(){if(heroNeedsCreation()&&!document.getElementById("screen-title").hidden){openHeroSetup("enter");return;}enterGame();},
  hero(){openHeroSetup(null);},
+ keybind(id){safeFn(()=>keyCaptureStart(id));},
+ keyreset(){safeFn(()=>keyReset());},
+ keyhelp(){narrate(keyHelpText(),{interrupt:true});},
  heroopen(id){safeFn(()=>heroOpen(id));},
  heroparam(k){safeFn(()=>heroParam(k));},
  heroset(arg){const p=String(arg).split(":");safeFn(()=>heroSet(p[0],p[1],p[2]));},
@@ -39574,7 +39582,7 @@ const CMD={
  encyc(){openModal("modal-encyclopedia");buildEncycCats();},
  guide(){openGuide();},
  /* settings:tts — сразу в пункт; без довода — список пунктов. */
- settings(g){openModal("modal-settings");safeFn(()=>renderGestBind());safeFn(()=>renderGestCombat());
+ settings(g){openModal("modal-settings");safeFn(()=>renderGestBind());safeFn(()=>renderGestCombat());safeFn(()=>renderKeyBind());
   if(g&&SET_GROUP_BY_ID[g])safeFn(()=>setGroupOpen(g));else safeFn(()=>buildSetMenu());},
  setgroup(id){if(!safeFn(()=>setGroupOpen(id),false))narrate("Такого пункта в настройках нет.");},
  setgroups(){if(!safeFn(()=>setBack(),false))narrate("Вы и так в списке пунктов настроек.");},
@@ -55614,7 +55622,7 @@ function enterGame(){if(entered){showScreen("screen-game");normalizeWeaponState(
  const c=cellContent(G.x,G.y);
  if(settings.effects&&openSky()&&!G.place)Play.start("amb0",(AMB[c.terrain[0]]||["wind"])[0],{loop:true});
  Music.start(c.terrain[0]);safeFn(()=>bankUpdateAmbient());lastEmp=c.empire.name;lastArrive=c;
- narrate(`Вы вошли в мир. ${c.terrain[1]}, ${c.empire.name}. Погода: ${G.weather}. Управление: свайп — шаг, свайп и удержание — бег, свайп тремя пальцами вверх — меню действий, касание двумя пальцами — собрать ресурс.`);
+ narrate(`Вы вошли в мир. ${c.terrain[1]}, ${c.empire.name}. Погода: ${G.weather}. ${isDesktopApp()?"Управление: стрелки — шаг, Shift со стрелкой — бег, E — действие, I — инвентарь, Tab — карта, M или Esc — меню, Shift+F1 — все клавиши.":"Управление: свайп — шаг, свайп и удержание — бег, свайп тремя пальцами вверх — меню действий, касание двумя пальцами — собрать ресурс."}`);
  /* Первый раз в жизни: игра сама говорит, что есть обучение. Не навязывает —
     просто называет пункт, чтобы новичок не искал его вслепую. */
  /* §10: с чего начать. Говорится один раз, при первом входе в мир. */
@@ -55632,36 +55640,279 @@ function enterGame(){if(entered){showScreen("screen-game");normalizeWeaponState(
    if((Number(G.x)||0)!==стартX||(Number(G.y)||0)!==стартY)return;
    narrate("Если вы здесь впервые: в меню действий есть пункт «Обучение жестам» — восемь коротких уроков, по одному жесту каждый.",{interrupt:false});}),7000);}
  refresh();saveGame(true);}
+/* ════════════════════════════════════════════════════════════════════════
+   УПРАВЛЕНИЕ С КЛАВИАТУРЫ (4.7, приложение для компьютера)
+
+   На компьютере игрок не касается мыши вовсе: всё, что на телефоне делают
+   жесты, здесь делают клавиши — отдельные и сочетания. Раскладка — как в
+   привычных играх: стрелки или WASD — шаг, Shift со стрелкой — бег,
+   E — действие с тем, что перед вами (как двойное касание одним пальцем:
+   сундук, книга, стойка с оружием, житель), I или Alt+E — инвентарь, Tab —
+   карта (по ней ходят стрелками), J — журнал, M — меню действий, Esc —
+   закрыть окно, а на поле — меню игры. Клавиши определяются по месту на
+   клавиатуре, а не по букве: русская раскладка работает так же, как
+   английская.
+
+   Окна: стрелки вверх и вниз (и влево-вправо) — пункт за пунктом, Enter или
+   пробел — выбрать, Esc или Backspace — назад, Home и End — первый и
+   последний пункт, Page Up и Page Down — раздел окна. Ползунок двигается
+   стрелками влево и вправо.
+
+   Бой: стрелки — удар в сторону твари (с вынутым оружием) или шаг, пробел —
+   удар, F — удар чарами, Q — зелье, T — где тварь, H — моё здоровье,
+   Backspace или Esc — бежать.
+
+   Любую клавишу можно переназначить в настройках («Жесты и клавиши» →
+   «Клавиатура»). Назначение хранится в настройках, а не в сохранении: оно
+   общее для всех героев на этом компьютере.
+   ════════════════════════════════════════════════════════════════════════ */
+const KEY_NAMES={ArrowUp:"стрелка вверх",ArrowDown:"стрелка вниз",ArrowLeft:"стрелка влево",ArrowRight:"стрелка вправо",
+ Enter:"Enter",Space:"пробел",Tab:"Tab",Escape:"Esc",Backspace:"Backspace",Home:"Home",End:"End",PageUp:"Page Up",PageDown:"Page Down",
+ Minus:"минус",Equal:"равно",Slash:"слэш",Backquote:"тильда",Comma:"запятая",Period:"точка",Semicolon:"точка с запятой",Quote:"кавычка",
+ BracketLeft:"левая скобка",BracketRight:"правая скобка",Backslash:"обратный слэш",Delete:"Delete",Insert:"Insert"};
+function keyName(combo){
+ return String(combo).split("+").map(p=>{
+  if(p==="Ctrl")return "Ctrl";if(p==="Alt")return "Alt";if(p==="Shift")return "Shift";
+  if(/^Key[A-Z]$/.test(p))return p.slice(3);
+  if(/^Digit\d$/.test(p))return p.slice(5);
+  if(/^F\d+$/.test(p))return p;
+  return KEY_NAMES[p]||p;}).join("+");}
+/* Сочетание из события: модификаторы по порядку и код клавиши по месту. */
+function keyCombo(e){
+ const code=e.code||(e.key===" "?"Space":e.key);
+ if(/^(Shift|Control|Alt|Meta|OS)(Left|Right)?$/.test(code))return null;
+ return (e.ctrlKey?"Ctrl+":"")+(e.altKey?"Alt+":"")+(e.shiftKey?"Shift+":"")+code;}
+/* Действия клавиатуры. ctx: field — на поле, combat — в бою, any — всюду.
+   run возвращает true, если клавиша разобрана. Где можно — зовётся то же,
+   что зовёт жест (GEST_ACTIONS), чтобы клавиша и жест не расходились. */
+const KB_GEST=id=>()=>{const a=GEST_ACTION_BY_ID[id];return a?!!safeFn(()=>a.делать(),false)||true:false;};
+const KB_CASTSLOT=i=>()=>{const sp=SPELLS[i];safeFn(()=>UI.natStep("ui_select",0.5,0.88+i*0.045));
+ if(!sp){narrate(`Слот ${i+1} пуст.`,{interrupt:true});return true;}
+ narrate(`Слот ${i+1}: ${sp.n}.`,{interrupt:true});safeFn(()=>castSpell(i));return true;};
+const KB_ACTIONS=[
+ /* ── ходьба ── */
+ {id:"stepN",g:"Движение",n:"шаг вперёд (на север)",def:["ArrowUp","KeyW"],ctx:"move",dir:"N"},
+ {id:"stepS",g:"Движение",n:"шаг назад (на юг)",def:["ArrowDown","KeyS"],ctx:"move",dir:"S"},
+ {id:"stepW",g:"Движение",n:"шаг влево (на запад)",def:["ArrowLeft","KeyA"],ctx:"move",dir:"W"},
+ {id:"stepE",g:"Движение",n:"шаг вправо (на восток)",def:["ArrowRight","KeyD"],ctx:"move",dir:"E"},
+ /* Бег — та же клавиша шага с Shift; держите, пока бежите. Отдельно не назначается. */
+ /* ── мир ── */
+ {id:"interact",g:"Мир",n:"действие с объектом",о:"сундук, книга, стойка с оружием, дверь, житель — то, что перед вами или под ногами",def:["KeyE","Enter"],ctx:"field",run:()=>{fieldInteract();return true;}},
+ {id:"gather",g:"Мир",n:"собрать ресурс",def:["KeyF"],ctx:"field",run:KB_GEST("gather")},
+ {id:"weapon",g:"Мир",n:"вынуть или убрать оружие",def:["KeyR"],ctx:"any",run:KB_GEST("weapon")},
+ {id:"potion",g:"Мир",n:"выпить зелье здоровья",def:["KeyQ"],ctx:"any",run:()=>{if(G.inCombat){fight("potion");return true;}const i=(G.items||[]).findIndex(x=>/зель/i.test(String(x)));if(i>=0&&typeof drinkPotion==="function"){drinkPotion(i);return true;}narrate("Зелья здоровья в сумке нет.",{interrupt:true});return true;}},
+ {id:"look",g:"Мир",n:"осмотреться",о:"объекты вокруг и выбор цели",def:["KeyV"],ctx:"field",run:KB_GEST("look")},
+ {id:"near",g:"Мир",n:"что рядом",def:["KeyN"],ctx:"field",run:KB_GEST("near")},
+ {id:"where",g:"Мир",n:"где я",о:"место, сторона света, время",def:["KeyG"],ctx:"field",run:KB_GEST("where")},
+ {id:"state",g:"Мир",n:"состояние героя",о:"здоровье, мана, вес, время",def:["KeyH"],ctx:"any",run:KB_GEST("state")},
+ {id:"beaconoff",g:"Мир",n:"погасить маяк цели",def:["KeyB"],ctx:"any",run:KB_GEST("beaconoff")},
+ /* ── окна ── */
+ {id:"inv",g:"Окна",n:"инвентарь",def:["KeyI","Alt+KeyE"],ctx:"any",run:KB_GEST("inv")},
+ {id:"map",g:"Окна",n:"карта места",о:"по карте ходят стрелками",def:["Tab"],ctx:"any",run:KB_GEST("map")},
+ {id:"journal",g:"Окна",n:"журнал",def:["KeyJ"],ctx:"any",run:KB_GEST("journal")},
+ {id:"quests",g:"Окна",n:"список дел",def:["KeyL"],ctx:"any",run:KB_GEST("quests")},
+ {id:"char",g:"Окна",n:"окно героя",def:["KeyC"],ctx:"any",run:KB_GEST("char")},
+ {id:"craft",g:"Окна",n:"ремесло",def:["KeyK"],ctx:"any",run:KB_GEST("craft")},
+ {id:"magic",g:"Окна",n:"панель магии",def:["KeyX"],ctx:"any",run:KB_GEST("magic")},
+ {id:"actions",g:"Окна",n:"меню действий",def:["KeyM"],ctx:"any",run:KB_GEST("actions")},
+ {id:"world",g:"Окна",n:"меню мира",о:"области, державы, боги",def:["KeyO"],ctx:"any",run:KB_GEST("world")},
+ {id:"faction",g:"Окна",n:"досье державы",def:["KeyT"],ctx:"field",run:KB_GEST("faction")},
+ {id:"news",g:"Окна",n:"вести мира",def:["KeyY"],ctx:"any",run:KB_GEST("news")},
+ {id:"rumours",g:"Окна",n:"вести о вас",def:["KeyU"],ctx:"any",run:KB_GEST("rumours")},
+ {id:"politics",g:"Окна",n:"политика",def:["KeyP"],ctx:"any",run:KB_GEST("politics")},
+ {id:"guide",g:"Окна",n:"руководство",def:["F1"],ctx:"any",run:KB_GEST("guide")},
+ {id:"keyhelp",g:"Окна",n:"список клавиш",о:"прочитать, что на какой клавише",def:["Shift+F1","Shift+Slash"],ctx:"any",run:()=>{narrate(keyHelpText(),{interrupt:true});return true;}},
+ {id:"settings",g:"Окна",n:"настройки",def:["F2"],ctx:"any",run:KB_GEST("settings")},
+ {id:"enc",g:"Окна",n:"энциклопедия заклинаний",def:["F3"],ctx:"any",run:KB_GEST("enc")},
+ {id:"best",g:"Окна",n:"бестиарий",def:["F4"],ctx:"any",run:KB_GEST("best")},
+ {id:"saves",g:"Окна",n:"сохранения",def:["F6"],ctx:"any",run:KB_GEST("saves")},
+ /* ── игра ── */
+ {id:"quicksave",g:"Игра",n:"быстрое сохранение",def:["F5","Ctrl+KeyS"],ctx:"any",run:()=>{safeFn(()=>saveGame(false));return true;}},
+ {id:"quickload",g:"Игра",n:"загрузить сохранение",def:["F9"],ctx:"any",run:()=>{safeFn(()=>loadGame());return true;}},
+ /* ── речь ── */
+ {id:"repeat",g:"Речь",n:"повторить или прервать речь",о:"идёт речь — оборвать, тишина — повторить",def:["Space"],ctx:"field",run:KB_GEST("repeat")},
+ {id:"again",g:"Речь",n:"повторить последнее",def:["Alt+KeyR"],ctx:"any",run:KB_GEST("again")},
+ {id:"stop",g:"Речь",n:"замолчать",о:"так же — Ctrl сам по себе",def:["Ctrl+Space"],ctx:"any",run:KB_GEST("stop")},
+ {id:"flush",g:"Речь",n:"очистить очередь речи",def:["Alt+KeyX"],ctx:"any",run:KB_GEST("flush")},
+ {id:"speechstatus",g:"Речь",n:"что сейчас с речью",def:["Alt+KeyH"],ctx:"any",run:()=>{Speech.status();return true;}},
+ /* ── магия: слоты 1–12 ── */
+ ...Array.from({length:12},(_,i)=>({id:"slot"+(i+1),g:"Магия",n:`заклинание слота ${i+1}`,def:[i<9?"Digit"+(i+1):["Digit0","Minus","Equal"][i-9]],ctx:"field",run:KB_CASTSLOT(i)})),
+ /* ── бой: эти клавиши работают, пока идёт бой, и перекрывают мирные ── */
+ {id:"c_attack",g:"Бой",n:"удар оружием",def:["Space"],ctx:"combat",run:()=>{fight("atk");return true;}},
+ {id:"c_cast",g:"Бой",n:"удар чарами",def:["KeyF"],ctx:"combat",run:()=>{fight("magic");return true;}},
+ {id:"c_foe",g:"Бой",n:"где тварь и сколько у неё сил",def:["KeyT"],ctx:"combat",run:()=>!!safeFn(()=>GEST_COMBAT_BY_ID.foe.делать(),false)},
+ {id:"c_self",g:"Бой",n:"моё здоровье и мана",def:["KeyH"],ctx:"combat",run:()=>!!safeFn(()=>GEST_COMBAT_BY_ID.self.делать(),false)},
+ {id:"c_flee",g:"Бой",n:"бежать из боя",def:["Backspace"],ctx:"combat",run:()=>{fight("flee");return true;}}];
+const KB_BY_ID=Object.fromEntries(KB_ACTIONS.map(a=>[a.id,a]));
+function keyBinds(){
+ try{if(!settings.keyBind||typeof settings.keyBind!=="object"||Array.isArray(settings.keyBind))settings.keyBind={};}catch(_){return {};}
+ return settings.keyBind;}
+function keyCombosOf(id){const b=keyBinds();const a=KB_BY_ID[id];if(!a)return [];return Array.isArray(b[id])?b[id].slice():a.def.slice();}
+/* Какие действия стоят на сочетании в этом положении игры. */
+function keyActionFor(combo,ctx){
+ const hits=KB_ACTIONS.filter(a=>keyCombosOf(a.id).indexOf(combo)>=0);
+ if(!hits.length)return null;
+ if(ctx==="combat"){const c=hits.find(a=>a.ctx==="combat");if(c)return c;}
+ return hits.find(a=>a.ctx!=="combat"&&(a.ctx!=="field"||ctx!=="window"))||null;}
+function keySave(){safeFn(()=>saveSettings());}
+/* Назначить сочетание: оно снимается с прежнего действия того же положения
+   (мирного или боевого), чтобы одна клавиша не делала двух дел. */
+function keyBind(id,combo){
+ const a=KB_BY_ID[id];if(!a||!combo)return false;
+ if(/^(Escape)$/.test(combo)){narrate("Esc занят: он закрывает окна.",{interrupt:true});return false;}
+ const b=keyBinds();
+ KB_ACTIONS.forEach(x=>{if(x.id===id)return;const бой=x.ctx==="combat",мой=a.ctx==="combat";if(бой!==мой)return;
+  const cs=keyCombosOf(x.id);const i=cs.indexOf(combo);if(i>=0){cs.splice(i,1);b[x.id]=cs;
+   narrate(`${keyName(combo)} снята с действия «${x.n}».`,{interrupt:false});}});
+ b[id]=[combo];keySave();
+ safeFn(()=>Bank.play("oc_ui_select",{gain:0.45,maxSec:1}));
+ narrate(`${a.n}: ${keyName(combo)}.`,{interrupt:false});
+ safeFn(()=>renderKeyBind());
+ return true;}
+function keyReset(){settings.keyBind={};keySave();safeFn(()=>renderKeyBind());
+ narrate("Клавиши возвращены к умолчанию.",{interrupt:true});return true;}
+function keyLine(a){const cs=keyCombosOf(a.id);return `${a.n}${a.о?` (${a.о})`:""} — ${cs.length?cs.map(keyName).join(" или "):"не назначено"}`;}
+function keyHelpText(){
+ const группы={};KB_ACTIONS.forEach(a=>{(группы[a.g]=группы[a.g]||[]).push(a);});
+ return "Клавиши. Бег — Shift и стрелка, держите, пока бежите. В окнах: стрелки — пункты, Enter или пробел — выбрать, Esc или Backspace — назад, Home и End — первый и последний пункт, Page Up и Page Down — разделы. На поле Esc — меню игры, Ctrl — замолчать. "+
+  Object.keys(группы).map(g=>g+": "+группы[g].map(keyLine).join("; ")).join(". ")+".";}
+/* ── Переназначение: пункт настроек ждёт следующего сочетания ── */
+const KeyCapture={id:null};
+function renderKeyBind(){
+ try{
+  const row=document.getElementById("keyRow");if(!row)return false;
+  const q=t=>String(t).replace(/&/g,"&amp;").replace(/"/g,"&quot;").replace(/</g,"&lt;");
+  let g="";row.innerHTML=KB_ACTIONS.map(a=>{let h="";if(a.g!==g){g=a.g;h=`<h4 class="list-line" tabindex="0">${q(g)}</h4>`;}
+   return h+`<button type="button" class="item" data-cmd="keybind:${a.id}" data-speak="${q(keyLine(a)+". Enter — назначить другую клавишу.")}">${q(keyLine(a))}</button>`;}).join("");
+  return true;}catch(_){return false;}}
+function keyCaptureStart(id){
+ const a=KB_BY_ID[id];if(!a)return false;
+ KeyCapture.id=id;
+ narrate(`Нажмите новую клавишу или сочетание для действия «${a.n}». Esc — отменить.`,{interrupt:true});
+ return true;}
+/* ── Карта стрелками ──
+   В открытой карте стрелки водят выбор по клетке сетки семь на семь (вы в
+   центре); Enter — назвать клетку и проиграть её маяк. Page Down — к
+   известным точкам, Page Up — обратно к сетке. */
+const MapKeys={i:24};
+function mapKeysOpen(){const m=document.getElementById("modal-map");return !!(m&&!m.hidden&&modalStack[modalStack.length-1]===m);}
+function mapKeysMove(dir){
+ const cells=[...document.querySelectorAll("#mapGrid button")];if(cells.length!==49)return false;
+ const cur=cells.indexOf(uiCursor);if(cur>=0)MapKeys.i=cur;
+ let r=Math.floor(MapKeys.i/7),c=MapKeys.i%7;
+ if(dir==="N")r--;else if(dir==="S")r++;else if(dir==="W")c--;else if(dir==="E")c++;
+ if(r<0||r>6||c<0||c>6){safeFn(()=>NavClick.play("edge",{rate:0.7}));narrate("Край карты.",{interrupt:true});return true;}
+ MapKeys.i=r*7+c;setCursor(cells[MapKeys.i],true);
+ safeFn(()=>NavClick.play(NavClick.kind(document.getElementById("modal-map"))));
+ return true;}
+/* ── Окна клавишами ── */
+function keyWindow(e,combo,layer){
+ const k=e.key;
+ /* Кнопка, на которой стоит фокус вне окна (так бывает в тестах и при
+    работе чтеца), отвечает на Enter сама — не перехватываем. */
+ const ae=document.activeElement;
+ if((k==="Enter"||e.code==="Space")&&ae&&ae!==document.body&&!layer.contains(ae)&&/^(BUTTON|A|INPUT|SELECT)$/.test(ae.tagName))return false;
+ /* Панель магии: цифры — слоты. */
+ if(safeFn(()=>magicPanelOpen(),false)){const a=keyActionFor(combo,"field");if(a&&/^slot\d+$/.test(a.id)){e.preventDefault();a.run();return true;}}
+ if(mapKeysOpen()&&/^Arrow/.test(k)&&!e.shiftKey&&!e.ctrlKey&&!e.altKey){
+  const inGrid=!uiCursor||!!(uiCursor.closest&&uiCursor.closest("#mapGrid"));
+  if(inGrid){e.preventDefault();const d={ArrowUp:"N",ArrowDown:"S",ArrowLeft:"W",ArrowRight:"E"}[k];
+   /* Первая стрелка идёт от центра — от клетки, где стоите вы. */
+   if(!uiCursor||!uiCursor.closest("#mapGrid"))MapKeys.i=24;
+   return mapKeysMove(d);}}
+ if(mapKeysOpen()&&(k==="PageDown"||k==="PageUp")){e.preventDefault();
+  const t=k==="PageDown"?document.querySelector("#mapPoints button, #mapPoints .list-line"):document.querySelectorAll("#mapGrid button")[MapKeys.i];
+  if(t)setCursor(t,true);return true;}
+ /* ползунок */
+ if((k==="ArrowLeft"||k==="ArrowRight")&&uiCursor&&uiCursor.tagName==="INPUT"&&uiCursor.type==="range"&&layer.contains(uiCursor)){
+  e.preventDefault();const el=uiCursor,min=+el.min||0,max=el.max===""?100:+el.max,st=el.dataset.tapStep?+el.dataset.tapStep:(+el.step||1);
+  let v=+el.value+(k==="ArrowRight"?st:-st);v=Math.max(min,Math.min(max,v));v=+v.toFixed(((String(st).split(".")[1])||"").length);
+  el.value=v;el.dispatchEvent(new Event("input",{bubbles:true}));el.dispatchEvent(new Event("change",{bubbles:true}));
+  safeFn(()=>{const s=controlState(el);if(s)narrate(s,{interrupt:true});});return true;}
+ /* панель магии: цифры */
+ if(k==="ArrowDown"||k==="ArrowRight"||(k==="Tab"&&!e.shiftKey&&!mapKeysOpen())){e.preventDefault();swipeNav("next");return true;}
+ if(k==="ArrowUp"||k==="ArrowLeft"||(k==="Tab"&&e.shiftKey)){e.preventDefault();swipeNav("prev");return true;}
+ if(k==="Home"||k==="End"){e.preventDefault();const it=cursorItems(layer);const el=k==="Home"?it[0]:it[it.length-1];if(el){lastAnnouncedAt=0;setCursor(el,true);}return true;}
+ if(k==="PageDown"){e.preventDefault();safeFn(()=>secNav("next"));return true;}
+ if(k==="PageUp"){e.preventDefault();safeFn(()=>secNav("prev"));return true;}
+ if((k==="Enter"||e.code==="Space")&&!e.ctrlKey&&!e.altKey){
+  const tag=document.activeElement&&document.activeElement.tagName;
+  if(tag==="SELECT"&&k!=="Enter")return false;
+  e.preventDefault();
+  const el=(uiCursor&&layer.contains(uiCursor))?uiCursor:ensureCursor(layer);
+  if(!el){safeFn(()=>closeTopUI());return true;}
+  /* Пункт-справка читается целиком, как по двойному касанию. */
+  if(safeFn(()=>isInfoCard(el),false)){readInfoCard(el);return true;}
+  activateElement(el);return true;}
+ if(k==="Backspace"){e.preventDefault();safeFn(()=>closeTopUI());return true;}
+ return false;}
+/* Шаг клавишей: удержание стрелки шагает ровно так же часто, как свайп, а
+   с Shift — бег, пока клавиша нажата. */
+const KeyWalk={last:0,run:null};
+function keyStep(dir,e){
+ if(G.inCombat&&G.weaponDrawn){safeFn(()=>weaponSwing(dir));return true;}
+ if(e.shiftKey&&!G.inCombat&&!G.weaponDrawn){
+  if(KeyWalk.run===dir&&safeFn(()=>runState.active,false))return true;
+  KeyWalk.run=dir;safeFn(()=>startRun(dir));return true;}
+ const now=Date.now();if(e.repeat&&now-KeyWalk.last<260)return true;
+ KeyWalk.last=now;safeFn(()=>move(dir));return true;}
+function keyStopRun(){if(KeyWalk.run){KeyWalk.run=null;safeFn(()=>stopRun());}}
+function onGameKey(e){
+ /* Поле ввода текста — клавиши его. */
+ const ae=document.activeElement;
+ if(ae&&(ae.tagName==="TEXTAREA"||(ae.tagName==="INPUT"&&!/^(checkbox|radio|range|button|submit)$/.test(ae.type)))&&e.key!=="Escape")return false;
+ const combo=keyCombo(e);
+ /* Ctrl сам по себе — замолчать, как в чтецах экрана. */
+ if(!combo){if(e.key==="Control"&&!e.repeat&&!e.altKey&&!e.shiftKey){safeFn(()=>Speech.stop());}return false;}
+ /* Переназначение: следующее сочетание уходит в назначение. */
+ if(KeyCapture.id){e.preventDefault();const id=KeyCapture.id;KeyCapture.id=null;
+  if(e.key==="Escape"){narrate("Назначение отменено.",{interrupt:true});return true;}
+  keyBind(id,combo);return true;}
+ const layer=activeLayer();
+ if(layer||navLayer()){
+  const lay=layer||navLayer();
+  if(keyWindow(e,combo,lay))return true;
+  if(!layer)return false;}
+ if(layer){
+  /* В окне работают клавиши окон (переключают своё окно и открывают
+     другие), а мирные клавиши поля молчат. */
+  const a=keyActionFor(combo,"window");
+  if(a&&a.ctx!=="field"&&a.ctx!=="move"&&a.run){e.preventDefault();safeFn(()=>a.run());return true;}
+  return false;}
+ if(!gameActive())return false;
+ if(ae&&ae!==document.body&&/^(BUTTON|A|SELECT)$/.test(ae.tagName)&&(e.key==="Enter"||e.code==="Space"))return false;
+ const ctx=G.inCombat?"combat":"field";
+ const a=keyActionFor(combo.replace(/^Shift\+(Arrow|Key[WASD]$)/,"$1"),ctx);
+ if(a&&a.ctx==="move"){e.preventDefault();return keyStep(a.dir,e);}
+ if(a&&a.run){e.preventDefault();safeFn(()=>a.run());return true;}
+ if(e.key==="Escape"){e.preventDefault();safeFn(()=>openActionMenu());return true;}
+ return false;}
+document.addEventListener("keyup",e=>{
+ if(/^(Shift)(Left|Right)?$/.test(e.code||"")||/^Arrow|^Key[WASD]$/.test(e.code||""))keyStopRun();});
 document.addEventListener("keydown",e=>{
  /* Любая клавиша, кроме модификаторов и речевых сочетаний, обрывает речь. */
- if(!/^(Shift|Control|Alt|Meta|AltGraph|CapsLock|OS)$/.test(e.key)&&!(e.altKey&&/^(r|h|x)$/i.test(e.key)))
+ if(!/^(Shift|Control|Alt|Meta|AltGraph|CapsLock|OS)$/.test(e.key)&&!(e.altKey&&/^(r|h|x)$/i.test(e.key))&&!(e.altKey&&/^Key[RHX]$/.test(e.code||"")))
   safeFn(()=>Speech.userCut());
- if(e.key==="Escape"){
+ if(e.key==="Escape"&&!KeyCapture.id){
   if(G.loot&&Array.isArray(G.loot)&&G.loot.length){takeLoot();return;}
-  if(G.inCombat){fight("flee");return;}
+  if(G.inCombat&&!activeLayer()){fight("flee");return;}
   if(!document.getElementById("screen-intro").hidden){enterGame();return;}
   /* Из пункта настроек и раздела инвентаря Эскейп, как и жест закрытия,
      сперва возвращает к списку. */
   if(modalStack.length){const верх=modalStack[modalStack.length-1];
    if(верх.id==="modal-settings"&&safeFn(()=>setBack(),false))return;
    if(верх.id==="modal-inventory"&&safeFn(()=>invBack(),false))return;
+   if(верх.id==="modal-hero"&&safeFn(()=>heroBack(),false))return;
    closeModal(верх);return;}
   if(!document.getElementById("guideOverlay").hidden){closeGuide();return;}
   if(!document.getElementById("actionMenu").hidden){if(!safeFn(()=>amBack(),false))closeActionMenu();return;}
+  const mp=document.getElementById("magicPanel");if(mp&&!mp.hidden){closeMagicPanel();return;}
+  /* На поле Esc — меню игры, как в привычных играх; вне игры — тишина. */
+  if(gameActive()){safeFn(()=>openActionMenu());return;}
   stopEverything();return;}
- /* Речь под рукой без чтеца экрана: Alt+Пробел — стоп, Alt+R — повтор,
-    Alt+H — состояние игрока, Alt+X — очистить очередь. */
+ /* Речь под рукой без чтеца экрана: Alt+Пробел — стоп. */
  if(e.altKey&&(e.code==="Space"||e.key===" ")){e.preventDefault();Speech.stop();vib(15);return;}
- if(e.altKey&&e.key.toLowerCase()==="r"){e.preventDefault();Speech.repeatLast();return;}
- if(e.altKey&&e.key.toLowerCase()==="h"){e.preventDefault();Speech.status();return;}
- if(e.altKey&&e.key.toLowerCase()==="x"){e.preventDefault();const n=Speech.flush();Speech.request(n?`Очередь речи очищена: ${n}.`:"Очередь речи пуста.",{key:"flush"});return;}
- const dirMap={ArrowUp:"N",ArrowDown:"S",ArrowLeft:"W",ArrowRight:"E"};
- if(dirMap[e.key]&&gameActive()&&!activeLayer()){e.preventDefault();
-  /* В бою с вынутым оружием стрелка — то же, что свайп: удар в сторону твари или шаг. */
-  if(G.inCombat&&G.weaponDrawn)weaponSwing(dirMap[e.key]);else move(dirMap[e.key]);return;}
- if((e.ctrlKey||e.altKey)&&e.key.toLowerCase()==="g"){e.preventDefault();openGuide();}
- else if((e.ctrlKey||e.altKey)&&e.key.toLowerCase()==="m"){e.preventDefault();openActionMenu();}
- else if(e.altKey&&e.key.toLowerCase()==="s"){e.preventDefault();stopEverything();}});
+ safeFn(()=>onGameKey(e));});
 window.addEventListener("beforeunload",()=>{try{stopRun();saveGame(true);}catch(e){}});
 /* ════════ ЕДИНАЯ ТОЧКА ЗАПУСКА ════════
    Раньше bindSettings() (привязка ВСЕХ переключателей настроек) и Speech.init()
@@ -55669,7 +55920,12 @@ window.addEventListener("beforeunload",()=>{try{stopRun();saveGame(true);}catch(
    но нигде не вызывались — весь экран настроек не реагировал на нажатия, а голос
    озвучки никогда не выбирался осознанно. Мёртвая функция welcomed() с тем же
    защитным флагом дублировала не выполнявшуюся логику — удалена. */
+/* Приложение для компьютера (Electron): чтецу экрана (NVDA, JAWS) окно
+   объявляется приложением, чтобы все клавиши шли в игру, а не в режим
+   просмотра страницы. */
+function isDesktopApp(){try{return !!window.graniDesktop||/Electron/i.test(navigator.userAgent);}catch(_){return false;}}
 (function boot(){
+ safeFn(()=>{if(isDesktopApp()){document.body.setAttribute("role","application");document.body.setAttribute("aria-label","Грань Миров");document.documentElement.classList.add("desktop");}});
  try{Speech.init();}catch(e){try{console.error("Speech.init",e);}catch(_){}}
  try{bindSettings();}catch(e){try{console.error("bindSettings",e);}catch(_){}}
  /* Заставка: музыка и голос при запуске (см. Intro). */
