@@ -34,6 +34,20 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
+      # У сервера сборки нет звуковой карты: ставим виртуальную, чтобы живая
+      # речь (синтезатор Chromium и мост голосов Windows) шла по-настоящему.
+      - name: Виртуальная звуковая карта
+        continue-on-error: true
+        uses: LABSN/sound-ci-helpers@v1
+      # Сторонний движок, как у игрока: русский голос RHVoice (SAPI 5).
+      - name: Сторонний синтезатор RHVoice
+        continue-on-error: true
+        shell: pwsh
+        run: |
+          $u = 'https://rhvoice.eu-central-1.linodeobjects.com/RHVoice-voice-Russian-Aleksandr-v4.2.2010.15-setup.exe'
+          Invoke-WebRequest $u -OutFile "$env:RUNNER_TEMP\rhv.exe"
+          Start-Process "$env:RUNNER_TEMP\rhv.exe" -ArgumentList '/S' -Wait
+          Get-ChildItem 'HKLM:\SOFTWARE\Microsoft\Speech\Voices\Tokens','HKLM:\SOFTWARE\WOW6432Node\Microsoft\Speech\Voices\Tokens' -ErrorAction SilentlyContinue | ForEach-Object { $_.PSChildName }
       - name: Electron
         working-directory: desktop
         run: npm install --no-audit --no-fund

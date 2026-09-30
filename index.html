@@ -1637,8 +1637,14 @@ const Speech={voice:null,keepAlive:null,
   const whole=this.gvClip(text);if(whole)return [{t:String(text),url:whole}];
   const ss=String(text).match(/[^.!?…]+[.!?…]*/g)||[String(text)];
   const out=[];
-  ss.forEach(s0=>{const s=s0.trim();if(!s)return;const url=this.gvClip(s);const last=out[out.length-1];
-   if(!url&&last&&!last.url)last.t+=" "+s;else out.push({t:s,url});});
+  const класть=(s,url)=>{const last=out[out.length-1];if(!url&&last&&!last.url)last.t+=" "+s;else out.push({t:s,url});};
+  ss.forEach(s0=>{const s=s0.trim();if(!s)return;const url=this.gvClip(s);
+   if(url){класть(s,url);return;}
+   /* Незаписанное предложение «Погода: туман» или «Общая громкость — 100%»
+      делится по двоеточию и тире: записанная часть звучит записью, прочее
+      договаривает синтезатор (4.8). */
+   const cl=s.split(/(?<=[:;—])\s+/);
+   if(cl.length>1)cl.forEach(c=>класть(c,this.gvClip(c)));else класть(s,null);});
   return out;},
  gvCover(text){const ч=this.gvParts(text);const все=ч.reduce((n,x)=>n+x.t.length,0)||1;
   return ч.filter(x=>x.url).reduce((n,x)=>n+x.t.length,0)/все;},

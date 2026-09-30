@@ -33,13 +33,24 @@ app.whenReady().then(() => setTimeout(async () => {
   await js(`(()=>{const t=document.getElementById("setTtsEngine");t.value="device";t.dispatchEvent(new Event("change"));return 1;})()`);
   for (const v of out.список.slice(0, 12)) {
     const выбран = await js(`Speech.pickVoice(${JSON.stringify(v.ключ)},{say:false})`);
-    const r = await скажи('Здравствуй, путник. Это голос ' + v.имя + '.');
+    const r = await скажи(/^ru/i.test(v.язык) ? 'Здравствуй, путник. Это голос ' + v.имя + '.' : 'Hello, traveller. This is ' + v.имя + '.');
     out.голоса.push(Object.assign({ имя: v.имя, язык: v.язык, мост: v.мост, выбран }, r));
   }
+  // Мост голосов Windows напрямую — каждым его голосом, в том числе теми,
+  // что в списке игры не повторяются, потому что их уже показал Chromium.
+  out.мостом = out.мост ? await js(`(async()=>{const vs=JSON.parse(GraniTTS.getVoices()||"[]");const r=[];
+    const d0=window.GraniTTSDone,e0=window.GraniTTSError;
+    for(const v of vs){const id="vc"+r.length;
+      const res=await new Promise(z=>{const t=setTimeout(()=>z("нет ответа"),15000);
+        window.GraniTTSDone=x=>{if(x===id){clearTimeout(t);z("конец");}};window.GraniTTSError=x=>{if(x===id){clearTimeout(t);z("ошибка");}};
+        GraniTTS.setVoice(v.id);GraniTTS.speak(/^ru/i.test(v.lang)?"Проверка голоса.":"Voice check.",1.5,1,id);});
+      r.push({имя:v.name,движок:v.engine,итог:res});}
+    window.GraniTTSDone=d0;window.GraniTTSError=e0;return r;})()`) : [];
   console.log('VOICECHECK ' + JSON.stringify(out));
   const синтОк = Object.values(out.синтезаторы).filter(x => x.ok).length;
   const голосОк = out.голоса.filter(x => x.ok).length;
-  console.log(`VOICECHECK итог: синтезаторов говорят ${synthLine(out)}; голосов компьютера говорят ${голосОк} из ${out.голоса.length}`);
+  const мостОк = out.мостом.filter(x => x.итог === 'конец').length;
+  console.log(`VOICECHECK итог: синтезаторов говорят ${synthLine(out)}; голосов в списке игры говорят ${голосОк} из ${out.голоса.length}; мостом Windows говорят ${мостОк} из ${out.мостом.length}`);
   app.exit(синтОк === 3 && (out.голоса.length === 0 || голосОк > 0) ? 0 : 1);
 }, 3000));
 function synthLine(out) { return Object.entries(out.синтезаторы).map(([k, v]) => k + (v.ok ? '✓' : '✗(' + v.why + ')')).join(', '); }
