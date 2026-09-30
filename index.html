@@ -9920,7 +9920,6 @@ const HERO_PEACEFUL=new Set(["halfling","elf","dryad","fae","mermaid","sylph","m
 const HERO_FIERCE=/шрам|боев|раскраск|клык|окован|шип|череп|кост|рваное|сколот|обломан|надорван/i;
 const HERO_DEMONIC=/рога|бараньи|ветвист|пламя|тень|пустот|чернил/i;
 function heroRaceKind(id){return HERO_KIND[id]||"гуманоид";}
-function heroRace(){const h=G.hero||{};return RACE_BY_ID[h.race]||RACE_BY_NAME[G.race]||RACE_BY_ID.human;}
 function heroPeoples(r){return (r&&r.br||[]).slice();}
 function heroTint(people){if(!people)return null;const t=HERO_PEOPLE_TINT.find(([re])=>re.test(people));return t?t[1]:null;}
 /* Параметры облика для расы и народа: [{k,n,opts}]. */

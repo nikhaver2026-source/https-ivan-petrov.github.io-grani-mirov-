@@ -41,8 +41,10 @@ jobs:
         working-directory: desktop
         run: node sapi-test.js
       - name: Выбор синтезатора и голоса в игре
+        if: always()
         working-directory: desktop
         run: npx electron voicecheck.js
       - name: Все клавиши по умолчанию
+        if: always()
         working-directory: desktop
         run: npx electron keycheck.js
