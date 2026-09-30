@@ -435,7 +435,7 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
    const сказано=[];const s0=Speech.say.bind(Speech);Speech.say=(t,o)=>{сказано.push(String(t));return s0(t,o);};
    openActionMenu();
    const кнопки=[...document.querySelectorAll("#amMenu > button")];
-   const предпоследняя=кнопки[кнопки.length-2],последняя=кнопки[кнопки.length-1];
+   const предпоследняя=кнопки[кнопки.length-3],последняя=кнопки[кнопки.length-1];/* (4.7) между ними — «Выход» */
    const out={пункт:предпоследняя&&предпоследняя.dataset.cmd,подпись:предпоследняя&&предпоследняя.textContent,
     речь:предпоследняя&&предпоследняя.dataset.speak,свежих:предпоследняя&&предпоследняя.dataset.fresh,
     закрыть:последняя&&последняя.dataset.cmd};

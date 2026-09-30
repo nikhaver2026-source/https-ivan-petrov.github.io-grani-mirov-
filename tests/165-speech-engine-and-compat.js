@@ -49,7 +49,8 @@ const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(e!==undefined?' :
    const m=document.getElementById("modal-settings");
    const h=[...m.querySelectorAll(".sec-head")].map(x=>x.dataset.secTitle);
    const поля=["setTtsEngine","setEngBuiltin","setGvVoice","setEngDevice","setVoiceLocal","setVoiceLang","setVoice","setRate","setPitch"];
-   const кнопки=['[data-cmd="setsave"]','[data-cmd="setsaved"]','#btnVoiceRefresh','#btnSpeechSample'];
+   /* (4.7) «Что сохранено» убрано по просьбе игрока: пункт был не нужен. */
+   const кнопки=['[data-cmd="setsave"]','#btnVoiceRefresh','#btnSpeechSample'];
    const out={разделов:h.length,синтезатор:h.includes("Синтезатор речи"),рассказчик:h.includes("Голос рассказчика"),
     нет:поля.filter(id=>!m.querySelector("#"+id)),безКнопок:кнопки.filter(s=>!m.querySelector(s)),
     немые:[...m.querySelectorAll("#setTtsEngine,#setVoiceLang,#setVoice,#setGvVoice")]
@@ -69,14 +70,12 @@ const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(e!==undefined?' :
    const было=store.set;store.set=()=>false;
    сказано.length=0;CMD.setsave();const безПамяти=сказано.join(" ");
    store.set=было;
-   сказано.length=0;CMD.setsaved();const отчёт=сказано.join(" ");
+   const отчёт=!document.querySelector('[data-cmd="setsaved"]')&&typeof CMD.setsaved!=="function";
    Speech.say=s0;
    return {сПамятью,безПамяти,отчёт};});
   check('2. кнопка сохранения отвечает словом и не обещает лишнего, когда памяти нет',
    /сохранены/i.test(r.сПамятью)&&!/сохранены/i.test(r.безПамяти)&&/не вышло|не даёт/i.test(r.безПамяти),r);
-  check('3. «Что сохранено» называет движок, голос, темп, высоту и отсев',
-   /Говорит/.test(r.отчёт)&&/Голос:/.test(r.отчёт)&&/Темп/.test(r.отчёт)
-   &&/высота/i.test(r.отчёт)&&/Онлайн-голоса/.test(r.отчёт),r.отчёт);
+  check('3. пункта «Что сохранено» больше нет — он был не нужен',r.отчёт===true,r.отчёт);
  }
 
  /* ── 4. отсев онлайн-голосов ── */

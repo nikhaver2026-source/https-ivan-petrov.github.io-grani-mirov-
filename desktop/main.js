@@ -1,7 +1,7 @@
 // «Грань Миров» для компьютера (Windows). Вся игра лежит рядом, в resources/game,
 // и открывается по своему адресу app://grani — сеть не нужна. Мышь не нужна:
 // управление целиком с клавиатуры (см. главу «Игра на компьютере» в руководстве).
-const { app, BrowserWindow, protocol, Menu, shell } = require('electron');
+const { app, BrowserWindow, protocol, Menu, shell, ipcMain } = require('electron');
 const path = require('path');
 const fs = require('fs');
 
@@ -90,6 +90,7 @@ else {
   });
   app.whenReady().then(() => {
     protocol.handle('app', serve);
+    ipcMain.on('grani-quit', () => app.quit());
     Menu.setApplicationMenu(null);
     createWindow();
   });

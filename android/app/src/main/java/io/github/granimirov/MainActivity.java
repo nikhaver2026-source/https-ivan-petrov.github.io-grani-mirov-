@@ -141,6 +141,15 @@ public class MainActivity extends Activity {
                 v -> { if (!"1".equals(v)) moveTaskToBack(true); });
     }
 
+    /* Приложение уходит в фон или его закрывают: игра записывает себя там,
+       где стоит герой, — система может выгрузить её, не спросив страницу. */
+    @Override
+    protected void onPause() {
+        super.onPause();
+        if (web != null) web.evaluateJavascript(
+            "try{if(typeof entered!=='undefined'&&entered&&typeof saveGame==='function')saveGame(true);}catch(e){}", null);
+    }
+
     @Override
     protected void onSaveInstanceState(Bundle out) {
         super.onSaveInstanceState(out);
@@ -212,6 +221,15 @@ public class MainActivity extends Activity {
                 }
             } catch (Exception ignored) { }
             return a.toString();
+        }
+
+        /* «Выход» в меню действий: игра уже сохранилась — закрываем приложение. */
+        @JavascriptInterface
+        public void exitApp() {
+            runOnUiThread(() -> {
+                try { if (ready) tts.stop(); } catch (Exception ignored) { }
+                finishAndRemoveTask();
+            });
         }
 
         @JavascriptInterface

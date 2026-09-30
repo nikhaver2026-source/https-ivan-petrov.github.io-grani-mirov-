@@ -17,6 +17,7 @@
    6. На поле Esc — меню игры; в бою пробел — удар, Q — зелье, Backspace — бег.
    7. Клавишу можно переназначить, и умолчание возвращается.
    8. В приложении для компьютера окно объявлено чтецу экрана приложением.
+   9. «Выход» в меню действий: игра сохраняется и приложение закрывается.
    ═══════════════════════════════════════════════════════════════════════ */
 const {chromium}=require('playwright');
 const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(e!==undefined?' :: '+JSON.stringify(e):''));
@@ -102,6 +103,20 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
  await стол.goto(process.argv[2]);await стол.waitForTimeout(600);
  const роль=await стол.evaluate(()=>({role:document.body.getAttribute("role"),пк:isDesktopApp()}));
  check('8. в приложении для компьютера окно — приложение для чтеца экрана',роль.role==="application"&&роль.пк,роль);
+
+ /* ── 9. выход ── */
+ const выход=await page.evaluate(async()=>{
+  while(activeLayer())closeTopUI();openActionMenu();
+  const кн=[...document.querySelectorAll("#amMenu > button")].map(b=>b.dataset.cmd);
+  closeActionMenu();
+  window.__q=0;window.__a=0;window.__saved=0;const s0=window.saveGame;window.saveGame=function(){__saved++;return true;};
+  window.graniDesktop={quit(){__q++;}};CMD.am("exit");await new Promise(z=>setTimeout(z,2100));
+  delete window.graniDesktop;window.GraniTTS=Object.assign(window.GraniTTS||{},{exitApp(){__a++;}});
+  document.dispatchEvent(new KeyboardEvent("keydown",{code:"KeyQ",key:"q",ctrlKey:true,bubbles:true}));await new Promise(z=>setTimeout(z,2100));
+  delete window.GraniTTS.exitApp;window.saveGame=s0;
+  return {кн:кн.slice(-3),пк:__q,андроид:__a,сохранено:__saved,титул:!!document.querySelector('#screen-title [data-cmd="quit"]')};});
+ check('9. «Выход» в меню действий и в главном меню: игра сохраняется и приложение закрывается (Ctrl+Q — то же)',
+  выход.кн.join()==="am:whatsnew,am:exit,am:close"&&выход.пк===1&&выход.андроид===1&&выход.сохранено>=2&&выход.титул,выход);
 
  check('Ошибок страницы нет',errors.length===0,errors.slice(0,3));
  await browser.close();
