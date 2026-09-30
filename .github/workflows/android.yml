@@ -1,6 +1,6 @@
 # Сборка приложения «Грань Миров» 4.8 для Android на серверах GitHub.
 #
-# Вся игра — index.html, записи sounds, встроенный голос tts — лежит внутри
+# Вся игра — index.html и записи sounds — лежит внутри
 # приложения, и оно работает без сети. Собираются два файла:
 #   grani-mirov-4.8.aab — для Google Play (целевой API 36, записи вынесены в
 #                          пакет ресурсов, который Play ставит вместе с
@@ -28,7 +28,6 @@ on:
       - 'manifest.json'
       - 'sounds/**'
       - '!sounds/gvoice_pack/**'
-      - 'tts/**'
       - 'android/**'
       - '.github/workflows/android.yml'
 
@@ -84,7 +83,6 @@ jobs:
           P=android/gamedata/src/main/assets/www
           rm -rf "$W" "$P" && mkdir -p "$W" "$P"
           cp index.html sw.js manifest.json icon-192.png icon-512.png "$W"/
-          cp -r tts "$W"/
           cp -r sounds "$P"/
           # Голосовой пакет Gemini — отдельным файлом (выпуск «voicepack-latest»), не в APK.
           rm -rf "$P"/sounds/gvoice_pack

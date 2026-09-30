@@ -24,7 +24,6 @@ jobs:
           sparse-checkout: |
             desktop
             tests
-            tts
             sounds/gvoice
             sounds/gvoice_f
             index.html

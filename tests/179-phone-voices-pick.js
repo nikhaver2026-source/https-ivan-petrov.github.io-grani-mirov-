@@ -62,7 +62,7 @@ const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(e!==undefined?' :
   speechSynthesis.speak=u=>{window.__said.push({text:String(u.text||""),voice:u.voice&&u.voice.voiceURI});
    setTimeout(()=>{try{u.onend&&u.onend();}catch(_){}},1);};
   speechSynthesis.getVoices=()=>window.__IOS;
-  settings.voiceLang="ru";settings.voiceLocal=1;settings.ttsEngine="device";Speech._graniAuto=false;
+  settings.voiceLang="ru";settings.voiceLocal=1;settings.ttsEngine="device";
   Speech.adapter=null;Speech._kind=null;});
 
  /* ── 1. одноимённые голоса ── */
@@ -91,47 +91,27 @@ const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(e!==undefined?' :
  check('2. сохранённое прежней версией имя переводится на единственный ключ голоса',
   r2.настройка==="com.apple.voice.enhanced.ru-RU.Yuri"&&r2.голос===r2.настройка,r2);
 
- /* ── 3. выбор голоса телефона важнее прочих синтезаторов ── */
+ /* ── 3. выбор голоса телефона ── */
  const r3=await page.evaluate(()=>{
   const out={};
-  Speech._graniAuto=true;settings.ttsEngine="device";Speech.adapter=null;Speech._kind=null;
-  out.доСам=Speech._wantKind();
+  settings.ttsEngine="device";Speech.adapter=null;Speech._kind=null;
   Speech.pickVoice("com.apple.voice.enhanced.ru-RU.Yuri",{say:false});
-  out.послеСам=Speech._wantKind();out.самСнят=Speech._graniAuto===false;
-  settings.ttsEngine="grani";Speech.adapter=null;Speech._kind=null;
+  out.род=Speech._wantKind();out.движок=settings.ttsEngine;out.поле=(document.getElementById("setTtsEngine")||{}).value;
+  settings.ttsEngine="gemini";Speech.adapter=null;Speech._kind=null;
   Speech.pickVoice("com.apple.voice.compact.ru-RU.Milena",{say:false});
-  out.движок=settings.ttsEngine;out.поле=(document.getElementById("setTtsEngine")||{}).value;
-  out.род=Speech._wantKind();
-  /* выпадающее поле идёт той же дверью */
+  out.приGemini=settings.ttsEngine;
   const sel=document.getElementById("setVoice");sel.value="com.apple.voice.enhanced.ru-RU.Milena";
   sel.dispatchEvent(new Event("change",{bubbles:true}));
   out.черезПоле=settings.voice;
   return out;});
- check('3. выбор голоса телефона снимает самовольный встроенный голос: говорит телефон',
-  r3.доСам==="grani"&&r3.послеСам==="device"&&r3.самСнят,r3);
- check('3б. выбран был встроенный — выбор голоса телефона переключает синтезатор, поле это показывает',
-  r3.движок==="device"&&r3.поле==="device"&&r3.род==="device",r3);
+ check('3. выбран голос телефона — говорит телефон, поле синтезатора это показывает',r3.род==="device"&&r3.движок==="device"&&r3.поле==="device",r3);
+ check('3б. при голосе Gemini выбранный голос телефона договаривает незаписанное: синтезатор остаётся Gemini',r3.приGemini==="gemini",r3);
  check('3в. выпадающее поле выбирает голос той же дверью',r3.черезПоле==="com.apple.voice.enhanced.ru-RU.Milena",r3);
 
- /* ── 4. пустой список — ещё не ответ ── */
- const r4=await page.evaluate(()=>{
-  const out={};
-  speechSynthesis.getVoices=()=>[];
-  settings.ttsEngine="device";Speech._graniAuto=false;Speech._graniTries=0;
-  out.сразу=Speech._graniAutoCheck();out.самНаПустом=Speech._graniAuto;out.попыток=Speech._graniTries;
-  /* голоса пришли: повторная проверка встроенный не включит */
-  speechSynthesis.getVoices=()=>window.__IOS;
-  /* самовольный встроенный уступает, когда русские голоса нашлись */
-  Speech._graniAuto=true;
-  try{speechSynthesis.onvoiceschanged&&speechSynthesis.onvoiceschanged();}catch(_){}
-  out.уступил=Speech._graniAuto===false&&Speech._wantKind()==="device";
-  return out;});
- check('4. на пустом ещё списке голосов встроенный голос сам не включается — проверка повторится',
-  r4.сразу===false&&r4.самНаПустом===false&&r4.попыток===1,r4);
- check('4б. пришли русские голоса — самовольный встроенный голос уступает телефону',r4.уступил,r4);
- await page.waitForTimeout(4300);
- const r4b=await page.evaluate(()=>({сам:Speech._graniAuto,грузится:Speech.graniState()}));
- check('4в. повторная проверка, найдя голоса, встроенный не включает',r4b.сам===false&&r4b.грузится==="off",r4b);
+ /* ── 4. встроенной нейросети Piper больше нет (4.8) ── */
+ const r4=await page.evaluate(()=>({kind:(settings.ttsEngine="grani",Speech.adapter=null,Speech._kind=null,Speech._wantKind()),нейро:typeof Speech.graniStart,поле:[...document.querySelectorAll("#setTtsEngine option")].map(o=>o.value)}));
+ check('4. встроенной нейросети Piper нет: выбрать её нельзя, говорить ею игра не может',r4.kind!=="grani"&&r4.нейро==="undefined"&&!r4.поле.includes("grani"),r4);
+ await page.evaluate(()=>{settings.ttsEngine="device";});
 
  /* ── 5. окно голосов ── */
  const r5=await page.evaluate(()=>{

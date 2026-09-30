@@ -13,7 +13,7 @@
    2. Без выбора говорит синтезатор Chromium (голоса SAPI), выбран голос
       Windows — говорит мост, и конец фразы приходит в игру.
    3. Chromium не видит ни одного голоса — говорит мост.
-   4. Переключение синтезатора: Gemini, встроенный голос, устройство.
+   4. Переключение синтезатора: Gemini или устройство (нейросети Piper с 4.8 нет).
    5. Темп игры переводится в шкалу SAPI так же, как у Chromium; мост
       отдаётся игре, только если голоса Windows ответили.
    ═══════════════════════════════════════════════════════════════════════ */
@@ -69,11 +69,11 @@ const скажи=`new Promise(res=>{const a=Speech._adapter();if(!a)return res({
 
  /* ── 4 ── */
  const движки=await p.evaluate(async()=>{const out={};
-  for(const e of ["gemini","grani","device"]){const t=document.getElementById("setTtsEngine");t.value=e;t.dispatchEvent(new Event("change"));
+  for(const e of ["gemini","device"]){const t=document.getElementById("setTtsEngine");t.value=e;t.dispatchEvent(new Event("change"));
    await new Promise(z=>setTimeout(z,300));out[e]={настройка:settings.ttsEngine,род:Speech._wantKind()};}
   return out;});
- check('4. выбор синтезатора: голос Gemini, встроенный голос, синтезатор устройства',
-  движки.gemini.настройка==="gemini"&&движки.gemini.род==="gemini"&&движки.grani.настройка==="grani"&&движки.device.настройка==="device"&&движки.device.род==="device",движки);
+ check('4. выбор синтезатора: голос Gemini или синтезатор устройства',
+  движки.gemini.настройка==="gemini"&&движки.gemini.род==="gemini"&&движки.device.настройка==="device"&&движки.device.род==="device",движки);
 
  /* ── 5 ── */
  const {Sapi}=require(path.join(__dirname,'..','desktop','sapi.js'));

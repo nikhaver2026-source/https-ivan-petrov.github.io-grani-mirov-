@@ -1,6 +1,6 @@
 // Проверка речи в приложении для компьютера: выбор синтезатора и голоса,
 // установленные в Windows. Для каждого синтезатора игры (голос Gemini,
-// встроенный голос, синтезатор устройства) и для каждого голоса компьютера,
+// синтезатор устройства) и для каждого голоса компьютера,
 // который игра показывает в списке, фраза произносится так, как её говорит
 // игра, и ждётся конец фразы. Запуск: electron voicecheck.js.
 const { app, BrowserWindow } = require('electron');
@@ -23,9 +23,9 @@ app.whenReady().then(() => setTimeout(async () => {
   const out = { мост: await js('!!(window.GraniTTS&&GraniTTS.speak)'), синтезаторы: {}, голоса: [] };
   out.список = await js(`Speech.allVoices().map(v=>({ключ:Speech.voiceKey(v),имя:v.name,язык:v.lang,мост:!!v.native,движок:v.engine||""}))`);
   out.показано = await js(`(Speech.fillVoices(),[...document.querySelectorAll("#setVoice option")].map(o=>o.textContent))`);
-  for (const e of ['gemini', 'grani', 'device']) {
+  for (const e of ['gemini', 'device']) {
     await js(`(()=>{const t=document.getElementById("setTtsEngine");t.value=${JSON.stringify(e)};t.dispatchEvent(new Event("change"));return 1;})()`);
-    await wait(e === 'grani' ? 8000 : 1500);
+    await wait(1500);
     out.синтезаторы[e] = Object.assign({ настройка: await js('settings.ttsEngine') },
       await скажи(e === 'gemini' ? 'Добро пожаловать в Грань Миров.' : 'Проверка синтезатора игры.'));
   }
@@ -51,6 +51,6 @@ app.whenReady().then(() => setTimeout(async () => {
   const голосОк = out.голоса.filter(x => x.ok).length;
   const мостОк = out.мостом.filter(x => x.итог === 'конец').length;
   console.log(`VOICECHECK итог: синтезаторов говорят ${synthLine(out)}; голосов в списке игры говорят ${голосОк} из ${out.голоса.length}; мостом Windows говорят ${мостОк} из ${out.мостом.length}`);
-  app.exit(синтОк === 3 && (out.голоса.length === 0 || голосОк > 0) ? 0 : 1);
+  app.exit(синтОк === 2 && (out.голоса.length === 0 || голосОк > 0) ? 0 : 1);
 }, 3000));
 function synthLine(out) { return Object.entries(out.синтезаторы).map(([k, v]) => k + (v.ok ? '✓' : '✗(' + v.why + ')')).join(', '); }

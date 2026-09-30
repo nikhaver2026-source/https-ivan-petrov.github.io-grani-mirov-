@@ -16,8 +16,8 @@
    2. «Встроенный голос» и «Голос устройства» — одна
       настройка: включён ровно один; выключить включённый — вернуться к
       встроенному голосу.
-   3. «Женский» — записи Callirrhoe (sounds/gvoice_f) и нейросеть sova;
-      «Мужской» — записи Iapetus (sounds/gvoice) и нейросеть igm; опись
+   3. «Женский» — записи Callirrhoe (sounds/gvoice_f), «Мужской» — записи
+      Iapetus (sounds/gvoice) (нейросети Piper с 4.8 нет); опись
       выбранного голоса грузится, выбор переживает перезагрузку.
    4. Женский банк: опись, у каждой записи файл, лишних нет, FLAC моно
       24 кГц; титры называют Callirrhoe, Gemini и условия, число сходится.
@@ -82,17 +82,17 @@ function probe(file){
   const g=document.getElementById("setGvVoice");const r={};
   g.value="f";g.dispatchEvent(new Event("change"));
   for(let i=0;i<60&&Speech.GVOICE.state!=="ready";i++)await new Promise(z=>setTimeout(z,50));
-  r.ж={v:settings.gvVoice,n:settings.graniVoice,dir:Speech.GVOICE.dir,state:Speech.GVOICE.state,модель:Speech.GRANI_MODELS[0],
+  r.ж={v:settings.gvVoice,dir:Speech.GVOICE.dir,state:Speech.GVOICE.state,
    голос:(window.GVOICE_BANK_F||{}).voice,фраз:Object.keys(Speech.GVOICE.map||{}).length};
   g.value="m";g.dispatchEvent(new Event("change"));
   for(let i=0;i<60&&Speech.GVOICE.state!=="ready";i++)await new Promise(z=>setTimeout(z,50));
-  r.м={v:settings.gvVoice,n:settings.graniVoice,dir:Speech.GVOICE.dir,state:Speech.GVOICE.state,модель:Speech.GRANI_MODELS[0],голос:(window.GVOICE_BANK||{}).voice};
+  r.м={v:settings.gvVoice,dir:Speech.GVOICE.dir,state:Speech.GVOICE.state,голос:(window.GVOICE_BANK||{}).voice};
   g.value="f";g.dispatchEvent(new Event("change"));return r;});
  await page.reload();await page.waitForTimeout(700);
  const после=await page.evaluate(()=>({v:settings.gvVoice,поле:document.getElementById("setGvVoice").value}));
- check('3. «Женский» — записи Callirrhoe и нейросеть sova, «Мужской» — Iapetus и igm; выбор переживает перезагрузку',
-  выбор.ж.v==="f"&&выбор.ж.n==="sova"&&выбор.ж.dir==="sounds/gvoice_f/"&&выбор.ж.state==="ready"&&выбор.ж.голос==="Callirrhoe"&&/sova200/.test(выбор.ж.модель)
-  &&выбор.м.v==="m"&&выбор.м.n==="igm"&&выбор.м.dir==="sounds/gvoice/"&&выбор.м.state==="ready"&&выбор.м.голос==="Iapetus"&&/igm3804/.test(выбор.м.модель)
+ check('3. «Женский» — записи Callirrhoe, «Мужской» — Iapetus; выбор переживает перезагрузку',
+  выбор.ж.v==="f"&&выбор.ж.dir==="sounds/gvoice_f/"&&выбор.ж.state==="ready"&&выбор.ж.голос==="Callirrhoe"
+  &&выбор.м.v==="m"&&выбор.м.dir==="sounds/gvoice/"&&выбор.м.state==="ready"&&выбор.м.голос==="Iapetus"
   &&после.v==="f"&&после.поле==="f",{выбор,после});
 
  /* ── 4. женский банк на диске ── */
