@@ -8,8 +8,11 @@
 
    1. Нейросеть встроенного голоса — того же пола, что выбран в «Выборе
       голоса» (мужской — igm, женский — sova), с первого запуска.
-   2. Незаписанное голос Gemini договаривает запасным путём того же пола:
-      поднялась нейросеть — говорит она, а не синтезатор телефона.
+   2. Незаписанное голос Gemini договаривает голосом устройства того же пола
+      (4.8: нейросеть отвечала с задержкой в секунду и ставила неверные
+      ударения): «Павел» при мужском голосе, «Ирина» при женском; по выбору
+      «Встроенный голос того же пола» — нейросеть, пока она не поднялась —
+      синтезатор устройства.
    3. Пол голоса жителя — пол из его души, а не пол народа: женщина из
       людей говорит женской записью, мужчина из эльфов — мужской.
    4. Строку без записи нужного пола житель мужским голосом за женщину не
@@ -34,19 +37,24 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
 
  /* ── 2. ── */
  const запас=await page.evaluate(()=>{
-  const был=Speech._grani,были={s:Speech.graniStart,a:Speech._graniAdapter,d:Speech._deviceAdapter};
+  const был=Speech._grani,были={s:Speech.graniStart,a:Speech._graniAdapter,d:Speech._deviceAdapter,v:Speech._voiceAdapter,all:Speech.allVoices,gv:settings.gvVoice,fb:settings.gvFallback,vc:settings.voice};
   const журнал=[];
   Speech._grani={state:"ready",worker:null,job:null};Speech.graniStart=function(){return this._grani;};
   Speech._graniAdapter=()=>({speak(t){журнал.push("grani:"+t);return true;},cancel(){},speaking(){return false;}});
   Speech._deviceAdapter=()=>({speak(t){журнал.push("device:"+t);return true;},cancel(){},speaking(){return false;}});
-  window.GraniTTS=window.GraniTTS||{speak(){},stop(){},isSpeaking(){return false;},getVoices(){return "[]";},setVoice(){}};
-  const f=Speech._gvFallback();f.speak("Сорок два.",{});
-  const вид=f.kind;
-  Speech._grani={state:"loading"};const f2=Speech._gvFallback();f2.speak("Семь.",{});
-  Speech._grani=был;Speech.graniStart=были.s;Speech._graniAdapter=были.a;Speech._deviceAdapter=были.d;
+  Speech._voiceAdapter=v=>({speak(t){журнал.push("voice:"+(v?v.name:"-")+":"+t);return true;},cancel(){},speaking(){return false;}});
+  Speech.allVoices=()=>[{name:"Microsoft Irina - Russian",lang:"ru-RU",voiceURI:"irina"},{name:"Microsoft Pavel - Russian",lang:"ru-RU",voiceURI:"pavel"}];
+  settings.voice="";settings.gvFallback="device";
+  settings.gvVoice="m";const f=Speech._gvFallback();f.speak("Сорок два.",{});
+  settings.gvVoice="f";const f1=Speech._gvFallback();f1.speak("Три.",{});
+  settings.gvFallback="grani";settings.gvVoice="m";const f2=Speech._gvFallback();f2.speak("Семь.",{});const вид=f2.kind;
+  Speech._grani={state:"loading"};const f3=Speech._gvFallback();f3.speak("Восемь.",{});
+  Speech._grani=был;Speech.graniStart=были.s;Speech._graniAdapter=были.a;Speech._deviceAdapter=были.d;Speech._voiceAdapter=были.v;Speech.allVoices=были.all;
+  settings.gvVoice=были.gv;settings.gvFallback=были.fb;settings.voice=были.vc;
   return {журнал,вид};});
- check('2. незаписанное договаривает нейросеть того же пола; пока она не поднялась — синтезатор устройства',
-  запас.журнал[0]==="grani:Сорок два."&&запас.вид==="grani"&&запас.журнал[1]==="device:Семь.",запас);
+ check('2. незаписанное — голосом устройства того же пола; по выбору — нейросеть, пока не поднялась — устройство',
+  запас.журнал[0]==="voice:Microsoft Pavel - Russian:Сорок два."&&запас.журнал[1]==="voice:Microsoft Irina - Russian:Три."
+  &&запас.журнал[2]==="grani:Семь."&&запас.вид==="grani"&&/^voice:.*Восемь\.$/.test(запас.журнал[3]),запас);
 
  /* ── 3–5. ── */
  const жители=await page.evaluate(()=>{

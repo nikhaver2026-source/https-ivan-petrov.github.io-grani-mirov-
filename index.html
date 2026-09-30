@@ -210,6 +210,7 @@ h3{color:var(--acc2);margin:14px 0 6px;font-size:1.05rem;}
  <label class="opt" data-eng="device"><input type="checkbox" id="setVoiceLocal" checked><span><b>Только голоса с устройства</b><small>Онлайн-голоса отсеиваются: они ждут сеть и отвечают с задержкой, а без сети молчат совсем</small></span></label>
  <label class="opt" data-eng="device">Язык голоса <select id="setVoiceLang" aria-label="Язык голоса"><option value="ru" selected>Русский</option><option value="all">Все языки</option></select></label>
  <div class="row" data-eng="device"><button type="button" id="btnVoiceList" data-cmd="voicelist">Все голоса телефона — списком</button><button type="button" id="btnVoiceRefresh">Перечитать голоса устройства</button></div>
+ <label class="opt" data-eng="gemini">Незаписанное договаривает <select id="setGvFallback" aria-label="Кто договаривает то, чего нет в записях Gemini"><option value="device" selected>Голос устройства — сразу и с верными ударениями</option><option value="grani">Встроенный голос того же пола — медленнее</option></select></label>
  <label class="opt">Скорость озвучки <input type="range" id="setRate" min="0.6" max="6" step="0.2" data-tap-step="0.2" value="5"><span id="vRate">5.0×</span></label>
  <p class="hint">Шкала от 0,6 до 6,0 шагом в две десятых, по умолчанию пять. Ползунок отвечает тем самым темпом, который выбран: «Раз, два, три» — это проба, а не подсказка. Дойдя до шести, шкала возвращается к началу, так что до медленного темпа добираться недалеко.</p>
  <label class="opt">Высота голоса <input type="range" id="setPitch" min="50" max="200" step="5" data-tap-step="5" value="100"><span id="vPitch">1,0</span></label>
@@ -792,7 +793,7 @@ const settings=Object.assign({speech:1,effects:1,music:1,subtitles:1,explore:1,h
     минутами. Привычный рабочий темп чтеца экрана у незрячих — впятеро
     быстрее обычной речи; столько же теперь и здесь. Шкала прежняя, от
     0,6 до 6,0: кому пять быстро, ставит своё, и это запоминается. */
- rate:5,voiceVol:1,fxVol:1,musicVol:1,ambVol:0.8,uiVol:0.9,
+ rate:5,gvFallback:"device",voiceVol:1,fxVol:1,musicVol:1,ambVol:0.8,uiVol:0.9,
  /* ── СИНТЕЗАТОР ──
     ttsEngine — чем говорить: «gemini» (записи голоса Gemini, остальное —
     синтезатор устройства; по умолчанию с 3.9), «device» (то, что стоит на
@@ -1238,7 +1239,7 @@ const Speech={voice:null,keepAlive:null,
    const веб=new Set(isDesktopApp()?out.map(v=>имя(v.name)):[]);
    (Array.isArray(a)?a:[]).forEach(x=>{if(!x||!(x.id||x.name))return;if(веб.has(имя(x.name||x.id)))return;
     взять({name:String(x.name||x.id),lang:String(x.lang||""),localService:x.local!==false&&x.localService!==false,
-     voiceURI:"native:"+String(x.id||x.name),default:!!x.default,native:true,engine:String(x.engine||"")});});}}catch(_){}
+     voiceURI:"native:"+String(x.id||x.name),default:!!x.default,native:true,engine:String(x.engine||""),gender:String(x.gender||"")});});}}catch(_){}
   return out;},
  voiceFind(key,vs){
   if(!key)return null;vs=vs||this.allVoices();
@@ -1694,12 +1695,44 @@ const Speech={voice:null,keepAlive:null,
     договаривает встроенная нейросеть того же пола (igm — мужской, sova —
     женский): в приложении она лежит внутри и поднимается при первой такой
     фразе; пока поднимается — говорит синтезатор устройства. */
+ /* ── НЕЗАПИСАННОЕ — БЫСТРО И С ВЕРНЫМИ УДАРЕНИЯМИ (4.8) ──
+    Жалоба игрока: в «Настройках персонажа» после жеста голос молчал секунду
+    и больше, а ударения ставил неверно. Это договаривала встроенная
+    нейросеть: она считает речь на самом телефоне. Теперь незаписанное
+    договаривает голос устройства — тот же, что у TalkBack или у Windows: он
+    отвечает сразу и знает ударения. Пол по-прежнему бережём: из голосов
+    устройства берётся голос того же пола, что выбранный голос Gemini, если
+    пол голоса виден по его имени или по сведениям движка. Нейросеть — по
+    выбору в настройках («Незаписанное договаривает») и там, где у
+    устройства нет ни одного голоса. */
+ voiceGender(v){
+  try{const g=String(v.gender||"").toLowerCase();if(/^f|жен/.test(g))return "f";if(/^m|муж/.test(g))return "m";
+   const n=String(v.name||"")+" "+String(v.voiceURI||"");
+   if(/(irina|svetlana|milena|katya|katerina|ekaterina|elena|anna|tatiana|tatyana|victoria|daria|dariya|olga|natalia|alena|alyona|yulia|julia|maria|marina|ksenia|polina|zira|smtf|female|ирин|светлан|милен|кат|елен|анн|татьян|виктор|дарь|ольг|натал|алён|юли|мари|ксени|полин|женск)/i.test(n))return "f";
+   if(/(pavel|dmitr|dmitry|aleksandr|alexander|artemiy|artem|yuri|yury|mikhail|maxim|ivan|nikolai|sergey|sergei|deni(?:s)|ruslan|evgeniy|evgeny|pyotr|andrei|andrey|smtm|male|павел|дмитр|александр|артем|юри|михаил|максим|иван|никола|серге|денис|руслан|евген|пётр|андре|мужск)/i.test(n))return "m";}catch(_){}
+  return null;},
+ /* Голос устройства для незаписанного: выбранный игроком — он; иначе русский
+    голос того же пола, что голос Gemini; иначе голос устройства по умолчанию. */
+ _fallbackVoice(){
+  if(settings.voice&&this.voiceFind(settings.voice))return this.voiceFind(settings.voice);
+  const хочу=settings.gvVoice==="f"?"f":"m";
+  let vs=[];try{vs=this.allVoices().filter(v=>/^ru/i.test(v.lang||"")&&v.localService!==false);}catch(_){}
+  return vs.find(v=>this.voiceGender(v)===хочу)||null;},
+ _voiceAdapter(v){
+  const self=this;if(!v)return this._deviceAdapter();
+  if(v.native){const base=this._nativeAdapter();const id=String(v.voiceURI||"").slice(7);
+   return {name:"native",speak(t,o){try{window.GraniTTS.setVoice(id);}catch(_){}return base.speak(t,o);},cancel(){base.cancel();},speaking(){return base.speaking();}};}
+  if(!("speechSynthesis" in window))return this._deviceAdapter();
+  const base=this._webAdapter();
+  return {name:"web",speak(t,o){const был=self.voice;self.voice=v;try{return base.speak(t,o);}finally{self.voice=был;}},cancel(){base.cancel();},speaking(){return base.speaking();}};},
  _gvFallback(){
-  const self=this;let dev=this._deviceAdapter(),gr=null,кто=null;
-  const можноСеть=()=>{try{return typeof Worker==="function"&&location.protocol!=="file:"&&(!!window.GraniTTS||self._graniAuto||settings.gvSameGender===1);}catch(_){return false;}};
+  const self=this;let dev=null,gr=null,кто=null,devKey=null;
+  const нейросеть=()=>{try{return typeof Worker==="function"&&location.protocol!=="file:"&&(settings.gvFallback==="grani"||self._graniAuto);}catch(_){return false;}};
+  const устройство=()=>{const v=self._fallbackVoice();const k=v?self.voiceKey(v):"";
+   if(!dev||devKey!==k){try{if(dev&&dev.cancel)dev.cancel();}catch(_){}dev=self._voiceAdapter(v);devKey=k;}return dev;};
   const выбрать=()=>{
-   if(можноСеть()){const g=self.graniStart();if(g&&g.state==="ready")return gr||(gr=self._graniAdapter());}
-   return dev||(dev=self._deviceAdapter());};
+   if(нейросеть()){const g=self.graniStart();if(g&&g.state==="ready")return gr||(gr=self._graniAdapter());}
+   return устройство();};
   return {name:"gvFallback",
    speak(t,o){const a=выбрать();кто=a;if(!a){if(o&&o.onerror)o.onerror();return false;}return a.speak(t,o);},
    cancel(){[dev,gr].forEach(a=>{try{if(a)a.cancel();}catch(_){}});},
@@ -1803,7 +1836,10 @@ const Speech={voice:null,keepAlive:null,
     return true;}catch(e){return false;}},
   cancel(){self._cancelAt=Date.now();clearTimeout(self._webPending);self._webPending=null;self._utt=null;try{speechSynthesis.cancel();}catch(_){}},
   speaking(){try{return !!speechSynthesis.speaking;}catch(_){return false;}}};},
- _nativeAdapter(){const self=this;const cbs={};
+ _nativeAdapter(){const self=this;
+  /* Один список ожиданий на все адаптеры моста: иначе новый адаптер
+     (например, запасной голос Gemini) перехватывал бы конец фразы прежнего. */
+  const cbs=self._nativeCbs||(self._nativeCbs={});
   window.GraniTTSDone=id=>{const c=cbs[id];delete cbs[id];if(c&&c.onend)c.onend();};
   window.GraniTTSError=id=>{const c=cbs[id];delete cbs[id];if(c&&c.onerror)c.onerror();};
   try{if(self._nativeVoice&&typeof window.GraniTTS.setVoice==="function")window.GraniTTS.setVoice(String(self._nativeVoice.voiceURI).slice(7));}catch(_){}
@@ -55173,6 +55209,10 @@ function bindSettings(){const $=id=>document.getElementById(id);
    narrate("Говорит голос устройства.",{interrupt:true});});}}
  engUi();
  safeFn(()=>{Speech.gvPackLoad(Speech.GVOICE);gvPackUi();});
+ {const g=$("setGvFallback");if(g){g.value=settings.gvFallback==="grani"?"grani":"device";
+  g.addEventListener("change",ev=>{settings.gvFallback=ev.target.value==="grani"?"grani":"device";saveSettings();
+   safeFn(()=>{Speech.adapter=null;Speech._kind=null;});
+   narrate(settings.gvFallback==="grani"?"Незаписанное договаривает встроенный голос того же пола.":"Незаписанное договаривает голос устройства.",{interrupt:true});});}}
  {const l=$("setVoiceLocal");if(l){l.checked=settings.voiceLocal!==0;
   l.addEventListener("change",ev=>{settings.voiceLocal=ev.target.checked?1:0;saveSettings();
    const n=safeFn(()=>Speech.fillVoices(),0);
