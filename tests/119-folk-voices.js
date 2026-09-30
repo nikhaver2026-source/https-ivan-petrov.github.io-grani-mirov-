@@ -35,7 +35,8 @@ const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(e!==undefined?' :
  /* ── 3. титры рядом с записями ── */
  const files=fs.existsSync(VOICE)?fs.readdirSync(VOICE):[];
  const mp3=files.filter(f=>f.endsWith('.mp3'));
- check('папка sounds/voice с четырьмястами семью записями',mp3.length===407,mp3.length);
+ /* (4.7) и 280 окликов народов голосом второго пола (race_*_x). */
+ check('папка sounds/voice с четырьмястами семью записями и 280 окликами второго пола',mp3.length===407+280,mp3.length);
  const cr=fs.existsSync(path.join(VOICE,'CREDITS.md'))?fs.readFileSync(path.join(VOICE,'CREDITS.md'),'utf8'):'';
  check('CREDITS.md называет Gemini, модель и условия',
   /Gemini/.test(cr)&&/gemini-3\.8-flash-tts/.test(cr)&&/Additional Terms of Service/.test(cr)&&/Prohibited Use Policy/.test(cr));
@@ -113,10 +114,11 @@ const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(e!==undefined?' :
    if(v[1])out.push(VOICE_DIR+"prof_"+v[0]+"_f"+G+".mp3");});
   VOICE_SAY.forEach(k=>{out.push(VOICE_DIR+"say_"+k+G+".mp3");out.push(VOICE_DIR+"say_"+k+"_f"+G+".mp3");});
   VOICE_HERO.forEach(k=>out.push(VOICE_DIR+"hero_"+k+G+".mp3"));
+  Object.keys(VOICE_RACE_ALT).forEach(id=>out.push(VOICE_DIR+"race_"+id+"_x"+G+".mp3"));
   return out;});
  const нетНаДиске=пути.filter(p=>!fs.existsSync(path.join(ROOT,'sounds',p)));
  check('каждая запись речи лежит на диске',
-  пути.length===407&&нетНаДиске.length===0,нетНаДиске.slice(0,5));
+  пути.length===407+280&&нетНаДиске.length===0,нетНаДиске.slice(0,5));
  const лишниеФайлы=mp3.filter(f=>пути.indexOf('voice/'+f)<0);
  check('в папке нет записей, которые игра не зовёт',лишниеФайлы.length===0,лишниеФайлы.slice(0,5));
  const читается=await page.evaluate(async(список)=>{

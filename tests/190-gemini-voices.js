@@ -35,7 +35,8 @@ const ГОЛОСА=["Algenib","Charon","Orus","Enceladus","Achird","Puck","Gacru
 
 (async()=>{
  /* ── 1. записи на диске ── */
- const mp3=fs.readdirSync(VOICE).filter(f=>f.endsWith('.mp3'));
+ /* Оклики второго пола (race_*_x, 4.7) проверяет набор 119. */
+ const mp3=fs.readdirSync(VOICE).filter(f=>f.endsWith('.mp3')&&!/_x_g\.mp3$/.test(f));
  const прежние=mp3.filter(f=>!/_g\.mp3$/.test(f));
  check('1. в sounds/voice четыреста семь записей, все нового поколения («_g»), прежних нет',
   mp3.length===407&&прежние.length===0,{всего:mp3.length,прежние:прежние.slice(0,4)});
@@ -58,7 +59,7 @@ const ГОЛОСА=["Algenib","Charon","Orus","Enceladus","Achird","Puck","Gacru
   return {G,need,len:VOICE_LEN,слагов2:Object.values(VOICE_RACES).filter(v=>/_2$/.test(v[0])).map(v=>v[0])};});
  const безФайла=игра.need.filter(k=>!fs.existsSync(path.join(VOICE,k+'.mp3')));
  const безДлины=игра.need.filter(k=>!(игра.len[k]>0));
- const ключи=Object.keys(игра.len);
+ const ключи=Object.keys(игра.len).filter(k=>!/_x_g$/.test(k));
  check('2. VOICE_GEN — «_g»; каждый народ, ремесло, общее слово и ход героя находит свой файл и длину; в именах народов нет «_2»',
   игра.G==="_g"&&игра.need.length===407&&new Set(игра.need).size===407&&безФайла.length===0&&безДлины.length===0
   &&ключи.length===407&&ключи.every(k=>/_g$/.test(k))&&игра.слагов2.length===0,
@@ -71,7 +72,7 @@ const ГОЛОСА=["Algenib","Charon","Orus","Enceladus","Achird","Puck","Gacru
 
  /* ── 4. титры ── */
  const титры=fs.readFileSync(path.join(VOICE,'CREDITS.md'),'utf8');
- const строки=титры.split('\n').filter(l=>/^\| [a-z0-9_]+_g\.mp3 \|/.test(l));
+ const строки=титры.split('\n').filter(l=>/^\| [a-z0-9_]+_g\.mp3 \|/.test(l)&&!/^\| [a-z0-9_]+_x_g\.mp3/.test(l));
  const поГолосам={};let сумма=0;
  for(const v of ГОЛОСА){const m=титры.match(new RegExp("\\| "+v+" \\| [^|]+\\| [^|]+\\| (\\d+) \\|"));поГолосам[v]=m?+m[1]:0;сумма+=поГолосам[v];}
  const безСтроки=mp3.filter(f=>!строки.some(l=>l.startsWith('| '+f+' |')));
