@@ -5,7 +5,7 @@
 стражник у ворот, жрец, трактирщик, староста, кузнец, торговец, наставник, смотритель порта. Прежде эти строки читал голос
 игры в кавычках; теперь у каждой своя запись и своя интонация.
 
-Записей: 6351
+Записей: 6384
 
 Речь синтезирована 27–29 сентября 2026 года нейроголосами **Gemini** (Google),
 модель `gemini-3.8-flash-tts`, через Gemini API (Interactions API,
@@ -29,9 +29,9 @@ Policy (https://policies.google.com/terms/generative-ai/use-policy). Отдел�
 
 | Голос Gemini | Каков | Кто говорит | Записей |
 |---|---|---|---|
-| Alnilam | твёрдый | стражник на обходе и ночной дозор (первый голос стражи) | 164 |
-| Orus | твёрдый, пониже | стражник на обходе (второй голос стражи) | 165 |
-| Algenib | с хрипотцой | стражник на обходе (третий голос стражи) | 165 |
+| Alnilam | твёрдый | стражник на обходе и ночной дозор (первый голос стражи) | 175 |
+| Orus | твёрдый, пониже | стражник на обходе (второй голос стражи) | 176 |
+| Algenib | с хрипотцой | стражник на обходе (третий голос стражи) | 176 |
 | Charon | низкий, ровный | латник смены и солдат гарнизона за Гранью | 116 |
 | Schedar | ровный, холодный | латник смены за Гранью (второй голос) | 859 |
 | Achird | дружелюбный | горожанин и житель посада, староста деревни | 106 |
@@ -91,7 +91,7 @@ Policy (https://policies.google.com/terms/generative-ai/use-policy). Отдел�
   видеть», «Я вас не видела»): в описи ниже — то, что произнесено; в игре
   строка ищется по исходному тексту. Обращённое к герою («пока цел») не менялось.
 - **Пакетами.** В одном запросе два голоса и до семидесяти четырёх строк; всё —
-  107 пакетов и переозвучки неудачных дублей.
+  109 пакетов и переозвучки неудачных дублей.
 - **Разрезка и разборчивость.** Запись пакета дробится по паузам и склеивается
   в строки по распознанному тексту; каждую строку распознаёт русская модель
   GigaAM (sherpa-onnx, `nemo-ctc-giga-am-v2-russian`): не больше 15 % ошибочных
@@ -6454,3 +6454,36 @@ Policy (https://policies.google.com/terms/generative-ai/use-policy). Отдел�
 | quest_done_5_v2_g.flac | заказчик: дело сдано | Schedar | respectful, warm | Слово своё держишь. Это ценю. |
 | quest_done_5_v1_f_g.flac | заказчик: дело сдано | Leda | respectful, warm | Слово своё держишь. Это ценю. |
 | quest_done_5_v2_f_g.flac | заказчик: дело сдано | Aoede | respectful, warm | Слово своё держишь. Это ценю. |
+| street_guard_40_g.flac | стражник | Alnilam | brisk, commanding | Не толпимся, проходим! |
+| street_guard_40_v1_g.flac | стражник | Orus | brisk, commanding | Не толпимся, проходим! |
+| street_guard_40_v2_g.flac | стражник | Algenib | brisk, commanding | Не толпимся, проходим! |
+| street_guard_41_g.flac | стражник | Alnilam | serious, watchful | Видел кого подозрительного — сразу к нам. |
+| street_guard_41_v1_g.flac | стражник | Orus | serious, watchful | Видел кого подозрительного — сразу к нам. |
+| street_guard_41_v2_g.flac | стражник | Algenib | serious, watchful | Видел кого подозрительного — сразу к нам. |
+| street_guard_42_g.flac | стражник | Alnilam | tired, grumbling | Сапоги стоптал, а смена всё не кончается. |
+| street_guard_42_v1_g.flac | стражник | Orus | tired, grumbling | Сапоги стоптал, а смена всё не кончается. |
+| street_guard_42_v2_g.flac | стражник | Algenib | tired, grumbling | Сапоги стоптал, а смена всё не кончается. |
+| street_guard_43_g.flac | стражник | Alnilam | stern, matter-of-fact | Ночью ворота закрыты. Кто не успел — ночует в поле. |
+| street_guard_43_v1_g.flac | стражник | Orus | stern, matter-of-fact | Ночью ворота закрыты. Кто не успел — ночует в поле. |
+| street_guard_43_v2_g.flac | стражник | Algenib | stern, matter-of-fact | Ночью ворота закрыты. Кто не успел — ночует в поле. |
+| street_guard_44_g.flac | стражник | Alnilam | wary, firm | Держи руки на виду. Порядок такой. |
+| street_guard_44_v1_g.flac | стражник | Orus | wary, firm | Держи руки на виду. Порядок такой. |
+| street_guard_44_v2_g.flac | стражник | Algenib | wary, firm | Держи руки на виду. Порядок такой. |
+| street_guard_45_g.flac | стражник | Alnilam | dry humor, gruff | Пьяных в канаву, драчунов в холодную. Всё по уставу. |
+| street_guard_45_v1_g.flac | стражник | Orus | dry humor, gruff | Пьяных в канаву, драчунов в холодную. Всё по уставу. |
+| street_guard_45_v2_g.flac | стражник | Algenib | dry humor, gruff | Пьяных в канаву, драчунов в холодную. Всё по уставу. |
+| street_guard_46_g.flac | стражник | Alnilam | low, confiding | Капитан опять не в духе. Лучше ему не попадаться. |
+| street_guard_46_v1_g.flac | стражник | Orus | low, confiding | Капитан опять не в духе. Лучше ему не попадаться. |
+| street_guard_46_v2_g.flac | стражник | Algenib | low, confiding | Капитан опять не в духе. Лучше ему не попадаться. |
+| street_guard_47_g.flac | стражник | Alnilam | concerned, serious | На тракте неспокойно. Один не ходи. |
+| street_guard_47_v1_g.flac | стражник | Orus | concerned, serious | На тракте неспокойно. Один не ходи. |
+| street_guard_47_v2_g.flac | стражник | Algenib | concerned, serious | На тракте неспокойно. Один не ходи. |
+| street_guard_48_g.flac | стражник | Alnilam | stern, warning | Оружие в ножнах держи. Здесь город, а не поле боя. |
+| street_guard_48_v1_g.flac | стражник | Orus | stern, warning | Оружие в ножнах держи. Здесь город, а не поле боя. |
+| street_guard_48_v2_g.flac | стражник | Algenib | stern, warning | Оружие в ножнах держи. Здесь город, а не поле боя. |
+| street_guard_49_g.flac | стражник | Alnilam | weary, wistful | Эх, горячего бы сейчас. Третий час на ветру. |
+| street_guard_49_v1_g.flac | стражник | Orus | weary, wistful | Эх, горячего бы сейчас. Третий час на ветру. |
+| street_guard_49_v2_g.flac | стражник | Algenib | weary, wistful | Эх, горячего бы сейчас. Третий час на ветру. |
+| street_guard_50_g.flac | стражник | Alnilam | impatient, brisk | Проходи, проходи, не задерживай. |
+| street_guard_50_v1_g.flac | стражник | Orus | impatient, brisk | Проходи, проходи, не задерживай. |
+| street_guard_50_v2_g.flac | стражник | Algenib | impatient, brisk | Проходи, проходи, не задерживай. |
