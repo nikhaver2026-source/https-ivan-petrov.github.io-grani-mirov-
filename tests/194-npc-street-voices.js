@@ -36,6 +36,9 @@ const {spawnSync}=require('child_process');const path=require('path');const fs=r
 const results=[];
 const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(e!==undefined?' :: '+JSON.stringify(e):''));
 const DIR=path.join(__dirname,'..','sounds','voice_npc');
+/* (6.0) Третий и дальнейшие голоса жителя («_v2», «_v3») — в голосовом пакете. */
+const PACK=path.join(__dirname,'..','sounds','gvoice_pack','npc');
+const где=k=>path.join(/_v[2-9]/.test(k)&&!/^street_/.test(k)?PACK:DIR,k+'.flac');
 function probe(file){
  const p=spawnSync('ffprobe',['-v','error','-show_entries','stream=codec_name,channels,sample_rate:format=duration,bit_rate','-of','json',file],{encoding:'utf8'});
  try{const j=JSON.parse(p.stdout),s=j.streams[0];return {c:s.codec_name,ch:s.channels,sr:+s.sample_rate,dur:+j.format.duration,br:Math.round(+j.format.bit_rate/1000)};}catch(_){return null;}}
@@ -73,12 +76,12 @@ function probe(file){
   {строк:игра.строк,нет:игра.нет.slice(0,4),безЖен:игра.безЖен.slice(0,4),роли:игра.роли});
 
  /* ── 2. файлы на диске ── */
- const mp3=fs.readdirSync(DIR).filter(f=>f.endsWith('.flac'));
+ const mp3=fs.readdirSync(DIR).filter(f=>f.endsWith('.flac')).concat(fs.existsSync(PACK)?fs.readdirSync(PACK).filter(f=>f.endsWith('.flac')):[]);
  const нужны=[...new Set(игра.файлы)];
- const безФайла=нужны.filter(k=>!fs.existsSync(path.join(DIR,k+'.flac')));
+ const безФайла=нужны.filter(k=>!fs.existsSync(где(k)));
  const лишние=mp3.filter(f=>нужны.indexOf(f.slice(0,-5))<0);
  const плохие=[],расхождения=[];
- нужны.filter((_,i)=>i%3===0).forEach(k=>{const i=probe(path.join(DIR,k+'.flac'));
+ нужны.filter((_,i)=>i%3===0).forEach(k=>{const i=probe(где(k));
   if(!i||i.c!=='flac'||i.ch!==1||i.sr!==24000)плохие.push({k,i});
   else if(Math.abs((игра.len[k]||0)-i.dur)>0.06)расхождения.push({k,в_игре:игра.len[k],файл:i.dur});});
  const безДлины=нужны.filter(k=>!(игра.len[k]>0));

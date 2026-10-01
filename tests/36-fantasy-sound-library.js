@@ -296,7 +296,8 @@ const NEW_DIRS=["arte","deep","foe","cast","hero","wild","trade","score",
   Object.values(VOICE_NPC).forEach(mp=>Object.values(mp).forEach(([b,f,m])=>{
    const маска=Number(m)||1;
    for(let k=0;k<8;k++)if((маска>>k)&1){const bk=b+(k?"_v"+k:"");
-    out.push(VOICE_NPC_DIR+bk+G+".flac");if(f)out.push(VOICE_NPC_DIR+bk+"_f"+G+".flac");}}));
+    const д=npcInPack(bk)?VOICE_NPC_PACK_DIR:VOICE_NPC_DIR;  /* (6.0) третьи голоса — в пакете */
+    out.push(д+bk+G+".flac");if(f)out.push(д+bk+"_f"+G+".flac");}}));
   /* (4.7) Голоса героя из «Настроек персонажа»: ходы разговора по описи
      HERO_VOICE_LINES и образец каждого голоса (папка voice_hero). */
   Object.entries(HERO_VOICE_LINES).forEach(([id,ходы])=>ходы.forEach(х=>out.push(HERO_VOICE_DIR+"hero_"+х+"_"+id+G+".flac")));
@@ -319,6 +320,9 @@ const NEW_DIRS=["arte","deep","foe","cast","hero","wild","trade","score",
   /* Голосовой пакет Gemini (4.8) — описи sounds/gvoice_pack/m|f/bank.js. */
   ["m","f"].forEach(v=>{try{const b=fs.readFileSync(path.join(корень,"sounds","gvoice_pack",v,"bank.js"),"utf8");
    Object.values(JSON.parse(b.slice(b.indexOf("{"),b.lastIndexOf("}")+1)).p).forEach(id=>ссылки.add("gvoice_pack/"+v+"/"+id+".flac"));}catch(_){}});
+  /* (6.0) Третьи и дальнейшие голоса жителей — опись sounds/gvoice_pack/npc/bank.js. */
+  try{const b=fs.readFileSync(path.join(корень,"sounds","gvoice_pack","npc","bank.js"),"utf8");
+   Object.keys(JSON.parse(b.slice(b.indexOf("{"),b.lastIndexOf("}")+1)).p).forEach(k=>ссылки.add("gvoice_pack/npc/"+k+".flac"));}catch(_){}
   /* Женский голос тех же фраз (с выпуска 24) — опись sounds/gvoice_f/bank_f1.js. */
   try{const опись=(html.match(/url:"sounds\/gvoice_f\/(bank_f\d+\.js)"/)||[])[1]||"bank_f1.js";
    const b=fs.readFileSync(path.join(корень,"sounds","gvoice_f",опись),"utf8");
