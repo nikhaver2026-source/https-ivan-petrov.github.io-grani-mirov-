@@ -27,6 +27,7 @@ const fs = require('fs'), path = require('path'), os = require('os');
   });
   console.log('живая фраза:', конец);
   console.log('голосов с записью:', good, 'из', s.voices.length);
+  console.log('состояние моста:', s.diag());
   s.quit();
   process.exit(ok && good > 0 ? 0 : 1);
 })();

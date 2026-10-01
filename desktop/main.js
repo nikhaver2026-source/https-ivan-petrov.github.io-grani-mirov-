@@ -99,9 +99,18 @@ function createWindow() {
     const fn = kind === 'done' ? 'GraniTTSDone' : 'GraniTTSError';
     win.webContents.executeJavaScript(`window.${fn}&&window.${fn}(${JSON.stringify(String(id))})`).catch(() => { });
   };
-  // Игру открываем, когда мост голосов ответил (или не ответил за 8 секунд):
-  // список голосов должен быть готов к первому слову.
-  sapiReady.then(() => win.loadURL('app://grani/index.html'));
+  // Игру открываем, когда мост голосов ответил, но не ждём его дольше шести
+  // секунд: мост, поднявшийся позже, отдаёт голоса в уже открытую игру
+  // (tts-ready), без перезапуска. Прежде игра, открытая без моста, до конца
+  // сеанса знала только голоса, которые видит Chromium, — Ирину, Павла и
+  // английские, без RHVoice, Acapela, Vocalizer и прочих.
+  let loaded = false;
+  const open = () => { if (loaded || win.isDestroyed()) return; loaded = true; win.loadURL('app://grani/index.html'); };
+  sapiReady.then(open); setTimeout(open, 6000);
+  const ttsReady = () => { if (!win.isDestroyed() && sapi.ready) win.webContents.send('tts-ready', sapi.list().length); };
+  sapi.onChange = ttsReady;
+  sapiReady.then(ttsReady);
+  win.webContents.on('did-finish-load', () => { if (sapi.ready) setTimeout(ttsReady, 300); });
   // Голосовой пакет Gemini — сам, в фоне (см. VoicePack.autoFetch).
   setTimeout(() => voicePack.autoFetch(net, ok => {
     if (!ok || win.isDestroyed()) return;
@@ -116,6 +125,17 @@ ipcMain.on('tts-speaking', e => { e.returnValue = sapi.speaking.size > 0; });
 ipcMain.on('tts-speak', (e, text, rate, volume, id) => sapi.speak(String(text || ''), rate, volume, String(id)));
 ipcMain.on('tts-stop', () => sapi.stop());
 ipcMain.on('tts-voice', (e, name) => sapi.setVoice(String(name || '')));
+// Почему голоса Windows не подключились — и повторная попытка по кнопке
+// «Перечитать голоса устройства» в настройках.
+ipcMain.on('tts-diag', e => { e.returnValue = sapi.diag(); });
+ipcMain.handle('tts-restart', async e => {
+  const ok = await sapi.restart(15000).catch(() => false);
+  if (ok && !e.sender.isDestroyed()) e.sender.send('tts-ready', sapi.list().length);
+  return { ready: !!ok, count: sapi.list().length, diag: sapi.diag() };
+});
+// Если окно не смогло принять мост на лету, страница перезагружается один раз.
+let lateReloaded = false;
+ipcMain.on('tts-late-fail', e => { if (lateReloaded) return; lateReloaded = true; try { e.sender.reload(); } catch (_) { } });
 // «Установить голосовой пакет»: игрок выбирает скачанный файл, приложение
 // проверяет его и кладёт копию в свою папку данных.
 ipcMain.handle('grani-voicepack-install', async e => {

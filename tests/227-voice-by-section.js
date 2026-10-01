@@ -1,15 +1,18 @@
 /* ═══════════════════════════════════════════════════════════════════════
-   НАБОР 227: ГОЛОСА ПО РАЗДЕЛАМ — НАСТРОЙКИ, МЕНЮ И ИГРА СВОИМИ ГОЛОСАМИ
+   НАБОР 227: ОДИН ГОЛОС НА ВСЁ, ВЕСТНИК — ДРУГИМ; «ПО РАЗДЕЛАМ» — ПО ВЫБОРУ
 
-   Просьба игрока: не плодить голоса, а дать каждому разделу свой.
-   1. Новый выбор «По разделам» стоит по умолчанию и есть в «Выборе голоса».
+   Просьба игрока (8.0): вся игра, настройки, меню, здоровье — одним голосом
+   Gemini, а достижения и события — другим. «По разделам» остаётся выбором.
+   1. По умолчанию — «Мужской: вся игра…; достижения и события — женским»;
+      в «Выборе голоса» есть и женский, и «По разделам».
    2. В настройках звучит голос настроек (Callirrhoe), в игре — голос игры
       (Iapetus): одна и та же фраза берётся из разных описей.
    3. Главное меню, «Настройки персонажа» и меню действий — раздел «меню»;
       пока опись голоса меню не записана, меню говорит голосом настроек.
    4. «Женский везде» и «Мужской везде» по-прежнему дают один голос на всё.
-   5. Прежний мужской голос по умолчанию переходит на «По разделам» один раз,
-      выбравший женский — остаётся при нём.
+   5. Прежний выбор «по разделам» (и старый мужской по умолчанию) переходит
+      на мужской один раз, выбравший женский — остаётся при нём.
+   6. Достижения и события звучат вестником — вторым голосом.
    ═══════════════════════════════════════════════════════════════════════ */
 const {chromium}=require('playwright');
 const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(e!==undefined?' :: '+JSON.stringify(e).slice(0,600):''));
@@ -24,10 +27,10 @@ const w=ms=>new Promise(z=>setTimeout(z,ms));
  /* ── 1. Выбор по умолчанию ── */
  const в=await page.evaluate(()=>({gv:settings.gvVoice,опции:[...document.querySelectorAll('#setGvVoice option')].map(o=>o.value+":"+o.textContent)}));
  check('1. «По разделам» — выбор по умолчанию и пункт в «Выборе голоса»',
-  в.gv==="z"&&в.опции.length===3&&/^z:По разделам/.test(в.опции[0]),в);
+  в.gv==="m"&&в.опции.length===3&&/^m:Мужской: вся игра/.test(в.опции[0])&&в.опции.some(o=>/^z:По разделам/.test(o))&&в.опции.some(o=>/^f:Женский/.test(o)),в);
 
  /* ── 2–3. Разделы ── */
- const р=await page.evaluate(async()=>{Speech.gvLoad();for(let i=0;i<60&&(Speech.GVOICES.m.state!=="ready"||Speech.GVOICES.f.state!=="ready");i++)await new Promise(z=>setTimeout(z,100));
+ const р=await page.evaluate(async()=>{settings.gvVoice="z";Speech.gvLoad();for(let i=0;i<60&&(Speech.GVOICES.m.state!=="ready"||Speech.GVOICES.f.state!=="ready");i++)await new Promise(z=>setTimeout(z,100));
   const снимок=()=>({раздел:Speech.gvSection(),опись:Speech.GVOICE.glob,клип:Speech.gvClip("Настройки")});
   const out={титул:снимок()};
   CMD.settings();await new Promise(z=>setTimeout(z,200));out.настройки=снимок();
@@ -53,15 +56,27 @@ const w=ms=>new Promise(z=>setTimeout(z,ms));
 
  /* ── 5. Перенос прежнего выбора ── */
  const п={};
- for(const [было,надо] of [["m","z"],["f","f"]]){
+ for(const [было,надо] of [["m","m"],["f","f"],["z","m"]]){
   const c2=await browser.newContext();const p2=await c2.newPage();
   await p2.goto(process.argv[2]);await p2.waitForTimeout(600);
   const ключ=await p2.evaluate(()=>{for(const k of Object.keys(localStorage)){try{const j=JSON.parse(localStorage.getItem(k));if(j&&typeof j==="object"&&"gvVoice" in j)return k;}catch(_){}}return null;});
-  await p2.evaluate(([k,v])=>{const j=JSON.parse(localStorage.getItem(k));j.gvVoice=v;delete j.gvZ;localStorage.setItem(k,JSON.stringify(j));},[ключ,было]);
+  await p2.evaluate(([k,v])=>{const j=JSON.parse(localStorage.getItem(k));j.gvVoice=v;delete j.gvZ;delete j.gvOne;localStorage.setItem(k,JSON.stringify(j));},[ключ,было]);
   await p2.reload();await p2.waitForTimeout(800);
   п[было]=await p2.evaluate(()=>settings.gvVoice);п[было+"_ok"]=п[было]===надо;
   await c2.close();}
- check('5. прежний мужской голос по умолчанию переходит на «По разделам», женский остаётся',п.m_ok&&п.f_ok,п);
+ check('5. прежний выбор «по разделам» и мужской переходят на мужской, женский остаётся',п.m_ok&&п.f_ok&&п.z_ok,п);
+
+ /* ── 6. Вестник: достижения и события — вторым голосом ── */
+ const в6=await page.evaluate(()=>{const out={};const был=Speech.current;
+  for(const v of ["m","f"]){settings.gvVoice=v;
+   Speech.current={cat:"achieve",herald:true};const a=Speech.GVOICE.glob;
+   Speech.current={cat:"event"};const e=Speech.GVOICE.glob;
+   Speech.current={cat:"ui"};const u=Speech.GVOICE.glob;
+   out[v]={достижение:a,событие:e,меню:u,класс:Speech._classify("Мировое событие: засуха. Продлится три дня.",{}).cat};}
+  Speech.current=был;settings.gvVoice="m";return out;});
+ check('6. достижения и события — вестником (вторым голосом), всё прочее — основным',
+  в6.m.достижение==="GVOICE_BANK_F"&&в6.m.событие==="GVOICE_BANK_F"&&в6.m.меню==="GVOICE_BANK"
+  &&в6.f.достижение==="GVOICE_BANK"&&в6.f.событие==="GVOICE_BANK"&&в6.f.меню==="GVOICE_BANK_F"&&в6.m.класс==="event",в6);
 
  check('без ошибок на странице',!errors.length,errors.slice(0,3));
  await browser.close();

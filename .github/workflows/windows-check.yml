@@ -50,6 +50,23 @@ jobs:
       - name: Electron
         working-directory: desktop
         run: npm install --no-audit --no-fund
+      - name: Готовый мост голосов Windows
+        working-directory: desktop
+        run: node sapi-build.js
+      - name: Библиотека NVDA для голоса чтеца экрана
+        continue-on-error: true
+        shell: pwsh
+        run: |
+          $v = '2024.4.2'
+          $z = "$env:RUNNER_TEMP\nvcc.zip"; $d = "$env:RUNNER_TEMP\nvcc"
+          Invoke-WebRequest "https://download.nvaccess.org/releases/$v/nvda_${v}_controllerClient.zip" -OutFile $z
+          Expand-Archive $z -DestinationPath $d -Force
+          Get-ChildItem -Recurse $d | ForEach-Object { $_.FullName }
+          foreach ($a in 'x64','x86') {
+            $f = Get-ChildItem $d -Recurse -Filter 'nvdaControllerClient*.dll' | Where-Object { $_.FullName -match "[\\/]$a[\\/]" -or $_.Name -match ($(if ($a -eq 'x64') {'64'} else {'32'})) } | Select-Object -First 1
+            if ($f) { New-Item -ItemType Directory -Force "desktop\sr\$a" | Out-Null; Copy-Item $f.FullName "desktop\sr\$a\nvdaControllerClient.dll" }
+          }
+          Get-ChildItem -Recurse desktop\sr
       - name: Голоса Windows через мост SAPI
         working-directory: desktop
         run: node sapi-test.js

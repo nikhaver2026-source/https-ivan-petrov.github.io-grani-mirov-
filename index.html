@@ -200,7 +200,7 @@ h3{color:var(--acc2);margin:14px 0 6px;font-size:1.05rem;}
  <h3 class="sec-head" tabindex="0" data-cmd="secjump" data-sec-title="Синтезатор речи">Синтезатор речи</h3>
  <p class="hint">Всё про сам голос в одном разделе: чем игра говорит, каким голосом, с какой скоростью и высотой. Проба — тут же.</p>
  <label class="opt"><input type="checkbox" id="setEngBuiltin" checked><span><b>Встроенный голос</b><small>Живые записи голоса Gemini: пункты меню, настроек и инвентаря, имена окон, частые сообщения звучат сразу, без сети; то, чего нет в записях (числа, имена), договаривает голос устройства</small></span></label>
- <label class="opt" data-eng="gemini">Выбор голоса <select id="setGvVoice" aria-label="Выбор голоса встроенного голоса"><option value="z" selected>По разделам: настройки, меню и игра — каждый своим голосом</option><option value="f">Женский везде</option><option value="m">Мужской везде</option></select></label>
+ <label class="opt" data-eng="gemini">Выбор голоса <select id="setGvVoice" aria-label="Выбор голоса встроенного голоса"><option value="m" selected>Мужской: вся игра, настройки и меню; достижения и события — женским</option><option value="f">Женский: вся игра, настройки и меню; достижения и события — мужским</option><option value="z">По разделам: настройки, меню и игра — каждый своим голосом</option></select></label>
  <p class="hint" id="gvPackHint" data-eng="gemini">Голосовой пакет Gemini: проверяю…</p>
  <div class="row" data-eng="gemini"><button type="button" id="btnGvPack" data-cmd="gvpack">Голосовой пакет</button></div>
  <label class="opt"><input type="checkbox" id="setEngDevice"><span><b>Голос устройства</b><small>Синтезатор самого телефона: на iPhone — голоса VoiceOver, на Android — Google, Samsung, Acapela или любой установленный; отвечает сразу и без сети</small></span></label>
@@ -1235,7 +1235,7 @@ const ANDROID_VERSION="8.0";
 const GAME_VERSION=SVODY_ON?ANDROID_VERSION:IN_APP?APP_VERSION:WEB_VERSION;
 const GVOICE_ON=true;
 /* Номер голосового пакета: растёт, когда пакет пополнился (обходит кэш). */
-const GV_PACK_V=4,GV_MENU_ON=false;
+const GV_PACK_V=5,GV_MENU_ON=false;
 try{
  const v="Alpha "+GAME_VERSION;
  document.title=document.title.replace(/Alpha [\d.]+/,v);
@@ -1296,7 +1296,7 @@ const settings=Object.assign({speech:1,effects:1,music:1,subtitles:1,explore:1,h
     своему ключу). voiceLocal — отсев онлайновых
     голосов: они ждут сеть и отвечают с задержкой на каждое слово меню.
     voiceLang — искать ли только русские голоса. pitch — высота. */
- ttsEngine:gvDefaultEngine(),gvVoice:"z",voiceLocal:1,voiceLang:"ru",pitch:1,
+ ttsEngine:gvDefaultEngine(),gvVoice:"m",gvOne:1,voiceLocal:1,voiceLang:"ru",pitch:1,
  /* ── КАНАЛЫ ПО ТЗ ЗВУКА ──
     Каналов девять: общий (master), музыка, фон, мир (sfx), голоса людей
     (npc), речь игры (tts — это voiceVol), бой, меню и чары. У каждого своя
@@ -1522,6 +1522,10 @@ function newsBrief(было){
 /* (6.0) Голоса по разделам — новый выбор по умолчанию: прежний мужской
    голос по умолчанию переходит на него один раз; выбравший женский — остаётся. */
 if(Object.keys(savedSet).length&&!settings.gvZ){if(settings.gvVoice!=="f")settings.gvVoice="z";settings.gvZ=1;saveSettings();}
+/* (8.0, просьба игрока) Один голос на всё — игру, настройки, меню, здоровье,
+   — а достижения и события — вторым голосом, вестником. Прежний выбор «по
+   разделам» переходит на мужской голос один раз; выбравший женский остаётся. */
+if(Object.keys(savedSet).length&&!savedSet.gvOne){if(settings.gvVoice==="z")settings.gvVoice="m";settings.gvOne=1;saveSettings();}
 if(!Object.keys(savedSet).length){settings.newsV=NEWS_V;settings.newsFrom=NEWS_V;saveSettings();}
 else if((Number(settings.newsV)||0)<NEWS_V){
  const было=Number(settings.newsV)||0;
@@ -2009,9 +2013,9 @@ const Speech={voice:null,keepAlive:null,
     подключается сам; в приложениях для Windows и Android его ставят один раз
     (настройки, «Синтезатор», «Голосовой пакет»), и приложение отдаёт его по
     тому же адресу sounds/gvoice_pack/. Нет пакета — звучит то, что вшито. */
- GVOICES:{m:{url:"sounds/gvoice/bank_9.js",dir:"sounds/gvoice/",glob:"GVOICE_BANK",map:null,state:"off",
+ GVOICES:{m:{url:"sounds/gvoice/bank_10.js",dir:"sounds/gvoice/",glob:"GVOICE_BANK",map:null,state:"off",
    pack:{url:"sounds/gvoice_pack/m/bank.js",dir:"sounds/gvoice_pack/m/",glob:"GVOICE_PACK_M",map:null,state:"off"}},
-  f:{url:"sounds/gvoice_f/bank_f9.js",dir:"sounds/gvoice_f/",glob:"GVOICE_BANK_F",map:null,state:"off",
+  f:{url:"sounds/gvoice_f/bank_f10.js",dir:"sounds/gvoice_f/",glob:"GVOICE_BANK_F",map:null,state:"off",
    pack:{url:"sounds/gvoice_pack/f/bank.js",dir:"sounds/gvoice_pack/f/",glob:"GVOICE_PACK_F",map:null,state:"off"}},
   /* (6.0) Третий голос — меню: главное меню, «Настройки персонажа», меню
      действий. Пока его опись не записана (GV_MENU_ON), меню говорит голосом
@@ -2036,7 +2040,9 @@ const Speech={voice:null,keepAlive:null,
     Достижения, повышения, открытия звучат своим голосом — не тем, что
     говорит игра: в игре мужской — вестник женский, и наоборот. */
  gvHerald(){return settings.gvVoice==="f"?this.GVOICES.m:this.GVOICES.f;},
- get GVOICE(){if(this.current&&this.current.herald)return this.gvHerald();
+ /* (8.0) Вестник говорит не только достижения, но и события: дорожные,
+    мировые, вести с войны. */
+ get GVOICE(){if(this.current&&(this.current.herald||this.current.cat==="event"))return this.gvHerald();
   if(settings.gvVoice==="z")return this.gvSectionVoice(this.gvSection());
   return this.GVOICES[settings.gvVoice==="f"?"f":"m"];},
  gvKey(t){return String(t==null?"":t).toLowerCase().replace(/ё/g,"е").replace(/[^а-яa-z0-9]+/g," ").trim();},
@@ -2270,6 +2276,8 @@ const Speech={voice:null,keepAlive:null,
   let cat=o.cat||(вОкне?null:this._ctx)||(pri<=1?"important":pri===2?"result":"context");
   /* Достижение узнаётся и по словам, если место в коде не пометило его само. */
   if(!o.cat&&ACHIEVE_RE.test(text))cat="achieve";
+  /* События узнаются по началу фразы: «Мировое событие», «Весть», «Событие». */
+  else if(!o.cat&&/^(Мировое событие|Весть|Событие)(?=[\s:.,—]|$)/.test(text))cat="event";
   return {pri,cat};},
  _shape(text,m){
   try{
@@ -58606,11 +58614,11 @@ function bindSettings(){const $=id=>document.getElementById(id);
  {const b=$("setEngBuiltin");if(b)b.addEventListener("change",ev=>engSet(ev.target.checked?"gemini":"device"));}
  {const d=$("setEngDevice");if(d)d.addEventListener("change",ev=>engSet(ev.target.checked?"device":"gemini"));}
  /* «Выбор голоса» голоса Gemini: женский — записи Callirrhoe, мужской — записи Iapetus. */
- {const g=$("setGvVoice");if(g){g.value=settings.gvVoice==="f"||settings.gvVoice==="m"?settings.gvVoice:"z";
-  g.addEventListener("change",ev=>{settings.gvVoice=ev.target.value==="f"||ev.target.value==="m"?ev.target.value:"z";
+ {const g=$("setGvVoice");if(g){g.value=settings.gvVoice==="f"||settings.gvVoice==="z"?settings.gvVoice:"m";
+  g.addEventListener("change",ev=>{settings.gvVoice=ev.target.value==="f"||ev.target.value==="z"?ev.target.value:"m";
    saveSettings();
    safeFn(()=>{Speech.adapter=null;Speech._kind=null;Speech.gvLoad();});
-   narrate(settings.gvVoice==="z"?"Встроенный голос по разделам: настройки, меню и игра — каждый своим голосом.":settings.gvVoice==="f"?"Встроенный голос: женский.":"Встроенный голос: мужской.",{interrupt:true});});}}
+   narrate(settings.gvVoice==="z"?"Встроенный голос по разделам: настройки, меню и игра — каждый своим голосом.":settings.gvVoice==="f"?"Встроенный голос: женский. Достижения и события — мужским.":"Встроенный голос: мужской. Достижения и события — женским.",{interrupt:true});});}}
  {const e=$("setTtsEngine");if(e){
   /* В приложении голоса Gemini пока нет: пункт и строка о нём убираются. */
   if(!GVOICE_ON){const o=e.querySelector('option[value="gemini"]');if(o)o.remove();const h=$("gvHint");if(h)h.remove();
@@ -58634,9 +58642,28 @@ function bindSettings(){const $=id=>document.getElementById(id);
    const n=safeFn(()=>Speech.fillVoices(),0);
    narrate(`${settings.voiceLang==="ru"?"Только русские голоса":"Голоса всех языков"}: ${n}.`,{interrupt:true});});}}
  {const b=$("btnVoiceRefresh");if(b)b.addEventListener("click",()=>{
+  const сказать=()=>{const n=safeFn(()=>Speech.fillVoices(),0);
+   const v=Speech._nativeVoice||Speech.voice;
+   narrate(n?`Список перечитан. Голосов на ${isDesktopApp()?"компьютере":"устройстве"}: ${n}. Текущий — ${(v&&v.name)||"не выбран"}.`
+            :"Ни одного голоса не нашлось. Поставьте голос в настройках системы и нажмите ещё раз.",{interrupt:true});};
+  /* Приложение для Windows: мост голосов, который не поднялся, запускается
+     заново, а если и так не вышло — игра говорит почему. */
+  if(isDesktopApp()&&window.graniDesktop&&typeof window.graniDesktop.ttsRestart==="function"){
+   narrate("Перечитываю голоса Windows.",{interrupt:true});
+   Promise.resolve(window.graniDesktop.ttsRestart()).then(r=>{
+    if(r&&r.ready){setTimeout(сказать,400);return;}
+    сказать();
+    narrate(`Голоса Windows не подключились: ${(r&&r.diag)||"причина неизвестна"}. Пока говорят голоса, которые видит само окно игры.`,{interrupt:false});
+   }).catch(сказать);return;}
+  сказать();});}
+ /* Приложение для Windows: мост голосов поднялся после открытия игры (или
+    его перезапустили) — голоса Windows перечитываются на лету, и выбранный
+    прежде голос (RHVoice, Acapela, голос чтеца экрана) включается сам. */
+ window.addEventListener("grani-tts-ready",ev=>safeFn(()=>{
+  safeFn(()=>{if(Speech.adapter&&Speech.adapter.cancel)Speech.adapter.cancel();});Speech.adapter=null;Speech._kind=null;
   const n=safeFn(()=>Speech.fillVoices(),0);
-  narrate(n?`Список перечитан. Голосов на устройстве: ${n}. Текущий — ${(Speech.voice&&Speech.voice.name)||"не выбран"}.`
-           :"Ни одного голоса не нашлось. Поставьте голос в настройках системы и нажмите ещё раз.",{interrupt:true});});}
+  if(ev&&ev.detail&&ev.detail.late&&String(settings.voice||"").startsWith("native:")&&Speech._nativeVoice)
+   narrate(`Голоса Windows подключены: ${n}. Говорит ${Speech._nativeVoice.name}.`,{interrupt:false,cat:"ui"});}));
  {const p=$("setPitch");if(p){p.value=Math.round((+settings.pitch||1)*100);
   const п=()=>{const v=$("vPitch");if(v)v.textContent=(+settings.pitch||1).toFixed(1).replace(".",",");};п();
   p.addEventListener("input",ev=>{settings.pitch=Math.max(0.5,Math.min(2,ev.target.value/100));saveSettings();п();});
@@ -59543,7 +59570,7 @@ function desktopStrip(){
 function desktopVoiceLabels(){
  if(!isDesktopApp())return;
  const b=document.querySelector("#setEngDevice + span");
- if(b)b.innerHTML="<b>Голос компьютера</b><small>Любой голос, установленный в Windows: SAPI 5 от Microsoft и сторонних движков — RHVoice, Acapela, Vocalizer, eSpeak и других, в том числе 32-битные, — голоса Windows 10 и 11 из параметров речи и голоса Microsoft Speech Platform</small>";
+ if(b)b.innerHTML="<b>Голос компьютера</b><small>Любой голос, установленный в Windows: SAPI 5 от Microsoft и сторонних движков — RHVoice, Acapela, Vocalizer, eSpeak и других, в том числе 32-битные, — голоса Windows 10 и 11 из параметров речи и голоса Microsoft Speech Platform. Синтезаторы, поставленные дополнениями NVDA, — пункт «NVDA — голос чтеца экрана» (при запущенном NVDA). Голоса не появились — «Перечитать голоса компьютера»: игра запустит их заново и скажет причину</small>";
  const sel=document.getElementById("setVoice");if(sel){sel.setAttribute("aria-label","Выбор голоса компьютера");const l=sel.closest("label");if(l&&l.firstChild&&l.firstChild.nodeType===3)l.firstChild.textContent="Выбор голоса компьютера ";}
  const h=document.getElementById("voiceHint");if(h)h.textContent="Список — все голоса, установленные на этом компьютере; рядом с именем — чей это движок.";
  const bl=document.getElementById("btnVoiceList");if(bl)bl.textContent="Все голоса компьютера — списком";

@@ -48,6 +48,28 @@ jobs:
         working-directory: desktop
         run: npm install --no-audit --no-fund
 
+      # Мост голосов Windows — готовой библиотекой: у игрока ничего не собирается
+      # (прежде сборка на месте срывалась, и игра видела только голоса Microsoft).
+      - name: Готовый мост голосов Windows
+        working-directory: desktop
+        run: node sapi-build.js
+
+      # Голос чтеца экрана: синтезаторы, поставленные дополнениями NVDA, — не
+      # голоса Windows; игра говорит ими через NVDA (nvdaControllerClient, LGPL 2.1).
+      - name: Библиотека NVDA для голоса чтеца экрана
+        continue-on-error: true
+        shell: pwsh
+        run: |
+          $v = '2024.4.2'
+          $z = "$env:RUNNER_TEMP\nvcc.zip"; $d = "$env:RUNNER_TEMP\nvcc"
+          Invoke-WebRequest "https://download.nvaccess.org/releases/$v/nvda_${v}_controllerClient.zip" -OutFile $z
+          Expand-Archive $z -DestinationPath $d -Force
+          foreach ($a in 'x64','x86') {
+            $f = Get-ChildItem $d -Recurse -Filter 'nvdaControllerClient*.dll' | Where-Object { $_.FullName -match "[\\/]$a[\\/]" -or $_.Name -match ($(if ($a -eq 'x64') {'64'} else {'32'})) } | Select-Object -First 1
+            if ($f) { New-Item -ItemType Directory -Force "desktop\sr\$a" | Out-Null; Copy-Item $f.FullName "desktop\sr\$a\nvdaControllerClient.dll"; Write-Host "$a -> $($f.FullName)" }
+          }
+          Get-ChildItem -Recurse desktop\sr
+
       - name: Проверить голоса Windows, выбор синтезатора и клавиши
         continue-on-error: true
         working-directory: desktop
@@ -80,7 +102,7 @@ jobs:
             --executable-name=GraniMirov --app-version=8.0.0 --build-version=8.0.${GITHUB_RUN_NUMBER} \
             --win32metadata.ProductName="Грань Миров" --win32metadata.FileDescription="Грань Миров" \
             --win32metadata.CompanyName="Грань Миров" \
-            --extra-resource=../build/game --ignore='out' --ignore='icon\.ico' --ignore='(key|voice)check\.js' --ignore='sapi-test\.js' $ICONARG
+            --extra-resource=../build/game --ignore='out' --ignore='icon\.ico' --ignore='(key|voice)check\.js' --ignore='sapi-test\.js' --ignore='sapi-build\.js' $ICONARG
           D=out/GraniMirov-win32-x64
           # Языки интерфейса Chromium: оставить русский и английский.
           find "$D/locales" -name '*.pak' ! -name 'ru.pak' ! -name 'en-US.pak' -delete

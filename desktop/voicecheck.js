@@ -21,6 +21,7 @@ app.whenReady().then(() => setTimeout(async () => {
     const r=a.speak(${JSON.stringify(text)},{rate:1.5,volume:1,onend:()=>готово(true,""),onerror:()=>готово(false,"ошибка синтезатора")});
     if(r===false)готово(false,"не принял фразу");})`);
   const out = { мост: await js('!!(window.GraniTTS&&GraniTTS.speak)'), синтезаторы: {}, голоса: [] };
+  out.причина = await js('window.graniDesktop&&graniDesktop.ttsDiag?graniDesktop.ttsDiag():""');
   out.список = await js(`Speech.allVoices().map(v=>({ключ:Speech.voiceKey(v),имя:v.name,язык:v.lang,мост:!!v.native,движок:v.engine||""}))`);
   out.показано = await js(`(Speech.fillVoices(),[...document.querySelectorAll("#setVoice option")].map(o=>o.textContent))`);
   for (const e of ['gemini', 'device']) {
