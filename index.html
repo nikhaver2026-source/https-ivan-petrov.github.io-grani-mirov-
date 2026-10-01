@@ -4837,7 +4837,7 @@ function buildEncycCats(){
  const t=soundTotals();
  if(hint)hint.textContent=`Разделов: ${grid.children.length}. Всего звуков: ${t.всего}. Касание — игра назовёт раздел, двойное касание — откроет его, свайп двумя пальцами вниз — вернёт к списку разделов.`;
  const cr=document.getElementById("encycCredits");
- if(cr)cr.textContent=ENC_CREDITS;
+ if(cr)cr.textContent=soundCreditsText();
 }
 
 /* ── Второй уровень: звуки одного раздела ── */
@@ -8470,6 +8470,10 @@ const GUIDE=(()=>{const out=[];
  const перенум=t=>String(t).replace(/([Гг]лав(?:а|е|у|ы|ой|ам|ах))\s+(\d+)/g,(м,w,n)=>GUIDE_OLD[+n]!==undefined?`${w} ${GUIDE_OLD[+n]+1}`:м);
  out.forEach(g=>{g.body=g.body.map(перенум);g.secs.forEach(x=>{x.body=x.body.map(перенум);});});
  return out;})();
+/* Авторы и лицензии записей — в титрах «Энциклопедии звуков»: прежняя
+   глава руководства «Кто написал эти звуки» целиком там (руководство — для
+   игры, а условия лицензий требуют, чтобы имена были в самой игре). */
+function soundCreditsText(){return ENC_CREDITS+"\n"+((GUIDE_SRC_BY_NUM[33]||{}).body||[]).join("\n");}
 /* Есть ли в руководстве раздел с таким заголовком и не короче k абзацев. */
 function guideHas(re,k){return GUIDE_SECS.some(x=>(re.test(x.t)||re.test(x.old||""))&&x.body.length>=(k||1));}
 /* Раздел руководства по заголовку прежней главы: {title, body, i}. */
@@ -57127,7 +57131,7 @@ function worldSelfCheck(){
   /* (4.5) Руководство собрано из прежних глав: каждая стала разделом, номера
      идут подряд; речь в бою, голос заказчика и баллады на месте. */
   ok("v46",GUIDE.every((g,i)=>guideNum(i)===i+1)&&GUIDE_PARTS.length===7
-   &&!guideSec(/Версия 4\.6/)&&!guideSec(/Тридцать четыре двери/)&&(GUIDE_DESKTOP_SKIP.size>0||!!guideSec(/^Жесты$/))&&Object.keys(GUIDE_OLD).length===GUIDE_SRC.filter(g=>{const k=/Глава\s+(\d+)/.exec(g.title);const o=k?+k[1]:0;return !GUIDE_DESKTOP_SKIP.has(o)&&!GUIDE_HIDE.has(o)&&guideClean(g.body).length;}).length
+   &&!guideSec(/Версия 4\.6/)&&!guideSec(/Тридцать четыре двери/)&&guideHas(/Клавиши/,10)&&guideHas(/Своды: второй слой Грани/,5)&&(GUIDE_DESKTOP_SKIP.size>0||!!guideSec(/^Жесты$/))&&Object.keys(GUIDE_OLD).length===GUIDE_SRC.filter(g=>{const k=/Глава\s+(\d+)/.exec(g.title);const o=k?+k[1]:0;return !GUIDE_DESKTOP_SKIP.has(o)&&!GUIDE_HIDE.has(o)&&guideClean(g.body).length;}).length
    &&["bandit","giant","dragon","spirit","construct"].every(p=>(LIVE_LINES["foe_"+p+"_start"]||[]).length>=3)
    &&questVoicePool({type:"fetch",res:"руда"})==="quest_fetch_ruda"&&BALLADS.length===8&&Object.keys(CAR_VOICE).length===5,
    "руководство собрано подряд, враги говорят в бою, заказчик называет поручение, восемь баллад, у обозов свои голоса");

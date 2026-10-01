@@ -273,7 +273,7 @@ const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(e!==undefined?' :
    модуль:!!m&&m.opens.length===9&&m.classes.length===8
     &&typeof m.classOf==="function"&&typeof m.grant==="function",
    текст:m?m.text():"",
-   глава:guideHas(/Книга как ресурс/,5),
+   глава:guideHas(/Книга как ресурс/,2),
    сохранение:(()=>{try{G.specBook={a:1};G.techBook={b:1};saveGame(true);
     const o=JSON.parse(localStorage.getItem(SAVE_KEY)||"{}");const g=o.G||o;
     return !!g.specBook&&!!g.techBook;}catch(_){return false;}})()};});

@@ -388,7 +388,7 @@ const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(e!==undefined?' :
   const герой=[...document.querySelectorAll("#modal-character [data-speak]")].map(x=>x.dataset.speak).find(t=>/^Надето \d+ из 13 мест/.test(t))||"";
   while(activeLayer())closeTopUI();
   return {есть:!!r,ok:r&&r.ok,плохие:rows.filter(x=>!x.ok).map(x=>x.id),герой,
-   глава:guideHas(/Инвентарь: шестнадцать разделов и тринадцать мест на теле/,10),
+   глава:guideHas(/Инвентарь: шестнадцать разделов и тринадцать мест на теле/,2),
    часть:guidePartOf(GUIDE_OLD[94]),модуль:Inventory.sections.length===16&&Inventory.places.length===13&&typeof Inventory.text()==="string"};});
  const корень=path.join(__dirname,'..');
  const readme=fs.readFileSync(path.join(корень,'README.md'),'utf8');

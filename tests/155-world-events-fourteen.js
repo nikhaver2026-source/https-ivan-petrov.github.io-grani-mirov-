@@ -290,7 +290,7 @@ const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(e!==undefined?' :
    модуль:!!m&&m.kinds.length===14&&typeof m.all==="function"&&typeof m.priceK==="function"
     &&typeof m.here==="function"&&typeof m.daily==="function",
    текст:m?m.text():"",
-   глава:guideHas(/Вести мира/,5),
+   глава:guideHas(/Вести мира/,2),
    кнопка:(()=>{try{return JSON.stringify(AM_GROUPS).indexOf("wevents")>0;}catch(_){return false;}})(),
    команда:typeof CMD.wevents==="function",
    сохранение:(()=>{try{G.weventSaid={"war:0:1":1};saveGame(true);

@@ -209,7 +209,7 @@ const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(e!==undefined?' :
  check('самопроверка мира держит зелёную строку «gen»',
   !!свод.gen&&свод.gen.ok===true,свод.gen);
  check('вся остальная самопроверка мира тоже зелёная',свод.плохие.length===0,свод.плохие);
- check('в руководстве есть глава о восьми множителях',свод.глава&&свод.строк>=5,свод);
+ check('глава о множителях порождения в руководство не входит: оно — для игрока',!свод.глава,свод);
 
  const ROOT=path.resolve(__dirname,'..');
  const readme=fs.readFileSync(path.join(ROOT,'README.md'),'utf8');

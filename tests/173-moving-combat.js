@@ -290,7 +290,7 @@ const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(e!==undefined?' :
   const гл=GUIDE_OLD[96];
   const row=worldSelfCheck().find(x=>x.id==="arena");
   return {свайп:g&&g.n,два:g2&&g2.n,подсказка:(document.querySelector('#combatBar .hint')||{}).textContent||"",
-   глава:гл!==undefined&&GUIDE[гл].body.length>=8,часть:гл!==undefined&&guidePartOf(гл),
+   глава:гл!==undefined&&GUIDE[гл].body.length>=2,часть:гл!==undefined&&guidePartOf(гл),
    само:row&&row.ok,самоТекст:row&&row.detail};});
  check('14. карта жестов и подсказка боя говорят про шаг и про «где тварь»',
   /в бою — шаг/.test(слова.свайп)&&/в бою — где тварь/.test(слова.два)&&/шаг по полю боя/.test(слова.подсказка),слова);

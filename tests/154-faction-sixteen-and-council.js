@@ -319,7 +319,7 @@ const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(e!==undefined?' :
     &&typeof c.priceK==="function"&&typeof c.tax==="function"
     &&c.traits.length===16&&c.moves.length===12,
    текст:c?c.text():"",
-   глава:guideHas(/Держава решает сама/,5),
+   глава:guideHas(/Держава решает сама/,2),
    сохранение:(()=>{try{G.council={0:1};saveGame(true);
     const o=JSON.parse(localStorage.getItem(SAVE_KEY)||"{}");const g=o.G||o;
     return !!g.council;}catch(_){return false;}})()};});

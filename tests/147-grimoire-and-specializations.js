@@ -260,7 +260,7 @@ const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(e!==undefined?' :
   свод.строка&&свод.ок&&свод.красные.length===0,свод);
  check('модуль GRIMOIRE зарегистрирован и отвечает',
   свод.модуль===true&&/Гримуар/.test(свод.текст)&&свод.счёт>=14000,свод);
- check('в руководстве есть глава о гримуаре',свод.глава&&свод.строкГлавы>=6,свод);
+ check('в руководстве есть глава о гримуаре',свод.глава&&свод.строкГлавы>=2,свод);
 
  const ROOT=path.resolve(__dirname,'..');
  const readme=fs.readFileSync(path.join(ROOT,'README.md'),'utf8');

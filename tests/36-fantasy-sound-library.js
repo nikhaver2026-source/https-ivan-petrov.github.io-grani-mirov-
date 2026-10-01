@@ -128,13 +128,13 @@ const NEW_DIRS=["arte","deep","foe","cast","hero","wild","trade","score",
   openModal("modal-encyclopedia");buildEncycCats();
   const t=document.getElementById("encycCredits").textContent;
   while(activeLayer())closeTopUI();
-  const гл=GUIDE.map(g=>g.title+" "+g.body.join(" ")).join(" ");
+  const гл=soundCreditsText();
   return {энц:t,вРуководстве:гл};});
  check('энциклопедия называет Flare, 0 A.D. и лицензию CC BY-SA 3.0',
   /Flare/.test(кредиты.энц)&&/Clint Bellanger/.test(кредиты.энц)
   &&/0 A\.D\./.test(кредиты.энц)&&/Wildfire Games/.test(кредиты.энц)
   &&/CC BY-SA 3\.0|Attribution-ShareAlike/.test(кредиты.энц),кредиты.энц.slice(0,200));
- check('руководство называет авторов и лицензию новых записей',
+ check('титры энциклопедии звуков называют авторов и лицензию новых записей',
   /Clint Bellanger/.test(кредиты.вРуководстве)&&/Wildfire Games/.test(кредиты.вРуководстве)
   &&/CC BY-SA/.test(кредиты.вРуководстве),
   (кредиты.вРуководстве.match(/[^.]*Bellanger[^.]*\./)||["нет"])[0].slice(0,150));

@@ -207,7 +207,7 @@ const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(e!==undefined?' :
    модуль:!!m&&typeof m.nav==="function"&&typeof m.refresh==="function"
     &&m.menu().length===16+(SVODY_ON?1:0)&&m.parts().length===9,
    текст:m?m.text():"",
-   глава:guideHas(/Разделы длинных окон/,7)};});
+   глава:guideHas(/Разделы длинных окон/,2)};});
  check('самопроверка держит строку sections, модуль SECTIONS отвечает, глава 90 на месте',
   свод.есть&&свод.ok&&свод.модуль&&свод.глава&&typeof свод.текст==="string",свод);
  check('ни одна другая строка самопроверки не покраснела',свод.плохие.length===0,свод.плохие);

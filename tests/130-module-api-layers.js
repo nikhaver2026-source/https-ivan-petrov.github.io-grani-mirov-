@@ -176,7 +176,7 @@ const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(e!==undefined?' :
  check('самопроверка мира держит зелёную строку «api»',
   !!свод.api&&свод.api.ok===true,свод.api);
  check('вся остальная самопроверка мира тоже зелёная',свод.плохие.length===0,свод.плохие);
- check('в руководстве есть глава о тридцати четырёх дверях',свод.глава&&свод.строк>=5,свод);
+ check('глава об устройстве игры изнутри в руководство не входит: оно — для игрока',!свод.глава,свод);
 
  const ROOT=path.resolve(__dirname,'..');
  const readme=fs.readFileSync(path.join(ROOT,'README.md'),'utf8');

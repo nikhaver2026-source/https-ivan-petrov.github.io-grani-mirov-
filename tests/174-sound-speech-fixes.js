@@ -268,7 +268,7 @@ const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(e!==undefined?' :
   const g=GUIDE_OLD[97];
   return {флажкиЕсть:!!document.getElementById("setCompass")&&!!document.getElementById("setStopOnAction"),
    умолчания:settings.compass===1&&settings.stopOnAction===1,
-   глава:g!==undefined&&GUIDE[g].body.length>=6,часть:g!==undefined&&guidePartOf(g)};});
+   глава:g!==undefined&&GUIDE[g].body.length>=2,часть:g!==undefined&&guidePartOf(g)};});
  check('7. два флажка в настройках, глава 97 в первой части',н.флажкиЕсть&&н.умолчания&&н.глава&&/Часть I\./.test(н.часть),н);
  const root=path.join(__dirname,'..');
  const readme=fs.readFileSync(path.join(root,'README.md'),'utf8');

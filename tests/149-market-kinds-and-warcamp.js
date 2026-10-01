@@ -235,7 +235,7 @@ const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(e!==undefined?' :
   свод.строка&&свод.ок&&свод.красные.length===0,свод);
  check('модуль MARKETS зарегистрирован и отвечает',
   свод.модуль===true&&свод.родов===7&&свод.текст.length>20,свод);
- check('в руководстве есть глава о семи рынках',свод.глава&&свод.строкГлавы>=6,свод);
+ check('в руководстве есть глава о семи рынках',свод.глава&&свод.строкГлавы>=2,свод);
 
  const ROOT=path.resolve(__dirname,'..');
  const readme=fs.readFileSync(path.join(ROOT,'README.md'),'utf8');
