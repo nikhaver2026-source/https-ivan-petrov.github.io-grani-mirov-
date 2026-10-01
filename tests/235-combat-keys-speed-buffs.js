@@ -36,7 +36,7 @@ const {chromium}=require('playwright');
  await page.goto(process.argv[2]);await page.waitForTimeout(800);
  await page.evaluate(()=>{try{enterGame();}catch(_){}while(activeLayer())closeTopUI();window.maybeEvent=()=>{};
   window.__said=[];const o=Speech.say.bind(Speech);Speech.say=(t,x)=>{window.__said.push(String(t));return o(t,x);};
-  window.ЖМИ=(code,key)=>{const e=new KeyboardEvent("keydown",{code,key:key||code,bubbles:true,cancelable:true});document.dispatchEvent(e);
+  window.ЖМИ=(code,key,shift)=>{const e=new KeyboardEvent("keydown",{code,key:key||code,shiftKey:!!shift,bubbles:true,cancelable:true});document.dispatchEvent(e);
    document.dispatchEvent(new KeyboardEvent("keyup",{code,key:key||code,bubbles:true}));return e.defaultPrevented;};
   window.__бой=(m,где)=>{while(activeLayer())closeTopUI();if(G.inCombat)endCombat();G.inCombat=false;G.combat=null;
    G.hp=G.hpMax=900;lastMoveDir="N";G.place=null;G.ship=null;settings.combatPace="live";
@@ -71,22 +71,24 @@ const {chromium}=require('playwright');
   KeyWalk.last=0;ЖМИ("KeyD","d");r.вынутоD=ходы.slice();
   /* в бою, оружие вынуто, тварь далеко справа */
   const a=__бой({},[3,0]);G.weaponDrawn=true;махи.length=0;шаги.length=0;KeyWalk.last=0;window.__said.length=0;
-  const px=a.px;ЖМИ("ArrowRight");r.дальМах=махи.slice();r.дальШаг=шаги.length;r.позиция=a.px===px;r.сказано=window.__said.slice(-2);
+  const px=a.px;ЖМИ("ArrowRight","ArrowRight",true);r.дальМах=махи.slice();r.дальШаг=шаги.length;r.позиция=a.px===px;r.сказано=window.__said.slice(-2);
   a.stepAt=0;KeyWalk.last=0;ЖМИ("KeyD","d");r.боемD=шаги.slice();r.сдвинулся=a.px===px+1;
   /* вплотную — стрелка бьёт */
-  a.fx=a.px+1;a.fy=a.py;a.swingAt=0;const hp=G.combat.hp;махи.length=0;ЖМИ("ArrowRight");
+  a.fx=a.px+1;a.fy=a.py;a.swingAt=0;const hp=G.combat.hp;махи.length=0;ЖМИ("ArrowRight","ArrowRight",true);
   r.вплотМах=махи.slice();
   /* убрали оружие — стрелка в бою шаг */
-  G.weaponDrawn=false;шаги.length=0;a.stepAt=0;KeyWalk.last=0;a.fx=a.px+3;ЖМИ("ArrowLeft");r.убраноБой=шаги.slice();
+  G.weaponDrawn=false;шаги.length=0;a.stepAt=0;KeyWalk.last=0;a.fx=a.px+3;ЖМИ("KeyA","a");r.убраноБой=шаги.slice();
+  /* (8.0) в бою стрелки — быстрые слоты, а не шаг и не удар */
+  const qn=[];const nav0=window.qsKeyNav;window.qsKeyNav=d=>{qn.push(d);return true;};шаги.length=0;махи.length=0;G.weaponDrawn=true;ЖМИ("ArrowLeft");ЖМИ("ArrowDown");window.qsKeyNav=nav0;r.слотыСтрелками=qn.join();r.слотыБезШага=шаги.length+махи.length;
   window.weaponSwing=sw0;Arena.step=st0;window.move=mv0;
   /* переназначение удара не отнимает стрелку у ходьбы */
   keyReset();keyBind("swingE","KeyL");r.шагСтрелкой=keyCombosOf("stepE").includes("ArrowRight");r.ударL=keyCombosOf("swingE").join();
   keyReset();keyBind("swingN","ArrowUp");r.шагВверх=keyCombosOf("stepN").includes("ArrowUp");keyReset();
   r.вСписке=KB_ACTIONS.filter(x=>x.ctx==="weapon").map(x=>x.id+":"+keyCombosOf(x.id).join());
   __чисто();return r;});
- check('2. оружие вынуто: стрелки — удар (не достаёт — взмах в воздух, не шаг), W, A, S, D — шаг; убрано — стрелки шагают; переназначение удара не отнимает стрелку у ходьбы',
+ check('2. оружие вынуто: вне боя стрелки — удар, в бою Shift со стрелкой — удар, а стрелки — быстрые слоты (не шаг), W, A, S, D — шаг; убрано — стрелки шагают; переназначение удара не отнимает стрелку у ходьбы',
   клавиши.убраноСтрелка.join()==="N"&&клавиши.убраноМах===0&&клавиши.вынутоСтрелка.join()==="E:key"&&клавиши.вынутоХод===0&&клавиши.вынутоD.join()==="E"
-  &&клавиши.дальМах.join()==="E:key"&&клавиши.дальШаг===0&&клавиши.позиция&&/не достаёт/.test(клавиши.сказано.join(" "))
+  &&клавиши.дальМах.join()==="E:key"&&клавиши.дальШаг===0&&клавиши.позиция&&клавиши.слотыСтрелками==="prev,down"&&клавиши.слотыБезШага===0
   &&клавиши.боемD.join()==="E"&&клавиши.сдвинулся&&клавиши.вплотМах.join()==="E:key"&&клавиши.убраноБой.join()==="W"
   &&клавиши.шагСтрелкой&&клавиши.ударL==="KeyL"&&клавиши.шагВверх&&клавиши.вСписке.length===4,клавиши);
 

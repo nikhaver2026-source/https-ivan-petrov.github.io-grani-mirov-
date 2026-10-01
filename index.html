@@ -238,6 +238,7 @@ h3{color:var(--acc2);margin:14px 0 6px;font-size:1.05rem;}
  <label class="opt"><input type="checkbox" id="setSayAchieve" checked><span><b>Озвучивать достижения при краткой и минимальной подробности</b><small>Новая ступень мастерства и ученичества, уровень, звание, выученное умение, стадия Грани — целиком, даже когда подробность речи краткая или минимальная. Снимите галочку — и при краткой и минимальной подробности о них скажут только звук и журнал</small></span></label>
  <label class="opt"><input type="checkbox" id="setSaySpatial" checked><span><b>Озвучивать пространственные события</b><small>Только если «звук вместо описаний» выключен</small></span></label>
  <label class="opt"><input type="checkbox" id="setCompass" checked><span><b>Стороны света</b><small>Север, юг, запад, восток. Снимите галочку — и игра будет называть стороны так же, как свайпы: впереди — свайп вверх, справа — вправо, позади — вниз, слева — влево. «Шкаф справа, сундук впереди»</small></span></label>
+ <label class="opt"><input type="checkbox" id="setCbSpeech"><span><b>Озвучка во время боя</b><small>По умолчанию снято: в бою игра молчит — слышно тварь, её шаги, замах, чары и то, что она говорит. Здоровье — два пальца вправо (на компьютере — H)</small></span></label>
  <label class="opt"><input type="checkbox" id="setCbSide"><span><b>В бою называть сторону твари</b><small>«Замах справа», «вплотную, впереди». По умолчанию снято: сторону твари слышно — её шаги, замах, чары и голос звучат с её стороны</small></span></label>
  <label class="opt"><input type="checkbox" id="setSayDir" checked><span><b>Называть сторону света при шаге</b><small>«Север», «Юг» — при каждой смене направления, в том числе с крыла. Выключите, если стороны забивают собой место: куда вы идёте, всегда скажет осмотр — два пальца влево, он начинается со слов «лицом на север»</small></span></label>
  <label class="opt"><input type="checkbox" id="setStairCount" checked><span><b>Считать ступени на лестнице</b><small>«Ступень 3 из 16» на каждом шаге марша. Выключите — и на лестнице будут слышны только шаги по камню и площадки; сколько всего ступеней, игра скажет в начале марша.</small></span></label>
@@ -273,6 +274,7 @@ h3{color:var(--acc2);margin:14px 0 6px;font-size:1.05rem;}
  <div class="row"><button type="button" data-cmd="gestcombatreset">Вернуть жесты боя к умолчанию</button></div>
  <h3 class="sec-head" tabindex="0" data-cmd="secjump" data-sec-title="Клавиатура">Клавиатура</h3>
  <p class="hint">Для игры на компьютере без мыши. Стрелки или WASD — шаг, Shift со стрелкой — бег, E или Enter — действие с объектом, I или Alt+E — инвентарь, Tab — карта (по ней — стрелками), M или Esc — меню. В окнах: стрелки — пункты, Enter или пробел — выбрать, Esc или Backspace — назад, Page Up и Page Down — разделы. Ctrl — замолчать, Shift+F1 — все клавиши. Клавиши определяются по месту, поэтому русская раскладка работает так же, как английская. Enter на действии — назначить ему другую клавишу или сочетание.</p>
+ <label class="opt">Быстрый слот в бою применяет <select id="setQsCtrl" aria-label="Какой Ctrl в бою применяет быстрый слот"><option value="ControlRight">правый Ctrl</option><option value="ControlLeft">левый Ctrl</option><option value="any">любой Ctrl</option></select></label>
  <div class="row" id="keyRow"></div>
  <div class="row"><button type="button" data-cmd="keyhelp">Прочитать все клавиши</button><button type="button" data-cmd="keyreset">Вернуть клавиши к умолчанию</button></div>
  <h3 class="sec-head" tabindex="0" data-cmd="secjump" data-sec-title="Точность жестов">Точность жестов</h3>
@@ -1353,6 +1355,9 @@ const settings=Object.assign({speech:1,effects:1,music:1,subtitles:1,explore:1,h
  /* В бою голос называет сторону твари, если 1; по умолчанию молчит о ней:
     сторону слышно по звуку — шагам, замаху и голосу твари. */
  cbSide:0,
+ /* Озвучка во время боя: по умолчанию бой тихий — слышно тварь (8.0). */
+ cbSpeech:0,
+ qsCtrl:"ControlRight",
  gestSens:"norm",   /* чуткость: множитель к расстояниям и скоростям */
  tapWindow:800,     /* окно двойного касания, мс — ритм руки, а не размах */
  tapTick:1          /* щелчок при первом касании: подтверждение взвода */
@@ -1512,6 +1517,9 @@ const NEWS=[
 /* 8.0: выпуск о Сводах — во всех сборках (без Сводов, с ?svody=0, его нет). */
 if(SVODY_ON)NEWS.push({v:39,н:"Своды 8.0: боги и края, нежить и рой, рассудок, выбор на краю, нити Отлетевших",
   т:"Версия 8.0. Для Android, Windows и браузера. Над миром встали Своды — второй слой Грани. Небо держат двадцать семь богов восьми родов — Первородные, Отражённые, Взошедшие, Пришлые со Звёзд, Павшие, Звериные Прародители, Кованые и Вплетённые, — и с ними двенадцать прежних Хранителей Грани. Отношения богов живут сами: раз в сутки они мирятся, ссорятся, заключают союзы и объявляют войны. Встаньте на сторону в небесной войне или присягните богу — при милости десять и выше он даёт свой дар. Под Сводами — восемнадцать краёв со своими народами, богами и упадком; пять океанов, шестнадцать морей, пять новых родов моря, реки, озёра, архипелаги и новые острова. Сорок пород тварей Сводов, среди них нежить, которая встаёт ещё раз, иссушает, крадёт слепки и проклинает, и хитиновый рой, что жалит злее с каждым укусом; пять морских тварей. Четырнадцать ловушек, десять подземелий — склеп перерождённых, улей чужого неба, руины Отлетевших, затопленный замок латников и другие, — одиннадцать трав и девять зелий у общего чана. Новое в 8.0 — пределы перерождений. Падение в Сводах отнимает рассудок, а у места гибели встаёт ваш посмертный двойник с отнятыми сущностями: одолейте его — и заберёте их. На край в упадке идёт нашествие Поглотителей слепков: пять их голов за три дня — и оплот выстоял. На краю дорога ставит выбор: два пути и отказ, который уводит в Сумеречный предел; от выборов растёт или тает человечность. В нервы можно вплести нити Отлетевших — ценой рассудка. Шесть клинков и посохов Сводов, восемнадцать реликвий, двенадцать заклинаний-легенд, двадцать один человек краёв с поручениями. И прежние системы Сводов: перековка тела сущностями, тень-попутчица, путь одиночки, слава у народов, летопись и песни. Всё — в разделе «Своды» меню действий. Сорок девять новых записей без потерь, 48 кГц. Бой на слух: сторону твари голос по умолчанию не называет — её слышно по шагам, замаху и чарам, а флажок «В бою называть сторону твари» в настройках возвращает слово. Попадание чарами (Искра и другие) слышно. Шаг в бою — обычный шаг. На компьютере, пока оружие вынуто, стрелки бьют в свою сторону, а ходят W, A, S, D. Ловкость и прибавка к скорости торопят шаг, бег и замах и прячут от встреч; маскировка уводит от встреч на дороге; усиления и цены договоров, которые прежде ничего не делали, работают, а сопротивления огню, стуже, тьме, свету и яду гасят удар своей твари."});
+/* 8.0: слоты быстрого доступа, тихий бой и зелья у торговцев. */
+NEWS.push({v:40,н:"слоты быстрого доступа, тихий бой и зелья у каждого торговца",
+  т:"Слоты быстрого доступа: двенадцать слотов для зелий, свитков, жезлов и любых вещей с действием. В бою с вынутым оружием — свайпы двумя, тремя и четырьмя пальцами влево, вверх, вправо и вниз; с открытой панелью магии — восемь слотов на касаниях двумя, тремя и четырьмя пальцами. Вещь ставится в слот из инвентаря: «В слот быстрого доступа»; купленное зелье встаёт в слот само. Одно касание двумя пальцами в бою с оружием — здоровье. Бой тихий: слышно тварь и то, что она говорит. Зелье здоровья в подземной лавке — одним пунктом; у каждого торговца теперь есть зелье маны и противоядие, у травника — все тринадцать зелий, у обоза — зелья в дорогу. Выпить зелье вне боя — одним пальцем вниз, затем вверх, на компьютере — Q."});
 const NEWS_V=NEWS[NEWS.length-1].v;
 /* Одна фраза: главное из последнего выпуска и сколько ещё новостей ждёт в меню. */
 function newsBrief(было){
@@ -2299,7 +2307,7 @@ const Speech={voice:null,keepAlive:null,
  request(text,o={}){return this.say(text,Object.assign({pri:1,user:true,interrupt:true},o));},
  /* Пространственное событие: по умолчанию его передаёт звук, а не слово. */
  spatial(text,o={}){if(settings.soundFirst!==0||settings.saySpatial===0)return null;return this.say(text,Object.assign({pri:3,cat:"spatial",ttl:1500},o));},
- enqueue(text,{interrupt=true,onDone=null,pri=null,cat=null,key=null,ttl=null,user=false,persistent=false,ждать=0,nav=false}={}){
+ enqueue(text,{interrupt=true,onDone=null,pri=null,cat=null,key=null,ttl=null,user=false,persistent=false,ждать=0,nav=false,речь=false}={}){
   text=String(text==null?"":text).replace(/\s+/g," ").trim();
   const done=cb=>{if(cb)setTimeout(()=>{try{cb();}catch(e){}},10);};
   if(!text){done(onDone);return null;}
@@ -2308,6 +2316,12 @@ const Speech={voice:null,keepAlive:null,
    interrupt:interrupt!==false,createdAt:Date.now(),ttl:ttl!=null?Number(ttl):(this.TTL[cls.pri]||0),onDone,state:"QUEUED",parts:null};
   this._live(m);
   const drop=()=>{m.state="DROPPED";this.stats.dropped++;done(onDone);return m;};
+  /* ── ТИХИЙ БОЙ (8.0, просьба игрока) ──
+     Пока идёт бой, игра молчит: тварь узнают по звуку — шагам, замаху, чарам
+     — и слышат, что она говорит (её слова — речь=true — звучат). Звучит то,
+     о чём игрок спросил сам (здоровье — два пальца вправо), и смертельная
+     опасность. Вернуть слова в бою — флажок «Озвучка во время боя». */
+  if(!user&&!речь&&cls.pri>0&&settings.cbSpeech!==1&&safeFn(()=>G.inCombat&&!!G.combat,false))return drop();
   if(!user&&m.cat==="achieve"){
    /* ── ДОСТИЖЕНИЯ ──
       Ступень мастерства, уровень, звание при краткой и минимальной
@@ -5201,6 +5215,21 @@ function visibleInteractive(layer){try{return [...(layer||document).querySelecto
 /* Ползунок и список: у них нет «нажатия», поэтому двойное касание меняет
    значение на один шаг и называет новое. Дойдя до конца, значение
    возвращается к началу — так до любого можно добраться, не видя экрана. */
+/* (8.0) Ползунок на шаг вверх или вниз — без перескока через край. На
+   телефоне это свайп одним пальцем вверх или вниз, на компьютере — стрелки
+   вправо и влево. Громкость и скорость меняются сразу: игрок слышит, как это
+   звучит, а сохраняет потом. */
+function rangeNudge(el,знак){
+ try{
+  if(!el||el.tagName!=="INPUT"||el.type!=="range")return false;
+  const min=+el.min||0,max=el.max===""?100:+el.max,свой=+el.step||1;
+  const шаг=el.dataset.tapStep?+el.dataset.tapStep:(max-min>=50?Math.max(свой,5):свой);
+  let v=+el.value+(знак>0?шаг:-шаг);
+  const край=v>max+1e-9||v<min-1e-9;
+  v=Math.max(min,Math.min(max,v));v=+v.toFixed(((String(шаг).split(".")[1])||"").length);
+  el.value=v;el.dispatchEvent(new Event("input",{bubbles:true}));el.dispatchEvent(new Event("change",{bubbles:true}));
+  safeFn(()=>{const st=controlState(el);if(st)narrate(st+(край?(знак>0?". Это предел.":". Это начало шкалы."):""),{interrupt:true});});
+  return true;}catch(_){return false;}}
 function stepControl(el){
  try{
   if(el.tagName==="INPUT"&&el.type==="range"){
@@ -5446,6 +5475,10 @@ const GEST_ACTIONS=[
  {id:"rumours",n:"вести о вас",             о:"что о вас говорят здесь",           делать:()=>{CMD.rumours();return true;}},
  {id:"politics",n:"политика",               о:"войны, договоры, рынок",            делать:()=>{CMD.politics();return true;}},
  {id:"best",   n:"бестиарий",               о:"кого вы встречали",                 делать:()=>{CMD.best();return true;}},
+ /* (8.0) Выпить зелье — и вне боя: зелье первого слота быстрого доступа,
+    иначе любое зелье здоровья. По умолчанию — на самой редкой фигуре:
+    одним пальцем вниз, затем вверх. */
+ {id:"potion", n:"выпить зелье",            о:"зелье первого слота быстрого доступа, иначе зелье здоровья", делать:()=>!!safeFn(()=>potionQuick(),false)},
  /* Три действия о разделах открытого окна. Они не заняты по умолчанию: игрок
     вешает их сам на ту фигуру, которая ему удобна. В меню действий, настройках
     и руководстве один перескок заменяет десяток свайпов. */
@@ -5457,7 +5490,11 @@ const GEST_ACTION_BY_ID=Object.fromEntries(GEST_ACTIONS.map(a=>[a.id,a]));
 const GEST_DEFAULTS={
  "2tap":"gather","2swipeS":"close","2swipeN":"near","2swipeW":"look","2swipeE":"journal",
  "3tap2":"weapon","3swipeN":"actions","3swipeS":"inv","3swipeW":"map","3swipeE":"where",
- "4tap2":"magic","4swipeS":"repeat","4swipeN":"beaconoff","4swipeW":"state","4swipeE":"flush"};
+ "4tap2":"magic","4swipeS":"repeat","4swipeN":"beaconoff","4swipeW":"state","4swipeE":"flush",
+ "cornerSN":"potion"};
+/* Умолчания, у которых нет прежнего пути в обработчике касаний: их выполняет
+   сам слой привязок. */
+const GEST_OWN_DEFAULT=new Set(["cornerSN"]);
 function gestBinds(){
  if(!G.gestBind||typeof G.gestBind!=="object"||Array.isArray(G.gestBind))G.gestBind={};
  return G.gestBind;}
@@ -5503,7 +5540,7 @@ function gestRun(пальцы,род,dir){
   const id=род==="corner"?`corner${dir}`:(род==="swipe"?`${пальцы}swipe${dir}`:`${пальцы}${род}`);
   const s=GEST_SHAPE_BY_ID[id];
   if(!s)return false;
-  if(gestIsDefault(id))return false;      /* умолчание — прежним путём */
+  if(gestIsDefault(id)&&!GEST_OWN_DEFAULT.has(id))return false;      /* умолчание — прежним путём */
   const a=GEST_ACTION_BY_ID[gestActionId(id)];
   if(!a||a.id==="none"){
    /* Назначенное «нет команды» — это тоже выбор игрока: молчим, но коротким
@@ -5548,42 +5585,261 @@ const GestBind=Modules.register("GESTUREBIND",{
    ════════════════════════════════════════════════════════════════════════ */
 const GEST_COMBAT_ACTIONS=[
  {id:"none",  n:"как вне боя",            о:"фигура делает то же, что и вне боя", делать:()=>false},
- {id:"potion",n:"выпить зелье",           о:"зелье здоровья из сумки, а нет его — отвар на воде", делать:()=>{fight("potion");return true;}},
+ {id:"potion",n:"выпить зелье",           о:"зелье первого слота, иначе зелье здоровья из сумки, а нет его — отвар на воде", делать:()=>potionQuick()},
  {id:"attack",n:"ударить оружием",        о:"удар по твари вынутым клинком",      делать:()=>{fight("atk");return true;}},
  {id:"cast",  n:"ударить чарами",         о:"удар магией, достаёт и до крылатой твари", делать:()=>{fight("magic");return true;}},
  {id:"flee",  n:"бежать из боя",          о:"попытка вырваться",                  делать:()=>{fight("flee");return true;}},
  {id:"weapon",n:"вынуть или убрать оружие",о:"перекинуть руку на клинок",         делать:()=>{handleThreeFingerTap(true);return true;}},
  {id:"foe",   n:"где тварь и сколько у неё сил",о:"сторона, расстояние и здоровье противника", делать:()=>{const cb=G.combat;if(!cb)return false;
-   narrate(`${cb.m.n}: ${safeFn(()=>Arena.where(),"рядом")}, здоровье ${Math.max(0,cb.hp)} из ${cb.m.hp}.`,{interrupt:true,cat:"combat"});return true;}},
- {id:"self",  n:"моё здоровье и мана",    о:"сколько сил осталось у героя",       делать:()=>{narrate(`Здоровье ${G.hp} из ${G.hpMax}, мана ${G.mana} из ${G.manaMax}.`,{interrupt:true,cat:"combat"});return true;}}];
+   narrate(`${cb.m.n}: ${safeFn(()=>Arena.where(),"рядом")}, здоровье ${Math.max(0,cb.hp)} из ${cb.m.hp}.`,{interrupt:true,cat:"combat",user:true});return true;}},
+ {id:"self",  n:"моё здоровье и мана",    о:"сколько сил осталось у героя",       делать:()=>{narrate(`Здоровье ${G.hp} из ${G.hpMax}, мана ${G.mana} из ${G.manaMax}.`,{interrupt:true,cat:"combat",user:true});return true;}}];
+/* ── СЛОТЫ БЫСТРОГО ДОСТУПА (8.0, просьба игрока) ──
+   Двенадцать слотов; в них ставится всё, чем пользуются за удар сердца:
+   зелья, свитки, жезлы, еда, вещи с действием. Из инвентаря — пункт «В слот
+   быстрого доступа». В первом слоте по умолчанию — зелье здоровья; купленное
+   или сваренное зелье само встаёт в свободный слот, если его там ещё нет.
+   В бою с вынутым оружием — свайпы: два пальца влево, вверх, вправо, вниз —
+   слоты с первого по четвёртый; три пальца так же — с пятого по восьмой;
+   четыре пальца — с девятого по двенадцатый. Одно касание двумя пальцами —
+   только здоровье.
+   В бою с открытой панелью магии свайпы творят чары, а слоты — на касаниях,
+   их восемь: двойное и тройное касание двумя пальцами — первый и второй;
+   одно, двойное и тройное тремя — с третьего по пятый; одно, двойное и
+   тройное четырьмя — с шестого по восьмой. Вне этих двух случаев те же
+   фигуры делают своё обычное дело. */
+const QS_N=12;
+const CB_SLOT_SHAPES=["2swipeW","2swipeN","2swipeE","2swipeS","3swipeW","3swipeN","3swipeE","3swipeS","4swipeW","4swipeN","4swipeE","4swipeS"];
+const QS_MAGIC_SHAPES=["2tap2","2tap3","3tap","3tap2","3tap3","4tap","4tap2","4tap3"];
+function cbSlots(){
+ if(!Array.isArray(G.cbSlots)||G.cbSlots.length!==QS_N){const s=Array.isArray(G.cbSlots)?G.cbSlots.slice(0,QS_N):[];while(s.length<QS_N)s.push(null);
+  if(!G.cbSlotsInit){s[0]=s[0]||{kind:"item",name:"Зелье здоровья"};G.cbSlotsInit=1;}G.cbSlots=s;}
+ return G.cbSlots;}
+function cbSlotName(x){if(!x)return "";if(x.kind==="potion"){const pt=POTION_BY_ID[x.id];return pt?"зелье "+pt.n:"зелье";}return String(x.name||"");}
+function cbSlotShape(i){return safeFn(()=>gestShapeWord(GEST_SHAPE_BY_ID[CB_SLOT_SHAPES[i]]),"");}
+function cbSlotShapeMagic(i){const id=QS_MAGIC_SHAPES[i];return id?safeFn(()=>gestShapeWord(GEST_SHAPE_BY_ID[id]),""):"";}
+/* Строка котомки, которой отвечает запись слота. */
+function cbSlotRow(x){
+ if(!x)return null;
+ return safeFn(()=>invAll().find(r=>x.kind==="potion"?(r.kind==="potion"&&r.it&&r.it.id===x.id)
+  :x.kind==="charged"?(r.kind==="charged"&&r.name===x.name)
+  :(r.kind!=="potion"&&r.kind!=="charged"&&r.kind!=="equip"&&r.kind!=="gear"&&r.name===x.name)),null)||null;}
+/* Сколько таких вещей при себе. */
+function cbSlotCount(x){
+ if(!x)return 0;
+ if(x.kind==="potion")return safeFn(()=>potionsOf().filter(r=>r&&r.id===x.id).length,0);
+ if(x.kind==="charged")return safeFn(()=>invAll().filter(r=>r.kind==="charged"&&r.name===x.name).length,0);
+ return (safeFn(()=>Number(G.inv&&G.inv[x.name])||0,0))+(Array.isArray(G.items)?G.items.filter(n=>(typeof n==="string"?n:n&&n.name)===x.name).length:0);}
+function cbSlotUse(i){
+ const x=cbSlots()[i];
+ if(!x){safeFn(()=>UI.nat("ui_arm",0.4));narrate(`Слот ${i+1} пуст. Вещь ставится в слот из инвентаря: «В слот быстрого доступа».`,{interrupt:true,user:true});return true;}
+ if(!cbSlotCount(x)){safeFn(()=>Bank.play("hero_nomana",{gain:0.5,maxSec:2}));narrate(`Слот ${i+1}: ${cbSlotName(x)} — нет при себе.`,{interrupt:true,user:true});return true;}
+ return cbDrink(x);}
+/* Чем пользоваться вещью из слота: первое выполнимое из этих действий котомки. */
+const QS_USE=["drink","chargeuse","read","eat","use","activate","wearmask","ability","drinkitem"];
+function qsUseAction(row,ctx){
+ for(const id of QS_USE){const a=ITEM_ACTIONS.find(x=>x.id===id);if(!a||!a.cats.includes(row.cat))continue;
+  if(a.kinds?!a.kinds.includes(row.kind):(row.kind==="charged"))continue;
+  if(safeFn(()=>a.можно(row,ctx),false)===true)return a;}
+ return null;}
+/* Воспользоваться вещью из слота — в бою и вне боя одинаково. Зелье здоровья в
+   бою — ход боя (fight), вне боя — просто выпивается. */
+function cbDrink(x){
+ const бой=!!(G.inCombat&&G.combat);
+ if(x.kind==="potion"){const k=safeFn(()=>potionsOf().findIndex(r=>r&&r.id===x.id),-1);if(k>=0)safeFn(()=>drinkPotion(k,true));if(бой)safeFn(()=>updateCombat());return true;}
+ if(x.name==="Зелье здоровья"){if(бой){fight("potion");return true;}return drinkHealthItem();}
+ const row=cbSlotRow(x);
+ if(!row){narrate(`${cbSlotName(x)} — нет при себе.`,{interrupt:true,user:true});return true;}
+ const ctx=safeFn(()=>invContext(),{станки:new Set(),бой});
+ const a=qsUseAction(row,ctx);
+ if(!a){narrate(`${cbSlotName(x)}: сейчас этим не воспользоваться.`,{interrupt:true,user:true});return true;}
+ const done=t=>{if(t){if(бой)cbLog(t);narrate(t,{interrupt:true,user:true});}safeFn(()=>{if(бой)updateCombat();refresh();saveGame(true);});return true;};
+ safeFn(()=>a.делать(row,ctx,done));
+ safeFn(()=>{if(бой)updateCombat();refresh();});
+ return true;}
+/* ── ЗЕЛЬЕ ОДНИМ ДВИЖЕНИЕМ ──
+   Q на компьютере, «одним пальцем вниз, затем вверх» на телефоне (и два
+   пальца влево в бою с убранным оружием) — одно действие: пьётся зелье
+   первого слота (по умолчанию — зелье здоровья); его нет при себе — любое
+   зелье здоровья, купленное или сваренное; нет и его — первое, что есть в
+   слотах. */
+function healthItemWhere(){
+ if(safeFn(()=>invHas("Зелье здоровья",1),false))return "inv";
+ if(Array.isArray(G.items)&&G.items.indexOf("Зелье здоровья")>=0)return "item";
+ return "";}
+function drinkHealthItem(){
+ const где=healthItemWhere();
+ if(!где){narrate("Зелья здоровья при себе нет.",{interrupt:true,user:true});return false;}
+ if(где==="inv")invTake("Зелье здоровья",1);else G.items.splice(G.items.indexOf("Зелье здоровья"),1);
+ const h=Math.min(G.hpMax,G.hp+15)-G.hp;G.hp+=h;
+ safeFn(()=>{UI.drink();Bank.play("potion_quick",{gain:0.85,maxSec:3});});
+ const ещё=cbSlotCount({kind:"item",name:"Зелье здоровья"});
+ narrate(`Выпито зелье здоровья: +${h}. Здоровье ${G.hp} из ${G.hpMax}. ${ещё?`Осталось ${ещё}.`:"Это было последнее."}`,{interrupt:true,user:true});
+ safeFn(()=>{refresh();saveGame(true);});
+ return true;}
+function isPotionSlot(x){return !!x&&(x.kind==="potion"||safeFn(()=>POTION_NAME_RE.test(x.name),false));}
+function potionQuick(){
+ try{
+  const s=cbSlots();
+  if(isPotionSlot(s[0])&&cbSlotCount(s[0]))return cbDrink(s[0]);
+  if(healthItemWhere())return cbDrink({kind:"item",name:"Зелье здоровья"});
+  if(safeFn(()=>potionsOf().some(r=>r&&r.id==="heal"),false))return cbDrink({kind:"potion",id:"heal"});
+  const k=s.findIndex(x=>isPotionSlot(x)&&cbSlotCount(x));
+  if(k>=0)return cbDrink(s[k]);
+  if(G.inCombat&&G.combat){fight("potion");return true;}
+  const иные=potionsOf().length;
+  safeFn(()=>Bank.play("hero_nomana",{gain:0.5,maxSec:2}));
+  narrate(иные?`Зелья здоровья при себе нет. Других зелий: ${иные} — они в разделе «Зелья» инвентаря; любое ставится в слот быстрого доступа.`:"Зелий при себе нет. Зелья продают торговцы, травники и обозы.",{interrupt:true,user:true});
+  return true;
+ }catch(_){return false;}}
+/* ── БЫСТРЫЕ СЛОТЫ С КЛАВИАТУРЫ (8.0, приложение для Windows) ──
+   Только в бою и только когда сверху нет окна. Три раздела: зелья, свитки и
+   прочее — всё, чем пользуются одним движением (жезлы и талисманы с
+   зарядами, еда, факел, вещи Пути и дары богов). Стрелки вверх и вниз —
+   раздел, вправо и влево — слот в разделе; правый Ctrl (в настройках можно
+   выбрать левый или любой) применяет слот, на котором стоите. В разделе
+   сперва то, что игрок сам поставил в слоты быстрого доступа, затем всё
+   остальное этого рода, что есть при себе. Удар в сторону в бою — Shift со
+   стрелкой, удар по твари — пробел. */
+const QSK_CATS=[{id:"potion",n:"Зелья"},{id:"scroll",n:"Свитки"},{id:"other",n:"Прочее"}];
+const QSK={cat:0,i:0};
+function qsEntryOfRow(row){
+ if(!row)return null;
+ if(row.kind==="potion")return row.it&&row.it.id?{kind:"potion",id:row.it.id}:null;
+ if(row.kind==="charged")return {kind:"charged",name:String(row.name)};
+ return {kind:"item",name:String(row.name)};}
+function qsCatOfRow(row){
+ if(!row)return "other";
+ if(row.kind==="potion"||row.cat==="potion")return "potion";
+ if(row.cat==="scroll")return "scroll";
+ return "other";}
+function qsCatOf(x){
+ if(!x)return "other";
+ if(isPotionSlot(x))return "potion";
+ return qsCatOfRow(cbSlotRow(x));}
+function qsSame(a,b){return !!a&&!!b&&a.kind===b.kind&&(a.kind==="potion"?a.id===b.id:a.name===b.name);}
+function qsKList(cat){
+ const out=[];
+ cbSlots().forEach(x=>{if(x&&qsCatOf(x)===cat&&!out.some(y=>qsSame(x,y)))out.push(x);});
+ safeFn(()=>{const ctx=Object.assign({},invContext(),{бой:false});
+  invAll().forEach(r=>{if(qsCatOfRow(r)!==cat)return;if(!["potion","item","res","rare","plant","fish","charged"].includes(r.kind))return;
+   if(r.kind!=="potion"&&r.kind!=="charged"&&!["potion","scroll","magic","food","tool","other","acc","treasure"].includes(r.cat))return;
+   if(!qsUseAction(r,ctx))return;
+   const x=qsEntryOfRow(r);if(x&&!out.some(y=>qsSame(x,y)))out.push(x);});});
+ return out;}
+function qsKName(x){
+ const n=cbSlotCount(x);const i=cbSlots().findIndex(y=>qsSame(x,y));
+ return `${cbSlotName(x)}${n>1?`, ${n}`:n?"":", нет при себе"}${i>=0?`, слот ${i+1}`:""}`;}
+function qsKeyNav(d){
+ try{
+  if(d==="up"||d==="down"){
+   QSK.cat=(QSK.cat+(d==="down"?1:QSK_CATS.length-1))%QSK_CATS.length;QSK.i=0;
+   const c=QSK_CATS[QSK.cat],list=qsKList(c.id);
+   safeFn(()=>UI.natStep("ui_select",0.45,0.85+QSK.cat*0.08));
+   narrate(list.length?`${c.n}: ${list.length}. ${qsKName(list[0])}.`:`${c.n}: пусто.`,{interrupt:true,user:true,cat:"ui"});
+   return true;}
+  const c=QSK_CATS[QSK.cat],list=qsKList(c.id);
+  if(!list.length){narrate(`${c.n}: пусто. Стрелки вверх и вниз — другой раздел.`,{interrupt:true,user:true,cat:"ui"});return true;}
+  QSK.i=((QSK.i+(d==="next"?1:-1))%list.length+list.length)%list.length;
+  safeFn(()=>UI.natStep("ui_select",0.45,0.9+QSK.i*0.03));
+  narrate(`${qsKName(list[QSK.i])}. ${QSK.i+1} из ${list.length}.`,{interrupt:true,user:true,cat:"ui"});
+  return true;}catch(_){return false;}}
+function qsKeyUse(){
+ try{
+  const c=QSK_CATS[QSK.cat],list=qsKList(c.id);
+  const x=list[Math.min(QSK.i,list.length-1)];
+  if(!x){safeFn(()=>Bank.play("hero_nomana",{gain:0.5,maxSec:2}));narrate(`${c.n}: пусто.`,{interrupt:true,user:true});return true;}
+  if(!cbSlotCount(x)){safeFn(()=>Bank.play("hero_nomana",{gain:0.5,maxSec:2}));narrate(`${cbSlotName(x)} — нет при себе.`,{interrupt:true,user:true});return true;}
+  return cbDrink(x);}catch(_){return false;}}
+/* Какой Ctrl применяет слот: правый (по умолчанию), левый или любой. Второй
+   Ctrl, как в чтецах экрана, обрывает речь. */
+function qsCtrlMatch(code){const v=settings.qsCtrl||"ControlRight";return v==="any"?/^Control/.test(code||""):code===v;}
+/* «В слот быстрого доступа» из инвентаря: вещь встаёт в первый свободный
+   слот, а уже стоящая — в следующий свободный; после двенадцатого убирается. */
+function cbSlotPut(x){
+ const s=cbSlots();const same=y=>y&&y.kind===x.kind&&(x.kind==="potion"?y.id===x.id:y.name===x.name);
+ const был=s.findIndex(same);
+ if(был>=0)s[был]=null;
+ let i=-1;
+ if(был<0)i=s.findIndex(y=>!y);
+ else for(let k=был+1;k<QS_N;k++)if(!s[k]){i=k;break;}
+ if(был<0&&i<0)i=QS_N-1;
+ if(i<0){safeFn(()=>saveGame(true));return `${cbSlotName(x)} убрано из слотов быстрого доступа.`;}
+ s[i]=x;safeFn(()=>saveGame(true));
+ return `${cbSlotName(x)} — в слоте быстрого доступа ${i+1}. ${qsSlotWhere(i)} Ещё раз «В слот быстрого доступа» — следующий слот.`;}
+function qsSlotWhere(i){
+ const м=cbSlotShapeMagic(i);
+ return `С оружием в бою: ${cbSlotShape(i)}.${м?` С панелью магии в бою: ${м}.`:" С панелью магии этого слота нет."}`;}
+/* Купленное или сваренное зелье само встаёт в свободный слот, если такого там
+   ещё нет. Возвращает слова для игрока или пустую строку. */
+function qsAutoAdd(x){
+ try{
+  const s=cbSlots();const same=y=>y&&y.kind===x.kind&&(x.kind==="potion"?y.id===x.id:y.name===x.name);
+  if(s.some(same))return "";
+  const i=s.findIndex(y=>!y);if(i<0)return "";
+  s[i]=x;return ` Встало в слот быстрого доступа ${i+1}: в бою с оружием — ${cbSlotShape(i)}.`;
+ }catch(_){return "";}}
+function cbSlotsText(){return cbSlots().map((x,i)=>`слот ${i+1}, ${cbSlotShape(i)} — ${x?cbSlotName(x)+(cbSlotCount(x)?`, ${cbSlotCount(x)}`:", нет при себе"):"пусто"}`).join("; ");}
+/* Бой с панелью магии: слоты на касаниях. Одно, двойное и тройное касание —
+   разные слоты, поэтому касание разбирается, когда счёт кончился: пальцы
+   отпущены и следующего касания не было. */
+function qsMagicMode(){return !!(G.inCombat&&G.combat&&safeFn(()=>magicPanelOpen(),false));}
+const qsTap={f:0,n:0,t:0,timer:null};
+function qsTapMs(){return Math.max(300,Math.min(600,safeFn(()=>gestMultiTapMs(),600)));}
+function qsTapResolve(f,n){
+ const id=`${f}tap${n>=3?"3":n===2?"2":""}`;
+ const i=QS_MAGIC_SHAPES.indexOf(id);
+ if(i>=0){GestCombat.last={id,a:"slot"+(i+1),t:Date.now()};return cbSlotUse(i);}
+ if(id==="2tap"){handleTwoFingerTap();return true;}
+ return false;}
+function qsMagicTap(f){
+ const now=Date.now();
+ if(qsTap.timer&&qsTap.f===f)qsTap.n++;else{if(qsTap.timer)clearTimeout(qsTap.timer);qsTap.f=f;qsTap.n=1;}
+ if(qsTap.timer)clearTimeout(qsTap.timer);
+ qsTap.t=now;
+ const f0=f,n0=qsTap.n;
+ if(n0>=3){qsTap.timer=null;qsTap.n=0;qsTapResolve(f0,3);return true;}
+ qsTap.timer=setTimeout(()=>{qsTap.timer=null;qsTap.n=0;safeFn(()=>qsTapResolve(f0,n0));},qsTapMs());
+ return true;}
+GEST_COMBAT_ACTIONS.push(
+ {id:"hp",n:"только здоровье",о:"сколько здоровья осталось у героя; работает, пока оружие вынуто",делать:()=>{narrate(`Здоровье ${G.hp} из ${G.hpMax}.`,{interrupt:true,user:true,cat:"combat"});return true;}},
+ ...Array.from({length:QS_N},(_,i)=>({id:"slot"+(i+1),n:`слот быстрого доступа ${i+1}`,о:"вещь из слота быстрого доступа, пока оружие вынуто",слот:i,делать:()=>cbSlotUse(i)})));
 const GEST_COMBAT_BY_ID=Object.fromEntries(GEST_COMBAT_ACTIONS.map(a=>[a.id,a]));
-const GEST_COMBAT_DEFAULTS={"2swipeW":"potion"};
+const GEST_COMBAT_DEFAULTS=Object.assign({"2tap":"hp"},Object.fromEntries(CB_SLOT_SHAPES.map((s,i)=>[s,"slot"+(i+1)])));
 function gestCombatBinds(){
  if(!G.gestBindCombat||typeof G.gestBindCombat!=="object"||Array.isArray(G.gestBindCombat))G.gestBindCombat={};
  return G.gestBindCombat;}
-function gestCombatId(shapeId){
+function gestCombatIdRaw(shapeId){
  const b=gestCombatBinds();
  if(Object.prototype.hasOwnProperty.call(b,shapeId))return b[shapeId];
  return GEST_COMBAT_DEFAULTS[shapeId]||"none";}
+/* Слоты быстрого доступа на свайпах и «только здоровье» работают, только пока
+   оружие вынуто; с убранным оружием та же фигура делает обычное дело (одно
+   касание двумя пальцами — сбор), кроме двух пальцев влево: это по-прежнему
+   «выпить зелье». */
+function gestCombatId(shapeId,всегда){
+ const id=gestCombatIdRaw(shapeId);
+ if(!всегда&&(/^slot\d+$/.test(id)||id==="hp")&&!G.weaponDrawn)return shapeId==="2swipeW"?"potion":"none";
+ return id;}
 /* Одно боевое действие — на одной фигуре, как и в обычной таблице. */
 function gestCombatBind(shapeId,actionId){
  try{
   const sh=GEST_SHAPE_BY_ID[shapeId],a=GEST_COMBAT_BY_ID[actionId];
   if(!sh||!a){narrate("Такой фигуры или такого действия нет.");return false;}
   const b=gestCombatBinds();
-  if(a.id!=="none")GEST_SHAPES.forEach(x=>{if(x.id!==shapeId&&gestCombatId(x.id)===a.id)b[x.id]="none";});
+  if(a.id!=="none")GEST_SHAPES.forEach(x=>{if(x.id!==shapeId&&gestCombatId(x.id,true)===a.id)b[x.id]="none";});
   b[shapeId]=a.id;
   safeFn(()=>Bank.play("oc_ui_select",{gain:0.45,maxSec:1}));
   narrate(`В бою: ${gestShapeWord(sh)} — ${a.n}. ${a.о}.`,{interrupt:true});
   return true;}catch(_){return false;}}
 function gestCombatReset(){G.gestBindCombat={};safeFn(()=>Bank.play("menu_select",{gain:0.45,maxSec:1}));
- narrate("Жесты боя возвращены к умолчанию: свайп двумя пальцами влево — выпить зелье.",{interrupt:true});return true;}
+ narrate("Жесты боя возвращены к умолчанию: с вынутым оружием двенадцать свайпов двумя, тремя и четырьмя пальцами — слоты быстрого доступа, одно касание двумя пальцами — здоровье; с убранным оружием два пальца влево — зелье.",{interrupt:true});return true;}
 /* Дверь из обработчика касаний: жест разобран здесь, только если идёт бой,
    сверху нет окна и фигуре назначено боевое действие. */
 function gestCombatRun(пальцы,род,dir){
  try{
   if(!G.inCombat||!G.combat)return false;
   if(safeFn(()=>activeLayer(),null))return false;
+  /* Слоты быстрого доступа — на действиях в бою с вынутым оружием. */
   const id=род==="corner"?`corner${dir}`:(род==="swipe"?`${пальцы}swipe${dir}`:`${пальцы}${род}`);
   if(!GEST_SHAPE_BY_ID[id])return false;
   const a=GEST_COMBAT_BY_ID[gestCombatId(id)];
@@ -5591,15 +5847,15 @@ function gestCombatRun(пальцы,род,dir){
   GestCombat.last={id,a:a.id,t:Date.now()};
   return !!safeFn(()=>a.делать(),false);}catch(_){return false;}}
 function gestCombatText(){
- const занято=GEST_SHAPES.filter(x=>gestCombatId(x.id)!=="none");
- return занято.length?"Жесты во время боя: "+занято.map(x=>`${gestShapeWord(x)} — ${GEST_COMBAT_BY_ID[gestCombatId(x.id)].n}`).join("; ")+"."
-  :"Во время боя все жесты делают то же, что и вне боя.";}
+ const занято=GEST_SHAPES.filter(x=>gestCombatId(x.id,true)!=="none");
+ return (занято.length?"Жесты во время боя: "+занято.map(x=>`${gestShapeWord(x)} — ${GEST_COMBAT_BY_ID[gestCombatId(x.id,true)].n}`).join("; ")+"."
+  :"Во время боя все жесты делают то же, что и вне боя.")+` Слоты быстрого доступа (в бою с вынутым оружием): ${safeFn(()=>cbSlotsText(),"")}. С панелью магии в бою слоты с первого по восьмой — на касаниях: ${QS_MAGIC_SHAPES.map((x,i)=>`${i+1} — ${cbSlotShapeMagic(i)}`).join(", ")}.`;}
 /* Подпись фигуры — та же, что в разделе «Жесты»: она записана голосом
    Gemini и звучит сразу; что это жесты боя, говорит заголовок раздела. */
 function renderGestCombat(){
  try{
   const row=document.getElementById("gestCombatRow");if(!row)return false;
-  row.innerHTML=GEST_SHAPES.map(x=>{const cur=gestCombatId(x.id),сл=gestShapeWord(x);
+  row.innerHTML=GEST_SHAPES.map(x=>{const cur=gestCombatId(x.id,true),сл=gestShapeWord(x);
    return `<label class="opt">${сл}<select data-gestc="${x.id}" aria-label="${сл}">`+
     GEST_COMBAT_ACTIONS.map(a=>`<option value="${a.id}"${a.id===cur?" selected":""}>${a.n}</option>`).join("")+`</select></label>`;}).join("");
   row.querySelectorAll("select[data-gestc]").forEach(sel=>sel.addEventListener("change",()=>{
@@ -6240,6 +6496,9 @@ document.addEventListener('touchend',e=>{
     const n=multiTap.c;
     if(n>=3)multiTap.c=0;
     return n;};
+   /* (8.0) Бой с панелью магии: касания двумя, тремя и четырьмя пальцами —
+      восемь слотов быстрого доступа; счёт касаний разбирает qsMagicTap. */
+   if(fingers>=2&&fingers<=4&&safeFn(()=>qsMagicMode(),false)){multiTap.n=0;multiTap.c=0;qsMagicTap(fingers);return;}
    if(fingers===2){
     /* Сбор двумя пальцами остаётся немедленным: ждать второго касания
        нельзя, иначе он начнёт запаздывать почти на секунду. */
@@ -6339,6 +6598,9 @@ document.addEventListener('touchend',e=>{
   /* В разделе инвентаря свайп вверх или вниз — действия с выбранной вещью;
      вбок — листать. В списке разделов действий нет, и свайп листает. */
   if(swipe&&(dir==='N'||dir==='S')&&layer.id==='modal-inventory'&&INV.cat){safeFn(()=>invActions());return;}
+  /* (8.0) На ползунке громкости, скорости или высоты свайп вверх прибавляет,
+     вниз убавляет — сразу, чтобы было слышно; вбок — листать дальше. */
+  if(swipe&&(dir==='N'||dir==='S')&&uiCursor&&uiCursor.tagName==="INPUT"&&uiCursor.type==="range"&&layer.contains(uiCursor)){safeFn(()=>rangeNudge(uiCursor,dir==='N'?1:-1));return;}
   const листает=swipe&&(g.fast||dt<=safeFn(()=>gestListMs(),700)||d>=safeFn(()=>gestListPx(),90));
   if(листает){swipeNav((dir==='E'||dir==='S')?'next':'prev');return;}
   if(g.moved){
@@ -7837,7 +8099,6 @@ const GUIDE_SRC=[
  "ГОЛОСА УЛИЦЫ В ФОНЕ. Реплики стражников и горожан на улице, окрик дозора и слово твари в бою звучат в фоне, чуть тише, с той стороны, где говорящий: голос игры их больше не ждёт, а ваши шаги и жесты их не обрывают. Собеседник — торговец у прилавка, заказчик, старший обоза — говорит, как прежде, по очереди с голосом игры.",
  "ДОСТИЖЕНИЯ. Новый уровень, звание, ступень мастерства и достижение договариваются до конца, даже если вы уже шагнули дальше: прежде следующий шаг обрывал их на полуслове. Молчат они, только если вы сами выключили их озвучку в настройках речи.",
  "ПЕРЕКЛЮЧАТЕЛИ И ВЕЩИ. Каждый переключатель в настройках звучит своей записью: включение — одной, выключение — другой. Стартовый стальной меч продаётся, как любое оружие, а разобранный или проданный больше не появляется в сумке снова.",
- "ЖЕСТЫ ВО ВРЕМЯ БОЯ. Пока идёт бой и сверху нет окна, свайп двумя пальцами влево выпивает зелье здоровья (а нет зелья — отвар на воде); вне боя этот жест, как прежде, — «осмотреться». В настройках, в разделе «Жесты», есть подраздел «Жесты во время боя»: любую из тридцати трёх фигур можно назначить на выпить зелье, удар оружием, удар чарами, бегство, вынуть оружие, «где тварь» или «моё здоровье»; «как вне боя» оставляет фигуре её обычное дело.",
  "ШАГ В ДОСПЕХЕ. Кольчуга и латы звучат настоящими записями брони: прежние слои были сведены из «лязга металла» и связки ключей и звенели, как монеты. У стражи те же записи ниже и тяжелее.",
  "ЗВУК КЛИНКА. Меч бьёт режущим ударом со звоном стали, а не глухо, как молот: по плоти — рассекающий удар, по броне — звон стали о сталь, по кости — удар и сухой треск. Кинжал колет коротко, топор рубит тяжело, копьё бьёт выпадом, булава и посох — глухим дробящим ударом, как им и положено. У каждого рода оружия свой взмах: свист клинка, тяжёлый взмах булавы и топора, короткий выпад кинжала. Щит принимает удар звоном оковки или стуком дерева, без щита удар парирует клинок. Все записи — без потерь, 48 кГц.",
  "ПОЛ ГОЛОСА. Выбранный голос игры — мужской или женский — не меняется посреди речи: то, чего нет в записях, договаривает встроенный голос того же пола, а не голос телефона. Житель говорит голосом своего пола: мужчина — мужским, женщина — женским, какого бы народа он ни был; народ задаёт только высоту. Если у фразы ещё нет записи нужного пола, житель не говорит её чужим голосом — её читает голос игры.",
@@ -8344,8 +8605,10 @@ const GUIDE_SRC=[
  "МИР. R — вынуть или убрать оружие. Q — выпить зелье здоровья. V — осмотреться: список объектов вокруг и выбор цели маяка. N — что рядом. G — где я. H — состояние героя. B — погасить маяк цели. Цифры 1–9, 0, минус и равно — заклинания слотов с первого по двенадцатый.",
  "ОКНА. I или Alt+E — инвентарь. Tab — карта места (по клеткам ходят стрелками, Enter называет клетку). J — журнал. L — список дел. C — окно героя. K — ремесло. X — панель магии. M — меню действий. O — меню мира. T — досье державы. Y — вести мира. U — вести о вас. P — политика. F1 — руководство. Shift+F1 (или Shift+слэш) — все клавиши. F2 — настройки. F3 — энциклопедия заклинаний. F4 — бестиарий. F6 — сохранения.",
  "В ОКНЕ. Стрелки — пункты; Enter или пробел — выбрать; Esc или Backspace — назад; Home и End — первый и последний пункт; Page Up и Page Down — разделы. Клавиша другого окна закрывает текущее и открывает своё; клавиша того же окна его закрывает.",
- "БОЙ. Пока идёт бой, боевые клавиши перекрывают мирные: пробел — удар оружием, F — удар чарами, T — где тварь и сколько у неё сил, H — моё здоровье и мана, Backspace или Esc — бежать из боя. W, A, S, D (и стрелки, пока оружие убрано) — шаг по полю схватки обычным шагом: отойти, уйти из-под удара, догнать. С вынутым оружием стрелки бьют в свою сторону. Сторону твари голос по умолчанию не называет — её слышно по шагам, замаху и голосу; назвать её можно включить в настройках: «В бою называть сторону твари».",
- "РЕЧЬ. Ctrl сам по себе или Ctrl+пробел — замолчать. Пробел на поле — повторить или прервать речь. Alt+R — повторить последнее. Alt+X — очистить очередь речи. Alt+H — что сейчас с речью. Любая клавиша, кроме речевых, обрывает речь сразу, как в чтеце экрана.",
+ "БОЙ. Пока идёт бой, боевые клавиши перекрывают мирные: пробел — удар оружием, F — удар чарами, T — где тварь и сколько у неё сил, H — моё здоровье и мана, Backspace или Esc — бежать из боя. Быстрые слоты в бою — стрелками: стрелка вверх и стрелка вниз — раздел (зелья, свитки, прочее), стрелка вправо и стрелка влево — слот в разделе, правый Ctrl — применить (в настройках клавиатуры можно выбрать левый или любой Ctrl). В разделе сперва то, что вы сами поставили в слоты быстрого доступа, затем всё остальное этого рода при себе. Удар в сторону в бою — Shift со стрелкой. Alt+1, Alt+2, Alt+3, Alt+4, Alt+5, Alt+6, Alt+7, Alt+8, Alt+9, Alt+0, Alt+минус и Alt+равно — сразу слоты быстрого доступа с первого по двенадцатый (вещь ставится в слот из инвентаря, «В слот быстрого доступа»); Q — выпить зелье, в бою и вне боя. Бой тихий: игра не называет взмахи и удары, слышно тварь; здоровье — H. W, A, S, D — шаг по полю схватки обычным шагом: отойти, уйти из-под удара, догнать. Стрелки в бою — быстрые слоты; с вынутым оружием Shift со стрелкой бьёт в свою сторону. Сторону твари голос по умолчанию не называет — её слышно по шагам, замаху и голосу; назвать её можно включить в настройках: «В бою называть сторону твари».",
+ "ПОЛЗУНКИ. В настройках стрелки вверх и вниз ходят по пунктам; на ползунке громкости, скорости или высоты голоса стрелки вправо и влево двигают его — новое значение слышно сразу, сохраняете потом.",
+ "ИНВЕНТАРЬ СТРЕЛКАМИ. В списке разделов инвентаря стрелки ходят по разделам, Enter открывает раздел. В разделе стрелки вверх и вниз ходят по вещам, а вправо и влево — по действиям с вещью, на которой стоите: игра называет действие, Enter его выполняет. Esc возвращает к разделам.",
+ "РЕЧЬ. Ctrl сам по себе или Ctrl+пробел — замолчать. В бою правый Ctrl (или тот, что выбран в настройках) применяет быстрый слот, а другой Ctrl обрывает речь. Пробел на поле — повторить или прервать речь. Alt+R — повторить последнее. Alt+X — очистить очередь речи. Alt+H — что сейчас с речью. Любая клавиша, кроме речевых, обрывает речь сразу, как в чтеце экрана.",
  "ИГРА. F5 или Ctrl+S — быстрое сохранение. F9 — загрузить сохранение. Ctrl+Q — сохранить и выйти. Esc на поле — меню игры.",
  "ПЕРЕНАЗНАЧЕНИЕ. Настройки (F2) → раздел «Клавиши» → пункт нужного действия → Enter → нажмите новую клавишу или сочетание. Esc — отменить ожидание. Если клавиша была у другого действия, она с него снимается, и игра это называет; у мирных, боевых клавиш и ударов оружием свои наборы — назначенная в бою не отнимает мирную, а удар стрелкой не отнимает у неё шаг. Действие без клавиши называется «не назначено». Esc назначить нельзя: он закрывает окна. Пункт «По умолчанию» возвращает все клавиши. Назначения сохраняются и переживают перезапуск игры.",
  "СПИСОК ПОД РУКОЙ. Shift+F1 в любой момент читает все клавиши с их нынешними назначениями — уже с вашими переназначениями."]},
@@ -8368,7 +8631,14 @@ const GUIDE_SRC=[
  "НИТИ ОТЛЕТЕВШИХ. Нити дают силу, зрение, стойкость или возврат сущностей. Вплести больше двух нервы не выдержат (реликвия даёт ещё одну); каждая вплетённая нить стоит рассудка. Нить можно выплести.",
  "НЕЖИТЬ ВСТАЁТ. Павшая нежить Сводов иногда встаёт ещё раз; Свет Оплота не даёт ей подняться. Умения нежити и роя: иссушение, слепок, проклятие, хор, рой, пепел, холод, одержимость, страх, тишина, сеть.",
  "ОРУЖИЕ СВОДОВ. Шесть видов: каждое со своим даром — вдвое по нежити, против роя, пробой панциря, оплетающее жало, сила при ранах. Добывают у тварей Сводов и в поручениях, надевают в котомке.",
- "ГДЕ ВСЁ ЭТО ВИДНО. Меню действий → «Своды» → «Пределы: рассудок и выбор»: рассудок и человечность, двойник и нашествие, выбор на краю с его кнопками, нити и оружие в руке."]}];
+ "ГДЕ ВСЁ ЭТО ВИДНО. Меню действий → «Своды» → «Пределы: рассудок и выбор»: рассудок и человечность, двойник и нашествие, выбор на краю с его кнопками, нити и оружие в руке."]},
+{title:"Глава 110. Слоты быстрого доступа, тихий бой и зелья",body:[
+ "СЛОТЫ БЫСТРОГО ДОСТУПА. Двенадцать слотов: в них ставится всё, чем пользуются за удар сердца, — зелья, свитки, жезлы, еда, вещи с действием. В бою с вынутым мечом или любым другим оружием — свайпы: два пальца влево — первый слот, вверх — второй, вправо — третий, вниз — четвёртый; три пальца влево — пятый, вверх — шестой, вправо — седьмой, вниз — восьмой; четыре пальца влево — девятый, вверх — десятый, вправо — одиннадцатый, вниз — двенадцатый. В бою с открытой панелью магии свайпы творят чары, а слоты — на касаниях, их на четыре меньше: двойное касание двумя пальцами — первый, тройное двумя — второй; одно касание тремя пальцами — третий, двойное тремя — четвёртый, тройное тремя — пятый; одно касание четырьмя — шестой, двойное четырьмя — седьмой, тройное четырьмя — восьмой. Касание разбирается, когда счёт кончился, — с задержкой в полсекунды. Панель магии в бою закрывается кнопкой «Закрыть» на ней или клавишей «Назад». В первом слоте по умолчанию — зелье здоровья. Вещь ставится в слот из инвентаря: действие «В слот быстрого доступа» (ещё раз — следующий слот); купленное или сваренное зелье встаёт в свободный слот само. Пустой слот или кончившуюся вещь игра называет. Вне этих двух случаев те же фигуры делают обычное дело. Свайпы можно переназначить: настройки, «Жесты», подраздел «Жесты во время боя».",
+ "ЖЕСТЫ ВО ВРЕМЯ БОЯ. Пока идёт бой и оружие вынуто: одно касание двумя пальцами — только здоровье, а двенадцать свайпов — слоты быстрого доступа. С убранным оружием одно касание двумя пальцами — сбор, как всегда, а два пальца влево — выпить зелье (нет зелья — отвар на воде). Вне боя эти жесты делают прежнее.",
+ "ЗЕЛЬЕ ОДНИМ ДВИЖЕНИЕМ. Выпить зелье можно и вне боя: на телефоне — одним пальцем вниз, затем вверх (самая редкая фигура, её можно переназначить в «Жестах»), на компьютере — клавиша Q. Пьётся зелье первого слота быстрого доступа (по умолчанию — зелье здоровья); его нет — любое зелье здоровья, купленное или сваренное.",
+ "ТИХИЙ БОЙ. В бою игра молчит: тварь узнают по звуку — шагам, замаху, чарам — и слышат, что она говорит. Взмахи и удары словами не называются. Звучит только то, о чём вы спросили (здоровье — одно касание двумя пальцами при вынутом оружии), и смертельная опасность. Вернуть слова в бою — флажок «Озвучка во время боя» в настройках речи.",
+ "ПОЛЗУНКИ СВАЙПОМ. В настройках на ползунке громкости, скорости или высоты голоса свайп одним пальцем вверх прибавляет, вниз убавляет — сразу, чтобы было слышно, как это звучит; свайп вбок листает дальше. Сохраните настройки, когда всё понравится.",
+ "ЗЕЛЬЯ У ТОРГОВЦЕВ. У всякого торговца — зелье здоровья, зелье маны и противоядие, и ещё два зелья по месту; под землёй — и зелье ночного зрения. Травник держит все тринадцать родов: восстановления сил, очищения, дыхания под водой, защиты от холода и от жара, восприятия, сопротивлений, скорости, силы, маскировки. Обоз везёт зелья здоровья и маны и ещё одно — на четверть дороже. Купленное зелье ложится в раздел «Зелья» инвентаря и само встаёт в свободный слот быстрого доступа."]}];
 /* ════════════════════════════════════════════════════════════════════════
    РУКОВОДСТВО РАЗЛОЖЕНО ПО ЧАСТЯМ
 
@@ -8421,7 +8691,7 @@ const GUIDE_PLAN=[
   ["Снаряжение, инвентарь, находки и артефакты",[[7,[2]],[94,[1,2,4,6,7,8,9,10,11,12,13]],[72,[0,1,2,3]],[82,[1,2,5,6]],[48,[1,2,3,6,9,11,12,14]]]],
   ["Магия: чары, плетение, резонанс, эхо и гримуар",[[64,[0,1,4,6]],[67,[0,1,2,3,4,5,6]],[81,[1,2,3]],[79,[2,4,5,6]],[68,[0,1,7]],[69,[0,1,2,6]],[70,[0,1,3,5,7]],[78,[1,3,4,5]],[87,[0,2,4,6]]]]]],
  ["Часть V. Бой и дела","Схватка, твари и владыки; поручения, цепочки и войско.",[
-  ["Бой и твари",[[11,[0,1,2,3]],[96,[1,2,3,4,5,6,7,8,9]]]],
+  ["Бой и твари",[[11,[0,1,2,3]],[96,[1,2,3,4,5,6,7,8,9]],110]],
   ["Дела, поручения, цепочки и войско",[[13,[0,1,2,4]],[38,[0,1,2]],[54,[1,2,3,4]],[41,[0,1,3]],[59,[0,2,4,5,6]]]]]],
  ["Часть VI. Хозяйство и море","Цены и караваны, мастерские и договоры, порты, корабли и рыбалка.",[
   ["Торговля, рынки, производство и дипломатия",[[14,[0,1,2,3,4,5,6]],[80,[1,3,6]],[73,[1,4,5,6,9]],[77,[1,3,6]],[74,[1,4,5,8]]]],
@@ -13097,6 +13367,9 @@ function meetCaravan(car){
   <button data-cmd="carbuy:${b.r}" data-speak="Купить ${b.r} за ${b.price} золота.">Купить 1</button>
   <button data-cmd="carbuy5:${b.r}" data-speak="Купить пять ${b.r} за ${b.price*5} золота.">Купить 5</button></div>`).join("")
   :`<div class="list-line">Обоз распродан.</div>`;
+ /* (8.0) В обозе едут и зелья: здоровья и маны — всегда, ещё одно — по обозу. */
+ html+=`<h3>Зелья в дорогу</h3>`+caravanPotions(car).map(p=>`<div class="list-line">${p.n} — ${p.price} золота
+  <button data-cmd="carpot:${p.key}" data-speak="Купить: ${p.n}, за ${p.price} золота.">Купить</button></div>`).join("");
  html+=`<h3>Обоз скупает</h3>`;
  const mine=sell.filter(s=>(Number(G.inv[s.r])||0)>0);
  html+=mine.length?mine.map(s=>{const have=Number(G.inv[s.r])||0;
@@ -13142,6 +13415,25 @@ function caravanBuy(res,qty){
  journal(`У каравана куплено: ${res} ×${n} за ${total}.`);
  saveGame(true);refresh();meetCaravan(car);
 }
+/* Зелья обоза: дороже прилавка на четверть — везут издалека. */
+function caravanPotions(car){
+ const out=[{key:"health",n:"Зелье здоровья",price:19},{key:"mana",n:"Зелье маны",price:25,зелье:"mana"}];
+ safeFn(()=>{const прочие=SHOP_POTIONS.slice(1);const p=прочие[Math.floor(hashName(String(car&&car.id||car&&car.from&&car.from.name||"обоз").length,(car&&car.eta)|0,9100)*прочие.length)%прочие.length];
+  out.push({key:p.id,n:p.n,price:Math.round(p.price*1.25),зелье:p.id});});
+ return out;}
+function caravanPotion(key){
+ if(!curCaravan){narrate("Обоз ушёл.");return;}
+ const car=curCaravan;const p=caravanPotions(car).find(x=>x.key===key);
+ if(!p){narrate("Такого зелья в обозе нет.");return;}
+ if(G.gold<p.price){narrate(`Нужно ${p.price} золота, у вас ${G.gold}.${carSay(car,"car_poor")}`);return;}
+ G.gold-=p.price;
+ let вСлот="";
+ if(p.зелье){const pt=POTION_BY_ID[p.зелье];potionsOf().push({id:p.зелье,q:1,стаб:0.95,день:Number(G.day)||1,срок:(pt&&pt.срок||10)*2,изъян:false,куплено:true});вСлот=qsAutoAdd({kind:"potion",id:p.зелье});}
+ else{G.inv["Зелье здоровья"]=(Number(G.inv["Зелье здоровья"])||0)+1;вСлот=qsAutoAdd({kind:"item",name:"Зелье здоровья"});}
+ safeFn(()=>{UI.pickup();Bank.play("arte_coins",{seed:p.price,gain:0.5,maxSec:3});Bank.play("arte_potion",{gain:0.45,maxSec:2});});
+ narrate(`Куплено у обоза: ${p.n} за ${p.price} золота. Осталось золота: ${G.gold}.${вСлот}`);
+ journal(`У каравана куплено: ${p.n} за ${p.price}.`);
+ saveGame(true);refresh();meetCaravan(car);}
 function caravanSell(res,all){
  if(!curCaravan){narrate("Обоз ушёл.");return;}
  const car=curCaravan;
@@ -17341,12 +17633,12 @@ function brewPotion(id){
   safeFn(()=>{Bank.play("oc_boiling",{gain:0.55,maxSec:3});setTimeout(()=>safeFn(()=>Bank.play(изъян?"stk_goo":"arte_potion",{gain:0.5,maxSec:2})),700);});
   safeFn(()=>mastGain("alchemy",3+(pt.редкое?3:0)));safeFn(()=>deedTech({маст:"alchemy",id:"potion"}));
   journal(`Сварено зелье: ${pt.n}.`);
-  narrate(`Сварено: зелье ${pt.n}; в чану были ${a.n} и ${b.n}. Качество ${potionQualityWord(q)}, устойчивость ${Math.round(стаб*100)} из ста, годно ${pt.срок} дней${изъян?". Состав вышел с изъяном: устойчивость ниже":""}. Выпить — в списке зелий.`,{pri:1,key:"potion"});
+  narrate(`Сварено: зелье ${pt.n}; в чану были ${a.n} и ${b.n}. Качество ${potionQualityWord(q)}, устойчивость ${Math.round(стаб*100)} из ста, годно ${pt.срок} дней${изъян?". Состав вышел с изъяном: устойчивость ниже":""}. Выпить — в списке зелий.${safeFn(()=>qsAutoAdd({kind:"potion",id:pt.id}),"")}`,{pri:1,key:"potion"});
   safeFn(()=>{renderPotions();refresh();saveGame(true);});
   return true;
  }catch(e){return false;}}
 function potionExpired(rec){return (Number(G.day)||1)>(Number(rec.день)||1)+(Number(rec.срок)||0);}
-function drinkPotion(i){
+function drinkPotion(i,user){
  try{
   const list=potionsOf();const rec=list[Number(i)];
   if(!rec){narrate("Такого зелья в сумке нет.");return false;}
@@ -17361,7 +17653,7 @@ function drinkPotion(i){
    const d=Math.max(2,Math.round(G.hpMax*0.05));G.hp=Math.max(1,G.hp-d);safeFn(()=>adaptAdd("мутаген",1));
    safeFn(()=>Bank.play("stk_goo",{gain:0.55,maxSec:3}));
    слова+=` Состав оказался нестабилен: подействовал вполсилы, а побочно — −${d} здоровья и нагрузка на тело.`;}
-  narrate(`Выпито: зелье ${pt.n}. ${pt.о[0].toUpperCase()+pt.о.slice(1)}: ${итог}.${слова}`);
+  narrate(`Выпито: зелье ${pt.n}. ${pt.о[0].toUpperCase()+pt.о.slice(1)}: ${итог}.${слова}`,user?{interrupt:true,user:true}:undefined);
   safeFn(()=>{renderPotions();refresh();saveGame(true);});
   return true;
  }catch(e){return false;}}
@@ -17519,7 +17811,7 @@ const DARK_EMPIRES=[
   gov:"Карантин черты: правит тот, кто проводит черту, и черта не обсуждается.",
   econ:"Оцепление: пропуска, досмотр, содержание отсечённых земель и плата за выход.",
   war:"Воюют чертой: обводят и ждут, пока внутри кончится всё.",
-  дань:["пропуска","отсечённые"]},
+  дань:["пропуска","отсечённые"]}
 ];
 /* Чья это земля за Гранью: ближайший престол империи. */
 /* (6.0) Тёмные земли размечены на поле в две тысячи клеток, а разлом стоит
@@ -31380,8 +31672,8 @@ function weaponSwing(dir,чем){
   /* Клавишей бьют стрелки, а ходят W, A, S, D: недостающий удар — взмах по
      воздуху, не шаг. Свайп по-прежнему шагает, если не достаёт. */
   if(цель==="step"&&чем==="key"){
+   /* (8.0) Без слов: взмах по воздуху слышно самим звуком клинка. */
    safeFn(()=>weaponSwingSound(false));vib(12);
-   narrate(`Взмах ${({N:"вперёд",S:"назад",E:"вправо",W:"влево"})[dir]}: не достаёт. Подойдите — W, A, S, D.`,{key:"arena",pri:1,cat:"combat",interrupt:false});
    return true;}
   if(цель==="step"){safeFn(()=>Arena.step(dir));return true;}
   if(цель==="wait")return true;}
@@ -31393,10 +31685,9 @@ function weaponSwing(dir,чем){
     поэтому здесь — только взмах по пустому месту. */
  const бьём=G.inCombat||(!G.place&&!G.ship&&safeFn(()=>{const c=cellContent(G.x,G.y);return !!(c.monster&&!G.cleared[G.x+","+G.y]);},false));
  if(!бьём)safeFn(()=>weaponSwingSound(false));
- /* Было «Взмах Простой стальной меч вправо» — три слова подряд без падежа.
-    Ставить имя вещи в творительный пришлось бы склонением всего словаря;
-    вместо этого имя вынесено отдельной частью и стоит в своём именительном. */
- vib(18); narrate(`Взмах ${labels[dir]}: ${weaponName().toLowerCase()}.`,{interrupt:false});
+ /* (8.0, просьба игрока) Взмах больше не называется словами («Взмах вправо…»):
+    его слышно звуком клинка, а речь не заслоняет тварь. */
+ vib(18);
  if(G.inCombat){ G.combat.lastDir=dir; setTimeout(()=>{if(G.inCombat){try{fight("atk");}catch(e){}}},90); }
  else if(!G.place&&!G.ship){
   /* Взмах по пустому месту сам начинал бой, если на клетке числилась тварь, —
@@ -38331,7 +38622,7 @@ const FoeTalk={
    const сказал=safeFn(()=>Folk.on(),false)&&liveRecorded(роль,t)
     &&!!safeFn(()=>Folk.реплика(роль,t,this.где(),false,{всегда:true,фон:true,чётко:true,голос:this.голос(m,p),maxSec:8}),false);
    this.last.сказал=сказал;
-   if(!сказал)narrate(`${m.n}: «${Род.кГероине(t)}»`,{interrupt:false,cat:"combat",pri:2});
+   if(!сказал)narrate(`${m.n}: «${Род.кГероине(t)}»`,{interrupt:false,cat:"combat",pri:2,речь:true});
    /* (5.0) На насмешку и удар твари герой может огрызнуться. */
    if(миг==="attack"||миг==="taunt"||миг==="start")safeFn(()=>{if(миг!=="start")Перепалка.наСлово(m);});
    return true;}catch(_){return false;}},
@@ -38674,7 +38965,7 @@ const Перепалка={
   return t;},
  говорить(t,кто,o){
   if(!t)return false;
-  narrate(`${кто}: «${t}»`,Object.assign({interrupt:false,cat:"combat",pri:2,ttl:9000,ждать:safeFn(()=>Folk.послеВсех(),0)||0},o||{}));
+  narrate(`${кто}: «${t}»`,Object.assign({interrupt:false,cat:"combat",pri:2,ttl:9000,речь:true,ждать:safeFn(()=>Folk.послеВсех(),0)||0},o||{}));
   return true;},
  /* Герой говорит. o.ответ — разумная тварь может ответить. */
  сказать(миг,m,o){
@@ -40474,12 +40765,14 @@ function startCombat(c,opts){
     первых боях, дальше — коротко: жесты к тому времени уже в руке. */
  const гдеТварь=safeFn(()=>Arena.where(),"");
  G.fightsSeen=(Number(G.fightsSeen)||0)+1;
- const кн=id=>keyCombosOf(id).map(keyName).join(" или ");
+ /* (8.0) Тихий бой: одно короткое слово о начале — дальше слышно саму тварь. */
+ if(settings.cbSpeech!==1)narrate(`Бой: ${m.n}.`,{interrupt:true,pri:1,cat:"combat",речь:true});
+ else{ const кн=id=>keyCombosOf(id).map(keyName).join(" или ");
  narrate(G.fightsSeen<=3&&isDesktopApp()
   ?`Бой! ${m.n} ${m.lvl} уровня${гдеТварь?", "+гдеТварь:""}. W, A, S, D — шаг: отойти, уйти из-под удара, догнать. ${кн("weapon")} — вынуть оружие; вынутое бьёт стрелкой в сторону твари. ${кн("c_foe")} — где она. ${кн("c_flee")} — побег.`
   :G.fightsSeen<=3
   ?`Бой! ${m.n} ${m.lvl} уровня, ${гдеТварь}. Свайп — шаг: отойти, уйти из-под удара, догнать. Двойное касание тремя пальцами — вынуть оружие; вынутое бьёт свайпом в сторону твари. Касание двумя пальцами — где она. Свайп тремя пальцами вверх — меню действий, там же побег.`
-  :`Бой! ${m.n} ${m.lvl} уровня, ${гдеТварь}.`);
+  :`Бой! ${m.n} ${m.lvl} уровня, ${гдеТварь}.`);}
  /* (6.0) Порода Дальнего Круга впервые — одним словом о ней. */
  if(m.порода){if(!G.dkSeen||typeof G.dkSeen!=="object")G.dkSeen={};
   if(!G.dkSeen[m.порода]){G.dkSeen[m.порода]=1;narrate(`${m.n} — порода рода «${m.род}» из Дальнего Круга: ${m.породаО}.`,{interrupt:false});}}
@@ -42027,6 +42320,7 @@ const CMD={
  sail(){if(G.ship)sailLeg();else narrate("Вы не на борту. Найдите порт на побережье.");},
  carbuy(res){caravanBuy(res,1);},
  carbuy5(res){caravanBuy(res,5);},
+ carpot(id){caravanPotion(id);},
  carsell(res){caravanSell(res,false);},
  carsellall(res){caravanSell(res,true);},
  carescort(){takeEscort();},
@@ -51814,6 +52108,11 @@ function buyItem(key,i){const n=getNPCByKey(key);
  else if(item.вещь){
   /* Вещь Пути — маска, артефакт, Ядро — ложится в сумку под своим именем. */
   if(!Array.isArray(G.items))G.items=[];G.items.push(item.n);}
+ else if(item.зелье){
+  /* Зелье с прилавка — то же, что сваренное: свежее, устойчивое, и пьётся из
+     раздела «Зелья» и из слота быстрого доступа. */
+  const pt=POTION_BY_ID[item.зелье];
+  potionsOf().push({id:item.зелье,q:1,стаб:0.95,день:Number(G.day)||1,срок:(pt&&pt.срок||10)*2,изъян:false,куплено:true});}
  else if(item.том){
   /* Книга — вещь, а не запас: она ложится в сумку под своим именем. */
   if(!Array.isArray(G.items))G.items=[];
@@ -51831,7 +52130,8 @@ function buyItem(key,i){const n=getNPCByKey(key);
   Bank.play(itemVoice(item.gear||item.n),{seed:item.price,gain:0.55,maxSec:3});
   setTimeout(()=>safeFn(()=>Bank.play("arte_coins",{seed:item.price,gain:0.5,maxSec:3})),180);});
  const слово=safeFn(()=>merchDeal(n,"buy",item.price),"");
- narrate(`Куплено: ${item.gear?lootDesc(item.gear):item.n}. Осталось золота: ${G.gold}.${слово}`);
+ const вСлот=item.зелье?qsAutoAdd({kind:"potion",id:item.зелье}):item.n==="Зелье здоровья"?qsAutoAdd({kind:"item",name:"Зелье здоровья"}):"";
+ narrate(`Куплено: ${item.gear?lootDesc(item.gear):item.n}. Осталось золота: ${G.gold}.${вСлот}${слово}`);
  afterTrade(key);}
 /* ════════ ПРОДАЖА РЕСУРСОВ ════════
    Цена зависит от державы (что она вывозит — дёшево, что ввозит — дорого),
@@ -51980,7 +52280,8 @@ function merchSoul(n){
   const S=k=>hashName((n.x|0)*7+k*13,(n.y|0)*11+k*5,7000+k);
   /* Ремесло задаёт, чем он может торговать: кузнец не продаёт книги. */
   const поРемеслу={"Кузнец":["mech","bron","instr","star"],
-   "Торговец":["pripas","obshiy","redk","knigi","kamni","star","zapret"],
+   /* (8.0) Торговец бывает и травником: у него все роды зелий. */
+   "Торговец":["pripas","obshiy","redk","knigi","kamni","star","zapret","snadob"],
    "Трактирщик":["pripas","obshiy"],
    "Целительница":["snadob"],
    "Магистр":["knigi","kamni","arte"],
@@ -52156,17 +52457,40 @@ function marketLine(idx){
   else if(д<0.88)ч.push("земля беднеет");
   return ч.join("; ");
  }catch(_){return "";}}
+/* ── ЗЕЛЬЯ НА ПРИЛАВКЕ (8.0) ──
+   Прежде продавалось одно зелье здоровья (в подземелье — двумя одинаковыми
+   пунктами), а зелья маны и прочие не продавал никто. Теперь у всякого
+   торговца — зелье здоровья, зелье маны и противоядие, и ещё два зелья по
+   месту; под землёй — и ночное зрение; травник держит все. Купленное зелье
+   ложится в «Зелья» инвентаря и встаёт в свободный слот быстрого доступа. */
+const SHOP_POTIONS=[
+ {n:"Зелье маны",id:"mana",price:20},{n:"Противоядие",id:"antidote",price:16},
+ {n:"Зелье восстановления сил",id:"energy",price:18},{n:"Зелье очищения",id:"clean",price:22},
+ {n:"Зелье ночного зрения",id:"nightsight",price:24},{n:"Зелье дыхания под водой",id:"breath",price:24},
+ {n:"Зелье защиты от холода",id:"coldguard",price:22},{n:"Зелье защиты от жара",id:"heatguard",price:22},
+ {n:"Зелье восприятия",id:"sense",price:28},{n:"Зелье сопротивлений",id:"resist",price:30},
+ {n:"Зелье скорости",id:"speed",price:30},{n:"Зелье силы",id:"strength",price:32},
+ {n:"Зелье маскировки",id:"mask",price:30}];
+const SHOP_POTION_BY_NAME=Object.fromEntries(SHOP_POTIONS.map(p=>[p.n,p]));
+function stockPotions(n,deep){
+ const все=safeFn(()=>{const д=merchSoul(n);return !!(д&&д.вид&&д.вид.id==="snadob");},false);
+ const выбор=все?SHOP_POTIONS.slice():SHOP_POTIONS.slice(0,2);
+ if(!все){
+  const прочие=SHOP_POTIONS.slice(2);
+  for(let k=0;k<2&&прочие.length;k++){const i=Math.floor(H((n.x|0)+k*5,(n.y|0)+k*3,95+k)*прочие.length)%прочие.length;выбор.push(прочие.splice(i,1)[0]);}
+  if(deep&&!выбор.some(p=>p.id==="nightsight"))выбор.push(SHOP_POTION_BY_NAME["Зелье ночного зрения"]);}
+ return выбор.map(p=>({n:p.n,зелье:p.id,price:p.price}));}
 function stockFor(n){const out=[];
  /* Под землёй торгуют тем, что нужно под землёй, и берут за это своё. */
  const deep=!!(G.place&&G.place.depth>0);
  out.push({n:"Зелье здоровья",price:15});
+ safeFn(()=>{const зелья=stockPotions(n,deep);зелья.forEach(z=>out.push(z));});
  out.push({n:"Еда в дорогу",price:8});
  if(deep){
   out.push({n:"Факел",price:6});
   out.push({n:"Верёвка",price:12});
   /* Щуп ловчего: длинная жила с крючком, которой пробуют плиту перед собой. */
-  out.push({n:"Щуп ловчего",price:34});
-  out.push({n:"Зелье здоровья",price:15});}
+  out.push({n:"Щуп ловчего",price:34});}
  /* Город продаёт свой избыток по своей цене; вне города — то, что вывозит держава.
     Цена ресурса уже полная: её считает npcAsk, второй раз множить нельзя. */
  const idx=empireIndexAt(n.x,n.y),emp=EMPIRES[idx]||EMPIRES[0];
@@ -52288,7 +52612,7 @@ function shopStockRows(n){
    else if(s.часть){cat="material";card="Часть для гнёзд артефактов: вкладывается у верстака.";}
    else if(s.том){cat="book";card=s.том.строка||"Книга.";}
    else if(s.res){cat=shopCatOf(invCategoryOf({kind:PLANT_BY_NAME[s.n]?"plant":"res",key:s.n,name:s.n,it:s.n}));card=`${s.промысел?"Товар местного промысла, дешевле обычного. ":""}Цена за штуку; берётся счётом.`;count="счётом";}
-   else{cat=shopCatOf(invCategoryOf({kind:"item",key:"0",name:s.n,it:s.n}));card=/Зелье/.test(s.n)?"Зелье здоровья: пятнадцать здоровья.":/Еда/.test(s.n)?"Еда в дорогу: сытость и немного здоровья.":/Факел/.test(s.n)?"Факел: свет в глубине.":/Верёвка/.test(s.n)?"Верёвка: спуск и колодец.":"Товар прилавка.";count="счётом";}
+   else{cat=shopCatOf(invCategoryOf({kind:"item",key:"0",name:s.n,it:s.n}));card=s.зелье?safeFn(()=>{const pt=POTION_BY_ID[s.зелье];return `${s.n}: ${pt.о}. Пьётся из раздела «Зелья» и из слота быстрого доступа.`;},s.n):/Зелье здоровья/.test(s.n)?"Зелье здоровья: пятнадцать здоровья. Пьётся клавишей Q, жестом «выпить зелье» и из слота быстрого доступа.":/Еда/.test(s.n)?"Еда в дорогу: сытость и немного здоровья.":/Факел/.test(s.n)?"Факел: свет в глубине.":/Верёвка/.test(s.n)?"Верёвка: спуск и колодец.":"Товар прилавка.";count="счётом";}
    if(s.вещь){cat=shopCatOf(invCategoryOf({kind:"item",key:"0",name:s.n,it:s.n}));card=safeFn(()=>Path.artifactText(s.n),"")||(MASK_BY_NAME[s.n]?`${MASK_BY_NAME[s.n].эффект}. Взаимодействие: ${MASK_BY_NAME[s.n].взаимодействие}.`:"Вещь Пути.");}
    if((Number(G.gold)||0)<s.price)доступно=`не хватает золота: нужно ${s.price}, у вас ${G.gold}`;
    const спрос=safeFn(()=>Path.demandFor(n,s,i),null);if(спрос&&!спрос.ок)доступно=спрос.почему;
@@ -52389,9 +52713,14 @@ function shopYes(){
   if(r.спрос&&!r.спрос.ок){narrate(`Не продано. ${r.спрос.почему[0].toUpperCase()+r.спрос.почему.slice(1)}.`);renderShop();return false;}
   if(c.count===1||!r.count){buyItem(n.key,r.i);}
   else{const s=r.s;if(s.res&&!cargoFits(c.count,`«${s.n}»`)){renderShop();return false;}
-   G.gold-=итог;G.inv[s.n]=(Number(G.inv[s.n])||0)+c.count;safeFn(()=>addRep(n.race,1));safeFn(()=>noteTrade(n,итог));safeFn(()=>npcRemember(n,"купил",итог,5));
+   G.gold-=итог;
+   /* Зелье с прилавка — в «Зелья» счётом записей, как сваренное; прочее — в запас. */
+   if(s.зелье){const pt=POTION_BY_ID[s.зелье];for(let k=0;k<c.count;k++)potionsOf().push({id:s.зелье,q:1,стаб:0.95,день:Number(G.day)||1,срок:(pt&&pt.срок||10)*2,изъян:false,куплено:true});}
+   else G.inv[s.n]=(Number(G.inv[s.n])||0)+c.count;
+   const вСлот=s.зелье?qsAutoAdd({kind:"potion",id:s.зелье}):s.n==="Зелье здоровья"?qsAutoAdd({kind:"item",name:"Зелье здоровья"}):"";
+   safeFn(()=>addRep(n.race,1));safeFn(()=>noteTrade(n,итог));safeFn(()=>npcRemember(n,"купил",итог,5));
    safeFn(()=>{UI.pickup();Bank.play("treasure",{seed:итог,gain:0.7});Bank.play("arte_coins",{seed:итог,gain:0.5,maxSec:3});});
-   narrate(`Куплено: ${s.n} ×${c.count} за ${итог} золота. Осталось золота: ${G.gold}.${safeFn(()=>merchDeal(n,"buy",итог),"")}`);journal(`Покупка: ${s.n} ×${c.count} за ${итог}.`);saveGame(true);refresh();}
+   narrate(`Куплено: ${s.n} ×${c.count} за ${итог} золота. Осталось золота: ${G.gold}.${вСлот}${safeFn(()=>merchDeal(n,"buy",итог),"")}`);journal(`Покупка: ${s.n} ×${c.count} за ${итог}.`);saveGame(true);refresh();}
   SHOP.sel=null;renderShop();return true;}
  const rows=shopSellRows(n).filter(r=>r.ок);const r=rows[SHOP.sel.idx];if(!r){narrate("Этой вещи уже нет.");renderShop();return false;}
  const row=r.row;
@@ -54474,6 +54803,13 @@ iaction("drink",{n:"Выпить",значок:"",cats:["potion"],можно:ok,
   if(n==="Противоядие"){G.poisoned=null;const h=Math.min(G.hpMax,G.hp+10)-G.hp;G.hp+=h;safeFn(()=>Bank.play("potion_cork",{gain:0.85,maxSec:3}));return done(`Противоядие выпито: яд снят, здоровья +${h}.`);}
   const h=Math.min(G.hpMax,G.hp+15)-G.hp;G.hp+=h;safeFn(()=>{UI.drink();Bank.play("potion_long",{gain:0.85,maxSec:3});});return done(`Выпито: ${n}. Здоровья +${h}.`);}});
 iaction("drinkitem",{n:"Выпить",значок:"",cats:[],можно:ok,делать:(row,ctx,done)=>invDo("drink",row.kind,row.key)});
+/* (8.0) В слот быстрого доступа: зелье, свиток, жезл, еда, вещь с действием —
+   всё, чем пользуются за удар сердца. */
+iaction("cbslot",{n:"В слот быстрого доступа",значок:"",cats:["potion","scroll","magic","food","tool","other","acc","treasure"],kinds:["potion","item","res","rare","plant","fish","charged"],
+ можно:(row,ctx)=>safeFn(()=>qsUseAction(row,Object.assign({},ctx,{бой:false})),null)?true:"этой вещью не пользуются одним движением",
+ делать:(row,ctx,done)=>{const pt=row.kind==="potion"?safeFn(()=>potionsOf()[Number(row.key)],null):null;
+  const x=pt?{kind:"potion",id:pt.id}:row.kind==="charged"?{kind:"charged",name:String(row.name)}:{kind:"item",name:String(row.name||row.key)};
+  safeFn(()=>Bank.play("oc_ui_select",{gain:0.45,maxSec:1}));return done(cbSlotPut(x));}});
 iaction("read",{n:"Прочитать",значок:"",cats:["scroll","book"],можно:(row,ctx)=>ctx&&ctx.бой&&row.cat==="book"?"в бою не до книг":true,
  делать:(row,ctx,done)=>{const n=String(row.name);
   if(row.cat==="scroll"){safeFn(()=>closeModal(document.getElementById("modal-invact")));readLegendScroll(n.slice(8));safeFn(()=>renderInventory());return true;}
@@ -54614,7 +54950,7 @@ function invDropN(row,n,done){
    В бою остаётся то, что делают за удар сердца: сменить оружие, выпить,
    съесть, прочитать свиток, применить чару, надеть кольцо. */
 const В_БОЮ=new Set(["look","equip","wear","wear2","unequip","draw","sheathe","compare","condition","drink","drinkitem","eat","read","use",
- "chargeuse","wearmask","maskoff","ability","activate","deactivate","identify","lore","drop","drop1","dropall"]);
+ "chargeuse","wearmask","maskoff","ability","activate","deactivate","identify","lore","drop","drop1","dropall","cbslot"]);
 function invActionsAll(row){
  const ok=[],blocked=[];if(!row)return {ok,blocked};
  const ctx=invContext();
@@ -57146,14 +57482,14 @@ function worldSelfCheck(){
    &&GEST_SHAPES.filter(s=>s.род==="corner").length===12
    /* Удержания среди назначаемых фигур нет и быть не должно. */
    &&GEST_SHAPES.every(s=>s.род!=="hold")
-   &&GEST_ACTIONS.length===35&&new Set(GEST_ACTIONS.map(a=>a.id)).size===35
+   &&GEST_ACTIONS.length===36&&new Set(GEST_ACTIONS.map(a=>a.id)).size===36
    &&GEST_ACTIONS.every(a=>a.n&&a.о&&typeof a.делать==="function")
    &&GEST_ACTIONS[0].id==="none"
    /* У каждой фигуры своё слово, и все слова разные. */
    &&new Set(GEST_SHAPES.map(s=>gestShapeWord(s))).size===33
    /* Умолчания — в точности нынешняя карта жестов: пятнадцать привязок, и
       каждая ссылается на существующее действие. */
-   &&Object.keys(GEST_DEFAULTS).length===15
+   &&Object.keys(GEST_DEFAULTS).length===16&&GEST_DEFAULTS.cornerSN==="potion"
    &&Object.keys(GEST_DEFAULTS).every(k=>GEST_SHAPE_BY_ID[k]&&GEST_ACTION_BY_ID[GEST_DEFAULTS[k]])
    &&GEST_DEFAULTS["3swipeS"]==="inv"&&GEST_DEFAULTS["3tap2"]==="weapon"
    &&GEST_DEFAULTS["2swipeS"]==="close"&&GEST_DEFAULTS["2swipeN"]==="near"&&GEST_DEFAULTS["4swipeS"]==="repeat"
@@ -58494,6 +58830,7 @@ function bindSpeechSettings($){
  chk("setQuietWalk","quietWalk","Тихий шаг: проходы и стороны на ходу не называются, только объекты рядом.","Тихий шаг выключен: после шага снова звучат проходы и стороны.");
  chk("setApproach","approach","Объекты рядом называются: «Справа сундук. Четыре шага».","Объекты рядом сами не называются. Что рядом — свайп двумя пальцами вверх.");
  chk("setCompass","compass","Стороны света: север, юг, запад, восток.","Стороны как свайпы: впереди, позади, справа, слева — без сторон света.");
+ chk("setCbSpeech","cbSpeech","В бою игра снова говорит: сторону, замах, удары.","Бой тихий: слышно тварь и её слова; здоровье — два пальца вправо.");
  chk("setCbSide","cbSide","В бою игра называет сторону твари.","В бою игра не называет сторону твари: слушайте, откуда звучат её шаги, замах и голос.");
  chk("setIntro","intro","Заставка при запуске включена.","Заставка при запуске выключена.");
  chk("setStairCount","stairCount","Ступени на лестнице считаются вслух.","Ступени на лестнице не считаются: слышны шаги и площадки марша.");
@@ -58569,6 +58906,9 @@ function bindSettings(){const $=id=>document.getElementById(id);
   narrate(settings.explore?"Режим ощупывания включён.":"Режим ощупывания выключен.");});
  $("setHaptics").addEventListener("change",e=>{settings.haptics=e.target.checked?1:0;saveSettings();vib(30);});
  /* ── ТОЧНОСТЬ ЖЕСТОВ ── */
+ {const q=$("setQsCtrl");if(q){q.value=settings.qsCtrl||"ControlRight";
+  q.addEventListener("change",e=>{settings.qsCtrl=e.target.value;saveSettings();
+   narrate(`В бою быстрый слот применяет ${e.target.options[e.target.selectedIndex].textContent}.${e.target.value==="any"?"":" Другой Ctrl обрывает речь."}`,{interrupt:true});});}}
  {const g=$("setGestSens");if(g){g.value=settings.gestSens||"norm";
   g.addEventListener("change",e=>{gestSensSet(e.target.value);
    narrate(`Чувствительность жестов: ${gestSens().n}. ${gestSens().о} Свайп начинается с ${gestSwipePx()} пикселей, касание прощает столько же.`,{interrupt:true});});}}
@@ -59244,7 +59584,7 @@ const KB_ACTIONS=[
  {id:"interact",g:"Мир",n:"действие с объектом",о:"торговец, сундук, книга, чан, горн, наковальня, лавка, дверь, житель — то, что под ногами или вплотную",def:["KeyE","Enter"],ctx:"field",run:()=>{fieldInteract();return true;}},
  {id:"gather",g:"Мир",n:"собрать ресурс",о:"только сбор; с торговцем, сундуком и станками — клавиша действия",def:["KeyF"],ctx:"field",run:KB_GEST("gather")},
  {id:"weapon",g:"Мир",n:"вынуть или убрать оружие",def:["KeyR"],ctx:"any",run:KB_GEST("weapon")},
- {id:"potion",g:"Мир",n:"выпить зелье здоровья",def:["KeyQ"],ctx:"any",run:()=>{if(G.inCombat){fight("potion");return true;}const i=(G.items||[]).findIndex(x=>/зель/i.test(String(x)));if(i>=0&&typeof drinkPotion==="function"){drinkPotion(i);return true;}narrate("Зелья здоровья в сумке нет.",{interrupt:true});return true;}},
+ {id:"potion",g:"Мир",n:"выпить зелье",def:["KeyQ"],ctx:"any",run:()=>!!safeFn(()=>potionQuick(),false)},
  {id:"look",g:"Мир",n:"осмотреться",о:"объекты вокруг и выбор цели",def:["KeyV"],ctx:"field",run:KB_GEST("look")},
  {id:"near",g:"Мир",n:"что рядом",def:["KeyN"],ctx:"field",run:KB_GEST("near")},
  {id:"where",g:"Мир",n:"где я",о:"место, сторона света, время",def:["KeyG"],ctx:"field",run:KB_GEST("where")},
@@ -59287,7 +59627,13 @@ const KB_ACTIONS=[
  {id:"c_cast",g:"Бой",n:"удар чарами",def:["KeyF"],ctx:"combat",run:()=>{fight("magic");return true;}},
  {id:"c_foe",g:"Бой",n:"где тварь и сколько у неё сил",def:["KeyT"],ctx:"combat",run:()=>!!safeFn(()=>GEST_COMBAT_BY_ID.foe.делать(),false)},
  {id:"c_self",g:"Бой",n:"моё здоровье и мана",def:["KeyH"],ctx:"combat",run:()=>!!safeFn(()=>GEST_COMBAT_BY_ID.self.делать(),false)},
- {id:"c_flee",g:"Бой",n:"бежать из боя",def:["Backspace"],ctx:"combat",run:()=>{fight("flee");return true;}}];
+ {id:"c_flee",g:"Бой",n:"бежать из боя",def:["Backspace"],ctx:"combat",run:()=>{fight("flee");return true;}},
+ /* Слоты быстрого доступа (8.0): на телефоне — двенадцать свайпов при вынутом оружии. */
+ {id:"qs_up",g:"Бой",n:"быстрые слоты: раздел выше",о:"зелья, свитки, прочее",def:["ArrowUp"],ctx:"combat",run:()=>!!safeFn(()=>qsKeyNav("up"),false)},
+ {id:"qs_down",g:"Бой",n:"быстрые слоты: раздел ниже",о:"зелья, свитки, прочее",def:["ArrowDown"],ctx:"combat",run:()=>!!safeFn(()=>qsKeyNav("down"),false)},
+ {id:"qs_prev",g:"Бой",n:"быстрые слоты: предыдущий слот",о:"в выбранном разделе; применить — правый Ctrl",def:["ArrowLeft"],ctx:"combat",run:()=>!!safeFn(()=>qsKeyNav("prev"),false)},
+ {id:"qs_next",g:"Бой",n:"быстрые слоты: следующий слот",о:"в выбранном разделе; применить — правый Ctrl",def:["ArrowRight"],ctx:"combat",run:()=>!!safeFn(()=>qsKeyNav("next"),false)},
+ ...Array.from({length:12},(_,i)=>({id:"c_slot"+(i+1),g:"Бой",n:`слот быстрого доступа ${i+1}`,о:"зелье, свиток или вещь из слота",def:[i<9?"Alt+Digit"+(i+1):["Alt+Digit0","Alt+Minus","Alt+Equal"][i-9]],ctx:"combat",run:()=>!!safeFn(()=>cbSlotUse(i),false)}))];
 const KB_BY_ID=Object.fromEntries(KB_ACTIONS.map(a=>[a.id,a]));
 function keyBinds(){
  try{if(!settings.keyBind||typeof settings.keyBind!=="object"||Array.isArray(settings.keyBind))settings.keyBind={};}catch(_){return {};}
@@ -59354,6 +59700,30 @@ function mapKeysMove(dir){
  MapKeys.i=r*7+c;setCursor(cells[MapKeys.i],true);
  safeFn(()=>NavClick.play(NavClick.kind(document.getElementById("modal-map"))));
  return true;}
+/* ── Действия с вещью стрелками (8.0, Windows) ── */
+function invKeySel(el){
+ const m=/^invpick:([^:]+):(.*)$/.exec(String((el&&el.dataset&&el.dataset.cmd)||""));if(!m)return null;
+ return {kind:m[1],key:decodeURIComponent(m[2])};}
+function invKeyAction(d){
+ try{
+  const sel=invKeySel(uiCursor);
+  if(!sel){narrate("Сначала встаньте на вещь: стрелки вверх и вниз.",{interrupt:true});return true;}
+  INV.sel=sel;
+  const row=invRow(sel.kind,sel.key);const list=row?invActionsAll(row).ok:[];
+  if(!list.length){narrate(`${row?row.name:"Вещь"}: действий нет.`,{interrupt:true});return true;}
+  const тот=INV.kbAct&&INV.kbAct.kind===sel.kind&&INV.kbAct.key===sel.key;
+  let i=тот?INV.kbAct.i+d:(d>0?0:list.length-1);
+  i=(i+list.length)%list.length;
+  INV.kbAct={kind:sel.kind,key:sel.key,i,id:list[i].id};
+  safeFn(()=>UI.natStep("ui_select",0.45,0.9+i*0.03));
+  narrate(`${list[i].n.trim().replace(/^[^0-9A-Za-zА-Яа-яЁё]+\s*/,"")}. ${i+1} из ${list.length}. Enter — выполнить.`,{interrupt:true});
+  return true;}catch(_){return false;}}
+function invKeyRun(el){
+ const sel=invKeySel(el);const a=INV.kbAct;
+ if(!sel||!a||a.kind!==sel.kind||a.key!==sel.key)return false;
+ INV.kbAct=null;
+ invDo(a.id,sel.kind,encodeURIComponent(sel.key));
+ return true;}
 /* ── Окна клавишами ── */
 function keyWindow(e,combo,layer){
  const k=e.key;
@@ -59374,10 +59744,13 @@ function keyWindow(e,combo,layer){
   if(t)setCursor(t,true);return true;}
  /* ползунок */
  if((k==="ArrowLeft"||k==="ArrowRight")&&uiCursor&&uiCursor.tagName==="INPUT"&&uiCursor.type==="range"&&layer.contains(uiCursor)){
-  e.preventDefault();const el=uiCursor,min=+el.min||0,max=el.max===""?100:+el.max,st=el.dataset.tapStep?+el.dataset.tapStep:(+el.step||1);
-  let v=+el.value+(k==="ArrowRight"?st:-st);v=Math.max(min,Math.min(max,v));v=+v.toFixed(((String(st).split(".")[1])||"").length);
-  el.value=v;el.dispatchEvent(new Event("input",{bubbles:true}));el.dispatchEvent(new Event("change",{bubbles:true}));
-  safeFn(()=>{const s=controlState(el);if(s)narrate(s,{interrupt:true});});return true;}
+  e.preventDefault();return rangeNudge(uiCursor,k==="ArrowRight"?1:-1);}
+ /* (8.0, Windows) Инвентарь стрелками: в списке разделов стрелки ходят по
+    разделам; в разделе вверх и вниз — вещи, вправо и влево — действия с
+    вещью, на которой стоите; Enter выполняет названное действие. */
+ if(isDesktopApp()&&layer.id==="modal-inventory"&&safeFn(()=>INV.cat,null)&&(k==="ArrowLeft"||k==="ArrowRight")&&!e.shiftKey&&!e.ctrlKey&&!e.altKey){
+  e.preventDefault();return invKeyAction(k==="ArrowRight"?1:-1);}
+ if(layer.id==="modal-inventory"&&(k==="ArrowUp"||k==="ArrowDown"))safeFn(()=>{INV.kbAct=null;});
  /* панель магии: цифры */
  if(k==="ArrowDown"||k==="ArrowRight"||(k==="Tab"&&!e.shiftKey&&!mapKeysOpen())){e.preventDefault();swipeNav("next");return true;}
  if(k==="ArrowUp"||k==="ArrowLeft"||(k==="Tab"&&e.shiftKey)){e.preventDefault();swipeNav("prev");return true;}
@@ -59395,6 +59768,7 @@ function keyWindow(e,combo,layer){
   const el=(uiCursor&&layer.contains(uiCursor))?uiCursor:null;
   if(el&&el.dataset&&/^invpick:/.test(el.dataset.cmd||"")){
    e.preventDefault();
+   if(k==="Enter"&&isDesktopApp()&&safeFn(()=>invKeyRun(el),false))return true;
    if(e.code==="Space")activateElement(el);
    else{const p=el.dataset.cmd.slice(8),i=p.indexOf(":");INV.sel={kind:p.slice(0,i),key:decodeURIComponent(p.slice(i+1))};
     safeFn(()=>Bank.play(itemVoice(invFind(INV.sel.kind,INV.sel.key)||INV.sel.key),{gain:0.45,maxSec:2}));
@@ -59436,7 +59810,10 @@ function onGameKey(e){
  if(ae&&(ae.tagName==="TEXTAREA"||(ae.tagName==="INPUT"&&!/^(checkbox|radio|range|button|submit)$/.test(ae.type)))&&e.key!=="Escape")return false;
  const combo=keyCombo(e);
  /* Ctrl сам по себе — замолчать, как в чтецах экрана. */
- if(!combo){if(e.key==="Control"&&!e.repeat&&!e.altKey&&!e.shiftKey){safeFn(()=>Speech.stop());}return false;}
+ if(!combo){if(e.key==="Control"&&!e.repeat&&!e.altKey&&!e.shiftKey){
+   /* (8.0) В бою выбранный Ctrl применяет быстрый слот. */
+   if(G.inCombat&&G.combat&&!activeLayer()&&qsCtrlMatch(e.code)){e.preventDefault();safeFn(()=>qsKeyUse());return true;}
+   safeFn(()=>Speech.stop());}return false;}
  /* Переназначение: следующее сочетание уходит в назначение. */
  if(KeyCapture.id){e.preventDefault();const id=KeyCapture.id;KeyCapture.id=null;
   if(e.key==="Escape"){narrate("Назначение отменено.",{interrupt:true});return true;}
@@ -59459,6 +59836,10 @@ function onGameKey(e){
  if(ae&&ae!==document.body&&/^(BUTTON|A|SELECT)$/.test(ae.tagName)&&(e.key==="Enter"||e.code==="Space")&&ae.getClientRects().length&&!ae.closest("[hidden]"))return false;
  const ctx=G.inCombat?"combat":"field";
  const базовое=combo.replace(/^Shift\+(Arrow|Key[WASD]$)/,"$1");
+ /* (8.0) В бою стрелки — быстрые слоты; удар в сторону — Shift со стрелкой. */
+ if(G.inCombat&&G.combat){
+  if(G.weaponDrawn&&/^Shift\+Arrow/.test(combo)){const w=keyActionFor(базовое,"weapon");if(w){e.preventDefault();return keySwing(w.dir,e);}}
+  const q=keyActionFor(combo,"combat");if(q&&/^qs_/.test(q.id)&&q.run){e.preventDefault();safeFn(()=>q.run());return true;}}
  if(G.weaponDrawn){const w=keyActionFor(базовое,"weapon");if(w){e.preventDefault();return keySwing(w.dir,e);}}
  const a=keyActionFor(базовое,ctx);
  if(a&&a.ctx==="move"){e.preventDefault();return keyStep(a.dir,e);}

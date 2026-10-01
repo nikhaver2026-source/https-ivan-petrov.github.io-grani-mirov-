@@ -125,6 +125,9 @@ function check(name,cond,extra){results.push((cond?'PASS':'FAIL')+' — '+name+(
  check('свайп при вынутом оружии наносит удар',hpAfter<hpBefore,{hpBefore,hpAfter});
 
  // 6. побег доступен из меню действий во время боя
+ /* (8.0) С вынутым оружием три пальца вверх в бою — слот быстрого доступа;
+    меню действий открывается тем же жестом, когда оружие убрано. */
+ await page.evaluate(()=>{G.weaponDrawn=false;});
  await multiSwipe(3,0,-170);
  const hasFlee=await page.evaluate(()=>[...document.querySelectorAll('#amList button')].some(b=>b.dataset.cmd==='am:flee'));
  check('в бою в меню действий есть пункт побега',hasFlee);

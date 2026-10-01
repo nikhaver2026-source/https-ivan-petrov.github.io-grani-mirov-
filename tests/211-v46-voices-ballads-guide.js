@@ -202,7 +202,7 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   const до=G.hp;r.зелье=gestCombatRun(2,"swipe","W");r.полечился=G.hp>до;
   r.прочее=gestCombatRun(2,"swipe","E");
   gestCombatBind("3swipeE","flee");r.назначено=gestCombatId("3swipeE")==="flee";
-  gestCombatBind("2swipeE","potion");r.одноМесто=gestCombatId("2swipeW")==="none"&&gestCombatId("2swipeE")==="potion";
+  gestCombatBind("2swipeE","potion");r.одноМесто=GEST_SHAPES.filter(x=>gestCombatId(x.id,true)==="potion").map(x=>x.id).join()==="2swipeE";
   gestCombatReset();r.сброс=gestCombatId("2swipeW")==="potion"&&gestCombatId("3swipeE")==="none";
   openModal("modal-settings");renderGestCombat();r.списков=document.querySelectorAll('#gestCombatRow select[data-gestc]').length;
   r.окноМешает=gestCombatRun(2,"swipe","W");safeFn(()=>closeModal(document.getElementById("modal-settings")));

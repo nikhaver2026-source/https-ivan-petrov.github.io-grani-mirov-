@@ -22,6 +22,9 @@ const ПОДГОТОВКА=`(()=>{
  GEST_ACTIONS.forEach(a=>{if(a.__w)return;const f=a.делать;a.делать=function(){R("g:"+a.id);return f.apply(this,arguments);};a.__w=1;});
  window.fieldInteract=function(){R("interact");};
  window.drinkPotion=function(){R("potion");};
+ window.potionQuick=function(){R("potion");return true;};
+ window.cbSlotUse=function(i){R("qs:"+i);return true;};
+ window.qsKeyNav=function(d){R("qsnav:"+d);return true;};
  window.fight=function(x){R("fight:"+x);};
  window.saveGame=function(){R("save");return true;};
  window.loadGame=function(){R("load");};
@@ -39,6 +42,8 @@ const ЖДЁМ=`(id)=>{
   c_attack:"fight:atk",c_cast:"fight:magic",c_flee:"fight:flee",c_foe:null,c_self:null};
  if(id in свои)return {r:свои[id]};
  const m=/^slot(\\d+)$/.exec(id);if(m)return {r:"cast:"+(Number(m[1])-1)};
+ const q=/^c_slot(\\d+)$/.exec(id);if(q)return {r:"qs:"+(Number(q[1])-1)};
+ const n={qs_up:"up",qs_down:"down",qs_prev:"prev",qs_next:"next"}[id];if(n)return {r:"qsnav:"+n};
  return {g:"g:"+id};}`;
 (async()=>{
  const browser=await chromium.launch({args:['--autoplay-policy=no-user-gesture-required']});

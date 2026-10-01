@@ -71,7 +71,7 @@ const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(e!==undefined?' :
    G.equip.weapon=w||G.equip.weapon;return G.equip.weapon;};
   G.place=null;G.ship=null;settings.combatPace="live";
   /* Этот набор слушает и сторону твари: флажок стороны включён (по умолчанию он снят). */
-  settings.cbSide=1;});
+  settings.cbSide=1;settings.cbSpeech=1;});
 
  async function swipe(dx,dy,steps=6){
   const x=195,y=420;
@@ -264,11 +264,12 @@ const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(e!==undefined?' :
  await twoTap();
  const где=await page.evaluate(()=>window.__said.slice(-2));
  const клав=await page.evaluate(()=>{const a=G.combat.arena;a.wind=null;a.stepAt=0;
-  document.dispatchEvent(new KeyboardEvent("keydown",{key:"ArrowLeft",bubbles:true}));
+  /* (8.0) в бою стрелки — быстрые слоты, шаг по полю — W, A, S, D */
+  document.dispatchEvent(new KeyboardEvent("keydown",{key:"a",code:"KeyA",bubbles:true}));
   return {px:a.px};});
  check('12. касание двумя пальцами в бою называет, где тварь и чем она занята',
   где.some(t=>/Тролль: в 2 шагах, впереди справа, замахивается/.test(t)),где);
- check('12. стрелка клавиатуры в бою — шаг по полю',клав.px===-1,клав);
+ check('12. клавиша A в бою — шаг по полю (стрелки в бою — быстрые слоты)',клав.px===-1,клав);
 
  /* ── 13. Темп в настройках ── */
  const темп=await page.evaluate(()=>{
