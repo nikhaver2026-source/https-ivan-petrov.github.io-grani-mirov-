@@ -781,47 +781,47 @@ const SVD={
  /* ── Боги Сводов. сфера — какие дела им угодны; дар — что даёт присяга. ── */
  gods:[
   {id:"molchan",n:"Молчан Глубинный",раса:"perv",дом:"тишина, недра и ловушки",сфера:"ловушки",символ:"закрытый рот, высеченный в камне",
-   дар:"ловушки находятся и снимаются легче",гнев:"ловушки бьют больнее",звук:"sv_god_omen"},
+   дар:"ловушки находятся и снимаются легче",гнев:"удар слабее на единицу, а ловушки бьют на четверть больнее",звук:"sv_god_omen"},
   {id:"veyra",n:"Вейра Первая Волна",раса:"perv",дом:"океаны, глубины и приливы",сфера:"море",символ:"волна, свернувшаяся кольцом",
-   дар:"море бьёт слабее, под водой легче дышать",гнев:"шторма злее",звук:"sv_sea_song"},
+   дар:"море бьёт слабее",гнев:"удар слабее на единицу, а море бьёт на пятую часть больнее",звук:"sv_sea_song"},
   {id:"irm",n:"Корень-Отец Ирм",раса:"perv",дом:"древние леса, травы и корни",сфера:"травы",символ:"корень, проросший сквозь кольцо",
-   дар:"травы и зелья сильнее",гнев:"травы вянут в руках",звук:"sv_god_union"},
+   дар:"каждое утро у изголовья — трава Сводов",гнев:"удар слабее на единицу",звук:"sv_god_union"},
   {id:"niyava",n:"Тёплая Ниява",раса:"otr",дом:"очаг, дом и простые люди",сфера:"жители",символ:"ладони над огнём",
-   дар:"жители краёв щедрее, слава растёт быстрее",гнев:"двери закрываются",звук:"sv_god_union"},
+   дар:"слава у народов растёт в полтора раза быстрее",гнев:"удар слабее на единицу",звук:"sv_god_union"},
   {id:"zvonstrazh",n:"Звон-Страж",раса:"otr",дом:"города, стража и порядок дорог",сфера:"стража",символ:"колокол на копье",
-   дар:"удар крепче против разбойников",гнев:"стража смотрит косо",звук:"sv_god_war"},
+   дар:"удар против разбойников крепче на два",гнев:"удар слабее на единицу",звук:"sv_god_war"},
   {id:"olva",n:"Ольва Многоустая",раса:"otr",дом:"молва, песни и летописи",сфера:"песни",символ:"раскрытый рот с тремя языками пламени",
-   дар:"песни о вас приносят больше золота",гнев:"молва о вас лжёт",звук:"sv_chronicle"},
+   дар:"песни о вас приносят вдвое больше золота",гнев:"удар слабее на единицу",звук:"sv_chronicle"},
   {id:"tarvin",n:"Тарвин Кузнец Плоти",раса:"vzosh",дом:"перековка тела и сущности",сфера:"перековка",символ:"молот над раскрытой ладонью",
-   дар:"сущностей с добычи больше",гнев:"перековка ломает тело",звук:"sv_reforge"},
+   дар:"с тварей Сводов вдвое больше сущностей, ломка реже",гнев:"удар слабее на единицу, а ломка после перековки вдвое чаще",звук:"sv_reforge"},
   {id:"keyna",n:"Кейна Безлунная",раса:"vzosh",дом:"тень, ночь и удар из темноты",сфера:"тень",символ:"полумесяц, повёрнутый остриём вниз",
-   дар:"тень растёт быстрее, ночной удар крепче",гнев:"тень отворачивается",звук:"sv_shadow"},
+   дар:"тень растёт в полтора раза быстрее, ночью удар крепче",гнев:"удар слабее на единицу, а тень-попутчица не растёт",звук:"sv_shadow"},
   {id:"brod",n:"Одинокий Брод",раса:"vzosh",дом:"дороги, одиночество и долгий путь",сфера:"одиночка",символ:"посох и одна цепочка следов",
-   дар:"путь одиночки даёт больше",гнев:"дорога путает",звук:"sv_slip"},
+   дар:"одиночество даёт к удару в полтора раза больше",гнев:"удар слабее на единицу",звук:"sv_slip"},
   {id:"ihor",n:"Ихор-Без-Лица",раса:"zvezd",дом:"аномалии, сбои и чужие законы",сфера:"аномалии",символ:"пустой овал",
-   дар:"сбой мира чаще идёт на пользу",гнев:"сбои злее",звук:"sv_glitch"},
+   дар:"сбой мира идёт на пользу",гнев:"удар слабее на единицу, а сбой мира никогда не бывает добрым",звук:"sv_glitch"},
   {id:"sirrah",n:"Семь Огней Сирраха",раса:"zvezd",дом:"чары, мана и звёздный огонь",сфера:"чары",символ:"семь точек кругом",
-   дар:"заклинания-легенды дешевле",гнев:"мана утекает",звук:"sv_trap_fire"},
+   дар:"заклинания-легенды на треть дешевле",гнев:"удар слабее на единицу",звук:"sv_trap_fire"},
   {id:"os",n:"Наблюдающая Ось",раса:"zvezd",дом:"знание, счёт и случай",сфера:"знание",символ:"глаз на вертикальной черте",
-   дар:"опыта за дела Сводов больше",гнев:"случай против вас",звук:"sv_page"},
+   дар:"опыта за дела Сводов на четверть больше",гнев:"удар слабее на единицу",звук:"sv_page"},
   {id:"grozdan",n:"Гроздан Свергнутый",раса:"pav",дом:"война, месть и сломанные знамёна",сфера:"война",символ:"переломленное копьё",
-   дар:"в небесную войну удар крепче",гнев:"враги находят вас сами",звук:"sv_god_clash"},
+   дар:"пока ваш бог воюет, удар крепче на два",гнев:"удар слабее на единицу",звук:"sv_god_clash"},
   {id:"hessa",n:"Ржавая Мать Хесса",раса:"pav",дом:"упадок, ржа и забытые ремёсла",сфера:"упадок",символ:"шестерня, съеденная ржой",
-   дар:"упадок отступает от ваших дел быстрее",гнев:"упадок растёт за вами",звук:"sv_trap_ratchet"},
+   дар:"упадок отступает от ваших дел в полтора раза быстрее",гнев:"удар слабее на единицу, а упадок края, где вы стоите, растёт быстрее",звук:"sv_trap_ratchet"},
   {id:"shestoy",n:"Безымянный Шестой",раса:"pav",дом:"забвение и тайны",сфера:"тайны",символ:"стёртая надпись",
-   дар:"тайные поручения чаще",гнев:"вы забываете найденное",звук:"sv_god_omen"},
+   дар:"за поручения Сводов золота на треть больше",гнев:"удар слабее на единицу",звук:"sv_god_omen"},
   {id:"sur",n:"Праволчица Сур",раса:"zver",дом:"стаи, охота и звериная кровь",сфера:"охота",символ:"след лапы в круге",
-   дар:"звери Сводов слабее против вас",гнев:"стаи идут по следу",звук:"sv_wolf_snarl"},
+   дар:"звери Сводов на десятую часть слабее",гнев:"удар слабее на единицу, а звери Сводов на десятую часть сильнее",звук:"sv_wolf_snarl"},
   {id:"aht",n:"Великий Змей Ахт",раса:"zver",дом:"реки, яды и долгая вода",сфера:"реки",символ:"змей, кусающий собственную волну",
-   дар:"реки поят и лечат",гнев:"реки кусают",звук:"sv_snake"},
+   дар:"у каждой новой реки — лечение",гнев:"удар слабее на единицу",звук:"sv_snake"},
   {id:"onga",n:"Праматерь-Черепаха Онга",раса:"zver",дом:"острова, долгий век и терпение",сфера:"острова",символ:"панцирь с горой на спине",
-   дар:"на островах находок больше",гнев:"острова уплывают",звук:"sv_trunk"},
+   дар:"на островах Сводов находки вдвое",гнев:"удар слабее на единицу",звук:"sv_trunk"},
   {id:"sudya",n:"Латунный Судья",раса:"kovan",дом:"закон, клятва и договор",сфера:"клятвы",символ:"весы из латуни",
-   дар:"клятвы держат крепче: гнев богов короче",гнев:"нарушенная клятва жжёт",звук:"sv_trap_clang"},
+   дар:"гнев богов вдвое короче",гнев:"удар слабее на единицу",звук:"sv_trap_clang"},
   {id:"kolokol",n:"Колокол-Вестник",раса:"kovan",дом:"весть, тревога и сбор",сфера:"весть",символ:"колокол без языка",
-   дар:"знамения богов слышны заранее",гнев:"вести опаздывают",звук:"sv_god_omen"},
+   дар:"о битве богов над краем вы узнаёте накануне",гнев:"удар слабее на единицу",звук:"sv_god_omen"},
   {id:"gorn",n:"Горн-Дитя",раса:"kovan",дом:"огонь кузни и оружие",сфера:"кузня",символ:"искра в ладони ребёнка",
-   дар:"оружие бьёт крепче",гнев:"клинок тупится",звук:"sv_trap_fire"}],
+   дар:"удар крепче на единицу",гнев:"удар слабее на единицу",звук:"sv_trap_fire"}],
  /* Нрав родов друг к другу: с чего начинаются отношения богов. */
  raceBase:{"perv|zvezd":-55,"perv|vzosh":-25,"perv|zver":35,"perv|hran":10,"otr|pav":-50,"otr|kovan":40,"otr|hran":30,
   "vzosh|pav":-20,"vzosh|kovan":15,"zvezd|hran":-35,"zvezd|zver":-30,"pav|hran":-45,"pav|kovan":-25,"zver|kovan":-20,
@@ -1017,15 +1017,15 @@ const SVD={
  essences:[
   {id:"коготь",n:"сущность когтя",черта:"Когти",о:"удар крепче на единицу за ступень"},
   {id:"чешуя",n:"сущность чешуи",черта:"Чешуя",о:"входящий удар слабее на единицу за ступень"},
-  {id:"крыло",n:"сущность крыла",черта:"Крылья",о:"уйти из боя легче, шаг легче"},
-  {id:"тень",n:"сущность тени",черта:"Теневая кожа",о:"ловушки и твари замечают вас позже"},
-  {id:"камень",n:"сущность камня",черта:"Каменные кости",о:"здоровье выше на пять за ступень"},
-  {id:"глубина",n:"сущность глубины",черта:"Жабры",о:"море бьёт слабее, под водой дольше"},
+  {id:"крыло",n:"сущность крыла",черта:"Крылья",о:"уйти из боя легче, ловушки бьют на десятую часть слабее за ступень"},
+  {id:"тень",n:"сущность тени",черта:"Теневая кожа",о:"ловушки находятся легче"},
+  {id:"камень",n:"сущность камня",черта:"Каменные кости",о:"входящий удар слабее на единицу за две ступени, после победы — лечение на единицу за ступень"},
+  {id:"глубина",n:"сущность глубины",черта:"Жабры",о:"в море удары слабее"},
   {id:"пламя",n:"сущность пламени",черта:"Горячая кровь",о:"каждый ваш удар обжигает на единицу за ступень"}],
  /* ── Реликвии Сводов: носятся до трёх разом. ── */
  relics:[
-  {id:"r_molchan",n:"Кляп Молчана",бог:"molchan",о:"каменная пластинка под язык: шаг беззвучен",бонус:{ловушки:0.12}},
-  {id:"r_veyra",n:"Раковина Первой Волны",бог:"veyra",о:"в ней слышен прилив, и море признаёт своего",бонус:{море:0.3}},
+  {id:"r_molchan",n:"Кляп Молчана",бог:"molchan",о:"каменная пластинка под язык: ловушки находятся легче",бонус:{ловушки:0.12}},
+  {id:"r_veyra",n:"Раковина Первой Волны",бог:"veyra",о:"в ней слышен прилив: в море удары слабее",бонус:{море:0.3}},
   {id:"r_tarvin",n:"Наковаленка Тарвина",бог:"tarvin",о:"крошечная наковальня на цепочке: сущности ложатся ровнее",бонус:{сущности:1}},
   {id:"r_keyna",n:"Серп Безлунья",бог:"keyna",о:"чёрный серп-подвеска: ночью удар находит щель",бонус:{ночь:3}},
   {id:"r_brod",n:"Посох-обломок Брода",бог:"brod",о:"обломок посоха: одному идти легче",бонус:{одиночка:2}},
@@ -1033,7 +1033,7 @@ const SVD={
   {id:"r_sudya",n:"Латунная гирька",бог:"sudya",о:"гирька с весов Судьи: клятвы держат, гнев богов короче",бонус:{гнев:0.5}},
   {id:"r_sur",n:"Клык Праволчицы",бог:"sur",о:"клык на шнурке: звери Сводов боятся",бонус:{звери:0.15}},
   {id:"r_os",n:"Зрачок Оси",бог:"os",о:"стеклянный глаз: опыта за дела Сводов больше",бонус:{опыт:0.25}},
-  {id:"r_hessa",n:"Ржавый ключ Хессы",бог:"hessa",о:"ключ от мастерской, которой нет: упадок отступает",бонус:{упадок:2}},
+  {id:"r_hessa",n:"Ржавый ключ Хессы",бог:"hessa",о:"ключ от мастерской, которой нет: упадок отступает от ваших побед быстрее",бонус:{упадок:2}},
   {id:"r_olva",n:"Перо Многоустой",бог:"olva",о:"перо, которое пишет само: песни дороже",бонус:{песни:0.5}},
   {id:"r_ihor",n:"Пустая маска Ихора",бог:"ihor",о:"маска без лица: сбой мира щадит",бонус:{сбой:0.5}}],
  /* ── Печати и заклинания-легенды ── */
@@ -24855,6 +24855,7 @@ function trapFire(x,y,л){
  if(safeFn(()=>buffActive("страж"),false))урон=Math.max(0,Math.round(урон*0.55));
  урон=Math.max(0,Math.round(урон*(1-Math.min(0.4,safeFn(()=>homunBonus("защита"),0)))));
  if(л.зов)урон=0;
+ if(SVODY_ON&&урон>0)урон=Math.max(1,Math.round(урон*safeFn(()=>Svody.trapDmgK(),1)));
  if(урон>0)G.hp=Math.max(1,G.hp-урон);
  let хвост="";
  if(л.зов){
@@ -28389,6 +28390,7 @@ function techDo(t,станок){
   else if(л.вид==="чары")дар=`${л.n} не поддаётся: знак стирают рукой, а не тяжестью`;
   else{
    safeFn(()=>setPlaceMark(л.x,л.y,"trap_off"));
+   if(SVODY_ON)safeFn(()=>{Svody.count("traps");Svody.sphere("ловушки",1);});
    safeFn(()=>mastGain("runes",2));
    дар=`${л.n} разведена по частям и больше не взведена`;}}
  if(t.id==="keep"){
@@ -40690,7 +40692,7 @@ function fight(a){const cb=G.combat;if(!cb)return;const m=cb.m;
   else{if(G.water<20){narrate("Нет ни зелья здоровья, ни воды для отвара.");return;}
    G.water-=20;G.hp=Math.min(G.hpMax,G.hp+15);UI.drink();cbLog("Отвар на воде: +15 здоровья.");}}
  else if(a==="flee"){if(safeFn(()=>{const p=bossPhaseOf(cb.m);return p&&p.механика==="без бегства";},false)){cbLog("Якорь брошен: бежать некуда.");}
-  else{if(Math.random()<0.4+G.agi*0.02+0.12*fxLevel("deal")+safeFn(()=>Morpho.fleeK(m),0)+safeFn(()=>Arena.fleeBonus(),0)){
+  else{if(Math.random()<0.4+G.agi*0.02+0.12*fxLevel("deal")+safeFn(()=>Morpho.fleeK(m),0)+safeFn(()=>Arena.fleeBonus(),0)+(SVODY_ON?safeFn(()=>Svody.fleeK(),0):0)){
    safeFn(()=>foeProfileCue(m,"lose",{gain:0.5}));endCombat();narrate("Вы сбежали!");journal(`Побег от «${m.n}».`);refresh();resumeLocationMusic();return;}
   cbLog("Сбежать не вышло!");}
   safeFn(()=>{Bank.play("oc_shield_block",{seed:G.hp,gain:0.5,maxSec:2});Bank.play("battle_shield",{seed:G.hp,gain:0.45,maxSec:3});Play.start("ev","shield_bash",{dur:2});});}
@@ -45445,6 +45447,12 @@ const Svody={
  day(){return Number(G.day)||1;},
  h(a,b,c){return hashName(Math.round(a),Math.round(b),c);},
  say(t,o){if(t)narrate(t,Object.assign({interrupt:false},o||{}));},
+ /* Опыт за дела Сводов: с Зрачком Оси и даром Оси — больше. Возвращает, сколько дано. */
+ xp(n){const v=Math.round(n*(1+this.relic("опыт")+0.25*this.boon("знание")));G.xp=(Number(G.xp)||0)+v;safeFn(()=>checkLevelUp());return v;},
+ wr(id){return this.wrathful().indexOf(id)>=0;},
+ /* Во сколько раз ловушка бьёт: Крылья смягчают, гнев Молчана ожесточает. */
+ trapDmgK(){let k=1-0.1*this.step("крыло");if(this.wr("molchan"))k*=1.25;return Math.max(0.4,k);},
+ fleeK(){return 0.06*this.step("крыло");},
  play(role,o){safeFn(()=>Bank.play(role,Object.assign({gain:0.6,maxSec:6},o||{})));},
  /* ── Боги и их отношения ── */
  gods(){if(!this._gods)this._gods=SVD.gods.map(g=>({id:g.id,n:g.n,раса:g.раса,sv:true})).concat(PANTHEON.map(g=>({id:g.id,n:g.n,раса:"hran",sv:false})));return this._gods;},
@@ -45525,9 +45533,9 @@ const Svody={
   return `Вы на стороне бога «${this.god(a).n}». ${this.god(b).n} это запомнит. Небесное поручение: одолеть трёх тварей Сводов — помощь склонит войну.`;},
  taskCheck(){const s=this.st(),t=s.task;if(!t)return "";
   if(this.n("svkills")-t.было<t.надо)return "";
-  s.task=null;const k=this.key(t.a,t.b);s.rel[k]=Math.min(100,this.rel(t.a,t.b)+25);this.favorAdd(t.a,12);G.xp+=30;
+  s.task=null;const k=this.key(t.a,t.b);s.rel[k]=Math.min(100,this.rel(t.a,t.b)+25);this.favorAdd(t.a,12);const оп=this.xp(30);
   this.play("sv_god_union",{gain:0.55});journal(`Небесное поручение исполнено: ${this.god(t.a).n}.`);
-  return ` Небесное поручение исполнено: ${this.god(t.a).n} благодарит, милость +12, опыт +30. Небесная война пошла к концу.`;},
+  return ` Небесное поручение исполнено: ${this.god(t.a).n} благодарит, милость +12, опыт +${оп}. Небесная война пошла к концу.`;},
  /* ── Края ── */
  landAt(x,y){
   if(G.dark)return null;
@@ -45574,10 +45582,10 @@ const Svody={
    else{const m=Math.min(G.manaMax,G.mana+4)-G.mana;G.mana+=m;if(m)w=` Песня вернула силы: мана +${m}.`;}}
   else if(t.sv==="жар"){if(!safeFn(()=>buffActive("прохлада"),false)){const dd=Math.max(1,Math.round(3*(1-this.seaK())));G.hp=Math.max(1,G.hp-dd);w=` Пар с кипящей воды: −${dd} здоровья.`;}}
   else if(t.sv==="обломки"){if(r<0.4){const g=5+Math.floor(r*30);G.gold+=g;w=` Выловили бочонок с обломков: +${g} золота.`;}}
-  else if(t.sv==="зеркало"){if(r<0.3){G.xp+=6;w=" В зеркальной воде видно, что будет: опыт +6.";}}
+  else if(t.sv==="зеркало"){if(r<0.3){const v=this.xp(6);w=` В зеркальной воде видно, что будет: опыт +${v}.`;}}
   else if(t.sv==="заросли"){if(r<0.3){G.hour+=1;if(G.hour>=24){G.hour-=24;G.day++;}w=" Водоросли держали вёсла целый час.";}}
   return w;},
- seaK(){let k=this.relic("море")+0.12*this.step("глубина");const b=this.boon("море");if(b)k+=0.15*b;return Math.min(0.7,k);},
+ seaK(){let k=this.relic("море")+0.12*this.step("глубина");const b=this.boon("море");if(b)k+=0.15*b;if(this.wr("veyra"))k-=0.2;return Math.max(-0.2,Math.min(0.7,k));},
  /* ── Тело: сущности и черты ── */
  step(id){return Number(this.st().body[id])||0;},
  bodyTotal(){return Object.values(this.st().body).reduce((a,b)=>a+(Number(b)||0),0);},
@@ -45592,7 +45600,7 @@ const Svody={
   const цена=this.reforgeCost(id);const есть=Number(s.ess[id])||0;
   if(есть<цена)return `Для перековки «${e.черта}» нужно ${цена} ${e.n.replace("сущность ","сущностей ")}, а у вас ${есть}.`;
   s.ess[id]=есть-цена;s.body[id]=ст+1;this.count("reforge");this.sphere("перековка",3);
-  let ломка="";if(Math.random()<(this.boon("перековка")?0.1:0.25)){buffSet("ломка",6);ломка=" Ломка: шесть часов удар слабее на два.";}
+  let ломка="";if(Math.random()<(this.boon("перековка")?0.1:0.25)*(this.wr("tarvin")?2:1)){buffSet("ломка",6);ломка=" Ломка: шесть часов удар слабее на два.";}
   this.play("sv_reforge",{gain:0.7});
   if(s.body[id]===3)this.deedAdd(`перековал${heroVoiceFemale()?"а":""} тело до третьей ступени черты «${e.черта}»`);
   journal(`Перековка: ${e.черта}, ступень ${s.body[id]}.`);
@@ -45610,10 +45618,10 @@ const Svody={
   if(!t.lvl){t.lvl=1;t.xp=0;t.hunger=100;this.play("sv_shadow",{gain:0.6});journal("Тень-попутчица проснулась.");
    this.deedAdd("обзавёл"+(heroVoiceFemale()?"ась":"ся")+" тенью-попутчицей");
    return " Ваша тень шевельнулась сама по себе: проснулась тень-попутчица. Она растёт от ночных и подземных побед.";}
-  t.hunger=100;t.xp=(Number(t.xp)||0)+n*(this.boon("тень")?1.5:1);
+  t.hunger=100;if(this.wr("keyna"))return " Кейна гневается: тень сыта, но не растёт.";t.xp=(Number(t.xp)||0)+n*(this.boon("тень")?1.5:1);
   const пороги=[0,0,10,30,70,150];
   while(t.lvl<5&&t.xp>=пороги[t.lvl+1]){t.lvl++;this.play("sv_shadow",{gain:0.7});
-   слова+=` Тень выросла до ${t.lvl}-й ступени: ${["","шепчет об опасности","крепче удар ночью","скольжение сквозь тонкие стены","первый удар из тени","враг боится"][t.lvl]}.`;
+   слова+=` Тень выросла до ${t.lvl}-й ступени: ${["","ловушки находятся легче","ночью удар крепче на два","скольжение сквозь тонкие стены","первый удар из тени","враг боится"][t.lvl]}.`;
    if(t.lvl===3)this.deedAdd("научил"+(heroVoiceFemale()?"ась":"ся")+" скользить сквозь стены вместе с тенью");
    journal(`Тень-попутчица: ${t.lvl}-я ступень.`);}
   this.questCheck();return слова;},
@@ -45648,7 +45656,7 @@ const Svody={
  /* ── Слава у народов ── */
  rep(id){return Number(this.st().rep[id])||0;},
  repTier(v){let w="чужак";for(const [p,t] of SV_REP_TIERS)if(v>=p)w=t;return w;},
- repAdd(id,n){if(!SVD_PEOPLE_BY_ID[id])return;const r=this.st().rep;let d=n;if(d>0&&this.boon("жители"))d*=1.5;r[id]=Math.max(-50,Math.min(150,Math.round(((Number(r[id])||0)+d)*10)/10));},
+ repAdd(id,n){if(!SVD_PEOPLE_BY_ID[id])return 0;const r=this.st().rep;let d=n;if(d>0&&this.boon("жители"))d*=1.5;const был=Number(r[id])||0;r[id]=Math.max(-50,Math.min(150,Math.round((был+d)*10)/10));return Math.round((r[id]-был)*10)/10;},
  /* ── Летопись и песни ── */
  deedAdd(t){const s=this.st();s.deeds.push({d:this.day(),t});if(s.deeds.length>60)s.deeds.shift();this.count("deeds");this.sphere("песни",1);
   if(this.n("deeds")%3===0)return this.compose();return "";},
@@ -45686,8 +45694,8 @@ const Svody={
    for(const id of Object.keys(s.quests)){const q=s.quests[id],n=SVD_NPC_BY_ID[id];if(!n||q.done)continue;
     if(this.qProg(id)<n.задание.надо)continue;
     q.done=true;const н=n.награда;let g=н.золото||0;if(this.boon("тайны"))g=Math.round(g*1.3);G.gold+=g;
-    this.repAdd(n.народ,н.слава||0);this.sphere("тайны",2);this.sphere("жители",2);
-    let t=`Поручение Сводов исполнено: «${n.задание.n}». ${n.n} благодарит: +${g} золота, слава у народа «${SVD_PEOPLE_BY_ID[n.народ].n}» +${н.слава}.`;
+    const сл=this.repAdd(n.народ,н.слава||0);this.sphere("тайны",2);this.sphere("жители",2);
+    let t=`Поручение Сводов исполнено: «${n.задание.n}». ${n.n} благодарит: +${g} золота, слава у народа «${SVD_PEOPLE_BY_ID[n.народ].n}» +${сл}.`;
     t+=this.relicGive(н.реликвия);t+=this.sealGive(н.печать);
     this.play("sv_god_union",{gain:0.55});journal(`Исполнено: «${n.задание.n}».`);
     const песня=this.deedAdd(`исполнил${heroVoiceFemale()?"а":""} поручение «${n.задание.n}»`);
@@ -45705,12 +45713,12 @@ const Svody={
   return t;},
  /* ── Сбой мира ── */
  glitch(причина){
-  const r=Math.random(),добрый=this.boon("аномалии")||this.relic("сбой")>0&&Math.random()<this.relic("сбой");
+  const r=Math.random(),добрый=!this.wr("ihor")&&(this.boon("аномалии")||this.relic("сбой")>0&&Math.random()<this.relic("сбой"));
   let t;
-  if(добрый){if(r<0.5){const m=Math.min(G.manaMax,G.mana+15)-G.mana;G.mana+=m;t=`Сбой мира: время дёрнулось, и мана вернулась: +${m}.`;}
-   else{G.hp=Math.min(G.hpMax,G.hp+12);t="Сбой мира: рана затянулась, будто её не было.";}}
+  if(добрый){if(r<0.5&&G.mana<G.manaMax){const m=Math.min(G.manaMax,G.mana+15)-G.mana;G.mana+=m;t=`Сбой мира: время дёрнулось, и мана вернулась: +${m}.`;}
+   else{const h=Math.min(G.hpMax,G.hp+12)-G.hp;if(h>0){G.hp+=h;t=`Сбой мира: рана затянулась, будто её не было. Здоровья +${h}.`;}else{const g=5;G.gold+=g;t=`Сбой мира: в кошельке звякнуло ${g} лишних монет.`;}}}
   else if(r<0.3){G.hour+=2;if(G.hour>=24){G.hour-=24;G.day++;}t="Сбой мира: два часа пропали неизвестно куда.";}
-  else if(r<0.55){const m=Math.min(G.mana,8);G.mana-=m;t=`Сбой мира: мана утекла сквозь пальцы, −${m}.`;}
+  else if(r<0.55&&G.mana>0){const m=Math.min(G.mana,8);G.mana-=m;t=`Сбой мира: мана утекла сквозь пальцы, −${m}.`;}
   else if(r<0.75){const g=3+Math.floor(r*10);G.gold+=g;t=`Сбой мира: в кошельке звякнуло ${g} лишних монет. Чьих — неизвестно.`;}
   else{const d=Math.max(1,Math.round(G.hpMax*0.06));G.hp=Math.max(1,G.hp-d);t=`Сбой мира: на миг вас было двое, и второй ударил первого. −${d} здоровья.`;}
   this.count("glitch");this.sphere("аномалии",1);this.play("sv_glitch",{gain:0.5,maxSec:4});
@@ -45723,13 +45731,13 @@ const Svody={
   if(m.sv)return m;
   const l=this.land();const x=(c&&c.x)||G.x,y=(c&&c.y)||G.y;
   const кинд=safeFn(()=>dungeonKindHere(),null);
-  let шанс=0.18;if(l&&this.decay(l.id)>=60)шанс+=0.1;if(кинд&&кинд.sv)шанс+=0.25;
+  let шанс=0.18+(l?(l.опасность-3)*0.03:0);if(l&&this.decay(l.id)>=60)шанс+=0.1;if(кинд&&кинд.sv)шанс+=0.25;
   if(this.h(x*13+this.day(),y*7,9530)>=шанс)return m;
   const свои=l?l.звери.map(id=>SVD_BEAST_BY_ID[id]).filter(b=>b&&b.база.indexOf(m.id)>=0):[];
   const все=SVD.beasts.filter(b=>b.база.indexOf(m.id)>=0);
   const пул=свои.length?свои:все;if(!пул.length)return m;
   const b=пул[Math.floor(this.h(x,y,9531)*пул.length)%пул.length];
-  let k=b.кр;if(l&&this.decay(l.id)>=60)k*=1.2;if(l&&this.clashToday(l.id))k*=1.2;if(this.boon("охота"))k*=0.9;k*=1-this.relic("звери");
+  let k=b.кр;if(l&&this.decay(l.id)>=60)k*=1.2;if(l&&this.clashToday(l.id))k*=1.2;if(this.boon("охота"))k*=0.9;if(this.wr("sur"))k*=1.1;k*=1-this.relic("звери");
   m.sv=b.id;m.svAbil=b.умение;m.n=b.n;m.hp=Math.max(5,Math.round((Number(m.hp)||20)*k));m.dmg=(Number(m.dmg)||3)+b.удар;m.xp=Math.round((Number(m.xp)||10)*1.4);
   if(this.shadowLvl()>=5&&(Number(m.lvl)||1)<=(Number(G.level)||1))m.svFear=true;
   setTimeout(()=>this.play(b.звук,{gain:0.7}),300);
@@ -45745,7 +45753,9 @@ const Svody={
   if(cb.svCrown)d+=2;
   return Math.max(0,d);},
  onStrike(m,mdmg){
-  if(!m)return mdmg;const cb=G.combat||{};let d=mdmg;const первый=!cb.svHit;cb.svHit=(cb.svHit||0)+1;
+  if(!m)return mdmg;const cb=G.combat||{};
+  if(cb.svStun>0){cb.svStun--;safeFn(()=>cbLog(`${m.n} оцепенел от песни глубин и не ударил.`));return 0;}
+  let d=mdmg;const первый=!cb.svHit;cb.svHit=(cb.svHit||0)+1;
   switch(m.svAbil){
    case "жар":d+=2;break;
    case "яд":if(Math.random()<0.25&&!G.poisoned){G.poisoned={until:this.day()*24+(Number(G.hour)||0)+2,n:`яд: ${m.n}`};safeFn(()=>cbLog("Яд! Два часа здоровье будет уходить."));}break;
@@ -45761,7 +45771,7 @@ const Svody={
   d-=this.step("чешуя")+Math.floor(this.step("камень")/2);
   if(this.solo())d-=Math.min(3,Math.floor((Number(this.st().solo)||0)/15));
   if(m.svFear)d=Math.round(d*0.8);
-  if(cb.svCrown&&G.combat){G.combat.hp=Math.max(1,(Number(G.combat.hp)||0)-4);safeFn(()=>cbLog("Пепельный венец обжёг врага: −4."));}
+  if(cb.svCrown&&G.combat&&(Number(G.combat.hp)||0)>1){const ож=Math.min(4,(Number(G.combat.hp)||0)-1);G.combat.hp-=ож;safeFn(()=>cbLog(`Пепельный венец обжёг врага: −${ож}.`));}
   if(G.ship&&!G.place)d=Math.round(d*(1-this.seaK()));
   d=Math.max(mdmg>0&&d<=0?1:0,d);
   if(G.combat)G.combat.svTaken=(Number(G.combat.svTaken)||0)+d;
@@ -45781,8 +45791,7 @@ const Svody={
   let k=this.relic("ловушки")+0.04*this.step("тень");if(this.shadowLvl()>=1)k+=0.05;
   const b=this.boon("ловушки");if(b)k+=0.08*b;if(safeFn(()=>buffActive("тишина шага"),false))k+=0.08;
   if(safeFn(()=>buffActive("глушь"),false))k-=0.1;if(this.harmony())k+=0.05;
-  if(this.wrathful().indexOf("molchan")>=0)k-=0.08;
-  return k;},
+    return k;},
  trapK(){const к=safeFn(()=>dungeonKindHere(),null);return к&&к.id==="sv_hush"?1.4:1;},
  trapEffect(л){
   switch(л.sv){
@@ -45794,7 +45803,7 @@ const Svody={
    case "сбой":return " "+this.glitch("");
    case "клятва":if(this.st().oath){const v=Math.round((Number(л.урон)||6)/2);G.hp=Math.min(G.hpMax,G.hp+v);return ` Печать признала вашу присягу и вернула ${v} здоровья.`;}return " Присяги у вас нет — печать считает это ложью.";
    case "корни":G.hour+=1;if(G.hour>=24){G.hour-=24;G.day++;}return " Час ушёл на то, чтобы выпутаться.";
-   case "соль":G.water=Math.max(0,(Number(G.water)||0)-10);return "";}
+   case "соль":{const v=Math.min(10,Number(G.water)||0);G.water=(Number(G.water)||0)-v;return v?` Соль сушит горло: ещё −${v} воды.`:"";}}
   return "";},
  onWin(m){
   if(!m)return;const s=this.st();const l=this.land();let t="";
@@ -45845,11 +45854,11 @@ const Svody={
     w=`На ступенях пустого трона — дары богу «${g.n}». Вы оставили свой: милость +${5*к}.`;
     if(this.favor(g.id)>=20){const r=SVD.relics.find(x=>x.бог===g.id);if(r)w+=this.relicGive(r.id);}
     this.questCheck();break;}
-   case "sv_singer":{if(buffActive("тишина шага")){G.xp+=12;w="Певуньи поют, но зелье тишины держит: вы слушаете и запоминаете. Опыт +12.";}
-    else if(rnd<0.5){G.hour+=3;if(G.hour>=24){G.hour-=24;G.day++;}w="Песня певуний держала вас на берегу три часа.";}
+   case "sv_singer":{if(buffActive("тишина шага")){const v=this.xp(12);w=`Певуньи поют, но зелье тишины держит: вы слушаете и запоминаете. Опыт +${v}.`;}
+    else if(rnd<0.5||G.mana>=G.manaMax){G.hour+=3;if(G.hour>=24){G.hour-=24;G.day++;}w="Песня певуний держала вас на берегу три часа.";}
     else{const m=Math.min(G.manaMax,G.mana+20)-G.mana;G.mana+=m;w=`Песня певуний наполнила вас силой: мана +${m}.`;}break;}
    case "sv_bone":{this.essAdd("камень",к);w=`Рёбра исполинского зверя: ${к>1?"две сущности":"сущность"} камня.`;break;}
-   case "sv_glass":{G.xp+=8*к;w=`Внутри прозрачных скал течёт свет. Опыт +${8*к}.`;break;}}
+   case "sv_glass":{const v=this.xp(8*к);w=`Внутри прозрачных скал течёт свет. Опыт +${v}.`;break;}}
   return w;},
  /* ── Зелья Сводов ── */
  drink(p,q){
@@ -45859,7 +45868,7 @@ const Svody={
    case "прилив":buffSet("прилив",Math.round(6*q));buffSet("дыхание",Math.round(3*q));return `${Math.round(6*q)} ч море бьёт слабее, под водой дольше`;
    case "тишина":buffSet("тишина шага",Math.round(4*q));return `${Math.round(4*q)} ч ловушки слышнее, а песни моря не берут`;
    case "одиночка":this.st().solo=(Number(this.st().solo)||0)+5;return "одиночество крепче: пять побед в запас";
-   case "жар":buffSet("мощь",Math.round(3*q));{const m=Math.min(G.manaMax,G.mana+8)-G.mana;G.mana+=m;}return `${Math.round(3*q)} ч удар сильнее, мана +8`;}
+   case "жар":{buffSet("мощь",Math.round(3*q));const m=Math.min(G.manaMax,G.mana+8)-G.mana;G.mana+=m;return `${Math.round(3*q)} ч удар сильнее на три${m>0?`, мана +${m}`:""}`;}}
   return "ничего не случилось";},
  /* ── Заклинания-легенды ── */
  cast(id){
@@ -45868,15 +45877,15 @@ const Svody={
   let цена=sp.мана;if(this.boon("чары"))цена=Math.round(цена*0.7);
   if((Number(G.mana)||0)<цена)return `На «${sp.n}» нужно ${цена} маны, а у вас ${Math.round(Number(G.mana)||0)}.`;
   const cb=G.combat;
-  if(!G.inCombat||!cb){if(sp.лечит){G.mana-=цена;G.hp=Math.min(G.hpMax,G.hp+sp.лечит);this.play(sp.звук);return `${sp.n}: здоровья +${sp.лечит}.`;}return `«${sp.n}» читают в бою.`;}
+  if(!G.inCombat||!cb){if(sp.лечит){if(G.hp>=G.hpMax)return `${sp.n}: вы и так здоровы.`;G.mana-=цена;const hh=Math.min(G.hpMax,G.hp+sp.лечит)-G.hp;G.hp+=hh;this.play(sp.звук);return `${sp.n}: здоровья +${hh}.`;}return `«${sp.n}» читают в бою.`;}
   G.mana-=цена;this.play(sp.звук,{gain:0.7});this.count("casts");this.sphere("чары",2);
   if(!s.cast1){s.cast1=1;this.deedAdd(`прочитал${heroVoiceFemale()?"а":""} заклинание-легенду «${sp.n}»`);}
   const ур=Number(G.level)||1;let t="";
   if(sp.сбой){cb.hp=Math.max(1,Math.round((Number(cb.hp)||0)*0.67));const d=Math.max(1,Math.round(G.hpMax*0.15));G.hp=Math.max(1,G.hp-d);t=`${sp.n}: мир сбился — враг потерял треть сил, вы −${d} здоровья.`;}
   else if(sp.тень){const доля=(Number(cb.hp)||0)/Math.max(1,Number(cb.m.hp)||1);
-   if(доля<0.3){cb.hp=0;t=`${sp.n}: удар из тени добил ${cb.m.n}.`;}else{safeFn(()=>endCombat());safeFn(()=>refresh());return `${sp.n}: вы ушли тенью, бой окончен.`;}}
+   if(доля<0.3){cb.hp=0;t=`${sp.n}: удар из тени добил ${cb.m.n}.`;}else{const mm=cb.m;safeFn(()=>foeProfileCue(mm,"lose",{gain:0.5}));safeFn(()=>endCombat());journal(`Ушли тенью от «${mm.n}».`);safeFn(()=>refresh());safeFn(()=>resumeLocationMusic());return `${sp.n}: вы ушли тенью, бой окончен.`;}}
   else{let d=sp.урон[0]+Math.round(sp.урон[1]*ур/2);if(sp.приговор)d=Math.max(d,Number(cb.svTaken)||0);cb.hp=Math.max(0,(Number(cb.hp)||0)-d);
-   t=`${sp.n}: ${cb.m.n} получает ${d}.`;if(sp.лечит){G.hp=Math.min(G.hpMax,G.hp+sp.лечит);t+=` Вы лечитесь на ${sp.лечит}.`;}if(sp.венец){cb.svCrown=true;t+=" Пепельный венец горит до конца боя.";}}
+   t=`${sp.n}: ${cb.m.n} получает ${d}.`;if(sp.лечит){const hh=Math.min(G.hpMax,G.hp+sp.лечит)-G.hp;G.hp+=hh;cb.svStun=1;t+=` Вы лечитесь на ${hh}, враг цепенеет на один удар.`;}if(sp.венец){cb.svCrown=true;t+=" Пепельный венец горит до конца боя.";}}
   if(cb.hp<=0)safeFn(()=>victory());else safeFn(()=>updateCombat());
   return t;},
  /* ── Такт мира: вызывается из refresh() после каждого действия ── */
@@ -45890,11 +45899,16 @@ const Svody={
    if(l&&s.land!==l.id){s.land=l.id;const впервые=!s.cnt.lands[l.id];s.cnt.lands[l.id]=1;
     const п=SVD_PEOPLE_BY_ID[l.народ],б=SVD_GOD_BY_ID[l.бог];
     let t=`Край Сводов: ${l.n} — ${l.о}. Здесь живут ${п.n}, чтут бога «${б.n}». Упадок ${Math.round(this.decay(l.id))} из ста.`;
-    if(впервые){G.xp+=5*(1+(this.boon("знание")?1:0));this.sphere("знание",1);if(Object.keys(s.cnt.lands).length%3===0)this.deedAdd(`дош${heroVoiceFemale()?"ла":"ёл"} до края «${l.n}»`);}
+    if(впервые){t+=` Новый край: опыт +${this.xp(5)}.`;this.sphere("знание",1);if(Object.keys(s.cnt.lands).length%3===0)this.deedAdd(`дош${heroVoiceFemale()?"ла":"ёл"} до края «${l.n}»`);}
     if(this.clashToday(l.id))t+=" Над краем гремит битва богов.";
     const встреча=this.h(G.x,G.y,9540)<0.5?this.meet(false):"";
     this.play(б.звук,{gain:0.4,maxSec:4});
     this.say(t+(встреча?" "+встреча:""));}}
+  /* Подземелье Сводов: имя на входе; перевёрнутый храм — пустой престол. */
+  {const pk=G.place&&Number(G.place.depth)>0?G.place.bx+","+G.place.by:"";
+   if(pk!==s.dk){s.dk=pk;const к=pk?safeFn(()=>dungeonKindHere(),null):null;
+    if(к&&к.sv){if(к.id==="sv_temple"){this.count("godseat");this.favorAdd("grozdan",2);}
+     this.say(`Подземелье Сводов: ${к.n}.${к.id==="sv_temple"?" Вы стоите под рухнувшим престолом павшего бога.":""}`);}}}
   /* Воды */
   const w=this.waterHere();const wk=w?w.key:"";
   if(wk!==s.water){s.water=wk;
@@ -45902,8 +45916,12 @@ const Svody={
     if(w.kind==="sea"){const нов=!s.cnt.oceans[w.ocean.id];s.cnt.oceans[w.ocean.id]=1;s.cnt.seas["n:"+w.n]=1;
      t=`${w.n}, ${w.ocean.n}${нов?": "+w.ocean.о:""}.`;}
     else if(w.kind==="river"){const нов=!s.cnt.rivers[w.n];s.cnt.rivers[w.n]=1;t=`Река ${w.n}: ${w.о}.`;
-     if(нов){if(w.дар==="вода")G.water=Math.min(200,(Number(G.water)||0)+30);else if(w.дар==="лечение")G.hp=Math.min(G.hpMax,G.hp+8);else if(w.дар==="знание")G.xp+=5;
-      if(this.boon("реки"))G.hp=Math.min(G.hpMax,G.hp+5*this.boon("реки"));this.sphere("реки",1);}}
+     if(нов){if(w.дар==="вода"){const v=Math.min(200,(Number(G.water)||0)+30)-(Number(G.water)||0);G.water=(Number(G.water)||0)+v;if(v>0)t+=` Вы напились: вода +${v}.`;}
+      else if(w.дар==="лечение"){const v=Math.min(G.hpMax,G.hp+8)-G.hp;G.hp+=v;if(v>0)t+=` Вода целебная: здоровья +${v}.`;}
+      else if(w.дар==="знание")t+=` Река показала прошлое: опыт +${this.xp(5)}.`;
+      else if(w.дар==="соль")t+=" Вода солёная: пить её нельзя.";
+      else if(w.дар==="змей")t+=" В воде мелькают змеи Ахта: купаться не стоит.";
+      if(this.boon("реки")){const v=Math.min(G.hpMax,G.hp+5*this.boon("реки"))-G.hp;G.hp+=v;if(v>0)t+=` Великий Змей Ахт лечит: здоровья +${v}.`;}this.sphere("реки",1);}}
     else if(w.kind==="lake"){s.cnt.lakes[w.n]=1;t=`${w.n}: ${w.о}.`;}
     else if(w.kind==="arch"){s.cnt.archs[w.n]=1;t=`Архипелаг ${w.n}: ${w.о}.`;}
     this.questCheck();
@@ -45919,6 +45937,7 @@ const Svody={
      только война бога края. */
   for(const l of SVD.lands){const st=this.landSt(l.id);const war=this.atWar(l.бог);const cur=Number(st.decay)||0;
    const d=cur<70?0.35+(war?0.4:0):(war?0.25:0);st.decay=Math.min(100,Math.round((cur+d)*100)/100);}
+  {const l0=this.land();if(l0&&this.wr("hessa"))this.decayAdd(l0.id,0.5);}
   /* Тень голодает, клятва копит дни */
   const tn=this.shadow();if(tn.lvl)tn.hunger=Math.max(0,(Number(tn.hunger)||0)-15);
   if(s.oath)this.count("oathdays");
@@ -46036,7 +46055,7 @@ const Svody={
  shadowView(){
   const t=this.shadow();
   let h=this.line(t.lvl?`Тень-попутчица: ступень ${t.lvl} из пяти, сытость ${Math.round(t.hunger)} из ста${t.hunger<=0?" — голодна и спит":""}. Растёт от побед ночью и под землёй.`:"Тени-попутчицы нет. Она просыпается после первой победы ночью или в подземелье.");
-  h+=this.line("Ступени: первая — шепчет об опасности ловушек; вторая — ночью удар крепче; третья — скольжение сквозь тонкие стены подземелий; четвёртая — первый удар в бою из тени; пятая — слабые твари боятся.");
+  h+=this.line("Ступени: первая — ловушки находятся легче; вторая — ночью удар крепче; третья — скольжение сквозь тонкие стены подземелий; четвёртая — первый удар в бою из тени; пятая — слабые твари боятся.");
   if(t.lvl>=3)h+=this.btn("slip","Скольжение: приготовить тень к шагу сквозь стену");
   const s=this.st();h+=this.line(`Путь одиночки: побед подряд без скакуна и гомункула — ${Math.round(Number(s.solo)||0)}; бонус к удару ${this.soloAtk()}${this.solo()?"":", сейчас вы не одни"}.`);
   return this.show("Тень-попутчица",h);},
@@ -50433,7 +50452,7 @@ function weaveAct(sp,sc,f,c,el,md,k){
   /* ── ПЕЧАТЬ ── */
   case "seal":{
    const л=safeFn(()=>trapFound(),null);
-   if(л){safeFn(()=>setPlaceMark(л.x,л.y,"trap_off"));return ` Метка ${sc.род} запечатала ${л.n}.`;}
+   if(л){safeFn(()=>setPlaceMark(л.x,л.y,"trap_off"));if(SVODY_ON)safeFn(()=>Svody.count("traps"));return ` Метка ${sc.род} запечатала ${л.n}.`;}
    return " Метка легла, но печатать было нечего.";}
   /* ── ЧУТЬЁ ── */
   case "sense":{
@@ -50502,7 +50521,7 @@ function weaveAct(sp,sc,f,c,el,md,k){
   case "dispel":{
    const слова=[];
    const л=safeFn(()=>trapFound(),null);
-   if(л){safeFn(()=>setPlaceMark(л.x,л.y,"trap_off"));слова.push(`${л.n} обезврежена`);}
+   if(л){safeFn(()=>setPlaceMark(л.x,л.y,"trap_off"));if(SVODY_ON)safeFn(()=>Svody.count("traps"));слова.push(`${л.n} обезврежена`);}
    /* Чужие метки вокруг снимаются по-настоящему. */
    const рад=Math.max(1,Number(f.радиус)||1);
    let снято=0;

@@ -141,11 +141,16 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
  // 9. Ловушки в сундуках глубины
  const trap=await page.evaluate(()=>{
   let trapped=0,hpLost=0;
-  for(let i=0;i<40;i++){
+  /* Открываем настоящие сундуки (клетка «C») сорока подземелий: ловушка
+     крышки — та же, что находит осмотр, и только на сундуке. */
+  let открыто=0;
+  for(let i=0;i<40&&открыто<40;i++){
    G.place={kind:"dungeon",bx:1000+i,by:1000,stype:"ruins",name:"т",depth:3,x:1,y:1};
-   G.marks={};G.hp=100;G.gold=0;
-   openChest(3+i%5,4+i%3);
-   if(G.hp<100){trapped++;hpLost+=100-G.hp;}}
+   G.marks={};const l=curLevel();
+   for(let y=0;y<l.h&&открыто<40;y++)for(let x=0;x<l.w&&открыто<40;x++){
+    if(tileAt(l,x,y)!=="C"||chestLocked(x,y))continue;
+    G.hp=100;G.gold=0;G.place.x=x;G.place.y=y;openChest(x,y);открыто++;
+    if(G.hp<100){trapped++;hpLost+=100-G.hp;}}}
   return {trapped,avg:trapped?Math.round(hpLost/trapped):0};});
  check('часть глубоких сундуков оказывается с ловушкой',trap.trapped>0&&trap.trapped<40&&trap.avg>0,trap);
 
