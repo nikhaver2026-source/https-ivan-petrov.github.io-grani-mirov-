@@ -4090,7 +4090,7 @@ const BANK_GROUPS=[
  {n:"Подземный мир и тёмные голоса",icon:"", dirs:["od"]},
  {n:"Взрывы, гулы и переходы",  icon:"", dirs:["es"]},
  {n:"Подземелья и тьма",      icon:"", dirs:["deep","cave"]},
- {n:"Магия, чары и касты",    icon:"", dirs:["cast"]},
+ {n:"Магия, чары и касты",    icon:"", dirs:["cast","potion"]},
  {n:"Боги, храмы и знамения", icon:"", dirs:["stendhalfx"]},
  {n:"Места, здания и постройки",icon:"", dirs:["hall","nat"]},
  {n:"Шаги и поверхности",     icon:"", dirs:["steps","tread","gear"]},
@@ -12681,7 +12681,7 @@ const SOUND_BANK={
  cast_fire:{f:["cast/cast_fire_01.ogg"],d:"Огненный шар"},
  cast_heal:{f:["cast/cast_heal_01.ogg"],d:"Исцеление"},
  cast_ice:{f:["cast/cast_ice_01.ogg"],d:"Лёд сковывает"},
- cast_potion:{f:["cast/cast_potion_01.ogg"],d:"Снадобье выпито"},
+ cast_potion:{f:["potion/potion_drink_01.flac","potion/potion_drink_02.flac","potion/potion_drink_03.flac"],d:"Зелье выпито: хлопок пробки, глотки, стеклянный звон"},
  cast_quake:{f:["cast/cast_quake_01.ogg"],d:"Земля вздрагивает"},
  cast_shield:{f:["cast/cast_shield_01.ogg"],d:"Щит встаёт"},
  cast_shock:{f:["cast/cast_shock_01.ogg"],d:"Разряд"},
@@ -16575,7 +16575,7 @@ function drinkPotion(i){
   let q=Number(rec.q)||1,стаб=Number(rec.стаб)||0.5,слова="";
   if(potionExpired(rec)){q*=0.5;стаб-=0.3;слова=" Зелье выдохлось: сработало вполсилы.";}
   const сбой=Math.random()>стаб;
-  safeFn(()=>{UI.drink();Bank.play("cast_potion",{gain:0.55,maxSec:3});});
+  safeFn(()=>{UI.drink();Bank.play("cast_potion",{gain:0.85,maxSec:3});});
   let итог=safeFn(()=>pt.дать(сбой?q*0.5:q),"ничего");
   if(сбой){
    const d=Math.max(2,Math.round(G.hpMax*0.05));G.hp=Math.max(1,G.hp-d);safeFn(()=>adaptAdd("мутаген",1));
@@ -40193,7 +40193,7 @@ function fight(a){const cb=G.combat;if(!cb)return;const m=cb.m;
      отвар на воде. */
   const есть=invHas("Зелье здоровья",1)?"inv":(Array.isArray(G.items)&&G.items.indexOf("Зелье здоровья")>=0)?"item":"";
   if(есть){if(есть==="inv")invTake("Зелье здоровья",1);else G.items.splice(G.items.indexOf("Зелье здоровья"),1);
-   const h=Math.min(G.hpMax,G.hp+15)-G.hp;G.hp+=h;UI.drink();safeFn(()=>Bank.play("cast_potion",{gain:0.5,maxSec:2}));cbLog(`Зелье здоровья: +${h} здоровья.`);}
+   const h=Math.min(G.hpMax,G.hp+15)-G.hp;G.hp+=h;UI.drink();safeFn(()=>Bank.play("cast_potion",{gain:0.85,maxSec:3}));cbLog(`Зелье здоровья: +${h} здоровья.`);}
   else{if(G.water<20){narrate("Нет ни зелья здоровья, ни воды для отвара.");return;}
    G.water-=20;G.hp=Math.min(G.hpMax,G.hp+15);UI.drink();cbLog("Отвар на воде: +15 здоровья.");}}
  else if(a==="flee"){if(safeFn(()=>{const p=bossPhaseOf(cb.m);return p&&p.механика==="без бегства";},false)){cbLog("Якорь брошен: бежать некуда.");}
@@ -52581,7 +52581,7 @@ iaction("drink",{n:"Выпить",значок:"",cats:["potion"],можно:ok,
  делать:(row,ctx,done)=>{if(row.kind==="potion"){safeFn(()=>closeModal(document.getElementById("modal-invact")));drinkPotion(Number(row.key));safeFn(()=>renderInventory());return true;}
   const n=String(row.name);invRemoveItem(row);
   if(n==="Яд"){const урон=Math.max(1,Math.round(G.hpMax*0.15));G.hp=Math.max(1,G.hp-урон);safeFn(()=>Bank.play("oc_corrode",{gain:0.5,maxSec:2}));return done(`Вы выпили яд. Урон ${урон}, здоровья ${G.hp}. Зачем?`);}
-  if(n==="Противоядие"){G.poisoned=null;const h=Math.min(G.hpMax,G.hp+10)-G.hp;G.hp+=h;safeFn(()=>Bank.play("cast_potion",{gain:0.5,maxSec:2}));return done(`Противоядие выпито: яд снят, здоровья +${h}.`);}
+  if(n==="Противоядие"){G.poisoned=null;const h=Math.min(G.hpMax,G.hp+10)-G.hp;G.hp+=h;safeFn(()=>Bank.play("cast_potion",{gain:0.85,maxSec:3}));return done(`Противоядие выпито: яд снят, здоровья +${h}.`);}
   const h=Math.min(G.hpMax,G.hp+15)-G.hp;G.hp+=h;safeFn(()=>{UI.drink();Bank.play("cast_potion",{gain:0.5,maxSec:2});});return done(`Выпито: ${n}. Здоровья +${h}.`);}});
 iaction("drinkitem",{n:"Выпить",значок:"",cats:[],можно:ok,делать:(row,ctx,done)=>invDo("drink",row.kind,row.key)});
 iaction("read",{n:"Прочитать",значок:"",cats:["scroll","book"],можно:(row,ctx)=>ctx&&ctx.бой&&row.cat==="book"?"в бою не до книг":true,

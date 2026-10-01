@@ -127,7 +127,6 @@ sounds/cast/cast_burn_01.ogg	57
 sounds/cast/cast_fire_01.ogg	91
 sounds/cast/cast_heal_01.ogg	47
 sounds/cast/cast_ice_01.ogg	97
-sounds/cast/cast_potion_01.ogg	111
 sounds/cast/cast_quake_01.ogg	49
 sounds/cast/cast_shield_01.ogg	113
 sounds/cast/cast_shock_01.ogg	103

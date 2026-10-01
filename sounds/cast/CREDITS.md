@@ -21,7 +21,6 @@ https://creativecommons.org/licenses/by-sa/3.0/
 | cast_fire_01 | огненный шар | `fantasycore/soundfx/powers/fireball.ogg` |
 | cast_heal_01 | исцеление | `fantasycore/soundfx/powers/heal.ogg` |
 | cast_ice_01 | лёд сковывает | `fantasycore/soundfx/powers/freeze.ogg` |
-| cast_potion_01 | снадобье выпито | `fantasycore/soundfx/powers/potion.ogg` |
 | cast_quake_01 | земля вздрагивает | `fantasycore/soundfx/powers/quake.ogg` |
 | cast_shield_01 | щит встаёт | `fantasycore/soundfx/powers/shield.ogg` |
 | cast_shock_01 | разряд | `fantasycore/soundfx/powers/shock.ogg` |
