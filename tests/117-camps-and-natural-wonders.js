@@ -100,25 +100,25 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   r.сказГреться=SAID.find(t=>/Здоровье \+\d+/.test(t))||SAID.slice(-1)[0]||"";r.лечит=G.hp>было;
   r.часПошёл=((Number(G.hour)||0)!==часБыл)||((Number(G.day)||1)!==деньБыл);
   SAID.length=0;r.спрос=CMD.camp("ask");await пауза(120);
-  r.сказСпрос=(SAID.slice(-1)[0]||"").slice(0,160);
+  r.сказСпрос=(SAID.filter(x=>!/^Край Сводов/.test(x)).slice(-1)[0]||"").slice(0,160);
   /* Сбыт: у охотников берут шкуру и кость дороже города. */
   const охот=НАЙТИ("camp","hunt");
   if(охот){G.x=охот.x;G.y=охот.y;
    G.inv=G.inv||{};G.inv["шкура"]=3;G.gold=100;
    SAID.length=0;r.сбыт=CMD.camp("sell");await пауза(120);
-   r.сказСбыт=(SAID.slice(-1)[0]||"").slice(0,160);
+   r.сказСбыт=(SAID.filter(x=>!/^Край Сводов/.test(x)).slice(-1)[0]||"").slice(0,160);
    r.золотоВыросло=G.gold>100;r.шкурыУшли=!(Number(G.inv["шкура"])||0);
    SAID.length=0;CMD.camp("sell");await пауза(120);
-   r.сбытПусто=(SAID.slice(-1)[0]||"").slice(0,120);
+   r.сбытПусто=(SAID.filter(x=>!/^Край Сводов/.test(x)).slice(-1)[0]||"").slice(0,120);
    /* Обещанное по делу стан не берёт: одно нажатие рвало поручение молча. */
    G.inv["шкура"]=5;G.inv["кость"]=2;G.gold=0;
    const дела=G.quests;
    G.quests=[{id:"проба",type:"fetch",res:"шкура",need:3,done:false,npc:"проба",text:"принеси шкуры"}];
    SAID.length=0;CMD.camp("sell");await пауза(120);
-   r.сДелом=(SAID.slice(-1)[0]||"");
+   r.сДелом=(SAID.filter(x=>!/^Край Сводов/.test(x)).slice(-1)[0]||"");
    r.шкурОсталось=Number(G.inv["шкура"])||0;r.костьОсталось=Number(G.inv["кость"])||0;
    SAID.length=0;CMD.camp("sell");await пауза(120);
-   r.сДеломДважды=(SAID.slice(-1)[0]||"");
+   r.сДеломДважды=(SAID.filter(x=>!/^Край Сводов/.test(x)).slice(-1)[0]||"");
    G.quests=дела;delete G.inv["шкура"];}
   return r;});
  check('у стана греются час и получают здоровье, расспрашивают и слышат своё слово',
@@ -140,13 +140,13 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   const раз=НАЙТИ("camp","band");
   if(раз){G.x=раз.x;G.y=раз.y;G.gold=500;
    SAID.length=0;CMD.camp("pay");await пауза(120);
-   r.мыто=(SAID.slice(-1)[0]||"");r.золотоУпало=G.gold<500;}
+   r.мыто=(SAID.filter(x=>!/^Край Сводов/.test(x)).slice(-1)[0]||"");r.золотоУпало=G.gold<500;}
   const пал=НАЙТИ("camp","pilg");
   if(пал){G.x=пал.x;G.y=пал.y;G.mana=0;G.zoneTake={};
    SAID.length=0;CMD.camp("bless");await пауза(120);
-   r.благо=(SAID.slice(-1)[0]||"");r.манаРосла=(Number(G.mana)||0)>0;
+   r.благо=(SAID.filter(x=>!/^Край Сводов/.test(x)).slice(-1)[0]||"");r.манаРосла=(Number(G.mana)||0)>0;
    SAID.length=0;CMD.camp("bless");await пауза(120);
-   r.благоДважды=(SAID.slice(-1)[0]||"");}
+   r.благоДважды=(SAID.filter(x=>!/^Край Сводов/.test(x)).slice(-1)[0]||"");}
   const вой=НАЙТИ("camp","army");
   if(вой){G.x=вой.x;G.y=вой.y;
    SAID.length=0;CMD.camp("war");await пауза(120);
@@ -154,10 +154,10 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   const пог=НАЙТИ("camp","drov");
   if(пог){G.x=пог.x;G.y=пог.y;G.gold=100;G.hp=Math.max(1,G.hpMax-30);
    SAID.length=0;CMD.camp("feed");await пауза(120);
-   r.корм=(SAID.slice(-1)[0]||"");r.кормЦена=G.gold===85;}
+   r.корм=(SAID.filter(x=>!/^Край Сводов/.test(x)).slice(-1)[0]||"");r.кормЦена=G.gold===85;}
   /* Вне стана дела честно отказывают. */
   G.x=1;G.y=1;SAID.length=0;CMD.camp("warm");await пауза(120);
-  r.вне=(SAID.slice(-1)[0]||"");
+  r.вне=(SAID.filter(x=>!/^Край Сводов/.test(x)).slice(-1)[0]||"");
   return r;});
  check('разбойники берут мыто, паломники благословляют раз в сутки, войско говорит о войне, погонщики поят за пятнадцать',
   /Мыто уплачено/.test(свои.мыто||"")&&свои.золотоУпало
