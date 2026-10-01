@@ -120,7 +120,7 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
 
  /* ── 5. варка ── */
  const варка=await page.evaluate(()=>{
-  const r={};r.зелий=POTIONS.length;
+  const r={};r.свЗ=SVODY_ON?SVD.potions.length:0;r.зелий=POTIONS.length;
   r.плохие=POTIONS.filter(p=>!p.n||!p.о||p.из.length!==2||p.из.some(c=>!PLANT_CAT_BY_ID[c])||!(p.срок>0)||!(p.стаб>0&&p.стаб<1)||typeof p.дать!=="function").map(p=>p.id);
   r.ниши=new Set(POTIONS.flatMap(p=>p.из)).size;
   G.potions=[];G.inv={};G.mast={alchemy:{ур:0,оп:0}};
@@ -140,7 +140,7 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   Math.random=rnd;
   return r;});
  check('5а. восемнадцать зелий из двух ниш, все поля на месте; без ступени не варят; отказ называет недостающую нишу',
-  варка.зелий===18&&!варка.плохие.length&&варка.ниши>=12&&варка.безСтупени===false&&/урок/.test(варка.безСтупениСказ)&&варка.безТравы===false&&/болотные/.test(варка.безТравыСказ),
+  варка.зелий===18+(варка.свЗ||0)&&!варка.плохие.length&&варка.ниши>=12&&варка.безСтупени===false&&/урок/.test(варка.безСтупениСказ)&&варка.безТравы===false&&/болотные/.test(варка.безТравыСказ),
   [варка.плохие,варка.ниши,варка.безТравыСказ]);
  check('5б. варка тратит по растению каждой ниши, даёт запись с качеством, устойчивостью и сроком, звучит и растит ремесло',
   варка.ok&&/Качество/.test(варка.сказ)&&/устойчивость \d+ из ста/.test(варка.сказ)&&варка.запись&&варка.запись.id==="heal"&&варка.запись.q>0&&варка.запись.стаб>0&&варка.запись.срок===12&&варка.осталось[0]===undefined&&варка.осталось[1]===undefined&&варка.звук&&варка.оп>0,
@@ -182,7 +182,7 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   const r={};const t=TECH_BY_ID.potion;r.тех=t&&{ур:t.ур,маст:t.маст,станки:t.станки};
   G.mast={alchemy:{ур:1,оп:0}};G.potions=[{id:"heal",q:1.2,стаб:0.8,день:G.day,срок:10}];G.inv["рановник"]=1;G.inv["топяной хвощ"]=1;
   r.работа=techDo(t,"cauldron");r.видно=!document.getElementById("modal-potions").hidden;
-  r.вСумке=document.querySelectorAll('#potBody [data-cmd^="drinkpotion:"]').length;r.рецептов=document.querySelectorAll('#potBody [data-cmd^="brewpotion:"]').length;
+  r.свЗ=SVODY_ON?SVD.potions.length:0;r.вСумке=document.querySelectorAll('#potBody [data-cmd^="drinkpotion:"]').length;r.рецептов=document.querySelectorAll('#potBody [data-cmd^="brewpotion:"]').length;
   r.можно=[...document.querySelectorAll('#potBody [data-cmd^="brewpotion:"]')].filter(b=>/можно сварить/.test(b.textContent)).map(b=>b.dataset.cmd);
   /* Прежде число родов зелий брали у potionsText — строки, которую игра не
      показывала нигде. Теперь берём то, что игрок слышит на самом деле:
@@ -195,7 +195,7 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   r.травник=plantsText();
   return r;});
  check('7. «Сварить зелье» — алхимия первой ступени у чана или очага, открывает окно с сумкой и рецептами; пункт меню — знающему или имеющему; сумка и травник в сохранении',
-  окно.тех&&окно.тех.ур===1&&окно.тех.маст==="alchemy"&&окно.тех.станки.includes("cauldron")&&окно.работа&&окно.видно&&окно.вСумке===1&&окно.рецептов===18&&окно.можно.includes("brewpotion:heal")&&окно.меню&&окно.менюБез===false&&окно.сохр&&/Ступень алхимии 1/.test(окно.шапка)&&/чёрный дурманник/.test(окно.травник),
+  окно.тех&&окно.тех.ур===1&&окно.тех.маст==="alchemy"&&окно.тех.станки.includes("cauldron")&&окно.работа&&окно.видно&&окно.вСумке===1&&окно.рецептов===18+(окно.свЗ||0)&&окно.можно.includes("brewpotion:heal")&&окно.меню&&окно.менюБез===false&&окно.сохр&&/Ступень алхимии 1/.test(окно.шапка)&&/чёрный дурманник/.test(окно.травник),
   [окно.тех,окно.вСумке,окно.рецептов,окно.можно,окно.меню,окно.менюБез,окно.сохр,окно.шапка]);
 
  check('без ошибок страницы',errors.length===0,errors.slice(0,3));

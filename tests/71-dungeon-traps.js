@@ -138,7 +138,9 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   setPlaceMark(цель.x,цель.y,"trap_on");
   G.place.x=цель.x-цель.dx;G.place.y=цель.y-цель.dy;G.hp=200;
   const рБыло=реплики.length;
-  moveInside(дир);
+  /* С 6.0 переступить удаётся не всегда (шанс от ловкости — набор 229);
+     здесь проверяем сам путь «переступил», поэтому бросок удачный. */
+  const rnd=Math.random;Math.random=()=>0;try{moveInside(дир);}finally{Math.random=rnd;}
   const переступил=реплики.slice(рБыло).some(t=>/переступили/i.test(t));
   safeFn(()=>Actors.ensure());
   Speech.say=say;Bank.play=bp;
