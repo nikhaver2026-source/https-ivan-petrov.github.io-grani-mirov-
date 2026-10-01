@@ -4,7 +4,7 @@
 «Настроек персонажа») и разумных врагов-людей: двух разбойников, разбойницы,
 корсара и корсарши — тем же голосом Gemini, каким они говорят в бою.
 
-Записей: 118
+Записей: 128
 
 Синтезировано 1 октября 2026 года нейроголосами **Gemini** (Google), модель
 gemini-3.8-flash-tts: по восемь криков на голос одной записью, затем нарезка
@@ -22,6 +22,8 @@ FLAC (без потерь).
 | cry_algieba_pain_3.flac | герой, голос algieba | Algieba | вскрик от удара |
 | cry_algieba_pain_4.flac | герой, голос algieba | Algieba | вскрик от удара |
 | cry_algieba_pain_5.flac | герой, голос algieba | Algieba | вскрик от удара |
+| cry_aoede_die_0.flac | герой, голос aoede | Aoede | предсмертный крик |
+| cry_aoede_die_1.flac | герой, голос aoede | Aoede | предсмертный крик |
 | cry_aoede_pain_0.flac | герой, голос aoede | Aoede | вскрик от удара |
 | cry_aoede_pain_1.flac | герой, голос aoede | Aoede | вскрик от удара |
 | cry_aoede_pain_2.flac | герой, голос aoede | Aoede | вскрик от удара |
@@ -73,12 +75,16 @@ FLAC (без потерь).
 | cry_kore_pain_3.flac | герой, голос kore | Kore | вскрик от удара |
 | cry_kore_pain_4.flac | герой, голос kore | Kore | вскрик от удара |
 | cry_kore_pain_5.flac | герой, голос kore | Kore | вскрик от удара |
+| cry_laomedeia_die_0.flac | герой, голос laomedeia | Laomedeia | предсмертный крик |
+| cry_laomedeia_die_1.flac | герой, голос laomedeia | Laomedeia | предсмертный крик |
 | cry_laomedeia_pain_0.flac | герой, голос laomedeia | Laomedeia | вскрик от удара |
 | cry_laomedeia_pain_1.flac | герой, голос laomedeia | Laomedeia | вскрик от удара |
 | cry_laomedeia_pain_2.flac | герой, голос laomedeia | Laomedeia | вскрик от удара |
 | cry_laomedeia_pain_3.flac | герой, голос laomedeia | Laomedeia | вскрик от удара |
 | cry_laomedeia_pain_4.flac | герой, голос laomedeia | Laomedeia | вскрик от удара |
 | cry_laomedeia_pain_5.flac | герой, голос laomedeia | Laomedeia | вскрик от удара |
+| cry_pirate_0_die_0.flac | корсар | Algenib | предсмертный крик |
+| cry_pirate_0_die_1.flac | корсар | Algenib | предсмертный крик |
 | cry_pirate_0_pain_0.flac | корсар | Algenib | вскрик от удара |
 | cry_pirate_0_pain_1.flac | корсар | Algenib | вскрик от удара |
 | cry_pirate_0_pain_2.flac | корсар | Algenib | вскрик от удара |
@@ -92,6 +98,8 @@ FLAC (без потерь).
 | cry_pirate_1_pain_3.flac | корсарша | Zephyr | вскрик от удара |
 | cry_pirate_1_pain_4.flac | корсарша | Zephyr | вскрик от удара |
 | cry_pirate_1_pain_5.flac | корсарша | Zephyr | вскрик от удара |
+| cry_pulcherrima_die_0.flac | герой, голос pulcherrima | Pulcherrima | предсмертный крик |
+| cry_pulcherrima_die_1.flac | герой, голос pulcherrima | Pulcherrima | предсмертный крик |
 | cry_pulcherrima_pain_0.flac | герой, голос pulcherrima | Pulcherrima | вскрик от удара |
 | cry_pulcherrima_pain_1.flac | герой, голос pulcherrima | Pulcherrima | вскрик от удара |
 | cry_pulcherrima_pain_2.flac | герой, голос pulcherrima | Pulcherrima | вскрик от удара |
@@ -120,6 +128,8 @@ FLAC (без потерь).
 | cry_schedar_pain_3.flac | герой, голос schedar | Schedar | вскрик от удара |
 | cry_schedar_pain_4.flac | герой, голос schedar | Schedar | вскрик от удара |
 | cry_schedar_pain_5.flac | герой, голос schedar | Schedar | вскрик от удара |
+| cry_vindemiatrix_die_0.flac | герой, голос vindemiatrix | Vindemiatrix | предсмертный крик |
+| cry_vindemiatrix_die_1.flac | герой, голос vindemiatrix | Vindemiatrix | предсмертный крик |
 | cry_vindemiatrix_pain_0.flac | герой, голос vindemiatrix | Vindemiatrix | вскрик от удара |
 | cry_vindemiatrix_pain_1.flac | герой, голос vindemiatrix | Vindemiatrix | вскрик от удара |
 | cry_vindemiatrix_pain_2.flac | герой, голос vindemiatrix | Vindemiatrix | вскрик от удара |
