@@ -26,16 +26,18 @@ app.whenReady().then(() => setTimeout(async () => {
   for (const a of list) for (const combo of a.combos) {
     const parts = combo.split('+'); const code = parts.pop();
     const modifiers = parts.map(p => p === 'Ctrl' ? 'control' : p.toLowerCase());
-    await js(`(()=>{while(activeLayer())closeTopUI();__rec.length=0;window.__steps=[];
+    await js(`(()=>{while(activeLayer())closeTopUI();__rec.length=0;window.__steps=[];window.__swings=[];
       if(!window.__mv){window.__mv=window.move;window.move=function(d){__steps.push(d);return true;};}
+      if(!window.__sw){window.__sw=window.weaponSwing;window.weaponSwing=function(d){__swings.push(d);return true;};}
       ${a.ctx === 'combat' ? 'G.inCombat=true;G.combat={m:{n:"волк",hp:10},hp:10};' : 'G.inCombat=false;G.combat=null;'}
-      G.weaponDrawn=false;G.items=(G.items||[]).filter(x=>!/зель/i.test(x));${a.id === 'potion' ? 'G.items.push("Зелье здоровья");' : ''}return 1;})()`);
+      G.weaponDrawn=${a.ctx === 'weapon' ? 'true' : 'false'};G.items=(G.items||[]).filter(x=>!/зель/i.test(x));${a.id === 'potion' ? 'G.items.push("Зелье здоровья");' : ''}return 1;})()`);
     w.webContents.sendInputEvent({ type: 'keyDown', keyCode: KEYCODE(code), modifiers });
     if (code.length === 1 || /^Key|^Digit|Space|Minus|Equal|Slash/.test(code)) w.webContents.sendInputEvent({ type: 'char', keyCode: KEYCODE(code), modifiers });
     w.webContents.sendInputEvent({ type: 'keyUp', keyCode: KEYCODE(code), modifiers });
     await wait(250);
     const r = await js(`((id,ctx,dir)=>{const ЖДЁМ=${ЖДЁМ};let ok=true,why="";
       if(ctx==="move"){ok=__steps[0]===dir;why=ok?"":"шаг "+JSON.stringify(__steps);}
+      else if(ctx==="weapon"){ok=__swings[0]===dir&&!__steps.length;why=ok?"":"удар "+JSON.stringify(__swings)+" шаг "+JSON.stringify(__steps);G.weaponDrawn=false;}
       else{const ж=ЖДЁМ(id);
        if(ж.g&&!__rec.includes(ж.g)){ok=false;why="нет "+ж.g;}
        if(ж.r&&!__rec.includes(ж.r)){ok=false;why="нет "+ж.r;}
