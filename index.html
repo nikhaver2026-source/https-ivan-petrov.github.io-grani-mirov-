@@ -24274,11 +24274,16 @@ function trapAt(x,y){
  const зк=safeFn(()=>deepLawK("ловушки",гл),1);
  const порог=Math.min(0.085*зк,(0.018+гл*0.004)*зк);
  const h=hashName(p.bx*23+x*7,p.by*19+y*11,6900+p.depth);
- if(h>=порог)return null;
+ /* (6.0) Сундук глубины с секретом — та же ловушка, что и на полу: её
+    находят осмотром, снимают и слышат одинаково. Прежде о «натяжке по
+    кромке» говорила одна проверка, а срабатывала крышка по другой, и
+    названная ловушка часто молчала. */
+ const крышка=t==="C"&&гл>=2&&H(x*7,y*11,806)<0.22;
+ if(h>=порог&&!крышка)return null;
  const в=TRAPS[Math.floor(hashName(p.bx+x*13,p.by+y*17,6901+p.depth)*TRAPS.length)%TRAPS.length];
  const метка=safeFn(()=>placeMark(x,y),null);
  return {...в,x,y,глубина:гл,
-  состояние:метка==="trap_off"?"обезврежена":метка==="trap_on"?"найдена":"не найдена",
+  состояние:метка==="trap_off"||метка==="open"?"обезврежена":метка==="trap_on"?"найдена":"не найдена",
   урон:Math.round(в.урон*(1+гл*0.08))};}
 /* Насколько хорошо игрок видит и снимает ловушки. */
 function trapSkill(){
@@ -26880,7 +26885,7 @@ function chestLocked(x,y){try{const p=G.place;if((Number(p.depth)||0)<3)return f
 function chestPreview(x,y){
  try{const p=G.place,r=H(p.bx+x*3,p.by+y*5,800+p.depth);
   const что=r<0.3?"золото, судя по звону":r<0.55?"что-то из снаряжения: ткань и металл":r<0.75?"склянки и свёртки":r<0.9?"тяжёлое и холодное — святыня или камень":"почти пусто, но что-то шуршит на дне";
-  return `${placeMark(x,y)==="open"?"Сундук уже открыт и пуст.":`Сундук закрыт. Если качнуть, внутри ${что}.`}${chestLocked(x,y)?" Замок заперт.":""}${safeFn(()=>trapAt(x,y),null)?" По кромке чувствуется натяжка: проверьте прежде, чем открывать.":""}`;
+  return `${placeMark(x,y)==="open"?"Сундук уже открыт и пуст.":`Сундук закрыт. Если качнуть, внутри ${что}.`}${chestLocked(x,y)?" Замок заперт.":""}${safeFn(()=>{const л=trapAt(x,y);return !!(л&&л.состояние!=="обезврежена"&&placeMark(x,y)!=="open");},false)?" По кромке чувствуется натяжка: проверьте прежде, чем открывать.":""}`;
  }catch(_){return "Сундук.";}}
 iact("copen",{n:"Открыть",значок:"",своё:true,
  можно:o=>!!G.place&&o.плитка==="C"&&placeMark(o.x,o.y)!=="open"&&!chestLocked(o.x,o.y),почему:o=>placeMark(o.x,o.y)==="open"?"сундук уже открыт и пуст":"сундук заперт: ключ или взлом",
@@ -35440,8 +35445,15 @@ function moveInside(dir){
  safeFn(()=>{
   const л=trapAt(nx,ny);
   if(л&&л.состояние==="не найдена")trapFire(nx,ny,л);
-  else if(л&&л.состояние==="найдена")
-   narrate(`Вы переступили через ${л.n}: она тут, и вы о ней помните.`,{interrupt:false});});
+  else if(л&&л.состояние==="найдена"){
+   /* (6.0) Найденная, но не снятая ловушка под ногой — не пустое место:
+      переступить её удаётся ловкому и осторожному, а на бегу или при
+      неудаче она срабатывает, как и всякая, — звуком и ударом. */
+   const шанс=runState.active?0.25:Math.max(0.35,Math.min(0.9,0.3+0.6*trapSkill()));
+   if(Math.random()<шанс){
+    safeFn(()=>Bank.play(л.покой,{seed:nx+ny,gain:0.45,maxSec:2}));
+    narrate(`Вы осторожно переступили через ловушку — ${л.n}: она взведена, снимите её, пока не задели.`,{interrupt:false});}
+   else{narrate(`Вы пытались переступить через ловушку — ${л.n}, но задели её.`,{interrupt:false});trapFire(nx,ny,л);}}});
  /* Внутри тоже один шаг — один звук. */
  safeFn(()=>{if(!settings.effects)return;
   /* Ступени под ногой — своя поверхность: марш звучит камнем с эхом. Прочее —
@@ -37026,23 +37038,21 @@ function altarSound(state,opts){
 function openChest(x,y){
  if(safeFn(()=>chestLocked(x,y),false)){safeFn(()=>chestSound("lock",{gain:0.5,maxSec:3})||chestSound("pick",{gain:0.5,maxSec:3}));narrate("Сундук заперт: замок в два оборота. Ключ или взлом — в действиях сундука.");return false;}
  safeFn(()=>chestSound(chestTier(x,y)));
- /* Ловушка в глубине: сперва дорожка, потом разрыв. */
- safeFn(()=>{const d=Number(G.place&&G.place.depth)||0;
-  if(d>=3&&hashName(x,y,4890)<0.18){
-   setTimeout(()=>safeFn(()=>Bank.play("mtg_fuse",{seed:x+y,gain:0.55,maxSec:3})),300);
-   setTimeout(()=>safeFn(()=>Bank.play("mtg_explode",{seed:x+y,gain:0.6,maxSec:4})),1100);}});
  setTimeout(()=>safeFn(()=>chestLidSound(false)),2600);
  if(placeMark(x,y)==="open"){safeFn(()=>Bank.play("oc_wood_dull",{seed:x+y,gain:0.45,maxSec:2}));
   narrate("Этот сундук уже пуст.");return false;}
+ /* Ловушка сундука — та, о которой предупреждал осмотр (trapAt): снятая
+    молчит, взведённая срабатывает при открытии звуком и ударом. */
+ const ловушка=safeFn(()=>trapAt(x,y),null);
+ const trapped=!!(ловушка&&ловушка.состояние!=="обезврежена");
  setPlaceMark(x,y,"open");
  const p=G.place,r=H(p.bx+x*3,p.by+y*5,800+p.depth);
  safeFn(()=>beacon("chest",0,0));
  /* Часть сундуков в глубине с секретом: механизм срабатывает при открытии,
     и это слышно — щелчок, шипение дорожки и разрыв. */
- const trapped=p.depth>=2&&H(x*7,y*11,806)<0.22;
  if(trapped){
   safeFn(()=>chestSound("trap"));
-  const dmg=4+Math.floor(H(x,y,807)*6)+p.depth*2;
+  const dmg=Math.max(1,Math.round(ловушка.урон||(4+Math.floor(H(x,y,807)*6)+p.depth*2)));
   G.hp=Math.max(1,G.hp-dmg);
   safeFn(()=>{Bank.play("trap",{seed:x+y,gain:0.9});Bank.play("oc_wheels",{seed:x+y,gain:0.6,maxSec:4});
    /* Механизм срабатывает с настоящим ударом, а не одним щелчком. */
@@ -37052,7 +37062,8 @@ function openChest(x,y){
    setTimeout(()=>safeFn(()=>Bank.play("oc_glass_break",{seed:x+y,gain:0.5,maxSec:3})),420);
    setTimeout(()=>safeFn(()=>Bank.play("oc_quake",{seed:x+y,gain:0.5,maxSec:4})),640);
    UI.hit();vib([40,60,40]);});
-  narrate(`Ловушка! Крышка была на взводе: −${dmg} здоровья.`,{interrupt:true});}
+  safeFn(()=>Bank.play(ловушка.сраб,{seed:x+y,gain:0.7,maxSec:4}));
+  narrate(`Ловушка! Крышка была на взводе: ${ловушка.n}. ${ловушка.бьёт||""} −${dmg} здоровья, осталось ${G.hp}.`,{interrupt:true});}
  safeFn(()=>{Bank.play("treasure",{seed:x+y,gain:0.7,maxSec:6});
   setTimeout(()=>safeFn(()=>Bank.play("arte_find",{gain:0.5,maxSec:4})),260);
   /* Клад слышен трижды: щелчок замка, блеск находки и голос самой вещи. */
