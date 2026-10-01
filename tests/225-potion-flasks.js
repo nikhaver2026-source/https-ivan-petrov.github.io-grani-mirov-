@@ -3,8 +3,8 @@
 
    Шесть записей выпитого зелья (sounds/potion) разложены по родам зелий
    (POTION_SOUND).
-   1. Шесть ролей банка potion_* есть, у каждой свой файл, файлы на месте,
-      все — FLAC 48 кГц / 24 бита.
+   1. Шесть ролей банка (стеклянный флакон — общая cast_potion, остальные
+      potion_*), у каждой свой файл, файлы на месте, все — FLAC 48 кГц / 24 бита.
    2. У каждого из зелий POTIONS своя склянка из этих шести, и в дело идут
       все шесть.
    3. Мана, здоровье, противоядие, сила, скорость и восстановление сил
@@ -12,7 +12,7 @@
    4. Выпитое сваренное зелье звучит своей склянкой (лечебное, маны, силы).
    5. Зелье здоровья из лавки — долгий глоток, противоядие — флакон с
       пробкой; зелье посреди боя — короткий глоток.
-   6. Общая роль cast_potion берёт все шесть, старых сборок не осталось.
+   6. Общая роль cast_potion — стеклянный флакон, старых сборок не осталось.
    ═══════════════════════════════════════════════════════════════════════ */
 const {chromium}=require('playwright');
 const fs=require('fs'),path=require('path'),cp=require('child_process');
@@ -27,16 +27,16 @@ const ROOT=path.resolve(__dirname,'..');
   window.PLAYED=[];const b0=Bank.play.bind(Bank);Bank.play=(r,o)=>{PLAYED.push(r);return b0(r,o);};});
 
  /* ── 1. Роли и файлы ── */
- const роли=await page.evaluate(()=>Object.keys(SOUND_BANK).filter(r=>/^potion_/.test(r)).map(r=>({r,f:SOUND_BANK[r].f,d:SOUND_BANK[r].d})));
+ const роли=await page.evaluate(()=>Object.keys(SOUND_BANK).filter(r=>/^potion_|^cast_potion$/.test(r)).map(r=>({r,f:SOUND_BANK[r].f,d:SOUND_BANK[r].d})));
  const файлы=роли.map(x=>x.f[0]);
  const формат=файлы.map(f=>{const п=path.join(ROOT,'sounds',f);if(!fs.existsSync(п))return f+": нет файла";
   const r=cp.execFileSync('ffprobe',['-v','error','-show_entries','stream=codec_name,sample_rate,bits_per_raw_sample','-of','csv=p=0',п],{encoding:'utf8'}).trim();
   return r==="flac,48000,24"?"":f+": "+r;}).filter(Boolean);
- check('1. шесть ролей potion_* со своим файлом, все FLAC 48 кГц / 24 бита',
+ check('1. шесть ролей склянок со своим файлом, все FLAC 48 кГц / 24 бита',
   роли.length===6&&new Set(файлы).size===6&&роли.every(x=>x.f.length===1&&x.d)&&!формат.length,{роли:роли.map(x=>x.r),формат});
 
  /* ── 2–3. Разложено по зельям ── */
- const р=await page.evaluate(()=>({без:POTIONS.filter(p=>!SOUND_BANK[potionSound(p.id)]||!/^potion_/.test(potionSound(p.id))).map(p=>p.id),
+ const р=await page.evaluate(()=>({без:POTIONS.filter(p=>!SOUND_BANK[potionSound(p.id)]||!/^potion_|^cast_potion$/.test(potionSound(p.id))).map(p=>p.id),
   взято:[...new Set(POTIONS.map(p=>potionSound(p.id)))],
   главные:["mana","heal","antidote","strength","speed","energy"].map(potionSound)}));
  check('2. у каждого зелья своя склянка из шести, и в деле все шесть',
@@ -51,7 +51,7 @@ const ROOT=path.resolve(__dirname,'..');
    drinkPotion(0);out[id]=PLAYED.filter(r=>/^potion_|^cast_potion/.test(r));}
   while(activeLayer())closeTopUI();return out;});
  check('4. выпитое сваренное зелье звучит своей склянкой',
-  в.heal.join()==="potion_long"&&в.mana.join()==="potion_vial"&&в.strength.join()==="potion_elixir",в);
+  в.heal.join()==="potion_long"&&в.mana.join()==="cast_potion"&&в.strength.join()==="potion_elixir",в);
 
  /* ── 5. Лавка и бой ── */
  const л=await page.evaluate(()=>{const out={};
@@ -72,8 +72,8 @@ const ROOT=path.resolve(__dirname,'..');
  /* ── 6. Общая роль ── */
  const о=await page.evaluate(()=>SOUND_BANK.cast_potion.f);
  const старые=fs.readdirSync(path.join(ROOT,'sounds','potion')).filter(f=>/potion_drink_/.test(f));
- check('6. cast_potion берёт все шесть склянок, старых сборок не осталось',
-  о.length===6&&файлы.every(f=>о.includes(f))&&!старые.length,{о,старые});
+ check('6. общая роль cast_potion — стеклянный флакон, старых сборок не осталось',
+  о.join()==="potion/potion_vial.flac"&&!старые.length,{о,старые});
 
  check('без ошибок на странице',!errors.length,errors.slice(0,3));
  await browser.close();

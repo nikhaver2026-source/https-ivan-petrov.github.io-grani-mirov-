@@ -12683,9 +12683,9 @@ const SOUND_BANK={
  cast_fire:{f:["cast/cast_fire_01.ogg"],d:"Огненный шар"},
  cast_heal:{f:["cast/cast_heal_01.ogg"],d:"Исцеление"},
  cast_ice:{f:["cast/cast_ice_01.ogg"],d:"Лёд сковывает"},
- cast_potion:{f:["potion/potion_vial.flac","potion/potion_long.flac","potion/potion_cork.flac","potion/potion_elixir.flac","potion/potion_quick.flac","potion/potion_clay.flac"],d:"Зелье выпито: любая из шести склянок"},
- /* 6.0: у каждого рода зелий своя склянка (POTION_SOUND). */
- potion_vial:{f:["potion/potion_vial.flac"],d:"Склянка: пробка из стеклянного флакона, три глотка, стеклянный звон — мана, восприятие, ночное зрение, магический след"},
+ /* 6.0: у каждого рода зелий своя склянка (POTION_SOUND). Стеклянный флакон
+    со звоном — общая склянка: им же звучат алхимические чары и сбор яда. */
+ cast_potion:{f:["potion/potion_vial.flac"],d:"Склянка: пробка из стеклянного флакона, три глотка, стеклянный звон — мана, восприятие, ночное зрение, магический след, алхимия"},
  potion_long:{f:["potion/potion_long.flac"],d:"Долгий глоток: протяжная пробка, льющееся питьё, громкий глоток — зелье здоровья, лечебное, очищение"},
  potion_cork:{f:["potion/potion_cork.flac"],d:"Флакон с пробкой: открыть, три коротких глотка, заткнуть обратно — противоядие, маскировка, изменение голоса, твёрдая рука"},
  potion_elixir:{f:["potion/potion_elixir.flac"],d:"Эликсир: глотки зелья и тихий отзвук стекла — сила, сопротивления, мутационный состав"},
@@ -16547,7 +16547,7 @@ const POTIONS=[
 const POTION_BY_ID=Object.fromEntries(POTIONS.map(p=>[p.id,p]));
 /* Своя склянка на каждый род зелья: звук выпитого зелья по его назначению. */
 const POTION_SOUND={heal:"potion_long",clean:"potion_long",
- mana:"potion_vial",sense:"potion_vial",nightsight:"potion_vial",trace:"potion_vial",
+ mana:"cast_potion",sense:"cast_potion",nightsight:"cast_potion",trace:"cast_potion",
  antidote:"potion_cork",mask:"potion_cork",voice:"potion_cork",craft:"potion_cork",
  strength:"potion_elixir",resist:"potion_elixir",mutation:"potion_elixir",
  speed:"potion_quick",
