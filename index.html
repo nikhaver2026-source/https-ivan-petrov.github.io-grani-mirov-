@@ -21829,7 +21829,7 @@ function empireQuestFor(npc){
   const цена=набор.цена,tier=npc.tier;
   const шапка=`${набор.звание} (держава «${emp.short}»). `;
   const хвост=` Платят ${набор.платят}.`;
-  const общее={id,npc:npc.name,держава:emp.short,наряд:набор.звание,
+  const общее={id,npc:npc.name,держава:emp.short,наряд:набор.звание,слово:дело.слово,
    дар:набор.дар?{res:набор.дар.res,n:набор.дар.n}:null,diplo:2};
   if(дело.тип==="fetch"){
    const need=2+tier,d=resourceDestination(npc,дело.res);
@@ -22015,7 +22015,7 @@ function borderQuestFor(npc){
   const x=npc.x,y=npc.y,id=npc.key+"q";
   const д=пул[Math.floor(H(x,y,4963)*пул.length)%пул.length];
   const tier=б.tier;
-  const общее={id,npc:npc.name,граница:б.id,
+  const общее={id,npc:npc.name,граница:б.id,слово:д.т,
    text:`${б.n}: «${д.т}»`,
    reward:{gold:45*tier+40,xp:40*tier+30}};
   if(д.kill)return Object.assign(общее,{type:"kill",need:д.kill});
@@ -51254,10 +51254,16 @@ function takeNPCQuest(n){
   const пул=questVoicePool(q);
   return npcSay(n,пул);},{t:"",сказал:false});
  const вступ=живо&&живо.t&&!живо.сказал?`${n.name}: «${живо.t}» `:`${n.name} объясняет поручение. `;
+ /* 6.0: слово поручения державы и пограничного люда заказчик говорит сам,
+    живым голосом (VOICE_NPC.quest_word); голос игры тогда читает только
+    шапку и подробности — без повтора тех же слов. */
+ const своёСлово=!!(q.слово&&VOICE_NPC.quest_word&&VOICE_NPC.quest_word[q.слово])
+  &&!!safeFn(()=>Folk.on()&&Folk.реплика("quest_word",q.слово,n,Folk.жен(n),{всегда:true,голос:Folk.пара(n)}),false);
+ const текст=своёСлово?String(q.text).replace(q.слово,"").replace(/«\s*»/g,"").replace(/\s{2,}/g," "):q.text;
  /* (4.5) Взятое дело сохраняется сразу: иначе после выхода из игры до
     ближайшего автосохранения журнал снова говорил «дел нет». */
  safeFn(()=>saveGame(true));safeFn(()=>{const m=document.getElementById("modal-quests");if(m&&!m.hidden)renderQuests();});
- narrate(`Квест взят. ${вступ}${q.text}${details}${chainWord}${второй}${ярусСлово}${родСлово} После выполнения возвращайтесь к заказчику.`,{interrupt:true,pri:1});safeFn(()=>UI.triumph());saveGame(true);openNPC(n.key,true);
+ narrate(`Квест взят. ${вступ}${текст}${details}${chainWord}${второй}${ярусСлово}${родСлово} После выполнения возвращайтесь к заказчику.`,{interrupt:true,pri:1});safeFn(()=>UI.triumph());saveGame(true);openNPC(n.key,true);
 }
 /* Кто сейчас в открытом окне жителя: закрывая окно, герой слышит прощание. */
 let npcOpenKey=null;
