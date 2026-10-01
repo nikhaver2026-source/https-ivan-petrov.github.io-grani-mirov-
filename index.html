@@ -743,7 +743,7 @@ const WEB_VERSION="6.0",APP_VERSION="6.0";
 const GAME_VERSION=IN_APP?APP_VERSION:WEB_VERSION;
 const GVOICE_ON=true;
 /* Номер голосового пакета: растёт, когда пакет пополнился (обходит кэш). */
-const GV_PACK_V=3;
+const GV_PACK_V=4;
 try{
  const v="Alpha "+GAME_VERSION;
  document.title=document.title.replace(/Alpha [\d.]+/,v);
@@ -1508,9 +1508,9 @@ const Speech={voice:null,keepAlive:null,
     подключается сам; в приложениях для Windows и Android его ставят один раз
     (настройки, «Синтезатор», «Голосовой пакет»), и приложение отдаёт его по
     тому же адресу sounds/gvoice_pack/. Нет пакета — звучит то, что вшито. */
- GVOICES:{m:{url:"sounds/gvoice/bank_5.js",dir:"sounds/gvoice/",glob:"GVOICE_BANK",map:null,state:"off",
+ GVOICES:{m:{url:"sounds/gvoice/bank_8.js",dir:"sounds/gvoice/",glob:"GVOICE_BANK",map:null,state:"off",
    pack:{url:"sounds/gvoice_pack/m/bank.js",dir:"sounds/gvoice_pack/m/",glob:"GVOICE_PACK_M",map:null,state:"off"}},
-  f:{url:"sounds/gvoice_f/bank_f6.js",dir:"sounds/gvoice_f/",glob:"GVOICE_BANK_F",map:null,state:"off",
+  f:{url:"sounds/gvoice_f/bank_f8.js",dir:"sounds/gvoice_f/",glob:"GVOICE_BANK_F",map:null,state:"off",
    pack:{url:"sounds/gvoice_pack/f/bank.js",dir:"sounds/gvoice_pack/f/",glob:"GVOICE_PACK_F",map:null,state:"off"}}},
  get GVOICE(){return this.GVOICES[settings.gvVoice==="f"?"f":"m"];},
  gvKey(t){return String(t==null?"":t).toLowerCase().replace(/ё/g,"е").replace(/[^а-яa-z0-9]+/g," ").trim();},
