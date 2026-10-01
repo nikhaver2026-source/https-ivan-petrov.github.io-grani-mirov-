@@ -248,7 +248,9 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
  const stepped=await page.evaluate(()=>({px:G.combat&&G.combat.arena&&G.combat.arena.px}));
  const stepSaid=await said();
  check('в бою с убранным оружием свайп в свободную сторону — шаг, и игра называет, где тварь',
-  stepped.px===-1&&/Волк: в 2 шагах, справа/.test(stepSaid.join(' ')),{stepped,сказано:stepSaid.slice(0,2)});
+  /* Сторону голос называет только с флажком «В бою называть сторону твари»
+     (по умолчанию он снят: сторону слышно). */
+  stepped.px===-1&&/Волк: в 2 шагах(?!,)/.test(stepSaid.join(' '))&&!/Волк: в 2 шагах, справа/.test(stepSaid.join(' ')),{stepped,сказано:stepSaid.slice(0,2)});
  const summary=await page.evaluate(()=>[document.getElementById('cbTitle').dataset.speak,
   document.getElementById('cbEnemyCol').dataset.speak,
   document.getElementById('cbYouCol')&&document.getElementById('cbYouCol').dataset.speak].filter(Boolean));

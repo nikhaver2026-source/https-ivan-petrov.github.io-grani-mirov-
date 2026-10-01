@@ -37,7 +37,7 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   const значимые=GEST_ACTIONS.filter(a=>!/^(none|close|sec)/.test(a.id)).map(a=>a.id);
   const безКлавиши=значимые.filter(id=>!KB_ACTIONS.some(k=>(k.run&&k.id===id)||(id==="interact"&&k.id==="interact")));
   const споры=[];
-  ["field","combat"].forEach(pos=>{const по={};KB_ACTIONS.forEach(a=>{if(pos==="field"&&a.ctx==="combat")return;if(pos==="combat"&&a.ctx!=="combat")return;
+  ["field","combat"].forEach(pos=>{const по={};KB_ACTIONS.forEach(a=>{if(pos==="field"&&(a.ctx==="combat"||a.ctx==="weapon"))return;if(pos==="combat"&&a.ctx!=="combat")return;
    keyCombosOf(a.id).forEach(c=>{if(по[c])споры.push(pos+": "+c+" "+по[c]+"/"+a.id);else по[c]=a.id;});});});
   return {безКлавиши,споры,всего:KB_ACTIONS.length,помощь:keyHelpText().length};});
  check('1. у каждого значимого действия есть клавиша; споров нет',!таблица.безКлавиши.length&&!таблица.споры.length&&таблица.помощь>500,таблица);

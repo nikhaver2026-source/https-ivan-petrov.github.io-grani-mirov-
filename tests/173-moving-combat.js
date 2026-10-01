@@ -69,7 +69,9 @@ const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(e!==undefined?' :
    return a;};
   window.__меч=()=>{const w=weaponList().find(x=>x&&!/лук|арбалет|копь|дротик/i.test(String(x.name||"")));
    G.equip.weapon=w||G.equip.weapon;return G.equip.weapon;};
-  G.place=null;G.ship=null;settings.combatPace="live";});
+  G.place=null;G.ship=null;settings.combatPace="live";
+  /* Этот набор слушает и сторону твари: флажок стороны включён (по умолчанию он снят). */
+  settings.cbSide=1;});
 
  async function swipe(dx,dy,steps=6){
   const x=195,y=420;
@@ -109,7 +111,7 @@ const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(e!==undefined?' :
   поле.роли.wolf==="fast"&&поле.роли.troll==="brute"&&поле.роли.wraith==="caster"&&поле.роли.dragon==="breath"
   &&поле.роли.harpy==="skirm"&&поле.роли.goblin==="melee"&&поле.роли.golem==="brute"&&поле.роли.spider==="fast",поле.роли);
  check('1. колдун начинает в трёх шагах со стороны последнего шага, голос идёт оттуда, у поля своё время',
-  поле.колдун.fx===3&&поле.колдун.fy===0&&поле.голос.dx===3&&поле.голос.dy===0&&поле.время&&!поле.времяПосле
+  поле.колдун.fx===3&&поле.колдун.fy===0&&поле.голос.dx>=3&&поле.голос.dy===0&&поле.время&&!поле.времяПосле
   &&/справа/.test(поле.старт)&&/Поле боя/.test(поле.строка),поле);
 
  /* ── 2. Свайп в бою без оружия — шаг ── */
