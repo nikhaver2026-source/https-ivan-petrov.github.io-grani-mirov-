@@ -13286,7 +13286,7 @@ const SOUND_BANK={
  sv2_grave_growl:{f:["svody/sv2_grave_growl.flac"],d:"Рычание у могилы: ледяной мертвец (Своды 8.0, без потерь, 48 кГц)"},
  sv2_double:{f:["svody/sv2_double.flac"],d:"Посмертный двойник поднимается: гул (Своды 8.0, без потерь, 48 кГц)"},
  sv2_departed:{f:["svody/sv2_departed.flac"],d:"Гул руин Отлетевших (Своды 8.0, без потерь, 48 кГц)"},
- sv2_thread:{f:["svody/sv2_thread.flac"],d:"Нить Отлетевших вплетена: механический отклик (Своды 8.0, без потерь, 48 кГц)"},
+ sv2_thread:{f:["svody/sv2_thread.flac"],d:"Нить Отлетевших вплетена: натянутая и отпущенная лента (Своды 8.0, без потерь, 48 кГц)"},
  sv2_ruin_hum:{f:["svody/sv2_ruin_hum.flac"],d:"Ровный гул механизмов Отлетевших (Своды 8.0, без потерь, 48 кГц)"},
  sv2_stronghold:{f:["svody/sv2_stronghold.flac"],d:"Оплот выстоял или пал: раскатистый удар (Своды 8.0, без потерь, 48 кГц)"},
  sv2_rebirth:{f:["svody/sv2_rebirth.flac"],d:"Перерождение: взмах (Своды 8.0, без потерь, 48 кГц)"},
@@ -15004,6 +15004,8 @@ const FOE_FAMILY_ID={
 function foeFamily(m){
  const id=String((m&&m.id)||"");
  if(FOE_FAMILY_ID[id])return FOE_FAMILY_ID[id];
+ /* Морские твари Сводов — глубинный род. */
+ if(SVODY_ON&&/^sv_/.test(id)&&SVD.seaBeasts.some(b=>b.id===id))return "deep";
  if(/^demon_|fiend|imp|d_ashborn|d_emberhound|d_nameless|ashlord|choir|dreamer|d_whisper/.test(id))return "fiend";
  if(/dragon|wyvern|wyrm|drake|heraldwing/.test(id))return "dragon";
  if(/harpy|rocbird|stormhawk|aarakocra|pegasus|hawk|raven/.test(id))return "bird";

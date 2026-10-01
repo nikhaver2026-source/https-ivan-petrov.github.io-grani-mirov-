@@ -50,7 +50,9 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
 
  /* ── 1. без подсказок ── */
  const подск=await page.evaluate(async()=>{
-  const r={};let L=null,bx,by;for(bx=3;bx<40&&!L;bx++)for(by=3;by<40&&!L;by++){const l=genLevel(bx,by,2,"ruins");if(l&&l.entry)L=l;}bx--;by--;
+  const r={};let L=null,bx,by;/* Место — из прежних родов подземелий: в родах Сводов свои твари, и бой
+     сбил бы проверку жестов. Сами роды Сводов проверяет набор 230. */
+  for(bx=3;bx<40&&!L;bx++)for(by=3;by<40&&!L;by++){if((dungeonKindAt(bx,by,"ruins")||{}).sv)continue;const l=genLevel(bx,by,2,"ruins");if(l&&l.entry)L=l;}bx--;by--;
   G.place={kind:"dungeon",bx,by,stype:"ruins",name:"м",depth:2,x:L.entry.x,y:L.entry.y};
   let dir=null,wall=null;for(const d of ["N","E","S","W"]){const t=tileAt(L,G.place.x+DIRV[d][0],G.place.y+DIRV[d][1]);if(t==="."&&!dir)dir=d;if(t==="#"&&!wall)wall=d;}
   settings.hints=0;PLAYED.length=0;SAID.length=0;SPOKEN.length=0;moveInside(dir);await new Promise(res=>setTimeout(res,900));

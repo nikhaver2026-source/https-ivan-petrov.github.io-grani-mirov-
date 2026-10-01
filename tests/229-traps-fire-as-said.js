@@ -62,11 +62,11 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   const l=curLevel();let цель=null;
   const DV=DIRV;
   for(let y=1;y<l.h-1&&!цель;y++)for(let x=1;x<l.w-1&&!цель;x++){
-   if(tileAt(l,x,y)!=="."||!trapAt(x,y))continue;
+   if(tileAt(l,x,y)!=="."||!trapAt(x,y)||trapAt(x,y).зов)continue;
    for(const [d,[dx,dy]] of Object.entries(DV)){const sx=x-dx,sy=y-dy;
     if(tileAt(l,sx,sy)==="."&&!trapAt(sx,sy)&&/^[NSEW]$/.test(d)){цель={x,y,sx,sy,d};break;}}}
   if(!цель)return {нет:true};
-  const пробовать=бег=>{setPlaceMark(цель.x,цель.y,"trap_on");G.place.x=цель.sx;G.place.y=цель.sy;G.hp=G.hpMax=500;
+  const пробовать=бег=>{if(G.inCombat)endCombat();setPlaceMark(цель.x,цель.y,"trap_on");G.place.x=цель.sx;G.place.y=цель.sy;G.hp=G.hpMax=500;
    ИГРАЛО.length=0;СКАЗАНО.length=0;runState.active=бег;try{moveInside(цель.d);}finally{runState.active=false;}
    return {удар:G.hp<500,сказано:СКАЗАНО.filter(t=>/переступ|задели|Ловушка отработала/.test(t)),звук:ИГРАЛО.slice()};};
   /* на бегу шанс переступить мал: из двадцати попыток хоть одна сработает */

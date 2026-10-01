@@ -280,7 +280,7 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   openActionMenu();
   const небо=[...document.querySelectorAll('#amList button')].map(b=>b.dataset.cmd);
   const подписи=[...document.querySelectorAll('#amList button')]
-   .filter(b=>/takeoff|flydown|land/.test(b.dataset.cmd||''))
+   .filter(b=>/^am:(takeoff|flydown|land)$/.test(b.dataset.cmd||''))
    .map(b=>(b.textContent||'').trim());
   closeActionMenu();
   наЗемлю();G.race="Люди";
@@ -290,15 +290,15 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   return {земля,небо,подписи,бескрылый};});
  check('на земле крылатому предлагают подняться, а снизиться и сесть — нет',
   меню.земля.includes('am:takeoff')&&!меню.земля.includes('am:flydown')&&
-  !меню.земля.includes('am:land'),меню.земля.filter(c=>/takeoff|flydown|land/.test(c)));
+  !меню.земля.includes('am:land'),меню.земля.filter(c=>/^am:(takeoff|flydown|land)$/.test(c)));
  /* С 3.6 пункты меню — короткие имена; высоту и запас крыла игра называет,
     когда действие выполнено. */
  check('в небе доступны все три действия высоты, каждое — коротким именем',
   меню.небо.includes('am:takeoff')&&меню.небо.includes('am:flydown')&&
   меню.небо.includes('am:land')&&меню.подписи.length===3&&меню.подписи.every(t=>t.length>=8&&!/\(|\d/.test(t)),меню.подписи);
  check('бескрылому народу пункты неба не предлагаются вовсе',
-  !меню.бескрылый.some(c=>/takeoff|flydown|land/.test(c||'')),
-  меню.бескрылый.filter(c=>/takeoff|flydown|land/.test(c||'')));
+  !меню.бескрылый.some(c=>/^am:(takeoff|flydown|land)$/.test(c||'')),
+  меню.бескрылый.filter(c=>/^am:(takeoff|flydown|land)$/.test(c||'')));
 
  /* ── 11. Погода в небе решает больше, чем на земле ── */
  const погода=await page.evaluate(()=>{

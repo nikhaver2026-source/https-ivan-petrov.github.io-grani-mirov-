@@ -71,7 +71,7 @@ CC BY 3.0 — https://creativecommons.org/licenses/by/3.0/ (авторы ука�
 | sv2_grave_growl.flac | `sv2_grave_growl` | рычание у могилы | Stendhal | newagesoup | **CC BY 3.0** | https://freesound.org/people/newagesoup/sounds/338674/ · `wolf-growl-01.flac` |
 | sv2_double.flac | `sv2_double` | гул: посмертный двойник поднимается | Sonic Pi | Autistic Lucario | CC0 | https://freesound.org/people/Autistic%20Lucario/sounds/195341/ · `ambi_drone.flac` |
 | sv2_departed.flac | `sv2_departed` | гул руин Отлетевших | Sonic Pi | maqsim | CC0 | https://freesound.org/people/maqsim/sounds/172157/ · `ambi_lunar_land.flac` |
-| sv2_thread.flac | `sv2_thread` | механический отклик: нить Отлетевших вплетена | Sonic Pi | hullum | CC0 | https://freesound.org/people/hullum/sounds/415557/ · `glitch_robot1.flac` |
+| sv2_thread.flac | `sv2_thread` | натянутая и отпущенная лента: нить Отлетевших вплетена | lavenderdotpet | Ben Burnes (Abstraction), «Toolbox Rummaging» | CC0 | `bb - Toolbox Rummaging (Sept 2021)/Pull Tape 1.wav` |
 | sv2_ruin_hum.flac | `sv2_ruin_hum` | ровный гул механизмов Отлетевших | Sonic Pi | hullum | CC0 | https://freesound.org/people/hullum/sounds/415570/ · `loop_drone_g_97.flac` |
 | sv2_stronghold.flac | `sv2_stronghold` | раскатистый удар: оплот выстоял или пал | Sonic Pi | Northern_Monkey | CC0 | https://freesound.org/people/Northern_Monkey/sounds/177242/ · `misc_cineboom.flac` |
 | sv2_rebirth.flac | `sv2_rebirth` | взмах: перерождение | Sonic Pi | Halgrimm | CC0 | https://freesound.org/people/Halgrimm/sounds/169867/ · `ambi_swoosh.flac` |
