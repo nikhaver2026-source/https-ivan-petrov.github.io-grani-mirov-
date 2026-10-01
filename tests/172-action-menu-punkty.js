@@ -81,14 +81,14 @@ const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(e!==undefined?' :
   const где={};AM_GROUPS.forEach(g=>g[1].forEach(([c])=>{(где[c]=где[c]||[]).push(g[2].id);}));
   const дважды=Object.keys(где).filter(c=>где[c].length!==1);
   const в=(c)=>(где[c]||[])[0];
-  return {ids:AM_GROUPS.map(g=>g[2].id),имена:AM_GROUPS.map(g=>g[0]),пунктов:Object.keys(где).length,дважды,
+  return {свП:SVODY_ON?AM_GROUP_BY_ID.svody[1].length:0,ids:AM_GROUPS.map(g=>g[2].id).filter(id=>!(SVODY_ON&&id==="svody")),имена:AM_GROUPS.map(g=>g[0]),пунктов:Object.keys(где).length,дважды,
    мета:AM_GROUPS.every(g=>g[2].о&&g[2].о.length>10),
    в:{char:в("char"),inv:в("inv"),bodystate:в("bodystate"),quests:в("quests"),journal:в("journal"),questlist:в("questlist"),
     lore:в("lore"),academy:в("academy"),best:в("best"),plants:в("plants"),preacher:в("preacher"),pantheon:в("pantheon"),
     sigils:в("sigils"),fish:в("fish"),resinfo:в("resinfo"),settings:в("settings"),hud:в("hud"),cases:в("cases")}};});
  check('1. шестнадцать разделов по смыслу, у каждого значок и что в нём; каждый пункт ровно в одном; персонаж, квесты и книги — где их ищут',
   раскладка.ids.join(",")==="start,here,move,fight,hero,quests,craft,people,magic,faith,books,world,realms,dark,sound,game"
-  &&раскладка.пунктов===131&&раскладка.дважды.length===0&&раскладка.мета
+  &&раскладка.пунктов===131+раскладка.свП&&раскладка.дважды.length===0&&раскладка.мета
   &&раскладка.в.char==="hero"&&раскладка.в.inv==="hero"&&раскладка.в.bodystate==="hero"
   &&раскладка.в.quests==="quests"&&раскладка.в.journal==="quests"&&раскладка.в.questlist==="quests"&&раскладка.в.cases==="quests"
   &&раскладка.в.lore==="books"&&раскладка.в.academy==="books"&&раскладка.в.best==="books"&&раскладка.в.plants==="books"
@@ -208,7 +208,7 @@ const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(e!==undefined?' :
   const rows=worldSelfCheck();const r=rows.find(x=>x.id==="ampunkty");
   return {есть:!!r,ok:r&&r.ok,плохие:rows.filter(x=>!x.ok).map(x=>x.id),
    глава:guideHas(/Меню действий — пунктами/,6),
-   часть:guidePartOf(GUIDE_OLD[95]),модуль:Sections.menu().length===16};});
+   часть:guidePartOf(GUIDE_OLD[95]),модуль:Sections.menu().length===16+(SVODY_ON?1:0)};});
  const корень=path.join(__dirname,'..');
  const readme=fs.readFileSync(path.join(корень,'README.md'),'utf8');
  const вз=fs.readFileSync(path.join(корень,'docs','ВЗАИМОДЕЙСТВИЕ.md'),'utf8');

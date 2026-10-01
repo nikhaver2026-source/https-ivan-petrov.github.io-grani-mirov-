@@ -73,11 +73,11 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
 
  // 5. Морской бестиарий и пираты
  const sea=await page.evaluate(()=>({
-  monsters:SEA_MONSTERS.length,crews:PIRATE_CREWS.length,
+  monsters:SEA_MONSTERS.length,sv:SVODY_ON?SVD.seaBeasts.length:0,crews:PIRATE_CREWS.length,
   fullMyth:SEA_MONSTERS.every(m=>m.myth&&m.who&&m.min<m.max),
   crewCreed:PIRATE_CREWS.every(c=>c.creed&&c.min<c.max),
   foe:(()=>{G.level=6;const f=makeSeaFoe(SEA_MONSTERS[0],0);return {n:f.n,lvl:f.lvl,hp:f.hp,gold:f.gold};})()}));
- check('морской бестиарий и пиратские ватаги описаны',sea.monsters===8&&sea.crews===5&&sea.fullMyth&&sea.crewCreed,sea);
+ check('морской бестиарий и пиратские ватаги описаны',sea.monsters===8+sea.sv&&sea.crews===5&&sea.fullMyth&&sea.crewCreed,sea);
  check('морской противник строится под уровень игрока',sea.foe.lvl>=5&&sea.foe.hp>0&&sea.foe.gold>0,sea.foe);
 
  // 6. Встреча с пиратами: окно и все исходы
@@ -135,8 +135,8 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   CMD.best();
   const t=document.getElementById("bestList").textContent;
   return {sea:/Морские твари/.test(t),pir:/Пиратские ватаги/.test(t),
-   voices:document.querySelectorAll('[data-cmd^="seavoice:"]').length};});
- check('бестиарий содержит морских тварей и ватаги с голосами',best.sea&&best.pir&&best.voices===13,best);
+   voices:document.querySelectorAll('[data-cmd^="seavoice:"]').length,sv:SVODY_ON?SVD.seaBeasts.length:0};});
+ check('бестиарий содержит морских тварей и ватаги с голосами',best.sea&&best.pir&&best.voices===13+best.sv,best);
 
  // 9. Ловушки в сундуках глубины
  const trap=await page.evaluate(()=>{

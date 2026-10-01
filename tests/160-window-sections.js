@@ -46,6 +46,7 @@ const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(e!==undefined?' :
     Меню больше не лента с заголовками-перескоками, а два уровня, как
     настройки: список разделов, потом пункты одного раздела. */
  const меню=await page.evaluate(()=>({
+  св:SVODY_ON?1:0,свП:SVODY_ON?AM_GROUP_BY_ID.svody[1].length:0,
   разделов:AM_GROUPS.length,
   имена:AM_GROUPS.map(g=>g[0]),
   уникИмён:new Set(AM_GROUPS.map(g=>g[0])).size,
@@ -56,7 +57,7 @@ const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(e!==undefined?' :
   безПодписи:AM_ITEMS.filter(x=>!(x[1]&&x[1].length>3)).map(x=>x[0]),
   первыеПодРукой:(AM_GROUP_BY_ID.here||[,[]])[1].map(x=>x[0])}));
  check('меню действий разбито на шестнадцать разделов с разными именами, и все сто тридцать пунктов целы',
-  меню.разделов===16&&меню.уникИмён===16&&меню.пунктов===131&&меню.уникПунктов===131
+  меню.разделов===16+меню.св&&меню.уникИмён===16+меню.св&&меню.пунктов===131+меню.свП&&меню.уникПунктов===131+меню.свП
   &&меню.пустые.length===0&&меню.безПодписи.length===0,меню);
  check('ни один раздел не длиннее шестнадцати пунктов, а «Здесь и сейчас» — то, что нужно на каждом шагу',
   меню.самыйБольшой<=16
@@ -204,7 +205,7 @@ const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(e!==undefined?' :
   return {есть:!!r,ok:r&&r.ok,
    плохие:rows.filter(x=>!x.ok).map(x=>x.id),
    модуль:!!m&&typeof m.nav==="function"&&typeof m.refresh==="function"
-    &&m.menu().length===16&&m.parts().length===9,
+    &&m.menu().length===16+(SVODY_ON?1:0)&&m.parts().length===9,
    текст:m?m.text():"",
    глава:guideHas(/Разделы длинных окон/,7)};});
  check('самопроверка держит строку sections, модуль SECTIONS отвечает, глава 90 на месте',
