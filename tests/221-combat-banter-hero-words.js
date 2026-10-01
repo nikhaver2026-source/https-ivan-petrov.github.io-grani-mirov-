@@ -117,10 +117,13 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   G.combat.голосРечи=2;G.lastFoeCry=null;playRealMonsterCue(b,"death",0.6);const смертьЖ=G.lastFoeCry&&G.lastFoeCry.role;
   G.inCombat=false;G.combat=null;
   const герой=new Set();for(let i=0;i<40;i++)герой.add(КРИК.роль("hero_m"));
-  return {герой:[...герой],героиня:КРИК.роль("hero_f"),удар,смерть,смертьЖ,
+  /* 6.0: у голоса героя свои крики (cry_hero_<голос>) — разнообразие внутри роли. */
+  const своих=[...герой].filter(r=>/^cry_hero_/.test(r)).reduce((n,r)=>n+((SOUND_BANK[r]||{}).f||[]).length,0);
+  return {герой:[...герой],своих,героиня:КРИК.роль("hero_f"),удар,смерть,смертьЖ,
    рана:/КРИК\.роль\(heroVoiceFemale\(\)\?"hero_f":"hero_m"\)/.test(String(playWoundSfx))};});
  check('6. крики: у героя свои записи, разбойник вскрикивает и падает по-человечески, разбойница — женским криком',
-  о6.герой.length>=2&&!!о6.героиня&&о6.рана&&["throng_retreat","mtg_hurt"].includes(о6.удар)&&о6.смерть==="throng_die_m"&&о6.смертьЖ==="throng_die_f",о6);
+  (о6.герой.length>=2||о6.своих>=6)&&!!о6.героиня&&о6.рана
+  &&["cry_bandit_0","throng_retreat","mtg_hurt"].includes(о6.удар)&&["cry_bandit_die_0","throng_die_m"].includes(о6.смерть)&&["cry_bandit_die_2","throng_die_f"].includes(о6.смертьЖ),о6);
 
  /* ── 7 ── */
  const о7=await page.evaluate(()=>{
