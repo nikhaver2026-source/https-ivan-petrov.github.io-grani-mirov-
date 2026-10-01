@@ -2,7 +2,7 @@
 // и объявляет окно чтецу экрана приложением (клавиши идут в игру).
 const { contextBridge, ipcRenderer } = require('electron');
 contextBridge.exposeInMainWorld('graniDesktop', {
-  version: '6.0', platform: process.platform,
+  version: '8.0', platform: process.platform,
   // «Выход» в меню действий: игра уже сохранилась — закрываем приложение.
   quit: () => ipcRenderer.send('grani-quit'),
   // Голосовой пакет Gemini: выбрать скачанный файл и поставить.

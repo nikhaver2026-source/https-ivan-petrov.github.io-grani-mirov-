@@ -1,14 +1,15 @@
 /* ═══════════════════════════════════════════════════════════════════════
-   НАБОР 230: 7.0 «СВОДЫ» — НОВЫЙ СЛОЙ МИРА (ТОЛЬКО СБОРКА ANDROID)
+   НАБОР 230: «СВОДЫ» — НОВЫЙ СЛОЙ МИРА (8.0: ВО ВСЕХ СБОРКАХ)
 
-   Своды включаются в сборке для Android; в браузере — адресом с ?svody=1.
-   1. Без ?svody=1 в браузере Сводов нет: ни раздела меню, ни новых ловушек,
-      морей, островов, подземелий, трав и зелий; версия прежняя.
-   2. С ?svody=1: раздел «Своды» в меню действий, версия 7.0, все списки
+   С 8.0 Своды есть в Android, Windows и браузере; адрес с ?svody=0
+   открывает прежний мир без них.
+   1. С ?svody=0 Сводов нет: ни раздела меню, ни новых ловушек, морей,
+      островов, подземелий, трав и зелий.
+   2. Без параметра: раздел «Своды» в меню действий, версия 8.0, все списки
       пополнены; в каждом наборе данных нужное число записей, имена
       не повторяются, у всех ссылок есть цель (твари → роды MONSTERS,
       ловушки → роды ловушек, звуки → роли банка).
-   3. Тридцать записей sounds/svody: FLAC 48 кГц / 24 бита, у каждой роли
+   3. Сорок девять записей sounds/svody: FLAC 48 кГц / 24 бита, у каждой роли
       свой файл, все описаны в CREDITS.md.
    4. Небо живёт: за двадцать суток отношения богов меняются, войны и
       союзы попадают в летопись неба; встать на сторону в войне — милость
@@ -19,7 +20,7 @@
       перековка поднимает черту и удар; тень просыпается ночью.
    7. Ловушка Сводов срабатывает звуком и своим действием; поручение
       «пять ловушек» засчитывается за снятые ловушки и даёт реликвию.
-   8. Окно «Своды»: свиток и все двенадцать разделов открываются без ошибок.
+   8. Окно «Своды»: свиток и все тринадцать разделов открываются без ошибок.
    ═══════════════════════════════════════════════════════════════════════ */
 const {chromium}=require('playwright');
 const fs=require('fs'),path=require('path'),cp=require('child_process');
@@ -27,18 +28,18 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
 const ROOT=path.resolve(__dirname,'..');
 (async()=>{
  const browser=await chromium.launch({args:['--autoplay-policy=no-user-gesture-required']});
- const base=process.argv[2];const sv=base+(base.indexOf('?')>=0?'&':'?')+'svody=1';
+ const base=process.argv[2];const sv=base;const без=base+(base.indexOf('?')>=0?'&':'?')+'svody=0';
 
  /* ── 1. Без Сводов ── */
  {const page=await browser.newPage();const errors=[];page.on('pageerror',e=>errors.push(String(e)));
-  await page.goto(base);await page.waitForTimeout(800);
+  await page.goto(без);await page.waitForTimeout(800);
   const р=await page.evaluate(()=>({on:SVODY_ON,group:AM_GROUPS.some(g=>g[0]==="Своды"),
    ловушки:TRAPS.filter(t=>/^sv_/.test(t.id)).length,моря:SEA_TYPES.filter(t=>/^sv_/.test(t.id)).length,
    острова:ISLAND_TYPES.filter(t=>/^sv_/.test(t.id)).length,зелья:POTIONS.filter(t=>/^sv_/.test(t.id)).length,
    травы:PLANTS.filter(t=>/^sv_/.test(t.id)).length,твари:SEA_MONSTERS.filter(t=>/^sv_/.test(t.id)).length,
    подземелья:Object.keys(DUNGEON_KIND_BY_ID).filter(k=>/^sv_/.test(k)).length,версия:GAME_VERSION,модуль:Modules.has("SVODY")}));
-  check('1. без ?svody=1 Сводов в браузере нет, версия прежняя',
-   !р.on&&!р.group&&!р.ловушки&&!р.моря&&!р.острова&&!р.зелья&&!р.травы&&!р.твари&&!р.подземелья&&р.версия!=="7.0"&&!р.модуль&&!errors.length,{р,errors});
+  check('1. с ?svody=0 Сводов нет — прежний мир для проверок',
+   !р.on&&!р.group&&!р.ловушки&&!р.моря&&!р.острова&&!р.зелья&&!р.травы&&!р.твари&&!р.подземелья&&!р.модуль&&!errors.length,{р,errors});
   await page.close();}
 
  const page=await browser.newPage();
@@ -72,23 +73,23 @@ const ROOT=path.resolve(__dirname,'..');
     зелья:POTIONS.filter(t=>/^sv_/.test(t.id)&&typeof t.дать==="function").length,травы:PLANTS.filter(t=>/^sv_/.test(t.id)).length,твари:SEA_MONSTERS.filter(t=>/^sv_/.test(t.id)).length,
     подземелья:Object.keys(DUNGEON_KIND_BY_ID).filter(k=>/^sv_/.test(k)).length}};});
  const с=д.сум;
- check('2а. раздел «Своды» в меню действий, у каждого пункта своя команда, версия 7.0',
-  !!д.group&&д.group[1].length===12&&!д.cmds.length&&д.версия==="7.0",{cmds:д.cmds,версия:д.версия});
- check('2б. объём: 21 бог семи родов, 14 народов и краёв, 5 океанов, 16 морей, 5 родов моря, 16 рек, 12 озёр, 8 архипелагов, 5 островов, 22+5 тварей, 10 ловушек, 6 подземелий, 8 трав, 6 зелий, 12 реликвий, 7 легенд, 13 персонажей',
-  с.богов===21&&с.родов===8&&с.народов===14&&с.краёв===14&&с.океанов===5&&с.морей===16&&с.родовМоря===5&&с.рек===16&&с.озёр===12&&с.архипелагов===8&&с.островов===5&&с.тварей===22&&с.морскихТварей===5&&с.ловушек===10&&с.подземелий===6&&с.трав===8&&с.зелий===6&&с.реликвий===12&&с.легенд===7&&с.персонажей===13,с);
+ check('2а. раздел «Своды» в меню действий, у каждого пункта своя команда, версия 8.0',
+  !!д.group&&д.group[1].length===13&&!д.cmds.length&&д.версия==="8.0",{cmds:д.cmds,версия:д.версия});
+ check('2б. объём: 27 богов восьми родов (+Хранители), 20 народов, 18 краёв, 5 океанов, 16 морей, 5 родов моря, 16 рек, 12 озёр, 8 архипелагов, 5 островов, 40+5 тварей, 14 ловушек, 10 подземелий, 11 трав, 9 зелий, 18 реликвий, 12 легенд, 21 персонаж, 6 видов оружия, 6 нитей, 8 выборов',
+  с.богов===27&&с.родов===9&&с.народов===20&&с.краёв===18&&с.океанов===5&&с.морей===16&&с.родовМоря===5&&с.рек===16&&с.озёр===12&&с.архипелагов===8&&с.островов===5&&с.тварей===40&&с.морскихТварей===5&&с.ловушек===14&&с.подземелий===10&&с.трав===11&&с.зелий===9&&с.реликвий===18&&с.легенд===12&&с.персонажей===21&&с.оружия===6&&с.нитей===6&&с.выборов===8,с);
  check('2в. списки игры пополнены: ловушки, моря, острова, морские твари, подземелья, травы, зелья (с действием)',
-  д.вСписках.ловушки===10&&д.вСписках.моря===5&&д.вСписках.острова===5&&д.вСписках.твари===5&&д.вСписках.подземелья===6&&д.вСписках.травы===8&&д.вСписках.зелья===6,д.вСписках);
+  д.вСписках.ловушки===14&&д.вСписках.моря===5&&д.вСписках.острова===5&&д.вСписках.твари===5&&д.вСписках.подземелья===10&&д.вСписках.травы===11&&д.вСписках.зелья===9,д.вСписках);
  check('2г. имена не повторяются, все связи ведут куда надо (звуки, роды тварей и ловушек, земли, персонажи, печати, травы → зелья)',
   !д.дубли.length&&!д.безЗвука.length&&!д.родыТварей.length&&!д.родыЛовушек.length&&!д.тварьЗемли.length&&!д.богиЗемель.length&&!д.персонажи.length&&!д.печатиБезПоручения.length&&!д.травыЗелья.length&&!д.зельяНиши.length&&!д.твариРек.length,д);
 
  /* ── 3. Звуки ── */
- const роли=await page.evaluate(()=>Object.keys(SOUND_BANK).filter(r=>/^sv_/.test(r)).map(r=>({r,f:SOUND_BANK[r].f})));
+ const роли=await page.evaluate(()=>Object.keys(SOUND_BANK).filter(r=>/^sv2?_/.test(r)).map(r=>({r,f:SOUND_BANK[r].f})));
  const кредиты=fs.readFileSync(path.join(ROOT,'sounds','svody','CREDITS.md'),'utf8');
  const плохие=роли.filter(x=>{const п=path.join(ROOT,'sounds',x.f[0]);if(x.f.length!==1||!fs.existsSync(п))return true;
   const r=cp.execFileSync('ffprobe',['-v','error','-show_entries','stream=codec_name,sample_rate,bits_per_raw_sample','-of','csv=p=0',п],{encoding:'utf8'}).trim();
   return r!=="flac,48000,24"||кредиты.indexOf(path.basename(п))<0;}).map(x=>x.r);
- check('3. тридцать записей Сводов: FLAC 48 кГц / 24 бита, у каждой роли свой файл, все в CREDITS.md',
-  роли.length===30&&new Set(роли.map(x=>x.f[0])).size===30&&!плохие.length,{n:роли.length,плохие});
+ check('3. сорок девять записей Сводов: FLAC 48 кГц / 24 бита, у каждой роли свой файл, все в CREDITS.md',
+  роли.length===49&&new Set(роли.map(x=>x.f[0])).size===49&&!плохие.length,{n:роли.length,плохие});
 
  /* ── 4. Небо ── */
  const н=await page.evaluate(()=>{
@@ -176,15 +177,15 @@ const ROOT=path.resolve(__dirname,'..');
  /* ── 8. Окно ── */
  const о=await page.evaluate(async()=>{const out={};
   G.place=null;while(activeLayer())closeTopUI();
-  for(const c of ["svody","svgods","svwars","svland","svwaters","svbody","svshadow","svsongs","svquests","svrelics","svspells","svbest"]){
+  for(const c of ["svody","svgods","svwars","svland","svwaters","svbody","svshadow","svsongs","svquests","svrelics","svspells","svbest","svlimits"]){
    CMD[c]();await new Promise(z=>setTimeout(z,30));
    const box=document.getElementById("svBody");out[c]=box?box.querySelectorAll("[data-speak]").length:0;}
   CMD.sv("race:perv");out.race=document.querySelectorAll("#svBody [data-cmd^='sv:god:']").length;
   CMD.sv("god:veyra");out.god=document.getElementById("svTitle").textContent;
   out.открыто=!document.getElementById("modal-svody").hidden;
   while(activeLayer())closeTopUI();return out;});
- check('8. окно «Своды»: свиток и двенадцать разделов открываются, у каждого есть пункты',
-  ["svody","svgods","svwars","svland","svwaters","svbody","svshadow","svsongs","svquests","svrelics","svspells","svbest"].every(c=>о[c]>=2)&&о.race===3&&о.god==="Вейра Первая Волна"&&о.открыто,о);
+ check('8. окно «Своды»: свиток и тринадцать разделов открываются, у каждого есть пункты',
+  ["svody","svgods","svwars","svland","svwaters","svbody","svshadow","svsongs","svquests","svrelics","svspells","svbest","svlimits"].every(c=>о[c]>=2)&&о.race===4&&о.god==="Вейра Первая Волна"&&о.открыто,о);
 
  check('без ошибок на странице',!errors.length,errors.slice(0,3));
  await browser.close();

@@ -49,3 +49,32 @@ Stendhal — по `doc/sources/audio-sfx.txt` и `doc/sources/audio-weather.txt`
 Лицензии: CC0 — https://creativecommons.org/publicdomain/zero/1.0/ ·
 CC BY 3.0 — https://creativecommons.org/licenses/by/3.0/ (авторы указаны выше;
 записи изменены: моно, громкость, обрезка тишины, 48 кГц).
+
+## 7.1 — пределы перерождений: нежить, рой, наследие Отлетевших
+
+Ещё девятнадцать записей той же обработки (FLAC 48 кГц / 24 бита, моно, около
+−16 LUFS). Исходники без потерь: Stendhal (`lossless_sources`), сэмплы Sonic Pi
+(`etc/samples`, FLAC; по `etc/samples/README.md` все — Freesound под CC0) и WAV
+сборника lavenderdotpet (CC0).
+
+| Файл | Роль | Что слышно | Источник | Автор | Лицензия | Исходник |
+|---|---|---|---|---|---|---|
+| sv2_rise.flac | `sv2_rise` | рык: павший встаёт снова | Stendhal | -sihiL | **CC BY 3.0** | https://freesound.org/people/-sihiL/sounds/213846/ · `troll-growl-02.flac` |
+| sv2_drain.flac | `sv2_drain` | долгое шипение: нежить иссушает | Stendhal | poots | **CC BY 3.0** | https://freesound.org/people/poots/sounds/71031/ · `lamia_hiss-02.flac` |
+| sv2_wail.flac | `sv2_wail` | утробный вой нежити | Stendhal | ketamineface | CC0 | https://freesound.org/people/ketamineface/sounds/242057/ · `werewolf_growl-02.flac` |
+| sv2_crypt_rat.flac | `sv2_crypt_rat` | ворчание склепной твари | Stendhal | Deganoth | **CC BY 3.0** | https://freesound.org/people/Deganoth/sounds/348700/ · `giantrat-growl-02.flac` |
+| sv2_hollow_laugh.flac | `sv2_hollow_laugh` | гулкий смех Поглотителя слепков | Stendhal | thanvannispen | **CC BY 3.0** | https://freesound.org/people/thanvannispen/sounds/9552/ · `cyclops-laugh-02.flac` |
+| sv2_swarm.flac | `sv2_swarm` | шипение роя | Stendhal | columbia23 | **CC BY 3.0** | https://freesound.org/people/columbia23/sounds/395396/ · `naga_hiss-03.flac` |
+| sv2_swarm_bite.flac | `sv2_swarm_bite` | бросок роевика | Stendhal | columbia23 | **CC BY 3.0** | https://freesound.org/people/columbia23/sounds/395396/ · `naga_hiss-05.flac` |
+| sv2_chitter.flac | `sv2_chitter` | стрёкот хитина | Stendhal | apolloaiello | CC0 | https://freesound.org/people/apolloaiello/sounds/276267/ · `kobold_bark-03.flac` |
+| sv2_invasion.flac | `sv2_invasion` | гром: нашествие Поглотителей | Stendhal | Andy_Gardner | CC0 | https://freesound.org/people/Andy_Gardner/sounds/238145/ · `weather/thunder-02.flac` |
+| sv2_grave_growl.flac | `sv2_grave_growl` | рычание у могилы | Stendhal | newagesoup | **CC BY 3.0** | https://freesound.org/people/newagesoup/sounds/338674/ · `wolf-growl-01.flac` |
+| sv2_double.flac | `sv2_double` | гул: посмертный двойник поднимается | Sonic Pi | Autistic Lucario | CC0 | https://freesound.org/people/Autistic%20Lucario/sounds/195341/ · `ambi_drone.flac` |
+| sv2_departed.flac | `sv2_departed` | гул руин Отлетевших | Sonic Pi | maqsim | CC0 | https://freesound.org/people/maqsim/sounds/172157/ · `ambi_lunar_land.flac` |
+| sv2_thread.flac | `sv2_thread` | механический отклик: нить Отлетевших вплетена | Sonic Pi | hullum | CC0 | https://freesound.org/people/hullum/sounds/415557/ · `glitch_robot1.flac` |
+| sv2_ruin_hum.flac | `sv2_ruin_hum` | ровный гул механизмов Отлетевших | Sonic Pi | hullum | CC0 | https://freesound.org/people/hullum/sounds/415570/ · `loop_drone_g_97.flac` |
+| sv2_stronghold.flac | `sv2_stronghold` | раскатистый удар: оплот выстоял или пал | Sonic Pi | Northern_Monkey | CC0 | https://freesound.org/people/Northern_Monkey/sounds/177242/ · `misc_cineboom.flac` |
+| sv2_rebirth.flac | `sv2_rebirth` | взмах: перерождение | Sonic Pi | Halgrimm | CC0 | https://freesound.org/people/Halgrimm/sounds/169867/ · `ambi_swoosh.flac` |
+| sv2_choice.flac | `sv2_choice` | быстро перелистнули: выбор на краю | lavenderdotpet | Ben Burnes (Abstraction), «Books, Paper, Writing» | CC0 | `bb - Books, Paper, Writing (Jan 2021)/Page Turn Fast.wav` |
+| sv2_madness.flac | `sv2_madness` | тонкий звон: рассудок на пределе | lavenderdotpet | NazdyNate, «Electromagnetic Sounds» | CC0 | `Micro Pack - NazdyNate - Electromagnetic Sounds/NazdyNate - Computer Monitor 2.wav` |
+| sv2_mech.flac | `sv2_mech` | скрежет ключа: страж Отлетевших | lavenderdotpet | Ben Burnes (Abstraction), «Smol Mechanisms» | CC0 | `bb - Smol Mechanisms (May 2021)/Pipe Wrench 3.wav` |
