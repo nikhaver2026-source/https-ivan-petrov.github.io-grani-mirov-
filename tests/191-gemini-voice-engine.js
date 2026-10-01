@@ -177,14 +177,15 @@ function lufs(file){
  const прил=await pA.evaluate(()=>{try{CMD.settings("tts");}catch(_){}
   const e=document.getElementById("setTtsEngine");
   return {v:GAME_VERSION,title:document.title,on:GVOICE_ON,вид:Speech._wantKind(),пункт:!!(e&&e.querySelector('option[value="gemini"]')),
-   n23:NEWS.some(n=>n.v===23),nv:NEWS_V,движок:settings.ttsEngine};});
+   n23:NEWS.some(n=>n.v===23),nv:NEWS_V,движок:settings.ttsEngine,андр:typeof ANDROID_VERSION==="string"?ANDROID_VERSION:APP_VERSION};});
  await cA.close();
  const сборка=fs.readFileSync(path.join(ROOT,'.github','workflows','android.yml'),'utf8');
  check('12. приложение для Android и браузер — одна версия (4.x–6.x); в приложении тоже голос Gemini, записи идут в сборку',
   /* Версия не прибита гвоздём: браузер, приложение и сборка просто совпадают (с 4.0 и дальше). */
   /^[456]\.\d+$/.test(браузер.v)&&браузер.title.includes("Alpha "+браузер.v)&&браузер.on&&браузер.n23
-  &&прил.v===браузер.v&&прил.title.includes("Alpha "+браузер.v)&&прил.on&&прил.вид==="gemini"&&прил.пункт&&прил.n23&&прил.движок==="gemini"
-  &&!/sounds\/gvoice(_f)?\b/.test(сборка)&&/cp -r sounds/.test(сборка)&&сборка.includes("grani-mirov-"+браузер.v+".apk"),{браузер,прил});
+  /* С 7.0 у приложения для Android своя версия (ANDROID_VERSION, в нём Своды). */
+  &&прил.v===прил.андр&&прил.title.includes("Alpha "+прил.v)&&прил.on&&прил.вид==="gemini"&&прил.пункт&&прил.n23&&прил.движок==="gemini"
+  &&!/sounds\/gvoice(_f)?\b/.test(сборка)&&/cp -r sounds/.test(сборка)&&сборка.includes("grani-mirov-"+прил.v+".apk"),{браузер,прил});
 
  check('страница не бросила ни одной ошибки',errors.length===0,errors.slice(0,3));
  await browser.close();

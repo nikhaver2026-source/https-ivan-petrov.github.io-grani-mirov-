@@ -1079,7 +1079,9 @@ const SVD={
  songC:["и с тех пор там больше никто не ходит.","а пиво за это пили неделю.","и боги, говорят, смеялись.","но кто считал, тот сбился.",
   "и даже Латунный Судья не нашёл, к чему придраться.","а Шестой велел это забыть — но мы помним."]};
 const WEB_VERSION="6.0",APP_VERSION="6.0";
-const GAME_VERSION=SVODY_ON?"7.0":IN_APP?APP_VERSION:WEB_VERSION;
+/* 7.0: у сборки для Android своя версия — в ней Своды (versionName в build.gradle). */
+const ANDROID_VERSION="7.0";
+const GAME_VERSION=SVODY_ON?ANDROID_VERSION:IN_APP?APP_VERSION:WEB_VERSION;
 const GVOICE_ON=true;
 /* Номер голосового пакета: растёт, когда пакет пополнился (обходит кэш). */
 const GV_PACK_V=4,GV_MENU_ON=false;

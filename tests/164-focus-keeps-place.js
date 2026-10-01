@@ -326,7 +326,9 @@ const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(e!==undefined?' :
   const приложение=(src.match(/APP_VERSION="([\d.]+)"/)||[])[1]||"";
   const грэдл=fs.readFileSync(path.join(__dirname,'..','android','app','build.gradle'),'utf8');
   const андроид=(грэдл.match(/versionName '([\d.]+)'/)||[])[1]||"";
-  const одна=версии.length>=3&&new Set(версии).size===1&&версии[0]===константа&&приложение===андроид;
+  /* С 7.0 у сборки для Android своя версия (ANDROID_VERSION): в ней Своды. */
+  const андрКонст=(src.match(/ANDROID_VERSION="([\d.]+)"/)||[])[1]||приложение;
+  const одна=версии.length>=3&&new Set(версии).size===1&&версии[0]===константа&&андрКонст===андроид;
   const вИгре=await page.evaluate(()=>{
    const t=(document.title.match(/Alpha (\d+\.\d+(?:\.\d+)?)/)||[])[1]||"";
    const h=((document.querySelector("h1")||{}).textContent||"").match(/Alpha (\d+\.\d+(?:\.\d+)?)/);
