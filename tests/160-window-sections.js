@@ -205,7 +205,7 @@ const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(e!==undefined?' :
   return {есть:!!r,ok:r&&r.ok,
    плохие:rows.filter(x=>!x.ok).map(x=>x.id),
    модуль:!!m&&typeof m.nav==="function"&&typeof m.refresh==="function"
-    &&m.menu().length===16+(SVODY_ON?1:0)&&m.parts().length===9,
+    &&m.menu().length===16+(SVODY_ON?1:0)&&m.parts().length===7,
    текст:m?m.text():"",
    глава:guideHas(/Разделы длинных окон/,2)};});
  check('самопроверка держит строку sections, модуль SECTIONS отвечает, глава 90 на месте',

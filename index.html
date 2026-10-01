@@ -8473,7 +8473,10 @@ const GUIDE=(()=>{const out=[];
 /* Авторы и лицензии записей — в титрах «Энциклопедии звуков»: прежняя
    глава руководства «Кто написал эти звуки» целиком там (руководство — для
    игры, а условия лицензий требуют, чтобы имена были в самой игре). */
-function soundCreditsText(){return ENC_CREDITS+"\n"+((GUIDE_SRC_BY_NUM[33]||{}).body||[]).join("\n");}
+function soundCreditsText(){
+ /* Голоса Gemini, которыми озвучены народы, названы там же, где авторы записей. */
+ const голоса=((GUIDE_SRC_BY_NUM[50]||{}).body||[]).filter(t=>/Gemini|Algenib|Puck/.test(t));
+ return [ENC_CREDITS].concat((GUIDE_SRC_BY_NUM[33]||{}).body||[],голоса).join("\n");}
 /* Есть ли в руководстве раздел с таким заголовком и не короче k абзацев. */
 function guideHas(re,k){return GUIDE_SECS.some(x=>(re.test(x.t)||re.test(x.old||""))&&x.body.length>=(k||1));}
 /* Раздел руководства по заголовку прежней главы: {title, body, i}. */
