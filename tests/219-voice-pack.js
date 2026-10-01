@@ -77,8 +77,13 @@ const опись=f=>{const t=fs.readFileSync(f,'utf8');return JSON.parse(t.slice
  /* ── 5 ── */
  const wf=f=>fs.readFileSync(path.join(ROOT,'.github/workflows',f),'utf8');
  const java=fs.readFileSync(path.join(ROOT,'android/app/src/main/java/io/github/granimirov/MainActivity.java'),'utf8');
- check('5. в APK и архив для Windows пакет не кладётся, пакет собирается в свой выпуск, Android отдаёт его по тому же адресу',
-  /rm -rf "\$P"\/sounds\/gvoice_pack/.test(wf('android.yml'))&&/rm -rf "\$G"\/sounds\/gvoice_pack/.test(wf('windows.yml'))&&/voicepack-latest/.test(wf('voicepack.yml'))
+ /* 6.0: приложение для Windows несёт пакет в себе (полная сборка без сжатия — артефакт);
+    в архив выпуска пакет идёт, только если архив влезает в 2 ГиБ, иначе приложение
+    само скачивает пакет из «voicepack-latest» (VoicePack.autoFetch). */
+ const win=wf('windows.yml'),vpjs=fs.readFileSync(path.join(ROOT,'desktop','voicepack.js'),'utf8');
+ check('5. в APK пакет не кладётся; Windows несёт его в полной сборке, а архив выпуска без пакета докачивает его сам; пакет собирается в свой выпуск, Android отдаёт его по тому же адресу',
+  /rm -rf "\$P"\/sounds\/gvoice_pack/.test(wf('android.yml'))&&!/rm -rf "\$G"\/sounds\/gvoice_pack/.test(win)&&/upload-artifact/.test(win)&&/-xr!'gvoice_pack'/.test(win)
+  &&/autoFetch/.test(vpjs)&&/voicepack-latest/.test(vpjs)&&/voicepack-latest/.test(wf('voicepack.yml'))
   &&/GraniMirov-voicepack\.zip/.test(wf('voicepack.yml'))&&/\/assets\/www\/sounds\/gvoice_pack\//.test(java)&&/installVoicePack/.test(java));
 
  check('Ошибок страницы нет',errors.length===0,errors.slice(0,3));
