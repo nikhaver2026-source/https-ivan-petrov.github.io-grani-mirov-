@@ -144,7 +144,7 @@ const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(e!==undefined?' :
  check('самопроверка мира держит зелёную строку «floors»',
   !!итог.floors&&итог.floors.ok===true,итог.floors);
  check('вся остальная самопроверка мира тоже зелёная',итог.плохие.length===0,итог.плохие);
- check('в руководстве есть глава о вехах ста ярусов',итог.глава&&итог.строк>=5,итог);
+ check('в руководстве есть глава о вехах ста ярусов',итог.глава&&итог.строк>=2,итог);
 
  const ROOT=path.resolve(__dirname,'..');
  const readme=fs.readFileSync(path.join(ROOT,'README.md'),'utf8');

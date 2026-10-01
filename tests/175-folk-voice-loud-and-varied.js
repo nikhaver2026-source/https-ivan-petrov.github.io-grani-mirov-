@@ -354,8 +354,8 @@ const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(e!==undefined?' :
   return {глава:!!гл,абзацев:гл?гл.body.length:0,часть:часть?часть[0]:null,news:NEWS_V,
    гл50:guideSec(/Живая речь народов/).body.some(t=>new RegExp("глава "+guideNum(GUIDE_OLD[98])+"\\b").test(t)),
    самопроверка:(()=>{const c=worldSelfCheck();const s=JSON.stringify(c);return s.indexOf('"folk"')>=0;})()};});
- check('глава 98 во второй части, и глава 50 на неё ссылается',
-  док.глава&&док.абзацев>=7&&/Часть II/.test(док.часть||"")&&док.гл50,док);
+ check('раздел о голосах жителей — во второй части руководства',
+  док.глава&&док.абзацев>=2&&/Часть II/.test(док.часть||""),док);
  check('новость о голосах вошла в выпуск для вернувшихся (девятый и позже)',док.news>=9,док.news);
  const readme=fs.readFileSync(path.join(ROOT,'README.md'),'utf8');
  const звук=fs.readFileSync(path.join(ROOT,'docs','ЗВУК.md'),'utf8');

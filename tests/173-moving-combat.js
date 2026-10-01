@@ -294,8 +294,8 @@ const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(e!==undefined?' :
    само:row&&row.ok,самоТекст:row&&row.detail};});
  check('14. карта жестов и подсказка боя говорят про шаг и про «где тварь»',
   /в бою — шаг/.test(слова.свайп)&&/в бою — где тварь/.test(слова.два)&&/шаг по полю боя/.test(слова.подсказка),слова);
- check('14. глава 96 «Подвижный бой» в части VII; самопроверка держит строку arena',
-  слова.глава&&/Часть VII/.test(слова.часть)&&слова.само===true,слова);
+ check('14. раздел «Подвижный бой» в части «Бой и дела»; самопроверка держит строку arena',
+  слова.глава&&/Часть V\./.test(слова.часть)&&слова.само===true,слова);
  const root=path.join(__dirname,'..');
  const readme=fs.readFileSync(path.join(root,'README.md'),'utf8');
  const docs=fs.readFileSync(path.join(root,'docs','ВЗАИМОДЕЙСТВИЕ.md'),'utf8');
