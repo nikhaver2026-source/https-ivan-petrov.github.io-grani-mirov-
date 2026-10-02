@@ -105,6 +105,8 @@ public static class GraniSapi {
       if (JawsUp()) Add(sb, JAWS, "ru-RU", "", "sr", "JAWS", false);
     }
     Say(sb.ToString());
+    // Состояние голоса чтеца экрана — для отчёта «почему не видно голосов».
+    Say("sr " + (IntPtr.Size == 8 ? (nvTest != null ? "lib" : "nolib") + " " + (NvdaUp() ? "up" : "down") : "x86"));
   }
   // Сколько примерно звучит фраза у чтеца экрана: конца речи он не сообщает.
   static int SrMs(string t, int rate){ double cps = 14.0 * Math.Pow(3.0, rate / 10.0); return 350 + (int)(1000.0 * (t ?? "").Length / Math.Max(6.0, cps)); }
@@ -120,6 +122,9 @@ public static class GraniSapi {
         if (p == null || p.Length == 0) continue;
         try {
           if (p[0] == "quit") return;
+          // «Перечитать голоса»: движок, поставленный или запущенный после
+          // открытия игры (новый голос SAPI, NVDA), появляется без перезапуска.
+          if (p[0] == "enum") { tokens.Clear(); platform.Clear(); Enumerate(v); Say("ready"); continue; }
           if (p[0] == "voice" && p.Length > 1) {
             object t;
             if (p[1] == NVDA || p[1] == JAWS) { sr = p[1]; }
@@ -238,11 +243,21 @@ class Proc {
       });
       return;
     }
+    if (l.startsWith('sr ')) { this.sr = l.slice(3); return; }
     if (l === 'ready') { this.ready = true; if (done) done(this.voices.length > 0); if (this.onReady) this.onReady(); return; }
     if (l.startsWith('fatal')) { this.ready = false; this.why = 'голоса Windows недоступны: ' + l.slice(6); if (done) done(false); return; }
     const m = /^(done|cancel|error) (\S*)/.exec(l);
     if (m) { if (this.onDone && m[2]) this.onDone(m[1], m[2]); return; }
     if (l === 'wav ok' || l.startsWith('wav fail')) { const w = this.waiters.shift(); if (w) w(l === 'wav ok' ? true : l); }
+  }
+  // Перечитать голоса в уже поднятом мосту.
+  reenum(ms) {
+    return new Promise(res => {
+      const prev = this.onReady; let fin = false;
+      this.onReady = () => { this.onReady = prev; if (prev) prev(); if (!fin) { fin = true; res(true); } };
+      this.send('enum');
+      setTimeout(() => { if (!fin) { fin = true; this.onReady = prev; res(false); } }, ms);
+    });
   }
   send(...parts) { try { if (this.proc && this.proc.stdin.writable) this.proc.stdin.write(parts.map(x => String(x).replace(/[\t\r\n]+/g, ' ')).join('\t') + '\n'); } catch (_) { } }
   quit() { try { this.send('quit'); if (this.proc) { this.proc.stdin.end(); setTimeout(() => { try { this.proc.kill(); } catch (_) { } }, 500); } } catch (_) { } }
@@ -262,18 +277,57 @@ function asciiTmp() {
   }
   return t;
 }
+// ── БИБЛИОТЕКИ ИЗ АРХИВА ПРИЛОЖЕНИЯ (8.0) ──
+// Упаковщик кладёт приложение в архив app.asar. Electron читает из него сам,
+// но PowerShell и Windows — нет: готовый мост и библиотека NVDA, лежавшие в
+// архиве, у игрока не поднимались. Мост тогда собирался заново и не успевал к
+// открытию игры, а голос NVDA не появлялся вовсе. Теперь библиотеки лежат
+// рядом с приложением (resources/sapi, resources/sr), а если всё же оказались
+// в архиве — копируются во временную папку обычными файлами.
+const inAsar = f => /\.asar([\\/]|$)/i.test(String(f || ''));
+function outOfAsar(f) {
+  if (!inAsar(f)) return f;
+  try {
+    const rel = String(f).split(/\.asar[\\/]/i).pop();
+    const dest = path.join(asciiTmp(), 'grani-bin', rel);
+    fs.mkdirSync(path.dirname(dest), { recursive: true });
+    const data = fs.readFileSync(f);
+    let same = false; try { same = fs.statSync(dest).size === data.length; } catch (_) { }
+    if (!same) fs.writeFileSync(dest, data);
+    return dest;
+  } catch (_) { return ''; }
+}
+function bases(sub) {
+  const out = [];
+  if (process.resourcesPath) out.push(path.join(process.resourcesPath, sub));
+  out.push(path.join(__dirname, sub));
+  return out;
+}
 // Готовый мост, собранный при сборке приложения (sapi-build.js): у игрока
 // ничего не компилируется — голоса Windows отвечают за секунду, без сборщика C#.
+let shippedCache = null;
 function shippedDll() {
-  for (const d of [path.join(__dirname, 'sapi'), path.join(process.resourcesPath || '', 'sapi')]) {
+  if (shippedCache !== null) return shippedCache;
+  for (const d of bases('sapi')) {
     const f = path.join(d, 'grani-sapi-' + TAG + '.dll');
-    try { if (fs.existsSync(f)) return f; } catch (_) { }
+    try { if (fs.existsSync(f)) { const r = outOfAsar(f); if (r) return (shippedCache = r); } } catch (_) { }
   }
-  return '';
+  return (shippedCache = '');
 }
 // Библиотека NVDA для голоса чтеца экрана (desktop/sr, кладётся при сборке).
 function srDir() {
-  for (const d of [path.join(__dirname, 'sr'), path.join(process.resourcesPath || '', 'sr')]) { try { if (fs.existsSync(d)) return d; } catch (_) { } }
+  for (const d of bases('sr')) {
+    try {
+      if (!fs.existsSync(d)) continue;
+      if (!inAsar(d)) return d;
+      let any = false;
+      for (const a of ['x64', 'x86']) {
+        const f = path.join(d, a, 'nvdaControllerClient.dll');
+        if (fs.existsSync(f) && outOfAsar(f)) any = true;
+      }
+      if (any) return path.join(asciiTmp(), 'grani-bin', 'sr');
+    } catch (_) { }
+  }
   return '';
 }
 
@@ -283,12 +337,15 @@ class Sapi {
   diag() {
     if (process.platform !== 'win32') return 'не Windows';
     const parts = this.procs.map(p => p.bits + ' бит: ' + (p.ready ? 'голосов ' + p.voices.length : (p.why || 'поднимается')));
+    const p64 = this.procs.find(p => p.bits === 64);
+    const sr = p64 && p64.sr ? (/^nolib/.test(p64.sr) ? '; голос NVDA: нет библиотеки NVDA' : /up$/.test(p64.sr) ? '; голос NVDA: доступен' : '; голос NVDA: NVDA не запущен — запустите NVDA и перечитайте голоса') : '';
     return (this.ready ? 'голоса Windows подключены, голосов ' + this.voices.length : 'голоса Windows не подключены' + (this.why ? ' (' + this.why + ')' : '')) +
-      (parts.length ? '; ' + parts.join('; ') : '') + (shippedDll() ? '; мост готовый' : '; мост собирается на месте');
+      (parts.length ? '; ' + parts.join('; ') : '') + (shippedDll() ? '; мост готовый' : '; мост собирается на месте') + sr;
   }
   // «Перечитать голоса»: мост, который не поднялся, запускается заново.
   restart(timeoutMs = 15000) {
-    if (this.ready && this.procs.every(p => p.ready)) return Promise.resolve(this.merge());
+    if (this.ready && this.procs.every(p => p.ready))
+      return Promise.all(this.procs.map(p => p.reenum(4000))).then(() => this.merge());
     this.procs.forEach(p => { if (!p.ready) p.quit(); });
     const keep = this.procs.filter(p => p.ready);
     return this.start(timeoutMs, keep);

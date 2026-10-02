@@ -5967,14 +5967,15 @@ function fieldInteract(){
 const ADJ_MAIN_TILES=new Set(["C","K","X","R","A","S","F","N","P","B","L","H","J","D","U","V","Z","Y","O","W"]);
 function interactAdjacent(){
  if(!G.place||G.place.тайник)return false;
- const все=safeFn(()=>objectsHere(),[])||[];
+ const все=safeFn(()=>objectsHere(true),[])||[];
  const рядом=все.map((o,i)=>({o,i})).filter(({o})=>o.d===1&&o.вид==="tile"&&o.плитка!=="#");
  if(!рядом.length)return false;
  /* Сперва то, к чему герой повернулся последним шагом; затем живые
-    (с ними говорят), потом прочее. */
+    (с ними говорят), потом то, что сбоку, и лишь затем — по диагонали. */
  const [fx,fy]=(lastMoveDir&&DIRV[lastMoveDir])||[0,0];
  const живой=z=>["S","F","N","P","B"].indexOf(z.o.плитка)>=0;
- const выбор=рядом.find(z=>z.o.dx===fx&&z.o.dy===fy)||рядом.find(живой)||рядом[0];
+ const прямо=z=>!(z.o.dx&&z.o.dy);
+ const выбор=рядом.find(z=>z.o.dx===fx&&z.o.dy===fy)||рядом.find(z=>живой(z)&&прямо(z))||рядом.find(прямо)||рядом.find(живой)||рядом[0];
  const o=выбор.o;
  if(ADJ_MAIN_TILES.has(o.плитка)&&typeof o.главное==="function"){safeFn(()=>o.главное());return true;}
  /* Дверь и прочее без своего главного дела — список его действий. */
@@ -17688,7 +17689,11 @@ function renderVoiceList(держать,кнопка){
  const тек=settings.voice||"";
  const говорит=settings.ttsEngine==="gemini"?"голос Gemini":"синтезатор телефона";
  const скрыто=все.length-vs.length;
- let html=`<div class="list-line" tabindex="0" data-speak="${q(`Голосов в телефоне: ${все.length}, в списке: ${vs.length}${скрыто>0?`, скрыто фильтрами: ${скрыто}`:""}. Сейчас говорит ${говорит}.`)}">Голосов в телефоне: ${все.length}, в списке: ${vs.length}. Говорит ${q(говорит)}.</div>`;
+ let html=`<div class="list-line" tabindex="0" data-speak="${q(`Голосов ${isDesktopApp()?"на компьютере":"в телефоне"}: ${все.length}, в списке: ${vs.length}${скрыто>0?`, скрыто фильтрами: ${скрыто}`:""}. Сейчас говорит ${говорит}.`)}">Голосов ${isDesktopApp()?"на компьютере":"в телефоне"}: ${все.length}, в списке: ${vs.length}. Говорит ${q(говорит)}.</div>`;
+ /* (8.0) Приложение для Windows: почему не видно голосов движков — словами,
+    чтобы игрок знал, что сделать (запустить NVDA, перечитать голоса). */
+ const отчёт=isDesktopApp()&&window.graniDesktop&&typeof window.graniDesktop.ttsDiag==="function"?safeFn(()=>window.graniDesktop.ttsDiag(),""):"";
+ if(отчёт)html+=`<div class="list-line" tabindex="0" data-speak="${q("Голоса Windows: "+отчёт+".")}">Голоса Windows: ${q(отчёт)}.</div>`;
  html+=vs.map((v,i)=>{const k=Speech.voiceKey(v),мой=k===тек&&settings.ttsEngine==="device";
   const имя=Speech.voiceLabel(v);
   return `<button type="button" class="item" data-cmd="voicepick:${i}" data-voice-key="${q(k)}" data-speak="${q(`${имя}.${мой?" Сейчас выбран.":""}`)}">${q(имя)}${мой?" — выбран":""}</button>`;}).join("");
@@ -27709,13 +27714,15 @@ const IOBJ_TILES={"+":"дверь","G":"ворота","C":"сундук","K":"к
  "Y":"дверь сокровищницы","#":"стена",
  "H":"лечебница","J":"тюрьма","D":"торговый дом","U":"канализационный люк","V":"трактир",
  "Z":"мастерская"};
-function objectsHere(){
+function objectsHere(диаг){
  const out=[];
  try{
   if(G.ship||inFlight())return out;
   if(G.place){
    const lvl=curLevel(),p=G.place;if(!lvl)return out;
-   const кл=[[0,0],[0,-1],[0,1],[-1,0],[1,0]];
+   /* (8.0) Для действия «вплотную» считаются и углы: шкаф или скрижаль по
+      диагонали игра называла рядом, а E и Enter с ними ничего не делали. */
+   const кл=диаг?[[0,0],[0,-1],[0,1],[-1,0],[1,0],[-1,-1],[1,-1],[-1,1],[1,1]]:[[0,0],[0,-1],[0,1],[-1,0],[1,0]];
    for(const [dx,dy] of кл){
     const x=p.x+dx,y=p.y+dy;
     if(x<0||y<0||x>=lvl.w||y>=lvl.h)continue;

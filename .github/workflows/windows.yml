@@ -98,18 +98,33 @@ jobs:
         working-directory: desktop
         run: |
           ICONARG=""; [ -n "$ICON" ] && ICONARG="--icon=$ICON"
+          # Мост голосов (sapi) и библиотека NVDA (sr) — рядом с приложением,
+          # обычными файлами (resources/sapi, resources/sr): из архива app.asar
+          # их не может прочитать ни PowerShell, ни Windows.
+          mkdir -p sr sapi
           npx @electron/packager . GraniMirov --platform=win32 --arch=x64 --out=out --overwrite \
             --executable-name=GraniMirov --app-version=8.0.0 --build-version=8.0.${GITHUB_RUN_NUMBER} \
             --win32metadata.ProductName="Грань Миров" --win32metadata.FileDescription="Грань Миров" \
             --win32metadata.CompanyName="Грань Миров" \
-            --extra-resource=../build/game --ignore='out' --ignore='icon\.ico' --ignore='(key|voice)check\.js' --ignore='sapi-test\.js' --ignore='sapi-build\.js' $ICONARG
+            --extra-resource=../build/game --extra-resource=sapi --extra-resource=sr --ignore='out' --ignore='icon\.ico' --ignore='(key|voice)check\.js' --ignore='sapi-test\.js' --ignore='sapi-build\.js' $ICONARG
           D=out/GraniMirov-win32-x64
+          # Мост голосов обязан лежать обычным файлом рядом с приложением.
+          ls -la "$D/resources/sapi" "$D/resources/sr" || true
+          ls "$D"/resources/sapi/grani-sapi-*.dll
           # Языки интерфейса Chromium: оставить русский и английский.
           find "$D/locales" -name '*.pak' ! -name 'ru.pak' ! -name 'en-US.pak' -delete
           cp README.txt "$D/Прочти меня.txt"
           ls "$D"; du -sh "$D" "$D/resources"/*
           # Приложение само должно быть маленьким: игра лежит в resources/game.
           test $(du -sm "$D/resources/app"* | awk '{s+=$1} END {print s}') -lt 50
+
+      # Голоса Windows из собранного приложения: мост берётся из resources/sapi,
+      # как у игрока, а не из папки исходников.
+      - name: Голоса Windows из собранного приложения
+        continue-on-error: true
+        working-directory: desktop
+        run: |
+          node -e "process.resourcesPath=require('path').resolve('out/GraniMirov-win32-x64/resources');const {Sapi}=require('./sapi.js');const s=new Sapi();s.start(30000).then(ok=>{console.log('SAPI', ok, s.list().length, s.diag());console.log(s.list().map(v=>v.name+' ['+v.engine+']').join('; '));s.quit();setTimeout(()=>process.exit(ok?0:1),800);});"
 
       - name: Папка приложения
         working-directory: desktop/out
