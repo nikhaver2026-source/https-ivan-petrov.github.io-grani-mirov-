@@ -16,7 +16,7 @@ const fs = require('fs'), os = require('os'), path = require('path');
 
 const CS = String.raw`
 using System; using System.Collections.Generic; using System.Collections.Concurrent; using System.Globalization; using System.Text; using System.Threading;
-using System.Runtime.InteropServices; using System.IO; using System.Diagnostics;
+using System.Runtime.InteropServices; using System.IO; using System.Diagnostics; using System.Runtime.ExceptionServices; using System.Security;
 // ── RHVoice из дополнений NVDA — без NVDA ──
 // Дополнение NVDA «RHVoice» несёт открытую библиотеку RHVoice.dll (LGPL), а
 // голоса — соседние дополнения «RHVoice-voice-…» (папки data и langdata). Мост
@@ -66,7 +66,9 @@ public static class GraniRh {
     return r;
   }
   static bool Live(string d){ string n = Path.GetFileName(d).ToLowerInvariant(); return !n.EndsWith(".pendinginstall") && !n.EndsWith(".pendingremove") && !File.Exists(Path.Combine(d, "delete")); }
-  public static void Load(){
+  [HandleProcessCorruptedStateExceptions, SecurityCritical]
+  public static void Load(){ try { LoadRaw(); } catch (Exception ex) { Voices = new List<V>(); Why = "сбой загрузки: " + ex.GetType().Name; } }
+  static void LoadRaw(){
     if (eng != IntPtr.Zero) return;
     Voices = new List<V>();
     try {
@@ -131,7 +133,13 @@ public static class GraniRh {
   static void OnDone(IntPtr ud){ }
   public static void Cancel(){ cancel = true; }
   // Фраза целиком в PCM 16 бит: RHVoice считает намного быстрее, чем звучит речь.
+  [HandleProcessCorruptedStateExceptions, SecurityCritical]
   public static short[] Synth(string profile, string text, int r, int vol, out int sr){
+    sr = rate;
+    try { return SynthRaw(profile, text, r, vol, out sr); }
+    catch (Exception ex) { eng = IntPtr.Zero; Voices = new List<V>(); Why = "сбой RHVoice: " + ex.GetType().Name; return null; }
+  }
+  static short[] SynthRaw(string profile, string text, int r, int vol, out int sr){
     lock (synthLock) {
       buf = new List<short>(); cancel = false; sr = rate;
       if (eng == IntPtr.Zero) return null;
@@ -177,7 +185,9 @@ public static class GraniEs {
     try { using (var fs = File.OpenRead(f)) { var r = new BinaryReader(fs); fs.Seek(0x3C, SeekOrigin.Begin); int pe = r.ReadInt32(); fs.Seek(pe + 4, SeekOrigin.Begin); ushort m = r.ReadUInt16(); return m == 0x8664 ? 64 : m == 0x14c ? 32 : 0; } }
     catch (Exception) { return 0; }
   }
-  public static void Load(){
+  [HandleProcessCorruptedStateExceptions, SecurityCritical]
+  public static void Load(){ try { LoadRaw(); } catch (Exception ex) { Voices = new List<V>(); Why = "сбой загрузки: " + ex.GetType().Name; } }
+  static void LoadRaw(){
     if (up) return;
     Voices = new List<V>();
     try {
@@ -209,7 +219,11 @@ public static class GraniEs {
         IntPtr vp = Marshal.ReadIntPtr(arr, i * IntPtr.Size); if (vp == IntPtr.Zero) break;
         string name = S8(Marshal.ReadIntPtr(vp, 0)); IntPtr lp = Marshal.ReadIntPtr(vp, IntPtr.Size);
         string lang = lp == IntPtr.Zero ? "" : S8(new IntPtr(lp.ToInt64() + 1)).ToLowerInvariant();
+        string ident = S8(Marshal.ReadIntPtr(vp, 2 * IntPtr.Size)).ToLowerInvariant().Replace('\\', '/');
         byte g = Marshal.ReadByte(vp, 3 * IntPtr.Size);
+        // Только настоящие голоса: варианты (!v/…) и голоса MBROLA (mb/…) без
+        // самой MBROLA роняли библиотеку.
+        if (ident.StartsWith("!v") || ident.StartsWith("mb/") || ident.Contains("/mb-") || name.ToLowerInvariant().Contains("mbrola")) continue;
         if (!(lang == "ru" || lang.StartsWith("ru-") || lang == "en" || lang == "en-gb" || lang == "en-us")) continue;
         var w = new V(); w.Id = name; w.Name = "eSpeak NG — " + name; w.Lang = lang == "ru" ? "ru-RU" : lang == "en" ? "en-GB" : lang; w.Gender = g == 1 ? "Male" : g == 2 ? "Female" : "";
         Voices.Add(w);
@@ -223,7 +237,15 @@ public static class GraniEs {
     return 0;
   }
   public static void Cancel(){ cancel = true; }
+  // Сбой внутри чужой библиотеки (нарушение доступа) не роняет мост: движок
+  // помечается неисправным, остальные голоса говорят дальше.
+  [HandleProcessCorruptedStateExceptions, SecurityCritical]
   public static short[] Synth(string voice, string text, int r, int vol, out int sr){
+    sr = rate;
+    try { return SynthRaw(voice, text, r, vol, out sr); }
+    catch (Exception ex) { up = false; Voices = new List<V>(); Why = "сбой eSpeak: " + ex.GetType().Name; return null; }
+  }
+  static short[] SynthRaw(string voice, string text, int r, int vol, out int sr){
     lock (lk) {
       buf = new List<short>(); cancel = false; sr = rate;
       if (!up) return null;
@@ -498,7 +520,14 @@ class Proc {
       try { this.proc = spawn(this.exe, ['-NoProfile', '-NonInteractive', '-ExecutionPolicy', 'Bypass', '-File', file, '-Dll', dll || ''], { windowsHide: true, env: env || process.env }); }
       catch (e) { this.why = 'PowerShell не запустился: ' + (e && e.message || e); return done(false); }
       this.proc.on('error', e => { this.why = 'PowerShell не запустился: ' + (e && e.message || e); done(false); });
-      this.proc.on('exit', code => { if (!this.ready && !this.why) this.why = 'мост закрылся (код ' + code + ')' + (this.err ? ': ' + this.err.slice(-300) : ''); this.ready = false; done(false); });
+      this.proc.on('exit', code => {
+        const был = this.ready || this.wasReady;
+        if (!this.ready && !this.why) this.why = 'мост закрылся (код ' + code + ')' + (this.err ? ': ' + this.err.slice(-300) : '');
+        if (был) { this.why = 'мост упал (код ' + code + ') и поднимается заново'; this.voices = []; }
+        this.ready = false; done(false);
+        // Упал уже работавший мост (сбой чужого движка) — Sapi поднимает его снова.
+        if (был && this.onExit) this.onExit(this);
+      });
       this.proc.stdin.on('error', () => { });
       // Ошибки PowerShell (сборка моста, запрет сценариев, антивирус) — для причины сбоя.
       try { this.proc.stderr.setEncoding('utf8'); this.proc.stderr.on('data', d => { this.err = (this.err + d).slice(-2000); }); } catch (_) { }
@@ -520,7 +549,7 @@ class Proc {
     }
     if (l.startsWith('sr ')) { this.sr = l.slice(3); return; }
     if (l.startsWith('rh ')) { this.rh = l.slice(3); return; }
-    if (l === 'ready') { this.ready = true; if (done) done(this.voices.length > 0); if (this.onReady) this.onReady(); return; }
+    if (l === 'ready') { this.ready = true; this.wasReady = true; if (done) done(this.voices.length > 0); if (this.onReady) this.onReady(); return; }
     if (l.startsWith('fatal')) { this.ready = false; this.why = 'голоса Windows недоступны: ' + l.slice(6); if (done) done(false); return; }
     const m = /^(done|cancel|error) (\S*)/.exec(l);
     if (m) { if (this.onDone && m[2]) this.onDone(m[1], m[2]); return; }
@@ -646,6 +675,12 @@ class Sapi {
     // Процесс, ответивший позже срока, всё равно добавляет свои голоса — и
     // игра узнаёт об этом сразу (onChange), а не со следующего запуска.
     fresh.forEach(p => { p.onReady = () => { const was = this.voices.length; this.merge(); if (this.onChange && this.voices.length !== was) this.onChange(); }; });
+    fresh.forEach(p => { p.onExit = () => {
+      this.merge();
+      this.restarts = (this.restarts || 0) + 1;
+      if (this.restarts > 3) return;   // не больше трёх подъёмов за сеанс
+      setTimeout(() => this.restart(20000).then(() => { if (this.onChange) this.onChange(); }).catch(() => { }), 800);
+    }; });
     const cached = fresh.every(p => fs.existsSync(this.dll(p.bits)));
     // Мост собирается на месте только без готовой библиотеки — тогда ждём дольше.
     const wait = cached ? timeoutMs : Math.max(timeoutMs, 30000);

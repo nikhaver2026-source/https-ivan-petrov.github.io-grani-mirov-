@@ -16,8 +16,10 @@
       голоса Windows 10/11, Speech Platform) в выборе нет; сохранённый голос
       Microsoft уступает стороннему.
    4. Других голосов нет — голоса Microsoft остаются, игра не немеет.
-   5. Мост голосов Windows сам грузит RHVoice из дополнений NVDA и eSpeak NG,
-      а сборка проверяет оба движка на сервере.
+   5. Мост голосов Windows сам грузит RHVoice из дополнений NVDA и eSpeak NG
+      (без вариантов и голосов MBROLA, ронявших библиотеку); сбой чужой
+      библиотеки не роняет мост, упавший мост поднимается сам; сборка
+      проверяет оба движка на сервере.
    ═══════════════════════════════════════════════════════════════════════ */
 const {chromium}=require('playwright');
 const fs=require('fs'),path=require('path'),os=require('os');
@@ -95,6 +97,8 @@ const ПОДДЕЛКА=(голоса,пакет,сохранён)=>`(()=>{
  check('5. мост сам грузит RHVoice из дополнений NVDA (RHVoice.dll, RHVoice-voice-…) и eSpeak NG; сборка проверяет оба движка',
   /class GraniRh/.test(CS_SOURCE)&&/RHVoice_new_tts_engine/.test(CS_SOURCE)&&/"nvda"\), "addons"/.test(CS_SOURCE)&&/\^RHVoice-\.\*\(voice\|language\)/.test(CS_SOURCE)
   &&/class GraniEs/.test(CS_SOURCE)&&/espeak_Initialize/.test(CS_SOURCE)&&/libespeak-ng\.dll/.test(CS_SOURCE)
+  &&/StartsWith\("!v"\)/.test(CS_SOURCE)&&/StartsWith\("mb\/"\)/.test(CS_SOURCE)&&(CS_SOURCE.match(/HandleProcessCorruptedStateExceptions/g)||[]).length>=4
+  &&/this\.onExit\(this\)/.test(sapi)&&/p\.onExit = /.test(sapi)
   &&/rhvoice:/.test(sapi)&&/espeak:/.test(sapi)&&/GRANI_EXPECT_ENGINES = 'rhvoice,espeak'/.test(wf)&&/GRANI_EXPECT_ENGINES/.test(test));
 
  check('Ошибок страницы нет',errors.length===0,errors.slice(0,3));
