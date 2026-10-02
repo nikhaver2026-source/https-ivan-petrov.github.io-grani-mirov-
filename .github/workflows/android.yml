@@ -55,10 +55,18 @@ jobs:
   build:
     if: ${{ github.event_name != 'schedule' }}
     runs-on: ubuntu-latest
-    timeout-minutes: 60
+    timeout-minutes: 150
     steps:
       - name: Забрать репозиторий
         uses: actions/checkout@v4
+
+      # Полная сборка со всеми голосами весит около трёх гигабайт и
+      # собирается вторым проходом: освобождаем место на машине сборки.
+      - name: Освободить место
+        run: |
+          sudo rm -rf /usr/share/dotnet /opt/ghc /usr/local/.ghcup /usr/local/share/boost /opt/hostedtoolcache/CodeQL /usr/local/share/powershell /usr/share/swift || true
+          sudo docker image prune -a -f > /dev/null 2>&1 || true
+          df -h /
 
       - name: Поставить Java 17
         uses: actions/setup-java@v4
@@ -166,3 +174,44 @@ jobs:
             --target "$GITHUB_SHA" \
             --title "Грань Миров 9.0 для Android (сборка ${GITHUB_RUN_NUMBER})" \
             --notes "Свежая сборка из main ($GITHUB_SHA); ${KEY_NOTE}. grani-mirov-9.0.apk — поставить на телефон: скачайте и откройте, Android попросит разрешить установку из этого источника. grani-mirov-9.0.aab — загрузить в Google Play Console. Вся игра внутри, сеть не нужна."
+
+      # Полный APK: та же игра и весь голосовой пакет Gemini внутри — голоса
+      # готовы сразу, ставить пакет отдельно не нужно. Файл больше 2 ГиБ, а
+      # выпуск принимает только меньшие, поэтому он лежит на странице сборки
+      # (Actions → «Сборка Android» → Artifacts) одним файлом, без zip.
+      - name: Полный APK со всеми голосами
+        env:
+          BUILD_NUMBER: ${{ github.run_number }}
+        run: |
+          rm -f grani-mirov-9.0.aab grani-mirov-9.0.apk "$RUNNER_TEMP/u.apks"
+          rm -rf android/app/build android/gamedata/build
+          cp -r sounds/gvoice_pack android/gamedata/src/main/assets/www/sounds/
+          du -sh android/gamedata/src/main/assets/www
+          (cd android && gradle --no-daemon bundleRelease)
+          AAB=android/app/build/outputs/bundle/release/app-release.aab
+          java -jar "$RUNNER_TEMP/bundletool.jar" build-apks --mode=universal \
+            --bundle="$AAB" --output="$RUNNER_TEMP/full.apks" \
+            --ks="$KS_FILE" --ks-pass="pass:$KS_PASS" --ks-key-alias="$KS_ALIAS" --key-pass="pass:$KS_KEY_PASS"
+          rm -rf android/app/build/intermediates
+          unzip -p "$RUNNER_TEMP/full.apks" universal.apk > grani-mirov-9.0-full.apk
+          rm -f "$RUNNER_TEMP/full.apks"
+          ls -la grani-mirov-9.0-full.apk
+          "$ANDROID_HOME/build-tools/36.0.0/apksigner" verify --print-certs grani-mirov-9.0-full.apk | head -3
+          df -h /
+
+      - name: Полный APK — на страницу сборки
+        uses: actions/upload-artifact@v7
+        with:
+          path: grani-mirov-9.0-full.apk
+          archive: false
+          compression-level: 0
+          retention-days: 90
+
+      - name: Ссылка на полный APK в выпуске
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          FULL="https://github.com/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
+          gh release view android-latest --json body -q .body > notes.txt
+          printf '\n\nПолная сборка со всеми голосами (grani-mirov-9.0-full.apk, около 3 ГБ: голосовой пакет уже внутри) — на странице сборки, раздел Artifacts: %s' "$FULL" >> notes.txt
+          gh release edit android-latest --notes-file notes.txt

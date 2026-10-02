@@ -133,13 +133,26 @@ jobs:
       # Полная сборка — вся папка приложения со всеми голосами, без сжатия,
       # одним файлом на странице сборки (Actions → «Сборка Windows» →
       # Artifacts). Предел выпуска в 2 ГиБ на неё не действует.
-      - name: Полная сборка без сжатия
-        uses: actions/upload-artifact@v4
+      - name: Полная сборка одним архивом
+        working-directory: desktop/out
+        run: |
+          # Вся папка приложения со всеми голосами (и голосовым пакетом) — один
+          # zip без пересжатия: записи уже сжаты, качество не меняется.
+          7z a -tzip -mx=0 ../../GraniMirov-9.0-windows-full.zip "GraniMirov" > /dev/null
+          ls -la ../../GraniMirov-9.0-windows-full.zip
+
+      - name: Полная сборка — на страницу сборки
+        uses: actions/upload-artifact@v7
         with:
-          name: GraniMirov-9.0-windows-full
-          path: desktop/out/GraniMirov
+          path: GraniMirov-9.0-windows-full.zip
+          archive: false
           compression-level: 0
           retention-days: 90
+
+      - name: Убрать полный архив перед выпуском
+        run: |
+          rm -f GraniMirov-9.0-windows-full.zip
+          df -h .
 
       - name: Архив
         working-directory: desktop/out
@@ -185,7 +198,7 @@ jobs:
           FILES=$(ls GraniMirov-9.0-*.zip)
           FULL="https://github.com/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
           NOTE="Свежая сборка из main ($GITHUB_SHA). Распакуйте GraniMirov-9.0-windows.zip в любую папку и откройте GraniMirov.exe — сеть и мышь не нужны, всё управляется клавиатурой: стрелки — шаг, Shift со стрелкой — бег, E — действие, I или Alt+E — инвентарь, Tab — карта, M или Esc — меню, Shift+F1 — все клавиши. Windows может предупредить о неизвестном издателе: «Подробнее» → «Выполнить в любом случае»."
-          NOTE="$NOTE Полная сборка со всеми голосами, без сжатия — на странице сборки, раздел Artifacts: $FULL"
+          NOTE="$NOTE Полная сборка со всеми голосами одним архивом (GraniMirov-9.0-windows-full.zip, голосовой пакет уже внутри) — на странице сборки, раздел Artifacts: $FULL"
           if [ -f GraniMirov-9.0-voices.zip ]; then NOTE="$NOTE Голоса жителей — во втором архиве GraniMirov-9.0-voices.zip: распакуйте его в ту же папку."; fi
           gh release create windows-latest $FILES --target "$GITHUB_SHA" \
             --title "Грань Миров 9.0 для Windows (сборка ${GITHUB_RUN_NUMBER})" --notes "$NOTE"
