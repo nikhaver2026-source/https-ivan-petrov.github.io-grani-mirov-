@@ -1,0 +1,61 @@
+# Сборочная машина скачивает свободные записи звуков, которые недоступны из
+# среды разработки, распаковывает их, переводит без потерь во FLAC (частота
+# и разрядность исходника сохраняются) и выкладывает архивами в служебный
+# выпуск sfx-inbox. Оттуда записи отбираются и сводятся в игру вручную.
+name: Свободные записи звуков
+
+on:
+  workflow_dispatch:
+  push:
+    branches: ['claude/**']
+    paths:
+      - 'tools/sfx-fetch/**'
+      - '.github/workflows/sfx-fetch.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: tools/sfx-fetch
+      - name: Инструменты
+        run: sudo apt-get update -qq && sudo apt-get install -y -qq p7zip-full ffmpeg flac > /dev/null
+      - name: Скачать, распаковать, перевести во FLAC
+        run: |
+          set -e
+          mkdir -p out
+          grep -v '^#' tools/sfx-fetch/list.txt | while read -r name url; do
+            [ -n "$name" ] || continue
+            echo "== $name"
+            curl -fsSL --retry 4 -o "src_$name" "$url"
+            ls -la "src_$name"
+            mkdir -p "x/$name"
+            7z x -y -o"x/$name" "src_$name" > /dev/null
+            find "x/$name" -type f \( -iname '*.wav' -o -iname '*.aif*' \) | while read -r f; do
+              rel="${f#x/}"; dst="out/${rel%.*}.flac"; mkdir -p "$(dirname "$dst")"
+              ffmpeg -nostdin -loglevel error -y -i "$f" -c:a flac -compression_level 8 "$dst"
+            done
+            find "x/$name" -type f \( -iname '*.ogg' -o -iname '*.mp3' -o -iname '*.flac' -o -iname '*.txt' -o -iname '*.md' -o -iname '*.pdf' \) | while read -r f; do
+              rel="${f#x/}"; mkdir -p "out/$(dirname "$rel")"; cp "$f" "out/$rel"; done
+            rm -rf "x/$name" "src_$name"
+          done
+          cd out
+          for d in */; do d="${d%/}"; zip -0 -qr "../$d.zip" "$d"; done
+          cd ..
+          ( cd out && find . -type f -name '*.flac' | sort | while read -r f; do
+              echo "$f $(ffprobe -v error -show_entries stream=sample_rate,channels,bits_per_raw_sample:format=duration -of csv=p=0 "$f" | tr '\n' ' ')"; done ) > inventory.txt
+          wc -l inventory.txt; head -40 inventory.txt
+          ls -la *.zip
+      - name: Выпуск sfx-inbox
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release delete sfx-inbox --yes --cleanup-tag 2>/dev/null || true
+          gh release create sfx-inbox *.zip inventory.txt --prerelease --target "$GITHUB_SHA" \
+            --title "Служебный: свободные записи звуков (FLAC)" \
+            --notes "Записи под CC0 для отбора в игру: Still North Media, Vehicle. Не для игроков."

@@ -1,0 +1,10 @@
+# Источники записей, которые сборочная машина скачивает в выпуск sfx-inbox.
+# Формат: имя_набора URL
+# Still North Media «The Medieval Weapons Sound Effects Library» (CC0):
+# взмахи, выхватывание и ножны клинков, удары клинок о клинок.
+snm_textures_1 https://opengameart.org/sites/default/files/medieval_sfx_textures_1_of_2.7z
+snm_textures_2 https://opengameart.org/sites/default/files/medieval_sfx_textures_2_of_2.7z
+snm_impacts_1 https://opengameart.org/sites/default/files/medieval_sfx_weapon_on_weapon_1_of_2.7z
+snm_impacts_2 https://opengameart.org/sites/default/files/medieval_sfx_weapon_on_weapon_2_of_2.7z
+# Vehicle «Fantasy Weapons and Apparel SFX Library» (CC0): меч, ножны, нож.
+vehicle_weapons https://opengameart.org/sites/default/files/weapons-apparel.zip
