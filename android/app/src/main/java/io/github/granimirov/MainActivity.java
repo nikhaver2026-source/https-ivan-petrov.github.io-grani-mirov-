@@ -60,6 +60,18 @@ public class MainActivity extends Activity {
 
     private WebView web;
     private TextToSpeech tts;
+    /* (9.0) Все движки речи телефона, а не только основной: игрок, поставивший
+       себе ещё один синтезатор, выбирает его голос прямо в игре, не меняя
+       движок по умолчанию в настройках Android. Говорит тот, чей голос выбран. */
+    private final java.util.Map<String, TextToSpeech> others = new java.util.HashMap<>();
+    private final java.util.Map<String, String> labels = new java.util.HashMap<>();
+    private volatile TextToSpeech speaker;
+    private final UtteranceProgressListener prog = new UtteranceProgressListener() {
+        @Override public void onStart(String id) { }
+        @Override public void onDone(String id) { callJs("GraniTTSDone", id); }
+        @Override public void onError(String id) { callJs("GraniTTSError", id); }
+        @Override public void onError(String id, int code) { callJs("GraniTTSError", id); }
+    };
     private volatile boolean ready = false;
     private final List<String[]> pending = new ArrayList<>();
     private static final int REQ_PACK = 7101;
@@ -73,12 +85,22 @@ public class MainActivity extends Activity {
         tts = new TextToSpeech(this, status -> {
             if (status != TextToSpeech.SUCCESS) return;
             tts.setLanguage(new Locale("ru", "RU"));
-            tts.setOnUtteranceProgressListener(new UtteranceProgressListener() {
-                @Override public void onStart(String id) { }
-                @Override public void onDone(String id) { callJs("GraniTTSDone", id); }
-                @Override public void onError(String id) { callJs("GraniTTSError", id); }
-                @Override public void onError(String id, int code) { callJs("GraniTTSError", id); }
-            });
+            tts.setOnUtteranceProgressListener(prog);
+            if (speaker == null) speaker = tts;
+            try {
+                String def = tts.getDefaultEngine();
+                for (TextToSpeech.EngineInfo e : tts.getEngines()) {
+                    if (e.name == null || e.name.equals(def)) continue;
+                    final String pkg = e.name;
+                    labels.put(pkg, e.label != null ? e.label : pkg);
+                    final TextToSpeech[] h = new TextToSpeech[1];
+                    h[0] = new TextToSpeech(this, st -> {
+                        if (st != TextToSpeech.SUCCESS) return;
+                        h[0].setOnUtteranceProgressListener(prog);
+                        synchronized (others) { others.put(pkg, h[0]); }
+                    }, pkg);
+                }
+            } catch (Exception ignored) { }
             List<String[]> wait;
             synchronized (pending) { ready = true; wait = new ArrayList<>(pending); pending.clear(); }
             for (String[] p : wait) say(p[0], Float.parseFloat(p[1]), Float.parseFloat(p[2]), p[3]);
@@ -184,6 +206,7 @@ public class MainActivity extends Activity {
     @Override
     protected void onDestroy() {
         if (tts != null) { tts.stop(); tts.shutdown(); }
+        synchronized (others) { for (TextToSpeech t : others.values()) { try { t.stop(); t.shutdown(); } catch (Exception ignored) { } } others.clear(); }
         if (web != null) web.destroy();
         super.onDestroy();
     }
@@ -235,6 +258,7 @@ public class MainActivity extends Activity {
     }
 
     private void say(String text, float rate, float volume, String id) {
+        final TextToSpeech tts = speaker != null ? speaker : this.tts;
         tts.setSpeechRate(Math.max(0.1f, Math.min(6f, rate > 0 ? rate : 1f)));
         Bundle p = new Bundle();
         p.putFloat(TextToSpeech.Engine.KEY_PARAM_VOLUME, Math.max(0f, Math.min(1f, volume >= 0 ? volume : 1f)));
@@ -257,12 +281,13 @@ public class MainActivity extends Activity {
         @JavascriptInterface
         public void stop() {
             synchronized (pending) { pending.clear(); }
-            if (ready) tts.stop();
+            if (ready) { tts.stop(); TextToSpeech sp = speaker; if (sp != null && sp != tts) sp.stop(); }
         }
 
         @JavascriptInterface
         public boolean isSpeaking() {
-            return ready && tts.isSpeaking();
+            TextToSpeech sp = speaker != null ? speaker : tts;
+            return ready && sp.isSpeaking();
         }
 
         /* Голоса телефона: имя, язык, работает ли без сети. Сетевые страница
@@ -284,6 +309,25 @@ public class MainActivity extends Activity {
                     o.put("default", cur != null && cur.getName().equals(v.getName()));
                     o.put("engine", tts.getDefaultEngine());
                     a.put(o);
+                }
+                /* Голоса прочих движков: id — «движок::голос». */
+                synchronized (others) {
+                    for (java.util.Map.Entry<String, TextToSpeech> en : others.entrySet()) {
+                        Set<Voice> ov = en.getValue().getVoices();
+                        if (ov == null) continue;
+                        String lab = labels.containsKey(en.getKey()) ? labels.get(en.getKey()) : en.getKey();
+                        for (Voice v : ov) {
+                            JSONObject o = new JSONObject();
+                            Locale l = v.getLocale();
+                            o.put("id", en.getKey() + "::" + v.getName());
+                            o.put("name", v.getName() + " (" + l.getDisplayName(new Locale("ru")) + ")");
+                            o.put("lang", l.toLanguageTag());
+                            o.put("local", !v.isNetworkConnectionRequired());
+                            o.put("default", false);
+                            o.put("engine", lab);
+                            a.put(o);
+                        }
+                    }
                 }
             } catch (Exception ignored) { }
             return a.toString();
@@ -314,8 +358,19 @@ public class MainActivity extends Activity {
         public void setVoice(String name) {
             if (!ready || name == null) return;
             try {
+                int cut = name.indexOf("::");
+                if (cut > 0) {
+                    TextToSpeech t;
+                    synchronized (others) { t = others.get(name.substring(0, cut)); }
+                    String vn = name.substring(cut + 2);
+                    if (t != null) {
+                        Set<Voice> ov = t.getVoices();
+                        if (ov != null) for (Voice v : ov) if (vn.equals(v.getName())) { tts.stop(); t.setVoice(v); speaker = t; return; }
+                    }
+                    return;
+                }
                 Set<Voice> vs = tts.getVoices();
-                if (vs != null) for (Voice v : vs) if (name.equals(v.getName())) { tts.setVoice(v); return; }
+                if (vs != null) for (Voice v : vs) if (name.equals(v.getName())) { TextToSpeech sp = speaker; if (sp != null && sp != tts) sp.stop(); tts.setVoice(v); speaker = tts; return; }
             } catch (Exception ignored) { }
         }
     }
