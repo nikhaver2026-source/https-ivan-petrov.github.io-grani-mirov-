@@ -28,7 +28,7 @@ const MIME = {
 };
 
 // Голосовой пакет Gemini — отдельным файлом (см. voicepack.js).
-const voicePack = new VoicePack(app);
+const voicePack = new VoicePack(app, ROOT);
 
 async function serve(request) {
   const u = new URL(request.url);
@@ -139,6 +139,8 @@ ipcMain.on('tts-late-fail', e => { if (lateReloaded) return; lateReloaded = true
 // «Установить голосовой пакет»: игрок выбирает скачанный файл, приложение
 // проверяет его и кладёт копию в свою папку данных.
 ipcMain.handle('grani-voicepack-install', async e => {
+  // В полной сборке пакет встроен: выбирать нечего.
+  if (voicePack.builtin) return 'builtin';
   const win = BrowserWindow.fromWebContents(e.sender);
   let dl = ''; try { dl = app.getPath('downloads'); } catch (_) { }
   const r = await dialog.showOpenDialog(win, { title: 'Голосовой пакет Грани Миров', defaultPath: dl,

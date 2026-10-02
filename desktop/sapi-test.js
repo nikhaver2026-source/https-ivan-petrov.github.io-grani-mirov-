@@ -28,6 +28,20 @@ const fs = require('fs'), path = require('path'), os = require('os');
   console.log('живая фраза:', конец);
   console.log('голосов с записью:', good, 'из', s.voices.length);
   console.log('состояние моста:', s.diag());
+  // Движки без NVDA (RHVoice из дополнения, eSpeak NG): сервер сборки ставит их
+  // перед проверкой и называет в GRANI_EXPECT_ENGINES — каждый должен найтись
+  // и записать фразу.
+  const ждём = String(process.env.GRANI_EXPECT_ENGINES || '').split(',').map(x => x.trim()).filter(Boolean);
+  let движки = true;
+  for (const k of ждём) {
+    const vs = s.voices.filter(v => v.kind === k);
+    const f = path.join(os.tmpdir(), 'grani-eng-' + k + '-' + Date.now() + '.wav');
+    const w = vs.length ? await s.wav(f, /^ru/i.test(vs[0].lang) ? 'Проверка голоса для Грани Миров.' : 'Voice check for Grani Mirov.', vs[0].name) : 'нет голосов';
+    const size = fs.existsSync(f) ? fs.statSync(f).size : 0;
+    const годен = vs.length > 0 && w === true && size > 8000;
+    if (!годен) движки = false;
+    console.log('движок', k + ':', vs.length, 'голосов', vs.map(v => v.name + ' (' + v.lang + ')').join(', '), '| запись:', w === true ? size + ' байт' : w, годен ? 'ГОДЕН' : 'НЕ ГОДЕН');
+  }
   s.quit();
-  process.exit(ok && good > 0 ? 0 : 1);
+  process.exit(ok && good > 0 && движки ? 0 : 1);
 })();

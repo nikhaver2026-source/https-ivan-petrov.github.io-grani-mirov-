@@ -345,6 +345,16 @@ public class MainActivity extends Activity {
             });
         }
 
+        /* Полный APK: голосовой пакет уже внутри приложения (assets) — ставить нечего. */
+        @JavascriptInterface
+        public boolean voicePackBuiltin() {
+            for (String v : new String[]{"m", "f"}) {
+                try (java.io.InputStream in = getAssets().open("www/sounds/gvoice_pack/" + v + "/bank.js")) { return true; }
+                catch (Exception ignored) { }
+            }
+            return false;
+        }
+
         /* «Выход» в меню действий: игра уже сохранилась — закрываем приложение. */
         @JavascriptInterface
         public void exitApp() {

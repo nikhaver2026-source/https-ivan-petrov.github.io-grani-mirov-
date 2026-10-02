@@ -2,6 +2,8 @@
 // читается прямо, без распаковки. Приложение ищет его в своей папке данных
 // (куда кладёт кнопка «Установить голосовой пакет»), рядом с GraniMirov.exe и в
 // папке «Загрузки»; распакованная папка gvoice_pack рядом с exe тоже подходит.
+// В полной сборке пакет уже лежит внутри игры (resources/game/sounds/gvoice_pack):
+// тогда он «встроен» — ни скачивать, ни выбирать файл не нужно.
 const fs = require('fs'), path = require('path'), zlib = require('zlib'), os = require('os');
 
 // Оглавление zip: имя → {offset, size, csize, method}.
@@ -53,7 +55,7 @@ function readZipIndex(file) {
 }
 
 class VoicePack {
-  constructor(app) { this.app = app; this.file = null; this.idx = null; this.dir = null; }
+  constructor(app, root) { this.app = app; this.root = root || ''; this.file = null; this.idx = null; this.dir = null; this.builtin = false; }
   candidates() {
     const out = [];
     const add = f => { if (f && !out.includes(f)) out.push(f); };
@@ -71,8 +73,13 @@ class VoicePack {
   }
   // Найти пакет; true — если нашёлся.
   load() {
-    this.file = null; this.idx = null; this.dir = null;
+    this.file = null; this.idx = null; this.dir = null; this.builtin = false;
     const exeDir = path.dirname(process.execPath);
+    // Полная сборка: пакет внутри игры — игра читает его как обычные файлы.
+    if (this.root) {
+      const d = path.join(this.root, 'sounds', 'gvoice_pack');
+      if (fs.existsSync(path.join(d, 'm', 'bank.js')) || fs.existsSync(path.join(d, 'f', 'bank.js'))) { this.dir = d; this.builtin = true; return true; }
+    }
     for (const d of [path.join(exeDir, 'gvoice_pack'), path.join(exeDir, 'voicepack', 'gvoice_pack')]) {
       if (fs.existsSync(path.join(d, 'm', 'bank.js')) || fs.existsSync(path.join(d, 'f', 'bank.js'))) { this.dir = d; return true; }
     }
@@ -125,7 +132,7 @@ class VoicePack {
   // «voicepack-latest» в свою папку данных и подключает, не прерывая игру.
   // Без сети игра говорит вшитыми записями и дозагрузит пакет в другой раз.
   autoFetch(net, onDone) {
-    if (this.idx || this.dir || this.fetching) return false;
+    if (this.idx || this.dir || this.builtin || this.fetching) return false;
     const url = 'https://github.com/nikhaver2026-source/https-ivan-petrov.github.io-grani-mirov-/releases/download/voicepack-latest/GraniMirov-voicepack.zip';
     let dst; try { dst = path.join(this.app.getPath('userData'), 'GraniMirov-voicepack.zip'); } catch (_) { return false; }
     const tmp = dst + '.part';
@@ -152,6 +159,6 @@ class VoicePack {
     } catch (_) { fin(false); }
     return true;
   }
-  info() { return { installed: !!(this.idx || this.dir), fetching: !!this.fetching, file: this.file || this.dir || '' }; }
+  info() { return { installed: !!(this.idx || this.dir), builtin: !!this.builtin, fetching: !!this.fetching, file: this.file || this.dir || '' }; }
 }
 module.exports = { VoicePack, readZipIndex };

@@ -70,6 +70,27 @@ jobs:
           }
           Get-ChildItem -Recurse desktop\sr
 
+      # Движки без NVDA: RHVoice из дополнения NVDA (движок + голос Aleksandr) и
+      # eSpeak NG ставятся на сервер сборки так же, как у игрока, и мост должен
+      # найти их сам и записать ими фразу (журнал — «движок …: ГОДЕН»).
+      - name: Движки без NVDA — RHVoice из дополнения и eSpeak NG
+        continue-on-error: true
+        shell: pwsh
+        run: |
+          $ad = Join-Path $env:APPDATA 'nvda\addons'
+          New-Item -ItemType Directory -Force $ad | Out-Null
+          $t = $env:RUNNER_TEMP
+          Invoke-WebRequest 'https://github.com/RHVoice/RHVoice/releases/download/1.18.2/RHVoice-1.18.201.nvda-addon' -OutFile "$t\rh.zip"
+          Invoke-WebRequest 'https://github.com/RHVoice/aleksandr-rus/releases/download/4.2/RHVoice-voice-Russian-Aleksandr-4.2.2017.12.nvda-addon' -OutFile "$t\al.zip"
+          Expand-Archive "$t\rh.zip" -DestinationPath "$ad\RHVoice" -Force
+          Expand-Archive "$t\al.zip" -DestinationPath "$ad\RHVoice-voice-Russian-Aleksandr" -Force
+          Invoke-WebRequest 'https://github.com/espeak-ng/espeak-ng/releases/download/1.52.0/espeak-ng.msi' -OutFile "$t\espeak.msi"
+          Start-Process msiexec.exe -Wait -ArgumentList '/i', "$t\espeak.msi", '/qn'
+          Get-ChildItem "$env:ProgramFiles\eSpeak NG" -ErrorAction SilentlyContinue | Select-Object -First 5
+          cd desktop
+          $env:GRANI_EXPECT_ENGINES = 'rhvoice,espeak'
+          node sapi-test.js
+
       - name: Проверить голоса Windows, выбор синтезатора и клавиши
         continue-on-error: true
         working-directory: desktop
