@@ -7,7 +7,7 @@
    2. На компьютере в настройках стрелки вправо и влево двигают ползунок.
    3. В приложении для Windows в разделе инвентаря стрелки вправо и влево
       перебирают действия с вещью, Enter выполняет названное.
-   4. В бою стрелки — быстрые слоты: вверх и вниз — раздел (зелья, свитки,
+   4. В бою Shift со стрелкой — быстрые слоты: вверх и вниз — раздел (зелья, свитки,
       прочее), вправо и влево — слот; правый Ctrl применяет; левый Ctrl
       обрывает речь; в настройках можно выбрать левый или любой Ctrl.
    5. Вне боя стрелки быстрые слоты не трогают; поверх окна — тоже.
@@ -70,13 +70,16 @@ const {chromium}=require('playwright');
   /* вне боя стрелка — шаг, а не слот */
   const n0=[];const nav0=window.qsKeyNav;
   G.inCombat=false;G.combat=null;G.weaponDrawn=false;window.qsKeyNav=d=>{n0.push(d);return true;};const mv0=window.move;window.move=()=>true;
-  ЖМИ("ArrowUp");r.внеБоя=n0.length;window.qsKeyNav=nav0;window.move=mv0;
+  ЖМИ("ArrowUp","ArrowUp",{shiftKey:true});r.внеБоя=n0.length;window.qsKeyNav=nav0;window.move=mv0;
   /* бой */
   G.inCombat=true;G.combat={m:{n:"волк",hp:10},hp:10};QSK.cat=0;QSK.i=0;
+  /* просто стрелка с вынутым оружием — удар, не слот */
+  {const sw0=window.weaponSwing,м=[],н=[];window.weaponSwing=d=>{м.push(d);return true;};window.qsKeyNav=d=>{н.push(d);return true;};
+   G.weaponDrawn=true;ЖМИ("ArrowRight");r.удар=м.join();r.ударБезСлота=н.length;window.weaponSwing=sw0;window.qsKeyNav=nav0;G.weaponDrawn=false;}
   r.зелья=qsKList("potion").map(cbSlotName);r.свитки=qsKList("scroll").map(cbSlotName);r.прочее=qsKList("other").map(cbSlotName);
-  __said.length=0;ЖМИ("ArrowRight");r.вправо=__said.slice(-1)[0];
-  ЖМИ("ArrowDown");r.вниз=__said.slice(-1)[0];r.раздел=QSK.cat;
-  ЖМИ("ArrowUp");r.вверх=QSK.cat;
+  __said.length=0;ЖМИ("ArrowRight","ArrowRight",{shiftKey:true});r.вправо=__said.slice(-1)[0];
+  ЖМИ("ArrowDown","ArrowDown",{shiftKey:true});r.вниз=__said.slice(-1)[0];r.раздел=QSK.cat;
+  ЖМИ("ArrowUp","ArrowUp",{shiftKey:true});r.вверх=QSK.cat;
   /* применить: правый Ctrl */
   QSK.cat=0;QSK.i=0;const was=[];const d0=window.cbDrink;window.cbDrink=x=>{was.push(cbSlotName(x));return true;};
   const st0=Speech.stop.bind(Speech);let стоп=0;Speech.stop=function(){стоп++;return st0();};
@@ -88,14 +91,14 @@ const {chromium}=require('playwright');
   settings.qsCtrl="ControlRight";window.cbDrink=d0;Speech.stop=st0;
   r.настройка=!!document.getElementById("setQsCtrl")&&document.getElementById("setQsCtrl").options.length===3;
   /* поверх окна стрелки работают как обычно */
-  const n1=[];window.qsKeyNav=d=>{n1.push(d);return true;};CMD.settings();ЖМИ("ArrowDown");r.поверхОкна=n1.length;window.qsKeyNav=nav0;
+  const n1=[];window.qsKeyNav=d=>{n1.push(d);return true;};CMD.settings();ЖМИ("ArrowDown","ArrowDown",{shiftKey:true});r.поверхОкна=n1.length;window.qsKeyNav=nav0;
   while(activeLayer())closeTopUI();
   G.inCombat=false;G.combat=null;
   return r;});
- check('4. в бою стрелки — быстрые слоты по разделам «Зелья», «Свитки», «Прочее»; правый Ctrl применяет, левый обрывает речь; Ctrl выбирается в настройках',
+ check('4. в бою просто стрелка с оружием — удар; Shift со стрелкой — быстрые слоты по разделам «Зелья», «Свитки», «Прочее»; правый Ctrl применяет, левый обрывает речь; Ctrl выбирается в настройках',
   слоты.зелья.includes("Зелье здоровья")&&слоты.зелья.some(x=>/ману/.test(x))&&слоты.зелья.includes("Противоядие")&&слоты.свитки.length>=1
   &&/из \d+/.test(слоты.вправо||"")&&/^Свитки/.test(слоты.вниз||"")&&слоты.раздел===1&&слоты.вверх===0
-  &&слоты.применено.length===1&&слоты.левыйСтоп>=1&&слоты.левый===1&&слоты.настройка,слоты);
+  &&слоты.удар==="E"&&слоты.ударБезСлота===0&&слоты.применено.length===1&&слоты.левыйСтоп>=1&&слоты.левый===1&&слоты.настройка,слоты);
  check('5. вне боя и поверх окна стрелки быстрые слоты не трогают',слоты.внеБоя===0&&слоты.поверхОкна===0,слоты);
 
  check('без ошибок на странице',!errors.length,errors.slice(0,3));

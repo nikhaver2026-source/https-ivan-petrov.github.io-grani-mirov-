@@ -264,12 +264,11 @@ const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(e!==undefined?' :
  await twoTap();
  const где=await page.evaluate(()=>window.__said.slice(-2));
  const клав=await page.evaluate(()=>{const a=G.combat.arena;a.wind=null;a.stepAt=0;
-  /* (8.0) в бою стрелки — быстрые слоты, шаг по полю — W, A, S, D */
-  document.dispatchEvent(new KeyboardEvent("keydown",{key:"a",code:"KeyA",bubbles:true}));
+  document.dispatchEvent(new KeyboardEvent("keydown",{key:"ArrowLeft",bubbles:true}));
   return {px:a.px};});
  check('12. касание двумя пальцами в бою называет, где тварь и чем она занята',
   где.some(t=>/Тролль: в 2 шагах, впереди справа, замахивается/.test(t)),где);
- check('12. клавиша A в бою — шаг по полю (стрелки в бою — быстрые слоты)',клав.px===-1,клав);
+ check('12. стрелка клавиатуры в бою (оружие убрано) — шаг по полю',клав.px===-1,клав);
 
  /* ── 13. Темп в настройках ── */
  const темп=await page.evaluate(()=>{
