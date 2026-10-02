@@ -1,10 +1,10 @@
 # Источники записей, которые сборочная машина скачивает в выпуск sfx-inbox.
 # Формат: имя_набора URL
-# Still North Media «The Medieval Weapons Sound Effects Library» (CC0):
-# взмахи, выхватывание и ножны клинков, удары клинок о клинок.
-snm_textures_1 https://opengameart.org/sites/default/files/medieval_sfx_textures_1_of_2.7z
-snm_textures_2 https://opengameart.org/sites/default/files/medieval_sfx_textures_2_of_2.7z
-snm_impacts_1 https://opengameart.org/sites/default/files/medieval_sfx_weapon_on_weapon_1_of_2.7z
-snm_impacts_2 https://opengameart.org/sites/default/files/medieval_sfx_weapon_on_weapon_2_of_2.7z
-# Vehicle «Fantasy Weapons and Apparel SFX Library» (CC0): меч, ножны, нож.
-vehicle_weapons https://opengameart.org/sites/default/files/weapons-apparel.zip
+# Уже взяты в первый заход: Still North Media «Medieval Weapons» (CC0) и
+# Vehicle «Fantasy Weapons and Apparel» (CC0). Второй заход:
+# Vehicle «Fantasy Sound Effects (Tinysized SFX)» (CC0): меч, сакс, порезы, металл.
+vehicle_tinysized https://opengameart.org/sites/default/files/tinysized.zip
+# JC Sounds «Fantasy SFX Pack Vol 1» (CC BY 4.0): тяжёлый и обычный меч, кинжал.
+jc_fantasy https://opengameart.org/sites/default/files/fantasy_sfx_pack_vol_1.7z
+# JC Sounds «Pirate Pack Vol 1» (CC BY 4.0): взмахи сабли и выхватывание.
+jc_pirate https://opengameart.org/sites/default/files/pirate_pack_vol_1.7z
