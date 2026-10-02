@@ -4636,6 +4636,7 @@ const BANK_CATS={mg:"Фэнтезийный мир: твари, чары, рем
  hall:"Здания, рынок, порт, подворье",
  gear:"Снаряжение на ходу: кольчуга, латы, кожа, ткань и ножны",
  potion:"Выпитое зелье: пробка, глотки, стекло (без потерь, 48 кГц)",
+ weapons:"Оружие по ступеням качества: от грубого до легендарного (без потерь, 48 кГц)",
  svody:"Своды: гром небесных войн, песни глубин, твари, ловушки, тень и летопись (без потерь, 48 кГц)",
  cry:"Крики героя и разбойников: боль и гибель живыми голосами Gemini",
  intro:"Заставка при запуске: голос под заглавную тему",
@@ -4658,7 +4659,7 @@ const BANK_GROUPS=[
  {n:"Боги, храмы и знамения", icon:"", dirs:["stendhalfx"]},
  {n:"Места, здания и постройки",icon:"", dirs:["hall","nat"]},
  {n:"Шаги и поверхности",     icon:"", dirs:["steps","tread","gear"]},
- {n:"Оружие, удары и война",  icon:"", dirs:["battle","siege","blade"]},
+ {n:"Оружие, удары и война",  icon:"", dirs:["battle","siege","blade","weapons"]},
  {n:"Твари, звери и птицы",   icon:"", dirs:["foe","beasts","creatures"]},
  {n:"Люди, рынок и торг",     icon:"", dirs:["throng","trade"]},
  {n:"Находки, вещи и артефакты",icon:"", dirs:["arte","lang","equip"]},
@@ -8658,6 +8659,8 @@ const GUIDE_SRC=[
  "ТИХИЙ БОЙ. В бою игра молчит: тварь узнают по звуку — шагам, замаху, чарам — и слышат, что она говорит. Взмахи и удары словами не называются. Звучит только то, о чём вы спросили (здоровье — одно касание двумя пальцами при вынутом оружии), и смертельная опасность. Вернуть слова в бою — флажок «Озвучка во время боя» в настройках речи.",
  "ПОЛЗУНКИ СВАЙПОМ. В настройках на ползунке громкости, скорости или высоты голоса свайп одним пальцем вверх прибавляет, вниз убавляет — сразу, чтобы было слышно, как это звучит; свайп вбок листает дальше. Сохраните настройки, когда всё понравится.",
  "ПРОЛОГ ПО СЦЕНАМ. «Начать историю» открывает пролог из восьми сцен — о шве между мирами, о том, откуда взялись боги, о Предтечах, о Пепельном годе, о мельнице у брода, о нынешних державах и о том, как вы сюда попали. У каждой сцены свои звуки со всех сторон. Свайп одним пальцем вправо — следующая сцена, влево — предыдущая, вниз — повторить, вверх — пропустить пролог; на компьютере — стрелки и Escape. Кнопка «Пропустить» осталась на крайний случай.",
+ "ОРУЖИЕ ЗВУЧИТ ПО КАЧЕСТВУ. Чем лучше вещь, тем лучше она звучит. Грубый меч свистит глухо, добротный — чисто, редкий звенит, а легендарный поёт и отзывается чарами. Щербатое оружие звучит на ступень хуже, певучее и нерушимое всегда отзываются чарами. Свой звук у меча, кинжала, топора, булавы, посоха, копья, лука и арбалета: у арбалета щелчок и болт, у лука тетива и стрела. Все записи — настоящее оружие, без потерь.",
+ "СДЕЛАННОЕ — В КОТОМКУ. Всё, что вы создаёте, ложится в свой раздел котомки, и голос называет его. Каменное копьё — в «Оружие», его можно взять в руку. Травяной отвар и крепкий отвар у очага — в «Зелья»: их пьют, когда нужно, а не сразу. Факел, удочка и сеть — в «Инструменты».",
  "НАЗАД В ГЛАВНОМ МЕНЮ. Свайп двумя пальцами вниз работает и до входа в игру: в энциклопедии звуков, настройках, руководстве, настройках персонажа. Из раздела он возвращает к списку разделов, из главы — к оглавлению, из списка — закрывает окно. Идти до кнопки «Закрыть» не нужно.",
  "ЗЕЛЬЯ У ТОРГОВЦЕВ. У всякого торговца — зелье здоровья, зелье маны и противоядие, и ещё два зелья по месту; под землёй — и зелье ночного зрения. Травник держит все тринадцать родов: восстановления сил, очищения, дыхания под водой, защиты от холода и от жара, восприятия, сопротивлений, скорости, силы, маскировки. Обоз везёт зелья здоровья и маны и ещё одно — на четверть дороже. Купленное зелье ложится в раздел «Зелья» инвентаря и само встаёт в свободный слот быстрого доступа."]}];
 /* ════════════════════════════════════════════════════════════════════════
@@ -13899,6 +13902,46 @@ const SOUND_BANK={
  blade_shield_metal:{f:["blade/shield_metal_01.flac","blade/shield_metal_02.flac","blade/shield_metal_03.flac","blade/shield_metal_04.flac","blade/shield_metal_05.flac","blade/shield_metal_06.flac"],d:"Щит с железной оковкой принял удар"},
  blade_blunt:{f:["blade/blunt_flesh_01.flac","blade/blunt_flesh_02.flac","blade/blunt_flesh_03.flac","blade/blunt_flesh_04.flac","blade/blunt_flesh_05.flac","blade/blunt_flesh_06.flac"],d:"Булава и посох: глухой дробящий удар по телу"},
  blade_swing_cut:{f:["blade/swing_blade_01.flac","blade/swing_blade_02.flac","blade/swing_blade_03.flac"],d:"Свист клинка в замахе"},
+ /* (8.5) Звук оружия по ступеням качества: см. WEAPON_TIERS. */
+ w_sword_swing_t1:{f:["weapons/sword_swing_t1_01.flac", "weapons/sword_swing_t1_02.flac", "weapons/sword_swing_t1_03.flac", "weapons/sword_swing_t1_04.flac", "weapons/sword_swing_t1_05.flac", "weapons/sword_swing_t1_06.flac"],d:"Взмах меча: простое оружие (Still North Media, Vehicle, JC Sounds; без потерь, 48 кГц)"},
+ w_sword_swing_t2:{f:["weapons/sword_swing_t2_01.flac", "weapons/sword_swing_t2_02.flac", "weapons/sword_swing_t2_03.flac", "weapons/sword_swing_t2_04.flac", "weapons/sword_swing_t2_05.flac", "weapons/sword_swing_t2_06.flac", "weapons/sword_swing_t2_07.flac", "weapons/sword_swing_t2_08.flac", "weapons/sword_swing_t2_09.flac", "weapons/sword_swing_t2_10.flac", "weapons/sword_swing_t2_11.flac"],d:"Взмах меча: добротное оружие (Still North Media, Vehicle, JC Sounds; без потерь, 48 кГц)"},
+ w_sword_swing_t3:{f:["weapons/sword_swing_t3_01.flac", "weapons/sword_swing_t3_02.flac", "weapons/sword_swing_t3_03.flac"],d:"Взмах меча: редкое оружие (Still North Media, Vehicle, JC Sounds; без потерь, 48 кГц)"},
+ w_sword_swing_t4:{f:["weapons/sword_swing_t4_01.flac", "weapons/sword_swing_t4_02.flac", "weapons/sword_swing_t4_03.flac"],d:"Взмах меча: легендарное оружие (Still North Media, Vehicle, JC Sounds; без потерь, 48 кГц)"},
+ w_blade_parry_t1:{f:["weapons/blade_parry_t1_01.flac", "weapons/blade_parry_t1_02.flac", "weapons/blade_parry_t1_03.flac", "weapons/blade_parry_t1_04.flac"],d:"Клинок о клинок: простое оружие (Still North Media, Vehicle, JC Sounds; без потерь, 48 кГц)"},
+ w_blade_parry_t2:{f:["weapons/blade_parry_t2_01.flac", "weapons/blade_parry_t2_02.flac", "weapons/blade_parry_t2_03.flac", "weapons/blade_parry_t2_04.flac", "weapons/blade_parry_t2_05.flac", "weapons/blade_parry_t2_06.flac", "weapons/blade_parry_t2_07.flac", "weapons/blade_parry_t2_08.flac", "weapons/blade_parry_t2_09.flac", "weapons/blade_parry_t2_10.flac", "weapons/blade_parry_t2_11.flac"],d:"Клинок о клинок: добротное оружие (Still North Media, Vehicle, JC Sounds; без потерь, 48 кГц)"},
+ w_blade_parry_t3:{f:["weapons/blade_parry_t3_01.flac", "weapons/blade_parry_t3_02.flac", "weapons/blade_parry_t3_03.flac", "weapons/blade_parry_t3_04.flac", "weapons/blade_parry_t3_05.flac", "weapons/blade_parry_t3_06.flac"],d:"Клинок о клинок: редкое оружие (Still North Media, Vehicle, JC Sounds; без потерь, 48 кГц)"},
+ w_blade_parry_t4:{f:["weapons/blade_parry_t4_01.flac", "weapons/blade_parry_t4_02.flac", "weapons/blade_parry_t4_03.flac", "weapons/blade_parry_t4_04.flac"],d:"Клинок о клинок: легендарное оружие (Still North Media, Vehicle, JC Sounds; без потерь, 48 кГц)"},
+ w_sword_armor_t3:{f:["weapons/sword_armor_t3_01.flac", "weapons/sword_armor_t3_02.flac", "weapons/sword_armor_t3_03.flac"],d:"Меч бьёт по броне: редкое оружие (Still North Media, Vehicle, JC Sounds; без потерь, 48 кГц)"},
+ w_heavy_armor_t3:{f:["weapons/heavy_armor_t3_01.flac", "weapons/heavy_armor_t3_02.flac", "weapons/heavy_armor_t3_03.flac"],d:"Тяжёлый клинок бьёт по броне: редкое оружие (Still North Media, Vehicle, JC Sounds; без потерь, 48 кГц)"},
+ w_sword_draw_t0:{f:["weapons/sword_draw_t0_01.flac", "weapons/sword_draw_t0_02.flac"],d:"Меч выходит из ножен: грубое оружие (Still North Media, Vehicle, JC Sounds; без потерь, 48 кГц)"},
+ w_sword_draw_t2:{f:["weapons/sword_draw_t2_01.flac", "weapons/sword_draw_t2_02.flac", "weapons/sword_draw_t2_03.flac", "weapons/sword_draw_t2_04.flac", "weapons/sword_draw_t2_05.flac"],d:"Меч выходит из ножен: добротное оружие (Still North Media, Vehicle, JC Sounds; без потерь, 48 кГц)"},
+ w_sword_draw_t4:{f:["weapons/sword_draw_t4_01.flac", "weapons/sword_draw_t4_02.flac"],d:"Меч выходит из ножен: легендарное оружие (Still North Media, Vehicle, JC Sounds; без потерь, 48 кГц)"},
+ w_sword_sheathe_t0:{f:["weapons/sword_sheathe_t0_01.flac", "weapons/sword_sheathe_t0_02.flac", "weapons/sword_sheathe_t0_03.flac", "weapons/sword_sheathe_t0_04.flac", "weapons/sword_sheathe_t0_05.flac"],d:"Меч ложится в ножны: грубое оружие (Still North Media, Vehicle, JC Sounds; без потерь, 48 кГц)"},
+ w_sword_sheathe_t2:{f:["weapons/sword_sheathe_t2_01.flac", "weapons/sword_sheathe_t2_02.flac", "weapons/sword_sheathe_t2_03.flac"],d:"Меч ложится в ножны: добротное оружие (Still North Media, Vehicle, JC Sounds; без потерь, 48 кГц)"},
+ w_dagger_swing_t1:{f:["weapons/dagger_swing_t1_01.flac", "weapons/dagger_swing_t1_02.flac", "weapons/dagger_swing_t1_03.flac", "weapons/dagger_swing_t1_04.flac", "weapons/dagger_swing_t1_05.flac", "weapons/dagger_swing_t1_06.flac"],d:"Взмах кинжала: простое оружие (Still North Media, Vehicle, JC Sounds; без потерь, 48 кГц)"},
+ w_dagger_swing_t3:{f:["weapons/dagger_swing_t3_01.flac", "weapons/dagger_swing_t3_02.flac", "weapons/dagger_swing_t3_03.flac"],d:"Взмах кинжала: редкое оружие (Still North Media, Vehicle, JC Sounds; без потерь, 48 кГц)"},
+ w_dagger_draw_t2:{f:["weapons/dagger_draw_t2_01.flac", "weapons/dagger_draw_t2_02.flac", "weapons/dagger_draw_t2_03.flac"],d:"Кинжал выходит из ножен: добротное оружие (Still North Media, Vehicle, JC Sounds; без потерь, 48 кГц)"},
+ w_dagger_sheathe_t0:{f:["weapons/dagger_sheathe_t0_01.flac", "weapons/dagger_sheathe_t0_02.flac"],d:"Кинжал ложится в ножны: грубое оружие (Still North Media, Vehicle, JC Sounds; без потерь, 48 кГц)"},
+ w_dagger_sheathe_t2:{f:["weapons/dagger_sheathe_t2_01.flac", "weapons/dagger_sheathe_t2_02.flac", "weapons/dagger_sheathe_t2_03.flac"],d:"Кинжал ложится в ножны: добротное оружие (Still North Media, Vehicle, JC Sounds; без потерь, 48 кГц)"},
+ w_heavy_swing_t2:{f:["weapons/heavy_swing_t2_01.flac", "weapons/heavy_swing_t2_02.flac", "weapons/heavy_swing_t2_03.flac", "weapons/heavy_swing_t2_04.flac", "weapons/heavy_swing_t2_05.flac", "weapons/heavy_swing_t2_06.flac"],d:"Взмах топора и булавы: добротное оружие (Still North Media, Vehicle, JC Sounds; без потерь, 48 кГц)"},
+ w_heavy_swing_t3:{f:["weapons/heavy_swing_t3_01.flac", "weapons/heavy_swing_t3_02.flac", "weapons/heavy_swing_t3_03.flac"],d:"Взмах топора и булавы: редкое оружие (Still North Media, Vehicle, JC Sounds; без потерь, 48 кГц)"},
+ w_bow_shoot_t0:{f:["weapons/bow_shoot_t0_01.flac", "weapons/bow_shoot_t0_02.flac", "weapons/bow_shoot_t0_03.flac"],d:"Выстрел из лука: грубое оружие (Still North Media, Vehicle, JC Sounds; без потерь, 48 кГц)"},
+ w_bow_shoot_t1:{f:["weapons/bow_shoot_t1_01.flac", "weapons/bow_shoot_t1_02.flac", "weapons/bow_shoot_t1_03.flac", "weapons/bow_shoot_t1_04.flac"],d:"Выстрел из лука: простое оружие (Still North Media, Vehicle, JC Sounds; без потерь, 48 кГц)"},
+ w_bow_shoot_t2:{f:["weapons/bow_shoot_t2_01.flac", "weapons/bow_shoot_t2_02.flac", "weapons/bow_shoot_t2_03.flac"],d:"Выстрел из лука: добротное оружие (Still North Media, Vehicle, JC Sounds; без потерь, 48 кГц)"},
+ w_bow_shoot_t3:{f:["weapons/bow_shoot_t3_01.flac", "weapons/bow_shoot_t3_02.flac"],d:"Выстрел из лука: редкое оружие (Still North Media, Vehicle, JC Sounds; без потерь, 48 кГц)"},
+ w_bow_shoot_t4:{f:["weapons/bow_shoot_t4_01.flac", "weapons/bow_shoot_t4_02.flac"],d:"Выстрел из лука: легендарное оружие (Still North Media, Vehicle, JC Sounds; без потерь, 48 кГц)"},
+ w_bow_draw_t0:{f:["weapons/bow_draw_t0_01.flac", "weapons/bow_draw_t0_02.flac", "weapons/bow_draw_t0_03.flac"],d:"Лук натянут: грубое оружие (Still North Media, Vehicle, JC Sounds; без потерь, 48 кГц)"},
+ w_bow_draw_t2:{f:["weapons/bow_draw_t2_01.flac", "weapons/bow_draw_t2_02.flac", "weapons/bow_draw_t2_03.flac"],d:"Лук натянут: добротное оружие (Still North Media, Vehicle, JC Sounds; без потерь, 48 кГц)"},
+ w_bow_draw_t3:{f:["weapons/bow_draw_t3_01.flac", "weapons/bow_draw_t3_02.flac"],d:"Лук натянут: редкое оружие (Still North Media, Vehicle, JC Sounds; без потерь, 48 кГц)"},
+ w_arrow_fly_t0:{f:["weapons/arrow_fly_t0_01.flac", "weapons/arrow_fly_t0_02.flac", "weapons/arrow_fly_t0_03.flac", "weapons/arrow_fly_t0_04.flac"],d:"Стрела в полёте: грубое оружие (Still North Media, Vehicle, JC Sounds; без потерь, 48 кГц)"},
+ w_arrow_fly_t3:{f:["weapons/arrow_fly_t3_01.flac", "weapons/arrow_fly_t3_02.flac", "weapons/arrow_fly_t3_03.flac", "weapons/arrow_fly_t3_04.flac"],d:"Стрела в полёте: редкое оружие (Still North Media, Vehicle, JC Sounds; без потерь, 48 кГц)"},
+ w_arrow_hit_t3:{f:["weapons/arrow_hit_t3_01.flac", "weapons/arrow_hit_t3_02.flac"],d:"Стрела попала: редкое оружие (Still North Media, Vehicle, JC Sounds; без потерь, 48 кГц)"},
+ w_xbow_shoot:{f:["weapons/xbow_shoot_01.flac", "weapons/xbow_shoot_02.flac", "weapons/xbow_shoot_03.flac"],d:"Выстрел арбалета (Still North Media, Vehicle, JC Sounds; без потерь, 48 кГц)"},
+ w_xbow_draw:{f:["weapons/xbow_draw_01.flac"],d:"Арбалет взведён (Still North Media, Vehicle, JC Sounds; без потерь, 48 кГц)"},
+ w_xbow_fly:{f:["weapons/xbow_fly_01.flac", "weapons/xbow_fly_02.flac", "weapons/xbow_fly_03.flac"],d:"Болт в полёте (Still North Media, Vehicle, JC Sounds; без потерь, 48 кГц)"},
+ w_spear_swing_t0:{f:["weapons/spear_swing_t0_01.flac", "weapons/spear_swing_t0_02.flac", "weapons/spear_swing_t0_03.flac"],d:"Копьё: бросок и выпад: грубое оружие (Still North Media, Vehicle, JC Sounds; без потерь, 48 кГц)"},
+ w_spear_swing_t2:{f:["weapons/spear_swing_t2_01.flac", "weapons/spear_swing_t2_02.flac", "weapons/spear_swing_t2_03.flac"],d:"Копьё: бросок и выпад: добротное оружие (Still North Media, Vehicle, JC Sounds; без потерь, 48 кГц)"},
+ w_staff_parry:{f:["weapons/staff_parry_01.flac", "weapons/staff_parry_02.flac", "weapons/staff_parry_03.flac", "weapons/staff_parry_04.flac", "weapons/staff_parry_05.flac", "weapons/staff_parry_06.flac"],d:"Древко о древко (Still North Media, Vehicle, JC Sounds; без потерь, 48 кГц)"},
  blade_swing_blunt:{f:["blade/swing_blunt_01.flac","blade/swing_blunt_02.flac","blade/swing_blunt_03.flac","blade/swing_blunt_04.flac","blade/swing_blunt_05.flac","blade/swing_blunt_06.flac"],d:"Тяжёлый взмах булавы, топора или посоха"},
  blade_swing_stab:{f:["blade/swing_stab_01.flac","blade/swing_stab_02.flac","blade/swing_stab_03.flac","blade/swing_stab_04.flac","blade/swing_stab_05.flac"],d:"Короткий выпад кинжалом или копьём"},
  blade_draw_knife:{f:["blade/draw_knife_01.flac","blade/draw_knife_02.flac","blade/draw_knife_03.flac"],d:"Клинок выходит из ножен"},
@@ -17639,6 +17682,17 @@ const POTION_SOUND={heal:"potion_long",clean:"potion_long",
 if(SVODY_ON)Object.assign(POTION_SOUND,{sv_shade:"potion_cork",sv_reforge:"potion_elixir",sv_tide:"potion_clay",sv_hush:"potion_cork",sv_lone:"potion_quick",sv_ember:"potion_elixir"});
 function potionSound(id){return POTION_SOUND[id]||"cast_potion";}
 function potionsOf(){if(!Array.isArray(G.potions))G.potions=[];return G.potions;}
+/* Имя склянки: у сделанного своими руками («травяной отвар») оно своё, у
+   прочих — имя рода зелья. */
+function potionName(rec){const pt=POTION_BY_ID[rec&&rec.id]||{n:String(rec&&rec.id||"")};return String(rec&&rec.имя||pt.n);}
+/* Склянка, сделанная ремеслом: ложится в «Зелья», как сваренная в чану. */
+function potionGive(id,o){
+ const pt=POTION_BY_ID[id];if(!pt)return null;o=o||{};
+ const rec={id,q:o.q||1,стаб:o.стаб||0.9,день:Number(G.day)||1,срок:o.срок||pt.срок,изъян:false};
+ if(o.имя)rec.имя=o.имя;if(o.мана)rec.мана=o.мана;
+ potionsOf().push(rec);
+ safeFn(()=>qsAutoAdd({kind:"potion",id}));
+ return rec;}
 /* Растение нужной ниши из котомки: берётся самое частое. */
 function plantInPouch(cat){
  const из=PLANTS.filter(p=>p.кат===cat&&(Number(G.inv&&G.inv[p.n])||0)>0).sort((a,b)=>(G.inv[b.n]||0)-(G.inv[a.n]||0));
@@ -17683,7 +17737,9 @@ function drinkPotion(i,user){
    const d=Math.max(2,Math.round(G.hpMax*0.05));G.hp=Math.max(1,G.hp-d);safeFn(()=>adaptAdd("мутаген",1));
    safeFn(()=>Bank.play("stk_goo",{gain:0.55,maxSec:3}));
    слова+=` Состав оказался нестабилен: подействовал вполсилы, а побочно — −${d} здоровья и нагрузка на тело.`;}
-  narrate(`Выпито: зелье ${pt.n}. ${pt.о[0].toUpperCase()+pt.о.slice(1)}: ${итог}.${слова}`,user?{interrupt:true,user:true}:undefined);
+  /* Отвар у очага возвращает и силу — долю запаса маны. */
+  if(rec.мана){const m=Math.min(G.manaMax,G.mana+Math.round(G.manaMax*rec.мана*(сбой?0.5:1)))-G.mana;G.mana+=m;итог+=`, силы +${m}`;}
+  narrate(`Выпито: ${rec.имя||"зелье "+pt.n}. ${pt.о[0].toUpperCase()+pt.о.slice(1)}: ${итог}.${слова}`,user?{interrupt:true,user:true}:undefined);
   safeFn(()=>{renderPotions();refresh();saveGame(true);});
   return true;
  }catch(e){return false;}}
@@ -17742,8 +17798,8 @@ function renderPotions(){
  const list=potionsOf();
  let html=`<div class="list-line" tabindex="0" data-speak="Зелья. Ступень алхимии ${ур}. В сумке ${list.length}. Варят у чана или очага из двух растений разных ниш.">Ступень алхимии ${ур}. Зелий в сумке: ${list.length}.</div>`;
  html+=`<h3>В сумке</h3>`+(list.length?list.map((rec,i)=>{const pt=POTION_BY_ID[rec.id]||{n:rec.id};const exp=potionExpired(rec);
-  const speak=`Зелье ${pt.n}: качество ${potionQualityWord(rec.q)}, устойчивость ${Math.round(rec.стаб*100)} из ста, ${exp?"выдохлось":"годно до "+(rec.день+rec.срок)+"-го дня"}.`;
-  return `<button class="item" data-cmd="drinkpotion:${i}" data-speak="${speak} Выпить.">${pt.n} — ${potionQualityWord(rec.q)}, ${Math.round(rec.стаб*100)}/100${exp?", выдохлось":""}</button>`;}).join(""):`<div class="list-line">Пусто.</div>`);
+  const speak=`${rec.имя?potionName(rec):"Зелье "+pt.n}: качество ${potionQualityWord(rec.q)}, устойчивость ${Math.round(rec.стаб*100)} из ста, ${exp?"выдохлось":"годно до "+(rec.день+rec.срок)+"-го дня"}.`;
+  return `<button class="item" data-cmd="drinkpotion:${i}" data-speak="${speak} Выпить.">${potionName(rec)} — ${potionQualityWord(rec.q)}, ${Math.round(rec.стаб*100)}/100${exp?", выдохлось":""}</button>`;}).join(""):`<div class="list-line">Пусто.</div>`);
  html+=`<h3>Сварить</h3>`+POTIONS.map(pt=>{const [a,b]=potionCanBrew(pt);const можно=a&&b&&ур>=1&&(!pt.редкое||ур>=3);
   const нужно=pt.из.map(id=>(PLANT_CAT_BY_ID[id]||{}).n).join(" и ");
   return `<button class="item" data-cmd="brewpotion:${pt.id}" data-speak="Зелье ${pt.n}: ${pt.о}. Нужны ${нужно}. ${можно?"Можно сварить.":a&&b?"Нужна ступень выше.":"Не хватает растений."}">${pt.n} — ${нужно}${можно?" · можно сварить":""}</button>`;}).join("");
@@ -29020,10 +29076,9 @@ function techDo(t,станок){
   G.items.push(имя);
   дар=`клинок «${имя}» вашей работы`;}
  if(t.id==="brew"){
-  const h=Math.min(G.hpMax,G.hp+Math.round(G.hpMax*0.4))-G.hp;
-  const m=Math.min(G.manaMax,G.mana+Math.round(G.manaMax*0.5))-G.mana;
-  G.hp+=h;G.mana+=m;
-  дар=`отвар выпит на месте: здоровья +${h}, силы +${m}`;}
+  /* Отвар не выпивается на месте: склянка ложится в «Зелья» и ждёт часа. */
+  potionGive("heal",{q:1.3,мана:0.5,имя:"крепкий отвар"});
+  дар=`крепкий отвар; склянка легла в раздел «Зелья»`;}
  if(t.id==="stew"){
   const h=Math.min(G.hpMax,G.hp+Math.round(G.hpMax*0.3))-G.hp;
   G.hp+=h;G.water=Math.min(200,(Number(G.water)||0)+60);
@@ -41335,10 +41390,82 @@ function foeMaterial(m){
  if(/golem|crystallid|guard|engine|d_manyarm|knight|construct|armou?r/.test(id))return "armor";
  return "flesh";}
 /* Сыграть состояние оружия текущего класса (или заданного). */
+/* ════════════════════════════════════════════════════════════════════════
+   ЗВУК ОРУЖИЯ ПО КАЧЕСТВУ (8.5)
+   Игрок слышит, что у него в руке. Ступень звука — из редкости и качества
+   вещи: грубый железный меч свистит глухо, добротный стальной поёт, редкий
+   звенит, легендарный звенит и отзывается чарами. Щербатое оружие звучит
+   ступенью ниже; певучее и нерушимое отзываются чарами на любой ступени.
+   Ступеней пять: 0 грубое, 1 простое, 2 добротное, 3 редкое, 4 легендарное.
+   У каждого рода оружия и действия — роль на каждую ступень; пустое место
+   (null) — прежний звук рода из WEAPON_SOUND. Арбалет — свой род звука.
+   Все записи — без потерь, 48 кГц: студийные записи настоящего оружия Still
+   North Media (192 кГц), Vehicle, JC Sounds.
+   ════════════════════════════════════════════════════════════════════════ */
+const WT=(a,b,c,d,e)=>[a,b,c,d,e];
+const WEAPON_TIERS={
+ sword:{swing:WT("blade_swing_cut","w_sword_swing_t1","w_sword_swing_t2","w_sword_swing_t3","w_sword_swing_t4"),
+  parry:WT("blade_clash","w_blade_parry_t1","w_blade_parry_t2","w_blade_parry_t3","w_blade_parry_t4"),
+  hit_armor:WT("blade_armor","blade_armor","blade_armor","w_sword_armor_t3","w_sword_armor_t3"),
+  draw:WT("w_sword_draw_t0","blade_draw_knife","w_sword_draw_t2","w_sword_draw_t2","w_sword_draw_t4"),
+  sheathe:WT("w_sword_sheathe_t0","w_sword_sheathe_t0","w_sword_sheathe_t2","w_sword_sheathe_t2","w_sword_sheathe_t2")},
+ dagger:{swing:WT("blade_swing_stab","w_dagger_swing_t1","w_dagger_swing_t1","w_dagger_swing_t3","w_dagger_swing_t3"),
+  parry:WT("blade_clash","w_blade_parry_t1","w_blade_parry_t2","w_blade_parry_t3","w_blade_parry_t4"),
+  hit_armor:WT("blade_armor","blade_armor","blade_armor","w_sword_armor_t3","w_sword_armor_t3"),
+  draw:WT("blade_draw_knife","blade_draw_knife","w_dagger_draw_t2","w_dagger_draw_t2","w_dagger_draw_t2"),
+  sheathe:WT("w_dagger_sheathe_t0","w_dagger_sheathe_t0","w_dagger_sheathe_t2","w_dagger_sheathe_t2","w_dagger_sheathe_t2")},
+ axe:{swing:WT("blade_swing_blunt","blade_swing_blunt","w_heavy_swing_t2","w_heavy_swing_t3","w_heavy_swing_t3"),
+  parry:WT("blade_clash","w_blade_parry_t1","w_blade_parry_t2","w_blade_parry_t3","w_blade_parry_t4"),
+  hit_armor:WT("blade_armor","blade_armor","blade_armor","w_heavy_armor_t3","w_heavy_armor_t3")},
+ mace:{swing:WT("blade_swing_blunt","blade_swing_blunt","w_heavy_swing_t2","w_heavy_swing_t3","w_heavy_swing_t3"),
+  parry:WT("blade_shield_metal","blade_shield_metal","blade_shield_metal","w_heavy_armor_t3","w_heavy_armor_t3"),
+  hit_armor:WT("blade_shield_metal","blade_shield_metal","blade_shield_metal","w_heavy_armor_t3","w_heavy_armor_t3")},
+ staff:{swing:WT("blade_swing_blunt","blade_swing_blunt","w_spear_swing_t2","w_spear_swing_t2","w_spear_swing_t2"),
+  parry:WT("w_staff_parry","w_staff_parry","w_staff_parry","w_staff_parry","w_staff_parry"),
+  clash:WT("w_staff_parry","w_staff_parry","w_staff_parry","w_staff_parry","w_staff_parry")},
+ spear:{shoot:WT("w_spear_swing_t0","w_spear_swing_t0","w_spear_swing_t2","w_spear_swing_t2","w_spear_swing_t2"),
+  fly:WT("w_arrow_fly_t3","w_arrow_fly_t3","w_arrow_fly_t3","w_arrow_fly_t3","w_arrow_fly_t3")},
+ bow:{shoot:WT("w_bow_shoot_t0","w_bow_shoot_t1","w_bow_shoot_t2","w_bow_shoot_t3","w_bow_shoot_t4"),
+  draw:WT("w_bow_draw_t0","w_bow_draw_t0","w_bow_draw_t2","w_bow_draw_t3","w_bow_draw_t3"),
+  fly:WT("w_arrow_fly_t0","w_arrow_fly_t0","w_arrow_fly_t0","w_arrow_fly_t3","w_arrow_fly_t3"),
+  hit:WT(null,null,null,"w_arrow_hit_t3","w_arrow_hit_t3")},
+ crossbow:{shoot:WT("w_xbow_shoot","w_xbow_shoot","w_xbow_shoot","w_xbow_shoot","w_xbow_shoot"),
+  draw:WT("w_xbow_draw","w_xbow_draw","w_xbow_draw","w_xbow_draw","w_xbow_draw"),
+  fly:WT("w_xbow_fly","w_xbow_fly","w_xbow_fly","w_xbow_fly","w_xbow_fly")}};
+/* Промах звучит тем же взмахом, что и удар: клинок один и тот же. */
+["sword","dagger","axe","mace","staff"].forEach(k=>{WEAPON_TIERS[k].miss=WEAPON_TIERS[k].swing;});
+/* Ступень звука вещи: редкость (0–9) и качество (0–6) вместе. */
+function weaponTier(w){
+ try{
+  w=w||(G.equip&&G.equip.weapon);if(!w)return 1;
+  const r=Math.max(0,Number(w.rank)||0),q=w.qual==null?1:Math.max(0,Number(w.qual)||0);
+  const s=r+q;let t=s<=1?0:s<=4?1:s<=7?2:s<=10?3:4;
+  if((w.черты||[]).indexOf("old")>=0)t=Math.max(0,t-1);
+  return t;
+ }catch(_){return 1;}}
+/* Певучее и нерушимое оружие и всё легендарное отзывается чарами. */
+function weaponSings(w){
+ try{w=w||(G.equip&&G.equip.weapon);if(!w)return false;
+  return weaponTier(w)>=4||(w.черты||[]).indexOf("sung")>=0||Number(w.qual)>=6;}catch(_){return false;}}
+const WEAPON_SING_STATES={swing:1,parry:1,draw:1,shoot:1,clash:1};
+/* Арбалет числится луком (та же дальность), но звучит по-своему. */
+function weaponSoundClass(){
+ const k=weaponClass();
+ if(k==="bow"&&safeFn(()=>/арбалет/i.test(String(G.equip.weapon.name||G.equip.weapon.n||G.equip.weapon.type||"")),false))return "crossbow";
+ return k;}
 function weaponSound(state,opts){
  const o=Object.assign({gain:0.55,maxSec:2.5,delay:150},opts||{});
- const cls=o.cls||weaponClass();
- const m=WEAPON_SOUND[cls]||WEAPON_SOUND.sword;
+ const cls=o.cls||weaponSoundClass();
+ const m=WEAPON_SOUND[cls]||WEAPON_SOUND[cls==="crossbow"?"bow":"sword"]||WEAPON_SOUND.sword;
+ /* Своя ступень: одна роль по качеству вещи, без наложения второй записи. */
+ const ряд=WEAPON_TIERS[cls]&&WEAPON_TIERS[cls][state];
+ const ступень=weaponTier();
+ const своя=ряд&&ряд[ступень];
+ if(своя&&Bank.has(своя)){
+  safeFn(()=>Bank.play(своя,{kind:"combat",gain:o.gain,maxSec:o.maxSec,prio:"high"}));
+  if(WEAPON_SING_STATES[state]&&weaponSings())setTimeout(()=>safeFn(()=>Bank.play("magic_shimmer",{kind:"combat",gain:o.gain*0.32,maxSec:1.6})),45);
+  G.lastWeaponSound={cls,state,role:своя,tier:ступень};
+  return true;}
  const list=m[state]||(state==="swing"&&m.shoot)||null;
  if(!list||!list.length)return false;
  /* one — одна запись из списка, по очереди: удар звучит одним ударом, а не
@@ -54331,7 +54458,7 @@ function invAll(){
    if(!(Number(v)>0)||/^__/.test(k)||/^[a-z0-9-]+$/.test(k))continue;
    const kind=PLANT_BY_NAME[k]?"plant":fishNames.has(k)?"fish":(SORT_GOODS[k]&&!RES_SORTS[k])?"rare":"res";
    out.push({kind,key:k,label:`${k}: ${v} шт.`,name:k,n:v,it:k});}
-  (Array.isArray(G.potions)?G.potions:[]).forEach((r,i)=>{const pt=POTION_BY_ID[r.id]||{n:r.id};out.push({kind:"potion",key:String(i),label:`зелье ${pt.n} — ${potionQualityWord(r.q)}`,name:"зелье "+pt.n,it:r});});
+  (Array.isArray(G.potions)?G.potions:[]).forEach((r,i)=>{const pt=POTION_BY_ID[r.id]||{n:r.id};const имя=r.имя||"зелье "+pt.n;out.push({kind:"potion",key:String(i),label:`${имя} — ${potionQualityWord(r.q)}`,name:имя,it:r});});
   (Array.isArray(G.artifacts)?G.artifacts:[]).forEach((a,i)=>{if(!a||typeof a!=="object")return;out.push({kind:"art",key:String(i),label:`${a.имя}${a.спит?" (спит)":""}`,name:a.имя,it:a});});
   (Array.isArray(G.items)?G.items:[]).forEach((it,i)=>{const n=typeof it==="string"?it:(it&&it.name)||"Предмет";out.push({kind:"item",key:String(i),label:n,name:n,it});});
   Object.keys(G.comps||{}).forEach(k=>{const n=Number(G.comps[k])||0;const p=(typeof ART_PART_BY_ID!=="undefined")&&ART_PART_BY_ID[k];if(n<=0||!p)return;out.push({kind:"part",key:k,label:`${p.n}: ${n} шт.`,name:p.n,n,it:p});});
@@ -58535,8 +58662,15 @@ CMD.craftdo=i=>{
  for(const k in r.из)if((Number(G.inv[k])||0)<r.из[k]){narrate(`Не хватает: ${k}.`);return;}
  for(const k in r.из)G.inv[k]-=r.из[k];
  i=Number(i);
- if(i===0){G.str+=2;journal("Крафт: Каменное копьё.");}
- if(i===1){G.hp=Math.min(G.hpMax,G.hp+30);}
+ /* Сделанное ложится в свой раздел котомки: копьё — в «Оружие», отвар — в
+    «Зелья». Прежде копьё лишь прибавляло силы, а отвар выпивался на месте, и
+    игрок не находил ни того, ни другого. */
+ let куда="";
+ if(i===0){if(!Array.isArray(G.gear))G.gear=[];
+  G.gear.push({id:`craft_spear_${Date.now().toString(36)}_${Math.floor(Math.random()*1e4)}`,name:"Каменное копьё",type:"Копьё",slot:"weapon",
+   rank:0,qual:0,val:4,price:15,черты:[],треб:0,стойкость:0,своя:true});
+  journal("Крафт: Каменное копьё.");}
+ if(i===1)potionGive("heal",{q:0.9,имя:"травяной отвар"});
  if(i===2){G.items.push("Факел");}
  /* Снасти: с ними открывается рыбалка на берегу, у причала и в море. */
  if(i===3&&!G.items.includes("Удочка")){G.items.push("Удочка");}
@@ -58544,7 +58678,12 @@ CMD.craftdo=i=>{
  AE.ensure();const s=new SFX();s.clang(200);setTimeout(()=>s.stop(0.2),1200);
  safeFn(()=>{Bank.play("arte_coins",{seed:i,gain:0.6,maxSec:3});
   setTimeout(()=>safeFn(()=>Bank.play("lug_whoosh_hit",{seed:i,gain:0.5,maxSec:3})),180);});
- narrate(`Создано: ${names[i]}.`);refresh();renderCraft();};
+ /* Раздел называется тем же именем, под которым вещь видна в котомке. */
+ const имя=i===1?"травяной отвар":names[i];
+ const ряд=safeFn(()=>invAll().filter(r=>String(r.name).toLowerCase()===имя.toLowerCase()).pop(),null);
+ const раздел=ряд&&INV_SECTION_BY_ID[ряд.раздел];
+ if(раздел)куда=` Лежит в котомке, раздел «${раздел.n}».`;
+ narrate(`Создано: ${names[i]}.${куда}`);safeFn(()=>saveGame(true));refresh();renderCraft();};
 function renderGestures(){
  /* Единая логика: число пальцев = область игры.
     1 — движение и предметы, 2 — места и меню, 3 — бой и сведения, 4 — магия.

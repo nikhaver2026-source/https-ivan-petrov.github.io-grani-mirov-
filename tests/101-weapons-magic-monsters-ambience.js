@@ -69,7 +69,7 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   G.weaponDrawn=false;PLAYED.length=0;drawWeapon();r.вынуть=G.lastWeaponSound&&G.lastWeaponSound.state;
   sheatheWeapon();r.убрать=G.lastWeaponSound&&G.lastWeaponSound.state;
   while(activeLayer())closeTopUI();
-  r.W=WEAPON_SOUND;
+  r.W=WEAPON_SOUND;r.T=WEAPON_TIERS;
   return r;});
  check('удар по кости звучит костью каналом боя; неизвестное состояние — «нет»',
   удары.кость===true&&удары.костьРоли[0]==="foe_bone_hit"&&удары.костьРоли.length>0
@@ -84,7 +84,9 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
  check('тяжёлый удар мечом по голему: один звон клинка о броню, без глухого удара молота',
   удары.голем.filter(r=>W.sword.hit_armor.includes(r)).length===1
   &&!удары.голем.includes("lug_impact")&&!удары.голем.includes("lug_thud")&&!удары.голем.includes("hero_swing"),удары.голем);
- check('промах свистит, а не бьёт',удары.промах.filter(r=>W.sword.miss.includes(r)).length===1&&!удары.промах.some(r=>W.sword.hit.includes(r)),удары.промах);
+ /* 8.5: промах звучит взмахом своей ступени качества (WEAPON_TIERS). */
+ const свист=W.sword.miss.concat(удары.T.sword.miss);
+ check('промах свистит, а не бьёт',удары.промах.filter(r=>свист.includes(r)).length===1&&!удары.промах.some(r=>W.sword.hit.includes(r)),удары.промах);
  check('вынуть и убрать оружие — свои состояния модели',удары.вынуть==="draw"&&удары.убрать==="sheathe",{вынуть:удары.вынуть,убрать:удары.убрать});
 
  /* ── 3. Чары ── */
