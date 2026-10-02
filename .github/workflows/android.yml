@@ -187,16 +187,17 @@ jobs:
           rm -rf android/app/build android/gamedata/build
           cp -r sounds/gvoice_pack android/gamedata/src/main/assets/www/sounds/
           du -sh android/gamedata/src/main/assets/www
-          (cd android && gradle --no-daemon bundleRelease)
+          # Файл почти в 3 ГБ: подписи нужно много памяти (машина сборки — 16 ГБ).
+          (cd android && gradle --no-daemon -Dorg.gradle.jvmargs="-Xmx12g -XX:MaxMetaspaceSize=1g" bundleRelease)
           AAB=android/app/build/outputs/bundle/release/app-release.aab
-          java -jar "$RUNNER_TEMP/bundletool.jar" build-apks --mode=universal \
+          java -Xmx12g -jar "$RUNNER_TEMP/bundletool.jar" build-apks --mode=universal \
             --bundle="$AAB" --output="$RUNNER_TEMP/full.apks" \
             --ks="$KS_FILE" --ks-pass="pass:$KS_PASS" --ks-key-alias="$KS_ALIAS" --key-pass="pass:$KS_KEY_PASS"
           rm -rf android/app/build/intermediates
           unzip -p "$RUNNER_TEMP/full.apks" universal.apk > grani-mirov-9.0-full.apk
           rm -f "$RUNNER_TEMP/full.apks"
           ls -la grani-mirov-9.0-full.apk
-          "$ANDROID_HOME/build-tools/36.0.0/apksigner" verify --print-certs grani-mirov-9.0-full.apk | head -3
+          "$ANDROID_HOME/build-tools/36.0.0/apksigner" -J-Xmx8g verify --print-certs grani-mirov-9.0-full.apk | head -3
           df -h /
 
       - name: Полный APK — на страницу сборки
