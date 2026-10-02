@@ -25,7 +25,7 @@
      GitHub Pages. Там же включается и service worker (см. ниже): игра ставится
      на главный экран и работает без сети. -->
 <meta name="theme-color" content="#10121c">
-<title>Грань Миров. Версия 9.0</title>
+<title>Грань Миров. Версия 8.5</title>
 <style>
 /* Палец, положенный на ползунок, не должен его двигать: браузер по умолчанию
    перебрасывает бегунок в точку касания, и незрячий игрок, просто читая
@@ -106,7 +106,7 @@ h3{color:var(--acc2);margin:14px 0 6px;font-size:1.05rem;}
 
 <!-- ТИТУЛ -->
 <div id="screen-title" class="screen">
- <h1>Грань Миров <small id="gameVersion" style="font-size:.5em;opacity:.75">Версия 9.0</small></h1>
+ <h1>Грань Миров <small id="gameVersion" style="font-size:.5em;opacity:.75">Версия 8.5</small></h1>
  <div class="menu">
   <button type="button" data-cmd="check">Проверить звук</button>
   <button type="button" data-cmd="whatsnew">Что нового</button>
@@ -1231,9 +1231,9 @@ SVD.weapons=[
  {id:"svw_perer",n:"Меч Перерождённого",type:"Меч",k:1.0,эфф:"отчаяние",о:"когда здоровья меньше трети, удар крепче на пять"},
  {id:"svw_slepok",n:"Посох Слепков",type:"Посох",k:0.9,эфф:"слепок",о:"с каждой твари Сводов — лишняя сущность"},
  {id:"svw_toplat",n:"Посох Топлых Латников",type:"Посох",k:1.05,эфф:"пробой",о:"пробивает хитин и латы: умение «панцирь» не спасает"}];
-const WEB_VERSION="9.0",APP_VERSION="9.0";
+const WEB_VERSION="8.5",APP_VERSION="8.5";
 /* У сборки для Android своя строка версии (versionName в build.gradle); с 8.0 все три сборки — 8.0. */
-const ANDROID_VERSION="9.0";
+const ANDROID_VERSION="8.5";
 const GAME_VERSION=SVODY_ON?ANDROID_VERSION:IN_APP?APP_VERSION:WEB_VERSION;
 const GVOICE_ON=true;
 /* Номер голосового пакета: растёт, когда пакет пополнился (обходит кэш). */
@@ -1516,10 +1516,10 @@ const NEWS=[
 if(SVODY_ON)NEWS.push({v:39,н:"версия 8.0: Своды",
   т:"Второй слой мира: боги и края, нежить и рой, рассудок, выбор на краю, нити Отлетевших."});
 /* 8.0: слоты быстрого доступа, тихий бой и зелья у торговцев. */
-NEWS.push({v:40,н:"версия 9.0: слоты быстрого доступа и тихий бой",
+NEWS.push({v:40,н:"версия 8.5: слоты быстрого доступа и тихий бой",
   т:"Двенадцать слотов для зелий и свитков. Тихий бой. Зелья у каждого торговца. Ползунки и инвентарь стрелками. Два пальца вниз — «назад» и в главном меню. Пролог из восьми сцен со звуками: свайпы вправо и влево, вверх — пропустить."});
 const NEWS_V=NEWS[NEWS.length-1].v;
-/* (9.0) Выпуск читается коротко: заголовок, затем факты. */
+/* (8.5) Выпуск читается коротко: заголовок, затем факты. */
 function newsLine(n){const н=String(n.н||"");return `${н.charAt(0).toUpperCase()+н.slice(1)}. ${n.т||""}`;}
 /* Одна фраза: главное из последнего выпуска и сколько ещё новостей ждёт в меню. */
 function newsBrief(было){
@@ -5905,7 +5905,7 @@ function preGameBack(){
  narrate("Главное меню: закрывать нечего.");
  return false;}
 function handleTwoFingerSwipe(dir){
- /* (9.0) До входа в игру — в главном меню, энциклопедии звуков, настройках,
+ /* (8.5) До входа в игру — в главном меню, энциклопедии звуков, настройках,
     руководстве, настройках персонажа — свайп двумя пальцами вниз работает
     «назад», как и в самой игре: из раздела возвращает к списку, из списка
     закрывает окно. Остальные стороны здесь — про мир, и мира ещё нет. */
@@ -6543,7 +6543,7 @@ document.addEventListener('touchend',e=>{
   if(g.moved&&g.dir){
    multiTap.n=0;multiTap.c=0;
    const слой=activeLayer();
-   /* (9.0) Вне игры два пальца вниз — всегда «назад», что бы ни было
+   /* (8.5) Вне игры два пальца вниз — всегда «назад», что бы ни было
       назначено этой фигуре в самой игре. */
    if(fingers===2&&!gameActive()){if(g.dir==="S")safeFn(()=>preGameBack());return;}
    /* Панель магии забирает свайпы себе и до привязок: она модальна. */
@@ -6601,7 +6601,7 @@ document.addEventListener('touchend',e=>{
  /* Поклёвка: подсекает любое касание или свайп — важна скорость, а не точность. */
  if(G.fishing&&G.fishing.active&&G.fishing.bite&&!activeLayer()){e.preventDefault();safeFn(()=>hookFish());return;}
  if(runState.active){stopRun();e.preventDefault();return;}
- /* (9.0) В прологе свайп одним пальцем листает сцены: вправо — дальше,
+ /* (8.5) В прологе свайп одним пальцем листает сцены: вправо — дальше,
     влево — назад, вниз — повторить, вверх — пропустить. */
  if(swipe&&!activeLayer()&&safeFn(()=>Prologue.active(),false)){e.preventDefault();safeFn(()=>Prologue.gesture(dir));return;}
  const layer=navLayer();
@@ -59343,7 +59343,7 @@ function loadGame(){
 
 /* ════════ ЭКРАНЫ / КЛАВИАТУРА / СТАРТ ════════ */
 /* ════════════════════════════════════════════════════════════════════════
-   ПРОЛОГ ПО СЦЕНАМ (9.0)
+   ПРОЛОГ ПО СЦЕНАМ (8.5)
    Раньше пролог был пятью строками, которые читались подряд одним куском, и
    выйти из него можно было только кнопкой «Пропустить». Теперь это восемь
    сцен: как попал сюда герой, откуда взялись боги, кто жил здесь до держав,
@@ -59416,8 +59416,6 @@ const PROLOGUE=[
    {кто:"mortana",t:"Я знаю твоё имя, путник. Но скажу его не сегодня."},
    "Здесь у тебя нет ни герба, ни рода, ни судьбы, записанной в летописях. Таких здесь зовут Неизбранными. Свой путь ты выберешь сам.",
    "Грань ждёт."]}];
-/* Пролог одной строкой — для старых мест, где он нужен целиком. */
-const PROSE=PROLOGUE.map(s=>s.строки.filter(x=>typeof x==="string").join(" "));
 const Prologue={i:0,ход:0,timers:[],el:null,подсказано:false,
  active(){try{const s=document.getElementById("screen-intro");return !!(s&&!s.hidden&&!gameActive());}catch(_){return false;}},
  ключ(i,k){return `s${i+1}_${k+1}`;},
@@ -60034,7 +60032,7 @@ document.addEventListener("keydown",e=>{
   stopEverything();return;}
  /* Речь под рукой без чтеца экрана: Alt+Пробел — стоп. */
  if(e.altKey&&(e.code==="Space"||e.key===" ")){e.preventDefault();Speech.stop();vib(15);return;}
- /* (9.0) Пролог листается стрелками: вправо — дальше, влево — назад, вниз — повторить. */
+ /* (8.5) Пролог листается стрелками: вправо — дальше, влево — назад, вниз — повторить. */
  if(!KeyCapture.id&&safeFn(()=>Prologue.key(e),false))return;
  safeFn(()=>onGameKey(e));});
 window.addEventListener("beforeunload",()=>{try{stopRun();saveGame(true);}catch(e){}});

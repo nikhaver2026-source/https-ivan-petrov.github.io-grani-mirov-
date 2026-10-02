@@ -22,8 +22,8 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   return said.join(" | ");});
  check('смена державы объявляет её народы и войны',/Народы:/.test(border)&&/чтут/.test(border),border.slice(0,120));
 
- const prose=await page.evaluate(()=>PROSE.join(" "));
- /* (9.0) Пролог стал сценами: о шве между мирами, о богах, о Предтечах, о державах и о том, как герой попал сюда. */
+ const prose=await page.evaluate(()=>PROLOGUE.map((_,i)=>Prologue.текст(i).join(" ")).join(" "));
+ /* (8.5) Пролог стал сценами: о шве между мирами, о богах, о Предтечах, о державах и о том, как герой попал сюда. */
  check('пролог говорит о Грани, двенадцати богах, Предтечах, державах и о том, как герой попал сюда',/Гранью/.test(prose)&&/богов двенадцать/.test(prose)&&/Предтечи/.test(prose)&&/державы/.test(prose)&&/Неизбранными/.test(prose));
 
  const guide=await page.evaluate(()=>GUIDE.map(g=>[g.title].concat((g.secs||[]).map(x=>x.t)).join(" | ")).join(" | "));
