@@ -318,7 +318,8 @@ const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(e!==undefined?' :
   /* Версия одна: GAME_VERSION, заголовок, заставка, руководство и
      приложение для Android. Прежде заставка застряла на 2.8, пока
      приложение уходило к 3.x. */
-  const версии=[...src.matchAll(/Alpha (\d+\.\d+(?:\.\d+)?)/g)].map(m=>m[1]);
+  /* (9.0) В заголовке и на заставке — «Версия N»: только они, а не главы руководства. */
+  const версии=[...src.matchAll(/Версия (\d+\.\d+(?:\.\d+)?)<\/(?:title|small)>/g)].map(m=>m[1]);
   /* С 3.9 версий две: браузерная (WEB_VERSION) и приложения для Android
      (APP_VERSION, она же versionName). В файле и на заставке браузера —
      браузерная; приложение показывает свою. */
@@ -328,10 +329,10 @@ const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(e!==undefined?' :
   const андроид=(грэдл.match(/versionName '([\d.]+)'/)||[])[1]||"";
   /* С 7.0 у сборки для Android своя версия (ANDROID_VERSION): в ней Своды. */
   const андрКонст=(src.match(/ANDROID_VERSION="([\d.]+)"/)||[])[1]||приложение;
-  const одна=версии.length>=3&&new Set(версии).size===1&&версии[0]===константа&&андрКонст===андроид;
+  const одна=версии.length>=2&&new Set(версии).size===1&&версии[0]===константа&&андрКонст===андроид;
   const вИгре=await page.evaluate(()=>{
-   const t=(document.title.match(/Alpha (\d+\.\d+(?:\.\d+)?)/)||[])[1]||"";
-   const h=((document.querySelector("h1")||{}).textContent||"").match(/Alpha (\d+\.\d+(?:\.\d+)?)/);
+   const t=(document.title.match(/Версия (\d+\.\d+(?:\.\d+)?)/)||[])[1]||"";
+   const h=((document.querySelector("h1")||{}).textContent||"").match(/Версия (\d+\.\d+(?:\.\d+)?)/);
    return {заголовок:t,заставка:h?h[1]:"",константа:typeof GAME_VERSION==="string"?GAME_VERSION:""};});
   check('17. версия игры одна и та же во всех местах файла, на заставке и в приложении',
    одна&&вИгре.заголовок===константа&&вИгре.заставка===константа&&вИгре.константа===константа&&константа!=="2.8.0",

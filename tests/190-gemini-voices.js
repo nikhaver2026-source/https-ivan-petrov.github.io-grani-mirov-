@@ -124,7 +124,7 @@ const ГОЛОСА=["Algenib","Charon","Orus","Enceladus","Achird","Puck","Gacru
    глава:гл?гл.body.join(" "):"",титры:титры?титры.body.join(" "):""};});
  const gradle=fs.readFileSync(path.join(ROOT,'android','app','build.gradle'),'utf8');
  check('8. выпуск новостей 21 есть, версия не ниже 3.7; глава о живой речи называет голоса, титры — Gemini и условия',
-  (v=>{const[a,b]=String(v).split('.').map(Number);return a*100+(b||0);})(свод.v)>=307&&/Alpha \d+\.\d+/.test(свод.title)&&/versionName '\d+\.\d+'/.test(gradle)&&свод.news>=21
+  (v=>{const[a,b]=String(v).split('.').map(Number);return a*100+(b||0);})(свод.v)>=307&&/Версия \d+\.\d+/.test(свод.title)&&/versionName '\d+\.\d+'/.test(gradle)&&свод.news>=21
   &&/Gemini/.test(свод.н+свод.т)&&/четыреста семь/.test(свод.т)
   &&["Algenib","Charon","Orus","Enceladus","Achird","Puck","Gacrux","Sulafat","Achernar","Leda","Iapetus","Erinome","Algieba"].every(v=>(свод.глава+" "+свод.титры).includes(v))
   &&/Gemini/.test(свод.титры)&&/Additional Terms of Service/.test(свод.титры),
