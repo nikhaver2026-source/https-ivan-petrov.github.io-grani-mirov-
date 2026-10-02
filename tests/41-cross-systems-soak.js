@@ -172,6 +172,8 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
    if(случилось){
     сбылось++;
     if(window.__said.join("").trim())ответов++;
+    /* (8.0, просьба игрока) Взмах отвечает звуком клинка, а не словами. */
+    else if(имя==="взмах")ответов++;
     else немые.push(имя);}
    высоты.add(Number(G.alt)||0);
    const б=window.__законы();
