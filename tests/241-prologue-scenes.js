@@ -14,6 +14,7 @@
    4. Стрелки на компьютере делают то же.
    5. Свайп одним пальцем вверх пропускает пролог: игрок в мире, звуки пролога
       остановлены. Escape тоже пропускает.
+   6. (9.0) Каждая строка пролога звучит своей записью голоса Gemini.
    ════════════════════════════════════════════════════════════════════════ */
 const {chromium}=require('playwright');
 (async()=>{
@@ -73,6 +74,13 @@ const {chromium}=require('playwright');
  await swipe(0,-160);
  const выход=await page.evaluate(()=>({игра:gameActive(),пролог:Prologue.active(),таймеров:Prologue.timers.length,фон:Bank.loops.has("prolog")}));
  check('5. свайп одним пальцем вверх пропускает пролог: игрок в мире, звуки пролога остановлены',выход.игра&&!выход.пролог&&выход.таймеров===0&&!выход.фон,выход);
+
+ /* ── 6 (9.0) ── пролог прочитан голосами Gemini: у каждой строки своя запись. */
+ const зап=await page.evaluate(()=>{const ключи=[].concat(...PROLOGUE.map((s,i)=>s.строки.map((_,k)=>Prologue.ключ(i,k))));
+  return {ключей:ключи.length,нет:ключи.filter(k=>!PROLOGUE_REC[k]),файлы:ключи.map(k=>PROLOGUE_REC[k]).filter(Boolean)};});
+ const fs=require('fs'),path=require('path');
+ const нетФайла=зап.файлы.filter(f=>!fs.existsSync(path.join(__dirname,'..','sounds',f)));
+ check('6. каждая строка пролога звучит своей записью голоса Gemini, файлы на месте',!зап.нет.length&&!нетФайла.length&&зап.файлы.length===зап.ключей,{ключей:зап.ключей,нет:зап.нет,нетФайла});
 
  check('без ошибок на странице',!errors.length,errors.slice(0,3));
  await browser.close();
