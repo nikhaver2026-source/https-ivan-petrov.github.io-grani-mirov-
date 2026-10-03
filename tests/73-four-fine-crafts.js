@@ -27,6 +27,8 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
  page.on('console',m=>{
   if(m.type()==='error'&&!/Failed to load resource|fetching the script|ServiceWorker/i.test(m.text()))errors.push('console: '+m.text());});
  await page.goto(process.argv[2]);await page.waitForTimeout(700);
+ /* (9.5) Набор меряет время и воду шагами: ход мира — по шагам. */
+ await page.evaluate(()=>{settings.clock="steps";});
  await page.evaluate(()=>enterGame());await page.waitForTimeout(500);
 
  /* ── 1. Четыре ремесла на месте, и им есть у кого учиться ── */

@@ -38,6 +38,8 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
  page.on('console',m=>{
   if(m.type()==='error'&&!/Failed to load resource|fetching the script|ServiceWorker/i.test(m.text()))errors.push('console: '+m.text());});
  await page.goto(process.argv[2]);await page.waitForTimeout(700);
+ /* (9.5) Набор меряет время и воду шагами: ход мира — по шагам. */
+ await page.evaluate(()=>{settings.clock="steps";});
  await page.evaluate(()=>enterGame());await page.waitForTimeout(500);
 
  /* ── 1. Таблица полна ── */
@@ -117,7 +119,7 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   for(const id of виды){
    const т=найти(id);if(!т)continue;
    G.dark=false;G.place=null;G.ship=null;G.inCombat=false;
-   G.x=т.x;G.y=т.y;
+   G.x=т.x;G.y=т.y;G.water=10; /* (9.5) фляга не полна: родник есть куда налить */
    const вера=()=>Object.values(G.faith||{}).reduce((s,v)=>s+(Number(v)||0),0);
    const до={золото:G.gold,вода:G.water,hp:G.hp,час:G.hour,день:G.day,вера:вера(),
     котомка:Object.values(G.inv||{}).reduce((s,v)=>s+(Number(v)||0),0)};

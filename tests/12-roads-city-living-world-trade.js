@@ -210,9 +210,12 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   const ok=useHere();
   const open=!!document.querySelector('#modal-npc.show, #modal-npc[style*="flex"]')||!!activeLayer();
   const title=document.getElementById("npcTitle").textContent;
+  /* (9.5) Торговля — первым пунктом, в ней «Купить» и «Продать». */
+  const tr=document.querySelector('#npcBody [data-cmd^="npctrade:"]');
+  if(tr)CMD.npctrade(tr.dataset.cmd.slice("npctrade:".length));
   const body=document.getElementById("npcBody").innerHTML;
   closeTopUI();
-  return {ok,open,title,hasBuy:/data-cmd="buy:/.test(body),hasSell:/data-cmd="sell/.test(body)};});
+  return {ok,open,title,hasBuy:/data-cmd="shop:[^"]*~buy"/.test(body),hasSell:/data-cmd="shop:[^"]*~sell"/.test(body)};});
  check('в городской лавке торгуют покупкой и продажей',cityTrade.hasBuy===true&&cityTrade.hasSell===true,cityTrade);
 
  // 9. Ошибок на странице нет

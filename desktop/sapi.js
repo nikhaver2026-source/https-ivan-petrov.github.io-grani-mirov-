@@ -750,6 +750,52 @@ function srDir() {
   return '';
 }
 
+// ── ГОЛОС ЧТЕЦА ПО УМОЛЧАНИЮ (9.5) ──
+// Игра сама берёт голос того чтеца экрана, что стоит у игрока: запущен NVDA —
+// говорит голосом NVDA, запущен JAWS — голосом JAWS. Чтец не запущен — тот
+// синтезатор и голос, что выбраны в настройках NVDA (nvda.ini: RHVoice или
+// eSpeak, их мост поднимает сам и без NVDA). Иначе — голос Windows по
+// умолчанию.
+function nvdaIni() {
+  const out = { synth: '', voice: '' };
+  try {
+    const ad = process.env.APPDATA; if (!ad) return out;
+    const txt = fs.readFileSync(path.join(ad, 'nvda', 'nvda.ini'), 'utf8');
+    let sec = '', sub = '';
+    for (const raw of txt.split(/\r?\n/)) {
+      const line = raw.trim();
+      let m;
+      if ((m = /^\[\[(.+)\]\]$/.exec(line))) { sub = m[1].trim().toLowerCase(); continue; }
+      if ((m = /^\[(.+)\]$/.exec(line))) { sec = m[1].trim().toLowerCase(); sub = ''; continue; }
+      if (sec !== 'speech' || !(m = /^([^=]+?)\s*=\s*(.*)$/.exec(line))) continue;
+      const k = m[1].trim().toLowerCase(), v = m[2].trim();
+      if (!sub && k === 'synth') out.synth = v.toLowerCase();
+      else if (sub && sub === out.synth && k === 'voice') out.voice = v;
+    }
+  } catch (_) { }
+  return out;
+}
+function autoVoiceName(voices, ini) {
+  const sr = voices.filter(v => v.kind === 'sr');
+  const nv = sr.find(v => /^NVDA/.test(v.name)), jw = sr.find(v => /^JAWS/.test(v.name));
+  if (nv) return nv.name;
+  if (jw) return jw.name;
+  ini = ini || nvdaIni();
+  const low = s => String(s || '').toLowerCase();
+  if (/rhvoice/.test(ini.synth)) {
+    const rh = voices.filter(v => v.kind === 'rhvoice');
+    const w = rh.find(v => ini.voice && low(v.name).indexOf(low(ini.voice).replace(/^.*[\\/]/, '')) >= 0) || rh.find(v => /^ru/i.test(v.lang)) || rh[0];
+    if (w) return w.name;
+  }
+  if (/espeak/.test(ini.synth)) {
+    const es = voices.filter(v => v.kind === 'espeak');
+    const w = es.find(v => /^ru/i.test(v.lang)) || es[0];
+    if (w) return w.name;
+  }
+  const d = voices.find(v => v.default);
+  return d ? d.name : '';
+}
+
 class Sapi {
   constructor() { this.procs = []; this.ready = false; this.voices = []; this.owner = new Map(); this.speaking = new Set(); this.onDone = null; this.onChange = null; this.cur = null; this.why = ''; }
   // Почему голоса Windows не подключились — игрок слышит это в настройках.
@@ -834,10 +880,13 @@ class Sapi {
     const p = this.proc(voice);
     return new Promise(r => { p.waiters.push(r); p.send('wav', file, voice || '', text); setTimeout(() => r(false), 20000); });
   }
+  // Чей голос игра возьмёт сама: NVDA, JAWS, настройки NVDA или голос Windows.
+  autoVoice() { return autoVoiceName(this.voices); }
   list() {
-    return this.voices.map(v => ({ id: v.name, name: v.name, lang: v.lang, gender: v.gender, local: true, default: v.name === this.cur && !!v.default,
+    const auto = this.autoVoice();
+    return this.voices.map(v => ({ id: v.name, name: v.name, lang: v.lang, gender: v.gender, local: true, default: v.name === this.cur && !!v.default, auto: v.name === auto,
       engine: (ENGINE[v.kind] || 'SAPI 5') + (v.vendor && !/^microsoft/i.test(v.vendor) ? ', ' + v.vendor : '') }));
   }
   quit() { this.procs.forEach(p => p.quit()); }
 }
-module.exports = { Sapi, CS_SOURCE: CS, TAG };
+module.exports = { Sapi, CS_SOURCE: CS, TAG, autoVoiceName, nvdaIni };

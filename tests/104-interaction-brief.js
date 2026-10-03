@@ -220,7 +220,7 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   let npc=null;outer: for(let rr=0;rr<80;rr++)for(let dx=-rr;dx<=rr;dx++)for(let dy=-rr;dy<=rr;dy++){const c=safeFn(()=>cellContent((OLD_WORLD>>1)+dx,(OLD_WORLD>>1)+dy),null);if(c&&c.structure){const n=safeFn(()=>npcsFor(c),[]).find(x=>x.trade);if(n){G.x=(OLD_WORLD>>1)+dx;G.y=(OLD_WORLD>>1)+dy;npc=n;break outer;}}}
   if(!npc)return r;r.npc=npc.name;
   G.gold=500;G.inv={"руда":6,"трава":3,"салака":2};G.items=["Свиток: Искра","Реликвия: Аурис Зарний"];G.gear=G.gear.filter(g=>g&&!/^t104/.test(g.id));G.gear.push({id:"t104s",name:"Дубовый щит",type:"Щит",slot:"armor",rank:1,qual:1,val:3,price:40});
-  openNPC(npc.key,true);await пауза(40);r.npcBtn=!!document.querySelector('#npcBody [data-cmd^="shop:"]');r.oldBtns=!!document.querySelector('#npcBody [data-cmd^="buy:"]');while(activeLayer())closeTopUI();
+  openNPC(npc.key,true);await пауза(40);r.oldBtns=!document.querySelector('#npcBody [data-cmd^="buy:"]');CMD.npctrade(npc.key);r.npcBtn=!!document.querySelector('#npcBody [data-cmd^="shop:"]');while(activeLayer())closeTopUI();
   SAID.length=0;r.open=openTrade(npc.key,"buy");await пауза(60);r.окно=activeLayer()&&activeLayer().id;
   r.tabs=[...document.querySelectorAll('#shopBody [data-cmd^="shoptab:"]')].map(b=>b.textContent.trim().slice(0,12));
   r.cats=[...document.querySelectorAll('#shopBody [data-cmd^="shopcat:"]')].map(b=>b.dataset.cmd.split(":")[1]);

@@ -202,9 +202,10 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   while(activeLayer())closeTopUI();
   G.quests=[];G.chainTaken={};G.x=OLD_WORLD>>1;G.y=OLD_WORLD>>1;G.place=null;
   const n=getNPC(G.x,G.y,0,"Старейшина");
-  openNPC(n.key,true);resetCursor();ensureCursor(activeLayer());
+  /* (9.5) Задание берут в «Заданиях»: взгляд на основное дело — и «Взять». */
+  openNPC(n.key,true);CMD.npcquests(n.key);CMD.qprev(n.key+"~main");resetCursor();ensureCursor(activeLayer());
   const items=cursorItems(activeLayer());
-  return {ключ:n.key,цель:items.findIndex(x=>x.dataset.cmd&&x.dataset.cmd.startsWith("qtake:")),
+  return {ключ:n.key,цель:items.findIndex(x=>x.dataset.cmd&&x.dataset.cmd.startsWith("qpick:")),
    всего:items.length,квестов:G.quests.length};});
  for(let i=0;i<dialog.цель;i++)await fwd();
  const onQuest=await page.evaluate(()=>uiCursor&&uiCursor.dataset.cmd);
@@ -213,7 +214,7 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
  await page.waitForTimeout(200);
  const questTaken=await page.evaluate(()=>({квестов:G.quests.length,окно:activeLayer()&&activeLayer().id}));
  check('в диалоге свайп доводит до «Взять квест», двойное касание берёт его',
-  /^qtake:/.test(onQuest||"")&&questTaken.квестов===1,
+  /^qpick:/.test(onQuest||"")&&questTaken.квестов===1,
   {курсор:onQuest,квестов:questTaken.квестов});
 
  // 3. Торговля: дойти свайпом до кнопки покупки нужного товара и купить именно его
@@ -221,18 +222,20 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   while(activeLayer())closeTopUI();
   G.gold=5000;G.inv={};G.place=null;
   const n=getNPC(G.x,G.y,0,"Торговец");
-  openNPC(n.key,true);resetCursor();ensureCursor(activeLayer());
+  /* (9.5) Покупка — в окне лавки: «Торговля» → «Купить» → товар → «Купить». */
+  openTrade(n.key,"buy");resetCursor();ensureCursor(activeLayer());
   const items=cursorItems(activeLayer());
-  /* берём вторую кнопку покупки: до неё нужно именно доходить */
-  const buys=items.map((x,i)=>({i,cmd:x.dataset.cmd})).filter(o=>/^buy:/.test(o.cmd||""));
+  /* берём второй товар: до него нужно именно доходить */
+  const buys=items.map((x,i)=>({i,cmd:x.dataset.cmd})).filter(o=>/^shopitem:/.test(o.cmd||""));
   const цель=buys[1]||buys[0];
-  return {индекс:цель?цель.i:-1,cmd:цель?цель.cmd:null,
-   товар:цель?stockFor(n)[Number(цель.cmd.split(":")[2])]:null,золото:G.gold};});
+  return {индекс:цель?цель.i:-1,cmd:цель?цель.cmd:null,золото:G.gold};});
  for(let i=0;i<trade.индекс;i++)await fwd();
  const onBuy=await page.evaluate(()=>uiCursor&&uiCursor.dataset.cmd);
  ep=await emptyPoint();
  await tap(ep.x,ep.y);await tap(ep.x,ep.y);
  await page.waitForTimeout(250);
+ /* карточка открыта двойным касанием — подтверждаем сделку */
+ await page.evaluate(()=>{const b=document.querySelector('#shopBody [data-cmd^="shopask:buy"]');if(b)CMD.shopask(b.dataset.cmd.slice(8));if(document.querySelector('#shopBody [data-cmd="shopyes"]'))CMD.shopyes();});
  const bought=await page.evaluate(()=>({золото:G.gold,запас:{...G.inv},вещей:G.gear.length}));
  check('в торговле свайп доводит до нужного товара, двойное касание покупает именно его',
   onBuy===trade.cmd&&bought.золото<trade.золото,

@@ -27,6 +27,8 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
  const errors=[];page.on('pageerror',e=>errors.push(String(e)));
  page.on('console',m=>{if(m.type()==='error'&&!/fetching the script|ServiceWorker/i.test(m.text()))errors.push('console: '+m.text());});
  await page.goto(process.argv[2]);await page.waitForTimeout(700);
+ /* (9.5) Набор меряет время шага: ход мира — по шагам, а не по реальным часам. */
+ await page.evaluate(()=>{settings.clock="steps";});
  await page.evaluate(()=>enterGame());await page.waitForTimeout(300);
  await page.evaluate(()=>{settings.effects=0;settings.music=0;
   window.__said=[];if(!window.__origSay)window.__origSay=Speech.say;

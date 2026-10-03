@@ -8,8 +8,9 @@
    2. Пока пакета нет, житель говорит первым или вторым своим голосом:
       строка не молчит и не просит файла, которого в сборке нет.
    3. С пакетом звучит третий голос, и файл берётся из gvoice_pack/npc/.
-   4. Всё, что идёт в APK (sounds без gvoice_pack и сама страница), — меньше
-      2 ГиБ с запасом: предел GitHub на один файл выпуска.
+   4. С 9.5 выкладываются только полные сборки (страница сборки, не выпуск):
+      всё, что идёт в полный APK и полный архив Windows (sounds вместе с
+      голосовым пакетом и страница), — меньше 3,9 ГБ: предел архива в 4 ГиБ.
    ═══════════════════════════════════════════════════════════════════════ */
 const {chromium}=require('playwright');
 const fs=require('fs'),path=require('path');
@@ -60,9 +61,9 @@ const PACK=path.join(ROOT,'sounds','gvoice_pack','npc');
  /* ── 4. Размер APK ── */
  let байт=fs.statSync(path.join(ROOT,'index.html')).size;
  const обойти=д=>{for(const и of fs.readdirSync(д)){const п=path.join(д,и);const st=fs.statSync(п);
-  if(st.isDirectory()){if(и!=='gvoice_pack')обойти(п);}else байт+=st.size;}};
+  if(st.isDirectory())обойти(п);else байт+=st.size;}};
  обойти(path.join(ROOT,'sounds'));
- check('4. всё, что идёт в APK, меньше 2 ГиБ с запасом (не больше 2100 МБ)',байт<2100e6,{МБ:Math.round(байт/1e6)});
+ check('4. всё, что идёт в полную сборку (с голосовым пакетом), меньше 3,9 ГБ — предел архива в 4 ГиБ',байт<3900e6,{МБ:Math.round(байт/1e6)});
 
  check('без ошибок на странице',!errors.length,errors.slice(0,3));
  await browser.close();

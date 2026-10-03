@@ -74,11 +74,13 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   const c=cellContent(G.x,G.y);const npc=npcsFor(c).find(n=>n.trade);
   if(!npc)return {skip:true};
   G.inv["руда"]=5;G.gold=0;
+  /* (9.5) Продажа — в «Торговле»: пункт «Продать», раздел «Ресурсы». */
   openNPC(npc.key);
-  const btn=document.querySelector('#npcBody [data-cmd^="sellall:"]');
-  if(!btn)return {noButton:true};
-  const arg=btn.dataset.cmd.slice("sellall:".length);
-  CMD.sellall(arg);
+  if(!document.querySelector('#npcBody [data-cmd^="npctrade:"]'))return {noButton:true};
+  CMD.npctrade(npc.key);
+  if(!document.querySelector('#npcBody [data-cmd$="~sell"]'))return {noButton:true};
+  CMD.shop(npc.key+"~sell");while(activeLayer()&&activeLayer().id==="modal-shop")closeTopUI();
+  CMD.sellall(npc.key+":руда");
   return {gold:G.gold,left:Number(G.inv["руда"])||0,race:npc.race};
  });
  check('продажа ресурса торговцу приносит золото',sold.gold>0&&sold.left===0,sold);

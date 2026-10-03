@@ -27,6 +27,8 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
  const page=await ctx.newPage();
  const errors=[];page.on('pageerror',e=>errors.push(String(e)));
  await page.goto(process.argv[2]);await page.waitForTimeout(700);
+ /* (9.5) Нужды считаются по часам пути: ход мира — по шагам. */
+ await page.evaluate(()=>{settings.clock="steps";});
  await page.evaluate(()=>enterGame());await page.waitForTimeout(500);
  await page.evaluate(()=>{window.SAID=[];const o=Speech.say.bind(Speech);Speech.say=(t,x)=>{SAID.push(String(t));return o(t,x);};
   window.PLAYED=[];const p=Bank.play.bind(Bank);Bank.play=(r,o)=>{PLAYED.push(String(r));return p(r,Object.assign({},o||{},{gain:0,maxSec:0.4}));};});

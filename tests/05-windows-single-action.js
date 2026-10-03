@@ -77,8 +77,12 @@ const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(e!==undefined?' :
   await dblTapSel('#bldBody [data-cmd^="npc:"]');
   check('карточка NPC открывается двойным касанием', await page.evaluate(()=>{const m=activeLayer();return !!m&&m.id==='modal-npc';}));
   const qBefore=await page.evaluate(()=>G.quests.length);
-  await dblTapSel('#npcBody [data-cmd^="qtake:"]');
+  /* (9.5) Задание берут через пункт «Задания»: взгляд на дело, затем «Взять». */
+  await dblTapSel('#npcBody [data-cmd^="npcquests:"]');
+  await dblTapSel('#npcBody [data-cmd^="qprev:"][data-cmd$="~main"]');
+  await dblTapSel('#npcBody [data-cmd^="qpick:"]');
   check('вариант диалога «Взять квест» срабатывает один раз', await page.evaluate(n=>G.quests.length===n+1,qBefore), await page.evaluate(()=>G.quests.length));
+  await dblTapSel('#npcBody [data-cmd^="npcback:"]');
   await dblTapSel('#npcBody [data-cmd^="npctalk:"]');
   check('вариант диалога «Поговорить» не ломает окно', await page.evaluate(()=>{const m=activeLayer();return !!m&&m.id==='modal-npc';}));
  }else check('в строении есть NPC (пропуск)',true);

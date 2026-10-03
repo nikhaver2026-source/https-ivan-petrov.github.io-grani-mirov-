@@ -18,6 +18,8 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
  const page=await ctx.newPage();
  const errors=[];page.on('pageerror',e=>errors.push(String(e)));
  await page.goto(process.argv[2]);await page.waitForTimeout(700);
+ /* (9.5) Набор меряет время шага: ход мира — по шагам, а не по реальным часам. */
+ await page.evaluate(()=>{settings.clock="steps";});
  const cdp=await ctx.newCDPSession(page);
  await page.evaluate(()=>enterGame());await page.waitForTimeout(300);
  const tap=async(x,y,ms=40)=>{
