@@ -54773,8 +54773,11 @@ function npcReact(n,исход,o){
   else{
    const чувство=safeFn(()=>npcFeel(n),0);
    цена=` Лично к вам: ${standWord(чувство).n} (${чувство}).`;}
-  safeFn(()=>npcVoice(n,доля>0?"спор":"да"));
-  return ` ${n.name}: «${Род.жителя(n,слово)}»${цена}`;
+  /* (9.5.1) Записанный отклик житель говорит сам, голосом своего приветствия;
+     голос игры называет только след в цене. */
+  const сам=npcSaysOwn(n,слово);
+  if(!сам)safeFn(()=>npcVoice(n,доля>0?"спор":"да"));
+  return сам?` ${n.name} отвечает.${цена}`:` ${n.name}: «${Род.жителя(n,слово)}»${цена}`;
  }catch(_){return "";}}
 /* Строка для окна торговца: что сейчас с его ценой для вас и почему. */
 function npcMoodLine(n){
@@ -55077,12 +55080,22 @@ function healerView(key){
  html+=`<div class="row"><button class="item" data-cmd="npcback:${n.key}" data-speak="Назад, к разговору.">Назад</button></div>`;
  document.getElementById("npcBody").innerHTML=html;
  return true;}
+/* (9.5.1) Слово жителя его собственным голосом: строка записана в пуле ответов
+   («dlg») — житель говорит её сам; нет записи (или нет женской у женщины) — false,
+   и строку читает голос игры. */
+function npcSaysOwn(n,t){
+ const r=t&&VOICE_NPC.dlg&&VOICE_NPC.dlg[t];if(!r||!safeFn(()=>Folk.on(),false))return false;
+ if(safeFn(()=>Folk.жен(n),false)&&!r[1])return false;
+ return !!safeFn(()=>Folk.ответ(n,t,{всегда:true}),false);}
+const HEAL_SAY={мёртвых:"Мёртвых я не лечу — моё ремесло для живых. Ищи склеп и ночь, или зелье.",нечего:"Лечить нечего — ни раны, ни яда.",
+ готово:["Вот и всё. Рана чистая, повязка тугая — береги её.","Держись. Отвар горький, зато к утру будешь на ногах."]};
+function healerSay(n,t,o){if(!npcSaysOwn(n,t))narrate(`${n.name}: «${Род.жителя(n,t.replace(/\.$/,""))}».`,o||{interrupt:true});}
 function healerHeal(key,mode){
  const n=getNPCByKey(key);if(!n){narrate("Этого жителя здесь больше нет.");return false;}
  if(!isHealer(n)){narrate(`${n.name} не лечит.`);return false;}
- if(heroUndead()){narrate(`${n.name}: «Мёртвых я не лечу — моё ремесло для живых. Ищи склеп и ночь, или зелье».`,{interrupt:true});return false;}
+ if(heroUndead()){healerSay(n,HEAL_SAY.мёртвых);return false;}
  const {нужно,отрава}=healState();
- if(!нужно&&!отрава){narrate(`${n.name}: «Лечить нечего — ни раны, ни яда».`,{interrupt:true});return false;}
+ if(!нужно&&!отрава){healerSay(n,HEAL_SAY.нечего);return false;}
  let плата="";
  if(mode==="credit"){
   const д=healCredits(n)[0];
@@ -55098,6 +55111,7 @@ function healerHeal(key,mode){
  safeFn(()=>{Bank.play("oc_boiling",{gain:0.45,maxSec:3});setTimeout(()=>safeFn(()=>Bank.play("od_heal",{gain:0.5,maxSec:4})),480);});
  safeFn(()=>npcRemember(n,"купил",1,4));
  narrate(`${n.name} промывает, перевязывает и даёт горький отвар. Здоровье ${G.hp} из ${G.hpMax} (было ${было}).${снято.length?` Снято: ${снято.join(", ")}.`:""}${плата}`,{interrupt:true});
+ safeFn(()=>{const т=HEAL_SAY.готово[(Number(G.day)||1)%HEAL_SAY.готово.length];setTimeout(()=>safeFn(()=>npcSaysOwn(n,т)),300);});
  safeFn(()=>{refresh();saveGame(true);});
  safeFn(()=>healerView(key));
  return true;}
