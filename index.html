@@ -54533,7 +54533,7 @@ const NightDead={
   const m=this.pick(c);
   const фраза=NIGHT_DEAD_SAY[Math.floor(Math.random()*NIGHT_DEAD_SAY.length)];
   safeFn(()=>Bank.play(m.id==="wisp"?"ghost_wail":"od_undead",{gain:0.6,maxSec:4}));
-  narrate(`Ночь. ${фраза} ${m.n.toLowerCase()}, ${m.lvl} уровня.`,{interrupt:true});
+  narrate(`Ночь. ${фраза} ${m.n.toLowerCase()} — ${m.lvl} уровня.`,{interrupt:true});
   setTimeout(()=>safeFn(()=>{if(!G.inCombat&&!G.place)startCombat({monster:m,x:G.x,y:G.y},{});}),900);
   return true;}catch(_){return false;}}};
 
