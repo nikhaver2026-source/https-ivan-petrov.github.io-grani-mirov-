@@ -259,7 +259,7 @@ public class MainActivity extends Activity {
 
     private void say(String text, float rate, float volume, String id) {
         final TextToSpeech tts = speaker != null ? speaker : this.tts;
-        tts.setSpeechRate(Math.max(0.1f, Math.min(6f, rate > 0 ? rate : 1f)));
+        tts.setSpeechRate(Math.max(0.1f, Math.min(8f, rate > 0 ? rate : 1f)));
         Bundle p = new Bundle();
         p.putFloat(TextToSpeech.Engine.KEY_PARAM_VOLUME, Math.max(0f, Math.min(1f, volume >= 0 ? volume : 1f)));
         /* Очередь ведёт сама игра и шлёт по одной фразе, дождавшись конца прежней.

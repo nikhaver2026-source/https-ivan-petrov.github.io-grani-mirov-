@@ -44,7 +44,7 @@ public static class GraniRh {
   public static string Why = "нет дополнения RHVoice";
   static IntPtr eng = IntPtr.Zero; static FMsg fMsg; static FSpeak fSpeak; static FDel fDel;
   static CbRate cbRate; static CbSpeech cbSpeech; static CbDone cbDone;   // держим, пока жив движок
-  static int rate = 24000; static List<short> buf; static volatile bool cancel;
+  static int rate = 24000; static List<short> buf; static volatile bool cancel; static Action<short[], int> sink;
   static object synthLock = new object();
   static IntPtr U8(string s){ byte[] b = Encoding.UTF8.GetBytes(s ?? ""); IntPtr p = Marshal.AllocHGlobal(b.Length + 1); Marshal.Copy(b, 0, p, b.Length); Marshal.WriteByte(p, b.Length, 0); return p; }
   static string S8(IntPtr p){ if (p == IntPtr.Zero) return ""; int n = 0; while (Marshal.ReadByte(p, n) != 0 && n < 4096) n++; byte[] b = new byte[n]; Marshal.Copy(p, b, 0, n); return Encoding.UTF8.GetString(b); }
@@ -98,8 +98,26 @@ public static class GraniRh {
       fMsg = D<FMsg>(h, "RHVoice_new_message"); fSpeak = D<FSpeak>(h, "RHVoice_speak"); fDel = D<FDel>(h, "RHVoice_delete_message");
       int major = 1; try { string ver = S8(D<FVer>(h, "RHVoice_get_version")()); int.TryParse(ver.Split('.')[0], out major); } catch (Exception) { }
       string ad = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
-      string cfg = Path.Combine(Path.Combine(ad, "nvda"), "RHVoice-config");
-      if (!Directory.Exists(cfg)) { cfg = Path.Combine(Path.GetTempPath(), "grani-rhvoice"); Directory.CreateDirectory(cfg); }
+      // Своя папка настроек: RHVoice.ini из NVDA (голоса, словари) переносится,
+      // а предел темпа поднят до пяти — иначе RHVoice не говорит быстрее
+      // двукратного и отстаёт от записей Gemini.
+      string nvc = Path.Combine(Path.Combine(ad, "nvda"), "RHVoice-config");
+      string cfg = Path.Combine(Path.GetTempPath(), "grani-rhvoice");
+      try {
+        Directory.CreateDirectory(cfg);
+        var ini = new StringBuilder();
+        string src = Path.Combine(nvc, "RHVoice.ini");
+        if (File.Exists(src)) foreach (string ln in File.ReadAllLines(src)) { string k = ln.Trim().ToLowerInvariant(); if (!k.StartsWith("max_rate") && !k.StartsWith("max_volume")) ini.AppendLine(ln); }
+        ini.AppendLine("max_rate=5"); ini.AppendLine("max_volume=2");
+        File.WriteAllText(Path.Combine(cfg, "RHVoice.ini"), ini.ToString());
+        if (Directory.Exists(Path.Combine(nvc, "dicts")) && !Directory.Exists(Path.Combine(cfg, "dicts"))) {
+          string dd = Path.Combine(cfg, "dicts"); Directory.CreateDirectory(dd);
+          foreach (string f in Directory.GetFiles(Path.Combine(nvc, "dicts"), "*", SearchOption.AllDirectories)) {
+            string to = Path.Combine(dd, f.Substring(Path.Combine(nvc, "dicts").Length).TrimStart('\\', '/'));
+            Directory.CreateDirectory(Path.GetDirectoryName(to)); File.Copy(f, to, true);
+          }
+        }
+      } catch (Exception) { if (Directory.Exists(nvc)) cfg = nvc; }
       var ip = new InitParams(); ip.config = U8(cfg);
       ip.res = Marshal.AllocHGlobal(IntPtr.Size * (res.Count + 1));
       for (int i = 0; i < res.Count; i++) Marshal.WriteIntPtr(ip.res, i * IntPtr.Size, U8(res[i]));
@@ -129,26 +147,37 @@ public static class GraniRh {
     } catch (Exception ex) { Why = "ошибка: " + ex.Message; Voices = new List<V>(); }
   }
   static int OnRate(int r, IntPtr ud){ rate = r; return 1; }
-  static int OnSpeech(IntPtr s, uint c, IntPtr ud){ if (cancel) return 0; var a = new short[c]; Marshal.Copy(s, a, 0, (int)c); if (buf != null) buf.AddRange(a); return 1; }
+  // Темп игры (r) — в настоящий множитель: тот же, с каким звучат записи Gemini.
+  public static double Tempo(double r){ if (r <= 0) r = 1; return r <= 1 ? r : 1 + (r - 1) * 0.45; }
+  static int OnSpeech(IntPtr s, uint c, IntPtr ud){
+    if (cancel) return 0; var a = new short[c]; Marshal.Copy(s, a, 0, (int)c);
+    if (sink != null) { try { sink(a, rate); } catch (Exception) { } } else if (buf != null) buf.AddRange(a);
+    return 1;
+  }
   static void OnDone(IntPtr ud){ }
   public static void Cancel(){ cancel = true; }
-  // Фраза целиком в PCM 16 бит: RHVoice считает намного быстрее, чем звучит речь.
+  // PCM 16 бит. С приёмником (snk) звук отдаётся кусками по мере синтеза и
+  // начинает звучать сразу, не дожидаясь конца фразы; без него — фраза целиком.
   [HandleProcessCorruptedStateExceptions, SecurityCritical]
-  public static short[] Synth(string profile, string text, int r, int vol, out int sr){
+  public static short[] Synth(string profile, string text, double r, int vol, Action<short[], int> snk, out int sr){
     sr = rate;
-    try { return SynthRaw(profile, text, r, vol, out sr); }
+    try { return SynthRaw(profile, text, r, vol, snk, out sr); }
     catch (Exception ex) { eng = IntPtr.Zero; Voices = new List<V>(); Why = "сбой RHVoice: " + ex.GetType().Name; return null; }
   }
-  static short[] SynthRaw(string profile, string text, int r, int vol, out int sr){
+  static short[] SynthRaw(string profile, string text, double r, int vol, Action<short[], int> snk, out int sr){
     lock (synthLock) {
-      buf = new List<short>(); cancel = false; sr = rate;
+      buf = new List<short>(); sink = snk; cancel = false; sr = rate;
       if (eng == IntPtr.Zero) return null;
       var sp = new SynthParams(); sp.profile = U8(profile);
-      sp.ar = Math.Max(-1.0, Math.Min(1.0, r / 10.0)); sp.av = Math.Max(-1.0, Math.Min(1.0, (vol - 100) / 100.0)); sp.rr = 1; sp.rp = 1; sp.rv = 1;
+      // r — во сколько раз быстрее обычного (как у записей Gemini). Обычный темп
+      // RHVoice — 1, предел — 5 (см. RHVoice.ini выше); громкость 100 — обычная, 200 — вдвое.
+      double k = Tempo(r);
+      sp.ar = k >= 1 ? Math.Min(1.0, (k - 1) / 4.0) : Math.Max(-1.0, (k - 1) / 0.5); sp.rr = k > 5 ? k / 5 : 1;
+      sp.av = Math.Max(-1.0, Math.Min(1.0, (vol - 100) / 100.0)); sp.rp = 1; sp.rv = 1;
       IntPtr t = U8(text); uint len = (uint)Encoding.UTF8.GetByteCount(text ?? "");
       try { IntPtr m = fMsg(eng, t, len, 0, ref sp, IntPtr.Zero); if (m != IntPtr.Zero) { fSpeak(m); fDel(m); } }
       finally { Marshal.FreeHGlobal(t); Marshal.FreeHGlobal(sp.profile); }
-      sr = rate; short[] o = cancel ? null : buf.ToArray(); buf = null; return o;
+      sr = rate; short[] o = cancel ? null : buf.ToArray(); buf = null; sink = null; return o;
     }
   }
   public static byte[] Wav(short[] s, int sr){
@@ -177,7 +206,7 @@ public static class GraniEs {
   public static List<V> Voices = new List<V>();
   public static string Why = "нет eSpeak";
   static bool up = false; static Cb cb; static FVoice fVoice; static FParam fParam; static FSynth fSynth; static FSync fSync;
-  static int rate = 22050; static List<short> buf; static volatile bool cancel; static object lk = new object();
+  static int rate = 22050; static List<short> buf; static volatile bool cancel; static Action<short[], int> sink; static object lk = new object();
   static IntPtr U8(string s){ byte[] b = Encoding.UTF8.GetBytes(s ?? ""); IntPtr p = Marshal.AllocHGlobal(b.Length + 1); Marshal.Copy(b, 0, p, b.Length); Marshal.WriteByte(p, b.Length, 0); return p; }
   static string S8(IntPtr p){ if (p == IntPtr.Zero) return ""; int n = 0; while (Marshal.ReadByte(p, n) != 0 && n < 4096) n++; byte[] b = new byte[n]; Marshal.Copy(p, b, 0, n); return Encoding.UTF8.GetString(b); }
   static T D<T>(IntPtr h, string n){ IntPtr a = GetProcAddress(h, n); if (a == IntPtr.Zero) throw new Exception("нет " + n); return (T)(object)Marshal.GetDelegateForFunctionPointer(a, typeof(T)); }
@@ -233,30 +262,85 @@ public static class GraniEs {
   }
   static int OnWav(IntPtr wav, int n, IntPtr ev){
     if (cancel) return 1;
-    if (wav != IntPtr.Zero && n > 0 && buf != null) { var a = new short[n]; Marshal.Copy(wav, a, 0, n); buf.AddRange(a); }
+    if (wav != IntPtr.Zero && n > 0) {
+      var a = new short[n]; Marshal.Copy(wav, a, 0, n);
+      if (sink != null) { try { sink(a, rate); } catch (Exception) { } } else if (buf != null) buf.AddRange(a);
+    }
     return 0;
   }
   public static void Cancel(){ cancel = true; }
   // Сбой внутри чужой библиотеки (нарушение доступа) не роняет мост: движок
   // помечается неисправным, остальные голоса говорят дальше.
   [HandleProcessCorruptedStateExceptions, SecurityCritical]
-  public static short[] Synth(string voice, string text, int r, int vol, out int sr){
+  public static short[] Synth(string voice, string text, double r, int vol, Action<short[], int> snk, out int sr){
     sr = rate;
-    try { return SynthRaw(voice, text, r, vol, out sr); }
+    try { return SynthRaw(voice, text, r, vol, snk, out sr); }
     catch (Exception ex) { up = false; Voices = new List<V>(); Why = "сбой eSpeak: " + ex.GetType().Name; return null; }
   }
-  static short[] SynthRaw(string voice, string text, int r, int vol, out int sr){
+  static short[] SynthRaw(string voice, string text, double r, int vol, Action<short[], int> snk, out int sr){
     lock (lk) {
-      buf = new List<short>(); cancel = false; sr = rate;
+      buf = new List<short>(); sink = snk; cancel = false; sr = rate;
       if (!up) return null;
       IntPtr vn = U8(voice); try { fVoice(vn); } finally { Marshal.FreeHGlobal(vn); }
-      // Темп SAPI (−10…10) — в слова в минуту eSpeak (175 — обычный).
-      fParam(1, Math.Max(80, Math.Min(450, (int)Math.Round(175 * Math.Pow(3.0, r / 10.0)))), 0);
+      // Темп игры — в слова в минуту eSpeak (175 — обычный); выше 450 eSpeak NG
+      // ускоряет речь библиотекой Sonic.
+      fParam(1, Math.Max(80, Math.Min(1000, (int)Math.Round(175 * GraniRh.Tempo(r)))), 0);
       fParam(2, Math.Max(0, Math.Min(200, vol)), 0);
       byte[] b = Encoding.UTF8.GetBytes(text ?? ""); IntPtr t = U8(text);
       try { fSynth(t, new UIntPtr((uint)b.Length + 1), 0, 1, 0, 1, IntPtr.Zero, IntPtr.Zero); fSync(); }
       finally { Marshal.FreeHGlobal(t); }
-      short[] o = cancel ? null : buf.ToArray(); buf = null; return o;
+      short[] o = cancel ? null : buf.ToArray(); buf = null; sink = null; return o;
+    }
+  }
+}
+// ── Потоковый вывод звука (waveOut) ──
+// Куски речи RHVoice и eSpeak уходят в звуковую карту, как только готовы:
+// первый — через 40 мс звука, дальше — по 100 мс. Голос начинает говорить
+// почти сразу, а не после синтеза всей фразы.
+public sealed class GraniWave {
+  [StructLayout(LayoutKind.Sequential)] struct Wfx { public ushort tag, ch; public uint sr, bps; public ushort align, bits, cb; }
+  [StructLayout(LayoutKind.Sequential)] struct Hdr { public IntPtr data; public uint len, rec; public IntPtr user; public uint flags, loops; public IntPtr next, res; }
+  [DllImport("winmm.dll")] static extern int waveOutOpen(out IntPtr h, uint dev, ref Wfx f, IntPtr cb, IntPtr inst, uint fl);
+  [DllImport("winmm.dll")] static extern int waveOutPrepareHeader(IntPtr h, IntPtr hdr, uint sz);
+  [DllImport("winmm.dll")] static extern int waveOutUnprepareHeader(IntPtr h, IntPtr hdr, uint sz);
+  [DllImport("winmm.dll")] static extern int waveOutWrite(IntPtr h, IntPtr hdr, uint sz);
+  [DllImport("winmm.dll")] static extern int waveOutReset(IntPtr h);
+  [DllImport("winmm.dll")] static extern int waveOutClose(IntPtr h);
+  static readonly int HSZ = Marshal.SizeOf(typeof(Hdr));
+  static readonly int FOFF = (int)Marshal.OffsetOf(typeof(Hdr), "flags");
+  IntPtr h = IntPtr.Zero; int sr; bool closed = false, started = false;
+  List<IntPtr> hs = new List<IntPtr>(); List<short> acc = new List<short>(); object lk = new object();
+  public GraniWave(int rate){ sr = rate; }
+  public bool Open(){
+    try {
+      var f = new Wfx(); f.tag = 1; f.ch = 1; f.sr = (uint)sr; f.bits = 16; f.align = 2; f.bps = (uint)sr * 2; f.cb = 0;
+      return waveOutOpen(out h, 0xFFFFFFFF, ref f, IntPtr.Zero, IntPtr.Zero, 0) == 0;
+    } catch (Exception) { h = IntPtr.Zero; return false; }
+  }
+  public void Add(short[] a){ lock (lk) { if (closed) return; acc.AddRange(a); if (acc.Count >= (started ? sr / 10 : sr / 25)) Flush(); } }
+  void Flush(){
+    if (acc.Count == 0 || h == IntPtr.Zero) return;
+    short[] a = acc.ToArray(); acc.Clear();
+    IntPtr d = Marshal.AllocHGlobal(a.Length * 2); Marshal.Copy(a, 0, d, a.Length);
+    var x = new Hdr(); x.data = d; x.len = (uint)(a.Length * 2);
+    IntPtr hp = Marshal.AllocHGlobal(HSZ); Marshal.StructureToPtr(x, hp, false);
+    if (waveOutPrepareHeader(h, hp, (uint)HSZ) != 0) { Marshal.FreeHGlobal(d); Marshal.FreeHGlobal(hp); return; }
+    if (waveOutWrite(h, hp, (uint)HSZ) != 0) { waveOutUnprepareHeader(h, hp, (uint)HSZ); Marshal.FreeHGlobal(d); Marshal.FreeHGlobal(hp); return; }
+    hs.Add(hp); started = true; Reap(false);
+  }
+  void Reap(bool all){
+    for (int i = hs.Count - 1; i >= 0; i--) {
+      IntPtr hp = hs[i];
+      if (!all && (Marshal.ReadInt32(hp, FOFF) & 1) == 0) continue;
+      waveOutUnprepareHeader(h, hp, (uint)HSZ); Marshal.FreeHGlobal(Marshal.ReadIntPtr(hp, 0)); Marshal.FreeHGlobal(hp); hs.RemoveAt(i);
+    }
+  }
+  public void End(){ lock (lk) { if (!closed) Flush(); } }
+  public bool Busy(){ lock (lk) { if (closed) return false; Reap(false); return hs.Count > 0; } }
+  public void Close(){
+    lock (lk) {
+      if (closed) return; closed = true; acc.Clear();
+      if (h != IntPtr.Zero) { try { waveOutReset(h); Reap(true); waveOutClose(h); } catch (Exception) { } h = IntPtr.Zero; }
     }
   }
 }
@@ -267,23 +351,46 @@ public static class GraniSapi {
   static HashSet<string> platform = new HashSet<string>();
   static dynamic msp = null;
   static Dictionary<string, string> rhMap = new Dictionary<string, string>();
-  // Голос RHVoice звучит через SoundPlayer; конец фразы — по её длине.
-  static object rk = new object(); static System.Media.SoundPlayer rhPlayer = null; static volatile int rhGen = 0; static long rhEnd = long.MaxValue;
-  static short[] EngSynth(string key, string text, int rate, int vol, out int sr){
-    if (key.StartsWith("es:")) return GraniEs.Synth(key.Substring(3), text, rate, vol, out sr);
-    return GraniRh.Synth(key.Substring(3), text, rate, vol, out sr);
+  // Голос RHVoice и eSpeak звучит потоком (GraniWave): первые слова — через
+  // десятки миллисекунд после команды. Конец фразы — когда звуковая карта
+  // доиграла последний кусок. Если waveOut недоступен — запасной SoundPlayer
+  // с фразой целиком.
+  static object rk = new object(); static System.Media.SoundPlayer rhPlayer = null; static GraniWave rhWave = null;
+  static volatile int rhGen = 0; static long rhEnd = long.MaxValue;
+  static short[] EngSynth(string key, string text, double rate, int vol, Action<short[], int> snk, out int sr){
+    if (key.StartsWith("es:")) return GraniEs.Synth(key.Substring(3), text, rate, vol, snk, out sr);
+    return GraniRh.Synth(key.Substring(3), text, rate, vol, snk, out sr);
   }
-  static void RhPlayerStop(){ try { if (rhPlayer != null) rhPlayer.Stop(); } catch (Exception) { } rhPlayer = null; }
-  static void RhSpeak(string profile, string text, int rate, int vol){
+  static void RhPlayerStop(){
+    try { if (rhPlayer != null) rhPlayer.Stop(); } catch (Exception) { } rhPlayer = null;
+    if (rhWave != null) { rhWave.Close(); rhWave = null; }
+  }
+  static void RhSpeak(string profile, string text, double rate, int vol){
     int gen = ++rhGen; GraniRh.Cancel(); GraniEs.Cancel(); Interlocked.Exchange(ref rhEnd, long.MaxValue);
     var th = new Thread(() => {
+      GraniWave w = null; bool noWave = false; var rest = new List<short>(); int wsr = 0;
       try {
-        int sr; short[] s = EngSynth(profile, text, rate, vol, out sr);
+        Action<short[], int> snk = (a, r) => {
+          if (gen != rhGen) return;
+          if (w == null && !noWave) {
+            var nw = new GraniWave(r);
+            if (!nw.Open()) noWave = true;
+            else lock (rk) { if (gen != rhGen) { nw.Close(); return; } RhPlayerStop(); rhWave = nw; w = nw; }
+          }
+          if (w != null) w.Add(a); else { rest.AddRange(a); wsr = r; }
+        };
+        int sr; short[] s = EngSynth(profile, text, rate, vol, snk, out sr);
         if (gen != rhGen) return;
-        if (s == null || s.Length == 0) { Interlocked.Exchange(ref rhEnd, DateTime.UtcNow.Ticks); return; }
-        var pl = new System.Media.SoundPlayer(new MemoryStream(GraniRh.Wav(s, sr)));
+        if (w != null) {
+          w.End();
+          while (gen == rhGen && w.Busy()) Thread.Sleep(15);
+          if (gen == rhGen) Interlocked.Exchange(ref rhEnd, DateTime.UtcNow.Ticks);
+          return;
+        }
+        if (rest.Count == 0) { Interlocked.Exchange(ref rhEnd, DateTime.UtcNow.Ticks); return; }
+        var pl = new System.Media.SoundPlayer(new MemoryStream(GraniRh.Wav(rest.ToArray(), wsr > 0 ? wsr : sr)));
         lock (rk) { if (gen != rhGen) return; RhPlayerStop(); rhPlayer = pl; pl.Load(); pl.Play(); }
-        Interlocked.Exchange(ref rhEnd, DateTime.UtcNow.Ticks + (long)(s.Length * 10000000.0 / sr) + 1500000);
+        Interlocked.Exchange(ref rhEnd, DateTime.UtcNow.Ticks + (long)(rest.Count * 10000000.0 / (wsr > 0 ? wsr : sr)) + 1500000);
       } catch (Exception) { Interlocked.Exchange(ref rhEnd, DateTime.UtcNow.Ticks); }
     });
     th.IsBackground = true; th.Start();
@@ -414,12 +521,19 @@ public static class GraniSapi {
             else if (msp != null && platform.Contains(p[1])) { msp.SelectVoice(p[1]); onPlatform = true; sr = null; rh = null; }
           }
           else if (p[0] == "speak" && p.Length > 4) {
-            int rate = Math.Max(-10, Math.Min(10, int.Parse(p[2]))), vol = Math.Max(0, Math.Min(100, int.Parse(p[3])));
+            // Темп приходит в шкале игры (единица — обычный, 5 — впятеро по шкале
+            // Web Speech); голоса SAPI получают его в своей шкале (−10…10), RHVoice
+            // и eSpeak — настоящим множителем. Громкость — до 200 (выше обычной
+            // умеют только RHVoice и eSpeak).
+            double tempo = 1; double.TryParse(p[2], NumberStyles.Float, CultureInfo.InvariantCulture, out tempo);
+            tempo = Math.Max(0.1, Math.Min(10, tempo));
+            int rate = (int)Math.Round(Math.Max(-10, Math.Min(10, 10 * Math.Log(tempo) / Math.Log(3))));
+            int vol2 = Math.Max(0, Math.Min(200, int.Parse(p[3]))), vol = Math.Min(100, vol2);
             if (rh != null) {
               // RHVoice без NVDA: прежняя фраза снимается, новая считается и звучит.
               try { v.Speak("", 1 | 2); } catch (Exception) { }
               if (msp != null) { try { msp.SpeakAsyncCancelAll(); } catch (Exception) { } }
-              prompt = null; RhSpeak(rh, p[4], rate, vol); cur = p[1];
+              prompt = null; RhSpeak(rh, p[4], tempo, vol2); cur = p[1];
             }
             else if (sr != null) {
               RhStop();
@@ -451,7 +565,7 @@ public static class GraniSapi {
           else if (p[0] == "wav" && p.Length > 3) {
             object t;
             if (rhMap.ContainsKey(p[2])) {
-              int srate; short[] snd = EngSynth(rhMap[p[2]], p[3], 0, 100, out srate);
+              int srate; short[] snd = EngSynth(rhMap[p[2]], p[3], 0, 100, null, out srate);
               if (snd == null || snd.Length == 0) throw new Exception("движок молчит");
               File.WriteAllBytes(p[1], GraniRh.Wav(snd, srate)); Say("wav ok");
             }
@@ -704,14 +818,15 @@ class Sapi {
     return this.ready;
   }
   proc(name) { return this.owner.get(name || this.cur) || this.procs[0]; }
-  // Темп игры (шкала Web Speech: единица — обычный) — в шкалу SAPI (−10…10)
-  // так же, как это делает Chromium: десять у SAPI — втрое быстрее обычного.
-  static rate(r) { r = Number(r) || 1; return Math.round(Math.max(-10, Math.min(10, 10 * Math.log(r) / Math.log(3)))); }
+  // Темп игры (шкала Web Speech: единица — обычный) уходит мосту как есть;
+  // мост сам переводит его в шкалу SAPI (−10…10, как Chromium: десять — втрое
+  // быстрее обычного), а RHVoice и eSpeak — в тот же темп, что у записей Gemini.
+  static rate(r) { r = Number(r) || 1; return Math.max(0.1, Math.min(10, r)).toFixed(2); }
   speak(text, rate, volume, id) {
     this.speaking.clear(); this.speaking.add(String(id));
     const p = this.proc();
     this.procs.forEach(o => { if (o !== p) o.send('stop'); });
-    p.send('speak', id, Sapi.rate(rate), Math.round(Math.max(0, Math.min(1, volume >= 0 ? volume : 1)) * 100), text);
+    p.send('speak', id, Sapi.rate(rate), Math.round(Math.max(0, Math.min(2, volume >= 0 ? volume : 1)) * 100), text);
   }
   stop() { this.speaking.clear(); this.procs.forEach(p => p.send('stop')); }
   setVoice(name) { if (!this.owner.has(name)) return; this.cur = name; this.proc(name).send('voice', name); }

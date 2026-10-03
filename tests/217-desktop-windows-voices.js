@@ -81,8 +81,9 @@ const скажи=`new Promise(res=>{const a=Speech._adapter();if(!a)return res({
  const preload=fs.readFileSync(path.join(__dirname,'..','desktop','preload.js'),'utf8');
  const main=fs.readFileSync(path.join(__dirname,'..','desktop','main.js'),'utf8');
  const sapi=fs.readFileSync(path.join(__dirname,'..','desktop','sapi.js'),'utf8');
+ /* 9.5: темп уходит мосту множителем, шкалу SAPI (как у Chromium) считает сам мост. */
  check('5. темп в шкалу SAPI как у Chromium; мост — только если голоса Windows ответили; голоса Windows 10/11 перечисляются',
-  JSON.stringify(темп)==="[-6,0,4,10,10]"&&/if \(tts\.ready\)/.test(preload)&&/GraniTTSDone/.test(main)&&/Speech_OneCore/.test(sapi),{темп});
+  JSON.stringify(темп)==='["0.50","1.00","1.50","3.00","5.00"]'&&/10 \* Math\.Log\(tempo\) \/ Math\.Log\(3\)/.test(sapi)&&/if \(tts\.ready\)/.test(preload)&&/GraniTTSDone/.test(main)&&/Speech_OneCore/.test(sapi),{темп});
 
  check('Ошибок страницы нет',errors.length===0,errors.slice(0,3));
  await browser.close();

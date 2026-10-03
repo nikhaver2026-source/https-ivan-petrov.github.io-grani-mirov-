@@ -25,7 +25,7 @@
      GitHub Pages. Там же включается и service worker (см. ниже): игра ставится
      на главный экран и работает без сети. -->
 <meta name="theme-color" content="#10121c">
-<title>Грань Миров. Версия 9.0</title>
+<title>Грань Миров. Версия 9.5</title>
 <style>
 /* Палец, положенный на ползунок, не должен его двигать: браузер по умолчанию
    перебрасывает бегунок в точку касания, и незрячий игрок, просто читая
@@ -106,7 +106,7 @@ h3{color:var(--acc2);margin:14px 0 6px;font-size:1.05rem;}
 
 <!-- ТИТУЛ -->
 <div id="screen-title" class="screen">
- <h1>Грань Миров <small id="gameVersion" style="font-size:.5em;opacity:.75">Версия 9.0</small></h1>
+ <h1>Грань Миров <small id="gameVersion" style="font-size:.5em;opacity:.75">Версия 9.5</small></h1>
  <div class="menu">
   <button type="button" data-cmd="check">Проверить звук</button>
   <button type="button" data-cmd="whatsnew">Что нового</button>
@@ -213,6 +213,10 @@ h3{color:var(--acc2);margin:14px 0 6px;font-size:1.05rem;}
  <div class="row" data-eng="device"><button type="button" id="btnVoiceList" data-cmd="voicelist">Все голоса телефона — списком</button><button type="button" id="btnVoiceRefresh">Перечитать голоса устройства</button></div>
  <label class="opt">Скорость озвучки <input type="range" id="setRate" min="0.6" max="6" step="0.2" data-tap-step="0.2" value="5"><span id="vRate">5.0×</span></label>
  <p class="hint">Шкала от 0,6 до 6,0 шагом в две десятых, по умолчанию пять. Ползунок отвечает тем самым темпом, который выбран: «Раз, два, три» — это проба, а не подсказка. Дойдя до шести, шкала возвращается к началу, так что до медленного темпа добираться недалеко.</p>
+ <label class="opt">Скорость синтезатора <input type="range" id="setSynthRate" min="1" max="7" step="0.5" data-tap-step="0.5" value="5"><span id="vSynthRate">5.0×</span></label>
+ <p class="hint">Темп того, что договаривает синтезатор: незаписанные фразы, числа, имена, — и всей речи, если выбран голос устройства. От 1,0 до 7,0; при одном и том же числе синтезатор и записи Gemini звучат одним темпом.</p>
+ <label class="opt">Громкость синтезатора <input type="range" id="setSynthVol" min="10" max="200" step="10" data-tap-step="10" value="100"><span id="vSynthVol">100%</span></label>
+ <p class="hint">Чтобы синтезатор звучал вровень с записями Gemini. Выше 100 % умеют RHVoice и eSpeak в приложении для Windows; остальные синтезаторы останавливаются на своей полной громкости.</p>
  <label class="opt">Высота голоса <input type="range" id="setPitch" min="50" max="200" step="5" data-tap-step="5" value="100"><span id="vPitch">1,0</span></label>
  <p class="hint">От 0,5 до 2,0. Единица — как задумано голосом; ниже — глуше, выше — звонче. Не всякий синтезатор слушается высоты: голоса Apple слушаются, часть андроидных — нет.</p>
  <div class="row"><button type="button" id="btnSpeechSample">Тест озвучки</button></div>
@@ -1231,9 +1235,9 @@ SVD.weapons=[
  {id:"svw_perer",n:"Меч Перерождённого",type:"Меч",k:1.0,эфф:"отчаяние",о:"когда здоровья меньше трети, удар крепче на пять"},
  {id:"svw_slepok",n:"Посох Слепков",type:"Посох",k:0.9,эфф:"слепок",о:"с каждой твари Сводов — лишняя сущность"},
  {id:"svw_toplat",n:"Посох Топлых Латников",type:"Посох",k:1.05,эфф:"пробой",о:"пробивает хитин и латы: умение «панцирь» не спасает"}];
-const WEB_VERSION="9.0",APP_VERSION="9.0";
+const WEB_VERSION="9.5",APP_VERSION="9.5";
 /* У сборки для Android своя строка версии (versionName в build.gradle); с 8.0 все три сборки — 8.0. */
-const ANDROID_VERSION="9.0";
+const ANDROID_VERSION="9.5";
 const GAME_VERSION=SVODY_ON?ANDROID_VERSION:IN_APP?APP_VERSION:WEB_VERSION;
 const GVOICE_ON=true;
 /* Номер голосового пакета: растёт, когда пакет пополнился (обходит кэш). */
@@ -1288,7 +1292,14 @@ const settings=Object.assign({speech:1,effects:1,music:1,subtitles:1,explore:1,h
     минутами. Привычный рабочий темп чтеца экрана у незрячих — впятеро
     быстрее обычной речи; столько же теперь и здесь. Шкала прежняя, от
     0,6 до 6,0: кому пять быстро, ставит своё, и это запоминается. */
- rate:5,voiceVol:1,fxVol:1,musicVol:1,ambVol:0.8,uiVol:0.9,
+ rate:5,
+ /* ── СКОРОСТЬ И ГРОМКОСТЬ СИНТЕЗАТОРА (9.5) ──
+    Пока голосом Gemini записано не всё, незаписанное договаривает
+    синтезатор — и рядом с быстрыми записями он звучал медленно и тише.
+    Свой темп от 1 до 7 (на Windows RHVoice и eSpeak говорят тем же темпом,
+    что записи Gemini при том же числе) и своя громкость, до 200 %. */
+ synthRate:5,synthVol:1,
+ voiceVol:1,fxVol:1,musicVol:1,ambVol:0.8,uiVol:0.9,
  /* ── СИНТЕЗАТОР ──
     ttsEngine — чем говорить: «gemini» (записи голоса Gemini, остальное —
     синтезатор устройства; по умолчанию с 3.9), «device» (то, что стоит на
@@ -1522,6 +1533,11 @@ NEWS.push({v:41,н:"версия 9.0: пролог голосами и оруж�
   т:"Пролог читают живые голоса: рассказчик и шесть персонажей. Оружие звучит по качеству, у каждого рода свой звук. Сделанное ремеслом ложится в свой раздел: копьё — в оружие, отвар — в зелья. Новые фразы озвучены."});
 NEWS.push({v:42,н:"версия 9.0: голоса компьютера без NVDA",
   т:"Приложение для Windows само находит RHVoice из дополнения NVDA и eSpeak NG — без NVDA. Голосов Microsoft в выборе нет, пока есть другие. Полная сборка не просит ставить голосовой пакет: он уже внутри."});
+/* 9.5: быстрый синтезатор, свои ползунки, списки стрелками, новый кинжал. */
+NEWS.push({v:43,н:"версия 9.5: быстрый синтезатор и новый кинжал",
+  т:"Синтезатор: свой темп до семи и своя громкость. RHVoice и eSpeak говорят сразу. Списки — стрелками вправо и влево, Enter раскрывает. Обозник договаривает до слов игры. Новый кинжал. Только полные сборки."});
+NEWS.push({v:44,н:"версия 9.5: припас у своего объекта и «Самоучка»",
+  т:"У каждого объекта — свои действия: у жаровни грибы жарят, в чане варят, у горна руду плавят. Нельзя — игра скажет почему. Без учения — «Самоучка», пять рангов. Сделанное даёт своё."});
 const NEWS_V=NEWS[NEWS.length-1].v;
 /* (8.5) Выпуск читается коротко: заголовок, затем факты. */
 function newsLine(n){const н=String(n.н||"");return `${н.charAt(0).toUpperCase()+н.slice(1)}. ${n.т||""}`;}
@@ -2127,6 +2143,12 @@ const Speech={voice:null,keepAlive:null,
     выше — быстрее, но вдвое мягче, чем у синтезатора: запись, ускоренная
     втрое с лишним, начинает звенеть. */
  gvTempo(r){r=+r||1;const t=r<=1?r:1+(r-1)*0.45;return Math.max(0.6,Math.min(3.5,t));},
+ /* Темп и громкость синтезатора — свои ползунки (9.5). */
+ synthRate(){const v=+settings.synthRate;return isFinite(v)&&v>0?Math.max(1,Math.min(7,v)):Math.max(1,Math.min(7,+settings.rate||5));},
+ synthVol(){const v=+settings.synthVol;return isFinite(v)&&v>0?Math.max(0.1,Math.min(2,v)):1;},
+ synthVolume(base){const b=isFinite(+base)?+base:1;return Math.max(0,Math.min(2,b*this.synthVol()));},
+ synthSample(text){const a=this._deviceAdapter();if(!a)return false;
+  try{return a.speak(String(text),{rate:this.synthRate(),volume:this.synthVolume(+settings.voiceVol),onstart(){},onend(){},onerror(){}});}catch(_){return false;}},
  /* Синтезатор устройства — для незаписанного: тот же выбор, что у «device». */
  _deviceAdapter(){
   const свойВеб=!!(this.voice&&settings.voice&&this.voiceKey(this.voice)===settings.voice&&"speechSynthesis" in window);
@@ -2203,7 +2225,7 @@ const Speech={voice:null,keepAlive:null,
     const голосом=(t,i)=>{
      if(!запас){шаг(i+1);return;}
      старт();
-     const ok=запас.speak(t,{rate:o.rate,volume:o.volume,onstart(){},
+     const ok=запас.speak(t,{rate:self.synthRate(),volume:self.synthVolume(o.volume),onstart(){},
       onend(){if(мой===ток)шаг(i+1);},onerror(){if(мой===ток)шаг(i+1);}});
      if(!ok)шаг(i+1);};
     шаг=i=>{
@@ -2255,7 +2277,7 @@ const Speech={voice:null,keepAlive:null,
        фразы, и конец фразы не приходит никогда. */
     self._utt=u;
     if(self.voice){u.voice=self.voice;u.lang=self.voice.lang;}else u.lang="ru-RU";
-    u.rate=+o.rate;u.volume=+o.volume;
+    u.rate=Math.max(0.1,Math.min(10,+o.rate||1));u.volume=Math.max(0,Math.min(1,+o.volume));
     u.pitch=Math.max(0.5,Math.min(2,+settings.pitch||1));
     u.onstart=()=>{if(o.onstart)o.onstart();};u.onend=()=>{if(o.onend)o.onend();};u.onerror=()=>{if(o.onerror)o.onerror();};
     /* Тридцать миллисекунд задержки стояли на каждом куске ради одного
@@ -2438,7 +2460,13 @@ const Speech={voice:null,keepAlive:null,
    if(Intro.playing){
     if(!m.user&&!m.nav){const к=now+400;рано=рано?Math.min(рано,к):к;continue;}
     Intro.stop();}
-   const голоса=safeFn(()=>typeof Folk!=="undefined"?Math.max(Folk.занятоДо,Folk.звучитДо):0,0)||0;
+   let голоса=safeFn(()=>typeof Folk!=="undefined"?Math.max(Folk.занятоДо,Folk.звучитДо):0,0)||0;
+   /* запись жителя ещё грузится или доигрывает дольше расчёта — ждём её саму
+      (не дольше 12 с от начала ожидания, чтобы застрявший проигрыватель не
+      держал речь вечно) */
+   if(!m.user&&!m.nav&&m.pri>=1&&safeFn(()=>Folk.звучитЛи(),false)){
+    if(!m.ждётЖителя)m.ждётЖителя=now;
+    if(now-m.ждётЖителя<12000)голоса=Math.max(голоса,now+200);}
    if(голоса>now){
     if(!m.user&&!m.nav&&m.pri>=1){const к=голоса+280;рано=рано?Math.min(рано,к):к;continue;}
     safeFn(()=>Folk.смолкнуть(true));}
@@ -2468,7 +2496,8 @@ const Speech={voice:null,keepAlive:null,
   let закрыт=false;
   const дальше=()=>{if(закрыт)return;закрыт=true;this._stopWatch();
    if(gen!==this.gen||this.current!==m)return;this._part(m,i+1);};
-  const ok=a&&a.speak(m.parts[i],{rate:+settings.rate||1,volume:+settings.voiceVol,
+  const синтез=a&&a.name!=="gemini";
+  const ok=a&&a.speak(m.parts[i],{rate:синтез?this.synthRate():+settings.rate||1,volume:синтез?this.synthVolume(+settings.voiceVol):+settings.voiceVol,
    onstart:()=>{if(gen!==this.gen||this.current!==m)return;m.state="SPEAKING";this._keepAlive();},
    onend:дальше,
    onerror:()=>{if(закрыт)return;закрыт=true;this._stopWatch();
@@ -8323,6 +8352,8 @@ const GUIDE_SRC=[
  "ДЕВЯТЬ РОДОВ ЗНАНИЯ. Прочитанная страница даёт не «знание вообще», а одно из девяти: рецепт, заклинание, специализацию, историческое знание, координаты, дело, тайну, ремесленную технологию или часть карты. Что именно — решает класс книги, а не жребий.",
  "ВОСЕМЬ КЛАССОВ. Обычная книга, редкий трактат, запрещённая книга, дневник, свод карт, рукопись, учебник, древний манускрипт. Класс — не переплёт: переплёт говорит, как книга сделана, а класс — что она такое и что может открыть. У каждого класса свой голос настоящей записью и своя цена.",
  "КЛАСС ВЫВОДИТСЯ ИЗ МЕСТА. Наверху чаще попадаются обычные книги и учебники, у дна — рукописи и древние манускрипты, запретное лежит там, где его прячут. Одна и та же страница всегда даёт один и тот же класс: книга не меняется от того, что вы к ней вернулись.",
+ "ПРИПАС У СВОЕГО ОБЪЕКТА. Встаньте рядом с объектом и откройте действия с припасом в котомке: у каждого объекта свой список. У жаровни грибы жарят и вялят, в чане варят похлёбку, у горна плавят руду, на точиле правят клинок, у ткацкого стана ткут холст. Чего здесь не сделать, игра скажет: почему и где это применяют. Сделанное даёт своё: еда — свой отклик, материал идёт в следующую работу.",
+ "САМОУЧКА. Работа без учения ремесла — достижение «Самоучка»: пять рангов, с каждым рука без учения срывается реже. Десять работ самоучкой в одном ремесле открывают его на ступени ученика. Ранг и счёт — в окне «Достижения и хозяйство».",
  "КАЖДЫЙ РОД ДЕЛАЕТ НАСТОЯЩЕЕ. Рецепт ложится в руки, и вещь можно собрать. Специализация открывается целиком: её чары выписываются из гримуара без кристалла, потому что вы и так знаете, как их писать. Координаты называют настоящее место числами и кладут его в молву — туда можно дойти. Дело ложится в журнал с целью и наградой. Тайна открывает тайную бумагу двух держав, и она становится видна в политике. Технология открывает технику у станка на ступень раньше, чем дал бы урок. Часть карты кладёт в молву сразу несколько мест области.",
  "ЗАПРЕТНОЕ ЧТЕНИЕ. Запрещённая книга даёт больше прочих — тайну или чару, — но держава ставит её чтение вам в вину: доброе имя у державы падает. Это цена, а не украшение.",
  "ГДЕ СЛУШАТЬ. Книга под ногами и книга с полки называют свой класс и то, что открывают, до того, как вы их прочтёте. На прилавке у торговца класс входит в цену."]},
@@ -8639,6 +8670,7 @@ const GUIDE_SRC=[
  "СБОР. F — только собрать ресурс под ногами: руду, травы, дерево, камень, кристаллы. Где собирать нечего, игра так и скажет — для торговца и станков есть клавиша действия.",
  "МИР. R — вынуть или убрать оружие. Q — выпить зелье здоровья. V — осмотреться: список объектов вокруг и выбор цели маяка. N — что рядом. G — где я. H — состояние героя. B — погасить маяк цели. Цифры 1–9, 0, минус и равно — заклинания слотов с первого по двенадцатый.",
  "ОКНА. I или Alt+E — инвентарь. Tab — карта места (по клеткам ходят стрелками, Enter называет клетку). J — журнал. L — список дел. C — окно героя. K — ремесло. X — панель магии. M — меню действий. O — меню мира. T — досье державы. Y — вести мира. U — вести о вас. P — политика. F1 — руководство. Shift+F1 (или Shift+слэш) — все клавиши. F2 — настройки. F3 — энциклопедия заклинаний. F4 — бестиарий. F6 — сохранения.",
+ "СПИСКИ И ПОЛЗУНКИ В ОКНАХ. Ползунок — стрелками вправо и влево. Список (синтезатор, голос, подробность речи и другие) стрелками вправо и влево сразу перебирается; Enter раскрывает его: вверх и вниз — выбор, Enter — выбрать, Escape — закрыть, ничего не меняя.",
  "В ОКНЕ. Стрелки — пункты; Enter или пробел — выбрать; Esc или Backspace — назад; Home и End — первый и последний пункт; Page Up и Page Down — разделы. Клавиша другого окна закрывает текущее и открывает своё; клавиша того же окна его закрывает.",
  "БОЙ. Пока идёт бой, боевые клавиши перекрывают мирные: пробел — удар оружием, F — удар чарами, T — где тварь и сколько у неё сил, H — моё здоровье и мана, Backspace или Esc — бежать из боя. Быстрые слоты в бою — Shift со стрелками: Shift+стрелка вверх и Shift+стрелка вниз — раздел (зелья, свитки, прочее), Shift+стрелка вправо и Shift+стрелка влево — слот в разделе, правый Ctrl — применить (в настройках клавиатуры можно выбрать левый или любой Ctrl). В разделе сперва то, что вы сами поставили в слоты быстрого доступа, затем всё остальное этого рода при себе. Просто стрелки в бою бьют в свою сторону, пока оружие вынуто. Alt+1, Alt+2, Alt+3, Alt+4, Alt+5, Alt+6, Alt+7, Alt+8, Alt+9, Alt+0, Alt+минус и Alt+равно — сразу слоты быстрого доступа с первого по двенадцатый (вещь ставится в слот из инвентаря, «В слот быстрого доступа»); Q — выпить зелье, в бою и вне боя. Бой тихий: игра не называет взмахи и удары, слышно тварь; здоровье — H. W, A, S, D — шаг по полю схватки обычным шагом: отойти, уйти из-под удара, догнать. С вынутым оружием стрелки бьют в свою сторону; Shift со стрелкой — быстрые слоты. Сторону твари голос по умолчанию не называет — её слышно по шагам, замаху и голосу; назвать её можно включить в настройках: «В бою называть сторону твари».",
  "ПОЛЗУНКИ. В настройках стрелки вверх и вниз ходят по пунктам; на ползунке громкости, скорости или высоты голоса стрелки вправо и влево двигают его — новое значение слышно сразу, сохраняете потом.",
@@ -13911,7 +13943,7 @@ const SOUND_BANK={
  blade_flesh:{f:["blade/blade_flesh_01.flac","blade/blade_flesh_02.flac","blade/blade_flesh_03.flac","blade/blade_flesh_04.flac","blade/blade_flesh_05.flac","blade/blade_flesh_06.flac","blade/blade_flesh_07.flac","blade/blade_flesh_08.flac"],d:"Клинок рассекает плоть: режущий удар (Freesound) и вход клинка со звоном стали (0 A.D.)"},
  blade_armor:{f:["blade/blade_armor_01.flac","blade/blade_armor_02.flac","blade/blade_armor_03.flac","blade/blade_armor_04.flac","blade/blade_armor_05.flac","blade/blade_armor_06.flac","blade/blade_armor_07.flac","blade/blade_armor_08.flac"],d:"Клинок бьёт по броне: звон стали о сталь"},
  blade_clash:{f:["blade/blade_clash_01.flac","blade/blade_clash_02.flac","blade/blade_clash_03.flac","blade/blade_clash_04.flac","blade/blade_clash_05.flac","blade/blade_clash_06.flac"],d:"Клинок о клинок: парирование с долгим звоном"},
- blade_dagger:{f:["blade/dagger_stab_01.flac","blade/dagger_stab_02.flac","blade/dagger_stab_03.flac","blade/dagger_stab_04.flac","blade/dagger_stab_05.flac","blade/dagger_stab_06.flac","blade/dagger_stab_07.flac","blade/dagger_stab_08.flac"],d:"Кинжал: короткий укол и рез"},
+ blade_dagger:{f:["blade/dagger_stab_01.flac","blade/dagger_stab_02.flac","blade/dagger_stab_03.flac","blade/dagger_stab_04.flac","blade/dagger_stab_05.flac","blade/dagger_stab_06.flac"],d:"Кинжал: сочный рез и звонкий отклик стали (9.5: Vehicle, JC Sounds; без потерь)"},
  blade_spear:{f:["blade/spear_thrust_01.flac","blade/spear_thrust_02.flac","blade/spear_thrust_03.flac","blade/spear_thrust_04.flac","blade/spear_thrust_05.flac","blade/spear_thrust_06.flac"],d:"Копьё: вход наконечника и выпад"},
  blade_axe:{f:["blade/axe_chop_01.flac","blade/axe_chop_02.flac","blade/axe_chop_03.flac","blade/axe_chop_04.flac","blade/axe_chop_05.flac","blade/axe_chop_06.flac"],d:"Топор: тяжёлая рубка с хрустом"},
  blade_shield_metal:{f:["blade/shield_metal_01.flac","blade/shield_metal_02.flac","blade/shield_metal_03.flac","blade/shield_metal_04.flac","blade/shield_metal_05.flac","blade/shield_metal_06.flac"],d:"Щит с железной оковкой принял удар"},
@@ -13933,8 +13965,10 @@ const SOUND_BANK={
  w_sword_draw_t4:{f:["weapons/sword_draw_t4_01.flac", "weapons/sword_draw_t4_02.flac"],d:"Меч выходит из ножен: легендарное оружие (Still North Media, Vehicle, JC Sounds; без потерь, 48 кГц)"},
  w_sword_sheathe_t0:{f:["weapons/sword_sheathe_t0_01.flac", "weapons/sword_sheathe_t0_02.flac", "weapons/sword_sheathe_t0_03.flac", "weapons/sword_sheathe_t0_04.flac", "weapons/sword_sheathe_t0_05.flac"],d:"Меч ложится в ножны: грубое оружие (Still North Media, Vehicle, JC Sounds; без потерь, 48 кГц)"},
  w_sword_sheathe_t2:{f:["weapons/sword_sheathe_t2_01.flac", "weapons/sword_sheathe_t2_02.flac", "weapons/sword_sheathe_t2_03.flac"],d:"Меч ложится в ножны: добротное оружие (Still North Media, Vehicle, JC Sounds; без потерь, 48 кГц)"},
+ w_dagger_swing_t0:{f:["weapons/dagger_swing_t0_01.flac","weapons/dagger_swing_t0_02.flac","weapons/dagger_swing_t0_03.flac"],d:"Взмах грубого кинжала: глухо (Still North Media, CC0; без потерь)"},
  w_dagger_swing_t1:{f:["weapons/dagger_swing_t1_01.flac", "weapons/dagger_swing_t1_02.flac", "weapons/dagger_swing_t1_03.flac", "weapons/dagger_swing_t1_04.flac", "weapons/dagger_swing_t1_05.flac", "weapons/dagger_swing_t1_06.flac"],d:"Взмах кинжала: простое оружие (Still North Media, Vehicle, JC Sounds; без потерь, 48 кГц)"},
  w_dagger_swing_t3:{f:["weapons/dagger_swing_t3_01.flac", "weapons/dagger_swing_t3_02.flac", "weapons/dagger_swing_t3_03.flac"],d:"Взмах кинжала: редкое оружие (Still North Media, Vehicle, JC Sounds; без потерь, 48 кГц)"},
+ w_dagger_draw_t0:{f:["weapons/dagger_draw_t0_01.flac","weapons/dagger_draw_t0_02.flac"],d:"Сакс выходит из ножен: простое оружие (Vehicle, CC0; без потерь)"},
  w_dagger_draw_t2:{f:["weapons/dagger_draw_t2_01.flac", "weapons/dagger_draw_t2_02.flac", "weapons/dagger_draw_t2_03.flac"],d:"Кинжал выходит из ножен: добротное оружие (Still North Media, Vehicle, JC Sounds; без потерь, 48 кГц)"},
  w_dagger_sheathe_t0:{f:["weapons/dagger_sheathe_t0_01.flac", "weapons/dagger_sheathe_t0_02.flac"],d:"Кинжал ложится в ножны: грубое оружие (Still North Media, Vehicle, JC Sounds; без потерь, 48 кГц)"},
  w_dagger_sheathe_t2:{f:["weapons/dagger_sheathe_t2_01.flac", "weapons/dagger_sheathe_t2_02.flac", "weapons/dagger_sheathe_t2_03.flac"],d:"Кинжал ложится в ножны: добротное оружие (Still North Media, Vehicle, JC Sounds; без потерь, 48 кГц)"},
@@ -19852,6 +19886,23 @@ const Folk={
  послеВсех(){const d=Math.max(this.занятоДо,this.звучитДо)-Date.now();return d>0?d+this.ПАУЗА:0;},
  /* Говорит ли сейчас голос игры. Житель не начинает поверх него. */
  речь(){try{return !!(Speech.speaking&&Speech.current);}catch(_){return false;}},
+ /* ── ЖИТЕЛЬ ЕЩЁ ГОВОРИТ? — ПО САМОМУ ПРОИГРЫВАТЕЛЮ (9.5) ──
+    Жалоба игрока: голос Gemini перебивал обозника и торговца — «Куплено у
+    обоза…» звучало поверх его слов. Очередь знала только расчётную длину
+    записи от мига, когда реплика встала в очередь; а запись из голосового
+    пакета на телефоне и компьютере начинает звучать с задержкой загрузки —
+    и голос игры стартовал, пока житель ещё говорил. Теперь голос игры ждёт,
+    пока запись жителя (не фоновая) действительно доиграет или будет
+    остановлена; голос из фона — уличная реплика — не держит. */
+ звучитЛи(){
+  try{
+   const фон=src=>{const s2=String(src||"");for(const f of this.фонПути)if(s2.endsWith(f))return true;return false;};
+   const жителя=/voice\/(race|prof|say|hero)_|voice_npc\/|voice_npc_pack\/|gvoice_npc\/|gvoice_pack\/npc\//;
+   const идёт=el=>!!el&&!el.ended&&!el.__stopped&&!(el.paused&&el.currentTime>0)&&жителя.test(el.src||"")&&!фон(el.src);
+   if((Spatial.live||[]).some(r=>r&&r.voice&&!r.done&&идёт(r.el)))return true;
+   if((Bank.shots||[]).some(el=>el&&el.__voice&&идёт(el)))return true;
+  }catch(_){}
+  return false;},
  /* Сколько звучит общее слово этого жителя (ответ в разговоре). */
  длинаОбщего(n,ключ){const г=this.голос(n);return this.длина(this.общееФайл(n,ключ),(г?г[1]:1)*this.тембр(n));},
  /* Житель смолкает: реплика героя обрывает его недоговорённое и снимает
@@ -29005,11 +29056,28 @@ function techsLocked(станок){
 /* Работа у станка. */
 function techDo(t,станок){
  if(!t)return false;
- if(mastLevel(t.маст)<t.ур){
-  narrate(`${t.n}: не выходит. Нужно мастерство «${MAST_BY_ID[t.маст].n}» ступени ${t.ур} — ${MAST_RANK[t.ур]}.`);
+ /* (9.5) Самоучка: первая работа ремесла выходит и без учения — с риском
+    выше обычного; каждая такая попытка идёт в зачёт «Самоучки». */
+ const сам=mastLevel(t.маст)<t.ур&&selfTaughtTech(t);
+ if(mastLevel(t.маст)<t.ур&&!сам){
+  narrate(`${t.n}: не выходит. Нужно мастерство «${MAST_BY_ID[t.маст].n}» ступени ${t.ур} — ${MAST_RANK[t.ур]}.${mastLevel(t.маст)===0?" Без учения, самоучкой, выходит только первая работа ремесла.":""}`);
   return false;}
  const нет=techLacks(t);
  if(нет.length){narrate(`${t.n}: не из чего. Не хватает: ${нет.join(", ")}.`);return false;}
+ if(сам){
+  for(const k in (t.берёт||{})){G.inv[k]=(Number(G.inv[k])||0)-t.берёт[k];if(G.inv[k]<=0)delete G.inv[k];}
+  safeFn(()=>{Bank.play(t.звук,{seed:(Number(G.day)||1)+(Number(G.hour)||0),gain:0.65,maxSec:6});
+   if(t.след)setTimeout(()=>safeFn(()=>Bank.play(t.след,{gain:0.55,maxSec:5})),420);});
+  safeFn(()=>propTime((t.время||0.5)*1.5));
+  const вышло=Math.random()>=selfTaughtRisk(Math.min(0.85,techRisk(t)+0.15));
+  if(вышло)for(const k in (t.даёт||{}))G.inv[k]=(Number(G.inv[k])||0)+t.даёт[k];
+  else safeFn(()=>Bank.play("stk_break",{gain:0.6,maxSec:4}));
+  narrate(вышло
+   ?`${t.n} — самоучкой, без единого урока: вышло. ${Object.entries(t.даёт||{}).map(([k,v])=>`${k} ×${v}`).join(", ")}.`
+   :`${t.n} — самоучкой: не вышло. ${techFailWord(t)} Припас ушёл впустую, но рука запомнила.`);
+  safeFn(()=>selfTaughtGain(t.маст,t.n));
+  safeFn(()=>{refresh();saveGame(true);});
+  return true;}
  safeFn(()=>{Bank.play(t.звук,{seed:(Number(G.day)||1)+(Number(G.hour)||0),gain:0.65,maxSec:6});
   if(t.след)setTimeout(()=>safeFn(()=>Bank.play(t.след,{gain:0.55,maxSec:5})),420);});
  safeFn(()=>propTime(t.время||0.5));
@@ -41424,10 +41492,10 @@ const WEAPON_TIERS={
   hit_armor:WT("blade_armor","blade_armor","blade_armor","w_sword_armor_t3","w_sword_armor_t3"),
   draw:WT("w_sword_draw_t0","blade_draw_knife","w_sword_draw_t2","w_sword_draw_t2","w_sword_draw_t4"),
   sheathe:WT("w_sword_sheathe_t0","w_sword_sheathe_t0","w_sword_sheathe_t2","w_sword_sheathe_t2","w_sword_sheathe_t2")},
- dagger:{swing:WT("blade_swing_stab","w_dagger_swing_t1","w_dagger_swing_t1","w_dagger_swing_t3","w_dagger_swing_t3"),
+ dagger:{swing:WT("w_dagger_swing_t0","w_dagger_swing_t1","w_dagger_swing_t1","w_dagger_swing_t3","w_dagger_swing_t3"),
   parry:WT("blade_clash","w_blade_parry_t1","w_blade_parry_t2","w_blade_parry_t3","w_blade_parry_t4"),
   hit_armor:WT("blade_armor","blade_armor","blade_armor","w_sword_armor_t3","w_sword_armor_t3"),
-  draw:WT("blade_draw_knife","blade_draw_knife","w_dagger_draw_t2","w_dagger_draw_t2","w_dagger_draw_t2"),
+  draw:WT("w_dagger_draw_t0","w_dagger_draw_t0","w_dagger_draw_t2","w_dagger_draw_t2","w_dagger_draw_t2"),
   sheathe:WT("w_dagger_sheathe_t0","w_dagger_sheathe_t0","w_dagger_sheathe_t2","w_dagger_sheathe_t2","w_dagger_sheathe_t2")},
  axe:{swing:WT("blade_swing_blunt","blade_swing_blunt","w_heavy_swing_t2","w_heavy_swing_t3","w_heavy_swing_t3"),
   parry:WT("blade_clash","w_blade_parry_t1","w_blade_parry_t2","w_blade_parry_t3","w_blade_parry_t4"),
@@ -49020,7 +49088,7 @@ const WarArc=Modules.register("WARARC",{
 function renderMerit(){
  try{
   const $=id=>document.getElementById(id);const line=(t,ic)=>`<div class="list-line" tabindex="0" data-speak="${String(t).replace(/"/g,"&quot;")}">${ic||"•"} ${t}</div>`;
-  if($("mtList"))$("mtList").innerHTML=line(Merits.text(),"")+MERIT_KINDS.map(k=>line(`${k.n[0].toUpperCase()+k.n.slice(1)}: ${Merits.byKind(k.id).map(m=>m.n).join(", ")}`,"")+Merits.byKind(k.id).map(m=>line(Merits.line(m),Merits.done(m.id)?"":"")).join("")).join("");
+  if($("mtList"))$("mtList").innerHTML=line(Merits.text(),"")+line(safeFn(()=>selfTaughtText(),""),"")+MERIT_KINDS.map(k=>line(`${k.n[0].toUpperCase()+k.n.slice(1)}: ${Merits.byKind(k.id).map(m=>m.n).join(", ")}`,"")+Merits.byKind(k.id).map(m=>line(Merits.line(m),Merits.done(m.id)?"":"")).join("")).join("");
   if($("mtArt")){const свои=(G.artifacts||[]).map(a=>a&&a.n).filter(Boolean).concat(Object.keys(G.artChains||{}));
    $("mtArt").innerHTML=line(ArtChains.text(),"")+[...new Set(свои)].slice(0,6).map(n=>line(ArtChains.text(n),"")+ART_CHAIN_STEPS.map(s=>`<button class="item" data-cmd="artchain:${encodeURIComponent(n)}~${s.id}" data-speak="Узнать звено «${s.n}» о вещи ${n}.">${s.n}</button>`).join("")).join("");}
   if($("mtEcon")){const n=safeFn(()=>getNPC(G.x,G.y,0,"Торговец"),null);$("mtEcon").innerHTML=line(n?Econ.text(n):"Торговца рядом нет.","");}
@@ -54341,7 +54409,7 @@ const INV_CAT_RULES=[
  {cat:"armor",re:/кольчуг|доспех|панцир|куртк|кираса|бригант|нагрудник|мантия|мантии/i},
  {cat:"weapon",re:/меч(?![а-яё])|меча|мечи|клинок|кинжал|молот|топор|секир|(?:^|[^а-яё])лук(?![а-яё])|копь|посох|булав|(?:^|[^а-яё])нож|сабл|челюсть|клык дома/i},
  {cat:"acc",re:/плащ|накидк|кольцо|перстен|браслет|амулет|ожерель|медальон|кулон|подвеск|пояс|серьг|маска|гривн|(?:^|[^а-яё])лент[аы]?(?![а-яё])/i},
- {cat:"food",re:/еда|хлеб|мясо|сыр|похлёбк|вялен|лепёшк/i},
+ {cat:"food",re:/еда|хлеб|мясо|сыр|похлёбк|вялен|лепёшк|жарен|взвар/i},
  {cat:"magic",re:/талисман|оберег|слепок|ядро|руна|эссенц|печать|стрелка|фляга|склянка|чаша|фонарь|компас|секстант|гребень|венок|сеть|перо|стило|уголь|колокольчик|ложка|(?:^|[^а-яё])час(?![а-яё])|осколок|отвес|серп|ведро|гиря|покрывало|монета|кочерга|ларец|клеймо|(?:^|[^а-яё])рог(?![а-яё])|засечн|камень|ошейник/i}];
 /* Сырьё — в ресурсы, переработанное и торговое — в материалы. */
 const INV_RAW=new Set(["дерево","трава","ягоды","камень","руда","кристалл","ракушка","грибы","кость","шкура"]);
@@ -54718,15 +54786,17 @@ function invPick(kind,key){
  return true;}
 /* Где стоим: станки рядом, алтарь, торговец, житель. От этого зависит список действий. */
 function invContext(){
- const ctx={станки:new Set(),алтарь:null,торговец:null,житель:null,ночь:safeFn(()=>isNight(),false),бой:!!G.inCombat};
+ const ctx={станки:new Set(),вещи:new Set(),алтарь:null,торговец:null,житель:null,ночь:safeFn(()=>isNight(),false),бой:!!G.inCombat};
  try{
   if(G.place){
-   (safeFn(()=>objectsHere(),[])||[]).forEach(o=>{if(o.d>1)return;if(o.станок)ctx.станки.add(o.станок);if(o.плитка==="A")ctx.алтарь=safeFn(()=>altarAt(o.x,o.y),null)||{k:{n:"алтарь"},бог:safeFn(()=>altarGod(o.x,o.y),null)};
+   (safeFn(()=>objectsHere(),[])||[]).forEach(o=>{if(o.d>1)return;if(o.станок)ctx.станки.add(o.станок);if(o.вещь)ctx.вещи.add(o.вещь);if(o.станок)ctx.вещи.add(o.станок);if(o.плитка==="A")ctx.алтарь=safeFn(()=>altarAt(o.x,o.y),null)||{k:{n:"алтарь"},бог:safeFn(()=>altarGod(o.x,o.y),null)};
     if(o.жилец){if(o.жилец.trade&&!ctx.торговец)ctx.торговец=o.жилец;if(!ctx.житель)ctx.житель=o.жилец;}});
   }else{
    const c=cellContent(G.x,G.y);
    const ns=safeFn(()=>c.structure?npcsFor(c):[],[]);
-   ctx.торговец=ns.find(n=>n.trade)||null;ctx.житель=ns[0]||null;}
+   ctx.торговец=ns.find(n=>n.trade)||null;ctx.житель=ns[0]||null;
+   /* Находка под ногами в поле (кострище, колодец, родник) — тоже объект. */
+   if(c&&c.находка&&c.находка.id)ctx.вещи.add(c.находка.id);}
  }catch(_){}
  return ctx;}
 /* ── РЕЕСТР ДЕЙСТВИЙ С ВЕЩАМИ ──
@@ -54953,16 +55023,219 @@ iaction("research",{n:"Исследовать состав",значок:"",cats
  делать:(row,ctx,done)=>{if(row.kind==="plant"){const p=PLANT_BY_NAME[row.key];return done(`${p.n}: ${p.о} Ниша — ${(PLANT_CAT_BY_ID[p.кат]||{n:"своя"}).n}. Идёт в: ${p.рецепты.map(id=>(POTION_BY_ID[id]||{n:id}).n).join(", ")}.`);}
   const pt=POTION_BY_ID[row.it.id]||{n:row.it.id,о:""};return done(`Зелье ${pt.n}: ${pt.о} Из двух ниш: ${(pt.из||[]).map(k=>(PLANT_CAT_BY_ID[k]||{n:k}).n).join(" и ")}.`);}});
 iaction("craft",{n:"Применить в ремесле",значок:"",cats:["res","material","ingredient"],
- можно:(row,ctx)=>ctx.станки.size?true:"рядом нет станка: горна, наковальни, верстака, чана",
- делать:(row,ctx,done)=>{const техн=[];ctx.станки.forEach(st=>(safeFn(()=>techsAt(st),[])||[]).forEach(t=>{if(t.берёт&&t.берёт[row.key]&&!техн.some(x=>x.id===t.id))техн.push(t);}));
-  if(!техн.length)return done(`${row.key} здесь ни в одну работу не идёт. Станки рядом: ${[...ctx.станки].map(s=>STANOK_NAME[s]||s).join(", ")}.`);
-  const t=техн[0];safeFn(()=>closeModal(document.getElementById("modal-invact")));const st=[...ctx.станки].find(s=>t.станки.includes(s));techDo(t,st);safeFn(()=>renderInventory());return true;}});
+ /* (9.5) Работа у станка показывается, только если здесь есть работа с этим
+    припасом; иначе — почему нет и где применяют. Если у объекта рядом есть свои
+    действия с этим припасом, общий пункт не нужен вовсе. */
+ можно:(row,ctx)=>{const техн=[];ctx.станки.forEach(st=>(safeFn(()=>techsAt(st,true),[])||[]).forEach(t=>{if(t.берёт&&t.берёт[row.key])техн.push(t);}));
+  if(техн.some(t=>mastLevel(t.маст)>=t.ур||selfTaughtTech(t)))return true;
+  if(техн.length){const t=техн[0];return `${t.n}: нужно мастерство «${MAST_BY_ID[t.маст].n}» ступени ${t.ур}`;}
+  if(OBJ_ACTS.some(a=>a.res.includes(row.key)&&a.at.some(x=>ctx.вещи&&ctx.вещи.has(x))))return false;
+  return resWhyNot(row.key,ctx);},
+ делать:(row,ctx,done)=>{const техн=[];ctx.станки.forEach(st=>(safeFn(()=>techsAt(st,true),[])||[]).forEach(t=>{if(t.берёт&&t.берёт[row.key]&&(mastLevel(t.маст)>=t.ур||selfTaughtTech(t))&&!техн.some(x=>x.id===t.id))техн.push(t);}));
+  if(!техн.length)return done(`${row.key[0].toUpperCase()+row.key.slice(1)} здесь не применить: ${resWhyNot(row.key,ctx)}.`);
+  const t=техн.find(x=>mastLevel(x.маст)>=x.ур)||техн.find(x=>selfTaughtTech(x))||техн[0];safeFn(()=>closeModal(document.getElementById("modal-invact")));const st=[...ctx.станки].find(s=>t.станки.includes(s));techDo(t,st);safeFn(()=>renderInventory());return true;}});
 iaction("melt",{n:"Плавить в горне",значок:"",cats:["res"],можно:(row,ctx)=>row.key==="руда"?(нужен(ctx,"forge")?true:"горна рядом нет"):"плавят только руду",
  делать:(row,ctx,done)=>{safeFn(()=>closeModal(document.getElementById("modal-invact")));techDo(TECH_BY_ID.melt,"forge");safeFn(()=>renderInventory());return true;}});
 iaction("blade",{n:"Отковать клинок",значок:"",cats:["material"],можно:(row,ctx)=>row.key==="слиток"?(нужен(ctx,"anvil")?true:"наковальни рядом нет"):"клинок куют из слитка",
  делать:(row,ctx,done)=>{safeFn(()=>closeModal(document.getElementById("modal-invact")));techDo(TECH_BY_ID.blade,"anvil");safeFn(()=>renderInventory());return true;}});
 iaction("brew",{n:"Сварить зелье",значок:"",cats:["ingredient"],можно:(row,ctx)=>нужен(ctx,"cauldron","hearth")?true:"чана или очага рядом нет",
  делать:(row,ctx,done)=>invDo("alchemy",row.kind,row.key)});
+/* ════════════════════════════════════════════════════════════════════════
+   (9.5) ПРИПАС У СВОЕГО ОБЪЕКТА И «САМОУЧКА»
+   Жалоба игрока: у жаровни с грибами было одно «Применить в ремесле», и
+   то не срабатывало — жаровня не станок. Теперь у каждого объекта свой
+   список того, что с этим припасом делают именно здесь: у жаровни грибы
+   жарят и вялят, в чане варят похлёбку, у горна руду плавят, на точиле
+   правят клинок. Чего здесь не сделать — игра говорит, почему и где можно.
+   Сделанное без учения ремесла идёт в зачёт достижения «Самоучка»: у него
+   пять рангов, и с каждым рука без учения срывается реже; десять работ
+   самоучкой в одном ремесле открывают его на ступени ученика.
+   ════════════════════════════════════════════════════════════════════════ */
+const SELF_TAUGHT_RANKS=[
+ {n:"Самоучка",              от:1,  о:"первая работа без единого урока"},
+ {n:"Самоучка: набитая рука",от:8,  о:"восемь работ своим умом"},
+ {n:"Самоучка-умелец",       от:25, о:"двадцать пять работ без учителя"},
+ {n:"Самоучка-мастер",       от:60, о:"шестьдесят работ, и рука не дрожит"},
+ {n:"Самородок",             от:140,о:"сто сорок работ: ремесло само идёт в руки"}];
+const SELF_TAUGHT_OPEN=10;
+function selfTaughtState(){if(!G.selfTaught||typeof G.selfTaught!=="object")G.selfTaught={n:0,ранг:0,по:{}};
+ if(!G.selfTaught.по||typeof G.selfTaught.по!=="object")G.selfTaught.по={};return G.selfTaught;}
+function selfTaughtRank(){try{return Number(selfTaughtState().ранг)||0;}catch(_){return 0;}}
+/* Срыв без учения: чем выше ранг «Самоучки», тем реже. */
+function selfTaughtRisk(base){return Math.max(0.05,(Number(base)||0.3)-selfTaughtRank()*0.05);}
+/* Самоучкой выходит только простая первая работа: припас в руки — вещь из рук. */
+function selfTaughtTech(t){return !!t&&t.ур===1&&mastLevel(t.маст)===0&&!!t.берёт&&!t.род&&!t.опыт&&!t.смесь&&!["vessel","rites","potion"].includes(t.id);}
+function selfTaughtGain(маст,что){
+ const st=selfTaughtState();
+ st.n=(Number(st.n)||0)+1;
+ if(маст)st.по[маст]=(Number(st.по[маст])||0)+1;
+ safeFn(()=>deed("selftaught",1));
+ let новый=0;SELF_TAUGHT_RANKS.forEach((r,i)=>{if(st.n>=r.от)новый=i+1;});
+ const слова=[];
+ if(новый>(Number(st.ранг)||0)){
+  st.ранг=новый;const r=SELF_TAUGHT_RANKS[новый-1];
+  safeFn(()=>{UI.triumph();eventTheme("achieve",{tier:новый>=5?"epic":новый>=3?"rare":"normal",gain:0.7});});
+  слова.push(`Достижение «${r.n}»: ${r.о}.${новый>1?" Без учения рука срывается реже.":""}`);
+  safeFn(()=>journal(`Достижение «${r.n}» — ${что||"работа своим умом"}.`));}
+ /* Десять работ своим умом в одном ремесле — и оно открывается само. */
+ if(маст&&MAST_BY_ID[маст]&&mastLevel(маст)===0&&st.по[маст]>=SELF_TAUGHT_OPEN){
+  if(!G.mast||typeof G.mast!=="object")G.mast={};
+  G.mast[маст]={ур:1,оп:0,дел:st.по[маст]};
+  слова.push(`Своим умом дошли: ремесло «${MAST_BY_ID[маст].n}» — ${MAST_RANK[1]}.`);
+  safeFn(()=>journal(`Ремесло «${MAST_BY_ID[маст].n}» открыто самоучкой.`));}
+ if(слова.length)setTimeout(()=>safeFn(()=>narrate(слова.join(" "),{interrupt:false,cat:"achieve"})),900);
+ return слова;}
+/* Строка «Самоучки» в окне достижений: ранг, счёт, следующий ранг и ремёсла. */
+function selfTaughtText(){
+ const st=selfTaughtState(),r=Number(st.ранг)||0,n=Number(st.n)||0;
+ const след=SELF_TAUGHT_RANKS[r];
+ const ремёсла=Object.entries(st.по||{}).filter(([,v])=>v>0).map(([k,v])=>`${(MAST_BY_ID[k]||{n:k}).n} ${v}`).join(", ");
+ return (r?`Самоучка: ранг ${r} из ${SELF_TAUGHT_RANKS.length} — «${SELF_TAUGHT_RANKS[r-1].n}», работ своим умом ${n}.`
+  :"Самоучка: пока ни одной работы без учения. Примените припас у своего объекта — грибы у жаровни, руду у горна — не учась ремеслу.")
+  +(след?` До ранга «${след.n}» — ещё ${след.от-n}.`:" Высший ранг взят.")
+  +(ремёсла?` По ремёслам: ${ремёсла}; десять работ в ремесле открывают его.`:"");}
+/* Объект рядом по имени — вслух. */
+function objName(id){try{if(STANOK_NAME[id])return STANOK_NAME[id];const p=PROPS.find(x=>x.id===id);if(p)return p.n;}catch(_){}
+ return OBJ_NAMES[id]||id;}
+const OBJ_NAMES={brazier:"жаровня",cookfire:"кухонный очаг",hearth:"очаг",cauldron:"алхимический чан",forge:"горн",anvil:"наковальня",
+ whetstone:"точило",bench:"верстак",loom:"ткацкий станок",millstone:"жёрнов",basin:"чаша с водой",fountain:"фонтан",spring:"родник",
+ well:"придорожный колодец",circle:"магический круг",orb:"хрустальный шар",censer:"курильница",ashes:"остывшее кострище",tanpit:"дубильный чан"};
+/* Что с каким припасом делают у какого объекта. маст — чьё это ремесло:
+   без его учения работа идёт в зачёт «Самоучки». */
+const ОГОНЬ=["brazier","cookfire","hearth"],ВОДА=["basin","fountain","spring","well"];
+const OBJ_ACTS=[
+ /* стряпня */
+ {id:"roast_mush",n:"Пожарить грибы",res:["грибы"],at:ОГОНЬ,маст:"cook",берёт:2,вещь:"Жареные грибы",звук:["ad_fire_sizzle","ad_fire_crackle"],о:"Грибы шкворчат на углях и пахнут лесом."},
+ {id:"dry_mush",n:"Подвялить грибы над жаром",res:["грибы"],at:["brazier","hearth"],маст:"cook",берёт:2,вещь:"Вяленые грибы",звук:["ad_fire_crackle"],о:"Грибы на нитке над жаром сохнут и твердеют: в дорогу не испортятся."},
+ {id:"stew_mush",n:"Сварить грибную похлёбку",res:["грибы"],at:["cauldron","cookfire","hearth"],маст:"cook",берёт:2,вещь:"Грибная похлёбка",звук:["oc_boiling"],о:"Похлёбка густеет, и от котла идёт сытный дух."},
+ {id:"berry_drink",n:"Сварить ягодный взвар",res:["ягоды"],at:["cauldron","cookfire","hearth"],маст:"cook",берёт:2,вещь:"Ягодный взвар",звук:["oc_boiling"],о:"Ягоды лопаются в кипятке, взвар краснеет."},
+ {id:"roast_berry",n:"Запечь ягоды на углях",res:["ягоды"],at:["brazier","cookfire"],маст:"cook",берёт:2,
+  эф:()=>{const h=Math.min(G.hpMax,G.hp+5)-G.hp;G.hp+=h;return `здоровья +${h}`;},звук:["ad_fire_sizzle"],о:"Ягоды темнеют на углях и сладко пахнут."},
+ {id:"herb_tea",n:"Заварить травяной чай",res:["трава"],at:ОГОНЬ,маст:"cook",берёт:1,
+  эф:()=>{const h=Math.min(G.hpMax,G.hp+6)-G.hp;G.hp+=h;const б=Number(G.water)||0;G.water=Math.min(200,б+15);return `здоровья +${h}, воды +${G.water-б}`;},звук:["oc_boiling"],о:"Кружка горячего, горького и душистого."},
+ {id:"bone_broth",n:"Сварить похлёбку на костях",res:["кость"],at:["cauldron","cookfire","hearth"],маст:"cook",берёт:2,вещь:"Похлёбка на костях",звук:["oc_boiling"],о:"Кости долго томятся, отвар выходит наваристый."},
+ {id:"stoke",n:"Подбросить в огонь",res:["дерево","гнилое дерево"],at:["brazier","cookfire","hearth","ashes"],маст:"cook",берёт:1,даёт:{"пепел":1},
+  эф:()=>{const h=Math.min(G.hpMax,G.hp+5)-G.hp;G.hp+=h;return `огонь разгорелся, здоровья +${h}`;},звук:["lug_fire_start","oc_fire"],о:"Огонь лизнул поленья и пошёл вверх."},
+ /* кузнечное дело */
+ {id:"charcoal",n:"Выжечь уголь",res:["дерево"],at:["brazier","forge"],маст:"smith",берёт:2,даёт:{"древесный уголь":1},звук:["ad_fire_crackle","ad_forge_sel"],о:"Поленья томятся без пламени и чернеют: выходит лёгкий звонкий уголь."},
+ {id:"nails",n:"Отковать гвозди",res:["слиток"],at:["anvil"],маст:"smith",берёт:1,даёт:{"гвозди":6},звук:["wild_anvil","oc_metal_light"],о:"Пруток рубится и плющится: гвозди один за другим падают в ведро."},
+ {id:"hone",n:"Править клинок на камне",res:["камень"],at:["whetstone","bench"],маст:"smith",берёт:1,
+  можно:()=>G.equip&&G.equip.weapon?true:"в руке нет оружия",эф:()=>{safeFn(()=>buffSet("заточка",3));return "три часа удар режет сильнее";},звук:["oc_metal_dull","oc_metal_light"],о:"Камень ходит по кромке, и сталь начинает петь."},
+ /* камнерезное дело */
+ {id:"chip_stone",n:"Обколоть камень",res:["камень"],at:["bench","anvil"],маст:"jewel",берёт:2,даёт:{"колотый камень":2},звук:["craft_quarry","mtg_stone_hit"],о:"Камень раскалывается по жиле на ровные куски."},
+ {id:"polish",n:"Отшлифовать кристалл",res:["кристалл"],at:["whetstone"],маст:"jewel",берёт:1,даёт:{"шлифованный кристалл":1},звук:["craft_stone","oc_glass_hit"],о:"Мутная корка сходит, и внутри проступает свет."},
+ /* плотницкое дело */
+ {id:"shaft",n:"Обтесать древко",res:["дерево"],at:["bench"],маст:"wood",берёт:2,даёт:{"древко":1},звук:["craft_axe","craft_knock"],о:"Стружка вьётся, и полено становится прямым древком."},
+ /* кожевенное и ткацкое дело */
+ {id:"scrape",n:"Выскоблить шкуру",res:["шкура"],at:["bench","tanpit"],маст:"leather",берёт:1,даёт:{"мездрёная шкура":1},звук:["craft_hide","arte_leather"],о:"Нож снимает мездру, шкура светлеет."},
+ {id:"dry_hide",n:"Просушить шкуру у огня",res:["шкура"],at:["hearth","brazier"],маст:"leather",берёт:1,даёт:{"сушёная шкура":1},звук:["ad_fire_crackle","arte_leather"],о:"Распяленная шкура сохнет у огня и делается жёсткой."},
+ {id:"weave",n:"Соткать холст",res:["споровый шёлк","турья шерсть","восьмирукий шёлк","мшаный войлок","стрекальный шёлк"],at:["loom"],маст:"leather",берёт:1,даёт:{"холст":1},звук:["craft_knock"],о:"Челнок ходит туда и обратно, и под рукой растёт полотно."},
+ /* алхимия */
+ {id:"lye",n:"Развести щёлок",res:["пепел"],at:["cauldron",...ВОДА],маст:"alchemy",берёт:1,даёт:{"щёлок":1},звук:["oc_waterdrop","oc_bubble"],о:"Пепел оседает, и вода делается скользкой и едкой."},
+ {id:"wash_herb",n:"Промыть травы",res:["трава","грибы","ягоды"],at:ВОДА,маст:"alchemy",берёт:0,
+  можно:row=>G.pure&&G.pure[row.key]?"уже промыто":true,эф:row=>{if(!G.pure||typeof G.pure!=="object")G.pure={};G.pure[row.key]=1;return "зелья из этого выйдут чище";},звук:["oc_waterdrop"],о:"Холодная вода уносит сор и песок."},
+ {id:"grind",n:"Смолоть в порошок",res:["трава","грибы","кость"],at:["millstone"],маст:"alchemy",берёт:2,даёт:{"толчёный порошок":1},звук:["craft_stone"],о:"Жёрнов скрипит, и из-под камня сыплется мелкий порошок."},
+ {id:"incense",n:"Возжечь травы в курильнице",res:["трава"],at:["censer"],маст:"alchemy",берёт:1,
+  эф:()=>{safeFn(()=>buffSet("оберег",2));return "два часа ловушки бьют вполсилы";},звук:["oc_inflame"],о:"Дым поднимается ровной струйкой и пахнет горькой полынью."},
+ {id:"venom_extract",n:"Вытопить яд",res:["яд"],at:["cauldron"],маст:"alchemy",берёт:1,даёт:{"ядовитая вытяжка":1},звук:["oc_bubble","oc_corrode"],о:"Яд густеет на огне до тёмной капли."},
+ /* артефакторика, руны, демонология */
+ {id:"feed_circle",n:"Напитать круг эфиром",res:["эфир"],at:["circle","orb"],маст:"arte",берёт:1,
+  эф:()=>{const m=Math.min(G.manaMax,G.mana+25)-G.mana;G.mana+=m;return `силы +${m}`;},звук:["magic_hum","magic_shimmer"],о:"Круг светлеет, и по жилам идёт ровный ток."},
+ {id:"essence_orb",n:"Влить эссенцию в шар",res:["эссенция"],at:["orb","circle"],маст:"arte",берёт:1,
+  эф:()=>{const m=Math.min(G.manaMax,G.mana+15)-G.mana;G.mana+=m;G.xp=(Number(G.xp)||0)+5;safeFn(()=>checkLevelUp());return `силы +${m}, опыт +5`;},звук:["oc_glass_hit","magic_shimmer"],о:"Эссенция кружит внутри шара и тает."},
+ {id:"charge_rune",n:"Зарядить рунный камень",res:["рунный камень"],at:["circle"],маст:"runes",берёт:1,даёт:{"заряженный рунный камень":1},звук:["oc_electrical","magic_shimmer"],о:"Знак на камне наливается светом и теплеет."},
+ {id:"carve_bone",n:"Вырезать знак на кости",res:["кость"],at:["bench"],маст:"runes",берёт:1,даёт:{"резная кость":1},звук:["craft_stone"],о:"Резец ведёт линию, и знак ложится в кость."},
+ {id:"blood_circle",n:"Окропить круг кровью",res:["кровь"],at:["circle"],маст:"demon",берёт:1,
+  эф:()=>{const m=Math.min(G.manaMax,G.mana+10)-G.mana;G.mana+=m;return `силы +${m}, и круг темнеет`;},звук:["stk_dark"],о:"Кровь впитывается в линии круга без следа."}];
+/* ── СДЕЛАННОЕ ДАЁТ СВОЁ ──
+   Всё, что выходит из этих работ, на что-то годится: еда кормит по-своему,
+   материал идёт в следующую работу у своего объекта. Цепочки: шкура →
+   мездрёная → выделанная кожа → подшитый доспех; дерево → уголь → ровный жар
+   горна; камень → колотый камень → тёплый очаг; кристалл → шлифованный →
+   линза у свечи; пепел → щёлок → выделка. */
+const hpUp=n=>{const h=Math.min(G.hpMax,G.hp+n)-G.hp;G.hp+=h;return h;};
+const manaUp=n=>{const m=Math.min(G.manaMax,G.mana+n)-G.mana;G.mana+=m;return m;};
+const waterUp=n=>{const б=Number(G.water)||0;G.water=Math.min(200,б+n);return G.water-б;};
+const FOOD_EFFECTS={
+ "Жареные грибы":     {о:"Горячо, сытно, пахнет дымом.",эф:()=>{const h=hpUp(12);safeFn(()=>buffSet("мощь",2));return `здоровья +${h}; два часа удар сильнее`;}},
+ "Вяленые грибы":     {о:"Лёгкий дорожный паёк.",эф:()=>{const h=hpUp(8);safeFn(()=>buffSet("скорость",2));return `здоровья +${h}; два часа шаг быстрее`;}},
+ "Грибная похлёбка":  {о:"Густая, горячая, согревает изнутри.",эф:()=>{const h=hpUp(18),w=waterUp(10);safeFn(()=>buffSet("тепло",4));return `здоровья +${h}, воды +${w}; четыре часа стужа не берёт`;}},
+ "Ягодный взвар":     {о:"Кисло-сладкий и прохладный.",эф:()=>{const w=waterUp(40),h=hpUp(6),m=manaUp(6);safeFn(()=>buffSet("прохлада",3));return `воды +${w}, здоровья +${h}, силы +${m}; три часа жар не берёт`;}},
+ "Похлёбка на костях":{о:"Наваристая, крепкая, до самых костей.",эф:()=>{const h=hpUp(20);safeFn(()=>buffSet("стойкость",4));return `здоровья +${h}; четыре часа яд не берёт`;}}};
+OBJ_ACTS.push(
+ {id:"coal_forge",n:"Раздуть горн углём",res:["древесный уголь"],at:["forge","smelter"],маст:"smith",берёт:1,
+  эф:()=>{safeFn(()=>buffSet("твёрдая рука",4));return "четыре часа жар ровный, работа срывается реже";},звук:["ad_forge_sel","ad_fire_crackle"],о:"Уголь берёт жар без дыма, и горн гудит ровно."},
+ {id:"coal_warm",n:"Засыпать углей в жаровню",res:["древесный уголь"],at:["brazier","hearth","cookfire"],маст:"cook",берёт:1,
+  эф:()=>{safeFn(()=>buffSet("тепло",6));const h=hpUp(4);return `здоровья +${h}; шесть часов стужа не берёт`;},звук:["ad_fire_crackle"],о:"Угли раскаляются докрасна и держат жар долго."},
+ {id:"stone_hearth",n:"Обложить очаг камнем",res:["колотый камень"],at:["hearth","cookfire","brazier"],маст:"jewel",берёт:2,
+  эф:()=>{safeFn(()=>buffSet("тепло",8));return "камни держат жар: восемь часов стужа не берёт";},звук:["mtg_stone_hit"],о:"Камни ложатся вкруг огня и скоро греют сами."},
+ {id:"nail_gear",n:"Подбить снаряжение гвоздями",res:["гвозди"],at:["bench","anvil"],маст:"smith",берёт:3,
+  эф:()=>{safeFn(()=>buffSet("страж",3));return "три часа удары по вам слабее";},звук:["craft_knock","oc_metal_light"],о:"Пряжки и подбой держат крепко, ничего не болтается."},
+ {id:"spear_head",n:"Насадить наконечник на древко",res:["древко"],at:["anvil"],маст:"smith",берёт:1,ещё:{"слиток":1},
+  снаряд:{name:"Копьё с железным наконечником",type:"Копьё",slot:"weapon",rank:0,qual:1,val:7,price:40},звук:["wild_anvil","craft_knock"],о:"Наконечник откован и насажен на древко."},
+ {id:"lens",n:"Поставить кристалл под свет",res:["шлифованный кристалл"],at:["candle","chandelier"],маст:"jewel",берёт:1,
+  эф:()=>{safeFn(()=>buffSet("ночное зрение",4));return "четыре часа ночь не прячет встречи";},звук:["oc_glass_hit","magic_shimmer"],о:"Кристалл собирает свет в узкий луч."},
+ {id:"lens_orb",n:"Вставить кристалл в шар",res:["шлифованный кристалл"],at:["orb"],маст:"arte",берёт:1,
+  эф:()=>{safeFn(()=>buffSet("чутьё",3));return "три часа чутьё острее";},звук:["oc_glass_hit"],о:"Шар проясняется, и муть уходит к краям."},
+ {id:"tan",n:"Выдубить кожу",res:["мездрёная шкура"],at:["cauldron","tanpit"],маст:"leather",берёт:1,ещё:{"щёлок":1},даёт:{"выделанная кожа":1},звук:["oc_bubble","arte_leather"],о:"Шкура долго мокнет в щёлоке и становится мягкой и прочной."},
+ {id:"line_armor",n:"Подшить доспех кожей",res:["выделанная кожа"],at:["bench"],маст:"leather",берёт:1,
+  эф:()=>{safeFn(()=>buffSet("страж",6));return "шесть часов удары по вам слабее";},звук:["arte_leather","craft_knock"],о:"Кожаный подбой гасит удар до тела."},
+ {id:"hide_bed",n:"Постелить шкуру у огня",res:["сушёная шкура"],at:["hearth","bed","brazier"],маст:"leather",берёт:1,
+  эф:()=>{const h=hpUp(10);safeFn(()=>buffSet("тепло",8));return `здоровья +${h}; восемь часов стужа не берёт`;},звук:["arte_leather"],о:"Тёплая шкура, огонь рядом — и сон без холода."},
+ {id:"bandage",n:"Перевязать раны холстом",res:["холст"],at:["bed","hearth","bench","cookfire"],маст:"leather",берёт:1,
+  эф:()=>{const h=hpUp(15);safeFn(()=>buffSet("перевязан",3));return `здоровья +${h}; три часа раны не открываются`;},звук:["arte_cloth"],о:"Чистый холст ложится плотно, кровь унимается."},
+ {id:"tonic",n:"Сварить укрепляющий настой",res:["толчёный порошок"],at:["cauldron","hearth"],маст:"alchemy",берёт:1,
+  зелье:["heal",{q:1.1,имя:"укрепляющий настой"}],звук:["oc_boiling","arte_potion"],о:"Порошок расходится в кипятке, и настой темнеет."},
+ {id:"venom_blade",n:"Смазать клинок вытяжкой",res:["ядовитая вытяжка"],at:["whetstone","bench","rack"],маст:"alchemy",берёт:1,
+  можно:()=>G.equip&&G.equip.weapon?true:"в руке нет оружия",эф:()=>{safeFn(()=>buffSet("мощь",3));return "три часа клинок жжёт: удар сильнее";},звук:["oc_corrode"],о:"Тёмная капля растекается по кромке."},
+ {id:"rune_ward",n:"Вложить руну в оберег",res:["заряженный рунный камень"],at:["circle","bench","altar"],маст:"runes",берёт:1,
+  эф:()=>{safeFn(()=>buffSet("оберег",8));return "восемь часов ловушки бьют вполсилы";},звук:["oc_electrical","magic_shimmer"],о:"Руна гаснет снаружи и разгорается внутри оберега."},
+ {id:"bone_charm",n:"Повесить резной знак",res:["резная кость"],at:["circle","censer","bed"],маст:"runes",берёт:1,
+  эф:()=>{safeFn(()=>buffSet("чутьё",4));return "четыре часа чутьё острее";},звук:["foe_bone_hit"],о:"Знак покачивается на шнурке и тихо постукивает."});
+OBJ_NAMES.candle="подсвечник";OBJ_NAMES.chandelier="канделябр";OBJ_NAMES.bed="лежанка";OBJ_NAMES.rack="стойка с оружием";OBJ_NAMES.altar="алтарь";OBJ_NAMES.smelter="плавильная печь";
+const OBJ_ACT_BY_ID=Object.fromEntries(OBJ_ACTS.map(a=>[a.id,a]));
+/* Где с этим припасом вообще что-то делают: свои действия и работы у станков. */
+function resWhere(res){
+ const где=new Set();
+ OBJ_ACTS.forEach(a=>{if(a.res.includes(res))a.at.forEach(o=>где.add(objName(o)));});
+ TECHS.forEach(t=>{if(t.берёт&&t.берёт[res])(t.станки||[]).forEach(s=>где.add(STANOK_NAME[s]||s));});
+ return [...где];}
+/* Почему этот припас здесь не применить. */
+function resWhyNot(res,ctx){
+ const рядом=[...((ctx&&ctx.вещи)||[])].map(objName);
+ const где=resWhere(res);
+ if(!где.length)return `${res} ни у какого объекта не применяют: это товар и часть рецептов`;
+ return (рядом.length?`${рядом.join(", ")} — не для этого`:"рядом нет нужного объекта")+`. ${res[0].toUpperCase()+res.slice(1)} применяют: ${где.join(", ")}`;}
+OBJ_ACTS.forEach(a=>iaction("oa_"+a.id,{n:a.n,значок:"",cats:["res","material","ingredient","food"],kinds:["res","rare"],
+ /* Чужой припас и объект не рядом — действие не показывается вовсе: список
+    у объекта — только то, что делают именно здесь. */
+ можно:(row,ctx)=>{if(!a.res.includes(row.key))return false;const o=a.at.find(x=>ctx.вещи&&ctx.вещи.has(x));if(!o)return false;
+  if(a.берёт&&(Number(G.inv[row.key])||0)<a.берёт)return `нужно ${a.берёт}, а у вас ${Number(G.inv[row.key])||0}`;
+  for(const k in (a.ещё||{}))if((Number(G.inv[k])||0)<a.ещё[k])return `нужно ещё: ${k} ×${a.ещё[k]}`;
+  if(a.можно){const r=safeFn(()=>a.можно(row,ctx),true);if(r!==true)return r;}
+  return true;},
+ имя:(row,ctx)=>{const o=a.at.find(x=>ctx.вещи&&ctx.вещи.has(x));return `${a.n} — ${objName(o)}${a.маст&&mastLevel(a.маст)===0?" (самоучкой)":""}`;},
+ делать:(row,ctx,done)=>done(objActDo(a,row,ctx))}));
+function objActDo(a,row,ctx){
+ const o=a.at.find(x=>ctx&&ctx.вещи&&ctx.вещи.has(x))||a.at[0];
+ const сам=!!a.маст&&mastLevel(a.маст)===0;
+ if(a.берёт)invTake(row.key,a.берёт);
+ for(const k in (a.ещё||{}))invTake(k,a.ещё[k]);
+ safeFn(()=>{(a.звук||[]).forEach((z,i)=>setTimeout(()=>safeFn(()=>Bank.play(z,{gain:0.55,maxSec:4})),i*380));});
+ safeFn(()=>propTime(сам?0.6:0.4));
+ if(сам&&Math.random()<selfTaughtRisk(0.25)){
+  safeFn(()=>setTimeout(()=>safeFn(()=>Bank.play("stk_break",{gain:0.5,maxSec:3})),700));
+  safeFn(()=>selfTaughtGain(a.маст,a.n));safeFn(()=>{refresh();saveGame(true);});
+  return `${a.n} — самоучкой, у объекта «${objName(o)}»: не вышло, без выучки рука неверна. ${a.берёт?"Припас ушёл впустую, но рука запомнила.":"Рука запомнила."}`;}
+ const итог=[];
+ if(a.вещь){G.items.push(a.вещь);итог.push(`в суме: ${a.вещь}`);}
+ if(a.снаряд){if(!Array.isArray(G.gear))G.gear=[];G.gear.push(Object.assign({id:`craft_${a.id}_${Date.now().toString(36)}_${Math.floor(Math.random()*1e4)}`,черты:[],треб:0,стойкость:0,своя:true},a.снаряд));итог.push(`в разделе «Оружие»: ${a.снаряд.name}`);}
+ if(a.зелье){safeFn(()=>potionGive(a.зелье[0],a.зелье[1]));итог.push(`в разделе «Зелья»: ${a.зелье[1].имя}`);}
+ for(const k in (a.даёт||{})){G.inv[k]=(Number(G.inv[k])||0)+a.даёт[k];итог.push(`${k} ×${a.даёт[k]}`);}
+ if(a.эф){const t=safeFn(()=>a.эф(row),"");if(t)итог.push(t);}
+ if(сам)safeFn(()=>selfTaughtGain(a.маст,a.n));else if(a.маст)safeFn(()=>mastGain(a.маст,2));
+ safeFn(()=>{refresh();saveGame(true);});
+ return `${a.n}${сам?" — самоучкой":""}. ${a.о} ${итог.length?итог.join(", ")[0].toUpperCase()+итог.join(", ").slice(1)+".":""}`;}
 /* стопки */
 const СТОПКИ=["res","rare","plant","fish"];
 iaction("split",{n:"Разделить стопку",значок:"",cats:ALL_CATS,
@@ -54974,7 +55247,10 @@ iaction("merge",{n:"Объединить",значок:"",cats:ALL_CATS,
  делать:(row,ctx,done)=>{const p=pileHere();const n=Number(p[row.key])||0;delete p[row.key];if(!Object.keys(p).length)delete G.piles[pileKey()];G.inv[row.key]=(Number(G.inv[row.key])||0)+n;safeFn(()=>UI.pickup());return done(`Стопка объединена: ${row.key} ×${Number(G.inv[row.key])||0}.`);}});
 /* еда, зелья, свитки, книги */
 iaction("eat",{n:"Съесть",значок:"",cats:["food"],можно:ok,
- делать:(row,ctx,done)=>{invRemoveItem(row);const h=Math.min(G.hpMax,G.hp+6)-G.hp;G.hp+=h;G.water=Math.min(200,(Number(G.water)||0)+5);safeFn(()=>Bank.play("oc_munch",{gain:0.5,maxSec:2}));return done(`Съедено: ${row.name}. Здоровья +${h}.`);}});
+ делать:(row,ctx,done)=>{const свой=FOOD_EFFECTS[String(row.name)];
+  if(свой){invRemoveItem(row);safeFn(()=>Bank.play("oc_munch",{gain:0.5,maxSec:2}));const t=safeFn(()=>свой.эф(),"");safeFn(()=>{refresh();saveGame(true);});
+   return done(`Съедено: ${row.name}. ${свой.о} ${t[0].toUpperCase()+t.slice(1)}.`);}
+  invRemoveItem(row);const h=Math.min(G.hpMax,G.hp+6)-G.hp;G.hp+=h;G.water=Math.min(200,(Number(G.water)||0)+5);safeFn(()=>Bank.play("oc_munch",{gain:0.5,maxSec:2}));return done(`Съедено: ${row.name}. Здоровья +${h}.`);}});
 iaction("drink",{n:"Выпить",значок:"",cats:["potion"],можно:ok,
  делать:(row,ctx,done)=>{if(row.kind==="potion"){safeFn(()=>closeModal(document.getElementById("modal-invact")));drinkPotion(Number(row.key));safeFn(()=>renderInventory());return true;}
   const n=String(row.name);invRemoveItem(row);
@@ -59064,6 +59340,8 @@ function bindSettings(){const $=id=>document.getElementById(id);
   if(!settings.scape)safeFn(()=>Scape.stop());
   narrate(settings.scape?"Живая звуковая картина включена.":"Живая звуковая картина выключена.");});
  $("setRate").value=settings.rate;$("vRate").textContent=(+settings.rate).toFixed(1)+"×";
+ $("setSynthRate").value=Speech.synthRate();$("vSynthRate").textContent=Speech.synthRate().toFixed(1)+"×";
+ $("setSynthVol").value=Math.round(Speech.synthVol()*100);$("vSynthVol").textContent=Math.round(Speech.synthVol()*100)+"%";
  $("setVoiceVol").value=settings.voiceVol*100;$("vVoice").textContent=settings.voiceVol*100+"%";
  $("setFxVol").value=settings.fxVol*100;$("vFx").textContent=settings.fxVol*100+"%";
  $("setAmbVol").value=Math.round(settings.ambVol*100);$("vAmb").textContent=Math.round(settings.ambVol*100)+"%";
@@ -59113,6 +59391,14 @@ function bindSettings(){const $=id=>document.getElementById(id);
  $("setRate").addEventListener("input",e=>{settings.rate=+e.target.value;saveSettings();
   $("vRate").textContent=(+settings.rate).toFixed(1)+"×";});
  $("setRate").addEventListener("change",()=>narrate(`Скорость озвучки ${(+settings.rate).toFixed(1)}. Раз, два, три.`));
+ /* Проба синтезатора — им самим: число не записано голосом Gemini. */
+ const пробаСинтеза=t=>{safeFn(()=>Speech.stop());safeFn(()=>Speech.synthSample(t));};
+ $("setSynthRate").addEventListener("input",e=>{settings.synthRate=+e.target.value;saveSettings();
+  $("vSynthRate").textContent=(+settings.synthRate).toFixed(1)+"×";});
+ $("setSynthRate").addEventListener("change",()=>пробаСинтеза(`Скорость синтезатора ${(+settings.synthRate).toFixed(1)}. Раз, два, три.`));
+ $("setSynthVol").addEventListener("input",e=>{settings.synthVol=e.target.value/100;saveSettings();
+  $("vSynthVol").textContent=e.target.value+"%";});
+ $("setSynthVol").addEventListener("change",()=>пробаСинтеза(`Громкость синтезатора ${Math.round(settings.synthVol*100)} процентов.`));
  $("setVoiceVol").addEventListener("input",e=>{settings.voiceVol=e.target.value/100;saveSettings();
   $("vVoice").textContent=e.target.value+"%";});
  $("setFxVol").addEventListener("input",e=>{settings.fxVol=e.target.value/100;saveSettings();
@@ -60045,9 +60331,57 @@ function invKeyRun(el){
  INV.kbAct=null;
  invDo(a.id,sel.kind,encodeURIComponent(sel.key));
  return true;}
+/* ── СПИСКИ ВЫБОРА КЛАВИШАМИ (9.5, Windows) ──
+   Выбор синтезатора, голоса и любого другого списка в окне: стрелки вправо и
+   влево сразу перебирают пункты (как ползунок), Enter раскрывает список —
+   по нему ходят стрелками вверх и вниз, Enter выбирает, Escape или Backspace
+   закрывает список, ничего не меняя. */
+const SelKeys={el:null,i:0};
+function selKeysSay(el,i,хвост){
+ const o=el.options[i];if(!o)return;
+ narrate(`${o.textContent.trim()}. ${i+1} из ${el.options.length}.${хвост?" "+хвост:""}`,{interrupt:true});}
+function selKeysStep(el,d){
+ const n=el.options.length;if(!n)return false;
+ let i=(el.selectedIndex+d+n)%n;
+ el.selectedIndex=i;el.dispatchEvent(new Event("change",{bubbles:true}));
+ safeFn(()=>UI.natStep("ui_select",0.45,0.9+Math.min(i,12)*0.03));
+ selKeysSay(el,i,i===0&&d>0?"Снова с начала.":"");
+ return true;}
+function selKeysOpen(el){
+ if(!el.options.length)return false;
+ SelKeys.el=el;SelKeys.i=Math.max(0,el.selectedIndex);
+ try{el.size=Math.min(8,el.options.length);}catch(_){}
+ const o=el.options[SelKeys.i];
+ narrate(`Список раскрыт, ${el.options.length} пунктов. Сейчас: ${o?o.textContent.trim():""}. Стрелки вверх и вниз — выбор, Enter — выбрать, Escape — закрыть.`,{interrupt:true});
+ return true;}
+function selKeysClose(выбрать){
+ const el=SelKeys.el;SelKeys.el=null;if(!el)return;
+ try{el.removeAttribute("size");}catch(_){}
+ if(выбрать){
+  el.selectedIndex=SelKeys.i;if(SelKeys.i!==SelKeys.was)el.dispatchEvent(new Event("change",{bubbles:true}));
+  const o=el.options[el.selectedIndex];narrate(`Выбрано: ${o?o.textContent.trim():""}.`,{interrupt:true});}
+ else{const o=el.options[el.selectedIndex];narrate(`Список закрыт. Остаётся: ${o?o.textContent.trim():""}.`,{interrupt:true});}}
+function selKeysKey(e,layer){
+ const k=e.key,el=SelKeys.el;
+ if(!el)return false;
+ if(!layer.contains(el)||el.hidden||!el.isConnected){SelKeys.el=null;try{el.removeAttribute("size");}catch(_){}return false;}
+ if(k==="ArrowDown"||k==="ArrowUp"){e.preventDefault();
+  const n=el.options.length;const i=SelKeys.i+(k==="ArrowDown"?1:-1);
+  if(i<0||i>=n){safeFn(()=>NavClick.play("edge",{rate:0.7}));selKeysSay(el,SelKeys.i,i<0?"Начало списка.":"Конец списка.");return true;}
+  SelKeys.i=i;try{el.selectedIndex=i;}catch(_){}
+  safeFn(()=>UI.natStep("ui_select",0.45,0.9+Math.min(i,12)*0.03));selKeysSay(el,i);return true;}
+ if(k==="Home"||k==="End"){e.preventDefault();SelKeys.i=k==="Home"?0:el.options.length-1;try{el.selectedIndex=SelKeys.i;}catch(_){}selKeysSay(el,SelKeys.i);return true;}
+ if(k==="Enter"||e.code==="Space"){e.preventDefault();selKeysClose(true);return true;}
+ if(k==="Escape"||k==="Backspace"){e.preventDefault();
+  /* Отказ возвращает прежний выбор: стрелки в раскрытом списке его не меняют. */
+  const был=SelKeys.was;if(был!=null)try{el.selectedIndex=был;}catch(_){}
+  selKeysClose(false);return true;}
+ if(k==="ArrowLeft"||k==="ArrowRight"||k==="Tab"){e.preventDefault();return true;}
+ return false;}
 /* ── Окна клавишами ── */
 function keyWindow(e,combo,layer){
  const k=e.key;
+ if(SelKeys.el&&safeFn(()=>selKeysKey(e,layer),false))return true;
  /* Кнопка, на которой стоит фокус вне окна (так бывает в тестах и при
     работе чтеца), отвечает на Enter сама — не перехватываем. */
  const ae=document.activeElement;
@@ -60066,6 +60400,10 @@ function keyWindow(e,combo,layer){
  /* ползунок */
  if((k==="ArrowLeft"||k==="ArrowRight")&&uiCursor&&uiCursor.tagName==="INPUT"&&uiCursor.type==="range"&&layer.contains(uiCursor)){
   e.preventDefault();return rangeNudge(uiCursor,k==="ArrowRight"?1:-1);}
+ /* список выбора: вправо и влево — соседний пункт, Enter — раскрыть список */
+ if(uiCursor&&uiCursor.tagName==="SELECT"&&layer.contains(uiCursor)&&!e.ctrlKey&&!e.altKey&&!e.shiftKey){
+  if(k==="ArrowLeft"||k==="ArrowRight"){e.preventDefault();return selKeysStep(uiCursor,k==="ArrowRight"?1:-1);}
+  if(k==="Enter"){e.preventDefault();SelKeys.was=uiCursor.selectedIndex;return selKeysOpen(uiCursor);}}
  /* (8.0, Windows) Инвентарь стрелками: в списке разделов стрелки ходят по
     разделам; в разделе вверх и вниз — вещи, вправо и влево — действия с
     вещью, на которой стоите; Enter выполняет названное действие. */
@@ -60174,6 +60512,9 @@ document.addEventListener("keydown",e=>{
  if(!/^(Shift|Control|Alt|Meta|AltGraph|CapsLock|OS)$/.test(e.key)&&!(e.altKey&&/^(r|h|x)$/i.test(e.key))&&!(e.altKey&&/^Key[RHX]$/.test(e.code||"")))
   safeFn(()=>Speech.userCut());
  if(e.key==="Escape"&&!KeyCapture.id){
+  /* Раскрытый список выбора закрывается первым, прежний выбор остаётся. */
+  if(SelKeys.el){e.preventDefault();const el=SelKeys.el;if(SelKeys.was!=null)try{el.selectedIndex=SelKeys.was;}catch(_){}
+   selKeysClose(false);return;}
   if(G.loot&&Array.isArray(G.loot)&&G.loot.length){takeLoot();return;}
   if(G.inCombat&&!activeLayer()){fight("flee");return;}
   if(!document.getElementById("screen-intro").hidden){Prologue.skip();return;}

@@ -33,8 +33,10 @@ Sounds** (jcsounds.itch.io).
 | `sword_draw_t4_01.flac` … `sword_draw_t4_02.flac` | клинок из ножен со звоном | JC Sounds, «Pirate Pack Vol 1», CC BY 4.0 |
 | `sword_sheathe_t0_01.flac` … `sword_sheathe_t0_05.flac` | клинок в грубые ножны | Vehicle (Jan Schupke), «Fantasy Weapons and Apparel SFX Library», CC0 |
 | `sword_sheathe_t2_01.flac` … `sword_sheathe_t2_03.flac` | сабля в ножны | Still North Media, «The Medieval Weapons Sound Effects Library» (Ben Jaszczak, Brian Nelson), CC0 |
+| `dagger_swing_t0_01.flac` … `dagger_swing_t0_03.flac` | глухой взмах грубого кинжала (9.5: те же записи, срез выше 2,8 кГц) | Still North Media, «The Medieval Weapons Sound Effects Library» (Ben Jaszczak, Brian Nelson), CC0 |
 | `dagger_swing_t1_01.flac` … `dagger_swing_t1_06.flac` | взмах сакса и кинжала | Still North Media, «The Medieval Weapons Sound Effects Library» (Ben Jaszczak, Brian Nelson), CC0 |
 | `dagger_swing_t3_01.flac` … `dagger_swing_t3_03.flac` | быстрый взмах кинжала | JC Sounds, «Fantasy SFX Pack Vol 1», CC BY 4.0 |
+| `dagger_draw_t0_01.flac` … `dagger_draw_t0_02.flac` | сакс из ножен (9.5) | Vehicle (Jan Schupke), «Fantasy Sound Effects (Tinysized SFX)» (`seax-unsheathe-01/02`), CC0 |
 | `dagger_draw_t2_01.flac` … `dagger_draw_t2_03.flac` | нож из ножен | Vehicle (Jan Schupke), «Fantasy Weapons and Apparel SFX Library», CC0 |
 | `dagger_sheathe_t0_01.flac` … `dagger_sheathe_t0_02.flac` | нож в ножны | Vehicle (Jan Schupke), «Fantasy Weapons and Apparel SFX Library», CC0 |
 | `dagger_sheathe_t2_01.flac` … `dagger_sheathe_t2_03.flac` | нож в ножны | Vehicle (Jan Schupke), «Fantasy Weapons and Apparel SFX Library», CC0 |
