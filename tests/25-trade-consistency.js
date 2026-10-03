@@ -17,9 +17,12 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
    const n=getNPC(c.x,c.y,0,"Торговец");
    G.rep={};G.place=null;G.inv={"руда":5};G.gold=0;
    const unit=sellUnit(n,"руда");
-   openNPC(n.key,true);
-   const body=document.getElementById("npcBody").innerHTML;
-   const shown=body.includes(`по ${unit} золота`);
+   /* Торговец, который руду не берёт (продавец редкого и т.п.), в счёт не идёт. */
+   if(!shopSellRows(n).some(r=>r.name==="руда"&&r.ок))continue;
+   /* (9.5) Цены продажи — в «Торговле» → «Продать», а не в карточке жителя. */
+   openTrade(n.key,"sell");
+   const body=document.getElementById("shopBody").innerHTML;
+   const shown=new RegExp("руда[^\"]*?— "+unit+" золот").test(body);
    closeTopUI();
    const before=G.gold;
    sellResource(n.key,"руда",false);

@@ -21,7 +21,7 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
  await page.evaluate(()=>enterGame());await page.waitForTimeout(300);
 
  const D=await page.evaluate(()=>{
-  const godIds=new Set(PANTHEON.map(g=>g.id));
+  const godIds=new Set(Object.keys(GOD_BY_ID)); /* (9.5) с Навием, покровителем нежити */
   const clanNames=new Set(CLANS), raceNames=new Set(ALL_RACE_NAMES);
   const empNames=new Set(EMPIRES.map(e=>e.name)), empShort=new Set(EMPIRES.map(e=>e.short));
   const terrains=new Set(Object.keys(RESBYT).concat(["coast","swamp","sea"]));
@@ -164,8 +164,8 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   {бог:D.кланы.чужойБог,народ:D.кланы.чужойНарод,поля:D.кланы.пустыеПоля});
  check('ни один клан не враждует сам с собой',!D.кланы.врагСам.length,D.кланы.врагСам);
 
- check('в каталоге сто двадцать три народа (с Дальним Кругом), у каждого заполнено досье',
-  D.народы.всего===123&&!D.народы.пустыеПоля.length,{всего:D.народы.всего,пустые:D.народы.пустыеПоля});
+ check('в каталоге сто двадцать шесть народов (с Дальним Кругом и нежитью), у каждого заполнено досье',
+  D.народы.всего===126&&!D.народы.пустыеПоля.length,{всего:D.народы.всего,пустые:D.народы.пустыеПоля});
  check('у каждого народа существующие бог, клан и держава',
   !D.народы.чужойБог.length&&!D.народы.чужойКлан.length&&!D.народы.чужаяДержава.length,
   {бог:D.народы.чужойБог,клан:D.народы.чужойКлан,держава:D.народы.чужаяДержава});

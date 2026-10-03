@@ -29,11 +29,11 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   monsterLore:MONSTERS.filter(m=>!MONSTER_LORE[m.id]).map(m=>m.id),
   empFields:EMPIRES.filter(e=>!e.gov||!e.econ||!e.god||!(e.exports||[]).length||!(e.imports||[]).length).map(e=>e.short)
  }));
- check('123 расы в каталоге светлых земель: 98 Средоточия и 25 Дальнего Круга (6.0)',d.races===123,d.races);
+ check('126 рас в каталоге светлых земель: 98 Средоточия, 25 Дальнего Круга и 3 народа нежити (9.5)',d.races===126,d.races);
  check('12 богов в пантеоне',d.gods===12,d.gods);
- check('12 кланов — по одному на бога',d.clans===12,d.clans);
+ check('13 кланов — по одному на бога и Бледный Двор нежити',d.clans===13,d.clans);
  check('народы есть в каждом ранге от Обычного до Божественного',d.byRank.every(x=>x>0),d.byRank);
- check('все 12 богов имеют народы',d.godsUsed===12,d.godsUsed);
+ check('все 12 богов и Навий имеют народы',d.godsUsed===13,d.godsUsed);
  check('у каждого народа существующий бог',d.missingGod.length===0,d.missingGod);
  check('у каждого народа существующий клан',d.missingClan.length===0,d.missingClan);
  check('нет повторяющихся id и имён народов',!d.dupIds.length&&!d.dupNames.length,[d.dupIds,d.dupNames]);
