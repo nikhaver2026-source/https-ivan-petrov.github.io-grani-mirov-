@@ -28032,7 +28032,8 @@ function objectsHere(диаг){
     if(t==="."){const к=safeFn(()=>keeperAt(lvl,x,y),null);
      if(к){const npc=safeFn(()=>getNPC(p.bx,p.by,(к.fx+к.fy)%3,"Кузнец"),null);
       out.push({вид:"tile",плитка:"N",n:npc?`кузнец ${npc.name}, у горна`:"кузнец у горна",x,y,dx,dy,d:Math.max(Math.abs(dx),Math.abs(dy)),
-       маяк:safeFn(()=>tileBeacon("N"),null),жилец:npc,главное:()=>talkInside("F",к.fx,к.fy)});}
+       маяк:safeFn(()=>tileBeacon("N"),null),жилец:npc,
+       главное:()=>{const был={x:p.x,y:p.y};p.x=x;p.y=y;try{useHere();}finally{p.x=был.x;p.y=был.y;}}});}
      continue;}
     if(!IOBJ_TILES[t])continue;
     /* Стена сама по себе не объект: она становится им только под рукой. */
@@ -36894,6 +36895,11 @@ function moveInside(dir){
  /* (9.5) Встали к кузнецу — он здесь, у горна. */
  if(cur==="."){const к=safeFn(()=>keeperAt(lvl,p.x,p.y),null);
   if(к){narrate(`Здесь кузнец; горн рядом — ${dirBetween(к.fx-p.x,к.fy-p.y)}. Действие — поговорить с ним.`,{interrupt:true});return true;}}
+ /* (9.5) Встали на клетку жителя или станка — игра называет, что здесь, и при
+    тихом шаге: иначе шаг к торговцу или горну проходил молча. */
+ if(["N","S","P","B","F"].indexOf(cur)>=0&&settings.quietWalk!==0){
+  const имя=safeFn(()=>tileLabel(cur,p.x,p.y),IOBJ_TILES[cur])||IOBJ_TILES[cur];
+  narrate(`Здесь ${имя}. Действие — ${cur==="F"?"работа у горна":"поговорить"}.`,{interrupt:true,cat:"desc"});}
  /* Объект вошёл в круг четырёх шагов — это звучит первым, коротко и целиком. */
  const близко=safeFn(()=>approachCues(),"")||"";
  if(близко)narrate(близко,{interrupt:true,cat:"approach",key:"approach"});
