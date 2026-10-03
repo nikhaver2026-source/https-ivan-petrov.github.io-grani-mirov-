@@ -48,7 +48,7 @@ const R=path.join(__dirname,'..');
  const errors=[];
  const открыть=async(desk)=>{const p=await (await browser.newContext()).newPage();p.on('pageerror',e=>errors.push(String(e)));
   await p.addInitScript(d=>{window.__voice="";
-   if(d)window.graniDesktop={version:"9.5",platform:"win32",quit(){}};
+   if(d)window.graniDesktop={version:"9.5.1",platform:"win32",quit(){}};
    window.GraniTTS={speak(t,r,v,id){setTimeout(()=>window.GraniTTSDone&&GraniTTSDone(id),20);},stop(){},isSpeaking(){return false;},setVoice(n){window.__voice=n;},
     getVoices(){return JSON.stringify([{id:"Aleksandr",name:"Aleksandr",lang:"ru-RU",local:true,engine:"RHVoice из дополнения NVDA, без NVDA"},
      {id:"NVDA — голос чтеца экрана",name:"NVDA — голос чтеца экрана",lang:"ru-RU",local:true,engine:"чтец экрана, NVDA",auto:true},

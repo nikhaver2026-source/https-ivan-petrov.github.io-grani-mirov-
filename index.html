@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <!-- Внешний слой защиты: жёсткая CSP запрещает любые внешние скрипты/подключения,
      eval и вставку кода извне; игра полностью самодостаточна и не обращается в сеть. -->
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; media-src 'self' data: blob:; connect-src 'none'; frame-src 'none'; object-src 'none'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; media-src 'self' data: blob:; connect-src 'none'; frame-src 'none'; object-src 'none'; form-action 'none'">
 <meta http-equiv="X-Content-Type-Options" content="nosniff">
 <meta http-equiv="Referrer-Policy" content="no-referrer">
 <meta http-equiv="Permissions-Policy" content="geolocation=(), camera=(), microphone=(), usb=(), payment=(), interest-cohort=()">
@@ -25,7 +25,7 @@
      GitHub Pages. Там же включается и service worker (см. ниже): игра ставится
      на главный экран и работает без сети. -->
 <meta name="theme-color" content="#10121c">
-<title>Грань Миров. Версия 9.5</title>
+<title>Грань Миров. Версия 9.5.1</title>
 <style>
 /* Палец, положенный на ползунок, не должен его двигать: браузер по умолчанию
    перебрасывает бегунок в точку касания, и незрячий игрок, просто читая
@@ -106,7 +106,7 @@ h3{color:var(--acc2);margin:14px 0 6px;font-size:1.05rem;}
 
 <!-- ТИТУЛ -->
 <div id="screen-title" class="screen">
- <h1>Грань Миров <small id="gameVersion" style="font-size:.5em;opacity:.75">Версия 9.5</small></h1>
+ <h1>Грань Миров <small id="gameVersion" style="font-size:.5em;opacity:.75">Версия 9.5.1</small></h1>
  <div class="menu">
   <button type="button" data-cmd="check">Проверить звук</button>
   <button type="button" data-cmd="whatsnew">Что нового</button>
@@ -199,8 +199,8 @@ h3{color:var(--acc2);margin:14px 0 6px;font-size:1.05rem;}
   <div class="set-group" data-set-group="tts" hidden>
  <h3 class="sec-head" tabindex="0" data-cmd="secjump" data-sec-title="Синтезатор речи">Синтезатор речи</h3>
  <p class="hint">Всё про сам голос в одном разделе: чем игра говорит, каким голосом, с какой скоростью и высотой. Проба — тут же.</p>
- <label class="opt"><input type="checkbox" id="setEngBuiltin" checked><span><b>Встроенный голос</b><small>Живые записи голоса Gemini: пункты меню, настроек и инвентаря, имена окон, частые сообщения звучат сразу, без сети; то, чего нет в записях (числа, имена), договаривает голос устройства</small></span></label>
- <label class="opt" data-eng="gemini">Выбор голоса <select id="setGvVoice" aria-label="Выбор голоса встроенного голоса"><option value="m" selected>Мужской: вся игра, настройки и меню; достижения и события — женским</option><option value="f">Женский: вся игра, настройки и меню; достижения и события — мужским</option><option value="z">По разделам: настройки, меню и игра — каждый своим голосом</option></select></label>
+ <label class="opt"><input type="checkbox" id="setEngBuiltin" checked><span><b>Встроенный голос</b><small>Голоса, которые едут с игрой и работают без сети: мужской или женский голос Gemini — живые записи всего интерфейса, — или eSpeak NG, быстрый синтезатор внутри игры. Чего нет в записях Gemini (числа, имена), договаривает голос устройства</small></span></label>
+ <label class="opt" data-eng="gemini">Выбор голоса <select id="setGvVoice" aria-label="Выбор голоса встроенного голоса"><option value="m" selected>Мужской голос Gemini: весь интерфейс игры</option><option value="f">Женский голос Gemini: весь интерфейс игры</option><option value="e">eSpeak NG: быстрый синтезатор, встроенный в игру</option></select></label>
  <p class="hint" id="gvPackHint" data-eng="gemini">Голосовой пакет Gemini: проверяю…</p>
  <div class="row" data-eng="gemini"><button type="button" id="btnGvPack" data-cmd="gvpack">Голосовой пакет</button></div>
  <label class="opt"><input type="checkbox" id="setEngDevice"><span><b>Голос устройства</b><small>Синтезатор самого телефона: на iPhone — голоса VoiceOver, на Android — Google, Samsung, Acapela или любой установленный; отвечает сразу и без сети</small></span></label>
@@ -1240,13 +1240,13 @@ SVD.weapons=[
  {id:"svw_perer",n:"Меч Перерождённого",type:"Меч",k:1.0,эфф:"отчаяние",о:"когда здоровья меньше трети, удар крепче на пять"},
  {id:"svw_slepok",n:"Посох Слепков",type:"Посох",k:0.9,эфф:"слепок",о:"с каждой твари Сводов — лишняя сущность"},
  {id:"svw_toplat",n:"Посох Топлых Латников",type:"Посох",k:1.05,эфф:"пробой",о:"пробивает хитин и латы: умение «панцирь» не спасает"}];
-const WEB_VERSION="9.5",APP_VERSION="9.5";
+const WEB_VERSION="9.5.1",APP_VERSION="9.5.1";
 /* У сборки для Android своя строка версии (versionName в build.gradle); с 8.0 все три сборки — 8.0. */
-const ANDROID_VERSION="9.5";
+const ANDROID_VERSION="9.5.1";
 const GAME_VERSION=SVODY_ON?ANDROID_VERSION:IN_APP?APP_VERSION:WEB_VERSION;
 const GVOICE_ON=true;
 /* Номер голосового пакета: растёт, когда пакет пополнился (обходит кэш). */
-const GV_PACK_V=7,GV_MENU_ON=false;
+const GV_PACK_V=7,GV_HERALD_ON=false;
 try{
  const v="Версия "+GAME_VERSION;
  document.title=document.title.replace(/Версия [\d.]+/,v);
@@ -1561,6 +1561,9 @@ NEWS.push({v:52,н:"версия 9.5: ночь, мертвецы на дорог
   т:"Ночью своя мрачная музыка, а на дороги выходит нежить по вашему уровню. С каждой твари падает своё; с рунных големов — руны, и чем лучше руна, тем реже."});
 NEWS.push({v:53,н:"версия 9.5: у каждого подземелья свои свойства",
   т:"У подземелий разные числа: твари реже или чаще, раны заживают быстрее, тайников меньше, — и свои знаки: некротика, святость, жар недр. Слышно при спуске и в «Где я»."});
+/* 9.5.1: два голоса Gemini без смешения, вестник, eSpeak NG внутри игры. */
+NEWS.push({v:54,н:"версия 9.5.1: два голоса Gemini и eSpeak в игре",
+  т:"«Встроенный голос» — мужской или женский голос Gemini, и выбранный говорит весь интерфейс; голоса больше не смешиваются. Достижения и события — своим голосом вестника. Третий встроенный — eSpeak NG: быстрый синтезатор внутри игры, без сети на любом устройстве. «Голос устройства» — все прочие движки."});
 const NEWS_V=NEWS[NEWS.length-1].v;
 /* (8.5) Выпуск читается коротко: заголовок, затем факты. */
 function newsLine(n){const н=String(n.н||"");return `${н.charAt(0).toUpperCase()+н.slice(1)}. ${n.т||""}`;}
@@ -1570,13 +1573,10 @@ function newsBrief(было){
  if(!свежие.length)return "";
  const главное=свежие[свежие.length-1].н,ещё=свежие.length-1;
  return `Игра обновилась. Главное: ${главное}.${ещё>0?` И ещё ${ещё} ${plural(ещё,"новость","новости","новостей")}.`:""} Подробно — «Что нового», последний пункт меню действий.`;}
-/* (6.0) Голоса по разделам — новый выбор по умолчанию: прежний мужской
-   голос по умолчанию переходит на него один раз; выбравший женский — остаётся. */
-if(Object.keys(savedSet).length&&!settings.gvZ){if(settings.gvVoice!=="f")settings.gvVoice="z";settings.gvZ=1;saveSettings();}
-/* (8.0, просьба игрока) Один голос на всё — игру, настройки, меню, здоровье,
-   — а достижения и события — вторым голосом, вестником. Прежний выбор «по
-   разделам» переходит на мужской голос один раз; выбравший женский остаётся. */
-if(Object.keys(savedSet).length&&!savedSet.gvOne){if(settings.gvVoice==="z")settings.gvVoice="m";settings.gvOne=1;saveSettings();}
+/* (9.5.1, просьба игрока) Голосов Gemini два — мужской и женский, и выбранный
+   говорит весь интерфейс; голоса не смешиваются. Прежний выбор «по разделам»
+   переходит на мужской; выбравший женский остаётся при нём. */
+if(settings.gvVoice!=="f"&&settings.gvVoice!=="e")settings.gvVoice="m";
 if(!Object.keys(savedSet).length){settings.newsV=NEWS_V;settings.newsFrom=NEWS_V;saveSettings();}
 else if((Number(settings.newsV)||0)<NEWS_V){
  const было=Number(settings.newsV)||0;
@@ -1781,6 +1781,37 @@ const Intro={
   try{if(typeof Speech!=="undefined")Speech._pump();}catch(_){}}};
 /* Слова, по которым весть узнаётся как достижение, если её не пометили родом «achieve». */
 const ACHIEVE_RE=/мастерство растёт|новый уровень|вы достигли \d+ уровня|достижение|новое звание|звание получено|титул получен|навык (получен|поднялся)|выучено:|испытание пройдено|экзамен сдан|пробуждение принято|ядро отклика принято|узел открыт:|прижился:|теперь вы (ученик|подмастерье|умелец|мастер|старший мастер)/i;
+/* ── eSpeak NG В ИГРЕ (9.5.1) ──
+   Движок (sounds/espeak/espeak-ng.js, WebAssembly внутри) и русские данные
+   (espeak-ru-data.js) подключаются обычными скриптами — сеть странице закрыта
+   (connect-src 'none'). Грузятся, только когда игрок выбрал eSpeak. */
+const ESpeak={st:"off",w:null,
+ ready(){return this.st==="ready"&&!!this.w;},
+ load(){if(this.st!=="off")return;this.st="loading";
+  const скрипт=(src,ok)=>{try{const sc=document.createElement("script");sc.src=src;sc.async=true;sc.onload=ok;sc.onerror=()=>{this.st="failed";};
+   (document.head||document.documentElement).appendChild(sc);}catch(_){this.st="failed";}};
+  const пуск=()=>{try{const D=window.GRANI_ESPEAK_DATA;const buf=new Uint8Array(D.size);
+    const raw=atob(D.b64);const bin=new Uint8Array(raw.length);for(let i=0;i<raw.length;i++)bin[i]=raw.charCodeAt(i);
+    let o=0;for(const [a,b] of D.parts){buf.set(bin.subarray(o,o+(b-a)),a);o+=b-a;}
+    try{D.b64="";}catch(_){}
+    window.GraniESpeakModule({getPreloadedPackage:()=>buf.buffer}).then(M=>{
+     const w=new M.eSpeakNGWorker();w.set_voice("ru");this.w=w;this.st="ready";}).catch(()=>{this.st="failed";});}
+   catch(_){this.st="failed";}};
+  скрипт("sounds/espeak/espeak-ru-data.js",()=>скрипт("sounds/espeak/espeak-ng.js",пуск));},
+ /* Темп «Скорости синтезатора» (1–7) — слова в минуту eSpeak: 110–290;
+    по умолчанию (5) — 230, бойко, но разборчиво. */
+ wav(text,rate,vol){const w=this.w;if(!w)return null;
+  const r=Math.max(1,Math.min(7,+rate||5));w.set_rate(Math.round(110+(r-1)*30));
+  safeFn(()=>w.set_pitch(Math.round(50*Math.max(0.5,Math.min(2,+settings.pitch||1)))));
+  const куски=[];let n=0;w.synthesize(text,s=>{if(s&&s.length){куски.push(s);n+=s.length;}});
+  if(!n)return null;
+  const sr=w.get_samplerate()||22050,g=Math.max(1,+vol||1);
+  const buf=new ArrayBuffer(44+n*2),dv=new DataView(buf);
+  const str=(o,t)=>{for(let i=0;i<t.length;i++)dv.setUint8(o+i,t.charCodeAt(i));};
+  str(0,"RIFF");dv.setUint32(4,36+n*2,true);str(8,"WAVE");str(12,"fmt ");dv.setUint32(16,16,true);dv.setUint16(20,1,true);dv.setUint16(22,1,true);
+  dv.setUint32(24,sr,true);dv.setUint32(28,sr*2,true);dv.setUint16(32,2,true);dv.setUint16(34,16,true);str(36,"data");dv.setUint32(40,n*2,true);
+  let o=44;for(const к of куски)for(let i=0;i<к.length;i++){let v=к[i]*g;v=v>32767?32767:v<-32768?-32768:v;dv.setInt16(o,v,true);o+=2;}
+  return new Blob([buf],{type:"audio/wav"});}};
 const Speech={voice:null,keepAlive:null,
  queue:[],current:null,speaking:false,gen:0,seq:0,
  history:[],last:null,ducking:false,adapter:null,_ctx:null,_ctxTimer:null,
@@ -2047,7 +2078,7 @@ const Speech={voice:null,keepAlive:null,
  /* Какой синтезатор нужен сейчас: выбор игрока, а не то, что попалось
     первым при запуске. Смена настройки меняет адаптер на следующей фразе. */
  _wantKind(){
-  try{if(settings.ttsEngine==="gemini"&&GVOICE_ON)return "gemini";}catch(_){}
+  try{if(settings.ttsEngine==="gemini"&&GVOICE_ON)return settings.gvVoice==="e"?"espeak":"gemini";}catch(_){}
   return "device";},
  /* Говорить ли родным мостом. На Android — всегда, кроме голоса, который
     показывает сам WebView. В приложении для Windows мост — это голоса
@@ -2064,6 +2095,7 @@ const Speech={voice:null,keepAlive:null,
   try{if(this.adapter&&this.adapter.cancel)this.adapter.cancel();}catch(_){}
   this.adapter=null;this._kind=род;
   if(род==="gemini")return this.adapter=this._geminiAdapter();
+  if(род==="espeak")return this.adapter=this._espeakAdapter();
   /* В приложении для Android речь идёт родным мостом, и он говорит голосом
      системы по умолчанию. Если игрок выбрал голос, который показывает сам
      WebView, — говорит браузерный синтезатор этим голосом, иначе выбор не
@@ -2100,34 +2132,20 @@ const Speech={voice:null,keepAlive:null,
    pack:{url:"sounds/gvoice_pack/m/bank.js",dir:"sounds/gvoice_pack/m/",glob:"GVOICE_PACK_M",map:null,state:"off"}},
   f:{url:"sounds/gvoice_f/bank_f14.js",dir:"sounds/gvoice_f/",glob:"GVOICE_BANK_F",map:null,state:"off",
    pack:{url:"sounds/gvoice_pack/f/bank.js",dir:"sounds/gvoice_pack/f/",glob:"GVOICE_PACK_F",map:null,state:"off"}},
-  /* (6.0) Третий голос — меню: главное меню, «Настройки персонажа», меню
-     действий. Пока его опись не записана (GV_MENU_ON), меню говорит голосом
-     настроек. */
-  menu:{url:"sounds/gvoice_menu/bank_menu1.js",dir:"sounds/gvoice_menu/",glob:"GVOICE_BANK_MENU",map:null,state:"off",pack:null}},
- /* ── ГОЛОСА ПО РАЗДЕЛАМ (6.0, просьба игрока) ──
-    Не два полных голоса на всё, а по голосу на раздел: настройки говорят
-    одним голосом (Callirrhoe), меню — другим, игра — третьим (Iapetus).
-    Каждая фраза записана одним голосом — так их не приходится плодить. */
- gvSection(){
-  const L=safeFn(()=>activeLayer(),null),id=L&&L.id||"";
-  if(id==="modal-settings")return "set";
-  if(id==="actionMenu"||id==="modal-hero")return "menu";
-  const t=document.getElementById("screen-title");
-  if(t&&!t.hidden&&!L&&safeFn(()=>getComputedStyle(t).display!=="none",true))return "menu";
-  return "game";},
- gvSectionVoice(z){
-  if(z==="set")return this.GVOICES.f;
-  if(z==="menu")return GV_MENU_ON&&this.GVOICES.menu.state!=="failed"?this.GVOICES.menu:this.GVOICES.f;
-  return this.GVOICES.m;},
- /* ── ВЕСТНИК (6.0, просьба игрока) ──
-    Достижения, повышения, открытия звучат своим голосом — не тем, что
-    говорит игра: в игре мужской — вестник женский, и наоборот. */
- gvHerald(){return settings.gvVoice==="f"?this.GVOICES.m:this.GVOICES.f;},
- /* (8.0) Вестник говорит не только достижения, но и события: дорожные,
-    мировые, вести с войны. */
+  /* (9.5.1) Вестник — свой голос для достижений и событий (Zephyr). Пока его
+     опись не записана (GV_HERALD_ON), вести звучат выбранным голосом. */
+  h:{url:"sounds/gvoice_herald/bank_h1.js",dir:"sounds/gvoice_herald/",glob:"GVOICE_BANK_HERALD",map:null,state:"off",pack:null}},
+ /* ── ВЫБРАННЫЙ ГОЛОС (9.5.1, просьба игрока) ──
+    Мужской (Iapetus) или женский (Callirrhoe) — один на весь интерфейс:
+    игру, настройки, меню, здоровье. Другой голос не вступает никогда. */
+ gvMain(){return this.GVOICES[settings.gvVoice==="f"?"f":"m"];},
+ /* ── ВЕСТНИК ──
+    Достижения, повышения, открытия и события (дорожные, мировые, вести с
+    войны) звучат своим, отдельным голосом — не мужским и не женским голосом
+    игры. Пока опись вестника не записана, вести говорит выбранный голос. */
+ gvHerald(){const h=this.GVOICES.h;return GV_HERALD_ON&&h.state!=="failed"?h:this.gvMain();},
  get GVOICE(){if(this.current&&(this.current.herald||this.current.cat==="event"))return this.gvHerald();
-  if(settings.gvVoice==="z")return this.gvSectionVoice(this.gvSection());
-  return this.GVOICES[settings.gvVoice==="f"?"f":"m"];},
+  return this.gvMain();},
  gvKey(t){return String(t==null?"":t).toLowerCase().replace(/ё/g,"е").replace(/[^а-яa-z0-9]+/g," ").trim();},
  /* Опись записей — скриптом с того же сайта, а не запросом fetch:
     политика безопасности страницы закрывает ей сеть (connect-src 'none'). */
@@ -2145,10 +2163,9 @@ const Speech={voice:null,keepAlive:null,
    (document.head||document.documentElement).appendChild(sc);}catch(_){p.state="failed";}
   return p;},
  gvLoad(){
-  /* по разделам — все три описи сразу: раздел меняется на лету */
-  if(settings.gvVoice==="z"){[this.GVOICES.m,this.GVOICES.f].concat(GV_MENU_ON?[this.GVOICES.menu]:[]).forEach(g=>this._gvLoad1(g));return this.GVOICE;}
-  this._gvLoad1(this.gvHerald());
-  return this._gvLoad1(this.GVOICE);},
+  if(settings.gvVoice==="e"){ESpeak.load();return this.gvMain();}
+  if(GV_HERALD_ON)this._gvLoad1(this.GVOICES.h);
+  return this._gvLoad1(this.gvMain());},
  _gvLoad1(g){
   safeFn(()=>this.gvPackLoad(g));if(g.state!=="off")return g;
   g.state="loading";
@@ -2162,9 +2179,11 @@ const Speech={voice:null,keepAlive:null,
    sc.onload=готово;sc.onerror=()=>{g.state="failed";};
    (document.head||document.documentElement).appendChild(sc);}catch(_){g.state="failed";}
   return g;},
- gvClip(t){const g=this.GVOICE;const k=this.gvKey(t);if(!k)return null;
-  const id=g.map&&g.map[k];if(id)return g.dir+id+".flac";
-  const p=g.pack,pid=p&&p.map&&p.map[k];return pid?p.dir+pid+".flac":null;},
+ gvClip(t){const k=this.gvKey(t);if(!k)return null;
+  const из=g=>{const id=g.map&&g.map[k];if(id)return g.dir+id+".flac";
+   const p=g.pack,pid=p&&p.map&&p.map[k];return pid?p.dir+pid+".flac":null;};
+  /* У вестника нет этой фразы — её говорит выбранный голос, а не синтезатор. */
+  const g=this.GVOICE,m=this.gvMain();return из(g)||(g!==m?из(m):null);},
  /* Текст — в куски: записанные предложения по одному, незаписанные соседи
     склеиваются в одну фразу синтезатора, чтобы голоса не чередовались
     через слово. */
@@ -2349,6 +2368,34 @@ const Speech={voice:null,keepAlive:null,
     try{window.GraniTTS.speak(text,+o.rate,+o.volume,id);if(o.onstart)setTimeout(o.onstart,0);return true;}catch(e){delete cbs[id];return false;}},
    cancel(){try{window.GraniTTS.stop();}catch(_){}for(const k in cbs)delete cbs[k];},
    speaking(){try{return !!window.GraniTTS.isSpeaking();}catch(_){return false;}}};},
+ /* ── eSpeak NG — ВСТРОЕННЫЙ СИНТЕЗАТОР (9.5.1, просьба игрока) ──
+    Третий встроенный голос рядом с мужским и женским голосами Gemini: eSpeak
+    NG, собранный в WebAssembly, едет с игрой (sounds/espeak) и говорит на
+    любом устройстве без сети — в браузере, на Android и на Windows. Фраза
+    синтезируется целиком в память и звучит записью, поэтому её прерывает
+    любое действие так же, как запись Gemini. Пока движок грузится (первые
+    доли секунды), фразу договаривает голос устройства. */
+ _espeakAdapter(){const self=this;const запас=this._gvFallback();
+  let ток=0,эл=null,идёт=false,ссылка=null;
+  const стоп=()=>{const a=эл;эл=null;if(a){try{a.onended=null;a.onerror=null;a.pause();}catch(_){}}
+   if(ссылка){try{URL.revokeObjectURL(ссылка);}catch(_){}ссылка=null;}};
+  return {name:"espeak",
+   speak(text,o){
+    if(!ESpeak.ready()){ESpeak.load();return запас?запас.speak(text,o):false;}
+    const мой=++ток;стоп();
+    let wav=null;try{wav=ESpeak.wav(String(text),self.synthRate(),self.synthVolume(o.volume));}catch(_){wav=null;}
+    if(!wav)return запас?запас.speak(text,o):false;
+    идёт=true;
+    const a=(self._плеер&&self._открыто&&self._открыто.плеер)?self._плеер:new Audio();
+    ссылка=URL.createObjectURL(wav);эл=a;
+    const конец=()=>{if(мой!==ток||эл!==a)return;стоп();идёт=false;if(o.onend)o.onend();};
+    a.onended=конец;a.onerror=()=>{if(мой!==ток||эл!==a)return;стоп();идёт=false;if(o.onerror)o.onerror();};
+    try{a.playbackRate=1;a.defaultPlaybackRate=1;a.volume=Math.max(0,Math.min(1,+o.volume||1));}catch(_){}
+    try{a.src=ссылка;const pr=a.play();if(o.onstart)o.onstart();if(pr&&pr.catch)pr.catch(()=>{if(мой===ток&&эл===a){стоп();идёт=false;if(запас)запас.speak(text,o);else if(o.onerror)o.onerror();}});}
+    catch(_){стоп();идёт=false;return запас?запас.speak(text,o):false;}
+    return true;},
+   cancel(){ток++;идёт=false;стоп();if(запас)запас.cancel();},
+   speaking(){return идёт;}};},
  /* ── класс сообщения: приоритет и род ── */
  _classify(text,o){
   let pri=o.pri;
@@ -8241,6 +8288,7 @@ const GUIDE_SRC=[
  "ПЕРЕКЛЮЧАТЕЛИ И ВЕЩИ. Каждый переключатель в настройках звучит своей записью: включение — одной, выключение — другой. Стартовый стальной меч продаётся, как любое оружие, а разобранный или проданный больше не появляется в сумке снова.",
  "ШАГ В ДОСПЕХЕ. Кольчуга и латы звучат настоящими записями брони: прежние слои были сведены из «лязга металла» и связки ключей и звенели, как монеты. У стражи те же записи ниже и тяжелее.",
  "ЗВУК КЛИНКА. Меч бьёт режущим ударом со звоном стали, а не глухо, как молот: по плоти — рассекающий удар, по броне — звон стали о сталь, по кости — удар и сухой треск. Кинжал колет коротко, топор рубит тяжело, копьё бьёт выпадом, булава и посох — глухим дробящим ударом, как им и положено. У каждого рода оружия свой взмах: свист клинка, тяжёлый взмах булавы и топора, короткий выпад кинжала. Щит принимает удар звоном оковки или стуком дерева, без щита удар парирует клинок. Все записи — без потерь, 48 кГц.",
+ "ВСТРОЕННЫЕ ГОЛОСА. В настройках, в разделе «Синтезатор», «Встроенный голос» даёт три голоса, которые едут с игрой и работают без сети: мужской голос Gemini, женский голос Gemini и eSpeak NG. Выбранный голос Gemini говорит весь интерфейс — меню, настройки, игру, — а второй не вступает нигде. Достижения и события объявляет свой голос — вестник. eSpeak NG — быстрый синтезатор внутри игры: он говорит всё и на любом устройстве. «Голос устройства» (на компьютере — «Голос компьютера») подключает все прочие движки: голоса телефона, NVDA, JAWS, RHVoice, SAPI.",
  "ПОЛ ГОЛОСА. Выбранный голос игры — мужской или женский — не меняется посреди речи: то, чего нет в записях, договаривает встроенный голос того же пола, а не голос телефона. Житель говорит голосом своего пола: мужчина — мужским, женщина — женским, какого бы народа он ни был; народ задаёт только высоту. Если у фразы ещё нет записи нужного пола, житель не говорит её чужим голосом — её читает голос игры.",
  "НАДЕТЬ И СНЯТЬ. У каждой вещи свой звук: кольчуга звенит кольцами, латы лязгают пластинами и щёлкают пряжкой, кожаный доспех скрипит кожей и ремнями (у кожи и ткани по три разных записи), ткань шуршит, щит стучит о ремни, амулет — тонкой цепочкой, кольцо — коротким звоном, браслет — звяканьем. Надеть и снять звучат по-разному.",
  "НАСТРОЙКИ ПЕРСОНАЖА. В главном меню, до входа в мир, собирается герой. Пункты: пол персонажа, раса, народ, настройки внешности, голос персонажа, описание героя и «Готово». Новая история («Начать историю» или «Без пролога») сперва открывает эти настройки. Сначала выбираются раса и народ: от них зависит облик. У каждой расы свой род тела — человеческий облик, мех, перья и крылья, чешуя, облик вод, кора и листва, тело из стихии, облик духа, крылья феи, панцирь или конское тело — и свои параметры: характер, телосложение, рост (у полурослика — сантиметры, у титана — метры), цвет глаз, кожа, мех, чешуя или перо, волосы, причёска, черты лица, приметы и особенность, которой нет у других рас (борода гнома, клыки орка, рога тифлинга, род чешуи драконида). Народ добавляет родовой цвет и примету народа. Голос героя живой: шесть мужских и шесть женских голосов; при выборе голоса видны только голоса выбранного пола, а встав на голос, вы слышите его образец. Мужчина говорит мужским голосом, женщина — женским: и в разговоре, и в стоне от раны. Раса, народ, характер и приметы дают первое впечатление: земляки встречают теплее, давние враги вашего народа — холоднее, грозные приметы уважают воинственные народы и настораживают мирные; в державе, где живёт ваш народ, вы свой для всех, а в земле, чей главный народ — давний враг вашего, чужой. Дальше всё решают ваши дела. После начала пути меняются только голос и характер.",
@@ -61003,11 +61051,11 @@ function bindSettings(){const $=id=>document.getElementById(id);
  {const b=$("setEngBuiltin");if(b)b.addEventListener("change",ev=>engSet(ev.target.checked?"gemini":"device"));}
  {const d=$("setEngDevice");if(d)d.addEventListener("change",ev=>engSet(ev.target.checked?"device":"gemini"));}
  /* «Выбор голоса» голоса Gemini: женский — записи Callirrhoe, мужской — записи Iapetus. */
- {const g=$("setGvVoice");if(g){g.value=settings.gvVoice==="f"||settings.gvVoice==="z"?settings.gvVoice:"m";
-  g.addEventListener("change",ev=>{settings.gvVoice=ev.target.value==="f"||ev.target.value==="z"?ev.target.value:"m";
+ {const g=$("setGvVoice");if(g){g.value=settings.gvVoice==="f"||settings.gvVoice==="e"?settings.gvVoice:"m";
+  g.addEventListener("change",ev=>{settings.gvVoice=ev.target.value==="f"||ev.target.value==="e"?ev.target.value:"m";
    saveSettings();
    safeFn(()=>{Speech.adapter=null;Speech._kind=null;Speech.gvLoad();});
-   narrate(settings.gvVoice==="z"?"Встроенный голос по разделам: настройки, меню и игра — каждый своим голосом.":settings.gvVoice==="f"?"Встроенный голос: женский. Достижения и события — мужским.":"Встроенный голос: мужской. Достижения и события — женским.",{interrupt:true});});}}
+   narrate(settings.gvVoice==="e"?"Встроенный голос: eSpeak NG — весь интерфейс игры.":settings.gvVoice==="f"?"Встроенный голос: женский голос Gemini — весь интерфейс игры.":"Встроенный голос: мужской голос Gemini — весь интерфейс игры.",{interrupt:true});});}}
  {const e=$("setTtsEngine");if(e){
   /* В приложении голоса Gemini пока нет: пункт и строка о нём убираются. */
   if(!GVOICE_ON){const o=e.querySelector('option[value="gemini"]');if(o)o.remove();const h=$("gvHint");if(h)h.remove();
@@ -61016,7 +61064,7 @@ function bindSettings(){const $=id=>document.getElementById(id);
   e.addEventListener("change",ev=>{settings.ttsEngine=ev.target.value;saveSettings();
    safeFn(()=>{Speech.adapter=null;Speech._kind=null;});
    if(settings.ttsEngine==="gemini"){safeFn(()=>Speech.gvLoad());
-    narrate("Говорит голос Gemini: постоянные фразы игры звучат записями сразу, остальное договаривает синтезатор устройства.",{interrupt:true});return;}
+    narrate(settings.gvVoice==="e"?"Говорит встроенный eSpeak NG.":"Говорит голос Gemini: весь интерфейс игры звучит живыми записями, остальное договаривает голос устройства.",{interrupt:true});return;}
    narrate("Говорит голос устройства.",{interrupt:true});});}}
  engUi();
  safeFn(()=>{Speech.gvPackLoad(Speech.GVOICE);gvPackUi();});
