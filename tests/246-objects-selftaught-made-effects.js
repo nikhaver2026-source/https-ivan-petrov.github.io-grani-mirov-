@@ -96,6 +96,17 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
  check('7. объекты действий есть в игре и названы вслух, звуки есть в банке; у каждого сделанного материала есть применение, у каждой еды — свой эффект',
   !п7.чужие.length&&!п7.беззвука.length&&!п7.безимени.length&&!п7.бездела.length&&!п7.еда.length&&п7.всего>=40,п7);
 
+ /* ── 8 ── */
+ const п8=await p.evaluate(()=>{G.inv={"грибы":2};const o={плитка:"X",вещь:"brazier",x:1,y:1,d:0};
+  const сп=actionsFor(o).map(a=>({id:a.id,n:a.n}));const жар=actionsFor(o).find(a=>a.id==="oa:roast_mush");
+  const до=G.items.length;if(жар)жар.делать(o);
+  const инфо=actionsFor(o).find(a=>a.id==="oa:info");
+  const горн=actionsFor({плитка:"F",станок:"forge",x:2,y:2,d:0}).map(a=>a.n);
+  return {сп,сделано:G.items.length>до,инфо:инфо&&инфо.о,горн};});
+ check('8. в меню самой жаровни — «Пожарить грибы» и «Подвялить», что ещё здесь делают и что нужно; у горна — плавка самоучкой',
+  п8.сп.some(a=>a.id==="oa:roast_mush")&&п8.сп.some(a=>a.id==="oa:dry_mush")&&п8.сделано&&/Жаровня: .*грибы/.test(п8.инфо||"")
+  &&п8.горн.some(n=>/Плавить руду/.test(n)),п8);
+
  check('Ошибок страницы нет',errors.length===0,errors.slice(0,3));
  await browser.close();
  console.log(results.join('\n'));

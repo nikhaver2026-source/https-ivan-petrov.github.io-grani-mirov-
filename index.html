@@ -27976,9 +27976,9 @@ function actionsFor(o){
   "altstudy","altread","altaura","altoffer","altbless","altseal","altartefact","altrite","altsacrifice","altmech",
   "assay","trap","disarm","shelf","apprentice","lastmemory","causeofdeath","use"];
  const общие=порядок.map(id=>IACT[id]).filter(a=>a&&(!a.можно||safeFn(()=>a.можно(o),false)));
- const тех=(o&&o.станок)?safeFn(()=>techsAt(o.станок),[])||[]:[];
+ const тех=(o&&o.станок)?(safeFn(()=>techsAt(o.станок,true),[])||[]).filter(t=>mastLevel(t.маст)>=t.ур||selfTaughtTech(t)):[];
  const выше=(o&&o.станок)?safeFn(()=>techsLocked(o.станок),[])||[]:[];
- return общие.concat(тех.map(t=>({id:"tech:"+t.id,n:t.n,значок:t.значок,
+ return общие.concat(safeFn(()=>objResActions(o),[])||[]).concat(тех.map(t=>({id:"tech:"+t.id,n:t.n+(mastLevel(t.маст)<t.ур?" (самоучкой)":""),значок:t.значок,
   о:`${t.о} Нужно: ${Object.entries(t.берёт||{}).map(([k,v])=>k+" ×"+v).join(", ")||"припас по разбору"}. Доля неудачи: ${Math.round(techRisk(t)*100)} из ста.`,
   делать:()=>techDo(t,o.станок)})))
  .concat(выше.map(t=>{
@@ -55216,6 +55216,24 @@ OBJ_ACTS.forEach(a=>iaction("oa_"+a.id,{n:a.n,значок:"",cats:["res","mater
   return true;},
  имя:(row,ctx)=>{const o=a.at.find(x=>ctx.вещи&&ctx.вещи.has(x));return `${a.n} — ${objName(o)}${a.маст&&mastLevel(a.маст)===0?" (самоучкой)":""}`;},
  делать:(row,ctx,done)=>done(objActDo(a,row,ctx))}));
+/* (9.5) У самого объекта — действия с тем припасом, что при вас: у жаровни с
+   грибами — «Пожарить грибы», «Подвялить грибы над жаром»; и одна строка —
+   что ещё здесь делают и что для этого нужно. */
+function objResActions(o){
+ const id=objProp(o)||(o&&o.станок)||"";if(!id)return [];
+ const ctx={вещи:new Set([id]),станки:new Set(o&&o.станок?[o.станок]:[])};
+ const есть=[],нет=[];
+ OBJ_ACTS.forEach(a=>{if(!a.at.includes(id))return;
+  const res=a.res.find(r=>(Number(G.inv&&G.inv[r])||0)>=Math.max(1,a.берёт||0)&&Object.keys(a.ещё||{}).every(k=>(Number(G.inv[k])||0)>=a.ещё[k]));
+  const можно=res&&(!a.можно||safeFn(()=>a.можно({key:res},ctx),true)===true);
+  if(можно)есть.push({id:"oa:"+a.id,n:`${a.n}${a.res.length>1?` (${res})`:""}${a.маст&&mastLevel(a.маст)===0?" — самоучкой":""}`,значок:"",
+   о:`${a.о} Нужно: ${res} ×${a.берёт||1}${Object.entries(a.ещё||{}).map(([k,v])=>`, ${k} ×${v}`).join("")}.`,
+   делать:()=>{narrate(objActDo(a,{key:res},ctx),{interrupt:true});return true;}});
+  else нет.push(`${a.n.toLowerCase()} — ${a.res.slice(0,3).join(" или ")}${a.берёт>1?` ×${a.берёт}`:""}${Object.entries(a.ещё||{}).map(([k,v])=>` и ${k} ×${v}`).join("")}`);});
+ if(нет.length)есть.push({id:"oa:info",n:"Что ещё здесь делают с припасом",значок:"",
+  о:`${objName(id)[0].toUpperCase()+objName(id).slice(1)}: ${нет.join("; ")}.`,
+  делать:()=>{narrate(`${objName(id)[0].toUpperCase()+objName(id).slice(1)}: ${нет.join("; ")}. Припаса для этого при вас нет.`,{interrupt:true});return true;}});
+ return есть;}
 function objActDo(a,row,ctx){
  const o=a.at.find(x=>ctx&&ctx.вещи&&ctx.вещи.has(x))||a.at[0];
  const сам=!!a.маст&&mastLevel(a.маст)===0;
