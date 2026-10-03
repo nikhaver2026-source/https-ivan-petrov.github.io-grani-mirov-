@@ -750,12 +750,38 @@ function srDir() {
   return '';
 }
 
+// eSpeak NG, поставленный вместе с игрой (resources/espeak: libespeak-ng.dll и
+// espeak-ng-data). Он говорит, даже если у игрока нет ни NVDA, ни RHVoice.
+function espeakDll() {
+  for (const d of bases('espeak')) {
+    try {
+      const f = path.join(d, 'libespeak-ng.dll');
+      if (fs.existsSync(f) && fs.existsSync(path.join(d, 'espeak-ng-data')) && !inAsar(d)) return f;
+    } catch (_) { }
+  }
+  return '';
+}
+
+// RHVoice с голосом Aleksandr, поставленный вместе с игрой (resources/rhvoice —
+// в том же виде, что дополнения NVDA). Берётся, только если у игрока нет
+// своего RHVoice в NVDA: иначе голоса задвоились бы.
+function rhvoiceDir() {
+  try {
+    const own = path.join(process.env.APPDATA || '', 'nvda', 'addons');
+    if (process.env.APPDATA && fs.existsSync(own) && fs.readdirSync(own).some(n => /^rhvoice$/i.test(n))) return '';
+  } catch (_) { }
+  for (const d of bases('rhvoice')) {
+    try { if (fs.existsSync(path.join(d, 'RHVoice')) && !inAsar(d)) return d; } catch (_) { }
+  }
+  return '';
+}
+
 // ── ГОЛОС ЧТЕЦА ПО УМОЛЧАНИЮ (9.5) ──
 // Игра сама берёт голос того чтеца экрана, что стоит у игрока: запущен NVDA —
 // говорит голосом NVDA, запущен JAWS — голосом JAWS. Чтец не запущен — тот
 // синтезатор и голос, что выбраны в настройках NVDA (nvda.ini: RHVoice или
-// eSpeak, их мост поднимает сам и без NVDA). Иначе — голос Windows по
-// умолчанию.
+// eSpeak, их мост поднимает сам и без NVDA). Иначе — русский RHVoice или
+// eSpeak NG, что идёт вместе с игрой; голосов Microsoft в игре нет.
 function nvdaIni() {
   const out = { synth: '', voice: '' };
   try {
@@ -775,13 +801,62 @@ function nvdaIni() {
   } catch (_) { }
   return out;
 }
-function autoVoiceName(voices, ini) {
+// Голос из настроек JAWS: в его файлах настроек (%APPDATA%\Freedom Scientific\JAWS)
+// ищем имя голоса, который мост умеет поднять сам (SAPI 5, RHVoice, eSpeak).
+// Собственные синтезаторы JAWS (Eloquence, Vocalizer) без JAWS не поднять —
+// тогда остаётся голос Windows по умолчанию.
+function jawsText() {
+  try {
+    const base = path.join(process.env.APPDATA || '', 'Freedom Scientific', 'JAWS');
+    if (!fs.existsSync(base)) return '';
+    let out = '';
+    const walk = (d, depth) => {
+      if (depth > 4 || out.length > 400000) return;
+      for (const f of fs.readdirSync(d)) {
+        const p = path.join(d, f);
+        let st; try { st = fs.statSync(p); } catch (_) { continue; }
+        if (st.isDirectory()) walk(p, depth + 1);
+        else if (/\.(jcf|vpf|ini|jsd)$/i.test(f) && st.size < 200000) { try { out += '\n' + fs.readFileSync(p, 'latin1') + '\n' + fs.readFileSync(p, 'utf16le'); } catch (_) { } }
+      }
+    };
+    walk(base, 0);
+    return out;
+  } catch (_) { return ''; }
+}
+// Совпадает ли голос с записью настроек: «RHVoice_Aleksandr», «MSTTS_V110_ruRU_IrinaM»,
+// «Aleksandr» — по значимым частям имени.
+function voiceMatch(v, rec) {
+  const low = s => String(s || '').toLowerCase();
+  const parts = low(String(rec || '').replace(/^.*[\\/]/, '')).split(/[_\-\s.]+/).filter(x => x.length >= 4 && !/^(rhvoice|mstts|v110|voice|sapi5|onecore|tokens|desktop|ruru|enus)$/.test(x));
+  const n = low(v.name);
+  // У голосов Windows на конце имени буква пола: «PavelM», «IrinaF».
+  parts.slice().forEach(x => { if (/[mf]$/.test(x) && x.length >= 5) parts.push(x.slice(0, -1)); });
+  return parts.length > 0 && parts.some(x => n.indexOf(x) >= 0);
+}
+// ── БЕЗ ГОЛОСОВ MICROSOFT (9.5) ──
+// Просьба игрока: голоса Microsoft (SAPI 5 от Microsoft, голоса Windows
+// 10/11, Microsoft Speech Platform) отвечают очень медленно — их в игре нет
+// совсем. Говорят голос чтеца экрана (NVDA, JAWS), RHVoice, eSpeak NG (он
+// поставляется вместе с игрой) и сторонние голоса SAPI 5 (Acapela, Vocalizer).
+function isMsVoice(v) {
+  if (!v || v.kind === 'sr') return false;
+  return v.kind === 'onecore' || v.kind === 'platform' || /microsoft/i.test(String(v.vendor || '')) || /^microsoft\b|\bmicrosoft\s/i.test(String(v.name || ''));
+}
+function autoVoiceName(voices, ini, jaws) {
+  voices = (voices || []).filter(v => !isMsVoice(v));
   const sr = voices.filter(v => v.kind === 'sr');
   const nv = sr.find(v => /^NVDA/.test(v.name)), jw = sr.find(v => /^JAWS/.test(v.name));
   if (nv) return nv.name;
   if (jw) return jw.name;
   ini = ini || nvdaIni();
   const low = s => String(s || '').toLowerCase();
+  // Чтец не запущен: голос из его настроек, но голосом, который мост
+  // поднимает сам, без NVDA и без JAWS.
+  if (/^sapi5$|^onecore$/.test(ini.synth)) {
+    const kinds = ini.synth === 'onecore' ? ['onecore'] : ['sapi', 'sapi32'];
+    const w = voices.find(v => kinds.includes(v.kind) && voiceMatch(v, ini.voice)) || voices.find(v => voiceMatch(v, ini.voice));
+    if (w) return w.name;
+  }
   if (/rhvoice/.test(ini.synth)) {
     const rh = voices.filter(v => v.kind === 'rhvoice');
     const w = rh.find(v => ini.voice && low(v.name).indexOf(low(ini.voice).replace(/^.*[\\/]/, '')) >= 0) || rh.find(v => /^ru/i.test(v.lang)) || rh[0];
@@ -792,7 +867,17 @@ function autoVoiceName(voices, ini) {
     const w = es.find(v => /^ru/i.test(v.lang)) || es[0];
     if (w) return w.name;
   }
-  const d = voices.find(v => v.default);
+  // JAWS: голос, имя которого записано в его настройках.
+  const jt = jaws !== undefined ? jaws : jawsText();
+  if (jt) {
+    const own = voices.filter(v => v.kind !== 'sr').sort((a, b) => b.name.length - a.name.length);
+    const w = own.find(v => v.name.length >= 4 && jt.toLowerCase().indexOf(low(v.name).split(/\s+[—-]\s+/)[0]) >= 0);
+    if (w) return w.name;
+  }
+  // Иначе — голос, что звучит быстрее и чище: русский RHVoice, русский
+  // eSpeak NG, голос Windows по умолчанию (если он не Microsoft), любой.
+  const ru = v => /^ru/i.test(v.lang || '');
+  const d = voices.find(v => v.kind === 'rhvoice' && ru(v)) || voices.find(v => v.kind === 'espeak' && ru(v)) || voices.find(v => v.default) || voices.find(ru) || voices[0];
   return d ? d.name : '';
 }
 
@@ -823,6 +908,8 @@ class Sapi {
     try { fs.writeFileSync(file, '\uFEFF' + PS1, 'utf8'); } catch (e) { this.why = 'не записан сценарий моста: ' + (e && e.message || e); return Promise.resolve(false); }
     const env = Object.assign({}, process.env, { TEMP: tmp, TMP: tmp });
     const sd = srDir(); if (sd) env.GRANI_SR_DIR = sd;
+    const ed = espeakDll(); if (ed && !env.GRANI_ESPEAK_DLL) env.GRANI_ESPEAK_DLL = ed;
+    const rd = rhvoiceDir(); if (rd) env.GRANI_NVDA_ADDONS = [env.GRANI_NVDA_ADDONS, rd].filter(Boolean).join(';');
     const root = process.env.SystemRoot || 'C:\\Windows';
     const ps64 = path.join(root, process.arch === 'ia32' ? 'Sysnative' : 'System32', 'WindowsPowerShell', 'v1.0', 'powershell.exe');
     const ps32 = path.join(root, 'SysWOW64', 'WindowsPowerShell', 'v1.0', 'powershell.exe');
@@ -855,12 +942,12 @@ class Sapi {
     // Голос, который видят оба процесса, говорит 64-битный.
     this.voices = []; this.owner.clear();
     for (const p of this.procs) for (const v of p.voices) {
-      if (this.owner.has(v.name)) continue;
+      if (this.owner.has(v.name) || isMsVoice(v)) continue;
       this.owner.set(v.name, p); this.voices.push(v);
     }
     this.ready = this.voices.length > 0;
     if (this.ready) this.why = '';
-    if (!this.cur || !this.owner.has(this.cur)) { const d = this.voices.find(v => v.default) || this.voices[0]; this.cur = d ? d.name : null; }
+    if (!this.cur || !this.owner.has(this.cur)) { const a = autoVoiceName(this.voices); this.cur = a || (this.voices[0] ? this.voices[0].name : null); if (this.cur) this.proc(this.cur).send('voice', this.cur); }
     return this.ready;
   }
   proc(name) { return this.owner.get(name || this.cur) || this.procs[0]; }
@@ -889,4 +976,4 @@ class Sapi {
   }
   quit() { this.procs.forEach(p => p.quit()); }
 }
-module.exports = { Sapi, CS_SOURCE: CS, TAG, autoVoiceName, nvdaIni };
+module.exports = { Sapi, CS_SOURCE: CS, TAG, autoVoiceName, nvdaIni, jawsText, isMsVoice, espeakDll, rhvoiceDir };

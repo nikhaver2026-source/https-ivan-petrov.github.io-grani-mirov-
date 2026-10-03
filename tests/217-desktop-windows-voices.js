@@ -8,10 +8,11 @@
    и голоса Windows 10/11 из «Параметры → Время и язык → Речь», которых
    Chromium сам не видит. Мост отдаётся игре тем же GraniTTS, что на Android.
 
-   1. Голос, который Chromium уже показал под тем же именем, второй раз в
-      списке не появляется; голос Windows 10/11 — появляется, с пометкой.
-   2. Без выбора говорит синтезатор Chromium (голоса SAPI), выбран голос
-      Windows — говорит мост, и конец фразы приходит в игру.
+   1. (9.5) Голосов Microsoft нет совсем — ни тех, что видит Chromium, ни
+      тех, что отдаёт мост (SAPI 5 от Microsoft, голоса Windows 10/11); в
+      списке — сторонние голоса моста (RHVoice) с пометкой движка.
+   2. Говорит только мост, и конец фразы приходит в игру; синтезатор
+      Chromium (голоса Microsoft) не говорит ни с выбором, ни без него.
    3. Chromium не видит ни одного голоса — говорит мост.
    4. Переключение синтезатора: Gemini или устройство (нейросети Piper с 4.8 нет).
    5. Темп игры переводится в шкалу SAPI так же, как у Chromium; мост
@@ -31,7 +32,8 @@ const ПОДДЕЛКА=(вебГолоса)=>`(()=>{
   stop(){},isSpeaking(){return false;},setVoice(n){__voice=n;},
   getVoices(){return JSON.stringify([
    {id:"Microsoft Irina Desktop - Russian",name:"Microsoft Irina Desktop - Russian",lang:"ru-RU",local:true,default:true,engine:"SAPI 5"},
-   {id:"Microsoft Pavel - Russian (Russia)",name:"Microsoft Pavel - Russian (Russia)",lang:"ru-RU",local:true,default:false,engine:"Windows"}]);}};
+   {id:"Microsoft Pavel - Russian (Russia)",name:"Microsoft Pavel - Russian (Russia)",lang:"ru-RU",local:true,default:false,engine:"Windows"},
+   {id:"Aleksandr",name:"Aleksandr",lang:"ru-RU",local:true,default:false,engine:"RHVoice из дополнения NVDA, без NVDA"}]);}};
 })()`;
 const скажи=`new Promise(res=>{const a=Speech._adapter();if(!a)return res({адаптер:null});
  const t=setTimeout(()=>res({адаптер:a.name,конец:false}),3000);
@@ -49,18 +51,16 @@ const скажи=`new Promise(res=>{const a=Speech._adapter();if(!a)return res({
  const p=await открыть(["Microsoft Irina Desktop - Russian"]);
  const список=await p.evaluate(()=>({голоса:Speech.allVoices().map(v=>({имя:v.name,мост:!!v.native})),
   пункты:[...document.querySelectorAll("#setVoice option")].map(o=>o.textContent)}));
- const ирин=список.голоса.filter(v=>/Irina/.test(v.имя));
- check('1. голос, который Chromium уже показал, не повторяется; голос Windows 10/11 — в списке с пометкой',
-  ирин.length===1&&!ирин[0].мост&&список.голоса.some(v=>/Pavel/.test(v.имя)&&v.мост)&&список.пункты.some(t=>/Pavel.*движок Windows/.test(t)),список);
+ check('1. голосов Microsoft нет совсем (ни Chromium, ни моста); RHVoice моста — в списке с пометкой движка',
+  !список.голоса.some(v=>/Microsoft/.test(v.имя))&&!список.пункты.some(t=>/Microsoft/.test(t))&&список.голоса.some(v=>v.имя==="Aleksandr"&&v.мост)&&список.пункты.some(t=>/Aleksandr.*движок RHVoice/.test(t)),список);
  const безВыбора=await p.evaluate(скажи);
- const выбор=await p.evaluate(()=>Speech.pickVoice("native:Microsoft Pavel - Russian (Russia)",{say:false}));
+ const мсНельзя=await p.evaluate(()=>Speech.pickVoice("native:Microsoft Pavel - Russian (Russia)",{say:false})||Speech.pickVoice("Microsoft Irina Desktop - Russian",{say:false}));
+ const выбор=await p.evaluate(()=>Speech.pickVoice("native:Aleksandr",{say:false}));
  const мостом=await p.evaluate(скажи);
  const сказано=await p.evaluate(()=>__said.slice(-1)[0]);
- const назад=await p.evaluate(()=>Speech.pickVoice("Microsoft Irina Desktop - Russian",{say:false}));
- const снова=await p.evaluate(скажи);
- check('2. без выбора — синтезатор Chromium; выбран голос Windows — говорит мост, конец фразы приходит; обратно — снова Chromium',
-  безВыбора.адаптер==="web"&&выбор&&мостом.адаптер==="native"&&мостом.конец&&сказано&&сказано.voice==="Microsoft Pavel - Russian (Russia)"&&назад&&снова.адаптер==="web",
-  {безВыбора,мостом,сказано,снова});
+ check('2. говорит только мост, конец фразы приходит; голос Microsoft выбрать нельзя, Chromium не говорит',
+  безВыбора.адаптер==="native"&&безВыбора.конец&&!мсНельзя&&выбор&&мостом.адаптер==="native"&&мостом.конец&&сказано&&сказано.voice==="Aleksandr",
+  {безВыбора,мсНельзя,мостом,сказано});
 
  /* ── 3 ── */
  const p2=await открыть([]);

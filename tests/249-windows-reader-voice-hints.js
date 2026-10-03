@@ -17,6 +17,9 @@
       переназначения), касание — Enter и стрелками, TalkBack — NVDA или JAWS.
    5. «Что нового», руководство и окна в приложении для Windows — без
       жестов и касаний; в браузере и на телефоне тексты прежние.
+   6. Голосов Microsoft в приложении для Windows нет совсем (они медленные):
+      ни в мосте, ни в списке игры, ни голосами Chromium; без чтеца говорит
+      RHVoice или eSpeak NG, что идут вместе с игрой.
    ═══════════════════════════════════════════════════════════════════════ */
 const {chromium}=require('playwright');
 const fs=require('fs'),path=require('path'),os=require('os');
@@ -24,7 +27,7 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
 const R=path.join(__dirname,'..');
 (async()=>{
  /* ── 1 ── */
- const {autoVoiceName,nvdaIni}=require(path.join(R,'desktop','sapi.js'));
+ const {autoVoiceName,nvdaIni,isMsVoice}=require(path.join(R,'desktop','sapi.js'));
  const голоса=[{name:"Microsoft Irina",kind:"sapi",default:true,lang:"ru-RU"},{name:"Aleksandr",kind:"rhvoice",lang:"ru-RU"},{name:"Anna",kind:"rhvoice",lang:"ru-RU"},
   {name:"eSpeak NG — Russian",kind:"espeak",lang:"ru-RU"}];
  const nv=autoVoiceName(голоса.concat([{name:"NVDA — голос чтеца экрана",kind:"sr"},{name:"JAWS — голос чтеца экрана",kind:"sr"}]),{synth:"",voice:""});
@@ -33,9 +36,13 @@ const R=path.join(__dirname,'..');
  fs.writeFileSync(path.join(tmp,'nvda','nvda.ini'),"schemaVersion = 11\n[speech]\n\tsynth = RHVoice\n\t[[RHVoice]]\n\t\tvoice = Anna\n\t\trate = 60\n[[espeak]]\n");
  const ad0=process.env.APPDATA;process.env.APPDATA=tmp;const ini=nvdaIni();process.env.APPDATA=ad0;
  const изIni=autoVoiceName(голоса,ini);
- const безВсего=autoVoiceName(голоса,{synth:"",voice:""});
- check('1. мост: NVDA запущен — голос NVDA; только JAWS — голос JAWS; без чтеца — голос из настроек NVDA; иначе голос Windows',
-  /^NVDA/.test(nv)&&/^JAWS/.test(jw)&&ini.synth==="rhvoice"&&ini.voice==="Anna"&&изIni==="Anna"&&безВсего==="Microsoft Irina",{nv,jw,ini,изIni,безВсего});
+ const безВсего=autoVoiceName(голоса,{synth:"",voice:""},"");
+ /* без запущенного чтеца: голос SAPI 5 и голос Windows из настроек NVDA, голос из настроек JAWS */
+ const сапи=autoVoiceName(голоса.concat([{name:"Elena",kind:"sapi",lang:"ru-RU"}]),{synth:"sapi5",voice:"HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Speech\\Voices\\Tokens\\RHVoice_Elena"},"");
+ const виндовс=autoVoiceName(голоса.concat([{name:"Microsoft Pavel",kind:"onecore",lang:"ru-RU"}]),{synth:"onecore",voice:"HKEY\\Tokens\\MSTTS_V110_ruRU_PavelM"},"");
+ const джос=autoVoiceName(голоса,{synth:"",voice:""},"[Options]\nSynthesizer=sapi5\nVoice=Aleksandr");
+ check('1. мост: NVDA запущен — голос NVDA; только JAWS — голос JAWS; без чтеца — голос из настроек NVDA (RHVoice, eSpeak, SAPI 5) или JAWS, которым мост говорит сам; иначе RHVoice — не голос Microsoft',
+  /^NVDA/.test(nv)&&/^JAWS/.test(jw)&&ini.synth==="rhvoice"&&ini.voice==="Anna"&&изIni==="Anna"&&безВсего==="Aleksandr"&&сапи==="Elena"&&виндовс==="Aleksandr"&&джос==="Aleksandr",{nv,jw,ini,изIni,безВсего,сапи,виндовс,джос});
 
  const browser=await chromium.launch();
  const errors=[];
@@ -44,7 +51,8 @@ const R=path.join(__dirname,'..');
    if(d)window.graniDesktop={version:"9.5",platform:"win32",quit(){}};
    window.GraniTTS={speak(t,r,v,id){setTimeout(()=>window.GraniTTSDone&&GraniTTSDone(id),20);},stop(){},isSpeaking(){return false;},setVoice(n){window.__voice=n;},
     getVoices(){return JSON.stringify([{id:"Aleksandr",name:"Aleksandr",lang:"ru-RU",local:true,engine:"RHVoice из дополнения NVDA, без NVDA"},
-     {id:"NVDA — голос чтеца экрана",name:"NVDA — голос чтеца экрана",lang:"ru-RU",local:true,engine:"чтец экрана, NVDA",auto:true}]);}};},desk);
+     {id:"NVDA — голос чтеца экрана",name:"NVDA — голос чтеца экрана",lang:"ru-RU",local:true,engine:"чтец экрана, NVDA",auto:true},
+     {id:"Microsoft Pavel",name:"Microsoft Pavel",lang:"ru-RU",local:true,engine:"Windows"}]);}};},desk);
   await p.goto(process.argv[2]);await p.waitForTimeout(900);
   await p.evaluate(()=>{try{enterGame();}catch(_){}while(activeLayer())closeTopUI();window.maybeEvent=()=>{};});
   return p;};
@@ -96,6 +104,16 @@ const R=path.join(__dirname,'..');
  const п5б=await pw.evaluate(()=>({перевод:deskText("Двойное касание — карточка."),окно:document.body.textContent.includes("касани")}));
  check('5. «Что нового», руководство, окна и речь на Windows — без жестов и касаний; в браузере тексты прежние',
   !п5.новости.length&&!п5.рук.length&&п5.длина>1000&&!/свайп|пальц/i.test(п5.сказано)&&п5б.перевод==="Двойное касание — карточка."&&п5б.окно,{п5,п5б});
+
+ /* ── 6 ── */
+ const мс=[{name:"Microsoft Irina",kind:"sapi",vendor:"Microsoft"},{name:"Microsoft Pavel",kind:"onecore"},{name:"Elena",kind:"platform"},{name:"Aleksandr",kind:"rhvoice"},{name:"Acapela Alyona",kind:"sapi",vendor:"Acapela"},{name:"NVDA — голос чтеца экрана",kind:"sr"}].map(v=>v.name+":"+isMsVoice(v));
+ const п6=await p.evaluate(()=>{const все=Speech.allVoices().map(v=>v.name);const список=Speech.voices().map(v=>v.name);
+  let web=0;try{web=(speechSynthesis.getVoices()||[]).length;}catch(_){}
+  settings.voiceAuto=0;settings.voice="";Speech._nativeVoice=null;Speech.voice=null;Speech.adapter=null;Speech._kind=null;const t=document.getElementById("setTtsEngine");if(t){t.value="device";t.dispatchEvent(new Event("change"));}
+  const a=Speech._adapter();return {все,список,web,адаптер:a&&a.name};});
+ check('6. голосов Microsoft на Windows нет: мост их не отдаёт, в списке игры их нет, Chromium не говорит; говорит мост',
+  мс.join()==="Microsoft Irina:true,Microsoft Pavel:true,Elena:true,Aleksandr:false,Acapela Alyona:false,NVDA — голос чтеца экрана:false"
+  &&!п6.все.some(n=>/microsoft/i.test(n))&&!п6.список.some(n=>/microsoft/i.test(n))&&п6.все.includes("Aleksandr")&&п6.адаптер==="native",{мс,п6});
 
  check('Ошибок страницы нет',errors.length===0,errors.slice(0,3));
  await browser.close();

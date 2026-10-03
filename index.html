@@ -1551,6 +1551,10 @@ NEWS.push({v:47,н:"версия 9.5: живой отклик жителей и 
   т:"Житель отвечает на исход по-своему и меняет цену: не помирили — зелье дороже на столько-то золотых и процентов. На Windows голос чтеца NVDA или JAWS выбирается сам, подсказки — про клавиши."});
 NEWS.push({v:48,н:"версия 9.5: кузнец у горна и лекарь, который лечит",
   т:"Кузнец больше не стоит на горне: он рядом и прохаживается вокруг; горн под ногами — работа у горна. В храме, крепости и деревне есть лекарь: лечит за золото или даром за сделанное для этого места дело."});
+NEWS.push({v:49,н:"версия 9.5: учителя по кварталам, стража и дела без возврата",
+  т:"Учителя ремёсел, языков и школ магии стоят в своих кварталах: «кузнец справа, восемь шагов», к ним ведёт маяк. Несколько стражников дают восемь родов заданий. Сделанное дело засчитывается само — к заказчику идти не нужно."});
+NEWS.push({v:50,н:"версия 9.5: на Windows нет голосов Microsoft",
+  т:"Голоса Microsoft на Windows убраны совсем: они отвечали медленно. Говорят голос NVDA или JAWS, RHVoice и eSpeak NG — RHVoice с голосом Aleksandr и eSpeak NG теперь идут вместе с игрой, так что голос есть и на чистом компьютере."});
 const NEWS_V=NEWS[NEWS.length-1].v;
 /* (8.5) Выпуск читается коротко: заголовок, затем факты. */
 function newsLine(n){const н=String(n.н||"");return `${н.charAt(0).toUpperCase()+н.slice(1)}. ${n.т||""}`;}
@@ -1797,7 +1801,11 @@ const Speech={voice:null,keepAlive:null,
  allVoices(){
   const out=[],был=new Set();
   const взять=v=>{const k=this.voiceKey(v);if(!k||был.has(k))return;был.add(k);out.push(v);};
-  try{(speechSynthesis.getVoices()||[]).forEach(взять);}catch(_){}
+  /* (9.5) В приложении для Windows голоса Chromium — это голоса Microsoft:
+     их там нет совсем, говорит только мост (чтец экрана, RHVoice, eSpeak NG,
+     сторонние SAPI 5). */
+  const безМс=this.deskNoMs();
+  if(!безМс)try{(speechSynthesis.getVoices()||[]).forEach(взять);}catch(_){}
   try{if(window.GraniTTS&&typeof window.GraniTTS.getVoices==="function"){
    const r=window.GraniTTS.getVoices();const a=typeof r==="string"?JSON.parse(r||"[]"):r;
    /* В приложении для Windows голос, который Chromium уже показал под тем же
@@ -1807,15 +1815,19 @@ const Speech={voice:null,keepAlive:null,
    (Array.isArray(a)?a:[]).forEach(x=>{if(!x||!(x.id||x.name))return;if(веб.has(имя(x.name||x.id)))return;
     взять({name:String(x.name||x.id),lang:String(x.lang||""),localService:x.local!==false&&x.localService!==false,
      voiceURI:"native:"+String(x.id||x.name),default:!!x.default,auto:!!x.auto,native:true,engine:String(x.engine||""),gender:String(x.gender||"")});});}}catch(_){}
-  return out;},
+  return безМс?out.filter(v=>!this.isMsVoice(v)):out;},
+ /* Приложение для Windows с мостом голосов: голосов Microsoft нет совсем
+    (просьба игрока, 9.5: они отвечают очень медленно). */
+ deskNoMs(){try{return isDesktopApp()&&!!(window.GraniTTS&&typeof window.GraniTTS.speak==="function");}catch(_){return false;}},
  /* ── ГОЛОСА MICROSOFT — ТОЛЬКО ЗАПАСНЫЕ ──
     Просьба игрока (9.0): голоса Microsoft звучат плохо — в выборе их нет,
     если на устройстве есть хоть один другой голос (RHVoice, eSpeak, Acapela,
     Vocalizer и любые сторонние). Других нет — Microsoft остаётся, иначе игра
-    онемела бы. Голоса Microsoft: имя с «Microsoft», голоса Windows 10/11
+    онемела бы. В приложении для Windows (9.5) голосов Microsoft нет совсем:
+    там с игрой едут свои RHVoice и eSpeak NG. Голоса Microsoft: имя с «Microsoft», голоса Windows 10/11
     (OneCore) и Microsoft Speech Platform. */
  isMsVoice(v){try{return !!v&&(/microsoft/i.test(String(v.name||"")+" "+String(v.voiceURI||""))||(!!v.native&&/^(Windows|Speech Platform)\b/.test(String(v.engine||""))));}catch(_){return false;}},
- noMs(vs){const чужие=(vs||[]).filter(v=>!this.isMsVoice(v));return чужие.length?чужие:(vs||[]);},
+ noMs(vs){const чужие=(vs||[]).filter(v=>!this.isMsVoice(v));return чужие.length||this.deskNoMs()?чужие:(vs||[]);},
  voiceFind(key,vs){
   if(!key)return null;vs=vs||this.allVoices();
   return vs.find(v=>this.voiceKey(v)===key)||vs.find(v=>v.name===key)||null;},
@@ -1857,7 +1869,7 @@ const Speech={voice:null,keepAlive:null,
   /* (9.5) «Сам» — голос чтеца экрана, который игра находит сама. */
   if(key==="auto"){settings.voiceAuto=1;saveSettings();this.fillVoices();
    const a=this._nativeVoice&&this._nativeVoice.auto?this._nativeVoice:null;
-   if(o.say!==false)this.say(a?`Голос — сам: ${a.name}.`:"Голос — сам: чтец экрана не найден, говорит голос компьютера по умолчанию.",{interrupt:true});
+   if(o.say!==false)this.say(a?`Голос — сам: ${a.name}.`:"Голос — сам: чтец экрана не найден, говорит RHVoice или eSpeak NG из игры.",{interrupt:true});
    return true;}
   const v=this.voiceFind(key);
   if(!v)return false;
@@ -2035,10 +2047,10 @@ const Speech={voice:null,keepAlive:null,
     показывает сам WebView. В приложении для Windows мост — это голоса
     Windows (SAPI 5 и голоса Windows 10/11): им говорим, когда игрок выбрал
     такой голос или когда Chromium не видит ни одного голоса; иначе говорит
-    синтезатор Chromium, который берёт те же голоса SAPI. */
+    синтезатор Chromium, который берёт те же голоса SAPI. С 9.5 в приложении
+    для Windows говорит только мост: голоса Chromium там — голоса Microsoft. */
  _useNative(свойВеб){
   if(свойВеб||!(window.GraniTTS&&typeof window.GraniTTS.speak==="function"))return false;
-  if(isDesktopApp()&&!this._nativeVoice){try{if((speechSynthesis.getVoices()||[]).length)return false;}catch(_){}}
   return true;},
  _adapter(){
   const род=this._wantKind();
@@ -2052,7 +2064,7 @@ const Speech={voice:null,keepAlive:null,
      доходил бы до уха. Голос, отданный мостом, мост и произносит. */
   const свойВеб=!!(this.voice&&settings.voice&&this.voiceKey(this.voice)===settings.voice&&"speechSynthesis" in window);
   try{if(this._useNative(свойВеб))return this.adapter=this._nativeAdapter();}catch(_){}
-  if("speechSynthesis" in window)return this.adapter=this._webAdapter();
+  if("speechSynthesis" in window&&!this.deskNoMs())return this.adapter=this._webAdapter();
   return null;},
  /* ── ГОЛОС GEMINI ──
     Просьба игрока (3.9): встроенный голос игры неразборчив и медленно
@@ -2179,7 +2191,7 @@ const Speech={voice:null,keepAlive:null,
  _deviceAdapter(){
   const свойВеб=!!(this.voice&&settings.voice&&this.voiceKey(this.voice)===settings.voice&&"speechSynthesis" in window);
   try{if(this._useNative(свойВеб))return this._nativeAdapter();}catch(_){}
-  if("speechSynthesis" in window)return this._webAdapter();
+  if("speechSynthesis" in window&&!this.deskNoMs())return this._webAdapter();
   return null;},
  /* ── НЕЗАПИСАННОЕ — БЫСТРО И С ВЕРНЫМИ УДАРЕНИЯМИ (4.8) ──
     Жалоба игрока: в «Настройках персонажа» после жеста голос молчал секунду
@@ -8036,7 +8048,9 @@ const GUIDE_SRC=[
  "ОТКЛИК ЖИТЕЛЯ. Житель отвечает на исход по-своему, по нраву, и это видно в цене. Не помирили его с соседом, сорвался разговор, бросили его дело, ограбили обоз — у торговца зелье здоровья и весь товар дороже на столько-то золотых и процентов. Помирили, убедили, сдали дело — дешевле. След держится часы мира и проходит сам; что сейчас с ценой — сказано в «Торговле».",
  "МАСТЕР У СТАНКА. Кузнец не стоит на горне: он рядом, в шаге-двух, и время от времени переходит на другое место вокруг горна. Встаньте на горн — откроются работы у горна; встаньте к кузнецу — разговор с ним. В «что вокруг» он назван отдельно: «кузнец … у горна».",
  "ЛЕКАРЬ. В храме рядом со жрецом — целительница, в крепости — лекарь, в деревне — целительница, в стане — полковой лекарь. В разговоре с ним пункт «Лечение»: за золото (дешевле городской лечебницы) или даром — в счёт дела, сданного людям этого места, одно лечение за дело. Лечение возвращает здоровье и снимает яд и кровотечение.",
- "ГОЛОС ЧТЕЦА НА WINDOWS. В приложении для Windows игра сама берёт голос вашего чтеца экрана: запущен NVDA — говорит голосом NVDA, запущен JAWS — голосом JAWS; чтец не запущен — голосом из настроек NVDA. Первый пункт списка голосов — «Сам»; выберете другой голос — игра его не перебьёт. Подсказки, «Что нового» и руководство на Windows говорят о клавишах.",
+ "УЧИТЕЛЯ В ГОРОДЕ. Учителя ремёсел, языков и школ магии стоят в своих кварталах: в ремесленном — мастер-кузнец, кожевенный мастер, плотник, ювелир или мастер рун; в храмовом и учёном — наставник школы чар, алхимик, артефактор; в торговом — повар и толмач; в жилом — толмач, книжник, наставник чар; в воровском — иллюзионист. Подойдя, вы слышите: «Справа мастер-кузнец. Восемь шагов»; в «Осмотреться» и на маяке учитель назван своим ремеслом. В разговоре пункт «Учиться»: ремесло, язык или чары его школы.",
+ "СТРАЖА И ДЕЛА БЕЗ ВОЗВРАТА. Задания дают несколько стражников, а не каждый: головы разбойников, обход стен, ночной дозор, донесение, зверь у дороги, вылазка в подземелье, контрабанда, ворота. Сделанное дело засчитывается само, как только условие выполнено: игра говорит «Дело исполнено — засчитано само», возвращаться к заказчику не нужно.",
+ "ГОЛОС ЧТЕЦА НА WINDOWS. Голосов Microsoft в приложении для Windows нет совсем — они отвечали медленно. В приложении для Windows игра сама берёт голос вашего чтеца экрана: запущен NVDA — говорит голосом NVDA, запущен JAWS — голосом JAWS; чтец не запущен — голосом из настроек NVDA, а если там голос Microsoft — RHVoice или eSpeak NG, которые идут вместе с игрой. Первый пункт списка голосов — «Сам»; выберете другой голос — игра его не перебьёт. Подсказки, «Что нового» и руководство на Windows говорят о клавишах.",
  "Передышка стоит времени. Очаг, жаровня, фонтан, чаша, мешки с зерном, жёрнов, алхимический чан, магический круг и курильница лечат и поят — но каждый раз на это уходит час мира, а на лежанке два. Час двигает сутки, голод, жажду и смену дня и ночи, поэтому у очага не отсидишься от любой раны: полное здоровье там стоит почти двух суток. Зато и даром время не берут: если лечить и поить нечего, вы просто постоите у огня, и часы не сдвинутся.",
  "Рассказывать вещь готова сколько угодно раз, а вот отдать — только однажды. Полено из поленницы, кости из груды, грибы с грибницы, верхушка сталагмита, монеты из комода, содержимое ящика — всё это берётся с этой клетки один раз. Тронув её снова, вы услышите, что тут уже прибрано, и это не отговорка: соседняя такая же поленница на другой клетке своё полено отдаст. Так задумано — иначе одна груда костей кормила бы вас до конца игры."]},
 {title:"Глава 33. Кто написал эти звуки",body:[
@@ -8210,7 +8224,7 @@ const GUIDE_SRC=[
  "ПОЛ ГОЛОСА. Выбранный голос игры — мужской или женский — не меняется посреди речи: то, чего нет в записях, договаривает встроенный голос того же пола, а не голос телефона. Житель говорит голосом своего пола: мужчина — мужским, женщина — женским, какого бы народа он ни был; народ задаёт только высоту. Если у фразы ещё нет записи нужного пола, житель не говорит её чужим голосом — её читает голос игры.",
  "НАДЕТЬ И СНЯТЬ. У каждой вещи свой звук: кольчуга звенит кольцами, латы лязгают пластинами и щёлкают пряжкой, кожаный доспех скрипит кожей и ремнями (у кожи и ткани по три разных записи), ткань шуршит, щит стучит о ремни, амулет — тонкой цепочкой, кольцо — коротким звоном, браслет — звяканьем. Надеть и снять звучат по-разному.",
  "НАСТРОЙКИ ПЕРСОНАЖА. В главном меню, до входа в мир, собирается герой. Пункты: пол персонажа, раса, народ, настройки внешности, голос персонажа, описание героя и «Готово». Новая история («Начать историю» или «Без пролога») сперва открывает эти настройки. Сначала выбираются раса и народ: от них зависит облик. У каждой расы свой род тела — человеческий облик, мех, перья и крылья, чешуя, облик вод, кора и листва, тело из стихии, облик духа, крылья феи, панцирь или конское тело — и свои параметры: характер, телосложение, рост (у полурослика — сантиметры, у титана — метры), цвет глаз, кожа, мех, чешуя или перо, волосы, причёска, черты лица, приметы и особенность, которой нет у других рас (борода гнома, клыки орка, рога тифлинга, род чешуи драконида). Народ добавляет родовой цвет и примету народа. Голос героя живой: шесть мужских и шесть женских голосов; при выборе голоса видны только голоса выбранного пола, а встав на голос, вы слышите его образец. Мужчина говорит мужским голосом, женщина — женским: и в разговоре, и в стоне от раны. Раса, народ, характер и приметы дают первое впечатление: земляки встречают теплее, давние враги вашего народа — холоднее, грозные приметы уважают воинственные народы и настораживают мирные; в державе, где живёт ваш народ, вы свой для всех, а в земле, чей главный народ — давний враг вашего, чужой. Дальше всё решают ваши дела. После начала пути меняются только голос и характер.",
- "ИГРА НА КОМПЬЮТЕРЕ. Есть приложение для Windows: вся игра внутри, сеть не нужна, мышь не нужна — всё делается клавишами, и они определяются по месту на клавиатуре, так что русская раскладка работает так же, как английская. Чтецу экрана (NVDA, JAWS) окно игры объявляется приложением, поэтому клавиши идут прямо в игру. ХОДЬБА: стрелки или W, A, S, D — шаг; Shift со стрелкой — бег, пока держите. ДЕЙСТВИЯ: E или Enter — действие с тем, что под ногами или вплотную: торговец, сундук, книга, алхимический чан, горн, наковальня, лавка, стойка с оружием, дверь, житель (как двойное касание одним пальцем); если рядом несколько, берётся то, к чему вы повернулись последним шагом; F — только собрать ресурс; R — вынуть или убрать оружие; Q — выпить зелье; V — осмотреться; N — что рядом; G — где я; H — состояние героя; B — погасить маяк; цифры 1–9, 0, минус и равно — заклинания слотов с первого по двенадцатый. ОКНА: I или Alt+E — инвентарь; Tab — карта места, по клеткам карты ходят стрелками, Enter называет клетку и проигрывает её маяк, Page Down — к известным точкам; J — журнал; L — список дел; C — окно героя; K — ремесло; X — панель магии; M или Esc — меню действий; O — меню мира; T — досье державы; Y — вести мира; U — вести о вас; P — политика; F1 — руководство; Shift+F1 — прочитать все клавиши; F2 — настройки; F3 — энциклопедия заклинаний; F4 — бестиарий; F6 — сохранения; F5 или Ctrl+S — быстрое сохранение; F9 — загрузить; Ctrl+Q — выход (игра сохраняется). В ОКНЕ: стрелки — пункт за пунктом, Enter или пробел — выбрать, Esc или Backspace — назад, Home и End — первый и последний пункт, Page Up и Page Down — разделы окна, стрелки влево и вправо двигают ползунок. БОЙ: стрелки — удар в сторону твари с вынутым оружием или шаг, пробел — удар, F — удар чарами, Q — зелье, T — где тварь, H — моё здоровье, Backspace или Esc — бежать. РЕЧЬ: Ctrl — замолчать, пробел на поле — повторить или прервать, Alt+R — повторить последнее, Alt+X — очистить очередь, Alt+H — что с речью. Любую клавишу можно переназначить: Настройки → Управление → Клавиатура, Enter на действии — и нажмите новую клавишу или сочетание. ГОЛОСА КОМПЬЮТЕРА: в Настройки → Синтезатор выбирается, кто говорит, — голос Gemini, встроенный голос или голос компьютера; в списке голосов — все движки, установленные на компьютере: голоса SAPI 5 сторонних движков (RHVoice, Acapela, Vocalizer, eSpeak и другие, в том числе 32-битные), RHVoice из дополнения NVDA и eSpeak NG — напрямую, без NVDA, — а закрытые модули NVDA и JAWS (Vocalizer, Acapela, Eloquence) — голосом чтеца экрана при запущенном NVDA или JAWS; рядом с именем сказано, чей это движок. Голоса Microsoft звучат плохо и в выбор не попадают, пока на компьютере есть хоть один другой голос. ГОЛОСОВОЙ ПАКЕТ: в полной сборке (Windows и Android) он уже внутри — ставить ничего не нужно, кнопки установки нет. Для обычной сборки всё, что голос Gemini прочёл сверх вшитого в игру, выходит отдельным файлом GraniMirov-voicepack.zip (выпуск «voicepack-latest»). В приложении для Windows достаточно скачать его в «Загрузки» — приложение найдёт его само; или Настройки → Синтезатор → «Установить голосовой пакет» и выбрать файл. На Android — та же кнопка. Распаковывать не нужно; в веб-версии пакет подключается сам.",
+ "ИГРА НА КОМПЬЮТЕРЕ. Есть приложение для Windows: вся игра внутри, сеть не нужна, мышь не нужна — всё делается клавишами, и они определяются по месту на клавиатуре, так что русская раскладка работает так же, как английская. Чтецу экрана (NVDA, JAWS) окно игры объявляется приложением, поэтому клавиши идут прямо в игру. ХОДЬБА: стрелки или W, A, S, D — шаг; Shift со стрелкой — бег, пока держите. ДЕЙСТВИЯ: E или Enter — действие с тем, что под ногами или вплотную: торговец, сундук, книга, алхимический чан, горн, наковальня, лавка, стойка с оружием, дверь, житель (как двойное касание одним пальцем); если рядом несколько, берётся то, к чему вы повернулись последним шагом; F — только собрать ресурс; R — вынуть или убрать оружие; Q — выпить зелье; V — осмотреться; N — что рядом; G — где я; H — состояние героя; B — погасить маяк; цифры 1–9, 0, минус и равно — заклинания слотов с первого по двенадцатый. ОКНА: I или Alt+E — инвентарь; Tab — карта места, по клеткам карты ходят стрелками, Enter называет клетку и проигрывает её маяк, Page Down — к известным точкам; J — журнал; L — список дел; C — окно героя; K — ремесло; X — панель магии; M или Esc — меню действий; O — меню мира; T — досье державы; Y — вести мира; U — вести о вас; P — политика; F1 — руководство; Shift+F1 — прочитать все клавиши; F2 — настройки; F3 — энциклопедия заклинаний; F4 — бестиарий; F6 — сохранения; F5 или Ctrl+S — быстрое сохранение; F9 — загрузить; Ctrl+Q — выход (игра сохраняется). В ОКНЕ: стрелки — пункт за пунктом, Enter или пробел — выбрать, Esc или Backspace — назад, Home и End — первый и последний пункт, Page Up и Page Down — разделы окна, стрелки влево и вправо двигают ползунок. БОЙ: стрелки — удар в сторону твари с вынутым оружием или шаг, пробел — удар, F — удар чарами, Q — зелье, T — где тварь, H — моё здоровье, Backspace или Esc — бежать. РЕЧЬ: Ctrl — замолчать, пробел на поле — повторить или прервать, Alt+R — повторить последнее, Alt+X — очистить очередь, Alt+H — что с речью. Любую клавишу можно переназначить: Настройки → Управление → Клавиатура, Enter на действии — и нажмите новую клавишу или сочетание. ГОЛОСА КОМПЬЮТЕРА: в Настройки → Синтезатор выбирается, кто говорит, — голос Gemini, встроенный голос или голос компьютера; в списке голосов — все движки, установленные на компьютере: голоса SAPI 5 сторонних движков (RHVoice, Acapela, Vocalizer, eSpeak и другие, в том числе 32-битные), RHVoice из дополнения NVDA и eSpeak NG — напрямую, без NVDA, — а закрытые модули NVDA и JAWS (Vocalizer, Acapela, Eloquence) — голосом чтеца экрана при запущенном NVDA или JAWS; рядом с именем сказано, чей это движок. Голосов Microsoft в приложении нет совсем — они отвечают очень медленно; вместе с игрой поставляются свои движки, RHVoice с голосом Aleksandr и eSpeak NG, так что игра говорит и на компьютере без единого стороннего голоса. ГОЛОСОВОЙ ПАКЕТ: в полной сборке (Windows и Android) он уже внутри — ставить ничего не нужно, кнопки установки нет. Для обычной сборки всё, что голос Gemini прочёл сверх вшитого в игру, выходит отдельным файлом GraniMirov-voicepack.zip (выпуск «voicepack-latest»). В приложении для Windows достаточно скачать его в «Загрузки» — приложение найдёт его само; или Настройки → Синтезатор → «Установить голосовой пакет» и выбрать файл. На Android — та же кнопка. Распаковывать не нужно; в веб-версии пакет подключается сам.",
  "ВЫХОД И СОХРАНЕНИЕ. В меню действий, после «Что нового», есть пункт «Выход», а в главном меню — кнопка «Выход»; на компьютере то же делает Ctrl+Q. Игра сохраняется и закрывается: на телефоне и компьютере — само приложение, в браузере — в главное меню (вкладку закрывает сам игрок, браузер не даёт странице закрыть себя). Герой сохраняется там, где стоит, где бы он ни был: каждые три секунды игра смотрит, сдвинулся ли он — по миру, по ярусу подземелья, по палубе, — и записывает себя; ещё раз — когда приложение уходит в фон. Кто прошёл по подземелью и закрыл игру, при загрузке оказывается на том же месте яруса, а не у лестницы.",
  "РУКОВОДСТВО. Сто шесть глав собраны в тридцать одну: близкие главы стали разделами одной, номера идут подряд в порядке чтения, по разделам внутри главы можно перескакивать так же, как по частям в оглавлении."]},
 {title:"Глава 105. Версия 4.4: свой голос у каждой твари, живая капель, тяжёлый шаг стражи, зелья и требования вещей",body:[
@@ -28596,7 +28610,11 @@ const MAST_TEACH={
  "Шепчущий":{demon:4,illus:2},
  "Обрядчик":{demon:3},
  "Меняла клятв":{demon:1},
- "Счётчик костей":{homun:2}};
+ "Счётчик костей":{homun:2},
+ /* (9.5) Учителя кварталов: у каждого своё ремесло до высшей ступени. */
+ "Мастер-кузнец":{smith:5,jewel:2},"Кожевенный мастер":{leather:5},"Плотник":{wood:5},
+ "Ювелир":{jewel:5},"Мастер рун":{runes:5},"Алхимик":{alchemy:5,cook:2},"Артефактор":{arte:5},
+ "Повар":{cook:5},"Иллюзионист":{illus:5},"Толмач":{lang:5},"Книжник":{lang:4}};
 function mastOf(id){
  if(!G.mast||typeof G.mast!=="object")G.mast={};
  const r=G.mast[id];
@@ -33261,6 +33279,7 @@ function tileLabel(t,x,y){
    if(k)return k.read?`${k.obj.n} (изучено)`:k.obj.n;}
   if(t==="X"){const p=propAt(x,y);if(p)return p.n;}
   if(t==="Z"){const b=prodShopAt(x,y);if(b)return b.n;}
+  if(t==="N"){const у=cityTeacherAt(x,y);if(у)return teacherLabel(у);}
  }catch(_){}
  return tileName(t);}
 function tileBeacon(t){return (TILE[t]||{}).b;}
@@ -36502,7 +36521,13 @@ function nearFeatures(rad,всё){
  for(let y=Math.max(0,p.y-rad);y<Math.min(lvl.h,p.y+rad+1);y++)
   for(let x=Math.max(0,p.x-rad);x<Math.min(lvl.w,p.x+rad+1);x++){
    const t=tileAt(lvl,x,y);
-   if(t==="."||t==="#")continue;
+   if(t==="#")continue;
+   if(t==="."){
+    /* (9.5) Кузнец у горна стоит на полу — его тоже слышно и видно маяком. */
+    const к=safeFn(()=>keeperAt(lvl,x,y),null);if(!к)continue;
+    const dx=x-p.x,dy=y-p.y,d=Math.max(Math.abs(dx),Math.abs(dy));if(!d)continue;
+    if(!всё&&!canSee(lvl,p.x,p.y,x,y)&&!isBeaconTarget(x,y))continue;
+    out.push({x,y,t:"N",d,dx,dy,dir:dirBetween(dx,dy),name:"кузнец у горна",bid:tileBeacon("N")});continue;}
    const dx=x-p.x,dy=y-p.y,d=Math.max(Math.abs(dx),Math.abs(dy));
    if(!d)continue;
    if(!всё&&!canSee(lvl,p.x,p.y,x,y)&&!isBeaconTarget(x,y))continue;
@@ -38692,7 +38717,8 @@ function talkInside(t,x,y){
  /* Лавка, горн, житель, подземный торговец и пост стражи — каждый со своим
     ремеслом. Торговцы в подземелье такие же настоящие, как городские:
     у них свой запас, свои цены и свой разговор. */
- const profForced=t==="S"?"Торговец":t==="F"?"Кузнец":t==="P"?"Торговец":t==="B"?"Стражник":null;
+ const учитель=t==="N"?safeFn(()=>cityTeacherAt(x,y),null):null;
+ const profForced=t==="S"?"Торговец":t==="F"?"Кузнец":t==="P"?"Торговец":t==="B"?"Стражник":учитель?учитель.prof:null;
  const role=t==="S"?"market":t==="F"?"forge":t==="P"?"shop_till":t==="B"?"oc_step_soft":"tavern";
  /* Шум места — под голосом, а не поверх него. Раньше касса, две тележки
     и маяк с той же кассой гремели разом во всю силу, и подземный торговец
@@ -43049,6 +43075,8 @@ const CMD={
  npctrade(key){if(npcTradeView(key))narrate("Торговля. Купить или продать.",{interrupt:true});},
  npcquests(key){if(npcQuestsView(key)){const n=getNPCByKey(key);narrate(`Задания у ${n?n.name:"жителя"}: основное, побочные${n&&npcSettlement(n)?" и дела общины":""}.`,{interrupt:true});}},
  npcback(key){openNPC(key,true);narrate("Разговор.",{interrupt:true});},
+ npclearn(key){if(teacherView(key))narrate("Учиться: ремёсла, язык и чары — чему он учит.",{interrupt:true});},
+ tspell(arg){const p=String(arg||"").split("~");teacherSpellLearn(p[0],p[1]);},
  npcheal(key){if(healerView(key))narrate("Лечение: за золото или в счёт сделанного дела.",{interrupt:true});},
  npchealdo(arg){const p=String(arg||"").split("~");healerHeal(p[0],p[1]||"gold");},
  qprev(arg){const p=String(arg||"").split("~");npcQuestPreview(p[0],p[1]||"main");},
@@ -45656,7 +45684,7 @@ const Langs=Modules.register("LANGS",{
  practice(n){try{const l=this.ofNPC(n);if(l.id==="common"||this.level(l.id)>=3)return false;if(!G.langTalk||typeof G.langTalk!=="object")G.langTalk={};const k=n.key+"@"+G.day;if(G.langTalk[k])return false;G.langTalk[k]=1;
   if(Object.keys(G.langTalk).length>200)G.langTalk={[k]:1};return this.learn(l.id,2,`разговор с ${n.name}`)||true;}catch(_){return false;}},
  /* Урок языка у того, кто учит: книжник, Магистр, Архивист, Изгнанник Дома. */
- teachers:["Книжник","Магистр","Маг-отшельник","Архивист","Изгнанник Дома","Жрец","Летописец","Наставник Пути"],
+ teachers:["Толмач","Книжник","Магистр","Маг-отшельник","Архивист","Изгнанник Дома","Жрец","Летописец","Наставник Пути"],
  lesson(n){try{if(!n||!this.teachers.includes(n.prof))return "Языкам здесь не учат.";const l=this.ofNPC(n);const цель=l.id==="common"?LANGS.find(x=>x.область===((regionIndexAt(n.x,n.y)+1)%20)):l;if(!цель)return "Учить нечему.";
   if(this.level(цель.id)>=3)return `${цель.n[0].toUpperCase()+цель.n.slice(1)} вы знаете свободно: ${n.name} разводит руками.`;const цена=30;if((Number(G.gold)||0)<цена)return `Урок языка стоит ${цена} золота: не хватает.`;G.gold-=цена;
   const up=this.learn(цель.id,8,`урок у ${n.name}`);return `${n.name} берёт ${цена} золота и час говорит с вами только на ${цель.n}: ${up?"ступень взята.":`понимание растёт (${(G.langs[цель.id]||{}).оп||0} из ${this.need(цель.id)}).`}`;}catch(_){return "Урок не сложился.";}},
@@ -48785,6 +48813,7 @@ const Clock={
   if(m!=="steps")this.advance(dt*CLOCK_MODES[m].k);
   G.realAt=сейчас;
   safeFn(()=>Body.tick(dt));
+  safeFn(()=>questAutoCheck());
   return true;}};
 const Body={
  hitAt:{},warned:{},
@@ -54087,6 +54116,39 @@ function questsText(){
 /* Не больше десяти незакрытых дел разом — откуда бы дело ни пришло: от
    жителя, стражи, обоза, храма, порта, книги или Академии. */
 const QUEST_LIMIT=10;
+/* ── (9.5) ДЕЛО СДАЁТСЯ САМО ──
+   Прежде, выполнив дело, нужно было бежать к заказчику и сдавать его самому.
+   Теперь, как только условие исполнено, дело засчитывается само: награда,
+   опыт и отношение — сразу, а заказчик узнаёт об этом с вестью. Не сдаются
+   сами только те дела, где нужен выбор игрока: развязка на выбор и сбор на
+   храм (это плата из вашего кошеля). */
+function questReady(q){
+ try{
+  if(!q||q.done||q.failed)return false;
+  if(q.решения&&!q.решение)return false;
+  const n=Number(q.need)||1,inv=k=>Number((G.inv||{})[k])||0;
+  const у=()=>Math.max(Math.abs(G.x-q.tx),Math.abs(G.y-q.ty));
+  switch(q.type){
+   case "fetch":case "war_supply":return inv(q.res)>=n;
+   case "kill":case "hunt":case "craft":case "study":case "trapwork":case "hoard":return (Number(q.have)||0)>=n;
+   case "visit":case "god_altar":case "soc_peace":return !!q.doneFlag;
+   case "bandits":return safeFn(()=>headsHave(),0)>=n;
+   case "freight":case "delivery":return !G.place&&у()<=1&&inv(q.res)>=n;
+   case "god_relic":{const g=GOD_BY_ID[q.godId];return !!g&&(G.items||[]).indexOf(`Реликвия: ${g.n}`)>=0;}
+   case "war_raid":return Math.max(0,(Number(G.dungeonKills)||0)-(Number(q.base)||0))>=n;
+   default:return false;}
+ }catch(_){return false;}}
+let questAutoBusy=false;
+function questAutoCheck(){
+ if(questAutoBusy||settings.autoQuest===0||G.inCombat)return 0;
+ questAutoBusy=true;let n=0;
+ try{
+  for(const q of (G.quests||[]).slice()){
+   if(!questReady(q))continue;
+   narrate(`Дело «${q.заглавие||String(q.text||"").split(/[.!?]/)[0].slice(0,60)}» исполнено — засчитано само, возвращаться к ${q.npc||"заказчику"} не нужно.`,{interrupt:false});
+   safeFn(()=>completeQuest(q.id));n++;}
+ }finally{questAutoBusy=false;}
+ return n;}
 /* ════════════════════════════════════════════════════════════════════════
    (9.5) ОТКЛИК ЖИТЕЛЯ: ИСХОД ДЕЛА МЕНЯЕТ ЕГО СЛОВО И ЕГО ЦЕНУ
 
@@ -54240,6 +54302,27 @@ const SIDE_KINDS=[
   return {type:"visit",tx:c.x,ty:c.y,need:1,куда:c.name,text:`Отнесите весточку моей родне в «${c.name}» — это на клетке (${c.x}; ${c.y}). Как дойдёте — возвращайтесь, расскажете, как они там.`,reward:{gold:8*t+Math.min(40,c.d),xp:12*t+Math.min(30,c.d)}};}},
  {id:"проведать",заг:"Проведать заимку",gen(n,t,h){const dx=Math.round((h(8)-0.5)*30)||7,dy=Math.round((h(9)-0.5)*30)||-6;const tx=Math.max(0,Math.min(WORLD-1,n.x+dx)),ty=Math.max(0,Math.min(WORLD-1,n.y+dy));
   return {type:"visit",tx,ty,need:1,text:`Сходите на мою заимку у (${tx}; ${ty}), гляньте, цела ли. Сам ноги уже не те.`,reward:{gold:7*t+8,xp:12*t+6}};}}];
+/* ── (9.5) ДЕЛА СТРАЖИ ──
+   Стражник давал одно дело — головы разбойников. Теперь у каждого стражника
+   три побочных на день из восьми родов службы. */
+const GUARD_RE=/Стражник|Сотник|Капитан|Комендант/;
+const GUARD_KINDS=[
+ {id:"головы",заг:"Головы разбойников",gen(n,t,h){const need=1+Math.floor(h(1)*2);
+  return {type:"bandits",need,text:`На тракте опять шалят. Принесите ${need} ${plural(need,"голову","головы","голов")} разбойников — заплатим по уставу.`,reward:{gold:20*t+18*need,xp:24*t+10*need}};}},
+ {id:"обход",заг:"Обход постов",gen(n,t,h){const dx=Math.round((h(2)-0.5)*24)||6,dy=Math.round((h(3)-0.5)*24)||-5;const tx=Math.max(0,Math.min(WORLD-1,n.x+dx)),ty=Math.max(0,Math.min(WORLD-1,n.y+dy));
+  return {type:"visit",tx,ty,need:1,text:`Дальний пост у (${tx}; ${ty}) молчит второй день. Дойдите и проверьте, на месте ли смена.`,reward:{gold:10*t+12,xp:16*t+8}};}},
+ {id:"дозор",заг:"Ночной дозор",gen(n,t,h){const need=2+Math.floor(h(4)*3);
+  return {type:"kill",need,text:`Ночью твари подходят к самым стенам. Встаньте в дозор: убейте ${need} в округе.`,reward:{gold:9*t+8*need,xp:22*t+9*need}};}},
+ {id:"донесение",заг:"Донесение",gen(n,t,h){const cs=(safeFn(()=>findCities(n.x,n.y,40,6),[])||[]).filter(c=>c.d>2);const c=cs[Math.floor(h(5)*cs.length)%Math.max(1,cs.length)];if(!c)return null;
+  return {type:"visit",tx:c.x,ty:c.y,need:1,куда:c.name,text:`Донесение коменданту в «${c.name}» (${c.x}; ${c.y}). Запечатано — не вскрывать.`,reward:{gold:8*t+Math.min(40,c.d),xp:14*t+Math.min(30,c.d)}};}},
+ {id:"зверь",заг:"Зверь у стен",gen(n,t,h){const m=MONSTERS[Math.floor(h(6)*MONSTERS.length)%MONSTERS.length];
+  return {type:"hunt",monsterId:m.id,monsterName:m.n,need:1,have:0,text:`У стен видели «${m.n}». Выследите и убейте, пока не задрал кого.`,reward:{gold:22*t+16,xp:26*t+12}};}},
+ {id:"подземелье",заг:"Очистить подземелье",gen(n,t,h){const need=3+Math.floor(h(7)*3);
+  return {type:"war_raid",need,text:`Из ближнего подземелья лезет нечисть. Спуститесь и убейте ${need} ${plural(need,"тварь","твари","тварей")} внизу.`,reward:{gold:14*t+10*need,xp:28*t+10*need}};}},
+ {id:"контрабанда",заг:"Перехват контрабанды",gen(n,t,h){const res=["кристалл","эфир","руда"][Math.floor(h(8)*3)%3];const need=2;
+  return {type:"fetch",res,need,безМеста:true,text:`Через ворота везут «${res}» мимо пошлины. Добудьте ${need} шт. для улики — найдите или выкупите.`,reward:{gold:12*t+15,xp:18*t+10}};}},
+ {id:"ворота",заг:"Смена у ворот",gen(n,t,h){const need=1+Math.floor(h(9)*2);
+  return {type:"kill",need,text:`Подмените смену у ворот: отгоните ${need} ${plural(need,"тварь","твари","тварей")}, что бродят у дороги.`,reward:{gold:8*t+10*need,xp:16*t+8*need}};}}];
 /* ── ДЕЛА ОБЩИНЫ: СОЦИАЛЬНЫЕ ── */
 const COMMUNITY_KINDS=[
  {id:"мир",заг:"Мир между соседями",власть:"noble",gen(n,t,h,s){
@@ -54266,10 +54349,11 @@ function sideQuestsFor(n){
   const идут=new Set();
   for(let i=0;i<3;i++){
    const h=j=>hashName((n.x|0)+i*7+j*3,(n.y|0)+day*13+String(n.key).length,9700+j+i*19);
-   let k=Math.floor(h(0)*SIDE_KINDS.length)%SIDE_KINDS.length,шаг=0;
-   while(идут.has(k)&&шаг<SIDE_KINDS.length){k=(k+1)%SIDE_KINDS.length;шаг++;}
+   const KINDS=GUARD_RE.test(String(n.prof||""))?GUARD_KINDS:SIDE_KINDS;
+   let k=Math.floor(h(0)*KINDS.length)%KINDS.length,шаг=0;
+   while(идут.has(k)&&шаг<KINDS.length){k=(k+1)%KINDS.length;шаг++;}
    идут.add(k);
-   const вид=SIDE_KINDS[k];const q=safeFn(()=>вид.gen(n,t,h),null);if(!q)continue;
+   const вид=KINDS[k];const q=safeFn(()=>вид.gen(n,t,h),null);if(!q)continue;
    Object.assign(q,{id:`${n.key}s${day}_${i}`,npc:n.name,npcKey:n.key,побочный:true,вид:вид.id,заглавие:вид.заг,have:0});
    q.text=safeFn(()=>Род.жителя(n,q.text),q.text);
    if(!взятые.has(q.id))out.push(q);}
@@ -54355,6 +54439,7 @@ function takeSideQuest(n,q,род){
   narrate(`У вас уже ${openQuests().length} незакрытых дел — больше не удержать. Закончите начатое или откажитесь от чего-нибудь в списке заданий.`);return false;}
  if((G.quests||[]).some(x=>x&&x.id===q.id)){narrate("Это дело уже у вас.");return false;}
  q.done=false;q.race=n.race;q.состояние="открыто";q.старт=`взято у ${n.name} на ${G.day}-й день`;
+ if(q.type==="war_raid")q.base=Number(G.dungeonKills)||0;
  if(!q.до)q.до=(Number(G.day)||1)+(q.общинный?4:5);
  G.quests.push(q);journal(`${род} от ${n.name}: ${q.text}`);
  safeFn(()=>eventTheme("quest_take",{tier:"normal",gain:0.5}));
@@ -54459,6 +54544,77 @@ function healerHeal(key,mode){
  narrate(`${n.name} промывает, перевязывает и даёт горький отвар. Здоровье ${G.hp} из ${G.hpMax} (было ${было}).${снято.length?` Снято: ${снято.join(", ")}.`:""}${плата}`,{interrupt:true});
  safeFn(()=>{refresh();saveGame(true);});
  safeFn(()=>healerView(key));
+ return true;}
+/* ── (9.5) УЧИТЕЛЯ ПО КВАРТАЛАМ ──
+   Учиться было не у кого: в городе жили правитель, советник и стража, а
+   ремёслам, языкам и чарам учили только в редких местах. Теперь в каждом
+   квартале один из жителей — учитель по делу квартала: в ремесленном —
+   мастер-кузнец, кожевенный мастер, плотник, ювелир или мастер рун; в
+   храмовом и учёном — наставник школы чар, алхимик, артефактор; в торговом —
+   повар и толмач; в жилом — толмач, книжник, наставник чар; в воровском —
+   иллюзионист. Он стоит в своей комнате квартала, на маяке и в подсказках
+   назван своим ремеслом: «Справа мастер-кузнец. Четыре шага». */
+const CITY_TEACHERS={
+ F:["Мастер-кузнец","Кожевенный мастер","Плотник","Ювелир","Мастер рун"],
+ A:["Наставник чар","Алхимик","Артефактор","Наставник чар"],
+ S:["Повар","Толмач"],
+ N:["Толмач","Книжник","Наставник чар","Повар"],
+ C:["Иллюзионист","Алхимик"],
+ B:[]};
+function cityTeacherAt(x,y,lvl){
+ try{
+  lvl=lvl||curLevel();if(!lvl||lvl.kind!=="city"||!lvl.blocks)return null;
+  const bi=lvl.blocks.findIndex(b=>x>=b.x0&&x<=b.x1&&y>=b.y0&&y<=b.y1);if(bi<0)return null;
+  const b=lvl.blocks[bi];if(!b.rooms||b.rooms.length<2)return null;
+  const r=b.rooms[1],cx=r.x0+((r.x1-r.x0)>>1),cy=r.y0+((r.y1-r.y0)>>1);
+  if(x!==cx||y!==cy||tileAt(lvl,x,y)!=="N")return null;
+  const list=CITY_TEACHERS[b.purpose]||CITY_TEACHERS.N;if(!list.length)return null;
+  const p=G.place||{};const h=hashName((p.bx|0)+bi*7,(p.by|0)+bi*3,991);
+  const prof=list[Math.floor(h*list.length)%list.length];
+  const школа=prof==="Наставник чар"?safeFn(()=>teacherSchoolOf(getNPC(p.bx,p.by,(x+y)%3,prof)),null):null;
+  return {prof,школа,квартал:b.name};
+ }catch(_){return null;}}
+function teacherLabel(t){return t.школа?`наставник школы «${t.школа.n}»`:t.prof[0].toLowerCase()+t.prof.slice(1);}
+/* Школа наставника чар — по его ключу: он учит одной школе. */
+function teacherSchoolOf(n){
+ if(!n||n.prof!=="Наставник чар")return null;
+ return ENC_SCHOOLS[Math.floor(hashName((n.x|0),(n.y|0)+String(n.key).length,992)*ENC_SCHOOLS.length)%ENC_SCHOOLS.length];}
+/* Три ближайшие ещё не разобранные чары его школы, что уже по уровню. */
+function teacherSpells(n){
+ const шк=teacherSchoolOf(n);if(!шк)return [];
+ const бл=ENC_SCHOOLS.indexOf(шк),out=[];
+ for(let k=0;k<ENC_PER_SCHOOL&&out.length<3;k++){
+  const r=safeFn(()=>encAt(бл*ENC_PER_SCHOOL+k+1),null);if(!r)continue;
+  if(safeFn(()=>encKnown(r.номер),false))continue;
+  if((Number(G.level)||1)<(ENC_TIER_LEVEL[r.ступень-1]||1))break;
+  out.push(r);}
+ return out;}
+function teacherSpellLearn(key,номер){
+ const n=getNPCByKey(key);if(!n){narrate("Наставника здесь больше нет.");return false;}
+ const r=teacherSpells(n).find(x=>String(x.номер)===String(номер));
+ if(!r){narrate("Этой чаре он сейчас не учит.");return false;}
+ const цена=20+r.ступень*25;
+ if((Number(G.gold)||0)<цена){narrate(`Урок «${r.имя}» стоит ${цена} золота, у вас ${Math.floor(G.gold)}.`,{interrupt:true});return false;}
+ G.gold-=цена;encState().книга.push(r.номер);safeFn(()=>encPlay(r));
+ safeFn(()=>npcRemember(n,"купил",цена,4));
+ narrate(`${n.name} берёт ${цена} золота и разбирает с вами «${r.имя}»: ${r.действие}, аспект — ${r.аспект}. Чара в вашей книге.`,{interrupt:true});
+ safeFn(()=>journal(`Урок чар: ${r.имя}.`));safeFn(()=>{refresh();saveGame(true);});safeFn(()=>teacherView(key));
+ return true;}
+function isTeacher(n){return !!n&&(!!MAST_TEACH[n.prof]||safeFn(()=>Langs.teachers.includes(n.prof),false)||n.prof==="Наставник чар");}
+/* Окно «Учиться» у учителя: ремёсла, язык, чары его школы. */
+function teacherView(key){
+ const n=getNPCByKey(key);if(!n){narrate("Этого жителя здесь больше нет.");return false;}
+ let html=`<div class="list-line" tabindex="0" data-speak="Учиться у ${n.name}, ${n.prof}.">Учиться у ${n.name} — ${n.prof}</div>`;
+ html+=safeFn(()=>Mentor.npcButtons(n),"")||"";
+ if(safeFn(()=>Langs.teachers.includes(n.prof),false))html+=`<button class="item" data-cmd="langlesson:${n.key}" data-speak="Урок языка: тридцать золота.">Урок языка (30)</button>`;
+ const шк=teacherSchoolOf(n);
+ if(шк){
+  const чары=teacherSpells(n);
+  html+=`<div class="list-line" tabindex="0">Школа «${шк.n}»: ${шк.о}</div>`;
+  html+=чары.length?чары.map(r=>`<button class="item" data-cmd="tspell:${n.key}~${r.номер}" data-speak="${(`Чара «${r.имя}», ступень ${r.ступеньРим}: ${r.действие}. Урок — ${20+r.ступень*25} золота.`).replace(/"/g,"&quot;")}">Чара «${r.имя}» (${20+r.ступень*25})</button>`).join("")
+   :`<div class="list-line" tabindex="0">Сейчас учить нечему: следующие чары — с более высокого уровня.</div>`;}
+ html+=`<div class="row"><button class="item" data-cmd="npcback:${n.key}" data-speak="Назад, к разговору.">Назад</button></div>`;
+ document.getElementById("npcBody").innerHTML=html;
  return true;}
 /* Окно «Торговля» у торговца: два пункта — купить и продать. */
 function npcTradeView(key){
@@ -54635,6 +54791,7 @@ function openNPC(key,silent,o){const n=getNPCByKey(key);o=o||{};
  {const побоч=safeFn(()=>sideQuestsTaken(n).length,0);
   const сказ=q?`Задания: основное взято — ${safeFn(()=>qProgressText(q),"")}.`:"Задания: основное, побочные"+(safeFn(()=>npcSettlement(n),null)?" и дела общины":"")+".";
   html+=`<button class="item" data-cmd="npcquests:${n.key}" data-speak="${(сказ+(побоч?` Взято побочных: ${побоч}.`:"")).replace(/"/g,"&quot;")}">Задания${q?" (основное взято)":""}${побоч?` · побочных: ${побоч}`:""}</button>`;}
+ if(safeFn(()=>isTeacher(n),false))html+=`<button class="item" data-cmd="npclearn:${n.key}" data-speak="Учиться у ${n.name}: ${n.prof}.">Учиться</button>`;
  if(safeFn(()=>isHealer(n),false)){const д=safeFn(()=>healCredits(n).length,0);
   html+=`<button class="item" data-cmd="npcheal:${n.key}" data-speak="Лечение: за золото${д?` или даром, в счёт сделанного дела`:""}.">Лечение</button>`;}
  html+=`<div class="list-line"><b>${n.name}</b> — ${Род.ремесло(n)}, ${n.race}${branch}. Уровень влияния ${n.tier}.<br>
@@ -61526,7 +61683,7 @@ function desktopStrip(){
 function desktopVoiceLabels(){
  if(!isDesktopApp())return;
  const b=document.querySelector("#setEngDevice + span");
- if(b)b.innerHTML="<b>Голос компьютера</b><small>Любой движок, установленный на компьютере: голоса SAPI 5 сторонних движков — RHVoice, Acapela, Vocalizer, eSpeak и других, в том числе 32-битные; RHVoice, поставленный дополнением NVDA, и eSpeak NG (из NVDA или отдельной установки) — напрямую, без NVDA; закрытые модули NVDA и JAWS (Vocalizer, Acapela, Eloquence) — пунктом «голос чтеца экрана» при запущенном NVDA или JAWS. Голосов Microsoft в выборе нет, пока есть хоть один другой голос. Новый движок поставили — «Перечитать голоса компьютера»: игра найдёт его без перезапуска и скажет, что нашла</small>";
+ if(b)b.innerHTML="<b>Голос компьютера</b><small>Любой движок, установленный на компьютере: голоса SAPI 5 сторонних движков — RHVoice, Acapela, Vocalizer, eSpeak и других, в том числе 32-битные; RHVoice, поставленный дополнением NVDA, и eSpeak NG (из NVDA или отдельной установки) — напрямую, без NVDA; закрытые модули NVDA и JAWS (Vocalizer, Acapela, Eloquence) — пунктом «голос чтеца экрана» при запущенном NVDA или JAWS. Голосов Microsoft нет совсем: они медленные. RHVoice с голосом Aleksandr и eSpeak NG идут вместе с игрой. Новый движок поставили — «Перечитать голоса компьютера»: игра найдёт его без перезапуска и скажет, что нашла</small>";
  const sel=document.getElementById("setVoice");if(sel){sel.setAttribute("aria-label","Выбор голоса компьютера");const l=sel.closest("label");if(l&&l.firstChild&&l.firstChild.nodeType===3)l.firstChild.textContent="Выбор голоса компьютера ";}
  const h=document.getElementById("voiceHint");if(h)h.textContent="Список — все голоса, установленные на этом компьютере; рядом с именем — чей это движок.";
  const bl=document.getElementById("btnVoiceList");if(bl)bl.textContent="Все голоса компьютера — списком";

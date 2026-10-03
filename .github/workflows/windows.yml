@@ -91,6 +91,23 @@ jobs:
           $env:GRANI_EXPECT_ENGINES = 'rhvoice,espeak'
           node sapi-test.js
 
+      # Голосов Microsoft в игре нет (медленные): вместе с игрой едут свои
+      # движки — eSpeak NG (resources/espeak) и RHVoice с голосом Aleksandr
+      # (resources/rhvoice, берётся, только если у игрока нет своего RHVoice).
+      - name: Встроить eSpeak NG и RHVoice в приложение
+        continue-on-error: true
+        shell: pwsh
+        run: |
+          $es = Join-Path $env:ProgramFiles 'eSpeak NG'
+          New-Item -ItemType Directory -Force desktop\espeak | Out-Null
+          Copy-Item (Join-Path $es 'libespeak-ng.dll') desktop\espeak\
+          Copy-Item (Join-Path $es 'espeak-ng-data') desktop\espeak\ -Recurse
+          $ad = Join-Path $env:APPDATA 'nvda\addons'
+          New-Item -ItemType Directory -Force desktop\rhvoice | Out-Null
+          foreach ($n in 'RHVoice','RHVoice-voice-Russian-Aleksandr') { Copy-Item (Join-Path $ad $n) desktop\rhvoice\ -Recurse }
+          Get-ChildItem desktop\espeak, desktop\rhvoice | Select-Object -First 10
+          "{0:N1} МБ" -f ((Get-ChildItem -Recurse desktop\espeak, desktop\rhvoice | Measure-Object Length -Sum).Sum / 1MB)
+
       - name: Проверить голоса Windows, выбор синтезатора и клавиши
         continue-on-error: true
         working-directory: desktop
@@ -122,12 +139,12 @@ jobs:
           # Мост голосов (sapi) и библиотека NVDA (sr) — рядом с приложением,
           # обычными файлами (resources/sapi, resources/sr): из архива app.asar
           # их не может прочитать ни PowerShell, ни Windows.
-          mkdir -p sr sapi
+          mkdir -p sr sapi espeak rhvoice
           npx @electron/packager . GraniMirov --platform=win32 --arch=x64 --out=out --overwrite \
             --executable-name=GraniMirov --app-version=9.5.0 --build-version=9.5.${GITHUB_RUN_NUMBER} \
             --win32metadata.ProductName="Грань Миров" --win32metadata.FileDescription="Грань Миров" \
             --win32metadata.CompanyName="Грань Миров" \
-            --extra-resource=../build/game --extra-resource=sapi --extra-resource=sr --ignore='out' --ignore='icon\.ico' --ignore='(key|voice)check\.js' --ignore='sapi-test\.js' --ignore='sapi-build\.js' $ICONARG
+            --extra-resource=../build/game --extra-resource=sapi --extra-resource=sr --extra-resource=espeak --extra-resource=rhvoice --ignore='out' --ignore='icon\.ico' --ignore='(key|voice)check\.js' --ignore='sapi-test\.js' --ignore='sapi-build\.js' $ICONARG
           D=out/GraniMirov-win32-x64
           # Мост голосов обязан лежать обычным файлом рядом с приложением.
           ls -la "$D/resources/sapi" "$D/resources/sr" || true

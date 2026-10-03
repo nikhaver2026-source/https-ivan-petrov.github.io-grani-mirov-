@@ -15,7 +15,8 @@
    3. Есть сторонние голоса — голосов Microsoft (SAPI с «Microsoft» в имени,
       голоса Windows 10/11, Speech Platform) в выборе нет; сохранённый голос
       Microsoft уступает стороннему.
-   4. Других голосов нет — голоса Microsoft остаются, игра не немеет.
+   4. (9.5) Голосов Microsoft на Windows нет совсем, даже без других: с игрой
+      едут свои RHVoice и eSpeak NG (resources/rhvoice, resources/espeak).
    5. Мост голосов Windows сам грузит RHVoice из дополнений NVDA и eSpeak NG
       (без вариантов и голосов MBROLA, ронявших библиотеку); сбой чужой
       библиотеки не роняет мост, упавший мост поднимается сам; сборка
@@ -87,7 +88,10 @@ const ПОДДЕЛКА=(голоса,пакет,сохранён)=>`(()=>{
  const p4=await открыть(ГОЛОСА_ВСЕ.filter(v=>/Microsoft|Elena/.test(v.name)),{installed:false});
  const п4=await p4.evaluate(()=>{const t=document.getElementById("setTtsEngine");t.value="device";t.dispatchEvent(new Event("change"));Speech.fillVoices();
   return {список:Speech.voices().map(v=>v.name),выбран:(Speech._nativeVoice||Speech.voice||{}).name||""};});
- check('4. других голосов нет — голоса Microsoft остаются запасными',п4.список.length===3&&/Microsoft/.test(п4.выбран),п4);
+ const сб=require('fs').readFileSync(require('path').join(__dirname,'..','.github','workflows','windows.yml'),'utf8');
+ const мост=require(require('path').join(__dirname,'..','desktop','sapi.js'));
+ check('4. голосов Microsoft на Windows нет и без других: свои RHVoice и eSpeak NG едут вместе с игрой',
+  п4.список.length===0&&!/Microsoft/.test(п4.выбран)&&/--extra-resource=espeak/.test(сб)&&/--extra-resource=rhvoice/.test(сб)&&typeof мост.espeakDll==="function"&&typeof мост.rhvoiceDir==="function",п4);
 
  /* ── 5 ── */
  const sapi=fs.readFileSync(path.join(R,'desktop','sapi.js'),'utf8');
