@@ -28861,9 +28861,11 @@ function mastAsk(npc,id){
  const м=MAST_BY_ID[id];if(!м||!npc)return false;
  const учит=((MAST_TEACH[npc.prof]||{})[id]||0)+safeFn(()=>Mentor.bonus(npc,id),0);
  const было=mastLevel(id);
- if(!учит){narrate(`${npc.name} этому не учит: «Не моё ремесло».`);return false;}
+ if(!учит){if(!npcSaysOwn(npc,"Не моё ремесло."))narrate(`${npc.name} этому не учит: «Не моё ремесло».`);else narrate(`${npc.name} этому не учит.`);return false;}
  if(было>=учит){
-  narrate(`${npc.name} разводит руками: «${м.n} вы знаете не хуже меня. Ищите того, кто выше».`);
+  /* (9.5.1) Записанный ответ наставник говорит сам; ремесло называет голос игры. */
+  if(npcSaysOwn(npc,"Это вы знаете не хуже меня. Ищите того, кто выше."))narrate(`${npc.name} разводит руками: ремесло «${м.n}» вы знаете не хуже.`);
+  else narrate(`${npc.name} разводит руками: «${м.n} вы знаете не хуже меня. Ищите того, кто выше».`);
   return false;}
  const цена=safeFn(()=>teachGoldCost(id),40+было*60);
  if((Number(G.gold)||0)<цена){
@@ -28871,7 +28873,8 @@ function mastAsk(npc,id){
   return false;}
  const отн=safeFn(()=>repOf(npc.race),0);
  if(отн<=-8){
-  narrate(`${npc.name} отказывает наотрез: «Вашему народу я не должен, а вам — тем более». Сперва поправьте отношения.`);
+  if(npcSaysOwn(npc,"Вашему народу я не должен, а вам — тем более."))narrate(`${npc.name} отказывает наотрез. Сперва поправьте отношения.`);
+  else narrate(`${npc.name} отказывает наотрез: «${Род.жителя(npc,"Вашему народу я не должен, а вам — тем более")}». Сперва поправьте отношения.`);
   return false;}
  G.gold-=цена;
  if(!G.mast||typeof G.mast!=="object")G.mast={};
@@ -28885,6 +28888,7 @@ function mastAsk(npc,id){
   setTimeout(()=>safeFn(()=>Bank.play("arte_find",{gain:0.6,maxSec:5})),380);});
  narrate(`${npc.name} берёт ${цена} золота и показывает дело руками, а не словами. ${м.о} Теперь вы ${MAST_RANK[r.ур]} в ремесле «${м.n}». Работать с этим надо у станка: ${м.станки.map(s=>STANOK_NAME[s]||s).join(", ")}.`);
  safeFn(()=>journal(`Урок у наставника: ${м.n}, ${MAST_RANK[r.ур]}.`));
+ safeFn(()=>{const т=r.ур>=3?"Вот так. Дальше — сами, у станка.":"Смотрите и запоминайте: руки помнят лучше головы.";setTimeout(()=>safeFn(()=>npcSaysOwn(npc,т)),300);});
  safeFn(()=>{refresh();saveGame(true);});
  return true;}
 /* ── У КАЖДОГО СТАНКА ДОЛЖНО БЫТЬ ИМЯ ВСЛУХ ──
@@ -33664,7 +33668,8 @@ function askAboutLands(key){
   narrate(`${n.name} не станет с вами говорить о землях: народ «${n.race}» вас не жалует.`);return false;}
  const r=safeFn(()=>landsRumour(n),null);
  if(!r){
-  narrate(`${n.name} разводит руками: «Про здешние места вы, похоже, знаете не меньше моего».`);
+  if(npcSaysOwn(n,"Про здешние места вы, похоже, знаете не меньше моего."))narrate(`${n.name} разводит руками.`);
+  else narrate(`${n.name} разводит руками: «Про здешние места вы, похоже, знаете не меньше моего».`);
   return false;}
  notePlace(r.x,r.y,r.st.type,r.st.name,"молва");
  const z=knownList().find(o=>o.x===r.x&&o.y===r.y);
