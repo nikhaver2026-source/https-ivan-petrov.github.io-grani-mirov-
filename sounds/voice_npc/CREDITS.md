@@ -5,7 +5,7 @@
 стражник у ворот, жрец, трактирщик, староста, кузнец, торговец, наставник, смотритель порта. Прежде эти строки читал голос
 игры в кавычках; теперь у каждой своя запись и своя интонация.
 
-Записей: 5420
+Записей: 7299
 
 Речь синтезирована 27–29 сентября 2026 года нейроголосами **Gemini** (Google),
 модель `gemini-3.8-flash-tts`, через Gemini API (Interactions API,
@@ -5092,7 +5092,6 @@ Policy (https://policies.google.com/terms/generative-ai/use-policy). Отдел�
 | quest_word_86_v1_f_g.flac | заказчик: слово поручения | Leda | speaking as a quest giver, explaining the task to a traveller; natural, earnest, clear | У дальней шхеры лёд треснул крестом, и нерпичи говорят, что так трескается над кракеном. Проверьте, прежде чем туда пойдут ловцы. |
 | quest_word_86_v2_g.flac | заказчик: слово поручения | Schedar | speaking as a quest giver, explaining the task to a traveller; natural, earnest, clear | У дальней шхеры лёд треснул крестом, и нерпичи говорят, что так трескается над кракеном. Проверьте, прежде чем туда пойдут ловцы. |
 | quest_word_86_v2_f_g.flac | заказчик: слово поручения | Aoede | speaking as a quest giver, explaining the task to a traveller; natural, earnest, clear | У дальней шхеры лёд треснул крестом, и нерпичи говорят, что так трескается над кракеном. Проверьте, прежде чем туда пойдут ловцы. |
-| quest_word_87_g.flac | заказчик: слово поручения | Umbriel | speaking as a quest giver, explaining the task to a traveller; natural, earnest, clear | Кракен поднимается там, где кит-город прошёл вчера, и цепляет за борта. Сход решил: город не свернёт, пусть свернёт кракен. |
 | quest_word_87_v1_g.flac | заказчик: слово поручения | Sadachbia | speaking as a quest giver, explaining the task to a traveller; natural, earnest, clear | Кракен поднимается там, где кит-город прошёл вчера, и цепляет за борта. Сход решил: город не свернёт, пусть свернёт кракен. |
 | quest_word_87_v1_f_g.flac | заказчик: слово поручения | Leda | speaking as a quest giver, explaining the task to a traveller; natural, earnest, clear | Кракен поднимается там, где кит-город прошёл вчера, и цепляет за борта. Сход решил: город не свернёт, пусть свернёт кракен. |
 | quest_word_87_v2_g.flac | заказчик: слово поручения | Schedar | speaking as a quest giver, explaining the task to a traveller; natural, earnest, clear | Кракен поднимается там, где кит-город прошёл вчера, и цепляет за борта. Сход решил: город не свернёт, пусть свернёт кракен. |
@@ -5217,7 +5216,6 @@ Policy (https://policies.google.com/terms/generative-ai/use-policy). Отдел�
 | quest_word_107_v2_f_g.flac | заказчик: слово поручения | Aoede | speaking as a quest giver, explaining the task to a traveller; natural, earnest, clear | У дальней отметки видели человека в маске, которой не делали. Масочники хотят знать, кто снял с них мерку. |
 | quest_word_108_g.flac | заказчик: слово поручения | Umbriel | speaking as a quest giver, explaining the task to a traveller; natural, earnest, clear | Застава считает всё, что идёт к разлому. Всё, кроме того, что идёт под ней. Принеси три кристалла — дальше не твоя забота. |
 | quest_word_108_f_g.flac | заказчик: слово поручения | Despina | speaking as a quest giver, explaining the task to a traveller; natural, earnest, clear | Застава считает всё, что идёт к разлому. Всё, кроме того, что идёт под ней. Принеси три кристалла — дальше не твоя забота. |
-| quest_word_108_v1_f_g.flac | заказчик: слово поручения | Leda | speaking as a quest giver, explaining the task to a traveller; natural, earnest, clear | Застава считает всё, что идёт к разлому. Всё, кроме того, что идёт под ней. Принеси три кристалла — дальше не твоя забота. |
 | quest_word_108_v2_g.flac | заказчик: слово поручения | Schedar | speaking as a quest giver, explaining the task to a traveller; natural, earnest, clear | Застава считает всё, что идёт к разлому. Всё, кроме того, что идёт под ней. Принеси три кристалла — дальше не твоя забота. |
 | quest_word_108_v2_f_g.flac | заказчик: слово поручения | Aoede | speaking as a quest giver, explaining the task to a traveller; natural, earnest, clear | Застава считает всё, что идёт к разлому. Всё, кроме того, что идёт под ней. Принеси три кристалла — дальше не твоя забота. |
 | quest_word_109_g.flac | заказчик: слово поручения | Umbriel | speaking as a quest giver, explaining the task to a traveller; natural, earnest, clear | За Гранью пепел валяется под ногами, а на Грани за него дают, как за серебро. Три меры. Не открывай мешок на свету. |
@@ -5227,7 +5225,6 @@ Policy (https://policies.google.com/terms/generative-ai/use-policy). Отдел�
 | quest_word_109_v2_f_g.flac | заказчик: слово поручения | Aoede | speaking as a quest giver, explaining the task to a traveller; natural, earnest, clear | За Гранью пепел валяется под ногами, а на Грани за него дают, как за серебро. Три меры. Не открывай мешок на свету. |
 | quest_word_110_g.flac | заказчик: слово поручения | Umbriel | speaking as a quest giver, explaining the task to a traveller; natural, earnest, clear | Один мой человек занял у тех, кто за Гранью. Занял костью, отдаёт рудой. Четыре меры — и он снова мой, а не их. |
 | quest_word_110_f_g.flac | заказчик: слово поручения | Despina | speaking as a quest giver, explaining the task to a traveller; natural, earnest, clear | Один мой человек занял у тех, кто за Гранью. Занял костью, отдаёт рудой. Четыре меры — и он снова мой, а не их. |
-| quest_word_110_v1_f_g.flac | заказчик: слово поручения | Leda | speaking as a quest giver, explaining the task to a traveller; natural, earnest, clear | Один мой человек занял у тех, кто за Гранью. Занял костью, отдаёт рудой. Четыре меры — и он снова мой, а не их. |
 | quest_word_110_v2_g.flac | заказчик: слово поручения | Schedar | speaking as a quest giver, explaining the task to a traveller; natural, earnest, clear | Один мой человек занял у тех, кто за Гранью. Занял костью, отдаёт рудой. Четыре меры — и он снова мой, а не их. |
 | quest_word_111_g.flac | заказчик: слово поручения | Umbriel | speaking as a quest giver, explaining the task to a traveller; natural, earnest, clear | У меня девять имён и два тела. Пройди к разлому и убей три твари, что там кормятся: если они сыты, остальные семеро не выйдут никогда. |
 | quest_word_111_f_g.flac | заказчик: слово поручения | Despina | speaking as a quest giver, explaining the task to a traveller; natural, earnest, clear | У меня девять имён и два тела. Пройди к разлому и убей три твари, что там кормятся: если они сыты, остальные семеро не выйдут никогда. |
@@ -5259,8 +5256,6 @@ Policy (https://policies.google.com/terms/generative-ai/use-policy). Отдел�
 | quest_word_115_v2_g.flac | заказчик: слово поручения | Schedar | speaking as a quest giver, explaining the task to a traveller; natural, earnest, clear | Сотник берёт травой: у него половина смены кашляет кровью. Четыре меры — и он меня не видел. |
 | quest_word_115_v2_f_g.flac | заказчик: слово поручения | Aoede | speaking as a quest giver, explaining the task to a traveller; natural, earnest, clear | Сотник берёт травой: у него половина смены кашляет кровью. Четыре меры — и он меня не видел. |
 | quest_word_116_f_g.flac | заказчик: слово поручения | Despina | speaking as a quest giver, explaining the task to a traveller; natural, earnest, clear | За мной пошли двое. Не люди — то, чем застава ищет. Убей их, и я исчезну по-настоящему. |
-| quest_word_116_v1_g.flac | заказчик: слово поручения | Sadachbia | speaking as a quest giver, explaining the task to a traveller; natural, earnest, clear | За мной пошли двое. Не люди — то, чем застава ищет. Убей их, и я исчезну по-настоящему. |
-| quest_word_116_v1_f_g.flac | заказчик: слово поручения | Leda | speaking as a quest giver, explaining the task to a traveller; natural, earnest, clear | За мной пошли двое. Не люди — то, чем застава ищет. Убей их, и я исчезну по-настоящему. |
 | quest_word_116_v2_g.flac | заказчик: слово поручения | Schedar | speaking as a quest giver, explaining the task to a traveller; natural, earnest, clear | За мной пошли двое. Не люди — то, чем застава ищет. Убей их, и я исчезну по-настоящему. |
 | quest_word_116_v2_f_g.flac | заказчик: слово поручения | Aoede | speaking as a quest giver, explaining the task to a traveller; natural, earnest, clear | За мной пошли двое. Не люди — то, чем застава ищет. Убей их, и я исчезну по-настоящему. |
 | quest_word_117_g.flac | заказчик: слово поручения | Umbriel | speaking as a quest giver, explaining the task to a traveller; natural, earnest, clear | Доведи меня до отметки у разлома. Дальше я сам. На Грани меня ждёт верёвка, а за Гранью хотя бы спрашивают имя. |
@@ -5275,8 +5270,6 @@ Policy (https://policies.google.com/terms/generative-ai/use-policy). Отдел�
 | quest_word_118_v1_f_g.flac | заказчик: слово поручения | Leda | speaking as a quest giver, explaining the task to a traveller; natural, earnest, clear | Судья берёт не золотом — золото записывают. Три меры ягод в корзине, и приговор полежит до весны. |
 | quest_word_118_v2_g.flac | заказчик: слово поручения | Schedar | speaking as a quest giver, explaining the task to a traveller; natural, earnest, clear | Судья берёт не золотом — золото записывают. Три меры ягод в корзине, и приговор полежит до весны. |
 | quest_word_119_f_g.flac | заказчик: слово поручения | Despina | speaking as a quest giver, explaining the task to a traveller; natural, earnest, clear | Меня осудили за двоих. Тех двоих я не трогал, но знаю, кто. Убей двух тварей у их двора — они поймут. |
-| quest_word_119_v1_g.flac | заказчик: слово поручения | Sadachbia | speaking as a quest giver, explaining the task to a traveller; natural, earnest, clear | Меня осудили за двоих. Тех двоих я не трогал, но знаю, кто. Убей двух тварей у их двора — они поймут. |
-| quest_word_119_v1_f_g.flac | заказчик: слово поручения | Leda | speaking as a quest giver, explaining the task to a traveller; natural, earnest, clear | Меня осудили за двоих. Тех двоих я не трогал, но знаю, кто. Убей двух тварей у их двора — они поймут. |
 | quest_word_120_g.flac | заказчик: слово поручения | Umbriel | speaking as a quest giver, explaining the task to a traveller; natural, earnest, clear | Там остались трое из моего дома. Дойди до отметки и оставь знак: они выйдут сами, если поймут, что есть куда. |
 | quest_word_120_f_g.flac | заказчик: слово поручения | Despina | speaking as a quest giver, explaining the task to a traveller; natural, earnest, clear | Там остались трое из моего дома. Дойди до отметки и оставь знак: они выйдут сами, если поймут, что есть куда. |
 | quest_word_120_v1_g.flac | заказчик: слово поручения | Sadachbia | speaking as a quest giver, explaining the task to a traveller; natural, earnest, clear | Там остались трое из моего дома. Дойди до отметки и оставь знак: они выйдут сами, если поймут, что есть куда. |
@@ -5371,8 +5364,6 @@ Policy (https://policies.google.com/terms/generative-ai/use-policy). Отдел�
 | r6_6_v1_f_g.flac | ответ в разговоре | Leda | grateful, warm, friendly | Давно бы так. Вам — уступлю. |
 | r6_7_v1_g.flac | ответ в разговоре | Sadachbia | grateful, warm, friendly | Камень с души. Берите, не торгуясь. |
 | r6_7_v1_f_g.flac | ответ в разговоре | Leda | grateful, warm, friendly | Камень с души. Берите, не торгуясь. |
-| r6_8_v1_g.flac | ответ в разговоре | Sadachbia | grateful, warm, friendly | Вот и ладно. С вас теперь меньше. |
-| r6_8_v1_f_g.flac | ответ в разговоре | Leda | grateful, warm, friendly | Вот и ладно. С вас теперь меньше. |
 | r6_9_v1_g.flac | ответ в разговоре | Sadachbia | resentful, cold, bitter | Рассорили нас — и довольны? Платите теперь сполна. |
 | r6_9_v1_f_g.flac | ответ в разговоре | Leda | resentful, cold, bitter | Рассорили нас — и довольны? Платите теперь сполна. |
 | r6_10_v1_g.flac | ответ в разговоре | Sadachbia | resentful, cold, bitter | Я знаю, чьих рук дело. Цена для вас другая. |
@@ -5385,8 +5376,6 @@ Policy (https://policies.google.com/terms/generative-ai/use-policy). Отдел�
 | r6_13_v1_f_g.flac | ответ в разговоре | Leda | resentful, cold, bitter | Не так со мной говорят. Это вам будет стоить. |
 | r6_14_v1_g.flac | ответ в разговоре | Sadachbia | resentful, cold, bitter | Хотите по-хорошему — ведите себя по-хорошему. |
 | r6_14_v1_f_g.flac | ответ в разговоре | Leda | resentful, cold, bitter | Хотите по-хорошему — ведите себя по-хорошему. |
-| r6_15_v1_g.flac | ответ в разговоре | Sadachbia | grateful, warm, friendly | Умеете вы сказать. Ладно, уступлю. |
-| r6_15_v1_f_g.flac | ответ в разговоре | Leda | grateful, warm, friendly | Умеете вы сказать. Ладно, уступлю. |
 | r6_16_v1_g.flac | ответ в разговоре | Sadachbia | grateful, warm, friendly | Убедили. Для вас — дешевле. |
 | r6_16_v1_f_g.flac | ответ в разговоре | Leda | grateful, warm, friendly | Убедили. Для вас — дешевле. |
 | r6_17_v1_g.flac | ответ в разговоре | Sadachbia | grateful, warm, friendly | Слово ваше крепкое. Берите по своей цене. |
@@ -5411,8 +5400,6 @@ Policy (https://policies.google.com/terms/generative-ai/use-policy). Отдел�
 | r6_26_v1_f_g.flac | ответ в разговоре | Leda | resentful, cold, bitter | С грабителями дел не веду. Разве что за двойную цену. |
 | r6_27_v1_g.flac | ответ в разговоре | Sadachbia | resentful, cold, bitter | Деньги-то у вас, небось, обозные? Плачено будет сполна. |
 | r6_27_v1_f_g.flac | ответ в разговоре | Leda | resentful, cold, bitter | Деньги-то у вас, небось, обозные? Плачено будет сполна. |
-| r6_28_v1_g.flac | ответ в разговоре | Sadachbia | caring, gentle healer, calm | Мёртвых я не лечу — моё ремесло для живых. Ищи склеп и ночь, или зелье. |
-| r6_29_v1_f_g.flac | ответ в разговоре | Leda | caring, gentle healer, calm | Лечить нечего — ни раны, ни яда. |
 | r6_30_v1_g.flac | ответ в разговоре | Sadachbia | caring, gentle healer, calm | Вот и всё. Рана чистая, повязка тугая — береги её. |
 | r6_30_v1_f_g.flac | ответ в разговоре | Leda | caring, gentle healer, calm | Вот и всё. Рана чистая, повязка тугая — береги её. |
 | r6_31_v1_g.flac | ответ в разговоре | Sadachbia | caring, gentle healer, calm | Держись. Отвар горький, зато к утру будешь на ногах. |
@@ -5520,3 +5507,1911 @@ Policy (https://policies.google.com/terms/generative-ai/use-policy). Отдел�
 
 | quest_rescue_0_v2_g.flac | заказчик: спасение | Schedar | anxious | Человек пропал. Найди его, пока не поздно. |
 | quest_rescue_0_v2_f_g.flac | заказчик: спасение | Aoede | anxious | Человек пропал. Найди его, пока не поздно. |
+| car_arrive_0_v2_f_g.flac | car_arrive | Vindemiatrix | relieved | Дошли! Держи плату, заслужено. |
+| car_arrive_0_v2_g.flac | car_arrive | Zubenelgenubi | relieved | Дошли! Держи плату, заслужено. |
+| car_arrive_0_v3_f_g.flac | car_arrive | Erinome | relieved | Дошли! Держи плату, заслужено. |
+| car_arrive_0_v3_g.flac | car_arrive | Achird | relieved | Дошли! Держи плату, заслужено. |
+| car_arrive_1_v2_f_g.flac | car_arrive | Vindemiatrix | sincere | Спасибо за охрану. Без тебя бы не дошли. |
+| car_arrive_1_v2_g.flac | car_arrive | Zubenelgenubi | sincere | Спасибо за охрану. Без тебя бы не дошли. |
+| car_arrive_1_v3_f_g.flac | car_arrive | Erinome | sincere | Спасибо за охрану. Без тебя бы не дошли. |
+| car_arrive_1_v3_g.flac | car_arrive | Achird | sincere | Спасибо за охрану. Без тебя бы не дошли. |
+| car_arrive_2_v2_f_g.flac | car_arrive | Vindemiatrix | satisfied | Вот твоё золото. Будешь рядом — нанимайся снова. |
+| car_arrive_2_v2_g.flac | car_arrive | Zubenelgenubi | satisfied | Вот твоё золото. Будешь рядом — нанимайся снова. |
+| car_arrive_2_v3_f_g.flac | car_arrive | Erinome | satisfied | Вот твоё золото. Будешь рядом — нанимайся снова. |
+| car_arrive_2_v3_g.flac | car_arrive | Achird | satisfied | Вот твоё золото. Будешь рядом — нанимайся снова. |
+| car_arrive_3_v2_f_g.flac | car_arrive | Vindemiatrix | relieved | Живы, груз цел. Честно заработано. |
+| car_arrive_3_v2_g.flac | car_arrive | Zubenelgenubi | relieved | Живы, груз цел. Честно заработано. |
+| car_arrive_3_v3_f_g.flac | car_arrive | Erinome | relieved | Живы, груз цел. Честно заработано. |
+| car_arrive_3_v3_g.flac | car_arrive | Achird | relieved | Живы, груз цел. Честно заработано. |
+| car_buy_0_v2_f_g.flac | car_buy | Vindemiatrix | confident | Твоё. Довезёшь — втрое продашь. |
+| car_buy_0_v2_g.flac | car_buy | Zubenelgenubi | confident | Твоё. Довезёшь — втрое продашь. |
+| car_buy_0_v3_f_g.flac | car_buy | Erinome | confident | Твоё. Довезёшь — втрое продашь. |
+| car_buy_0_v3_g.flac | car_buy | Achird | confident | Твоё. Довезёшь — втрое продашь. |
+| car_buy_1_v2_f_g.flac | car_buy | Vindemiatrix | persuasive | Бери, пока есть. До города такого не сыщешь. |
+| car_buy_1_v2_g.flac | car_buy | Zubenelgenubi | persuasive | Бери, пока есть. До города такого не сыщешь. |
+| car_buy_1_v3_f_g.flac | car_buy | Erinome | persuasive | Бери, пока есть. До города такого не сыщешь. |
+| car_buy_1_v3_g.flac | car_buy | Achird | persuasive | Бери, пока есть. До города такого не сыщешь. |
+| car_buy_2_v2_f_g.flac | car_buy | Vindemiatrix | cheerful | Взято! Деньги в сундук, товар — тебе. |
+| car_buy_2_v2_g.flac | car_buy | Zubenelgenubi | cheerful | Взято! Деньги в сундук, товар — тебе. |
+| car_buy_2_v3_f_g.flac | car_buy | Erinome | cheerful | Взято! Деньги в сундук, товар — тебе. |
+| car_buy_2_v3_g.flac | car_buy | Achird | cheerful | Взято! Деньги в сундук, товар — тебе. |
+| car_buy_3_v2_f_g.flac | car_buy | Vindemiatrix | approving | Добрый выбор. Там, куда идём, это на вес золота. |
+| car_buy_3_v2_g.flac | car_buy | Zubenelgenubi | approving | Добрый выбор. Там, куда идём, это на вес золота. |
+| car_buy_3_v3_f_g.flac | car_buy | Erinome | approving | Добрый выбор. Там, куда идём, это на вес золота. |
+| car_buy_3_v3_g.flac | car_buy | Achird | approving | Добрый выбор. Там, куда идём, это на вес золота. |
+| car_buy_4_v2_f_g.flac | car_buy | Vindemiatrix | friendly | По рукам. Только в дороге не растеряй. |
+| car_buy_4_v2_g.flac | car_buy | Zubenelgenubi | friendly | По рукам. Только в дороге не растеряй. |
+| car_buy_4_v3_f_g.flac | car_buy | Erinome | friendly | По рукам. Только в дороге не растеряй. |
+| car_buy_4_v3_g.flac | car_buy | Achird | friendly | По рукам. Только в дороге не растеряй. |
+| car_buy_5_v2_f_g.flac | car_buy | Vindemiatrix | sincere | Держи. Мы честные купцы, без обмана. |
+| car_buy_5_v2_g.flac | car_buy | Zubenelgenubi | sincere | Держи. Мы честные купцы, без обмана. |
+| car_buy_5_v3_f_g.flac | car_buy | Erinome | sincere | Держи. Мы честные купцы, без обмана. |
+| car_buy_5_v3_g.flac | car_buy | Achird | sincere | Держи. Мы честные купцы, без обмана. |
+| car_hire_0_v2_f_g.flac | car_hire | Vindemiatrix | decisive | Нанят! Держись у последнего воза. |
+| car_hire_0_v2_g.flac | car_hire | Zubenelgenubi | decisive | Нанят! Держись у последнего воза. |
+| car_hire_0_v3_f_g.flac | car_hire | Erinome | decisive | Нанят! Держись у последнего воза. |
+| car_hire_0_v3_g.flac | car_hire | Achird | decisive | Нанят! Держись у последнего воза. |
+| car_hire_1_v2_f_g.flac | car_hire | Vindemiatrix | appraising | Меч при тебе? Отлично. Плата в городе. |
+| car_hire_1_v2_g.flac | car_hire | Zubenelgenubi | appraising | Меч при тебе? Отлично. Плата в городе. |
+| car_hire_1_v3_f_g.flac | car_hire | Erinome | appraising | Меч при тебе? Отлично. Плата в городе. |
+| car_hire_1_v3_g.flac | car_hire | Achird | appraising | Меч при тебе? Отлично. Плата в городе. |
+| car_hire_2_v2_f_g.flac | car_hire | Vindemiatrix | relieved | Лишняя рука с оружием — в самый раз. Добро пожаловать. |
+| car_hire_2_v2_g.flac | car_hire | Zubenelgenubi | relieved | Лишняя рука с оружием — в самый раз. Добро пожаловать. |
+| car_hire_2_v3_f_g.flac | car_hire | Erinome | relieved | Лишняя рука с оружием — в самый раз. Добро пожаловать. |
+| car_hire_2_v3_g.flac | car_hire | Achird | relieved | Лишняя рука с оружием — в самый раз. Добро пожаловать. |
+| car_hire_3_v2_f_g.flac | car_hire | Vindemiatrix | businesslike | Договорились. Довезём груз — получишь сполна. |
+| car_hire_3_v2_g.flac | car_hire | Zubenelgenubi | businesslike | Договорились. Довезём груз — получишь сполна. |
+| car_hire_3_v3_f_g.flac | car_hire | Erinome | businesslike | Договорились. Довезём груз — получишь сполна. |
+| car_hire_3_v3_g.flac | car_hire | Achird | businesslike | Договорились. Довезём груз — получишь сполна. |
+| car_hire_4_v2_f_g.flac | car_hire | Vindemiatrix | serious | Охранник? Хорошо. Гляди в оба — на тракте неспокойно. |
+| car_hire_4_v2_g.flac | car_hire | Zubenelgenubi | serious | Охранник? Хорошо. Гляди в оба — на тракте неспокойно. |
+| car_hire_4_v3_f_g.flac | car_hire | Erinome | serious | Охранник? Хорошо. Гляди в оба — на тракте неспокойно. |
+| car_hire_4_v3_g.flac | car_hire | Achird | serious | Охранник? Хорошо. Гляди в оба — на тракте неспокойно. |
+| car_hire_5_v2_f_g.flac | car_hire | Vindemiatrix | friendly | По рукам. Если что — кричи, ребята прибегут. |
+| car_hire_5_v2_g.flac | car_hire | Zubenelgenubi | friendly | По рукам. Если что — кричи, ребята прибегут. |
+| car_hire_5_v3_f_g.flac | car_hire | Erinome | friendly | По рукам. Если что — кричи, ребята прибегут. |
+| car_hire_5_v3_g.flac | car_hire | Achird | friendly | По рукам. Если что — кричи, ребята прибегут. |
+| car_hire_busy_0_v2_f_g.flac | car_hire_busy | Vindemiatrix | dry | У тебя уже есть наниматель. Двух обозов не сторожат. |
+| car_hire_busy_0_v2_g.flac | car_hire_busy | Zubenelgenubi | dry | У тебя уже есть наниматель. Двух обозов не сторожат. |
+| car_hire_busy_0_v3_f_g.flac | car_hire_busy | Erinome | dry | У тебя уже есть наниматель. Двух обозов не сторожат. |
+| car_hire_busy_0_v3_g.flac | car_hire_busy | Achird | dry | У тебя уже есть наниматель. Двух обозов не сторожат. |
+| car_hire_busy_1_v2_f_g.flac | car_hire_busy | Vindemiatrix | firm | Ты другой обоз ведёшь. Сперва доведи его. |
+| car_hire_busy_1_v2_g.flac | car_hire_busy | Zubenelgenubi | firm | Ты другой обоз ведёшь. Сперва доведи его. |
+| car_hire_busy_1_v3_f_g.flac | car_hire_busy | Erinome | firm | Ты другой обоз ведёшь. Сперва доведи его. |
+| car_hire_busy_1_v3_g.flac | car_hire_busy | Achird | firm | Ты другой обоз ведёшь. Сперва доведи его. |
+| car_meet_0_v2_f_g.flac | car_meet | Vindemiatrix | loud | Эй, путник! Обоз идёт. Торговать будешь? |
+| car_meet_0_v2_g.flac | car_meet | Zubenelgenubi | loud | Эй, путник! Обоз идёт. Торговать будешь? |
+| car_meet_0_v3_f_g.flac | car_meet | Erinome | loud | Эй, путник! Обоз идёт. Торговать будешь? |
+| car_meet_0_v3_g.flac | car_meet | Achird | loud | Эй, путник! Обоз идёт. Торговать будешь? |
+| car_meet_1_v2_f_g.flac | car_meet | Vindemiatrix | reassuring | Стой, не пугайся, мы купцы. Глянешь на товар? |
+| car_meet_1_v2_g.flac | car_meet | Zubenelgenubi | reassuring | Стой, не пугайся, мы купцы. Глянешь на товар? |
+| car_meet_1_v3_f_g.flac | car_meet | Erinome | reassuring | Стой, не пугайся, мы купцы. Глянешь на товар? |
+| car_meet_1_v3_g.flac | car_meet | Achird | reassuring | Стой, не пугайся, мы купцы. Глянешь на товар? |
+| car_meet_2_v2_f_g.flac | car_meet | Vindemiatrix | cheerful | Доброй дороги! У нас есть чем поторговать. |
+| car_meet_2_v2_g.flac | car_meet | Zubenelgenubi | cheerful | Доброй дороги! У нас есть чем поторговать. |
+| car_meet_2_v3_f_g.flac | car_meet | Erinome | cheerful | Доброй дороги! У нас есть чем поторговать. |
+| car_meet_2_v3_g.flac | car_meet | Achird | cheerful | Доброй дороги! У нас есть чем поторговать. |
+| car_meet_3_v2_f_g.flac | car_meet | Vindemiatrix | relaxed | Караван на привале. Подходи, пока стоим. |
+| car_meet_3_v2_g.flac | car_meet | Zubenelgenubi | relaxed | Караван на привале. Подходи, пока стоим. |
+| car_meet_3_v3_f_g.flac | car_meet | Erinome | relaxed | Караван на привале. Подходи, пока стоим. |
+| car_meet_3_v3_g.flac | car_meet | Achird | relaxed | Караван на привале. Подходи, пока стоим. |
+| car_meet_4_v2_f_g.flac | car_meet | Vindemiatrix | wary | Не разбойник? Ну и славно. Меняться будем? |
+| car_meet_4_v2_g.flac | car_meet | Zubenelgenubi | wary | Не разбойник? Ну и славно. Меняться будем? |
+| car_meet_4_v3_f_g.flac | car_meet | Erinome | wary | Не разбойник? Ну и славно. Меняться будем? |
+| car_meet_4_v3_g.flac | car_meet | Achird | wary | Не разбойник? Ну и славно. Меняться будем? |
+| car_meet_5_v2_f_g.flac | car_meet | Vindemiatrix | proud | Товар с дальних земель! Смотри, пока не ушли. |
+| car_meet_5_v2_g.flac | car_meet | Zubenelgenubi | proud | Товар с дальних земель! Смотри, пока не ушли. |
+| car_meet_5_v3_f_g.flac | car_meet | Erinome | proud | Товар с дальних земель! Смотри, пока не ушли. |
+| car_meet_5_v3_g.flac | car_meet | Achird | proud | Товар с дальних земель! Смотри, пока не ушли. |
+| car_meet_6_v2_f_g.flac | car_meet | Vindemiatrix | tired | Мы с утра в пути. Покупай, продавай — только быстро. |
+| car_meet_6_v2_g.flac | car_meet | Zubenelgenubi | tired | Мы с утра в пути. Покупай, продавай — только быстро. |
+| car_meet_6_v3_f_g.flac | car_meet | Erinome | tired | Мы с утра в пути. Покупай, продавай — только быстро. |
+| car_meet_6_v3_g.flac | car_meet | Achird | tired | Мы с утра в пути. Покупай, продавай — только быстро. |
+| car_meet_7_v2_f_g.flac | car_meet | Vindemiatrix | brisk trader | Путник, нужна соль, железо, ткань? Всё есть. |
+| car_meet_7_v2_g.flac | car_meet | Zubenelgenubi | brisk trader | Путник, нужна соль, железо, ткань? Всё есть. |
+| car_meet_7_v3_f_g.flac | car_meet | Erinome | brisk trader | Путник, нужна соль, железо, ткань? Всё есть. |
+| car_meet_7_v3_g.flac | car_meet | Achird | brisk trader | Путник, нужна соль, железо, ткань? Всё есть. |
+| car_meet_8_v2_f_g.flac | car_meet | Vindemiatrix | calming | Охрана, спокойно, это не разбойник. Подходи, добрый человек. |
+| car_meet_8_v2_g.flac | car_meet | Zubenelgenubi | calming | Охрана, спокойно, это не разбойник. Подходи, добрый человек. |
+| car_meet_8_v3_f_g.flac | car_meet | Erinome | calming | Охрана, спокойно, это не разбойник. Подходи, добрый человек. |
+| car_meet_8_v3_g.flac | car_meet | Achird | calming | Охрана, спокойно, это не разбойник. Подходи, добрый человек. |
+| car_meet_9_v2_f_g.flac | car_meet | Vindemiatrix | hopeful | Дорога длинная, а покупатель редкий. Заглянешь? |
+| car_meet_9_v2_g.flac | car_meet | Zubenelgenubi | hopeful | Дорога длинная, а покупатель редкий. Заглянешь? |
+| car_meet_9_v3_f_g.flac | car_meet | Erinome | hopeful | Дорога длинная, а покупатель редкий. Заглянешь? |
+| car_meet_9_v3_g.flac | car_meet | Achird | hopeful | Дорога длинная, а покупатель редкий. Заглянешь? |
+| car_meet_night_0_v2_f_g.flac | car_meet_night | Vindemiatrix | alarmed | Кто там в темноте? Назовись! |
+| car_meet_night_0_v2_g.flac | car_meet_night | Zubenelgenubi | alarmed | Кто там в темноте? Назовись! |
+| car_meet_night_0_v3_f_g.flac | car_meet_night | Erinome | alarmed | Кто там в темноте? Назовись! |
+| car_meet_night_0_v3_g.flac | car_meet_night | Achird | alarmed | Кто там в темноте? Назовись! |
+| car_meet_night_1_v2_f_g.flac | car_meet_night | Vindemiatrix | sleepy | Ночью обоз не торгует. Но для тебя сделаем исключение. |
+| car_meet_night_1_v2_g.flac | car_meet_night | Zubenelgenubi | sleepy | Ночью обоз не торгует. Но для тебя сделаем исключение. |
+| car_meet_night_1_v3_f_g.flac | car_meet_night | Erinome | sleepy | Ночью обоз не торгует. Но для тебя сделаем исключение. |
+| car_meet_night_1_v3_g.flac | car_meet_night | Achird | sleepy | Ночью обоз не торгует. Но для тебя сделаем исключение. |
+| car_meet_night_2_v2_f_g.flac | car_meet_night | Vindemiatrix | wary | Поздно бродишь. Ладно, подходи к огню. |
+| car_meet_night_2_v2_g.flac | car_meet_night | Zubenelgenubi | wary | Поздно бродишь. Ладно, подходи к огню. |
+| car_meet_night_2_v3_f_g.flac | car_meet_night | Erinome | wary | Поздно бродишь. Ладно, подходи к огню. |
+| car_meet_night_2_v3_g.flac | car_meet_night | Achird | wary | Поздно бродишь. Ладно, подходи к огню. |
+| car_meet_war_0_v2_f_g.flac | car_meet_war | Vindemiatrix | tense | Тише. Мы идём через фронт. Торгуй, но не мешкай. |
+| car_meet_war_0_v2_g.flac | car_meet_war | Zubenelgenubi | tense | Тише. Мы идём через фронт. Торгуй, но не мешкай. |
+| car_meet_war_0_v3_f_g.flac | car_meet_war | Erinome | tense | Тише. Мы идём через фронт. Торгуй, но не мешкай. |
+| car_meet_war_0_v3_g.flac | car_meet_war | Achird | tense | Тише. Мы идём через фронт. Торгуй, но не мешкай. |
+| car_meet_war_1_v2_f_g.flac | car_meet_war | Vindemiatrix | grim | Война кругом, а торговать надо. Цены, уж извини, злые. |
+| car_meet_war_1_v2_g.flac | car_meet_war | Zubenelgenubi | grim | Война кругом, а торговать надо. Цены, уж извини, злые. |
+| car_meet_war_1_v3_f_g.flac | car_meet_war | Erinome | grim | Война кругом, а торговать надо. Цены, уж извини, злые. |
+| car_meet_war_1_v3_g.flac | car_meet_war | Achird | grim | Война кругом, а торговать надо. Цены, уж извини, злые. |
+| car_meet_war_2_v2_f_g.flac | car_meet_war | Vindemiatrix | nervous | Солдат по дороге не видно? Тогда быстро меняемся. |
+| car_meet_war_2_v2_g.flac | car_meet_war | Zubenelgenubi | nervous | Солдат по дороге не видно? Тогда быстро меняемся. |
+| car_meet_war_2_v3_f_g.flac | car_meet_war | Erinome | nervous | Солдат по дороге не видно? Тогда быстро меняемся. |
+| car_meet_war_2_v3_g.flac | car_meet_war | Achird | nervous | Солдат по дороге не видно? Тогда быстро меняемся. |
+| car_meet_war_3_v2_f_g.flac | car_meet_war | Vindemiatrix | grim | На такой дороге каждая рука с оружием на счету. |
+| car_meet_war_3_v2_g.flac | car_meet_war | Zubenelgenubi | grim | На такой дороге каждая рука с оружием на счету. |
+| car_meet_war_3_v3_f_g.flac | car_meet_war | Erinome | grim | На такой дороге каждая рука с оружием на счету. |
+| car_meet_war_3_v3_g.flac | car_meet_war | Achird | grim | На такой дороге каждая рука с оружием на счету. |
+| car_news_0_v2_f_g.flac | car_news | Vindemiatrix | conversational | Слушай, что на дорогах делается. |
+| car_news_0_v2_g.flac | car_news | Zubenelgenubi | conversational | Слушай, что на дорогах делается. |
+| car_news_0_v3_f_g.flac | car_news | Erinome | conversational | Слушай, что на дорогах делается. |
+| car_news_0_v3_g.flac | car_news | Achird | conversational | Слушай, что на дорогах делается. |
+| car_news_1_v2_f_g.flac | car_news | Vindemiatrix | friendly | Расскажу, что знаю. Мы много где бываем. |
+| car_news_1_v2_g.flac | car_news | Zubenelgenubi | friendly | Расскажу, что знаю. Мы много где бываем. |
+| car_news_1_v3_f_g.flac | car_news | Erinome | friendly | Расскажу, что знаю. Мы много где бываем. |
+| car_news_1_v3_g.flac | car_news | Achird | friendly | Расскажу, что знаю. Мы много где бываем. |
+| car_news_2_v2_f_g.flac | car_news | Vindemiatrix | amused | Новости? Их у нас больше, чем товара. |
+| car_news_2_v2_g.flac | car_news | Zubenelgenubi | amused | Новости? Их у нас больше, чем товара. |
+| car_news_2_v3_f_g.flac | car_news | Erinome | amused | Новости? Их у нас больше, чем товара. |
+| car_news_2_v3_g.flac | car_news | Achird | amused | Новости? Их у нас больше, чем товара. |
+| car_pass_0_v2_f_g.flac | car_pass | Vindemiatrix | easygoing | Ну, как знаешь. Доброй дороги! |
+| car_pass_0_v2_g.flac | car_pass | Zubenelgenubi | easygoing | Ну, как знаешь. Доброй дороги! |
+| car_pass_0_v3_f_g.flac | car_pass | Erinome | easygoing | Ну, как знаешь. Доброй дороги! |
+| car_pass_0_v3_g.flac | car_pass | Achird | easygoing | Ну, как знаешь. Доброй дороги! |
+| car_pass_1_v2_f_g.flac | car_pass | Vindemiatrix | loud command to drivers | Трогай! Обоз идёт дальше. |
+| car_pass_1_v2_g.flac | car_pass | Zubenelgenubi | loud command to drivers | Трогай! Обоз идёт дальше. |
+| car_pass_1_v3_f_g.flac | car_pass | Erinome | loud command to drivers | Трогай! Обоз идёт дальше. |
+| car_pass_1_v3_g.flac | car_pass | Achird | loud command to drivers | Трогай! Обоз идёт дальше. |
+| car_pass_2_v2_f_g.flac | car_pass | Vindemiatrix | warm | Счастливо оставаться. Может, свидимся. |
+| car_pass_2_v2_g.flac | car_pass | Zubenelgenubi | warm | Счастливо оставаться. Может, свидимся. |
+| car_pass_2_v3_f_g.flac | car_pass | Erinome | warm | Счастливо оставаться. Может, свидимся. |
+| car_pass_2_v3_g.flac | car_pass | Achird | warm | Счастливо оставаться. Может, свидимся. |
+| car_pass_3_v2_f_g.flac | car_pass | Vindemiatrix | shrugging | Ничего не нужно? Ладно, нам пора. |
+| car_pass_3_v2_g.flac | car_pass | Zubenelgenubi | shrugging | Ничего не нужно? Ладно, нам пора. |
+| car_pass_3_v3_f_g.flac | car_pass | Erinome | shrugging | Ничего не нужно? Ладно, нам пора. |
+| car_pass_3_v3_g.flac | car_pass | Achird | shrugging | Ничего не нужно? Ладно, нам пора. |
+| car_pass_4_v2_f_g.flac | car_pass | Vindemiatrix | loud | Пропускаем путника! Эй, возчики, трогай! |
+| car_pass_4_v2_g.flac | car_pass | Zubenelgenubi | loud | Пропускаем путника! Эй, возчики, трогай! |
+| car_pass_4_v3_f_g.flac | car_pass | Erinome | loud | Пропускаем путника! Эй, возчики, трогай! |
+| car_pass_4_v3_g.flac | car_pass | Achird | loud | Пропускаем путника! Эй, возчики, трогай! |
+| car_pass_5_v2_f_g.flac | car_pass | Vindemiatrix | caring warning | Береги себя на тракте. Разбойники шалят. |
+| car_pass_5_v2_g.flac | car_pass | Zubenelgenubi | caring warning | Береги себя на тракте. Разбойники шалят. |
+| car_pass_5_v3_f_g.flac | car_pass | Erinome | caring warning | Береги себя на тракте. Разбойники шалят. |
+| car_pass_5_v3_g.flac | car_pass | Achird | caring warning | Береги себя на тракте. Разбойники шалят. |
+| car_poor_0_v2_f_g.flac | car_poor | Vindemiatrix | dry | Золота не хватит. Мы в долг не возим. |
+| car_poor_0_v2_g.flac | car_poor | Zubenelgenubi | dry | Золота не хватит. Мы в долг не возим. |
+| car_poor_0_v3_f_g.flac | car_poor | Erinome | dry | Золота не хватит. Мы в долг не возим. |
+| car_poor_0_v3_g.flac | car_poor | Achird | dry | Золота не хватит. Мы в долг не возим. |
+| car_poor_1_v2_f_g.flac | car_poor | Vindemiatrix | sympathetic | Кошель пустоват. Ну, может, в другой раз. |
+| car_poor_1_v2_g.flac | car_poor | Zubenelgenubi | sympathetic | Кошель пустоват. Ну, может, в другой раз. |
+| car_poor_1_v3_f_g.flac | car_poor | Erinome | sympathetic | Кошель пустоват. Ну, может, в другой раз. |
+| car_poor_1_v3_g.flac | car_poor | Achird | sympathetic | Кошель пустоват. Ну, может, в другой раз. |
+| car_sell_0_v2_f_g.flac | car_sell | Vindemiatrix | businesslike | Беру. В городе пригодится. |
+| car_sell_0_v2_g.flac | car_sell | Zubenelgenubi | businesslike | Беру. В городе пригодится. |
+| car_sell_0_v3_f_g.flac | car_sell | Erinome | businesslike | Беру. В городе пригодится. |
+| car_sell_0_v3_g.flac | car_sell | Achird | businesslike | Беру. В городе пригодится. |
+| car_sell_1_v2_f_g.flac | car_sell | Vindemiatrix | agreeable | Хорошо, заберём. Вот плата. |
+| car_sell_1_v2_g.flac | car_sell | Zubenelgenubi | agreeable | Хорошо, заберём. Вот плата. |
+| car_sell_1_v3_f_g.flac | car_sell | Erinome | agreeable | Хорошо, заберём. Вот плата. |
+| car_sell_1_v3_g.flac | car_sell | Achird | agreeable | Хорошо, заберём. Вот плата. |
+| car_sell_2_v2_f_g.flac | car_sell | Vindemiatrix | pleased | Как раз этого нам в дорогу и не хватало. |
+| car_sell_2_v2_g.flac | car_sell | Zubenelgenubi | pleased | Как раз этого нам в дорогу и не хватало. |
+| car_sell_2_v3_f_g.flac | car_sell | Erinome | pleased | Как раз этого нам в дорогу и не хватало. |
+| car_sell_2_v3_g.flac | car_sell | Achird | pleased | Как раз этого нам в дорогу и не хватало. |
+| car_sell_3_v2_f_g.flac | car_sell | Vindemiatrix | loud | Грузите на третий воз! Беру всё. |
+| car_sell_3_v2_g.flac | car_sell | Zubenelgenubi | loud | Грузите на третий воз! Беру всё. |
+| car_sell_3_v3_f_g.flac | car_sell | Erinome | loud | Грузите на третий воз! Беру всё. |
+| car_sell_3_v3_g.flac | car_sell | Achird | loud | Грузите на третий воз! Беру всё. |
+| car_sell_4_v2_f_g.flac | car_sell | Vindemiatrix | fair | Честная цена. Держи монеты. |
+| car_sell_4_v2_g.flac | car_sell | Zubenelgenubi | fair | Честная цена. Держи монеты. |
+| car_sell_4_v3_f_g.flac | car_sell | Erinome | fair | Честная цена. Держи монеты. |
+| car_sell_4_v3_g.flac | car_sell | Achird | fair | Честная цена. Держи монеты. |
+| car_sell_5_v2_f_g.flac | car_sell | Vindemiatrix | eager | Годится. Ещё что-нибудь есть? |
+| car_sell_5_v2_g.flac | car_sell | Zubenelgenubi | eager | Годится. Ещё что-нибудь есть? |
+| car_sell_5_v3_f_g.flac | car_sell | Erinome | eager | Годится. Ещё что-нибудь есть? |
+| car_sell_5_v3_g.flac | car_sell | Achird | eager | Годится. Ещё что-нибудь есть? |
+| dlg_0_0_v2_f_g.flac | dlg | Aoede | evasive | Я в такие дела не лезу |
+| dlg_0_0_v2_g.flac | dlg | Schedar | evasive | Я в такие дела не лезу |
+| dlg_0_10_v2_f_g.flac | dlg | Aoede | evasive | Проваливай с такими вопросами |
+| dlg_0_10_v2_g.flac | dlg | Schedar | evasive | Проваливай с такими вопросами |
+| dlg_0_11_v2_f_g.flac | dlg | Aoede | evasive | С вами я ни о чём говорить не стану |
+| dlg_0_11_v2_g.flac | dlg | Schedar | evasive | С вами я ни о чём говорить не стану |
+| dlg_0_12_v2_f_g.flac | dlg | Aoede | evasive | Ищите дураков в другом месте |
+| dlg_0_12_v2_g.flac | dlg | Schedar | evasive | Ищите дураков в другом месте |
+| dlg_0_13_v2_f_g.flac | dlg | Aoede | evasive | Спрашивайте кого другого |
+| dlg_0_13_v2_g.flac | dlg | Schedar | evasive | Спрашивайте кого другого |
+| dlg_0_14_v2_f_g.flac | dlg | Aoede | evasive | Не до вас сейчас |
+| dlg_0_14_v2_g.flac | dlg | Schedar | evasive | Не до вас сейчас |
+| dlg_0_15_v2_f_g.flac | dlg | Aoede | evasive | Тебе бы сказать, да нечего |
+| dlg_0_15_v2_g.flac | dlg | Schedar | evasive | Тебе бы сказать, да нечего |
+| dlg_0_16_v2_f_g.flac | dlg | Aoede | evasive | После того, что было? Ничего вам не скажу |
+| dlg_0_16_v2_g.flac | dlg | Schedar | evasive | После того, что было? Ничего вам не скажу |
+| dlg_0_17_v2_f_g.flac | dlg | Aoede | evasive | Вам бы помочь, да правда не знаю |
+| dlg_0_17_v2_g.flac | dlg | Schedar | evasive | Вам бы помочь, да правда не знаю |
+| dlg_0_1_v2_f_g.flac | dlg | Aoede | evasive | Спросите кого другого, я тут сбоку |
+| dlg_0_1_v2_g.flac | dlg | Schedar | evasive | Спросите кого другого, я тут сбоку |
+| dlg_0_2_v2_f_g.flac | dlg | Aoede | evasive | Моё дело маленькое — ничего не знаю |
+| dlg_0_2_v2_g.flac | dlg | Schedar | evasive | Моё дело маленькое — ничего не знаю |
+| dlg_0_3_v2_f_g.flac | dlg | Aoede | evasive | Не моего ума дело, и не вашего, по-хорошему |
+| dlg_0_3_v2_g.flac | dlg | Schedar | evasive | Не моего ума дело, и не вашего, по-хорошему |
+| dlg_0_4_v2_f_g.flac | dlg | Aoede | evasive | Тише вы… Не знаю ничего и знать не хочу |
+| dlg_0_4_v2_g.flac | dlg | Schedar | evasive | Тише вы… Не знаю ничего и знать не хочу |
+| dlg_0_5_v2_f_g.flac | dlg | Aoede | evasive | А вам-то зачем? Нет, не скажу |
+| dlg_0_5_v2_g.flac | dlg | Schedar | evasive | А вам-то зачем? Нет, не скажу |
+| dlg_0_6_v2_f_g.flac | dlg | Aoede | evasive | Я не пересказываю базарные сплетни |
+| dlg_0_6_v2_g.flac | dlg | Schedar | evasive | Я не пересказываю базарные сплетни |
+| dlg_0_7_v2_f_g.flac | dlg | Aoede | evasive | Бесплатно я даже время не говорю |
+| dlg_0_7_v2_g.flac | dlg | Schedar | evasive | Бесплатно я даже время не говорю |
+| dlg_0_8_v2_f_g.flac | dlg | Aoede | evasive | Может, и знаю. Но не вам и не сегодня |
+| dlg_0_8_v2_g.flac | dlg | Schedar | evasive | Может, и знаю. Но не вам и не сегодня |
+| dlg_0_9_v2_f_g.flac | dlg | Aoede | evasive | Наверняка не знаю, а гадать не стану |
+| dlg_0_9_v2_g.flac | dlg | Schedar | evasive | Наверняка не знаю, а гадать не стану |
+| dlg_10_0_v2_f_g.flac | dlg | Aoede | firm | Цена одна для всех. Берёте или нет? |
+| dlg_10_0_v2_g.flac | dlg | Schedar | firm | Цена одна для всех. Берёте или нет? |
+| dlg_10_10_v2_f_g.flac | dlg | Aoede | firm | С вами торговаться не буду |
+| dlg_10_10_v2_g.flac | dlg | Schedar | firm | С вами торговаться не буду |
+| dlg_10_11_v2_f_g.flac | dlg | Aoede | firm | Цена сказана |
+| dlg_10_11_v2_g.flac | dlg | Schedar | firm | Цена сказана |
+| dlg_10_1_v2_f_g.flac | dlg | Aoede | firm | Ниже не опущу |
+| dlg_10_1_v2_g.flac | dlg | Schedar | firm | Ниже не опущу |
+| dlg_10_2_v2_f_g.flac | dlg | Aoede | firm | Не нравится — идите к соседу |
+| dlg_10_2_v2_g.flac | dlg | Schedar | firm | Не нравится — идите к соседу |
+| dlg_10_3_v2_f_g.flac | dlg | Aoede | firm | Товар хороший, и цена у него своя |
+| dlg_10_3_v2_g.flac | dlg | Schedar | firm | Товар хороший, и цена у него своя |
+| dlg_10_4_v2_f_g.flac | dlg | Aoede | firm | Скорее удавлюсь, чем уступлю |
+| dlg_10_4_v2_g.flac | dlg | Schedar | firm | Скорее удавлюсь, чем уступлю |
+| dlg_10_5_v2_f_g.flac | dlg | Aoede | firm | Я не торгуюсь, как на базаре |
+| dlg_10_5_v2_g.flac | dlg | Schedar | firm | Я не торгуюсь, как на базаре |
+| dlg_10_6_v2_f_g.flac | dlg | Aoede | firm | Цена честная, клянусь. Меньше — себе в убыток |
+| dlg_10_6_v2_g.flac | dlg | Schedar | firm | Цена честная, клянусь. Меньше — себе в убыток |
+| dlg_10_7_v2_f_g.flac | dlg | Aoede | firm | Посчитайте сами: дешевле не выходит |
+| dlg_10_7_v2_g.flac | dlg | Schedar | firm | Посчитайте сами: дешевле не выходит |
+| dlg_10_8_v2_f_g.flac | dlg | Aoede | firm | Вам — вдвое. Не нравится — дверь там |
+| dlg_10_8_v2_g.flac | dlg | Schedar | firm | Вам — вдвое. Не нравится — дверь там |
+| dlg_10_9_v2_f_g.flac | dlg | Aoede | firm | Уступить бы тебе, да и так в убыток торгую |
+| dlg_10_9_v2_g.flac | dlg | Schedar | firm | Уступить бы тебе, да и так в убыток торгую |
+| dlg_11_0_v2_f_g.flac | dlg | Aoede | conspiratorial | Я вас не видела |
+| dlg_11_0_v2_g.flac | dlg | Schedar | conspiratorial | Я вас не видел |
+| dlg_11_1_v2_f_g.flac | dlg | Aoede | conspiratorial | Какие деньги? Ничего не было |
+| dlg_11_1_v2_g.flac | dlg | Schedar | conspiratorial | Какие деньги? Ничего не было |
+| dlg_11_2_v2_f_g.flac | dlg | Aoede | conspiratorial | Считайте, мы не встречались |
+| dlg_11_2_v2_g.flac | dlg | Schedar | conspiratorial | Считайте, мы не встречались |
+| dlg_11_3_v2_f_g.flac | dlg | Aoede | conspiratorial | Я глуха, слепа и очень занята |
+| dlg_11_3_v2_g.flac | dlg | Schedar | conspiratorial | Я глух, слеп и очень занят |
+| dlg_11_4_v2_f_g.flac | dlg | Aoede | conspiratorial | Щедро. Для вас — что угодно |
+| dlg_11_4_v2_g.flac | dlg | Schedar | conspiratorial | Щедро. Для вас — что угодно |
+| dlg_11_5_v2_f_g.flac | dlg | Aoede | conspiratorial | Только быстро, пока никто не смотрит |
+| dlg_11_5_v2_g.flac | dlg | Schedar | conspiratorial | Только быстро, пока никто не смотрит |
+| dlg_11_6_v2_f_g.flac | dlg | Aoede | conspiratorial | Разумный подход. Я умею молчать |
+| dlg_11_6_v2_g.flac | dlg | Schedar | conspiratorial | Разумный подход. Я умею молчать |
+| dlg_11_7_v2_f_g.flac | dlg | Aoede | conspiratorial | Для тебя — могила. Никому ни слова |
+| dlg_11_7_v2_g.flac | dlg | Schedar | conspiratorial | Для тебя — могила. Никому ни слова |
+| dlg_11_8_v2_f_g.flac | dlg | Aoede | conspiratorial | Деньги взяты. Разговора не было |
+| dlg_11_8_v2_g.flac | dlg | Schedar | conspiratorial | Деньги взяты. Разговора не было |
+| dlg_11_9_v2_f_g.flac | dlg | Aoede | conspiratorial | Деньги возьму, но друзьями нам не быть |
+| dlg_11_9_v2_g.flac | dlg | Schedar | conspiratorial | Деньги возьму, но друзьями нам не быть |
+| dlg_12_0_v2_f_g.flac | dlg | Aoede | offended | За кого вы меня держите? |
+| dlg_12_0_v2_g.flac | dlg | Schedar | offended | За кого вы меня держите? |
+| dlg_12_10_v2_f_g.flac | dlg | Aoede | offended | Вам я и так помогаю, зачем деньги? |
+| dlg_12_10_v2_g.flac | dlg | Schedar | offended | Вам я и так помогаю, зачем деньги? |
+| dlg_12_1_v2_f_g.flac | dlg | Aoede | offended | Уберите это, пока я не позвала стражу |
+| dlg_12_1_v2_g.flac | dlg | Schedar | offended | Уберите это, пока я не позвал стражу |
+| dlg_12_2_v2_f_g.flac | dlg | Aoede | offended | Меня не купишь |
+| dlg_12_2_v2_g.flac | dlg | Schedar | offended | Меня не купишь |
+| dlg_12_3_v2_f_g.flac | dlg | Aoede | offended | Деньги держите при себе |
+| dlg_12_3_v2_g.flac | dlg | Schedar | offended | Деньги держите при себе |
+| dlg_12_4_v2_f_g.flac | dlg | Aoede | offended | Честь не продаётся. Ступайте |
+| dlg_12_4_v2_g.flac | dlg | Schedar | offended | Честь не продаётся. Ступайте |
+| dlg_12_5_v2_f_g.flac | dlg | Aoede | offended | Вы смеете? Мне? |
+| dlg_12_5_v2_g.flac | dlg | Schedar | offended | Вы смеете? Мне? |
+| dlg_12_6_v2_f_g.flac | dlg | Aoede | offended | Боги видят, что вы сделали |
+| dlg_12_6_v2_g.flac | dlg | Schedar | offended | Боги видят, что вы сделали |
+| dlg_12_7_v2_f_g.flac | dlg | Aoede | offended | Нет-нет, я в таком не участвую! |
+| dlg_12_7_v2_g.flac | dlg | Schedar | offended | Нет-нет, я в таком не участвую! |
+| dlg_12_8_v2_f_g.flac | dlg | Aoede | offended | От тебя — и такое? Обидно |
+| dlg_12_8_v2_g.flac | dlg | Schedar | offended | От тебя — и такое? Обидно |
+| dlg_12_9_v2_f_g.flac | dlg | Aoede | offended | Ещё раз — и позову стражу |
+| dlg_12_9_v2_g.flac | dlg | Schedar | offended | Ещё раз — и позову стражу |
+| dlg_13_0_v2_f_g.flac | dlg | Aoede | correcting | Вы путаете. Так говорят приезжие |
+| dlg_13_0_v2_g.flac | dlg | Schedar | correcting | Вы путаете. Так говорят приезжие |
+| dlg_13_1_v2_f_g.flac | dlg | Aoede | correcting | Это вы где-то не то прочитали |
+| dlg_13_1_v2_g.flac | dlg | Schedar | correcting | Это вы где-то не то прочитали |
+| dlg_13_2_v2_f_g.flac | dlg | Aoede | correcting | У нас так не говорят |
+| dlg_13_2_v2_g.flac | dlg | Schedar | correcting | У нас так не говорят |
+| dlg_13_3_v2_f_g.flac | dlg | Aoede | correcting | Близко, но нет |
+| dlg_13_3_v2_g.flac | dlg | Schedar | correcting | Близко, но нет |
+| dlg_13_4_v2_f_g.flac | dlg | Aoede | correcting | Нахватались по верхам. Бывает у чужаков |
+| dlg_13_4_v2_g.flac | dlg | Schedar | correcting | Нахватались по верхам. Бывает у чужаков |
+| dlg_13_5_v2_f_g.flac | dlg | Aoede | correcting | Неверно. Проверьте, откуда вы это взяли |
+| dlg_13_5_v2_g.flac | dlg | Schedar | correcting | Неверно. Проверьте, откуда вы это взяли |
+| dlg_13_6_v2_f_g.flac | dlg | Aoede | correcting | Так только в новых книжках пишут, у нас по-другому |
+| dlg_13_6_v2_g.flac | dlg | Schedar | correcting | Так только в новых книжках пишут, у нас по-другому |
+| dlg_13_7_v2_f_g.flac | dlg | Aoede | correcting | Прежде чем умничать, узнайте хоть что-то |
+| dlg_13_7_v2_g.flac | dlg | Schedar | correcting | Прежде чем умничать, узнайте хоть что-то |
+| dlg_13_8_v2_f_g.flac | dlg | Aoede | correcting | Не то, друг. Но за старание спасибо |
+| dlg_13_8_v2_g.flac | dlg | Schedar | correcting | Не то, друг. Но за старание спасибо |
+| dlg_14_0_v2_f_g.flac | dlg | Aoede | pleasantly surprised | Редко кто из чужих знает это |
+| dlg_14_0_v2_g.flac | dlg | Schedar | pleasantly surprised | Редко кто из чужих знает это |
+| dlg_14_1_v2_f_g.flac | dlg | Aoede | pleasantly surprised | Вот это да — будто свой |
+| dlg_14_1_v2_g.flac | dlg | Schedar | pleasantly surprised | Вот это да — будто свой |
+| dlg_14_2_v2_f_g.flac | dlg | Aoede | pleasantly surprised | Где вы этому научились? |
+| dlg_14_2_v2_g.flac | dlg | Schedar | pleasantly surprised | Где вы этому научились? |
+| dlg_14_3_v2_f_g.flac | dlg | Aoede | pleasantly surprised | Теперь с вами можно говорить по-настоящему |
+| dlg_14_3_v2_g.flac | dlg | Schedar | pleasantly surprised | Теперь с вами можно говорить по-настоящему |
+| dlg_14_4_v2_f_g.flac | dlg | Aoede | pleasantly surprised | Уважаю. Обычай — это корни |
+| dlg_14_4_v2_g.flac | dlg | Schedar | pleasantly surprised | Уважаю. Обычай — это корни |
+| dlg_14_5_v2_f_g.flac | dlg | Aoede | pleasantly surprised | Приятно! Садитесь, поговорим |
+| dlg_14_5_v2_g.flac | dlg | Schedar | pleasantly surprised | Приятно! Садитесь, поговорим |
+| dlg_14_6_v2_f_g.flac | dlg | Aoede | pleasantly surprised | Не ожидала от чужака |
+| dlg_14_6_v2_g.flac | dlg | Schedar | pleasantly surprised | Не ожидал от чужака |
+| dlg_14_7_v2_f_g.flac | dlg | Aoede | pleasantly surprised | Даже недруг, а обычай знает. Уважаю |
+| dlg_14_7_v2_g.flac | dlg | Schedar | pleasantly surprised | Даже недруг, а обычай знает. Уважаю |
+| dlg_14_8_v2_f_g.flac | dlg | Aoede | pleasantly surprised | Ты у нас уже почти свой |
+| dlg_14_8_v2_g.flac | dlg | Schedar | pleasantly surprised | Ты у нас уже почти свой |
+| dlg_14_9_v2_f_g.flac | dlg | Aoede | pleasantly surprised | Хм. Удивили |
+| dlg_14_9_v2_g.flac | dlg | Schedar | pleasantly surprised | Хм. Удивили |
+| dlg_15_0_v2_f_g.flac | dlg | Aoede | suspicious | Вы чего-то не договариваете? |
+| dlg_15_0_v2_g.flac | dlg | Schedar | suspicious | Вы чего-то не договариваете? |
+| dlg_15_1_v2_f_g.flac | dlg | Aoede | suspicious | Что-то в вашем рассказе не сходится |
+| dlg_15_1_v2_g.flac | dlg | Schedar | suspicious | Что-то в вашем рассказе не сходится |
+| dlg_15_2_v2_f_g.flac | dlg | Aoede | suspicious | А дальше? Где остальное? |
+| dlg_15_2_v2_g.flac | dlg | Schedar | suspicious | А дальше? Где остальное? |
+| dlg_15_3_v2_f_g.flac | dlg | Aoede | suspicious | Полуправда хуже лжи, знаете ли |
+| dlg_15_3_v2_g.flac | dlg | Schedar | suspicious | Полуправда хуже лжи, знаете ли |
+| dlg_15_4_v2_f_g.flac | dlg | Aoede | suspicious | Я так и знала, что вы темните |
+| dlg_15_4_v2_g.flac | dlg | Schedar | suspicious | Я так и знал, что вы темните |
+| dlg_15_5_v2_f_g.flac | dlg | Aoede | suspicious | Нет второй половины. Где она? |
+| dlg_15_5_v2_g.flac | dlg | Schedar | suspicious | Нет второй половины. Где она? |
+| dlg_15_6_v2_f_g.flac | dlg | Aoede | suspicious | Недомолвки — мой хлеб. Меня так не проведёшь |
+| dlg_15_6_v2_g.flac | dlg | Schedar | suspicious | Недомолвки — мой хлеб. Меня так не проведёшь |
+| dlg_15_7_v2_f_g.flac | dlg | Aoede | suspicious | Друг, от меня-то зачем таиться? |
+| dlg_15_7_v2_g.flac | dlg | Schedar | suspicious | Друг, от меня-то зачем таиться? |
+| dlg_15_8_v2_f_g.flac | dlg | Aoede | suspicious | Опять хитрите. Всё вижу |
+| dlg_15_8_v2_g.flac | dlg | Schedar | suspicious | Опять хитрите. Всё вижу |
+| dlg_15_9_v2_f_g.flac | dlg | Aoede | suspicious | Один раз вы уже обманули. Хватит |
+| dlg_15_9_v2_g.flac | dlg | Schedar | suspicious | Один раз вы уже обманули. Хватит |
+| dlg_16_0_v2_f_g.flac | dlg | Aoede | contemptuous | Врёте. И плохо врёте |
+| dlg_16_0_v2_g.flac | dlg | Schedar | contemptuous | Врёте. И плохо врёте |
+| dlg_16_10_v2_f_g.flac | dlg | Aoede | contemptuous | Лгун. Все будут знать |
+| dlg_16_10_v2_g.flac | dlg | Schedar | contemptuous | Лгун. Все будут знать |
+| dlg_16_1_v2_f_g.flac | dlg | Aoede | contemptuous | Сказки рассказывайте детям |
+| dlg_16_1_v2_g.flac | dlg | Schedar | contemptuous | Сказки рассказывайте детям |
+| dlg_16_2_v2_f_g.flac | dlg | Aoede | contemptuous | Не держите меня за дурака |
+| dlg_16_2_v2_g.flac | dlg | Schedar | contemptuous | Не держите меня за дурака |
+| dlg_16_3_v2_f_g.flac | dlg | Aoede | contemptuous | Ложь у вас на лбу написана |
+| dlg_16_3_v2_g.flac | dlg | Schedar | contemptuous | Ложь у вас на лбу написана |
+| dlg_16_4_v2_f_g.flac | dlg | Aoede | contemptuous | Лгать мне в лицо? Как не стыдно |
+| dlg_16_4_v2_g.flac | dlg | Schedar | contemptuous | Лгать мне в лицо? Как не стыдно |
+| dlg_16_5_v2_f_g.flac | dlg | Aoede | contemptuous | Врать надо тоньше. Учитесь |
+| dlg_16_5_v2_g.flac | dlg | Schedar | contemptuous | Врать надо тоньше. Учитесь |
+| dlg_16_6_v2_f_g.flac | dlg | Aoede | contemptuous | Ещё одно враньё — и язык укорочу |
+| dlg_16_6_v2_g.flac | dlg | Schedar | contemptuous | Ещё одно враньё — и язык укорочу |
+| dlg_16_7_v2_f_g.flac | dlg | Aoede | contemptuous | Я с первого слова знала, что врёте |
+| dlg_16_7_v2_g.flac | dlg | Schedar | contemptuous | Я с первого слова знал, что врёте |
+| dlg_16_8_v2_f_g.flac | dlg | Aoede | contemptuous | Зачем врёшь своему? Обидно |
+| dlg_16_8_v2_g.flac | dlg | Schedar | contemptuous | Зачем врёшь своему? Обидно |
+| dlg_16_9_v2_f_g.flac | dlg | Aoede | contemptuous | Опять за старое? Второй раз не поверю |
+| dlg_16_9_v2_g.flac | dlg | Schedar | contemptuous | Опять за старое? Второй раз не поверю |
+| dlg_17_0_v2_f_g.flac | dlg | Aoede | frightened | Только не надо... я скажу |
+| dlg_17_0_v2_g.flac | dlg | Schedar | frightened | Только не надо... я скажу |
+| dlg_17_1_v2_f_g.flac | dlg | Aoede | frightened | Хорошо, хорошо! Всё скажу |
+| dlg_17_1_v2_g.flac | dlg | Schedar | frightened | Хорошо, хорошо! Всё скажу |
+| dlg_17_2_v2_f_g.flac | dlg | Aoede | frightened | Не трогайте меня, я всё сделаю |
+| dlg_17_2_v2_g.flac | dlg | Schedar | frightened | Не трогайте меня, я всё сделаю |
+| dlg_17_3_v2_f_g.flac | dlg | Aoede | frightened | Спокойно… договоримся |
+| dlg_17_3_v2_g.flac | dlg | Schedar | frightened | Спокойно… договоримся |
+| dlg_17_4_v2_f_g.flac | dlg | Aoede | frightened | Пощадите! Всё, что хотите! |
+| dlg_17_4_v2_g.flac | dlg | Schedar | frightened | Пощадите! Всё, что хотите! |
+| dlg_17_5_v2_f_g.flac | dlg | Aoede | frightened | …Вы об этом пожалеете. Но — ладно |
+| dlg_17_5_v2_g.flac | dlg | Schedar | frightened | …Вы об этом пожалеете. Но — ладно |
+| dlg_17_6_v2_f_g.flac | dlg | Aoede | frightened | Ладно. Ваша сила. Пока |
+| dlg_17_6_v2_g.flac | dlg | Schedar | frightened | Ладно. Ваша сила. Пока |
+| dlg_17_7_v2_f_g.flac | dlg | Aoede | frightened | Ненавижу вас. Но скажу |
+| dlg_17_7_v2_g.flac | dlg | Schedar | frightened | Ненавижу вас. Но скажу |
+| dlg_17_8_v2_f_g.flac | dlg | Aoede | frightened | Уберите. Всё скажу |
+| dlg_17_8_v2_g.flac | dlg | Schedar | frightened | Уберите. Всё скажу |
+| dlg_18_0_v2_f_g.flac | dlg | Aoede | defiant | Убери железо, пока цел |
+| dlg_18_0_v2_g.flac | dlg | Schedar | defiant | Убери железо, пока цел |
+| dlg_18_1_v2_f_g.flac | dlg | Aoede | defiant | Не на того напал |
+| dlg_18_1_v2_g.flac | dlg | Schedar | defiant | Не на того напал |
+| dlg_18_2_v2_f_g.flac | dlg | Aoede | defiant | Пугать меня вздумал? Стража! |
+| dlg_18_2_v2_g.flac | dlg | Schedar | defiant | Пугать меня вздумал? Стража! |
+| dlg_18_3_v2_f_g.flac | dlg | Aoede | defiant | Сейчас ты об этом пожалеешь |
+| dlg_18_3_v2_g.flac | dlg | Schedar | defiant | Сейчас ты об этом пожалеешь |
+| dlg_18_4_v2_f_g.flac | dlg | Aoede | defiant | Я и не таких видала. Стража! |
+| dlg_18_4_v2_g.flac | dlg | Schedar | defiant | Я и не таких видал. Стража! |
+| dlg_18_5_v2_f_g.flac | dlg | Aoede | defiant | Попробуй только — останешься без руки |
+| dlg_18_5_v2_g.flac | dlg | Schedar | defiant | Попробуй только — останешься без руки |
+| dlg_18_6_v2_f_g.flac | dlg | Aoede | defiant | Угроз я не боюсь. Стража, сюда! |
+| dlg_18_6_v2_g.flac | dlg | Schedar | defiant | Угроз я не боюсь. Стража, сюда! |
+| dlg_18_7_v2_f_g.flac | dlg | Aoede | defiant | Ты что, своего пугать вздумал? |
+| dlg_18_7_v2_g.flac | dlg | Schedar | defiant | Ты что, своего пугать вздумал? |
+| dlg_18_8_v2_f_g.flac | dlg | Aoede | defiant | Вот оно, твоё настоящее лицо |
+| dlg_18_8_v2_g.flac | dlg | Schedar | defiant | Вот оно, твоё настоящее лицо |
+| dlg_19_0_v2_f_g.flac | dlg | Aoede | tense | Чего вы хотите? Только тихо |
+| dlg_19_0_v2_g.flac | dlg | Schedar | tense | Чего вы хотите? Только тихо |
+| dlg_19_1_v2_f_g.flac | dlg | Aoede | tense | Ладно… Что вам нужно? |
+| dlg_19_1_v2_g.flac | dlg | Schedar | tense | Ладно… Что вам нужно? |
+| dlg_19_2_v2_f_g.flac | dlg | Aoede | tense | Не здесь. Говорите, чего хотите |
+| dlg_19_2_v2_g.flac | dlg | Schedar | tense | Не здесь. Говорите, чего хотите |
+| dlg_19_3_v2_f_g.flac | dlg | Aoede | tense | Тише. Договоримся |
+| dlg_19_3_v2_g.flac | dlg | Schedar | tense | Тише. Договоримся |
+| dlg_19_4_v2_f_g.flac | dlg | Aoede | tense | Только никому! Я сделаю, что скажете |
+| dlg_19_4_v2_g.flac | dlg | Schedar | tense | Только никому! Я сделаю, что скажете |
+| dlg_19_5_v2_f_g.flac | dlg | Aoede | tense | Хорошо сыграно. Каковы условия? |
+| dlg_19_5_v2_g.flac | dlg | Schedar | tense | Хорошо сыграно. Каковы условия? |
+| dlg_19_6_v2_f_g.flac | dlg | Aoede | tense | Вы пожалеете об этом. Но — говорите |
+| dlg_19_6_v2_g.flac | dlg | Schedar | tense | Вы пожалеете об этом. Но — говорите |
+| dlg_19_7_v2_f_g.flac | dlg | Aoede | tense | Будьте вы прокляты. Говорите, что нужно |
+| dlg_19_7_v2_g.flac | dlg | Schedar | tense | Будьте вы прокляты. Говорите, что нужно |
+| dlg_1_0_v2_f_g.flac | dlg | Aoede | shrugging | Мало ли что болтают |
+| dlg_1_0_v2_g.flac | dlg | Schedar | shrugging | Мало ли что болтают |
+| dlg_1_10_v2_f_g.flac | dlg | Aoede | shrugging | Врать не стану: ничего путного не слышно |
+| dlg_1_10_v2_g.flac | dlg | Schedar | shrugging | Врать не стану: ничего путного не слышно |
+| dlg_1_11_v2_f_g.flac | dlg | Aoede | shrugging | Чтобы вы потом разнесли? Нет уж |
+| dlg_1_11_v2_g.flac | dlg | Schedar | shrugging | Чтобы вы потом разнесли? Нет уж |
+| dlg_1_1_v2_f_g.flac | dlg | Aoede | shrugging | Слухов тут больше, чем людей, — не собираю |
+| dlg_1_1_v2_g.flac | dlg | Schedar | shrugging | Слухов тут больше, чем людей, — не собираю |
+| dlg_1_2_v2_f_g.flac | dlg | Aoede | shrugging | Язык без костей, а у меня память на чужие басни короткая |
+| dlg_1_2_v2_g.flac | dlg | Schedar | shrugging | Язык без костей, а у меня память на чужие басни короткая |
+| dlg_1_3_v2_f_g.flac | dlg | Aoede | shrugging | Не слышала. А и слышала бы — не повторила |
+| dlg_1_3_v2_g.flac | dlg | Schedar | shrugging | Не слышал. А и слышал бы — не повторил |
+| dlg_1_4_v2_f_g.flac | dlg | Aoede | shrugging | Врать не хочу, а правды не знаю |
+| dlg_1_4_v2_g.flac | dlg | Schedar | shrugging | Врать не хочу, а правды не знаю |
+| dlg_1_5_v2_f_g.flac | dlg | Aoede | shrugging | Про такое вслух не говорят. Не спрашивайте |
+| dlg_1_5_v2_g.flac | dlg | Schedar | shrugging | Про такое вслух не говорят. Не спрашивайте |
+| dlg_1_6_v2_f_g.flac | dlg | Aoede | shrugging | Пустое это всё. Слушайте лучше, что говорят боги |
+| dlg_1_6_v2_g.flac | dlg | Schedar | shrugging | Пустое это всё. Слушайте лучше, что говорят боги |
+| dlg_1_7_v2_f_g.flac | dlg | Aoede | shrugging | Кто вас подослал выспрашивать? |
+| dlg_1_7_v2_g.flac | dlg | Schedar | shrugging | Кто вас подослал выспрашивать? |
+| dlg_1_8_v2_f_g.flac | dlg | Aoede | shrugging | Вам — ни слова |
+| dlg_1_8_v2_g.flac | dlg | Schedar | shrugging | Вам — ни слова |
+| dlg_1_9_v2_f_g.flac | dlg | Aoede | shrugging | Сплетен не держу |
+| dlg_1_9_v2_g.flac | dlg | Schedar | shrugging | Сплетен не держу |
+| dlg_20_0_v2_f_g.flac | dlg | Aoede | defiant | Рассказывайте кому хотите. Мне терять нечего |
+| dlg_20_0_v2_g.flac | dlg | Schedar | defiant | Рассказывайте кому хотите. Мне терять нечего |
+| dlg_20_1_v2_f_g.flac | dlg | Aoede | defiant | Шантажом меня не возьмёшь |
+| dlg_20_1_v2_g.flac | dlg | Schedar | defiant | Шантажом меня не возьмёшь |
+| dlg_20_2_v2_f_g.flac | dlg | Aoede | defiant | Иди и рассказывай. Я не боюсь |
+| dlg_20_2_v2_g.flac | dlg | Schedar | defiant | Иди и рассказывай. Я не боюсь |
+| dlg_20_3_v2_f_g.flac | dlg | Aoede | defiant | Ищите кого попугливее |
+| dlg_20_3_v2_g.flac | dlg | Schedar | defiant | Ищите кого попугливее |
+| dlg_20_4_v2_f_g.flac | dlg | Aoede | defiant | Пусть знают все. Мне скрывать нечего |
+| dlg_20_4_v2_g.flac | dlg | Schedar | defiant | Пусть знают все. Мне скрывать нечего |
+| dlg_20_5_v2_f_g.flac | dlg | Aoede | defiant | Лучше правда, чем жить у вас на крючке |
+| dlg_20_5_v2_g.flac | dlg | Schedar | defiant | Лучше правда, чем жить у вас на крючке |
+| dlg_20_6_v2_f_g.flac | dlg | Aoede | defiant | Скажешь хоть слово — и тебя не найдут |
+| dlg_20_6_v2_g.flac | dlg | Schedar | defiant | Скажешь хоть слово — и тебя не найдут |
+| dlg_20_7_v2_f_g.flac | dlg | Aoede | defiant | Я вас больше не боюсь |
+| dlg_20_7_v2_g.flac | dlg | Schedar | defiant | Я вас больше не боюсь |
+| dlg_21_0_v2_f_g.flac | dlg | Aoede | angry | Ещё слово — и будет драка |
+| dlg_21_0_v2_g.flac | dlg | Schedar | angry | Ещё слово — и будет драка |
+| dlg_21_1_v2_f_g.flac | dlg | Aoede | angry | Не зли меня |
+| dlg_21_1_v2_g.flac | dlg | Schedar | angry | Не зли меня |
+| dlg_21_2_v2_f_g.flac | dlg | Aoede | angry | Думаешь, я дам себя разозлить? Не выйдет |
+| dlg_21_2_v2_g.flac | dlg | Schedar | angry | Думаешь, я дам себя разозлить? Не выйдет |
+| dlg_21_3_v2_f_g.flac | dlg | Aoede | angry | Иди своей дорогой |
+| dlg_21_3_v2_g.flac | dlg | Schedar | angry | Иди своей дорогой |
+| dlg_21_4_v2_f_g.flac | dlg | Aoede | angry | Язык свой придержи, а то вырву |
+| dlg_21_4_v2_g.flac | dlg | Schedar | angry | Язык свой придержи, а то вырву |
+| dlg_21_5_v2_f_g.flac | dlg | Aoede | angry | Не надо так. Я не хочу ссоры |
+| dlg_21_5_v2_g.flac | dlg | Schedar | angry | Не надо так. Я не хочу ссоры |
+| dlg_21_6_v2_f_g.flac | dlg | Aoede | angry | Не надо, друг. Не порти то, что было |
+| dlg_21_6_v2_g.flac | dlg | Schedar | angry | Не надо, друг. Не порти то, что было |
+| dlg_21_7_v2_f_g.flac | dlg | Aoede | angry | Давно хочется дать вам по зубам |
+| dlg_21_7_v2_g.flac | dlg | Schedar | angry | Давно хочется дать вам по зубам |
+| dlg_22_0_v2_f_g.flac | dlg | Aoede | easygoing | Бывает |
+| dlg_22_0_v2_g.flac | dlg | Schedar | easygoing | Бывает |
+| dlg_22_1_v2_f_g.flac | dlg | Aoede | easygoing | Что ж, не всякий разговор к добру |
+| dlg_22_1_v2_g.flac | dlg | Schedar | easygoing | Что ж, не всякий разговор к добру |
+| dlg_22_2_v2_f_g.flac | dlg | Aoede | easygoing | Ваше право |
+| dlg_22_2_v2_g.flac | dlg | Schedar | easygoing | Ваше право |
+| dlg_22_3_v2_f_g.flac | dlg | Aoede | easygoing | Понимаю |
+| dlg_22_3_v2_g.flac | dlg | Schedar | easygoing | Понимаю |
+| dlg_22_4_v2_f_g.flac | dlg | Aoede | easygoing | Ничего, в другой раз |
+| dlg_22_4_v2_g.flac | dlg | Schedar | easygoing | Ничего, в другой раз |
+| dlg_22_5_v2_f_g.flac | dlg | Aoede | easygoing | Как угодно |
+| dlg_22_5_v2_g.flac | dlg | Schedar | easygoing | Как угодно |
+| dlg_22_6_v2_f_g.flac | dlg | Aoede | easygoing | Ничего, друг. В другой раз |
+| dlg_22_6_v2_g.flac | dlg | Schedar | easygoing | Ничего, друг. В другой раз |
+| dlg_22_7_v2_f_g.flac | dlg | Aoede | easygoing | Не беда. Вы и так много сделали |
+| dlg_22_7_v2_g.flac | dlg | Schedar | easygoing | Не беда. Вы и так много сделали |
+| dlg_22_8_v2_f_g.flac | dlg | Aoede | easygoing | Как знаете |
+| dlg_22_8_v2_g.flac | dlg | Schedar | easygoing | Как знаете |
+| dlg_23_0_v2_f_g.flac | dlg | Aoede | impatient | Мы об этом говорили |
+| dlg_23_0_v2_g.flac | dlg | Schedar | impatient | Мы об этом говорили |
+| dlg_23_1_v2_f_g.flac | dlg | Aoede | impatient | Я уже ответила вам сегодня |
+| dlg_23_1_v2_g.flac | dlg | Schedar | impatient | Я уже ответил вам сегодня |
+| dlg_23_2_v2_f_g.flac | dlg | Aoede | impatient | Опять вы с тем же? |
+| dlg_23_2_v2_g.flac | dlg | Schedar | impatient | Опять вы с тем же? |
+| dlg_23_3_v2_f_g.flac | dlg | Aoede | impatient | Сегодня — хватит об этом |
+| dlg_23_3_v2_g.flac | dlg | Schedar | impatient | Сегодня — хватит об этом |
+| dlg_23_4_v2_f_g.flac | dlg | Aoede | impatient | Зачем спрашивать дважды? |
+| dlg_23_4_v2_g.flac | dlg | Schedar | impatient | Зачем спрашивать дважды? |
+| dlg_23_5_v2_f_g.flac | dlg | Aoede | impatient | Я же сказала уже — не сердитесь |
+| dlg_23_5_v2_g.flac | dlg | Schedar | impatient | Я же сказал уже — не сердитесь |
+| dlg_23_6_v2_f_g.flac | dlg | Aoede | impatient | За второй ответ — отдельная плата |
+| dlg_23_6_v2_g.flac | dlg | Schedar | impatient | За второй ответ — отдельная плата |
+| dlg_23_7_v2_f_g.flac | dlg | Aoede | impatient | Друг, ты повторяешься |
+| dlg_23_7_v2_g.flac | dlg | Schedar | impatient | Друг, ты повторяешься |
+| dlg_23_8_v2_f_g.flac | dlg | Aoede | impatient | Сколько можно? Уходите |
+| dlg_23_8_v2_g.flac | dlg | Schedar | impatient | Сколько можно? Уходите |
+| dlg_24_0_v2_f_g.flac | dlg | Aoede | disappointed | Я на вас рассчитывала |
+| dlg_24_0_v2_g.flac | dlg | Schedar | disappointed | Я на вас рассчитывал |
+| dlg_24_1_v2_f_g.flac | dlg | Aoede | disappointed | От друга — и такое |
+| dlg_24_1_v2_g.flac | dlg | Schedar | disappointed | От друга — и такое |
+| dlg_24_2_v2_f_g.flac | dlg | Aoede | disappointed | Опять подвели. Как всегда |
+| dlg_24_2_v2_g.flac | dlg | Schedar | disappointed | Опять подвели. Как всегда |
+| dlg_25_0_v2_f_g.flac | dlg | Aoede | willing | Слушайте, расскажу, что знаю |
+| dlg_25_0_v2_g.flac | dlg | Schedar | willing | Слушайте, расскажу, что знаю |
+| dlg_25_1_v2_f_g.flac | dlg | Aoede | willing | Спрашиваете — отвечу |
+| dlg_25_1_v2_g.flac | dlg | Schedar | willing | Спрашиваете — отвечу |
+| dlg_25_2_v2_f_g.flac | dlg | Aoede | willing | Садитесь, раз интересно |
+| dlg_25_2_v2_g.flac | dlg | Schedar | willing | Садитесь, раз интересно |
+| dlg_25_3_v2_f_g.flac | dlg | Aoede | willing | Скажу. Но в следующий раз — за монету |
+| dlg_25_3_v2_g.flac | dlg | Schedar | willing | Скажу. Но в следующий раз — за монету |
+| dlg_25_4_v2_f_g.flac | dlg | Aoede | willing | Только тихо, ладно? Вот что тут творится |
+| dlg_25_4_v2_g.flac | dlg | Schedar | willing | Только тихо, ладно? Вот что тут творится |
+| dlg_25_5_v2_f_g.flac | dlg | Aoede | willing | Так и быть, просвещу вас |
+| dlg_25_5_v2_g.flac | dlg | Schedar | willing | Так и быть, просвещу вас |
+| dlg_25_6_v2_f_g.flac | dlg | Aoede | willing | Тебе — всё как есть |
+| dlg_25_6_v2_g.flac | dlg | Schedar | willing | Тебе — всё как есть |
+| dlg_25_7_v2_f_g.flac | dlg | Aoede | willing | Вам расскажу без утайки |
+| dlg_25_7_v2_g.flac | dlg | Schedar | willing | Вам расскажу без утайки |
+| dlg_25_8_v2_f_g.flac | dlg | Aoede | willing | Коротко: вот что тут было |
+| dlg_25_8_v2_g.flac | dlg | Schedar | willing | Коротко: вот что тут было |
+| dlg_26_0_v2_f_g.flac | dlg | Aoede | patient | Да, про это уже шла речь. Вот как было |
+| dlg_26_0_v2_g.flac | dlg | Schedar | patient | Да, про это уже шла речь. Вот как было |
+| dlg_26_1_v2_f_g.flac | dlg | Aoede | patient | Повторю, раз не расслышали |
+| dlg_26_1_v2_g.flac | dlg | Schedar | patient | Повторю, раз не расслышали |
+| dlg_26_2_v2_f_g.flac | dlg | Aoede | patient | Слушайте ещё раз, внимательнее |
+| dlg_26_2_v2_g.flac | dlg | Schedar | patient | Слушайте ещё раз, внимательнее |
+| dlg_26_3_v2_f_g.flac | dlg | Aoede | patient | По порядку, ещё раз |
+| dlg_26_3_v2_g.flac | dlg | Schedar | patient | По порядку, ещё раз |
+| dlg_26_4_v2_f_g.flac | dlg | Aoede | patient | Для тебя — хоть дважды |
+| dlg_26_4_v2_g.flac | dlg | Schedar | patient | Для тебя — хоть дважды |
+| dlg_26_5_v2_f_g.flac | dlg | Aoede | patient | Последний раз повторяю |
+| dlg_26_5_v2_g.flac | dlg | Schedar | patient | Последний раз повторяю |
+| dlg_27_0_v2_f_g.flac | dlg | Aoede | curt | Больше мне добавить нечего |
+| dlg_27_0_v2_g.flac | dlg | Schedar | curt | Больше мне добавить нечего |
+| dlg_27_1_v2_f_g.flac | dlg | Aoede | curt | Что было — рассказано |
+| dlg_27_1_v2_g.flac | dlg | Schedar | curt | Что было — рассказано |
+| dlg_27_2_v2_f_g.flac | dlg | Aoede | curt | Больше ничего не знаю |
+| dlg_27_2_v2_g.flac | dlg | Schedar | curt | Больше ничего не знаю |
+| dlg_27_3_v2_f_g.flac | dlg | Aoede | curt | Отстаньте со своими расспросами |
+| dlg_27_3_v2_g.flac | dlg | Schedar | curt | Отстаньте со своими расспросами |
+| dlg_27_4_v2_f_g.flac | dlg | Aoede | curt | Честно, друг, больше ничего не знаю |
+| dlg_27_4_v2_g.flac | dlg | Schedar | curt | Честно, друг, больше ничего не знаю |
+| dlg_28_0_v2_f_g.flac | dlg | Aoede | worried | Времена неспокойные, вот что скажу |
+| dlg_28_0_v2_g.flac | dlg | Schedar | worried | Времена неспокойные, вот что скажу |
+| dlg_28_1_v2_f_g.flac | dlg | Aoede | worried | В мире всякое творится, слушайте |
+| dlg_28_1_v2_g.flac | dlg | Schedar | worried | В мире всякое творится, слушайте |
+| dlg_28_2_v2_f_g.flac | dlg | Aoede | worried | Цены растут, войны не кончаются — вот вам и новости |
+| dlg_28_2_v2_g.flac | dlg | Schedar | worried | Цены растут, войны не кончаются — вот вам и новости |
+| dlg_28_3_v2_f_g.flac | dlg | Aoede | worried | Боги гневаются, вот и неспокойно |
+| dlg_28_3_v2_g.flac | dlg | Schedar | worried | Боги гневаются, вот и неспокойно |
+| dlg_28_4_v2_f_g.flac | dlg | Aoede | worried | Торговля встала, вот главное |
+| dlg_28_4_v2_g.flac | dlg | Schedar | worried | Торговля встала, вот главное |
+| dlg_28_5_v2_f_g.flac | dlg | Aoede | worried | Власть жиреет, народ беднеет — вот и все новости |
+| dlg_28_5_v2_g.flac | dlg | Schedar | worried | Власть жиреет, народ беднеет — вот и все новости |
+| dlg_28_6_v2_f_g.flac | dlg | Aoede | worried | Тебе скажу как есть: худо в мире |
+| dlg_28_6_v2_g.flac | dlg | Schedar | worried | Тебе скажу как есть: худо в мире |
+| dlg_29_0_v2_f_g.flac | dlg | Aoede | dismissive | Моё дело — свой двор, а не весь мир |
+| dlg_29_0_v2_g.flac | dlg | Schedar | dismissive | Моё дело — свой двор, а не весь мир |
+| dlg_29_1_v2_f_g.flac | dlg | Aoede | dismissive | Не знаю я, что там за горами |
+| dlg_29_1_v2_g.flac | dlg | Schedar | dismissive | Не знаю я, что там за горами |
+| dlg_29_2_v2_f_g.flac | dlg | Aoede | dismissive | Мне бы тут управиться, не до мира |
+| dlg_29_2_v2_g.flac | dlg | Schedar | dismissive | Мне бы тут управиться, не до мира |
+| dlg_29_3_v2_f_g.flac | dlg | Aoede | dismissive | Про мир спросите у кого-нибудь другого |
+| dlg_29_3_v2_g.flac | dlg | Schedar | dismissive | Про мир спросите у кого-нибудь другого |
+| dlg_29_4_v2_f_g.flac | dlg | Aoede | dismissive | Не интересуюсь |
+| dlg_29_4_v2_g.flac | dlg | Schedar | dismissive | Не интересуюсь |
+| dlg_2_0_v2_f_g.flac | dlg | Aoede | thoughtful | Пожалуй, вы правы |
+| dlg_2_0_v2_g.flac | dlg | Schedar | thoughtful | Пожалуй, вы правы |
+| dlg_2_10_v2_f_g.flac | dlg | Aoede | thoughtful | Согласна, если мне с этого не убыток |
+| dlg_2_10_v2_g.flac | dlg | Schedar | thoughtful | Согласен, если мне с этого не убыток |
+| dlg_2_11_v2_f_g.flac | dlg | Aoede | thoughtful | Не люблю вас, но тут вы правы |
+| dlg_2_11_v2_g.flac | dlg | Schedar | thoughtful | Не люблю вас, но тут вы правы |
+| dlg_2_12_v2_f_g.flac | dlg | Aoede | thoughtful | Ладно. На этот раз соглашусь |
+| dlg_2_12_v2_g.flac | dlg | Schedar | thoughtful | Ладно. На этот раз соглашусь |
+| dlg_2_13_v2_f_g.flac | dlg | Aoede | thoughtful | С тобой спорить — себе дороже. Прав ты |
+| dlg_2_13_v2_g.flac | dlg | Schedar | thoughtful | С тобой спорить — себе дороже. Прав ты |
+| dlg_2_14_v2_f_g.flac | dlg | Aoede | thoughtful | Вам я верю. Будь по-вашему |
+| dlg_2_14_v2_g.flac | dlg | Schedar | thoughtful | Вам я верю. Будь по-вашему |
+| dlg_2_15_v2_f_g.flac | dlg | Aoede | thoughtful | Правы. Хоть и не хочется это признавать |
+| dlg_2_15_v2_g.flac | dlg | Schedar | thoughtful | Правы. Хоть и не хочется это признавать |
+| dlg_2_1_v2_f_g.flac | dlg | Aoede | thoughtful | Убедили. Сделаю по-вашему |
+| dlg_2_1_v2_g.flac | dlg | Schedar | thoughtful | Убедили. Сделаю по-вашему |
+| dlg_2_2_v2_f_g.flac | dlg | Aoede | thoughtful | Что ж, в ваших словах есть толк |
+| dlg_2_2_v2_g.flac | dlg | Schedar | thoughtful | Что ж, в ваших словах есть толк |
+| dlg_2_3_v2_f_g.flac | dlg | Aoede | thoughtful | Может, и правда пора посмотреть иначе |
+| dlg_2_3_v2_g.flac | dlg | Schedar | thoughtful | Может, и правда пора посмотреть иначе |
+| dlg_2_4_v2_f_g.flac | dlg | Aoede | thoughtful | Доводы весомые. Принимаю |
+| dlg_2_4_v2_g.flac | dlg | Schedar | thoughtful | Доводы весомые. Принимаю |
+| dlg_2_5_v2_f_g.flac | dlg | Aoede | thoughtful | Редко признаю чужую правоту, но тут — да |
+| dlg_2_5_v2_g.flac | dlg | Schedar | thoughtful | Редко признаю чужую правоту, но тут — да |
+| dlg_2_6_v2_f_g.flac | dlg | Aoede | thoughtful | Раз вы так считаете — так и быть |
+| dlg_2_6_v2_g.flac | dlg | Schedar | thoughtful | Раз вы так считаете — так и быть |
+| dlg_2_7_v2_f_g.flac | dlg | Aoede | thoughtful | Ладно. Но если окажется не так, я вспомню этот разговор |
+| dlg_2_7_v2_g.flac | dlg | Schedar | thoughtful | Ладно. Но если окажется не так, я вспомню этот разговор |
+| dlg_2_8_v2_f_g.flac | dlg | Aoede | thoughtful | Деды бы поспорили, но я соглашусь |
+| dlg_2_8_v2_g.flac | dlg | Schedar | thoughtful | Деды бы поспорили, но я соглашусь |
+| dlg_2_9_v2_f_g.flac | dlg | Aoede | thoughtful | Вот это дело! Давно пора было так думать |
+| dlg_2_9_v2_g.flac | dlg | Schedar | thoughtful | Вот это дело! Давно пора было так думать |
+| dlg_30_0_v2_f_g.flac | dlg | Aoede | knowing | Понимаю. Можете на меня положиться |
+| dlg_30_0_v2_g.flac | dlg | Schedar | knowing | Понимаю. Можете на меня положиться |
+| dlg_30_1_v2_f_g.flac | dlg | Aoede | knowing | Можно не продолжать, всё ясно |
+| dlg_30_1_v2_g.flac | dlg | Schedar | knowing | Можно не продолжать, всё ясно |
+| dlg_30_2_v2_f_g.flac | dlg | Aoede | knowing | Намёк понят |
+| dlg_30_2_v2_g.flac | dlg | Schedar | knowing | Намёк понят |
+| dlg_30_3_v2_f_g.flac | dlg | Aoede | knowing | Понимаю больше, чем вы сказали |
+| dlg_30_3_v2_g.flac | dlg | Schedar | knowing | Понимаю больше, чем вы сказали |
+| dlg_30_4_v2_f_g.flac | dlg | Aoede | knowing | Для тебя — сделаю |
+| dlg_30_4_v2_g.flac | dlg | Schedar | knowing | Для тебя — сделаю |
+| dlg_31_0_v2_f_g.flac | dlg | Aoede | convinced | Раз так — верю вам |
+| dlg_31_0_v2_g.flac | dlg | Schedar | convinced | Раз так — верю вам |
+| dlg_31_1_v2_f_g.flac | dlg | Aoede | convinced | Ну, если так, другое дело |
+| dlg_31_1_v2_g.flac | dlg | Schedar | convinced | Ну, если так, другое дело |
+| dlg_31_2_v2_f_g.flac | dlg | Aoede | convinced | Что ж, похоже на правду |
+| dlg_31_2_v2_g.flac | dlg | Schedar | convinced | Что ж, похоже на правду |
+| dlg_31_3_v2_f_g.flac | dlg | Aoede | convinced | Верю. Людям надо верить |
+| dlg_31_3_v2_g.flac | dlg | Schedar | convinced | Верю. Людям надо верить |
+| dlg_31_4_v2_f_g.flac | dlg | Aoede | convinced | Тебе — верю |
+| dlg_31_4_v2_g.flac | dlg | Schedar | convinced | Тебе — верю |
+| dlg_32_0_v2_f_g.flac | dlg | Aoede | angry outburst | Да что вы понимаете! Ладно, слушайте |
+| dlg_32_0_v2_g.flac | dlg | Schedar | angry outburst | Да что вы понимаете! Ладно, слушайте |
+| dlg_32_1_v2_f_g.flac | dlg | Aoede | angry outburst | Довели! Так знайте же |
+| dlg_32_1_v2_g.flac | dlg | Schedar | angry outburst | Довели! Так знайте же |
+| dlg_32_2_v2_f_g.flac | dlg | Aoede | angry outburst | Хватит! Скажу, раз так хотите |
+| dlg_32_2_v2_g.flac | dlg | Schedar | angry outburst | Хватит! Скажу, раз так хотите |
+| dlg_32_3_v2_f_g.flac | dlg | Aoede | angry outburst | Ах так? Получайте правду |
+| dlg_32_3_v2_g.flac | dlg | Schedar | angry outburst | Ах так? Получайте правду |
+| dlg_32_4_v2_f_g.flac | dlg | Aoede | angry outburst | Ненавижу вас. Но слушайте |
+| dlg_32_4_v2_g.flac | dlg | Schedar | angry outburst | Ненавижу вас. Но слушайте |
+| dlg_33_0_v2_f_g.flac | dlg | Aoede | heated | Вы не знаете, о чём говорите! |
+| dlg_33_0_v2_g.flac | dlg | Schedar | heated | Вы не знаете, о чём говорите! |
+| dlg_33_1_v2_f_g.flac | dlg | Aoede | heated | Чушь! Всё не так |
+| dlg_33_1_v2_g.flac | dlg | Schedar | heated | Чушь! Всё не так |
+| dlg_33_2_v2_f_g.flac | dlg | Aoede | heated | Спорить с вами — время терять |
+| dlg_33_2_v2_g.flac | dlg | Schedar | heated | Спорить с вами — время терять |
+| dlg_33_3_v2_f_g.flac | dlg | Aoede | heated | Куда вам со мной спорить |
+| dlg_33_3_v2_g.flac | dlg | Schedar | heated | Куда вам со мной спорить |
+| dlg_33_4_v2_f_g.flac | dlg | Aoede | heated | Нет, друг, тут ты неправ |
+| dlg_33_4_v2_g.flac | dlg | Schedar | heated | Нет, друг, тут ты неправ |
+| dlg_33_5_v2_f_g.flac | dlg | Aoede | heated | От вас другого и не ждёшь |
+| dlg_33_5_v2_g.flac | dlg | Schedar | heated | От вас другого и не ждёшь |
+| dlg_34_0_v2_f_g.flac | dlg | Aoede | thoughtful | Может, боги и вправду так рассудили |
+| dlg_34_0_v2_g.flac | dlg | Schedar | thoughtful | Может, боги и вправду так рассудили |
+| dlg_34_1_v2_f_g.flac | dlg | Aoede | thoughtful | Над этим стоит помолиться |
+| dlg_34_1_v2_g.flac | dlg | Schedar | thoughtful | Над этим стоит помолиться |
+| dlg_34_2_v2_f_g.flac | dlg | Aoede | thoughtful | В ваших словах есть вера |
+| dlg_34_2_v2_g.flac | dlg | Schedar | thoughtful | В ваших словах есть вера |
+| dlg_34_3_v2_f_g.flac | dlg | Aoede | thoughtful | Вы говорите, как истинно верующий |
+| dlg_34_3_v2_g.flac | dlg | Schedar | thoughtful | Вы говорите, как истинно верующий |
+| dlg_34_4_v2_f_g.flac | dlg | Aoede | thoughtful | С тобой и о богах говорить легко |
+| dlg_34_4_v2_g.flac | dlg | Schedar | thoughtful | С тобой и о богах говорить легко |
+| dlg_35_0_v2_f_g.flac | dlg | Aoede | outraged | Не вам судить о богах! |
+| dlg_35_0_v2_g.flac | dlg | Schedar | outraged | Не вам судить о богах! |
+| dlg_35_1_v2_f_g.flac | dlg | Aoede | outraged | Святотатство! |
+| dlg_35_1_v2_g.flac | dlg | Schedar | outraged | Святотатство! |
+| dlg_35_2_v2_f_g.flac | dlg | Aoede | outraged | Боги вам этого не простят |
+| dlg_35_2_v2_g.flac | dlg | Schedar | outraged | Боги вам этого не простят |
+| dlg_35_3_v2_f_g.flac | dlg | Aoede | outraged | Замолчите, пока небо не услышало! |
+| dlg_35_3_v2_g.flac | dlg | Schedar | outraged | Замолчите, пока небо не услышало! |
+| dlg_35_4_v2_f_g.flac | dlg | Aoede | outraged | Вера не спор, её не переспоришь |
+| dlg_35_4_v2_g.flac | dlg | Schedar | outraged | Вера не спор, её не переспоришь |
+| dlg_35_5_v2_f_g.flac | dlg | Aoede | outraged | Не надо, друг. Это святое |
+| dlg_35_5_v2_g.flac | dlg | Schedar | outraged | Не надо, друг. Это святое |
+| dlg_36_0_v2_f_g.flac | dlg | Aoede | thoughtful | В этом есть правда, как ни крути |
+| dlg_36_0_v2_g.flac | dlg | Schedar | thoughtful | В этом есть правда, как ни крути |
+| dlg_36_1_v2_f_g.flac | dlg | Aoede | thoughtful | С податями и вправду перегнули |
+| dlg_36_1_v2_g.flac | dlg | Schedar | thoughtful | С податями и вправду перегнули |
+| dlg_36_2_v2_f_g.flac | dlg | Aoede | thoughtful | Может, и вправду пора менять порядки |
+| dlg_36_2_v2_g.flac | dlg | Schedar | thoughtful | Может, и вправду пора менять порядки |
+| dlg_36_3_v2_f_g.flac | dlg | Aoede | thoughtful | Не люблю перемен, но тут вы правы |
+| dlg_36_3_v2_g.flac | dlg | Schedar | thoughtful | Не люблю перемен, но тут вы правы |
+| dlg_36_4_v2_f_g.flac | dlg | Aoede | thoughtful | Наконец-то кто-то говорит дело |
+| dlg_36_4_v2_g.flac | dlg | Schedar | thoughtful | Наконец-то кто-то говорит дело |
+| dlg_36_5_v2_f_g.flac | dlg | Aoede | thoughtful | Вот и у меня те же мысли |
+| dlg_36_5_v2_g.flac | dlg | Schedar | thoughtful | Вот и у меня те же мысли |
+| dlg_37_0_v2_f_g.flac | dlg | Aoede | stern | Власть — не вашего ума дело |
+| dlg_37_0_v2_g.flac | dlg | Schedar | stern | Власть — не вашего ума дело |
+| dlg_37_1_v2_f_g.flac | dlg | Aoede | stern | Про такое вслух не говорят |
+| dlg_37_1_v2_g.flac | dlg | Schedar | stern | Про такое вслух не говорят |
+| dlg_37_2_v2_f_g.flac | dlg | Aoede | stern | Держава как стояла, так и будет стоять |
+| dlg_37_2_v2_g.flac | dlg | Schedar | stern | Держава как стояла, так и будет стоять |
+| dlg_37_3_v2_f_g.flac | dlg | Aoede | stern | Власть? Да она нас и не спрашивает |
+| dlg_37_3_v2_g.flac | dlg | Schedar | stern | Власть? Да она нас и не спрашивает |
+| dlg_37_4_v2_f_g.flac | dlg | Aoede | stern | Порядок заведён не нами |
+| dlg_37_4_v2_g.flac | dlg | Schedar | stern | Порядок заведён не нами |
+| dlg_37_5_v2_f_g.flac | dlg | Aoede | stern | Донести бы на вас за такие речи |
+| dlg_37_5_v2_g.flac | dlg | Schedar | stern | Донести бы на вас за такие речи |
+| dlg_38_0_v2_f_g.flac | dlg | Aoede | offended | У нас так не кланяются |
+| dlg_38_0_v2_g.flac | dlg | Schedar | offended | У нас так не кланяются |
+| dlg_38_1_v2_f_g.flac | dlg | Aoede | offended | Это что, насмешка? |
+| dlg_38_1_v2_g.flac | dlg | Schedar | offended | Это что, насмешка? |
+| dlg_38_2_v2_f_g.flac | dlg | Aoede | offended | Не знаете обычаев — не берите |
+| dlg_38_2_v2_g.flac | dlg | Schedar | offended | Не знаете обычаев — не берите |
+| dlg_38_3_v2_f_g.flac | dlg | Aoede | offended | Чужакам наших обычаев не понять |
+| dlg_38_3_v2_g.flac | dlg | Schedar | offended | Чужакам наших обычаев не понять |
+| dlg_38_4_v2_f_g.flac | dlg | Aoede | offended | Ничего, научишься |
+| dlg_38_4_v2_g.flac | dlg | Schedar | offended | Ничего, научишься |
+| dlg_39_0_v2_f_g.flac | dlg | Aoede | satisfied | По рукам, договорились |
+| dlg_39_0_v2_g.flac | dlg | Schedar | satisfied | По рукам, договорились |
+| dlg_39_1_v2_f_g.flac | dlg | Aoede | satisfied | Что ж, такое обоим подходит |
+| dlg_39_1_v2_g.flac | dlg | Schedar | satisfied | Что ж, такое обоим подходит |
+| dlg_39_2_v2_f_g.flac | dlg | Aoede | satisfied | Уговор так уговор |
+| dlg_39_2_v2_g.flac | dlg | Schedar | satisfied | Уговор так уговор |
+| dlg_39_3_v2_f_g.flac | dlg | Aoede | satisfied | По рукам, но моя доля побольше |
+| dlg_39_3_v2_g.flac | dlg | Schedar | satisfied | По рукам, но моя доля побольше |
+| dlg_39_4_v2_f_g.flac | dlg | Aoede | satisfied | Со своим всегда договоримся |
+| dlg_39_4_v2_g.flac | dlg | Schedar | satisfied | Со своим всегда договоримся |
+| dlg_39_5_v2_f_g.flac | dlg | Aoede | satisfied | Договорились. Но глаз с вас не спущу |
+| dlg_39_5_v2_g.flac | dlg | Schedar | satisfied | Договорились. Но глаз с вас не спущу |
+| dlg_3_0_v2_f_g.flac | dlg | Aoede | firm refusal | Нет. И не уговаривайте |
+| dlg_3_0_v2_g.flac | dlg | Schedar | firm refusal | Нет. И не уговаривайте |
+| dlg_3_10_v2_f_g.flac | dlg | Aoede | firm refusal | Меня уже раз уговорили — хватило на всю жизнь |
+| dlg_3_10_v2_g.flac | dlg | Schedar | firm refusal | Меня уже раз уговорили — хватило на всю жизнь |
+| dlg_3_11_v2_f_g.flac | dlg | Aoede | firm refusal | С вами? Никогда |
+| dlg_3_11_v2_g.flac | dlg | Schedar | firm refusal | С вами? Никогда |
+| dlg_3_12_v2_f_g.flac | dlg | Aoede | firm refusal | Нет. Разговор окончен |
+| dlg_3_12_v2_g.flac | dlg | Schedar | firm refusal | Нет. Разговор окончен |
+| dlg_3_13_v2_f_g.flac | dlg | Aoede | firm refusal | Прости, друг, но тут не уступлю |
+| dlg_3_13_v2_g.flac | dlg | Schedar | firm refusal | Прости, друг, но тут не уступлю |
+| dlg_3_14_v2_f_g.flac | dlg | Aoede | firm refusal | Вам, после всего? Нет |
+| dlg_3_14_v2_g.flac | dlg | Schedar | firm refusal | Вам, после всего? Нет |
+| dlg_3_15_v2_f_g.flac | dlg | Aoede | firm refusal | Уважаю вас, но нет |
+| dlg_3_15_v2_g.flac | dlg | Schedar | firm refusal | Уважаю вас, но нет |
+| dlg_3_1_v2_f_g.flac | dlg | Aoede | firm refusal | Сказала нет — значит нет |
+| dlg_3_1_v2_g.flac | dlg | Schedar | firm refusal | Сказал нет — значит нет |
+| dlg_3_2_v2_f_g.flac | dlg | Aoede | firm refusal | Красиво говорите, но я останусь при своём |
+| dlg_3_2_v2_g.flac | dlg | Schedar | firm refusal | Красиво говорите, но я останусь при своём |
+| dlg_3_3_v2_f_g.flac | dlg | Aoede | firm refusal | Зря стараетесь. Не сегодня |
+| dlg_3_3_v2_g.flac | dlg | Schedar | firm refusal | Зря стараетесь. Не сегодня |
+| dlg_3_4_v2_f_g.flac | dlg | Aoede | firm refusal | Моя правда крепче ваших слов |
+| dlg_3_4_v2_g.flac | dlg | Schedar | firm refusal | Моя правда крепче ваших слов |
+| dlg_3_5_v2_f_g.flac | dlg | Aoede | firm refusal | Доводы слабые. Нет |
+| dlg_3_5_v2_g.flac | dlg | Schedar | firm refusal | Доводы слабые. Нет |
+| dlg_3_6_v2_f_g.flac | dlg | Aoede | firm refusal | Ещё раз начнёте — пожалеете |
+| dlg_3_6_v2_g.flac | dlg | Schedar | firm refusal | Ещё раз начнёте — пожалеете |
+| dlg_3_7_v2_f_g.flac | dlg | Aoede | firm refusal | Не вам мне указывать |
+| dlg_3_7_v2_g.flac | dlg | Schedar | firm refusal | Не вам мне указывать |
+| dlg_3_8_v2_f_g.flac | dlg | Aoede | firm refusal | Так не заведено, и так не будет |
+| dlg_3_8_v2_g.flac | dlg | Schedar | firm refusal | Так не заведено, и так не будет |
+| dlg_3_9_v2_f_g.flac | dlg | Aoede | firm refusal | Не сердитесь, но нет. Не могу |
+| dlg_3_9_v2_g.flac | dlg | Schedar | firm refusal | Не сердитесь, но нет. Не могу |
+| dlg_40_0_v2_f_g.flac | dlg | Aoede | firm | Так не договоримся |
+| dlg_40_0_v2_g.flac | dlg | Schedar | firm | Так не договоримся |
+| dlg_40_1_v2_f_g.flac | dlg | Aoede | firm | Мне это не с руки |
+| dlg_40_1_v2_g.flac | dlg | Schedar | firm | Мне это не с руки |
+| dlg_40_2_v2_f_g.flac | dlg | Aoede | firm | Ищите другой уговор |
+| dlg_40_2_v2_g.flac | dlg | Schedar | firm | Ищите другой уговор |
+| dlg_40_3_v2_f_g.flac | dlg | Aoede | firm | С вами никаких уговоров |
+| dlg_40_3_v2_g.flac | dlg | Schedar | firm | С вами никаких уговоров |
+| dlg_40_4_v2_f_g.flac | dlg | Aoede | firm | Прости, друг, так не выйдет |
+| dlg_40_4_v2_g.flac | dlg | Schedar | firm | Прости, друг, так не выйдет |
+| dlg_41_0_v2_f_g.flac | dlg | Aoede | storyteller | Давняя это история. Слушайте |
+| dlg_41_0_v2_g.flac | dlg | Schedar | storyteller | Давняя это история. Слушайте |
+| dlg_41_10_v2_f_g.flac | dlg | Aoede | storyteller | Коротко расскажу, и хватит |
+| dlg_41_10_v2_g.flac | dlg | Schedar | storyteller | Коротко расскажу, и хватит |
+| dlg_41_11_v2_f_g.flac | dlg | Aoede | storyteller | Расскажу. Может, поумнеете |
+| dlg_41_11_v2_g.flac | dlg | Schedar | storyteller | Расскажу. Может, поумнеете |
+| dlg_41_1_v2_f_g.flac | dlg | Aoede | storyteller | Было это давно, слушайте |
+| dlg_41_1_v2_g.flac | dlg | Schedar | storyteller | Было это давно, слушайте |
+| dlg_41_2_v2_f_g.flac | dlg | Aoede | storyteller | Старики так рассказывают |
+| dlg_41_2_v2_g.flac | dlg | Schedar | storyteller | Старики так рассказывают |
+| dlg_41_3_v2_f_g.flac | dlg | Aoede | storyteller | Про это у нас каждый ребёнок знает |
+| dlg_41_3_v2_g.flac | dlg | Schedar | storyteller | Про это у нас каждый ребёнок знает |
+| dlg_41_4_v2_f_g.flac | dlg | Aoede | storyteller | Слушайте, и да будут боги свидетелями |
+| dlg_41_4_v2_g.flac | dlg | Schedar | storyteller | Слушайте, и да будут боги свидетелями |
+| dlg_41_5_v2_f_g.flac | dlg | Aoede | storyteller | Вам, приезжим, полезно знать |
+| dlg_41_5_v2_g.flac | dlg | Schedar | storyteller | Вам, приезжим, полезно знать |
+| dlg_41_6_v2_f_g.flac | dlg | Aoede | storyteller | По летописям было так |
+| dlg_41_6_v2_g.flac | dlg | Schedar | storyteller | По летописям было так |
+| dlg_41_7_v2_f_g.flac | dlg | Aoede | storyteller | Только это между нами, ладно? |
+| dlg_41_7_v2_g.flac | dlg | Schedar | storyteller | Только это между нами, ладно? |
+| dlg_41_8_v2_f_g.flac | dlg | Aoede | storyteller | Тебе расскажу, как деды рассказывали |
+| dlg_41_8_v2_g.flac | dlg | Schedar | storyteller | Тебе расскажу, как деды рассказывали |
+| dlg_41_9_v2_f_g.flac | dlg | Aoede | storyteller | Вам — с удовольствием расскажу |
+| dlg_41_9_v2_g.flac | dlg | Schedar | storyteller | Вам — с удовольствием расскажу |
+| dlg_42_0_v2_f_g.flac | dlg | Aoede | dismissive | Историю пусть книжники рассказывают |
+| dlg_42_0_v2_g.flac | dlg | Schedar | dismissive | Историю пусть книжники рассказывают |
+| dlg_42_1_v2_f_g.flac | dlg | Aoede | dismissive | Не до сказок мне сейчас |
+| dlg_42_1_v2_g.flac | dlg | Schedar | dismissive | Не до сказок мне сейчас |
+| dlg_42_2_v2_f_g.flac | dlg | Aoede | dismissive | Не знаю я старины |
+| dlg_42_2_v2_g.flac | dlg | Schedar | dismissive | Не знаю я старины |
+| dlg_42_3_v2_f_g.flac | dlg | Aoede | dismissive | Не для чужих ушей наша история |
+| dlg_42_3_v2_g.flac | dlg | Schedar | dismissive | Не для чужих ушей наша история |
+| dlg_42_4_v2_f_g.flac | dlg | Aoede | dismissive | С вами прошлым делиться? Нет |
+| dlg_42_4_v2_g.flac | dlg | Schedar | dismissive | С вами прошлым делиться? Нет |
+| dlg_42_5_v2_f_g.flac | dlg | Aoede | dismissive | Прости, друг, не мастак я рассказывать |
+| dlg_42_5_v2_g.flac | dlg | Schedar | dismissive | Прости, друг, не мастак я рассказывать |
+| dlg_4_0_v2_f_g.flac | dlg | Aoede | reluctant | Ладно. Но это в последний раз |
+| dlg_4_0_v2_g.flac | dlg | Schedar | reluctant | Ладно. Но это в последний раз |
+| dlg_4_10_v2_f_g.flac | dlg | Aoede | reluctant | Вам не откажу: вы меня выручали |
+| dlg_4_10_v2_g.flac | dlg | Schedar | reluctant | Вам не откажу: вы меня выручали |
+| dlg_4_11_v2_f_g.flac | dlg | Aoede | reluctant | Держите. И больше не просите |
+| dlg_4_11_v2_g.flac | dlg | Schedar | reluctant | Держите. И больше не просите |
+| dlg_4_12_v2_f_g.flac | dlg | Aoede | reluctant | Бери и уходи |
+| dlg_4_12_v2_g.flac | dlg | Schedar | reluctant | Бери и уходи |
+| dlg_4_13_v2_f_g.flac | dlg | Aoede | reluctant | Помогу. Но помнить буду всё |
+| dlg_4_13_v2_g.flac | dlg | Schedar | reluctant | Помогу. Но помнить буду всё |
+| dlg_4_1_v2_f_g.flac | dlg | Aoede | reluctant | Помогу. Но вы теперь мне должны |
+| dlg_4_1_v2_g.flac | dlg | Schedar | reluctant | Помогу. Но вы теперь мне должны |
+| dlg_4_2_v2_f_g.flac | dlg | Aoede | reluctant | Так и быть, только никому ни слова |
+| dlg_4_2_v2_g.flac | dlg | Schedar | reluctant | Так и быть, только никому ни слова |
+| dlg_4_3_v2_f_g.flac | dlg | Aoede | reluctant | Хорошо. Но больше с таким не приходите |
+| dlg_4_3_v2_g.flac | dlg | Schedar | reluctant | Хорошо. Но больше с таким не приходите |
+| dlg_4_4_v2_f_g.flac | dlg | Aoede | reluctant | Конечно помогу. Как не помочь |
+| dlg_4_4_v2_g.flac | dlg | Schedar | reluctant | Конечно помогу. Как не помочь |
+| dlg_4_5_v2_f_g.flac | dlg | Aoede | reluctant | Для хорошего человека не жалко |
+| dlg_4_5_v2_g.flac | dlg | Schedar | reluctant | Для хорошего человека не жалко |
+| dlg_4_6_v2_f_g.flac | dlg | Aoede | reluctant | Сделаю. Сочтёмся потом — я запомню |
+| dlg_4_6_v2_g.flac | dlg | Schedar | reluctant | Сделаю. Сочтёмся потом — я запомню |
+| dlg_4_7_v2_f_g.flac | dlg | Aoede | reluctant | Помогу, если и мне с того что-то будет. Будет? |
+| dlg_4_7_v2_g.flac | dlg | Schedar | reluctant | Помогу, если и мне с того что-то будет. Будет? |
+| dlg_4_8_v2_f_g.flac | dlg | Aoede | reluctant | Ох… ладно, только чтобы без неприятностей |
+| dlg_4_8_v2_g.flac | dlg | Schedar | reluctant | Ох… ладно, только чтобы без неприятностей |
+| dlg_4_9_v2_f_g.flac | dlg | Aoede | reluctant | Для тебя — хоть сто раз |
+| dlg_4_9_v2_g.flac | dlg | Schedar | reluctant | Для тебя — хоть сто раз |
+| dlg_5_0_v2_f_g.flac | dlg | Aoede | helpless | Мне бы кто помог |
+| dlg_5_0_v2_g.flac | dlg | Schedar | helpless | Мне бы кто помог |
+| dlg_5_10_v2_f_g.flac | dlg | Aoede | helpless | Вам? Даже не просите |
+| dlg_5_10_v2_g.flac | dlg | Schedar | helpless | Вам? Даже не просите |
+| dlg_5_11_v2_f_g.flac | dlg | Aoede | helpless | Не могу и не хочу |
+| dlg_5_11_v2_g.flac | dlg | Schedar | helpless | Не могу и не хочу |
+| dlg_5_12_v2_f_g.flac | dlg | Aoede | helpless | После того, как вы со мной обошлись? Нет |
+| dlg_5_12_v2_g.flac | dlg | Schedar | helpless | После того, как вы со мной обошлись? Нет |
+| dlg_5_1_v2_f_g.flac | dlg | Aoede | helpless | Самой бы кто подсобил |
+| dlg_5_1_v2_g.flac | dlg | Schedar | helpless | Самому бы кто подсобил |
+| dlg_5_2_v2_f_g.flac | dlg | Aoede | helpless | Не могу. Своих забот по горло |
+| dlg_5_2_v2_g.flac | dlg | Schedar | helpless | Не могу. Своих забот по горло |
+| dlg_5_3_v2_f_g.flac | dlg | Aoede | helpless | Не просите, не выйдет |
+| dlg_5_3_v2_g.flac | dlg | Schedar | helpless | Не просите, не выйдет |
+| dlg_5_4_v2_f_g.flac | dlg | Aoede | helpless | Задаром? Нет уж |
+| dlg_5_4_v2_g.flac | dlg | Schedar | helpless | Задаром? Нет уж |
+| dlg_5_5_v2_f_g.flac | dlg | Aoede | helpless | С чего бы мне вам помогать? |
+| dlg_5_5_v2_g.flac | dlg | Schedar | helpless | С чего бы мне вам помогать? |
+| dlg_5_6_v2_f_g.flac | dlg | Aoede | helpless | Я не бегаю по поручениям чужаков |
+| dlg_5_6_v2_g.flac | dlg | Schedar | helpless | Я не бегаю по поручениям чужаков |
+| dlg_5_7_v2_f_g.flac | dlg | Aoede | helpless | Рада бы, правда, но сейчас никак |
+| dlg_5_7_v2_g.flac | dlg | Schedar | helpless | Рад бы, правда, но сейчас никак |
+| dlg_5_8_v2_f_g.flac | dlg | Aoede | helpless | Помог бы, но боюсь ввязаться в беду |
+| dlg_5_8_v2_g.flac | dlg | Schedar | helpless | Помог бы, но боюсь ввязаться в беду |
+| dlg_5_9_v2_f_g.flac | dlg | Aoede | helpless | Прости, друг, сейчас нечем помочь |
+| dlg_5_9_v2_g.flac | dlg | Schedar | helpless | Прости, друг, сейчас нечем помочь |
+| dlg_6_0_v2_f_g.flac | dlg | Aoede | serious | Запомню. Слово дороже золота |
+| dlg_6_0_v2_g.flac | dlg | Schedar | serious | Запомню. Слово дороже золота |
+| dlg_6_10_v2_f_g.flac | dlg | Aoede | serious | Посмотрим, чего оно стоит |
+| dlg_6_10_v2_g.flac | dlg | Schedar | serious | Посмотрим, чего оно стоит |
+| dlg_6_11_v2_f_g.flac | dlg | Aoede | serious | Сдержите — может, и помиримся |
+| dlg_6_11_v2_g.flac | dlg | Schedar | serious | Сдержите — может, и помиримся |
+| dlg_6_1_v2_f_g.flac | dlg | Aoede | serious | Ловлю на слове. Не подведите |
+| dlg_6_1_v2_g.flac | dlg | Schedar | serious | Ловлю на слове. Не подведите |
+| dlg_6_2_v2_f_g.flac | dlg | Aoede | serious | Хорошо. Буду ждать, что сдержите |
+| dlg_6_2_v2_g.flac | dlg | Schedar | serious | Хорошо. Буду ждать, что сдержите |
+| dlg_6_3_v2_f_g.flac | dlg | Aoede | serious | Договорились. Время покажет |
+| dlg_6_3_v2_g.flac | dlg | Schedar | serious | Договорились. Время покажет |
+| dlg_6_4_v2_f_g.flac | dlg | Aoede | serious | Слово — это всё, что у нас есть. Верю |
+| dlg_6_4_v2_g.flac | dlg | Schedar | serious | Слово — это всё, что у нас есть. Верю |
+| dlg_6_5_v2_f_g.flac | dlg | Aoede | serious | Запомню. Я всё запоминаю |
+| dlg_6_5_v2_g.flac | dlg | Schedar | serious | Запомню. Я всё запоминаю |
+| dlg_6_6_v2_f_g.flac | dlg | Aoede | serious | Принято. Проверю, когда придёт срок |
+| dlg_6_6_v2_g.flac | dlg | Schedar | serious | Принято. Проверю, когда придёт срок |
+| dlg_6_7_v2_f_g.flac | dlg | Aoede | serious | Верю вам. Не знаю почему, но верю |
+| dlg_6_7_v2_g.flac | dlg | Schedar | serious | Верю вам. Не знаю почему, но верю |
+| dlg_6_8_v2_f_g.flac | dlg | Aoede | serious | Верю тебе, как себе |
+| dlg_6_8_v2_g.flac | dlg | Schedar | serious | Верю тебе, как себе |
+| dlg_6_9_v2_f_g.flac | dlg | Aoede | serious | Вы уже держали слово. Верю |
+| dlg_6_9_v2_g.flac | dlg | Schedar | serious | Вы уже держали слово. Верю |
+| dlg_7_0_v2_f_g.flac | dlg | Aoede | skeptical | Обещать вы горазды. Посмотрим |
+| dlg_7_0_v2_g.flac | dlg | Schedar | skeptical | Обещать вы горазды. Посмотрим |
+| dlg_7_1_v2_f_g.flac | dlg | Aoede | skeptical | Слова ничего не стоят |
+| dlg_7_1_v2_g.flac | dlg | Schedar | skeptical | Слова ничего не стоят |
+| dlg_7_2_v2_f_g.flac | dlg | Aoede | skeptical | Много вас тут обещало |
+| dlg_7_2_v2_g.flac | dlg | Schedar | skeptical | Много вас тут обещало |
+| dlg_7_3_v2_f_g.flac | dlg | Aoede | skeptical | Посмотрим, что от этого останется завтра |
+| dlg_7_3_v2_g.flac | dlg | Schedar | skeptical | Посмотрим, что от этого останется завтра |
+| dlg_7_4_v2_f_g.flac | dlg | Aoede | skeptical | Кто обещает легко, тот легко и забывает |
+| dlg_7_4_v2_g.flac | dlg | Schedar | skeptical | Кто обещает легко, тот легко и забывает |
+| dlg_7_5_v2_f_g.flac | dlg | Aoede | skeptical | Обещаниями сыт не будешь |
+| dlg_7_5_v2_g.flac | dlg | Schedar | skeptical | Обещаниями сыт не будешь |
+| dlg_7_6_v2_f_g.flac | dlg | Aoede | skeptical | Ваши обещания мне ни к чему |
+| dlg_7_6_v2_g.flac | dlg | Schedar | skeptical | Ваши обещания мне ни к чему |
+| dlg_7_7_v2_f_g.flac | dlg | Aoede | skeptical | Прошлое слово вы уже нарушили |
+| dlg_7_7_v2_g.flac | dlg | Schedar | skeptical | Прошлое слово вы уже нарушили |
+| dlg_7_8_v2_f_g.flac | dlg | Aoede | skeptical | Ваши обещания — ветер |
+| dlg_7_8_v2_g.flac | dlg | Schedar | skeptical | Ваши обещания — ветер |
+| dlg_7_9_v2_f_g.flac | dlg | Aoede | skeptical | Ты уж не подведи |
+| dlg_7_9_v2_g.flac | dlg | Schedar | skeptical | Ты уж не подведи |
+| dlg_8_0_v2_f_g.flac | dlg | Aoede | surprised | Не думала об этом так |
+| dlg_8_0_v2_g.flac | dlg | Schedar | surprised | Не думал об этом так |
+| dlg_8_10_v2_f_g.flac | dlg | Aoede | surprised | Допустим. Убедили |
+| dlg_8_10_v2_g.flac | dlg | Schedar | surprised | Допустим. Убедили |
+| dlg_8_1_v2_f_g.flac | dlg | Aoede | surprised | А ведь вы правы |
+| dlg_8_1_v2_g.flac | dlg | Schedar | surprised | А ведь вы правы |
+| dlg_8_2_v2_f_g.flac | dlg | Aoede | surprised | Сдаюсь — тут вы меня переспорили |
+| dlg_8_2_v2_g.flac | dlg | Schedar | surprised | Сдаюсь — тут вы меня переспорили |
+| dlg_8_3_v2_f_g.flac | dlg | Aoede | surprised | Что ж, умеете вы спорить |
+| dlg_8_3_v2_g.flac | dlg | Schedar | surprised | Что ж, умеете вы спорить |
+| dlg_8_4_v2_f_g.flac | dlg | Aoede | surprised | …Мне надо это обдумать. Одному |
+| dlg_8_4_v2_g.flac | dlg | Schedar | surprised | …Мне надо это обдумать. Одному |
+| dlg_8_5_v2_f_g.flac | dlg | Aoede | surprised | Неприятно признавать, но вы правы |
+| dlg_8_5_v2_g.flac | dlg | Schedar | surprised | Неприятно признавать, но вы правы |
+| dlg_8_6_v2_f_g.flac | dlg | Aoede | surprised | Логика на вашей стороне. Признаю |
+| dlg_8_6_v2_g.flac | dlg | Schedar | surprised | Логика на вашей стороне. Признаю |
+| dlg_8_7_v2_f_g.flac | dlg | Aoede | surprised | Вот! Я всегда чувствовала, что всё не так, как нам говорят |
+| dlg_8_7_v2_g.flac | dlg | Schedar | surprised | Вот! Я всегда чувствовал, что всё не так, как нам говорят |
+| dlg_8_8_v2_f_g.flac | dlg | Aoede | surprised | Правы. Но это ничего не меняет |
+| dlg_8_8_v2_g.flac | dlg | Schedar | surprised | Правы. Но это ничего не меняет |
+| dlg_8_9_v2_f_g.flac | dlg | Aoede | surprised | Вот за что тебя ценю: голова у тебя светлая |
+| dlg_8_9_v2_g.flac | dlg | Schedar | surprised | Вот за что тебя ценю: голова у тебя светлая |
+| dlg_9_0_v2_f_g.flac | dlg | Aoede | grudging | Ваша взяла. Уступлю |
+| dlg_9_0_v2_g.flac | dlg | Schedar | grudging | Ваша взяла. Уступлю |
+| dlg_9_10_v2_f_g.flac | dlg | Aoede | grudging | Уступлю, но только сейчас |
+| dlg_9_10_v2_g.flac | dlg | Schedar | grudging | Уступлю, но только сейчас |
+| dlg_9_11_v2_f_g.flac | dlg | Aoede | grudging | Забирайте и не возвращайтесь |
+| dlg_9_11_v2_g.flac | dlg | Schedar | grudging | Забирайте и не возвращайтесь |
+| dlg_9_1_v2_f_g.flac | dlg | Aoede | grudging | Ладно, по рукам, — но себе в убыток |
+| dlg_9_1_v2_g.flac | dlg | Schedar | grudging | Ладно, по рукам, — но себе в убыток |
+| dlg_9_2_v2_f_g.flac | dlg | Aoede | grudging | Грабёж, но пусть будет так |
+| dlg_9_2_v2_g.flac | dlg | Schedar | grudging | Грабёж, но пусть будет так |
+| dlg_9_3_v2_f_g.flac | dlg | Aoede | grudging | Уговорили. Только другим не рассказывайте |
+| dlg_9_3_v2_g.flac | dlg | Schedar | grudging | Уговорили. Только другим не рассказывайте |
+| dlg_9_4_v2_f_g.flac | dlg | Aoede | grudging | Режете меня без ножа… ладно, берите |
+| dlg_9_4_v2_g.flac | dlg | Schedar | grudging | Режете меня без ножа… ладно, берите |
+| dlg_9_5_v2_f_g.flac | dlg | Aoede | grudging | Хорошо торгуетесь. Уступлю — на этот раз |
+| dlg_9_5_v2_g.flac | dlg | Schedar | grudging | Хорошо торгуетесь. Уступлю — на этот раз |
+| dlg_9_6_v2_f_g.flac | dlg | Aoede | grudging | Для вас — скину. Носите на здоровье |
+| dlg_9_6_v2_g.flac | dlg | Schedar | grudging | Для вас — скину. Носите на здоровье |
+| dlg_9_7_v2_f_g.flac | dlg | Aoede | grudging | По такой цене я ещё в прибытке. Согласна |
+| dlg_9_7_v2_g.flac | dlg | Schedar | grudging | По такой цене я ещё в прибытке. Согласен |
+| dlg_9_8_v2_f_g.flac | dlg | Aoede | grudging | Своему — со скидкой |
+| dlg_9_8_v2_g.flac | dlg | Schedar | grudging | Своему — со скидкой |
+| dlg_9_9_v2_f_g.flac | dlg | Aoede | grudging | За прошлое — уступлю |
+| dlg_9_9_v2_g.flac | dlg | Schedar | grudging | За прошлое — уступлю |
+| enter_castle_0_v2_g.flac | enter_castle | Algenib | stern | Стой. Кто таков? Ладно, проходи, только без глупостей. |
+| enter_castle_1_v2_g.flac | enter_castle | Algenib | formal | Добро пожаловать в замок. Оружие держи в ножнах. |
+| enter_castle_2_v2_g.flac | enter_castle | Algenib | dutiful | Проходи. Лорд нынче не принимает, но двор открыт. |
+| enter_castle_3_v2_g.flac | enter_castle | Algenib | gruff | Ворота открыты до заката. Не задерживайся у казарм. |
+| enter_castle_4_v2_g.flac | enter_castle | Algenib | watchful | Гость? Проходи. За порядком тут смотрят строго. |
+| enter_castle_5_v2_g.flac | enter_castle | Algenib | loud call to other guards | Путник в замок! Пропустить! |
+| enter_castle_6_v2_g.flac | enter_castle | Algenib | serious | Держись дороги к двору. На стены чужим нельзя. |
+| enter_castle_7_v2_g.flac | enter_castle | Algenib | proud | Замок стоит, пока мы стоим. Входи с миром. |
+| enter_clanhall_0_v2_g.flac | enter_clanhall | Algenib | solemn | Дом клана. Здесь чтут старших и помнят кровь. |
+| enter_clanhall_1_v2_g.flac | enter_clanhall | Algenib | hospitable | Входи. За столом клана гостю место найдётся. |
+| enter_clanhall_2_v2_g.flac | enter_clanhall | Algenib | stern | Сними шапку, чужак. Это чертог предков. |
+| enter_clanhall_3_v2_g.flac | enter_clanhall | Algenib | hushed | Старейшины совещаются. Не шуми. |
+| enter_clanhall_4_v2_g.flac | enter_clanhall | Algenib | measured | Клан гостя не обидит, если гость не обидит клан. |
+| enter_clanhall_5_v2_g.flac | enter_clanhall | Algenib | jovial | Ещё один на пир? Проходи, мёда хватит. |
+| enter_fort_0_v2_g.flac | enter_fort | Algenib | tense | Крепость на военном положении. Проходи и не мешайся. |
+| enter_fort_1_v2_g.flac | enter_fort | Algenib | wary | Стой! Свой? Ну проходи, гарнизон рад живой душе. |
+| enter_fort_2_v2_g.flac | enter_fort | Algenib | hard | В крепости порядок один — наш. Уяснил? |
+| enter_fort_3_v2_g.flac | enter_fort | Algenib | dry | Проходи. У арсенала не стой, стрелки нервные. |
+| enter_fort_4_v2_g.flac | enter_fort | Algenib | suspicious | Ещё один странник. Лишь бы не лазутчик. |
+| enter_fort_5_v2_g.flac | enter_fort | Algenib | reassuring | Добро пожаловать за стены. Здесь безопаснее, чем в поле. |
+| enter_fort_6_v2_g.flac | enter_fort | Algenib | hurried | Проходи быстрее, ворота закрываем. |
+| enter_fort_7_v2_g.flac | enter_fort | Algenib | weary | Крепость видела осады и похуже. Входи. |
+| enter_gate_cold_0_v2_g.flac | enter_gate_cold | Algenib | cold | Тебя тут не ждали. Проходи, но я смотрю за тобой. |
+| enter_gate_cold_1_v2_g.flac | enter_gate_cold | Algenib | cold | Одно лишнее движение — и в темницу. |
+| enter_gate_cold_2_v2_g.flac | enter_gate_cold | Algenib | hostile | Наслышаны о тебе. Недоброе слышали. |
+| enter_gate_cold_3_v2_g.flac | enter_gate_cold | Algenib | cold | Проходи молча. И не задерживайся. |
+| enter_gate_cold_4_v2_g.flac | enter_gate_cold | Algenib | hard | Держи руки на виду, чужак. |
+| enter_gate_cold_5_v2_g.flac | enter_gate_cold | Algenib | resentful | Будь моя воля — не пустил бы. |
+| enter_gate_friend_0_v2_g.flac | enter_gate_friend | Algenib | warm | А, это ты! Проходи, для тебя ворота всегда открыты. |
+| enter_gate_friend_1_v2_g.flac | enter_gate_friend | Algenib | friendly | Своих пропускаем без вопросов. С возвращением! |
+| enter_gate_friend_2_v2_g.flac | enter_gate_friend | Algenib | sincere | Рад видеть! Про тебя тут только доброе говорят. |
+| enter_gate_friend_3_v2_g.flac | enter_gate_friend | Algenib | cheerful call | Эй, ребята, это наш друг! Пропустите. |
+| enter_gate_friend_4_v2_g.flac | enter_gate_friend | Algenib | warm | Проходи, проходи. Если что — зови стражу, поможем. |
+| enter_gate_friend_5_v2_g.flac | enter_gate_friend | Algenib | respectful | О, наш герой вернулся. Добро пожаловать домой. |
+| enter_gate_night_0_v2_g.flac | enter_gate_night | Algenib | sharp | Кто идёт в такой час? Назовись! |
+| enter_gate_night_1_v2_g.flac | enter_gate_night | Algenib | grumbling | Ночью ворота на засове. Ладно, проходи, раз пришёл. |
+| enter_gate_night_2_v2_g.flac | enter_gate_night | Algenib | hushed | Тише. Город спит. Не шуми на улицах. |
+| enter_gate_night_3_v2_g.flac | enter_gate_night | Algenib | wry | Ночь тёмная, а ты один. Храбрый или глупый? |
+| enter_gate_night_4_v2_g.flac | enter_gate_night | Algenib | low voice | Факел держи ближе. Ночью всякое бродит. |
+| enter_gate_night_5_v2_g.flac | enter_gate_night | Algenib | tired | Поздно гуляешь, путник. Трактир ещё открыт. |
+| enter_warcamp_0_v2_g.flac | enter_warcamp | Algenib | busy | Лагерь войска. Кто пустил? А, ладно, проходи. |
+| enter_warcamp_1_v2_g.flac | enter_warcamp | Algenib | brusque | Не путайся под ногами, у нас сборы. |
+| enter_warcamp_2_v2_g.flac | enter_warcamp | Algenib | matter-of-fact | К интенданту — налево. К лекарю — за шатрами. |
+| enter_warcamp_3_v2_g.flac | enter_warcamp | Algenib | interested | Наёмник? Командиру такие нужны. |
+| enter_warcamp_4_v2_g.flac | enter_warcamp | Algenib | lowered voice | Тише у шатра воеводы. Он не спал две ночи. |
+| enter_warcamp_5_v2_g.flac | enter_warcamp | Algenib | determined | Скоро выступаем. Хочешь с нами — готовь меч. |
+| foe_bandit_attack_0_v2_g.flac | foe_bandit_attack | Achernar | aggressive shout | Получай! |
+| foe_bandit_attack_1_v2_g.flac | foe_bandit_attack | Achernar | grunting | На, держи! |
+| foe_bandit_attack_2_v2_g.flac | foe_bandit_attack | Achernar | angry | Стой смирно, хуже будет! |
+| foe_bandit_attack_3_v2_g.flac | foe_bandit_attack | Achernar | vicious | Это тебе за дорогу! |
+| foe_bandit_attack_4_v2_g.flac | foe_bandit_attack | Achernar | furious | Не вертись, зарежу! |
+| foe_bandit_attack_5_v2_g.flac | foe_bandit_attack | Achernar | savage | Вот так! И ещё! |
+| foe_bandit_attack_6_v2_g.flac | foe_bandit_attack | Achernar | chasing | Куда пятишься? Стоять! |
+| foe_bandit_attack_7_v2_g.flac | foe_bandit_attack | Achernar | frenzied shout | Бей его, бей! |
+| foe_bandit_death_0_v2_g.flac | foe_bandit_death | Achernar | dying | Будь ты проклят… |
+| foe_bandit_death_1_v2_g.flac | foe_bandit_death | Achernar | dying whisper | Надо было… в деревне сидеть… |
+| foe_bandit_death_2_v2_g.flac | foe_bandit_death | Achernar | dying | Мать… прости… |
+| foe_bandit_hurt_0_v2_g.flac | foe_bandit_hurt | Achernar | pain | Ах ты гад! Кровь пустил! |
+| foe_bandit_hurt_1_v2_g.flac | foe_bandit_hurt | Achernar | hissing in pain | Больно, зараза! |
+| foe_bandit_hurt_2_v2_g.flac | foe_bandit_hurt | Achernar | surprised | Он кусается, ребята! |
+| foe_bandit_hurt_3_v2_g.flac | foe_bandit_hurt | Achernar | through gritted teeth | Ничего, заживёт. А тебя — нет! |
+| foe_bandit_hurt_4_v2_g.flac | foe_bandit_hurt | Achernar | panting | Проклятье, крепкий попался! |
+| foe_bandit_low_0_v2_g.flac | foe_bandit_low | Achernar | panicked | Стой! Хватит! Забирай всё! |
+| foe_bandit_low_1_v2_g.flac | foe_bandit_low | Achernar | terrified | Пощади, у меня дети! |
+| foe_bandit_low_2_v2_g.flac | foe_bandit_low | Achernar | frightened | Всё, всё, ухожу! Не бей! |
+| foe_bandit_low_3_v2_g.flac | foe_bandit_low | Achernar | panicked shout | Братцы, бежим, он нас всех положит! |
+| foe_bandit_low_4_v2_g.flac | foe_bandit_low | Achernar | desperate | Не убивай, я всё скажу! |
+| foe_bandit_start_0_v2_g.flac | foe_bandit_start | Achernar | menacing | Кошелёк или жизнь! Выбирай быстро. |
+| foe_bandit_start_1_v2_g.flac | foe_bandit_start | Achernar | mocking | Ну всё, путник, приехали. |
+| foe_bandit_start_2_v2_g.flac | foe_bandit_start | Achernar | shouting to accomplices | Окружай его! Не дай уйти! |
+| foe_bandit_start_3_v2_g.flac | foe_bandit_start | Achernar | low | Зря ты свернул на эту дорогу. |
+| foe_bandit_start_4_v2_g.flac | foe_bandit_start | Achernar | greedy | Снимай всё, что блестит. И без глупостей. |
+| foe_bandit_start_5_v2_g.flac | foe_bandit_start | Achernar | gleeful | Гляди-ка, сам пришёл. Бери его! |
+| foe_bandit_start_6_v2_g.flac | foe_bandit_start | Achernar | cruel | Дорога платная. Плати кровью. |
+| foe_bandit_start_7_v2_g.flac | foe_bandit_start | Achernar | whisper then shout | Тихо, тихо… А теперь — ножом! |
+| foe_bandit_taunt_0_v2_g.flac | foe_bandit_taunt | Achernar | cruel | Шатаешься? Сейчас упадёшь. |
+| foe_bandit_taunt_1_v2_g.flac | foe_bandit_taunt | Achernar | greedy | Ещё удар — и всё твоё станет моим. |
+| foe_bandit_taunt_2_v2_g.flac | foe_bandit_taunt | Achernar | mocking laugh | Кровью харкаешь, герой? |
+| greet_bedn_0_v2_f_g.flac | greet_бедный | Aoede | dry | Карманы пустые? Посмотреть-то можно. |
+| greet_bedn_0_v2_g.flac | greet_бедный | Schedar | dry | Карманы пустые? Посмотреть-то можно. |
+| greet_bedn_1_v2_f_g.flac | greet_бедный | Aoede | dry | В долг не даю. Но поглядеть не запрещаю. |
+| greet_bedn_1_v2_g.flac | greet_бедный | Schedar | dry | В долг не даю. Но поглядеть не запрещаю. |
+| greet_bedn_2_v2_f_g.flac | greet_бедный | Aoede | sympathetic | Небогато нынче? Бывает. Продать есть что? |
+| greet_bedn_2_v2_g.flac | greet_бедный | Schedar | sympathetic | Небогато нынче? Бывает. Продать есть что? |
+| greet_bedn_3_v2_f_g.flac | greet_бедный | Aoede | businesslike | Без золота разговор короткий. Что есть на обмен? |
+| greet_bedn_3_v2_g.flac | greet_бедный | Schedar | businesslike | Без золота разговор короткий. Что есть на обмен? |
+| greet_bedn_4_v2_f_g.flac | greet_бедный | Aoede | wry | Пустой кошель — не порок. Но и не покупка. |
+| greet_bedn_4_v2_g.flac | greet_бедный | Schedar | wry | Пустой кошель — не порок. Но и не покупка. |
+| greet_bedn_5_v2_f_g.flac | greet_бедный | Aoede | kindly | Заработаешь — приходи. Я никуда не денусь. |
+| greet_bedn_5_v2_g.flac | greet_бедный | Schedar | kindly | Заработаешь — приходи. Я никуда не денусь. |
+| greet_bogat_0_v2_f_g.flac | greet_богатый | Aoede | greedy | О, кошель-то тяжёлый. Проходи, проходи! |
+| greet_bogat_0_v2_g.flac | greet_богатый | Schedar | greedy | О, кошель-то тяжёлый. Проходи, проходи! |
+| greet_bogat_1_v2_f_g.flac | greet_богатый | Aoede | sly | Звон слышу издалека. Для тебя — лучшее. |
+| greet_bogat_1_v2_g.flac | greet_богатый | Schedar | sly | Звон слышу издалека. Для тебя — лучшее. |
+| greet_bogat_2_v2_f_g.flac | greet_богатый | Aoede | obsequious | Богатому гостю — лучший угол и лучший товар. |
+| greet_bogat_2_v2_g.flac | greet_богатый | Schedar | obsequious | Богатому гостю — лучший угол и лучший товар. |
+| greet_bogat_3_v2_f_g.flac | greet_богатый | Aoede | persuasive | С таким кошелём грех уйти с пустыми руками. |
+| greet_bogat_3_v2_g.flac | greet_богатый | Schedar | persuasive | С таким кошелём грех уйти с пустыми руками. |
+| greet_bogat_4_v2_f_g.flac | greet_богатый | Aoede | sly | Вижу, дела идут в гору. Может, и мне перепадёт? |
+| greet_bogat_4_v2_g.flac | greet_богатый | Schedar | sly | Вижу, дела идут в гору. Может, и мне перепадёт? |
+| greet_bogat_5_v2_f_g.flac | greet_богатый | Aoede | confidential | Для важного гостя найдётся кое-что особенное. |
+| greet_bogat_5_v2_g.flac | greet_богатый | Schedar | confidential | Для важного гостя найдётся кое-что особенное. |
+| greet_davno_0_v2_f_g.flac | greet_давно | Aoede | surprised | Давненько тебя видно не было! Где носило? |
+| greet_davno_0_v2_g.flac | greet_давно | Schedar | surprised | Давненько тебя видно не было! Где носило? |
+| greet_davno_1_v2_f_g.flac | greet_давно | Aoede | joyful | Сколько лет, сколько зим! Проходи. |
+| greet_davno_1_v2_g.flac | greet_давно | Schedar | joyful | Сколько лет, сколько зим! Проходи. |
+| greet_davno_2_v2_f_g.flac | greet_давно | Aoede | relieved | А я уж боялась, что тракт тебя забрал. |
+| greet_davno_2_v2_g.flac | greet_давно | Schedar | relieved | А я уж боялся, что тракт тебя забрал. |
+| greet_davno_3_v2_f_g.flac | greet_давно | Aoede | mock reproach | Давно не заходишь. Забываешь старых знакомых. |
+| greet_davno_3_v2_g.flac | greet_давно | Schedar | mock reproach | Давно не заходишь. Забываешь старых знакомых. |
+| greet_davno_4_v2_f_g.flac | greet_давно | Aoede | surprised | Живой! А мы уж и гадать перестали. |
+| greet_davno_4_v2_g.flac | greet_давно | Schedar | surprised | Живой! А мы уж и гадать перестали. |
+| greet_davno_5_v2_f_g.flac | greet_давно | Aoede | curious | Тебя не узнать. Долгой была дорога? |
+| greet_davno_5_v2_g.flac | greet_давно | Schedar | curious | Тебя не узнать. Долгой была дорога? |
+| greet_dobro_0_v2_f_g.flac | greet_добро | Aoede | grateful | А, это вы! Спасибо за прошлое. |
+| greet_dobro_0_v2_g.flac | greet_добро | Schedar | grateful | А, это вы! Спасибо за прошлое. |
+| greet_dobro_1_v2_f_g.flac | greet_добро | Aoede | grateful | Помню добро. Заходите. |
+| greet_dobro_1_v2_g.flac | greet_добро | Schedar | grateful | Помню добро. Заходите. |
+| greet_dobro_2_v2_f_g.flac | greet_добро | Aoede | grateful | Вам здесь всегда рады. |
+| greet_dobro_2_v2_g.flac | greet_добро | Schedar | grateful | Вам здесь всегда рады. |
+| greet_dobro_3_v2_f_g.flac | greet_добро | Aoede | grateful | О, вот кто нас выручил! |
+| greet_dobro_3_v2_g.flac | greet_добро | Schedar | grateful | О, вот кто нас выручил! |
+| greet_dobro_4_v2_f_g.flac | greet_добро | Aoede | grateful | Для вас — всё самое лучшее. |
+| greet_dobro_4_v2_g.flac | greet_добро | Schedar | grateful | Для вас — всё самое лучшее. |
+| greet_dobro_5_v2_f_g.flac | greet_добро | Aoede | grateful | Не забуду, что вы для нас сделали. |
+| greet_dobro_5_v2_g.flac | greet_добро | Schedar | grateful | Не забуду, что вы для нас сделали. |
+| greet_dozhd_0_v2_f_g.flac | greet_дождь | Aoede | hospitable | Мокро снаружи? Вставай ближе к огню. |
+| greet_dozhd_0_v2_g.flac | greet_дождь | Schedar | hospitable | Мокро снаружи? Вставай ближе к огню. |
+| greet_dozhd_1_v2_f_g.flac | greet_дождь | Aoede | dry | В такой дождь только по делу и ходят. |
+| greet_dozhd_1_v2_g.flac | greet_дождь | Schedar | dry | В такой дождь только по делу и ходят. |
+| greet_dozhd_2_v2_f_g.flac | greet_дождь | Aoede | fussy | Отряхнись у порога, с тебя течёт. |
+| greet_dozhd_2_v2_g.flac | greet_дождь | Schedar | fussy | Отряхнись у порога, с тебя течёт. |
+| greet_dozhd_3_v2_f_g.flac | greet_дождь | Aoede | weary | Льёт и льёт. Хоть торговля под крышей. |
+| greet_dozhd_3_v2_g.flac | greet_дождь | Schedar | weary | Льёт и льёт. Хоть торговля под крышей. |
+| greet_dozhd_4_v2_f_g.flac | greet_дождь | Aoede | cheerful | Дождь делу не помеха — заходи. |
+| greet_dozhd_4_v2_g.flac | greet_дождь | Schedar | cheerful | Дождь делу не помеха — заходи. |
+| greet_dozhd_5_v2_f_g.flac | greet_дождь | Aoede | grumbling | Вот погодка! Сапоги у порога оставь. |
+| greet_dozhd_5_v2_g.flac | greet_дождь | Schedar | grumbling | Вот погодка! Сапоги у порога оставь. |
+| greet_durn_0_v2_f_g.flac | greet_дурная | Aoede | wary | Слыхали мы о вас. Всякое слыхали. |
+| greet_durn_0_v2_g.flac | greet_дурная | Schedar | wary | Слыхали мы о вас. Всякое слыхали. |
+| greet_durn_1_v2_f_g.flac | greet_дурная | Aoede | suspicious | Говорят о вас недоброе. Посмотрим, правда ли. |
+| greet_durn_1_v2_g.flac | greet_дурная | Schedar | suspicious | Говорят о вас недоброе. Посмотрим, правда ли. |
+| greet_durn_2_v2_f_g.flac | greet_дурная | Aoede | nervous | Держите руки на виду. На всякий случай. |
+| greet_durn_2_v2_g.flac | greet_дурная | Schedar | nervous | Держите руки на виду. На всякий случай. |
+| greet_durn_3_v2_f_g.flac | greet_дурная | Aoede | disapproving | С вашей славой в честный дом не ходят. |
+| greet_durn_3_v2_g.flac | greet_дурная | Schedar | disapproving | С вашей славой в честный дом не ходят. |
+| greet_durn_4_v2_f_g.flac | greet_дурная | Aoede | defiant | Вас тут боятся. Я — пока нет. |
+| greet_durn_4_v2_g.flac | greet_дурная | Schedar | defiant | Вас тут боятся. Я — пока нет. |
+| greet_glub_0_v2_f_g.flac | greet_глубь | Aoede | low voice | Тише. Здесь торгуют без свидетелей. |
+| greet_glub_0_v2_g.flac | greet_глубь | Schedar | low voice | Тише. Здесь торгуют без свидетелей. |
+| greet_glub_1_v2_f_g.flac | greet_глубь | Aoede | low voice | Живой? Уже хорошо. Что берёшь? |
+| greet_glub_1_v2_g.flac | greet_глубь | Schedar | low voice | Живой? Уже хорошо. Что берёшь? |
+| greet_glub_2_v2_f_g.flac | greet_глубь | Aoede | low voice | Факелы, верёвка, хлеб. Остальное — дорого. |
+| greet_glub_2_v2_g.flac | greet_глубь | Schedar | low voice | Факелы, верёвка, хлеб. Остальное — дорого. |
+| greet_glub_3_v2_f_g.flac | greet_глубь | Aoede | low voice | Наверх далеко, а я рядом. За это и плата. |
+| greet_glub_3_v2_g.flac | greet_глубь | Schedar | low voice | Наверх далеко, а я рядом. За это и плата. |
+| greet_glub_4_v2_f_g.flac | greet_глубь | Aoede | low voice | Садись у огня, погрейся. Потом о цене. |
+| greet_glub_4_v2_g.flac | greet_глубь | Schedar | low voice | Садись у огня, погрейся. Потом о цене. |
+| greet_glub_5_v2_f_g.flac | greet_глубь | Aoede | low voice | Что нашёл внизу — покажи. Может, куплю. |
+| greet_glub_5_v2_g.flac | greet_глубь | Schedar | low voice | Что нашёл внизу — покажи. Может, куплю. |
+| greet_glub_6_v2_f_g.flac | greet_глубь | Aoede | low voice | Не оглядывайся. Твари сюда не суются — огня боятся. |
+| greet_glub_6_v2_g.flac | greet_глубь | Schedar | low voice | Не оглядывайся. Твари сюда не суются — огня боятся. |
+| greet_glub_7_v2_f_g.flac | greet_глубь | Aoede | low voice | Я тут давно. Дольше, чем ты думаешь. |
+| greet_glub_7_v2_g.flac | greet_глубь | Schedar | low voice | Я тут давно. Дольше, чем ты думаешь. |
+| greet_glub_8_v2_f_g.flac | greet_глубь | Aoede | low voice | Кто спустился, тот платит. Такое правило. |
+| greet_glub_8_v2_g.flac | greet_глубь | Schedar | low voice | Кто спустился, тот платит. Такое правило. |
+| greet_glub_9_v2_f_g.flac | greet_глубь | Aoede | low voice | Руду беру, кости беру. Вопросов не задаю. |
+| greet_glub_9_v2_g.flac | greet_глубь | Schedar | low voice | Руду беру, кости беру. Вопросов не задаю. |
+| greet_holod_0_v2_f_g.flac | greet_холод | Aoede | cold | Чего тебе? |
+| greet_holod_0_v2_g.flac | greet_холод | Schedar | cold | Чего тебе? |
+| greet_holod_1_v2_f_g.flac | greet_холод | Aoede | cold | Быстрее. Мне некогда. |
+| greet_holod_1_v2_g.flac | greet_холод | Schedar | cold | Быстрее. Мне некогда. |
+| greet_holod_2_v2_f_g.flac | greet_холод | Aoede | cold | Говори и уходи. |
+| greet_holod_2_v2_g.flac | greet_холод | Schedar | cold | Говори и уходи. |
+| greet_holod_3_v2_f_g.flac | greet_холод | Aoede | cold | Знаем тебя. Не с лучшей стороны. |
+| greet_holod_3_v2_g.flac | greet_холод | Schedar | cold | Знаем тебя. Не с лучшей стороны. |
+| greet_holod_4_v2_f_g.flac | greet_холод | Aoede | cold | Ну? Я слушаю. Недолго. |
+| greet_holod_4_v2_g.flac | greet_холод | Schedar | cold | Ну? Я слушаю. Недолго. |
+| greet_holod_5_v2_f_g.flac | greet_холод | Aoede | cold | Опять ты. Ладно, говори. |
+| greet_holod_5_v2_g.flac | greet_холод | Schedar | cold | Опять ты. Ладно, говори. |
+| greet_kuznya_0_v2_f_g.flac | greet_кузня | Aoede | loud | Осторожно, окалина летит. |
+| greet_kuznya_0_v2_g.flac | greet_кузня | Schedar | loud | Осторожно, окалина летит. |
+| greet_kuznya_10_v2_f_g.flac | greet_кузня | Aoede | gruff | Искры не боишься? Подходи. |
+| greet_kuznya_10_v2_g.flac | greet_кузня | Schedar | gruff | Искры не боишься? Подходи. |
+| greet_kuznya_1_v2_f_g.flac | greet_кузня | Aoede | loud | Клинок принёс? Покажи, где зазубрина. |
+| greet_kuznya_1_v2_g.flac | greet_кузня | Schedar | loud | Клинок принёс? Покажи, где зазубрина. |
+| greet_kuznya_2_v2_f_g.flac | greet_кузня | Aoede | loud | Горн горячий, говори быстро. |
+| greet_kuznya_2_v2_g.flac | greet_кузня | Schedar | loud | Горн горячий, говори быстро. |
+| greet_kuznya_3_v2_f_g.flac | greet_кузня | Aoede | loud | Подкову, гвоздь или меч — всё куётся. |
+| greet_kuznya_3_v2_g.flac | greet_кузня | Schedar | loud | Подкову, гвоздь или меч — всё куётся. |
+| greet_kuznya_4_v2_f_g.flac | greet_кузня | Aoede | loud | Железо слушает руку, а не язык. |
+| greet_kuznya_4_v2_g.flac | greet_кузня | Schedar | loud | Железо слушает руку, а не язык. |
+| greet_kuznya_5_v2_f_g.flac | greet_кузня | Aoede | loud | Погоди, докую — остынет. |
+| greet_kuznya_5_v2_g.flac | greet_кузня | Schedar | loud | Погоди, докую — остынет. |
+| greet_kuznya_6_v2_f_g.flac | greet_кузня | Aoede | loud | Доспех править будем или новый ковать? |
+| greet_kuznya_6_v2_g.flac | greet_кузня | Schedar | loud | Доспех править будем или новый ковать? |
+| greet_kuznya_7_v2_f_g.flac | greet_кузня | Aoede | loud | Сталь у меня звонкая. Послушай. |
+| greet_kuznya_7_v2_g.flac | greet_кузня | Schedar | loud | Сталь у меня звонкая. Послушай. |
+| greet_kuznya_8_v2_f_g.flac | greet_кузня | Aoede | loud | Молот не ждёт. Чего тебе? |
+| greet_kuznya_8_v2_g.flac | greet_кузня | Schedar | loud | Молот не ждёт. Чего тебе? |
+| greet_kuznya_9_v2_f_g.flac | greet_кузня | Aoede | gruff | Кольчугу латать или клинок точить? |
+| greet_kuznya_9_v2_g.flac | greet_кузня | Schedar | gruff | Кольчугу латать или клинок точить? |
+| greet_lekar_0_v2_f_g.flac | greet_лекарь | Aoede | caring | Где болит? Показывай. |
+| greet_lekar_0_v2_g.flac | greet_лекарь | Schedar | caring | Где болит? Показывай. |
+| greet_lekar_10_v2_f_g.flac | greet_лекарь | Aoede | gentle | Травы свежие, отвар готов. Что беспокоит? |
+| greet_lekar_10_v2_g.flac | greet_лекарь | Schedar | gentle | Травы свежие, отвар готов. Что беспокоит? |
+| greet_lekar_1_v2_f_g.flac | greet_лекарь | Aoede | caring | Сядь. Руку дай, пульс послушаю. |
+| greet_lekar_1_v2_g.flac | greet_лекарь | Schedar | caring | Сядь. Руку дай, пульс послушаю. |
+| greet_lekar_2_v2_f_g.flac | greet_лекарь | Aoede | caring | Раны промывать надо, а не ждать. |
+| greet_lekar_2_v2_g.flac | greet_лекарь | Schedar | caring | Раны промывать надо, а не ждать. |
+| greet_lekar_3_v2_f_g.flac | greet_лекарь | Aoede | caring | Отвар горький, зато живой уйдёшь. |
+| greet_lekar_3_v2_g.flac | greet_лекарь | Schedar | caring | Отвар горький, зато живой уйдёшь. |
+| greet_lekar_4_v2_f_g.flac | greet_лекарь | Aoede | caring | Не трогай склянки, в них не вода. |
+| greet_lekar_4_v2_g.flac | greet_лекарь | Schedar | caring | Не трогай склянки, в них не вода. |
+| greet_lekar_5_v2_f_g.flac | greet_лекарь | Aoede | caring | Опять порезы? Береги себя. |
+| greet_lekar_5_v2_g.flac | greet_лекарь | Schedar | caring | Опять порезы? Береги себя. |
+| greet_lekar_6_v2_f_g.flac | greet_лекарь | Aoede | caring | Дыши ровно. Сейчас посмотрим. |
+| greet_lekar_6_v2_g.flac | greet_лекарь | Schedar | caring | Дыши ровно. Сейчас посмотрим. |
+| greet_lekar_7_v2_f_g.flac | greet_лекарь | Aoede | caring | Бледный ты. Давно ел? |
+| greet_lekar_7_v2_g.flac | greet_лекарь | Schedar | caring | Бледный ты. Давно ел? |
+| greet_lekar_8_v2_f_g.flac | greet_лекарь | Aoede | gentle | Тише, тише. Здесь больные спят. |
+| greet_lekar_8_v2_g.flac | greet_лекарь | Schedar | gentle | Тише, тише. Здесь больные спят. |
+| greet_lekar_9_v2_f_g.flac | greet_лекарь | Aoede | calm | Покажи руки. Раны чистые? |
+| greet_lekar_9_v2_g.flac | greet_лекарь | Schedar | calm | Покажи руки. Раны чистые? |
+| greet_noch_0_v2_f_g.flac | greet_ночь | Aoede | sleepy | Ночь на дворе. Чего не спится? |
+| greet_noch_0_v2_g.flac | greet_ночь | Schedar | sleepy | Ночь на дворе. Чего не спится? |
+| greet_noch_1_v2_f_g.flac | greet_ночь | Aoede | sleepy | Тише, люди спят. |
+| greet_noch_1_v2_g.flac | greet_ночь | Schedar | sleepy | Тише, люди спят. |
+| greet_noch_2_v2_f_g.flac | greet_ночь | Aoede | sleepy | В такой час? Ну, заходи. |
+| greet_noch_2_v2_g.flac | greet_ночь | Schedar | sleepy | В такой час? Ну, заходи. |
+| greet_noch_3_v2_f_g.flac | greet_ночь | Aoede | sleepy | Ночью добрые люди дома сидят. |
+| greet_noch_3_v2_g.flac | greet_ночь | Schedar | sleepy | Ночью добрые люди дома сидят. |
+| greet_obshiy_0_v2_f_g.flac | greet_общий | Aoede | plain | Доброго дня. |
+| greet_obshiy_0_v2_g.flac | greet_общий | Schedar | plain | Доброго дня. |
+| greet_obshiy_10_v2_f_g.flac | greet_общий | Aoede | curious | Ну, здравствуй. Что нового на свете? |
+| greet_obshiy_10_v2_g.flac | greet_общий | Schedar | curious | Ну, здравствуй. Что нового на свете? |
+| greet_obshiy_11_v2_f_g.flac | greet_общий | Aoede | calm | Мир дому и тому, кто входит. |
+| greet_obshiy_11_v2_g.flac | greet_общий | Schedar | calm | Мир дому и тому, кто входит. |
+| greet_obshiy_12_v2_f_g.flac | greet_общий | Aoede | hospitable | О, гость. Проходи, не стой на пороге. |
+| greet_obshiy_12_v2_g.flac | greet_общий | Schedar | hospitable | О, гость. Проходи, не стой на пороге. |
+| greet_obshiy_13_v2_f_g.flac | greet_общий | Aoede | cautious | Добрый человек? Тогда поговорим. |
+| greet_obshiy_13_v2_g.flac | greet_общий | Schedar | cautious | Добрый человек? Тогда поговорим. |
+| greet_obshiy_1_v2_f_g.flac | greet_общий | Aoede | plain | А, путник. Чем могу? |
+| greet_obshiy_1_v2_g.flac | greet_общий | Schedar | plain | А, путник. Чем могу? |
+| greet_obshiy_2_v2_f_g.flac | greet_общий | Aoede | plain | Здравствуй. Нечасто к нам заходят. |
+| greet_obshiy_2_v2_g.flac | greet_общий | Schedar | plain | Здравствуй. Нечасто к нам заходят. |
+| greet_obshiy_3_v2_f_g.flac | greet_общий | Aoede | plain | Слушаю тебя. |
+| greet_obshiy_3_v2_g.flac | greet_общий | Schedar | plain | Слушаю тебя. |
+| greet_obshiy_4_v2_f_g.flac | greet_общий | Aoede | plain | Говори, только недолго — дела. |
+| greet_obshiy_4_v2_g.flac | greet_общий | Schedar | plain | Говори, только недолго — дела. |
+| greet_obshiy_5_v2_f_g.flac | greet_общий | Aoede | plain | Опять дожди, а у меня крыша течёт. |
+| greet_obshiy_5_v2_g.flac | greet_общий | Schedar | plain | Опять дожди, а у меня крыша течёт. |
+| greet_obshiy_6_v2_f_g.flac | greet_общий | Aoede | plain | Новое лицо. Откуда будешь? |
+| greet_obshiy_6_v2_g.flac | greet_общий | Schedar | plain | Новое лицо. Откуда будешь? |
+| greet_obshiy_7_v2_f_g.flac | greet_общий | Aoede | plain | Проходи, раз пришёл. |
+| greet_obshiy_7_v2_g.flac | greet_общий | Schedar | plain | Проходи, раз пришёл. |
+| greet_obshiy_8_v2_f_g.flac | greet_общий | Aoede | friendly | Здравствуй, здравствуй. Каким ветром? |
+| greet_obshiy_8_v2_g.flac | greet_общий | Schedar | friendly | Здравствуй, здравствуй. Каким ветром? |
+| greet_obshiy_9_v2_f_g.flac | greet_общий | Aoede | friendly | Путник? Дорога дальняя, небось. |
+| greet_obshiy_9_v2_g.flac | greet_общий | Schedar | friendly | Путник? Дорога дальняя, небось. |
+| greet_postoyan_0_v2_f_g.flac | greet_постоянный | Aoede | warm | А, мой лучший покупатель! Заходи. |
+| greet_postoyan_0_v2_g.flac | greet_постоянный | Schedar | warm | А, мой лучший покупатель! Заходи. |
+| greet_postoyan_1_v2_f_g.flac | greet_постоянный | Aoede | proud | Снова ко мне? Правильно, у меня лучше всех. |
+| greet_postoyan_1_v2_g.flac | greet_постоянный | Schedar | proud | Снова ко мне? Правильно, у меня лучше всех. |
+| greet_postoyan_2_v2_f_g.flac | greet_постоянный | Aoede | confidential | Для постоянных — цена особая. Смотри. |
+| greet_postoyan_2_v2_g.flac | greet_постоянный | Schedar | confidential | Для постоянных — цена особая. Смотри. |
+| greet_postoyan_3_v2_f_g.flac | greet_постоянный | Aoede | teasing | Я уж думала, ты к соседу переметнулся. |
+| greet_postoyan_3_v2_g.flac | greet_постоянный | Schedar | teasing | Я уж думал, ты к соседу переметнулся. |
+| greet_postoyan_4_v2_f_g.flac | greet_постоянный | Aoede | knowing | Узнаю тебя. Опять за припасами? |
+| greet_postoyan_4_v2_g.flac | greet_постоянный | Schedar | knowing | Узнаю тебя. Опять за припасами? |
+| greet_postoyan_5_v2_f_g.flac | greet_постоянный | Aoede | courteous | Постоянному покупателю — первый выбор. Прошу. |
+| greet_postoyan_5_v2_g.flac | greet_постоянный | Schedar | courteous | Постоянному покупателю — первый выбор. Прошу. |
+| greet_postoyan_6_v2_f_g.flac | greet_постоянный | Aoede | joking | Твоё золото у меня в сундуке уже место греет. |
+| greet_postoyan_6_v2_g.flac | greet_постоянный | Schedar | joking | Твоё золото у меня в сундуке уже место греет. |
+| greet_postoyan_7_v2_f_g.flac | greet_постоянный | Aoede | cheerful | Опять ты! Я как раз свежий товар разложила. |
+| greet_postoyan_7_v2_g.flac | greet_постоянный | Schedar | cheerful | Опять ты! Я как раз свежий товар разложил. |
+| greet_postoyan_8_v2_f_g.flac | greet_постоянный | Aoede | sincere | С тобой торговать — одно удовольствие. |
+| greet_postoyan_8_v2_g.flac | greet_постоянный | Schedar | sincere | С тобой торговать — одно удовольствие. |
+| greet_postoyan_9_v2_f_g.flac | greet_постоянный | Aoede | helpful | Запомнила, что ты берёшь. Отложила кое-что. |
+| greet_postoyan_9_v2_g.flac | greet_постоянный | Schedar | helpful | Запомнил, что ты берёшь. Отложил кое-что. |
+| greet_prodavec_0_v2_f_g.flac | greet_продавец | Aoede | eager | С добычей? Показывай, что там у тебя. |
+| greet_prodavec_0_v2_g.flac | greet_продавец | Schedar | eager | С добычей? Показывай, что там у тебя. |
+| greet_prodavec_1_v2_f_g.flac | greet_продавец | Aoede | amused | Полсклада уже твоим добром забито. Неси ещё. |
+| greet_prodavec_1_v2_g.flac | greet_продавец | Schedar | amused | Полсклада уже твоим добром забито. Неси ещё. |
+| greet_prodavec_2_v2_f_g.flac | greet_продавец | Aoede | businesslike | Своему поставщику плачу честно. Что сегодня? |
+| greet_prodavec_2_v2_g.flac | greet_продавец | Schedar | businesslike | Своему поставщику плачу честно. Что сегодня? |
+| greet_prodavec_3_v2_f_g.flac | greet_продавец | Aoede | curious | Опять с мешком? Ну-ка, развязывай. |
+| greet_prodavec_3_v2_g.flac | greet_продавец | Schedar | curious | Опять с мешком? Ну-ка, развязывай. |
+| greet_prodavec_4_v2_f_g.flac | greet_продавец | Aoede | warm | Хороший товар всегда возьму. Особенно у тебя. |
+| greet_prodavec_4_v2_g.flac | greet_продавец | Schedar | warm | Хороший товар всегда возьму. Особенно у тебя. |
+| greet_prodavec_5_v2_f_g.flac | greet_продавец | Aoede | playful | С тобой и артели не надо. Что на продажу? |
+| greet_prodavec_5_v2_g.flac | greet_продавец | Schedar | playful | С тобой и артели не надо. Что на продажу? |
+| greet_ranen_0_v2_f_g.flac | greet_ранен | Aoede | alarmed | Ох, да ты весь в крови! Садись, отдышись. |
+| greet_ranen_0_v2_g.flac | greet_ранен | Schedar | alarmed | Ох, да ты весь в крови! Садись, отдышись. |
+| greet_ranen_1_v2_f_g.flac | greet_ранен | Aoede | concerned | Кто ж тебя так? Лекарь тут недалеко. |
+| greet_ranen_1_v2_g.flac | greet_ранен | Schedar | concerned | Кто ж тебя так? Лекарь тут недалеко. |
+| greet_ranen_2_v2_f_g.flac | greet_ранен | Aoede | worried | На ногах едва стоишь. Может, сперва к лекарю? |
+| greet_ranen_2_v2_g.flac | greet_ранен | Schedar | worried | На ногах едва стоишь. Может, сперва к лекарю? |
+| greet_ranen_3_v2_f_g.flac | greet_ранен | Aoede | gruff | Перевяжись хоть. Кровью весь пол закапаешь. |
+| greet_ranen_3_v2_g.flac | greet_ранен | Schedar | gruff | Перевяжись хоть. Кровью весь пол закапаешь. |
+| greet_ranen_4_v2_f_g.flac | greet_ранен | Aoede | relieved | Живой — и то ладно. Потом о делах. |
+| greet_ranen_4_v2_g.flac | greet_ранен | Schedar | relieved | Живой — и то ладно. Потом о делах. |
+| greet_ranen_5_v2_f_g.flac | greet_ранен | Aoede | sympathetic | Эк тебя потрепало. Воды дать? |
+| greet_ranen_5_v2_g.flac | greet_ранен | Schedar | sympathetic | Эк тебя потрепало. Воды дать? |
+| greet_slava_0_v2_f_g.flac | greet_слава | Aoede | awed | Неужто это вы? Наслышаны, наслышаны! |
+| greet_slava_0_v2_g.flac | greet_слава | Schedar | awed | Неужто это вы? Наслышаны, наслышаны! |
+| greet_slava_1_v2_f_g.flac | greet_слава | Aoede | respectful | О вас уже песни поют. Чем могу служить? |
+| greet_slava_1_v2_g.flac | greet_слава | Schedar | respectful | О вас уже песни поют. Чем могу служить? |
+| greet_slava_2_v2_f_g.flac | greet_слава | Aoede | honored | Такой гость — честь для нашего дома. |
+| greet_slava_2_v2_g.flac | greet_слава | Schedar | honored | Такой гость — честь для нашего дома. |
+| greet_slava_3_v2_f_g.flac | greet_слава | Aoede | excited | Весь город о вас говорит. Проходите! |
+| greet_slava_3_v2_g.flac | greet_слава | Schedar | excited | Весь город о вас говорит. Проходите! |
+| greet_slava_4_v2_f_g.flac | greet_слава | Aoede | delighted | Знаменитость у меня! Соседи обзавидуются. |
+| greet_slava_4_v2_g.flac | greet_слава | Schedar | delighted | Знаменитость у меня! Соседи обзавидуются. |
+| greet_slava_5_v2_f_g.flac | greet_слава | Aoede | respectful | Слава бежит впереди вас. Рады видеть. |
+| greet_slava_5_v2_g.flac | greet_слава | Schedar | respectful | Слава бежит впереди вас. Рады видеть. |
+| greet_snova_0_v2_f_g.flac | greet_снова | Aoede | wry | Снова ты? Ну, заходи. |
+| greet_snova_0_v2_g.flac | greet_снова | Schedar | wry | Снова ты? Ну, заходи. |
+| greet_snova_1_v2_f_g.flac | greet_снова | Aoede | wry | Вернулся? Значит, понравилось. |
+| greet_snova_1_v2_g.flac | greet_снова | Schedar | wry | Вернулся? Значит, понравилось. |
+| greet_snova_2_v2_f_g.flac | greet_снова | Aoede | wry | Опять пришёл. Что на этот раз? |
+| greet_snova_2_v2_g.flac | greet_снова | Schedar | wry | Опять пришёл. Что на этот раз? |
+| greet_snova_3_v2_f_g.flac | greet_снова | Aoede | wry | Помню тебя. Садись. |
+| greet_snova_3_v2_g.flac | greet_снова | Schedar | wry | Помню тебя. Садись. |
+| greet_snova_4_v2_f_g.flac | greet_снова | Aoede | wry | А, это ты. С прошлого раза ничего не изменилось. |
+| greet_snova_4_v2_g.flac | greet_снова | Schedar | wry | А, это ты. С прошлого раза ничего не изменилось. |
+| greet_strazha_0_v2_f_g.flac | greet_стража | Aoede | stern | Стой. Кто таков и зачем? |
+| greet_strazha_0_v2_g.flac | greet_стража | Schedar | stern | Стой. Кто таков и зачем? |
+| greet_strazha_10_v2_f_g.flac | greet_стража | Aoede | dry | Держи руки на виду, и мы поладим. |
+| greet_strazha_10_v2_g.flac | greet_стража | Schedar | dry | Держи руки на виду, и мы поладим. |
+| greet_strazha_11_v2_f_g.flac | greet_стража | Aoede | curt | Без дела не задерживайся. |
+| greet_strazha_11_v2_g.flac | greet_стража | Schedar | curt | Без дела не задерживайся. |
+| greet_strazha_1_v2_f_g.flac | greet_стража | Aoede | stern | Оружие в ножнах держи. |
+| greet_strazha_1_v2_g.flac | greet_стража | Schedar | stern | Оружие в ножнах держи. |
+| greet_strazha_2_v2_f_g.flac | greet_стража | Aoede | stern | Проходи, но без шума. |
+| greet_strazha_2_v2_g.flac | greet_стража | Schedar | stern | Проходи, но без шума. |
+| greet_strazha_3_v2_f_g.flac | greet_стража | Aoede | stern | Жалобы — к старшему. Дело — ко мне. |
+| greet_strazha_3_v2_g.flac | greet_стража | Schedar | stern | Жалобы — к старшему. Дело — ко мне. |
+| greet_strazha_4_v2_f_g.flac | greet_стража | Aoede | stern | Ночью по одному не ходи. |
+| greet_strazha_4_v2_g.flac | greet_стража | Schedar | stern | Ночью по одному не ходи. |
+| greet_strazha_5_v2_f_g.flac | greet_стража | Aoede | stern | Приказ есть приказ. Чего надо? |
+| greet_strazha_5_v2_g.flac | greet_стража | Schedar | stern | Приказ есть приказ. Чего надо? |
+| greet_strazha_6_v2_f_g.flac | greet_стража | Aoede | stern | Смена долгая, говори короче. |
+| greet_strazha_6_v2_g.flac | greet_стража | Schedar | stern | Смена долгая, говори короче. |
+| greet_strazha_7_v2_f_g.flac | greet_стража | Aoede | stern | Бумаги есть? Покажи. |
+| greet_strazha_7_v2_g.flac | greet_стража | Schedar | stern | Бумаги есть? Покажи. |
+| greet_strazha_8_v2_f_g.flac | greet_стража | Aoede | stern | Спокойно у ворот — и слава богам. |
+| greet_strazha_8_v2_g.flac | greet_стража | Schedar | stern | Спокойно у ворот — и слава богам. |
+| greet_strazha_9_v2_f_g.flac | greet_стража | Aoede | stern | Порядок знаешь? Тогда проходи. |
+| greet_strazha_9_v2_g.flac | greet_стража | Schedar | stern | Порядок знаешь? Тогда проходи. |
+| greet_svoy_0_v2_f_g.flac | greet_свой | Aoede | joyful | Рада тебя видеть, друг. |
+| greet_svoy_0_v2_g.flac | greet_свой | Schedar | joyful | Рад тебя видеть, друг. |
+| greet_svoy_1_v2_f_g.flac | greet_свой | Aoede | joyful | Для тебя — всегда время. |
+| greet_svoy_1_v2_g.flac | greet_свой | Schedar | joyful | Для тебя — всегда время. |
+| greet_svoy_2_v2_f_g.flac | greet_свой | Aoede | joyful | А вот и ты! Заходи. |
+| greet_svoy_2_v2_g.flac | greet_свой | Schedar | joyful | А вот и ты! Заходи. |
+| greet_svoy_3_v2_f_g.flac | greet_свой | Aoede | joyful | Своих не забываем. Садись. |
+| greet_svoy_3_v2_g.flac | greet_свой | Schedar | joyful | Своих не забываем. Садись. |
+| greet_svoy_4_v2_f_g.flac | greet_свой | Aoede | joyful | О, наш человек! Что нового? |
+| greet_svoy_4_v2_g.flac | greet_свой | Schedar | joyful | О, наш человек! Что нового? |
+| greet_svoy_5_v2_f_g.flac | greet_свой | Aoede | joyful | Для тебя отложила кое-что. Смотри. |
+| greet_svoy_5_v2_g.flac | greet_свой | Schedar | joyful | Для тебя отложил кое-что. Смотри. |
+| greet_tma_0_v2_f_g.flac | greet_тьма | Aoede | hushed | Говори быстро. Нас считают. |
+| greet_tma_0_v2_g.flac | greet_тьма | Schedar | hushed | Говори быстро. Нас считают. |
+| greet_tma_1_v2_f_g.flac | greet_тьма | Aoede | hushed | Ты не отсюда. Это слышно. |
+| greet_tma_1_v2_g.flac | greet_тьма | Schedar | hushed | Ты не отсюда. Это слышно. |
+| greet_tma_2_v2_f_g.flac | greet_тьма | Aoede | hushed | Цена — не в золоте. Но золото тоже возьму. |
+| greet_tma_2_v2_g.flac | greet_тьма | Schedar | hushed | Цена — не в золоте. Но золото тоже возьму. |
+| greet_tma_3_v2_f_g.flac | greet_тьма | Aoede | hushed | Тише. Надсмотрщик близко. |
+| greet_tma_3_v2_g.flac | greet_тьма | Schedar | hushed | Тише. Надсмотрщик близко. |
+| greet_tma_4_v2_f_g.flac | greet_тьма | Aoede | hushed | Спросишь лишнее — забуду, что видела тебя. |
+| greet_tma_4_v2_g.flac | greet_тьма | Schedar | hushed | Спросишь лишнее — забуду, что видел тебя. |
+| greet_tma_5_v2_f_g.flac | greet_тьма | Aoede | hushed | Живым здесь не рады. Но я — не здесь. |
+| greet_tma_5_v2_g.flac | greet_тьма | Schedar | hushed | Живым здесь не рады. Но я — не здесь. |
+| greet_tma_6_v2_f_g.flac | greet_тьма | Aoede | hushed | Что принёс с той стороны? Покажи. |
+| greet_tma_6_v2_g.flac | greet_тьма | Schedar | hushed | Что принёс с той стороны? Покажи. |
+| greet_tma_7_v2_f_g.flac | greet_тьма | Aoede | hushed | Не называй имени. Имя — это долг. |
+| greet_tma_7_v2_g.flac | greet_тьма | Schedar | hushed | Не называй имени. Имя — это долг. |
+| greet_torg_0_v2_f_g.flac | greet_торг | Aoede | brisk | Смотри, выбирай. Руками не мни. |
+| greet_torg_0_v2_g.flac | greet_торг | Schedar | brisk | Смотри, выбирай. Руками не мни. |
+| greet_torg_10_v2_f_g.flac | greet_торг | Aoede | brisk | Тише, не торгуйся вслух — соседи услышат, цены поднимут. |
+| greet_torg_10_v2_g.flac | greet_торг | Schedar | brisk | Тише, не торгуйся вслух — соседи услышат, цены поднимут. |
+| greet_torg_11_v2_f_g.flac | greet_торг | Aoede | brisk | Последний такой остался. Правда последний. |
+| greet_torg_11_v2_g.flac | greet_торг | Schedar | brisk | Последний такой остался. Правда последний. |
+| greet_torg_12_v2_f_g.flac | greet_торг | Aoede | brisk | Подходи, не стесняйся! Товар лицом покажу. |
+| greet_torg_12_v2_g.flac | greet_торг | Schedar | brisk | Подходи, не стесняйся! Товар лицом покажу. |
+| greet_torg_13_v2_f_g.flac | greet_торг | Aoede | playful | Купишь — не пожалеешь, не купишь — пожалеешь. |
+| greet_torg_13_v2_g.flac | greet_торг | Schedar | playful | Купишь — не пожалеешь, не купишь — пожалеешь. |
+| greet_torg_14_v2_f_g.flac | greet_торг | Aoede | proud | У меня сегодня привоз. Свежее не найдёшь. |
+| greet_torg_14_v2_g.flac | greet_торг | Schedar | proud | У меня сегодня привоз. Свежее не найдёшь. |
+| greet_torg_15_v2_f_g.flac | greet_торг | Aoede | sly | Торгуюсь до последнего медяка, так и знай. |
+| greet_torg_15_v2_g.flac | greet_торг | Schedar | sly | Торгуюсь до последнего медяка, так и знай. |
+| greet_torg_16_v2_f_g.flac | greet_торг | Aoede | admiring | Глянь, какая работа! Такое не каждый день. |
+| greet_torg_16_v2_g.flac | greet_торг | Schedar | admiring | Глянь, какая работа! Такое не каждый день. |
+| greet_torg_17_v2_f_g.flac | greet_торг | Aoede | wise | Деньги любят счёт, а товар — хозяина. |
+| greet_torg_17_v2_g.flac | greet_торг | Schedar | wise | Деньги любят счёт, а товар — хозяина. |
+| greet_torg_1_v2_f_g.flac | greet_торг | Aoede | brisk | Товар свежий, цена честная — почти. |
+| greet_torg_1_v2_g.flac | greet_торг | Schedar | brisk | Товар свежий, цена честная — почти. |
+| greet_torg_2_v2_f_g.flac | greet_торг | Aoede | brisk | Золото есть? Тогда поговорим. |
+| greet_torg_2_v2_g.flac | greet_торг | Schedar | brisk | Золото есть? Тогда поговорим. |
+| greet_torg_3_v2_f_g.flac | greet_торг | Aoede | brisk | Заходи, заходи. Сегодня уступлю, если не жадничать. |
+| greet_torg_3_v2_g.flac | greet_торг | Schedar | brisk | Заходи, заходи. Сегодня уступлю, если не жадничать. |
+| greet_torg_4_v2_f_g.flac | greet_торг | Aoede | brisk | Что ищешь — то и найдём. Чего нет — достанем. |
+| greet_torg_4_v2_g.flac | greet_торг | Schedar | brisk | Что ищешь — то и найдём. Чего нет — достанем. |
+| greet_torg_5_v2_f_g.flac | greet_торг | Aoede | brisk | Не стой в проходе, покупатели за тобой. |
+| greet_torg_5_v2_g.flac | greet_торг | Schedar | brisk | Не стой в проходе, покупатели за тобой. |
+| greet_torg_6_v2_f_g.flac | greet_торг | Aoede | brisk | За погляд денег не беру. Пока. |
+| greet_torg_6_v2_g.flac | greet_торг | Schedar | brisk | За погляд денег не беру. Пока. |
+| greet_torg_7_v2_f_g.flac | greet_торг | Aoede | brisk | С дороги? Значит, есть что продать. |
+| greet_torg_7_v2_g.flac | greet_торг | Schedar | brisk | С дороги? Значит, есть что продать. |
+| greet_torg_8_v2_f_g.flac | greet_торг | Aoede | brisk | Меняю, покупаю, продаю. Спрашивай. |
+| greet_torg_8_v2_g.flac | greet_торг | Schedar | brisk | Меняю, покупаю, продаю. Спрашивай. |
+| greet_torg_9_v2_f_g.flac | greet_торг | Aoede | brisk | Весы у меня верные, не сомневайся. |
+| greet_torg_9_v2_g.flac | greet_торг | Schedar | brisk | Весы у меня верные, не сомневайся. |
+| greet_traktir_0_v2_f_g.flac | greet_трактир | Aoede | warm | Садись к огню, похлёбка горячая. |
+| greet_traktir_0_v2_g.flac | greet_трактир | Schedar | warm | Садись к огню, похлёбка горячая. |
+| greet_traktir_10_v2_f_g.flac | greet_трактир | Aoede | friendly | Свободный стол у окна. Садись. |
+| greet_traktir_10_v2_g.flac | greet_трактир | Schedar | friendly | Свободный стол у окна. Садись. |
+| greet_traktir_1_v2_f_g.flac | greet_трактир | Aoede | warm | Комната наверху свободна, если не храпишь. |
+| greet_traktir_1_v2_g.flac | greet_трактир | Schedar | warm | Комната наверху свободна, если не храпишь. |
+| greet_traktir_2_v2_f_g.flac | greet_трактир | Aoede | warm | Чего налить? Пиво у нас своё. |
+| greet_traktir_2_v2_g.flac | greet_трактир | Schedar | warm | Чего налить? Пиво у нас своё. |
+| greet_traktir_3_v2_f_g.flac | greet_трактир | Aoede | warm | Новости? Здесь их больше, чем пива. |
+| greet_traktir_3_v2_g.flac | greet_трактир | Schedar | warm | Новости? Здесь их больше, чем пива. |
+| greet_traktir_4_v2_f_g.flac | greet_трактир | Aoede | warm | Ноги вытирай, пол только выскоблили. |
+| greet_traktir_4_v2_g.flac | greet_трактир | Schedar | warm | Ноги вытирай, пол только выскоблили. |
+| greet_traktir_5_v2_f_g.flac | greet_трактир | Aoede | warm | Грей руки. Ночь нынче злая. |
+| greet_traktir_5_v2_g.flac | greet_трактир | Schedar | warm | Грей руки. Ночь нынче злая. |
+| greet_traktir_6_v2_f_g.flac | greet_трактир | Aoede | warm | Платят вперёд. Ничего личного. |
+| greet_traktir_6_v2_g.flac | greet_трактир | Schedar | warm | Платят вперёд. Ничего личного. |
+| greet_traktir_7_v2_f_g.flac | greet_трактир | Aoede | warm | О дороге спроси — здесь все с дороги. |
+| greet_traktir_7_v2_g.flac | greet_трактир | Schedar | warm | О дороге спроси — здесь все с дороги. |
+| greet_traktir_8_v2_f_g.flac | greet_трактир | Aoede | warm | Заходи, у нас тепло и сухо. |
+| greet_traktir_8_v2_g.flac | greet_трактир | Schedar | warm | Заходи, у нас тепло и сухо. |
+| greet_traktir_9_v2_f_g.flac | greet_трактир | Aoede | cheerful innkeeper | Кружку пива для начала? |
+| greet_traktir_9_v2_g.flac | greet_трактир | Schedar | cheerful innkeeper | Кружку пива для начала? |
+| greet_utro_0_v2_f_g.flac | greet_утро | Aoede | fresh | Доброе утро. Рано вы. |
+| greet_utro_0_v2_g.flac | greet_утро | Schedar | fresh | Доброе утро. Рано вы. |
+| greet_utro_1_v2_f_g.flac | greet_утро | Aoede | fresh | С утра пораньше — и уже по делам? |
+| greet_utro_1_v2_g.flac | greet_утро | Schedar | fresh | С утра пораньше — и уже по делам? |
+| greet_utro_2_v2_f_g.flac | greet_утро | Aoede | fresh | Утро доброе. Только открылись. |
+| greet_utro_2_v2_g.flac | greet_утро | Schedar | fresh | Утро доброе. Только открылись. |
+| greet_utro_3_v2_f_g.flac | greet_утро | Aoede | fresh | Доброе утро, путник. |
+| greet_utro_3_v2_g.flac | greet_утро | Schedar | fresh | Доброе утро, путник. |
+| greet_vecher_0_v2_f_g.flac | greet_вечер | Aoede | tired evening greeting | Добрый вечер. Скоро закрываемся. |
+| greet_vecher_0_v2_g.flac | greet_вечер | Schedar | tired evening greeting | Добрый вечер. Скоро закрываемся. |
+| greet_vecher_1_v2_f_g.flac | greet_вечер | Aoede | tired evening greeting | Вечер уже. Чего так поздно? |
+| greet_vecher_1_v2_g.flac | greet_вечер | Schedar | tired evening greeting | Вечер уже. Чего так поздно? |
+| greet_vecher_2_v2_f_g.flac | greet_вечер | Aoede | tired evening greeting | Добрый вечер, путник. |
+| greet_vecher_2_v2_g.flac | greet_вечер | Schedar | tired evening greeting | Добрый вечер, путник. |
+| greet_vecher_3_v2_f_g.flac | greet_вечер | Aoede | tired evening greeting | К ночи дело, говорите быстрее. |
+| greet_vecher_3_v2_g.flac | greet_вечер | Schedar | tired evening greeting | К ночи дело, говорите быстрее. |
+| greet_vrazhda_0_v2_f_g.flac | greet_вражда | Aoede | hostile | Уходи, пока цел. |
+| greet_vrazhda_0_v2_g.flac | greet_вражда | Schedar | hostile | Уходи, пока цел. |
+| greet_vrazhda_1_v2_f_g.flac | greet_вражда | Aoede | hostile | Тебе здесь не рады. |
+| greet_vrazhda_1_v2_g.flac | greet_вражда | Schedar | hostile | Тебе здесь не рады. |
+| greet_vrazhda_2_v2_f_g.flac | greet_вражда | Aoede | hostile | Ещё шаг — и позову стражу. |
+| greet_vrazhda_2_v2_g.flac | greet_вражда | Schedar | hostile | Ещё шаг — и позову стражу. |
+| greet_vrazhda_3_v2_f_g.flac | greet_вражда | Aoede | hostile | С такими, как ты, не говорю. |
+| greet_vrazhda_3_v2_g.flac | greet_вражда | Schedar | hostile | С такими, как ты, не говорю. |
+| greet_vrazhda_4_v2_f_g.flac | greet_вражда | Aoede | hostile | Не подходи. Я всё про тебя знаю. |
+| greet_vrazhda_4_v2_g.flac | greet_вражда | Schedar | hostile | Не подходи. Я всё про тебя знаю. |
+| greet_vrazhda_5_v2_f_g.flac | greet_вражда | Aoede | hostile | Руки держи на виду. |
+| greet_vrazhda_5_v2_g.flac | greet_вражда | Schedar | hostile | Руки держи на виду. |
+| greet_zemlyak_0_v2_f_g.flac | greet_земляк | Aoede | joyful | Свой! По говору слышу. Здравствуй, земляк. |
+| greet_zemlyak_0_v2_g.flac | greet_земляк | Schedar | joyful | Свой! По говору слышу. Здравствуй, земляк. |
+| greet_zemlyak_1_v2_f_g.flac | greet_земляк | Aoede | warm | Родная кровь! Для земляка — всегда пожалуйста. |
+| greet_zemlyak_1_v2_g.flac | greet_земляк | Schedar | warm | Родная кровь! Для земляка — всегда пожалуйста. |
+| greet_zemlyak_2_v2_f_g.flac | greet_земляк | Aoede | pleasantly surprised | Из наших будешь? Тогда и разговор другой. |
+| greet_zemlyak_2_v2_g.flac | greet_земляк | Schedar | pleasantly surprised | Из наших будешь? Тогда и разговор другой. |
+| greet_zemlyak_3_v2_f_g.flac | greet_земляк | Aoede | friendly | Земляку и цена своя. Проходи. |
+| greet_zemlyak_3_v2_g.flac | greet_земляк | Schedar | friendly | Земляку и цена своя. Проходи. |
+| greet_zemlyak_4_v2_f_g.flac | greet_земляк | Aoede | warm | Своих издалека видно. Как там дома? |
+| greet_zemlyak_4_v2_g.flac | greet_земляк | Schedar | warm | Своих издалека видно. Как там дома? |
+| greet_zemlyak_5_v2_f_g.flac | greet_земляк | Aoede | glad | Нечасто наших тут встретишь. Садись. |
+| greet_zemlyak_5_v2_g.flac | greet_земляк | Schedar | glad | Нечасто наших тут встретишь. Садись. |
+| greet_zhdet_0_v2_f_g.flac | greet_ждёт | Aoede | expectant | Ну что, как с моим делом? |
+| greet_zhdet_0_v2_g.flac | greet_ждёт | Schedar | expectant | Ну что, как с моим делом? |
+| greet_zhdet_1_v2_f_g.flac | greet_ждёт | Aoede | reminding | Помнишь, о чём договаривались? |
+| greet_zhdet_1_v2_g.flac | greet_ждёт | Schedar | reminding | Помнишь, о чём договаривались? |
+| greet_zhdet_2_v2_f_g.flac | greet_ждёт | Aoede | impatient | Жду, жду. Дело само не сделается. |
+| greet_zhdet_2_v2_g.flac | greet_ждёт | Schedar | impatient | Жду, жду. Дело само не сделается. |
+| greet_zhdet_3_v2_f_g.flac | greet_ждёт | Aoede | worried | Не забыто ли моё поручение? |
+| greet_zhdet_3_v2_g.flac | greet_ждёт | Schedar | worried | Не забыто ли моё поручение? |
+| greet_zhdet_4_v2_f_g.flac | greet_ждёт | Aoede | hopeful | Вести есть? Как там с тем делом? |
+| greet_zhdet_4_v2_g.flac | greet_ждёт | Schedar | hopeful | Вести есть? Как там с тем делом? |
+| greet_zhdet_5_v2_f_g.flac | greet_ждёт | Aoede | hopeful | Вижу тебя — значит, есть новости? |
+| greet_zhdet_5_v2_g.flac | greet_ждёт | Schedar | hopeful | Вижу тебя — значит, есть новости? |
+| greet_zhrec_0_v2_f_g.flac | greet_жрец | Aoede | quiet | Мир тебе, путник. |
+| greet_zhrec_0_v2_g.flac | greet_жрец | Schedar | quiet | Мир тебе, путник. |
+| greet_zhrec_10_v2_f_g.flac | greet_жрец | Aoede | gentle | Помолишься с нами или пришёл за советом? |
+| greet_zhrec_10_v2_g.flac | greet_жрец | Schedar | gentle | Помолишься с нами или пришёл за советом? |
+| greet_zhrec_1_v2_f_g.flac | greet_жрец | Aoede | quiet | Боги слышат. Говори тише. |
+| greet_zhrec_1_v2_g.flac | greet_жрец | Schedar | quiet | Боги слышат. Говори тише. |
+| greet_zhrec_2_v2_f_g.flac | greet_жрец | Aoede | quiet | Свеча горит — значит, ты не один. |
+| greet_zhrec_2_v2_g.flac | greet_жрец | Schedar | quiet | Свеча горит — значит, ты не один. |
+| greet_zhrec_3_v2_f_g.flac | greet_жрец | Aoede | quiet | С чем пришёл: с молитвой или с бедой? |
+| greet_zhrec_3_v2_g.flac | greet_жрец | Schedar | quiet | С чем пришёл: с молитвой или с бедой? |
+| greet_zhrec_4_v2_f_g.flac | greet_жрец | Aoede | quiet | Здесь не лгут. Здесь и так всё видно. |
+| greet_zhrec_4_v2_g.flac | greet_жрец | Schedar | quiet | Здесь не лгут. Здесь и так всё видно. |
+| greet_zhrec_5_v2_f_g.flac | greet_жрец | Aoede | quiet | Сними шапку, путник. Здесь святое место. |
+| greet_zhrec_5_v2_g.flac | greet_жрец | Schedar | quiet | Сними шапку, путник. Здесь святое место. |
+| greet_zhrec_6_v2_f_g.flac | greet_жрец | Aoede | quiet | Кто кается — того слушают. |
+| greet_zhrec_6_v2_g.flac | greet_жрец | Schedar | quiet | Кто кается — того слушают. |
+| greet_zhrec_7_v2_f_g.flac | greet_жрец | Aoede | quiet | Благослови тебя небо. Чем помочь? |
+| greet_zhrec_7_v2_g.flac | greet_жрец | Schedar | quiet | Благослови тебя небо. Чем помочь? |
+| greet_zhrec_8_v2_f_g.flac | greet_жрец | Aoede | serene | Входи с миром, уходи с надеждой. |
+| greet_zhrec_8_v2_g.flac | greet_жрец | Schedar | serene | Входи с миром, уходи с надеждой. |
+| greet_zhrec_9_v2_f_g.flac | greet_жрец | Aoede | quiet | Боги видят всякого, кто переступает порог. |
+| greet_zhrec_9_v2_g.flac | greet_жрец | Schedar | quiet | Боги видят всякого, кто переступает порог. |
+| greet_zlo_0_v2_f_g.flac | greet_зло | Aoede | resentful | Опять вы. После того, что было... |
+| greet_zlo_0_v2_g.flac | greet_зло | Schedar | resentful | Опять вы. После того, что было... |
+| greet_zlo_1_v2_f_g.flac | greet_зло | Aoede | resentful | Не думайте, что всё забыто. |
+| greet_zlo_1_v2_g.flac | greet_зло | Schedar | resentful | Не думайте, что всё забыто. |
+| greet_zlo_2_v2_f_g.flac | greet_зло | Aoede | resentful | Чего пришли? Мало вам? |
+| greet_zlo_2_v2_g.flac | greet_зло | Schedar | resentful | Чего пришли? Мало вам? |
+| greet_zlo_3_v2_f_g.flac | greet_зло | Aoede | resentful | Помню, как вы со мной обошлись. |
+| greet_zlo_3_v2_g.flac | greet_зло | Schedar | resentful | Помню, как вы со мной обошлись. |
+| greet_zlo_4_v2_f_g.flac | greet_зло | Aoede | resentful | Держитесь подальше. Всё помню. |
+| greet_zlo_4_v2_g.flac | greet_зло | Schedar | resentful | Держитесь подальше. Всё помню. |
+| greet_zlo_5_v2_f_g.flac | greet_зло | Aoede | resentful | Вы ещё смеете сюда приходить? |
+| greet_zlo_5_v2_g.flac | greet_зло | Schedar | resentful | Вы ещё смеете сюда приходить? |
+| greet_znanie_0_v2_f_g.flac | greet_знание | Aoede | thoughtful scholar | Не шуми, я считаю. |
+| greet_znanie_0_v2_g.flac | greet_знание | Schedar | thoughtful scholar | Не шуми, я считаю. |
+| greet_znanie_10_v2_f_g.flac | greet_знание | Aoede | delighted | Вопрос? Прекрасно. Вопросы я люблю. |
+| greet_znanie_10_v2_g.flac | greet_знание | Schedar | delighted | Вопрос? Прекрасно. Вопросы я люблю. |
+| greet_znanie_1_v2_f_g.flac | greet_знание | Aoede | thoughtful scholar | Книги любят тишину и чистые руки. |
+| greet_znanie_1_v2_g.flac | greet_знание | Schedar | thoughtful scholar | Книги любят тишину и чистые руки. |
+| greet_znanie_2_v2_f_g.flac | greet_знание | Aoede | thoughtful scholar | Спрашивай. Если знаю — скажу. |
+| greet_znanie_2_v2_g.flac | greet_знание | Schedar | thoughtful scholar | Спрашивай. Если знаю — скажу. |
+| greet_znanie_3_v2_f_g.flac | greet_знание | Aoede | thoughtful scholar | Ученье долгое. Разговор — короче. |
+| greet_znanie_3_v2_g.flac | greet_знание | Schedar | thoughtful scholar | Ученье долгое. Разговор — короче. |
+| greet_znanie_4_v2_f_g.flac | greet_знание | Aoede | thoughtful scholar | Чернила сохнут, говори по делу. |
+| greet_znanie_4_v2_g.flac | greet_знание | Schedar | thoughtful scholar | Чернила сохнут, говори по делу. |
+| greet_znanie_5_v2_f_g.flac | greet_знание | Aoede | thoughtful scholar | Любопытство — первая ступень знания. Проходи. |
+| greet_znanie_5_v2_g.flac | greet_знание | Schedar | thoughtful scholar | Любопытство — первая ступень знания. Проходи. |
+| greet_znanie_6_v2_f_g.flac | greet_знание | Aoede | thoughtful scholar | Осторожно, свитки не сшиты. |
+| greet_znanie_6_v2_g.flac | greet_знание | Schedar | thoughtful scholar | Осторожно, свитки не сшиты. |
+| greet_znanie_7_v2_f_g.flac | greet_знание | Aoede | thoughtful scholar | Ты грамоте учён? Хорошо. |
+| greet_znanie_7_v2_g.flac | greet_знание | Schedar | thoughtful scholar | Ты грамоте учён? Хорошо. |
+| greet_znanie_8_v2_f_g.flac | greet_знание | Aoede | absent-minded scholar | А, посетитель. Осторожно, чернила. |
+| greet_znanie_8_v2_g.flac | greet_знание | Schedar | absent-minded scholar | А, посетитель. Осторожно, чернила. |
+| greet_znanie_9_v2_f_g.flac | greet_знание | Aoede | fussy | Любую книгу — только после того, как руки вымоешь. |
+| greet_znanie_9_v2_g.flac | greet_знание | Schedar | fussy | Любую книгу — только после того, как руки вымоешь. |
+| guard_quest_0_v2_g.flac | guard_quest | Algenib | stern | Разбойники на тракте совсем обнаглели. Очисти округу — головы принесёшь в доказательство. |
+| guard_quest_1_v2_g.flac | guard_quest | Algenib | tired | Нам людей не хватает. Возьмёшься за разбойников на дороге? |
+| guard_quest_2_v2_g.flac | guard_quest | Algenib | grim | На тракте грабят обозы. Найди эту шайку и покончи с ней. |
+| guard_quest_3_v2_g.flac | guard_quest | Algenib | dry | Капитан платит за каждую голову разбойника. Слово стражи. |
+| guard_quest_4_v2_g.flac | guard_quest | Algenib | earnest | Дорога должна быть безопасной. Помоги нам с этим. |
+| guard_quest_5_v2_g.flac | guard_quest | Algenib | stern | Бандиты засели у тракта. Принеси их головы — получишь награду. |
+| guard_quest_done_0_v2_g.flac | guard_quest_done | Algenib | pleased | Вот это работа! Тракт теперь чище. Держи плату. |
+| guard_quest_done_1_v2_g.flac | guard_quest_done | Algenib | satisfied | Головы на месте. Капитан будет доволен. |
+| guard_quest_done_2_v2_g.flac | guard_quest_done | Algenib | grateful | Спасибо от всей стражи. Дорога снова безопасна. |
+| guard_quest_done_3_v2_g.flac | guard_quest_done | Algenib | respectful | Честная работа. Если понадобишься — позовём. |
+| guard_quest_wait_0_v2_g.flac | guard_quest_wait | Algenib | dry | Ещё не всех? Разбойники сами не кончатся. |
+| guard_quest_wait_1_v2_g.flac | guard_quest_wait | Algenib | stern | Голов маловато. Тракт всё ещё неспокоен. |
+| patrol_0_v2_g.flac | patrol | Algenib | loud | Дозор державы! Дорогу! |
+| patrol_1_v2_g.flac | patrol | Algenib | stern | Стой! Проверка. Ладно, проходи. |
+| patrol_2_v2_g.flac | patrol | Algenib | watchful | Разбойников на пути не видно было? |
+| patrol_3_v2_g.flac | patrol | Algenib | reassuring | Держись тракта, путник. Мы рядом. |
+| patrol_4_v2_g.flac | patrol | Algenib | loud military command | Шагом марш! Не растягиваться! |
+| patrol_5_v2_g.flac | patrol | Algenib | rhythmic marching command | Левой! Левой! Держать строй! |
+| patrol_6_v2_g.flac | patrol | Algenib | gruff warning | На обочине не стой — строй идёт. |
+| patrol_7_v2_g.flac | patrol | Algenib | calm | Дорога под охраной. Можно не бояться. |
+| quest_archeo_0_v2_f_g.flac | quest_archeo | Aoede | mysterious | Под землёй лежит старое. Подними его. |
+| quest_archeo_0_v2_g.flac | quest_archeo | Schedar | mysterious | Под землёй лежит старое. Подними его. |
+| quest_archeo_1_v2_f_g.flac | quest_archeo | Aoede | intrigued | Древность ждёт того, кто не побоится копать. |
+| quest_archeo_1_v2_g.flac | quest_archeo | Schedar | intrigued | Древность ждёт того, кто не побоится копать. |
+| quest_archeo_2_v2_f_g.flac | quest_archeo | Aoede | eager | В старых руинах есть то, что мне нужно. Раскопай, но бережно. |
+| quest_archeo_2_v2_g.flac | quest_archeo | Schedar | eager | В старых руинах есть то, что мне нужно. Раскопай, но бережно. |
+| quest_archeo_3_v2_f_g.flac | quest_archeo | Aoede | awed | Предтечи оставили там что-то. Найди — и мир станет немного понятнее. |
+| quest_archeo_3_v2_g.flac | quest_archeo | Schedar | awed | Предтечи оставили там что-то. Найди — и мир станет немного понятнее. |
+| quest_case_0_v2_f_g.flac | quest_case | Aoede | suspicious | Здесь что-то нечисто. Нужно разобраться. |
+| quest_case_0_v2_g.flac | quest_case | Schedar | suspicious | Здесь что-то нечисто. Нужно разобраться. |
+| quest_case_1_v2_f_g.flac | quest_case | Aoede | sharp | Нужны улики, а не слухи. Поищешь? |
+| quest_case_1_v2_g.flac | quest_case | Schedar | sharp | Нужны улики, а не слухи. Поищешь? |
+| quest_case_2_v2_f_g.flac | quest_case | Aoede | suspicious | Тут дело тёмное. Разберись, кто виноват, — а я уж решу, что с ним делать. |
+| quest_case_2_v2_g.flac | quest_case | Schedar | suspicious | Тут дело тёмное. Разберись, кто виноват, — а я уж решу, что с ним делать. |
+| quest_case_3_v2_f_g.flac | quest_case | Aoede | irritated | Кто-то врёт, и я хочу знать кто. Поспрашивай, погляди. |
+| quest_case_3_v2_g.flac | quest_case | Schedar | irritated | Кто-то врёт, и я хочу знать кто. Поспрашивай, погляди. |
+| quest_craft_0_v2_f_g.flac | quest_craft | Aoede | appraising | Руки у тебя, говорят, умелые. Нужна работа. |
+| quest_craft_0_v2_g.flac | quest_craft | Schedar | appraising | Руки у тебя, говорят, умелые. Нужна работа. |
+| quest_craft_1_v2_f_g.flac | quest_craft | Aoede | earnest | Сделай мне вещь — хорошую, на совесть. |
+| quest_craft_1_v2_g.flac | quest_craft | Schedar | earnest | Сделай мне вещь — хорошую, на совесть. |
+| quest_delivery_0_v2_f_g.flac | quest_delivery | Aoede | businesslike | Груз нужно доставить. Ждут его давно. |
+| quest_delivery_0_v2_g.flac | quest_delivery | Schedar | businesslike | Груз нужно доставить. Ждут его давно. |
+| quest_delivery_1_v2_f_g.flac | quest_delivery | Aoede | businesslike | Довези товар целым — там заплатят. |
+| quest_delivery_1_v2_g.flac | quest_delivery | Schedar | businesslike | Довези товар целым — там заплатят. |
+| quest_diplom_0_v2_f_g.flac | quest_diplom | Aoede | thoughtful | Тут словом надо, а не мечом. |
+| quest_diplom_0_v2_g.flac | quest_diplom | Schedar | thoughtful | Тут словом надо, а не мечом. |
+| quest_diplom_1_v2_f_g.flac | quest_diplom | Aoede | frustrated | Поговори с ними. Меня они слушать не станут. |
+| quest_diplom_1_v2_g.flac | quest_diplom | Schedar | frustrated | Поговори с ними. Меня они слушать не станут. |
+| quest_diplom_2_v2_f_g.flac | quest_diplom | Aoede | calm | Нужно поговорить с соседями. Словом тут можно больше, чем мечом. |
+| quest_diplom_2_v2_g.flac | quest_diplom | Schedar | calm | Нужно поговорить с соседями. Словом тут можно больше, чем мечом. |
+| quest_diplom_3_v2_f_g.flac | quest_diplom | Aoede | earnest | Отнеси им моё слово. И постарайся, чтобы его услышали. |
+| quest_diplom_3_v2_g.flac | quest_diplom | Schedar | earnest | Отнеси им моё слово. И постарайся, чтобы его услышали. |
+| quest_done_0_v2_f_g.flac | quest_done | Aoede | delighted | Сделано? Вот это дело! Держи награду. |
+| quest_done_0_v2_g.flac | quest_done | Schedar | delighted | Сделано? Вот это дело! Держи награду. |
+| quest_done_1_v2_f_g.flac | quest_done | Aoede | grateful | Спасибо. Выручка твоя дорогого стоит. |
+| quest_done_1_v2_g.flac | quest_done | Schedar | grateful | Спасибо. Выручка твоя дорогого стоит. |
+| quest_done_2_v2_f_g.flac | quest_done | Aoede | satisfied | Честно заработано. Держи. |
+| quest_done_2_v2_g.flac | quest_done | Schedar | satisfied | Честно заработано. Держи. |
+| quest_done_3_v2_f_g.flac | quest_done | Aoede | proud | Знала, что на тебя можно положиться. |
+| quest_done_3_v2_g.flac | quest_done | Schedar | proud | Знал, что на тебя можно положиться. |
+| quest_done_4_v2_f_g.flac | quest_done | Aoede | enthusiastic | Вот это работа! Приходи ещё. |
+| quest_done_4_v2_g.flac | quest_done | Schedar | enthusiastic | Вот это работа! Приходи ещё. |
+| quest_done_5_v2_f_g.flac | quest_done | Aoede | respectful | Слово своё держишь. Это ценю. |
+| quest_done_5_v2_g.flac | quest_done | Schedar | respectful | Слово своё держишь. Это ценю. |
+| quest_econ_0_v2_f_g.flac | quest_econ | Aoede | shrewd | Дело денежное. Добудь — и в накладе не останешься. |
+| quest_econ_0_v2_g.flac | quest_econ | Schedar | shrewd | Дело денежное. Добудь — и в накладе не останешься. |
+| quest_econ_1_v2_f_g.flac | quest_econ | Aoede | brisk | Нужен товар. Много и быстро. |
+| quest_econ_1_v2_g.flac | quest_econ | Schedar | brisk | Нужен товар. Много и быстро. |
+| quest_econ_2_v2_f_g.flac | quest_econ | Aoede | shrewd | Цены скачут, товар пропадает. Помоги наладить дело — не пожалеешь. |
+| quest_econ_2_v2_g.flac | quest_econ | Schedar | shrewd | Цены скачут, товар пропадает. Помоги наладить дело — не пожалеешь. |
+| quest_econ_3_v2_f_g.flac | quest_econ | Aoede | businesslike | Торговля встала. Разберись, в чём загвоздка, и я заплачу. |
+| quest_econ_3_v2_g.flac | quest_econ | Schedar | businesslike | Торговля встала. Разберись, в чём загвоздка, и я заплачу. |
+| quest_faction_0_v2_f_g.flac | quest_faction | Aoede | official | Это поручение не от меня — от тех, кому я служу. |
+| quest_faction_0_v2_g.flac | quest_faction | Schedar | official | Это поручение не от меня — от тех, кому я служу. |
+| quest_faction_1_v2_f_g.flac | quest_faction | Aoede | dry | Служба есть служба. Задание такое. |
+| quest_faction_1_v2_g.flac | quest_faction | Schedar | dry | Служба есть служба. Задание такое. |
+| quest_faction_2_v2_f_g.flac | quest_faction | Aoede | earnest | Наши люди просят помощи. Сделаешь — станешь одной из нас. |
+| quest_faction_2_v2_g.flac | quest_faction | Schedar | earnest | Наши люди просят помощи. Сделаешь — станешь одним из нас. |
+| quest_faction_3_v2_f_g.flac | quest_faction | Aoede | solemn | Братство помнит тех, кто ему помог. Не подведи. |
+| quest_faction_3_v2_g.flac | quest_faction | Schedar | solemn | Братство помнит тех, кто ему помог. Не подведи. |
+| quest_faith_0_v2_f_g.flac | quest_faith | Aoede | reverent | Боги ждут знака. Исполни обет. |
+| quest_faith_0_v2_g.flac | quest_faith | Schedar | reverent | Боги ждут знака. Исполни обет. |
+| quest_faith_1_v2_f_g.flac | quest_faith | Aoede | serene | Святое дело. Не для корысти — для души. |
+| quest_faith_1_v2_g.flac | quest_faith | Schedar | serene | Святое дело. Не для корысти — для души. |
+| quest_fetch_derevo_0_v2_f_g.flac | quest_fetch_derevo | Aoede | practical | Дров и бруса не хватает — зима близко. Принеси дерева, сколько сказал. |
+| quest_fetch_derevo_0_v2_g.flac | quest_fetch_derevo | Schedar | practical | Дров и бруса не хватает — зима близко. Принеси дерева, сколько сказал. |
+| quest_fetch_derevo_1_v2_f_g.flac | quest_fetch_derevo | Aoede | businesslike | Мне нужно хорошее дерево, сухое, без гнили. Найдёшь — заплачу честно. |
+| quest_fetch_derevo_1_v2_g.flac | quest_fetch_derevo | Schedar | businesslike | Мне нужно хорошее дерево, сухое, без гнили. Найдёшь — заплачу честно. |
+| quest_fetch_griby_0_v2_f_g.flac | quest_fetch_griby | Aoede | warning | Грибов принеси. Только не бледных — те не для еды. |
+| quest_fetch_griby_0_v2_g.flac | quest_fetch_griby | Schedar | warning | Грибов принеси. Только не бледных — те не для еды. |
+| quest_fetch_griby_1_v2_f_g.flac | quest_fetch_griby | Aoede | instructive | Нужны грибы для зелья. Ищи в сырых местах, у корней. |
+| quest_fetch_griby_1_v2_g.flac | quest_fetch_griby | Schedar | instructive | Нужны грибы для зелья. Ищи в сырых местах, у корней. |
+| quest_fetch_kamen_0_v2_f_g.flac | quest_fetch_kamen | Aoede | tired | Стена осыпается, камня нет. Принеси камня — поправим. |
+| quest_fetch_kamen_0_v2_g.flac | quest_fetch_kamen | Schedar | tired | Стена осыпается, камня нет. Принеси камня — поправим. |
+| quest_fetch_kamen_1_v2_f_g.flac | quest_fetch_kamen | Aoede | firm | Мне нужен камень, крепкий, без трещин. Остальное — моя забота. |
+| quest_fetch_kamen_1_v2_g.flac | quest_fetch_kamen | Schedar | firm | Мне нужен камень, крепкий, без трещин. Остальное — моя забота. |
+| quest_fetch_kost_0_v2_f_g.flac | quest_fetch_kost | Aoede | curt | Кости нужны. Не спрашивай зачем — просто принеси. |
+| quest_fetch_kost_0_v2_g.flac | quest_fetch_kost | Schedar | curt | Кости нужны. Не спрашивай зачем — просто принеси. |
+| quest_fetch_kost_1_v2_f_g.flac | quest_fetch_kost | Aoede | businesslike | Принеси кости зверя, крепкие. Резчику работы на месяц. |
+| quest_fetch_kost_1_v2_g.flac | quest_fetch_kost | Schedar | businesslike | Принеси кости зверя, крепкие. Резчику работы на месяц. |
+| quest_fetch_kristall_0_v2_f_g.flac | quest_fetch_kristall | Aoede | hushed | Кристаллы нужны для обряда. Найди их — только осторожно, они поют. |
+| quest_fetch_kristall_0_v2_g.flac | quest_fetch_kristall | Schedar | hushed | Кристаллы нужны для обряда. Найди их — только осторожно, они поют. |
+| quest_fetch_kristall_1_v2_f_g.flac | quest_fetch_kristall | Aoede | precise | Принеси кристаллов. Чистых, светлых. Мутные мне ни к чему. |
+| quest_fetch_kristall_1_v2_g.flac | quest_fetch_kristall | Schedar | precise | Принеси кристаллов. Чистых, светлых. Мутные мне ни к чему. |
+| quest_fetch_rakushka_0_v2_f_g.flac | quest_fetch_rakushka | Aoede | light | Ракушек бы мне, перламутровых. На берегу их полно, если знать места. |
+| quest_fetch_rakushka_0_v2_g.flac | quest_fetch_rakushka | Schedar | light | Ракушек бы мне, перламутровых. На берегу их полно, если знать места. |
+| quest_fetch_rakushka_1_v2_f_g.flac | quest_fetch_rakushka | Aoede | cheerful | Собери ракушек. Из них у нас и пуговицы, и обереги. |
+| quest_fetch_rakushka_1_v2_g.flac | quest_fetch_rakushka | Schedar | cheerful | Собери ракушек. Из них у нас и пуговицы, и обереги. |
+| quest_fetch_ruda_0_v2_f_g.flac | quest_fetch_ruda | Aoede | gruff | Горн стынет без руды. Добудь мне руды, и я в долгу не останусь. |
+| quest_fetch_ruda_0_v2_g.flac | quest_fetch_ruda | Schedar | gruff | Горн стынет без руды. Добудь мне руды, и я в долгу не останусь. |
+| quest_fetch_ruda_1_v2_f_g.flac | quest_fetch_ruda | Aoede | gruff | Руда нужна, да побольше. Кузня без неё — просто сарай. |
+| quest_fetch_ruda_1_v2_g.flac | quest_fetch_ruda | Schedar | gruff | Руда нужна, да побольше. Кузня без неё — просто сарай. |
+| quest_fetch_trava_0_v2_f_g.flac | quest_fetch_trava | Aoede | worried | Травы кончились, а люди болеют. Собери мне трав, прошу тебя. |
+| quest_fetch_trava_0_v2_g.flac | quest_fetch_trava | Schedar | worried | Травы кончились, а люди болеют. Собери мне трав, прошу тебя. |
+| quest_fetch_trava_1_v2_f_g.flac | quest_fetch_trava | Aoede | brisk | Нужны травы, свежие, не вялые. Где растут — я сказал. |
+| quest_fetch_trava_1_v2_g.flac | quest_fetch_trava | Schedar | brisk | Нужны травы, свежие, не вялые. Где растут — я сказал. |
+| quest_fetch_yagody_0_v2_f_g.flac | quest_fetch_yagody | Aoede | warm | Ягод бы мне. Детям на зиму, да и на настойку хватит. |
+| quest_fetch_yagody_0_v2_g.flac | quest_fetch_yagody | Schedar | warm | Ягод бы мне. Детям на зиму, да и на настойку хватит. |
+| quest_fetch_yagody_1_v2_f_g.flac | quest_fetch_yagody | Aoede | fussy | Собери ягод, только спелых. Зелёные не возьму. |
+| quest_fetch_yagody_1_v2_g.flac | quest_fetch_yagody | Schedar | fussy | Собери ягод, только спелых. Зелёные не возьму. |
+| quest_full_0_v2_f_g.flac | quest_full | Aoede | amused | Куда тебе ещё? У тебя и так десяток дел. |
+| quest_full_0_v2_g.flac | quest_full | Schedar | amused | Куда тебе ещё? У тебя и так десяток дел. |
+| quest_full_1_v2_f_g.flac | quest_full | Aoede | firm | Сперва закончи начатое, потом приходи. |
+| quest_full_1_v2_g.flac | quest_full | Schedar | firm | Сперва закончи начатое, потом приходи. |
+| quest_full_2_v2_f_g.flac | quest_full | Aoede | dry | Дел у тебя по горло. Разгрузись — тогда поговорим. |
+| quest_full_2_v2_g.flac | quest_full | Schedar | dry | Дел у тебя по горло. Разгрузись — тогда поговорим. |
+| quest_full_3_v2_f_g.flac | quest_full | Aoede | sympathetic | У тебя и так дел по горло. Разгребись сначала. |
+| quest_full_3_v2_g.flac | quest_full | Schedar | sympathetic | У тебя и так дел по горло. Разгребись сначала. |
+| quest_full_4_v2_f_g.flac | quest_full | Aoede | kind | Столько поручений разом никто не унесёт. Приходи, как освободишься. |
+| quest_full_4_v2_g.flac | quest_full | Schedar | kind | Столько поручений разом никто не унесёт. Приходи, как освободишься. |
+| quest_have_0_v2_f_g.flac | quest_have | Aoede | patient | Моё дело уже у тебя. Сделай сначала его. |
+| quest_have_0_v2_g.flac | quest_have | Schedar | patient | Моё дело уже у тебя. Сделай сначала его. |
+| quest_have_1_v2_f_g.flac | quest_have | Aoede | mildly impatient | Моё поручение и так при тебе. |
+| quest_have_1_v2_g.flac | quest_have | Schedar | mildly impatient | Моё поручение и так при тебе. |
+| quest_have_2_v2_f_g.flac | quest_have | Aoede | patient | Ты уже взялась за моё дело. Сперва закончи его. |
+| quest_have_2_v2_g.flac | quest_have | Schedar | patient | Ты уже взялся за моё дело. Сперва закончи его. |
+| quest_have_3_v2_f_g.flac | quest_have | Aoede | impatient | Я жду. Дело-то моё ещё не сделано. |
+| quest_have_3_v2_g.flac | quest_have | Schedar | impatient | Я жду. Дело-то моё ещё не сделано. |
+| quest_have_4_v2_f_g.flac | quest_have | Aoede | wry | Не торопись с новым — старое ещё за тобой. |
+| quest_have_4_v2_g.flac | quest_have | Schedar | wry | Не торопись с новым — старое ещё за тобой. |
+| quest_hunt_0_v2_f_g.flac | quest_hunt | Aoede | grim | Тварь повадилась. Выследи её и убей. |
+| quest_hunt_0_v2_g.flac | quest_hunt | Schedar | grim | Тварь повадилась. Выследи её и убей. |
+| quest_hunt_1_v2_f_g.flac | quest_hunt | Aoede | concerned | Зверь опасный. Будь осторожен на охоте. |
+| quest_hunt_1_v2_g.flac | quest_hunt | Schedar | concerned | Зверь опасный. Будь осторожен на охоте. |
+| quest_hunt_2_v2_f_g.flac | quest_hunt | Aoede | cold | Принеси мне весть, что она мертва. |
+| quest_hunt_2_v2_g.flac | quest_hunt | Schedar | cold | Принеси мне весть, что она мертва. |
+| quest_kill_sever_0_v2_f_g.flac | quest_kill_sever | Aoede | grim | На севере твари расплодились, житья не дают. Иди туда и перебей их. |
+| quest_kill_sever_0_v2_g.flac | quest_kill_sever | Schedar | grim | На севере твари расплодились, житья не дают. Иди туда и перебей их. |
+| quest_kill_sever_1_v2_f_g.flac | quest_kill_sever | Aoede | angry | Ступай на север. Там зверьё совсем обнаглело — проучи его. |
+| quest_kill_sever_1_v2_g.flac | quest_kill_sever | Schedar | angry | Ступай на север. Там зверьё совсем обнаглело — проучи его. |
+| quest_kill_vostok_0_v2_f_g.flac | quest_kill_vostok | Aoede | urgent | С востока лезут твари. Иди на восток и перебей их, пока не дошли до нас. |
+| quest_kill_vostok_0_v2_g.flac | quest_kill_vostok | Schedar | urgent | С востока лезут твари. Иди на восток и перебей их, пока не дошли до нас. |
+| quest_kill_vostok_1_v2_f_g.flac | quest_kill_vostok | Aoede | earnest | Ступай на восток. Люди туда ходить боятся — сделай так, чтобы перестали. |
+| quest_kill_vostok_1_v2_g.flac | quest_kill_vostok | Schedar | earnest | Ступай на восток. Люди туда ходить боятся — сделай так, чтобы перестали. |
+| quest_kill_yug_0_v2_f_g.flac | quest_kill_yug | Aoede | worried | С юга приходят твари, режут скот. Иди на юг и очисти округу. |
+| quest_kill_yug_0_v2_g.flac | quest_kill_yug | Schedar | worried | С юга приходят твари, режут скот. Иди на юг и очисти округу. |
+| quest_kill_yug_1_v2_f_g.flac | quest_kill_yug | Aoede | businesslike | Ступай на юг. Сколько тварей там положишь — столько и заплачу. |
+| quest_kill_yug_1_v2_g.flac | quest_kill_yug | Schedar | businesslike | Ступай на юг. Сколько тварей там положишь — столько и заплачу. |
+| quest_kill_zapad_0_v2_f_g.flac | quest_kill_zapad | Aoede | stern | На западе завелась нечисть. Иди туда и не возвращайся, пока не очистишь. |
+| quest_kill_zapad_0_v2_g.flac | quest_kill_zapad | Schedar | stern | На западе завелась нечисть. Иди туда и не возвращайся, пока не очистишь. |
+| quest_kill_zapad_1_v2_f_g.flac | quest_kill_zapad | Aoede | uneasy | Ступай на запад. Там по ночам воют — разберись. |
+| quest_kill_zapad_1_v2_g.flac | quest_kill_zapad | Schedar | uneasy | Ступай на запад. Там по ночам воют — разберись. |
+| quest_magic_0_v2_f_g.flac | quest_magic | Aoede | uneasy | Тут чары замешаны. Без знающего не справиться. |
+| quest_magic_0_v2_g.flac | quest_magic | Schedar | uneasy | Тут чары замешаны. Без знающего не справиться. |
+| quest_magic_1_v2_f_g.flac | quest_magic | Aoede | tense | Сила неспокойна. Нужно её унять. |
+| quest_magic_1_v2_g.flac | quest_magic | Schedar | tense | Сила неспокойна. Нужно её унять. |
+| quest_magic_2_v2_f_g.flac | quest_magic | Aoede | mysterious | Эфир там неспокоен. Узнай почему — и не трогай руками, что светится. |
+| quest_magic_2_v2_g.flac | quest_magic | Schedar | mysterious | Эфир там неспокоен. Узнай почему — и не трогай руками, что светится. |
+| quest_magic_3_v2_f_g.flac | quest_magic | Aoede | appraising | Мне нужен кто-то, кто не боится чар. Похоже, это ты. |
+| quest_magic_3_v2_g.flac | quest_magic | Schedar | appraising | Мне нужен кто-то, кто не боится чар. Похоже, это ты. |
+| quest_random_0_v2_f_g.flac | quest_random | Aoede | casual | Подвернулось тут одно дело. Возьмёшься? |
+| quest_random_0_v2_g.flac | quest_random | Schedar | casual | Подвернулось тут одно дело. Возьмёшься? |
+| quest_random_1_v2_f_g.flac | quest_random | Aoede | puzzled | Странное дело, но заплачу честно. |
+| quest_random_1_v2_g.flac | quest_random | Schedar | puzzled | Странное дело, но заплачу честно. |
+| quest_random_2_v2_f_g.flac | quest_random | Aoede | casual | Дело так себе, но платят исправно. Возьмёшься? |
+| quest_random_2_v2_g.flac | quest_random | Schedar | casual | Дело так себе, но платят исправно. Возьмёшься? |
+| quest_random_3_v2_f_g.flac | quest_random | Aoede | plain | Работа есть, работа простая. Главное — сделать. |
+| quest_random_3_v2_g.flac | quest_random | Schedar | plain | Работа есть, работа простая. Главное — сделать. |
+| quest_rescue_1_v2_f_g.flac | quest_rescue | Aoede | desperate | Вытащи его живым. Прошу тебя. |
+| quest_rescue_1_v2_g.flac | quest_rescue | Schedar | desperate | Вытащи его живым. Прошу тебя. |
+| quest_rescue_3_v2_f_g.flac | quest_rescue | Aoede | pleading | Там наши, в беде. Выручи их — больше некому. |
+| quest_rescue_3_v2_g.flac | quest_rescue | Schedar | pleading | Там наши, в беде. Выручи их — больше некому. |
+| quest_secret_0_v2_f_g.flac | quest_secret | Aoede | whisper | Только тихо. Об этом — никому. |
+| quest_secret_0_v2_g.flac | quest_secret | Schedar | whisper | Только тихо. Об этом — никому. |
+| quest_secret_1_v2_f_g.flac | quest_secret | Aoede | hushed | Дело тайное. Если спросят — ты ничего не знаешь. |
+| quest_secret_1_v2_g.flac | quest_secret | Schedar | hushed | Дело тайное. Если спросят — ты ничего не знаешь. |
+| quest_secret_2_v2_f_g.flac | quest_secret | Aoede | whisper | Дело тихое. Сделаешь — забудь, что я тебя просил. |
+| quest_secret_2_v2_g.flac | quest_secret | Schedar | whisper | Дело тихое. Сделаешь — забудь, что я тебя просил. |
+| quest_secret_3_v2_f_g.flac | quest_secret | Aoede | hushed | Об этом никто не должен знать. Ни стража, ни соседи. |
+| quest_secret_3_v2_g.flac | quest_secret | Schedar | hushed | Об этом никто не должен знать. Ни стража, ни соседи. |
+| quest_story_0_v2_f_g.flac | quest_story | Aoede | grave | Это только начало. Дело большое, слушай с самого начала. |
+| quest_story_0_v2_g.flac | quest_story | Schedar | grave | Это только начало. Дело большое, слушай с самого начала. |
+| quest_story_1_v2_f_g.flac | quest_story | Aoede | serious | От этого многое зависит. Не подведи. |
+| quest_story_1_v2_g.flac | quest_story | Schedar | serious | От этого многое зависит. Не подведи. |
+| quest_story_2_v2_f_g.flac | quest_story | Aoede | grave | Это дело больше, чем кажется. С него всё только начинается. |
+| quest_story_2_v2_g.flac | quest_story | Schedar | grave | Это дело больше, чем кажется. С него всё только начинается. |
+| quest_story_3_v2_f_g.flac | quest_story | Aoede | serious | Слушай внимательно. От этого зависит больше, чем ты думаешь. |
+| quest_story_3_v2_g.flac | quest_story | Schedar | serious | Слушай внимательно. От этого зависит больше, чем ты думаешь. |
+| quest_study_0_v2_f_g.flac | quest_study | Aoede | curious | Мне нужно знать. Разузнай, прочти, дойди. |
+| quest_study_0_v2_g.flac | quest_study | Schedar | curious | Мне нужно знать. Разузнай, прочти, дойди. |
+| quest_study_1_v2_f_g.flac | quest_study | Aoede | curious | Сходи и посмотри своими глазами. Потом расскажешь. |
+| quest_study_1_v2_g.flac | quest_study | Schedar | curious | Сходи и посмотри своими глазами. Потом расскажешь. |
+| quest_study_2_v2_f_g.flac | quest_study | Aoede | scholarly | Мне нужны сведения. Разузнай всё, что сможешь, и запиши. |
+| quest_study_2_v2_g.flac | quest_study | Schedar | scholarly | Мне нужны сведения. Разузнай всё, что сможешь, и запиши. |
+| quest_study_3_v2_f_g.flac | quest_study | Aoede | thoughtful | Изучи это место. Каждая мелочь может оказаться важной. |
+| quest_study_3_v2_g.flac | quest_study | Schedar | thoughtful | Изучи это место. Каждая мелочь может оказаться важной. |
+| quest_take_0_v2_f_g.flac | quest_take | Aoede | serious | Есть для тебя дело. Слушай внимательно. |
+| quest_take_0_v2_g.flac | quest_take | Schedar | serious | Есть для тебя дело. Слушай внимательно. |
+| quest_take_1_v2_f_g.flac | quest_take | Aoede | earnest | Выручишь — не забуду. Вот что нужно. |
+| quest_take_1_v2_g.flac | quest_take | Schedar | earnest | Выручишь — не забуду. Вот что нужно. |
+| quest_take_2_v2_f_g.flac | quest_take | Aoede | businesslike | Работа есть, плата будет. Слушай. |
+| quest_take_2_v2_g.flac | quest_take | Schedar | businesslike | Работа есть, плата будет. Слушай. |
+| quest_take_3_v2_f_g.flac | quest_take | Aoede | earnest | Мне нужна помощь. Вот в чём дело. |
+| quest_take_3_v2_g.flac | quest_take | Schedar | earnest | Мне нужна помощь. Вот в чём дело. |
+| quest_type_craft_0_v2_f_g.flac | quest_type_craft | Aoede | businesslike | Мне нужна работа мастера. Сделай, как умеешь, а я оценю. |
+| quest_type_craft_0_v2_g.flac | quest_type_craft | Schedar | businesslike | Мне нужна работа мастера. Сделай, как умеешь, а я оценю. |
+| quest_type_craft_1_v2_f_g.flac | quest_type_craft | Aoede | friendly | Руки у тебя, вижу, откуда надо растут. Выручи — сработай мне вещь. |
+| quest_type_craft_1_v2_g.flac | quest_type_craft | Schedar | friendly | Руки у тебя, вижу, откуда надо растут. Выручи — сработай мне вещь. |
+| quest_type_craft_2_v2_f_g.flac | quest_type_craft | Aoede | hurried | Заказ срочный. Сделаешь быстро — заплачу сверху. |
+| quest_type_craft_2_v2_g.flac | quest_type_craft | Schedar | hurried | Заказ срочный. Сделаешь быстро — заплачу сверху. |
+| quest_type_delivery_0_v2_f_g.flac | quest_type_delivery | Aoede | businesslike | Довези груз в целости. Там за него дадут втрое больше, чем здесь. |
+| quest_type_delivery_0_v2_g.flac | quest_type_delivery | Schedar | businesslike | Довези груз в целости. Там за него дадут втрое больше, чем здесь. |
+| quest_type_delivery_1_v2_f_g.flac | quest_type_delivery | Aoede | shrewd | Отвезёшь товар — получишь долю. Только в дороге не зевай. |
+| quest_type_delivery_1_v2_g.flac | quest_type_delivery | Schedar | shrewd | Отвезёшь товар — получишь долю. Только в дороге не зевай. |
+| quest_type_delivery_2_v2_f_g.flac | quest_type_delivery | Aoede | earnest | Груз ценный, путь неблизкий. Доставишь — будем друзьями. |
+| quest_type_delivery_2_v2_g.flac | quest_type_delivery | Schedar | earnest | Груз ценный, путь неблизкий. Доставишь — будем друзьями. |
+| quest_type_fetch_0_v2_f_g.flac | quest_type_fetch | Aoede | businesslike | Принеси, что прошу. Сколько сказано — столько и неси. |
+| quest_type_fetch_0_v2_g.flac | quest_type_fetch | Schedar | businesslike | Принеси, что прошу. Сколько сказано — столько и неси. |
+| quest_type_fetch_1_v2_f_g.flac | quest_type_fetch | Aoede | worried | Запасы кончаются. Добудь, будь другом. |
+| quest_type_fetch_1_v2_g.flac | quest_type_fetch | Schedar | worried | Запасы кончаются. Добудь, будь другом. |
+| quest_type_god_altar_0_v2_f_g.flac | quest_type_god_altar | Aoede | reverent | Алтарь заброшен, и бог недоволен. Сходи, поклонись и принеси дар. |
+| quest_type_god_altar_0_v2_g.flac | quest_type_god_altar | Schedar | reverent | Алтарь заброшен, и бог недоволен. Сходи, поклонись и принеси дар. |
+| quest_type_god_altar_1_v2_f_g.flac | quest_type_god_altar | Aoede | solemn | Боги ждут. Дойди до алтаря и соверши обряд, как положено. |
+| quest_type_god_altar_1_v2_g.flac | quest_type_god_altar | Schedar | solemn | Боги ждут. Дойди до алтаря и соверши обряд, как положено. |
+| quest_type_god_altar_2_v2_f_g.flac | quest_type_god_altar | Aoede | quiet | У старого алтаря давно не горел огонь. Зажги его снова. |
+| quest_type_god_altar_2_v2_g.flac | quest_type_god_altar | Schedar | quiet | У старого алтаря давно не горел огонь. Зажги его снова. |
+| quest_type_god_relic_0_v2_f_g.flac | quest_type_god_relic | Aoede | urgent | Святыня пропала. Найди её и верни в храм — боги отблагодарят. |
+| quest_type_god_relic_0_v2_g.flac | quest_type_god_relic | Schedar | urgent | Святыня пропала. Найди её и верни в храм — боги отблагодарят. |
+| quest_type_god_relic_1_v2_f_g.flac | quest_type_god_relic | Aoede | pained | Реликвию унесли недостойные руки. Верни её, прошу тебя. |
+| quest_type_god_relic_1_v2_g.flac | quest_type_god_relic | Schedar | pained | Реликвию унесли недостойные руки. Верни её, прошу тебя. |
+| quest_type_god_relic_2_v2_f_g.flac | quest_type_god_relic | Aoede | solemn | Без святыни храм пустеет. Найди её, где бы она ни была. |
+| quest_type_god_relic_2_v2_g.flac | quest_type_god_relic | Schedar | solemn | Без святыни храм пустеет. Найди её, где бы она ни была. |
+| quest_type_hoard_0_v2_f_g.flac | quest_type_hoard | Aoede | sly | Говорят, там клад лежит. Найдёшь — поделим по-честному. |
+| quest_type_hoard_0_v2_g.flac | quest_type_hoard | Schedar | sly | Говорят, там клад лежит. Найдёшь — поделим по-честному. |
+| quest_type_hoard_1_v2_f_g.flac | quest_type_hoard | Aoede | hushed | Старый тайник где-то рядом. Раскопай его, а я скажу, что с ним делать. |
+| quest_type_hoard_1_v2_g.flac | quest_type_hoard | Schedar | hushed | Старый тайник где-то рядом. Раскопай его, а я скажу, что с ним делать. |
+| quest_type_hoard_2_v2_f_g.flac | quest_type_hoard | Aoede | whisper | Там припрятано добро. Только никому ни слова, поняла? |
+| quest_type_hoard_2_v2_g.flac | quest_type_hoard | Schedar | whisper | Там припрятано добро. Только никому ни слова, понял? |
+| quest_type_hunt_0_v2_f_g.flac | quest_type_hunt | Aoede | serious | Есть одна тварь, особая. Обычного зверя не надо — мне нужна именно она. |
+| quest_type_hunt_0_v2_g.flac | quest_type_hunt | Schedar | serious | Есть одна тварь, особая. Обычного зверя не надо — мне нужна именно она. |
+| quest_type_hunt_1_v2_f_g.flac | quest_type_hunt | Aoede | stern | Выследи ту тварь, о которой я говорю. Остальных не трогай — зря потратишь силы. |
+| quest_type_hunt_1_v2_g.flac | quest_type_hunt | Schedar | stern | Выследи ту тварь, о которой я говорю. Остальных не трогай — зря потратишь силы. |
+| quest_type_hunt_2_v2_f_g.flac | quest_type_hunt | Aoede | grim | Эта тварь уже троих задрала. Найди её. Только её. |
+| quest_type_hunt_2_v2_g.flac | quest_type_hunt | Schedar | grim | Эта тварь уже троих задрала. Найди её. Только её. |
+| quest_type_hunt_3_v2_f_g.flac | quest_type_hunt | Aoede | warning | Охота не простая: зверь хитрый и следы путает. Не упусти. |
+| quest_type_hunt_3_v2_g.flac | quest_type_hunt | Schedar | warning | Охота не простая: зверь хитрый и следы путает. Не упусти. |
+| quest_type_kill_0_v2_f_g.flac | quest_type_kill | Aoede | grim | Округу заполонили твари. Очисти её. |
+| quest_type_kill_0_v2_g.flac | quest_type_kill | Schedar | grim | Округу заполонили твари. Очисти её. |
+| quest_type_trapwork_0_v2_f_g.flac | quest_type_trapwork | Aoede | worried | Там ловушки стоят, старые. Обезвредь их, пока кто-нибудь не покалечился. |
+| quest_type_trapwork_0_v2_g.flac | quest_type_trapwork | Schedar | worried | Там ловушки стоят, старые. Обезвредь их, пока кто-нибудь не покалечился. |
+| quest_type_trapwork_1_v2_f_g.flac | quest_type_trapwork | Aoede | warning | Кто-то наставил капканов на тропе. Разберись с ними — только осторожно. |
+| quest_type_trapwork_1_v2_g.flac | quest_type_trapwork | Schedar | warning | Кто-то наставил капканов на тропе. Разберись с ними — только осторожно. |
+| quest_type_trapwork_2_v2_f_g.flac | quest_type_trapwork | Aoede | practical | Проверь ловушки. Какие сломаны — почини, какие чужие — сними. |
+| quest_type_trapwork_2_v2_g.flac | quest_type_trapwork | Schedar | practical | Проверь ловушки. Какие сломаны — почини, какие чужие — сними. |
+| quest_type_visit_0_v2_f_g.flac | quest_type_visit | Aoede | uneasy | Сходи туда и погляди, что там творится. |
+| quest_type_visit_0_v2_g.flac | quest_type_visit | Schedar | uneasy | Сходи туда и погляди, что там творится. |
+| quest_type_visit_1_v2_f_g.flac | quest_type_visit | Aoede | worried | Там неладно. Проверь и возвращайся. |
+| quest_type_visit_1_v2_g.flac | quest_type_visit | Schedar | worried | Там неладно. Проверь и возвращайся. |
+| quest_type_visit_2_v2_f_g.flac | quest_type_visit | Aoede | curious | Сходи туда и посмотри своими глазами. Потом расскажешь мне, что видел. |
+| quest_type_visit_2_v2_g.flac | quest_type_visit | Schedar | curious | Сходи туда и посмотри своими глазами. Потом расскажешь мне, что видел. |
+| quest_type_visit_3_v2_f_g.flac | quest_type_visit | Aoede | anxious | Мне нужно знать, что там творится. Дойди до места — и назад. |
+| quest_type_visit_3_v2_g.flac | quest_type_visit | Schedar | anxious | Мне нужно знать, что там творится. Дойди до места — и назад. |
+| quest_type_visit_4_v2_f_g.flac | quest_type_visit | Aoede | worried | Туда давно никто не ходил. Проверь, цело ли всё, и возвращайся. |
+| quest_type_visit_4_v2_g.flac | quest_type_visit | Schedar | worried | Туда давно никто не ходил. Проверь, цело ли всё, и возвращайся. |
+| quest_type_visit_5_v2_f_g.flac | quest_type_visit | Aoede | mysterious | Дойди до отметки, что я назвал. Там кое-что есть — поймёшь, когда увидишь. |
+| quest_type_visit_5_v2_g.flac | quest_type_visit | Schedar | mysterious | Дойди до отметки, что я назвал. Там кое-что есть — поймёшь, когда увидишь. |
+| quest_war_0_v2_f_g.flac | quest_war | Aoede | urgent | Война не ждёт. Нужны люди и припасы. |
+| quest_war_0_v2_g.flac | quest_war | Schedar | urgent | Война не ждёт. Нужны люди и припасы. |
+| quest_war_1_v2_f_g.flac | quest_war | Aoede | tense | Фронт близко. Помоги, чем сможешь. |
+| quest_war_1_v2_g.flac | quest_war | Schedar | tense | Фронт близко. Помоги, чем сможешь. |
+| quest_war_2_v2_f_g.flac | quest_war | Aoede | urgent | Война у ворот. Нам нужен каждый клинок — встань за нас. |
+| quest_war_2_v2_g.flac | quest_war | Schedar | urgent | Война у ворот. Нам нужен каждый клинок — встань за нас. |
+| quest_war_3_v2_f_g.flac | quest_war | Aoede | commanding | Враг наступает. Выполни приказ — и держава тебя не забудет. |
+| quest_war_3_v2_g.flac | quest_war | Schedar | commanding | Враг наступает. Выполни приказ — и держава тебя не забудет. |
+| quest_war_4_v2_f_g.flac | quest_war | Aoede | grim | На фронте тяжело. Помоги нашим, и получишь по заслугам. |
+| quest_war_4_v2_g.flac | quest_war | Schedar | grim | На фронте тяжело. Помоги нашим, и получишь по заслугам. |
+| trade_buy_0_v2_f_g.flac | trade_buy | Aoede | warm | Хороший выбор. Носи на здоровье. |
+| trade_buy_0_v2_g.flac | trade_buy | Schedar | warm | Хороший выбор. Носи на здоровье. |
+| trade_buy_10_v2_f_g.flac | trade_buy | Aoede | grateful | Спасибо за золото. Удачи в дороге. |
+| trade_buy_10_v2_g.flac | trade_buy | Schedar | grateful | Спасибо за золото. Удачи в дороге. |
+| trade_buy_11_v2_f_g.flac | trade_buy | Aoede | lively | Сделка! Смотри не потеряй. |
+| trade_buy_11_v2_g.flac | trade_buy | Schedar | lively | Сделка! Смотри не потеряй. |
+| trade_buy_1_v2_f_g.flac | trade_buy | Aoede | confident | Держи. Сносу не будет. |
+| trade_buy_1_v2_g.flac | trade_buy | Schedar | confident | Держи. Сносу не будет. |
+| trade_buy_2_v2_f_g.flac | trade_buy | Aoede | cheerful | По рукам! Приятно иметь дело. |
+| trade_buy_2_v2_g.flac | trade_buy | Schedar | cheerful | По рукам! Приятно иметь дело. |
+| trade_buy_3_v2_f_g.flac | trade_buy | Aoede | friendly | Бери, бери. Не пожалеешь. |
+| trade_buy_3_v2_g.flac | trade_buy | Schedar | friendly | Бери, бери. Не пожалеешь. |
+| trade_buy_4_v2_f_g.flac | trade_buy | Aoede | businesslike | С тебя золото — с меня товар. Честно. |
+| trade_buy_4_v2_g.flac | trade_buy | Schedar | businesslike | С тебя золото — с меня товар. Честно. |
+| trade_buy_5_v2_f_g.flac | trade_buy | Aoede | pleased | Вот и славно. Заходи ещё. |
+| trade_buy_5_v2_g.flac | trade_buy | Schedar | pleased | Вот и славно. Заходи ещё. |
+| trade_buy_6_v2_f_g.flac | trade_buy | Aoede | proud | Твоё. Береги, второго такого нет. |
+| trade_buy_6_v2_g.flac | trade_buy | Schedar | proud | Твоё. Береги, второго такого нет. |
+| trade_buy_7_v2_f_g.flac | trade_buy | Aoede | cheerful | Взято! Пусть служит верно. |
+| trade_buy_7_v2_g.flac | trade_buy | Schedar | cheerful | Взято! Пусть служит верно. |
+| trade_buy_8_v2_f_g.flac | trade_buy | Aoede | approving | Отличная покупка. Я бы и сама взяла. |
+| trade_buy_8_v2_g.flac | trade_buy | Schedar | approving | Отличная покупка. Я бы и сам взял. |
+| trade_buy_9_v2_f_g.flac | trade_buy | Aoede | confidential | Забирай. Цену сбавила только для тебя. |
+| trade_buy_9_v2_g.flac | trade_buy | Schedar | confidential | Забирай. Цену сбавил только для тебя. |
+| trade_buy_big_0_v2_f_g.flac | trade_buy_big | Aoede | delighted | Ого, сколько! Сегодня у меня праздник. |
+| trade_buy_big_0_v2_g.flac | trade_buy_big | Schedar | delighted | Ого, сколько! Сегодня у меня праздник. |
+| trade_buy_big_1_v2_f_g.flac | trade_buy_big | Aoede | excited | Вот это покупатель! Всё завернём в лучшем виде. |
+| trade_buy_big_1_v2_g.flac | trade_buy_big | Schedar | excited | Вот это покупатель! Всё завернём в лучшем виде. |
+| trade_buy_big_2_v2_f_g.flac | trade_buy_big | Aoede | grateful | Щедро! За такое — скидка в следующий раз. |
+| trade_buy_big_2_v2_g.flac | trade_buy_big | Schedar | grateful | Щедро! За такое — скидка в следующий раз. |
+| trade_buy_big_3_v2_f_g.flac | trade_buy_big | Aoede | amazed | Полприлавка разом! Вот это размах. |
+| trade_buy_big_3_v2_g.flac | trade_buy_big | Schedar | amazed | Полприлавка разом! Вот это размах. |
+| trade_buy_big_4_v2_f_g.flac | trade_buy_big | Aoede | happy | С таким покупателем и год не страшен. |
+| trade_buy_big_4_v2_g.flac | trade_buy_big | Schedar | happy | С таким покупателем и год не страшен. |
+| trade_bye_0_v2_f_g.flac | trade_bye | Aoede | warm | Заходи ещё, всегда рада. |
+| trade_bye_0_v2_g.flac | trade_bye | Schedar | warm | Заходи ещё, всегда рад. |
+| trade_bye_1_v2_f_g.flac | trade_bye | Aoede | friendly | Доброй дороги. Возвращайся за новым. |
+| trade_bye_1_v2_g.flac | trade_bye | Schedar | friendly | Доброй дороги. Возвращайся за новым. |
+| trade_bye_2_v2_f_g.flac | trade_bye | Aoede | grateful | Спасибо за торг. Не забывай меня. |
+| trade_bye_2_v2_g.flac | trade_bye | Schedar | grateful | Спасибо за торг. Не забывай меня. |
+| trade_bye_3_v2_f_g.flac | trade_bye | Aoede | cheerful | Удачи! И помни, где лучшие цены. |
+| trade_bye_3_v2_g.flac | trade_bye | Schedar | cheerful | Удачи! И помни, где лучшие цены. |
+| trade_bye_4_v2_f_g.flac | trade_bye | Aoede | friendly | Будешь рядом — загляни. |
+| trade_bye_4_v2_g.flac | trade_bye | Schedar | friendly | Будешь рядом — загляни. |
+| trade_bye_5_v2_f_g.flac | trade_bye | Aoede | polite | Приятно было иметь дело. |
+| trade_bye_5_v2_g.flac | trade_bye | Schedar | polite | Приятно было иметь дело. |
+| trade_poor_0_v2_f_g.flac | trade_poor | Aoede | dry | Золота маловато. Доложишь — отдам. |
+| trade_poor_0_v2_g.flac | trade_poor | Schedar | dry | Золота маловато. Доложишь — отдам. |
+| trade_poor_1_v2_f_g.flac | trade_poor | Aoede | firm | Не хватает монет. Без денег не отдаю. |
+| trade_poor_1_v2_g.flac | trade_poor | Schedar | firm | Не хватает монет. Без денег не отдаю. |
+| trade_poor_2_v2_f_g.flac | trade_poor | Aoede | sympathetic | Эх, на это кошель тонковат. |
+| trade_poor_2_v2_g.flac | trade_poor | Schedar | sympathetic | Эх, на это кошель тонковат. |
+| trade_poor_3_v2_f_g.flac | trade_poor | Aoede | firm | В долг не торгую, не проси. |
+| trade_poor_3_v2_g.flac | trade_poor | Schedar | firm | В долг не торгую, не проси. |
+| trade_poor_4_v2_f_g.flac | trade_poor | Aoede | kindly | Подкопи ещё немного и возвращайся. |
+| trade_poor_4_v2_g.flac | trade_poor | Schedar | kindly | Подкопи ещё немного и возвращайся. |
+| trade_poor_5_v2_f_g.flac | trade_poor | Aoede | wry | Даром только ветер в поле. |
+| trade_poor_5_v2_g.flac | trade_poor | Schedar | wry | Даром только ветер в поле. |
+| trade_refuse_0_v2_f_g.flac | trade_refuse | Aoede | dismissive | Это мне не нужно. Неси кому другому. |
+| trade_refuse_0_v2_g.flac | trade_refuse | Schedar | dismissive | Это мне не нужно. Неси кому другому. |
+| trade_refuse_1_v2_f_g.flac | trade_refuse | Aoede | firm | Нет, такое не беру. |
+| trade_refuse_1_v2_g.flac | trade_refuse | Schedar | firm | Нет, такое не беру. |
+| trade_refuse_2_v2_f_g.flac | trade_refuse | Aoede | dismissive | Такого у меня и так полон склад. |
+| trade_refuse_2_v2_g.flac | trade_refuse | Schedar | dismissive | Такого у меня и так полон склад. |
+| trade_refuse_3_v2_f_g.flac | trade_refuse | Aoede | neutral | Не мой товар. Попробуй у соседа. |
+| trade_refuse_3_v2_g.flac | trade_refuse | Schedar | neutral | Не мой товар. Попробуй у соседа. |
+| trade_regular_0_v2_f_g.flac | trade_regular | Aoede | courteous | Для постоянного покупателя — с поклоном. |
+| trade_regular_0_v2_g.flac | trade_regular | Schedar | courteous | Для постоянного покупателя — с поклоном. |
+| trade_regular_1_v2_f_g.flac | trade_regular | Aoede | warm | Постоянным — от души. Приходи снова. |
+| trade_regular_1_v2_g.flac | trade_regular | Schedar | warm | Постоянным — от души. Приходи снова. |
+| trade_regular_2_v2_f_g.flac | trade_regular | Aoede | playful | Ещё немного — и я тебе медаль вручу. |
+| trade_regular_2_v2_g.flac | trade_regular | Schedar | playful | Ещё немного — и я тебе медаль вручу. |
+| trade_regular_3_v2_f_g.flac | trade_regular | Aoede | amused | Я твои покупки уже на память знаю. |
+| trade_regular_3_v2_g.flac | trade_regular | Schedar | amused | Я твои покупки уже на память знаю. |
+| trade_regular_4_v2_f_g.flac | trade_regular | Aoede | grateful | Вот кто меня кормит! Спасибо. |
+| trade_regular_4_v2_g.flac | trade_regular | Schedar | grateful | Вот кто меня кормит! Спасибо. |
+| trade_sell_0_v2_f_g.flac | trade_sell | Aoede | businesslike | Возьму. Цена честная, не спорь. |
+| trade_sell_0_v2_g.flac | trade_sell | Schedar | businesslike | Возьму. Цена честная, не спорь. |
+| trade_sell_10_v2_f_g.flac | trade_sell | Aoede | curt | Это пойдёт. Вот плата. |
+| trade_sell_10_v2_g.flac | trade_sell | Schedar | curt | Это пойдёт. Вот плата. |
+| trade_sell_11_v2_f_g.flac | trade_sell | Aoede | pleased | Как раз этого и не хватало. Беру. |
+| trade_sell_11_v2_g.flac | trade_sell | Schedar | pleased | Как раз этого и не хватало. Беру. |
+| trade_sell_1_v2_f_g.flac | trade_sell | Aoede | appraising | Неплохая вещица. Держи золото. |
+| trade_sell_1_v2_g.flac | trade_sell | Schedar | appraising | Неплохая вещица. Держи золото. |
+| trade_sell_2_v2_f_g.flac | trade_sell | Aoede | businesslike | Беру. Такое всегда найдёт покупателя. |
+| trade_sell_2_v2_g.flac | trade_sell | Schedar | businesslike | Беру. Такое всегда найдёт покупателя. |
+| trade_sell_3_v2_f_g.flac | trade_sell | Aoede | appraising | Хм, сойдёт. Вот твои монеты. |
+| trade_sell_3_v2_g.flac | trade_sell | Schedar | appraising | Хм, сойдёт. Вот твои монеты. |
+| trade_sell_4_v2_f_g.flac | trade_sell | Aoede | eager | По рукам. Ещё что-нибудь есть? |
+| trade_sell_4_v2_g.flac | trade_sell | Schedar | eager | По рукам. Ещё что-нибудь есть? |
+| trade_sell_5_v2_f_g.flac | trade_sell | Aoede | approving | Товар годный. Приноси ещё. |
+| trade_sell_5_v2_g.flac | trade_sell | Schedar | approving | Товар годный. Приноси ещё. |
+| trade_sell_6_v2_f_g.flac | trade_sell | Aoede | wry | Ладно, беру. Хоть и переплачиваю. |
+| trade_sell_6_v2_g.flac | trade_sell | Schedar | wry | Ладно, беру. Хоть и переплачиваю. |
+| trade_sell_7_v2_f_g.flac | trade_sell | Aoede | dry | Держи золото. Считай, повезло тебе. |
+| trade_sell_7_v2_g.flac | trade_sell | Schedar | dry | Держи золото. Считай, повезло тебе. |
+| trade_sell_8_v2_f_g.flac | trade_sell | Aoede | playful | Добро пожаловать на мой склад, вещица! |
+| trade_sell_8_v2_g.flac | trade_sell | Schedar | playful | Добро пожаловать на мой склад, вещица! |
+| trade_sell_9_v2_f_g.flac | trade_sell | Aoede | sly | Возьму, если больше торговаться не станешь. |
+| trade_sell_9_v2_g.flac | trade_sell | Schedar | sly | Возьму, если больше торговаться не станешь. |
+| trade_sell_big_0_v2_f_g.flac | trade_sell_big | Aoede | amazed | Целый мешок! Ну, считай, разбогатеешь. |
+| trade_sell_big_0_v2_g.flac | trade_sell_big | Schedar | amazed | Целый мешок! Ну, считай, разбогатеешь. |
+| trade_sell_big_1_v2_f_g.flac | trade_sell_big | Aoede | wry | Всё беру. Кошель мой худеет на глазах. |
+| trade_sell_big_1_v2_g.flac | trade_sell_big | Schedar | wry | Всё беру. Кошель мой худеет на глазах. |
+| trade_sell_big_2_v2_f_g.flac | trade_sell_big | Aoede | surprised | Столько добра разом? Ладно, по рукам. |
+| trade_sell_big_2_v2_g.flac | trade_sell_big | Schedar | surprised | Столько добра разом? Ладно, по рукам. |
+| trade_sell_big_3_v2_f_g.flac | trade_sell_big | Aoede | mock complaining | Ты меня разоришь, но товар хорош. |
+| trade_sell_big_3_v2_g.flac | trade_sell_big | Schedar | mock complaining | Ты меня разоришь, но товар хорош. |
+| trade_sell_big_4_v2_f_g.flac | trade_sell_big | Aoede | wry | Опустошаешь мне кассу. Но беру всё. |
+| trade_sell_big_4_v2_g.flac | trade_sell_big | Schedar | wry | Опустошаешь мне кассу. Но беру всё. |
