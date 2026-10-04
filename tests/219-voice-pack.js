@@ -56,6 +56,8 @@ const опись=f=>{const t=fs.readFileSync(f,'utf8');return JSON.parse(t.slice
   Speech.gvLoad();await new Promise(z=>setTimeout(z,800));gvPackUi();const кнопка=document.getElementById("btnGvPack").textContent;
   const s0=Speech.GVOICES.m.pack.state;window.__said=[];const n0=Speech.say.bind(Speech);Speech.say=function(t,o){__said.push(String(t));return n0(t,o);};
   CMD.gvpack();await new Promise(z=>setTimeout(z,1200));
+  /* опись пакета большая (шесть с лишним тысяч фраз) — даём ей дочитаться */
+  for(let i=0;i<40&&Speech.GVOICE.pack&&Speech.GVOICE.pack.state==="loading";i++)await new Promise(z=>setTimeout(z,150));
   return {кнопка,вызвано:window.__vp,сказано:__said.slice(),state:Speech.GVOICES.m.pack.state,s0};});
  check('3. в «Синтезаторе» сказано, что пакет подключён; в приложении кнопка ставит пакет и опись перечитывается',
   /подключён: ещё \d+/.test(строка.h)&&/Обновить голосовой пакет|Установить голосовой пакет/.test(уст.кнопка)&&уст.вызвано===1&&уст.сказано.some(t=>/Голосовой пакет установлен/.test(t))&&уст.state==="ready",{строка,уст});
