@@ -61,6 +61,8 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   /* лекарь */
   SAID.length=0;const h={key:"t251h",name:"Целительница",prof:"Целительница",x:0,y:0};
   window.getNPCByKey=(k=>key=>key==="t251h"?h:k(key))(window.getNPCByKey);G.hp=10;G.hpMax=100;
+  /* (9.5.1) Записанный ответ лекарь говорит своим голосом (Folk.ответ) — его текст тоже считается сказанным. */
+  if(typeof Folk!=="undefined"&&Folk.ответ&&!Folk.__t251){const f0=Folk.ответ.bind(Folk);Folk.ответ=function(n,t,o){SAID.push(String(t));return f0(n,t,o);};Folk.__t251=1;}
   healerHeal("t251h","gold");r.лекарь=SAID.join(" | ").slice(0,160);r.hp=G.hp;
   /* вампир пьёт кровь */
   G.race="Вампиры";G.hp=50;G.combat={m:{id:"wolf",n:"Волк",hp:100},hp:100};r.удар=Undead.onHit(G.combat.m,30);r.кровь=G.hp;

@@ -146,7 +146,10 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   const т1=npcReact(t,"дело_сдано");const ц1=stockFor(t).find(x=>x.n==="Зелье здоровья").price;
   G.npcMood={};const т2=npcReact(t,"ход_провал");const ц2=stockFor(t).find(x=>x.n==="Зелье здоровья").price;
   /* слова разнятся от раза к разу */
-  const слова=new Set();for(let i=0;i<8;i++){G.npcMood={};слова.add((npcReact(t,"мир_провал").match(/«([^»]+)»/)||[])[1]);}
+  /* (9.5.1) Записанные ответы житель говорит своим голосом (Folk.ответ) — в строке остаётся «отвечает». */
+  let голос=null;const fo=typeof Folk!=="undefined"&&Folk.ответ;if(fo)Folk.ответ=function(n,tt,o){голос=tt;return fo.call(Folk,n,tt,o);};
+  const слова=new Set();for(let i=0;i<8;i++){G.npcMood={};голос=null;const тт=npcReact(t,"мир_провал");слова.add((тт.match(/«([^»]+)»/)||[])[1]||голос);}
+  if(fo)Folk.ответ=fo;
   G.npcMood={};
   return {ц0,ц1,ц2,т1:т1.slice(0,200),т2:т2.slice(0,200),разных:слова.size};});
  check('8. сданное дело — уступка, неудачный ход — надбавка; слова жителя разнятся',

@@ -323,6 +323,10 @@ const NEW_DIRS=["arte","deep","foe","cast","hero","wild","trade","score",
   /* (6.0) Третьи и дальнейшие голоса жителей — опись sounds/gvoice_pack/npc/bank.js. */
   try{const b=fs.readFileSync(path.join(корень,"sounds","gvoice_pack","npc","bank.js"),"utf8");
    Object.keys(JSON.parse(b.slice(b.indexOf("{"),b.lastIndexOf("}")+1)).p).forEach(k=>ссылки.add("gvoice_pack/npc/"+k+".flac"));}catch(_){}
+  /* (9.5.1) Голос вестника — опись sounds/gvoice_herald/bank_hN.js. */
+  try{const опись=(html.match(/url:"sounds\/gvoice_herald\/(bank_h\d+\.js)"/)||[])[1];
+   if(опись){const b=fs.readFileSync(path.join(корень,"sounds","gvoice_herald",опись),"utf8");
+   Object.values(JSON.parse(b.slice(b.indexOf("{"),b.lastIndexOf("}")+1)).p).forEach(id=>ссылки.add("gvoice_herald/"+id+".flac"));}}catch(_){}
   /* Женский голос тех же фраз (с выпуска 24) — опись sounds/gvoice_f/bank_f1.js. */
   try{const опись=(html.match(/url:"sounds\/gvoice_f\/(bank_f\d+\.js)"/)||[])[1]||"bank_f1.js";
    const b=fs.readFileSync(path.join(корень,"sounds","gvoice_f",опись),"utf8");

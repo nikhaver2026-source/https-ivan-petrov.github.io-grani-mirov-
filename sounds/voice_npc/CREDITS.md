@@ -2855,12 +2855,6 @@ Policy (https://policies.google.com/terms/generative-ai/use-policy). Отдел�
 | quest_war_4_f_g.flac | заказчик: война | Despina | grim, earnest | На фронте тяжело. Помоги нашим, и получишь по заслугам. |
 | quest_war_4_v1_g.flac | заказчик: война | Sadachbia | grim, earnest | На фронте тяжело. Помоги нашим, и получишь по заслугам. |
 | quest_war_4_v1_f_g.flac | заказчик: война | Leda | grim, earnest | На фронте тяжело. Помоги нашим, и получишь по заслугам. |
-| quest_rescue_2_g.flac | заказчик: спасение | Umbriel | desperate, urgent | Человек пропал. Найди его, пока не поздно. |
-| quest_rescue_2_f_g.flac | заказчик: спасение | Despina | desperate, urgent | Человек пропал. Найди его, пока не поздно. |
-| quest_rescue_2_v1_g.flac | заказчик: спасение | Sadachbia | desperate, urgent | Человек пропал. Найди его, пока не поздно. |
-| quest_rescue_2_v1_f_g.flac | заказчик: спасение | Leda | desperate, urgent | Человек пропал. Найди его, пока не поздно. |
-| quest_rescue_2_v2_g.flac | заказчик: спасение | Schedar | desperate, urgent | Человек пропал. Найди его, пока не поздно. |
-| quest_rescue_2_v2_f_g.flac | заказчик: спасение | Aoede | desperate, urgent | Человек пропал. Найди его, пока не поздно. |
 | quest_rescue_3_g.flac | заказчик: спасение | Umbriel | pleading, urgent | Там наши, в беде. Выручи их — больше некому. |
 | quest_rescue_3_f_g.flac | заказчик: спасение | Despina | pleading, urgent | Там наши, в беде. Выручи их — больше некому. |
 | quest_rescue_3_v1_g.flac | заказчик: спасение | Sadachbia | pleading, urgent | Там наши, в беде. Выручи их — больше некому. |
@@ -5523,3 +5517,6 @@ Policy (https://policies.google.com/terms/generative-ai/use-policy). Отдел�
 | r7_4_v2_f_g.flac | ответ в разговоре | Aoede | patient, experienced craft teacher, calm | Вот так. Дальше — сами, у станка. |
 | r7_5_v2_g.flac | ответ в разговоре | Schedar | thoughtful, a little amused, friendly | Про здешние места вы, похоже, знаете не меньше моего. |
 | r7_5_v2_f_g.flac | ответ в разговоре | Aoede | thoughtful, a little amused, friendly | Про здешние места вы, похоже, знаете не меньше моего. |
+
+| quest_rescue_0_v2_g.flac | заказчик: спасение | Schedar | anxious | Человек пропал. Найди его, пока не поздно. |
+| quest_rescue_0_v2_f_g.flac | заказчик: спасение | Aoede | anxious | Человек пропал. Найди его, пока не поздно. |
