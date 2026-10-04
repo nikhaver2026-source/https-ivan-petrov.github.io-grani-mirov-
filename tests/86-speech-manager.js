@@ -62,7 +62,7 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
  /* Бродячая тварь могла завязать бой посреди замеров, и её замахи и удары
     ложились в запись синтезатора чужими строками. Перед каждой проверкой
     бой, если он есть, закрывается. */
- const fresh=()=>page.evaluate(()=>{try{if(G.inCombat||G.combat)endCombat();}catch(_){}Speech.stop();Speech.recent.clear();Speech.agg.items=null;clearTimeout(Speech.agg.timer);Speech.last=null;Speech.history=[];FAKE.reset();});
+ const fresh=()=>page.evaluate(()=>{try{if(G.inCombat||G.combat)endCombat();}catch(_){}Speech.stop();try{Folk.смолкнуть(true);}catch(_){}Speech.recent.clear();Speech.agg.items=null;clearTimeout(Speech.agg.timer);Speech.last=null;Speech.history=[];FAKE.reset();});
  const state=()=>page.evaluate(()=>({log:FAKE.log.slice(),cancels:FAKE.cancels,speaking:Speech.isSpeaking(),
   cur:Speech.current&&Speech.current.text,queue:Speech.queue.map(m=>m.text),stats:Object.assign({},Speech.stats)}));
 
@@ -362,7 +362,8 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   const el=document.getElementById("setRate");
   const шкала=el?[el.min,el.max,el.step,el.dataset.tapStep,el.value,
    (document.getElementById("vRate")||{}).textContent]:null;
-  Speech.say("Проба темпа.",{pri:2});await new Promise(r=>setTimeout(r,30));
+  /* фраза, которой заведомо нет среди записей: её говорит синтезатор */
+  Speech.say("Квазимодо проверяет темп.",{pri:2});await new Promise(r=>setTimeout(r,30));
   const ушло=FAKE.cur?Number(FAKE.cur.rate):null;FAKE.end();
   return {умолчание:Number(settings.rate),флаг:Number(settings.rateFast)||0,шкала,ушло};});
  check('темп речи по умолчанию пять, и ровно он уходит в синтезатор без ограничителей',

@@ -149,7 +149,8 @@ const ROOT=path.resolve(__dirname,'..');
   const сущ={...s.ess};const тень=s.shadow.lvl;
   /* перековка когтя */
   s.ess["коготь"]=10;G.level=Math.max(Number(G.level)||1,4);
-  const ответ=Svody.reforge("коготь");const атакаПосле=atk();
+  /* ломка выпадает случайно (25 %) — здесь проверяется сама перековка */
+  const r0=Math.random;Math.random=()=>0.99;const ответ=Svody.reforge("коготь");Math.random=r0;const атакаПосле=atk();
   G.hour=12;
   return {тварь:тварь.n,умение:тварь.svAbil,сущ,тень,ответ,атакаДо,атакаПосле,звук:ИГРАЛО.slice(0,6)};});
  check('6а. тварь Сводов в бою: своя порода и умение',!б.нет&&!!б.умение&&SVD_NAMES_OK(б.тварь),б);

@@ -2380,9 +2380,18 @@ const Speech={voice:null,keepAlive:null,
   window.GraniTTSError=id=>{const c=cbs[id];delete cbs[id];if(c&&c.onerror)c.onerror();};
   try{if(self._nativeVoice&&typeof window.GraniTTS.setVoice==="function")window.GraniTTS.setVoice(String(self._nativeVoice.voiceURI).slice(7));}catch(_){}
   return {name:"native",
-   speak(text,o){const id=String(++self.seq);cbs[id]=o;
+   /* ── БЫСТРОЕ ЛИСТАНИЕ (9.5.1, просьба игрока) ──
+      Пункт меню снимается и тут же называется следующий: прежде мост получал
+      stop() и сразу speak(). Синтезатор Android останавливается не мгновенно,
+      и у части движков запоздалая остановка снимала уже новую фразу — при
+      быстрых свайпах пункт «проглатывался», и приходилось возвращаться. Новая
+      фраза идёт с QUEUE_FLUSH и сама снимает недосказанное, поэтому остановка
+      откладывается на миг и отменяется, если следом пришла новая фраза. */
+   speak(text,o){clearTimeout(self._nativeStopT);self._nativeStopT=null;
+    const id=String(++self.seq);cbs[id]=o;
     try{window.GraniTTS.speak(text,+o.rate,+o.volume,id);if(o.onstart)setTimeout(o.onstart,0);return true;}catch(e){delete cbs[id];return false;}},
-   cancel(){try{window.GraniTTS.stop();}catch(_){}for(const k in cbs)delete cbs[k];},
+   cancel(){for(const k in cbs)delete cbs[k];clearTimeout(self._nativeStopT);
+    self._nativeStopT=setTimeout(()=>{self._nativeStopT=null;try{window.GraniTTS.stop();}catch(_){}},60);},
    speaking(){try{return !!window.GraniTTS.isSpeaking();}catch(_){return false;}}};},
  /* ── eSpeak NG — ВСТРОЕННЫЙ СИНТЕЗАТОР (9.5.1, просьба игрока) ──
     Третий встроенный голос рядом с мужским и женским голосами Gemini: eSpeak
@@ -2520,6 +2529,13 @@ const Speech={voice:null,keepAlive:null,
   if(key){const q=this.queue.find(x=>x.key===key);if(q){q.state="REPLACED";this.queue=this.queue.filter(x=>x!==q);this.stats.replaced++;done(q.onDone);}}
   const cur=this.current;
   if(cur&&this.speaking&&cur.herald&&!m.herald&&m.pri<=2&&!m.nav){this._cut(cur,"CANCELLED");this._pushFront(m);this._pump();return m;}
+  if(cur&&this.speaking&&m.nav&&cur.pri>=1){
+   /* ── ЛИСТАНИЕ ГЛАВНЕЕ (9.5.1, просьба игрока) ──
+      Свайп по меню обрывает всё, кроме тревоги, как в TalkBack. Прежде пункт,
+      пролистанный, пока звучало имя окна или важное сообщение, вставал в
+      очередь за ним — и при быстром листании промежуточные пункты пропадали,
+      а нужный звучал с опозданием. Оборванная весть сама вернётся в очередь. */
+   this._cut(cur,"CANCELLED");this._dropQueued(2,"CANCELLED");this.queue=this.queue.filter(x=>!x.nav);this._pushFront(m);this._pump();return m;}
   if(cur&&this.speaking){
    /* Игрок листает или сам спросил — мир не перебивает его на полуслове:
       обычная весть мира ждёт, пока пункт договорён (важное и тревога — нет).
