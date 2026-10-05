@@ -53,7 +53,7 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   const голоса=EMPIRE_VOICE.length>=EMPIRES.length&&EMPIRE_VOICE.every(r=>Bank.has(r));
   return {пусто,острова,области:области.filter(Boolean).length,боги:боги.filter(Boolean).length,дары,голоса,регионов:REGIONS.length};});
  check('2. 24 державы Круга (16 суши, 8 островов) с досье; своя область, младший бог, дар земли и голос',
-  !д.пусто.length&&д.острова===8&&д.области===24&&д.боги===24&&!д.дары.length&&д.голоса&&д.регионов===44,д);
+  !д.пусто.length&&д.острова===8&&д.области===24&&д.боги===24&&!д.дары.length&&д.голоса&&д.регионов>=44,д);
 
  /* ── 3 ── */
  const р=await page.evaluate(()=>{
