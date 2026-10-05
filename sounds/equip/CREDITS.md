@@ -57,10 +57,10 @@ Vehicle (Jan Schupke, «Fantasy Weapons and Apparel SFX Library»), Kenney
 
 | Файлы | Что звучит | Источник |
 |---|---|---|
-| `equip_belt_on_01…03`, `equip_belt_off_01…03` | пряжка пояса | `belt-buckle-01…05`, `sheath-unbuckle-02` (Vehicle, CC0) |
-| `equip_boots_on_01…03`, `equip_boots_off_01…03` | кожа сапог и каблук | `boots-leather-step-01…04`, `boots-leather-jump-01/02` (Vehicle, CC0) |
-| `equip_gloves_on_01…03`, `equip_gloves_off_01…03` | мнётся кожа перчаток | `sheath-squeeze-01…06` (Vehicle, CC0) |
-| `equip_helm_on_01…02`, `equip_helm_off_01…02` | металл шлема и ремешок | `metalPot1/2/3` (Kenney, CC0); `belt-buckle-02/03`, `sheath-unbuckle-02/03` (Vehicle, CC0) |
-| `equip_cloak_on_01…02`, `equip_cloak_off_01…02` | ткань плаща и застёжка | `cloth1…4`, `metalClick` (Kenney, CC0) |
-| `equip_quiver_on_01…03`, `equip_quiver_off_01…03` | колчан и перья стрел | `quiver-leather-squeeze-01/05/09`, `arrow-feathers-01`, `arrow-return-to-quiver-01/04` (Vehicle, CC0) |
-| `equip_blade_on_01…02`, `equip_blade_off_01…02` | ножны клинка на поясе | `sheath-buckle-01`, `sheath-squeeze-07/08`, `belt-buckle-01`, `sheath-unbuckle-01/03` (Vehicle, CC0) |
+| `equip_belt_on_01.flac`, `equip_belt_on_02.flac`, `equip_belt_on_03.flac`, `equip_belt_off_01.flac`, `equip_belt_off_02.flac`, `equip_belt_off_03.flac` | пряжка пояса | `belt-buckle-01…05`, `sheath-unbuckle-02` (Vehicle, CC0) |
+| `equip_boots_on_01.flac`, `equip_boots_on_02.flac`, `equip_boots_on_03.flac`, `equip_boots_off_01.flac`, `equip_boots_off_02.flac`, `equip_boots_off_03.flac` | кожа сапог и каблук | `boots-leather-step-01…04`, `boots-leather-jump-01/02` (Vehicle, CC0) |
+| `equip_gloves_on_01.flac`, `equip_gloves_on_02.flac`, `equip_gloves_on_03.flac`, `equip_gloves_off_01.flac`, `equip_gloves_off_02.flac`, `equip_gloves_off_03.flac` | мнётся кожа перчаток | `sheath-squeeze-01…06` (Vehicle, CC0) |
+| `equip_helm_on_01.flac`, `equip_helm_on_02.flac`, `equip_helm_off_01.flac`, `equip_helm_off_02.flac` | металл шлема и ремешок | `metalPot1/2/3` (Kenney, CC0); `belt-buckle-02/03`, `sheath-unbuckle-02/03` (Vehicle, CC0) |
+| `equip_cloak_on_01.flac`, `equip_cloak_on_02.flac`, `equip_cloak_off_01.flac`, `equip_cloak_off_02.flac` | ткань плаща и застёжка | `cloth1…4`, `metalClick` (Kenney, CC0) |
+| `equip_quiver_on_01.flac`, `equip_quiver_on_02.flac`, `equip_quiver_on_03.flac`, `equip_quiver_off_01.flac`, `equip_quiver_off_02.flac`, `equip_quiver_off_03.flac` | колчан и перья стрел | `quiver-leather-squeeze-01/05/09`, `arrow-feathers-01`, `arrow-return-to-quiver-01/04` (Vehicle, CC0) |
+| `equip_blade_on_01.flac`, `equip_blade_on_02.flac`, `equip_blade_off_01.flac`, `equip_blade_off_02.flac` | ножны клинка на поясе | `sheath-buckle-01`, `sheath-squeeze-07/08`, `belt-buckle-01`, `sheath-unbuckle-01/03` (Vehicle, CC0) |

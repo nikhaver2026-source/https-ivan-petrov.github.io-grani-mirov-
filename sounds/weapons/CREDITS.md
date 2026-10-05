@@ -80,21 +80,21 @@ Veloren (veloren.net, автор Eden; https://www.gnu.org/licenses/gpl-3.0.html
 
 | Файлы | Что звучит | Источник |
 |---|---|---|
-| `voice_ring_hit_01…05` | звонкий клинок по плоти | blade_flesh_01–05 + `sword-knife-clash-13/14/15/16/21` (Vehicle, CC0) |
-| `voice_ring_parry_01…06` | звонкий клинок о клинок | `sword-knife-clash-13/14/15/16/21/22` (Vehicle, CC0) |
-| `voice_ring_draw_01…03` | звонкий клинок из ножен | `sword-thermos-scrape-01/02/04` (Vehicle, CC0) |
-| `voice_heavy_hit_01…05` | тяжёлый клинок по плоти | blade_flesh_06/07/08/04/02 −3 пт + `sword-knife-clash-27` −4 пт (Vehicle, CC0) |
-| `voice_heavy_parry_01…05` | тяжёлый клинок о клинок | `sword-knife-clash-23/24/25/26/28` −4 пт (Vehicle, CC0) |
-| `voice_heavy_draw_01…04` | тяжёлый клинок из ножен | `sword-table-leg-scrape-01…04` (Vehicle, CC0) |
-| `voice_heavy_swing_01…04` | взмах тяжёлого клинка | `sword_swing_t2_01/03/05/08` −3 пт (Still North Media, CC0) |
-| `voice_thin_hit_01…04` | тонкий клинок: укол | `knifeSlice`, `knifeSlice2` (Kenney, CC0); dagger_stab_01/03 +2 пт; звон `sword-knife-clash-38/41` (Vehicle, CC0) |
-| `voice_thin_parry_01…05` | тонкий клинок о клинок | `sword-knife-clash-30/34/37/38/43` +2 пт (Vehicle, CC0) |
-| `voice_thin_draw_01…03` | тонкий клинок из ножен | `metal-knife-scrape-01/02`, `handsaw-knife-scrape-01` (Vehicle, Tinysized, CC0) |
-| `voice_thin_swing_01…04` | свист тонкого клинка | `sword_swing_t1_02/04/05/06` +2 пт (Still North Media, CC0) |
-| `voice_knife_hit_01…04` | нож: рез | `knifeSlice`, `knifeSlice2` (Kenney, CC0); dagger_stab_04/02 +1 пт |
-| `voice_knife_draw_01…03` | нож из ножен | `drawKnife1`, `drawKnife2` (Kenney, CC0); `knife-unsheathe-01` (Vehicle, CC0) |
-| `voice_knife_parry_01…03` | нож о клинок | `sword-knife-clash-39/40/19` +3 пт (Vehicle, CC0) |
-| `voice_stiletto_hit_01…04` | стилет: укол | dagger_stab_05/06/01/02 +3 пт (Vehicle, CC0; JC Sounds, CC BY 4.0) |
-| `voice_stiletto_draw_01`, `voice_stiletto_sheathe_01` | стилет из ножен и в ножны | `weapon/dagger_out.ogg`, `weapon/dagger_in.ogg` — Eden, Veloren, GPL-3.0 |
-| `voice_stiletto_parry_01…02` | стилет о клинок | `sword-knife-clash-18` +4 пт (Vehicle, CC0) |
-| `sword_equip_01` | меч на поясе | `sfx_sword_equip.flac` — **Credit: JC Sounds**, «Pirate Pack Vol 1», CC BY 4.0 |
+| `voice_ring_hit_01.flac`, `voice_ring_hit_02.flac`, `voice_ring_hit_03.flac`, `voice_ring_hit_04.flac`, `voice_ring_hit_05.flac` | звонкий клинок по плоти | blade_flesh_01–05 + `sword-knife-clash-13/14/15/16/21` (Vehicle, CC0) |
+| `voice_ring_parry_01.flac`, `voice_ring_parry_02.flac`, `voice_ring_parry_03.flac`, `voice_ring_parry_04.flac`, `voice_ring_parry_05.flac`, `voice_ring_parry_06.flac` | звонкий клинок о клинок | `sword-knife-clash-13/14/15/16/21/22` (Vehicle, CC0) |
+| `voice_ring_draw_01.flac`, `voice_ring_draw_02.flac`, `voice_ring_draw_03.flac` | звонкий клинок из ножен | `sword-thermos-scrape-01/02/04` (Vehicle, CC0) |
+| `voice_heavy_hit_01.flac`, `voice_heavy_hit_02.flac`, `voice_heavy_hit_03.flac`, `voice_heavy_hit_04.flac`, `voice_heavy_hit_05.flac` | тяжёлый клинок по плоти | blade_flesh_06/07/08/04/02 −3 пт + `sword-knife-clash-27` −4 пт (Vehicle, CC0) |
+| `voice_heavy_parry_01.flac`, `voice_heavy_parry_02.flac`, `voice_heavy_parry_03.flac`, `voice_heavy_parry_04.flac`, `voice_heavy_parry_05.flac` | тяжёлый клинок о клинок | `sword-knife-clash-23/24/25/26/28` −4 пт (Vehicle, CC0) |
+| `voice_heavy_draw_01.flac`, `voice_heavy_draw_02.flac`, `voice_heavy_draw_03.flac`, `voice_heavy_draw_04.flac` | тяжёлый клинок из ножен | `sword-table-leg-scrape-01…04` (Vehicle, CC0) |
+| `voice_heavy_swing_01.flac`, `voice_heavy_swing_02.flac`, `voice_heavy_swing_03.flac`, `voice_heavy_swing_04.flac` | взмах тяжёлого клинка | `sword_swing_t2_01/03/05/08` −3 пт (Still North Media, CC0) |
+| `voice_thin_hit_01.flac`, `voice_thin_hit_02.flac`, `voice_thin_hit_03.flac`, `voice_thin_hit_04.flac` | тонкий клинок: укол | `knifeSlice`, `knifeSlice2` (Kenney, CC0); dagger_stab_01/03 +2 пт; звон `sword-knife-clash-38/41` (Vehicle, CC0) |
+| `voice_thin_parry_01.flac`, `voice_thin_parry_02.flac`, `voice_thin_parry_03.flac`, `voice_thin_parry_04.flac`, `voice_thin_parry_05.flac` | тонкий клинок о клинок | `sword-knife-clash-30/34/37/38/43` +2 пт (Vehicle, CC0) |
+| `voice_thin_draw_01.flac`, `voice_thin_draw_02.flac`, `voice_thin_draw_03.flac` | тонкий клинок из ножен | `metal-knife-scrape-01/02`, `handsaw-knife-scrape-01` (Vehicle, Tinysized, CC0) |
+| `voice_thin_swing_01.flac`, `voice_thin_swing_02.flac`, `voice_thin_swing_03.flac`, `voice_thin_swing_04.flac` | свист тонкого клинка | `sword_swing_t1_02/04/05/06` +2 пт (Still North Media, CC0) |
+| `voice_knife_hit_01.flac`, `voice_knife_hit_02.flac`, `voice_knife_hit_03.flac`, `voice_knife_hit_04.flac` | нож: рез | `knifeSlice`, `knifeSlice2` (Kenney, CC0); dagger_stab_04/02 +1 пт |
+| `voice_knife_draw_01.flac`, `voice_knife_draw_02.flac`, `voice_knife_draw_03.flac` | нож из ножен | `drawKnife1`, `drawKnife2` (Kenney, CC0); `knife-unsheathe-01` (Vehicle, CC0) |
+| `voice_knife_parry_01.flac`, `voice_knife_parry_02.flac`, `voice_knife_parry_03.flac` | нож о клинок | `sword-knife-clash-39/40/19` +3 пт (Vehicle, CC0) |
+| `voice_stiletto_hit_01.flac`, `voice_stiletto_hit_02.flac`, `voice_stiletto_hit_03.flac`, `voice_stiletto_hit_04.flac` | стилет: укол | dagger_stab_05/06/01/02 +3 пт (Vehicle, CC0; JC Sounds, CC BY 4.0) |
+| `voice_stiletto_draw_01.flac`, `voice_stiletto_sheathe_01.flac` | стилет из ножен и в ножны | `weapon/dagger_out.ogg`, `weapon/dagger_in.ogg` — Eden, Veloren, GPL-3.0 |
+| `voice_stiletto_parry_01.flac`, `voice_stiletto_parry_02.flac` | стилет о клинок | `sword-knife-clash-18` +4 пт (Vehicle, CC0) |
+| `sword_equip_01.flac` | меч на поясе | `sfx_sword_equip.flac` — **Credit: JC Sounds**, «Pirate Pack Vol 1», CC BY 4.0 |

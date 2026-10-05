@@ -71,9 +71,10 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
    топор:await удар("Боевой топор","wolf",6),булаваТяж:await удар("Булава","wolf",20)};});
  const глух=p=>p.some(x=>/^(lug_thud|lug_impact|lug_sword)$/.test(x));
  check('3. меч по плоти — режущий удар клинка, и тяжёлый тоже без глухого отзвука',
-  бой.меч.includes("blade_flesh")&&!глух(бой.меч)&&бой.мечТяж.includes("blade_flesh")&&!глух(бой.мечТяж),{меч:бой.меч,тяж:бой.мечТяж});
+  /* 9.5.3: у клинка свой голос — удар по плоти звучит записью голоса (w_v_…_hit). */
+  бой.меч.some(x=>x==="blade_flesh"||/^w_v_[a-z]+_hit$/.test(x))&&!глух(бой.меч)&&бой.мечТяж.some(x=>x==="blade_flesh"||/^w_v_[a-z]+_hit$/.test(x))&&!глух(бой.мечТяж),{меч:бой.меч,тяж:бой.мечТяж});
  check('3. по голему — звон клинка о броню; кинжал — укол; топор — рубка; булава — глухо',
-  бой.мечБроня.includes("blade_armor")&&бой.кинжал.includes("blade_dagger")&&бой.топор.includes("blade_axe")&&бой.булаваТяж.includes("lug_impact"),бой);
+  бой.мечБроня.includes("blade_armor")&&бой.кинжал.some(x=>x==="blade_dagger"||/^w_v_(knife|stiletto)_hit$/.test(x))&&бой.топор.includes("blade_axe")&&бой.булаваТяж.includes("lug_impact"),бой);
 
  /* ── 4. блок ── */
  const блок=await page.evaluate(()=>{
@@ -92,7 +93,7 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   плащ:equipSoundKind({name:"Плащ странника"},"cloak"),сапоги:equipSoundKind({name:"Сапоги"},"boots")}));
  check('5. у каждой вещи свой род звука надевания',
   род.кольцо==="ring"&&род.кольцо2==="ring"&&род.амулет==="amulet"&&род.браслет==="bracelet"&&род.щит==="shield"&&
-  род.кольчуга==="chain"&&род.латы==="plate"&&род.кожа==="leather"&&род.плащ==="cloth"&&род.сапоги==="leather",род);
+  род.кольчуга==="chain"&&род.латы==="plate"&&род.кожа==="leather"&&род.плащ==="cloak"&&род.сапоги==="boots",род);
 
  /* ── 6. надеть и снять ── */
  const вещи=await page.evaluate(()=>{

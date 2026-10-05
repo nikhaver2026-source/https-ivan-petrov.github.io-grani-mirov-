@@ -207,7 +207,8 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
    if((G.items||[]).includes(legendItemName(sp.n)))плохие.push(sp.n+": не израсходовался");});
   /* Переписчик иногда сохраняет свиток. */
   G.skills=["scribe"];let уцелел=0;
-  for(let i=0;i<200;i++){G.items=[legendItemName(LEGEND_SPELLS[0].n)];
+  /* 9.5.3: у свитка откат шесть часов, переписчик снимает список один раз — для пробы оба сбрасываются. */
+  for(let i=0;i<200;i++){G.items=[legendItemName(LEGEND_SPELLS[0].n)];G.scrollCD={};G.scribeCopy={};
    readLegendScroll(LEGEND_SPELLS[0].n);
    if((G.items||[]).length)уцелел++;}
   G.skills=[];G.items=[];
