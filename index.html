@@ -1566,7 +1566,7 @@ NEWS.push({v:54,н:"версия 9.5.1: два голоса Gemini и eSpeak в 
   т:"«Встроенный голос» — мужской или женский голос Gemini, и выбранный говорит весь интерфейс; голоса больше не смешиваются. Достижения и события — своим голосом вестника. Третий встроенный — eSpeak NG: быстрый, без сети на любом устройстве."});
 /* 9.5.2: дозапись голосов Gemini, наставники Пути своим голосом, проверка записей с числами. */
 NEWS.push({v:55,н:"версия 9.5.2: больше живых голосов",
-  т:"Дописаны голоса Gemini, наставники Пути говорят сами. Любой синтезатор — телефона, браузера, Windows, eSpeak — говорит тем темпом, что выставлен. У обоза зелья и товары — по 1, 5, 10 и на всё золото."});
+  т:"Дописаны голоса Gemini, наставники Пути говорят сами. Любой синтезатор — телефона, браузера, Windows, eSpeak — говорит тем темпом, что выставлен. У обоза зелья и товары — по 1, 5, 10 и на всё золото. Каждый объект звучит по-своему: стол, верстак, точило, сундук и прочее больше не отзываются одним стуком дерева."});
 const NEWS_V=NEWS[NEWS.length-1].v;
 /* (8.5) Выпуск читается коротко: заголовок, затем факты. */
 function newsLine(n){const н=String(n.н||"");return `${н.charAt(0).toUpperCase()+н.slice(1)}. ${n.т||""}`;}
@@ -4774,7 +4774,10 @@ const BEACON_INFO={
  tradehouse:["Торговый дом","Оптовый двор: сдать всё разом и оставить золото на хранение"],
  sewer:["Канализация","Люк с улицы в городские стоки"],
  workshop:["Мастерская","Производственное здание: станок, работа и её стук"], npc_ruler:["Правитель","Старший откашливается перед словом"], npc_guard:["Стражник","Клич стражника"], npc_merchant:["Торговец","Довольный хохот торговца"], npc_scholar:["Учёный","Шорох пергамента"], npc_bartender:["Трактирщик","Гомон трактира и кружки"], npc_common:["Житель","Весёлый оклик без слов"], npc_elder:["Старейшина","Приветливый смешок"], npc_farmer:["Крестьянин","Мотыга в земле"], npc_healer:["Целитель","Склянка со снадобьем"], npc_clanlead:["Глава клана","Клич воина"], npc_warrior:["Воин клана","Лязг доспеха"], npc_apprentice:["Ученик мага","Чары послушника"], npc_traveler:["Странник","Шаги путника по гравию"], portal:["Портал","Магический портал"],
- door:["Дверь","Дверь здания или комнаты: скрип петель"], gate:["Ворота","Городские ворота: лязг цепи и засова"], stairs_down:["Лестница вниз","Ступени, ведущие на нижний уровень"], stairs_up:["Лестница вверх","Ступени наверх или выход наружу"], chest:["Сундук","Запертый сундук с добычей"], altar:["Алтарь","Алтарь бога в святилище или подземелье"], torch:["Факел","Настенный факел — ориентир в темноте"], well:["Колодец","Колодец или источник воды"], city:["Город","Городская площадь: гул голосов и колокол"], dungeon:["Подземелье","Гул камня и капли в глубине"], wall:["Стена","Тупик: глухой удар в камень"], house:["Дом","Жилой дом: скрип петель двери"], barracks:["Казарма","Оружейные стойки и стража"], throne:["Тронный зал","Зал правителя: скрип тронного дерева"], caravan:["Караван","Обоз в пути: колёса, бубенцы и шаг животных"],
+ door:["Дверь","Дверь здания или комнаты: скрип петель"], gate:["Ворота","Городские ворота: створы расходятся"], stairs_down:["Лестница вниз","Ступени, ведущие на нижний уровень"], stairs_up:["Лестница вверх","Ступени наверх или выход наружу: шаги вверх по ступеням"],
+ vault:["Дверь сокровищницы","Тяжёлая железная дверь"], lair:["Логово","Зверь в своём углу: рык и ворчание"],
+ pigeon_post:["Голубиная почта","Голуби воркуют и хлопают крыльями"], crawl:["Лаз назад","Узкий ход: камень скребёт по камню"],
+ secret_find:["Находка тайной палаты","Пригоршня добычи"], books:["Книги и свитки","Книга в руках"], chest:["Сундук","Запертый сундук с добычей"], altar:["Алтарь","Алтарь бога в святилище или подземелье"], torch:["Факел","Настенный факел — ориентир в темноте"], well:["Колодец","Колодец или источник воды"], city:["Город","Городская площадь: гул голосов и колокол"], dungeon:["Подземелье","Гул камня и капли в глубине"], wall:["Стена","Тупик: глухой удар в камень"], house:["Дом","Жилой дом: скрип петель двери"], barracks:["Казарма","Оружейные стойки и стража"], throne:["Тронный зал","Зал правителя: скрип тронного дерева"], caravan:["Караван","Обоз в пути: колёса, бубенцы и шаг животных"],
  port:["Порт","Причалы: волна о доски, снасти и корабельный колокол"],
  ship:["Корабль","Судно: скрип корпуса и хлопок паруса"], cave_entrance:["Вход в пещеру","Тяга воздуха и эхо подземелья"]
 };
@@ -5072,7 +5075,7 @@ function openEncycCat(key,title){
  head.textContent=title||s.n;
  /* Маяки — первыми: ради них в этот раздел и приходят. */
  e.beacons.forEach(id=>{
-  const info=BEACON_INFO[id]||[id,"Звуковой маяк объекта"];
+  const info=BEACON_INFO[id]||(typeof PROP_INFO!=="undefined"&&PROP_INFO[id])||[id,"Звуковой маяк объекта"];
   grid.appendChild(soundCard("",info[0],info[1],
    `Маяк: ${info[0]}. ${info[1]}. Двойное касание — прослушать.`,
    ()=>{if(!settings.effects)return;narrate(`Маяк: ${info[0]}. ${info[1]}`);beacon(id,0,0);}));});
@@ -15568,6 +15571,26 @@ Object.assign(SOUND_BANK,{
  oc_wood_creak:{f:["oc/oc_wood_creak_01.ogg", "oc/oc_wood_creak_02.ogg", "oc/oc_wood_creak_03.ogg"],d:"дерево скрипит: трон, лежанка, полка"},
  oc_wood_hit:{f:["oc/oc_wood_hit_01.ogg", "oc/oc_wood_hit_02.ogg", "oc/oc_wood_hit_03.ogg"],d:"удар по дереву"},
  oc_wood_dull:{f:["oc/oc_wood_dull_01.ogg", "oc/oc_wood_dull_02.ogg"],d:"глухой стук по дереву"},
+ /* (9.5.2) Голоса обстановки, которым в банке не нашлось записи (sounds/prop, CC0, без потерь). */
+ prop_whetstone:{f:["prop/prop_whetstone_01.flac", "prop/prop_whetstone_02.flac"],d:"точило: камень и сталь"},
+ prop_barrel:{f:["prop/prop_barrel_01.flac", "prop/prop_barrel_02.flac"],d:"бочки: плеск внутри"},
+ prop_fountain:{f:["prop/prop_fountain_01.flac"],d:"фонтан: струя в чашу"},
+ prop_table:{f:["prop/prop_table_01.flac", "prop/prop_table_02.flac"],d:"стол: нож по столешнице"},
+ prop_pigeon:{f:["prop/prop_pigeon_01.flac", "prop/prop_pigeon_02.flac"],d:"голубиная почта: воркование и взмах крыльев"},
+ prop_crawl:{f:["prop/prop_crawl_01.flac", "prop/prop_crawl_02.flac"],d:"лаз: камень скребёт по камню"},
+ prop_mush:{f:["prop/prop_mush_01.flac"],d:"грибница: влажная склизкая мякоть"},
+ prop_basin:{f:["prop/prop_basin_01.flac"],d:"умывальник: струйка в чашу"},
+ prop_pantry:{f:["prop/prop_pantry_01.flac", "prop/prop_pantry_02.flac"],d:"кладовая: пробка кувшина и мешочек"},
+ prop_vault:{f:["prop/prop_vault_01.flac", "prop/prop_vault_02.flac"],d:"дверь сокровищницы: тяжёлое железо"},
+ prop_bed:{f:["prop/prop_bed_01.flac", "prop/prop_bed_02.flac", "prop/prop_bed_03.flac", "prop/prop_bed_04.flac"],d:"постель: шерстяное одеяло"},
+ prop_pour:{f:["prop/prop_pour_01.flac", "prop/prop_pour_02.flac"],d:"трактирщик: льёт из бутыли"},
+ prop_pot:{f:["prop/prop_pot_01.flac", "prop/prop_pot_02.flac", "prop/prop_pot_03.flac"],d:"очаг для стряпни: котелок и крышка"},
+ prop_creak:{f:["prop/prop_creak_01.flac", "prop/prop_creak_02.flac", "prop/prop_creak_03.flac"],d:"комод: скрип ящика"},
+ prop_bookplace:{f:["prop/prop_bookplace_01.flac", "prop/prop_bookplace_02.flac", "prop/prop_bookplace_03.flac"],d:"книжный шкаф: книги встают на полку"},
+ prop_bookflip:{f:["prop/prop_bookflip_01.flac", "prop/prop_bookflip_02.flac", "prop/prop_bookflip_03.flac"],d:"книжник: листает страницы"},
+ prop_map:{f:["prop/prop_map_01.flac", "prop/prop_map_02.flac"],d:"карта на стене: лист разворачивают"},
+ prop_coins:{f:["prop/prop_coins_01.flac", "prop/prop_coins_02.flac"],d:"подземный торговец: монеты в горсти"},
+ prop_stairs_up:{f:["prop/prop_stairs_up_01.flac", "prop/prop_stairs_up_02.flac"],d:"лестница вверх: шаги по ступеням вверх"},
  oc_rock_hit:{f:["oc/oc_rock_hit_01.ogg", "oc/oc_rock_hit_02.ogg", "oc/oc_rock_hit_03.ogg"],d:"камень под рукой: статуя, сталагмит, кладка"},
  oc_metal_dull:{f:["oc/oc_metal_dull_01.ogg", "oc/oc_metal_dull_02.ogg", "oc/oc_metal_dull_03.ogg"],d:"глухой металл: било, наковальня, кандалы"},
  oc_metal_light:{f:["oc/oc_metal_light_01.ogg", "oc/oc_metal_light_02.ogg"],d:"лёгкий металл: весы, астролябия, цепочка"},
@@ -16236,8 +16259,8 @@ const BEACON_ROLE={
     Лестница вниз отзывалась тем же стуком — теперь ступенями. */
  torch:"ad_fire_crackle",
  stairs_down:"deep_stairs",
- res_tree:"oc_rustle", res_stone:"oc_rock_hit", res_ore:"mine_pick",
- res_herbs:"ad_leaves", res_berry:"lug_bush", res_crystal:"oc_glass_hit",
+ res_tree:"oc_rustle", res_stone:"mtg_stone_hit", res_ore:"mine_pick",
+ res_herbs:"ad_leaves", res_berry:"lug_bush", res_crystal:"spell_ice",
  res_shell:"sky_wave", res_bone:"mtg_rubble",
  res_hide:"oc_res_hide", res_organ:"oc_res_organ", res_blood:"oc_res_blood",
  res_venom:"oc_res_venom", res_essence:"oc_res_essence", res_ether:"oc_res_ether",
@@ -16254,25 +16277,39 @@ const BEACON_ROLE={
     маяка нигде не было — сигнал молчал. Роль в банке для него есть давно. */
  port_horn:"port_horn",
  /* Городские службы слышны с улицы: лечебница — кипящим отваром, тюрьма —
-    цепью на вороте, торговый дом — вознёй на складе, люк — каплей в
+    скрежетом ключа, торговый дом — горстью монет, люк — каплей в
     пустоте под решёткой. Ни одну из них не спутать с лавкой и кузней. */
- infirmary:"oc_boiling", cityjail:"oc_chain", tradehouse:"uh_warehouse", sewer:"oc_waterdrop",
- /* §12: мастерская слышна работой — общий голос для всех тринадцати; какая
+ infirmary:"oc_boiling", cityjail:"sv2_mech", tradehouse:"arte_coins", sewer:"oc_waterdrop",
+ /* §12: мастерская слышна плотницкой работой (не горном — горн у кузни) — общий голос для всех тринадцати; какая
     именно мастерская, говорит звуковая картина, у неё свой голос на здание. */
- workshop:"ad_forge_sel",
+ workshop:"craft_wood",
  /* Жители и постройки без своей записи звучали синтезом: осциллятор пищал
     под пальцем посреди живого мира. Теперь у каждого голос или работа:
     правитель — покашливание старшего, стражник — клич, торговец — хохот,
-    книжник — лист пергамента, трактирщик — гомон трактира, травник —
+    книжник — шелест листаемых страниц, трактирщик — струя из бутыли, травник —
     склянка, земледелец — мотыга, ученик мага — чары послушника, воин — лязг,
     глава клана — клич воина, странник — шаги, дом — скрип петель, казарма
     — казарма, трон — скрип дерева, корабль — скрип корпуса. */
  npc_ruler:"throng_lord", npc_guard:"guard_shout", npc_merchant:"trade_m",
- npc_scholar:"arte_page", npc_bartender:"uh_tavern", npc_common:"throng_hail_m",
+ npc_scholar:"prop_bookflip", npc_bartender:"prop_pour", npc_common:"throng_hail_m",
  npc_elder:"throng_hail_f", npc_farmer:"ad_hoe", npc_healer:"arte_potion",
  npc_clanlead:"warrior_shout", npc_warrior:"lug_clank", npc_apprentice:"spell_initiate",
  npc_traveler:"tread_gravel", house:"oc_hinge", barracks:"hall_barracks",
- throne:"oc_wood_creak", ship:"ship_creak"};
+ throne:"oc_wood_creak", ship:"ship_creak",
+ /* (9.5.2) Книги и свитки звучат книгой, а не сундуком. */
+ books:"arte_book",
+ /* (9.5.2) У каждого объекта свой голос — двух одинаковых на слух больше нет.
+    Ворота лязгают створами, а не колоколом горной кумирни; дверь сокровищницы
+    гудит железом; логово рычит зверем, а не окликом стражи; голубиная почта
+    воркует, а не хрустит гравием путника; лаз назад скребёт камнем; находка
+    тайной палаты звенит добычей. Лестница вверх — шагами вверх, вниз — по
+    камню вниз. Мастерская — плотницкой работой, а не горном кузни; торговый
+    дом — горстью монет, а не складом, который остался ящикам; тюрьма —
+    скрежетом ключа, цепи остались цепям; зал клана — своим залом, а не
+    казармой; книжник листает страницы, трактирщик наливает из бутыли. */
+ gate:"ad_gate_open", vault:"prop_vault", lair:"lair", pigeon_post:"prop_pigeon",
+ crawl:"prop_crawl", secret_find:"treasure", stairs_up:"prop_stairs_up",
+ clanhall:"clanhall", trader_deep:"prop_coins"};
 
 /* ── ГОЛОСА ДВЕНАДЦАТИ БОГОВ ──
    У каждого бога свой голос — живая запись его стихии: исцеление зари,
@@ -26670,6 +26707,24 @@ const MOUNTS=[
   d:"Бьёт и чует: урон выше на четверть, эхо-скан достаёт дальше на две клетки.",
   дар:{урон:1.25,скан:2},тьма:true},
 ];
+/* ── ГОЛОС КАЖДОЙ ВЕЩИ (9.5.2, просьба игрока) ──
+   «Рабочий стол звучит так же, как сундук, верстак — так же, стук дерева».
+   Вещи обстановки стояли на одной клетке «X», и её маяк был один на всех —
+   сундук; точило, верстак и наковальня делили «кузницу». Теперь у каждой вещи
+   свой маяк со своей настоящей записью: точило — камнем по стали, верстак —
+   пилой, станок — щелчком челнока, бочки — плеском, весы — лёгким металлом,
+   часы — ходом. Его слышно при подходе, в «Что вокруг», в «Прислушаться» и
+   когда вещью пользуются. */
+/* BEACON_INFO к этому месту уже заморожен: подписи вещей живут рядом, в своей таблице. */
+const PROP_INFO={};
+const PROP_SND={"table": "prop_table", "rack": "gear_blade", "circle": "oc_electrical", "orb": "magic_shimmer", "mirror": "oc_glass_hit", "brazier": "oc_fire", "cauldron": "oc_bubble", "loom": "craft_knock", "barrels": "prop_barrel", "hearth": "wild_hearth", "statue": "craft_stone", "board": "arte_page", "bed": "prop_bed", "anvil": "anvil", "basin": "prop_basin", "candle": "oc_inflame", "chandelier": "ad_fire_sparks", "bookcase": "prop_bookplace", "scrollcase": "lang_page", "tapestry": "arte_cloth", "dresser": "prop_creak", "sacks": "oc_soft_touch", "crates": "uh_warehouse", "rope": "sv_trap_coil", "lever": "oc_lift_start", "chains": "oc_chain", "cage": "oc_lock", "bones": "foe_bone_die", "mushbed": "prop_mush", "stalag": "deep_drip", "fountain": "prop_fountain", "scales": "oc_metal_light", "whetstone": "prop_whetstone", "bench": "craft_saw", "hourglass": "stk_clock", "astrolabe": "oc_wheels", "wallmap": "prop_map", "throne": "oc_wood_creak", "censer": "oc_sizzle", "woodpile": "craft_axe", "millstone": "deep_stone", "shields": "oc_shield_block", "gong": "oc_metal_dull", "stools": "mtg_step_wood", "mugs": "stk_inn", "cookfire": "prop_pot", "shelf": "uh_build", "coffer": "oc_door_unlock", "tools": "oc_find_tool", "pantry": "prop_pantry", "cellar": "amb_cave", "backdoor": "inventory_open"};
+PROPS.forEach(p=>{const r=PROP_SND[p.id];if(!r)return;const id="prop_"+p.id;
+ BEACON_ROLE[id]=r;PROP_INFO[id]=[p.n[0].toUpperCase()+p.n.slice(1),`Обстановка: ${p.n}`];p.b=id;});
+/* Маяк клетки с учётом того, что на ней стоит: обстановка звучит своей вещью. */
+function cellBeacon(t,x,y){
+ if(t==="X"){const pr=safeFn(()=>propAt(x,y),null);if(pr&&pr.b)return pr.b;}
+ return tileBeacon(t);}
+
 const MOUNT_BY_ID=Object.fromEntries(MOUNTS.map(m=>[m.id,m]));
 function hasMount(id){try{return (G.mounts||[]).indexOf(id)>=0;}catch(_){return false;}}
 function mountNow(){try{return G.mount?MOUNT_BY_ID[G.mount]||null:null;}catch(_){return null;}}
@@ -28317,7 +28372,7 @@ function objectsHere(диаг){
     const имя=safeFn(()=>tileLabel(t,x,y),IOBJ_TILES[t]);
     const o={вид:"tile",плитка:t,n:имя,x,y,dx,dy,
      d:Math.max(Math.abs(dx),Math.abs(dy)),
-     маяк:safeFn(()=>tileBeacon(t),null)};
+     маяк:safeFn(()=>cellBeacon(t,x,y),null)};
     /* Горн — станок сам по себе; обстановка становится станком по тому, что
        это за вещь: наковальня, чан, круг, верстак, точило, очаг. */
     if(t==="F")o.станок="forge";
@@ -32341,24 +32396,24 @@ const TILE={
  ">":{n:"лестница вниз",b:"stairs_down"},
  "C":{n:"сундук",b:"chest"},
  "R":{n:"жила ресурса",b:"res_ore"},
- "M":{n:"логово",b:"npc_guard"},
+ "M":{n:"логово",b:"lair"},
  "N":{n:"житель",b:"npc_common"},
  "A":{n:"алтарь",b:"altar"},
  "S":{n:"лавка",b:"market"},
  "F":{n:"горн",b:"forge"},
  "W":{n:"колодец",b:"well"},
  "T":{n:"факел",b:"torch"},
- "P":{n:"торговец",b:"market"},
+ "P":{n:"торговец",b:"npc_merchant"},
  "B":{n:"пост стражи",b:"npc_guard"},
- "L":{n:"голубиная почта",b:"traveler"},
+ "L":{n:"голубиная почта",b:"pigeon_post"},
  /* Носитель знаний и предмет обстановки. Имя у обоих не одно на всех: что
     именно стоит на клетке, решают knowledgeAt и propAt, а TILE держит только
     общий случай — на него опираются старые сохранения и карта. */
- "K":{n:"книги и свитки",b:"chest"},
+ "K":{n:"книги и свитки",b:"books"},
  "X":{n:"обстановка",b:"chest"},
  /* Дверь сокровищницы. Запертая — своя плитка; открытая превращается в
     обычный проход (см. tileAt), поэтому второй раз её отпирать не нужно. */
- "Y":{n:"дверь сокровищницы",b:"gate"},
+ "Y":{n:"дверь сокровищницы",b:"vault"},
  /* ── ГОРОДСКИЕ СЛУЖБЫ ──
     §12 брифа перечисляет, что есть в большом городе: таверны, кузницы,
     храмы, библиотека, рынок — и лечебница, тюрьма, торговый дом и
@@ -32383,8 +32438,8 @@ const TILE={
     чужих ловушек с тех же координат. Лаз — дорога назад; находка — то, ради
     чего сюда лезли. */
  "q":{n:"пол тайной палаты",b:null},
- "Q":{n:"лаз назад",b:"door"},
- "O":{n:"находка тайной палаты",b:"chest"}};
+ "Q":{n:"лаз назад",b:"crawl"},
+ "O":{n:"находка тайной палаты",b:"secret_find"}};
 /* Какие службы стоят в городе этого рода. Деревне они не положены: там
    лечит знахарка у очага, а вора ведут к старейшине. */
 const CITY_SERVICE_SET={
@@ -36801,7 +36856,7 @@ function nearFeatures(rad,всё){
    const dx=x-p.x,dy=y-p.y,d=Math.max(Math.abs(dx),Math.abs(dy));
    if(!d)continue;
    if(!всё&&!canSee(lvl,p.x,p.y,x,y)&&!isBeaconTarget(x,y))continue;
-   out.push({x,y,t,d,dx,dy,dir:dirBetween(dx,dy),name:tileLabel(t,x,y),bid:tileBeacon(t)});}
+   out.push({x,y,t,d,dx,dy,dir:dirBetween(dx,dy),name:tileLabel(t,x,y),bid:cellBeacon(t,x,y)});}
  out.sort((a,b)=>a.d-b.d);
  return out;
 }
@@ -37198,7 +37253,7 @@ function moveInside(dir){
  /* Объект вошёл в круг четырёх шагов — это звучит первым, коротко и целиком. */
  const близко=safeFn(()=>approachCues(),"")||"";
  if(близко)narrate(близко,{interrupt:true,cat:"approach",key:"approach"});
- if(cur!=="."&&tileBeacon(cur))safeFn(()=>beacon(tileBeacon(cur),0,0));
+ if(cur!=="."&&cellBeacon(cur,p.x,p.y))safeFn(()=>beacon(cellBeacon(cur,p.x,p.y),0,0));
  /* Лаз назад и находка палаты: сказать, что здесь и как с этим быть. */
  if(cur==="Q"){
   p.arm={x:p.x,y:p.y,dir,t:cur};
@@ -60719,7 +60774,7 @@ function renderMap(){
    b.textContent=me?"Вы":icon;
    const nm=me?`вы здесь, ${tileLabel(t,x,y)}`:`${tileLabel(t,x,y)}, ${dirBetween(dx,dy)||"здесь"}, ${Math.max(Math.abs(dx),Math.abs(dy))} шаг.`;
    b.dataset.speak=nm;b.setAttribute("aria-label",nm);
-   b.addEventListener("click",()=>{narrate(nm);const bid=tileBeacon(t);
+   b.addEventListener("click",()=>{narrate(nm);const bid=cellBeacon(t,x,y);
     if(bid)safeFn(()=>beaconAt(bid,dx,dy,t===">"?-1:t==="<"?1:0,
      Math.max(Math.abs(dx),Math.abs(dy))));});
    g.appendChild(b);}
