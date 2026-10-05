@@ -120,7 +120,7 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
 
  /* ── 5. варка ── */
  const варка=await page.evaluate(()=>{
-  const r={};r.свЗ=SVODY_ON?SVD.potions.length:0;r.зелий=POTIONS.length;
+  const r={};r.свЗ=(SVODY_ON?SVD.potions.length:0)+ZMR.potions.length;r.зелий=POTIONS.length;
   r.плохие=POTIONS.filter(p=>!p.n||!p.о||p.из.length!==2||p.из.some(c=>!PLANT_CAT_BY_ID[c])||!(p.срок>0)||!(p.стаб>0&&p.стаб<1)||typeof p.дать!=="function").map(p=>p.id);
   r.ниши=new Set(POTIONS.flatMap(p=>p.из)).size;
   G.potions=[];G.inv={};G.mast={alchemy:{ур:0,оп:0}};
@@ -182,7 +182,7 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   const r={};const t=TECH_BY_ID.potion;r.тех=t&&{ур:t.ур,маст:t.маст,станки:t.станки};
   G.mast={alchemy:{ур:1,оп:0}};G.potions=[{id:"heal",q:1.2,стаб:0.8,день:G.day,срок:10}];G.inv["рановник"]=1;G.inv["топяной хвощ"]=1;
   r.работа=techDo(t,"cauldron");r.видно=!document.getElementById("modal-potions").hidden;
-  r.свЗ=SVODY_ON?SVD.potions.length:0;r.вСумке=document.querySelectorAll('#potBody [data-cmd^="drinkpotion:"]').length;r.рецептов=document.querySelectorAll('#potBody [data-cmd^="brewpotion:"]').length;
+  r.свЗ=(SVODY_ON?SVD.potions.length:0)+ZMR.potions.length;r.вСумке=document.querySelectorAll('#potBody [data-cmd^="drinkpotion:"]').length;r.рецептов=document.querySelectorAll('#potBody [data-cmd^="brewpotion:"]').length;
   r.можно=[...document.querySelectorAll('#potBody [data-cmd^="brewpotion:"]')].filter(b=>/можно сварить/.test(b.textContent)).map(b=>b.dataset.cmd);
   /* Прежде число родов зелий брали у potionsText — строки, которую игра не
      показывала нигде. Теперь берём то, что игрок слышит на самом деле:

@@ -29,7 +29,7 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   monsterLore:MONSTERS.filter(m=>!MONSTER_LORE[m.id]).map(m=>m.id),
   empFields:EMPIRES.filter(e=>!e.gov||!e.econ||!e.god||!(e.exports||[]).length||!(e.imports||[]).length).map(e=>e.short)
  }));
- check('126 рас в каталоге светлых земель: 98 Средоточия, 25 Дальнего Круга и 3 народа нежити (9.5)',d.races===126,d.races);
+ check('135 рас в каталоге светлых земель: 98 Средоточия, 25 Дальнего Круга, 9 Заморья и 3 народа нежити',d.races===135,d.races);
  check('12 богов в пантеоне',d.gods===12,d.gods);
  check('13 кланов — по одному на бога и Бледный Двор нежити',d.clans===13,d.clans);
  check('народы есть в каждом ранге от Обычного до Божественного',d.byRank.every(x=>x>0),d.byRank);

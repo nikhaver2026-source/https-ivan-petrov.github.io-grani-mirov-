@@ -46,7 +46,6 @@ CC0 — https://creativecommons.org/publicdomain/zero/1.0/ .
 | `growl_wet_03.flac` | утробный рык корнегрыза, пасти без тела | `zm_growl_wet` | Guttural Vocals, «belch» | — |
 | `nightmare_01.flac` | безликий мешок | `zm_nightmare` | A Lonely Nightmare — Minimare (Monster) SFX, «Minimare_Hiss» | 13.0 |
 | `nightmare_02.flac` | безликий мешок | `zm_nightmare` | A Lonely Nightmare — Minimare (Monster) SFX, «Minimare_Hurt» | 10.9 |
-| `nightmare_03.flac` | безликий мешок | `zm_nightmare` | A Lonely Nightmare — Minimare (Monster) SFX, «Minmare_Die» | — |
 | `scream_01.flac` | крик девы-сборщицы, обиженной | `zm_scream` | Horror Sound Effects Library, «Scream_Male_00» | — |
 | `scream_02.flac` | крик девы-сборщицы, обиженной | `zm_scream` | Horror Sound Effects Library, «Scream_Male_01» | — |
 | `scream_03.flac` | крик девы-сборщицы, обиженной | `zm_scream` | Horror Sound Effects Library, «Scream_Male_02» | — |
