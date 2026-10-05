@@ -140,7 +140,7 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   const раз=НАЙТИ("camp","band");
   if(раз){G.x=раз.x;G.y=раз.y;G.gold=500;
    SAID.length=0;CMD.camp("pay");await пауза(120);
-   r.мыто=(SAID.filter(x=>!/^Край Сводов/.test(x)).slice(-1)[0]||"");r.золотоУпало=G.gold<500;}
+   r.мыто=(SAID.filter(x=>!/^(Край Сводов|Слышен обоз)/.test(x)).slice(-1)[0]||"");r.золотоУпало=G.gold<500;}
   const пал=НАЙТИ("camp","pilg");
   if(пал){G.x=пал.x;G.y=пал.y;G.mana=0;G.zoneTake={};
    SAID.length=0;CMD.camp("bless");await пауза(120);
