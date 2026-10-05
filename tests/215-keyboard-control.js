@@ -64,9 +64,9 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
  await жми("KeyE","e",{altKey:true});окна.альтЕ=await page.evaluate(()=>!document.getElementById("modal-inventory").hidden);
  await page.evaluate(()=>{while(activeLayer())closeTopUI();});
  /* 9.5.3: карты места больше нет; Tab называет только здоровье. */
- await page.evaluate(()=>{window.__сказ=[];const n=window.narrate;window.__narr=n;window.narrate=(t,o)=>{window.__сказ.push(String(t));return n(t,o);};});
+ await page.evaluate(()=>{window.__сказ=[];const e=Speech.enqueue.bind(Speech);window.__enq=Speech.enqueue;Speech.enqueue=(t,o)=>{window.__сказ.push(String(t));return e(t,o);};});
  await жми("Tab","Tab");await page.waitForTimeout(300);
- окна.здоровье=await page.evaluate(()=>{window.narrate=window.__narr;return window.__сказ.join(" | ");});
+ окна.здоровье=await page.evaluate(()=>{Speech.enqueue=window.__enq;return window.__сказ.join(" | ");});
  окна.картыНет=await page.evaluate(()=>document.getElementById("modal-map").hidden);
  check('4. I и Alt+E — инвентарь, Tab — только здоровье, карта не открывается',
   окна.инвОткрыт&&окна.инвЗакрыт&&окна.альтЕ&&/Здоровье \d+ из \d+/.test(окна.здоровье)&&окна.картыНет,окна);

@@ -108,7 +108,7 @@ const {chromium}=require('playwright');
  /* ── 8 ── */
  const вне=await page.evaluate(()=>{__чисто();const r={};G.cbSlots=null;G.cbSlotsInit=0;
   G.inv=G.inv||{};G.inv["Зелье здоровья"]=2;G.items=(G.items||[]).filter(x=>x!=="Зелье здоровья");G.hpMax=100;G.hp=40;
-  r.фигура=gestActionId("2swipeW");r.жест=gestRun(2,"swipe","W");r.hp1=G.hp;r.ост1=G.inv["Зелье здоровья"];
+  r.фигура=gestActionId("2swipeW");handleTwoFingerSwipe("W");r.жест=true;r.hp1=G.hp;r.ост1=G.inv["Зелье здоровья"];
   G.hp=40;r.q=KB_ACTIONS.find(a=>a.id==="potion").run();r.hp2=G.hp;r.ост2=Number(G.inv["Зелье здоровья"])||0;
   __said.length=0;KB_ACTIONS.find(a=>a.id==="potion").run();r.нет=__said.map(x=>x.t);
   return r;});
