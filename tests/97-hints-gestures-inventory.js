@@ -70,10 +70,10 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
  await page.evaluate(()=>{Speech.stop();LOG.length=0;});
  await multiSwipe(2,0,-170);
  const повтор=await page.evaluate(()=>LOG.includes("near"));
- /* С 4.0 карта — три пальца влево, а два влево — осмотреться (ближайшие объекты). */
- await multiSwipe(3,-170,0);const картаОткр=await page.evaluate(()=>!document.getElementById("modal-map").hidden);
- await multiSwipe(3,-170,0);const картаЗакр=await page.evaluate(()=>document.getElementById("modal-map").hidden);
- await multiSwipe(2,-170,0);const осмотр=await page.evaluate(()=>!document.getElementById("modal-object").hidden);
+ /* 9.5.3: три пальца влево — осмотреться (открыть и закрыть), два влево — выпить зелье; карты места нет. */
+ await multiSwipe(3,-170,0);const картаОткр=await page.evaluate(()=>!document.getElementById("modal-object").hidden);
+ await multiSwipe(3,-170,0);const картаЗакр=await page.evaluate(()=>document.getElementById("modal-object").hidden);
+ await multiSwipe(2,-170,0);const осмотр=await page.evaluate(()=>document.getElementById("modal-map").hidden&&document.getElementById("modal-object").hidden);
  await page.evaluate(()=>{while(activeLayer())closeTopUI();});
  await multiSwipe(2,170,0);const журнОткр=await page.evaluate(()=>!document.getElementById("modal-quests").hidden);
  await multiSwipe(2,170,0);const журнЗакр=await page.evaluate(()=>document.getElementById("modal-quests").hidden);
@@ -83,7 +83,7 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
  /* Действие — «действие здесь» или, если рядом вещь со своими делами (лестница,
     дверь), её список действий: двойное касание действует с тем, что рядом. */
  const действие=await page.evaluate(()=>LOG.includes("useHere")||!!(activeLayer()&&activeLayer().id==="modal-object"));
- check('2. два пальца: вверх — что рядом, влево — осмотреться, три влево — карта (открыть и закрыть), вправо — журнал (открыть и закрыть), вниз — только закрыть; действие с найденным — двойное касание',
+ check('2. два пальца: вверх — что рядом, влево — зелье (окно не открывается), три влево — осмотр (открыть и закрыть), вправо — журнал (открыть и закрыть), вниз — только закрыть; действие с найденным — двойное касание',
   повтор&&картаОткр&&картаЗакр&&осмотр&&журнОткр&&журнЗакр&&!свайпВниз&&действие,{повтор,картаОткр,картаЗакр,осмотр,журнОткр,журнЗакр,свайпВниз,действие});
 
  /* ── 3. три пальца ── */
@@ -92,12 +92,12 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
  await multiSwipe(2,170,0);const журнПоверх=await page.evaluate(()=>!document.getElementById("modal-quests").hidden&&document.getElementById("modal-inventory").hidden);
  await multiSwipe(3,0,170);const инвПоверх=await page.evaluate(()=>!document.getElementById("modal-inventory").hidden);
  await multiSwipe(3,0,170);const инвЗакр=await page.evaluate(()=>document.getElementById("modal-inventory").hidden);
- /* С 4.0 три влево — карта (дальние точки с маяком), осмотр — два влево. */
- await multiSwipe(3,-170,0);const картаТри=await page.evaluate(()=>!document.getElementById("modal-map").hidden);
+ /* 9.5.3: три влево — осмотр. */
+ await multiSwipe(3,-170,0);const картаТри=await page.evaluate(()=>!document.getElementById("modal-object").hidden);
  await page.evaluate(()=>{while(activeLayer())closeTopUI();});
  await multiSwipe(2,-170,0);await page.evaluate(()=>{while(activeLayer())closeTopUI();SAID.length=0;});await multiSwipe(3,170,0);
  const лог=await page.evaluate(()=>LOG.slice());const гдеЯ=await page.evaluate(()=>SAID.some(t=>/Вы здесь/.test(t)));
- check('3. три пальца: вниз — инвентарь и его закрытие, и поверх другого окна тоже; влево — карта; два влево — осмотр (эхо-скан); вправо — «где я»',
+ check('3. три пальца: вниз — инвентарь и его закрытие, и поверх другого окна тоже; влево — осмотр (эхо-скан); вправо — «где я»',
   инвОткр&&журнПоверх&&инвПоверх&&инвЗакр&&картаТри&&лог.includes("scan")&&гдеЯ,{инвОткр,журнПоверх,инвПоверх,инвЗакр,картаТри,лог,гдеЯ});
 
  /* ── 4. инвентарь ── */
