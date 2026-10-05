@@ -1566,7 +1566,7 @@ NEWS.push({v:54,н:"версия 9.5.1: два голоса Gemini и eSpeak в 
   т:"«Встроенный голос» — мужской или женский голос Gemini, и выбранный говорит весь интерфейс; голоса больше не смешиваются. Достижения и события — своим голосом вестника. Третий встроенный — eSpeak NG: быстрый, без сети на любом устройстве."});
 /* 9.5.2: дозапись голосов Gemini, наставники Пути своим голосом, проверка записей с числами. */
 NEWS.push({v:55,н:"версия 9.5.2: больше живых голосов",
-  т:"Дописаны голоса Gemini, наставники Пути говорят сами. Любой синтезатор — телефона, браузера, Windows, eSpeak — говорит тем темпом, что выставлен. У обоза зелья и товары — по 1, 5, 10 и на всё золото. Каждый объект звучит по-своему: стол, верстак, точило, сундук и прочее больше не отзываются одним стуком дерева."});
+  т:"Дописаны голоса Gemini, наставники Пути говорят сами. Любой синтезатор — телефона, браузера, Windows, eSpeak — говорит тем темпом, что выставлен. У обоза зелья и товары — по 1, 5, 10 и на всё золото. Каждый объект звучит по-своему: стол, верстак, точило, сундук и прочее больше не отзываются одним стуком дерева. При быстром листании голос не пропускает пункты."});
 const NEWS_V=NEWS[NEWS.length-1].v;
 /* (8.5) Выпуск читается коротко: заголовок, затем факты. */
 function newsLine(n){const н=String(n.н||"");return `${н.charAt(0).toUpperCase()+н.slice(1)}. ${n.т||""}`;}
@@ -2361,7 +2361,20 @@ const Speech={voice:null,keepAlive:null,
      if(b0){try{b0.src=ч.url;}catch(_){}пуск(b0);}else пуск(аудио(ч.url));};
     шаг(0);return true;},
    cancel(){ток++;идёт=false;стоп();if(запас)запас.cancel();},
+   /* ── СОСЕДИ НАГОТОВЕ (9.5.2, просьба игрока) ──
+      Запись открывается не мгновенно: при быстром листании следующий пункт
+      обрывал её раньше, чем она успевала зазвучать, и казалось, что голос
+      пропустил пункт. Записи соседних пунктов плееры открывают заранее —
+      свайп попадает на готовую запись, и она звучит сразу. На iPhone
+      заранее не открываем: там плееры берутся из запаса, открытого касанием. */
+   warm(urls){if(Плееры.вкл)return 0;let n=0;
+    (urls||[]).slice(0,3).forEach(u=>{if(!u||пул.has(u))return;try{const a=аудио(u);a.preload="auto";a.load();n++;}catch(_){}});
+    return n;},
    speaking(){return идёт;}};},
+ gvWarm(texts){try{const a=this.adapter;if(!a||a.name!=="gemini"||!a.warm)return 0;
+  const urls=(texts||[]).map(t=>{let x=String(t||"").replace(/\s+/g," ").trim();if(!x)return null;
+   if(typeof deskText==="function")x=deskText(x);const ч=this.gvParts(x);return ч[0]&&ч[0].url;}).filter(Boolean);
+  return a.warm(urls);}catch(_){return 0;}},
  _webAdapter(){const self=this;return {name:"web",
   speak(text,o){try{const u=new SpeechSynthesisUtterance(text);
     /* Ссылка на высказывание: без неё Chrome собирает его как мусор посреди
@@ -2390,6 +2403,11 @@ const Speech={voice:null,keepAlive:null,
   const cbs=self._nativeCbs||(self._nativeCbs={});
   window.GraniTTSDone=id=>{const c=cbs[id];delete cbs[id];if(c&&c.onend)c.onend();};
   window.GraniTTSError=id=>{const c=cbs[id];delete cbs[id];if(c&&c.onerror)c.onerror();};
+  /* (9.5.2) Начало фразы приложение сообщает само (GraniTTSStart): по нему
+     игра отличает фразу, которую синтезатор начал, от потерянной. Мост без
+     этого сообщения (прежние сборки, Windows) получает начало сразу. */
+  window.GraniTTSStart=id=>{const c=cbs[id];if(c&&c.onstart)c.onstart();};
+  const честно=safeFn(()=>typeof window.GraniTTS.hasStart==="function"&&!!window.GraniTTS.hasStart(),false);
   try{if(self._nativeVoice&&typeof window.GraniTTS.setVoice==="function")window.GraniTTS.setVoice(String(self._nativeVoice.voiceURI).slice(7));}catch(_){}
   return {name:"native",
    /* ── БЫСТРОЕ ЛИСТАНИЕ (9.5.1, просьба игрока) ──
@@ -2401,7 +2419,7 @@ const Speech={voice:null,keepAlive:null,
       откладывается на миг и отменяется, если следом пришла новая фраза. */
    speak(text,o){clearTimeout(self._nativeStopT);self._nativeStopT=null;
     const id=String(++self.seq);cbs[id]=o;
-    try{window.GraniTTS.speak(text,+o.rate,+o.volume,id);if(o.onstart)setTimeout(o.onstart,0);return true;}catch(e){delete cbs[id];return false;}},
+    try{window.GraniTTS.speak(text,+o.rate,+o.volume,id);if(o.onstart&&!честно)setTimeout(o.onstart,0);return true;}catch(e){delete cbs[id];return false;}},
    cancel(){for(const k in cbs)delete cbs[k];clearTimeout(self._nativeStopT);
     self._nativeStopT=setTimeout(()=>{self._nativeStopT=null;try{window.GraniTTS.stop();}catch(_){}},60);},
    speaking(){try{return !!window.GraniTTS.isSpeaking();}catch(_){return false;}}};},
@@ -2624,25 +2642,40 @@ const Speech={voice:null,keepAlive:null,
   this.current=m;this.speaking=true;this._duck(true);
   safeFn(()=>{if(typeof PlaceVoice!=="undefined")PlaceVoice.hush();});
   this._part(m,0);},
- _part(m,i){
+ /* ── ФРАЗА, КОТОРУЮ СИНТЕЗАТОР ПОТЕРЯЛ (9.5.2, просьба игрока) ──
+    «При быстром листании голос пропускает пункт». Синтезатор браузера и
+    Android после частых обрывов иногда молча роняет только что поданную
+    фразу — не начинает её, а то и отвечает ошибкой; сторож через полторы
+    секунды считал такой пункт сказанным, и игрок его не слышал. Теперь кусок,
+    который так и не начал звучать, подаётся ещё раз — один раз, чтобы
+    сломанный синтезатор не держал очередь. */
+ _part(m,i,повтор){
   const gen=m.gen;
   if(gen!==this.gen||this.current!==m)return;
   if(i>=m.parts.length){this._finish(m,"COMPLETED");return;}
   const a=this._adapter();
   /* Кусок закрывается ровно один раз: концом, ошибкой или сторожем. */
-  let закрыт=false;
+  let закрыт=false,начат=false;const t0=Date.now();
   const дальше=()=>{if(закрыт)return;закрыт=true;this._stopWatch();
    if(gen!==this.gen||this.current!==m)return;this._part(m,i+1);};
+  const ещё=()=>{if(закрыт||повтор||начат||!a||a.name==="gemini")return false;закрыт=true;this._stopWatch();
+   if(gen!==this.gen||this.current!==m)return true;
+   this.stats.retried=(this.stats.retried||0)+1;
+   try{a.cancel();}catch(_){}
+   setTimeout(()=>{if(gen===this.gen&&this.current===m)this._part(m,i,true);},120);return true;};
   const синтез=a&&a.name!=="gemini";
   const ok=a&&a.speak(m.parts[i],{rate:синтез?this.synthRate():+settings.rate||1,volume:синтез?this.synthVolume(+settings.voiceVol):+settings.voiceVol,
-   onstart:()=>{if(gen!==this.gen||this.current!==m)return;m.state="SPEAKING";this._keepAlive();},
-   onend:дальше,
-   onerror:()=>{if(закрыт)return;закрыт=true;this._stopWatch();
+   onstart:()=>{начат=true;if(gen!==this.gen||this.current!==m)return;m.state="SPEAKING";this._keepAlive();},
+   /* Конец без начала за доли секунды — фраза не прозвучала (настоящий пункт
+      длиннее); движок, который вовсе не сообщает о начале, так не страдает:
+      его фраза кончается не раньше, чем договорена. */
+   onend:()=>{if(!начат&&Date.now()-t0<250&&ещё())return;дальше();},
+   onerror:()=>{if(закрыт)return;if(ещё())return;закрыт=true;this._stopWatch();
     if(gen!==this.gen||this.current!==m)return;
     /* Ошибка на середине длинного текста не глушит остальное: следующий кусок. */
     if(i+1<m.parts.length)this._part(m,i+1);else this._finish(m,i>0?"COMPLETED":"FAILED");}});
-  if(!ok){this._finish(m,"FAILED");return;}
-  this._watch(m,a,m.parts[i],дальше);},
+  if(!ok){if(ещё())return;this._finish(m,"FAILED");return;}
+  this._watch(m,a,m.parts[i],дальше,()=>ещё());},
  /* ── СТОРОЖ ──
     Синтезатор устройства иногда не присылает конца фразы: Chrome теряет
     событие, если высказывание собрал сборщик мусора, Android глохнет после
@@ -2652,7 +2685,7 @@ const Speech={voice:null,keepAlive:null,
     сторож следит за каждым куском: синтезатор уже молчит, а конца нет — идём
     дальше; кусок звучит втрое дольше, чем мог бы, — снимаем его и будим
     синтезатор. */
- _watch(m,a,text,дальше){
+ _watch(m,a,text,дальше,ещё){
   this._stopWatch();
   const темп=Math.max(0.5,Math.min(3,+settings.rate||1));
   const предел=4000+Math.round(String(text).length/(14*темп)*1000*3);
@@ -2668,6 +2701,8 @@ const Speech={voice:null,keepAlive:null,
    тихо=говорит?0:тихо+1;
    const умолк=a&&(a.name==="web"||a.name==="native")&&тихо>=2&&прошло>1500;
    if(!умолк&&прошло<=предел)return;
+   /* Синтезатор молчит, а начала фразы не было — фраза потеряна: подать снова. */
+   if(ещё&&ещё())return;
    this.stats.rescued=(this.stats.rescued||0)+1;
    if(!умолк)safeFn(()=>{a.cancel();if(a.name==="web"&&speechSynthesis.resume)speechSynthesis.resume();});
    дальше();},700);},
@@ -4864,7 +4899,8 @@ const BANK_GROUPS=[
  {n:"Механизмы, ворота, сундуки, огонь и вода",icon:"", dirs:["oc"]},
  {n:"Подворье, мастерские, костёр, шаги и звери",icon:"", dirs:["ad","uh","lug"]},
  {n:"Фоны построек и голоса мест",icon:"", dirs:["bed"]},
- {n:"Своды: боги, моря, твари и ловушки",icon:"", dirs:["svody"]}];
+ {n:"Своды: боги, моря, твари и ловушки",icon:"", dirs:["svody"]},
+ {n:"Обстановка: голоса вещей и объектов",icon:"", dirs:["prop"]}];
 /* Роли банка, лежащие в этих папках. */
 function bankRolesIn(dirs){
  const set=new Set(dirs);
@@ -4960,6 +4996,8 @@ const ENC_RULES=[
  [/^bed_/,"amb_places"],
  [/^pv_/,"people"],
  [/^oc_res_/,"beacons"],
+ /* (9.5.2) Голоса обстановки — маяки вещей: стол, точило, верстак, кровать… */
+ [/^prop_/,"beacons"],
  [/^(tread_|step_|mtg_step_|lug_step_|oc_step_|hero_step_|gear_)|^(deep_stairs|stk_bridge|lug_land|oc_swim)$/,"steps"],
  [/^(god|omen|temple|altar|bell_big|bell_small|ad_temple|uh_chapel|oc_sizzle)$/,"gods"],
  [/^(siege_victory|siege_defeat|siege_herojoin|siege_herodead|siege_phase|siege_alarm_\w+|hero_levelup|es_alarm|lug_alarm|danger|od_claim|od_keeper_word|stk_clock|oc_connect|stk_horn)$/,"events"],
@@ -5194,11 +5232,14 @@ function labelTextOf(el){
    out.push(part);}
   return out.join(". ").replace(/\s+/g," ").trim();
  }catch(_){return "";}}
-function speakTextOf(el){try{
+function navTextOf(el){try{
  let text=el?.dataset?.speak||el?.getAttribute?.('aria-label')||(el?.textContent||'').trim().replace(/\s+/g,' ');
  if(!text)text=labelTextOf(el);
  const st=controlState(el);
  if(st)text=text?`${text}. ${st}`:st;
+ return text||"";}catch(_){return "";}}
+function speakTextOf(el){try{
+ const text=navTextOf(el);
  if(!text)return;
  /* Один и тот же элемент не называется дважды подряд. Прежняя проверка
     требовала, чтобы элемент совпал с последним ОЩУПАННЫМ, а при касании
@@ -5267,6 +5308,9 @@ function setCursor(el,speak,scroll){
  silentFocus=false;
  if(scroll!==false)safeFn(()=>el.scrollIntoView({block:"center"}));
  if(speak!==false)speakTextOf(el);
+ /* Записи соседних пунктов — наготове: следующий свайп звучит сразу. */
+ if(speak!==false)safeFn(()=>{const it=cursorItems(lay),k=it.indexOf(el);
+  if(k>=0)Speech.gvWarm([it[k+1],it[k-1],it[k+2]].filter(Boolean).map(navTextOf));});
  /* Голос героя: встав на голос, игрок слышит его образец. */
  if(speak!==false&&el.dataset&&el.dataset.heroVoice)safeFn(()=>heroVoiceSample(el.dataset.heroVoice));
  return el;

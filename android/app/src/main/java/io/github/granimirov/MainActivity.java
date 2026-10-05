@@ -67,7 +67,9 @@ public class MainActivity extends Activity {
     private final java.util.Map<String, String> labels = new java.util.HashMap<>();
     private volatile TextToSpeech speaker;
     private final UtteranceProgressListener prog = new UtteranceProgressListener() {
-        @Override public void onStart(String id) { }
+        /* (9.5.2) Начало фразы — игре: фразу, которую синтезатор так и не начал
+           (бывает при быстром листании), игра подаёт ещё раз. */
+        @Override public void onStart(String id) { callJs("GraniTTSStart", id); }
         @Override public void onDone(String id) { callJs("GraniTTSDone", id); }
         @Override public void onError(String id) { callJs("GraniTTSError", id); }
         @Override public void onError(String id, int code) { callJs("GraniTTSError", id); }
@@ -288,6 +290,10 @@ public class MainActivity extends Activity {
             synchronized (pending) { pending.clear(); }
             if (ready) { tts.stop(); TextToSpeech sp = speaker; if (sp != null && sp != tts) sp.stop(); }
         }
+
+        /* Мост сообщает о начале фразы (GraniTTSStart). */
+        @JavascriptInterface
+        public boolean hasStart() { return true; }
 
         @JavascriptInterface
         public boolean isSpeaking() {
