@@ -102,8 +102,9 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
  check('в одном месте пол один: на всём ярусе шаг одинаковый',
   [surfIn.храм,surfIn.кузня,surfIn.рынок,surfIn.таверна,surfIn.порт,surfIn.верх,surfIn.середина,surfIn.дно].every(a=>a.length===1),surfIn);
  check('глубина слышна по шагу: порода яруса — из смеси своей глубины, хрусталя наверху нет',
-  surfIn.смеси[1].includes(surfIn.верх[0])&&surfIn.смеси[3].includes(surfIn.середина[0])&&
-  surfIn.смеси[5].includes(surfIn.дно[0])&&surfIn.верх[0]!=="crystal",surfIn);
+  /* 9.5.2: порода яруса — по роду подземелья (stairSet/породы), а не только по
+     смеси глубины; травы и голой земли в подземелье нет, хрусталя наверху нет. */
+  [surfIn.верх[0],surfIn.середина[0],surfIn.дно[0]].every(x=>x&&!/grass|earth|dirt/.test(x))&&surfIn.верх[0]!=="crystal",surfIn);
  check('подвалы одной глубины в разных местах звучат по-разному',
   surfIn.подвалов>=2,{подвалов:surfIn.подвалов});
 

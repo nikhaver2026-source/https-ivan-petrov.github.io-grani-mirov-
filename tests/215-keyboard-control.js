@@ -4,7 +4,7 @@
    Просьба игрока: приложение для компьютера, где жесты заменены клавишами —
    и отдельными, и сочетаниями, как в привычных играх: стрелки — ходьба,
    Shift со стрелкой — бег, E — действие с объектом (как двойное касание),
-   Alt+E — инвентарь, Tab — карта, по карте — стрелками.
+   Alt+E — инвентарь, Tab — только здоровье (9.5.3).
 
    1. У каждого значимого действия жестов есть клавиша; одна клавиша не
       делает двух дел в одном положении (на поле и в бою — отдельно).
@@ -63,12 +63,13 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
  await жми("KeyI","i");окна.инвЗакрыт=await page.evaluate(()=>document.getElementById("modal-inventory").hidden);
  await жми("KeyE","e",{altKey:true});окна.альтЕ=await page.evaluate(()=>!document.getElementById("modal-inventory").hidden);
  await page.evaluate(()=>{while(activeLayer())closeTopUI();});
- await жми("Tab","Tab");окна.карта=await page.evaluate(()=>!document.getElementById("modal-map").hidden);
- await жми("ArrowUp","ArrowUp");await жми("ArrowLeft","ArrowLeft");
- окна.клетка=await page.evaluate(()=>({i:MapKeys.i,говорит:uiCursor&&uiCursor.dataset.speak}));
- await жми("Tab","Tab");окна.картаЗакрыта=await page.evaluate(()=>document.getElementById("modal-map").hidden);
- check('4. I и Alt+E — инвентарь, Tab — карта, стрелки по клеткам, Tab закрывает',
-  окна.инвОткрыт&&окна.инвЗакрыт&&окна.альтЕ&&окна.карта&&окна.клетка.i===16&&/2 шага|север|впереди/.test(окна.клетка.говорит||"")&&окна.картаЗакрыта,окна);
+ /* 9.5.3: карты места больше нет; Tab называет только здоровье. */
+ await page.evaluate(()=>{window.__сказ=[];const n=window.narrate;window.__narr=n;window.narrate=(t,o)=>{window.__сказ.push(String(t));return n(t,o);};});
+ await жми("Tab","Tab");await page.waitForTimeout(300);
+ окна.здоровье=await page.evaluate(()=>{window.narrate=window.__narr;return window.__сказ.join(" | ");});
+ окна.картыНет=await page.evaluate(()=>document.getElementById("modal-map").hidden);
+ check('4. I и Alt+E — инвентарь, Tab — только здоровье, карта не открывается',
+  окна.инвОткрыт&&окна.инвЗакрыт&&окна.альтЕ&&/Здоровье \d+ из \d+/.test(окна.здоровье)&&окна.картыНет,окна);
 
  /* ── 5. ── */
  const пункты=await page.evaluate(()=>{while(activeLayer())closeTopUI();CMD.settings();return {меню:!!document.querySelector("#setMenu [data-punkt]")};});

@@ -62570,6 +62570,8 @@ const KB_ACTIONS=[
  {id:"gather",g:"Мир",n:"собрать ресурс",о:"только сбор; с торговцем, сундуком и станками — клавиша действия",def:["KeyF"],ctx:"field",run:KB_GEST("gather")},
  {id:"weapon",g:"Мир",n:"вынуть или убрать оружие",def:["KeyR"],ctx:"any",run:KB_GEST("weapon")},
  {id:"potion",g:"Мир",n:"выпить зелье",def:["KeyQ"],ctx:"any",run:()=>!!safeFn(()=>potionQuick(),false)},
+ /* (9.5.3) Только здоровье — Tab, в бою и вне боя; прежде Tab открывал карту места. */
+ {id:"hp",g:"Мир",n:"только здоровье",def:["Tab"],ctx:"any",run:()=>{narrate(`Здоровье ${G.hp} из ${G.hpMax}.`,{interrupt:true,user:true});return true;}},
  {id:"look",g:"Мир",n:"осмотреться",о:"объекты вокруг и выбор цели",def:["KeyV"],ctx:"field",run:KB_GEST("look")},
  {id:"near",g:"Мир",n:"что рядом",def:["KeyN"],ctx:"field",run:KB_GEST("near")},
  {id:"where",g:"Мир",n:"где я",о:"место, сторона света, время",def:["KeyG"],ctx:"field",run:KB_GEST("where")},

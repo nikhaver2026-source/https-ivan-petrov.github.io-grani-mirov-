@@ -211,16 +211,16 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
  check('10. в бою свайп двумя пальцами влево выпивает зелье, вне боя и поверх окна — нет; в настройках раздел «Жесты во время боя» на все 33 фигуры, переназначение и сброс',
   жб.внеБоя===false&&жб.зелье===true&&жб.полечился&&жб.прочее===false&&жб.назначено&&жб.одноМесто&&жб.сброс&&жб.списков===33&&жб.окноМешает===false,жб);
 
- /* ── 11. осмотреться при тихом шаге; достижение не обрывается шагом ── */
+ /* ── 11. осмотреться при тихом шаге (9.5.3: тремя пальцами влево); достижение не обрывается шагом ── */
  const ос=await page.evaluate(()=>{
   const r={};for(let i=0;i<20&&activeLayer();i++)closeTopUI();
   settings.quietWalk=1;G.inCombat=false;G.combat=null;
   /* в мире */
-  handleTwoFingerSwipe("W");let l=activeLayer();r.мир=!!(l&&l.id==="modal-object")&&document.querySelectorAll('#objBody .list-line').length>0;
+  handleThreeFingerSwipe("W");let l=activeLayer();r.мир=!!(l&&l.id==="modal-object")&&document.querySelectorAll('#objBody .list-line').length>0;
   for(let i=0;i<20&&activeLayer();i++)closeTopUI();
   /* в поселении */
   enterPlace({x:700,y:700,structure:{type:"village",name:"Проба",beacon:"village"}});
-  handleTwoFingerSwipe("W");l=activeLayer();r.вМесте=!!(l&&l.id==="modal-object")&&Look.list.length>0;
+  handleThreeFingerSwipe("W");l=activeLayer();r.вМесте=!!(l&&l.id==="modal-object")&&Look.list.length>0;
   for(let i=0;i<20&&activeLayer();i++)closeTopUI();
   safeFn(()=>leavePlace());G.place=null;
   /* достижение: действие игрока его не снимает */

@@ -120,13 +120,13 @@ const {chromium}=require('playwright');
   спор.уДействия==="Enter"&&спор.уСбора==="KeyE"&&спор.мирнаяОсталась&&спор.боевая==="KeyE"&&спор.esc&&спор.безКлавиши,спор);
 
  /* ── 6. назначения переживают перезапуск; сброс ── */
- await page.evaluate(()=>{ЧИСТО();keyReset();keyBind("interact","KeyU");keyBind("map","Ctrl+KeyM");safeFn(()=>saveSettings());});
+ await page.evaluate(()=>{ЧИСТО();keyReset();keyBind("interact","KeyU");keyBind("hp","Ctrl+KeyM");safeFn(()=>saveSettings());});
  await старт();
  const после=await page.evaluate(()=>{
-  ЧИСТО();const r={interact:keyCombosOf("interact").join(),map:keyCombosOf("map").join()};
+  ЧИСТО();const r={interact:keyCombosOf("interact").join(),map:keyCombosOf("hp").join()};
   const fi0=window.fieldInteract;let fi=0;window.fieldInteract=function(){fi++;return true;};
   ЖМИ("KeyU","u");r.работает=fi;window.fieldInteract=fi0;
-  keyReset();r.сброс=keyCombosOf("interact").join()===KB_BY_ID.interact.def.join()&&keyCombosOf("map").join()===KB_BY_ID.map.def.join();
+  keyReset();r.сброс=keyCombosOf("interact").join()===KB_BY_ID.interact.def.join()&&keyCombosOf("hp").join()===KB_BY_ID.hp.def.join();
   return r;});
  check('6. назначения переживают перезапуск игры, новая клавиша работает; «по умолчанию» возвращает всё',
   после.interact==="KeyU"&&после.map==="Ctrl+KeyM"&&после.работает===1&&после.сброс,после);
