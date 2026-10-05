@@ -5,7 +5,7 @@
 стражник у ворот, жрец, трактирщик, староста, кузнец, торговец, наставник, смотритель порта. Прежде эти строки читал голос
 игры в кавычках; теперь у каждой своя запись и своя интонация.
 
-Записей: 7345
+Записей: 7336
 
 Речь синтезирована 27–29 сентября 2026 года нейроголосами **Gemini** (Google),
 модель `gemini-3.8-flash-tts`, через Gemini API (Interactions API,
@@ -5092,7 +5092,6 @@ Policy (https://policies.google.com/terms/generative-ai/use-policy). Отдел�
 | quest_word_86_v1_f_g.flac | заказчик: слово поручения | Leda | speaking as a quest giver, explaining the task to a traveller; natural, earnest, clear | У дальней шхеры лёд треснул крестом, и нерпичи говорят, что так трескается над кракеном. Проверьте, прежде чем туда пойдут ловцы. |
 | quest_word_86_v2_g.flac | заказчик: слово поручения | Schedar | speaking as a quest giver, explaining the task to a traveller; natural, earnest, clear | У дальней шхеры лёд треснул крестом, и нерпичи говорят, что так трескается над кракеном. Проверьте, прежде чем туда пойдут ловцы. |
 | quest_word_86_v2_f_g.flac | заказчик: слово поручения | Aoede | speaking as a quest giver, explaining the task to a traveller; natural, earnest, clear | У дальней шхеры лёд треснул крестом, и нерпичи говорят, что так трескается над кракеном. Проверьте, прежде чем туда пойдут ловцы. |
-| quest_word_87_g.flac | заказчик: слово поручения | Umbriel | speaking as a quest giver, explaining the task to a traveller; natural, earnest, clear | Кракен поднимается там, где кит-город прошёл вчера, и цепляет за борта. Сход решил: город не свернёт, пусть свернёт кракен. |
 | quest_word_87_v1_g.flac | заказчик: слово поручения | Sadachbia | speaking as a quest giver, explaining the task to a traveller; natural, earnest, clear | Кракен поднимается там, где кит-город прошёл вчера, и цепляет за борта. Сход решил: город не свернёт, пусть свернёт кракен. |
 | quest_word_87_v1_f_g.flac | заказчик: слово поручения | Leda | speaking as a quest giver, explaining the task to a traveller; natural, earnest, clear | Кракен поднимается там, где кит-город прошёл вчера, и цепляет за борта. Сход решил: город не свернёт, пусть свернёт кракен. |
 | quest_word_87_v2_g.flac | заказчик: слово поручения | Schedar | speaking as a quest giver, explaining the task to a traveller; natural, earnest, clear | Кракен поднимается там, где кит-город прошёл вчера, и цепляет за борта. Сход решил: город не свернёт, пусть свернёт кракен. |
@@ -5219,7 +5218,6 @@ Policy (https://policies.google.com/terms/generative-ai/use-policy). Отдел�
 | quest_word_107_v2_f_g.flac | заказчик: слово поручения | Aoede | speaking as a quest giver, explaining the task to a traveller; natural, earnest, clear | У дальней отметки видели человека в маске, которой не делали. Масочники хотят знать, кто снял с них мерку. |
 | quest_word_108_g.flac | заказчик: слово поручения | Umbriel | speaking as a quest giver, explaining the task to a traveller; natural, earnest, clear | Застава считает всё, что идёт к разлому. Всё, кроме того, что идёт под ней. Принеси три кристалла — дальше не твоя забота. |
 | quest_word_108_f_g.flac | заказчик: слово поручения | Despina | speaking as a quest giver, explaining the task to a traveller; natural, earnest, clear | Застава считает всё, что идёт к разлому. Всё, кроме того, что идёт под ней. Принеси три кристалла — дальше не твоя забота. |
-| quest_word_108_v1_f_g.flac | заказчик: слово поручения | Leda | speaking as a quest giver, explaining the task to a traveller; natural, earnest, clear | Застава считает всё, что идёт к разлому. Всё, кроме того, что идёт под ней. Принеси три кристалла — дальше не твоя забота. |
 | quest_word_108_v2_g.flac | заказчик: слово поручения | Schedar | speaking as a quest giver, explaining the task to a traveller; natural, earnest, clear | Застава считает всё, что идёт к разлому. Всё, кроме того, что идёт под ней. Принеси три кристалла — дальше не твоя забота. |
 | quest_word_108_v2_f_g.flac | заказчик: слово поручения | Aoede | speaking as a quest giver, explaining the task to a traveller; natural, earnest, clear | Застава считает всё, что идёт к разлому. Всё, кроме того, что идёт под ней. Принеси три кристалла — дальше не твоя забота. |
 | quest_word_109_g.flac | заказчик: слово поручения | Umbriel | speaking as a quest giver, explaining the task to a traveller; natural, earnest, clear | За Гранью пепел валяется под ногами, а на Грани за него дают, как за серебро. Три меры. Не открывай мешок на свету. |
@@ -5230,7 +5228,6 @@ Policy (https://policies.google.com/terms/generative-ai/use-policy). Отдел�
 | quest_word_109_v2_f_g.flac | заказчик: слово поручения | Aoede | speaking as a quest giver, explaining the task to a traveller; natural, earnest, clear | За Гранью пепел валяется под ногами, а на Грани за него дают, как за серебро. Три меры. Не открывай мешок на свету. |
 | quest_word_110_g.flac | заказчик: слово поручения | Umbriel | speaking as a quest giver, explaining the task to a traveller; natural, earnest, clear | Один мой человек занял у тех, кто за Гранью. Занял костью, отдаёт рудой. Четыре меры — и он снова мой, а не их. |
 | quest_word_110_f_g.flac | заказчик: слово поручения | Despina | speaking as a quest giver, explaining the task to a traveller; natural, earnest, clear | Один мой человек занял у тех, кто за Гранью. Занял костью, отдаёт рудой. Четыре меры — и он снова мой, а не их. |
-| quest_word_110_v1_f_g.flac | заказчик: слово поручения | Leda | speaking as a quest giver, explaining the task to a traveller; natural, earnest, clear | Один мой человек занял у тех, кто за Гранью. Занял костью, отдаёт рудой. Четыре меры — и он снова мой, а не их. |
 | quest_word_110_v2_g.flac | заказчик: слово поручения | Schedar | speaking as a quest giver, explaining the task to a traveller; natural, earnest, clear | Один мой человек занял у тех, кто за Гранью. Занял костью, отдаёт рудой. Четыре меры — и он снова мой, а не их. |
 | quest_word_111_g.flac | заказчик: слово поручения | Umbriel | speaking as a quest giver, explaining the task to a traveller; natural, earnest, clear | У меня девять имён и два тела. Пройди к разлому и убей три твари, что там кормятся: если они сыты, остальные семеро не выйдут никогда. |
 | quest_word_111_f_g.flac | заказчик: слово поручения | Despina | speaking as a quest giver, explaining the task to a traveller; natural, earnest, clear | У меня девять имён и два тела. Пройди к разлому и убей три твари, что там кормятся: если они сыты, остальные семеро не выйдут никогда. |
@@ -5263,8 +5260,6 @@ Policy (https://policies.google.com/terms/generative-ai/use-policy). Отдел�
 | quest_word_115_v2_g.flac | заказчик: слово поручения | Schedar | speaking as a quest giver, explaining the task to a traveller; natural, earnest, clear | Сотник берёт травой: у него половина смены кашляет кровью. Четыре меры — и он меня не видел. |
 | quest_word_115_v2_f_g.flac | заказчик: слово поручения | Aoede | speaking as a quest giver, explaining the task to a traveller; natural, earnest, clear | Сотник берёт травой: у него половина смены кашляет кровью. Четыре меры — и он меня не видел. |
 | quest_word_116_f_g.flac | заказчик: слово поручения | Despina | speaking as a quest giver, explaining the task to a traveller; natural, earnest, clear | За мной пошли двое. Не люди — то, чем застава ищет. Убей их, и я исчезну по-настоящему. |
-| quest_word_116_v1_g.flac | заказчик: слово поручения | Sadachbia | speaking as a quest giver, explaining the task to a traveller; natural, earnest, clear | За мной пошли двое. Не люди — то, чем застава ищет. Убей их, и я исчезну по-настоящему. |
-| quest_word_116_v1_f_g.flac | заказчик: слово поручения | Leda | speaking as a quest giver, explaining the task to a traveller; natural, earnest, clear | За мной пошли двое. Не люди — то, чем застава ищет. Убей их, и я исчезну по-настоящему. |
 | quest_word_116_v2_g.flac | заказчик: слово поручения | Schedar | speaking as a quest giver, explaining the task to a traveller; natural, earnest, clear | За мной пошли двое. Не люди — то, чем застава ищет. Убей их, и я исчезну по-настоящему. |
 | quest_word_116_v2_f_g.flac | заказчик: слово поручения | Aoede | speaking as a quest giver, explaining the task to a traveller; natural, earnest, clear | За мной пошли двое. Не люди — то, чем застава ищет. Убей их, и я исчезну по-настоящему. |
 | quest_word_117_g.flac | заказчик: слово поручения | Umbriel | speaking as a quest giver, explaining the task to a traveller; natural, earnest, clear | Доведи меня до отметки у разлома. Дальше я сам. На Грани меня ждёт верёвка, а за Гранью хотя бы спрашивают имя. |
@@ -5280,8 +5275,6 @@ Policy (https://policies.google.com/terms/generative-ai/use-policy). Отдел�
 | quest_word_118_v2_g.flac | заказчик: слово поручения | Schedar | speaking as a quest giver, explaining the task to a traveller; natural, earnest, clear | Судья берёт не золотом — золото записывают. Три меры ягод в корзине, и приговор полежит до весны. |
 | quest_word_118_v2_f_g.flac | заказчик: слово поручения | Aoede | speaking as a quest giver, explaining the task to a traveller; natural, earnest, clear | Судья берёт не золотом — золото записывают. Три меры ягод в корзине, и приговор полежит до весны. |
 | quest_word_119_f_g.flac | заказчик: слово поручения | Despina | speaking as a quest giver, explaining the task to a traveller; natural, earnest, clear | Меня осудили за двоих. Тех двоих я не трогал, но знаю, кто. Убей двух тварей у их двора — они поймут. |
-| quest_word_119_v1_g.flac | заказчик: слово поручения | Sadachbia | speaking as a quest giver, explaining the task to a traveller; natural, earnest, clear | Меня осудили за двоих. Тех двоих я не трогал, но знаю, кто. Убей двух тварей у их двора — они поймут. |
-| quest_word_119_v1_f_g.flac | заказчик: слово поручения | Leda | speaking as a quest giver, explaining the task to a traveller; natural, earnest, clear | Меня осудили за двоих. Тех двоих я не трогал, но знаю, кто. Убей двух тварей у их двора — они поймут. |
 | quest_word_120_g.flac | заказчик: слово поручения | Umbriel | speaking as a quest giver, explaining the task to a traveller; natural, earnest, clear | Там остались трое из моего дома. Дойди до отметки и оставь знак: они выйдут сами, если поймут, что есть куда. |
 | quest_word_120_f_g.flac | заказчик: слово поручения | Despina | speaking as a quest giver, explaining the task to a traveller; natural, earnest, clear | Там остались трое из моего дома. Дойди до отметки и оставь знак: они выйдут сами, если поймут, что есть куда. |
 | quest_word_120_v1_g.flac | заказчик: слово поручения | Sadachbia | speaking as a quest giver, explaining the task to a traveller; natural, earnest, clear | Там остались трое из моего дома. Дойди до отметки и оставь знак: они выйдут сами, если поймут, что есть куда. |
@@ -5330,7 +5323,6 @@ Policy (https://policies.google.com/terms/generative-ai/use-policy). Отдел�
 | r6_13_f_g.flac | ответ в разговоре | Despina | resentful, cold, bitter | Не так со мной говорят. Это вам будет стоить. |
 | r6_14_g.flac | ответ в разговоре | Umbriel | resentful, cold, bitter | Хотите по-хорошему — ведите себя по-хорошему. |
 | r6_14_f_g.flac | ответ в разговоре | Despina | resentful, cold, bitter | Хотите по-хорошему — ведите себя по-хорошему. |
-| r6_15_g.flac | ответ в разговоре | Umbriel | grateful, warm, friendly | Умеете вы сказать. Ладно, уступлю. |
 | r6_15_f_g.flac | ответ в разговоре | Despina | grateful, warm, friendly | Умеете вы сказать. Ладно, уступлю. |
 | r6_16_g.flac | ответ в разговоре | Umbriel | grateful, warm, friendly | Убедили. Для вас — дешевле. |
 | r6_16_f_g.flac | ответ в разговоре | Despina | grateful, warm, friendly | Убедили. Для вас — дешевле. |
@@ -5395,7 +5387,6 @@ Policy (https://policies.google.com/terms/generative-ai/use-policy). Отдел�
 | r6_14_v1_g.flac | ответ в разговоре | Sadachbia | resentful, cold, bitter | Хотите по-хорошему — ведите себя по-хорошему. |
 | r6_14_v1_f_g.flac | ответ в разговоре | Leda | resentful, cold, bitter | Хотите по-хорошему — ведите себя по-хорошему. |
 | r6_15_v1_g.flac | ответ в разговоре | Sadachbia | grateful, warm, friendly | Умеете вы сказать. Ладно, уступлю. |
-| r6_15_v1_f_g.flac | ответ в разговоре | Leda | grateful, warm, friendly | Умеете вы сказать. Ладно, уступлю. |
 | r6_16_v1_g.flac | ответ в разговоре | Sadachbia | grateful, warm, friendly | Убедили. Для вас — дешевле. |
 | r6_16_v1_f_g.flac | ответ в разговоре | Leda | grateful, warm, friendly | Убедили. Для вас — дешевле. |
 | r6_17_v1_g.flac | ответ в разговоре | Sadachbia | grateful, warm, friendly | Слово ваше крепкое. Берите по своей цене. |
@@ -7452,3 +7443,5 @@ Policy (https://policies.google.com/terms/generative-ai/use-policy). Отдел�
 | trade_sell_big_3_v2_g.flac | trade_sell_big | Schedar | mock complaining | Ты меня разоришь, но товар хорош. |
 | trade_sell_big_4_v2_f_g.flac | trade_sell_big | Aoede | wry | Опустошаешь мне кассу. Но беру всё. |
 | trade_sell_big_4_v2_g.flac | trade_sell_big | Schedar | wry | Опустошаешь мне кассу. Но беру всё. |
+| r6_15_g.flac | dlg | Umbriel | grateful | Умеете вы сказать. Ладно, уступлю. |
+| r6_15_v1_f_g.flac | dlg | Leda | grateful | Умеете вы сказать. Ладно, уступлю. |

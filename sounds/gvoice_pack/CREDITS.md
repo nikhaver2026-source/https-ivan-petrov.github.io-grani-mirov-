@@ -15,7 +15,7 @@ FLAC без потерь, моно, 24 кГц, 16 бит, −18 LUFS, пик н�
 Additional Terms of Service, https://ai.google.dev/gemini-api/terms) Google не
 претендует на права на созданное содержимое; действует Prohibited Use Policy.
 
-## Мужской голос — Iapetus, записей: 7074
+## Мужской голос — Iapetus, записей: 7073
 
 | Файл | Фраза |
 |---|---|
@@ -7092,9 +7092,8 @@ Additional Terms of Service, https://ai.google.dev/gemini-api/terms) Google не
 | m/p10096.flac | злая; |
 | m/p10097.flac | Стоп |
 | m/p10098.flac | фон. |
-| m/p10099.flac | Квазимодо восемнадцать раз прыгнул через Зюйдвестский мост. |
 
-## Женский голос — Callirrhoe, записей: 7646
+## Женский голос — Callirrhoe, записей: 7645
 
 | Файл | Фраза |
 |---|---|
@@ -14743,4 +14742,3 @@ Additional Terms of Service, https://ai.google.dev/gemini-api/terms) Google не
 | f/p09891.flac | злая; |
 | f/p09892.flac | Стоп |
 | f/p09893.flac | фон. |
-| f/p09894.flac | Квазимодо восемнадцать раз прыгнул через Зюйдвестский мост. |
