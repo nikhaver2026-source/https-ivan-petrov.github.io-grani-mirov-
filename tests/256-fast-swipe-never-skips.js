@@ -36,6 +36,9 @@ const R=path.join(__dirname,'..');
    setTimeout(()=>{u.onstart&&u.onstart();слышно.push(u.text);setTimeout(()=>u.onend&&u.onend(),120);},20);};
   Object.defineProperty(speechSynthesis,"speaking",{configurable:true,get:()=>false});
   Object.defineProperty(speechSynthesis,"pending",{configurable:true,get:()=>false});
+  /* Синтезатор уже показал, что сообщает о начале фразы (обычная фраза до
+     того прозвучала): только у такого молчание о начале значит потерю. */
+  Speech._startSeen={web:true};
   const было=Speech.stats.retried||0;
   Speech.say("Настройки звука",{interrupt:true,nav:true});
   await new Promise(r=>setTimeout(r,5200));
@@ -70,6 +73,17 @@ const R=path.join(__dirname,'..');
   a.warm=был;Speech.stop({user:false});while(activeLayer())closeTopUI();
   return {открыто,ждали};});
  check('5. записи Gemini соседних пунктов открываются заранее',п6&&!п6.нет&&!п6.мало&&п6.ждали.length>0&&п6.ждали.every(u=>п6.открыто.includes(u)),п6);
+
+ /* 6: синтезатор, который о начале не сообщает вовсе, не получает лишних повторов */
+ const п7=await p.evaluate(async()=>{
+  settings.ttsEngine="device";Speech.stop({user:false});Speech.adapter=null;Speech._kind=null;Speech._startSeen={};
+  const слышно=[];
+  speechSynthesis.speak=u=>{setTimeout(()=>{слышно.push(u.text);u.onend&&u.onend();},40);};
+  const было=Speech.stats.retried||0;
+  Speech.say("Пункт без начала",{interrupt:true,nav:true});
+  await new Promise(r=>setTimeout(r,1500));
+  return {слышно,повторов:(Speech.stats.retried||0)-было};});
+ check('6. синтезатор, не сообщающий о начале, не получает лишних повторов',п7.слышно.length===1&&п7.повторов===0,п7);
 
  check('Ошибок страницы нет',errors.length===0,errors.slice(0,3));
  await browser.close();

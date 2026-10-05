@@ -1566,7 +1566,7 @@ NEWS.push({v:54,н:"версия 9.5.1: два голоса Gemini и eSpeak в 
   т:"«Встроенный голос» — мужской или женский голос Gemini, и выбранный говорит весь интерфейс; голоса больше не смешиваются. Достижения и события — своим голосом вестника. Третий встроенный — eSpeak NG: быстрый, без сети на любом устройстве."});
 /* 9.5.2: дозапись голосов Gemini, наставники Пути своим голосом, проверка записей с числами. */
 NEWS.push({v:55,н:"версия 9.5.2: больше живых голосов",
-  т:"Дописаны голоса Gemini, наставники Пути говорят сами. Любой синтезатор — телефона, браузера, Windows, eSpeak — говорит тем темпом, что выставлен. У обоза зелья и товары — по 1, 5, 10 и на всё золото. Каждый объект звучит по-своему: стол, верстак, точило, сундук и прочее больше не отзываются одним стуком дерева. При быстром листании голос не пропускает пункты."});
+  т:"Дописаны голоса Gemini. Любой синтезатор говорит выставленным темпом и не пропускает пункты при быстром листании. У обоза всё — по 1, 5, 10 и на всё золото. Каждый объект звучит по-своему: стол, верстак, точило, сундук."});
 const NEWS_V=NEWS[NEWS.length-1].v;
 /* (8.5) Выпуск читается коротко: заголовок, затем факты. */
 function newsLine(n){const н=String(n.н||"");return `${н.charAt(0).toUpperCase()+н.slice(1)}. ${n.т||""}`;}
@@ -2658,14 +2658,16 @@ const Speech={voice:null,keepAlive:null,
   let закрыт=false,начат=false;const t0=Date.now();
   const дальше=()=>{if(закрыт)return;закрыт=true;this._stopWatch();
    if(gen!==this.gen||this.current!==m)return;this._part(m,i+1);};
-  const ещё=()=>{if(закрыт||повтор||начат||!a||a.name==="gemini")return false;закрыт=true;this._stopWatch();
+  /* Судить по «не было начала» можно лишь о синтезаторе, который о начале
+     сообщает: хоть раз сообщил — значит умеет, и молчание о начале значит потерю. */
+  const ещё=()=>{if(закрыт||повтор||начат||!a||(a.name!=="web"&&a.name!=="native")||!(this._startSeen&&this._startSeen[a.name]))return false;закрыт=true;this._stopWatch();
    if(gen!==this.gen||this.current!==m)return true;
    this.stats.retried=(this.stats.retried||0)+1;
    try{a.cancel();}catch(_){}
    setTimeout(()=>{if(gen===this.gen&&this.current===m)this._part(m,i,true);},120);return true;};
   const синтез=a&&a.name!=="gemini";
   const ok=a&&a.speak(m.parts[i],{rate:синтез?this.synthRate():+settings.rate||1,volume:синтез?this.synthVolume(+settings.voiceVol):+settings.voiceVol,
-   onstart:()=>{начат=true;if(gen!==this.gen||this.current!==m)return;m.state="SPEAKING";this._keepAlive();},
+   onstart:()=>{начат=true;(this._startSeen||(this._startSeen={}))[a.name]=true;if(gen!==this.gen||this.current!==m)return;m.state="SPEAKING";this._keepAlive();},
    /* Конец без начала за доли секунды — фраза не прозвучала (настоящий пункт
       длиннее); движок, который вовсе не сообщает о начале, так не страдает:
       его фраза кончается не раньше, чем договорена. */
