@@ -29,13 +29,32 @@ jobs:
         run: |
           set -e
           mkdir -p out
+          # Страницы OpenGameArt: ссылки на файлы набора берутся со страницы
+          # (раздел «Файлы»), лицензия — оттуда же; записывается в inventory.
+          touch tools/sfx-fetch/list.txt
+          if [ -f tools/sfx-fetch/pages.txt ]; then
+            grep -v '^#' tools/sfx-fetch/pages.txt | while read -r name page; do
+              [ -n "$name" ] || continue
+              html=$(curl -fsSL --retry 4 "$page" || true)
+              lic=$(printf '%s' "$html" | grep -o 'creativecommons.org/[a-z/.0-9-]*' | head -1)
+              echo "$name $page ${lic:-?}" >> licenses.txt
+              printf '%s' "$html" | grep -o 'https://opengameart.org/sites/default/files/[^"]*' | grep -v '/styles/\|audio_preview\|\.png$\|\.jpg$\|\.gif$' | sort -u | head -6 | while read -r u; do
+                n="${name}_$(basename "$u" | tr -c 'A-Za-z0-9._\n-' '_' | cut -c1-40)"
+                echo "$n $u" >> tools/sfx-fetch/list.txt
+              done
+            done
+            cat licenses.txt || true
+          fi
           grep -v '^#' tools/sfx-fetch/list.txt | while read -r name url; do
             [ -n "$name" ] || continue
             echo "== $name"
-            curl -fsSL --retry 4 -o "src_$name" "$url"
+            curl -fsSL --retry 4 -o "src_$name" "$url" || { echo "!! не скачалось: $url"; continue; }
             ls -la "src_$name"
             mkdir -p "x/$name"
-            7z x -y -o"x/$name" "src_$name" > /dev/null
+            case "$url" in
+              *.wav|*.WAV|*.ogg|*.OGG|*.mp3|*.MP3|*.flac|*.FLAC|*.aif*|*.AIF*) cp "src_$name" "x/$name/$(basename "$url" | sed 's/%20/_/g')";;
+              *) 7z x -y -o"x/$name" "src_$name" > /dev/null || true;;
+            esac
             find "x/$name" -type f \( -iname '*.wav' -o -iname '*.aif*' \) | while read -r f; do
               rel="${f#x/}"; dst="out/${rel%.*}.flac"; mkdir -p "$(dirname "$dst")"
               ffmpeg -nostdin -loglevel error -y -i "$f" -c:a flac -compression_level 8 "$dst"
@@ -49,6 +68,8 @@ jobs:
           cd ..
           ( cd out && find . -type f -name '*.flac' | sort | while read -r f; do
               echo "$f $(ffprobe -v error -show_entries stream=sample_rate,channels,bits_per_raw_sample:format=duration -of csv=p=0 "$f" | tr '\n' ' ')"; done ) > inventory.txt
+          ( cd out && find . -type f \( -name '*.ogg' -o -name '*.mp3' \) | sort | sed 's/$/ (сжатый исходник — в игру не годится)/' ) >> inventory.txt
+          [ -f licenses.txt ] && { echo "== лицензии"; cat licenses.txt; } >> inventory.txt
           wc -l inventory.txt; head -40 inventory.txt
           ls -la *.zip
       - name: Выпуск sfx-inbox
@@ -58,4 +79,4 @@ jobs:
           gh release delete sfx-inbox --yes --cleanup-tag 2>/dev/null || true
           gh release create sfx-inbox *.zip inventory.txt --prerelease --target "$GITHUB_SHA" \
             --title "Служебный: свободные записи звуков (FLAC)" \
-            --notes "Записи под CC0 для отбора в игру: Still North Media, Vehicle. Не для игроков."
+            --notes "Свободные записи (CC0 и CC BY) для отбора в игру; лицензии каждого набора — в inventory.txt. Не для игроков."
