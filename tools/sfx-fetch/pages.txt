@@ -1,17 +1,16 @@
 # 9.5.4: страницы OpenGameArt, с которых сборочная машина берёт файлы наборов.
 # Формат: имя страница. Лицензия каждого набора пишется в inventory.txt.
 # Ужасы Заморья: жуткие голоса, стоны, шёпот, смех, кость, дыхание, утробный рык.
+# Наборы под CC BY-SA не берутся: условие «так же» не подходит к звукам игры.
 horror https://opengameart.org/content/horror-sound-effects-library
 fantasy https://opengameart.org/content/fantasy-sound-effects-library
 ghostmoan https://opengameart.org/content/ghost-monster-voice-moaning-growling
 ghostloops https://opengameart.org/content/4-atmospheric-ghostly-loops
-growls6 https://opengameart.org/content/6-monstrous-growls
 grunt15 https://opengameart.org/content/15-monster-gruntpaindeath-sounds
 undead https://opengameart.org/content/undead-moans
 ghost1 https://opengameart.org/content/scary-ghost-1
 ghost2 https://opengameart.org/content/scary-ghost-2
 eery https://opengameart.org/content/eeryhorror-sfx
-bigmoan https://opengameart.org/content/big-monster-moan
 breath https://opengameart.org/content/ghost-breath
 spider https://opengameart.org/content/spider-chattering
 witch https://opengameart.org/content/witch-cackle
@@ -24,7 +23,6 @@ interact https://opengameart.org/content/atmospheric-interaction-sound-pack
 creature80 https://opengameart.org/content/80-cc0-creature-sfx
 creature80b https://opengameart.org/content/80-cc0-creture-sfx-2
 evilcr https://opengameart.org/content/evil-creature
-large https://opengameart.org/content/large-monster
 beast https://opengameart.org/content/monster-or-beast-sounds
 silentgr https://opengameart.org/content/silent-beast-growls4
 guttural https://opengameart.org/content/guttural-vocals

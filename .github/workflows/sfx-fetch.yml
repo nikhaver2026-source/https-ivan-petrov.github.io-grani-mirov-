@@ -55,9 +55,11 @@ jobs:
               *.wav|*.WAV|*.ogg|*.OGG|*.mp3|*.MP3|*.flac|*.FLAC|*.aif*|*.AIF*) cp "src_$name" "x/$name/$(basename "$url" | sed 's/%20/_/g')";;
               *) 7z x -y -o"x/$name" "src_$name" > /dev/null || true;;
             esac
+            find "x/$name" -depth -name '__MACOSX' -exec rm -rf {} + 2>/dev/null || true
+            find "x/$name" -name '._*' -delete 2>/dev/null || true
             find "x/$name" -type f \( -iname '*.wav' -o -iname '*.aif*' \) | while read -r f; do
               rel="${f#x/}"; dst="out/${rel%.*}.flac"; mkdir -p "$(dirname "$dst")"
-              ffmpeg -nostdin -loglevel error -y -i "$f" -c:a flac -compression_level 8 "$dst"
+              ffmpeg -nostdin -loglevel error -y -i "$f" -c:a flac -compression_level 8 "$dst" || echo "!! не перевелось: $f"
             done
             find "x/$name" -type f \( -iname '*.ogg' -o -iname '*.mp3' -o -iname '*.flac' -o -iname '*.txt' -o -iname '*.md' -o -iname '*.pdf' \) | while read -r f; do
               rel="${f#x/}"; mkdir -p "out/$(dirname "$rel")"; cp "$f" "out/$rel"; done
