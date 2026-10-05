@@ -87,18 +87,20 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
  check('2. с выбранной целью двойное касание делает то, что под ногами (сундук), а на пустом полу называет, где цель',
   двойное.цель&&двойное.сундукПодНогами===1&&!двойное.сказалЦель&&двойное.пустоЦель&&двойное.пустоСундук===0,двойное);
 
- /* ── 3. три влево — карта, два влево — осмотреться ── */
- await page.evaluate(()=>{while(activeLayer())closeTopUI();Speech.stop();});
+ /* ── 3. (9.5.3) три влево — осмотр (тот же жест закрывает), два влево — выпить зелье ──
+    Озвученной карты места больше нет: «что вокруг» с маяком осталось. */
+ await page.evaluate(()=>{while(activeLayer())closeTopUI();Speech.stop();window.__зелье=0;
+  const было=window.potionQuick;window.potionQuick=function(){window.__зелье++;return true;};window.__былоЗелье=было;});
  await multiSwipe(3,-170,0);
- const карта=await page.evaluate(()=>!document.getElementById("modal-map").hidden);
+ const осмотр=await page.evaluate(()=>!document.getElementById("modal-object").hidden);
  await multiSwipe(3,-170,0);
- const картаЗакрыта=await page.evaluate(()=>document.getElementById("modal-map").hidden);
+ const осмотрЗакрыт=await page.evaluate(()=>document.getElementById("modal-object").hidden);
  await multiSwipe(2,-170,0);
- const осмотр=await page.evaluate(()=>!document.getElementById("modal-object").hidden&&document.getElementById("modal-map").hidden);
- await page.evaluate(()=>{while(activeLayer())closeTopUI();});
+ const зелье=await page.evaluate(()=>window.__зелье>0&&document.getElementById("modal-map").hidden);
+ await page.evaluate(()=>{window.potionQuick=window.__былоЗелье;while(activeLayer())closeTopUI();});
  const умолчания=await page.evaluate(()=>({два:GEST_DEFAULTS["2swipeW"],три:GEST_DEFAULTS["3swipeW"]}));
- check('3. три пальца влево — карта (тот же жест закрывает), два пальца влево — осмотреться',
-  карта&&картаЗакрыта&&осмотр&&умолчания.два==="look"&&умолчания.три==="map",{карта,картаЗакрыта,осмотр,умолчания});
+ check('3. три пальца влево — осмотр (тот же жест закрывает), два пальца влево — выпить зелье',
+  осмотр&&осмотрЗакрыт&&зелье&&умолчания.два==="potion"&&умолчания.три==="look",{осмотр,осмотрЗакрыт,зелье,умолчания});
 
  /* ── 4. точка карты — цель и маяк ── */
  const точка=await page.evaluate(async()=>{

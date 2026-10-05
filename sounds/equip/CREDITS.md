@@ -57,7 +57,7 @@ Vehicle (Jan Schupke, «Fantasy Weapons and Apparel SFX Library»), Kenney
 
 | Файлы | Что звучит | Источник |
 |---|---|---|
-| `equip_belt_on_01…03`, `equip_belt_off_01…03` | пряжка пояса | `belt-buckle-01…05`, `sheath-unbuckle-01` (Vehicle, CC0) |
+| `equip_belt_on_01…03`, `equip_belt_off_01…03` | пряжка пояса | `belt-buckle-01…05`, `sheath-unbuckle-02` (Vehicle, CC0) |
 | `equip_boots_on_01…03`, `equip_boots_off_01…03` | кожа сапог и каблук | `boots-leather-step-01…04`, `boots-leather-jump-01/02` (Vehicle, CC0) |
 | `equip_gloves_on_01…03`, `equip_gloves_off_01…03` | мнётся кожа перчаток | `sheath-squeeze-01…06` (Vehicle, CC0) |
 | `equip_helm_on_01…02`, `equip_helm_off_01…02` | металл шлема и ремешок | `metalPot1/2/3` (Kenney, CC0); `belt-buckle-02/03`, `sheath-unbuckle-02/03` (Vehicle, CC0) |
