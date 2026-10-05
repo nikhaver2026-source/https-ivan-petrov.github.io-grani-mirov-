@@ -27,7 +27,7 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
  check('пролог говорит о Грани, двенадцати богах, Предтечах, державах и о том, как герой попал сюда',/Гранью/.test(prose)&&/богов двенадцать/.test(prose)&&/Предтечи/.test(prose)&&/державы/.test(prose)&&/Неизбранными/.test(prose));
 
  const guide=await page.evaluate(()=>GUIDE.map(g=>[g.title].concat((g.secs||[]).map(x=>x.t)).join(" | ")).join(" | "));
- check('в руководстве есть главы о народах, богах и политике',/Сорок шесть народов/.test(guide)&&/Двенадцать богов/.test(guide)&&/Политика, войны и торговля/.test(guide),guide.split(" | ").length+" глав");
+ check('в руководстве есть главы о народах, богах и политике',/Народы Грани/.test(guide)&&/Великие боги/.test(guide)&&/Политика, войны и торговля/.test(guide),guide.split(" | ").length+" глав");
  const dupCh=await page.evaluate(()=>{const nums=GUIDE.map(g=>(g.title.match(/Глава (\d+)/)||[])[1]);return nums.filter((v,i,a)=>a.indexOf(v)!==i);});
  check('нумерация глав руководства без повторов',dupCh.length===0,dupCh);
 

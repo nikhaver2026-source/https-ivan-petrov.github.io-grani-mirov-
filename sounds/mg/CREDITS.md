@@ -102,9 +102,6 @@ Unported (CC BY-SA 3.0): https://creativecommons.org/licenses/by-sa/3.0/
 | brute_step_02 | исполин: шаг | `behemoth_walk2.wav` |
 | build_magic_01 | возведение чарами: удар силы по камню (FLAC без потерь) | `initiate_hit1.wav` |
 | build_magic_02 | возведение чарами: удар силы по камню (FLAC без потерь) | `initiate_hit2.wav` |
-| build_work_01 | стройка | `worker_build1.wav` |
-| build_work_02 | стройка | `worker_build2.wav` |
-| build_work_03 | стройка | `worker_build3.wav` |
 | fiend_die_01 | демон: гибель | `daemon_die1.wav` |
 | fiend_die_02 | демон: гибель | `daemon_die2.wav` |
 | fiend_die_03 | демон: гибель | `daemon_die3.wav` |
@@ -136,7 +133,7 @@ Unported (CC BY-SA 3.0): https://creativecommons.org/licenses/by-sa/3.0/
 | hall_fall_04 | здание рушится | `tech_building_fall4.wav` |
 | hall_fall_05 | здание рушится | `tech_building_fall5.wav` |
 | harvest_01 | сбор урожая | `initiate_harvest1.wav` |
-| harvest_02 | сбор урожая | `initiate_harvest2.wav` |
+| harvest_02_n | сбор урожая | `initiate_harvest2.wav` |
 | harvest_03 | сбор урожая | `initiate_harvest3.wav` |
 | harvest_04 | сбор урожая | `initiate_harvest4.wav` |
 | hit_air_01 | удар в воздухе | `air_hit1.wav` |
@@ -164,10 +161,10 @@ Unported (CC BY-SA 3.0): https://creativecommons.org/licenses/by-sa/3.0/
 | horse_step_02 | конский шаг | `horseman_walk2.wav` |
 | horse_step_03 | конский шаг | `horseman_walk3.wav` |
 | mine_pick_01 | кирка по руде | `worker_mine1.wav` |
-| mine_pick_02 | кирка по руде | `worker_mine2.wav` |
+| mine_pick_02_n | кирка по руде | `worker_mine2.wav` |
 | mine_pick_03 | кирка по руде | `worker_mine3.wav` |
 | mine_pick_04 | кирка по руде | `worker_mine4.wav` |
-| mine_pick_05 | кирка по руде | `worker_mine5.wav` |
+| mine_pick_05_n | кирка по руде | `worker_mine5.wav` |
 | mine_pick_06 | кирка по руде | `worker_mine6.wav` |
 | mummy_die_01 | мумия: гибель | `mummy_die1.wav` |
 | mummy_die_02 | мумия: гибель | `mummy_die2.wav` |

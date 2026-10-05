@@ -17,9 +17,9 @@
 | craft_axe_02 | топор по дереву | `audio/resource/lumbering/lumber_tree_02.ogg` |
 | craft_axe_03 | топор по дереву | `audio/resource/lumbering/lumber_tree_03.ogg` |
 | craft_axe_04 | топор по дереву | `audio/resource/lumbering/lumber_tree_04.ogg` |
-| craft_berry_01 | ягоды в короб | `audio/resource/gathering/gather_fruit_01.ogg` |
-| craft_berry_02 | ягоды в короб | `audio/resource/gathering/gather_fruit_02.ogg` |
-| craft_berry_03 | ягоды в короб | `audio/resource/gathering/gather_fruit_03.ogg` |
+| craft_berry_01_n | ягоды в короб | `audio/resource/gathering/gather_fruit_01.ogg` |
+| craft_berry_02_n | ягоды в короб | `audio/resource/gathering/gather_fruit_02.ogg` |
+| craft_berry_03_n | ягоды в короб | `audio/resource/gathering/gather_fruit_03.ogg` |
 | craft_field_01 | серп по колосу | `audio/resource/gathering/gather_field_01.ogg` |
 | craft_field_02 | серп по колосу | `audio/resource/gathering/gather_field_02.ogg` |
 | craft_field_03 | серп по колосу | `audio/resource/gathering/gather_field_03.ogg` |

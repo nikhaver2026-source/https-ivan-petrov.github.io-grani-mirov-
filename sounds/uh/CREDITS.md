@@ -30,3 +30,15 @@ License: CC-BY-SA-3.0`).
 | uh_page_01 | страница перевёрнута | `content/audio/sounds/flippage.ogg` |
 | uh_build_01 | доска поставлена | `content/audio/sounds/build.ogg` |
 
+
+**Версия 9.5.3: стройка.** Прежняя «стройка» звучала щелчком в сорок тысячных
+секунды. Три новые записи собраны из двух записей этой же папки — `build.ogg`
+(доска ставится на место) и `stonemason.ogg` (каменотёс): удары молотка по
+доске с разным шагом и тёсаный камень между ними. FLAC 44,1 кГц, 24 бит, пик
+−1,5 дБ. Лицензия та же — CC BY-SA 3.0, The Unknown Horizons Team.
+
+| Файл | Что звучит | Собрано из |
+|---|---|---|
+| uh_build_work_01 | стройка: три удара по доске | `content/audio/sounds/build.ogg` |
+| uh_build_work_02 | стройка: каменотёс, затем доска | `content/audio/sounds/stonemason.ogg`, `content/audio/sounds/build.ogg` |
+| uh_build_work_03 | стройка: доска, камень, доска | `content/audio/sounds/build.ogg`, `content/audio/sounds/stonemason.ogg` |

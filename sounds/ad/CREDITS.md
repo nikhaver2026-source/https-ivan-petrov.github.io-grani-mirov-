@@ -19,12 +19,12 @@
 | ad_gate_close_02 | каменные ворота закрываются | `audio/actor/gate/stonegate_close_22.ogg` |
 | ad_collapse_01 | обрушение кладки | `audio/attack/destruction/building_collapse_large_01.ogg` |
 | ad_collapse_02 | обрушение кладки | `audio/attack/destruction/building_collapse_large_02.ogg` |
-| ad_leaves_01 | листва под руками: травы, грибница, ягоды | `audio/resource/foraging/leaves_01.ogg` |
-| ad_leaves_02 | листва под руками: травы, грибница, ягоды | `audio/resource/foraging/leaves_02.ogg` |
-| ad_leaves_03 | листва под руками: травы, грибница, ягоды | `audio/resource/foraging/leaves_03.ogg` |
+| ad_leaves_01_n | листва под руками: травы, грибница, ягоды | `audio/resource/foraging/leaves_01.ogg` |
+| ad_leaves_02_n | листва под руками: травы, грибница, ягоды | `audio/resource/foraging/leaves_02.ogg` |
+| ad_leaves_03_n | листва под руками: травы, грибница, ягоды | `audio/resource/foraging/leaves_03.ogg` |
 | ad_leaves_04 | листва под руками: травы, грибница, ягоды | `audio/resource/foraging/leaves_04.ogg` |
-| ad_leaves_05 | листва под руками: травы, грибница, ягоды | `audio/resource/foraging/leaves_05.ogg` |
-| ad_leaves_06 | листва под руками: травы, грибница, ягоды | `audio/resource/foraging/leaves_06.ogg` |
+| ad_leaves_05_n | листва под руками: травы, грибница, ягоды | `audio/resource/foraging/leaves_05.ogg` |
+| ad_leaves_06_n | листва под руками: травы, грибница, ягоды | `audio/resource/foraging/leaves_06.ogg` |
 | ad_hoe_01 | мотыга в земле: раскопать, закопать | `audio/resource/farming/hoe_11.ogg` |
 | ad_hoe_02 | мотыга в земле: раскопать, закопать | `audio/resource/farming/hoe_13.ogg` |
 | ad_hoe_03 | мотыга в земле: раскопать, закопать | `audio/resource/farming/hoe_14.ogg` |
@@ -47,7 +47,7 @@
 | ad_trade_02 | торговые ряды | `audio/ambient/building/amb_trade_13.ogg` |
 | ad_day_01 | день в умеренных землях | `audio/ambient/dayscape/day_temperate_12.ogg` |
 | ad_day_02 | день в умеренных землях | `audio/ambient/dayscape/day_temperate_13.ogg` |
-| ad_day_03 | день в умеренных землях | `audio/ambient/dayscape/day_temperate_14.ogg` |
+| ad_day_03_n | день в умеренных землях | `audio/ambient/dayscape/day_temperate_14.ogg` |
 | ad_day_long_01 | долгий день: поле и дорога | `audio/ambient/dayscape/day_temperate_gen_01.ogg` |
 | ad_tropic_01 | жаркий день | `audio/ambient/dayscape/day_tropical_11.ogg` |
 | ad_river_fast_01 | быстрая река | `audio/ambient/water/river_fast_21.ogg` |

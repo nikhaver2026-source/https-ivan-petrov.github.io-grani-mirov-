@@ -8,7 +8,7 @@ domain sounds taken from freesound.org»); отдельные записи ид�
 [CC BY-SA 3.0](https://creativecommons.org/licenses/by-sa/3.0/) — они отмечены в
 таблице.
 
-**Изменения:** отобрано 72 записей, годных тёмному фэнтези (взрывы, удары, гулы,
+**Изменения:** оставлено 53 записи, годных тёмному фэнтези (взрывы, удары, гулы,
 переходы, тревога, копка); каждая перекодирована из WAV в Ogg Vorbis 96 кбит/с
 моно. Содержание не менялось.
 
@@ -33,23 +33,15 @@ domain sounds taken from freesound.org»); отдельные записи ид�
 | `ember_tear_hit.ogg` | разрыв углей | endless-sky contributors, freesound.org | общественное достояние |
 | `excavator.ogg` | землеройка | endless-sky contributors, freesound.org | общественное достояние |
 | `explosion_huge.ogg` | взрыв | Mike Koenig | CC BY-SA 3.0 |
-| `explosion_large.ogg` | взрыв | endless-sky contributors, freesound.org | общественное достояние |
-| `explosion_medium.ogg` | взрыв | endless-sky contributors, freesound.org | общественное достояние |
 | `explosion_small.ogg` | взрыв | endless-sky contributors, freesound.org | общественное достояние |
 | `fate_fire.ogg` | огонь судьбы | endless-sky contributors, freesound.org | общественное достояние |
 | `final_explosion_large.ogg` | последний взрыв | endless-sky contributors, freesound.org | общественное достояние |
 | `final_explosion_medium.ogg` | последний взрыв | endless-sky contributors, freesound.org | общественное достояние |
 | `final_explosion_small.ogg` | последний взрыв | endless-sky contributors, freesound.org | общественное достояние |
-| `firelight_hit.ogg` | огненный удар | endless-sky contributors, freesound.org | общественное достояние |
 | `firestorm_hit.ogg` | огненный шквал | endless-sky contributors, freesound.org | общественное достояние |
 | `gravity_well.ogg` | колодец тяжести | endless-sky contributors, freesound.org | общественное достояние |
-| `gridfire.ogg` | сетчатый огонь | endless-sky contributors, freesound.org | общественное достояние |
 | `harmonic_jump.ogg` | гармонический скачок | endless-sky contributors, freesound.org | общественное достояние |
 | `heaver_shard_hit.ogg` | осколки | endless-sky contributors, freesound.org | общественное достояние |
-| `heavy_rocket_hit.ogg` | гулкий разрыв | Mike Koenig | CC BY-SA 3.0 |
-| `hyperdrive.ogg` | гул перехода | endless-sky contributors, freesound.org | общественное достояние |
-| `hyperdrive_in.ogg` | гул перехода | endless-sky contributors, freesound.org | общественное достояние |
-| `hyperdrive_out.ogg` | гул перехода | endless-sky contributors, freesound.org | общественное достояние |
 | `ion_huge.ogg` | ионный гул | endless-sky contributors, freesound.org | общественное достояние |
 | `ion_impact.ogg` | разряд в упор | endless-sky contributors, freesound.org | общественное достояние |
 | `ion_large.ogg` | ионный гул | endless-sky contributors, freesound.org | общественное достояние |
@@ -57,15 +49,10 @@ domain sounds taken from freesound.org»); отдельные записи ид�
 | `ion_rain.ogg` | ионный гул | endless-sky contributors, freesound.org | общественное достояние |
 | `ion_small.ogg` | ионный гул | endless-sky contributors, freesound.org | общественное достояние |
 | `ion_tiny.ogg` | ионный гул | endless-sky contributors, freesound.org | общественное достояние |
-| `jump_drive.ogg` | прыжок | endless-sky contributors, freesound.org | общественное достояние |
-| `jump_in.ogg` | приход | endless-sky contributors, freesound.org | общественное достояние |
-| `jump_out.ogg` | уход | endless-sky contributors, freesound.org | общественное достояние |
 | `korath_digger.ogg` | копатель | endless-sky contributors, freesound.org | общественное достояние |
 | `magic_am.ogg` | чары | endless-sky contributors, freesound.org | общественное достояние |
 | `magic_weapon.ogg` | оружие чар | endless-sky contributors, freesound.org | общественное достояние |
 | `meteor.ogg` | метеор | 18hiltc | CC BY-SA 3.0 |
-| `mining_laser.ogg` | резак по камню | endless-sky contributors, freesound.org | общественное достояние |
-| `missile_hit.ogg` | попадание | endless-sky contributors, freesound.org | общественное достояние |
 | `moonbeam.ogg` | лунный луч | endless-sky contributors, freesound.org | общественное достояние |
 | `nucleolysis.ogg` | распад | endless-sky contributors, freesound.org | общественное достояние |
 | `nuke_alarm.ogg` | сигнал беды | endless-sky contributors, freesound.org | общественное достояние |
@@ -80,4 +67,9 @@ domain sounds taken from freesound.org»); отдельные записи ид�
 | `stagnation_beam.ogg` | луч застоя | endless-sky contributors, freesound.org | общественное достояние |
 | `star_tail.ogg` | звёздный след | endless-sky contributors, freesound.org | общественное достояние |
 | `sunbeam.ogg` | солнечный луч | endless-sky contributors, freesound.org | общественное достояние |
-| `torpedo_hit.ogg` | попадание тяжёлого | endless-sky contributors, freesound.org | общественное достояние |
+
+**Версия 9.5.3.** Четырнадцать записей с явным звуком космического корабля —
+гул гиперпривода, прыжковый двигатель, ракета, торпеда, плазменная «сетка»,
+лазерный резак — и два взрыва с сильным перегрузом (срезанные пики) из игры
+убраны: фэнтезийному миру они чужие. Их место заняли записи JC Sounds из
+папки `jcfx`.

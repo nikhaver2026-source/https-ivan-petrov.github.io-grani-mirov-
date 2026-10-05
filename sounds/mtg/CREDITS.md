@@ -47,7 +47,6 @@ random-geek, Extex101, An0n3m0us, Lopano.
 | `dug_metal_2.ogg` | металл падает |
 | `dug_node_1.ogg` | камень падает |
 | `dug_node_2.ogg` | камень падает |
-| `explode.ogg` | взрыв |
 | `fencegate_close.ogg` | калитка закрывается |
 | `fencegate_open.ogg` | калитка открывается |
 | `fire_1.ogg` | запись Minetest Game |
@@ -70,7 +69,6 @@ random-geek, Extex101, An0n3m0us, Lopano.
 | `gravel_footstep_2.ogg` | шаг по гравию |
 | `gravel_footstep_3.ogg` | шаг по гравию |
 | `gravel_footstep_4.ogg` | шаг по гравию |
-| `gunpowder_burning.ogg` | горит пороховая дорожка |
 | `hard_footstep_1.ogg` | шаг по камню |
 | `hard_footstep_2.ogg` | шаг по камню |
 | `hard_footstep_3.ogg` | шаг по камню |

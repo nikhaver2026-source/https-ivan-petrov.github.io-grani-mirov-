@@ -106,7 +106,7 @@ https://creativecommons.org/licenses/by/3.0/ — текст лицензии р�
 | oc_diamond_01 | кристалл выкопан | `Sound.ocg/Objects.ocg/DiamondDigOut.ogg` |
 | oc_warp_01 | переход: перенос, слепок времени | `Tutorials.ocf/Sandbox.ocs/Sound.ocg/Warp.ogg` |
 | oc_waterfall_01 | водопад | `Sound.ocg/Environment.ocg/Waterfall.ogg` |
-| oc_birds_01 | птицы в кронах | `Sound.ocg/Environment.ocg/BirdsLoop.ogg` |
+| oc_birds_01_n | птицы в кронах | `Sound.ocg/Environment.ocg/BirdsLoop.ogg` |
 | oc_wind_01 | ветер над землёй | `Sound.ocg/Environment.ocg/WindLoop.ogg` |
 | oc_thunder_01 | гром | `Sound.ocg/Environment.ocg/Lightning.ocg/Thunder1.ogg` |
 | oc_thunder_02 | гром | `Sound.ocg/Environment.ocg/Lightning.ocg/Thunder2.ogg` |
@@ -196,7 +196,7 @@ https://creativecommons.org/licenses/by/3.0/ — текст лицензии р�
 | oc_chop_03 | топор по стволу | `Sound.ocg/Environment.ocg/Tree.ocg/Chop3.wav` (перекодировано из WAV в OGG, содержимое не менялось) |
 | oc_tree_fall_01 | дерево валится | `Sound.ocg/Environment.ocg/Tree.ocg/Landing.ogg` |
 | oc_bat_flutter_01 | летучие мыши: хлопки крыльев | `Sound.ocg/Animals.ocg/Bat.ocg/Flutter1.wav` (перекодировано из WAV в OGG, содержимое не менялось) |
-| oc_bat_flutter_02 | летучие мыши: хлопки крыльев | `Sound.ocg/Animals.ocg/Bat.ocg/Flutter2.wav` (перекодировано из WAV в OGG, содержимое не менялось) |
+| oc_bat_flutter_02_n | летучие мыши: хлопки крыльев | `Sound.ocg/Animals.ocg/Bat.ocg/Flutter2.wav` (перекодировано из WAV в OGG, содержимое не менялось) |
 | oc_bat_flutter_03 | летучие мыши: хлопки крыльев | `Sound.ocg/Animals.ocg/Bat.ocg/Flutter3.wav` (перекодировано из WAV в OGG, содержимое не менялось) |
 | oc_bat_noise_01 | летучие мыши: писк в темноте | `Sound.ocg/Animals.ocg/Bat.ocg/Noise1.wav` (перекодировано из WAV в OGG, содержимое не менялось) |
 | oc_bat_noise_02 | летучие мыши: писк в темноте | `Sound.ocg/Animals.ocg/Bat.ocg/Noise2.wav` (перекодировано из WAV в OGG, содержимое не менялось) |
@@ -233,7 +233,6 @@ https://creativecommons.org/licenses/by/3.0/ — текст лицензии р�
 | oc_trap_poison_01 | ядовитая ловушка: состав распылился | `Sound.ocg/Objects.ocg/SprayCan.wav` (перекодировано из WAV в OGG, содержимое не менялось) |
 | oc_trap_space_01 | пространственная ловушка: ход подменён ходом | `Sound.ocg/Animals.ocg/Puka.ocg/TeleportIn.wav` (перекодировано из WAV в OGG, содержимое не менялось) |
 | oc_trap_space_02 | пространственная ловушка: ход подменён ходом | `Sound.ocg/Animals.ocg/Puka.ocg/TeleportOut.wav` (перекодировано из WAV в OGG, содержимое не менялось) |
-| oc_trap_time_01 | временная ловушка: отсчёт до удара | `Sound.ocg/UI.ocg/Tick.ogg` |
 | oc_trap_grav_01 | гравитационная ловушка: вес стал непомерным | `Sound.ocg/Objects.ocg/Lorry.ocg/Dump1.wav` (перекодировано из WAV в OGG, содержимое не менялось) |
 | oc_trap_grav_02 | гравитационная ловушка: вес стал непомерным | `Sound.ocg/Objects.ocg/Lorry.ocg/Dump2.wav` (перекодировано из WAV в OGG, содержимое не менялось) |
 | oc_trap_illusion_01 | иллюзорная ловушка: морок дрогнул | `Sound.ocg/Hits.ocg/Materials.ocg/Glass.ocg/GlassHit3.ogg` |
