@@ -84,8 +84,9 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
  check('тяжёлый удар мечом по голему: один звон клинка о броню, без глухого удара молота',
   удары.голем.filter(r=>W.sword.hit_armor.includes(r)).length===1
   &&!удары.голем.includes("lug_impact")&&!удары.голем.includes("lug_thud")&&!удары.голем.includes("hero_swing"),удары.голем);
- /* 8.5: промах звучит взмахом своей ступени качества (WEAPON_TIERS). */
- const свист=W.sword.miss.concat(удары.T.sword.miss);
+ /* 8.5: промах звучит взмахом своей ступени качества (WEAPON_TIERS);
+    9.5.3: у тяжёлого и тонкого клинка — взмах своего голоса. */
+ const свист=W.sword.miss.concat(удары.T.sword.miss,["w_v_heavy_swing","w_v_thin_swing"]);
  check('промах свистит, а не бьёт',удары.промах.filter(r=>свист.includes(r)).length===1&&!удары.промах.some(r=>W.sword.hit.includes(r)),удары.промах);
  check('вынуть и убрать оружие — свои состояния модели',удары.вынуть==="draw"&&удары.убрать==="sheathe",{вынуть:удары.вынуть,убрать:удары.убрать});
 
