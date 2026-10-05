@@ -25,7 +25,7 @@
      GitHub Pages. Там же включается и service worker (см. ниже): игра ставится
      на главный экран и работает без сети. -->
 <meta name="theme-color" content="#10121c">
-<title>Грань Миров. Версия 9.5.2</title>
+<title>Грань Миров. Версия 9.5.3</title>
 <style>
 /* Палец, положенный на ползунок, не должен его двигать: браузер по умолчанию
    перебрасывает бегунок в точку касания, и незрячий игрок, просто читая
@@ -106,7 +106,7 @@ h3{color:var(--acc2);margin:14px 0 6px;font-size:1.05rem;}
 
 <!-- ТИТУЛ -->
 <div id="screen-title" class="screen">
- <h1>Грань Миров <small id="gameVersion" style="font-size:.5em;opacity:.75">Версия 9.5.2</small></h1>
+ <h1>Грань Миров <small id="gameVersion" style="font-size:.5em;opacity:.75">Версия 9.5.3</small></h1>
  <div class="menu">
   <button type="button" data-cmd="check">Проверить звук</button>
   <button type="button" data-cmd="whatsnew">Что нового</button>
@@ -1242,9 +1242,9 @@ SVD.weapons=[
  {id:"svw_perer",n:"Меч Перерождённого",type:"Меч",k:1.0,эфф:"отчаяние",о:"когда здоровья меньше трети, удар крепче на пять"},
  {id:"svw_slepok",n:"Посох Слепков",type:"Посох",k:0.9,эфф:"слепок",о:"с каждой твари Сводов — лишняя сущность"},
  {id:"svw_toplat",n:"Посох Топлых Латников",type:"Посох",k:1.05,эфф:"пробой",о:"пробивает хитин и латы: умение «панцирь» не спасает"}];
-const WEB_VERSION="9.5.2",APP_VERSION="9.5.2";
+const WEB_VERSION="9.5.3",APP_VERSION="9.5.3";
 /* У сборки для Android своя строка версии (versionName в build.gradle); с 8.0 все три сборки — 8.0. */
-const ANDROID_VERSION="9.5.2";
+const ANDROID_VERSION="9.5.3";
 const GAME_VERSION=SVODY_ON?ANDROID_VERSION:IN_APP?APP_VERSION:WEB_VERSION;
 const GVOICE_ON=true;
 /* Номер голосового пакета: растёт, когда пакет пополнился (обходит кэш). */
@@ -1575,6 +1575,9 @@ NEWS.push({v:54,н:"версия 9.5.1: два голоса Gemini и eSpeak в 
 /* 9.5.2: дозапись голосов Gemini, наставники Пути своим голосом, проверка записей с числами. */
 NEWS.push({v:55,н:"версия 9.5.2: больше живых голосов",
   т:"Касание по вещи — сразу её дело. Трофеи — в добыче. Шаги и лестницы звучат по роду подземелья, площадки можно обыскать, голоса сверху стихают на спуске. Всё говорит выбранный голос Gemini. Каждый объект звучит по-своему."});
+/* 9.5.3: голоса клинков, звуки надевания, завалы и двери, урон вслух, жесты здоровья и зелья, фляга. */
+NEWS.push({v:56,н:"версия 9.5.3: у каждого клинка свой голос",
+  т:"Мечи и кинжалы звучат по-разному, надевание — по роду вещи. Завал разбирается в проход, за дверью всегда путь. Урон называется; жест здоровья и жест зелья. Простая фляга в суме. Музыка ярусов исправлена."});
 const NEWS_V=NEWS[NEWS.length-1].v;
 /* (8.5) Выпуск читается коротко: заголовок, затем факты. */
 function newsLine(n){const н=String(n.н||"");return `${н.charAt(0).toUpperCase()+н.slice(1)}. ${n.т||""}`;}
@@ -14435,6 +14438,25 @@ const SOUND_BANK={
  w_dagger_draw_t2:{f:["weapons/dagger_draw_t2_01.flac", "weapons/dagger_draw_t2_02.flac", "weapons/dagger_draw_t2_03.flac"],d:"Кинжал выходит из ножен: добротное оружие (Still North Media, Vehicle, JC Sounds; без потерь, 48 кГц)"},
  w_dagger_sheathe_t0:{f:["weapons/dagger_sheathe_t0_01.flac", "weapons/dagger_sheathe_t0_02.flac"],d:"Кинжал ложится в ножны: грубое оружие (Still North Media, Vehicle, JC Sounds; без потерь, 48 кГц)"},
  w_dagger_sheathe_t2:{f:["weapons/dagger_sheathe_t2_01.flac", "weapons/dagger_sheathe_t2_02.flac", "weapons/dagger_sheathe_t2_03.flac"],d:"Кинжал ложится в ножны: добротное оружие (Still North Media, Vehicle, JC Sounds; без потерь, 48 кГц)"},
+ w_v_ring_hit:{f:["weapons/voice_ring_hit_01.flac", "weapons/voice_ring_hit_02.flac", "weapons/voice_ring_hit_03.flac", "weapons/voice_ring_hit_04.flac", "weapons/voice_ring_hit_05.flac"],d:"Звонкий клинок по плоти: рез и чистый звон стали (9.5.3; Vehicle, CC0)"},
+ w_v_ring_parry:{f:["weapons/voice_ring_parry_01.flac", "weapons/voice_ring_parry_02.flac", "weapons/voice_ring_parry_03.flac", "weapons/voice_ring_parry_04.flac", "weapons/voice_ring_parry_05.flac", "weapons/voice_ring_parry_06.flac"],d:"Звонкий клинок о клинок (9.5.3; Vehicle, CC0)"},
+ w_v_ring_draw:{f:["weapons/voice_ring_draw_01.flac", "weapons/voice_ring_draw_02.flac", "weapons/voice_ring_draw_03.flac"],d:"Звонкий клинок из ножен: долгий скрежет стали (9.5.3; Vehicle, CC0)"},
+ w_v_heavy_hit:{f:["weapons/voice_heavy_hit_01.flac", "weapons/voice_heavy_hit_02.flac", "weapons/voice_heavy_hit_03.flac", "weapons/voice_heavy_hit_04.flac", "weapons/voice_heavy_hit_05.flac"],d:"Тяжёлый клинок по плоти: глубокий удар и низкий гул (9.5.3; Vehicle, CC0)"},
+ w_v_heavy_parry:{f:["weapons/voice_heavy_parry_01.flac", "weapons/voice_heavy_parry_02.flac", "weapons/voice_heavy_parry_03.flac", "weapons/voice_heavy_parry_04.flac", "weapons/voice_heavy_parry_05.flac"],d:"Тяжёлый клинок о клинок: низкий лязг (9.5.3; Vehicle, CC0)"},
+ w_v_heavy_draw:{f:["weapons/voice_heavy_draw_01.flac", "weapons/voice_heavy_draw_02.flac", "weapons/voice_heavy_draw_03.flac", "weapons/voice_heavy_draw_04.flac"],d:"Тяжёлый клинок из ножен: шершавый скрежет (9.5.3; Vehicle, CC0)"},
+ w_v_heavy_swing:{f:["weapons/voice_heavy_swing_01.flac", "weapons/voice_heavy_swing_02.flac", "weapons/voice_heavy_swing_03.flac", "weapons/voice_heavy_swing_04.flac"],d:"Взмах тяжёлого клинка: густой гул (9.5.3; Still North Media, CC0)"},
+ w_v_thin_hit:{f:["weapons/voice_thin_hit_01.flac", "weapons/voice_thin_hit_02.flac", "weapons/voice_thin_hit_03.flac", "weapons/voice_thin_hit_04.flac"],d:"Тонкий клинок: короткий укол и тонкий звон (9.5.3; Kenney, Vehicle, CC0)"},
+ w_v_thin_parry:{f:["weapons/voice_thin_parry_01.flac", "weapons/voice_thin_parry_02.flac", "weapons/voice_thin_parry_03.flac", "weapons/voice_thin_parry_04.flac", "weapons/voice_thin_parry_05.flac"],d:"Тонкий клинок о клинок: высокий звон (9.5.3; Vehicle, CC0)"},
+ w_v_thin_draw:{f:["weapons/voice_thin_draw_01.flac", "weapons/voice_thin_draw_02.flac", "weapons/voice_thin_draw_03.flac"],d:"Тонкий клинок из ножен: тонкий шелест стали (9.5.3; Vehicle, CC0)"},
+ w_v_thin_swing:{f:["weapons/voice_thin_swing_01.flac", "weapons/voice_thin_swing_02.flac", "weapons/voice_thin_swing_03.flac", "weapons/voice_thin_swing_04.flac"],d:"Взмах тонкого клинка: свист (9.5.3; Still North Media, CC0)"},
+ w_v_knife_hit:{f:["weapons/voice_knife_hit_01.flac", "weapons/voice_knife_hit_02.flac", "weapons/voice_knife_hit_03.flac", "weapons/voice_knife_hit_04.flac"],d:"Нож: сочный рез (9.5.3; Kenney, Vehicle, CC0)"},
+ w_v_knife_draw:{f:["weapons/voice_knife_draw_01.flac", "weapons/voice_knife_draw_02.flac", "weapons/voice_knife_draw_03.flac"],d:"Нож из ножен (9.5.3; Kenney, Vehicle, CC0)"},
+ w_v_knife_parry:{f:["weapons/voice_knife_parry_01.flac", "weapons/voice_knife_parry_02.flac", "weapons/voice_knife_parry_03.flac"],d:"Нож о клинок: короткий звяк (9.5.3; Vehicle, CC0)"},
+ w_v_stiletto_hit:{f:["weapons/voice_stiletto_hit_01.flac", "weapons/voice_stiletto_hit_02.flac", "weapons/voice_stiletto_hit_03.flac", "weapons/voice_stiletto_hit_04.flac"],d:"Стилет: тонкий укол (9.5.3; Vehicle, CC0; JC Sounds, CC BY 4.0)"},
+ w_v_stiletto_draw:{f:["weapons/voice_stiletto_draw_01.flac"],d:"Стилет из ножен (9.5.3; Veloren, GPL-3)"},
+ w_v_stiletto_sheathe:{f:["weapons/voice_stiletto_sheathe_01.flac"],d:"Стилет в ножны (9.5.3; Veloren, GPL-3)"},
+ w_v_stiletto_parry:{f:["weapons/voice_stiletto_parry_01.flac", "weapons/voice_stiletto_parry_02.flac"],d:"Стилет о клинок: высокий звяк (9.5.3; Vehicle, CC0)"},
+ w_sword_equip:{f:["weapons/sword_equip_01.flac"],d:"Меч на поясе: ножны и рукоять (9.5.3; JC Sounds, CC BY 4.0)"},
  w_heavy_swing_t2:{f:["weapons/heavy_swing_t2_01.flac", "weapons/heavy_swing_t2_02.flac", "weapons/heavy_swing_t2_03.flac", "weapons/heavy_swing_t2_04.flac", "weapons/heavy_swing_t2_05.flac", "weapons/heavy_swing_t2_06.flac"],d:"Взмах топора и булавы: добротное оружие (Still North Media, Vehicle, JC Sounds; без потерь, 48 кГц)"},
  w_heavy_swing_t3:{f:["weapons/heavy_swing_t3_01.flac", "weapons/heavy_swing_t3_02.flac", "weapons/heavy_swing_t3_03.flac"],d:"Взмах топора и булавы: редкое оружие (Still North Media, Vehicle, JC Sounds; без потерь, 48 кГц)"},
  w_bow_shoot_t0:{f:["weapons/bow_shoot_t0_01.flac", "weapons/bow_shoot_t0_02.flac", "weapons/bow_shoot_t0_03.flac"],d:"Выстрел из лука: грубое оружие (Still North Media, Vehicle, JC Sounds; без потерь, 48 кГц)"},
@@ -14479,6 +14501,20 @@ const SOUND_BANK={
  equip_ring_off:{f:["equip/equip_ring_off.flac"],d:"Снять — кольцо: тонкий звон металла"},
  equip_bracelet_on:{f:["equip/equip_bracelet_on.flac"],d:"Надеть — браслет: звяканье металла"},
  equip_bracelet_off:{f:["equip/equip_bracelet_off.flac"],d:"Снять — браслет: звяканье металла"},
+ equip_belt_on:{f:["equip/equip_belt_on_01.flac", "equip/equip_belt_on_02.flac", "equip/equip_belt_on_03.flac"],d:"Надеть — пояс: пряжка (9.5.3; Vehicle, CC0)"},
+ equip_belt_off:{f:["equip/equip_belt_off_01.flac", "equip/equip_belt_off_02.flac", "equip/equip_belt_off_03.flac"],d:"Снять — пояс: пряжка (9.5.3; Vehicle, CC0)"},
+ equip_boots_on:{f:["equip/equip_boots_on_01.flac", "equip/equip_boots_on_02.flac", "equip/equip_boots_on_03.flac"],d:"Надеть — сапоги: кожа и каблук (9.5.3; Vehicle, CC0)"},
+ equip_boots_off:{f:["equip/equip_boots_off_01.flac", "equip/equip_boots_off_02.flac", "equip/equip_boots_off_03.flac"],d:"Снять — сапоги (9.5.3; Vehicle, CC0)"},
+ equip_gloves_on:{f:["equip/equip_gloves_on_01.flac", "equip/equip_gloves_on_02.flac", "equip/equip_gloves_on_03.flac"],d:"Надеть — перчатки: мнётся кожа (9.5.3; Vehicle, CC0)"},
+ equip_gloves_off:{f:["equip/equip_gloves_off_01.flac", "equip/equip_gloves_off_02.flac", "equip/equip_gloves_off_03.flac"],d:"Снять — перчатки (9.5.3; Vehicle, CC0)"},
+ equip_helm_on:{f:["equip/equip_helm_on_01.flac", "equip/equip_helm_on_02.flac"],d:"Надеть — шлем: металл и ремешок (9.5.3; Kenney, Vehicle, CC0)"},
+ equip_helm_off:{f:["equip/equip_helm_off_01.flac", "equip/equip_helm_off_02.flac"],d:"Снять — шлем (9.5.3; Kenney, Vehicle, CC0)"},
+ equip_cloak_on:{f:["equip/equip_cloak_on_01.flac", "equip/equip_cloak_on_02.flac"],d:"Надеть — плащ: ткань и застёжка (9.5.3; Kenney, CC0)"},
+ equip_cloak_off:{f:["equip/equip_cloak_off_01.flac", "equip/equip_cloak_off_02.flac"],d:"Снять — плащ (9.5.3; Kenney, CC0)"},
+ equip_quiver_on:{f:["equip/equip_quiver_on_01.flac", "equip/equip_quiver_on_02.flac", "equip/equip_quiver_on_03.flac"],d:"Взять лук: колчан и перья стрел (9.5.3; Vehicle, CC0)"},
+ equip_quiver_off:{f:["equip/equip_quiver_off_01.flac", "equip/equip_quiver_off_02.flac", "equip/equip_quiver_off_03.flac"],d:"Убрать лук: стрелы в колчан (9.5.3; Vehicle, CC0)"},
+ equip_blade_on:{f:["equip/equip_blade_on_01.flac", "equip/equip_blade_on_02.flac"],d:"Ножны на пояс: пряжка и кожа (9.5.3; Vehicle, CC0)"},
+ equip_blade_off:{f:["equip/equip_blade_off_01.flac", "equip/equip_blade_off_02.flac"],d:"Ножны с пояса (9.5.3; Vehicle, CC0)"},
  /* ── МУЗЫКА МЕСТ ИЗ ОТКРЫТЫХ ФЭНТЕЗИЙНЫХ ИГР ──
     У каждого ключа MUSIC_TRACK своя роль, и ни одна запись не звучит в двух
     местах. Темы из нескольких записей идут по кругу одна за другой. Всё,
@@ -42595,9 +42631,43 @@ function weaponSoundClass(){
  const k=weaponClass();
  if(k==="bow"&&safeFn(()=>/арбалет/i.test(String(G.equip.weapon.name||G.equip.weapon.n||G.equip.weapon.type||"")),false))return "crossbow";
  return k;}
+/* ── Голос клинка (9.5.3) ──
+   Прежде все мечи одной ступени звучали одинаково, и кинжалы тоже. Теперь у
+   каждого клинка свой голос: звонкий, тяжёлый или тонкий меч; нож или стилет.
+   Голос — по слову в имени (сабля звенит, двуручник гудит, рапира свистит),
+   иначе — по самой вещи: один и тот же меч всегда звучит одинаково, а другой
+   меч — иначе. Голос даёт удар по плоти, парирование, извлечение из ножен и
+   у части голосов — взмах; чего у голоса нет, звучит ступенью качества. */
+const WEAPON_VOICES={sword:["","ring","heavy","thin"],dagger:["","knife","stiletto"]};
+const WEAPON_VOICE_WORDS={
+ sword:[[/сабл|катан|ятаган|шамшир|звонк|поющ|мифрил|серебр/i,"ring"],
+  [/двуруч|полутор|палаш|клеймор|тяжёл|исполин|драконь|адамант|гарнизон/i,"heavy"],
+  [/рапир|шпаг|эсток|тонк|лёгк|лунн|игл|эльф/i,"thin"]],
+ dagger:[[/нож|тесак|клык|серп|челюст/i,"knife"],[/стилет|жало|шип|игл|кортик/i,"stiletto"]]};
+const WEAPON_VOICE_STATE={swing:"swing",miss:"swing",hit:"hit",hit_flesh:"hit",parry:"parry",clash:"parry",draw:"draw",sheathe:"sheathe"};
+function weaponVoice(w,cls){
+ try{
+  w=w||(G.equip&&G.equip.weapon);if(!w)return "";
+  cls=cls||weaponClass();const ряд=WEAPON_VOICES[cls];if(!ряд)return "";
+  if(w.голос&&ряд.indexOf(w.голос)>=0)return w.голос;
+  const имя=`${w.name||w.n||""} ${w.type||""}`;
+  for(const [re,v] of (WEAPON_VOICE_WORDS[cls]||[]))if(re.test(имя))return v;
+  /* Стартовый меч звенит: это первый клинок, который слышит игрок. */
+  if(w.id==="starter-steel-sword")return "ring";
+  const key=String(w.id||w.name||"");let h=0;for(let i=0;i<key.length;i++)h=(h*31+key.charCodeAt(i))>>>0;
+  return ряд[h%ряд.length];
+ }catch(_){return "";}}
 function weaponSound(state,opts){
  const o=Object.assign({gain:0.55,maxSec:2.5,delay:150},opts||{});
  const cls=o.cls||weaponSoundClass();
+ /* Свой голос клинка — раньше ступени качества. */
+ {const v=(cls==="sword"||cls==="dagger")?weaponVoice(null,cls):"";const st=WEAPON_VOICE_STATE[state];
+  const роль=v&&st?`w_v_${v}_${st}`:"";
+  if(роль&&Bank.has(роль)){
+   safeFn(()=>Bank.play(роль,{kind:"combat",gain:o.gain,maxSec:o.maxSec,prio:"high"}));
+   if(WEAPON_SING_STATES[state]&&weaponSings())setTimeout(()=>safeFn(()=>Bank.play("magic_shimmer",{kind:"combat",gain:o.gain*0.32,maxSec:1.6})),45);
+   G.lastWeaponSound={cls,state,role:роль,voice:v};
+   return true;}}
  const m=WEAPON_SOUND[cls]||WEAPON_SOUND[cls==="crossbow"?"bow":"sword"]||WEAPON_SOUND.sword;
  /* Своя ступень: одна роль по качеству вещи, без наложения второй записи. */
  const ряд=WEAPON_TIERS[cls]&&WEAPON_TIERS[cls][state];
@@ -56458,6 +56528,15 @@ function equipMaterial(it){
    месту вещи и её материалу. Прежде звучал общий «голос вещи». */
 function equipSoundKind(it,место){
  const м=String(место||"");const t=`${(it&&it.name)||""} ${(it&&it.type)||""}`.toLowerCase();
+ /* (9.5.3) Оружие не лязгает латами: лук берётся с колчаном, клинок — с
+    ножнами на поясе. Пояс щёлкает пряжкой, сапоги и перчатки — своей кожей,
+    шлем — металлом и ремешком, плащ — тканью и застёжкой. */
+ if(м==="weapon")return /лук|арбалет/.test(t)?"quiver":/посох|жезл/.test(t)?"cloth":"blade";
+ if(м==="belt")return "belt";
+ if(м==="cloak")return "cloak";
+ if(м==="helm"&&equipMaterial(it)!=="leather"&&equipMaterial(it)!=="cloth")return "helm";
+ if(м==="boots"&&equipMaterial(it)!=="metal")return "boots";
+ if(м==="gloves"&&equipMaterial(it)!=="metal")return "gloves";
  if(м==="amulet")return "amulet";
  if(м==="ring"||м==="ring2"||м==="ears")return "ring";
  if(м==="bracelet")return "bracelet";

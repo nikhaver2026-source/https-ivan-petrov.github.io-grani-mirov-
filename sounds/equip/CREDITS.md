@@ -44,3 +44,23 @@ EBU R128 до −16 LUFS, пик не выше −1 дБ TP. Пересчёт ч
 | `equip_ring_off.flac` | снять кольцо: тонкий звон | `audio/attack/impact/arrow_metal_07.ogg` — Wildfire Games (0 A.D.), CC BY-SA 3.0 |
 | `equip_bracelet_on.flac` | надеть браслет: защёлка | `metalLatch.ogg` — Kenney (kenney.nl), «RPG Audio», CC0 |
 | `equip_bracelet_off.flac` | снять браслет | `mcl_armor_unequip_chainmail.ogg` — artisticdude (OpenGameArt, «RPG Sound Pack»), CC0; из MineClone2/VoxeLibre |
+
+## Надеть и снять по месту вещи (версия 9.5.3)
+
+Пояс, сапоги, перчатки, шлем, плащ, лук с колчаном и ножны клинка — свои
+записи. Моно FLAC 48 кГц, 24 бит; срез ниже 40 Гц, пик −1 дБ, громкость не выше
+−20…−22 LUFS.
+
+**Лицензии.** CC0 (https://creativecommons.org/publicdomain/zero/1.0/):
+Vehicle (Jan Schupke, «Fantasy Weapons and Apparel SFX Library»), Kenney
+(kenney.nl, «RPG Audio»).
+
+| Файлы | Что звучит | Источник |
+|---|---|---|
+| `equip_belt_on_01…03`, `equip_belt_off_01…03` | пряжка пояса | `belt-buckle-01…05`, `sheath-unbuckle-01` (Vehicle, CC0) |
+| `equip_boots_on_01…03`, `equip_boots_off_01…03` | кожа сапог и каблук | `boots-leather-step-01…04`, `boots-leather-jump-01/02` (Vehicle, CC0) |
+| `equip_gloves_on_01…03`, `equip_gloves_off_01…03` | мнётся кожа перчаток | `sheath-squeeze-01…06` (Vehicle, CC0) |
+| `equip_helm_on_01…02`, `equip_helm_off_01…02` | металл шлема и ремешок | `metalPot1/2/3` (Kenney, CC0); `belt-buckle-02/03`, `sheath-unbuckle-02/03` (Vehicle, CC0) |
+| `equip_cloak_on_01…02`, `equip_cloak_off_01…02` | ткань плаща и застёжка | `cloth1…4`, `metalClick` (Kenney, CC0) |
+| `equip_quiver_on_01…03`, `equip_quiver_off_01…03` | колчан и перья стрел | `quiver-leather-squeeze-01/05/09`, `arrow-feathers-01`, `arrow-return-to-quiver-01/04` (Vehicle, CC0) |
+| `equip_blade_on_01…02`, `equip_blade_off_01…02` | ножны клинка на поясе | `sheath-buckle-01`, `sheath-squeeze-07/08`, `belt-buckle-01`, `sheath-unbuckle-01/03` (Vehicle, CC0) |
