@@ -60370,7 +60370,7 @@ function worldSelfCheck(){
    &&new Set(AM_GROUPS.map(g=>g[0])).size===16+(SVODY_ON?1:0)&&new Set(AM_GROUPS.map(g=>g[2].id)).size===16+(SVODY_ON?1:0)
    &&typeof amGroupOpen==="function"&&typeof amBack==="function"&&typeof CMD.amgroup==="function"
    /* Ни один пункт меню не потерян и не задвоен при разбивке. */
-   &&AM_ITEMS.length===134+(SVODY_ON?13:0)&&new Set(AM_ITEMS.map(x=>x[0])).size===134+(SVODY_ON?13:0)
+   &&AM_ITEMS.length===136+(SVODY_ON?13:0)&&new Set(AM_ITEMS.map(x=>x[0])).size===136+(SVODY_ON?13:0)
    /* Самый большой раздел меньше трети меню: прежний был на пятьдесят семь. */
    &&Math.max(...AM_GROUPS.map(g=>g[1].length))<=16
    /* Семь частей руководства, и каждая глава ровно в одной. */
@@ -60421,7 +60421,7 @@ function worldSelfCheck(){
      невозможного. */
   /* Меню действий пунктами: шестнадцать разделов, каждый пункт в одном,
      список разделов открывается первым, раздел — двойным касанием. */
-  ok("ampunkty",AM_GROUPS.length===16+(SVODY_ON?1:0)&&AM_ITEMS.length===134+(SVODY_ON?13:0)&&new Set(AM_ITEMS.map(x=>x[0])).size===134+(SVODY_ON?13:0)
+  ok("ampunkty",AM_GROUPS.length===16+(SVODY_ON?1:0)&&AM_ITEMS.length===136+(SVODY_ON?13:0)&&new Set(AM_ITEMS.map(x=>x[0])).size===136+(SVODY_ON?13:0)
    &&["start","here","move","fight","hero","quests","craft","people","magic","faith","books","world","realms","dark","sound","game"]
      .every(id=>AM_GROUP_BY_ID[id])
    &&["char","bodystate","inv","mastery"].every(c=>AM_GROUP_BY_ID.hero[1].some(x=>x[0]===c))
