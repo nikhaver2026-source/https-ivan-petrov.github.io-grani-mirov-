@@ -28,6 +28,8 @@ const R=path.join(__dirname,'..');
    let rate=null;const был=window.SpeechSynthesisUtterance;
    window.SpeechSynthesisUtterance=function(t){this.text=t;};
    const sp=window.speechSynthesis&&speechSynthesis.speak;
+   /* пуск сразу, без паузы после недавнего обрыва фоновой речи */
+   Speech._cancelAt=0;
    try{if(window.speechSynthesis)speechSynthesis.speak=u=>{rate=u.rate;};
     Speech._webAdapter().speak("проба",{rate:Speech.synthRate(),volume:1});}catch(_){}
    finally{window.SpeechSynthesisUtterance=был;if(sp)speechSynthesis.speak=sp;}
