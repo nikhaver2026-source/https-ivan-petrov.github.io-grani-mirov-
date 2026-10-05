@@ -174,7 +174,8 @@ const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(e!==undefined?' :
   const кл=WEAPON_SOUND[weaponClass()];
   r.удар=игр.slice();
   r.свистов=игр.filter(x=>(кл.swing||[]).indexOf(x)>=0||x==="hero_swing").length;
-  r.ударов=игр.filter(x=>(кл.hit||[]).indexOf(x)>=0).length;
+  /* 9.5.3: у клинка свой голос — удар звучит записью голоса (w_v_…_hit). */
+  r.ударов=игр.filter(x=>(кл.hit||[]).indexOf(x)>=0||/^w_v_[a-z]+_hit$/.test(x)).length;
   const оружейные=new Set(Object.values(кл).flat().concat(["hero_swing","lug_impact"]));
   r.оружейных=игр.filter(x=>оружейные.has(x)).length;
   endCombat();
