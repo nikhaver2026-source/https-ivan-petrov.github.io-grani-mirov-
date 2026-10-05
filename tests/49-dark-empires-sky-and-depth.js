@@ -228,7 +228,8 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
  const звук=await page.evaluate(()=>{
   const mtg=Object.keys(SOUND_BANK).filter(k=>k.startsWith("mtg_"));
   const файлы=[...new Set(mtg.flatMap(k=>SOUND_BANK[k].f))];
-  const чужие=файлы.filter(f=>!f.startsWith("mtg/"));
+  /* (9.5.3) Взрыв Luanti с перегрузом сменила запись JC Sounds (папка jcfx). */
+  const чужие=файлы.filter(f=>!f.startsWith("mtg/")&&!f.startsWith("jcfx/"));
   const беды=[];
   ["shrine","ossuary","pit","spire","bazaar","den","hold"].forEach(st=>{
    const г=LIVE_SCENE[st];
