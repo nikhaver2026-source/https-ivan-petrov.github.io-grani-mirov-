@@ -1246,7 +1246,11 @@ const ANDROID_VERSION="9.5.2";
 const GAME_VERSION=SVODY_ON?ANDROID_VERSION:IN_APP?APP_VERSION:WEB_VERSION;
 const GVOICE_ON=true;
 /* Номер голосового пакета: растёт, когда пакет пополнился (обходит кэш). */
-const GV_PACK_V=9,GV_HERALD_ON=true;
+/* (9.5.2, просьба игрока) Вестник выключен: «выбран мужской голос Gemini — всё
+   должно звучать мужским, выбран женский — женским». Голос вестника (Zephyr)
+   звучал женским и при выбранном мужском. Вести и достижения теперь говорит
+   выбранный голос; опись вестника остаётся в игре на случай возврата. */
+const GV_PACK_V=9,GV_HERALD_ON=false;
 try{
  const v="Версия "+GAME_VERSION;
  document.title=document.title.replace(/Версия [\d.]+/,v);
@@ -1566,7 +1570,7 @@ NEWS.push({v:54,н:"версия 9.5.1: два голоса Gemini и eSpeak в 
   т:"«Встроенный голос» — мужской или женский голос Gemini, и выбранный говорит весь интерфейс; голоса больше не смешиваются. Достижения и события — своим голосом вестника. Третий встроенный — eSpeak NG: быстрый, без сети на любом устройстве."});
 /* 9.5.2: дозапись голосов Gemini, наставники Пути своим голосом, проверка записей с числами. */
 NEWS.push({v:55,н:"версия 9.5.2: больше живых голосов",
-  т:"Дописаны голоса Gemini. Любой синтезатор говорит выставленным темпом и не пропускает пункты при быстром листании. У обоза всё — по 1, 5, 10 и на всё золото. Каждый объект звучит по-своему: стол, верстак, точило, сундук."});
+  т:"Касание по вещи — сразу её дело. Трофеи — в добыче. Шаги и лестницы звучат по роду подземелья, площадки можно обыскать, голоса сверху стихают на спуске. Всё говорит выбранный голос Gemini. Каждый объект звучит по-своему."});
 const NEWS_V=NEWS[NEWS.length-1].v;
 /* (8.5) Выпуск читается коротко: заголовок, затем факты. */
 function newsLine(n){const н=String(n.н||"");return `${н.charAt(0).toUpperCase()+н.slice(1)}. ${n.т||""}`;}
@@ -2260,7 +2264,7 @@ const Speech={voice:null,keepAlive:null,
   try{const g=String(v.gender||"").toLowerCase();if(/^f|жен/.test(g))return "f";if(/^m|муж/.test(g))return "m";
    const n=String(v.name||"")+" "+String(v.voiceURI||"");
    if(/(irina|svetlana|milena|katya|katerina|ekaterina|elena|anna|tatiana|tatyana|victoria|daria|dariya|olga|natalia|alena|alyona|yulia|julia|maria|marina|ksenia|polina|zira|smtf|female|ирин|светлан|милен|кат|елен|анн|татьян|виктор|дарь|ольг|натал|алён|юли|мари|ксени|полин|женск)/i.test(n))return "f";
-   if(/(pavel|dmitr|dmitry|aleksandr|alexander|artemiy|artem|yuri|yury|mikhail|maxim|ivan|nikolai|sergey|sergei|deni(?:s)|ruslan|evgeniy|evgeny|pyotr|andrei|andrey|smtm|male|павел|дмитр|александр|артем|юри|михаил|максим|иван|никола|серге|денис|руслан|евген|пётр|андре|мужск)/i.test(n))return "m";}catch(_){}
+   if(/(pavel|dmitr|dmitry|aleksandr|alexander|artemiy|artem|yuri|yury|mikhail|maxim|x-rud|x-ruf|ivan|nikolai|sergey|sergei|deni(?:s)|ruslan|evgeniy|evgeny|pyotr|andrei|andrey|smtm|male|павел|дмитр|александр|артем|юри|михаил|максим|иван|никола|серге|денис|руслан|евген|пётр|андре|мужск)/i.test(n))return "m";}catch(_){}
   return null;},
  /* Голос устройства для незаписанного: выбранный игроком — он; иначе русский
     голос того же пола, что голос Gemini; иначе голос устройства по умолчанию. */
@@ -2507,6 +2511,8 @@ const Speech={voice:null,keepAlive:null,
      о чём игрок спросил сам (здоровье — два пальца вправо), и смертельная
      опасность. Вернуть слова в бою — флажок «Озвучка во время боя». */
   if(!user&&!речь&&cls.pri>0&&settings.cbSpeech!==1&&safeFn(()=>G.inCombat&&!!G.combat,false))return drop();
+  /* Пункт меню — не достижение, даже если в нём слово «достижения» или «уровень». */
+  if(m.nav&&m.cat==="achieve")m.cat="result";
   if(!user&&m.cat==="achieve"){
    /* ── ДОСТИЖЕНИЯ ──
       Ступень мастерства, уровень, звание при краткой и минимальной
@@ -6231,8 +6237,27 @@ function interactAdjacent(){
  const выбор=рядом.find(z=>z.o.dx===fx&&z.o.dy===fy)||рядом.find(z=>живой(z)&&прямо(z))||рядом.find(прямо)||рядом.find(живой)||рядом[0];
  const o=выбор.o;
  if(ADJ_MAIN_TILES.has(o.плитка)&&typeof o.главное==="function"){safeFn(()=>o.главное());return true;}
- /* Дверь и прочее без своего главного дела — список его действий. */
- objList=все;return !!safeFn(()=>openObjActions(выбор.i),false);}
+ /* Дверь и прочее без своего главного дела — его первое дело, не список. */
+ objList=все;return !!safeFn(()=>objMainAct(выбор.i),false);}
+/* ── КАСАНИЕ ПО ОБЪЕКТУ — САМО ДЕЛО (9.5.2, просьба игрока) ──
+   «На каждое касание по объекту открывается меню действий». Двойное касание
+   по вещи под рукой теперь делает её главное дело сразу: вещь звучит и
+   рассказывает о себе, под ней может щёлкнуть рычаг; сундук открывается,
+   книги — на полке, дверь — открывается. Полный список действий остаётся
+   в меню действий: «Что вокруг» → объект. Станок (горн, мастерская) — это
+   выбор работы, и он по-прежнему открывает свой список. */
+const OBJ_LIST_TILES=new Set(["G","<",">","M"]);
+const OBJ_MAIN_ORDER=["landsearch","use","dopen","enterpass","copen","takeitem","readbook","drawer","pull","toggle","knock","look"];
+function objMainAct(j){
+ const o=objList[Number(j)];if(!o)return false;
+ /* Станок — выбор работы; выход, лестницы и логово уводят с уровня или
+    начинают бой, — у них по-прежнему список, а не дело с первого касания. */
+ if(o.станок||OBJ_LIST_TILES.has(o.плитка))return openObjActions(j);
+ if(typeof o.главное==="function"&&ADJ_MAIN_TILES.has(o.плитка)){safeFn(()=>o.главное());return true;}
+ const acts=safeFn(()=>actionsFor(o),[])||[];
+ const a=OBJ_MAIN_ORDER.map(id=>acts.find(z=>z.id===id&&!z.заблокировано)).find(Boolean);
+ if(a)return doObjAction(j,a.id);
+ return openObjActions(j);}
 /* Есть ли дело прямо под ногами: добыча, предмет на клетке, постройка или ресурс. */
 function somethingHere(){
  if(G.loot&&Array.isArray(G.loot)&&G.loot.length)return true;
@@ -14732,11 +14757,11 @@ const Bank={
    const c=this.chanOf(kind),m=this.master();
    if(c==="music")return settings.music?Math.min(1,(Number(settings.musicVol)||0.5))*speechDuck("music")*depthMusicDuck()*m:0;
    if(!settings.effects)return 0;
-   if(c==="ambient")return Math.min(1,Number(settings.ambVol)===0?0:(Number(settings.ambVol)||0.8))*speechDuck("ambient")*anomalyGain("ambient")*m;
+   if(c==="ambient")return Math.min(1,Number(settings.ambVol)===0?0:(Number(settings.ambVol)||0.8))*speechDuck("ambient")*anomalyGain("ambient")*flightFade()*m;
    if(c==="ui")return Math.min(1,Number(settings.uiVol)===0?0:(Number(settings.uiVol)||0.9))*m;
    if(c==="combat")return Math.min(1,Number(settings.combatVol)===0?0:(Number(settings.combatVol)||1))*anomalyGain("world")*m;
    if(c==="magic")return Math.min(1,Number(settings.magicVol)===0?0:(Number(settings.magicVol)||1))*anomalyGain("world")*m;
-   if(c==="npc")return Math.min(1,Number(settings.npcVol)===0?0:(Number(settings.npcVol)||1))*speechDuck("npc")*m;
+   if(c==="npc")return Math.min(1,Number(settings.npcVol)===0?0:(Number(settings.npcVol)||1))*speechDuck("npc")*flightFade()*m;
    return Math.min(1,Number(settings.fxVol)||0.7)*anomalyGain("world")*m;
   }catch(_){return 0.5;}},
  /* ── ЗАТИШЬЕ И ПРОБУЖДЕНИЕ ──
@@ -15200,6 +15225,15 @@ function voiceChain(ctx,src){
  return {out:mk,nodes:[c,mk]};}
 /* Громкость голоса без приглушения под речь, без шины эффектов и без
    второго множителя общей громкости: остаются ползунок голосов и общий. */
+/* ── ГОЛОСА ЯРУСА ОТДАЛЯЮТСЯ С КАЖДОЙ СТУПЕНЬЮ (9.5.2, просьба игрока) ──
+   Прежде фон места и голоса жителей звучали в полную силу весь марш и
+   смолкали разом, когда игрок уже сошёл на новый ярус. Теперь покидаемый
+   ярус стихает постепенно: на середине марша — вполовину, у последней
+   ступени — едва слышен. Вернувшись на площадку, игрок слышит его снова. */
+function flightFade(){
+ try{const f=G.flight;if(!f)return 1;
+  const доля=Math.max(0,Math.min(1,(Number(f.i)||0)/Math.max(1,Number(f.n)||1)));
+  return Math.max(0.1,1-доля*0.9);}catch(_){return 1;}}
 function voiceLevel(kind,gain){
  const d=Math.max(0.05,safeFn(()=>speechDuck(Bank.chanOf(kind)),1));
  const fx=Math.max(0.05,Number(settings.fxVol)||1);
@@ -26147,7 +26181,7 @@ function trapFire(x,y,л){
  if(л.яд&&safeFn(()=>pactGift("соль"),false))хвост+=" Соль держит: отрава разошлась, не дойдя до сердца.";
  else if(л.яд)хвост+=` Дышать трудно: вода убыла.`,G.water=Math.max(0,(Number(G.water)||0)-Math.round(20*(1-safeFn(()=>Path.facetK("ash"),0))));
  if(л.sv&&SVODY_ON)хвост+=safeFn(()=>Svody.trapEffect(л),"");
- narrate(`${л.бьёт}${урон>0?` Урон: ${урон}, здоровья осталось ${G.hp}.`:" Обошлось без крови."}${хвост} Ловушка отработала и больше не взведена.`);
+ narrate(`${л.бьёт}${урон>0?` Урон: ${урон}, здоровья осталось ${G.hp}.`:" Обошлось без крови."}${хвост} Ловушка отработала и больше не взведена.`,{pri:1,interrupt:true});
  safeFn(()=>{refresh();saveGame(true);});
  return true;}
 
@@ -27755,8 +27789,56 @@ function stashSkill(){
  if(safeFn(()=>pactGift("ключ"),false))k+=0.12;
  if(safeFn(()=>pactGift("слух"),false))k+=0.08;
  return Math.max(0.1,Math.min(0.95,k));}
+/* ── ПЛОЩАДКА ЛЕСТНИЦЫ (9.5.2, просьба игрока) ──
+   «На лестницах есть площадки, но обыск через меню действий ничего не даёт».
+   Площадку обыскивают руками: в щелях между плитами — монеты, в нише —
+   оставленное, на стене — метки тех, кто шёл раньше. У каждой площадки своё,
+   и обыскивают её один раз. */
+function landingKey(){const p=G.place,f=G.flight;if(!p||!f)return null;
+ return [p.bx,p.by,p.depth,f.d,f.i].join(":");}
+function landingSearched(){const k=landingKey();return !!(k&&G.landings&&G.landings[k]);}
+function landingSearch(){
+ const p=G.place,f=G.flight,k=landingKey();
+ if(!k||!(f.i>0&&f.i%5===0)){narrate("Здесь ступень, а не площадка: обыскивать негде. Площадка — каждые пять ступеней.");return false;}
+ G.landings=G.landings||{};
+ if(G.landings[k]){safeFn(()=>Bank.play("oc_soft_touch",{gain:0.45,maxSec:2}));
+  narrate("Эту площадку вы уже обыскали: пыль, крошка и ваши же следы.",{interrupt:false});return true;}
+ G.landings[k]=1;
+ safeFn(()=>Bank.play("oc_soft_touch",{seed:f.i,gain:0.5,maxSec:2}));
+ setTimeout(()=>safeFn(()=>Bank.play("craft_stone",{seed:f.i,gain:0.45,maxSec:3})),300);
+ G.hour+=0.1;if(G.hour>=24){G.hour-=24;G.day++;}
+ const h=hashName(p.bx*31+f.i*7+(f.d>0?3:11),p.by*17+p.depth*13,8810);
+ let т;
+ if(h<0.24){const з=3+Math.floor(hashName(p.bx,f.i,8811)*13);G.gold=(Number(G.gold)||0)+з;
+  setTimeout(()=>safeFn(()=>Bank.play("arte_coins",{gain:0.6,maxSec:2})),650);
+  т=`Вы прошли пальцами по щелям между плитами. В одной застряли монеты: ${з} золота.`;}
+ else if(h<0.42){const п=[["факел","огарок факела, ещё годный"],["верёвка","моток верёвки, брошенный кем-то"],["кость","чья-то кость, гладкая от времени"],["трава","пучок сухой травы, принесённый ветром снизу"]];
+  const в=п[Math.floor(hashName(f.i,p.by,8812)*п.length)%п.length];
+  G.inv[в[0]]=(Number(G.inv[в[0]])||0)+1;
+  setTimeout(()=>safeFn(()=>Bank.play("arte_cloth",{gain:0.5,maxSec:2})),650);
+  т=`У стены, под ступенью, — ${в[1]}. Берёте: ${в[0]} ×1.`;}
+ else if(h<0.54){
+  const страж=safeFn(()=>guardianHere(),null);
+  setTimeout(()=>safeFn(()=>Bank.play("mtg_stone_hit",{gain:0.45,maxSec:2})),650);
+  т=f.d>0
+   ?`На стене процарапаны метки тех, кто шёл раньше: стрелка вниз и ${страж?"знак черепа — внизу на шахте кто-то стоит":"три черты — до дна ещё далеко"}.`
+   :"На стене процарапаны метки: стрелка вверх и короткое «выход». Кто-то здесь уже выбирался.";}
+ else if(h<0.62){const з=20+Math.floor(hashName(p.by,f.i,8813)*45);G.gold=(Number(G.gold)||0)+з;
+  setTimeout(()=>safeFn(()=>{Bank.play("deep_stone",{gain:0.55,maxSec:3});setTimeout(()=>safeFn(()=>Bank.play("treasure",{gain:0.6,maxSec:3})),600);}),500);
+  const вещь=hashName(f.i*3,p.bx,8814)<0.35?safeFn(()=>genLoot(p.bx,p.by,f.i*97+p.depth,Math.max(1,p.depth)),null):null;
+  if(вещь)G.gear.push(вещь);
+  т=`Один камень в стене сидит неплотно. За ним ниша, и в ней припрятано: ${з} золота${вещь?` и ${вещь.name||"вещь"}`:""}.`;}
+ else{setTimeout(()=>safeFn(()=>Bank.play("oc_wood_dull",{gain:0.4,maxSec:2})),650);
+  т="Вы обшарили площадку: пыль, каменная крошка и чей-то старый след. Ничего не нашлось.";}
+ narrate(т,{interrupt:false});
+ safeFn(()=>{refresh();saveGame(true);});
+ return true;}
+iact("landsearch",{n:"Обыскать площадку",значок:"",
+ можно:o=>o&&o.вид==="landing",
+ делать:()=>{landingSearch();return true;}});
 /* Обыскать место. Стоит времени всегда, даже когда искать было нечего. */
 function stashSearch(x,y){
+ if(G.flight)return landingSearch();
  if(!G.place){safeFn(()=>Bank.play("oc_wood_dull",{gain:0.4,maxSec:3}));
   narrate("Тайники прячут в стенах и под крышей. Под открытым небом ищут по приметам, а не руками.");return false;}
  const т=stashAt(x,y);
@@ -28399,6 +28481,12 @@ function objectsHere(диаг){
   if(G.ship||inFlight())return out;
   if(G.place){
    const lvl=curLevel(),p=G.place;if(!lvl)return out;
+   /* На марше лестницы, на площадке, объект — сама площадка. */
+   if(G.flight){const f=G.flight;
+    if(f.i>0&&f.i%5===0)out.push({вид:"landing",n:"лестничная площадка",x:p.x,y:p.y,dx:0,dy:0,d:0,маяк:null,
+     о:"Широкая ступень между маршами: плиты, щели, ниша в стене.",
+     состояние:landingSearched()?"обыскана":null});
+    return out;}
    /* (8.0) Для действия «вплотную» считаются и углы: шкаф или скрижаль по
       диагонали игра называла рядом, а E и Enter с ними ничего не делали. */
    const кл=диаг?[[0,0],[0,-1],[0,1],[-1,0],[1,0],[-1,-1],[1,-1],[-1,1],[1,1]]:[[0,0],[0,-1],[0,1],[-1,0],[1,0]];
@@ -28506,7 +28594,7 @@ iact("apprentice",{n:"Проситься в ученики",значок:"",
    К общим добавляются техники станка: у горна свои, у наковальни свои, и
    показаны только те, до которых доросло мастерство. */
 function actionsFor(o){
- const порядок=["look","enterpass","dopen","dclose","dunlock","dlock","dkey","dpick","dspell","eavesdrop","copen","cpeek","ctakeall","ckey","cpick","findbook","readbook","takebook","takeitem","readdocs","welldrink","wellcoin","welllisten","wellrope","rest","cook","lighttorch","statueread","circlestep","godown","goup","stairlisten","trade","prices","portalinfo","enter","services","gather","harbor","mountcall",
+ const порядок=["look","landsearch","enterpass","dopen","dclose","dunlock","dlock","dkey","dpick","dspell","eavesdrop","copen","cpeek","ctakeall","ckey","cpick","findbook","readbook","takebook","takeitem","readdocs","welldrink","wellcoin","welllisten","wellrope","rest","cook","lighttorch","statueread","circlestep","godown","goup","stairlisten","trade","prices","portalinfo","enter","services","gather","harbor","mountcall",
   "listen","knock","hollow","secret","stash","stashtake","drawer","close","put","mytake","lockpick","compare","toggle","pull","shove","doormech","repair","salvage","attune",
   "altstudy","altread","altaura","altoffer","altbless","altseal","altartefact","altrite","altsacrifice","altmech",
   "assay","trap","disarm","shelf","apprentice","lastmemory","causeofdeath","use"];
@@ -28760,7 +28848,7 @@ function openObjects(){
  openModal("modal-object");
  narrate(`Вокруг ${objList.length} ${plural(objList.length,"объект","объекта","объектов")}: ${objList.map(o=>o.n).join(", ")}. Свайп — листать, двойное касание — выбрать.`);
  return true;}
-function openObjActions(i){
+function openObjActions(i,молча){
  i=Number(i);
  const o=objList[i];
  if(!o){narrate("Этого здесь уже нет.");return false;}
@@ -28774,9 +28862,11 @@ function openObjActions(i){
   +(()=>{const bl=safeFn(()=>actionsForAll(o).blocked,[])||[];return bl.length?`<h3>Недоступно сейчас</h3>`+bl.map(a=>`<button class="item" data-cmd="objwhy:${i}:${a.id}" data-speak="${(a.n+" — нельзя: "+a.почему).replace(/"/g,"&quot;")}">${a.n} — ${a.почему}</button>`).join(""):"";})()
   +`<button class="item" data-cmd="objback" data-speak="Назад, к списку объектов вокруг.">Назад: что вокруг</button>`;
  openModal("modal-object");
- /* Вслух — сперва то, что можно, потом то, до чего ещё расти. */
+ /* Вслух — сперва то, что можно, потом то, до чего ещё расти. Обновление
+    после действия — молча: иначе перечень действий обрывал ответ на само
+    действие («стук уходит вглубь…»), и игроку казалось, что ничего не было. */
  const можно=acts.filter(a=>!a.заблокировано),выше=acts.filter(a=>a.заблокировано);
- narrate(`${o.n}, ${где}. Действий: ${можно.length}: ${можно.map(a=>a.n).join(", ")}.`
+ if(!молча)narrate(`${o.n}, ${где}. Действий: ${можно.length}: ${можно.map(a=>a.n).join(", ")}.`
   +(выше.length?` Выше вашей ступени ещё ${выше.length}: ${выше.map(a=>a.n).join("; ")}.`:""));
  return true;}
 /* ── Полка и книга: два нижних уровня того же окна ── */
@@ -28887,7 +28977,7 @@ function doObjAction(i,id){
     того, как игрок успевал выбрать. Набор 70 поймал это первым же прогоном:
     полка называла пять книг вслух, а в окне не было ни одной. */
  if(id!=="use"&&!a.своё&&document.getElementById("modal-object")
-   &&!document.getElementById("modal-object").hidden)safeFn(()=>openObjActions(i));
+   &&!document.getElementById("modal-object").hidden)safeFn(()=>openObjActions(i,true));
  return true;}
 
 /* ════════════════════════════════════════════════════════════════════════
@@ -36694,7 +36784,7 @@ function leavePlace(){
 function changeDepth(delta){
  if(!G.place)return false;
  if(G.place.тайник){narrate("Сначала выберитесь из тайной палаты: лаз — у западной стены.");return false;}
- G.flight=null;
+ G.flight=null;safeFn(()=>setTimeout(()=>safeFn(()=>Bank.refresh()),0));
  const p=G.place,nd=p.depth+delta;
  if(nd<0){narrate("Выше подниматься некуда.");return false;}
  if(nd>safeFn(()=>maxDepthHere(),MAX_DEPTH)){
@@ -37099,8 +37189,7 @@ function startFlight(delta,dir){
  /* Марш начинается настоящим звуком каменных ступеней: шаг ногой по
     камню, а за ним — отзвук самой лестницы. Запись ступеней тихая
     (в среднем −37 дБ), и одна она на ходу почти не слышна. */
- safeFn(()=>{stairFootstep(0,delta>0);Bank.play("deep_stairs",{seed:n,gain:1,maxSec:4});setTimeout(()=>safeFn(()=>Bank.play("lug_land",{seed:n,gain:0.45,maxSec:1})),700);});
- safeFn(()=>Bank.play("deep_stairs",{seed:1,gain:0.55,maxSec:1.4}));
+ safeFn(()=>{stairFootstep(0,delta>0);stairEcho({seed:n,gain:1,maxSec:4});setTimeout(()=>safeFn(()=>Bank.play("lug_land",{seed:n,gain:0.45,maxSec:1})),700);});
  safeFn(()=>beacon(delta>0?"stairs_down":"stairs_up",0,0));
  /* Шахта вертикальна, и это стоит сказать: игрок должен знать, что вернётся
     ровно сюда же, а не «куда-нибудь». */
@@ -37110,7 +37199,7 @@ function startFlight(delta,dir){
    наборов, чтобы соседние ступени не звучали одним щелчком; ставится чуть
    ниже уха при спуске и чуть выше при подъёме. */
 function stairFootstep(i,вниз){
- const роль=(Number(i)||0)%2?"lug_step_stone":"mtg_step_hard";
+ const н=stairSet();const роль=(Number(i)||0)%2?н[0]:н[1];
  return Spatial.role(роль,0,0,{dz:вниз?-0.3:0.3,gain:0.8,maxSec:0.8,seed:i})
   ||Bank.play(роль,{seed:i,gain:0.8,maxSec:0.8});}
 /* Что слышно на марше: чем ниже, тем меньше живого и больше камня. */
@@ -37132,15 +37221,16 @@ function flightStep(dir){
  const f=G.flight,p=G.place;if(!f||!p)return false;
  const назад=dir===FLIGHT_OPP[f.md];
  f.i+=назад?-1:1;
+ safeFn(()=>Bank.refresh());
  G.hour+=0.04;if(G.hour>=24){G.hour-=24;G.day++;}
  if(f.i<=0){
-  G.flight=null;
-  safeFn(()=>{stairFootstep(1,f.d<0);Bank.play("deep_stairs",{seed:2,gain:0.9,maxSec:1.4});});
+  G.flight=null;safeFn(()=>Bank.refresh());
+  safeFn(()=>{stairFootstep(1,f.d<0);stairEcho({seed:2,gain:0.9,maxSec:1.4});});
   narrate(`Вы вернулись на площадку: ${placeTitle()}. ${describeHere(true)}`);
   refresh();saveGame(true);return true;}
  if(f.i>=f.n){
   const d=f.d;G.flight=null;
-  safeFn(()=>{stairFootstep(f.n,d>0);Bank.play("deep_stairs",{seed:3,gain:1,maxSec:1.4});});
+  safeFn(()=>{stairFootstep(f.n,d>0);stairEcho({seed:3,gain:1,maxSec:1.4});});
   safeFn(()=>Bank.play("deep_wind",{seed:f.n,gain:0.4,maxSec:6}));
   return changeDepth(d);}
  /* ── МАРШ СЛЫШЕН ПО ВЫСОТЕ ──
@@ -37156,8 +37246,8 @@ function flightStep(dir){
   /* Шаг: слышен под ногой, с лёгким наклоном по ходу движения, а за ним
      тихий отзвук лестничной клетки. */
   stairFootstep(f.i,вниз);
-  if(!Spatial.role("deep_stairs",0,0,{dz:вниз?-0.4:0.4,gain:0.9,maxSec:1.4,seed:f.i*5}))
-   Bank.play("deep_stairs",{seed:f.i*5,gain:0.9,maxSec:1.4});
+  if(!Spatial.role(stairSet()[2],0,0,{dz:вниз?-0.4:0.4,gain:0.9,maxSec:1.4,seed:f.i*5}))
+   stairEcho({seed:f.i*5,gain:0.9,maxSec:1.4});
   /* Позади — то, что покинули; впереди — то, куда идёте. */
   const позадиZ=(вниз?1:-1)*(0.6+доля*2.4);
   const впередиZ=(вниз?-1:1)*(0.6+(1-доля)*2.4);
@@ -37192,7 +37282,7 @@ function passageCues(){
   ["N","E","S","W"].forEach((d,i)=>{
    const nx=p.x+DIRV[d][0],ny=p.y+DIRV[d][1];const t=tileAt(lvl,nx,ny);
    if(t===undefined||t==="#")return;
-   const role=t==="+"?"oc_hinge":(t===">"||t==="<")?"deep_stairs":t==="G"?"hall_gate":"deep_wind";
+   const role=t==="+"?"oc_hinge":(t===">"||t==="<")?stairSet()[2]:t==="G"?"hall_gate":"deep_wind";
    setTimeout(()=>safeFn(()=>{Spatial.role(role,DIRV[d][0]*2,DIRV[d][1]*2,{gain:0.22,maxSec:1.5})||Bank.play(role,{seed:nx+ny,gain:0.18,maxSec:1.5});}),i*140);});
  }catch(_){}}
 function moveInside(dir){
@@ -40283,7 +40373,7 @@ function outdoorSurface(){
    одни, но половицы другие. */
 const DEPTH_MIX=[
  /* 0 — не подземелье, сюда не попадаем */ null,
- ["gravel","dirt","stone"],                    /* первый ярус: обжитой камень */
+ ["gravel","cave","stone"],                    /* первый ярус: обжитой камень (9.5.2: без «утоптанной земли» — она звучала травой) */
  ["gravel","mud","stone","plank"],             /* второй: сырость и старая крепь */
  ["bone","gravel","ash"],                      /* третий: кости и пепел */
  ["bone","ash","crystal","stone"],             /* четвёртый: пепел и первый хрусталь */
@@ -40298,6 +40388,42 @@ function placeStepTone(p){
  if(!p)return 1;
  return 0.93+0.14*safeFn(()=>hashName(p.bx*3+(Number(p.depth)||0)*5,p.by*7+(Number(p.depth)||0)*11,4321),0.5);}
 /* Пол тёмных ярусов: своя порода у каждого круга глубины. */
+const DUNGEON_FLOOR={
+ mine:["gravel","stone","cave"],catacomb:["stone","bone","gravel"],temple:["marble","stone"],
+ tower:["stone","plank","marble"],undercity:["stone","marble","gravel"],lab:["metal","stone","crystal"],
+ necropolis:["bone","stone","ash"],fort:["stone","metal","plank"],tomb:["stone","ash","bone"],
+ rift:["gravel","crystal","cave"],living:["mud","bone","cave"],water:["water","mud","stone"],
+ air:["stone","crystal","marble"],time:["crystal","marble","ice"],
+ dk_salt:["crystal","gravel","stone"],dk_web:["ash","gravel","cave"],dk_shell:["water","sand","stone"],
+ dk_bell:["metal","stone","marble"],dk_root:["mud","cave","gravel"],dk_coal:["ash","gravel","stone"],
+ dk_veil:["crystal","ash","marble"],dk_mask:["marble","plank","stone"],
+ sv_hush:["stone","marble","cave"],sv_temple:["marble","stone","crystal"],sv_nest:["bone","gravel","cave"],
+ sv_forge:["metal","ash","stone"],sv_glitch:["crystal","metal","marble"],sv_chronicle:["water","stone","mud"]};
+/* Лестница звучит своим местом: ступень и отзвук марша. В шахте — мостки и
+   скрип крепи, в крепости и лаборатории — железо, в водном — мокрый камень,
+   в храме — мрамор; в доме и трактире — деревянные ступени. */
+const STAIR_SET={
+ stone:["lug_step_stone","mtg_step_hard","deep_stairs"],
+ wood:["tread_wood","mtg_step_wood","oc_wood_creak"],
+ metal:["mtg_step_metal","oc_step_hard","oc_metal_dull"],
+ wet:["mtg_step_water","lug_step_stone","deep_drip"],
+ marble:["oc_step_hard","mtg_step_hard","deep_stairs"],
+ bone:["tread_gravel","mtg_step_gravel","deep_stairs"],
+ crystal:["mtg_step_glass","mtg_step_ice","oc_glass_hit"],
+ earth:["mtg_step_dirt","oc_step_soft","oc_rustle"],
+ rock:["mtg_step_gravel","lug_step_stone","deep_rocks"]};
+const STAIR_BY_KIND={mine:"wood",fort:"metal",lab:"metal",dk_bell:"metal",sv_forge:"metal",
+ water:"wet",dk_shell:"wet",sv_chronicle:"wet",temple:"marble",sv_temple:"marble",dk_mask:"marble",undercity:"marble",
+ necropolis:"bone",catacomb:"bone",sv_nest:"bone",time:"crystal",dk_salt:"crystal",dk_veil:"crystal",sv_glitch:"crystal",air:"crystal",
+ living:"earth",dk_root:"earth",rift:"rock",dk_coal:"rock",dk_web:"rock",tower:"stone",tomb:"stone",sv_hush:"stone"};
+function stairSet(){
+ try{const p=G.place;if(!p)return STAIR_SET.stone;
+  if(PLACE_KIND[p.stype]!=="dungeon")return STAIR_SET.wood;
+  /* Спуск из дома в подвал — ещё по дереву; ниже — как место. */
+  const род=(Number(p.depth)||0)>0?dungeonKindHere():safeFn(()=>dungeonKindAt(p.bx,p.by,p.stype),null);
+  return STAIR_SET[STAIR_BY_KIND[род&&род.id]]||STAIR_SET.stone;
+ }catch(_){return STAIR_SET.stone;}}
+function stairEcho(o){const r=stairSet()[2];return safeFn(()=>Bank.play(r,o||{}),null);}
 function darkFloorSurface(){
  try{
   const p=G.place;if(!p||!G.dark)return null;
@@ -40320,6 +40446,15 @@ function indoorSurface(){
     десяток, и она не повторяет соседний круг. */
  if(!G.dark&&p.depth>DEEP_EDGE)return lightCircle(p.depth).порода;
  if(p.depth>0){
+  /* ── ПОЛ ПО РОДУ ПОДЗЕМЕЛЬЯ (9.5.2, просьба игрока) ──
+     «Шаги в подземельях как по траве; в разных подземельях и на разных
+     уровнях шаги должны быть разные». У каждого рода своя порода: шахта —
+     щебень и камень, храм — мрамор, лаборатория и крепость — металл, водное —
+     вода, некрополь — кости. На каждом ярусе порода своя из этого набора. */
+  const род=safeFn(()=>dungeonKindHere(),null);
+  const пол=род&&DUNGEON_FLOOR[род.id];
+  if(пол){const h=safeFn(()=>hashName(p.bx*7+p.depth*11,p.by*5+p.depth*3,4301),0.5);
+   return пол[(Math.floor(h*пол.length)+p.depth)%пол.length];}
   const смесь=DEPTH_MIX[Math.min(DEPTH_MIX.length-1,p.depth)]||["gravel"];
   /* Порода яруса — одна на весь ярус; у соседнего подвала той же глубины
      она своя. */
@@ -42493,8 +42628,9 @@ function victory(){const cb=G.combat,m=cb.m;
   safeFn(()=>{setPlaceMark(k.x,k.y,"dead");G.dungeonKills=(Number(G.dungeonKills)||0)+1;checkQuestProgress();});}
  G.xp+=xpGain(m.xp);
  safeFn(()=>{G.lastKill={id:m.id,n:m.n,lvl:m.lvl,fx:m.fx,gold:m.gold,морф:m.морф||null,черты:m.черты||null,boss:!!m.boss,uniq:!!m.uniq,когда:(Number(G.day)||1)*24+(Number(G.hour)||0)};deed("kills");artWearAll(1);if(m.путь)Devour.grant();});
- safeFn(()=>Res.fromKill(m));
- safeFn(()=>Spoils.fromKill(m));
+ const трофеи=[];let трофейТекст="";
+ safeFn(()=>Res.fromKill(m,трофеи));
+ safeFn(()=>{трофейТекст=Spoils.fromKill(m,трофеи)||"";});
  if(m&&m.boss)safeFn(()=>bossVictory(m));
  /* ── О ПОБЕДЕ УЗНАЮТ ──
     Весть рождается там, где был бой, и дальше идёт без игрока. Мелкую драку
@@ -42535,6 +42671,8 @@ function victory(){const cb=G.combat,m=cb.m;
    journal(`Найден свиток: ${sp.n}.`);}});
  const mats=["кожа","кость","клык","чешуя"];
  loot.push({type:"mat",name:mats[Math.floor(Math.random()*mats.length)]});
+ /* Трофеи и взятое с туши — в той же кучке: их собирают вместе со всем. */
+ трофеи.forEach(n=>loot.push({type:"mat",name:n,трофей:true}));
  if(Math.random()<0.35+G.level*0.02)loot.push({type:"gear",item:genLoot(G.x,G.y,Math.floor(Math.random()*999),m.lvl)});
  /* Страж яруса оставляет казну круга: золото сверх обычного, вещь его круга
     и, с глубины, — ключ от сокровищницы. */
@@ -42586,7 +42724,9 @@ function victory(){const cb=G.combat,m=cb.m;
  safeFn(()=>Bank.play("oc_thunder",{kind:"combat",seed:m.lvl,gain:0.55,maxSec:4}));
  let txt=`Победа! Опыт +${m.xp}. Добыча лежит на вашей клетке: золото ${m.gold}, ${lootNames}`;
  if(loot.find(l=>l.type==="gear"))txt+=", предмет экипировки";
- txt+='. Двойное касание одним пальцем соберёт всю добычу.';
+ txt+='.';
+ if(трофейТекст&&/Редкое/.test(трофейТекст))txt+=` ${трофейТекст.replace(/^Трофеи:[^.]*\.\s*/,"")}`;
+ txt+=' Двойное касание одним пальцем соберёт всю добычу.';
  openLootView(txt);
 }
 function openLootView(txt){
@@ -43744,7 +43884,7 @@ const Look=Modules.register("LOOK",{
   const рядом=this.adjacent(o.dx,o.dy);
   if(рядом&&!o.живое&&!o.проход&&o.род!=="опасность"){
    /* Под рукой: сразу действия. */
-   objList=safeFn(()=>objectsHere(),[])||[];const j=this.objectIndex(o);if(j>=0)return openObjActions(j);}
+   objList=safeFn(()=>objectsHere(),[])||[];const j=this.objectIndex(o);if(j>=0)return objMainAct(j);}
   /* Окно осмотра закрывается: дальше игрок идёт ногами на звон маяка. */
   safeFn(()=>{const m=document.getElementById("modal-object");if(m&&!m.hidden)closeModal(m);});
   const маяк=TargetBeacon.t?(TargetBeacon.mode()==="constant"
@@ -43768,7 +43908,7 @@ const Look=Modules.register("LOOK",{
    if(d===0&&!G.place){this.target=null;return false;}
    objList=safeFn(()=>objectsHere(),[])||[];
    const j=objList.findIndex(z=>z.x===t.x&&z.y===t.y&&z.вид!=="floor");
-   if(j>=0){this.target=null;return openObjActions(j);}
+   if(j>=0){this.target=null;return objMainAct(j);}
    if(d===0)return false;}
   if(толькоВплотную)return false;
   safeFn(()=>{if(t.bid)beaconAt(t.bid,dx,dy,t.dz||0,d);});
@@ -50078,18 +50218,20 @@ const Res=Modules.register("RES",{
   const i=this.info(res);if(!RES_BASE[res]&&!this.kind(res))return `Такого ресурса нет: «${res}».`;
   return `${i.название}: ${i.род}. Регион: ${i.регион}. Сезон: ${i.сезон}${this.inSeason(res)?" — сейчас его время":" — сейчас не сезон, и потому дороже"}. Глубина: ${i.глубина}. Редкость: ${i.редкость}. Берут ${i.добыча}, идёт на ${i.обработка}. Покупает ${i.рынок}. Цена около ${Number(RES_BASE[res])||"—"}.`;},
  /* Что берут с убитой твари: шкура, нутро, кровь и яд — у кого что есть. */
- fromKill(m){try{
+ /* (9.5.2) С кучкой добычи (в) взятое ложится в неё — его собирают вместе с
+    золотом, а не находят молча в котомке. */
+ fromKill(m,в){try{
   const id=String(m&&m.id||"");if(!id)return "";
   const взято=[];const удача=0.1*(safeFn(()=>hasSkill("tracker"),false)?1:0);
   const дать=(что,шанс)=>{if(Math.random()>=шанс+удача)return;
-   G.inv[что]=(Number(G.inv[что])||0)+1;взято.push(что);};
+   if(Array.isArray(в))в.push(что);else G.inv[что]=(Number(G.inv[что])||0)+1;взято.push(что);};
   if(KILL_HIDE.indexOf(id)>=0)дать("шкура",0.35);
   if(KILL_VENOM.indexOf(id)>=0)дать("яд",0.3);
   if(KILL_DRY.indexOf(id)<0){дать("орган",0.25);if(G.dark||(Number(m.lvl)||1)>=3)дать("кровь",0.2);}
   if(!взято.length)return "";
   safeFn(()=>{Bank.play("craft_hide",{gain:0.45,maxSec:3});deed("gathers");saveGame(true);});
   const т=`С добычи взято: ${взято.join(", ")}.`;
-  narrate(т,{interrupt:false});return т;}catch(_){return "";}},
+  if(!Array.isArray(в))narrate(т,{interrupt:false});return т;}catch(_){return "";}},
  /* Что берут в аномальной зоне: это решает её правило. */
  fromZone(){try{
   const z=safeFn(()=>Zones.here(),null);
@@ -54706,15 +54848,19 @@ const Spoils={
   const взято=[];
   for(const [что,шанс] of this.list(m)){if(взято.length>=3)break;if(rnd()<шанс*k)взято.push(что);}
   return взято;},
- fromKill(m){try{
+ /* ── ТРОФЕЙ ЛЕЖИТ В ДОБЫЧЕ (9.5.2, просьба игрока) ──
+    «Игра говорит: трофей — слеза призрака, а в добыче её нет». Трофей
+    клался прямо в котомку, мимо кучки добычи, и при сборе его не было.
+    Теперь он ложится в добычу (в) и собирается вместе с золотом. */
+ fromKill(m,в){try{
   if(!m||m.boss||!m.id)return "";
   const взято=this.roll(m);if(!взято.length)return "";
-  взято.forEach(r=>{G.inv[r]=(Number(G.inv[r])||0)+1;});
+  взято.forEach(r=>{if(Array.isArray(в))в.push(r);else G.inv[r]=(Number(G.inv[r])||0)+1;});
   const редкие=взято.filter(r=>(SPOIL_PRICE[r]||RES_BASE[r]||0)>=SPOIL_RARE);
   safeFn(()=>{Bank.play(редкие.length?"oc_diamond":"craft_hide",{gain:редкие.length?0.6:0.4,maxSec:3});deed("gathers");});
   if(редкие.length)safeFn(()=>journal(`Редкий трофей: ${редкие.join(", ")} (${m.n}).`));
   const т=`Трофеи: ${взято.join(", ")}.${редкие.length?` Редкое: ${редкие.join(", ")}!`:""}`;
-  setTimeout(()=>safeFn(()=>narrate(т,{interrupt:false})),700);return т;}catch(_){return "";}}};
+  if(!Array.isArray(в))setTimeout(()=>safeFn(()=>narrate(т,{interrupt:false})),700);return т;}catch(_){return "";}}};
 
 /* ════════════════════════════════════════════════════════════════════════
    НОЧНЫЕ МЕРТВЕЦЫ НА ДОРОГАХ (9.5)
