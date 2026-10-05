@@ -1566,7 +1566,7 @@ NEWS.push({v:54,н:"версия 9.5.1: два голоса Gemini и eSpeak в 
   т:"«Встроенный голос» — мужской или женский голос Gemini, и выбранный говорит весь интерфейс; голоса больше не смешиваются. Достижения и события — своим голосом вестника. Третий встроенный — eSpeak NG: быстрый, без сети на любом устройстве."});
 /* 9.5.2: дозапись голосов Gemini, наставники Пути своим голосом, проверка записей с числами. */
 NEWS.push({v:55,н:"версия 9.5.2: больше живых голосов",
-  т:"Дописаны фразы интерфейса мужским и женским голосом Gemini и вести голосом вестника. Наставники Пути рассказывают о Предтечах, глубинах и морфозверях своим голосом."});
+  т:"Дописаны голоса Gemini, наставники Пути говорят сами. Любой синтезатор — телефона, браузера, Windows, eSpeak — говорит тем темпом, что выставлен. У обоза зелья и товары — по 1, 5, 10 и на всё золото."});
 const NEWS_V=NEWS[NEWS.length-1].v;
 /* (8.5) Выпуск читается коротко: заголовок, затем факты. */
 function newsLine(n){const н=String(n.н||"");return `${н.charAt(0).toUpperCase()+н.slice(1)}. ${n.т||""}`;}
@@ -1804,7 +1804,7 @@ const ESpeak={st:"off",w:null,
  /* Темп «Скорости синтезатора» (1–7) — слова в минуту eSpeak: 110–290;
     по умолчанию (5) — 230, бойко, но разборчиво. */
  wav(text,rate,vol){const w=this.w;if(!w)return null;
-  const r=Math.max(1,Math.min(7,+rate||5));w.set_rate(Math.round(110+(r-1)*30));
+  const r=Math.max(1,Math.min(7,+rate||5));w.set_rate(Math.max(80,Math.min(450,Math.round(175*Speech.synthTempo(r)))));
   safeFn(()=>w.set_pitch(Math.round(50*Math.max(0.5,Math.min(2,+settings.pitch||1)))));
   const куски=[];let n=0;w.synthesize(text,s=>{if(s&&s.length){куски.push(s);n+=s.length;}});
   if(!n)return null;
@@ -2225,6 +2225,15 @@ const Speech={voice:null,keepAlive:null,
     выше — быстрее, но вдвое мягче, чем у синтезатора: запись, ускоренная
     втрое с лишним, начинает звенеть. */
  gvTempo(r){r=+r||1;const t=r<=1?r:1+(r-1)*0.45;return Math.max(0.6,Math.min(3.5,t));},
+ /* ── ТЕМП СИНТЕЗАТОРА — ОДНА ШКАЛА (9.5.2, просьба игрока) ──
+    «Где-то синтезатор говорит быстрее, где-то медленнее»: ползунок «Скорость
+    синтезатора» каждый движок понимал по-своему — голос браузера и Android
+    брали число как есть (5 — впятеро быстрее обычного), eSpeak считал своё
+    (5 — лишь на треть быстрее), голоса Windows — третье. Теперь любой
+    синтезатор получает один и тот же настоящий темп — тот же, что у записей
+    Gemini при том же числе: 1 — обычная речь, 5 — в 2,8 раза быстрее. Мосты
+    Android и Windows получают число ползунка и пересчитывают его так же. */
+ synthTempo(r){return this.gvTempo(r);},
  /* Темп и громкость синтезатора — свои ползунки (9.5). */
  synthRate(){const v=+settings.synthRate;return isFinite(v)&&v>0?Math.max(1,Math.min(7,v)):Math.max(1,Math.min(7,+settings.rate||5));},
  synthVol(){const v=+settings.synthVol;return isFinite(v)&&v>0?Math.max(0.1,Math.min(2,v)):1;},
@@ -2359,7 +2368,7 @@ const Speech={voice:null,keepAlive:null,
        фразы, и конец фразы не приходит никогда. */
     self._utt=u;
     if(self.voice){u.voice=self.voice;u.lang=self.voice.lang;}else u.lang="ru-RU";
-    u.rate=Math.max(0.1,Math.min(10,+o.rate||1));u.volume=Math.max(0,Math.min(1,+o.volume));
+    u.rate=Math.max(0.1,Math.min(10,self.synthTempo(o.rate)));u.volume=Math.max(0,Math.min(1,+o.volume));
     u.pitch=Math.max(0.5,Math.min(2,+settings.pitch||1));
     u.onstart=()=>{if(o.onstart)o.onstart();};u.onend=()=>{if(o.onend)o.onend();};u.onerror=()=>{if(o.onerror)o.onerror();};
     /* Тридцать миллисекунд задержки стояли на каждом куске ради одного
@@ -13769,18 +13778,17 @@ function meetCaravan(car){
   ${war?"Обоз идёт через линию войны — риск засады выше, а цены на нём щедрее.":"Дорога спокойна."}</div>`;
  html+=`<h3>Обоз продаёт</h3>`;
  html+=buy.length?buy.map(b=>`<div class="list-line">${RESICON[b.r]||""} ${b.r} — ${b.price} золота
-  <button data-cmd="carbuy:${b.r}" data-speak="Купить ${b.r} за ${b.price} золота.">Купить 1</button>
-  <button data-cmd="carbuy5:${b.r}" data-speak="Купить пять ${b.r} за ${b.price*5} золота.">Купить 5</button></div>`).join("")
+  ${buyCountButtons(b.price,k=>`carbuyn:${b.r}~${k}`,b.r)}</div>`).join("")
   :`<div class="list-line">Обоз распродан.</div>`;
  /* (8.0) В обозе едут и зелья: здоровья и маны — всегда, ещё одно — по обозу. */
  html+=`<h3>Зелья в дорогу</h3>`+caravanPotions(car).map(p=>`<div class="list-line">${p.n} — ${p.price} золота
-  <button data-cmd="carpot:${p.key}" data-speak="Купить: ${p.n}, за ${p.price} золота.">Купить</button></div>`).join("");
+  ${buyCountButtons(p.price,k=>`carpotn:${p.key}~${k}`,p.n)}</div>`).join("");
  html+=`<h3>Обоз скупает</h3>`;
  const mine=sell.filter(s=>(Number(G.inv[s.r])||0)>0);
  html+=mine.length?mine.map(s=>{const have=Number(G.inv[s.r])||0;
   return `<div class="list-line">${RESICON[s.r]||""} ${s.r}: у вас ${have} — по ${s.price} золота
-   <button data-cmd="carsell:${s.r}" data-speak="Продать одну единицу ${s.r} за ${s.price} золота.">Продать 1</button>
-   <button data-cmd="carsellall:${s.r}" data-speak="Продать весь запас ${s.r} за ${s.price*have} золота.">Продать всё (${s.price*have})</button></div>`;}).join("")
+   ${[1,5,10].filter(k=>k<have).map(k=>`<button data-cmd="carselln:${s.r}~${k}" data-speak="Продать ${k} — ${s.r} — за ${s.price*k} золота.">Продать ${k} (${s.price*k})</button>`).join("")}
+   <button data-cmd="carsellall:${s.r}" data-speak="Продать весь запас ${s.r}: ${have} за ${s.price*have} золота.">Продать всё: ${have} (${s.price*have})</button></div>`;}).join("")
   :`<div class="list-line">Обозу нужны: ${sell.map(s=>`${s.r} (${s.price} золота)`).join(", ")||"ничего"} — у вас этого нет.</div>`;
  const hasEscort=(G.quests||[]).some(q=>q.type==="escort"&&!q.done);
  html+=`<h3>Дела</h3>`;
@@ -13818,30 +13826,42 @@ function caravanBuy(res,qty){
     должен это принять. */
  if(!Number.isFinite(total)){narrate("Цену этого товара обоз назвать не берётся.");return;}
  if(G.gold<total){narrate(`Нужно ${total} золота, у вас ${G.gold}.${carSay(car,"car_poor")}`);return;}
+ /* (9.5.2) Груз считается так же, как у торговца: сверх подъёмного не взять. */
+ if(!cargoFits(n,`«${res}»`))return;
  G.gold-=total;G.inv[res]=(Number(G.inv[res])||0)+n;
  safeFn(()=>{UI.pickup();Bank.play("treasure",{seed:total,gain:0.7});Bank.play("arte_coins",{seed:total,gain:0.5,maxSec:3});});
  narrate(`Куплено у обоза: ${res} ×${n} за ${total} золота. Везите туда, где этого не хватает.${carSay(car,"car_buy")}`);
  journal(`У каравана куплено: ${res} ×${n} за ${total}.`);
  saveGame(true);refresh();meetCaravan(car);
 }
+/* ── ПОКУПКА СЧЁТОМ — ОДНО ПРАВИЛО (9.5.2, просьба игрока) ──
+   Счётный товар берётся у любого продавца одинаково: 1, 5, 10 и «на всё
+   золото» — как в лавке торговца. Прежде зелья у обоза продавались только по
+   одному, а товары обоза — по одному и по пять. */
+function buyCountButtons(price,cmd,name){
+ const цена=Math.max(1,Number(price)||1),золото=Number(G.gold)||0,макс=Math.floor(золото/цена);
+ if(макс<1)return `<button data-cmd="${cmd(1)}" data-speak="Не хватает золота: ${name} стоит ${цена}, у вас ${золото}.">Не хватает золота (${цена})</button>`;
+ return [1,5,10].filter(k=>k<=макс).map(k=>`<button data-cmd="${cmd(k)}" data-speak="Купить ${k} — ${name} — за ${цена*k} золота.">Купить ${k} (${цена*k})</button>`).join("")
+  +(макс>10?`<button data-cmd="${cmd(макс)}" data-speak="Купить на всё золото: ${макс} — ${name} — за ${цена*макс} золота.">На всё золото: ${макс} (${цена*макс})</button>`:"");}
 /* Зелья обоза: дороже прилавка на четверть — везут издалека. */
 function caravanPotions(car){
  const out=[{key:"health",n:"Зелье здоровья",price:19},{key:"mana",n:"Зелье маны",price:25,зелье:"mana"}];
  safeFn(()=>{const прочие=SHOP_POTIONS.slice(1);const p=прочие[Math.floor(hashName(String(car&&car.id||car&&car.from&&car.from.name||"обоз").length,(car&&car.eta)|0,9100)*прочие.length)%прочие.length];
   out.push({key:p.id,n:p.n,price:Math.round(p.price*1.25),зелье:p.id});});
  return out;}
-function caravanPotion(key){
+function caravanPotion(key,qty){
  if(!curCaravan){narrate("Обоз ушёл.");return;}
  const car=curCaravan;const p=caravanPotions(car).find(x=>x.key===key);
  if(!p){narrate("Такого зелья в обозе нет.");return;}
- if(G.gold<p.price){narrate(`Нужно ${p.price} золота, у вас ${G.gold}.${carSay(car,"car_poor")}`);return;}
- G.gold-=p.price;
+ const n=Math.max(1,Math.floor(Number(qty)||1)),итог=p.price*n;
+ if(G.gold<итог){narrate(`Нужно ${итог} золота, у вас ${G.gold}.${carSay(car,"car_poor")}`);return;}
+ G.gold-=итог;
  let вСлот="";
- if(p.зелье){const pt=POTION_BY_ID[p.зелье];potionsOf().push({id:p.зелье,q:1,стаб:0.95,день:Number(G.day)||1,срок:(pt&&pt.срок||10)*2,изъян:false,куплено:true});вСлот=qsAutoAdd({kind:"potion",id:p.зелье});}
- else{G.inv["Зелье здоровья"]=(Number(G.inv["Зелье здоровья"])||0)+1;вСлот=qsAutoAdd({kind:"item",name:"Зелье здоровья"});}
- safeFn(()=>{UI.pickup();Bank.play("arte_coins",{seed:p.price,gain:0.5,maxSec:3});Bank.play("arte_potion",{gain:0.45,maxSec:2});});
- narrate(`Куплено у обоза: ${p.n} за ${p.price} золота. Осталось золота: ${G.gold}.${вСлот}`);
- journal(`У каравана куплено: ${p.n} за ${p.price}.`);
+ if(p.зелье){const pt=POTION_BY_ID[p.зелье];for(let k=0;k<n;k++)potionsOf().push({id:p.зелье,q:1,стаб:0.95,день:Number(G.day)||1,срок:(pt&&pt.срок||10)*2,изъян:false,куплено:true});вСлот=qsAutoAdd({kind:"potion",id:p.зелье});}
+ else{G.inv["Зелье здоровья"]=(Number(G.inv["Зелье здоровья"])||0)+n;вСлот=qsAutoAdd({kind:"item",name:"Зелье здоровья"});}
+ safeFn(()=>{UI.pickup();Bank.play("arte_coins",{seed:итог,gain:0.5,maxSec:3});Bank.play("arte_potion",{gain:0.45,maxSec:2});});
+ narrate(`Куплено у обоза: ${p.n}${n>1?` ×${n}`:""} за ${итог} золота. Осталось золота: ${G.gold}.${вСлот}`);
+ journal(`У каравана куплено: ${p.n}${n>1?` ×${n}`:""} за ${итог}.`);
  saveGame(true);refresh();meetCaravan(car);}
 function caravanSell(res,all){
  if(!curCaravan){narrate("Обоз ушёл.");return;}
@@ -13853,7 +13873,7 @@ function caravanSell(res,all){
  if((((car.goods&&car.goods.wants)||[]).indexOf(res))<0){
   narrate("Этого обоз не скупает.");return;}
  const price=carSellPrice(car,res);
- const qty=all?have:1,total=price*qty;
+ const qty=all===true?have:Math.max(1,Math.min(have,Math.floor(Number(all)||1))),total=price*qty;
  if(!Number.isFinite(total)){narrate("Цену этого товара обоз назвать не берётся.");return;}
  G.inv[res]=have-qty;if(G.inv[res]<=0)delete G.inv[res];
  G.gold+=total;
@@ -43063,9 +43083,12 @@ const CMD={
  sail(){if(G.ship)sailLeg();else narrate("Вы не на борту. Найдите порт на побережье.");},
  carbuy(res){caravanBuy(res,1);},
  carbuy5(res){caravanBuy(res,5);},
- carpot(id){caravanPotion(id);},
+ carpot(id){caravanPotion(id,1);},
+ carpotn(a){const [id,k]=String(a).split("~");caravanPotion(id,Number(k)||1);},
+ carbuyn(a){const [r,k]=String(a).split("~");caravanBuy(r,Number(k)||1);},
  carsell(res){caravanSell(res,false);},
  carsellall(res){caravanSell(res,true);},
+ carselln(a){const [r,k]=String(a).split("~");caravanSell(r,Number(k)||1);},
  carescort(){takeEscort();},
  carride(){caravanRide();},
  carrob(){caravanRob();},

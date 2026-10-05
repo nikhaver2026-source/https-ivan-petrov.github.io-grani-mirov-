@@ -259,7 +259,12 @@ public class MainActivity extends Activity {
 
     private void say(String text, float rate, float volume, String id) {
         final TextToSpeech tts = speaker != null ? speaker : this.tts;
-        tts.setSpeechRate(Math.max(0.1f, Math.min(8f, rate > 0 ? rate : 1f)));
+        /* (9.5.2) Темп приходит числом ползунка «Скорость синтезатора» и
+           пересчитывается так же, как у записей Gemini и у моста Windows:
+           1 — обычная речь, 5 — в 2,8 раза быстрее. Прежде 5 значило «впятеро». */
+        float r = rate > 0 ? rate : 1f;
+        float tempo = r <= 1f ? r : 1f + (r - 1f) * 0.45f;
+        tts.setSpeechRate(Math.max(0.1f, Math.min(3.5f, tempo)));
         Bundle p = new Bundle();
         p.putFloat(TextToSpeech.Engine.KEY_PARAM_VOLUME, Math.max(0f, Math.min(1f, volume >= 0 ? volume : 1f)));
         /* Очередь ведёт сама игра и шлёт по одной фразе, дождавшись конца прежней.

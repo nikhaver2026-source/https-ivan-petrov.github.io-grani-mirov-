@@ -58,7 +58,7 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   meetCaravan(car);
   const m=document.getElementById("modal-caravan");
   return {open:!!m&&!m.hidden,
-   buy:document.querySelectorAll('#caravanBody [data-cmd^="carbuy:"]').length,
+   buy:document.querySelectorAll('#caravanBody [data-cmd^="carbuyn:"]').length,
    escort:!!document.querySelector('[data-cmd="carescort"]'),
    news:!!document.querySelector('[data-cmd="carnews"]'),
    name:car.name,to:car.to.name};});
@@ -66,16 +66,16 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
 
  // 6. Покупка у обоза и продажа обозу
  const deal=await page.evaluate(()=>{
-  const btn=document.querySelector('#caravanBody [data-cmd^="carbuy:"]');
+  const btn=document.querySelector('#caravanBody [data-cmd^="carbuyn:"]');
   if(!btn)return {skip:true};
-  const res=btn.dataset.cmd.split(":")[1];
+  const res=btn.dataset.cmd.split(":")[1].split("~")[0]; // 9.5.2: «carbuyn:товар~счёт»
   G.gold=500;const before=Number(G.inv[res])||0;
   CMD.carbuy(res);
   const bought=(Number(G.inv[res])||0)-before, goldAfter=G.gold;
   // продаём обозу то, что он скупает
-  const sbtn=document.querySelector('#caravanBody [data-cmd^="carsell:"]');
+  const sbtn=document.querySelector('#caravanBody [data-cmd^="carselln:"]');
   let sold=null;
-  if(sbtn){const r2=sbtn.dataset.cmd.split(":")[1];const g0=G.gold;CMD.carsell(r2);sold={gain:G.gold-g0,res:r2};}
+  if(sbtn){const r2=sbtn.dataset.cmd.split(":")[1].split("~")[0];const g0=G.gold;CMD.carsell(r2);sold={gain:G.gold-g0,res:r2};}
   return {res,bought,paid:500-goldAfter,sold};});
  check('у обоза можно купить товар',deal.skip||(deal.bought===1&&deal.paid>0),deal);
 

@@ -521,13 +521,14 @@ public static class GraniSapi {
             else if (msp != null && platform.Contains(p[1])) { msp.SelectVoice(p[1]); onPlatform = true; sr = null; rh = null; }
           }
           else if (p[0] == "speak" && p.Length > 4) {
-            // Темп приходит в шкале игры (единица — обычный, 5 — впятеро по шкале
-            // Web Speech); голоса SAPI получают его в своей шкале (−10…10), RHVoice
-            // и eSpeak — настоящим множителем. Громкость — до 200 (выше обычной
+            // Темп приходит числом ползунка «Скорость синтезатора» (единица — обычный);
+            // голоса SAPI получают его в своей шкале (−10…10), RHVoice и eSpeak —
+            // настоящим множителем, все через Tempo — одинаково. Громкость — до 200 (выше обычной
             // умеют только RHVoice и eSpeak).
             double tempo = 1; double.TryParse(p[2], NumberStyles.Float, CultureInfo.InvariantCulture, out tempo);
             tempo = Math.Max(0.1, Math.Min(10, tempo));
-            int rate = (int)Math.Round(Math.Max(-10, Math.Min(10, 10 * Math.Log(tempo) / Math.Log(3))));
+            // (9.5.2) Голосам SAPI — тот же настоящий темп, что RHVoice, eSpeak и записям: Tempo(число ползунка).
+            int rate = (int)Math.Round(Math.Max(-10, Math.Min(10, 10 * Math.Log(GraniRh.Tempo(tempo)) / Math.Log(3))));
             int vol2 = Math.Max(0, Math.Min(200, int.Parse(p[3]))), vol = Math.Min(100, vol2);
             if (rh != null) {
               // RHVoice без NVDA: прежняя фраза снимается, новая считается и звучит.
