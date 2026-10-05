@@ -26590,13 +26590,20 @@ function studyKnowledge(x,y){
   setTimeout(()=>safeFn(()=>Bank.play("arte_page",{seed:k.n,gain:0.45,maxSec:2})),320);
   /* Книгу слышно как книгу: переплёт, страница, сухой шелест. */
   Bank.play("uh_page",{seed:k.n,gain:0.5,maxSec:1});Bank.play(/пергамент|скрижаль|том/i.test(k.obj.n)?"arte_page":"arte_book",{seed:k.n,gain:0.6,maxSec:3});});
- const награда=knowGrant(k.n,k.reward);
+ /* Сначала игрок слышит, что изучил, и только потом — что из этого вышло:
+    часть карты или дело называют себя сами, и раньше они звучали прежде
+    главного «Изучено». Их речь откладывается до конца главной фразы. */
+ const отложено=[];const прежнееSay=Speech.say;
+ Speech.say=(t,o)=>{отложено.push([t,Object.assign({},o||{},{interrupt:false})]);};
+ let награда="";
+ try{награда=knowGrant(k.n,k.reward);}finally{Speech.say=прежнееSay;}
  /* Книга у чтения теперь есть имя, вид, редкость и цена: одна и та же
     полка в двух разных башнях держит разные книги, и слышно это сразу. */
  const том=safeFn(()=>tomeAt(x,y),null);
  narrate(`${k.obj.n[0].toUpperCase()+k.obj.n.slice(1)}: ${k.obj.say}. `+
   (том?`${том.n} — ${том.редкостьИмя} ${том.видИмя}, ${том.откуда}${том.орден?`, из собрания «${том.орден}»`:""}. `:"")+
   `Изучено. Опыт растёт на ${опыт}.${награда}`);
+ отложено.forEach(([t,o])=>safeFn(()=>Speech.say(t,o)));
  safeFn(()=>checkLevelUp());
  refresh();saveGame(true);
  openReading(k.n,true);
