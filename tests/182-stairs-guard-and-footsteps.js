@@ -86,14 +86,15 @@ const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(e!==undefined?' :
  for(let i=0;i<30;i++){
   await page.evaluate(()=>{window.__роли.length=0;});
   await swipe();
-  const r=await page.evaluate(()=>({f:G.flight?G.flight.i:null,d:G.place&&G.place.depth,роли:window.__роли.slice()}));
+  /* (9.5.2) Ступень звучит родом подземелья: камень, дерево крепи, железо… */
+  const r=await page.evaluate(()=>{const н=stairSet();return {f:G.flight?G.flight.i:null,d:G.place&&G.place.depth,роли:window.__роли.filter(x=>x===н[0]||x===н[1])};});
   путь.push(r.f);
-  if(r.f!==null)ступени.push(r.роли.filter(x=>x==="lug_step_stone"||x==="mtg_step_hard"));
+  if(r.f!==null)ступени.push(r.роли);
   if(r.f===null&&r.d!==с2.depth){путь.push("ярус "+r.d);break;}}
  const конец=await page.evaluate(()=>({d:G.place&&G.place.depth,марш:!!G.flight}));
  check('2. без стража двойное касание начинает марш, свайпы ведут по ступеням до нового яруса',
   !!начало.марш&&конец.d===с2.depth+1&&!конец.марш,{начало,путь,конец});
- check('3. каждая ступень звучит настоящим шагом по камню',
+ check('3. каждая ступень звучит настоящим шагом — по породе своего подземелья',
   ступени.length>=5&&ступени.every(s=>s.length>=1),ступени.slice(0,6));
  check('3б. соседние ступени звучат разными наборами шагов',
   ступени.slice(0,6).some((s,i,a)=>i>0&&s[0]!==a[i-1][0]),ступени.slice(0,6));
