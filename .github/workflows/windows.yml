@@ -180,6 +180,7 @@ jobs:
           ls -la ../../GraniMirov-10.5-windows-full.zip
 
       - name: Полная сборка — на страницу сборки
+        id: art
         uses: actions/upload-artifact@v7
         with:
           path: GraniMirov-10.5-windows-full.zip
@@ -194,7 +195,8 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           gh release delete windows-latest --cleanup-tag -y || true
-          FULL="https://github.com/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
-          NOTE="Свежая сборка из main ($GITHUB_SHA). Выкладывается только полная сборка со всеми голосами — GraniMirov-10.5-windows-full.zip (голосовой пакет уже внутри, ставить ничего не нужно): страница сборки, раздел Artifacts — $FULL. Распакуйте архив в любую папку и откройте GraniMirov.exe — сеть и мышь не нужны, всё управляется клавиатурой: стрелки — шаг, Shift со стрелкой — бег, E — действие, I или Alt+E — инвентарь, Q — зелье, Tab — только здоровье, V — осмотреться, M или Esc — меню, Shift+F1 — все клавиши. Windows может предупредить о неизвестном издателе: «Подробнее» → «Выполнить в любом случае»."
+          FULL="${{ steps.art.outputs.artifact-url }}"
+          [ -n "$FULL" ] || FULL="https://github.com/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
+          NOTE="Свежая сборка из main ($GITHUB_SHA). Выкладывается только полная сборка со всеми голосами — GraniMirov-10.5-windows-full.zip (голосовой пакет уже внутри, ставить ничего не нужно): прямая ссылка на файл (скачивание начинается сразу, нужен вход в GitHub) — $FULL. Распакуйте архив в любую папку и откройте GraniMirov.exe — сеть и мышь не нужны, всё управляется клавиатурой: стрелки — шаг, Shift со стрелкой — бег, E — действие, I или Alt+E — инвентарь, Q — зелье, Tab — только здоровье, V — осмотреться, M или Esc — меню, Shift+F1 — все клавиши. Windows может предупредить о неизвестном издателе: «Подробнее» → «Выполнить в любом случае»."
           gh release create windows-latest --target "$GITHUB_SHA" \
             --title "Грань Миров 10.5 для Windows (сборка ${GITHUB_RUN_NUMBER})" --notes "$NOTE"

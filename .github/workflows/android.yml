@@ -170,6 +170,7 @@ jobs:
           df -h /
 
       - name: Полный APK — на страницу сборки
+        id: art
         uses: actions/upload-artifact@v7
         with:
           path: grani-mirov-10.5-full.apk
@@ -184,7 +185,8 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           gh release delete android-latest --cleanup-tag -y || true
-          FULL="https://github.com/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
+          FULL="${{ steps.art.outputs.artifact-url }}"
+          [ -n "$FULL" ] || FULL="https://github.com/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
           gh release create android-latest --target "$GITHUB_SHA" \
             --title "Грань Миров 10.5 для Android (сборка ${GITHUB_RUN_NUMBER})" \
-            --notes "Свежая сборка из main ($GITHUB_SHA); ${KEY_NOTE}. Выкладывается только полная сборка со всеми голосами — grani-mirov-10.5-full.apk (около 3 ГБ, голосовой пакет уже внутри): страница сборки, раздел Artifacts — $FULL. Скачайте и откройте на телефоне, Android попросит разрешить установку из этого источника. Вся игра внутри, сеть не нужна."
+            --notes "Свежая сборка из main ($GITHUB_SHA); ${KEY_NOTE}. Выкладывается только полная сборка со всеми голосами — grani-mirov-10.5-full.apk (около 3 ГБ, голосовой пакет уже внутри): прямая ссылка на файл (скачивание начинается сразу, нужен вход в GitHub) — $FULL. Скачайте и откройте на телефоне, Android попросит разрешить установку из этого источника. Вся игра внутри, сеть не нужна."
