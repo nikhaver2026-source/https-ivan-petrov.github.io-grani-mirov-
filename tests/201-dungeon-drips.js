@@ -47,6 +47,9 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   r.файлы=SOUND_BANK.deep_drip.f.slice();r.старых=Object.values(SOUND_BANK).some(b=>b.f.some(f=>/deep_drip_01_n/.test(f)));
   r.ритмы=места.map(m=>Math.round(m.период));
   const m0=места[0];
+  /* Фоновый такт капели на время замера молчит: иначе капля из другой точки,
+     случайно упавшая в те же 900 мс, считалась бы лишним повтором этой. */
+  Drips.stop();
   вызовы.length=0;const t0=Date.now();
   r.капля=Drips.drop(m0);await w(900);
   const свои=вызовы.filter(x=>/cave_drip/.test(x.path));

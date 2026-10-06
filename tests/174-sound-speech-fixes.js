@@ -193,6 +193,8 @@ const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(e!==undefined?' :
    cancel(){this.cancels++;this.cur=null;},speaking(){return !!this.cur;},
    end(){const o=this.cur;this.cur=null;if(o&&o.onend)o.onend();},reset(){this.log=[];this.cancels=0;this.cur=null;}};
   Speech.adapter=window.FAKE;Speech._chunk=t=>[String(t)];Speech.stop();Speech.recent.clear();
+  /* (10.0) после боя ещё звучит записанная фраза героя — голос игры по правилу ждёт её; глушим записи */
+  Folk.смолкнуть(true);Folk.геройДо=0;Folk.занятоДо=0;Folk.звучитДо=0;Folk.звучитЛи=()=>false;
   settings.speech=1;settings.stopOnAction=1;
   while(activeLayer())closeTopUI();if(G.inCombat)endCombat();G.place=null;G.ship=null;G.weaponDrawn=false;});
  const говорит=(pri)=>page.evaluate(p=>{Speech.stop();FAKE.reset();Speech.recent.clear();
