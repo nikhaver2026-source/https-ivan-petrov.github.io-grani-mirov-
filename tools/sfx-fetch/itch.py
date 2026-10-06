@@ -175,7 +175,7 @@ def main(name, page_url, root):
     lic = re.search(r'itch\.io/game-assets/assets-([a-z0-9-]+)', page)
     print(f"LICENSE {name} {game} {lic.group(1) if lic else '?'}", flush=True)
     token = csrf(page)
-    items, key, referer = uploads(page), None, game
+    items, key, referer, template = uploads(page), None, game, None
     # «Назови свою цену» (кнопка ведёт на /purchase) и страницы без кнопок:
     # ключ загрузки выдаёт download_url — как после «Нет, спасибо».
     if "/purchase" in page or not items:
@@ -192,6 +192,17 @@ def main(name, page_url, root):
             items = uploads(dpage) or items
             referer = durl
             print(f"   ключ загрузки получен ({len(key)} знаков)", flush=True)
+            # Страница загрузок сама называет адрес выдачи файла (шаблон с
+            # {upload_id}): берём его, а страницу кладём рядом для разбора.
+            with open(os.path.join(folder, "_download_page.html"), "w", encoding="utf-8") as f:
+                f.write(dpage)
+            for m in list(re.finditer(r'"([^"]*\\?/file\\?/[^"]*)"', dpage))[:6]:
+                t = m.group(1).replace("\\/", "/")
+                print(f"   шаблон на странице: {t[:200]}", flush=True)
+                if "upload_id" in t and template is None:
+                    template = t
+            for m in list(re.finditer(r'.{0,80}(?:download_key|"key"|key=).{0,120}', dpage))[:6]:
+                print(f"   ключ на странице: {m.group(0)[:220]}", flush=True)
         elif not items:
             print(f"!! нет страницы загрузок: {info}", flush=True)
             return 1
@@ -199,7 +210,11 @@ def main(name, page_url, root):
             print(f"   download_url не ответил ({info}); пробую прямые кнопки", flush=True)
     print(f"   файлов в наборе: {len(items)}", flush=True)
     for uid, nm in items:
-        if key:
+        if template:
+            api = re.sub(r"\{upload_id\}|%7Bupload_id%7D|:upload_id", uid, template)
+            if api.startswith("/"):
+                api = game.split("/", 3)[0] + "//" + game.split("/", 3)[2] + api
+        elif key:
             api = f"{game}/file/{uid}?source=game_download&key={key}"
         else:
             api = f"{game}/file/{uid}?source=view_game&as_props=1&after_download_lightbox=true"
