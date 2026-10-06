@@ -1,12 +1,13 @@
-# 10.0 «Сплетение», второй заход: ток и гул Призрачной Сети и Буревала,
-# шёпот осколков древних разумов, голоса мёртвых, чары школ.
+# 11.0 «Магия без тока»: чары звучат волшебством, а не электричеством.
+# Наборы прошлых заходов (10.0) уже сведены в игру и здесь не повторяются.
 # Наборы под CC BY-SA не берутся: условие «так же» не подходит к звукам игры.
-electriclib https://opengameart.org/content/electric-sound-effects-library
-scifilib https://opengameart.org/content/sci-fi-sound-effects-library
-madness https://opengameart.org/content/voices-of-madness
-deadvoice https://opengameart.org/content/male-dead-voice
-spellstarter https://opengameart.org/content/spell-sounds-starter-pack
-heal3 https://opengameart.org/content/3-heal-spells
-miscsfx https://opengameart.org/content/misc-sfx-pack
-projectile https://opengameart.org/content/4-projectile-launches
-monster2 https://opengameart.org/content/monster-sound-effects-2
+rpg80 https://opengameart.org/content/80-cc0-rpg-sfx
+teleport https://opengameart.org/content/teleport-spell
+darkmagic3 https://opengameart.org/content/3-dark-magic-spells
+sandspell https://opengameart.org/content/sand-spell
+ghostportal https://opengameart.org/content/ghost
+portalsnd https://opengameart.org/content/portal-sound
+torchfire https://opengameart.org/content/torch-fire-spell
+chanting https://opengameart.org/content/creepy-incoherent-chanting
+eery https://opengameart.org/content/eeryhorror-sfx
+revtime https://opengameart.org/content/reverse-time-loop

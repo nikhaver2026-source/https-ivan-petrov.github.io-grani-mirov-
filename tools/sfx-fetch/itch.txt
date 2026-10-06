@@ -1,0 +1,7 @@
+# Наборы с itch.io (CC0 и CC BY 4.0) — скачиваются через itch.py.
+lentbasic https://lentikula.itch.io/freecc0-basic-spell-impacts-sfx
+lentheal https://lentikula.itch.io/healing-spell-impacts
+lentdruid https://lentikula.itch.io/druid-spell-impacts
+soundrack https://thesoundrack.itch.io/freemagicspellsfx
+timmagic https://timothyadan.itch.io/magic-attacks-bundle
+polar34 https://polar-34.itch.io/magic-sound-effects

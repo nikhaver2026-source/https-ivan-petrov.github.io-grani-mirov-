@@ -28,10 +28,47 @@ jobs:
       - name: Скачать, распаковать, перевести во FLAC
         run: |
           set -e
-          mkdir -p out
+          mkdir -p out dl
+          # Без потерь во FLAC; выше 48 кГц — передискретизация до 48 кГц
+          # (soxr), разрядность сохраняется: 16 бит остаются 16, прочее — 24.
+          conv() {
+            sr=$(ffprobe -v error -select_streams a:0 -show_entries stream=sample_rate -of csv=p=0 "$1" || echo 0)
+            fmt=$(ffprobe -v error -select_streams a:0 -show_entries stream=sample_fmt -of csv=p=0 "$1" || echo s16)
+            sf=s32; case "$fmt" in s16*|u8*) sf=s16;; esac
+            af=""; [ "${sr:-0}" -gt 48000 ] && af="-af aresample=48000:resampler=soxr:precision=28"
+            ffmpeg -nostdin -loglevel error -y -i "$1" $af -sample_fmt $sf -c:a flac -compression_level 8 "$2"
+          }
+          # Всё, что лежит в x/<имя>: архивы распаковываются (и вложенные),
+          # звук переводится во FLAC, сжатые исходники и тексты кладутся как есть.
+          process() {
+            name="$1"
+            for pass in 1 2; do
+              find "x/$name" -type f \( -iname '*.zip' -o -iname '*.7z' -o -iname '*.rar' \) | while read -r a; do
+                7z x -y -o"${a%.*}" "$a" < /dev/null > /dev/null || echo "!! не распаковалось: $a"; rm -f "$a"; done
+            done
+            find "x/$name" -depth -name '__MACOSX' -exec rm -rf {} + 2>/dev/null || true
+            find "x/$name" -name '._*' -delete 2>/dev/null || true
+            find "x/$name" -type f \( -iname '*.wav' -o -iname '*.aif*' -o -iname '*.flac' \) | while read -r f; do
+              rel="${f#x/}"; dst="out/${rel%.*}.flac"; mkdir -p "$(dirname "$dst")"
+              conv "$f" "$dst" || echo "!! не перевелось: $f"
+            done
+            find "x/$name" -type f \( -iname '*.ogg' -o -iname '*.mp3' -o -iname '*.txt' -o -iname '*.md' -o -iname '*.pdf' -o -iname '*.rtf' -o -iname '*.html' \) | while read -r f; do
+              rel="${f#x/}"; mkdir -p "out/$(dirname "$rel")"; cp "$f" "out/$rel"; done
+            rm -rf "x/$name"
+          }
+          touch tools/sfx-fetch/list.txt
+          # Наборы itch.io: путь покупателя «без доплаты» (itch.py).
+          if [ -f tools/sfx-fetch/itch.txt ]; then
+            grep -v '^#' tools/sfx-fetch/itch.txt | while read -r name page; do
+              [ -n "$name" ] || continue
+              echo "== itch $name"
+              python3 tools/sfx-fetch/itch.py "$name" "$page" x 2>&1 | tee -a itch.log || echo "!! itch: $name"
+              grep "^LICENSE $name " itch.log | tail -1 | cut -d' ' -f2- >> licenses.txt || true
+              process "$name"
+            done
+          fi
           # Страницы OpenGameArt: ссылки на файлы набора берутся со страницы
           # (раздел «Файлы»), лицензия — оттуда же; записывается в inventory.
-          touch tools/sfx-fetch/list.txt
           if [ -f tools/sfx-fetch/pages.txt ]; then
             grep -v '^#' tools/sfx-fetch/pages.txt | while read -r name page; do
               [ -n "$name" ] || continue
@@ -48,22 +85,9 @@ jobs:
           grep -v '^#' tools/sfx-fetch/list.txt | while read -r name url; do
             [ -n "$name" ] || continue
             echo "== $name"
-            curl -fsSL --retry 4 -o "src_$name" "$url" || { echo "!! не скачалось: $url"; continue; }
-            ls -la "src_$name"
             mkdir -p "x/$name"
-            case "$url" in
-              *.wav|*.WAV|*.ogg|*.OGG|*.mp3|*.MP3|*.flac|*.FLAC|*.aif*|*.AIF*) cp "src_$name" "x/$name/$(basename "$url" | sed 's/%20/_/g')";;
-              *) 7z x -y -o"x/$name" "src_$name" > /dev/null || true;;
-            esac
-            find "x/$name" -depth -name '__MACOSX' -exec rm -rf {} + 2>/dev/null || true
-            find "x/$name" -name '._*' -delete 2>/dev/null || true
-            find "x/$name" -type f \( -iname '*.wav' -o -iname '*.aif*' \) | while read -r f; do
-              rel="${f#x/}"; dst="out/${rel%.*}.flac"; mkdir -p "$(dirname "$dst")"
-              ffmpeg -nostdin -loglevel error -y -i "$f" -c:a flac -compression_level 8 "$dst" || echo "!! не перевелось: $f"
-            done
-            find "x/$name" -type f \( -iname '*.ogg' -o -iname '*.mp3' -o -iname '*.flac' -o -iname '*.txt' -o -iname '*.md' -o -iname '*.pdf' \) | while read -r f; do
-              rel="${f#x/}"; mkdir -p "out/$(dirname "$rel")"; cp "$f" "out/$rel"; done
-            rm -rf "x/$name" "src_$name"
+            curl -fsSL --retry 4 -o "x/$name/$(basename "$url" | sed 's/%20/_/g')" "$url" || { echo "!! не скачалось: $url"; continue; }
+            process "$name"
           done
           cd out
           for d in */; do d="${d%/}"; zip -0 -qr "../$d.zip" "$d"; done
@@ -72,6 +96,7 @@ jobs:
               echo "$f $(ffprobe -v error -show_entries stream=sample_rate,channels,bits_per_raw_sample:format=duration -of csv=p=0 "$f" | tr '\n' ' ')"; done ) > inventory.txt
           ( cd out && find . -type f \( -name '*.ogg' -o -name '*.mp3' \) | sort | sed 's/$/ (сжатый исходник — в игру не годится)/' ) >> inventory.txt
           [ -f licenses.txt ] && { echo "== лицензии"; cat licenses.txt; } >> inventory.txt
+          [ -f itch.log ] && { echo "== itch.io"; cat itch.log; } >> inventory.txt
           wc -l inventory.txt; head -40 inventory.txt
           ls -la *.zip
       - name: Выпуск sfx-inbox
