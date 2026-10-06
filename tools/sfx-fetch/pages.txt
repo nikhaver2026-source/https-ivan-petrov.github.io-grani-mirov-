@@ -1,32 +1,36 @@
-# 9.5.4: страницы OpenGameArt, с которых сборочная машина берёт файлы наборов.
-# Формат: имя страница. Лицензия каждого набора пишется в inventory.txt.
-# Ужасы Заморья: жуткие голоса, стоны, шёпот, смех, кость, дыхание, утробный рык.
+# 10.0 «Сплетение»: гроза Буревала, джунгли Нефритовых Сект, драконы Кривой
+# Короны, бурление алхимиков Переиначенного Предела, гул Хрустальной Сферы,
+# разломы Шестигранной Империи, рык изменённых и тварей, гонг сект.
 # Наборы под CC BY-SA не берутся: условие «так же» не подходит к звукам игры.
-horror https://opengameart.org/content/horror-sound-effects-library
-fantasy https://opengameart.org/content/fantasy-sound-effects-library
-ghostmoan https://opengameart.org/content/ghost-monster-voice-moaning-growling
-ghostloops https://opengameart.org/content/4-atmospheric-ghostly-loops
-grunt15 https://opengameart.org/content/15-monster-gruntpaindeath-sounds
-undead https://opengameart.org/content/undead-moans
-ghost1 https://opengameart.org/content/scary-ghost-1
-ghost2 https://opengameart.org/content/scary-ghost-2
-eery https://opengameart.org/content/eeryhorror-sfx
-breath https://opengameart.org/content/ghost-breath
-spider https://opengameart.org/content/spider-chattering
-witch https://opengameart.org/content/witch-cackle
-tomb https://opengameart.org/content/forgoten-tomb-ambience
-hatmo https://opengameart.org/content/horror-atmosphere
-darkamb https://opengameart.org/content/dark-ambiences
-hloop https://opengameart.org/content/loopable-horror-ambiance
-spooky25 https://opengameart.org/content/25-spooky-sound-effects
-interact https://opengameart.org/content/atmospheric-interaction-sound-pack
-creature80 https://opengameart.org/content/80-cc0-creature-sfx
-creature80b https://opengameart.org/content/80-cc0-creture-sfx-2
-evilcr https://opengameart.org/content/evil-creature
-beast https://opengameart.org/content/monster-or-beast-sounds
-silentgr https://opengameart.org/content/silent-beast-growls4
-guttural https://opengameart.org/content/guttural-vocals
-hiscream https://opengameart.org/content/high-pitch-scream-sounds2
-insect https://opengameart.org/content/insect-or-alien-scream
-crows https://opengameart.org/content/crows-singing
-nightmare https://opengameart.org/content/a-lonely-nightmare-minimare-monster-sfx
+thunderrw https://opengameart.org/content/thunder-rain-and-wind
+thunderfield https://opengameart.org/content/thunder-lightning-ambience-field-recording
+thunderclose https://opengameart.org/content/thunder-very-close-rain-01
+thunderlong https://opengameart.org/content/rain-long-thunder
+thunder https://opengameart.org/content/thunder
+jungle https://opengameart.org/content/birdcricketfrog-and-mosquito-sounds
+naturepack https://opengameart.org/content/nature-sounds-pack
+gorilla https://opengameart.org/content/gorilla-sounds
+boar https://opengameart.org/content/boar-0
+troll https://opengameart.org/content/big-scary-troll-sounds
+growls6 https://opengameart.org/content/6-monstrous-growls
+deeproar https://opengameart.org/content/cc0-deep-monster-roar
+zombie https://opengameart.org/content/unreleased-zombie-sfx
+buzz https://opengameart.org/content/electric-buzz
+forcefield https://opengameart.org/content/force-field-electric-hum
+generator https://opengameart.org/content/generator-loop
+breaker https://opengameart.org/content/sfx-circuit-breaker
+overload https://opengameart.org/content/overloading-sound
+steamel https://opengameart.org/content/steampunk-electric-effects
+iceel https://opengameart.org/content/ice-electricity-magic
+computer https://opengameart.org/content/9-sci-fi-computer-sounds-and-beeps
+grin https://opengameart.org/content/upside-down-grin-freaky-ambient
+squish https://opengameart.org/content/8-wet-squish-slurp-impacts
+swamp https://opengameart.org/content/swamp-environment-audio
+acid https://opengameart.org/content/bubbling-acid
+bubble https://opengameart.org/content/bubble-sound-effects
+wings https://opengameart.org/content/large-wings-flap
+dragonflap https://opengameart.org/content/dragon-flap-0
+crystalv https://opengameart.org/content/crystal-voices
+gong https://opengameart.org/content/gonk-gong
+darkscape https://opengameart.org/content/dark-ambience-soundscapes
+siren https://opengameart.org/content/storm-siren
