@@ -10793,8 +10793,26 @@ const EMPIRE_VOICE=["mine_pick","harvest","wild_owl","beasts_camel",
  "sp_crystal","sp_beast_hunger","sp_hum","sp_god_blacksun","sp_darkscape","sp_beast_rim","sp_wings","sky_wave","sp_thunder","sp_lg_frost","sp_gong","sp_lg_rung","sp_siren","sp_acid","sp_god_shest","sp_god_haos"];
 /* (6.0) Шов Завесы делит землю: в Средоточии спорят только прежние державы,
    за швом — только державы Дальнего Круга. */
-function empireAt(x,y){const спис=inCore(x,y)?CORE_EMPIRES:FAR_REALMS;let best=спис[0],bestD=Infinity;
- for(const e of спис){const dx=x-e.cap.x,dy=y-e.cap.y,d=dx*dx+dy*dy;if(d<bestD){bestD=d;best=e;}}
+/* (10.0) Держав стало под сотню, а спрашивают о державе на каждой клетке.
+   Мир разбит на квадраты по двадцать пять тысяч клеток, и для каждого
+   квадрата раз и навсегда отобраны те державы, чья столица может оказаться
+   ближайшей хоть к одной его клетке (ближний край квадрата не дальше, чем
+   дальний край у самой близкой). Ответ тот же, что при полном переборе,
+   включая порядок при равных расстояниях, — только считается по трём-пяти
+   столицам, а не по всем. */
+const EMP_SQ=25000,empSq={core:new Map(),far:new Map()};
+function empCandidates(спис,x0,y0){
+ const x1=x0+EMP_SQ,y1=y0+EMP_SQ,ближ=[];let предел=Infinity;
+ for(const e of спис){const cx=e.cap.x,cy=e.cap.y;
+  const dx=Math.max(x0-cx,0,cx-x1),dy=Math.max(y0-cy,0,cy-y1);ближ.push(dx*dx+dy*dy);
+  const fx=Math.max(Math.abs(cx-x0),Math.abs(cx-x1)),fy=Math.max(Math.abs(cy-y0),Math.abs(cy-y1));
+  предел=Math.min(предел,fx*fx+fy*fy);}
+ const out=спис.filter((e,i)=>ближ[i]<=предел);return out.length?out:спис.slice();}
+function empireAt(x,y){const core=inCore(x,y),спис=core?CORE_EMPIRES:FAR_REALMS,m=core?empSq.core:empSq.far;
+ const bx=Math.floor(x/EMP_SQ),by=Math.floor(y/EMP_SQ),k=bx*8192+by;
+ let c=m.get(k);if(!c){c=empCandidates(спис,bx*EMP_SQ,by*EMP_SQ);m.set(k,c);}
+ let best=c[0],bestD=Infinity;
+ for(const e of c){const dx=x-e.cap.x,dy=y-e.cap.y,d=dx*dx+dy*dy;if(d<bestD){bestD=d;best=e;}}
  return best;}
 const TERR={forest:["forest","Лес","Шумят кроны деревьев."],
  plains:["plains","Равнина","Травы колышутся под ветром."],
@@ -10815,12 +10833,18 @@ const isCrossroads=(x,y)=>x%29===0&&y%29===0;
    От каждого селения к ближнему тракту протоптан свой съезд, поэтому до
    деревни или цитадели можно дойти по дороге, не блуждая по полям.
    Съезд выводится из тех же чисел, что и селение, — карта у всех одна. */
+/* Клетки столиц — набором: съезд спрашивает «не столица ли тут» о каждой
+   клетке отрезка, и искать ради этого ближайшую державу незачем. Столица
+   в наборе — только та, что и вправду ближайшая к своей клетке. */
+let capCells=null;
+function isCapCell(x,y){
+ if(!capCells){capCells=new Set();for(const e of EMPIRES)if(e.cap&&empireAt(e.cap.x,e.cap.y)===e)capCells.add(e.cap.x*1048576+e.cap.y);}
+ return capCells.has(x*1048576+y);}
 function settlementSeed(x,y){
  /* Проверка селения без обращения к рельефу: иначе дорога и рельеф
     начали бы спрашивать друг друга по кругу. */
  if(x<0||y<0||x>=WORLD||y>=WORLD)return null;
- const emp=empireAt(x,y);
- if(x===emp.cap.x&&y===emp.cap.y)return "castle";
+ if(isCapCell(x,y))return "castle";
  if(!isRoad(x,y)&&H(x,y,3)<0.0035)return "village";
  return null;}
 /* К какому тракту жмётся селение: к ближайшему из четырёх. */
@@ -10833,16 +10857,20 @@ function spurTarget(cx,cy){
  if(m===du)return {axis:"y",v:sy*29};
  return {axis:"y",v:(sy+1)*29};}
 const spurCache=new Map();
+/* Пустой отрезок (а таких девять из десяти) — один общий пустой набор:
+   иначе каждая новая клетка порождала бы два лишних объекта. Ключ — число. */
+const SPUR_NONE=new Set();
 function spurLine(kind,line,seg){
- const key=kind+line+","+seg;
- if(spurCache.has(key))return spurCache.get(key);
- const a=seg*29,set=new Set();
+ const key=(line*65536+seg)*2+(kind==="r"?1:0);
+ const было=spurCache.get(key);if(было)return было;
+ const a=seg*29;let set=SPUR_NONE;
  for(let i=a+1;i<a+29;i++){
   const cx=kind==="r"?i:line,cy=kind==="r"?line:i;
   if(!settlementSeed(cx,cy))continue;
   const t=spurTarget(cx,cy);
   if(t.axis!==(kind==="r"?"x":"y"))continue;
   const from=kind==="r"?cx:cy,lo=Math.min(from,t.v),hi=Math.max(from,t.v);
+  if(set===SPUR_NONE)set=new Set();
   for(let v=lo;v<=hi;v++)set.add(v);}
  if(spurCache.size>600)spurCache.clear();
  spurCache.set(key,set);
@@ -40402,7 +40430,12 @@ const Scape={
     у самого частого голоса срок больше трёх секунд. */
  timer:null,
  start(){if(this.timer)return;
-  this.timer=setInterval(()=>safeFn(()=>{this.tick();this.bed();safeFn(()=>Ambience.tick());safeFn(()=>PlaceVoice.tick());safeFn(()=>PatrolMarch.tick());safeFn(()=>CaravanRoll.tick());}),1500);},
+  this.timer=setInterval(()=>safeFn(()=>{
+   /* (10.0) Мир звучит, только пока на экране сам мир: в заглавном меню и
+      в прологе обоз не подъезжает и стража не марширует — иначе игрок,
+      вернувшийся в меню, слышал бы «Слышен обоз…» поверх пунктов. */
+   const мир=document.getElementById("screen-game");if(!мир||мир.hidden)return;
+   this.tick();this.bed();safeFn(()=>Ambience.tick());safeFn(()=>PlaceVoice.tick());safeFn(()=>PatrolMarch.tick());safeFn(()=>CaravanRoll.tick());}),1500);},
 };
 
 /* Как далеко слышно шаги живых и где стража ходит в коже, а не в железе. */
