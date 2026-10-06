@@ -1,36 +1,12 @@
-# 10.0 «Сплетение»: гроза Буревала, джунгли Нефритовых Сект, драконы Кривой
-# Короны, бурление алхимиков Переиначенного Предела, гул Хрустальной Сферы,
-# разломы Шестигранной Империи, рык изменённых и тварей, гонг сект.
+# 10.0 «Сплетение», второй заход: ток и гул Призрачной Сети и Буревала,
+# шёпот осколков древних разумов, голоса мёртвых, чары школ.
 # Наборы под CC BY-SA не берутся: условие «так же» не подходит к звукам игры.
-thunderrw https://opengameart.org/content/thunder-rain-and-wind
-thunderfield https://opengameart.org/content/thunder-lightning-ambience-field-recording
-thunderclose https://opengameart.org/content/thunder-very-close-rain-01
-thunderlong https://opengameart.org/content/rain-long-thunder
-thunder https://opengameart.org/content/thunder
-jungle https://opengameart.org/content/birdcricketfrog-and-mosquito-sounds
-naturepack https://opengameart.org/content/nature-sounds-pack
-gorilla https://opengameart.org/content/gorilla-sounds
-boar https://opengameart.org/content/boar-0
-troll https://opengameart.org/content/big-scary-troll-sounds
-growls6 https://opengameart.org/content/6-monstrous-growls
-deeproar https://opengameart.org/content/cc0-deep-monster-roar
-zombie https://opengameart.org/content/unreleased-zombie-sfx
-buzz https://opengameart.org/content/electric-buzz
-forcefield https://opengameart.org/content/force-field-electric-hum
-generator https://opengameart.org/content/generator-loop
-breaker https://opengameart.org/content/sfx-circuit-breaker
-overload https://opengameart.org/content/overloading-sound
-steamel https://opengameart.org/content/steampunk-electric-effects
-iceel https://opengameart.org/content/ice-electricity-magic
-computer https://opengameart.org/content/9-sci-fi-computer-sounds-and-beeps
-grin https://opengameart.org/content/upside-down-grin-freaky-ambient
-squish https://opengameart.org/content/8-wet-squish-slurp-impacts
-swamp https://opengameart.org/content/swamp-environment-audio
-acid https://opengameart.org/content/bubbling-acid
-bubble https://opengameart.org/content/bubble-sound-effects
-wings https://opengameart.org/content/large-wings-flap
-dragonflap https://opengameart.org/content/dragon-flap-0
-crystalv https://opengameart.org/content/crystal-voices
-gong https://opengameart.org/content/gonk-gong
-darkscape https://opengameart.org/content/dark-ambience-soundscapes
-siren https://opengameart.org/content/storm-siren
+electriclib https://opengameart.org/content/electric-sound-effects-library
+scifilib https://opengameart.org/content/sci-fi-sound-effects-library
+madness https://opengameart.org/content/voices-of-madness
+deadvoice https://opengameart.org/content/male-dead-voice
+spellstarter https://opengameart.org/content/spell-sounds-starter-pack
+heal3 https://opengameart.org/content/3-heal-spells
+miscsfx https://opengameart.org/content/misc-sfx-pack
+projectile https://opengameart.org/content/4-projectile-launches
+monster2 https://opengameart.org/content/monster-sound-effects-2
