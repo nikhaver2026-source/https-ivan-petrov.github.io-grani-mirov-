@@ -61186,7 +61186,7 @@ function trialRecipeText(t){
 /* Касание механизма или источника. */
 function raceTrialUse(){
  const z=raceTrialHere();if(!z){narrate("Здесь нет древнего механизма.");return false;}
- const t=z.t,st=raceTrialState(t.id),p=G.place;
+ const t=RACE_TRIAL_BY_ID[z.t.id]||z.t,st=raceTrialState(t.id),p=G.place;
  if(z.роль==="src"){
   G.trialSrc=G.trialSrc||{};const k=[p.bx,p.by,p.depth].join(",");
   if(G.trialSrc[k]){narrate(`Источник иссяк: ${z.рес.toLowerCase()} вы уже взяли.`);return true;}
