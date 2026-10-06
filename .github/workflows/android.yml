@@ -1,8 +1,8 @@
-# Сборка приложения «Грань Миров» 10.5 для Android на серверах GitHub.
+# Сборка приложения «Грань Миров» 11.0 для Android на серверах GitHub.
 #
 # Вся игра — index.html и записи sounds — лежит внутри
 # приложения, и оно работает без сети. С 9.5 собирается только полная
-# сборка grani-mirov-10.5-full.apk со всем голосовым пакетом Gemini внутри;
+# сборка grani-mirov-11.0-full.apk со всем голосовым пакетом Gemini внутри;
 # она больше предела выпуска (2 ГиБ) и лежит на странице сборки (Artifacts),
 # а выпуск «android-latest» несёт ссылку на неё.
 #
@@ -163,17 +163,17 @@ jobs:
             --bundle="$AAB" --output="$RUNNER_TEMP/full.apks" \
             --ks="$KS_FILE" --ks-pass="pass:$KS_PASS" --ks-key-alias="$KS_ALIAS" --key-pass="pass:$KS_KEY_PASS"
           rm -rf android/app/build/intermediates
-          unzip -p "$RUNNER_TEMP/full.apks" universal.apk > grani-mirov-10.5-full.apk
+          unzip -p "$RUNNER_TEMP/full.apks" universal.apk > grani-mirov-11.0-full.apk
           rm -f "$RUNNER_TEMP/full.apks"
-          ls -la grani-mirov-10.5-full.apk
-          "$ANDROID_HOME/build-tools/36.0.0/apksigner" -J-Xmx8g verify --print-certs grani-mirov-10.5-full.apk | head -3
+          ls -la grani-mirov-11.0-full.apk
+          "$ANDROID_HOME/build-tools/36.0.0/apksigner" -J-Xmx8g verify --print-certs grani-mirov-11.0-full.apk | head -3
           df -h /
 
       - name: Полный APK — на страницу сборки
         id: art
         uses: actions/upload-artifact@v7
         with:
-          path: grani-mirov-10.5-full.apk
+          path: grani-mirov-11.0-full.apk
           archive: false
           compression-level: 0
           retention-days: 90
@@ -188,5 +188,5 @@ jobs:
           FULL="${{ steps.art.outputs.artifact-url }}"
           [ -n "$FULL" ] || FULL="https://github.com/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
           gh release create android-latest --target "$GITHUB_SHA" \
-            --title "Грань Миров 10.5 для Android (сборка ${GITHUB_RUN_NUMBER})" \
-            --notes "Свежая сборка из main ($GITHUB_SHA); ${KEY_NOTE}. Выкладывается только полная сборка со всеми голосами — grani-mirov-10.5-full.apk (около 3 ГБ, голосовой пакет уже внутри): прямая ссылка на файл (скачивание начинается сразу, нужен вход в GitHub) — $FULL. Скачайте и откройте на телефоне, Android попросит разрешить установку из этого источника. Вся игра внутри, сеть не нужна."
+            --title "Грань Миров 11.0 для Android (сборка ${GITHUB_RUN_NUMBER})" \
+            --notes "Свежая сборка из main ($GITHUB_SHA); ${KEY_NOTE}. Выкладывается только полная сборка со всеми голосами — grani-mirov-11.0-full.apk (около 3 ГБ, голосовой пакет уже внутри): прямая ссылка на файл (скачивание начинается сразу, нужен вход в GitHub) — $FULL. Скачайте и откройте на телефоне, Android попросит разрешить установку из этого источника. Вся игра внутри, сеть не нужна."
