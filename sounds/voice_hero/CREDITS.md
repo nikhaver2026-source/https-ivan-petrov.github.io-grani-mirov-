@@ -274,7 +274,7 @@
 
 Целые фразы героя в бою — угроза, ответ врагу, удачный удар, рана, свой
 край, край врага, победа — записаны голосами «Настроек персонажа» с
-интонацией мига боя. Записей: 1344. Нейроголоса **Gemini** (Google),
+интонацией мига боя. Записей: 1916. Нейроголоса **Gemini** (Google),
 модель gemini-3.8-flash-tts, по тексту игры; каждая проверена
 распознаванием (GigaAM). Обработка: −18 LUFS, пик не выше −1 дБ, 24 кГц, FLAC.
 
@@ -748,6 +748,7 @@
 | hero_f_42uav1_aoede_g.flac | Лёгкий (жен.) | Aoede | Вот так. |
 | hero_f_1u2bfug_aoede_g.flac | Лёгкий (жен.) | Aoede | Хороший удар. |
 | hero_f_slnn8e_aoede_g.flac | Лёгкий (жен.) | Aoede | Дошло. |
+| hero_f_s9ww9k_aoede_g.flac | Лёгкий (жен.) | Aoede | Так и держать. |
 | hero_f_od6p6w_aoede_g.flac | Лёгкий (жен.) | Aoede | Больно? Это только начало. |
 | hero_f_1tdir86_aoede_g.flac | Лёгкий (жен.) | Aoede | Ой, извини. Нет, не извини. |
 | hero_f_ay7efw_aoede_g.flac | Лёгкий (жен.) | Aoede | Красиво же вышло! |
@@ -763,6 +764,577 @@
 | hero_f_1ku8y9u_aoede_g.flac | Лёгкий (жен.) | Aoede | Ещё хочешь? |
 | hero_f_1pyu43y_aoede_g.flac | Лёгкий (жен.) | Aoede | Жри сталь! |
 | hero_f_187ddpr_aoede_g.flac | Лёгкий (жен.) | Aoede | Вот так тебе! |
+| hero_f_47akx6_aoede_g.flac | Лёгкий (жен.) | Aoede | Мало? Добавлю! |
+| hero_f_1wuqul1_aoede_g.flac | Лёгкий (жен.) | Aoede | Нравится, скотина? |
+| hero_f_1fdlkbr_aoede_g.flac | Лёгкий (жен.) | Aoede | Получай, зараза! |
+| hero_f_13emju8_aoede_g.flac | Лёгкий (жен.) | Aoede | На ещё! |
+| hero_f_ak08wm_aoede_g.flac | Лёгкий (жен.) | Aoede | Вот и весь сказ! |
+| hero_f_bkt4y2_aoede_g.flac | Лёгкий (жен.) | Aoede | Больно, но стою. |
+| hero_f_1ur0sze_aoede_g.flac | Лёгкий (жен.) | Aoede | Ничего, держусь. |
+| hero_f_vgpll1_aoede_g.flac | Лёгкий (жен.) | Aoede | Кровь — не беда. |
+| hero_f_l5ajbk_aoede_g.flac | Лёгкий (жен.) | Aoede | Это было сильно. |
+| hero_f_1gq3wie_aoede_g.flac | Лёгкий (жен.) | Aoede | Пропустил. |
+| hero_f_1lqf70c_aoede_g.flac | Лёгкий (жен.) | Aoede | Надо осторожнее. |
+| hero_f_g0stap_aoede_g.flac | Лёгкий (жен.) | Aoede | Пустяк, царапина. |
+| hero_f_1pkv1ay_aoede_g.flac | Лёгкий (жен.) | Aoede | Ещё не конец. |
+| hero_f_br33hw_aoede_g.flac | Лёгкий (жен.) | Aoede | Ай! Можно было и помягче. |
+| hero_f_h77vlu_aoede_g.flac | Лёгкий (жен.) | Aoede | Ох, кажется, что-то хрустнуло. Надеюсь, не у меня. |
+| hero_f_120yq67_aoede_g.flac | Лёгкий (жен.) | Aoede | Ну вот, новый шрам. Буду хвастаться. |
+| hero_f_1mnn0y2_aoede_g.flac | Лёгкий (жен.) | Aoede | Это был мой любимый бок! |
+| hero_f_1hosn4s_aoede_g.flac | Лёгкий (жен.) | Aoede | Эй, я ещё не готова был! |
+| hero_f_18iq4k_aoede_g.flac | Лёгкий (жен.) | Aoede | Ладно, этот ты выиграл. |
+| hero_f_agipjb_aoede_g.flac | Лёгкий (жен.) | Aoede | Ой-ой-ой. Запишем в долг. |
+| hero_f_6pllyk_aoede_g.flac | Лёгкий (жен.) | Aoede | Больно, но красиво. |
+| hero_f_1dbwgqs_aoede_g.flac | Лёгкий (жен.) | Aoede | Ах ты ж зараза! |
+| hero_f_1rd1g0q_aoede_g.flac | Лёгкий (жен.) | Aoede | Больно, сволочь! |
+| hero_f_rscz95_aoede_g.flac | Лёгкий (жен.) | Aoede | Ну всё, ты доигрался! |
+| hero_f_dy7uzt_aoede_g.flac | Лёгкий (жен.) | Aoede | Чтоб тебе пусто было! |
+| hero_f_xp76gw_aoede_g.flac | Лёгкий (жен.) | Aoede | Ах ты, падаль! |
+| hero_f_11i7occ_aoede_g.flac | Лёгкий (жен.) | Aoede | Ты за это ответишь! |
+| hero_f_1tpmjdw_aoede_g.flac | Лёгкий (жен.) | Aoede | Больно же, гадина! |
+| hero_f_1aasib7_aoede_g.flac | Лёгкий (жен.) | Aoede | Ну держись теперь! |
+| hero_f_a918uu_aoede_g.flac | Лёгкий (жен.) | Aoede | Мне плохо. Надо лечиться. |
+| hero_f_10c0od0_aoede_g.flac | Лёгкий (жен.) | Aoede | Ещё пара ударов — и мне конец. |
+| hero_f_wtygf9_aoede_g.flac | Лёгкий (жен.) | Aoede | Силы уходят. Пора пить зелье. |
+| hero_f_120ynn3_aoede_g.flac | Лёгкий (жен.) | Aoede | Я на краю. Осторожнее. |
+| hero_f_px3axu_aoede_g.flac | Лёгкий (жен.) | Aoede | Ещё немного, и я упаду. |
+| hero_f_abrx9e_aoede_g.flac | Лёгкий (жен.) | Aoede | Кровь течёт. Надо отступить или лечиться. |
+| hero_f_1aodnsw_aoede_g.flac | Лёгкий (жен.) | Aoede | Долго я так не выстою. |
+| hero_f_4g26cg_aoede_g.flac | Лёгкий (жен.) | Aoede | Голова кружится. Надо лечиться. |
+| hero_f_1s4vj87_aoede_g.flac | Лёгкий (жен.) | Aoede | Кажется, это был не лучший план. |
+| hero_f_170rsh1_aoede_g.flac | Лёгкий (жен.) | Aoede | Если выживу, напишу завещание. Потом. |
+| hero_f_x9hljz_aoede_g.flac | Лёгкий (жен.) | Aoede | Мне бы сейчас зелье и мягкую кровать. |
+| hero_f_xvs3cm_aoede_g.flac | Лёгкий (жен.) | Aoede | Так, кто-нибудь, зелье! Ах да, я тут одна. |
+| hero_f_l38jtw_aoede_g.flac | Лёгкий (жен.) | Aoede | Кажется, я немного умираю. |
+| hero_f_1qtiv2l_aoede_g.flac | Лёгкий (жен.) | Aoede | Где-то тут было зелье. Где-то. |
+| hero_f_pxudb3_aoede_g.flac | Лёгкий (жен.) | Aoede | Самое время для чуда. |
+| hero_f_nc9953_aoede_g.flac | Лёгкий (жен.) | Aoede | Бард, этот куплет пропусти. |
+| hero_f_17iipts_aoede_g.flac | Лёгкий (жен.) | Aoede | Проклятье, я на последнем издыхании! |
+| hero_f_mj0s4n_aoede_g.flac | Лёгкий (жен.) | Aoede | Кровь хлещет, чтоб её! |
+| hero_f_19rw865_aoede_g.flac | Лёгкий (жен.) | Aoede | Держись, дурья башка, держись! |
+| hero_f_1io568l_aoede_g.flac | Лёгкий (жен.) | Aoede | Ещё удар — и мне крышка! |
+| hero_f_ngh0n9_aoede_g.flac | Лёгкий (жен.) | Aoede | Чёрт, совсем худо! |
+| hero_f_drm4zx_aoede_g.flac | Лёгкий (жен.) | Aoede | Зелье, где же зелье, проклятье! |
+| hero_f_1dva8xu_aoede_g.flac | Лёгкий (жен.) | Aoede | Ну всё, доигрался! |
+| hero_f_xbu58g_aoede_g.flac | Лёгкий (жен.) | Aoede | Сейчас свалюсь, зараза! |
+| hero_f_1i0ajf0_aoede_g.flac | Лёгкий (жен.) | Aoede | Он едва стоит. |
+| hero_f_a6zagx_aoede_g.flac | Лёгкий (жен.) | Aoede | Ещё удар — и всё. |
+| hero_f_9hbokr_aoede_g.flac | Лёгкий (жен.) | Aoede | Слабеет. Дожимай. |
+| hero_f_a50qzu_aoede_g.flac | Лёгкий (жен.) | Aoede | Конец близок. |
+| hero_f_l0wv9w_aoede_g.flac | Лёгкий (жен.) | Aoede | Осталось немного. |
+| hero_f_1c6snma_aoede_g.flac | Лёгкий (жен.) | Aoede | Он выдыхается. |
+| hero_f_m9eyvs_aoede_g.flac | Лёгкий (жен.) | Aoede | Добей, пока не опомнился. |
+| hero_f_1i61gng_aoede_g.flac | Лёгкий (жен.) | Aoede | Последний рывок. |
+| hero_f_8t628d_aoede_g.flac | Лёгкий (жен.) | Aoede | Шатается. Сейчас свалится. |
+| hero_f_fu2byp_aoede_g.flac | Лёгкий (жен.) | Aoede | Ну что, выдохся? |
+| hero_f_176hnmk_aoede_g.flac | Лёгкий (жен.) | Aoede | Кажется, кто-то устал. |
+| hero_f_1dwacmt_aoede_g.flac | Лёгкий (жен.) | Aoede | Сдаёшься? Нет? Ну ладно. |
+| hero_f_drkrr9_aoede_g.flac | Лёгкий (жен.) | Aoede | Ещё чуть-чуть, и в песню. |
+| hero_f_tpyfvf_aoede_g.flac | Лёгкий (жен.) | Aoede | Держись, осталось недолго. Тебе. |
+| hero_f_xg6hvm_aoede_g.flac | Лёгкий (жен.) | Aoede | Добью, гада! |
+| hero_f_fbnsrr_aoede_g.flac | Лёгкий (жен.) | Aoede | Всё, тебе хана! |
+| hero_f_1no9gg6_aoede_g.flac | Лёгкий (жен.) | Aoede | Сдыхай уже! |
+| hero_f_vpxz3h_aoede_g.flac | Лёгкий (жен.) | Aoede | Конец тебе, скотина! |
+| hero_f_3t85yf_aoede_g.flac | Лёгкий (жен.) | Aoede | Ещё разок, и готов! |
+| hero_f_1limr4s_aoede_g.flac | Лёгкий (жен.) | Aoede | Падай уже, зараза! |
+| hero_f_1f0kvrv_aoede_g.flac | Лёгкий (жен.) | Aoede | Кончено. |
+| hero_f_10dtl1j_aoede_g.flac | Лёгкий (жен.) | Aoede | Покойся. |
+| hero_f_1trw8qb_aoede_g.flac | Лёгкий (жен.) | Aoede | Одним меньше. |
+| hero_f_1tgjhh9_aoede_g.flac | Лёгкий (жен.) | Aoede | Путь свободен. |
+| hero_f_1jeaxzv_aoede_g.flac | Лёгкий (жен.) | Aoede | Всё. |
+| hero_f_jn3lpq_aoede_g.flac | Лёгкий (жен.) | Aoede | Так и должно было кончиться. |
+| hero_f_eug9vp_aoede_g.flac | Лёгкий (жен.) | Aoede | Отдых заслужен. |
+| hero_f_2ftstk_aoede_g.flac | Лёгкий (жен.) | Aoede | Можно идти дальше. |
+| hero_f_1r6ccbu_aoede_g.flac | Лёгкий (жен.) | Aoede | Так и знал. |
+| hero_f_yvb8zb_aoede_g.flac | Лёгкий (жен.) | Aoede | Кто молодец? Я молодец. |
+| hero_f_xwauw9_aoede_g.flac | Лёгкий (жен.) | Aoede | Бард, записывай. |
+| hero_f_f25hz0_aoede_g.flac | Лёгкий (жен.) | Aoede | Даже не вспотел. Почти. |
+| hero_f_149zlkm_aoede_g.flac | Лёгкий (жен.) | Aoede | Следующий! |
+| hero_f_1q74uxv_aoede_g.flac | Лёгкий (жен.) | Aoede | Ещё бы кто похлопал. |
+| hero_f_byb0ww_aoede_g.flac | Лёгкий (жен.) | Aoede | Так тебе и надо! |
+| hero_f_10eaz2f_aoede_g.flac | Лёгкий (жен.) | Aoede | Получил своё! |
+| hero_f_1awnd7b_aoede_g.flac | Лёгкий (жен.) | Aoede | Нечего было лезть! |
+| hero_f_1uqp8wj_aoede_g.flac | Лёгкий (жен.) | Aoede | Туда тебе и дорога! |
+| hero_f_1dasxgp_aoede_g.flac | Лёгкий (жен.) | Aoede | Сам нарвался! |
+| hero_f_1j67bwk_aoede_g.flac | Лёгкий (жен.) | Aoede | Вот и весь разговор! |
+| hero_f_11820al_aoede_g.flac | Лёгкий (жен.) | Aoede | Слова тебе не помогут. |
+| hero_f_1qoxf26_aoede_g.flac | Лёгкий (жен.) | Aoede | Меньше слов. |
+| hero_f_egozhn_aoede_g.flac | Лёгкий (жен.) | Aoede | Посмотрим. |
+| hero_f_ng7mlg_aoede_g.flac | Лёгкий (жен.) | Aoede | Говори, пока можешь. |
+| hero_f_150bd1v_aoede_g.flac | Лёгкий (жен.) | Aoede | Угрозы оставь при себе. |
+| hero_f_1nzdipc_aoede_g.flac | Лёгкий (жен.) | Aoede | Болтовня тебя не спасёт. |
+| hero_f_1lw2m7q_aoede_g.flac | Лёгкий (жен.) | Aoede | Я слышала это много раз. |
+| hero_f_xwy7eh_aoede_g.flac | Лёгкий (жен.) | Aoede | Делом докажи. |
+| hero_f_qfqcwc_aoede_g.flac | Лёгкий (жен.) | Aoede | Ой, как страшно. Я прямо дрожу. |
+| hero_f_1hvjdsz_aoede_g.flac | Лёгкий (жен.) | Aoede | Это ты сам придумал или научил кто? |
+| hero_f_2yooie_aoede_g.flac | Лёгкий (жен.) | Aoede | Громко говоришь, а бьёшь слабо. |
+| hero_f_1uooexe_aoede_g.flac | Лёгкий (жен.) | Aoede | Скажи это моему мечу. |
+| hero_f_sh8hwp_aoede_g.flac | Лёгкий (жен.) | Aoede | Я запишу, это смешно. |
+| hero_f_wygtes_aoede_g.flac | Лёгкий (жен.) | Aoede | Ещё что-нибудь скажешь? Я не тороплюсь. |
+| hero_f_1k6gwqq_aoede_g.flac | Лёгкий (жен.) | Aoede | Какие речи! Тебе бы в глашатаи. |
+| hero_f_dvn2qq_aoede_g.flac | Лёгкий (жен.) | Aoede | Бу-бу-бу. Страшно-то как. |
+| hero_f_xuh7nn_aoede_g.flac | Лёгкий (жен.) | Aoede | Заткнись и дерись! |
+| hero_f_14m4d4p_aoede_g.flac | Лёгкий (жен.) | Aoede | Язык отрежу! |
+| hero_f_nsohx4_aoede_g.flac | Лёгкий (жен.) | Aoede | Пасть закрой! |
+| hero_f_1nytadf_aoede_g.flac | Лёгкий (жен.) | Aoede | Ещё слово — и получишь! |
+| hero_f_j9yl5h_aoede_g.flac | Лёгкий (жен.) | Aoede | Поговори мне ещё! |
+| hero_f_1ib19ud_aoede_g.flac | Лёгкий (жен.) | Aoede | Слышь, закрой рот! |
+| hero_f_7m1tn8_aoede_g.flac | Лёгкий (жен.) | Aoede | Язык длинный, а руки короткие! |
+| hero_f_ol25gd_aoede_g.flac | Лёгкий (жен.) | Aoede | Хватит трепаться! |
+| hero_f_9eaqh0_aoede_g.flac | Лёгкий (жен.) | Aoede | Уйди, зверь, и останешься жив. |
+| hero_f_rkgidn_aoede_g.flac | Лёгкий (жен.) | Aoede | Зверь есть зверь. Прости. |
+| hero_f_1y02k5a_aoede_g.flac | Лёгкий (жен.) | Aoede | Не рычи, я не боюсь. |
+| hero_f_1j02qp2_aoede_g.flac | Лёгкий (жен.) | Aoede | Я пущу тебя на шкуру. |
+| hero_f_1lrquiu_aoede_g.flac | Лёгкий (жен.) | Aoede | Сделаю из тебя шашлык. |
+| hero_f_1yqiwnp_aoede_g.flac | Лёгкий (жен.) | Aoede | Из тебя выйдет отличный коврик у камина. |
+| hero_f_q0jqur_aoede_g.flac | Лёгкий (жен.) | Aoede | Будешь моим воротником. |
+| hero_f_p8nrso_aoede_g.flac | Лёгкий (жен.) | Aoede | Жаркое само пришло к ужину. |
+| hero_f_6icnkj_aoede_g.flac | Лёгкий (жен.) | Aoede | Кто тут у нас? Обед! |
+| hero_f_1ypd7r1_aoede_g.flac | Лёгкий (жен.) | Aoede | Шуба сама бежит в руки. |
+| hero_f_756l5_aoede_g.flac | Лёгкий (жен.) | Aoede | Я тебе шкуру спущу! |
+| hero_f_3a8jpr_aoede_g.flac | Лёгкий (жен.) | Aoede | Порву, как тряпку! |
+| hero_f_i1em5e_aoede_g.flac | Лёгкий (жен.) | Aoede | Шерсть клочьями полетит! |
+| hero_f_13x48dn_aoede_g.flac | Лёгкий (жен.) | Aoede | Клыки повыбиваю! |
+| hero_f_1l3vm2c_aoede_g.flac | Лёгкий (жен.) | Aoede | Шкуру не порть, она мне ещё пригодится. |
+| hero_f_srmup1_aoede_g.flac | Лёгкий (жен.) | Aoede | Мягкий, хороший, вкусный. |
+| hero_f_sk7fo4_aoede_g.flac | Лёгкий (жен.) | Aoede | Кис-кис. Не подходи. |
+| hero_f_1ja1dtr_aoede_g.flac | Лёгкий (жен.) | Aoede | Получай, блохастый! |
+| hero_f_cbrgtk_aoede_g.flac | Лёгкий (жен.) | Aoede | Скули теперь! |
+| hero_f_1j3l9r1_aoede_g.flac | Лёгкий (жен.) | Aoede | Зверь хромает. |
+| hero_f_l1obbd_aoede_g.flac | Лёгкий (жен.) | Aoede | Зверь скулит. Скоро конец. |
+| hero_f_1t78u89_aoede_g.flac | Лёгкий (жен.) | Aoede | Жаркое почти готово. |
+| hero_f_13cdpny_aoede_g.flac | Лёгкий (жен.) | Aoede | Добью, облезлый! |
+| hero_f_1hugdtc_aoede_g.flac | Лёгкий (жен.) | Aoede | Шашлык будет. |
+| hero_f_1nhj3v_aoede_g.flac | Лёгкий (жен.) | Aoede | Шкура моя. |
+| hero_f_serlq3_aoede_g.flac | Лёгкий (жен.) | Aoede | Ужин добыт. |
+| hero_f_3l80wn_aoede_g.flac | Лёгкий (жен.) | Aoede | Прости, зверь. |
+| hero_f_f847ka_aoede_g.flac | Лёгкий (жен.) | Aoede | Не лети ко мне, птица. |
+| hero_f_12l331l_aoede_g.flac | Лёгкий (жен.) | Aoede | Крылья тебя не спасут. |
+| hero_f_7x1f1g_aoede_g.flac | Лёгкий (жен.) | Aoede | Ощиплю и на подушку. |
+| hero_f_roj008_aoede_g.flac | Лёгкий (жен.) | Aoede | Из твоих перьев выйдет славная перина. |
+| hero_f_ji2srp_aoede_g.flac | Лёгкий (жен.) | Aoede | Суп из тебя будет наваристый. |
+| hero_f_13tfkcf_aoede_g.flac | Лёгкий (жен.) | Aoede | Чирикай, пока можешь. |
+| hero_f_1icf5x4_aoede_g.flac | Лёгкий (жен.) | Aoede | Курица-переросток! |
+| hero_f_1wdqorp_aoede_g.flac | Лёгкий (жен.) | Aoede | Перья повыдёргиваю! |
+| hero_f_nnrdlm_aoede_g.flac | Лёгкий (жен.) | Aoede | Шею сверну, курица! |
+| hero_f_1wfvlzg_aoede_g.flac | Лёгкий (жен.) | Aoede | Крылья пообломаю! |
+| hero_f_cdvd76_aoede_g.flac | Лёгкий (жен.) | Aoede | Пух полетел! |
+| hero_f_bn5eso_aoede_g.flac | Лёгкий (жен.) | Aoede | Минус перо. |
+| hero_f_zzcevj_aoede_g.flac | Лёгкий (жен.) | Aoede | Получай, пернатая! |
+| hero_f_d1yit8_aoede_g.flac | Лёгкий (жен.) | Aoede | Птица роняет перья. |
+| hero_f_4vv7rr_aoede_g.flac | Лёгкий (жен.) | Aoede | Крыло подбито. |
+| hero_f_zotuue_aoede_g.flac | Лёгкий (жен.) | Aoede | Лётчик из тебя уже никакой. |
+| hero_f_1hsofcr_aoede_g.flac | Лёгкий (жен.) | Aoede | Перина будет. |
+| hero_f_1gimva9_aoede_g.flac | Лёгкий (жен.) | Aoede | Суп сварю. |
+| hero_f_17j1k75_aoede_g.flac | Лёгкий (жен.) | Aoede | Отлеталась. |
+| hero_f_l1u3mr_aoede_g.flac | Лёгкий (жен.) | Aoede | Держись подальше от жала. |
+| hero_f_1fjvra8_aoede_g.flac | Лёгкий (жен.) | Aoede | Яд — не повод отступать. |
+| hero_f_rcln1w_aoede_g.flac | Лёгкий (жен.) | Aoede | Ползи прочь. |
+| hero_f_e4b77v_aoede_g.flac | Лёгкий (жен.) | Aoede | Сапоги из тебя сошью. |
+| hero_f_16pm47c_aoede_g.flac | Лёгкий (жен.) | Aoede | Раздавлю, и хрустнет. |
+| hero_f_149siz5_aoede_g.flac | Лёгкий (жен.) | Aoede | Ползи сюда, червячок. |
+| hero_f_any9b3_aoede_g.flac | Лёгкий (жен.) | Aoede | Из твоей шкурки выйдет кошелёк. |
+| hero_f_1jttcvv_aoede_g.flac | Лёгкий (жен.) | Aoede | Ножек-то сколько. А толку? |
+| hero_f_wgw6a6_aoede_g.flac | Лёгкий (жен.) | Aoede | Раздавлю, гадина! |
+| hero_f_yrtdg1_aoede_g.flac | Лёгкий (жен.) | Aoede | Хвост оторву, змеюка! |
+| hero_f_1cd8gxb_aoede_g.flac | Лёгкий (жен.) | Aoede | Жало вырву! |
+| hero_f_7dorra_aoede_g.flac | Лёгкий (жен.) | Aoede | Хрустнуло! |
+| hero_f_omoozb_aoede_g.flac | Лёгкий (жен.) | Aoede | Одной лапкой меньше. |
+| hero_f_1vpa7z9_aoede_g.flac | Лёгкий (жен.) | Aoede | Получай, ползучий! |
+| hero_f_ryqizw_aoede_g.flac | Лёгкий (жен.) | Aoede | Гад извивается. Добивай. |
+| hero_f_9yrjfg_aoede_g.flac | Лёгкий (жен.) | Aoede | Уже почти сапоги. |
+| hero_f_yont43_aoede_g.flac | Лёгкий (жен.) | Aoede | Сапоги будут. |
+| hero_f_vg6w7z_aoede_g.flac | Лёгкий (жен.) | Aoede | Раздавлен. |
+| hero_f_h4fptk_aoede_g.flac | Лёгкий (жен.) | Aoede | Яд больше не страшен. |
+| hero_f_alwh1u_aoede_g.flac | Лёгкий (жен.) | Aoede | Из глубин не возвращаются. Тебе и не придётся. |
+| hero_f_r00irm_aoede_g.flac | Лёгкий (жен.) | Aoede | Вода не спасёт тебя. |
+| hero_f_1xin3nj_aoede_g.flac | Лёгкий (жен.) | Aoede | Уху из тебя сварю. |
+| hero_f_v46c4_aoede_g.flac | Лёгкий (жен.) | Aoede | Наживка сама приплыла. |
+| hero_f_16kghp1_aoede_g.flac | Лёгкий (жен.) | Aoede | Не люблю рыбу, но ради тебя попробую. |
+| hero_f_114sw1a_aoede_g.flac | Лёгкий (жен.) | Aoede | Кто тут такой мокрый? |
+| hero_f_6v4zhk_aoede_g.flac | Лёгкий (жен.) | Aoede | Обратно в пучину, склизкая мерзость! |
+| hero_f_aaim1x_aoede_g.flac | Лёгкий (жен.) | Aoede | Жабры повырываю! |
+| hero_f_1pgmlo9_aoede_g.flac | Лёгкий (жен.) | Aoede | Плюх! |
+| hero_f_1o6fih2_aoede_g.flac | Лёгкий (жен.) | Aoede | Чешуя полетела. |
+| hero_f_s0hxvh_aoede_g.flac | Лёгкий (жен.) | Aoede | Получай, склизкий! |
+| hero_f_1mnq6e9_aoede_g.flac | Лёгкий (жен.) | Aoede | Тварь уходит на дно. Добивай. |
+| hero_f_1uyakzk_aoede_g.flac | Лёгкий (жен.) | Aoede | Уха почти готова. |
+| hero_f_1sehnum_aoede_g.flac | Лёгкий (жен.) | Aoede | Будет уха. |
+| hero_f_rux4a_aoede_g.flac | Лёгкий (жен.) | Aoede | Спи в пучине. |
+| hero_f_1kk8jxf_aoede_g.flac | Лёгкий (жен.) | Aoede | Камень тоже трескается. |
+| hero_f_90itxl_aoede_g.flac | Лёгкий (жен.) | Aoede | Кто тебя сложил, того и спрошу. |
+| hero_f_4lqsoy_aoede_g.flac | Лёгкий (жен.) | Aoede | Сталь против камня. |
+| hero_f_yfdztf_aoede_g.flac | Лёгкий (жен.) | Aoede | Пущу тебя на кирпичи. |
+| hero_f_144qta5_aoede_g.flac | Лёгкий (жен.) | Aoede | Отправлю в переплавку. |
+| hero_f_vjpyid_aoede_g.flac | Лёгкий (жен.) | Aoede | Интересно, сколько за тебя дадут у кузнеца? |
+| hero_f_iyjo6n_aoede_g.flac | Лёгкий (жен.) | Aoede | Из тебя выйдет хорошая ограда. |
+| hero_f_ct0sd_aoede_g.flac | Лёгкий (жен.) | Aoede | Тебя кто-нибудь смазывал? |
+| hero_f_1vm1wp4_aoede_g.flac | Лёгкий (жен.) | Aoede | Разнесу по винтику! |
+| hero_f_1koioxl_aoede_g.flac | Лёгкий (жен.) | Aoede | Раскрошу, истукан! |
+| hero_f_1cr8lnv_aoede_g.flac | Лёгкий (жен.) | Aoede | Разобью, болван! |
+| hero_f_cv040w_aoede_g.flac | Лёгкий (жен.) | Aoede | Звенит, как пустой котёл. |
+| hero_f_2zt86d_aoede_g.flac | Лёгкий (жен.) | Aoede | Тук-тук. Есть кто дома? |
+| hero_f_db3acb_aoede_g.flac | Лёгкий (жен.) | Aoede | Получай, железка! |
+| hero_f_jekk0s_aoede_g.flac | Лёгкий (жен.) | Aoede | Трещит по швам. |
+| hero_f_cpsfj7_aoede_g.flac | Лёгкий (жен.) | Aoede | Истукан разваливается. |
+| hero_f_1nzrcrx_aoede_g.flac | Лёгкий (жен.) | Aoede | Сейчас рассыплется на кирпичи. |
+| hero_f_10cek2y_aoede_g.flac | Лёгкий (жен.) | Aoede | Кирпичи будут. |
+| hero_f_135zmv3_aoede_g.flac | Лёгкий (жен.) | Aoede | В переплавку. |
+| hero_f_1pmo94v_aoede_g.flac | Лёгкий (жен.) | Aoede | Камень упокоен. |
+| hero_f_1g7l7h2_aoede_g.flac | Лёгкий (жен.) | Aoede | Чем больше шкаф, тем громче падает. |
+| hero_f_oqp6nc_aoede_g.flac | Лёгкий (жен.) | Aoede | Высокий — не значит сильный. |
+| hero_f_182uzop_aoede_g.flac | Лёгкий (жен.) | Aoede | Я не боюсь великанов. |
+| hero_f_3sy2ed_aoede_g.flac | Лёгкий (жен.) | Aoede | Ну и громила. Кормили на убой? |
+| hero_f_15m3zp6_aoede_g.flac | Лёгкий (жен.) | Aoede | Упадёшь — земля вздрогнет. Хочу посмотреть. |
+| hero_f_11mqna0_aoede_g.flac | Лёгкий (жен.) | Aoede | Я бы тебя обнял, да руки коротки. |
+| hero_f_1s6qcq_aoede_g.flac | Лёгкий (жен.) | Aoede | Тебе бы в плотники: потолки белить. |
+| hero_f_1lt50bw_aoede_g.flac | Лёгкий (жен.) | Aoede | Свалю тебя, дубина! |
+| hero_f_1tfjp5_aoede_g.flac | Лёгкий (жен.) | Aoede | Колени перешибу, орясина! |
+| hero_f_47dr7a_aoede_g.flac | Лёгкий (жен.) | Aoede | Руби его, он большой, не промахнёшься! |
+| hero_f_37nmq4_aoede_g.flac | Лёгкий (жен.) | Aoede | По колену — самое то. |
+| hero_f_1a6m0fu_aoede_g.flac | Лёгкий (жен.) | Aoede | Ниже бей, оно падает! |
+| hero_f_1trzzz9_aoede_g.flac | Лёгкий (жен.) | Aoede | Получай, громадина! |
+| hero_f_1i3fyua_aoede_g.flac | Лёгкий (жен.) | Aoede | Исполин шатается. |
+| hero_f_8sj7pf_aoede_g.flac | Лёгкий (жен.) | Aoede | Громада вот-вот рухнет. |
+| hero_f_xyzln_aoede_g.flac | Лёгкий (жен.) | Aoede | Берегись, сейчас будет землетрясение. |
+| hero_f_1cqx8m5_aoede_g.flac | Лёгкий (жен.) | Aoede | Громко упал, как и обещал. |
+| hero_f_1mlo9vp_aoede_g.flac | Лёгкий (жен.) | Aoede | Исполин повержен. |
+| hero_f_argnik_aoede_g.flac | Лёгкий (жен.) | Aoede | Упокойся. |
+| hero_f_1jf893h_aoede_g.flac | Лёгкий (жен.) | Aoede | Твоё время давно вышло. |
+| hero_f_ub2o71_aoede_g.flac | Лёгкий (жен.) | Aoede | Кости должны лежать в земле. |
+| hero_f_1dnemkv_aoede_g.flac | Лёгкий (жен.) | Aoede | Суп из костей — лучший суп. |
+| hero_f_1w9whex_aoede_g.flac | Лёгкий (жен.) | Aoede | Собаке на косточку пойдёшь. |
+| hero_f_1egtt3o_aoede_g.flac | Лёгкий (жен.) | Aoede | Тебе бы мяса нарастить. |
+| hero_f_12yclsg_aoede_g.flac | Лёгкий (жен.) | Aoede | Сыграю на твоих рёбрах, как на ксилофоне. |
+| hero_f_yzejwr_aoede_g.flac | Лёгкий (жен.) | Aoede | Худой ты какой-то. |
+| hero_f_kygfoy_aoede_g.flac | Лёгкий (жен.) | Aoede | В муку перемелю, костлявый! |
+| hero_f_z8hul_aoede_g.flac | Лёгкий (жен.) | Aoede | Рассыплю по косточке! |
+| hero_f_1d0th7w_aoede_g.flac | Лёгкий (жен.) | Aoede | Черепушку расколю! |
+| hero_f_xzeinw_aoede_g.flac | Лёгкий (жен.) | Aoede | Хрусть! Минус ребро. |
+| hero_f_12picxm_aoede_g.flac | Лёгкий (жен.) | Aoede | Кость долой. |
+| hero_f_ra50ro_aoede_g.flac | Лёгкий (жен.) | Aoede | Получай, костлявый! |
+| hero_f_jyh60y_aoede_g.flac | Лёгкий (жен.) | Aoede | Кости сыплются. |
+| hero_f_xjncz6_aoede_g.flac | Лёгкий (жен.) | Aoede | Костяк рассыпается. |
+| hero_f_1n3f1sx_aoede_g.flac | Лёгкий (жен.) | Aoede | Ещё немного, и соберу набор для супа. |
+| hero_f_iak38o_aoede_g.flac | Лёгкий (жен.) | Aoede | Косточки собаке. |
+| hero_f_ybzeqw_aoede_g.flac | Лёгкий (жен.) | Aoede | Покойся с миром. |
+| hero_f_kpuiu1_aoede_g.flac | Лёгкий (жен.) | Aoede | Уходи с миром, дух. Или я помогу. |
+| hero_f_ep2v4p_aoede_g.flac | Лёгкий (жен.) | Aoede | Здесь не твоё место. |
+| hero_f_189mcrz_aoede_g.flac | Лёгкий (жен.) | Aoede | Мёртвым не место среди живых. |
+| hero_f_qxfuvu_aoede_g.flac | Лёгкий (жен.) | Aoede | Развею по ветру, призрак. |
+| hero_f_2eb67u_aoede_g.flac | Лёгкий (жен.) | Aoede | Не пугай, я пуганый. |
+| hero_f_1cw5fua_aoede_g.flac | Лёгкий (жен.) | Aoede | Бу! Что, не страшно? |
+| hero_f_ti67e7_aoede_g.flac | Лёгкий (жен.) | Aoede | Сквозняк какой-то. А, это ты. |
+| hero_f_yzh46z_aoede_g.flac | Лёгкий (жен.) | Aoede | Простыню-то где потерял? |
+| hero_f_1gkfxbm_aoede_g.flac | Лёгкий (жен.) | Aoede | Развею, нечисть! |
+| hero_f_1m0dm4o_aoede_g.flac | Лёгкий (жен.) | Aoede | Сгинь, погань! |
+| hero_f_147ygn2_aoede_g.flac | Лёгкий (жен.) | Aoede | Изыди, нежить! |
+| hero_f_900g51_aoede_g.flac | Лёгкий (жен.) | Aoede | Сквозь тебя, как сквозь туман, а всё-таки задел! |
+| hero_f_bo0esf_aoede_g.flac | Лёгкий (жен.) | Aoede | Получай, тень! |
+| hero_f_1v947dj_aoede_g.flac | Лёгкий (жен.) | Aoede | Дух тает на глазах. |
+| hero_f_132nqbi_aoede_g.flac | Лёгкий (жен.) | Aoede | Тень редеет. |
+| hero_f_1lhqb9v_aoede_g.flac | Лёгкий (жен.) | Aoede | Почти прозрачный. Ещё прозрачнее, чем был. |
+| hero_f_u47ep9_aoede_g.flac | Лёгкий (жен.) | Aoede | Покойся, дух. |
+| hero_f_157n5w_aoede_g.flac | Лёгкий (жен.) | Aoede | Ступай с миром. |
+| hero_f_1hsc2gx_aoede_g.flac | Лёгкий (жен.) | Aoede | Сквозняк закрыт. |
+| hero_f_1r0ite7_aoede_g.flac | Лёгкий (жен.) | Aoede | Мёртвые должны лежать. |
+| hero_f_1838pwh_aoede_g.flac | Лёгкий (жен.) | Aoede | Я верну тебя в землю. |
+| hero_f_nt74bc_aoede_g.flac | Лёгкий (жен.) | Aoede | Твоя смерть не окончена. |
+| hero_f_y2vg7u_aoede_g.flac | Лёгкий (жен.) | Aoede | Закопаю обратно, и глубже. |
+| hero_f_8ih539_aoede_g.flac | Лёгкий (жен.) | Aoede | От тебя пахнет, дружок. |
+| hero_f_exu0ph_aoede_g.flac | Лёгкий (жен.) | Aoede | Опять вылез? Ну сколько можно. |
+| hero_f_fv5vi5_aoede_g.flac | Лёгкий (жен.) | Aoede | Тебе бы помыться. Лет сто назад. |
+| hero_f_jvppdg_aoede_g.flac | Лёгкий (жен.) | Aoede | Упокою, гнильё! |
+| hero_f_ptz15l_aoede_g.flac | Лёгкий (жен.) | Aoede | Обратно в могилу, падаль! |
+| hero_f_5dj44w_aoede_g.flac | Лёгкий (жен.) | Aoede | Голову снесу, мертвяк! |
+| hero_f_1vy4l75_aoede_g.flac | Лёгкий (жен.) | Aoede | Отвалилось что-то. Не моё. |
+| hero_f_1ianq3e_aoede_g.flac | Лёгкий (жен.) | Aoede | Получай, гниль! |
+| hero_f_1m1t0lq_aoede_g.flac | Лёгкий (жен.) | Aoede | Мертвец валится. |
+| hero_f_15yctwf_aoede_g.flac | Лёгкий (жен.) | Aoede | Ещё удар, и он снова мёртв. |
+| hero_f_oz1s32_aoede_g.flac | Лёгкий (жен.) | Aoede | Второй раз умирать не так страшно, правда? |
+| hero_f_1mqwmvn_aoede_g.flac | Лёгкий (жен.) | Aoede | Лежи спокойно. |
+| hero_f_1mzf7aa_aoede_g.flac | Лёгкий (жен.) | Aoede | Теперь навсегда. |
+| hero_f_13do8s2_aoede_g.flac | Лёгкий (жен.) | Aoede | Закопан. Надеюсь, окончательно. |
+| hero_f_1plma7i_aoede_g.flac | Лёгкий (жен.) | Aoede | Опусти оружие — и уйдёшь живым. |
+| hero_f_1moebve_aoede_g.flac | Лёгкий (жен.) | Aoede | Разбой — плохое ремесло. |
+| hero_f_1gteyhr_aoede_g.flac | Лёгкий (жен.) | Aoede | Я не отдам тебе ни монеты. |
+| hero_f_1kcgn57_aoede_g.flac | Лёгкий (жен.) | Aoede | Кошелёк? Мой? Попробуй возьми. |
+| hero_f_1r1fep4_aoede_g.flac | Лёгкий (жен.) | Aoede | Ты с какой дороги такой смелый? |
+| hero_f_1gor7za_aoede_g.flac | Лёгкий (жен.) | Aoede | Разбойник, а манеры как у лавочника. |
+| hero_f_6373xr_aoede_g.flac | Лёгкий (жен.) | Aoede | Тебя мама не учила спрашивать разрешения? |
+| hero_f_1m3c7yq_aoede_g.flac | Лёгкий (жен.) | Aoede | Башку снесу, ворюга! |
+| hero_f_10guej2_aoede_g.flac | Лёгкий (жен.) | Aoede | Ты у меня попляшешь, головорез! |
+| hero_f_38bymo_aoede_g.flac | Лёгкий (жен.) | Aoede | Руки прочь, ворьё! |
+| hero_f_1o4ibc7_aoede_g.flac | Лёгкий (жен.) | Aoede | Вот тебе и кошелёк. |
+| hero_f_90v5rw_aoede_g.flac | Лёгкий (жен.) | Aoede | Получай, ворюга! |
+| hero_f_1bfnec4_aoede_g.flac | Лёгкий (жен.) | Aoede | Он шатается. Бросит оружие или падёт. |
+| hero_f_1dawcez_aoede_g.flac | Лёгкий (жен.) | Aoede | Может, всё-таки договоримся? |
+| hero_f_1d4fb3b_aoede_g.flac | Лёгкий (жен.) | Aoede | Больше ты никого не ограбишь. |
+| hero_f_1fcumfr_aoede_g.flac | Лёгкий (жен.) | Aoede | Кошелёк остался при мне. |
+| hero_f_r97z7m_aoede_g.flac | Лёгкий (жен.) | Aoede | Твоё пламя меня не остановит. |
+| hero_f_ke8whs_aoede_g.flac | Лёгкий (жен.) | Aoede | Даже драконы смертны. |
+| hero_f_hfxhvj_aoede_g.flac | Лёгкий (жен.) | Aoede | Я пришла за тобой, ящер. |
+| hero_f_3rrb9w_aoede_g.flac | Лёгкий (жен.) | Aoede | Сапоги из драконьей кожи — моя давняя мечта. |
+| hero_f_1t530de_aoede_g.flac | Лёгкий (жен.) | Aoede | Будешь трофеем над камином. |
+| hero_f_1co5d8_aoede_g.flac | Лёгкий (жен.) | Aoede | Чешуя на щит пойдёт. |
+| hero_f_1c83sjp_aoede_g.flac | Лёгкий (жен.) | Aoede | Ну и пасть. Зубы-то чистишь? |
+| hero_f_17pydw0_aoede_g.flac | Лёгкий (жен.) | Aoede | Крылья оборву, ящерица! |
+| hero_f_163wcei_aoede_g.flac | Лёгкий (жен.) | Aoede | Пасть заткну, змей! |
+| hero_f_16drltv_aoede_g.flac | Лёгкий (жен.) | Aoede | Хвост отрублю, гадина! |
+| hero_f_8eel9k_aoede_g.flac | Лёгкий (жен.) | Aoede | Чешуя трещит! |
+| hero_f_2831io_aoede_g.flac | Лёгкий (жен.) | Aoede | Получай, ящерица! |
+| hero_f_1pgyftq_aoede_g.flac | Лёгкий (жен.) | Aoede | Дракон слабеет, пламя гаснет. |
+| hero_f_lg3ax2_aoede_g.flac | Лёгкий (жен.) | Aoede | Кажется, у кого-то кончился огонь. |
+| hero_f_l40x88_aoede_g.flac | Лёгкий (жен.) | Aoede | Дракон повержен. |
+| hero_f_2r8vjh_aoede_g.flac | Лёгкий (жен.) | Aoede | Сапоги будут. Драконьи! |
+| hero_f_13h8nwb_aoede_g.flac | Лёгкий (жен.) | Aoede | Возвращайся за Грань. |
+| hero_f_yrfqjf_aoede_g.flac | Лёгкий (жен.) | Aoede | Твоя сила здесь не власть. |
+| hero_f_1kihcyy_aoede_g.flac | Лёгкий (жен.) | Aoede | Я не боюсь тебя, бес. |
+| hero_f_to5266_aoede_g.flac | Лёгкий (жен.) | Aoede | Обратно в пекло, погреешься. |
+| hero_f_1k2v2kz_aoede_g.flac | Лёгкий (жен.) | Aoede | Рога — хорошее украшение. Для стены. |
+| hero_f_x68uht_aoede_g.flac | Лёгкий (жен.) | Aoede | Опять из-за Грани гости. Без приглашения. |
+| hero_f_ouo625_aoede_g.flac | Лёгкий (жен.) | Aoede | Серой-то как несёт. |
+| hero_f_1vm4kls_aoede_g.flac | Лёгкий (жен.) | Aoede | Изыди, бесово отродье! |
+| hero_f_1248483_aoede_g.flac | Лёгкий (жен.) | Aoede | Хвост тебе прищемлю, чёрт! |
+| hero_f_rx0sj9_aoede_g.flac | Лёгкий (жен.) | Aoede | Рога обломаю! |
+| hero_f_1hgn2nl_aoede_g.flac | Лёгкий (жен.) | Aoede | Жарко? Это тебе не пекло. |
+| hero_f_1i4y8ag_aoede_g.flac | Лёгкий (жен.) | Aoede | Получай, рогатый! |
+| hero_f_16waf6_aoede_g.flac | Лёгкий (жен.) | Aoede | Бес теряет силу. |
+| hero_f_19y74s0_aoede_g.flac | Лёгкий (жен.) | Aoede | Пекло тебя заждалось. |
+| hero_f_1n523wf_aoede_g.flac | Лёгкий (жен.) | Aoede | Возвращайся туда, откуда пришёл. |
+| hero_f_jmun8b_aoede_g.flac | Лёгкий (жен.) | Aoede | Рога на стену. |
+| hero_f_1ykh267_aoede_g.flac | Лёгкий (жен.) | Aoede | Кошелёк у меня один, и он не твой. |
+| hero_f_1bkhbpk_aoede_g.flac | Лёгкий (жен.) | Aoede | Разбоем не проживёшь. |
+| hero_f_95u63q_aoede_g.flac | Лёгкий (жен.) | Aoede | Ты меня с кем-то путаешь. Богатые — не сюда. |
+| hero_f_ds8mvb_aoede_g.flac | Лёгкий (жен.) | Aoede | Сначала поймай, потом грози. |
+| hero_f_1xppht4_aoede_g.flac | Лёгкий (жен.) | Aoede | Иди ограбь кого другого! |
+| hero_f_1u218wd_aoede_g.flac | Лёгкий (жен.) | Aoede | Руки оторву, ворюга! |
+| hero_f_1t2yfbf_aoede_g.flac | Лёгкий (жен.) | Aoede | Твой корабль пойдёт ко дну вместе с тобой. |
+| hero_f_rja7u3_aoede_g.flac | Лёгкий (жен.) | Aoede | Море не прощает. |
+| hero_f_1my1x5l_aoede_g.flac | Лёгкий (жен.) | Aoede | Попугая дома забыл? |
+| hero_f_nd93jx_aoede_g.flac | Лёгкий (жен.) | Aoede | Качает тебя, морячок? |
+| hero_f_dkigql_aoede_g.flac | Лёгкий (жен.) | Aoede | Ступай к рыбам, пропойца! |
+| hero_f_184irus_aoede_g.flac | Лёгкий (жен.) | Aoede | Мал, да не удал. |
+| hero_f_krhoov_aoede_g.flac | Лёгкий (жен.) | Aoede | Ростом не вышел, а туда же. |
+| hero_f_kw82wy_aoede_g.flac | Лёгкий (жен.) | Aoede | Тебя из-за камня не видно. |
+| hero_f_zvm7pn_aoede_g.flac | Лёгкий (жен.) | Aoede | Раздавлю, мелочь! |
+| hero_f_1eil0as_aoede_g.flac | Лёгкий (жен.) | Aoede | Большой, да глупый. |
+| hero_f_ij55v1_aoede_g.flac | Лёгкий (жен.) | Aoede | Нагнись, а то не слышу. |
+| hero_f_lqs38f_aoede_g.flac | Лёгкий (жен.) | Aoede | Рухнешь, дубина! |
+| hero_f_1s80p9y_aoede_g.flac | Лёгкий (жен.) | Aoede | Меньше огня, больше дела. |
+| hero_f_16ovvq6_aoede_g.flac | Лёгкий (жен.) | Aoede | Не дыми, тут дышать нечем. |
+| hero_f_1lrglaj_aoede_g.flac | Лёгкий (жен.) | Aoede | Пасть закрой, ящер! |
+| hero_f_mz52z3_aoede_g.flac | Лёгкий (жен.) | Aoede | Корона тебе велика. |
+| hero_f_sh844d_aoede_g.flac | Лёгкий (жен.) | Aoede | Смерть твоя давно пришла. |
+| hero_f_h5bc13_aoede_g.flac | Лёгкий (жен.) | Aoede | Ты бы прилёг, выглядишь неважно. |
+| hero_f_17honi_aoede_g.flac | Лёгкий (жен.) | Aoede | Рассыплю, костлявый владыка! |
+| hero_f_1gln8dw_aoede_g.flac | Лёгкий (жен.) | Aoede | Грань тебя не спасёт. |
+| hero_f_4u8bwy_aoede_g.flac | Лёгкий (жен.) | Aoede | Твоя власть кончается здесь. |
+| hero_f_hmybyq_aoede_g.flac | Лёгкий (жен.) | Aoede | Рога бы подпилил, царапаешься. |
+| hero_f_vl3iit_aoede_g.flac | Лёгкий (жен.) | Aoede | Изыди, погань! |
+| hero_f_jvdjak_aoede_g.flac | Лёгкий (жен.) | Aoede | Шёпот тебя не спасёт. |
+| hero_f_1ajj6of_aoede_g.flac | Лёгкий (жен.) | Aoede | Отпусти этот мир. |
+| hero_f_1bcilap_aoede_g.flac | Лёгкий (жен.) | Aoede | Шепчи громче, не слышно. |
+| hero_f_1b4hjl3_aoede_g.flac | Лёгкий (жен.) | Aoede | Сгинь, нечисть! |
+| hero_f_2yfww4_aoede_g.flac | Лёгкий (жен.) | Aoede | Твоя песня меня не заманит. |
+| hero_f_exxab0_aoede_g.flac | Лёгкий (жен.) | Aoede | Песня у тебя так себе. |
+| hero_f_1ypfn6e_aoede_g.flac | Лёгкий (жен.) | Aoede | Замолчи, ведьма морская! |
+| hero_f_15p2006_aoede_g.flac | Лёгкий (жен.) | Aoede | С камнем не спорят. Камень ломают. |
+| hero_f_36r4hs_aoede_g.flac | Лёгкий (жен.) | Aoede | Тебя бы смазать, скрипишь. |
+| hero_f_10x554i_aoede_g.flac | Лёгкий (жен.) | Aoede | Разобью, железка! |
+| hero_f_1q8ez1f_fenrir_g.flac | Горячий (муж.) | Fenrir | Встань и дерись. |
+| hero_f_vv7k2n_fenrir_g.flac | Горячий (муж.) | Fenrir | Я не уйду с этой дороги. |
+| hero_f_1tik8bc_fenrir_g.flac | Горячий (муж.) | Fenrir | Ты выбрал не того. |
+| hero_f_1ldq9bb_fenrir_g.flac | Горячий (муж.) | Fenrir | Здесь ты и остановишься. |
+| hero_f_1c34g21_fenrir_g.flac | Горячий (муж.) | Fenrir | Твой путь заканчивается здесь. |
+| hero_f_vv49ip_fenrir_g.flac | Горячий (муж.) | Fenrir | Я видел тварей и пострашнее. |
+| hero_f_1kxa0rw_fenrir_g.flac | Горячий (муж.) | Fenrir | Посмотрим, чего ты стоишь. |
+| hero_f_1r73ujw_fenrir_g.flac | Горячий (муж.) | Fenrir | Ни шагу дальше. |
+| hero_f_1h1fcxt_fenrir_g.flac | Горячий (муж.) | Fenrir | Уходи, пока можешь. |
+| hero_f_1hoqyj4_fenrir_g.flac | Горячий (муж.) | Fenrir | Это моя дорога. |
+| hero_f_1m67ids_fenrir_g.flac | Горячий (муж.) | Fenrir | Потанцуем? |
+| hero_f_ism1du_fenrir_g.flac | Горячий (муж.) | Fenrir | Давно я так не разминался. |
+| hero_f_13oq4ww_fenrir_g.flac | Горячий (муж.) | Fenrir | Ну давай, удиви меня. |
+| hero_f_xcubv0_fenrir_g.flac | Горячий (муж.) | Fenrir | Спорим, я быстрее? |
+| hero_f_os6gb_fenrir_g.flac | Горячий (муж.) | Fenrir | Кто первый упадёт, тот моет посуду. |
+| hero_f_1oj9g8p_fenrir_g.flac | Горячий (муж.) | Fenrir | Я как раз искал, на ком потренироваться. |
+| hero_f_n5h5ee_fenrir_g.flac | Горячий (муж.) | Fenrir | А я-то думал, будет скучный день. |
+| hero_f_63spcp_fenrir_g.flac | Горячий (муж.) | Fenrir | Надеюсь, ты не обидчивый. |
+| hero_f_1jhjccm_fenrir_g.flac | Горячий (муж.) | Fenrir | Разомнёмся перед ужином? |
+| hero_f_jiwhxk_fenrir_g.flac | Горячий (муж.) | Fenrir | Ты сегодня главный гость. |
+| hero_f_1ok7x0n_fenrir_g.flac | Горячий (муж.) | Fenrir | Сейчас я тебе покажу! |
+| hero_f_vss8ey_fenrir_g.flac | Горячий (муж.) | Fenrir | Иди сюда, отродье! |
+| hero_f_5s4hjr_fenrir_g.flac | Горячий (муж.) | Fenrir | Размажу по камням! |
+| hero_f_g94qk3_fenrir_g.flac | Горячий (муж.) | Fenrir | Я тебе рога-то пообломаю! |
+| hero_f_1tpwutp_fenrir_g.flac | Горячий (муж.) | Fenrir | Сейчас огребёшь! |
+| hero_f_xlh9od_fenrir_g.flac | Горячий (муж.) | Fenrir | Ну всё, конец тебе! |
+| hero_f_1wrce77_fenrir_g.flac | Горячий (муж.) | Fenrir | Порву на куски! |
+| hero_f_14kudl8_fenrir_g.flac | Горячий (муж.) | Fenrir | Живым не уйдёшь! |
+| hero_f_bzecxg_fenrir_g.flac | Горячий (муж.) | Fenrir | Я тебе устрою! |
+| hero_f_u715yy_fenrir_g.flac | Горячий (муж.) | Fenrir | Сейчас получишь по полной! |
+| hero_f_cj9xcu_fenrir_g.flac | Горячий (муж.) | Fenrir | Попал. |
+| hero_f_18sodny_fenrir_g.flac | Горячий (муж.) | Fenrir | Один есть. |
+| hero_f_f3ff7m_fenrir_g.flac | Горячий (муж.) | Fenrir | Держи. |
+| hero_f_1pw71p7_fenrir_g.flac | Горячий (муж.) | Fenrir | Ещё раз. |
+| hero_f_xjsdbv_fenrir_g.flac | Горячий (муж.) | Fenrir | Точно в цель. |
+| hero_f_42uav1_fenrir_g.flac | Горячий (муж.) | Fenrir | Вот так. |
+| hero_f_1u2bfug_fenrir_g.flac | Горячий (муж.) | Fenrir | Хороший удар. |
+| hero_f_slnn8e_fenrir_g.flac | Горячий (муж.) | Fenrir | Дошло. |
+| hero_f_wstchs_fenrir_g.flac | Горячий (муж.) | Fenrir | Ещё немного. |
+| hero_f_s9ww9k_fenrir_g.flac | Горячий (муж.) | Fenrir | Так и держать. |
+| hero_f_od6p6w_fenrir_g.flac | Горячий (муж.) | Fenrir | Больно? Это только начало. |
+| hero_f_1tdir86_fenrir_g.flac | Горячий (муж.) | Fenrir | Ой, извини. Нет, не извини. |
+| hero_f_ay7efw_fenrir_g.flac | Горячий (муж.) | Fenrir | Красиво же вышло! |
+| hero_f_ritn0w_fenrir_g.flac | Горячий (муж.) | Fenrir | Запомни этот удар. |
+| hero_f_1w3socn_fenrir_g.flac | Горячий (муж.) | Fenrir | Хорошо пошло! |
+| hero_f_4u0oed_fenrir_g.flac | Горячий (муж.) | Fenrir | Щекотно, да? |
+| hero_f_xrrizl_fenrir_g.flac | Горячий (муж.) | Fenrir | Это был привет. |
+| hero_f_gvbkcg_fenrir_g.flac | Горячий (муж.) | Fenrir | Лови подарок! |
+| hero_f_179rrug_fenrir_g.flac | Горячий (муж.) | Fenrir | Вот это я понимаю! |
+| hero_f_1vnvaq_fenrir_g.flac | Горячий (муж.) | Fenrir | Аплодисменты, пожалуйста. |
+| hero_f_cz74k7_fenrir_g.flac | Горячий (муж.) | Fenrir | На, получи! |
+| hero_f_34leus_fenrir_g.flac | Горячий (муж.) | Fenrir | Вот тебе, гад! |
+| hero_f_1ku8y9u_fenrir_g.flac | Горячий (муж.) | Fenrir | Ещё хочешь? |
+| hero_f_1pyu43y_fenrir_g.flac | Горячий (муж.) | Fenrir | Жри сталь! |
+| hero_f_187ddpr_fenrir_g.flac | Горячий (муж.) | Fenrir | Вот так тебе! |
+| hero_f_47akx6_fenrir_g.flac | Горячий (муж.) | Fenrir | Мало? Добавлю! |
+| hero_f_1wuqul1_fenrir_g.flac | Горячий (муж.) | Fenrir | Нравится, скотина? |
+| hero_f_1fdlkbr_fenrir_g.flac | Горячий (муж.) | Fenrir | Получай, зараза! |
+| hero_f_13emju8_fenrir_g.flac | Горячий (муж.) | Fenrir | На ещё! |
+| hero_f_ak08wm_fenrir_g.flac | Горячий (муж.) | Fenrir | Вот и весь сказ! |
+| hero_f_vgpll1_fenrir_g.flac | Горячий (муж.) | Fenrir | Кровь — не беда. |
+| hero_f_1gq3wie_fenrir_g.flac | Горячий (муж.) | Fenrir | Пропустил. |
+| hero_f_1pkv1ay_fenrir_g.flac | Горячий (муж.) | Fenrir | Ещё не конец. |
+| hero_f_br33hw_fenrir_g.flac | Горячий (муж.) | Fenrir | Ай! Можно было и помягче. |
+| hero_f_h77vlu_fenrir_g.flac | Горячий (муж.) | Fenrir | Ох, кажется, что-то хрустнуло. Надеюсь, не у меня. |
+| hero_f_120yq67_fenrir_g.flac | Горячий (муж.) | Fenrir | Ну вот, новый шрам. Буду хвастаться. |
+| hero_f_1mnn0y2_fenrir_g.flac | Горячий (муж.) | Fenrir | Это был мой любимый бок! |
+| hero_f_1hosn4s_fenrir_g.flac | Горячий (муж.) | Fenrir | Эй, я ещё не готов был! |
+| hero_f_18iq4k_fenrir_g.flac | Горячий (муж.) | Fenrir | Ладно, этот ты выиграл. |
+| hero_f_agipjb_fenrir_g.flac | Горячий (муж.) | Fenrir | Ой-ой-ой. Запишем в долг. |
+| hero_f_6pllyk_fenrir_g.flac | Горячий (муж.) | Fenrir | Больно, но красиво. |
+| hero_f_1dbwgqs_fenrir_g.flac | Горячий (муж.) | Fenrir | Ах ты ж зараза! |
+| hero_f_1rd1g0q_fenrir_g.flac | Горячий (муж.) | Fenrir | Больно, сволочь! |
+| hero_f_rscz95_fenrir_g.flac | Горячий (муж.) | Fenrir | Ну всё, ты доигрался! |
+| hero_f_dy7uzt_fenrir_g.flac | Горячий (муж.) | Fenrir | Чтоб тебе пусто было! |
+| hero_f_xp76gw_fenrir_g.flac | Горячий (муж.) | Fenrir | Ах ты, падаль! |
+| hero_f_11i7occ_fenrir_g.flac | Горячий (муж.) | Fenrir | Ты за это ответишь! |
+| hero_f_1tpmjdw_fenrir_g.flac | Горячий (муж.) | Fenrir | Больно же, гадина! |
+| hero_f_1aasib7_fenrir_g.flac | Горячий (муж.) | Fenrir | Ну держись теперь! |
+| hero_f_a918uu_fenrir_g.flac | Горячий (муж.) | Fenrir | Мне плохо. Надо лечиться. |
+| hero_f_10c0od0_fenrir_g.flac | Горячий (муж.) | Fenrir | Ещё пара ударов — и мне конец. |
+| hero_f_wtygf9_fenrir_g.flac | Горячий (муж.) | Fenrir | Силы уходят. Пора пить зелье. |
+| hero_f_120ynn3_fenrir_g.flac | Горячий (муж.) | Fenrir | Я на краю. Осторожнее. |
+| hero_f_px3axu_fenrir_g.flac | Горячий (муж.) | Fenrir | Ещё немного, и я упаду. |
+| hero_f_abrx9e_fenrir_g.flac | Горячий (муж.) | Fenrir | Кровь течёт. Надо отступить или лечиться. |
+| hero_f_1aodnsw_fenrir_g.flac | Горячий (муж.) | Fenrir | Долго я так не выстою. |
+| hero_f_4g26cg_fenrir_g.flac | Горячий (муж.) | Fenrir | Голова кружится. Надо лечиться. |
+| hero_f_1s4vj87_fenrir_g.flac | Горячий (муж.) | Fenrir | Кажется, это был не лучший план. |
+| hero_f_17iipts_fenrir_g.flac | Горячий (муж.) | Fenrir | Проклятье, я на последнем издыхании! |
+| hero_f_mj0s4n_fenrir_g.flac | Горячий (муж.) | Fenrir | Кровь хлещет, чтоб её! |
+| hero_f_19rw865_fenrir_g.flac | Горячий (муж.) | Fenrir | Держись, дурья башка, держись! |
+| hero_f_1io568l_fenrir_g.flac | Горячий (муж.) | Fenrir | Ещё удар — и мне крышка! |
+| hero_f_drm4zx_fenrir_g.flac | Горячий (муж.) | Fenrir | Зелье, где же зелье, проклятье! |
+| hero_f_1dva8xu_fenrir_g.flac | Горячий (муж.) | Fenrir | Ну всё, доигрался! |
+| hero_f_xbu58g_fenrir_g.flac | Горячий (муж.) | Fenrir | Сейчас свалюсь, зараза! |
+| hero_f_1i0ajf0_fenrir_g.flac | Горячий (муж.) | Fenrir | Он едва стоит. |
+| hero_f_a6zagx_fenrir_g.flac | Горячий (муж.) | Fenrir | Ещё удар — и всё. |
+| hero_f_9hbokr_fenrir_g.flac | Горячий (муж.) | Fenrir | Слабеет. Дожимай. |
+| hero_f_a50qzu_fenrir_g.flac | Горячий (муж.) | Fenrir | Конец близок. |
+| hero_f_l0wv9w_fenrir_g.flac | Горячий (муж.) | Fenrir | Осталось немного. |
+| hero_f_1c6snma_fenrir_g.flac | Горячий (муж.) | Fenrir | Он выдыхается. |
+| hero_f_m9eyvs_fenrir_g.flac | Горячий (муж.) | Fenrir | Добей, пока не опомнился. |
+| hero_f_1i61gng_fenrir_g.flac | Горячий (муж.) | Fenrir | Последний рывок. |
+| hero_f_8t628d_fenrir_g.flac | Горячий (муж.) | Fenrir | Шатается. Сейчас свалится. |
+| hero_f_fu2byp_fenrir_g.flac | Горячий (муж.) | Fenrir | Ну что, выдохся? |
+| hero_f_176hnmk_fenrir_g.flac | Горячий (муж.) | Fenrir | Кажется, кто-то устал. |
+| hero_f_1dwacmt_fenrir_g.flac | Горячий (муж.) | Fenrir | Сдаёшься? Нет? Ну ладно. |
+| hero_f_drkrr9_fenrir_g.flac | Горячий (муж.) | Fenrir | Ещё чуть-чуть, и в песню. |
+| hero_f_tpyfvf_fenrir_g.flac | Горячий (муж.) | Fenrir | Держись, осталось недолго. Тебе. |
+| hero_f_xg6hvm_fenrir_g.flac | Горячий (муж.) | Fenrir | Добью, гада! |
+| hero_f_fbnsrr_fenrir_g.flac | Горячий (муж.) | Fenrir | Всё, тебе хана! |
+| hero_f_vpxz3h_fenrir_g.flac | Горячий (муж.) | Fenrir | Конец тебе, скотина! |
+| hero_f_3t85yf_fenrir_g.flac | Горячий (муж.) | Fenrir | Ещё разок, и готов! |
+| hero_f_1f0kvrv_fenrir_g.flac | Горячий (муж.) | Fenrir | Кончено. |
+| hero_f_10dtl1j_fenrir_g.flac | Горячий (муж.) | Fenrir | Покойся. |
+| hero_f_1trw8qb_fenrir_g.flac | Горячий (муж.) | Fenrir | Одним меньше. |
+| hero_f_1tgjhh9_fenrir_g.flac | Горячий (муж.) | Fenrir | Путь свободен. |
+| hero_f_1jeaxzv_fenrir_g.flac | Горячий (муж.) | Fenrir | Всё. |
+| hero_f_jn3lpq_fenrir_g.flac | Горячий (муж.) | Fenrir | Так и должно было кончиться. |
+| hero_f_eug9vp_fenrir_g.flac | Горячий (муж.) | Fenrir | Отдых заслужен. |
+| hero_f_2ftstk_fenrir_g.flac | Горячий (муж.) | Fenrir | Можно идти дальше. |
+| hero_f_1r6ccbu_fenrir_g.flac | Горячий (муж.) | Fenrir | Так и знал. |
+| hero_f_yvb8zb_fenrir_g.flac | Горячий (муж.) | Fenrir | Кто молодец? Я молодец. |
+| hero_f_xwauw9_fenrir_g.flac | Горячий (муж.) | Fenrir | Бард, записывай. |
+| hero_f_f25hz0_fenrir_g.flac | Горячий (муж.) | Fenrir | Даже не вспотел. Почти. |
+| hero_f_149zlkm_fenrir_g.flac | Горячий (муж.) | Fenrir | Следующий! |
+| hero_f_1q74uxv_fenrir_g.flac | Горячий (муж.) | Fenrir | Ещё бы кто похлопал. |
+| hero_f_byb0ww_fenrir_g.flac | Горячий (муж.) | Fenrir | Так тебе и надо! |
+| hero_f_10eaz2f_fenrir_g.flac | Горячий (муж.) | Fenrir | Получил своё! |
+| hero_f_1awnd7b_fenrir_g.flac | Горячий (муж.) | Fenrir | Нечего было лезть! |
+| hero_f_1uqp8wj_fenrir_g.flac | Горячий (муж.) | Fenrir | Туда тебе и дорога! |
+| hero_f_1dasxgp_fenrir_g.flac | Горячий (муж.) | Fenrir | Сам нарвался! |
+| hero_f_1j67bwk_fenrir_g.flac | Горячий (муж.) | Fenrir | Вот и весь разговор! |
+| hero_f_11820al_fenrir_g.flac | Горячий (муж.) | Fenrir | Слова тебе не помогут. |
+| hero_f_1qoxf26_fenrir_g.flac | Горячий (муж.) | Fenrir | Меньше слов. |
+| hero_f_egozhn_fenrir_g.flac | Горячий (муж.) | Fenrir | Посмотрим. |
+| hero_f_ng7mlg_fenrir_g.flac | Горячий (муж.) | Fenrir | Говори, пока можешь. |
+| hero_f_150bd1v_fenrir_g.flac | Горячий (муж.) | Fenrir | Угрозы оставь при себе. |
+| hero_f_1nzdipc_fenrir_g.flac | Горячий (муж.) | Fenrir | Болтовня тебя не спасёт. |
+| hero_f_1lw2m7q_fenrir_g.flac | Горячий (муж.) | Fenrir | Я слышал это много раз. |
+| hero_f_xwy7eh_fenrir_g.flac | Горячий (муж.) | Fenrir | Делом докажи. |
+| hero_f_qfqcwc_fenrir_g.flac | Горячий (муж.) | Fenrir | Ой, как страшно. Я прямо дрожу. |
+| hero_f_2yooie_fenrir_g.flac | Горячий (муж.) | Fenrir | Громко говоришь, а бьёшь слабо. |
+| hero_f_1uooexe_fenrir_g.flac | Горячий (муж.) | Fenrir | Скажи это моему мечу. |
+| hero_f_sh8hwp_fenrir_g.flac | Горячий (муж.) | Fenrir | Я запишу, это смешно. |
+| hero_f_wygtes_fenrir_g.flac | Горячий (муж.) | Fenrir | Ещё что-нибудь скажешь? Я не тороплюсь. |
+| hero_f_1k6gwqq_fenrir_g.flac | Горячий (муж.) | Fenrir | Какие речи! Тебе бы в глашатаи. |
+| hero_f_dvn2qq_fenrir_g.flac | Горячий (муж.) | Fenrir | Бу-бу-бу. Страшно-то как. |
+| hero_f_xuh7nn_fenrir_g.flac | Горячий (муж.) | Fenrir | Заткнись и дерись! |
+| hero_f_14m4d4p_fenrir_g.flac | Горячий (муж.) | Fenrir | Язык отрежу! |
+| hero_f_nsohx4_fenrir_g.flac | Горячий (муж.) | Fenrir | Пасть закрой! |
+| hero_f_1nytadf_fenrir_g.flac | Горячий (муж.) | Fenrir | Ещё слово — и получишь! |
+| hero_f_j9yl5h_fenrir_g.flac | Горячий (муж.) | Fenrir | Поговори мне ещё! |
+| hero_f_1ib19ud_fenrir_g.flac | Горячий (муж.) | Fenrir | Слышь, закрой рот! |
+| hero_f_7m1tn8_fenrir_g.flac | Горячий (муж.) | Fenrir | Язык длинный, а руки короткие! |
+| hero_f_ol25gd_fenrir_g.flac | Горячий (муж.) | Fenrir | Хватит трепаться! |
+| hero_f_9eaqh0_fenrir_g.flac | Горячий (муж.) | Fenrir | Уйди, зверь, и останешься жив. |
+| hero_f_rkgidn_fenrir_g.flac | Горячий (муж.) | Fenrir | Зверь есть зверь. Прости. |
+| hero_f_1y02k5a_fenrir_g.flac | Горячий (муж.) | Fenrir | Не рычи, я не боюсь. |
+| hero_f_1j02qp2_fenrir_g.flac | Горячий (муж.) | Fenrir | Я пущу тебя на шкуру. |
+| hero_f_1lrquiu_fenrir_g.flac | Горячий (муж.) | Fenrir | Сделаю из тебя шашлык. |
+| hero_f_1yqiwnp_fenrir_g.flac | Горячий (муж.) | Fenrir | Из тебя выйдет отличный коврик у камина. |
+| hero_f_q0jqur_fenrir_g.flac | Горячий (муж.) | Fenrir | Будешь моим воротником. |
+| hero_f_p8nrso_fenrir_g.flac | Горячий (муж.) | Fenrir | Жаркое само пришло к ужину. |
+| hero_f_6icnkj_fenrir_g.flac | Горячий (муж.) | Fenrir | Кто тут у нас? Обед! |
+| hero_f_1ypd7r1_fenrir_g.flac | Горячий (муж.) | Fenrir | Шуба сама бежит в руки. |
+| hero_f_756l5_fenrir_g.flac | Горячий (муж.) | Fenrir | Я тебе шкуру спущу! |
+| hero_f_3a8jpr_fenrir_g.flac | Горячий (муж.) | Fenrir | Порву, как тряпку! |
+| hero_f_i1em5e_fenrir_g.flac | Горячий (муж.) | Fenrir | Шерсть клочьями полетит! |
+| hero_f_13x48dn_fenrir_g.flac | Горячий (муж.) | Fenrir | Клыки повыбиваю! |
+| hero_f_1l3vm2c_fenrir_g.flac | Горячий (муж.) | Fenrir | Шкуру не порть, она мне ещё пригодится. |
+| hero_f_srmup1_fenrir_g.flac | Горячий (муж.) | Fenrir | Мягкий, хороший, вкусный. |
+| hero_f_sk7fo4_fenrir_g.flac | Горячий (муж.) | Fenrir | Кис-кис. Не подходи. |
+| hero_f_1ja1dtr_fenrir_g.flac | Горячий (муж.) | Fenrir | Получай, блохастый! |
+| hero_f_cbrgtk_fenrir_g.flac | Горячий (муж.) | Fenrir | Скули теперь! |
+| hero_f_1j3l9r1_fenrir_g.flac | Горячий (муж.) | Fenrir | Зверь хромает. |
+| hero_f_l1obbd_fenrir_g.flac | Горячий (муж.) | Fenrir | Зверь скулит. Скоро конец. |
+| hero_f_1t78u89_fenrir_g.flac | Горячий (муж.) | Fenrir | Жаркое почти готово. |
+| hero_f_13cdpny_fenrir_g.flac | Горячий (муж.) | Fenrir | Добью, облезлый! |
+| hero_f_3l80wn_fenrir_g.flac | Горячий (муж.) | Fenrir | Прости, зверь. |
+| hero_f_f847ka_fenrir_g.flac | Горячий (муж.) | Fenrir | Не лети ко мне, птица. |
+| hero_f_12l331l_fenrir_g.flac | Горячий (муж.) | Fenrir | Крылья тебя не спасут. |
+| hero_f_7x1f1g_fenrir_g.flac | Горячий (муж.) | Fenrir | Ощиплю и на подушку. |
+| hero_f_roj008_fenrir_g.flac | Горячий (муж.) | Fenrir | Из твоих перьев выйдет славная перина. |
+| hero_f_ji2srp_fenrir_g.flac | Горячий (муж.) | Fenrir | Суп из тебя будет наваристый. |
+| hero_f_13tfkcf_fenrir_g.flac | Горячий (муж.) | Fenrir | Чирикай, пока можешь. |
+| hero_f_1icf5x4_fenrir_g.flac | Горячий (муж.) | Fenrir | Курица-переросток! |
+| hero_f_1wdqorp_fenrir_g.flac | Горячий (муж.) | Fenrir | Перья повыдёргиваю! |
+| hero_f_nnrdlm_fenrir_g.flac | Горячий (муж.) | Fenrir | Шею сверну, курица! |
+| hero_f_1wfvlzg_fenrir_g.flac | Горячий (муж.) | Fenrir | Крылья пообломаю! |
+| hero_f_cdvd76_fenrir_g.flac | Горячий (муж.) | Fenrir | Пух полетел! |
+| hero_f_bn5eso_fenrir_g.flac | Горячий (муж.) | Fenrir | Минус перо. |
+| hero_f_zzcevj_fenrir_g.flac | Горячий (муж.) | Fenrir | Получай, пернатая! |
 | hero_f_vv7k2n_kore_g.flac | Ясный (жен.) | Kore | Я не уйду с этой дороги. |
 | hero_f_1tik8bc_kore_g.flac | Ясный (жен.) | Kore | Ты выбрал не того. |
 | hero_f_1ldq9bb_kore_g.flac | Ясный (жен.) | Kore | Здесь ты и остановишься. |
