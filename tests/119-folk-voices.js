@@ -142,8 +142,9 @@ const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(e!==undefined?' :
  const оклик=await page.evaluate(async()=>{
   /* 4.6: пол голоса — пол жителя; оклик народа записан полом народа, и
      житель другого пола его пока не произносит. Берём жителя, чей пол
-     совпадает с записью его народа. */
-  let n=null;for(let x=120;x<600&&!n;x++){const c=getNPC(x,120,0);if(Folk.жен(c)===(Folk.раса(c.race)[2]==="ж"))n=c;}
+     совпадает с записью его народа. Народ, чей оклик ещё не записан
+     (четвёртое поле 2), молчит по замыслу — такого жителя не берём. */
+  let n=null;for(let x=120;x<600&&!n;x++){const c=getNPC(x,120,0);const г=Folk.раса(c.race);if(г&&г[3]!==2&&Folk.жен(c)===(г[2]==="ж"))n=c;}
   try{Speech.userCut();}catch(_){}try{Folk.смолкнуть(true);}catch(_){}
   VOICED.length=0;CUED.length=0;
   npcVoice(n,"оклик");

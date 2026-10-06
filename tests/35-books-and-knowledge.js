@@ -265,7 +265,9 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
 
  /* ── 8. Собрание знаний ── */
  const соб=await page.evaluate(()=>{
-  G.lore=[0,1,400,1500,3000,5000,5700];
+  /* По одной странице с начала каждой полки: сквозные номера сдвигаются,
+     когда в мир приходят новые расы и боги, а полки остаются. */
+  G.lore=(()=>{const L=knowLayout();const out=[];let s=0;for(const r of L.rows){out.push(s);s+=r.n;}return out.slice(0,7);})();
   openLore();
   const окно=!document.getElementById("modal-lore").hidden;
   const полок=document.querySelectorAll("#loreGrid button").length;

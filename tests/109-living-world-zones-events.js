@@ -41,7 +41,7 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
  /* ── 1. данные ── */
  const данные=await page.evaluate(()=>{
   const r={};r.rules=ANOM_RULES.length;r.rulesOk=ANOM_RULES.every(x=>SOUND_BANK[x.маркер]&&x.как&&x.маршрут&&RES_BASE[x.ресурс]&&x.опасность&&x.о);
-  const z=Zones.all();r.zones=z.length;r.zonesOk=z.every(x=>ANOM_BY_ID[x.правило]&&x.x>=0&&x.x<WORLD&&x.y>=0&&x.y<WORLD&&x.r>=6)&&new Set(z.map(x=>x.id)).size===z.length;
+  const z=Zones.all();r.zones=z.length;r.zonesOk=z.every(x=>ANOM_BY_ID[x.правило]&&x.x>=0&&x.x<(typeof WORLD_MAX!=="undefined"?WORLD_MAX:WORLD)&&x.y>=0&&x.y<(typeof WORLD_MAX!=="undefined"?WORLD_MAX:WORLD)&&x.r>=6)&&new Set(z.map(x=>x.id)).size===z.length;
   r.power=Power.all().length;r.powerOk=POWER_PLACES.every(p=>SOUND_BANK[p.звук]&&MSCHOOL_BY_ID[p.школа]&&WEATHER_BY_ID[p.погода]&&RES_BASE[p.трава]&&p.дар);
   r.global=GLOBAL_EVENTS.length;r.globalOk=GLOBAL_EVENTS.every(e=>SOUND_BANK[e.звук]&&e.срок>0&&typeof e.начать==="function");
   /* Случайных событий четырнадцать; два события Сопряжения живут только на
@@ -56,7 +56,7 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   const sc=worldSelfCheck();const row=sc.find(x=>x.id==="living");r.selfcheck=row?row.ok:null;
   return r;});
  check('двадцать правил зон со звуком, признаком, маршрутом, настоящим ресурсом и опасностью; сто зон с разными именами внутри мира; шестьдесят мест силы пяти родов со звуком, школой, погодой и травой',
-  данные.rules===20&&данные.rulesOk&&данные.zones===345&&данные.zonesOk&&данные.power===207&&данные.powerOk,данные);
+  данные.rules===20&&данные.rulesOk&&данные.zones===385&&данные.zonesOk&&данные.power===231&&данные.powerOk,данные);
  check('десять мировых событий, четырнадцать случайных (и двенадцать весёлых), шесть пророчеств, восемь ступеней судьбы, восемь модулей; самопроверка мира видит живой мир',
   данные.global===10&&данные.globalOk&&данные.random===14&&данные.randomConj===2&&данные.randomMirth===12&&данные.randomOk&&данные.proph===6&&данные.prophOk&&данные.arcs===8&&данные.modules&&данные.selfcheck===true,данные);
 
