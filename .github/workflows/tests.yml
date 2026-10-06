@@ -63,7 +63,7 @@ jobs:
             const f=path.join('sounds',m[1],m[2]);if(!fs.existsSync(f))continue;const t=fs.readFileSync(f,'utf8');
             Object.values(JSON.parse(t.slice(t.indexOf('{'),t.lastIndexOf('}')+1)).p).forEach(id=>refs.add(m[1]+'/'+id+'.flac'));}
           /* Голоса жителей, героя и прочие описи длин: ключ — имя файла в своей папке. */
-          for(const [re,dir,ext] of [[/const VOICE_NPC_LEN=(\{[^\n]*?\});/,'voice_npc','.flac'],[/const HERO_VOICE_LEN=(\{[^\n]*?\});/,'voice_hero','.flac'],[/const HERO_FIGHT_LEN=(\{[^\n]*?\});/,'voice_hero','.flac']]){
+          for(const [re,dir,ext] of [[/const VOICE_NPC_LEN=(\{[^\n]*?\});/,'voice_npc','.flac'],[/const HERO_VOICE_LEN=(\{[^\n]*?\});/,'voice_hero','.flac'],[/const HERO_FIGHT_LEN=(\{[^\n]*?\});/,'voice_hero','.flac'],[/const GOD_SPEECH_LEN=(\{[^\n]*?\});/,'voice_god','.flac']]){
             const j=(html.match(re)||[])[1];if(j)Object.keys(JSON.parse(j)).forEach(k=>{
               /* (6.0) третьи и дальнейшие голоса жителей (кроме стражи) — в голосовом пакете */
               const д=dir==='voice_npc'&&/_v[2-9]/.test(k)&&!/^street_/.test(k)?'gvoice_pack/npc':dir;refs.add(д+'/'+k+ext);});}
