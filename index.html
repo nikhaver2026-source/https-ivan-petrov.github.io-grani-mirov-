@@ -68055,8 +68055,12 @@ function desktopVoiceLabels(){
  const br=document.getElementById("btnVoiceRefresh");if(br)br.textContent="Перечитать голоса компьютера";}
 /* Строка о голосовом пакете в разделе «Синтезатор». */
 /* Полная сборка (Windows и Android): голосовой пакет уже внутри приложения —
-   ни скачивать, ни выбирать файл не нужно, кнопки установки нет. */
+   ни скачивать, ни выбирать файл не нужно, кнопки установки нет. Приложение
+   для Windows всегда собирается с пакетом внутри, поэтому кнопки «Обновить
+   голосовой пакет» в нём нет вовсе — даже если проверка пакета не ответила
+   (10.5, просьба игрока). */
 function gvPackBuiltin(){
+ if(safeFn(()=>isDesktopApp(),false))return true;
  return !!safeFn(()=>{if(window.graniDesktop&&typeof window.graniDesktop.voicePackInfo==="function"){const i=window.graniDesktop.voicePackInfo();if(i&&i.builtin)return true;}
   if(window.GraniTTS&&typeof window.GraniTTS.voicePackBuiltin==="function")return !!window.GraniTTS.voicePackBuiltin();return false;},false);}
 function gvPackUi(){

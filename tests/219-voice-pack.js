@@ -10,8 +10,10 @@
       не меньше пятисот фраз (в 4.9 пункты настроек переехали в сборку), у каждой фразы файл; с описями сборок пакет не
       пересекается.
    2. Фраза из пакета звучит записью пакета, фраза из сборки — записью сборки.
-   3. В «Синтезаторе» сказано, что пакет подключён; в приложении — кнопка
-      «Установить голосовой пакет», и после установки опись перечитывается.
+   3. В «Синтезаторе» сказано, что пакет подключён. Приложение для Windows
+      всегда собирается с пакетом внутри (10.5): кнопки «Установить / Обновить
+      голосовой пакет» в нём нет, а пункт «Голосовой пакет» говорит, что
+      он встроен, и ничего не ставит.
    4. Приложение для Windows читает пакет прямо из zip, без распаковки.
    5. В APK и архив для Windows пакет не кладётся; пакет собирается в свой
       выпуск; Android отдаёт его по тому же адресу.
@@ -53,14 +55,14 @@ const опись=f=>{const t=fs.readFileSync(f,'utf8');return JSON.parse(t.slice
  await стол.addInitScript(()=>{window.__vp=0;window.graniDesktop={version:"5.0",platform:"win32",quit(){},installVoicePack(){window.__vp++;return Promise.resolve(true);}};});
  await стол.goto(process.argv[2]);await стол.waitForTimeout(900);
  const уст=await стол.evaluate(async()=>{try{enterGame();}catch(_){}while(activeLayer())closeTopUI();
-  Speech.gvLoad();await new Promise(z=>setTimeout(z,800));gvPackUi();const кнопка=document.getElementById("btnGvPack").textContent;
+  Speech.gvLoad();await new Promise(z=>setTimeout(z,800));gvPackUi();const кнопка=document.getElementById("btnGvPack").textContent,скрыта=document.getElementById("btnGvPack").hidden,подсказка=document.getElementById("gvPackHint").textContent;
   const s0=Speech.GVOICES.m.pack.state;window.__said=[];const n0=Speech.say.bind(Speech);Speech.say=function(t,o){__said.push(String(t));return n0(t,o);};
   CMD.gvpack();await new Promise(z=>setTimeout(z,1200));
   /* опись пакета большая (шесть с лишним тысяч фраз) — даём ей дочитаться */
   for(let i=0;i<40&&Speech.GVOICE.pack&&Speech.GVOICE.pack.state==="loading";i++)await new Promise(z=>setTimeout(z,150));
-  return {кнопка,вызвано:window.__vp,сказано:__said.slice(),state:Speech.GVOICES.m.pack.state,s0};});
- check('3. в «Синтезаторе» сказано, что пакет подключён; в приложении кнопка ставит пакет и опись перечитывается',
-  /подключён: ещё \d+/.test(строка.h)&&/Обновить голосовой пакет|Установить голосовой пакет/.test(уст.кнопка)&&уст.вызвано===1&&уст.сказано.some(t=>/Голосовой пакет установлен/.test(t))&&уст.state==="ready",{строка,уст});
+  return {кнопка,скрыта,подсказка,вызвано:window.__vp,сказано:__said.slice(),state:Speech.GVOICES.m.pack.state,s0};});
+ check('3. в «Синтезаторе» сказано, что пакет подключён; в приложении для Windows кнопки пакета нет — он встроен',
+  /подключён: ещё \d+/.test(строка.h)&&уст.скрыта===true&&/встроен/.test(уст.подсказка)&&уст.вызвано===0&&уст.сказано.some(t=>/встроен/.test(t)),{строка,уст});
 
  /* ── 4 ── */
  const tmp=fs.mkdtempSync(path.join(os.tmpdir(),'vp-'));const zip=path.join(tmp,'GraniMirov-voicepack.zip');
