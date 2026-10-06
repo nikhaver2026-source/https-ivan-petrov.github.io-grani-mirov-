@@ -17154,7 +17154,11 @@ function godVoice(id,{gain=0.8,pan=0,maxSec=6}={}){
 /* Капель в фоне не лежит: записанная сплошь, она играла мимо отзвука яруса и
    звучала как кран в доме. Капли теперь падают по одной, каждая в своей точке
    свода и через эхо подземелья (см. КАПЕЛЬ ПОДЗЕМЕЛЬЯ). */
-const DEPTH_LOOP=["deep_wind","deep_wind","stk_dark","stk_deepsea","amb_abyss"];
+/* (9.5.4) На четвёртом ярусе лежала «подводная» петля stk_deepsea — почти три
+   минуты ритма и гармонии: под землёй она звучала как музыка, которой там
+   быть не должно, и играла каналом фона даже при выключенной музыке. Теперь
+   третий и четвёртый ярусы гудят толщей, ниже — бездна. */
+const DEPTH_LOOP=["deep_wind","deep_wind","stk_dark","stk_dark","amb_abyss"];
 /* Роль фона для места, где находится игрок. */
 /* ── ФОН ПОСТРОЙКИ ──
    У каждого рода места свой долгий фон (роли bed_*). Трактир к ночи полон,
@@ -42708,7 +42712,36 @@ function playRealMonsterCue(m,cue,vol=0.7){
 }
 /* opts.alt — высота схватки, если она задана извне: тварь, сорвавшаяся в пике,
    дерётся на земле, хотя ходит по небу. Ничего в мире при этом не меняется. */
+/* ── БОЙ ПРЕЖДЕ СОБЫТИЯ (9.5.4, просьба игрока) ──
+   Встреча на дороге открывает окно выбора, и если в тот же миг нападала
+   тварь, бой шёл под открытым окном: длинный рассказ о встрече звучал
+   первым, «Бой» — за ним, а жесты уходили в окно, а не в схватку. Теперь
+   бой первичен: окно встречи закрывается, её речь обрывается, а сама
+   встреча ждёт и предлагается снова, когда бой позади. */
+const EventHold={ждёт:null,
+ hold(){try{
+  if(!curEvent)return false;
+  this.ждёт={e:curEvent.e};curEvent=null;
+  const m=document.getElementById("modal-event");
+  if(m&&!m.hidden)safeFn(()=>closeModal(m,true));
+  safeFn(()=>Speech.stop());safeFn(()=>Speech.flush());
+  return true;}catch(_){return false;}},
+ later(попытка){try{
+  if(!this.ждёт)return false;
+  const n=Number(попытка)||0;
+  setTimeout(()=>safeFn(()=>{
+   if(!this.ждёт)return;
+   if(G.inCombat)return;                      /* новый бой — встреча подождёт его конца */
+   if(!gameActive()||!(G.hp>0)){this.ждёт=null;return;}
+   if((activeLayer()||curEvent)&&n<45){this.later(n+1);return;}
+   const ж=this.ждёт;this.ждёт=null;
+   const c=eventContext();let можно=true;try{можно=!!ж.e.ok(c);}catch(_){}
+   if(!можно)return;
+   narrate("Бой позади. Теперь о том, что ждало вас на дороге.",{interrupt:false,cat:"event",pri:1});
+   openEvent(ж.e,c);}),n?2000:3500);
+  return true;}catch(_){return false;}}};
 function startCombat(c,opts){
+ safeFn(()=>EventHold.hold());
  safeFn(()=>Ballads.stop(true));
  const m=c.monster;G.weaponDrawn=!!G.weaponDrawn; /* бой никогда сам не вытаскивает оружие */
  /* Разбойник не рычит — он говорит: грозит живым голосом ещё до удара. */
@@ -43246,6 +43279,7 @@ function playWoundSfx(dmg=6){try{AE.ensure();
   {kind:"combat",seed:Math.floor(Math.random()*97),gain:0.45,maxSec:2}));
  const s=new SFX();const heavy=Math.max(0.6,Math.min(1.5,0.6+(Number(dmg)||6)/14));s.wound(heavy);setTimeout(()=>{try{s.stop(.2);}catch(e){}},650);}catch(e){}}
 function endCombat(){if(G.combat&&G.combat.monsterTimer)clearTimeout(G.combat.monsterTimer);safeFn(()=>Arena.stop());G.inCombat=false;G.combat=null;
+ safeFn(()=>EventHold.later());
  /* Отметка «этот бой идёт за такое-то логово» ставится в startInsideCombat и
     снималась ТОЛЬКО победой. После побега она оставалась висеть: игрок
     спускался на уровень ниже, побеждал там кого угодно — и мёртвым
@@ -43919,7 +43953,7 @@ function takeLoot(){
   return true;
  }catch(e){try{console.error("takeLoot",e);}catch(_){}return false;}
 }
-function defeat(){const павший=G.combat&&G.combat.m;safeFn(()=>foeProfileCue(павший,"victory",{gain:0.6}));endCombat();Music.stop();
+function defeat(){const павший=G.combat&&G.combat.m;safeFn(()=>foeProfileCue(павший,"victory",{gain:0.6}));endCombat();EventHold.ждёт=null;Music.stop();
  if(SVODY_ON)safeFn(()=>Svody.onDefeat(павший));
  if(павший&&павший.boss)safeFn(()=>bossDefeat(павший));
  safeFn(()=>{
@@ -57576,7 +57610,7 @@ function openModal(id){const m=document.getElementById(id);if(!m||!m.hidden)retu
   if(!имя&&!пункт)return;
   const итог=safeFn(()=>modalSummary(id),"")||"";
   narrate(имя?`Окно «${имя}». ${итог?итог+" ":""}Выбрано: ${пункт||"первый пункт"}.`:`Выбрано: ${пункт}.`,{interrupt:true,pri:1,cat:"ui"});});}
-function closeModal(m){if(!m)return;
+function closeModal(m,тихо){if(!m)return;
  if(m.id==="modal-encyclopedia")safeFn(()=>EncPreview.stop());
  const имя=safeFn(()=>modalTitleText(m),"");
  /* Уходя от жителя, герой слышит его прощание — или угрозу вслед. */
@@ -57599,6 +57633,8 @@ function closeModal(m){if(!m)return;
     слышит тишину — по ней не понять, закрылось ли окно вообще. */
  safeFn(()=>{
   const низ=modalStack[modalStack.length-1];
+  /* Окно закрыла сама игра (бой отложил встречу) — без лишних слов. */
+  if(тихо)return;
   const куда=низ?`Окно «${modalTitleText(низ)}»`:(gameActive()?"Игровое поле":"Главное меню");
   narrate(имя?`Окно «${имя}» закрыто. ${куда}.`:`${куда}.`,{interrupt:true,pri:1,cat:"ui"});});}
 /* ════════ ИНВЕНТАРЬ ПО РАЗДЕЛАМ ════════
@@ -63676,7 +63712,8 @@ function enterGame(){if(entered){showScreen("screen-game");normalizeWeaponState(
  G.weather=rollWeather();Weather.set(G.weather);
  const c=cellContent(G.x,G.y);
  if(settings.effects&&openSky()&&!G.place)Play.start("amb0",(AMB[c.terrain[0]]||["wind"])[0],{loop:true});
- Music.start(c.terrain[0]);safeFn(()=>bankUpdateAmbient());lastEmp=c.empire.name;lastArrive=c;
+ /* Сохранение могло застать героя в подземелье: тема — по месту, а не по местности наверху. */
+ Music.start(locationMusicKey());safeFn(()=>bankUpdateAmbient());lastEmp=c.empire.name;lastArrive=c;
  narrate(`Вы вошли в мир. ${c.terrain[1]}, ${c.empire.name}. Погода: ${G.weather}. ${isDesktopApp()?"Управление: стрелки — шаг, Shift со стрелкой — бег, E — действие, I — инвентарь, Tab — карта, M или Esc — меню, Shift+F1 — все клавиши.":"Управление: свайп — шаг, свайп и удержание — бег, свайп тремя пальцами вверх — меню действий, касание двумя пальцами — собрать ресурс."}`);
  /* Первый раз в жизни: игра сама говорит, что есть обучение. Не навязывает —
     просто называет пункт, чтобы новичок не искал его вслепую. */
