@@ -58,7 +58,7 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
    if(t.id==="ice"){лёд++;if(climateAt(x,y).тепло>=CLIM.Т_ЛЁД)лёдТёплый++;}
    острова[islandTypeByHash(x,y).id]=1;}
   const a=seaTypeAt(777,888).id,b=seaTypeAt(777,888).id;
-  return {свМ:SVODY_ON?SVD.seaTypes.length:0,свО:SVODY_ON?SVD.isles.length:0,змМ:ZMR.seaTypes.length+SPL.seaTypes.length,змО:ZMR.isles.length+SPL.isles.length,морей:SEA_TYPES.length,видовМорей:Object.keys(моря).length,плохиеМоря,лёд,лёдТёплый,постоянно:a===b,
+  return {свМ:SVODY_ON?SVD.seaTypes.length:0,свО:SVODY_ON?SVD.isles.length:0,змМ:ZMR.seaTypes.length+SPL.seaTypes.length+(typeof PRK!=="undefined"?PRK.seaTypes.length:0),змО:ZMR.isles.length+SPL.isles.length+(typeof PRK!=="undefined"?PRK.isles.length:0),морей:SEA_TYPES.length,видовМорей:Object.keys(моря).length,плохиеМоря,лёд,лёдТёплый,постоянно:a===b,
    островов:ISLAND_TYPES.length,видовОстровов:Object.keys(острова).length,плохиеОстрова,имя:islandName(500,500),имяТо:islandName(500,500)===islandName(501,502),
    мест:DIVE_SITES.length,плохиеМеста};});
  check('1. восемь родов моря и одиннадцать родов островов (и свои у Заморья, в его углу) — все с голосом из банка, вне Заморья все встречаются, лёд только в стуже, род постоянен, у островов имена',
@@ -184,7 +184,7 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
 
  /* ── 7. счёт, текст, сохранение ── */
  const итог=await page.evaluate(()=>{
-  const r={};r.свМ=(SVODY_ON?SVD.seaTypes.length:0)+ZMR.seaTypes.length+SPL.seaTypes.length;r.свО=(SVODY_ON?SVD.isles.length:0)+ZMR.isles.length+SPL.isles.length;r.dives=deeds("dives");r.виды=Object.keys(G.dives||{}).length;
+  const r={};r.свМ=(SVODY_ON?SVD.seaTypes.length:0)+ZMR.seaTypes.length+SPL.seaTypes.length+(typeof PRK!=="undefined"?PRK.seaTypes.length:0);r.свО=(SVODY_ON?SVD.isles.length:0)+ZMR.isles.length+SPL.isles.length+(typeof PRK!=="undefined"?PRK.isles.length:0);r.dives=deeds("dives");r.виды=Object.keys(G.dives||{}).length;
   r.текст=seasText();saveGame(true);const raw=localStorage.getItem(SAVE_KEY)||"";
   r.сохр=/"seasSeen"/.test(raw)&&/"isles"/.test(raw)&&/"dives"/.test(raw)&&/"islesLanded"/.test(raw);
   return r;});
