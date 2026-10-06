@@ -219,8 +219,8 @@ def main(name, page_url, root):
                         print(f"   js {src}: {e}", flush=True)
                         continue
                     js = js.decode("utf-8", "replace")
-                    for m in list(re.finditer(r'download_btn|GameDownload|source:"game_download"|after_download', js))[:10]:
-                        print(f"   JS {src.split('/')[-1][:30]}: {js[max(0, m.start()-700):m.start()+700]}", flush=True)
+                    for m in list(re.finditer(r'GameDownload=|\.GameDownload\b(?!\()|"game_download"|game_download:', js))[:8]:
+                        print(f"   JS {src.split('/')[-1][:30]} @{m.start()}: {js[max(0, m.start()-300):m.start()+2500]}", flush=True)
         elif not items:
             print(f"!! нет страницы загрузок: {info}", flush=True)
             return 1
