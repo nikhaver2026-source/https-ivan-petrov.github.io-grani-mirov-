@@ -185,7 +185,10 @@ def main(name, page_url, root):
             info = {"errors": [str(e)]}
         durl = info.get("url")
         if durl:
-            key = durl.rstrip("/").split("/")[-1].split("?")[0]
+            # Ключ — base64 с подписью: «+» в строке запроса стал бы пробелом,
+            # поэтому ключ раскодируется и кодируется заново целиком.
+            key = urllib.parse.quote(urllib.parse.unquote(durl.rstrip("/").split("/")[-1].split("?")[0]), safe="")
+            print(f"   страница загрузок: {durl[:160]}", flush=True)
             _, _, raw = fetch(op, durl)
             dpage = raw.decode("utf-8", "replace")
             token = csrf(dpage) or token
