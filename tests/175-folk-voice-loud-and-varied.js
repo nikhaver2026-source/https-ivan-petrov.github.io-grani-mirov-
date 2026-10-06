@@ -170,7 +170,7 @@ const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(e!==undefined?' :
   Bank.play=(role,o)=>{r.звуки.push({role,gain:(o||{}).gain});return оP(role,o);};
   beacon=(id,pan,dist,k)=>{r.маяки.push({id,k:k===undefined?1:k});return оB(id,pan,dist,k);};
   Speech.say=(t,o)=>{r.речь.push(String(t));return оS(t,o);};
-  Spatial.at=(p,dx,dy,o)=>{if(/^voice\//.test(p))r.голос.push({p,voice:!!(o&&o.voice)});return оA(p,dx,dy,o);};
+  Spatial.at=(p,dx,dy,o)=>{if(/^voice(_npc|_npc_pack)?\//.test(p))r.голос.push({p,voice:!!(o&&o.voice)});return оA(p,dx,dy,o);};
   try{
    G.place={kind:"dungeon",depth:3,bx:300,by:300,x:5,y:5,name:"Проверка",levels:null};
    Folk.когда=0;Folk.было.clear();

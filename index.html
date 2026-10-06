@@ -18502,11 +18502,14 @@ const Drips={timer:null,spots:[],key:"",
    const n=this.files().length||1;
    /* Отрывки идут подряд от общего начала: у трёх мест они всегда разные. */
    const f0=Math.floor(hashName(p.bx,p.by+p.depth,5106)*n);
+   /* (10.0) Ярусы стали шире: места капели берутся в слышимости от того
+      места, где герой вошёл на ярус, иначе на широком ярусе их не слышно. */
+   const R=Math.max(3,MAXCELL-3),x0=Math.max(1,(p.x|0)-R),x1=Math.min(lvl.w-2,(p.x|0)+R),y0=Math.max(1,(p.y|0)-R),y1=Math.min(lvl.h-2,(p.y|0)+R);
    for(let i=0;i<3;i++){
     let pt=null;
     for(let t=0;t<60&&!pt;t++){
-     const x=1+Math.floor(hashName(p.bx*7+i*31+t,p.by*13+p.depth,5101)*(lvl.w-2));
-     const y=1+Math.floor(hashName(p.bx*11+t,p.by*5+i*17+p.depth,5102)*(lvl.h-2));
+     const x=x0+Math.floor(hashName(p.bx*7+i*31+t,p.by*13+p.depth,5101)*(x1-x0+1));
+     const y=y0+Math.floor(hashName(p.bx*11+t,p.by*5+i*17+p.depth,5102)*(y1-y0+1));
      if(tileAt(lvl,x,y)===".")pt={x,y};}
     if(!pt)continue;
     const h=hashName(pt.x+i,pt.y,5103);

@@ -305,6 +305,8 @@ const NEW_DIRS=["arte","deep","foe","cast","hero","wild","trade","score",
      HERO_VOICE_LINES и образец каждого голоса (папка voice_hero). */
   Object.entries(HERO_VOICE_LINES).forEach(([id,ходы])=>ходы.forEach(х=>out.push(HERO_VOICE_DIR+"hero_"+х+"_"+id+G+".flac")));
   HERO_VOICES["м"].concat(HERO_VOICES["ж"]).forEach(v=>out.push(HERO_VOICE_DIR+"obrazec_"+v.id+G+".flac"));
+  /* (10.0) Боевые фразы героя по описи HERO_FIGHT. */
+  Object.entries(HERO_FIGHT).forEach(([id,ключи])=>String(ключи).split(" ").filter(Boolean).forEach(k=>out.push(HERO_VOICE_DIR+"hero_f_"+k+"_"+id+G+".flac")));
   return out;});
  const опись=(()=>{
   const корень=path.join(__dirname,"..");

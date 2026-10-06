@@ -70,8 +70,10 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   const r={};
   /* Зверь: герой грозит сам. */
   const wolf=Object.assign({},find("wolf"),{hp:100});G.inCombat=true;G.combat={m:wolf,hp:wolf.hp,key:"0,0",alt:0};
-  SAID.length=0;Перепалка.было=0;for(let i=0;i<6&&!SAID.some(t=>/^Вы: «/.test(t));i++){Перепалка.было=0;Перепалка.начало(wolf);}
-  r.зверь=SAID.find(t=>/^Вы: «/.test(t))||"";
+  /* (10.0) Записанная фраза героя звучит записью, а не голосом игры: её строка — в Перепалка.last. */
+  const словоГероя=()=>SAID.find(t=>/^Вы: «/.test(t))||(Перепалка.last&&Перепалка.last.кто==="герой"&&Перепалка.last.запись?`Вы: «${Перепалка.last.t}»`:"");
+  SAID.length=0;Перепалка.было=0;Перепалка.last=null;for(let i=0;i<6&&!словоГероя();i++){Перепалка.было=0;Перепалка.начало(wolf);}
+  r.зверь=словоГероя();
   /* Край твари — подсказка героя. */
   G.combat.hp=Math.floor(wolf.hp*0.2);SAID.length=0;Перепалка.удар(wolf);await w(400);
   r.крайТвари=Перепалка.last&&Перепалка.last.миг;
@@ -83,9 +85,10 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   SAID.length=0;Перепалка.было=0;
   const was=Math.random;Math.random=()=>0.01;
   Перепалка.сказать("reply",b,{ответ:true,шанс:1});
+  const герой=Перепалка.last;
   Math.random=was;
   await w(5500);
-  r.перепалка=SAID.filter(t=>/^Вы: «|^Разбойник[^:]*: «|: «/.test(t)).slice(0,4);
+  r.перепалка=(герой&&герой.запись?[`Вы: «${герой.t}»`]:[]).concat(SAID.filter(t=>/^Вы: «|^Разбойник[^:]*: «|: «/.test(t))).slice(0,4);
   r.вразОтвет=Перепалка.last&&Перепалка.last.кто;
   /* Героиня: в женском роде. */
   G.hero.пол="ж";
