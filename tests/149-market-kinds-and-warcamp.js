@@ -106,8 +106,12 @@ const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(e!==undefined?' :
   const idx=empireIndexAt(G.x,G.y);
   const было=G.place;
   const ряд={};
+  /* «Город» — без постройки, стоя в городе: стартовая клетка героя может
+     оказаться и в поле, тогда торг там деревенский. */
+  const гx=G.x,гy=G.y;const ц=safeFn(()=>(Cities.empireAll()||[]).find(c=>isCityAt(c.x,c.y)),null);
   Object.keys(МЕСТА).forEach(k=>{G.place=МЕСТА[k];
-   ряд[k]=marketPrice("руда",idx,G.day);});
+   if(k==="city"&&ц){G.x=ц.x;G.y=ц.y;}
+   ряд[k]=marketPrice("дерево",idx,G.day);G.x=гx;G.y=гy;});
   /* Дорогое здесь — дороже, дешёвое здесь — дешевле, и это записанные товары. */
   const проба=[];
   MARKET_KINDS.forEach(m=>{
