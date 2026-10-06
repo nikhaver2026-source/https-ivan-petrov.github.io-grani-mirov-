@@ -16,7 +16,6 @@ import sys
 import urllib.parse
 import urllib.request
 
-JS_DONE = False
 UA = ("Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) "
       "Chrome/124.0 Safari/537.36")
 
@@ -176,7 +175,7 @@ def main(name, page_url, root):
     lic = re.search(r'itch\.io/game-assets/assets-([a-z0-9-]+)', page)
     print(f"LICENSE {name} {game} {lic.group(1) if lic else '?'}", flush=True)
     token = csrf(page)
-    items, key, referer, template = uploads(page), None, game, None
+    items, key, referer = uploads(page), None, game
     # «Назови свою цену» (кнопка ведёт на /purchase) и страницы без кнопок:
     # ключ загрузки выдаёт download_url — как после «Нет, спасибо».
     if "/purchase" in page or not items:
@@ -186,41 +185,16 @@ def main(name, page_url, root):
             info = {"errors": [str(e)]}
         durl = info.get("url")
         if durl:
-            # Ключ — base64 с подписью: «+» в строке запроса стал бы пробелом,
-            # поэтому ключ раскодируется и кодируется заново целиком.
-            key = urllib.parse.quote(urllib.parse.unquote(durl.rstrip("/").split("/")[-1].split("?")[0]), safe="")
-            print(f"   страница загрузок: {durl[:160]}", flush=True)
+            # Подпись в адресе страницы — пропуск на саму страницу: файлы
+            # потом выдаются по сессии (куки), без ключа, как у кнопки
+            # «Download» (I.GameDownload.download_upload в коде itch.io).
+            key = "session"
             _, _, raw = fetch(op, durl)
             dpage = raw.decode("utf-8", "replace")
             token = csrf(dpage) or token
             items = uploads(dpage) or items
             referer = durl
-            print(f"   ключ загрузки получен ({len(key)} знаков)", flush=True)
-            # Страница загрузок сама называет адрес выдачи файла (шаблон с
-            # {upload_id}): берём его, а страницу кладём рядом для разбора.
-            with open(os.path.join(folder, "_download_page.html"), "w", encoding="utf-8") as f:
-                f.write(dpage)
-            for m in list(re.finditer(r'"([^"]*\\?/file\\?/[^"]*)"', dpage))[:6]:
-                t = m.group(1).replace("\\/", "/")
-                print(f"   шаблон на странице: {t[:200]}", flush=True)
-                if "upload_id" in t and template is None:
-                    template = t
-            for m in list(re.finditer(r'.{0,80}(?:download_key|"key"|key=).{0,120}', dpage))[:6]:
-                print(f"   ключ на странице: {m.group(0)[:220]}", flush=True)
-            # Как кнопка страницы просит файл — видно в коде itch.io: куски
-            # вокруг «/file/» идут в журнал (один раз за прогон).
-            global JS_DONE
-            if not JS_DONE:
-                JS_DONE = True
-                for src in re.findall(r'<script[^>]+src="(https://static\.itch\.io/[^"]+)"', dpage):
-                    try:
-                        _, _, js = fetch(op, src)
-                    except Exception as e:  # noqa: BLE001
-                        print(f"   js {src}: {e}", flush=True)
-                        continue
-                    js = js.decode("utf-8", "replace")
-                    for m in list(re.finditer(r'GameDownload=|\.GameDownload\b(?!\()|"game_download"|game_download:', js))[:8]:
-                        print(f"   JS {src.split('/')[-1][:30]} @{m.start()}: {js[max(0, m.start()-300):m.start()+2500]}", flush=True)
+            print("   страница загрузок открыта", flush=True)
         elif not items:
             print(f"!! нет страницы загрузок: {info}", flush=True)
             return 1
@@ -228,12 +202,8 @@ def main(name, page_url, root):
             print(f"   download_url не ответил ({info}); пробую прямые кнопки", flush=True)
     print(f"   файлов в наборе: {len(items)}", flush=True)
     for uid, nm in items:
-        if template:
-            api = re.sub(r"\{upload_id\}|%7Bupload_id%7D|:upload_id", uid, template)
-            if api.startswith("/"):
-                api = game.split("/", 3)[0] + "//" + game.split("/", 3)[2] + api
-        elif key:
-            api = f"{game}/file/{uid}?source=game_download&key={key}"
+        if key:
+            api = f"{game}/file/{uid}?source=game_download&after_download_lightbox=1&as_props=1"
         else:
             api = f"{game}/file/{uid}?source=view_game&as_props=1&after_download_lightbox=true"
         try:
