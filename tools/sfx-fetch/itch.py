@@ -16,6 +16,7 @@ import sys
 import urllib.parse
 import urllib.request
 
+JS_DONE = False
 UA = ("Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) "
       "Chrome/124.0 Safari/537.36")
 
@@ -206,6 +207,20 @@ def main(name, page_url, root):
                     template = t
             for m in list(re.finditer(r'.{0,80}(?:download_key|"key"|key=).{0,120}', dpage))[:6]:
                 print(f"   ключ на странице: {m.group(0)[:220]}", flush=True)
+            # Как кнопка страницы просит файл — видно в коде itch.io: куски
+            # вокруг «/file/» идут в журнал (один раз за прогон).
+            global JS_DONE
+            if not JS_DONE:
+                JS_DONE = True
+                for src in re.findall(r'<script[^>]+src="(https://static\.itch\.io/[^"]+)"', dpage):
+                    try:
+                        _, _, js = fetch(op, src)
+                    except Exception as e:  # noqa: BLE001
+                        print(f"   js {src}: {e}", flush=True)
+                        continue
+                    js = js.decode("utf-8", "replace")
+                    for m in list(re.finditer(r'/file/', js))[:8]:
+                        print(f"   JS {src.split('/')[-1][:30]}: {js[max(0, m.start()-500):m.start()+400]}", flush=True)
         elif not items:
             print(f"!! нет страницы загрузок: {info}", flush=True)
             return 1
