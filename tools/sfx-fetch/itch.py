@@ -175,21 +175,28 @@ def main(name, page_url, root):
     lic = re.search(r'itch\.io/game-assets/assets-([a-z0-9-]+)', page)
     print(f"LICENSE {name} {game} {lic.group(1) if lic else '?'}", flush=True)
     token = csrf(page)
-    items, key = uploads(page), None
-    if not items:
-        info = post_json(op, game + "/download_url", token, game)
+    items, key, referer = uploads(page), None, game
+    # «Назови свою цену» (кнопка ведёт на /purchase) и страницы без кнопок:
+    # ключ загрузки выдаёт download_url — как после «Нет, спасибо».
+    if "/purchase" in page or not items:
+        try:
+            info = post_json(op, game + "/download_url", token, game)
+        except Exception as e:  # noqa: BLE001
+            info = {"errors": [str(e)]}
         durl = info.get("url")
-        if not durl:
+        if durl:
+            key = durl.rstrip("/").split("/")[-1].split("?")[0]
+            _, _, raw = fetch(op, durl)
+            dpage = raw.decode("utf-8", "replace")
+            token = csrf(dpage) or token
+            items = uploads(dpage) or items
+            referer = durl
+            print(f"   ключ загрузки получен ({len(key)} знаков)", flush=True)
+        elif not items:
             print(f"!! нет страницы загрузок: {info}", flush=True)
             return 1
-        key = durl.rstrip("/").split("/")[-1]
-        _, _, raw = fetch(op, durl)
-        dpage = raw.decode("utf-8", "replace")
-        token = csrf(dpage) or token
-        items = uploads(dpage)
-        referer = durl
-    else:
-        referer = game
+        else:
+            print(f"   download_url не ответил ({info}); пробую прямые кнопки", flush=True)
     print(f"   файлов в наборе: {len(items)}", flush=True)
     for uid, nm in items:
         if key:
