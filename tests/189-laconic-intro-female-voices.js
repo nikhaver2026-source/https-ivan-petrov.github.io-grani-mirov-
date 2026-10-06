@@ -136,7 +136,9 @@ const КОРОТКО=t=>typeof t==="string"&&t.length>0&&!/\d|\(|\)|Двойно
  const дважды=await page.evaluate(async()=>{
   const сказано=[];const s0=Speech.say.bind(Speech);Speech.say=(t,o)=>{сказано.push(String(t));return s0(t,o);};
   Intro.finish(true);CMD.intro();const первый=Intro.el;CMD.intro();const второй=Intro.el;
-  await new Promise(r=>setTimeout(r,1200));
+  /* Запись заставки большая (320 кбит/с): под нагрузкой она начинает звучать
+     и через две-три секунды — ждём её до четырёх, а не ровно 1,2 с. */
+  for(let i=0;i<40&&!(Intro.playing&&Intro.el===первый);i++)await new Promise(r=>setTimeout(r,100));
   const r={один:!!первый&&первый===второй,звучит:Intro.playing&&Intro.el===первый,сказано:сказано.slice()};
   Speech.say=s0;Intro.finish(true);return r;});
  check('5б. повторная просьба, пока заставка грузится, не запускает вторую поверх первой',

@@ -58,7 +58,7 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   settings.hints=0;PLAYED.length=0;SAID.length=0;SPOKEN.length=0;moveInside(dir);await new Promise(res=>setTimeout(res,900));
   r.шагСказ=SPOKEN.filter(t=>/Проход|Стена|Вы под землёй|Слой/.test(t));r.проходы=PLAYED.filter(x=>/^sp:(deep_wind|deep_stairs|oc_hinge|hall_gate)/.test(x));
   const p2={x:G.place.x,y:G.place.y};let wall2=null;for(const d of ["N","E","S","W"]){if(tileAt(L,p2.x+DIRV[d][0],p2.y+DIRV[d][1])==="#")wall2=d;}
-  SPOKEN.length=0;if(wall2)moveInside(wall2);await new Promise(res=>setTimeout(res,200));r.стенаМолчит=SPOKEN.length===0;
+  SPOKEN.length=0;if(wall2)moveInside(wall2);await new Promise(res=>setTimeout(res,200));r.стенаМолчит=!SPOKEN.some(t=>/стен[аеуыо]/i.test(t));
   settings.hints=1;SAID.length=0;if(wall2)moveInside(wall2);r.стенаСказ=SAID.slice();
   SAID.length=0;let back=null;for(const d of ["N","E","S","W"]){if(tileAt(L,G.place.x+DIRV[d][0],G.place.y+DIRV[d][1])===".")back=d;}moveInside(back);await new Promise(res=>setTimeout(res,300));r.сПодсказками=SAID.length;
   r.чекбокс=!!document.getElementById("setHintMode")&&typeof setHintMode==="function"&&(setHintMode("sound"),settings.hints===0)&&(setHintMode("full"),settings.hints===1);

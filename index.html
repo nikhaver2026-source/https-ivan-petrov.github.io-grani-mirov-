@@ -3102,11 +3102,16 @@ const AudioLife={
   safeFn(()=>Speech.hush());
   safeFn(()=>{if(AE.ctx&&AE.ctx.state==="running"&&AE.ctx.suspend)AE.ctx.suspend();});
   return true;},
+ /* (11.0) Возврат поднимает движок и из «interrupted» (звонок на iPhone
+    отнимает звук, не сворачивая игру, — затишья тогда не было, а движок
+    молчит), заводит петли, остановленные системой, и будит синтезатор,
+    оставленный на паузе. */
  wake(){
-  if(!this.hushed)return false;
+  if(!this.hushed){safeFn(()=>Звук.поднять("возврат"));safeFn(()=>Звук.петли());safeFn(()=>Речь.проснуться());return false;}
   this.hushed=false;
-  safeFn(()=>{if(AE.ctx&&AE.ctx.state==="suspended"&&AE.ctx.resume)AE.ctx.resume();});
+  safeFn(()=>Звук.поднять("возврат"));
   safeFn(()=>Bank.wake());
+  safeFn(()=>Речь.проснуться());
   return true;},
  bind(){
   if(this.bound)return;this.bound=true;
@@ -3142,7 +3147,7 @@ const Плееры={
   if(!this.вкл||typeof Audio!=="function")return 0;
   let n=0;
   while(this.запас.length<this.N){
-   let a;try{a=new Audio();a.src=this.тишина;const pr=a.play();if(pr&&pr.catch)pr.catch(()=>{});}catch(_){break;}
+   let a;try{a=new Audio();a.src=this.тишина;Звук.играть(a,"запас",{тихо:true});}catch(_){break;}
    this.запас.push(a);n++;}
   return n;},
  /* Плеер для записи: открытый из запаса или новый. */
@@ -3153,6 +3158,401 @@ const Плееры={
    a.preservesPitch=true;a.preload="auto";a.src=url;}catch(_){}
   return a;}};
 safeFn(()=>{Плееры.вкл=Плееры.iOS();});
+/* ════════ ЕДИНЫЙ ОБРАБОТЧИК ЗВУКА (11.0) ════════
+   Записи игра запускала из двенадцати мест, и каждое по-своему решало, что
+   делать, если браузер не дал звучать, — чаще всего ничего: обещание play()
+   гасилось пустым catch, и звук пропадал молча. Так терялись фон места до
+   первого касания, шаги и фон после звонка на iPhone, голос жителя, чей
+   плеер отказал. Теперь всякая запись запускается через Звук.играть, а
+   движок Web Audio держит в рабочем состоянии Звук.поднять — одинаково на
+   Android, iPhone, компьютере и в браузере:
+   • отказ браузера (NotAllowedError: звук ещё не открыт касанием) звук не
+     теряет — петля фона и только что поданная запись ждут ближайшего
+     касания и звучат с ним; устаревшая (шаг, щелчок) невпопад не звучит;
+   • обрыв play() паузой или сменой записи (AbortError) — не сбой;
+   • запись, которую не удалось загрузить или нечем играть, — в журнал с
+     именем файла;
+   • движок поднимается не только из «suspended», но и из «interrupted» —
+     так iPhone помечает звук, отнятый звонком, Siri или будильником: на
+     возврате в игру, на касании, при смене наушников и по сигналу самого
+     движка; свёрнутая игра молчит, как и прежде (AudioLife);
+   • петли фона и музыки, остановленные системой, а не игрой, заводятся
+     снова;
+   • слушатель касаний у обработчика постоянный: первое же касание после
+     звонка или заевшего синтезатора поднимает движок, заново открывает
+     закрывшееся и доигрывает ждущее.
+   Журнал последних сбоев и счёт — в отладочной панели (звук). */
+const Звук={
+ журнал:[],N:60,ждут:[],СРОК:1000,
+ счёт:{всего:0,ок:0,отказ:0,повтор:0,сбой:0,подъём:0},
+ /* Строка журнала: когда, что звучало, что случилось, какой файл. */
+ записать(род,что,src){
+  try{
+   const s=String(src||"");
+   this.журнал.push({t:Date.now(),род:String(род||""),что:String(что||""),
+    файл:/^(data|blob):/.test(s)?"":s.split("?")[0].split("/").slice(-2).join("/").slice(0,90)});
+   if(this.журнал.length>this.N)this.журнал.splice(0,this.журнал.length-this.N);
+  }catch(_){}},
+ /* ── ЕДИНЫЙ ЗАПУСК ЗАПИСИ ──
+    el — плеер; род — что звучит («петля», «запись», «мир», «маяк», «шаг»,
+    «голос», «речь», «щелчок», «заставка», «запас»). Настройки о:
+     тихо    — пустая запись, которой открывают плеер: отказ до касания
+               ожидаем и в журнал не идёт;
+     повтор  — false: не ждать касания (у речи и заставки свой запасной
+               путь, а реплика жителя после касания прозвучала бы невпопад);
+     срок    — сколько мс запись уместна, чтобы доиграть её по касанию
+               (петля уместна всегда);
+     сторож  — мс: запись так и не зазвучала — наОтказ(el,"сторож");
+     наОтказ — что делать с записью, которая уже не зазвучит.
+    Возвращает обещание самого play(): вызывающий по-прежнему решает свою
+    судьбу через then/catch, а синхронная ошибка пробрасывается ему же. */
+ играть(el,род,о){
+  о=о||{};
+  if(!el)return undefined;
+  this.счёт.всего++;
+  el.__род=род;el.__отказ=false;
+  if(!о.тихо&&!el.__звукСлух){el.__звукСлух=true;
+   try{el.addEventListener("error",()=>{
+    if(el.__stopped||!el.error)return;
+    this.счёт.сбой++;
+    this.записать(el.__род,"не загрузилась"+({1:" (прервано)",2:" (сеть)",3:" (не раскодировать)",4:" (формат не поддерживается)"}[el.error.code]||""),el.currentSrc||el.src);});}catch(_){}}
+  let pr;
+  try{pr=el.play();}
+  catch(e){
+   this.счёт.сбой++;el.__отказ=true;
+   if(!о.тихо)this.записать(род,"не запустилась: "+((e&&e.name)||"ошибка"),el.src);
+   throw e;}
+  const t0=Date.now();
+  const отказ=почему=>{if(typeof о.наОтказ==="function")safeFn(()=>о.наОтказ(el,почему));};
+  if(о.сторож>0){
+   let пошло=false,продлён=false;const есть=()=>{пошло=true;};
+   try{el.addEventListener("playing",есть,{once:true});}catch(_){}
+   const смотреть=()=>{
+    if(пошло||el.__stopped||el.__отказ||el.ended||(!el.paused&&el.currentTime>0)){try{el.removeEventListener("playing",есть);}catch(_){}return;}
+    /* Запись ещё качается по сети (медленный телефонный интернет) — второй
+       срок, один раз; плеер, который завис молча, второго срока не ждёт. */
+    if(!продлён&&el.networkState===2){продлён=true;setTimeout(смотреть,о.сторож);return;}
+    try{el.removeEventListener("playing",есть);}catch(_){}
+    this.счёт.сбой++;
+    this.записать(род,"не зазвучала за "+Math.round((продлён?2:1)*о.сторож/100)/10+" с",el.currentSrc||el.src);
+    отказ("сторож");};
+   setTimeout(смотреть,о.сторож);}
+  if(pr&&typeof pr.then==="function"){
+   pr.then(()=>{this.счёт.ок++;},e=>{
+    const имя=(e&&e.name)||"";
+    if(имя==="AbortError"||el.__stopped||о.тихо)return;
+    el.__отказ=true;
+    if(имя==="NotAllowedError"){
+     this.счёт.отказ++;
+     /* До первого касания отказ — норма браузера, а не сбой: его только
+        считаем, чтобы журнал хранил настоящие беды (после касания отказ
+        значит, что плеер не открыт — например, иссяк запас на iPhone). */
+     const важно=safeFn(()=>!!Speech.primed,true);
+     if(о.повтор!==false){if(важно)this.записать(род,"ждёт касания",el.src);this._ждать(el,t0,о.срок);return;}
+     if(важно)this.записать(род,"не пустили без касания",el.src);}
+    else{this.счёт.сбой++;el.__сбой=true;this.записать(род,имя||"отказ",el.src);}
+    отказ(имя||"отказ");});}
+  else this.счёт.ок++;
+  return pr;},
+ _ждать(el,t0,срок){
+  if(this.ждут.some(з=>з.el===el))return;
+  this.ждут.push({el,t0,срок:Number(срок)>0?Number(срок):this.СРОК,раз:0});
+  if(this.ждут.length>32)this.ждут.splice(0,this.ждут.length-32);},
+ /* Петля банка, которой принадлежит плеер, — или null. */
+ _петля(el){
+  let r=null;
+  safeFn(()=>Bank.loops.forEach(c=>{if(c&&(c.el===el||c.el2===el))r=c;}));
+  return r;},
+ /* ── ДОИГРАТЬ ЖДУЩЕЕ ──
+    На касании (ключ к звуку уже дан) и когда движок снова звучит. Петля
+    звучит, если игра её не остановила. Разовая запись — если с её запуска
+    прошло не больше срока, и не больше двух самых свежих: первое касание
+    после загрузки застаёт с полдесятка отложенных звуков, и гром, волк и
+    монеты разом были бы шумом, а не вестью. Остановленное, доигравшее, уже
+    звучащее и трижды отказавшее не трогаем. */
+ доиграть(){
+  if(!this.ждут.length||safeFn(()=>AudioLife.hushed,false))return 0;
+  const now=Date.now(),список=this.ждут;this.ждут=[];
+  const годные=список.filter(з=>{
+   const el=з.el;
+   if(!el||el.__stopped||el.ended||!el.paused||!(el.currentSrc||el.src)||з.раз>=3)return false;
+   const п=this._петля(el);з.петля=!!п||!!el.loop;
+   return п?!п.paused:(el.loop||now-з.t0<=з.срок);});
+  const разовые=годные.filter(з=>!з.петля).sort((x,y)=>y.t0-x.t0).slice(0,2);
+  let n=0;
+  годные.filter(з=>з.петля||разовые.includes(з)).forEach(з=>{
+   const el=з.el;
+   з.раз++;n++;this.счёт.повтор++;
+   let pr;try{pr=el.play();}catch(_){return;}
+   if(pr&&typeof pr.then==="function")pr.then(()=>{this.счёт.ок++;el.__отказ=false;},e=>{
+    if(e&&e.name==="NotAllowedError"&&з.раз<3&&!this.ждут.includes(з))this.ждут.push(з);});
+   else this.счёт.ок++;});
+  return n;},
+ /* ── ДВИЖОК ЗВУЧИТ ──
+    Web Audio просыпается из «suspended» и «interrupted»; «closed» уже не
+    поднять. Свёрнутую игру не будим — она молчит намеренно (AudioLife), но
+    касание само говорит, что игра перед глазами. Из AE.ensure — то есть
+    на каждый звук — просьба одна на три секунды: resume() до первого
+    касания висит без ответа, и копить ждущие обещания незачем. */
+ поднять(причина,жест){
+  try{
+   const c=typeof AE!=="undefined"?AE.ctx:null;
+   if(!c||typeof c.resume!=="function")return false;
+   const st=c.state;
+   if(st==="running"||st==="closed")return false;
+   if(!жест&&typeof AudioLife!=="undefined"&&AudioLife.hushed)return false;
+   const now=Date.now();
+   if(причина==="ensure"&&this._подъём&&now-this._подъём<3000)return false;
+   this._подъём=now;this.счёт.подъём++;
+   const p=c.resume();
+   const вышло=()=>{this._подъём=0;
+    if(c.state!=="running")return;
+    if(st==="interrupted"||(причина!=="ensure"&&причина!=="касание"))
+     this.записать("движок","снова звучит после «"+(st==="interrupted"?"прерван":"усыплён")+"» ("+причина+")");
+    this.петли();this.доиграть();};
+   if(p&&typeof p.then==="function")p.then(вышло,()=>{this._подъём=0;});
+   return true;
+  }catch(_){return false;}},
+ /* ── ПЕТЛИ, ОСТАНОВЛЕННЫЕ НЕ ИГРОЙ ──
+    Звонок, будильник, чужой проигрыватель ставят записи на паузу сами; игра
+    этого не видела, и после звонка фон места молчал до перехода в другое
+    место. Петля, которую игра не останавливала, а она стоит, — заводится.
+    Запись, которая не загрузилась или упала не от запрета, не дёргаем. */
+ петли(){
+  if(safeFn(()=>AudioLife.hushed||document.hidden,false))return 0;
+  let n=0;
+  safeFn(()=>Bank.loops.forEach(c=>{
+   if(!c||c.paused)return;
+   [c.el,c.el2].forEach(e=>{
+    if(!e||e.__stopped||e.__сбой||e.error||e.ended||!e.paused||!(e.currentSrc||e.src))return;
+    n++;try{this.играть(e,"петля");}catch(_){}});}));
+  return n;},
+ /* ── КАСАНИЕ ОЖИВЛЯЕТ ЗВУК ──
+    Слушатель распорядителя речи снимается, как только всё открыто (кроме
+    iPhone). Этот — постоянный: касание поднимает движок, будит игру, если
+    затишье осталось от ухода, открывает заново закрывшиеся двери речи и
+    доигрывает ждущее. */
+ касание(e){
+  if(e){if(this._событие===e)return;this._событие=e;}
+  safeFn(()=>{if(AudioLife.hushed&&!document.hidden)AudioLife.wake();});
+  this.движок();
+  this.поднять("касание",true);
+  safeFn(()=>{if(!Плееры.вкл&&Speech.primed&&!Speech._открытоВсё())Speech.prime(e);});
+  this.доиграть();
+  const now=Date.now();
+  if(now-(this._петлиТ||0)>1000){this._петлиТ=now;this.петли();}},
+ /* Слушатель касаний вешается после слушателя распорядителя речи (boot,
+    сразу за Speech.init): в касании сначала открываются двери — движок,
+    синтезатор, общий плеер, запас, — а уже потом доигрывается ждущее. */
+ слушатьКасания(){
+  if(this._слушает)return;this._слушает=true;
+  const типы=["pointerdown","pointerup","touchend","click","mousedown","keydown"];
+  const слух=e=>{
+   try{if(typeof Speech!=="undefined"&&typeof Speech._ключ==="function"&&!Speech._ключ(e))return;}catch(_){}
+   try{this.касание(e);}catch(_){}};
+  safeFn(()=>типы.forEach(t=>window.addEventListener(t,слух,{capture:true,passive:true})));},
+ /* Слушатели — раз за жизнь страницы. */
+ следить(){
+  if(this._следит)return;this._следит=true;
+  /* Запасной путь, если boot до слушателя не дошёл. */
+  safeFn(()=>setTimeout(()=>this.слушатьКасания(),0));
+  /* Наушники вставили или вынули, подключили колонку: браузер может
+     усыпить движок и остановить записи. */
+  safeFn(()=>{const md=navigator.mediaDevices;
+   if(md&&typeof md.addEventListener==="function")md.addEventListener("devicechange",()=>{
+    this.записать("движок","смена устройства вывода");
+    setTimeout(()=>{this.поднять("устройство");this.петли();},300);});});
+  /* Сеанс звука iPhone (Audio Session API): прерван — звонок; снова
+     активен — поднять движок и петли. */
+  safeFn(()=>{const s=navigator.audioSession;
+   if(s&&typeof s.addEventListener==="function")s.addEventListener("statechange",()=>{
+    if(s.state==="interrupted"){this.записать("движок","сеанс звука прерван");return;}
+    this.поднять("сеанс");this.петли();});});
+  this.движок();},
+ /* Сигналы самого движка. Он заводится лениво (AE.ensure), поэтому слушатель
+    вешается при первом случае. */
+ движок(){
+  try{
+   const c=typeof AE!=="undefined"?AE.ctx:null;
+   if(!c||c.__звук||typeof c.addEventListener!=="function")return;
+   c.__звук=true;
+   c.addEventListener("statechange",()=>{
+    const st=c.state;
+    if(st==="running"){this.петли();this.доиграть();return;}
+    if(st==="interrupted"){this.записать("движок","прерван системой (звонок, будильник, Siri)");return;}
+    if(st==="closed"){this.записать("движок","закрыт");return;}
+    /* «suspended», а игра его не усыпляла (она усыпляет только свёрнутой):
+       так iPhone отдаёт звук после звонка — просим снова. */
+    if(st==="suspended"&&!safeFn(()=>AudioLife.hushed||document.hidden,true))
+     setTimeout(()=>this.поднять("сигнал"),250);});
+  }catch(_){}},
+ /* Для отладочной панели: состояние движка, счёт и последние сбои. */
+ кратко(){
+  const c=safeFn(()=>AE.ctx,null),с=this.счёт;
+  return `Движок звука: ${c?({running:"звучит",suspended:"усыплён",interrupted:"прерван",closed:"закрыт"}[c.state]||c.state):"ещё не заведён"}. Запусков ${с.всего}, ждали касания ${с.отказ}, доиграно ${с.повтор}, сбоев ${с.сбой}.`;},
+ /* Что устройство умеет играть: записи игры — FLAC, OGG и MP3, а старые
+    iPhone (до iOS 17) не играют OGG вовсе — отчёт скажет это сразу. */
+ умеет(){
+  if(this._умеет)return this._умеет;
+  const r={};
+  try{const a=document.createElement("audio");
+   [["flac","audio/flac"],["ogg",'audio/ogg; codecs="vorbis"'],["mp3","audio/mpeg"]].forEach(([k,t])=>{r[k]=String(a.canPlayType(t)||"")!=="";});}catch(_){}
+  return (this._умеет=r);},
+ отчёт(n){
+  const строки=[this.кратко()];
+  const c=safeFn(()=>AE.ctx,null);
+  if(c)строки.push(`Частота ${c.sampleRate} Гц${c.baseLatency?", задержка "+Math.round(c.baseLatency*1000)+" мс":""}${c.outputLatency?", вывод "+Math.round(c.outputLatency*1000)+" мс":""}.`);
+  const у=this.умеет();
+  строки.push(`Форматы: FLAC — ${у.flac?"да":"нет"}, OGG — ${у.ogg?"да":"нет"}, MP3 — ${у.mp3?"да":"нет"}.`);
+  if(Плееры.вкл)строки.push(`Открытых плееров в запасе: ${Плееры.запас.length} из ${Плееры.N}.`);
+  if(this.ждут.length)строки.push(`Ждут касания: ${this.ждут.length}.`);
+  this.журнал.slice(-(n||8)).forEach(з=>строки.push(`${new Date(з.t).toTimeString().slice(0,8)} ${з.род}: ${з.что}${з.файл?" — "+з.файл:""}`));
+  return строки.join("\n");}};
+safeFn(()=>Звук.следить());
+/* ════════ ЕДИНЫЙ ОБРАБОТЧИК РЕЧИ (11.0) ════════
+   Речь в игре идёт тремя путями: голос игры (Speech — очередь, приоритеты,
+   запись Gemini, синтезатор устройства, eSpeak), голоса персонажей (Folk —
+   герой, жители, боги, твари, уличные реплики) и заставка (Intro). Каждый
+   путь знал о себе и лишь кое-что — о соседях. Жест «повторить или
+   прервать» спрашивал только голос игры: житель договаривал, а если голос
+   игры молчал, тот же жест вместо тишины повторял прошлую фразу поверх
+   жителя. Запись жителя, которую плеер не пустил, для очереди «звучала» до
+   девяти секунд, и всё это время голос игры молчал. Теперь над путями —
+   один обработчик:
+   • кто() и идёт() — кто говорит сейчас: игра, персонаж, фон, заставка;
+   • стоп() — тишина всей речи сразу: голос игры с его очередью, голоса
+     персонажей с их очередью, заставка; уличные реплики и слово твари —
+     фон мира, их жест не обрывает (так было решено в 4.6);
+   • тихоИлиПовтор() — жест и клавиша: говорит кто угодно — тишина;
+     тишина — повтор последнего;
+   • голос, который не зазвучал (плеер отказал или молчит три секунды),
+     снимается сразу: очередь голосов и голос игры идут дальше;
+   • синтезатор, трижды подряд не сказавший фразы, сбрасывается, а ближайшее
+     касание открывает его заново; синтезатор, оставленный системой на
+     паузе, на возврате в игру продолжает;
+   • журнал сбоев речи и отчёт — в отладочной панели (звук) и в слое TTS.
+   Speech и Folk остаются собой: обработчик их не переписывает, а собирает. */
+const Речь={
+ журнал:[],N:40,подряд:0,
+ счёт:{стоп:0,повтор:0,голосНет:0,сброс:0},
+ записать(путь,что,текст){
+  try{
+   this.журнал.push({t:Date.now(),путь:String(путь||""),что:String(что||""),текст:String(текст||"").slice(0,70)});
+   if(this.журнал.length>this.N)this.журнал.splice(0,this.журнал.length-this.N);
+  }catch(_){}},
+ /* Речь персонажей лежит в своих папках; оклик прохожего, гул толпы, клич
+    стражи (throng/, trade/, mg/) идут голосом, но это фон мира. Уличную
+    реплику и слово твари Folk помнит по файлу (фонПути). */
+ ПАПКИ:/\/(voice|voice_npc|voice_hero|voice_god|gvoice_npc|voice_npc_pack)\/|\/gvoice_pack\/npc\//,
+ _фон(el){
+  try{const s=String((el&&(el.currentSrc||el.src))||"");
+   if(!this.ПАПКИ.test(s))return true;
+   for(const f of Folk.фонПути)if(s.endsWith(f))return true;}catch(_){}
+  return false;},
+ /* Звучит ли сейчас речь персонажа — по самим плеерам, любой папки речи. */
+ собеседникЗвучит(){return this._голоса().some(g=>!g.el.paused&&!this._фон(g.el));},
+ /* Звучащие записи голосов — все: жители, герой, боги, твари, улица. */
+ _голоса(){
+  const r=[];
+  safeFn(()=>(Spatial.live||[]).forEach(x=>{
+   if(x&&x.voice&&!x.done&&x.el&&!x.el.ended&&!x.el.__stopped)r.push({el:x.el,стоп:()=>x.stop()});}));
+  safeFn(()=>(Bank.shots||[]).forEach(el=>{
+   if(el&&el.__voice&&!el.ended&&!el.__stopped)r.push({el,стоп:()=>{Bank.kill(el);Bank.shots=Bank.shots.filter(x=>x!==el);}});}));
+  return r;},
+ /* Кто говорит: «игра» — голос игры; «персонаж» — собеседник, герой, бог
+    (и тот, чья реплика ждёт очереди); «фон» — улица, слово твари;
+    «заставка». */
+ кто(){
+  const r=[];
+  if(safeFn(()=>Speech.isSpeaking(),false))r.push("игра");
+  const голоса=this._голоса().filter(g=>!g.el.paused);
+  if(safeFn(()=>Folk.звучитЛи()||Folk.очередь.length>0,false)||голоса.some(g=>!this._фон(g.el)))r.push("персонаж");
+  if(голоса.some(g=>this._фон(g.el)))r.push("фон");
+  if(safeFn(()=>!!Intro.playing,false))r.push("заставка");
+  return r;},
+ /* Идёт ли речь, которую игрок может оборвать (фон — только с всё=true). */
+ идёт(всё){const к=this.кто();return всё?к.length>0:к.some(x=>x!=="фон");},
+ /* ── ТИШИНА ВСЕЙ РЕЧИ ── */
+ стоп(){
+  const было=this.кто();
+  safeFn(()=>Intro.stop());
+  safeFn(()=>Speech.stop());
+  safeFn(()=>Folk.смолкнуть(true));
+  /* Голоса, которых Folk по папке не знает (боги, бой героя, пакет
+     голосов), — тоже; фон мира остаётся. */
+  this._голоса().forEach(g=>{if(!this._фон(g.el))safeFn(()=>g.стоп());});
+  safeFn(()=>{const t=Date.now();
+   Folk.звучитДо=Math.min(Folk.звучитДо,t);Folk.занятоДо=Math.min(Folk.занятоДо,t);Folk.геройДо=Math.min(Folk.геройДо,t);});
+  safeFn(()=>{if(VoiceDuck.идёт()){VoiceDuck.до=0;clearTimeout(VoiceDuck.т);
+   if(typeof AE!=="undefined"&&AE.ctx)AE.applyVolumes();else Bank.refresh();}});
+  this.счёт.стоп++;
+  return было;},
+ /* Жест и клавиша «повторить или прервать»: говорит кто угодно — тишина;
+    никто — повтор последнего сказанного. */
+ тихоИлиПовтор(){
+  if(this.идёт()){this.стоп();safeFn(()=>UI.nat("ui_hush",0.5));safeFn(()=>vib(15));return "тихо";}
+  this.счёт.повтор++;
+  safeFn(()=>Speech.repeatLast());
+  return "повтор";},
+ /* ── ГОЛОС, КОТОРЫЙ НЕ ЗАЗВУЧАЛ ──
+    Плеер отказал или запись молчит три секунды (Звук.играть, сторож): она
+    снимается, и если больше никто не говорит, время очереди голосов
+    сдвигается на «сейчас» — следующая реплика и голос игры не ждут
+    пустоты. */
+ голосНеЗазвучал(el,почему){
+  try{
+   if(!el||el.__stopped)return false;
+   let снят=false;
+   safeFn(()=>(Spatial.live||[]).slice().forEach(x=>{if(x&&x.el===el){x.stop();снят=true;}}));
+   if(!снят)safeFn(()=>{Bank.kill(el);Bank.shots=Bank.shots.filter(x=>x!==el);});
+   this.счёт.голосНет++;
+   this.записать("персонаж",почему==="сторож"?"запись молчала — снята":"плеер отказал ("+почему+") — запись снята",
+    String(el.currentSrc||el.src||"").split("/").pop());
+   safeFn(()=>{
+    if(Folk.звучитЛи()||this.собеседникЗвучит())return;
+    const t=Date.now();
+    Folk.звучитДо=Math.min(Folk.звучитДо,t);Folk.геройДо=Math.min(Folk.геройДо,t);
+    Folk._резерв();Folk._качать();});
+   safeFn(()=>Speech._pump());
+   return true;
+  }catch(_){return false;}},
+ /* ── ГОЛОС ИГРЫ НЕ СКАЗАЛ ФРАЗУ ──
+    Трижды подряд — синтезатор «заело» (так бывает с Android после
+    перегрузки и с iPhone после звонка): сбросить его, а ближайшее касание
+    откроет его заново (Звук.касание → Speech.prime). */
+ неСказано(m,почему){
+  const a=safeFn(()=>Speech._adapter(),null);
+  if(!a||safeFn(()=>AudioLife.hushed,false))return;
+  this.записать("игра",(почему||"не прозвучало")+" ("+a.name+")",m&&m.text);
+  if(++this.подряд>=3)this.сброс(a.name);},
+ сказано(){this.подряд=0;},
+ сброс(имя){
+  this.подряд=0;
+  /* Не чаще раза в минуту: там, где синтеза нет вовсе, частый сброс речь
+     не вернёт, а лишь будет дёргать движок. */
+  const now=Date.now();if(now-(this._сбросТ||0)<60000)return;
+  this._сбросТ=now;this.счёт.сброс++;
+  this.записать("игра","синтезатор сброшен ("+имя+")");
+  /* Сброс — через сам адаптер: он помнит миг отмены и следующую фразу
+     подаёт с паузой, которую требуют движки после cancel(). */
+  safeFn(()=>{const a=Speech._adapter();if(a&&a.name===имя&&typeof a.cancel==="function")a.cancel();});
+  safeFn(()=>{if(имя==="web"&&"speechSynthesis" in window&&speechSynthesis.paused)speechSynthesis.resume();});
+  /* Дверь синтезатора браузера откроет заново ближайшее касание. */
+  if(имя==="web")safeFn(()=>{Speech._открыто.речь=false;});},
+ /* Возврат в игру: синтезатор, оставленный системой на паузе, продолжает —
+    иначе новые фразы вставали бы в немую очередь. */
+ проснуться(){
+  safeFn(()=>{if("speechSynthesis" in window&&speechSynthesis.paused)speechSynthesis.resume();});},
+ /* Для отладочной панели. */
+ кратко(){
+  const к=this.кто(),a=safeFn(()=>Speech._adapter(),null),s=safeFn(()=>Speech.stats,null)||{};
+  const путь=a?({gemini:"запись Gemini",web:"синтезатор устройства",native:"голос устройства в приложении",espeak:"eSpeak"}[a.name]||a.name):"нет";
+  return `Речь: ${к.length?"говорит "+к.join(", "):"тишина"}; голос игры — ${путь}. Сказано ${s.spoken||0}, подано снова ${s.retried||0}, снято сторожем ${s.rescued||0}, немых записей ${s.gvMute||0}, голосов без звука ${this.счёт.голосНет}, сбросов синтезатора ${this.счёт.сброс}.`;},
+ отчёт(n){
+  const строки=[this.кратко()];
+  строки.push(`В очереди голоса игры ${safeFn(()=>Speech.queue.length,0)}, голосов персонажей ${safeFn(()=>Folk.очередь.length,0)}. Остановок игроком ${this.счёт.стоп}, повторов ${this.счёт.повтор}.`);
+  this.журнал.slice(-(n||8)).forEach(з=>строки.push(`${new Date(з.t).toTimeString().slice(0,8)} ${з.путь}: ${з.что}${з.текст?" — «"+з.текст+"»":""}`));
+  return строки.join("\n");}};
 
 /* ════════ РЕЧЬ (очередь фраз, нарезка, защита от обрыва в 15 секунд) ════════ */
 /* ════════ РАСПОРЯДИТЕЛЬ РЕЧИ ════════
@@ -3228,7 +3628,7 @@ const Intro={
   const пошла=()=>{if(this.el!==el)return;this.playing=true;
    /* Касание, которым заставку попросили, её не обрывает. */
    setTimeout(()=>{if(this.el===el)this.listen(true);},сам?0:700);};
-  let pr=null;try{pr=el.play();}catch(_){this.finish(true);return false;}
+  let pr=null;try{pr=Звук.играть(el,"заставка",{повтор:false});}catch(_){this.finish(true);return false;}
   if(pr&&pr.then)pr.then(пошла).catch(()=>{if(this.el===el)this.finish(true);});
   else пошла();
   return true;},
@@ -3492,7 +3892,7 @@ const Speech={voice:null,keepAlive:null,
    if(!о.плеер&&typeof Audio==="function"){
     const a=this._плеер||(this._плеер=new Audio());
     a.src=Плееры.тишина;a.volume=0;
-    const pr=a.play();
+    const pr=Звук.играть(a,"запас",{тихо:true});
     const есть=()=>{о.плеер=true;try{a.pause();a.volume=1;}catch(_){}};
     if(pr&&pr.then)pr.then(есть,()=>{});else есть();}
   }catch(_){}
@@ -3825,7 +4225,7 @@ const Speech={voice:null,keepAlive:null,
        if(a===self._плеер)self._черезОбщий=false;
        эл=null;self.stats&&(self.stats.gvMute=(self.stats.gvMute||0)+1);голосом(ч.t,i);},1100);
       a.addEventListener("playing",()=>clearTimeout(немой),{once:true});
-      let pr=null;try{pr=a.play();}catch(_){clearTimeout(немой);отказ(a);return;}
+      let pr=null;try{pr=Звук.играть(a,"речь",{повтор:false});}catch(_){clearTimeout(немой);отказ(a);return;}
       старт();
       if(pr&&pr.catch)pr.catch(()=>{if(мой===ток&&эл===a)отказ(a);});};
      /* Плеер не пустили — та же запись общим плеером; не вышло и так —
@@ -3922,7 +4322,7 @@ const Speech={voice:null,keepAlive:null,
     const конец=()=>{if(мой!==ток||эл!==a)return;стоп();идёт=false;if(o.onend)o.onend();};
     a.onended=конец;a.onerror=()=>{if(мой!==ток||эл!==a)return;стоп();идёт=false;if(o.onerror)o.onerror();};
     try{a.playbackRate=1;a.defaultPlaybackRate=1;a.volume=Math.max(0,Math.min(1,+o.volume||1));}catch(_){}
-    try{a.src=ссылка;const pr=a.play();if(o.onstart)o.onstart();if(pr&&pr.catch)pr.catch(()=>{if(мой===ток&&эл===a){стоп();идёт=false;if(запас)запас.speak(text,o);else if(o.onerror)o.onerror();}});}
+    try{a.src=ссылка;const pr=Звук.играть(a,"речь",{повтор:false});if(o.onstart)o.onstart();if(pr&&pr.catch)pr.catch(()=>{if(мой===ток&&эл===a){стоп();идёт=false;if(запас)запас.speak(text,o);else if(o.onerror)o.onerror();}});}
     catch(_){стоп();идёт=false;return запас?запас.speak(text,o):false;}
     return true;},
    cancel(){ток++;идёт=false;стоп();if(запас)запас.cancel();},
@@ -4143,7 +4543,7 @@ const Speech={voice:null,keepAlive:null,
      сообщает: хоть раз сообщил — значит умеет, и молчание о начале значит потерю. */
   const ещё=()=>{if(закрыт||повтор||начат||!a||(a.name!=="web"&&a.name!=="native")||!(this._startSeen&&this._startSeen[a.name]))return false;закрыт=true;this._stopWatch();
    if(gen!==this.gen||this.current!==m)return true;
-   this.stats.retried=(this.stats.retried||0)+1;
+   this.stats.retried=(this.stats.retried||0)+1;safeFn(()=>Речь.записать("игра","синтезатор потерял кусок — подан снова ("+a.name+")",m.parts[i]));
    try{a.cancel();}catch(_){}
    setTimeout(()=>{if(gen===this.gen&&this.current===m)this._part(m,i,true);},120);return true;};
   const синтез=a&&a.name!=="gemini";
@@ -4186,14 +4586,15 @@ const Speech={voice:null,keepAlive:null,
    if(!умолк&&прошло<=предел)return;
    /* Синтезатор молчит, а начала фразы не было — фраза потеряна: подать снова. */
    if(ещё&&ещё())return;
-   this.stats.rescued=(this.stats.rescued||0)+1;
+   this.stats.rescued=(this.stats.rescued||0)+1;safeFn(()=>Речь.записать("игра",(умолк?"синтезатор умолк без конца":"кусок звучал втрое дольше")+" — сторож снял ("+(a&&a.name)+")",text));
    if(!умолк)safeFn(()=>{a.cancel();if(a.name==="web"&&speechSynthesis.resume)speechSynthesis.resume();});
    дальше();},700);},
  _stopWatch(){if(this._wd){clearInterval(this._wd);this._wd=null;}},
  _finish(m,state,silent){
   m.state=state;
   if(this.current===m){this.current=null;this.speaking=false;this._stopKeepAlive();this._stopWatch();this._duck(false);}
-  if(state==="COMPLETED"){this.stats.spoken++;this.last=m;this.history.push(m);if(this.history.length>20)this.history.shift();}
+  if(state==="COMPLETED"){this.stats.spoken++;this.last=m;this.history.push(m);if(this.history.length>20)this.history.shift();safeFn(()=>Речь.сказано());}
+  else if(state==="FAILED")safeFn(()=>Речь.неСказано(m));
   if(m.onDone)setTimeout(()=>{try{m.onDone();}catch(e){}},10);
   if(!silent)this._pump();},
  /* ── управление игроком ── */
@@ -4362,8 +4763,11 @@ const SAMPLES={
 const sampleBufCache={};
 
 const AE={ctx:null,master:null,fx:null,musicBus:null,dry:null,convolver:null,cache:{},
- ensure(){if(this.ctx){if(this.ctx.state==="suspended"){try{this.ctx.resume();}catch(e){}}return this.ctx;}
+ /* (11.0) Уснувший или прерванный движок поднимает единый обработчик:
+    из «interrupted» тоже, но не в свёрнутой игре. */
+ ensure(){if(this.ctx){safeFn(()=>Звук.поднять("ensure"));return this.ctx;}
   const C=window.AudioContext||window.webkitAudioContext;if(!C)return null;this.ctx=new C();
+  safeFn(()=>Звук.движок());
   this.master=this.ctx.createGain();this.master.gain.value=0.9;this.master.connect(this.ctx.destination);
   this.fx=this.ctx.createGain();this.fx.connect(this.master);
   this.musicBus=this.ctx.createGain();this.musicBus.connect(this.master);
@@ -7258,7 +7662,7 @@ const GEST_ACTIONS=[
  {id:"interact",n:"взаимодействие",         о:"с выбранным объектом или тем, что под ногами", делать:()=>{if(safeFn(()=>activeLayer(),null)){safeFn(()=>closeTopUI());return true;}fieldInteract();return true;}},
  {id:"close",  n:"закрыть окно",            о:"снять верхнее окно; на поле — только подсказка", делать:()=>{handleTwoFingerSwipe("S");return true;}},
  {id:"near",   n:"что рядом",               о:"объекты поблизости со стороной и расстоянием; дальность от одного до шести шагов — в настройках", делать:()=>{nearSummary();return true;}},
- {id:"repeat", n:"повторить или прервать речь",о:"тишина — повтор последнего; идёт речь — обрыв", делать:()=>{if(Speech.isSpeaking()){Speech.stop();safeFn(()=>UI.nat("ui_hush",0.5));vib(15);}else Speech.repeatLast();return true;}},
+ {id:"repeat", n:"повторить или прервать речь",о:"тишина — повтор последнего; идёт речь — обрыв", делать:()=>{Речь.тихоИлиПовтор();return true;}},
  /* (9.5.2) Только здоровье — одним жестом, в бою и вне боя. */
  {id:"hp",     n:"только здоровье",         о:"сколько здоровья осталось — и в бою, и вне боя", делать:()=>{narrate(`Здоровье ${G.hp} из ${G.hpMax}.`,{interrupt:true,user:true});return true;}},
  {id:"journal",n:"журнал дел",              о:"открыть и закрыть тем же жестом",   делать:()=>{handleTwoFingerSwipe("E");return true;}},
@@ -7948,7 +8352,7 @@ function handleThreeFingerTap(двойное){if(!gameActive())return;
    остановить маяк (с 4.1; прежняя настройка, менявшая их местами, убрана). */
 function handleFourFingerSwipe(dir){
  /* Повторить или прервать: идёт речь — оборвать, тишина — повторить последнее. */
- if(dir==="S"){if(Speech.isSpeaking()){Speech.stop();safeFn(()=>UI.nat("ui_hush",0.5));vib(15);}else Speech.repeatLast();return;}
+ if(dir==="S"){Речь.тихоИлиПовтор();return;}
  if(dir==="N"){beaconOff();return;}
  if(dir==="W"){Speech.status();return;}
  if(dir==="E"){const n=Speech.flush();Speech.request(n?`Очередь речи очищена: ${n}.`:"Очередь речи пуста.",{key:"flush"});return;}}
@@ -8024,7 +8428,7 @@ const NavClick={
    a.volume=Math.max(0,Math.min(1,Bank.vol("ui")*(o.gain||0.55)));
    try{a.playbackRate=Math.max(0.5,Math.min(2,Number(o.rate)||1));}catch(_){}
    try{a.pause();a.currentTime=0;}catch(_){}
-   const pr=a.play();if(pr&&pr.catch)pr.catch(()=>{});
+   Звук.играть(a,"щелчок",{повтор:false});
    return true;
   }catch(_){return false;}}};
 function swipeNav(dir){
@@ -17283,7 +17687,7 @@ const Bank={
   this.loops.forEach(c=>{c.paused=true;[c.el,c.el2].forEach(e=>{try{if(e)e.pause();}catch(_){}});});
   this.shots.forEach(a=>{try{a.pause();}catch(_){}});},
  wake(){
-  this.loops.forEach(c=>{c.paused=false;[c.el,c.el2].forEach(e=>{try{if(e){const pr=e.play();if(pr&&pr.catch)pr.catch(()=>{});}}catch(_){}});});},
+  this.loops.forEach(c=>{c.paused=false;[c.el,c.el2].forEach(e=>{try{if(e)Звук.играть(e,"петля");}catch(_){}});});},
  make(file,volume,loop,rate){
   try{
    const a=Плееры.взять(this.url(file));
@@ -17301,8 +17705,7 @@ const Bank={
     this.fails++;
     if(this.plays===0&&this.fails>=4)this.enabled=false;},{once:true});
    a.addEventListener("loadeddata",()=>{this.plays++;this.fails=0;},{once:true});
-   const pr=a.play();
-   if(pr&&pr.catch)pr.catch(()=>{});
+   Звук.играть(a,loop?"петля":"запись");
    return a;
   }catch(e){if(this.plays===0)this.enabled=false;return null;}},
  /* Остановить запись так, чтобы это не считалось ошибкой загрузки. */
@@ -17430,7 +17833,7 @@ const Bank={
    let node=src;
    if(ctx.createStereoPanner){const pn=ctx.createStereoPanner();pn.pan.value=Math.max(-1,Math.min(1,pan));node.connect(pn);node=pn;}
    node.connect(g);g.connect(AE.fx||ctx.destination);
-   const pr=el.play();if(pr&&pr.catch)pr.catch(()=>{});
+   Звук.играть(el,"маяк");
    /* Доиграв, маяк отдаёт плеер (см. Spatial.at). */
    el.addEventListener("ended",()=>{try{el.__stopped=true;src.disconnect();g.disconnect();el.removeAttribute("src");el.load();}catch(_){}},{once:true});
    /* Живая нота инструмента не обрывается на полуслове: перед остановкой
@@ -17876,7 +18279,10 @@ const Spatial={
      Spatial.live=Spatial.live.filter(x=>x!==this);Voices.forget(this);}};
    this.live.push(rec);this.trim(10);Voices.add(rec);
    el.addEventListener("ended",()=>rec.stop(),{once:true});
-   const pr=el.play();if(pr&&pr.catch)pr.catch(()=>{});
+   /* Голос, который не зазвучит, снимает единый обработчик речи: очередь
+      голосов и голос игры не ждут пустоты. */
+   if(voice)Звук.играть(el,"голос",{повтор:false,сторож:3000,наОтказ:(e,почему)=>Речь.голосНеЗазвучал(e,почему)});
+   else Звук.играть(el,"мир");
    const life=Math.max(0.4,maxSec||3);
    const fade=Math.min(0.3,life*0.3);
    setTimeout(()=>{try{g.gain.setTargetAtTime(0.0001,ctx.currentTime,fade/3);}catch(_){}},
@@ -23261,12 +23667,14 @@ const Folk={
     const уйти=()=>{try{src.disconnect();сж.nodes.forEach(x=>x.disconnect());g.disconnect();if(wet)wet.disconnect();}catch(_){}};
     el.addEventListener("ended",уйти,{once:true});
     el.__voice=true;el.__room=!!wet;
-    const pr=el.play();if(pr&&pr.catch)pr.catch(()=>{});
+    Звук.играть(el,"голос",{повтор:false,сторож:3000,наОтказ:(e,почему)=>Речь.голосНеЗазвучал(e,почему)});
     Bank._shot(el,"npc",{prio:"high"},оп.maxSec||9);
     setTimeout(уйти,(оп.maxSec||9)*1000+60);
     return el;
    }catch(_){}}
-  return Bank.file(файл,Object.assign({},оп,{gain:1}));},
+  /* Запасной плоский путь — тоже голос: его ждёт голос игры и снимает «тихо». */
+  const el=Bank.file(файл,Object.assign({},оп,{gain:1}));if(el)el.__voice=true;
+  return el;},
  /* Тембр человека. Запись на народ одна, а жителей тысячи: двое людей у
     одного прилавка не должны звучать одним горлом. Высота каждого сдвинута
     в пределах ±5 % — от ключа, поэтому у одного и того же жителя она та же
@@ -44190,7 +44598,7 @@ function playLeveled(role,o){
    const уйти=()=>{try{src.disconnect();g.disconnect();}catch(_){}};
    el.addEventListener("ended",уйти,{once:true});
    el.__role=role;el.__file=file;el.__k=k;el.__reverb=отзвук;
-   const pr=el.play();if(pr&&pr.catch)pr.catch(()=>{});
+   Звук.играть(el,"шаг");
    Bank._shot(el,kind,{prio},maxSec);
    if(maxSec>0)setTimeout(уйти,maxSec*1000+60);
    return el;
@@ -46855,7 +47263,7 @@ const CMD={
   narrate(gestLine(p[0]),{interrupt:true});},
  testall(){openModal("modal-encyclopedia");buildEncycCats();testAllSounds();},
  silence(){stopEverything();},
- speechstop(){Speech.stop();safeFn(()=>UI.nat("ui_hush",0.5));vib(15);Speech.request("Тихо.",{key:"stopped"});},
+ speechstop(){Речь.стоп();safeFn(()=>UI.nat("ui_hush",0.5));vib(15);Speech.request("Тихо.",{key:"stopped"});},
  speechrepeat(){Speech.repeatLast();},
  speechflush(){const n=Speech.flush();Speech.request(n?`Очередь речи очищена: ${n}.`:"Очередь речи пуста.",{key:"flush"});},
  hud(){Speech.status();},
@@ -64294,11 +64702,12 @@ Modules.register("AUDIO_3D",{
  text(){return `Объёмный звук ${this.enabled()?"включён":"выключен"}. Акустика места: ${this.room()}.`;}});
 Modules.register("TTS",{
  speech:()=>Speech,
+ hub:()=>Речь,
  say:(t,o)=>S(()=>narrate(t,o),false),
  stop:()=>S(()=>Speech.hush(),false),
  rate:()=>Number(settings.rate)||1,
  auto:()=>settings.autoSpeech!==0,
- text(){return `Речь: скорость ${(Number(settings.rate)||1).toFixed(1)}, автоматическая речь ${this.auto()?"включена":"выключена"}.`;}});
+ text(){return `Речь: скорость ${(Number(settings.rate)||1).toFixed(1)}, автоматическая речь ${this.auto()?"включена":"выключена"}. `+S(()=>Речь.кратко(),"");}});
 Modules.register("ACCESSIBILITY",{
  gestures:()=>GESTURE_MAP,
  conflicts:()=>S(()=>Gestures.conflicts(),[]),
@@ -64907,8 +65316,9 @@ Modules.register("AUDIO_MIXER_CORE",{
  duck:kind=>S(()=>speechDuck(kind),1),
  loops:()=>S(()=>[...Bank.loops.keys()],[]),
  stop:ch=>S(()=>Bank.stop(ch),false),
+ hub:()=>Звук,
  text(){const ch=this.channels();
-  return `Каналов звука ${ch.length}: ${ch.slice(0,8).join(", ")}${ch.length>8?"…":""}. Общая громкость ${this.master().toFixed(2)}. Приоритетов речи пять: от смертельной опасности до фона. Звучащих петель ${this.loops().length}.`;}});
+  return `Каналов звука ${ch.length}: ${ch.slice(0,8).join(", ")}${ch.length>8?"…":""}. Общая громкость ${this.master().toFixed(2)}. Приоритетов речи пять: от смертельной опасности до фона. Звучащих петель ${this.loops().length}. `+S(()=>Звук.кратко(),"")+" "+S(()=>Речь.кратко(),"");}});
 /* Единое чтение и запись состояния: одна дверь ко всему, что сохраняется. */
 Modules.register("DATABASE_CORE",{
  /* Все ключи состояния, которые мир и вправду держит. */
@@ -66736,7 +67146,7 @@ function bindSpeechSettings($){
   d.addEventListener("input",e=>{settings.duck=e.target.value/100;saveSettings();$("vDuck").textContent=e.target.value+"%";});}
  const r=$("btnRepeatLast");if(r)r.addEventListener("click",()=>Speech.repeatLast());
  const st=$("btnReadStatus");if(st)st.addEventListener("click",()=>Speech.status());
- const sp=$("btnStopSpeech");if(sp)sp.addEventListener("click",()=>{Speech.stop();vib(15);});}
+ const sp=$("btnStopSpeech");if(sp)sp.addEventListener("click",()=>{Речь.стоп();vib(15);});}
 function bindSettings(){const $=id=>document.getElementById(id);
  renderDifficulty();
  safeFn(()=>bindSpeechSettings($));
@@ -67965,7 +68375,7 @@ document.addEventListener("keydown",e=>{
   if(gameActive()){safeFn(()=>openActionMenu());return;}
   stopEverything();return;}
  /* Речь под рукой без чтеца экрана: Alt+Пробел — стоп. */
- if(e.altKey&&(e.code==="Space"||e.key===" ")){e.preventDefault();Speech.stop();vib(15);return;}
+ if(e.altKey&&(e.code==="Space"||e.key===" ")){e.preventDefault();Речь.стоп();vib(15);return;}
  /* (8.5) Пролог листается стрелками: вправо — дальше, влево — назад, вниз — повторить. */
  if(!KeyCapture.id&&safeFn(()=>Prologue.key(e),false))return;
  safeFn(()=>onGameKey(e));});
@@ -68156,6 +68566,9 @@ function deskWatch(){
  safeFn(()=>{if(isDesktopApp()){document.body.setAttribute("role","application");document.body.setAttribute("aria-label","Грань Миров");document.documentElement.classList.add("desktop");}});
  safeFn(()=>desktopVoiceLabels());
  try{Speech.init();}catch(e){try{console.error("Speech.init",e);}catch(_){}}
+ /* (11.0) Касание сначала открывает звук (Speech.prime), потом единый
+    обработчик доигрывает ждущее. */
+ safeFn(()=>Звук.слушатьКасания());
  try{bindSettings();}catch(e){try{console.error("bindSettings",e);}catch(_){}}
  safeFn(()=>desktopStrip());
  safeFn(()=>deskWatch());

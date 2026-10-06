@@ -45,8 +45,11 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   /* файл записи — FLAC из папки богов */
   out.файл=null;
   if(safeFn(()=>Folk.on(),false)){const n0=Folk.очередь.length;GOD_SPEECH_LEN[путь]=GOD_SPEECH_LEN[путь]||2.5;
+   /* Очередь пуста — запись звучит сразу, мимо очереди: файл берём у самого запуска. */
+   let пущен=null;const оЗв=Folk._звук;Folk._звук=function(п,ф,n,оп){пущен=ф;return оЗв.call(this,п,ф,n,оп);};
    Folk.сказать(путь,null,{dir:GOD_SPEECH_DIR,всегда:true});const q=Folk.очередь[Folk.очередь.length-1];
-   out.файл=q&&Folk.очередь.length>n0?q.файл:(Folk.last||null);if(!было)delete GOD_SPEECH_LEN[путь];}
+   Folk._звук=оЗв;
+   out.файл=q&&Folk.очередь.length>n0?q.файл:(пущен||null);if(!было)delete GOD_SPEECH_LEN[путь];}
   /* 4. места: молитва и покровительство вызывают слово своего вида */
   const вызовы=[];const оG=window.godSpeak;window.godSpeak=(id,k,o)=>{вызовы.push(id+":"+k);return false;};
   safeFn(()=>prayToGod("wood"));safeFn(()=>choosePatron("forge"));

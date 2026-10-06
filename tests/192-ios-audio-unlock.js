@@ -69,6 +69,11 @@ const IPHONE='Mozilla/5.0 (iPhone; CPU iPhone OS 18_5 like Mac OS X) AppleWebKit
 
  /* ── 3. запас открытых плееров ── */
  const запас=await page.evaluate(()=>{
+  /* (11.0) Звук, который браузер не пустил до касания, единый обработчик
+     доигрывает с касанием: заигравший фон места на стыке петли берёт плеер
+     из запаса — для того запас и есть. Поэтому запас меряем сразу после
+     касания, а не через полсекунды жизни мира. */
+  document.body.dispatchEvent(new Event("touchend",{bubbles:true}));
   const r={после:Плееры.запас.length};
   const верх=Плееры.запас[Плееры.запас.length-1];
   const a=Плееры.взять("sounds/intro/intro_12.ogg");

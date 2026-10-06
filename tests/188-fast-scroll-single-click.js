@@ -114,7 +114,10 @@ function удары(file){
   setCursor(все[все.length-1],false);
   сказано.length=0;window.__snd.length=0;
   swipeNav("next");await new Promise(t=>setTimeout(t,200));
-  r.край={сказано:сказано.length,щелчки:window.__snd.map(x=>x.rate)};
+  /* Как и в проверке 2: мир живёт и при открытом меню — считаются только
+     щелчки интерфейса (записи UI_BANK), а не всадник, проехавший мимо. */
+  const уиК=new Set(Object.values(UI_BANK));
+  r.край={сказано:сказано.length,щелчки:window.__snd.filter(x=>уиК.has(x.src)).map(x=>x.rate)};
   Speech.say=s0;
   return r;});
  check('3. двадцать быстрых свайпов: каждый пункт назван, ни один не отброшен, звучит последний выбранный',
