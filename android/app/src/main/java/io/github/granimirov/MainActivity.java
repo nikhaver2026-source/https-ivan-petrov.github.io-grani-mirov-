@@ -259,6 +259,32 @@ public class MainActivity extends Activity {
         web.post(() -> web.evaluateJavascript(js, null));
     }
 
+    /* (10.0) Громкость синтезатора выше ста процентов. Сам Android принимает
+       у синтезатора громкость только от нуля до единицы, и ползунок на 150%
+       ничего не менял. Теперь фраза идёт в своей звуковой сессии, а на ней
+       стоит усилитель громкости (LoudnessEnhancer): 150% — плюс шесть
+       децибел, 200% — плюс двенадцать. */
+    private int ttsSession = 0;
+    private android.media.audiofx.LoudnessEnhancer boost;
+    private int boostMb = -1;
+    private void applyBoost(float volume, Bundle p) {
+        try {
+            if (ttsSession == 0) {
+                AudioManager am = (AudioManager) getSystemService(AUDIO_SERVICE);
+                if (am != null) ttsSession = am.generateAudioSessionId();
+            }
+            if (ttsSession <= 0) return;
+            p.putInt(TextToSpeech.Engine.KEY_PARAM_SESSION_ID, ttsSession);
+            int mb = volume > 1f ? Math.round(Math.min(1f, volume - 1f) * 1200f) : 0;
+            if (boost == null) boost = new android.media.audiofx.LoudnessEnhancer(ttsSession);
+            if (mb != boostMb) {
+                boost.setTargetGain(mb);
+                boost.setEnabled(mb > 0);
+                boostMb = mb;
+            }
+        } catch (Throwable t) { /* усилителя нет — звучит как прежде */ }
+    }
+
     private void say(String text, float rate, float volume, String id) {
         final TextToSpeech tts = speaker != null ? speaker : this.tts;
         /* (9.5.2) Темп приходит числом ползунка «Скорость синтезатора» и
@@ -269,6 +295,7 @@ public class MainActivity extends Activity {
         tts.setSpeechRate(Math.max(0.1f, Math.min(3.5f, tempo)));
         Bundle p = new Bundle();
         p.putFloat(TextToSpeech.Engine.KEY_PARAM_VOLUME, Math.max(0f, Math.min(1f, volume >= 0 ? volume : 1f)));
+        applyBoost(volume, p);
         /* Очередь ведёт сама игра и шлёт по одной фразе, дождавшись конца прежней.
            QUEUE_FLUSH снимает всё недосказанное в самом синтезаторе в тот же миг,
            что и новая фраза: при быстром листании устаревший пункт больше не
@@ -288,7 +315,17 @@ public class MainActivity extends Activity {
         @JavascriptInterface
         public void stop() {
             synchronized (pending) { pending.clear(); }
-            if (ready) { tts.stop(); TextToSpeech sp = speaker; if (sp != null && sp != tts) sp.stop(); }
+            /* (10.0) Не tts.stop(), а беззвучная фраза с QUEUE_FLUSH: у части
+               движков stop() доходит до службы синтеза позже следующей фразы и
+               гасит уже её — при быстром листании пункт молчал. Сброс очереди
+               беззвучием идёт в том же порядке, что и фразы, и обогнать
+               следующую не может. */
+            if (ready) {
+                TextToSpeech sp = speaker != null ? speaker : tts;
+                try { sp.playSilentUtterance(1, TextToSpeech.QUEUE_FLUSH, "__hush"); }
+                catch (Throwable t) { sp.stop(); }
+                if (sp != tts) { try { tts.playSilentUtterance(1, TextToSpeech.QUEUE_FLUSH, "__hush"); } catch (Throwable t) { tts.stop(); } }
+            }
         }
 
         /* Мост сообщает о начале фразы (GraniTTSStart). */

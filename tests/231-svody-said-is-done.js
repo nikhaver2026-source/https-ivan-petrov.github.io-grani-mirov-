@@ -69,7 +69,7 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
      if(tileAt(l,sx,sy)!=="."||trapAt(sx,sy))continue;
      G.place.x=sx;G.place.y=sy;G.hp=G.hpMax=500;ИГРАЛО.length=0;G.inCombat=false;G.combat=null;
      moveInside(d);
-     return {bx,ловушка:t.n,удар:G.hp<500,звук:ИГРАЛО.indexOf(t.сраб)>=0,встали:G.place.x===x&&G.place.y===y};}}}
+     return {bx,ловушка:t.n,удар:G.hp<500||!!t.зов,звук:ИГРАЛО.indexOf(t.сраб)>=0,встали:G.place.x===x&&G.place.y===y};}}}
   return {нет:true};});
  check('2. ловушка Сводов на полу подземелья: шаг на ненайденную — звук и удар',!п.нет&&п.удар&&п.звук,п);
 

@@ -106,7 +106,7 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
 
  /* ── 5. страж яруса, реликвия, узел шва ── */
  const страж=await p.evaluate(()=>{
-  const k=SPL_DUNGEON_BY_ID.xd_abyss;const e=SPL_REALMS.find(x=>x.сплетение==="bezdna");
+  const k=SPL.dungeons.find(d=>d.id==="xd_abyss");const e=SPL_REALMS.find(x=>x.сплетение==="bezdna");
   G.place={kind:"dungeon",bx:e.cap.x,by:e.cap.y,stype:"ruins",name:"т",depth:100,x:1,y:1};
   const old=window.dungeonKindHere;window.dungeonKindHere=()=>k;
   const m=Object.assign({},MONSTERS.find(q=>q.id==="lich")||MONSTERS[0]);Spletenie.onCombat(m,{});

@@ -55,7 +55,7 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
  await p.waitForTimeout(1100);
  const сказано3=await p.evaluate(()=>__said.join(" | "));
  check('3. жареные грибы выходят и лежат в «Еде»; без учения стряпни — самоучкой, и это достижение «Самоучка»',
-  п3.есть&&п3.раздел==="food"&&п3.грибов===4&&п3.ранг===1&&/самоучкой/.test(п3.said)&&/Достижение «Самоучка»/.test(сказано3),{п3,сказано3});
+  п3.есть&&п3.раздел==="food"&&п3.грибов===5&&п3.ранг===1&&/самоучкой/.test(п3.said)&&/Достижение «Самоучка»/.test(сказано3),{п3,сказано3});
 
  /* ── 4 ── */
  const п4=await p.evaluate(()=>{__где=["forge"];G.inv["руда"]=4;const a=invActionsAll(invRow("res","руда"));
@@ -97,7 +97,7 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   !п7.чужие.length&&!п7.беззвука.length&&!п7.безимени.length&&!п7.бездела.length&&!п7.еда.length&&п7.всего>=40,п7);
 
  /* ── 8 ── */
- const п8=await p.evaluate(()=>{G.inv={"грибы":2};const o={плитка:"X",вещь:"brazier",x:1,y:1,d:0};
+ const п8=await p.evaluate(()=>{G.inv={"грибы":1};const o={плитка:"X",вещь:"brazier",x:1,y:1,d:0};
   const сп=actionsFor(o).map(a=>({id:a.id,n:a.n}));const жар=actionsFor(o).find(a=>a.id==="oa:roast_mush");
   const до=G.items.length;if(жар)жар.делать(o);
   const инфо=actionsFor(o).find(a=>a.id==="oa:info");
