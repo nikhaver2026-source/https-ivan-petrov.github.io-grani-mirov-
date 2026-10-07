@@ -228,24 +228,24 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   /* карточка и покупка со счётом */
   const ri=stock.findIndex(x=>x.count);r.hasStack=ri>=0;
   if(ri>=0){SAID.length=0;shopItemCard(ri);await пауза(30);r.card=SAID.slice(-1)[0];r.buyBtns=[...document.querySelectorAll('#shopBody [data-cmd^="shopask:buy"]')].map(b=>b.dataset.cmd);
-   const g0=G.gold,name=stock[ri].name,price=stock[ri].price;shopAsk("buy",5);await пауза(20);r.askQ=SAID.slice(-1)[0];shopYes();await пауза(30);r.bought=[g0-G.gold,price*5,Number(G.inv[name])||0];}
+   const g0=G.gold,name=stock[ri].name,price=stock[ri].price;shopAsk("buy",5);await пауза(30);r.askQ=SAID.filter(x=>/^Куплено:/.test(String(x))).slice(-1)[0]||SAID.slice(-1)[0];r.bought=[g0-G.gold,price*5,Number(G.inv[name])||0];}
   /* Цену берём заново, а не из старого снимка: покупка стопки подняла имя у
      народа, торговец подобрел, и цена к этому мигу уже другая. Сравнивать
      списанное с ценой ДО покупки — значит ловить не ошибку, а расположение. */
-  const gi=stock.findIndex(x=>x.s.gear);if(gi>=0){shopItemCard(gi);const g0=G.gold;const price=(shopStockRows(npc)[gi]||{}).price;shopAsk("buy",1);shopYes();await пауза(30);r.boughtGear=[g0-G.gold,price,G.gear.some(g=>g&&g.name===stock[gi].name)];}
+  const gi=stock.findIndex(x=>x.s.gear);if(gi>=0){shopItemCard(gi);const g0=G.gold;const price=(shopStockRows(npc)[gi]||{}).price;shopAsk("buy",1);await пауза(30);r.boughtGear=[g0-G.gold,price,G.gear.some(g=>g&&g.name===stock[gi].name)];}
   /* продать */
   CMD.shoptab("sell");await пауза(30);const sell=shopSellRows(npc);r.sellOk=sell.filter(x=>x.ок).map(x=>x.name);r.sellNo=sell.filter(x=>!x.ок).map(x=>x.name+"|"+x.почему);r.relicHidden=!sell.some(x=>/Реликвия/.test(x.name));
   const rows=sell.filter(x=>x.ок);const oi=rows.findIndex(x=>x.name==="руда");
-  if(oi>=0){shopItemCard(oi);await пауза(20);r.sellCard=SAID.slice(-1)[0];const g0=G.gold;shopAsk("sell",3);r.sellQ=SAID.slice(-1)[0];shopYes();await пауза(30);r.sold=[G.gold-g0,G.inv["руда"]];}
+  if(oi>=0){shopItemCard(oi);await пауза(20);r.sellCard=SAID.slice(-1)[0];const g0=G.gold;shopAsk("sell",3);await пауза(30);r.sellQ=SAID.filter(x=>/^Продано:/.test(String(x))).slice(-1)[0]||SAID.slice(-1)[0];r.sold=[G.gold-g0,G.inv["руда"]];}
   const d=merchSoul(npc);r.kind=d&&d.вид.id;
   while(activeLayer())closeTopUI();
   return r;});
  check('карточка жителя ведёт в торговлю, старые кнопки прилавка на месте; окно торговли: два раздела и категории из пятнадцати',
   торг.module&&торг.npcBtn&&торг.oldBtns&&торг.open===true&&торг.окно==="modal-shop"&&торг.tabs.length===2&&торг.cats.length>=1&&торг.allowedCats,{tabs:торг.tabs,cats:торг.cats,stockCats:торг.stockCats,kind:торг.kind});
- check('карточка товара с ценой; покупка стопки счётом с подтверждением списывает ровно цену и кладёт товар; снаряжение покупается поштучно',
-  торг.hasStack&&/Цена: \d+/.test(торг.card)&&торг.buyBtns.length>=2&&/^Купить «.+» ×5 за \d+/.test(торг.askQ)&&торг.bought&&торг.bought[0]===торг.bought[1]&&торг.bought[2]>=5&&(!торг.boughtGear||(торг.boughtGear[0]===торг.boughtGear[1]&&торг.boughtGear[2])),{card:(торг.card||"").slice(0,120),ask:торг.askQ,bought:торг.bought,gear:торг.boughtGear});
- check('умный торговец: раздел «Продать» берёт своё и объясняет, чего не берёт; реликвия не предлагается; продажа стопки счётом с подтверждением',
-  торг.sellOk&&торг.relicHidden&&(торг.sellNo.length===0||торг.sellNo.every(t=>t.split("|")[1].length>3))&&(!торг.sold||(/^Продать «руда» ×3 за \d+/.test(торг.sellQ)&&торг.sold[0]>0&&торг.sold[1]===3)),{ok:торг.sellOk,no:торг.sellNo,sold:торг.sold,q:торг.sellQ});
+ check('карточка товара с ценой; покупка стопки счётом сразу, без окна подтверждения, списывает ровно цену и кладёт товар; снаряжение покупается поштучно',
+  торг.hasStack&&/Цена: \d+/.test(торг.card)&&торг.buyBtns.length>=2&&/^Куплено: .+ ×5 за \d+/.test(торг.askQ)&&торг.bought&&торг.bought[0]===торг.bought[1]&&торг.bought[2]>=5&&(!торг.boughtGear||(торг.boughtGear[0]===торг.boughtGear[1]&&торг.boughtGear[2])),{card:(торг.card||"").slice(0,120),ask:торг.askQ,bought:торг.bought,gear:торг.boughtGear});
+ check('умный торговец: раздел «Продать» берёт своё и объясняет, чего не берёт; реликвия не предлагается; продажа стопки счётом сразу',
+  торг.sellOk&&торг.relicHidden&&(торг.sellNo.length===0||торг.sellNo.every(t=>t.split("|")[1].length>3))&&(!торг.sold||(/^Продано: руда — 3 шт\./.test(торг.sellQ)&&торг.sold[0]>0&&торг.sold[1]===3)),{ok:торг.sellOk,no:торг.sellNo,sold:торг.sold,q:торг.sellQ});
 
  check('страница без ошибок JavaScript',errors.length===0,errors.slice(0,3));
  await browser.close();

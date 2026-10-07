@@ -77,14 +77,15 @@ const {chromium}=require('playwright');
   const g0=window.handleTwoFingerTap;let сбор=0;window.handleTwoFingerTap=()=>{сбор++;};
   for(const [f,n] of [[2,2],[2,3],[3,1],[3,2],[3,3],[4,1],[4,2],[4,3]])qsTapResolve(f,n);
   r.слоты=взято.slice();взято.length=0;
+  safeOpenMagicPanel();qsTapResolve(4,2);r.закрыто=!magicPanelOpen();safeOpenMagicPanel();
   qsTapResolve(2,1);r.сбор=сбор;
   qsMagicTap(3);qsMagicTap(3);r.доСрока=взято.length;await new Promise(z=>setTimeout(z,750));r.послеСрока=взято.slice();
   взято.length=0;qsMagicTap(4);qsMagicTap(4);qsMagicTap(4);r.тройное=взято.slice();
   window.cbSlotUse=u0;window.handleTwoFingerTap=g0;
   r.тексты=QS_MAGIC_SHAPES.map((x,i)=>cbSlotShapeMagic(i));
   closeMagicPanel();__чисто();r.вне=qsMagicMode();return r;});
- check('5. с панелью магии в бою слоты 1–8 на касаниях 2×2,2×3,3×1,3×2,3×3,4×1,4×2,4×3; счёт ждёт конца; одно касание двумя — сбор',
-  магия.режим===true&&магия.слоты.join()==="1,2,3,4,5,6,7,8"&&магия.сбор===1&&магия.доСрока===0&&магия.послеСрока.join()==="4"&&магия.тройное.join()==="8"&&магия.вне===false,магия);
+ check('5. с панелью магии в бою слоты на касаниях 2×2,2×3,3×1,3×2,3×3,4×1,4×3, а 4×2 закрывает панель; счёт ждёт конца; одно касание двумя — сбор',
+  магия.режим===true&&магия.слоты.join()==="1,2,3,4,5,6,8"&&магия.закрыто===true&&магия.сбор===1&&магия.доСрока===0&&магия.послеСрока.join()==="4"&&магия.тройное.join()==="8"&&магия.вне===false,магия);
 
  /* ── 6 ── */
  const слоты=await page.evaluate(()=>{__чисто();G.cbSlots=null;G.cbSlotsInit=0;const r={};

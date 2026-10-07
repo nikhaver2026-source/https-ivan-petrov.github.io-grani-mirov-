@@ -25,7 +25,7 @@
      GitHub Pages. Там же включается и service worker (см. ниже): игра ставится
      на главный экран и работает без сети. -->
 <meta name="theme-color" content="#10121c">
-<title>Грань Миров. Версия 12.0</title>
+<title>Грань Миров. Версия 12.5</title>
 <style>
 /* Палец, положенный на ползунок, не должен его двигать: браузер по умолчанию
    перебрасывает бегунок в точку касания, и незрячий игрок, просто читая
@@ -106,7 +106,7 @@ h3{color:var(--acc2);margin:14px 0 6px;font-size:1.05rem;}
 
 <!-- ТИТУЛ -->
 <div id="screen-title" class="screen">
- <h1>Грань Миров <small id="gameVersion" style="font-size:.5em;opacity:.75">Версия 12.0</small></h1>
+ <h1>Грань Миров <small id="gameVersion" style="font-size:.5em;opacity:.75">Версия 12.5</small></h1>
  <div class="menu">
   <button type="button" data-cmd="check">Проверить звук</button>
   <button type="button" data-cmd="whatsnew">Что нового</button>
@@ -175,7 +175,7 @@ h3{color:var(--acc2);margin:14px 0 6px;font-size:1.05rem;}
  <label class="opt"><input type="checkbox" id="setEffects" checked><span><b>Эффекты</b><small>Шаги, толпа, маяки и прочие звуки</small></span></label>
  <label class="opt"><input type="checkbox" id="setMusic" checked><span><b>Музыка</b><small>Общий выключатель музыки: заглавная тема и темы мест. Новый уровень, дела и награды звучат живыми звуками мира и от него не зависят</small></span></label>
  <label class="opt"><input type="checkbox" id="setIntro" checked><span><b>Заставка при запуске</b><small>Музыка и голос: «Добро пожаловать в Грань Миров. Мир, где всё возможно». Любое касание или клавиша обрывает её; послушать ещё раз — кнопкой «Прослушать заставку» на главном экране.</small></span></label>
- <label class="opt"><input type="checkbox" id="setBgMusic"><span><b>Фоновая музыка мест</b><small>Темы местностей, построек, подземелий и глубин из свободных фэнтезийных игр. По умолчанию выключено: место слышно звуками</small></span></label>
+ <label class="opt"><input type="checkbox" id="setBgMusic"><span><b>Фоновая музыка мест</b><small>Темы местностей, построек, подземелий и глубин. По умолчанию выключено: место слышно звуками</small></span></label>
  <h3 class="sec-head" tabindex="0" data-cmd="secjump" data-sec-title="Громкость">Громкость</h3>
  <p class="hint">Десять шкал: общая, речь, мир, фон, музыка, меню, бой, чары, голоса людей и приглушение музыки под речь.</p>
  <label class="opt">Общая громкость <input type="range" id="setMasterVol" min="0" max="100" value="100"><span id="vMaster">100%</span></label>
@@ -2720,9 +2720,9 @@ SVD.weapons=[
  {id:"svw_perer",n:"Меч Перерождённого",type:"Меч",k:1.0,эфф:"отчаяние",о:"когда здоровья меньше трети, удар крепче на пять"},
  {id:"svw_slepok",n:"Посох Слепков",type:"Посох",k:0.9,эфф:"слепок",о:"с каждой твари Сводов — лишняя сущность"},
  {id:"svw_toplat",n:"Посох Топлых Латников",type:"Посох",k:1.05,эфф:"пробой",о:"пробивает хитин и латы: умение «панцирь» не спасает"}];
-const WEB_VERSION="12.0",APP_VERSION="12.0";
+const WEB_VERSION="12.5",APP_VERSION="12.5";
 /* У сборки для Android своя строка версии (versionName в build.gradle); с 8.0 все три сборки — 8.0. */
-const ANDROID_VERSION="12.0";
+const ANDROID_VERSION="12.5";
 const GAME_VERSION=SVODY_ON?ANDROID_VERSION:IN_APP?APP_VERSION:WEB_VERSION;
 const GVOICE_ON=true;
 /* Номер голосового пакета: растёт, когда пакет пополнился (обходит кэш). */
@@ -3089,6 +3089,15 @@ NEWS.push({v:68,н:"версия 12.0: жители, хранители и ра�
   т:"Жители помнят вас и скрывают цели: предатель, слуга хранителя, призрак. Боссы с фазами и репликами запоминают ваши чары; «Арена чертога» в меню боя. У сердца — пять развязок, и мир меняется: цены, державы, следующий заход."});
 NEWS.push({v:69,н:"версия 12.0: Режиссёр 2 и недуги",
   т:"Режиссёр учится на вашей игре: выбирает события, силу тварей и поручения, сам открывает новые чертоги. Яды, проклятия, стужа и жар действуют: снимают зелья, травы, вода, огонь, светлые чары, лекарь, молитва и отдых."});
+/* 12.5: нейродвижок Режиссёра и Кузница нового, сплавы зелий, лавка без подтверждений (набор 277). */
+NEWS.push({v:70,н:"версия 12.5: Режиссёр Грани учится и растёт",
+  т:"Режиссёр Грани учится на вашей игре, растёт вместе с миром и решает, что мир родит завтра. Он крепит тварей, открывает чертоги и даёт поручения; мир живёт и без вас. Окно: меню мира → «Режиссёр Грани» → «Кузница нового»."});
+NEWS.push({v:71,н:"версия 12.5: Кузница нового",
+  т:"Каждый день в Грани рождается новое: зелья, ресурсы, рецепты вещей, заклинания, оружие, устройства и механизмы, питомцы и скакуны, книги, боги, города, деревни, озёра и моря, новые земли, небесные острова и глубинные ярусы, народы, расы, кланы и фракции со своей политикой, войнами и верой. Мастера растут в умении, твари крепнут, умнеют и хитреют, старое переделывается."});
+NEWS.push({v:72,н:"версия 12.5: ваши изобретения расходятся по миру",
+  т:"Два разных зелья сплавляются в новый рецепт — эликсир с обоими действиями; два отличных одинаковых — в высший состав. Опыт за находку зависит от её трудности, качества и уровня. О вашем сплаве, своём составе, своих чарах и вещах узнают народы и предлагают сделку."});
+NEWS.push({v:73,н:"версия 12.5: лавка и панель магии",
+  т:"У торговца — как в обозе: у каждого товара «Купить 1, 5, 10», у своей вещи «Продать 1, 5, 10, всё», без окна подтверждения; в разделе «Все» товары разложены по категориям. В бою панель магии закрывается тем же двойным касанием четырьмя пальцами, а без маны — сама."});
 const NEWS_V=NEWS[NEWS.length-1].v;
 /* (8.5) Выпуск читается коротко: заголовок, затем факты. */
 function newsLine(n){const н=String(n.н||"");return `${н.charAt(0).toUpperCase()+н.slice(1)}. ${n.т||""}`;}
@@ -7878,7 +7887,10 @@ const GEST_COMBAT_ACTIONS=[
    фигуры делают своё обычное дело. */
 const QS_N=12;
 const CB_SLOT_SHAPES=["2swipeW","2swipeN","2swipeE","2swipeS","3swipeW","3swipeN","3swipeE","3swipeS","4swipeW","4swipeN","4swipeE","4swipeS"];
-const QS_MAGIC_SHAPES=["2tap2","2tap3","3tap","3tap2","3tap3","4tap","4tap2","4tap3"];
+/* Четыре пальца двойным касанием — открыть и закрыть панель магии, и в бою
+   тоже (просьба игрока: кончилась мана — закрыть панель и драться оружием).
+   Поэтому седьмой слот при открытой панели на касание не садится. */
+const QS_MAGIC_SHAPES=["2tap2","2tap3","3tap","3tap2","3tap3","4tap",null,"4tap3"];
 function cbSlots(){
  if(!Array.isArray(G.cbSlots)||G.cbSlots.length!==QS_N){const s=Array.isArray(G.cbSlots)?G.cbSlots.slice(0,QS_N):[];while(s.length<QS_N)s.push(null);
   if(!G.cbSlotsInit){s[0]=s[0]||{kind:"item",name:"Зелье здоровья"};G.cbSlotsInit=1;}G.cbSlots=s;}
@@ -8059,7 +8071,15 @@ function qsTapResolve(f,n){
  const i=QS_MAGIC_SHAPES.indexOf(id);
  if(i>=0){GestCombat.last={id,a:"slot"+(i+1),t:Date.now()};return cbSlotUse(i);}
  if(id==="2tap"){handleTwoFingerTap();return true;}
+ if(id==="4tap2"){magicPanelCombatClose("");return true;}
  return false;}
+/* Закрыть панель магии посреди боя: дальше — оружие. Если оно в ножнах,
+   сказано, как его вынуть. */
+function magicPanelCombatClose(почему){
+ if(!magicPanelOpen())return false;
+ closeMagicPanel();
+ if(G.inCombat&&G.combat)safeFn(()=>narrate(`${почему?почему+" ":""}Панель магии закрыта — бой продолжается оружием${G.weaponDrawn?"":": вынуть его — двойное касание тремя пальцами"}.`,{interrupt:true}));
+ return true;}
 function qsMagicTap(f){
  const now=Date.now();
  if(qsTap.timer&&qsTap.f===f)qsTap.n++;else{if(qsTap.timer)clearTimeout(qsTap.timer);qsTap.f=f;qsTap.n=1;}
@@ -10221,7 +10241,7 @@ const GUIDE_SRC=[
  "Магия и находки. У каждой школы свой второй слой: свет вспыхивает благословением, тьма густеет дымкой, лёд трескается, огонь рассыпается искрами. Артефакт отзывается гулом силы и звоном стекла, молитва у алтаря — колоколом храма и голосом бога, новый уровень — вспышкой исцеления и одобрительным гулом толпы.",
  "Ловушки и работа. Ловушка звучит на два такта: щелчок механизма, а за ним осыпь. Кирка по жиле бьёт по-разному: наверху сухой лязг, в глубине — тяжёлый с отзвуком."]},
 {title:"Глава 25. У каждого места свой голос",body:[
- "Акустика мест различалась давно: в пещере долгое эхо, в храме высокий отзвук, в подвале глухота. Теперь у каждого места и своя музыка — тема из свободной фэнтезийной игры, написанная как раз для такого места. Место узнаётся по ней раньше, чем прозвучит его имя. Музыка мест включается в настройках, в разделе «Что звучит».",
+ "Акустика мест различалась давно: в пещере долгое эхо, в храме высокий отзвук, в подвале глухота. Теперь у каждого места и своя музыка — тема, написанная как раз для такого места. Место узнаётся по ней раньше, чем прозвучит его имя. Музыка мест включается в настройках, в разделе «Что звучит».",
  "ПОСТРОЙКИ. Таверна — трактирные напевы Stendhal, замок — пир и замковая тема Solarus, дом клана — тема гномов Wyrmsun, храм — «Святилище» Valyria Tear, школа магии — «Школа причуд», башня отшельника — «Лунариус», торговый двор — рыночный день, кузница — вторая гномья тема, деревня — сельская тема Solarus, порт — «Под парусом», руины — «Сказание руин» Ancient Beast, крепость — марш гарнизона, походный лагерь — германская тема Wyrmsun, схрон — «Разведка», гнездовье и кумирня на вершине — ледяные высоты.",
  "МЕСТНОСТИ. Равнина — простор, дорога — ветер в спину, пустыня — «Город песков», лес — «Лесная сказка» Мэтью Пабло, топи — «Хмурый день», горы, побережье, пещеры и небо — каждая своей темой. В городе, на равнине, в таверне и в бою тем по две–четыре, и они идут по кругу одна за другой, а не одна до бесконечности.",
  "ПОДЗЕМЕЛЬЯ. Первые десять ярусов звучат тем, что это за подземелье: шахта, катакомбы, древний храм, ушедшая башня, подземный город, лаборатория, некрополь, подземная крепость, гробница, разлом, живое, водное, воздушное и временное — у каждого рода своя тема. Глубже род уступает глубине: ярусы до тридцатого, до пятьдесят пятого, до восьмидесятого и до девяносто девятого звучат каждый своей темой, а у самого дна музыки нет — только дыхание бездны.",
@@ -11018,7 +11038,7 @@ const GUIDE_SRC=[
  "ОРУЖИЕ СВОДОВ. Шесть видов: каждое со своим даром — вдвое по нежити, против роя, пробой панциря, оплетающее жало, сила при ранах. Добывают у тварей Сводов и в поручениях, надевают в котомке.",
  "ГДЕ ВСЁ ЭТО ВИДНО. Меню действий → «Своды» → «Пределы: рассудок и выбор»: рассудок и человечность, двойник и нашествие, выбор на краю с его кнопками, нити и оружие в руке."]},
 {title:"Глава 110. Слоты быстрого доступа, тихий бой и зелья",body:[
- "СЛОТЫ БЫСТРОГО ДОСТУПА. Двенадцать слотов: в них ставится всё, чем пользуются за удар сердца, — зелья, свитки, жезлы, еда, вещи с действием. В бою с вынутым мечом или любым другим оружием — свайпы: два пальца влево — первый слот, вверх — второй, вправо — третий, вниз — четвёртый; три пальца влево — пятый, вверх — шестой, вправо — седьмой, вниз — восьмой; четыре пальца влево — девятый, вверх — десятый, вправо — одиннадцатый, вниз — двенадцатый. В бою с открытой панелью магии свайпы творят чары, а слоты — на касаниях, их на четыре меньше: двойное касание двумя пальцами — первый, тройное двумя — второй; одно касание тремя пальцами — третий, двойное тремя — четвёртый, тройное тремя — пятый; одно касание четырьмя — шестой, двойное четырьмя — седьмой, тройное четырьмя — восьмой. Касание разбирается, когда счёт кончился, — с задержкой в полсекунды. Панель магии в бою закрывается кнопкой «Закрыть» на ней или клавишей «Назад». В первом слоте по умолчанию — зелье здоровья. Вещь ставится в слот из инвентаря: действие «В слот быстрого доступа» (ещё раз — следующий слот); купленное или сваренное зелье встаёт в свободный слот само. Пустой слот или кончившуюся вещь игра называет. Вне этих двух случаев те же фигуры делают обычное дело. Свайпы можно переназначить: настройки, «Жесты», подраздел «Жесты во время боя».",
+ "СЛОТЫ БЫСТРОГО ДОСТУПА. Двенадцать слотов: в них ставится всё, чем пользуются за удар сердца, — зелья, свитки, жезлы, еда, вещи с действием. В бою с вынутым мечом или любым другим оружием — свайпы: два пальца влево — первый слот, вверх — второй, вправо — третий, вниз — четвёртый; три пальца влево — пятый, вверх — шестой, вправо — седьмой, вниз — восьмой; четыре пальца влево — девятый, вверх — десятый, вправо — одиннадцатый, вниз — двенадцатый. В бою с открытой панелью магии свайпы творят чары, а слоты — на касаниях, их на четыре меньше: двойное касание двумя пальцами — первый, тройное двумя — второй; одно касание тремя пальцами — третий, двойное тремя — четвёртый, тройное тремя — пятый; одно касание четырьмя — шестой, двойное четырьмя — седьмой, тройное четырьмя — восьмой. Касание разбирается, когда счёт кончился, — с задержкой в полсекунды. Панель магии в бою закрывается тем же жестом, что и открывается, — двойным касанием четырьмя пальцами (на компьютере — клавишей X или «Назад»), а когда маны не хватает ни на одно заклинание, она закрывается сама: дальше бой идёт оружием. Седьмой слот быстрого доступа при открытой панели на касание не садится. В первом слоте по умолчанию — зелье здоровья. Вещь ставится в слот из инвентаря: действие «В слот быстрого доступа» (ещё раз — следующий слот); купленное или сваренное зелье встаёт в свободный слот само. Пустой слот или кончившуюся вещь игра называет. Вне этих двух случаев те же фигуры делают обычное дело. Свайпы можно переназначить: настройки, «Жесты», подраздел «Жесты во время боя».",
  "ЖЕСТЫ ВО ВРЕМЯ БОЯ. Пока идёт бой и оружие вынуто: одно касание двумя пальцами — только здоровье, а двенадцать свайпов — слоты быстрого доступа. С убранным оружием одно касание двумя пальцами — сбор, как всегда, а два пальца влево — выпить зелье (нет зелья — отвар на воде). Два пальца влево пьют зелье и вне боя, а одним пальцем вниз и сразу вверх — только здоровье, в бою и вне боя.",
  "ЗЕЛЬЕ ОДНИМ ДВИЖЕНИЕМ. Выпить зелье можно и вне боя: на телефоне — свайп двумя пальцами влево (его можно переназначить в «Жестах»), на компьютере — клавиша Q. Пьётся зелье первого слота быстрого доступа (по умолчанию — зелье здоровья); его нет — любое зелье здоровья, купленное или сваренное.",
  "ТИХИЙ БОЙ. В бою игра молчит: тварь узнают по звуку — шагам, замаху, чарам — и слышат, что она говорит. Взмахи и удары словами не называются. Звучит только то, о чём вы спросили (здоровье — одно касание двумя пальцами при вынутом оружии), и смертельная опасность. Вернуть слова в бою — флажок «Озвучка во время боя» в настройках речи.",
@@ -11027,7 +11047,14 @@ const GUIDE_SRC=[
  "ОРУЖИЕ ЗВУЧИТ ПО КАЧЕСТВУ. Чем лучше вещь, тем лучше она звучит. Грубый меч свистит глухо, добротный — чисто, редкий звенит, а легендарный поёт и отзывается чарами. Щербатое оружие звучит на ступень хуже, певучее и нерушимое всегда отзываются чарами. Свой звук у меча, кинжала, топора, булавы, посоха, копья, лука и арбалета: у арбалета щелчок и болт, у лука тетива и стрела. Все записи — настоящее оружие, без потерь.",
  "СДЕЛАННОЕ — В КОТОМКУ. Всё, что вы создаёте, ложится в свой раздел котомки, и голос называет его. Каменное копьё — в «Оружие», его можно взять в руку. Травяной отвар и крепкий отвар у очага — в «Зелья»: их пьют, когда нужно, а не сразу. Факел, удочка и сеть — в «Инструменты».",
  "НАЗАД В ГЛАВНОМ МЕНЮ. Свайп двумя пальцами вниз работает и до входа в игру: в энциклопедии звуков, настройках, руководстве, настройках персонажа. Из раздела он возвращает к списку разделов, из главы — к оглавлению, из списка — закрывает окно. Идти до кнопки «Закрыть» не нужно.",
- "ЗЕЛЬЯ У ТОРГОВЦЕВ. У всякого торговца — зелье здоровья, зелье маны и противоядие, и ещё два зелья по месту; под землёй — и зелье ночного зрения. Травник держит все тринадцать родов: восстановления сил, очищения, дыхания под водой, защиты от холода и от жара, восприятия, сопротивлений, скорости, силы, маскировки. Обоз везёт зелья здоровья и маны и ещё одно — на четверть дороже. Купленное зелье ложится в раздел «Зелья» инвентаря и само встаёт в свободный слот быстрого доступа."]}];
+ "ЗЕЛЬЯ У ТОРГОВЦЕВ. У всякого торговца — зелье здоровья, зелье маны и противоядие, и ещё два зелья по месту; под землёй — и зелье ночного зрения. Травник держит все тринадцать родов: восстановления сил, очищения, дыхания под водой, защиты от холода и от жара, восприятия, сопротивлений, скорости, силы, маскировки. Обоз везёт зелья здоровья и маны и ещё одно — на четверть дороже. Купленное зелье ложится в раздел «Зелья» инвентаря и само встаёт в свободный слот быстрого доступа."]},
+{title:"Глава 111. Режиссёр Грани: мир растёт сам",body:[
+ "КТО ЭТО. Режиссёр Грани следит за тем, как вы играете, и каждый день добавляет в мир что-то новое — то, что вам, скорее всего, будет интересно. Чем дольше вы играете, тем лучше он вас понимает.",
+ "ЧТО ПОЯВЛЯЕТСЯ. Зелья, ресурсы, оружие, вещи и устройства, заклинания, книги, звери и скакуны, боги, города, деревни, озёра и моря, новые земли, небесные острова и глубинные ярусы, народы, кланы и фракции. О каждой новинке говорят вести.",
+ "ГДЕ СМОТРЕТЬ. Меню мира → «Режиссёр Грани» → «Кузница нового». Там всё новое, с кнопками «Купить», «Выучить», «Прочитать», «Принести дар». Покупают в любом городе или поселении.",
+ "МИР МЕНЯЕТСЯ. Твари, которых вы бьёте чаще, крепнут и хитреют. Народы воюют, дружат и торгуют — от этого меняются цены. Мастера набираются умения, их вещи становятся лучше.",
+ "ВАШИ НАХОДКИ. Если вы сварили новый состав, сложили свои чары или сделали редкую вещь, о вас узнают народы и предложат сделку. Там же — их поручения.",
+ "ПОКА ВАС НЕТ. Мир живёт и без вас: когда вы вернётесь, услышите, что случилось за это время."]}];
 /* ════════════════════════════════════════════════════════════════════════
    РУКОВОДСТВО РАЗЛОЖЕНО ПО ЧАСТЯМ
 
@@ -11074,6 +11101,7 @@ const GUIDE_PLAN=[
   ["Мир, державы, народы и боги",[[8,[0,2,3,4,6,7,10]],[18,[0,2,4]],[10,[1]],[20,[0,1,2,4]],[84,[0,2,5]],[85,[0,4,6]],[39,[1,2,3]],[19,[0,2,3,4]],[51,[0,3,4,5,6]],[60,[2,3,5]],[56,[0,1,2,6]]]],
   ["Города, здания, книги и дороги",[[12,[0,1,2,4,5]],[9,[1]],[52,[1,2,3,4,5,7]],[36,[0,1,2]],[32,[0,1,2,10,11]],[31,[0,1,4,6]],[86,[0,1,4,5]],[47,[0,2,4,5,7]],[23,[0,1,2,3,5]]]],
   ["Подземелья и сто ярусов",[[27,[1,3,8]],[45,[0,1,2,3,5,7]],[75,[1,3,5]],[89,[0,1,2,3]],[92,[1,3,5,6]],[53,[1,2,3,4]],[65,[0,1,3]],[57,[1,2,3,6,7,8]],[42,[0,1,2,3,4,5]]]],
+  ["Режиссёр Грани: мир растёт сам",[111]],
   ["Тёмные земли, Сопряжение и Предтечи",[[43,[0,1,5,6,7,8,9]],[44,[0,2,3,4,5,6]],[46,[0,2,4,5]],[71,[0,1,4,6]]]]]],
  ["Часть IV. Герой и магия","Опыт и свойства, умения и наставники, вещи и артефакты, чары.",[
   ["Герой: свойства, Древо Граней, школы и наставники",[[6,[0,1]],[76,[1,2,6,7]],[62,[2,3,4,5,6]],[58,[1,2,3,4,6]],[40,[0,1,2,3,4]],[83,[1,3,4,5]],[37,[0,1,2]]]],
@@ -47560,6 +47588,9 @@ const CMD={
  shopitem(i){if(shopItemCard(i)===false&&!shopNpc())narrate("Окно торговли не открыто: подойдите к торговцу и откройте «Торговля».");},
  shopask(arg){const p=String(arg).split(":");if(shopAsk(p[0],p[1])===false&&(!shopNpc()||!SHOP.sel))narrate(shopNpc()?"Сперва выберите товар в окне торговли.":"Окно торговли не открыто: подойдите к торговцу и откройте «Торговля».");},
  shopyes(){shopYes();},
+ /* Сделка прямо из списка: shopnow:<buy|sell>:<номер>:<сколько>. */
+ shopnow(arg){const [tab,idx,k]=String(arg).split(":");const n=shopNpc();if(!n){narrate("Окно торговли не открыто: подойдите к торговцу и откройте «Торговля».");return;}
+  SHOP.tab=tab==="sell"?"sell":"buy";SHOP.sel={idx:Number(idx),tab:SHOP.tab};shopAsk(SHOP.tab,k);},
  shopback(){SHOP.confirm=null;if(SHOP.sel){SHOP.sel=null;renderShop();narrate("Назад к списку.",{interrupt:true});}else{renderShop();narrate("Список товаров.",{interrupt:true});}},
  merit(){openModal("modal-merit");renderMerit();},
  traps(){narrate(Traps.text(),{interrupt:true});},
@@ -54796,6 +54827,669 @@ Object.assign(Director,{
  /* Молитва — повод для поручения «молитва». */
  const мол=prayToGod;prayToGod=function(id){const r=мол(id);if(r)safeFn(()=>Director.note("pray",id));return r;};}
 Object.assign(CMD,{dirquests(){Director.questsView();},dirmodel(){Director.modelView();}});
+/* ════════════════════════════════════════════════════════════════════════
+   12.5: РЕЖИССЁР ГРАНИ 3 — РАСТУЩИЙ НЕЙРОДВИЖОК И КУЗНИЦА НОВОГО
+   Просьба игрока: «в игре постоянно должны появляться — за счёт игроков или
+   персонажей — новые зелья, рецепты, ресурсы, артефакты, заклинания»;
+   «нейросеть, которая обучается, растёт вместе с игрой и расширяет мир:
+   новые территории, фракции, расы, кланы, народы»; «она должна влиять на
+   всё: монстров, подземелья, квесты, чертоги».
+
+   НЕЙРОСЕТЬ. Настоящий многослойный перцептрон прямо в игре: 32 признака
+   положения (здоровье, уровень, ночь, глубина, мастерство, напряжение,
+   золото, десять каналов того, чем игрок занят, — бой, чары, алхимия,
+   ремесло, торг, странствия, поручения, сбор, звери, чертоги, — и размер
+   выросшего мира), скрытый слой с tanh и по выходу на каждое действие мира.
+   Учится обратным распространением ошибки на памяти опыта (последние 160
+   решений): что Режиссёр сделал — и насколько после этого игрок играл,
+   брал ли новинку, доводил ли поручение. Хранится в сохранении.
+   РОСТ. Сеть начинает с 12 нейронов и растёт по 4 (до 96), когда её
+   ошибка перестаёт падать или мир разросся больше, чем она охватывает.
+   Новые нейроны входят с нулевым выходом — сеть не забывает выученное
+   (приём Net2Net). Новые действия мира добавляются новыми выходами.
+
+   ВЛИЯНИЕ НА ВСЁ. Сеть выбирает событие дня и для второго Режиссёра (ее
+   оценка складывается с LinUCB), решает, что родит Кузница, крепит тварей
+   новых земель, открывает чертоги, задаёт напор внутри чертогов, даёт
+   поручения от народов и откликается на изобретения игрока.
+
+   КУЗНИЦА НОВОГО. Каждый день мир может родить: зелье (настоящее: его
+   варят в чане и находят смешиванием его ниш), ресурс (с природой для
+   опытов и ценой на рынке), рецепт артефакта (делается в мастерской),
+   заклинание (через составитель — оно творится как любое), новые земли
+   (на карте: свой ресурс, свои твари, свои поручения), народ, расу, клан,
+   фракцию (со своим нравом, тягой и отношением к игроку), новую тварь,
+   новый чертог. Имена — от марковской модели второго Режиссёра.
+
+   ЗА СЧЁТ ИГРОКА. Изобретение игрока — сплав зелий, свой состав, своё
+   заклинание, сделанная вещь — расходится по миру: народ, фракция или клан
+   с подходящей тягой предлагает сделку за право им пользоваться; принятая
+   сделка — золото, слава у них и новинка на их прилавках.
+   ════════════════════════════════════════════════════════════════════════ */
+const NEURO_CH=["бой","чары","алхимия","ремесло","торг","странствия","поручения","сбор","звери","чертоги"];
+const NEURO_DEED={kills:0,hits:0,raids:0,sieges:0,war:0,garrison:0,forts:0,
+ casts:1,manaSpent:1,wards:1,sigils:1,rites:1,unweave:1,focus:1,
+ mixes:2,meals:2,
+ works:3,tools:3,leather:3,mechanisms:3,houses:3,legs:3,
+ deals:4,trades:4,
+ steps:5,places:5,regions:5,forests:5,weathers:5,rifts:5,hollow:5,seam:5,tracks:5,
+ quests:6,persuade:6,repGains:6,
+ gathers:7,hides:7,imprints:7};
+const NEURO_IN=32;
+/* Действия Кузницы и мира: каждое — выход сети. */
+const NEURO_ARMS=["potion","resource","artifact","spell","land","people","race","clan","faction","beast","instance","demand","quest","sky","deep","device","evolve","master","town","village","water","god","pet","mount","weapon","book","saga","politics","remake","branch"];
+const NEURO_ARM_N={potion:"новое зелье",resource:"новый ресурс",artifact:"рецепт артефакта",spell:"новое заклинание",land:"новые земли",
+ people:"новый народ",race:"новая раса",clan:"новый клан",faction:"новая фракция",beast:"новая тварь",instance:"новый чертог",
+ demand:"спрос народа",quest:"поручение народа",sky:"небесный остров",deep:"глубинный ярус",device:"новое устройство",evolve:"твари крепнут",master:"новый мастер",town:"новый город",village:"новая деревня",water:"новая вода",god:"новый бог",pet:"новый питомец",mount:"новый скакун",weapon:"новое оружие",book:"новая книга",saga:"сложное поручение",politics:"политика и войны",remake:"переделка старого",branch:"ветвь старой расы"};
+const NEURO_LAND_KIND=[["Долина","plains"],["Нагорье","mountains"],["Пуща","forest"],["Топи","swamp"],["Взморье","coast"],["Пустошь","desert"],["Предгорья","mountains"],["Чащоба","forest"]];
+const NEURO_RES_ADJ=["звёздная","дымчатая","поющая","лунная","пепельная","студёная","медовая","горькая","живая","текучая","сонная","грозовая","багряная","тихая"];
+const NEURO_RES_NOUN=["смола","соль","пыльца","глина","роса","кора","слюда","пряжа","икра","зола","руда","ртуть"];
+const NEURO_ART_NOUN=["Перстень","Оберег","Венец","Пряжка","Наруч","Амулет","Обод","Застёжка","Подвеска","Кольцо"];
+const NEURO_SPELL_NOUN=["Шёпот","Длань","Узор","Вихрь","Печать","Зов","Венец","Клинок","Песнь","Дыхание"];
+const NEURO_FACT_NOUN=["Орден","Братство","Гильдия","Круг","Союз","Ковен","Дом","Совет"];
+/* Нрав народа и то, к чему его тянет. */
+const NEURO_ETHOS={
+ торговцы:{тяга:["resource","potion","elixir","brew"],о:"живут торгом и платят за всё, что можно перепродать"},
+ мистики:{тяга:["spell","elixir"],о:"ищут чары и тайное знание"},
+ воины:{тяга:["artifact","beast"],о:"ценят оружие, защиту и сильных противников"},
+ алхимики:{тяга:["potion","elixir","brew","resource"],о:"собирают составы и рецепты"},
+ учёные:{тяга:["spell","artifact","elixir","brew","potion"],о:"записывают всё новое, что случается в Грани"},
+ жрецы:{тяга:["spell","potion"],о:"берегут святыни и целебные составы"},
+ кочевники:{тяга:["land","resource","beast"],о:"идут туда, где открываются новые земли"},
+ мастера:{тяга:["artifact","resource"],о:"делают вещи и ищут для них припас"}};
+const NEURO_ETHOS_IDS=Object.keys(NEURO_ETHOS);
+const NEURO_PEOPLE_N={people:"народ",race:"раса",clan:"клан",faction:"фракция"};
+const Neuro={
+ /* ── состояние ── */
+ st(){const s=Director.st();if(!s.nn||typeof s.nn!=="object")s.nn={};const n=s.nn;
+  if(!Array.isArray(n.arms))n.arms=NEURO_ARMS.concat(DIR2_ARMS.map(a=>"d2:"+a));
+  for(const a of NEURO_ARMS.concat(DIR2_ARMS.map(a=>"d2:"+a)))if(!n.arms.includes(a))this.addArm(n,a);
+  if(!Number.isFinite(Number(n.H))||!Array.isArray(n.W1)||n.W1.length!==n.H*NEURO_IN)this.init(n);
+  if(!Array.isArray(n.mem))n.mem=[];if(!Array.isArray(n.lossHist))n.lossHist=[];if(!Array.isArray(n.grown))n.grown=[];
+  if(!Array.isArray(n.act)||n.act.length!==NEURO_CH.length)n.act=new Array(NEURO_CH.length).fill(0);
+  if(!Array.isArray(n.today)||n.today.length!==NEURO_CH.length)n.today=new Array(NEURO_CH.length).fill(0);
+  if(!Number.isFinite(Number(n.steps)))n.steps=0;if(!Number.isFinite(Number(n.lastNovel)))n.lastNovel=Number(G.day)||1;
+  if(!n.meta||typeof n.meta!=="object")n.meta={lr:0.08,T:0.12,eps:0.1,r:[],ver:1,лучшее:0};if(!Array.isArray(n.meta.r))n.meta.r=[];if(!Array.isArray(n.recent))n.recent=[];
+  return n;},
+ /* ── Самосовершенствование: сеть сама подбирает скорость учёбы и смелость
+    поиска нового по тому, растёт ли ваш интерес; новая версия себя — когда
+    средняя награда побила прежний рекорд. ── */
+ meta(r){const n=this.st(),M=n.meta;M.r.push(Math.round(r*1000)/1000);if(M.r.length>28)M.r.shift();if(M.r.length<14)return;
+  const avg=a=>a.reduce((x,y)=>x+y,0)/a.length;const a=avg(M.r.slice(-14,-7)),b=avg(M.r.slice(-7));
+  if(b<a-0.03){M.eps=Math.min(0.3,+(M.eps+0.03).toFixed(3));M.T=Math.min(0.3,+(M.T+0.02).toFixed(3));M.lr=Math.min(0.15,+(M.lr*1.15).toFixed(4));}
+  else if(b>a+0.03){M.eps=Math.max(0.04,+(M.eps-0.02).toFixed(3));M.T=Math.max(0.06,+(M.T-0.01).toFixed(3));M.lr=Math.max(0.02,+(M.lr*0.92).toFixed(4));}
+  if(b>(Number(M.лучшее)||0)+0.02&&M.r.length>=14){M.лучшее=+b.toFixed(3);M.ver=(Number(M.ver)||1)+1;this.chron(`Режиссёр Грани стал лучше понимать, что вам интересно`);}},
+ gen(){if(!G.gen||typeof G.gen!=="object"||Array.isArray(G.gen))G.gen={};const g=G.gen;
+  for(const k of ["potions","res","arts","spells","lands","peoples","beasts","offers","quests","chron","inventions","masters","devices","own"])if(!Array.isArray(g[k]))g[k]=[];
+  if(!g.evo||typeof g.evo!=="object")g.evo={};if(!g.killsFam||typeof g.killsFam!=="object")g.killsFam={};
+  if(!Number.isFinite(Number(g.n)))g.n=1;if(!g.demand||typeof g.demand!=="object")g.demand={};return g;},
+ rnd(seed){let a=(Math.abs(Math.floor(seed))>>>0)||1;return ()=>{a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};},
+ r4(v){return Math.round(v*1e4)/1e4;},
+ init(n){n.H=12;const A=n.arms.length;const R=this.rnd(7919);const sc=1/Math.sqrt(NEURO_IN);
+  n.W1=Array.from({length:n.H*NEURO_IN},()=>this.r4((R()*2-1)*sc));n.b1=new Array(n.H).fill(0);
+  n.W2=Array.from({length:A*n.H},()=>this.r4((R()*2-1)*0.1));n.b2=new Array(A).fill(0);n.updates=0;},
+ addArm(n,a){n.arms.push(a);if(Array.isArray(n.W2)&&Number.isFinite(Number(n.H))){for(let j=0;j<n.H;j++)n.W2.push(0);n.b2.push(0);}},
+ /* ── признаки: 32 числа ── */
+ feats(){const n=this.st(),g=this.gen();const x=safeFn(()=>Director.feats(),null)||new Array(12).fill(0);
+  const out=x.slice(0,12);
+  out.push(Math.min(1,Math.log10(1+(Number(G.gold)||0))/5));
+  for(let i=0;i<NEURO_CH.length;i++){const v=Number(n.act[i])||0;out.push(v/(1+v));}
+  const мир=g.potions.length+g.res.length+g.arts.length+g.spells.length+g.lands.length+g.peoples.length+g.beasts.length;
+  out.push(Math.min(1,Math.log10(1+мир)/2));
+  out.push(Math.min(1,((Number(G.day)||1)-(Number(n.lastNovel)||1))/10));
+  out.push(Math.min(1,g.peoples.length/12));out.push(Math.min(1,g.lands.length/8));
+  out.push(Math.min(1,Math.log10(1+g.inventions.length)/1.5));
+  out.push(Math.min(1,g.offers.filter(o=>!o.done).length/4));out.push(Math.min(1,g.quests.filter(q=>!q.done).length/4));
+  out.push(this.landHere()?1:0);out.push(safeFn(()=>Chertog.run(),null)?1:0);
+  while(out.length<NEURO_IN)out.push(0);return out.slice(0,NEURO_IN).map(v=>Number.isFinite(v)?v:0);},
+ /* ── прямой проход ── */
+ forward(x){const n=this.st();const H=n.H,A=n.arms.length;const h=new Array(H);
+  for(let j=0;j<H;j++){let z=n.b1[j];for(let i=0;i<NEURO_IN;i++)z+=n.W1[j*NEURO_IN+i]*x[i];h[j]=Math.tanh(z);}
+  const y=new Array(A);for(let a=0;a<A;a++){let z=n.b2[a];for(let j=0;j<H;j++)z+=n.W2[a*H+j]*h[j];y[a]=1/(1+Math.exp(-Math.max(-30,Math.min(30,z))));}
+  return {h,y};},
+ score(arm,x){const n=this.st();const a=n.arms.indexOf(arm);if(a<0)return 0.5;return this.forward(x||this.feats()).y[a];},
+ /* ── обучение: один шаг SGD по одному примеру ── */
+ sgd(x,arm,r,lr){const n=this.st();const a=n.arms.indexOf(arm);if(a<0)return 0;const H=n.H;const {h,y}=this.forward(x);
+  const e=y[a]-r;const dz=e*y[a]*(1-y[a]);
+  for(let j=0;j<H;j++){const w=n.W2[a*H+j];n.W2[a*H+j]-=lr*(dz*h[j]+1e-4*w);
+   const dh=dz*w*(1-h[j]*h[j]);if(Math.abs(dh)<1e-9)continue;
+   for(let i=0;i<NEURO_IN;i++)if(x[i])n.W1[j*NEURO_IN+i]-=lr*dh*x[i];n.b1[j]-=lr*dh;}
+  n.b2[a]-=lr*dz;n.updates=(Number(n.updates)||0)+1;return e*e;},
+ remember(x,arm,r){const n=this.st();n.mem.push({x:x.map(v=>Math.round(v*1000)/1000),a:arm,r:Math.round(Math.max(0,Math.min(1,r))*1000)/1000});
+  if(n.mem.length>160)n.mem.splice(0,n.mem.length-160);},
+ /* Повтор памяти: несколько проходов по случайным примерам. */
+ train(steps){const n=this.st();if(!n.mem.length)return 0;let L=0,k=0;
+  for(let t=0;t<(steps||40);t++){const m=n.mem[Math.floor(Math.random()*n.mem.length)];if(!m||!Array.isArray(m.x)||m.x.length!==NEURO_IN)continue;L+=this.sgd(m.x,m.a,m.r,Number(n.meta&&n.meta.lr)||0.08);k++;}
+  n.W1=n.W1.map(v=>this.r4(v));n.W2=n.W2.map(v=>this.r4(v));n.b1=n.b1.map(v=>this.r4(v));n.b2=n.b2.map(v=>this.r4(v));
+  const loss=k?L/k:0;n.lossHist.push(Math.round(loss*1e4)/1e4);if(n.lossHist.length>30)n.lossHist.shift();n.loss=loss;return loss;},
+ /* ── рост сети ── */
+ grow(why){const n=this.st();if(n.H>=96)return false;const add=4,H=n.H,A=n.arms.length;const R=this.rnd((Number(G.day)||1)*31+H);
+  const W1=n.W1.slice();for(let j=0;j<add;j++)for(let i=0;i<NEURO_IN;i++)W1.push(this.r4((R()*2-1)*0.3/Math.sqrt(NEURO_IN)));
+  const W2=[];for(let a=0;a<A;a++){for(let j=0;j<H;j++)W2.push(n.W2[a*H+j]);for(let j=0;j<add;j++)W2.push(0);}
+  n.W1=W1;n.W2=W2;n.b1=n.b1.concat(new Array(add).fill(0));n.H=H+add;
+  n.grown.push({день:Number(G.day)||1,H:n.H,почему:why});if(n.grown.length>20)n.grown.shift();
+  this.chron(`Режиссёр Грани вырос: ${why}`);return true;},
+ growCheck(){const n=this.st(),g=this.gen();const L=n.lossHist;
+  const мир=g.potions.length+g.res.length+g.arts.length+g.spells.length+g.lands.length*2+g.peoples.length*2+g.beasts.length;
+  if(мир>n.H*1.5)return this.grow("мир разросся, и он стал видеть шире");
+  if(L.length>=12&&n.mem.length>=40){const a=L.slice(-12,-6).reduce((s,v)=>s+v,0)/6,b=L.slice(-6).reduce((s,v)=>s+v,0)/6;
+   if(b>0.02&&b>=a*0.97&&(Number(G.day)||1)-((n.grown[n.grown.length-1]||{}).день||0)>=5)return this.grow("старого понимания стало мало — он стал внимательнее");}
+  return false;},
+ /* ── наблюдение за всем, что делает игрок ── */
+ observe(kind,n){const st=this.st();const c=NEURO_DEED[kind];if(c==null)return;st.today[c]=(Number(st.today[c])||0)+Math.min(5,Number(n)||1)*(kind==="steps"?0.05:1);},
+ note(kind){const st=this.st();if(kind==="tame"||kind==="beast"||kind==="hatch")st.today[8]+=1;if(kind==="pray")st.today[6]+=0.5;if(kind==="mix"||kind==="recipe")st.today[2]+=1;},
+ instEvent(ev){const st=this.st();st.today[9]=(Number(st.today[9])||0)+(ev==="runCompleted"||ev==="bossKilled"?3:0.5);
+  if(ev==="runCompleted")this.questProgress("instance",1);if(ev==="bossKilled")st.bonus=(Number(st.bonus)||0)+0.2;},
+ /* ── сутки мира ── */
+ day(played){if(!Director.on())return;const n=this.st(),g=this.gen();
+  for(let i=0;i<NEURO_CH.length;i++){n.act[i]=Math.round(((Number(n.act[i])||0)*0.85+(Number(n.today[i])||0))*1000)/1000;n.today[i]=0;}
+  const x=this.feats();
+  /* награда вчерашнему решению */
+  if(n.pend&&Array.isArray(n.pend.x)){const r=Math.min(1,Math.min(1,(Number(played)||0)/60)*0.7+(Number(n.bonus)||0));this.remember(n.pend.x,n.pend.a,r);this.meta(r);
+   if(n.pend.d2)this.remember(n.pend.x,"d2:"+n.pend.d2,r);}
+  n.bonus=0;this.train(48);
+  this.expire();this.mastersGrow();
+  /* решение дня: что родит мир */
+  const arm=this.pickArm(x);n.pend={x,a:arm,d2:safeFn(()=>Director.st().lastArm,null)};
+  const what=safeFn(()=>this.forge(arm),"");
+  if(what){n.lastNovel=Number(G.day)||1;safeFn(()=>narrate(`Вести мира: ${what}`,{interrupt:false}));}
+  this.growCheck();},
+ /* Мягкий максимум по оценкам сети, с малой долей разведки и уважением к вкусу игрока. */
+ pickArm(x){const n=this.st();const y=this.forward(x).y;const can=NEURO_ARMS.filter(a=>this.possible(a));if(!can.length)return "potion";
+  const M=n.meta||{};const T=Number(M.T)||0.12;const pri=this.prior();const rec=n.recent||[];
+  /* Однообразие скучно: недавно сделанное весит меньше. */
+  const w=can.map(a=>Math.exp(((y[n.arms.indexOf(a)]||0.5)+(pri[a]||0)-0.08*rec.filter(z=>z===a).length)/T));const tot=w.reduce((s,v)=>s+v,0);
+  let pick=can[can.length-1];
+  if(Math.random()<(Number(M.eps)||0.1))pick=can[Math.floor(Math.random()*can.length)];
+  else{let r=Math.random()*tot;for(let i=0;i<can.length;i++){r-=w[i];if(r<=0){pick=can[i];break;}}}
+  rec.push(pick);if(rec.length>8)rec.shift();n.recent=rec;return pick;},
+ /* Склад игрока подсказывает, что ему интереснее, пока сеть не выучилась. */
+ prior(){const n=this.st();const a=n.act;const s=(i)=>Math.min(0.15,(Number(a[i])||0)/40);
+  return {potion:s(2),resource:s(7)+s(4)*0.5,artifact:s(3)+s(0)*0.3,spell:s(1),land:s(5),people:0.03,race:0.02,clan:0.02,faction:0.02,
+   beast:s(0)+s(8)*0.5,instance:s(9),demand:s(4),quest:s(6),sky:s(5)*0.6+s(9)*0.4,deep:s(9)*0.6+s(5)*0.4,device:s(3)+s(1)*0.3,evolve:s(0),master:0.03,town:s(4)*0.5+0.02,village:0.02,water:s(5)*0.5,god:s(6)*0.3+0.01,pet:s(8),mount:s(8)*0.7+s(5)*0.3,weapon:s(0)+s(3)*0.3,book:s(6)*0.4+0.02,saga:s(6),politics:0.03,remake:s(2)*0.5+s(3)*0.5+0.02,branch:0.02};},
+ possible(a){const g=this.gen();
+  if(a==="demand"||a==="quest")return g.peoples.length>0;
+  if(a==="clan")return g.peoples.length>0||safeFn(()=>EMPIRES.length,0)>0;
+  if(a==="beast")return g.lands.length>0;
+  if(a==="instance")return typeof InstanceDirectorIntegration!=="undefined";
+  if(a==="land")return g.lands.length<24;
+  if(a==="sky"||a==="deep")return typeof InstanceGenerator!=="undefined"&&g.lands.filter(l=>l.слой).length<16;
+  if(a==="evolve")return Object.keys(g.killsFam).length>0||g.beasts.length>0;
+  if(a==="master")return g.masters.length<30;
+  if(a==="town"||a==="village"||a==="water")return !Array.isArray(g.places)||g.places.length<40;
+  if(a==="god")return !Array.isArray(g.gods)||g.gods.length<12;if(a==="saga")return g.peoples.length>0;
+  if(a==="politics")return g.peoples.length>0;if(a==="pet"||a==="mount")return typeof ZV_BREEDS!=="undefined";
+  if(a==="people"||a==="race"||a==="faction")return g.peoples.length<40;
+  return true;},
+ chron(t){const g=this.gen();g.chron.unshift(`День ${Number(G.day)||1}: ${t}`);if(g.chron.length>40)g.chron.length=40;safeFn(()=>Director.chron(t));},
+ /* ── имена ── */
+ name(R){return safeFn(()=>Director.genName(R),null)||"Безымянный";},
+ pick(arr,R){return arr[Math.floor((R?R():Math.random())*arr.length)%arr.length];},
+ near(){const town=safeFn(()=>nearestTown(G.x,G.y),null);return town&&town.name?town.name:safeFn(()=>EMPIRES[empireIndexAt(G.x,G.y)].short,"")||"окрестности";},
+ who(R,ремесло){const g=this.gen();
+  if(ремесло){let m=g.masters.filter(x=>x.ремесло===ремесло).sort((a,b)=>b.умение-a.умение)[0];if(!m||(g.masters.length<30&&R()<0.25))m=this.newMaster(g.n++,R,ремесло).m;
+   if(m){m.дел=(m.дел||0)+1;m.умение=Math.min(10,+(m.умение+0.3).toFixed(2));return {n:`${NEURO_MASTER[m.ремесло].кто} ${m.n}`,p:m.p,m,f:m.ремесло==="травница"};}}
+  const p=g.peoples.length&&R()<0.6?this.pick(g.peoples,R):null;const nm=this.name(R);
+  return p?{n:`${nm} из рода «${p.n}»`,p:p.id}:{n:`мастер ${nm}`,p:null};},
+ /* Сила новинки растёт с умением мастера. */
+ skillK(w){return w&&w.m?1+0.06*w.m.умение:1;},
+ /* ── Кузница ── */
+ forge(arm){const g=this.gen();const id=g.n++;const R=this.rnd((Number(G.day)||1)*7333+id*131+(Number(G.x)||0));
+  switch(arm){
+   case "potion":return this.newPotion(id,R);case "resource":return this.newRes(id,R);case "artifact":return this.newArt(id,R);
+   case "spell":return this.newSpell(id,R);case "land":return this.newLand(id,R);
+   case "people":case "race":case "clan":case "faction":return this.newPeople(id,R,arm);
+   case "beast":return this.newBeast(id,R);case "instance":return this.newInstance(id,R);
+   case "demand":return this.newDemand(id,R);case "quest":return this.newQuest(id,R);
+   case "sky":case "deep":return this.newLayer(id,R,arm);case "device":return this.newDevice(id,R);
+   case "evolve":return this.evolve(R);case "master":return this.newMaster(id,R).t;
+   case "town":return this.newPlace(id,R,R()<0.7?"город":"крепость");case "village":return this.newPlace(id,R,R()<0.75?"деревня":"святилище");
+   case "water":return this.newPlace(id,R,this.pick(["озеро","река","море"],R));case "god":return this.newGod(id,R);
+   case "pet":return this.newPet(id,R,false);case "mount":return this.newPet(id,R,true);case "weapon":return this.newWeapon(id,R);
+   case "book":return this.newBook(id,R);case "saga":return this.newSaga(id,R);case "politics":return this.newPolitics(id,R);
+   case "remake":return this.remake(id,R);case "branch":return this.branch(id,R);}
+  return "";},
+ /* Зелье: две ниши из тех, у которых есть травы (чтобы варилось в чане), и одно-два действия. */
+ potionEffects(R){const B=Object.keys(MIX_BUFF_WORD);const эф=[];const k=R();
+  if(k<0.35)эф.push(["hp",+(0.6+R()*0.6).toFixed(2)]);else if(k<0.55)эф.push(["mana",+(0.6+R()*0.6).toFixed(2)]);else if(k<0.65)эф.push(["rest",+(0.8+R()*0.4).toFixed(2)]);
+  const b=this.pick(B,R);эф.push(["buff",b,Math.round(3+R()*4)]);return эф;},
+ newPotion(id,R,from){const cats=PLANT_CATS.map(c=>c.id).filter(c=>MIX_NICHES[c]);
+  const busy=new Set(POTIONS.filter(p=>p.из&&p.из.length===2).map(p=>p.из.slice().sort().join("+")));
+  let пара=null;for(let t=0;t<40&&!пара;t++){const a=this.pick(cats,R),b=this.pick(cats,R);if(a!==b&&!busy.has([a,b].sort().join("+")))пара=[a,b];}
+  if(!пара)return "";const кто=from&&from.кто?{n:from.кто,p:from.p}:this.who(R,"алхимик");const эф=from&&from.эф?from.эф:this.potionEffects(R).map(e=>e[0]==="buff"?[e[0],e[1],Math.round(e[2]*this.skillK(кто))]:[e[0],+(e[1]*this.skillK(кто)).toFixed(2)]);
+  const nm=this.name(R);const rec={id:"gp_"+id,n:`${MIX_NICHES[пара[0]].прил} «${nm}»`,из:пара,эф,срок:10,стаб:0.7,кто:кто.n,p:кто.p,где:this.near(),x:G.x,y:G.y,день:Number(G.day)||1,цена:18+Math.round(R()*20),родители:from&&from.родители||null};
+  this.gen().potions.push(rec);this.regPotion(rec);
+  safeFn(()=>Ledger.add("рецепты",`зелье ${rec.n}: ${PLANT_CAT_BY_ID[пара[0]].n} и ${PLANT_CAT_BY_ID[пара[1]].n}`,"мир"));
+  this.chron(`${кто.n} сварил${кто.f?"а":""} новое зелье — ${rec.n}`);
+  return `${кто.n} в округе ${rec.где} сварил новое зелье — ${rec.n}: ${this.potionWord(rec)}. Рецепт простой: ${PLANT_CAT_BY_ID[пара[0]].n} и ${PLANT_CAT_BY_ID[пара[1]].n} — в чан или в опыт смешивания. Купить готовое — в окне Режиссёра, раздел «Кузница нового».`;},
+ potionWord(rec){if(Array.isArray(rec.родители)&&rec.родители.length)return rec.родители.map(id=>(POTION_BY_ID[id]||{}).о).filter(Boolean).join("; ");
+  return (rec.эф||[]).map(e=>e[0]==="buff"?(MIX_BUFF_WORD[e[1]]||e[1]):MIX_EFFECT_WORD[e[0]]).filter(Boolean).join(", ");},
+ regPotion(rec){if(POTION_BY_ID[rec.id])return;const self=this;
+  const pt={id:rec.id,n:rec.n,из:rec.из.slice(),срок:rec.срок||10,стаб:rec.стаб||0.7,о:this.potionWord(rec),gen:true,
+   дать(q){if(Array.isArray(rec.родители)&&rec.родители.length)return rec.родители.map(id=>{const p=POTION_BY_ID[id];return p&&!p.gen?safeFn(()=>p.дать(q*(Number(rec.мн)||0.75)),""):"";}).filter(Boolean).join("; ")||"ни вкуса, ни толку";
+    return (rec.эф||[]).map(e=>safeFn(()=>mixApply(e,q,1),"")).filter(Boolean).join(", ")||"ни вкуса, ни толку";}};
+  POTIONS.push(pt);POTION_BY_ID[pt.id]=pt;},
+ newRes(id,R,land){const g=this.gen();let n=null;for(let t=0;t<30&&!n;t++){const c=`${this.pick(NEURO_RES_ADJ,R)} ${this.pick(NEURO_RES_NOUN,R)}`;if(!g.res.some(r=>r.n===c)&&!RES_BASE[c])n=c;}
+  if(!n)return "";const ids=Object.keys(MIX_NICHES);const ниши=[this.pick(ids,R)];const b=this.pick(ids,R);if(b!==ниши[0])ниши.push(b);
+  const rec={id:"gr_"+id,n,ниши,цена:8+Math.round(R()*50),земля:land||null,кто:this.who(R).n,где:this.near(),x:G.x,y:G.y,день:Number(G.day)||1};
+  g.res.push(rec);this.regRes(rec);
+  safeFn(()=>Ledger.add("рецепты",`${n}: ${land?"добывают в землях «"+(g.lands.find(l=>l.id===land)||{}).n+"»":"нашли в округе "+rec.где}`,"ресурс"));
+  this.chron(`найден новый ресурс — ${n}`);
+  const нич=ниши.map(x=>MIX_NICHES[x].прил).join(" и ");
+  return `${land?`В землях «${(g.lands.find(l=>l.id===land)||{}).n}»`:`В округе ${rec.где}`} нашли новый припас — ${n}: по природе ${нич}, на рынке около ${rec.цена} золота. Годится в опыты смешивания.`;},
+ regRes(rec){safeFn(()=>{MIX_NATURE[rec.n]=rec.ниши.slice();});},
+ resPrice(name){const r=this.gen().res.find(x=>x.n===name);return r?r.цена:0;},
+ demandK(res){const d=this.gen().demand[res];return d&&Number(d.до)>=(Number(G.day)||1)?Number(d.k)||1:1;},
+ newArt(id,R,from){const doms=[...new Set(ART_RECIPES.map(r=>r.дом))].filter(d=>!["leg","fact"].includes(d));const crafts=["кузня","зачар","мистика","алхимия"].filter(c=>safeFn(()=>ART_CRAFT_BY_ID[c],null));
+  const ранг=Math.max(0,Math.min(4,Math.floor((Number(G.level)||1)/6)+(R()<0.3?1:0)));
+  const база=["руда","камень","кость","кристалл","трава","кожа","самоцвет"].filter(k=>RES_BASE[k]||k==="кожа");const нужно={};
+  нужно[this.pick(база,R)]=2+Math.floor(R()*3);нужно[this.pick(база,R)]=(нужно[this.pick(база,R)]||0)+1+Math.floor(R()*2);
+  const g=this.gen();if(g.res.length&&R()<0.5){const r=this.pick(g.res,R);нужно[r.n]=1;}
+  const кто=from&&from.кто?{n:from.кто,p:from.p}:this.who(R,R()<0.5?"кузнец":"зачарователь");const nm=this.name(R);
+  const rec={id:"ga_"+id,n:`${this.pick(NEURO_ART_NOUN,R)} ${nm}`,ремесло:this.pick(crafts.length?crafts:["кузня"],R),дом:this.pick(doms,R),ранг,нужно,
+   о:`Вещь, которую придумал ${кто.n}.`,кто:кто.n,p:кто.p,где:this.near(),x:G.x,y:G.y,день:Number(G.day)||1,цена:40+ранг*40};
+  g.arts.push(rec);this.regArt(rec);this.chron(`${кто.n} придумал${кто.f?"а":""} вещь — ${rec.n}`);
+  return `${кто.n} придумал${кто.f?"а":""} новую вещь — ${rec.n}: ремесло ${(ART_CRAFT_BY_ID[rec.ремесло]||{}).n||rec.ремесло}, нужно ${Object.entries(нужно).map(([k,v])=>`${k} ×${v}`).join(", ")}. Рецепт можно купить в окне Режиссёра.`;},
+ regArt(rec){if(ART_RECIPE_BY_ID[rec.id])return;const r={id:rec.id,n:rec.n,ремесло:rec.ремесло,дом:rec.дом,ранг:rec.ранг,нужно:Object.assign({},rec.нужно),о:rec.о,gen:true};
+  ART_RECIPES.push(r);ART_RECIPE_BY_ID[r.id]=r;},
+ newSpell(id,R){const fav=safeFn(()=>Director.favSchool(),null);const sc=fav&&safeFn(()=>MSCHOOL_BY_ID[fav],null)?fav:this.pick(SCHOOLS.slice(0,24).map(s=>s.id),R);
+  const forms=Object.keys(FORM_BY_ID);const mods=SPELL_MODS.map(m=>m.id);const ур=Math.max(1,Math.min(5,1+Math.floor((Number(G.level)||1)/5)));
+  let rec=null;for(let t=0;t<12&&(!rec||rec.ошибка);t++)rec=safeFn(()=>composeSpell(sc,this.pick(forms,R),this.pick(mods,R),ур),null);
+  if(!rec||rec.ошибка)return "";const кто=this.who(R,"маг");const nm=this.name(R);
+  rec.n=`${this.pick(NEURO_SPELL_NOUN,R)} ${nm}`;rec.id="gs_"+id;rec.источник=кто.n;rec.gen=true;
+  const g=this.gen();g.spells.push({id:rec.id,n:rec.n,rec,кто:кто.n,p:кто.p,где:this.near(),x:G.x,y:G.y,день:Number(G.day)||1,цена:60+ур*50});
+  this.chron(`${кто.n} сложил${кто.f?"а":""} новые чары — ${rec.n}`);
+  return `${кто.n} сложил${кто.f?"а":""} новые чары — «${rec.n}»: ${rec.вид}, мана ${rec.cost}. Выучить у него — в окне Режиссёра.`;},
+ newLand(id,R){const g=this.gen();const [слово,terr]=this.pick(NEURO_LAND_KIND,R);const nm=this.name(R);
+  const ang=R()*Math.PI*2,d=30+Math.round(R()*70);const x=Math.round((Number(G.x)||0)+Math.cos(ang)*d),y=Math.round((Number(G.y)||0)+Math.sin(ang)*d);
+  const fam=this.pick(["beast","crawler","bird","giant","spirit","construct","deep","bone","undead"],R);
+  const rec={id:"gl_"+id,n:`${слово} ${nm}`,terr,x,y,r:6+Math.round(R()*6),fam,опасность:1+Math.floor(R()*3),день:Number(G.day)||1,res:null};
+  g.lands.push(rec);
+  const rr=this.newRes(g.n++,R,rec.id);const res=g.res[g.res.length-1];if(rr&&res&&res.земля===rec.id)rec.res=res.n;
+  this.chron(`открылись новые земли — ${rec.n}`);
+  return `Открылись новые земли — ${rec.n}, ${safeFn(()=>Director.where(x-G.x,y-G.y),"")||"вдали"}, около ${d} шагов. Там водятся ${DIR2_FAMILY[fam]||"твари"}${rec.res?`, а добывают там «${rec.res}»`:""}.`;},
+ newPeople(id,R,kind){const g=this.gen();const nm=this.name(R);const ethos=this.pick(NEURO_ETHOS_IDS,R);
+  const land=g.lands.length&&R()<0.7?this.pick(g.lands,R):null;const parent=kind==="clan"?(g.peoples.length&&R()<0.6?this.pick(g.peoples.filter(p=>p.kind!=="clan"),R):null):null;
+  const emp=kind==="clan"&&!parent?safeFn(()=>EMPIRES[empireIndexAt(G.x,G.y)],null):null;
+  const n=kind==="faction"?`${this.pick(NEURO_FACT_NOUN,R)} ${nm}`:nm;
+  const rec={id:"gn_"+id,kind,n,ethos,тяга:NEURO_ETHOS[ethos].тяга.slice(),вождь:this.name(R),земля:land?land.id:null,
+   род:parent?parent.id:null,держава:emp?emp.short:null,реп:0,день:Number(G.day)||1};
+  g.peoples.push(rec);this.chron(`${NEURO_PEOPLE_N[kind]} «${n}» вошёл в Грань`);
+  const откуда=land?`из земель «${land.n}»`:parent?`из рода «${parent.n}»`:emp?`в державе «${emp.short}»`:"из-за края карты";
+  return `${({people:"Новый народ",race:"Новая раса",clan:"Новый клан",faction:"Новая фракция"})[kind]} — «${n}» ${откуда}: ${ethos}, ${NEURO_ETHOS[ethos].о}. Вождь — ${rec.вождь}.`;},
+ newBeast(id,R){const g=this.gen();const land=this.pick(g.lands,R);const nm=this.name(R);
+  const base=safeFn(()=>MONSTERS.filter(m=>foeFamily(m)===land.fam),[])||[];const m=base.length?this.pick(base,R):null;
+  const rec={id:"gb_"+id,n:`${nm} — ${m?m.n.toLowerCase():"тварь"} земель «${land.n}»`,имя:nm,base:m?m.id:null,fam:land.fam,земля:land.id,k:1.15+R()*0.25,день:Number(G.day)||1,убито:0};
+  g.beasts.push(rec);this.chron(`в землях «${land.n}» завелась новая тварь — ${nm}`);
+  return `В землях «${land.n}» завелась новая тварь — ${nm}: ${m?m.n.toLowerCase()+", только крупнее и злее":"невиданная прежде"}. Встретить её можно только там.`;},
+ newInstance(id,R){const g=this.gen();const p=g.peoples.length?this.pick(g.peoples,R):null;
+  const why=p?`его открыли «${p.n}»`:`Режиссёр открыл его по вашему складу: ${NEURO_CH[this.topCh()]}`;
+  const c=safeFn(()=>InstanceDirectorIntegration.createNear(why),null);if(!c)return "";this.chron(`открылся чертог «${c.n}»`);
+  return `Рядом открылся новый чертог — «${c.n}»: ${why}. Он на карте ${safeFn(()=>Director.where(c.x-G.x,c.y-G.y),"рядом")}.`;},
+ topCh(){const a=this.st().act;let b=0;for(let i=1;i<a.length;i++)if((a[i]||0)>(a[b]||0))b=i;return b;},
+ newDemand(id,R){const g=this.gen();const p=this.pick(g.peoples,R);const pool=g.res.length&&R()<0.5?g.res.map(r=>r.n):["руда","камень","кость","кристалл","трава","самоцвет"].filter(k=>RES_BASE[k]);
+  const res=this.pick(pool,R);const k=1.3+Math.round(R()*4)/10;g.demand[res]={k,до:(Number(G.day)||1)+5,кто:p.n};
+  this.chron(`«${p.n}» скупают «${res}»`);
+  return `«${p.n}» скупают «${res}»: пять дней цена выше в ${String(k).replace(".",",")} раза по всем рынкам.`;},
+ newQuest(id,R){const g=this.gen();const p=this.pick(g.peoples,R);const land=p.земля?g.lands.find(l=>l.id===p.земля):(g.lands.length?this.pick(g.lands,R):null);
+  const виды=["deliver","hunt","explore","instance"].filter(v=>v!=="hunt"&&v!=="explore"||land);const вид=this.pick(виды,R);
+  const res=g.res.length&&R()<0.6?this.pick(g.res,R).n:this.pick(["руда","кость","кристалл","трава"],R);const nq=вид==="deliver"?3+Math.floor(R()*4):вид==="hunt"?2+Math.floor(R()*3):1;
+  const q={id:"gq_"+id,вид,p:p.id,кто:p.n,земля:land?land.id:null,res,n:nq,сделано:0,до:(Number(G.day)||1)+8,награда:60+(Number(G.level)||1)*15,done:false};
+  q.т=вид==="deliver"?`принести «${p.n}» «${res}» ×${nq} — сдать в любом городе через окно Режиссёра`:вид==="hunt"?`одолеть ${nq} тварей в землях «${land.n}»`:вид==="explore"?`дойти до сердца земель «${land.n}»`:"пройти любой чертог до конца";
+  g.quests.push(q);this.chron(`поручение от «${p.n}»: ${q.т}`);
+  return `«${p.n}» просят: ${q.т}. Награда — ${q.награда} золота и их доверие.`;},
+ /* ── изобретение игрока расходится по миру ── */
+ invent(kind,name,data){if(!Director.on())return "";const g=this.gen();if(g.inventions.some(i=>i.n===name))return "";
+  g.inventions.push({kind,n:name,день:Number(G.day)||1});if(g.inventions.length>60)g.inventions.shift();
+  const st=this.st();st.bonus=(Number(st.bonus)||0)+0.15;
+  const R=this.rnd((Number(G.day)||1)*977+name.length*31);
+  let p=g.peoples.filter(x=>(x.тяга||[]).includes(kind)).sort((a,b)=>b.реп-a.реп)[0];
+  if(!p){this.newPeople(g.n++,R,this.pick(["people","faction","clan"],R));p=g.peoples[g.peoples.length-1];if(p&&!p.тяга.includes(kind))p.тяга.push(kind);}
+  if(!p)return "";const gold=Math.round((40+20*(Number(G.level)||1))*(kind==="spell"?1.6:kind==="artifact"?1.4:1));
+  const o={id:"go_"+(g.n++),kind,n:name,p:p.id,кто:p.n,gold,data:data||null,до:(Number(G.day)||1)+6,done:false};g.offers.push(o);
+  this.chron(`«${p.n}» прослышали о вашем изобретении «${name}»`);
+  return ` Слух о «${name}» дошёл до «${p.n}»: они предлагают ${gold} золота за право этим пользоваться — окно Режиссёра, «Кузница нового».`;},
+ acceptOffer(id){const g=this.gen();const o=g.offers.find(x=>x.id===id&&!x.done);if(!o)return "Предложения уже нет.";
+  o.done=true;G.gold=(Number(G.gold)||0)+o.gold;const p=g.peoples.find(x=>x.id===o.p);if(p)p.реп=Math.min(100,p.реп+15);
+  const st=this.st();st.bonus=(Number(st.bonus)||0)+0.3;
+  let ещё="";const R=this.rnd(o.gold*13+o.n.length);
+  if((o.kind==="elixir"||o.kind==="brew")&&o.data){const t=this.newPotion(g.n++,R,{эф:o.data.эф,родители:o.data.родители,кто:p?p.n:o.кто,p:o.p});if(t)ещё=" Теперь ваш состав варят и продают у них.";}
+  if(o.kind==="artifact")safeFn(()=>{this.newArt(g.n++,R,{кто:p?p.n:o.кто,p:o.p});ещё=" Мастера «"+(p?p.n:o.кто)+"» сделали по вашему образцу свою вещь.";});
+  safeFn(()=>{UI.pickup();Bank.play("arte_coins",{gain:0.55,maxSec:3});});
+  this.chron(`вы продали «${o.кто}» право на «${o.n}»`);safeFn(()=>saveGame(true));
+  return `Сделка: «${o.кто}» платят ${o.gold} золота за «${o.n}». Их доверие к вам выросло.${ещё} Золота: ${G.gold}.`;},
+ declineOffer(id){const g=this.gen();const o=g.offers.find(x=>x.id===id&&!x.done);if(!o)return "Предложения уже нет.";o.done=true;o.отказ=true;
+  const p=g.peoples.find(x=>x.id===o.p);if(p)p.реп=Math.max(-100,p.реп-3);return `Вы отказали «${o.кто}». Изобретение осталось только вашим.`;},
+ expire(){const g=this.gen();const d=Number(G.day)||1;
+  for(const o of g.offers)if(!o.done&&d>o.до){o.done=true;o.истекло=true;}
+  for(const q of g.quests)if(!q.done&&d>q.до){q.done=true;q.провал=true;const p=g.peoples.find(x=>x.id===q.p);if(p)p.реп=Math.max(-100,p.реп-5);}
+  for(const k of Object.keys(g.demand))if(Number(g.demand[k].до)<d)delete g.demand[k];
+  if(g.offers.length>30)g.offers=g.offers.filter(o=>!o.done).concat(g.offers.filter(o=>o.done).slice(-10));
+  if(g.quests.length>30)g.quests=g.quests.filter(q=>!q.done).concat(g.quests.filter(q=>q.done).slice(-10));},
+ questProgress(вид,n,где){const g=this.gen();let t="";
+  for(const q of g.quests){if(q.done||q.вид!==вид)continue;if((вид==="hunt"||вид==="explore")&&q.земля!==где)continue;
+   q.сделано=Math.min(q.n,q.сделано+(n||1));if(q.сделано>=q.n)t+=this.questDone(q);}
+  return t;},
+ questDone(q){const g=this.gen();
+  if(q.сага&&Array.isArray(q.шаги)&&q.шаг<q.шаги.length-1){q.шаг++;Object.assign(q,q.шаги[q.шаг],{сделано:0});const t=`«${q.кто}»: шаг ${q.шаг} из ${q.шаги.length} сделан. Дальше: ${q.т}.`;safeFn(()=>narrate(t,{interrupt:false}));return t;}
+  q.done=true;G.gold=(Number(G.gold)||0)+q.награда;const p=g.peoples.find(x=>x.id===q.p);if(p){p.реп=Math.min(100,p.реп+12);this.repSpread(p.id,12);if(p.раса)safeFn(()=>addRep(p.раса,2));}
+  const st=this.st();st.bonus=(Number(st.bonus)||0)+0.35;safeFn(()=>deed("quests"));safeFn(()=>UI.triumph());
+  this.chron(`поручение «${q.кто}» исполнено`);const t=`Поручение «${q.кто}» исполнено: ${q.т}. Награда — ${q.награда} золота.`;safeFn(()=>narrate(t,{interrupt:false}));return t;},
+ deliver(id){const g=this.gen();const q=g.quests.find(x=>x.id===id&&!x.done);if(!q)return "Поручения уже нет.";
+  if(!safeFn(()=>Zver.inTown(),false)&&!G.place)return "Сдать можно в любом городе или поселении.";
+  const есть=Number(G.inv&&G.inv[q.res])||0;if(есть<q.n)return `Нужно ${q.res} ×${q.n}, у вас ${есть}.`;
+  G.inv[q.res]=есть-q.n;if(G.inv[q.res]<=0)delete G.inv[q.res];q.сделано=q.n;return this.questDone(q);},
+ /* ── земли на карте ── */
+ landHere(){const g=G.gen;if(!g||!Array.isArray(g.lands))return null;return g.lands.find(l=>Math.abs(l.x-G.x)+Math.abs(l.y-G.y)<=l.r)||null;},
+ step(){const l=this.landHere();const st=this.st();
+  if(!l){st.inLand=null;return;}
+  if(st.inLand!==l.id){st.inLand=l.id;if(!l.был){l.был=1;this.st().bonus=(Number(this.st().bonus)||0)+0.2;}
+   safeFn(()=>narrate(`Вы вступили в земли «${l.n}». Здесь водятся ${DIR2_FAMILY[l.fam]||"твари"}${l.res?`, а под ногами бывает «${l.res}»`:""}.`,{interrupt:false}));}
+  if(Math.abs(l.x-G.x)+Math.abs(l.y-G.y)<=1)this.questProgress("explore",1,l.id);
+  if(l.res&&Math.random()<0.04){G.inv[l.res]=(Number(G.inv[l.res])||0)+1;safeFn(()=>Bank.play("oc_diamond",{gain:0.45,maxSec:3}));
+   safeFn(()=>narrate(`Под ногами — «${l.res}». Подобрано.`,{interrupt:false}));safeFn(()=>deed("gathers"));}},
+ /* Тварь в новых землях — их тварь: крупнее, и иногда та самая, новая. */
+ combat(m){if(!m||!Director.on())return;safeFn(()=>this.evoApply(m));const l=this.landHere();const x=this.feats();
+  const k=0.9+0.2*this.score("beast",x);/* сеть: насколько игроку по душе схватки */
+  if(!l){if(k!==1&&!m.zvNem){m.hp=Math.max(1,Math.round((Number(m.hp)||1)*Math.max(0.92,Math.min(1.08,k))));}return;}
+  const g=this.gen();const b=g.beasts.find(z=>z.земля===l.id&&(!z.base||z.base===m.id||Math.random()<0.35));
+  let kk=1+0.08*l.опасность;if(b){kk*=b.k;m.n=b.имя;m.genBeast=b.id;}else m.n=`${m.n} земель «${l.n}»`;
+  m.genLand=l.id;m.hp=Math.max(1,Math.round((Number(m.hp)||1)*kk));m.dmg=Math.max(1,Math.round((Number(m.dmg)||1)*(1+(kk-1)*0.7)));},
+ win(m){if(!m)return;const g=this.gen();const fam=safeFn(()=>foeFamily(m),null);if(fam)g.killsFam[fam]=(Number(g.killsFam[fam])||0)+1;if(m.genLand)this.questProgress("hunt",1,m.genLand);
+  if(m.genBeast){const b=g.beasts.find(z=>z.id===m.genBeast);if(b){b.убито=(b.убито||0)+1;const st=this.st();st.bonus=(Number(st.bonus)||0)+0.1;}}},
+ /* Напор внутри чертогов — по оценке сети, в узких пределах. */
+ instK(){if(!Director.on())return 1;return 0.85+0.3*this.score("instance");},
+ /* ── покупки в окне ── */
+ canBuy(it){if(safeFn(()=>Zver.inTown(),false)||G.place)return "";const pl=this.placeHere();if(pl&&["город","деревня","крепость","святилище"].includes(pl.kind))return "";if(Number.isFinite(it.x)&&Math.abs(it.x-G.x)+Math.abs(it.y-G.y)<=3)return "";
+  return `Купить можно в любом городе или поселении, или у самого мастера — он ${safeFn(()=>Director.where(it.x-G.x,it.y-G.y),"далеко")}.`;},
+ buy(kind,id,k){const g=this.gen();k=Math.max(1,Math.min(10,Number(k)||1));
+  if(kind==="p"){const it=g.potions.find(x=>x.id===id);if(!it)return "Такого зелья нет.";const why=this.canBuy(it);if(why)return why;
+   const p=g.peoples.find(x=>x.id===it.p);const цена=Math.max(1,Math.round(it.цена*(p&&p.реп>=30?0.85:1)));const всего=цена*k;
+   if((Number(G.gold)||0)<всего)return `Нужно ${всего} золота, у вас ${G.gold}.`;G.gold-=всего;
+   for(let i=0;i<k;i++)potionsOf().push({id:it.id,q:1,стаб:0.9,день:Number(G.day)||1,срок:20,изъян:false,куплено:true});
+   this.bought();safeFn(()=>Bank.play("arte_potion",{gain:0.45,maxSec:2}));return `Куплено: зелье ${it.n} ×${k} за ${всего} золота. Оно в разделе «Зелья».`;}
+  if(kind==="r"){const it=g.res.find(x=>x.id===id);if(!it)return "Такого припаса нет.";const why=this.canBuy(it);if(why)return why;
+   const всего=it.цена*k;if((Number(G.gold)||0)<всего)return `Нужно ${всего} золота, у вас ${G.gold}.`;
+   if(!safeFn(()=>cargoFits(k,`«${it.n}»`),true))return "Груз не помещается.";G.gold-=всего;G.inv[it.n]=(Number(G.inv[it.n])||0)+k;this.bought();
+   return `Куплено: ${it.n} ×${k} за ${всего} золота.`;}
+  if(kind==="a"){const it=g.arts.find(x=>x.id===id);if(!it)return "Такого рецепта нет.";if(safeFn(()=>artKnowsRecipe(it.id),false))return `Рецепт «${it.n}» у вас уже есть.`;
+   const why=this.canBuy(it);if(why)return why;if((Number(G.gold)||0)<it.цена)return `Нужно ${it.цена} золота, у вас ${G.gold}.`;
+   G.gold-=it.цена;safeFn(()=>artLearnRecipe(it.id,it.кто,true));this.bought();return `Рецепт записан: «${it.n}» — ${(ART_CRAFT_BY_ID[it.ремесло]||{}).n||it.ремесло}, нужно ${Object.entries(it.нужно).map(([a,b])=>`${a} ×${b}`).join(", ")}.`;}
+  if(kind==="s"){const it=g.spells.find(x=>x.id===id);if(!it)return "Таких чар нет.";if((G.spells||[]).includes(it.n))return `«${it.n}» у вас уже есть.`;
+   const why=this.canBuy(it);if(why)return why;if((Number(G.gold)||0)<it.цена)return `Нужно ${it.цена} золота, у вас ${G.gold}.`;
+   G.gold-=it.цена;if(!Array.isArray(G.spellbook))G.spellbook=[];G.spellbook.push(Object.assign({},it.rec));safeFn(()=>registerCustomSpells());this.bought();
+   safeFn(()=>Bank.play("arte_page",{gain:0.5,maxSec:3}));return `Выучено: «${it.n}» — ${it.rec.вид}. Мана ${it.rec.cost}. Оно в списке заклинаний.`;}
+  if(kind==="d"){const it=g.devices.find(x=>x.id===id);if(!it)return "Такого устройства нет.";const why=this.canBuy(it);if(why)return why;
+   if((Number(G.gold)||0)<it.цена)return `Нужно ${it.цена} золота, у вас ${G.gold}.`;G.gold-=it.цена;g.own.push({id:it.id,заряд:it.заряды});this.bought();
+   return `Куплено: ${it.n}. Зарядов ${it.заряды}; применить — в окне Режиссёра, «Ваши устройства».`;}
+  if(kind==="w"){const it=(g.weapons||[]).find(x=>x.id===id);if(!it)return "Такого оружия нет.";const why=this.canBuy(it);if(why)return why;
+   if((Number(G.gold)||0)<it.цена)return `Нужно ${it.цена} золота, у вас ${G.gold}.`;G.gold-=it.цена;
+   G.gear.push({id:`${it.id}_${Date.now().toString(36)}`,name:it.name,type:it.type,slot:"weapon",rank:it.rank,qual:it.qual,val:it.val,черты:[],треб:0,стойкость:0.3,price:it.цена,повесть:`выковал ${it.кто}`});
+   this.bought();return `Куплено: ${it.name}, удар ${it.val}. Надеть — в котомке.`;}
+  if(kind==="z"){const it=(g.pets||[]).find(x=>x.id===id);if(!it)return "Такого зверя нет.";const why=this.canBuy(it);if(why)return why;
+   if((Number(G.gold)||0)<it.цена)return `Нужно ${it.цена} золота, у вас ${G.gold}.`;const a=safeFn(()=>Zver.make(it.breed,{lvl:it.lvl,верн:70}),null);if(!a)return "Зверь не идёт в руки.";
+   G.gold-=it.цена;a.n=it.имя;this.bought();return `Теперь ваш: ${it.n}. Он в зверинце${it.mount?", под седло":""}.`;}
+  return "Не понял, что купить.";},
+ bought(){const st=this.st();st.bonus=(Number(st.bonus)||0)+0.25;safeFn(()=>{UI.pickup();Bank.play("arte_coins",{gain:0.5,maxSec:3});refresh();saveGame(true);});},
+ /* ── восстановление после загрузки ── */
+ rehydrate(){const g=G.gen;if(!g||typeof g!=="object")return;
+  (g.potions||[]).forEach(r=>safeFn(()=>this.regPotion(r)));(g.res||[]).forEach(r=>safeFn(()=>this.regRes(r)));(g.arts||[]).forEach(r=>safeFn(()=>this.regArt(r)));
+  safeFn(()=>this.offline());},
+ /* ── окно ── */
+ view(){const D=Director;const n=this.st(),g=this.gen();const x=this.feats();const y=this.forward(x).y;
+  const top=NEURO_ARMS.map(a=>[a,y[n.arms.indexOf(a)]]).sort((a,b)=>b[1]-a[1]).slice(0,4).map(([a,v])=>`${NEURO_ARM_N[a]} ${Math.round(v*100)}`).join(", ");
+  let h=D.line(`Режиссёр Грани помнит ${n.mem.length} своих решений и то, как вы на них ответили; его внимание выросло до ${n.H}. Сейчас он думает, что вам интереснее всего: ${top}.`);
+  h+=D.line(`Чем вы заняты, по его наблюдениям: ${NEURO_CH.map((c,i)=>[c,n.act[i]||0]).sort((a,b)=>b[1]-a[1]).slice(0,4).map(([c,v])=>`${c} ${Math.round(v*10)/10}`).join(", ")}.`);
+  h+=D.line(`Самосовершенствование: Режиссёр Грани улучшал себя ${Math.max(0,(n.meta.ver||1)-1)} раз; смелость в новом ${Math.round(n.meta.eps*100)} из ста.`);
+  if(n.grown.length)h+=D.line(`Рост: ${n.grown.slice(-3).map(z=>`день ${z.день} — ${z.почему}`).join("; ")}.`);
+  const offers=g.offers.filter(o=>!o.done);
+  if(offers.length){h+=`<h3>Предложения за ваши изобретения (${offers.length})</h3>`;
+   offers.forEach(o=>{h+=D.line(`«${o.кто}» дают ${o.gold} золота за «${o.n}», до дня ${o.до}.`)+`<div class="row">${D.btn("nx:ok:"+o.id,"Принять")}${D.btn("nx:no:"+o.id,"Отказать")}</div>`;});}
+  const qs=g.quests.filter(q=>!q.done);
+  if(qs.length){h+=`<h3>Поручения народов (${qs.length})</h3>`;qs.forEach(q=>{h+=D.line(`«${q.кто}»: ${q.т}. Сделано ${q.сделано} из ${q.n}, до дня ${q.до}, награда ${q.награда}.`);
+   if(q.вид==="deliver")h+=D.btn("nx:give:"+q.id,`Сдать ${q.res} ×${q.n}`);});}
+  const item=(t,kind,it,btns)=>D.line(t)+(btns?`<div class="row">${btns}</div>`:"");
+  const buyBtns=(kind,it,цена)=>[1,5,10].map(k=>D.btn(`nx:buy:${kind}:${it.id}:${k}`,`Купить ${k} (${цена*k})`)).join("");
+  if(g.potions.length){h+=`<h3>Новые зелья (${g.potions.length})</h3>`;g.potions.slice(-8).reverse().forEach(it=>{h+=item(`${it.n}: ${this.potionWord(it)}. Варят из ниш: ${it.из.map(c=>(PLANT_CAT_BY_ID[c]||{}).n||c).join(" и ")}. Сделал ${it.кто}, ${it.где}.`,"p",it,buyBtns("p",it,it.цена));});}
+  if(g.res.length){h+=`<h3>Новые ресурсы (${g.res.length})</h3>`;g.res.slice(-8).reverse().forEach(it=>{h+=item(`${it.n}: природа ${it.ниши.map(z=>MIX_NICHES[z].прил).join(" и ")}, цена около ${it.цена}${it.земля?`, добывают в землях «${(g.lands.find(l=>l.id===it.земля)||{}).n}»`:""}.`,"r",it,buyBtns("r",it,it.цена));});}
+  if(g.arts.length){h+=`<h3>Рецепты артефактов (${g.arts.length})</h3>`;g.arts.slice(-8).reverse().forEach(it=>{const есть=safeFn(()=>artKnowsRecipe(it.id),false);
+   h+=item(`${it.n}: ${(ART_CRAFT_BY_ID[it.ремесло]||{}).n||it.ремесло}, ранг ${it.ранг}, нужно ${Object.entries(it.нужно).map(([a,b])=>`${a} ×${b}`).join(", ")}. Придумал ${it.кто}.`,"a",it,есть?"":D.btn(`nx:buy:a:${it.id}:1`,`Купить рецепт (${it.цена})`));});}
+  if(g.spells.length){h+=`<h3>Новые чары (${g.spells.length})</h3>`;g.spells.slice(-8).reverse().forEach(it=>{const есть=(G.spells||[]).includes(it.n);
+   h+=item(`«${it.n}»: ${it.rec.вид}, мана ${it.rec.cost}. Сложил ${it.кто}.`,"s",it,есть?"":D.btn(`nx:buy:s:${it.id}:1`,`Выучить (${it.цена})`));});}
+  if(g.lands.length){h+=`<h3>Новые земли (${g.lands.length})</h3>`;g.lands.slice(-8).reverse().forEach(l=>{const d=Math.abs(l.x-G.x)+Math.abs(l.y-G.y);
+   h+=D.line(`${l.n}${l.слой?` (${l.слой})`:""}: ${D.where(l.x-G.x,l.y-G.y)}, ${d} шагов; водятся ${DIR2_FAMILY[l.fam]||"твари"}${l.res?`, добывают «${l.res}»`:""}${l.был?", вы там бывали":""}.`);});}
+  if(g.peoples.length){h+=`<h3>Народы, расы, кланы и фракции (${g.peoples.length})</h3>`;g.peoples.slice(-10).reverse().forEach(p=>{
+   h+=D.line(`${NEURO_PEOPLE_N[p.kind]} «${p.n}»: ${p.ethos}, ${NEURO_ETHOS[p.ethos].о}; вождь ${p.вождь}; к вам ${p.реп>=30?"дружелюбны":p.реп<=-20?"враждебны":"присматриваются"} (${p.реп}).`);});}
+  if(g.devices.length){h+=`<h3>Устройства и механизмы (${g.devices.length})</h3>`;g.devices.slice(-8).reverse().forEach(it=>{
+   h+=item(`${it.n} — ${it.kind}: ${this.deviceWord(it)}; зарядов ${it.заряды}. Сделал ${it.кто}.`,"d",it,D.btn(`nx:buy:d:${it.id}:1`,`Купить (${it.цена})`));});}
+  const мои=g.own.filter(o=>o.заряд>0);if(мои.length){h+=`<h3>Ваши устройства (${мои.length})</h3>`;мои.forEach((o,i)=>{const d=g.devices.find(x=>x.id===o.id);if(!d)return;
+   h+=item(`${d.n}: ${this.deviceWord(d)}; зарядов ${o.заряд}.`,"u",d,D.btn(`nx:use:${g.own.indexOf(o)}`,`Применить: ${d.n}`));});}
+  const W=g.weapons||[];if(W.length){h+=`<h3>Новое оружие (${W.length})</h3>`;W.slice(-6).reverse().forEach(it=>{h+=item(`${it.name}: удар ${it.val}. Выковал ${it.кто}.`,"w",it,D.btn(`nx:buy:w:${it.id}:1`,`Купить (${it.цена})`));});}
+  const Z=g.pets||[];if(Z.length){h+=`<h3>Новые питомцы и скакуны (${Z.length})</h3>`;Z.slice(-6).reverse().forEach(it=>{h+=item(`${it.n}${it.mount?", под седло":""}. Вывел ${it.кто}.`,"z",it,D.btn(`nx:buy:z:${it.id}:1`,`Купить (${it.цена})`));});}
+  const K=g.books||[];if(K.length){h+=`<h3>Книги и свитки (${K.length})</h3>`;K.slice(-6).reverse().forEach(it=>{h+=item(`«${it.n}». Написал ${it.кто}.`,"k",it,D.btn(`nx:read:${it.id}`,it.прочитано?"Перечитать":`Купить и прочитать (${it.цена})`));});}
+  const GD=g.gods||[];if(GD.length){h+=`<h3>Новые боги (${GD.length})</h3>`;GD.slice(-6).reverse().forEach(b=>{const p=g.peoples.find(x=>x.id===b.культ);h+=item(`${b.n}, ${b.нрав}: дар — ${MIX_BUFF_WORD[b.дар]}${p?`; ему молятся «${p.n}»`:""}; ваших даров ${b.вера||0}.`,"g",b,D.btn(`nx:god:${b.id}`,`Принести дар (${20+(Number(G.level)||1)*4})`));});}
+  const PL=g.places||[];if(PL.length){h+=`<h3>Новые города, деревни и воды (${PL.length})</h3>`;PL.slice(-8).reverse().forEach(pl=>{const d=Math.abs(pl.x-G.x)+Math.abs(pl.y-G.y);h+=D.line(`${pl.n}: ${D.where(pl.x-G.x,pl.y-G.y)}, ${d} шагов${pl.res?`; добывают «${pl.res}»`:""}${pl.был?"; вы там бывали":""}.`);});}
+  const REL=(g.rel||[]).filter(r=>r.до>=(Number(G.day)||1));if(REL.length){h+=`<h3>Политика, войны и союзы</h3>`;REL.slice(-6).reverse().forEach(r=>{h+=D.line(`«${r.a}» и «${r.b}» ${NEURO_REL[r.kind]} — до дня ${r.до}.`);});}
+  if(g.masters.length){h+=`<h3>Мастера Грани (${g.masters.length})</h3>`;g.masters.slice().sort((a,b)=>b.умение-a.умение).slice(0,8).forEach(m=>{
+   h+=D.line(`${NEURO_MASTER[m.ремесло].кто} ${m.n}, ${m.где}: умение ${String(m.умение).replace(".",",")} из десяти, изобретений ${m.дел||0}.`);});}
+  const evo=Object.entries(g.evo);if(evo.length){h+=`<h3>Твари крепнут</h3>`;evo.forEach(([f,e])=>{h+=D.line(`${DIR2_FAMILY[f]||f}: сила ${e.сила}, ум ${e.ум}, хитрость ${e.хитрость}${e.черта?`; переняли: ${e.черта}`:""}.`);});}
+  if(g.beasts.length){h+=`<h3>Новые твари (${g.beasts.length})</h3>`;g.beasts.slice(-6).reverse().forEach(b=>{h+=D.line(`${b.n}; одолено ${b.убито||0}.`);});}
+  const dem=Object.entries(g.demand);if(dem.length)h+=D.line(`Спрос: ${dem.map(([r,d])=>`${r} — «${d.кто}», цена ×${String(d.k).replace(".",",")} до дня ${d.до}`).join("; ")}.`);
+  if(g.chron.length)h+=`<h3>Летопись Кузницы</h3>`+g.chron.slice(0,8).map(t=>D.line(t)).join("");
+  h+=D.btn("nx:forge","Попросить мир о новинке сегодня")+D.btn("home","Режиссёр Грани");
+  return D.show("Режиссёр Грани: Кузница нового",h);},
+ cmd(a){const p=String(a||"").split(":");let t="";
+  if(p[0]==="ok")t=this.acceptOffer(p[1]);else if(p[0]==="no")t=this.declineOffer(p[1]);else if(p[0]==="give")t=this.deliver(p[1]);
+  else if(p[0]==="buy")t=this.buy(p[1],p[2],p[3]);else if(p[0]==="use")t=this.useDevice(Number(p[1]));
+  else if(p[0]==="read")t=this.read(p[1]);else if(p[0]==="god")t=this.offer(p[1]);
+  else if(p[0]==="forge"){const st=this.st();if(st.forgedDay===(Number(G.day)||1))t="Сегодня мир уже родил новинку по вашей просьбе: приходите завтра.";
+   else{st.forgedDay=Number(G.day)||1;const arm=this.pickArm(this.feats());t=safeFn(()=>this.forge(arm),"")||"Мир пока молчит.";safeFn(()=>saveGame(true));}}
+  if(t)narrate(t,{interrupt:true});return this.view();},
+ summary(){const n=this.st(),g=this.gen();return {нейронов:n.H,входов:NEURO_IN,выходов:n.arms.length,примеров:n.mem.length,зелий:g.potions.length,ресурсов:g.res.length,артефактов:g.arts.length,чар:g.spells.length,земель:g.lands.length,народов:g.peoples.length,тварей:g.beasts.length};}};
+Modules.register("NEURO",Neuro);
+/* ── Мастера Грани: растут сами, и их руками рождается новое ── */
+const NEURO_MASTER={алхимик:{кто:"алхимик"},кузнец:{кто:"кузнец"},кожевенник:{кто:"кожевенник"},маг:{кто:"маг"},механик:{кто:"механик"},зачарователь:{кто:"зачарователь"},травница:{кто:"травница"}};
+const NEURO_DEVICE={
+ механизм:{сущ:["Заводной компас","Паровой фонарь","Шестерёнчатый щуп","Часовой замок","Пружинный капкан","Медный слух"],звук:"oc_electrical"},
+ "магическое устройство":{сущ:["Рунный фонарь","Звёздная призма","Поющий кристалл","Эфирная чаша","Зеркало тишины","Сфера дыхания"],звук:"magic_shimmer"},
+ "кожевенная снасть":{сущ:["Пояс странника","Сбруя ловца","Перчатки стрелка","Сума травницы","Плащ тени","Наручи охотника"],звук:"craft_knock"}};
+Object.assign(Neuro,{
+ newMaster(id,R,ремесло){const g=this.gen();const r=ремесло||this.pick(Object.keys(NEURO_MASTER),R);const nm=this.name(R);
+  const p=g.peoples.length&&R()<0.5?this.pick(g.peoples,R):null;
+  const m={id:"gm_"+id,n:nm,ремесло:r,умение:+(1+R()*2).toFixed(2),где:this.near(),p:p?p.id:null,день:Number(G.day)||1,дел:0};
+  g.masters.push(m);if(g.masters.length>40)g.masters.splice(0,g.masters.length-40);
+  this.chron(`в Грани появился ${NEURO_MASTER[r].кто} ${nm}`);
+  return {m,t:`В округе ${m.где} объявился новый мастер: ${NEURO_MASTER[r].кто} ${nm}${p?` из рода «${p.n}»`:""}. ${r==="травница"?"Её":"Его"} изобретения будут встречаться в Кузнице нового.`};},
+ mastersGrow(){const g=this.gen();for(const m of g.masters){m.умение=Math.min(10,+(m.умение+0.05+Math.random()*0.1).toFixed(2));}},
+ /* ── Устройства, механизмы, магические вещи ── */
+ newDevice(id,R){const kind=this.pick(Object.keys(NEURO_DEVICE),R);const ремесло=kind==="механизм"?"механик":kind==="магическое устройство"?"маг":"кожевенник";
+  const кто=this.who(R,ремесло);const nm=this.name(R);const эф=this.potionEffects(R).map(e=>e[0]==="buff"?[e[0],e[1],Math.round(e[2]*this.skillK(кто))]:[e[0],+(e[1]*this.skillK(кто)).toFixed(2)]);
+  const rec={id:"gd_"+id,n:`${this.pick(NEURO_DEVICE[kind].сущ,R)} ${nm}`,kind,эф,заряды:3+Math.floor(R()*4),цена:50+Math.round(R()*90),кто:кто.n,p:кто.p,где:this.near(),x:G.x,y:G.y,день:Number(G.day)||1};
+  this.gen().devices.push(rec);this.chron(`${кто.n} сделал${кто.f?"а":""} ${kind} — ${rec.n}`);
+  return `${кто.n} сделал${кто.f?"а":""} новое — ${kind} «${rec.n}»: ${this.deviceWord(rec)}. Купить — в окне Режиссёра.`;},
+ deviceWord(d){return (d.эф||[]).map(e=>e[0]==="buff"?(MIX_BUFF_WORD[e[1]]||e[1]):MIX_EFFECT_WORD[e[0]]).filter(Boolean).join(", ");},
+ useDevice(i){const g=this.gen();const o=g.own[i];if(!o||o.заряд<=0)return "Этого устройства нет или оно разряжено.";const d=g.devices.find(x=>x.id===o.id);if(!d)return "Устройство потеряно.";
+  o.заряд--;const t=(d.эф||[]).map(e=>safeFn(()=>mixApply(e,1,1),"")).filter(Boolean).join(", ");
+  safeFn(()=>Bank.play(NEURO_DEVICE[d.kind]?NEURO_DEVICE[d.kind].звук:"magic_shimmer",{kind:d.kind==="магическое устройство"?"magic":undefined,gain:0.5,maxSec:3}));
+  safeFn(()=>{refresh();saveGame(true);});return `${d.n}: ${t||"ничего не случилось"}. Зарядов осталось ${o.заряд}.`;},
+ /* ── Места вверх и вниз: небесные острова и глубинные ярусы ── */
+ newLayer(id,R,arm){const g=this.gen();const sky=arm==="sky";const nm=this.name(R);
+  const cats=sky?["skyfort","astral","skyfort"]:["undercity","mine","caves","catacombs","sunken"];const cat=this.pick(cats,R);
+  const civ={skyfort:"zvezdochety",astral:"zvezdochety",undercity:"zodchie",mine:"pepelnye",caves:"bezlikie",catacombs:"zhrecy",sunken:"utopshie"}[cat]||"tkachi";
+  const ang=R()*Math.PI*2,d=8+Math.round(R()*30);const x=Math.round((Number(G.x)||0)+Math.cos(ang)*d),y=Math.round((Number(G.y)||0)+Math.sin(ang)*d);
+  const n=sky?`Небесный остров ${nm}`:`Глубинный ярус ${nm}`;
+  const st=Chertog.st();InstancePersistence.ensure();const i=CH_N+(st.dynN++);const rank=Math.max(0,Math.min(5,Math.floor((Number(G.level)||1)/6)));
+  st.dyn[i]={base:Math.floor(R()*CH_N),cat,civ,rank,n,x,y,until:(Number(G.day)||1)+90,why:sky?"остров поднялся над Гранью":"земля разошлась, открыв новый ярус"};
+  const rec={id:"gl_"+id,n,слой:sky?"в небе":"под землёй",terr:sky?"mountains":"cave",x,y,r:2,fam:sky?"bird":"deep",опасность:2+Math.floor(R()*2),день:Number(G.day)||1,res:null,inst:i};
+  g.lands.push(rec);const rr=this.newRes(g.n++,R,rec.id);const res=g.res[g.res.length-1];if(rr&&res&&res.земля===rec.id)rec.res=res.n;
+  this.chron(`${sky?"поднялся небесный остров":"открылся глубинный ярус"} — ${nm}`);
+  return sky?`Над Гранью поднялся новый небесный остров — ${n}, ${safeFn(()=>Director.where(x-G.x,y-G.y),"")}, около ${d} шагов. Подъём к нему — чертог на карте; там живут птицы и звёздные стражи${rec.res?`, а добывают «${rec.res}»`:""}.`
+   :`Земля разошлась: открылся глубинный ярус — ${n}, ${safeFn(()=>Director.where(x-G.x,y-G.y),"")}, около ${d} шагов. Спуск — чертог на карте; там глубинные твари${rec.res?`, а добывают «${rec.res}»`:""}.`;},
+ /* ── Твари крепнут: род, который вы бьёте чаще, учится у вас ── */
+ evolve(R){const g=this.gen();const fams=Object.entries(g.killsFam).sort((a,b)=>b[1]-a[1]);
+  const fam=fams.length&&R()<0.75?fams[Math.min(fams.length-1,Math.floor(R()*Math.min(3,fams.length)))][0]:this.pick(["beast","crawler","bird","giant","spirit","construct","deep","bone","undead","humanoid"],R);
+  const e=g.evo[fam]||(g.evo[fam]={сила:0,ум:0,хитрость:0});const ч=this.pick(["сила","ум","хитрость"],R);if(e[ч]>=10)return "";e[ч]++;
+  const fav=safeFn(()=>Director.favSchool(),null);if(ч==="ум"&&fav&&DIRECTOR_RESIST_WORD[fav])e.черта=`стойкость к ${DIRECTOR_RESIST_WORD[fav]}`;
+  const род=DIR2_FAMILY[fam]||"твари";this.chron(`${род}: ${ч} растёт`);
+  return {сила:`${mixCap(род)} крепнут: шкура толще, удар тяжелее. Говорят, это от того, как часто их бьют.`,
+   ум:`${mixCap(род)} умнеют: учатся на прошлых схватках${e.черта?` и приходят со ${e.черта}`:""}.`,
+   хитрость:`${mixCap(род)} хитреют: заходят со спины и уходят от удара.`}[ч];},
+ evoApply(m){const g=G.gen;if(!g||!g.evo)return;const fam=safeFn(()=>foeFamily(m),null);const e=fam&&g.evo[fam];if(!e)return;
+  const k=1+0.05*(e.сила||0);m.hp=Math.max(1,Math.round((Number(m.hp)||1)*k));m.dmg=Math.max(1,Math.round((Number(m.dmg)||1)*(1+0.04*(e.сила||0))));
+  if(e.хитрость)m.lvl=(Number(m.lvl)||1)+Math.floor(e.хитрость/2);
+  if(e.ум&&Math.random()<0.1*e.ум){const fav=safeFn(()=>Director.favSchool(),null);if(fav&&DIRECTOR_RESIST_WORD[fav])m.dirResist=fav;}
+  m.evo=fam;},
+ /* ── Мир живёт без вас: по сутки на каждые два часа отсутствия, до десяти ── */
+ offline(){const g=this.gen();const now=Date.now();const last=Number(g.lastReal)||0;g.lastReal=now;if(!last||!Director.on())return "";
+  const days=Math.min(10,Math.floor((now-last)/7.2e6));if(days<1)return "";const вести=[];
+  for(let d=0;d<days;d++){const x=this.feats();const arm=this.pickArm(x);const t=safeFn(()=>this.forge(arm),"");if(t)вести.push(t);this.mastersGrow();this.train(16);}
+  this.growCheck();g.offlineLast={дней:days,вестей:вести.length};
+  const t=`Пока вас не было, Грань прожила ${days} ${plural(days,"день","дня","дней")}. ${вести.slice(0,3).join(" ")}${вести.length>3?` И ещё ${вести.length-3} — в окне Режиссёра, «Кузница нового».`:""}`;
+  if(вести.length)setTimeout(()=>safeFn(()=>narrate(t,{interrupt:false})),2600);return t;}});
+/* ── Весь мир растёт: поселения, воды, боги, звери, оружие, книги, свитки,
+      сложные поручения, политика, войны, торговля и вера ── */
+const NEURO_PLACE={город:{сущ:"город",о:"с рынком и мастерскими"},деревня:{сущ:"деревня",о:"с огородами и колодцем"},
+ озеро:{сущ:"озеро",о:"с тихой водой и камышом"},река:{сущ:"река",о:"быстрая, с перекатами"},море:{сущ:"море",о:"солёное, с дальним прибоем"},
+ крепость:{сущ:"крепость",о:"на скале, с гарнизоном"},святилище:{сущ:"святилище",о:"где молятся новому богу"}};
+const NEURO_WEAPON_TYPES=["Меч","Топор","Копьё","Булава","Кинжал","Посох","Лук"];
+const NEURO_REL={война:"воюют",союз:"заключили союз","торговый союз":"заключили торговый союз",единоверие:"приняли одну веру"};
+Object.assign(Neuro,{
+ newPlace(id,R,kind){const g=this.gen();if(!Array.isArray(g.places))g.places=[];const k=kind||this.pick(Object.keys(NEURO_PLACE),R);const nm=this.name(R);
+  const ang=R()*Math.PI*2,d=15+Math.round(R()*60);const x=Math.round((Number(G.x)||0)+Math.cos(ang)*d),y=Math.round((Number(G.y)||0)+Math.sin(ang)*d);
+  const p=g.peoples.length?this.pick(g.peoples,R):null;const rec={id:"gc_"+id,kind:k,n:`${mixCap(NEURO_PLACE[k].сущ)} ${nm}`,x,y,r:["город","крепость"].includes(k)?3:2,народ:p?p.id:null,день:Number(G.day)||1};
+  g.places.push(rec);if(["озеро","река","море"].includes(k)){const t=this.newRes(g.n++,R,null);const rr=g.res[g.res.length-1];if(t&&rr){rr.место=rec.id;rec.res=rr.n;}}
+  this.chron(`появилось новое место — ${rec.n}`);
+  return `${["город","деревня","крепость","святилище"].includes(k)?"Выросло новое поселение":"Открылась новая вода"} — ${rec.n}, ${NEURO_PLACE[k].о}, ${safeFn(()=>Director.where(x-G.x,y-G.y),"")}, около ${d} шагов${p?`; там живут «${p.n}»`:""}${rec.res?`; там добывают «${rec.res}»`:""}.`;},
+ placeHere(){const g=G.gen;if(!g||!Array.isArray(g.places))return null;return g.places.find(p=>Math.abs(p.x-G.x)+Math.abs(p.y-G.y)<=p.r)||null;},
+ newGod(id,R){const g=this.gen();if(!Array.isArray(g.gods))g.gods=[];const nm=this.name(R);const дар=this.pick(Object.keys(MIX_BUFF_WORD),R);
+  const нрав=this.pick(["милосердный","грозный","лукавый","молчаливый","ревнивый","щедрый"],R);const p=g.peoples.length?this.pick(g.peoples,R):null;
+  const rec={id:"gg_"+id,n:nm,дар,нрав,культ:p?p.id:null,вера:0,день:Number(G.day)||1};g.gods.push(rec);if(p)p.бог=rec.id;
+  this.chron(`родилась новая вера — ${nm}`);
+  return `В Грани заговорили о новом боге — ${nm}, ${нрав}; его дар — ${MIX_BUFF_WORD[дар]}${p?`. Ему молятся «${p.n}»`:""}. Принести дар — в окне Режиссёра.`;},
+ offer(id){const g=this.gen();const b=(g.gods||[]).find(x=>x.id===id);if(!b)return "Такого бога нет.";const цена=20+(Number(G.level)||1)*4;
+  if((Number(G.gold)||0)<цена)return `Дар стоит ${цена} золота, у вас ${G.gold}.`;G.gold-=цена;b.вера=(b.вера||0)+1;
+  const ч=3+Math.min(6,b.вера);safeFn(()=>buffSet(b.дар,ч));const p=g.peoples.find(x=>x.id===b.культ);if(p)p.реп=Math.min(100,p.реп+4);
+  safeFn(()=>Bank.play("bell_big",{gain:0.5,maxSec:3}));safeFn(()=>Director.note("pray"));this.bought();
+  return `${b.n} принимает дар: ${ч} ч ${MIX_BUFF_WORD[b.дар]}.${p?` «${p.n}» это видят.`:""}`;},
+ newPet(id,R,mount){const g=this.gen();if(!Array.isArray(g.pets))g.pets=[];const pool=safeFn(()=>ZV_BREEDS.filter(b=>{const f=ZV_FAMILY_BY_ID[b.fam];return f&&!b.легенда&&(mount?!!f.ездовой:!f.ездовой);}),[])||[];
+  if(!pool.length)return "";const b=this.pick(pool,R);const nm=this.name(R);const кто=this.who(R,"травница");
+  const rec={id:"gz_"+id,n:`${nm} — ${b.n.toLowerCase()}`,имя:nm,breed:b.id,mount:!!mount,lvl:1+Math.floor((Number(G.level)||1)/4),цена:(mount?160:80)+Math.round(R()*60),кто:кто.n,p:кто.p,x:G.x,y:G.y,где:this.near(),день:Number(G.day)||1};
+  g.pets.push(rec);this.chron(`выведена новая порода — ${rec.n}`);
+  return `${кто.n} вывел${кто.f?"а":""} новую породу — ${rec.n}${mount?", под седло":""}. Купить — в окне Режиссёра.`;},
+ newWeapon(id,R){const g=this.gen();if(!Array.isArray(g.weapons))g.weapons=[];const кто=this.who(R,"кузнец");const type=this.pick(NEURO_WEAPON_TYPES,R);const nm=this.name(R);
+  const ур=Math.max(1,Number(G.level)||1);const val=Math.max(5,Math.round((4+ур)*1.8*this.skillK(кто)*(0.9+R()*0.3)));
+  const rec={id:"gw_"+id,name:`${type} ${nm}`,type,val,rank:Math.min(5,1+Math.floor(ур/6)),qual:2+Math.floor(R()*2),цена:Math.round(val*12),кто:кто.n,p:кто.p,x:G.x,y:G.y,где:this.near(),день:Number(G.day)||1};
+  g.weapons.push(rec);this.chron(`${кто.n} выковал${кто.f?"а":""} новое оружие — ${rec.name}`);
+  return `${кто.n} выковал${кто.f?"а":""} новое оружие — ${rec.name}, удар ${val}. Купить — в окне Режиссёра.`;},
+ newBook(id,R){const g=this.gen();if(!Array.isArray(g.books))g.books=[];const темы=[];
+  if(g.lands.length)темы.push(()=>{const l=this.pick(g.lands,R);return {n:`Записки о землях «${l.n}»`,t:`${l.n} лежат ${l.слой||"на поверхности"}; там водятся ${DIR2_FAMILY[l.fam]||"твари"}${l.res?`, а добывают «${l.res}»`:""}. Опасность — ${l.опасность} из трёх.`,map:l.id};});
+  if(g.peoples.length)темы.push(()=>{const p=this.pick(g.peoples,R);return {n:`Сказание о «${p.n}»`,t:`${NEURO_PEOPLE_N[p.kind]} «${p.n}»: ${p.ethos}, ${NEURO_ETHOS[p.ethos].о}. Вождь — ${p.вождь}.${p.бог?` Их бог — ${((g.gods||[]).find(x=>x.id===p.бог)||{}).n}.`:""}`};});
+  const evo=Object.entries(g.evo);if(evo.length)темы.push(()=>{const [f,e]=this.pick(evo,R);return {n:`Бестиарий: ${DIR2_FAMILY[f]||f}`,t:`${mixCap(DIR2_FAMILY[f]||f)} нынче: сила ${e.сила}, ум ${e.ум}, хитрость ${e.хитрость}.${e.черта?` Переняли ${e.черта}.`:""} Бить их надо иначе, чем прежде.`};});
+  темы.push(()=>({n:`Летопись Кузницы, том ${g.books.length+1}`,t:g.chron.slice(0,5).join(" ")||"Страницы ещё пусты."}));
+  const b=this.pick(темы,R)();const кто=this.who(R);const rec=Object.assign({id:"gk_"+id,кто:кто.n,цена:15+Math.round(R()*25),день:Number(G.day)||1,x:G.x,y:G.y},b);
+  g.books.push(rec);this.chron(`написана книга «${rec.n}»`);return `${кто.n} написал${кто.f?"а":""} книгу — «${rec.n}». Прочитать — в окне Режиссёра.`;},
+ read(id){const g=this.gen();const b=(g.books||[]).find(x=>x.id===id);if(!b)return "Такой книги нет.";
+  if(!b.прочитано){const why=this.canBuy(b);if(why)return why;if((Number(G.gold)||0)<b.цена)return `Книга стоит ${b.цена} золота, у вас ${G.gold}.`;G.gold-=b.цена;b.прочитано=1;
+   G.xp=(Number(G.xp)||0)+10+(Number(G.level)||1)*2;safeFn(()=>checkLevelUp());if(b.map)safeFn(()=>Lore.add("map",b.map,b.n,"книга Кузницы"));safeFn(()=>Bank.play("arte_book",{gain:0.5,maxSec:3}));}
+  return `«${b.n}». ${b.t}`;},
+ /* Сложное поручение: цепь из трёх шагов от одного народа. */
+ newSaga(id,R){const g=this.gen();if(!g.peoples.length)return "";const p=this.pick(g.peoples,R);const land=g.lands.length?this.pick(g.lands,R):null;
+  const res=g.res.length?this.pick(g.res,R).n:"кристалл";const шаги=[{вид:"deliver",res,n:2,т:`принести «${p.n}» «${res}» ×2 — сдать в любом городе через окно Режиссёра`}];
+  if(land)шаги.push({вид:"explore",n:1,земля:land.id,т:`дойти до сердца земель «${land.n}»`});if(land)шаги.push({вид:"hunt",n:3,земля:land.id,т:`одолеть трёх тварей в землях «${land.n}»`});
+  шаги.push({вид:"instance",n:1,т:"пройти любой чертог до конца"});
+  const q=Object.assign({id:"gq_"+id,p:p.id,кто:p.n,сделано:0,до:(Number(G.day)||1)+20,награда:150+(Number(G.level)||1)*30,done:false,шаги,шаг:0,сага:true},шаги[0]);
+  g.quests.push(q);this.chron(`«${p.n}» начали большое дело`);
+  return `«${p.n}» доверяют вам большое дело из ${шаги.length} шагов. Первый: ${q.т}. Награда в конце — ${q.награда} золота.`;},
+ /* Политика, войны, торговля и вера между народами и державами. */
+ newPolitics(id,R){const g=this.gen();if(!Array.isArray(g.rel))g.rel=[];const стороны=g.peoples.map(p=>({n:p.n,p:p.id}));
+  safeFn(()=>{const e=EMPIRES[empireIndexAt(G.x,G.y)];if(e)стороны.push({n:e.short,emp:true});});if(стороны.length<2)return "";
+  const a=this.pick(стороны,R);let b=this.pick(стороны,R);for(let t=0;t<6&&b.n===a.n;t++)b=this.pick(стороны,R);if(b.n===a.n)return "";
+  const kind=this.pick(Object.keys(NEURO_REL),R);const rec={id:"gr_"+id,a:a.n,b:b.n,kind,до:(Number(G.day)||1)+10,день:Number(G.day)||1};g.rel.push(rec);if(g.rel.length>30)g.rel.shift();
+  let следствие="";
+  if(kind==="война"){g.demand["руда"]={k:1.4,до:rec.до,кто:`${a.n} и ${b.n}`};g.demand["кость"]={k:1.3,до:rec.до,кто:`${a.n} и ${b.n}`};следствие=" Руда и кость дорожают; за помощь одной стороне другая на вас обидится.";
+   const side=g.peoples.find(x=>x.n===a.n);if(side){const land=g.lands.length?this.pick(g.lands,R):null;if(land){const q={id:"gq_"+(g.n++),вид:"hunt",p:side.id,кто:side.n,земля:land.id,n:3,сделано:0,до:rec.до,награда:120+(Number(G.level)||1)*20,done:false,враг:b.n,т:`для войны с «${b.n}»: одолеть трёх тварей в землях «${land.n}»`};g.quests.push(q);следствие+=` «${side.n}» просят помощи.`;}}
+   safeFn(()=>{Director.st().tension=Math.min(100,(Director.st().tension||0)+10);});}
+  else if(kind==="торговый союз"){const r=g.res.length?this.pick(g.res,R).n:"трава";g.demand[r]={k:0.8,до:rec.до,кто:`${a.n} и ${b.n}`};следствие=` «${r}» дешевеет.`;}
+  else if(kind==="единоверие"&&(g.gods||[]).length){const god=this.pick(g.gods,R);[a,b].forEach(x=>{const p=g.peoples.find(y=>y.n===x.n);if(p)p.бог=god.id;});следствие=` Их бог — ${god.n}.`;}
+  else if(kind==="союз"){следствие=" Кто дружен с одним, тот в чести и у другого.";}
+  this.chron(`«${a.n}» и «${b.n}» ${NEURO_REL[kind]}`);
+  return `«${a.n}» и «${b.n}» ${NEURO_REL[kind]}.${следствие}`;},
+ /* Доверие одного народа задевает союзников и врагов. */
+ repSpread(pid,d){const g=this.gen();const p=g.peoples.find(x=>x.id===pid);if(!p)return;const now=Number(G.day)||1;
+  for(const r of (g.rel||[])){if(r.до<now)continue;const other=r.a===p.n?r.b:r.b===p.n?r.a:null;if(!other)continue;const q=g.peoples.find(x=>x.n===other);if(!q)continue;
+   if(r.kind==="война")q.реп=Math.max(-100,q.реп-Math.round(d/2));if(r.kind==="союз"||r.kind==="единоверие")q.реп=Math.min(100,q.реп+Math.round(d/3));}},
+ placeStep(){const pl=this.placeHere();const st=this.st();if(!pl){st.inPlace=null;return;}
+  if(st.inPlace!==pl.id){st.inPlace=pl.id;if(!pl.был){pl.был=1;st.bonus=(Number(st.bonus)||0)+0.15;}
+   const g=this.gen();const p=g.peoples.find(x=>x.id===pl.народ);
+   safeFn(()=>narrate(`${pl.n}${p?` — здесь живут «${p.n}»`:""}. ${NEURO_PLACE[pl.kind]?mixCap(NEURO_PLACE[pl.kind].о)+".":""}`,{interrupt:false}));}
+  if(pl.res&&Math.random()<0.05){G.inv[pl.res]=(Number(G.inv[pl.res])||0)+1;safeFn(()=>narrate(`У воды — «${pl.res}». Подобрано.`,{interrupt:false}));}}});
+
+/* ── Видоизменить то, что уже есть: старое зелье, старый рецепт вещи,
+      старый народ, хозяйство державы ── */
+Object.assign(Neuro,{
+ remake(id,R){const виды=["potion","art","market"];const v=this.pick(виды,R);
+  if(v==="potion"){const base=POTIONS.filter(p=>!p.gen&&!p.редкое&&!p.опыт&&p.из&&p.id!=="murk"&&p.id!=="mutation");if(!base.length)return "";
+   const p=this.pick(base,R);const кто=this.who(R,"алхимик");const мн=+(1.15+0.05*(кто.m?кто.m.умение:1)).toFixed(2);
+   const g=this.gen();const nm=this.name(R);const rec={id:"gp_"+id,n:`${p.n} по-${nm.toLowerCase()}ски`,из:p.из.slice(),эф:[],родители:[p.id],мн,срок:(p.срок||10)+4,стаб:Math.min(0.95,(p.стаб||0.7)+0.05),
+    кто:кто.n,p:кто.p,где:this.near(),x:G.x,y:G.y,день:Number(G.day)||1,цена:24+Math.round(R()*20),улучшение:p.id};
+   g.potions.push(rec);this.regPotion(rec);this.chron(`${кто.n} улучшил${кто.f?"а":""} зелье «${p.n}»`);
+   return `${кто.n} улучшил${кто.f?"а":""} старое зелье «${p.n}»: теперь оно крепче в ${String(мн).replace(".",",")} раза и хранится дольше. Новое имя — «${rec.n}»; купить — в окне Режиссёра.`;}
+  if(v==="art"){const base=ART_RECIPES.filter(r=>!r.gen&&r.ремесло!=="ритуал");if(!base.length)return "";const r=this.pick(base,R);
+   const кто=this.who(R,r.ремесло==="кузня"?"кузнец":"зачарователь");const nm=this.name(R);const g=this.gen();const нужно=Object.assign({},r.нужно);
+   if(g.res.length){const x=this.pick(g.res,R);нужно[x.n]=1;}const k=Object.keys(нужно)[0];if(k&&нужно[k]>1)нужно[k]--;
+   const rec={id:"ga_"+id,n:`${r.n} ${nm}`,ремесло:r.ремесло,дом:r.дом,ранг:Math.min(5,(r.ранг||0)+1),нужно,части:r.части?r.части.slice():undefined,
+    о:`Прежняя вещь «${r.n}», переделанная: ${кто.n} поднял${кто.f?"а":""} её на ранг.`,кто:кто.n,p:кто.p,где:this.near(),x:G.x,y:G.y,день:Number(G.day)||1,цена:60+(r.ранг||0)*50,основа:r.id};
+   g.arts.push(rec);this.regArt(rec);this.chron(`${кто.n} переделал${кто.f?"а":""} «${r.n}»`);
+   return `${кто.n} переделал${кто.f?"а":""} старую вещь «${r.n}»: вышло «${rec.n}», ранг выше, в работе новый припас. Рецепт — в окне Режиссёра.`;}
+  const idx=safeFn(()=>empireIndexAt(G.x,G.y),0)||0;const e=EMPIRES[idx];if(!e)return "";const up=R()<0.5;
+  safeFn(()=>marketNudge(idx,"подвоз",up?0.25:-0.25,up?"мастера наладили новый подвоз":"обоз пропал на дороге"));
+  this.chron(`в державе «${e.short}» ${up?"наладили подвоз":"оборвался подвоз"}`);
+  return `В державе «${e.short}» ${up?"мастера наладили новый подвоз: товаров на рынках больше, цены мягче":"оборвался подвоз: на рынках пусто, цены выше"}.`;},
+ /* Новая ветвь старой расы: делит с ней славу. */
+ branch(id,R){const races=safeFn(()=>RACES.slice(),[])||[];if(!races.length)return "";const race=this.pick(races,R);const nm=this.name(R);const ethos=this.pick(NEURO_ETHOS_IDS,R);
+  const g=this.gen();const rec={id:"gn_"+id,kind:"people",n:nm,ethos,тяга:NEURO_ETHOS[ethos].тяга.slice(),вождь:this.name(R),земля:g.lands.length?this.pick(g.lands,R).id:null,раса:race,реп:0,день:Number(G.day)||1};
+  g.peoples.push(rec);this.chron(`от народа «${race}» отделилась ветвь «${nm}»`);
+  return `От народа «${race}» отделилась новая ветвь — «${nm}»: ${ethos}, ${NEURO_ETHOS[ethos].о}. Слава у них общая со старым родом.`;}});
+
+{const sg=saveGame;saveGame=function(...a){safeFn(()=>{if(G.gen&&typeof G.gen==="object")G.gen.lastReal=Date.now();});return sg.apply(this,a);};}
+/* ── подключение ко всему миру ── */
+{const D2=Object.assign({},{worldDay:Director.worldDay,pick:Director.pick,onCombat:Director.onCombat,onWin:Director.onWin,note:Director.note,siteCheck:Director.siteCheck,home:Director.home,cmd:Director.cmd,summary:Director.summary});
+ Object.assign(Director,{
+  /* Сутки: сеть видит, сколько вы играли, раньше, чем счётчик обнулится. */
+  worldDay(){const played=Number(this.st().played)||0;D2.worldDay.call(this);safeFn(()=>Neuro.day(played));},
+  /* Событие дня второго Режиссёра — по LinUCB и по оценке нейросети вместе. */
+  pick(){const s=this.st2();const x=this.feats();s.lastX=x;let nx=null;safeFn(()=>{nx=Neuro.feats();});
+   let best=null,bv=-1e9;for(const a of DIR2_ARMS){const v=this.ucb(a,x)+(nx?0.8*Neuro.score("d2:"+a,nx):0)+Math.random()*1e-6;if(v>bv){bv=v;best=a;}}return best;},
+  onCombat(m,c){D2.onCombat.call(this,m,c);safeFn(()=>Neuro.combat(m));},
+  onWin(m){const r=D2.onWin.call(this,m);safeFn(()=>Neuro.win(m));return r;},
+  note(kind,what){D2.note.call(this,kind,what);safeFn(()=>Neuro.note(kind,what));},
+  siteCheck(){D2.siteCheck.call(this);safeFn(()=>Neuro.step());safeFn(()=>Neuro.placeStep());},
+  home(){D2.home.call(this);const box=document.getElementById("dirBody");if(!box)return true;const g=Neuro.gen();
+   const новых=g.potions.length+g.res.length+g.arts.length+g.spells.length+g.lands.length+g.peoples.length+g.beasts.length;
+   const ждёт=g.offers.filter(o=>!o.done).length+g.quests.filter(q=>!q.done).length;
+   const b=this.btn("nx:view",`Кузница нового: новинок ${новых}${ждёт?`, ждут вас ${ждёт}`:""}`);
+   const first=box.querySelector("button");if(first)first.insertAdjacentHTML("beforebegin",b);else box.insertAdjacentHTML("beforeend",b);return true;},
+  cmd(a){const s=String(a||"");if(s.startsWith("nx:")){const r=s.slice(3);return r==="view"?Neuro.view():Neuro.cmd(r);}return D2.cmd.call(this,a);},
+  summary(){return Object.assign(D2.summary.call(this),{нейро:Neuro.summary()});}});
+ /* Всё, что игрок делает, — сигнал для сети. */
+ const d0=deed;deed=function(k,n){const r=d0(k,n);safeFn(()=>Neuro.observe(k,n));return r;};
+ /* Новые ресурсы стоят своих денег, а спрос народа поднимает цену. */
+ const mp=marketPrice;marketPrice=function(res,idx,day){let p=mp(res,idx,day);const g=Neuro.resPrice(res);if(g)p=p*g/6;return p*Neuro.demandK(res);};
+ /* После загрузки новинки снова в своих списках. */
+ const as=applySave;applySave=function(raw,whence){const r=as(raw,whence);safeFn(()=>Neuro.rehydrate());return r;};
+ /* Чертоги: напор по оценке сети; события шины — сигнал для неё. */
+ safeFn(()=>{const ik=InstanceDirectorIntegration.intensity.bind(InstanceDirectorIntegration);
+  InstanceDirectorIntegration.intensity=function(){return Math.max(0,Math.min(0.5,ik()*Neuro.instK()));};
+  Inst.module("InstanceNeuroLink",{init(bus){for(const ev of ["runCompleted","bossKilled","monsterKilled","puzzleSolved","secretDiscovered","sideQuestCompleted","hiddenQuestCompleted","relicFound","npcSaved","floorReached","instanceEntered"])
+   bus.on(ev,"InstanceNeuroLink",()=>safeFn(()=>Neuro.instEvent(ev)));}});});
+ /* Своё заклинание игрока — тоже изобретение. */
+ let видел=null;const cs=registerCustomSpells;registerCustomSpells=function(){const r=cs();safeFn(()=>{const мои=(G.spellbook||[]).filter(x=>x&&x.источник==="игрок").map(x=>x.n);
+  if(!видел){видел=new Set(мои);return;}for(const n of мои)if(!видел.has(n)){видел.add(n);const t=Neuro.invent("spell",n,null);if(t)setTimeout(()=>safeFn(()=>narrate(t.trim(),{interrupt:false})),1500);}});return r;};
+ /* Новая игра или загрузка — счёт своих заклинаний начинается заново. */
+ const as2=applySave;applySave=function(raw,whence){видел=null;const r=as2(raw,whence);safeFn(()=>registerCustomSpells());return r;};
+ /* Сделанная вещь по своему (не общему) рецепту — изобретение для народов-мастеров. */
+ const ac=artCraft;artCraft=function(id){const r=ac(id);if(r){const rc=ART_RECIPE_BY_ID[id];if(rc&&!rc.общий&&!rc.gen){const t=safeFn(()=>Neuro.invent("artifact",rc.n,null),"");if(t)safeFn(()=>narrate(t.trim(),{interrupt:false}));}}return r;};}
+
 /* ── БИОЛОГИЧЕСКИЙ ОТПЕЧАТОК ── */
 const Imprint=Modules.register("IMPRINT",{
  state(){if(!G.imprints||typeof G.imprints!=="object")G.imprints={};return G.imprints;},
@@ -62065,7 +62759,12 @@ function castSpell(i){const sp=SPELLS[i];
  if(sp.custom){const ч=spellCooling(sp);if(ч){safeFn(()=>Bank.play("hero_nomana",{kind:"magic",gain:0.5,maxSec:2}));narrate(`«${sp.n}» ещё перезаряжается: ${ч} ч.`);return;}}
  {const з=safeFn(()=>Oversight.forbids(sp),null);if(з){safeFn(()=>Bank.play("guard_shout",{gain:0.45,maxSec:2}));narrate(з);return;}}
  if(G.mana<sp.cost){safeFn(()=>Bank.play("hero_nomana",{kind:"magic",gain:0.6,maxSec:3}));
-  narrate(`Нужно ${sp.cost} маны, у вас ${G.mana}.`);return;}
+  narrate(`Нужно ${sp.cost} маны, у вас ${G.mana}.`);
+  /* В бою, когда маны не хватает ни на одно заклинание, панель закрывается
+     сама: слоты быстрого доступа и оружие снова под пальцами. */
+  if(G.inCombat&&G.combat&&magicPanelOpen()&&!SPELLS.some(x=>x&&Number(G.mana)>=Number(x.cost)))
+   setTimeout(()=>safeFn(()=>magicPanelCombatClose("Маны не хватает ни на одно заклинание.")),900);
+  return;}
  МАНА_ДО=Number(G.mana)||0;
  /* Резонанс: своя стихия слушается дешевле, чужая дороже. Отдача от прежнего
     срыва тоже сидит в цене — пока держится, всякая чара идёт тяжелее. */
@@ -62969,9 +63668,29 @@ function renderShop(){
  /* вещи выбранной категории */
  const shown=SHOP.cat?rows.filter(r=>r.cat===SHOP.cat):rows;
  html+=`<h3>${SHOP.tab==="buy"?"Товары":"Ваши вещи"}${SHOP.cat?`: ${SHOP_CAT_BY_ID[SHOP.cat].n}`:""}</h3>`;
- html+=shown.map((r,i)=>{const idx=rows.indexOf(r);const цена=`${r.price} ${plural(r.price,"золотой","золотых","золотых")}`;
+ /* ── СДЕЛКА СРАЗУ, КАК В ОБОЗЕ (просьба игрока) ──
+    Прежде вещь брали в четыре шага: товар — карточка — «купить 5» —
+    «Купить?» и ещё раз «Купить». Теперь у каждой строки свои кнопки
+    «Купить 1, 5, 10» (или «Продать 1, 5, 10, всё»), и сделка проходит
+    сразу, без окна подтверждения. Имя товара — касание к подробностям.
+    В разделе «Все» товары разложены по категориям с заголовками. */
+ const строка=r=>{const idx=rows.indexOf(r);const цена=`${r.price} ${plural(r.price,"золотой","золотых","золотых")}`;
   const речь=SHOP.tab==="buy"?`${r.name} — ${цена}${r.count?" за штуку":""}.`:`${r.name}${r.n>1?`, ${r.n} шт.`:""} — ${цена}${r.n>1?" за штуку":""}.`;
-  return `<button class="item" data-cmd="shopitem:${idx}" data-speak="${речь.replace(/"/g,"&quot;")} Двойное касание — карточка и сделка.">${(SHOP_CAT_BY_ID[r.cat]||{}).з||""} ${r.name}${SHOP.tab==="sell"&&r.n>1?` ×${r.n}`:""} — ${r.price} </button>`;}).join("")||`<div class="list-line">Здесь пусто.</div>`;
+  let h=`<button class="item" data-cmd="shopitem:${idx}" data-speak="${речь.replace(/"/g,"&quot;")} Касание — подробнее.">${(SHOP_CAT_BY_ID[r.cat]||{}).з||""} ${r.name}${SHOP.tab==="sell"&&r.n>1?` ×${r.n}`:""} — ${r.price}</button>`;
+  const имя=String(r.name).replace(/"/g,"&quot;");
+  if(SHOP.tab==="buy"){
+   if(r.count)h+=buyCountButtons(r.price,k=>`shopnow:buy:${idx}:${k}`,имя);
+   else{const можно=(Number(G.gold)||0)>=r.price;h+=`<button data-cmd="shopnow:buy:${idx}:1" data-speak="${можно?`Купить ${имя} за ${цена}.`:`Не хватает золота: ${имя} стоит ${r.price}, у вас ${G.gold}.`}">${можно?"Купить":"Не хватает золота"} (${r.price})</button>`;}}
+  else{
+   if(r.n>1)h+=[1,5,10].filter(k=>k<r.n).map(k=>`<button data-cmd="shopnow:sell:${idx}:${k}" data-speak="Продать ${k} — ${имя} — за ${r.price*k} золота.">Продать ${k} (${r.price*k})</button>`).join("")
+    +`<button data-cmd="shopnow:sell:${idx}:${r.n}" data-speak="Продать всё: ${r.n} — ${имя} — за ${r.price*r.n} золота.">Продать всё: ${r.n} (${r.price*r.n})</button>`;
+   else h+=`<button data-cmd="shopnow:sell:${idx}:1" data-speak="Продать ${имя} за ${цена}.">Продать (${r.price})</button>`;}
+  return `<div class="row">${h}</div>`;};
+ const поЦене=(x,y)=>x.price-y.price;
+ if(SHOP.cat)html+=shown.slice().sort(поЦене).map(строка).join("")||`<div class="list-line">Здесь пусто.</div>`;
+ else html+=SHOP_CATS.map(c=>{const в=shown.filter(r=>r.cat===c.id).sort(поЦене);return в.length?`<h3>${c.n} (${в.length})</h3>`+в.map(строка).join(""):"";}).join("")
+  +(()=>{const прочее=shown.filter(r=>!SHOP_CAT_BY_ID[r.cat]);return прочее.length?`<h3>Прочее (${прочее.length})</h3>`+прочее.map(строка).join(""):"";})()
+  ||`<div class="list-line">Здесь пусто.</div>`;
  /* что не берёт — с причиной */
  if(SHOP.tab==="sell"){const нет=shopSellRows(n).filter(r=>!r.ок).slice(0,6);if(нет.length)html+=`<h3>Не берёт</h3>`+нет.map(r=>`<div class="list-line" tabindex="0" data-speak="${(r.name+": не берёт — "+r.почему).replace(/"/g,"&quot;")}">${r.name} — ${r.почему}</div>`).join("");}
  /* скрытый товар */
@@ -63008,6 +63727,8 @@ function shopAsk(tab,count){
  const r=rows[SHOP.sel.idx];if(!r){narrate("Этой вещи уже нет.");return false;}
  count=Math.max(1,Number(count)||1);
  SHOP.confirm={tab,count};
+ /* Подтверждения больше нет: кнопка с числом и есть согласие. */
+ if(!SHOP.ask)return shopYes();
  const сумма=r.price*count;
  const вопрос=tab==="buy"?`Купить «${r.name}»${count>1?` ×${count}`:""} за ${сумма} ${plural(сумма,"золотой","золотых","золотых")}?`:`Продать «${r.name}»${count>1?` ×${count}`:""} за ${сумма} ${plural(сумма,"золотой","золотых","золотых")}?`;
  const box=document.getElementById("shopBody");
@@ -66516,6 +67237,13 @@ function mixOutcome(a,b,place){
  /* Особое сочетание. */
  const ос=mixSpecial(a,b);
  if(ос)return {род:"зелье",id:ос.id,q:Math.min(1.8,q+0.1),слово:"особое сочетание",как:"особое"};
+ /* Два разных зелья — сплав: новый рецепт, в котором живут оба действия.
+    Два одинаковых отличных — высший состав: тоже новый рецепт, сила вдвое. */
+ const НЕ_СПЛАВ=["p:murk","p:mutation"];
+ if(a.ид.startsWith("p:")&&b.ид.startsWith("p:")&&!НЕ_СПЛАВ.includes(a.ид)&&!НЕ_СПЛАВ.includes(b.ид)){
+  const ia=a.ид.slice(2),ib=b.ид.slice(2);
+  if(ia!==ib)return {род:"эликсир",родители:[ia,ib].sort(),мн:+(0.6+0.2*Math.min(a.q,b.q)).toFixed(2),q,слово:"два зелья сплавились в новый рецепт",как:"сплав"};
+  if(a.q>=1.3&&b.q>=1.3)return {род:"эликсир",родители:[ia,ia],мн:1.4,q:Math.min(1.8,Math.max(a.q,b.q)),слово:"два отличных зелья дали высший состав",как:"высший"};}
  /* Два одинаковых зелья — то же, но крепче; две одинаковые смеси — тоже. */
  if(ид[0]===ид[1]&&ид[0].startsWith("p:"))return {род:"зелье",id:ид[0].slice(2),q:Math.min(1.8,Math.max(a.q,b.q)+0.3),слово:"крепче прежнего",как:"двойное"};
  if(ид[0]===ид[1]&&ид[0].startsWith("b:")&&a.смесь&&a.смесь.эф)
@@ -66567,6 +67295,9 @@ function mixApply(e,s,долго){
  return "";}
 function brewDrink(rec,q){
  const s=rec&&rec.смесь||{};
+ if(Array.isArray(s.родители)&&s.родители.length){
+  const мн=Number(s.мн)||0.8;const ids=s.родители[0]===s.родители[1]?[s.родители[0]]:s.родители;
+  return ids.map(id=>{const pt=POTION_BY_ID[id];return pt&&typeof pt.дать==="function"?safeFn(()=>pt.дать(q*мн),""):"";}).filter(Boolean).join("; ")||"ни вкуса, ни толку";}
  const out=(s.эф||[]).map(e=>safeFn(()=>mixApply(e,q,Number(s.долго)||1),"")).filter(Boolean);
  return out.join(", ")||"ни вкуса, ни толку";}
 /* Сам опыт: тратит по одной мере каждого припаса, звучит, пишет книгу. */
@@ -66590,7 +67321,7 @@ function mixDo(a,b,place){
  safeFn(()=>Director.note("mix"));
  const шаги=mixSteps(a,b,place);
  const цвет=mixNiche(b.ниши[0]).цвет,запах=mixNiche(a.ниши[0]).запах;
- let т="",итог="",о="";
+ let т="",итог="",о="",новыйРецепт=false;
  if(out.род==="зелье"){
   const pt=POTION_BY_ID[out.id];
   safeFn(()=>potionGive(out.id,{q:Math.max(0.5,Math.min(1.8,out.q)),стаб:Math.min(0.95,(pt.стаб||0.7)+(out.id==="murk"?0:0.05))}));
@@ -66609,8 +67340,25 @@ function mixDo(a,b,place){
   if(rec)rec.смесь={ниши:s.ниши.slice(),эф:s.эф.map(e=>e.slice()),о:s.о,вкус:s.вкус,цвет:s.цвет,долго:s.долго};
   итог=s.имя;о=s.о;
   const связь=(s.связи||[]).map(x=>x.о).filter(Boolean).slice(0,2).map(x=>x+".").join(" ");
-  т=`${шаги}${связь?" "+связь:""} ${out.как==="двойное"?"Две одинаковые смеси сливаются в одну и крепнут.":`${связь?"Выходит своё":"Смесь сходится по-своему"}: цвет — ${s.цвет}, пахнет ${s.запах}.`} В разделе «Зелья» новое: ${s.имя}, ${potionQualityWord(out.q)}. Действие: ${s.о}.`;
+  т=`${шаги}${связь?" "+связь:""} ${out.как==="двойное"?"Две одинаковые смеси сливаются в одну и крепнут.":`${связь?"Выходит своё":"Смесь сходится по-своему"}: цвет — ${s.цвет}, пахнет ${s.запах}.`} В разделе «Зелья» новое: ${s.имя}, ${potionQualityWord(out.q)}. Действие: ${s.о}.${новое&&out.как!=="двойное"&&s.эф.length>=2?safeFn(()=>Neuro.invent("brew",s.имя,{эф:s.эф.map(e=>e.slice())}),""):""}`;
   звук("magic_shimmer",1600,0.5,true);}
+ else if(out.род==="эликсир"){
+  const [p1,p2]=out.родители.map(id=>POTION_BY_ID[id]);const выс=out.как==="высший";
+  const имя=выс?`высший состав «${p1.n}»`:`эликсир «${p1.n}» и «${p2.n}»`;
+  о=выс?`${p1.о} — вдвое сильнее обычного`:`${p1.о}; ${p2.о}`;
+  const rec=safeFn(()=>potionGive("brew",{q:Math.max(0.5,Math.min(1.8,out.q)),стаб:Math.min(Number(p1.стаб)||0.7,Number(p2.стаб)||0.7),срок:Math.max(Number(p1.срок)||8,Number(p2.срок)||8),имя}),null);
+  if(rec)rec.смесь={ниши:[...new Set([...(p1.из||[]),...(p2.из||[])])].slice(0,3),эф:[],родители:out.родители.slice(),мн:out.мн,о,
+   вкус:выс?"густо и крепко":"сперва одно, следом другое",цвет:mixNiche((p1.из||["heal"])[0]).цвет,долго:1};
+  итог=имя;
+  if(!G.potRecipes||typeof G.potRecipes!=="object")G.potRecipes={};
+  const rk=out.родители.join("+")+(выс?"!":"");новыйРецепт=!G.potRecipes[rk];
+  if(новыйРецепт){G.potRecipes[rk]={имя,родители:out.родители.slice(),мн:out.мн,день:Number(G.day)||1};
+   safeFn(()=>Lore.add("recipe","elx_"+rk,имя,"алхимия: свой сплав зелий"));
+   safeFn(()=>Ledger.add("рецепты",`${имя}: ${выс?`два отличных зелья «${p1.n}»`:`зелья «${p1.n}» и «${p2.n}»`}`,"зелье"));
+   safeFn(()=>Director.note("recipe"));}
+  const слух=новыйРецепт?safeFn(()=>Neuro.invent("elixir",имя,{родители:out.родители.slice()}),""):"";
+  т=`${шаги} ${выс?"Два отличных зелья сходятся без остатка: цвет темнеет до глубины, запах делается острым.":"Зелья не гасят друг друга, а сплетаются: в склянке два слоя, и ни один не тонет."} ${новыйРецепт?`Открыт новый рецепт: «${имя}» — он записан в реестр, и сплав можно повторить. `:""}В разделе «Зелья»: ${имя}, ${potionQualityWord(out.q)}. Действие: ${о}.${слух||""}`;
+  звук("magic_shimmer",1600,0.55,true);}
  else if(out.род==="чад"){
   const у=Math.max(2,Math.round(G.hpMax*0.05));G.hp=Math.max(1,G.hp-у);итог="ядовитый чад";
   т=`${шаги} Смесь вскипает едким жёлтым чадом: глаза режет, горло дерёт — здоровья −${у}. Яд на жару не варят: ни зелья, ни припаса.`;
@@ -66635,8 +67383,11 @@ function mixDo(a,b,place){
  if(о)G.mixBook[k].о=о;
  safeFn(()=>deed("mixes"));
  if(новое){
-  const оп=(out.род==="зелье"&&out.id!=="murk")||out.род==="смесь"?8:4;G.xp=(Number(G.xp)||0)+оп;safeFn(()=>checkLevelUp());
-  т+=` Новый опыт записан в книгу опытов: опыт +${оп}.`;
+  if(!G.potMade||typeof G.potMade!=="object")G.potMade={};
+  const вид=out.род==="зелье"?"p:"+out.id:out.род==="смесь"?"b:"+(out.смесь&&out.смесь.имя):out.род==="эликсир"?"e:"+out.родители.join("+")+(out.как==="высший"?"!":""):"";
+  const впервые=!!вид&&out.id!=="murk"&&!G.potMade[вид];if(вид)G.potMade[вид]=1;
+  const оп=mixXp(out,впервые,новыйРецепт);G.xp=(Number(G.xp)||0)+оп;safeFn(()=>checkLevelUp());
+  т+=` Новый опыт записан в книгу опытов${впервые?`, а ${/«/.test(итог)?итог:`«${итог}»`} у вас впервые`:""}: опыт +${оп}.`;
   safeFn(()=>journal(`Опыт: ${a.имя} и ${b.имя} ${P.в} — ${итог}.`));
   const n=Object.keys(G.mixBook).length;
   const ранг=MIX_RANKS.filter(r=>n>=r.от).pop();
@@ -66645,6 +67396,22 @@ function mixDo(a,b,place){
  else safeFn(()=>selfTaughtGain("alchemy","опыт со смесью"));
  safeFn(()=>{refresh();saveGame(true);});
  return т;}
+/* Опыт за новый опыт со смесью — по трудности находки, а не поровну:
+   особое сочетание и сплав зелий дороже простого рецепта, свой состав
+   дороже тем, чем больше в нём действий и связей; качество, редкость,
+   первое в жизни зелье этого рода и уровень героя множат награду. */
+function mixXp(out,впервые,новыйРецепт){
+ const БАЗА={особое:22,высший:16,поглощение:15,сплав:12,рецепт:10,смесь:6,усиление:5,двойное:4,бурда:2};
+ let б=БАЗА[out.как];if(б==null)б=out.род==="чад"||out.род==="вспышка"||out.род==="зов"?4:3;
+ if(out.как==="смесь"&&out.смесь)б+=3*(out.смесь.эф||[]).length+2*(out.смесь.связи||[]).length;
+ const pt=out.род==="зелье"?POTION_BY_ID[out.id]:null;
+ const ред=pt&&pt.редкое?1.6:pt&&pt.опыт?1.3:1;
+ const кач=out.q?0.6+0.5*Math.min(1.8,Number(out.q)||1):0.8;
+ const ур=1+0.3*Math.max(0,(Number(G.level)||1)-1);
+ let xp=б*кач*ред*ур;
+ if(впервые)xp+=6*ред*ур;
+ if(новыйРецепт)xp*=1.25;
+ return Math.max(1,Math.round(xp));}
 const MIX_RANKS=[
  {от:1, n:"Любопытный",       о:"первый опыт со смесью"},
  {от:5, n:"Смешивающий",      о:"пять разных опытов"},
