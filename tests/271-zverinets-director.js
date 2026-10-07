@@ -194,6 +194,68 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   ["home","beast","shop","gear","best","режиссёр"].every(k=>typeof ui[k]==="number"&&ui[k]>40)&&ui.кнопкаЗверя>=5,ui);
  check('9в. пункты меню и команды на месте; звери и Режиссёр сохраняются вместе с игрой',ui.меню&&ui.команды&&ui.сохранение,ui);
 
+ /* ── 11. своё у зверей ── */
+ const своё=await p.evaluate(()=>{const r={};const s=Zver.st();
+  G.place={kind:"city",bx:G.x,by:G.y,stype:"village",name:"Тестовое село",depth:0,x:1,y:1};G.gold=100000;
+  r.способностиВсе=ZV_FAMILIES.every(f=>ZV_ABILITIES[f.id]&&ZV_ABIL_EFFECTS[ZV_ABILITIES[f.id].эф]);
+  r.обликиВсе=ZV_VARIANTS.filter(v=>v.id!=="wild").every(v=>ZV_VAR_ABIL[v.id]&&ZV_ABIL_EFFECTS[ZV_VAR_ABIL[v.id].эф]);
+  r.видовСпособн=new Set(Object.values(ZV_ABILITIES).map(x=>x.эф)).size;
+  r.умения=Object.values(ZV_TALENTS.move).every(l=>l.length===2)&&["fang","hide","sense","bond"].every(b=>ZV_TALENTS[b].length===2);
+  /* характеристики и здоровье */
+  const пёс=Zver.make("spider_wild",{lvl:10,верн:90});const ск=Zver.make("centipede_wild",{lvl:10,верн:90});const сова=Zver.make("owl_wild",{lvl:5,верн:90});
+  r.разумСовы=Zver.stat(сова,"разум");r.разумПаука=Zver.stat(пёс,"разум");r.hp=Zver.hpMax(пёс);
+  /* умения открываются ветвями */
+  пёс.lvl=30;r.доУмений=Zver.talents(пёс).length;for(let i=0;i<3;i++)Zver.grow(пёс.uid,"fang");r.умение3=Zver.has(пёс,"bite2");r.умение5=Zver.has(пёс,"deathgrip");
+  for(let i=0;i<2;i++)Zver.grow(пёс.uid,"fang");r.умение5б=Zver.has(пёс,"deathgrip");
+  for(let i=0;i<3;i++)Zver.grow(пёс.uid,"move");r.ползок=Zver.has(пёс,"lurk");
+  /* бой: способности срабатывают */
+  s.pets=[];s.mount=null;Zver.follow(пёс.uid);Zver.follow(ск.uid);Zver.role(пёс.uid,"hunter");Zver.role(ск.uid,"hunter");
+  const m=Object.assign({},MONSTERS.find(q=>q.id==="wolf"),{lvl:3,hp:2000,dmg:10});startCombat({x:G.x,y:G.y,monster:m});
+  const rnd=Math.random;Math.random=()=>0.001;let log1,log2;
+  try{log1=Zver.turn(G.combat,"atk");r.путы=G.combat.путы;r.яд=G.combat.zvPoison;log2=Zver.turn(G.combat,"atk");}finally{Math.random=rnd;}
+  r.лог=log1;r.ядИдёт=/Яд жжёт/.test(log2);r.навыкОхоты=пёс.навыки&&пёс.навыки.hunter>0;
+  /* раны: защитник принимает удар, раненый не дерётся, отвар лечит */
+  Zver.role(ск.uid,"guard");G.combat.zvGuard=0.6;G.combat.zvGuardUid=ск.uid;const hp0=Zver.hp(ск);const рез=Zver.guard(100);r.взялЗверь=hp0-Zver.hp(ск);r.герою=рез;
+  Zver.hurt(ск,9999);r.ранен=!!ск.ранен;r.ход=Zver.turn(G.combat,"atk");endCombat();
+  s.pot.otvar=1;r.отвар=Zver.give(ск.uid,"otvar");r.послеОтвара=!ск.ранен&&Zver.hp(ск)>0;
+  /* ресурсы, зелья */
+  s.res={};Math.random=()=>0.01;try{r.добыча=Zver.onWin(Object.assign({},MONSTERS.find(q=>q.id==="wolf"),{lvl:3}));}finally{Math.random=rnd;}
+  r.ресурсы=Object.assign({},s.res);
+  s.res.клык=2;const d0=Zver.dmg(пёс);r.варка=Zver.brew("yarost");r.дать=Zver.give(пёс.uid,"yarost");r.яростьУрон=Zver.dmg(пёс)>d0;
+  r.купитьЗелье=Zver.buyPotion("syt");r.зелий=Object.keys(ZV_POTIONS).length;
+  /* экипировка: особое место по ходу, шьётся из ресурса */
+  r.места=Zver.slots(сова).map(x=>x[0]);s.res.перо=3;r.сшить=Zver.craftGear("wings","feather");r.надеть=Zver.equip(сова.uid,"wings","feather");
+  r.продажа=Zver.buyGear("wings","feather");
+  /* артефакт */
+  s.arts=["cald_fang"];const d1=Zver.dmg(пёс);r.арт=Zver.putArt(пёс.uid,"cald_fang");r.артУрон=Zver.dmg(пёс)>d1;r.выпал=Zver.artDrop("проверка");
+  r.артефактов=ZV_ARTIFACTS.length;
+  /* сутки: носильщик приносит ресурсы, раны заживают */
+  Zver.role(пёс.uid,"scout");пёс.сыт=90;ск.сыт=90;const рес0=Object.values(s.res).reduce((x,y)=>x+y,0);Zver.hurt(пёс,30);const h0=Zver.hp(пёс);
+  s.day=G.day;G.day+=1;Zver.tick();G.day-=1;s.day=G.day;r.принёс=Object.values(s.res).reduce((x,y)=>x+y,0)>рес0;r.зажило=Zver.hp(пёс)>h0;
+  /* окна */
+  Zver.beastView(пёс.uid);r.окноЗверя=document.getElementById("zvBody").textContent;
+  Zver.workView();r.мастерская=document.getElementById("zvBody").textContent.length;
+  Zver.craftView("feather");r.шитьё=document.getElementById("zvBody").querySelectorAll("button").length;
+  while(activeLayer())closeTopUI();
+  for(const a of [пёс,ск,сова])Zver.release(a.uid);
+  return r;});
+ check('11. у каждого рода своя способность, у каждого облика — своя; одиннадцать видов действия; умения в каждой ветви',
+  своё.способностиВсе&&своё.обликиВсе&&своё.видовСпособн>=10&&своё.умения,своё);
+ check('11б. свои характеристики: разум (у совы выше, чем у паука) и своё здоровье; умения открываются на третьей и пятой ступени',
+  своё.разумСовы>своё.разумПаука&&своё.hp>30&&своё.доУмений===0&&своё.умение3&&!своё.умение5&&своё.умение5б&&своё.ползок,своё);
+ check('11в. в бою срабатывают способности (паутина оглушает, яд идёт ходами), навык охоты растёт',
+  своё.путы>=1&&своё.яд>=1&&своё.ядИдёт&&своё.навыкОхоты,своё.лог);
+ check('11г. защитник принимает удар своим здоровьем; раненый не дерётся; звериный отвар лечит',
+  своё.взялЗверь>0&&своё.герою<100&&своё.ранен&&/ранен/.test(своё.ход)&&своё.послеОтвара,своё);
+ check('11д. звериные ресурсы с добычи; зелье варится из ресурсов и действует; зелья продаются в зверинце',
+  Object.keys(своё.ресурсы).length>=1&&/Сварено/.test(своё.варка)&&своё.яростьУрон&&/Куплено/.test(своё.купитьЗелье)&&своё.зелий===7,своё);
+ check('11е. особое место по ходу (накрылья у совы) шьётся из перьев и надевается; звериное не продаётся',
+  своё.места.indexOf("wings")>=0&&/Сшито/.test(своё.сшить)&&/надето/.test(своё.надеть)&&/не продаётся/.test(своё.продажа),своё);
+ check('11ж. двенадцать звериных артефактов: надетый усиливает зверя, новые выпадают',
+  своё.артефактов===12&&своё.артУрон&&/Звериный артефакт/.test(своё.выпал),своё);
+ check('11з. за сутки разведчик приносит ресурсы, раны заживают; окно зверя называет навыки, способности, умения и артефакт',
+  своё.принёс&&своё.зажило&&/Навыки/.test(своё.окноЗверя)&&/Способности/.test(своё.окноЗверя)&&/Умения/.test(своё.окноЗверя)&&/Артефакт/.test(своё.окноЗверя)&&/разум/.test(своё.окноЗверя)&&своё.мастерская>100&&своё.шитьё>=14,своё);
+
  check('10. без ошибок страницы',errors.length===0,errors.slice(0,3));
  console.log(results.join('\n'));
  await browser.close();process.exit(results.some(r=>r.startsWith('FAIL'))?1:0);

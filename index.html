@@ -3066,6 +3066,8 @@ NEWS.push({v:63,н:"версия 11.5: Зверинец Грани",
   т:"844 породы скакунов и питомцев: летающие, ходячие, ползучие, плавучие, роющие и двенадцать зверей богов. Зверинцы в городах, приручение после боя, яйца. До двух спутников в бою, у каждого свой урон; корм, рост до 30, ветви и снаряжение."});
 NEWS.push({v:64,н:"версия 11.5: Режиссёр мира",
   т:"Мир подстраивает тварей под вашу игру, даёт передышку после тяжёлой схватки и шлёт мстителей. Каждые сутки сам меняется эфир, просыпаются машины Предтеч, гневаются и благоволят боги. Сила Режиссёра — в настройках."});
+NEWS.push({v:65,н:"версия 11.5: своё у зверей",
+  т:"У зверей свои характеристики (разум, своё здоровье, раны), навыки от дела, способность рода и облика, умения в ветвях, звериные ресурсы, семь зелий, экипировка из перьев, чешуи, хитина и жемчуга и двенадцать звериных артефактов."});
 const NEWS_V=NEWS[NEWS.length-1].v;
 /* (8.5) Выпуск читается коротко: заголовок, затем факты. */
 function newsLine(n){const н=String(n.н||"");return `${н.charAt(0).toUpperCase()+н.slice(1)}. ${n.т||""}`;}
@@ -53714,7 +53716,7 @@ const ZV_MATERIALS=[
 const ZV_SLOT_GIFT={saddle:{шаг:0.03},bridle:{урон:0.03},barding:{стойк:1},shoes:{шаг:0.02,стойк:0.5},bags:{добыча:0.5},
  collar:{верность:3},armor:{стойк:1.2},amulet:{лечение:0.6},claws:{урон:0.05}};
 const ZV_SLOT_GENDER={saddle:"ср",bridle:"ж",barding:"ж",shoes:"мн",bags:"мн",collar:"м",armor:"ж",amulet:"м",claws:"мн"};
-function zvGearName(slot,mat){const m=ZV_MATERIALS.find(x=>x.id===mat);const s=[...ZV_SLOTS_MOUNT,...ZV_SLOTS_PET].find(x=>x[0]===slot);if(!m||!s)return "снаряжение";
+function zvGearName(slot,mat){const m=ZV_MATERIALS.find(x=>x.id===mat);const s=[...ZV_SLOTS_MOUNT,...ZV_SLOTS_PET,...Object.values(ZV_SLOTS_MOVE)].find(x=>x[0]===slot);if(!m||!s)return "снаряжение";
  const г=ZV_SLOT_GENDER[slot];const прил=г==="ж"?m.ж:г==="ср"?m.ср:г==="мн"?m.мн:m.n;return прил[0].toUpperCase()+прил.slice(1)+" "+s[1];}
 /* ── Каталог пород: род × облик ── */
 function zvBreedOK(f,v){if(v.только&&v.только.indexOf(f.id)<0)return false;if(v.кроме&&v.кроме.indexOf(f.id)>=0)return false;
@@ -53738,12 +53740,124 @@ const ZV_BRANCHES=[
  {id:"bond", n:"Узы",   о:"лечение хозяина и верность"},
  {id:"move", n:"Ход",   о:"ветвь своего хода: крыло, бег, ползок, плавник или нора"}];
 
+/* ── 11.5: своё у зверей ──
+   Просьба игрока: «свои виды экипировки, зелий, ресурсов, артефактов,
+   характеристик, навыков, способностей, умений». У зверя теперь:
+   — характеристики: сила, стойкость, ловкость, чутьё, разум и своё
+     здоровье; раненый зверь выходит из боя и лечится сутками или отваром;
+   — навыки (растут от дела): Охота, Защита, Врачевание, Следопытство,
+     Чародейство, Носка и Ход под седлом;
+   — способности: своя у каждого из сорока шести родов и своя у облика;
+   — умения: открываются на третьей и пятой ступени каждой ветви;
+   — звериные ресурсы (перо, шерсть, чешуя, хитин, клык, рог, жемчуг, слизь,
+     эфирная пыль, шестерни Предтеч): их приносят носильщики и разведчики,
+     их дают поверженные звери;
+   — звериные зелья — семь, покупаются в зверинце и варятся из ресурсов;
+   — экипировка: пять звериных материалов из ресурсов и особое место по
+     ходу зверя (накрылья, налобник, пластины, плавниковые кольца,
+     когти-лопаты);
+   — двенадцать звериных артефактов: их дают боги, машины Предтеч, мстители
+     и владыки. */
+const ZV_STATS=[["сила","сила"],["стойк","стойкость"],["ловк","ловкость"],["чутьё","чутьё"],["разум","разум"]];
+/* Разум рода: у чародеев и лекарей выше. Задан явно, где род особенный. */
+const ZV_MIND={drake:8,phoenix:9,unicorn:9,raven:8,owl:7,moth:7,salamander:7,cat:6,fox:6,pegasus:6,skyray:5,golem:2,steed:4,worm:2,snail:3,tortoise:4};
+const ZV_SKILLS={
+ hunter:{n:"Охота",      о:"урон охотника"},
+ guard: {n:"Защита",     о:"сколько удара защитник принимает на себя"},
+ healer:{n:"Врачевание", о:"сила лечения"},
+ scout: {n:"Следопытство",о:"удар в слабое место и находки"},
+ mage:  {n:"Чародейство",о:"урон стихией и шанс способности"},
+ bearer:{n:"Носка",      о:"добыча и ресурсы"},
+ saddle:{n:"Ход под седлом",о:"скакун привыкает к всаднику: дорога короче"}};
+/* Способность рода. эф — что делает, ш — шанс за ход. */
+const ZV_ABIL_EFFECTS={
+ stun:"оглушает: тварь теряет ход",poison:"отравляет на три хода",bleed:"пускает кровь на два хода",burn:"обжигает сверх удара",
+ double:"бьёт второй раз",crit:"бьёт вдвое",fear:"пугает: следующий удар твари слабее",heal:"лечит хозяина",
+ shield:"закрывает: следующий удар твари слабее на треть",lifesteal:"пьёт силу: лечит себя и хозяина",dodge:"уходит от удара"};
+const ZV_ABILITIES={
+ roc:{n:"Удар крылом",эф:"stun",ш:0.15},griffin:{n:"Когти грифона",эф:"bleed",ш:0.2},wyvern:{n:"Жало виверны",эф:"poison",ш:0.2},
+ drake:{n:"Огненное дыхание",эф:"burn",ш:0.22},pegasus:{n:"Светлое копыто",эф:"heal",ш:0.2},skyray:{n:"Тень ската",эф:"fear",ш:0.2},
+ dragonfly:{n:"Вихрь крыльев",эф:"double",ш:0.2},raven:{n:"Вещий крик",эф:"fear",ш:0.22},owl:{n:"Бесшумный налёт",эф:"crit",ш:0.2},
+ hawk:{n:"Пике",эф:"crit",ш:0.25},bat:{n:"Ультразвук",эф:"stun",ш:0.12},moth:{n:"Светящаяся пыльца",эф:"heal",ш:0.25},
+ phoenix:{n:"Пепел возрождения",эф:"heal",ш:0.3},horse:{n:"Удар копытом",эф:"stun",ш:0.12},stag:{n:"Рога оленя",эф:"bleed",ш:0.15},
+ elk:{n:"Таран",эф:"stun",ш:0.15},wolf:{n:"Стайная хватка",эф:"double",ш:0.2},lynx:{n:"Прыжок рыси",эф:"crit",ш:0.25},
+ bear:{n:"Медвежья хватка",эф:"stun",ш:0.18},boar:{n:"Клыки вепря",эф:"bleed",ш:0.2},ram:{n:"Разбег",эф:"stun",ш:0.15},
+ aurochs:{n:"Рога тура",эф:"crit",ш:0.18},camel:{n:"Плевок",эф:"fear",ш:0.15},lion:{n:"Царский рык",эф:"fear",ш:0.25},
+ hound:{n:"Хватка за горло",эф:"bleed",ш:0.2},fox:{n:"Лисья хитрость",эф:"dodge",ш:0.25},cat:{n:"Девять жизней",эф:"dodge",ш:0.25},
+ unicorn:{n:"Рог исцеления",эф:"heal",ш:0.3},runner:{n:"Рывок ящера",эф:"double",ш:0.2},golem:{n:"Каменная стена",эф:"shield",ш:0.25},
+ steed:{n:"Паровой рывок",эф:"double",ш:0.15},beetle:{n:"Панцирь жука",эф:"shield",ш:0.25},spider:{n:"Паутина",эф:"stun",ш:0.25},
+ centipede:{n:"Яд сотни ног",эф:"poison",ш:0.25},serpent:{n:"Удушающие кольца",эф:"stun",ш:0.18},salamander:{n:"Огненная кожа",эф:"burn",ш:0.25},
+ tortoise:{n:"Укрыться в панцире",эф:"shield",ш:0.3},scorpion:{n:"Жало скорпиона",эф:"poison",ш:0.25},snail:{n:"Липкая слизь",эф:"fear",ш:0.15},
+ lizard:{n:"Ядовитая слюна",эф:"poison",ш:0.2},hippocamp:{n:"Волна",эф:"stun",ш:0.15},seaserp:{n:"Кольца морского змея",эф:"stun",ш:0.2},
+ otter:{n:"Ловкость выдры",эф:"dodge",ш:0.25},mole:{n:"Подкоп",эф:"crit",ш:0.2},worm:{n:"Проглотить",эф:"bleed",ш:0.2},
+ badger:{n:"Барсучья ярость",эф:"double",ш:0.2}};
+/* Способность облика: стихия породы. */
+const ZV_VAR_ABIL={
+ ash:{n:"Пепельный жар",эф:"burn"},storm:{n:"Грозовой разряд",эф:"stun"},moon:{n:"Лунный свет",эф:"heal"},rune:{n:"Разящая руна",эф:"crit"},
+ mist:{n:"Туманный шаг",эф:"dodge"},deep:{n:"Ужас глубин",эф:"fear"},crystal:{n:"Хрустальная грань",эф:"shield"},bone:{n:"Костяная жажда",эф:"lifesteal"},
+ wood:{n:"Лесной сок",эф:"heal"},frost:{n:"Иней",эф:"fear"},star:{n:"Звёздный двойник",эф:"double"},shadow:{n:"Удар из тени",эф:"crit"},
+ sun:{n:"Солнечное тепло",эф:"heal"},brass:{n:"Латунный щит",эф:"shield"},seam:{n:"Живой шов",эф:"double"},woven:{n:"Нить пут",эф:"stun"},
+ vault:{n:"Сводный щит",эф:"shield"},sea:{n:"Солёный вал",эф:"stun"},tide:{n:"Прилив сил",эф:"heal"}};
+/* Умения: открываются на третьей и пятой ступени ветви. */
+const ZV_TALENTS={
+ fang:[{id:"bite2",n:"Двойной укус",о:"чаще бьёт второй раз"},{id:"deathgrip",n:"Смертельная хватка",о:"чаще бьёт вдвое"}],
+ hide:[{id:"thick",n:"Толстая шкура",о:"сам получает на четверть меньше"},{id:"wall",n:"Живой щит",о:"в любой роли принимает часть удара на себя"}],
+ sense:[{id:"loot",n:"Нюх на добычу",о:"после победы приносит лишний ресурс"},{id:"ambush",n:"Чутьё засады",о:"первый удар твари в бою вдвое слабее"}],
+ bond:[{id:"friend",n:"Верный друг",о:"верность не падает ниже тридцати, каждый ход лечит хозяина"},{id:"cover",n:"Заслонить",о:"раз за бой принимает смертельный удар на себя"}],
+ move:{fly:[{id:"dive",n:"Пикирование",о:"первый удар в бою в полтора раза сильнее"},{id:"sky",n:"Высокое небо",о:"поднимает всадника на ступень выше"}],
+  walk:[{id:"tireless",n:"Неутомимый бег",о:"дорога верхом ещё короче"},{id:"stomp",n:"Топот",о:"чаще оглушает тварь"}],
+  crawl:[{id:"lurk",n:"Затаиться",о:"всадник тише"},{id:"venom",n:"Яд жил",о:"любой удар может отравить"}],
+  swim:[{id:"plunge",n:"Нырок",о:"морской путь короче"},{id:"whirl",n:"Водоворот",о:"чаще оглушает тварь"}],
+  dig:[{id:"tunnel",n:"Подкоп",о:"чует тайники дальше"},{id:"vein",n:"Жила",о:"добычи больше"}]}};
+/* Звериные ресурсы. */
+const ZV_RES=["перо","шерсть","чешуя","хитин","клык","рог","жемчуг","слизь","эфирная пыль","шестерня Предтеч"];
+function zvResOf(famId,varId){const f=ZV_FAMILY_BY_ID[famId];if(!f)return ["клык"];
+ if(famId==="golem"||famId==="steed"||varId==="brass")return ["шестерня Предтеч","клык"];
+ if(varId==="star"||varId==="rune"||famId==="moth"||famId==="phoenix")return ["эфирная пыль","перо"];
+ return {fly:["перо","клык"],walk:["шерсть","рог"],crawl:["хитин","слизь"],swim:["чешуя","жемчуг"],dig:["клык","шерсть"]}[f.ход];}
+/* Звериные зелья: покупаются в зверинце или варятся из ресурсов. */
+const ZV_POTIONS={
+ otvar: {n:"Звериный отвар",       о:"залечивает раны зверя на две трети",          цена:30, рецепт:{слизь:1,шерсть:1}},
+ yarost:{n:"Зелье звериной ярости",о:"три боя зверь бьёт на треть сильнее",          цена:60, рецепт:{клык:2}},
+ kozha: {n:"Настой каменной шкуры",о:"три боя зверь получает вдвое меньше",          цена:60, рецепт:{хитин:2}},
+ vern:  {n:"Настой верности",      о:"верность зверя прибавляет двадцать пять",      цена:40, рецепт:{перо:1,шерсть:1}},
+ syt:   {n:"Сытный бальзам",       о:"зверь сыт до краёв",                           цена:20, рецепт:{рог:1}},
+ rost:  {n:"Эликсир роста",        о:"полуровня опыта сразу",                        цена:120,рецепт:{"эфирная пыль":2,жемчуг:1}},
+ pere:  {n:"Эликсир перерождения", о:"все очки ветвей возвращаются, умения закрываются",цена:200,рецепт:{"эфирная пыль":2,чешуя:2}}};
+/* Звериные материалы: шьются в зверинце из ресурсов. */
+const ZV_BEAST_MATS=[
+ {id:"feather",n:"перьевой",  ж:"перьевая",  ср:"перьевое",  мн:"перьевые",  k:3,цена:25,рес:"перо",       дар:{уклон:0.03}},
+ {id:"scale",  n:"чешуйчатый",ж:"чешуйчатая",ср:"чешуйчатое",мн:"чешуйчатые",k:3,цена:25,рес:"чешуя",      дар:{стойк:1}},
+ {id:"chitin", n:"хитиновый", ж:"хитиновая", ср:"хитиновое", мн:"хитиновые", k:3,цена:25,рес:"хитин",      дар:{стойк:1}},
+ {id:"pearl",  n:"жемчужный", ж:"жемчужная", ср:"жемчужное", мн:"жемчужные", k:4,цена:40,рес:"жемчуг",     дар:{лечение:1}},
+ {id:"cog",    n:"шестерёнчатый",ж:"шестерёнчатая",ср:"шестерёнчатое",мн:"шестерёнчатые",k:4,цена:40,рес:"шестерня Предтеч",дар:{урон:0.05}}];
+ZV_MATERIALS.push(...ZV_BEAST_MATS);
+/* Особое место по ходу зверя. */
+const ZV_SLOTS_MOVE={fly:["wings","накрылья"],walk:["brow","налобник"],crawl:["plates","пластины"],swim:["fins","плавниковые кольца"],dig:["spades","когти-лопаты"]};
+Object.assign(ZV_SLOT_GIFT,{wings:{шаг:0.03,уклон:0.02},brow:{урон:0.04},plates:{стойк:1.5},fins:{море:0.04},spades:{скан:0.4,добыча:0.3}});
+Object.assign(ZV_SLOT_GENDER,{wings:"мн",brow:"м",plates:"мн",fins:"мн",spades:"мн"});
+/* Двенадцать звериных артефактов. */
+const ZV_ARTIFACTS=[
+ {id:"via_bell",   n:"Колокольчик Виа Странницы",о:"дорога короче, верность не падает",дар:{шаг:0.1,верность:1}},
+ {id:"mort_collar",n:"Ошейник Мортаны",          о:"зверь пьёт силу из каждого удара",   дар:{вампир:0.25}},
+ {id:"aur_feather",n:"Перо Ауриса",              о:"поднимает на крыло и лечит",        дар:{крыло:1,лечение:3}},
+ {id:"cald_fang",  n:"Клык Кальдера",            о:"урон зверя на четверть выше",       дар:{урон:0.25}},
+ {id:"sel_eye",    n:"Глаз Селены",              о:"видит ночью и чаще бьёт вдвое",     дар:{крит:0.15,ночь:1}},
+ {id:"chron_shell",n:"Осколок панциря Хронара",  о:"стойкость выше на четыре",          дар:{стойк:4}},
+ {id:"mech_heart", n:"Сердце машины Предтеч",    о:"стойкость и урон выше",             дар:{стойк:2,урон:0.1}},
+ {id:"tarh_rune",  n:"Руна Тарха",               о:"чует тайники и несёт больше",       дар:{скан:2,добыча:1}},
+ {id:"ner_pearl",  n:"Жемчуг Нереи",             о:"морской путь короче, лечит",        дар:{море:0.15,лечение:2}},
+ {id:"spl_thread", n:"Нить Сплетения",           о:"чаще бьёт второй раз",              дар:{двойной:0.15}},
+ {id:"prk_needle", n:"Шовная игла Перекроя",     о:"способности срабатывают чаще",      дар:{способность:0.15}},
+ {id:"taur_crown", n:"Венец Таура",              о:"чаще оглушает тварь",               дар:{оглуш:0.12}}];
+const ZV_ART_BY_ID=Object.fromEntries(ZV_ARTIFACTS.map(a=>[a.id,a]));
 const Zver={
  /* ── Состояние ── */
  st(){if(!G.zv||typeof G.zv!=="object")G.zv={};const s=G.zv;
   if(!Array.isArray(s.list))s.list=[];if(!Array.isArray(s.pets))s.pets=[];if(!s.gear||typeof s.gear!=="object")s.gear={};
   if(!Array.isArray(s.eggs))s.eggs=[];if(!s.seen||typeof s.seen!=="object")s.seen={};
-  if(!Number.isFinite(Number(s.next)))s.next=1;if(!Number.isFinite(Number(s.day)))s.day=Number(G.day)||1;return s;},
+  if(!Number.isFinite(Number(s.next)))s.next=1;if(!Number.isFinite(Number(s.day)))s.day=Number(G.day)||1;
+  for(const k of ["res","pot"])if(!s[k]||typeof s[k]!=="object"||Array.isArray(s[k]))s[k]={};if(!Array.isArray(s.arts))s.arts=[];return s;},
  q(t){return String(t).replace(/&/g,"&amp;").replace(/"/g,"&quot;").replace(/</g,"&lt;");},
  h(a,b,c){return hashName(Math.round(a),Math.round(b),c);},
  play(r,o){safeFn(()=>Bank.play(r,Object.assign({gain:0.6,maxSec:4},o||{})));},
@@ -53765,13 +53879,40 @@ const Zver={
  points(a){return Math.floor((Number(a.lvl)||1)/3);},
  spent(a){return Object.values(a.ветви||{}).reduce((x,y)=>x+(Number(y)||0),0);},
  /* Сила зверя в цифрах: род, облик, уровень, ветви, снаряжение, сытость. */
- stat(a,k){const f=this.fam(a);if(!f)return 0;let v=Number(f[k])||0;
+ stat(a,k){const f=this.fam(a);if(!f)return 0;let v=k==="разум"?this.mind(f):Number(f[k])||0;
   v*=1+0.08*((Number(a.lvl)||1)-1);
   const br=a.ветви||{};if(k==="сила")v*=1+0.12*(br.fang||0);if(k==="стойк")v*=1+0.12*(br.hide||0);if(k==="чутьё")v*=1+0.12*(br.sense||0);
   const vv=this.variant(a);if(vv&&vv.дар&&k==="стойк")v+=Number(vv.дар.стойк)||0;
+  if(k==="разум")v*=1+0.1*((a.ветви&&a.ветви.bond)||0);
   const l=this.legend(a);if(l&&l.дар&&k==="стойк")v+=Number(l.дар.стойк)||0;if(l)v*=1.3;
-  v+=this.gearSum(a,k==="стойк"?"стойк":"_");
+  v+=this.gearSum(a,k==="стойк"?"стойк":"_");if(k==="стойк")v+=this.art(a,"стойк");
   if((Number(a.сыт)||0)<20)v*=0.5;return Math.round(v*10)/10;},
+ mind(f){return ZV_MIND[f.id]!=null?ZV_MIND[f.id]:3+(f.роли.indexOf("mage")>=0?3:0)+(f.роли.indexOf("healer")>=0?2:0);},
+ /* Своё здоровье зверя. Раненый (ноль) из боя выходит. */
+ hpMax(a){const lvl=Number(a.lvl)||1;return Math.round(18+this.stat(a,"стойк")*5+lvl*4+((a.ветви&&a.ветви.hide)||0)*6+this.gearSum(a,"здоровье"));},
+ hp(a){const m=this.hpMax(a);if(!Number.isFinite(Number(a.hp)))a.hp=m;a.hp=Math.max(0,Math.min(m,Number(a.hp)));return a.hp;},
+ hurt(a,n){this.hp(a);a.hp=Math.max(0,a.hp-Math.max(0,Math.round(n)));if(a.hp<=0&&!a.ранен){a.ранен=1;
+   safeFn(()=>narrate(`${a.n} ранен и выходит из боя. Его лечит отвар или сутки покоя.`,{interrupt:false}));this.play(this.fam(a).звук,{gain:0.4,maxSec:2});}},
+ cure(a,n){this.hp(a);a.hp=Math.min(this.hpMax(a),a.hp+Math.round(n));if(a.hp>=this.hpMax(a)*0.3)a.ранен=0;},
+ /* Артефакт зверя: один на зверя. */
+ artOf(a){return a&&a.арт?ZV_ART_BY_ID[a.арт]||null:null;},
+ art(a,k){const x=this.artOf(a);return x&&x.дар&&x.дар[k]!=null?Number(x.дар[k]):0;},
+ /* Навыки растут от дела: 0…10. */
+ skill(a,k){return Math.min(10,Math.floor(Number(a.навыки&&a.навыки[k])||0));},
+ skillUp(a,k,n){if(!a.навыки||typeof a.навыки!=="object")a.навыки={};const до=this.skill(a,k);
+  const need=lv=>10+lv*8;let x=Number(a.навыки[k])||0;const lv=Math.floor(x);if(lv>=10)return "";
+  x+=n/need(lv);a.навыки[k]=Math.min(10,x);const после=this.skill(a,k);
+  return после>до?` ${a.n}: навык «${ZV_SKILLS[k].n}» — ${после}.`:"";},
+ /* Умения: открыты ли. */
+ talents(a){const out=[];const f=this.fam(a);const br=a.ветви||{};
+  for(const b of ["fang","hide","sense","bond"])ZV_TALENTS[b].forEach((x,i)=>{if((br[b]||0)>=(i?5:3))out.push(x.id);});
+  (ZV_TALENTS.move[f.ход]||[]).forEach((x,i)=>{if((br.move||0)>=(i?5:3))out.push(x.id);});return out;},
+ has(a,id){return this.talents(a).indexOf(id)>=0;},
+ talentList(a){const f=this.fam(a);const br=a.ветви||{};const out=[];
+  for(const b of ZV_BRANCHES){const list=b.id==="move"?ZV_TALENTS.move[f.ход]:ZV_TALENTS[b.id];
+   list.forEach((x,i)=>out.push({x,ветвь:this.branchName(a,b),ступень:i?5:3,открыто:(br[b.id]||0)>=(i?5:3)}));}return out;},
+ ability(a){const x=ZV_ABILITIES[a.fam];return x||null;},
+ varAbility(a){const v=ZV_VAR_ABIL[a.var]||null;if(v)return v;const l=this.legend(a);if(l){const f=ZV_ABILITIES[l.fam];return f?{n:"Дар бога: "+f.n,эф:f.эф}:null;}return null;},
  /* Свой урон зверя: сила рода, уровень, ветвь «Клык», облик, когти или
     узда, легенда; голодный бьёт вполовину. Это число зверь и наносит в бою
     (с разбросом ±20 %), а роль решает, какую долю и что сверх того. */
@@ -53780,18 +53921,23 @@ const Zver={
   v*=1+0.15*((a.ветви&&a.ветви.fang)||0);
   const vv=this.variant(a);if(vv&&vv.дар&&vv.дар.урон)v*=1+Number(vv.дар.урон);
   const l=this.legend(a);if(l){v*=1.3;if(l.дар&&l.дар.урон)v*=1+Number(l.дар.урон);}
-  v*=1+this.gearSum(a,"урон");
+  v*=1+this.gearSum(a,"урон")+this.art(a,"урон");
+  if((Number(a.ярость)||0)>0)v*=1.33;
   if((Number(a.сыт)||0)<20)v*=0.5;return Math.max(1,Math.round(v));},
  element(a){const l=this.legend(a);if(l){const g=PANTHEON.find(x=>x.id===l.бог);return g?"сила "+g.n.split(" ")[0]+"а":"";}
   const v=this.variant(a);return v&&v.стих?v.стих:"";},
  ROLE_DMG:{hunter:1,mage:0.9,scout:0.6,bearer:0.6,guard:0.5,healer:0.35},
- gearSum(a,k){let v=0;for(const [slot,mat] of Object.entries(a.снар||{})){const m=ZV_MATERIALS.find(x=>x.id===mat);const g=ZV_SLOT_GIFT[slot];if(m&&g&&g[k])v+=g[k]*m.k;}return v;},
+ gearSum(a,k){let v=0;for(const [slot,mat] of Object.entries(a.снар||{})){const m=ZV_MATERIALS.find(x=>x.id===mat);const g=ZV_SLOT_GIFT[slot];if(m&&g&&g[k])v+=g[k]*m.k;
+   if(m&&m.дар&&m.дар[k])v+=Number(m.дар[k]);}return v;},
  /* Дар зверя в пути — те же ключи, что у скакунов из тайных палат. */
  gift(a,k){if(!a)return null;const f=this.fam(a);let v=0,есть=false;
   const add=x=>{if(x!=null&&Number.isFinite(Number(x))){v+=Number(x);есть=true;}};
   const vv=this.variant(a);if(vv&&vv.дар)add(vv.дар[k]);const l=this.legend(a);if(l&&l.дар)add(l.дар[k]);
-  add(this.gearSum(a,k)||null);
+  add(this.gearSum(a,k)||null);add(this.art(a,k)||null);
   const ход=f&&f.ход,мв=(a.ветви&&a.ветви.move)||0;
+  if(k==="шаг"&&f&&f.ездовой){add(0.01*this.skill(a,"saddle"));if(this.has(a,"tireless"))add(0.08);}
+  if(k==="крыло"&&this.has(a,"sky"))add(1);if(k==="скрытность"&&this.has(a,"lurk"))add(0.1);
+  if(k==="море"&&this.has(a,"plunge"))add(0.1);if(k==="скан"&&this.has(a,"tunnel"))add(1);if(k==="добыча"&&this.has(a,"vein"))add(1);
   if(k==="шаг"&&f&&f.ездовой){add(0.15+0.03*мв+(ход==="walk"?0.1:0));}
   if(k==="крыло"&&ход==="fly"&&f.ездовой)add(Math.min(3,1+Math.floor(мв/2)));
   if(k==="море"&&ход==="swim")add(0.25+0.05*мв);
@@ -53869,7 +54015,7 @@ const Zver={
   s.list=s.list.filter(x=>x.uid!==a.uid);s.pets=s.pets.filter(x=>x!==a.uid);if(s.mount===a.uid)s.mount=null;
   return `${a.n} уходит на волю.`;},
  /* ── Снаряжение ── */
- slots(a){return this.fam(a).ездовой?ZV_SLOTS_MOUNT:ZV_SLOTS_PET;},
+ slots(a){const f=this.fam(a);return (f.ездовой?ZV_SLOTS_MOUNT:ZV_SLOTS_PET).concat([ZV_SLOTS_MOVE[f.ход]]);},
  gearKey(slot,mat){return slot+":"+mat;},
  equip(u,slot,mat){const a=this.byUid(u);if(!a)return "Такого зверя нет.";if(!this.slots(a).some(x=>x[0]===slot))return `${a.n} такого не носит.`;
   const s=this.st(),k=this.gearKey(slot,mat);if(!(Number(s.gear[k])>0))return "Такого снаряжения в сумке нет.";
@@ -53893,7 +54039,7 @@ const Zver={
   G.gold-=ц;const a=this.make(id);safeFn(()=>Bank.play("arte_coins",{gain:0.5,maxSec:2}));this.play(this.fam(a).звук);
   safeFn(()=>journal(`Куплен зверь: ${a.n}.`));safeFn(()=>Director.note("beast",a.n));
   return `${a.n} теперь ваш за ${ц} золота. ${this.fam(a).о}. Ест: ${this.fam(a).корм.join(", ")}.`;},
- buyGear(slot,mat){const m=ZV_MATERIALS.find(x=>x.id===mat);if(!m||!ZV_SLOT_GIFT[slot])return "Такого снаряжения нет.";if(!this.inTown())return "Снаряжение продают в зверинцах.";
+ buyGear(slot,mat){const m=ZV_MATERIALS.find(x=>x.id===mat);if(!m||!ZV_SLOT_GIFT[slot])return "Такого снаряжения нет.";if(m.рес)return `${zvGearName(slot,mat)} не продаётся: его шьют из ресурса «${m.рес}».`;if(!this.inTown())return "Снаряжение продают в зверинцах.";
   if((Number(G.gold)||0)<m.цена)return `${zvGearName(slot,mat)} стоит ${m.цена} золота.`;G.gold-=m.цена;const s=this.st(),k=this.gearKey(slot,mat);s.gear[k]=(Number(s.gear[k])||0)+1;
   safeFn(()=>Bank.play("arte_coins",{gain:0.5,maxSec:2}));return `Куплено: ${zvGearName(slot,mat).toLowerCase()} за ${m.цена} золота.`;},
  buyFood(k){if(!ZV_FOOD[k]||!this.inTown())return "Корм продают в зверинцах.";if((Number(G.gold)||0)<6)return "Корм стоит 6 золота.";
@@ -53923,7 +54069,40 @@ const Zver={
    s.tame={breed:fam+"_"+v.id,lvl:Math.max(1,Math.round(lvl*0.7)),x:G.x,y:G.y,day:G.day};
    t.push(` Поверженный зверь не убегает: ${ZV_BREED_BY_ID[s.tame.breed].n} смотрит на вас. Его можно приручить кормом — «Приручить зверя».`);}
   if(Math.random()<0.03){const f=ZV_FAMILIES[Math.floor(Math.random()*ZV_FAMILIES.length)];t.push(this.egg(f.id,"добыча"));}
+  /* звериные ресурсы с поверженного зверя и от чутких спутников */
+  if(fam){let n=Math.random()<0.45?1:0;for(const a of this.pets())if(this.has(a,"loot"))n++;
+   if(n){const r=zvResOf(fam)[Math.floor(Math.random()*2)];t.push(this.resAdd(r,n,"с добычи"));}}
+  if(m&&m.boss&&Math.random()<0.3)t.push(this.artDrop("владыка"));
+  for(const a of this.st().list){if(a.ярость>0)a.ярость--;if(a.шкура>0)a.шкура--;}
   return t.filter(Boolean).join(" ");},
+ /* ── Ресурсы, зелья, артефакты ── */
+ resAdd(r,n,откуда){const s=this.st();if(ZV_RES.indexOf(r)<0)return "";s.res[r]=(Number(s.res[r])||0)+n;return ` Звериный ресурс${откуда?" "+откуда:""}: ${r} ×${n}.`;},
+ resHas(rec){const s=this.st();return Object.entries(rec).every(([k,n])=>(Number(s.res[k])||0)>=n);},
+ resTake(rec){const s=this.st();for(const [k,n] of Object.entries(rec)){s.res[k]-=n;if(s.res[k]<=0)delete s.res[k];}},
+ recWords(rec){return Object.entries(rec).map(([k,n])=>`${k} ×${n}`).join(", ");},
+ brew(id){const p=ZV_POTIONS[id];if(!p)return "Такого зелья нет.";if(!this.resHas(p.рецепт))return `${p.n} варится из: ${this.recWords(p.рецепт)}. Не хватает ресурсов.`;
+  this.resTake(p.рецепт);const s=this.st();s.pot[id]=(Number(s.pot[id])||0)+1;safeFn(()=>Bank.play("oc_bubble",{gain:0.5,maxSec:3}));return `Сварено: ${p.n}. ${p.о}.`;},
+ buyPotion(id){const p=ZV_POTIONS[id];if(!p||!this.inTown())return "Звериные зелья продают в зверинцах.";if((Number(G.gold)||0)<p.цена)return `${p.n} стоит ${p.цена} золота.`;
+  G.gold-=p.цена;const s=this.st();s.pot[id]=(Number(s.pot[id])||0)+1;safeFn(()=>Bank.play("arte_coins",{gain:0.5,maxSec:2}));return `Куплено: ${p.n} за ${p.цена} золота.`;},
+ give(u,id){const a=this.byUid(u);const p=ZV_POTIONS[id];const s=this.st();if(!a||!p)return "Нет такого зверя или зелья.";if(!(Number(s.pot[id])>0))return `${p.n}: в сумке нет.`;
+  switch(id){
+   case "otvar":if(this.hp(a)>=this.hpMax(a))return `${a.n} цел, отвар не нужен.`;this.cure(a,this.hpMax(a)*0.67);break;
+   case "yarost":a.ярость=3;break;case "kozha":a.шкура=3;break;
+   case "vern":a.верн=Math.min(100,(Number(a.верн)||0)+25);break;case "syt":a.сыт=100;break;
+   case "rost":if((Number(a.lvl)||1)>=30)return `${a.n} уже на тридцатом уровне.`;this.xp(a,Math.ceil(this.need(a)/2));break;
+   case "pere":if(!this.spent(a))return `${a.n}: очки ветвей и так свободны.`;a.ветви={fang:0,hide:0,sense:0,bond:0,move:0};break;}
+  s.pot[id]--;if(s.pot[id]<=0)delete s.pot[id];safeFn(()=>Bank.play("potion_quick",{gain:0.45,maxSec:2}));
+  return `${a.n} выпивает: ${p.n}. ${p.о[0].toUpperCase()+p.о.slice(1)}.`;},
+ craftGear(slot,mat){const m=ZV_BEAST_MATS.find(x=>x.id===mat);if(!m||!ZV_SLOT_GIFT[slot])return "Такого не сшить.";if(!this.inTown())return "Шьют в зверинцах городов.";
+  const rec={[m.рес]:3};if(!this.resHas(rec))return `${zvGearName(slot,mat)}: нужно ${m.рес} ×3 и ${m.цена} золота.`;if((Number(G.gold)||0)<m.цена)return `Работа стоит ${m.цена} золота.`;
+  this.resTake(rec);G.gold-=m.цена;const s=this.st(),k=this.gearKey(slot,mat);s.gear[k]=(Number(s.gear[k])||0)+1;safeFn(()=>Bank.play("craft_knock",{gain:0.5,maxSec:2}));
+  return `Сшито: ${zvGearName(slot,mat).toLowerCase()}.`;},
+ artDrop(откуда){const s=this.st();const есть=new Set(s.arts.concat(s.list.map(a=>a.арт).filter(Boolean)));const free=ZV_ARTIFACTS.filter(x=>!есть.has(x.id));
+  if(!free.length)return "";const x=free[Math.floor(Math.random()*free.length)];s.arts.push(x.id);safeFn(()=>journal(`Звериный артефакт: ${x.n}.`));
+  safeFn(()=>Bank.play("magic_shimmer",{gain:0.5,maxSec:3}));return ` Звериный артефакт${откуда?" ("+откуда+")":""}: ${x.n} — ${x.о}.`;},
+ putArt(u,id){const a=this.byUid(u);const s=this.st();if(!a||s.arts.indexOf(id)<0)return "Нет такого зверя или артефакта.";
+  s.arts.splice(s.arts.indexOf(id),1);if(a.арт)s.arts.push(a.арт);a.арт=id;return `${a.n} носит: ${ZV_ART_BY_ID[id].n}. ${ZV_ART_BY_ID[id].о}.`;},
+
  tame(){const s=this.st();const o=s.tame;if(!o)return "Приручать некого: зверь, что ждал вас, ушёл.";
   if(o.day!==G.day||Math.abs(o.x-G.x)+Math.abs(o.y-G.y)>2){s.tame=null;return "Зверь ушёл, не дождавшись.";}
   const b=ZV_BREED_BY_ID[o.breed],f=ZV_FAMILY_BY_ID[b.fam];const k=f.корм.find(x=>invHas(ZV_FOOD[x],1));
@@ -53936,25 +54115,85 @@ const Zver={
  /* ── В бою ── */
  onCombat(m,c){},
  turn(cb,act){if(!cb||!cb.m)return "";const out=[];
+  /* яд и кровь, пущенные зверями, идут своим ходом */
+  if((Number(cb.zvPoison)||0)>0){cb.zvPoison--;const d=Math.max(1,Number(cb.zvPoisonD)||1);cb.hp-=d;out.push(`Яд жжёт тварь: ${d}.`);}
+  if((Number(cb.zvBleed)||0)>0){cb.zvBleed--;const d=Math.max(1,Number(cb.zvBleedD)||1);cb.hp-=d;out.push(`Тварь истекает кровью: ${d}.`);}
+  const первый=!cb.zvTurn;cb.zvTurn=(Number(cb.zvTurn)||0)+1;
   for(const a of this.pets()){if((Number(a.сыт)||0)<10){out.push(`${a.n} слишком голоден, чтобы драться.`);continue;}
-   const f=this.fam(a);const lvl=Number(a.lvl)||1;const доля=this.ROLE_DMG[a.роль]||0.5;
-   let d=Math.max(1,Math.round(this.dmg(a)*доля*(0.8+Math.random()*0.4)));let ещё="";
+   if(a.ранен||this.hp(a)<=0){out.push(`${a.n} ранен и не дерётся.`);continue;}
+   const f=this.fam(a);const lvl=Number(a.lvl)||1;const доля=this.ROLE_DMG[a.роль]||0.5;const нав=this.skill(a,a.роль);
+   let d=Math.max(1,Math.round(this.dmg(a)*доля*(0.8+Math.random()*0.4)*(1+0.05*нав)));let ещё="";
+   if(первый&&this.has(a,"dive")){d=Math.round(d*1.5);ещё+=" Пикирование!";}
    switch(a.роль){
     case "hunter":out.push(`${a.n} рвёт тварь: ${d}.`);this.play(f.звук,{gain:0.5,maxSec:2});break;
     case "mage":{const ст=this.element(a);out.push(`${a.n} бьёт ${ст?ст+"ю":"чарами"}: ${d}.`.replace("ою:","ой:"));safeFn(()=>Bank.play("arc_hit",{gain:0.4,maxSec:2}));break;}
-    case "guard":cb.zvGuard=Math.min(0.6,0.2+0.03*this.stat(a,"стойк")/2);out.push(`${a.n} кусает тварь (${d}) и закрывает вас собой.`);break;
-    case "healer":if(G.hp<G.hpMax){const h=Math.max(1,Math.round(2+lvl*0.5+((a.ветви&&a.ветви.bond)||0)*1.5+this.gearSum(a,"лечение")));G.hp=Math.min(G.hpMax,G.hp+h);ещё=` и лечит вас: +${h}`;safeFn(()=>Bank.play("heal_bloom",{gain:0.35,maxSec:2}));}
-     out.push(`${a.n} цапает тварь: ${d}${ещё}.`);break;
-    case "scout":if(!cb.zvMark){cb.zvMark=1;d+=Math.max(1,Math.round(this.dmg(a)*0.5));out.push(`${a.n} находит слабое место твари: ${d}.`);}else out.push(`${a.n} бьёт в слабое место: ${d}.`);break;
+    case "guard":cb.zvGuard=Math.min(0.7,0.2+0.03*this.stat(a,"стойк")/2+0.02*нав+(this.has(a,"wall")?0.15:0));cb.zvGuardUid=a.uid;out.push(`${a.n} кусает тварь (${d}) и закрывает вас собой.`);break;
+    case "healer":{let s="";if(G.hp<G.hpMax){const h=Math.max(1,Math.round(2+lvl*0.5+((a.ветви&&a.ветви.bond)||0)*1.5+this.gearSum(a,"лечение")+this.art(a,"лечение")+нав*0.5));
+      G.hp=Math.min(G.hpMax,G.hp+h);s=` и лечит вас: +${h}`;safeFn(()=>Bank.play("heal_bloom",{gain:0.35,maxSec:2}));}
+     out.push(`${a.n} цапает тварь: ${d}${s}.`);break;}
+    case "scout":if(!cb.zvMark){cb.zvMark=1;d+=Math.max(1,Math.round(this.dmg(a)*(0.5+0.05*нав)));out.push(`${a.n} находит слабое место твари: ${d}.`);}else out.push(`${a.n} бьёт в слабое место: ${d}.`);break;
     default:out.push(`${a.n} бьёт копытом или лапой: ${d}.`);}
-   cb.hp-=d;a.нанёс=(Number(a.нанёс)||0)+d;}
-  return out.join(" ");},
- guard(dmg){const cb=G.combat;if(!cb||!cb.zvGuard)return dmg;const k=cb.zvGuard;cb.zvGuard=0;return Math.max(1,Math.round(dmg*(1-k)));},
+   cb.hp-=d;a.нанёс=(Number(a.нанёс)||0)+d;
+   /* способности рода и облика, умения, артефакт */
+   const шансБонус=this.stat(a,"разум")*0.01+this.art(a,"способность")+(a.роль==="mage"?0.02*нав:0);
+   const пробы=[];const ab=this.ability(a);if(ab)пробы.push([ab,ab.ш+шансБонус]);
+   const va=this.varAbility(a);if(va)пробы.push([va,0.1+шансБонус/2]);
+   if(this.has(a,"bite2"))пробы.push([{n:"Двойной укус",эф:"double"},0.15]);
+   if(this.has(a,"deathgrip"))пробы.push([{n:"Смертельная хватка",эф:"crit"},0.15]);
+   if(this.has(a,"venom"))пробы.push([{n:"Яд жил",эф:"poison"},0.2]);
+   if(this.has(a,"stomp")||this.has(a,"whirl"))пробы.push([{n:this.has(a,"stomp")?"Топот":"Водоворот",эф:"stun"},0.1]);
+   if(this.art(a,"двойной"))пробы.push([{n:"Нить Сплетения",эф:"double"},this.art(a,"двойной")]);
+   if(this.art(a,"крит"))пробы.push([{n:"Глаз Селены",эф:"crit"},this.art(a,"крит")]);
+   if(this.art(a,"оглуш"))пробы.push([{n:"Венец Таура",эф:"stun"},this.art(a,"оглуш")]);
+   if(this.art(a,"вампир"))пробы.push([{n:"Ошейник Мортаны",эф:"lifesteal"},1]);
+   let сраб=0;for(const [x,ш] of пробы){if(сраб>=2||Math.random()>=ш)continue;const r=this.effect(a,x,d,cb);if(r){out.push(r);сраб++;}}
+   if(сраб)this.skillUp(a,a.роль,1);
+   if(this.has(a,"friend")&&G.hp<G.hpMax){G.hp=Math.min(G.hpMax,G.hp+2);}
+   out.push(this.skillUp(a,a.роль,1));}
+  return out.filter(Boolean).join(" ");},
+ /* Что делает сработавшая способность. */
+ effect(a,x,d,cb){const n=x.n;switch(x.эф){
+   case "stun":cb.путы=Math.max(Number(cb.путы)||0,1);return `${a.n}: «${n}» — тварь оглушена и теряет ход.`;
+   case "poison":cb.zvPoison=3;cb.zvPoisonD=Math.max(1,Math.round(d*0.4));return `${a.n}: «${n}» — тварь отравлена.`;
+   case "bleed":cb.zvBleed=2;cb.zvBleedD=Math.max(1,Math.round(d*0.5));return `${a.n}: «${n}» — у твари кровь.`;
+   case "burn":{const z=Math.max(1,Math.round(d*0.6));cb.hp-=z;return `${a.n}: «${n}» — ожог, ещё ${z}.`;}
+   case "double":{const z=Math.max(1,Math.round(d*0.8));cb.hp-=z;return `${a.n}: «${n}» — второй удар, ${z}.`;}
+   case "crit":cb.hp-=d;return `${a.n}: «${n}» — удар вдвое, ещё ${d}.`;
+   case "fear":cb.zvFear=1;return `${a.n}: «${n}» — тварь напугана, её удар слабее.`;
+   case "shield":cb.zvShield=1;return `${a.n}: «${n}» — следующий удар твари слабее на треть.`;
+   case "heal":{if(G.hp>=G.hpMax)return "";const h=Math.max(2,Math.round(4+(Number(a.lvl)||1)*0.6));G.hp=Math.min(G.hpMax,G.hp+h);return `${a.n}: «${n}» — лечит вас, +${h}.`;}
+   case "lifesteal":{const h=Math.max(1,Math.round(d*(this.art(a,"вампир")||0.25)));this.cure(a,h);G.hp=Math.min(G.hpMax,G.hp+Math.ceil(h/2));return `${a.n}: «${n}» — пьёт силу, +${h} себе и +${Math.ceil(h/2)} вам.`;}
+   case "dodge":a.уклон=1;return `${a.n}: «${n}» — готов уйти от удара.`;}
+  return "";},
+ /* Удар твари: защитник принимает часть на себя, напуганная тварь бьёт
+    слабее, зверь может сам попасть под удар; «Заслонить» спасает хозяина. */
+ guard(dmg){const cb=G.combat;if(!cb)return dmg;const pets=this.pets().filter(a=>!a.ранен&&this.hp(a)>0);if(!pets.length&&!cb.zvGuard)return dmg;
+  let d=dmg;const msg=[];
+  if(cb.zvFear){cb.zvFear=0;d=Math.round(d*0.7);}
+  if(cb.zvShield){cb.zvShield=0;d=Math.round(d*0.65);}
+  if(!cb.zvFirst){cb.zvFirst=1;if(pets.some(a=>this.has(a,"ambush"))){d=Math.round(d*0.5);msg.push("Звери почуяли засаду: первый удар слабее.");}}
+  let k=Number(cb.zvGuard)||0,кто=cb.zvGuardUid?this.byUid(cb.zvGuardUid):null;cb.zvGuard=0;
+  if(!k){const w=pets.find(a=>this.has(a,"wall"));if(w){k=0.15;кто=w;}}
+  if(k&&кто){const взял=Math.round(d*k);d-=взял;this.hurt(кто,взял*this.soft(кто));}
+  /* шальной удар по зверю */
+  if(pets.length&&Math.random()<0.12){const a=pets[Math.floor(Math.random()*pets.length)];
+   if(a.уклон||Math.random()<this.stat(a,"ловк")*0.015+this.gearSum(a,"уклон")){a.уклон=0;msg.push(`${a.n} уходит от удара.`);}
+   else{const z=Math.round(dmg*0.35*this.soft(a));this.hurt(a,z);msg.push(`Тварь задевает и зверя: ${a.n} −${z}.`);}}
+  if(d>=(Number(G.hp)||0)&&!cb.zvCover){const c=pets.find(a=>this.has(a,"cover")&&this.hp(a)>0);if(c){cb.zvCover=1;this.hurt(c,d*this.soft(c));msg.push(`${c.n} заслоняет вас от смертельного удара!`);d=0;}}
+  if(msg.length)safeFn(()=>narrate(msg.join(" "),{interrupt:false}));
+  return Math.max(0,Math.round(d));},
+ soft(a){return (this.has(a,"thick")?0.75:1)*((Number(a.шкура)||0)>0?0.5:1);},
  /* ── Сутки: голод, верность, яйца ── */
- tick(){const s=this.st(),d=Number(G.day)||1;if(d<=s.day)return;const дней=Math.min(5,d-s.day);s.day=d;const t=[];
+ tick(){const s=this.st(),d=Number(G.day)||1;
+  {const м=this.mount();const pos=G.x+","+G.y;if(м&&s.pos!==pos&&s.pos){const t=this.skillUp(м,"saddle",0.15);if(t)safeFn(()=>narrate(t.trim(),{interrupt:false}));}s.pos=pos;}
+  if(d<=s.day)return;const дней=Math.min(5,d-s.day);s.day=d;const t=[];
   for(let i=0;i<дней;i++)for(const a of s.list.slice()){const рядом=s.pets.indexOf(a.uid)>=0||s.mount===a.uid;
    a.сыт=Math.max(0,(Number(a.сыт)||0)-(рядом?30:18));
    if(a.сыт<20)a.верн=Math.max(0,(Number(a.верн)||0)-6);else if(a.сыт>60)a.верн=Math.min(100,(Number(a.верн)||0)+1);
+   if(this.has(a,"friend")||this.art(a,"верность"))a.верн=Math.max(30,a.верн);
+   this.cure(a,this.hpMax(a)*0.5);
+   if(рядом&&(a.роль==="bearer"||a.роль==="scout")&&a.сыт>=20){const r=zvResOf(a.fam,a.var)[Math.random()<0.7?0:1];const n=1+(this.skill(a,a.роль)>=5?1:0);
+    this.resAdd(r,n);this.skillUp(a,a.роль,2);if(!t.some(x=>/приносят/.test(x)))t.push("Звери приносят ресурсы.");}
    if(a.верн<=0){this.release(a.uid);t.push(`${a.n} ушёл: вы его не кормили.`);}
    else if(a.сыт<20&&!a.warn){a.warn=1;t.push(`${a.n} голоден: сытость ${Math.round(a.сыт)}.`);}else if(a.сыт>=20)a.warn=0;}
   const h=this.hatch();if(h)t.push(h);
@@ -53968,7 +54207,7 @@ const Zver={
   const first=box&&box.querySelector("[data-speak]");if(first)safeFn(()=>setCursor(first,false));
   narrate(`${title}. ${сказать||(first?first.dataset.speak:"")}`,{interrupt:true,pri:1,cat:"ui"});return true;},
  brief(a){const f=this.fam(a);const где=this.st().mount===a.uid?"под седлом":this.st().pets.indexOf(a.uid)>=0?"рядом":"в стойле";
-  return `${a.n}, ${ZV_MOVES[f.ход].n}, уровень ${a.lvl}, урон ${this.dmg(a)}, ${где}. Сытость ${Math.round(a.сыт)}, верность ${Math.round(a.верн)}.`;},
+  return `${a.n}, ${ZV_MOVES[f.ход].n}, уровень ${a.lvl}, урон ${this.dmg(a)}, здоровье ${this.hp(a)} из ${this.hpMax(a)}${a.ранен?", ранен":""}, ${где}. Сытость ${Math.round(a.сыт)}, верность ${Math.round(a.верн)}.`;},
  home(){const s=this.st(),c=this.counts();const м=this.mount();
   let h=this.line(`Ваших зверей ${s.list.length} из ${this.cap()}. ${м?"Верхом: "+м.n+".":"Вы пешком."} Спутников ${this.pets().length} из двух. Яиц ${s.eggs.length}.`);
   for(const a of s.list)h+=this.btn("beast:"+a.uid,this.brief(a));
@@ -53977,15 +54216,22 @@ const Zver={
   if(s.tame)h+=this.btn("tame",`Приручить: ${ZV_BREED_BY_ID[s.tame.breed].n}`);
   if(this.inTown())h+=this.btn("shop","Зверинец города: звери, яйца, корм, снаряжение");
   h+=this.btn("gear","Снаряжение в сумке");
+  h+=this.btn("work",`Ресурсы, зелья и артефакты зверей: ресурсов ${Object.values(s.res).reduce((x,y)=>x+y,0)}, зелий ${Object.values(s.pot).reduce((x,y)=>x+y,0)}, артефактов ${s.arts.length}`);
   h+=this.btn("best",`Бестиарий: пород ${c.всего} — летающих ${c.fly}, ходячих ${c.walk}, ползучих ${c.crawl}, плавучих ${c.swim}, роющих ${c.dig}`);
   return this.show("Зверинец",h);},
  beastView(u){const a=this.byUid(u);if(!a)return this.home();const f=this.fam(a),v=this.variant(a),l=this.legend(a);
   let h=this.line(this.brief(a));
   h+=this.line(`${l?l.о:f.о}${v&&v.id!=="wild"?". Облик: "+v.о:""}. Редкость: ${ZV_RARITY[ZV_BREED_BY_ID[a.breed].ред]}. Ест: ${f.корм.join(", ")} (любимое — ${f.корм[0]}).`);
   {const ст=this.element(a);h+=this.line(`Свой урон: ${this.dmg(a)}${ст?", стихия — "+ст:""}. Как ${ZV_ROLES[a.роль].n} в бою наносит ${Math.round((this.ROLE_DMG[a.роль]||0.5)*100)} % от него за ход${a.нанёс?"; всего нанёс "+a.нанёс:""}.`);}
-  h+=this.line(`Сила ${this.stat(a,"сила")}, стойкость ${this.stat(a,"стойк")}, ловкость ${this.stat(a,"ловк")}, чутьё ${this.stat(a,"чутьё")}. Опыт ${a.xp} из ${this.need(a)}. Роль: ${ZV_ROLES[a.роль].n}.`);
+  h+=this.line(`Сила ${this.stat(a,"сила")}, стойкость ${this.stat(a,"стойк")}, ловкость ${this.stat(a,"ловк")}, чутьё ${this.stat(a,"чутьё")}, разум ${this.stat(a,"разум")}, здоровье ${this.hp(a)} из ${this.hpMax(a)}${a.ранен?" (ранен)":""}${a.ярость>0?", ярость ещё "+a.ярость+" "+plural(a.ярость,"бой","боя","боёв"):""}${a.шкура>0?", каменная шкура ещё "+a.шкура:""}. Опыт ${a.xp} из ${this.need(a)}. Роль: ${ZV_ROLES[a.роль].n}.`);
   const дары=this.giftWords(a);
   if(f.ездовой&&дары.length)h+=this.line(`Верхом: ${дары.join(", ")}.`);
+  h+=this.line(`Навыки: ${Object.keys(ZV_SKILLS).filter(k=>k!=="saddle"||f.ездовой).map(k=>ZV_SKILLS[k].n+" "+this.skill(a,k)).join(", ")}. Растут от дела, до десяти.`);
+  {const ab=this.ability(a),va=this.varAbility(a);h+=this.line(`Способности: ${ab?`«${ab.n}» — ${ZV_ABIL_EFFECTS[ab.эф]}, шанс ${Math.round((ab.ш+this.stat(a,"разум")*0.01+this.art(a,"способность"))*100)} %`:"нет"}${va?`; облик — «${va.n}»: ${ZV_ABIL_EFFECTS[va.эф]}`:""}.`);}
+  {const tl=this.talentList(a);const откр=tl.filter(x=>x.открыто),закр=tl.filter(x=>!x.открыто);
+   h+=this.line(`Умения: ${откр.length?откр.map(x=>`«${x.x.n}» — ${x.x.о}`).join("; "):"пока ни одного"}. ${закр.length?"Откроются: "+закр.slice(0,4).map(x=>`«${x.x.n}» — ${x.ветвь} ${x.ступень}`).join(", ")+(закр.length>4?" и другие":"")+".":""}`);}
+  {const x=this.artOf(a);h+=this.line(`Артефакт: ${x?x.n+" — "+x.о:"нет"}.`);for(const id of this.st().arts)h+=this.btn(`putart:${u}~${id}`,`Надеть артефакт: ${ZV_ART_BY_ID[id].n} — ${ZV_ART_BY_ID[id].о}`);}
+  for(const [id,n] of Object.entries(this.st().pot))if(n>0)h+=this.btn(`give:${u}~${id}`,`Дать: ${ZV_POTIONS[id].n} (${n}) — ${ZV_POTIONS[id].о}`);
   h+=this.btn("feed:"+u,"Покормить");
   if(f.ездовой)h+=this.btn("ride:"+u,this.st().mount===a.uid?"Он под седлом":"Сесть верхом");
   h+=this.btn("follow:"+u,this.st().pets.indexOf(a.uid)>=0?"Оставить в стойле":"Взять спутником");
@@ -54002,11 +54248,23 @@ const Zver={
   for(const b of this.shop()){const f=ZV_FAMILY_BY_ID[b.fam];h+=this.btn("buy:"+b.id,`${b.n} — ${ZV_MOVES[f.ход].n}, ${ZV_RARITY[b.ред]}, урон ${this.dmgOf(b)}, ${this.price(b)} золота`);}
   h+=this.btn("buyegg","Яйцо неизвестного зверя — 120 золота");
   for(const k of ["мясо","рыба","зерно","трава","ягоды","мёд"])h+=this.btn("buyfood:"+k,`Корм: ${k} ×3 — 6 золота`);
-  for(const m of ZV_MATERIALS.slice(0,3))for(const [slot] of [...ZV_SLOTS_MOUNT,...ZV_SLOTS_PET])h+=this.btn(`buygear:${slot}~${m.id}`,`${zvGearName(slot,m.id)} — ${m.цена} золота`);
+  for(const [id,p] of Object.entries(ZV_POTIONS))h+=this.btn("buypot:"+id,`${p.n} — ${p.о}; ${p.цена} золота`);
+  for(const m of ZV_MATERIALS.slice(0,3))for(const [slot] of [...ZV_SLOTS_MOUNT,...ZV_SLOTS_PET,...Object.values(ZV_SLOTS_MOVE)])h+=this.btn(`buygear:${slot}~${m.id}`,`${zvGearName(slot,m.id)} — ${m.цена} золота`);
   return this.show("Зверинец города",h);},
  gearView(){const s=this.st();let h="";const есть=Object.entries(s.gear).filter(([,n])=>n>0);
   if(!есть.length)h+=this.line("Снаряжения для зверей в сумке нет. Его продают в зверинцах городов.");
   for(const [k,n] of есть){const [sl,mt]=k.split(":");h+=this.line(`${zvGearName(sl,mt)} ×${n}.`);}return this.show("Снаряжение зверей",h);},
+ workView(){const s=this.st();let h="";
+  const рес=Object.entries(s.res).filter(([,n])=>n>0);h+=this.line(рес.length?`Звериные ресурсы: ${рес.map(([k,n])=>k+" ×"+n).join(", ")}.`:"Звериных ресурсов нет. Их приносят носильщики и разведчики и дают поверженные звери.");
+  const пот=Object.entries(s.pot).filter(([,n])=>n>0);h+=this.line(пот.length?`Зелья зверей: ${пот.map(([k,n])=>ZV_POTIONS[k].n+" ×"+n).join(", ")}. Дать зелье — в окне зверя.`:"Звериных зелий нет.");
+  h+=this.line(s.arts.length?`Артефакты зверей: ${s.arts.map(id=>ZV_ART_BY_ID[id].n).join(", ")}. Надеть — в окне зверя.`:"Свободных звериных артефактов нет: их дают боги, машины Предтеч, мстители и владыки.");
+  for(const [id,p] of Object.entries(ZV_POTIONS))h+=this.btn("brew:"+id,`Сварить: ${p.n} — ${p.о}; нужно ${this.recWords(p.рецепт)}${this.resHas(p.рецепт)?"":" (не хватает)"}`);
+  if(this.inTown())for(const m of ZV_BEAST_MATS)h+=this.btn("craftmat:"+m.id,`Сшить из ресурса «${m.рес}» (${m.мн} вещи, ${m.рес} ×3 и ${m.цена} золота)`);
+  else h+=this.line("Шить звериную экипировку из ресурсов можно в зверинцах городов.");
+  return this.show("Ресурсы, зелья и артефакты зверей",h);},
+ craftView(mat){const m=ZV_BEAST_MATS.find(x=>x.id===mat);if(!m)return this.workView();let h=this.line(`Есть: ${m.рес} ×${Number(this.st().res[m.рес])||0}. Каждая вещь — ${m.рес} ×3 и ${m.цена} золота.`);
+  for(const [slot] of [...ZV_SLOTS_MOUNT,...ZV_SLOTS_PET,...Object.values(ZV_SLOTS_MOVE)])h+=this.btn(`craft:${slot}~${mat}`,`Сшить: ${zvGearName(slot,mat).toLowerCase()}`);
+  return this.show(`Шить: ${m.мн} вещи`,h);},
  bestView(){const s=this.st(),c=this.counts();let h=this.line(`Пород в Грани ${c.всего}, из них ездовых ${c.ездовых}, легенд ${c.легенд}. Вы видели ${Object.keys(s.seen).length}.`);
   for(const [k,mv] of Object.entries(ZV_MOVES)){const fams=ZV_FAMILIES.filter(f=>f.ход===k);
    h+=this.line(`${mv.мн[0].toUpperCase()+mv.мн.slice(1)} (${c[k]} пород): ${fams.map(f=>f.n).join(", ")}. ${mv.о}.`);}
@@ -54020,6 +54278,13 @@ const Zver={
    case "shop":return this.shopView();
    case "gear":return this.gearView();
    case "best":return this.bestView();
+   case "work":return this.workView();
+   case "craftmat":return this.craftView(p[0]);
+   case "craft":t=this.craftGear(p[0],p[1]);narrate(t,{interrupt:true});safeFn(()=>saveGame(true));return this.craftView(p[1]);
+   case "brew":t=this.brew(p[0]);narrate(t,{interrupt:true});safeFn(()=>saveGame(true));return this.workView();
+   case "buypot":t=this.buyPotion(p[0]);narrate(t,{interrupt:true});safeFn(()=>saveGame(true));return this.shopView();
+   case "give":t=this.give(p[0],p[1]);break;
+   case "putart":t=this.putArt(p[0],p[1]);break;
    case "feed":t=this.feed(p[0]);break;
    case "feedall":t=this.feedAll();break;
    case "ride":t=this.ride(p[0]);break;
@@ -54122,7 +54387,7 @@ const Director={
   s.skill=s.skill*0.85+0.15*Math.min(1,0.35+hp*0.75);
   if(hp<0.35){s.relax=this.mode()==="soft"?4:3;}s.tension=Math.max(0,s.tension-25);
   let t="";const nm=m&&m.zvNem?s.nem.find(n=>n.id===m.zvNem):null;
-  if(nm){nm.dead=1;const g=40+20*nm.рост;G.gold=(Number(G.gold)||0)+g;this.chron(`повержен мститель ${nm.n}`);t=` Мститель ${nm.n} повержен: +${g} золота. О победе заговорят в трактирах.`;}
+  if(nm){nm.dead=1;const g=40+20*nm.рост;G.gold=(Number(G.gold)||0)+g;this.chron(`повержен мститель ${nm.n}`);t=` Мститель ${nm.n} повержен: +${g} золота. О победе заговорят в трактирах.`+(Math.random()<0.35?safeFn(()=>Zver.artDrop("мститель"),""):"");}
   this.reward(0.6+0.4*(1-hp));return t;},
  onLose(m){const s=this.st();s.obs.losses++;s.skill=s.skill*0.85;s.relax=5;if(m)this.nemesis(m);},
  onFlee(m){const s=this.st();s.obs.flees++;s.skill=s.skill*0.92;if(m&&Math.random()<0.6)this.nemesis(m);},
@@ -54168,6 +54433,7 @@ const Director={
  ev_gods(){const w=this.st().world;const g=PANTHEON[Math.floor(Math.random()*PANTHEON.length)];const v=Number(w.gods[g.id])||0;
   if(v>25){safeFn(()=>godSpeak(g.id,"bless"));if(Math.random()<0.25){const l=ZV_LEGENDS.find(x=>x.бог===g.id);
     if(l&&!Zver.st().list.some(a=>a.breed===l.id)&&Zver.st().list.length<Zver.cap()){Zver.make(l.id,{верн:90,lvl:5});return `${g.n} благоволит вам и шлёт своего зверя: ${l.n}. Он ждёт в вашем зверинце`;}}
+   if(Math.random()<0.1){const x=safeFn(()=>Zver.artDrop(g.n),"");if(x)return `${g.n} благоволит и дарит вашим зверям:${x.replace(/^ Звериный артефакт \([^)]*\):/,"")}`;}
    G.hp=Math.min(G.hpMax,(Number(G.hp)||0)+10);return `${g.n} благоволит: знамения добрые, раны легче`;}
   if(v<-25){safeFn(()=>godSpeak(g.id,"anger"));this.st().tension=Math.min(100,this.st().tension+20);return `${g.n} гневается: твари в ближайшие дни будут злее`;}
   safeFn(()=>godSpeak(g.id,"omen"));return `${g.n} подаёт знамение: небо меняется, жрецы толкуют его по-разному`;},
@@ -54180,7 +54446,7 @@ const Director={
  /* Машины Предтеч: герой дошёл до места. */
  siteCheck(){const s=this.st();for(const [id,p] of Object.entries(s.sites)){if(Math.abs(p.x-G.x)+Math.abs(p.y-G.y)>1)continue;delete s.sites[id];
    if(p.род==="тайник"){G.inv=G.inv||{};G.inv["руна"]=(Number(G.inv["руна"])||0)+2;G.gold=(Number(G.gold)||0)+60;safeFn(()=>Bank.play("oc_chest_open",{gain:0.6,maxSec:3}));
-    const t="Машина Предтеч открыта: две руны и шестьдесят золота."+(Math.random()<0.3?safeFn(()=>Zver.egg("steed","машина Предтеч"),""):"");this.chron("герой открыл машину Предтеч");narrate(t,{interrupt:true});}
+    const t="Машина Предтеч открыта: две руны и шестьдесят золота."+(Math.random()<0.3?safeFn(()=>Zver.egg("steed","машина Предтеч"),""):"")+(Math.random()<0.25?safeFn(()=>Zver.artDrop("машина Предтеч"),""):"")+safeFn(()=>Zver.resAdd("шестерня Предтеч",2,"из машины"),"");this.chron("герой открыл машину Предтеч");narrate(t,{interrupt:true});}
    else{const L=Math.max(3,(Number(G.level)||1)+1);const m=safeFn(()=>Object.assign({},MONSTERS.find(x=>x.id==="golem"),{n:"Медный страж Предтеч",lvl:L,
      hp:Math.round((30+L*10)*safeFn(()=>diff().foeHp,1)),dmg:4+L*2,xp:30+L*14,gold:20+L*8}),null);
     if(m){narrate("Медный страж Предтеч поднимается с лязгом.",{interrupt:true});safeFn(()=>startCombat({monster:m,x:G.x,y:G.y},{}));}}}},
