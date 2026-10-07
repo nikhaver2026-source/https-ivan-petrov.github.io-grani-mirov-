@@ -54489,6 +54489,275 @@ Object.assign(CMD,{
   const a=Zver.st().list.find(x=>ZV_FAMILY_BY_ID[x.fam].ездовой);narrate(a?Zver.ride(a.uid):"Ездового зверя нет: его покупают в зверинцах, приручают или получают в дар.",{interrupt:true});},
  dir(a){Director.cmd(a);},director(){Director.home();},
  setdir(k){narrate(Director.setMode(k),{interrupt:true});}});
+/* ════════════════════════════════════════════════════════════════════════
+   РЕЖИССЁР ГРАНИ 2 — ОБУЧАЕМАЯ И ГЕНЕРАТИВНАЯ МОДЕЛЬ МИРА
+   Просьба игрока: «расширенную версию — генеративную и обучаемую модель
+   Режиссёра Грани для мира».
+
+   Обучаемая часть (учится прямо в игре, на ваших решениях, и хранится в
+   сохранении):
+   1. Признаки положения — двенадцать чисел: здоровье, уровень, ночь,
+      подземелье, тёмные земли, мастерство, напряжение, передышка, эфир,
+      машины Предтеч, спутники.
+   2. Контекстный бандит LinUCB: для каждой из десяти сфер событий мира своя
+      линейная модель «насколько игроку интересно это событие в этом
+      положении»; выбирается событие с лучшей оценкой плюс бонус за
+      неуверенность. Награда — сколько вы играли после события и довели ли
+      до конца поручение.
+   3. Прогноз победы — логистическая регрессия на признаках боя (уровень
+      твари против вашего, владыка, урон спутников, здоровье…). Учится на
+      исходе каждой схватки. По прогнозу Режиссёр держит долю побед у цели
+      своей силы (мягкий — 85 %, обычный — 75 %, жёсткий — 62 %), а не
+      правило «мастерство выше — тварь крепче».
+   4. Вкус к поручениям — у каждого вида поручения свой вес; доведённое до
+      конца поднимает вес, брошенное — опускает. Генератор выбирает вид по
+      этим весам (мягкий максимум), поэтому мир со временем предлагает то,
+      что вы любите делать.
+
+   Генеративная часть:
+   5. Имена — марковская цепь второго порядка по буквам, обученная на именах
+      самой Грани (боги, державы, твари, звери). Так рождаются имена
+      мстителей, странствующих героев, урочищ и машин.
+   6. Грамматика событий — слухи, знамения и вести собираются из частей и
+      опираются на настоящее состояние мира (мстители, проснувшиеся машины,
+      настроение богов, эфир).
+   7. Поручения мира — восемь видов: охота на род тварей, мститель, машина
+      Предтеч, приручение, опыт смешивания, молитва богу, дальний путь,
+      спуск в подземелье. У каждого своя цель, срок и награда.
+   8. Сюжетные арки на несколько дней — «Пробуждение колосса», «Гнев бога»,
+      «Великая миграция», «Тень мстителя»: слух → поручение → развязка с
+      наградой (звериный артефакт, яйцо, милость бога).
+   ════════════════════════════════════════════════════════════════════════ */
+const DIR2_ARMS=["magic","mech","gods","beasts","alchemy","rumor","quest","caravan","omen","arc"];
+const DIR2_ARM_N={magic:"эфир",mech:"машины Предтеч",gods:"боги",beasts:"звери",alchemy:"алхимия",rumor:"слухи",quest:"поручения",caravan:"караваны",omen:"знамения",arc:"сюжетные арки"};
+const DIR2_FEATS=["основа","здоровье","уровень","ночь","подземелье","тёмные земли","мастерство","напряжение","передышка","эфир","машины","спутники"];
+const DIR2_F=DIR2_FEATS.length;
+const DIR2_TARGET={soft:0.85,normal:0.75,hard:0.62};
+const DIR2_FAMILY={beast:"звери",bird:"птицы",crawler:"ползучие твари",spirit:"духи",undead:"нежить",bone:"костяные твари",giant:"великаны",
+ construct:"конструкты",dragon:"драконы",deep:"глубинные твари",fiend:"демоны",humanoid:"разбойники и налётчики"};
+const DIR2_QTYPES={
+ hunt:   {n:"охота",          о:"одолеть тварей нужного рода"},
+ nemesis:{n:"мститель",       о:"одолеть своего мстителя"},
+ site:   {n:"машина Предтеч", о:"дойти до проснувшейся машины"},
+ tame:   {n:"приручение",     о:"приручить или вывести зверя"},
+ mix:    {n:"опыт",           о:"провести опыт смешивания"},
+ pray:   {n:"молитва",        о:"помолиться названному богу"},
+ travel: {n:"дальний путь",   о:"уйти далеко от места, где взято поручение"},
+ dungeon:{n:"спуск",          о:"спуститься в подземелье"}};
+/* Части грамматики. */
+const DIR2_GRAM={
+ знак:["над холмами встала двойная луна","ночью небо прорезала зелёная звезда","вороны летят против ветра","колокола звонят сами, без звонаря",
+  "в колодцах вода стала тёплой","на рассвете туман лёг кольцом","звёзды сложились в незнакомую руну","собаки воют на юг всю ночь",
+  "в кузницах сами собой гаснут горны","над морем видели огни без кораблей"],
+ молва:["в трактирах шепчут","пастухи божатся","купцы пересказывают","жрецы молчат, но все знают","бродячий певец сложил песню о том",
+  "дети на площадях играют в то"],
+ урочище:["Курган","Плёс","Утёс","Брод","Распадок","Перевал","Холм","Падь","Яр","Камень"],
+ машина:["Колосс","Привратник","Жнец","Сторож","Часовщик","Ткач","Молот","Око"],
+ зов:["зовёт смельчака","ждёт того, кто не побоится","обещает награду","просит о помощи"]};
+/* Сюжетные арки: стадии по порядку. */
+const DIR2_ARCS={
+ colossus:{n:"Пробуждение колосса",о:"машина Предтеч проснулась в глуши: слух, путь к ней, страж и награда"},
+ wrath:   {n:"Гнев бога",          о:"бог гневается: знамение, молитва ему, милость или кара"},
+ migration:{n:"Великая миграция",  о:"стада уходят на новые пастбища: слух, приручение, яйцо в награду"},
+ shadow:  {n:"Тень мстителя",      о:"по следу ходит мститель: слух, охота, расплата"}};
+
+Object.assign(Director,{
+ /* ── состояние второй модели ── */
+ st2(){const s=this.st();
+  if(!s.ml||typeof s.ml!=="object")s.ml={};const ml=s.ml;
+  if(!ml.lin||typeof ml.lin!=="object")ml.lin={};
+  for(const a of DIR2_ARMS){const L=ml.lin[a];if(!L||!Array.isArray(L.Ai)||L.Ai.length!==DIR2_F*DIR2_F||!Array.isArray(L.b)||L.b.length!==DIR2_F)
+   ml.lin[a]={Ai:Array.from({length:DIR2_F*DIR2_F},(_,i)=>i%(DIR2_F+1)===0?1:0),b:new Array(DIR2_F).fill(0),n:0};}
+  const W=DIR2_F+3;
+  if(!Array.isArray(ml.w)||ml.w.length!==W){ml.w=new Array(W).fill(0);ml.w[0]=1.4;ml.w[1]=0.8;ml.w[DIR2_F]=-1.1;ml.w[DIR2_F+1]=-0.8;ml.w[DIR2_F+2]=0.6;}
+  if(!Number.isFinite(Number(ml.nw)))ml.nw=0;if(!Number.isFinite(Number(ml.wins)))ml.wins=0;
+  if(!Array.isArray(s.q))s.q=[];if(!s.qpref||typeof s.qpref!=="object")s.qpref={};
+  for(const k of Object.keys(DIR2_QTYPES))if(!Number.isFinite(Number(s.qpref[k])))s.qpref[k]=0;
+  if(!Array.isArray(s.arcs))s.arcs=[];if(!Array.isArray(s.qdone))s.qdone=[];if(!Number.isFinite(Number(s.qn)))s.qn=1;
+  return s;},
+ /* ── признаки положения ── */
+ feats(){const s=this.st(),w=s.world;const hp=(Number(G.hp)||0)/Math.max(1,Number(G.hpMax)||1);
+  const h=Number(G.hour)||12;const pets=safeFn(()=>Zver.pets().length,0)||0;
+  return [1,hp,Math.min(1,(Number(G.level)||1)/30),(h>=21||h<5)?1:0,G.place?1:0,G.dark?1:0,Number(s.skill)||0.5,(Number(s.tension)||0)/100,
+   (Number(s.relax)||0)>0?1:0,(Number(w.ether)||50)/100,(Number(w.mech)||0)/100,pets/2];},
+ fightFeats(m){const x=this.feats();const d=((Number(m&&m.lvl)||1)-(Number(G.level)||1))/5;
+  const pd=safeFn(()=>Zver.pets().reduce((t,a)=>t+Zver.dmg(a),0),0)||0;
+  return x.concat([Math.max(-2,Math.min(2,d)),m&&m.boss?1:0,Math.min(1,pd/50)]);},
+ dot(a,b){let s=0;for(let i=0;i<a.length;i++)s+=a[i]*b[i];return s;},
+ /* ── LinUCB ── */
+ mv(Ai,x){const n=x.length,o=new Array(n).fill(0);for(let i=0;i<n;i++){let s=0;for(let j=0;j<n;j++)s+=Ai[i*n+j]*x[j];o[i]=s;}return o;},
+ ucb(a,x,alpha){const L=this.st2().ml.lin[a];const Ax=this.mv(L.Ai,x);const th=this.mv(L.Ai,L.b);
+  return this.dot(th,x)+(alpha==null?0.6:alpha)*Math.sqrt(Math.max(0,this.dot(x,Ax)));},
+ pickLin(x){let best=null,bv=-1e9;for(const a of DIR2_ARMS){const v=this.ucb(a,x)+Math.random()*1e-6;if(v>bv){bv=v;best=a;}}return best;},
+ /* Шерман — Моррисон: обновление обратной матрицы без обращения. */
+ learnLin(a,x,r){const L=this.st2().ml.lin[a];if(!L)return;const n=x.length;const Ax=this.mv(L.Ai,x);const den=1+this.dot(x,Ax);
+  for(let i=0;i<n;i++)for(let j=0;j<n;j++)L.Ai[i*n+j]-=Ax[i]*Ax[j]/den;
+  r=Math.max(0,Math.min(1,Number(r)||0));for(let i=0;i<n;i++)L.b[i]+=r*x[i];L.n=(Number(L.n)||0)+1;},
+ /* ── прогноз победы ── */
+ sig(z){return 1/(1+Math.exp(-Math.max(-30,Math.min(30,z))));},
+ winP(m){return this.sig(this.dot(this.st2().ml.w,this.fightFeats(m)));},
+ learnWin(x,y){const ml=this.st2().ml;if(!Array.isArray(x)||x.length!==ml.w.length)return;const p=this.sig(this.dot(ml.w,x));const lr=0.08;
+  for(let i=0;i<x.length;i++)ml.w[i]+=lr*((y-p)*x[i]-0.001*ml.w[i]);ml.nw++;if(y)ml.wins++;},
+ /* ── генерация имён ── */
+ nameCorpus(){const out=new Set();const add=s=>{for(const w of String(s||"").split(/[\s,«»"()—-]+/))if(/^[А-ЯЁ][а-яё]{3,11}$/.test(w))out.add(w.toLowerCase());};
+  safeFn(()=>PANTHEON.forEach(g=>add(g.n)));safeFn(()=>EMPIRES.forEach(e=>{add(e.short);add(e.n);add(e.cap&&e.cap.n);}));
+  safeFn(()=>MONSTERS.forEach(m=>add(m.n)));safeFn(()=>ZV_LEGENDS.forEach(l=>add(l.n)));return [...out];},
+ nameModel(){if(this._nm)return this._nm;const c=this.nameCorpus();const T={};
+  for(const w of c){const s="^^"+w+"$";for(let i=2;i<s.length;i++){const k=s.slice(i-2,i);(T[k]=T[k]||{})[s[i]]=(T[k][s[i]]||0)+1;}}
+  this._nm={T,set:new Set(c),n:c.length};return this._nm;},
+ genName(rnd){const M=this.nameModel();const R=rnd||Math.random;
+  for(let tries=0;tries<60;tries++){let k="^^",w="";
+   for(let i=0;i<14;i++){const row=M.T[k];if(!row)break;let tot=0;for(const v of Object.values(row))tot+=v;let r=R()*tot,ch="$";
+    for(const [c,v] of Object.entries(row)){r-=v;if(r<=0){ch=c;break;}}if(ch==="$")break;w+=ch;k=k[1]+ch;}
+   if(w.length>=4&&w.length<=10&&!M.set.has(w)&&/[аеёиоуыэюя]/.test(w))return w[0].toUpperCase()+w.slice(1);}
+  return "Безымянный";},
+ g(k){const a=DIR2_GRAM[k]||[""];return a[Math.floor(Math.random()*a.length)];},
+ /* ── поручения ── */
+ qWeights(){const s=this.st2();const ks=Object.keys(DIR2_QTYPES).filter(k=>this.qPossible(k));const T=0.7;
+  const e=ks.map(k=>Math.exp((Number(s.qpref[k])||0)/T));const z=e.reduce((a,b)=>a+b,0)||1;return ks.map((k,i)=>[k,e[i]/z]);},
+ qPossible(k){const s=this.st2();if(s.q.some(q=>q.type===k))return false;
+  if(k==="nemesis")return s.nem.some(n=>!n.dead);if(k==="site")return Object.keys(s.sites).length>0;return true;},
+ qPick(){const w=this.qWeights();if(!w.length)return null;let r=Math.random();for(const [k,p] of w){r-=p;if(r<=0)return k;}return w[w.length-1][0];},
+ qMake(type,opt){const s=this.st2();if(s.q.length>=3)return null;if(!type||!DIR2_QTYPES[type]||!this.qPossible(type))return null;opt=opt||{};
+  const lvl=Number(G.level)||1;const q={id:"q"+(s.qn++),type,prog:0,need:1,взят:Number(G.day)||1,до:(Number(G.day)||1)+(opt.days||4),x:G.x,y:G.y,
+   награда:{gold:30+lvl*12},arc:opt.arc||null};
+  const имя=opt.name||this.genName();
+  switch(type){
+   case "hunt":{const fams=Object.keys(DIR2_FAMILY);const f=opt.fam||fams[Math.floor(Math.random()*fams.length)];q.fam=f;q.need=2+Math.floor(Math.random()*3);
+    q.n=`Охота: ${DIR2_FAMILY[f]}`;q.t=`${this.g("молва")}: ${DIR2_FAMILY[f]} осмелели у деревни ${имя}. Одолейте ${q.need} — и староста заплатит.`;break;}
+   case "nemesis":{const nm=s.nem.find(n=>!n.dead);q.nem=nm.id;q.n=`Расплата: ${nm.n}`;q.t=`${nm.n} ходит по вашим следам. Встретьте его и положите конец погоне.`;q.награда.gold+=40;q.награда.art=0.35;break;}
+   case "site":{const [id,p]=Object.entries(s.sites)[0];q.site=id;q.n=`Машина Предтеч: ${this.g("машина")} ${имя}`;q.t=`Машина ${this.where(p.x-G.x,p.y-G.y)} — около ${Math.abs(p.x-G.x)+Math.abs(p.y-G.y)} клеток. Дойдите до неё.`;q.награда.res="шестерня Предтеч";break;}
+   case "tame":q.n="Приручение";q.t=`Звероловы из ${имя} спорят, кто первым приручит дикого зверя. Приручите или выведите из яйца своего.`;q.награда.res="шерсть";break;
+   case "mix":q.n="Опыт алхимика";q.t=`Алхимик ${имя} ${this.g("зов")}: проведите опыт смешивания — любой.`;break;
+   case "pray":{const g=opt.god?PANTHEON.find(x=>x.id===opt.god):PANTHEON[Math.floor(Math.random()*PANTHEON.length)];q.god=g.id;q.n=`Молитва: ${g.n}`;q.t=`Жрецы просят помолиться у храма. Имя бога — ${g.n}.`;break;}
+   case "travel":q.need=40+Math.floor(Math.random()*40);q.n=`Дальний путь: ${this.g("урочище")} ${имя}`;q.t=`Странствующий герой ${имя} ушёл и не вернулся. Пройдите по его следу ${q.need} клеток от этого места.`;q.days=6;q.до=(Number(G.day)||1)+6;break;
+   case "dungeon":q.n=`Спуск: ${this.g("урочище")} ${имя}`;q.t=`В урочище «${this.g("урочище")} ${имя}» нашли ход вниз. Спуститесь в любое подземелье.`;break;}
+  s.q.push(q);safeFn(()=>Bank.play("bell_small",{gain:0.45,maxSec:3}));safeFn(()=>journal(`Поручение мира: ${q.n}.`));return q;},
+ qDone(q){const s=this.st2();s.q=s.q.filter(x=>x!==q);s.qdone.unshift({n:q.n,type:q.type,day:G.day});if(s.qdone.length>20)s.qdone.length=20;
+  const t=[];const g=Number(q.награда&&q.награда.gold)||0;if(g){G.gold=(Number(G.gold)||0)+g;t.push(`${g} золота`);}
+  if(q.награда&&q.награда.res){const r=safeFn(()=>Zver.resAdd(q.награда.res,2,""),"");if(r)t.push(`${q.награда.res} ×2`);}
+  if(q.награда&&q.награда.art&&Math.random()<q.награда.art){const a=safeFn(()=>Zver.artDrop("поручение"),"");if(a)t.push(a.trim());}
+  /* обучение: вкус к поручениям и награда сфере «поручения» */
+  const w=this.qWeights();const p=(w.find(x=>x[0]===q.type)||[0,0.2])[1];s.qpref[q.type]=Math.max(-3,Math.min(3,(Number(s.qpref[q.type])||0)+1.0*(1-p)));
+  s.qBonus=(Number(s.qBonus)||0)+0.5;
+  safeFn(()=>Bank.play("quest_done",{gain:0.6,maxSec:4}));this.chron(`исполнено поручение «${q.n}»`);
+  if(q.arc)safeFn(()=>this.arcStep(q.arc,"done"));
+  const msg=`Поручение мира исполнено: ${q.n}. Награда: ${t.join(", ")||"благодарность"}.`;safeFn(()=>narrate(msg,{interrupt:false}));return msg;},
+ qProgress(kind,info){const s=this.st2();let out="";
+  for(const q of s.q.slice()){let hit=false;
+   if(kind==="win"&&q.type==="hunt"&&info&&info.fam===q.fam)hit=true;
+   if(kind==="win"&&q.type==="nemesis"&&info&&info.nem&&info.nem===q.nem)hit=true;
+   if(kind==="tame"&&q.type==="tame")hit=true;
+   if(kind==="mix"&&q.type==="mix")hit=true;
+   if(kind==="pray"&&q.type==="pray"&&info===q.god)hit=true;
+   if(kind==="site"&&q.type==="site"&&info===q.site)hit=true;
+   if(kind==="dungeon"&&q.type==="dungeon")hit=true;
+   if(kind==="travel"&&q.type==="travel"){const d=Math.abs(G.x-q.x)+Math.abs(G.y-q.y);q.prog=Math.max(Number(q.prog)||0,d);if(q.prog>=q.need)out+=this.qDone(q);continue;}
+   if(hit){q.prog=(Number(q.prog)||0)+1;if(q.prog>=q.need)out+=this.qDone(q);}}
+  return out;},
+ qExpire(){const s=this.st2(),d=Number(G.day)||1;for(const q of s.q.slice())if(d>q.до){s.q=s.q.filter(x=>x!==q);
+   s.qpref[q.type]=Math.max(-3,(Number(s.qpref[q.type])||0)-0.4);this.chron(`поручение «${q.n}» не исполнено в срок`);if(q.arc)safeFn(()=>this.arcStep(q.arc,"fail"));}},
+ /* ── сюжетные арки ── */
+ arcStart(kind){const s=this.st2();if(s.arcs.length>=2)return "";if(s.arcs.some(a=>a.kind===kind))return "";const имя=this.genName();
+  const a={id:"a"+(s.qn++),kind,stage:0,name:имя,start:G.day};
+  switch(kind){
+   case "colossus":{const x=Math.round(G.x+(Math.random()*50-25)),y=Math.round(G.y+(Math.random()*50-25));const sid="arc"+a.id;s.sites[sid]={x,y,род:"страж",день:G.day,arc:a.id};a.site=sid;
+    s.world.mech=Math.min(100,(Number(s.world.mech)||0)+10);s.arcs.push(a);
+    const q=this.qMake("site",{arc:a.id,name:имя,days:6});if(q){q.site=sid;q.t=`Колосс ${имя} шевелится ${this.where(x-G.x,y-G.y)}, около ${Math.abs(x-G.x)+Math.abs(y-G.y)} клеток. Дойдите до него.`;q.награда.art=0.6;}
+    return `${this.g("молва")}: в глуши ${this.where(x-G.x,y-G.y)} проснулся колосс Предтеч по имени ${имя}. Сюжет «${DIR2_ARCS.colossus.n}» начался`;}
+   case "wrath":{const g=PANTHEON[Math.floor(Math.random()*PANTHEON.length)];a.god=g.id;s.world.gods[g.id]=-35;s.tension=Math.min(100,s.tension+15);s.arcs.push(a);
+    safeFn(()=>godSpeak(g.id,"anger"));this.qMake("pray",{arc:a.id,god:g.id,days:5});
+    return `${g.n} гневается: ${this.g("знак")}. Умилостивите его молитвой — сюжет «${DIR2_ARCS.wrath.n}»`;}
+   case "migration":{const fams=ZV_FAMILIES;const f=fams[Math.floor(Math.random()*fams.length)];a.fam=f.id;s.arcs.push(a);this.qMake("tame",{arc:a.id,days:6});
+    return `${this.g("молва")}: ${ZV_MOVES[f.ход].мн} звери — ${f.n} и подобные — идут через край на новые пастбища. Сюжет «${DIR2_ARCS.migration.n}»`;}
+   case "shadow":{const base=MONSTERS[Math.floor(Math.random()*Math.min(12,MONSTERS.length))];
+    const n=`${base.n} ${this.genName()}`;s.nem.push({id:"n"+Date.now().toString(36)+a.id,base:base.id,n,рост:2,день:G.day});if(s.nem.length>8)s.nem.shift();
+    a.nem=s.nem[s.nem.length-1].id;s.arcs.push(a);const q=this.qMake("nemesis",{arc:a.id,days:7});if(q){q.nem=a.nem;q.n=`Расплата: ${n}`;}
+    return `По вашим следам пошёл мститель — ${n}. Сюжет «${DIR2_ARCS.shadow.n}»`;}}
+  return "";},
+ arcStep(id,how){const s=this.st2();const a=s.arcs.find(x=>x.id===id);if(!a)return "";s.arcs=s.arcs.filter(x=>x!==a);let t="";
+  if(how==="done"){
+   if(a.kind==="wrath"){s.world.gods[a.god]=30;safeFn(()=>godSpeak(a.god,"bless"));t=`Гнев сменился милостью: ${(PANTHEON.find(g=>g.id===a.god)||{}).n} благоволит вам.`;}
+   else if(a.kind==="migration"){t="Стада прошли, и звероловы дарят вам яйцо."+safeFn(()=>Zver.egg(a.fam||"horse","миграция"),"");}
+   else if(a.kind==="colossus"){t=`Колосс ${a.name} затих навсегда.`+safeFn(()=>Zver.artDrop("колосс"),"");}
+   else if(a.kind==="shadow"){t="Тень мстителя рассеялась.";}
+   this.chron(`сюжет «${DIR2_ARCS[a.kind].n}» завершён`);}
+  else{if(a.kind==="wrath")s.tension=Math.min(100,s.tension+20);this.chron(`сюжет «${DIR2_ARCS[a.kind].n}» оборвался`);t=`Сюжет «${DIR2_ARCS[a.kind].n}» оборвался.`;}
+  if(t)safeFn(()=>narrate(t,{interrupt:false}));return t;},
+ /* ── новые события мира ── */
+ ev_rumor(){const s=this.st2();const nm=s.nem.find(n=>!n.dead);const sites=Object.values(s.sites);
+  if(nm&&Math.random()<0.5)return `${this.g("молва")}: ${nm.n} рыщет неподалёку и спрашивает о вас`;
+  if(sites.length)return `${this.g("молва")}: из-под земли ${this.where(sites[0].x-G.x,sites[0].y-G.y)} слышен гул — там не спит машина Предтеч`;
+  const g=PANTHEON[Math.floor(Math.random()*PANTHEON.length)];const v=Number(s.world.gods[g.id])||0;
+  return `${this.g("молва")}, что ${g.n} ${v>10?"доволен смертными":v<-10?"гневается на смертных":"смотрит на мир молча"}, а ${this.g("знак")}`;},
+ ev_quest(){const q=this.qMake(this.qPick());return q?`новое поручение — «${q.n}». ${q.t}`:"";},
+ ev_caravan(){const рес=ZV_RES[Math.floor(Math.random()*6)];safeFn(()=>Zver.resAdd(рес,1,""));
+  return `через край прошёл торговый караван ${this.genName()}: купцы оставили вам в подарок ${рес}, а цены в городах на день стали мягче`;},
+ ev_omen(){const s=this.st2();const z=this.g("знак");const good=Math.random()<0.5;s.tension=Math.max(0,Math.min(100,s.tension+(good?-10:12)));
+  return `${z} — ${good?"знамение доброе: угроза отступает":"знамение тревожное: твари беспокоятся"}`;},
+ ev_arc(){const kinds=Object.keys(DIR2_ARCS).filter(k=>!this.st2().arcs.some(a=>a.kind===k));if(!kinds.length)return "";
+  return this.arcStart(kinds[Math.floor(Math.random()*kinds.length)]);},
+ /* ── окна ── */
+ modelView(){const s=this.st2(),ml=s.ml;const x=this.feats();
+  let h=this.line(`Обучаемая модель мира: событий изучено ${DIR2_ARMS.reduce((t,a)=>t+(Number(ml.lin[a].n)||0),0)}, схваток для прогноза ${ml.nw}${ml.nw?", побед "+Math.round(100*ml.wins/ml.nw)+" %":""}.`);
+  const rank=DIR2_ARMS.map(a=>[a,this.ucb(a,x,0)]).sort((p,q)=>q[1]-p[1]);
+  h+=this.line(`Сейчас, в этом положении, модель ждёт, что вам интереснее всего: ${rank.slice(0,3).map(r=>DIR2_ARM_N[r[0]]).join(", ")}; меньше всего — ${rank.slice(-2).map(r=>DIR2_ARM_N[r[0]]).join(" и ")}.`);
+  const p=this.winP({lvl:G.level});const tgt=DIR2_TARGET[this.mode()];
+  h+=this.line(`Прогноз победы над тварью вашего уровня: ${Math.round(p*100)} %${tgt?`; цель Режиссёра — ${Math.round(tgt*100)} %, поэтому твари ${p>tgt+0.03?"будут крепче":p<tgt-0.03?"будут слабее":"остаются как есть"}`:""}.`);
+  const qw=this.qWeights().sort((a,b)=>b[1]-a[1]);if(qw.length)h+=this.line(`Вкус к поручениям: ${qw.map(([k,v])=>DIR2_QTYPES[k].n+" "+Math.round(v*100)+" %").join(", ")}.`);
+  const top=ml.w.map((v,i)=>[i<DIR2_F?DIR2_FEATS[i]:["разница уровней","владыка","урон спутников"][i-DIR2_F],v]).slice(1).sort((a,b)=>Math.abs(b[1])-Math.abs(a[1])).slice(0,4);
+  h+=this.line(`Что сильнее всего решает исход боя, по мнению модели: ${top.map(([n,v])=>n+(v>0?" (помогает)":" (мешает)")).join(", ")}.`);
+  h+=this.line(`Имена мира рождает марковская цепь по ${this.nameModel().n} именам Грани. Например: ${[1,2,3].map(()=>this.genName()).join(", ")}.`);
+  h+=this.btn("home","Режиссёр Грани");return this.show("Модель мира",h);},
+ questsView(){const s=this.st2();let h="";
+  h+=this.line(s.q.length?`Поручения мира — ${s.q.length} из трёх.`:"Поручений мира пока нет: Режиссёр выдаёт их вместе с вестями.");
+  for(const q of s.q)h+=this.line(`${q.n}. ${q.t} Сделано ${Math.min(q.prog,q.need)} из ${q.need}. Срок — до ${q.до}-го дня. Награда: ${q.награда.gold} золота${q.награда.res?", "+q.награда.res:""}${q.награда.art?", может быть звериный артефакт":""}.`);
+  if(s.arcs.length)h+=this.line(`Идущие сюжеты: ${s.arcs.map(a=>`«${DIR2_ARCS[a.kind].n}» (${a.name}) — ${DIR2_ARCS[a.kind].о}`).join("; ")}.`);
+  if(s.qdone.length)h+=this.line(`Исполнено: ${s.qdone.slice(0,6).map(x=>x.n).join("; ")}.`);
+  h+=this.btn("newq","Попросить поручение у мира");h+=this.btn("home","Режиссёр Грани");return this.show("Поручения мира",h);}
+});
+
+/* ── Встраивание: прежние методы Режиссёра дополняются второй моделью ── */
+{const D0={onCombat:Director.onCombat,onWin:Director.onWin,onLose:Director.onLose,onFlee:Director.onFlee,note:Director.note,tick:Director.tick,
+  worldDay:Director.worldDay,siteCheck:Director.siteCheck,home:Director.home,cmd:Director.cmd,pick:Director.pick,summary:Director.summary};
+ Object.assign(Director,{
+  onCombat(m,c){if(!m)return;const s=this.st2();m.dirX=this.fightFeats(m);
+   /* пока прогноз не обучен — прежнее правило мастерства; потом — прогноз победы */
+   const обучен=s.ml.nw>=15;const sk=s.skill;if(обучен)s.skill=0.5;
+   D0.onCombat.call(this,m,c);if(обучен)s.skill=sk;
+   if(!this.on()||!обучен)return;const p=this.winP(m),tgt=DIR2_TARGET[this.mode()]||0.75,K=this.k();
+   const f=Math.max(1-K,Math.min(1+K,1+(p-tgt)*1.6*K/0.25));
+   if(Math.abs(f-1)>0.01){m.hp=Math.max(1,Math.round((Number(m.hp)||1)*f));m.dmg=Math.max(1,Math.round((Number(m.dmg)||1)*(1+(f-1)*0.7)));}
+   m.dirP=Math.round(p*100)/100;m.dirK=Math.round((Number(m.dirK)||1)*f*100)/100;},
+  onWin(m){const t=D0.onWin.call(this,m)||"";if(m&&m.dirX)this.learnWin(m.dirX,1);
+   const q=this.qProgress("win",{fam:safeFn(()=>foeFamily(m),null),nem:m&&m.zvNem});return t+(q?" "+q:"");},
+  onLose(m){D0.onLose.call(this,m);if(m&&m.dirX)this.learnWin(m.dirX,0);},
+  onFlee(m){D0.onFlee.call(this,m);if(m&&m.dirX)this.learnWin(m.dirX,0.2);},
+  note(kind,what){D0.note.call(this,kind,what);
+   if(kind==="tame"||kind==="hatch")this.qProgress("tame");if(kind==="mix")this.qProgress("mix");if(kind==="pray")this.qProgress("pray",what);},
+  tick(){D0.tick.call(this);const s=this.st2();if(!s.q.length)return;
+   if(s.q.some(q=>q.type==="travel"))this.qProgress("travel");
+   if(G.place&&(Number(G.place.depth)||0)>0&&s.q.some(q=>q.type==="dungeon"))this.qProgress("dungeon");},
+  siteCheck(){const s=this.st2();const near=Object.entries(s.sites).filter(([,p])=>Math.abs(p.x-G.x)+Math.abs(p.y-G.y)<=1).map(([id])=>id);
+   D0.siteCheck.call(this);for(const id of near)this.qProgress("site",id);},
+  /* Выбор события дня: контекстный бандит; награда вчерашнему событию. */
+  pick(){const s=this.st2();const x=this.feats();s.lastX=x;return this.pickLin(x);},
+  worldDay(){const s=this.st2();const played=Math.min(1,(Number(s.played)||0)/60);
+   if(s.lastArm&&Array.isArray(s.lastX))this.learnLin(s.lastArm,s.lastX,Math.min(1,played+(Number(s.qBonus)||0)));s.qBonus=0;
+   D0.worldDay.call(this);this.qExpire();
+   /* поручение раз в два дня, если их мало; сюжет — реже */
+   if(this.on()&&s.q.length<2&&Math.random()<0.5){const q=this.qMake(this.qPick());if(q)safeFn(()=>narrate(`Новое поручение мира: ${q.n}. ${q.t}`,{interrupt:false}));}},
+  home(){D0.home.call(this);const box=document.getElementById("dirBody");if(!box)return true;const s=this.st2();
+   const extra=this.btn("model","Модель мира: чему научился Режиссёр и прогноз победы")+this.btn("quests",`Поручения мира: ${s.q.length}, сюжетов ${s.arcs.length}`);
+   const first=box.querySelector("button");if(first)first.insertAdjacentHTML("beforebegin",extra);else box.insertAdjacentHTML("beforeend",extra);return true;},
+  cmd(a){const [k,arg]=String(a||"").split(":");
+   if(k==="model")return this.modelView();if(k==="quests")return this.questsView();
+   if(k==="newq"){const q=this.qMake(this.qPick());narrate(q?`Поручение мира: ${q.n}. ${q.t}`:"Сейчас мир не просит большего: поручений уже три или нет подходящих.",{interrupt:true});safeFn(()=>saveGame(true));return this.questsView();}
+   return D0.cmd.call(this,a);},
+  summary(){const s=this.st2();return Object.assign(D0.summary.call(this),{сфер2:DIR2_ARMS.length,поручений:s.q.length,сюжетов:s.arcs.length,схваток:s.ml.nw});}});
+ /* Молитва — повод для поручения «молитва». */
+ const мол=prayToGod;prayToGod=function(id){const r=мол(id);if(r)safeFn(()=>Director.note("pray",id));return r;};}
+Object.assign(CMD,{dirquests(){Director.questsView();},dirmodel(){Director.modelView();}});
 /* ── БИОЛОГИЧЕСКИЙ ОТПЕЧАТОК ── */
 const Imprint=Modules.register("IMPRINT",{
  state(){if(!G.imprints||typeof G.imprints!=="object")G.imprints={};return G.imprints;},

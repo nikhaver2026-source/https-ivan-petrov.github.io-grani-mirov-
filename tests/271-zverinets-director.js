@@ -166,7 +166,9 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   const d0=G.day;const ch0=s.chron.length;s.day=G.day;G.day+=3;Director.tick();r.летопись=s.chron.length-ch0;G.day=d0;s.day=G.day;
   for(let i=0;i<40;i++)for(const a of DIRECTOR_ARMS){s.lastArm=a;Director.reward(a==="beasts"?1:0);}
   r.бандит=[s.bandit.beasts.a/(s.bandit.beasts.a+s.bandit.beasts.b),s.bandit.mech.a/(s.bandit.mech.a+s.bandit.mech.b)];
-  let звери=0;for(let i=0;i<200;i++)if(Director.pick()==="beasts")звери++;r.выбор=звери/200;
+  /* (Режиссёр 2) выбор дня делает контекстный бандит LinUCB: учим его в том же положении */
+  const x=Director.feats();for(let i=0;i<30;i++)for(const a of DIR2_ARMS)Director.learnLin(a,x,a==="beasts"?1:0);
+  let звери=0;for(let i=0;i<50;i++)if(Director.pick()==="beasts")звери++;r.выбор=звери/50;
   return r;});
  check('8. эфир: прилив и отлив; машины Предтеч просыпаются на карте; боги благоволят и гневаются своими голосами',
   /прилив/.test(мир.прилив)&&/отхлынул/.test(мир.отлив)&&/Предтеч/.test(мир.машина)&&мир.мест>=1&&/благоволит/.test(мир.боги[0])&&/гневается/.test(мир.боги[1]),мир);
