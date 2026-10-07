@@ -88,7 +88,7 @@ const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(e!==undefined?' :
     sigils:в("sigils"),fish:в("fish"),resinfo:в("resinfo"),settings:в("settings"),hud:в("hud"),cases:в("cases")}};});
  check('1. шестнадцать разделов по смыслу, у каждого значок и что в нём; каждый пункт ровно в одном; персонаж, квесты и книги — где их ищут',
   раскладка.ids.join(",")==="start,here,move,fight,hero,quests,craft,people,magic,faith,books,world,realms,dark,sound,game"
-  &&раскладка.пунктов===139+раскладка.свП&&раскладка.дважды.length===0&&раскладка.мета
+  &&раскладка.пунктов===144+раскладка.свП&&раскладка.дважды.length===0&&раскладка.мета
   &&раскладка.в.char==="hero"&&раскладка.в.inv==="hero"&&раскладка.в.bodystate==="hero"
   &&раскладка.в.quests==="quests"&&раскладка.в.journal==="quests"&&раскладка.в.questlist==="quests"&&раскладка.в.cases==="quests"
   &&раскладка.в.lore==="books"&&раскладка.в.academy==="books"&&раскладка.в.best==="books"&&раскладка.в.plants==="books"

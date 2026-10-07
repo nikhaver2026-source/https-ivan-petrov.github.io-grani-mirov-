@@ -1,10 +1,10 @@
-# Сборка приложения «Грань Миров» 11.0 для Windows на серверах GitHub.
+# Сборка приложения «Грань Миров» 11.5 для Windows на серверах GitHub.
 #
 # Приложение — Electron: вся игра (index.html и записи sounds) лежит рядом, в resources/game, и открывается по своему адресу
 # app://grani — сеть не нужна. Управление целиком с клавиатуры, мышь не
 # нужна (глава «Игра на компьютере» в руководстве).
 #
-# Выходит одна полная сборка GraniMirov-11.0-windows-full.zip со всеми
+# Выходит одна полная сборка GraniMirov-11.5-windows-full.zip со всеми
 # голосами: распаковать и открыть GraniMirov.exe. Она больше предела выпуска
 # (2 ГиБ) и лежит на странице сборки (Artifacts); выпуск «windows-latest»
 # несёт ссылку на неё. Обычный архив без голосов с 9.5 не выкладывается.
@@ -141,7 +141,7 @@ jobs:
           # их не может прочитать ни PowerShell, ни Windows.
           mkdir -p sr sapi espeak rhvoice
           npx @electron/packager . GraniMirov --platform=win32 --arch=x64 --out=out --overwrite \
-            --executable-name=GraniMirov --app-version=11.0.0 --build-version=11.0.0.${GITHUB_RUN_NUMBER} \
+            --executable-name=GraniMirov --app-version=11.5.0 --build-version=11.5.0.${GITHUB_RUN_NUMBER} \
             --win32metadata.ProductName="Грань Миров" --win32metadata.FileDescription="Грань Миров" \
             --win32metadata.CompanyName="Грань Миров" \
             --extra-resource=../build/game --extra-resource=sapi --extra-resource=sr --extra-resource=espeak --extra-resource=rhvoice --ignore='out' --ignore='icon\.ico' --ignore='(key|voice)check\.js' --ignore='sapi-test\.js' --ignore='sapi-build\.js' $ICONARG
@@ -176,14 +176,14 @@ jobs:
         run: |
           # Вся папка приложения со всеми голосами (и голосовым пакетом) — один
           # zip без пересжатия: записи уже сжаты, качество не меняется.
-          7z a -tzip -mx=0 ../../GraniMirov-11.0-windows-full.zip "GraniMirov" > /dev/null
-          ls -la ../../GraniMirov-11.0-windows-full.zip
+          7z a -tzip -mx=0 ../../GraniMirov-11.5-windows-full.zip "GraniMirov" > /dev/null
+          ls -la ../../GraniMirov-11.5-windows-full.zip
 
       - name: Полная сборка — на страницу сборки
         id: art
         uses: actions/upload-artifact@v7
         with:
-          path: GraniMirov-11.0-windows-full.zip
+          path: GraniMirov-11.5-windows-full.zip
           archive: false
           compression-level: 0
           retention-days: 90
@@ -197,6 +197,6 @@ jobs:
           gh release delete windows-latest --cleanup-tag -y || true
           FULL="${{ steps.art.outputs.artifact-url }}"
           [ -n "$FULL" ] || FULL="https://github.com/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
-          NOTE="Свежая сборка из main ($GITHUB_SHA). Выкладывается только полная сборка со всеми голосами — GraniMirov-11.0-windows-full.zip (голосовой пакет уже внутри, ставить ничего не нужно): прямая ссылка на файл (скачивание начинается сразу, нужен вход в GitHub) — $FULL. Распакуйте архив в любую папку и откройте GraniMirov.exe — сеть и мышь не нужны, всё управляется клавиатурой: стрелки — шаг, Shift со стрелкой — бег, E — действие, I или Alt+E — инвентарь, Q — зелье, Tab — только здоровье, V — осмотреться, M или Esc — меню, Shift+F1 — все клавиши. Windows может предупредить о неизвестном издателе: «Подробнее» → «Выполнить в любом случае»."
+          NOTE="Свежая сборка из main ($GITHUB_SHA). Выкладывается только полная сборка со всеми голосами — GraniMirov-11.5-windows-full.zip (голосовой пакет уже внутри, ставить ничего не нужно): прямая ссылка на файл (скачивание начинается сразу, нужен вход в GitHub) — $FULL. Распакуйте архив в любую папку и откройте GraniMirov.exe — сеть и мышь не нужны, всё управляется клавиатурой: стрелки — шаг, Shift со стрелкой — бег, E — действие, I или Alt+E — инвентарь, Q — зелье, Tab — только здоровье, V — осмотреться, M или Esc — меню, Shift+F1 — все клавиши. Windows может предупредить о неизвестном издателе: «Подробнее» → «Выполнить в любом случае»."
           gh release create windows-latest --target "$GITHUB_SHA" \
-            --title "Грань Миров 11.0 для Windows (сборка ${GITHUB_RUN_NUMBER})" --notes "$NOTE"
+            --title "Грань Миров 11.5 для Windows (сборка ${GITHUB_RUN_NUMBER})" --notes "$NOTE"
