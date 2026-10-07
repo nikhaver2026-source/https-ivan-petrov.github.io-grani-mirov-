@@ -3044,6 +3044,9 @@ NEWS.push({v:60,н:"версия 10.5: Перекрой",
 /* 11.0: единый обработчик звука и единый обработчик речи (набор 269). */
 NEWS.push({v:61,н:"версия 11.0: единый звук и единая речь",
   т:"Звук не теряется: не пущенное до касания звучит с первым касанием, после звонка и смены наушников звук возвращается сам. Жест «повторить или прервать» глушит и жителя. Голос, который не зазвучал, не держит игру. Боевые фразы героя — голосом Aoede."});
+/* 11.0: чары без тока (sounds/arcana) и опыты со всем припасом (набор 270). */
+NEWS.push({v:62,н:"версия 11.0: магия без тока и опыты со всем",
+  т:"Искра и все школы чар звучат волшебством, а не электричеством: гул чар, обереги и руны, сияние, исцеление, тёмные чары, разрывы стихий. Смешивать можно любой припас; у каждой смеси свой ход, цвет, запах, вкус и действие, а не сошедшаяся смесь даёт своё зелье."});
 const NEWS_V=NEWS[NEWS.length-1].v;
 /* (8.5) Выпуск читается коротко: заголовок, затем факты. */
 function newsLine(n){const н=String(n.н||"");return `${н.charAt(0).toUpperCase()+н.slice(1)}. ${n.т||""}`;}
@@ -5660,7 +5663,7 @@ const LIVE_INSTEAD={
  battle_cry:    ["cast_warcry","throng_fight"],
  artifact_pulse:["magic_hum","artifact_hum"],
  arrow_hit:     ["cast_arrows","hit_knife"],
- spell_release: ["oc_zap","cast_shoot"],
+ spell_release: ["arc_cast","arc_hit"],
  ward_shimmer:  ["stk_ward","cast_shield"],
  anvil:         ["anvil"],
  /* Три сцены каталога оставались рисованными, хотя живые записи для них в
@@ -6737,6 +6740,7 @@ const BEACON_INFO={
 };
 /* Карточки записей банка: по одной на роль, с описанием и числом вариантов. */
 const BANK_CATS={mg:"Фэнтезийный мир: твари, чары, ремёсла и погода",
+ arcana:"Чары без тока: гул чар, обереги, сияние, исцеление, тёмные чары, разрывы стихий (Tim, Lentikula, OpenGameArt; без потерь)",
  mtg:"Ремесло и стихии Luanti: шаги, двери, огонь, лава, взрыв",
  od:"Подземный мир OpenDungeons: голоса владыки, нежить, копка, обвалы",
  es:"Взрывы, гулы и переходы Endless Sky",
@@ -6806,7 +6810,7 @@ const BANK_GROUPS=[
  {n:"Подземный мир и тёмные голоса",icon:"", dirs:["od","zm","sp"]},
  {n:"Взрывы, гулы и переходы",  icon:"", dirs:["es","jcfx"]},
  {n:"Подземелья и тьма",      icon:"", dirs:["deep","cave"]},
- {n:"Магия, чары и касты",    icon:"", dirs:["cast","potion"]},
+ {n:"Магия, чары и касты",    icon:"", dirs:["cast","potion","arcana"]},
  {n:"Боги, храмы и знамения", icon:"", dirs:["stendhalfx"]},
  {n:"Места, здания и постройки",icon:"", dirs:["hall","nat"]},
  {n:"Шаги и поверхности",     icon:"", dirs:["steps","tread","gear"]},
@@ -6911,6 +6915,8 @@ const ENC_BY_ID={};ENC_SECTIONS.forEach(s=>ENC_BY_ID[s.id]=s);
    свой раздел по имени; не подошедшая ни под одно правило уходит по папке
    источника, а уж затем — к фону земель, чтобы ни одна не пропала. */
 const ENC_RULES=[
+ /* 11.0: чары без тока (sounds/arcana) — к магии. */
+ [/^(arc_|fire_spell_|ooze_|frost_(charge|cast|hit)$|(flame_cast|ash_crackle|crystal_shatter|gale_hit|heal_bloom|bolt_hit|dark_spell|portal_open|chant_ether)$|(water|earth|plant)_spell_hit$)/,"magic"],
  /* 10.0: Сплетение — боги к богам, твари к чудовищам, гул земель к земле, котлы к местам. */
  [/^sp_(lg|god)_/,"gods"],
  [/^sp_beast_/,"monsters"],
@@ -12031,7 +12037,7 @@ function discoverPortal(node){
  const k=portalKey(node.x,node.y);
  if(portalsKnown().includes(k))return false;
  portalsKnown().push(k);
- safeFn(()=>{Bank.play("oc_warp",{seed:node.x+node.y,gain:0.55,maxSec:7});
+ safeFn(()=>{Bank.play("portal_open",{seed:node.x+node.y,gain:0.55,maxSec:7});
   setTimeout(()=>safeFn(()=>Bank.play("stk_portal",{seed:node.x,gain:0.5,maxSec:6})),500);});
  safeFn(()=>journal(`Открыт узел сети: ${node.name}.`));
  narrate(`${node.name}. Узел портальной сети открыт: теперь сюда можно перейти из любого другого открытого узла. Всего открыто узлов: ${portalsKnown().length}.`,{interrupt:false});
@@ -12152,7 +12158,7 @@ function portalTravel(key){
  G.hour+=f.hours;while(G.hour>=24){G.hour-=24;G.day++;}
  safeFn(()=>{while(activeLayer())closeTopUI();});
  safeFn(()=>{beacon("portal",0,0);
-  Bank.play("oc_warp",{seed:to.x,gain:0.6,maxSec:7});
+  Bank.play("portal_open",{seed:to.x,gain:0.6,maxSec:7});
   setTimeout(()=>safeFn(()=>Bank.play("stk_portal",{seed:to.y,gain:0.5,maxSec:6})),450);});
  safeFn(()=>journal(`Переход сетью: ${from.name} → ${to.name} за ${f.gold} золота.`));
  const c=cellContent(G.x,G.y);
@@ -16991,6 +16997,33 @@ const SOUND_BANK={
  magic_woosh:{f:["nat/magic_woosh_01.flac"],d:"Заклинание: тёмный воздушный ход"},
  magic_shimmer:{f:["nat/magic_shimmer_01.flac"],d:"Чары: стеклянный перезвон"},
  magic_hum:{f:["nat/magic_hum_01.flac"],d:"Накопление силы: ровный гул"},
+ /* 11.0: чары без тока (sounds/arcana, без потерь; авторы и лицензии — CREDITS.md папки) */
+ arc_charge:{f:["arcana/arcane_charge_01.flac","arcana/arcane_charge_02.flac","arcana/arcane_charge_03.flac"],d:"Чары копят силу: нарастающий волшебный гул (Tim, CC BY)"},
+ arc_rise:{f:["arcana/arcane_rise_01.flac","arcana/arcane_rise_02.flac","arcana/arcane_rise_03.flac"],d:"Чары взмывают: гул уходит вверх (Tim, CC BY)"},
+ arc_breath:{f:["arcana/arcane_breath_01.flac","arcana/arcane_breath_02.flac","arcana/arcane_breath_03.flac"],d:"Дыхание чар: воздух втягивается в заклинание (Tim, CC BY)"},
+ arc_cast:{f:["arcana/arcane_cast_01.flac","arcana/arcane_cast_02.flac","arcana/arcane_cast_03.flac"],d:"Волшебный выпуск: чары срываются с рук (Tim, CC BY)"},
+ arc_hit:{f:["arcana/arcane_hit_01.flac","arcana/arcane_hit_02.flac","arcana/arcane_hit_03.flac"],d:"Волшебное попадание: чары разбиваются о цель (Tim, CC BY)"},
+ arc_shine:{f:["arcana/arcane_shine_01.flac","arcana/arcane_shine_02.flac","arcana/arcane_shine_03.flac"],d:"Сияние: светлый отзвук после чар (Tim, CC BY)"},
+ arc_chimes:{f:["arcana/arcane_chimes_01.flac"],d:"Волшебный перезвон (Tim, CC BY)"},
+ flame_cast:{f:["arcana/flame_cast_01.flac","arcana/flame_cast_02.flac","arcana/flame_cast_03.flac"],d:"Огненный выпуск: пламя срывается с рук (Tim, CC BY)"},
+ fire_spell_fly:{f:["arcana/flame_whoosh_01.flac","arcana/flame_whoosh_02.flac","arcana/flame_whoosh_03.flac","arcana/torch_whoosh_01.flac"],d:"Пламя летит (Tim, CC BY; spookymodem, CC BY 3.0)"},
+ fire_spell_hit:{f:["arcana/flame_hit_01.flac","arcana/flame_hit_02.flac","arcana/flame_hit_03.flac","arcana/fire_burst_01.flac","arcana/fire_burst_02.flac","arcana/fire_burst_03.flac","arcana/fire_burst_04.flac","arcana/fire_burst_05.flac"],d:"Огненное попадание (Tim, CC BY; Lentikula, CC0)"},
+ ash_crackle:{f:["arcana/ember_crackle_01.flac","arcana/ember_crackle_02.flac","arcana/ember_crackle_03.flac"],d:"Треск углей и пепла (Tim, CC BY)"},
+ frost_charge:{f:["arcana/frost_charge_01.flac","arcana/frost_charge_02.flac"],d:"Холод сгущается (Tim, CC BY)"},
+ frost_cast:{f:["arcana/frost_cast_01.flac","arcana/frost_cast_02.flac","arcana/frost_cast_03.flac"],d:"Ледяной выпуск (Tim, CC BY)"},
+ frost_hit:{f:["arcana/frost_hit_01.flac","arcana/frost_hit_02.flac","arcana/frost_hit_03.flac","arcana/ice_burst_01.flac","arcana/ice_burst_02.flac","arcana/ice_burst_03.flac","arcana/ice_burst_04.flac","arcana/ice_burst_05.flac"],d:"Ледяное попадание (Tim, CC BY; Lentikula, CC0)"},
+ crystal_shatter:{f:["arcana/crystal_shatter_01.flac","arcana/crystal_shatter_02.flac","arcana/crystal_shatter_03.flac"],d:"Хрусталь разлетается (Tim, CC BY)"},
+ gale_hit:{f:["arcana/gale_hit_01.flac","arcana/gale_hit_02.flac","arcana/gale_hit_03.flac","arcana/wind_burst_01.flac","arcana/wind_burst_02.flac","arcana/wind_burst_03.flac","arcana/wind_burst_04.flac","arcana/wind_burst_05.flac"],d:"Порыв чар бьёт ветром (Tim, CC BY; Lentikula, CC0)"},
+ ooze_cast:{f:["arcana/ooze_cast_01.flac","arcana/ooze_cast_02.flac","arcana/ooze_cast_03.flac"],d:"Вязкая жижа срывается (Tim, CC BY)"},
+ ooze_splat:{f:["arcana/ooze_splat_01.flac","arcana/ooze_splat_02.flac","arcana/ooze_splat_03.flac"],d:"Шлепок жижи (Tim, CC BY)"},
+ heal_bloom:{f:["arcana/heal_bloom_04.flac","arcana/heal_bloom_05.flac","arcana/heal_bloom_06.flac","arcana/heal_bloom_07.flac","arcana/heal_bloom_08.flac","arcana/heal_bloom_01.flac","arcana/heal_bloom_02.flac","arcana/heal_bloom_03.flac"],d:"Исцеление расцветает светом (Lentikula, CC0)"},
+ water_spell_hit:{f:["arcana/water_burst_01.flac","arcana/water_burst_02.flac","arcana/water_burst_03.flac","arcana/water_burst_04.flac","arcana/water_burst_05.flac"],d:"Водяной разрыв (Lentikula, CC0)"},
+ earth_spell_hit:{f:["arcana/earth_burst_01.flac","arcana/earth_burst_02.flac","arcana/earth_burst_03.flac","arcana/earth_burst_04.flac","arcana/earth_burst_05.flac"],d:"Каменный разрыв (Lentikula, CC0)"},
+ plant_spell_hit:{f:["arcana/plant_burst_01.flac","arcana/plant_burst_02.flac","arcana/plant_burst_03.flac","arcana/plant_burst_04.flac","arcana/plant_burst_05.flac"],d:"Разрыв живой поросли (Lentikula, CC0)"},
+ bolt_hit:{f:["arcana/bolt_burst_01.flac","arcana/bolt_burst_02.flac","arcana/bolt_burst_03.flac","arcana/bolt_burst_04.flac","arcana/bolt_burst_05.flac"],d:"Удар молнии — только у чар молнии (Lentikula, CC0)"},
+ dark_spell:{f:["arcana/dark_spell_01.flac","arcana/dark_spell_02.flac","arcana/dark_spell_03.flac"],d:"Тёмные чары (qubodup, CC0)"},
+ portal_open:{f:["arcana/portal_open_01.flac"],d:"Проход раскрывается (Ogrebane, CC0)"},
+ chant_ether:{f:["arcana/chant_ether_01.flac","arcana/chant_ether_02.flac","arcana/chant_ether_03.flac"],d:"Призрачное пение обряда (OwlishMedia, CC0)"},
  artifact_hum:{f:["nat/artifact_hum_01.flac"],d:"Артефакт: поющее стекло"},
  crow:{f:["nat/crow_01.flac"],d:"Ворон над дорогой"},
  door_wood:{f:["nat/door_wood_01.flac"],d:"Деревянная дверь на петлях"},
@@ -18459,7 +18492,7 @@ Object.assign(SOUND_BANK,{
  stk_horn:{f:["stk/stk_horn_01.ogg"],d:"Рог: одиночный зов"},
  stk_dark:{f:["stk/stk_dark_01_n.flac"],d:"Тьма: низкий гул подземелья"},
  stk_goo:{f:["stk/stk_goo_01.ogg"],d:"Слизь: вязкий хлюп"},
- stk_ward:{f:["stk/stk_ward_01.ogg"],d:"Оберег: гудение защитных чар"},
+ stk_ward:{f:["arcana/ward_hum_01.flac","arcana/ward_hum_02.flac","arcana/ward_hum_03.flac"],d:"Оберег: гул защитных чар — смычок по металлу (Tim, CC BY)"},
 /* ── ЗАПИСИ LUANTI (MINETEST GAME), CC BY-SA 3.0 ──
    Девяносто семь записей под той же лицензией, что и сама игра: шаги по
    девяти поверхностям, двери и калитки, огонь и его гашение, кресало,
@@ -18627,7 +18660,7 @@ Object.assign(SOUND_BANK,{
  oc_munch:{f:["oc/oc_munch_01.ogg"],d:"кто-то жуёт"},
  oc_hurt:{f:["oc/oc_hurt_01.ogg", "oc/oc_hurt_02.ogg"],d:"человек ранен"},
  oc_die:{f:["oc/oc_die_01.ogg"],d:"человек пал"},
- oc_electrical:{f:["oc/oc_electrical_01.ogg"],d:"потрескивание силы: магический круг, ядро, руны"},
+ oc_electrical:{f:["arcana/power_hum_01.flac","arcana/power_hum_02.flac","arcana/power_hum_03.flac","arcana/power_hum_04.flac"],d:"гул силы: магический круг, ядро, руны (Tim, CC BY)"},
  oc_connect:{f:["oc/oc_connect_01.ogg"],d:"соединение сошлось"},
  oc_line_snap:{f:["oc/oc_line_snap_01.ogg"],d:"верёвка лопнула"},
  oc_diamond:{f:["oc/oc_diamond_01.ogg"],d:"кристалл выкопан"},
@@ -18659,7 +18692,7 @@ Object.assign(SOUND_BANK,{
  oc_weapon_hit:{f:["oc/oc_weapon_hit_01.ogg", "oc/oc_weapon_hit_02.ogg", "oc/oc_weapon_hit_03.ogg"],d:"оружие попало"},
  oc_catapult:{f:["oc/oc_catapult_01.ogg"],d:"катапульта"},
  oc_gust:{f:["oc/oc_gust_01.ogg"],d:"порыв из меха"},
- oc_zap:{f:["oc/oc_zap_01.ogg", "oc/oc_zap_02.ogg", "oc/oc_zap_03.ogg", "oc/oc_zap_04.ogg"],d:"разряд тварей"},
+ oc_zap:{f:["arcana/arcane_slap_01.flac","arcana/arcane_slap_02.flac","arcana/arcane_slap_03.flac"],d:"хлёсткий удар чар (Tim, CC BY)"},
  oc_fish_munch:{f:["oc/oc_fish_munch_01.ogg"],d:"рыба клюнула"},
  oc_crystal_comm:{f:["oc/oc_crystal_comm_01.ogg", "oc/oc_crystal_comm_02.ogg", "oc/oc_crystal_comm_03.ogg", "oc/oc_crystal_comm_04.ogg", "oc/oc_crystal_comm_05.ogg"],d:"сигналы древнего устройства"},
  ad_gate_open:{f:["ad/ad_gate_open_01.ogg", "ad/ad_gate_open_02.ogg"],d:"каменные ворота открываются"},
@@ -19466,7 +19499,7 @@ const LIVE_SCENE={
  /* Тёмные места звучат своим: святилище — огнём и кресалом, костница —
     костью и стеклом, яма — обвалом, шпиль — металлом, торжище — торгом,
     притон — дверью и огнём, оплот — воротами и строем. */
- shrine:["mtg_fire","mtg_flint","ad_temple","od_heal","es_magic"],
+ shrine:["mtg_fire","mtg_flint","ad_temple","od_heal","chant_ether"],
  ossuary:["od_undead","mtg_glass","od_die","foe_bone_hit","od_keeper_groan"],
  pit:["od_dig","od_rocks","es_crunch","mtg_rubble","es_drill","oc_drill","oc_pumpjack"],
  spire:["oc_electrical","es_ion","mtg_metal_hit","cast_teleport","es_beam","oc_steam","oc_fan"],
@@ -21263,6 +21296,9 @@ POTIONS.push(
    if(r<0.45){const h=Math.min(G.hpMax,G.hp+5)-G.hp;G.hp+=h;return `кисло, но здоровья +${h}`;}
    if(r<0.75)return "ни вкуса, ни толку";
    const у=Math.max(1,Math.round(G.hpMax*0.05));G.hp=Math.max(1,G.hp-у);return `горько и муторно: урон ${у}`;}},
+ /* (11.0) Своя смесь из опыта: имя, вкус и действие — в записи склянки
+    (rec.смесь), пьётся через brewDrink. */
+ {id:"brew",n:"своей смеси",из:[],опыт:true,срок:8,стаб:0.6,о:"своя смесь из опыта",дать:q=>"ни вкуса, ни толку"},
  {id:"oddbrew",n:"странное",из:[],опыт:true,срок:8,стаб:0.5,о:"на вкус как гроза",
   дать:q=>{const b=["чутьё","лёгкость","мощь","тепло","прохлада","ночное зрение","дыхание"][Math.floor(Math.random()*7)];buffSet(b,Math.max(1,Math.round(2*q)));return `${Math.max(1,Math.round(2*q))} ч: ${b}`;}});
 const POTION_BY_ID=Object.fromEntries(POTIONS.map(p=>[p.id,p]));
@@ -21272,7 +21308,7 @@ const POTION_SOUND={heal:"potion_long",clean:"potion_long",
  antidote:"potion_cork",mask:"potion_cork",voice:"potion_cork",craft:"potion_cork",
  strength:"potion_elixir",resist:"potion_elixir",mutation:"potion_elixir",
  speed:"potion_quick",
- energy:"potion_clay",breath:"potion_clay",coldguard:"potion_clay",heatguard:"potion_clay"};
+ energy:"potion_clay",breath:"potion_clay",coldguard:"potion_clay",heatguard:"potion_clay",brew:"potion_clay"};
 if(SVODY_ON)Object.assign(POTION_SOUND,{sv_shade:"potion_cork",sv_reforge:"potion_elixir",sv_tide:"potion_clay",sv_hush:"potion_cork",sv_lone:"potion_quick",sv_ember:"potion_elixir"});
 Object.assign(POTION_SOUND,{zp_skald:"potion_clay",zp_jadebroth:"potion_elixir",zp_lanternbrew:"potion_cork"});
 Object.assign(POTION_SOUND,{xp_syncdraught:"potion_elixir",xp_shardtonic:"potion_quick",xp_returnbrew:"potion_clay",xp_bardhoney:"potion_cork",xp_stormtea:"potion_quick",xp_qibroth:"potion_elixir",xp_antidote:"potion_clay",xp_facetelixir:"potion_cork"});
@@ -21328,14 +21364,15 @@ function drinkPotion(i,user){
   if(potionExpired(rec)){q*=0.5;стаб-=0.3;слова=" Зелье выдохлось: сработало вполсилы.";}
   const сбой=Math.random()>стаб;
   safeFn(()=>{UI.drink();Bank.play(potionSound(pt.id),{gain:0.85,maxSec:3});});
-  let итог=safeFn(()=>pt.дать(сбой?q*0.5:q),"ничего");
+  let итог=rec.id==="brew"?safeFn(()=>brewDrink(rec,сбой?q*0.5:q),"ничего"):safeFn(()=>pt.дать(сбой?q*0.5:q),"ничего");
   if(сбой){
    const d=Math.max(2,Math.round(G.hpMax*0.05));G.hp=Math.max(1,G.hp-d);safeFn(()=>adaptAdd("мутаген",1));
    safeFn(()=>Bank.play("stk_goo",{gain:0.55,maxSec:3}));
    слова+=` Состав оказался нестабилен: подействовал вполсилы, а побочно — −${d} здоровья и нагрузка на тело.`;}
   /* Отвар у очага возвращает и силу — долю запаса маны. */
   if(rec.мана){const m=Math.min(G.manaMax,G.mana+Math.round(G.manaMax*rec.мана*(сбой?0.5:1)))-G.mana;G.mana+=m;итог+=`, силы +${m}`;}
-  narrate(`Выпито: ${rec.имя||"зелье "+pt.n}. ${pt.о[0].toUpperCase()+pt.о.slice(1)}: ${итог}.${слова}`,user?{interrupt:true,user:true}:undefined);
+  const как=rec.id==="brew"?`На вкус ${(rec.смесь&&rec.смесь.вкус)||"странно"}`:pt.о[0].toUpperCase()+pt.о.slice(1);
+  narrate(`Выпито: ${rec.имя||"зелье "+pt.n}. ${как}: ${итог}.${слова}`,user?{interrupt:true,user:true}:undefined);
   safeFn(()=>{renderPotions();refresh();saveGame(true);});
   return true;
  }catch(e){return false;}}
@@ -21394,7 +21431,7 @@ function renderPotions(){
  const list=potionsOf();
  let html=`<div class="list-line" tabindex="0" data-speak="Зелья. Ступень алхимии ${ур}. В сумке ${list.length}. Варят у чана или очага из двух растений разных ниш.">Ступень алхимии ${ур}. Зелий в сумке: ${list.length}.</div>`;
  html+=`<h3>В сумке</h3>`+(list.length?list.map((rec,i)=>{const pt=POTION_BY_ID[rec.id]||{n:rec.id};const exp=potionExpired(rec);
-  const speak=`${rec.имя?potionName(rec):"Зелье "+pt.n}: качество ${potionQualityWord(rec.q)}, устойчивость ${Math.round(rec.стаб*100)} из ста, ${exp?"выдохлось":"годно до "+(rec.день+rec.срок)+"-го дня"}.`;
+  const speak=`${rec.имя?potionName(rec):"Зелье "+pt.n}${rec.id==="brew"&&rec.смесь&&rec.смесь.о?` — ${rec.смесь.о}`:""}: качество ${potionQualityWord(rec.q)}, устойчивость ${Math.round(rec.стаб*100)} из ста, ${exp?"выдохлось":"годно до "+(rec.день+rec.срок)+"-го дня"}.`;
   return `<button class="item" data-cmd="drinkpotion:${i}" data-speak="${speak} Выпить.">${potionName(rec)} — ${potionQualityWord(rec.q)}, ${Math.round(rec.стаб*100)}/100${exp?", выдохлось":""}</button>`;}).join(""):`<div class="list-line">Пусто.</div>`);
  html+=`<h3>Опыты</h3><div class="list-line" tabindex="0" data-speak="${mixQ(mixBookText())}">${mixQ(mixBookText())}</div>`;
  html+=`<h3>Сварить</h3>`+POTIONS.filter(pt=>!pt.опыт).map(pt=>{const [a,b]=potionCanBrew(pt);const можно=a&&b&&ур>=1&&(!pt.редкое||ур>=3);
@@ -21843,12 +21880,12 @@ const DARK_MAGIC=[
  {id:"ember", n:"уголь",     удар:1.25,звук:"cast_fire", след:"тление: горит и после боя"},
  {id:"scream",n:"крик",      удар:1.0,звук:"es_magic",след:"оглушение: следующий ход мимо"},
  {id:"dream", n:"сон",       удар:0.9,звук:"magic_shimmer",след:"дрёма: мана тает"},
- {id:"pain",  n:"боль",      удар:1.35,звук:"cast_shock",след:"боль: урон по вам выше"},
- {id:"void",  n:"пустота",   удар:1.2,звук:"oc_warp",    след:"пустота съедает ману"},
+ {id:"pain",  n:"боль",      удар:1.35,звук:"dark_spell",след:"боль: урон по вам выше"},
+ {id:"void",  n:"пустота",   удар:1.2,звук:"arc_breath",    след:"пустота съедает ману"},
  {id:"vein",  n:"жила",      удар:1.15,звук:"cast_quake",след:"камень в жилах: защита ниже"},
  {id:"oath",  n:"клятва",    удар:1.0,звук:"od_undead",след:"связан словом: бежать нельзя"},
- {id:"scar",  n:"шов",       удар:1.4,звук:"es_ion",  след:"шов расходится: рана не закрывается"},
- {id:"omen",  n:"пророчество",удар:1.3,звук:"oc_electrical", след:"назначенный срок: следующий удар сильнее"},
+ {id:"scar",  n:"шов",       удар:1.4,звук:"dark_spell",  след:"шов расходится: рана не закрывается"},
+ {id:"omen",  n:"пророчество",удар:1.3,звук:"chant_ether", след:"назначенный срок: следующий удар сильнее"},
  {id:"brood", n:"выводок",   удар:1.1,звук:"lug_growl",след:"их становится больше"},
 ];
 const DARK_MAGIC_BY_ID=Object.fromEntries(DARK_MAGIC.map(m=>[m.id,m]));
@@ -25713,7 +25750,7 @@ const EVENTS=[
       if(!nd||portalKnown(nd.x,nd.y))continue;
       const d=Math.max(Math.abs(dx),Math.abs(dy));
       if(d<d0){d0=d;ближ=nd;}}}
-    safeFn(()=>Bank.play("oc_crystal_comm",{gain:0.6,maxSec:6}));
+    safeFn(()=>Bank.play("arc_chimes",{gain:0.6,maxSec:6}));
     if(ближ)narrate(`Камень отвечает гулом с одной стороны: ${ближ.name}, ${d0} ${plural(d0,"шаг","шага","шагов")}, ${dirBetween(ближ.x-G.x,ближ.y-G.y)}. Дойдите — и сеть его запомнит.`);
     else narrate(`Гул ровный со всех сторон: поблизости все узлы вам уже открыты. Их у вас ${было}.`);}},
    {l:"Положить монету на камень (10 золота)",run:()=>{
@@ -25751,7 +25788,7 @@ const EVENTS=[
      :`«К «${узлы[0].name}» сегодня хода нет. ${f.reason}»`);}},
    {l:"Пройти мимо",run:()=>narrate("Смотритель кивнул и вернулся к доске.")}]},
 
- {id:"stone_dim",w:2,snd:"oc_drone_die",ok:c=>!!c.node&&c.nodeKnown,
+ {id:"stone_dim",w:2,snd:"arc_breath",ok:c=>!!c.node&&c.nodeKnown,
   title:()=>"Камень гаснет",
   text:c=>`Свет в жилах ${nodeWord(c)} мигает и уходит. Смотрители зовут это «сушью»: узел держится на кристалле, а кристалл выгорает. Без него камень замолчит, и путь отсюда придётся идти ногами.`,
   choices:c=>[
@@ -25787,7 +25824,7 @@ const EVENTS=[
     G.gold-=80;
     if(Math.random()<0.6){
      G.clanRep=(Number(G.clanRep)||0)+5;G.xp+=xpGain(40);
-     safeFn(()=>Bank.play("oc_crystal_comm",{gain:0.6,maxSec:6}));
+     safeFn(()=>Bank.play("arc_chimes",{gain:0.6,maxSec:6}));
      narrate("Слово оказалось настоящим: следующий переход сеть зачла вам как свой. Слава в узких кругах растёт.");}
     else{
      addRep(c.emp.race,-3);
@@ -25798,7 +25835,7 @@ const EVENTS=[
     narrate("Свисток, топот — и ночного увели. Смотритель отсчитал вам 30 золота, а народ этой земли запомнил, чью сторону вы взяли.");}},
    {l:"Уйти молча",run:()=>narrate("Вы отошли, не сказав ни слова. Он не окликнул.")}]},
 
- {id:"stone_flare",w:2,snd:"oc_electrical",ok:c=>!!c.node&&c.nodes>=3,
+ {id:"stone_flare",w:2,snd:"arc_rise",ok:c=>!!c.node&&c.nodes>=3,
   title:()=>"Вспышка в сети",
   text:c=>`По жилам камня прокатывается вспышка — и на миг слышно все открытые вами узлы разом: ${c.nodes} ${plural(c.nodes,"голос","голоса","голосов")}, каждый со своей нотой. Смотрители говорят, такое бывает, когда где-то в сети открыли новый камень.`,
   choices:c=>[
@@ -29583,7 +29620,7 @@ const PROPS=[
       дало: с полной силой игрок просто послушал линии и пошёл дальше. */
    const час=дал?propRest(1):"";
    G.mana=Math.min(G.manaMax,G.mana+Math.max(4,Math.round(G.manaMax*0.25)));
-   safeFn(()=>{Bank.play("oc_electrical",{gain:0.55,maxSec:4});
+   safeFn(()=>{Bank.play("arc_charge",{gain:0.55,maxSec:4});
     setTimeout(()=>safeFn(()=>Bank.play("magic_hum",{gain:0.45,maxSec:6})),300);});
    narrate(дал?`Магический круг. Вы встали в середину, и линии отозвались теплом: мана восстановлена до ${G.mana} из ${G.manaMax}. ${час}`
     :"Магический круг. Линии отозвались, но брать вам нечего: сила и так полна.");
@@ -30103,7 +30140,7 @@ const MOUNTS=[
    когда вещью пользуются. */
 /* BEACON_INFO к этому месту уже заморожен: подписи вещей живут рядом, в своей таблице. */
 const PROP_INFO={};
-const PROP_SND={"table": "prop_table", "rack": "gear_blade", "circle": "oc_electrical", "orb": "magic_shimmer", "mirror": "oc_glass_hit", "brazier": "oc_fire", "cauldron": "oc_bubble", "loom": "craft_knock", "barrels": "prop_barrel", "hearth": "wild_hearth", "statue": "craft_stone", "board": "arte_page", "bed": "prop_bed", "anvil": "anvil", "basin": "prop_basin", "candle": "oc_inflame", "chandelier": "ad_fire_sparks", "bookcase": "prop_bookplace", "scrollcase": "lang_page", "tapestry": "arte_cloth", "dresser": "prop_creak", "sacks": "oc_soft_touch", "crates": "uh_warehouse", "rope": "sv_trap_coil", "lever": "oc_lift_start", "chains": "oc_chain", "cage": "oc_lock", "bones": "foe_bone_die", "mushbed": "prop_mush", "stalag": "deep_drip", "fountain": "prop_fountain", "scales": "oc_metal_light", "whetstone": "prop_whetstone", "bench": "craft_saw", "hourglass": "stk_clock", "astrolabe": "oc_wheels", "wallmap": "prop_map", "throne": "oc_wood_creak", "censer": "oc_sizzle", "woodpile": "craft_axe", "millstone": "deep_stone", "shields": "oc_shield_block", "gong": "oc_metal_dull", "stools": "mtg_step_wood", "mugs": "stk_inn", "cookfire": "prop_pot", "shelf": "uh_build", "coffer": "oc_door_unlock", "tools": "oc_find_tool", "pantry": "prop_pantry", "cellar": "amb_cave", "backdoor": "inventory_open"};
+const PROP_SND={"table": "prop_table", "rack": "gear_blade", "circle": "arc_charge", "orb": "magic_shimmer", "mirror": "oc_glass_hit", "brazier": "oc_fire", "cauldron": "oc_bubble", "loom": "craft_knock", "barrels": "prop_barrel", "hearth": "wild_hearth", "statue": "craft_stone", "board": "arte_page", "bed": "prop_bed", "anvil": "anvil", "basin": "prop_basin", "candle": "oc_inflame", "chandelier": "ad_fire_sparks", "bookcase": "prop_bookplace", "scrollcase": "lang_page", "tapestry": "arte_cloth", "dresser": "prop_creak", "sacks": "oc_soft_touch", "crates": "uh_warehouse", "rope": "sv_trap_coil", "lever": "oc_lift_start", "chains": "oc_chain", "cage": "oc_lock", "bones": "foe_bone_die", "mushbed": "prop_mush", "stalag": "deep_drip", "fountain": "prop_fountain", "scales": "oc_metal_light", "whetstone": "prop_whetstone", "bench": "craft_saw", "hourglass": "stk_clock", "astrolabe": "oc_wheels", "wallmap": "prop_map", "throne": "oc_wood_creak", "censer": "oc_sizzle", "woodpile": "craft_axe", "millstone": "deep_stone", "shields": "oc_shield_block", "gong": "oc_metal_dull", "stools": "mtg_step_wood", "mugs": "stk_inn", "cookfire": "prop_pot", "shelf": "uh_build", "coffer": "oc_door_unlock", "tools": "oc_find_tool", "pantry": "prop_pantry", "cellar": "amb_cave", "backdoor": "inventory_open"};
 PROPS.forEach(p=>{const r=PROP_SND[p.id];if(!r)return;const id="prop_"+p.id;
  BEACON_ROLE[id]=r;PROP_INFO[id]=[p.n[0].toUpperCase()+p.n.slice(1),`Обстановка: ${p.n}`];p.b=id;});
 /* Маяк клетки с учётом того, что на ней стоит: обстановка звучит своей вещью. */
@@ -31714,7 +31751,7 @@ iact("attune",{n:"Прочесть наговор",значок:"",
    return true;}
   propMark(o.x,o.y,"read");
   safeFn(()=>propTime(0.5));
-  safeFn(()=>{Bank.play("oc_electrical",{seed:o.x+o.y,gain:0.6,maxSec:4});
+  safeFn(()=>{Bank.play("arc_charge",{seed:o.x+o.y,gain:0.6,maxSec:4});
    setTimeout(()=>safeFn(()=>Bank.play("magic_shimmer",{seed:o.y,gain:0.5,maxSec:4})),320);});
   safeFn(()=>mastGain("runes",5));
   const ч=safeFn(()=>artPartFor((G.place&&Number(G.place.depth))||0,o.x+o.y),null);
@@ -31960,7 +31997,7 @@ iact("altartefact",{n:"Поместить артефакт",значок:"",
   if(!v){narrate("Класть нечего: вещи с силой при вас нет.");return true;}
   propMark(o.x,o.y,"charged");safeFn(()=>adaptAdd("материал",1));
   safeFn(()=>propTime(0.8));
-  safeFn(()=>{Bank.play("oc_electrical",{seed:o.x+o.y,gain:0.65,maxSec:6});
+  safeFn(()=>{Bank.play("arc_rise",{seed:o.x+o.y,gain:0.65,maxSec:6});
    setTimeout(()=>safeFn(()=>Bank.play("magic_shimmer",{seed:o.y,gain:0.5,maxSec:4})),380);});
   const былоК=Number(v.кач)||1,былоР=Number(v.ранг)||1;
   v.кач=Math.min(5,былоК+1);
@@ -32854,9 +32891,9 @@ const PROD_BUILDINGS=[
   о:"Пильная яма, клинья и вайма: кряж делается доской, доска — брусом."},
  {id:"stonecut", n:"камнерезная",                     станок:"stonebench", звук:"craft_stone", цепи:["stone","bone"],
   о:"Станок с мокрым кругом: камень и кость режут одним и тем же терпением."},
- {id:"etherlab", n:"эфирная лаборатория",             станок:"etherbench", звук:"es_plasma",   цепи:["ether"],
+ {id:"etherlab", n:"эфирная лаборатория",             станок:"etherbench", звук:"arc_charge",   цепи:["ether"],
   о:"Стол под колпаком, где эфир держат в стекле: из трёх граней выходит одна линза."},
- {id:"astrallab",n:"астральная лаборатория",          станок:"astralbench",звук:"oc_warp",     цепи:["ether"],
+ {id:"astrallab",n:"астральная лаборатория",          станок:"astralbench",звук:"arc_rise",     цепи:["ether"],
   о:"Круг под открытым сводом: сюда сводят свет линзы и то, что стоит за ним."}];
 const PROD_BUILD_BY_ID=Object.fromEntries(PROD_BUILDINGS.map(b=>[b.id,b]));
 const PROD_BUILD_BY_STANOK=Object.fromEntries(PROD_BUILDINGS.map(b=>[b.станок,b]));
@@ -32998,11 +33035,11 @@ const PROD_STEPS=[
   о:"Перегонка на малом огне: состав делается крепким до едкости — им и калят сталь."},
  {id:"pr_lens",цепь:"ether",маст:"arte",ур:3,станки:["etherbench"],n:"Собрать эфирную линзу",значок:"",
   берёт:{"шлифованная грань":1,"эфир":2},даёт:{"эфирная линза":1},время:1.2,оп:8,
-  звук:"es_plasma",след:"oc_glass_hit",
+  звук:"arc_charge",след:"oc_glass_hit",
   о:"Грань держат в эфире, пока он не войдёт в неё весь. Линза потом гудит на одной ноте."},
  {id:"pr_focus",цепь:"ether",маст:"arte",ур:4,станки:["astralbench"],n:"Свести астральный фокус",значок:"",
   берёт:{"эфирная линза":1,"осколок времени":1},даёт:{"астральный фокус":1},время:1.4,оп:10,
-  звук:"oc_warp",след:"magic_shimmer",
+  звук:"arc_rise",след:"magic_shimmer",
   о:"Линзу и осколок сводят в круге: свет проходит насквозь и возвращается позже, чем ушёл."},
  {id:"pr_amulet",цепь:"ether",маст:"arte",ур:5,станки:["astralbench"],n:"Замкнуть амулет",значок:"",
   берёт:{"астральный фокус":1,"артефактная оправа":1},вещь:{тип:"Амулет"},время:1.6,оп:16,
@@ -33010,7 +33047,7 @@ const PROD_STEPS=[
   о:"Фокус садится в оправу, и круг замыкают. Выходит вещь высокого ранга — и своя, а не найденная."},
  {id:"pr_blank",цепь:"rune",маст:"runes",ур:2,станки:["runebench"],n:"Выправить рунную заготовку",значок:"",
   берёт:{"тёсаный блок":1,"рунный камень":1},даёт:{"рунная заготовка":1},время:0.8,оп:5,
-  звук:"craft_stone",след:"oc_electrical",
+  звук:"craft_stone",след:"arc_shine",
   о:"Плашку выводят под линейку: кривая заготовка искажает знак, а знак искажает вещь."},
  {id:"pr_mount",цепь:"arte",маст:"arte",ур:3,станки:["artebench"],n:"Собрать оправу",значок:"",
   берёт:{"кованая полоса":1,"шлифованная грань":1,"рунная заготовка":1},даёт:{"артефактная оправа":1},
@@ -35308,7 +35345,7 @@ const TREE_LEAVES=[
  {id:"artef",n:"артефакторика",гр:"hand",о:"ступень артефактора и сделанные работы",звук:"arte_object",
   счёт:()=>treeMast("arte"),шаги:[8,20,36,58,86],k:[0.02,0.04,0.06,0.09,0.13],связь:["artan"],
   дар:["у круга срывается реже на две сотых","на четыре","на шесть","на девять","на тринадцать сотых"]},
- {id:"runework",n:"руны",гр:"hand",о:"ступень рунного дела и сделанные работы",звук:"oc_crystal_comm",
+ {id:"runework",n:"руны",гр:"hand",о:"ступень рунного дела и сделанные работы",звук:"oc_electrical",
   счёт:()=>treeMast("runes"),шаги:[8,20,36,58,86],k:[0.02,0.04,0.06,0.09,0.13],связь:["read"],
   дар:["знак срывается реже на две сотых","на четыре","на шесть","на девять","на тринадцать сотых"]},
  {id:"ench",n:"зачарование",гр:"hand",о:"руны и артефакторика вместе",звук:"spell_initiate",
@@ -42517,7 +42554,7 @@ const DOOR_SOUND={
  creaky:{n:"старая скрипучая дверь",open:["oc_hinge","oc_wood_creak"],close:["oc_wood_creak","oc_wood_dull"],lock:["oc_lock","oc_wood_creak"],unlock:["oc_door_unlock","oc_wood_creak"],
          locked:["oc_wood_creak","oc_wood_dull"],pick:["oc_lock","oc_wood_creak"],break:["stk_break","oc_tree_crack"]},
  magic: {n:"магическая дверь",open:["stk_portal","cast_teleport"],close:["oc_warp","stk_portal"],lock:["cast_shield","stk_ward"],unlock:["magic_shimmer","oc_electrical"],
-         locked:["stk_ward","oc_zap"],pick:["oc_electrical","oc_crystal_comm"],break:["oc_blast","es_magic"]}};
+         locked:["stk_ward","oc_zap"],pick:["oc_electrical","arc_breath"],break:["oc_blast","crystal_shatter"]}};
 /* Род двери по месту: за Гранью и в оплотах — железо и решётки, в храме —
    тяжёлая, в башне — магическая, в руинах — скрипучая, в глубине — тяжёлая,
    а ещё глубже — решётка. Ворота — свой род. */
@@ -56254,7 +56291,7 @@ const SPELL_FORMS=[
   ядро:{урон:"strike",исцеление:"heal",скрытность:"astral",контроль:"mana"}},
  /* Семь форм сверх прежних пяти. */
  {id:"beam",n:"луч",имя:"Луч",род:"луча",дальность:10,радиус:0,подготовка:0.5,откат:2,база:11,сем:["урон","защита","контроль"],
-  урон:1.2,целей:1,держится:0,звук:"es_beam",о:"бьёт по прямой и достаёт дальше всех",
+  урон:1.2,целей:1,держится:0,звук:"arc_cast",о:"бьёт по прямой и достаёт дальше всех",
   ядро:{урон:"drain",защита:"ward",контроль:"bind"}},
  {id:"cloud",n:"облако",имя:"Облако",род:"облака",дальность:3,радиус:2,подготовка:0.7,откат:3,база:12,сем:["урон","скрытность","контроль"],
   урон:0.5,целей:3,держится:2,звук:"mtg_smoke",о:"висит над местом и разъедает всех, кто в нём",
@@ -57447,7 +57484,7 @@ const ENC_WAYS=[
  {id:"seal",  n:"печать", цель:"местность",           риск:"пространственный сдвиг", звук:"oc_res_rune"},
  {id:"brew",  n:"состав", цель:"предмет",              риск:"искажение формы",        звук:"oc_boiling"},
  {id:"rite",  n:"ритуал", цель:"конструкция",          риск:"остаточная аура",        звук:"temple"},
- {id:"pulse", n:"импульс",цель:"броня",                риск:"истощение источника",    звук:"cast_shock"},
+ {id:"pulse", n:"импульс",цель:"броня",                риск:"истощение источника",    звук:"arc_hit"},
  {id:"module",n:"модуль", цель:"группа",               риск:"отдача по заклинателю",  звук:"oc_connect"},
  {id:"loop",  n:"контур", цель:"магический источник",  риск:"потеря контроля",        звук:"oc_electrical"},
  {id:"chan",  n:"канал",  цель:"оружие",               риск:"временный резонанс",     звук:"magic_hum"},
@@ -58618,56 +58655,62 @@ function itogTish(){
    бьют базовые заклинания. Всё — записями; ни одного инструмента.
    ════════════════════════════════════════════════════════════════════════ */
 const SCHOOL_AUDIO={
- generic:{prep:"oc_cracker",charge:"magic_hum",cast:"spell_arcane",travel:"magic_woosh",impact:"cast_shoot",result:"oc_electrical",fade:"oc_drone_die"},
- fire:{prep:"oc_inflame",charge:"oc_fire",cast:"cast_fire",travel:"spell_fire",impact:"oc_fireball",result:"oc_blast",fade:"ad_fire_sizzle"},
- water:{prep:"oc_bubble",charge:"amb_water",cast:"spell_cast",travel:"oc_swim",impact:"oc_splash",result:"stk_splash",fade:"oc_pshsh"},
- earth:{prep:"deep_stone",charge:"oc_quake",cast:"cast_quake",travel:"oc_rock_hit",impact:"deep_rocks",result:"mtg_rubble",fade:"oc_earthquake"},
- air:{prep:"oc_gust",charge:"lug_wind",cast:"spell_cast",travel:"lug_whoosh",impact:"oc_gust",result:"sky_gust",fade:"oc_wind"},
- ice:{prep:"oc_ice_hit",charge:"cast_ice",cast:"spell_ice",travel:"lug_whoosh",impact:"mtg_ice_break",result:"oc_ice_hit",fade:"oc_wind"},
- lightning:{prep:"oc_electrical",charge:"oc_zap",cast:"cast_shock",travel:"oc_zap",impact:"oc_thunder",result:"stk_thunder",fade:"oc_electrical"},
- light:{prep:"magic_shimmer",charge:"cast_heal",cast:"spell_light",travel:"oc_zap",impact:"cast_heal",result:"bell_small",fade:"oc_drone_die"},
- dark:{prep:"oc_sizzle",charge:"stk_dark",cast:"spell_dark",travel:"oc_pshsh",impact:"cast_burn",result:"oc_sizzle",fade:"wraith_moan"},
- chaos:{prep:"oc_cracker",charge:"oc_electrical",cast:"spell_dark",travel:"oc_warp",impact:"oc_blast",result:"stk_blast",fade:"oc_smoke"},
- order:{prep:"oc_connect",charge:"cast_shield",cast:"spell_light",travel:"oc_zap",impact:"cast_block",result:"bell_small",fade:"stk_ward"},
- aether:{prep:"oc_electrical",charge:"oc_crystal_comm",cast:"spell_cast",travel:"oc_warp",impact:"cast_teleport",result:"stk_portal",fade:"oc_electrical"},
- ash:{prep:"ad_fire_sizzle",charge:"oc_smoke",cast:"spell_fire",travel:"oc_pshsh",impact:"cast_burn",result:"oc_smoke",fade:"ad_fire_sizzle"},
+ /* (11.0) Игрок: «Искра звучит как электричество — такого быть не должно».
+    Гул и треск тока, сигналы машин и гул дронов (OpenClonk) ушли из всех
+    школ; их место заняли записи волшебства (sounds/arcana): нарастающий гул
+    чар, выпуск, попадание, сияние, перезвон, дыхание чар, тёмные чары,
+    призрачное пение, раскрытие прохода и разрывы стихий. Ток остался только
+    у молнии — и он теперь удар настоящей молнии и гром. */
+ generic:{prep:"arc_breath",charge:"arc_charge",cast:"spell_arcane",travel:"magic_woosh",impact:"arc_hit",result:"arc_shine",fade:"magic_shimmer"},
+ fire:{prep:"oc_inflame",charge:"oc_fire",cast:"flame_cast",travel:"fire_spell_fly",impact:"fire_spell_hit",result:"cast_burn",fade:"ad_fire_sizzle"},
+ water:{prep:"oc_bubble",charge:"amb_water",cast:"spell_cast",travel:"oc_swim",impact:"water_spell_hit",result:"stk_splash",fade:"oc_pshsh"},
+ earth:{prep:"deep_stone",charge:"oc_quake",cast:"cast_quake",travel:"oc_rock_hit",impact:"earth_spell_hit",result:"mtg_rubble",fade:"oc_earthquake"},
+ air:{prep:"oc_gust",charge:"arc_breath",cast:"spell_cast",travel:"lug_whoosh",impact:"gale_hit",result:"sky_gust",fade:"oc_wind"},
+ ice:{prep:"frost_charge",charge:"cast_ice",cast:"frost_cast",travel:"lug_whoosh",impact:"frost_hit",result:"mtg_ice_break",fade:"oc_wind"},
+ lightning:{prep:"gale_hit",charge:"arc_rise",cast:"cast_shock",travel:"bolt_hit",impact:"bolt_hit",result:"oc_thunder",fade:"stk_thunder"},
+ light:{prep:"magic_shimmer",charge:"arc_charge",cast:"spell_light",travel:"arc_cast",impact:"heal_bloom",result:"arc_shine",fade:"bell_small"},
+ dark:{prep:"stk_dark",charge:"chant_ether",cast:"spell_dark",travel:"magic_woosh",impact:"dark_spell",result:"deep_wind",fade:"wraith_moan"},
+ chaos:{prep:"dark_spell",charge:"arc_rise",cast:"arc_cast",travel:"portal_open",impact:"oc_blast",result:"stk_blast",fade:"oc_smoke"},
+ order:{prep:"bell_small",charge:"cast_shield",cast:"spell_light",travel:"arc_cast",impact:"cast_block",result:"arc_shine",fade:"stk_ward"},
+ aether:{prep:"arc_chimes",charge:"arc_charge",cast:"arc_cast",travel:"magic_woosh",impact:"arc_hit",result:"arc_shine",fade:"magic_shimmer"},
+ ash:{prep:"ad_fire_sizzle",charge:"ash_crackle",cast:"flame_cast",travel:"oc_pshsh",impact:"fire_spell_hit",result:"oc_smoke",fade:"ash_crackle"},
  sound:{prep:"oc_thunder",charge:"cast_warcry",cast:"cast_thunder",travel:"lug_whoosh",impact:"oc_thunder",result:"stk_horn",fade:"oc_wind"},
- crystal:{prep:"oc_glass_hit",charge:"oc_crystal_comm",cast:"spell_ice",travel:"oc_zap",impact:"oc_glass_break",result:"mtg_glass",fade:"oc_crystal_comm"},
- plants:{prep:"lug_bush",charge:"oc_rustle",cast:"spell_cast",travel:"oc_rustle",impact:"harvest",result:"lug_bush",fade:"oc_rustle"},
- blood:{prep:"oc_organic_hit",charge:"lug_flesh",cast:"spell_dark",travel:"oc_pshsh",impact:"lug_splatter",result:"oc_organic_hit",fade:"wraith_moan"},
- spirit:{prep:"ad_temple",charge:"od_heal",cast:"spell_light",travel:"oc_warp",impact:"cast_heal",result:"ad_temple",fade:"deep_wind"},
- mind:{prep:"oc_electrical",charge:"oc_connect",cast:"spell_cast",travel:"oc_zap",impact:"cast_timestop",result:"oc_electrical",fade:"oc_drone_die"},
- gravity:{prep:"oc_quake",charge:"deep_stone",cast:"cast_quake",travel:"lug_thud",impact:"oc_earthquake",result:"deep_rocks",fade:"oc_quake"},
- time:{prep:"stk_clock",charge:"stk_clock",cast:"cast_timestop",travel:"oc_warp",impact:"cast_timestop",result:"stk_clock",fade:"oc_drone_die"},
- space:{prep:"oc_warp",charge:"oc_electrical",cast:"cast_teleport",travel:"oc_warp",impact:"stk_portal",result:"deep_portal",fade:"oc_warp"},
- barrier:{prep:"cast_shield",charge:"oc_shield_block",cast:"spell_light",travel:"oc_zap",impact:"cast_block",result:"stk_ward",fade:"stk_ward"},
- summon:{prep:"es_abyss",charge:"spell_summon",cast:"spell_summon",travel:"oc_warp",impact:"spell_genie",result:"oc_connect",fade:"es_abyss"},
- illusion:{prep:"oc_rustle",charge:"magic_shimmer",cast:"spell_cast",travel:"oc_rustle",impact:"oc_warp",result:"oc_pop",fade:"oc_rustle"},
- runes:{prep:"craft_stone",charge:"mtg_flint",cast:"spell_cast",travel:"oc_zap",impact:"oc_rock_hit",result:"stk_ward",fade:"oc_electrical"},
- artefact:{prep:"artifact_hum",charge:"oc_crystal_comm",cast:"spell_cast",travel:"oc_electrical",impact:"oc_diamond",result:"artifact_hum",fade:"oc_crystal_comm"},
- mystic:{prep:"bell_small",charge:"ad_temple",cast:"spell_light",travel:"oc_warp",impact:"cast_heal",result:"bell_small",fade:"deep_wind"},
- demon:{prep:"es_abyss",charge:"stk_dark",cast:"spell_summon",travel:"oc_pshsh",impact:"fiend_roar",result:"od_undead",fade:"wraith_moan"},
- alch:{prep:"oc_bubble",charge:"oc_boiling",cast:"cast_potion",travel:"oc_pshsh",impact:"oc_corrode",result:"mtg_explode",fade:"oc_smoke"},
- necro:{prep:"wraith_moan",charge:"stk_dark",cast:"spell_dark",travel:"oc_pshsh",impact:"od_undead",result:"oc_corrode",fade:"deep_wind"},
- enchant:{prep:"bell_small",charge:"magic_hum",cast:"spell_cast",travel:"magic_woosh",impact:"oc_diamond",result:"artifact_hum",fade:"oc_drone_die"},
- forgemagic:{prep:"oc_inflame",charge:"oc_fire",cast:"spell_cast",travel:"magic_woosh",impact:"oc_shield_metal",result:"oc_blast",fade:"ad_fire_sizzle"},
- homunc:{prep:"oc_bubble",charge:"oc_boiling",cast:"spell_summon",travel:"oc_swim",impact:"oc_splash",result:"wraith_moan",fade:"oc_smoke"},
- memory:{prep:"uh_bell",charge:"magic_hum",cast:"spell_light",travel:"oc_warp",impact:"bell_small",result:"uh_bell",fade:"oc_drone_die"},
- dream:{prep:"ad_temple",charge:"amb_wind",cast:"spell_light",travel:"oc_warp",impact:"cast_heal",result:"ad_temple",fade:"deep_wind"},
- rift:{prep:"stk_portal",charge:"oc_electrical",cast:"spell_dark",travel:"oc_warp",impact:"mtg_explode",result:"stk_portal",fade:"oc_pshsh"},
+ crystal:{prep:"oc_glass_hit",charge:"arc_chimes",cast:"frost_cast",travel:"magic_woosh",impact:"crystal_shatter",result:"mtg_glass",fade:"magic_shimmer"},
+ plants:{prep:"lug_bush",charge:"oc_rustle",cast:"spell_cast",travel:"oc_rustle",impact:"plant_spell_hit",result:"lug_bush",fade:"oc_rustle"},
+ blood:{prep:"oc_organic_hit",charge:"lug_flesh",cast:"spell_dark",travel:"oc_pshsh",impact:"ooze_splat",result:"lug_splatter",fade:"wraith_moan"},
+ spirit:{prep:"ad_temple",charge:"chant_ether",cast:"spell_light",travel:"arc_breath",impact:"heal_bloom",result:"arc_shine",fade:"deep_wind"},
+ mind:{prep:"arc_breath",charge:"arc_charge",cast:"arc_cast",travel:"magic_woosh",impact:"cast_timestop",result:"arc_shine",fade:"magic_shimmer"},
+ gravity:{prep:"oc_quake",charge:"deep_stone",cast:"cast_quake",travel:"lug_thud",impact:"earth_spell_hit",result:"deep_rocks",fade:"oc_quake"},
+ time:{prep:"stk_clock",charge:"arc_rise",cast:"cast_timestop",travel:"arc_breath",impact:"cast_timestop",result:"stk_clock",fade:"magic_shimmer"},
+ space:{prep:"arc_breath",charge:"arc_rise",cast:"cast_teleport",travel:"gale_hit",impact:"portal_open",result:"deep_portal",fade:"deep_wind"},
+ barrier:{prep:"cast_shield",charge:"oc_shield_block",cast:"spell_light",travel:"arc_cast",impact:"cast_block",result:"arc_shine",fade:"stk_ward"},
+ summon:{prep:"chant_ether",charge:"arc_rise",cast:"spell_summon",travel:"arc_breath",impact:"portal_open",result:"spell_genie",fade:"deep_wind"},
+ illusion:{prep:"arc_breath",charge:"magic_shimmer",cast:"arc_cast",travel:"oc_rustle",impact:"arc_hit",result:"arc_shine",fade:"oc_rustle"},
+ runes:{prep:"craft_stone",charge:"arc_charge",cast:"spell_cast",travel:"magic_woosh",impact:"earth_spell_hit",result:"arc_shine",fade:"stk_ward"},
+ artefact:{prep:"artifact_hum",charge:"arc_charge",cast:"spell_cast",travel:"magic_woosh",impact:"arc_hit",result:"artifact_hum",fade:"magic_shimmer"},
+ mystic:{prep:"bell_small",charge:"ad_temple",cast:"arc_cast",travel:"arc_breath",impact:"heal_bloom",result:"arc_shine",fade:"bell_small"},
+ demon:{prep:"chant_ether",charge:"stk_dark",cast:"spell_summon",travel:"magic_woosh",impact:"fiend_roar",result:"dark_spell",fade:"wraith_moan"},
+ alch:{prep:"oc_bubble",charge:"oc_boiling",cast:"ooze_cast",travel:"oc_pshsh",impact:"ooze_splat",result:"oc_corrode",fade:"oc_smoke"},
+ necro:{prep:"wraith_moan",charge:"chant_ether",cast:"spell_dark",travel:"magic_woosh",impact:"dark_spell",result:"od_undead",fade:"deep_wind"},
+ enchant:{prep:"bell_small",charge:"arc_charge",cast:"arc_cast",travel:"magic_woosh",impact:"arc_hit",result:"artifact_hum",fade:"magic_shimmer"},
+ forgemagic:{prep:"oc_inflame",charge:"oc_fire",cast:"flame_cast",travel:"magic_woosh",impact:"oc_shield_metal",result:"fire_spell_hit",fade:"ad_fire_sizzle"},
+ homunc:{prep:"oc_bubble",charge:"oc_boiling",cast:"spell_summon",travel:"ooze_cast",impact:"ooze_splat",result:"wraith_moan",fade:"oc_smoke"},
+ memory:{prep:"uh_bell",charge:"arc_charge",cast:"spell_light",travel:"arc_breath",impact:"bell_small",result:"uh_bell",fade:"magic_shimmer"},
+ dream:{prep:"ad_temple",charge:"arc_breath",cast:"spell_light",travel:"magic_woosh",impact:"heal_bloom",result:"arc_shine",fade:"deep_wind"},
+ rift:{prep:"portal_open",charge:"arc_rise",cast:"spell_dark",travel:"gale_hit",impact:"mtg_explode",result:"dark_spell",fade:"deep_wind"},
  /* Четыре новые школы звучат так же полно, как прежние тридцать четыре:
     семь слоёв, все — настоящие записи. */
- power:{prep:"magic_hum",charge:"oc_electrical",cast:"cast_shock",travel:"oc_zap",impact:"oc_thunder",result:"stk_thunder",fade:"oc_electrical"},
- biomancy:{prep:"oc_bubble",charge:"stk_goo",cast:"spell_cast",travel:"oc_swim",impact:"oc_res_blood",result:"cast_heal",fade:"oc_smoke"},
- astro:{prep:"deep_wind",charge:"ad_temple",cast:"spell_light",travel:"oc_warp",impact:"magic_shimmer",result:"uh_bell",fade:"oc_drone_die"},
- engine:{prep:"oc_shield_metal",charge:"magic_hum",cast:"spell_cast",travel:"magic_woosh",impact:"mtg_metal_hit",result:"oc_electrical",fade:"oc_pshsh"}};
+ power:{prep:"arc_charge",charge:"arc_rise",cast:"arc_cast",travel:"cast_shoot",impact:"oc_thunder",result:"stk_thunder",fade:"deep_wind"},
+ biomancy:{prep:"oc_bubble",charge:"stk_goo",cast:"spell_cast",travel:"oc_swim",impact:"plant_spell_hit",result:"heal_bloom",fade:"oc_smoke"},
+ astro:{prep:"deep_wind",charge:"arc_charge",cast:"spell_light",travel:"arc_breath",impact:"magic_shimmer",result:"arc_shine",fade:"uh_bell"},
+ engine:{prep:"oc_shield_metal",charge:"arc_charge",cast:"spell_cast",travel:"magic_woosh",impact:"mtg_metal_hit",result:"artifact_hum",fade:"oc_pshsh"}};
 const SPELL_LAYERS=["prep","charge","cast","travel","impact","result","fade"];
 const SPELL_LAYER_AT={prep:0,charge:260,cast:560,travel:820,impact:1080,result:1340,fade:1750};
 const SPELL_LAYER_GAIN={prep:0.4,charge:0.45,cast:0.7,travel:0.45,impact:0.7,result:0.5,fade:0.35};
 /* Школа базового заклинания — по имени: искра бьёт молнией, игла — льдом. */
 function spellSchoolGuess(sp){
  const n=String((sp&&sp.n)||"");
- if(/Искра/.test(n))return "lightning";
+ if(/Искра/.test(n))return "aether";
  if(/Ледян|Лёд|Стуж/.test(n))return "ice";
  if(/Огн|Пламя|Пепел/.test(n))return "fire";
  if(/Исцел|Свет|Заря/.test(n))return "light";
@@ -58684,9 +58727,9 @@ function spellAudio(sp,opts){
     едва слышная подготовка и затухание общего языка, чтобы твари не
     насторожились. */
  if(sp&&sp.custom&&sp.усиление==="silent"){
-  safeFn(()=>Bank.play("oc_cracker",{kind:"magic",gain:0.18,maxSec:2}));
-  setTimeout(()=>safeFn(()=>Bank.play("oc_drone_die",{kind:"magic",gain:0.16,maxSec:3})),900);
-  G.lastSpell={school:sc,layers:[["prep","oc_cracker"],["fade","oc_drone_die"]],silent:true};
+  safeFn(()=>Bank.play("arc_breath",{kind:"magic",gain:0.18,maxSec:2}));
+  setTimeout(()=>safeFn(()=>Bank.play("magic_shimmer",{kind:"magic",gain:0.16,maxSec:3})),900);
+  G.lastSpell={school:sc,layers:[["prep","arc_breath"],["fade","magic_shimmer"]],silent:true};
   return true;}
  const A=Object.assign({},SCHOOL_AUDIO.generic,SCHOOL_AUDIO[sc]||{});
  const seq=[];
@@ -62134,7 +62177,7 @@ function invBrief(kind,key){
    const где=!место?"":row.equipped?` Надето ${место.где}.${даёт?` ${даёт}.`:""}`
     :` Носится ${место.id==="ring"?"на пальце; колец два — по одному на руку":место.где}.${даёт?` Надетое даст: ${даёт.replace(/^Даёт: /,"")}.`:""}`;
    return `${it.name}. ${слово[0].toUpperCase()+слово.slice(1)}. ${стат}: ${it.val}. Состояние: ${itemCondition(it)}%. ${itemReqText(it)}. Ранг: ${String(RANKS[it.rank]||"обычный").toLowerCase()}, качество ${String(QUAL[it.qual]||"простое").toLowerCase()}.${где}${it.чары?` Зачаровано: ${it.чары}.`:""}${it.руна?" С руной.":""}${it.освящён?" Освящено.":""}${it.яд?" Смазано ядом.":""}${it.клеймо?` Клеймо: ${it.клеймо}.`:""}${it.улучшений?` Улучшений: ${it.улучшений}.`:""}`;}
-  if(kind==="potion"){const pt=POTION_BY_ID[it.id]||{n:it.id,о:""};return `Зелье ${pt.n}: ${pt.о}. Качество ${potionQualityWord(it.q)}, устойчивость ${Math.round(it.стаб*100)} из ста, ${potionExpired(it)?"выдохлось":"годно до "+(it.день+it.срок)+"-го дня"}. Действие — выпить.`;}
+  if(kind==="potion"){const pt=POTION_BY_ID[it.id]||{n:it.id,о:""};if(it.id==="brew")return `${mixCap(potionName(it))} — своя смесь из опыта: ${(it.смесь&&it.смесь.о)||"действие неизвестно"}. Качество ${potionQualityWord(it.q)}, устойчивость ${Math.round(it.стаб*100)} из ста, ${potionExpired(it)?"выдохлось":"годно до "+(it.день+it.срок)+"-го дня"}. Действие — выпить.`;return `Зелье ${pt.n}: ${pt.о}. Качество ${potionQualityWord(it.q)}, устойчивость ${Math.round(it.стаб*100)} из ста, ${potionExpired(it)?"выдохлось":"годно до "+(it.день+it.срок)+"-го дня"}. Действие — выпить.`;}
   if(kind==="art")return ART.describe(it,true)+(it.спит?" Артефакт спит: его свойства не действуют.":"");
   if(kind==="part")return `${row.name}: часть для гнёзд артефактов, ${row.n} шт. ${it.о||""}`;
   if(kind==="charged")return safeFn(()=>chargedLine(it),row.name);
@@ -62654,34 +62697,184 @@ function objActDo(a,row,ctx){
    (10.0) ОПЫТЫ: СМЕШАТЬ ОДНО С ДРУГИМ
    Просьба игрока: «экспериментировать с разными зельями, травами и так
    далее — смешать зелье маны с зельем здоровья, — у чана, у жаровни, у
-   соответствующих мест, а можно и во фляге». Любые два припаса из котомки —
-   зелье, трава, гриб, ягоды, кристалл, сваренный отвар — смешиваются там,
-   где для этого есть место:
+   соответствующих мест, а можно и во фляге». Где смешивают:
      • алхимический чан — полная сила, любая пара;
      • очаг и кухонный очаг — чуть слабее, огонь томит;
      • жаровня — слабее, и жар сам ложится в смесь как ещё одна ниша;
-     • фляга — без огня и котла, только настой: зелья и травы, и нужна вода.
-   Что выйдет, решает природа припасов: у каждого есть ниши (лечебная,
-   ядовитая, жгучая…). Есть особые сочетания — равновесие из здоровья и
-   маны, чистая кровь из лечебного и противоядия; есть «то же самое,
-   только крепче» — два одинаковых зелья; есть обычное зелье, если ниши
-   смеси сходятся с его рецептом; а если не сходится ничего, выходит то, что
-   выходит: мутная бурда, странный настой, пена через край или вспышка.
+     • фляга — без огня и котла, только настой: нужна вода и хоть одно
+       жидкое — зелье, отвар, кровь, сок, мёд.
    Одна и та же пара в одном и том же месте даёт одно и то же — опыт можно
    запомнить и повторить. Открытое пишется в книгу опытов (окно «Зелья»).
+
+   (11.0) Просьба игрока: «описание смешивания у всех одно — светлеет и
+   густеет; на разные зелья и смешивания должны быть разные эффекты; и не
+   все ингредиенты он даёт смешивать — эксперименты должны быть со всеми
+   ингредиентами, ресурсами и так далее». Теперь:
+     • в опыт идёт любой припас котомки: зелье (и своя смесь прошлого
+       опыта), растение, ресурс, руда и металл, трофей твари, дар нежити,
+       руна, дар Дальнего Круга, рыба, еда и отвар, часть для гнёзд;
+     • у припаса своя природа — от одной до трёх ниш из двадцати девяти
+       (MIX_NICHES): восемнадцать ниш растений и одиннадцать ниш вещества —
+       земля, металл, кровь, кость, зверь, дух, эфир, руна, соль, мёд, гроза;
+     • у ниши свой отклик в котле (что делается с водой, когда её кладут
+       первой, и со смесью, когда второй), свой цвет, запах, вкус, звук и
+       действие на того, кто выпьет;
+     • опыт звучит по шагам: место, первый припас, второй, связь ниш, итог;
+       у каждого известного зелья — свой вид, когда оно сошлось;
+     • если ниши не сходятся ни с особым сочетанием, ни с рецептом, выходит
+       своя смесь: имя — из двух главных ниш и места («сумеречное грибное
+       снадобье»), действие — из трёх главных ниш, с поправками связей
+       (MIX_BONDS): жар и холод гасят друг друга, яд при целебном выводится,
+       свет и тьма дают сумерки, металл на жару калится, семя пьёт влагу;
+       катализатор и эфир усиливают, редкий цветок даёт удачу и силу, древнее
+       семя — долгое действие, соль — долгий срок;
+     • неудача — от несовместимого (MIX_CLASH): яд на жару даёт ядовитый
+       чад, разлом на огне вспыхивает, кровь зовёт мёртвое; изредка — от
+       случая, и тем реже, чем выше ступень алхимии. Описана тем, что было
+       в котле: его цветом и запахом.
    ════════════════════════════════════════════════════════════════════════ */
 const MIX_PLACES={
- cauldron:{n:"алхимический чан",в:"в алхимическом чане",q:1,   звук:["oc_bubble","oc_boiling"]},
- hearth:  {n:"очаг",            в:"на очаге",           q:0.9, звук:["oc_boiling","ad_fire_crackle"]},
- cookfire:{n:"кухонный очаг",   в:"на кухонном очаге",  q:0.9, звук:["oc_boiling","ad_fire_crackle"]},
- brazier: {n:"жаровня",         в:"на жаровне",         q:0.8, жар:true,звук:["ad_fire_sizzle","oc_sizzle"]},
- flask:   {n:"фляга",           в:"во фляге",           q:0.7, звук:["potion_cork","oc_splash"]}};
+ cauldron:{n:"алхимический чан",в:"в алхимическом чане",q:1,   сущ:"зелье",   слово:"Чан держит ровный жар.",звук:["oc_bubble","oc_boiling"]},
+ hearth:  {n:"очаг",            в:"на очаге",           q:0.9, сущ:"питьё",   слово:"Очаг томит смесь на углях.",звук:["oc_boiling","ad_fire_crackle"]},
+ cookfire:{n:"кухонный очаг",   в:"на кухонном очаге",  q:0.9, сущ:"варево",  слово:"Кухонный огонь томит смесь не спеша.",звук:["oc_boiling","ad_fire_crackle"]},
+ brazier: {n:"жаровня",         в:"на жаровне",         q:0.8, сущ:"снадобье",слово:"Жар жаровни сам ложится в смесь.",жар:true,звук:["ad_fire_sizzle","oc_sizzle"]},
+ flask:   {n:"фляга",           в:"во фляге",           q:0.7, сущ:"питьё",   слово:"Во фляге, без огня, смесь только настаивается.",звук:["potion_cork","oc_splash"]}};
 const MIX_PLACE_ORDER=["cauldron","hearth","cookfire","brazier","flask"];
-/* Ниши простого припаса и сваренных вещей. Растения берут нишу из каталога. */
-const MIX_RES={"грибы":["fungi"],"ягоды":["heal"],"трава":["heal"],"кристалл":["catalyst"],"пепел":["heat"],"кость":["dark"],"ракушка":["sea"],"древесный уголь":["heat"]};
-const MIX_ITEMS={"Зелье здоровья":["heal","marsh"],"Травяной отвар":["heal","sleep"],"Ягодный взвар":["heal","stim"],"Грибная похлёбка":["fungi"],"Похлёбка на костях":["dark","heal"]};
+/* Двадцать девять ниш. первое — что делается с водой, когда припас кладут
+   первым; второе — что делается со смесью, когда его кладут вторым; цвет
+   и вкус — именительным, запах — творительным («пахнет …»); эф — действие
+   на выпившего: [вид, сила] или ["buff", имя, часов]. */
+const MIX_NICHES={
+ heal:    {прил:"целебное",    первое:"вода зеленеет и пахнет свежим листом",второе:"смесь успокаивается, муть уходит на дно",цвет:"травяная зелень",запах:"свежим листом",вкус:"горьковато и чисто",звук:"oc_bubble",эф:[["hp",1]]},
+ poison:  {прил:"ядовитое",    первое:"по воде расходится маслянистая плёнка, пар горчит",второе:"смесь темнеет, по краю ползёт радужная плёнка",цвет:"болотная чернота с радужным отливом",запах:"горьким миндалём",вкус:"жгуче-горько",звук:"stk_goo",эф:[["harm",1]]},
+ sleep:   {прил:"сонное",      первое:"вода затихает, пар стелется низко и медленно",второе:"бульканье стихает, смесь будто засыпает",цвет:"сизая дымка",запах:"мёдом и сеном",вкус:"мягко и сонно",звук:"oc_bubble",эф:[["rest",1],["buff","тишина шага",3]]},
+ stim:    {прил:"бодрящее",    первое:"вода мелко дрожит, как от озноба",второе:"смесь подпрыгивает мелкими частыми пузырьками",цвет:"рыжая медь",запах:"перцем и корицей",вкус:"остро, до слёз",звук:"oc_boiling",эф:[["water",1],["buff","лёгкость",3]]},
+ catalyst:{прил:"искристое",   первое:"по воде пробегает холодное мерцание",второе:"смесь мерцает и тихо поёт, как тронутая струна",цвет:"переливчатая лазурь",запах:"холодным камнем и мятой",вкус:"покалывает язык",звук:"magic_shimmer",эф:[["mana",1]]},
+ light:   {прил:"светлое",     первое:"вода светлеет изнутри, будто в ней зажгли свечу",второе:"в глубине смеси загорается ровный тёплый свет",цвет:"прозрачное золото",запах:"воском и утренней росой",вкус:"светло и свежо",звук:"magic_shimmer",эф:[["buff","ночное зрение",5]]},
+ dark:    {прил:"тёмное",      первое:"вода чернеет и глотает отблески огня",второе:"смесь темнеет до чернил, свет в ней тонет",цвет:"чернильная тьма",запах:"сырым погребом",вкус:"холодно и глухо",звук:"magic_hum",эф:[["buff","морок",3]]},
+ cold:    {прил:"студёное",    первое:"по краю проступает иней, пар идёт вниз",второе:"смесь холодеет, на стенках выступает изморозь",цвет:"ледяная синева",запах:"снегом",вкус:"студёно, до ломоты в зубах",звук:"mtg_ice_break",эф:[["buff","прохлада",5]]},
+ heat:    {прил:"жгучее",      первое:"вода закипает сама, без огня",второе:"смесь вскипает и пышет жаром",цвет:"раскалённый янтарь",запах:"золой и перцем",вкус:"жгуче, как угли",звук:"ad_fire_sizzle",эф:[["buff","тепло",5]]},
+ rift:    {прил:"двоящееся",   первое:"вода двоится: в ней два цвета, и они не смешиваются",второе:"смесь дрожит и на миг показывает два цвета сразу",цвет:"два несливающихся цвета",запах:"тем, чему нет имени",вкус:"то сладко, то горько",звук:"magic_woosh",эф:[["mutate",1]]},
+ time:    {прил:"переменчивое",первое:"вода то бурлит, то замирает, будто её перематывают",второе:"пузыри всплывают медленно, а лопаются раньше, чем всплыли",цвет:"выцветшая бронза",запах:"старой бумагой",вкус:"пыльно и странно",звук:"magic_woosh",эф:[["buff","скорость",4]]},
+ gravity: {прил:"тяжёлое",     первое:"вода тяжелеет, ложка идёт как сквозь мёд",второе:"смесь оседает и тянет ложку ко дну",цвет:"свинцовая серость",запах:"мокрым камнем",вкус:"тяжело, будто глотаешь камень",звук:"mtg_crumble",эф:[["buff","мощь",3]]},
+ fungi:   {прил:"грибное",     первое:"вода мутнеет, поднимается пряный грибной пар",второе:"по смеси расползается бледная пена, пахнет подвалом",цвет:"молочная бледность",запах:"грибами и прелой листвой",вкус:"землисто",звук:"oc_bubble",эф:[["mana",0.5],["buff","дыхание",3]]},
+ sea:     {прил:"морское",     первое:"вода солонеет, по ней ходит мелкая зыбь",второе:"смесь шумит, как прибой в раковине",цвет:"бутылочная зелень моря",запах:"солью и водорослями",вкус:"солоно, как морская волна",звук:"oc_splash",эф:[["buff","дыхание",4]]},
+ marsh:   {прил:"болотное",    первое:"вода зеленеет ряской и пахнет тиной",второе:"смесь тянет в себя муть, как болото",цвет:"болотная зелень",запах:"тиной",вкус:"травянисто и сыро",звук:"oc_bubble",эф:[["cleanse",1],["water",0.5]]},
+ alpine:  {прил:"горное",      первое:"вода делается прозрачной, как горный ручей",второе:"смесь светлеет, и в ней видно дно",цвет:"хрустальная прозрачность",запах:"горным ветром",вкус:"чисто и холодно",звук:"magic_shimmer",эф:[["buff","чутьё",3]]},
+ rare:    {прил:"звёздное",    первое:"в воде мерцают крошечные звёзды",второе:"смесь мерцает изнутри, как ночное небо",цвет:"ночная синь в звёздах",запах:"цветами, которых нет в этом мире",вкус:"сладко и печально",звук:"magic_shimmer",эф:[["buff","удача",3]]},
+ seed:    {прил:"древнее",     первое:"на дно ложится тёплый янтарный осадок",второе:"смесь теплеет, и в ней будто что-то прорастает",цвет:"тёплый янтарь",запах:"свежей землёй и хлебом",вкус:"сытно, как зерно",звук:"oc_bubble",эф:[["food",0.6]]},
+ earth:   {прил:"земляное",    первое:"вода густеет и делается похожей на глину",второе:"смесь густеет, по дну скрипит песок",цвет:"глиняная бурость",запах:"сырой землёй",вкус:"пресно и землисто",звук:"mtg_crumble",эф:[["buff","стойкость",3]]},
+ metal:   {прил:"железистое",  первое:"по воде расходится металлический блеск, стенки звенят",второе:"смесь звенит о стенки и отливает сталью",цвет:"стальной отлив",запах:"железом",вкус:"с привкусом железа",звук:"mtg_crumble",эф:[["buff","стойкость",5]]},
+ blood:   {прил:"багровое",    первое:"вода краснеет и тяжелеет",второе:"смесь багровеет и пахнет железом",цвет:"густой багрянец",запах:"кровью и железом",вкус:"солоно и тепло",звук:"stk_goo",эф:[["buff","мощь",4],["harm",0.4]]},
+ bone:    {прил:"костяное",    первое:"вода белеет, как разведённый мел",второе:"смесь белеет, по дну постукивает костяная крошка",цвет:"костяная белизна",запах:"мелом и старым склепом",вкус:"известково",звук:"mtg_crumble",эф:[["buff","оберег",3]]},
+ beast:   {прил:"звериное",    первое:"по воде расходятся жирные кольца, пахнет зверем",второе:"смесь мутнеет жиром и пахнет логовом",цвет:"мутная желтизна жира",запах:"зверем и дымом",вкус:"жирно и сытно",звук:"oc_bubble",эф:[["food",1],["buff","тепло",3]]},
+ spirit:  {прил:"призрачное",  первое:"вода холодеет, над ней поднимается бледная дымка",второе:"над смесью встаёт бледный дымок, и в нём будто шепчут",цвет:"бледное серебро",запах:"холодом склепа",вкус:"пусто и холодно, как вздох",звук:"magic_hum",эф:[["buff","астрал",3],["buff","чутьё",2]]},
+ ether:   {прил:"эфирное",     первое:"вода почти теряет вес, над ней дрожит воздух",второе:"смесь светлеет и словно приподнимается над дном",цвет:"дрожащая прозрачность",запах:"пустотой — ничем",вкус:"легко, как воздух",звук:"magic_shimmer",эф:[["mana",1.4]]},
+ rune:    {прил:"рунное",      первое:"по поверхности проступают и гаснут знаки",второе:"по смеси бегут тонкие светлые знаки и складываются в круг",цвет:"тёмное серебро в светлых знаках",запах:"старым пергаментом и камнем",вкус:"сухо, как пыль библиотеки",звук:"magic_hum",эф:[["buff","оберег",4],["buff","твёрдая рука",3]]},
+ salt:    {прил:"солёное",     первое:"вода белеет, по краю выступает соляная корка",второе:"смесь светлеет: соль забирает муть",цвет:"белёсая прозрачность",запах:"солью",вкус:"солоно и чисто",звук:"mtg_crumble",эф:[["cleanse",0.6],["rest",0.6]]},
+ sweet:   {прил:"медовое",     первое:"вода густеет сиропом и сладко пахнет",второе:"смесь тянется медовой нитью",цвет:"медовый янтарь",запах:"мёдом и ягодой",вкус:"сладко",звук:"oc_bubble",эф:[["hp",0.5],["food",0.6],["water",0.5]]},
+ storm:   {прил:"грозовое",    первое:"вода вздрагивает, по ней бежит ветреная рябь",второе:"смесь закручивается воронкой, будто внутри гуляет ветер",цвет:"грозовая синь",запах:"дождём и ветром",вкус:"свежо и резко, как ветер",звук:"magic_woosh",эф:[["buff","скорость",3],["buff","лёгкость",2]]}};
+/* Связи ниш: что две ниши делают друг с другом в одной смеси. с — одна
+   из ниш-спутниц (любая); убрать — ниши, которые связь гасит. */
+const MIX_BONDS=[
+ {ид:"пар",есть:["heat","cold"],прил:"ровное",убрать:["heat","cold"],о:"Жар и холод сходятся: смесь шипит, валит пар — и всё успокаивается",эф:[["buff","тепло",4],["buff","прохлада",4]]},
+ {ид:"узда",есть:["poison"],с:["heal","marsh","salt","sweet"],прил:"укрощённое",убрать:["poison"],
+  о:{heal:"Горечь яда гаснет: целебное берёт его в узду",marsh:"Болотная трава вбирает яд, как топь вбирает камень",salt:"Соль вытягивает яд, и плёнка по краю белеет",sweet:"Мёд обволакивает яд, и горечь уходит"},эф:[["cleanse",1]]},
+ {ид:"сумерки",есть:["light","dark"],прил:"сумеречное",убрать:[],о:"Свет и тьма не спорят, а ложатся слоями, как сумерки",эф:[["buff","ночное зрение",3]]},
+ {ид:"покой",есть:["sleep","stim"],прил:"ровное",убрать:["sleep","stim"],о:"Сон и бодрость гасят друг друга: смесь стоит ровно, без ряби",эф:[["rest",1],["water",0.6]]},
+ {ид:"петля",есть:["rift","time"],прил:"петляющее",убрать:[],о:"Время спотыкается о разлом: пузыри лопаются раньше, чем всплывают",эф:[["buff","скорость",2]]},
+ {ид:"упокоение",есть:["spirit"],с:["light","salt","rune"],прил:"упокоенное",убрать:[],о:"Мёртвое смиряется: дымка над смесью ложится и тает",эф:[["buff","оберег",3]]},
+ {ид:"шторм",есть:["storm"],с:["sea","marsh"],прил:"штормовое",убрать:[],о:"Ветер гонит по смеси волну: она ходит кругами, как море в бурю",эф:[["buff","дыхание",3]]},
+ {ид:"закал",есть:["metal"],с:["heat"],прил:"калёное",убрать:[],о:"Металл в жару отдаёт смеси свою твёрдость: она тяжелеет и звенит",эф:[["buff","мощь",3]]},
+ {ид:"рост",есть:["seed"],с:["heal","marsh","sea","sweet"],прил:"живое",убрать:[],о:"Семя пьёт влагу и будто прорастает: смесь теплеет и пахнет весной",эф:[["hp",0.6]]},
+ {ид:"обряд",есть:["blood"],с:["rune","dark"],прил:"обрядовое",убрать:[],о:"Кровь ложится в знак: смесь темнеет и дышит тяжело и ровно",эф:[["buff","мощь",2],["buff","оберег",2]]}];
+/* Несовместимое: смесь не выходит вовсе. без — ниши, которые спасают. */
+const MIX_CLASH=[
+ {есть:["poison","heat"],без:["heal","marsh","salt","sweet"],род:"чад"},
+ {есть:["rift","heat"],род:"вспышка"},
+ {есть:["blood","spirit"],без:["light","salt","rune"],род:"зов"}];
+/* Слова действий: для описания смеси и для того, что сказать, когда выпито. */
+const MIX_BUFF_WORD={"тепло":"стужа не вредит","прохлада":"жар не вредит","ночное зрение":"ночью видно","морок":"встреч меньше","лёгкость":"шаг легче",
+ "мощь":"удар сильнее","стойкость":"защита выше","чутьё":"слух шире","дыхание":"под водой дольше","оберег":"проклятия и духи бьют вполсилы",
+ "астрал":"тени обходят стороной","удача":"удача на вашей стороне","скорость":"в пути быстрее","твёрдая рука":"у станка рука вернее","тишина шага":"шаг беззвучен"};
+const MIX_EFFECT_WORD={hp:"лечит",harm:"ранит",mana:"возвращает ману",rest:"снимает усталость",food:"насыщает",water:"утоляет жажду",cleanse:"выводит яд",mutate:"меняет тело"};
+/* Природа припасов. Зелья опытов — две ниши, как у сваренных. */
+const MIX_OPYT={balance:["heal","catalyst"],clearblood:["heal","marsh"],warbrew:["catalyst","gravity"],courier:["stim","time"],owl:["light","dark"],
+ faceless:["dark","poison"],evenwarm:["heat","cold"],murk:["marsh","fungi"],oddbrew:["rift","storm"]};
+/* Ресурсы, трофеи, дары нежити, руны, дары Дальнего Круга, рыба — каждому
+   своя природа: «имя:ниша,ниша;…». Чего нет в строке, то решают корни
+   имени (MIX_ROOTS), род ресурса (MIX_KIND_NICHES) и, наконец, земля. */
+const MIX_NATURE={};
+("грибы:fungi;ягоды:heal,sweet;трава:heal;кристалл:catalyst;пепел:heat,salt;кость:bone;ракушка:sea;древесный уголь:heat,earth;"+
+ "дерево:earth,seed;гнилое дерево:fungi,earth;камень:earth;жильный камень:earth,metal;слиток:metal;холодное железо:metal,cold;первый металл:metal,rare;"+
+ "руда:earth,metal;живая руда:metal,rift;самоцвет:catalyst,rare;эхокристалл:catalyst,time;зеркальный осколок:light,rift;пустотное стекло:rift,dark;"+
+ "споровый шёлк:fungi,sleep;яд:poison;орган:blood,beast;шкура:beast;эссенция:ether,catalyst;эфир:ether;чёрная соль:salt,dark;кровь:blood;"+
+ "осколок времени:time;тяжёлый минерал:gravity,earth;рунный камень:rune,earth;сердечник:catalyst,metal;разломный песок:rift,earth;глубинный янтарь:time,seed;"+
+ "могильный прах:spirit,earth;трупный воск:spirit,beast;саван:spirit,sleep;костная мука:bone;эктоплазма:spirit,ether;трупный яд:poison,spirit;"+
+ "вампирья кровь:blood,dark;клык вампира:bone,blood;перстень крови:blood,metal;бальзам гробниц:heal,spirit;погребальное золото:metal,spirit;"+
+ "курганное серебро:metal,light;чёрная свеча:dark,heat;кристалл некроманта:catalyst,spirit;фрагмент филактерии:spirit,rift,rare;чёрная сталь:metal,dark;"+
+ "руна смерти:rune,spirit;кость колосса:bone,gravity;огонёк в склянке:spirit,light;слеза призрака:spirit,cold;осколок души:spirit,rare;"+
+ "звериный жир:beast;целый клык:bone,beast;сердце вожака:beast,blood,rare;хитин:bone,earth;ядовитая железа:poison,beast;жемчужный глаз:sea,light;"+
+ "перо:storm;маховое перо:storm,stim;жила исполина:gravity,beast;кость исполина:bone,gravity;сердце горы:earth,gravity,rare;драконья чешуя:heat,metal;"+
+ "драконья кровь:blood,heat,rare;сердце дракона:heat,blood,rare;сера:heat,poison;рог беса:dark,heat;сердце пламени:heat,catalyst,rare;ихор:blood,ether;"+
+ "жемчуг глубин:sea,rare;простая руна:rune;руна стихий:rune,catalyst;руна силы:rune,gravity;древняя руна:rune,time;руна Предтеч:rune,rare,time;"+
+ "чужая соль:salt,rift;переходный сплав:metal,rift;семя иного:seed,rift;дроблёная руда:earth,metal;отборная руда:metal,earth;рудный концентрат:metal;"+
+ "кованая полоса:metal;закалённый клинок:metal,cold;колотый камень:earth;тёсаный блок:earth;шлифованная грань:catalyst,earth;кряж:earth,seed;доска:earth,seed;"+
+ "клеёный брус:earth,beast;мездрёная шкура:beast;выделанная кожа:beast,salt;кожаный крой:beast;трёпаное волокно:seed;пряжа:seed,sleep;полотно:seed;"+
+ "вываренная кость:bone,salt;костяная пластина:bone;травяная вытяжка:heal,catalyst;алхимический концентрат:catalyst,rare;эфирная линза:ether,light;"+
+ "астральный фокус:ether,catalyst;рунная заготовка:rune,earth;артефактная оправа:metal,rune;салака:sea,beast;треска:sea,beast;скумбрия:sea,beast;"+
+ "угорь:sea,marsh;тунец:sea,beast;кальмар:sea,dark;скат:sea,poison;жемчужница:sea,rare;морской окунь:sea,beast;сок Ясеня:heal,seed;рунная кора:rune,seed;"+
+ "инейное железо:metal,cold;вода Колодца Памяти:time,alpine;ноготь мертвеца:spirit,bone;нефритовая крошка:heal,earth;персик Долгого Века:sweet,time;"+
+ "пятицветный камень:catalyst,rare;погребальная бумага:spirit,rune;жемчужина половодья:sea,rare;синий воск:light,sleep;масло синего фонаря:light,heat;"+
+ "тушь из темноты:dark,rune;ткань оберегов:rune,seed;очищающая соль:salt,light;серебро:metal,light;золотая крупица:metal,rare;мифрил:metal,ether;"+
+ "адамант:metal,gravity;кварц:catalyst,alpine;мрамор:earth,light;обсидиан:earth,heat,dark;водный кристалл:sea,catalyst;огненный кристалл:heat,catalyst;"+
+ "ледяной кристалл:cold,catalyst;воздушный кристалл:storm,catalyst;теневой кристалл:dark,catalyst;астральный кристалл:ether,catalyst;целебник:heal;"+
+ "вороний корень:dark,poison;звёздоцвет:rare,light;светляки:light,beast;поганка:poison,fungi;морозная ягода:cold,sweet;смола:heat,seed;"+
+ "железное дерево:earth,metal;древняя кость:bone,time;драконья кость:bone,heat,rare;перламутр:sea,light;жемчуг:sea,light;сердце пепла:heat,salt,rare;"+
+ "слеза сновидицы:sleep,rare;компас кормчего:storm,metal;хребтовый камень:earth,gravity;нота хора:light,spirit;сердечная шестерня:metal,time;"+
+ "белая соль:salt;мшаный войлок:beast,marsh;ясное стекло:light,alpine;янтарь с голосом:time,spirit;грозовое перо:storm;свет в склянке:light;"+
+ "турья шерсть:beast,heat;восьмирукий шёлк:poison,sleep;летописный лист:rune,time;песчаное стекло:earth,heat;клочок Завесы:rift,ether;холмовой мёд:sweet,heal;"+
+ "камертонная бронза:metal,alpine;корень-лекарь:heal,earth;ночная тушь:dark,rune;вечный уголь:heat,time;моржовый клык:bone,cold;серая амбра:sea,rare;"+
+ "рифовый жемчуг:sea,light;стрекальный шёлк:poison,sea;штормовое стекло:storm,sea;раковина памяти:sea,time;звёздная таблица:rune,light;резная маска:spirit,rune;"+
+ "тихая медь:metal,sleep;тёмное стекло:dark,earth;полынная сеть:poison,alpine;нить шва:rift,rune;жемчуг предвестия:sea,time;иней первой зимы:cold,rare;"+
+ "корневой сок:heal,seed;ясеневый сок:heal,seed;храмовый лёд:cold,light;шкура спутника:beast,cold;нефритовая грамота:rune,heal;речной жемчуг:sea,marsh;"+
+ "бумага для мёртвых:spirit,rune;синяя свеча:light,spirit;рисовый колобок с перекрёстка:sweet,spirit;черпак без дна:rift,sea;сонное стекло:sleep,earth;"+
+ "склянка немоты:dark,sleep;сигнальный фонарь:light,heat;пепел Чёрного Солнца:heat,dark,rare;крошка камня возврата:time,earth;жетон Рубежа:metal,rune;"+
+ "кривое серебро:metal,rift;струна песнопевца:light,alpine;грозовое стекло:storm,catalyst;лёд Приюта:cold,heal;нефритовый лист:heal,alpine;"+
+ "лотосовое семя:seed,light;ноа в склянке:ether,sea;флакон противоядия:marsh,heal;гранёный камень:catalyst,earth;зерно хаоса:rift,rare")
+ .split(";").forEach(s=>{const i=s.lastIndexOf(":");if(i>0)MIX_NATURE[s.slice(0,i).trim()]=s.slice(i+1).split(",").map(x=>x.trim()).filter(Boolean);});
+/* Корни имени для того, чего нет в строке: дары новых земель, новые трофеи. */
+const MIX_ROOTS=[
+ [/кров|ихор/i,"blood"],[/яд(?![а-я])|отрав|поганк/i,"poison"],[/прах|саван|призрак|душ[аи]|эктоплазм|мертв|мёртв|могил|погребальн|филактер/i,"spirit"],
+ [/кост|клык|рог(?![а-я])|хитин|ногот|череп|зуб/i,"bone"],[/сол[ьяи]|солян/i,"salt"],[/мёд|медов|ягод|персик|колобок|сладк|сот[аы]/i,"sweet"],
+ [/пепел|пепл|угол|уголь|сер[аы](?![а-я])|пламен|огнен|жар|горн/i,"heat"],[/лёд|льд|иней|морозн|стуж|снеж|холодн/i,"cold"],
+ [/свет|солнц|звёзд|звезд|зар[яи]|огонёк|свеч/i,"light"],[/тьм|тен[иье]|тём|ночн|чёрн|мрак/i,"dark"],[/времен|час|памят|летопис|древн/i,"time"],
+ [/разлом|хаос|ино[гй]|завес|шва|кривое/i,"rift"],[/эфир|астрал|эссенц|линз/i,"ether"],[/рун|знак|печат|грамот|бумаг|тушь/i,"rune"],
+ [/жемчуг|раковин|ракушк|морск|рыб|риф|прилив|половод/i,"sea"],[/болот|тин[аы]|мох|мшан/i,"marsh"],[/гриб|спор/i,"fungi"],
+ [/гроз|штор|ветр|пер[оь]|воздуш/i,"storm"],[/желез|стал[ьи]|медь|бронз|серебр|золот|сплав|металл|мифрил|адамант|слит/i,"metal"],
+ [/камен|камн|мрамор|глин|песо?к|руд[аы]/i,"earth"],[/шкур|кож[аи]|жир|шерст|мяс|войлок/i,"beast"],
+ [/сем[яе]|зерн|кор[аеня]|сок(?![а-я])|древес|дерев|волокн|пряж|полотн/i,"seed"],[/кристалл|самоцвет|кварц|гран[ьё]/i,"catalyst"],
+ [/трав|лист|лекар|целеб|бальзам/i,"heal"],[/сонн|тих|немот/i,"sleep"],[/тяж|исполин|хребт/i,"gravity"]];
+const MIX_KIND_NICHES={wood:["earth","seed"],stone:["earth"],metal:["metal"],ore:["earth","metal"],crystal:["catalyst"],herb:["heal"],fungus:["fungi"],
+ poison:["poison"],organ:["blood","beast"],hide:["beast"],bone:["bone"],essence:["ether","catalyst"],ether:["ether"],ash:["heat","salt"],blood:["blood"],
+ time:["time"],grav:["gravity"],rune:["rune"],dkgift:["rare"],artpart:["catalyst","metal"],grave:["spirit"],trophy:["beast"]};
+/* Вещи котомки, что годятся в котёл: еда, отвары, находки из вещества.
+   Ключи, инструменты, реликвии Домов и прочее, что не варят, — нет. */
+const MIX_ITEMS={"Зелье здоровья":["heal","marsh"],"Травяной отвар":["heal","sleep"],"Ягодный взвар":["heal","stim"],"Грибная похлёбка":["fungi","beast"],
+ "Похлёбка на костях":["bone","heal"],"Жареные грибы":["fungi","heat"],"Вяленые грибы":["fungi","salt"],"Яд":["poison"],"Противоядие":["marsh","heal"],
+ "Свеча":["light","heat"],"Сота пепельного улья":["sweet","heat"],"Солёная гроздь свода":["salt","sea"],"Донная соль прилива":["salt","sea"],
+ "Лёд утопшего яруса":["cold","sea"],"Хитин червоточного узла":["bone","rift"],"Перо из ветряного колодца":["storm"],"Клык проснувшегося":["bone","beast"]};
+const MIX_ITEM_OK=/зелье|отвар|взвар|похлёбк|гриб|мёд|сот[аы]|соль|перо|ягод|хлеб|мяс|рыб|сыр|вино|пиво|настой|эликсир|бальзам|масло|сухар|лепёшк|каша/i;
+const MIX_ITEM_NO=/ Дома |Ключ|Печать|Маска|Корона|Кольцо|Компас|Секстант|Ошейник|Колокол/;
 /* Жидкое — то, что можно лить во флягу. Сухое во фляге только настаивают. */
-const MIX_LIQUID_ITEMS=new Set(["Зелье здоровья","Травяной отвар","Ягодный взвар"]);
+const MIX_LIQUID_ITEMS=new Set(["Зелье здоровья","Травяной отвар","Ягодный взвар","Противоядие","Яд","Грибная похлёбка","Похлёбка на костях"]);
+const MIX_LIQUID_RE=/кров|ихор|яд$|^яд|сок(?![а-я])|масло|вода|бальзам|мёд|тушь|эктоплазм|эссенц|отвар|взвар|похлёбк|настой|противояд|слез[аы]|склянк|флакон/i;
+/* Части для гнёзд артефактов: руны, ядра, эссенции, кристаллы. */
+const MIX_PARTS={r_sila:["rune","gravity"],r_shchit:["rune","earth"],r_hod:["rune","time"],r_zhizn:["rune","heal"],r_zov:["rune","catalyst"],
+ r_ostr:["rune","metal"],r_tish:["rune","dark"],r_nosha:["rune","gravity"],r_sled:["rune","alpine"],r_dolya:["rune","rare"],
+ c_gorn:["heat","metal"],c_naled:["cold","catalyst"],c_zari:["light","catalyst"],c_teni:["dark","catalyst"],c_glub:["ether","catalyst"],c_serdce:["heal","blood","rare"],
+ e_bystr:["ether","storm"],e_shept:["ether","sleep"],e_zhil:["ether","catalyst"],e_krovi:["ether","blood"],e_rosy:["ether","heal"],e_puti:["ether","time"],
+ k_ogon:["catalyst","heat"],k_lyod:["catalyst","cold"],k_tmy:["catalyst","dark"],k_sveta:["catalyst","light"],k_soli:["catalyst","salt"],k_grani:["catalyst","rift","rare"]};
 /* Особые сочетания: пара (зелья по id, ниши по имени) → зелье опыта. */
 const MIX_SPECIAL=[
  {a:"p:heal",b:"p:mana",id:"balance"},
@@ -62693,15 +62886,59 @@ const MIX_SPECIAL=[
  {a:"p:coldguard",b:"p:heatguard",id:"evenwarm"},
  {a:"poison",b:"heal",id:"antidote"},
  {a:"light",b:"dark",id:"nightsight"}];
+/* Каким выходит известное зелье, когда смесь сошлась. */
+const MIX_VIEW={heal:"цвет выравнивается в чистую травяную зелень, и пахнет свежим листом",mana:"по смеси бегут лазурные блики, и она тихо гудит",
+ energy:"смесь делается цвета крепкого чая и пахнет мятой",resist:"смесь густеет и затягивается плёнкой, плотной, как кожа",
+ speed:"смесь бурлит быстрее, чем греется",strength:"смесь тяжелеет и темнеет, как кузнечная окалина",sense:"смесь становится прозрачной до звона",
+ breath:"по смеси лопаются крупные пузыри, и пахнет морем",nightsight:"смесь делается серой, как сумерки, и чуть светится",
+ coldguard:"смесь рыжеет и греет ладони сквозь стенки",heatguard:"смесь синеет и холодит пальцы",clean:"смесь светлеет до прозрачности, муть уходит вся",
+ mask:"над смесью густеет серый пар и не расходится",voice:"смесь темнеет и глухо булькает, будто со дна кто-то говорит",
+ trace:"по смеси ходят светлые нити и тянутся к краю",craft:"смесь успокаивается и стоит ровно, без единой ряби",
+ antidote:"смесь мутнеет, потом разом светлеет — горечь уходит",mutation:"смесь меняет цвет на каждом вдохе",
+ balance:"зелень и лазурь сплетаются в одну спокойную струю",clearblood:"смесь краснеет и тут же светлеет, холодная, как родник",
+ warbrew:"смесь багровеет и звенит, как наковальня",courier:"смесь бурлит и пахнет дорожной пылью",
+ owl:"смесь делается серебристо-серой и светится, как совиные глаза",faceless:"смесь теряет цвет и запах, будто её и нет",
+ evenwarm:"жар и холод сходятся, и смесь стоит ровная, тёплая на ощупь",murk:"смесь мутнеет и оседает бурыми хлопьями",
+ oddbrew:"смесь пахнет грозой и меняет цвет, когда на неё не смотрят"};
+function mixCap(t){t=String(t||"");return t.charAt(0).toUpperCase()+t.slice(1);}
+function mixNiche(n){return MIX_NICHES[n]||MIX_NICHES.earth;}
+function mixPotionView(pt){
+ if(MIX_VIEW[pt.id])return MIX_VIEW[pt.id];
+ const н=(pt.из||[]).filter(n=>MIX_NICHES[n]);
+ return н.length>=2?`цвет ложится ровно — ${MIX_NICHES[н[0]].цвет}, и пахнет ${MIX_NICHES[н[1]].запах}`:"смесь сходится ровно";}
+/* Природа ресурса по имени: строка, корни, род, земля. */
+function mixNature(n,kind){
+ if(MIX_NATURE[n])return MIX_NATURE[n].slice();
+ const out=[];
+ for(const [re,ниша] of MIX_ROOTS){if(re.test(n)&&!out.includes(ниша)){out.push(ниша);if(out.length>=2)break;}}
+ if(out.length)return out;
+ if(kind==="fish")return ["sea","beast"];
+ const k=safeFn(()=>RES_KIND_BY_RES[n],null);
+ if(k&&MIX_KIND_NICHES[k.id])return MIX_KIND_NICHES[k.id].slice();
+ return ["earth"];}
+/* Сила ресурса — от цены: дешёвый камень слабее сердца дракона. */
+function mixPotency(n){
+ const p=Number(safeFn(()=>RES_BASE[n],0))||Number(safeFn(()=>SORT_GOODS[n].цена,0))||10;
+ return +Math.max(0.8,Math.min(1.5,0.75+Math.log10(Math.max(1,p))/4)).toFixed(2);}
 /* Что из котомки годится в опыт: строки инвентаря. */
 function mixIngr(row){
  if(!row)return null;
- if(row.kind==="potion"){const rec=row.it||{};const pt=POTION_BY_ID[rec.id];if(!pt)return null;
-  return {ключ:"potion:"+row.key,ид:"p:"+rec.id,имя:row.name,ниши:(pt.из||[]).slice(),q:Number(rec.q)||1,жидкое:true,row};}
+ if(row.kind==="potion"){const rec=row.it||{};
+  if(rec.id==="brew"){const s=rec.смесь||{};
+   return {ключ:"potion:"+row.key,ид:"b:"+(rec.имя||"смесь"),имя:row.name,ниши:(s.ниши&&s.ниши.length?s.ниши:["earth"]).slice(0,3),q:Number(rec.q)||1,жидкое:true,row,смесь:s};}
+  const pt=POTION_BY_ID[rec.id];if(!pt)return null;
+  const ниши=(pt.из&&pt.из.length?pt.из:(MIX_OPYT[rec.id]||["heal"])).slice();
+  return {ключ:"potion:"+row.key,ид:"p:"+rec.id,имя:row.name,ниши,q:Number(rec.q)||1,жидкое:true,row};}
  if(row.kind==="plant"){const p=PLANT_BY_NAME[row.key];if(!p)return null;
-  return {ключ:"plant:"+row.key,ид:"n:"+p.id,имя:row.key,ниши:[p.кат],q:1,жидкое:false,row};}
- if((row.kind==="res"||row.kind==="rare")&&MIX_RES[row.key])return {ключ:"res:"+row.key,ид:"r:"+row.key,имя:row.key,ниши:MIX_RES[row.key].slice(),q:0.9,жидкое:false,row};
- if(row.kind==="item"&&MIX_ITEMS[row.name])return {ключ:"item:"+row.name,ид:"i:"+row.name,имя:row.name,ниши:MIX_ITEMS[row.name].slice(),q:0.95,жидкое:MIX_LIQUID_ITEMS.has(row.name),row};
+  return {ключ:"plant:"+row.key,ид:"n:"+p.id,имя:row.key,ниши:[p.кат],q:+Math.min(1.5,0.85+0.12*(Number(p.редкость)||1)).toFixed(2),жидкое:false,row};}
+ if(row.kind==="res"||row.kind==="rare"||row.kind==="fish")
+  return {ключ:"res:"+row.key,ид:"r:"+row.key,имя:row.key,ниши:mixNature(row.key,row.kind),q:mixPotency(row.key),жидкое:MIX_LIQUID_RE.test(row.key),row};
+ if(row.kind==="item"){const n=String(row.name||"");
+  const ниши=MIX_ITEMS[n]||(MIX_ITEM_OK.test(n)&&!MIX_ITEM_NO.test(n)?mixNature(n,"item"):null);if(!ниши)return null;
+  return {ключ:"item:"+n,ид:"i:"+n,имя:n,ниши:ниши.slice(),q:0.95,жидкое:MIX_LIQUID_ITEMS.has(n)||MIX_LIQUID_RE.test(n),row};}
+ if(row.kind==="part"){const p=row.it||{};
+  const ниши=MIX_PARTS[row.key]||(p.род==="руна"?["rune"]:p.род==="эссенция"?["ether"]:["catalyst"]);
+  return {ключ:"part:"+row.key,ид:"a:"+row.key,имя:row.name,ниши:ниши.slice(),q:+Math.min(1.6,0.9+0.12*(Number(p.ред)||1)).toFixed(2),жидкое:p.род==="эссенция",row};}
  return null;}
 function mixIngredients(){return (safeFn(()=>invAll(),[])||[]).map(mixIngr).filter(Boolean);}
 /* Где можно смешать сейчас: объекты рядом и фляга с водой. */
@@ -62713,83 +62950,193 @@ function mixPlacesHere(вещи){
 /* Ключ опыта: пара припасов (без порядка) и место. */
 function mixKey(a,b,place){return [a.ид,b.ид].sort().join("+")+"@"+place;}
 function mixHash(s){let h=2166136261;for(let i=0;i<s.length;i++){h^=s.charCodeAt(i);h=Math.imul(h,16777619);}return ((h>>>0)%100000)/100000;}
+function mixSpecial(a,b){
+ return MIX_SPECIAL.find(r=>{
+  if(r.a.startsWith("p:")||r.b.startsWith("p:"))return (a.ид===r.a&&b.ид===r.b)||(a.ид===r.b&&b.ид===r.a);
+  return (a.ниши.includes(r.a)&&b.ниши.includes(r.b))||(a.ниши.includes(r.b)&&b.ниши.includes(r.a));})||null;}
+/* Своя смесь: веса ниш, связи, три главные ниши → имя, вид, вкус и действие. */
+function mixBrew(a,b,place,q){
+ const P=MIX_PLACES[place]||MIX_PLACES.cauldron;
+ const w={};const add=(n,v)=>{if(MIX_NICHES[n])w[n]=(w[n]||0)+v;};
+ [a,b].forEach(x=>(x.ниши||[]).forEach((n,i)=>add(n,[1,0.6,0.4][i]||0.3)));
+ if(P.жар)add("heat",0.5);
+ const связи=[],эф=[];
+ for(const s of MIX_BONDS){
+  if(!s.есть.every(n=>w[n]))continue;
+  const с=s.с?s.с.find(n=>w[n]):null;if(s.с&&!с)continue;
+  связи.push({ид:s.ид,прил:s.прил,о:typeof s.о==="string"?s.о:s.о[с]});
+  (s.убрать||[]).forEach(n=>{delete w[n];});
+  s.эф.forEach(e=>эф.push(e.slice()));}
+ const главные=Object.keys(w).sort((x,y)=>w[y]-w[x]||(x<y?-1:1)).slice(0,3);
+ const верх=главные.length?w[главные[0]]:1;
+ главные.forEach(n=>{const k=w[n]/верх;mixNiche(n).эф.forEach(e=>эф.push(e[0]==="buff"?[e[0],e[1],e[2]*k]:[e[0],e[1]*k]));});
+ let усил=1;
+ if(w.catalyst&&главные.length>1)усил*=1.15;
+ if(w.ether&&главные.length>1)усил*=1.1;
+ if(w.rare)усил*=1.25;
+ /* Одинаковое складывается: часы — до полутора самого долгого, сила — суммой. */
+ const сум={};
+ эф.forEach(e=>{const k=e[0]==="buff"?"buff:"+e[1]:e[0];const v=e[0]==="buff"?e[2]:e[1];
+  if(!сум[k])сум[k]={e:e.slice(),все:[]};сум[k].все.push(v);});
+ let итог=Object.values(сум).map(({e,все})=>{
+  if(e[0]==="buff"){const m=Math.max(...все);e[2]=+Math.min(m*1.5,все.reduce((s,v)=>s+v,0)).toFixed(2);}
+  else e[1]=+все.reduce((s,v)=>s+v,0).toFixed(2);
+  return e;});
+ /* Целебное и горькое гасят друг друга. */
+ const hp=итог.find(e=>e[0]==="hp"),harm=итог.find(e=>e[0]==="harm");
+ if(hp&&harm){const d=hp[1]-harm[1];hp[1]=+Math.max(0,d).toFixed(2);harm[1]=+Math.max(0,-d).toFixed(2);}
+ итог=итог.filter(e=>(e[0]==="buff"?e[2]:e[1])>0.05).map(e=>e[0]==="buff"?[e[0],e[1],+(e[2]*усил).toFixed(2)]:[e[0],+(e[1]*усил).toFixed(2)]);
+ итог.sort((x,y)=>(y[0]==="buff"?y[2]/4:y[1])-(x[0]==="buff"?x[2]/4:x[1]));
+ итог=итог.slice(0,5);
+ const прил=[];
+ if(связи.length)прил.push(связи[0].прил);
+ главные.forEach(n=>{const p=mixNiche(n).прил;if(прил.length<2&&!прил.includes(p))прил.push(p);});
+ if(!прил.length)прил.push("мутное");
+ const н1=mixNiche(главные[0]||(a.ниши[0])),н2=mixNiche(главные[1]||главные[0]||(b.ниши[0]));
+ const мастер=safeFn(()=>mastLevel("alchemy"),0)||0;
+ const стаб=+Math.max(0.3,Math.min(0.9,0.6+0.04*мастер-(w.rift?0.15:0)+(w.salt?0.05:0)+(w.catalyst?0.03:0))).toFixed(2);
+ const слова=итог.map(e=>e[0]==="buff"?(MIX_BUFF_WORD[e[1]]||e[1]):MIX_EFFECT_WORD[e[0]]).filter(Boolean);
+ return {имя:`${прил.join(" ")} ${P.сущ}`,ниши:главные.length?главные:a.ниши.slice(0,1),эф:итог,связи,
+  цвет:н1.цвет,запах:н2.запах,вкус:н1===н2?н1.вкус:`${н1.вкус}, а после — ${н2.вкус}`,
+  о:слова.join(", ")||"ни вкуса, ни толку",долго:w.seed?1.5:1,срок:Math.round(8*(w.salt?1.5:1)),стаб};}
 /* Что выйдет — без траты припаса: решение по природе смеси. */
 function mixOutcome(a,b,place){
  const P=MIX_PLACES[place]||MIX_PLACES.cauldron;
  if(a.ключ===b.ключ&&!(a.row&&b.row&&a.row.n>=2))return {род:"нельзя",почему:"смешивать вещь саму с собой нельзя: возьмите второй припас"};
- if(place==="flask"&&!(a.жидкое||b.жидкое))return {род:"нельзя",почему:"во фляге настаивают только с зельем или отваром: сухое с сухим без котла не смешать"};
+ if(place==="flask"&&!(a.жидкое||b.жидкое))return {род:"нельзя",почему:"во фляге настаивают только с жидким — зельем, отваром, кровью, соком, мёдом: сухое с сухим без котла не смешать"};
  const ид=[a.ид,b.ид].sort();
- const ниши=new Set([...a.ниши,...b.ниши]);if(P.жар)ниши.add("heat");
  const мастер=safeFn(()=>mastLevel("alchemy"),0)||0;
  const q=Math.min(1.8,((a.q+b.q)/2)*P.q+мастер*0.05);
  /* С мутационным составом всё становится мутацией. */
- if(ид.includes("p:mutation"))return {род:"зелье",id:"mutation",q,слово:"мутационный состав поглотил всё остальное"};
+ if(ид.includes("p:mutation"))return {род:"зелье",id:"mutation",q,слово:"мутационный состав поглотил всё остальное",как:"поглощение"};
  /* Особое сочетание. */
- const ос=MIX_SPECIAL.find(r=>{const x=[r.a,r.b];
-  const есть=t=>t.startsWith("p:")?ид.includes(t):(a.ниши.includes(t)&&!b.ниши.includes(t)?b.ниши.includes(x.find(y=>y!==t)):b.ниши.includes(t)&&a.ниши.includes(x.find(y=>y!==t)));
-  return x[0].startsWith("p:")||x[1].startsWith("p:")?ид.includes(r.a)&&ид.includes(r.b):есть(r.a);});
- if(ос)return {род:"зелье",id:ос.id,q:q+0.1,слово:"особое сочетание"};
- /* Два одинаковых зелья — то же, но крепче. */
- if(ид[0]===ид[1]&&ид[0].startsWith("p:"))return {род:"зелье",id:ид[0].slice(2),q:Math.min(1.8,Math.max(a.q,b.q)+0.3),слово:"крепче прежнего"};
- /* Зелье и трава его ниши — зелье набирает силу. */
- for(const [x,y] of [[a,b],[b,a]])if(x.ид.startsWith("p:")&&!y.ид.startsWith("p:")&&y.ниши.some(n=>x.ниши.includes(n)))
-  return {род:"зелье",id:x.ид.slice(2),q:Math.min(1.8,x.q+0.2*P.q),слово:"трава своей ниши усилила зелье"};
- /* Ниши смеси сходятся с рецептом обычного зелья. */
- const годные=POTIONS.filter(pt=>!pt.опыт&&!pt.редкое&&pt.из&&pt.из.length===2&&pt.из.every(n=>ниши.has(n)));
+ const ос=mixSpecial(a,b);
+ if(ос)return {род:"зелье",id:ос.id,q:Math.min(1.8,q+0.1),слово:"особое сочетание",как:"особое"};
+ /* Два одинаковых зелья — то же, но крепче; две одинаковые смеси — тоже. */
+ if(ид[0]===ид[1]&&ид[0].startsWith("p:"))return {род:"зелье",id:ид[0].slice(2),q:Math.min(1.8,Math.max(a.q,b.q)+0.3),слово:"крепче прежнего",как:"двойное"};
+ if(ид[0]===ид[1]&&ид[0].startsWith("b:")&&a.смесь&&a.смесь.эф)
+  return {род:"смесь",смесь:Object.assign({},a.смесь,{имя:a.имя,стаб:Math.min(0.9,(Number(a.row&&a.row.it&&a.row.it.стаб)||0.6)+0.05),срок:8}),q:Math.min(1.8,Math.max(a.q,b.q)+0.3),слово:"крепче прежнего",как:"двойное"};
+ /* Зелье и припас его ниши — зелье набирает силу. */
+ for(const [x,y] of [[a,b],[b,a]])if(x.ид.startsWith("p:")&&!y.ид.startsWith("p:")&&!y.ид.startsWith("b:")&&y.ниши.some(n=>x.ниши.includes(n)))
+  return {род:"зелье",id:x.ид.slice(2),q:Math.min(1.8,x.q+0.2*P.q),слово:"припас своей ниши усилил зелье",как:"усиление",чем:y.имя};
+ /* Несовместимое: смесь не выходит вовсе. */
+ const все=new Set([...a.ниши,...b.ниши]);if(P.жар)все.add("heat");
+ const кл=MIX_CLASH.find(c=>c.есть.every(n=>все.has(n))&&!(c.без||[]).some(n=>все.has(n)));
+ if(кл)return {род:кл.род,слово:"",как:"несовместимо",разлом:все.has("rift")};
+ /* Рецепт обычного зелья: по нише от каждого припаса; жар жаровни
+    дополняет рецепт, только если сами припасы ни в один не сошлись. */
+ const рецепты=(A,B)=>POTIONS.filter(pt=>!pt.опыт&&!pt.редкое&&pt.из&&pt.из.length===2&&
+  ((A.includes(pt.из[0])&&B.includes(pt.из[1]))||(A.includes(pt.из[1])&&B.includes(pt.из[0]))));
+ let годные=рецепты(a.ниши,b.ниши);
+ if(!годные.length&&P.жар)годные=рецепты(a.ниши.concat("heat"),b.ниши.concat("heat"));
  if(годные.length){const pt=годные[Math.floor(mixHash(mixKey(a,b,place)+"z")*годные.length)%годные.length];
-  return {род:"зелье",id:pt.id,q:q*0.95,слово:"ниши сошлись с рецептом"};}
- /* Ничего не сходится — исход решает сама пара и место, всегда одинаково. */
- const h=mixHash(mixKey(a,b,place));
- if(h<0.34)return {род:"зелье",id:"murk",q:0.7,слово:"вышла мутная бурда"};
- if(h<0.56)return {род:"зелье",id:"oddbrew",q:Math.max(0.6,q*0.8),слово:"вышло что-то странное"};
- if(h<0.8)return {род:place==="flask"?"пролито":P.жар||place==="hearth"||place==="cookfire"?"вспышка":"пена",слово:""};
- return {род:"дым",слово:""};}
+  return {род:"зелье",id:pt.id,q:q*0.95,слово:"ниши сошлись с рецептом",как:"рецепт"};}
+ /* Случай: изредка смесь не берётся, и тем реже, чем опытнее рука. */
+ const h=mixHash(mixKey(a,b,place));const риск=Math.max(0.04,0.12-0.02*мастер);
+ if(h<риск)return {род:place==="flask"?"пролито":P.жар||place==="hearth"||place==="cookfire"?"вспышка":h<риск/2?"пена":"дым",слово:"",как:"случай"};
+ /* Своя смесь. */
+ const смесь=mixBrew(a,b,place,q);
+ if(!смесь.эф.length)return {род:"зелье",id:"murk",q:0.7,слово:"ниши погасили друг друга",как:"бурда"};
+ return {род:"смесь",смесь,q:Math.max(0.5,q*0.95),слово:"своя смесь",как:"смесь"};}
+/* Опыт по шагам: место, первый припас, второй. */
+function mixSteps(a,b,place){
+ const P=MIX_PLACES[place]||MIX_PLACES.cauldron;
+ const н1=mixNiche(a.ниши[0]),н2=mixNiche(b.ниши[0]);
+ const перв=`${mixCap(P.в)}: ${a.имя} — ${a.row&&a.row.kind==="potion"?н1.второе:н1.первое}.`;
+ const втор=a.ниши[0]===b.ниши[0]?`Следом ${b.имя} — отклик тот же, только гуще.`:`Следом ${b.имя} — ${н2.второе}.`;
+ return `${перв} ${втор}${P.жар||place==="flask"?" "+P.слово:""}`;}
+/* Выпить свою смесь: действия по её записи, сила — от качества. */
+function mixApply(e,s,долго){
+ const k=e[0];
+ if(k==="buff"){const ч=Math.max(1,Math.round(e[2]*s*(долго||1)));buffSet(e[1],ч);return `${ч} ч: ${MIX_BUFF_WORD[e[1]]||e[1]}`;}
+ if(k==="hp"){const h=Math.min(G.hpMax,G.hp+Math.max(1,Math.round(G.hpMax*0.2*e[1]*s)))-G.hp;G.hp+=h;return `здоровья +${h}`;}
+ if(k==="harm"){const у=Math.max(1,Math.round(G.hpMax*0.06*e[1]*s));G.hp=Math.max(1,G.hp-у);return `горько: здоровья −${у}`;}
+ if(k==="mana"){const m=Math.min(G.manaMax,G.mana+Math.max(1,Math.round(G.manaMax*0.25*e[1]*s)))-G.mana;G.mana+=m;return `маны +${m}`;}
+ if(k==="rest"){safeFn(()=>adaptRest(Math.max(1,Math.round(8*e[1]*s))));return "усталость отступает";}
+ if(k==="food"){const f=Math.max(1,Math.round(25*e[1]*s));G.food=Math.min(200,(Number(G.food)||0)+f);return `сытость +${f}`;}
+ if(k==="water"){const v=Math.max(1,Math.round(15*e[1]*s));G.water=Math.min(safeFn(()=>waterCap(),100),(Number(G.water)||0)+v);return "жажда утолена";}
+ if(k==="cleanse"){const был=!!(G.buffs&&G.buffs["яд"])||!!G.poisoned;if(G.buffs)delete G.buffs["яд"];G.poisoned=null;safeFn(()=>adaptRest(Math.max(1,Math.round(5*e[1]*s))));return был?"яд выведен":"кровь чиста";}
+ if(k==="mutate"){const r=Math.random();const ст=["str","agi","mind"][Math.floor(Math.random()*3)];const имя={str:"сила",agi:"ловкость",mind:"разум"}[ст];
+  if(r<0.12*e[1]*s){G[ст]=(Number(G[ст])||0)+1;return `${имя} выросла на единицу — навсегда`;}
+  if(r<0.6){safeFn(()=>adaptAdd("мутаген",2));return "тело дрогнуло: нагрузка выросла";}
+  return "тело дрогнуло и успокоилось";}
+ return "";}
+function brewDrink(rec,q){
+ const s=rec&&rec.смесь||{};
+ const out=(s.эф||[]).map(e=>safeFn(()=>mixApply(e,q,Number(s.долго)||1),"")).filter(Boolean);
+ return out.join(", ")||"ни вкуса, ни толку";}
 /* Сам опыт: тратит по одной мере каждого припаса, звучит, пишет книгу. */
 function mixDo(a,b,place){
  const out=mixOutcome(a,b,place);
  if(out.род==="нельзя")return `Не смешать: ${out.почему}.`;
  const P=MIX_PLACES[place];
  const взять=x=>{const r=x.row;if(r.kind==="potion"){potionsOf().splice(Number(r.key),1);}
-  else if(r.kind==="item")invRemoveItem(r);else invTake(r.key,1);};
+  else if(r.kind==="item"||r.kind==="part")invRemoveItem(r);else invTake(r.key,1);};
  /* Сперва то, что дальше в списке зелий: иначе индексы съедут. */
  const пара=[a,b].sort((x,y)=>(y.row.kind==="potion"?Number(y.row.key):-1)-(x.row.kind==="potion"?Number(x.row.key):-1));
  пара.forEach(взять);
  if(place==="flask")G.water=Math.max(0,(Number(G.water)||0)-10);
  G.hour+=0.5;if(G.hour>=24){G.hour-=24;G.day++;}
- safeFn(()=>(P.звук||[]).forEach((z,i)=>setTimeout(()=>safeFn(()=>Bank.play(z,{gain:0.55,maxSec:4})),i*420)));
+ /* Звуки опыта: место, отклик второго припаса, итог (чары — каналом магии). */
+ const звук=(z,мс,g,маг)=>safeFn(()=>setTimeout(()=>safeFn(()=>Bank.play(z,маг?{kind:"magic",gain:g||0.5,maxSec:3}:{gain:g||0.5,maxSec:4})),мс));
+ (P.звук||[]).forEach((z,i)=>звук(z,i*420,0.55));
+ звук(mixNiche(b.ниши[0]).звук,1000,0.5,/^magic_/.test(mixNiche(b.ниши[0]).звук));
  if(!G.mixBook||typeof G.mixBook!=="object")G.mixBook={};
  const k=mixKey(a,b,place),новое=!G.mixBook[k];
- const начало=`${P.в[0].toUpperCase()+P.в.slice(1)}: ${a.имя} и ${b.имя}. `;
- let т="",итог="";
+ const шаги=mixSteps(a,b,place);
+ const цвет=mixNiche(b.ниши[0]).цвет,запах=mixNiche(a.ниши[0]).запах;
+ let т="",итог="",о="";
  if(out.род==="зелье"){
   const pt=POTION_BY_ID[out.id];
   safeFn(()=>potionGive(out.id,{q:Math.max(0.5,Math.min(1.8,out.q)),стаб:Math.min(0.95,(pt.стаб||0.7)+(out.id==="murk"?0:0.05))}));
   итог=`зелье ${pt.n}`;
-  т=`${начало}Смесь ${out.id==="murk"?"мутнеет и оседает":"светлеет и густеет"} — ${out.слово}. В разделе «Зелья»: зелье ${pt.n}, ${potionQualityWord(out.q)}. ${pt.о[0].toUpperCase()+pt.о.slice(1)}.`;
-  safeFn(()=>setTimeout(()=>safeFn(()=>Bank.play(out.id==="murk"?"stk_goo":"magic_shimmer",{kind:"magic",gain:0.5,maxSec:3})),900));}
+  const вид=mixPotionView(pt);
+  const как={особое:`Особое сочетание — смесь сходится сразу: ${вид}.`,рецепт:`Ниши сошлись с рецептом: ${вид}.`,
+   двойное:"Два одинаковых зелья сливаются в одно: цвет густеет, запах крепнет.",
+   усиление:`${mixCap(out.чем||"припас")} ложится в зелье как в родное, и оно крепнет: ${вид}.`,
+   поглощение:`Мутационный состав глотает всё, что в него попало: ${вид}.`,
+   бурда:`Ниши гасят друг друга: ${вид}.`}[out.как]||`Смесь сходится: ${вид}.`;
+  т=`${шаги} ${как} В разделе «Зелья»: зелье ${pt.n}, ${potionQualityWord(out.q)}${out.как==="двойное"?" — крепче прежнего":""}. ${mixCap(pt.о)}.`;
+  звук(out.id==="murk"?"stk_goo":"magic_shimmer",1600,0.5,out.id!=="murk");}
+ else if(out.род==="смесь"){
+  const s=out.смесь;
+  const rec=safeFn(()=>potionGive("brew",{q:Math.max(0.5,Math.min(1.8,out.q)),стаб:s.стаб,срок:s.срок,имя:s.имя}),null);
+  if(rec)rec.смесь={ниши:s.ниши.slice(),эф:s.эф.map(e=>e.slice()),о:s.о,вкус:s.вкус,цвет:s.цвет,долго:s.долго};
+  итог=s.имя;о=s.о;
+  const связь=(s.связи||[]).map(x=>x.о).filter(Boolean).slice(0,2).map(x=>x+".").join(" ");
+  т=`${шаги}${связь?" "+связь:""} ${out.как==="двойное"?"Две одинаковые смеси сливаются в одну и крепнут.":`${связь?"Выходит своё":"Смесь сходится по-своему"}: цвет — ${s.цвет}, пахнет ${s.запах}.`} В разделе «Зелья» новое: ${s.имя}, ${potionQualityWord(out.q)}. Действие: ${s.о}.`;
+  звук("magic_shimmer",1600,0.5,true);}
+ else if(out.род==="чад"){
+  const у=Math.max(2,Math.round(G.hpMax*0.05));G.hp=Math.max(1,G.hp-у);итог="ядовитый чад";
+  т=`${шаги} Смесь вскипает едким жёлтым чадом: глаза режет, горло дерёт — здоровья −${у}. Яд на жару не варят: ни зелья, ни припаса.`;
+  звук("oc_sizzle",1600,0.55);}
  else if(out.род==="вспышка"){
   const у=Math.max(2,Math.round(G.hpMax*0.06));G.hp=Math.max(1,G.hp-у);итог="вспышка";
-  т=`${начало}Смесь шипит, вскипает — и плюёт огнём в лицо: −${у} здоровья. Припас сгорел, зато ясно: так не смешивают.`;
-  safeFn(()=>setTimeout(()=>safeFn(()=>Bank.play("lug_fire_start",{gain:0.6,maxSec:3})),700));}
+  т=`${шаги} ${out.разлом?"Разлом не терпит огня: смесь вздувается и лопается вспышкой":"Смесь шипит, вскипает — и плюёт огнём в лицо"}: здоровья −${у}. Припас сгорел, зато ясно: так не смешивают.`;
+  звук("lug_fire_start",1600,0.6);}
+ else if(out.род==="зов"){итог="зов мёртвых";
+  т=`${шаги} Кровь зовёт мёртвое: дымок густеет, шёпот в нём делается громче и злее — и вдруг всё уходит в пол вместе со смесью.`;
+  звук("magic_hum",1600,0.55,true);}
  else if(out.род==="пена"){итог="пена";
-  т=`${начало}Смесь лезет пеной через край чана и уходит в пол. Ничего не вышло, но и это знание.`;
-  safeFn(()=>setTimeout(()=>safeFn(()=>Bank.play("oc_corrode",{gain:0.5,maxSec:3})),700));}
+  т=`${шаги} Смесь вспухает пеной — ${цвет} лезет через край и уходит в пол. Ничего не вышло, но и это знание.`;
+  звук("oc_corrode",1600);}
  else if(out.род==="пролито"){итог="пролито";
-  т=`${начало}Во фляге зашипело, пробку выбило — настой пролился. Вода ушла вместе с ним.`;
-  safeFn(()=>setTimeout(()=>safeFn(()=>Bank.play("oc_splash",{gain:0.5,maxSec:3})),600));}
+  т=`${шаги} Во фляге зашипело, пробку выбило — настой пролился, пахнуло ${запах}. Вода ушла вместе с ним.`;
+  звук("oc_splash",1600);}
  else{итог="дым";
-  т=`${начало}Смесь темнеет и уходит едким дымом. Ничего не осталось.`;
-  safeFn(()=>setTimeout(()=>safeFn(()=>Bank.play("oc_sizzle",{gain:0.45,maxSec:3})),600));}
+  т=`${шаги} Смесь темнеет и уходит дымом, пахнущим ${запах}. Ничего не осталось.`;
+  звук("oc_sizzle",1600,0.45);}
  G.mixBook[k]={a:a.имя,b:b.имя,где:place,итог,раз:(Number(G.mixBook[k]&&G.mixBook[k].раз)||0)+1};
+ if(о)G.mixBook[k].о=о;
  safeFn(()=>deed("mixes"));
  if(новое){
-  const оп=out.род==="зелье"&&out.id!=="murk"?8:4;G.xp=(Number(G.xp)||0)+оп;safeFn(()=>checkLevelUp());
+  const оп=(out.род==="зелье"&&out.id!=="murk")||out.род==="смесь"?8:4;G.xp=(Number(G.xp)||0)+оп;safeFn(()=>checkLevelUp());
   т+=` Новый опыт записан в книгу опытов: опыт +${оп}.`;
   safeFn(()=>journal(`Опыт: ${a.имя} и ${b.имя} ${P.в} — ${итог}.`));
   const n=Object.keys(G.mixBook).length;
   const ранг=MIX_RANKS.filter(r=>n>=r.от).pop();
   if(ранг&&ранг.от===n){safeFn(()=>{UI.triumph();eventTheme("achieve",{tier:"normal",gain:0.6});});т+=` Достижение «${ранг.n}»: ${ранг.о}.`;}}
- if(safeFn(()=>mastLevel("alchemy"),0)>0)safeFn(()=>mastGain("alchemy",out.род==="зелье"?2:1));
+ if(safeFn(()=>mastLevel("alchemy"),0)>0)safeFn(()=>mastGain("alchemy",out.род==="зелье"||out.род==="смесь"?2:1));
  else safeFn(()=>selfTaughtGain("alchemy","опыт со смесью"));
  safeFn(()=>{refresh();saveGame(true);});
  return т;}
@@ -62797,13 +63144,14 @@ const MIX_RANKS=[
  {от:1, n:"Любопытный",       о:"первый опыт со смесью"},
  {от:5, n:"Смешивающий",      о:"пять разных опытов"},
  {от:15,n:"Знаток смесей",    о:"пятнадцать разных опытов"},
- {от:40,n:"Мастер опытов",    о:"сорок разных опытов"}];
+ {от:40,n:"Мастер опытов",    о:"сорок разных опытов"},
+ {от:80,n:"Первооткрыватель", о:"восемьдесят разных опытов"}];
 /* Книга опытов: всё открытое, вслух и в окне «Зелья». */
 function mixBookText(){
  const b=G.mixBook&&typeof G.mixBook==="object"?G.mixBook:{};
  const всё=Object.values(b);
- if(!всё.length)return "Книга опытов пуста. Смешайте два припаса у чана, очага, жаровни или во фляге: в котомке — «Смешать с…».";
- return `Книга опытов, записей ${всё.length}: `+всё.map(z=>`${z.a} и ${z.b} ${(MIX_PLACES[z.где]||{в:""}).в} — ${z.итог}`).join("; ")+".";}
+ if(!всё.length)return "Книга опытов пуста. Смешайте любые два припаса у чана, очага, жаровни или во фляге: в котомке — «Смешать с…».";
+ return `Книга опытов, записей ${всё.length}: `+всё.map(z=>`${z.a} и ${z.b} ${(MIX_PLACES[z.где]||{в:""}).в} — ${z.итог}${z.о?` (${z.о})`:""}`).join("; ")+".";}
 /* ── Выбор второго припаса и места: окно действий с вещью ── */
 const MIX_UI={a:null,b:null,box:null,вещи:null};
 function mixBox(){return document.getElementById(MIX_UI.box||"invActBody");}
@@ -62821,7 +63169,7 @@ function mixPickSecond(a,boxId,вещи){
  const места=mixPlacesHere(вещи);
  if(!места.length)return narrate("Смешивать негде: нужен алхимический чан, очаг или жаровня рядом — или фляга, где есть вода."),false;
  const другие=mixIngredients().filter(x=>x.ключ!==a.ключ||(x.row.n>=2));
- if(!другие.length)return narrate(`Смешать ${a.имя} не с чем: в котомке нет второго зелья, травы, гриба или отвара.`),false;
+ if(!другие.length)return narrate(`Смешать ${a.имя} не с чем: в котомке нет второго припаса.`),false;
  MIX_UI.list=другие;
  const html=`<div class="list-line" tabindex="0" data-speak="С чем смешать: ${mixQ(a.имя)}?">С чем смешать: ${mixQ(a.имя)}?</div>`
   +другие.map((x,i)=>{const z=G.mixBook&&места.map(p=>G.mixBook[mixKey(a,x,p)]).find(Boolean);
@@ -62854,8 +63202,9 @@ function mixCancel(){const boxId=MIX_UI.box;MIX_UI.a=MIX_UI.b=null;MIX_UI.list=n
 Object.assign(CMD,{mixsel(i){mixChoose(i);},mixplace(p){mixPlace(String(p||""));},mixcancel(){mixCancel();},
  mixfirst(i){const x=(MIX_UI.first||[])[Number(i)];if(!x){narrate("Этого припаса уже нет.");return;}mixPickSecond(x,"objBody",MIX_UI.вещи);},
  mixbook(){Speech.request(mixBookText(),{key:"mixbook"});}});
-/* В котомке: «Смешать с…» — у зелий, трав, грибов, ягод, кристаллов, отваров. */
-iaction("mixwith",{n:"Смешать с…",значок:"",cats:ALL_CATS,kinds:["potion","plant","res","rare","item"],
+/* В котомке: «Смешать с…» — у любого припаса: зелья, растения, ресурса,
+   трофея, руны, рыбы, еды и отвара, части для гнёзд. */
+iaction("mixwith",{n:"Смешать с…",значок:"",cats:ALL_CATS,kinds:["potion","plant","res","rare","fish","item","part"],
  можно:(row,ctx)=>{const a=mixIngr(row);if(!a)return false;
   const места=mixPlacesHere(ctx&&ctx.вещи);if(!места.length)return "смешивают у чана, очага или жаровни, а во фляге — когда в ней есть вода";
   if(!mixIngredients().some(x=>x.ключ!==a.ключ||x.row.n>=2))return "второго припаса для смеси нет";
@@ -62865,7 +63214,7 @@ iaction("mixwith",{n:"Смешать с…",значок:"",cats:ALL_CATS,kinds:
 /* У самого чана, очага и жаровни: «Опыт: смешать два припаса». */
 iact("mixhere",{n:"Опыт: смешать два припаса",значок:"",своё:true,
  можно:o=>!!MIX_PLACES[objProp(o)||(o&&o.станок)||""]&&mixIngredients().length>=2,
- почему:o=>"для опыта нужны два припаса: зелья, травы, грибы, ягоды или отвары",
+ почему:o=>"для опыта нужны два любых припаса: зелья, растения, ресурсы, трофеи, руны, рыба, еда или отвары",
  делать:o=>{const id=objProp(o)||o.станок;const вещи=new Set([id]);
   const все=mixIngredients();MIX_UI.first=все;MIX_UI.box="objBody";MIX_UI.вещи=вещи;
   const html=`<div class="list-line" tabindex="0" data-speak="Опыт: ${mixQ(objName(id))}. Что смешиваем первым?">Опыт: ${mixQ(objName(id))}. Что первым?</div>`

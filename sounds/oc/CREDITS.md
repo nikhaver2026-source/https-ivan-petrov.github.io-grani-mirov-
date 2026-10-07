@@ -100,7 +100,6 @@ https://creativecommons.org/licenses/by/3.0/ — текст лицензии р�
 | oc_hurt_01 | человек ранен | `Sound.ocg/Clonk.ocg/Skin.ocg/Farmer.ocg/Hurt1.ogg` |
 | oc_hurt_02 | человек ранен | `Sound.ocg/Clonk.ocg/Skin.ocg/Farmer.ocg/Hurt2.ogg` |
 | oc_die_01 | человек пал | `Sound.ocg/Clonk.ocg/Skin.ocg/Farmer.ocg/Die1.ogg` |
-| oc_electrical_01 | потрескивание силы: магический круг, ядро, руны | `Sound.ocg/Objects.ocg/Electrical.ogg` |
 | oc_connect_01 | соединение сошлось | `Sound.ocg/Objects.ocg/Connect.ogg` |
 | oc_line_snap_01 | верёвка лопнула | `Sound.ocg/Objects.ocg/LineSnap.ogg` |
 | oc_diamond_01 | кристалл выкопан | `Sound.ocg/Objects.ocg/DiamondDigOut.ogg` |
@@ -157,10 +156,6 @@ https://creativecommons.org/licenses/by/3.0/ — текст лицензии р�
 | oc_weapon_hit_03 | оружие попало | `Sound.ocg/Objects.ocg/Weapons.ocg/WeaponHit3.ogg` |
 | oc_catapult_01 | катапульта | `Sound.ocg/Objects.ocg/Catapult_Launch.ogg` |
 | oc_gust_01 | порыв из меха | `Sound.ocg/Objects.ocg/Windbag.ocg/Gust.ogg` |
-| oc_zap_01 | разряд тварей | `Sound.ocg/Animals.ocg/Zap.ocg/Zap1.ogg` |
-| oc_zap_02 | разряд тварей | `Sound.ocg/Animals.ocg/Zap.ocg/Zap2.ogg` |
-| oc_zap_03 | разряд тварей | `Sound.ocg/Animals.ocg/Zap.ocg/Zap3.ogg` |
-| oc_zap_04 | разряд тварей | `Sound.ocg/Animals.ocg/Zap.ocg/Zap4.ogg` |
 | oc_fish_munch_01 | рыба клюнула | `Sound.ocg/Animals.ocg/Fish.ocg/Munch1.ogg` |
 | oc_crystal_comm_01 | сигналы древнего устройства | `Missions.ocf/DeepSeaMining.ocs/CrystalCommunicator.ocd/CrystalCommToneA.ogg` |
 | oc_crystal_comm_02 | сигналы древнего устройства | `Missions.ocf/DeepSeaMining.ocs/CrystalCommunicator.ocd/CrystalCommToneB.ogg` |

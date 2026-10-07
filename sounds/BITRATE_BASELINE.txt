@@ -680,7 +680,6 @@ sounds/oc/oc_door_unlock_01.ogg	167
 sounds/oc/oc_drill_01.ogg	102
 sounds/oc/oc_drone_die_01.ogg	142
 sounds/oc/oc_earthquake_01.ogg	250
-sounds/oc/oc_electrical_01.ogg	83
 sounds/oc/oc_fan_01.ogg	89
 sounds/oc/oc_find_analyze_01.ogg	123
 sounds/oc/oc_find_listen_01.ogg	148
@@ -824,10 +823,6 @@ sounds/oc/oc_wood_creak_02.ogg	190
 sounds/oc/oc_wood_creak_03.ogg	131
 sounds/oc/oc_wood_dull_01.ogg	314
 sounds/oc/oc_wood_hit_02.ogg	309
-sounds/oc/oc_zap_01.ogg	87
-sounds/oc/oc_zap_02.ogg	80
-sounds/oc/oc_zap_03.ogg	97
-sounds/oc/oc_zap_04.ogg	85
 sounds/oc/score_cavern_01.ogg	149
 sounds/oc/score_lucid_01.ogg	137
 sounds/od/cannon_firing.ogg	112
@@ -965,7 +960,6 @@ sounds/stk/stk_rain_01.ogg	138
 sounds/stk/stk_river_01.ogg	93
 sounds/stk/stk_splash_01.ogg	186
 sounds/stk/stk_thunder_01.ogg	105
-sounds/stk/stk_ward_01.ogg	107
 sounds/throng/throng_die_f_01.ogg	91
 sounds/throng/throng_die_f_02.ogg	102
 sounds/throng/throng_die_f_03.ogg	107

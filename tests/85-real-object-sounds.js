@@ -107,7 +107,7 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
  const муз=new RegExp('^('+["pad_halo","pad_astral","pad_sanctum","pad_dream","pad_hearth","fx_crystal","rune_square","spark_glock","xylo_coin","chime","shine","charm_celesta","wide_strings","horn_castle","temple_bell","stk_horn"].join('|')+')$');
  for(const id in вещи){
   const p=вещи[id];
-  check('вещь «'+id+'» звучит записью, не музыкой',p.length>0&&!p.some(r=>муз.test(r))&&p.some(r=>/^(oc_|ad_|uh_|lug_|magic_|mtg_|arte_|bell_|amb_fire|wild_|knock)/.test(r)),p);}
+  check('вещь «'+id+'» звучит записью, не музыкой',p.length>0&&!p.some(r=>муз.test(r))&&p.some(r=>/^(oc_|ad_|uh_|lug_|magic_|arc_|mtg_|arte_|bell_|amb_fire|wild_|knock)/.test(r)),p);} /* (11.0) arc_ — записи чар sounds/arcana */
  check('статуя: камень и голоса храма, без инструмента бога',вещи.statue&&вещи.statue.includes('oc_rock_hit'),вещи.statue);
  /* Алтарь: приношение и изучение — тоже записи. */
  const алтарь=await page.evaluate(async()=>{

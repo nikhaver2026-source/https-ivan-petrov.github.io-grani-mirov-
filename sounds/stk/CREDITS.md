@@ -55,7 +55,6 @@
 | `stk_river_01.ogg` | `stk_river` | Река: течение по камням | CC0 | 2012 Adam Newns <www.vennaudio.com> |
 | `stk_splash_01.ogg` | `stk_splash` | Всплеск: тело или камень в воду | CC-BY-SA-4.0 | 2017 The Audio Monkey |
 | `stk_thunder_01.ogg` | `stk_thunder` | Гром: раскат над головой | CC-BY-3.0 | 2009 Mike Koenig 2011 Marianne "Auria" Gagnon <auria.mg@gmail.com> |
-| `stk_ward_01.ogg` | `stk_ward` | Оберег: гудение защитных чар | CC0 | 2007 aust_paul |
 
 ## Откуда взято
 
@@ -89,7 +88,6 @@
 | `stk_river_01.ogg` | `data/sfx/river_loop.ogg` |
 | `stk_splash_01.ogg` | `data/sfx/splash.ogg` |
 | `stk_thunder_01.ogg` | `data/sfx/thunder.ogg` |
-| `stk_ward_01.ogg` | `data/sfx/forcefield.ogg` |
 
 ## Версия 3.9: громкость глубины
 

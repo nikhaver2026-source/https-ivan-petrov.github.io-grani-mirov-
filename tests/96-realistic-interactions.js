@@ -54,7 +54,9 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
  const инстр=/xylo|glock|marimba|celesta|calliope|charang|harp|clarinet|sitar|piano|tremolo|pad_|contrabass|pizz|harmonium|organ|dulcimer|relic_/;
  check('2а. чтение страницы шуршит страницей и переплётом, без инструментов',дин.чтение.includes("uh_page")&&дин.чтение.includes("arte_book")&&!дин.чтение.some(x=>инстр.test(x)),дин.чтение);
  check('2б. сундук открывается крышкой и звенит металлом или монетами, без арфы и органа',дин.сундук.length>0&&!дин.сундук.some(x=>инстр.test(x)),дин.сундук);
- check('2в. чары звучат стихией, а не челестой',дин.чары.includes("cast_fire")&&!дин.чары.some(x=>инстр.test(x)),дин.чары);
+ /* (11.0) Огненная школа звучит записями огня Tim и Lentikula: розжиг, пламя, выпуск,
+    полёт и разрыв огня; прежний «огненный шар» cast_fire остался у чар тварей. */
+ check('2в. чары звучат стихией, а не челестой',дин.чары.some(x=>/^(cast_fire|flame_cast|fire_spell_fly|fire_spell_hit|oc_inflame|oc_fire)$/.test(x))&&!дин.чары.some(x=>инстр.test(x)),дин.чары);
 
  /* ── 3. заменяющие роли настоящие ── */
  const роли=["uh_page","arte_page","arte_gem","arte_metal","arte_coins","artifact_hum","oc_chest_open","ad_temple","uh_chapel","bell_small","od_gold","stk_hammer","deep_cart","hall_house","ad_trade","beasts_camel","hero_heart","lug_growl","lug_snarl","oc_growl","ad_leaves","lug_bush","oc_glass_hit","cast_heal","cast_shock","cast_ice","cast_fire","magic_woosh","magic_shimmer","es_magic","od_undead","oc_warp","raptor_wing","mtg_door_close","amb_fire","stk_dark","stk_rain","sky_gust","amb_wind","stk_clang"];
