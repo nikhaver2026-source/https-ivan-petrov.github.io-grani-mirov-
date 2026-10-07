@@ -65,7 +65,9 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   /* приручение, опыт, молитва */
   Director.qMake("tame");Director.note("tame","зверь");Director.qMake("mix");Director.note("mix");
   const pr=Director.qMake("pray",{god:"storm"});Director.note("pray","zarya");r.чужойБог=s.q.includes(pr);Director.note("pray","storm");
-  r.молитваОбёрнута=String(prayToGod).indexOf("Director.note")>=0;
+  /* молитва обёрнута Режиссёром (и снаружи — недугами): зов доходит до поручений */
+  {let дошло=false;const оN=Director.note;Director.note=function(k,w){if(k==="pray")дошло=true;return оN.call(this,k,w);};
+   try{G.prayed={};prayToGod("wood");}catch(_){}Director.note=оN;r.молитваОбёрнута=дошло;}
   /* дальний путь, спуск */
   const tr=Director.qMake("travel");tr.need=5;G.x+=6;Director.tick();r.путь=!s.q.includes(tr);G.x-=6;
   const dn=Director.qMake("dungeon");G.place={kind:"dungeon",bx:G.x,by:G.y,depth:1,x:1,y:1};Director.tick();G.place=null;r.спуск=!s.q.includes(dn);

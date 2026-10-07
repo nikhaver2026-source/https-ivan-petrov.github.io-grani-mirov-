@@ -386,6 +386,12 @@ h3{color:var(--acc2);margin:14px 0 6px;font-size:1.05rem;}
  <div id="potBody"></div>
 </div></div>
 
+<!-- НЕДУГИ -->
+<div class="modal" id="modal-hv" role="dialog" aria-modal="true" aria-label="Недуги" hidden><div class="sheet">
+ <header><h2 id="hvTitle">Недуги</h2><button type="button" data-cmd="close">Закрыть</button></header>
+ <div id="hvBody"></div>
+</div></div>
+
 <!-- 11.5: ЗВЕРИНЕЦ -->
 <div class="modal" id="modal-zver" role="dialog" aria-modal="true" aria-label="Зверинец" hidden><div class="sheet">
  <header><h2 id="zvTitle">Зверинец</h2><button type="button" data-cmd="close">Закрыть</button></header>
@@ -9595,8 +9601,9 @@ const AM_GROUPS=[
   ["merit","Достижения"],
   ["zver","Зверинец"],
   ["zvfeed","Накормить зверей"],
-  ["zvtame","Приручить зверя"]],
-  {id:"hero",з:"",о:"лист героя, тело, инвентарь, мастерства, Путь Грани, ветви силы, достижения и зверинец"}],
+  ["zvtame","Приручить зверя"],
+  ["hvhome","Недуги"]],
+  {id:"hero",з:"",о:"лист героя, тело, инвентарь, мастерства, Путь Грани, ветви силы, достижения, зверинец и недуги"}],
  /* Всё, что поручено и записано: дела, сроки, расследования и журнал. */
  ["Квесты",[
   ["quests","Квесты"],
@@ -36047,6 +36054,7 @@ function refresh(){
  safeFn(()=>Perekroy.tick());
  safeFn(()=>Director.tick());
  safeFn(()=>Zver.tick());
+ safeFn(()=>Hv.tick());
  if(!G.inCombat&&!G.place)safeFn(()=>Director.siteCheck());
  const c=cellContent(G.x,G.y);
  const h=Math.floor(G.hour%24);
@@ -46309,6 +46317,8 @@ function fight(a){const cb=G.combat;if(!cb)return;const m=cb.m;
  safeFn(()=>{const ход=bossPlayerTurn();if(ход)cbLog(cbLog2text()+ход);});
  /* (11.5) Спутники из зверинца делают свой ход вслед за героем. */
  safeFn(()=>{const з=Zver.turn(cb,a);if(з)cbLog(cbLog2text()+" "+з);});
+ /* Недуги: срыв удара от страха, слепоты и оглушения; яд, кровь и ожог за ход. */
+ safeFn(()=>{const с=Hv.takeSlip(),н=Hv.combatTurn();if(с||н)cbLog(cbLog2text()+с+(н?" "+н:""));});
  narrate(cbLog2text());
  safeFn(()=>bossPhaseCheck());
  if(cb.hp<=0){victory();return;}
@@ -46425,6 +46435,8 @@ function foeStrike(o){const cb=G.combat;if(!cb)return 0;const m=cb.m;
  if(!safeFn(()=>playRealMonsterCue(m,"attack",0.7),false))playMonsterSound(m);
  const как={lunge:"сбивает вас прыжком",bolt:"бьёт вас чарой",breath:"обдаёт вас пламенем"}[род]||"бьёт вас";
  narrate(` ${m.n} ${как}: −${mdmg}, здоровья ${Math.max(0,G.hp)}.${щитПринял?" Щит принял удар.":""}`,{key:"enemyhit",pri:o&&o.counter?3:1,ttl:1500,cat:"combat",урон:"me",interrupt:false});
+ /* Недуги рода твари: яд, кровь, проклятие, стужа, ожог и прочее. */
+ if(G.hp>0)safeFn(()=>Hv.onHit(m,mdmg));
  updateCombat();refresh();
  if(G.hp<=0)defeat();
  return mdmg;}
@@ -60503,6 +60515,190 @@ const SHOP_POTIONS=[
  {n:"Зелье скорости",id:"speed",price:30},{n:"Зелье силы",id:"strength",price:32},
  {n:"Зелье маскировки",id:"mask",price:30}];
 const SHOP_POTION_BY_NAME=Object.fromEntries(SHOP_POTIONS.map(p=>[p.n,p]));
+/* ════════════════════════════════════════════════════════════════════════
+   НЕДУГИ — ЯДЫ, ПРОКЛЯТИЯ, СТУЖА, ЖАР И ПРОЧЕЕ, ЧТО ОСТАЁТСЯ ПОСЛЕ БОЯ
+   Жалоба игрока: «не работают системы ядов и различных умений у монстров и
+   боссов — игрок убивает монстра без последствий; последствия должны быть
+   от проклятий, ядов, заморозки, жара, холода, и игрок должен уметь всё это
+   нейтрализовать».
+   Прежде яд (G.poisoned), кровотечение и проклятие кое-где накладывались, но
+   урона со временем не наносили, а обычные твари не накладывали ничего.
+
+   Теперь у каждого рода тварей свои недуги (паук и змей травят, зверь рвёт
+   до крови, нежить заражает, дух пугает и проклинает, дракон жжёт, глубинная
+   тварь студит, великан оглушает…), а у иных тварей по имени — свой
+   (василиск каменит, лич проклинает, ледяные студят, огненные жгут).
+   Недуг держится часами и бьёт и в бою (каждый ваш ход), и после — по часам
+   мира. У него три ступени: тварь сильнее вас — ступень выше.
+   Снимают: зелья (противоядие, очищения, чистой крови — как и прежде, и шесть
+   новых: согревающее, охлаждающее, святая вода, кровоостанавливающее,
+   ясности, размягчения), защитные зелья заранее (от холода, от жара,
+   сопротивлений), молитва, отдых у огня и в трактире, вода из фляги,
+   перевязка травами, лекарь в городе, светлые чары и зверь-лекарь.
+   ════════════════════════════════════════════════════════════════════════ */
+const HV_DEFS={
+ poison:{n:"яд",          о:"горечь во рту и дрожь в руках",              час:3,дот:2,бой:1,     снимают:"противоядие, зелье очищения или чистой крови, светлые чары, лекарь, травы",звук:"oc_corrode"},
+ bleed: {n:"кровотечение",о:"рана не закрывается",                      час:2,дот:3,бой:1,     снимают:"перевязка травами, кровоостанавливающее зелье, лечебное зелье, лекарь",звук:"lug_impact"},
+ curse: {n:"проклятие",   о:"удар слабее, удача отворачивается",        час:12,дот:0,стойкое:2, снимают:"святая вода, молитва, светлые чары, лекарь",звук:"wraith_moan"},
+ frost: {n:"обморожение", о:"пальцы не гнутся, удар слабее",           час:4,дот:1,          снимают:"согревающее зелье, отдых у огня или в трактире, огненные чары",звук:"sky_snow"},
+ burn:  {n:"ожог",        о:"кожа горит, жажда сильнее",               час:3,дот:2,бой:1,     снимают:"охлаждающее зелье, вода из фляги, отдых, лекарь",звук:"oc_sizzle"},
+ disease:{n:"лихорадка",  о:"жар и слабость: здоровье не держится",     час:10,дот:1,          снимают:"зелье очищения, лекарь, светлые чары, молитва",звук:"stk_goo"},
+ fear:  {n:"страх",       о:"рука дрожит: удар может сорваться",        час:2,дот:0,          снимают:"святая вода, зелье ясности, молитва, время",звук:"wraith_moan"},
+ weak:  {n:"истощение",   о:"жизнь вытянута: удар слабее",             час:4,дот:0,          снимают:"отдых, восстанавливающее силы зелье",звук:"wraith_moan"},
+ blind: {n:"слепота",     о:"глаза жжёт: удар может уйти мимо",         час:2,дот:0,          снимают:"зелье ясности, вода из фляги",звук:"oc_sizzle"},
+ stone: {n:"окаменение",  о:"тело тяжёлое, как камень: удар слабее",    час:4,дот:0,          снимают:"зелье размягчения, зелье очищения, лекарь",звук:"oc_rock_hit"},
+ mana:  {n:"порча маны",  о:"мана утекает",                            час:4,дот:0,          снимают:"зелье маны, отдых",звук:"arc_charge"},
+ stun:  {n:"оглушение",   о:"в голове звон: следующий удар пропадёт",   час:0.3,дот:0,         снимают:"проходит само за ход, зелье ясности",звук:"oc_rock_hit"}};
+/* Какие недуги несёт род твари: [недуг, шанс за попадание]. */
+const HV_FAMILY={beast:[["bleed",0.18]],bird:[["bleed",0.15],["blind",0.06]],crawler:[["poison",0.22]],spirit:[["fear",0.2],["curse",0.08],["frost",0.06]],
+ undead:[["disease",0.18],["fear",0.06]],bone:[["curse",0.12],["bleed",0.1]],giant:[["stun",0.15],["bleed",0.08]],construct:[["stun",0.1],["burn",0.06]],
+ dragon:[["burn",0.25]],deep:[["frost",0.15],["poison",0.06]],fiend:[["burn",0.15],["curse",0.12],["mana",0.08]],humanoid:[["bleed",0.12],["poison",0.05]]};
+/* По имени и роду твари — свои, сверх рода. */
+const HV_BY_NAME=[[/basilisk|василиск|горгон|medusa/i,"stone",0.2],[/wraith|banshee|ghost|призрак|баньши/i,"fear",0.25],[/lich|лич|mummy|мумия/i,"curse",0.25],
+ [/\bice|frost|yeti|winter|снеж|ледян|иней|мороз/i,"frost",0.25],[/fire|ember|ash|lava|salamand|огн|пепел|лав|жар/i,"burn",0.25],[/vampire|вампир|bat|нетопыр/i,"weak",0.2],
+ [/rat|plague|zombie|крыс|чум|гнил/i,"disease",0.2],[/scorpion|wyvern|spider|snake|serpent|скорпион|паук|змей|виверн|оса|hornet/i,"poison",0.25],
+ [/witch|ведьм|hex|сглаз|колдун/i,"curse",0.18],[/eye|глаз|флеш|вспыш/i,"blind",0.15]];
+/* Новые зелья для снятия недугов: в лавках и у травников, варятся алхимиком. */
+const HV_POTIONS=[
+ {id:"warm",  n:"согревающее",       из:["heat","stim"], срок:14,стаб:0.75,о:"по телу расходится печной жар",  лавка:"Согревающее зелье",цена:18,снимает:["frost"],защита:["тепло",4]},
+ {id:"cool",  n:"охлаждающее",       из:["cold","sea"],  срок:14,стаб:0.75,о:"кожа остывает",                   лавка:"Охлаждающее зелье",цена:18,снимает:["burn"],защита:["прохлада",4]},
+ {id:"holy",  n:"святая вода",       из:["light","heal"],срок:20,стаб:0.85,о:"на душе светлеет",                лавка:"Святая вода",цена:24,снимает:["curse","fear"]},
+ {id:"stanch",n:"кровоостанавливающее",из:["heal","marsh"],срок:14,стаб:0.8,о:"рана стягивается",            лавка:"Кровоостанавливающее зелье",цена:16,снимает:["bleed"]},
+ {id:"clarity",n:"ясности",          из:["light","alpine"],срок:12,стаб:0.75,о:"мир снова резкий и тихий",      лавка:"Зелье ясности",цена:22,снимает:["blind","fear","stun"]},
+ {id:"soften",n:"размягчения",       из:["marsh","rift"],срок:12,стаб:0.7,о:"тело снова гнётся",               лавка:"Зелье размягчения",цена:26,снимает:["stone"]}];
+/* Какие прежние зелья что снимают. */
+const HV_OLD_CURES={antidote:["poison"],clean:["poison","disease","stone"],clearblood:["poison","bleed"],heal:["bleed"],mana:["mana"],energy:["weak"],
+ coldguard:["frost"],heatguard:["burn"],resist:[],balance:["weak"]};
+const Hv={
+ st(){if(!G.hv||typeof G.hv!=="object")G.hv={};const s=G.hv;if(!s.c||typeof s.c!=="object")s.c={};if(!Number.isFinite(Number(s.t)))s.t=this.now();return s;},
+ now(){return (Number(G.day)||1)*24+(Number(G.hour)||0);},
+ list(){const s=this.st();const now=this.now();const out=[];
+  /* прежний яд других систем — тоже недуг */
+  if(G.poisoned&&!s.c.poison)s.c.poison={ст:1,до:Number(G.poisoned.until)||now+2,от:G.poisoned.n||"яд"};
+  for(const [id,c] of Object.entries(s.c)){if(!HV_DEFS[id]){delete s.c[id];continue;}
+   if(!HV_DEFS[id].стойкое||c.ст<HV_DEFS[id].стойкое){if(now>=Number(c.до)){delete s.c[id];if(id==="poison")G.poisoned=null;continue;}}
+   out.push([id,c]);}
+  return out;},
+ has(id){return this.list().some(x=>x[0]===id);},
+ stage(id){const c=this.st().c[id];return c&&this.has(id)?Number(c.ст)||1:0;},
+ /* Защита заранее: зелья от холода и от жара, сопротивлений, вещи против стихий. */
+ resist(id,m){let k=1;const b=x=>safeFn(()=>buffActive(x),false);
+  if(id==="frost"&&b("тепло"))return 0;if(id==="burn"&&b("прохлада"))return 0;
+  if(b("стойкость"))k*=0.5;k*=1-Math.min(0.5,Number(safeFn(()=>foeElementResist(m),0))||0);
+  k*=1-Math.min(0.35,(Number(safeFn(()=>derived("def"),0))||0)*0.01);return k;},
+ add(id,stage,from,silent){const d=HV_DEFS[id];if(!d)return "";const s=this.st();const now=this.now();const c=s.c[id];
+  const пр=c?Number(c.ст)||1:0;const ст=Math.min(3,c?Math.max(пр+1,Number(stage)||1):Math.max(1,Number(stage)||1));
+  s.c[id]={ст,до:now+d.час*ст,от:from||(c&&c.от)||""};
+  if(id==="poison")G.poisoned={until:now+d.час*ст,n:from||"яд"};
+  if(id==="bleed")safeFn(()=>buffSet("кровотечение",d.час*ст));if(id==="curse")safeFn(()=>buffSet("проклятие",d.час*ст));
+  if(!silent)safeFn(()=>Bank.play(d.звук,{gain:0.45,maxSec:2}));
+  return `${d.n[0].toUpperCase()+d.n.slice(1)}${ст>1?", ступень "+ст:""}: ${d.о}.`;},
+ cure(id,ступеней){const s=this.st();const c=s.c[id];if(!c)return false;const n=ступеней==null?3:ступеней;c.ст=(Number(c.ст)||1)-n;
+  if(c.ст<=0){delete s.c[id];if(id==="poison")G.poisoned=null;if(id==="bleed"&&G.buffs)delete G.buffs["кровотечение"];if(id==="curse"&&G.buffs)delete G.buffs["проклятие"];}
+  else c.до=Math.max(this.now()+0.5,Number(c.до)-HV_DEFS[id].час*n);return true;},
+ cureList(ids,n){const снято=[];for(const id of ids)if(this.has(id)&&this.cure(id,n))снято.push(HV_DEFS[id].n);return снято;},
+ /* Удар твари: проверка недугов рода и имени. */
+ onHit(m,dmg){if(!m||!(dmg>0))return "";const fam=safeFn(()=>foeFamily(m),"beast");const пары=(HV_FAMILY[fam]||[]).slice();
+  const имя=String((m.id||"")+" "+(m.n||""));for(const [re,id,ш] of HV_BY_NAME)if(re.test(имя))пары.push([id,ш]);
+  if(Array.isArray(m.hvAdd))for(const x of m.hvAdd)пары.push(x);
+  const разн=(Number(m.lvl)||1)-(Number(G.level)||1);const ст=разн>=6?3:разн>=3?2:1;const босс=m.boss||m.chBoss?1.5:1;const out=[];const было=new Set();
+  for(const [id,ш] of пары){if(было.has(id))continue;было.add(id);
+   if(Math.random()<ш*босс*this.resist(id,m)*safeFn(()=>diff().foeDmg||1,1)){const t=this.add(id,ст,m.n);if(t)out.push(t);}}
+  if(!out.length)return "";const msg=`${m.n} оставляет след. ${out.join(" ")} Снять: окно «Недуги».`;
+  safeFn(()=>narrate(msg,{interrupt:false,cat:"combat"}));return msg;},
+ /* Каждый ваш ход в бою: яд, кровь и ожог берут своё; оглушение проходит. */
+ combatTurn(){const out=[];let урон=0;
+  for(const [id,c] of this.list()){const d=HV_DEFS[id];if(d.бой){const n=d.бой*(Number(c.ст)||1);урон+=n;out.push(`${d.n} −${n}`);}}
+  if(урон){G.hp=Math.max(1,(Number(G.hp)||0)-урон);}
+  /* зверь-лекарь в спутниках снимает ступень яда или крови */
+  safeFn(()=>{if(Zver.pets().some(a=>a.роль==="healer"&&!a.ранен)&&Math.random()<0.15){const id=["poison","bleed","disease"].find(x=>this.has(x));if(id){this.cure(id,1);out.push(`зверь-лекарь ослабил ${HV_DEFS[id].n}`);}}});
+  return out.length?`Недуги: ${out.join(", ")}.`:"";},
+ /* Множитель удара героя: проклятие, стужа, истощение, камень; страх и слепота — срыв. */
+ heroK(kind){if(kind!=="удар"&&kind!=="чары"&&kind!=="по_вам")return 1;let k=1;const s=id=>this.stage(id);
+  if(kind==="по_вам"){if(s("curse")>=3)k*=1.15;if(s("stone"))k*=0.9;return k;}
+  if(s("curse"))k*=1-0.15*s("curse");if(s("frost"))k*=1-0.1*s("frost");if(s("weak"))k*=1-0.1*s("weak");if(s("stone"))k*=1-0.1*s("stone");
+  if(kind==="чары"&&s("mana"))k*=1-0.15*s("mana");
+  this.срыв="";
+  if(s("stun")){this.cure("stun");this.срыв="оглушение: удар пропал";return 0;}
+  if(s("fear")&&Math.random()<0.12*s("fear")){this.срыв="страх сковал руку: удар сорвался";return 0;}
+  if(kind==="удар"&&s("blind")&&Math.random()<0.15*s("blind")){this.срыв="слепота: удар ушёл мимо";return 0;}
+  return Math.max(0.3,k);},
+ takeSlip(){const t=this.срыв;this.срыв="";return t?` ${t[0].toUpperCase()+t.slice(1)}.`:"";},
+ /* Часы мира: недуги бьют по часам; насмерть вне боя не убивают, но держат на краю. */
+ tick(){const s=this.st();const now=this.now();let часов=Math.floor(now-s.t);if(часов<1)return;s.t+=часов;часов=Math.min(часов,24);
+  const l=this.list();if(!l.length)return;let урон=0;const что=[];
+  for(const [id,c] of l){const d=HV_DEFS[id];const n=(d.дот||0)*(Number(c.ст)||1)*часов;if(n){урон+=n;что.push(d.n);}
+   if(id==="burn")G.water=Math.max(0,(Number(G.water)||0)-2*часов);if(id==="mana")G.mana=Math.max(0,(Number(G.mana)||0)-2*(Number(c.ст)||1)*часов);
+   if(id==="disease")G.hp=Math.min(G.hp,Math.round(G.hpMax*(1-0.15*(Number(c.ст)||1))));}
+  if(урон){const до=G.hp;G.hp=Math.max(1,G.hp-урон);
+   if(G.hp<=Math.round(G.hpMax*0.2)&&s.warn!==G.day+":"+G.hour){s.warn=G.day+":"+G.hour;safeFn(()=>Bank.play("hero_heart",{gain:0.55,maxSec:4}));
+    safeFn(()=>narrate(`Недуги берут своё: ${что.join(", ")}. Здоровья ${G.hp} из ${G.hpMax}. Снимите их — окно «Недуги».`,{interrupt:false}));}
+   else if(до-G.hp>=3)safeFn(()=>narrate(`${что.join(", ")[0].toUpperCase()+что.join(", ").slice(1)}: −${до-G.hp} здоровья за ${часов} ${plural(часов,"час","часа","часов")}.`,{interrupt:false}));}},
+ /* ── как снять ── */
+ onPotion(id){const p=HV_POTIONS.find(x=>x.id===id);const ids=p?p.снимает:(HV_OLD_CURES[id]||[]);const сн=this.cureList(ids);
+  if(p&&p.защита)safeFn(()=>buffSet(p.защита[0],p.защита[1]));return сн.length?`снято: ${сн.join(", ")}`:"";},
+ onPray(godId){const сн=this.cureList(["curse","fear"],1);if(G.patron===godId)сн.push(...this.cureList(["poison","disease","frost","burn"],1));return сн;},
+ onRest(){return this.cureList(["frost","weak","mana","stun"]);},
+ lightSpell(){return (G.spells||[]).find(n=>/лечен|исцел|свет|заря|очищ/i.test(String(n)))||null;},
+ fireSpell(){return (G.spells||[]).find(n=>/огн|пламя|искр|жар/i.test(String(n)))||null;},
+ iceSpell(){return (G.spells||[]).find(n=>/лёд|лед|мороз|стуж|иней/i.test(String(n)))||null;},
+ town(){return !!safeFn(()=>Zver.inTown(),false);},
+ fireNear(){return !!(safeFn(()=>campHere(),null)||(G.place&&/city|house/.test(String(G.place.kind))));},
+ options(){const o=[];const l=this.list().map(x=>x[0]);const has=id=>l.indexOf(id)>=0;const pots=potionsOf();
+  const pot=id=>pots.findIndex(r=>r.id===id);
+  for(const p of HV_POTIONS)if(p.снимает.some(has)&&pot(p.id)>=0)o.push(["potion:"+p.id,`Выпить: ${p.лавка} — снимает ${p.снимает.map(x=>HV_DEFS[x].n).join(", ")}`]);
+  for(const [id,ids] of Object.entries(HV_OLD_CURES))if(ids.some(has)&&pot(id)>=0)o.push(["potion:"+id,`Выпить: зелье ${(POTION_BY_ID[id]||{}).n||id} — снимает ${ids.filter(has).map(x=>HV_DEFS[x].n).join(", ")}`]);
+  if(has("bleed")&&invHas("трава",1))o.push(["herb","Перевязать рану травами (одна трава) — снимает кровотечение"]);
+  if(has("poison")&&invHas("трава",2))o.push(["herbpoison","Отвар из двух трав — ослабляет яд на ступень"]);
+  if((has("burn")||has("blind"))&&(Number(G.water)||0)>=10)o.push(["water","Промыть и выпить воды из фляги — ослабляет ожог и слепоту"]);
+  if(this.fireNear()&&["frost","weak","mana"].some(has))o.push(["fire","Отдохнуть у огня — снимает обморожение, истощение и порчу маны"]);
+  const ls=this.lightSpell();if(ls&&["poison","disease","curse","fear"].some(has))o.push(["light",`Чары «${ls}» на себя (8 маны) — ослабляют яд, лихорадку, проклятие и страх`]);
+  const fs=this.fireSpell();if(fs&&has("frost"))o.push(["firespell",`Чары «${fs}» — согреться (5 маны)`]);
+  const is=this.iceSpell();if(is&&has("burn"))o.push(["icespell",`Чары «${is}» — остудить ожог (5 маны)`]);
+  if(this.town()&&l.length)o.push(["healer",`Лекарь в городе — снимет всё за ${this.healerPrice()} золота`]);
+  return o;},
+ healerPrice(){return this.list().reduce((t,[id,c])=>t+12*(Number(c.ст)||1),0);},
+ act(k){const [a,b]=String(k||"").split(":");let t="";
+  switch(a){
+   case "potion":{const i=potionsOf().findIndex(r=>r.id===b);if(i<0)return "Такого зелья нет.";drinkPotion(i,true);return "";}
+   case "herb":if(!invHas("трава",1))return "Нужна трава.";invTake("трава",1);this.cure("bleed",2);safeFn(()=>Bank.play("arte_leather",{gain:0.4,maxSec:2}));return "Рана перевязана травами: кровь унялась.";
+   case "herbpoison":if(!invHas("трава",2))return "Нужны две травы.";invTake("трава",2);this.cure("poison",1);return "Горький отвар выпит: яд ослаб.";
+   case "water":if((Number(G.water)||0)<10)return "Во фляге мало воды.";G.water-=10;const сн=this.cureList(["burn","blind"],1);safeFn(()=>Survival.relieve("heat",30));return `Вода: ${сн.join(", ")||"полегчало"}.`;
+   case "fire":{if(!this.fireNear())return "Огня рядом нет: нужен стан с костром, трактир или дом.";const сн2=this.onRest();safeFn(()=>Survival.relieve("cold",40));G.hour+=1;return `Вы грелись у огня час. ${сн2.length?"Снято: "+сн2.join(", ")+".":""}`;}
+   case "light":case "firespell":case "icespell":{const цена=a==="light"?8:5;if((Number(G.mana)||0)<цена)return `Нужно ${цена} маны.`;G.mana-=цена;
+    const сн3=a==="light"?this.cureList(["poison","disease","curse","fear"],1):a==="firespell"?this.cureList(["frost"]):this.cureList(["burn"]);
+    safeFn(()=>Bank.play(a==="light"?"heal_bloom":a==="firespell"?"spell_fire":"spell_ice",{gain:0.5,maxSec:3}));return `Чары легли на вас. ${сн3.length?"Снято: "+сн3.join(", ")+".":""}`;}
+   case "healer":{if(!this.town())return "Лекарь есть только в городах и сёлах.";const ц=this.healerPrice();if((Number(G.gold)||0)<ц)return `Лекарь просит ${ц} золота, у вас ${G.gold}.`;
+    G.gold-=ц;const сн4=this.cureList(this.list().map(x=>x[0]));safeFn(()=>Bank.play("heal_bloom",{gain:0.5,maxSec:3}));return `Лекарь осмотрел вас и взял ${ц} золота. Снято: ${сн4.join(", ")}.`;}}
+  return t;},
+ text(){const l=this.list();if(!l.length)return "Недугов нет.";
+  return l.map(([id,c])=>{const d=HV_DEFS[id];const ост=Math.max(0,Number(c.до)-this.now());const стойко=d.стойкое&&c.ст>=d.стойкое;
+   return `${d.n}${c.ст>1?", ступень "+c.ст:""}${c.от?" ("+c.от+")":""}: ${d.о}${d.дот?`, −${d.дот*c.ст} в час`:""}${d.бой?`, в бою −${d.бой*c.ст} за ход`:""}; ${стойко?"само не пройдёт":"пройдёт через "+(ост<1?"меньше часа":Math.round(ост)+" ч")}. Снимают: ${d.снимают}`;}).join(". ")+".";},
+ /* ── окно ── */
+ q(t){return String(t).replace(/&/g,"&amp;").replace(/"/g,"&quot;").replace(/</g,"&lt;");},
+ line(t){return `<div class="list-line" tabindex="0" data-speak="${this.q(t)}">${this.q(t)}</div>`;},
+ btn(cmd,label){return `<button type="button" class="item" data-cmd="hv:${cmd}" data-speak="${this.q(label)}">${this.q(label)}</button>`;},
+ home(){const box=document.getElementById("hvBody");let h=this.line(this.text());const o=this.options();
+  for(const [k,l] of o)h+=this.btn(k,l);
+  if(this.list().length&&!o.length)h+=this.line("Снять сейчас нечем: купите зелья в лавке или у травника, найдите огонь, лекаря в городе или выучите светлые чары.");
+  h+=this.line(`Защититься заранее: зелья защиты от холода и от жара, зелье сопротивлений (вдвое реже любой недуг), вещи против стихий и крепкая броня. Род твари и её недуги: зверь — кровь, паук и змей — яд, нежить — лихорадка, дух — страх и проклятие, дракон — ожог, глубинные — стужа, великан — оглушение, демон — ожог, проклятие и порча маны.`);
+  if(box)box.innerHTML=h;const h2=document.getElementById("hvTitle");if(h2)h2.textContent="Недуги";
+  const m=document.getElementById("modal-hv");if(m&&m.hidden)openModal("modal-hv");
+  const first=box&&box.querySelector("[data-speak]");if(first)safeFn(()=>setCursor(first,false));
+  narrate(`Недуги. ${first?first.dataset.speak:""}`,{interrupt:true,pri:1,cat:"ui"});return true;},
+ cmd(a){const t=this.act(a);if(t)narrate(t,{interrupt:true});safeFn(()=>saveGame(true));safeFn(()=>refresh());return this.home();},
+ summary(){return {недугов:Object.keys(HV_DEFS).length,зелий:HV_POTIONS.length,родов:Object.keys(HV_FAMILY).length};}};
+Modules.register("HV",Hv);
+/* Зелья — в общий список, в лавки и травникам. */
+for(const p of HV_POTIONS){const def={id:p.id,n:p.n,из:p.из,срок:p.срок,стаб:p.стаб,о:p.о,дать:q=>{const t=Hv.onPotion(p.id);return t||"недуга, который оно снимает, нет"}};
+ POTIONS.push(def);POTION_BY_ID[p.id]=def;const sp={n:p.лавка,id:p.id,price:p.цена};SHOP_POTIONS.push(sp);SHOP_POTION_BY_NAME[p.лавка]=sp;}
+/* Прежние зелья тоже снимают свои недуги; молитва, отдых — тоже. */
+{const пить=drinkPotion;drinkPotion=function(i,user){const rec=potionsOf()[Number(i)];const id=rec&&rec.id;const r=пить(i,user);
+  if(r&&id&&HV_OLD_CURES[id]){const t=Hv.onPotion(id);if(t)safeFn(()=>narrate(`Недуги: ${t}.`,{interrupt:false}));}return r;};
+ const мол=prayToGod;prayToGod=function(id){const r=мол(id);if(r){const сн=Hv.onPray(id);if(сн.length)safeFn(()=>narrate(`Молитва сняла: ${сн.join(", ")}.`,{interrupt:false}));}return r;};
+ const отд=Survival.rest.bind(Survival);Survival.rest=function(){const t=отд();const сн=Hv.onRest();return t+(сн.length?` Снято: ${сн.join(", ")}.`:"");};
+ const hb=heroBuffK;heroBuffK=function(kind){return hb(kind)*Hv.heroK(kind);};}
+Object.assign(CMD,{hv(a){Hv.cmd(a);},hvhome(){Hv.home();}});
 function stockPotions(n,deep){
  const все=safeFn(()=>{const д=merchSoul(n);return !!(д&&д.вид&&д.вид.id==="snadob");},false);
  const выбор=все?SHOP_POTIONS.slice():SHOP_POTIONS.slice(0,2);
@@ -67432,7 +67628,7 @@ function worldSelfCheck(){
    &&new Set(AM_GROUPS.map(g=>g[0])).size===16+(SVODY_ON?1:0)&&new Set(AM_GROUPS.map(g=>g[2].id)).size===16+(SVODY_ON?1:0)
    &&typeof amGroupOpen==="function"&&typeof amBack==="function"&&typeof CMD.amgroup==="function"
    /* Ни один пункт меню не потерян и не задвоен при разбивке. */
-   &&AM_ITEMS.length===144+(SVODY_ON?13:0)&&new Set(AM_ITEMS.map(x=>x[0])).size===144+(SVODY_ON?13:0)
+   &&AM_ITEMS.length===145+(SVODY_ON?13:0)&&new Set(AM_ITEMS.map(x=>x[0])).size===145+(SVODY_ON?13:0)
    /* Самый большой раздел меньше трети меню: прежний был на пятьдесят семь. */
    &&Math.max(...AM_GROUPS.map(g=>g[1].length))<=16
    /* Семь частей руководства, и каждая глава ровно в одной. */
@@ -67483,7 +67679,7 @@ function worldSelfCheck(){
      невозможного. */
   /* Меню действий пунктами: шестнадцать разделов, каждый пункт в одном,
      список разделов открывается первым, раздел — двойным касанием. */
-  ok("ampunkty",AM_GROUPS.length===16+(SVODY_ON?1:0)&&AM_ITEMS.length===144+(SVODY_ON?13:0)&&new Set(AM_ITEMS.map(x=>x[0])).size===144+(SVODY_ON?13:0)
+  ok("ampunkty",AM_GROUPS.length===16+(SVODY_ON?1:0)&&AM_ITEMS.length===145+(SVODY_ON?13:0)&&new Set(AM_ITEMS.map(x=>x[0])).size===145+(SVODY_ON?13:0)
    &&["start","here","move","fight","hero","quests","craft","people","magic","faith","books","world","realms","dark","sound","game"]
      .every(id=>AM_GROUP_BY_ID[id])
    &&["char","bodystate","inv","mastery"].every(c=>AM_GROUP_BY_ID.hero[1].some(x=>x[0]===c))
