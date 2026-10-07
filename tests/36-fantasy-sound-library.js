@@ -308,6 +308,8 @@ const NEW_DIRS=["arte","deep","foe","cast","hero","wild","trade","score",
   HERO_VOICES["м"].concat(HERO_VOICES["ж"]).forEach(v=>out.push(HERO_VOICE_DIR+"obrazec_"+v.id+G+".flac"));
   /* (10.0) Боевые фразы героя по описи HERO_FIGHT. */
   Object.entries(HERO_FIGHT).forEach(([id,ключи])=>String(ключи).split(" ").filter(Boolean).forEach(k=>out.push(HERO_VOICE_DIR+"hero_f_"+k+"_"+id+G+".flac")));
+  /* (11.0) Речь двенадцати богов по описи GOD_SPEECH_LEN (папка voice_god). */
+  Object.keys(typeof GOD_SPEECH_LEN==="object"?GOD_SPEECH_LEN:{}).forEach(k=>out.push("voice_god/"+k+".flac"));
   return out;});
  const опись=(()=>{
   const корень=path.join(__dirname,"..");
