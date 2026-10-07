@@ -54225,7 +54225,7 @@ const Zver={
   let h=this.line(this.brief(a));
   h+=this.line(`${l?l.о:f.о}${v&&v.id!=="wild"?". Облик: "+v.о:""}. Редкость: ${ZV_RARITY[ZV_BREED_BY_ID[a.breed].ред]}. Ест: ${f.корм.join(", ")} (любимое — ${f.корм[0]}).`);
   {const ст=this.element(a);h+=this.line(`Свой урон: ${this.dmg(a)}${ст?", стихия — "+ст:""}. Как ${ZV_ROLES[a.роль].n} в бою наносит ${Math.round((this.ROLE_DMG[a.роль]||0.5)*100)} % от него за ход${a.нанёс?"; всего нанёс "+a.нанёс:""}.`);}
-  h+=this.line(`Сила ${this.stat(a,"сила")}, стойкость ${this.stat(a,"стойк")}, ловкость ${this.stat(a,"ловк")}, чутьё ${this.stat(a,"чутьё")}, разум ${this.stat(a,"разум")}, здоровье ${this.hp(a)} из ${this.hpMax(a)}${a.ранен?" (ранен)":""}${a.ярость>0?", ярость ещё "+a.ярость+" "+plural(a.ярость,"бой","боя","боёв"):""}${a.шкура>0?", каменная шкура ещё "+a.шкура:""}. Опыт ${a.xp} из ${this.need(a)}. Роль: ${ZV_ROLES[a.роль].n}.`);
+  h+=this.line(`${ZV_STATS.map(([k,n],i)=>(i?n:n[0].toUpperCase()+n.slice(1))+" "+this.stat(a,k)).join(", ")}, здоровье ${this.hp(a)} из ${this.hpMax(a)}${a.ранен?" (ранен)":""}${a.ярость>0?", ярость ещё "+a.ярость+" "+plural(a.ярость,"бой","боя","боёв"):""}${a.шкура>0?", каменная шкура ещё "+a.шкура:""}. Опыт ${a.xp} из ${this.need(a)}. Роль: ${ZV_ROLES[a.роль].n}.`);
   const дары=this.giftWords(a);
   if(f.ездовой&&дары.length)h+=this.line(`Верхом: ${дары.join(", ")}.`);
   h+=this.line(`Навыки: ${Object.keys(ZV_SKILLS).filter(k=>k!=="saddle"||f.ездовой).map(k=>ZV_SKILLS[k].n+" "+this.skill(a,k)).join(", ")}. Растут от дела, до десяти.`);

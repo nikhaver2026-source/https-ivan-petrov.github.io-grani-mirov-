@@ -262,7 +262,8 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
  /* ── 14. Нежить встаёт; Свет Оплота не даёт ── */
  const в=await page.evaluate(src=>{const бой=eval(src);const out={};
   const m=бой(100,{n:"Дважды павший",sv:"sv_twice",svAbil:"восстаёт"});G.combat.hp=0;СКАЗАНО.length=0;ИГРАЛО.length=0;victory();
-  out.встал=G.inCombat&&G.combat&&G.combat.hp===30&&СКАЗАНО.some(x=>/встаёт снова/.test(x))&&ИГРАЛО.indexOf("sv2_rise")>=0;
+  /* (11.5) Режиссёр мира может подстроить здоровье твари: встаёт она с третью от своего. */
+  out.встал=G.inCombat&&G.combat&&G.combat.hp===Math.max(1,Math.round((Number(m.hp)||20)*0.3))&&СКАЗАНО.some(x=>/встаёт снова/.test(x))&&ИГРАЛО.indexOf("sv2_rise")>=0;
   G.combat.hp=0;victory();out.второйРаз=!G.inCombat;
   const s=Svody.st();s.seals=SVD.spells.map(x=>x.печать);G.mana=G.manaMax=200;
   бой(30,{n:"Дважды павший",sv:"sv_twice",svAbil:"восстаёт"});const t=Svody.cast("l_oplot");out.свет=!G.inCombat&&/вдвое/.test(t);
