@@ -118,6 +118,17 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   /земель|—/.test(влияние.земля[0])&&влияние.земля[1]>100&&влияние.род[0]>100&&влияние.род[2]>3&&/предлагают/.test(влияние.предложение)&&влияние.золото>0
   &&/Пока вас не было/.test(влияние.безВас)&&влияние.сводка&&влияние.сводка.дней===4&&влияние.выбор&&влияние.напор>=0.85&&влияние.напор<=1.15,влияние);
 
+ /* ── 9 ── */
+ const голоса=await p.evaluate(async()=>{const r={};const пулы=["ch_boss","ch_open","ch_role","ch_chain"];
+  r.записей=пулы.reduce((a,k)=>a+Object.keys(VOICE_NPC[k]||{}).length,0);r.пулы=пулы.filter(k=>VOICE_NPC[k]);
+  const все=пулы.flatMap(k=>Object.values(VOICE_NPC[k]||{}).map(v=>v[0]+VOICE_GEN));r.безДлины=все.filter(f=>!VOICE_NPC_LEN[f]);
+  r.файлы=все;
+  const стр=Object.keys(VOICE_NPC.ch_role||{})[0];r.строка=стр;r.найдена=!!chVoiceLine(стр);
+  const было=Folk.сказать.bind(Folk);const сыграли=[];Folk.on=()=>true;Folk.сказать=(f,n,o)=>{сыграли.push(f);return true;};const сказано=[];const s0=window.__s0;
+  const res=Speech.say(`Житель говорит: «${стр}»`);r.ответ=res;r.сыграли=сыграли.slice();Folk.сказать=было;return r;});
+ check('9. голоса чертогов и заказчиков цепочек: пулы, длины, файлы; строка в кавычках звучит записью',
+  голоса.записей>=40&&голоса.пулы.length===4&&!голоса.безДлины.length&&голоса.файлы.every(f=>require('fs').existsSync(__dirname+'/../sounds/voice_npc/'+f+'.flac'))&&голоса.найдена&&голоса.сыграли.length===1,Object.assign({},голоса,{файлы:голоса.файлы.length}));
+
  check('страница без ошибок JavaScript',errors.length===0,errors.slice(0,3));
  await browser.close();
  results.forEach(r=>console.log(r));
