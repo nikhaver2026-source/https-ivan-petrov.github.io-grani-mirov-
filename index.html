@@ -9681,6 +9681,8 @@ const AM_GROUPS=[
   ["searchhere","Обыскать здесь"],
   ["whisperrest","Привал"],
   ["deep","Ярус подземелья"],
+  ["deeptalk","Поговорить"],
+  ["deepuse","Вещь яруса"],
   ["listenhere","Прислушаться"],
   ["hollowhere","Проверить стены на пустоту"],
   ["drinkwater","Выпить воды"],
@@ -9919,6 +9921,9 @@ function amAvailable(cmd){
   if(cmd==="mount")return (G.mounts||[]).length>0;
   if(cmd==="unmount")return !!G.mount;
   if(cmd==="chenter")return !!G.chStair||!!safeFn(()=>Chertog.here(),null);
+  /* Житель и вещь яруса — когда они в шаге от вас. */
+  if(cmd==="deeptalk")return !!safeFn(()=>Deep.npcNear(1),null);
+  if(cmd==="deepuse")return !!safeFn(()=>Deep.elNear(1),null);
   if(cmd==="charena")return !!safeFn(()=>InstanceBossEngine.arenaReady(),false);
   if(cmd==="zvride")return safeFn(()=>Zver.st().list.some(a=>ZV_FAMILY_BY_ID[a.fam].ездовой),false);
   if(cmd==="zvfeed")return safeFn(()=>Zver.st().list.length>0,false);
@@ -9995,6 +10000,8 @@ function amBtnLabel(cmd,label){
  if(cmd==="descend"&&!G.place){const c=cellContent(G.x,G.y);return c.structure?`Войти: ${c.structure.name}`:label;}
  /* Вход в чертог назван тем, как в него попасть: по лестнице вниз, по
     эфирной вверх или по пространственной; на самой лестнице — дойти. */
+ if(cmd==="deeptalk")return safeFn(()=>Deep.talkLabel(),label);
+ if(cmd==="deepuse")return safeFn(()=>Deep.useLabel(),label);
  if(cmd==="chenter"){const f=G.chStair;if(f){const n=Math.max(1,f.n-f.s);return `Пройти лестницу до конца: ${n} ${plural(n,"ступень","ступени","ступеней")}`;}
   const e=safeFn(()=>Chertog.here(),null);return e?Chertog.entryLabel(e):label;}
  if(cmd==="ascend"&&G.place)return G.place.depth>0?"Подняться на уровень выше":"Выйти наружу";
@@ -40903,7 +40910,9 @@ const approachSeen={key:"",map:{}};
 function approachOn(){return settings.approach!==0&&settings.hints!==0&&settings.hintMode!=="sound";}
 function approachObjects(){
  const p=G.place;if(!p||G.flight)return [];
- return (safeFn(()=>nearFeatures(approachR()),[])||[]).filter(o=>!APPROACH_SKIP.has(o.t));}
+ const R=approachR();
+ return (safeFn(()=>nearFeatures(R),[])||[]).filter(o=>!APPROACH_SKIP.has(o.t))
+  .concat(safeFn(()=>Deep.nearObjs(R),[])||[]).sort((a,b)=>a.d-b.d);}
 /* Текст про объекты, только что вошедшие в круг; пусто — сказать нечего. */
 function approachCues(){
  const p=G.place;if(!p)return "";
@@ -41883,6 +41892,8 @@ const Actors={
     const pool=safeFn(()=>dungeonPool(базовый.length?базовый:MONSTERS),базовый);
     const m0=(pool.length?pool:MONSTERS)[Math.floor(R(20+i)*(pool.length||MONSTERS.length))];
     this.list.push({id:i,kind:"mob",x:sp.x,y:sp.y,m:m0,name:m0.n,seen:false});}
+   /* Жители яруса Глуби — на своих местах, у поселения или у своего дела. */
+   safeFn(()=>Deep.spawnFolk(this.list,lvl,(l,x,y)=>this.free(l,x,y)));
   }else{
    /* Город и дом: стража на обходе и горожане по своим делам. За Гранью
       улицу держат гуще — стража, гарнизон и те, кто ещё в списке. */
@@ -41928,7 +41939,9 @@ const Actors={
    else{const dirs=[[1,0],[-1,0],[0,1],[0,-1]];
     const d=dirs[Math.floor(Math.random()*4)];dx=d[0];dy=d[1];}
    a.шёл=false;
-   if(this.free(lvl,a.x+dx,a.y+dy)){a.x+=dx;a.y+=dy;a.шёл=!!(dx||dy);}
+   /* Житель яруса держится своего места: в клетке и раненый — не сходит. */
+   const держит=a.kind==="deepnpc"&&(a.stay||Math.random()<0.7||Math.max(Math.abs(a.x+dx-a.hx),Math.abs(a.y+dy-a.hy))>2);
+   if(!держит&&this.free(lvl,a.x+dx,a.y+dy)){a.x+=dx;a.y+=dy;a.шёл=!!(dx||dy);}
    const d=Math.max(Math.abs(a.x-p.x),Math.abs(a.y-p.y));
    /* Стражник встал — железо на нём оседает коротким звоном; шаг прерван. */
    if(!a.шёл&&a.шёлРаньше&&a.kind!=="mob"){a.шагДо=0;if(a.kind!=="folk"&&d<=4)safeFn(()=>this.осел(a,d));}
@@ -41963,6 +41976,7 @@ const Actors={
     safeFn(()=>{const cue=["lug_growl","lug_snarl","oc_growl"][Math.floor(Math.random()*3)];
      setTimeout(()=>safeFn(()=>Actors.voice(a,cue,{gain:0.5,maxSec:5})),320);});
     narrate(`Рядом кто-то движется: ${a.name}, ${nearest.d} ${plural(nearest.d,"шаг","шага","шагов")}, ${dir}.`,{interrupt:false});}
+   else if(a.kind==="deepnpc")safeFn(()=>Deep.greet(a,nearest.d,dir));
    else if(a.kind==="guard"){
     const race=safeFn(()=>(EMPIRES[empireIndexAt(G.place.bx,G.place.by)]||EMPIRES[0]).race,null);
     const att=race?safeFn(()=>attitudeOf(race),null):null;
@@ -42319,6 +42333,7 @@ function useHere(){
    narrate("Вы набрали воды из колодца. Запас воды пополнен.");refresh();saveGame(true);return true;}
   case "T":{safeFn(()=>beacon("torch",0,0));narrate("Настенный факел. Он потрескивает и служит ориентиром.");return true;}
   default:{
+   if(safeFn(()=>Deep.useHere(),false))return true;
    const near=nearFeatures(1);
    if(near.length){narrate(`Под ногами пусто. Рядом: ${near.map(o=>`${o.name} на ${o.dir}е`).join("; ")}.`);pingSurroundings(1,3);return false;}
    /* Пусто под ногами и рядом — тогда подсказка, где спуск: ступени вниз
@@ -47941,6 +47956,9 @@ const Look=Modules.register("LOOK",{
     const R=rad||6;
     nearFeatures(R).forEach(o=>{if(o.t==="#")return;
      out.push({n:o.name,род:LOOK_KIND[o.t]||"объект",t:o.t,x:o.x,y:o.y,dx:o.dx,dy:o.dy,d:o.d,dir:o.dir,bid:o.bid,dz:o.t===">"?-1:o.t==="<"?1:0,опасно:o.t==="M"});});
+    /* Вещи яруса Глуби: механизмы, замки, загадки, логова, реликвия, поселение. */
+    safeFn(()=>Deep.nearObjs(Math.max(R,8)).forEach(o=>{const опасно=o.deep.t==="lair"||o.deep.t==="boss";
+     out.push({n:o.name,род:Deep.lookKind(o.deep),x:o.x,y:o.y,dx:o.dx,dy:o.dy,d:o.d,dir:o.dir,bid:опасно?"danger":"portal",опасно});}));
     safeFn(()=>{(Actors&&Actors.list||[]).forEach(a=>{const dx=a.x-p.x,dy=a.y-p.y,d=Math.max(Math.abs(dx),Math.abs(dy));if(!d||d>R)return;
      if(!visibleFrom(a.x,a.y))return;
      out.push({n:(a.m&&a.m.n)||a.n||"живое существо",род:a.m?"тварь":"житель",x:a.x,y:a.y,dx,dy,d,dir:dirBetween(dx,dy),bid:a.m?"danger":"npc",живое:true,опасно:!!a.m});});});
@@ -65036,6 +65054,7 @@ function questReady(q){
    case "fetch":case "war_supply":return inv(q.res)>=n;
    case "kill":case "hunt":case "craft":case "study":case "trapwork":case "hoard":return (Number(q.have)||0)>=n;
    case "visit":case "god_altar":case "soc_peace":return !!q.doneFlag;
+   case "deep":return (Number(q.have)||0)>=(Number(q.need)||1);
    case "bandits":return safeFn(()=>headsHave(),0)>=n;
    case "freight":case "delivery":return !G.place&&у()<=1&&inv(q.res)>=n;
    case "god_relic":{const g=GOD_BY_ID[q.godId];return !!g&&(G.items||[]).indexOf(`Реликвия: ${g.n}`)>=0;}
@@ -65794,6 +65813,8 @@ function openNPC(key,silent,o){const n=getNPCByKey(key);o=o||{};
  if(!silent){
   narrate(`${o.пре?o.пре+" ":""}${n.name}, ${Род.ремесло(n)}${привет&&!сказал?`: «${Род.жителя(n,привет)}»`:"."} Народ ${n.race}, ранг народа ${rank}, покровитель ${god?god.n:"неизвестен"}. Уровень влияния ${n.tier}. ${n.life}.`);}}
 function qProgressText(q){
+ if(q.type==="deep"){const d=q.deep||{};const s=safeFn(()=>Deep.spec(d.bx,d.by,d.stype),null);const x=s&&safeFn(()=>Deep.st(s),null);const dq=x&&x.quests.find(z=>z.id===d.qid);
+  return dq?Deep.qProgress(s,x,dq):`${Math.min(Number(q.have)||0,q.need)} из ${q.need}`;}
  if(q.type==="god_altar")return q.doneFlag?"молитва принята, вернитесь к заказчику":"алтарь ещё не найден: спуститесь на второй уровень подземелья и глубже";
  if(q.type==="god_relic"){const g=GOD_BY_ID[q.godId];return (G.items||[]).includes(`Реликвия: ${g?g.n:""}`)?"реликвия у вас, вернитесь к заказчику":"реликвия ещё не найдена: ищите в подземных сундуках";}
  if(q.type==="freight"){const have=Number(G.inv[q.res])||0,d=Math.max(Math.abs(G.x-q.tx),Math.abs(G.y-q.ty));
@@ -65836,6 +65857,8 @@ function completeQuest(id){
  const q=G.quests.find(qq=>qq.id===id&&!qq.done)||G.quests.find(qq=>qq.id===id);
  if(!q){narrate("Квест не найден.");return;}
  if(q.done){narrate("Это задание уже сдано.");return;}
+ /* Дело подземелья закрывает само подземелье: оно же и платит. */
+ if(q.type==="deep"){safeFn(()=>Deep.jFinish(q));refresh();renderQuests();return;}
  safeFn(()=>Gods.taboo("deal"));
  /* Сданное дело — в счёт командования; рейд — вдвойне. */
  safeFn(()=>{const было=G.quests.filter(x=>x.done).length;
@@ -70753,7 +70776,7 @@ function worldSelfCheck(){
    &&new Set(AM_GROUPS.map(g=>g[0])).size===16+(SVODY_ON?1:0)&&new Set(AM_GROUPS.map(g=>g[2].id)).size===16+(SVODY_ON?1:0)
    &&typeof amGroupOpen==="function"&&typeof amBack==="function"&&typeof CMD.amgroup==="function"
    /* Ни один пункт меню не потерян и не задвоен при разбивке. */
-   &&AM_ITEMS.length===150+(SVODY_ON?13:0)&&new Set(AM_ITEMS.map(x=>x[0])).size===150+(SVODY_ON?13:0)
+   &&AM_ITEMS.length===152+(SVODY_ON?13:0)&&new Set(AM_ITEMS.map(x=>x[0])).size===152+(SVODY_ON?13:0)
    /* Самый большой раздел меньше трети меню: прежний был на пятьдесят семь. */
    &&Math.max(...AM_GROUPS.map(g=>g[1].length))<=16
    /* Семь частей руководства, и каждая глава ровно в одной. */
@@ -70804,7 +70827,7 @@ function worldSelfCheck(){
      невозможного. */
   /* Меню действий пунктами: шестнадцать разделов, каждый пункт в одном,
      список разделов открывается первым, раздел — двойным касанием. */
-  ok("ampunkty",AM_GROUPS.length===16+(SVODY_ON?1:0)&&AM_ITEMS.length===150+(SVODY_ON?13:0)&&new Set(AM_ITEMS.map(x=>x[0])).size===150+(SVODY_ON?13:0)
+  ok("ampunkty",AM_GROUPS.length===16+(SVODY_ON?1:0)&&AM_ITEMS.length===152+(SVODY_ON?13:0)&&new Set(AM_ITEMS.map(x=>x[0])).size===152+(SVODY_ON?13:0)
    &&["start","here","move","fight","hero","quests","craft","people","magic","faith","books","world","realms","dark","sound","game"]
      .every(id=>AM_GROUP_BY_ID[id])
    &&["char","bodystate","inv","mastery"].every(c=>AM_GROUP_BY_ID.hero[1].some(x=>x[0]===c))
@@ -72560,7 +72583,7 @@ const Deep={
   else (this.reg[kind]=this.reg[kind]||[]).push(def);this.cache.clear();return true;}catch(_){return false;}},
  /* Включено ли: обычный мир, подземелье, ярус в пределах самого подземелья. */
  on(){try{const p=G.place;if(!p||G.dark||p.тайник)return false;const d=Number(p.depth)||0;if(d<=0)return false;if(PLACE_KIND[p.stype]!=="dungeon")return false;
-   if(typeof Director!=="undefined"&&Director.on&&!Director.on())return false;return d<=this.spec(p.bx,p.by,p.stype).N;}catch(_){return false;}},
+   return d<=this.spec(p.bx,p.by,p.stype).N;}catch(_){return false;}},
  /* В подземелье ли вообще (и ниже его ярусов — тоже: Нижние пути). */
  inDungeon(){const p=G.place;return !!(p&&!G.dark&&(Number(p.depth)||0)>0&&PLACE_KIND[p.stype]==="dungeon");},
  here(){const p=G.place;return p?this.spec(p.bx,p.by,p.stype):null;},
@@ -73419,6 +73442,371 @@ Object.assign(Deep,{
  summary(){const A=this.all();return Object.keys(A).map(k=>{const s=this.cache.get(k);return s?`${s.n}: ${s.cls.n}, ${s.N} ярусов, посещений ${A[k].visits}`:k;});}});
 
 /* Подключение Глуби к общим системам: урон, сутки мира, команды. */
+/* ════════════════════════════════════════════════════════════════════════
+   ГЛУБЬ 2: ЖИЗНЬ ПОДЗЕМЕЛЬЯ — В САМОМ ЯРУСЕ
+   Жалоба игрока: «в подземельях почему-то ни квестов, ничего этого нет».
+   Глубь жила в окне «Ярус подземелья»: жители, поручения, механизмы и замки
+   были списками, а в самом ярусе игрок встречал только прежних тварей. У
+   механизма он слышал «действия — в окне яруса», жителей и поселений на
+   клетках не было вовсе, а поручения сами рождались и сами закрывались,
+   мимо журнала дел. Теперь всё это стоит в ярусе:
+   — жители ходят по ярусу живыми существами: слышны шаги, при встрече —
+     слово по роду и нраву, и кто даёт дело, говорит об этом сам; «Поговорить»
+     — в меню «Здесь» и «Действием здесь»;
+   — поручения берут у жителей (или в окне яруса); взятое — в общем журнале
+     дел с целью, ходом и наградой, закрывается делом в самом ярусе и платит
+     золотом, опытом и отношением фракции; у каждого рода дела есть способ
+     его исполнить: разведка — пройти ярус, реликвия лежит на клетке, мир
+     между фракциями заключают в разговорах с обеими сторонами;
+   — механизмы, замки, загадки, тайные ходы, логова, владыка, поселение и
+     реликвия — приметы яруса: их называют «Что рядом» и «Осмотреться» (цель
+     маяка), у самой вещи — пункт «Здесь» с её именем и «Действие здесь»;
+   — при входе на ярус слышно, кто здесь живёт, у кого есть дело и какое
+     ваше дело ждёт здесь;
+   — Глубь больше не выключается вместе с Режиссёром: он правит событиями
+     и подстройкой, а не тем, кто живёт внизу.
+   ════════════════════════════════════════════════════════════════════════ */
+/* Первые слова жителя при встрече — по его роду; без родовых окончаний,
+   чтобы подходили и мужчине, и женщине. */
+const DEEP_GREET={
+ hermit:["Тише. Здесь даже камень слушает.","Давно ко мне никто не спускался.","Пришёл за делом — говори; нет — ступай с миром."],
+ explorer:["Ниже есть ходы, которых нет ни на одной карте.","Свет береги: внизу он дороже золота.","Дно близко, если знать, где свернуть."],
+ mage:["Чуешь? Ярус дышит силой — и не всегда доброй.","Камень здесь помнит чары прежних хозяев.","Иные замки заперты словом, а не ключом."],
+ trader:["Товар подземный, цены честные — почти.","Есть соль, кристаллы и слухи. Что берёшь?","Наверх отсюда несут то, чего там не найти."],
+ smith:["Горн чадит, но железо слушается.","Принесёшь шестерню — скую что угодно.","Машины прежних хозяев — лучшее железо в этих ходах."],
+ alchemist:["Не трогай склянки: половина из них кусается.","Здесь растёт то, чего нет под солнцем.","Принесёшь редкий корень — сварю, что нужно."],
+ hunter:["Тихо ступай: вожак яруса слышит шаги издалека.","Следы свежие. Зверь где-то рядом.","Зверь здесь умнее, чем наверху. Помни об этом."],
+ prisoner:["Спасибо, что не прошёл мимо.","Наверх бы… хоть на час.","Знаю ход, о котором здешние молчат."],
+ cultist:["Тот, кто спит внизу, проснётся. Вопрос — кто будет рядом.","Ты пахнешь поверхностью. Здесь это не к добру.","Печати слабеют. Слышишь, как трещат?"],
+ refugee:["Наверху беда, внизу — хоть крыша над головой.","Не выдавай нас — мы и так спрятались.","Здесь страшно, но наверху было страшнее."],
+ merc:["Плати — и пойду с тобой хоть к владыке.","Работа есть, если не боишься крови.","Меч острый, а совесть сговорчивая."],
+ engineer:["Слышишь гул? Это сеть. Она ещё жива.","Машины прежних хозяев можно разбудить — если знать как.","Не трогай рычаги, пока не спросишь меня."],
+ miner:["Жила здесь поёт — прислушайся.","Кирка тупится о здешний камень быстрее, чем наверху.","Где-то внизу та самая жила. Чую."],
+ priest:["Да хранят тебя боги глубин.","Печати держатся молитвой. Не ломай их.","Здесь свято место — веди себя достойно."],
+ guardian:["Стой. Вниз идут лишь достойные.","Стою здесь дольше, чем помнят твои предки.","Докажи, что ты не тот, кого здесь ждут."],
+ fisher:["В чёрной воде клюёт слепой змей. Терпение — вот и вся снасть.","Не шуми у воды.","Рыба здесь светится — сам увидишь."],
+ envoy:["Мой народ ищет мира с теми, кто сверху.","Говорю от имени тех, кого ты ещё не видел.","Слово здесь весит больше меча."]};
+/* Реликвии поручений «найти»: у каждой — своё имя. */
+const DEEP_RELICS=["печать прежних хозяев","осколок древнего витража","медный ключ без замка","книга в железном переплёте","идол из чёрного камня",
+ "фонарь, что светит сам","кольцо инженера","свиток с картой ярусов","колокольчик стража","кремнёвый нож первого рудокопа"];
+/* Чем житель обычно просит помочь: по его роду. */
+const DEEP_ROLE_QUEST={hunter:"hunt",engineer:"mech",smith:"mech",alchemist:"alchemy",trader:"trade",explorer:"explore",priest:"magic",mage:"magic",
+ envoy:"diplomacy",merc:"defend",miner:"search",refugee:"defend",hermit:"search",cultist:"magic",guardian:"explore",fisher:"alchemy"};
+const DEEP_EXPLORE_STEPS=20;
+Object.assign(Deep,{
+ /* Глубь живёт и при выключенном Режиссёре. */
+ on(){try{const p=G.place;if(!p||G.dark||p.тайник)return false;const d=Number(p.depth)||0;if(d<=0)return false;if(PLACE_KIND[p.stype]!=="dungeon")return false;
+   return d<=this.spec(p.bx,p.by,p.stype).N;}catch(_){return false;}},
+ /* ── жители на клетках яруса ── */
+ freeNear(lvl,p,free){if(!p)return null;for(let r=0;r<7;r++)for(let dy=-r;dy<=r;dy++)for(let dx=-r;dx<=r;dx++){if(Math.max(Math.abs(dx),Math.abs(dy))!==r)continue;
+   const X=p.x+dx,Y=p.y+dy;if(free(lvl,X,Y))return {x:X,y:Y};}return null;},
+ spawnFolk(list,lvl,free){if(!this.on())return 0;const s=this.here();const x=this.st(s);const d=this.tierNo();const ns=this.npcsOn(s,x,d);if(!ns.length)return 0;
+  const c=s.settle[d]?this.posOf(s,d,900):null;let n0=0;
+  ns.forEach((n,k)=>{const z=this.nst(x,n);const want=c?{x:c.x+((k%3)-1)*2,y:c.y+((Math.floor(k/3)%3)-1)*2}:this.posOf(s,d,300+k*5);
+   const pos=this.freeNear(lvl,want,free);if(!pos)return;n0++;
+   list.push({id:600+k,kind:"deepnpc",x:pos.x,y:pos.y,hx:pos.x,hy:pos.y,dn:n.id,name:`${n.n}, ${n.кто}`,n:`${n.n}, ${n.кто}`,жен:!!n.ж,stay:z.st!=="жив",seen:false,said:0});});
+  return n0;},
+ actors(){return ((safeFn(()=>Actors.list,[]))||[]).filter(a=>a.kind==="deepnpc");},
+ npcNear(r){const p=G.place;if(!p||!this.on())return null;const R=r==null?1:r;let best=null;
+  for(const a of this.actors()){const d=Math.max(Math.abs(a.x-p.x),Math.abs(a.y-p.y));if(d<=R&&(!best||d<best.d))best={a,d};}
+  if(!best)return null;const s=this.here();const x=this.st(s);const n=this.people(s,x).find(z=>z.id===best.a.dn);return n?{a:best.a,d:best.d,n}:null;},
+ elNear(r){if(!this.on())return null;const s=this.here();const x=this.st(s);const d=this.tierNo();const R=r==null?1:r;let best=null;
+  for(const e of this.els(s,x,d)){const q=this.rel(e);if(q.d<=R&&(!best||q.d<best.d))best={e,d:q.d};}return best;},
+ offerOf(s,x,n){return x.quests.find(q=>!q.done&&!q.taken&&q.giver===n.id);},
+ greet(a,d,dir){const s=this.here();const x=this.st(s);const n=this.people(s,x).find(z=>z.id===a.dn);if(!n)return false;
+  const now=Date.now();if(now-(Number(a.said)||0)<45000)return false;a.said=now;const z=this.nst(x,n);a.stay=z.st!=="жив";
+  const pool=DEEP_GREET[n.role]||DEEP_GREET.refugee;
+  const line=z.st==="в плену"?"Помоги! Открой клетку — я отплачу.":z.st==="ранен"?"Меня ранили… перевяжи, если есть чем.":pool[((Number(z.met)||0)+(Number(a.id)||0))%pool.length];
+  const offer=this.offerOf(s,x,n);const мой=x.quests.find(q=>!q.done&&q.taken&&q.giver===n.id);
+  safeFn(()=>Actors.voice(a,n.ж?"throng_hail_f":"throng_yes",{gain:0.45,maxSec:3}));
+  const tail=offer?` У ${n.ж?"неё":"него"} есть для вас дело.`:мой?` Ждёт, как там ${n.ж?"её":"его"} дело: ${мой.n}.`:"";
+  narrate(`${this.cap(n.n)}, ${n.кто}, ${dir}: «${line}»${tail}${d<=1?" Поговорить — «Действие здесь».":""}`,{interrupt:false});return true;},
+ /* ── поручения: предложение, взятие, журнал ── */
+ qXp(s,q){return Math.round(20+(Number(q.tier)||1)*10*((s.cls&&s.cls.k)||1));},
+ jid(s,q){return `dq_${s.key}_${q.id}`;},
+ qProgress(s,x,q){const inv=r=>Number(G.inv&&G.inv[r])||0;
+  switch(q.kind){case "combat":case "eco":case "defend":return `убито ${Math.min(q.have,q.need)} из ${q.need}`;
+   case "hunt":return q.have?"вожак пал":"вожак ещё жив; логово — в «Осмотреться»";
+   case "explore":{const n=Math.max(0,((x.ts||{})[q.tier]||0)-(Number(q.ts0)||0));return q.have?"ярус разведан":`пройдено по ${q.tier}-му ярусу ${Math.min(n,DEEP_EXPLORE_STEPS)} из ${DEEP_EXPLORE_STEPS} шагов`;}
+   case "search":return q.have?"реликвия у вас":`реликвия «${q.relic||"вещь прежних хозяев"}» ждёт на ${q.tier}-м ярусе`;
+   case "rescue":return "пленник ещё в клетке";
+   case "mech":case "magic":{const m=s.mechs.find(z=>z.id===q.mech)||s.mechs.find(z=>z.tier===q.tier);return m?`${DEEP_MECH_KINDS[m.kind].n}: ${DEEP_MECH_STATES[this.mst(x,m)]||this.mst(x,m)}`:"механизм на месте";}
+   case "alchemy":return `${Math.min(inv(q.res),q.need)} из ${q.need} × ${q.res}`;
+   case "diplomacy":return `согласны на мир: ${Object.keys(x.peace||{}).length} из ${q.need}`;
+   case "stealth":return q.clean?`дойдите до ${q.to}-го яруса без боя`:"бой уже был — весть не дойдёт тайно";
+   case "trade":return `${Math.min(inv(q.res),q.need)} из ${q.need} × ${q.res}; нести на ${q.to}-й ярус`;}
+  return q.о||"";},
+ qTake(qid){const s=this.here();const x=this.st(s);const q=x.quests.find(z=>z.id===qid&&!z.done);if(!q)return this.view("quests");
+  if(q.taken){this.say("Это дело уже у вас.");return this.view("quests");}
+  if(typeof questsFull==="function"&&questsFull()){this.say(questsFullText());return this.view("quests");}
+  q.taken=1;q.takenDay=Number(G.day)||1;
+  if(q.kind==="search"&&!q.relic)q.relic=DEEP_RELICS[Math.floor(hashName(s.bx+q.tier*7,s.by+(x.qn||0),4471)*DEEP_RELICS.length)%DEEP_RELICS.length];
+  if(q.kind==="explore"){x.ts=x.ts||{};q.ts0=Number(x.ts[q.tier])||0;}
+  if(q.kind==="diplomacy")q.need=Math.max(1,Math.min(2,s.factions.length));
+  if(q.kind==="stealth")q.clean=1;
+  const gv=this.people(s,x).find(n=>n.id===q.giver);const xp=this.qXp(s,q);
+  if(!Array.isArray(G.quests))G.quests=[];
+  G.quests.push({id:this.jid(s,q),type:"deep",npc:gv?`${gv.n} (${gv.кто})`:"жители подземелья",race:null,
+   text:`Подземелье «${s.n}», ${q.tier}-й ярус: ${q.n}. ${this.cap(q.о)}.`,need:q.need,have:Math.min(q.need,Number(q.have)||0),done:false,состояние:"открыто",
+   reward:{gold:q.reward.gold,xp},deep:{key:s.key,bx:s.bx,by:s.by,stype:s.stype,qid:q.id,tier:q.tier,kind:q.kind},взят:Number(G.day)||1});
+  safeFn(()=>journal(`Поручение в подземелье «${s.n}»: ${q.n}.`));safeFn(()=>eventTheme("quest_take",{gain:0.55}));safeFn(()=>renderQuests());
+  const где=this.qWhere(s,x,q);
+  this.say(`Вы взялись: ${q.n}. ${this.cap(q.о)}.${где?" "+где:""} Дело — в журнале.`);return gv?this.talk(gv.id):this.view("quests");},
+ /* Куда идти по делу — словами, без окна. */
+ qWhere(s,x,q){const d=this.tierNo();
+  if(q.tier!==d&&["hunt","search","explore","mech","magic","defend","combat","eco"].includes(q.kind))return `Это на ${q.tier}-м ярусе, вы на ${d}-м.`;
+  const e=this.els(s,x,q.tier).find(z=>(q.kind==="search"&&z.t==="relic"&&z.ref.id===q.id)||(q.kind==="hunt"&&z.t==="lair")||((q.kind==="mech"||q.kind==="magic")&&z.t==="mech"&&(z.ref.id===q.mech||z.ref.tier===q.tier)));
+  return e?`${this.cap(e.n)}: ${this.where(e)}.`:"";},
+ jSync(s,x){if(!Array.isArray(G.quests))return;let ch=0;
+  for(const q of x.quests){if(!q.taken)continue;const e=G.quests.find(z=>z.id===this.jid(s,q));if(!e)continue;
+   const have=Math.min(q.need,Number(q.have)||0);if(e.have!==have){e.have=have;ch=1;}
+   if(q.done&&!e.done){e.done=true;if(q.failed){e.провал=true;e.состояние="провалено";}else e.состояние="сдано";ch=1;}}
+  if(ch)safeFn(()=>renderQuests());},
+ /* «Завершить» в журнале: закрыть, если дело сделано (а принести — отдать). */
+ jFinish(e){const d=e&&e.deep;if(!d){narrate("Дело не найдено.");return false;}const s=this.spec(d.bx,d.by,d.stype);const x=this.st(s);const q=x.quests.find(z=>z.id===d.qid);
+  if(!q){e.done=true;e.провал=true;e.состояние="провалено";safeFn(()=>renderQuests());narrate("Это дело подземелья уже не застать: оно истекло.");return false;}
+  if(q.done){this.jSync(s,x);narrate("Это дело уже закрыто.");return true;}
+  if(q.kind==="alchemy"||q.kind==="trade"){const have=Number(G.inv&&G.inv[q.res])||0;
+   if(q.kind==="trade"&&!(G.place&&this.on()&&this.here()===s&&this.tierNo()===q.to)){narrate(`Товар ждут на ${q.to}-м ярусе подземелья «${s.n}».`);return false;}
+   if(have<q.need){narrate(`Дело не сделано: ${this.qProgress(s,x,q)}.`);return false;}
+   G.inv[q.res]=have-q.need;if(G.inv[q.res]<=0)delete G.inv[q.res];q.have=q.need;narrate(this.questDone(s,x,q));return true;}
+  if((Number(q.have)||0)>=q.need){narrate(this.questDone(s,x,q));return true;}
+  narrate(`Дело не сделано: ${this.qProgress(s,x,q)}.`);return false;},
+ /* Каждый житель этого яруса, кому есть что поручить, держит своё дело. */
+ questsEnsure(s,x){const offers=()=>x.quests.filter(q=>!q.done&&!q.taken);const d=this.tierNo()||1;const day=Number(G.day)||1;
+  for(const n of (this.on()?this.npcsOn(s,x,d):[])){if(offers().length>=5)break;const z=this.nst(x,n);
+   if(z.st!=="жив"||this.offerOf(s,x,n)||x.quests.some(q=>!q.done&&q.taken&&q.giver===n.id))continue;
+   if((Number(z.lastOffer)||0)+2>day&&z.lastOffer)continue;
+   let kind=DEEP_ROLE_QUEST[n.role]||"search",tier=d,mech=null;
+   if(kind==="mech"){const m=s.mechs.find(m=>["damaged","repair"].includes(this.mst(x,m)));if(m){tier=m.tier;mech=m.id;}else kind="explore";}
+   if(kind==="magic"){const m=s.mechs.find(m=>this.mst(x,m)==="cursed");if(m){tier=m.tier;mech=m.id;}else kind="search";}
+   if(kind==="hunt"){const v=s.minis.find(v=>!x.mini[v.id]);if(v)tier=v.tier;else kind="combat";}
+   if(kind==="defend"&&!s.settle[d])kind="combat";
+   if(kind==="diplomacy"&&s.factions.length<2)kind="search";
+   if(kind==="trade"&&Object.keys(s.settle).filter(t=>+t!==d).length<1)kind="alchemy";
+   if(kind==="explore")tier=Math.min(s.N,d+1);
+   if(kind==="search")tier=Math.min(s.N,d+(hashName(s.bx+d,s.by+day,4472)<0.5?0:1));
+   const why={hunt:"вожак не даёт ходить по ярусу",combat:`хищников на ${tier}-м ярусе стало слишком много`,mech:"машина встала, а без неё ярусу худо",magic:"порча ползёт по механизму",
+    alchemy:"не хватает редкого для варева",trade:"соседнему поселению нужен товар",explore:"ниже давно никто не был",search:"жители помнят о реликвии прежних хозяев",
+    defend:"твари подходят к поселению",diplomacy:"фракции на грани войны"}[kind]||"так сложилось";
+   const q=this.questAdd(s,x,{kind,tier,why,giver:n,mech});if(q)z.lastOffer=day;}
+  if(offers().length>=3)return;
+  /* общие дела подземелья — как прежде, пока предложений мало */
+  const kinds=[];for(let i=1;i<=s.N&&kinds.length<6;i++){const e=x.eco[i];if(e&&e.p>0.8)kinds.push(["combat",i,`хищников на ${i}-м ярусе стало слишком много`]);}
+  s.npcs.filter(n=>this.nst(x,n).st==="в плену").slice(0,1).forEach(n=>kinds.push(["rescue",this.nst(x,n).t,`${n.n} томится в клетке`]));
+  if(s.factions.length>=2)kinds.push(["diplomacy",1,"фракции подземелья на грани войны"]);
+  kinds.push(["search",1+Math.floor(Math.random()*s.N),"жители помнят о реликвии прежних хозяев"]);kinds.push(["stealth",1+Math.floor(Math.random()*Math.max(1,s.N-2)),"весть нельзя доверить тем, кто шумит"]);
+  for(const [k,i,why] of kinds){if(offers().length>=3)break;this.questAdd(s,x,{kind:k,tier:i,why});}},
+ questKill(s,x,D){for(const q of x.quests){if(q.done||!q.taken)continue;
+   if((q.kind==="combat"||q.kind==="eco"||q.kind==="defend")&&q.tier===D.tier){q.have=(Number(q.have)||0)+1;
+    if(q.have>=q.need)setTimeout(()=>safeFn(()=>this.say(this.questDone(s,x,q))),3600);else this.say(`${q.n}: ${q.have} из ${q.need}.`,{key:"dwq"});}
+   if(q.kind==="hunt"&&q.tier===D.tier&&D.rank==="mini"){q.have=1;setTimeout(()=>safeFn(()=>this.say(this.questDone(s,x,q))),3600);}}
+  for(const q of x.quests)if(!q.done&&q.kind==="stealth")q.clean=0;this.jSync(s,x);},
+ questEnter(s,x,d){for(const q of x.quests){if(q.done||!q.taken)continue;
+   if(q.kind==="stealth"&&d===q.to){if(q.clean)this.say(this.questDone(s,x,q));else{q.done=1;q.failed=1;this.say(`Поручение «${q.n}» сорвано: вы вступали в бой.`);}}
+   if(q.kind==="trade"&&d===q.to&&(Number(G.inv[q.res])||0)>=q.need){G.inv[q.res]-=q.need;q.have=q.need;this.say(this.questDone(s,x,q));}}
+  this.jSync(s,x);},
+ /* Разведка: двадцать шагов по ярусу — и он пройден. */
+ liveStep(s,x,d){x.ts=x.ts||{};x.ts[d]=(Number(x.ts[d])||0)+1;
+  for(const q of x.quests)if(q.taken&&!q.done&&q.kind==="explore"&&q.tier===d&&x.ts[d]-(Number(q.ts0)||0)>=DEEP_EXPLORE_STEPS){q.have=1;this.say(this.questDone(s,x,q));}},
+ relicTake(qid){const s=this.here();const x=this.st(s);const q=x.quests.find(z=>z.id===qid);if(!q||q.done)return this.things();
+  const e=this.els(s,x,this.tierNo()).find(z=>z.t==="relic"&&z.ref.id===qid);if(!e)return this.things();
+  if(!this.near(e)){this.say(`До реликвии ${this.where(e)}. Включите маяк.`);return this.el("relic:"+qid);}
+  safeFn(()=>Bank.play("arte_gem",{gain:0.55,maxSec:2}));q.have=1;if(!Array.isArray(G.items))G.items=[];G.items.push(`Реликвия подземелья: ${q.relic}`);
+  this.say(`Вы поднимаете реликвию: ${q.relic}. ${this.questDone(s,x,q)}`);safeFn(()=>closeTopUI());return true;},
+ peaceTalk(id){const s=this.here();const x=this.st(s);const n=this.people(s,x).find(z=>z.id===id);const q=x.quests.find(z=>!z.done&&z.taken&&z.kind==="diplomacy");
+  if(!n||!n.f||!q)return this.talk(id);const z=this.nst(x,n);const f=s.factions.find(F=>F.id===n.f);
+  if(z.att<0){this.say(`${n.n}: «С тобой — о мире? Сначала заслужи доверие».`);return this.talk(id);}
+  x.peace=x.peace||{};x.peace[n.f]=1;const k=Object.keys(x.peace).length;q.have=Math.min(q.need,k);
+  this.say(`${n.n} выслушивает вас: «${f?f.n:"Наши"} готовы говорить, если и другие готовы». Согласны на мир: ${k} из ${q.need}.`);
+  if(k>=q.need)this.say(this.questDone(s,x,q));this.jSync(s,x);return this.talk(id);},
+ /* ── разговор: жизнь, дело, взятые дела, мир ── */
+ talk(id){const s=this.here();const x=this.st(s);const n=this.people(s,x).find(z=>z.id===id);if(!n)return this.view("folk");const z=this.nst(x,n);if(z.t!==this.tierNo())return this.view("folk");
+  z.met=(Number(z.met)||0)+1;const он=n.ж?"она":"он",его=n.ж?"её":"его";
+  let h=this.line(`${n.n}, ${n.кто}${n.f?`, «${(s.factions.find(f=>f.id===n.f)||{}).n}»`:""}. Нрав: ${n.нрав}. ${this.cap(n.био)}. Хочет ${n.желание}; цель — ${n.цель}; боится ${n.страх}. Отношение к вам: ${this.attWord(z.att)}.`);
+  if(z.st==="в плену")h+=this.line("Сидит в клетке и смотрит на вас с надеждой.")+this.btn("free:"+id,"Освободить пленника")+this.btn("buyout:"+id,`Выкупить за ${40+this.tierNo()*10} золота`);
+  else{
+   const offer=this.offerOf(s,x,n);
+   if(offer)h+=this.line(`Есть дело: ${offer.n}. ${this.cap(offer.о)}. Почему: ${offer.why||"так сложилось"}. Награда: ${offer.reward.gold} золота и ${this.qXp(s,offer)} опыта${offer.reward.rep?`, отношение фракции +${offer.reward.rep}`:""}.`)
+    +this.btn("qtake:"+offer.id,`Взяться: ${offer.n}`);
+   for(const q of x.quests.filter(q=>!q.done&&q.taken&&q.giver===id)){h+=this.line(`Ваше дело для ${его}: ${q.n} — ${this.qProgress(s,x,q)}.`);
+    if(q.kind==="alchemy")h+=this.btn("give:"+q.id,`Отдать ${q.need} × ${q.res} (у вас ${Number(G.inv[q.res])||0})`);}
+   const мир=x.quests.find(q=>!q.done&&q.taken&&q.kind==="diplomacy");if(мир&&n.f&&!(x.peace||{})[n.f])h+=this.btn("peace:"+id,"Говорить о мире между фракциями");
+   h+=this.btn("ask:"+id,`Спросить, что ${он} знает`);if(n.role==="engineer"&&s.net)h+=this.btn("eng:"+id,"Спросить о древнем ядре");
+   if(["trader","smith","alchemist"].includes(n.role))h+=this.btn("trade:"+this.tierNo(),"Торговать");if(n.role==="guardian")h+=this.btn("trial:"+id,"Пройти испытание хранителя");}
+  if(z.st==="ранен")h+=this.btn("heal:"+id,"Перевязать раны");h+=this.btn("folk","Назад, к жителям");
+  safeFn(()=>this.cue("hero_step_cloth",1,0,0.4));return this.show(n.n,h);},
+ questsView(){const s=this.here();const x=this.st(s);let h="";const cl=this.chainLine(s,x);if(cl)h+=this.line(cl);
+  if(s.net&&x.chain.s===9){h+=this.btn("choice:settle","Отдать ядро поселениям");h+=this.btn("choice:faction",`Отдать ядро фракции «${s.factions[0].n}»`);h+=this.btn("choice:take","Забрать силу ядра себе");h+=this.btn("choice:sleep","Усыпить ядро и разум");}
+  const мои=x.quests.filter(q=>!q.done&&q.taken),пред=x.quests.filter(q=>!q.done&&!q.taken);
+  h+=this.line(мои.length?`Ваши дела здесь: ${мои.length}. Они же — в журнале дел.`:"Взятых дел в этом подземелье нет.");
+  for(const q of мои){const g=this.people(s,x).find(n=>n.id===q.giver);h+=this.line(`${q.n} (${q.tier}-й ярус): ${this.qProgress(s,x,q)}.${g?" Дал: "+g.n+".":""}`);
+   if(q.kind==="alchemy")h+=this.btn("give:"+q.id,`Отдать ${q.need} × ${q.res}`);}
+  if(пред.length)h+=this.line(`Предлагают: ${пред.length}. Взяться можно здесь или у самого заказчика.`);
+  for(const q of пред){const g=this.people(s,x).find(n=>n.id===q.giver);const gz=g?this.nst(x,g):null;
+   h+=this.line(`${q.n} (${DEEP_QUEST_KINDS[q.kind]||q.kind}, ${q.tier}-й ярус): ${q.о}. Почему: ${q.why||"так сложилось"}.${g?` Заказчик: ${g.n}, ${g.кто}, на ${gz.t}-м ярусе.`:""} Награда: ${q.reward.gold} золота и ${this.qXp(s,q)} опыта.`)
+    +this.btn("qtake:"+q.id,`Взяться: ${q.n}`);}
+  const done=x.quests.filter(q=>q.done).slice(-3);if(done.length)h+=this.line(`Закрыто недавно: ${done.map(q=>q.n+(q.failed?" (сорвано)":"")).join("; ")}.`);
+  return this.show("Поручения подземелья",h);},
+ /* ── вещи яруса: прямо на месте ── */
+ verb(e){return {mech:"осмотреть и управлять",lock:"открыть замок",puzzle:"взяться за загадку",secret:"пройти тайным ходом",lair:"напасть на вожака",boss:"бросить вызов владыке",
+  stier:"войти",bloom:"собрать цветение",relic:"взять реликвию",settle:"торговать и говорить с жителями"}[e.t]||"действовать";},
+ lookKind(e){return {mech:"механизм",lock:"замок",puzzle:"загадка",secret:"тайный ход",lair:"логово",boss:"владыка",stier:"потаённый ход",bloom:"цветение",relic:"реликвия",settle:"поселение"}[e.t]||"вещь яруса";},
+ nearObjs(R){if(!this.on())return [];const s=this.here();const x=this.st(s);const d=this.tierNo();const p=G.place;const out=[];
+  for(const e of this.els(s,x,d)){const dx=e.x-p.x,dy=e.y-p.y,dd=Math.max(Math.abs(dx),Math.abs(dy));if(dd>R)continue;
+   out.push({x:e.x,y:e.y,dx,dy,d:dd,dir:dd?dirBetween(dx,dy):"здесь",name:e.n,t:"deep",deep:e});}
+  return out.sort((a,b)=>a.d-b.d);},
+ useHere(){if(!this.on())return false;const n=this.npcNear(1);if(n){this.talk(n.n.id);return true;}
+  const e=this.elNear(1);if(e){this.el(e.e.t+":"+(e.e.ref.id||""));return true;}return false;},
+ talkLabel(){const r=this.npcNear(1);return r?`Поговорить: ${r.n.n}, ${r.n.кто}`:"Поговорить";},
+ useLabel(){const r=this.elNear(1);return r?`${this.cap(r.e.n)}: ${this.verb(r.e)}`:"Вещь яруса";},
+ /* Приход на ярус: кто здесь, у кого дело, что ждёт вас. */
+ enterSay(s,x,d){if(!this.on()||this.tierNo()!==d)return;const ns=this.npcsOn(s,x,d);const t=[];
+  if(ns.length)t.push(`Здесь ${ns.length===1?"живёт":"живут"}: ${ns.slice(0,4).map(n=>`${n.n}, ${n.кто}`).join("; ")}${ns.length>4?` и ещё ${ns.length-4}`:""}`);
+  const offers=x.quests.filter(q=>!q.done&&!q.taken&&ns.some(n=>n.id===q.giver));
+  if(offers.length)t.push(`дело есть у: ${[...new Set(offers.map(q=>(ns.find(n=>n.id===q.giver)||{}).n).filter(Boolean))].join(", ")}`);
+  const мои=x.quests.filter(q=>!q.done&&q.taken&&(q.tier===d||q.to===d));if(мои.length)t.push(`ваше дело здесь: ${мои.map(q=>q.n).join("; ")}`);
+  const els=this.els(s,x,d).filter(e=>e.t!=="settle");if(els.length)t.push(`вещей яруса — ${els.length}: они в «Осмотреться»`);
+  if(t.length)this.say(t.map(z=>this.cap(z)).join(". ")+".");},
+ step(nx,ny){if(!this.on())return;const s=this.here();const x=this.st(s);const d=this.tierNo();x.steps=(x.steps||0)+1;
+  if(x.steps%23===0)this.ambience(s,x,d,1);
+  for(const e of this.els(s,x,d)){const k=`${d}:${e.t}:${e.ref.id||e.n}`;if(this.rel(e).d<=1&&!x.tok[k]){x.tok[k]=Number(G.day)||1;
+    const st=e.t==="mech"?` (${DEEP_MECH_STATES[this.mst(x,e.ref)]||this.mst(x,e.ref)})`:"";this.cue(e.role,e.x-G.place.x,e.y-G.place.y,0.45);
+    setTimeout(()=>safeFn(()=>this.say(`Рядом: ${e.n}${st}. «Действие здесь» — ${this.verb(e)}.`,{key:"dwnear"})),400);break;}}
+  if(s.ai&&(x.ai.att||0)>=8&&Math.random()<0.01){x.ai.att-=1;safeFn(()=>Bank.play(s.ai.голос,{gain:0.5,maxSec:3}));this.say(`${this.cap(s.ai.n)} меняет свет: ярус погружается во тьму. ${safeFn(()=>Hv.add("blind",1,s.ai.n),"")||""}`);}
+  safeFn(()=>this.liveStep(s,x,d));}
+});
+/* Реликвия поручения и поселение — тоже вещи яруса. */
+{const e0=Deep.els;Deep.els=function(s,x,i){const out=e0.call(this,s,x,i);
+  for(const q of x.quests)if(q.taken&&!q.done&&q.kind==="search"&&q.tier===i){const k=parseInt(String(q.id).replace(/\D/g,""),10)||0;
+   out.push(Object.assign({t:"relic",ref:{id:q.id,tier:i},n:`реликвия: ${q.relic||"вещь прежних хозяев"}`,role:"magic_shimmer"},this.posOf(s,i,700+k)));}
+  if(s.settle[i]){const S=s.settle[i];out.push(Object.assign({t:"settle",ref:{id:"settle"+i,tier:i},n:`${DEEP_SETTLE_KINDS[S.kind]} «${S.n}»`,role:"hero_step_cloth"},this.posOf(s,i,900)));}
+  return out;};}
+{const el0=Deep.el;Deep.el=function(id){const [t,rid]=String(id).split(":");
+  if(t!=="relic"&&t!=="settle")return el0.call(this,id);
+  const s=this.here();const x=this.st(s);const d=this.tierNo();const e=this.els(s,x,d).find(q=>q.t===t&&String(q.ref.id||"")===rid);if(!e)return this.things();
+  let h=this.line(`${this.cap(e.n)} — ${this.where(e)}.`);if(!this.near(e))h+=this.btn("beacon:"+id,"Маяк: вести туда");
+  if(t==="relic"){const q=x.quests.find(z=>z.id===rid);if(q)h+=this.line(`Ваше дело: ${q.n}.`);if(this.near(e))h+=this.btn("relic:"+rid,"Взять реликвию");}
+  if(t==="settle"){const S=s.settle[d];const z=x.set[d]||(x.set[d]=this.setInit(s,d));
+   h+=this.line(`${this.cap(DEEP_SETTLE_KINDS[S.kind])} «${S.n}»: жителей ${z.pop}, достаток ${Math.round(z.wealth*100)} из ста, безопасность ${Math.round(z.safety*100)}.`);
+   h+=this.btn("trade:"+d,"Торговать")+this.btn("folk","Жители")+this.btn("quests","Поручения");}
+  safeFn(()=>{const r=this.rel(e);this.cue(e.role,r.dx,r.dy,0.45);});return this.show(this.cap(e.n),h);};}
+/* Поручение, предложенное при создании, говорит, где его логово. */
+{const qa0=Deep.questAdd;Deep.questAdd=function(s,x,o){const q=qa0.call(this,s,x,o);if(q&&q.о)q.о=q.о.replace(" (логово — в окне яруса)"," (логово — в «Осмотреться», цель маяка)");return q;};}
+/* Закрытое дело платит и опытом и отмечается в журнале. */
+{const qd0=Deep.questDone;Deep.questDone=function(s,x,q,extra){const was=!!q.done;const t=qd0.call(this,s,x,q,extra);
+  if(!was&&q.done&&!q.failed){const xp=safeFn(()=>xpGain(this.qXp(s,q)),this.qXp(s,q));G.xp=(Number(G.xp)||0)+xp;q.have=q.need;
+   safeFn(()=>this.jSync(s,x));safeFn(()=>checkLevelUp());safeFn(()=>refresh());return t?`${t} Опыт +${xp}.`:t;}
+  safeFn(()=>this.jSync(s,x));return t;};}
+/* Приход на ярус и окно поручений: новые слова. */
+{const en0=Deep.enter;Deep.enter=function(d){en0.apply(this,arguments);if(!this.on())return;const s=this.here();const x=this.st(s);setTimeout(()=>safeFn(()=>this.enterSay(s,x,d)),1800);};}
+{const tl0=Deep.tierLine;Deep.tierLine=function(d){const t=tl0.call(this,d);return t?t.replace(" Окно яруса — в меню действий: «Ярус подземелья».",
+  " Жители, их дела и вещи яруса — прямо здесь: «Осмотреться», «Поговорить» и «Действие здесь»; сводка — «Ярус подземелья» в меню «Здесь»."):t;};}
+/* Новые команды окна. */
+{const c0=Deep.cmd;Deep.cmd=function(a){const [k,...r]=String(a||"").split(":");const arg=r.join(":");
+  try{if(k==="qtake")return this.qTake(arg);if(k==="relic")return this.relicTake(arg);if(k==="peace")return this.peaceTalk(arg);}catch(e){console.error("[Deep]",e);}
+  return c0.call(this,a);};}
+/* Отдача и освобождение — тоже в журнал. */
+for(const f of ["give","free","mechAct","lockTry"]){const f0=Deep[f];if(typeof f0!=="function")continue;
+ Deep[f]=function(){const r=f0.apply(this,arguments);safeFn(()=>{const s=this.here();if(s)this.jSync(s,this.st(s));});return r;};}
+Object.assign(CMD,{
+ deeptalk(){const r=Deep.npcNear(1);if(!r){narrate("Рядом никого из жителей.",{interrupt:true});return;}Deep.talk(r.n.id);},
+ deepuse(){const r=Deep.elNear(1);if(!r){narrate("Рядом нет вещей яруса.",{interrupt:true});return;}Deep.el(r.e.t+":"+(r.e.ref.id||""));}});
+/* ════════════════════════════════════════════════════════════════════════
+   У КАЖДОГО ЯРУСА — СВОЁ
+   Просьба игрока: «наполнение чертогов и обычных подземелий должно
+   отличаться, каждое наполнение каждого яруса — уникальным: квесты,
+   персонажи, монстры, ресурсы, артефакты, механизмы, экосистема». Ярусы
+   одной породы прежде делили одни и те же ресурсы и виды тварей, механизмы
+   были безымянны, а приметы могли повторяться. Теперь у каждого яруса своя
+   подпись, выведенная из координат подземелья и номера яруса:
+   — своё имя («Галерея Сорока Ламп»), неповторимое внутри подземелья;
+   — свой ресурс: порода яруса с местной приметой («кварц с медным
+     отливом»); его дают цветение, логова и тайники яруса, им торгуют в
+     здешнем поселении, о нём просят здешние поручения;
+   — свои твари: два вида своей породы и пришлый снизу, у каждого местное
+     имя и своя черта (каменная шкура — стойкость к земле, ядовитые шипы —
+     яд, тихая поступь — уклон…); род каждого яруса учится на вас отдельно;
+   — своя реликвия с историей хозяина; её ищут поручения «найти», а тайник
+     яруса отдаёт её один раз;
+   — механизмы с прозвищами («насос «Ворчун»»), вожак — с именем яруса;
+   — экосистема яруса называет своих тварей и свой ресурс.
+   Чертоги собираются из своих словарей (цивилизации, эпитеты, фауна
+   чертогов), подземелья — из этих: одно с другим не совпадает.
+   ════════════════════════════════════════════════════════════════════════ */
+const DEEP_TIER_HEAD=["Галерея","Штольня","Колодец","Зал","Переход","Грот","Свод","Ниша","Забой","Купол","Подвал","Выработка","Притвор","Анфилада","Подклет","Лаз","Кольцо","Порог","Терраса","Ярусная улица"];
+const DEEP_TIER_TAIL=["Сорока Ламп","Вдовьего Плача","Немого Звонаря","Трёх Ключников","Рыжей Глины","Сломанной Клятвы","Последнего Обвала","Капающих Часов","Мокрого Шёпота","Старой Смолы",
+ "Чужих Следов","Красной Охры","Тёплого Сквозняка","Совиного Крика","Кривого Мастера","Рассыпанной Соли","Девяти Ступеней","Чёрного Молока","Спящих Кротов","Сырой Извести",
+ "Брошенных Кирок","Медвежьей Лапы","Седого Мха","Разбитых Кувшинов","Глухой Воды","Горького Дыма","Пропавшей Артели","Холодной Печи","Двух Братьев","Висячих Корней",
+ "Битого Стекла","Тихой Ртути","Кованых Скоб","Ночного Сторожа","Синей Плесени","Острого Сланца","Петушиного Камня","Лунной Капели","Старого Ворота","Сорванной Цепи"];
+const DEEP_RES_QUAL=["с медным отливом","с прожилками охры","с запахом дыма","с искрой внутри","с горьким привкусом","с синим налётом","с тёплой сердцевиной","с узором трещин","с серебряной пылью","с каплей смолы",
+ "с чёрной каймой","с жёлтыми пятнами","с хрустом на изломе","с туманом внутри","с винным оттенком","с рыжей коркой","с мерцанием в темноте","с солоноватым духом","с зелёной жилкой","с пеплом в порах"];
+const DEEP_BEAST_TRAIT=[{n:"с каменной шкурой",res:"earth"},{n:"с ядовитыми шипами",sk:"poison"},{n:"с глазами, что видят во тьме",sk:"enrage"},{n:"с выжженной меткой прежних хозяев",res:"fire"},
+ {n:"с медным ошейником строителей",sk:"shield"},{n:"с костяным гребнем",sk:"cleave"},{n:"с мокрой чешуёй",res:"water"},{n:"с тихой поступью",dodge:0.12},{n:"с инеем на шерсти",res:"air"},
+ {n:"с гнилым дыханием",sk:"drain"},{n:"с рогом, что гудит перед ударом",sk:"roar"},{n:"с заросшими глазами — идёт на звук",dodge:0.08},{n:"с панцирем из слипшейся гальки",res:"earth"},{n:"с кровью, что быстро сворачивается",sk:"regen"}];
+const DEEP_RELIC_OBJ=["печать","фонарь","ключ","свиток","кубок","колокольчик","идол","нож","кольцо","книга","маска","рог","посох","амулет","компас","молоток","фляга","гребень","зеркальце","счётные палочки"];
+const DEEP_RELIC_OWN=["первого рудокопа","немой жрицы","беглого инженера","старосты-основателя","сторожа шахты","певицы нижнего яруса","кузнеца-отшельника","вожака артели","картографа без имени","последнего из строителей",
+ "ребёнка, что родился внизу","слепого звонаря","утонувшего паромщика","казначея прежних хозяев","двух сестёр-штейгеров"];
+const DEEP_MECH_NICK=["Старый Хрип","Ворчун","Рыжая Тётка","Безухий","Звонарь","Молчун","Колченогий","Дед Гром","Жестянка","Сиплый","Кривошей","Тихоня","Скрипун","Большой Вздох","Хромая Мельница","Сердитый","Барабан","Полуночник","Кашлюн","Бабушкин Сундук"];
+Object.assign(Deep,{
+ tierSig(s,i){const T=s.tiers[i];if(!T)return null;if(T.sig)return T.sig;const R=this.rng(hashName(s.bx*7+i*131,s.by*11+i*71,5150+i)*4294967296);
+  const used=s._used||(s._used={name:new Set(),res:new Set(),relic:new Set()});const uniq=(set,mk)=>{let v=mk();for(let k=0;k<30&&set.has(v);k++)v=mk();set.add(v);return v;};
+  const name=uniq(used.name,()=>`${this.pick(DEEP_TIER_HEAD,R)} ${this.pick(DEEP_TIER_TAIL,R)}`);const tail=name.split(" ").slice(name.startsWith("Ярусная")?2:1).join(" ");
+  const b=DEEP_BIOME_BY_ID[T.b];const res=uniq(used.res,()=>`${this.pick(b.ресурсы,R)} ${this.pick(DEEP_RES_QUAL,R)}`);
+  const sp=b.виды.slice().sort(()=>R()-0.5).slice(0,2);const nb=DEEP_BIOME_BY_ID[s.tiers[Math.min(s.N,i+1)].b];const vis=this.pick(nb.виды,R);
+  const fauna=sp.concat([vis]).map((v,k)=>{const tr=this.pick(DEEP_BEAST_TRAIT,R);return {id:v[0],base:v[1],n:`${v[1]} ${tail}`,trait:tr,гость:k===2&&nb!==b};});
+  const relic=uniq(used.relic,()=>`${this.pick(DEEP_RELIC_OBJ,R)} ${this.pick(DEEP_RELIC_OWN,R)}`);
+  T.sig={name,tail,res,base:res.split(" с ")[0],fauna,relic};return T.sig;},
+ sigOf(i){const s=this.here();return s?this.tierSig(s,i==null?this.tierNo():i):null;},
+ regLocal(s){for(let i=1;i<=s.N;i++){const g=this.tierSig(s,i);const b=DEEP_BIOME_BY_ID[s.tiers[i].b];const k=Math.max(0,b.ресурсы.indexOf(g.base));
+   if(DEEP_PRICE[g.res]==null&&!(typeof RES_BASE!=="undefined"&&RES_BASE[g.res]))DEEP_PRICE[g.res]=Math.round((14+b.м*12+k*9)*1.6);
+   safeFn(()=>{if(typeof MIX_NATURE!=="undefined"&&!MIX_NATURE[g.res])MIX_NATURE[g.res]=(MIX_NATURE[g.base]||[]).slice();});}},
+ mechNick(s,m){return DEEP_MECH_NICK[Math.floor(hashName(s.bx*3+m.tier*17,s.by*5+(parseInt(String(m.id).replace(/\D/g,""),10)||0)*29,5151)*DEEP_MECH_NICK.length)%DEEP_MECH_NICK.length];},
+ /* Твари яруса: свои виды под местным именем. */
+ speciesFor(s,i,m){const g=this.tierSig(s,i);const x=this.st(s);const e=x.eco[i]||{};
+  let f=g.fauna.find(z=>z.id===m.id);if(!f){const R=this.rng(hashName(i*13+(G.place.x||0),(G.place.y||0)*7+i,8642)*4294967296);f=this.pick(g.fauna,R);}
+  if(e.inv&&Math.random()<0.35){const g2=this.tierSig(s,Math.min(s.N,i+3));const f2=g2.fauna[0];return [f2.id,`${f2.n}, пришлый снизу`];}
+  return [f.id,f.n];}
+});
+{const sp0=Deep.spec;Deep.spec=function(bx,by,stype){const s=sp0.call(this,bx,by,stype);
+  if(s&&!s._sigDone){s._sigDone=1;for(let i=1;i<=s.N;i++)this.tierSig(s,i);
+   for(const v of s.minis){const g=s.tiers[v.tier]&&s.tiers[v.tier].sig;if(g&&v.n.indexOf(g.tail)<0)v.n=`${v.n} ${g.tail}`;}
+   this.regLocal(s);}
+  return s;};}
+/* Черта твари: стойкость, навык или уклон — по её местной породе. */
+{const oc0=Deep.onCombat;Deep.onCombat=function(m,c){oc0.apply(this,arguments);if(!m||!m.dw||!this.on())return;
+  const s=this.here();const g=this.tierSig(s,m.dw.tier);const f=g&&g.fauna.find(z=>m.dw.sp.indexOf(z.n)===0);if(!f)return;const tr=f.trait;m.dw.trait=tr.n;
+  if(tr.sk&&!m.dw.skills.includes(tr.sk)){m.dw.skills.push(tr.sk);m.dw.B.skills=m.dw.skills;}if(tr.res&&!m.dw.res)m.dw.res=tr.res;if(tr.dodge)m.dw.dodge=Math.max(m.dw.dodge||0,tr.dodge);};}
+/* Вожак яруса и цветение дают местный ресурс. */
+{const ow0=Deep.onWin;Deep.onWin=function(m){const r=ow0.apply(this,arguments);safeFn(()=>{if(m&&m.dw&&m.dw.rank==="mini"&&m.dw.key){const s=this.here();if(!s)return;const g=this.tierSig(s,m.dw.tier);
+  G.inv[g.res]=(Number(G.inv[g.res])||0)+2;this.say(`С вожака яруса — ${g.res} ×2.`);}});return r;};}
+{const ga0=Deep.gather;Deep.gather=function(d){const s=this.here();const x=this.st(s);d=+d;const had=!!x.bloom[d];const r=ga0.call(this,d);
+  if(had&&!x.bloom[d]){const g=this.tierSig(s,d);G.inv[g.res]=(Number(G.inv[g.res])||0)+2;this.say(`И местное: ${g.res} ×2.`);
+   for(const q of x.quests)if(!q.done&&q.kind==="alchemy"&&q.res===g.res)q.have=Math.min(q.need,Number(G.inv[q.res])||0);}
+  return r;};}
+/* Тайник яруса один раз отдаёт его реликвию. */
+{const su0=Deep.secretUse;Deep.secretUse=function(id){const s=this.here();const x=this.st(s);const z=s.secrets.find(q=>q.id===id);const was=x.used&&x.used[id];const r=su0.call(this,id);
+  safeFn(()=>{if(z&&!was&&x.used&&x.used[id]&&(z.gives==="тайник"||z.gives==="кладовая")){x.relicT=x.relicT||{};if(!x.relicT[z.tier]){x.relicT[z.tier]=1;const g=this.tierSig(s,z.tier);
+   if(!Array.isArray(G.items))G.items=[];G.items.push(`Реликвия подземелья: ${g.relic}`);safeFn(()=>eventTheme("reward",{tier:"rare",gain:0.5}));this.say(`В тайнике — реликвия яруса: ${g.relic}.`);}}});return r;};}
+/* Поселение торгует местным ресурсом своего яруса. */
+{const tr0=Deep.trade;Deep.trade=function(i){safeFn(()=>{const s=this.here();const x=this.st(s);const t=+i||this.tierNo();const z=x.set[t];if(z){const g=this.tierSig(s,t);if(z.stock[g.res]==null)z.stock[g.res]=3+Math.floor(hashName(s.bx+t,s.by,5152)*5);}});return tr0.call(this,i);};}
+/* Поручения говорят о своём ярусе: его имени, ресурсе, реликвии. */
+{const qa1=Deep.questAdd;Deep.questAdd=function(s,x,o){const q=qa1.call(this,s,x,o);if(!q)return q;const g=this.tierSig(s,q.tier);
+  if(q.kind==="alchemy"){q.res=g.res;q.n=`Принести ${g.res}`;const gv=this.people(s,x).find(n=>n.id===q.giver);q.о=`${gv?gv.n:"жители"} просит ${q.need} × ${g.res} — его дают только «${g.name}»`;}
+  if(q.kind==="trade"){const g0=this.tierSig(s,q.tier);q.res=g0.res;q.о=`отнесите ${q.need} × ${g0.res} с ${q.tier}-го на ${q.to}-й ярус`;}
+  if(q.kind==="search")q.relic=g.relic;
+  if(q.о&&q.о.indexOf(g.name)<0)q.о+=` («${g.name}», ${q.tier}-й ярус)`;return q;};}
+/* Механизмы — с прозвищами. */
+{const e1=Deep.els;Deep.els=function(s,x,i){const out=e1.call(this,s,x,i);for(const e of out)if(e.t==="mech"&&e.n.indexOf("«")<0)e.n=`${e.n} «${this.mechNick(s,e.ref)}»`;return out;};}
+/* Приход на ярус: его имя, твари и ресурс. */
+{const tl1=Deep.tierLine;Deep.tierLine=function(d){const t=tl1.call(this,d);if(!t)return t;const s=this.here();const g=this.tierSig(s,d);const x=this.st(s);
+  let u=t.replace(`подземелье «${s.n}»: `,`подземелье «${s.n}», «${g.name}»: `);
+  if((x.seen[d]||0)===(Number(G.day)||1)&&x.visits<=1||!x.sigTold||!x.sigTold[d]){x.sigTold=x.sigTold||{};if(!x.sigTold[d]){x.sigTold[d]=1;
+   u+=` Водятся: ${g.fauna.map(f=>`${f.n} ${f.trait.n}`).join("; ")}. Здешний ресурс — ${g.res}.`;}}
+  return u;};}
+{const ev0=Deep.ecoView;Deep.ecoView=function(){const r=ev0.call(this);safeFn(()=>{const s=this.here();const g=this.tierSig(s,this.tierNo());const box=document.getElementById("dpBody");
+  if(box)box.insertAdjacentHTML("afterbegin",this.line(`«${g.name}»: ${g.fauna.map(f=>`${f.n} ${f.trait.n}${f.гость?" (пришёл снизу)":""}`).join("; ")}. Здешний ресурс — ${g.res}; реликвия яруса — ${g.relic}.`));});return r;};}
+
 {const bk2=bossDamageK;bossDamageK=function(kind,school){return bk2(kind,school)*safeFn(()=>Deep.dmgK(kind,school),1);};}
 {const mp3=marketPrice;marketPrice=function(res,idx,day){const v=mp3(res,idx,day);const dp=DEEP_PRICE[res];return dp&&!RES_BASE[res]?v*dp/6:v;};}
 {const wd=Director.worldDay;Director.worldDay=function(){const r=wd.apply(this,arguments);safeFn(()=>Deep.day());return r;};}
