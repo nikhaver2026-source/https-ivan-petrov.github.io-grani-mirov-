@@ -42,7 +42,7 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
  const в=await p.evaluate(async()=>{let c=null;for(let x=1000;x<60000&&!c;x+=37)for(let y=1000;y<1400&&!c;y+=41){const cc=cellContent(x,y);if(cc.structure&&PLACE_KIND[cc.structure.type]==="dungeon"&&Deep.spec(x,y,cc.structure.type).N>=5&&Deep.spec(x,y,cc.structure.type).net)c={x,y};}
   G.place=null;G.x=c.x;G.y=c.y;enterPlace(cellContent(c.x,c.y));while(activeLayer())closeTopUI();if(G.place.depth===0)changeDepth(1,{bypass:true});
   await new Promise(r=>setTimeout(r,1800));window.__deepAt=c;const s=Deep.here();const said=[];
-  return {on:Deep.on(),N:s.N,line:Deep.tierLine(G.place.depth),room:roomKind(),track:underTrack(G.place.depth),surf:indoorSurface(),trap:!!Deep.trapPick(G.place,G.place.x,G.place.y),name:s.n,cls:s.cls.n};});
+  return {on:Deep.on(),N:s.N,line:Deep.tierLine(G.place.depth),room:(Room.set(null,true),Room.ak),track:underTrack(G.place.depth),surf:indoorSurface(),trap:!!Deep.trapPick(G.place,G.place.x,G.place.y),name:s.n,cls:s.cls.n};});
  check('2. вход на ярус: своя речь, отклик, музыка, пол и ловушки породы',в.on&&/^Ярус 1 из \d+, подземелье «/.test(в.line)&&/^deep_/.test(в.room)&&!!в.track&&!!в.surf&&в.trap,в);
 
  /* ── 3 ── */
