@@ -292,7 +292,8 @@ public class MainActivity extends Activity {
            1 — обычная речь, 5 — в 2,8 раза быстрее. Прежде 5 значило «впятеро». */
         float r = rate > 0 ? rate : 1f;
         float tempo = r <= 1f ? r : 1f + (r - 1f) * 0.45f;
-        tts.setSpeechRate(Math.max(0.1f, Math.min(3.5f, tempo)));
+        /* (12.5) Шкала синтезатора выросла до 10 — темп до пятикратного. */
+        tts.setSpeechRate(Math.max(0.1f, Math.min(5.05f, tempo)));
         Bundle p = new Bundle();
         p.putFloat(TextToSpeech.Engine.KEY_PARAM_VOLUME, Math.max(0f, Math.min(1f, volume >= 0 ? volume : 1f)));
         applyBoost(volume, p);

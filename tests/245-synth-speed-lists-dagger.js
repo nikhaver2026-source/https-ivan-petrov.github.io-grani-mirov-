@@ -44,14 +44,14 @@ const flac=f=>{const b=fs.readFileSync(f);if(b.slice(0,4).toString()!=="fLaC")re
  const п1=await p.evaluate(async()=>{
   const r=document.getElementById("setSynthRate"),v=document.getElementById("setSynthVol");
   const шкала={rmin:r&&r.min,rmax:r&&r.max,vmin:v&&v.min,vmax:v&&v.max};
-  r.value=7;r.dispatchEvent(new Event("input"));v.value=150;v.dispatchEvent(new Event("input"));
+  r.value=100;r.dispatchEvent(new Event("input"));v.value=75;v.dispatchEvent(new Event("input"));
   settings.rate=5;__calls.length=0;
   Speech.say("Число 48217 и имя Зарубаэль",{interrupt:true});await new Promise(z=>setTimeout(z,1200));
   const c=__calls.find(x=>/48217/.test(x[0]));
-  return {шкала,вызов:c,set:[settings.synthRate,settings.synthVol],темпGemini:Speech.gvTempo(settings.rate)};});
- check('1. «Скорость синтезатора» 1–7 и «Громкость синтезатора» 10–200 %: синтез говорит своим темпом и громкостью',
-  п1.шкала.rmin==="1"&&п1.шкала.rmax==="7"&&п1.шкала.vmin==="10"&&п1.шкала.vmax==="200"
-  &&п1.вызов&&п1.вызов[1]===7&&Math.abs(п1.вызов[2]-1.5)<1e-9&&п1.set[0]===7&&п1.set[1]===1.5,п1);
+  return {шкала,вызов:c,set:[settings.synthRate,settings.synthVol],темпGemini:Speech.gvTempo(settings.rate),темп10:Speech.synthTempo(10)};});
+ check('1. (12.5) «Скорость синтезатора» и «Громкость синтезатора» 0–100: синтез говорит своим темпом (до 10 — пятикратного) и громкостью',
+  п1.шкала.rmin==="0"&&п1.шкала.rmax==="100"&&п1.шкала.vmin==="0"&&п1.шкала.vmax==="100"
+  &&п1.вызов&&п1.вызов[1]===10&&Math.abs(п1.вызов[2]-1.5)<1e-9&&п1.set[0]===10&&п1.set[1]===1.5&&Math.abs(п1.темп10-5.05)<1e-9,п1);
 
  /* ── 2 ── */
  const src=fs.readFileSync(path.join(R,'index.html'),'utf8');

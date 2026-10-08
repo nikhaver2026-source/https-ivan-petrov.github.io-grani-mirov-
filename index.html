@@ -211,14 +211,14 @@ h3{color:var(--acc2);margin:14px 0 6px;font-size:1.05rem;}
  <label class="opt" data-eng="device"><input type="checkbox" id="setVoiceLocal" checked><span><b>Только голоса с устройства</b><small>Онлайн-голоса отсеиваются: они ждут сеть и отвечают с задержкой, а без сети молчат совсем</small></span></label>
  <label class="opt" data-eng="device">Язык голоса <select id="setVoiceLang" aria-label="Язык голоса"><option value="ru" selected>Русский</option><option value="all">Все языки</option></select></label>
  <div class="row" data-eng="device"><button type="button" id="btnVoiceList" data-cmd="voicelist">Все голоса телефона — списком</button><button type="button" id="btnVoiceRefresh">Перечитать голоса устройства</button></div>
- <label class="opt">Скорость озвучки <input type="range" id="setRate" min="0.6" max="6" step="0.2" data-tap-step="0.2" value="5"><span id="vRate">5.0×</span></label>
- <p class="hint">Шкала от 0,6 до 6,0 шагом в две десятых, по умолчанию пять. Ползунок отвечает тем самым темпом, который выбран: «Раз, два, три» — это проба, а не подсказка. Дойдя до шести, шкала возвращается к началу, так что до медленного темпа добираться недалеко.</p>
- <label class="opt">Скорость синтезатора <input type="range" id="setSynthRate" min="1" max="7" step="0.5" data-tap-step="0.5" value="5"><span id="vSynthRate">5.0×</span></label>
- <p class="hint">Темп того, что договаривает синтезатор: незаписанные фразы, числа, имена, — и всей речи, если выбран голос устройства. От 1,0 до 7,0; при одном и том же числе синтезатор и записи Gemini звучат одним темпом.</p>
- <label class="opt">Громкость синтезатора <input type="range" id="setSynthVol" min="10" max="200" step="10" data-tap-step="10" value="100"><span id="vSynthVol">100%</span></label>
- <p class="hint">Чтобы синтезатор звучал вровень с записями Gemini. Выше 100 % умеют RHVoice и eSpeak в приложении для Windows; остальные синтезаторы останавливаются на своей полной громкости.</p>
- <label class="opt">Высота голоса <input type="range" id="setPitch" min="50" max="200" step="5" data-tap-step="5" value="100"><span id="vPitch">1,0</span></label>
- <p class="hint">От 0,5 до 2,0. Единица — как задумано голосом; ниже — глуше, выше — звонче. Не всякий синтезатор слушается высоты: голоса Apple слушаются, часть андроидных — нет.</p>
+ <label class="opt">Скорость озвучки <input type="range" id="setRate" min="0" max="100" step="1" data-tap-step="5" value="80"><span id="vRate">80</span></label>
+ <p class="hint">Шкала от 0 до 100, как у всех ползунков, по умолчанию 80. Ноль — самая медленная речь, сто — самая быстрая. Ползунок отвечает тем самым темпом, который выбран: «Раз, два, три» — это проба, а не подсказка. Дойдя до ста, шкала возвращается к началу.</p>
+ <label class="opt">Скорость синтезатора <input type="range" id="setSynthRate" min="0" max="100" step="1" data-tap-step="5" value="50"><span id="vSynthRate">50</span></label>
+ <p class="hint">Темп того, что договаривает синтезатор, пока не все фразы записаны голосом Gemini: незаписанные фразы, числа, имена, — и всей речи, если выбран голос устройства. От 0 до 100, по умолчанию 50; выше 50 синтезатор говорит быстрее прежнего предела — до пятикратного темпа.</p>
+ <label class="opt">Громкость синтезатора <input type="range" id="setSynthVol" min="0" max="100" step="1" data-tap-step="5" value="50"><span id="vSynthVol">50%</span></label>
+ <p class="hint">Чтобы синтезатор звучал вровень с записями Gemini. 50 — его обычная полная громкость, выше — усиление до двойной (его умеют RHVoice и eSpeak в приложении для Windows; остальные синтезаторы останавливаются на своей полной громкости).</p>
+ <label class="opt">Высота голоса <input type="range" id="setPitch" min="0" max="100" step="1" data-tap-step="5" value="50"><span id="vPitch">50</span></label>
+ <p class="hint">От 0 до 100. 50 — как задумано голосом; ниже — глуше, выше — звонче. Не всякий синтезатор слушается высоты: голоса Apple слушаются, часть андроидных — нет.</p>
  <div class="row"><button type="button" id="btnSpeechSample">Тест озвучки</button></div>
   </div>
   <div class="set-group" data-set-group="speech" hidden>
@@ -3459,8 +3459,29 @@ const Звук={
   try{const a=document.createElement("audio");
    [["flac","audio/flac"],["ogg",'audio/ogg; codecs="vorbis"'],["mp3","audio/mpeg"]].forEach(([k,t])=>{r[k]=String(a.canPlayType(t)||"")!=="";});}catch(_){}
   return (this._умеет=r);},
+ /* ── (12.5) ЕДИНАЯ ГРОМКОСТЬ ──
+    Громкость музыки считалась в двух местах — банком записей и шиной синтеза,
+    и под землёй они разошлись с ползунком. Теперь музыку считает одна функция:
+    ползунок × выключатель × приглушение под речью (и бывшее приглушение
+    глубины, ныне 1). Банк умножает её на общую громкость, шина синтеза — нет:
+    общая у неё своя (AE.master). Любой канал — Звук.уровень(род). */
+ музыка(){try{if(!settings.music)return 0;const mv=Number(settings.musicVol);
+  return Math.min(1,Number.isFinite(mv)?Math.max(0,mv):0.5)*speechDuck("music")*depthMusicDuck();}catch(_){return 0;}},
+ уровень(род){return safeFn(()=>Bank.vol(род||"world"),0);},
+ /* ── (12.5) ЩЕЛЧКИ ИНТЕРФЕЙСА ── переключатели, ползунки: одна дорога —
+    ползунок «Громкость меню» × общая, мимо выключателя «Эффекты» (иначе
+    выключенное не услышать выключенным), с высотой тона и сроком. */
+ щелчок(ключ,о){try{о=о||{};const f=typeof UI_BANK!=="undefined"&&UI_BANK[ключ];if(!f)return false;
+  const v=Math.min(1,Number(settings.uiVol)===0?0:(Number(settings.uiVol)||0.9))*safeFn(()=>Bank.master(),1)*(о.gain===undefined?0.55:о.gain);
+  const el=Bank.make(f,v,false,о.rate||0);if(!el)return false;return !!Bank._shot(el,"ui",{},о.max||2);}catch(_){return false;}},
+ /* Что выставил игрок и что звучит на деле — для отладки «почему тихо». */
+ уровни(){const п=k=>Math.round((Number(settings[k])||0)*100);
+  const т=safeFn(()=>Music.track,null),f=т&&safeFn(()=>Bank.loops.get("score").file,"");
+  return `Ползунки: общая ${п("masterVol")}, музыка ${settings.music?п("musicVol"):"выкл"}, фон ${п("ambVol")}, мир ${п("fxVol")}, меню ${п("uiVol")}, озвучка ${п("voiceVol")}. `
+   +`Музыка звучит на ${this.уровень("music").toFixed(2)}${f?` (тема ${String(f).split("/").pop()}, поправка ×${musicFileGain(f)})`:""}; под землёй — так же, как наверху.`;},
  отчёт(n){
   const строки=[this.кратко()];
+  строки.push(this.уровни());
   const c=safeFn(()=>AE.ctx,null);
   if(c)строки.push(`Частота ${c.sampleRate} Гц${c.baseLatency?", задержка "+Math.round(c.baseLatency*1000)+" мс":""}${c.outputLatency?", вывод "+Math.round(c.outputLatency*1000)+" мс":""}.`);
   const у=this.умеет();
@@ -3604,6 +3625,26 @@ const Речь={
     иначе новые фразы вставали бы в немую очередь. */
  проснуться(){
   safeFn(()=>{if("speechSynthesis" in window&&speechSynthesis.paused)speechSynthesis.resume();});},
+ /* ── (12.5) ПОКРЫТИЕ ЗАПИСЯМИ ──
+    Пока не все фразы записаны голосом Gemini, синтезатор договаривает
+    остальное. Обработчик считает, сколько кусков прозвучало записью и сколько
+    синтезом, и помнит самые частые незаписанные фразы (до 400, в памяти
+    браузера): по этому списку их и дописывают — сперва то, что звучит чаще. */
+ покрытие:{запись:0,синтез:0},незаписано:null,_тик:0,
+ _ключ(t){return String(t||"").replace(/\d+/g,"#").replace(/\s+/g," ").trim().slice(0,120);},
+ учесть(записано,незаписанные){
+  try{this.покрытие.запись+=Math.max(0,записано|0);const н=this.незаписанные(0,true);
+   (незаписанные||[]).forEach(t=>{const k=this._ключ(t);if(k.length<2)return;this.покрытие.синтез++;н[k]=(н[k]||0)+1;});
+   const ks=Object.keys(н);if(ks.length>400){ks.sort((a,b)=>н[a]-н[b]).slice(0,ks.length-400).forEach(k=>delete н[k]);}
+   if(++this._тик%20===0)safeFn(()=>localStorage.setItem("grani-unrec-v1",JSON.stringify(н)));}catch(_){}},
+ незаписанные(n,сырой){
+  if(!this.незаписано){this.незаписано={};safeFn(()=>{const j=JSON.parse(localStorage.getItem("grani-unrec-v1")||"{}");if(j&&typeof j==="object")this.незаписано=j;});}
+  if(сырой)return this.незаписано;
+  return Object.entries(this.незаписано).sort((a,b)=>b[1]-a[1]).slice(0,n||20);},
+ доляЗаписей(){const п=this.покрытие,в=п.запись+п.синтез;return в?п.запись/в:1;},
+ /* Темпы речи: что на ползунке (0–100) и какой это настоящий темп. */
+ темпы(){return {озвучка:{ползунок:safeFn(()=>sliderOf("setRate",settings.rate),80),темп:safeFn(()=>Speech.gvTempo(settings.rate),1)},
+  синтезатор:{ползунок:safeFn(()=>sliderOf("setSynthRate",Speech.synthRate()),50),темп:safeFn(()=>Speech.synthTempo(Speech.synthRate()),1)}};},
  /* Для отладочной панели. */
  кратко(){
   const к=this.кто(),a=safeFn(()=>Speech._adapter(),null),s=safeFn(()=>Speech.stats,null)||{};
@@ -3611,6 +3652,10 @@ const Речь={
   return `Речь: ${к.length?"говорит "+к.join(", "):"тишина"}; голос игры — ${путь}. Сказано ${s.spoken||0}, подано снова ${s.retried||0}, снято сторожем ${s.rescued||0}, немых записей ${s.gvMute||0}, голосов без звука ${this.счёт.голосНет}, сбросов синтезатора ${this.счёт.сброс}.`;},
  отчёт(n){
   const строки=[this.кратко()];
+  safeFn(()=>{const т=this.темпы(),п=this.покрытие;
+   строки.push(`Темп записей: ползунок ${т.озвучка.ползунок} — ×${т.озвучка.темп.toFixed(2)}; темп синтезатора: ползунок ${т.синтезатор.ползунок} — ×${т.синтезатор.темп.toFixed(2)}.`);
+   if(п.запись+п.синтез)строки.push(`Записью Gemini прозвучало ${Math.round(this.доляЗаписей()*100)} % кусков (${п.запись} из ${п.запись+п.синтез}).`);
+   const top=this.незаписанные(5);if(top.length)строки.push("Чаще всего синтезом: "+top.map(([t,k])=>`«${t.slice(0,40)}» ×${k}`).join("; ")+".");});
   строки.push(`В очереди голоса игры ${safeFn(()=>Speech.queue.length,0)}, голосов персонажей ${safeFn(()=>Folk.очередь.length,0)}. Остановок игроком ${this.счёт.стоп}, повторов ${this.счёт.повтор}.`);
   this.журнал.slice(-(n||8)).forEach(з=>строки.push(`${new Date(з.t).toTimeString().slice(0,8)} ${з.путь}: ${з.что}${з.текст?" — «"+з.текст+"»":""}`));
   return строки.join("\n");}};
@@ -3637,8 +3682,31 @@ const Речь={
    долей 0,55. Теперь петли глубины выровнены по громкости (копии без потерь
    с суффиксом «_n», −18…−22 LUFS), под землёй фон идёт с долей 0,95, живой
    слой — 0,6, а музыка там звучит на 0,6 своей громкости (−4,4 дБ): глубина
-   слышна и с музыкой, а музыка остаётся. */
-const DEPTH_MUSIC_DUCK=0.6;
+   слышна и с музыкой, а музыка остаётся.
+   (12.5) Жалоба игрока: «музыка в подземельях очень тихая, хотя ползунок на
+   80 %». Музыка должна звучать везде одинаково — так, как выставил игрок.
+   Приглушения под землёй больше нет: глубину слышно по выровненному фону,
+   а кому музыка мешает, тот убавит её ползунком. */
+const DEPTH_MUSIC_DUCK=1;
+/* (12.5) Все ползунки — от 0 до 100. Громкости и так были в процентах; темп,
+   громкость синтезатора и высота голоса хранятся в своих единицах (их понимают
+   движки речи и старые сохранения), а ползунок показывает 0–100 и пересчитывает
+   ломаной через привычное значение по умолчанию. */
+const SLIDER_0_100={
+ setRate:[[0,0.6],[80,5],[100,6]],          /* темп озвучки: 80 — прежние 5 */
+ setSynthRate:[[0,1],[50,5],[100,10]],      /* темп синтезатора: 50 — прежние 5, 100 — вдвое дальше */
+ setSynthVol:[[0,0],[50,1],[100,2]],        /* громкость синтезатора: 50 — полная */
+ setPitch:[[0,0.5],[50,1],[100,2]]};        /* высота: 50 — как задумано */
+function sliderVal(id,s){const k=SLIDER_0_100[id];s=Math.max(0,Math.min(100,+s||0));if(!k)return s;
+ for(let i=1;i<k.length;i++)if(s<=k[i][0]){const [a,x]=k[i-1],[b,y]=k[i];return +(x+(y-x)*(s-a)/(b-a)).toFixed(3);}return k[k.length-1][1];}
+function sliderOf(id,v){const k=SLIDER_0_100[id];v=+v;if(!k)return Math.round(v);if(!isFinite(v))return k[1][0];
+ for(let i=1;i<k.length;i++)if(v<=k[i][1]){const [a,x]=k[i-1],[b,y]=k[i];return Math.max(0,Math.min(100,Math.round(a+(b-a)*(v-x)/(y-x))));}return 100;}
+/* (12.5) Громкость каждой темы выровнена к −22 LUFS: множитель роли g
+   и множитель файла дают одну и ту же громкость, где бы тема ни звучала.
+   Темы Flare были записаны на −23…−25 LUFS, «Затишье» — на −32,6 (теперь
+   файл выровнен), ветер — на −19,9. */
+const MUSIC_FILE_GAIN={"score/score_road_01.ogg":1.46,"score/score_forest_01.ogg":1.2,"score/score_battle_01.ogg":1.46,"score/score_boss_01.ogg":1.19,"score/score_town_01.ogg":1.2,"score/score_cave_01.ogg":1.32,"score/score_dungeon_01.ogg":1.15,"score/score_unrest_01.ogg":1.41,"score/score_magic_01.ogg":1.17,"evol/ev_sewer_ambience.ogg":1.48,"score/score_title_01.ogg":1.35,"score/score_wind_01.ogg":0.79};
+function musicFileGain(f){const g=Number(MUSIC_FILE_GAIN[f]);return g>0?g:1;}
 function depthMusicDuck(){try{return typeof G!=="undefined"&&G&&G.place&&G.place.depth>0?DEPTH_MUSIC_DUCK:1;}catch(_){return 1;}}
 /* (5.0) Пока звучит слово твари в бою, музыка, фон и шум схватки
    приглушены, как под речью игры: игрок слышит, что ему сказали. */
@@ -3739,7 +3807,7 @@ const ESpeak={st:"off",w:null,
  /* Темп «Скорости синтезатора» (1–7) — слова в минуту eSpeak: 110–290;
     по умолчанию (5) — 230, бойко, но разборчиво. */
  wav(text,rate,vol){const w=this.w;if(!w)return null;
-  const r=Math.max(1,Math.min(7,+rate||5));w.set_rate(Math.max(80,Math.min(450,Math.round(175*Speech.synthTempo(r)))));
+  const r=Math.max(1,Math.min(10,+rate||5));w.set_rate(Math.max(80,Math.min(900,Math.round(175*Speech.synthTempo(r)))));
   safeFn(()=>w.set_pitch(Math.round(50*Math.max(0.5,Math.min(2,+settings.pitch||1)))));
   const куски=[];let n=0;w.synthesize(text,s=>{if(s&&s.length){куски.push(s);n+=s.length;}});
   if(!n)return null;
@@ -4168,10 +4236,13 @@ const Speech={voice:null,keepAlive:null,
     синтезатор получает один и тот же настоящий темп — тот же, что у записей
     Gemini при том же числе: 1 — обычная речь, 5 — в 2,8 раза быстрее. Мосты
     Android и Windows получают число ползунка и пересчитывают его так же. */
- synthTempo(r){return this.gvTempo(r);},
+ /* (12.5) Просьба игрока: пока не все фразы записаны, синтезатор должен уметь
+    говорить быстрее. Шкала та же до пяти (2,8 раза быстрее обычного), а
+    дальше растёт до десяти — до пятикратного темпа, без прежнего предела 3,5. */
+ synthTempo(r){r=+r||1;const t=r<=1?r:1+(r-1)*0.45;return Math.max(0.6,Math.min(5.05,t));},
  /* Темп и громкость синтезатора — свои ползунки (9.5). */
- synthRate(){const v=+settings.synthRate;return isFinite(v)&&v>0?Math.max(1,Math.min(7,v)):Math.max(1,Math.min(7,+settings.rate||5));},
- synthVol(){const v=+settings.synthVol;return isFinite(v)&&v>0?Math.max(0.1,Math.min(2,v)):1;},
+ synthRate(){const v=+settings.synthRate;return isFinite(v)&&v>0?Math.max(1,Math.min(10,v)):Math.max(1,Math.min(10,+settings.rate||5));},
+ synthVol(){const v=settings.synthVol===undefined||settings.synthVol===null||settings.synthVol===""?NaN:+settings.synthVol;return isFinite(v)&&v>=0?Math.max(0,Math.min(2,v)):1;},
  synthVolume(base){const b=isFinite(+base)?+base:1;return Math.max(0,Math.min(2,b*this.synthVol()));},
  synthSample(text){const a=this._deviceAdapter();if(!a)return false;
   try{return a.speak(String(text),{rate:this.synthRate(),volume:this.synthVolume(+settings.voiceVol),onstart(){},onend(){},onerror(){}});}catch(_){return false;}},
@@ -4242,6 +4313,8 @@ const Speech={voice:null,keepAlive:null,
     const g=self.gvLoad();
     if(g.state!=="ready")return запас?запас.speak(text,o):false;
     const части=self.gvParts(text);
+    /* (12.5) Учёт покрытия записями: что звучит записью, что синтезом. */
+    safeFn(()=>Речь.учесть(части.filter(x=>x.url).length,части.filter(x=>!x.url).map(x=>x.t||x.text||"")));
     if(!части.some(x=>x.url))return запас?запас.speak(text,o):false;
     const мой=++ток;стоп();идёт=true;
     let начато=false;
@@ -4842,7 +4915,7 @@ const AE={ctx:null,master:null,fx:null,musicBus:null,dry:null,convolver:null,cac
  applyVolumes(){if(!this.ctx){try{if(typeof Bank!=="undefined")Bank.refresh();}catch(_){}return;}
   this.master.gain.setTargetAtTime(0.9*safeFn(()=>Bank.master(),1),this.ctx.currentTime,0.05);
   this.fx.gain.setTargetAtTime(settings.effects?settings.fxVol:0,this.ctx.currentTime,0.05);
-  this.musicBus.gain.setTargetAtTime(settings.music?settings.musicVol*speechDuck("music")*depthMusicDuck():0,this.ctx.currentTime,0.05);
+  this.musicBus.gain.setTargetAtTime(Звук.музыка(),this.ctx.currentTime,0.05);
   try{if(typeof Bank!=="undefined")Bank.refresh();}catch(_){}},
  impulse(sec,decay){const rate=this.ctx.sampleRate,len=rate*sec,buf=this.ctx.createBuffer(2,len,rate);
   for(let c=0;c<2;c++){const d=buf.getChannelData(c);for(let i=0;i<len;i++)d[i]=(Math.random()*2-1)*Math.pow(1-i/len,decay);}return buf;},
@@ -7504,6 +7577,7 @@ function rangeNudge(el,знак){
   if(!el||el.tagName!=="INPUT"||el.type!=="range")return false;
   const min=+el.min||0,max=el.max===""?100:+el.max,свой=+el.step||1;
   const шаг=el.dataset.tapStep?+el.dataset.tapStep:(max-min>=50?Math.max(свой,5):свой);
+  el.__был=+el.value;   /* (12.5) звук ползунка сравнит с этим: вверх или вниз */
   let v=+el.value+(знак>0?шаг:-шаг);
   const край=v>max+1e-9||v<min-1e-9;
   v=Math.max(min,Math.min(max,v));v=+v.toFixed(((String(шаг).split(".")[1])||"").length);
@@ -17795,7 +17869,7 @@ const Bank={
   try{
    const c=this.chanOf(kind),m=this.master();
    /* Ноль на ползунке — это ноль, а не «половина по умолчанию». */
-   if(c==="music"){const mv=Number(settings.musicVol);return settings.music?Math.min(1,Number.isFinite(mv)?Math.max(0,mv):0.5)*speechDuck("music")*depthMusicDuck()*m:0;}
+   if(c==="music")return Звук.музыка()*m;   /* (12.5) одна формула на всех */
    if(!settings.effects)return 0;
    if(c==="ambient")return Math.min(1,Number(settings.ambVol)===0?0:(Number(settings.ambVol)||0.8))*speechDuck("ambient")*anomalyGain("ambient")*flightFade()*m;
    if(c==="ui")return Math.min(1,Number(settings.uiVol)===0?0:(Number(settings.uiVol)||0.9))*m;
@@ -17852,25 +17926,28 @@ const Bank={
   if(role==="cave_leak"&&safeFn(()=>Drips.on(),false)){safeFn(()=>Drips.ensure());this.stop(channel);return null;}
   if(!this.enabled||!this.has(role))return null;
   const b=SOUND_BANK[role];
-  const g=gain*(Number(b.g)>0?Number(b.g):1);
+  const музыка=this.chanOf(kind)==="music";
+  const base=gain*(Number(b.g)>0?Number(b.g):1);
   const file=this.pick(role,seed);
+  const g=base*(музыка?musicFileGain(file):1);
   const cur=this.loops.get(channel);
   if(cur&&(cur.file===file||cur.role===role)){
-   cur.gain=g;cur.kind=kind;
-   if(!cur.fading)cur.el.volume=Math.max(0,Math.min(1,this.vol(kind)*g));return cur.el;}
+   cur.gain=base*(музыка?musicFileGain(cur.file):1);cur.base=base;cur.kind=kind;
+   if(!cur.fading)cur.el.volume=Math.max(0,Math.min(1,this.vol(kind)*cur.gain));return cur.el;}
   this.stop(channel);
   /* Фон места, голос местности, погода — бесшовная петля (см. ниже). */
   if(this.chanOf(kind)!=="music")return this._seamless(channel,role,file,g,kind);
   const list=b.f.length>1&&this.chanOf(kind)==="music";
   const el=this.make(file,this.vol(kind)*g,!list);
   if(!el)return null;
-  const rec={el,file,gain:g,kind,role};
+  const rec={el,file,gain:g,base,kind,role};
   this.loops.set(channel,rec);
   if(list){
    let i=b.f.indexOf(file);
    const next=()=>{
     if(rec.el.__stopped||this.loops.get(channel)!==rec)return;
     i=(i+1)%b.f.length;
+    rec.gain=rec.base*musicFileGain(b.f[i]);
     const ne=this.make(b.f[i],this.vol(rec.kind)*rec.gain,false);
     if(!ne)return;
     const было=rec.el;rec.el=ne;rec.file=b.f[i];
@@ -19353,10 +19430,17 @@ const UI_BANK={
  spell_learn:"mg/spell_initiate_01.ogg",
  ui_select:"oc/oc_ui_select_01.ogg",
  ui_success:"oc/oc_lock_01.ogg",
- /* (4.5) Переключатель: включение — звонкий щелчок выше тоном, выключение —
-    глухой ниже; записи CC0 без потерь (sounds/ui/CREDITS.md). */
- ui_toggle_off:"ui/ui_toggle_off.flac",
- ui_toggle_on:"ui/ui_toggle_on.flac"};
+ /* (4.5) Переключатель: включение и выключение — разными записями.
+    (12.5) Жалоба игрока: «звуки переключателей плюс-минус одинаковые». Теперь
+    включение — щелчок соединения и звон стекла вверх (OpenClonk, CC BY 3.0),
+    выключение — шорох сложенного листа и глухой звон вниз (Stendhal, CC BY
+    4.0, и OpenClonk): нейтрально, но не спутать (sounds/ui/CREDITS.md). */
+ ui_toggle_off:"ui/ui_switch_off.flac",
+ ui_toggle_on:"ui/ui_switch_on.flac",
+ /* (12.5) Ползунок звучит, а не только говорит: «больше» — светлый тик,
+    «меньше» — глухой тук; высота тона идёт за значением. */
+ ui_slider_up:"ui/ui_slider_up.flac",
+ ui_slider_down:"ui/ui_slider_down.flac"};
 /* Маяк → натуральная запись. Направление важнее тембра, поэтому запись
    проигрывается через звуковую шину с панорамой, а не простым элементом. */
 const BEACON_SAMPLE={
@@ -71764,15 +71848,28 @@ function setDifficulty(k){
    десятки других молчали. Щелчок идёт мимо выключателя «Эффекты»: иначе
    выключенные эффекты нельзя было бы услышать выключенными. */
 const Toggles={last:null,
- play(on){try{const f=typeof UI_BANK!=="undefined"&&UI_BANK[on?"ui_toggle_on":"ui_toggle_off"];if(!f)return false;
-  this.last={on:!!on,t:Date.now()};
-  const v=Math.min(1,Number(settings.uiVol)===0?0:(Number(settings.uiVol)||0.9))*safeFn(()=>Bank.master(),1)*0.55;
-  const el=Bank.make(f,v,false,0);if(!el)return false;return !!Bank._shot(el,"ui",{},2);}catch(_){return false;}},
+ play(on){this.last={on:!!on,t:Date.now()};return Звук.щелчок(on?"ui_toggle_on":"ui_toggle_off",{gain:0.55});},
  bind(){if(this.bound)return;this.bound=true;
   document.addEventListener("change",e=>{const t=e.target;
    if(t&&t.type==="checkbox"&&t.closest&&t.closest(".modal"))Toggles.play(t.checked);},true);}};
+/* (12.5) ПОЛЗУНОК ЗВУЧИТ. Просьба игрока: слышать изменение не только голосом,
+   но и звуком, по-разному вверх и вниз. Прибавили — светлый тик, убавили —
+   глухой тук; высота тона следует за значением (у нуля ниже, у сотни выше),
+   так что по звуку слышно и куда, и где на шкале. Частый сдвиг (перетаскивание)
+   не сыплет звуками: не чаще раза в 60 мс. Щелчок идёт мимо выключателя
+   «Эффекты», как и у переключателей. */
+const Sliders={last:null,t:0,
+ play(el,dir){try{if(!dir)return false;const now=Date.now();if(now-this.t<60)return false;this.t=now;
+  const min=+el.min||0,max=el.max===""?100:+el.max,доля=max>min?Math.max(0,Math.min(1,(+el.value-min)/(max-min))):0.5;
+  const rate=0.8+доля*0.55;this.last={dir,rate,t:now};
+  return Звук.щелчок(dir>0?"ui_slider_up":"ui_slider_down",{gain:0.5,rate,max:1});}catch(_){return false;}},
+ bind(){if(this.bound)return;this.bound=true;
+  document.addEventListener("input",e=>{const t=e.target;if(!t||t.type!=="range")return;
+   const was=t.__был===undefined?+t.defaultValue:t.__был,now=+t.value;t.__был=now;
+   if(now!==was)Sliders.play(t,now>was?1:-1);},true);
+  document.addEventListener("focusin",e=>{const t=e.target;if(t&&t.type==="range")t.__был=+t.value;},true);}};
 function bindSpeechSettings($){
- safeFn(()=>Toggles.bind());
+ safeFn(()=>Toggles.bind());safeFn(()=>Sliders.bind());
  /* Галочка ЩЁЛКАЕТ. Сорок с лишним переключателей отвечали только словом,
     а две живые записи — ui_toggle_on и ui_toggle_off — лежали в банке и не
     звучали нигде. Теперь включение и выключение слышны по-разному, и это
@@ -71839,9 +71936,9 @@ function bindSettings(){const $=id=>document.getElementById(id);
  $("setScape").addEventListener("change",e=>{settings.scape=e.target.checked?1:0;saveSettings();
   if(!settings.scape)safeFn(()=>Scape.stop());
   narrate(settings.scape?"Живая звуковая картина включена.":"Живая звуковая картина выключена.");});
- $("setRate").value=settings.rate;$("vRate").textContent=(+settings.rate).toFixed(1)+"×";
- $("setSynthRate").value=Speech.synthRate();$("vSynthRate").textContent=Speech.synthRate().toFixed(1)+"×";
- $("setSynthVol").value=Math.round(Speech.synthVol()*100);$("vSynthVol").textContent=Math.round(Speech.synthVol()*100)+"%";
+ $("setRate").value=sliderOf("setRate",settings.rate);$("vRate").textContent=$("setRate").value;
+ $("setSynthRate").value=sliderOf("setSynthRate",Speech.synthRate());$("vSynthRate").textContent=$("setSynthRate").value;
+ $("setSynthVol").value=sliderOf("setSynthVol",Speech.synthVol());$("vSynthVol").textContent=$("setSynthVol").value+"%";
  $("setVoiceVol").value=settings.voiceVol*100;$("vVoice").textContent=settings.voiceVol*100+"%";
  $("setFxVol").value=settings.fxVol*100;$("vFx").textContent=settings.fxVol*100+"%";
  $("setAmbVol").value=Math.round(settings.ambVol*100);$("vAmb").textContent=Math.round(settings.ambVol*100)+"%";
@@ -71892,17 +71989,17 @@ function bindSettings(){const $=id=>document.getElementById(id);
   narrate(settings.autoDrink?"Герой пьёт из фляги сам, когда подступает жажда.":"Пить из фляги — только по команде «Выпить воды».");});
  $("setAutoEat").addEventListener("change",e=>{settings.autoEat=e.target.checked?1:0;saveSettings();
   narrate(settings.autoEat?"Герой ест сам, когда подступает голод.":"Есть — только самому, из котомки.");});});
- $("setRate").addEventListener("input",e=>{settings.rate=+e.target.value;saveSettings();
-  $("vRate").textContent=(+settings.rate).toFixed(1)+"×";});
- $("setRate").addEventListener("change",()=>narrate(`Скорость озвучки ${(+settings.rate).toFixed(1)}. Раз, два, три.`));
+ $("setRate").addEventListener("input",e=>{settings.rate=sliderVal("setRate",e.target.value);saveSettings();
+  $("vRate").textContent=e.target.value;});
+ $("setRate").addEventListener("change",e=>narrate(`Скорость озвучки ${e.target.value}. Раз, два, три.`));
  /* Проба синтезатора — им самим: число не записано голосом Gemini. */
  const пробаСинтеза=t=>{safeFn(()=>Speech.stop());safeFn(()=>Speech.synthSample(t));};
- $("setSynthRate").addEventListener("input",e=>{settings.synthRate=+e.target.value;saveSettings();
-  $("vSynthRate").textContent=(+settings.synthRate).toFixed(1)+"×";});
- $("setSynthRate").addEventListener("change",()=>пробаСинтеза(`Скорость синтезатора ${(+settings.synthRate).toFixed(1)}. Раз, два, три.`));
- $("setSynthVol").addEventListener("input",e=>{settings.synthVol=e.target.value/100;saveSettings();
+ $("setSynthRate").addEventListener("input",e=>{settings.synthRate=sliderVal("setSynthRate",e.target.value);saveSettings();
+  $("vSynthRate").textContent=e.target.value;});
+ $("setSynthRate").addEventListener("change",e=>пробаСинтеза(`Скорость синтезатора ${e.target.value}. Раз, два, три.`));
+ $("setSynthVol").addEventListener("input",e=>{settings.synthVol=sliderVal("setSynthVol",e.target.value);saveSettings();
   $("vSynthVol").textContent=e.target.value+"%";});
- $("setSynthVol").addEventListener("change",()=>пробаСинтеза(`Громкость синтезатора ${Math.round(settings.synthVol*100)} процентов.`));
+ $("setSynthVol").addEventListener("change",e=>пробаСинтеза(`Громкость синтезатора ${e.target.value} процентов.`));
  $("setVoiceVol").addEventListener("input",e=>{settings.voiceVol=e.target.value/100;saveSettings();
   $("vVoice").textContent=e.target.value+"%";});
  $("setFxVol").addEventListener("input",e=>{settings.fxVol=e.target.value/100;saveSettings();
@@ -71990,10 +72087,10 @@ function bindSettings(){const $=id=>document.getElementById(id);
   const n=safeFn(()=>Speech.fillVoices(),0);
   if(ev&&ev.detail&&ev.detail.late&&String(settings.voice||"").startsWith("native:")&&Speech._nativeVoice)
    narrate(`Голоса Windows подключены: ${n}. Говорит ${Speech._nativeVoice.name}.`,{interrupt:false,cat:"ui"});}));
- {const p=$("setPitch");if(p){p.value=Math.round((+settings.pitch||1)*100);
-  const п=()=>{const v=$("vPitch");if(v)v.textContent=(+settings.pitch||1).toFixed(1).replace(".",",");};п();
-  p.addEventListener("input",ev=>{settings.pitch=Math.max(0.5,Math.min(2,ev.target.value/100));saveSettings();п();});
-  p.addEventListener("change",()=>narrate(`Высота голоса ${(+settings.pitch).toFixed(1).replace(".",",")}. Раз, два, три.`,{interrupt:true}));}}
+ {const p=$("setPitch");if(p){p.value=sliderOf("setPitch",+settings.pitch||1);
+  const п=()=>{const v=$("vPitch");if(v)v.textContent=p.value;};п();
+  p.addEventListener("input",ev=>{settings.pitch=Math.max(0.5,Math.min(2,sliderVal("setPitch",ev.target.value)));saveSettings();п();});
+  p.addEventListener("change",()=>narrate(`Высота голоса ${p.value}. Раз, два, три.`,{interrupt:true}));}}
  }
 
 /* ════════ СОХРАНЕНИЕ ════════ */

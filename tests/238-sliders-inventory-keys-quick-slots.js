@@ -30,16 +30,16 @@ const {chromium}=require('playwright');
   const vol=document.getElementById("setVoiceVol"),rate=document.getElementById("setRate");
   vol.value=50;vol.dispatchEvent(new Event("input",{bubbles:true}));
   rangeNudge(vol,1);r.громче=settings.voiceVol;rangeNudge(vol,-1);rangeNudge(vol,-1);r.тише=settings.voiceVol;
-  rate.value=5;rate.dispatchEvent(new Event("input",{bubbles:true}));
+  rate.value=80;rate.dispatchEvent(new Event("input",{bubbles:true}));
   rangeNudge(rate,1);r.быстрее=settings.rate;
-  rate.value=6;rangeNudge(rate,1);r.край=+rate.value;r.крайСказано=__said.slice(-1)[0];
+  rate.value=100;rangeNudge(rate,1);r.край=+rate.value;r.крайСказано=__said.slice(-1)[0];
   /* стрелки на компьютере */
   setCursor(vol,true);const v0=+vol.value;ЖМИ("ArrowRight");r.стрелкаВправо=+vol.value-v0;ЖМИ("ArrowLeft");r.стрелкаВлево=+vol.value-v0;
   while(activeLayer())closeTopUI();
   r.свайп=/uiCursor\.type==="range"&&layer\.contains\(uiCursor\)\)\{safeFn\(\(\)=>rangeNudge\(uiCursor,dir==='N'\?1:-1\)\)/.test(document.documentElement.innerHTML);
   return r;});
  check('1. ползунок: вверх прибавляет, вниз убавляет, значение применяется сразу; край не перескакивается; на телефоне — свайп вверх и вниз',
-  полз.громче>0.5&&полз.тише<0.5&&Math.abs(полз.быстрее-5.2)<1e-6&&полз.край===6&&/предел/.test(полз.крайСказано||"")&&полз.свайп,полз);
+  полз.громче>0.5&&полз.тише<0.5&&Math.abs(полз.быстрее-5.25)<1e-6&&полз.край===100&&/предел/.test(полз.крайСказано||"")&&полз.свайп,полз);
  check('2. на компьютере стрелки вправо и влево двигают ползунок',полз.стрелкаВправо>0&&полз.стрелкаВлево===0,полз);
 
  /* ── 3 ── */
