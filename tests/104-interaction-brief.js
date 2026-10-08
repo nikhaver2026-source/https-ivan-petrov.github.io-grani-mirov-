@@ -130,7 +130,7 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   /* выброс */
   SAID.length=0;invDo("drop","res","руда");await пауза(30);r.dropQ=SAID.slice(-1)[0];r.dropBtns=[...document.querySelectorAll('#invActBody button')].map(b=>b.dataset.cmd.split(":").slice(0,2).join(":"));
   invDo("dropn:2","res","руда");r.oreAfter=G.inv["руда"];
-  const ri=G.items.indexOf("Реликвия: Аурис Зарний");invPick("item",String(ri));SAID.length=0;invDo("drop","item",String(ri));await пауза(30);r.relicRefuse=SAID.slice(-1)[0];r.relicStill=G.items.includes("Реликвия: Аурис Зарний");
+  const ri=G.items.indexOf("Реликвия: Аурис Зарний");invPick("item",String(ri));SAID.length=0;invDo("drop","item",String(ri));await пауза(30);/* в этот миг может договорить и чужое объявление (приглашение выбрать ремесло) — ищем своё слово */r.relicRefuse=SAID.find(t=>/защищён/.test(t))||SAID.slice(-1)[0];r.relicStill=G.items.includes("Реликвия: Аурис Зарний");
   const ti=G.items.indexOf("Факел");invPick("item",String(ti));SAID.length=0;invDo("drop","item",String(ti));await пауза(30);r.torchQ=SAID.slice(-1)[0];invDo("dropyes","item",String(ti));r.torchGone=!G.items.includes("Факел");
   /* стопки */
   invDo("split","res","трава");r.split=[G.inv["трава"],Object.keys(G.piles||{}).length];invDo("merge","res","трава");r.merge=[G.inv["трава"],Object.keys(G.piles||{}).length];
