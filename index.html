@@ -9679,7 +9679,7 @@ const AM_GROUPS=[
   ["usehere","Действие здесь"],
   ["interact","Взаимодействовать"],
   ["searchhere","Обыскать здесь"],
-  ["chenter","Войти в чертог"],
+  ["whisperrest","Привал"],
   ["deep","Ярус подземелья"],
   ["listenhere","Прислушаться"],
   ["hollowhere","Проверить стены на пустоту"],
@@ -9692,6 +9692,7 @@ const AM_GROUPS=[
  /* Всё, чем меняют место: дверь, лестница, крыло, подъёмник, скакун,
     палуба, портал. Небо и море — такой же путь, как ступени. */
  ["Перемещение",[
+  ["chenter","Спуститься в чертог"],
   ["descend","Войти или спуститься"],
   ["ascend","Подняться или выйти"],
   ["takeoff","Подняться на крыло"],
@@ -9706,8 +9707,7 @@ const AM_GROUPS=[
   ["dive","Нырнуть"],
   ["landisle","Пристать к острову"],
   ["whisperup","Подъёмник вверх"],
-  ["whisperdown","Подъёмник вниз"],
-  ["whisperrest","Привал"]],
+  ["whisperdown","Подъёмник вниз"]],
   {id:"move",з:"",о:"войти, спуститься и выйти, крыло, скакун и зверь под седлом, портал, корабль, подъёмник и привал"}],
  /* Владыки, крепости и десять родов ловушек с семью способами их найти. */
  ["Бой",[
@@ -9918,7 +9918,7 @@ function amAvailable(cmd){
    :safeFn(()=>{const c=cellContent(G.x,G.y);return !!(c.structure&&c.structure.type==="ruins");},false));
   if(cmd==="mount")return (G.mounts||[]).length>0;
   if(cmd==="unmount")return !!G.mount;
-  if(cmd==="chenter")return !!safeFn(()=>Chertog.here(),null);
+  if(cmd==="chenter")return !!G.chStair||!!safeFn(()=>Chertog.here(),null);
   if(cmd==="charena")return !!safeFn(()=>InstanceBossEngine.arenaReady(),false);
   if(cmd==="zvride")return safeFn(()=>Zver.st().list.some(a=>ZV_FAMILY_BY_ID[a.fam].ездовой),false);
   if(cmd==="zvfeed")return safeFn(()=>Zver.st().list.length>0,false);
@@ -9993,6 +9993,10 @@ function amBtnLabel(cmd,label){
   const obj=c.structure?c.structure.name:(c.res?`Ресурс: ${c.res.name}`:(c.находка?c.находка.n:""));
   return obj?`Взаимодействовать: ${obj}`:"Взаимодействовать";}
  if(cmd==="descend"&&!G.place){const c=cellContent(G.x,G.y);return c.structure?`Войти: ${c.structure.name}`:label;}
+ /* Вход в чертог назван тем, как в него попасть: по лестнице вниз, по
+    эфирной вверх или по пространственной; на самой лестнице — дойти. */
+ if(cmd==="chenter"){const f=G.chStair;if(f){const n=Math.max(1,f.n-f.s);return `Пройти лестницу до конца: ${n} ${plural(n,"ступень","ступени","ступеней")}`;}
+  const e=safeFn(()=>Chertog.here(),null);return e?Chertog.entryLabel(e):label;}
  if(cmd==="ascend"&&G.place)return G.place.depth>0?"Подняться на уровень выше":"Выйти наружу";
  if(cmd==="takeoff"){const a=Number(G.alt)||0;return a?"Подняться выше":"Подняться на крыло";}
  if(cmd==="flydown")return "Снизиться";
@@ -40930,6 +40934,8 @@ function worldNear(R){
   if(c.находка)имена.push(c.находка.n);
   if(c.monster&&!G.cleared[x+","+y])имена.push(c.monster.n);
   имена.forEach(n=>out.push({dx,dy,d,name:n}));}
+ /* Входы в чертоги — тоже приметы местности. */
+ safeFn(()=>Chertog.near(R).forEach(e=>{if(!e.d)return;out.push({dx:e.x-G.x,dy:e.y-G.y,d:e.d,name:`вход в чертог «${Chertog.spec(e.i).n}»`});}));
  out.sort((a,b)=>a.d-b.d);
  return out;}
 function nearSummary(){
@@ -42267,6 +42273,9 @@ function useHere(){
   if(c.structure&&PLACE_KIND[c.structure.type])return enterPlace(c);
   if(c.structure)return interactHere(),true;
   if(c.res)return gatherCurrent("tap"),true;
+  /* У входа в чертог «действие здесь» ставит на его лестницу, а на лестнице — ведёт до конца. */
+  if(G.chStair)return !!safeFn(()=>Chertog.stairFinish(),false);
+  if(safeFn(()=>Chertog.here(),null)){const t=Chertog.stairStart();if(t!==true)narrate(t,{interrupt:true});return true;}
   narrate("Здесь нет ни входа, ни постройки, ни ресурса.");
   return false;}
  const lvl=curLevel(),p=G.place,t=tileAt(lvl,p.x,p.y);
@@ -44184,6 +44193,8 @@ function move(dir){
  /* Внутри здания, города или подземелья ходьба идёт по клеткам уровня. */
  if(G.place)return moveInside(dir);
  if(G.inCombat){narrate("Сначала завершите бой!");return;}
+ /* На лестнице к чертогу шаг тратится на ступень. */
+ if(G.chStair&&safeFn(()=>Chertog.stairStep(dir),false))return true;
  /* Вход своим ходом: игрок стоит у ворот или двери и делает ещё один шаг в
     ту же сторону — тогда он входит сам, а не через меню. Случайно пройти
     мимо нельзя, и случайно ввалиться внутрь на бегу тоже. */
@@ -47391,7 +47402,8 @@ const CMD={
  enterplace(){const c=cellContent(G.x,G.y);if(closeTopUI&&modalStack.length)safeFn(()=>closeTopUI());
   if(c.structure&&PLACE_KIND[c.structure.type])enterPlace(c);else narrate("Здесь нет постройки со входом.");},
  descend(){if(!G.place){const c=cellContent(G.x,G.y);
-   if(c.structure&&PLACE_KIND[c.structure.type]){enterPlace(c);return;}narrate("Здесь нет входа вниз.");return;}
+   if(c.structure&&PLACE_KIND[c.structure.type]){enterPlace(c);return;}
+   if(G.chStair||safeFn(()=>Chertog.here(),null)){CMD.chenter();return;}narrate("Здесь нет входа вниз.");return;}
   if(closeTopUI&&modalStack.length)safeFn(()=>closeTopUI());
   fieldInteract();},
  ascend(){handleTwoFingerSwipe("N");},
@@ -47947,6 +47959,8 @@ const Look=Modules.register("LOOK",{
     /* Разломный слух: узлы сети и разломы слышны дальше обычного круга. */
     safeFn(()=>{const R2=Path.facetK("rift")+Math.round(safeFn(()=>Fore.boonK("сеть"),0));if(!R2)return;for(let dx=-R2;dx<=R2;dx++)for(let dy=-R2;dy<=R2;dy++){const d=Math.max(Math.abs(dx),Math.abs(dy));if(d<=R||!d)continue;const x=G.x+dx,y=G.y+dy;if(x<0||y<0||x>=WORLD_MAX||y>=WORLD_MAX)continue;const nd=portalNodeAt(x,y);if(nd)out.push({n:nd.name,род:"узел сети",x,y,dx,dy,d,dir:dirBetween(dx,dy),bid:"portal"});else if(Path.facetTier("rift")>=3&&riftAt(x,y))out.push({n:"разлом",род:"разлом",x,y,dx,dy,d,dir:dirBetween(dx,dy),bid:"portal",опасно:true});}});
     safeFn(()=>{const пер=crossingAt(G.x,G.y);if(пер)out.push({n:пер.n,род:"переправа",x:G.x,y:G.y,dx:0,dy:0,d:0,dir:"здесь",bid:"well"});});
+    /* Входы в чертоги видны дальше обычного круга: их ищут нарочно. */
+    safeFn(()=>Chertog.near(Math.max(R,8)).forEach(e=>{const dx=e.x-G.x,dy=e.y-G.y;out.push({n:`вход в чертог «${Chertog.spec(e.i).n}»`,род:"чертог",x:e.x,y:e.y,dx,dy,d:e.d,dir:e.d?dirBetween(dx,dy):"здесь",bid:"portal"});}));
     safeFn(()=>{const nd=portalNodeAt(G.x,G.y);if(nd)out.push({n:nd.name,род:"узел сети",x:G.x,y:G.y,dx:0,dy:0,d:0,dir:"здесь",bid:"portal"});});
    }
    out.forEach(o=>{o.сектор=o.d?this.sector(o.dx,o.dy):"здесь";});
@@ -55512,7 +55526,7 @@ Object.assign(Neuro,{
   const civ={skyfort:"zvezdochety",astral:"zvezdochety",undercity:"zodchie",mine:"pepelnye",caves:"bezlikie",catacombs:"zhrecy",sunken:"utopshie"}[cat]||"tkachi";
   const ang=R()*Math.PI*2,d=8+Math.round(R()*30);const x=Math.round((Number(G.x)||0)+Math.cos(ang)*d),y=Math.round((Number(G.y)||0)+Math.sin(ang)*d);
   const n=sky?`Небесный остров ${nm}`:`Глубинный ярус ${nm}`;
-  const st=Chertog.st();InstancePersistence.ensure();const i=CH_N+(st.dynN++);const rank=Math.max(0,Math.min(5,Math.floor((Number(G.level)||1)/6)));
+  const st=Chertog.st();InstancePersistence.ensure();const i=CH_DYN0+(st.dynN++);const rank=Math.max(0,Math.min(5,Math.floor((Number(G.level)||1)/6)));
   st.dyn[i]={base:Math.floor(R()*CH_N),cat,civ,rank,n,x,y,until:(Number(G.day)||1)+90,why:sky?"остров поднялся над Гранью":"земля разошлась, открыв новый ярус"};
   const rec={id:"gl_"+id,n,слой:sky?"в небе":"под землёй",terr:sky?"mountains":"cave",x,y,r:2,fam:sky?"bird":"deep",опасность:2+Math.floor(R()*2),день:Number(G.day)||1,res:null,inst:i};
   g.lands.push(rec);const rr=this.newRes(g.n++,R,rec.id);const res=g.res[g.res.length-1];if(rr&&res&&res.земля===rec.id)rec.res=res.n;
@@ -60673,7 +60687,14 @@ SCHOOL_SPELLS.forEach(sp=>{
    — S10: швы, где земля пришита → цивилизация Ткачей Шва;
    — S2: живые стены, что открываются в свой час → теневые ходы.
    ════════════════════════════════════════════════════════════════════════ */
-const CH_N=6000;
+/* Чертогов в Грани десять тысяч (было шесть): имён хватает с запасом —
+   двадцать пять категорий × сорок эпитетов × сорок имён дают сорок тысяч
+   сочетаний, и шаг 7919 обходит их без повторов. */
+const CH_N=10000;
+/* Чертоги, которые открывает сам мир (Режиссёр, новые острова и ярусы),
+   нумеруются с CH_DYN0 и не пересекаются с постоянными. Прежде они шли
+   сразу за последним постоянным, с 6000; старые сохранения переносятся. */
+const CH_DYN0=100000;
 const CH_RANKS=[
  {id:0,n:"обычный",    ж:"обычная",    уровень:1, ярусов:2, комнат:10,печать:0,группа:0.15,цвет:"",       арт:5},
  {id:1,n:"необычный",  ж:"необычная",  уровень:4, ярусов:3, комнат:12,печать:1,группа:0.2, цвет:"",       арт:12},
@@ -60682,7 +60703,7 @@ const CH_RANKS=[
  {id:4,n:"легендарный",ж:"легендарная",уровень:18,ярусов:6, комнат:18,печать:4,группа:0.5, цвет:"",       арт:60},
  {id:5,n:"мифический", ж:"мифическая", уровень:24,ярусов:8, комнат:20,печать:5,группа:0.6, цвет:"",       арт:80},
  {id:6,n:"божественный",ж:"божественная",уровень:30,ярусов:10,комнат:22,печать:6,группа:0.8,цвет:"",      арт:95}];
-/* Доли рангов среди шести тысяч: чем выше, тем реже. */
+/* Доли рангов среди десяти тысяч: чем выше, тем реже. */
 const CH_RANK_SHARE=[0.40,0.25,0.16,0.10,0.05,0.03,0.01];
 /* Сколько пройденных чертогов ранга нужно, чтобы получить следующую печать. */
 const CH_SEAL_NEED=[3,3,3,2,2,1];
@@ -61284,7 +61305,7 @@ const InstanceGenerator=Inst.module("InstanceGenerator",{
    фракции:фр,экономика:`здесь ценятся ${s.cat.ресурс.join(", ")}`,конфликт:pick(КОНФЛИКТ),побочные:[pick(КОНФЛИКТ)],
    опасности:`${s.cat.пр}; ловушки ${s.cat.ловушки.map(t=>TRAP_TYPES[t].n).join(", ")}`,тайна:pick(["под последним ярусом есть ещё один","хранитель — один из строителей","сердце можно починить","выход наверх не один"]),
    атмосфера:s.cat.о,правило:s.cat.пр+(s.hybrid?`; и ещё — ${({breath:"вода",regrow:"зарастание",wind:"ветер",loop:"петля времени",gravity:"тяжесть",corruption:"порча"})[s.hybrid.правило]||""}`:"")};},
- /* Инстансы, которые Режиссёр создаёт сам: по номеру ≥ 6000. */
+ /* Инстансы, которые Режиссёр создаёт сам: по номеру ≥ CH_DYN0. */
  dynSpec(i){const d=Chertog.st().dyn&&Chertog.st().dyn[i];if(!d)return this.spec(i%CH_N);if(!this._dc)this._dc=new Map();if(this._dc.has(i))return this._dc.get(i);
   const base=Object.assign({},this.spec(d.base));const cat=INST_CAT_BY_ID[d.cat]||base.cat;const civ=CH_CIV_BY_ID[d.civ]||base.civ;
   const s=Object.assign(base,{i,n:d.n,cat,kind:cat,civ,rank:d.rank,RK:CH_RANKS[d.rank],unique:true,hidden:false,dyn:true,until:d.until,why:d.why,rules:[cat.правило]});
@@ -61429,7 +61450,7 @@ const InstanceDirectorIntegration=Inst.module("InstanceDirectorIntegration",{
  createNear(why){const st=Chertog.st();InstancePersistence.ensure();if(Object.keys(st.dyn).length>=4){const old=Object.keys(st.dyn).find(k=>Number(st.dyn[k].until)<(Number(G.day)||1)&&!(st.run&&+k===st.run.i));if(old)delete st.dyn[old];else return null;}
   const w=safeFn(()=>Director.st().world,{})||{};const cat=(w.mech||0)>=50?"biomech":(w.ether||50)>=70?"astral":Object.values(w.gods||{}).some(v=>v<-25)?"temple":["rift","spatial","temporal","living"][Math.floor(Math.random()*4)];
   const civ=cat==="biomech"?"predtechi":cat==="astral"?"zvezdochety":cat==="temple"?"zhrecy":["tkachi","bezlikie","pepelnye"][Math.floor(Math.random()*3)];
-  const i=CH_N+(st.dynN++);const rank=Math.max(0,Math.min(5,Math.floor((Number(G.level)||1)/6)));const C=INST_CAT_BY_ID[cat];
+  const i=CH_DYN0+(st.dynN++);const rank=Math.max(0,Math.min(5,Math.floor((Number(G.level)||1)/6)));const C=INST_CAT_BY_ID[cat];
   const n=`${C.n} ${CH_EPI[Math.floor(Math.random()*CH_EPI.length)]} ${CH_NOUN[Math.floor(Math.random()*CH_NOUN.length)]}`;
   const x=Math.round(G.x+(Math.random()*16-8)),y=Math.round(G.y+(Math.random()*16-8));
   st.dyn[i]={base:Math.floor(Math.random()*CH_N),cat,civ,rank,n,x,y,until:(Number(G.day)||1)+6,why:why||"мир сам открыл это место"};return Object.assign({i},st.dyn[i]);},
@@ -61528,7 +61549,10 @@ const Chertog={
  brief(s){return `«${s.n}» — ${s.RK.n}, ${this.typeWord(s)}, ярусов ${s.floors}, от ${s.level}-го уровня; ${s.civ.n}; ${s.cat.о}${s.unique?"; единственный в своём роде: раскрывается один раз":""}${s.dyn?"; открылся недавно и скоро затянется":""}`;},
  /* ── входы в мире: в каждом блоке 28×28 клеток — с долей в треть ── */
  at(bx,by){if(hashName(bx,by,9701)>=0.32)return null;const i=Math.floor(hashName(bx,by,9702)*CH_N)%CH_N;
-  const x=bx*this.BLOCK+3+Math.floor(hashName(bx,by,9703)*(this.BLOCK-6)),y=by*this.BLOCK+3+Math.floor(hashName(bx,by,9704)*(this.BLOCK-6));
+  let x=bx*this.BLOCK+3+Math.floor(hashName(bx,by,9703)*(this.BLOCK-6)),y=by*this.BLOCK+3+Math.floor(hashName(bx,by,9704)*(this.BLOCK-6));
+  /* Вход не делит клетку с городом, замком или подземельем: на такой клетке
+     шаг уводит внутрь постройки, и до чертога было не добраться. */
+  for(let k=0;k<6&&safeFn(()=>!!cellContent(x,y).structure,false);k++)x+=1;
   return {i,x,y};},
  /* Скрытые инстансы не видны, пока их не найдут; созданные Режиссёром — видны, пока не затянутся. */
  near(radius,all){const out=[];const R=radius||60;const r=Math.ceil(R/this.BLOCK);const bx0=Math.floor(G.x/this.BLOCK),by0=Math.floor(G.y/this.BLOCK);const st=this.st();
@@ -61537,11 +61561,74 @@ const Chertog={
   for(const [k,v] of Object.entries(st.dyn||{})){if(Number(v.until)<(Number(G.day)||1))continue;const d=Math.max(Math.abs(v.x-G.x),Math.abs(v.y-G.y));if(d<=R)out.push({i:+k,x:v.x,y:v.y,d});}
   return out.sort((a,b)=>a.d-b.d);},
  here(){if(G.place||G.ship||safeFn(()=>inFlight(),false))return null;const e=this.near(2)[0];return e&&e.d<=1?e:null;},
+ /* ── путь к входу и лестница внутрь ──
+    Жалоба игрока: «говорит, что чертог в пяти шагах на западе, прохожу пять
+    шагов — входа нет». Сторона называлась округлённо, до восьми румбов, а
+    расстояние — по большей оси: вход в десяти шагах к югу и трёх к западу
+    звучал как «на юге, в 10 шагах», и, пройдя десять шагов на юг, игрок
+    оставался в трёх клетках от входа, а войти можно было только вплотную.
+    Теперь путь называется по осям («10 шагов на юг и 3 на запад»), у самого
+    входа игра говорит об этом каждый раз, а внутрь ведёт лестница: вниз — в
+    подземный чертог, эфирная вверх — к летающей крепости, пространственная —
+    в разломы и аномалии. По ней идут сами, свайп — ступень. */
+ route(dx,dy){const ax=Math.abs(dx),ay=Math.abs(dy);if(!ax&&!ay)return "прямо здесь";const к=safeFn(()=>компас(),true);
+  const ns=dy<0?(к?"на север":"вперёд"):(к?"на юг":"назад"),ew=dx<0?(к?"на запад":"влево"):(к?"на восток":"вправо");
+  const ч=[];if(ay)ч.push(`${ay} ${plural(ay,"шаг","шага","шагов")} ${ns}`);if(ax)ч.push(`${ax} ${plural(ax,"шаг","шага","шагов")} ${ew}`);return ч.join(" и ");},
+ entryKind(s){const c=s&&s.cat&&s.cat.id;return c==="skyfort"?"up":["astral","spatial","temporal","artifactworld","rift"].indexOf(c)>=0?"portal":"down";},
+ entryLabel(e){const s=this.spec(e.i);const k=this.entryKind(s);
+  return k==="up"?`Подняться по эфирной лестнице в чертог «${s.n}»`:k==="portal"?`Вступить на пространственную лестницу: чертог «${s.n}»`:`Спуститься по лестнице в чертог «${s.n}»`;},
+ entryHint(s){const k=this.entryKind(s);
+  const что=k==="up"?"Чертог — над облаками: к нему поднимается эфирная лестница":k==="portal"?"Чертог — по ту сторону складки пространства: туда ведёт пространственная лестница":"Под входом — лестница вниз";
+  const пункт=k==="up"?"«Подняться по эфирной лестнице»":k==="portal"?"«Вступить на пространственную лестницу»":"«Спуститься по лестнице»";
+  return `${что}. Меню действий, раздел «Перемещение», — ${пункт}; или «Действие здесь».`;},
+ stairN(s){return 8+2*Math.max(0,Math.min(6,Number(s.rank)||0));},
+ stairKind(s){return ({catacombs:"bone",necropolis:"bone",mine:"wood",sunken:"wet",temple:"marble",academy:"marble",undercity:"marble",
+  lab:"metal",biomech:"metal",warsite:"metal",fortress:"metal",caves:"earth",living:"earth",hive:"earth"})[s.cat.id]||"stone";},
+ stairStart(e){if(G.inCombat)return "Сначала завершите бой.";e=e||this.here();if(!e)return "Входа в чертог рядом нет. Чертоги отмечены в «Книге искателя»: там же сторона и шаги до входа.";
+  const s=this.spec(e.i);const why=this.access(s);if(why.length)return `«${s.n}» не открывается: ${why.join("; ")}.`;
+  const st=this.st();if(st.run&&st.run.i===s.i){this.view();return true;}
+  const k=this.entryKind(s),n=this.stairN(s);G.chStair={i:e.i,x:G.x,y:G.y,ex:e.x,ey:e.y,n,s:0,k,md:null,set:this.stairKind(s)};
+  this.stairSound(0);
+  const t=k==="up"?`Из земли поднимается эфирная лестница: ${n} ${plural(n,"ступень","ступени","ступеней")} вверх, к чертогу «${s.n}» над облаками.`
+   :k==="portal"?`Пространство складывается в лестницу: ${n} ${plural(n,"ступень","ступени","ступеней")} света ведут в чертог «${s.n}».`
+   :`Под входом — лестница: ${n} ${plural(n,"ступень","ступени","ступеней")} вниз, в чертог «${s.n}».`;
+  return `${t} Свайп — ступень, свайп в обратную сторону — ступень назад. Пройти до конца сразу — тот же пункт меню.`;},
+ stairSound(i,last){const f=G.chStair||{};const k=f.k||"down";
+  if(k==="down"){const н=STAIR_SET[f.set]||STAIR_SET.stone;safeFn(()=>Spatial.role(i%2?н[0]:н[1],0,0,{dz:-0.3,gain:0.8,maxSec:0.8,seed:i})||Bank.play(i%2?н[0]:н[1],{seed:i,gain:0.8,maxSec:0.8}));
+   if(i%3===0)safeFn(()=>Spatial.role(н[2],0,0,{dz:-0.6-i*0.05,gain:0.5,maxSec:1.4,seed:i})||Bank.play(н[2],{seed:i,gain:0.5,maxSec:1.4}));}
+  else if(k==="up"){safeFn(()=>Spatial.role("mtg_step_glass",0,0,{dz:0.3+i*0.08,gain:0.6,maxSec:0.8,seed:i})||Bank.play("mtg_step_glass",{seed:i,gain:0.6,maxSec:0.8}));
+   if(i%3===0)safeFn(()=>Spatial.role("sky_gust",0,0,{dz:1+i*0.1,gain:0.35,maxSec:2,seed:i})||Bank.play("sky_gust",{seed:i,gain:0.35,maxSec:2}));}
+  else safeFn(()=>Bank.play(i%2?"arc_shine":"magic_shimmer",{seed:i,gain:0.5,maxSec:1.2}));
+  if(last)safeFn(()=>Bank.play(k==="down"?"deep_wind":k==="up"?"sky_gust":"arc_chimes",{gain:0.45,maxSec:3}));},
+ stairFlavour(f){const L={down:["Сквозняк снизу тянет холодом.","Шаги уходят эхом вниз.","Ступени стёрты тысячами ног.","Снизу уже слышен чертог."],
+  up:["Ступени из света держат вас над землёй; внизу шумит ветер.","Земля уходит вниз, воздух редеет.","Облака проходят сквозь ступени.","Над вами уже слышна крепость."],
+  portal:["Каждая ступень — шаг через лигу: пространство складывается.","Свет под ногами звенит, как стекло.","Мир вокруг течёт; держитесь лестницы.","Впереди проступает чертог."]}[f.k]||[];
+  const left=f.n-f.s;return `${L[Math.floor(f.s/4)%Math.max(1,L.length)]||""} ${left>0?`Осталось ${left} ${plural(left,"ступень","ступени","ступеней")}.`:""}`.trim();},
+ stairStep(dir){const f=G.chStair;if(!f)return false;
+  if(f.x!==G.x||f.y!==G.y||G.place||G.ship){G.chStair=null;return false;}
+  if(!f.md)f.md=dir;const назад=dir===({N:"S",S:"N",E:"W",W:"E"})[f.md];f.s+=назад?-1:1;
+  G.hour+=0.04;if(G.hour>=24){G.hour-=24;G.day++;}
+  if(f.s<0){G.chStair=null;narrate("Вы сошли с лестницы и снова стоите у входа.",{interrupt:true});return true;}
+  if(f.s>=f.n)return this.stairFinish();
+  this.stairSound(f.s);if(f.s%4===0||f.s===f.n-1)narrate(this.stairFlavour(f),{interrupt:false});return true;},
+ stairFinish(){const f=G.chStair;if(!f)return false;this.stairSound(f.n,true);G.chStair=null;
+  const t=this.enter({i:f.i,x:f.ex,y:f.ey});if(!this.run()&&t!==true&&typeof t==="string")narrate(t,{interrupt:true});return true;},
  where(e){return safeFn(()=>Director.where(e.x-G.x,e.y-G.y),"рядом");},
  /* ── состояние ── */
  st(){if(!G.ch||typeof G.ch!=="object")G.ch={};const s=G.ch;if(!Number.isFinite(Number(s.seal)))s.seal=0;
   for(const k of ["cleared","floors","ann","stats","found","inst","dyn","ach"])if(!s[k]||typeof s[k]!=="object")s[k]={};
-  for(const k of ["hires","relics","lspells"])if(!Array.isArray(s[k]))s[k]=[];if(!Number.isFinite(Number(s.dynN)))s.dynN=0;return s;},
+  for(const k of ["hires","relics","lspells"])if(!Array.isArray(s[k]))s[k]=[];if(!Number.isFinite(Number(s.dynN)))s.dynN=0;
+  if(s.dynBase!==CH_DYN0)this.migrateDyn(s);return s;},
+ /* Сохранения, где открытые миром чертоги нумеровались с 6000: теперь
+    6000–9999 — постоянные чертоги, а открытые миром переезжают за CH_DYN0
+    вместе со всем, что о них помнится. */
+ migrateDyn(s){const old=Number(s.dynBase)||6000;s.dynBase=CH_DYN0;
+  const m=k=>{const n=Number(k);return Number.isFinite(n)&&n>=old&&n<CH_DYN0?n-old+CH_DYN0:k;};
+  for(const f of ["dyn","cleared","found","floors","inst"]){const o=s[f];if(!o||typeof o!=="object")continue;const nn={};for(const [k,v] of Object.entries(o))nn[m(k)]=v;s[f]=nn;}
+  if(s.run&&Number.isFinite(Number(s.run.i)))s.run.i=m(Number(s.run.i));
+  s.ann={};
+  safeFn(()=>{(Director.st2().q||[]).forEach(x=>{if(x&&x.type==="chertog"&&x.ch!=null)x.ch=m(Number(x.ch));});});
+  safeFn(()=>{(G.gen&&Array.isArray(G.gen.lands)?G.gen.lands:[]).forEach(l=>{if(l&&l.inst!=null)l.inst=m(Number(l.inst));});});},
  relic(id){return this.st().relics.includes(id);},
  knows(id){return this.st().lspells.includes(id);},
  clearedOf(rank){const s=this.st();return Object.keys(s.cleared).filter(i=>+i<CH_N&&this.spec(+i).rank===rank).length;},
@@ -62629,22 +62716,29 @@ Object.assign(Chertog,{
   if(st.run){const s=this.spec(st.run.i);h+=this.btn("resume",`Вернуться в чертог «${s.n}»: ярус ${st.run.floor+1}`);}
   const near=this.near(80).slice(0,6);if(!near.length)h+=this.line("Рядом входов в чертоги нет: идите дальше — они в каждой области.");
   for(const e of near){const s=this.spec(e.i);const why=this.access(s);const cl=st.cleared[s.i];const rec=InstanceState.rec(s.i);
-   h+=this.line(`${this.brief(s)}. ${this.where(e)}, ${e.d} ${plural(e.d,"шаг","шага","шагов")}. ${cl?"Пройден"+(cl.n>1?` ${cl.n} раз`:"")+". ":""}${rec.best?`Лучшая оценка: ${rec.best.grade}. `:""}${rec.s&&rec.s.OUTCOME?`Развязка: ${INST_OUTCOMES[rec.s.OUTCOME].n}. `:""}${why.length?"Закрыт: "+why.join("; ")+".":"Открыт."}`);
-   if(e.d<=1&&!why.length)h+=this.btn("enter",`Войти в чертог «${s.n}»`);}
+   h+=this.line(`${this.brief(s)}. Вход: ${this.route(e.x-G.x,e.y-G.y)}. ${cl?"Пройден"+(cl.n>1?` ${cl.n} раз`:"")+". ":""}${rec.best?`Лучшая оценка: ${rec.best.grade}. `:""}${rec.s&&rec.s.OUTCOME?`Развязка: ${INST_OUTCOMES[rec.s.OUTCOME].n}. `:""}${why.length?"Закрыт: "+why.join("; ")+".":"Открыт."}`);
+   if(e.d<=1&&!why.length)h+=this.btn("enter",this.entryLabel(e));else if(e.d>1)h+=this.btn("beacon:"+e.i,`Маяк к входу: «${s.n}»`);}
   if(safeFn(()=>Zver.inTown(),false)){h+=this.line(`Гильдия искателей: наёмники на сегодня (в отряде ${st.hires.length} из трёх).`);
    for(const c of this.candidates())if(!st.hires.some(x=>x.id===c.id))h+=this.btn("hire:"+c.id,`Нанять: ${c.n}, ${CH_CLASSES[c.cls].n} ${c.lvl}-го уровня — ${c.цена} золота. ${CH_CLASSES[c.cls].о}`);}
   for(const x of st.hires)h+=this.btn("dismiss:"+x.id,`Отпустить: ${x.n} (${CH_CLASSES[x.cls].n})`);
   h+=this.line(`Ранги: ${CH_RANKS.map((r,k)=>r.n+" — "+CH_SEALS[k].toLowerCase()).join("; ")}. Виды: одиночные, испытания одиночки, групповые и рейдовые. Сложности: ${INST_DIFFS.map(d=>d.n).join(", ")} — каждая открывается прохождением прежней. Божественные открывает вера.`);
   return this.show("Чертоги Грани",h);},
  /* ── в мире: о входе рядом говорится заранее ── */
- tick(){if(G.place||G.inCombat||this.run())return;const e=this.near(5)[0];if(!e)return;const st=this.st();const key=e.i+":"+G.day;if(st.ann[key])return;st.ann=Object.fromEntries(Object.entries(st.ann).slice(-30));st.ann[key]=1;
+ tick(){if(G.place||G.inCombat||this.run()||G.chStair)return;const e=this.near(5)[0];const st=this.st();
+  /* У самого входа игра говорит об этом каждый раз, когда вы к нему подошли. */
+  const у=e&&e.d<=1?e.i:null;
+  if(у===null)this._at=null;
+  else if(this._at!==у){this._at=у;const s=this.spec(e.i);safeFn(()=>Bank.play(s.civ.звук,{gain:0.4,maxSec:3}));
+   narrate(`${e.d?`Рядом, ${this.route(e.x-G.x,e.y-G.y)}, —`:"Здесь"} вход в чертог «${s.n}». ${this.entryHint(s)}`,{interrupt:false});return;}
+  if(!e||e.d<=1)return;const key=e.i+":"+G.day;if(st.ann[key])return;st.ann=Object.fromEntries(Object.entries(st.ann).slice(-30));st.ann[key]=1;
   const s=this.spec(e.i);safeFn(()=>Bank.play(s.civ.звук,{gain:0.35,maxSec:3}));
-  narrate(`${e.d<=1?"Здесь":this.where(e)[0].toUpperCase()+this.where(e).slice(1)+", в "+e.d+" "+plural(e.d,"шаге","шагах","шагах")+","} вход в чертог: ${this.brief(s)}.${e.d<=1?" «Войти в чертог» — в меню «Здесь».":""}`,{interrupt:false});},
+  narrate(`Вход в чертог: ${this.route(e.x-G.x,e.y-G.y)}. ${this.brief(s)}. Маяк к входу — в «Осмотреться».`,{interrupt:false});},
  /* Поиск рядом с собой находит и скрытые входы. */
  search(){if(this.run()||G.place)return "";const st=this.st();const e=this.near(2,true).find(x=>this.spec(x.i).hidden&&!st.found[x.i]);if(!e)return "";st.found[e.i]=1;const s=this.spec(e.i);
   safeFn(()=>Bank.play("hero_step_echo",{gain:0.6,maxSec:2}));safeFn(()=>journal(`Найден скрытый чертог «${s.n}».`));return `Под ногами пустота: вы нашли скрытый вход — ${this.brief(s)}.`;},
  cmd(a){const [k,arg]=String(a||"").split(":");const p=String(arg||"").split("~");
-  switch(k){case "home":return this.home();case "resume":case "view":return this.run()?this.view():this.home();case "enter":{const t=this.enter();if(!this.run()&&t!==true)this.say(t);return true;}
+  switch(k){case "home":return this.home();case "resume":case "view":return this.run()?this.view():this.home();case "enter":{safeFn(()=>closeTopUI());const t=this.stairStart();if(t!==true)narrate(t,{interrupt:true});return true;}
+   case "beacon":{const e=this.near(80).find(x=>x.i===+p[0]);if(!e)return this.home();safeFn(()=>closeTopUI());safeFn(()=>TargetBeacon.start({x:e.x,y:e.y,n:`вход в чертог «${this.spec(e.i).n}»`}));narrate(`Маяк к входу в чертог «${this.spec(e.i).n}»: ${this.route(e.x-G.x,e.y-G.y)}.`,{interrupt:true});return true;}
    case "diff":{const e=this._pending||this.here();this._pending=null;const t=this.enter(e,+p[0]);if(!this.run()&&t!==true)this.say(t);return true;}
    case "leave":this.say(this.leave());return true;case "go":{const c=this.cur();const e=c&&c.F.edges[+p[0]];if(e&&["rune","note","riddle"].includes(e.lock)&&!this.isOpen(c,e)&&!(this.relic("pick")&&e.lock!=="riddle"))return this.edgeView(+p[0]);return this.go(+p[0]);}
    case "rune":return this.seqStep(+p[0],"rune",p[1]);case "note":return this.seqStep(+p[0],"note",p[1]);case "ans":return this.seqStep(+p[0],"ans",p[1]);
@@ -62676,7 +62770,7 @@ Object.assign(Chertog,{
  const zg=Zver.guard.bind(Zver);Zver.guard=function(d){if(Chertog.soloLock())return d;return zg(d);};}
 /* Поиск рядом с собой находит и скрытые входы в чертоги. */
 {const sh=CMD.searchhere;CMD.searchhere=function(){const t=safeFn(()=>Chertog.search(),"");if(t){narrate(t,{interrupt:true});return true;}return sh.apply(this,arguments);};}
-Object.assign(CMD,{ch(a){Chertog.cmd(a);},chertog(){Chertog.home();},chenter(){const t=Chertog.enter();if(!Chertog.run()&&t!==true)narrate(t,{interrupt:true});},charena(){InstanceBossEngine.arenaView();}});
+Object.assign(CMD,{ch(a){Chertog.cmd(a);},chertog(){Chertog.home();},chenter(){if(G.chStair){Chertog.stairFinish();return;}const t=Chertog.stairStart();if(t!==true)narrate(t,{interrupt:true});},charena(){InstanceBossEngine.arenaView();}});
 const SchoolSpells=Modules.register("SCHOOLSPELLS",{
  list:SCHOOL_SPELLS,
  ofSchool(id){return SCHOOL_SPELLS.filter(s=>s.school===id);},

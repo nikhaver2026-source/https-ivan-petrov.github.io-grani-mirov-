@@ -1,7 +1,7 @@
 /* Инстансы Грани (чертоги, 12.0): ядро движка по мастер-промпту игрока.
    «Каждый инстанс — самостоятельная история, экосистема и приключение, а не
    набор комнат и противников». Набор проверяет:
-   — каталог: шесть тысяч разных имён, 25 категорий со своим откликом, шагом,
+   — каталог: десять тысяч разных имён, 25 категорий со своим откликом, шагом,
      фоном и правилом, гибриды, виды (одиночный, испытание одиночки,
      групповой, рейд), ранги, шесть сложностей, единственные и скрытые;
    — паспорт каждого инстанса: откуда, зачем, что сейчас, фракции,
@@ -30,15 +30,15 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
  const кат=await p.evaluate(()=>{const r={};const names=new Set(),types={},cats={},ranks=[0,0,0,0,0,0,0];let hyb=0,uni=0,hid=0,lore=0;
   for(let i=0;i<CH_N;i++){const s=Chertog.spec(i);names.add(s.n);types[s.type]=(types[s.type]||0)+1;cats[s.cat.id]=1;ranks[s.rank]++;if(s.hybrid)hyb++;if(s.unique)uni++;if(s.hidden)hid++;
    const L=s.lore;if(L&&L.откуда&&L.зачем&&L.сейчас&&L.фракции.length&&L.экономика&&L.конфликт&&L.опасности&&L.тайна&&L.атмосфера&&L.правило)lore++;}
-  Object.assign(r,{uniq:names.size,types,cats:Object.keys(cats).length,ranks,hyb,uni,hid,lore,diffs:INST_DIFFS.length,catsData:INST_CATS.length});
+  Object.assign(r,{N:CH_N,uniq:names.size,types,cats:Object.keys(cats).length,ranks,hyb,uni,hid,lore,diffs:INST_DIFFS.length,catsData:INST_CATS.length});
   r.catFields=INST_CATS.every(c=>c.акустика&&c.шаг&&c.фон.length>=2&&c.правило&&c.пр&&c.мех.length&&c.ловушки.length&&c.ресурс.length&&ROOM["inst_"+c.id]&&ROOM["inst_"+c.id].sec===c.акустика.sec);
   r.rules=new Set(INST_CATS.map(c=>c.правило)).size;r.hybRules=INST_HYBRID.every(h=>h.м&&h.ж&&h.ср&&h.мн&&h.правило);
   const raid=Array.from({length:CH_N},(_,i)=>Chertog.spec(i)).find(s=>s.type==="raid");r.raidParty=raid&&raid.party;r.raidRank=raid&&raid.rank;
   return r;});
- check('1. шесть тысяч чертогов с разными именами; 25 категорий — у каждой свой отклик, шаг, фон и правило; одиночные, испытания одиночки, групповые и рейды на пятерых; все семь рангов',
-  кат.uniq===6000&&кат.cats===25&&кат.catsData===25&&кат.rules===25&&кат.catFields&&кат.types.solo>0&&кат.types.soloonly>0&&кат.types.group>0&&кат.types.raid>0&&кат.raidParty===5&&кат.raidRank>=4&&кат.ranks.every(x=>x>0),кат);
+ check('1. десять тысяч чертогов с разными именами; 25 категорий — у каждой свой отклик, шаг, фон и правило; одиночные, испытания одиночки, групповые и рейды на пятерых; все семь рангов',
+  кат.uniq===кат.N&&кат.N===10000&&кат.cats===25&&кат.catsData===25&&кат.rules===25&&кат.catFields&&кат.types.solo>0&&кат.types.soloonly>0&&кат.types.group>0&&кат.types.raid>0&&кат.raidParty===5&&кат.raidRank>=4&&кат.ranks.every(x=>x>0),кат);
  check('1б. у каждого паспорт: откуда, зачем, что сейчас, фракции, экономика, конфликт, опасности, тайна, атмосфера, правило; гибриды, единственные, скрытые; шесть сложностей',
-  кат.lore===6000&&кат.hyb>100&&кат.hybRules&&кат.uni>20&&кат.hid>100&&кат.diffs===6,кат);
+  кат.lore===кат.N&&кат.hyb>100&&кат.hybRules&&кат.uni>20&&кат.hid>100&&кат.diffs===6,кат);
 
  /* ── 2. генератор: постоянство и решаемость ── */
  const ген=await p.evaluate(()=>{const r={visitDiff:0,diffDiff:0,unsolvable:[],floors:0,mech:new Set(),locks:new Set(),secrets:new Set(),trapTypes:new Set(),npcs:0,books:new Set(),cues:new Set(),patrols:0};
