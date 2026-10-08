@@ -403,6 +403,15 @@ h3{color:var(--acc2);margin:14px 0 6px;font-size:1.05rem;}
  <header><h2 id="zvTitle">Зверинец</h2><button type="button" data-cmd="close">Закрыть</button></header>
  <div id="zvBody"></div>
 </div></div>
+<!-- ПИТОМЦЫ И МАУНТЫ: два окна над зверинцем и скакунами тайных палат -->
+<div class="modal" id="modal-pets" role="dialog" aria-modal="true" aria-label="Питомцы" hidden><div class="sheet">
+ <header><h2 id="petsTitle">Питомцы</h2><button type="button" data-cmd="close">Закрыть</button></header>
+ <div id="petsBody"></div>
+</div></div>
+<div class="modal" id="modal-mounts" role="dialog" aria-modal="true" aria-label="Маунты" hidden><div class="sheet">
+ <header><h2 id="mountsTitle">Маунты</h2><button type="button" data-cmd="close">Закрыть</button></header>
+ <div id="mountsBody"></div>
+</div></div>
 
 <!-- 12.5: ГЛУБЬ — ЖИВЫЕ ПОДЗЕМЕЛЬЯ -->
 <div class="modal" id="modal-deep" role="dialog" aria-modal="true" aria-label="Ярус подземелья" hidden><div class="sheet">
@@ -3126,6 +3135,8 @@ NEWS.push({v:83,н:"версия 13.5: течения мифов в подзем
   т:"В ярусы просачиваются пять течений по мотивам мифов Китая, Японии, Индии, Британии и Бретани. У каждого — закон, перемена, твари со своим приёмом, диковины, алтарь с даром на выбор, отвары и легенда в пять шагов."});
 NEWS.push({v:84,н:"версия 13.5: карточка вещи",
   т:"«Осмотреть» в действиях с вещью открывает карточку: что это, свойства, откуда имя и с чем связано, где берут и на что идёт; ниже — что можно сделать здесь и что — в другом месте. Описаны все ресурсы мира и пород Глуби."});
+NEWS.push({v:85,н:"версия 13.5: питомцы и маунты",
+  т:"В меню действий — «Питомцы»: характеристики, корм, уход, снаряжение, развитие и задания, которые питомец выполняет сам, и пока вас нет. «Маунты»: скакуны, снаряжение, выучка. Скакун ждёт, где вы сошли: «Действие здесь» — и вы в седле."});
 const NEWS_V=NEWS[NEWS.length-1].v;
 /* (8.5) Выпуск читается коротко: заголовок, затем факты. */
 function newsLine(n){const н=String(n.н||"");return `${н.charAt(0).toUpperCase()+н.slice(1)}. ${n.т||""}`;}
@@ -9748,8 +9759,10 @@ const AM_GROUPS=[
   ["zver","Зверинец"],
   ["zvfeed","Накормить зверей"],
   ["zvtame","Приручить зверя"],
+  ["pets","Питомцы"],
+  ["mounts","Маунты"],
   ["hvhome","Недуги"]],
-  {id:"hero",з:"",о:"лист героя, тело, инвентарь, мастерства, Путь Грани, ветви силы, достижения, зверинец и недуги"}],
+  {id:"hero",з:"",о:"лист героя, тело, инвентарь, мастерства, Путь Грани, ветви силы, достижения, зверинец, питомцы, маунты и недуги"}],
  /* Всё, что поручено и записано: дела, сроки, расследования и журнал. */
  ["Квесты",[
   ["quests","Квесты"],
@@ -10537,7 +10550,7 @@ const GUIDE_SRC=[
  "Как войти. Коснитесь поля дважды рядом с открытым ходом — или шагните в отъехавшую кладку, или выберите в меню вещи «Войти в тайный ход». Вы окажетесь в самой палате: подробно — глава 99.",
  "Что внутри. Тайная палата, собранная из координат: сухая крипта, затопленная по щиколотку, комната с колодцем, галерея с двенадцатью нишами — двенадцать видов и восемь стражей. Двух одинаковых палат в мире нет.",
  "Что лежит. Награда шести родов: артефакт, заклинание, умение, навык, именное оружие и скакун. Плюс золото россыпью. Палату опустошают один раз: вернувшись, вы найдёте пустой камень.",
- "Скакуны. Их восемь, и купить их нельзя нигде — только найти. Пепельная кобылица вдвое сокращает шаг, каменный жук везёт добычу, туманный олень уводит от встреч, грозовой рух поднимает на крыло даже бескрылого, костяной баран бьёт с разбега, приливный конь укорачивает морские переходы, угольный пёс чует дальше, стеклянная рысь видит в темноте. Позвать и отпустить скакуна можно из меню действий или из окна «Школы и умения»."]},
+ "Скакуны. Их восемь, купить их нельзя — только найти. Кобылица сокращает шаг, жук везёт добычу, олень уводит от встреч, рух поднимает на крыло, баран бьёт с разбега, приливный конь укорачивает море, пёс чует дальше, рысь видит в темноте. Всё о них — «Персонаж» → «Маунты», о зверях — «Питомцы». Скакун ждёт, где вы сошли: «Действие здесь» — и вы в седле."]},
 {title:"Глава 43. Тёмные земли",body:[
  "За Гранью лежит то, что Грань и держит. Туда не ведёт ни один тракт: вход один — разлом. Разломы стоят там, где камень треснул сам: в горах, в топях, у пещерных зевов. Найдя разлом, выберите в меню действий «Шагнуть в разлом».",
  "Что там. Семь видов земли, каких нет по эту сторону: пепельное поле, костяное поле, гнилая чаща, зеркальная равнина, жильная порода, утопшие низины и Шрам — место, где Грань зашивали. Шаг по каждой звучит по-своему.",
@@ -70784,7 +70797,7 @@ function worldSelfCheck(){
    &&new Set(AM_GROUPS.map(g=>g[0])).size===16+(SVODY_ON?1:0)&&new Set(AM_GROUPS.map(g=>g[2].id)).size===16+(SVODY_ON?1:0)
    &&typeof amGroupOpen==="function"&&typeof amBack==="function"&&typeof CMD.amgroup==="function"
    /* Ни один пункт меню не потерян и не задвоен при разбивке. */
-   &&AM_ITEMS.length===152+(SVODY_ON?13:0)&&new Set(AM_ITEMS.map(x=>x[0])).size===152+(SVODY_ON?13:0)
+   &&AM_ITEMS.length===154+(SVODY_ON?13:0)&&new Set(AM_ITEMS.map(x=>x[0])).size===154+(SVODY_ON?13:0)
    /* Самый большой раздел меньше трети меню: прежний был на пятьдесят семь. */
    &&Math.max(...AM_GROUPS.map(g=>g[1].length))<=16
    /* Семь частей руководства, и каждая глава ровно в одной. */
@@ -70835,7 +70848,7 @@ function worldSelfCheck(){
      невозможного. */
   /* Меню действий пунктами: шестнадцать разделов, каждый пункт в одном,
      список разделов открывается первым, раздел — двойным касанием. */
-  ok("ampunkty",AM_GROUPS.length===16+(SVODY_ON?1:0)&&AM_ITEMS.length===152+(SVODY_ON?13:0)&&new Set(AM_ITEMS.map(x=>x[0])).size===152+(SVODY_ON?13:0)
+  ok("ampunkty",AM_GROUPS.length===16+(SVODY_ON?1:0)&&AM_ITEMS.length===154+(SVODY_ON?13:0)&&new Set(AM_ITEMS.map(x=>x[0])).size===154+(SVODY_ON?13:0)
    &&["start","here","move","fight","hero","quests","craft","people","magic","faith","books","world","realms","dark","sound","game"]
      .every(id=>AM_GROUP_BY_ID[id])
    &&["char","bodystate","inv","mastery"].every(c=>AM_GROUP_BY_ID.hero[1].some(x=>x[0]===c))
@@ -74909,6 +74922,323 @@ const ItemCard={
 /* «Осмотреть» открывает карточку целиком; строка при выборе — с тем, что это за вещь. */
 {const a=ITEM_ACTIONS.find(x=>x.id==="look");if(a){const d0=a.делать;a.делать=(row,ctx)=>{if(safeFn(()=>ItemCard.show(row),false))return "keep";return d0(row,ctx);};}}
 {const ib0=invBrief;invBrief=function(kind,key){const t=ib0(kind,key);return safeFn(()=>ItemCard.briefAdd(kind,key,t),t);};}
+/* ════════════════════════════════════════════════════════════════════════
+   ПИТОМЦЫ И МАУНТЫ — ДВА ОКНА В МЕНЮ ДЕЙСТВИЙ
+   Просьба игрока: «в меню действий — пункт „Питомец“: снаряжать, проверять
+   характеристики, кормить, ухаживать и выдавать задания. Меню — чтобы не
+   привязывать питомца к персонажу: пока героя нет в игре, питомец сам бегает,
+   развивается и выполняет задания. То же с маунтами: характеристики,
+   снаряжение, улучшение и „забраться“. И забраться на маунта, когда он
+   рядом, — выбрать его как объект, как сундук или ресурс».
+   Звери уже живут в зверинце (Zver), скакуны тайных палат — в MOUNTS. Здесь
+   два окна над ними: «Питомцы» — все небольшие звери, их характеристики,
+   снаряжение, корм, уход, развитие и задания со своим временем; «Маунты» —
+   ездовые звери и скакуны тайных палат, их характеристики, снаряжение,
+   выучка и «сесть». Скакун, с которого сошли, стоит в мире на том месте, и
+   к нему подходят, как к сундуку: «Действие здесь» — и вы в седле.
+   Задания идут по часам мира: часы при входе догоняют время, что вас не
+   было (до месяца), — и питомец возвращается с добычей сам. При часах «по
+   шагам» задание дойдёт и по настоящему времени: десять минут на час дела.
+   ════════════════════════════════════════════════════════════════════════ */
+const PET_TASKS=[
+ {id:"forage",  n:"Искать припасы", о:"обходит округу и приносит то, что растёт и лежит рядом",ч:6, стат:"чутьё",риск:0.05,навык:"bearer"},
+ {id:"hunt",    n:"Охотиться",      о:"выслеживает дичь — мясо, шкуры и кости; бывает, возвращается с раной",ч:8,стат:"сила",риск:0.25,навык:"hunter"},
+ {id:"herbs",   n:"Собирать травы", о:"ищет травы, что растут в эту пору",ч:6,стат:"чутьё",риск:0.05,навык:"scout"},
+ {id:"scout",   n:"Разведать округу",о:"находит подземелья и постройки вокруг и рассказывает о них",ч:10,стат:"чутьё",риск:0.12,навык:"scout"},
+ {id:"treasure",n:"Искать клады",   о:"роет и вынюхивает старые клады; удача — по чутью",ч:12,стат:"чутьё",риск:0.15,навык:"scout"},
+ {id:"courier", n:"Отнести весть",  о:"несёт весть в ближний город и приносит плату",ч:8,стат:"ловк",риск:0.08,навык:"bearer"},
+ {id:"train",   n:"Тренироваться",  о:"бегает, борется и учится сам: опыт без добычи",ч:4,стат:"стойк",риск:0,навык:"guard"},
+ {id:"rest",    n:"Отдыхать дома",  о:"спит, ест и залечивает раны",ч:6,стат:"стойк",риск:0,навык:null}];
+const PET_TASK_BY_ID=Object.fromEntries(PET_TASKS.map(t=>[t.id,t]));
+const PET_CARE={talk:{n:"Погладить и поговорить",о:"верность растёт",ч:2,уже:"обласкан и доволен"},groom:{n:"Вычесать и почистить",о:"настроение лучше, мелкие раны затягиваются",ч:6,уже:"вычесан и чист"},
+ play:{n:"Поиграть",о:"настроение и опыт, но зверь устаёт и голодает",ч:3,уже:"наигрался и отдыхает"},heal:{n:"Полечить звериным отваром",о:"отвар из запасов зверинца лечит раны",ч:0}};
+/* Выучка скакуна тайных палат: пять ступеней, каждая — золото и время с ним. */
+const MOUNT_TRAIN=[{n:"дикий"},{n:"привыкший",ц:60},{n:"послушный",ц:150},{n:"выезженный",ц:320},{n:"боевой",ц:600},{n:"легендарный",ц:1000}];
+const Stable={
+ st(){const s=Zver.st();if(!s.stb||typeof s.stb!=="object")s.stb={};const b=s.stb;
+  for(const k of ["legLv","legGear","legCare","pos"])if(!b[k]||typeof b[k]!=="object"||Array.isArray(b[k]))b[k]={};
+  if(!Array.isArray(b.reports))b.reports=[];if(!Number.isFinite(Number(b.day)))b.day=Number(G.day)||1;return b;},
+ absH(){return (Number(G.day)||1)*24+(Number(G.hour)||0);},
+ cap(t){t=String(t||"");return t?t[0].toUpperCase()+t.slice(1):t;},
+ q(t){return String(t).replace(/&/g,"&amp;").replace(/"/g,"&quot;").replace(/</g,"&lt;");},
+ line(t){return `<div class="list-line" tabindex="0" data-speak="${this.q(t)}">${this.q(t)}</div>`;},
+ btn(cmd,label){return `<button type="button" class="item" data-cmd="${cmd}" data-speak="${this.q(label)}">${this.q(label)}</button>`;},
+ show(modal,title,html){const box=document.getElementById(modal==="modal-pets"?"petsBody":"mountsBody");const h=document.getElementById(modal==="modal-pets"?"petsTitle":"mountsTitle");
+  if(h)h.textContent=title;if(box)box.innerHTML=html;const m=document.getElementById(modal);if(m&&m.hidden)openModal(modal);
+  const first=box&&box.querySelector("[data-speak]");if(first)safeFn(()=>setCursor(first,false));
+  narrate(`${title}. ${first?first.dataset.speak:""}`,{interrupt:true,pri:1,cat:"ui"});return true;},
+ hours(n){n=Math.max(1,Math.ceil(n));return `${n} ${plural(n,"час","часа","часов")}`;},
+ /* ═══ ПИТОМЦЫ ═══ */
+ isMount(a){const f=Zver.fam(a);return !!(f&&f.ездовой);},
+ pets(){return Zver.st().list.filter(a=>!this.isMount(a));},
+ mood(a){if(!Number.isFinite(Number(a.настр)))a.настр=60;return Math.round(Number(a.настр));},
+ moodWord(a){const m=this.mood(a);return m>=80?"весел":m>=55?"спокоен":m>=30?"скучает":"тоскует";},
+ due(a){const t=a.задание;if(!t)return false;if(this.absH()>=t.start+t.dur)return true;return Clock.mode()==="steps"&&(Date.now()-t.rs)>=t.dur*600000;},
+ eta(a){const t=a.задание;if(!t)return 0;let h=t.start+t.dur-this.absH();if(Clock.mode()==="steps")h=Math.min(h,t.dur-(Date.now()-t.rs)/600000);return Math.max(0,h);},
+ etaWords(a){const h=this.eta(a);return h<=0.05?"вот-вот":`через ${this.hours(h)}`;},
+ petWhere(a){const s=Zver.st();if(a.задание)return `на задании «${PET_TASK_BY_ID[a.задание.id].n.toLowerCase()}», вернётся ${this.etaWords(a)}`;
+  if(s.mount===a.uid)return "под седлом";if(s.pets.indexOf(a.uid)>=0)return "с вами";const p=this.st().pos["zv:"+a.uid];return p?this.posWords(p):"дома, в стойле зверинца";},
+ petBrief(a){return `${a.n}, уровень ${a.lvl}, ${this.petWhere(a)}. Здоровье ${Zver.hp(a)} из ${Zver.hpMax(a)}${a.ранен?", ранен":""}; сытость ${Math.round(a.сыт)}, верность ${Math.round(a.верн)}, настроение ${this.mood(a)} — ${this.moodWord(a)}.`;},
+ petsHome(){this.tick(true);const s=Zver.st(),b=this.st();const list=this.pets();
+  const сЗадания=list.filter(a=>a.задание).length,сВами=list.filter(a=>s.pets.indexOf(a.uid)>=0).length;
+  let h=this.line(list.length?`Питомцев ${list.length}: с вами ${сВами}, на заданиях ${сЗадания}, дома ${list.length-сВами-сЗадания}. Питомец живёт и без вас: ходит на задания, растёт и сам возвращается.`
+   :"Питомцев пока нет. Их покупают в зверинцах городов, приручают («Приручить зверя» в меню действий) и выводят из яиц.");
+  if(b.reports.length){h+=this.line(`Вернулись с заданий: ${b.reports.slice(-6).map(r=>r.t).join(" ")}`);b.reports=[];}
+  for(const a of list)h+=this.btn("pet:view:"+a.uid,this.petBrief(a));
+  if(list.length)h+=this.btn("pet:feedall","Накормить всех питомцев и скакунов");
+  h+=this.btn("pet:zver","Зверинец: лавка, мастерская, звериные зелья и бестиарий");
+  h+=this.btn("mnt:home","Маунты: скакуны и ездовые звери");
+  return this.show("modal-pets","Питомцы",h);},
+ petView(u){const a=Zver.byUid(u);if(!a)return this.petsHome();const f=Zver.fam(a),v=Zver.variant(a),l=Zver.legend(a);
+  let h=this.line(this.petBrief(a));
+  h+=this.line(`${this.cap(l?l.о:f.о)}${v&&v.id!=="wild"?`. Облик: ${v.о}`:""}. Ест ${f.корм.join(", ")}, любимое — ${f.корм[0]}.`);
+  h+=this.line(`Характеристики: ${ZV_STATS.map(([k,n])=>`${n} ${Zver.stat(a,k)}`).join(", ")}; урон ${Zver.dmg(a)}; роль — ${ZV_ROLES[a.роль].n}: ${ZV_ROLES[a.роль].о}.`);
+  {const ab=Zver.ability(a),va=Zver.varAbility(a);const tl=Zver.talentList(a).filter(x=>x.открыто);
+   h+=this.line(`Способности: ${ab?`«${ab.n}» — ${ZV_ABIL_EFFECTS[ab.эф]}`:"нет"}${va?`; облик — «${va.n}»: ${ZV_ABIL_EFFECTS[va.эф]}`:""}. Умения: ${tl.length?tl.map(x=>`«${x.x.n}» — ${x.x.о}`).join("; "):"пока ни одного"}.`);}
+  h+=this.line(`Навыки: ${Object.keys(ZV_SKILLS).filter(k=>k!=="saddle").map(k=>`${ZV_SKILLS[k].n.toLowerCase()} ${Zver.skill(a,k)}`).join(", ")}. Опыт ${Math.round(a.xp)} из ${Zver.need(a)} до следующего уровня.`);
+  if(a.задание){h+=this.line(`Сейчас: ${this.petWhere(a)}.`);h+=this.btn(`pet:recall:${u}`,"Отозвать с задания — без добычи");}
+  else{h+=this.btn(`pet:feed:${u}`,"Покормить");h+=this.btn(`pet:care:${u}`,"Уход: погладить, вычесать, поиграть, полечить");h+=this.btn(`pet:tasks:${u}`,"Задания: послать на дело");
+   h+=this.btn(`pet:follow:${u}`,Zver.st().pets.indexOf(a.uid)>=0?"Оставить дома":"Взять с собой");}
+  h+=this.btn(`pet:gear:${u}`,"Снаряжение, артефакт и звериные зелья");h+=this.btn(`pet:grow:${u}`,`Развитие и роль: свободных очков ${Zver.points(a)-Zver.spent(a)}`);
+  h+=this.btn(`pet:release:${u}`,"Отпустить на волю");h+=this.btn("pet:home","К списку питомцев");
+  return this.show("modal-pets",a.n,h);},
+ careView(u){const a=Zver.byUid(u);if(!a)return this.petsHome();const now=this.absH();a.уход=a.уход||{};let h=this.line(`${a.n}: настроение ${this.mood(a)} — ${this.moodWord(a)}, верность ${Math.round(a.верн)}, сытость ${Math.round(a.сыт)}. Весёлый зверь работает удачливее.`);
+  for(const [k,C] of Object.entries(PET_CARE)){const ждать=C.ч&&a.уход[k]!=null?C.ч-(now-a.уход[k]):0;h+=this.btn(`pet:docare:${u}:${k}`,`${C.n} — ${C.о}${ждать>0?`; снова через ${this.hours(ждать)}`:""}`);}
+  h+=this.btn(`pet:view:${u}`,`Назад: ${a.n}`);return this.show("modal-pets",`Уход: ${a.n}`,h);},
+ care(u,k){const a=Zver.byUid(u);if(!a)return "Такого зверя нет.";if(a.задание)return `${a.n} на задании и вернётся ${this.etaWords(a)}.`;const C=PET_CARE[k];if(!C)return "Так не ухаживают.";
+  const now=this.absH();a.уход=a.уход||{};if(C.ч&&a.уход[k]!=null&&now-a.уход[k]<C.ч)return `${a.n} ${C.уже}: снова — через ${this.hours(C.ч-(now-a.уход[k]))}.`;
+  const f=Zver.fam(a);this.mood(a);let t="";
+  switch(k){
+   case "talk":a.верн=Math.min(100,(Number(a.верн)||0)+3);a.настр=Math.min(100,a.настр+6);Zver.play(f.звук,{gain:0.45});
+    t=`${a.n} жмётся к руке и слушает ваш голос. Верность ${Math.round(a.верн)}, настроение ${this.mood(a)}.`;break;
+   case "groom":{a.настр=Math.min(100,a.настр+15);const h=Math.round(Zver.hpMax(a)*0.1);Zver.cure(a,h);a.верн=Math.min(100,(Number(a.верн)||0)+1);safeFn(()=>Bank.play("oc_rustle",{gain:0.45,maxSec:2}));
+    t=`Вы вычёсываете и чистите зверя: ${a.n} жмурится от удовольствия. Настроение ${this.mood(a)}, здоровье ${Zver.hp(a)} из ${Zver.hpMax(a)}.`;break;}
+   case "play":{a.настр=Math.min(100,a.настр+10);a.сыт=Math.max(0,(Number(a.сыт)||0)-5);const x=Zver.xp(a,5);Zver.play(f.звук,{gain:0.5});
+    t=`${a.n} носится вокруг вас и не хочет останавливаться. Настроение ${this.mood(a)}, сытость ${Math.round(a.сыт)}.${x}`;break;}
+   case "heal":{if(!(Number(Zver.st().pot.otvar)>0))return "Звериного отвара нет: его варят в зверинце из слизи и шерсти или покупают в зверинцах городов.";t=Zver.give(u,"otvar");break;}}
+  a.уход[k]=now;return t;},
+ tasksView(u){const a=Zver.byUid(u);if(!a)return this.petsHome();const c=this.canTask(a);let h=this.line(c===true?`${a.n} готов к делу. Задание идёт по часам мира — и пока вас нет в игре. Вернувшись, питомец сам принесёт добычу.`:`${a.n} сейчас не пойдёт: ${c}.`);
+  for(const T of PET_TASKS)h+=this.btn(`pet:task:${u}:${T.id}`,`${T.n} — ${T.о}; ${this.hours(T.ч)}${T.id==="rest"||T.id==="train"?"":`; удача около ${Math.round(this.chance(a,T)*100)} из ста`}${T.риск?`, риск раны ${Math.round(this.risk(a,T)*100)} из ста`:""}`);
+  h+=this.btn(`pet:view:${u}`,`Назад: ${a.n}`);return this.show("modal-pets",`Задания: ${a.n}`,h);},
+ canTask(a,T){if(a.задание)return `уже на задании и вернётся ${this.etaWords(a)}`;if(Zver.st().mount===a.uid)return "он под седлом";if((a.ранен||Zver.hp(a)<=0)&&!(T&&T.id==="rest"))return "ранен — сперва полечите или пошлите отдыхать";
+  if((Number(a.сыт)||0)<20)return "голоден — сперва покормите";if((Number(a.верн)||0)<20)return "не слушается: верность ниже двадцати";return true;},
+ chance(a,T){const st=Number(Zver.stat(a,T.стат))||1;const lvl=Number(a.lvl)||1;return Math.max(0.15,Math.min(0.95,0.45+st*0.035+lvl*0.012+(this.mood(a)-50)/300));},
+ risk(a,T){return T.риск*(1-Math.min(0.6,(Number(Zver.stat(a,"ловк"))||0)*0.03));},
+ taskStart(u,id){const a=Zver.byUid(u);const T=PET_TASK_BY_ID[id];if(!a||!T)return "Нет такого зверя или задания.";const c=this.canTask(a,T);if(c!==true)return `${a.n}: ${c}.`;
+  if(T.id==="rest"&&Zver.hp(a)>=Zver.hpMax(a)&&!a.ранен&&this.mood(a)>=70)return `${a.n} здоров и весел: отдыхать ему незачем.`;
+  const s=Zver.st();s.pets=s.pets.filter(x=>x!==a.uid);
+  a.задание={id,start:this.absH(),dur:T.ч,rs:Date.now(),x:G.x,y:G.y};
+  Zver.play(Zver.fam(a).звук,{gain:0.5});
+  return `${a.n} уходит: ${T.о}. Вернётся через ${this.hours(T.ч)}${T.id==="rest"||T.id==="train"?"":`; удача — около ${Math.round(this.chance(a,T)*100)} из ста`}.`;},
+ taskRecall(u){const a=Zver.byUid(u);if(!a||!a.задание)return "Этот зверь не на задании.";const T=PET_TASK_BY_ID[a.задание.id];a.задание=null;
+  return `${a.n} возвращается раньше срока с задания «${T.n.toLowerCase()}» — без добычи.`;},
+ /* Итог задания: добыча по месту, удача — по силе, чутью или ловкости, уровню и настроению. */
+ finish(a){const t0=a.задание;const T=PET_TASK_BY_ID[t0&&t0.id];a.задание=null;if(!T)return "";const ok=Math.random()<this.chance(a,T);const got={};const t=[];
+  const add=(k,n)=>{if(n>0&&k){G.inv[k]=(Number(G.inv[k])||0)+n;got[k]=(got[k]||0)+n;}};const lvl=Number(a.lvl)||1;const more=ok?1+Math.floor(lvl/6):0;
+  switch(T.id){
+   case "forage":{const terr=safeFn(()=>cellContent(t0.x,t0.y).terrain[0],"plains");const pool=(RESBYT[terr]&&RESBYT[terr].length)?RESBYT[terr]:LAND_RES;
+    for(let i=0;i<1+more;i++)add(pool[Math.floor(Math.random()*pool.length)],1+Math.floor(Math.random()*2));
+    if(ok){const zr=zvResOf(a.fam,a.var)[0];Zver.resAdd(zr,1);t.push(`звериный ресурс в зверинец: ${zr}`);}break;}
+   case "hunt":add("мясо",ok?2+more:1);if(ok)add("шкура",1);if(ok&&Math.random()<0.5)add("кость",1);if(ok&&Math.random()<0.3)add("звериный жир",1);break;
+   case "herbs":{const sea=safeFn(()=>seasonAt(G.day).id,"summer");const pool=PLANTS.filter(p=>(!p.пора||p.пора.includes(sea))&&(Number(p.редкость)||1)<=2+Math.floor(lvl/8));
+    for(let i=0;i<(ok?1+more:1);i++){const p=pool[Math.floor(Math.random()*pool.length)];if(p)add(p.n,1);}break;}
+   case "scout":{const r=this.scoutFind(t0,ok);if(r)t.push(r);break;}
+   case "treasure":if(ok){const g=Math.round((20+lvl*8)*(0.6+Math.random()));G.gold=(Number(G.gold)||0)+g;t.push(`клад — ${g} золота`);
+     if(Math.random()<0.08){const fm=ZV_FAMILIES[Math.floor(Math.random()*ZV_FAMILIES.length)];const e=safeFn(()=>Zver.egg(fm.id,`из клада, что откопал ${a.n}`),"");if(e)t.push("и звериное яйцо в гнезде зверинца");}}
+    else t.push("клада не нашлось");break;
+   case "courier":if(ok){const g=Math.round(15+lvl*4+Math.random()*20);G.gold=(Number(G.gold)||0)+g;t.push(`плата за весть — ${g} золота`);}else t.push("весть не дошла: в городе гонца не приняли");break;
+   case "train":t.push("сил прибавилось");break;
+   case "rest":a.настр=Math.min(100,this.mood(a)+10);t.push("здоров и бодр после отдыха");break;}
+  if(T.риск&&Math.random()<this.risk(a,T)){const z=Math.round(Zver.hpMax(a)*(0.3+Math.random()*0.3));Zver.hurt(a,z);t.push(`возвращается с раной: −${z} здоровья`);}
+  const xp=Zver.xp(a,Math.round(T.ч*(T.id==="train"?4:2)*(ok||T.id==="rest"||T.id==="train"?1:0.6)));if(T.навык)safeFn(()=>Zver.skillUp(a,T.навык,ok?2:1));
+  if(T.id==="rest"){Zver.cure(a,Zver.hpMax(a));a.ранен=0;}
+  a.сыт=Math.max(0,(Number(a.сыт)||0)-T.ч*2.5);a.настр=Math.max(0,Math.min(100,this.mood(a)+(ok?4:-6)));
+  const вещи=Object.entries(got).map(([k,n])=>`${k} ×${n}`);
+  const text=`${a.n} возвращается с задания «${T.n.toLowerCase()}»${вещи.length||t.length?": ":""}${вещи.concat(t).join(", ")}.${xp}`;
+  const b=this.st();b.reports.push({d:Number(G.day)||1,t:text,uid:a.uid});if(b.reports.length>20)b.reports.shift();
+  safeFn(()=>journal(text));safeFn(()=>Zver.play(Zver.fam(a).звук,{gain:0.5}));return text;},
+ /* Разведка: подземелья, чертоги и постройки вокруг места, откуда ушёл питомец. */
+ scoutFind(t0,ok){const R=ok?24:12;const found=[];
+  for(let r=2;r<=R&&found.length<(ok?2:1);r+=2)for(let i=0;i<16&&found.length<(ok?2:1);i++){const ang=i/16*Math.PI*2;const x=Math.round(t0.x+Math.cos(ang)*r),y=Math.round(t0.y+Math.sin(ang)*r);
+   if(x<0||y<0||x>=WORLD_MAX||y>=WORLD_MAX)continue;const c=safeFn(()=>cellContent(x,y),null);if(!c||!c.structure||c.structure.onlyAir)continue;
+   if(found.some(f=>f.x===x&&f.y===y))continue;const k=safeFn(()=>knownKey(x,y),null);const знали=k&&G.known&&G.known[k];if(знали&&found.length)continue;
+   found.push({x,y,c,знали});}
+  if(!found.length)return "вокруг пусто: ни построек, ни входов вниз";
+  return found.map(f=>{const dx=f.x-t0.x,dy=f.y-t0.y,d=Math.max(Math.abs(dx),Math.abs(dy));const st=f.c.structure;safeFn(()=>notePlace(f.x,f.y,st.type,st.name,"слух"));
+   const род=PLACE_KIND[st.type]==="dungeon"?"подземелье":PLACE_KIND[st.type]==="city"?"поселение":"постройка";
+   const myth=PLACE_KIND[st.type]==="dungeon"?safeFn(()=>Deep.mythLoreLine(f.x,f.y,st.type),""):"";
+   return `${род} «${st.name}» в ${d} ${plural(d,"шаге","шагах","шагах")} ${dirBetween(dx,dy)} от места, откуда ушёл питомец${myth?` (${myth.replace(/^Из глубины сюда просачиваются течения: /,"течения: ").replace(/\.$/,"")})`:""}`;}).join("; ");},
+ /* Сутки дома: зверь сам тренируется во дворе, скучает без хозяина. */
+ daily(){const b=this.st();const d=Number(G.day)||1;if(d<=b.day)return;const дней=Math.min(10,d-b.day);b.day=d;const s=Zver.st();
+  for(let i=0;i<дней;i++)for(const a of s.list){const дома=!a.задание&&s.pets.indexOf(a.uid)<0&&s.mount!==a.uid;this.mood(a);
+   if(дома&&(Number(a.сыт)||0)>=40){Zver.xp(a,4+Math.floor((Number(a.lvl)||1)/3));a.настр=Math.max(20,a.настр-4);}
+   else if(!дома)a.настр=Math.min(100,a.настр+2);}},
+ tick(silent){const out=[];for(const a of Zver.st().list.slice())if(a.задание&&this.due(a)){const r=safeFn(()=>this.finish(a),"");if(r)out.push(r);}
+  safeFn(()=>this.daily());if(out.length&&!silent)setTimeout(()=>safeFn(()=>narrate(out.join(" "),{interrupt:false})),400);return out;},
+ gearView(kind,u){const a=Zver.byUid(u);if(!a)return kind==="mnt"?this.mountsHome():this.petsHome();const s=Zver.st();let h="";
+  for(const [slot,имя] of Zver.slots(a)){const mat=a.снар[slot];h+=this.line(`${this.cap(имя)}: ${mat?zvGearName(slot,mat).toLowerCase():"нет"}${ZV_SLOT_GIFT[slot]?` — ${Object.keys(ZV_SLOT_GIFT[slot]).join(", ")}`:""}.`);
+   for(const [k,n] of Object.entries(s.gear)){const [sl,mt]=k.split(":");if(sl===slot&&n>0&&mt!==mat)h+=this.btn(`${kind}:equip:${u}:${slot}:${mt}`,`Надеть: ${zvGearName(slot,mt).toLowerCase()} (в сумке ${n})`);}}
+  if(!Object.values(s.gear).some(n=>n>0))h+=this.line("Снаряжения для зверей в сумке нет: его продают и шьют в зверинцах городов.");
+  {const x=Zver.artOf(a);h+=this.line(`Артефакт: ${x?`${x.n} — ${x.о}`:"нет"}.`);for(const id of s.arts)h+=this.btn(`${kind}:putart:${u}:${id}`,`Надеть артефакт: ${ZV_ART_BY_ID[id].n} — ${ZV_ART_BY_ID[id].о}`);}
+  for(const [id,n] of Object.entries(s.pot))if(n>0)h+=this.btn(`${kind}:give:${u}:${id}`,`Дать: ${ZV_POTIONS[id].n} (${n}) — ${ZV_POTIONS[id].о}`);
+  h+=this.btn(`${kind}:view:${kind==="mnt"?"zv:":""}${u}`,`Назад: ${a.n}`);return this.show(kind==="mnt"?"modal-mounts":"modal-pets",`Снаряжение: ${a.n}`,h);},
+ growView(kind,u){const a=Zver.byUid(u);if(!a)return kind==="mnt"?this.mountsHome():this.petsHome();const f=Zver.fam(a);const своб=Zver.points(a)-Zver.spent(a);
+  let h=this.line(`Свободных очков развития ${своб}: очко — каждые три уровня. ${ZV_BRANCHES.map(b=>`${Zver.branchName(a,b)} ${a.ветви[b.id]||0}`).join(", ")}.`);
+  if(своб>0)for(const b of ZV_BRANCHES)if((a.ветви[b.id]||0)<5)h+=this.btn(`${kind}:growdo:${u}:${b.id}`,`Вложить в «${Zver.branchName(a,b)}»: ${b.о}`);
+  for(const r of f.роли.concat(["hunter","guard"]).filter((x,i,arr)=>arr.indexOf(x)===i))if(r!==a.роль)h+=this.btn(`${kind}:role:${u}:${r}`,`Роль: ${ZV_ROLES[r].n} — ${ZV_ROLES[r].о}`);
+  h+=this.btn(`${kind}:view:${kind==="mnt"?"zv:":""}${u}`,`Назад: ${a.n}`);return this.show(kind==="mnt"?"modal-mounts":"modal-pets",`Развитие: ${a.n}`,h);},
+ petCmd(arg){const [k,u,x,y]=String(arg||"").split(":");let t="";this.tick(true);
+  switch(k){
+   case "home":return this.petsHome();case "view":return this.petView(u);case "care":return this.careView(u);case "tasks":return this.tasksView(u);
+   case "gear":return this.gearView("pet",u);case "grow":return this.growView("pet",u);case "zver":safeFn(()=>closeTopUI());return Zver.home();
+   case "docare":t=this.care(u,x);narrate(t,{interrupt:true});safeFn(()=>saveGame(true));return this.careView(u);
+   case "task":t=this.taskStart(u,x);narrate(t,{interrupt:true});safeFn(()=>saveGame(true));return this.petView(u);
+   case "recall":t=this.taskRecall(u);break;case "feed":t=Zver.feed(u);break;case "feedall":t=Zver.feedAll();narrate(t,{interrupt:true});safeFn(()=>saveGame(true));return this.petsHome();
+   case "follow":t=Zver.follow(u);break;case "equip":t=Zver.equip(u,x,y);narrate(t,{interrupt:true});safeFn(()=>saveGame(true));return this.gearView("pet",u);
+   case "putart":t=Zver.putArt(u,x);narrate(t,{interrupt:true});safeFn(()=>saveGame(true));return this.gearView("pet",u);
+   case "give":t=Zver.give(u,x);narrate(t,{interrupt:true});safeFn(()=>saveGame(true));return this.gearView("pet",u);
+   case "growdo":t=Zver.grow(u,x);narrate(t,{interrupt:true});safeFn(()=>saveGame(true));return this.growView("pet",u);
+   case "role":t=Zver.role(u,x);narrate(t,{interrupt:true});safeFn(()=>saveGame(true));return this.growView("pet",u);
+   case "release":{const a=Zver.byUid(u);if(!a)return this.petsHome();if(x!=="yes")return this.show("modal-pets",`Отпустить: ${a.n}?`,this.line(`${a.n} уйдёт на волю навсегда — со снаряжением на нём.`)+this.btn(`pet:release:${u}:yes`,`Да, отпустить ${a.n}`)+this.btn(`pet:view:${u}`,"Нет, оставить"));
+    t=Zver.release(u);narrate(t,{interrupt:true});safeFn(()=>saveGame(true));return this.petsHome();}
+   default:return this.petsHome();}
+  narrate(t,{interrupt:true});safeFn(()=>{saveGame(true);refresh();});return this.petView(u);},
+ /* ═══ МАУНТЫ ═══ */
+ mountsAll(){const out=[];for(const a of Zver.st().list)if(this.isMount(a))out.push({k:"zv:"+a.uid,kind:"zv",a,n:a.n});
+  for(const id of (Array.isArray(G.mounts)?G.mounts:[]))if(MOUNT_BY_ID[id])out.push({k:"leg:"+id,kind:"leg",id,m:MOUNT_BY_ID[id],n:MOUNT_BY_ID[id].n});return out;},
+ mBy(k){return this.mountsAll().find(x=>x.k===k)||null;},
+ riding(){const za=safeFn(()=>Zver.mount(),null);if(za)return "zv:"+za.uid;if(G.mount&&MOUNT_BY_ID[G.mount])return "leg:"+G.mount;return null;},
+ moveOf(M){if(M.kind==="zv")return Zver.fam(M.a).ход;const d=M.m.дар||{};return d.крыло?"fly":d.море?"swim":/жук|червь/i.test(M.n)?"crawl":"walk";},
+ verb(M){return {fly:"Взлететь в седло",swim:"Забраться на спину",crawl:"Забраться в седло",dig:"Забраться в седло",walk:"Сесть верхом"}[this.moveOf(M)]||"Сесть верхом";},
+ voice(M){return M.kind==="zv"?Zver.fam(M.a).звук:M.m.b;},
+ here(){return G.place?{w:"place",pk:this.pk(),x:G.place.x,y:G.place.y}:{w:"world",x:G.x,y:G.y};},
+ pk(){const p=G.place;return p?`${p.bx},${p.by},${p.stype},${Number(p.depth)||0}`:"";},
+ posNear(p,R){if(!p||G.ship)return null;if(p.w==="world"){if(G.place)return null;const dx=p.x-G.x,dy=p.y-G.y,d=Math.max(Math.abs(dx),Math.abs(dy));return d<=R?{dx,dy,d}:null;}
+  if(!G.place||p.pk!==this.pk())return null;const dx=p.x-G.place.x,dy=p.y-G.place.y,d=Math.max(Math.abs(dx),Math.abs(dy));return d<=R?{dx,dy,d}:null;},
+ posWords(p){if(!p)return "в стойле зверинца";const r=this.posNear(p,9999);if(r)return r.d?`ждёт в ${r.d} ${plural(r.d,"шаге","шагах","шагах")}, ${dirBetween(r.dx,r.dy)}`:"ждёт здесь, рядом с вами";
+  return p.w==="world"?"ждёт снаружи, там, где вы спешились":"ждёт внутри, там, где вы спешились";},
+ near(R){const out=[];const b=this.st();const k0=this.riding();for(const M of this.mountsAll()){if(k0===M.k)continue;const r=this.posNear(b.pos[M.k],R);if(r)out.push(Object.assign({M},r));}return out;},
+ mWhere(M){if(this.riding()===M.k)return "вы в седле";if(M.kind==="zv"&&Zver.st().pets.indexOf(M.a.uid)>=0)return "идёт рядом с вами";return this.posWords(this.st().pos[M.k]);},
+ legLv(id){return Math.max(0,Math.min(5,Number(this.st().legLv[id])||0));},
+ /* Снаряжение и выучка скакуна тайных палат прибавляют к его дару. */
+ legBonus(id,k){const b=this.st();const gear=b.legGear[id]||{};let add=0;
+  for(const [slot,mat] of Object.entries(gear)){const m=ZV_MATERIALS.find(x=>x.id===mat);const g=ZV_SLOT_GIFT[slot];if(m&&g&&g[k])add+=g[k]*m.k;if(m&&m.дар&&m.дар[k])add+=Number(m.дар[k])||0;}
+  return {lv:this.legLv(id),add};},
+ legWords(id){const m=MOUNT_BY_ID[id];const d=m.дар||{};const out=[];const lv=this.legLv(id);const B=k=>this.legBonus(id,k).add;
+  if(d.шаг!=null||B("шаг"))out.push(`дорога короче на ${Math.round((1-Math.max(0.35,(d.шаг!=null?d.шаг:1)-B("шаг")-0.02*lv))*100)} %`);
+  if(d.море!=null)out.push(`морской путь короче на ${Math.round((1-Math.max(0.35,d.море-0.03*lv))*100)} %`);
+  if(d.урон!=null||B("урон"))out.push(`удар с разбега сильнее на ${Math.round(((d.урон!=null?d.урон:1)+B("урон")+0.03*lv-1)*100)} %`);
+  if(d.скрытность!=null)out.push(`вы тише на ${Math.round(Math.min(0.8,d.скрытность+0.03*lv)*100)} %`);
+  if(d.добыча!=null||B("добыча"))out.push(`везёт добычи на ${Math.round((d.добыча||0)+B("добыча")+(d.добыча!=null?Math.floor(lv/2):0))} больше`);
+  if(d.скан!=null)out.push(`чует на ${d.скан+Math.floor(lv/2)} клеток дальше`);if(d.крыло!=null)out.push(`поднимает на крыло до высоты ${d.крыло}`);if(d.ночь)out.push("видит ночью");
+  return out;},
+ mountBrief(M){if(M.kind==="zv"){const a=M.a;return `${a.n} — ${ZV_MOVES[Zver.fam(a).ход].n} ездовой зверь, уровень ${a.lvl}, ${this.mWhere(M)}. Сытость ${Math.round(a.сыт)}, верность ${Math.round(a.верн)}.`;}
+  return `${M.n} — скакун тайных палат, выучка «${MOUNT_TRAIN[this.legLv(M.id)].n}», ${this.mWhere(M)}.`;},
+ mountsHome(){const list=this.mountsAll();const k0=this.riding();
+  let h=this.line(list.length?`Скакунов ${list.length}. ${k0?`Вы в седле: ${(this.mBy(k0)||{n:"скакун"}).n}.`:"Вы пешком."} Скакун, с которого вы сошли, ждёт на том месте: подойдите — «Действие здесь» — и вы снова в седле.`
+   :"Скакунов нет. Ездовых зверей покупают и приручают в зверинцах, а скакунов тайных палат находят в самих палатах.");
+  for(const M of list)h+=this.btn(`mnt:view:${M.k}`,this.mountBrief(M));
+  if(k0)h+=this.btn("mnt:off","Спешиться здесь");
+  h+=this.btn("pet:home","Питомцы");return this.show("modal-mounts","Маунты",h);},
+ mountView(k){const M=this.mBy(k);if(!M)return this.mountsHome();let h=this.line(this.mountBrief(M));const k0=this.riding();
+  if(M.kind==="zv"){const a=M.a,f=Zver.fam(a);h+=this.line(`${this.cap(f.о)}. Ход: ${ZV_MOVES[f.ход].о}. Ест ${f.корм.join(", ")}.`);
+   h+=this.line(`Характеристики: ${ZV_STATS.map(([kk,n])=>`${n} ${Zver.stat(a,kk)}`).join(", ")}; здоровье ${Zver.hp(a)} из ${Zver.hpMax(a)}; ход под седлом ${Zver.skill(a,"saddle")} из десяти.`);
+   const g=Zver.giftWords(a);h+=this.line(g.length?`В седле: ${g.join(", ")}.`:"В седле даёт немного: растите его ветвь хода и снаряжайте.");}
+  else{const m=M.m;h+=this.line(`${m.d}`);const g=this.legWords(M.id);h+=this.line(g.length?`В седле: ${g.join(", ")}.`:"");
+   const gear=this.st().legGear[M.id]||{};h+=this.line(`Снаряжение: ${ZV_SLOTS_MOUNT.map(([s,n])=>`${n} — ${gear[s]?zvGearName(s,gear[s]).toLowerCase():"нет"}`).join("; ")}.`);}
+  if(k0===k)h+=this.btn("mnt:off","Спешиться здесь");
+  else{const r=this.posNear(this.st().pos[k],1);h+=r?this.btn(`mnt:ride:${k}`,`${this.verb(M)}: ${M.n} рядом`):this.btn(`mnt:call:${k}`,`Позвать к себе — ${this.mWhere(M)}`);}
+  if(M.kind==="zv"){const u=M.a.uid;h+=this.btn(`mnt:feed:${k}`,"Покормить");h+=this.btn(`mnt:care:${k}`,"Почистить и погладить");h+=this.btn(`mnt:gear:${u}`,"Снаряжение: седло, узда, попона, подковы, сумы");
+   h+=this.btn(`mnt:grow:${u}`,`Улучшить: развитие и роль, свободных очков ${Zver.points(M.a)-Zver.spent(M.a)}`);h+=this.btn(`mnt:follow:${k}`,Zver.st().pets.indexOf(u)>=0?"Не брать спутником":"Взять спутником в бой");}
+  else{h+=this.btn(`mnt:care:${k}`,"Почистить и погладить");h+=this.btn(`mnt:lgear:${M.id}`,"Снаряжение: седло, узда, попона, подковы, сумы");
+   const lv=this.legLv(M.id);if(lv<5)h+=this.btn(`mnt:train:${M.id}`,`Улучшить выучку до «${MOUNT_TRAIN[lv+1].n}» — ${MOUNT_TRAIN[lv+1].ц} золота`);else h+=this.line("Выучка — легендарная: выше некуда.");}
+  h+=this.btn("mnt:home","К списку маунтов");return this.show("modal-mounts",M.n,h);},
+ legGearView(id){const M=this.mBy("leg:"+id);if(!M)return this.mountsHome();const s=Zver.st();const gear=this.st().legGear[id]||{};let h="";
+  for(const [slot,имя] of ZV_SLOTS_MOUNT){h+=this.line(`${this.cap(имя)}: ${gear[slot]?zvGearName(slot,gear[slot]).toLowerCase():"нет"}.`);
+   for(const [kk,n] of Object.entries(s.gear)){const [sl,mt]=kk.split(":");if(sl===slot&&n>0&&mt!==gear[slot])h+=this.btn(`mnt:lequip:${id}:${slot}:${mt}`,`Надеть: ${zvGearName(slot,mt).toLowerCase()} (в сумке ${n})`);}}
+  if(!Object.values(s.gear).some(n=>n>0))h+=this.line("Снаряжения в сумке нет: его продают и шьют в зверинцах городов.");
+  h+=this.btn(`mnt:view:leg:${id}`,`Назад: ${M.n}`);return this.show("modal-mounts",`Снаряжение: ${M.n}`,h);},
+ legEquip(id,slot,mat){const s=Zver.st(),b=this.st();const kk=Zver.gearKey(slot,mat);if(!(Number(s.gear[kk])>0))return "Такого снаряжения в сумке нет.";if(!ZV_SLOTS_MOUNT.some(x=>x[0]===slot))return "Скакун такого не носит.";
+  const g=b.legGear[id]||(b.legGear[id]={});s.gear[kk]--;if(s.gear[kk]<=0)delete s.gear[kk];if(g[slot]){const old=Zver.gearKey(slot,g[slot]);s.gear[old]=(Number(s.gear[old])||0)+1;}
+  g[slot]=mat;safeFn(()=>Bank.play("equip_leather_on",{gain:0.5,maxSec:2}));return `${MOUNT_BY_ID[id].n}: ${zvGearName(slot,mat).toLowerCase()} надето.`;},
+ train(id){const lv=this.legLv(id);if(lv>=5)return "Выучка и так легендарная.";const c=MOUNT_TRAIN[lv+1].ц;if((Number(G.gold)||0)<c)return `На выучку нужно ${c} золота, а у вас ${Number(G.gold)||0}.`;
+  G.gold-=c;this.st().legLv[id]=lv+1;safeFn(()=>Bank.play(MOUNT_BY_ID[id].b,{gain:0.6,maxSec:3}));return `${MOUNT_BY_ID[id].n}: выучка «${MOUNT_TRAIN[lv+1].n}». ${this.legWords(id).join(", ")}.`;},
+ mountCare(k){const M=this.mBy(k);if(!M)return "Такого скакуна нет.";const now=this.absH();const b=this.st();const last=Number(b.legCare[k]);
+  if(Number.isFinite(last)&&now-last<4)return `${M.n} уже вычищен: снова — через ${this.hours(4-(now-last))}.`;b.legCare[k]=now;safeFn(()=>Bank.play(this.voice(M),{gain:0.5,maxSec:3}));
+  if(M.kind==="zv"){M.a.верн=Math.min(100,(Number(M.a.верн)||0)+3);M.a.настр=Math.min(100,this.mood(M.a)+10);return `Вы чистите скакуна и треплете по шее: ${M.n} фыркает и тянется к руке. Верность ${Math.round(M.a.верн)}.`;}
+  return `Вы чистите ${M.n.toLowerCase()} и говорите с ним: скакун тайных палат слушает и успокаивается.`;},
+ /* Сесть: скакун должен стоять рядом — как сундук, к нему подходят. */
+ mountUp(k){const M=this.mBy(k);if(!M)return "Такого скакуна нет.";if(this.riding()===k)return "Вы и так в седле.";if(G.ship)return "На палубе в седло не садятся.";const b=this.st();
+  if(!this.posNear(b.pos[k],1))return `${M.n} не рядом: ${this.mWhere(M)}. В окне «Маунты» — «Позвать к себе».`;
+  const prev=this.riding();if(M.kind==="zv"){const t0=Zver.ride(M.a.uid);if(!/^Вы верхом/.test(t0))return t0;if(prev&&prev!==k)b.pos[prev]=this.here();}
+  else{this.leaveCurrent(k);G.mount=M.id;if(!Array.isArray(G.mounts))G.mounts=[];if(G.mounts.indexOf(M.id)<0)G.mounts.push(M.id);Zver.st().mount=null;safeFn(()=>Bank.play(M.m.b,{gain:0.6,maxSec:4}));}
+  delete b.pos[k];safeFn(()=>Bank.play("horse_step",{gain:0.4,maxSec:2}));return `${this.verb(M)} — и вы в седле: ${M.n}. ${this.cap(M.kind==="zv"?ZV_MOVES[Zver.fam(M.a).ход].о:M.m.d)}.`.replace(/\.\.$/,".");},
+ /* Пересев: прежний скакун остаётся там, где вы с него сошли. */
+ leaveCurrent(keep){const k=this.riding();if(!k||k===keep)return "";this.st().pos[k]=this.here();if(k.startsWith("zv:")){const s=Zver.st();s.mount=null;}else G.mount=null;return k;},
+ dismountHere(){const k=this.riding();if(!k)return "Вы и так пешком.";const M=this.mBy(k);this.st().pos[k]=this.here();
+  if(k.startsWith("zv:"))Zver.st().mount=null;else G.mount=null;safeFn(()=>Bank.play("horse_step",{gain:0.4,maxSec:2}));
+  return `Вы спешились. ${M?M.n:"Скакун"} ждёт здесь: подойдите и «Действие здесь» — снова в седло.`;},
+ call(k){const M=this.mBy(k);if(!M)return "Такого скакуна нет.";if(this.riding()===k)return "Вы и так в седле.";if(G.ship)return "На борт скакун не придёт.";
+  this.st().pos[k]=this.here();safeFn(()=>Bank.play(this.voice(M),{gain:0.6,maxSec:3}));return `Вы зовёте — и ${M.n} приходит и встаёт рядом. «Действие здесь» — ${this.verb(M).toLowerCase()}.`;},
+ mntCmd(arg){const parts=String(arg||"").split(":");const k=parts[0];const rest=parts.slice(1);let t="";const key=rest.slice(0,2).join(":");
+  switch(k){
+   case "home":return this.mountsHome();case "view":return this.mountView(key);
+   case "ride":t=this.mountUp(key);narrate(t,{interrupt:true});safeFn(()=>{saveGame(true);refresh();});return /в седле/.test(t)?(safeFn(()=>closeTopUI()),true):this.mountView(key);
+   case "call":t=this.call(key);break;case "off":t=this.dismountHere();narrate(t,{interrupt:true});safeFn(()=>{saveGame(true);refresh();});return this.mountsHome();
+   case "care":t=this.mountCare(key);break;case "feed":{const M=this.mBy(key);t=M&&M.kind==="zv"?Zver.feed(M.a.uid):"Скакуны тайных палат кормятся сами.";break;}
+   case "follow":{const M=this.mBy(key);t=M&&M.kind==="zv"?Zver.follow(M.a.uid):"Скакун тайных палат в бой спутником не идёт.";break;}
+   case "gear":return this.gearView("mnt",rest[0]);case "grow":return this.growView("mnt",rest[0]);
+   case "equip":t=Zver.equip(rest[0],rest[1],rest[2]);narrate(t,{interrupt:true});safeFn(()=>saveGame(true));return this.gearView("mnt",rest[0]);
+   case "putart":t=Zver.putArt(rest[0],rest[1]);narrate(t,{interrupt:true});safeFn(()=>saveGame(true));return this.gearView("mnt",rest[0]);
+   case "give":t=Zver.give(rest[0],rest[1]);narrate(t,{interrupt:true});safeFn(()=>saveGame(true));return this.gearView("mnt",rest[0]);
+   case "growdo":t=Zver.grow(rest[0],rest[1]);narrate(t,{interrupt:true});safeFn(()=>saveGame(true));return this.growView("mnt",rest[0]);
+   case "role":t=Zver.role(rest[0],rest[1]);narrate(t,{interrupt:true});safeFn(()=>saveGame(true));return this.growView("mnt",rest[0]);
+   case "lgear":return this.legGearView(rest[0]);
+   case "lequip":t=this.legEquip(rest[0],rest[1],rest[2]);narrate(t,{interrupt:true});safeFn(()=>saveGame(true));return this.legGearView(rest[0]);
+   case "train":t=this.train(rest[0]);narrate(t,{interrupt:true});safeFn(()=>{saveGame(true);refresh();});return this.mountView("leg:"+rest[0]);
+   default:return this.mountsHome();}
+  narrate(t,{interrupt:true});safeFn(()=>{saveGame(true);refresh();});return this.mountView(key);},
+ /* Скакун рядом — объект, как сундук: у него свои действия. */
+ objects(){return this.near(1).map(({M,dx,dy,d})=>{const x=(G.place?G.place.x:G.x)+dx,y=(G.place?G.place.y:G.y)+dy;
+  return {вид:"mount",mk:M.k,n:`${M.n} — ваш скакун`,x,y,dx,dy,d,маяк:null,о:`${this.cap(this.verb(M).toLowerCase())} — главное действие. ${M.kind==="zv"?Zver.fam(M.a).о:M.m.d}`,
+   состояние:M.kind==="zv"?`сытость ${Math.round(M.a.сыт)}, верность ${Math.round(M.a.верн)}`:`выучка «${MOUNT_TRAIN[this.legLv(M.id)].n}»`,
+   главное:()=>{narrate(this.mountUp(M.k),{interrupt:true});safeFn(()=>{saveGame(true);refresh();});}};});}};
+Modules.register("STABLE",Stable);
+/* Окна и пункты меню. */
+Object.assign(CMD,{pets(){Stable.petsHome();},pet(a){Stable.petCmd(a);},mounts(){Stable.mountsHome();},mnt(a){Stable.mntCmd(a);}});
+/* Задания идут по часам мира — и при каждом тике часов, и при входе. */
+{const ct0=Clock.tick;Clock.tick=function(){const r=ct0.apply(this,arguments);safeFn(()=>Stable.tick(false));return r;};}
+{const cr0=Clock.resume;Clock.resume=function(){const r=cr0.apply(this,arguments);safeFn(()=>{const out=Stable.tick(true);
+  if(out.length)setTimeout(()=>safeFn(()=>narrate(`Пока вас не было, питомцы ходили на задания. ${out.slice(0,3).join(" ")}${out.length>3?` И ещё ${out.length-3} — в окне «Питомцы».`:""}`,{interrupt:false})),3200);});return r;};}
+/* Сошли со скакуна старыми путями — он ждёт на месте; сели — место пустеет. */
+{const zd0=Zver.dismount;Zver.dismount=function(){const a=this.mount();if(a)safeFn(()=>{Stable.st().pos["zv:"+a.uid]=Stable.here();});return zd0.apply(this,arguments);};}
+{const zr0=Zver.ride;Zver.ride=function(u){const r=zr0.apply(this,arguments);if(/^Вы верхом/.test(String(r)))safeFn(()=>{delete Stable.st().pos["zv:"+Number(u)];});return r;};}
+{const dm0=dismissMount;dismissMount=function(){if(G.mount)safeFn(()=>{Stable.st().pos["leg:"+G.mount]=Stable.here();});return dm0.apply(this,arguments);};}
+{const cm0=callMount;callMount=function(id){const r=cm0.apply(this,arguments);if(r&&G.mount)safeFn(()=>{delete Stable.st().pos["leg:"+G.mount];});return r;};}
+/* Дар скакуна тайных палат — с его снаряжением и выучкой. */
+{const mg0=mountGift;mountGift=function(k){const v=mg0(k);if(safeFn(()=>Zver.mount(),null)||!G.mount||!MOUNT_BY_ID[G.mount])return v;const {lv,add}=safeFn(()=>Stable.legBonus(G.mount,k),{lv:0,add:0});
+  if(!lv&&!add)return v;if(k==="шаг"||k==="море"){if(v==null&&!add)return v;return Math.max(0.35,Math.round(((v==null?1:v)-add-0.02*lv)*100)/100);}
+  if(k==="урон"){if(v==null&&!add)return v;return Math.round(((v==null?1:v)+add+0.03*lv)*100)/100;}
+  if(k==="скрытность"){if(v==null)return v;return Math.min(0.8,v+0.03*lv);}
+  if(k==="скан"||k==="добыча"){const x=(Number(v)||0)+Math.round(add)+(v!=null?Math.floor(lv/2):0);return x>0?x:v;}
+  return v;};}
+/* Скакун рядом — в «Что вокруг», в «Осмотреться», при подходе и по «Действию здесь». */
+{const oh0=objectsHere;objectsHere=function(диаг){const out=oh0.apply(this,arguments);safeFn(()=>{for(const o of Stable.objects())out.push(o);});return out;};}
+{const af0=actionsFor;actionsFor=function(o){const r=af0(o);if(!o||o.вид!=="mount")return r;const M=Stable.mBy(o.mk);if(!M)return r;
+  const done=t=>{narrate(t,{interrupt:true});safeFn(()=>{saveGame(true);refresh();});return true;};
+  return r.filter(a=>a.id==="look").concat([
+   {id:"mnt_ride",n:Stable.verb(M),значок:"",о:"сесть в седло",делать:()=>{const t=Stable.mountUp(M.k);done(t);if(/в седле/.test(t))safeFn(()=>closeTopUI());return true;}},
+   {id:"mnt_care",n:"Почистить и погладить",значок:"",о:"скакун спокойнее и вернее",делать:()=>done(Stable.mountCare(M.k))},
+   {id:"mnt_feed",n:"Покормить",значок:"",о:"корм из сумки",делать:()=>done(M.kind==="zv"?Zver.feed(M.a.uid):"Скакуны тайных палат кормятся сами.")},
+   {id:"mnt_menu",n:"Открыть «Маунты»",значок:"",о:"характеристики, снаряжение и выучка",делать:()=>{safeFn(()=>closeTopUI());return Stable.mountView(M.k);}}]);};}
+{const ls0=Look.scan;Look.scan=function(rad){const out=ls0.apply(this,arguments);safeFn(()=>{const R=G.place?(rad||6):(rad||4);
+  for(const {M,dx,dy,d} of Stable.near(R)){out.push({n:`${M.n} — ваш скакун`,род:"скакун",x:(G.place?G.place.x:G.x)+dx,y:(G.place?G.place.y:G.y)+dy,dx,dy,d,dir:d?dirBetween(dx,dy):"здесь",bid:null,живое:true,сектор:d?this.sector(dx,dy):"здесь"});}});return out;};}
+{const ao0=approachObjects;approachObjects=function(){const out=ao0.apply(this,arguments);safeFn(()=>{if(!G.place)return;for(const {M,dx,dy,d} of Stable.near(approachR()))out.push({x:G.place.x+dx,y:G.place.y+dy,dx,dy,d,dir:d?dirBetween(dx,dy):"здесь",name:`${M.n} — ваш скакун`,t:"mount"});out.sort((a,b)=>a.d-b.d);});return out;};}
+{const wn0=worldNear;worldNear=function(R){const out=wn0.apply(this,arguments);safeFn(()=>{for(const {M,dx,dy,d} of Stable.near(R))if(d)out.push({dx,dy,d,name:`${M.n} — ваш скакун`});out.sort((a,b)=>a.d-b.d);});return out;};}
+/* «Действие здесь»: если под рукой ничего, кроме скакуна, — садимся. */
+{const uh0=useHere;useHere=function(){const n=safeFn(()=>Stable.near(1),[])||[];if(n.length&&!G.inCombat&&!G.ship){const др=(safeFn(()=>oh0objs(),[])||[]);if(!др.length){const t=Stable.mountUp(n[0].M.k);narrate(t,{interrupt:true});safeFn(()=>{saveGame(true);refresh();});return true;}}
+  return uh0.apply(this,arguments);};}
+function oh0objs(){return (objectsHere(true)||[]).filter(o=>o.вид!=="mount"&&o.вид!=="floor"&&!(o.вид==="tile"&&o.плитка==="#")&&o.d<=1&&!(o.вид==="structure"&&o.d>0));}
 {const bk2=bossDamageK;bossDamageK=function(kind,school){return bk2(kind,school)*safeFn(()=>Deep.dmgK(kind,school),1);};}
 {const mp3=marketPrice;marketPrice=function(res,idx,day){const v=mp3(res,idx,day);const dp=DEEP_PRICE[res];return dp&&!RES_BASE[res]?v*dp/6:v;};}
 {const wd=Director.worldDay;Director.worldDay=function(){const r=wd.apply(this,arguments);safeFn(()=>Deep.day());return r;};}
