@@ -38,12 +38,14 @@ const R=path.join(__dirname,'..');
  const src=fs.readFileSync(path.join(R,'index.html'),'utf8');
  const java=fs.readFileSync(path.join(R,'android/app/src/main/java/io/github/granimirov/MainActivity.java'),'utf8');
  const sapi=fs.readFileSync(path.join(R,'desktop/sapi.js'),'utf8');
- const ровно=Object.values(п1).every(x=>x.web!==null&&Math.abs(x.web-x.gemini)<1e-9&&Math.abs(x.синтез-x.gemini)<1e-9);
- check('1. голос браузера: темп синтезатора = темп записей Gemini при том же числе (1 — обычный, 5 — 2,8)',
-  ровно&&Math.abs(п1[1].web-1)<1e-9&&Math.abs(п1[5].web-2.8)<1e-9,п1);
+ /* (12.5) До пяти синтезатор и записи — одним темпом; дальше синтезатор
+    нарочно разгоняется сильнее (записи упираются в 3,5×, синтезатор — нет). */
+ const ровно=Object.values(п1).every(x=>x.web!==null&&Math.abs(x.web-x.синтез)<1e-9)&&[1,3,5].every(r=>Math.abs(п1[r].синтез-п1[r].gemini)<1e-9);
+ check('1. голос браузера: темп синтезатора = темп записей Gemini при том же числе до пяти (1 — обычный, 5 — 2,8), дальше синтезатор быстрее',
+  ровно&&Math.abs(п1[1].web-1)<1e-9&&Math.abs(п1[5].web-2.8)<1e-9&&п1[7].синтез>п1[7].gemini,п1);
  check('2. eSpeak, Android и Windows пересчитывают число ползунка той же шкалой',
-  /w\.set_rate\(Math\.max\(80,Math\.min\(450,Math\.round\(175\*Speech\.synthTempo\(r\)\)\)\)\)/.test(src)
-  &&/float tempo = r <= 1f \? r : 1f \+ \(r - 1f\) \* 0\.45f;/.test(java)&&/setSpeechRate\(Math\.max\(0\.1f, Math\.min\(3\.5f, tempo\)\)\)/.test(java)
+  /w\.set_rate\(Math\.max\(80,Math\.min\(900,Math\.round\(175\*Speech\.synthTempo\(r\)\)\)\)\)/.test(src)
+  &&/float tempo = r <= 1f \? r : 1f \+ \(r - 1f\) \* 0\.45f;/.test(java)&&/setSpeechRate\(Math\.max\(0\.1f, Math\.min\(5\.05f, tempo\)\)\)/.test(java)
   &&/Math\.Log\(GraniRh\.Tempo\(tempo\)\)/.test(sapi));
 
  /* ── 2 ── */
