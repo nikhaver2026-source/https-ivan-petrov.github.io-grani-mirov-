@@ -3102,6 +3102,12 @@ NEWS.push({v:74,н:"версия 12.5: хранители и жители чер
   т:"Хранители чертогов, жители по нраву, их просьбы и слова тех, кто даёт цепочки поручений, теперь звучат своими голосами — из двух дублей взят лучший. Голос игры договаривает только остальное."});
 NEWS.push({v:75,н:"версия 12.5: яйца зверей видны, питомец звенит",
   т:"Найденное яйцо больше не пропадает из виду: оно лежит в гнезде зверинца отдельной строкой и видно в котомке, в разделе «Прочее», — какой зверь и когда вылупится. Новое яйцо и новый питомец встречают вас ярким волшебным перезвоном."});
+NEWS.push({v:76,н:"версия 12.5: музыка везде одинаково громкая",
+  т:"Под землёй музыка больше не тише: она звучит так, как выставлено ползунком, где бы вы ни были. Темы выровнены по громкости, и тихая тема привала поднята. Синтезатор незаписанных фраз умеет говорить быстрее — до пятикратного темпа."});
+NEWS.push({v:77,н:"версия 12.5: ползунки от 0 до 100 и со звуком",
+  т:"Все ползунки — от 0 до 100. Прибавили — светлый тик, убавили — глухой тук, и тон выше у верха шкалы. Переключатели звучат по-новому: включение — щелчок со звоном вверх, выключение — шорох и глухой звон вниз."});
+NEWS.push({v:78,н:"версия 12.5: Режиссёр Грани второго поколения",
+  т:"Режиссёр Грани учится быстрее и бережнее: чаще повторяет то, в чём ошибся, проверяет себя на отложенном опыте и не путает заучивание с пониманием, а неизведанное пробует с разумной смелостью. Речь считает, что ещё не записано голосом."});
 const NEWS_V=NEWS[NEWS.length-1].v;
 /* (8.5) Выпуск читается коротко: заголовок, затем факты. */
 function newsLine(n){const н=String(n.н||"");return `${н.charAt(0).toUpperCase()+н.slice(1)}. ${n.т||""}`;}
@@ -10151,11 +10157,11 @@ const GUIDE_SRC=[
 {title:"Глава 4. Настройки звука и доступности",body:[
  "Озвучка — голос читает всё. Эффекты — звуки мира и маяки. Музыка — фон локаций, пролога и боя. Субтитры звуков — подписи для слабослышащих.",
  "Скорость и громкость озвучки, громкость эффектов и музыки, выбор голоса.",
- "Скорость озвучки по умолчанию — пять: это рабочий темп чтеца экрана, а не темп диктора. Шкала идёт от 0,6 до 6,0 шагом в две десятых и по кругу: дойдя до шести, следующее касание ставит 0,6. Ползунок отвечает выбранным темпом — «Раз, два, три», — так что подобрать свой можно на слух, ничего не запоминая.",
+ "Скорость озвучки по умолчанию — пять: это рабочий темп чтеца экрана, а не темп диктора. Шкала, как у всех ползунков, идёт от 0 до 100 и по кругу: 80 — прежняя пятёрка, дойдя до ста, следующее касание ставит ноль. Ползунок отвечает выбранным темпом — «Раз, два, три», — так что подобрать свой можно на слух, ничего не запоминая.",
  "Всё про сам голос собрано в отдельный раздел «Синтезатор»: чем говорить, каким голосом, с какой скоростью и высотой, и тут же проба. Раньше это лежало в трёх разных разделах.",
  "Синтезатор можно выбрать. «Синтезатор устройства» — тот, что стоит в самом телефоне: на iPhone это голоса VoiceOver, на Android — Google, Samsung, Acapela или любой другой установленный. Он отвечает сразу и работает без сети.",
  "Онлайн-голоса по умолчанию отсеяны. Браузер показывает вперемешку два рода голосов: те, что лежат в телефоне, и сетевые. Сетевой на каждое слово меню ходит на чужой сервер — полсекунды задержки на каждый пункт списка, а без сети молчание. Выключатель «Только голоса с устройства» их убирает; включить обратно можно там же.",
- "Высота голоса — отдельный ползунок, от 0,5 до 2,0. Не всякий синтезатор слушается высоты: голоса Apple слушаются, часть андроидных — нет.",
+ "Высота голоса — отдельный ползунок, от 0 до 100; 50 — как задумано голосом. Не всякий синтезатор слушается высоты: голоса Apple слушаются, часть андроидных — нет.",
  "Кнопка «Сохранить настройки» есть наверху окна. Настройки сохраняются и сами, при каждой правке; кнопка нужна, чтобы игра ответила словом, что записано. Рядом «Что сохранено» — она называет движок, голос, темп, высоту и отсев онлайн-голосов.",
  "«Заставка при запуске» (раздел «Что звучит») включает музыку и голос, которыми игра встречает при каждом запуске. «Считать ступени на лестнице» (раздел «Что игра говорит сама») решает, называть ли на марше каждую ступень: выключите — и останутся шаги по камню и площадки, а сколько всего ступеней, игра скажет в начале марша.",
  "Режим ощупывания и тактильный отклик — в разделе доступности. Настройки сохраняются."]},
@@ -55024,14 +55030,29 @@ const Neuro={
   if(!Array.isArray(n.today)||n.today.length!==NEURO_CH.length)n.today=new Array(NEURO_CH.length).fill(0);
   if(!Number.isFinite(Number(n.steps)))n.steps=0;if(!Number.isFinite(Number(n.lastNovel)))n.lastNovel=Number(G.day)||1;
   if(!n.meta||typeof n.meta!=="object")n.meta={lr:0.08,T:0.12,eps:0.1,r:[],ver:1,лучшее:0};if(!Array.isArray(n.meta.r))n.meta.r=[];if(!Array.isArray(n.recent))n.recent=[];
+  /* (12.5) Второе поколение: счёт попыток по действиям (для разумного поиска),
+     проверочная ошибка, сила забывания лишнего и смелость поиска неизвестного. */
+  if(!n.cnt||typeof n.cnt!=="object")n.cnt={};if(!Array.isArray(n.valHist))n.valHist=[];
+  if(!Number.isFinite(Number(n.meta.wd)))n.meta.wd=1e-4;if(!Number.isFinite(Number(n.meta.ucb)))n.meta.ucb=0.12;
+  if(!(Number(n.gen2)>=2)){n.gen2=2;n.meta.eps=Math.min(Number(n.meta.eps)||0.1,0.06);}
   return n;},
+ /* ── (12.5) ОПТИМИЗАТОР ADAM ──
+    Прежде сеть училась простым спуском: одна скорость на все веса, и редкие
+    действия мира учились так же медленно, как частые. Adam держит для
+    каждого веса свою скорость (первый и второй моменты градиента), а
+    градиент ограничен по норме — сеть учится быстрее и не срывается от
+    одного странного дня. Моменты живут в памяти и не тянут сохранение;
+    после роста сети они расширяются. */
+ _opt(n){const H=n.H,A=n.arms.length,z=k=>new Float64Array(k);let o=this._adam;
+  if(!o||o.H!==H||o.A!==A||o.n!==n){o=this._adam={n,H,A,t:0,mW1:z(H*NEURO_IN),vW1:z(H*NEURO_IN),mb1:z(H),vb1:z(H),mW2:z(A*H),vW2:z(A*H),mb2:z(A),vb2:z(A)};}
+  return o;},
  /* ── Самосовершенствование: сеть сама подбирает скорость учёбы и смелость
     поиска нового по тому, растёт ли ваш интерес; новая версия себя — когда
     средняя награда побила прежний рекорд. ── */
  meta(r){const n=this.st(),M=n.meta;M.r.push(Math.round(r*1000)/1000);if(M.r.length>28)M.r.shift();if(M.r.length<14)return;
   const avg=a=>a.reduce((x,y)=>x+y,0)/a.length;const a=avg(M.r.slice(-14,-7)),b=avg(M.r.slice(-7));
-  if(b<a-0.03){M.eps=Math.min(0.3,+(M.eps+0.03).toFixed(3));M.T=Math.min(0.3,+(M.T+0.02).toFixed(3));M.lr=Math.min(0.15,+(M.lr*1.15).toFixed(4));}
-  else if(b>a+0.03){M.eps=Math.max(0.04,+(M.eps-0.02).toFixed(3));M.T=Math.max(0.06,+(M.T-0.01).toFixed(3));M.lr=Math.max(0.02,+(M.lr*0.92).toFixed(4));}
+  if(b<a-0.03){M.eps=Math.min(0.3,+(M.eps+0.03).toFixed(3));M.T=Math.min(0.3,+(M.T+0.02).toFixed(3));M.lr=Math.min(0.15,+(M.lr*1.15).toFixed(4));M.ucb=Math.min(0.4,+((Number(M.ucb)||0.12)*1.2).toFixed(3));}
+  else if(b>a+0.03){M.eps=Math.max(0.02,+(M.eps-0.02).toFixed(3));M.T=Math.max(0.06,+(M.T-0.01).toFixed(3));M.lr=Math.max(0.02,+(M.lr*0.92).toFixed(4));M.ucb=Math.max(0.04,+((Number(M.ucb)||0.12)*0.9).toFixed(3));}
   if(b>(Number(M.лучшее)||0)+0.02&&M.r.length>=14){M.лучшее=+b.toFixed(3);M.ver=(Number(M.ver)||1)+1;this.chron(`Режиссёр Грани стал лучше понимать, что вам интересно`);}},
  gen(){if(!G.gen||typeof G.gen!=="object"||Array.isArray(G.gen))G.gen={};const g=G.gen;
   for(const k of ["potions","res","arts","spells","lands","peoples","beasts","offers","quests","chron","inventions","masters","devices","own"])if(!Array.isArray(g[k]))g[k]=[];
@@ -55062,20 +55083,41 @@ const Neuro={
   const y=new Array(A);for(let a=0;a<A;a++){let z=n.b2[a];for(let j=0;j<H;j++)z+=n.W2[a*H+j]*h[j];y[a]=1/(1+Math.exp(-Math.max(-30,Math.min(30,z))));}
   return {h,y};},
  score(arm,x){const n=this.st();const a=n.arms.indexOf(arm);if(a<0)return 0.5;return this.forward(x||this.feats()).y[a];},
- /* ── обучение: один шаг SGD по одному примеру ── */
+ /* ── обучение: один шаг по одному примеру (12.5 — Adam, ограничение градиента) ── */
  sgd(x,arm,r,lr){const n=this.st();const a=n.arms.indexOf(arm);if(a<0)return 0;const H=n.H;const {h,y}=this.forward(x);
-  const e=y[a]-r;const dz=e*y[a]*(1-y[a]);
-  for(let j=0;j<H;j++){const w=n.W2[a*H+j];n.W2[a*H+j]-=lr*(dz*h[j]+1e-4*w);
-   const dh=dz*w*(1-h[j]*h[j]);if(Math.abs(dh)<1e-9)continue;
-   for(let i=0;i<NEURO_IN;i++)if(x[i])n.W1[j*NEURO_IN+i]-=lr*dh*x[i];n.b1[j]-=lr*dh;}
-  n.b2[a]-=lr*dz;n.updates=(Number(n.updates)||0)+1;return e*e;},
+  const e=y[a]-r;let dz=e*y[a]*(1-y[a]);const wd=Number(n.meta&&n.meta.wd)||1e-4;
+  /* градиенты скрытого слоя и их норма */
+  const dh=new Array(H);let nrm=dz*dz;const xx=1+x.reduce((s,v)=>s+v*v,0);
+  for(let j=0;j<H;j++){dh[j]=dz*n.W2[a*H+j]*(1-h[j]*h[j]);nrm+=dz*dz*h[j]*h[j]+dh[j]*dh[j]*xx;}
+  const clip=Math.sqrt(nrm)>1?1/Math.sqrt(nrm):1;
+  const o=this._opt(n);o.t++;const b1=0.9,b2=0.999,eps=1e-8,lrA=(Number(lr)||0.08)*0.12;
+  const c1=1-Math.pow(b1,o.t),c2=1-Math.pow(b2,o.t);
+  const step=(W,i,g,m,v)=>{m[i]=b1*m[i]+(1-b1)*g;v[i]=b2*v[i]+(1-b2)*g*g;W[i]-=lrA*(m[i]/c1)/(Math.sqrt(v[i]/c2)+eps);};
+  for(let j=0;j<H;j++){const k=a*H+j;step(n.W2,k,clip*dz*h[j]+wd*n.W2[k],o.mW2,o.vW2);
+   const d=clip*dh[j];if(Math.abs(d)<1e-12)continue;
+   for(let i=0;i<NEURO_IN;i++)if(x[i]){const q=j*NEURO_IN+i;step(n.W1,q,d*x[i]+wd*n.W1[q],o.mW1,o.vW1);}
+   step(n.b1,j,d,o.mb1,o.vb1);}
+  step(n.b2,a,clip*dz,o.mb2,o.vb2);n.updates=(Number(n.updates)||0)+1;return e*e;},
  remember(x,arm,r){const n=this.st();n.mem.push({x:x.map(v=>Math.round(v*1000)/1000),a:arm,r:Math.round(Math.max(0,Math.min(1,r))*1000)/1000});
   if(n.mem.length>160)n.mem.splice(0,n.mem.length-160);},
- /* Повтор памяти: несколько проходов по случайным примерам. */
+ /* Повтор памяти (12.5): приоритетный — чаще то, в чём сеть ошибается сильнее,
+    и свежее; каждый пятый пример не учится, а проверяет: по нему видно,
+    понимает ли сеть вас или заучивает. Заучивает — сильнее забывает лишнее. */
  train(steps){const n=this.st();if(!n.mem.length)return 0;let L=0,k=0;
-  for(let t=0;t<(steps||40);t++){const m=n.mem[Math.floor(Math.random()*n.mem.length)];if(!m||!Array.isArray(m.x)||m.x.length!==NEURO_IN)continue;L+=this.sgd(m.x,m.a,m.r,Number(n.meta&&n.meta.lr)||0.08);k++;}
+  const ok=m=>m&&Array.isArray(m.x)&&m.x.length===NEURO_IN;
+  const уч=[],пров=[];n.mem.forEach((m,i)=>{if(!ok(m))return;(n.mem.length>=10&&i%5===4?пров:уч).push([m,i]);});
+  if(!уч.length)return 0;
+  const err=m=>{const a=n.arms.indexOf(m.a);return a<0?0:Math.abs(this.forward(m.x).y[a]-m.r);};
+  const w=уч.map(([m,i])=>Math.pow(err(m)+0.05,0.6)*(0.5+0.5*i/n.mem.length));const tot=w.reduce((s,v)=>s+v,0);
+  const брать=()=>{let r=Math.random()*tot;for(let i=0;i<уч.length;i++){r-=w[i];if(r<=0)return уч[i][0];}return уч[уч.length-1][0];};
+  for(let t=0;t<(steps||40);t++){const m=брать();L+=this.sgd(m.x,m.a,m.r,Number(n.meta&&n.meta.lr)||0.08);k++;}
   n.W1=n.W1.map(v=>this.r4(v));n.W2=n.W2.map(v=>this.r4(v));n.b1=n.b1.map(v=>this.r4(v));n.b2=n.b2.map(v=>this.r4(v));
-  const loss=k?L/k:0;n.lossHist.push(Math.round(loss*1e4)/1e4);if(n.lossHist.length>30)n.lossHist.shift();n.loss=loss;return loss;},
+  const loss=k?L/k:0;n.lossHist.push(Math.round(loss*1e4)/1e4);if(n.lossHist.length>30)n.lossHist.shift();n.loss=loss;
+  if(пров.length){const v=пров.reduce((s,[m])=>s+Math.pow(err(m),2),0)/пров.length;n.val=Math.round(v*1e4)/1e4;n.valHist.push(n.val);if(n.valHist.length>30)n.valHist.shift();
+   /* проверка хуже учёбы вдвое и растёт — сеть заучивает: сильнее забывать лишнее */
+   const V=n.valHist;if(V.length>=6&&v>loss*2&&V[V.length-1]>V[V.length-6])n.meta.wd=Math.min(3e-3,+(n.meta.wd*1.5).toFixed(6));
+   else if(V.length>=6&&v<=loss*1.2)n.meta.wd=Math.max(5e-5,+(n.meta.wd*0.9).toFixed(6));}
+  return loss;},
  /* ── рост сети ── */
  grow(why){const n=this.st();if(n.H>=96)return false;const add=4,H=n.H,A=n.arms.length;const R=this.rnd((Number(G.day)||1)*31+H);
   const W1=n.W1.slice();for(let j=0;j<add;j++)for(let i=0;i<NEURO_IN;i++)W1.push(this.r4((R()*2-1)*0.3/Math.sqrt(NEURO_IN)));
@@ -55087,7 +55129,9 @@ const Neuro={
   const мир=g.potions.length+g.res.length+g.arts.length+g.spells.length+g.lands.length*2+g.peoples.length*2+g.beasts.length;
   if(мир>n.H*1.5)return this.grow("мир разросся, и он стал видеть шире");
   if(L.length>=12&&n.mem.length>=40){const a=L.slice(-12,-6).reduce((s,v)=>s+v,0)/6,b=L.slice(-6).reduce((s,v)=>s+v,0)/6;
-   if(b>0.02&&b>=a*0.97&&(Number(G.day)||1)-((n.grown[n.grown.length-1]||{}).день||0)>=5)return this.grow("старого понимания стало мало — он стал внимательнее");}
+   /* (12.5) Растёт, только если не понимает и на проверке: заучивание ростом не лечат */
+   const V=n.valHist||[],заучил=V.length>=6&&V[V.length-1]>b*2;
+   if(b>0.02&&b>=a*0.97&&!заучил&&(Number(G.day)||1)-((n.grown[n.grown.length-1]||{}).день||0)>=5)return this.grow("старого понимания стало мало — он стал внимательнее");}
   return false;},
  /* ── наблюдение за всем, что делает игрок ── */
  observe(kind,n){const st=this.st();const c=NEURO_DEED[kind];if(c==null)return;st.today[c]=(Number(st.today[c])||0)+Math.min(5,Number(n)||1)*(kind==="steps"?0.05:1);},
@@ -55111,12 +55155,16 @@ const Neuro={
  /* Мягкий максимум по оценкам сети, с малой долей разведки и уважением к вкусу игрока. */
  pickArm(x){const n=this.st();const y=this.forward(x).y;const can=NEURO_ARMS.filter(a=>this.possible(a));if(!can.length)return "potion";
   const M=n.meta||{};const T=Number(M.T)||0.12;const pri=this.prior();const rec=n.recent||[];
+  /* (12.5) Разумный поиск: к оценке прибавка за неизвестное (UCB) — чем реже
+     мир пробовал действие, тем больше; смелость её сеть подбирает сама. */
+  const cnt=n.cnt||{},N=can.reduce((s,a)=>s+(Number(cnt[a])||0),0),c=Number(M.ucb)||0.12;
+  const ucb=a=>c*Math.sqrt(Math.log(2+N)/(1+(Number(cnt[a])||0)));
   /* Однообразие скучно: недавно сделанное весит меньше. */
-  const w=can.map(a=>Math.exp(((y[n.arms.indexOf(a)]||0.5)+(pri[a]||0)-0.08*rec.filter(z=>z===a).length)/T));const tot=w.reduce((s,v)=>s+v,0);
+  const w=can.map(a=>Math.exp(((y[n.arms.indexOf(a)]||0.5)+(pri[a]||0)+ucb(a)-0.08*rec.filter(z=>z===a).length)/T));const tot=w.reduce((s,v)=>s+v,0);
   let pick=can[can.length-1];
   if(Math.random()<(Number(M.eps)||0.1))pick=can[Math.floor(Math.random()*can.length)];
   else{let r=Math.random()*tot;for(let i=0;i<can.length;i++){r-=w[i];if(r<=0){pick=can[i];break;}}}
-  rec.push(pick);if(rec.length>8)rec.shift();n.recent=rec;return pick;},
+  rec.push(pick);if(rec.length>8)rec.shift();n.recent=rec;cnt[pick]=(Number(cnt[pick])||0)+1;n.cnt=cnt;return pick;},
  /* Склад игрока подсказывает, что ему интереснее, пока сеть не выучилась. */
  prior(){const n=this.st();const a=n.act;const s=(i)=>Math.min(0.15,(Number(a[i])||0)/40);
   return {potion:s(2),resource:s(7)+s(4)*0.5,artifact:s(3)+s(0)*0.3,spell:s(1),land:s(5),people:0.03,race:0.02,clan:0.02,faction:0.02,
@@ -55354,7 +55402,7 @@ const Neuro={
   const top=NEURO_ARMS.map(a=>[a,y[n.arms.indexOf(a)]]).sort((a,b)=>b[1]-a[1]).slice(0,4).map(([a,v])=>`${NEURO_ARM_N[a]} ${Math.round(v*100)}`).join(", ");
   let h=D.line(`Режиссёр Грани помнит ${n.mem.length} своих решений и то, как вы на них ответили; его внимание выросло до ${n.H}. Сейчас он думает, что вам интереснее всего: ${top}.`);
   h+=D.line(`Чем вы заняты, по его наблюдениям: ${NEURO_CH.map((c,i)=>[c,n.act[i]||0]).sort((a,b)=>b[1]-a[1]).slice(0,4).map(([c,v])=>`${c} ${Math.round(v*10)/10}`).join(", ")}.`);
-  h+=D.line(`Самосовершенствование: Режиссёр Грани улучшал себя ${Math.max(0,(n.meta.ver||1)-1)} раз; смелость в новом ${Math.round(n.meta.eps*100)} из ста.`);
+  h+=D.line(`Самосовершенствование: Режиссёр Грани улучшал себя ${Math.max(0,(n.meta.ver||1)-1)} раз; смелость в новом ${Math.round(n.meta.eps*100)} из ста, тяга к неизведанному ${Math.round((Number(n.meta.ucb)||0)*100)} из ста.${Number.isFinite(Number(n.val))?` Ошибка на проверке ${Math.round(n.val*1000)/10} %, на учёбе ${Math.round((Number(n.loss)||0)*1000)/10} %.`:""}`);
   if(n.grown.length)h+=D.line(`Рост: ${n.grown.slice(-3).map(z=>`день ${z.день} — ${z.почему}`).join("; ")}.`);
   const offers=g.offers.filter(o=>!o.done);
   if(offers.length){h+=`<h3>Предложения за ваши изобретения (${offers.length})</h3>`;

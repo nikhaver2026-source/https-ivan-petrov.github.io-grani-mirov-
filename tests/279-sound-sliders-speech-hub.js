@@ -22,6 +22,9 @@
    6. Переключатель: включение и выключение — разные новые записи.
    7. Речь считает покрытие записями и частые незаписанные фразы; отчёты
       звука и речи показывают уровни и темпы.
+   8. Режиссёр Грани второго поколения: учится Adam'ом с ограничением
+      градиента, повторяет память по приоритету и проверяет себя на
+      отложенных примерах, ищет неизведанное по UCB.
    ═══════════════════════════════════════════════════════════════════════ */
 const {chromium}=require('playwright');
 const fs=require('fs'),path=require('path');
@@ -83,6 +86,17 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
  check('7. речь считает покрытие записями и частые незаписанные фразы; отчёты звука и речи — уровни и темпы',
   Math.abs(р.доля-4/7)<1e-9&&р.top[0][0]==="Сундук открыт за # золота"&&р.top[0][1]===2&&/Темп синтезатора: ползунок|темп синтезатора: ползунок/.test(р.отчёт)&&/57 %/.test(р.отчёт)
   &&/Ползунки: общая/.test(р.звук)&&/под землёй — так же/.test(р.звук),р);
+
+ /* ── 8 ── */
+ const н=await p.evaluate(()=>{const r={};const n=Neuro.st();r.поколение=n.gen2;
+  const x=Neuro.feats();n.mem=[];for(let i=0;i<40;i++)Neuro.remember(x.map((v,k)=>k===i%32?1:v),i%2?"potion":"spell",i%2?0.9:0.1);
+  const l0=Neuro.train(10);for(let i=0;i<15;i++)Neuro.train(40);r.учёба=[l0,n.loss];r.проверка=n.val;r.adam=!!(Neuro._adam&&Neuro._adam.t>0);
+  /* разумный поиск: невиданное действие получает прибавку */
+  n.cnt={};NEURO_ARMS.forEach(a=>n.cnt[a]=50);n.cnt.potion=0;n.meta.eps=0;n.meta.T=0.05;n.meta.ucb=0.4;
+  let k=0;for(let i=0;i<60;i++){n.recent=[];if(Neuro.pickArm(x)==="potion")k++;n.cnt.potion=0;}r.неизведанное=k;
+  Neuro.view();r.окно=/тяга к неизведанному/.test(document.body.innerHTML);while(activeLayer())closeTopUI();return r;});
+ check('8. Режиссёр Грани второго поколения: Adam, приоритетная память с проверкой, разумный поиск неизведанного',
+  н.поколение===2&&н.adam&&н.учёба[1]<н.учёба[0]&&Number.isFinite(н.проверка)&&н.неизведанное>=20&&н.окно,н);
 
  check('страница без ошибок JavaScript',errors.length===0,errors.slice(0,3));
  await browser.close();
