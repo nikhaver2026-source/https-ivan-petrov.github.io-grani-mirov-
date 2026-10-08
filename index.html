@@ -3100,6 +3100,8 @@ NEWS.push({v:73,н:"версия 12.5: лавка и панель магии",
   т:"У торговца — как в обозе: «Купить 1, 5, 10» и «Продать … всё» сразу, без подтверждения, товары по категориям. В бою панель магии закрывается двойным касанием четырьмя пальцами, а без маны — сама."});
 NEWS.push({v:74,н:"версия 12.5: хранители и жители чертогов заговорили",
   т:"Хранители чертогов, жители по нраву, их просьбы и слова тех, кто даёт цепочки поручений, теперь звучат своими голосами — из двух дублей взят лучший. Голос игры договаривает только остальное."});
+NEWS.push({v:75,н:"версия 12.5: яйца зверей видны, питомец звенит",
+  т:"Найденное яйцо больше не пропадает из виду: оно лежит в гнезде зверинца отдельной строкой и видно в котомке, в разделе «Прочее», — какой зверь и когда вылупится. Новое яйцо и новый питомец встречают вас ярким волшебным перезвоном."});
 const NEWS_V=NEWS[NEWS.length-1].v;
 /* (8.5) Выпуск читается коротко: заголовок, затем факты. */
 function newsLine(n){const н=String(n.н||"");return `${н.charAt(0).toUpperCase()+н.slice(1)}. ${n.т||""}`;}
@@ -6130,6 +6132,7 @@ const EVENT_THEME={
  reward_title:  {роль:"throng_hail_m",следом:[["guard_shout",520]],             о:"титул или звание"},
  reward_land:   {роль:"hall_gate",   следом:[["throng_lord",560]],              о:"земля или владение"},
  reward_ally:   {роль:"throng_yes",  следом:[["tread_gravel",340]],             о:"спутник примкнул"},
+ reward_pet:    {роль:"arc_chimes",  следом:[["arte_gem",380],["magic_shimmer",900]], о:"питомец или яйцо зверя обретены"},
  /* ── ДОСТИЖЕНИЯ ── */
  achieve:       {роль:"mtg_chest_open",следом:[["arte_find",420]],              о:"достижение"},
  achieve_great: {роль:"warrior_shout",следом:[["throng_hail_f",700]],           о:"большое достижение"},
@@ -53941,6 +53944,10 @@ const Zver={
  q(t){return String(t).replace(/&/g,"&amp;").replace(/"/g,"&quot;").replace(/</g,"&lt;");},
  h(a,b,c){return hashName(Math.round(a),Math.round(b),c);},
  play(r,o){safeFn(()=>Bank.play(r,Object.assign({gain:0.6,maxSec:4},o||{})));},
+ /* (12.5) Новый питомец или яйцо — яркий волшебный перезвон, слышный сразу. */
+ fanfare(){safeFn(()=>eventTheme("reward_pet",{gain:0.85}));},
+ eggText(e){const f=ZV_FAMILY_BY_ID[e&&e.fam];if(!f)return "Яйцо неведомого зверя.";const д=Math.max(0,(Number(e.до)||0)-(Number(G.day)||1));
+  return `Яйцо: ${f.n}. ${д?`Вылупится через ${д} ${plural(д,"день","дня","дней")}`:"Вылупится с новым днём"}, лежит в гнезде зверинца${e.откуда?`, найдено: ${e.откуда}`:""}. Ухаживать не нужно: детёныш сам придёт в зверинец.`;},
  fam(a){return ZV_FAMILY_BY_ID[a&&a.fam]||null;},
  variant(a){return ZV_VARIANT_BY_ID[a&&a.var]||null;},
  legend(a){return a&&ZV_LEGEND_BY_ID[a.breed]||null;},
@@ -53954,7 +53961,7 @@ const Zver={
  make(breedId,opts){const b=ZV_BREED_BY_ID[breedId];if(!b)return null;const s=this.st();const f=ZV_FAMILY_BY_ID[b.fam];
   const a={uid:s.next++,breed:b.id,fam:b.fam,var:b.var,n:b.n,lvl:Math.max(1,Number(opts&&opts.lvl)||1),xp:0,сыт:80,верн:opts&&opts.верн!=null?opts.верн:60,
    роль:(opts&&opts.роль)||f.роли[0],ветви:{fang:0,hide:0,sense:0,bond:0,move:0},снар:{},день:Number(G.day)||1};
-  s.list.push(a);s.seen[b.id]=1;return a;},
+  s.list.push(a);s.seen[b.id]=1;if(!(opts&&opts.тихо))this.fanfare();return a;},
  cap(){return 12;},
  points(a){return Math.floor((Number(a.lvl)||1)/3);},
  spent(a){return Object.values(a.ветви||{}).reduce((x,y)=>x+(Number(y)||0),0);},
@@ -54128,8 +54135,8 @@ const Zver={
   G.gold-=120;const [x,y]=this.shopSeed();const fams=ZV_FAMILIES.filter(f=>f.ход==="fly"||f.ход==="crawl");
   const f=fams[Math.floor(this.h(x,y,G.day*7+this.st().eggs.length)*fams.length)];return this.egg(f.id,"Яйцо из зверинца");},
  egg(fam,откуда){const s=this.st();const f=ZV_FAMILY_BY_ID[fam];if(!f)return "";const дни=2+Math.floor(Math.random()*3);
-  s.eggs.push({fam,до:(Number(G.day)||1)+дни,откуда:откуда||""});safeFn(()=>journal(`Яйцо: ${f.n}, вылупится через ${дни} дн.`));
-  return ` Найдено яйцо: ${f.n}, вылупится через ${дни} ${plural(дни,"день","дня","дней")}.`;},
+  s.eggs.push({fam,до:(Number(G.day)||1)+дни,откуда:откуда||""});safeFn(()=>journal(`Яйцо: ${f.n}, вылупится через ${дни} дн.`));this.fanfare();
+  return ` Найдено яйцо: ${f.n}, вылупится через ${дни} ${plural(дни,"день","дня","дней")}. Оно в гнезде зверинца и в котомке, в разделе «Прочее».`;},
  hatch(){const s=this.st(),d=Number(G.day)||1;let t="";s.eggs=s.eggs.filter(e=>{if(d<e.до)return true;
    const vs=ZV_VARIANTS.filter(v=>zvBreedOK(ZV_FAMILY_BY_ID[e.fam],v));const v=vs[Math.floor(Math.random()*vs.length)];
    const a=this.make(e.fam+"_"+v.id,{верн:80});if(a){t+=` Из яйца вылупился ${a.n}!`;this.play(this.fam(a).звук);safeFn(()=>Director.note("hatch",a.n));}return false;});
@@ -54291,6 +54298,7 @@ const Zver={
  home(){const s=this.st(),c=this.counts();const м=this.mount();
   let h=this.line(`Ваших зверей ${s.list.length} из ${this.cap()}. ${м?"Верхом: "+м.n+".":"Вы пешком."} Спутников ${this.pets().length} из двух. Яиц ${s.eggs.length}.`);
   for(const a of s.list)h+=this.btn("beast:"+a.uid,this.brief(a));
+  for(const e of s.eggs)h+=this.line(this.eggText(e));
   if(s.list.length)h+=this.btn("feedall","Накормить всех");
   if(this.mount())h+=this.btn("dismount","Спешиться");
   if(s.tame)h+=this.btn("tame",`Приручить: ${ZV_BREED_BY_ID[s.tame.breed].n}`);
@@ -63660,7 +63668,7 @@ function shopSellRows(n){
   /* (4.5) Надетое продаётся, как и всё остальное: вещь снимается и уходит
      торговцу (прежде продать можно было только снятое, а оружие с руки не
      снимается — его лишь меняют, — и стартовый меч не продавался вовсе). */
-  invAll().forEach(row=>{if(row.cat==="quest")return;const b=merchantBuys(n,row);const cat=shopCatOf(row.cat);if(!cat)return;
+  invAll().forEach(row=>{if(row.cat==="quest"||row.kind==="egg")return;const b=merchantBuys(n,row);const cat=shopCatOf(row.cat);if(!cat)return;
    out.push({row,name:row.name,cat,price:sellPriceOf(n,row),n:row.n||1,ок:b.ок,почему:b.почему||"",card:invBrief(row.kind,row.key)});});
  }catch(_){}
  return out;}
@@ -65851,7 +65859,7 @@ const INV_SECTION_BY_ID=Object.fromEntries(INV_SECTIONS.map(c=>[c.id,c]));
    по месту, на которое его надевают (gearSectionOf). */
 const INV_SECTION_OF_CAT={weapon:"weapon",shield:"armor",armor:"armor",helm:"helm",gloves:"gloves",boots:"boots",acc:"amulet",
  artifact:"artifact",treasure:"artifact",magic:"artifact",scroll:"consumable",book:"other",potion:"potion",res:"res",material:"material",
- quest:"quest",tool:"tool",ammo:"consumable",food:"consumable",ingredient:"res",other:"other"};
+ quest:"quest",tool:"tool",ammo:"consumable",food:"consumable",ingredient:"res",egg:"other",other:"other"};
 const AMULET_RE=/амулет|ожерел|оберег|талисман|медальон|кулон|гривн|подвеск|серьг|бусы|(?:^|[^а-яё])лент[аы]?(?![а-яё])/i;
 /* ════════ ТРИНАДЦАТЬ МЕСТ НА ТЕЛЕ ════════
    Прежде мест было три — оружие, доспех и «аксессуар», — и шлем надевался
@@ -66144,6 +66152,7 @@ const POTION_NAME_RE=/(?:^|[^а-яё])(?:зелье|эликсир|настой|
 function invCategoryOf(row){
  try{
   const it=row.it,name=String(row.name||"");
+  if(row.kind==="egg")return "egg";
   if(row.kind==="art")return "artifact";
   /* Вложенная чара: свиток — к свиткам, жезл, талисман и фокус — к магическим. */
   if(row.kind==="charged")return it&&it.вид==="scroll"?"scroll":"magic";
@@ -66226,6 +66235,10 @@ function invAll(){
   (Array.isArray(G.charged)?G.charged:[]).forEach((it,i)=>{const c=(typeof CARRIER_BY_ID!=="undefined")&&CARRIER_BY_ID[it&&it.вид];if(!c)return;
    const имя=safeFn(()=>chargedName(it),c.n);
    out.push({kind:"charged",key:String(i),label:`${имя}${c.заряды?` — зарядов ${it.заряд} из ${it.макс}`:""}`,name:имя,it});});
+  /* (12.5) Яйца зверей лежат в гнезде зверинца, но и в котомке их видно:
+     игрок подобрал яйцо и ищет его среди вещей. */
+  safeFn(()=>Zver.st().eggs.forEach((e,i)=>{const f=ZV_FAMILY_BY_ID[e.fam];if(!f)return;const д=Math.max(0,(Number(e.до)||0)-(Number(G.day)||1));
+   out.push({kind:"egg",key:String(i),label:`Яйцо: ${f.n} — ${д?`вылупится через ${д} ${plural(д,"день","дня","дней")}`:"вылупится с новым днём"}`,name:"Яйцо: "+f.n,it:e});}));
   /* (9.5.2) Фляга — вещь в котомке, а не невидимый запас воды. */
   safeFn(()=>{const f=flaskOf();out.push({kind:"flask",key:"flask",label:`${f.n}: воды ${Number(G.water)||0} из ${f.cap}${G.flaskMix&&G.flaskMix.left>0?", с зельем":""}`,name:f.n,it:f});});
   out.forEach(r=>{if(r.kind==="flask"){r.cat="flask";r.раздел="tool";}else{r.cat=invCategoryOf(r);r.раздел=invSectionOf(r);}if(r.kind==="gear"&&r.it&&typeof r.it==="object")r.место=equipPlaceOf(r.it);
@@ -66345,6 +66358,7 @@ function invFind(kind,key){
   if(kind==="charged")return (G.charged||[])[Number(key)]||null;
   if(kind==="part")return (Number(G.comps&&G.comps[key])||0)>0?key:null;
   if(kind==="flask")return safeFn(()=>flaskOf(),null);
+  if(kind==="egg")return safeFn(()=>Zver.st().eggs[Number(key)],null)||null;
   return (Number(G.inv&&G.inv[key])||0)>0?key:null;
  }catch(_){return null;}}
 /* ── Состояние и требования вещи ──
@@ -66427,6 +66441,7 @@ function invBrief(kind,key){
   if(kind==="potion"){const pt=POTION_BY_ID[it.id]||{n:it.id,о:""};if(it.id==="brew")return `${mixCap(potionName(it))} — своя смесь из опыта: ${(it.смесь&&it.смесь.о)||"действие неизвестно"}. Качество ${potionQualityWord(it.q)}, устойчивость ${Math.round(it.стаб*100)} из ста, ${potionExpired(it)?"выдохлось":"годно до "+(it.день+it.срок)+"-го дня"}. Действие — выпить.`;return `Зелье ${pt.n}: ${pt.о}. Качество ${potionQualityWord(it.q)}, устойчивость ${Math.round(it.стаб*100)} из ста, ${potionExpired(it)?"выдохлось":"годно до "+(it.день+it.срок)+"-го дня"}. Действие — выпить.`;}
   if(kind==="art")return ART.describe(it,true)+(it.спит?" Артефакт спит: его свойства не действуют.":"");
   if(kind==="part")return `${row.name}: часть для гнёзд артефактов, ${row.n} шт. ${it.о||""}`;
+  if(kind==="egg")return safeFn(()=>Zver.eggText(it),row.name);
   if(kind==="charged")return safeFn(()=>chargedLine(it),row.name);
   if(kind==="item"){const n=String(typeof it==="string"?it:it.name);
    if(PATH_ART_BY_NAME[n])return safeFn(()=>Path.artifactText(n),n);
@@ -67859,6 +67874,7 @@ const В_БОЮ=new Set(["look","flook","fdrink","equip","wear","wear2","unequip
  "chargeuse","wearmask","maskoff","ability","activate","deactivate","identify","lore","drop","drop1","dropall","cbslot"]);
 function invActionsAll(row){
  const ok=[],blocked=[];if(!row)return {ok,blocked};
+ if(row.kind==="egg")return {ok,blocked};
  const ctx=invContext();
  ITEM_ACTIONS.forEach(a=>{if(!a.cats.includes(row.cat))return;
   /* Вложенной чаре подходят только её действия и немногие общие: читать её
