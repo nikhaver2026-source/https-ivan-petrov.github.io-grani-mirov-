@@ -5,7 +5,7 @@
 стражник у ворот, жрец, трактирщик, староста, кузнец, торговец, наставник, смотритель порта. Прежде эти строки читал голос
 игры в кавычках; теперь у каждой своя запись и своя интонация.
 
-Записей: 7390
+Записей: 7395
 
 Речь синтезирована 27–29 сентября 2026 года нейроголосами **Gemini** (Google),
 модель `gemini-3.8-flash-tts`, через Gemini API (Interactions API,
@@ -7466,6 +7466,7 @@ Policy (https://policies.google.com/terms/generative-ai/use-policy). Отдел�
 | ch_boss_7_g.flac | Charon | Твой клинок я уже знаю. |
 | ch_boss_8_g.flac | Charon | Ты держишься вдали? Дотянусь. |
 | ch_boss_9_g.flac | Charon | Ты пришёл туда, откуда не уходят. |
+| ch_boss_10_g.flac | Charon | Ты учишься. Я тоже. |
 | ch_boss_11_g.flac | Charon | Хорошо. Теперь по-настоящему. |
 | ch_boss_12_g.flac | Charon | Это место моё. И ты теперь тоже. |
 | ch_boss_13_g.flac | Charon | Это не конец. Это смена стражи. |
@@ -7473,12 +7474,14 @@ Policy (https://policies.google.com/terms/generative-ai/use-policy). Отдел�
 | ch_boss_15_g.flac | Charon | Я запомнил твой клинок. |
 | ch_boss_16_g.flac | Charon | Я запомнил твой огонь. |
 | ch_open_0_g.flac | Enceladus | Говори тише. |
+| ch_open_1_g.flac | Algenib | Чего уставился? |
 | ch_open_2_g.flac | Sulafat | Живой! Вот радость. |
 | ch_open_3_g.flac | Umbriel | Мало ли кто здесь ходит. |
 | ch_open_4_g.flac | Achird | Если есть монета — поговорим. |
 | ch_open_5_g.flac | Despina | Спрашивай, отвечу как есть. |
 | ch_open_6_g.flac | Laomedeia | Ты… ты не из них? |
 | ch_open_7_g.flac | Orus | Не каждому я отвечаю. |
+| ch_open_8_g.flac | Schedar | Ещё один герой. Ну-ну. |
 | ch_open_9_g.flac | Rasalgethi | Я тут давно. Слишком давно. |
 | ch_role_0_g.flac | Achird | Дальше я сам. Спасибо! |
 | ch_role_1_g.flac | Despina | Две травы — и я тебя вылечу |
@@ -7509,4 +7512,6 @@ Policy (https://policies.google.com/terms/generative-ai/use-policy). Отдел�
 | ch_chain_10_g.flac | Sadaltager | Путь уже идёт по вам. Осталось это признать |
 | ch_chain_11_g.flac | Zubenelgenubi | Развитие, разломы и древняя сеть — одно и то же. Пройдите до конца |
 | ch_chain_12_g.flac | Orus | Смотрите не на нити. Смотрите между |
+| ch_chain_13_g.flac | Alnilam | Это не разбойники. Разбойники так не делают |
+| ch_chain_14_g.flac | Sadachbia | Этого разговора не было. Дальше — по делу |
 | ch_chain_15_g.flac | Puck | Я хожу этой дорогой третий год. В этом году пойдём вдвоём |
