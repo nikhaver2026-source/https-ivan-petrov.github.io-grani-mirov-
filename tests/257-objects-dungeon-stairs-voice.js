@@ -104,6 +104,8 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   const pl=G.place,lvl=curLevel();
   for(let y=0;y<lvl.h;y++)for(let x=0;x<lvl.w;x++)if(tileAt(lvl,x,y)===">"){pl.x=x;pl.y=y;}
   safeFn(()=>markGuardianDead(pl.bx,pl.by,pl.depth));if(G.inCombat){G.inCombat=false;G.combat=null;}
+  /* (12.5) Замер — в тишине: под речью фон приглушён, и «до» с «после» не сравнить. */
+  Speech.stop({user:false});safeFn(()=>Речь.стоп());VoiceDuck.до=0;Bank.refresh();
   const v0=Bank.vol("ambient"),n0=Bank.vol("npc");
   startFlight(1,"S");if(!G.flight)return {нет:"марша"};
   const dd=G.flight.md||"S";const громк=[];
@@ -115,11 +117,12 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   Speech.stop({user:false});window.__tts.length=0;
   if(j>=0)objMainAct(j);await new Promise(r=>setTimeout(r,1200));
   const обыск=window.__tts.slice();
-  window.__tts.length=0;if(j>=0)CMD.objact(j+":landsearch");await new Promise(r=>setTimeout(r,900));
+  Speech.stop({user:false});window.__tts.length=0;if(j>=0)CMD.objact(j+":landsearch");
+  for(let w=0;w<20&&!window.__tts.some(t=>/уже обыскали/.test(t));w++)await new Promise(r=>setTimeout(r,100));
   const второй=window.__tts.slice();
   /* на ступени, не на площадке, — площадки нет */
   flightStep(dd);const наСтупени=objectsHere().filter(o=>o.вид==="landing").length;
-  G.flight=null;Bank.refresh();const после=Bank.vol("ambient");while(activeLayer())closeTopUI();
+  G.flight=null;Speech.stop({user:false});safeFn(()=>Речь.стоп());VoiceDuck.до=0;Bank.refresh();const после=Bank.vol("ambient");while(activeLayer())closeTopUI();
   return {v0,n0,громк,npc5,дела,обыск,второй,наСтупени,после,нашли:G.gold!==золото||JSON.stringify(G.inv).length+G.gear.length!==вещи};});
  check('5а. площадка марша — объект с делом «обыскать»',!м.нет&&м.дела.includes("landsearch"),м);
  check('5б. обыск площадки отвечает находкой или «ничего не нашлось»',!м.нет&&м.обыск.some(t=>/плит|ниш|стен|площадк|под ступенью/i.test(t)),м.обыск);

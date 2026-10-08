@@ -31369,7 +31369,8 @@ function landingSearch(){
  if(!k||!(f.i>0&&f.i%5===0)){narrate("Здесь ступень, а не площадка: обыскивать негде. Площадка — каждые пять ступеней.");return false;}
  G.landings=G.landings||{};
  if(G.landings[k]){safeFn(()=>Bank.play("oc_soft_touch",{gain:0.45,maxSec:2}));
-  narrate("Эту площадку вы уже обыскали: пыль, крошка и ваши же следы.",{interrupt:false});return true;}
+  /* (12.5) Прямой ответ на действие игрока — сразу, а не в хвосте очереди. */
+  narrate("Эту площадку вы уже обыскали: пыль, крошка и ваши же следы.",{interrupt:true});return true;}
  G.landings[k]=1;
  safeFn(()=>Bank.play("oc_soft_touch",{seed:f.i,gain:0.5,maxSec:2}));
  setTimeout(()=>safeFn(()=>Bank.play("craft_stone",{seed:f.i,gain:0.45,maxSec:3})),300);
