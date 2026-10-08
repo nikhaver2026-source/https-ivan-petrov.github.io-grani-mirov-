@@ -3114,6 +3114,10 @@ NEWS.push({v:77,н:"версия 12.5: ползунки от 0 до 100 и со 
   т:"Все ползунки — от 0 до 100. Прибавили — светлый тик, убавили — глухой тук, и тон выше у верха шкалы. Переключатели звучат по-новому: включение — щелчок со звоном вверх, выключение — шорох и глухой звон вниз."});
 NEWS.push({v:78,н:"версия 12.5: Режиссёр Грани второго поколения",
   т:"Режиссёр Грани учится быстрее и бережнее: чаще повторяет то, в чём ошибся, проверяет себя на отложенном опыте и не путает заучивание с пониманием, а неизведанное пробует с разумной смелостью. Речь считает, что ещё не записано голосом."});
+NEWS.push({v:79,н:"версия 12.5: подземелья — живые миры",
+  т:"Каждое подземелье теперь свой мир: от двух до сотни ярусов, у каждого порода, тепло, свет, звук и история. Твари едят, кочуют и учатся у вас; есть жители, поселения, фракции, механизмы и тайные ходы. Окно — «Ярус подземелья»."});
+NEWS.push({v:80,н:"версия 12.5: владыки подземелий",
+  т:"На дне каждого подземелья — владыка с шестью фазами и живой ареной: свод, вода, турели и свет можно обратить против него. Проиграли — он запомнит. Вниз ведут семь путей: сила, тайна, договор, чары, механизм, знание и пошлина."});
 const NEWS_V=NEWS[NEWS.length-1].v;
 /* (8.5) Выпуск читается коротко: заголовок, затем факты. */
 function newsLine(n){const н=String(n.н||"");return `${н.charAt(0).toUpperCase()+н.slice(1)}. ${n.т||""}`;}
@@ -11149,7 +11153,14 @@ const GUIDE_SRC=[
  "ГДЕ СМОТРЕТЬ. Меню мира → «Режиссёр Грани» → «Кузница нового». Там всё новое, с кнопками «Купить», «Выучить», «Прочитать», «Принести дар». Покупают в любом городе или поселении.",
  "МИР МЕНЯЕТСЯ. Твари, которых вы бьёте чаще, крепнут и хитреют. Народы воюют, дружат и торгуют — от этого меняются цены. Мастера набираются умения, их вещи становятся лучше.",
  "ВАШИ НАХОДКИ. Если вы сварили новый состав, сложили свои чары или сделали редкую вещь, о вас узнают народы и предложат сделку. Там же — их поручения.",
- "ПОКА ВАС НЕТ. Мир живёт и без вас: когда вы вернётесь, услышите, что случилось за это время."]}];
+ "ПОКА ВАС НЕТ. Мир живёт и без вас: когда вы вернётесь, услышите, что случилось за это время."]},
+{title:"Глава 112. Подземелья — живые миры",body:[
+ "КАКИЕ ОНИ. Каждое подземелье — свой мир. Малое — несколько ярусов, древнее и легендарное уходят на десятки. Чем глубже, тем страннее: сперва камень и вода, потом грибы и жар, потом магия, зеркала, остановленное время и сон самого камня.",
+ "ОКНО ЯРУСА. Меню действий → «Здесь» → «Ярус подземелья». Там всё про ярус: что здесь звучит, вещи и где они стоят, жители и поселение, тайное, пути вниз, поручения, звери, энергосеть, фракции, владыка и летопись.",
+ "СЛУШАЙТЕ. Вода, машины, шаги жителей и звери звучат с той стороны, где они есть. К любой вещи можно включить маяк. Тайные ходы ищут слухом, ощупью, нюхом, чарами или факелом.",
+ "ЖИЗНЬ ВНИЗУ. Звери едят, кочуют и плодятся; если выбить хищников, придут другие. Твари учатся у вас. Жители ходят между ярусами, у поселений свои беды, у фракций — своя память о вас.",
+ "ПУТИ ВНИЗ. Стража шахты можно победить, а можно обойти: тайным лазом, договором с фракцией, чарами, подъёмником, знанием от жителя или пошлиной.",
+ "ВЛАДЫКА. На дне живёт владыка — шесть фаз и арена: в меню боя «Арена подземелья», где свод, воду, турели и свет можно обратить против него. Проиграете — он запомнит. Ниже владыки начинаются Нижние пути Грани."]}];
 /* ════════════════════════════════════════════════════════════════════════
    РУКОВОДСТВО РАЗЛОЖЕНО ПО ЧАСТЯМ
 
@@ -11197,6 +11208,7 @@ const GUIDE_PLAN=[
   ["Города, здания, книги и дороги",[[12,[0,1,2,4,5]],[9,[1]],[52,[1,2,3,4,5,7]],[36,[0,1,2]],[32,[0,1,2,10,11]],[31,[0,1,4,6]],[86,[0,1,4,5]],[47,[0,2,4,5,7]],[23,[0,1,2,3,5]]]],
   ["Подземелья и сто ярусов",[[27,[1,3,8]],[45,[0,1,2,3,5,7]],[75,[1,3,5]],[89,[0,1,2,3]],[92,[1,3,5,6]],[53,[1,2,3,4]],[65,[0,1,3]],[57,[1,2,3,6,7,8]],[42,[0,1,2,3,4,5]]]],
   ["Режиссёр Грани: мир растёт сам",[111]],
+  ["Подземелья — живые миры",[112]],
   ["Тёмные земли, Сопряжение и Предтечи",[[43,[0,1,5,6,7,8,9]],[44,[0,2,3,4,5,6]],[46,[0,2,4,5]],[71,[0,1,4,6]]]]]],
  ["Часть IV. Герой и магия","Опыт и свойства, умения и наставники, вещи и артефакты, чары.",[
   ["Герой: свойства, Древо Граней, школы и наставники",[[6,[0,1]],[76,[1,2,6,7]],[62,[2,3,4,5,6]],[58,[1,2,3,4,6]],[40,[0,1,2,3,4]],[83,[1,3,4,5]],[37,[0,1,2]]]],
@@ -70650,7 +70662,7 @@ function worldSelfCheck(){
    &&new Set(AM_GROUPS.map(g=>g[0])).size===16+(SVODY_ON?1:0)&&new Set(AM_GROUPS.map(g=>g[2].id)).size===16+(SVODY_ON?1:0)
    &&typeof amGroupOpen==="function"&&typeof amBack==="function"&&typeof CMD.amgroup==="function"
    /* Ни один пункт меню не потерян и не задвоен при разбивке. */
-   &&AM_ITEMS.length===148+(SVODY_ON?13:0)&&new Set(AM_ITEMS.map(x=>x[0])).size===148+(SVODY_ON?13:0)
+   &&AM_ITEMS.length===150+(SVODY_ON?13:0)&&new Set(AM_ITEMS.map(x=>x[0])).size===150+(SVODY_ON?13:0)
    /* Самый большой раздел меньше трети меню: прежний был на пятьдесят семь. */
    &&Math.max(...AM_GROUPS.map(g=>g[1].length))<=16
    /* Семь частей руководства, и каждая глава ровно в одной. */
@@ -70701,7 +70713,7 @@ function worldSelfCheck(){
      невозможного. */
   /* Меню действий пунктами: шестнадцать разделов, каждый пункт в одном,
      список разделов открывается первым, раздел — двойным касанием. */
-  ok("ampunkty",AM_GROUPS.length===16+(SVODY_ON?1:0)&&AM_ITEMS.length===148+(SVODY_ON?13:0)&&new Set(AM_ITEMS.map(x=>x[0])).size===148+(SVODY_ON?13:0)
+  ok("ampunkty",AM_GROUPS.length===16+(SVODY_ON?1:0)&&AM_ITEMS.length===150+(SVODY_ON?13:0)&&new Set(AM_ITEMS.map(x=>x[0])).size===150+(SVODY_ON?13:0)
    &&["start","here","move","fight","hero","quests","craft","people","magic","faith","books","world","realms","dark","sound","game"]
      .every(id=>AM_GROUP_BY_ID[id])
    &&["char","bodystate","inv","mastery"].every(c=>AM_GROUP_BY_ID.hero[1].some(x=>x[0]===c))
@@ -72654,7 +72666,7 @@ Object.assign(Deep,{
   if(e.inv&&Math.random()<0.35){const deeper=s.tiers[Math.min(s.N,i+3)];const db=DEEP_BIOME_BY_ID[deeper.b];v=[db.виды[0][0],db.виды[0][1]+", пришлый снизу"];}
   return v;},
  rankRoll(s,x,i){const e=x.eco[i]||{};const dpt=i/Math.max(1,s.N);const w=DEEP_RANKS.map(r=>r.w*(r.id==="common"?1-dpt*0.4:1+dpt*(r.id==="elite"?1.2:0.8)));
-  if(e.a>0.3){w[2]*=1.4;w[4]*=1.6;}if((x.ai.att||0)>=6&&s.ai){w[2]*=1.5;}if(this.powered(s,x,"defense")&&!this.defenseFriendly(s,x)){w[2]*=1.3;}
+  if(e.a>0.3){w[2]*=1.4;w[4]*=1.6;}if((x.ai.att||0)>=6&&s.ai){w[2]*=1.5;}if(this.powered(s,x,"defense")&&!this.defenseFriendly(s,x)){w[2]*=1.3;}{const f=x.ctrl[i]||s.ctrl[i];if(f&&(Number(x.rep[f])||0)<-30){w[2]*=1.5;w[1]*=1.2;}}
   const tot=w.reduce((a,b)=>a+b,0);let r=Math.random()*tot;for(let k=0;k<w.length;k++){r-=w[k];if(r<=0)return DEEP_RANKS[k];}return DEEP_RANKS[0];},
  onCombat(m,c){if(!m||m.dw||m.boss||m.страж||m.chBoss||m.chFauna||m.chRun!=null||!this.on())return;const s=this.here();const x=this.st(s);const i=this.tierNo();
   const v=this.speciesFor(s,i,m);const rank=this.rankRoll(s,x,i);const ev=x.evo[v[1]]||(x.evo[v[1]]={enc:0,kills:0,lost:0,sch:{},atk:0,flee:0,ad:[]});ev.enc++;
@@ -72800,6 +72812,7 @@ Object.assign(Deep,{
   return st&&PLACE_KIND[st]==="dungeon"?this.spec(bx,by,st):null;},
  sim(s,x,days){for(let k=0;k<days;k++){const evs=this.ecoDay(s,x);evs.push(...this.npcDay(s,x),...this.settleDay(s,x),...this.factionDay(s,x),...this.mechDay(s,x));
    const pick=this.directorPick(s,x,evs);if(pick){pick.d=Number(G.day)||1;x.ev.push(pick);if(x.ev.length>30)x.ev.shift();this.chron(x,`${pick.text} — потому что ${pick.why}`);this.eventApply(s,x,pick);}
+   if(s.ai&&!x.ai.asleep&&x.ai.att>=5){const door=s.mechs.find(m=>m.kind==="door"&&this.mst(x,m)==="active");if(door&&Math.random()<0.3){this.setM(x,door,"blocked");this.chron(x,`${s.ai.n} закрыл дверь на ${door.tier}-м ярусе: вы слишком шумели`);}}
    if(s.ai&&x.ai.att>0)x.ai.att=+Math.max(0,x.ai.att-0.5).toFixed(2);this.questsExpire(s,x);}
   this.questsEnsure(s,x);},
  /* Режиссёр Грани выбирает одно событие дня из тех, у которых есть причина:
@@ -72819,16 +72832,20 @@ Object.assign(Deep,{
    case "bloom":this.questAdd(s,x,{kind:"alchemy",tier:e.tier,why:e.why});break;
    case "newboss":this.questAdd(s,x,{kind:"hunt",tier:e.tier,why:e.why});break;
    case "migration":this.questAdd(s,x,{kind:"eco",tier:e.tier,why:e.why});break;}},
- npcsOn(s,x,d){return s.npcs.filter(n=>{const z=this.nst(x,n);return z.t===d&&z.st!=="погиб"&&z.st!=="ушёл";});},
- nst(x,n){return x.npc[n.id]||(x.npc[n.id]={t:n.дом,att:0,st:n.плен?"в плену":"жив",met:0});},
- npcDay(s,x){const ev=[];for(const n of s.npcs){const z=this.nst(x,n);if(z.st==="погиб"||z.st==="ушёл"||z.st==="в плену")continue;
+ /* Жители: те, кто здесь испокон, и пришлые — беженцы и путники, что спустились позже. */
+ people(s,x){return s.npcs.concat(x.newNpc||[]);},
+ npcsOn(s,x,d){return this.people(s,x).filter(n=>{const z=this.nst(x,n);return z.t===d&&z.st!=="погиб"&&z.st!=="ушёл";});},
+ nst(x,n){return x.npc[n.id]||(x.npc[n.id]={t:n.дом,att:n.f?Math.round((Number(x.rep[n.f])||0)/2):0,st:n.плен?"в плену":"жив",met:0});},
+ npcDay(s,x){const ev=[];for(const n of this.people(s,x)){const z=this.nst(x,n);if(z.st==="погиб"||z.st==="ушёл"||z.st==="в плену")continue;
    const move=d=>{const t=Math.max(1,Math.min(s.N,z.t+d));if(t!==z.t)z.t=t;};
    switch(n.role){case "trader":{const ts=Object.keys(s.settle).map(Number);if(ts.length>1&&Math.random()<0.3)z.t=ts[Math.floor(Math.random()*ts.length)];break;}
     case "explorer":if(Math.random()<0.25)move(z.down?-1:1);if(z.t>=s.N)z.down=1;if(z.t<=1)z.down=0;break;
     case "refugee":if(Math.random()<0.2)move(-1);break;case "cultist":if(Math.random()<0.15){const t=s.tiers.findIndex((T,i)=>i>0&&["temple","living"].includes(T.b));if(t>0)move(t>z.t?1:-1);}break;
     case "hunter":{const t=Object.entries(x.eco).sort((a,b)=>b[1].a-a[1].a)[0];if(t&&Math.random()<0.2)move(+t[0]>z.t?1:-1);break;}}
    const e=x.eco[z.t];if(e&&e.p>0.9&&!x.set[z.t]&&Math.random()<0.04){z.st="ранен";ev.push({kind:"raid",tier:z.t,why:`хищники ${z.t}-го яруса расплодились`,text:`на ${z.t}-м ярусе ранили: ${n.n}, ${n.кто}`});}}
-  if(Math.random()<0.03){const t=1+Math.floor(Math.random()*s.N);ev.push({kind:"migration",tier:t,why:"сверху пришли беженцы и путники",text:`на ${t}-й ярус пришли новые люди`});}
+  if(Math.random()<0.03&&(x.newNpc||[]).length<8){const t=1+Math.floor(Math.random()*s.N);const R=Math.random;const role=R()<0.5?"refugee":"explorer";const ж=R()<0.4;const Rl=DEEP_ROLES[role];
+   x.newNpc=x.newNpc||[];const n={id:"x"+x.newNpc.length,n:safeFn(()=>Director.genName(R),"Пришлый"),ж,role,кто:ж?Rl.ж:Rl.м,нрав:this.pick(DEEP_NATURES,R),био:"спустился недавно: "+this.pick(DEEP_BIOS,R),цель:Rl.цель,страх:this.pick(DEEP_FEARS,R),желание:this.pick(DEEP_WANTS,R),знает:Rl.знает,дом:t,f:null,плен:false};
+   x.newNpc.push(n);ev.push({kind:"migration",tier:t,why:"сверху пришли беженцы и путники",text:`на ${t}-й ярус пришёл новый житель — ${n.n}, ${n.кто}`});}
   return ev;},
  setInit(s,i){const R=this.rng(hashName(s.bx*3+i,s.by*5+i,1357)*4294967296);return {pop:20+Math.floor(R()*120),wealth:+(0.3+R()*0.4).toFixed(2),safety:+(0.4+R()*0.4).toFixed(2),crime:+(R()*0.3).toFixed(2),stock:{},mood:0};},
  settleDay(s,x){const ev=[];for(const k of Object.keys(s.settle)){const i=+k;const z=x.set[i]||(x.set[i]=this.setInit(s,i));const e=x.eco[i]||{f:0.5,p:0.3};const b=DEEP_BIOME_BY_ID[s.tiers[i].b];
@@ -72879,7 +72896,7 @@ Object.assign(Deep,{
  questsExpire(s,x){const d=Number(G.day)||1;x.quests=x.quests.filter(q=>q.done?d-(q.doneDay||d)<20:d-q.day<25);},
  questDone(s,x,q,extra){if(q.done)return "";q.done=1;q.doneDay=Number(G.day)||1;G.gold=(Number(G.gold)||0)+q.reward.gold;const t=[`+${q.reward.gold} золота`];
   if(q.f&&q.reward.rep){this.repAdd(s,x,q.f,q.reward.rep,"вы выполнили их поручение");t.push(`репутация «${(s.factions.find(f=>f.id===q.f)||{}).n}» +${q.reward.rep}`);}
-  const gv=s.npcs.find(n=>n.id===q.giver);if(gv)this.nst(x,gv).att+=15;
+  const gv=this.people(s,x).find(n=>n.id===q.giver);if(gv)this.nst(x,gv).att+=15;
   /* последствия: поручение меняет подземелье */
   switch(q.kind){case "combat":case "eco":{const e=x.eco[q.tier];if(e){e.p=Math.max(0.15,+(e.p-0.15).toFixed(2));e.inv=0;}t.push("равновесие яруса выправилось");break;}
    case "defend":{const z=x.set[q.tier];if(z){z.safety=Math.min(1,+(z.safety+0.3).toFixed(2));z.mood+=1;}t.push("поселение вздохнуло спокойнее");break;}
@@ -72919,7 +72936,7 @@ Object.assign(Deep,{
    case "sleep":{c.choice="ядро усыплено";if(s.ai)x.ai.att=0;x.ai.asleep=1;for(const k2 of Object.keys(x.eco)){x.eco[k2].f=Math.min(1.2,x.eco[k2].f+0.2);}t.push("древний разум уснул; ярусы зарастают жизнью");break;}}
   c.s=10;if(s.secret&&s.secret.cond==="choice")x.sec.open=1;this.chron(x,`судьба ядра: ${c.choice}`);this.say(`${this.cap(c.choice)}. ${t.join("; ")}.`);return this.view("net");},
  /* ═══ ЖИТЕЛИ ═══ */
- talk(id){const s=this.here();const x=this.st(s);const n=s.npcs.find(z=>z.id===id);if(!n)return this.view("folk");const z=this.nst(x,n);if(z.t!==this.tierNo())return this.view("folk");
+ talk(id){const s=this.here();const x=this.st(s);const n=this.people(s,x).find(z=>z.id===id);if(!n)return this.view("folk");const z=this.nst(x,n);if(z.t!==this.tierNo())return this.view("folk");
   z.met++;let h=this.line(`${n.n}, ${n.кто}${n.f?`, «${(s.factions.find(f=>f.id===n.f)||{}).n}»`:""}. Нрав: ${n.нрав}. ${this.cap(n.био)}. Хочет ${n.желание}; цель — ${n.цель}; боится ${n.страх}. Отношение к вам: ${this.attWord(z.att)}.`);
   if(z.st==="в плену")h+=this.line("Сидит в клетке и смотрит на вас с надеждой.")+this.btn("free:"+id,"Освободить пленника")+this.btn("buyout:"+id,`Выкупить за ${40+this.tierNo()*10} золота`);
   else{h+=this.btn("ask:"+id,"Спросить, что он знает");if(n.role==="engineer"&&s.net)h+=this.btn("eng:"+id,"Спросить о древнем ядре");
@@ -72928,7 +72945,7 @@ Object.assign(Deep,{
   if(z.st==="ранен")h+=this.btn("heal:"+id,"Перевязать его раны");h+=this.btn("folk","Назад, к жителям");
   safeFn(()=>this.cue("hero_step_cloth",1,0,0.4));return this.show(n.n,h);},
  attWord(a){return a>=60?"друг":a>=30?"доверяет":a>=0?"нейтрально":a>-30?"настороже":"враждебно";},
- ask(id){const s=this.here();const x=this.st(s);const n=s.npcs.find(z=>z.id===id);const z=this.nst(x,n);if(z.att<0&&Math.random()<0.6){this.say(`${n.n}: «Не твоё дело». Отношение надо заслужить.`);return this.talk(id);}
+ ask(id){const s=this.here();const x=this.st(s);const n=this.people(s,x).find(z=>z.id===id);const z=this.nst(x,n);if(z.att<0&&Math.random()<0.6){this.say(`${n.n}: «Не твоё дело». Отношение надо заслужить.`);return this.talk(id);}
   let t="";switch(n.знает){
    case "secret":{const sc=s.secrets.find(q=>q.tier>=this.tierNo()&&!x.found[q.id]);if(sc){x.found[sc.id]=1;t=`«На ${sc.tier}-м ярусе есть ${sc.n}: ${DEEP_SECRET_CUES[sc.cue].при}». Ход отмечен в окне яруса.`;this.style(x,"explore");}break;}
    case "guard":{const d=this.tierNo();x.know["guard"+d]=1;t=`«Страж шахты на этом ярусе слеп на левый бок — пройти можно, если не шуметь». Путь «знание» открыт.`;break;}
@@ -73062,7 +73079,7 @@ Object.assign(Deep,{
  /* ключ даёт тот, у кого он должен быть по замыслу: житель, тварь, тайник, поселение, вожак */
  giveKeyFrom(s,x,src,tier){const L=s.locks.find(l=>l.keyFrom===src&&Math.abs(l.tier-tier)<=1&&!x.locks[l.id]&&!(Number(G.inv[l.key])>0)&&["key","pick","combo"].includes(DEEP_LOCK_KINDS[l.kind].треб));if(!L)return "";
   G.inv[L.key]=1;return L.key;},
- free(id,silent){const s=this.here();const x=this.st(s);const n=s.npcs.find(z=>z.id===id);if(!n)return "";const z=this.nst(x,n);z.st="жив";z.att+=40;
+ free(id,silent){const s=this.here();const x=this.st(s);const n=this.people(s,x).find(z=>z.id===id);if(!n)return "";const z=this.nst(x,n);z.st="жив";z.att+=40;
   for(const q of x.quests)if(!q.done&&q.kind==="rescue"&&q.tier===z.t)this.say(this.questDone(s,x,q));
   if(s.secret&&s.secret.cond==="rescue")x.sec.open=1;this.chron(x,`освобождён пленник ${n.n}`);const t=`${n.n} свободен: «Я этого не забуду». ${n.знает==="secret"?"Он шепчет о тайном ходе.":""}`;if(n.знает==="secret"){const sc=s.secrets.find(q=>!x.found[q.id]);if(sc)x.found[sc.id]=1;}
   if(silent)return t;this.say(t);return this.talk(id);},
@@ -73226,18 +73243,18 @@ Object.assign(Deep,{
   if(s.settle[d]){const z=x.set[d]||(x.set[d]=this.setInit(s,d));const S=s.settle[d];h+=this.line(`${this.cap(DEEP_SETTLE_KINDS[S.kind])} «${S.n}»: жителей ${z.pop}, достаток ${Math.round(z.wealth*100)}, безопасность ${Math.round(z.safety*100)}, преступность ${Math.round(z.crime*100)}.`)+this.btn("trade:"+d,"Торг и стража поселения");}
   h+=ns.length?this.line(`На ярусе ${ns.length} ${plural(ns.length,"житель","жителя","жителей")}.`):this.line("Жителей на этом ярусе сейчас нет: они ходят между ярусами.");
   for(const n of ns){const z=this.nst(x,n);h+=this.btn("talk:"+n.id,`${n.n}, ${n.кто}${z.st!=="жив"?" ("+z.st+")":""}`);}
-  const elsewhere=s.npcs.filter(n=>{const z=this.nst(x,n);return z.t!==d&&z.st!=="погиб";}).slice(0,6);if(elsewhere.length)h+=this.line(`На других ярусах: ${elsewhere.map(n=>`${n.n} (${n.кто}, ${this.nst(x,n).t}-й)`).join("; ")}.`);
+  const elsewhere=this.people(s,x).filter(n=>{const z=this.nst(x,n);return z.t!==d&&z.st!=="погиб";}).slice(0,6);if(elsewhere.length)h+=this.line(`На других ярусах: ${elsewhere.map(n=>`${n.n} (${n.кто}, ${this.nst(x,n).t}-й)`).join("; ")}.`);
   return this.show("Жители яруса",h);},
- eng(id){const s=this.here();const x=this.st(s);const n=s.npcs.find(z=>z.id===id);if(!n||!s.net)return this.talk(id);const c=x.chain;const core=DEEP_BIOME_BY_ID[s.tiers[s.net.core].b];const need=core.ресурсы[0];
+ eng(id){const s=this.here();const x=this.st(s);const n=this.people(s,x).find(z=>z.id===id);if(!n||!s.net)return this.talk(id);const c=x.chain;const core=DEEP_BIOME_BY_ID[s.tiers[s.net.core].b];const need=core.ресурсы[0];
   if(c.s===0){this.say(`${n.n}: «Сначала найди ядро — оно на ${s.net.core}-м ярусе. Осмотри его, потом приходи».`);return this.talk(id);}
   if(c.s===1){this.chainCheck(s,x,"talk:engineer");this.say(`${n.n}: «Ядро не мертво, оно спит. Принеси мне ${need} ×3 — я начерчу, как его разбудить».`);return this.talk(id);}
   if(c.s===2){if((Number(G.inv[need])||0)>=3){G.inv[need]-=3;G.inv["чертёж ядра"]=1;this.nst(x,n).att+=10;this.chainCheck(s,x);this.say(`${n.n}: «Держи чертёж. Нужны древняя шестерня — её носят механизмы — и латунный клапан: его продают в поселениях или снимают с насосов».`);}
    else this.say(`${n.n}: «Без ${need} ×3 чертежа не будет».`);return this.talk(id);}
   this.say(`${n.n}: «${this.chainLine(s,x)}»`);return this.talk(id);},
- trial(id){const s=this.here();const x=this.st(s);const n=s.npcs.find(z=>z.id===id);if(!n)return this.folk();const z=this.nst(x,n);if(z.trial){this.say(`${n.n}: «Ты уже прошёл моё испытание».`);return this.talk(id);}
+ trial(id){const s=this.here();const x=this.st(s);const n=this.people(s,x).find(z=>z.id===id);if(!n)return this.folk();const z=this.nst(x,n);if(z.trial){this.say(`${n.n}: «Ты уже прошёл моё испытание».`);return this.talk(id);}
   const p=s.puzzles.find(q=>!x.solved[q.id]);if(p&&!x.solved[p.id]){this.say(`${n.n}: «Реши ${p.n.toLowerCase()} на ${p.tier}-м ярусе — тогда поговорим».`);return this.talk(id);}
   z.trial=1;z.att+=20;x.know.boss=1;this.say(`${n.n}: «Достоин. Знай: ${s.boss.откликСлова}». ${this.giveTreasure(s,x,"t_ring")||""}`);return this.talk(id);},
- heal(id){const s=this.here();const x=this.st(s);const n=s.npcs.find(z=>z.id===id);if(!n)return this.folk();const z=this.nst(x,n);if(z.st!=="ранен")return this.talk(id);z.st="жив";z.att+=20;this.say(`Вы перевязываете раны: ${n.n} благодарит.`);return this.talk(id);},
+ heal(id){const s=this.here();const x=this.st(s);const n=this.people(s,x).find(z=>z.id===id);if(!n)return this.folk();const z=this.nst(x,n);if(z.st!=="ранен")return this.talk(id);z.st="жив";z.att+=20;this.say(`Вы перевязываете раны: ${n.n} благодарит.`);return this.talk(id);},
  give(qid){const s=this.here();const x=this.st(s);const q=x.quests.find(z=>z.id===qid);if(!q||q.done)return this.folk();if((Number(G.inv[q.res])||0)<q.need){this.say(`Нужно ${q.need} × ${q.res}.`);return this.folk();}G.inv[q.res]-=q.need;if(!G.inv[q.res])delete G.inv[q.res];this.say(this.questDone(s,x,q));return this.folk();},
  secretView(){const s=this.here();const x=this.st(s);const d=this.tierNo();const found=s.secrets.filter(z=>z.tier===d&&x.found[z.id]);const left=s.secrets.filter(z=>z.tier===d&&!x.found[z.id]).length;
   let h=this.line(`Тайное ищут разными чувствами: одно отзывается звуку, другое — ладони, третье — нюху или чарам. ${left?"Здесь ещё что-то скрыто.":"Здесь, кажется, всё найдено."}${this.powered(s,x,"light")?" Свет сети помогает искать.":""}`);
@@ -73248,7 +73265,7 @@ Object.assign(Deep,{
  pathsView(){const s=this.here();const ps=this.paths();let h=this.line("Вниз ведёт не один путь: силой, тайно, договором, чарами, механизмом, знанием или пошлиной. У каждого свои последствия.");for(const [k,l] of ps)h+=this.btn("path:"+k,l);return this.show("Пути вниз",h);},
  questsView(){const s=this.here();const x=this.st(s);let h="";const cl=this.chainLine(s,x);if(cl)h+=this.line(cl);if(s.net&&x.chain.s===9){h+=this.btn("choice:settle","Отдать ядро поселениям");h+=this.btn("choice:faction",`Отдать ядро фракции «${s.factions[0].n}»`);h+=this.btn("choice:take","Забрать силу ядра себе");h+=this.btn("choice:sleep","Усыпить ядро и разум");}
   const act=x.quests.filter(q=>!q.done);if(!act.length)h+=this.line("Поручений нет: подземелье само подскажет, когда что-то случится.");
-  for(const q of act){const g=s.npcs.find(n=>n.id===q.giver);h+=this.line(`${q.n} (${DEEP_QUEST_KINDS[q.kind]||q.kind}, ${q.tier}-й ярус): ${q.о}. ${q.need>1?`Сделано ${q.have} из ${q.need}. `:""}Почему: ${q.why||"так сложилось"}.${g?" Дал: "+g.n+".":""} Награда: ${q.reward.gold} золота.`);}
+  for(const q of act){const g=this.people(s,x).find(n=>n.id===q.giver);h+=this.line(`${q.n} (${DEEP_QUEST_KINDS[q.kind]||q.kind}, ${q.tier}-й ярус): ${q.о}. ${q.need>1?`Сделано ${q.have} из ${q.need}. `:""}Почему: ${q.why||"так сложилось"}.${g?" Дал: "+g.n+".":""} Награда: ${q.reward.gold} золота.`);}
   const done=x.quests.filter(q=>q.done).slice(-3);if(done.length)h+=this.line(`Выполнено недавно: ${done.map(q=>q.n).join("; ")}.`);return this.show("Поручения подземелья",h);},
  ecoView(){const s=this.here();const x=this.st(s);const d=this.tierNo();const b=DEEP_BIOME_BY_ID[s.tiers[d].b];const e=x.eco[d];
   let h=this.line(`Ярус ${d}: ${this.ecoWord(e)}. Травоядные — ${b.травоядные}; хищники — ${b.виды.map(v=>v[1].toLowerCase()).join(", ")}; верхний хищник — ${b.верх[1].toLowerCase()}. Живые ловушки: ${b.живые}.`);
