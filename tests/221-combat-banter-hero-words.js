@@ -88,7 +88,9 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   const герой=Перепалка.last;
   Math.random=was;
   await w(5500);
-  r.перепалка=(герой&&герой.запись?[`Вы: «${герой.t}»`]:[]).concat(SAID.filter(t=>/^Вы: «|^Разбойник[^:]*: «|: «/.test(t))).slice(0,4);
+  /* (14.0) Записанный ответ твари звучит её голосом, строкой — субтитр (как у героя). */
+  const врагЗап=Перепалка.last&&Перепалка.last.кто==="враг"&&Перепалка.last.запись?[`${b.n}: «${Перепалка.last.t}»`]:[];
+  r.перепалка=(герой&&герой.запись?[`Вы: «${герой.t}»`]:[]).concat(SAID.filter(t=>/^Вы: «|^Разбойник[^:]*: «|: «/.test(t))).concat(врагЗап).slice(0,4);
   r.вразОтвет=Перепалка.last&&Перепалка.last.кто;
   /* Героиня: в женском роде. */
   G.hero.пол="ж";
@@ -102,6 +104,8 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
 
  /* ── 5 ── */
  const о5=await page.evaluate(()=>{
+  /* (14.0) Записанный ответ твари из п. 4 ещё звучит и держит приглушение — начинаем с тишины. */
+  VoiceDuck.до=0;
   const до={music:speechDuck("music"),combat:speechDuck("combat")};
   VoiceDuck.на(800);
   const во={music:speechDuck("music"),combat:speechDuck("combat")};

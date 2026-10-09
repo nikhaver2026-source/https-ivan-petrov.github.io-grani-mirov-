@@ -5,7 +5,7 @@
 стражник у ворот, жрец, трактирщик, староста, кузнец, торговец, наставник, смотритель порта. Прежде эти строки читал голос
 игры в кавычках; теперь у каждой своя запись и своя интонация.
 
-Записей: 7395
+Записей: 7763
 
 Речь синтезирована 27–29 сентября 2026 года нейроголосами **Gemini** (Google),
 модель `gemini-3.8-flash-tts`, через Gemini API (Interactions API,
@@ -7515,3 +7515,379 @@ Policy (https://policies.google.com/terms/generative-ai/use-policy). Отдел�
 | ch_chain_13_g.flac | Alnilam | Это не разбойники. Разбойники так не делают |
 | ch_chain_14_g.flac | Sadachbia | Этого разговора не было. Дальше — по делу |
 | ch_chain_15_g.flac | Puck | Я хожу этой дорогой третий год. В этом году пойдём вдвоём |
+
+## 13.5: разумные твари — недостающие реплики боя и ответы в перепалке
+
+Реплики, которые прежде читал голос игры, записаны голосами своих тварей
+(Gemini, gemini-3.8-flash-tts), каждая проверена распознаванием (GigaAM).
+
+| Файл | Где звучит | Голос | Интонация | Строка |
+|---|---|---|---|---|
+| foe_bandit_attack_10_g.flac | в бою: разбойник, удар | Fenrir | rough highway robber | Ещё разок, для верности! |
+| foe_bandit_attack_10_v1_g.flac | в бою: разбойник, удар | Enceladus | rough highway robber | Ещё разок, для верности! |
+| foe_bandit_attack_11_g.flac | в бою: разбойник, удар | Fenrir | rough highway robber | Под рёбра его! |
+| foe_bandit_attack_11_v1_g.flac | в бою: разбойник, удар | Enceladus | rough highway robber | Под рёбра его! |
+| foe_bandit_attack_11_v2_g.flac | в бою: разбойник, удар | Achernar | rough highway robber | Под рёбра его! |
+| foe_bandit_attack_8_g.flac | в бою: разбойник, удар | Fenrir | rough highway robber | Держи подарочек! |
+| foe_bandit_attack_8_v1_g.flac | в бою: разбойник, удар | Enceladus | rough highway robber | Держи подарочек! |
+| foe_bandit_attack_8_v2_g.flac | в бою: разбойник, удар | Achernar | rough highway robber | Держи подарочек! |
+| foe_bandit_attack_9_g.flac | в бою: разбойник, удар | Fenrir | rough highway robber | Ага, попался! |
+| foe_bandit_attack_9_v1_g.flac | в бою: разбойник, удар | Enceladus | rough highway robber | Ага, попался! |
+| foe_bandit_kray_0_g.flac | в бою: разбойник, слабеет | Fenrir | rough highway robber | Ах... Ладно, хватит! Хватит! |
+| foe_bandit_kray_0_v1_g.flac | в бою: разбойник, слабеет | Enceladus | rough highway robber | Ах... Ладно, хватит! Хватит! |
+| foe_bandit_kray_0_v2_g.flac | в бою: разбойник, слабеет | Achernar | rough highway robber | Ах... Ладно, хватит! Хватит! |
+| foe_bandit_kray_1_g.flac | в бою: разбойник, слабеет | Fenrir | rough highway robber | Кровь... Пощади! |
+| foe_bandit_kray_1_v1_g.flac | в бою: разбойник, слабеет | Enceladus | rough highway robber | Кровь... Пощади! |
+| foe_bandit_kray_1_v2_g.flac | в бою: разбойник, слабеет | Achernar | rough highway robber | Кровь... Пощади! |
+| foe_bandit_kray_2_g.flac | в бою: разбойник, слабеет | Fenrir | rough highway robber | Проклятье, он меня достал! |
+| foe_bandit_kray_2_v2_g.flac | в бою: разбойник, слабеет | Achernar | rough highway robber | Проклятье, он меня достал! |
+| foe_bandit_kray_3_g.flac | в бою: разбойник, слабеет | Fenrir | rough highway robber | Всё, всё, ухожу! |
+| foe_bandit_kray_3_v2_g.flac | в бою: разбойник, слабеет | Achernar | rough highway robber | Всё, всё, ухожу! |
+| foe_bandit_kray_4_g.flac | в бою: разбойник, слабеет | Fenrir | rough highway robber | Не бей больше, прошу! |
+| foe_bandit_kray_4_v2_g.flac | в бою: разбойник, слабеет | Achernar | rough highway robber | Не бей больше, прошу! |
+| foe_bandit_kray_5_g.flac | в бою: разбойник, слабеет | Fenrir | rough highway robber | Ой, всё, всё! Бери что хочешь! |
+| foe_bandit_kray_5_v2_g.flac | в бою: разбойник, слабеет | Achernar | rough highway robber | Ой, всё, всё! Бери что хочешь! |
+| foe_bandit_low_5_g.flac | в бою: разбойник, на краю | Fenrir | rough highway robber | Да подавись ты этим кошелём! |
+| foe_bandit_low_5_v1_g.flac | в бою: разбойник, на краю | Enceladus | rough highway robber | Да подавись ты этим кошелём! |
+| foe_bandit_low_5_v2_g.flac | в бою: разбойник, на краю | Achernar | rough highway robber | Да подавись ты этим кошелём! |
+| foe_bandit_low_6_g.flac | в бою: разбойник, на краю | Fenrir | rough highway robber | Ладно, ладно, твоя взяла! |
+| foe_bandit_low_6_v1_g.flac | в бою: разбойник, на краю | Enceladus | rough highway robber | Ладно, ладно, твоя взяла! |
+| foe_bandit_low_6_v2_g.flac | в бою: разбойник, на краю | Achernar | rough highway robber | Ладно, ладно, твоя взяла! |
+| foe_bandit_low_7_g.flac | в бою: разбойник, на краю | Fenrir | rough highway robber | Уходим, уходим! Он бешеный! |
+| foe_bandit_low_7_v1_g.flac | в бою: разбойник, на краю | Enceladus | rough highway robber | Уходим, уходим! Он бешеный! |
+| foe_bandit_low_7_v2_g.flac | в бою: разбойник, на краю | Achernar | rough highway robber | Уходим, уходим! Он бешеный! |
+| foe_bandit_otvet_0_g.flac | в бою: разбойник, ответ герою | Fenrir | rough highway robber | Посмотрим, как запоёшь без зубов. |
+| foe_bandit_otvet_0_v1_g.flac | в бою: разбойник, ответ герою | Enceladus | rough highway robber | Посмотрим, как запоёшь без зубов. |
+| foe_bandit_otvet_0_v2_g.flac | в бою: разбойник, ответ герою | Achernar | rough highway robber | Посмотрим, как запоёшь без зубов. |
+| foe_bandit_otvet_1_g.flac | в бою: разбойник, ответ герою | Fenrir | rough highway robber | Языком махать — не мечом махать. |
+| foe_bandit_otvet_10_g.flac | в бою: разбойник, ответ герою | Fenrir | rough highway robber | Болтай, болтай. Карманы-то полные. |
+| foe_bandit_otvet_10_v1_g.flac | в бою: разбойник, ответ герою | Enceladus | rough highway robber | Болтай, болтай. Карманы-то полные. |
+| foe_bandit_otvet_10_v2_g.flac | в бою: разбойник, ответ герою | Achernar | rough highway robber | Болтай, болтай. Карманы-то полные. |
+| foe_bandit_otvet_1_v1_g.flac | в бою: разбойник, ответ герою | Enceladus | rough highway robber | Языком махать — не мечом махать. |
+| foe_bandit_otvet_1_v2_g.flac | в бою: разбойник, ответ герою | Achernar | rough highway robber | Языком махать — не мечом махать. |
+| foe_bandit_otvet_2_g.flac | в бою: разбойник, ответ герою | Fenrir | rough highway robber | Кошелёк всё равно будет мой. |
+| foe_bandit_otvet_2_v1_g.flac | в бою: разбойник, ответ герою | Enceladus | rough highway robber | Кошелёк всё равно будет мой. |
+| foe_bandit_otvet_2_v2_g.flac | в бою: разбойник, ответ герою | Achernar | rough highway robber | Кошелёк всё равно будет мой. |
+| foe_bandit_otvet_3_g.flac | в бою: разбойник, ответ герою | Fenrir | rough highway robber | Шутник, да? Люблю шутников, они громко кричат. |
+| foe_bandit_otvet_3_v1_g.flac | в бою: разбойник, ответ герою | Enceladus | rough highway robber | Шутник, да? Люблю шутников, они громко кричат. |
+| foe_bandit_otvet_3_v2_g.flac | в бою: разбойник, ответ герою | Achernar | rough highway robber | Шутник, да? Люблю шутников, они громко кричат. |
+| foe_bandit_otvet_4_g.flac | в бою: разбойник, ответ герою | Fenrir | rough highway robber | Не таких обчищали. |
+| foe_bandit_otvet_4_v1_g.flac | в бою: разбойник, ответ герою | Enceladus | rough highway robber | Не таких обчищали. |
+| foe_bandit_otvet_4_v2_g.flac | в бою: разбойник, ответ герою | Achernar | rough highway robber | Не таких обчищали. |
+| foe_bandit_otvet_5_g.flac | в бою: разбойник, ответ герою | Fenrir | rough highway robber | Сейчас проверим, какой ты храбрый. |
+| foe_bandit_otvet_5_v1_g.flac | в бою: разбойник, ответ герою | Enceladus | rough highway robber | Сейчас проверим, какой ты храбрый. |
+| foe_bandit_otvet_5_v2_g.flac | в бою: разбойник, ответ герою | Achernar | rough highway robber | Сейчас проверим, какой ты храбрый. |
+| foe_bandit_otvet_6_g.flac | в бою: разбойник, ответ герою | Fenrir | rough highway robber | Ребята за тебя спасибо скажут. |
+| foe_bandit_otvet_6_v1_g.flac | в бою: разбойник, ответ герою | Enceladus | rough highway robber | Ребята за тебя спасибо скажут. |
+| foe_bandit_otvet_6_v2_g.flac | в бою: разбойник, ответ герою | Achernar | rough highway robber | Ребята за тебя спасибо скажут. |
+| foe_bandit_otvet_7_g.flac | в бою: разбойник, ответ герою | Fenrir | rough highway robber | Красиво говоришь. В петле так же запоёшь? |
+| foe_bandit_otvet_7_v1_g.flac | в бою: разбойник, ответ герою | Enceladus | rough highway robber | Красиво говоришь. В петле так же запоёшь? |
+| foe_bandit_otvet_7_v2_g.flac | в бою: разбойник, ответ герою | Achernar | rough highway robber | Красиво говоришь. В петле так же запоёшь? |
+| foe_bandit_otvet_8_g.flac | в бою: разбойник, ответ герою | Fenrir | rough highway robber | Храбрый, пока нож не увидел. |
+| foe_bandit_otvet_8_v1_g.flac | в бою: разбойник, ответ герою | Enceladus | rough highway robber | Храбрый, пока нож не увидел. |
+| foe_bandit_otvet_8_v2_g.flac | в бою: разбойник, ответ герою | Achernar | rough highway robber | Храбрый, пока нож не увидел. |
+| foe_bandit_otvet_9_g.flac | в бою: разбойник, ответ герою | Fenrir | rough highway robber | Мы таких, как ты, по три на день встречаем. |
+| foe_bandit_otvet_9_v1_g.flac | в бою: разбойник, ответ герою | Enceladus | rough highway robber | Мы таких, как ты, по три на день встречаем. |
+| foe_bandit_otvet_9_v2_g.flac | в бою: разбойник, ответ герою | Achernar | rough highway robber | Мы таких, как ты, по три на день встречаем. |
+| foe_bandit_start_10_g.flac | в бою: разбойник, начало боя | Fenrir | rough highway robber | Не дёргайся — может, и живым уйдёшь. |
+| foe_bandit_start_10_v1_g.flac | в бою: разбойник, начало боя | Enceladus | rough highway robber | Не дёргайся — может, и живым уйдёшь. |
+| foe_bandit_start_10_v2_g.flac | в бою: разбойник, начало боя | Achernar | rough highway robber | Не дёргайся — может, и живым уйдёшь. |
+| foe_bandit_start_11_g.flac | в бою: разбойник, начало боя | Fenrir | rough highway robber | Эй, ребята, работа пришла! |
+| foe_bandit_start_11_v1_g.flac | в бою: разбойник, начало боя | Enceladus | rough highway robber | Эй, ребята, работа пришла! |
+| foe_bandit_start_11_v2_g.flac | в бою: разбойник, начало боя | Achernar | rough highway robber | Эй, ребята, работа пришла! |
+| foe_bandit_start_8_g.flac | в бою: разбойник, начало боя | Fenrir | rough highway robber | Ну-ка, стой. Дальше дорога наша. |
+| foe_bandit_start_8_v1_g.flac | в бою: разбойник, начало боя | Enceladus | rough highway robber | Ну-ка, стой. Дальше дорога наша. |
+| foe_bandit_start_8_v2_g.flac | в бою: разбойник, начало боя | Achernar | rough highway robber | Ну-ка, стой. Дальше дорога наша. |
+| foe_bandit_start_9_g.flac | в бою: разбойник, начало боя | Fenrir | rough highway robber | Глянь, какой нарядный. Раздевайся. |
+| foe_bandit_start_9_v1_g.flac | в бою: разбойник, начало боя | Enceladus | rough highway robber | Глянь, какой нарядный. Раздевайся. |
+| foe_bandit_start_9_v2_g.flac | в бою: разбойник, начало боя | Achernar | rough highway robber | Глянь, какой нарядный. Раздевайся. |
+| foe_bandit_taunt_3_g.flac | в бою: разбойник, насмешка | Fenrir | rough highway robber | Что, ноги не держат? |
+| foe_bandit_taunt_3_v1_g.flac | в бою: разбойник, насмешка | Enceladus | rough highway robber | Что, ноги не держат? |
+| foe_bandit_taunt_3_v2_g.flac | в бою: разбойник, насмешка | Achernar | rough highway robber | Что, ноги не держат? |
+| foe_construct_attack_6_g.flac | в бою: голем, удар | Zubenelgenubi | flat, grinding stone golem | Импульс. |
+| foe_construct_attack_7_g.flac | в бою: голем, удар | Zubenelgenubi | flat, grinding stone golem | Цель зафиксирована. Бью. |
+| foe_construct_attack_8_g.flac | в бою: голем, удар | Zubenelgenubi | flat, grinding stone golem | Давление повышено. |
+| foe_construct_attack_9_g.flac | в бою: голем, удар | Zubenelgenubi | flat, grinding stone golem | Сокрушение. |
+| foe_construct_death_3_g.flac | в бою: голем, последние слова | Zubenelgenubi | flat, grinding stone golem | Последний приказ… не выполнен… |
+| foe_construct_death_4_g.flac | в бою: голем, последние слова | Zubenelgenubi | flat, grinding stone golem | Тишина… в узлах… |
+| foe_construct_hurt_4_g.flac | в бою: голем, рана | Zubenelgenubi | flat, grinding stone golem | Пробита пластина. Компенсирую. |
+| foe_construct_hurt_5_g.flac | в бою: голем, рана | Zubenelgenubi | flat, grinding stone golem | Шестерня заклинена. |
+| foe_construct_hurt_6_g.flac | в бою: голем, рана | Zubenelgenubi | flat, grinding stone golem | Ущерб учтён. |
+| foe_construct_kray_0_g.flac | в бою: голем, слабеет | Zubenelgenubi | flat, grinding stone golem | Повреждение критическое. |
+| foe_construct_low_4_g.flac | в бою: голем, на краю | Zubenelgenubi | flat, grinding stone golem | Энергия на исходе. |
+| foe_construct_low_5_g.flac | в бою: голем, на краю | Zubenelgenubi | flat, grinding stone golem | Отказ узлов. Отступаю на подзарядку. |
+| foe_construct_low_6_g.flac | в бою: голем, на краю | Zubenelgenubi | flat, grinding stone golem | Протокол… нарушен… |
+| foe_construct_otvet_0_g.flac | в бою: голем, ответ герою | Zubenelgenubi | flat, grinding stone golem | Сопротивление бесполезно. |
+| foe_construct_otvet_1_g.flac | в бою: голем, ответ герою | Zubenelgenubi | flat, grinding stone golem | Уничтожение по приказу. |
+| foe_construct_otvet_2_g.flac | в бою: голем, ответ герою | Zubenelgenubi | flat, grinding stone golem | Страж не устаёт. |
+| foe_construct_otvet_3_g.flac | в бою: голем, ответ герою | Zubenelgenubi | flat, grinding stone golem | Приказ не обсуждается. |
+| foe_construct_otvet_4_g.flac | в бою: голем, ответ герою | Zubenelgenubi | flat, grinding stone golem | Ваши слова не являются командой. |
+| foe_construct_otvet_5_g.flac | в бою: голем, ответ герою | Zubenelgenubi | flat, grinding stone golem | Эмоции не учтены в протоколе. |
+| foe_construct_otvet_6_g.flac | в бою: голем, ответ герою | Zubenelgenubi | flat, grinding stone golem | Вероятность вашей победы ничтожна. |
+| foe_construct_otvet_7_g.flac | в бою: голем, ответ герою | Zubenelgenubi | flat, grinding stone golem | Страж не знает сомнений. |
+| foe_construct_start_6_g.flac | в бою: голем, начало боя | Zubenelgenubi | flat, grinding stone golem | Нарушение периметра. Начинаю очистку. |
+| foe_construct_start_7_g.flac | в бою: голем, начало боя | Zubenelgenubi | flat, grinding stone golem | Доступ запрещён. Причина: жизнь. |
+| foe_construct_start_8_g.flac | в бою: голем, начало боя | Zubenelgenubi | flat, grinding stone golem | Протокол охраны активен. |
+| foe_construct_start_9_g.flac | в бою: голем, начало боя | Zubenelgenubi | flat, grinding stone golem | Цель опознана. Угроза малая. |
+| foe_construct_taunt_3_g.flac | в бою: голем, насмешка | Zubenelgenubi | flat, grinding stone golem | Ваш ресурс исчерпывается. |
+| foe_construct_taunt_4_g.flac | в бою: голем, насмешка | Zubenelgenubi | flat, grinding stone golem | Расчёт: вы падёте через три удара. |
+| foe_construct_taunt_5_g.flac | в бою: голем, насмешка | Zubenelgenubi | flat, grinding stone golem | Сопротивление неэффективно. |
+| foe_dragon_attack_6_g.flac | в бою: дракон, удар | Charon | ancient, deep, majestic dragon | Испепелю! |
+| foe_dragon_attack_7_g.flac | в бою: дракон, удар | Charon | ancient, deep, majestic dragon | Стань золой! |
+| foe_dragon_attack_8_g.flac | в бою: дракон, удар | Charon | ancient, deep, majestic dragon | Мой коготь — твоя судьба! |
+| foe_dragon_attack_9_g.flac | в бою: дракон, удар | Charon | ancient, deep, majestic dragon | Огонь не спрашивает! |
+| foe_dragon_death_3_g.flac | в бою: дракон, последние слова | Charon | ancient, deep, majestic dragon | Мой огонь… переживёт тебя… |
+| foe_dragon_death_4_g.flac | в бою: дракон, последние слова | Charon | ancient, deep, majestic dragon | Золото… остынет… |
+| foe_dragon_hurt_4_g.flac | в бою: дракон, рана | Charon | ancient, deep, majestic dragon | Ты оцарапал древность. Дорого заплатишь. |
+| foe_dragon_hurt_6_g.flac | в бою: дракон, рана | Charon | ancient, deep, majestic dragon | Дерзкий червь! |
+| foe_dragon_kray_0_g.flac | в бою: дракон, слабеет | Charon | ancient, deep, majestic dragon | Невозможно... моё пламя гаснет. |
+| foe_dragon_kray_4_g.flac | в бою: дракон, слабеет | Charon | ancient, deep, majestic dragon | Огонь… не слушается… |
+| foe_dragon_kray_5_g.flac | в бою: дракон, слабеет | Charon | ancient, deep, majestic dragon | Ты пожалеешь… если выживешь… |
+| foe_dragon_low_4_g.flac | в бою: дракон, на краю | Charon | ancient, deep, majestic dragon | Довольно… Возьми горсть золота и уходи. |
+| foe_dragon_low_5_g.flac | в бою: дракон, на краю | Charon | ancient, deep, majestic dragon | Я старше твоего рода… и я устал. |
+| foe_dragon_low_6_g.flac | в бою: дракон, на краю | Charon | ancient, deep, majestic dragon | Пламя гаснет… но не во мне одном. |
+| foe_dragon_otvet_0_g.flac | в бою: дракон, ответ герою | Charon | ancient, deep, majestic dragon | Я сжигал королей за меньшее. |
+| foe_dragon_otvet_1_g.flac | в бою: дракон, ответ герою | Charon | ancient, deep, majestic dragon | Твоя храбрость — лишь запах гари. |
+| foe_dragon_otvet_2_g.flac | в бою: дракон, ответ герою | Charon | ancient, deep, majestic dragon | Пеплом станешь. |
+| foe_dragon_otvet_3_g.flac | в бою: дракон, ответ герою | Charon | ancient, deep, majestic dragon | Моё пламя старше твоих богов. |
+| foe_dragon_otvet_4_g.flac | в бою: дракон, ответ герою | Charon | ancient, deep, majestic dragon | Я спал дольше, чем стоит твой город. |
+| foe_dragon_otvet_5_g.flac | в бою: дракон, ответ герою | Charon | ancient, deep, majestic dragon | Песни о тебе петь не станут. |
+| foe_dragon_otvet_6_g.flac | в бою: дракон, ответ герою | Charon | ancient, deep, majestic dragon | Твоё оружие — игла против горы. |
+| foe_dragon_otvet_7_g.flac | в бою: дракон, ответ герою | Charon | ancient, deep, majestic dragon | Ты пища, возомнившая себя охотником. |
+| foe_dragon_start_6_g.flac | в бою: дракон, начало боя | Charon | ancient, deep, majestic dragon | Ещё один глупец у моего золота. |
+| foe_dragon_start_7_g.flac | в бою: дракон, начало боя | Charon | ancient, deep, majestic dragon | Я видел, как пеплом становились города. Ты меньше города. |
+| foe_dragon_start_8_g.flac | в бою: дракон, начало боя | Charon | ancient, deep, majestic dragon | Твоя смелость пахнет страхом. |
+| foe_dragon_start_9_g.flac | в бою: дракон, начало боя | Charon | ancient, deep, majestic dragon | Склонись — и сгоришь быстрее. |
+| foe_dragon_taunt_3_g.flac | в бою: дракон, насмешка | Charon | ancient, deep, majestic dragon | Слышу, как стучит твоё сердце. Всё реже. |
+| foe_dragon_taunt_4_g.flac | в бою: дракон, насмешка | Charon | ancient, deep, majestic dragon | Ты тлеешь, смертный. |
+| foe_dragon_taunt_5_g.flac | в бою: дракон, насмешка | Charon | ancient, deep, majestic dragon | Ещё вдох — и станешь легендой. Короткой. |
+| foe_fiend_attack_6_g.flac | в бою: демон, удар | Orus | dark, hissing demon | Жгу! |
+| foe_fiend_attack_7_g.flac | в бою: демон, удар | Orus | dark, hissing demon | Ха! Горячо? |
+| foe_fiend_attack_8_g.flac | в бою: демон, удар | Orus | dark, hissing demon | Получай, смертный! |
+| foe_fiend_attack_9_g.flac | в бою: демон, удар | Orus | dark, hissing demon | Коготь Бездны! |
+| foe_fiend_hurt_4_g.flac | в бою: демон, рана | Orus | dark, hissing demon | Ах! Это… неприятно. |
+| foe_fiend_hurt_5_g.flac | в бою: демон, рана | Orus | dark, hissing demon | Святой металл? Подло! |
+| foe_fiend_hurt_6_g.flac | в бою: демон, рана | Orus | dark, hissing demon | Бездна запомнит это! |
+| foe_fiend_kray_0_g.flac | в бою: демон, слабеет | Orus | dark, hissing demon | Грань... зовёт меня обратно! |
+| foe_fiend_kray_1_g.flac | в бою: демон, слабеет | Orus | dark, hissing demon | Проклятая плоть! |
+| foe_fiend_kray_2_g.flac | в бою: демон, слабеет | Orus | dark, hissing demon | Нет! Не туда! |
+| foe_fiend_kray_3_g.flac | в бою: демон, слабеет | Orus | dark, hissing demon | Жжёт! Свет жжёт! |
+| foe_fiend_kray_4_g.flac | в бою: демон, слабеет | Orus | dark, hissing demon | Договор… расторгнут… |
+| foe_fiend_kray_5_g.flac | в бою: демон, слабеет | Orus | dark, hissing demon | Бездна, забери меня! |
+| foe_fiend_otvet_0_g.flac | в бою: демон, ответ герою | Orus | dark, hissing demon | Твоя душа сладко пахнет. |
+| foe_fiend_otvet_1_g.flac | в бою: демон, ответ герою | Orus | dark, hissing demon | За Гранью тебя ждут. |
+| foe_fiend_otvet_2_g.flac | в бою: демон, ответ герою | Orus | dark, hissing demon | Кричи, мне нравится. |
+| foe_fiend_otvet_3_g.flac | в бою: демон, ответ герою | Orus | dark, hissing demon | Я заберу тебя с собой. |
+| foe_fiend_otvet_4_g.flac | в бою: демон, ответ герою | Orus | dark, hissing demon | Подпиши — и боль кончится. |
+| foe_fiend_otvet_5_g.flac | в бою: демон, ответ герою | Orus | dark, hissing demon | Я слышу, о чём ты молишься. Смешно. |
+| foe_fiend_otvet_6_g.flac | в бою: демон, ответ герою | Orus | dark, hissing demon | Твои боги заняты, а я здесь. |
+| foe_fiend_otvet_7_g.flac | в бою: демон, ответ герою | Orus | dark, hissing demon | Ещё слово — и я заберу твой голос. |
+| foe_fiend_start_6_g.flac | в бою: демон, начало боя | Orus | dark, hissing demon | Договор? Нет. Сегодня просто ужин. |
+| foe_fiend_start_7_g.flac | в бою: демон, начало боя | Orus | dark, hissing demon | Ах, свежая душа! Какая удача! |
+| foe_fiend_start_8_g.flac | в бою: демон, начало боя | Orus | dark, hissing demon | Пламя Бездны шлёт привет. |
+| foe_fiend_start_9_g.flac | в бою: демон, начало боя | Orus | dark, hissing demon | Сыграем? Ставка — твоя кровь. |
+| foe_giant_attack_6_g.flac | в бою: великан, удар | Alnilam | huge, slow, rumbling giant | Хрясь! |
+| foe_giant_attack_8_g.flac | в бою: великан, удар | Alnilam | huge, slow, rumbling giant | Вниз, мелкий! |
+| foe_giant_death_3_g.flac | в бою: великан, последние слова | Alnilam | huge, slow, rumbling giant | Гора… падает… |
+| foe_giant_death_4_g.flac | в бою: великан, последние слова | Alnilam | huge, slow, rumbling giant | Тихо… стало… |
+| foe_giant_kray_4_g.flac | в бою: великан, слабеет | Alnilam | huge, slow, rumbling giant | Ох… тяжело… |
+| foe_giant_kray_5_g.flac | в бою: великан, слабеет | Alnilam | huge, slow, rumbling giant | Камень… трескается… |
+| foe_giant_low_4_g.flac | в бою: великан, на краю | Alnilam | huge, slow, rumbling giant | Устал. Гора устала. |
+| foe_giant_low_5_g.flac | в бою: великан, на краю | Alnilam | huge, slow, rumbling giant | Уйду в камень. Не трогай. |
+| foe_giant_low_6_g.flac | в бою: великан, на краю | Alnilam | huge, slow, rumbling giant | Хватит, мелкий… хватит. |
+| foe_giant_otvet_0_g.flac | в бою: великан, ответ герою | Alnilam | huge, slow, rumbling giant | Раздавлю. |
+| foe_giant_otvet_1_g.flac | в бою: великан, ответ герою | Alnilam | huge, slow, rumbling giant | Мелкий много болтает. |
+| foe_giant_otvet_2_g.flac | в бою: великан, ответ герою | Alnilam | huge, slow, rumbling giant | Будешь лепёшкой. |
+| foe_giant_otvet_3_g.flac | в бою: великан, ответ герою | Alnilam | huge, slow, rumbling giant | Съем и не замечу. |
+| foe_giant_otvet_4_g.flac | в бою: великан, ответ герою | Alnilam | huge, slow, rumbling giant | Ты маленький. Слова маленькие. |
+| foe_giant_otvet_5_g.flac | в бою: великан, ответ герою | Alnilam | huge, slow, rumbling giant | Камни не слушают мелких. |
+| foe_giant_otvet_6_g.flac | в бою: великан, ответ герою | Alnilam | huge, slow, rumbling giant | Раздавлю и забуду. |
+| foe_giant_otvet_7_g.flac | в бою: великан, ответ герою | Alnilam | huge, slow, rumbling giant | Гора смеётся. |
+| foe_giant_start_2_g.flac | в бою: великан, начало боя | Alnilam | huge, slow, rumbling giant | Я голоден. Ты — ужин. |
+| foe_giant_start_6_g.flac | в бою: великан, начало боя | Alnilam | huge, slow, rumbling giant | Мелкий. Хрупкий. Раздавлю. |
+| foe_giant_start_7_g.flac | в бою: великан, начало боя | Alnilam | huge, slow, rumbling giant | Гора моя. Уходи. |
+| foe_giant_start_8_g.flac | в бою: великан, начало боя | Alnilam | huge, slow, rumbling giant | Ты камешек. Я обвал. |
+| foe_giant_start_9_g.flac | в бою: великан, начало боя | Alnilam | huge, slow, rumbling giant | Шумишь. Не люблю шум. |
+| foe_giant_taunt_3_g.flac | в бою: великан, насмешка | Alnilam | huge, slow, rumbling giant | Гнёшься, мелкий. |
+| foe_giant_taunt_4_g.flac | в бою: великан, насмешка | Alnilam | huge, slow, rumbling giant | Скоро будешь плоский. |
+| foe_giant_taunt_5_g.flac | в бою: великан, насмешка | Alnilam | huge, slow, rumbling giant | Слабеешь. Слышу. |
+| foe_goblin_attack_6_g.flac | в бою: гоблин, удар | Puck | shrill, cunning goblin | Щипок! Ещё щипок! |
+| foe_goblin_kray_0_g.flac | в бою: гоблин, слабеет | Puck | shrill, cunning goblin | Ай-ай! Не бей! |
+| foe_goblin_kray_1_g.flac | в бою: гоблин, слабеет | Puck | shrill, cunning goblin | Больно! Больно! |
+| foe_goblin_kray_2_g.flac | в бою: гоблин, слабеет | Puck | shrill, cunning goblin | Убегаю! Убегаю! |
+| foe_goblin_kray_3_g.flac | в бою: гоблин, слабеет | Puck | shrill, cunning goblin | Не бей! Я отдам! |
+| foe_goblin_kray_4_g.flac | в бою: гоблин, слабеет | Puck | shrill, cunning goblin | Нора! Где нора? |
+| foe_goblin_kray_5_g.flac | в бою: гоблин, слабеет | Puck | shrill, cunning goblin | Уи-и, страшно! |
+| foe_goblin_otvet_0_g.flac | в бою: гоблин, ответ герою | Puck | shrill, cunning goblin | Я маленький, да кусачий! |
+| foe_goblin_otvet_1_g.flac | в бою: гоблин, ответ герою | Puck | shrill, cunning goblin | Всё твоё теперь моё! |
+| foe_goblin_otvet_2_g.flac | в бою: гоблин, ответ герою | Puck | shrill, cunning goblin | Злой дылда! |
+| foe_goblin_otvet_3_g.flac | в бою: гоблин, ответ герою | Puck | shrill, cunning goblin | Сейчас укушу! |
+| foe_goblin_otvet_4_g.flac | в бою: гоблин, ответ герою | Puck | shrill, cunning goblin | Блестяшки отдай! |
+| foe_goblin_otvet_5_g.flac | в бою: гоблин, ответ герою | Puck | shrill, cunning goblin | Большой, а глупый! |
+| foe_goblin_otvet_6_g.flac | в бою: гоблин, ответ герою | Puck | shrill, cunning goblin | Моя нора, моя добыча! |
+| foe_goblin_otvet_8_g.flac | в бою: гоблин, ответ герою | Puck | shrill, cunning goblin | Хи, не догонишь! |
+| foe_goblin_start_6_g.flac | в бою: гоблин, начало боя | Puck | shrill, cunning goblin | Блестяшки! Хочу блестяшки! |
+| foe_goblin_start_7_g.flac | в бою: гоблин, начало боя | Puck | shrill, cunning goblin | Наш! Он наш! Делим! |
+| foe_goblin_start_8_g.flac | в бою: гоблин, начало боя | Puck | shrill, cunning goblin | Хи-хи, большой, глупый, вкусный! |
+| foe_goblin_start_9_g.flac | в бою: гоблин, начало боя | Puck | shrill, cunning goblin | Тыкай его, тыкай! |
+| foe_lich_attack_6_g.flac | в бою: лич, удар | Schedar | cold, hollow, ancient undead lord | Тлен! |
+| foe_lich_attack_7_g.flac | в бою: лич, удар | Schedar | cold, hollow, ancient undead lord | Ложись в землю! |
+| foe_lich_attack_8_g.flac | в бою: лич, удар | Schedar | cold, hollow, ancient undead lord | Угасни! |
+| foe_lich_attack_9_g.flac | в бою: лич, удар | Schedar | cold, hollow, ancient undead lord | Твоё время вышло! |
+| foe_lich_death_4_g.flac | в бою: лич, последние слова | Schedar | cold, hollow, ancient undead lord | Прах… помнит… |
+| foe_lich_hurt_4_g.flac | в бою: лич, рана | Schedar | cold, hollow, ancient undead lord | Боль… забытое чувство. |
+| foe_lich_hurt_5_g.flac | в бою: лич, рана | Schedar | cold, hollow, ancient undead lord | Ты рвёшь мои печати! |
+| foe_lich_hurt_6_g.flac | в бою: лич, рана | Schedar | cold, hollow, ancient undead lord | Кость крошится… но я помню всё. |
+| foe_lich_kray_0_g.flac | в бою: лич, слабеет | Schedar | cold, hollow, ancient undead lord | Мой прах... рассыпается. |
+| foe_lich_kray_1_g.flac | в бою: лич, слабеет | Schedar | cold, hollow, ancient undead lord | Нет... служба не окончена. |
+| foe_lich_kray_2_g.flac | в бою: лич, слабеет | Schedar | cold, hollow, ancient undead lord | Корона... падает... |
+| foe_lich_kray_3_g.flac | в бою: лич, слабеет | Schedar | cold, hollow, ancient undead lord | Печати… ломаются… |
+| foe_lich_kray_4_g.flac | в бою: лич, слабеет | Schedar | cold, hollow, ancient undead lord | Холод… отступает… |
+| foe_lich_kray_5_g.flac | в бою: лич, слабеет | Schedar | cold, hollow, ancient undead lord | Книга… закрывается… |
+| foe_lich_low_4_g.flac | в бою: лич, на краю | Schedar | cold, hollow, ancient undead lord | Мой сосуд не здесь… ты не победишь. |
+| foe_lich_low_5_g.flac | в бою: лич, на краю | Schedar | cold, hollow, ancient undead lord | Я уйду в тень и вернусь. |
+| foe_lich_low_6_g.flac | в бою: лич, на краю | Schedar | cold, hollow, ancient undead lord | Смерть меня не держит… пока. |
+| foe_lich_otvet_0_g.flac | в бою: лич, ответ герою | Schedar | cold, hollow, ancient undead lord | Смерть — лишь начало моей службы. |
+| foe_lich_otvet_1_g.flac | в бою: лич, ответ герою | Schedar | cold, hollow, ancient undead lord | Твои кости послужат мне. |
+| foe_lich_otvet_2_g.flac | в бою: лич, ответ герою | Schedar | cold, hollow, ancient undead lord | Жизнь коротка. Твоя — особенно. |
+| foe_lich_otvet_3_g.flac | в бою: лич, ответ герою | Schedar | cold, hollow, ancient undead lord | Я видел, как умирали царства. |
+| foe_lich_otvet_4_g.flac | в бою: лич, ответ герою | Schedar | cold, hollow, ancient undead lord | Я записал имена всех, кто так говорил. |
+| foe_lich_otvet_5_g.flac | в бою: лич, ответ герою | Schedar | cold, hollow, ancient undead lord | Время — мой слуга, не твой. |
+| foe_lich_otvet_6_g.flac | в бою: лич, ответ герою | Schedar | cold, hollow, ancient undead lord | Твоё тепло мне смешно. |
+| foe_lich_otvet_7_g.flac | в бою: лич, ответ герою | Schedar | cold, hollow, ancient undead lord | Каждая кость в этом склепе — чей-то герой. |
+| foe_lich_start_8_g.flac | в бою: лич, начало боя | Schedar | cold, hollow, ancient undead lord | Твоя душа ляжет в мою книгу. |
+| foe_lich_taunt_3_g.flac | в бою: лич, насмешка | Schedar | cold, hollow, ancient undead lord | Скоро ты будешь служить мне. |
+| foe_lich_taunt_4_g.flac | в бою: лич, насмешка | Schedar | cold, hollow, ancient undead lord | Твоё сердце уже считает удары. |
+| foe_lich_taunt_5_g.flac | в бою: лич, насмешка | Schedar | cold, hollow, ancient undead lord | Ещё чуть-чуть — и ты холоднее меня. |
+| foe_pirate_attack_6_g.flac | в бою: пират, удар | Algenib | salty, swaggering pirate | Получай по ватерлинии! |
+| foe_pirate_death_3_g.flac | в бою: пират, последние слова | Algenib | salty, swaggering pirate | Свистать… меня… на дно… |
+| foe_pirate_death_3_v1_g.flac | в бою: пират, последние слова | Zephyr | salty, swaggering pirate | Свистать… меня… на дно… |
+| foe_pirate_death_4_g.flac | в бою: пират, последние слова | Algenib | salty, swaggering pirate | Последний… якорь… |
+| foe_pirate_hurt_4_g.flac | в бою: пират, рана | Algenib | salty, swaggering pirate | Пробоина! Да чтоб тебя! |
+| foe_pirate_hurt_5_g.flac | в бою: пират, рана | Algenib | salty, swaggering pirate | Ах ты, медуза кусачая! |
+| foe_pirate_hurt_6_g.flac | в бою: пират, рана | Algenib | salty, swaggering pirate | Течь в трюме, но держусь! |
+| foe_pirate_kray_0_g.flac | в бою: пират, слабеет | Algenib | salty, swaggering pirate | Шторм меня побери... пробоина! |
+| foe_pirate_kray_2_g.flac | в бою: пират, слабеет | Algenib | salty, swaggering pirate | Спускаю флаг! Спускаю! |
+| foe_pirate_kray_2_v1_g.flac | в бою: пират, слабеет | Zephyr | salty, swaggering pirate | Спускаю флаг! Спускаю! |
+| foe_pirate_kray_4_g.flac | в бою: пират, слабеет | Algenib | salty, swaggering pirate | Ох, палуба уходит из-под ног! |
+| foe_pirate_kray_4_v1_g.flac | в бою: пират, слабеет | Zephyr | salty, swaggering pirate | Ох, палуба уходит из-под ног! |
+| foe_pirate_kray_5_g.flac | в бою: пират, слабеет | Algenib | salty, swaggering pirate | Шлюпку мне! |
+| foe_pirate_kray_5_v1_g.flac | в бою: пират, слабеет | Zephyr | salty, swaggering pirate | Шлюпку мне! |
+| foe_pirate_low_4_g.flac | в бою: пират, на краю | Algenib | salty, swaggering pirate | Белый флаг! Белый флаг! |
+| foe_pirate_low_5_g.flac | в бою: пират, на краю | Algenib | salty, swaggering pirate | Хватит, хватит, твоя добыча! |
+| foe_pirate_low_6_g.flac | в бою: пират, на краю | Algenib | salty, swaggering pirate | Прыгаю за борт, не догонишь! |
+| foe_pirate_otvet_0_g.flac | в бою: пират, ответ герою | Algenib | salty, swaggering pirate | На рее у меня запоёшь. |
+| foe_pirate_otvet_1_g.flac | в бою: пират, ответ герою | Algenib | salty, swaggering pirate | Рыбы тебя заждались. |
+| foe_pirate_otvet_1_v1_g.flac | в бою: пират, ответ герою | Zephyr | salty, swaggering pirate | Рыбы тебя заждались. |
+| foe_pirate_otvet_2_g.flac | в бою: пират, ответ герою | Algenib | salty, swaggering pirate | Слова — ветер, а сабля вот она. |
+| foe_pirate_otvet_2_v1_g.flac | в бою: пират, ответ герою | Zephyr | salty, swaggering pirate | Слова — ветер, а сабля вот она. |
+| foe_pirate_otvet_3_g.flac | в бою: пират, ответ герою | Algenib | salty, swaggering pirate | Отправлю тебя кормить крабов. |
+| foe_pirate_otvet_3_v1_g.flac | в бою: пират, ответ герою | Zephyr | salty, swaggering pirate | Отправлю тебя кормить крабов. |
+| foe_pirate_otvet_4_g.flac | в бою: пират, ответ герою | Algenib | salty, swaggering pirate | Сейчас пойдёшь по доске. |
+| foe_pirate_otvet_4_v1_g.flac | в бою: пират, ответ герою | Zephyr | salty, swaggering pirate | Сейчас пойдёшь по доске. |
+| foe_pirate_otvet_5_g.flac | в бою: пират, ответ герою | Algenib | salty, swaggering pirate | Ты болтаешь, как попугай на мачте. |
+| foe_pirate_otvet_5_v1_g.flac | в бою: пират, ответ герою | Zephyr | salty, swaggering pirate | Ты болтаешь, как попугай на мачте. |
+| foe_pirate_otvet_6_g.flac | в бою: пират, ответ герою | Algenib | salty, swaggering pirate | Наш капитан и не таких топил. |
+| foe_pirate_otvet_6_v1_g.flac | в бою: пират, ответ герою | Zephyr | salty, swaggering pirate | Наш капитан и не таких топил. |
+| foe_pirate_otvet_7_g.flac | в бою: пират, ответ герою | Algenib | salty, swaggering pirate | Слова не держат на плаву. |
+| foe_pirate_otvet_7_v1_g.flac | в бою: пират, ответ герою | Zephyr | salty, swaggering pirate | Слова не держат на плаву. |
+| foe_pirate_otvet_8_g.flac | в бою: пират, ответ герою | Algenib | salty, swaggering pirate | Сейчас узнаешь, что такое килевание. |
+| foe_pirate_otvet_8_v1_g.flac | в бою: пират, ответ герою | Zephyr | salty, swaggering pirate | Сейчас узнаешь, что такое килевание. |
+| foe_pirate_start_6_g.flac | в бою: пират, начало боя | Algenib | salty, swaggering pirate | Поднять флаг! Гости на борту! |
+| foe_pirate_start_6_v1_g.flac | в бою: пират, начало боя | Zephyr | salty, swaggering pirate | Поднять флаг! Гости на борту! |
+| foe_pirate_start_7_g.flac | в бою: пират, начало боя | Algenib | salty, swaggering pirate | Якорь мне в печень, вот это улов! |
+| foe_pirate_start_8_g.flac | в бою: пират, начало боя | Algenib | salty, swaggering pirate | Кошели на палубу, сабли к бою! |
+| foe_pirate_start_9_g.flac | в бою: пират, начало боя | Algenib | salty, swaggering pirate | Эй, на шканцах! Режь его! |
+| foe_pirate_taunt_3_g.flac | в бою: пират, насмешка | Algenib | salty, swaggering pirate | Качает тебя, сухопутный! |
+| foe_pirate_taunt_3_v1_g.flac | в бою: пират, насмешка | Zephyr | salty, swaggering pirate | Качает тебя, сухопутный! |
+| foe_pirate_taunt_4_g.flac | в бою: пират, насмешка | Algenib | salty, swaggering pirate | Ещё волна — и ты на дне! |
+| foe_pirate_taunt_4_v1_g.flac | в бою: пират, насмешка | Zephyr | salty, swaggering pirate | Ещё волна — и ты на дне! |
+| foe_pirate_taunt_5_g.flac | в бою: пират, насмешка | Algenib | salty, swaggering pirate | Ну что, наглотался солёной? |
+| foe_pirate_taunt_5_v1_g.flac | в бою: пират, насмешка | Zephyr | salty, swaggering pirate | Ну что, наглотался солёной? |
+| foe_siren_attack_7_g.flac | в бою: сирена, удар | Autonoe | alluring, cold sea siren | Волна, возьми его! |
+| foe_siren_attack_8_g.flac | в бою: сирена, удар | Autonoe | alluring, cold sea siren | Песня режет глубже стали! |
+| foe_siren_attack_9_g.flac | в бою: сирена, удар | Autonoe | alluring, cold sea siren | В пучину! |
+| foe_siren_death_3_g.flac | в бою: сирена, последние слова | Autonoe | alluring, cold sea siren | Море… заберёт… голос… |
+| foe_siren_hurt_5_g.flac | в бою: сирена, рана | Autonoe | alluring, cold sea siren | Жестокий… как шторм… |
+| foe_siren_hurt_6_g.flac | в бою: сирена, рана | Autonoe | alluring, cold sea siren | Кровь в воде… моя… |
+| foe_siren_kray_0_g.flac | в бою: сирена, слабеет | Autonoe | alluring, cold sea siren | Песня... обрывается... |
+| foe_siren_kray_5_g.flac | в бою: сирена, слабеет | Autonoe | alluring, cold sea siren | Не гаси мою песню… |
+| foe_siren_low_4_g.flac | в бою: сирена, на краю | Autonoe | alluring, cold sea siren | Оставь меня… уйду на дно… |
+| foe_siren_low_5_g.flac | в бою: сирена, на краю | Autonoe | alluring, cold sea siren | Не губи… море тебе отплатит… |
+| foe_siren_low_6_g.flac | в бою: сирена, на краю | Autonoe | alluring, cold sea siren | Песня кончается… |
+| foe_siren_otvet_1_g.flac | в бою: сирена, ответ герою | Autonoe | alluring, cold sea siren | Я спою тебе в последний раз. |
+| foe_siren_otvet_2_g.flac | в бою: сирена, ответ герою | Autonoe | alluring, cold sea siren | Море заберёт тебя. |
+| foe_siren_otvet_3_g.flac | в бою: сирена, ответ герою | Autonoe | alluring, cold sea siren | Утони в моей песне. |
+| foe_siren_otvet_4_g.flac | в бою: сирена, ответ герою | Autonoe | alluring, cold sea siren | Твоё сердце уже поёт со мной. |
+| foe_siren_otvet_5_g.flac | в бою: сирена, ответ герою | Autonoe | alluring, cold sea siren | Глубина ласковее твоих слов. |
+| foe_siren_otvet_6_g.flac | в бою: сирена, ответ герою | Autonoe | alluring, cold sea siren | Сколько моряков говорили так же… |
+| foe_siren_otvet_7_g.flac | в бою: сирена, ответ герою | Autonoe | alluring, cold sea siren | Не сопротивляйся… вода мягкая… |
+| foe_siren_start_6_g.flac | в бою: сирена, начало боя | Autonoe | alluring, cold sea siren | Сядь на берег… послушай… |
+| foe_siren_start_7_g.flac | в бою: сирена, начало боя | Autonoe | alluring, cold sea siren | Слышишь мою песню? Она для тебя. |
+| foe_siren_start_8_g.flac | в бою: сирена, начало боя | Autonoe | alluring, cold sea siren | Глубина ждёт своего гостя. |
+| foe_siren_start_9_g.flac | в бою: сирена, начало боя | Autonoe | alluring, cold sea siren | Не бойся… я лишь спою… |
+| foe_siren_taunt_3_g.flac | в бою: сирена, насмешка | Autonoe | alluring, cold sea siren | Ты уже качаешься в такт. |
+| foe_siren_taunt_4_g.flac | в бою: сирена, насмешка | Autonoe | alluring, cold sea siren | Вода по колено… по пояс… |
+| foe_siren_taunt_5_g.flac | в бою: сирена, насмешка | Autonoe | alluring, cold sea siren | Засыпай под мою песню… |
+| foe_spirit_attack_6_g.flac | в бою: дух, удар | Enceladus | eerie, echoing ghost | Иди к нам… |
+| foe_spirit_attack_6_v1_g.flac | в бою: дух, удар | Vindemiatrix | eerie, echoing ghost | Иди к нам… |
+| foe_spirit_attack_8_g.flac | в бою: дух, удар | Enceladus | eerie, echoing ghost | Отдай тепло… |
+| foe_spirit_attack_8_v1_g.flac | в бою: дух, удар | Vindemiatrix | eerie, echoing ghost | Отдай тепло… |
+| foe_spirit_attack_9_g.flac | в бою: дух, удар | Enceladus | eerie, echoing ghost | Тьма коснётся тебя… |
+| foe_spirit_attack_9_v1_g.flac | в бою: дух, удар | Vindemiatrix | eerie, echoing ghost | Тьма коснётся тебя… |
+| foe_spirit_death_3_g.flac | в бою: дух, последние слова | Enceladus | eerie, echoing ghost | Я слышу… колокол… |
+| foe_spirit_death_3_v1_g.flac | в бою: дух, последние слова | Vindemiatrix | eerie, echoing ghost | Я слышу… колокол… |
+| foe_spirit_death_4_g.flac | в бою: дух, последние слова | Enceladus | eerie, echoing ghost | Теперь… светло… |
+| foe_spirit_death_4_v1_g.flac | в бою: дух, последние слова | Vindemiatrix | eerie, echoing ghost | Теперь… светло… |
+| foe_spirit_hurt_4_g.flac | в бою: дух, рана | Enceladus | eerie, echoing ghost | Ты рассёк туман… |
+| foe_spirit_hurt_4_v1_g.flac | в бою: дух, рана | Vindemiatrix | eerie, echoing ghost | Ты рассёк туман… |
+| foe_spirit_hurt_5_g.flac | в бою: дух, рана | Enceladus | eerie, echoing ghost | Больно… даже мёртвым… |
+| foe_spirit_hurt_5_v1_g.flac | в бою: дух, рана | Vindemiatrix | eerie, echoing ghost | Больно… даже мёртвым… |
+| foe_spirit_hurt_6_g.flac | в бою: дух, рана | Enceladus | eerie, echoing ghost | Не трогай мою память… |
+| foe_spirit_hurt_6_v1_g.flac | в бою: дух, рана | Vindemiatrix | eerie, echoing ghost | Не трогай мою память… |
+| foe_spirit_kray_0_g.flac | в бою: дух, слабеет | Enceladus | eerie, echoing ghost | Я таю... таю... |
+| foe_spirit_kray_1_g.flac | в бою: дух, слабеет | Enceladus | eerie, echoing ghost | Свет... слишком ярко... |
+| foe_spirit_kray_2_g.flac | в бою: дух, слабеет | Enceladus | eerie, echoing ghost | Отпусти... |
+| foe_spirit_kray_2_v1_g.flac | в бою: дух, слабеет | Vindemiatrix | eerie, echoing ghost | Отпусти... |
+| foe_spirit_kray_3_g.flac | в бою: дух, слабеет | Enceladus | eerie, echoing ghost | Рассеиваюсь… |
+| foe_spirit_kray_3_v1_g.flac | в бою: дух, слабеет | Vindemiatrix | eerie, echoing ghost | Рассеиваюсь… |
+| foe_spirit_kray_4_g.flac | в бою: дух, слабеет | Enceladus | eerie, echoing ghost | Тепло… обжигает… |
+| foe_spirit_kray_4_v1_g.flac | в бою: дух, слабеет | Vindemiatrix | eerie, echoing ghost | Тепло… обжигает… |
+| foe_spirit_kray_5_g.flac | в бою: дух, слабеет | Enceladus | eerie, echoing ghost | Голоса… зовут меня… |
+| foe_spirit_kray_5_v1_g.flac | в бою: дух, слабеет | Vindemiatrix | eerie, echoing ghost | Голоса… зовут меня… |
+| foe_spirit_low_4_g.flac | в бою: дух, на краю | Enceladus | eerie, echoing ghost | Отпусти… дай уснуть… |
+| foe_spirit_low_4_v1_g.flac | в бою: дух, на краю | Vindemiatrix | eerie, echoing ghost | Отпусти… дай уснуть… |
+| foe_spirit_low_5_g.flac | в бою: дух, на краю | Enceladus | eerie, echoing ghost | Я таю… как свеча… |
+| foe_spirit_low_5_v1_g.flac | в бою: дух, на краю | Vindemiatrix | eerie, echoing ghost | Я таю… как свеча… |
+| foe_spirit_low_6_g.flac | в бою: дух, на краю | Enceladus | eerie, echoing ghost | Свет… слишком яркий… |
+| foe_spirit_low_6_v1_g.flac | в бою: дух, на краю | Vindemiatrix | eerie, echoing ghost | Свет… слишком яркий… |
+| foe_spirit_otvet_0_g.flac | в бою: дух, ответ герою | Enceladus | eerie, echoing ghost | Останься с нами... |
+| foe_spirit_otvet_0_v1_g.flac | в бою: дух, ответ герою | Vindemiatrix | eerie, echoing ghost | Останься с нами... |
+| foe_spirit_otvet_1_g.flac | в бою: дух, ответ герою | Enceladus | eerie, echoing ghost | Здесь холодно... и тебе будет. |
+| foe_spirit_otvet_1_v1_g.flac | в бою: дух, ответ герою | Vindemiatrix | eerie, echoing ghost | Здесь холодно... и тебе будет. |
+| foe_spirit_otvet_2_g.flac | в бою: дух, ответ герою | Enceladus | eerie, echoing ghost | Мы помним всех... |
+| foe_spirit_otvet_2_v1_g.flac | в бою: дух, ответ герою | Vindemiatrix | eerie, echoing ghost | Мы помним всех... |
+| foe_spirit_otvet_3_g.flac | в бою: дух, ответ герою | Enceladus | eerie, echoing ghost | Иди ко мне... в темноту... |
+| foe_spirit_otvet_3_v1_g.flac | в бою: дух, ответ герою | Vindemiatrix | eerie, echoing ghost | Иди ко мне... в темноту... |
+| foe_spirit_otvet_4_g.flac | в бою: дух, ответ герою | Enceladus | eerie, echoing ghost | Я тоже так думал… при жизни… |
+| foe_spirit_otvet_4_v1_g.flac | в бою: дух, ответ герою | Vindemiatrix | eerie, echoing ghost | Я тоже так думала… при жизни… |
+| foe_spirit_otvet_5_g.flac | в бою: дух, ответ герою | Enceladus | eerie, echoing ghost | Твоё сердце стучит слишком громко… |
+| foe_spirit_otvet_5_v1_g.flac | в бою: дух, ответ герою | Vindemiatrix | eerie, echoing ghost | Твоё сердце стучит слишком громко… |
+| foe_spirit_otvet_6_g.flac | в бою: дух, ответ герою | Enceladus | eerie, echoing ghost | Здесь нет дня… и не будет… |
+| foe_spirit_otvet_6_v1_g.flac | в бою: дух, ответ герою | Vindemiatrix | eerie, echoing ghost | Здесь нет дня… и не будет… |
+| foe_spirit_otvet_7_g.flac | в бою: дух, ответ герою | Enceladus | eerie, echoing ghost | Мы ждём… всегда ждём… |
+| foe_spirit_otvet_7_v1_g.flac | в бою: дух, ответ герою | Vindemiatrix | eerie, echoing ghost | Мы ждём… всегда ждём… |
+| foe_spirit_start_6_g.flac | в бою: дух, начало боя | Enceladus | eerie, echoing ghost | Зачем ты потревожил покой? |
+| foe_spirit_start_6_v1_g.flac | в бою: дух, начало боя | Vindemiatrix | eerie, echoing ghost | Зачем ты потревожил покой? |
+| foe_spirit_start_7_g.flac | в бою: дух, начало боя | Enceladus | eerie, echoing ghost | Уходи… пока помнишь своё имя… |
+| foe_spirit_start_7_v1_g.flac | в бою: дух, начало боя | Vindemiatrix | eerie, echoing ghost | Уходи… пока помнишь своё имя… |
+| foe_spirit_start_8_g.flac | в бою: дух, начало боя | Enceladus | eerie, echoing ghost | Холод… я принесу тебе холод… |
+| foe_spirit_start_8_v1_g.flac | в бою: дух, начало боя | Vindemiatrix | eerie, echoing ghost | Холод… я принесу тебе холод… |
+| foe_spirit_start_9_g.flac | в бою: дух, начало боя | Enceladus | eerie, echoing ghost | Здесь лежу я. Здесь ляжешь ты. |
+| foe_spirit_start_9_v1_g.flac | в бою: дух, начало боя | Vindemiatrix | eerie, echoing ghost | Здесь лежу я. Здесь ляжешь ты. |
+| foe_spirit_taunt_3_g.flac | в бою: дух, насмешка | Enceladus | eerie, echoing ghost | Ты дрожишь… как я когда-то… |
+| foe_spirit_taunt_3_v1_g.flac | в бою: дух, насмешка | Vindemiatrix | eerie, echoing ghost | Ты дрожишь… как я когда-то… |
+| foe_spirit_taunt_4_g.flac | в бою: дух, насмешка | Enceladus | eerie, echoing ghost | Твоё дыхание слабеет… |
+| foe_spirit_taunt_4_v1_g.flac | в бою: дух, насмешка | Vindemiatrix | eerie, echoing ghost | Твоё дыхание слабеет… |
+| foe_spirit_taunt_5_g.flac | в бою: дух, насмешка | Enceladus | eerie, echoing ghost | Скоро ты услышишь тишину… |
+| foe_spirit_taunt_5_v1_g.flac | в бою: дух, насмешка | Vindemiatrix | eerie, echoing ghost | Скоро ты услышишь тишину… |
