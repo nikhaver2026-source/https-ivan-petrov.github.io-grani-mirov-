@@ -274,7 +274,7 @@
 
 Целые фразы героя в бою — угроза, ответ врагу, удачный удар, рана, свой
 край, край врага, победа — записаны голосами «Настроек персонажа» с
-интонацией мига боя. Записей: 2529. Нейроголоса **Gemini** (Google),
+интонацией мига боя. Записей: 2604. Нейроголоса **Gemini** (Google),
 модель gemini-3.8-flash-tts, по тексту игры; каждая проверена
 распознаванием (GigaAM). Обработка: −18 LUFS, пик не выше −1 дБ, 24 кГц, FLAC.
 
@@ -2809,3 +2809,78 @@
 | hero_f_1v3c7qp_aoede_g.flac | Лёгкий (жен.) | Aoede | Стучи громче, щит не слышит. |
 | hero_f_1e5lpn3_aoede_g.flac | Лёгкий (жен.) | Aoede | Обломись! |
 | hero_f_1s87agk_aoede_g.flac | Лёгкий (жен.) | Aoede | Не выйдет, гад! |
+| hero_f_ztad2k_schedar_g.flac | Твёрдый (муж.) | Schedar | Давай быстро, у меня ещё дела. |
+| hero_f_14j2wnb_schedar_g.flac | Твёрдый (муж.) | Schedar | Улыбнись, это будет весело. Мне. |
+| hero_f_1pacjyc_schedar_g.flac | Твёрдый (муж.) | Schedar | Ещё попросишь? |
+| hero_f_1hw7x1q_schedar_g.flac | Твёрдый (муж.) | Schedar | Я сегодня в ударе! |
+| hero_f_13e1057_schedar_g.flac | Твёрдый (муж.) | Schedar | Ничего, переживу. |
+| hero_f_x7hgyv_schedar_g.flac | Твёрдый (муж.) | Schedar | Удар хорош. Мой будет лучше. |
+| hero_f_d8szqk_schedar_g.flac | Твёрдый (муж.) | Schedar | Ай. Ладно, это было честно. |
+| hero_f_101x00o_schedar_g.flac | Твёрдый (муж.) | Schedar | Ну вот, опять штопать. |
+| hero_f_18mi5az_schedar_g.flac | Твёрдый (муж.) | Schedar | Ну всё, теперь это личное. |
+| hero_f_m6jzgp_schedar_g.flac | Твёрдый (муж.) | Schedar | Спасибо, я и так проснулся. |
+| hero_f_w4ujg0_schedar_g.flac | Твёрдый (муж.) | Schedar | Ох, где мои доспехи получше? |
+| hero_f_fh6phv_schedar_g.flac | Твёрдый (муж.) | Schedar | Ещё раз так — и я обижусь. |
+| hero_f_odascy_schedar_g.flac | Твёрдый (муж.) | Schedar | Больно, чтоб тебя! |
+| hero_f_pq71d4_schedar_g.flac | Твёрдый (муж.) | Schedar | Ты у меня попляшешь! |
+| hero_f_1y2ms0i_schedar_g.flac | Твёрдый (муж.) | Schedar | Ах так? Ну держись! |
+| hero_f_1l7aswi_schedar_g.flac | Твёрдый (муж.) | Schedar | Зубы выбью! |
+| hero_f_uax6sc_schedar_g.flac | Твёрдый (муж.) | Schedar | Ну, гадина, сейчас ответишь! |
+| hero_f_181m57y_schedar_g.flac | Твёрдый (муж.) | Schedar | Сил всё меньше. Надо лечиться. |
+| hero_f_15ceact_schedar_g.flac | Твёрдый (муж.) | Schedar | Тело не слушается. Лечиться, срочно. |
+| hero_f_1lxfmo1_schedar_g.flac | Твёрдый (муж.) | Schedar | Проклятье, ещё чуть — и всё! |
+| hero_f_199jhpi_schedar_g.flac | Твёрдый (муж.) | Schedar | Не дай ему уйти. |
+| hero_f_1n0yt9d_schedar_g.flac | Твёрдый (муж.) | Schedar | Ты устал? Я тоже. Но тебе хуже. |
+| hero_f_1bdviis_schedar_g.flac | Твёрдый (муж.) | Schedar | Тишина. |
+| hero_f_fslwk8_schedar_g.flac | Твёрдый (муж.) | Schedar | Он больше не встанет. |
+| hero_f_10gt0wq_schedar_g.flac | Твёрдый (муж.) | Schedar | Дорога снова чиста. |
+| hero_f_1te2exb_schedar_g.flac | Твёрдый (муж.) | Schedar | Получил своё, падаль! |
+| hero_f_6tw026_schedar_g.flac | Твёрдый (муж.) | Schedar | Получай по полной! |
+| hero_f_gm44_schedar_g.flac | Твёрдый (муж.) | Schedar | Мимо меня. |
+| hero_f_1e5lpn3_schedar_g.flac | Твёрдый (муж.) | Schedar | Обломись! |
+| hero_f_pwv4w0_schedar_g.flac | Твёрдый (муж.) | Schedar | Зубы о щит сломаешь! |
+| hero_f_1xin3nj_schedar_g.flac | Твёрдый (муж.) | Schedar | Уху из тебя сварю. |
+| hero_f_ztad2k_kore_g.flac | Ясный (жен.) | Kore | Давай быстро, у меня ещё дела. |
+| hero_f_14j2wnb_kore_g.flac | Ясный (жен.) | Kore | Улыбнись, это будет весело. Мне. |
+| hero_f_1ijyn1y_kore_g.flac | Ясный (жен.) | Kore | Сам полез — сам и получишь! |
+| hero_f_l1ey2j_kore_g.flac | Ясный (жен.) | Kore | Ещё один. |
+| hero_f_7ktqle_kore_g.flac | Ясный (жен.) | Kore | Получай, рвань! |
+| hero_f_1dgt8o8_kore_g.flac | Ясный (жен.) | Kore | Не нравится? Терпи! |
+| hero_f_9668kf_kore_g.flac | Ясный (жен.) | Kore | Съел? |
+| hero_f_1kggna7_kore_g.flac | Ясный (жен.) | Kore | Вот так-то! |
+| hero_f_1hrosal_kore_g.flac | Ясный (жен.) | Kore | На, подавись! |
+| hero_f_3jl9vh_kore_g.flac | Ясный (жен.) | Kore | Ещё немного — и не встану. Пора за зелье. |
+| hero_f_15ceact_kore_g.flac | Ясный (жен.) | Kore | Тело не слушается. Лечиться, срочно. |
+| hero_f_1rifh2f_kore_g.flac | Ясный (жен.) | Kore | Нельзя падать. Сначала зелье. |
+| hero_f_l6o85h_kore_g.flac | Ясный (жен.) | Kore | В глазах темнеет. Надо лечиться. |
+| hero_f_1tp6d0b_kore_g.flac | Ясный (жен.) | Kore | Так, план «героически погибнуть» отменяется. Где зелье? |
+| hero_f_2psc5k_kore_g.flac | Ясный (жен.) | Kore | Чёрт, кровь заливает глаза! |
+| hero_f_1akddq2_kore_g.flac | Ясный (жен.) | Kore | Совсем худо, чтоб меня! |
+| hero_f_e5kbcm_kore_g.flac | Ясный (жен.) | Kore | Он на пределе. |
+| hero_f_1tz3yv2_kore_g.flac | Ясный (жен.) | Kore | Ну что, ещё потанцуем? |
+| hero_f_twwu5u_kore_g.flac | Ясный (жен.) | Kore | Сейчас добью! |
+| hero_f_jme3tj_kore_g.flac | Ясный (жен.) | Kore | Валяйся, падаль! |
+| hero_f_1by91op_kore_g.flac | Ясный (жен.) | Kore | Ну всё, тебе конец! |
+| hero_f_1mcq9pm_kore_g.flac | Ясный (жен.) | Kore | Последний раз, гад! |
+| hero_f_1f7aoi6_kore_g.flac | Ясный (жен.) | Kore | Пустые слова. |
+| hero_f_1hytswi_kore_g.flac | Ясный (жен.) | Kore | Скоро ты замолчишь. |
+| hero_f_52zpw8_kore_g.flac | Ясный (жен.) | Kore | Закрой пасть! |
+| hero_f_tgm1zg_kore_g.flac | Ясный (жен.) | Kore | Хватит гавкать! |
+| hero_f_1g5ot31_kore_g.flac | Ясный (жен.) | Kore | Отбил. |
+| hero_f_izaek4_kore_g.flac | Ясный (жен.) | Kore | Тук-тук. Никого нет дома. |
+| hero_f_1q8ez1f_kore_g.flac | Ясный (жен.) | Kore | Встань и дерись. |
+| hero_f_1387bps_aoede_g.flac | Лёгкий (жен.) | Aoede | Тихо. Дальше ты не пройдёшь. |
+| hero_f_1xs8r22_aoede_g.flac | Лёгкий (жен.) | Aoede | Ну что, кто первый моргнёт? |
+| hero_f_ztad2k_aoede_g.flac | Лёгкий (жен.) | Aoede | Давай быстро, у меня ещё дела. |
+| hero_f_14j2wnb_aoede_g.flac | Лёгкий (жен.) | Aoede | Улыбнись, это будет весело. Мне. |
+| hero_f_120sgz5_aoede_g.flac | Лёгкий (жен.) | Aoede | Чисто. |
+| hero_f_pq71d4_aoede_g.flac | Лёгкий (жен.) | Aoede | Ты у меня попляшешь! |
+| hero_f_11sf1io_aoede_g.flac | Лёгкий (жен.) | Aoede | По-моему, я начинаю проигрывать. |
+| hero_f_2psc5k_aoede_g.flac | Лёгкий (жен.) | Aoede | Чёрт, кровь заливает глаза! |
+| hero_f_1f7aoi6_aoede_g.flac | Лёгкий (жен.) | Aoede | Пустые слова. |
+| hero_f_3h3qbc_aoede_g.flac | Лёгкий (жен.) | Aoede | Это ничего не меняет. |
+| hero_f_1hytswi_aoede_g.flac | Лёгкий (жен.) | Aoede | Скоро ты замолчишь. |
+| hero_f_52zpw8_aoede_g.flac | Лёгкий (жен.) | Aoede | Закрой пасть! |
+| hero_f_1g5ot31_aoede_g.flac | Лёгкий (жен.) | Aoede | Отбил. |
+| hero_f_13kghqu_aoede_g.flac | Лёгкий (жен.) | Aoede | Держусь. |
+| hero_f_wstchs_aoede_g.flac | Лёгкий (жен.) | Aoede | Ещё немного. |
