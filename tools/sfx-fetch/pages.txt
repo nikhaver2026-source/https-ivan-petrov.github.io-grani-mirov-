@@ -1,13 +1,10 @@
-# 11.0 «Магия без тока»: чары звучат волшебством, а не электричеством.
-# Наборы прошлых заходов (10.0) уже сведены в игру и здесь не повторяются.
+# 14.0 «Сеть Граней»: фоны иных Граней, узлы, переходы и их срывы.
+# Наборы прошлых заходов (10.0, 11.0) уже сведены в игру и здесь не повторяются.
 # Наборы под CC BY-SA не берутся: условие «так же» не подходит к звукам игры.
-rpg80 https://opengameart.org/content/80-cc0-rpg-sfx
-teleport https://opengameart.org/content/teleport-spell
-darkmagic3 https://opengameart.org/content/3-dark-magic-spells
-sandspell https://opengameart.org/content/sand-spell
-ghostportal https://opengameart.org/content/ghost
-portalsnd https://opengameart.org/content/portal-sound
-torchfire https://opengameart.org/content/torch-fire-spell
-chanting https://opengameart.org/content/creepy-incoherent-chanting
-eery https://opengameart.org/content/eeryhorror-sfx
-revtime https://opengameart.org/content/reverse-time-loop
+# Сжатые исходники (ogg, mp3) в игру не идут — только wav, flac и архивы с ними.
+bgdrones https://opengameart.org/content/background-drones-vol-1
+darkamb13 https://opengameart.org/content/dark-ambient-loop-13
+ghostloops https://opengameart.org/content/4-atmospheric-ghostly-loops
+krank https://opengameart.org/content/atmospheric-interaction-sound-pack
+rumble https://opengameart.org/content/rumbling-sound-effects
+teleport https://opengameart.org/content/teleport

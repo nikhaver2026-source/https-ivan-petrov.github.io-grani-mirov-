@@ -5,7 +5,9 @@
 Файлы, выложенные автором вне itch.io (Google Drive, Dropbox, MediaFire,
 прямая ссылка), берутся по их ссылке. Лицензия набора — строка «LICENSE».
 
-Использование: itch.py имя адрес_страницы папка
+Использование: itch.py имя адрес_страницы папка [отбор]
+Отбор — регулярное выражение по имени файла набора (без учёта регистра):
+берутся только совпавшие файлы; без него — все.
 """
 import html
 import http.cookiejar
@@ -165,8 +167,9 @@ def external(op, url, folder, name):
             print("   ", link, flush=True)
 
 
-def main(name, page_url, root):
+def main(name, page_url, root, only=None):
     op = opener()
+    pick = re.compile(only, re.I) if only else None
     game = page_url.rstrip("/")
     folder = os.path.join(root, name)
     os.makedirs(folder, exist_ok=True)
@@ -202,6 +205,9 @@ def main(name, page_url, root):
             print(f"   download_url не ответил ({info}); пробую прямые кнопки", flush=True)
     print(f"   файлов в наборе: {len(items)}", flush=True)
     for uid, nm in items:
+        if pick and not (nm and pick.search(nm)):
+            print(f"   пропущен: {nm or uid}", flush=True)
+            continue
         if key:
             api = f"{game}/file/{uid}?source=game_download&after_download_lightbox=1&as_props=1"
         else:
@@ -228,4 +234,4 @@ def main(name, page_url, root):
 
 
 if __name__ == "__main__":
-    sys.exit(main(sys.argv[1], sys.argv[2], sys.argv[3]))
+    sys.exit(main(sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4] if len(sys.argv) > 4 else None))

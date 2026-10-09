@@ -59,10 +59,10 @@ jobs:
           touch tools/sfx-fetch/list.txt
           # Наборы itch.io: путь покупателя «без доплаты» (itch.py).
           if [ -f tools/sfx-fetch/itch.txt ]; then
-            grep -v '^#' tools/sfx-fetch/itch.txt | while read -r name page; do
+            grep -v '^#' tools/sfx-fetch/itch.txt | while read -r name page only; do
               [ -n "$name" ] || continue
               echo "== itch $name"
-              python3 tools/sfx-fetch/itch.py "$name" "$page" x 2>&1 | tee -a itch.log || echo "!! itch: $name"
+              python3 tools/sfx-fetch/itch.py "$name" "$page" x $only 2>&1 | tee -a itch.log || echo "!! itch: $name"
               grep "^LICENSE $name " itch.log | tail -1 | cut -d' ' -f2- >> licenses.txt || true
               process "$name"
             done
