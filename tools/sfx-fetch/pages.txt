@@ -10,3 +10,4 @@ teleport https://opengameart.org/content/teleport
 owlish https://opengameart.org/content/sound-effects-pack
 blacklodge https://opengameart.org/content/50-free-scifi-soundfx-192khz-64-bit-24576kbps-wav
 coindrop https://opengameart.org/content/coin-drop
+chanting https://opengameart.org/content/creepy-incoherent-chanting

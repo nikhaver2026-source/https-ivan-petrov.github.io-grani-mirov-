@@ -60,6 +60,14 @@ def one(name, num, root):
         ctype = h.get("Content-Type", "")
         if ctype.startswith("text/html") or len(data) < 2000:
             print(f"   {name} #{num} вариант {i}: пришла страница ({ctype}, {len(data)} байт)", flush=True)
+            # Ответ сохраняется для разбора (страница ожидания, ссылка на файл).
+            dbg = os.path.join(root, "bsb_debug")
+            os.makedirs(dbg, exist_ok=True)
+            open(os.path.join(dbg, f"{int(num):04d}_v{i}.html"), "wb").write(data)
+            links = sorted(set(re.findall(r'(?:href|src|action|url)\s*[=:]\s*["\']?([^"\' >]+)', data.decode("utf-8", "replace"))))
+            for l in links:
+                if any(k in l.lower() for k in ("download", "upload", ".wav", "token", "get", "file")):
+                    print(f"      ссылка: {l[:200]}", flush=True)
             continue
         cd = h.get("Content-Disposition") or ""
         m = re.search(r'filename="?([^";]+)"?', cd)
