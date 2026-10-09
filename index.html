@@ -7083,6 +7083,7 @@ const ENC_SECTIONS=[
  {id:"combat",    з:"",n:"Бой и оружие",о:"клинок, лук, копьё, щит, удары и раны"},
  {id:"war",       з:"",n:"Война, осада и взрывы",о:"таран, камнемёт, баллиста, башни, пушка и взрывы"},
  {id:"magic",     з:"",n:"Магия и чары",о:"школы чар, касты, порталы, обереги и сила"},
+ {id:"grani",     з:"",n:"Сеть Граней: иные миры и переходы",о:"фоны десяти классов Граней, узлы Сети, переход и его срывы, страж Покрова, чутьё и свидетельства"},
  {id:"gods",      з:"",n:"Боги, храмы и знамения",о:"голоса двенадцати богов, алтарь, колокола и знамения"},
  {id:"monsters",  з:"",n:"Чудовища и твари",о:"драконы, громады, нежить, гоблины, призраки и голоса чудовищ"},
  {id:"animals",   з:"",n:"Звери и птицы",о:"скот, кони, псы, волки, совы, ястребы и летучие мыши"},
@@ -7094,6 +7095,8 @@ const ENC_BY_ID={};ENC_SECTIONS.forEach(s=>ENC_BY_ID[s.id]=s);
    свой раздел по имени; не подошедшая ни под одно правило уходит по папке
    источника, а уж затем — к фону земель, чтобы ни одна не пропала. */
 const ENC_RULES=[
+ /* 14.0: Сеть Граней (sounds/hron) — свой раздел. */
+ [/^gr_/,"grani"],
  /* 11.0: чары без тока (sounds/arcana) — к магии. */
  [/^(arc_|fire_spell_|ooze_|frost_(charge|cast|hit)$|(flame_cast|ash_crackle|crystal_shatter|gale_hit|heal_bloom|bolt_hit|dark_spell|portal_open|chant_ether)$|(water|earth|plant)_spell_hit$)/,"magic"],
  /* 10.0: Сплетение — боги к богам, твари к чудовищам, гул земель к земле, котлы к местам. */
@@ -19047,6 +19050,65 @@ Object.assign(SOUND_BANK,{
  oc_ui_select:{f:["oc/oc_ui_select_01.ogg", "oc/oc_ui_select_02.ogg"],d:"выбор в списке"},
  oc_dig:{f:["oc/oc_dig_01.ogg", "oc/oc_dig_02.ogg", "oc/oc_dig_03.ogg", "oc/oc_dig_04.ogg", "oc/oc_dig_05.ogg"],d:"копать: лопата в грунт"},
  oc_chest_close:{f:["oc/oc_chest_close_01.ogg"],d:"крышка сундука закрывается"},
+});
+
+/* (14.0) Звуки Сети Граней — sounds/hron. У каждого класса Грани свой долгий
+   фон, у каждого рода узла — свой маяк; переход, прибытие и возвращение, пять
+   родов срыва, страж Покрова, чутьё к Граням, свидетельства, вывод, ключ
+   Сшивателей, алтарь, жители, механизмы, сбор вещества, запись и короткие
+   голоса мест каждой Грани. Собраны заново из свободных записей (CC0, CC BY)
+   и синтеза; что из чего сделано — в sounds/hron/CREDITS.md. */
+Object.assign(SOUND_BANK,{
+ gr_amb_stable:{f:["hron/gr_amb_stable.ogg"],d:"Стабильная Грань: ветер колышет металлические подвески, ровный покой"},
+ gr_amb_distorted:{f:["hron/gr_amb_distorted.ogg"],d:"Искажённая Грань: свист то взмывает, то опадает — время и тяжесть гуляют"},
+ gr_amb_reflected:{f:["hron/gr_amb_reflected.ogg"],d:"Отражённая Грань: стеклянный гул, и каждый звук приходит дважды"},
+ gr_amb_dead:{f:["hron/gr_amb_dead.ogg"],d:"Погибшая Грань: пустой гул и полые ветры"},
+ gr_amb_artificial:{f:["hron/gr_amb_artificial.ogg"],d:"Рукотворная Грань: громадный ровный механизм дышит за стенами"},
+ gr_amb_pocket:{f:["hron/gr_amb_pocket.ogg"],d:"Карманная Грань: тесно и близко, гул как внутри большой чаши"},
+ gr_amb_border:{f:["hron/gr_amb_border.ogg"],d:"Пограничье: под ногами гул разлома, сверху чужой ветер"},
+ gr_amb_conditional:{f:["hron/gr_amb_conditional.ogg"],d:"Урочная Грань: мерное пение, будто часы мира тикают струной"},
+ gr_amb_hidden:{f:["hron/gr_amb_hidden.ogg"],d:"Сокрытая Грань: полый гул и чьё-то дыхание в нём"},
+ gr_amb_altered:{f:["hron/gr_amb_altered.ogg"],d:"Переиначенная Грань: звук живёт дольше и приходит задом наперёд"},
+ gr_node_gate:{f:["hron/gr_node_gate_01.flac"],d:"Врата Сшивателей: каменная арка гудит, камень трётся о камень"},
+ gr_node_road:{f:["hron/gr_node_road_01.flac"],d:"Древняя дорога: ветер над плитами и дальний звон"},
+ gr_node_crystal:{f:["hron/gr_node_crystal_01.flac"],d:"Резонансный кристалл: гул и пение хрусталя"},
+ gr_node_circle:{f:["hron/gr_node_circle_01.flac"],d:"Ритуальный круг: удары барабана, гул чаши и тлеющие угли"},
+ gr_node_rift:{f:["hron/gr_node_rift_01.flac"],d:"Разлом-узел: воздух рвётся со свистом, тянет чужим ветром"},
+ gr_node_key:{f:["hron/gr_node_key_01.flac"],d:"Замок Сшивателей: плита гудит металлом, в прорези звенит"},
+ gr_sense:{f:["hron/gr_sense_01.flac","hron/gr_sense_02.flac"],d:"Прислушаться к Граням: зов уходит, дальние узлы отвечают с разных сторон"},
+ gr_transit:{f:["hron/gr_transit_01.flac","hron/gr_transit_02.flac"],d:"Переход через узел: втягивает воронка, смыкаются камень и хрусталь"},
+ gr_arrive:{f:["hron/gr_arrive_01.flac"],d:"Прибытие в иную Грань: хрустальный удар и воздух чужого мира"},
+ gr_return:{f:["hron/gr_return_01.flac"],d:"Возвращение под своё небо: воронка разворачивается, под ногами земля"},
+ gr_deny:{f:["hron/gr_deny_01.flac"],d:"Узел не пускает: глухой удар и опадающий звон"},
+ gr_fail_neighbor:{f:["hron/gr_fail_neighbor_01.flac"],d:"Срыв перехода: вынесло в соседнюю Грань — два звона спорят"},
+ gr_fail_time:{f:["hron/gr_fail_time_01.flac"],d:"Срыв перехода: время затянулось — ход часов замедляется и тонет"},
+ gr_fail_cargo:{f:["hron/gr_fail_cargo_01.flac"],d:"Срыв перехода: порыв рвёт ношу, монеты рассыпаются"},
+ gr_fail_magic:{f:["hron/gr_fail_magic_01.flac"],d:"Срыв перехода: магию задело — хрусталь лопается"},
+ gr_fail_guard:{f:["hron/gr_fail_guard_01.flac"],d:"Срыв перехода: страж Покрова заметил — гул земли и вой натянутых нитей"},
+ gr_warden:{f:["hron/gr_warden_01.flac","hron/gr_warden_02.flac"],d:"Страж Покрова: скрежет лат из печатных нитей"},
+ gr_evidence:{f:["hron/gr_evidence_01.flac"],d:"Найдено свидетельство о Разрыве: страница, хрустальный звон и шёпот"},
+ gr_verdict:{f:["hron/gr_verdict_01.flac"],d:"Принята версия Разрыва: хрустальный удар и большой колокол"},
+ gr_key:{f:["hron/gr_key_01.flac"],d:"Ключ Сшивателей: щелчок, звон, удар камня и сдвиг плиты"},
+ gr_altar:{f:["hron/gr_altar_01.flac"],d:"Алтарь бога иной Грани: гул чаши и ответный звон"},
+ gr_native:{f:["hron/gr_native_01.flac","hron/gr_native_02.flac"],d:"Жители иной Грани: чужая речь на выдохе"},
+ gr_mech:{f:["hron/gr_mech_01.flac"],d:"Механизм Рукотворной Грани: ход, гул и скрежет"},
+ gr_gather:{f:["hron/gr_gather_01.flac","hron/gr_gather_02.flac"],d:"Сбор вещества Грани: отлом, звон кристалла, осколки"},
+ gr_record:{f:["hron/gr_record_01.flac"],d:"Запись на плите Грани: резец и звон"},
+ gr_spot_chime:{f:["hron/gr_spot_chime_01.flac"],d:"Голос Грани: дальний хрустальный звон"},
+ gr_spot_glass:{f:["hron/gr_spot_glass_01.flac"],d:"Голос Отражённой Грани: стеклянный звон отвечает с обеих сторон"},
+ gr_spot_warp:{f:["hron/gr_spot_warp_01.flac"],d:"Голос Искажённой Грани: звук гнётся, время плывёт"},
+ gr_spot_creak:{f:["hron/gr_spot_creak_01.flac"],d:"Голос Погибшей Грани: вдали скрипит громада"},
+ gr_spot_dust:{f:["hron/gr_spot_dust_01.flac"],d:"Голос Погибшей Грани: гул и осыпающиеся камешки"},
+ gr_spot_tick:{f:["hron/gr_spot_tick_01.flac"],d:"Голос Рукотворной Грани: где-то идут часы"},
+ gr_spot_servo:{f:["hron/gr_spot_servo_01.flac"],d:"Голос Рукотворной Грани: сдвинулся малый механизм"},
+ gr_spot_pulse:{f:["hron/gr_spot_pulse_01.flac"],d:"Голос Карманной Грани: глухой толчок, как сердце за стеной"},
+ gr_spot_gust:{f:["hron/gr_spot_gust_01.flac"],d:"Голос Пограничья: порыв чужого ветра"},
+ gr_spot_rumble:{f:["hron/gr_spot_rumble_01.flac"],d:"Голос Грани: глухо сдвинулась каменная толща"},
+ gr_spot_bell:{f:["hron/gr_spot_bell_01.flac"],d:"Голос Урочной Грани: дальний колокол отбивает урочный час"},
+ gr_spot_whisper:{f:["hron/gr_spot_whisper_01.flac"],d:"Голос Сокрытой Грани: шёпот рядом"},
+ gr_spot_breath:{f:["hron/gr_spot_breath_01.flac"],d:"Голос Сокрытой Грани: кто-то дышит в темноте"},
+ gr_spot_rise:{f:["hron/gr_spot_rise_01.flac"],d:"Голос Переиначенной Грани: звон, идущий вспять и вверх"},
+ gr_spot_coldfire:{f:["hron/gr_spot_coldfire_01.flac"],d:"Голос Переиначенной Грани: холодный треск огня, который не жжёт"},
 });
 const MONSTER_BANK={
  bat:{attack:"creatures/cr_bat_attack.flac",damage:"creatures/cr_bat_damage.flac",death:"creatures/cr_bat_death.flac",emerge:"creatures/cr_bat_emerge.flac",sonic_special:"creatures/cr_bat_sonic_special.flac",step:"creatures/cr_bat_step.flac"},
@@ -75322,25 +75384,25 @@ Object.assign(CMD,{dp(a){Deep.cmd(a);},deep(){Deep.home();},dparena(){Deep.arena
    опасность (1…4), cross — как трудно туда попасть (множитель удачи перехода). */
 const GRAN_CLASSES=[
  {id:"stable",   n:"Стабильная", о:"законы постоянны: день есть день, камень есть камень",
-  время:[0.8,1.25],тяжесть:[0.85,1.15],магия:[0.9,1.15],свет:[0.6,1],вещество:[0.95,1],сознание:[0.95,1],danger:1,cross:1.0,звук:"magic_hum"},
+  время:[0.8,1.25],тяжесть:[0.85,1.15],магия:[0.9,1.15],свет:[0.6,1],вещество:[0.95,1],сознание:[0.95,1],danger:1,cross:1.0,звук:"gr_amb_stable"},
  {id:"distorted",n:"Искажённая", о:"пространство и время неустойчивы: шаг уводит не туда, часы проваливаются",
-  время:[0.4,3],тяжесть:[0.6,1.6],магия:[0.8,1.4],свет:[0.3,0.9],вещество:[0.7,0.95],сознание:[0.6,0.9],danger:3,cross:0.75,звук:"oc_warp"},
+  время:[0.4,3],тяжесть:[0.6,1.6],магия:[0.8,1.4],свет:[0.3,0.9],вещество:[0.7,0.95],сознание:[0.6,0.9],danger:3,cross:0.75,звук:"gr_amb_distorted"},
  {id:"reflected",n:"Отражённая", о:"повторяет чужие места и вещи, но наизнанку: левое — справа, имена — задом наперёд",
-  время:[0.9,1.1],тяжесть:[0.9,1.1],магия:[0.9,1.2],свет:[0.5,1],вещество:[0.8,1],сознание:[0.75,0.95],danger:2,cross:0.9,звук:"oc_glass_hit"},
+  время:[0.9,1.1],тяжесть:[0.9,1.1],магия:[0.9,1.2],свет:[0.5,1],вещество:[0.8,1],сознание:[0.75,0.95],danger:2,cross:0.9,звук:"gr_amb_reflected"},
  {id:"dead",     n:"Погибшая",   о:"руины цивилизации, которой больше нет; живут здесь только эхо и падальщики",
-  время:[0.6,1],тяжесть:[0.9,1.2],магия:[0.4,0.8],свет:[0.2,0.6],вещество:[0.85,1],сознание:[0.85,1],danger:2,cross:0.9,звук:"deep_wind"},
+  время:[0.6,1],тяжесть:[0.9,1.2],магия:[0.4,0.8],свет:[0.2,0.6],вещество:[0.85,1],сознание:[0.85,1],danger:2,cross:0.9,звук:"gr_amb_dead"},
  {id:"artificial",n:"Рукотворная",о:"измерение, созданное мастерами: ровные грани, механизмы, свои строгие правила",
-  время:[1,1],тяжесть:[0.7,1.3],магия:[1,1.3],свет:[0.6,1],вещество:[1,1],сознание:[0.9,1],danger:2,cross:0.85,звук:"stk_clock"},
+  время:[1,1],тяжесть:[0.7,1.3],магия:[1,1.3],свет:[0.6,1],вещество:[1,1],сознание:[0.9,1],danger:2,cross:0.85,звук:"gr_amb_artificial"},
  {id:"pocket",   n:"Карманная",  о:"тесное пространство внутри артефакта, башни или древнего механизма",
-  время:[0.5,2],тяжесть:[0.8,1.2],магия:[1,1.5],свет:[0.4,1],вещество:[0.9,1],сознание:[0.9,1],danger:1,cross:1.0,звук:"magic_shimmer"},
+  время:[0.5,2],тяжесть:[0.8,1.2],магия:[1,1.5],свет:[0.4,1],вещество:[0.9,1],сознание:[0.9,1],danger:1,cross:1.0,звук:"gr_amb_pocket"},
  {id:"border",   n:"Пограничье", о:"полоса между реальностями: черты двух миров разом и стражи, следящие за границей",
-  время:[0.7,1.5],тяжесть:[0.7,1.4],магия:[0.7,1.3],свет:[0.3,0.8],вещество:[0.75,0.95],сознание:[0.7,0.95],danger:3,cross:0.8,звук:"es_ion"},
+  время:[0.7,1.5],тяжесть:[0.7,1.4],магия:[0.7,1.3],свет:[0.3,0.8],вещество:[0.75,0.95],сознание:[0.7,0.95],danger:3,cross:0.8,звук:"gr_amb_border"},
  {id:"conditional",n:"Урочная",  о:"существует, только пока небо в нужном положении: в свой срок открыта, в другой — её нет",
-  время:[0.8,1.6],тяжесть:[0.8,1.2],магия:[1,1.6],свет:[0.2,1],вещество:[0.85,1],сознание:[0.85,1],danger:2,cross:0.9,звук:"chant_ether"},
+  время:[0.8,1.6],тяжесть:[0.8,1.2],магия:[1,1.6],свет:[0.2,1],вещество:[0.85,1],сознание:[0.85,1],danger:2,cross:0.9,звук:"gr_amb_conditional"},
  {id:"hidden",   n:"Сокрытая",   о:"не видна обычному чутью: узлы к ней надо услышать, а не найти",
-  время:[0.8,1.2],тяжесть:[0.8,1.2],магия:[0.9,1.4],свет:[0.3,0.9],вещество:[0.9,1],сознание:[0.8,1],danger:2,cross:0.85,звук:"oc_rustle"},
+  время:[0.8,1.2],тяжесть:[0.8,1.2],магия:[0.9,1.4],свет:[0.3,0.9],вещество:[0.9,1],сознание:[0.8,1],danger:2,cross:0.85,звук:"gr_amb_hidden"},
  {id:"altered",  n:"Переиначенная",о:"древняя катастрофа переписала основы: огонь не горит, тяжесть тянет вверх, звук живёт дольше",
-  время:[0.5,2],тяжесть:[0.3,2.5],магия:[0.5,1.8],свет:[0.1,0.9],вещество:[0.6,0.9],сознание:[0.65,0.95],danger:4,cross:0.7,звук:"es_abyss"}];
+  время:[0.5,2],тяжесть:[0.3,2.5],магия:[0.5,1.8],свет:[0.1,0.9],вещество:[0.6,0.9],сознание:[0.65,0.95],danger:4,cross:0.7,звук:"gr_amb_altered"}];
 const GRAN_CLASS_BY_ID=Object.fromEntries(GRAN_CLASSES.map(c=>[c.id,c]));
 
 /* ── ШЕСТНАДЦАТЬ ГРАНЕЙ, ИЗВЕСТНЫХ ПО ИМЕНИ ──
@@ -75453,17 +75515,17 @@ const GRANI_MAIN_BY_ID=Object.fromEntries(GRANI_MAIN.map(f=>[f.id,f]));
    (школа ослабла или взбесилась), страж (заметили на Пороге). */
 const GRAN_NODE_KINDS=[
  {id:"gate",   n:"Врата Сшивателей",о:"каменная арка без стены за ней; камни гудят",цена:"двадцать маны, чтобы отворить",base:0.9,
-  провал:{сосед:3,время:2,ноша:1,магия:1,страж:1},звук:"deep_door",где:["mountains","plains","ruins"]},
+  провал:{сосед:3,время:2,ноша:1,магия:1,страж:1},звук:"gr_node_gate",где:["mountains","plains","ruins"]},
  {id:"road",   n:"Древняя дорога",о:"мощёная дорога, уходящая в никуда; видна только в сумерках",цена:"час пути в сумерках",base:0.8,
-  провал:{сосед:4,время:3,ноша:1,магия:0,страж:1},звук:"step_stone",где:["plains","forest","road"]},
+  провал:{сосед:4,время:3,ноша:1,магия:0,страж:1},звук:"gr_node_road",где:["plains","forest","road"]},
  {id:"crystal",n:"Резонансный кристалл",о:"кристалл в рост человека; поёт, если его настроить",цена:"кристалл из котомки для настройки",base:0.85,
-  провал:{сосед:1,время:1,ноша:1,магия:4,страж:1},звук:"oc_glass_hit",где:["mountains","cave"]},
+  провал:{сосед:1,время:1,ноша:1,магия:4,страж:1},звук:"gr_node_crystal",где:["mountains","cave"]},
  {id:"circle", n:"Ритуальный круг",о:"круг из камней с выжженной серединой",цена:"ночью и с подношением в десять золотых",base:0.82,
-  провал:{сосед:1,время:2,ноша:1,магия:2,страж:4},звук:"chant_ether",где:["forest","swamp","plains"]},
+  провал:{сосед:1,время:2,ноша:1,магия:2,страж:4},звук:"gr_node_circle",где:["forest","swamp","plains"]},
  {id:"rift",   n:"Разлом-узел",о:"трещина в самом воздухе; из неё тянет чужим ветром",цена:"ничего — но и обещать он ничего не обещает",base:0.6,
-  провал:{сосед:2,время:3,ноша:3,магия:2,страж:3},звук:"es_ion",где:["swamp","mountains","cave"]},
+  провал:{сосед:2,время:3,ноша:3,магия:2,страж:3},звук:"gr_node_rift",где:["swamp","mountains","cave"]},
  {id:"key",    n:"Замок Сшивателей",о:"плита с прорезью под ключ; без ключа она просто камень",цена:"ключ Сшивателей, найденный по свидетельствам",base:0.97,
-  провал:{сосед:1,время:1,ноша:0,магия:1,страж:1},звук:"oc_connect",где:["ruins","mountains"]}];
+  провал:{сосед:1,время:1,ноша:0,магия:1,страж:1},звук:"gr_node_key",где:["ruins","mountains"]}];
 const GRAN_NODE_BY_ID=Object.fromEntries(GRAN_NODE_KINDS.map(k=>[k.id,k]));
 const GRAN_FAIL_WORD={сосед:"не та Грань",время:"провал во времени",ноша:"потеря ноши",магия:"сдвиг магии",страж:"страж Порога"};
 
@@ -75681,13 +75743,13 @@ const Grani={
  nodeName(n){const k=GRAN_NODE_BY_ID[n.kind],s=this.st(),f=this.facet(n.gran);
   const знаю=!!s.known[n.gran]||!!(s.nodes[n.key]&&s.nodes[n.key].used);
   return `${k?k.n:"Узел Сети"} — ${знаю&&f?`Грань «${f.n}»`:"неизвестная Грань"}`;},
- structure(n){return {type:"grannode",name:this.nodeName(n),beacon:"portal",grannode:n.key,rift:false};},
+ structure(n){return {type:"grannode",name:this.nodeName(n),beacon:"gr_node_"+n.kind,grannode:n.key,rift:false};},
  /* ── ЧУТЬЁ ГРАНЕЙ ──
     Растёт от переходов и от того, что слушаешь. Слышит узлы (скрытые — с 30),
     чужие версии этого места и перемены в устройстве Сети. */
  senseRadius(){const s=this.st();return 1500+Math.round(s.sense*450)+(s.verdict==="outside"?3000:0);},
  sense(){const s=this.st();if(G.place&&!this.inFacet()){narrate("Под крышей Грани не слышно: выйдите на открытое место.");return false;}
-  safeFn(()=>Bank.play("magic_hum",{gain:0.45,maxSec:4}));
+  safeFn(()=>Bank.play("gr_sense",{gain:0.62,maxSec:7})||Bank.play("magic_hum",{gain:0.45,maxSec:4}));
   if(this.inFacet())return this.senseInside();
   const r=this.senseRadius();const ns=this.nodesNear(G.x,G.y,r).filter(n=>this.visible(n));
   s.sense=Math.min(100,s.sense+0.6);const слова=[];
@@ -75734,10 +75796,10 @@ const Grani={
  transit(n,opts){opts=opts||{};const s=this.st();
   if(!n){narrate("Здесь нет узла Сети.");return false;}
   if(G.inCombat){narrate("Сначала закончите бой.");return false;}
-  const why=this.need(n);if(why){narrate(why);safeFn(()=>Bank.play("hero_nomana",{gain:0.4,maxSec:2}));return false;}
+  const why=this.need(n);if(why){narrate(why);safeFn(()=>Bank.play("gr_deny",{gain:0.55,maxSec:2})||Bank.play("hero_nomana",{gain:0.4,maxSec:2}));return false;}
   this.pay(n);const k=GRAN_NODE_BY_ID[n.kind];
-  safeFn(()=>Bank.play(k&&k.звук||"portal",{gain:0.7,maxSec:5}));
-  setTimeout(()=>safeFn(()=>Bank.play("deep_portal",{gain:0.7,maxSec:6})||Bank.play("portal",{gain:0.7,maxSec:6})),450);
+  safeFn(()=>Bank.play(k&&k.звук||"portal",{gain:0.7,maxSec:3.5}));
+  setTimeout(()=>safeFn(()=>Bank.play("gr_transit",{gain:0.8,maxSec:5.5})||Bank.play("deep_portal",{gain:0.7,maxSec:6})),450);
   s.transits++;s.sense=Math.min(100,s.sense+2);
   s.nodes[n.key]=Object.assign(s.nodes[n.key]||{},{used:(Number((s.nodes[n.key]||{}).used)||0)+1,seen:Number(G.day)||1});
   let target=this.facet(n.gran);const ok=this.roll()<this.chance(n);const слова=[];let mode=null;
@@ -75751,7 +75813,8 @@ const Grani={
      s.shift={school:sc.id,k:up?1.5:0.5,until:(Number(G.day)||1)+3};
      слова.push(`Переход задел вашу магию: чары школы «${sc.n}» три дня будут ${up?"бешено сильнее":"вдвое слабее"}.`);break;}
     case "страж":слова.push("На Пороге вас заметили: страж Покрова встаёт на пути.");break;}
-   this.chron(`переход через ${k?k.n.toLowerCase():"узел"} не удался — ${GRAN_FAIL_WORD[mode]}.`);}
+   this.chron(`переход через ${k?k.n.toLowerCase():"узел"} не удался — ${GRAN_FAIL_WORD[mode]}.`);
+   const срыв=GRAN_FAIL_SND[mode];if(срыв)setTimeout(()=>safeFn(()=>Bank.play(срыв,{gain:0.75,maxSec:5.5})),1750);}
   this.arrive(target,n,{mode,слова});
   if(mode==="страж")setTimeout(()=>safeFn(()=>this.guardian()),900);
   return true;},
@@ -75771,7 +75834,7 @@ const Grani={
   s.known[f.id]=Object.assign(s.known[f.id]||{},{n:f.n,first:(s.known[f.id]||{}).first||Number(G.day)||1,visits:((s.known[f.id]||{}).visits||0)+1});
   if(!was)this.chron(`впервые открыта Грань «${f.n}» (${this.cls(f).n.toLowerCase()}).`);
   safeFn(()=>contentCache.clear());safeFn(()=>Scape.stop());safeFn(()=>Actors.stop());
-  safeFn(()=>Bank.play(this.cls(f).звук,{gain:0.5,maxSec:6}));
+  safeFn(()=>Bank.play("gr_arrive",{gain:0.7,maxSec:5.5})||Bank.play("deep_portal",{gain:0.6,maxSec:5}));
   const t=[...(o.слова||[]),`Грань «${f.n}». ${f.о}. Класс — ${this.cls(f).n.toLowerCase()}: ${this.cls(f).о}.`,this.lawsText(f),
    f.народы.length?`Здесь живут: ${f.народы.join("; ")}.`:"Живых здесь нет.",f.опасно?`Опасность: ${f.опасно}.`:"",
    f.обычай?`Обычай: ${f.обычай}.`:"","Врата назад — там, где вы стоите; шаг на них дважды выведет домой."];
@@ -75781,13 +75844,13 @@ const Grani={
   G.place=null;safeFn(()=>Scape.stop());safeFn(()=>UI.close());
   if(p.gran&&p.gran.back){G.x=p.gran.back.x;G.y=p.gran.back.y;}
   safeFn(()=>contentCache.clear());
-  safeFn(()=>Bank.play("deep_portal",{gain:0.7,maxSec:6})||Bank.play("portal",{gain:0.6,maxSec:5}));
+  safeFn(()=>Bank.play("gr_return",{gain:0.7,maxSec:5.5})||Bank.play("deep_portal",{gain:0.7,maxSec:6}));
   const c=safeFn(()=>cellContent(G.x,G.y),null);
   narrate(`Вы проходите врата и возвращаетесь из Грани «${f?f.n:"?"}» под небо мира Грани.${c?` ${c.terrain[1]}.`:""}`);
   safeFn(()=>refresh());saveGame(true);return true;},
  guardian(){if(G.inCombat)return false;const lv=Math.max(1,(Number(G.level)||1)+1);
   const m={id:"gran_warden",n:"Страж Покрова",lvl:lv,hp:Math.round((40+lv*14)*safeFn(()=>diff().foeHp,1)),dmg:6+lv*2,xp:40+lv*15,gold:15+lv*6,
-   biomes:["road"],звук:"es_ion",о:"страж Порога в латах из печатных нитей"};
+   biomes:["road"],звук:"gr_warden",о:"страж Порога в латах из печатных нитей"};
   safeFn(()=>startCombat({x:G.x,y:G.y,monster:m}));return true;},
  /* ── ВНУТРИ ГРАНИ ── */
  inFacet(){return !!(G.place&&G.place.stype==="gran"&&G.place.gran);},
@@ -75869,7 +75932,7 @@ const Grani={
    default:return false;}},
  siteKey(x,y){const p=G.place;return `${p.gran.id}:${p.gran.reg}:${x},${y}`;},
  readRecord(x,y){const f=this.cur(),s=this.st(),k=this.siteKey(x,y);
-  safeFn(()=>Bank.play("book_page",{gain:0.4,maxSec:3})||Bank.play("ad_page",{gain:0.4,maxSec:3}));
+  safeFn(()=>Bank.play("gr_record",{gain:0.55,maxSec:5})||Bank.play("book_page",{gain:0.4,maxSec:3}));
   if(s.seen[k]){narrate("Эту надпись вы уже прочли. Её слова — в «Эпохах и свидетельствах».");return true;}
   s.seen[k]=1;const cl=this.cls(f).id;
   const годные=HRON_EVIDENCE.filter(e=>!s.ev[e.id]&&(e.где===cl||e.где==="books"));
@@ -75878,7 +75941,7 @@ const Grani={
   return this.addEvidence(e.id,`Грань «${f.n}»`);},
  addEvidence(id,where){const s=this.st(),e=HRON_EVIDENCE_BY_ID[id];if(!e||s.ev[id])return false;
   s.ev[id]={day:Number(G.day)||1,where:String(where||"")};
-  safeFn(()=>Bank.play("magic_shimmer",{gain:0.35,maxSec:3}));
+  safeFn(()=>Bank.play("gr_evidence",{gain:0.55,maxSec:4})||Bank.play("magic_shimmer",{gain:0.35,maxSec:3}));
   narrate(`Свидетельство: «${e.n}» (${HRON_SRC_WORD[e.ист]}, надёжность ${Math.round(e.надёжность*100)} из ста). ${e.t}`);
   this.chron(`найдено свидетельство «${e.n}».`);
   this.keyCheck();saveGame(true);return true;},
@@ -75888,18 +75951,19 @@ const Grani={
   const сколько=Math.floor(n/3);const есть=Object.keys(s.keys).length;
   if(сколько>есть){const cand=GRANI_MAIN.filter(f=>!s.keys[f.id]);if(!cand.length)return;
    const f=cand[Math.floor(H(n,есть,8875)*cand.length)];s.keys[f.id]=Number(G.day)||1;
+   safeFn(()=>Bank.play("gr_key",{gain:0.7,maxSec:5.5}));
    narrate(`По свидетельствам эпохи Сшивателей вы поняли устройство их замков: у вас ключ Сшивателей к Грани «${f.n}». Ищите Замок Сшивателей.`);
    this.chron(`собран ключ Сшивателей к Грани «${f.n}».`);}},
  altar(x,y){const f=this.cur(),s=this.st();const b=(f.боги||[])[0];
   if(!b){narrate("Алтарь пуст: бога этой Грани не осталось.");return true;}
   const k="alt:"+this.siteKey(x,y)+":"+(Number(G.day)||1);if(s.seen[k]){narrate(`${b.n} уже ответил вам сегодня.`);return true;}
-  s.seen[k]=1;safeFn(()=>Bank.play("ad_temple",{gain:0.5,maxSec:6}));
+  s.seen[k]=1;safeFn(()=>Bank.play("gr_altar",{gain:0.6,maxSec:5})||Bank.play("ad_temple",{gain:0.5,maxSec:6}));
   const сила=s.verdict==="wrath"?1.5:1;const ман=Math.round(10*сила),жизнь=Math.round(15*сила);
   G.mana=Math.min(Number(G.maxMana)||Number(G.mana)+ман,(Number(G.mana)||0)+ман);G.hp=Math.min(Number(G.hpMax)||Number(G.hp)+жизнь,(Number(G.hp)||0)+жизнь);
   narrate(`Алтарь бога «${b.n}» — ${b.dom}. ${f.обычай?`Вы соблюли обычай: ${f.обычай}. `:""}Бог ответил: +${жизнь} здоровья, +${ман} маны${сила>1?" (вы чтите волю богов — ответ сильнее)":""}.`);
   saveGame(true);return true;},
  talk(x,y){const f=this.cur(),s=this.st();const k="talk:"+this.siteKey(x,y);
-  safeFn(()=>Bank.play("npc_common",{gain:0.4,maxSec:3}));
+  safeFn(()=>Bank.play("gr_native",{gain:0.55,maxSec:3.5})||Bank.play("npc_common",{gain:0.4,maxSec:3}));
   const народ=(f.народы||[])[0]||"здешний житель";
   if(!s.seen[k]){s.seen[k]=1;
    const t=HRON_EVIDENCE.filter(e=>!s.ev[e.id]&&e.где==="natives");
@@ -75913,10 +75977,10 @@ const Grani={
   let res=f.ресурс||"пыль Сети";const з=f.законы||{};let доп="";
   if((Number(з.вещество)||1)<0.9&&this.roll()<(1-з.вещество)){const др=this.all()[Math.floor(this.roll()*this.all().length)];res=др.ресурс||res;доп=" Вещество Грани дрогнуло в руках и обернулось чужим.";}
   const n=1+Math.floor(this.roll()*2);G.inv[res]=(Number(G.inv[res])||0)+n;
-  safeFn(()=>Bank.play("res_ore",{gain:0.5,maxSec:3})||Bank.play("mtg_stone_hit",{gain:0.5,maxSec:3}));
+  safeFn(()=>Bank.play("gr_gather",{gain:0.6,maxSec:3})||Bank.play("res_ore",{gain:0.5,maxSec:3}));
   narrate(`Вы добыли «${res}» ×${n}.${доп} Межмировое вещество в котомке — оно пригодится мастерам и обрядам.`);saveGame(true);return true;},
  mechanism(x,y){const f=this.cur(),s=this.st(),k="mech:"+this.siteKey(x,y);
-  safeFn(()=>Bank.play("stk_clock",{gain:0.5,maxSec:4})||Bank.play("oc_connect",{gain:0.5,maxSec:4}));
+  safeFn(()=>Bank.play("gr_mech",{gain:0.6,maxSec:4.5})||Bank.play("stk_clock",{gain:0.5,maxSec:4}));
   if(s.seen[k]){narrate("Механизм стоит в положении, которое вы ему дали.");return true;}
   /* Механизм Сшивателей просит ответ числом: сколько у этой Грани соседей
      по Сети. Ответ можно узнать чутьём («Прислушаться к Граням»). */
@@ -75938,7 +76002,7 @@ const Grani={
    return {id:v.id,n:v.n,доля:Math.round(100*w/tot),роды:o.роды.size,n_:o.n};}).sort((a,b)=>b.доля-a.доля);},
  adopt(id){const s=this.st(),v=HRON_VERSION_BY_ID[id];if(!v)return false;
   if(Object.keys(s.ev).length<3){narrate("Слишком мало свидетельств, чтобы что-то решать: нужно хотя бы три.");return false;}
-  s.verdict=id;this.chron(`вы приняли версию Разрыва: «${v.n}».`);
+  s.verdict=id;safeFn(()=>Bank.play("gr_verdict",{gain:0.7,maxSec:8}));this.chron(`вы приняли версию Разрыва: «${v.n}».`);
   narrate(`Вы приняли версию «${v.n}»: ${v.о}. Её держатся ${v.чьи}. Что это меняет: ${v.поверил}. Решение можно пересмотреть, когда найдёте новые свидетельства.`);
   saveGame(true);return true;},
  /* ── ДЕНЬ СЕТИ ──
@@ -76052,6 +76116,57 @@ for(const r of ["пыль Сети","осколок шва","нить чужог
 {const ch0=Grani.chron.bind(Grani);Grani.chron=function(t){ch0(t);
  if(/впервые открыта|свидетельство|ключ Сшивателей/.test(t))safeFn(()=>rumorSeed("сеть",t,G.x,G.y,true));};}
 {const wd3=Director.worldDay;Director.worldDay=function(){const r=wd3.apply(this,arguments);safeFn(()=>Grani.tick());return r;};}
+/* ── ЗВУК СЕТИ (14.0) ──
+   Прежде в Грани звучали огонь очага, комнатный отзвук и случайные звуки
+   дома: место «gran» не знало своего рода. Теперь у каждого класса Грани
+   свой долгий фон (класс.звук), свой отзвук (ROOM) и свои голоса места
+   (AMBIENCE_SET): в Переиначенной звук живёт дольше, в Погибшей глохнет, в
+   Отражённой приходит дважды. У каждого рода узла свой маяк, у стража
+   Покрова — свой голос, у каждого рода срыва — свой звук. */
+const GRAN_FAIL_SND={сосед:"gr_fail_neighbor",время:"gr_fail_time",ноша:"gr_fail_cargo",магия:"gr_fail_magic",страж:"gr_fail_guard"};
+SCAPE_FOE.gran_warden="gr_warden";
+for(const k of GRAN_NODE_KINDS){const id="gr_node_"+k.id;safeFn(()=>{BEACON_ROLE[id]=id;PROP_INFO[id]=[k.n,`Узел Сети: ${k.о}`];});}
+/* Синтезированные маяки (BEACONS) заморожены: если записи узла не сыграть
+   (банк выключен), узел звучит прежним маяком портала. */
+{const bc0=beacon;beacon=function(id,...a){
+ if(/^gr_node_/.test(String(id))&&!(Bank.enabled&&Bank.has(id)))return bc0("portal",...a);
+ return bc0(id,...a);};}
+Object.assign(ROOM,{
+ gran_stable:     {sec:0.60,decay:4.0,wet:0.10,damp:7000,n:"Стабильная Грань: простор"},
+ gran_distorted:  {sec:2.80,decay:1.5,wet:0.42,damp:3200,n:"Искажённая Грань: эхо гуляет"},
+ gran_reflected:  {sec:3.40,decay:1.4,wet:0.55,damp:9500,n:"Отражённая Грань: всё звучит дважды"},
+ gran_dead:       {sec:0.25,decay:7.0,wet:0.03,damp:1500,n:"Погибшая Грань: глухо"},
+ gran_artificial: {sec:1.60,decay:2.2,wet:0.34,damp:7500,n:"Рукотворная Грань: ровные стены"},
+ gran_pocket:     {sec:0.45,decay:3.6,wet:0.32,damp:2600,n:"Карманная Грань: тесно"},
+ gran_border:     {sec:1.20,decay:2.8,wet:0.20,damp:4000,n:"Пограничье: ветер меж мирами"},
+ gran_conditional:{sec:2.00,decay:2.0,wet:0.30,damp:5000,n:"Урочная Грань"},
+ gran_hidden:     {sec:1.00,decay:3.0,wet:0.22,damp:2000,n:"Сокрытая Грань: звук прячется"},
+ gran_altered:    {sec:5.50,decay:1.1,wet:0.60,damp:6000,n:"Переиначенная Грань: звук живёт дольше"}});
+Object.assign(AMBIENCE_SET,{
+ gran_stable:     {period:[9,16],spots:[["gr_spot_chime",2],["gr_spot_gust",1.2]]},
+ gran_distorted:  {period:[7,13],spots:[["gr_spot_warp",2],["gr_spot_rise",1],["gr_spot_rumble",1]]},
+ gran_reflected:  {period:[7,13],spots:[["gr_spot_glass",2],["gr_spot_chime",1.5],["gr_spot_whisper",0.5]]},
+ gran_dead:       {period:[8,15],spots:[["gr_spot_creak",2],["gr_spot_dust",2],["gr_spot_gust",1]]},
+ gran_artificial: {period:[6,12],spots:[["gr_spot_tick",2],["gr_spot_servo",2],["gr_spot_pulse",0.7]]},
+ gran_pocket:     {period:[7,13],spots:[["gr_spot_pulse",2],["gr_spot_breath",0.8],["gr_spot_dust",0.6]]},
+ gran_border:     {period:[6,11],spots:[["gr_spot_gust",2.5],["gr_spot_rumble",1.5],["gr_spot_warp",0.7]]},
+ gran_conditional:{period:[8,14],spots:[["gr_spot_bell",1.5],["gr_spot_tick",2],["gr_spot_chime",0.7]]},
+ gran_hidden:     {period:[8,15],spots:[["gr_spot_whisper",2],["gr_spot_breath",1.2],["gr_spot_creak",0.6]]},
+ gran_altered:    {period:[7,13],spots:[["gr_spot_rise",2],["gr_spot_coldfire",1.5],["gr_spot_warp",0.8]]}});
+{const rk0=roomKind;roomKind=function(){
+ if(G.place&&G.place.stype==="gran"&&!G.ship){const k="gran_"+safeFn(()=>Grani.cls(Grani.cur()).id,"stable");if(ROOM[k])return k;}
+ return rk0.apply(this,arguments);};}
+{const as0=ambienceSetFor;ambienceSetFor=function(){
+ if(Grani.inFacet()){const k="gran_"+safeFn(()=>Grani.cls(Grani.cur()).id,"stable");if(AMBIENCE_SET[k])return k;}
+ return as0.apply(this,arguments);};}
+/* Голоса чужой Грани — только её собственные: птицы области и лес мира
+   Грани сюда не долетают. */
+{const sp0=Ambience.spots.bind(Ambience);Ambience.spots=function(name){
+ if(/^gran_/.test(String(name||""))){const st=AMBIENCE_SET[name];return st?st.spots.filter(([r])=>Bank.has(r)):[];}
+ return sp0(name);};}
+{const ba0=bankAmbientRole;bankAmbientRole=function(){
+ if(Grani.inFacet()){const r=safeFn(()=>Grani.cls(Grani.cur()).звук,null);if(r&&Bank.has(r))return r;}
+ return ba0.apply(this,arguments);};}
 Object.assign(CMD,{grani(){Grani.home();},gr(a){Grani.cmd(a);},gsense(){Grani.sense();},
  gstep(){if(Grani.inFacet()){const lvl=curLevel(),p=G.place;if(tileAt(lvl,p.x,p.y)==="E")return Grani.useHere("E");narrate("Чтобы шагнуть дальше по Сети, встаньте на врата Грани.");return;}
   const n=Grani.nodeAt(G.x,G.y);if(!n||!Grani.visible(n)){narrate("Здесь нет узла Сети. Прислушайтесь к Граням — чутьё подскажет, где ближайший.");return;}Grani.transit(n);},
