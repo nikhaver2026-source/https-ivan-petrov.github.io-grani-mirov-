@@ -124,7 +124,9 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
  await clearSaid();
  await fwd();
  await page.waitForTimeout(200);
- const swiped=await page.evaluate(()=>({мана:G.mana,цена:SPELLS[1].cost,имя:SPELLS[1].n,названий:window.__said.filter(t=>/^Слот \d/.test(t)).length,окно:activeLayer()&&activeLayer().id}));
+ /* Цена — та, что берёт плетение: с согласием стихий героя и чар (Resonance). Своя стихия
+    героя выводится из выученного, и чем больше школ выучено, тем она может быть другой. */
+ const swiped=await page.evaluate(()=>({мана:G.mana,цена:Math.max(1,Math.round(SPELLS[1].cost*safeFn(()=>Resonance.ценаK(SPELLS[1]),1))),имя:SPELLS[1].n,названий:window.__said.filter(t=>/^Слот \d/.test(t)).length,окно:activeLayer()&&activeLayer().id}));
  check('в панели магии свайп вправо одним пальцем творит второй слот и называет ровно его',
   swiped.мана===60-swiped.цена&&swiped.названий===1&&swiped.окно==='magicPanel',swiped);
  await page.evaluate(()=>{G.mana=60;});

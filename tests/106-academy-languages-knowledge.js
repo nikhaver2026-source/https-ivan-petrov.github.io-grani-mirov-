@@ -49,16 +49,20 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   r.fac=FACULTIES.length;r.facOk=FACULTIES.every(f=>f.о&&f.полка&&f.станок&&(f.школы||[]).every(id=>MSCHOOL_BY_ID[id])&&(!f.маст||MAST_BY_ID[f.маст])&&(!f.наука||SCI_BY_ID[f.наука]));
   /* Набор 147 добавил четыре школы §6: энергетику, биомантию, астральную
      науку и магическую инженерию. Они тоже должны быть полны. */
+  /* Хроника V (14.5) добавила ещё десять школ — до тридцати дисциплин мастер-промпта:
+     вероятности, отражения, ведьмовство, клятвы, истинные имена, изменение законов,
+     стихийные катастрофы, пространственные печати, подавление чар и симбиоз. */
   r.schools=SCHOOLS.length;r.newSchools=["necro","enchant","forgemagic","homunc","memory","dream","rift",
-   "power","biomancy","astro","engine"].filter(id=>!MSCHOOL_BY_ID[id]||!SCHOOL_AUDIO[id]);
+   "power","biomancy","astro","engine",
+   "chance","mirror","witch","oath","truename","laws","calamity","sigil","counter","symbiont"].filter(id=>!MSCHOOL_BY_ID[id]||!SCHOOL_AUDIO[id]);
   r.layers=SCHOOLS.filter(sc=>!SCHOOL_AUDIO[sc.id]||!SPELL_LAYERS.every(l=>SOUND_BANK[SCHOOL_AUDIO[sc.id][l]])).map(sc=>sc.id);
   r.modules=["LANGS","SCIENCES","LEDGER","MENTOR","ACADEMY"].every(m=>Modules.get?!!Modules.get(m):true);
   const sc=worldSelfCheck();const row=sc.find(x=>x.id==="academy");r.selfcheck=row?row.ok:null;
   return r;});
  check('двадцать один язык с письмом, семьёй и областью на все двадцать областей; шесть наук с факультетом и звуком; двенадцать факультетов с полкой и станком',
   данные.langs>=20&&данные.langsOk&&данные.langRegions===20&&данные.sci===6&&данные.sciOk&&данные.fac===12&&данные.facOk,данные);
- check('школ чар тридцать восемь, одиннадцать новых со своим языком из семи слоёв записями; самопроверка мира видит Академию',
-  данные.schools===38&&данные.newSchools.length===0&&данные.layers.length===0&&данные.modules&&данные.selfcheck===true,данные);
+ check('школ чар сорок восемь, двадцать одна новая со своим языком из семи слоёв записями; самопроверка мира видит Академию',
+  данные.schools===48&&данные.newSchools.length===0&&данные.layers.length===0&&данные.modules&&данные.selfcheck===true,данные);
 
  /* ── 2. языки ── */
  const языки=await page.evaluate(()=>{
