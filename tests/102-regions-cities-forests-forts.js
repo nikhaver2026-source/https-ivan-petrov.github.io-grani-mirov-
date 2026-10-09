@@ -78,7 +78,10 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   r.всего=NAMED_CITIES.length;r.имена=new Set(NAMED_CITIES.map(c=>c.n)).size;
   r.координаты=new Set(NAMED_CITIES.map(c=>c.x+","+c.y)).size;
   r.наДороге=NAMED_CITIES.filter(c=>isRoad(c.x,c.y)).map(c=>c.n);
+  /* 14.5: Виррен днём уходит в карман пространства (набор 291) — постройкой в мире он стоит ночью. */
+  const час0=G.hour;G.hour=23;
   r.постройки=NAMED_CITIES.filter(c=>{const s=cellContent(c.x,c.y).structure;return !(s&&s.named===c.id&&PLACE_KIND[s.type]==="city");}).map(c=>c.n);
+  G.hour=час0;
   r.поиск=NAMED_CITIES.filter(c=>{const f=isCityAt(c.x,c.y);return !(f&&f.named===c.id);}).map(c=>c.n);
   const районы={};NAMED_CITIES.forEach(c=>{const d=namedCityDistricts(c);районы[c.id]={n:d.length,уник:new Set(d.map(x=>x.n)).size,поля:d.every(x=>x.n&&x.p&&x.слух!==undefined&&x.дозор!==undefined)};});
   r.мало=Object.keys(районы).filter(id=>районы[id].n<12||районы[id].uник===false);

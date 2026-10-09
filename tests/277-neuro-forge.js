@@ -75,7 +75,9 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
 
  /* ── 6 ── */
  const кузница=await p.evaluate(()=>{const r={};G.gen={};G.dir=null;G.gold=100000;G.level=10;G.x=300;G.y=300;G.place=null;
-  ["people","land","clan"].forEach(a=>Neuro.forge(a));r.пусто=[];for(const a of NEURO_ARMS){const t=safeFn(()=>Neuro.forge(a),"");if(!t)r.пусто.push(a);}
+  /* 14.5: за день Режиссёр придумывает не больше шести новинок (набор 293); набор рождает все роды разом — счёт дня обнуляется перед каждой. */
+  const новыйСчёт=()=>{if(typeof DirCheck!=="undefined"){const s=DirCheck.st();s.день=Number(G.day)||1;s.сегодня=0;}};
+  ["people","land","clan"].forEach(a=>{новыйСчёт();Neuro.forge(a);});r.пусто=[];for(const a of NEURO_ARMS){новыйСчёт();const t=safeFn(()=>Neuro.forge(a),"");if(!t)r.пусто.push(a);}
   const g=G.gen;G.place={kind:"town"};
   const gp=g.potions.find(x=>!x.родители);r.зелье=!!gp&&!!POTION_BY_ID[gp.id]&&typeof POTION_BY_ID[gp.id].дать==="function"&&PLANT_CAT_BY_ID[gp.из[0]]&&PLANT_CAT_BY_ID[gp.из[1]]?true:false;
   r.купитьЗ=Neuro.buy("p",gp.id,5);r.ресурсНиши=!!MIX_NATURE[g.res[0].n];r.цена=Math.round(marketPrice(g.res[0].n,0,G.day));

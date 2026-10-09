@@ -144,8 +144,10 @@ const NEW_DIRS=["arte","deep","foe","cast","hero","wild","trade","score",
   const нет=Object.values(MUSIC_TRACK).filter(r=>!SOUND_BANK[r]);
   settings.bgMusic=1; /* темы мест звучат только по выбору игрока */
   Music.stop();
+  /* Днём: ночью у города своя тёмная тема (Music.NIGHT_ROLE) — набор зависел от часов машины. */
+  const час0=G.hour;G.hour=12;
   Music.start("town");
-  const тема=Music.track;
+  const тема=Music.track;G.hour=час0;
   Music.stop();
   const после=Music.track;
   Music.start("battle");const бой=Music.track;

@@ -106,10 +106,12 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   const мест=["tavern","castle","clanhall","temple","school","market","forge","village","port","ruins",
    "fortress","warcamp","smugglers","eyrie","peakshrine","citadel","burg","shrine","ossuary","pit","spire","bazaar","den","hold"]
    .filter(t=>!MUSIC_TRACK["pl_"+t]);
+  /* Днём: ночью у города своя тёмная тема (Music.NIGHT_ROLE) в одну запись — набор зависел от часов машины. */
+  const час0=G.hour;G.hour=12;
   settings.bgMusic=1;settings.music=1;Music.stop();Music.start("town");
   const rec=Bank.loops.get("score");const до=rec&&rec.file;
   if(rec)rec.el.dispatchEvent(new Event("ended"));
-  const после=Bank.loops.get("score")&&Bank.loops.get("score").file;Music.stop();
+  const после=Bank.loops.get("score")&&Bank.loops.get("score").file;Music.stop();G.hour=час0;
   const новые=файлы.filter(f=>/^(stendhal|solarus|valyria|wyrmsun|evol|tmw)\//.test(f)||/^(ab\/ab_mus_|mg\/mg_mus_)/.test(f));
   return {файлов:файлы.length,дубли,роды,круги,тёмныеКруги,мест,до,после,новых:новые.length,
    underTrackЕсть:typeof underTrack==="function"};});
