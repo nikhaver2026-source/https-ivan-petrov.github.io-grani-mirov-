@@ -55,6 +55,7 @@ https://opengameart.org/content/dark-ambient-loop-13 . Записи измене
 | Файл | Из чего собран | Лицензия | Длина, с | Звучащая часть, дБ |
 |---|---|---|---|---|
 | `gr_amb_stable.ogg` | MundoSound (Lucas Calvo, mundosound.com): `Dark__Atmosphere13_Looped_24bit.flac` | https://opengameart.org/content/dark-ambient-loop-13 | 56.0 | -26.5 |
+| `bed_gran.ogg` | MundoSound (Lucas Calvo, mundosound.com): `Dark__Atmosphere13_Looped_24bit.flac` — тот же фон стабильной Грани, приглушённый фильтрами (как сквозь стены), бесшовная петля | https://opengameart.org/content/dark-ambient-loop-13 | 56.0 | -26.5 |
 | `gr_amb_distorted.ogg` | Nihilex: `06.There_In_Spirit.flac` | https://nihil-existentia.itch.io/free-audio-asset-collection | 60.0 | -26.5 |
 | `gr_amb_reflected.ogg` | Nihilex: `Ambience_Hallway.flac` | https://nihil-existentia.itch.io/free-audio-asset-collection | 56.0 | -26.5 |
 | `gr_amb_dead.ogg` | Tsorthan Grove: `light_through_a_pale_window_loop.flac` | https://opengameart.org/content/background-drones-vol-1 | 56.0 | -26.5 |

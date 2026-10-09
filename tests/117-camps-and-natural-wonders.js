@@ -188,13 +188,14 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   r.далоRes=дар.res?(Number(G.inv[дар.res])||0)>res0:true;
   r.прозвучало=PLAYED.indexOf(k.звук)>=0;
   SAID.length=0;r.второй=CMD.wonder();await пауза(150);
-  r.сказВторой=SAID.slice(-1)[0]||"";
+  /* Всё сказанное за паузу: молва мира (обозы, вести) может вклиниться между отказом и проверкой. */
+  r.сказВторой=SAID.join(" | ");
   /* Назавтра снова отдаёт. */
   G.day=(Number(G.day)||1)+1;
   SAID.length=0;CMD.wonder();await пауза(150);
-  r.назавтра=SAID.slice(-1)[0]||"";
+  r.назавтра=SAID.join(" | ");
   G.x=1;G.y=1;SAID.length=0;CMD.wonder();await пауза(120);
-  r.вне=SAID.slice(-1)[0]||"";
+  r.вне=SAID.join(" | ");
   return r;});
  check('чудо природы отдаёт свой дар, звучит своей записью и во второй раз за сутки честно отказывает',
   !чудо.нет&&чудо.взяли===true&&чудо.далоHp&&чудо.далоMana&&чудо.далоRes&&чудо.прозвучало

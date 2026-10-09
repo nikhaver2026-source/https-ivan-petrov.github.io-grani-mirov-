@@ -106,7 +106,8 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   гол.solved.length===8&&гол.failHurt&&гол.undo,гол);
 
  /* ── 5. местные чары, книги, реликвии, ресурсы ── */
- const чар=await p.evaluate(()=>{const r={};const T=__T;const hit=T.find(F=>F.rooms.find(x=>x.id>0&&x.ex.length>=2&&x.ex.some(id=>F.edges[id].lock==="open")),1);const c=T.start(hit.i,hit.f,hit.x.id);
+ const чар=await p.evaluate(()=>{const r={};const T=__T;/* Комната с тремя выходами, из них два под словесными замками: на одной проверяются слово открытия, звуковой ключ и растворение металла. */
+  const hit=T.find(F=>F.rooms.find(x=>x.id>0&&x.ex.length>=3&&x.ex.filter(id=>F.edges[id].lock==="open").length>=2),1);const c=T.start(hit.i,hit.f,hit.x.id);
   const st=Chertog.st();st.lspells=INST_SPELLS.map(x=>x.id);const room=Chertog.cur().room;const F=Chertog.fs(c.r.floor);const ex=room.ex.map(id=>c.F.edges[id]).filter(e=>e.lock==="open"&&F.e[e.id]!=="open");
   const ok={};const cast=(id,setup)=>{if(setup)setup();G.mana=400;const m0=G.mana;Chertog.cmd("cast:"+id);return m0-G.mana;};
   if(ex[0]){ex[0].lock="rune";ex[0].word=["Ис","Ур","Тэр"];ok.open=cast("open")>0&&F.e[ex[0].id]==="open";}
