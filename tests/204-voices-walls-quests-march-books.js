@@ -150,7 +150,8 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   if(!n)return {нет:true};
   Folk.on=()=>false; /* без живого голоса: строку читает голос игры */
   const купил=merchDeal(n,"buy",20),продал=merchDeal(n,"sell",20);
-  const в=(t,роль)=>LIVE_LINES[роль].some(x=>t.includes(x));
+  /* строку жителя игра ставит в его род (Род.жителя): торговка говорит «я бы и сама взяла» — это та же строка */
+  const в=(t,роль)=>LIVE_LINES[роль].some(x=>t.includes(x)||t.includes(safeFn(()=>Род.жителя(n,x),x)));
   const пулы=["trade_buy","trade_sell","trade_poor","trade_bye","car_meet","car_buy","car_pass","car_hire","quest_take","guard_quest","patrol","bandit"].every(k=>(LIVE_LINES[k]||[]).length>0);
   const приветы=["постоянный","продавец","богатый","бедный","ранен","слава","давно","земляк","ждёт"].every(k=>(NPC_GREET[k]||[]).length>=5);
   /* обоз */
