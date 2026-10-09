@@ -28,6 +28,7 @@
 | Dark Ambient Loop 13 | MundoSound (Lucas Calvo, mundosound.com) | CC BY 3.0 | https://opengameart.org/content/dark-ambient-loop-13 |
 | Rumbling Sound Effects | bretbernhoft | CC0 1.0 | https://opengameart.org/content/rumbling-sound-effects |
 | Coin Drop | Vinrax | CC0 1.0 | https://opengameart.org/content/coin-drop |
+| голоса Gemini, записанные для этих звуков 9 октября 2026 (модель gemini-3.8-flash-tts; голоса Enceladus и Achernar; выдуманное наречие) | Google Gemini (синтез речи по заказу автора игры) | без отдельной лицензии: по Gemini API Additional Terms Google не заявляет прав на созданное | https://ai.google.dev/gemini-api/terms |
 | исходники звуков игры Stendhal без потерь (data/sounds/lossless_sources) | авторы по файлам — ниже | CC0 1.0 | https://github.com/arianne/stendhal/tree/master/data/sounds/lossless_sources |
 
 Записи Stendhal (все CC0 1.0; авторы и страницы — по описям проекта Stendhal, doc/sources):
@@ -86,8 +87,8 @@ https://opengameart.org/content/dark-ambient-loop-13 . Записи измене
 | `gr_verdict_01.flac` | legoluft (выложил qubodup): `part.flac` | https://opengameart.org/content/atmospheric-interaction-sound-pack | 5.2 | -18.4 |
 | `gr_key_01.flac` | OwlishMedia: `tap.flac`; legoluft (выложил qubodup): `link.flac`; legoluft (выложил qubodup): `link.flac`; legoluft (выложил qubodup): `part.flac` | https://opengameart.org/content/atmospheric-interaction-sound-pack + https://opengameart.org/content/sound-effects-pack | 3.6 | -18.0 |
 | `gr_altar_01.flac` | Nihilex: `Ambience_Cell.flac`; legoluft (выложил qubodup): `magnet_off.flac` | https://nihil-existentia.itch.io/free-audio-asset-collection + https://opengameart.org/content/atmospheric-interaction-sound-pack | 5.0 | -18.0 |
-| `gr_native_01.flac` | OwlishMedia: `breath-male.flac`; legoluft (выложил qubodup): `magnet_action.flac` | https://opengameart.org/content/atmospheric-interaction-sound-pack + https://opengameart.org/content/sound-effects-pack | 3.3 | -18.0 |
-| `gr_native_02.flac` | OwlishMedia: `breath-female.flac`; legoluft (выложил qubodup): `magnet_action.flac` | https://opengameart.org/content/atmospheric-interaction-sound-pack + https://opengameart.org/content/sound-effects-pack | 3.3 | -18.0 |
+| `gr_native_01.flac` | Google Gemini (синтез речи по заказу автора игры): `native_m1.wav` | https://ai.google.dev/gemini-api/terms | 3.4 | -18.0 |
+| `gr_native_02.flac` | Google Gemini (синтез речи по заказу автора игры): `native_f1.wav` | https://ai.google.dev/gemini-api/terms | 3.8 | -18.0 |
 | `gr_mech_01.flac` | OwlishMedia: `loopable-ticking-clock.flac`; legoluft (выложил qubodup): `part.flac`; legoluft (выложил qubodup): `magnet_on.flac` | https://opengameart.org/content/atmospheric-interaction-sound-pack + https://opengameart.org/content/sound-effects-pack | 3.2 | -19.7 |
 | `gr_gather_01.flac` | legoluft (выложил qubodup): `magnet_action.flac`; OwlishMedia: `scrape1.flac`; blacklodgegames: `blg_alien_starship_flyby_05.flac` | https://opengameart.org/content/50-free-scifi-soundfx-192khz-64-bit-24576kbps-wav + https://opengameart.org/content/atmospheric-interaction-sound-pack + https://opengameart.org/content/sound-effects-pack | 2.1 | -18.0 |
 | `gr_gather_02.flac` | legoluft (выложил qubodup): `link.flac`; OwlishMedia: `scrape3.flac`; blacklodgegames: `blg_alien_starship_flyby_05.flac`; OwlishMedia: `tap.flac` | https://opengameart.org/content/50-free-scifi-soundfx-192khz-64-bit-24576kbps-wav + https://opengameart.org/content/atmospheric-interaction-sound-pack + https://opengameart.org/content/sound-effects-pack | 2.3 | -18.0 |
@@ -103,7 +104,7 @@ https://opengameart.org/content/dark-ambient-loop-13 . Записи измене
 | `gr_spot_gust_01.flac` | Félix Blume (Stendhal): `wind.flac` | https://github.com/arianne/stendhal/tree/master/data/sounds/lossless_sources | 4.5 | -18.0 |
 | `gr_spot_rumble_01.flac` | blacklodgegames: `blg_alien_wilderness_04.flac` | https://opengameart.org/content/50-free-scifi-soundfx-192khz-64-bit-24576kbps-wav | 1.2 | -18.0 |
 | `gr_spot_bell_01.flac` | legoluft (выложил qubodup): `magnet_off.flac` | https://opengameart.org/content/atmospheric-interaction-sound-pack | 4.8 | -18.0 |
-| `gr_spot_whisper_01.flac` | OwlishMedia: `shh1.flac`; OwlishMedia: `breath-female.flac` | https://opengameart.org/content/sound-effects-pack | 3.0 | -19.1 |
+| `gr_spot_whisper_01.flac` | Google Gemini (синтез речи по заказу автора игры): `whisper_1.wav` | https://ai.google.dev/gemini-api/terms | 2.8 | -18.1 |
 | `gr_spot_breath_01.flac` | OwlishMedia: `breath-female.flac` | https://opengameart.org/content/sound-effects-pack | 3.7 | -18.0 |
 | `gr_spot_rise_01.flac` | legoluft (выложил qubodup): `magnet_on.flac` | https://opengameart.org/content/atmospheric-interaction-sound-pack | 3.6 | -18.8 |
 | `gr_spot_coldfire_01.flac` | OwlishMedia: `record_player_loop.flac` | https://opengameart.org/content/sound-effects-pack | 3.3 | -20.3 |
