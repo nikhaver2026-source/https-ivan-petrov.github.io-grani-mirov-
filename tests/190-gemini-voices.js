@@ -123,11 +123,13 @@ const ГОЛОСА=["Algenib","Charon","Orus","Enceladus","Achird","Puck","Gacru
   return {v:GAME_VERSION,title:document.title,news:NEWS_V,н:н.н||"",т:н.т||"",
    глава:гл?гл.body.join(" "):"",титры:титры?титры.body.join(" "):""};});
  const gradle=fs.readFileSync(path.join(ROOT,'android','app','build.gradle'),'utf8');
- check('8. выпуск новостей 21 есть, версия не ниже 3.7; глава о живой речи называет голоса, титры — Gemini и условия',
+ /* (14.5) Игроку не рассказывается, чем и как сделана речь: в новости, главе
+    руководства и титрах нет ни имени нейросети, ни имён её голосов, ни условий
+    сервиса — только то, что слышно в игре. */
+ check('8. выпуск новостей 21 есть, версия не ниже 3.7; новость, глава о живой речи и титры — без закулисья',
   (v=>{const[a,b]=String(v).split('.').map(Number);return a*100+(b||0);})(свод.v)>=307&&/Версия \d+\.\d+/.test(свод.title)&&/versionName '\d+\.\d+(\.\d+)?'/.test(gradle)&&свод.news>=21
-  &&/Gemini/.test(свод.н+свод.т)&&/четыреста семь/.test(свод.т)
-  &&["Algenib","Charon","Orus","Enceladus","Achird","Puck","Gacrux","Sulafat","Achernar","Leda","Iapetus","Erinome","Algieba"].every(v=>(свод.глава+" "+свод.титры).includes(v))
-  &&/Gemini/.test(свод.титры)&&/Additional Terms of Service/.test(свод.титры),
+  &&/четыреста семь/.test(свод.т)&&!/Gemini/.test(свод.н+свод.т)
+  &&свод.глава.length>0&&!["Gemini","Algenib","Charon","Iapetus","Additional Terms"].some(v=>(свод.глава+" "+свод.титры).includes(v)),
   {v:свод.v,news:свод.news,н:свод.н});
 
  check('страница не бросила ни одной ошибки',errors.length===0,errors.slice(0,3));

@@ -238,10 +238,11 @@ const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(e!==undefined?' :
   const титры=({body:soundCreditsText().split("\n")});
   return {строка:строка||null,сырое:JSON.stringify(c).indexOf("folk")>=0,
    глава:!!гл,строк:гл?гл.body.length:0,
-   титрыGemini:!!титры&&титры.body.some(t=>/Gemini/.test(t))};});
+   титрыБезЗакулисья:!!титры&&!титры.body.some(t=>/Gemini|ElevenLabs|Piper|Additional Terms/.test(t))};});
  check('самопроверка мира знает строку «folk»',свод.сырое,свод);
  check('в руководстве есть глава о живой речи',свод.глава&&свод.строк>=2,свод);
- check('титры энциклопедии называют Gemini',свод.титрыGemini);
+ /* (14.5) Титры — только имена авторов и лицензии, без того, как и чем что сделано. */
+ check('титры энциклопедии — только авторы и лицензии, без закулисья',свод.титрыБезЗакулисья);
 
  check('ошибок на странице нет',errors.length===0,errors.slice(0,3));
 

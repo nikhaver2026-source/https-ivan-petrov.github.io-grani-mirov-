@@ -77,7 +77,7 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
  // ── 3. Раздел открывается двойным касанием и закрывается кнопкой ──
  await page.evaluate(()=>{resetCursor();ensureCursor(activeLayer());});
  const цель=await page.evaluate(()=>cursorItems(activeLayer())
-  .findIndex(x=>/Музыка мест из фэнтезийных игр/.test(x.textContent||"")));
+  .findIndex(x=>/^Музыка мест/.test(x.textContent||"")));
  for(let i=0;i<цель;i++)await fwd();
  const наРазделе=await page.evaluate(()=>(uiCursor.textContent||"").slice(0,20));
  await doubleTap();

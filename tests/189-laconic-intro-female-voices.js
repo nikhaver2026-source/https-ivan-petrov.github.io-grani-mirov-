@@ -196,7 +196,7 @@ const КОРОТКО=t=>typeof t==="string"&&t.length>0&&!/\d|\(|\)|Двойно
  const gradle=fs.readFileSync(path.join(ROOT,'android','app','build.gradle'),'utf8');
  check('9. версия не ниже 3.6, выпуск новостей 20 рассказывает о переменах',
   (v=>{const[a,b]=String(v).split('.').map(Number);return a*100+(b||0);})(версия.v)>=306&&/Версия \d+\.\d+/.test(версия.title)&&/versionName '\d+\.\d+(\.\d+)?'/.test(gradle)&&версия.news>=20
-  &&/одним именем/.test(версия.т)&&/Supertonic 3/.test(версия.т),версия);
+  &&/одним именем/.test(версия.т)&&!/Supertonic/.test(версия.т),версия);  /* (14.5) без имени движка: игроку не нужно знать, чем это сделано */
 
  check('страница не бросила ни одной ошибки',errors.length===0,errors.slice(0,3));
  await browser.close();
