@@ -28,6 +28,18 @@
 | Dark Ambient Loop 13 | MundoSound (Lucas Calvo, mundosound.com) | CC BY 3.0 | https://opengameart.org/content/dark-ambient-loop-13 |
 | Rumbling Sound Effects | bretbernhoft | CC0 1.0 | https://opengameart.org/content/rumbling-sound-effects |
 | Coin Drop | Vinrax | CC0 1.0 | https://opengameart.org/content/coin-drop |
+| исходники звуков игры Stendhal без потерь (data/sounds/lossless_sources) | авторы по файлам — ниже | CC0 1.0 | https://github.com/arianne/stendhal/tree/master/data/sounds/lossless_sources |
+
+Записи Stendhal (все CC0 1.0; авторы и страницы — по описям проекта Stendhal, doc/sources):
+
+- `wind.flac` — Félix Blume — https://freesound.org/people/felix.blume/sounds/146436/
+- `thunder-05.flac` — Dave Welsh — https://freesound.org/people/Dave%20Welsh/sounds/194364/
+- `loop-grind-stone-1.flac` — j1987 — https://freesound.org/people/j1987/sounds/95007/
+- `scrape-2.flac` — Jordan Irwin (AntumDeluge) — https://opengameart.org/node/81247
+- `clang-metallic-1.flac` — lostchocolatelab — https://freesound.org/people/lostchocolatelab/sounds/1468/
+- `clang-dull-1.flac` — alienistcog — https://freesound.org/people/alienistcog/sounds/124711/
+- `creak-tree-2.flac` — Department64 — https://freesound.org/people/Department64/sounds/95262/
+- `rocks-1.flac` — Allan K Zepeda (ALLANZ10D) — https://freesound.org/people/ALLANZ10D/sounds/155934/
 
 **Credit (CC BY):** Background Drones Vol 1 by Tsorthan Grove — CC BY 4.0 —
 https://opengameart.org/content/background-drones-vol-1 ; Dark Ambient Loop 13
@@ -50,12 +62,12 @@ https://opengameart.org/content/dark-ambient-loop-13 . Записи измене
 | `gr_amb_conditional.ogg` | Nihilex: `Ambience_Office.flac` | https://nihil-existentia.itch.io/free-audio-asset-collection | 56.0 | -26.5 |
 | `gr_amb_hidden.ogg` | Nihilex: `Ambience_Janitory.flac`; OwlishMedia: `breath-female.flac` | https://nihil-existentia.itch.io/free-audio-asset-collection + https://opengameart.org/content/sound-effects-pack | 56.0 | -26.5 |
 | `gr_amb_altered.ogg` | Tsorthan Grove: `temple_of_the_digital_monk.flac`; legoluft (выложил qubodup): `magnet_on.flac` | https://opengameart.org/content/atmospheric-interaction-sound-pack + https://opengameart.org/content/background-drones-vol-1 | 56.0 | -26.5 |
-| `gr_node_gate_01.flac` | legoluft (выложил qubodup): `wall.flac` | https://opengameart.org/content/atmospheric-interaction-sound-pack | 4.6 | -18.0 |
-| `gr_node_road_01.flac` | legoluft (выложил qubodup): `magnet_off.flac` | https://opengameart.org/content/atmospheric-interaction-sound-pack | 5.0 | -18.0 |
+| `gr_node_gate_01.flac` | j1987 (Stendhal): `loop-grind-stone-1.flac`; Dave Welsh (Stendhal): `thunder-05.flac`; Jordan Irwin (AntumDeluge) (Stendhal): `scrape-2.flac` | https://github.com/arianne/stendhal/tree/master/data/sounds/lossless_sources | 5.2 | -18.0 |
+| `gr_node_road_01.flac` | Félix Blume (Stendhal): `wind.flac`; lostchocolatelab (Stendhal): `clang-metallic-1.flac` | https://github.com/arianne/stendhal/tree/master/data/sounds/lossless_sources | 5.4 | -18.0 |
 | `gr_node_crystal_01.flac` | Nihilex: `Ambience_Lockers.flac`; legoluft (выложил qubodup): `anchor_action.flac` | https://nihil-existentia.itch.io/free-audio-asset-collection + https://opengameart.org/content/atmospheric-interaction-sound-pack | 5.0 | -18.0 |
 | `gr_node_circle_01.flac` | OwlishMedia: `djembe1.flac`; legoluft (выложил qubodup): `magnet_action.flac` | https://opengameart.org/content/atmospheric-interaction-sound-pack + https://opengameart.org/content/sound-effects-pack | 4.6 | -18.0 |
 | `gr_node_rift_01.flac` | legoluft (выложил qubodup): `exit.flac`; OwlishMedia: `blackhole.flac` | https://opengameart.org/content/atmospheric-interaction-sound-pack + https://opengameart.org/content/sound-effects-pack | 4.6 | -18.0 |
-| `gr_node_key_01.flac` | legoluft (выложил qubodup): `anchor_action.flac`; legoluft (выложил qubodup): `link.flac` | https://opengameart.org/content/atmospheric-interaction-sound-pack | 5.0 | -18.0 |
+| `gr_node_key_01.flac` | legoluft (выложил qubodup): `anchor_action.flac`; lostchocolatelab (Stendhal): `clang-metallic-1.flac`; alienistcog (Stendhal): `clang-dull-1.flac` | https://github.com/arianne/stendhal/tree/master/data/sounds/lossless_sources + https://opengameart.org/content/atmospheric-interaction-sound-pack | 5.3 | -18.0 |
 | `gr_sense_01.flac` | legoluft (выложил qubodup): `magnet_off.flac`; bretbernhoft: `rumbling18.flac`; legoluft (выложил qubodup): `exit.flac` | https://opengameart.org/content/atmospheric-interaction-sound-pack + https://opengameart.org/content/rumbling-sound-effects | 7.0 | -18.0 |
 | `gr_sense_02.flac` | legoluft (выложил qubodup): `part.flac`; bretbernhoft: `rumbling18.flac`; legoluft (выложил qubodup): `exit.flac` | https://opengameart.org/content/atmospheric-interaction-sound-pack + https://opengameart.org/content/rumbling-sound-effects | 7.0 | -18.0 |
 | `gr_transit_01.flac` | OwlishMedia: `blackhole.flac`; legoluft (выложил qubodup): `unlink.flac` | https://opengameart.org/content/atmospheric-interaction-sound-pack + https://opengameart.org/content/sound-effects-pack | 4.5 | -18.0 |
@@ -83,12 +95,12 @@ https://opengameart.org/content/dark-ambient-loop-13 . Записи измене
 | `gr_spot_chime_01.flac` | blacklodgegames: `blg_alien_wilderness_05.flac` | https://opengameart.org/content/50-free-scifi-soundfx-192khz-64-bit-24576kbps-wav | 3.8 | -18.0 |
 | `gr_spot_glass_01.flac` | blacklodgegames: `blg_alien_starship_flyby_05.flac` | https://opengameart.org/content/50-free-scifi-soundfx-192khz-64-bit-24576kbps-wav | 3.2 | -18.0 |
 | `gr_spot_warp_01.flac` | blacklodgegames: `blg_alien_wilderness_02.flac` | https://opengameart.org/content/50-free-scifi-soundfx-192khz-64-bit-24576kbps-wav | 3.6 | -18.0 |
-| `gr_spot_creak_01.flac` | legoluft (выложил qubodup): `wall.flac` | https://opengameart.org/content/atmospheric-interaction-sound-pack | 1.7 | -21.6 |
-| `gr_spot_dust_01.flac` | bretbernhoft: `rumbling19_0.flac` | https://opengameart.org/content/rumbling-sound-effects | 3.8 | -18.0 |
+| `gr_spot_creak_01.flac` | Department64 (Stendhal): `creak-tree-2.flac` | https://github.com/arianne/stendhal/tree/master/data/sounds/lossless_sources | 5.0 | -18.0 |
+| `gr_spot_dust_01.flac` | Dave Welsh (Stendhal): `thunder-05.flac`; Allan K Zepeda (ALLANZ10D) (Stendhal): `rocks-1.flac` | https://github.com/arianne/stendhal/tree/master/data/sounds/lossless_sources | 4.0 | -18.0 |
 | `gr_spot_tick_01.flac` | OwlishMedia: `loopable-ticking-clock.flac` | https://opengameart.org/content/sound-effects-pack | 3.7 | -18.0 |
 | `gr_spot_servo_01.flac` | OwlishMedia: `robotics1.flac`; legoluft (выложил qubodup): `part.flac` | https://opengameart.org/content/atmospheric-interaction-sound-pack + https://opengameart.org/content/sound-effects-pack | 1.7 | -21.3 |
 | `gr_spot_pulse_01.flac` | OwlishMedia: `djembe2.flac` | https://opengameart.org/content/sound-effects-pack | 1.4 | -18.2 |
-| `gr_spot_gust_01.flac` | — | синтез | 4.0 | -18.1 |
+| `gr_spot_gust_01.flac` | Félix Blume (Stendhal): `wind.flac` | https://github.com/arianne/stendhal/tree/master/data/sounds/lossless_sources | 4.5 | -18.0 |
 | `gr_spot_rumble_01.flac` | blacklodgegames: `blg_alien_wilderness_04.flac` | https://opengameart.org/content/50-free-scifi-soundfx-192khz-64-bit-24576kbps-wav | 1.2 | -18.0 |
 | `gr_spot_bell_01.flac` | legoluft (выложил qubodup): `magnet_off.flac` | https://opengameart.org/content/atmospheric-interaction-sound-pack | 4.8 | -18.0 |
 | `gr_spot_whisper_01.flac` | OwlishMedia: `shh1.flac`; OwlishMedia: `breath-female.flac` | https://opengameart.org/content/sound-effects-pack | 3.0 | -19.1 |
