@@ -4,7 +4,6 @@
 # Сжатые исходники (ogg, mp3) в игру не идут — только wav, flac и архивы с ними.
 bgdrones https://opengameart.org/content/background-drones-vol-1
 darkamb13 https://opengameart.org/content/dark-ambient-loop-13
-ghostloops https://opengameart.org/content/4-atmospheric-ghostly-loops
 krank https://opengameart.org/content/atmospheric-interaction-sound-pack
 rumble https://opengameart.org/content/rumbling-sound-effects
 teleport https://opengameart.org/content/teleport

@@ -69,13 +69,15 @@ jobs:
           fi
           # Страницы OpenGameArt: ссылки на файлы набора берутся со страницы
           # (раздел «Файлы»), лицензия — оттуда же; записывается в inventory.
+          # Собранные сайтом стили и скрипты (files/css, files/js) лежат по
+          # тому же пути — они отсекаются, иначе занимают все шесть мест.
           if [ -f tools/sfx-fetch/pages.txt ]; then
             grep -v '^#' tools/sfx-fetch/pages.txt | while read -r name page; do
               [ -n "$name" ] || continue
               html=$(curl -fsSL --retry 4 "$page" || true)
               lic=$(printf '%s' "$html" | grep -o 'creativecommons.org/[a-z/.0-9-]*' | head -1)
               echo "$name $page ${lic:-?}" >> licenses.txt
-              printf '%s' "$html" | grep -o 'https://opengameart.org/sites/default/files/[^"]*' | grep -v '/styles/\|audio_preview\|\.png$\|\.jpg$\|\.gif$' | sort -u | head -6 | while read -r u; do
+              printf '%s' "$html" | grep -o 'https://opengameart.org/sites/default/files/[^"]*' | grep -v '/styles/\|audio_preview\|/files/css/\|/files/js/\|\.css$\|\.js$\|\.png$\|\.jpg$\|\.gif$' | sort -u | head -6 | while read -r u; do
                 n="${name}_$(basename "$u" | tr -c 'A-Za-z0-9._\n-' '_' | cut -c1-40)"
                 echo "$n $u" >> tools/sfx-fetch/list.txt
               done
