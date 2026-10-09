@@ -1,0 +1,18 @@
+# BigSoundBank (Joseph Sardin, CC0) — скачивается через bsb.py.
+# имя номер заметка
+bsb_tomb 580 надгробная плита отходит со скрежетом
+bsb_stonefall 1022 осыпь камней
+bsb_gong_sweet 1482 мягкий удар в гонг
+bsb_gong_strong 1483 сильный удар в гонг
+bsb_gong_vstrong 1485 очень сильный удар в гонг
+bsb_bell_church 135 церковный колокол
+bsb_bell_one 830 один церковный колокол
+bsb_bell_four 829 четыре колокола
+bsb_bell_1h 3446 бой часов: час
+bsb_bell_5h 3445 бой часов: пять
+bsb_wind2 152 сильный ветер из дома
+bsb_wind3 153 сильный ветер из дома
+bsb_wind4 154 сильный ветер снаружи
+bsb_windvillage 625 сильный ветер в деревне
+bsb_windtrees1 1450 буря в деревьях
+bsb_windtrees3 1452 буря в деревьях

@@ -67,6 +67,12 @@ jobs:
               process "$name"
             done
           fi
+          # BigSoundBank (CC0): форма «Download» сайта (bsb.py).
+          if [ -f tools/sfx-fetch/bsb.txt ]; then
+            python3 tools/sfx-fetch/bsb.py tools/sfx-fetch/bsb.txt x 2>&1 | tee -a bsb.log || echo "!! bsb"
+            echo "bsb https://bigsoundbank.com cc0 (Joseph Sardin)" >> licenses.txt
+            for d in x/bsb_*; do [ -d "$d" ] && process "$(basename "$d")"; done
+          fi
           # Страницы OpenGameArt: ссылки на файлы набора берутся со страницы
           # (раздел «Файлы»), лицензия — оттуда же; записывается в inventory.
           # Собранные сайтом стили и скрипты (files/css, files/js) лежат по
@@ -99,6 +105,7 @@ jobs:
           ( cd out && find . -type f \( -name '*.ogg' -o -name '*.mp3' \) | sort | sed 's/$/ (сжатый исходник — в игру не годится)/' ) >> inventory.txt
           [ -f licenses.txt ] && { echo "== лицензии"; cat licenses.txt; } >> inventory.txt
           [ -f itch.log ] && { echo "== itch.io"; cat itch.log; } >> inventory.txt
+          [ -f bsb.log ] && { echo "== BigSoundBank"; cat bsb.log; } >> inventory.txt
           wc -l inventory.txt; head -40 inventory.txt
           ls -la *.zip
       - name: Выпуск sfx-inbox
