@@ -26,4 +26,4 @@ https://creativecommons.org/licenses/by-sa/3.0/
 | score_title_01 | заглавная тема | `fantasycore/music/title_theme.ogg` |
 | score_town_01 | город и селение | `fantasycore/music/town_theme.ogg` |
 | score_unrest_01 | смута и война | `fantasycore/music/unrest_theme.ogg` |
-| score_wind_01 | пустой ветер | `fantasycore/music/wind_ambient.ogg` |
+| score_wind_01 | пустой ветер (с 14.6 — горы; прежде — воздушное подземелье) | `fantasycore/music/wind_ambient.ogg` |

@@ -280,8 +280,8 @@ Unported (CC BY-SA 3.0): https://creativecommons.org/licenses/by-sa/3.0/
 | `mg_mus_magic.ogg` | Чары | «тема державы магов» — команда MegaGlest | CC BY-SA 3.0 | `techs/megapack/factions/magic/music/music_magic.ogg` | укорочено до 2:00, затухание 6 с (исходник 6:59) |
 | `mg_mus_persian.ogg` | Тёмный базар | «Together Together (тема персов)» — Aminos | CC BY-SA 3.0 | `techs/megapack/factions/persian/music/aminos-together_together.ogg` | укорочено до 2:00, затухание 6 с (исходник 3:50) |
 | `mg_mus_menu.ogg` | Орден шва | «тема главного меню» — команда MegaGlest | CC BY-SA 3.0 | `data/core/menu/music/menu_music.ogg` | — |
-| `mg_mus_egypt.ogg` | Древний храм | «Asak (тема египтян)» — Margaras | CC BY-SA 3.0 | `techs/megapack/factions/egypt/music/asak-jadeflange.ogg` | — |
-| `mg_mus_indian.ogg` | Живое | «тема индейцев» — Aminos | CC BY-SA 3.0 | `techs/megapack/factions/indian/music/music_indian.ogg` | укорочено до 2:00, затухание 6 с (исходник 3:05) |
+| `mg_mus_egypt.ogg` | Пустыня (с 14.6; прежде — древний храм) | «Asak (тема египтян)» — Margaras | CC BY-SA 3.0 | `techs/megapack/factions/egypt/music/asak-jadeflange.ogg` | — |
+| `mg_mus_indian.ogg` | Смута и война (с 14.6; прежде — живое подземелье) | «тема индейцев» — Aminos | CC BY-SA 3.0 | `techs/megapack/factions/indian/music/music_indian.ogg` | укорочено до 2:00, затухание 6 с (исходник 3:05) |
 
 ## Чары MegaGlest вместо синтезированных школ
 

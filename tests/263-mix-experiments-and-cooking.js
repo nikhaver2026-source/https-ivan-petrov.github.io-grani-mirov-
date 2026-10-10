@@ -52,7 +52,8 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   п2.есть&&п2.кнопок>=1&&п2.зелья.length===1&&п2.зелья[0]==="balance",п2);
 
  const п3=await p.evaluate(()=>{G.potions=[];potionGive("heal");potionGive("heal");G.inv={"трава":1,"чёрный дурманник":1,"ягоды":1};G.water=60;
-  const h=invAll().filter(x=>x.kind==="potion");const same=mixOutcome(mixIngr(h[0]),mixIngr(h[1]),"brazier");
+  /* (14.6) Одинаковые склянки лежат одной стопкой: вторая берётся из той же стопки. */
+  const h=invAll().filter(x=>x.kind==="potion");const same=mixOutcome(mixIngr(h[0]),mixIngr(h[1]||h[0]),"brazier");
   const t=mixIngr(invRow("res","трава")),d=mixIngr(invRow("plant","чёрный дурманник")),я=mixIngr(invRow("res","ягоды"));
   return {same,anti:mixOutcome(t,d,"cauldron"),flask:mixOutcome(t,я,"flask"),места:mixPlacesHere(new Set(["cauldron"]))};});
  check('3. два одинаковых зелья — крепче; трава и дурманник — противоядие; сухое с сухим во фляге — нельзя, с причиной',

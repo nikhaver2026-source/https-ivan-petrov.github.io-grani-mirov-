@@ -23,4 +23,4 @@
 | `sol_soldiers.ogg` | Крепость | «Soldiers» — Eduardo Dueñas | CC BY-SA 4.0 | `data/musics/eduardo/soldiers.ogg` | укорочено до 2:00, затухание 6 с (исходник 3:44) |
 | `sol_fairy.ogg` | Орден тихого слова | «Fairy» — Eduardo Dueñas | CC BY-SA 4.0 | `data/musics/eduardo/fairy.ogg` | укорочено до 2:00, затухание 6 с (исходник 2:35) |
 | `sol_witch_hut.ogg` | Орден сумеречного затвора | «Witch Hut» — Eduardo Dueñas | CC BY-SA 4.0 | `data/musics/eduardo/witch_hut.ogg` | — |
-| `sol_neptune.ogg` | Водное | «Neptune Battle» — Eduardo Dueñas | CC BY-SA 4.0 | `data/musics/eduardo/neptune_battle.ogg` | укорочено до 2:00, затухание 6 с (исходник 2:52) |
+| `sol_neptune.ogg` | Побережье (с 14.6; прежде — водное подземелье) | «Neptune Battle» — Eduardo Dueñas | CC BY-SA 4.0 | `data/musics/eduardo/neptune_battle.ogg` | укорочено до 2:00, затухание 6 с (исходник 2:52) |

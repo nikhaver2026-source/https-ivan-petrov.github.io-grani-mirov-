@@ -22,7 +22,7 @@
       взломать, ключ и чары; запертая держит шаг; у сундука осмотр
       содержимого и замок; у шкафа взять книгу; у стола взять предмет и
       прочесть бумаги; колодец, очаг, лестница; отказ с причиной; модуль.
-   7. Торговля: два раздела «Купить» и «Продать» по категориям, карточка
+   7. Торговля: два окна «Купить» и «Продать» по категориям, карточка
       с ценой и состоянием, подтверждение сделки и счёт, умный торговец.
    ═══════════════════════════════════════════════════════════════════════ */
 const {chromium}=require('playwright');
@@ -128,8 +128,10 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   r.menuItems=[...document.querySelectorAll('#invActBody [data-cmd^="invdo:"]')].map(b=>b.dataset.cmd.split(":")[1]);r.menuOk=invActionsAll(invRow("res","руда")).ok.map(a=>a.id);
   SAID.length=0;invWhy("melt","res","руда");r.why=SAID.slice(-1)[0];
   /* выброс */
-  SAID.length=0;invDo("drop","res","руда");await пауза(30);r.dropQ=SAID.slice(-1)[0];r.dropBtns=[...document.querySelectorAll('#invActBody button')].map(b=>b.dataset.cmd.split(":").slice(0,2).join(":"));
-  invDo("dropn:2","res","руда");r.oreAfter=G.inv["руда"];
+  /* (14.6) У стопки «Выбросить» держит счёт — свайп вверх или вниз (стрелки в Windows) выбирает,
+     сколько, и сделка идёт сразу, без окна «Выбросить сколько?». */
+  SAID.length=0;DropCount.set("res","руда",2,3);invDo("drop","res","руда");await пауза(30);r.dropQ=SAID.filter(t=>/Выброшено/.test(t)).slice(-1)[0]||SAID.slice(-1)[0];
+  r.oreAfter=G.inv["руда"];
   const ri=G.items.indexOf("Реликвия: Аурис Зарний");invPick("item",String(ri));SAID.length=0;invDo("drop","item",String(ri));await пауза(30);/* в этот миг может договорить и чужое объявление (приглашение выбрать ремесло) — ищем своё слово */r.relicRefuse=SAID.find(t=>/защищён/.test(t))||SAID.slice(-1)[0];r.relicStill=G.items.includes("Реликвия: Аурис Зарний");
   const ti=G.items.indexOf("Факел");invPick("item",String(ti));SAID.length=0;invDo("drop","item",String(ti));await пауза(30);r.torchQ=SAID.slice(-1)[0];invDo("dropyes","item",String(ti));r.torchGone=!G.items.includes("Факел");
   /* стопки */
@@ -155,8 +157,8 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
  check('действия по роду и месту: у меча в руке вне кузницы — осмотреть, взять в руки, состояние; в меню только возможное, а причина невозможного помнится для invWhy',
   инв.sword.ok.includes("look")&&инв.sword.ok.includes("draw")&&!инв.sword.ok.includes("unequip")&&инв.sword.ok.includes("condition")&&инв.sword.blocked.includes("repair")&&инв.sword.reasons.every(t=>t.length>3)
   &&!/Недоступно/.test(инв.menuSaid)&&инв.menuBlocked===0&&инв.menuItems.join()===инв.menuOk.join()&&/нельзя/.test(инв.why),{sword:инв.sword.ok,why:инв.why,menu:инв.menuSaid.slice(0,120),items:инв.menuItems});
- check('«Выбросить»: для стопки — вопрос «сколько» с одной, несколькими, половиной и всей; для вещи — «да или нет»; квестовое защищено',
-  /Выбросить сколько\?/.test(инв.dropQ)&&инв.dropBtns.includes("invdo:dropn")&&инв.oreAfter===1&&/защищён/.test(инв.relicRefuse)&&инв.relicStill&&/Выбросить «Факел»\?/.test(инв.torchQ)&&инв.torchGone&&инв.relic.ok.includes("look")&&/защищён/.test(инв.relic.drop||""),{dropQ:инв.dropQ,relic:инв.relicRefuse});
+ check('«Выбросить»: у стопки — счёт (сколько выбрано, столько и уходит); для вещи — «да или нет»; квестовое защищено',
+  /Выброшено: руда ×2\. Осталось 1/.test(инв.dropQ)&&инв.oreAfter===1&&/защищён/.test(инв.relicRefuse)&&инв.relicStill&&/Выбросить «Факел»\?/.test(инв.torchQ)&&инв.torchGone&&инв.relic.ok.includes("look")&&/защищён/.test(инв.relic.drop||""),{dropQ:инв.dropQ,relic:инв.relicRefuse});
  check('стопка делится на землю и сходится обратно; бой снимает состояние; книга изучается',инв.split[0]===2&&инв.split[1]===1&&инв.merge[0]===4&&инв.merge[1]===0&&инв.wear<100&&инв.book.includes("read")&&инв.book.includes("study")&&инв.book.includes("chapters")&&инв.studied,{split:инв.split,merge:инв.merge,wear:инв.wear,book:инв.book});
  check('у горна меч чинят и закаляют, руду плавят; починка стоит руду и возвращает сто',инв.forge&&инв.forge.includes("repair")&&инв.forge.includes("temper")&&инв.forgeOre&&инв.forgeOre.includes("melt")&&инв.repaired&&инв.repaired[0]===100&&инв.repaired[1]===1,{forge:инв.forge,ore:инв.forgeOre,rep:инв.repaired});
  check('у чана алхимика из грибов варят яд, из травы — противоядие, ядом смазывают клинок',инв.lab&&инв.lab.includes("poison")&&инв.poison&&инв.poison[0]&&инв.poison[1]==null&&инв.antidote&&инв.antidote[0]&&инв.antidote[1]===2&&инв.poisonBlade&&инв.bladePoisoned===3,{lab:инв.lab,poison:инв.poison,antidote:инв.antidote,blade:инв.bladePoisoned,pb:инв.poisonBlade,why:инв.poisonWhy,items:инв.itemsNow,dbg:инв.pbDbg});
@@ -240,8 +242,9 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   const d=merchSoul(npc);r.kind=d&&d.вид.id;
   while(activeLayer())closeTopUI();
   return r;});
- check('карточка жителя ведёт в торговлю, старые кнопки прилавка на месте; окно торговли: два раздела и категории из пятнадцати',
-  торг.module&&торг.npcBtn&&торг.oldBtns&&торг.open===true&&торг.окно==="modal-shop"&&торг.tabs.length===2&&торг.cats.length>=1&&торг.allowedCats,{tabs:торг.tabs,cats:торг.cats,stockCats:торг.stockCats,kind:торг.kind});
+ /* (14.6) «Купить» и «Продать» — два отдельных окна: в окне «Купить» только товары, переход в «Продать» — один, в конце. */
+ check('карточка жителя ведёт в торговлю, старые кнопки прилавка на месте; окно торговли: свой раздел, переход в другой — в конце, категории из пятнадцати',
+  торг.module&&торг.npcBtn&&торг.oldBtns&&торг.open===true&&торг.окно==="modal-shop"&&торг.tabs.length===1&&/Прода/.test(торг.tabs[0])&&торг.cats.length>=1&&торг.allowedCats,{tabs:торг.tabs,cats:торг.cats,stockCats:торг.stockCats,kind:торг.kind});
  check('карточка товара с ценой; покупка стопки счётом сразу, без окна подтверждения, списывает ровно цену и кладёт товар; снаряжение покупается поштучно',
   торг.hasStack&&/Цена: \d+/.test(торг.card)&&торг.buyBtns.length>=2&&/^Куплено: .+ ×5 за \d+/.test(торг.askQ)&&торг.bought&&торг.bought[0]===торг.bought[1]&&торг.bought[2]>=5&&(!торг.boughtGear||(торг.boughtGear[0]===торг.boughtGear[1]&&торг.boughtGear[2])),{card:(торг.card||"").slice(0,120),ask:торг.askQ,bought:торг.bought,gear:торг.boughtGear});
  check('умный торговец: раздел «Продать» берёт своё и объясняет, чего не берёт; реликвия не предлагается; продажа стопки счётом сразу',

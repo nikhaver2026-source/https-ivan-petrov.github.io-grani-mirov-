@@ -20,5 +20,5 @@
 | `ev_adventure_begins.ogg` | Орден утренней ступени | «The Adventure Begins» — bartk | CC BY 4.0 | `music/artis.ogg` | укорочено до 2:00, затухание 6 с (исходник 3:12) |
 | `ev_overwhelmed_underground.ogg` | Катакомбы | «Overwhelmed Underground» — Ledmitz (S. Lowe) | CC BY-SA 3.0 | `music/crypt.ogg` | укорочено до 2:00, затухание 6 с (исходник 3:18) |
 | `ev_sewer_ambience.ogg` | Подземный город | «Sewer Ambience» — Ledmitz (S. Lowe) | CC BY-SA 3.0 | `music/sewer.ogg` | — |
-| `ev_ghoulish_fun.ogg` | Лаборатория | «Ghoulish Fun» — Eric Matyas (soundimage.org) | CC BY 4.0 | `music/ghoulish.ogg` | — |
+| `ev_ghoulish_fun.ogg` | Тёмный базар (с 14.6; прежде — лаборатория) | «Ghoulish Fun» — Eric Matyas (soundimage.org) | CC BY 4.0 | `music/ghoulish.ogg` | — |
 | `ev_surreal_place.ogg` | Временное | «Surreal Place» — Eric Matyas (soundimage.org) | CC BY 4.0 | `music/surreal.ogg` | — |

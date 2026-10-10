@@ -25,7 +25,7 @@
 | `st_kings_feast.ogg` | Замок | «King's Feast» — RandomMind | CC0 1.0 (общественное достояние) · https://opengameart.org/node/88287 | `data/music/kings_feast.ogg` | — |
 | `st_market_day.ogg` | Торговый двор | «Market Day» — RandomMind | CC0 1.0 (общественное достояние) · https://opengameart.org/node/93955 | `data/music/market_day.ogg` | — |
 | `st_rejoicing.ogg` | Торговый двор | «Rejoicing» — RandomMind | CC0 1.0 (общественное достояние) · https://opengameart.org/node/100213 | `app/android/client/src/main/res/raw/title_04.ogg` | — |
-| `st_treasure_hunter.ogg` | Руины | «Treasure Hunter» — Tad Miller (TAD) | CC0 1.0 (общественное достояние) · https://opengameart.org/node/127124 | `app/android/client/src/main/res/raw/title_01.ogg` | — |
+| `st_treasure_hunter.ogg` | Дорога (с 14.6; прежде — руины) | «Treasure Hunter» — Tad Miller (TAD) | CC0 1.0 (общественное достояние) · https://opengameart.org/node/127124 | `app/android/client/src/main/res/raw/title_01.ogg` | — |
 | `st_night_town.ogg` | Тёмный город | «Night Town» — Angus Macnaughton | CC BY 4.0 · https://opengameart.org/node/88304 | `data/music/night_town.flac` | исходник без потерь (FLAC); укорочено до 2:00, затухание 6 с (исходник 2:25) |
 | `st_settlement_frontier.ogg` | Удел | «Settlement of the Frontier» — Tad Miller | CC BY 4.0 · https://opengameart.org/node/109342 | `data/music/settlement_of_the_frontier.ogg` | — |
 | `st_spooky_forest.ogg` | Гнилая чаща | «Spooky Forest» — Bendzer | CC BY 4.0 · https://opengameart.org/node/94146 | `data/music/spooky_forest.ogg` | — |

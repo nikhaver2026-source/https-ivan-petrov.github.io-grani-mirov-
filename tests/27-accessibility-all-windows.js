@@ -311,12 +311,19 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
  await page.evaluate(()=>{while(activeLayer())closeTopUI();});
 
  // Короткое касание игрового поля не получает второго, отложенного имени вдогонку.
- await page.evaluate(()=>{while(activeLayer())closeTopUI();window.__said=[];});
+ // (14.6) Мир живёт своим таймером: раз в полторы секунды обоз, дозор, голос
+ // места и фон могут подать весть («Слышен обоз…»), и она попадала в эти
+ // три четверти секунды — к касанию она не относится. На время замера эти
+ // голоса мира молчат.
+ await page.evaluate(()=>{while(activeLayer())closeTopUI();window.__said=[];
+  window.__мир=[CaravanRoll.tick,PatrolMarch.tick,PlaceVoice.tick,Ambience.tick];
+  CaravanRoll.tick=PatrolMarch.tick=PlaceVoice.tick=Ambience.tick=()=>false;});
  await tap(195,400);
  await page.waitForTimeout(160);
  const rightAfter=(await said()).length;
  await page.waitForTimeout(600);
  const muchLater=(await said()).length;
+ await page.evaluate(()=>{[CaravanRoll.tick,PatrolMarch.tick,PlaceVoice.tick,Ambience.tick]=window.__мир;});
  check('после короткого касания игра не договаривает лишнее спустя миг',
   muchLater===rightAfter,{сразу:rightAfter,потом:muchLater});
 

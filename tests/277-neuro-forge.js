@@ -15,7 +15,7 @@
    2. Опыт за опыт со смесью зависит от трудности: сплав дороже двойного.
    3. Два разных зелья — эликсир, новый рецепт с обоими действиями; два
       отличных одинаковых — высший состав; рецепт в реестре.
-   4. Лавка: у товара кнопки «Купить 1, 5, 10», сделка сразу.
+   4. Лавка: у товара счёт на строке (14.6: свайп вверх или вниз, вместо кнопок «Купить 1, 5, 10»), сделка сразу.
    5. Панель магии в бою: 4×2 закрывает, без маны закрывается сама.
    6. Кузница: каждое действие мира рождает своё, всё настоящее.
    7. Нейросеть учится, растёт, совершенствует себя и переживает загрузку.
@@ -39,7 +39,7 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
 
  /* ── 2, 3 ── */
  const сплав=await p.evaluate(()=>{G.mast={alchemy:{lvl:2}};G.mixBook={};G.potRecipes={};G.potMade={};G.level=4;G.xp=0;const r={};
-  const mk=(x,y,qx,qy)=>{G.potions=[];potionGive(x,{q:qx});potionGive(y,{q:qy});const h=invAll().filter(z=>z.kind==="potion");const A=mixIngr(h[0]),B=mixIngr(h[1]);
+  const mk=(x,y,qx,qy)=>{G.potions=[];potionGive(x,{q:qx});potionGive(y,{q:qy});const h=invAll().filter(z=>z.kind==="potion");const A=mixIngr(h[0]),B=mixIngr(h[1]||h[0]);/* (14.6) одинаковые — одной стопкой */
    const o=mixOutcome(A,B,"cauldron");const x0=G.xp;const t=mixDo(A,B,"cauldron");return {род:o.род,как:o.как,xp:G.xp-x0,t,зелья:G.potions.map(z=>z.имя||z.id)};};
   r.эликсир=mk("strength","speed",1.4,1.4);r.высший=mk("heal","heal",1.4,1.4);r.двойное=mk("sense","sense",1.0,1.0);
   const br=G.potions[0];r.пить=brewDrink(G.potions.find(z=>z.id==="brew")||{},1);
@@ -56,14 +56,16 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
  const лавка=await p.evaluate(async()=>{const пауза=ms=>new Promise(z=>setTimeout(z,ms));const r={};G.place=null;G.ship=null;
   let npc=null;outer: for(let rr=0;rr<80;rr++)for(let dx=-rr;dx<=rr;dx++)for(let dy=-rr;dy<=rr;dy++){const c=safeFn(()=>cellContent((OLD_WORLD>>1)+dx,(OLD_WORLD>>1)+dy),null);if(c&&c.structure){const n=safeFn(()=>npcsFor(c),[]).find(x=>x.trade);if(n){G.x=(OLD_WORLD>>1)+dx;G.y=(OLD_WORLD>>1)+dy;npc=n;break outer;}}}
   if(!npc)return r;G.gold=2000;G.inv={"руда":6};openTrade(npc.key,"buy");await пауза(50);
-  const btn=[...document.querySelectorAll('#shopBody [data-cmd^="shopnow:buy:"]')];r.кнопок=btn.length;r.подписи=btn.slice(0,3).map(b=>b.textContent.trim());
-  const b5=btn.find(b=>/:5$/.test(b.dataset.cmd));if(b5){const idx=Number(b5.dataset.cmd.split(":")[2]);const row=shopStockRows(npc)[idx];const g0=G.gold;
-   CMD.shopnow(b5.dataset.cmd.slice(8));await пауза(30);r.списано=g0-G.gold;r.цена=row.price*5;r.окно=!!document.querySelector('#shopBody [data-cmd="shopyes"]');}
+  /* (14.6) Сколько — счётом на самой строке товара (свайп вверх или вниз, стрелки в Windows), сделка — двойным касанием. */
+  const btn=[...document.querySelectorAll('#shopBody [data-cmd^="shopitem:"][data-shopmax]')];r.кнопок=btn.length;r.подписи=btn.slice(0,3).map(b=>b.textContent.trim());
+  const b5=btn.find(b=>+b.dataset.shopmax>=5);if(b5){const idx=Number(b5.dataset.cmd.split(":")[1]);const row=shopStockRows(npc)[idx];const g0=G.gold;
+   setCursor(b5,false);for(let i=0;i<4;i++)ShopCount.nudge(1);r.счёт=b5.dataset.shopn;
+   CMD.shopitem(String(idx));await пауза(30);r.списано=g0-G.gold;r.цена=row.price*5;r.окно=!!document.querySelector('#shopBody [data-cmd="shopyes"]');}
   r.заголовки=[...document.querySelectorAll('#shopBody h3')].map(h=>h.textContent).length;
-  CMD.shoptab("sell");await пауза(30);r.продать=[...document.querySelectorAll('#shopBody [data-cmd^="shopnow:sell:"]')].map(b=>b.textContent.trim()).slice(0,4);
+  CMD.shoptab("sell");await пауза(30);r.продать=[...document.querySelectorAll('#shopBody [data-cmd^="shopitem:"][data-shopmax]')].map(b=>[b.dataset.shopmax,b.textContent.trim()]).slice(0,4);
   while(activeLayer())closeTopUI();return r;});
- check('4. лавка как обоз: у товара «Купить 1, 5, 10», сделка сразу без окна «Купить?»; у своей вещи «Продать … всё»; товары по категориям',
-  лавка.кнопок>=2&&лавка.списано===лавка.цена&&лавка.окно===false&&лавка.заголовки>=3&&лавка.продать.some(t=>/Продать всё/.test(t)),лавка);
+ check('4. лавка: у товара счёт на строке, сделка сразу без окна «Купить?»; своя стопка продаётся до всей; товары по категориям',
+  лавка.кнопок>=2&&лавка.счёт==="5"&&лавка.списано===лавка.цена&&лавка.окно===false&&лавка.заголовки>=3&&лавка.продать.some(x=>x[0]==="6"&&/руда/.test(x[1])),лавка);
 
  /* ── 5 ── */
  const магия=await p.evaluate(async()=>{const r={};while(activeLayer())closeTopUI();G.hp=500;G.hpMax=900;G.place=null;G.ship=null;settings.combatPace="live";
