@@ -231,6 +231,37 @@ const ROOT=path.resolve(__dirname,'..');
  check('10. руководство: раздел «Питомцы и маунты» (спутник, голос, кормление, очки, езда) и абзац о лавке со счётом',
   р.есть&&р.абзацев>=8&&р.очки&&р.езда&&р.голос&&р.лавка&&/питомцы и маунты/.test(р.глава)&&р.глав<=20,р);
 
+ /* ── 12. Окна «Питомцы» и «Маунты»: тем же звуком, без двойников ── */
+ const ок=await p.evaluate(async()=>{const r={};while(activeLayer())closeTopUI();G.zv={};G.mount=null;G.place=null;G.ship=null;G.inCombat=false;
+  const БАНК=[];const bp=Bank.play.bind(Bank);Bank.play=function(rl,o){БАНК.push(rl);return bp(rl,o);};
+  const жать=c=>{const b=[...document.querySelectorAll('button[data-cmd]')].find(x=>x.dataset.cmd===c);if(b)activateElement(b);return !!b;};
+  const mk=(f,o)=>Zver.make(ZV_BREEDS.find(b=>b.fam===f).id,Object.assign({тихо:true,верн:90},o||{}));
+  const конь=mk("horse"),кот=mk("cat"),волк=mk("wolf"),скорп=mk("scorpion");G.mounts=["ashmare"];
+  const сцена=async(fn,ms)=>{БАНК.length=0;ZvSnd.журнал.length=0;await fn();await спим(ms||1800);return {банк:БАНК.slice(),зверь:ЗВЕРЬ()};};
+  CMD.mounts();await спим(150);
+  r.зов=await сцена(async()=>{CMD.mnt("view:zv:"+конь.uid);await спим(120);r.кнЗов=жать("mnt:call:zv:"+конь.uid);},2200);
+  r.сесть=await сцена(async()=>{CMD.mnt("view:zv:"+конь.uid);await спим(120);r.кнСесть=жать("mnt:ride:zv:"+конь.uid);},1500);r.верхом=Stable.riding();
+  r.сойти=await сцена(async()=>{CMD.mounts();await спим(120);r.кнСойти=жать("mnt:off");},1800);r.пешком=!Stable.riding();
+  r.палаты=await сцена(async()=>{CMD.mnt("view:leg:ashmare");await спим(120);жать("mnt:call:leg:ashmare");await спим(2200);CMD.mnt("view:leg:ashmare");await спим(120);жать("mnt:ride:leg:ashmare");},1500);
+  while(activeLayer())closeTopUI();CMD.mounts();await спим(120);жать("mnt:off");await спим(800);
+  r.чесать=await сцена(async()=>{CMD.pet("care:"+кот.uid);await спим(120);жать("pet:docare:"+кот.uid+":groom");},1800);
+  r.задание=await сцена(async()=>{CMD.pet("tasks:"+кот.uid);await спим(120);const b=document.querySelector('#petsBody button[data-cmd^="pet:task:'+кот.uid+':"]');if(b)activateElement(b);},2200);
+  [конь,волк,скорп].forEach(a=>{a.сыт=20;const f=Zver.fam(a);for(const k of f.корм)G.inv[ZV_FOOD[k]]=(Number(G.inv[ZV_FOOD[k]])||0)+3;});
+  r.всех=await сцена(async()=>{CMD.pets();await спим(120);жать("pet:feedall");},400);
+  /* через 0,4 с звучит только первая сценка; остальные — по очереди */
+  r.всехСразу=r.всех.зверь.filter(f=>/zv_eat|chew|chitter/.test(f)).length;await спим(5200);r.всехПотом=ЗВЕРЬ().filter(f=>/zv_eat|chew|chitter/.test(f)).length;
+  while(activeLayer())closeTopUI();Bank.play=bp;return r;});
+ const копыта=x=>x.банк.filter(b=>b==="horse_step").length;
+ check('12. окна «Питомцы» и «Маунты»: зов — шаги и голос; посадка — седло и голос без стука копыт; «Спешиться здесь» — седло; скакун палат — один голос; вычёсывание — одна щётка; задание — шаги уходят; «Накормить всех» — по очереди',
+  ок.кнЗов&&ок.кнСесть&&ок.кнСойти&&/^zv:/.test(ок.верхом||"")&&ок.пешком
+  &&ок.зов.зверь.some(f=>/zv_ride_walk/.test(f))&&ок.зов.зверь.some(f=>/zv_neigh|beasts_horse/.test(f))&&!копыта(ок.зов)
+  &&ок.сесть.зверь.some(f=>/leather/.test(f))&&!копыта(ок.сесть)
+  &&ок.сойти.зверь.some(f=>/leather|lug_land/.test(f))&&!копыта(ок.сойти)
+  &&!копыта(ок.палаты)&&!ок.палаты.банк.includes("beasts_horse")
+  &&!ок.чесать.банк.includes("oc_rustle")&&ок.чесать.зверь.filter(f=>/craft_hide|arte_leather/.test(f)).length===1
+  &&ок.задание.зверь.filter(f=>/step|tread|creatures/.test(f)).length>=3
+  &&ок.всехСразу<=1&&ок.всехПотом>=2,ок);
+
  check('11. ошибок страницы нет',errors.length===0,errors.slice(0,5));
  await browser.close();
  results.forEach(x=>console.log(x));

@@ -475,6 +475,17 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
    cancel(){this.cancels++;this.cur=null;},speaking(){return !!this.cur;},
    end(){const o=this.cur;this.cur=null;if(o&&o.onend)o.onend();}};
   const прежний=Speech.adapter,прежнийChunk=Speech._chunk;Speech.adapter=fake;Speech._chunk=x=>[String(x)];Speech.stop();Speech.recent.clear();Speech.last=null;
+  /* Мир живёт своим чередом: весть о прибытии из прежних шагов, небесная война,
+     слой мира, край Сводов, река, вход в чертог встают в очередь посреди замера
+     («снято» 5–6 вместо 2, описание ждёт за вестью мира). Здесь проверяется сам
+     распорядитель речи, поэтому на время шага в очередь идут только свои фразы,
+     а голоса жителей молчат: голос игры ждёт, пока житель договорит, и описание
+     оставалось в очереди («говорило» false, «Новое.» не звучало). */
+  const своё=/^(Сундук открыт|Перед вами|Новый уровень|Лишнее|Старое\.|Новое\.|Опыт:)/;
+  const enq0=Speech.enqueue;Speech.enqueue=function(text){return своё.test(String(text||""))?enq0.apply(this,arguments):null;};
+  const жители0=settings.folk,звучит0=Folk.звучитЛи;settings.folk=0;Folk.звучитЛи=()=>false;
+  try{Folk.смолкнуть(true);}catch(_){}Folk.занятоДо=Folk.звучитДо=0;
+  Speech.queue.length=0;
   const wait=ms=>new Promise(r=>setTimeout(r,ms));
   const шаг={};
   try{
@@ -486,6 +497,9 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
    try{Folk.смолкнуть(true);}catch(_){}
    narrate("Сундук открыт. Золото: 120.");await wait(30);fake.end();await wait(30);
    narrate("Перед вами длинный коридор с древними знаками на стенах.",{interrupt:false});await wait(30);
+   /* Под нагрузкой описание может начаться позже 30 мс (запись голоса грузится,
+      житель договаривает) — ждём начала до полусекунды. */
+   for(let i=0;i<24&&!Speech.isSpeaking();i++)await wait(20);
    const говорило=Speech.isSpeaking();Speech.stop();const стихло=!Speech.isSpeaking();
    Speech.repeatLast();await wait(30);
    шаг.стоп={говорило,стихло,повтор:fake.log[fake.log.length-1]};
@@ -502,12 +516,12 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
    fake.log.length=0;for(let i=0;i<5;i++)narrate("Перед вами дверь.",{key:"d",pri:3});
    Speech.tally("xp",5);Speech.tally("xp",7);await wait(600);
    /* Мир не замирает на время проверки: за эти полсекунды он мог сказать
-      своё, и тогда фраза опыта ждёт в очереди. Считаем и очередь. */
-   шаг.дубли={дверей:fake.log.filter(t=>t==="Перед вами дверь.").length,
+      своё, и тогда фраза опыта (и дверь) ждёт в очереди. Считаем и очередь. */
+   шаг.дубли={дверей:fake.log.filter(t=>t==="Перед вами дверь.").length+Speech.queue.filter(m=>m.text==="Перед вами дверь.").length,
     опыт:fake.log.some(t=>/Опыт: 12\./.test(t))||Speech.queue.some(m=>/Опыт: 12\./.test(m.text))};
    const src=document.documentElement.innerHTML;
    шаг.единый={прямых:(src.match(/speechSynthesis\.speak\(/g)||[]).length,очередьОдна:Array.isArray(Speech.queue)&&typeof Speech.enqueue==="function"};
-  }finally{Speech.stop();Speech.adapter=прежний;Speech._chunk=прежнийChunk;}
+  }finally{Speech.stop();Speech.adapter=прежний;Speech._chunk=прежнийChunk;Speech.enqueue=enq0;settings.folk=жители0;Folk.звучитЛи=звучит0;}
   return шаг;});
  check('IV-1. стоп обрывает описание, повтор возвращает последнее завершённое, а не оборванное',
   речь.стоп.говорило&&речь.стоп.стихло&&речь.стоп.повтор==="Сундук открыт. Золото: 120.",речь.стоп);

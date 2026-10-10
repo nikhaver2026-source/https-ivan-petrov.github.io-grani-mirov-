@@ -79926,6 +79926,34 @@ function deepGateKey(t){try{const p=G.place;if(!p||(Number(p.depth)||0)>0||"pl_"
  return pool[Math.floor(hashName((Number(p.bx)||0)*5+3,(Number(p.by)||0)*7+1,7719)*pool.length)%pool.length];}catch(_){return t;}}
 safeFn(()=>{const s0=Music.start;Music.start=function(t){return s0.call(this,DEEP_GATE_POOL[t]?deepGateKey(t):t);};});
 
+/* ── 15. Голос игры — по полу героя ──
+   Просьба игрока: «выбрал женский пол героя — значит, и голос Gemini
+   женский: все реплики, разговоры с торговцами и прочее». Встроенный голос
+   Gemini (мужской или женский) прежде всегда начинался мужским, и героиню
+   вела мужская речь. Теперь, пока игрок сам не выбрал голос в настройках,
+   голос игры идёт за полом героя: героиня — женский голос Gemini, герой —
+   мужской. Выбор в настройках («Выбор голоса») остаётся выбором игрока и
+   больше не перекрывается. Голос героини в разговорах и в бою — её
+   собственный, из женских голосов героя. */
+function gvVoiceFollowHero(h,сейчас){
+ try{
+  h=h||G.hero;if(!h||!(h.made||сейчас))return false;
+  if(settings.gvVoiceManual||settings.gvVoice==="e")return false;
+  const v=h.пол==="ж"?"f":"m";if(settings.gvVoice===v)return false;
+  settings.gvVoice=v;safeFn(()=>saveSettings());
+  safeFn(()=>{const g=document.getElementById("setGvVoice");if(g)g.value=v;});
+  return true;}catch(_){return false;}}
+/* Пол выбран в окне героя — голос игры следом (своё слово он скажет уже новым голосом). */
+safeFn(()=>{const s0=heroSet;heroSet=matKeep(s0,function(what,a){
+ if(what==="sex"&&(a==="м"||a==="ж")&&!safeFn(()=>heroLocked(),false))safeFn(()=>gvVoiceFollowHero(Object.assign({},heroEnsure(),{пол:a}),true));
+ return s0.apply(this,arguments);});});
+/* «Готово» в окне героя: голос выбран до слов «Герой готов». */
+safeFn(()=>{const d0=heroDone;heroDone=matKeep(d0,function(){safeFn(()=>gvVoiceFollowHero(heroEnsure(),true));return d0.apply(this,arguments);});});
+/* Загрузка сохранения: героиня — женский голос, если игрок не выбирал сам. */
+safeFn(()=>{const a0=applySave;applySave=matKeep(a0,function(){const r=a0.apply(this,arguments);safeFn(()=>gvVoiceFollowHero());return r;});});
+/* Голос, выбранный в настройках, — выбор игрока: дальше пол героя его не меняет. */
+safeFn(()=>document.addEventListener("change",e=>{const t=e.target;if(t&&t.id==="setGvVoice"){settings.gvVoiceManual=1;safeFn(()=>saveSettings());}},true));
+
 /* ═══════════════════════════════════════════════════════════════════════════
    14.6: ЗВЕРИ СЛЫШНЫ — СПУТНИК, ВЕРХОВАЯ ЕЗДА, РОСТ; ТОРГОВЛЯ СО СЧЁТОМ
    ───────────────────────────────────────────────────────────────────────────
@@ -80137,7 +80165,8 @@ const ZvWalk={mv:{x:0,y:-1},last:null,n:0,
  /* Спутники идут следом: каждый своим шагом, с опозданием на полшага. */
  follow(){const pets=safeFn(()=>Zver.pets(),[])||[];const inWater=safeFn(()=>/water|sea|coast|lake|river/.test(cellContent(G.x,G.y).terrain[0]),false);
   pets.slice(0,2).forEach((a,i)=>{if(a.ранен||a.задание)return;const f=Zver.fam(a);if(!f)return;
-   const редко=f.ход==="fly"?this.n%2:f.ход==="dig"?this.n%3:0;if(редко)return;
+   /* двое спутников ступают по очереди: на шаг героя — один шаг зверя, а не три шага разом */
+   const редко=pets.length>1?(this.n+i)%2:(f.ход==="fly"?this.n%2:f.ход==="dig"?this.n%3:0);if(редко)return;
    const p=ZvSnd.prof(a);const L=f.ход==="swim"&&!inWater?["oc_step_soft"]:(p.ш||["oc_step_soft"]);
    ZvSnd.later(130+i*110,()=>ZvSnd.play(L,Object.assign({maxSec:1,gain:0.55,rate:ZvSnd.rate(a)},ZvSnd.behind(i))));
    /* голос в пути — изредка */
@@ -80208,7 +80237,8 @@ safeFn(()=>{const h0=Zver.hurt;Zver.hurt=function(a,n){const sp=this.play;this.p
  try{h0.apply(this,arguments);}finally{this.play=sp;}
  if(a&&n>0){const i=Math.max(0,(this.pets()||[]).indexOf(a));safeFn(()=>ZvSnd.pain(a,Object.assign({gain:a.ранен&&!был?1:0.8},G.inCombat?ZvSnd.atFoe(i):ZvSnd.near(i))));}};});
 safeFn(()=>{const sc=startCombat;startCombat=matKeep(sc,function(){const r=sc.apply(this,arguments);
- safeFn(()=>{const pets=(Zver.pets()||[]).filter(a=>!a.ранен);pets.slice(0,2).forEach((a,i)=>ZvSnd.later(650+i*350,()=>ZvSnd.growl(a,Object.assign({gain:0.95},ZvSnd.near(i)))));});
+ /* рык — после первого грохота схватки (клич, шум толпы), а не поверх него */
+ safeFn(()=>{const pets=(Zver.pets()||[]).filter(a=>!a.ранен);pets.slice(0,2).forEach((a,i)=>ZvSnd.later(950+i*420,()=>ZvSnd.growl(a,Object.assign({gain:0.8},ZvSnd.near(i)))));});
  return r;});});
 
 /* ── 9. Задания и уход ── */
@@ -80344,6 +80374,71 @@ safeFn(()=>{const y0=shopYes;shopYes=matKeep(y0,function(){const n=shopNpc();con
  if(n&&c&&SHOP.sel&&c.tab==="sell"&&c.count>1){const r=shopSellRows(n).filter(x=>x.ок)[SHOP.sel.idx];
   if(r&&!["res","rare","plant","fish"].includes(r.row.kind)){SHOP.confirm=null;shopSellN(n,r,c.count);SHOP.sel=null;saveGame(true);refresh();renderShop();return true;}}
  return y0.apply(this,arguments);});});
+
+/* ── 11. Окна «Питомцы» и «Маунты»: тем же звуком, без двойников ──
+   Игрок кормит, садится, спешивается и ухаживает через окна, а там у
+   каждого действия был свой старый тихий звук — и он звучал вместе с
+   новым: посадка через «Маунты» стучала копытами даже у жука и птицы, а
+   голос скакуна тайных палат звучал дважды; «Спешиться здесь» вместо
+   скрипа седла давало копыта; вычёсывание звучало двумя звуками сразу;
+   «Накормить всех» кормило всех зверей разом, и сценки ложились одна на
+   другую. Теперь каждое действие окна звучит одной сценкой своего зверя. */
+/* Скакун тайных палат: свой голос (b) и ход (moveOf). */
+Object.assign(ZvSnd,{
+ /* Тихо внутри: на время вызова старые звуки банка молчат (свой тракт ZvSnd звучит). */
+ hush(fn,ctx,args,also){const bp=Bank.play,zp=Zver.play;Bank.play=function(){return null;};if(also!==false)Zver.play=function(){};
+  try{return fn.apply(ctx,args);}finally{Bank.play=bp;Zver.play=zp;}},
+ legVoice(M,o){const r=M&&M.m&&M.m.b;return r?this.play([r],Object.assign({maxSec:2.2,gain:0.9},this.near(0),o||{})):false;},
+ /* Шаги зверя или скакуна: zv — шаг рода, скакун палат — по ходу. */
+ stepsOf(M){if(!M)return ["oc_step_soft"];if(M.kind==="zv"){const p=this.prof(M.a);return p.е||p.ш||["oc_step_soft"];}
+  const ход=safeFn(()=>Stable.moveOf(M),"walk");return {fly:["zv_wing","raptor_wing"],swim:["oc_swim","oc_splash"],crawl:["prop_crawl","creatures/cr_spider_step.flac"],dig:["oc_dig"]}[ход]||["zv_ride_walk"];},
+ /* Уходит (задание, на волю): голос — и шаги удаляются. */
+ leave(a,далеко){const p=this.prof(a);this.scene(1800);this.voice(a,{gain:0.9});
+  for(let i=0;i<4;i++){const t=i/3;this.later(380+i*300,()=>this.play(p.ш||["oc_step_soft"],{dx:0.4+2.0*t,dy:-0.4-(далеко?2.6:2.0)*t,maxSec:0.9,gain:0.75-0.35*t,rate:this.rate(a)}));}},
+ /* Скакун идёт на зов: шаги издали — голос. */
+ come(M){const L=this.stepsOf(M);this.scene(1800);const rate=M&&M.kind==="zv"?this.rate(M.a):1;
+  for(let i=0;i<4;i++){const t=i/3;this.later(i*280,()=>this.play(L,{dx:2.2-1.8*t,dy:-2.4+2.1*t,maxSec:0.9,gain:0.45+0.35*t,rate}));}
+  this.later(1250,()=>{if(M&&M.kind==="zv")this.voice(M.a,{gain:0.95});else this.legVoice(M,{gain:0.95});});},
+ /* Уход за скакуном: щётка — довольный голос. */
+ careMount(M){if(M&&M.kind==="zv")return this.care(M.a,"groom");this.scene(1400);
+  this.play(["craft_hide","arte_leather"],Object.assign({maxSec:1.4,gain:0.75},this.near(0)));this.later(900,()=>this.legVoice(M,{gain:0.8}));},
+ /* Снаряжение и выучка скакуна палат. */
+ equipLeg(M,slot){this.play(ZV_GEAR_SND[slot]||["equip_leather_on"],Object.assign({maxSec:1.6,gain:0.85},this.near(0)));this.later(650,()=>this.legVoice(M,{gain:0.75}));},
+ trainLeg(M){this.play(["arc_rise","magic_shimmer"],Object.assign({maxSec:1.8,gain:0.85},this.near(0)));this.later(520,()=>this.legVoice(M,{gain:0.9}));}});
+/* Спешиться: скрип седла, шаг на землю — и голос того, с кого сошли. */
+safeFn(()=>{const d0=ZvSnd.dismount;ZvSnd.dismount=function(M){d0.call(this);if(M)this.later(600,()=>{if(M.kind==="zv")this.voice(M.a,{gain:0.7});else this.legVoice(M,{gain:0.7});});};});
+/* «Сесть верхом» из окна: без лишнего стука копыт и второго голоса. */
+safeFn(()=>{const m0=Stable.mountUp;Stable.mountUp=function(k){return ZvSnd.hush(m0,this,arguments,false);};});
+/* «Спешиться здесь»: скрип седла вместо копыт. */
+safeFn(()=>{const d0=Stable.dismountHere;Stable.dismountHere=function(){const k=safeFn(()=>this.riding(),null);const M=k?safeFn(()=>this.mBy(k),null):null;
+ const t=ZvSnd.hush(d0,this,arguments);if(k&&!safeFn(()=>this.riding(),null))safeFn(()=>ZvSnd.dismount(M));return t;};});
+/* Позвать скакуна: шаги издали и голос. */
+safeFn(()=>{const c0=Stable.call;Stable.call=function(k){const t=ZvSnd.hush(c0,this,arguments);if(/приходит/.test(String(t)))safeFn(()=>ZvSnd.come(this.mBy(k)));return t;};});
+/* Почистить скакуна. */
+safeFn(()=>{const c0=Stable.mountCare;Stable.mountCare=function(k){const t=ZvSnd.hush(c0,this,arguments);if(/^Вы чистите/.test(String(t)))safeFn(()=>ZvSnd.careMount(this.mBy(k)));return t;};});
+/* Снаряжение и выучка скакуна тайных палат. */
+safeFn(()=>{const e0=Stable.legEquip;Stable.legEquip=function(id,slot){const t=ZvSnd.hush(e0,this,arguments);if(/надето/.test(String(t)))safeFn(()=>ZvSnd.equipLeg(this.mBy("leg:"+id),slot));return t;};});
+safeFn(()=>{const t0=Stable.train;Stable.train=function(id){const t=ZvSnd.hush(t0,this,arguments);if(/выучка «/.test(String(t)))safeFn(()=>ZvSnd.trainLeg(this.mBy("leg:"+id)));return t;};});
+/* Уход за питомцем: вычёсывание — одна щётка, а не две. */
+safeFn(()=>{const c1=Stable.care;Stable.care=function(u,k){ZvSnd.вУходе=(ZvSnd.вУходе|0)+1;try{return ZvSnd.hush(c1,this,arguments,false);}finally{ZvSnd.вУходе--;}};});
+/* На задание: голос — и шаги уходят; отозвать — шаги назад. */
+safeFn(()=>{const s0=Stable.taskStart;Stable.taskStart=function(u){const a=Zver.byUid(u);const было=a&&a.задание;const t=ZvSnd.hush(s0,this,arguments);
+ if(a&&a.задание&&a.задание!==было)safeFn(()=>ZvSnd.leave(a,true));return t;};});
+safeFn(()=>{const r0=Stable.taskRecall;Stable.taskRecall=function(u){const a=Zver.byUid(u);const t=r0.apply(this,arguments);if(a&&/возвращается/.test(String(t)))safeFn(()=>ZvSnd.back(a,false));return t;};});
+/* На волю: голос — и шаги уходят далеко. */
+safeFn(()=>{const r0=Zver.release;Zver.release=function(u){const a=this.byUid(u);const t=r0.apply(this,arguments);if(a&&/на волю/.test(String(t)))safeFn(()=>ZvSnd.leave(a,true));return t;};});
+/* Новый зверь (купленный, вылупившийся): его голос — ярко, своим трактом. */
+safeFn(()=>{const b0=Zver.buy;Zver.buy=function(id){const до=this.st().list.length;const zp=this.play;this.play=function(){};let t;try{t=b0.apply(this,arguments);}finally{this.play=zp;}
+ if(this.st().list.length>до){const a=this.st().list[this.st().list.length-1];ZvSnd.later(450,()=>ZvSnd.voice(a,{gain:1}));}return t;};});
+safeFn(()=>{const h0=Zver.hatch;Zver.hatch=function(){const до=this.st().list.length;const zp=this.play;this.play=function(){};let t;try{t=h0.apply(this,arguments);}finally{this.play=zp;}
+ const нов=this.st().list.slice(до);нов.slice(0,2).forEach((a,i)=>ZvSnd.later(300+i*1400,()=>{ZvSnd.play(["craft_stone","mtg_place"],Object.assign({maxSec:0.8,gain:0.6},ZvSnd.near(i)));ZvSnd.later(250,()=>ZvSnd.voice(a,{gain:1,i}));}));return t;};});
+/* Звериное зелье дано: глоток — и голос. */
+safeFn(()=>{const g0=Zver.give;Zver.give=function(u){const a=this.byUid(u);const t=g0.apply(this,arguments);if(a&&!ZvSnd.вУходе&&!/нет|в сумке нет/.test(String(t).slice(0,40)))ZvSnd.later(500,()=>ZvSnd.voice(a,{gain:0.85}));return t;};});
+/* «Накормить всех»: сценки по очереди, не больше трёх, звук уровня — один. */
+safeFn(()=>{const f0=Zver.feedAll;Zver.feedAll=function(){const fd=ZvSnd.feed,lv=ZvSnd.level;let n=0,lvl=0;
+ ZvSnd.feed=function(a,k,люб){const i=n++;if(i>=3)return;if(!i)return fd.call(this,a,k,люб);this.scene(1700*i+2600);this.later(1700*i,()=>fd.call(this,a,k,люб));};
+ ZvSnd.level=function(a){if(lvl++)return;return lv.call(this,a);};
+ try{return f0.apply(this,arguments);}finally{ZvSnd.feed=fd;ZvSnd.level=lv;}};});
 
 
 /* ════════ СОХРАНЕНИЕ ════════ */
