@@ -1,21 +1,22 @@
-# (14.6) Звери и верховая езда: BigSoundBank (Joseph Sardin, CC0), поиск по словам.
+# (14.6) Звери и верховая езда, второй заход: BigSoundBank (Joseph Sardin, CC0).
+# Первый заход (кони, хруст, мурлыканье, галоп, рысь, шаг, крылья) уже в игре.
+# Поиск сайта любит одно-два простых слова в единственном числе.
 # имя запрос ~ шаблон имени страницы ~ сколько
-bsb_eat_horse horse eating ~ horse.*(eat|chew|hay|oat|graz) ~ 2
-bsb_eat_goat goat eating ~ (goat|sheep|cow).*(eat|chew|graz) ~ 2
-bsb_eat_rabbit rabbit eating ~ (rabbit|guinea|hamster).*(eat|chew|nibbl|carrot) ~ 1
-bsb_eat_dog dog eating ~ dog.*(eat|chew|crunch|kibble|bone) ~ 2
-bsb_eat_cat cat eating ~ cat.*(eat|chew|food|crunch) ~ 1
-bsb_eat_hen chicken eating ~ (chicken|hen|bird|pigeon).*(eat|peck|grain) ~ 1
-bsb_eat_crunch crunching ~ (crunch|chew|bite|munch) ~ 2
-bsb_drink_dog dog drinking ~ (dog|cat|animal).*(drink|lap) ~ 1
-bsb_ride_gallop horse gallop ~ (horse|hoof|gallop) ~ 2
-bsb_ride_trot horse trot ~ (horse|hoof|trot) ~ 1
-bsb_ride_walk horse walking ~ (horse|hoof).*(walk|step|pav|stone|gravel) ~ 1
-bsb_wings wings flapping ~ (wing|flap|pigeon|bird|flight|flutter) ~ 2
-bsb_purr cat purring ~ (purr|cat) ~ 1
-bsb_growl dog growling ~ (growl|grunt|dog) ~ 1
-bsb_sniff dog sniffing ~ (sniff|snif|nose|dog) ~ 1
-bsb_pant dog panting ~ (pant|breath|dog) ~ 1
-bsb_saddle saddle ~ (saddle|leather|harness|bridle|tack) ~ 2
-bsb_buckle buckle ~ (buckle|belt|strap|clasp) ~ 1
-bsb_bell small bell ~ (bell|jingle|tinkle) ~ 1
+bsb_dog dog ~ dog.*(growl|grunt|pant|sniff|eat|chew|drink|lap|whin|bark) ~ 4
+bsb_cat cat ~ cat.*(eat|meow|hiss|lap|drink|purr) ~ 2
+bsb_goat goat ~ (goat|kid) ~ 2
+bsb_sheep sheep ~ (sheep|lamb|ewe) ~ 2
+bsb_cow cow ~ (cow|calf|bull|cattle) ~ 2
+bsb_pig pig ~ (pig|hog|boar|piglet) ~ 2
+bsb_hen chicken ~ (chicken|hen|rooster|cock|chick) ~ 2
+bsb_duck duck ~ (duck|goose) ~ 1
+bsb_chew chewing ~ (chew|eat|munch|bite|gnaw|crunch) ~ 3
+bsb_bone bone ~ (bone|crunch|break|snap) ~ 2
+bsb_meat meat ~ (meat|flesh|tear|raw|steak) ~ 2
+bsb_lick licking ~ (lick|lap|drink|slurp) ~ 2
+bsb_sniff sniffing ~ (sniff|smell|nose|snif) ~ 2
+bsb_leather leather ~ (leather|saddle|harness|strap|creak) ~ 3
+bsb_buckle buckle ~ (buckle|belt|clasp|strap) ~ 2
+bsb_bell bell ~ (small|little|jingle|tinkle|hand) ~ 2
+bsb_bird bird ~ (flight|wing|flap|flutter|take-off|takeoff) ~ 2
+bsb_horse horse ~ horse.*(snort|neigh|whinn|blow|breath|nicker) ~ 2

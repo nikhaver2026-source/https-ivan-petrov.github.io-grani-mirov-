@@ -67,7 +67,19 @@ def hidden_fields(html):
     return out
 
 
+FORMATS = ("wav", "flac", "aiff", "ogg", "mp3")
+
+
 def download(op, slug, num, root, name):
+    """Первый формат, который сайт отдал: у старых записей (номер меньше
+    тысячи) WAV не отдаётся — форма уводит на главную; тогда FLAC и дальше."""
+    for fmt in FORMATS:
+        if download_fmt(op, slug, num, root, name, fmt):
+            return True
+    return False
+
+
+def download_fmt(op, slug, num, root, name, fmt):
     page_url = f"{BASE}/{slug}-s{int(num):04d}.html"
     final, _, raw = fetch(op, page_url)
     page = raw.decode("utf-8", "replace")
@@ -77,7 +89,7 @@ def download(op, slug, num, root, name):
     token = token.group(1) if token else ""
     form = re.search(r'<form[^>]+action="https://bigsoundbank\.com/download\.php"[^>]*>(.*?)</form>', page, re.S)
     fields = hidden_fields(form.group(1)) if form else {}
-    fields.update({"format": "wav", "button": "Download", "id": str(int(num))})
+    fields.update({"format": fmt, "button": "Download", "id": str(int(num))})
     if token:
         fields["csrf_token"] = token
     hdr = {"Referer": final, "Origin": BASE, "Content-Type": "application/x-www-form-urlencoded"}
@@ -93,7 +105,7 @@ def download(op, slug, num, root, name):
         return False
     action = urllib.parse.urljoin(url, dl.group(1))
     f2 = hidden_fields(dl.group(2))
-    f2.setdefault("format", "wav")
+    f2["format"] = fmt
     f2["antibot_hp"] = ""
     time.sleep(6.5)  # страница ждёт пять секунд, потом отправляет форму сама
     hdr2 = {"Referer": url, "Origin": BASE, "Content-Type": "application/x-www-form-urlencoded"}
@@ -102,8 +114,8 @@ def download(op, slug, num, root, name):
     if ctype.startswith("text/html") or len(data2) < 2000:
         dbg = os.path.join(root, "bsb_debug")
         os.makedirs(dbg, exist_ok=True)
-        open(os.path.join(dbg, f"{int(num):04d}_dl.html"), "wb").write(data2)
-        print(f"!! {name} #{num}: вместо звука страница ({ctype}, {len(data2)} байт)", flush=True)
+        open(os.path.join(dbg, f"{int(num):04d}_{fmt}_dl.html"), "wb").write(data2)
+        print(f"!! {name} #{num} {fmt}: вместо звука страница ({ctype}, {len(data2)} байт)", flush=True)
         return False
     return save(h2, data2, root, name, num, slug, title)
 
@@ -112,6 +124,10 @@ def save(h, data, root, name, num, slug, title):
     cd = h.get("Content-Disposition") or ""
     m = re.search(r'filename="?([^";]+)"?', cd)
     ext = ".wav"
+    ct = (h.get("Content-Type") or "").lower()
+    for k, e in (("flac", ".flac"), ("aiff", ".aiff"), ("ogg", ".ogg"), ("mpeg", ".mp3"), ("mp3", ".mp3")):
+        if k in ct:
+            ext = e
     if m and "." in m.group(1):
         ext = os.path.splitext(m.group(1))[1].lower()[:5] or ".wav"
     fn = f"{int(num):04d}_{slug[:60]}{ext}"
