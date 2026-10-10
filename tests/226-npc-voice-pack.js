@@ -8,9 +8,10 @@
    2. Пока пакета нет, житель говорит первым или вторым своим голосом:
       строка не молчит и не просит файла, которого в сборке нет.
    3. С пакетом звучит третий голос, и файл берётся из gvoice_pack/npc/.
-   4. С 9.5 выкладываются только полные сборки (страница сборки, не выпуск):
-      всё, что идёт в полный APK и полный архив Windows (sounds вместе с
-      голосовым пакетом и страница), — меньше 3,9 ГБ: предел архива в 4 ГиБ.
+   4. Архив Windows — полная сборка при любом весе (14.5): ZIP64 без предела,
+      записи на машине сборки переносятся, а не копируются. APK для Android
+      (страница и записи без голосового пакета жителей) — меньше 3,9 ГБ: APK
+      больше 4 ГиБ с подписью v2/v3 Android не принимает.
    ═══════════════════════════════════════════════════════════════════════ */
 const {chromium}=require('playwright');
 const fs=require('fs'),path=require('path');
@@ -58,12 +59,14 @@ const PACK=path.join(ROOT,'sounds','gvoice_pack','npc');
  check('3. с пакетом звучит третий голос, файл берётся из gvoice_pack/npc/',
   с.state==="ready"&&/_v2$/.test(с.имя)&&с.файлы.some(f=>/gvoice_pack\/npc\/.+_v2_g\.flac$/.test(f)),с);
 
- /* ── 4. Размер APK ── */
+ /* ── 4. Размер сборок ── */
  let байт=fs.statSync(path.join(ROOT,'index.html')).size;
- const обойти=д=>{for(const и of fs.readdirSync(д)){const п=path.join(д,и);const st=fs.statSync(п);
-  if(st.isDirectory())обойти(п);else байт+=st.size;}};
+ const обойти=д=>{for(const и of fs.readdirSync(д)){if(д===path.join(ROOT,'sounds')&&и==='gvoice_pack')continue;
+  const п=path.join(д,и);const st=fs.statSync(п);if(st.isDirectory())обойти(п);else байт+=st.size;}};
  обойти(path.join(ROOT,'sounds'));
- check('4. всё, что идёт в полную сборку (с голосовым пакетом), меньше 3,9 ГБ — предел архива в 4 ГиБ',байт<3900e6,{МБ:Math.round(байт/1e6)});
+ const ww=fs.readFileSync(path.join(ROOT,'.github','workflows','windows.yml'),'utf8');
+ const виндоус=/mv sounds "\$G"\//.test(ww)&&/mv \.\.\/build\/game "\$D\/resources\/game"/.test(ww)&&/7z a -tzip -mx=0/.test(ww)&&!/3900e6|3,9 ГБ/.test(ww);
+ check('4. архив Windows — полная сборка при любом весе; APK для Android (без пакета жителей) меньше 3,9 ГБ',байт<3900e6&&виндоус,{МБ:Math.round(байт/1e6),виндоус});
 
  check('без ошибок на странице',!errors.length,errors.slice(0,3));
  await browser.close();

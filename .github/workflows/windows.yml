@@ -5,9 +5,11 @@
 # нужна (глава «Игра на компьютере» в руководстве).
 #
 # Выходит одна полная сборка GraniMirov-14.5-windows-full.zip со всеми
-# голосами: распаковать и открыть GraniMirov.exe. Она больше предела выпуска
-# (2 ГиБ) и лежит на странице сборки (Artifacts); выпуск «windows-latest»
-# несёт ссылку на неё. Обычный архив без голосов с 9.5 не выкладывается.
+# голосами: распаковать и открыть GraniMirov.exe. Предела веса у неё нет
+# (14.5): все записи без сжатия, архив ZIP64 — хоть 5, хоть 10 ГБ и больше.
+# Записи на машине сборки переносятся, а не копируются, — места хватает с
+# запасом. Она больше предела выпуска (2 ГиБ) и лежит на странице сборки
+# (Artifacts); выпуск «windows-latest» несёт ссылку на неё.
 name: Сборка Windows
 
 on:
@@ -17,7 +19,6 @@ on:
     paths:
       - 'index.html'
       - 'sounds/**'
-      - '!sounds/gvoice_pack/**'
       - 'desktop/**'
       - '.github/workflows/windows.yml'
 
@@ -38,6 +39,12 @@ jobs:
     steps:
       - name: Забрать репозиторий
         uses: actions/checkout@v4
+
+      # Историю git сборке не нужно, а она весит столько же, сколько записи.
+      - name: Место на машине сборки
+        run: |
+          rm -rf .git || cmd //c "rmdir /s /q .git"
+          df -h . || true
 
       - name: Поставить Node 22
         uses: actions/setup-node@v4
@@ -128,8 +135,9 @@ jobs:
           G=build/game
           rm -rf "$G" && mkdir -p "$G"
           cp index.html manifest.json icon-192.png icon-512.png "$G"/
-          cp -r sounds "$G"/
-          # Голосовой пакет Gemini — внутри: игроку ничего не надо ставить самому.
+          # Все записи и голосовой пакет Gemini — внутри: игроку ничего не надо
+          # ставить самому. Перенос, а не копия: записи весят гигабайты.
+          mv sounds "$G"/
           du -sh "$G"
 
       - name: Упаковать приложение
@@ -144,8 +152,10 @@ jobs:
             --executable-name=GraniMirov --app-version=14.5.0 --build-version=14.5.0.${GITHUB_RUN_NUMBER} \
             --win32metadata.ProductName="Грань Миров" --win32metadata.FileDescription="Грань Миров" \
             --win32metadata.CompanyName="Грань Миров" \
-            --extra-resource=../build/game --extra-resource=sapi --extra-resource=sr --extra-resource=espeak --extra-resource=rhvoice --ignore='out' --ignore='icon\.ico' --ignore='(key|voice)check\.js' --ignore='sapi-test\.js' --ignore='sapi-build\.js' $ICONARG
+            --extra-resource=sapi --extra-resource=sr --extra-resource=espeak --extra-resource=rhvoice --ignore='out' --ignore='icon\.ico' --ignore='(key|voice)check\.js' --ignore='sapi-test\.js' --ignore='sapi-build\.js' $ICONARG
           D=out/GraniMirov-win32-x64
+          # Игра — в resources/game, переносом (упаковщик скопировал бы её ещё раз).
+          mv ../build/game "$D/resources/game"
           # Мост голосов обязан лежать обычным файлом рядом с приложением.
           ls -la "$D/resources/sapi" "$D/resources/sr" || true
           ls "$D"/resources/sapi/grani-sapi-*.dll
@@ -176,8 +186,10 @@ jobs:
         run: |
           # Вся папка приложения со всеми голосами (и голосовым пакетом) — один
           # zip без пересжатия: записи уже сжаты, качество не меняется.
+          df -h . || true
           7z a -tzip -mx=0 ../../GraniMirov-14.5-windows-full.zip "GraniMirov" > /dev/null
           ls -la ../../GraniMirov-14.5-windows-full.zip
+          df -h . || true
 
       - name: Полная сборка — на страницу сборки
         id: art
@@ -191,8 +203,10 @@ jobs:
       # 9.5: выкладывается только полная сборка. Обычного архива больше нет —
       # выпуск «windows-latest» несёт лишь ссылку на полную сборку.
       - name: Ссылка на полную сборку в выпуске «windows-latest»
+        if: github.ref == 'refs/heads/main'
         env:
           GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
         run: |
           gh release delete windows-latest --cleanup-tag -y || true
           FULL="${{ steps.art.outputs.artifact-url }}"
