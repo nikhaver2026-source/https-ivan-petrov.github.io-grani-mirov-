@@ -2,12 +2,4 @@
 # Наборы прошлых заходов (10.0, 11.0) уже сведены в игру и здесь не повторяются.
 # Наборы под CC BY-SA не берутся: условие «так же» не подходит к звукам игры.
 # Сжатые исходники (ogg, mp3) в игру не идут — только wav, flac и архивы с ними.
-bgdrones https://opengameart.org/content/background-drones-vol-1
-darkamb13 https://opengameart.org/content/dark-ambient-loop-13
-krank https://opengameart.org/content/atmospheric-interaction-sound-pack
-rumble https://opengameart.org/content/rumbling-sound-effects
-teleport https://opengameart.org/content/teleport
-owlish https://opengameart.org/content/sound-effects-pack
-blacklodge https://opengameart.org/content/50-free-scifi-soundfx-192khz-64-bit-24576kbps-wav
-coindrop https://opengameart.org/content/coin-drop
-chanting https://opengameart.org/content/creepy-incoherent-chanting
+# (14.6) Прежние наборы сведены в игру; этот заход — звери и верховая езда (bsb_q.txt).

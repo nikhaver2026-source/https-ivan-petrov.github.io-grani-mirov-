@@ -1,0 +1,21 @@
+# (14.6) Звери и верховая езда: BigSoundBank (Joseph Sardin, CC0), поиск по словам.
+# имя запрос | шаблон имени страницы | сколько
+bsb_eat_horse horse eating | horse.*(eat|chew|hay|oat|graz) | 2
+bsb_eat_goat goat eating | (goat|sheep|cow).*(eat|chew|graz) | 2
+bsb_eat_rabbit rabbit eating | (rabbit|guinea|hamster).*(eat|chew|nibbl|carrot) | 1
+bsb_eat_dog dog eating | dog.*(eat|chew|crunch|kibble|bone) | 2
+bsb_eat_cat cat eating | cat.*(eat|chew|food|crunch) | 1
+bsb_eat_hen chicken eating | (chicken|hen|bird|pigeon).*(eat|peck|grain) | 1
+bsb_eat_crunch crunching | (crunch|chew|bite|munch) | 2
+bsb_drink_dog dog drinking | (dog|cat|animal).*(drink|lap) | 1
+bsb_ride_gallop horse gallop | (horse|hoof|gallop) | 2
+bsb_ride_trot horse trot | (horse|hoof|trot) | 1
+bsb_ride_walk horse walking | (horse|hoof).*(walk|step|pav|stone|gravel) | 1
+bsb_wings wings flapping | (wing|flap|pigeon|bird|flight|flutter) | 2
+bsb_purr cat purring | (purr|cat) | 1
+bsb_growl dog growling | (growl|grunt|dog) | 1
+bsb_sniff dog sniffing | (sniff|snif|nose|dog) | 1
+bsb_pant dog panting | (pant|breath|dog) | 1
+bsb_saddle saddle | (saddle|leather|harness|bridle|tack) | 2
+bsb_buckle buckle | (buckle|belt|strap|clasp) | 1
+bsb_bell small bell | (bell|jingle|tinkle) | 1

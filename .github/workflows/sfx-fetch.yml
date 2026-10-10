@@ -67,9 +67,16 @@ jobs:
               process "$name"
             done
           fi
-          # BigSoundBank (CC0): форма «Download» сайта (bsb.py).
-          if [ -f tools/sfx-fetch/bsb.txt ]; then
+          # BigSoundBank (CC0): форма «Download» сайта (bsb.py, по номерам).
+          if [ -f tools/sfx-fetch/bsb.txt ] && grep -qv '^#' tools/sfx-fetch/bsb.txt; then
             python3 tools/sfx-fetch/bsb.py tools/sfx-fetch/bsb.txt x 2>&1 | tee -a bsb.log || echo "!! bsb"
+          fi
+          # (14.6) Поиск по словам и загрузка в два шага — через страницу
+          # ожидания и форму dl-form (bsb_search.py).
+          if [ -f tools/sfx-fetch/bsb_q.txt ]; then
+            python3 tools/sfx-fetch/bsb_search.py tools/sfx-fetch/bsb_q.txt x 2>&1 | tee -a bsb.log || echo "!! bsb_search"
+          fi
+          if ls -d x/bsb_* > /dev/null 2>&1; then
             echo "bsb https://bigsoundbank.com cc0 (Joseph Sardin)" >> licenses.txt
             for d in x/bsb_*; do [ -d "$d" ] && process "$(basename "$d")"; done
           fi

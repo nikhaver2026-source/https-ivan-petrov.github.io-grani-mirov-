@@ -1,3 +1,3 @@
 # Наборы с itch.io (CC0 и CC BY 4.0) — скачиваются через itch.py.
 # Третье поле — отбор файлов набора по имени (регулярное выражение, без пробелов).
-nihilex https://nihil-existentia.itch.io/free-audio-asset-collection Dark.Ambient|Underground
+# (14.6) Прежние наборы сведены в игру; этот заход — звери и верховая езда (bsb_q.txt).
