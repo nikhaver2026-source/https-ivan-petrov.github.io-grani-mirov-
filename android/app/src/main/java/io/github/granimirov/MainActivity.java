@@ -175,6 +175,19 @@ public class MainActivity extends Activity {
         }
         if (state != null) web.restoreState(state);
         else web.loadUrl(START);
+
+        /* (14.5) Проверка полного APK на эмуляторе (android/install-check.sh):
+           прочесть запись из конца архива ZIP64 — за пределом 4 ГиБ — тем же
+           путём, каким записи читает страница, и сказать об этом в журнал. */
+        final String probe = getIntent() != null ? getIntent().getStringExtra("grani_probe") : null;
+        if (probe != null) new Thread(() -> {
+            long n = 0;
+            try (InputStream in = getAssets().open(probe)) {
+                byte[] b = new byte[1 << 16]; int k;
+                while ((k = in.read(b)) > 0) n += k;
+                android.util.Log.i("GraniProbe", "ok " + probe + " " + n);
+            } catch (Exception e) { android.util.Log.e("GraniProbe", "fail " + probe + " " + e); }
+        }).start();
     }
 
     /* Кнопка «Назад» закрывает верхнее окно игры, как свайп двумя пальцами

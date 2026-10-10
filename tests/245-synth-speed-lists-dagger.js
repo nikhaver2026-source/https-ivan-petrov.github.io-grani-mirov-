@@ -99,10 +99,9 @@ const flac=f=>{const b=fs.readFileSync(f);if(b.slice(0,4).toString()!=="fLaC")re
  /* ── 7 ── */
  const wa=fs.readFileSync(path.join(R,'.github','workflows','android.yml'),'utf8');
  const ww=fs.readFileSync(path.join(R,'.github','workflows','windows.yml'),'utf8');
- /* 14.5: Windows — полная сборка; у Android голоса жителей — отдельный голосовой пакет (APK больше 4 ГиБ
-    подписать нельзя): выпуск несёт ссылки на APK и на пакет. AAB по-прежнему не выкладывается. */
- check('7. Windows — только полная сборка; Android — APK и голосовой пакет жителей, AAB и архива нет, выпуски несут ссылки',
-  /grani-mirov-[\d.]+\.apk/.test(wa)&&!/grani-mirov-[\d.]+\.aab\b/.test(wa)&&/voicepack-latest\/GraniMirov-voicepack\.zip/.test(wa)&&/gh release create android-latest --target/.test(wa)
+ /* 14.5: только полные сборки при любом весе — один APK со всеми голосами (ZIP64, подпись v1) и один архив Windows */
+ check('7. выкладываются только полные сборки: обычного APK, AAB и архива нет, выпуски несут ссылку на полные',
+  /grani-mirov-[\d.]+-full\.apk/.test(wa)&&!/grani-mirov-[\d.]+\.(apk|aab)\b/.test(wa)&&/gh release create android-latest --target/.test(wa)
   &&/windows-full\.zip/.test(ww)&&!/GraniMirov-[\d.]+-windows\.zip/.test(ww)&&!/voices\.zip/.test(ww)&&/gh release create windows-latest --target/.test(ww)
   &&/upload-artifact/.test(wa)&&/upload-artifact/.test(ww));
 

@@ -17,7 +17,11 @@ android {
     defaultConfig {
         applicationId 'io.github.granimirov'
         minSdk 24
-        targetSdk 36
+        /* (14.5) Полный APK больше 4 ГиБ — архив ZIP64: его подпись — только v1
+           (v2/v3 у ZIP64 система не принимает), а подпись v1 без v2 Android
+           принимает у приложений с целевым API ниже 30. Рабочий процесс
+           android.yml собирает полный APK с TARGET_SDK=29; без него — 36. */
+        targetSdk((System.getenv('TARGET_SDK') ?: '36') as int)
         /* 3.0 — первая версия приложения со всей игрой внутри. Номер сборки
            растёт с каждым запуском рабочего процесса: Play требует, чтобы
            versionCode только рос. С 4.0 основа — 40000000: коды 4.0 выше
@@ -55,6 +59,12 @@ android {
         /* По умолчанию сборщик выбрасывает файлы и папки на «_» и «.»; в игре
            таких нет, но пусть ни один файл не пропадёт молча. */
         ignoreAssetsPattern = '!.svn:!.git:!.ds_store'
+    }
+
+    /* Целевой API 29 у полного APK — нарочно (см. выше): проверка «устаревший
+       целевой API» не должна останавливать его сборку. */
+    lint {
+        disable 'ExpiredTargetSdkVersion', 'OldTargetApi'
     }
 
     compileOptions {

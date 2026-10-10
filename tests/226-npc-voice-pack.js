@@ -8,10 +8,14 @@
    2. Пока пакета нет, житель говорит первым или вторым своим голосом:
       строка не молчит и не просит файла, которого в сборке нет.
    3. С пакетом звучит третий голос, и файл берётся из gvoice_pack/npc/.
-   4. Архив Windows — полная сборка при любом весе (14.5): ZIP64 без предела,
-      записи на машине сборки переносятся, а не копируются. APK для Android
-      (страница и записи без голосового пакета жителей) — меньше 3,9 ГБ: APK
-      больше 4 ГиБ с подписью v2/v3 Android не принимает.
+   4. Полные сборки — при любом весе (14.5): один APK и один архив Windows,
+      все записи с голосовым пакетом внутри, без сжатия, игроку ничего не
+      докачивать. Архив Windows — ZIP64 без предела, записи на машине сборки
+      переносятся, а не копируются. APK больше 4 ГиБ — архив ZIP64
+      (android/full-apk.py) с подписью v1 и целевым API 29 (подписи v2/v3 у
+      ZIP64 Android не принимает); перед выпуском он ставится и читает запись
+      из конца архива на эмуляторах Android 12 и 15. Сборщик проверен на малом
+      APK: прежняя подпись выброшена, всё прочее на месте, записи — без сжатия.
    ═══════════════════════════════════════════════════════════════════════ */
 const {chromium}=require('playwright');
 const fs=require('fs'),path=require('path');
@@ -59,14 +63,35 @@ const PACK=path.join(ROOT,'sounds','gvoice_pack','npc');
  check('3. с пакетом звучит третий голос, файл берётся из gvoice_pack/npc/',
   с.state==="ready"&&/_v2$/.test(с.имя)&&с.файлы.some(f=>/gvoice_pack\/npc\/.+_v2_g\.flac$/.test(f)),с);
 
- /* ── 4. Размер сборок ── */
- let байт=fs.statSync(path.join(ROOT,'index.html')).size;
- const обойти=д=>{for(const и of fs.readdirSync(д)){if(д===path.join(ROOT,'sounds')&&и==='gvoice_pack')continue;
-  const п=path.join(д,и);const st=fs.statSync(п);if(st.isDirectory())обойти(п);else байт+=st.size;}};
- обойти(path.join(ROOT,'sounds'));
- const ww=fs.readFileSync(path.join(ROOT,'.github','workflows','windows.yml'),'utf8');
- const виндоус=/mv sounds "\$G"\//.test(ww)&&/mv \.\.\/build\/game "\$D\/resources\/game"/.test(ww)&&/7z a -tzip -mx=0/.test(ww)&&!/3900e6|3,9 ГБ/.test(ww);
- check('4. архив Windows — полная сборка при любом весе; APK для Android (без пакета жителей) меньше 3,9 ГБ',байт<3900e6&&виндоус,{МБ:Math.round(байт/1e6),виндоус});
+ /* ── 4. Полные сборки при любом весе ── */
+ const {execFileSync}=require('child_process'),os=require('os');
+ const врем=fs.mkdtempSync(path.join(os.tmpdir(),'grani226-'));
+ const zipPy=(код,...а)=>execFileSync('python3',['-c',код,...а],{encoding:'utf8'});
+ zipPy(`import sys,zipfile
+z=zipfile.ZipFile(sys.argv[1],"w")
+z.writestr(zipfile.ZipInfo("AndroidManifest.xml"),b"m"*500,compress_type=zipfile.ZIP_DEFLATED)
+z.writestr("resources.arsc",b"r"*100)
+for n in ("META-INF/MANIFEST.MF","META-INF/GRANI.SF","META-INF/GRANI.RSA"):z.writestr(n,b"old")
+z.writestr("META-INF/androidx.webkit_webkit.version",b"1.11.0")
+z.writestr("assets/www/index.html",b"<!doctype html>")
+z.close()`,path.join(врем,'small.apk'));
+ const звуки=path.join(врем,'sounds');fs.mkdirSync(path.join(звуки,'gvoice_pack','m'),{recursive:true});fs.mkdirSync(path.join(звуки,'voice'),{recursive:true});
+ fs.writeFileSync(path.join(звуки,'gvoice_pack','m','p00001.flac'),Buffer.alloc(3000,7));fs.writeFileSync(path.join(звуки,'voice','a.flac'),Buffer.alloc(1200,9));
+ fs.writeFileSync(path.join(звуки,'CREDITS.md'),'x');
+ let отчёт='',состав={};
+ try{отчёт=execFileSync('python3',[path.join(ROOT,'android','full-apk.py'),path.join(врем,'small.apk'),звуки,path.join(врем,'full.apk')],{encoding:'utf8'});
+  состав=JSON.parse(zipPy(`import sys,zipfile,json
+z=zipfile.ZipFile(sys.argv[1]);print(json.dumps({i.filename:[i.file_size,i.compress_type] for i in z.infolist()}))`,path.join(врем,'full.apk')));}catch(e){отчёт=String(e);}
+ const сборщик=!!состав['AndroidManifest.xml']&&состав['AndroidManifest.xml'][1]===8&&!!состав['resources.arsc']&&!!состав['assets/www/index.html']
+  &&!!состав['META-INF/androidx.webkit_webkit.version']&&!состав['META-INF/MANIFEST.MF']&&!состав['META-INF/GRANI.SF']&&!состав['META-INF/GRANI.RSA']
+  &&JSON.stringify(состав['assets/www/sounds/gvoice_pack/m/p00001.flac'])==='[3000,0]'&&JSON.stringify(состав['assets/www/sounds/voice/a.flac'])==='[1200,0]'&&!!состав['assets/www/sounds/CREDITS.md'];
+ fs.rmSync(врем,{recursive:true,force:true});
+ const wa=fs.readFileSync(path.join(ROOT,'.github','workflows','android.yml'),'utf8'),ww=fs.readFileSync(path.join(ROOT,'.github','workflows','windows.yml'),'utf8');
+ const андроид=/full-apk\.py "\$SMALL" sounds/.test(wa)&&/TARGET_SDK: '29'/.test(wa)&&/jarsigner .*-signedjar grani-mirov-[\d.]+-full\.apk/.test(wa)
+  &&(wa.match(/install-check\.sh/g)||[]).length>=2&&/api-level: 31/.test(wa)&&!/gvoice_pack/.test(wa)&&!/3900e6|3,9 ГБ/.test(wa);
+ const виндоус=/mv sounds "\$G"\//.test(ww)&&/mv \.\.\/build\/game "\$D\/resources\/game"/.test(ww)&&/7z a -tzip -mx=0/.test(ww)&&!/gvoice_pack\/\*\*/.test(ww)&&!/3900e6|3,9 ГБ/.test(ww);
+ check('4. полные сборки при любом весе: один APK (ZIP64, подпись v1, проверка на Android 12 и 15) и один архив Windows; сборщик APK кладёт все записи без сжатия',
+  сборщик&&андроид&&виндоус,{отчёт:отчёт.trim().slice(0,200),андроид,виндоус,состав:Object.keys(состав).length});
 
  check('без ошибок на странице',!errors.length,errors.slice(0,3));
  await browser.close();

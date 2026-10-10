@@ -86,7 +86,8 @@ const опись=f=>{const t=fs.readFileSync(f,'utf8');return JSON.parse(t.slice
     само скачать его из «voicepack-latest» (VoicePack.autoFetch). */
  const win=wf('windows.yml'),vpjs=fs.readFileSync(path.join(ROOT,'desktop','voicepack.js'),'utf8');
  check('5. обычного APK нет, пакет кладётся только в полный; Windows несёт его в полной сборке, а приложение без пакета докачивает его само; пакет собирается в свой выпуск, Android отдаёт его по тому же адресу',
-  /rm -rf "\$P"\/sounds\/gvoice_pack/.test(wf('android.yml'))&&!/rm -rf "\$G"\/sounds\/gvoice_pack/.test(win)&&/upload-artifact/.test(win)&&/windows-full\.zip/.test(win)
+  /* 14.5: полный APK несёт все записи с пакетом (android/full-apk.py берёт всю папку sounds) */
+  /full-apk\.py "\$SMALL" sounds/.test(wf('android.yml'))&&!/gvoice_pack/.test(fs.readFileSync(path.join(ROOT,'android','full-apk.py'),'utf8'))&&!/rm -rf "\$G"\/sounds\/gvoice_pack/.test(win)&&/upload-artifact/.test(win)&&/windows-full\.zip/.test(win)
   &&/autoFetch/.test(vpjs)&&/voicepack-latest/.test(vpjs)&&/voicepack-latest/.test(wf('voicepack.yml'))
   &&/GraniMirov-voicepack\.zip/.test(wf('voicepack.yml'))&&/\/assets\/www\/sounds\/gvoice_pack\//.test(java)&&/installVoicePack/.test(java));
 
