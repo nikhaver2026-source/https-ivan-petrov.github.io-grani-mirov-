@@ -1,10 +1,14 @@
 # Сборка приложения «Грань Миров» 14.5 для Android на серверах GitHub.
 #
 # Вся игра — index.html и записи sounds — лежит внутри
-# приложения, и оно работает без сети. С 9.5 собирается только полная
-# сборка grani-mirov-14.5-full.apk со всем голосовым пакетом Gemini внутри;
-# она больше предела выпуска (2 ГиБ) и лежит на странице сборки (Artifacts),
-# а выпуск «android-latest» несёт ссылку на неё.
+# приложения, и оно работает без сети. С 14.5 голоса жителей Gemini
+# (sounds/gvoice_pack) в APK не входят: с ними APK вырос бы больше 4 ГиБ, а
+# подпись APK (apksig) архивов больше 4 ГиБ не принимает. Они — отдельный файл
+# GraniMirov-voicepack.zip (выпуск «voicepack-latest», сборка «Голосовой пакет»);
+# приложение ставит его кнопкой «Установить голосовой пакет». Остальное — весь
+# интерфейс голосами Gemini, боевые фразы героя, все звуки — в APK, без потерь.
+# APK больше предела выпуска (2 ГиБ) и лежит на странице сборки (Artifacts),
+# а выпуск «android-latest» несёт ссылку на него и на голосовой пакет.
 #
 # Подпись. Ключей в репозитории нет. Если в Settings → Secrets and variables
 # → Actions заведены ANDROID_KEYSTORE_B64 (хранилище ключей в base64),
@@ -144,17 +148,16 @@ jobs:
             } >> "$GITHUB_ENV"
           fi
 
-      # Полный APK: та же игра и весь голосовой пакет Gemini внутри — голоса
-      # готовы сразу, ставить пакет отдельно не нужно. Файл больше 2 ГиБ, а
-      # выпуск принимает только меньшие, поэтому он лежит на странице сборки
+      # APK: вся игра, кроме голосов жителей Gemini (они — GraniMirov-voicepack.zip,
+      # иначе APK больше 4 ГиБ и не подписывается). Файл больше 2 ГиБ, а выпуск
+      # принимает только меньшие, поэтому он лежит на странице сборки
       # (Actions → «Сборка Android» → Artifacts) одним файлом, без zip.
-      - name: Полный APK со всеми голосами
+      - name: APK (голоса жителей — отдельным пакетом)
         env:
           BUILD_NUMBER: ${{ github.run_number }}
         run: |
           curl -sSL -o "$RUNNER_TEMP/bundletool.jar" \
             https://github.com/google/bundletool/releases/download/1.18.1/bundletool-all-1.18.1.jar
-          cp -r sounds/gvoice_pack android/gamedata/src/main/assets/www/sounds/
           du -sh android/gamedata/src/main/assets/www
           # Файл почти в 3 ГБ: подписи нужно много памяти (машина сборки — 16 ГБ).
           (cd android && gradle --no-daemon -Dorg.gradle.jvmargs="-Xmx12g -XX:MaxMetaspaceSize=1g" bundleRelease)
@@ -163,24 +166,24 @@ jobs:
             --bundle="$AAB" --output="$RUNNER_TEMP/full.apks" \
             --ks="$KS_FILE" --ks-pass="pass:$KS_PASS" --ks-key-alias="$KS_ALIAS" --key-pass="pass:$KS_KEY_PASS"
           rm -rf android/app/build/intermediates
-          unzip -p "$RUNNER_TEMP/full.apks" universal.apk > grani-mirov-14.5-full.apk
+          unzip -p "$RUNNER_TEMP/full.apks" universal.apk > grani-mirov-14.5.apk
           rm -f "$RUNNER_TEMP/full.apks"
-          ls -la grani-mirov-14.5-full.apk
-          "$ANDROID_HOME/build-tools/36.0.0/apksigner" -J-Xmx8g verify --print-certs grani-mirov-14.5-full.apk | head -3
+          ls -la grani-mirov-14.5.apk
+          "$ANDROID_HOME/build-tools/36.0.0/apksigner" -J-Xmx8g verify --print-certs grani-mirov-14.5.apk | head -3
           df -h /
 
-      - name: Полный APK — на страницу сборки
+      - name: APK — на страницу сборки
         id: art
         uses: actions/upload-artifact@v7
         with:
-          path: grani-mirov-14.5-full.apk
+          path: grani-mirov-14.5.apk
           archive: false
           compression-level: 0
           retention-days: 90
 
-      # 9.5: выкладывается только полная сборка. Выпуск «android-latest» несёт
-      # лишь ссылку на полный APK (он больше предела выпуска в 2 ГиБ).
-      - name: Ссылка на полный APK в выпуске «android-latest»
+      # Выпуск «android-latest» несёт ссылки на APK (он больше предела выпуска в 2 ГиБ)
+      # и на голосовой пакет жителей.
+      - name: Ссылки на APK и голосовой пакет в выпуске «android-latest»
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
@@ -189,4 +192,4 @@ jobs:
           [ -n "$FULL" ] || FULL="https://github.com/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
           gh release create android-latest --target "$GITHUB_SHA" \
             --title "Грань Миров 14.5 для Android (сборка ${GITHUB_RUN_NUMBER})" \
-            --notes "Свежая сборка из main ($GITHUB_SHA); ${KEY_NOTE}. Выкладывается только полная сборка со всеми голосами — grani-mirov-14.5-full.apk (около 3 ГБ, голосовой пакет уже внутри): прямая ссылка на файл (скачивание начинается сразу, нужен вход в GitHub) — $FULL. Скачайте и откройте на телефоне, Android попросит разрешить установку из этого источника. Вся игра внутри, сеть не нужна."
+            --notes "Свежая сборка из main ($GITHUB_SHA); ${KEY_NOTE}. Игра — grani-mirov-14.5.apk (около 3,4 ГБ): прямая ссылка на файл (скачивание начинается сразу, нужен вход в GitHub) — $FULL. Скачайте и откройте на телефоне, Android попросит разрешить установку из этого источника. Вся игра внутри, сеть не нужна. Голоса жителей Gemini — отдельный файл GraniMirov-voicepack.zip (около 1,2 ГБ): https://github.com/$GITHUB_REPOSITORY/releases/download/voicepack-latest/GraniMirov-voicepack.zip — скачайте его на телефон и в игре нажмите «Установить голосовой пакет»."

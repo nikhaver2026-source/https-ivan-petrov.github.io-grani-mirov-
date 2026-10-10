@@ -185,7 +185,9 @@ function lufs(file){
   /^([4-9]|[1-9]\d)\.\d+(\.\d+)?$/.test(браузер.v)&&браузер.title.includes("Версия "+браузер.v)&&браузер.on&&браузер.n23
   /* С 7.0 у приложения для Android своя версия (ANDROID_VERSION, в нём Своды). */
   &&прил.v===прил.андр&&прил.title.includes("Версия "+прил.v)&&прил.on&&прил.вид==="gemini"&&прил.пункт&&прил.n23&&прил.движок==="gemini"
-  &&!/sounds\/gvoice(_f)?\b/.test(сборка)&&/cp -r sounds/.test(сборка)&&сборка.includes("grani-mirov-"+прил.v+"-full.apk"),{браузер,прил});
+  &&!/sounds\/gvoice(_f)?\b/.test(сборка)&&/cp -r sounds/.test(сборка)
+  /* 14.5: голоса жителей — отдельным пакетом (APK больше 4 ГиБ не подписывается), имя APK — по версии */
+  &&сборка.includes("grani-mirov-"+прил.v+".apk"),{браузер,прил});
 
  check('страница не бросила ни одной ошибки',errors.length===0,errors.slice(0,3));
  await browser.close();
