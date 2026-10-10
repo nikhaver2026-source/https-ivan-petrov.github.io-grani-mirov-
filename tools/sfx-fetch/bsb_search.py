@@ -9,7 +9,7 @@
 (короткий /sNNNN.html уводит на главную).
 
 Использование: bsb_search.py список папка
-Строка списка: имя запрос | шаблон | сколько
+Строка списка: имя запрос ~ шаблон ~ сколько
   имя     — папка набора (bsb_…);
   запрос  — слова поиска (как в строке поиска сайта);
   шаблон  — регулярное выражение по имени страницы звука: из выдачи берутся
@@ -129,7 +129,7 @@ def main(lst, root):
         line = line.strip()
         if not line or line.startswith("#"):
             continue
-        parts = [p.strip() for p in line.split("|")]
+        parts = [p.strip() for p in line.split(" ~ ")]
         head = parts[0].split(None, 1)
         name, q = head[0], head[1] if len(head) > 1 else ""
         pat = re.compile(parts[1] if len(parts) > 1 and parts[1] else ".", re.I)

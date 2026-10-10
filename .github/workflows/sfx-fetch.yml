@@ -104,9 +104,10 @@ jobs:
             curl -fsSL --retry 4 -o "x/$name/$(basename "$url" | sed 's/%20/_/g')" "$url" || { echo "!! не скачалось: $url"; continue; }
             process "$name"
           done
-          cd out
-          for d in */; do d="${d%/}"; zip -0 -qr "../$d.zip" "$d"; done
+          mkdir -p out && cd out
+          for d in */; do [ -d "$d" ] || continue; d="${d%/}"; zip -0 -qr "../$d.zip" "$d"; done
           cd ..
+          ls *.zip > /dev/null 2>&1 || { echo "пусто" > empty.txt; zip -0 -q empty.zip empty.txt; }
           ( cd out && find . -type f -name '*.flac' | sort | while read -r f; do
               echo "$f $(ffprobe -v error -show_entries stream=sample_rate,channels,bits_per_raw_sample:format=duration -of csv=p=0 "$f" | tr '\n' ' ')"; done ) > inventory.txt
           ( cd out && find . -type f \( -name '*.ogg' -o -name '*.mp3' \) | sort | sed 's/$/ (сжатый исходник — в игру не годится)/' ) >> inventory.txt
