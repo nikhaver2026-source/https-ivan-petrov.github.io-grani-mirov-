@@ -5,7 +5,7 @@
 стражник у ворот, жрец, трактирщик, староста, кузнец, торговец, наставник, смотритель порта. Прежде эти строки читал голос
 игры в кавычках; теперь у каждой своя запись и своя интонация.
 
-Записей: 7887
+Записей: 7963
 
 Речь синтезирована 27–29 сентября 2026 года нейроголосами **Gemini** (Google),
 модель `gemini-3.8-flash-tts`, через Gemini API (Interactions API,
@@ -7179,7 +7179,7 @@ Policy (https://policies.google.com/terms/generative-ai/use-policy). Отдел�
 | quest_have_0_v2_g.flac | quest_have | Schedar | patient | Моё дело уже у тебя. Сделай сначала его. |
 | quest_have_1_v2_f_g.flac | quest_have | Aoede | mildly impatient | Моё поручение и так при тебе. |
 | quest_have_1_v2_g.flac | quest_have | Schedar | mildly impatient | Моё поручение и так при тебе. |
-| quest_have_2_v2_f_g.flac | quest_have | Aoede | patient | Ты уже взялась за моё дело. Сперва закончи его. |
+| quest_have_2_v2_f_g.flac | quest_have | Aoede | patient | Ты уже взялся за моё дело. Сперва закончи его. |
 | quest_have_2_v2_g.flac | quest_have | Schedar | patient | Ты уже взялся за моё дело. Сперва закончи его. |
 | quest_have_3_v2_f_g.flac | quest_have | Aoede | impatient | Я жду. Дело-то моё ещё не сделано. |
 | quest_have_3_v2_g.flac | quest_have | Schedar | impatient | Я жду. Дело-то моё ещё не сделано. |
@@ -7910,6 +7910,40 @@ Policy (https://policies.google.com/terms/generative-ai/use-policy). Отдел�
 | foe_pirate_low_5_v1_g.flac | в бою: пират, на краю | Zephyr | salty, swaggering pirate | Хватит, хватит, твоя добыча! |
 | foe_pirate_low_6_v1_g.flac | в бою: пират, на краю | Zephyr | salty, swaggering pirate | Прыгаю за борт, не догонишь! |
 | foe_pirate_otvet_0_v1_g.flac | в бою: пират, ответ герою | Zephyr | salty, swaggering pirate | На рее у меня запоёшь. |
+| foe_bandit_death_3_g.flac | в бою: разбойник, последние слова | Fenrir | rough highway robber | Не так… договаривались… |
+| foe_bandit_hurt_6_g.flac | в бою: разбойник, рана | Fenrir | rough highway robber | Ну всё, теперь я злой! |
+| foe_bandit_hurt_7_g.flac | в бою: разбойник, рана | Fenrir | rough highway robber | Да что ж ты острый такой! |
+| foe_bandit_hurt_7_v1_g.flac | в бою: разбойник, рана | Enceladus | rough highway robber | Да что ж ты острый такой! |
+| foe_bandit_kray_4_v1_g.flac | в бою: разбойник, слабеет | Enceladus | rough highway robber | Не бей больше, прошу! |
+| foe_bandit_kray_5_v1_g.flac | в бою: разбойник, слабеет | Enceladus | rough highway robber | Ой, всё, всё! Бери что хочешь! |
+| foe_bandit_kray_7_g.flac | в бою: разбойник, слабеет | Fenrir | rough highway robber | Ноги… уходим! |
+| foe_bandit_taunt_4_g.flac | в бою: разбойник, насмешка | Fenrir | rough highway robber | Бледный ты какой-то, путник. |
+| foe_construct_kray_1_g.flac | в бою: голем, слабеет | Zubenelgenubi | flat, grinding stone golem | Сбой... сбой... |
+| foe_construct_kray_2_g.flac | в бою: голем, слабеет | Zubenelgenubi | flat, grinding stone golem | Отказ... опоры... |
+| foe_dragon_hurt_5_g.flac | в бою: дракон, рана | Charon | ancient, deep, majestic dragon | Чешуя треснула… Невозможно! |
+| foe_dragon_kray_1_g.flac | в бою: дракон, слабеет | Charon | ancient, deep, majestic dragon | Крылья... не держат. |
+| foe_dragon_kray_3_g.flac | в бою: дракон, слабеет | Charon | ancient, deep, majestic dragon | Кровь древних… на камне… |
+| foe_fiend_low_4_g.flac | в бою: демон, на краю | Orus | dark, hissing demon | Ладно-ладно! Сделку, давай сделку! |
+| foe_fiend_low_5_g.flac | в бою: демон, на краю | Orus | dark, hissing demon | Отпусти — исполню желание! |
+| foe_fiend_low_6_g.flac | в бою: демон, на краю | Orus | dark, hissing demon | Я исчезну, только не бей! |
+| foe_giant_hurt_6_g.flac | в бою: великан, рана | Alnilam | huge, slow, rumbling giant | Гр-р… больно. |
+| foe_goblin_attack_7_g.flac | в бою: гоблин, удар | Puck | shrill, cunning goblin | Цап за палец! |
+| foe_goblin_attack_8_g.flac | в бою: гоблин, удар | Puck | shrill, cunning goblin | Вот тебе, вот! |
+| foe_goblin_attack_9_g.flac | в бою: гоблин, удар | Puck | shrill, cunning goblin | Под коленку его! |
+| foe_goblin_death_3_g.flac | в бою: гоблин, последние слова | Puck | shrill, cunning goblin | Блестяшки… мои… |
+| foe_goblin_hurt_4_g.flac | в бою: гоблин, рана | Puck | shrill, cunning goblin | Ай-ай-ай! Нечестно! |
+| foe_goblin_hurt_5_g.flac | в бою: гоблин, рана | Puck | shrill, cunning goblin | Уи! Больно-больно! |
+| foe_goblin_low_4_g.flac | в бою: гоблин, на краю | Puck | shrill, cunning goblin | Не надо! Отдам блестяшку! |
+| foe_goblin_low_5_g.flac | в бою: гоблин, на краю | Puck | shrill, cunning goblin | Мама! Бежим в нору! |
+| foe_goblin_low_6_g.flac | в бою: гоблин, на краю | Puck | shrill, cunning goblin | Я хороший! Я маленький! |
+| foe_goblin_taunt_5_g.flac | в бою: гоблин, насмешка | Puck | shrill, cunning goblin | Скоро наш будешь! |
+| foe_lich_start_7_g.flac | в бою: лич, начало боя | Schedar | cold, hollow, ancient undead lord | Я ждал тебя дольше, чем ты живёшь. |
+| foe_pirate_attack_6_v1_g.flac | в бою: пират, удар | Zephyr | salty, swaggering pirate | Получай по ватерлинии! |
+| foe_pirate_attack_7_g.flac | в бою: пират, удар | Algenib | salty, swaggering pirate | Вот тебе бортовой залп! |
+| foe_pirate_attack_7_v1_g.flac | в бою: пират, удар | Zephyr | salty, swaggering pirate | Вот тебе бортовой залп! |
+| foe_pirate_start_7_v1_g.flac | в бою: пират, начало боя | Zephyr | salty, swaggering pirate | Якорь мне в печень, вот это улов! |
+| foe_pirate_start_8_v1_g.flac | в бою: пират, начало боя | Zephyr | salty, swaggering pirate | Кошели на палубу, сабли к бою! |
+| foe_pirate_start_9_v1_g.flac | в бою: пират, начало боя | Zephyr | salty, swaggering pirate | Эй, на шканцах! Режь его! |
 
 ## 15.0: женское обращение к героине
 
@@ -7919,6 +7953,8 @@ Policy (https://policies.google.com/terms/generative-ai/use-policy). Отдел�
 
 | Файл | Где звучит | Голос | Интонация | Строка |
 |---|---|---|---|---|
+| ch_boss_9_hn_g.flac | хранитель чертога, героине | Charon | low, heavy, menacing ancient guardian; slow but natural pace | Ты пришла туда, откуда не уходят. |
+| ch_role_12_hn_g.flac | житель чертога, героине | Puck | playful, teasing | Угадал бы — получил бы золото. Но ты подсмотрела |
 | dlg_13_8_hn_g.flac | ответ в разговоре, героине | Umbriel | correcting, slightly condescending, warm, friendly | Не то, подруга. Но за старание спасибо |
 | dlg_13_8_hn_f_g.flac | ответ в разговоре, героине | Despina | correcting, slightly condescending, warm, friendly | Не то, подруга. Но за старание спасибо |
 | dlg_13_8_hn_v1_g.flac | ответ в разговоре, героине | Sadachbia | correcting, slightly condescending, warm, friendly | Не то, подруга. Но за старание спасибо |
@@ -7965,17 +8001,38 @@ Policy (https://policies.google.com/terms/generative-ai/use-policy). Отдел�
 | dlg_40_4_hn_f_g.flac | ответ в разговоре, героине | Despina | firm, dissatisfied, warm, friendly | Прости, подруга, так не выйдет |
 | dlg_42_5_hn_g.flac | ответ в разговоре, героине | Umbriel | dismissive, busy, warm, friendly | Прости, подруга, не мастак я рассказывать |
 | dlg_42_5_hn_f_g.flac | ответ в разговоре, героине | Despina | dismissive, busy, warm, friendly | Прости, подруга, не мастак я рассказывать |
+| dlg_42_5_hn_v2_g.flac | ответ в разговоре, героине | Schedar | dismissive | Прости, подруга, не мастак я рассказывать |
+| dlg_42_5_hn_v2_f_g.flac | ответ в разговоре, героине | Aoede | dismissive | Прости, подруга, не мастак я рассказывать |
 | dlg_5_9_hn_g.flac | ответ в разговоре, героине | Umbriel | helpless, sad, warm, friendly | Прости, подруга, сейчас нечем помочь |
 | dlg_5_9_hn_f_g.flac | ответ в разговоре, героине | Despina | helpless, sad, warm, friendly | Прости, подруга, сейчас нечем помочь |
 | dlg_5_9_hn_v1_g.flac | ответ в разговоре, героине | Sadachbia | helpless, sad, warm, friendly | Прости, подруга, сейчас нечем помочь |
 | dlg_5_9_hn_v1_f_g.flac | ответ в разговоре, героине | Leda | helpless, sad, warm, friendly | Прости, подруга, сейчас нечем помочь |
 | dlg_5_9_hn_v2_g.flac | ответ в разговоре, героине | Schedar | helpless | Прости, подруга, сейчас нечем помочь |
 | dlg_5_9_hn_v2_f_g.flac | ответ в разговоре, героине | Aoede | helpless | Прости, подруга, сейчас нечем помочь |
+| enter_castle_4_hn_g.flac | на пороге: castle, героине | Alnilam | watchful, stern | Гостья? Проходи. За порядком тут смотрят строго. |
+| enter_castle_4_hn_v1_g.flac | на пороге: castle, героине | Orus | watchful, stern | Гостья? Проходи. За порядком тут смотрят строго. |
+| enter_castle_4_hn_v2_g.flac | на пороге: castle, героине | Algenib | watchful | Гостья? Проходи. За порядком тут смотрят строго. |
+| enter_clanhall_2_hn_v2_g.flac | на пороге: clanhall, героине | Algenib | stern | Сними шапку, чужачка. Это чертог предков. |
+| enter_dark_city_4_hn_g.flac | на пороге: dark_city, героине | Charon | cold, menacing | Смена видит всё. Даже то, чего ты не делала. |
+| enter_dark_city_4_hn_v1_g.flac | на пороге: dark_city, героине | Schedar | cold, menacing | Смена видит всё. Даже то, чего ты не делала. |
+| enter_gate_night_5_hn_v2_g.flac | на пороге: gate_night, героине | Algenib | tired | Поздно гуляешь, путница. Трактир ещё открыт. |
 | enter_market_4_hn_g.flac | на пороге: market, героине | Sadachbia | brisk, businesslike | Торг идёт бойко. Что ищешь, путница? |
 | enter_market_4_hn_f_g.flac | на пороге: market, героине | Laomedeia | brisk, businesslike | Торг идёт бойко. Что ищешь, путница? |
+| foe_bandit_death_0_hn_v1_g.flac | в бою: bandit_death, героине | Enceladus | dying, weak, bitter | Будь ты проклята… |
+| foe_bandit_start_1_hn_g.flac | в бою: bandit_start, героине | Fenrir | mocking, cold | Ну всё, путница, приехали. |
+| foe_bandit_start_1_hn_v1_g.flac | в бою: bandit_start, героине | Enceladus | mocking, cold | Ну всё, путница, приехали. |
+| foe_bandit_start_3_hn_g.flac | в бою: bandit_start, героине | Fenrir | low, threatening | Зря ты свернула на эту дорогу. |
+| foe_bandit_start_3_hn_v1_g.flac | в бою: bandit_start, героине | Enceladus | low, threatening | Зря ты свернула на эту дорогу. |
+| foe_bandit_taunt_2_hn_g.flac | в бою: bandit_taunt, героине | Fenrir | mocking laugh | Кровью харкаешь, героиня? |
+| foe_bandit_taunt_2_hn_v1_g.flac | в бою: bandit_taunt, героине | Enceladus | mocking laugh | Кровью харкаешь, героиня? |
+| foe_dragon_hurt_4_hn_g.flac | в бою: dragon_hurt, героине | Charon | ancient, deep, majestic dragon | Ты оцарапала древность. Дорого заплатишь. |
+| foe_dragon_start_0_hn_g.flac | в бою: dragon_start, героине | Charon | ancient, regal, contemptuous | Ты пришла к моему золоту. Смело. Глупо. |
+| foe_lich_hurt_3_hn_g.flac | в бою: lich_hurt, героине | Schedar | cold, calm | Ты лишь отсрочила неизбежное. |
 | foe_siren_death_2_hn_g.flac | в бою: siren_death, героине | Autonoe | sorrowful, dying | Невеста моя… прощай… |
 | foe_siren_start_3_hn_g.flac | в бою: siren_start, героине | Autonoe | eerie, longing, tender | Невеста моя… наконец-то ты пришла. |
+| foe_spirit_start_0_hn_g.flac | в бою: spirit_start, героине | Enceladus | ghostly whisper, mournful | Зачем ты пришла туда, где нет живых? |
 | foe_spirit_start_0_hn_v1_g.flac | в бою: spirit_start, героине | Vindemiatrix | ghostly whisper, mournful | Зачем ты пришла туда, где нет живых? |
+| foe_spirit_start_6_hn_g.flac | в бою: spirit_start, героине | Enceladus | eerie, echoing ghost | Зачем ты потревожила покой? |
 | foe_spirit_start_6_hn_v1_g.flac | в бою: spirit_start, героине | Vindemiatrix | eerie, echoing ghost | Зачем ты потревожила покой? |
 | greet_obshiy_12_hn_g.flac | приветствие, героине | Umbriel | hospitable, warm | О, гостья. Проходи, не стой на пороге. |
 | greet_obshiy_12_hn_f_g.flac | приветствие, героине | Despina | hospitable, warm | О, гостья. Проходи, не стой на пороге. |
@@ -7985,22 +8042,32 @@ Policy (https://policies.google.com/terms/generative-ai/use-policy). Отдел�
 | greet_obshiy_12_hn_v2_f_g.flac | приветствие, героине | Aoede | hospitable | О, гостья. Проходи, не стой на пороге. |
 | greet_obshiy_1_hn_g.flac | приветствие, героине | Umbriel | plain, friendly, natural | А, путница. Чем могу? |
 | greet_obshiy_1_hn_f_g.flac | приветствие, героине | Despina | plain, friendly, natural | А, путница. Чем могу? |
+| greet_obshiy_1_hn_v1_g.flac | приветствие, героине | Sadachbia | plain, friendly, natural | А, путница. Чем могу? |
+| greet_obshiy_1_hn_v1_f_g.flac | приветствие, героине | Leda | plain, friendly, natural | А, путница. Чем могу? |
 | greet_obshiy_1_hn_v2_g.flac | приветствие, героине | Schedar | plain | А, путница. Чем могу? |
 | greet_obshiy_1_hn_v2_f_g.flac | приветствие, героине | Aoede | plain | А, путница. Чем могу? |
 | greet_obshiy_9_hn_g.flac | приветствие, героине | Umbriel | friendly, sympathetic | Путница? Дорога дальняя, небось. |
 | greet_obshiy_9_hn_f_g.flac | приветствие, героине | Despina | friendly, sympathetic | Путница? Дорога дальняя, небось. |
+| greet_obshiy_9_hn_v1_g.flac | приветствие, героине | Sadachbia | friendly, sympathetic | Путница? Дорога дальняя, небось. |
+| greet_obshiy_9_hn_v1_f_g.flac | приветствие, героине | Leda | friendly, sympathetic | Путница? Дорога дальняя, небось. |
 | greet_obshiy_9_hn_v2_g.flac | приветствие, героине | Schedar | friendly | Путница? Дорога дальняя, небось. |
 | greet_obshiy_9_hn_v2_f_g.flac | приветствие, героине | Aoede | friendly | Путница? Дорога дальняя, небось. |
 | greet_svoy_0_hn_g.flac | приветствие, героине | Umbriel | joyful, warm, glad to see a friend | Рад тебя видеть, подруга. |
 | greet_svoy_0_hn_f_g.flac | приветствие, героине | Despina | joyful, warm, glad to see a friend | Рада тебя видеть, подруга. |
+| greet_svoy_0_hn_v1_g.flac | приветствие, героине | Sadachbia | joyful, warm, glad to see a friend | Рад тебя видеть, подруга. |
+| greet_svoy_0_hn_v1_f_g.flac | приветствие, героине | Leda | joyful, warm, glad to see a friend | Рада тебя видеть, подруга. |
 | greet_svoy_0_hn_v2_g.flac | приветствие, героине | Schedar | joyful | Рад тебя видеть, подруга. |
 | greet_svoy_0_hn_v2_f_g.flac | приветствие, героине | Aoede | joyful | Рада тебя видеть, подруга. |
 | greet_utro_3_hn_g.flac | приветствие, героине | Umbriel | fresh, friendly morning greeting | Доброе утро, путница. |
 | greet_utro_3_hn_f_g.flac | приветствие, героине | Despina | fresh, friendly morning greeting | Доброе утро, путница. |
+| greet_utro_3_hn_v1_g.flac | приветствие, героине | Sadachbia | fresh, friendly morning greeting | Доброе утро, путница. |
+| greet_utro_3_hn_v1_f_g.flac | приветствие, героине | Leda | fresh, friendly morning greeting | Доброе утро, путница. |
 | greet_utro_3_hn_v2_g.flac | приветствие, героине | Schedar | fresh | Доброе утро, путница. |
 | greet_utro_3_hn_v2_f_g.flac | приветствие, героине | Aoede | fresh | Доброе утро, путница. |
 | greet_vecher_2_hn_g.flac | приветствие, героине | Umbriel | tired evening greeting | Добрый вечер, путница. |
 | greet_vecher_2_hn_f_g.flac | приветствие, героине | Despina | tired evening greeting | Добрый вечер, путница. |
+| greet_vecher_2_hn_v1_g.flac | приветствие, героине | Sadachbia | tired evening greeting | Добрый вечер, путница. |
+| greet_vecher_2_hn_v1_f_g.flac | приветствие, героине | Leda | tired evening greeting | Добрый вечер, путница. |
 | greet_vecher_2_hn_v2_g.flac | приветствие, героине | Schedar | tired evening greeting | Добрый вечер, путница. |
 | greet_vecher_2_hn_v2_f_g.flac | приветствие, героине | Aoede | tired evening greeting | Добрый вечер, путница. |
 | greet_zhrec_0_hn_g.flac | приветствие, героине | Umbriel | quiet, reverent, serene | Мир тебе, путница. |
@@ -8011,16 +8078,25 @@ Policy (https://policies.google.com/terms/generative-ai/use-policy). Отдел�
 | greet_zhrec_0_hn_v2_f_g.flac | приветствие, героине | Aoede | quiet | Мир тебе, путница. |
 | greet_zhrec_2_hn_g.flac | приветствие, героине | Umbriel | quiet, reverent, serene | Свеча горит — значит, ты не одна. |
 | greet_zhrec_2_hn_f_g.flac | приветствие, героине | Despina | quiet, reverent, serene | Свеча горит — значит, ты не одна. |
+| greet_zhrec_2_hn_v1_g.flac | приветствие, героине | Sadachbia | quiet, reverent, serene | Свеча горит — значит, ты не одна. |
+| greet_zhrec_2_hn_v1_f_g.flac | приветствие, героине | Leda | quiet, reverent, serene | Свеча горит — значит, ты не одна. |
 | greet_zhrec_2_hn_v2_g.flac | приветствие, героине | Schedar | quiet | Свеча горит — значит, ты не одна. |
 | greet_zhrec_2_hn_v2_f_g.flac | приветствие, героине | Aoede | quiet | Свеча горит — значит, ты не одна. |
 | greet_zhrec_5_hn_g.flac | приветствие, героине | Umbriel | quiet, reverent, serene | Сними шапку, путница. Здесь святое место. |
 | greet_zhrec_5_hn_f_g.flac | приветствие, героине | Despina | quiet, reverent, serene | Сними шапку, путница. Здесь святое место. |
+| greet_zhrec_5_hn_v1_g.flac | приветствие, героине | Sadachbia | quiet, reverent, serene | Сними шапку, путница. Здесь святое место. |
+| greet_zhrec_5_hn_v1_f_g.flac | приветствие, героине | Leda | quiet, reverent, serene | Сними шапку, путница. Здесь святое место. |
 | greet_zhrec_5_hn_v2_g.flac | приветствие, героине | Schedar | quiet | Сними шапку, путница. Здесь святое место. |
 | greet_zhrec_5_hn_v2_f_g.flac | приветствие, героине | Aoede | quiet | Сними шапку, путница. Здесь святое место. |
 | quest_have_2_hn_g.flac | заказчик, героине | Umbriel | patient, reminding | Ты уже взялась за моё дело. Сперва закончи его. |
 | quest_have_2_hn_f_g.flac | заказчик, героине | Despina | patient, reminding | Ты уже взялась за моё дело. Сперва закончи его. |
 | quest_have_2_hn_v1_g.flac | заказчик, героине | Sadachbia | patient, reminding | Ты уже взялась за моё дело. Сперва закончи его. |
 | quest_have_2_hn_v1_f_g.flac | заказчик, героине | Leda | patient, reminding | Ты уже взялась за моё дело. Сперва закончи его. |
+| quest_have_2_hn_v2_g.flac | заказчик, героине | Schedar | patient | Ты уже взялась за моё дело. Сперва закончи его. |
+| quest_have_2_hn_v2_f_g.flac | заказчик, героине | Aoede | patient | Ты уже взялась за моё дело. Сперва закончи его. |
 | street_guard_15_hn_g.flac | стражник, героине | Alnilam | dry humour, suspicious | Спокойно у нас. Пока ты тут не появилась. |
 | street_guard_15_hn_v1_g.flac | стражник, героине | Orus | dry humour, suspicious | Спокойно у нас. Пока ты тут не появилась. |
+| street_guard_15_hn_v2_g.flac | стражник, героине | Algenib | dry humour, suspicious | Спокойно у нас. Пока ты тут не появилась. |
+| street_guard_27_hn_g.flac | стражник, героине | Alnilam | calm, neutral | Иди своей дорогой, путница. |
 | street_guard_27_hn_v1_g.flac | стражник, героине | Orus | calm, neutral | Иди своей дорогой, путница. |
+| street_guard_27_hn_v2_g.flac | стражник, героине | Algenib | calm, neutral | Иди своей дорогой, путница. |

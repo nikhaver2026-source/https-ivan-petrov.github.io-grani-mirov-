@@ -5,7 +5,7 @@
 образец «Я готов(а) в путь». Прежний голос героя (Уверенный, Algieba)
 лежит в sounds/voice; здесь — его образец и одиннадцать новых голосов.
 
-Записей: 1174
+Записей: 1284
 
 Речь синтезирована 30 сентября 2026 года нейроголосами **Gemini** (Google),
 модель gemini-3.8-flash-tts, по тексту игры. Каждая запись проверена
@@ -274,7 +274,7 @@
 
 Целые фразы героя в бою — угроза, ответ врагу, удачный удар, рана, свой
 край, край врага, победа — записаны голосами «Настроек персонажа» с
-интонацией мига боя. Записей: 6634. Нейроголоса **Gemini** (Google),
+интонацией мига боя. Записей: 6688. Нейроголоса **Gemini** (Google),
 модель gemini-3.8-flash-tts, по тексту игры; каждая проверена
 распознаванием (GigaAM). Обработка: −18 LUFS, пик не выше −1 дБ, 24 кГц, FLAC.
 
@@ -7843,3 +7843,167 @@
 | hero_znanie_2_zubenelgenubi_g.flac | Простой (муж.) | Zubenelgenubi | confident, natural | Мне известно больше, чем ты думаешь. |
 | hero_znanie_3_zubenelgenubi_g.flac | Простой (муж.) | Zubenelgenubi | confident, natural | Я многое повидал на своём пути. |
 | hero_znanie_4_zubenelgenubi_g.flac | Простой (муж.) | Zubenelgenubi | confident, natural | Я знаю, о чём говорю. |
+| hero_f_1pbd4i3_kore_g.flac | Ясный (жен.) | Kore | Ты всем это говоришь? |
+| hero_f_fu6cor_aoede_g.flac | Лёгкий (жен.) | Aoede | Отдохнём минуту. |
+| hero_f_t94oy5_aoede_g.flac | Лёгкий (жен.) | Aoede | Об щит, дурень! |
+| hero_f_121m77v_aoede_g.flac | Лёгкий (жен.) | Aoede | Ха! Не пробьёшь! |
+| hero_f_3ulm4c_aoede_g.flac | Лёгкий (жен.) | Aoede | Задел. |
+| hero_f_q118ts_rasalgethi_g.flac | Бывалый (муж.) | Rasalgethi | Ах ты ж, гнида! |
+| hero_f_1l7aswi_rasalgethi_g.flac | Бывалый (муж.) | Rasalgethi | Зубы выбью! |
+| hero_f_1lxfmo1_rasalgethi_g.flac | Бывалый (муж.) | Rasalgethi | Проклятье, ещё чуть — и всё! |
+| hero_f_1fcumfr_rasalgethi_g.flac | Бывалый (муж.) | Rasalgethi | Кошелёк остался при мне. |
+| hero_f_s9ww9k_rasalgethi_g.flac | Бывалый (муж.) | Rasalgethi | Так и держать. |
+| hero_f_1q74uxv_rasalgethi_g.flac | Бывалый (муж.) | Rasalgethi | Ещё бы кто похлопал. |
+| hero_f_7ktqle_fenrir_g.flac | Горячий (муж.) | Fenrir | Получай, рвань! |
+| hero_f_tg3v8q_fenrir_g.flac | Горячий (муж.) | Fenrir | Вот тебе подарочек! |
+| hero_f_e6v1yu_fenrir_g.flac | Горячий (муж.) | Fenrir | Как тебе такое, а? |
+| hero_f_zf7pog_fenrir_g.flac | Горячий (муж.) | Fenrir | Держи ещё! |
+| hero_f_1hrosal_fenrir_g.flac | Горячий (муж.) | Fenrir | На, подавись! |
+| hero_f_q118ts_fenrir_g.flac | Горячий (муж.) | Fenrir | Ах ты ж, гнида! |
+| hero_f_1h54yup_fenrir_g.flac | Горячий (муж.) | Fenrir | Кажется, пора вспомнить про зелья. |
+| hero_f_1xno55l_fenrir_g.flac | Горячий (муж.) | Fenrir | Кажется, твоя песня спета. |
+| hero_f_iq543t_fenrir_g.flac | Горячий (муж.) | Fenrir | Аплодисменты можно потом. |
+| hero_f_3h3qbc_fenrir_g.flac | Горячий (муж.) | Fenrir | Это ничего не меняет. |
+| hero_f_1p4g31i_fenrir_g.flac | Горячий (муж.) | Fenrir | Это всё, что ты умеешь? |
+| hero_f_pwv4w0_fenrir_g.flac | Горячий (муж.) | Fenrir | Зубы о щит сломаешь! |
+| hero_f_3ulm4c_fenrir_g.flac | Горячий (муж.) | Fenrir | Задел. |
+| hero_f_g0stap_fenrir_g.flac | Горячий (муж.) | Fenrir | Пустяк, царапина. |
+| hero_f_g8auj8_zubenelgenubi_g.flac | Простой (муж.) | Zubenelgenubi | Держись, держись, проклятье! |
+| hero_f_irzh28_zubenelgenubi_g.flac | Простой (муж.) | Zubenelgenubi | Бард, это в припев. |
+| hero_f_1lte2f9_zubenelgenubi_g.flac | Простой (муж.) | Zubenelgenubi | Знай наших! |
+| hero_f_85dmq3_zubenelgenubi_g.flac | Простой (муж.) | Zubenelgenubi | Это угроза или комплимент? |
+| hero_f_1d713d8_zubenelgenubi_g.flac | Простой (муж.) | Zubenelgenubi | Повтори, я не расслышал. |
+| hero_f_1yz7ixq_zubenelgenubi_g.flac | Простой (муж.) | Zubenelgenubi | Вот тебе, со всей души! |
+| hero_f_yhya80_zubenelgenubi_g.flac | Простой (муж.) | Zubenelgenubi | Вот так, с размаху! |
+| hero_f_13emju8_zubenelgenubi_g.flac | Простой (муж.) | Zubenelgenubi | На ещё! |
+| hero_f_1gq3wie_zubenelgenubi_g.flac | Простой (муж.) | Zubenelgenubi | Пропустил. |
+| hero_f_16pm47c_zubenelgenubi_g.flac | Простой (муж.) | Zubenelgenubi | Раздавлю, и хрустнет. |
+| hero_f_149siz5_zubenelgenubi_g.flac | Простой (муж.) | Zubenelgenubi | Ползи сюда, червячок. |
+| hero_f_1cw5fua_zubenelgenubi_g.flac | Простой (муж.) | Zubenelgenubi | Бу! Что, не страшно? |
+| hero_f_ti67e7_zubenelgenubi_g.flac | Простой (муж.) | Zubenelgenubi | Сквозняк какой-то. А, это ты. |
+| hero_f_8hvb1b_sadachbia_g.flac | Живой (муж.) | Sadachbia | Ну и кто тут молодец? |
+| hero_f_1lte2f9_sadachbia_g.flac | Живой (муж.) | Sadachbia | Знай наших! |
+| hero_f_3h3qbc_sadachbia_g.flac | Живой (муж.) | Sadachbia | Это ничего не меняет. |
+| hero_f_pwv4w0_sadachbia_g.flac | Живой (муж.) | Sadachbia | Зубы о щит сломаешь! |
+| hero_f_3ulm4c_sadachbia_g.flac | Живой (муж.) | Sadachbia | Задел. |
+| hero_f_g0stap_sadachbia_g.flac | Живой (муж.) | Sadachbia | Пустяк, царапина. |
+| hero_f_bkt4y2_sadachbia_g.flac | Живой (муж.) | Sadachbia | Больно, но стою. |
+| hero_f_1ur0sze_sadachbia_g.flac | Живой (муж.) | Sadachbia | Ничего, держусь. |
+| hero_f_l5ajbk_sadachbia_g.flac | Живой (муж.) | Sadachbia | Это было сильно. |
+| hero_f_cv040w_sadachbia_g.flac | Живой (муж.) | Sadachbia | Звенит, как пустой котёл. |
+| hero_f_2zt86d_sadachbia_g.flac | Живой (муж.) | Sadachbia | Тук-тук. Есть кто дома? |
+| hero_f_47dr7a_sadachbia_g.flac | Живой (муж.) | Sadachbia | Руби его, он большой, не промахнёшься! |
+| hero_f_od6p6w_sadachbia_g.flac | Живой (муж.) | Sadachbia | Больно? Это только начало. |
+| hero_f_1w3socn_sadachbia_g.flac | Живой (муж.) | Sadachbia | Хорошо пошло! |
+| hero_f_gvbkcg_sadachbia_g.flac | Живой (муж.) | Sadachbia | Лови подарок! |
+| hero_f_1vnvaq_sadachbia_g.flac | Живой (муж.) | Sadachbia | Аплодисменты, пожалуйста. |
+| hero_istoriya_4_algieba_g.flac | Уверенный (муж.) | Algieba | curious, respectful, natural pace | Какие былые дни помнит эта земля? |
+| hero_kultura_3_algieba_g.flac | Уверенный (муж.) | Algieba | confident, natural | Твой народ так не поступает, я знаю. |
+| hero_kultura_4_algieba_g.flac | Уверенный (муж.) | Algieba | confident, natural | Я помню, как у вас встречают гостей. |
+| hero_nedoskazat_1_algieba_g.flac | Уверенный (муж.) | Algieba | sly | Кое-что я знаю, но всего не скажу. |
+| hero_nedoskazat_2_algieba_g.flac | Уверенный (муж.) | Algieba | sly | Об остальном — как-нибудь потом. |
+| hero_nedoskazat_3_algieba_g.flac | Уверенный (муж.) | Algieba | sly | Намёка тебе хватит, а дальше думай сам. |
+| hero_nedoskazat_4_algieba_g.flac | Уверенный (муж.) | Algieba | sly | Не всё сразу. Остальное — после. |
+| hero_obeshat_1_algieba_g.flac | Уверенный (муж.) | Algieba | confident, natural | Обещаю — и сделаю. |
+| hero_obeshat_2_algieba_g.flac | Уверенный (муж.) | Algieba | confident, natural | Можешь на меня положиться. |
+| hero_obeshat_3_algieba_g.flac | Уверенный (муж.) | Algieba | confident, natural | Сделаю, как сказал. |
+| hero_obeshat_4_algieba_g.flac | Уверенный (муж.) | Algieba | confident, natural | Моё слово крепче замка. |
+| hero_obman_1_algieba_g.flac | Уверенный (муж.) | Algieba | casual, evasive | Ты что-то путаешь, я тут ни при чём. |
+| hero_prosit_2_algieba_g.flac | Уверенный (муж.) | Algieba | earnest | Мне очень нужна твоя помощь. |
+| hero_ubedit_3_algieba_g.flac | Уверенный (муж.) | Algieba | confident, natural | Взгляни на это иначе. |
+| hero_ubedit_4_algieba_g.flac | Уверенный (муж.) | Algieba | confident, natural | Я дело говорю, послушай. |
+| hero_utochnit_1_algieba_g.flac | Уверенный (муж.) | Algieba | attentive | Постой, повтори ещё раз. |
+| hero_istoriya_1_fenrir_g.flac | Горячий (муж.) | Fenrir | curious, respectful, natural pace | Что помнят старики об этих местах? |
+| hero_nedoskazat_3_fenrir_g.flac | Горячий (муж.) | Fenrir | sly | Намёка тебе хватит, а дальше думай сам. |
+| hero_obman_4_fenrir_g.flac | Горячий (муж.) | Fenrir | casual, evasive | Я просто шёл мимо. |
+| hero_podkup_1_fenrir_g.flac | Горячий (муж.) | Fenrir | conspiratorial, low voice | Монета за молчание — честная сделка. |
+| hero_podkup_4_fenrir_g.flac | Горячий (муж.) | Fenrir | conspiratorial, low voice | Пусть это останется между нами. |
+| hero_prosit_1_fenrir_g.flac | Горячий (муж.) | Fenrir | earnest | Помоги мне, прошу тебя. |
+| hero_prosit_2_fenrir_g.flac | Горячий (муж.) | Fenrir | earnest | Мне очень нужна твоя помощь. |
+| hero_prosit_3_fenrir_g.flac | Горячий (муж.) | Fenrir | earnest | Окажи услугу — я в долгу не останусь. |
+| hero_prosit_4_fenrir_g.flac | Горячий (муж.) | Fenrir | earnest | Выручи меня, буду благодарен. |
+| hero_provoc_1_fenrir_g.flac | Горячий (муж.) | Fenrir | taunting | Что, смелости не хватает? |
+| hero_provoc_2_fenrir_g.flac | Горячий (муж.) | Fenrir | taunting | Ну же, договаривай. |
+| hero_provoc_4_fenrir_g.flac | Горячий (муж.) | Fenrir | taunting | Давай, я жду. |
+| hero_rassprosit_1_fenrir_g.flac | Горячий (муж.) | Fenrir | confident, natural | Что у вас нового? |
+| hero_rassprosit_2_fenrir_g.flac | Горячий (муж.) | Fenrir | confident, natural | Как вам тут живётся? |
+| hero_rassprosit_3_fenrir_g.flac | Горячий (муж.) | Fenrir | confident, natural | Что здесь происходит? |
+| hero_rassprosit_4_fenrir_g.flac | Горячий (муж.) | Fenrir | confident, natural | Расскажи, чем живёт ваш край. |
+| hero_shantazh_1_fenrir_g.flac | Горячий (муж.) | Fenrir | quiet and menacing | Мне кое-что известно о тебе. |
+| hero_shantazh_2_fenrir_g.flac | Горячий (муж.) | Fenrir | quiet and menacing | Твои тайны в надёжных руках. Пока. |
+| hero_shantazh_3_fenrir_g.flac | Горячий (муж.) | Fenrir | quiet and menacing | Хочешь, чтобы об этом узнали все? |
+| hero_shantazh_4_fenrir_g.flac | Горячий (муж.) | Fenrir | quiet and menacing | Сделай, как я прошу, и я буду молчать. |
+| hero_sluhi_1_fenrir_g.flac | Горячий (муж.) | Fenrir | confident, natural | Какие слухи ходят? |
+| hero_sluhi_2_fenrir_g.flac | Горячий (муж.) | Fenrir | confident, natural | О чём болтают на улицах? |
+| hero_sluhi_3_fenrir_g.flac | Горячий (муж.) | Fenrir | confident, natural | Что нового слышно? |
+| hero_sluhi_4_fenrir_g.flac | Горячий (муж.) | Fenrir | confident, natural | Что шепчут в трактирах? |
+| hero_sobytiya_1_fenrir_g.flac | Горячий (муж.) | Fenrir | confident, natural | Что слышно о войне? |
+| hero_sobytiya_2_fenrir_g.flac | Горячий (муж.) | Fenrir | confident, natural | Почём нынче хлеб? |
+| hero_sobytiya_3_fenrir_g.flac | Горячий (муж.) | Fenrir | confident, natural | Что творится в мире? |
+| hero_sobytiya_4_fenrir_g.flac | Горячий (муж.) | Fenrir | confident, natural | Какие вести с дорог? |
+| hero_sporit_1_fenrir_g.flac | Горячий (муж.) | Fenrir | assertive | Я с тобой не согласен. |
+| hero_sporit_2_fenrir_g.flac | Горячий (муж.) | Fenrir | assertive | Это не так, и ты это знаешь. |
+| hero_sporit_3_fenrir_g.flac | Горячий (муж.) | Fenrir | assertive | Погоди, тут ты ошибаешься. |
+| hero_sporit_4_fenrir_g.flac | Горячий (муж.) | Fenrir | assertive | Посмотри на дело с другой стороны. |
+| hero_torg_1_fenrir_g.flac | Горячий (муж.) | Fenrir | confident, natural | Сбавь цену, и по рукам. |
+| hero_torg_2_fenrir_g.flac | Горячий (муж.) | Fenrir | confident, natural | За такие деньги — дороговато. |
+| hero_torg_3_fenrir_g.flac | Горячий (муж.) | Fenrir | confident, natural | Давай поторгуемся. |
+| hero_torg_4_fenrir_g.flac | Горячий (муж.) | Fenrir | confident, natural | Назови честную цену. |
+| hero_ubedit_1_fenrir_g.flac | Горячий (муж.) | Fenrir | confident, natural | Поверь мне, так будет лучше. |
+| hero_ubedit_2_fenrir_g.flac | Горячий (муж.) | Fenrir | confident, natural | Подумай, кому это выгодно. |
+| hero_ubedit_3_fenrir_g.flac | Горячий (муж.) | Fenrir | confident, natural | Взгляни на это иначе. |
+| hero_ubedit_4_fenrir_g.flac | Горячий (муж.) | Fenrir | confident, natural | Я дело говорю, послушай. |
+| hero_utochnit_3_fenrir_g.flac | Горячий (муж.) | Fenrir | attentive | А поподробнее? |
+| hero_utochnit_4_fenrir_g.flac | Горячий (муж.) | Fenrir | attentive | Объясни-ка ещё раз. |
+| hero_vera_1_fenrir_g.flac | Горячий (муж.) | Fenrir | stern | Боги видят, что ты делаешь. |
+| hero_vera_2_fenrir_g.flac | Горячий (муж.) | Fenrir | stern | Не прикрывайся именем богов. |
+| hero_vera_3_fenrir_g.flac | Горячий (муж.) | Fenrir | stern | Вспомни, во что ты веришь. |
+| hero_vera_4_fenrir_g.flac | Горячий (муж.) | Fenrir | stern | Твоя вера учит другому. |
+| hero_vlast_1_fenrir_g.flac | Горячий (муж.) | Fenrir | cold | Здесь решаешь не ты. |
+| hero_vlast_2_fenrir_g.flac | Горячий (муж.) | Fenrir | cold | Над тобой тоже есть хозяин. |
+| hero_vlast_3_fenrir_g.flac | Горячий (муж.) | Fenrir | cold | Не забывай, кто здесь правит. |
+| hero_vlast_4_fenrir_g.flac | Горячий (муж.) | Fenrir | cold | Твоя власть кончается за порогом. |
+| hero_znanie_1_fenrir_g.flac | Горячий (муж.) | Fenrir | confident, natural | Я бывал в этих краях. |
+| hero_znanie_2_fenrir_g.flac | Горячий (муж.) | Fenrir | confident, natural | Мне известно больше, чем ты думаешь. |
+| hero_znanie_3_fenrir_g.flac | Горячий (муж.) | Fenrir | confident, natural | Я многое повидал на своём пути. |
+| hero_znanie_4_fenrir_g.flac | Горячий (муж.) | Fenrir | confident, natural | Я знаю, о чём говорю. |
+| hero_rassprosit_3_kore_g.flac | Ясный (жен.) | Kore | confident, natural | Что здесь происходит? |
+| hero_obman_4_rasalgethi_g.flac | Бывалый (муж.) | Rasalgethi | casual, evasive | Я просто шёл мимо. |
+| hero_otkaz_1_rasalgethi_g.flac | Бывалый (муж.) | Rasalgethi | firm | Нет. Я не согласен. |
+| hero_otkaz_2_rasalgethi_g.flac | Бывалый (муж.) | Rasalgethi | firm | На это я не пойду. |
+| hero_otkaz_3_rasalgethi_g.flac | Бывалый (муж.) | Rasalgethi | firm | Даже не проси. |
+| hero_otkaz_4_rasalgethi_g.flac | Бывалый (муж.) | Rasalgethi | firm | Мой ответ — нет. |
+| hero_podkup_3_rasalgethi_g.flac | Бывалый (муж.) | Rasalgethi | conspiratorial, low voice | Возьми золото и смотри в другую сторону. |
+| hero_torg_2_rasalgethi_g.flac | Бывалый (муж.) | Rasalgethi | confident, natural | За такие деньги — дороговато. |
+| hero_utochnit_1_rasalgethi_g.flac | Бывалый (муж.) | Rasalgethi | attentive | Постой, повтори ещё раз. |
+| hero_utochnit_2_rasalgethi_g.flac | Бывалый (муж.) | Rasalgethi | attentive | Я правильно тебя понял? |
+| hero_utochnit_3_rasalgethi_g.flac | Бывалый (муж.) | Rasalgethi | attentive | А поподробнее? |
+| hero_utochnit_4_rasalgethi_g.flac | Бывалый (муж.) | Rasalgethi | attentive | Объясни-ка ещё раз. |
+| hero_vera_1_rasalgethi_g.flac | Бывалый (муж.) | Rasalgethi | stern | Боги видят, что ты делаешь. |
+| hero_vera_2_rasalgethi_g.flac | Бывалый (муж.) | Rasalgethi | stern | Не прикрывайся именем богов. |
+| hero_vera_3_rasalgethi_g.flac | Бывалый (муж.) | Rasalgethi | stern | Вспомни, во что ты веришь. |
+| hero_vera_4_rasalgethi_g.flac | Бывалый (муж.) | Rasalgethi | stern | Твоя вера учит другому. |
+| hero_vlast_1_rasalgethi_g.flac | Бывалый (муж.) | Rasalgethi | cold | Здесь решаешь не ты. |
+| hero_vlast_2_rasalgethi_g.flac | Бывалый (муж.) | Rasalgethi | cold | Над тобой тоже есть хозяин. |
+| hero_vlast_3_rasalgethi_g.flac | Бывалый (муж.) | Rasalgethi | cold | Не забывай, кто здесь правит. |
+| hero_vlast_4_rasalgethi_g.flac | Бывалый (муж.) | Rasalgethi | cold | Твоя власть кончается за порогом. |
+| hero_zapugat_1_rasalgethi_g.flac | Бывалый (муж.) | Rasalgethi | menacing | Не советую со мной ссориться. |
+| hero_zapugat_2_rasalgethi_g.flac | Бывалый (муж.) | Rasalgethi | menacing | Лучше тебе меня не злить. |
+| hero_zapugat_3_rasalgethi_g.flac | Бывалый (муж.) | Rasalgethi | menacing | Пожалеешь, если не уступишь. |
+| hero_zapugat_4_rasalgethi_g.flac | Бывалый (муж.) | Rasalgethi | menacing | Я дважды не предупреждаю. |
+| hero_znanie_1_rasalgethi_g.flac | Бывалый (муж.) | Rasalgethi | confident, natural | Я бывал в этих краях. |
+| hero_obman_4_sadachbia_g.flac | Живой (муж.) | Sadachbia | casual, evasive | Я просто шёл мимо. |
+| hero_torg_3_sadachbia_g.flac | Живой (муж.) | Sadachbia | confident, natural | Давай поторгуемся. |
+| hero_torg_4_sadachbia_g.flac | Живой (муж.) | Sadachbia | confident, natural | Назови честную цену. |
+| hero_ubedit_1_sadachbia_g.flac | Живой (муж.) | Sadachbia | confident, natural | Поверь мне, так будет лучше. |
+| hero_ubedit_2_sadachbia_g.flac | Живой (муж.) | Sadachbia | confident, natural | Подумай, кому это выгодно. |
+| hero_nedoskazat_1_schedar_g.flac | Твёрдый (муж.) | Schedar | sly | Кое-что я знаю, но всего не скажу. |
+| hero_nedoskazat_2_schedar_g.flac | Твёрдый (муж.) | Schedar | sly | Об остальном — как-нибудь потом. |
+| hero_nedoskazat_1_zubenelgenubi_g.flac | Простой (муж.) | Zubenelgenubi | sly | Кое-что я знаю, но всего не скажу. |
+| hero_nedoskazat_2_zubenelgenubi_g.flac | Простой (муж.) | Zubenelgenubi | sly | Об остальном — как-нибудь потом. |
+| hero_provoc_1_zubenelgenubi_g.flac | Простой (муж.) | Zubenelgenubi | taunting | Что, смелости не хватает? |
+| hero_provoc_2_zubenelgenubi_g.flac | Простой (муж.) | Zubenelgenubi | taunting | Ну же, договаривай. |
+| hero_provoc_3_zubenelgenubi_g.flac | Простой (муж.) | Zubenelgenubi | taunting | Боишься сказать прямо? |
+| hero_rassprosit_4_zubenelgenubi_g.flac | Простой (муж.) | Zubenelgenubi | confident, natural | Расскажи, чем живёт ваш край. |
+| hero_shantazh_1_zubenelgenubi_g.flac | Простой (муж.) | Zubenelgenubi | quiet and menacing | Мне кое-что известно о тебе. |
+| hero_shantazh_2_zubenelgenubi_g.flac | Простой (муж.) | Zubenelgenubi | quiet and menacing | Твои тайны в надёжных руках. Пока. |
