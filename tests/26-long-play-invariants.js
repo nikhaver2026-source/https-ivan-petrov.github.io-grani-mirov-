@@ -155,7 +155,7 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   G.quests=[];G.chainTaken={};G.rep={};
   const said=[];const o=Speech.say;Speech.say=t=>said.push(t);
   let взято=0;
-  for(let i=0;i<20;i++){
+  for(let i=0;i<QUEST_LIMIT+3;i++){
    const n=getNPC(1000+i*13,1000+i*7,0,"Старейшина");
    const before=openQuests().length;
    takeNPCQuest(n);
@@ -173,7 +173,7 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   Speech.say=o;
   return {взято,предел:QUEST_LIMIT,открыто:openQuests().length,отказПрозвучал:отказ,
    сброшено,местоОсвободилось,репУпала:репПосле<репДо};});
- check('больше восьми незакрытых дел взять нельзя, и игра объясняет почему',
+ check('больше предела незакрытых дел взять нельзя, и игра объясняет почему',
   limit.взято===limit.предел&&limit.отказПрозвучал===true,limit);
  check('от дела можно отказаться: место освобождается, репутация падает',
   limit.сброшено===true&&limit.местоОсвободилось===true&&limit.репУпала===true&&limit.открыто===limit.предел,limit);
