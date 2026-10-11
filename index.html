@@ -55013,7 +55013,7 @@ const Zver={
   if(!есть.length)return `${a.n} ест ${f.корм.join(" или ")}, а такого в сумке нет.`;
   if((Number(a.сыт)||0)>=95)return `${a.n} сыт и отворачивается от корма.`;
   const k=есть[0],люб=k===f.корм[0];invTake(ZV_FOOD[k],1);
-  a.сыт=Math.min(100,(Number(a.сыт)||0)+(люб?45:25));a.верн=Math.min(100,(Number(a.верн)||0)+(люб?4:2));
+  const голоден=(Number(a.сыт)||0)<20;a.сыт=Math.min(100,(Number(a.сыт)||0)+(люб?45:25));a.верн=Math.min(100,(Number(a.верн)||0)+(люб?6:3)+(голоден?4:0));
   this.xp(a,люб?6:3);this.play(f.звук,{gain:0.5});safeFn(()=>Bank.play("oc_munch",{gain:0.4,maxSec:2}));
   return `${a.n} ест ${k}${люб?" — любимый корм":""}. Сытость ${Math.round(a.сыт)}, верность ${Math.round(a.верн)}.`;},
  feedAll(){const out=[];for(const a of this.st().list){if((Number(a.сыт)||0)<70)out.push(this.feed(a.uid));}
@@ -55033,7 +55033,7 @@ const Zver={
  /* ── Верхом и рядом ── */
  ride(u){const a=this.byUid(u);if(!a)return "Такого зверя нет.";const f=this.fam(a);
   if(!f.ездовой)return `${a.n} слишком мал, чтобы нести всадника. Возьмите его спутником.`;
-  if((Number(a.верн)||0)<25)return `${a.n} не подпускает вас: верность ${Math.round(a.верн)}. Покормите его.`;
+  if((Number(a.верн)||0)<15)return `${a.n} не подпускает вас: верность ${Math.round(a.верн)}, а для седла нужно хотя бы пятнадцать. Покормите его и почистите — «Покормить» и «Почистить и погладить» в окне скакуна.`;
   const s=this.st();s.pets=s.pets.filter(x=>x!==a.uid);s.mount=a.uid;G.mount=null;
   this.play(f.звук,{gain:0.65});safeFn(()=>Bank.play("horse_step",{gain:0.4,maxSec:2}));
   return `Вы верхом: ${a.n}. ${ZV_MOVES[f.ход].о}.`;},
@@ -76092,7 +76092,7 @@ const Stable={
   else{const m=M.m;h+=this.line(`${m.d}`);const g=this.legWords(M.id);h+=this.line(g.length?`В седле: ${g.join(", ")}.`:"");
    const gear=this.st().legGear[M.id]||{};h+=this.line(`Снаряжение: ${ZV_SLOTS_MOUNT.map(([s,n])=>`${n} — ${gear[s]?zvGearName(s,gear[s]).toLowerCase():"нет"}`).join("; ")}.`);}
   if(k0===k)h+=this.btn("mnt:off","Спешиться здесь");
-  else{const r=this.posNear(this.st().pos[k],1);h+=r?this.btn(`mnt:ride:${k}`,`${this.verb(M)}: ${M.n} рядом`):this.btn(`mnt:call:${k}`,`Позвать к себе — ${this.mWhere(M)}`);}
+  else{const r=this.posNear(this.st().pos[k],1)||(M.kind==="zv"&&Zver.st().pets.indexOf(M.a.uid)>=0);h+=r?this.btn(`mnt:ride:${k}`,`${this.verb(M)}: ${M.n} рядом`):this.btn(`mnt:call:${k}`,`Позвать к себе — ${this.mWhere(M)}`);}
   if(M.kind==="zv"){const u=M.a.uid;h+=this.btn(`mnt:feed:${k}`,"Покормить");h+=this.btn(`mnt:care:${k}`,"Почистить и погладить");h+=this.btn(`mnt:gear:${u}`,"Снаряжение: седло, узда, попона, подковы, сумы");
    h+=this.btn(`mnt:grow:${u}`,`Улучшить: развитие и роль, свободных очков ${Zver.points(M.a)-Zver.spent(M.a)}`);h+=this.btn(`mnt:follow:${k}`,Zver.st().pets.indexOf(u)>=0?"Не брать спутником":"Взять спутником в бой");}
   else{h+=this.btn(`mnt:care:${k}`,"Почистить и погладить");h+=this.btn(`mnt:lgear:${M.id}`,"Снаряжение: седло, узда, попона, подковы, сумы");
@@ -76114,7 +76114,7 @@ const Stable={
   return `Вы чистите ${M.n.toLowerCase()} и говорите с ним: скакун тайных палат слушает и успокаивается.`;},
  /* Сесть: скакун должен стоять рядом — как сундук, к нему подходят. */
  mountUp(k){const M=this.mBy(k);if(!M)return "Такого скакуна нет.";if(this.riding()===k)return "Вы и так в седле.";if(G.ship)return "На палубе в седло не садятся.";const b=this.st();
-  if(!this.posNear(b.pos[k],1))return `${M.n} не рядом: ${this.mWhere(M)}. В окне «Маунты» — «Позвать к себе».`;
+  if(!this.posNear(b.pos[k],1)&&!(M.kind==="zv"&&Zver.st().pets.indexOf(M.a.uid)>=0))return `${M.n} не рядом: ${this.mWhere(M)}. В окне «Маунты» — «Позвать к себе».`;
   const prev=this.riding();if(M.kind==="zv"){const t0=Zver.ride(M.a.uid);if(!/^Вы верхом/.test(t0))return t0;if(prev&&prev!==k)b.pos[prev]=this.here();}
   else{this.leaveCurrent(k);G.mount=M.id;if(!Array.isArray(G.mounts))G.mounts=[];if(G.mounts.indexOf(M.id)<0)G.mounts.push(M.id);Zver.st().mount=null;safeFn(()=>Bank.play(M.m.b,{gain:0.6,maxSec:4}));}
   delete b.pos[k];safeFn(()=>Bank.play("horse_step",{gain:0.4,maxSec:2}));return `${this.verb(M)} — и вы в седле: ${M.n}. ${this.cap(M.kind==="zv"?ZV_MOVES[Zver.fam(M.a).ход].о:M.m.d)}.`.replace(/\.\.$/,".");},
@@ -76181,7 +76181,7 @@ Object.assign(CMD,{pets(){Stable.petsHome();},pet(a){Stable.petCmd(a);},mounts()
 {const ao0=approachObjects;approachObjects=function(){const out=ao0.apply(this,arguments);safeFn(()=>{if(!G.place)return;for(const {M,dx,dy,d} of Stable.near(approachR()))out.push({x:G.place.x+dx,y:G.place.y+dy,dx,dy,d,dir:d?dirBetween(dx,dy):"здесь",name:`${M.n} — ваш скакун`,t:"mount"});out.sort((a,b)=>a.d-b.d);});return out;};}
 {const wn0=worldNear;worldNear=function(R){const out=wn0.apply(this,arguments);safeFn(()=>{for(const {M,dx,dy,d} of Stable.near(R))if(d)out.push({dx,dy,d,name:`${M.n} — ваш скакун`});out.sort((a,b)=>a.d-b.d);});return out;};}
 /* «Действие здесь»: если под рукой ничего, кроме скакуна, — садимся. */
-{const uh0=useHere;useHere=function(){const n=safeFn(()=>Stable.near(1),[])||[];if(n.length&&!G.inCombat&&!G.ship){const др=(safeFn(()=>oh0objs(),[])||[]);if(!др.length){const t=Stable.mountUp(n[0].M.k);narrate(t,{interrupt:true});safeFn(()=>{saveGame(true);refresh();});return true;}}
+{const uh0=useHere;useHere=function(){const n=safeFn(()=>Stable.near(1),[])||[];if(n.length&&!G.inCombat&&!G.ship){const др=(safeFn(()=>oh0objs(),[])||[]);const тут=n.find(x=>x.d===0);if(!др.length||тут){const t=Stable.mountUp((тут||n[0]).M.k);narrate(t,{interrupt:true});safeFn(()=>{saveGame(true);refresh();});return true;}}
   return uh0.apply(this,arguments);};}
 function oh0objs(){return (objectsHere(true)||[]).filter(o=>o.вид!=="mount"&&o.вид!=="floor"&&!(o.вид==="tile"&&o.плитка==="#")&&o.d<=1&&!(o.вид==="structure"&&o.d>0));}
 {const bk2=bossDamageK;bossDamageK=function(kind,school){return bk2(kind,school)*safeFn(()=>Deep.dmgK(kind,school),1);};}
@@ -79442,7 +79442,7 @@ Zver.feed=matKeep(Zver.feed,function(u){const a=this.byUid(u);if(!a)return "Та
  if(!есть)return `${a.n} ест ${f.корм.join(" или ")}, а такого в сумке нет.${zvFoodWhere()}`;
  if((Number(a.сыт)||0)>=95)return `${a.n} сыт${f.g==="ж"?"а":""} и отворачивается от корма.`;
  const k=есть.k,люб=k===f.корм[0];const взято=zvFoodTake(k);
- a.сыт=Math.min(100,(Number(a.сыт)||0)+(люб?45:25));a.верн=Math.min(100,(Number(a.верн)||0)+(люб?4:2));
+ const голоден=(Number(a.сыт)||0)<20;a.сыт=Math.min(100,(Number(a.сыт)||0)+(люб?45:25));a.верн=Math.min(100,(Number(a.верн)||0)+(люб?6:3)+(голоден?4:0));   /* (15.0) голодный зверь благодарнее */
  /* звук еды — живые записи своим трактом (14.6, ZvSnd); фраза о новом уровне не пропадает */
  const рост=this.xp(a,люб?6:3)||"";if(!safeFn(()=>(ZvSnd.feed(a,k,люб),true),false)){this.play(f.звук,{gain:0.5});safeFn(()=>Bank.play("oc_munch",{gain:0.4,maxSec:2}));}
  return `${a.n} ест ${zvFoodSay(k,взято)}${люб?" — любимый корм":""}. Сытость ${Math.round(a.сыт)}, верность ${Math.round(a.верн)}.${рост}`;});
@@ -80536,6 +80536,98 @@ safeFn(()=>{
    &&!!safeFn(()=>Folk.реплика(роль,t,n,!страж&&Folk.жен(n),Object.assign({rate:страж?1:(г?г[1]:1)*safeFn(()=>Folk.тембр(n),1),всегда:true,голос:гол},o||{})),false);
   return {t:показ,сказал};});
 });
+
+/* ════════ 15.0: ПИТОМЦЫ И МАУНТЫ — ПОСАДКА, ЗВУК ПРЕЖДЕ СЛОВ ════════
+   Жалобы игрока: «забираешься в седло — нет звука, что забрался или
+   спешился»; «позвал скакуна, нажал „Забраться“ — он не забирается, шагнул —
+   а скакун так и стоит справа»; «не слышно, как питомец ест, как вкладываются
+   очки развития». */
+
+/* ── 1. Звук прежде слов ──
+   Звуки были, но итог дела звучал в тот же миг и глушил их, а окно питомца,
+   обновляясь, тут же перечитывало своё имя поверх итога (и отказ «не
+   подпускает вас» пропадал за ним — казалось, что ничего не случилось).
+   Теперь в окнах «Питомцы» и «Маунты» после дела окно обновляется молча,
+   звук идёт первым, итог — следом. */
+const ZV_PAUSE={feed:900,feedall:900,growdo:950,care:800,docare:800,ride:850,off:700,call:1100,equip:650,lequip:650,putart:650,give:600,train:800,task:450,recall:450,role:450,follow:600,release:450};
+const ZvSay={тихо:0,
+ /* первая фраза дела — через ms (звук успевает прозвучать); окно в это время не перечитывается */
+ run(ms,fn,self,args){const s0=Speech.say;let первая=true;this.тихо++;
+  Speech.say=function(t,o){if(первая&&!(o&&o.cat==="ui")){первая=false;const a=arguments,me=this;
+    if(ms>0){setTimeout(()=>safeFn(()=>s0.apply(me,a)),ms);return true;}}return s0.apply(this,arguments);};
+  try{return fn.apply(self,args||[]);}finally{Speech.say=s0;this.tihoOff();}},
+ tihoOff(){this.тихо=Math.max(0,this.тихо-1);}};
+/* Окно, обновлённое после дела, молчит: курсор встаёт на первую строку без слов. */
+safeFn(()=>{const sh0=Stable.show;Stable.show=function(modal,title,html){if(!ZvSay.тихо)return sh0.apply(this,arguments);
+ const s0=Speech.say;Speech.say=function(t,o){if(o&&o.cat==="ui")return true;return s0.apply(this,arguments);};
+ try{return sh0.apply(this,arguments);}finally{Speech.say=s0;}};});
+/* Слова о посадке и спешивании из «Действия здесь», из окна объектов и по главному действию скакуна —
+   тоже после звука: следующая фраза с тем же текстом откладывается. */
+const ZvLater={t:0,text:"",ms:0};
+safeFn(()=>{const s0=Speech.say;Speech.say=function(t,o){
+ if(ZvLater.text&&Date.now()-ZvLater.t<150&&String(t)===ZvLater.text){const ms=ZvLater.ms;ZvLater.text="";const a=arguments,me=this;setTimeout(()=>safeFn(()=>s0.apply(me,a)),ms);return true;}
+ return s0.apply(this,arguments);};});
+safeFn(()=>{const m0=Stable.mountUp;Stable.mountUp=function(k){const до=safeFn(()=>this.riding(),null);const t=m0.apply(this,arguments);
+ if(safeFn(()=>this.riding(),null)===k&&до!==k){ZvLater.t=Date.now();ZvLater.text=String(t);ZvLater.ms=ZV_PAUSE.ride;}return t;};});
+safeFn(()=>{const d0=Stable.dismountHere;Stable.dismountHere=function(){const до=safeFn(()=>this.riding(),null);const t=d0.apply(this,arguments);
+ if(до&&!safeFn(()=>this.riding(),null)){ZvLater.t=Date.now();ZvLater.text=String(t);ZvLater.ms=ZV_PAUSE.off;}return t;};});
+
+/* ── 2. «Сесть верхом» из окна ──
+   Удалось — окно закрывается, слышна посадка, затем слова. Не удалось (скакун не
+   рядом, не подпускает) — окно скакуна остаётся, и причина звучит последней, а не
+   тонет под заново прочитанным окном. */
+Stable.rideCmd=function(arg){const key=String(arg||"").split(":").slice(1,3).join(":");
+ const t=this.mountUp(key);ZvLater.text="";
+ if(safeFn(()=>this.riding(),null)===key){safeFn(()=>{saveGame(true);refresh();});safeFn(()=>closeTopUI());
+  setTimeout(()=>safeFn(()=>narrate(t,{interrupt:true})),ZV_PAUSE.ride);return true;}
+ ZvSay.тихо++;let r;try{r=this.mountView(key);}finally{ZvSay.tihoOff();}
+ narrate(t,{interrupt:true});safeFn(()=>saveGame(true));return r;};
+for(const nm of ["petCmd","mntCmd"])safeFn(()=>{const c0=Stable[nm];Stable[nm]=function(arg){const k=String(arg||"").split(":")[0];
+ if(nm==="mntCmd"&&k==="ride")return this.rideCmd(arg);
+ const ms=ZV_PAUSE[k];if(!ms)return c0.apply(this,arguments);
+ return ZvSay.run(ms,c0,this,arguments);};});
+
+/* ── 3. Посадка и спешивание слышны ──
+   Посадка: рывок вверх — скрип седла — голос скакуна — его первый шаг под вами.
+   Спешивание: скрип седла — прыжок на землю — голос того, с кого сошли. */
+Object.assign(ZvSnd,{
+ mount(M){const pos={dx:0.3,dy:0.1};this.scene(1600);
+  this.play(["lug_whoosh"],Object.assign({maxSec:0.7,gain:0.9},pos));
+  this.later(170,()=>this.play(["equip_leather_on","arte_leather"],Object.assign({maxSec:1.2,gain:1.05},pos)));
+  this.later(520,()=>{if(M&&M.kind==="zv")this.voice(M.a,{gain:1});else if(M)this.legVoice(M,{gain:1});});
+  this.later(980,()=>safeFn(()=>{if(M)ZvWalk.ride(M);}));},
+ dismount(M){const pos={dx:0.3,dy:0.1};this.scene(1300);
+  this.play(["equip_leather_off","arte_leather"],Object.assign({maxSec:1.2,gain:1.05},pos));
+  this.later(300,()=>this.play(["lug_land"],Object.assign({maxSec:0.8,gain:1},{dx:0.15,dy:0.2})));
+  this.later(680,()=>{if(M&&M.kind==="zv")this.voice(M.a,{gain:0.85});else if(M)this.legVoice(M,{gain:0.85});});}});
+
+/* ── 4. Очко развития: у каждой ветви свой звук ──
+   Клык — оскал, удар когтями и точильный камень; шкура — кожа, кольчуга и глухой
+   удар; чутьё — нюх и звон; связь — сердце и тёплый отзвук; ход — по роду хода:
+   крылья, копыта, ползучие лапы, плеск, рытьё. Затем — голос зверя. */
+const ZV_GROW_SND={
+ fang:[["lug_snarl","sv_beast_snarl"],["lug_claw"],["prop_whetstone","lug_knife_sheathe"]],
+ hide:[["craft_hide"],["equip_chain_on"],["lug_thud","oc_rock_hit"]],
+ sense:[["zv_sniff"],["arc_shine"],["uh_bell"]],
+ bond:[["hero_heart"],["heal_bloom"],["zv_purr"]],
+ move:{fly:[["zv_wing"],["sky_gust"],["raptor_wing"]],walk:[["tread_hoof","zv_ride_gallop"],["zv_ride_trot"],["lug_whoosh"]],
+  crawl:[["prop_crawl"],["lug_claw"],["prop_crawl"]],swim:[["oc_swim"],["oc_splash"],["oc_swim"]],dig:[["oc_dig"],["deep_rocks"],["oc_dig"]]}};
+safeFn(()=>{const g0=Zver.grow;Zver.grow=function(u,br){ZvSnd.ветвь=br;try{return g0.apply(this,arguments);}finally{ZvSnd.ветвь=null;}};});
+ZvSnd.grow=function(a){const pos=this.near(0);const br=this.ветвь;this.scene(1500);
+ let L=ZV_GROW_SND[br];if(br==="move"){const f=safeFn(()=>Zver.fam(a),null);L=ZV_GROW_SND.move[(f&&f.ход)||"walk"]||ZV_GROW_SND.move.walk;}
+ if(!L){this.play(["arc_rise","magic_shimmer"],Object.assign({maxSec:1.8,gain:0.85},pos));this.later(520,()=>this.voice(a,{gain:0.85}));return;}
+ L.forEach((x,i)=>this.later(i*260,()=>this.play(x,Object.assign({maxSec:1.2,gain:i===0?1:0.9},pos))));
+ this.later(L.length*260+120,()=>this.play(["arc_rise"],Object.assign({maxSec:1.2,gain:0.6},pos)));
+ this.later(L.length*260+480,()=>this.voice(a,{gain:0.9}));};
+
+/* ── 5. «Действие здесь»: только что позванный скакун — первым ──
+   Скакун стоит под ногами (его позвали) — «Действие здесь» сажает в седло, а не
+   открывает узел Сети или вещи рядом. Встреча с диким зверем по-прежнему главнее. */
+safeFn(()=>{const u0=useHere;useHere=matKeep(u0,function(){
+ if(!G.inCombat&&!G.ship&&!safeFn(()=>BeastMeet.here(),false)&&!safeFn(()=>Stable.riding(),null)){
+  const тут=(safeFn(()=>Stable.near(0),[])||[]).find(x=>x.d===0);
+  if(тут){const t=Stable.mountUp(тут.M.k);narrate(t,{interrupt:true});safeFn(()=>{saveGame(true);refresh();});return true;}}
+ return u0.apply(this,arguments);});});
 
 
 /* ════════ СОХРАНЕНИЕ ════════ */
