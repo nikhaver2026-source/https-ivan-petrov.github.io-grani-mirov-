@@ -120,8 +120,10 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   Folk.сказать=было;Bank.play=bp;
   return r;});
  check('6. герой говорит выбранным голосом своего пола; стон от раны — голосом пола героя',
-  речь.жен[0]==="voice_hero/hero_torg_kore_g"&&речь.женАльгиеба===false&&!речь.женАльгиебаПути.length
-  &&["hero_pain_f","cry_hero_kore"].includes(речь.стонЖ[0])&&речь.муж[0]==="voice_hero/hero_sporit_fenrir_g"&&речь.мужПрежний[0]==="hero_sporit_g"&&["hero_pain_m","oc_hurt","cry_hero_algieba"].includes(речь.стонМ[0]),речь);
+  /* (15.0) у хода до пяти реплик тем же голосом: прежняя запись или hero_<ход>_<n>_<голос> */
+  /^voice_hero\/hero_torg(_\d)?_kore_g$/.test(речь.жен[0]||"")&&речь.женАльгиеба===false&&!речь.женАльгиебаПути.length
+  &&["hero_pain_f","cry_hero_kore"].includes(речь.стонЖ[0])&&/^voice_hero\/hero_sporit(_\d)?_fenrir_g$/.test(речь.муж[0]||"")
+  &&(речь.мужПрежний[0]==="hero_sporit_g"||/^voice_hero\/hero_sporit_\d_algieba_g$/.test(речь.мужПрежний[0]||""))&&["hero_pain_m","oc_hurt","cry_hero_algieba"].includes(речь.стонМ[0]),речь);
 
  /* ── 7. ── */
  const впечатление=await page.evaluate(()=>{

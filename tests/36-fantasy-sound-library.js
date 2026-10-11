@@ -308,6 +308,8 @@ const NEW_DIRS=["arte","deep","foe","cast","hero","wild","trade","score",
      HERO_VOICE_LINES и образец каждого голоса (папка voice_hero). */
   Object.entries(HERO_VOICE_LINES).forEach(([id,ходы])=>ходы.forEach(х=>out.push(HERO_VOICE_DIR+"hero_"+х+"_"+id+G+".flac")));
   HERO_VOICES["м"].concat(HERO_VOICES["ж"]).forEach(v=>out.push(HERO_VOICE_DIR+"obrazec_"+v.id+G+".flac"));
+  /* (15.0) Новые реплики героя к ходам разговора — опись HERO_VOICE_VARS (hero_<ход>_<n>_<голос>). */
+  Object.entries(typeof HERO_VOICE_VARS==="object"?HERO_VOICE_VARS:{}).forEach(([id,ходы])=>Object.entries(ходы).forEach(([х,vs])=>vs.forEach(([n])=>out.push(HERO_VOICE_DIR+"hero_"+х+"_"+n+"_"+id+G+".flac"))));
   /* (10.0) Боевые фразы героя по описи HERO_FIGHT. */
   Object.entries(HERO_FIGHT).forEach(([id,ключи])=>String(ключи).split(" ").filter(Boolean).forEach(k=>out.push(HERO_VOICE_DIR+"hero_f_"+k+"_"+id+G+".flac")));
   /* (11.0) Речь двенадцати богов по описи GOD_SPEECH_LEN (папка voice_god). */

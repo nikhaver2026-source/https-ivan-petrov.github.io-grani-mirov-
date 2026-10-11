@@ -198,7 +198,9 @@ const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(e!==undefined?' :
   const сразуПосле=VOICED.map(v=>v.f);
   /* Житель отвечает, когда герой договорил: ждём длину реплики героя и
      ещё немного (раньше ответ шёл через 1,5 с — поверх героя). */
-  const герояМс=Math.round(Folk.длина("hero_rassprosit"+VOICE_GEN)*1000);
+  /* (15.0) у хода до пяти реплик: длина — той, что прозвучала (прежняя voice/hero_… или voice_hero/hero_<ход>_<n>_<голос>) */
+  const звучал=(сразуПосле[0]||"").replace(/^.*\//,"").replace(/\.(mp3|flac)$/,"");
+  const герояМс=Math.round(Folk.длина(звучал||("hero_rassprosit"+VOICE_GEN))*1000);
   await new Promise(r=>setTimeout(r,герояМс+1600));
   /* Ответ — общее слово (voice/say_) или, если у слов ответа есть запись,
      сами слова жителя (voice_npc/dlg_) или голос его народа (voice_npc/r…). */
@@ -206,9 +208,9 @@ const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(e!==undefined?' :
   return {вышло:typeof вышло==="boolean",сразуПосле,всё:VOICED.map(v=>v.f),
    герояМс,ответЧерез:ответ?ответ.t-t0:null};});
  check('ход разговора звучит голосом героя',
-  герой.сразуПосле[0]==="voice/hero_rassprosit_g.mp3",герой);
+  герой.сразуПосле[0]==="voice/hero_rassprosit_g.mp3"||/^voice_hero\/hero_rassprosit_\d_algieba_g\.flac$/.test(герой.сразуПосле[0]||""),герой);
  check('голос героя идёт раньше ответа собеседника',
-  герой.всё.length>=2&&герой.всё[0].indexOf("voice/hero_")===0
+  герой.всё.length>=2&&/^voice(_hero)?\/hero_/.test(герой.всё[0])
   &&герой.всё.slice(1).some(f=>/^voice\/say_|^voice_npc\//.test(f)),герой.всё);
  check('ответ жителя не наслаивается на героя: начинается, когда тот договорил',
   герой.ответЧерез!==null&&герой.ответЧерез>=герой.герояМс,{ответЧерез:герой.ответЧерез,герояМс:герой.герояМс});
