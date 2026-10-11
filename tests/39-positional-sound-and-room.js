@@ -253,9 +253,10 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   /* С 4.3 капель подземелья звучит из своих мест каждые несколько секунд: здесь
      она мешала бы узнать, откуда звучит именно то, что проверяется. */
   const капель0=Drips.tick;Drips.tick=function(){this.timer=null;};Drips.stop();
-  const было=Spatial.node.bind(Spatial);
+  /* (15.0) Звук ставится в точку общим методом Spatial.place: его зовут и узел размещения, и каналы единой звуковой среды. */
+  const было=Spatial.place.bind(Spatial);
   const точки=[];
-  Spatial.node=(dx,dy,dz,roll)=>{точки.push({dx,dy,dz});return было(dx,dy,dz,roll);};
+  Spatial.place=(p,dx,dy,dz,roll)=>{точки.push({dx,dy,dz});return было(p,dx,dy,dz,roll);};
   const out={};
   /* бродящая тварь на уровне */
   G.place={kind:"dungeon",bx:1500,by:1500,stype:"ruins",name:"п",depth:2,x:5,y:5};
@@ -303,7 +304,7 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
     if(cellContent(x+dx,y+dy).structure){G.x=x;G.y=y;break outer2;}}
   recentBeacons.clear();точки.length=0;scanNearbyBeacons();
   await пауза(120);out.рядом=точки.slice();
-  Spatial.node=было;Drips.tick=капель0;Spatial.stopAll();G.place=null;
+  Spatial.place=было;Drips.tick=капель0;Spatial.stopAll();G.place=null;
   return out;});
  check('бродящая тварь звучит с той клетки, где она стоит',
   точкиМест.тварь&&точкиМест.тварь.dx===4&&точкиМест.тварь.dy===-2,точкиМест.тварь);

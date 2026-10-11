@@ -107,8 +107,9 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
  /* ── 3. Марш слышен по высоте ── */
  const высота=await page.evaluate(()=>{
   settings.effects=1;settings.hrtf=1;
-  const поймано=[];const ор=Spatial.node.bind(Spatial);
-  Spatial.node=(dx,dy,dz,roll)=>{поймано.push(Number(dz)||0);return ор(dx,dy,dz,roll);};
+  /* (15.0) Звук ставится в точку общим методом Spatial.place: его зовут и узел размещения, и каналы единой звуковой среды. */
+  const поймано=[];const ор=Spatial.place.bind(Spatial);
+  Spatial.place=(p,dx,dy,dz,roll)=>{поймано.push(Number(dz)||0);return ор(p,dx,dy,dz,roll);};
   G.place={bx:5,by:5,stype:"ruins",depth:1,name:"Руины",x:1,y:1};
   const lvl=curLevel();let вниз=null;
   for(let y=0;y<lvl.h&&!вниз;y++)for(let x=0;x<lvl.w;x++)if(lvl.g[y][x]===">"){вниз={x,y};break;}
@@ -121,7 +122,7 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
    safeFn(()=>moveInside(G.flight.md));
    (доля<0.25?начало:доля>0.75?конец:[]).push(...поймано);
    i++;}
-  Spatial.node=ор;settings.effects=0;
+  Spatial.place=ор;settings.effects=0;
   return {вверхВНачале:начало.filter(z=>z>0.5).length,внизВНачале:начало.filter(z=>z<-1.5).length,
    вверхВКонце:конец.filter(z=>z>1.5).length,внизВКонце:конец.filter(z=>z<-0.5).length,
    всего:начало.length+конец.length};});

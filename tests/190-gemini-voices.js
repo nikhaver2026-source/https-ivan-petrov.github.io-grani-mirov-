@@ -101,8 +101,9 @@ const ГОЛОСА=["Algenib","Charon","Orus","Enceladus","Achird","Puck","Gacru
   }finally{Folk.сказать=s0;}
   return {путь,жен:VOICE_RACES[женНарод][0],муж:VOICE_RACES[мужНарод][0]};});
  const ждём=["race_"+пути.муж+"_g","race_"+пути.жен+"_g","prof_kuznec_g","prof_kuznec_f_g","say_torg_g","say_torg_f_g","hero_torg_g"];
+ /* (15.0) Ход героя звучит одной из его реплик своим голосом (hero_torg_3_algieba_g) или общей записью хода. */
  check('5. оклик, слово ремесла, общее слово и ход героя звучат записями нового поколения, в мужском и женском голосе',
-  JSON.stringify(пути.путь)===JSON.stringify(ждём),{путь:пути.путь,ждём});
+  JSON.stringify(пути.путь.slice(0,6))===JSON.stringify(ждём.slice(0,6))&&/^hero_torg(_\d+_[a-z]+)?_g$/.test(пути.путь[6]||""),{путь:пути.путь,ждём});
 
  /* ── 6. темп ── */
  const тексты={};строки.forEach(l=>{const f=l.slice(2,l.indexOf('.mp3'));const t=(l.match(/«([^»]+)»/)||[])[1];if(t)тексты[f]=t;});

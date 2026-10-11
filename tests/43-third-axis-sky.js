@@ -109,8 +109,9 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   const из={};
   /* Подменяем узел размещения и смотрим, какие высоты игра ему даёт. */
   const поймано=[];
-  const ориг=Spatial.node.bind(Spatial);
-  Spatial.node=(dx,dy,dz,roll)=>{поймано.push({dx,dy,dz,alt:Number(G.alt)||0});return ориг(dx,dy,dz,roll);};
+  /* (15.0) Звук ставится в точку общим методом Spatial.place: его зовут и узел размещения, и каналы единой звуковой среды. */
+  const ориг=Spatial.place.bind(Spatial);
+  Spatial.place=(p,dx,dy,dz,roll)=>{поймано.push({dx,dy,dz,alt:Number(G.alt)||0});return ориг(p,dx,dy,dz,roll);};
   из.слушательНаЗемле=listenerAlt();
   G.alt=3;из.слушательВНебе=listenerAlt();
   /* Тот же источник с земли и с высоты должен уехать вниз ровно на высоту */
@@ -123,7 +124,7 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   /* Своя высота у источника отсчитывается от земли */
   из.тварьНаДвух_сЗемли=узел(0,2);
   из.тварьНаДвух_сДвух=узел(2,2);
-  G.alt=0;Spatial.node=ориг;
+  G.alt=0;Spatial.place=ориг;
   return из;});
  check('высота игрока вычитается из источника в одном месте — в узле размещения',
   звук.земляСЗемли===0&&звук.земляСВысоты1<звук.земляСЗемли&&

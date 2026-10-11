@@ -23,7 +23,9 @@
    7. Идёт важная речь + мелочь — мелочь не перебивает, ждёт.
    8. A, B, C в очереди + действие игрока — очередь пуста.
    9. Без чтеца экрана: окно, свайп, стоп — всё через встроенную речь.
-   10. VoiceOver/TalkBack: живая область получает каждый текст ровно раз.
+   10. VoiceOver/TalkBack: встроенная речь включена — живая область молчит
+       (два голоса вместе не звучат, 15.0); выключена — живая область получает
+       каждый текст ровно раз.
    11. Стоп → новая речь → старый обратный вызов — старый игнорируется.
    12. Потеря и возврат звука — устаревшая очередь не возвращается.
    13. Одно событие ×10 — одна фраза.
@@ -167,11 +169,18 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   const live=document.getElementById("liveRegion");const seen=[];live.textContent="";
   const mo=new MutationObserver(()=>{if(live.textContent)seen.push(live.textContent);});
   mo.observe(live,{childList:true,characterData:true,subtree:true});
+  /* встроенная речь говорит — чтецу не дублируем */
   Speech.say("Первое сообщение.",{pri:2});await new Promise(r=>setTimeout(r,60));FAKE.end();
   Speech.say("Второе сообщение.",{pri:2});await new Promise(r=>setTimeout(r,60));FAKE.end();
-  await new Promise(r=>setTimeout(r,60));mo.disconnect();
-  return {seen,spoken:FAKE.log.slice()};});
- check('10. VoiceOver/TalkBack: живая область получает каждый текст ровно раз, без дублей',дубли.seen.length===2&&дубли.seen[0]==="Первое сообщение."&&дубли.seen[1]==="Второе сообщение."&&дубли.spoken.length===2,дубли);
+  await new Promise(r=>setTimeout(r,60));const приРечи=seen.slice();seen.length=0;
+  /* встроенная речь выключена — фразы читает чтец, каждую ровно раз */
+  settings.speech=0;live.textContent="";
+  Speech.say("Третье сообщение.",{pri:2});await new Promise(r=>setTimeout(r,60));
+  Speech.say("Четвёртое сообщение.",{pri:2});await new Promise(r=>setTimeout(r,60));
+  await new Promise(r=>setTimeout(r,60));mo.disconnect();settings.speech=1;
+  return {приРечи,seen,spoken:FAKE.log.slice()};});
+ check('10. VoiceOver/TalkBack: при встроенной речи живая область молчит; без неё — каждый текст ровно раз, без дублей',
+  дубли.приРечи.length===0&&дубли.seen.length===2&&дубли.seen[0]==="Третье сообщение."&&дубли.seen[1]==="Четвёртое сообщение."&&дубли.spoken.length===2,дубли);
 
  /* ── 11. стоп → новая речь → старый callback ── */
  await fresh();

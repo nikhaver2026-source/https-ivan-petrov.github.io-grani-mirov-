@@ -143,7 +143,7 @@ h3{color:var(--acc2);margin:14px 0 6px;font-size:1.05rem;}
    <div class="cb-col cb-player" id="cbPlayerCol" role="group" aria-label="Параметры персонажа" tabindex="0"></div>
   </div>
   <div id="cbArena" class="list-line" tabindex="0" hidden></div>
-  <div id="cbLog" class="list-line" aria-live="polite" aria-atomic="true"></div>
+  <div id="cbLog" class="list-line" aria-live="off"></div>
   <p class="hint">Свайп — шаг по полю боя: отойти, уйти из-под замаха, догнать. Вынутое оружие бьёт свайпом в сторону твари, если достаёт. Касание двумя пальцами — где тварь. Двойное касание тремя пальцами — вынуть или убрать оружие. Свайп тремя пальцами вверх — меню действий, там же побег.</p>
  </div>
  <p class="hint" style="text-align:center;">Свайп: север · юг · запад · восток.<br>
@@ -807,7 +807,7 @@ h3{color:var(--acc2);margin:14px 0 6px;font-size:1.05rem;}
 </div></div>
 
 <div id="subtitle" aria-hidden="true"><span id="subText" hidden></span></div>
-<div id="nowPlaying" role="status" aria-live="polite">Сейчас ничего не играет</div>
+<div id="nowPlaying" aria-live="off">Сейчас ничего не играет</div>
 <div id="liveRegion" class="sr-only" role="status" aria-live="assertive"></div>
 
 <script>
@@ -3303,6 +3303,16 @@ const Плееры={
    a.preservesPitch=true;a.preload="auto";a.src=url;}catch(_){}
   return a;}};
 safeFn(()=>{Плееры.вкл=Плееры.iOS();});
+/* ── (15.0) ПЛЕЕР КАНАЛА ЕДИНОЙ ЗВУКОВОЙ СРЕДЫ (см. ЗвукСреда) ──
+   Слушатели событий, которые хозяин звука вешает на плеер канала, — на учёте:
+   когда канал освобождается, они снимаются, и следующий хозяин не получает
+   чужих «доиграл» и «ошибка». Отыгравший плеер канала (пустой src и load —
+   так все пути отдают плеер) освобождает канал. */
+safeFn(()=>{const ael=EventTarget.prototype.addEventListener;
+ HTMLMediaElement.prototype.addEventListener=function(t,f,o){const к=this.__канал;if(к&&к.занят)(this.__ls||(this.__ls=[])).push([t,f,o]);return ael.call(this,t,f,o);};});
+safeFn(()=>{const l0=HTMLMediaElement.prototype.load;
+ HTMLMediaElement.prototype.load=function(){const r=l0.apply(this,arguments);const к=this.__канал;
+  if(к&&к.занят&&!к.освобождается&&!this.hasAttribute("src")&&typeof ЗвукСреда!=="undefined")ЗвукСреда.освободить(к);return r;};});
 /* ════════ ЕДИНЫЙ ОБРАБОТЧИК ЗВУКА (11.0) ════════
    Записи игра запускала из двенадцати мест, и каждое по-своему решало, что
    делать, если браузер не дал звучать, — чаще всего ничего: обещание play()
@@ -3368,11 +3378,15 @@ const Звук={
    if(!о.тихо)this.записать(род,"не запустилась: "+((e&&e.name)||"ошибка"),el.src);
    throw e;}
   const t0=Date.now();
-  const отказ=почему=>{if(typeof о.наОтказ==="function")safeFn(()=>о.наОтказ(el,почему));};
+  /* (15.0) Плеер канала единой звуковой среды мог уже перейти к другому звуку:
+     сторож и отказ прежнего звука его не трогают. */
+  const поколение=el.__gen;
+  const отказ=почему=>{if(el.__gen!==поколение)return;if(typeof о.наОтказ==="function")safeFn(()=>о.наОтказ(el,почему));};
   if(о.сторож>0){
    let пошло=false,продлён=false;const есть=()=>{пошло=true;};
    try{el.addEventListener("playing",есть,{once:true});}catch(_){}
    const смотреть=()=>{
+    if(el.__gen!==поколение){try{el.removeEventListener("playing",есть);}catch(_){}return;}
     if(пошло||el.__stopped||el.__отказ||el.ended||(!el.paused&&el.currentTime>0)){try{el.removeEventListener("playing",есть);}catch(_){}return;}
     /* Запись ещё качается по сети (медленный телефонный интернет) — второй
        срок, один раз; плеер, который завис молча, второго срока не ждёт. */
@@ -3401,7 +3415,7 @@ const Звук={
   return pr;},
  _ждать(el,t0,срок){
   if(this.ждут.some(з=>з.el===el))return;
-  this.ждут.push({el,t0,срок:Number(срок)>0?Number(срок):this.СРОК,раз:0});
+  this.ждут.push({el,t0,срок:Number(срок)>0?Number(срок):this.СРОК,раз:0,gen:el.__gen});
   if(this.ждут.length>32)this.ждут.splice(0,this.ждут.length-32);},
  /* Петля банка, которой принадлежит плеер, — или null. */
  _петля(el){
@@ -3421,6 +3435,7 @@ const Звук={
   const годные=список.filter(з=>{
    const el=з.el;
    if(!el||el.__stopped||el.ended||!el.paused||!(el.currentSrc||el.src)||з.раз>=3)return false;
+   if(з.gen!==undefined&&el.__gen!==з.gen)return false;
    const п=this._петля(el);з.петля=!!п||!!el.loop;
    return п?!п.paused:(el.loop||now-з.t0<=з.срок);});
   const разовые=годные.filter(з=>!з.петля).sort((x,y)=>y.t0-x.t0).slice(0,2);
@@ -4611,7 +4626,11 @@ const Speech={voice:null,keepAlive:null,
   const m={id:++this.seq,gen:0,text,pri:cls.pri,cat:cls.cat,key,user:!!user,nav:!!nav,persistent:!!persistent,
    interrupt:interrupt!==false,createdAt:Date.now(),ttl:ttl!=null?Number(ttl):(this.TTL[cls.pri]||0),onDone,state:"QUEUED",parts:null};
   m.task=this._task();m.keep=!!итог;
-  this._live(m);
+  /* (15.0) Живая область для чтеца экрана больше не получает фразу здесь, до
+     всех проверок: чтец (TalkBack, VoiceOver, NVDA) читал её своим голосом
+     поверх голоса игры, и ещё те фразы, что игра сама намеренно не говорит
+     (тихий бой, краткая подробность, устаревшее). Теперь фраза уходит чтецу
+     только когда встроенная озвучка её не скажет — ниже. */
   const drop=()=>{m.state="DROPPED";this.stats.dropped++;done(onDone);return m;};
   /* ── ТИХИЙ БОЙ (8.0, просьба игрока) ──
      Пока идёт бой, игра молчит: тварь узнают по звуку — шагам, замаху, чарам
@@ -4647,7 +4666,10 @@ const Speech={voice:null,keepAlive:null,
    if((m.cat==="desc"||m.cat==="object")&&settings.hints===0&&!m.user)return drop();
    if(m.cat==="object"&&settings.describeObjects===0)return drop();
    if(settings.verbosity==="min"&&m.pri>=3)return drop();}
-  if(!settings.speech||!this._adapter()){this._finish(m,"COMPLETED",true);return m;}
+  /* Встроенная озвучка выключена или говорить нечем — фразу читает чтец экрана
+     (живая область). Встроенная говорит — чтецу не дублируем: два голоса
+     вместе не звучат (15.0). */
+  if(!settings.speech||!this._adapter()){this._live(m);this._finish(m,"COMPLETED",true);return m;}
   if(typeof AudioLife!=="undefined"&&AudioLife.hushed)return drop();
   m.text=this._shape(text,m);
   /* дубли и замена. Листание (nav) дублем не бывает никогда: игрок, вернувшийся
@@ -4767,7 +4789,7 @@ const Speech={voice:null,keepAlive:null,
   clearTimeout(this._laterTimer);this._laterAt=t;
   this._laterTimer=setTimeout(()=>{this._laterAt=0;this._pump();},ждать);},
  _speak(m){
-  const a=this._adapter();if(!a){this._finish(m,"FAILED");return;}
+  const a=this._adapter();if(!a){this._live(m);this._finish(m,"FAILED");return;}
   /* Субтитр реплики: важное — на уровне событий, прочее — на уровне реплик. */
   safeFn(()=>sub(m.text,m.pri<=1?"important":"speech"));
   m.parts=this._chunk(m.text);m.gen=++this.gen;m.state="STARTING";
@@ -18337,28 +18359,23 @@ const Bank={
  panned(path,{pan=0,gain=1,maxSec=3}={}){
   if(!this.enabled||!path||!settings.effects)return null;
   try{
-   const el=Плееры.взять(this.url(path));
+   /* (15.0) Маяк — через канал единой звуковой среды, стереопутём. */
+   const h=ЗвукСреда.играть(this.url(path),{путь:"stereo",pan,gain:Math.max(0,Math.min(1,gain)),dry:"fx"});
+   if(!h)return null;
+   const el=h.el;
    /* Одна ненайденная запись не гасит весь банк: считаем неудачи, как в make(). */
    el.addEventListener("error",()=>{if(el.__stopped)return;this.fails++;
     if(this.plays===0&&this.fails>=4)this.enabled=false;},{once:true});
    el.addEventListener("loadeddata",()=>{this.plays++;this.fails=0;},{once:true});
-   const ctx=AE.ctx;
-   const src=ctx.createMediaElementSource(el);
-   const g=ctx.createGain();g.gain.value=Math.max(0,Math.min(1,gain));
-   let node=src;
-   if(ctx.createStereoPanner){const pn=ctx.createStereoPanner();pn.pan.value=Math.max(-1,Math.min(1,pan));node.connect(pn);node=pn;}
-   node.connect(g);g.connect(AE.fx||ctx.destination);
    Звук.играть(el,"маяк");
-   /* Доиграв, маяк отдаёт плеер (см. Spatial.at). */
-   el.addEventListener("ended",()=>{try{el.__stopped=true;src.disconnect();g.disconnect();el.removeAttribute("src");el.load();}catch(_){}},{once:true});
+   /* Доиграв, маяк отдаёт канал. */
+   el.addEventListener("ended",()=>h.стоп(),{once:true});
    /* Живая нота инструмента не обрывается на полуслове: перед остановкой
       громкость сводится к нулю за четверть секунды, иначе слышен щелчок. */
    if(maxSec>0){
     const fade=Math.min(0.25,maxSec*0.3);
-    setTimeout(()=>{try{g.gain.setTargetAtTime(0.0001,ctx.currentTime,fade/3);}catch(_){}},Math.max(0,(maxSec-fade)*1000));
-    /* Отыгравший маяк отдаёт плеер сразу (см. Spatial.at). */
-    setTimeout(()=>{try{el.__stopped=true;el.pause();src.disconnect();g.disconnect();}catch(_){}
-     try{el.removeAttribute("src");el.load();}catch(_){}},maxSec*1000+120);}
+    setTimeout(()=>h.затухание(fade/3),Math.max(0,(maxSec-fade)*1000));
+    setTimeout(()=>h.стоп(),maxSec*1000+120);}
    return el;
   }catch(e){return null;}},
  /* Запись по прямому пути: реплики чудовищ разложены по видам, а не по ролям. */
@@ -18366,14 +18383,16 @@ const Bank={
     решают, кто уступит место, когда голосов станет слишком много. */
  _shot(el,kind,o,maxSec){
   this.shots.push(el);
+  /* (15.0) Плеер из запаса мог уже перейти к новому звуку: тогда старые таймеры его не трогают. */
+  const gen=el.__gen,мой=()=>el.__gen===gen;
   const rec={el,kind,prio:Voices.prioOf(kind,o.prio),dist:Number(o.dist)||0,t:Date.now(),
-   stop:()=>{Bank.kill(el);Bank.shots=Bank.shots.filter(x=>x!==el);}};
+   stop:()=>{if(мой())Bank.kill(el);Bank.shots=Bank.shots.filter(x=>x!==el);}};
   Voices.add(rec);
   /* Доигравшая запись отдаёт плеер сразу, а не ждёт сборки мусора: плееров
      у страницы ограниченно, и без этого звуки через несколько минут игры
      переставали загружаться (см. Spatial.at). */
-  el.addEventListener("ended",()=>{this.kill(el);this.shots=this.shots.filter(x=>x!==el);Voices.forget(rec);},{once:true});
-  if(maxSec>0)setTimeout(()=>{this.kill(el);
+  el.addEventListener("ended",()=>{if(мой())this.kill(el);this.shots=this.shots.filter(x=>x!==el);Voices.forget(rec);},{once:true});
+  if(maxSec>0)setTimeout(()=>{if(мой())this.kill(el);
    this.shots=this.shots.filter(x=>x!==el);Voices.forget(rec);},maxSec*1000);
   return el;},
  file(path,o={}){
@@ -18671,6 +18690,107 @@ function voiceLevel(kind,gain){
  const fx=Math.max(0.05,Number(settings.fxVol)||1);
  const m=Math.max(0.05,safeFn(()=>Bank.master(),1));
  return Bank.vol(kind)*(Number(gain)||0)/(d*fx*m);}
+/* ════════ (15.0) ЕДИНАЯ ЗВУКОВАЯ СРЕДА ════════
+   Просьба игрока: «привести всё к единому обработчику звука — единая звуковая
+   среда, которая отвечает за обработку, чтобы не накапливать и не
+   разворачивать кучу плееров, которые проигрывают эти звуки».
+   Причина «глюков» после получаса-часа игры: каждый звук со стороны — шаг,
+   шаг спутника, его удар, маяк, голос жителя, отзвук стен — брал новый
+   плеер, подключал его к звуковому движку и строил себе новую цепочку:
+   громкость, панораму, окраску, отклик помещения. Подключённый плеер браузер
+   не освобождает, пока жив движок (из четырёхсот не освободился ни один), и
+   за час игры их копились десятки тысяч, а с ними — их цепочки. Движок
+   тяжелел с каждой минутой: звук начинал заикаться, игра — тормозить, запись
+   голоса запускалась с опозданием.
+   Теперь всё это звучит через одну среду: двадцать четыре постоянных канала.
+   У каждого — свой плеер, подключённый к движку один раз, и своя цепочка,
+   собранная один раз: сжатие голоса, приглушение за стеной, окраска,
+   объёмная или стереопанорама, громкость, сухой путь и отклик помещения.
+   Звук берёт свободный канал и настраивает его; отыграв, канал свободен для
+   следующего. Все каналы заняты — уступает самый старый звук (речь — в
+   последнюю очередь). Ни плееров, ни узлов движка за игру больше не
+   прибавляется.
+   У канала есть поколение: запоздалая команда прежнего хозяина
+   («остановить», «затухнуть») нового хозяина не задевает. */
+const ЗвукСреда={N:24,каналы:[],ctx:null,счёт:{звуков:0,краж:0},
+ готов(){const ctx=AE.ensure();if(!ctx||!Room.ensure())return null;
+  if(this.ctx!==ctx){this.каналы=[];this.ctx=ctx;}return ctx;},
+ /* Канал: плеер и постоянная цепочка движка. */
+ создать(url){const ctx=this.ctx;
+  const el=Плееры.взять(url);el.preload="auto";
+  const к={el,ctx,gen:0,занят:false,t:0,voice:false,onStop:null,освобождается:false};
+  el.__канал=к;el.__ls=[];el.__gen=0;
+  const G2=v=>{const g=ctx.createGain();g.gain.value=v;return g;};
+  к.mes=ctx.createMediaElementSource(el);
+  /* голос — через сжатие (VOICE_MIX), прочее — напрямую */
+  к.vIn=G2(0);к.comp=ctx.createDynamicsCompressor();к.mk=G2(VOICE_MIX.makeup);к.dIn=G2(1);к.mix=G2(1);
+  {const c=VOICE_MIX.comp;try{к.comp.threshold.value=c.threshold;к.comp.knee.value=c.knee;к.comp.ratio.value=c.ratio;к.comp.attack.value=c.attack;к.comp.release.value=c.release;}catch(_){}}
+  к.mes.connect(к.vIn);к.vIn.connect(к.comp);к.comp.connect(к.mk);к.mk.connect(к.mix);к.mes.connect(к.dIn);к.dIn.connect(к.mix);
+  /* приглушение за стеной и окраска */
+  к.lp=ctx.createBiquadFilter();к.lp.type="lowpass";к.lp.frequency.value=ctx.sampleRate/2;к.lp.Q.value=0.5;
+  к.eq=ctx.createBiquadFilter();к.eq.type="peaking";к.eq.frequency.value=2800;к.eq.Q.value=0.8;к.eq.gain.value=0;
+  к.mix.connect(к.lp);к.lp.connect(к.eq);
+  /* три пути: объёмный (HRTF), стерео (маяк) и прямой */
+  к.g=G2(0);
+  к.selP=G2(0);к.pan=ctx.createPanner();try{к.pan.panningModel="HRTF";}catch(_){}к.pan.distanceModel="inverse";
+  к.eq.connect(к.selP);к.selP.connect(к.pan);к.pan.connect(к.g);
+  к.selS=G2(0);к.sp=ctx.createStereoPanner?ctx.createStereoPanner():G2(1);к.eq.connect(к.selS);к.selS.connect(к.sp);к.sp.connect(к.g);
+  к.selF=G2(1);к.eq.connect(к.selF);к.selF.connect(к.g);
+  /* сухой путь — в шину эффектов или в зал; мокрый — в отклик помещения */
+  к.toFx=G2(1);к.toRoom=G2(0);к.wet=G2(0);
+  к.g.connect(к.toFx);к.toFx.connect(AE.fx);к.g.connect(к.toRoom);к.toRoom.connect(Room.dry);к.g.connect(к.wet);к.wet.connect(Room.conv);к.wetTo=Room.conv;
+  this.каналы.push(к);return к;},
+ /* Сыграть запись через свободный канал. о: gain, rate, путь ("pan" | "stereo" |
+    "flat"), dx, dy, dz, roll, pan, voice, lp (частота приглушения), eq {f,q,g},
+    dry ("fx" | "room"), wet, conv. Возвращает ручку звука или null. */
+ играть(url,о){о=о||{};const ctx=this.готов();if(!ctx||!url)return null;
+  let к=this.каналы.find(x=>!x.занят);
+  if(!к)к=this.каналы.length<this.N?this.создать(url):this.украсть();
+  if(!к)return null;
+  к.gen++;к.занят=true;к.t=Date.now();к.n=(this.номер=(this.номер||0)+1);к.voice=!!о.voice;к.onStop=null;
+  const el=к.el;el.__gen=к.gen;el.__stopped=false;el.__отказ=false;el.__звукСлух=false;el.__сбой=false;
+  try{el.loop=false;el.muted=false;el.volume=1;const r=Number(о.rate)||1;
+   if(r!==1){el.preservesPitch=false;el.mozPreservesPitch=false;el.defaultPlaybackRate=1;el.playbackRate=Math.max(0.5,Math.min(2,r));}
+   else{el.preservesPitch=true;el.mozPreservesPitch=true;el.defaultPlaybackRate=1;el.playbackRate=1;}
+   if(el.getAttribute("src")!==url)el.src=url;}catch(_){}
+  /* значение ставится сразу: прежние затухания канала снимаются */
+  const уст=(p,v)=>{try{p.cancelScheduledValues(0);}catch(_){}try{p.value=v;}catch(_){}};
+  уст(к.vIn.gain,о.voice?1:0);уст(к.dIn.gain,о.voice?0:1);
+  уст(к.lp.frequency,о.lp>0?о.lp:ctx.sampleRate/2);
+  const eq=о.eq;уст(к.eq.frequency,eq&&eq.f||2800);уст(к.eq.Q,eq&&eq.q||0.8);уст(к.eq.gain,eq&&eq.g||0);
+  const путь=о.путь||"flat";уст(к.selP.gain,путь==="pan"?1:0);уст(к.selS.gain,путь==="stereo"?1:0);уст(к.selF.gain,путь==="flat"?1:0);
+  if(к.sp.pan)уст(к.sp.pan,путь==="stereo"?Math.max(-1,Math.min(1,Number(о.pan)||0)):0);
+  if(путь==="pan")safeFn(()=>Spatial.place(к.pan,о.dx,о.dy,о.dz,о.roll));
+  уст(к.g.gain,Math.max(0,Number(о.gain)||0));
+  const сухо=о.dry==="room"?"room":"fx";уст(к.toFx.gain,сухо==="fx"?1:0);уст(к.toRoom.gain,сухо==="room"?1:0);
+  const цель=о.conv||Room.conv;if(цель&&к.wetTo!==цель){try{к.wet.disconnect();}catch(_){}try{к.wet.connect(цель);к.wetTo=цель;}catch(_){}}
+  уст(к.wet.gain,Math.max(0,Number(о.wet)||0));
+  this.счёт.звуков++;
+  return this.ручка(к);},
+ ручка(к){const gen=к.gen,среда=this;
+  return {el:к.el,gen,канал:к,
+   мой(){return к.gen===gen&&к.занят;},
+   /* плавно увести громкость: живая нота не обрывается щелчком */
+   затухание(tc){if(к.gen!==gen||!к.занят)return;try{к.g.gain.setTargetAtTime(0.0001,среда.ctx.currentTime,Math.max(0.01,Number(tc)||0.08));}catch(_){}},
+   стоп(){if(к.gen!==gen)return;среда.освободить(к);},
+   /* что сделать хозяину, если его звук снят средой (уступил место) */
+   приСнятии(f){if(к.gen===gen)к.onStop=f;}};},
+ /* Освободить канал: пауза, тишина, слушатели прежнего хозяина сняты, плеер
+    разгружен (пустой src и load), поколение сменено. */
+ освободить(к){if(!к||!к.занят)return;к.занят=false;к.gen++;const el=к.el;el.__gen=к.gen;
+  const f=к.onStop;к.onStop=null;
+  try{el.__stopped=true;el.pause();}catch(_){}
+  try{к.g.gain.cancelScheduledValues(0);к.g.gain.value=0;}catch(_){}
+  const ls=el.__ls||[];el.__ls=[];for(const [t,fn,o] of ls){try{EventTarget.prototype.removeEventListener.call(el,t,fn,o);}catch(_){}}
+  for(const k of ["__role","__file","__k","__reverb","__voice","__room","__род"])try{delete el[k];}catch(_){}
+  к.освобождается=true;try{el.removeAttribute("src");el.load();}catch(_){}к.освобождается=false;
+  if(f)safeFn(f);},
+ /* Все каналы заняты: уступает самый старый звук, речь — в последнюю очередь. */
+ украсть(){let best=null;for(const к of this.каналы){if(!к.занят)return к;if(к.voice)continue;if(!best||к.n<best.n)best=к;}
+  if(!best)best=this.каналы.reduce((a,b)=>a.n<b.n?a:b,this.каналы[0]);
+  if(!best)return null;this.счёт.краж++;this.освободить(best);return best;},
+ заняты(){return this.каналы.filter(к=>к.занят).length;},
+ стопВсе(){this.каналы.forEach(к=>this.освободить(к));}};
 const Spatial={
  on(){try{return settings.hrtf!==0&&settings.effects&&location.protocol!=="file:";}catch(_){return false;}},
  live:[],                 /* что звучит прямо сейчас — чтобы не разрастаться */
@@ -18697,11 +18817,17 @@ const Spatial={
   const ctx=AE.ctx,p=ctx.createPanner();
   try{p.panningModel="HRTF";}catch(_){}
   p.distanceModel="inverse";
+  this.place(p,dx,dy,dz,roll);
+  return p;},
+ /* (15.0) Поставить готовый узел размещения в точку: каналы единой звуковой
+    среды не строят узел заново, а переставляют свой. */
+ place(p,dx,dy,dz,roll){
   p.refDistance=CELL;p.maxDistance=CELL*MAXCELL;p.rolloffFactor=roll||1.1;
   const высота=(Number(dz)||0)-safeFn(()=>listenerAlt(),0);
   const X=(Number(dx)||0)*CELL,Z=(Number(dy)||0)*CELL,Y=высота*CELL*0.8;
   try{
-   if(p.positionX){p.positionX.value=X;p.positionY.value=Y;p.positionZ.value=Z;}
+   if(p.positionX){
+    for(const [a,v] of [[p.positionX,X],[p.positionY,Y],[p.positionZ,Z]]){try{a.cancelScheduledValues(0);}catch(_){}a.value=v;}}
    else p.setPosition(X,Y,Z);
   }catch(_){}
   return p;},
@@ -18751,50 +18877,36 @@ const Spatial={
   if(dist>MAXCELL)return false;
   try{
    const ctx=this.ensure();if(!ctx)return false;
-   const el=Плееры.взять(Bank.url(path));
-   /* Скорость нужна речи: общее слово и слово ремесла идут в высоте народа. */
-   if(rate&&rate!==1){try{el.preservesPitch=false;el.mozPreservesPitch=false;el.playbackRate=Math.max(0.5,Math.min(2,rate));}catch(_){}}
-   el.addEventListener("error",()=>{if(el.__stopped)return;Bank.fails++;
-    if(Bank.plays===0&&Bank.fails>=4)Bank.enabled=false;},{once:true});
-   el.addEventListener("loadeddata",()=>{Bank.plays++;Bank.fails=0;},{once:true});
-   const src=ctx.createMediaElementSource(el);
    /* Преграды: за стеной звук глуше и тише, за перекрытием — ещё глуше;
       кузница за стеной слышна иначе, чем кузница рядом. */
    const прегр0=occl===null?this.occlusion(dx,dy,dz):Math.max(0,Number(occl)||0);
    /* Речь жителя за стеной глуше, но слова различимы (VOICE_MIX). */
    const прегр=voice?Math.min(VOICE_MIX.occlMax,прегр0):прегр0;
    this.lastOccl=прегр;
-   const g=ctx.createGain();
-   g.gain.value=voice?Math.max(0,Math.min(VOICE_MIX.cap,voiceLevel(kind,gain)*Math.pow(0.72,прегр)))
+   const громк=voice?Math.max(0,Math.min(VOICE_MIX.cap,voiceLevel(kind,gain)*Math.pow(0.72,прегр)))
     :Math.max(0,Math.min(1,Bank.vol(kind)*gain*Math.pow(0.72,прегр)));
-   const pan=this.node(dx,dy,dz,voice?Math.min(roll,VOICE_MIX.roll):roll);
-   const сж=voice?voiceChain(ctx,src):null;
-   const вход=сж?сж.out:src;
-   let lp=null;
-   if(прегр>0){lp=ctx.createBiquadFilter();lp.type="lowpass";lp.frequency.value=Math.max(300,9000/(1+прегр*2.2));lp.Q.value=0.5;
-    вход.connect(lp);lp.connect(pan);}
-   else вход.connect(pan);
-   pan.connect(g);
    /* Сухой путь и путь через отзвук помещения — доля второго задана акустикой.
       За преградой прямого звука почти нет: остаётся в основном отзвук.
-      Речи отзвука оставлено меньше: в гулком подземелье слова иначе тонут. */
-   g.connect(Room.dry);
-   /* wetK — своя доля отзвука у источника: капля под сводом звучит больше эхом, чем собой. */
-   const wet=ctx.createGain();wet.gain.value=(прегр>0?Math.min(1.6,1+прегр*0.3):1)*(voice?VOICE_MIX.wet:1)*Math.max(0,Math.min(4,Number(wetK)||1));g.connect(wet);wet.connect(conv||Room.conv);
-   const rec={el,src,g,pan,lp,wet,сж,voice:!!voice,occl:прегр,kind,dist,prio:Voices.prioOf(kind,prio),t:Date.now(),
-    /* Отыгравший элемент отдаёт плеер сразу. Раньше он только вставал на
-       паузу и держал плеер до сборки мусора; браузер держит их
-       ограниченно — на Android около сорока на страницу, — и в подземелье,
-       где после каждого шага отзываются стены, двери и сундуки, запас
-       кончался за несколько минут: новые записи молча не загружались, а
-       запасной синтез не вступал, потому что звук «пошёл». Так пропадал
-       удар о стену. Пустой src и load() разрушают плеер немедленно. */
+      Речи отзвука оставлено меньше: в гулком подземелье слова иначе тонут.
+      wetK — своя доля отзвука у источника: капля под сводом звучит больше эхом, чем собой. */
+   const мокро=(прегр>0?Math.min(1.6,1+прегр*0.3):1)*(voice?VOICE_MIX.wet:1)*Math.max(0,Math.min(4,Number(wetK)||1));
+   /* (15.0) Звук — через канал единой звуковой среды: плеер и цепочка движка не создаются заново. */
+   const h=ЗвукСреда.играть(Bank.url(path),{путь:"pan",dx,dy,dz,roll:voice?Math.min(roll,VOICE_MIX.roll):roll,voice:!!voice,
+    lp:прегр>0?Math.max(300,9000/(1+прегр*2.2)):0,gain:громк,dry:"room",wet:мокро,conv:conv||null,rate:(rate&&rate!==1)?rate:1});
+   if(!h)return false;
+   const el=h.el;
+   el.addEventListener("error",()=>{if(el.__stopped)return;Bank.fails++;
+    if(Bank.plays===0&&Bank.fails>=4)Bank.enabled=false;},{once:true});
+   el.addEventListener("loadeddata",()=>{Bank.plays++;Bank.fails=0;},{once:true});
+   const к=h.канал;
+   const rec={el,h,voice:!!voice,occl:прегр,kind,dist,prio:Voices.prioOf(kind,prio),t:Date.now(),
+    /* узлы канала — для того, кто смотрит, как звучит источник */
+    g:к.g,pan:к.pan,wet:к.wet,lp:прегр>0?к.lp:null,сж:voice?{nodes:[к.comp,к.mk],out:к.mk}:null,
+    /* Отыгравший звук отдаёт канал сразу: следующий звук берёт его же плеер. */
     stop(){if(this.done)return;this.done=true;
-     try{this.el.__stopped=true;this.el.pause();
-     this.src.disconnect();this.pan.disconnect();this.g.disconnect();if(this.lp)this.lp.disconnect();this.wet.disconnect();
-     if(this.сж)this.сж.nodes.forEach(x=>x.disconnect());}catch(_){}
-     try{this.el.removeAttribute("src");this.el.load();}catch(_){}
+     safeFn(()=>this.h.стоп());
      Spatial.live=Spatial.live.filter(x=>x!==this);Voices.forget(this);}};
+   h.приСнятии(()=>rec.stop());
    this.live.push(rec);this.trim(10);Voices.add(rec);
    el.addEventListener("ended",()=>rec.stop(),{once:true});
    /* Голос, который не зазвучит, снимает единый обработчик речи: очередь
@@ -18803,8 +18915,7 @@ const Spatial={
    else Звук.играть(el,"мир");
    const life=Math.max(0.4,maxSec||3);
    const fade=Math.min(0.3,life*0.3);
-   setTimeout(()=>{try{g.gain.setTargetAtTime(0.0001,ctx.currentTime,fade/3);}catch(_){}},
-    Math.max(0,(life-fade)*1000));
+   setTimeout(()=>h.затухание(fade/3),Math.max(0,(life-fade)*1000));
    setTimeout(()=>{rec.stop();this.live=this.live.filter(x=>x!==rec);},life*1000+150);
    return true;
   }catch(_){return false;}},
@@ -24663,31 +24774,24 @@ const Folk={
   if(!Bank.enabled||!файл)return null;
   if(Bank.canPan()){
    try{
-    const ctx=AE.ensure();
-    const el=Плееры.взять(Bank.url(файл));
-    const r=Number(оп.rate)||0;
-    if(r&&r!==1){try{el.preservesPitch=false;el.mozPreservesPitch=false;el.playbackRate=Math.max(0.5,Math.min(2,r));}catch(_){}}
-    el.addEventListener("error",()=>{if(el.__stopped)return;Bank.fails++;},{once:true});
-    el.addEventListener("loadeddata",()=>{Bank.plays++;Bank.fails=0;},{once:true});
-    const src=ctx.createMediaElementSource(el);
-    const сж=voiceChain(ctx,src);
-    const g=ctx.createGain();
-    g.gain.value=Math.max(0,Math.min(VOICE_MIX.cap,voiceLevel("npc",оп.gain)));
-    сж.out.connect(g);g.connect(AE.fx);
     /* ── ГОЛОС ГЕРОЯ В ТОМ ЖЕ ЗАЛЕ ──
        Житель говорит из точки и потому звучит в отклике места, а голос героя
        (и всякий голос без точки: встречающий на пороге, старший обоза) шёл
        сухо, мимо отзвука: в храме жрец звучал под сводом, а герой — будто на
        улице. Теперь и такой голос идёт в отклик помещения с той же долей, что
-       у жителя: в храме — гулко, в таверне — коротко, в пещере — сыро. */
-    let wet=null;
-    if(Room.conv){wet=ctx.createGain();wet.gain.value=VOICE_MIX.wet;g.connect(wet);wet.connect(Room.conv);}
-    const уйти=()=>{try{src.disconnect();сж.nodes.forEach(x=>x.disconnect());g.disconnect();if(wet)wet.disconnect();}catch(_){}};
-    el.addEventListener("ended",уйти,{once:true});
-    el.__voice=true;el.__room=!!wet;
+       у жителя: в храме — гулко, в таверне — коротко, в пещере — сыро.
+       (15.0) Голос — через канал единой звуковой среды: сжатие, громкость и
+       отклик у канала свои, постоянные. */
+    const r=Number(оп.rate)||0;
+    const h=ЗвукСреда.играть(Bank.url(файл),{voice:true,gain:Math.max(0,Math.min(VOICE_MIX.cap,voiceLevel("npc",оп.gain))),
+     rate:(r&&r!==1)?r:1,dry:"fx",wet:Room.conv?VOICE_MIX.wet:0});
+    if(!h)throw new Error("нет канала");
+    const el=h.el;
+    el.addEventListener("error",()=>{if(el.__stopped)return;Bank.fails++;},{once:true});
+    el.addEventListener("loadeddata",()=>{Bank.plays++;Bank.fails=0;},{once:true});
+    el.__voice=true;el.__room=!!Room.conv;
     Звук.играть(el,"голос",{повтор:false,сторож:3000,наОтказ:(e,почему)=>Речь.голосНеЗазвучал(e,почему)});
     Bank._shot(el,"npc",{prio:"high"},оп.maxSec||9);
-    setTimeout(уйти,(оп.maxSec||9)*1000+60);
     return el;
    }catch(_){}}
   /* Запасной плоский путь — тоже голос: его ждёт голос игры и снимает «тихо». */
@@ -45659,25 +45763,18 @@ function playLeveled(role,o){
  const отзвук=!!reverb&&!!Room.conv;
  if((k>1||отзвук)&&Bank.canPan()){
   try{
-   const ctx=AE.ensure();
-   const el=Плееры.взять(Bank.url(file));
-   if(rate&&rate!==1){try{el.preservesPitch=false;el.mozPreservesPitch=false;el.playbackRate=Math.max(0.5,Math.min(2,rate));}catch(_){}}
+   /* (15.0) Шаг — через канал единой звуковой среды. Шина эффектов уже несёт
+      громкость эффектов и общую: здесь — только сам шаг, усиление записи и
+      аномалия места. Шаг под крышей — ещё и в отклик помещения. */
+   const h=ЗвукСреда.играть(Bank.url(file),{gain:Math.max(0,gain*k*safeFn(()=>anomalyGain("world"),1)/0.9),
+    rate:(rate&&rate!==1)?rate:1,dry:"fx",wet:отзвук?1:0});
+   if(!h)throw new Error("нет канала");
+   const el=h.el;
    el.addEventListener("error",()=>{if(el.__stopped)return;Bank.fails++;},{once:true});
    el.addEventListener("loadeddata",()=>{Bank.plays++;Bank.fails=0;},{once:true});
-   const src=ctx.createMediaElementSource(el);
-   const g=ctx.createGain();
-   /* Шина эффектов уже несёт громкость эффектов и общую: здесь — только
-      сам шаг, усиление записи и аномалия места. */
-   g.gain.value=Math.max(0,gain*k*safeFn(()=>anomalyGain("world"),1)/0.9);
-   src.connect(g);g.connect(AE.fx);
-   /* Шаг под крышей — ещё и в отклик помещения: доля отзвука задана местом. */
-   if(отзвук)g.connect(Room.conv);
-   const уйти=()=>{try{src.disconnect();g.disconnect();}catch(_){}};
-   el.addEventListener("ended",уйти,{once:true});
    el.__role=role;el.__file=file;el.__k=k;el.__reverb=отзвук;
    Звук.играть(el,"шаг");
    Bank._shot(el,kind,{prio},maxSec);
-   if(maxSec>0)setTimeout(уйти,maxSec*1000+60);
    return el;
   }catch(_){}}
  const el=Bank.file(file,{gain:gain*Math.min(1,k),rate,maxSec,kind,prio});
@@ -73066,7 +73163,7 @@ function bindSpeechSettings($){
  sel("setTargetBeacon","targetBeacon",v=>v==="gesture"?"Маяк цели — по жесту: свайп двумя пальцами вверх называет расстояние и сторону до цели и подаёт маяк.":"Маяк цели звучит постоянно: чем ближе к цели, тем чаще звон, и звучит он со стороны цели.");
  sel("setApproachR","approachR",v=>`Объекты рядом: за ${STEP_WORDS[Math.max(1,Math.min(6,Number(v)||4))]}. Так же далеко достаёт жест «что рядом».`);
  sel("setVerbosity","verbosity",v=>({min:"Подробность: минимальная — только важное и результат действия.",brief:"Подробность: краткая — первые две фразы.",normal:"Подробность: стандартная.",full:"Подробность: полная."}[v]||"Подробность изменена."));
- sel("setSrMode","srMode",v=>({auto:"Объявления для VoiceOver и TalkBack: автоматически.",request:"Объявления для VoiceOver и TalkBack: только по запросу.",off:"Объявления для VoiceOver и TalkBack выключены."}[v]||"Режим объявлений изменён."));
+ sel("setSrMode","srMode",v=>({auto:"Объявления для VoiceOver и TalkBack: автоматически — чтец получает фразы, только когда встроенная озвучка выключена; два голоса вместе не звучат.",request:"Объявления для VoiceOver и TalkBack: только по запросу.",off:"Объявления для VoiceOver и TalkBack выключены."}[v]||"Режим объявлений изменён."));
  const d=$("setDuck");if(d){d.value=Math.round((Number(settings.duck)||0)*100);$("vDuck").textContent=d.value+"%";
   d.addEventListener("input",e=>{settings.duck=e.target.value/100;saveSettings();$("vDuck").textContent=e.target.value+"%";});}
  const r=$("btnRepeatLast");if(r)r.addEventListener("click",()=>Speech.repeatLast());
@@ -80095,18 +80192,16 @@ const ZvSnd={live:0,журнал:[],
   if(!safeFn(()=>Spatial.on(),false)){this.note(file,Bank.vol("fx")*Math.min(1.43,gain*k));return !!safeFn(()=>Bank.file(file,{gain:Math.min(1.43,gain*k),kind:"fx",maxSec:o.maxSec||3,rate:o.rate||1}),null);}
   try{
    const ctx=Spatial.ensure();if(!ctx)return false;
-   const el=Плееры.взять(Bank.url(file));
-   if(o.rate&&o.rate!==1){try{el.preservesPitch=false;el.mozPreservesPitch=false;el.playbackRate=Math.max(0.5,Math.min(2,o.rate));}catch(_){}}
-   const src=ctx.createMediaElementSource(el);
-   const eq=ctx.createBiquadFilter();eq.type="peaking";eq.frequency.value=2800;eq.Q.value=0.8;eq.gain.value=3.5;
-   const g=ctx.createGain();g.gain.value=Math.max(0,Math.min(3,Bank.vol("fx")*gain*k));
-   const pan=Spatial.node(Number(dx)||0,Number(dy)||0,Number(o.dz)||0,1.1);
-   src.connect(eq);eq.connect(pan);pan.connect(g);g.connect(Room.dry||ctx.destination);
-   let w=null;if(Room.conv){w=ctx.createGain();w.gain.value=0.22;g.connect(w);w.connect(Room.conv);}
-   this.live++;this.note(file,g.gain.value);let done=false;
-   const stop=()=>{if(done)return;done=true;this.live=Math.max(0,this.live-1);
-    try{el.__stopped=true;el.pause();src.disconnect();eq.disconnect();pan.disconnect();g.disconnect();if(w)w.disconnect();}catch(_){}
-    try{el.removeAttribute("src");el.load();}catch(_){}};
+   /* (15.0) Звук зверя — через канал единой звуковой среды: объёмный путь,
+      середина чуть поднята, отклик помещения — постоянная цепочка канала. */
+   const v=Math.max(0,Math.min(3,Bank.vol("fx")*gain*k));
+   const h=ЗвукСреда.играть(Bank.url(file),{путь:"pan",dx:Number(dx)||0,dy:Number(dy)||0,dz:Number(o.dz)||0,roll:1.1,
+    eq:{f:2800,q:0.8,g:3.5},gain:v,dry:"room",wet:Room.conv?0.22:0,rate:(o.rate&&o.rate!==1)?o.rate:1});
+   if(!h)return false;
+   const el=h.el;
+   this.live++;this.note(file,v);let done=false;
+   const stop=()=>{if(done)return;done=true;this.live=Math.max(0,this.live-1);h.стоп();};
+   h.приСнятии(stop);
    el.addEventListener("ended",stop,{once:true});setTimeout(stop,Math.max(0.3,o.maxSec||3)*1000+200);
    Звук.играть(el,"мир");return true;
   }catch(_){return false;}},
