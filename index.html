@@ -83750,10 +83750,10 @@ safeFn(()=>{const k0=НемВещи.камертон.bind(НемВещи);Нем
   const a=НемАкт2.ст();if(d<7&&(a.стадия===1||a.стадия===2))return `${t} А ниже, на седьмом ярусе, звон уходит в щель и не возвращается: там Шов.`;}catch(_){}
  return t;};});
 /* кривой шов расходится сам — и это слышно */
-safeFn(()=>{const r0=refresh;refresh=function(){const r=r0.apply(this,arguments);
+safeFn(()=>{const r0=refresh;refresh=matKeep(r0,function(){const r=r0.apply(this,arguments);
  try{const a=G.nem&&G.nem.акт2;const ш=a&&a.шов;if(ш&&ш.сост==="криво"&&Number(ш.до)>0&&НемАкт2.now()>=ш.до){
    НемАкт2.сверитьИсход();setTimeout(()=>safeFn(()=>narrate("Где-то глубоко под Боргином разошёлся кривой шов: Шов снова дышит, поле копей — прежнее.",{interrupt:false})),600);}}catch(_){}
- return r;};});
+ return r;});});
 /* дело линии не сдаётся раньше времени — со словами второго акта */
 safeFn(()=>{const c0=completeQuest;completeQuest=function(id){
  if(id==="nem_akt2"){const q=НемАкт2.дело();if(q&&!q.done&&!q.doneFlag){narrate(`Дело «${q.заглавие}» ещё не закрыто. ${НемАкт2.текст()}`,{interrupt:true});return;}}
@@ -83776,6 +83776,10 @@ safeFn(()=>{const c0=completeQuest;completeQuest=function(id){
  if(a.стадия===3&&a.кто==="ваэль")ч.push({l:"Рассказать о Шве",run:()=>НемЛюди.ваэль(НемАкт2.сдать())});
  if(a.стадия===4&&a.кто!=="ваэль")ч.push({l:"Спросить о Шве",run:()=>НемЛюди.ваэль(НемАкт2.отзыв("ваэль"))});
  return ч;});
+/* обёртки показывают текст прежнего правила (см. ДО150 в начале подъёмников); этот модуль теперь последний —
+   наборы проверок читают исходник правила (учтены ли удача, бафф и т. п.), а прежнее правило работает внутри */
+safeFn(()=>{if(typeof ДО150==="undefined")return;for(const [k,f] of Object.entries(ДО150)){const тек=window[k];
+ if(typeof тек==="function"&&тек!==f&&!Object.prototype.hasOwnProperty.call(тек,"toString"))matKeep(f,тек);}});
 
 
 /* ════════ СОХРАНЕНИЕ ════════ */
