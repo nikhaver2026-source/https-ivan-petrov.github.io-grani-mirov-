@@ -70,6 +70,8 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
  const обоз=await page.evaluate(async()=>{
   const w=ms=>new Promise(r=>setTimeout(r,ms));
   const тик=CaravanRoll.tick;CaravanRoll.tick=()=>false;const тик2=PatrolMarch.tick;PatrolMarch.tick=()=>false;
+  /* шаги обоза, что сам подъезжал к герою раньше (назначены заранее), на время замера снимаются — иначе их копыта мешаются с проезжающим */
+  safeFn(()=>hushSoon());
   ROLES.length=0;PassBy.run("caravan","прочь",{сек:3,сторона:-1});await w(3300);
   CaravanRoll.tick=тик;PatrolMarch.tick=тик2;
   const шаги=ROLES.filter(x=>x.r==="tread_hoof"),колёса=ROLES.filter(x=>x.r==="mtg_cart");
