@@ -102,8 +102,8 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   const o={места:НЕМ_МЕСТА.map(м=>{const c=cellContent(м.x,м.y);return (c.structure&&c.structure.name===м.n&&c.structure.type===м.тип)?м.n:null;})};
   o.поселения=["Сильвен","Боргин","Драгош"].map(n=>{const м=НЕМ_МЕСТА.find(x=>x.n===n);return (isCityAt(м.x,м.y)||{}).name;});
   G.x=24898;G.y=24665;fieldInteract();const m=document.getElementById("modal-event");o.стража=m&&!m.hidden?document.getElementById("eventTitle").textContent:null;__закрыть();
-  o.ордена=НЕМ_ОРДЕНА.length;o.круг=!!STAND_SCOPE_BY_ID.orden;return o;});
- check('8. на карте у начала игры — Сильвен, Боргин, Драгош и Немые штольни; у ворот Сильвена встречает стража (14.7); двенадцать орденов и круг отношений «орден»',
+  o.ордена=НЕМ_ОРДЕНА.length;o.круг=!STAND_SCOPE_BY_ID["orden"]&&STAND_SCOPES.length===12&&!!STAND_SCOPE_BY_ID.guild;return o;});
+ check('8. на карте у начала игры — Сильвен, Боргин, Драгош и Немые штольни; у ворот Сильвена встречает стража (14.7); двенадцать орденов — в прежнем круге отношений «в гильдии», нового круга нет',
   м.места.every(Boolean)&&м.поселения.join()==="Сильвен,Боргин,Драгош"&&/^Ворота: Сильвен/.test(м.стража||"")&&м.ордена===12&&м.круг,м);
 
  /* ── 9. «Записки о Пределе»: дело Звёздной Меры с наградой и последствием ── */
@@ -112,8 +112,8 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   const c=cellContent(24898,24665);const ns=npcsFor(c)||[];const L=ns.length?sideQuestsFor(ns[0]):[];const q=L.find(x=>x.id==="nem_zapiski");
   const o={есть:!!q,первым:L[0]&&L[0].id==="nem_zapiski"};if(!q)return o;G.quests.push(q);
   for(const [x,y] of НЕМ_ТОЧКИ){__тихо();G.x=x+1;G.y=y;move("W");__тихо();if(!(q.got||[]).length||G.x!==x){G.x=x;G.y=y;Q150.onStep();}}
-  o.сделано=Q150.сделано(q);const s0=standOf("orden","zvm");__said=[];completeQuest(q.id);
-  o.стенд=standOf("orden","zvm")-s0;o.нить=G.spells.includes("Услышать нить");o.повтор=!!(sideQuestsFor(ns[0])||[]).find(x=>x.id==="nem_zapiski");return o;});
+  o.сделано=Q150.сделано(q);const s0=standOf("guild","zvm");__said=[];completeQuest(q.id);
+  o.стенд=standOf("guild","zvm")-s0;o.нить=G.spells.includes("Услышать нить");o.повтор=!!(sideQuestsFor(ns[0])||[]).find(x=>x.id==="nem_zapiski");return o;});
  check('9. жители Сильвена первым предлагают «Записки о Пределе»: три замера в Сильвенской Тиши — и Звёздная Мера ценит вас выше, а Ваэль учит «Услышать нить»; второй раз дела не дают',
   з2.есть&&з2.первым&&з2.сделано&&з2.стенд>=12&&з2.нить&&!з2.повтор,з2);
 

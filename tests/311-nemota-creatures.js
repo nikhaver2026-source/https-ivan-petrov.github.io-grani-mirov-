@@ -88,8 +88,8 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
  /* ── 8. выгоревший: жадное касание, купол тиши, Приют Тишайших ── */
  const в=await page.evaluate(async()=>{const cb=__бой("nem_burnt",200);cb.hp=150;G.mana=50;Undead.onStrike(cb.m,10);const o={мана:50-G.mana,лечился:cb.hp-150};
   cb.немКупол=3;G.mana=50;Undead.onStrike(cb.m,10);o.подКуполом=50-G.mana;cb.немКупол=0;
-  G.standing=G.standing||{};G.standing["orden:priyut"]=30;const xp=G.xp;cb.hp=40;updateCombat();await new Promise(r=>setTimeout(r,900));
-  o.сдался=!G.combat;o.опыт=G.xp-xp;o.приют=standOf("orden","priyut");__тихо();return o;});
+  G.standing=G.standing||{};G.standing["guild:priyut"]=30;const xp=G.xp;cb.hp=40;updateCombat();await new Promise(r=>setTimeout(r,900));
+  o.сдался=!G.combat;o.опыт=G.xp-xp;o.приют=standOf("guild","priyut");__тихо();return o;});
  check('8. выгоревший: касание забирает три маны и лечит его; под куполом тиши — ничего; при доверии Приюта Тишайших раненый опускает руки: бой окончен миром, половина опыта, Приют ценит выше',
   в.мана===3&&в.лечился===3&&в.подКуполом===0&&в.сдался&&в.опыт>0&&в.приют>30,в);
 
@@ -113,8 +113,8 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   const o={слово:__said.filter(t=>/Тварь Немоты/.test(t)).slice(0,1)};__тихо();
   renderBestiary();const h=document.getElementById("bestList").innerHTML;o.бест=(h.match(/nemvoice:/g)||[]).length;o.раздел=/Твари Немоты/.test(h);
   o.добыча=НЕМ_ТВАРИ.every(m=>Spoils.list(m).some(([r])=>SPOIL_PRICE[r]>0));o.род=(RES_KIND_BY_RES["тишь-смола"]||{}).id;o.сердце=Spoils.roll(Object.assign({},НЕМ_ТВАРЬ.nem_lord,{lvl:16}),()=>0.99).includes("сердце Немоты");return o;});
- check('11. в начале первого боя тварь названа, с умениями и способом её взять; в бестиарии раздел «Твари Немоты» с голосами всех семи; у каждой своя добыча с ценой, с Владыки всегда — «сердце Немоты»',
-  б.слово.length===1&&/Чем взять/.test(б.слово[0])&&б.бест===7&&б.раздел&&б.добыча&&б.род==="nem"&&б.сердце,б);
+ check('11. в начале первого боя тварь названа, с умениями и способом её взять; в бестиарии раздел «Твари Немоты» с голосами всех семи; у каждой своя добыча с ценой (тишь-смола — в прежнем роде «трофеи тварей»), с Владыки всегда — «сердце Немоты»',
+  б.слово.length===1&&/Чем взять/.test(б.слово[0])&&б.бест===7&&б.раздел&&б.добыча&&б.род==="trophy"&&б.сердце,б);
 
  check('Ошибок страницы нет',errors.length===0,errors.slice(0,3));
  await browser.close();
