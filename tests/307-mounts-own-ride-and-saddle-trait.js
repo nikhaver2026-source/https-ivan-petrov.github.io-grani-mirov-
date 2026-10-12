@@ -22,6 +22,7 @@
    7. Ошибок страницы нет.
    8. У каждого из сорока шести родов свои звуки: голос, рык, удар, шаг, езда
       и бег ни у кого не повторяются («делай каждому уникальные звуки»).
+   9. У каждой из 138 способностей свой набор звуков.
    ═══════════════════════════════════════════════════════════════════════ */
 const {chromium}=require('playwright');
 const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(e!==undefined?' :: '+JSON.stringify(e).slice(0,900):''));
@@ -120,6 +121,13 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   r.безГромкости=[...new Set(r.безГромкости)];return r;});
  check('8. у каждого из сорока шести родов свои звуки: голос, рык, удар, шаг, езда и бег ни у кого не повторяются, все на месте и выровнены',
   !Object.keys(у.повторы).length&&!у.нет.length&&!у.безГромкости.length,у);
+
+ /* ── 9. У каждой из 138 способностей свой набор звуков ── */
+ const сп=await p.evaluate(()=>{const sig={};let n=0;for(const f of ZV_FAMILIES)for(const x of Zver.abilities({fam:f.id})){n++;
+   const s=(x.зв||[]).map(L=>[...L].map(String).sort().join("|")).join(" + ");(sig[s]=sig[s]||[]).push(f.id+": "+x.n);}
+  return {способностей:n,повторы:Object.values(sig).filter(v=>v.length>1)};});
+ check('9. у каждой из ста тридцати восьми способностей свой набор звуков — ни одна не звучит, как способность другого зверя',
+  сп.способностей===138&&!сп.повторы.length,сп);
 
  check('7. ошибок страницы нет',errors.length===0,errors.slice(0,5));
  console.log(results.join('\n'));
