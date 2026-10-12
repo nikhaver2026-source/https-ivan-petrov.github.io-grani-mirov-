@@ -42,15 +42,16 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
  /* Действие здесь — двойное касание одним пальцем (набор 176). */
  async function dbl(){await tap();await tap();await page.waitForTimeout(300);}
 
- // встаём на постройку с входом — подземелье: в поселение пускает стража, в дом — стук (набор 308)
+ // встаём на поселение с входом. (14.7) У ворот стража: здесь у героя пропуск на сегодня —
+ // плата уже внесена, и стража пропускает сразу (расспрос и плата — набор 308).
  await page.evaluate(()=>{
   outer: for(let r=1;r<120;r++)for(let dx=-r;dx<=r;dx++)for(let dy=-r;dy<=r;dy++){
    const c=cellContent(G.x+dx,G.y+dy);
-   if(c.structure&&PLACE_KIND[c.structure.type]==="dungeon"&&!airOnly(c.structure.type)){G.x+=dx;G.y+=dy;break outer;}}
-  G.place=null;});
+   if(c.structure&&PLACE_KIND[c.structure.type]==="city"){G.x+=dx;G.y+=dy;break outer;}}
+  G.place=null;G.gate147={[G.x+","+G.y]:Number(G.day)||0};});
 
  // 1. Двойное касание одним пальцем — вход внутрь
- await dbl();
+ await dbl();await page.waitForTimeout(800);
  const inside=await page.evaluate(()=>G.place&&{kind:G.place.kind,depth:G.place.depth,name:G.place.name});
  check('двойное касание одним пальцем вводит в постройку',!!inside,inside);
 
@@ -82,7 +83,7 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
  await page.waitForTimeout(300);
  const послеСвайпа=await page.evaluate(()=>!!G.place);
  check('свайп двумя пальцами вниз на поле больше не входит: он только закрывает окна',послеСвайпа===false);
- await dbl();
+ await dbl();await page.waitForTimeout(800);
  const held=await page.evaluate(()=>!!G.place);
  check('двойное касание одним пальцем входит в постройку под ногами',held);
 
