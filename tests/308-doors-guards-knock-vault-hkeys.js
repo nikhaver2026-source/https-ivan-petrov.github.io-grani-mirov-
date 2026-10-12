@@ -148,6 +148,17 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
  check('14. с дурной славой стража не пускает: остаётся мзда — она пропускает, но запоминается',
   мз.окно&&/Не пущу/.test(мз.окно.текст)&&/^Дать мзду/.test(мз.окно.выбор[0])&&мз2.вошёл&&мз2.золото===90&&мз2.розыск>=1,{мз,мз2});
 
+ /* ── 14б. «Услуги и люди» деревни на карте — тоже за воротами: без пропуска стража, после платы — услуги ── */
+ const ус=await page.evaluate(()=>{__закрыть();safeFn(()=>leavePlace());G.place=null;G.standing={};G.gate147={};G.gold=100;G.hour=12;const f=__дер;G.x=f.x;G.y=f.y;
+  openBuilding(cellContent(f.x,f.y));const o={окно:__окно(),услуги:!document.getElementById("modal-building").hidden};
+  resolveEvent(0);resolveEvent(0);resolveEvent(0);return o;});
+ await W(900);
+ const ус2=await page.evaluate(()=>{const o={услуги:!document.getElementById("modal-building").hidden,внутри:!!G.place,золото:G.gold};__закрыть();
+  /* с пропуском — услуги сразу */
+  openBuilding(cellContent(__дер.x,__дер.y));o.сразу=!document.getElementById("modal-building").hidden&&!__окно();__закрыть();return o;});
+ check('14б. «Услуги и люди» деревни на карте: без пропуска сначала стража и плата, затем услуги (не вход); с пропуском — услуги сразу',
+  ус.окно&&/^Ворота/.test(ус.окно.заголовок)&&!ус.услуги&&ус2.услуги&&!ус2.внутри&&ус2.золото===98&&ус2.сразу,{ус,ус2});
+
  /* ── 15. шаг на поселение: «вы у ворот, тут стража»; второй шаг — к страже ── */
  const ш=await page.evaluate(()=>{__закрыть();safeFn(()=>leavePlace());G.place=null;G.standing={};G.gate147={};G.hour=12;const f=__дер;
   G.x=f.x+1;G.y=f.y;G.atDoor=null;__said=[];move("W");const o={слова:__said.filter(t=>/ворот|Шагните/.test(t)),у:!!G.atDoor};
