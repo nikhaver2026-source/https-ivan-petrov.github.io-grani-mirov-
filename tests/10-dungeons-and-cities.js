@@ -60,7 +60,7 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   return {blocked:true};});
  check('стены не пропускают игрока',wall.blocked,wall);
 
- // 4. Двери: первый шаг открывает, второй проводит
+ // 4. Двери (14.7): шаг упирается в закрытую, двойное касание открывает, следующий шаг проводит
  const door=await page.evaluate(()=>{
   const c=cellContent(G.x,G.y);
   G.place={kind:"house",bx:c.x,by:c.y,stype:"tavern",name:"Тест",depth:0,x:1,y:1};
@@ -71,11 +71,12 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
    for(const [d,ox,oy] of dirs){
     if(l.g[y+oy][x+ox]==="#")continue;
     G.place.x=x+ox;G.place.y=y+oy;G.marks={};
-    const first=moveInside(d);const opened=placeMark(x,y)==="open";
+    const first=moveInside(d);const закрыта=placeMark(x,y)!=="open";
+    fieldInteract();const opened=placeMark(x,y)==="open";
     const second=moveInside(d);
-    return {first,opened,second,dir:d,pos:[G.place.x,G.place.y],target:[x,y]};}}
+    return {first,закрыта,opened,second,dir:d,pos:[G.place.x,G.place.y],target:[x,y]};}}
   return {skip:true};});
- check('дверь сначала открывается, затем пропускает',door.skip||(door.first===false&&door.opened&&door.second===true),door);
+ check('дверь закрыта, пока её не откроешь двойным касанием, затем пропускает',door.skip||(door.first===false&&door.закрыта&&door.opened&&door.second===true),door);
 
  // 5. Лестницы: между ярусами лежит марш, и его проходят ногами
  const stairs=await page.evaluate(()=>{

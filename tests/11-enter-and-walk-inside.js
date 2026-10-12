@@ -42,11 +42,11 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
  /* Действие здесь — двойное касание одним пальцем (набор 176). */
  async function dbl(){await tap();await tap();await page.waitForTimeout(300);}
 
- // встаём на постройку с входом
+ // встаём на постройку с входом — подземелье: в поселение пускает стража, в дом — стук (набор 308)
  await page.evaluate(()=>{
-  outer: for(let r=1;r<50;r++)for(let dx=-r;dx<=r;dx++)for(let dy=-r;dy<=r;dy++){
+  outer: for(let r=1;r<120;r++)for(let dx=-r;dx<=r;dx++)for(let dy=-r;dy<=r;dy++){
    const c=cellContent(G.x+dx,G.y+dy);
-   if(c.structure&&PLACE_KIND[c.structure.type]){G.x+=dx;G.y+=dy;break outer;}}
+   if(c.structure&&PLACE_KIND[c.structure.type]==="dungeon"&&!airOnly(c.structure.type)){G.x+=dx;G.y+=dy;break outer;}}
   G.place=null;});
 
  // 1. Двойное касание одним пальцем — вход внутрь

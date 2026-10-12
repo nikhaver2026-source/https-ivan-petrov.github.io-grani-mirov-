@@ -45,7 +45,7 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
      if(z.y===b.y0)s={x:z.x,y:z.y-1,d:"S"};else if(z.y===b.y1)s={x:z.x,y:z.y+1,d:"N"};else if(z.x===b.x0)s={x:z.x-1,y:z.y,d:"E"};else if(z.x===b.x1)s={x:z.x+1,y:z.y,d:"W"};
      if(s&&tileAt(lvl,s.x,s.y)!=="#"){G.place.x=s.x;G.place.y=s.y;return s;}}return null;},
    шаг(lvl,i){const s=Ж.кДвери(lvl,i);if(!s)return {нет:true};SAID.length=0;const x0=G.place.x,y0=G.place.y;moveInside(s.d);
-    return {сдвинулся:G.place.x!==x0||G.place.y!==y0||/Дверь открыта/.test(SAID.join(" ")),сказ:SAID.join(" ")};},
+    return {сдвинулся:G.place.x!==x0||G.place.y!==y0||/Дверь открыта|постучаться или открыть/.test(SAID.join(" ")),сказ:SAID.join(" ")};},
    внутрь(lvl,i){const b=lvl.blocks[i];G.place.x=b.x0+1;G.place.y=b.y0+1;}};});
 
  /* ── 1–2. десять городов; Сар-Дорн: сутки; ворота держат с улицы, изнутри выпускают ── */

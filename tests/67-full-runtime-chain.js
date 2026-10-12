@@ -561,7 +561,9 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
    for(let y=1;y<L.h-1&&!дверь;y++)for(let x=1;x<L.w-1&&!дверь;x++){if(tileAt(L,x,y)!=="."&&tileAt(L,x,y)!=="+")continue;
     for(const d of ["N","E","S","W"]){const t=tileAt(L,x+DIRV[d][0],y+DIRV[d][1]);if(t==="#"&&!стена)стена={x,y,d};if(t==="+")дверь={x,y,d};}}
    if(стена){G.place.x=стена.x;G.place.y=стена.y;said.length=0;moveInside(стена.d);ш.столкновение=said.some(t=>/Стена/.test(t));}
-   if(дверь){G.place.x=дверь.x;G.place.y=дверь.y;said.length=0;PLAYED.length=0;moveInside(дверь.d);ш.дверь=said.some(t=>/Дверь открыта/.test(t))&&PLAYED.some(r=>/deep_stone|deep_door/.test(r));}
+   /* (14.7) дверь закрыта, пока герой не откроет её сам: шаг упирается, двойное касание открывает */
+   if(дверь){G.place.x=дверь.x;G.place.y=дверь.y;G.marks={};said.length=0;PLAYED.length=0;moveInside(дверь.d);const упёрся=said.some(t=>/закрыта\. Двойное касание/.test(t));
+    said.length=0;fieldInteract();ш.дверь=упёрся&&said.some(t=>/Вы открыли дверь/.test(t))&&PLAYED.some(r=>/deep_stone|deep_door/.test(r));}
    ш.объект=(Scape.around()||[]).length>=0&&!!SCAPE_TILE;
    G.place=null;
    /* 5–6. NPC и квест */

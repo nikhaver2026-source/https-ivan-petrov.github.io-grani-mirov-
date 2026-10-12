@@ -32,6 +32,8 @@ const ПОДГОТОВКА=`(()=>{
  window.castSpell=function(i){R("cast:"+i);};
  const st=Speech.status.bind(Speech);Speech.status=function(){R("speechstatus");};
  const kh=window.keyHelpText;window.keyHelpText=function(){R("keyhelp");return kh.apply(this,arguments);};
+ /* (14.7) Shift+H — всё остальное о герое (и в бою) */
+ const o147=window.остальное147;window.остальное147=function(){R("state147");return o147.apply(this,arguments);};
  return true;})()`;
 /* Что ждём от действия. */
 const ЖДЁМ=`(id)=>{
@@ -39,7 +41,7 @@ const ЖДЁМ=`(id)=>{
   world:null,faction:null,news:null,rumours:null,politics:null,guide:"guideOverlay",settings:"modal-settings",enc:null,best:null,saves:null};
  if(id in окна)return {g:"g:"+id,окно:окна[id]};
  const свои={interact:"interact",potion:"potion",keyhelp:"keyhelp",quicksave:"save",quickload:"load",exit:"exit",speechstatus:"speechstatus",
-  c_attack:"fight:atk",c_cast:"fight:magic",c_flee:"fight:flee",c_foe:null,c_self:null};
+  c_attack:"fight:atk",c_cast:"fight:magic",c_flee:"fight:flee",c_foe:null,c_self:null,state:"state147",c_selfrest:"state147"};
  if(id in свои)return {r:свои[id]};
  const m=/^slot(\\d+)$/.exec(id);if(m)return {r:"cast:"+(Number(m[1])-1)};
  const q=/^c_slot(\\d+)$/.exec(id);if(q)return {r:"qs:"+(Number(q[1])-1)};
