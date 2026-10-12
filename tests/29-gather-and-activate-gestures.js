@@ -24,6 +24,9 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
  await page.goto(process.argv[2]);await page.waitForTimeout(700);
  const cdp=await ctx.newCDPSession(page);
  await page.evaluate(()=>enterGame());await page.waitForTimeout(300);
+ /* (15.0) Через 2,6 с после входа игра один раз называет начальные ремёсла: дождаться, чтобы эта
+    фраза не попала в окно, где набор ждёт тишины (проверка «касание двумя пальцами…»). */
+ await page.waitForTimeout(2800);
  await page.evaluate(()=>{window.__said=[];if(!window.__origSay)window.__origSay=Speech.say;
   Speech.say=t=>{window.__said.push(t);};});
  const said=()=>page.evaluate(()=>window.__said.slice());

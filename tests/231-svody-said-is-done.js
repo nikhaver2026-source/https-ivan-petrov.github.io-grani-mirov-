@@ -97,6 +97,9 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
  /* ── 4. Острова ── */
  const о=await page.evaluate(()=>{
   const ошибки=[],слова={};
+  /* (15.0) Поручения мира засчитываются при обновлении экрана — и «дойти до…» могло исполниться
+     посреди высадки, прибавив свою награду к замеру острова. Мерится остров, а не случайное поручение. */
+  safeFn(()=>{Director.st2().q=[];});
   for(const t of SVD.isles)for(let k=0;k<6;k++){
    G.ship={tox:G.x,toy:G.y,leg:0,legs:4,left:4,island:{type:t.id,x:1000+k*977,y:2000+k*313,name:"Проба"}};
    G.hp=G.hpMax=200;G.mana=k%2?10:G.manaMax;G.buffs={};ИГРАЛО.length=0;СКАЗАНО.length=0;
