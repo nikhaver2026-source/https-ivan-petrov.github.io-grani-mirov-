@@ -22,7 +22,10 @@
       сохраняется.
    6. Смешанный текст: записанное предложение — записью, остальное —
       синтезатором устройства, по порядку и без пропусков.
-   7. Незаписанный текст целиком говорит синтезатор устройства.
+   7. Незаписанный текст целиком говорит один синтезатор: голос устройства
+      того же пола, что голос Gemini, а если у устройства такого нет —
+      встроенный eSpeak NG того же пола (выпуск 14.7: мужской и женский
+      голоса не смешиваются).
    8. Новая фраза обрывает недосказанную запись.
    9. Пункты окна настроек почти все записаны: не меньше восьмидесяти
       процентов текста звучит голосом Gemini.
@@ -98,7 +101,8 @@ function lufs(file){
  /* ── 5–8. адаптер ── */
  const адаптер=await page.evaluate(async()=>{
   const log=[];const pl=HTMLMediaElement.prototype.play,pa=HTMLMediaElement.prototype.pause;
-  HTMLMediaElement.prototype.play=function(){if(/gvoice/.test(this.src))log.push({k:"play",f:this.src.split('/').pop(),r:this.playbackRate,pp:this.preservesPitch!==false,t:performance.now()});return pl.call(this);};
+  HTMLMediaElement.prototype.play=function(){if(/gvoice/.test(this.src))log.push({k:"play",f:this.src.split('/').pop(),r:this.playbackRate,pp:this.preservesPitch!==false,t:performance.now()});
+   else if(/^blob:/.test(this.src))log.push({k:"espeak",t:performance.now()});return pl.call(this);};
   HTMLMediaElement.prototype.pause=function(){if(/gvoice/.test(this.src))log.push({k:"pause",f:this.src.split('/').pop(),t:performance.now()});return pa.call(this);};
   speechSynthesis.speak=u=>{log.push({k:"tts",x:u.text,t:performance.now()});setTimeout(()=>{try{u.onstart&&u.onstart();u.onend&&u.onend();}catch(_){}},30);};
   try{window.GraniTTS=undefined;}catch(_){}
@@ -117,10 +121,11 @@ function lufs(file){
   await ждать(4000);out.п6=log.slice();
   Speech.stop();await ждать(80);log.length=0;
   Speech.say("Квазимодо восемнадцать раз прыгнул через Зюйдвестский мост.",{interrupt:true});
-  await ждать(300);out.п7=log.slice();
+  for(let i=0;i<30&&!log.some(x=>x.k==="tts"||x.k==="espeak");i++)await ждать(50);await ждать(100);out.п7=log.slice();
   Speech.stop();await ждать(80);log.length=0;
   Speech.say(фраза,{interrupt:true});await ждать(40);
-  Speech.say("Квазимодо прыгнул через мост.",{interrupt:true,user:true});await ждать(150);
+  Speech.say("Зюйдвестский кракозябр лопочет.",{interrupt:true,user:true});
+  for(let i=0;i<30&&!log.some(x=>x.k==="tts"||x.k==="espeak");i++)await ждать(50);
   out.п8=log.slice();
   return out;});
  const п5=адаптер.п5.find(x=>x.k==="play");
@@ -130,9 +135,10 @@ function lufs(file){
  const п6=адаптер.п6.filter(x=>x.k==="play"||x.k==="tts");
  check('6. смешанный текст: записанное — записью, затем остальное — синтезатором устройства, по порядку',
   п6.length===2&&п6[0].k==="play"&&п6[1].k==="tts"&&/1234/.test(п6[1].x)&&п6[1].t>=п6[0].t,адаптер.п6);
- check('7. незаписанный текст целиком говорит синтезатор устройства',
-  !адаптер.п7.some(x=>x.k==="play")&&адаптер.п7.filter(x=>x.k==="tts").length===1,адаптер.п7);
- const п8=адаптер.п8;const ip=п8.findIndex(x=>x.k==="play"),ipa=п8.findIndex(x=>x.k==="pause"),itt=п8.findIndex(x=>x.k==="tts");
+ const синт7=адаптер.п7.filter(x=>x.k==="tts"||x.k==="espeak");
+ check('7. незаписанный текст целиком говорит один синтезатор: голос устройства того же пола или встроенный eSpeak того же пола',
+  !адаптер.п7.some(x=>x.k==="play")&&синт7.length===1&&(синт7[0].k==="espeak"||/Зюйдвестский мост/.test(синт7[0].x)),адаптер.п7);
+ const п8=адаптер.п8;const ip=п8.findIndex(x=>x.k==="play"),ipa=п8.findIndex(x=>x.k==="pause"),itt=п8.findIndex(x=>x.k==="tts"||x.k==="espeak");
  check('8. новая фраза обрывает недосказанную запись',ip>=0&&ipa>ip&&itt>ipa,п8);
 
  /* ── 9. покрытие окна настроек ── */

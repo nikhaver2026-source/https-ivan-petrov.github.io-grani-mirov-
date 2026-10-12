@@ -106,7 +106,8 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   outer: for(let r=1;r<60;r++)for(let dx=-r;dx<=r;dx++)for(let dy=-r;dy<=r;dy++){
    const c=cellContent(G.x+dx,G.y+dy);
    if(c.structure&&PLACE_KIND[c.structure.type]){G.x+=dx;G.y+=dy;break outer;}}
-  G.place=null;useHere();
+  /* (14.7) ворота и двери сами не открываются (стража, стук) — план уровня нужен и без них: входим прямо */
+  G.place=null;enterPlace(cellContent(G.x,G.y));
   if(!G.place)return {нетМеста:true};
   const lvl=curLevel(),p=G.place;
   /* Ищем точку, откуда по прямой на восток есть стена, и точку с открытой линией. */

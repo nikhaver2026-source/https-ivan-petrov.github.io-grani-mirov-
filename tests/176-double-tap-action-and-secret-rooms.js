@@ -78,10 +78,13 @@ const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(e!==undefined?' :
  await tap();await page.waitForTimeout(900);
  const послеОдного=await page.evaluate(()=>!!G.place);
  await dbl();
+ /* (14.7) у двери постройки — «Постучаться / Открыть дверь / Отойти»: открываем сами */
+ const выбор=await page.evaluate(()=>{const i=curEvent&&curEvent.choices?curEvent.choices.findIndex(c=>/^Открыть дверь/.test(String(c.l))):-1;if(i>=0)resolveEvent(i);return i>=0;});
+ await page.waitForTimeout(700);
  const послеДвойного=await page.evaluate(()=>({внутри:!!G.place,имя:G.place&&G.place.name}));
  check('одиночное касание поля ничего не делает',послеОдного===false,{послеОдного});
- check('двойное касание одним пальцем по полю — действие здесь: герой входит в постройку',
-  послеДвойного.внутри===true,послеДвойного);
+ check('двойное касание одним пальцем по полю — действие здесь: у двери постройки выбор «Открыть дверь», и герой входит',
+  выбор&&послеДвойного.внутри===true,послеДвойного);
 
  /* ── 1б. Сундук под ногами ── */
  const сундук=await page.evaluate(()=>{

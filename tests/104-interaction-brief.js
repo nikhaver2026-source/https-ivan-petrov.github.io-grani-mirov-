@@ -179,7 +179,7 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   if(door&&standNext(door)){G.items=["Ключ сокровищницы"];setPlaceMark(door.x,door.y,"closed");let i=objAt(door);let A=Interact.actions(objList[i]);r.doorActs=A.ok.map(a=>a.id);r.doorBlocked=A.blocked.map(a=>a.id+"|"+a.почему);
    SAID.length=0;doObjAction(i,"eavesdrop");r.eaves=SAID.find(t=>/За дверью/.test(t))||SAID.slice(-1)[0];
    doObjAction(i,"dlock");r.locked=placeMark(door.x,door.y);
-   const dir=door.x>p.x?"E":door.x<p.x?"W":door.y>p.y?"S":"N";SAID.length=0;const шаг=moveInside(dir);r.stepLocked=[шаг,p.x===((dir==="E"?1:dir==="W"?-1:0)+p.x)?true:true,SAID.slice(-1)[0]];
+   const dir=door.x>p.x?"E":door.x<p.x?"W":door.y>p.y?"S":"N";SAID.length=0;const шаг=moveInside(dir);/* (14.7) за словом «заперта» может идти подсказка о ключе — смотрим всё сказанное на шаг */r.stepLocked=[шаг,p.x===((dir==="E"?1:dir==="W"?-1:0)+p.x)?true:true,SAID.join(" ")];
    i=objAt(door);A=Interact.actions(objList[i]);r.lockedActs=A.ok.map(a=>a.id);r.whyOpen=Interact.why(i,"dopen");
    doObjAction(i,"dunlock");r.unlocked=placeMark(door.x,door.y);i=objAt(door);doObjAction(i,"dopen");r.opened=placeMark(door.x,door.y);
    i=objAt(door);A=Interact.actions(objList[i]);r.openActs=A.ok.map(a=>a.id);doObjAction(i,"dclose");r.closed=placeMark(door.x,door.y);

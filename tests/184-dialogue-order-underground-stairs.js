@@ -54,7 +54,8 @@ const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(e!==undefined?' :
   try{Intro.stop();}catch(_){}PlaceVoice.ПАУЗА=1e9;});
  await page.waitForTimeout(1500);
 
- const голос=x=>x.k==="tts"||/^voice\//.test(x.src)||/^throng\//.test(x.src)||/^bed\/pv_/.test(x.src);
+ /* (14.7) реплики героя в разговоре — и записи Gemini его голосом (папка voice_hero) */
+ const голос=x=>x.k==="tts"||/^voice(_hero)?\//.test(x.src)||/^throng\//.test(x.src)||/^bed\/pv_/.test(x.src);
  const снять=async(код,ждать)=>{
   await page.evaluate(()=>{window.__log.length=0;});
   await page.evaluate(код);
@@ -82,7 +83,7 @@ const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(e!==undefined?' :
  /* ── 3. ход разговора ── */
  await page.evaluate(k=>openNPC(k),key);await page.waitForTimeout(5000);
  const ход=await снять(`CMD.dlg(${JSON.stringify(key)}+":rassprosit")`,12000);
- const герой=ход.гл.find(x=>/^voice\/hero_/.test(x.src));
+ const герой=ход.гл.find(x=>/^voice(_hero)?\/hero_/.test(x.src));
  /* Ответ жителя — его запись (оклик, слово ремесла) или, где записи нет,
     голос игры, читающий ответ: любой голос после реплики героя. */
  const житель=ход.гл.find(x=>x!==герой&&(/^voice\/(say_|race_|prof_)/.test(x.src)||x.k==="tts")&&(!герой||x.t0>=герой.t0));
