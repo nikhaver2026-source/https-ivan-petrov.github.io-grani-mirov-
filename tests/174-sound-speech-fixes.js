@@ -80,6 +80,8 @@ const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(e!==undefined?' :
   [смерть.подземелье,смерть.палуба,смерть.небо].every(x=>x.место===null&&x.палуба===null&&x.высота===0&&x.уСтолицы&&!x.бой&&/у стен столицы/.test(x.сказано)),смерть);
 
  /* ── 2. Звук не пропадает ── */
+ /* после трёх поражений подряд даём отзвучать их отложенным звукам и словам (возрождение у столицы) */
+ await page.waitForTimeout(2500);
  const ЗВУК_КАНАЛОВ=await page.evaluate(()=>ЗвукСреда.N);
  const плееры=await page.evaluate(async()=>{
   const r={};
@@ -93,8 +95,8 @@ const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(e!==undefined?' :
   Spatial.at("mg/hit_air_01.ogg",1,0,{maxSec:0.4});
   Bank.panned("mg/hit_air_02.ogg",{pan:0.3,gain:0.4,maxSec:0.4});
   let свои=живые.slice(n0);
-  /* мир звучит и сам — считаются только эти две записи */
-  const мои=()=>ЗвукСреда.каналы.filter(к=>к.занят&&/hit_air_0[12]/.test(String(к.el.getAttribute("src")||"")));
+  /* мир звучит и сам — считаются только эти две записи (у удара по воздуху четыре варианта: hit_air_01…04) */
+  const мои=()=>ЗвукСреда.каналы.filter(к=>к.занят&&/hit_air_0[1-4]/.test(String(к.el.getAttribute("src")||"")));
   const занятоСразу=мои().length;
   await new Promise(z=>setTimeout(z,900));
   /* (15.0) объёмная запись и маяк звучат каналами единой звуковой среды: новый
