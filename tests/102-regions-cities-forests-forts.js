@@ -235,6 +235,8 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
      замером надо не только закрыть окна и выйти из места, но и ДАТЬ УЖЕ
      ЗАПЛАНИРОВАННОМУ ОТЗВУЧАТЬ: иначе зал цитадели, назначенный прошлым
      шагом набора, падает в чужое окно и выглядит ошибкой игры. */
+  /* (14.7) окно «Услуги и люди» поселения — после стражи: у героя пропуск на сегодня */
+  const пропуск=(x,y)=>{G.gate147=Object.assign(G.gate147||{},{[x+","+y]:Number(G.day)||0});};
   const начисто=async()=>{
    while(activeLayer&&activeLayer())closeTopUI();
    G.place=null;G.inCombat=false;G.combat=null;
@@ -242,7 +244,7 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
    await пауза(3200);PLAYED.length=0;};
   const ring=NAMED_CITY_BY_ID.ring;
   await начисто();
-  G.x=ring.x;G.y=ring.y;PLAYED.length=0;
+  G.x=ring.x;G.y=ring.y;PLAYED.length=0;пропуск(ring.x,ring.y);
   openBuilding(cellContent(ring.x,ring.y));await пауза(2400);
   r.кольцоСвои=ring.звук.filter(z=>PLAYED.indexOf(z)>=0).length;
   r.кольцоОбщий=PLAYED.indexOf("hall_center")>=0;
@@ -252,14 +254,14 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   /* Город державы — тоже своими. */
   const свой=Cities.empireAll()[0];
   await начисто();
-  G.x=свой.x;G.y=свой.y;PLAYED.length=0;
+  G.x=свой.x;G.y=свой.y;PLAYED.length=0;пропуск(свой.x,свой.y);
   openBuilding(cellContent(свой.x,свой.y));await пауза(2400);
   r.свойСвои=свой.звук.filter(z=>PLAYED.indexOf(z)>=0).length;
   while(activeLayer&&activeLayer())closeTopUI();
   /* У престола своего голоса нет — там прежний зал цитадели. */
   const cap=EMPIRES[0].cap;
   await начисто();
-  G.x=cap.x;G.y=cap.y;PLAYED.length=0;
+  G.x=cap.x;G.y=cap.y;PLAYED.length=0;пропуск(cap.x,cap.y);
   openBuilding(cellContent(cap.x,cap.y));await пауза(1200);
   r.престолОбщий=PLAYED.indexOf("hall_center")>=0;
   while(activeLayer&&activeLayer())closeTopUI();
@@ -328,7 +330,7 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   r.профессии=(PROFS.fortress||[]).length;
   G.place=null;
   /* окно здания с действиями */
-  openBuilding(cellContent(G.x,G.y));const html=document.getElementById("bldBody").innerHTML;closeTopUI();
+  G.gate147=Object.assign(G.gate147||{},{[G.x+","+G.y]:Number(G.day)||0});openBuilding(cellContent(G.x,G.y));const html=document.getElementById("bldBody").innerHTML;closeTopUI();
   r.кнопки=["fort:status","fort:besiege","fort:capture"].filter(k=>html.includes(k));
   /* осада → дни → взятие */
   PLAYED.length=0;r.осада=Forts.besiege(f.id);r.осадаЗвук=PLAYED.includes("siege_alarm_city");

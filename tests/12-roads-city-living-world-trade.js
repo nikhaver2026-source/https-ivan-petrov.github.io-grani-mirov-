@@ -90,6 +90,9 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
    if(c.structure&&c.structure.type==="village"){v={x,y};break;}}
   if(!v)return {err:"деревня не найдена"};
   G.place=null;G.x=v.x-1;G.y=v.y;G.atDoor=null;
+  /* (14.7) У ворот стража: у героя пропуск на сегодня — плата внесена,
+     стража пропускает сразу и ворота отворяются (расспрос и плата — набор 308). */
+  G.gate147={[v.x+","+v.y]:Number(G.day)||0};
   window.__said=[];
   move("E");
   const atDoor=!!G.atDoor,insideAfterFirst=!!G.place;
@@ -99,6 +102,7 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   let событие=false;
   while(activeLayer()){событие=true;closeTopUI();}
   move("E");
+  await new Promise(r=>setTimeout(r,800));
   const inside=!!G.place;
   return {atDoor,insideAfterFirst,inside,событие,kind:G.place&&G.place.kind,said:window.__said.slice()};});
  check('первый шаг ставит на порог, а не вводит внутрь',enter.atDoor===true&&enter.insideAfterFirst===false,enter);

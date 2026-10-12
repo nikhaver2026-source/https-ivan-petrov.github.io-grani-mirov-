@@ -71,7 +71,11 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   outer: for(let q=1;q<60;q++)for(let dx=-q;dx<=q;dx++)for(let dy=-q;dy<=q;dy++){
    const c=cellContent(G.x+dx,G.y+dy);
    if(c.structure&&PLACE_KIND[c.structure.type]&&PLACE_KIND[c.structure.type]!=="dungeon"){G.x+=dx;G.y+=dy;break outer;}}
-  G.place=null;PLAYED.length=0;useHere();await пауза(500);
+  /* (14.7) Сами собой двери и ворота не открываются: у ворот поселения — стража (здесь у героя пропуск
+     на сегодня), у дома — «Постучаться / Открыть дверь / Отойти» (открываем сами). */
+  G.place=null;G.gate147={[G.x+","+G.y]:Number(G.day)||0};PLAYED.length=0;useHere();await пауза(150);
+  if(curEvent&&curEvent.choices){const i=curEvent.choices.findIndex(c=>/^Открыть дверь/.test(String(c.l)));if(i>=0)resolveEvent(i);}
+  await пауза(500);
   const вид=doorKindHere();r.вошли=!!G.place;r.вход=roles();r.видВхода=вид;
   const открыть=DOOR_SOUND[вид].open;
   r.входДверь=открыть.some(x=>r.вход.includes(x));

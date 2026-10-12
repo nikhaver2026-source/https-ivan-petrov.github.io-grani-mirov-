@@ -75,7 +75,11 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   outer: for(let rr=1;rr<60;rr++)for(let dx=-rr;dx<=rr;dx++)for(let dy=-rr;dy<=rr;dy++){
    const c=safeFn(()=>cellContent(G.x+dx,G.y+dy),null);
    if(c&&c.structure&&c.structure.type!=="gate"){G.x+=dx;G.y+=dy;break outer;}}
+  /* (14.7) у ворот поселения — стража (у героя пропуск на сегодня), у дома — «Открыть дверь» */
+  G.gate147={[G.x+","+G.y]:Number(G.day)||0};
   useHere();await new Promise(res=>setTimeout(res,150));
+  if(curEvent&&curEvent.choices){const i=curEvent.choices.findIndex(c=>/^Открыть дверь/.test(String(c.l)));if(i>=0)resolveEvent(i);}
+  await new Promise(res=>setTimeout(res,600));
   r.вошли=!!G.place;if(!r.вошли)return r;
   const list=objectsHere();r.объектов=list.length;
   PLAYED.length=0;SAID.length=0;const scan=safeFn(()=>Look.scan(6),[]);r.осмотр=scan.length;

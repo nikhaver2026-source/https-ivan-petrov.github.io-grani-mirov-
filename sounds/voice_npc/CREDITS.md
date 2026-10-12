@@ -5,7 +5,7 @@
 стражник у ворот, жрец, трактирщик, староста, кузнец, торговец, наставник, смотритель порта. Прежде эти строки читал голос
 игры в кавычках; теперь у каждой своя запись и своя интонация.
 
-Записей: 7963
+Записей: 7975
 
 Речь синтезирована 27–29 сентября 2026 года нейроголосами **Gemini** (Google),
 модель `gemini-3.8-flash-tts`, через Gemini API (Interactions API,
@@ -2170,7 +2170,7 @@ Policy (https://policies.google.com/terms/generative-ai/use-policy). Отдел�
 | enter_temple_5_g.flac | на пороге: жрец, жрица | Zubenelgenubi | solemn, blessing | Благословляю твой путь. Пусть Грань будет к тебе добра. |
 | enter_temple_5_f_g.flac | на пороге: жрец, жрица | Vindemiatrix | solemn, blessing | Благословляю твой путь. Пусть Грань будет к тебе добра. |
 | enter_temple_6_g.flac | на пороге: жрец, жрица | Zubenelgenubi | gentle, knowing | Давно ты не заходил под эти своды. |
-| enter_temple_6_f_g.flac | на пороге: жрец, жрица | Vindemiatrix | gentle, knowing | Давно ты не заходила под эти своды. |
+| enter_temple_6_f_g.flac | на пороге: жрец, жрица | Vindemiatrix | gentle, knowing | Давно ты не заходил под эти своды. |
 | enter_temple_7_g.flac | на пороге: жрец, жрица | Zubenelgenubi | calm, firm | Оставь гнев у порога. Здесь ему не место. |
 | enter_temple_7_f_g.flac | на пороге: жрец, жрица | Vindemiatrix | calm, firm | Оставь гнев у порога. Здесь ему не место. |
 | enter_tavern_0_g.flac | на пороге: трактирщик, трактирщица | Puck | hearty, welcoming, loud | Заходи, заходи! Садись поближе к огню. |
@@ -7953,6 +7953,8 @@ Policy (https://policies.google.com/terms/generative-ai/use-policy). Отдел�
 
 | Файл | Где звучит | Голос | Интонация | Строка |
 |---|---|---|---|---|
+| car_meet_7_hn_v2_g.flac | обоз на тракте, героине | Zubenelgenubi | brisk trader | Путница, нужна соль, железо, ткань? Всё есть. |
+| car_meet_7_hn_v2_f_g.flac | обоз на тракте, героине | Vindemiatrix | brisk trader | Путница, нужна соль, железо, ткань? Всё есть. |
 | ch_boss_9_hn_g.flac | хранитель чертога, героине | Charon | low, heavy, menacing ancient guardian; slow but natural pace | Ты пришла туда, откуда не уходят. |
 | ch_role_12_hn_g.flac | житель чертога, героине | Puck | playful, teasing | Угадал бы — получил бы золото. Но ты подсмотрела |
 | dlg_13_8_hn_g.flac | ответ в разговоре, героине | Umbriel | correcting, slightly condescending, warm, friendly | Не то, подруга. Но за старание спасибо |
@@ -7987,10 +7989,16 @@ Policy (https://policies.google.com/terms/generative-ai/use-policy). Отдел�
 | dlg_23_7_hn_v2_f_g.flac | ответ в разговоре, героине | Aoede | impatient | Подруга, ты повторяешься |
 | dlg_27_4_hn_g.flac | ответ в разговоре, героине | Umbriel | curt, closing the topic, warm, friendly | Честно, подруга, больше ничего не знаю |
 | dlg_27_4_hn_f_g.flac | ответ в разговоре, героине | Despina | curt, closing the topic, warm, friendly | Честно, подруга, больше ничего не знаю |
+| dlg_27_4_hn_v2_g.flac | ответ в разговоре, героине | Schedar | curt | Честно, подруга, больше ничего не знаю |
+| dlg_27_4_hn_v2_f_g.flac | ответ в разговоре, героине | Aoede | curt | Честно, подруга, больше ничего не знаю |
 | dlg_33_4_hn_g.flac | ответ в разговоре, героине | Umbriel | heated, arguing loudly, warm, friendly | Нет, подруга, тут ты неправа |
 | dlg_33_4_hn_f_g.flac | ответ в разговоре, героине | Despina | heated, arguing loudly, warm, friendly | Нет, подруга, тут ты неправа |
+| dlg_33_4_hn_v2_g.flac | ответ в разговоре, героине | Schedar | heated | Нет, подруга, тут ты неправа |
+| dlg_33_4_hn_v2_f_g.flac | ответ в разговоре, героине | Aoede | heated | Нет, подруга, тут ты неправа |
 | dlg_35_5_hn_g.flac | ответ в разговоре, героине | Umbriel | outraged, indignant, pious, warm, friendly | Не надо, подруга. Это святое |
 | dlg_35_5_hn_f_g.flac | ответ в разговоре, героине | Despina | outraged, indignant, pious, warm, friendly | Не надо, подруга. Это святое |
+| dlg_35_5_hn_v2_g.flac | ответ в разговоре, героине | Schedar | outraged | Не надо, подруга. Это святое |
+| dlg_35_5_hn_v2_f_g.flac | ответ в разговоре, героине | Aoede | outraged | Не надо, подруга. Это святое |
 | dlg_3_13_hn_g.flac | ответ в разговоре, героине | Umbriel | firm refusal, warm, friendly | Прости, подруга, но тут не уступлю |
 | dlg_3_13_hn_f_g.flac | ответ в разговоре, героине | Despina | firm refusal, warm, friendly | Прости, подруга, но тут не уступлю |
 | dlg_3_13_hn_v1_g.flac | ответ в разговоре, героине | Sadachbia | firm refusal, warm, friendly | Прости, подруга, но тут не уступлю |
@@ -8018,6 +8026,10 @@ Policy (https://policies.google.com/terms/generative-ai/use-policy). Отдел�
 | enter_gate_night_5_hn_v2_g.flac | на пороге: gate_night, героине | Algenib | tired | Поздно гуляешь, путница. Трактир ещё открыт. |
 | enter_market_4_hn_g.flac | на пороге: market, героине | Sadachbia | brisk, businesslike | Торг идёт бойко. Что ищешь, путница? |
 | enter_market_4_hn_f_g.flac | на пороге: market, героине | Laomedeia | brisk, businesslike | Торг идёт бойко. Что ищешь, путница? |
+| enter_temple_0_hn_g.flac | на пороге: temple, героине | Zubenelgenubi | calm, gentle, serene | Мир тебе, путница. Боги видят входящего. |
+| enter_temple_0_hn_f_g.flac | на пороге: temple, героине | Vindemiatrix | calm, gentle, serene | Мир тебе, путница. Боги видят входящего. |
+| enter_temple_6_hn_g.flac | на пороге: temple, героине | Zubenelgenubi | gentle, knowing | Давно ты не заходила под эти своды. |
+| enter_temple_6_hn_f_g.flac | на пороге: temple, героине | Vindemiatrix | gentle, knowing | Давно ты не заходила под эти своды. |
 | foe_bandit_death_0_hn_v1_g.flac | в бою: bandit_death, героине | Enceladus | dying, weak, bitter | Будь ты проклята… |
 | foe_bandit_start_1_hn_g.flac | в бою: bandit_start, героине | Fenrir | mocking, cold | Ну всё, путница, приехали. |
 | foe_bandit_start_1_hn_v1_g.flac | в бою: bandit_start, героине | Enceladus | mocking, cold | Ну всё, путница, приехали. |
