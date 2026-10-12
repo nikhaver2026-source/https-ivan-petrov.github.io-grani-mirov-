@@ -81768,7 +81768,7 @@ const Лифт150={
     if(nx<1||ny<1||nx>=W-1||ny>=Hh-1||был.has(k))continue;был.add(k);if(стоп(g[ny][nx]))continue;q.push({x:nx,y:ny,d:c.d+1});}}
   if(запас){g[запас.y][запас.x]="E";lvl.lift150={x:запас.x,y:запас.y};}},
  /* меню площадки */
- меню(){if(!this.здесь())return false;const p=G.place;const d=Number(p.depth)||0;const край=this.был();const s=this.ст(),k=this.ключ();
+ меню(){if(!this.здесь())return false;if(this._едет){narrate("Клеть ещё идёт.",{interrupt:true});return true;}const p=G.place;const d=Number(p.depth)||0;const край=this.был();const s=this.ст(),k=this.ключ();
   if(!s.бодр[k])return выбор147("Древний подъёмник",
    "Площадка подъёмника Безмолвных Зодчих: каменная клеть на цепях, ворот под слоем пыли. Механизм спит: противовесы молчат.",[
     {l:"Повернуть ворот — разбудить механизм",run:()=>this.разбудить()},
@@ -81800,13 +81800,16 @@ const Лифт150={
   narrate("Вы налегли на ворот. Он поддался со скрежетом, и где-то в толще камня отозвались противовесы: подъёмник проснулся. Двойное касание — выбрать ярус.",{interrupt:true});
   safeFn(()=>saveGame(true));return true;},
  ехать(n){const p=G.place;if(!p||!this.здесь())return false;if(G.inCombat){narrate("Сначала завершите бой!");return false;}
+  /* пока клеть идёт, вторая поездка не начинается: ярус меняется на месте (changeDepth правит depth того же места),
+     и поездка, заказанная с прежнего яруса, увезла бы мимо пройденного */
+  if(this._едет){narrate("Клеть ещё идёт.",{interrupt:true});return false;}
   const d=Number(p.depth)||0;n=Math.max(1,Math.min(Math.round(Number(n)||1),this.был()));
   if(n===d){narrate("Вы и так на этом ярусе.",{interrupt:true});return false;}
   const путь=Math.abs(n-d),вверх=n<d;const ход=Math.min(6,1.4+путь*0.25);
   this._едет=true;
   safeFn(()=>{Bank.play("oc_lift_start",{gain:0.7,maxSec:3});setTimeout(()=>safeFn(()=>Bank.play("oc_lift_move",{gain:0.55,maxSec:ход})),450);});
   narrate(`Клеть дрогнула и пошла ${вверх?"вверх":"вниз"}: ${путь} ${plural(путь,"ярус","яруса","ярусов")}.`,{interrupt:true});
-  setTimeout(()=>safeFn(()=>{this._едет=false;if(!G.place||G.place!==p)return;
+  setTimeout(()=>safeFn(()=>{this._едет=false;if(!G.place||G.place!==p||(Number(p.depth)||0)!==d)return;
    safeFn(()=>Bank.play("oc_lift_stop",{gain:0.7,maxSec:3}));
    G.hour=(Number(G.hour)||0)+0.04*путь;while(G.hour>=24){G.hour-=24;G.day=(Number(G.day)||1)+1;}
    const ok=changeDepth(n-d,{bypass:true,lift:true});
@@ -82072,7 +82075,9 @@ safeFn(()=>{const f0=foeStrike;foeStrike=matKeep(f0,function(o){const cb=G.comba
  safeFn(()=>{if(маг&&Немота.здесь()>=1&&r>0)Немота.счёт("чарой");if(маг&&куп>0&&cb&&(Number(cb.немКупол)||0)<куп)Немота.счёт("купол");});
  return r;});});
 safeFn(()=>{const m0=moveInside;moveInside=function(){const r=m0.apply(this,arguments);if(r!==false){const d=Немота.здесь();if(d>=2)safeFn(()=>Немота.счёт("шаги2"));if(d>=3)safeFn(()=>Немота.счёт("глубь"));}return r;};});
-safeFn(()=>{const m0=move;move=function(){const r=m0.apply(this,arguments);const d=Немота.здесь();if(d>=2)safeFn(()=>Немота.счёт("шаги2"));if(d>=3)safeFn(()=>Немота.счёт("глубь"));return r;};});
+/* шаг по миру; внутри места move() идёт через moveInside — там шаг уже посчитан, второй раз его не считать */
+safeFn(()=>{const m0=move;move=function(){const внутри=!!G.place;const r=m0.apply(this,arguments);if(внутри||r===false)return r;
+ const d=Немота.здесь();if(d>=2)safeFn(()=>Немота.счёт("шаги2"));if(d>=3)safeFn(()=>Немота.счёт("глубь"));return r;};});
 
 /* ════ МЕСТА НЕМОТЫ: поверх существующих клеток, мир не сдвигается ════
    Клетки выбраны пустыми (ни постройки, ни дороги, ни воды) рядом с началом
