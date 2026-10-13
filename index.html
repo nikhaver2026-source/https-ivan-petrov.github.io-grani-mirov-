@@ -85571,8 +85571,11 @@ const СводИгра={
   h+=this.btn("stat","Мои загадки: счёт и звания");
   return this.show(`Загадки: ${T.n.toLowerCase()}`,h);},
  /* ── окно загадки ── */
- открыть(z,ctx){if(!z)return false;if(!this.z||this.z.id!==z.id){this.ввод=[];}this.z=z;this.ctx=ctx||{вид:"место"};
-  if(z.ui==="шаги"&&!this.сост[z.id])this.сост[z.id]=СводШаги[z.шаги.вид].нач(z.шаги);this.звук("arte_page",{gain:0.3});return this.рисовать();},
+ /* вступление (след тайны, слово о легенде) звучит одной фразой с условием: отдельная фраза перед окном обрывалась бы
+    его объявлением */
+ открыть(z,ctx,вступление){if(!z)return false;if(!this.z||this.z.id!==z.id){this.ввод=[];}this.z=z;this.ctx=ctx||{вид:"место"};
+  if(z.ui==="шаги"&&!this.сост[z.id])this.сост[z.id]=СводШаги[z.шаги.вид].нач(z.шаги);this.звук("arte_page",{gain:0.3});
+  this._title=null;return this.рисовать(вступление?`${вступление} ${this.текстЗагадки(z)}`:undefined);},
  текстЗагадки(z){if(z.память&&this.ввод.length)return "Повторите по памяти — порядок уже сказан.";return z.q;},
  рисовать(сказать){const z=this.z;if(!z)return this.домой();const ст=this.ст();const id=z.id;let h=this.line(this.текстЗагадки(z));
   if(this.блок(z)){h+=this.line("Эта загадка уже разгадана.");}
@@ -85649,8 +85652,7 @@ const СводИгра={
   if(!шаг||т.конец)return this.домой(this.тема);if(this.темаШага(шаг,м)!==this.тема)return this.домой(this.тема);
   const z=this.тайнаЗагадка(м);if(!z)return this.домой(this.тема);
   if(т.шаг===0&&!т.взята){т.взята=1;safeFn(()=>journal(`Тайна «${T.n}» (${м.n}): ${T.нач}.`));}
-  this.say(`${т.шаг===0?this.cap(T.нач)+". ":""}${шаг[1]}`,{interrupt:true});
-  setTimeout(()=>safeFn(()=>this.открыть(z,{вид:"тайна",ключ:м.поселение})),60);return true;},
+  return this.открыть(z,{вид:"тайна",ключ:м.поселение},`${т.шаг===0?this.cap(T.нач)+". ":""}${шаг[1]}`);},
  тайнаДальше(ctx){const ст=this.ст();const т=ст.тайны[ctx.ключ];if(!т||т.конец)return "";const T=СВОД_ТАЙНЫ[т.t];const ш=this.шагиТайны(т);т.шаг++;
   if(т.шаг<ш.length){const м=this.место()||{доступно:СВОД_ГОРОД_ТЕМЫ,темы:["площадь"]};const где=this.темаШага(ш[т.шаг],м);
    return т.дно&&т.шаг===ш.length-2?`Похоже, это ещё не конец… Следующий след — ${СВОД_ТЕМЫ[где].где}.`:`Следующий след — ${СВОД_ТЕМЫ[где].где}.`;}
@@ -85666,8 +85668,7 @@ const СводИгра={
  легЗ(L,i){const r=L.z[i];const R=СводХ.r(СводХ.h(L.id,i,"лв"));return {id:`л:${L.id}:${i}`,мех:"лег",n:`легенда «${L.n}», ${i+1} из ${L.z.length}`,ур:3,ui:"выбор",q:r[0],ans:r[1],
   opts:СводХ.тасовать([r[1]].concat(r[2]),R),hints:[`Ответ начинается на «${r[1][0].toUpperCase()}».`,`В ответе ${r[1].split(" ").length>1?r[1].split(" ").length+" "+СводХ.сл(r[1].split(" ").length,"слово","слова","слов"):r[1].length+" "+СводХ.сл(r[1].length,"буква","буквы","букв")}.`]};},
  легОткрыть(ключ){const L=СВОД_ЛЕГЕНДЫ[this.легИндекс(ключ)];const ст=this.ст();const л=ст.лег[L.id]||(ст.лег[L.id]={i:0});if(л.готово)return this.домой();
-  if(!л.i)this.say(`Легенда «${L.n}» — ${L.откуда}. Ошибётесь — придётся начинать с первой загадки.`,{interrupt:true});
-  setTimeout(()=>safeFn(()=>this.открыть(this.легЗ(L,л.i),{вид:"легенда",ключ,L})),60);return true;},
+  return this.открыть(this.легЗ(L,л.i),{вид:"легенда",ключ,L},л.i?"":`Легенда «${L.n}» — ${L.откуда}. Ошибётесь — придётся начинать с первой загадки.`);},
  легШаг(ctx){const L=ctx.L;const ст=this.ст();const л=ст.лег[L.id]||(ст.лег[L.id]={i:0});л.i++;
   if(л.i<L.z.length){this.z=null;const z=this.легЗ(L,л.i);this.ввод=[];this.z=z;this.ctx=ctx;safeFn(()=>saveGame(true));return this.рисовать(`Верно! Загадка ${л.i+1} из ${L.z.length}: ${z.q}`);}
   л.готово=this.день();const g=300,xp=xpGain(250);G.gold=(Number(G.gold)||0)+g;G.xp=(Number(G.xp)||0)+xp;safeFn(()=>checkLevelUp());if(!G.inv)G.inv={};G.inv[L.дар]=(Number(G.inv[L.дар])||0)+1;
