@@ -37,7 +37,10 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   п.нем.length===7&&!п.делят.length&&роль.nem_hound==="fast"&&роль.nem_warden==="brute"&&роль.nem_lord==="caster"&&!п.вMONSTERS,п);
 
  /* ── 2. поля Немоты: вместо здешних зверей — её твари; вне полей — ни одной ── */
- const ж=await page.evaluate(()=>{G.place=null;let поле=0,нем=0,вне=0,немВне=0;
+ const ж=await page.evaluate(()=>{G.place=null;
+  /* Встречи зависят от часа мира, а новая игра начинается с часа, выведенного из настоящих часов: вечером
+     доля тварей Немоты на этом клочке падала ниже половины, днём была выше. Считаем в полдень — всегда одинаково. */
+  G.hour=12;safeFn(()=>contentCache.clear());let поле=0,нем=0,вне=0,немВне=0;
   for(let y=24645;y<=24665;y++)for(let x=24895;x<=24915;x++){const c=cellContent(x,y);if(c&&c.monster&&Немота.мир(x,y)>=2){поле++;if(c.monster.нем)нем++;}}
   for(let i=0;i<4000;i++){const x=24000+(i*37)%2000,y=24000+(i*91)%2000;if(Немота.мир(x,y)>0)continue;const c=cellContent(x,y);if(c&&c.monster){вне++;if(c.monster.нем)немВне++;}}
   return {поле,нем,вне,немВне};});

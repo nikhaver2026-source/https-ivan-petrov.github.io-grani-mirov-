@@ -6,8 +6,9 @@
       «Скорость синтезатора» — тот же, что у записей Gemini: голос браузера
       (Web Speech), eSpeak (слов в минуту = 175 × темп), мосты Android и
       Windows пересчитывают число так же.
-   2. Обоз: зелья и товары — «Купить 1 / 5 / 10 / на всё золото», покупка
-      пятёрки зелий маны кладёт пять зелий; продажа — 1 / 5 / 10 / всё.
+   2. Обоз: зелья и товары — счётом (с 16.x — ползунком: одна строка на
+      товар, сколько — свайпом вверх и вниз), покупка пятёрки зелий маны
+      кладёт пять зелий; продажа — ползунок до всей стопки, «5» — ровно пять.
    ══════════════════════════════════════════════════════════════════ */
 const {chromium}=require('playwright');
 const fs=require('fs'),path=require('path');
@@ -57,20 +58,22 @@ const R=path.join(__dirname,'..');
   G.gold=1000;meetCaravan(car);
   const кнопки=()=>[...document.querySelectorAll("#modal-caravan [data-cmd]")].map(e=>e.dataset.cmd);
   const к=кнопки();
-  const зелья=к.filter(c=>/^carpotn:mana~/.test(c)).map(c=>+c.split("~")[1]);
-  const товары=к.filter(c=>/^carbuyn:/.test(c));
+  /* (после 16.0) Счёт — ползунком: одна строка на товар, сколько — свайпом вверх и вниз (data-cnttpl, data-cntmax). */
+  const ряд=document.querySelector('#modal-caravan [data-cnttpl^="carpotn:mana~"]');const зелья=ряд?[Number(ряд.dataset.cntmax)]:[];
+  const старые=к.filter(c=>/^carpotn:mana~/.test(c)).length;
+  const товары=[...document.querySelectorAll('#modal-caravan [data-cnttpl^="carbuyn:"]')];
   const было=potionsOf().filter(x=>x.id==="mana").length,золото=G.gold;
   CMD.carpotn("mana~5");
   const стало=potionsOf().filter(x=>x.id==="mana").length;
   /* продажа: дать игроку товар, который обоз скупает */
   const хочет=(car.goods&&car.goods.wants||[])[0];let продажа=[];
-  if(хочет){G.inv[хочет]=12;meetCaravan(car);продажа=кнопки().filter(c=>c.startsWith("carselln:"+хочет+"~")||c==="carsellall:"+хочет);
+  if(хочет){G.inv[хочет]=12;meetCaravan(car);продажа=[...document.querySelectorAll(`#modal-caravan [data-cnttpl="carselln:${хочет}~{n}"]`)].map(b=>Number(b.dataset.cntmax));
    CMD.carselln(хочет+"~5");}
-  return {зелья,товаров:товары.length,было,стало,потрачено:золото-G.gold,продажа,осталось:хочет?G.inv[хочет]:null};});
- check('3. обоз: зелья маны — «Купить 1 / 5 / 10 / на всё», пятёрка кладёт пять зелий',
-  п2&&!п2.нет&&[1,5,10].every(k=>п2.зелья.includes(k))&&п2.зелья.some(k=>k>10)&&п2.стало-п2.было===5&&п2.товаров>=3,п2);
- check('4. обоз: продажа — 1 / 5 / 10 / всё; «5» продаёт ровно пять',
-  п2&&!п2.нет&&(п2.продажа.length===0||(п2.продажа.length===4&&п2.осталось===7)),п2);
+  return {зелья,старые,товаров:товары.length,было,стало,потрачено:золото-G.gold,продажа,осталось:хочет?G.inv[хочет]:null};});
+ check('3. обоз: зелья маны — одна строка-ползунок до всего, на что хватает золота; пятёрка кладёт пять зелий',
+  п2&&!п2.нет&&п2.зелья.length===1&&п2.зелья[0]>10&&п2.старые===1&&п2.стало-п2.было===5&&п2.товаров>=3,п2);
+ check('4. обоз: продажа — ползунок до всей стопки; «5» продаёт ровно пять',
+  п2&&!п2.нет&&(п2.продажа.length===0||(п2.продажа.length===1&&п2.продажа[0]===12&&п2.осталось===7)),п2);
 
  check('Ошибок страницы нет',errors.length===0,errors.slice(0,3));
  await browser.close();

@@ -229,7 +229,7 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   const stock=shopStockRows(npc);r.stockN=stock.length;r.stockCats=[...new Set(stock.map(x=>x.cat))];r.allowedCats=stock.every(x=>SHOP_CAT_BY_ID[x.cat]);
   /* карточка и покупка со счётом */
   const ri=stock.findIndex(x=>x.count);r.hasStack=ri>=0;
-  if(ri>=0){SAID.length=0;shopItemCard(ri);await пауза(30);r.card=SAID.slice(-1)[0];r.buyBtns=[...document.querySelectorAll('#shopBody [data-cmd^="shopask:buy"]')].map(b=>b.dataset.cmd);
+  if(ri>=0){SAID.length=0;shopItemCard(ri);await пауза(30);r.card=SAID.slice(-1)[0];r.buyBtns=[...document.querySelectorAll('#shopBody [data-cmd^="shopask:buy"]')].map(b=>b.dataset.cmd);r.ползунок=!!document.querySelector('#shopBody [data-cnttpl^="shopask:buy:"]');
    const g0=G.gold,name=stock[ri].name,price=stock[ri].price;shopAsk("buy",5);await пауза(30);r.askQ=SAID.filter(x=>/^Куплено:/.test(String(x))).slice(-1)[0]||SAID.slice(-1)[0];r.bought=[g0-G.gold,price*5,Number(G.inv[name])||0];}
   /* Цену берём заново, а не из старого снимка: покупка стопки подняла имя у
      народа, торговец подобрел, и цена к этому мигу уже другая. Сравнивать
@@ -246,7 +246,7 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
  check('карточка жителя ведёт в торговлю, старые кнопки прилавка на месте; окно торговли: свой раздел, переход в другой — в конце, категории из пятнадцати',
   торг.module&&торг.npcBtn&&торг.oldBtns&&торг.open===true&&торг.окно==="modal-shop"&&торг.tabs.length===1&&/Прода/.test(торг.tabs[0])&&торг.cats.length>=1&&торг.allowedCats,{tabs:торг.tabs,cats:торг.cats,stockCats:торг.stockCats,kind:торг.kind});
  check('карточка товара с ценой; покупка стопки счётом сразу, без окна подтверждения, списывает ровно цену и кладёт товар; снаряжение покупается поштучно',
-  торг.hasStack&&/Цена: \d+/.test(торг.card)&&торг.buyBtns.length>=2&&/^Куплено: .+ ×5 за \d+/.test(торг.askQ)&&торг.bought&&торг.bought[0]===торг.bought[1]&&торг.bought[2]>=5&&(!торг.boughtGear||(торг.boughtGear[0]===торг.boughtGear[1]&&торг.boughtGear[2])),{card:(торг.card||"").slice(0,120),ask:торг.askQ,bought:торг.bought,gear:торг.boughtGear});
+  торг.hasStack&&/Цена: \d+/.test(торг.card)&&(торг.buyBtns.length>=2||торг.ползунок)&&/^Куплено: .+ ×5 за \d+/.test(торг.askQ)&&торг.bought&&торг.bought[0]===торг.bought[1]&&торг.bought[2]>=5&&(!торг.boughtGear||(торг.boughtGear[0]===торг.boughtGear[1]&&торг.boughtGear[2])),{card:(торг.card||"").slice(0,120),ask:торг.askQ,bought:торг.bought,gear:торг.boughtGear});
  check('умный торговец: раздел «Продать» берёт своё и объясняет, чего не берёт; реликвия не предлагается; продажа стопки счётом сразу',
   торг.sellOk&&торг.relicHidden&&(торг.sellNo.length===0||торг.sellNo.every(t=>t.split("|")[1].length>3))&&(!торг.sold||(/^Продано: руда — 3 шт\./.test(торг.sellQ)&&торг.sold[0]>0&&торг.sold[1]===3)),{ok:торг.sellOk,no:торг.sellNo,sold:торг.sold,q:торг.sellQ});
 

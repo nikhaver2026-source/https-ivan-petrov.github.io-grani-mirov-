@@ -54,7 +54,7 @@ if PHASE>=9:
         late+="\n"+open(H+'door147_late.js',encoding='utf-8').read()
     # (15.0) древние подъёмники и Немота — Нулевой Предел: ядро, твари, вещи и люди, «Немая штольня»;
     # поиск под рукой, тайные ходы (лаз назван, вход шагом и касанием, после находки закрыт), завал не зря
-    for f in ('lift150_late.js','nem150_late.js','nem150b_late.js','nem150c_late.js','nem150d_late.js','poisk150_late.js','taina150_late.js','zagadki150_late.js','zaval150_late.js','nem155_late.js','glub155_late.js','zver155_late.js','zvuk155_late.js','prolog155_late.js','svod155_late.js','zhivye155_late.js','konec155_late.js'):
+    for f in ('lift150_late.js','nem150_late.js','nem150b_late.js','nem150c_late.js','nem150d_late.js','poisk150_late.js','taina150_late.js','zagadki150_late.js','zaval150_late.js','nem155_late.js','glub155_late.js','zver155_late.js','zvuk155_late.js','prolog155_late.js','svod155_late.js','zhivye155_late.js','torg160_late.js','konec155_late.js'):
         if os.path.exists(H+f):
             late+="\n"+open(H+f,encoding='utf-8').read()
 open(H+'mater_late.js','w',encoding='utf-8').write(late)
@@ -298,12 +298,16 @@ if PHASE>=9:
     rep("  /* (8.0) На ползунке громкости, скорости или высоты свайп вверх прибавляет,",
         "  /* (14.6) Торговля: на товаре свайп вверх или вниз — сколько купить или продать, двойное касание — сделка. */\n"
         "  if(swipe&&(dir==='N'||dir==='S')&&layer.id==='modal-shop'&&safeFn(()=>ShopCount.on(uiCursor),false)){safeFn(()=>ShopCount.nudge(dir==='N'?1:-1));return;}\n"
+        "  /* (после 16.0) Ползунок счёта везде, где покупают и продают: обоз, карточка товара, торг Глуби, Кузница нового, Гильдия. */\n"
+        "  if(swipe&&(dir==='N'||dir==='S')&&safeFn(()=>CountRow.on(uiCursor)&&layer.contains(uiCursor),false)){safeFn(()=>CountRow.nudge(dir==='N'?1:-1));return;}\n"
         "  /* (8.0) На ползунке громкости, скорости или высоты свайп вверх прибавляет,")
     rep(' if(layer.id==="modal-inventory"&&(k==="ArrowUp"||k==="ArrowDown"))safeFn(()=>{INV.kbAct=null;});',
         ' /* (14.6) Торговля: стрелки вверх и вниз на товаре — сколько, Enter — сделка, пробел — карточка товара. */\n'
         ' if(layer.id==="modal-shop"&&!e.shiftKey&&!e.ctrlKey&&!e.altKey&&safeFn(()=>ShopCount.on(uiCursor)&&layer.contains(uiCursor),false)){\n'
         '  if(k==="ArrowUp"||k==="ArrowDown"){e.preventDefault();safeFn(()=>ShopCount.nudge(k==="ArrowUp"?1:-1));return true;}\n'
         '  if(e.code==="Space"){e.preventDefault();safeFn(()=>shopItemCard(uiCursor.dataset.cmd.split(":")[1]));return true;}}\n'
+        ' /* (после 16.0) Ползунок счёта везде: стрелки вверх и вниз — сколько, Enter — сделка. */\n'
+        ' if((k==="ArrowUp"||k==="ArrowDown")&&!e.shiftKey&&!e.ctrlKey&&!e.altKey&&safeFn(()=>CountRow.on(uiCursor)&&layer.contains(uiCursor),false)){e.preventDefault();safeFn(()=>CountRow.nudge(k==="ArrowUp"?1:-1));return true;}\n'
         ' if(layer.id==="modal-inventory"&&(k==="ArrowUp"||k==="ArrowDown"))safeFn(()=>{INV.kbAct=null;});')
 fr="[EMPIRES,MONSTERS,RACES,URACES,UDESC,CLANS,VIEWS,LIFE,RUMORS,SYL,SYL2,VILL_A,VILL_B,TAV_A,TAV_B,"
 rep(fr,early.rstrip()+"\n"+fr)

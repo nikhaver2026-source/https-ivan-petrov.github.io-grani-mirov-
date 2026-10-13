@@ -43608,8 +43608,10 @@ function mineVein(x,y){
  const left=(Number(placeMark(x,y))||3)-1;
  setPlaceMark(x,y,left<=0?"empty":left);
  G.inv[res]=(Number(G.inv[res])||0)+1;
+ /* (после 16.0) С киркой жила отдаёт ещё одну. */
+ const кирка=safeFn(()=>ToolKit.vein(res),null);if(кирка)G.inv[res]+=кирка.n;
  safeFn(()=>{beacon(RESBEACON[res]||"res_ore",0,0);UI.pickup();});
- narrate(`Добыто: ${res}. В жиле осталось: ${Math.max(0,left)}.`);
+ narrate(`Добыто: ${res}${кирка?` ×${1+кирка.n}`:""}.${кирка?кирка.t:""} В жиле осталось: ${Math.max(0,left)}.`);
  refresh();saveGame(true);
  checkQuestProgress();
  return true;
@@ -47711,6 +47713,8 @@ function gatherCurrent(source="tap"){
   const вьюк=safeFn(()=>mountGift("добыча"),null);
   if(вьюк){bounty+=вьюк;навык+=` ${safeFn(()=>(Zver.mount()||mountNow()).n,"Скакун")} везёт ещё ${вьюк}.`;}
   if(зелёное&&hasAbility("greenhand")){bounty+=1;навык+=" Зелёная рука: ещё одна.";}
+  /* (после 16.0) Инструмент в деле: топор — дерево, серп — трава, ягоды и грибы, кирка — камень, руда и кристалл. */
+  safeFn(()=>{const т=ToolKit.gather(c.res.name);if(т){bounty+=т.n;навык+=т.t;}});
   G.inv[c.res.name]=(G.inv[c.res.name]||0)+bounty;safeFn(()=>deed("gathers"));
   /* 6.0: у каждой державы Дальнего Круга свой дар земли — в каждой шестой горсти. */
   safeFn(()=>{const e=empireAt(G.x,G.y),дар=e&&e.дальний&&DK_GIFTS[e.short];

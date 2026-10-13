@@ -55,3 +55,5 @@ hron/zv_level.json
 hron/zv_roles.py
 hron/zver155_late.js
 hron/zvuk155_late.js
+hron/torg160_late.js
+hron/patch_guide_torg160.py
