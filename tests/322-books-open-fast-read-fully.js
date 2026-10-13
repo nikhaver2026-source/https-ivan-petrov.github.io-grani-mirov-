@@ -21,7 +21,14 @@
       подаётся ещё раз, а молчащий — снимается, и чтение идёт дальше до
       конца (onDone), без общего сторожа.
    5. eSpeak читает длинный текст по предложениям: первое — сразу, следующее
-      считается, пока звучит текущее; короткий — целиком.
+      считается, пока звучит текущее; короткий — целиком. Латиница — русскими
+      буквами (английского словаря в сборке нет: прежде слово молчало).
+   5б. Знаки, на которых eSpeak прежде лез в английский словарь («×», «−», «→», «·», «–», неразрывный
+      пробел, кавычки-лапки, буквы с надстрочными знаками, греческие, «1-2», «-5», одинокое «…»), — словами
+      или паузой: ни одной ошибки словаря; римское число после слова — цифрой («акт II» — «акт 2»).
+   4б. Кусок без единой записи голос Gemini отдаёт запасному синтезатору
+      целиком и «звучит», пока тот говорит: общий сторож речи не снимает его
+      через две секунды как тишину (так терялся остаток страницы).
    6. Ошибок страницы нет.
    ════════════════════════════════════════════════════════════════════════ */
 const {chromium}=require('playwright');
@@ -29,7 +36,7 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
 (async()=>{
  const browser=await chromium.launch({args:['--autoplay-policy=no-user-gesture-required']});
  const page=await (await browser.newContext()).newPage();
- const errors=[];page.on('pageerror',e=>errors.push(String(e)));
+ const errors=[];page.on('pageerror',e=>errors.push(String(e)));let словарь=0;page.on('console',m=>{if(/_dict/.test(m.text()))словарь++;});
  page.on('console',m=>{if(m.type()==='error'&&!/fetching the script|ServiceWorker|Failed to load resource/i.test(m.text()))errors.push('console: '+m.text());});
  await page.goto(process.argv[2]);await page.waitForTimeout(800);
  await page.evaluate(()=>{try{enterGame();}catch(_){}while(activeLayer())closeTopUI();window.maybeEvent=()=>{};window.meetCaravan=()=>false;
@@ -90,6 +97,18 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
  check('4. Gemini: кусок, который синтезатор уронил, подан ещё раз; чтение дошло до конца за секунды, а не через сорок',
   о4.запись&&о4.конец!=null&&о4.конец<8000&&о4.подач>=4&&о4.журнал.some(x=>/подан снова/.test(x)),о4);
 
+ /* ── 4б. кусок без единой записи — целиком у запасного синтезатора, и голос Gemini «звучит», пока тот говорит ── */
+ const о4б=await page.evaluate(async()=>{const r={};Speech.stop();
+  const фал={name:"fake",speak(t,o){this._идёт=true;setTimeout(()=>{try{o.onstart&&o.onstart();}catch(_){}},10);setTimeout(()=>{this._идёт=false;try{o.onend&&o.onend();}catch(_){}},2600);return true;},
+   cancel(){this._идёт=false;},speaking(){return !!this._идёт;}};
+  const fb0=Speech._gvFallback;Speech._gvFallback=()=>фал;const a=Speech._geminiAdapter();Speech._gvFallback=fb0;
+  const gp0=Speech.gvParts;Speech.gvParts=t=>[{url:null,t:"Врата державы стоят у цитадели на клетке двадцать четыре."}];
+  let конец=false;a.speak("кусок без записей",{rate:1,volume:1,onend(){конец=true;}});
+  await new Promise(q=>setTimeout(q,1900));r.звучитНа19=a.звучит();await new Promise(q=>setTimeout(q,1000));r.конец=конец;r.звучитПосле=a.звучит();
+  Speech.gvParts=gp0;return r;});
+ check('4б. Gemini: кусок без единой записи звучит запасным синтезатором целиком — сторож речи не принимает его за тишину и не снимает (остаток страницы не теряется)',
+  о4б.звучитНа19===true&&о4б.конец===true&&о4б.звучитПосле===false,о4б);
+
  /* ── 5. eSpeak: длинное — по предложениям ── */
  const о5=await page.evaluate(async()=>{const r={};ESpeak.load();const t0=performance.now();while(!ESpeak.ready()&&performance.now()-t0<15000)await new Promise(q=>setTimeout(q,100));
   r.готов=ESpeak.ready();if(!r.готов)return r;
@@ -100,9 +119,21 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   const t2=performance.now();while(!конец&&performance.now()-t2<8000)await new Promise(q=>setTimeout(q,30));
   r.длинный={вызовов:вызовы.length,длины:вызовы.map(x=>x.n),конец};вызовы.length=0;конец=false;
   a.speak("Сумка. Карта.",{volume:1,onend(){конец=true;}});const t3=performance.now();while(!конец&&performance.now()-t3<4000)await new Promise(q=>setTimeout(q,30));
-  r.короткий={вызовов:вызовы.length,конец};HTMLMediaElement.prototype.play=pl;ESpeak.wav=w0;return r;});
+  r.короткий={вызовов:вызовы.length,конец};HTMLMediaElement.prototype.play=pl;ESpeak.wav=w0;
+  r.латиница=ESpeak.кир("Нажмите F1, затем Shift и NVDA.");return r;});
  check('5. eSpeak читает длинный текст по предложениям (первое сразу, следующее — пока звучит текущее), короткий — целиком',
-  о5.готов&&о5.длинный.вызовов>=2&&о5.длинный.длины.every(n=>n<150&&n>=60)&&о5.длинный.конец&&о5.короткий.вызовов===1&&о5.короткий.конец,о5);
+  о5.готов&&о5.длинный.вызовов>=2&&о5.длинный.длины.every(n=>n<150&&n>=60)&&о5.длинный.конец&&о5.короткий.вызовов===1&&о5.короткий.конец
+  &&!/[A-Za-z]/.test(о5.латиница)&&/эф один/.test(о5.латиница),о5);
+
+ /* ── 5б. eSpeak: знаки — словами или паузой, без английского словаря ── */
+ const о5б=await page.evaluate(()=>{const r={};if(!ESpeak.ready())return r;
+  const T=["Зелье ×3, урон −5 → щит.","Пункт · второй • третий.","Шаг 1–2, код 7-4-1, сила -5.","Он сказал „да“ и “нет”, ‘так’.","1\u00a0000 золотых, 5\u202f000 монет.",
+   "Café, naïve, Ł, ß.","Ω и α, µ.","Жара 30°, ½ пуда, 5 м², 5 €.","Немота, акт II «Шов под штольнями».","…","—","Огонь 🔥 горит ★ ✓."];
+  r.текст=T.map(t=>ESpeak.кир(ESpeak.рим(ESpeak.чист(t))));r.звук=T.map(t=>!!ESpeak.wav(t,5,1,"m"));return r;});
+ await page.waitForTimeout(300);
+ check('5б. eSpeak: знаки и чужие буквы — словами или паузой, ни одной ошибки английского словаря; «акт II» — «акт 2»',
+  о5б.текст&&словарь===0&&о5б.текст.every(t=>/^[\t\n\r\x20-\x7E\u0410-\u044F\u0401\u0451«»—№\u0301]*$/.test(t)&&!/[A-Za-z]/.test(t))
+  &&/акт 2/.test(о5б.текст[8])&&/на 3/.test(о5б.текст[0])&&/минус 5/.test(о5б.текст[2])&&о5б.текст[9]===""&&о5б.звук.slice(0,9).every(Boolean),{словарь,т:о5б.текст});
 
  check('6. ошибок страницы нет',errors.length===0,errors.slice(0,3));
  await browser.close();
