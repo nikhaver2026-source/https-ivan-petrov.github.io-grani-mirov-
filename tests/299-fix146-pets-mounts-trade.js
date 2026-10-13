@@ -160,6 +160,7 @@ const ROOT=path.resolve(__dirname,'..');
  /* ── 7. Находка в пути ── */
  const н=await p.evaluate(async()=>{const r={};G.zv={};G.place=null;G.ship=null;G.inCombat=false;
   const b=ZV_BREEDS.find(b=>b.fam==="hound")||ZV_BREEDS.find(b=>b.fam==="wolf");const a=Zver.make(b.id,{тихо:true,верн:80});a.сыт=90;a.роль="scout";Zver.st().pets=[a.uid];
+  while(activeLayer())closeTopUI();   /* 15.5: при открытом окне «Питомцы» фоновые фразы ждут его закрытия */
   const s=Zver.st();s.steps=100;s.findAt=0;const было=JSON.stringify(G.inv);const r0=Math.random;Math.random=()=>0.001;
   ZvSnd.журнал.length=0;СКАЗАНО.length=0;try{ZvFind.step();}finally{Math.random=r0;}await спим(1600);
   r.нашёл=СКАЗАНО.filter(t=>/учуял/.test(t));r.нюх=ЗВЕРЬ().some(f=>/zv_sniff/.test(f));r.сума=JSON.stringify(G.inv)!==было;Zver.st().pets=[];return r;});
@@ -226,7 +227,7 @@ const ROOT=path.resolve(__dirname,'..');
  const р=await p.evaluate(()=>{while(activeLayer())closeTopUI();
   const s=GUIDE_SECS.find(x=>x.t==="Питомцы и маунты");const все=s?s.body.join(" "):"";
   const лавка=GUIDE_SECS.some(x=>x.body.some(b=>/^ЛАВКА: КУПИТЬ И ПРОДАТЬ\./.test(b)&&/свайп вверх или вниз/.test(b)));
-  return {есть:!!s,абзацев:s?s.body.length:0,очки:/С каждым новым уровнем — очко развития/.test(все),езда:/вместо ваших шагов слышен ход маунта/.test(все),
+  return {есть:!!s,абзацев:s?s.body.length:0,очки:/С каждым новым уровнем — очко развития/.test(все),езда:/вместо ваших шагов слышен (только )?ход маунта/.test(все),
    голос:/свой голос, рык, удар, шаг/.test(все),лавка,глава:(GUIDE.find(g=>/питомцы и маунты/.test(g.title))||{}).title||"",глав:GUIDE.length};});
  check('10. руководство: раздел «Питомцы и маунты» (спутник, голос, кормление, очки, езда) и абзац о лавке со счётом',
   р.есть&&р.абзацев>=8&&р.очки&&р.езда&&р.голос&&р.лавка&&/питомцы и маунты/.test(р.глава)&&р.глав<=20,р);
@@ -259,7 +260,7 @@ const ROOT=path.resolve(__dirname,'..');
   &&ок.сойти.зверь.some(f=>/leather|lug_land/.test(f))&&!копыта(ок.сойти)
   &&!копыта(ок.палаты)&&!ок.палаты.банк.includes("beasts_horse")
   &&!ок.чесать.банк.includes("oc_rustle")&&ок.чесать.зверь.filter(f=>/craft_hide|arte_leather/.test(f)).length===1
-  &&ок.задание.зверь.filter(f=>/step|tread|creatures/.test(f)).length>=3
+  &&ок.задание.зверь.filter(f=>/step|tread|creatures|zv_paw|zv_hoof|zv_claw/.test(f)).length>=3   /* 15.5: шаги лап и копыт — zvlapy */
   &&ок.всехСразу<=1&&ок.всехПотом>=2,ок);
 
  check('11. ошибок страницы нет',errors.length===0,errors.slice(0,5));
