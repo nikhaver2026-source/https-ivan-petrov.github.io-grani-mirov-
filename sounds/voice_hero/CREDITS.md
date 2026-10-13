@@ -274,7 +274,7 @@
 
 Целые фразы героя в бою — угроза, ответ врагу, удачный удар, рана, свой
 край, край врага, победа — записаны голосами «Настроек персонажа» с
-интонацией мига боя. Записей: 8161. Нейроголоса **Gemini** (Google),
+интонацией мига боя. Записей: 8352. Нейроголоса **Gemini** (Google),
 модель gemini-3.8-flash-tts, по тексту игры; каждая проверена
 распознаванием (GigaAM). Обработка: −18 LUFS, пик не выше −1 дБ, 24 кГц, FLAC.
 
@@ -9497,3 +9497,194 @@
 | hero_znanie_4_rasalgethi_g.flac | Бывалый (муж.) | Rasalgethi | confident, natural | Я знаю, о чём говорю. |
 | hero_rassprosit_2_zubenelgenubi_g.flac | Простой (муж.) | Zubenelgenubi | confident, natural | Как вам тут живётся? |
 | hero_rassprosit_3_zubenelgenubi_g.flac | Простой (муж.) | Zubenelgenubi | confident, natural | Что здесь происходит? |
+| hero_f_18eqx6j_algieba_g.flac | Уверенный (муж.) | Algieba | Хрясь! Будешь знать! |
+| hero_f_1sof8nl_algieba_g.flac | Уверенный (муж.) | Algieba | Ломаю! |
+| hero_f_dw2o0p_algieba_g.flac | Уверенный (муж.) | Algieba | Щит держит. |
+| hero_f_1yvsd0e_rasalgethi_g.flac | Бывалый (муж.) | Rasalgethi | На! Ещё на! |
+| hero_f_z96ukp_fenrir_g.flac | Горячий (муж.) | Fenrir | Ой, неужели больно? |
+| hero_f_xvs3cm_fenrir_g.flac | Горячий (муж.) | Fenrir | Так, кто-нибудь, зелье! Ах да, я тут один. |
+| hero_f_1yvsd0e_zubenelgenubi_g.flac | Простой (муж.) | Zubenelgenubi | На! Ещё на! |
+| hero_f_13cdpny_autonoe_g.flac | Светлый (жен.) | Autonoe | Добью, облезлый! |
+| hero_f_agipjb_autonoe_g.flac | Светлый (жен.) | Autonoe | Ой-ой-ой. Запишем в долг. |
+| hero_f_1tpmjdw_autonoe_g.flac | Светлый (жен.) | Autonoe | Больно же, гадина! |
+| hero_f_1aasib7_autonoe_g.flac | Светлый (жен.) | Autonoe | Ну держись теперь! |
+| hero_f_a918uu_autonoe_g.flac | Светлый (жен.) | Autonoe | Мне плохо. Надо лечиться. |
+| hero_f_10c0od0_autonoe_g.flac | Светлый (жен.) | Autonoe | Ещё пара ударов — и мне конец. |
+| hero_f_1f5h6zj_vindemiatrix_g.flac | Мягкий (жен.) | Vindemiatrix | Хватит! Иди сюда! |
+| hero_f_1qsrtr2_vindemiatrix_g.flac | Мягкий (жен.) | Vindemiatrix | Я из тебя дух вышибу! |
+| hero_f_retygk_vindemiatrix_g.flac | Мягкий (жен.) | Vindemiatrix | Вот тебе, отродье! |
+| hero_f_1etl4bi_vindemiatrix_g.flac | Мягкий (жен.) | Vindemiatrix | Конец твой пришёл! |
+| hero_f_1bwnbj9_vindemiatrix_g.flac | Мягкий (жен.) | Vindemiatrix | Последний удар — и всё! |
+| hero_f_14kpo5n_vindemiatrix_g.flac | Мягкий (жен.) | Vindemiatrix | Победа. Идём дальше. |
+| hero_f_155xcc3_vindemiatrix_g.flac | Мягкий (жен.) | Vindemiatrix | Дело сделано. |
+| hero_f_j5ztx6_vindemiatrix_g.flac | Мягкий (жен.) | Vindemiatrix | Ещё одна битва позади. |
+| hero_f_5gy7as_vindemiatrix_g.flac | Мягкий (жен.) | Vindemiatrix | Поглядим, что ты скажешь потом. |
+| hero_f_dw2o0p_vindemiatrix_g.flac | Мягкий (жен.) | Vindemiatrix | Щит держит. |
+| hero_f_tdgi3p_vindemiatrix_g.flac | Мягкий (жен.) | Vindemiatrix | Стучите — не откроют. |
+| hero_f_1ku8y9u_vindemiatrix_g.flac | Мягкий (жен.) | Vindemiatrix | Ещё хочешь? |
+| hero_f_p8nrso_vindemiatrix_g.flac | Мягкий (жен.) | Vindemiatrix | Жаркое само пришло к ужину. |
+| hero_f_47akx6_vindemiatrix_g.flac | Мягкий (жен.) | Vindemiatrix | Мало? Добавлю! |
+| hero_f_1pkv1ay_vindemiatrix_g.flac | Мягкий (жен.) | Vindemiatrix | Ещё не конец. |
+| hero_f_1jeaxzv_vindemiatrix_g.flac | Мягкий (жен.) | Vindemiatrix | Всё. |
+| hero_f_1r6ccbu_vindemiatrix_g.flac | Мягкий (жен.) | Vindemiatrix | Так и знал. |
+| hero_f_149zlkm_vindemiatrix_g.flac | Мягкий (жен.) | Vindemiatrix | Следующий! |
+| hero_f_1q74uxv_vindemiatrix_g.flac | Мягкий (жен.) | Vindemiatrix | Ещё бы кто похлопал. |
+| hero_f_13x48dn_vindemiatrix_g.flac | Мягкий (жен.) | Vindemiatrix | Клыки повыбиваю! |
+| hero_f_1l3vm2c_vindemiatrix_g.flac | Мягкий (жен.) | Vindemiatrix | Шкуру не порть, она мне ещё пригодится. |
+| hero_f_cbrgtk_vindemiatrix_g.flac | Мягкий (жен.) | Vindemiatrix | Скули теперь! |
+| hero_f_vl3iit_vindemiatrix_g.flac | Мягкий (жен.) | Vindemiatrix | Изыди, погань! |
+| hero_f_gvbkcg_vindemiatrix_g.flac | Мягкий (жен.) | Vindemiatrix | Лови подарок! |
+| hero_f_vgpll1_vindemiatrix_g.flac | Мягкий (жен.) | Vindemiatrix | Кровь — не беда. |
+| hero_f_yvb8zb_vindemiatrix_g.flac | Мягкий (жен.) | Vindemiatrix | Кто молодец? Я молодец. |
+| hero_f_11820al_vindemiatrix_g.flac | Мягкий (жен.) | Vindemiatrix | Слова тебе не помогут. |
+| hero_f_1qoxf26_vindemiatrix_g.flac | Мягкий (жен.) | Vindemiatrix | Меньше слов. |
+| hero_f_egozhn_vindemiatrix_g.flac | Мягкий (жен.) | Vindemiatrix | Посмотрим. |
+| hero_f_ng7mlg_vindemiatrix_g.flac | Мягкий (жен.) | Vindemiatrix | Говори, пока можешь. |
+| hero_f_150bd1v_vindemiatrix_g.flac | Мягкий (жен.) | Vindemiatrix | Угрозы оставь при себе. |
+| hero_f_1nzdipc_vindemiatrix_g.flac | Мягкий (жен.) | Vindemiatrix | Болтовня тебя не спасёт. |
+| hero_f_1lw2m7q_vindemiatrix_g.flac | Мягкий (жен.) | Vindemiatrix | Я слышала это много раз. |
+| hero_f_xwy7eh_vindemiatrix_g.flac | Мягкий (жен.) | Vindemiatrix | Делом докажи. |
+| hero_f_qfqcwc_vindemiatrix_g.flac | Мягкий (жен.) | Vindemiatrix | Ой, как страшно. Я прямо дрожу. |
+| hero_f_2yooie_vindemiatrix_g.flac | Мягкий (жен.) | Vindemiatrix | Громко говоришь, а бьёшь слабо. |
+| hero_f_1uooexe_vindemiatrix_g.flac | Мягкий (жен.) | Vindemiatrix | Скажи это моему мечу. |
+| hero_f_sh8hwp_vindemiatrix_g.flac | Мягкий (жен.) | Vindemiatrix | Я запишу, это смешно. |
+| hero_f_wygtes_vindemiatrix_g.flac | Мягкий (жен.) | Vindemiatrix | Ещё что-нибудь скажешь? Я не тороплюсь. |
+| hero_f_1k6gwqq_vindemiatrix_g.flac | Мягкий (жен.) | Vindemiatrix | Какие речи! Тебе бы в глашатаи. |
+| hero_f_dvn2qq_vindemiatrix_g.flac | Мягкий (жен.) | Vindemiatrix | Бу-бу-бу. Страшно-то как. |
+| hero_f_1nytadf_vindemiatrix_g.flac | Мягкий (жен.) | Vindemiatrix | Ещё слово — и получишь! |
+| hero_f_j9yl5h_vindemiatrix_g.flac | Мягкий (жен.) | Vindemiatrix | Поговори мне ещё! |
+| hero_f_1ib19ud_vindemiatrix_g.flac | Мягкий (жен.) | Vindemiatrix | Слышь, закрой рот! |
+| hero_f_7m1tn8_vindemiatrix_g.flac | Мягкий (жен.) | Vindemiatrix | Язык длинный, а руки короткие! |
+| hero_f_ol25gd_vindemiatrix_g.flac | Мягкий (жен.) | Vindemiatrix | Хватит трепаться! |
+| hero_f_9eaqh0_vindemiatrix_g.flac | Мягкий (жен.) | Vindemiatrix | Уйди, зверь, и останешься жив. |
+| hero_f_rkgidn_vindemiatrix_g.flac | Мягкий (жен.) | Vindemiatrix | Зверь есть зверь. Прости. |
+| hero_f_1y02k5a_vindemiatrix_g.flac | Мягкий (жен.) | Vindemiatrix | Не рычи, я не боюсь. |
+| hero_f_1j02qp2_vindemiatrix_g.flac | Мягкий (жен.) | Vindemiatrix | Я пущу тебя на шкуру. |
+| hero_f_1lrquiu_vindemiatrix_g.flac | Мягкий (жен.) | Vindemiatrix | Сделаю из тебя шашлык. |
+| hero_f_1yqiwnp_vindemiatrix_g.flac | Мягкий (жен.) | Vindemiatrix | Из тебя выйдет отличный коврик у камина. |
+| hero_f_q0jqur_vindemiatrix_g.flac | Мягкий (жен.) | Vindemiatrix | Будешь моим воротником. |
+| hero_f_1ok7x0n_vindemiatrix_g.flac | Мягкий (жен.) | Vindemiatrix | Сейчас я тебе покажу! |
+| hero_f_vss8ey_vindemiatrix_g.flac | Мягкий (жен.) | Vindemiatrix | Иди сюда, отродье! |
+| hero_f_1i0ajf0_vindemiatrix_g.flac | Мягкий (жен.) | Vindemiatrix | Он едва стоит. |
+| hero_f_1lrglaj_vindemiatrix_g.flac | Мягкий (жен.) | Vindemiatrix | Пасть закрой, ящер! |
+| hero_f_10x554i_vindemiatrix_g.flac | Мягкий (жен.) | Vindemiatrix | Разобью, железка! |
+| hero_f_vv7k2n_vindemiatrix_g.flac | Мягкий (жен.) | Vindemiatrix | Я не уйду с этой дороги. |
+| hero_f_jiwhxk_vindemiatrix_g.flac | Мягкий (жен.) | Vindemiatrix | Ты сегодня главный гость. |
+| hero_f_5s4hjr_vindemiatrix_g.flac | Мягкий (жен.) | Vindemiatrix | Размажу по камням! |
+| hero_f_xlh9od_vindemiatrix_g.flac | Мягкий (жен.) | Vindemiatrix | Ну всё, конец тебе! |
+| hero_f_1019s4i_vindemiatrix_g.flac | Мягкий (жен.) | Vindemiatrix | Давай договоримся: ты падаешь, я иду дальше. |
+| hero_f_havsru_vindemiatrix_g.flac | Мягкий (жен.) | Vindemiatrix | Предупреждаю: я сегодня не завтракала. |
+| hero_f_6a3i54_vindemiatrix_g.flac | Мягкий (жен.) | Vindemiatrix | Ну держись, тварь! |
+| hero_f_xmuvx0_vindemiatrix_g.flac | Мягкий (жен.) | Vindemiatrix | Сейчас полетят клочья! |
+| hero_f_1jy8p8g_vindemiatrix_g.flac | Мягкий (жен.) | Vindemiatrix | Верно бью. |
+| hero_f_z96ukp_vindemiatrix_g.flac | Мягкий (жен.) | Vindemiatrix | Ой, неужели больно? |
+| hero_f_xm1dmf_vindemiatrix_g.flac | Мягкий (жен.) | Vindemiatrix | Больно, но сделаю вид, что нет. |
+| hero_f_1o36d8s_vindemiatrix_g.flac | Мягкий (жен.) | Vindemiatrix | Ах ты, тварь кусачая! |
+| hero_f_drm4zx_vindemiatrix_g.flac | Мягкий (жен.) | Vindemiatrix | Зелье, где же зелье, проклятье! |
+| hero_f_1dva8xu_vindemiatrix_g.flac | Мягкий (жен.) | Vindemiatrix | Ну всё, доигрался! |
+| hero_f_xbu58g_vindemiatrix_g.flac | Мягкий (жен.) | Vindemiatrix | Сейчас свалюсь, зараза! |
+| hero_f_a50qzu_vindemiatrix_g.flac | Мягкий (жен.) | Vindemiatrix | Конец близок. |
+| hero_f_xuh7nn_vindemiatrix_g.flac | Мягкий (жен.) | Vindemiatrix | Заткнись и дерись! |
+| hero_f_14m4d4p_vindemiatrix_g.flac | Мягкий (жен.) | Vindemiatrix | Язык отрежу! |
+| hero_f_nsohx4_vindemiatrix_g.flac | Мягкий (жен.) | Vindemiatrix | Пасть закрой! |
+| hero_f_2jwhy1_laomedeia_g.flac | Звонкий (жен.) | Laomedeia | Опля! Прямо в яблочко. |
+| hero_f_1r49u8s_laomedeia_g.flac | Звонкий (жен.) | Laomedeia | Это тебе за беспокойство. |
+| hero_f_3t85yf_laomedeia_g.flac | Звонкий (жен.) | Laomedeia | Ещё разок, и готов! |
+| hero_f_z96ukp_pulcherrima_g.flac | Прямой (жен.) | Pulcherrima | Ой, неужели больно? |
+| hero_f_retygk_pulcherrima_g.flac | Прямой (жен.) | Pulcherrima | Вот тебе, отродье! |
+| hero_f_34leus_pulcherrima_g.flac | Прямой (жен.) | Pulcherrima | Вот тебе, гад! |
+| hero_f_1pyu43y_pulcherrima_g.flac | Прямой (жен.) | Pulcherrima | Жри сталь! |
+| hero_f_l1obbd_pulcherrima_g.flac | Прямой (жен.) | Pulcherrima | Зверь скулит. Скоро конец. |
+| hero_f_cdvd76_pulcherrima_g.flac | Прямой (жен.) | Pulcherrima | Пух полетел! |
+| hero_f_vl3iit_pulcherrima_g.flac | Прямой (жен.) | Pulcherrima | Изыди, погань! |
+| hero_f_vpxz3h_pulcherrima_g.flac | Прямой (жен.) | Pulcherrima | Конец тебе, скотина! |
+| hero_f_1f0kvrv_pulcherrima_g.flac | Прямой (жен.) | Pulcherrima | Кончено. |
+| hero_f_150bd1v_pulcherrima_g.flac | Прямой (жен.) | Pulcherrima | Угрозы оставь при себе. |
+| hero_f_1nzdipc_pulcherrima_g.flac | Прямой (жен.) | Pulcherrima | Болтовня тебя не спасёт. |
+| hero_f_1lw2m7q_pulcherrima_g.flac | Прямой (жен.) | Pulcherrima | Я слышала это много раз. |
+| hero_f_xwy7eh_pulcherrima_g.flac | Прямой (жен.) | Pulcherrima | Делом докажи. |
+| hero_f_qfqcwc_pulcherrima_g.flac | Прямой (жен.) | Pulcherrima | Ой, как страшно. Я прямо дрожу. |
+| hero_f_2yooie_pulcherrima_g.flac | Прямой (жен.) | Pulcherrima | Громко говоришь, а бьёшь слабо. |
+| hero_f_1uooexe_pulcherrima_g.flac | Прямой (жен.) | Pulcherrima | Скажи это моему мечу. |
+| hero_f_sh8hwp_pulcherrima_g.flac | Прямой (жен.) | Pulcherrima | Я запишу, это смешно. |
+| hero_f_wygtes_pulcherrima_g.flac | Прямой (жен.) | Pulcherrima | Ещё что-нибудь скажешь? Я не тороплюсь. |
+| hero_f_1k6gwqq_pulcherrima_g.flac | Прямой (жен.) | Pulcherrima | Какие речи! Тебе бы в глашатаи. |
+| hero_f_dvn2qq_pulcherrima_g.flac | Прямой (жен.) | Pulcherrima | Бу-бу-бу. Страшно-то как. |
+| hero_f_xuh7nn_pulcherrima_g.flac | Прямой (жен.) | Pulcherrima | Заткнись и дерись! |
+| hero_f_nsohx4_pulcherrima_g.flac | Прямой (жен.) | Pulcherrima | Пасть закрой! |
+| hero_f_1nytadf_pulcherrima_g.flac | Прямой (жен.) | Pulcherrima | Ещё слово — и получишь! |
+| hero_f_j9yl5h_pulcherrima_g.flac | Прямой (жен.) | Pulcherrima | Поговори мне ещё! |
+| hero_f_1ib19ud_pulcherrima_g.flac | Прямой (жен.) | Pulcherrima | Слышь, закрой рот! |
+| hero_f_7m1tn8_pulcherrima_g.flac | Прямой (жен.) | Pulcherrima | Язык длинный, а руки короткие! |
+| hero_f_ol25gd_pulcherrima_g.flac | Прямой (жен.) | Pulcherrima | Хватит трепаться! |
+| hero_f_9eaqh0_pulcherrima_g.flac | Прямой (жен.) | Pulcherrima | Уйди, зверь, и останешься жив. |
+| hero_f_rkgidn_pulcherrima_g.flac | Прямой (жен.) | Pulcherrima | Зверь есть зверь. Прости. |
+| hero_f_1y02k5a_pulcherrima_g.flac | Прямой (жен.) | Pulcherrima | Не рычи, я не боюсь. |
+| hero_f_1j02qp2_pulcherrima_g.flac | Прямой (жен.) | Pulcherrima | Я пущу тебя на шкуру. |
+| hero_f_1lrquiu_pulcherrima_g.flac | Прямой (жен.) | Pulcherrima | Сделаю из тебя шашлык. |
+| hero_f_1yqiwnp_pulcherrima_g.flac | Прямой (жен.) | Pulcherrima | Из тебя выйдет отличный коврик у камина. |
+| hero_f_q0jqur_pulcherrima_g.flac | Прямой (жен.) | Pulcherrima | Будешь моим воротником. |
+| hero_f_yzh46z_pulcherrima_g.flac | Прямой (жен.) | Pulcherrima | Простыню-то где потерял? |
+| hero_f_1ok7x0n_pulcherrima_g.flac | Прямой (жен.) | Pulcherrima | Сейчас я тебе покажу! |
+| hero_f_vss8ey_pulcherrima_g.flac | Прямой (жен.) | Pulcherrima | Иди сюда, отродье! |
+| hero_f_1hosn4s_pulcherrima_g.flac | Прямой (жен.) | Pulcherrima | Эй, я ещё не готова был! |
+| hero_f_18iq4k_pulcherrima_g.flac | Прямой (жен.) | Pulcherrima | Ладно, этот ты выиграл. |
+| hero_f_agipjb_pulcherrima_g.flac | Прямой (жен.) | Pulcherrima | Ой-ой-ой. Запишем в долг. |
+| hero_f_6pllyk_pulcherrima_g.flac | Прямой (жен.) | Pulcherrima | Больно, но красиво. |
+| hero_f_1rd1g0q_pulcherrima_g.flac | Прямой (жен.) | Pulcherrima | Больно, сволочь! |
+| hero_f_rscz95_pulcherrima_g.flac | Прямой (жен.) | Pulcherrima | Ну всё, ты доигрался! |
+| hero_f_1tpmjdw_pulcherrima_g.flac | Прямой (жен.) | Pulcherrima | Больно же, гадина! |
+| hero_f_1aasib7_pulcherrima_g.flac | Прямой (жен.) | Pulcherrima | Ну держись теперь! |
+| hero_f_a918uu_pulcherrima_g.flac | Прямой (жен.) | Pulcherrima | Мне плохо. Надо лечиться. |
+| hero_f_10c0od0_pulcherrima_g.flac | Прямой (жен.) | Pulcherrima | Ещё пара ударов — и мне конец. |
+| hero_f_mj0s4n_pulcherrima_g.flac | Прямой (жен.) | Pulcherrima | Кровь хлещет, чтоб её! |
+| hero_f_19rw865_pulcherrima_g.flac | Прямой (жен.) | Pulcherrima | Держись, дурья башка, держись! |
+| hero_f_drm4zx_pulcherrima_g.flac | Прямой (жен.) | Pulcherrima | Зелье, где же зелье, проклятье! |
+| hero_f_1dva8xu_pulcherrima_g.flac | Прямой (жен.) | Pulcherrima | Ну всё, доигрался! |
+| hero_f_xbu58g_pulcherrima_g.flac | Прямой (жен.) | Pulcherrima | Сейчас свалюсь, зараза! |
+| hero_f_1i0ajf0_pulcherrima_g.flac | Прямой (жен.) | Pulcherrima | Он едва стоит. |
+| hero_f_a50qzu_pulcherrima_g.flac | Прямой (жен.) | Pulcherrima | Конец близок. |
+| hero_f_1c6snma_pulcherrima_g.flac | Прямой (жен.) | Pulcherrima | Он выдыхается. |
+| hero_f_fu2byp_pulcherrima_g.flac | Прямой (жен.) | Pulcherrima | Ну что, выдохся? |
+| hero_f_176hnmk_pulcherrima_g.flac | Прямой (жен.) | Pulcherrima | Кажется, кто-то устал. |
+| hero_f_1dwacmt_pulcherrima_g.flac | Прямой (жен.) | Pulcherrima | Сдаёшься? Нет? Ну ладно. |
+| hero_f_fv5vi5_pulcherrima_g.flac | Прямой (жен.) | Pulcherrima | Тебе бы помыться. Лет сто назад. |
+| hero_f_1m3c7yq_pulcherrima_g.flac | Прямой (жен.) | Pulcherrima | Башку снесу, ворюга! |
+| hero_f_1lrglaj_pulcherrima_g.flac | Прямой (жен.) | Pulcherrima | Пасть закрой, ящер! |
+| hero_f_jvdjak_pulcherrima_g.flac | Прямой (жен.) | Pulcherrima | Шёпот тебя не спасёт. |
+| hero_f_10x554i_pulcherrima_g.flac | Прямой (жен.) | Pulcherrima | Разобью, железка! |
+| hero_f_1tik8bc_pulcherrima_g.flac | Прямой (жен.) | Pulcherrima | Ты выбрал не того. |
+| hero_f_14kudl8_pulcherrima_g.flac | Прямой (жен.) | Pulcherrima | Живым не уйдёшь! |
+| hero_f_u715yy_pulcherrima_g.flac | Прямой (жен.) | Pulcherrima | Сейчас получишь по полной! |
+| hero_f_br33hw_pulcherrima_g.flac | Прямой (жен.) | Pulcherrima | Ай! Можно было и помягче. |
+| hero_f_h77vlu_pulcherrima_g.flac | Прямой (жен.) | Pulcherrima | Ох, кажется, что-то хрустнуло. Надеюсь, не у меня. |
+| hero_f_dy7uzt_pulcherrima_g.flac | Прямой (жен.) | Pulcherrima | Чтоб тебе пусто было! |
+| hero_f_xp76gw_pulcherrima_g.flac | Прямой (жен.) | Pulcherrima | Ах ты, падаль! |
+| hero_f_px3axu_pulcherrima_g.flac | Прямой (жен.) | Pulcherrima | Ещё немного, и я упаду. |
+| hero_f_abrx9e_pulcherrima_g.flac | Прямой (жен.) | Pulcherrima | Кровь течёт. Надо отступить или лечиться. |
+| hero_f_1aodnsw_pulcherrima_g.flac | Прямой (жен.) | Pulcherrima | Долго я так не выстою. |
+| hero_f_4g26cg_pulcherrima_g.flac | Прямой (жен.) | Pulcherrima | Голова кружится. Надо лечиться. |
+| hero_f_1s4vj87_pulcherrima_g.flac | Прямой (жен.) | Pulcherrima | Кажется, это был не лучший план. |
+| hero_f_17iipts_pulcherrima_g.flac | Прямой (жен.) | Pulcherrima | Проклятье, я на последнем издыхании! |
+| hero_f_1io568l_pulcherrima_g.flac | Прямой (жен.) | Pulcherrima | Ещё удар — и мне крышка! |
+| hero_f_a6zagx_pulcherrima_g.flac | Прямой (жен.) | Pulcherrima | Ещё удар — и всё. |
+| hero_f_9hbokr_pulcherrima_g.flac | Прямой (жен.) | Pulcherrima | Слабеет. Дожимай. |
+| hero_f_ti67e7_pulcherrima_g.flac | Прямой (жен.) | Pulcherrima | Сквозняк какой-то. А, это ты. |
+| hero_f_ptz15l_pulcherrima_g.flac | Прямой (жен.) | Pulcherrima | Обратно в могилу, падаль! |
+| hero_f_38bymo_pulcherrima_g.flac | Прямой (жен.) | Pulcherrima | Руки прочь, ворьё! |
+| hero_f_dkigql_pulcherrima_g.flac | Прямой (жен.) | Pulcherrima | Ступай к рыбам, пропойца! |
+| hero_f_1eil0as_pulcherrima_g.flac | Прямой (жен.) | Pulcherrima | Большой, да глупый. |
+| hero_f_1ypfn6e_pulcherrima_g.flac | Прямой (жен.) | Pulcherrima | Замолчи, ведьма морская! |
+| hero_f_15p2006_pulcherrima_g.flac | Прямой (жен.) | Pulcherrima | С камнем не спорят. Камень ломают. |
+| hero_f_1awourk_pulcherrima_g.flac | Прямой (жен.) | Pulcherrima | Это не кровь, это краска. Наверное. |
+| hero_f_14m4d4p_pulcherrima_g.flac | Прямой (жен.) | Pulcherrima | Язык отрежу! |
+| hero_f_3t85yf_pulcherrima_g.flac | Прямой (жен.) | Pulcherrima | Ещё разок, и готов! |
+| hero_f_1xppht4_pulcherrima_g.flac | Прямой (жен.) | Pulcherrima | Иди ограбь кого другого! |
+| hero_f_bzecxg_pulcherrima_g.flac | Прямой (жен.) | Pulcherrima | Я тебе устрою! |
+| hero_f_120yq67_pulcherrima_g.flac | Прямой (жен.) | Pulcherrima | Ну вот, новый шрам. Буду хвастаться. |
+| hero_f_1mnn0y2_pulcherrima_g.flac | Прямой (жен.) | Pulcherrima | Это был мой любимый бок! |
+| hero_f_11i7occ_pulcherrima_g.flac | Прямой (жен.) | Pulcherrima | Ты за это ответишь! |
+| hero_f_wtygf9_pulcherrima_g.flac | Прямой (жен.) | Pulcherrima | Силы уходят. Пора пить зелье. |
+| hero_f_120ynn3_pulcherrima_g.flac | Прямой (жен.) | Pulcherrima | Я на краю. Осторожнее. |
+| hero_f_l0wv9w_pulcherrima_g.flac | Прямой (жен.) | Pulcherrima | Осталось немного. |
+| hero_f_lqs38f_pulcherrima_g.flac | Прямой (жен.) | Pulcherrima | Рухнешь, дубина! |
