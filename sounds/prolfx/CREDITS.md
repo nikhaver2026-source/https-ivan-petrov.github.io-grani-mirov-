@@ -85,3 +85,32 @@ CC-Sounds: https://github.com/Fris0uman/CDDA-Soundpacks (авторы и лиц�
 В сведение входят записи под CC BY-SA 3.0, поэтому три записи толпы — тоже **CC BY-SA 3.0**
 (https://creativecommons.org/licenses/by-sa/3.0/): указаны авторы, названа лицензия, изменения — расстановка по
 полю, высота, удаление, отклик гор, сведение и петля.
+
+## Первая часть «Шов»: город под дождём, гроза, страницы, музыка (`pf_make4.py`)
+
+Просьба игрока: «добавь в первую часть пролога больше шумов города; измени на более яркие звуки пролистывания
+страниц; добавь музыку — как таковой музыки сейчас нет; добавь звук не одной машины, а потока машин; добавь дождь и
+гром».
+
+| Файл | Длина | Громкость | Что это | Источник, автор, лицензия |
+|---|---|---|---|---|
+| `pf_traffic_wet_01.flac` | 43 с | −24 дБ | поток машин по мокрому проспекту: четыре полосы рядом, проспект подальше, гул города; петля | синтез кодом (177 проездов, физика проезда как у `pf_car_pass`), мотор — Frederik_Sunne, CC BY 4.0 |
+| `pf_rain_street_01.flac` | 31 с | −24 дБ | ливень на улице: по асфальту и крышам, водосток, капли по жести и лужам; петля | «heavyrain» — Ali@k (freesound.org/s/128907), CC0; «WEATHER_RAINSTORM» — Iam_calderon (freesound.org/s/424306), CC0 — через CC-Sounds; капли и водосток — синтез |
+| `pf_drizzle_01.flac` | 29 с | −30 дБ | морось по мокрой улице; петля | «drizzle» — klankbeeld (freesound.org/s/325442), CC BY 3.0, через CC-Sounds; «loop_rain» — собрание CC0; капли — синтез |
+| `pf_rain_room_01.flac` | 27 с | −28 дБ | дождь за окном пустой комнаты, капли по стеклу; петля | «indoors_rain» — InspectorJ (freesound.org/s/346641), CC BY; «WEATHER_RAINSTORM_inside» — klankbeeld (freesound.org/s/614134), CC BY 4.0 — через CC-Sounds; капли по стеклу — синтез |
+| `pf_thunder_near_01.flac` | 18,6 с | −15 дБ | гроза над городом: близкий раскат и эхо от домов | «thunder_near» — mrsorbias (freesound.org/s/574687), CC BY 3.0, через CC-Sounds; эхо и отклик — обработка |
+| `pf_thunder_near_02.flac` | 10,1 с | −15 дБ | сухой треск разряда и раскат по улицам | `sfx100v2_thunder_01` — «100 CC0 SFX #2», собрание CC0 |
+| `pf_thunder_far_01.flac` | 15 с | −24 дБ | дальний гром за кварталами | «thunder_far» — chromakei (freesound.org/s/398287), CC0, через CC-Sounds |
+| `pf_horns_01.flac` | 5,8 с | −19 дБ | гудки на перекрёстке: двойной, долгий злой, дальний ответ | «horn_medium» — Legnalegna55 (freesound.org/s/545015), CC0, через CC-Sounds |
+| `pf_car_alarm_far_01.flac` | 7,9 с | −26 дБ | автосигнализация во дворе через квартал | «car_alarm» — InspectorJ (freesound.org/s/422051), CC BY, через CC-Sounds |
+| `pf_subway_01.flac` | 9 с | −24 дБ | метро под улицей: поезд проходит под ногами | «underground» — Kinoton (freesound.org/s/421826), CC0, через CC-Sounds |
+| `pf_window_close_01.flac` | 1,9 с | −22 дБ | окно захлопнули через двор | «close_window» — cabled_mess (freesound.org/s/407644), CC0, через CC-Sounds |
+| `pf_umbrella_pass_01.flac` | 8,8 с | −22 дБ | прохожий под зонтом: шаги по лужам, дробь дождя по зонту, слева направо | шаги `sfx100v2_footstep_wet_01…03` — «100 CC0 SFX #2», собрание CC0; дробь по зонту — синтез |
+| `pf_moto_wet_01.flac` | 7,4 с | −19 дБ | мотороллер по мокрому асфальту справа налево | синтез кодом, мотор — Frederik_Sunne, CC BY 4.0 |
+| `pf_page_turn_01.flac`, `pf_page_turn_02.flac`, `pf_page_turn_03.flac` | 1,1–3 с | −15 дБ | страница перевёрнута — ярко и близко, лист проходит от края к краю | «Page Turn 1», «Page Turn 2», «Page Turn Fast» — Ben Burnes (Abstraction), «Books, Paper, Writing», CC0 |
+| `pf_page_riffle_01.flac`, `pf_page_riffle_02.flac` | 1,7–2 с | −14 дБ | пролистывание: веер страниц под пальцем | «Flipping Pages 3», «Flipping Pages 2» — Ben Burnes (Abstraction), «Retail Therapy Sample Pack», CC0 |
+| `pf_mus_noir_01.flac` | 63,5 с | −22 дБ | музыка первой части: ночной нуар под дождь — Rhodes, бас, щётки; петля | «Midnight Murmurs — Chill Rhodes, Rainy Noir, Harmonized Fadeout» — Ben Burnes (Abstraction), «2HTC Samples Vol 4», CC0 (записано с Mark Powers): вступление, дважды тема, ещё раз тема, концовка |
+
+Собрание CC0: https://github.com/lavenderdotpet/CC0-Public-Domain-Sounds. Все записи изменены (обработка указана в
+таблице): яркость страниц — подъём верхов, движение листа по сторонам; дождь — стерео из разных отрезков, капли;
+гром — эхо от домов; даль — срез верхов и отклик.

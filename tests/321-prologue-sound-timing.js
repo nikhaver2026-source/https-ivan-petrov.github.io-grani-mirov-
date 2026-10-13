@@ -34,6 +34,9 @@
       роль и описание, CREDITS.md называет источники и лицензии.
    8. Фон места мира (день в поле — птицы — с заглавного экрана) не тянется
       под пролог: у частей свой фон; войдя в мир, игрок снова слышит фон места.
+   9. (Просьба игрока о первой части: «больше шумов города, ярче
+      пролистывание страниц, музыка, поток машин, дождь и гром».) У первой
+      части своя музыка — нуар под дождь; во второй части снова тема пролога.
    ════════════════════════════════════════════════════════════════════════ */
 const {chromium}=require('playwright');
 const fs=require('fs'),path=require('path');
@@ -57,10 +60,14 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
 
  /* ── 2 ── */
  const м=await page.evaluate(()=>{const s1=PROLOGUE[0],s7=PROLOGUE[6];const z=(s,r)=>s.звуки.filter(x=>x[1]===r).map(x=>x[0]);const L=(s,r)=>(s.слои||[]).filter(x=>x[0]===r).map(x=>[x[1],x[2]]);
-  return {машина:z(s1,"pf_car_pass"),город:L(s1,"pf_city_night"),фонарь:L(s1,"pf_lamp_buzz"),мокро:z(s7,"pf_car_wet"),мигнул:z(s7,"pf_lamp_flicker"),звон:z(s7,"pf_tinnitus_rise"),
+  return {машина:z(s1,"pf_car_wet"),поток:L(s1,"pf_traffic_wet"),морось:L(s1,"pf_drizzle"),ливень:L(s1,"pf_rain_street"),комната:L(s1,"pf_rain_room"),
+   гром:z(s1,"pf_thunder_near"),страницы:z(s1,"pf_page_turn").concat(z(s1,"pf_page_riffle")),гудки:z(s1,"pf_horns"),музыка:(s1.музыка||[])[0]||null,
+   город:L(s1,"pf_city_night"),фонарь:L(s1,"pf_lamp_buzz"),мокро:z(s7,"pf_car_wet"),мигнул:z(s7,"pf_lamp_flicker"),звон:z(s7,"pf_tinnitus_rise"),
    уши:z(s1,"pf_tinnitus"),фон7:s7.фон[0]};});
- check('2. машины: на «машины» проезжает машина, под второй строкой — ночной город и фонарь; в седьмой сцене — машина по мокрому асфальту, фонарь мигает, звон нарастает',
-  м.машина.some(a=>/^2:машины/.test(a))&&м.город.some(([a,b])=>/^2:/.test(a)&&/^3:тишина/.test(b))&&м.фонарь.length&&м.уши.some(a=>/^3:звон/.test(a))
+ check('2. первая часть: поток машин по мокрому и морось под второй строкой, гудки на «гудят», проезд на «машины», ночной город и фонарь; гром на «грозой», за ним ливень и дождь за окном комнаты; страницы ярко; своя музыка; в седьмой части — машина по мокрому асфальту, фонарь мигает, звон нарастает',
+  м.машина.some(a=>/^2:машины/.test(a))&&м.поток.some(([a,b])=>/^2:мире/.test(a)&&/^3:тишина/.test(b))&&м.морось.length&&м.гудки.some(a=>/^2:гудят/.test(a))
+  &&м.гром.some(a=>/^3:грозой/.test(a))&&м.ливень.some(([a])=>/^3:грозой/.test(a))&&м.комната.length&&м.страницы.filter(a=>/^1:страниц/.test(a)).length>=2&&м.музыка==="pf_mus_noir"
+  &&м.город.some(([a,b])=>/^2:/.test(a)&&/^3:тишина/.test(b))&&м.фонарь.length&&м.уши.some(a=>/^3:звон/.test(a))
   &&м.мокро.some(a=>/^1:асфальт/.test(a))&&м.мигнул.some(a=>/^3:фонарь/.test(a))&&м.звон.some(a=>/^1:звон/.test(a))&&м.фон7==="pf_city_rain",м);
 
  /* ── 3–5: сцена по часам записи; запись идёт в 2,5 раза быстрее ── */
@@ -88,9 +95,9 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   return {наСлове,мимо,раньшеСтроки};};
  const с1=await сыграть(0,24);const с1с=сверка(с1);
  const город=с1.лог.find(e=>e.т==="слой"&&e.r==="pf_city_night"),гаснет=с1.лог.filter(e=>e.т==="гаснет");
- const машина=с1.лог.find(e=>e.r==="pf_car_pass");
+ const машина=с1.лог.find(e=>e.r==="pf_car_wet");
  check('3. сцена 1 по часам записи: каждый звук на своём слове, ни один не раньше своей строки; машина — на «машины», город вступает со второй строкой и гаснет на «тишина»',
-  с1с.наСлове>=15&&!с1с.мимо.length&&!с1с.раньшеСтроки.length&&машина&&машина.k===2&&Math.abs(машина.ct-(с1.ждали["2:машины-0.25|pf_car_pass"].t))<0.16
+  с1с.наСлове>=15&&!с1с.мимо.length&&!с1с.раньшеСтроки.length&&машина&&машина.k===2&&Math.abs(машина.ct-(с1.ждали["2:машины-0.25|pf_car_wet"].t))<0.16
   &&город&&гаснет.length>=2&&с1.строки.length===3,{с1с,машина,город,гаснет:гаснет.length,строк:с1.строки.length});
  const тесно=await page.evaluate(()=>{const т0=Гул155.теснота;Гул155.теснота=()=>({L:6,n:12});
   const r={рассказ:Гул155.множ("рассказ"),голос:+Гул155.множ("голос").toFixed(2),мир:+Гул155.множ("мир").toFixed(2)};Гул155.теснота=т0;return r;});
@@ -150,6 +157,15 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   r.ждём=["deep","cave","dungeon","desert","forest","water","ship","mountain","field"].includes(safeFn(()=>roomKind(),""));return r;});
  check('8. фон места мира (день в поле с заглавного экрана) не тянется под пролог: у частей свой фон; в мире он возвращается',
   !ф.пролог&&!ф.часть4&&ф.игра&&ф.мир===ф.ждём,ф);
+
+ /* ── 9: музыка первой части — своя тема, во второй — снова тема пролога ── */
+ await page.goto(process.argv[2]);await page.waitForTimeout(900);
+ const муз=await page.evaluate(async()=>{const r={};startIntro();await new Promise(q=>setTimeout(q,3000));
+  const a=Bank.loops.get("score");r.часть1=a?a.role:null;r.громко=a?+(+a.el.volume).toFixed(2):0;
+  Prologue.play(1,false);await new Promise(q=>setTimeout(q,3000));const b=Bank.loops.get("score");r.часть2=b?b.role:null;
+  Prologue.skip();return r;});
+ check('9. у первой части своя музыка — нуар под дождь, её слышно; во второй части снова тема пролога',
+  муз.часть1==="pf_mus_noir"&&муз.громко>0.2&&муз.часть2==="mus_prologue",муз);
 
  check('Ошибок страницы нет',errors.length===0,errors.slice(0,3));
  await browser.close();
