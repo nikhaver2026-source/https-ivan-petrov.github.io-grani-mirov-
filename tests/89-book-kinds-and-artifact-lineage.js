@@ -88,12 +88,15 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
  check('2е. дар одной страницы даётся один раз',дары.again==="",дары.again);
 
  /* ── 3. чтение через studyPage ── */
- const чтение=await page.evaluate(()=>{
+ const чтение=await page.evaluate(async()=>{
   const L=knowLayout();let n=-1;for(let i=0;i<L.total;i++){const e=knowEntry(i);if(e&&bookKind(e).id==="treatise"){n=i;break;}}
   G.lore=[];G.bookGifts={};SAID.length=0;
   studyPage(n,1,"Проверка.");
-  return {n,said:SAID.find(t=>/Изучено/.test(t))||"",
-   заголовок:(()=>{SAID.length=0;openReading(n,true);return SAID.join(" | ");})()};});
+  const said=SAID.find(t=>/Изучено/.test(t))||"";
+  /* (15.5) Окно книги открывается молча: заглавие с родом звучит в начале самого текста, следом за шорохом
+     страниц (через 0,45 с), — ждём его, а не объявления окна. */
+  SAID.length=0;openReading(n,true);await new Promise(q=>setTimeout(q,900));
+  return {n,said,заголовок:SAID.join(" | ")};});
  check('3. чтение произносит дар рода, а заглавие называет род',/Трактат/.test(чтение.said)&&/трактат/i.test(чтение.заголовок),[чтение.said.slice(0,90),чтение.заголовок.slice(0,90)]);
 
  /* ── 4. знание в разговоре ── */

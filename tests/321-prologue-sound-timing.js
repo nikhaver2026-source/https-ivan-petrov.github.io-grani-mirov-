@@ -37,6 +37,14 @@
    9. (Просьба игрока о первой части: «больше шумов города, ярче
       пролистывание страниц, музыка, поток машин, дождь и гром».) У первой
       части своя музыка — нуар под дождь; во второй части снова тема пролога.
+  10. (Просьба игрока: «расширь стереопанораму пролога, добавь глубину звука
+      и высоту звука».) Угол звуков части шире в полтора раза, звук ровно по
+      центру расходится в свою сторону, а шёпот у уха остаётся у уха; дальнее
+      отодвинуто дальше, у него срезан верх и больше отзвука; гром, драконы —
+      сверху, шаги и подземный гул — снизу, восьмое число задаёт высоту явно.
+      Рой боя — со всех сторон (и за спиной) и на разной высоте. Петли части
+      и стерео «плоско» идут через ширитель и звучат; у части своя акустика
+      (у Пепельного года — горы), в мире акустика снова своя.
    ════════════════════════════════════════════════════════════════════════ */
 const {chromium}=require('playwright');
 const fs=require('fs'),path=require('path');
@@ -79,7 +87,7 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
     /* дыхание слоёв: доля громкости петель пролога по ходу части */
     setInterval(()=>{try{Bank.loops.forEach((c,key)=>{if(/^prolog_/.test(key)&&c&&c.дых!=null)(window.__дых[key]=window.__дых[key]||[]).push(+c.дых);});}catch(_){}},40);
     const з0=Prologue.звукЗ.bind(Prologue);Prologue.звукЗ=function(z){const el=Prologue.el;__лог.push({т:"звук",a:z[0],r:z[1],k:Prologue.__k,ct:el?el.currentTime:null,ms:performance.now()-t0});return з0(z);};
-    const б0=Prologue.звук.bind(Prologue);Prologue.звук=function(r,dx,dy,g,s){if(Prologue.бой||Prologue.поход)__лог.push({т:Prologue.бой?"бой":"поход",r,dx,k:Prologue.__k,ms:performance.now()-t0});return б0(r,dx,dy,g,s);};
+    const б0=Prologue.звук.bind(Prologue);Prologue.звук=function(r,dx,dy,g,s,dz){if(Prologue.бой||Prologue.поход)__лог.push({т:Prologue.бой?"бой":"поход",r,dx,k:Prologue.__k,ms:performance.now()-t0});return б0(r,dx,dy,g,s,dz);};
     const с0=Prologue.слой.bind(Prologue);Prologue.слой=function(k,r,g,v){__лог.push({т:"слой",r,k,ct:Prologue.el?Prologue.el.currentTime:null,ms:performance.now()-t0});return с0(k,r,g,v);};
     const п0=Prologue.погасить.bind(Prologue);Prologue.погасить=function(k,s){__лог.push({т:"гаснет",k,ct:Prologue.el?Prologue.el.currentTime:null});return п0(k,s);};
     const f0=Bank.file.bind(Bank);Bank.file=function(p,o){const el=f0(p,o);if(/^prologue\//.test(p)){window.__строки.push({p,voice:!!(o&&o.voice),кл:Гул155.кл||Гул155.класс("",(o&&o.kind)||"fx",o)});
@@ -166,6 +174,42 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   Prologue.skip();return r;});
  check('9. у первой части своя музыка — нуар под дождь, её слышно; во второй части снова тема пролога',
   муз.часть1==="pf_mus_noir"&&муз.громко>0.2&&муз.часть2==="mus_prologue",муз);
+
+ /* ── 10: ширь, глубина и высота ── */
+ await page.goto(process.argv[2]);await page.waitForTimeout(900);
+ const ш=await page.evaluate(async()=>{const r={};settings.effects=1;settings.music=1;const Ш=ПрологШирь;
+  const уг=m=>+(Math.atan2(m.dx,-m.dy)*180/Math.PI).toFixed(1);
+  r.центр=уг(Ш.точка("gr_spot_chime",0,-2,null,"2:грань"));r.центрСнова=уг(Ш.точка("gr_spot_chime",0,-2,null,"2:грань"));
+  r.бок=уг(Ш.точка("stk_dark",-2,-2,null,"x"));const шп=Ш.точка("gr_spot_whisper",0.5,0.5,null,"x");r.шёпот=[шп.dx,шп.dy];
+  const дл=Ш.точка("market",0,-4,null,"x");r.даль=+Math.hypot(дл.dx,дл.dy).toFixed(2);
+  r.высоты={гром:Ш.точка("sky_thunder",2,-5,null,"x").dz,дракон:Ш.точка("wyrm_roar",0,-9,null,"x").dz,шаг:Ш.точка("step_water",0.3,0.5,null,"x").dz,
+   гул:Ш.точка("oc_earthquake",0,-1,null,"x").dz,явно:Ш.точка("market",1,-1,3.5,"x").dz};
+  const г1=Ш.глубина("market",0,-1,0),г2=Ш.глубина("market",0,-9,0);r.глубина={близко:[г1.воздух,+г1.отзвук.toFixed(2)],далеко:[Math.round(г2.воздух),+г2.отзвук.toFixed(2)]};
+  /* часть 4: петли через ширитель, акустика гор */
+  startIntro();await new Promise(q=>setTimeout(q,500));Prologue.play(3,false);await new Promise(q=>setTimeout(q,1800));
+  const фон=Bank.loops.get("prolog");r.фонШирь=!!(фон&&Ш.узлы.has(фон.el));r.акустика=Room.kind;r.объём=Spatial.on();
+  /* ширитель звучит: уровень на его выходе */
+  const ур=async el=>{const n=el&&Ш.узлы.get(el);if(!n)return 0;const an=AE.ctx.createAnalyser();an.fftSize=2048;n.выход.connect(an);
+   let m=0;const d=new Float32Array(2048);for(let k=0;k<12;k++){await new Promise(q=>setTimeout(q,60));an.getFloatTimeDomainData(d);let s2=0;for(const v of d)s2+=v*v;m=Math.max(m,Math.sqrt(s2/d.length));}
+   try{n.выход.disconnect(an);}catch(_){}return m;};
+  r.уровеньФона=+(await ур(фон&&фон.el)).toFixed(4);
+  /* стерео «плоско» — через ширитель */
+  Prologue.звукЗ(["0:+0","pf_thunder_far",0,0,0.4,3,"плоско"]);const гр=Bank.shots[Bank.shots.length-1];r.громШирь=!!(гр&&Ш.узлы.has(гр));
+  /* рой боя: со всех сторон и на разной высоте */
+  const зв=[];const at0=Spatial.at;Spatial.at=function(f,dx,dy,o){зв.push({dx,dy,dz:(o&&o.dz)||0,lp:(o&&o.lp)||0});return at0.apply(this,arguments);};
+  прологРой(Prologue.ход,PROLOGUE[3].бой,"бой");await new Promise(q=>setTimeout(q,5000));Prologue.бой=false;Spatial.at=at0;
+  r.рой={всего:зв.length,сзади:зв.filter(z=>z.dy>0).length,слева:зв.filter(z=>z.dx<-1).length,справа:зв.filter(z=>z.dx>1).length,
+   выше:зв.filter(z=>z.dz>0.5).length,срез:зв.filter(z=>z.lp>0).length};
+  /* из пролога — в мир: ширитель отдан, акустика мира */
+  Prologue.skip();await new Promise(q=>setTimeout(q,1500));safeFn(()=>Room.set());r.послеМир=Room.kind;r.ждём=safeFn(()=>roomKind(),"");
+  r.отдан=!(фон&&Ш.узлы.has(фон.el));return r;});
+ check('10. ширь, глубина и высота: угол шире, центр расходится в свою сторону, шёпот у уха; дальнее дальше, глуше и в отзвуке; гром и драконы сверху, шаги и гул снизу; рой боя со всех сторон и на высоте; петли и стерео через ширитель и звучат; у части своя акустика, в мире — своя',
+  Math.abs(ш.центр)>=15&&Math.abs(ш.центр)<=35&&ш.центр===ш.центрСнова&&ш.бок<=-60&&ш.шёпот[0]===0.5&&ш.шёпот[1]===0.5&&ш.даль>=5
+  &&ш.высоты.гром>=4&&ш.высоты.дракон>=4&&ш.высоты.шаг<0&&ш.высоты.гул<0&&ш.высоты.явно===3.5
+  &&ш.глубина.близко[0]===0&&ш.глубина.далеко[0]>0&&ш.глубина.далеко[0]<12000&&ш.глубина.далеко[1]>ш.глубина.близко[1]
+  &&ш.объём&&ш.фонШирь&&ш.уровеньФона>0.0005&&ш.громШирь&&ш.акустика==="mountain"
+  &&ш.рой.всего>=10&&ш.рой.сзади>=1&&ш.рой.слева>=2&&ш.рой.справа>=2&&ш.рой.выше>=1&&ш.рой.срез>=3
+  &&ш.послеМир===ш.ждём&&ш.отдан,ш);
 
  check('Ошибок страницы нет',errors.length===0,errors.slice(0,3));
  await browser.close();

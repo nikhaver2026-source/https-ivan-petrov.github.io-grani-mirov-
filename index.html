@@ -3241,7 +3241,9 @@ NEWS.push({v:133,н:"версия 15.5: загадки и механизмы в 
 NEWS.push({v:134,н:"версия 15.5: звук без перегруза",
   т:"На выходе звука — ограничитель, в тесноте мир и фон тише, а герой и звери почти не убавляются. Шаги героя громче, его удары и чары тоже, звери громче и ярче. В окнах «Питомцы» и «Маунты» фоновые фразы ждут закрытия окна."});
 NEWS.push({v:135,н:"версия 15.5: пролог — звуки ко времени",
-  т:"Пролог делится на части, и каждый звук звучит на своём слове записанной строки, а не по таймеру. В нашем мире слышны машины, город, фонари и звон в ушах, в Пепельном году — извержение, поход через перевалы и битва толпы: сеча, крики, кровь."});
+  т:"Пролог делится на части, и каждый звук звучит на своём слове записанной строки, а не по таймеру. В нашем мире — своя музыка, поток машин под дождём и гроза, в Пепельном году — поход через перевалы и битва толпы: сеча, крики, кровь."});
+NEWS.push({v:136,н:"версия 15.5: книги сразу, объёмный пролог",
+  т:"Книга открывается сразу и читается до конца: голос начинает через полсекунды и не обрывается на длинной странице. Пролог звучит шире и глубже: звуки сбоку и за спиной, дальнее — глуше и в эхе, гром и драконы — сверху, шаги — снизу."});
 const NEWS_V=NEWS[NEWS.length-1].v;
 /* (8.5) Выпуск читается коротко: заголовок, затем факты. */
 function newsLine(n){const н=String(n.н||"");return `${н.charAt(0).toUpperCase()+н.slice(1)}. ${n.т||""}`;}
@@ -4468,7 +4470,7 @@ const Speech={voice:null,keepAlive:null,
   const self=this;
   const запас=this._gvFallback();
   const пул=new Map();
-  let ток=0,эл=null,идёт=false;
+  let ток=0,эл=null,идёт=false,послШаг=0;
   const стоп=()=>{const a=эл;эл=null;if(a){try{a.onended=null;a.onerror=null;a.pause();}catch(_){}}};
   const аудио=url=>{let a=пул.get(url);
    if(a){пул.delete(url);пул.set(url,a);return a;}
@@ -4488,19 +4490,40 @@ const Speech={voice:null,keepAlive:null,
     /* (12.5) Учёт покрытия записями: что звучит записью, что синтезом. */
     safeFn(()=>Речь.учесть(части.filter(x=>x.url).length,части.filter(x=>!x.url).map(x=>x.t||x.text||"")));
     if(!части.some(x=>x.url))return запас?запас.speak(text,o):false;
-    const мой=++ток;стоп();идёт=true;
+    const мой=++ток;стоп();идёт=true;послШаг=Date.now();
     let начато=false;
     const старт=()=>{if(!начато){начато=true;if(o.onstart)o.onstart();}};
     const темп=self.gvTempo(o.rate);
+    /* (15.5) Записанные куски — заранее: плеер открывает их сразу, пока звучит первый. */
+    if(!Плееры.вкл)safeFn(()=>части.filter(x=>x.url).slice(0,4).forEach(x=>{if(!пул.has(x.url)){const a=аудио(x.url);a.preload="auto";a.load();}}));
     let шаг=null;
+    /* ── КУСОК СИНТЕЗАТОРА ПОД СТОРОЖЕМ (15.5) ──
+       Синтезатор устройства после частых обрывов иногда молча роняет фразу: не начинает её и не сообщает о конце.
+       Раньше цепочка ждала этот конец, и чтение страницы стояло, пока общий сторож речи (для длинного куска —
+       около сорока секунд) не перескакивал дальше, теряя остаток. Теперь у куска свой сторож: не начал звучать
+       за 1,6 с и молчит — подать ещё раз; снова молчит или звучит втрое дольше возможного — следующий кусок. */
     const голосом=(t,i)=>{
      if(!запас){шаг(i+1);return;}
-     старт();
-     const ok=запас.speak(t,{rate:self.synthRate(),volume:self.synthVolume(o.volume),onstart(){},
-      onend(){if(мой===ток)шаг(i+1);},onerror(){if(мой===ток)шаг(i+1);}});
-     if(!ok)шаг(i+1);};
+     старт();послШаг=Date.now();
+     let закрыт=false,попытка=0,начат=false;const t0=Date.now();
+     const темпС=Math.max(0.5,Math.min(5,self.synthTempo(self.synthRate())));
+     const предел=2500+Math.round(String(t).length/(14*темпС)*1000*3);
+     let сторож=null,тихо=0;
+     const дальше=()=>{if(закрыт)return;закрыт=true;clearInterval(сторож);if(мой===ток)шаг(i+1);};
+     const подать=()=>{const моя=++попытка;
+      return запас.speak(t,{rate:self.synthRate(),volume:self.synthVolume(o.volume),onstart(){if(моя===попытка)начат=true;},
+       onend(){if(моя===попытка&&мой===ток)дальше();},onerror(){if(моя===попытка&&мой===ток)дальше();}});};
+     if(!подать()){дальше();return;}
+     сторож=setInterval(()=>{if(закрыт||мой!==ток){clearInterval(сторож);return;}
+      const прошло=Date.now()-t0;const говорит=safeFn(()=>!!(запас.speaking&&запас.speaking()),true);
+      тихо=говорит?0:тихо+1;if(говорит)послШаг=Date.now();
+      if(!начат&&!говорит&&прошло>1600&&попытка<2){safeFn(()=>Речь.записать("игра","синтезатор уронил кусок — подан снова (Gemini)",t));
+       try{запас.cancel();}catch(_){}setTimeout(()=>{if(!закрыт&&мой===ток&&!подать())дальше();},120);return;}
+      if((тихо>=3&&прошло>1800)||прошло>предел){if(прошло>предел)try{запас.cancel();}catch(_){}
+       safeFn(()=>Речь.записать("игра",(прошло>предел?"кусок звучал втрое дольше":"синтезатор умолк без конца")+" — сторож куска снял (Gemini)",t));дальше();}},500);};
     шаг=i=>{
      if(мой!==ток)return;
+     послШаг=Date.now();
      if(i>=части.length){идёт=false;if(o.onend)o.onend();return;}
      const ч=части[i];
      if(!ч.url){голосом(ч.t,i);return;}
@@ -4543,16 +4566,25 @@ const Speech={voice:null,keepAlive:null,
      if(b0){try{b0.src=ч.url;}catch(_){}пуск(b0);}else пуск(аудио(ч.url));};
     шаг(0);return true;},
    cancel(){ток++;идёт=false;стоп();if(запас)запас.cancel();},
+   /* (15.5) Звучит ли голос Gemini на самом деле: играет запись, говорит синтезатор — или идёт переход между
+      кусками (открывается следующая запись). Общий сторож речи по этому замечает тишину за полторы секунды. */
+   звучит(){if(!идёт)return false;if(эл&&!эл.paused)return true;
+    try{if(запас&&запас.speaking&&запас.speaking())return true;}catch(_){}
+    return Date.now()-послШаг<1800;},
    /* ── СОСЕДИ НАГОТОВЕ (9.5.2, просьба игрока) ──
       Запись открывается не мгновенно: при быстром листании следующий пункт
       обрывал её раньше, чем она успевала зазвучать, и казалось, что голос
       пропустил пункт. Записи соседних пунктов плееры открывают заранее —
       свайп попадает на готовую запись, и она звучит сразу. На iPhone
       заранее не открываем: там плееры берутся из запаса, открытого касанием. */
-   warm(urls){if(Плееры.вкл)return 0;let n=0;
-    (urls||[]).slice(0,3).forEach(u=>{if(!u||пул.has(u))return;try{const a=аудио(u);a.preload="auto";a.load();n++;}catch(_){}});
+   warm(urls,сколько){if(Плееры.вкл)return 0;let n=0;
+    (urls||[]).slice(0,Math.max(1,Math.min(6,сколько||3))).forEach(u=>{if(!u||пул.has(u))return;try{const a=аудио(u);a.preload="auto";a.load();n++;}catch(_){}});
     return n;},
    speaking(){return идёт;}};},
+ /* (15.5) Записанные куски одного длинного текста (страница книги) — заранее, все сразу (до четырёх). */
+ gvWarmText(text,сколько){try{const a=this._adapter();if(!a||a.name!=="gemini"||!a.warm)return 0;
+  let x=String(text||"").replace(/\s+/g," ").trim();if(!x)return 0;if(typeof deskText==="function")x=deskText(x);
+  return a.warm(this.gvParts(x).filter(p=>p.url).map(p=>p.url),сколько||6);}catch(_){return 0;}},
  gvWarm(texts){try{const a=this.adapter;if(!a||a.name!=="gemini"||!a.warm)return 0;
   const urls=(texts||[]).map(t=>{let x=String(t||"").replace(/\s+/g," ").trim();if(!x)return null;
    if(typeof deskText==="function")x=deskText(x);const ч=this.gvParts(x);return ч[0]&&ч[0].url;}).filter(Boolean);
@@ -4620,6 +4652,24 @@ const Speech={voice:null,keepAlive:null,
    speak(text,o){
     if(!ESpeak.ready()){ESpeak.load();return запас?запас.speak(text,o):false;}
     const мой=++ток;стоп();
+    /* (15.5) Длинный текст — по предложениям: первое звучит сразу, следующее считается, пока звучит
+       предыдущее. Раньше весь текст считался целиком в главном потоке, и игра стояла, пока не досчитает. */
+    const куски=(()=>{const t=String(text);if(t.length<140)return null;const ss=t.match(/[^.!?…;]+[.!?…;]*/g)||[t];const out=[];
+     ss.forEach(x=>{x=x.trim();if(!x)return;if(out.length&&out[out.length-1].length<60)out[out.length-1]+=" "+x;else out.push(x);});return out.length>1?out:null;})();
+    if(куски){let k=0,готов=null,начат=false;идёт=true;
+     const синт=x=>{try{return ESpeak.wav(x,self.synthRate(),self.synthVolume(o.volume),пол);}catch(_){return null;}};
+     const следующий=()=>{if(мой!==ток)return;
+      if(k>=куски.length){стоп();идёт=false;if(o.onend)o.onend();return;}
+      const w=готов||синт(куски[k]);готов=null;k++;if(!w){следующий();return;}
+      const a=(self._плеер&&self._открыто&&self._открыто.плеер)?self._плеер:new Audio();
+      if(ссылка){try{URL.revokeObjectURL(ссылка);}catch(_){}}ссылка=URL.createObjectURL(w);эл=a;
+      a.onended=()=>{if(мой!==ток||эл!==a)return;следующий();};
+      a.onerror=()=>{if(мой!==ток||эл!==a)return;следующий();};
+      try{a.playbackRate=1;a.defaultPlaybackRate=1;a.volume=Math.max(0,Math.min(1,+o.volume||1));}catch(_){}
+      try{a.src=ссылка;const pr=Звук.играть(a,"речь",{повтор:false});if(!начат){начат=true;if(o.onstart)o.onstart();}
+       if(pr&&pr.catch)pr.catch(()=>{if(мой===ток&&эл===a)следующий();});}catch(_){следующий();return;}
+      setTimeout(()=>{if(мой===ток&&k<куски.length&&!готов)готов=синт(куски[k]);},40);};
+     следующий();return true;}
     let wav=null;try{wav=ESpeak.wav(String(text),self.synthRate(),self.synthVolume(o.volume),пол);}catch(_){wav=null;}
     if(!wav)return запас?запас.speak(text,o):false;
     идёт=true;
@@ -4658,7 +4708,10 @@ const Speech={voice:null,keepAlive:null,
    if(settings.hintMode==="min"&&!m.user&&m.pri>=2&&(m.cat==="desc"||m.cat==="spatial"||m.cat==="object")){
     const sents=text.match(/[^.!?…]+[.!?…]*/g)||[text];return (sents[0]||text).trim();}
    const v=settings.verbosity||"normal";
-   if(m.user||m.pri<=1||m.cat==="achieve"||m.cat==="approach"||v==="normal"||v==="full")return text;
+   /* (15.5) Листание самого игрока (nav) и строки книги (read) — целиком при любой подробности: «краткая» и
+      «минимальная» сокращают речь мира, а не то, на что игрок перешёл сам; прежде строка книги обрезалась до
+      одной-двух фраз, и казалось, что книга открылась не полностью. */
+   if(m.user||m.nav||m.cat==="read"||m.pri<=1||m.cat==="achieve"||m.cat==="approach"||v==="normal"||v==="full")return text;
    const sents=text.match(/[^.!?…]+[.!?…]*/g)||[text];
    if(v==="min")return (sents[0]||text).trim();
    if(v==="brief")return sents.slice(0,2).map(x=>x.trim()).join(" ").trim();
@@ -4783,6 +4836,10 @@ const Speech={voice:null,keepAlive:null,
    if(m.pri<cur.pri){this._cut(cur,"CANCELLED");this._pushFront(m);this._pump();return m;}
    if(m.pri>=2&&cur.pri<=1){if(m.interrupt)this._dropQueued(2,"CANCELLED");this._push(m);return m;}
    if(m.interrupt&&m.pri>=2&&cur.pri>=2){this._cut(cur,"CANCELLED");this._dropQueued(2,"CANCELLED");this._pushFront(m);this._pump();return m;}
+   /* (15.5) Книга главнее речи окон: страница, которую игрок открыл, обрывает имя закрытого или открытого окна
+      и «выбрано», а не ждёт их конца (тревогу, итог дела и вести — не трогает). */
+   if(m.interrupt&&m.cat==="read"&&cur.pri>=1&&!cur.keep&&!cur.herald&&(cur.cat==="ui"||cur.cat==="menu"||cur.nav)){
+    this._cut(cur,"CANCELLED");this._dropQueued(2,"CANCELLED");this._pushFront(m);this._pump();return m;}
    if(m.interrupt&&m.pri<=1){this._dropQueued(2,"CANCELLED");this._push(m);return m;}
    this._push(m);return m;}
   this._pushFront(m);this._pump();return m;},
@@ -4910,8 +4967,10 @@ const Speech={voice:null,keepAlive:null,
    /* Родной синтезатор приложения после частых обрывов тоже иногда
       проглатывает фразу: молчит — идём дальше, не ждём четыре секунды. */
    else if(a&&a.name==="native")говорит=safeFn(()=>!!a.speaking(),true);
+   /* (15.5) Голос Gemini — по тому, звучит ли запись или синтезатор: застрявший кусок снимается за полторы секунды. */
+   else if(a&&a.name==="gemini"&&a.звучит)говорит=safeFn(()=>!!a.звучит(),true);
    тихо=говорит?0:тихо+1;
-   const умолк=a&&(a.name==="web"||a.name==="native")&&тихо>=2&&прошло>1500;
+   const умолк=a&&(a.name==="web"||a.name==="native"||(a.name==="gemini"&&!!a.звучит))&&тихо>=2&&прошло>1500;
    if(!умолк&&прошло<=предел)return;
    /* Синтезатор молчит, а начала фразы не было — фраза потеряна: подать снова. */
    if(ещё&&ещё())return;
@@ -18942,7 +19001,8 @@ const Spatial={
    return Math.min(4,walls+doors*0.4+floors*1.5);
   }catch(_){return 0;}},
  lastOccl:0,
- at(path,dx,dy,{dz=0,gain=1,maxSec=3,roll=1.1,kind="fx",prio=null,occl=null,rate=0,voice=false,wetK=1,conv=null}={}){
+ /* (15.5) lp — свой срез верха, Гц (воздух у дальнего звука пролога); за преградой берётся меньший из двух. */
+ at(path,dx,dy,{dz=0,gain=1,maxSec=3,roll=1.1,kind="fx",prio=null,occl=null,rate=0,voice=false,wetK=1,conv=null,lp=0}={}){
   if(!this.on()||!path)return false;
   /* Расстояние теперь объёмное: поднявшись на четыре клетки, игрок и вправду
      удалился от земли на четыре клетки, и дальние наземные голоса до него уже
@@ -18967,7 +19027,7 @@ const Spatial={
    const мокро=(прегр>0?Math.min(1.6,1+прегр*0.3):1)*(voice?VOICE_MIX.wet:1)*Math.max(0,Math.min(4,Number(wetK)||1));
    /* (15.0) Звук — через канал единой звуковой среды: плеер и цепочка движка не создаются заново. */
    const h=ЗвукСреда.играть(Bank.url(path),{путь:"pan",dx,dy,dz,roll:voice?Math.min(roll,VOICE_MIX.roll):roll,voice:!!voice,
-    lp:прегр>0?Math.max(300,9000/(1+прегр*2.2)):0,gain:громк,dry:"room",wet:мокро,conv:conv||null,rate:(rate&&rate!==1)?rate:1});
+    lp:(()=>{const a=прегр>0?Math.max(300,9000/(1+прегр*2.2)):0,b=Number(lp)>0?Number(lp):0;return a&&b?Math.min(a,b):(a||b);})(),gain:громк,dry:"room",wet:мокро,conv:conv||null,rate:(rate&&rate!==1)?rate:1});
    if(!h)return false;
    const el=h.el;
    el.addEventListener("error",()=>{if(el.__stopped)return;Bank.fails++;
@@ -30143,14 +30203,18 @@ function openReading(n,первый,вид){
  строки.forEach((t,i)=>{
   const b=document.createElement("button");b.type="button";b.className="item";
   b.textContent=t;b.dataset.speak=t;
-  b.addEventListener("click",()=>narrate(t));
+  b.addEventListener("click",()=>narrate(t,{interrupt:true,cat:"read",user:true}));
   body.appendChild(b);});
  const соб=knowRead();
  const пред=document.getElementById("readPrev"),след=document.getElementById("readNext");
  const i=соб.indexOf(n);
  пред.disabled=!(i>0);след.disabled=!(i>=0&&i<соб.length-1);
- if(m.hidden)openModal("modal-read");
- const первыйПункт=body.querySelector("button");if(первыйПункт)первыйПункт.focus();
+ if(m.hidden)openModal("modal-read",{тихо:true});
+ /* (15.5) Фокус — молча: страницу читает сама книга, строка под фокусом не начинает звучать, чтобы её тут же
+    оборвали. Записанные куски страницы плеер открывает сразу — к началу чтения они готовы. */
+ const первыйПункт=body.querySelector("button");if(первыйПункт){silentFocus=true;try{первыйПункт.focus();}catch(_){}silentFocus=false;}
+ const текстКниги=`${/свиток|связка/.test(какая)?"Свиток развёрнут":первый?"Книга раскрыта":"Страница открыта"}. ${родКниги.n[0].toUpperCase()+родКниги.n.slice(1)}: ${e.title}. ${e.body.join(" ")}`;
+ safeFn(()=>Speech.gvWarmText(текстКниги,4));
  safeFn(()=>resetCursor());
  safeFn(()=>bookSound(первый?"read":"open",{вид:какая}));
  const что=/свиток|связка/.test(какая)?"Свиток развёрнут":первый?"Книга раскрыта":"Страница открыта";
@@ -30158,7 +30222,7 @@ function openReading(n,первый,вид){
  /* Книгу успели закрыть или перелистнуть — запоздалый текст уже не звучит
     и не обрывает чужую речь. */
  setTimeout(()=>safeFn(()=>{if(m.hidden||readIndex!==n)return;
-  narrate(`${что}. ${родКниги.n[0].toUpperCase()+родКниги.n.slice(1)}: ${e.title}. ${e.body.join(" ")}`,{interrupt:true,pri:1,cat:"read"});}),первый?900:650);
+  narrate(текстКниги,{interrupt:true,pri:1,cat:"read"});}),первый?450:300);
  return true;}
 function readingStep(d){
  const соб=knowRead();const i=соб.indexOf(readIndex);
@@ -67168,7 +67232,7 @@ const MODAL_PRERENDER={"modal-quests":()=>renderQuests(),"modal-journal":()=>ren
 function modalSummary(id){
  if(id==="modal-quests"){const о=openQuests().length;return `Незакрытых дел ${о} из ${QUEST_LIMIT}.`;}
  return "";}
-function openModal(id){const m=document.getElementById(id);if(!m||!m.hidden)return;
+function openModal(id,о){const m=document.getElementById(id);if(!m||!m.hidden)return;
  safeFn(()=>{const f=MODAL_PRERENDER[id];if(f)f();});
  lastFocused=document.activeElement;m.hidden=false;modalStack.push(m);
  safeFn(()=>modalOpenReset(id));
@@ -67185,6 +67249,9 @@ function openModal(id){const m=document.getElementById(id);if(!m||!m.hidden)retu
  /* Число пунктов здесь не называется намеренно: содержимое многих окон
     рисуется уже ПОСЛЕ openModal, и счёт вышел бы то верным, то нулевым. */
  safeFn(()=>{
+  /* (15.5) Окно, которое представит себя само (книга читает «Книга раскрыта. …»), себя не называет: иначе его
+     имя начинало звучать — грузило записи и синтезатор — и тут же обрывалось текстом окна. */
+  if(о&&о.тихо)return;
   const имя=modalTitleText(m);
   const пункт=cb?((cb.dataset&&cb.dataset.speak)||(cb.textContent||"").trim().replace(/\s+/g," ")):"";
   if(!имя&&!пункт)return;
@@ -84251,6 +84318,12 @@ safeFn(()=>{setInterval(()=>safeFn(()=>Гул155.тик()),350);});
    битвы (pf_battle_cries), клич войска на «гнёзда» (pf_crowd_warcry). Бой
    дышит: под словами рассказа слои и рой тише, в паузах — в полную силу
    (паузы речи — PROLOG_PAUSE).
+   Просьба о первой части: «больше шумов города, ярче пролистывание
+   страниц, музыка — её как таковой нет, поток машин, дождь и гром». У части
+   может быть своя музыка (музыка:[роль, громкость, доли]): у первой — нуар
+   под дождь, на «тишина» почти в ноль; город под моросью — поток машин,
+   гудки, проезды, прохожий под зонтом, метро; после «грозой» — гром, ливень
+   и дождь за окном пустой комнаты.
    ════════════════════════════════════════════════════════════════════════ */
 /* время слов в записях пролога (с): s<сцена>_<строка> → длина d и начало каждого слова w */
 const PROLOG_WT={"s1_1":{"d":14.35,"w":[0.32,1.28,1.92,3.04,3.2,3.64,3.96,4.6,4.92,5.76,6.28,7.72,8.12,9.28,10.04,10.56,12.04,12.84,13.36]},"s1_2":{"d":12.12,"w":[0.2,0.4,1.28,1.44,1.92,3.32,3.48,4.12,4.44,4.92,5.36,6.28,6.64,6.8,7.28,7.68,7.88,8.8,8.92,9.08,10.32,10.96,11.44]},"s1_3":{"d":16.71,"w":[0.24,0.28,1.28,2.04,2.28,3.52,3.8,4.4,4.76,5.08,5.4,5.6,6.6,7.28,7.64,7.8,8.36,8.72,9.56,10.32,10.72,11.92,12.2,12.44,13.16,13.88,14.2,14.4,15.12,15.28,15.84]},"s2_1":{"d":14.71,"w":[0.15,0.44,0.88,1.32,2.48,2.72,3.68,4.44,6.12,7.0,7.16,7.44,8.32,9.8,9.92,10.24,11.6,12.52,13.56]},"s2_2":{"d":22.23,"w":[0.16,0.96,1.28,1.52,2.28,3.0,3.16,4.32,4.6,5.56,6.32,6.44,7.0,8.6,9.0,9.48,11.0,11.6,12.84,13.32,14.12,14.96,16.2,16.52,17.0,17.36,18.84,19.48,20.0,21.16]},"s2_3":{"d":5.61,"w":[0.32,0.84,1.52,1.92,3.2,3.4,3.84,4.56]},"s2_4":{"d":8.39,"w":[0.28,1.16,1.72,2.08,2.24,3.28,4.28,5.4,5.6,6.52,6.8,7.44,7.72]},"s2_5":{"d":18.78,"w":[0.2,0.36,0.68,1.16,1.84,3.4,4.12,4.76,5.2,5.6,7.52,7.92,9.36,10.84,11.24,11.56,11.8,12.64,13.72,14.52,14.96,15.24,16.04,17.28,18.08]},"s2_6":{"d":7.38,"w":[0.2,0.4,0.6,1.88,2.24,3.88,4.0,4.16,4.44,4.8,5.48,6.28,6.52]},"s3_1":{"d":16.05,"w":[0.32,1.04,1.24,2.56,3.12,3.84,5.48,5.8,5.96,6.6,7.64,8.24,8.92,9.2,9.84,10.92,11.64,12.16,12.6,12.8,13.08,13.76,14.08,14.88,15.24,15.4]},"s3_2":{"d":17.7,"w":[0.16,0.32,1.2,2.6,4.4,5.04,6.24,7.04,7.48,7.64,8.72,8.88,9.36,9.6,10.4,10.92,11.48,11.8,13.36,13.92,14.68,15.08,15.6,16.56,16.76]},"s4_1":{"d":20.63,"w":[0.24,1.64,1.92,3.12,4.32,5.2,6.72,7.48,8.08,8.56,9.24,10.4,10.88,11.04,12.28,12.52,13.28,13.96,14.8,15.36,15.84,16.96,17.96,18.32,18.8,20.0]},"s4_2":{"d":13.67,"w":[0.36,0.56,1.48,1.72,2.44,4.2,4.8,4.96,6.12,6.56,6.84,7.4,7.6,8.64,9.2,9.92,10.08,11.04,11.88,12.16,12.84]},"s4_3":{"d":3.62,"w":[0.28,0.6,1.12,1.92,2.16,2.64]},"s4_4":{"d":16.56,"w":[0.16,1.24,2.84,3.16,3.8,4.48,5.0,5.84,7.08,7.24,7.52,7.8,8.08,8.32,9.52,10.56,11.56,12.76,13.8,14.16,14.8,15.68]},"s5_1":{"d":15.91,"w":[0.2,0.36,0.52,1.8,2.0,2.32,2.72,3.48,3.84,4.36,4.64,6.32,6.48,6.8,7.48,7.92,8.6,9.52,10.0,10.12,11.08,11.84,12.8,12.96,13.68,14.16,14.48,15.08,15.24]},"s5_2":{"d":4.72,"w":[0.2,0.44,1.68,2.08,2.36,3.08,3.64,3.88]},"s5_3":{"d":7.03,"w":[0.2,0.68,0.88,1.28,2.0,3.84,4.44,5.48,5.96]},"s5_4":{"d":12.0,"w":[0.2,0.52,1.4,1.6,2.2,3.4,4.2,4.88,5.0,5.76,6.56,7.4,7.4,8.64,9.28,9.44,10.48,11.4]},"s5_5":{"d":1.24,"w":[0.28,0.52]},"s5_6":{"d":13.53,"w":[0.24,0.72,2.12,2.64,3.16,4.76,4.92,5.44,5.68,6.8,7.88,9.08,9.24,9.56,10.16,10.28,10.6,11.44,11.68,12.44,12.64]},"s6_1":{"d":17.48,"w":[0.28,1.0,2.24,2.56,3.16,3.72,5.2,6.2,6.48,7.92,8.44,9.4,9.92,10.84,11.04,11.44,12.0,13.04,13.4,14.28,14.48,14.72,15.4,16.68]},"s6_2":{"d":20.64,"w":[0.2,0.24,1.36,2.04,2.28,3.64,4.04,4.24,4.88,5.24,6.4,6.64,7.24,9.24,9.64,10.0,12.32,12.48,12.96,13.68,14.04,15.04,15.52,16.44,17.0,18.2,18.68,19.88]},"s7_1":{"d":13.18,"w":[0.2,0.36,0.68,1.68,1.92,3.0,4.28,4.72,5.92,6.56,7.32,7.6,9.2,9.8,9.96,10.96,11.84,12.2]},"s7_2":{"d":6.62,"w":[0.2,0.36,0.56,1.0,2.0,2.2,2.44,3.04,4.08,5.28]},"s7_3":{"d":12.99,"w":[0.28,1.0,2.2,3.0,3.52,3.76,4.08,5.04,5.24,5.68,6.08,6.72,7.44,7.64,8.4,9.28,9.84,10.4,10.6,11.6,12.12,12.28,12.48]},"s8_1":{"d":14.9,"w":[0.16,0.36,1.48,1.68,2.16,3.4,4.04,4.52,4.68,5.84,6.2,6.6,7.16,8.28,8.56,9.4,10.28,11.04,11.2,11.48,11.64,11.8,12.56,13.92]},"s8_2":{"d":5.67,"w":[0.16,0.4,0.92,1.28,1.8,3.32,3.56,4.16,4.68,4.92]},"s8_3":{"d":14.35,"w":[0.32,0.84,0.96,1.76,2.2,2.36,3.28,3.52,4.68,4.88,5.52,6.36,6.48,7.96,8.52,8.96,9.68,11.6,12.04,12.92,13.16,13.8]},"s8_4":{"d":2.29,"w":[0.36,1.4]}};
@@ -84370,12 +84443,12 @@ const PROLOG_SFX=[
    ["pf_battle_clash","2:резали-0.2","4:устояли+0.6",0.5,0.8,3.0,0.6],["siege_fire","2:резали","4:устояли+1.0",0.25,1.0,3.0],
    ["sky_snow","2:кровь","4:история",0.25,2.0,3.0]],
   /* поход: шаги по щебню и снегу, телеги, кони, осыпь — рядом и вдали, пока племена идут к перевалам */
-  поход:{на:"1:тридцать",до:"2:встретили",шаг:[0.14,0.34],g:[0.2,0.46],подРечью:0.75,
+  поход:{на:"1:тридцать",до:"2:встретили",шаг:[0.14,0.34],g:[0.2,0.46],подРечью:0.75,кругом:0.6,склон:0.2,
    пул:[["tread_gravel",6],["tread_snow",4],["lug_step_stone",3],["mtg_step_snow",3],["lug_step_snow",2],["mtg_cart",2],["caravan",2],
     ["zv_neigh",1],["mtg_rubble",2],["gr_spot_dust",1],["sky_gust",1]]},
   /* битва: оружие всех родов, кровь, тела, крики и предсмертные крики разных голосов, драконы — и сшибки:
      замах, парирование, удар по плоти, крик — в одной точке, одна за другой */
-  бой:{на:"2:резали",до:"4:устояли",шаг:[0.14,0.36],g:[0.15,0.36],подРечью:0.6,сшибкаДоля:0.26,кучка:0.3,
+  бой:{на:"2:резали",до:"4:устояли",шаг:[0.14,0.36],g:[0.15,0.36],подРечью:0.6,сшибкаДоля:0.26,кучка:0.3,кругом:0.35,склон:0.25,
    пул:[["w_sword_swing_t2",2],["w_sword_swing_t3",1],["w_blade_parry_t2",3],["w_blade_parry_t3",2],["w_blade_parry_t4",1],["w_v_ring_parry",2],
     ["w_v_heavy_parry",2],["blade_clash",3],["stk_clang",1],["w_sword_armor_t3",2],["w_heavy_armor_t3",2],["blade_armor",2],["lug_metal",1],
     ["lug_clank",1],["w_heavy_swing_t2",1],["w_heavy_swing_t3",1],["blade_swing_blunt",1],["w_v_heavy_hit",2],["blade_blunt",2],["lug_impact",1],
@@ -84501,6 +84574,111 @@ const ПрологЧасы={
    t=wt&&wt.w&&wt.w[idx]!=null?wt.w[idx]:d*idx/Math.max(1,ws.length);}
   return {k,t:Math.max(0,t+сдвиг),d};}};
 
+/* ── (15.5) ШИРЬ, ГЛУБИНА И ВЫСОТА ПРОЛОГА ──
+   Просьба игрока: «расширь стереопанораму пролога, добавь глубину звука и высоту звука». Было: звуки частей
+   стояли тесной дугой впереди — из 208 точечных звуков 82 ровно по центру, сбоку два, сзади 35; высоты не было
+   ни у одного; рой боя и похода — только спереди; петли фона — как записаны, а записаны многие узко (у гор
+   связь каналов 0,81, у города 0,69) или в один канал (птицы, листва, костёр осады, колёса, гул руин).
+   Стало:
+   • угол — каждый звук части разведён по углу в 1,6 раза (до ±170°: сбоку и за спиной), звуки ровно по
+     центру разошлись на 18–40° — каждый в свою, всегда одну и ту же сторону; не трогается то, что случается
+     с самим слушателем (шёпот у уха, сердце, переход, ион, портал). Рой боя и похода — во всю ширь спереди,
+     а доля «кругом» — сбоку и за спиной: войско идёт вокруг слушателя, сеча — со всех сторон;
+   • глубина — дальнее отодвинуто дальше (расстояние за первой клеткой — в полтора раза), у дальнего воздух
+     съедает верх (с полутора клеток: 20 кГц → 4,5 кГц на двенадцати), и чем дальше звук, тем больше в нём
+     отзвука места: близкое сухое, дальнее тонет в эхе. У каждой части своя акустика — ночная улица, гулкая
+     пустота первого звука, зал руин, горы перевала, вода у брода, город, лес пробуждения;
+   • высота — гром, птицы, драконы, колокола на башнях, стрелы, камни и осыпь со склонов звучат сверху,
+     подземный гул, землетрясение и провал портала — снизу, шаги — под ногами; бойцы на склонах над тропой —
+     выше уха. Восьмое число звука части задаёт высоту явно;
+   • петли фона и слоёв — через ширитель середины и сторон (M/S): сторона усилена тем больше, чем уже запись,
+     к одноканальной добавлена развязанная сторона (середина через задержку 13 мс без баса) — сумма каналов
+     прежняя, громкость уравнена. У «небесных» петель (морось, дождь, снег, пепел, листва, птицы, ветер на
+     высоте) — приподнята полоса около 8 кГц: по ней ухо слышит звук сверху. Стерео-звуки «плоско» (проезд
+     машины, гром, клич войска) — через тот же ширитель. Без объёмного звука (настройка, файл://) всё звучит
+     по-прежнему. */
+const ПРОЛОГ_АКУСТИКА=["city","temple","castle","mountain","water","city","city","forest"];
+/* высота звука в клетках над ухом (минус — ниже уха) */
+const ПРОЛОГ_ВЫСОТА={wyrm_roar:5,wyrm_wing:4.5,wyrm_dark:4.5,wyrm_pain:4,sky_thunder:6,stk_thunder:6,stk_birds:2.5,wild_owl:2.2,
+ wild_raven:2.6,crow:2.6,sky_gust:2,sky_wave:1.2,sky_leaves:2.4,bell_small:1.5,bell_big:3,uh_bell:2.5,gr_spot_bell:2,arc_chimes:1.6,
+ gr_spot_chime:1.2,magic_shimmer:1.5,gr_spot_rise:1,arc_rise:1.2,omen:1.5,w_arrow_fly_t3:1.8,w_arrow_fly_t0:1.8,battle_arrowfly:2,
+ w_bow_shoot_t1:0.8,w_xbow_shoot:0.6,stk_horn:1.4,stk_blast:1.5,mtg_lava:0.8,mtg_rubble:1.4,gr_spot_dust:1,stk_crash:0.6,ad_temple:1,
+ temple:1,spell_ice:1,zv_neigh:0.4,
+ oc_earthquake:-2.5,gr_spot_rumble:-2,deep_portal:-2.2,tread_gravel:-0.9,tread_snow:-0.9,lug_step_stone:-0.9,mtg_step_snow:-0.9,
+ lug_step_snow:-0.9,tread_grass:-0.9,step_water:-0.9,horse_step:-0.7,lug_land:-0.6,lug_thud:-0.4,hit_ground:-0.7,throng_die_m:-0.3,
+ throng_die_f:-0.3,blade_die:-0.3,stk_splash:-0.7,ship_creak:-0.4,oc_rustle:-0.5};
+/* что случается с самим слушателем — не разводится по сторонам */
+const ПРОЛОГ_ЦЕНТР=/^(gr_spot_whisper|gr_transit|stk_portal|deep_portal|hero_heart|es_ion|gr_spot_breath)$/;
+function прологВысота(r,склон){return ПРОЛОГ_ВЫСОТА[r]!=null?ПРОЛОГ_ВЫСОТА[r]:(Number(склон)||0);}
+/* место звука роя: впереди во всю ширь (±80°), доля «кругом» — сбоку и за спиной (80–175°); д — 0 близко, 1 далеко */
+function прологМестоРоя(b,д){const кругом=Number(b.кругом)||0;
+ const a=Math.random()<кругом?(Math.random()<0.5?-1:1)*(80+Math.random()*95):(Math.random()*2-1)*80;
+ const r=1.3+(Number(д)||0)*5.4;return [r*Math.sin(a*Math.PI/180),-r*Math.cos(a*Math.PI/180)];}
+const ПрологШирь={узлы:new WeakMap(),место:null,
+ /* петли: [сторона, развязка, высота дБ на 8 кГц] — по тому, насколько узко записана петля */
+ ПЕТЛИ:{pf_city_night:[2.1,0.15,0],pf_traffic_wet:[2.1,0.15,0],gr_amb_artificial:[2.1,0.15,0],wild_wind:[2.1,0.15,1.5],
+  pf_war_drums:[1.9,0.1,0],pf_pass_march:[2,0.12,0],amb_mountain:[2.3,0.18,1.5],oc_rain:[2.1,0.15,2],pf_city_rain:[2,0.12,1.5],
+  pf_melee_mass:[1.7,0.08,0],pf_battle_cries:[1.7,0.08,0],gr_amb_hidden:[1.7,0.08,0],pf_battle_clash:[1.75,0.08,0],
+  pf_ashfall:[1.7,0.08,3],sky_river:[1.7,0.08,0],bed_forge:[1.7,0.08,0],bed_port:[1.7,0.08,0],gr_amb_border:[1.7,0.08,0],
+  amb_wind:[1.7,0.08,1.5],wild_fire:[1.6,0.06,0],
+  bed_gran:[1.35,0,0],pf_rain_street:[1.4,0,2],pf_battle_roar:[1.4,0,0],gr_amb_dead:[1.35,0,0],bed_tavern:[1.3,0,0],
+  bed_market:[1.3,0,0],bed_camp_pilg:[1.3,0,0],
+  bed_temple:[1,0,0],sky_snow:[1,0,3],pf_rain_room:[1,0,0],pf_drizzle:[1.05,0,2.5],pf_lamp_buzz:[1,0,0],
+  sv2_ruin_hum:[1,0.5,0],siege_fire:[1,0.45,0],oc_wheels:[1,0.4,0],stk_birds:[1,0.5,3],sky_leaves:[1,0.5,3]},
+ /* стерео-звуки «плоско» */
+ ПЛОСКО:{pf_car_wet:[1.7,0,0],pf_bus_pass:[1.7,0,0],pf_moto_wet:[1.7,0,0],pf_horns:[1.6,0,0],pf_car_alarm_far:[1.6,0,0],
+  pf_umbrella_pass:[1.6,0,0],pf_thunder_near:[1.6,0,2],pf_thunder_far:[1.7,0,2],pf_crowd_warcry:[1.7,0,0],pf_tinnitus_rise:[1,0,0],
+  pf_lamp_flicker:[1,0,0]},
+ можно(){return safeFn(()=>Spatial.on()&&!!AE.ctx&&AE.ctx.state==="running",false);},
+ параметры(role,flat){const p=(flat?this.ПЛОСКО:this.ПЕТЛИ)[role]||(flat?[1.45,0,0]:[1.5,0.06,0]);const [w,k,h]=p;
+  if(w<=1.001&&!(k>0)&&!h)return null;
+  /* доля сторон в записи по её узости — для уравнивания громкости */
+  const σ=w>=1.9?0.2:w>=1.55?0.3:0.38;return {w,k,h,out:1/Math.sqrt(1+(w*w-1)*σ+0.7*k*k)};},
+ /* Плеер — через ширитель: L = M + S, R = M − S, где M = (L+R)/2, S = w·(L−R)/2 + k·ВЧ(задержка(M)). */
+ подключить(el,role,flat){
+  if(!el||this.узлы.has(el)||!this.можно())return false;const п=this.параметры(role,flat);if(!п)return false;
+  const ctx=AE.ctx;
+  try{const G=v=>{const g=ctx.createGain();g.gain.value=v;return g;};
+   const src=ctx.createMediaElementSource(el);
+   /* одноканальная запись раскладывается в оба канала поровну */
+   const вход=G(1);вход.channelCount=2;вход.channelCountMode="explicit";вход.channelInterpretation="speakers";
+   const раз=ctx.createChannelSplitter(2),слив=ctx.createChannelMerger(2);
+   const M=G(1),S=G(1);
+   src.connect(вход);вход.connect(раз);
+   раз.connect(G(0.5),0).connect(M);раз.connect(G(0.5),1).connect(M);
+   раз.connect(G(0.5*п.w),0).connect(S);раз.connect(G(-0.5*п.w),1).connect(S);
+   if(п.k>0){const d=ctx.createDelay(0.05);d.delayTime.value=0.013;const hp=ctx.createBiquadFilter();hp.type="highpass";hp.frequency.value=350;
+    M.connect(d);d.connect(hp);hp.connect(G(п.k)).connect(S);}
+   M.connect(G(п.out)).connect(слив,0,0);M.connect(G(п.out)).connect(слив,0,1);
+   S.connect(G(п.out)).connect(слив,0,0);S.connect(G(-п.out)).connect(слив,0,1);
+   let выход=слив;
+   if(п.h){const eq=ctx.createBiquadFilter();eq.type="peaking";eq.frequency.value=8000;eq.Q.value=1;eq.gain.value=п.h;слив.connect(eq);выход=eq;}
+   выход.connect(ctx.destination);
+   this.узлы.set(el,{src,выход});return true;
+  }catch(_){return false;}},
+ отключить(el){const n=el&&this.узлы.get(el);if(!n)return;this.узлы.delete(el);try{n.src.disconnect();}catch(_){}try{n.выход.disconnect();}catch(_){}},
+ /* петля пролога: нынешний плеер и тот, что вступит на шве бесшовной петли (el2) */
+ петля(key,role){const rec=Bank.loops.get(key);if(!rec||!rec.el)return;this.подключить(rec.el,role,false);
+  if(rec.__ширь)return;rec.__ширь=true;const self=this;let e2=rec.el2||null;
+  try{Object.defineProperty(rec,"el2",{configurable:true,enumerable:true,get(){return e2;},
+   set(v){e2=v;if(v)self.подключить(v,rec.role||role,false);}});}catch(_){}},
+ /* точка звука части: угол шире, ровно центральное — в свою сторону, дальнее — дальше, высота по роду */
+ точка(role,dx,dy,высота,якорь){
+  let x=Number(dx)||0,y=Number(dy)||0;const r=Math.hypot(x,y);
+  const dz=высота!=null&&isFinite(Number(высота))?Number(высота):прологВысота(role,0);
+  if(r<0.25||ПРОЛОГ_ЦЕНТР.test(role))return {dx:x,dy:y,dz};
+  let a=Math.atan2(x,-y)*180/Math.PI;
+  if(Math.abs(a)<4){let h=0;const t=role+"|"+(якорь||"");for(let i=0;i<t.length;i++)h=(h*31+t.charCodeAt(i))>>>0;
+   const q=(h%1000)/1000;a=(q<0.5?-1:1)*(18+44*Math.abs(q-0.5));}
+  else a=Math.sign(a)*Math.min(170,Math.abs(a)*1.6);
+  const R=Math.min(11,r<=1?r:1+(r-1)*1.5);
+  return {dx:R*Math.sin(a*Math.PI/180),dy:-R*Math.cos(a*Math.PI/180),dz};},
+ /* глубина: воздух (срез верха) и доля отзвука по расстоянию */
+ глубина(role,dx,dy,dz){const h=dz!=null&&isFinite(Number(dz))?Number(dz):прологВысота(role,0);
+  const d=Math.hypot(Number(dx)||0,Number(dy)||0,h*0.8);
+  return {dz:h,воздух:d>1.5?Math.max(4500,20000/(1+0.16*(d-1.5))):0,отзвук:Math.max(0.55,Math.min(3,0.55+0.32*d))};},
+ акустика(i){const k=ПРОЛОГ_АКУСТИКА[i];if(!k||typeof Room==="undefined")return;this.место=k;safeFn(()=>Room.set(k,true));}};
+
 /* ── живое поле: удары, крики, стрелы и рёв то тут, то там (бой); шаги, телеги и осыпь (поход) ──
    Звук — со случайной стороны и расстояния: ближние громче и ярче. Сшибка — короткий ряд звуков в одной
    точке: замах, парирование, удар по плоти, крик. */
@@ -84509,18 +84687,20 @@ function прологРой(ход,b,флаг){
  if(!весь.length)return;
  const сшибки=(b.сшибки||[]).filter(c=>c.every(([r])=>Bank.has(r)));
  const тик=()=>{if(ход!==Prologue.ход||!Prologue[флаг])return;
-  const далеко=Math.random();const dx=(Math.random()*2-1)*(1.6+далеко*3.8),dy=-0.6-далеко*5.2;
+  const далеко=Math.random();const [dx,dy]=прологМестоРоя(b,далеко);
+  /* боец на склоне над тропой — выше уха; у стрел, камней и драконов высота своя (ПРОЛОГ_ВЫСОТА) */
+  const склон=Math.random()<(Number(b.склон)||0)?0.8+Math.random()*1.4:0;
   /* под словами рассказа рой тише (подРечью), в паузах — в полную силу: бой накатывает между фразами */
   const пр=b.подРечью&&safeFn(()=>Prologue.говорит(),false)?b.подРечью:1;
   const g=(b.g[0]+(b.g[1]-b.g[0])*(1-далеко)*(0.55+0.45*Math.random()))*пр;
   if(сшибки.length&&Math.random()<(b.сшибкаДоля||0)){
    const c=сшибки[Math.floor(Math.random()*сшибки.length)];
-   c.forEach(([r,t])=>Prologue.timers.push(setTimeout(()=>{if(ход===Prologue.ход&&Prologue[флаг])Prologue.звук(r,dx+(Math.random()-0.5)*0.4,dy,g,/^wyrm_/.test(r)?3:2);},t*1000)));}
-  else{const r=весь[Math.floor(Math.random()*весь.length)];Prologue.звук(r,dx,dy,g,/^wyrm_|^mtg_cart|^caravan/.test(r)?3:2);}
+   c.forEach(([r,t])=>Prologue.timers.push(setTimeout(()=>{if(ход===Prologue.ход&&Prologue[флаг])Prologue.звук(r,dx+(Math.random()-0.5)*0.4,dy,g,/^wyrm_/.test(r)?3:2,прологВысота(r,склон));},t*1000)));}
+  else{const r=весь[Math.floor(Math.random()*весь.length)];Prologue.звук(r,dx,dy,g,/^wyrm_|^mtg_cart|^caravan/.test(r)?3:2,прологВысота(r,склон));}
   /* кучка: в тот же миг — ещё удар или крик в другом месте поля: бьются не двое, а все разом */
-  if(Math.random()<(b.кучка||0)){const д=Math.random(),x2=(Math.random()*2-1)*(1.6+д*3.8),y2=-0.6-д*5.2;
+  if(Math.random()<(b.кучка||0)){const д=Math.random(),[x2,y2]=прологМестоРоя(b,д),с2=Math.random()<(Number(b.склон)||0)?0.8+Math.random()*1.4:0;
    const g2=(b.g[0]+(b.g[1]-b.g[0])*(1-д)*(0.55+0.45*Math.random()))*пр,r2=весь[Math.floor(Math.random()*весь.length)];
-   Prologue.timers.push(setTimeout(()=>{if(ход===Prologue.ход&&Prologue[флаг])Prologue.звук(r2,x2,y2,g2,/^wyrm_/.test(r2)?3:2);},40+Math.random()*120));}
+   Prologue.timers.push(setTimeout(()=>{if(ход===Prologue.ход&&Prologue[флаг])Prologue.звук(r2,x2,y2,g2,/^wyrm_/.test(r2)?3:2,прологВысота(r2,с2));},40+Math.random()*120));}
   Prologue.timers.push(setTimeout(тик,(b.шаг[0]+(b.шаг[1]-b.шаг[0])*Math.random())*1000));};
  Prologue[флаг]=true;тик();}
 function прологБой(ход,b){прологРой(ход,b,"бой");}
@@ -84539,6 +84719,7 @@ function прологПодключить(){
   if(!Bank.enabled||!Bank.has(role))return;
   const k=Number(SOUND_BANK[role].g)>0?Number(SOUND_BANK[role].g):1;
   Bank.loop(key,role,{gain:вход>0?0.0001:g,kind:"ambient"});
+  safeFn(()=>ПрологШирь.петля(key,role));
   if(вход>0)this.плавно(key,g*k,вход);};
  Prologue.плавно=function(key,цель,сек,потом){
   const rec=Bank.loops.get(key);if(!rec){if(потом)потом();return;}
@@ -84589,11 +84770,27 @@ function прологПодключить(){
   Гул155.множ=function(кл){return кл==="рассказ"?1:м0.call(this,кл);};Гул155.рассказ=true;});
  Prologue.погасить=function(key,сек){this.плавно(key,0,Math.max(0.05,сек),()=>safeFn(()=>Bank.stop(key)));};
  /* Звук сцены: «плоско» — стереозапись с готовым движением (проезд машины) звучит как есть. */
- Prologue.звукЗ=function(z){const [,role,dx,dy,g,sec,ф]=z;
-  if(ф==="плоско"){try{if(Bank.enabled&&Bank.has(role)){const п=()=>Bank.play(role,{gain:g,maxSec:sec,flat:true});
+ Prologue.звукЗ=function(z){const [якорь,role,dx,dy,g,sec,ф,высота]=z;
+  if(ф==="плоско"){try{if(Bank.enabled&&Bank.has(role)){const п=()=>{const el=Bank.play(role,{gain:g,maxSec:sec,flat:true});
+    /* стерео сцены — через ширитель: проезд машины шире ходит из стороны в сторону, гром — шире и выше */
+    if(el&&el.tagName)safeFn(()=>ПрологШирь.подключить(el,role,true));return el;};
     /* стерео сцены (проезд машины, извержение, клич войска) — род «сцена»: в тесноте уступает не больше пятой части */
     return !!(typeof Гул155!=="undefined"?Гул155.в("сцена",п,null,[]):п());}}catch(_){}return false;}
-  return this.звук(role,dx,dy,g,sec);};
+  const м=ПрологШирь.точка(role,dx,dy,высота,String(якорь));
+  return this.звук(role,м.dx,м.dy,g,sec,м.dz);};
+ /* Звук сцены в точке: высота (dz), глубина — у дальнего воздух съедает верх, и чем дальше звук, тем больше
+    в нём отзвука места (у части своя акустика); близкое — сухое и ясное. */
+ Prologue.звук=function(role,dx,dy,gain,maxSec,dz){
+  try{if(!Bank.enabled||!Bank.has(role))return false;
+   if(Spatial.on()){const f=Vary.file(role);const м=ПрологШирь.глубина(role,dx,dy,dz);
+    if(f&&Spatial.at(f,dx,dy,{gain,maxSec,kind:"fx",occl:0,roll:0.6,dz:м.dz,lp:м.воздух,wetK:м.отзвук}))return true;}
+   return !!Bank.play(role,{gain,maxSec,flat:true});
+  }catch(_){return false;}};
+ /* Отыгравший плеер петли или стерео-звука отдаёт ширитель сразу. */
+ safeFn(()=>{if(Bank.__ширь)return;const k0=Bank.kill;Bank.kill=function(el){safeFn(()=>ПрологШирь.отключить(el));return k0.apply(this,arguments);};Bank.__ширь=true;});
+ /* Акустика части: пока идёт пролог, мир свою (Room.set без вида на каждом шаге) не ставит. */
+ safeFn(()=>{if(typeof Room==="undefined"||Room.прологом)return;const s0=Room.set;
+  Room.set=function(kind){if(!kind&&ПрологШирь.место&&safeFn(()=>Prologue.active(),false))return this.kind;return s0.apply(this,arguments);};Room.прологом=true;});
  const stop0=Prologue.stopFx.bind(Prologue);
  Prologue.stopFx=function(){this.бой=false;this.поход=false;
   [...Bank.loops.keys()].filter(k=>/^prolog/.test(k)).forEach(k=>safeFn(()=>Bank.stop(k)));
@@ -84602,7 +84799,7 @@ function прологПодключить(){
  Prologue.play=function(i,первая){
   i=Math.max(0,Math.min(PROLOGUE.length-1,i));
   this.stop();this.i=i;const ход=this.ход;
-  safeFn(()=>Speech.stop());безФонаМеста();
+  safeFn(()=>Speech.stop());безФонаМеста();safeFn(()=>ПрологШирь.акустика(i));
   this.render(i);
   const s=PROLOGUE[i];
   /* события сцены по строкам: k → [{t, f}] */
