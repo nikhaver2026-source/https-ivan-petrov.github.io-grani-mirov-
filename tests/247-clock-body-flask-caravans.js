@@ -29,6 +29,8 @@
       «Поехать с обозом» и «Ограбить»; поездка довозит до города назначения
       за живую плату; ограбление — розыск державы.
    9. Живая цена: ночью дороже, чем днём.
+   10. (16.0, долгая игра) Два обоза рядом: окно каждого всплывает один раз за шесть часов, а не на каждом шаге
+       (прежде помнилась одна последняя встреча, и ближним становился то один обоз, то другой).
    ═══════════════════════════════════════════════════════════════════════ */
 const {chromium}=require('playwright');
 const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(e!==undefined?' :: '+JSON.stringify(e):''));
@@ -137,6 +139,17 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
  /* ── 9 ── */
  const п9=await p.evaluate(()=>{const x=G.x,y=G.y;G.hour=13;const день=priceDyn(x,y);G.hour=23;const ночь=priceDyn(x,y);G.hour=13;return {день,ночь};});
  check('9. живая цена: ночью дороже, чем днём',п9.ночь>п9.день,п9);
+
+ /* ── 10 ── */
+ const п10=await p.evaluate(()=>{while(activeLayer())closeTopUI();const все=caravansNear(G.x,G.y,G.day,G.hour,400);
+  const A=все[0],B=A&&все.find(c=>c.rt.id!==A.rt.id);if(!B)return {нет:true,всего:все.length};
+  const h0=caravanHere,m0=meetCaravan;let k=0,встреч=0,прибытий=0;const ряд=[];
+  caravanHere=()=>{прибытий++;return k++%2?B:A;};meetCaravan=c=>{встреч++;ряд.push(c.rt.id===A.rt.id?"A":"B");return true;};
+  G.place=null;G.inCombat=false;G.hour=1;G.metCaravan=null;G.metCaravans={};
+  try{for(let i=0;i<12;i++){safeFn(()=>move(["N","E","S","W"][i%4]));while(activeLayer())closeTopUI();}}finally{caravanHere=h0;meetCaravan=m0;}
+  return {встреч,прибытий,ряд:ряд.join("")};});
+ check('10. два обоза рядом: окно каждого всплывает один раз за шесть часов, а не на каждом шаге',
+  !п10.нет&&п10.прибытий>=4&&п10.встреч===2&&п10.ряд.length===2&&new Set(п10.ряд).size===2,п10);
 
  check('Ошибок страницы нет',errors.length===0,errors.slice(0,3));
  await browser.close();

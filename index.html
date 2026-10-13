@@ -46334,11 +46334,17 @@ function arrive(dir){
  safeFn(()=>checkEscortArrival());
  /* Доска смотрителя: у чужого узла её принимают на месте, заказчик далеко. */
  safeFn(()=>checkPortalRunArrival());
- /* Встреча с обозом на дороге: он идёт своим ходом и сам попадается навстречу. */
+ /* Встреча с обозом на дороге: он идёт своим ходом и сам попадается навстречу.
+    (16.0) Встреча помнится у каждого обоза своя (раз в шесть часов). Прежде помнилась одна последняя, и у деревни,
+    где рядом идут два обоза, ближним становился то один, то другой — окно обоза всплывало на каждом шаге. */
  safeFn(()=>{const car=caravanHere();
   if(car&&!activeLayer()&&!G.inCombat){
    const key=car.rt.id+":"+G.day+":"+Math.floor(G.hour/6);
-   if(G.metCaravan!==key){G.metCaravan=key;stopRun();meetCaravan(car);}}});
+   if(!G.metCaravans||typeof G.metCaravans!=="object")G.metCaravans={};
+   const met=G.metCaravans;
+   if(G.metCaravan!==key&&met[car.rt.id]!==key){G.metCaravan=key;met[car.rt.id]=key;
+    for(const k of Object.keys(met))if(+String(met[k]).split(":").slice(-2)[0]<G.day-1)delete met[k];
+    stopRun();meetCaravan(car);}}});
  saveGame(true);}
 /* Прибытие охраны каравана в город назначения. */
 /* ════════════════════════════════════════════════════════════════════════
