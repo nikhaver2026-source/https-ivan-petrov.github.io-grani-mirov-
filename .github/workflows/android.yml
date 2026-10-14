@@ -1,6 +1,6 @@
-# Сборка приложения «Грань Миров» 16.5 для Android на серверах GitHub.
+# Сборка приложения «Грань Миров» 17.0 для Android на серверах GitHub.
 #
-# Полная сборка: один APK grani-mirov-16.5-full.apk, в нём вся игра —
+# Полная сборка: один APK grani-mirov-17.0-full.apk, в нём вся игра —
 # index.html и все записи sounds с голосовым пакетом Gemini, без сжатия и без
 # потерь, сколько бы она ни весила. Игрок ставит один файл — и всё уже внутри,
 # сеть не нужна, докачивать и ставить отдельно нечего.
@@ -164,20 +164,20 @@ jobs:
           python3 android/full-apk.py "$SMALL" sounds "$RUNNER_TEMP/full-unsigned.apk"
           rm -rf android/app/build
           # Подпись v1: у ZIP64 подписи v2/v3 система не принимает (см. шапку).
-          SIGN="jarsigner -J-Xmx8g -keystore $KS_FILE -storepass:env KS_PASS -keypass:env KS_KEY_PASS -digestalg SHA-256 -signedjar grani-mirov-16.5-full.apk"
+          SIGN="jarsigner -J-Xmx8g -keystore $KS_FILE -storepass:env KS_PASS -keypass:env KS_KEY_PASS -digestalg SHA-256 -signedjar grani-mirov-17.0-full.apk"
           $SIGN -sigalg SHA256withRSA "$RUNNER_TEMP/full-unsigned.apk" "$KS_ALIAS" || $SIGN "$RUNNER_TEMP/full-unsigned.apk" "$KS_ALIAS"
           rm -f "$RUNNER_TEMP/full-unsigned.apk"
-          ls -la grani-mirov-16.5-full.apk
-          jarsigner -J-Xmx8g -verify grani-mirov-16.5-full.apk | grep "jar verified"
+          ls -la grani-mirov-17.0-full.apk
+          jarsigner -J-Xmx8g -verify grani-mirov-17.0-full.apk | grep "jar verified"
           # Разбор тем же кодом ZIP, что у Android (libziparchive в aapt2).
-          "$ANDROID_HOME/build-tools/36.0.0/aapt2" dump badging grani-mirov-16.5-full.apk | head -4
+          "$ANDROID_HOME/build-tools/36.0.0/aapt2" dump badging grani-mirov-17.0-full.apk | head -4
           df -h /
 
       - name: Полный APK — на страницу сборки
         id: art
         uses: actions/upload-artifact@v7
         with:
-          path: grani-mirov-16.5-full.apk
+          path: grani-mirov-17.0-full.apk
           archive: false
           compression-level: 0
           retention-days: 90
@@ -199,7 +199,7 @@ jobs:
           disk-size: 16G
           emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
           disable-animations: true
-          script: bash android/install-check.sh grani-mirov-16.5-full.apk
+          script: bash android/install-check.sh grani-mirov-17.0-full.apk
 
       - name: Установка на Android 15
         uses: reactivecircus/android-emulator-runner@v2
@@ -210,7 +210,7 @@ jobs:
           disk-size: 16G
           emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
           disable-animations: true
-          script: bash android/install-check.sh grani-mirov-16.5-full.apk
+          script: bash android/install-check.sh grani-mirov-17.0-full.apk
 
       # Выпуск «android-latest» несёт ссылку на полный APK (он больше предела
       # выпуска в 2 ГиБ). Пробная сборка из ветки (Run workflow) выпуск не трогает.
@@ -223,5 +223,5 @@ jobs:
           FULL="${{ steps.art.outputs.artifact-url }}"
           [ -n "$FULL" ] || FULL="https://github.com/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
           gh release create android-latest --target "$GITHUB_SHA" \
-            --title "Грань Миров 16.5 для Android (сборка ${GITHUB_RUN_NUMBER})" \
-            --notes "Свежая сборка из main ($GITHUB_SHA); ${KEY_NOTE}. Полная сборка — один файл grani-mirov-16.5-full.apk: вся игра и все голоса внутри, без сжатия и без потерь, докачивать и ставить отдельно ничего не нужно. Прямая ссылка на файл (скачивание начинается сразу, нужен вход в GitHub) — $FULL. Нужен Android 12 или новее и свободное место примерно вдвое больше файла на время установки. Скачайте и откройте на телефоне, Android попросит разрешить установку из этого источника. Сеть игре не нужна."
+            --title "Грань Миров 17.0 для Android (сборка ${GITHUB_RUN_NUMBER})" \
+            --notes "Свежая сборка из main ($GITHUB_SHA); ${KEY_NOTE}. Полная сборка — один файл grani-mirov-17.0-full.apk: вся игра и все голоса внутри, без сжатия и без потерь, докачивать и ставить отдельно ничего не нужно. Прямая ссылка на файл (скачивание начинается сразу, нужен вход в GitHub) — $FULL. Нужен Android 12 или новее и свободное место примерно вдвое больше файла на время установки. Скачайте и откройте на телефоне, Android попросит разрешить установку из этого источника. Сеть игре не нужна."
