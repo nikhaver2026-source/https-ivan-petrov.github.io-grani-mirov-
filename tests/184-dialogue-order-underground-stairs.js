@@ -67,7 +67,8 @@ const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(e!==undefined?' :
    if(o>150)over.push(`${(a.src||"TTS:"+a.s).slice(0,40)} ⟂ ${(c.src||"TTS:"+c.s).slice(0,40)} : ${o} мс`);}
   return {гл,over};};
 
- const key=await page.evaluate(()=>getNPC(3000,3000,0,"Кузнец").key);
+ /* день: по реальным часам ночью житель спит и не отвечает — разговор проверяется днём */
+ const key=await page.evaluate(()=>{G.hour=12;return getNPC(3000,3000,0,"Кузнец").key;});
  /* ── 1. окно жителя ── */
  const окно=await снять(`openNPC(${JSON.stringify(key)})`,15000);
  check('1. окно жителя: оклик и голос игры не звучат разом',
@@ -109,7 +110,7 @@ const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(e!==undefined?' :
  const птицы=/bird|forest|owl|raven|amb_forest|amb_plains|wild_birds|oc_birds/;
  check('4. в подземелье нет ни слоёв земли, ни погоды, фон — голос глубины',
   !глубь.внутри.w1&&!глубь.внутри.w2&&!глубь.внутри.amb0&&!глубь.внутри.amb1&&глубь.внутри.глухо
-  &&/^(deep_|stk_|amb_abyss)/.test(глубь.внутри.фон)&&!птицы.test(String(глубь.внутри.живой||"")),глубь);
+  &&/^(deep_|stk_|amb_abyss|oc_|ad_river|ad_fire|lug_wind)/.test(глубь.внутри.фон)/* (после 16.0) у яруса свой фон по породе: вода, пар, ветер штолен, огонь кузни */&&!птицы.test(String(глубь.внутри.живой||"")),глубь);
  check('4б. под открытым небом погода возвращается',глубь.снаружи.w1&&глубь.наружу.глухо===false,глубь);
 
  /* ── 5. счёт ступеней ── */

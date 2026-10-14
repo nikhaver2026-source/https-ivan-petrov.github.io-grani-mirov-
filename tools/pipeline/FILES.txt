@@ -57,3 +57,9 @@ hron/zver155_late.js
 hron/zvuk155_late.js
 hron/torg160_late.js
 hron/patch_guide_torg160.py
+hron/put165_late.js
+hron/zhivoe165_late.js
+hron/tayny165_late.js
+hron/dom165_late.js
+hron/zvuk165_late.js
+hron/patch_guide_put165.py

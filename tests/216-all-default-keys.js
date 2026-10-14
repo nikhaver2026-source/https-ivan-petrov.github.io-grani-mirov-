@@ -34,6 +34,9 @@ const ПОДГОТОВКА=`(()=>{
  const kh=window.keyHelpText;window.keyHelpText=function(){R("keyhelp");return kh.apply(this,arguments);};
  /* (14.7) Shift+H — всё остальное о герое (и в бою) */
  const o147=window.остальное147;window.остальное147=function(){R("state147");return o147.apply(this,arguments);};
+ /* (после 16.0) Shift+G — карта с координатами, Ctrl+G — мои метки: свои окна */
+ if(typeof Карта165!=="undefined"){const ko=Карта165.открыть.bind(Карта165);Карта165.открыть=function(){R("k165");return ko();};
+  const mo=Карта165.метокОкно.bind(Карта165);Карта165.метокОкно=function(){R("m165");return mo();};}
  return true;})()`;
 /* Что ждём от действия. */
 const ЖДЁМ=`(id)=>{
@@ -43,6 +46,7 @@ const ЖДЁМ=`(id)=>{
  const свои={interact:"interact",potion:"potion",keyhelp:"keyhelp",quicksave:"save",quickload:"load",exit:"exit",speechstatus:"speechstatus",
   c_attack:"fight:atk",c_cast:"fight:magic",c_flee:"fight:flee",c_foe:null,c_self:null,state:"state147",c_selfrest:"state147"};
  if(id in свои)return {r:свои[id]};
+ const карты={mapcoords:["k165","modal-karta165"],mymarks:["m165","modal-metki165"]};if(id in карты)return {r:карты[id][0],окно:карты[id][1]};
  const m=/^slot(\\d+)$/.exec(id);if(m)return {r:"cast:"+(Number(m[1])-1)};
  const q=/^c_slot(\\d+)$/.exec(id);if(q)return {r:"qs:"+(Number(q[1])-1)};
  const n={qs_up:"up",qs_down:"down",qs_prev:"prev",qs_next:"next"}[id];if(n)return {r:"qsnav:"+n};

@@ -8,5 +8,5 @@ if [ "$P" -ge 5 ]; then python3 patch_guide_mag.py || exit 1; fi
 if [ "$P" -ge 6 ]; then python3 patch_guide_lc.py || exit 1; fi
 if [ "$P" -ge 7 ]; then python3 patch_guide_tales.py || exit 1; fi
 if [ "$P" -ge 8 ]; then python3 patch_guide_snd.py || exit 1; fi
-if [ "$P" -ge 9 ]; then python3 patch_guide_dir.py && python3 patch_guide_zv.py && python3 patch_guide_v150.py && python3 patch_guide_q150.py && python3 patch_guide_door147.py && python3 patch_guide_nem150.py && python3 patch_guide_z150.py && python3 patch_guide_nem155.py && python3 patch_guide_zv155.py && python3 patch_guide_svod155.py && python3 patch_guide_torg160.py || exit 1; fi
+if [ "$P" -ge 9 ]; then python3 patch_guide_dir.py && python3 patch_guide_zv.py && python3 patch_guide_v150.py && python3 patch_guide_q150.py && python3 patch_guide_door147.py && python3 patch_guide_nem150.py && python3 patch_guide_z150.py && python3 patch_guide_nem155.py && python3 patch_guide_zv155.py && python3 patch_guide_svod155.py && python3 patch_guide_torg160.py && python3 patch_guide_put165.py || exit 1; fi
 cp /home/user/https-ivan-petrov.github.io-grani-mirov-/index.html index_mater_wip.html

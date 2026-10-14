@@ -179,12 +179,19 @@ const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(e!==undefined?' :
   палата.отзвук==="vault"&&палата.есть&&/Q/.test(палата.клетки)&&/O/.test(палата.клетки),палата);
  check('о входе сказано: что за палата, где находка и где лаз',
   речьВход.some(t=>/тайной палате/.test(t)&&/Находка лежит/.test(t)&&/Лаз назад/.test(t)),речьВход.slice(-2));
- /* Шагами — к находке. */
- const шаги=[];
- for(let i=0;i<24;i++){
-  const d=await page.evaluate(()=>{const p=G.place,н=curLevel().находка;
+ /* Шагами — к находке. (После 16.0 тайный ход бывает целым местом — комнаты и ходы: путь ищем по клеткам,
+    а встречи в ходах — тварь, страж — для этой проверки снимаем.) */
+ await page.evaluate(()=>{const к=curLevel().комплекс165;if(к){if(Array.isArray(к.встречи))к.встречи.length=0;к.выход=null;}});
+ /* шаг к цели по кратчайшему пути (поиском по клеткам); окна, что открылись по пути, закрываются */
+ const кЦели=(какая)=>page.evaluate((какая)=>{while(activeLayer())closeTopUI();const p=G.place,L=curLevel(),н=какая==="вход"?L.entry:L.находка;
    if(p.x===н.x&&p.y===н.y)return null;
-   return p.x<н.x?"E":p.x>н.x?"W":p.y<н.y?"S":"N";});
+   const ок=(x,y)=>{const t=L.g[y]&&L.g[y][x];return !!t&&t!=="#"&&t!=="%";};
+   const был=new Map([[н.x+","+н.y,null]]);const q=[[н.x,н.y]];
+   while(q.length){const [x,y]=q.shift();for(const [dx,dy,dn] of [[1,0,"W"],[-1,0,"E"],[0,1,"N"],[0,-1,"S"]]){const nx=x+dx,ny=y+dy,k=nx+","+ny;if(был.has(k)||!ок(nx,ny))continue;был.set(k,dn);q.push([nx,ny]);}}
+   return был.get(p.x+","+p.y)||(p.x<н.x?"E":p.x>н.x?"W":p.y<н.y?"S":"N");},какая);
+ const шаги=[];
+ for(let i=0;i<160;i++){
+  const d=await кЦели("находка");
   if(!d)break;
   шаги.push(d);
   await swipe(d==="E"?170:d==="W"?-170:0,d==="S"?170:d==="N"?-170:0,1);}
@@ -198,10 +205,8 @@ const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(e!==undefined?' :
  check('двойное касание на находке — награда и золото, а клетка пустеет',
   награда.n===доНаграды.n+1&&награда.g>доНаграды.g&&награда.клетка==="q",{доНаграды,награда});
  /* Назад к лазу и шаг в стену. */
- for(let i=0;i<24;i++){
-  const d=await page.evaluate(()=>{const p=G.place,q=curLevel().entry;
-   if(p.x===q.x&&p.y===q.y)return null;
-   return p.x<q.x?"E":p.x>q.x?"W":p.y<q.y?"S":"N";});
+ for(let i=0;i<160;i++){
+  const d=await кЦели("вход");
   if(!d)break;
   await swipe(d==="E"?170:d==="W"?-170:0,d==="S"?170:d==="N"?-170:0,1);}
  await clr();
