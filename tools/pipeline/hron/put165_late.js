@@ -185,7 +185,7 @@ const ДвериПорядок165={
     /* дверь на колене, на развилке или посреди пола: снять и поставить в ближний проём у комнаты */
     g[y][x]=".";
     const был=new Set([x+","+y]);let q=[[x,y,0]];const кан=[];
-    while(q.length){const [cx,cy,d]=q.shift();if(d>=4)continue;
+    while(q.length){const [cx,cy,d]=q.shift();if(d>=8)continue;
      for(const [dx,dy] of [[0,-1],[0,1],[1,0],[-1,0]]){const nx=cx+dx,ny=cy+dy,k=nx+","+ny;if(был.has(k)||!P(nx,ny))continue;был.add(k);
       if(g[ny][nx]==="."&&проём(nx,ny)&&!дверьРядом(nx,ny)&&!особоеРядом(nx,ny))кан.push({x:nx,y:ny,d:d+1,к:уКомнаты(nx,ny)?0:1});
       q.push([nx,ny,d+1]);}}

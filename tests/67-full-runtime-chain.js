@@ -555,7 +555,9 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
    /* 2. ориентация: что вокруг и с какой стороны */
    const круг=Scape.around();ш.ориентация=Array.isArray(круг)&&круг.every(o=>typeof o.dx==="number"&&typeof o.dy==="number");
    /* 3–4. столкновение и объект: в подземелье стена держит, дверь открывается */
-   let lvl=null,bx=0,by=0;for(bx=3;bx<40&&!lvl;bx++)for(by=3;by<40&&!lvl;by++){const l=safeFn(()=>genLevel(bx,by,2,"ruins"),null);if(l&&l.entry)lvl=l;}
+   /* (после 16.0) двери стоят только в проёмах: ярус берём тот, где дверь есть */
+   const сДверью=l=>l.g.some(row=>row.includes("+"));
+   let lvl=null,bx=0,by=0;for(bx=3;bx<40&&!lvl;bx++)for(by=3;by<40&&!lvl;by++){const l=safeFn(()=>genLevel(bx,by,2,"ruins"),null);if(l&&l.entry&&сДверью(l))lvl=l;}
    bx--;by--;G.place={kind:"dungeon",bx,by,stype:"ruins",name:"Проверка",depth:2,x:lvl.entry.x,y:lvl.entry.y};
    const L=curLevel();let стена=null,дверь=null;
    for(let y=1;y<L.h-1&&!дверь;y++)for(let x=1;x<L.w-1&&!дверь;x++){if(tileAt(L,x,y)!=="."&&tileAt(L,x,y)!=="+")continue;

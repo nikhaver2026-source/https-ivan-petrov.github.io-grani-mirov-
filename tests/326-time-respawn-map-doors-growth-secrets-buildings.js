@@ -90,7 +90,10 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   for(let i=0;i<30&&!цель;i++){G.place={kind:"house",bx:G.x+7777+i*13,by:G.y+7771+i*7,stype:"tavern",name:"Тестовая таверна",depth:0,x:1,y:1};
    lvl=curLevel();
    for(let y=1;y<lvl.h-1&&!цель;y++)for(let x=1;x<lvl.w-1&&!цель;x++){if(lvl.g[y][x]!=="+"||placeMark(x,y)==="open")continue;
-    for(const [dir,dx,dy] of [["N",0,-1],["S",0,1],["W",-1,0],["E",1,0]]){const sx=x-dx,sy=y-dy;if(lvl.g[sy]&&lvl.g[sy][sx]==="."){цель={x:sx,y:sy,dir,dx:x,dy:y};break;}}}}
+    for(const [dir,dx,dy] of [["N",0,-1],["S",0,1],["W",-1,0],["E",1,0]]){const sx=x-dx,sy=y-dy;
+     /* рядом с клеткой — только дверь, пол и стены: иначе E (не по ходу) — для лавки или вещи рядом */
+     const чисто=[[0,-1],[0,1],[1,0],[-1,0],[1,1],[-1,-1],[1,-1],[-1,1]].every(([ax,ay])=>{const t=lvl.g[sy+ay]&&lvl.g[sy+ay][sx+ax];return !t||t==="#"||t==="."||t==="%"||(sx+ax===x&&sy+ay===y);});
+     if(lvl.g[sy]&&lvl.g[sy][sx]==="."&&чисто){цель={x:sx,y:sy,dir,dx:x,dy:y};break;}}}}
   if(!цель)return {нет:true};
   G.place.x=цель.x;G.place.y=цель.y;lastMoveDir=цель.dir==="N"?"S":"N";G.place.door147=null;Look.target=null;
   window.__said.length=0;KB_BY_ID.interact.run();await w(500);

@@ -66,7 +66,8 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   /* Долгий фон глубины и города — настоящие петли: гул толщи на
      четвёртом поясе (не «подводная» петля, звучавшая музыкой), а у деревни свой долгий фон — птицы, скотина, топор у
      поленницы (версия 3.4: у каждой постройки свой фон). */
-  amb.deep==='stk_dark'&&amb.city==='bed_village'&&amb.sea==='sea_open'&&amb.storm==='sea_storm'&&/^(amb_|sea_|hall_port|deep_wind)/.test(amb.land),amb);
+  /* (после 16.0) у каждого яруса свой долгий фон по породе — из подземной палитры, а не одна петля на пояс */
+  /^(deep_|stk_|amb_abyss|oc_|ad_river|ad_fire|lug_wind)/.test(amb.deep)&&amb.city==='bed_village'&&amb.sea==='sea_open'&&amb.storm==='sea_storm'&&/^(amb_|sea_|hall_port|deep_wind)/.test(amb.land),amb);
 
  // 4. Банк реально проигрывает и подгружает файлы
  const played=await page.evaluate(()=>{

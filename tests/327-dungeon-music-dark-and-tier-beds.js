@@ -12,7 +12,9 @@
       города, затишья, заглавия). Роль с несколькими файлами играет их по
       кругу — проверяются все файлы.
    2. Ярус хозяина подземелья (бой с сильным), бой под землёй, затишье и тема
-      местности, запрошенные под землёй, — тоже мрачные; наверху бой — прежний.
+      местности, запрошенные под землёй, — тоже мрачные (у «боя» и «боя с
+      сильным» бодрые файлы на время запуска выходят из круга роли); наверху
+      бой — прежний, все его файлы.
    3. Фон ярусов: на ярусах 1–12 у одного подземелья больше пяти разных
       главных фонов, и соседние ярусы не звучат одним фоном; второй слой не
       совпадает с главным.
@@ -33,24 +35,25 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   const роль=k=>MUSIC_TRACK[k]||k;const файлы=k=>((SOUND_BANK[роль(k)]||{}).f)||[];
   const плохие=[];const тем=new Set();let ярусов=0,мест=0;
   const роды=Object.keys(PLACE_KIND).filter(t=>PLACE_KIND[t]==="dungeon");
-  const сыграно=[];const s0=Bank.loop.bind(Bank);
-  Bank.loop=function(ch,r,o){if(ch==="score")сыграно.push(r);return null;};
+  /* роль и файлы её круга — в миг запуска: под землёй бодрые файлы на это время выходят из круга */
+  const сыграно=[],кругФайлы=[];const s0=Bank.loop.bind(Bank);
+  Bank.loop=function(ch,r,o){if(ch==="score"){сыграно.push(r);кругФайлы.push(((SOUND_BANK[r]||{}).f||[]).slice());}return null;};
   for(const st of роды)for(let i=0;i<60;i++){const bx=24000+i*131+st.length*17,by=26000-i*97;мест++;
    for(const d of [1,2,3,4,5,6,7,8,9,10,11,12,25,45,70,95]){
-    G.place={kind:"dungeon",bx,by,stype:st,name:"т",depth:d,x:1,y:1};Music.current=null;Music.track=null;сыграно.length=0;
+    G.place={kind:"dungeon",bx,by,stype:st,name:"т",depth:d,x:1,y:1};Music.current=null;Music.track=null;сыграно.length=0;кругФайлы.length=0;
     Music.start(locationMusicKey());ярусов++;
     const r=сыграно[0];if(r)тем.add(r);
-    const ф=((SOUND_BANK[r]||{}).f)||[];if(!r||ф.some(f=>БОДРО.test(f)))плохие.push({st,d,r,ф:ф.filter(f=>БОДРО.test(f))});}}
+    const ф=кругФайлы[0]||[];if(!r||!ф.length||ф.some(f=>БОДРО.test(f)))плохие.push({st,d,r,ф:ф.filter(f=>БОДРО.test(f))});}}
   /* бой, бой с сильным, затишье, местность и заглавие под землёй */
   const просьбы={};for(const k of ["battle","boss","safe","plains","town","prologue","pl_tavern"]){
-   G.place={kind:"dungeon",bx:24001,by:26001,stype:"cave_entrance",name:"т",depth:8,x:1,y:1};Music.current=null;Music.track=null;сыграно.length=0;
-   Music.start(k);const r=сыграно[0];просьбы[k]={r,бодро:(((SOUND_BANK[r]||{}).f)||[]).filter(f=>БОДРО.test(f))};}
-  G.place=null;Music.current=null;Music.track=null;сыграно.length=0;Music.start("battle");const наверху=сыграно[0];
+   G.place={kind:"dungeon",bx:24001,by:26001,stype:"cave_entrance",name:"т",depth:8,x:1,y:1};Music.current=null;Music.track=null;сыграно.length=0;кругФайлы.length=0;
+   Music.start(k);const r=сыграно[0];const ф=кругФайлы[0]||[];просьбы[k]={r,n:ф.length,бодро:ф.filter(f=>БОДРО.test(f))};}
+  G.place=null;Music.current=null;Music.track=null;сыграно.length=0;кругФайлы.length=0;Music.start("battle");const наверху=сыграно[0],наверхуФ=кругФайлы[0]||[];
   Bank.loop=s0;
-  return {мест,ярусов,тем:[...тем],плохие:плохие.slice(0,6),плохихВсего:плохие.length,просьбы,наверху};});
+  return {мест,ярусов,тем:[...тем],плохие:плохие.slice(0,6),плохихВсего:плохие.length,просьбы,наверху,наверхуФ};});
  check("1. Все подземелья, все ярусы: тема яруса без бодрых файлов",м.плохихВсего===0&&м.ярусов>1000,{мест:м.мест,ярусов:м.ярусов,тем:м.тем,плохие:м.плохие});
  check("2. Под землёй бой, бой с сильным, затишье, местность — мрачные; наверху бой прежний",
-  Object.values(м.просьбы).every(z=>z.r&&!z.бодро.length)&&м.просьбы.boss.r==="mus_boss_dark"&&м.просьбы.battle.r==="mus_battle_dark"&&м.наверху==="mus_battle",{просьбы:м.просьбы,наверху:м.наверху});
+  Object.values(м.просьбы).every(z=>z.r&&z.n>0&&!z.бодро.length)&&м.просьбы.boss.r==="mus_boss"&&м.просьбы.battle.r==="mus_battle"&&м.наверху==="mus_battle"&&м.наверхуФ.length===2,{просьбы:м.просьбы,наверху:м.наверху,наверхуФ:м.наверхуФ});
 
  const ф=await p.evaluate(()=>{const o={подземелий:0,мало:[],соседи:[],слой:[]};
   for(let i=0;i<30;i++){const bx=25000+i*211,by=24000+i*157;o.подземелий++;
