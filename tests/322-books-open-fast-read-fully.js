@@ -64,7 +64,7 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   о1.a.length===1&&чтение&&чтение.ms>=420&&чтение.ms<=650&&о1.b.length===1&&лист&&лист.ms>=270&&лист.ms<=500,о1);
 
  /* ── 2. чтение обрывает объявление окна ── */
- const о2=await page.evaluate(async()=>{ФЕЙК();Speech.say("Окно «Инвентарь» закрыто. Игровое поле.",{cat:"ui",pri:1,interrupt:true});
+ const о2=await page.evaluate(async()=>{ФЕЙК();Speech.say("Окно «Инвентарь» закрыто.",{cat:"ui",pri:1,interrupt:true});
   await new Promise(q=>setTimeout(q,30));const c0=FAKE.cancels;
   narrate("Книга раскрыта. Трактат: Проба. Первая строка.",{interrupt:true,pri:1,cat:"read"});await new Promise(q=>setTimeout(q,30));
   const r={обрыв:FAKE.cancels>c0,сейчас:FAKE.log.length?FAKE.log[FAKE.log.length-1].t.slice(0,20):"",очередь:Speech.queue.length};FAKE.end();return r;});

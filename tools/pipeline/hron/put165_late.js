@@ -353,3 +353,29 @@ Promise.resolve().then(()=>safeFn(()=>{
  вставить({id:"mymarks",g:"Мир",n:"мои метки",о:"сохранённые метки: маяк к выбранной",def:["Ctrl+KeyG"],ctx:"field",run:()=>Карта165.метокОкно()},"mapcoords");
  const it=KB_BY_ID.interact;if(it&&!it._e165){it._e165=1;const r0=it.run;it.run=function(){if(safeFn(()=>ДверьE165.нажать(),false))return true;return r0.apply(this,arguments);};}}));
 /* жесты не трогаем: их карта — тридцать три действия; карта и метки — клавиши приложения (просьба — пока для Windows) */
+
+/* ── 6. Шаг без зависаний (просьба игрока: «при быстром перемещении в лазах, тайных проходах и подземельях шаги
+   зависают — проходит время, прежде чем персонаж сделает шаг») ──
+   Замер под нагрузкой (процессор вчетверо медленнее, как на телефоне): первый же шаг после загрузки — и в
+   подземелье тоже — считал гавани материков (обход берегов вокруг двадцати с лишним точек мира): больше секунды.
+   Теперь гавани считаются один раз, в простое, ещё до входа в мир, и запоминаются в браузере — следующие запуски
+   берут их готовыми. Подсчёт даров леса возможностей, что звучит на каждом шаге (картина звуков вокруг), берётся
+   из короткой памяти, а не перебором всех узлов на каждый вызов. */
+const Плавно165={
+ КЛЮЧ:"gm165harb",
+ гавани(){try{const v=JSON.parse(store.get(this.КЛЮЧ)||"null");
+   if(v&&v.w===WORLD_MAX&&Array.isArray(v.h)&&v.h.length&&v.h.every(h=>h&&Number.isFinite(h.x)&&Number.isFinite(h.y)))return v.h;}catch(_){}
+  return null;},
+ запомнить(h){try{store.set(this.КЛЮЧ,JSON.stringify({w:WORLD_MAX,h}));}catch(_){}}};
+safeFn(()=>{const h0=Mater.harbors;Mater.harbors=function(){if(this._harb)return this._harb;
+ const v=Плавно165.гавани();if(v){this._harb=v;return v;}
+ const r=h0.apply(this,arguments);if(Array.isArray(r)&&r.length)Плавно165.запомнить(r);return r;};});
+/* в простое, пока игрок в меню: гавани готовы до первого шага */
+safeFn(()=>{const ри=window.requestIdleCallback||(f=>setTimeout(f,1500));
+ ри(()=>safeFn(()=>{if(!Mater._harb)Mater.harbors();}),{timeout:6000});});
+/* дары леса возможностей: подсчёт на секунду */
+safeFn(()=>{const b0=Fore.boonCount;const пам=new Map();let метка=0,открыто=-1;
+ Fore.boonCount=function(id){const now=Date.now();const n=safeFn(()=>Object.keys(this.state().открыты||{}).length,-2);
+  /* открыт новый узел — память сбрасывается сразу */
+  if(now-метка>1000||n!==открыто){пам.clear();метка=now;открыто=n;}
+  if(пам.has(id))return пам.get(id);const r=b0.apply(this,arguments);пам.set(id,r);return r;};});

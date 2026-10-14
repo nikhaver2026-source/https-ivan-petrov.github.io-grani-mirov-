@@ -158,7 +158,7 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
  st=await state();
  check('9. без чтеца экрана: окно названо встроенной речью, стоп кнопкой работает, живая область молчит',без.layer&&без.log.some(t=>/Окно «Настройки»/.test(t))&&без.live===""&&!st.speaking&&st.stats.userStops>=1,{log:без.log,live:без.live});
  await page.evaluate(()=>{settings.srMode="auto";while(activeLayer())closeTopUI();});
- /* Отчёт о закрытом окне («Окно „Настройки“ закрыто. Игровое поле.») уходит
+ /* Отчёт о закрытом окне («Окно „Настройки“ закрыто.») уходит
     в живую область с задержкой; пусть он отзвучит здесь, а не попадёт в
     подсчёт следующей проверки. */
  await page.waitForTimeout(700);

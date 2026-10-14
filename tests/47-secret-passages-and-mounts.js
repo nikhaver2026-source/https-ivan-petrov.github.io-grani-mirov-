@@ -163,14 +163,17 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
      дороге случается встреча, и тогда шаг не делается вовсе, а разница
      выходит нулевой — проверка падала не потому, что скакун перестал
      сокращать путь, а потому, что до шага дело не дошло. Пробуем, пока шаг
-     не пройдёт, и бой при этом прекращаем. */
+     не пройдёт, и бой при этом прекращаем. Верхом одно действие проходит
+     две-три клетки (16.5), поэтому сравнивается время одной клетки. */
   const замер=(dir)=>{
    for(let i=0;i<20;i++){
     safeFn(()=>{if(G.inCombat){G.inCombat=false;G.combat=null;}});
     while(activeLayer())closeTopUI();
-    const ч=G.hour;safeFn(()=>move(dir));
+    const ч=G.hour,x0=G.x,y0=G.y;safeFn(()=>move(dir));
     const d=G.hour-ч;
-    if(d>0)return +d.toFixed(3);}
+    /* (16.5) верхом одно действие — две-три клетки: сравнивается время клетки */
+    const клеток=Math.max(1,Math.abs(G.x-x0),Math.abs(G.y-y0));
+    if(d>0)return +(d/клеток).toFixed(3);}
    return 0;};
   takeMount("ashmare");
   const сКонём=замер("N");

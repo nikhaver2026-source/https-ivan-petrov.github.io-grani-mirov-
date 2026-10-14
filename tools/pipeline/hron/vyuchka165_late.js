@@ -161,7 +161,11 @@ safeFn(()=>{const t0=Stable.train;Stable.train=обёртка165v(function(id){c
 /* ── 1. Верхом — быстрее ── */
 const Верхом165={
  чёт:false,
- можно(){return !!(gameActive()&&!G.place&&!G.ship&&!G.inCombat&&!G.chStair&&!safeFn(()=>inFlight(),false)&&safeFn(()=>Stable.riding(),null));},
+ /* в воздухе — только на летучем скакуне (он и несёт быстрее); i — какая клетка действия идёт */
+ i:0,
+ можно(){if(!(gameActive()&&!G.place&&!G.ship&&!G.inCombat&&!G.chStair&&safeFn(()=>Stable.riding(),null)))return false;
+  if(safeFn(()=>inFlight(),false)){const M=this.скакун();return !!M&&safeFn(()=>Stable.moveOf(M),"walk")==="fly";}
+  return true;},
  скакун(){return safeFn(()=>ZvWalk.mount(),null);},
  клеток(){const M=this.скакун();if(!M)return 1;const ход=safeFn(()=>Stable.moveOf(M),"walk");let n=2;
   if(ход==="fly")n=3;
@@ -178,10 +182,57 @@ safeFn(()=>{const m0=move;move=обёртка165v(function(dir){
  let r;
  for(let i=0;i<n;i++){const x0=G.x,y0=G.y;const последний=i===n-1;const захват=[];const n0=Speech.say;
   if(!последний)Speech.say=function(){захват.push(Array.prototype.slice.call(arguments));return true;};
-  try{r=m0.call(this,dir);}finally{Speech.say=n0;}
+  Верхом165.i=i;try{r=m0.call(this,dir);}finally{Speech.say=n0;Верхом165.i=0;}
   if(i===0)Выучка165.опыт("езда",0.2,true);
   if(последний)break;
   const сдвиг=G.x!==x0||G.y!==y0;
   const стоп=!сдвиг||!Верхом165.можно()||!!activeLayer()||(G.atDoor&&G.atDoor.x===G.x&&G.atDoor.y===G.y)||Верхом165.стоять(G.x,G.y);
   if(стоп){захват.forEach(a=>{try{n0.apply(Speech,a);}catch(_){}});break;}}
  return r;},m0);});
+
+/* ── Полёт: быстрее и своим крылом (просьба игрока) ──
+   «При полёте перемещение тоже должно идти быстрее, и слышен должен быть звук самого полёта — крыльев: у феникса
+   свой, у другого летучего маунта — свой; у ползающего — свой звук, по маунту».
+   Прежде в воздухе шаг шёл по клетке и молча: ни крыла скакуна, ни своего крыла — только ветер да изредка голос
+   неба; а верхом в воздухе езда по две-три клетки и вовсе выключалась. Теперь на летучем скакуне и в небе шаг —
+   три клетки (опытный всадник — четыре), и каждая клетка звучит взмахом именно этого крыла: рух — тяжёлым махом с
+   порывом, грифон — орлиным, виверна и дракон — перепончатым с жаром, пегас — лёгким махом, скат — веером,
+   стрекоза — жужжанием. Свои крылья героя тоже слышны каждым взмахом, у каждого крылатого народа свои: феникс —
+   крыло с треском пламени на каждом махе, гарпия и аракокра — птичье, фея — трепет и звон, сильф — ветер, дракониды,
+   вирмы и прародители — перепонка с гулом. Клетки одного действия звучат одна за другой, ритмом маха или бега, а не
+   разом — и на земле: шаг ползающего, роющего, ходячего скакуна, каждый своим звуком рода. */
+const Полёт165={
+ /* крыло рода из зверинца: мах и призвук; каждый — через сколько махов призвук */
+ РОД:{roc:{к:["raptor_wing","zv_wing"],з:["sky_gust"],каждый:3},griffin:{к:["raptor_wing"],з:["lug_whoosh"],каждый:3},
+  wyvern:{к:["wyrm_wing"],з:["deep_wind"],каждый:3},drake:{к:["wyrm_wing","sp_wings"],з:["oc_fire","ad_fire_sizzle"],каждый:3},
+  pegasus:{к:["zv_wing"],з:["sky_wind"],каждый:4},skyray:{к:["oc_fan","sky_gust"],з:["sky_wind"],каждый:3},
+  dragonfly:{к:["sp_buzz","oc_mosquito"],з:["sp_hum"],каждый:3},phoenix:{к:["zv_wing"],з:["ad_fire_crackle","lug_fire","oc_inflame"],каждый:1},
+  hawk:{к:["raptor_wing"]},owl:{к:["oc_bat_flutter"]},bat:{к:["oc_bat_flutter"]},raven:{к:["lug_whoosh"]},moth:{к:["sp_hum"]}},
+ /* свои крылья крылатого народа */
+ НАРОД:{phoenix:{к:["zv_wing"],з:["ad_fire_crackle","lug_fire","oc_inflame"],каждый:1},harpy:{к:["raptor_wing"],з:["lug_whoosh"],каждый:3},
+  fae:{к:["sp_wings"],з:["sp_hum","arc_chimes"],каждый:2},aarakocra:{к:["raptor_wing"],з:["sky_wind"],каждый:4},
+  pegasus:{к:["zv_wing"],з:["sky_wind"],каждый:4},sylph:{к:["zv_wing","oc_wind"],з:["wild_wind","sky_wind"],каждый:2},
+  dragonborn:{к:["wyrm_wing"],з:["deep_wind"],каждый:4},stormwyrm:{к:["wyrm_wing"],з:["sky_gust","sky_thunder"],каждый:3},
+  progenitor:{к:["wyrm_wing"],з:["deep_wind","oc_fire"],каждый:3}},
+ n:0,
+ /* чьё крыло несёт: летучий скакун (зверь зверинца, скакун тайных палат) или свои крылья героя */
+ крыло(){const M=safeFn(()=>ZvWalk.mount(),null);
+  if(M&&M.kind==="zv"){const f=safeFn(()=>Zver.fam(M.a),null);
+   if(f&&f.ход==="fly"){const п=this.РОД[f.id];const p=ZvSnd.prof(M.a);return Object.assign({к:p.е||p.ш||["zv_wing"],каждый:4},п||{},{rate:ZvSnd.rate(M.a),чьё:"скакун"});}}
+  if(M&&M.kind!=="zv"&&M.m&&(M.m.дар||{}).крыло){const L=typeof ZV_LEGRIDE150!=="undefined"&&ZV_LEGRIDE150[M.m.id];
+   if(L)return {к:L.е,з:L.а,каждый:L.ак||3,чьё:"скакун"};const n=String(M.m.n||"");
+   const п=/феникс/i.test(n)?this.РОД.phoenix:/дракон|вирм|виверн/i.test(n)?this.РОД.drake:{к:["zv_wing","raptor_wing"],з:["sky_gust"],каждый:4};
+   return Object.assign({},п,{чьё:"скакун"});}
+  const r=safeFn(()=>raceInfo(G.race),null);const п=r&&this.НАРОД[r.id];
+  return Object.assign({к:[safeFn(()=>wingRole(),"raptor_wing")],каждый:4},п||{},{чьё:"герой"});},
+ /* взмах на клетку неба: клетки одного действия — одна за другой */
+ мах(){if(!safeFn(()=>inFlight(),false))return;const w=this.крыло();this.n++;const t=(Number(Верхом165.i)||0)*130;const pos={dx:0,dy:0.1};
+  ZvSnd.later(t,()=>ZvSnd.play(w.к,Object.assign({maxSec:1.1,gain:w.чьё==="герой"?0.62:0.85,rate:w.rate||1},pos)));
+  if(w.з&&this.n%(w.каждый||3)===0)ZvSnd.later(t+90,()=>ZvSnd.play(w.з,Object.assign({maxSec:1,gain:0.42},pos)));}};
+safeFn(()=>{const w0=wingBeat;wingBeat=обёртка165v(function(){const r=w0.apply(this,arguments);safeFn(()=>Полёт165.мах());return r;},w0);});
+/* взлёт верхом на летучем — крылом скакуна, а не своим */
+safeFn(()=>{const r0=wingRole;wingRole=обёртка165v(function(){const w=safeFn(()=>Полёт165.крыло(),null);
+ if(w&&w.чьё==="скакун"&&w.к&&w.к.length)return w.к[0];return r0.apply(this,arguments);},r0);});
+/* на земле клетки одного действия верхом звучат по очереди, ритмом хода */
+safeFn(()=>{const r0=ZvWalk.ride;ZvWalk.ride=function(M){const i=Number(Верхом165.i)||0;
+ if(i>0){const self=this;ZvSnd.later(i*120,()=>safeFn(()=>r0.call(self,M)));return true;}return r0.apply(this,arguments);};});
