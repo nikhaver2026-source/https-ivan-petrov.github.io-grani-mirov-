@@ -1,29 +1,25 @@
 # (17.0) «Хроники приключений и путь ста тысяч ступеней»: замки, рычаги, механизмы,
 # ловушки, тайники, загадки на слух, боссы, экзамены мастерства. BigSoundBank (Joseph Sardin, CC0).
-# Прежние заходы (14.6: звери и верховая езда) уже сведены в игру.
+# Заход 1 (замки, цепи, рычаг, ворот, двери, тайник, гонги, дробь, сердце, свист, всплеск) уже сведён в игру: sounds/adv.
 # Поиск сайта любит одно-два простых слова в единственном числе.
 # Имя набора — обязательно с «bsb_»: иначе сборщик его не упакует.
 # имя запрос ~ шаблон имени страницы ~ сколько
-# Заход 1 из 2: замки, механизмы, ловушки, тайники, колокола, барабаны, двери.
-bsb_adv_lock lock ~ (lock|padlock|latch|bolt) ~ 4
-bsb_adv_key key ~ (key|keys) ~ 2
-bsb_adv_chain chain ~ (chain|hoist) ~ 3
-bsb_adv_mech mechanism ~ . ~ 3
-bsb_adv_ratchet ratchet ~ . ~ 2
-bsb_adv_crank crank ~ (crank|winch|reel|ratchet|handle) ~ 2
-bsb_adv_winch winch ~ . ~ 2
-bsb_adv_lever lever ~ . ~ 2
-bsb_adv_stone stone ~ . ~ 3
-bsb_adv_drawer drawer ~ . ~ 2
-bsb_adv_chest chest ~ (chest|trunk|box|coffer) ~ 2
-bsb_adv_arrow arrow ~ . ~ 2
-bsb_adv_swish swish ~ . ~ 3
-bsb_adv_spring spring ~ . ~ 2
-bsb_adv_click click ~ (click|clack|tick|clic|switch) ~ 2
-bsb_adv_bell bell ~ (bell|gong|chime) ~ 3
-bsb_adv_gong gong ~ . ~ 2
-bsb_adv_drum drum ~ (drum|tom|timpani|roll) ~ 3
-bsb_adv_heart heartbeat ~ (heart|beat|pulse) ~ 2
-bsb_adv_door door ~ door.*(heavy|old|creak|castle|cellar|wood|iron|open|clos) ~ 3
-bsb_adv_creak creak ~ . ~ 2
-bsb_adv_rubble rubble ~ . ~ 2
+# Заход 2 из 2: стук, перо, страницы, песочные часы, верёвка, лом, долото, шкатулка, толпа, трясина, лёд, факел.
+bsb_adv_knock knock ~ (knock|door|wood|tap) ~ 2
+bsb_adv_quill writing ~ (writ|pen|quill|pencil|scratch) ~ 2
+bsb_adv_page page ~ (page|book|paper|leaf) ~ 2
+bsb_adv_sand hourglass ~ . ~ 2
+bsb_adv_sand2 sand ~ (sand|trickl|pour|grain) ~ 2
+bsb_adv_rope rope ~ (rope|cord|tension|creak|knot) ~ 2
+bsb_adv_pry crowbar ~ . ~ 2
+bsb_adv_chisel chisel ~ . ~ 2
+bsb_adv_musicbox music box ~ (music|box) ~ 2
+bsb_adv_crowd crowd ~ (crowd|applau|cheer|people) ~ 2
+bsb_adv_applause applause ~ . ~ 1
+bsb_adv_bubble bubbling ~ (bubbl|boil|simmer) ~ 2
+bsb_adv_mud mud ~ (mud|squelch|bog|wet) ~ 2
+bsb_adv_ice ice ~ (ice|crack|frozen) ~ 2
+bsb_adv_torch torch ~ (torch|fire|flame|ignit|match|burn) ~ 2
+bsb_adv_dig shovel ~ (shovel|dig|spade|earth|soil) ~ 2
+bsb_adv_coins coins ~ (coin|purse|money|pouch) ~ 2
+bsb_adv_wax candle ~ (candle|wax|blow) ~ 2
