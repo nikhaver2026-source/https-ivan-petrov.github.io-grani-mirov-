@@ -16,7 +16,7 @@
    3. Свежевальный нож — шкуры и кровь с туши чаще; капкан — мех чаще; ступка с пестиком нужна зельям с
       крепкого ранга.
    4. Стража у ворот деревни слышит и отношение селения, а не только города: кому деревня доверяет, того пускают
-      даром.
+      даром; дурная слава (ниже −50) по-прежнему закрывает ворота.
    ════════════════════════════════════════════════════════════════════════ */
 safeFn(()=>{const T={
  hoe:   {n:"Мотыга",где:"item",одна:true,цена:16,о:"Огород, гряды, корни: в деревне — «Вскопать огород».",звук:"arte_wood"},
@@ -130,7 +130,7 @@ safeFn(()=>{const o0=openNPC;openNPC=matKeep(o0,function(key){const r=o0.apply(t
   if(q)q.insertAdjacentHTML("afterend",Хозяйство170.кнопка());else b.insertAdjacentHTML("afterbegin",Хозяйство170.кнопка());});return r;});});
 /* стража у ворот деревни слышит и отношение селения */
 safeFn(()=>{if(typeof Стража147==="undefined")return;const o0=Стража147.отношение;Стража147.отношение=function(c){const o=o0.apply(this,arguments);
- try{if(c&&c.structure&&c.structure.type==="village"){const v=Хозяйство170.отношение(Хозяйство170.имяДеревни(c));if(v>o.s){o.s=v;o.место=v;}}}catch(_){}return o;};});
+ try{if(c&&c.structure&&c.structure.type==="village"&&o.s>-50){const v=Хозяйство170.отношение(Хозяйство170.имяДеревни(c));if(v>o.s){o.s=v;o.место=v;}}}catch(_){}return o;};});
 /* капкан: мех с туши чаще */
 safeFn(()=>{const s0=Сырьё170.сТуши;Сырьё170.сТуши=function(m){const t=s0.apply(this,arguments);
  try{if((G.items||[]).includes("Капкан")&&safeFn(()=>foeFamily(m),"")==="beast"&&Math.random()<0.3){const n=String(m.n||"").toLowerCase();
