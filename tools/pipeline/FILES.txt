@@ -72,4 +72,5 @@ hron/rabota170_late.js
 hron/dela170_late.js
 hron/slava170_late.js
 hron/molva170_late.js
+hron/lavka170_late.js
 hron/patch_guide_put165.py
