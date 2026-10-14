@@ -29,7 +29,9 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
  const errors=[];
  const p=await (await browser.newContext()).newPage();p.on('pageerror',e=>errors.push(String(e)));
  await p.goto(process.argv[2]);await p.waitForTimeout(900);
- await p.evaluate(()=>{try{enterGame();}catch(_){}while(activeLayer())closeTopUI();window.maybeEvent=()=>{};G.level=14;G.hpMax=400;G.hp=400;G.mana=200;G.manaMax=200;G.gold=500;
+ await p.evaluate(()=>{try{enterGame();}catch(_){}while(activeLayer())closeTopUI();window.maybeEvent=()=>{};
+  /* обозы и дозоры на тракте говорят сами, в свой такт — проверке очереди речи они чужие (как в наборах 39, 205) */
+  try{CaravanRoll.tick=()=>false;PatrolMarch.tick=()=>false;}catch(_){}G.level=14;G.hpMax=400;G.hp=400;G.mana=200;G.manaMax=200;G.gold=500;
   window.__said=[];const s0=Speech.say.bind(Speech);Speech.say=(t,o)=>{window.__said.push(String(t));return s0(t,o);};
   /* синтезатор, который кончает фразу только по команде проверки */
   window.ДОСКАЗАНО=[];window.ОБОРВАНО=[];const f0=Speech._finish.bind(Speech);
