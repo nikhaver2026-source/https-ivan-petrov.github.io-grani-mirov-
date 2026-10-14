@@ -1,19 +1,29 @@
-# (17.5) «Хроники приключений и путь ста тысяч ступеней»: замки, рычаги, механизмы,
+# (17.0) «Хроники приключений и путь ста тысяч ступеней»: замки, рычаги, механизмы,
 # ловушки, тайники, загадки на слух, боссы, экзамены мастерства. BigSoundBank (Joseph Sardin, CC0).
 # Прежние заходы (14.6: звери и верховая езда) уже сведены в игру.
 # Поиск сайта любит одно-два простых слова в единственном числе.
+# Имя набора — обязательно с «bsb_»: иначе сборщик его не упакует.
 # имя запрос ~ шаблон имени страницы ~ сколько
-# Заход 1 из 3: замки, рычаги, механизмы, ловушки, колокола, барабаны.
-adv_lock lock ~ (lock|padlock|latch|bolt) ~ 4
-adv_key key ~ (key|keys|keyring) ~ 2
-adv_lever lever ~ (lever|handle|switch|toggle) ~ 3
-adv_chain chain ~ (chain|chains) ~ 2
-adv_gear gear ~ (gear|cog|mechanism|clockwork|ratchet|winding) ~ 3
-adv_stone stone ~ (stone|rock|block|slab).*(slid|drag|scrap|grind|rub|mov|push) ~ 3
-adv_cage cage ~ (cage|grid|bars|grill) ~ 2
-adv_arrow arrow ~ (arrow|whiz|whizz|bow) ~ 2
-adv_spring spring ~ (spring|snap|clack|trap) ~ 2
-adv_click click ~ (click|clack|tick|clic) ~ 2
-adv_bell bell ~ (bell|gong|chime) ~ 3
-adv_drum drum ~ (drum|tom|timpani|bass) ~ 3
-adv_heart heartbeat ~ (heart|beat|pulse) ~ 2
+# Заход 1 из 2: замки, механизмы, ловушки, тайники, колокола, барабаны, двери.
+bsb_adv_lock lock ~ (lock|padlock|latch|bolt) ~ 4
+bsb_adv_key key ~ (key|keys) ~ 2
+bsb_adv_chain chain ~ (chain|hoist) ~ 3
+bsb_adv_mech mechanism ~ . ~ 3
+bsb_adv_ratchet ratchet ~ . ~ 2
+bsb_adv_crank crank ~ (crank|winch|reel|ratchet|handle) ~ 2
+bsb_adv_winch winch ~ . ~ 2
+bsb_adv_lever lever ~ . ~ 2
+bsb_adv_stone stone ~ . ~ 3
+bsb_adv_drawer drawer ~ . ~ 2
+bsb_adv_chest chest ~ (chest|trunk|box|coffer) ~ 2
+bsb_adv_arrow arrow ~ . ~ 2
+bsb_adv_swish swish ~ . ~ 3
+bsb_adv_spring spring ~ . ~ 2
+bsb_adv_click click ~ (click|clack|tick|clic|switch) ~ 2
+bsb_adv_bell bell ~ (bell|gong|chime) ~ 3
+bsb_adv_gong gong ~ . ~ 2
+bsb_adv_drum drum ~ (drum|tom|timpani|roll) ~ 3
+bsb_adv_heart heartbeat ~ (heart|beat|pulse) ~ 2
+bsb_adv_door door ~ door.*(heavy|old|creak|castle|cellar|wood|iron|open|clos) ~ 3
+bsb_adv_creak creak ~ . ~ 2
+bsb_adv_rubble rubble ~ . ~ 2

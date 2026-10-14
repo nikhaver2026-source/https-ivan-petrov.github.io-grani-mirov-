@@ -74,8 +74,11 @@ def download(op, slug, num, root, name):
     """Первый формат, который сайт отдал: у старых записей (номер меньше
     тысячи) WAV не отдаётся — форма уводит на главную; тогда FLAC и дальше."""
     for fmt in FORMATS:
-        if download_fmt(op, slug, num, root, name, fmt):
+        r = download_fmt(op, slug, num, root, name, fmt)
+        if r:
             return True
+        if r is None:
+            return False
     return False
 
 
@@ -116,6 +119,10 @@ def download_fmt(op, slug, num, root, name, fmt):
         os.makedirs(dbg, exist_ok=True)
         open(os.path.join(dbg, f"{int(num):04d}_{fmt}_dl.html"), "wb").write(data2)
         print(f"!! {name} #{num} {fmt}: вместо звука страница ({ctype}, {len(data2)} байт)", flush=True)
+        # (17.0) Страница проверки посетителя: другие форматы той же записи
+        # уводят туда же — не тратить на них по семь секунд.
+        if b"challenge-platform" in data2:
+            return None
         return False
     return save(h2, data2, root, name, num, slug, title)
 
