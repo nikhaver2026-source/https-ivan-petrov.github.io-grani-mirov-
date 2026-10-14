@@ -149,11 +149,13 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   /* встаём на клетку с ресурсом */
   outer:for(let r=0;r<220;r++)for(let dy=-r;dy<=r;dy++)for(let dx=-r;dx<=r;dx++){
    const x=1000+dx,y=1000+dy;const c=cellContent(x,y);
-   if(c.res&&!c.structure&&!c.monster){G.x=x;G.y=y;G.place=null;G.ship=null;G.inCombat=false;refresh();break outer;}}
+   if(c.res&&!c.structure&&!c.monster){G.x=x;G.y=y;G.place=null;G.ship=null;G.inCombat=false;window.__рес=c.res.name;refresh();break outer;}}
   G.inv={};});
  await clearSaid();
  await twoFingerTap(195,470);
- const собрано=await page.evaluate(()=>Object.entries(G.inv).filter(([,v])=>v>0));
+ /* (17.0) Сбор камня в горах, травы на лугу, ракушки на берегу может принести попутную находку (минерал,
+    перламутр, лён): проверяется, что собран именно ресурс под ногами, а попутное — отдельно. */
+ const собрано=await page.evaluate(()=>Object.entries(G.inv).filter(([k,v])=>v>0&&k===window.__рес));
  check('одно касание двумя пальцами собирает ресурс под ногами',собрано.length===1&&собрано[0][1]>=1,
   {инвентарь:собрано,сказано:(await said()).slice(0,2)});
 
@@ -174,7 +176,7 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
  await page.evaluate(()=>{G.inv={};});
  await clearSaid();
  await doubleTap(195,470);
- const послеДвойного=await page.evaluate(()=>Object.entries(G.inv).filter(([,v])=>v>0));
+ const послеДвойного=await page.evaluate(()=>Object.entries(G.inv).filter(([k,v])=>v>0&&k===window.__рес));
  const речьДвойного=(await said()).filter(t=>/Собрано/.test(String(t)));
  /* Двойное касание поля — действие здесь (набор 176): на ресурсе оно
     собирает, и ровно одну единицу. */
