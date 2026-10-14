@@ -52,8 +52,10 @@ const Слава170={
  поднятьРемесло(prof,n){if(!prof||!n)return 0;const было=this.ремесло(prof);const стало=safeFn(()=>addStand("guild",prof,n,true),было);
   const w1=this.ступень(было),w2=this.ступень(стало);if(w1.номер!==w2.номер)safeFn(()=>narrate(`Слава у ремесла «${prof}»: теперь ${w2.n} — ${w2.о}.`,{interrupt:false}));
   /* на «доверии» мастер один раз делится секретом ремесла */
-  if(было<60&&стало>=60){const с=this.СЕКРЕТЫ[prof];const g=this.ст();if(с&&!g.секреты[prof]){g.секреты[prof]=Number(G.day)||1;safeFn(()=>{const m=mastOf(с[0]);if(m.ур<5){if(!G.mast)G.mast={};G.mast[с[0]]={ур:m.ур+1,оп:m.оп,дел:m.дел};}});
-   const t=`Мастера ремесла «${prof}» считают вас своим и делятся секретом: ${с[1]} — на ступень выше (теперь «${MAST_RANK[safeFn(()=>mastLevel(с[0]),1)]||"умелец"}»).`;
+  if(было<60&&стало>=60){const с=this.СЕКРЕТЫ[prof];const g=this.ст();if(с&&!g.секреты[prof]){g.секреты[prof]=Number(G.day)||1;
+   /* 17.0: секрет — признание мастера (право на ранг на тысячной ступени) и приём; звание само не растёт */
+   const пр=safeFn(()=>Мастерство170.признание(с[0],`мастера ремесла «${prof}»`),"")||"";
+   const t=`Мастера ремесла «${prof}» считают вас своим и делятся секретом: ${с[1]}${пр?` — ${пр}`:""}.`;
    safeFn(()=>{journal(t);narrate(t,{interrupt:false});Bank.play("throng_hail_m",{gain:0.5,maxSec:4});});}}
   return стало;},
  /* ── окно «Репутация» ── */

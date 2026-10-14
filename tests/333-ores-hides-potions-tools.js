@@ -102,7 +102,7 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
 
  /* ── 8. Все большие дела начинаются ── */
  const ц=await page.evaluate(()=>{const out=[];
-  for(const t of ЦЕПИ170.filter(t=>!t.малое&&!t.требует)){const n=getNPC(60000+out.length*37,61000+out.length*29,0,t.профы[0]);G.x=n.x;G.y=n.y;
+  for(const t of ЦЕПИ170.filter(t=>!t.малое&&!t.требует&&!t.мст)){const n=getNPC(60000+out.length*37,61000+out.length*29,0,t.профы[0]);G.x=n.x;G.y=n.y;
    const ok=Цепи170.начать(t,n);const c=Цепи170.ст().список.slice().reverse().find(x=>x.tid===t.id);
    const пусто=c?c.шаги.flatMap(s=>s.вид==="дела"?s.под:[s]).filter(s=>s.tx!=null&&(!(s.tx>0)||!(s.ty>0))).length:-1;
    out.push({id:t.id,ok,шагов:c?c.шаги.length:0,пусто});
