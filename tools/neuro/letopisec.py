@@ -1,0 +1,178 @@
+"""letopisec.py — Летописец: порождающая сеть мира (трансформер по буквам, условный по виду сущности).
+
+Учится в два этапа на одной и той же сети:
+  1) язык мира — окна по 256 знаков из всего русского текста игры (text.txt);
+  2) сущности — записи «⟦вид⟧⟨черты⟩⟨и⟩имя⟨о⟩описание⟨к⟩» из таблиц мира (corpus.jsonl), вперемешку с текстом,
+     чтобы сеть не забывала язык.
+Пишет новое: по виду (и, если заданы, чертам) — имя и суть; имена, повторяющие уже существующие или слишком близкие
+к ним, отбрасываются.
+
+  python3 letopisec.py train <папка данных> [шагов] [этап: язык|сущности|оба]
+  python3 letopisec.py write <папка данных> <вид> [сколько] [черты: ключ=значение;…]
+  python3 letopisec.py eval  <папка данных>       — потеря на проверке, доля нового, образцы по всем видам
+Потоки — LET_THREADS (по умолчанию 2). Снимок — <папка>/letopisec.pt (каждые 250 шагов; обучение продолжает с него).
+"""
+import sys, os, json, math, time, random, re, collections
+import torch, torch.nn as nn, torch.nn.functional as F
+
+СЛУЖ = ["<pad>", "⟨и⟩", "⟨о⟩", "⟨к⟩", "⟨ч⟩", "⟨/ч⟩", "\n"]
+ВИДЫ = ["бог", "грань", "миф", "история", "держава", "народ", "тварь", "зверь", "чары", "вещь", "ресурс", "растение",
+        "зелье", "земля", "поселение", "подземелье", "здание", "находка", "персонаж", "вера", "слух"]
+CTX = int(os.environ.get("LET_CTX", "256"))
+
+class Словарь:
+    def __init__(s, знаки):
+        s.т = СЛУЖ + ["⟦" + в + "⟧" for в in ВИДЫ] + sorted(знаки)
+        s.и = {t: i for i, t in enumerate(s.т)}
+        s.спец = sorted([t for t in s.т if len(t) > 1], key=len, reverse=True)
+    def код(s, текст):
+        out, i = [], 0
+        while i < len(текст):
+            for t in s.спец:
+                if текст.startswith(t, i): out.append(s.и[t]); i += len(t); break
+            else:
+                out.append(s.и.get(текст[i], s.и["<pad>"])); i += 1
+        return out
+    def текст(s, коды): return "".join(s.т[c] for c in коды if c != 0)
+
+def запись(z, с_чертами=True):
+    ч = ""
+    if с_чертами and z.get("черты"):
+        пары = [f"{k}={v}" for k, v in z["черты"].items()][:4]
+        ч = "⟨ч⟩" + "; ".join(пары) + "⟨/ч⟩"
+    о = ("⟨о⟩" + z["о"]) if z.get("о") else ""
+    return f"⟦{z['вид']}⟧{ч}⟨и⟩{z['имя']}{о}⟨к⟩"
+
+class Блок(nn.Module):
+    def __init__(s, d, h, p):
+        super().__init__(); s.n1 = nn.LayerNorm(d); s.a = nn.MultiheadAttention(d, h, dropout=p, batch_first=True)
+        s.n2 = nn.LayerNorm(d); s.f = nn.Sequential(nn.Linear(d, 4 * d), nn.GELU(), nn.Linear(4 * d, d), nn.Dropout(p))
+    def forward(s, x, маска):
+        y = s.n1(x); x = x + s.a(y, y, y, attn_mask=маска, need_weights=False)[0]
+        return x + s.f(s.n2(x))
+
+class Летописец(nn.Module):
+    def __init__(s, V, d=int(os.environ.get("LET_D", "256")), L=int(os.environ.get("LET_L", "6")), h=8, p=0.1):
+        super().__init__(); s.e = nn.Embedding(V, d); s.pos = nn.Embedding(CTX, d); s.drop = nn.Dropout(p)
+        s.b = nn.ModuleList([Блок(d, h, p) for _ in range(L)]); s.n = nn.LayerNorm(d); s.o = nn.Linear(d, V, bias=False)
+        s.o.weight = s.e.weight
+        s.register_buffer("маска", torch.triu(torch.full((CTX, CTX), float("-inf")), 1), persistent=False)
+    def forward(s, x):
+        T = x.shape[1]; h = s.drop(s.e(x) + s.pos(torch.arange(T)))
+        for б in s.b: h = б(h, s.маска[:T, :T])
+        return s.o(s.n(h))
+
+def данные(папка):
+    текст = open(os.path.join(папка, "text.txt"), encoding="utf-8").read()
+    корпус = [json.loads(l) for l in open(os.path.join(папка, "corpus.jsonl"), encoding="utf-8")]
+    знаки = set(текст) | set("".join(z["имя"] + z["о"] + json.dumps(z.get("черты", {}), ensure_ascii=False) for z in корпус))
+    знаки -= set("".join(СЛУЖ)) - {"\n"}; знаки.discard("\n")
+    return текст, корпус, знаки
+
+def готовить(папка):
+    текст, корпус, знаки = данные(папка)
+    пс = os.path.join(папка, "letopisec_vocab.json")
+    if os.path.exists(пс): сл = Словарь([]); сл.т = json.load(open(пс, encoding="utf-8")); сл.и = {t: i for i, t in enumerate(сл.т)}; сл.спец = sorted([t for t in сл.т if len(t) > 1], key=len, reverse=True)
+    else: сл = Словарь(знаки); json.dump(сл.т, open(пс, "w", encoding="utf-8"), ensure_ascii=False)
+    random.seed(7); пров_ид = set(random.sample(range(len(корпус)), max(50, len(корпус) // 20)))
+    учить = [z for i, z in enumerate(корпус) if i not in пров_ид]; пров = [z for i, z in enumerate(корпус) if i in пров_ид]
+    т = torch.tensor(сл.код(текст), dtype=torch.long); n = len(т); тп = т[: n * 95 // 100]; тв = т[n * 95 // 100:]
+    return сл, тп, тв, учить, пров, корпус
+
+def пачка_текст(т, B):
+    i = torch.randint(0, len(т) - CTX - 1, (B,)); x = torch.stack([т[j:j + CTX + 1] for j in i]); return x[:, :-1], x[:, 1:]
+
+def пачка_записи(сл, записи, B):
+    xs = []
+    for _ in range(B):
+        # несколько записей подряд в одно окно — сеть видит много сущностей сразу
+        к = []
+        while len(к) < CTX + 1:
+            z = random.choice(записи); к += сл.код(запись(z, random.random() < 0.7)) + [сл.и["\n"]]
+        xs.append(torch.tensor(к[:CTX + 1]))
+    x = torch.stack(xs); y = x[:, 1:].clone(); y[y == 0] = -100; return x[:, :-1], y
+
+def учить(папка, шагов, этап):
+    torch.set_num_threads(int(os.environ.get("LET_THREADS", "2"))); torch.manual_seed(1)
+    сл, тп, тв, учз, прз, _ = готовить(папка); V = len(сл.т)
+    м = Летописец(V); пут = os.path.join(папка, "letopisec.pt"); шаг0 = 0
+    опт = torch.optim.AdamW(м.parameters(), lr=float(os.environ.get("LET_LR", "6e-4")), weight_decay=0.05, betas=(0.9, 0.95))
+    if os.path.exists(пут):
+        c = torch.load(пут); м.load_state_dict(c["м"]); опт.load_state_dict(c["опт"]); шаг0 = c["шаг"]
+    print(f"Летописец: словарь {V}, весов {sum(p.numel() for p in м.parameters())/1e6:.2f} млн, с шага {шаг0}", flush=True)
+    B = int(os.environ.get("LET_B", "24")); t0 = time.time(); ср = None
+    for ш in range(шаг0, шагов):
+        доля_записей = 0.0 if этап == "язык" else (0.75 if этап == "сущности" else min(0.75, max(0.0, (ш - шагов * 0.45) / (шагов * 0.2)) * 0.75))
+        lr = float(os.environ.get("LET_LR", "6e-4")) * min(1.0, (ш + 1) / 300) * (0.1 + 0.9 * 0.5 * (1 + math.cos(math.pi * ш / шагов)))
+        for g in опт.param_groups: g["lr"] = lr
+        x, y = пачка_записи(сл, учз, B) if random.random() < доля_записей else пачка_текст(тп, B)
+        м.train(); п = F.cross_entropy(м(x).reshape(-1, V), y.reshape(-1), ignore_index=-100)
+        опт.zero_grad(); п.backward(); torch.nn.utils.clip_grad_norm_(м.parameters(), 1.0); опт.step()
+        ср = п.item() if ср is None else 0.98 * ср + 0.02 * п.item()
+        if (ш + 1) % 50 == 0: print(f"шаг {ш+1}: потеря {ср:.3f} (записей {доля_записей:.2f}), {time.time()-t0:.0f} с", flush=True)
+        if (ш + 1) % 250 == 0 or ш + 1 == шагов:
+            torch.save({"м": м.state_dict(), "опт": опт.state_dict(), "шаг": ш + 1}, пут + ".tmp"); os.replace(пут + ".tmp", пут)
+            if (ш + 1) % 1000 == 0 or ш + 1 == шагов:
+                print("  проверка:", оценка_потери(м, сл, тв, прз, V), flush=True)
+                for в in random.sample(ВИДЫ, 3): print("  образец", в, "→", "; ".join(n for n, _ in писать(м, сл, в, 2, известные=set())), flush=True)
+
+@torch.no_grad()
+def оценка_потери(м, сл, тв, прз, V):
+    м.eval(); torch.manual_seed(5); random.seed(5)
+    пт = [F.cross_entropy(м(x).reshape(-1, V), y.reshape(-1)).item() for x, y in [пачка_текст(тв, 16) for _ in range(8)]]
+    пз = [F.cross_entropy(м(x).reshape(-1, V), y.reshape(-1), ignore_index=-100).item() for x, y in [пачка_записи(сл, прз, 16) for _ in range(8)]]
+    return {"текст_бит_на_знак": round(sum(пт) / len(пт) / math.log(2), 3), "сущности_бит_на_знак": round(sum(пз) / len(пз) / math.log(2), 3)}
+
+def близко(a, b):
+    a, b = a.lower(), b.lower()
+    if a == b: return True
+    if abs(len(a) - len(b)) > 3: return False
+    d = list(range(len(b) + 1))
+    for i, ca in enumerate(a, 1):
+        p, d[0] = d[0], i
+        for j, cb in enumerate(b, 1): p, d[j] = d[j], min(d[j] + 1, d[j - 1] + 1, p + (ca != cb))
+    return d[-1] <= max(1, len(a) // 6)
+
+@torch.no_grad()
+def писать(м, сл, вид, сколько, черты=None, известные=None, T=0.85, top_p=0.92, попыток=None):
+    м.eval(); вывод = []; попыток = попыток or сколько * 6
+    нач = f"⟦{вид}⟧" + (("⟨ч⟩" + черты + "⟨/ч⟩") if черты else "") + "⟨и⟩"
+    к_конец, к_о = сл.и["⟨к⟩"], сл.и["⟨о⟩"]
+    for _ in range(попыток):
+        x = torch.tensor([сл.код(нач)])
+        for _ in range(CTX - x.shape[1] - 1):
+            p = F.softmax(м(x[:, -CTX:])[0, -1] / T, -1)
+            sp, si = torch.sort(p, descending=True); cs = torch.cumsum(sp, 0); sp[cs - sp > top_p] = 0
+            c = si[torch.multinomial(sp / sp.sum(), 1)]
+            x = torch.cat([x, c.view(1, 1)], 1)
+            if c.item() in (к_конец, сл.и["\n"]): break
+        t = сл.текст(x[0].tolist())[len(нач):].replace("⟨к⟩", "").strip()
+        имя, _, о = t.partition("⟨о⟩")
+        имя = имя.strip()
+        if not (2 <= len(имя) <= 60) or "⟦" in имя or "⟨" in имя: continue
+        if известные is not None and any(близко(имя, k) for k in известные): continue
+        if any(близко(имя, n) for n, _ in вывод): continue
+        вывод.append((имя, о.strip()))
+        if len(вывод) >= сколько: break
+    return вывод
+
+def загрузить(папка):
+    сл = Словарь([]); сл.т = json.load(open(os.path.join(папка, "letopisec_vocab.json"), encoding="utf-8"))
+    сл.и = {t: i for i, t in enumerate(сл.т)}; сл.спец = sorted([t for t in сл.т if len(t) > 1], key=len, reverse=True)
+    м = Летописец(len(сл.т)); м.load_state_dict(torch.load(os.path.join(папка, "letopisec.pt"))["м"]); return м, сл
+
+if __name__ == "__main__":
+    cmd, папка = sys.argv[1], sys.argv[2]
+    if cmd == "train": учить(папка, int(sys.argv[3]) if len(sys.argv) > 3 else 8000, sys.argv[4] if len(sys.argv) > 4 else "оба")
+    elif cmd == "write":
+        torch.set_num_threads(2); м, сл = загрузить(папка)
+        корпус = [json.loads(l) for l in open(os.path.join(папка, "corpus.jsonl"), encoding="utf-8")]
+        изв = {z["имя"] for z in корпус if z["вид"] == sys.argv[3]}
+        for имя, о in писать(м, сл, sys.argv[3], int(sys.argv[4]) if len(sys.argv) > 4 else 8, sys.argv[5] if len(sys.argv) > 5 else None, изв):
+            print(f"{имя} — {о}" if о else имя)
+    elif cmd == "eval":
+        torch.set_num_threads(2); м, сл = загрузить(папка); сл2, тп, тв, учз, прз, корпус = готовить(папка)
+        print(оценка_потери(м, сл, тв, прз, len(сл.т)))
+        for в in ВИДЫ:
+            изв = {z["имя"] for z in корпус if z["вид"] == в}; р = писать(м, сл, в, 4, известные=изв)
+            print(f"{в}: " + " | ".join(f"{n} — {o[:90]}" if o else n for n, o in р))
