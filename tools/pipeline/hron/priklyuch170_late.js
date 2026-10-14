@@ -1389,7 +1389,9 @@ Object.assign(Приключения170,{
    речь:{первая:"«Помогите… Я думал, мне конец»."},знает:`${пленник.имя}: ${пленник.знает}`,цель_найден:"пленник_найден",цель_свобода:"пленник_свободен"});}
   return {id,n,опасность:оп,фон,звукВхода,старт:"вход",выход:"вход",цель_спасения,вход,комнаты,ген:true,арх};},
  /* молва: родить приключение рядом с героем */
- породить(Rext){const z=this.ген();const day=Number(G.day)||1;z.предложено=z.предложено.filter(o=>o.до>=day);if(z.предложено.length>=3)return this.молваСтарая()||"";
+ остудить(){const z=this.ген();const day=Number(G.day)||1;const ушли=z.предложено.filter(o=>o.до<day);if(!ушли.length)return;z.предложено=z.предложено.filter(o=>o.до>=day);
+  safeFn(()=>{const ms=Карта165.метки();for(const o of ушли){const i=ms.findIndex(m=>String(m.n).startsWith(`Молва: «${o.n}»`));if(i>=0)ms.splice(i,1);}});},
+ породить(Rext){const z=this.ген();const day=Number(G.day)||1;this.остудить();if(z.предложено.length>=3)return this.молваСтарая()||"";
   const seed=Math.floor((Rext?Rext():Math.random())*4294967295)>>>0;const R=this.rnd(seed);
   const т=safeFn(()=>Цепи170.точка(G.x,G.y,80,420,"gen"+seed,null),null);if(!т||!Number.isFinite(т.x))return this.молваСтарая()||"";
   const край=safeFn(()=>biomeAt(т.x,т.y),"plains")||"plains";const арх=this.выбратьАрх(край,R);z.n++;const id=`g_${z.n}`;
@@ -1455,35 +1457,35 @@ safeFn(()=>{const s0=startCombat;startCombat=matKeep(s0,function(c,opts){const r
    перед испытанием и схваткой, сердцебиение последней фазы и уходящего
    срока. Каждая — отрезок записи, моно, пик −1 дБ, FLAC без потерь; откуда
    и какой отрезок — sounds/adv/CREDITS.md. */
-safeFn(()=>{const F=(r,n)=>Array.from({length:n},(_,i)=>`adv/${r}_${String(i+1).padStart(2,"0")}.flac`);const B="(BigSoundBank, Joseph Sardin, CC0)";
+safeFn(()=>{const B="(BigSoundBank, Joseph Sardin, CC0)";
  Object.assign(SOUND_BANK,{
-  adv_lock:{f:F("adv_lock",3),d:`Приключения: ключ в замке — звяканье связки и ход механизма ${B}`},
-  adv_unlock:{f:F("adv_unlock",2),d:`Приключения: замок поддался — засов отходит ${B}`},
-  adv_chain:{f:F("adv_chain",3),d:`Приключения: цепи подъёмника и противовесов ${B}`},
-  adv_crank:{f:F("adv_crank",2),d:`Приключения: ворот механизма проворачивается ${B}`},
-  adv_lever:{f:F("adv_lever",3),d:`Приключения: скрип рычага ${B}`},
-  adv_ratchet:{f:F("adv_ratchet",2),d:`Приключения: храповик кольца — щелчки поворота ${B}`},
-  adv_rubble:{f:F("adv_rubble",3),d:`Приключения: обвал камней, падающая глыба свода ${B}`},
-  adv_creak:{f:F("adv_creak",2),d:`Приключения: скрипучая старая дверь ${B}`},
-  adv_door:{f:F("adv_door",2),d:`Приключения: дверь открывается и закрывается ${B}`},
-  adv_drawer:{f:F("adv_drawer",2),d:`Приключения: тайник выдвигается из стены ${B}`},
-  adv_click:{f:F("adv_click",2),d:`Приключения: щелчок диска кодового замка ${B}`},
-  adv_gong:{f:F("adv_gong",1),d:`Приключения и мастерство: гонг нового ранга и сданного испытания ${B}`},
-  adv_gong_big:{f:F("adv_gong_big",1),d:`Приключения: тяжёлый гонг — страж места переходит в новую фазу ${B}`},
-  adv_roll:{f:F("adv_roll",2),d:`Приключения и мастерство: дробь перед испытанием и схваткой со стражем ${B}`},
-  adv_heart:{f:F("adv_heart",2),d:`Приключения: сердцебиение — последняя фаза стража, уходящий срок ${B}`},
-  adv_whoosh:{f:F("adv_whoosh",3),d:`Приключения: свист дротика или болта ловушки ${B}`},
-  adv_bell_hi:{f:F("adv_bell_hi",1),d:`Приключения: тонкий колокольчик-сторож ${B}`},
-  adv_splash:{f:F("adv_splash",2),d:`Приключения: всплеск — провал в воду, гнилая гать ${B}`},
-  adv_mech:{f:F("adv_mech",2),d:`Приключения: старая машина приходит в движение ${B}`},
-  adv_cheer:{f:F("adv_cheer",1),d:`Приключения: толпа рукоплещет — разоблачение на площади, спасённая деревня ${B}`},
-  adv_dig:{f:F("adv_dig",2),d:`Приключения: лопата в земле и щебне — завал, ящик под снегом ${B}`},
-  adv_ice:{f:F("adv_ice",1),d:`Приключения: трещит лёд ледяного грота ${B}`},
-  adv_musicbox:{f:F("adv_musicbox",2),d:`Приключения: музыкальная шкатулка звякнула, открываясь ${B}`},
-  adv_page:{f:F("adv_page",2),d:`Приключения: шелест страниц — найдена записка или улика ${B}`},
-  adv_rope:{f:F("adv_rope",2),d:`Приключения: верёвка скользит и натягивается — мост, колодец ${B}`},
-  adv_candle:{f:F("adv_candle",1),d:`Приключения: потрескивает свеча у алтаря ${B}`},
-  adv_blow:{f:F("adv_blow",1),d:`Приключения: задули свечу — уйти, не оставив следа ${B}`}});
+  adv_lock:{f:["adv/adv_lock_01.flac","adv/adv_lock_02.flac","adv/adv_lock_03.flac"],d:`Приключения: ключ в замке — звяканье связки и ход механизма ${B}`},
+  adv_unlock:{f:["adv/adv_unlock_01.flac","adv/adv_unlock_02.flac"],d:`Приключения: замок поддался — засов отходит ${B}`},
+  adv_chain:{f:["adv/adv_chain_01.flac","adv/adv_chain_02.flac","adv/adv_chain_03.flac"],d:`Приключения: цепи подъёмника и противовесов ${B}`},
+  adv_crank:{f:["adv/adv_crank_01.flac","adv/adv_crank_02.flac"],d:`Приключения: ворот механизма проворачивается ${B}`},
+  adv_lever:{f:["adv/adv_lever_01.flac","adv/adv_lever_02.flac","adv/adv_lever_03.flac"],d:`Приключения: скрип рычага ${B}`},
+  adv_ratchet:{f:["adv/adv_ratchet_01.flac","adv/adv_ratchet_02.flac"],d:`Приключения: храповик кольца — щелчки поворота ${B}`},
+  adv_rubble:{f:["adv/adv_rubble_01.flac","adv/adv_rubble_02.flac","adv/adv_rubble_03.flac"],d:`Приключения: обвал камней, падающая глыба свода ${B}`},
+  adv_creak:{f:["adv/adv_creak_01.flac","adv/adv_creak_02.flac"],d:`Приключения: скрипучая старая дверь ${B}`},
+  adv_door:{f:["adv/adv_door_01.flac","adv/adv_door_02.flac"],d:`Приключения: дверь открывается и закрывается ${B}`},
+  adv_drawer:{f:["adv/adv_drawer_01.flac","adv/adv_drawer_02.flac"],d:`Приключения: тайник выдвигается из стены ${B}`},
+  adv_click:{f:["adv/adv_click_01.flac","adv/adv_click_02.flac"],d:`Приключения: щелчок диска кодового замка ${B}`},
+  adv_gong:{f:["adv/adv_gong_01.flac"],d:`Приключения и мастерство: гонг нового ранга и сданного испытания ${B}`},
+  adv_gong_big:{f:["adv/adv_gong_big_01.flac"],d:`Приключения: тяжёлый гонг — страж места переходит в новую фазу ${B}`},
+  adv_roll:{f:["adv/adv_roll_01.flac","adv/adv_roll_02.flac"],d:`Приключения и мастерство: дробь перед испытанием и схваткой со стражем ${B}`},
+  adv_heart:{f:["adv/adv_heart_01.flac","adv/adv_heart_02.flac"],d:`Приключения: сердцебиение — последняя фаза стража, уходящий срок ${B}`},
+  adv_whoosh:{f:["adv/adv_whoosh_01.flac","adv/adv_whoosh_02.flac","adv/adv_whoosh_03.flac"],d:`Приключения: свист дротика или болта ловушки ${B}`},
+  adv_bell_hi:{f:["adv/adv_bell_hi_01.flac"],d:`Приключения: тонкий колокольчик-сторож ${B}`},
+  adv_splash:{f:["adv/adv_splash_01.flac","adv/adv_splash_02.flac"],d:`Приключения: всплеск — провал в воду, гнилая гать ${B}`},
+  adv_mech:{f:["adv/adv_mech_01.flac","adv/adv_mech_02.flac"],d:`Приключения: старая машина приходит в движение ${B}`},
+  adv_cheer:{f:["adv/adv_cheer_01.flac"],d:`Приключения: толпа рукоплещет — разоблачение на площади, спасённая деревня ${B}`},
+  adv_dig:{f:["adv/adv_dig_01.flac","adv/adv_dig_02.flac"],d:`Приключения: лопата в земле и щебне — завал, ящик под снегом ${B}`},
+  adv_ice:{f:["adv/adv_ice_01.flac"],d:`Приключения: трещит лёд ледяного грота ${B}`},
+  adv_musicbox:{f:["adv/adv_musicbox_01.flac","adv/adv_musicbox_02.flac"],d:`Приключения: музыкальная шкатулка звякнула, открываясь ${B}`},
+  adv_page:{f:["adv/adv_page_01.flac","adv/adv_page_02.flac"],d:`Приключения: шелест страниц — найдена записка или улика ${B}`},
+  adv_rope:{f:["adv/adv_rope_01.flac","adv/adv_rope_02.flac"],d:`Приключения: верёвка скользит и натягивается — мост, колодец ${B}`},
+  adv_candle:{f:["adv/adv_candle_01.flac"],d:`Приключения: потрескивает свеча у алтаря ${B}`},
+  adv_blow:{f:["adv/adv_blow_01.flac"],d:`Приключения: задули свечу — уйти, не оставив следа ${B}`}});
  if(typeof BANK_CATS!=="undefined")BANK_CATS.adv="Приключения и мастерство: замки, механизмы, ловушки, тайники, гонги рангов и сердцебиение схваток";
  if(typeof BANK_GROUPS!=="undefined"&&!BANK_GROUPS.some(g=>g.dirs.includes("adv")))BANK_GROUPS.push({n:"Приключения и мастерство",icon:"",dirs:["adv"]});
  if(typeof ENC_FOLDER!=="undefined")ENC_FOLDER.adv="mech";

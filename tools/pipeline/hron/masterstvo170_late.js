@@ -363,7 +363,8 @@ const Мастерство170={
   safeFn(()=>Bank.play(МСТ170_ЗВУК.готов,{gain:0.6,maxSec:4}));
   this.журнал("путь",`${this.cap(d.n)}: тысячная ступень ранга ${r.р}. Для ранга ${r.р+1} «${сл.n}» нужно испытание — ${this.путиТекст(id,r)}`,"мастерство");
   this.сказать(`${this.cap(d.n)}: тысячная ступень ранга ${r.р}. Ступени дальше не растут — нужен переход на ранг ${r.р+1} «${сл.n}»: ${this.путиТекст(id,r)}`,"уровень");},
- сказать(t,кат){safeFn(()=>narrate(t,{interrupt:false,cat:"achieve"}));},
+ /* весть о пути — после итога самого дела: сначала «сотворено», «выковано», потом «начат путь» */
+ сказать(t,кат){const f=()=>safeFn(()=>narrate(t,{interrupt:false,cat:"achieve"}));if(кат==="уровень")setTimeout(f,1400);else f();},
  /* ── ПЕРЕХОД НА РАНГ ── */
  нужноПризнание(r){const сл=r.р+1;const p0=this.звание(r.р),p1=this.звание(сл);return p1>p0||сл>90;},
  путиТекст(id,r){const сл=r.р+1;const ч=[];const d=МСТ170_ПО_ID[id];
@@ -615,13 +616,11 @@ safeFn(()=>{const t0=techDo;techDo=matKeep(t0,function(t,станок){const M=�
  const s=M.снимок(t);M._тех={t,n:0,было:false};let r;
  try{r=t0.apply(this,arguments);}finally{const к=M._тех;M._тех=null;if(к&&к.было)safeFn(()=>M.поТехнике(t,к.n,M.вышло(t,s)));}
  return r;});});
-safeFn(()=>{const a0=mastAsk;mastAsk=matKeep(a0,function(npc,id){
- /* Первый урок и отказы (не учит, выше себя, нет золота, обида народа) — прежним путём, цена — teachGoldCost. */
- const ур=safeFn(()=>mastLevel(id),0)||0;if(!ур||!npc)return a0.apply(this,arguments);
- const учит=((MAST_TEACH[npc.prof]||{})[id]||0)+(safeFn(()=>Mentor.bonus(npc,id),0)||0);if(!учит||ур>=учит)return a0.apply(this,arguments);
- const M=Мастерство170;const r=M.запись(id,true);const v=M.уЖителя(npc).find(x=>x.id===id&&x.вид!=="урок")||M.уЖителя(npc).find(x=>x.id===id);
- if(!v){narrate(`${npc.name}: «Сейчас мне нечего вам дать — работайте у станка, ступени растут от дела».`,{interrupt:true});return false;}
- const g0=Number(G.gold)||0;M.уЖителяДело(npc,v);return (Number(G.gold)||0)<g0||v.вид==="сдать";});});
+/* Урок у наставника — прежним путём (цена, материалы, двенадцать дел, испытание в три работы, наставничество):
+   прежнее звание поднимает признавший мастер — это и есть переход полосы званий. Новая система сверяет ранг
+   с новым званием; уроки и испытания внутри звания — кнопкой «Мастерство: уроки и испытания» у жителя. */
+safeFn(()=>{const a0=mastAsk;mastAsk=matKeep(a0,function(npc,id){const r=a0.apply(this,arguments);
+ if(r)safeFn(()=>{const M=Мастерство170;M.запись(id,true);});return r;});});
 safeFn(()=>{const o0=openMastery;openMastery=matKeep(o0,function(){return Мастерство170.окно();});});
 /* ── признание мастера: право на один ранг на тысячной ступени (слава ремесла, наставники, тайные пути, большие дела) ── */
 Object.assign(Мастерство170,{признание(dir,кто,безПриёма){const d=МСТ170_ПО_ID[dir];if(!d)return "";const r=this.запись(dir,d.leg!==dir);if(!r||r.пусто)return "";
