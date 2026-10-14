@@ -1,22 +1,49 @@
-# (14.6) Звери и верховая езда, второй заход: BigSoundBank (Joseph Sardin, CC0).
-# Первый заход (кони, хруст, мурлыканье, галоп, рысь, шаг, крылья) уже в игре.
+# (17.5) «Хроники приключений и путь ста тысяч ступеней»: замки, рычаги, механизмы,
+# ловушки, тайники, загадки на слух, боссы, экзамены мастерства. BigSoundBank (Joseph Sardin, CC0).
+# Прежние заходы (14.6: звери и верховая езда) уже сведены в игру.
 # Поиск сайта любит одно-два простых слова в единственном числе.
 # имя запрос ~ шаблон имени страницы ~ сколько
-bsb_dog dog ~ dog.*(growl|grunt|pant|sniff|eat|chew|drink|lap|whin|bark) ~ 4
-bsb_cat cat ~ cat.*(eat|meow|hiss|lap|drink|purr) ~ 2
-bsb_goat goat ~ (goat|kid) ~ 2
-bsb_sheep sheep ~ (sheep|lamb|ewe) ~ 2
-bsb_cow cow ~ (cow|calf|bull|cattle) ~ 2
-bsb_pig pig ~ (pig|hog|boar|piglet) ~ 2
-bsb_hen chicken ~ (chicken|hen|rooster|cock|chick) ~ 2
-bsb_duck duck ~ (duck|goose) ~ 1
-bsb_chew chewing ~ (chew|eat|munch|bite|gnaw|crunch) ~ 3
-bsb_bone bone ~ (bone|crunch|break|snap) ~ 2
-bsb_meat meat ~ (meat|flesh|tear|raw|steak) ~ 2
-bsb_lick licking ~ (lick|lap|drink|slurp) ~ 2
-bsb_sniff sniffing ~ (sniff|smell|nose|snif) ~ 2
-bsb_leather leather ~ (leather|saddle|harness|strap|creak) ~ 3
-bsb_buckle buckle ~ (buckle|belt|clasp|strap) ~ 2
-bsb_bell bell ~ (small|little|jingle|tinkle|hand) ~ 2
-bsb_bird bird ~ (flight|wing|flap|flutter|take-off|takeoff) ~ 2
-bsb_horse horse ~ horse.*(snort|neigh|whinn|blow|breath|nicker) ~ 2
+adv_lock lock ~ (lock|padlock|latch|bolt) ~ 4
+adv_key key ~ (key|keys|keyring) ~ 3
+adv_lever lever ~ (lever|handle|switch|toggle) ~ 3
+adv_chain chain ~ (chain|chains) ~ 3
+adv_gear gear ~ (gear|cog|mechanism|clockwork|ratchet|winding) ~ 4
+adv_crank crank ~ (crank|winch|reel|ratchet) ~ 2
+adv_stone stone ~ (stone|rock|block|slab).*(slid|drag|scrap|grind|rub|mov|push) ~ 3
+adv_grind grinding ~ (grind|scrap|drag|friction) ~ 2
+adv_cage cage ~ (cage|grid|bars|grill) ~ 2
+adv_gate gate ~ (gate|portcullis|iron|metal) ~ 2
+adv_arrow arrow ~ (arrow|whiz|whizz|bow) ~ 3
+adv_swish swish ~ (swish|whoosh|swoosh|swing) ~ 3
+adv_spring spring ~ (spring|snap|clack|trap) ~ 2
+adv_click click ~ (click|clack|tick|clic) ~ 3
+adv_water water ~ water.*(flow|rush|pour|torrent|gush|flood|stream) ~ 3
+adv_hiss hiss ~ (hiss|steam|gas|valve|leak) ~ 3
+adv_spark electric ~ (electric|spark|arc|zap|discharge) ~ 3
+adv_rubble rubble ~ (rubble|rock|debris|collapse|landslide|fall|crumbl) ~ 3
+adv_bell bell ~ (bell|gong|chime) ~ 3
+adv_chime chime ~ (chime|wind|carillon|glass) ~ 2
+adv_musicbox music box ~ (music|box|melody) ~ 2
+adv_tuning tuning fork ~ (tuning|fork|diapason) ~ 1
+adv_harp harp ~ (harp|lyre|zither) ~ 2
+adv_heart heartbeat ~ (heart|beat|pulse) ~ 2
+adv_drum drum ~ (drum|tom|timpani|bass) ~ 3
+adv_paper paper ~ (paper|page|sheet|book) ~ 3
+adv_quill writing ~ (writ|pen|quill|pencil|scratch) ~ 2
+adv_knock knock ~ (knock|wood|door|wall|tap) ~ 3
+adv_draft wind ~ (wind|draft|draught|whistl|breeze|gust) ~ 2
+adv_sand sand ~ (sand|trickl|pour|grain|hourglass) ~ 2
+adv_rope rope ~ (rope|cord|knot|tension) ~ 2
+adv_crowbar crowbar ~ (crowbar|pry|lever|nail|wrench) ~ 2
+adv_horn horn ~ (horn|trumpet|bugle|fanfare|conch) ~ 2
+adv_applause applause ~ (applau|clap|cheer|ovation) ~ 2
+adv_chisel chisel ~ (chisel|carv|stone|engrav) ~ 2
+adv_bubble bubbling ~ (bubbl|boil|brew|simmer) ~ 2
+adv_glass glass ~ glass.*(clink|tink|ring|break|shatter|bottle) ~ 2
+adv_crystal crystal ~ (crystal|singing|glass|bowl) ~ 2
+adv_door door ~ door.*(heavy|old|creak|castle|cellar|wood|iron) ~ 3
+adv_creak creak ~ (creak|squeak|groan) ~ 2
+adv_pendulum pendulum ~ (pendulum|clock|tick|tock) ~ 2
+adv_scroll parchment ~ (parchment|scroll|paper|unroll|roll) ~ 1
+adv_shovel shovel ~ (shovel|dig|spade|earth) ~ 2
+adv_torch torch ~ (torch|fire|flame|ignit|match) ~ 2
