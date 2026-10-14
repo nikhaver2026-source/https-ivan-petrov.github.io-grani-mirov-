@@ -57,6 +57,13 @@ class Летописец(nn.Module):
         s.b = nn.ModuleList([Блок(d, h, p) for _ in range(L)]); s.n = nn.LayerNorm(d); s.o = nn.Linear(d, V, bias=False)
         s.o.weight = s.e.weight
         s.register_buffer("маска", torch.triu(torch.full((CTX, CTX), float("-inf")), 1), persistent=False)
+        s.apply(s._нач)
+    @staticmethod
+    def _нач(m):
+        """малые начальные веса (как у трансформеров): иначе общие веса входа и выхода дают огромные оценки и учёба вязнет"""
+        if isinstance(m, (nn.Linear, nn.Embedding)):
+            nn.init.normal_(m.weight, 0.0, 0.02)
+            if getattr(m, "bias", None) is not None: nn.init.zeros_(m.bias)
     def forward(s, x):
         T = x.shape[1]; h = s.drop(s.e(x) + s.pos(torch.arange(T)))
         for б in s.b: h = б(h, s.маска[:T, :T])
