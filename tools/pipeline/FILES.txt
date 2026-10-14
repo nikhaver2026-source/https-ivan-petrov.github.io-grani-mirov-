@@ -62,4 +62,7 @@ hron/zhivoe165_late.js
 hron/tayny165_late.js
 hron/dom165_late.js
 hron/zvuk165_late.js
+hron/vyuchka165_late.js
+hron/zagadki165_late.js
+hron/golos165_late.js
 hron/patch_guide_put165.py

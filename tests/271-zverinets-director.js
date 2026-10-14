@@ -49,6 +49,8 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   r.витрина=Zver.shop().length;
   r.грифон=Zver.buy("griffin_storm");r.конь=Zver.buy("horse_wild");r.паук=Zver.buy("spider_shadow");r.кот=Zver.buy("cat_moon");r.пёс=Zver.buy("hound_wild");
   const s=Zver.st();r.зверей=s.list.length;const id=n=>s.list.find(a=>a.breed===n).uid;
+  /* (после 16.0) седло летучего требует верховой езды: герой здесь — опытный всадник и зверовод */
+  G.vy165={звер:{xp:600,предел:10},езда:{xp:600,предел:10}};
   r.котВерхом=Zver.ride(id("cat_moon"));
   r.седло=Zver.ride(id("griffin_storm"));r.крыло=mountGift("крыло");r.шаг=mountGift("шаг");r.канКрыло=safeFn(()=>wingSpan(),0);
   Zver.ride(id("horse_wild"));r.шагКонь=mountGift("шаг");r.крылоКонь=mountGift("крыло");
@@ -208,9 +210,11 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   const пёс=Zver.make("spider_wild",{lvl:10,верн:90});const ск=Zver.make("centipede_wild",{lvl:10,верн:90});const сова=Zver.make("owl_wild",{lvl:5,верн:90});
   r.разумСовы=Zver.stat(сова,"разум");r.разумПаука=Zver.stat(пёс,"разум");r.hp=Zver.hpMax(пёс);
   /* умения открываются ветвями */
+  /* (после 16.0) третья ступень ветви — звероведение, четвёртая и пятая — наставник в городе, корм и плата */
+  G.vy165={звер:{xp:600,предел:10},езда:{xp:600,предел:10}};const место0=G.place;G.place={kind:"city",bx:G.x,by:G.y,stype:"village",name:"Тестовое село",depth:0,x:1,y:1};G.gold=Math.max(Number(G.gold)||0,1000);G.inv["мясо"]=20;
   пёс.lvl=30;r.доУмений=Zver.talents(пёс).length;for(let i=0;i<3;i++)Zver.grow(пёс.uid,"fang");r.умение3=Zver.has(пёс,"bite2");r.умение5=Zver.has(пёс,"deathgrip");
   for(let i=0;i<2;i++)Zver.grow(пёс.uid,"fang");r.умение5б=Zver.has(пёс,"deathgrip");
-  for(let i=0;i<3;i++)Zver.grow(пёс.uid,"move");r.ползок=Zver.has(пёс,"lurk");
+  for(let i=0;i<3;i++)Zver.grow(пёс.uid,"move");r.ползок=Zver.has(пёс,"lurk");G.place=место0;
   /* бой: способности срабатывают */
   s.pets=[];s.mount=null;Zver.follow(пёс.uid);Zver.follow(ск.uid);Zver.role(пёс.uid,"hunter");Zver.role(ск.uid,"hunter");
   const m=Object.assign({},MONSTERS.find(q=>q.id==="wolf"),{lvl:3,hp:2000,dmg:10});startCombat({x:G.x,y:G.y,monster:m});

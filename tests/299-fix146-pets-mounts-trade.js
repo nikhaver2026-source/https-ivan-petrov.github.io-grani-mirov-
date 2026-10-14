@@ -122,6 +122,7 @@ const ROOT=path.resolve(__dirname,'..');
   ZvSnd.журнал.length=0;r.сошёл=Zver.dismount();await спим(600);r.спешился=ЗВЕРЬ();
   /* летающий маунт — крылья */
   const fb=ZV_BREEDS.find(b=>ZV_FAMILY_BY_ID[b.fam].ездовой&&ZV_FAMILY_BY_ID[b.fam].ход==="fly");const f=Zver.make(fb.id,{тихо:true,верн:90});
+  /* (после 16.0) седло летучего — верховая езда 3 */G.vy165={звер:{xp:0,предел:4},езда:{xp:6*9+1,предел:4}};
   Zver.ride(f.uid);await спим(500);ZvSnd.журнал.length=0;for(let i=0;i<3;i++){stepSound();await спим(220);}await спим(300);
   const кр=(ZvSnd.prof(f).е||ZvSnd.prof(f).ш).map(x=>x.indexOf("/")>=0?x:SOUND_BANK[x].f).flat();
   r.крылья=ЗВЕРЬ().filter(x=>кр.includes(x)).length;r.летун=fb.fam;Zver.dismount();

@@ -89,7 +89,7 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   объект.рядом.length===1&&объект.действия.includes("Сесть верхом")&&объект.сел&&объект.следом&&объект.далеко&&/не рядом/.test(объект.издали)&&объект.снова&&объект.черезОкно,объект);
 
  /* ── 9 ── */
- const выучка=await p.evaluate(()=>{G.gold=2000;const g0=mountGift("шаг");Stable.train("ashmare");Stable.train("ashmare");const g1=mountGift("шаг");
+ const выучка=await p.evaluate(()=>{G.gold=2000;/* (после 16.0) вторая ступень выучки — верховая езда 1 и кожа */G.vy165={звер:{xp:0,предел:4},езда:{xp:7,предел:4}};G.inv["кожа"]=2;const g0=mountGift("шаг");Stable.train("ashmare");Stable.train("ashmare");const g1=mountGift("шаг");
   Zver.st().gear["saddle:leather"]=1;const mat=ZV_MATERIALS[0].id;Zver.st().gear["saddle:"+mat]=1;const t=Stable.legEquip("ashmare","saddle",mat);const g2=mountGift("шаг");
   return {g0,g1,g2,t,lv:Stable.legLv("ashmare")};});
  check('9. выучка и снаряжение скакуна тайных палат усиливают его дар',выучка.lv===2&&выучка.g1<выучка.g0&&выучка.g2<выучка.g1&&/надето/.test(выучка.t),выучка);
