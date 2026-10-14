@@ -65,4 +65,8 @@ hron/zvuk165_late.js
 hron/vyuchka165_late.js
 hron/zagadki165_late.js
 hron/golos165_late.js
+hron/rudy170_late.js
+hron/zelya170_late.js
+hron/hozyain170_late.js
+hron/rabota170_late.js
 hron/patch_guide_put165.py
