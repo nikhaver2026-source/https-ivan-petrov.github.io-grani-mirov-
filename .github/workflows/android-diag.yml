@@ -1,5 +1,6 @@
 # Разбор «Приложение не установлено» на Android 16 (только в рабочей ветке, ничего не собирает и не выпускает):
-# выложенные APK 16.0 и 17.0 ставятся начисто на эмуляторы Android 16, adb печатает точную причину отказа.
+# выложенные APK 16.0 и 17.0 ставятся начисто на эмуляторы Android 16 — как на телефоне: файл в «Загрузках»,
+# его открывает установщик Android, кнопка «Установить»; итог и причина отказа — в журнале.
 name: Разбор установки Android 16
 
 on:
@@ -18,7 +19,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        target: [google_apis, google_apis_playstore]
+        target: [google_apis_playstore]
     steps:
       - uses: actions/checkout@v4
         with:
@@ -48,7 +49,7 @@ jobs:
           api-level: 36
           target: ${{ matrix.target }}
           arch: x86_64
-          disk-size: 20G
+          disk-size: 40G
           emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
           disable-animations: true
-          script: bash .github/diag/install-diag.sh "$RUNNER_TEMP/g16.0.apk" "$RUNNER_TEMP/g17.0.apk"
+          script: bash .github/diag/install-ui.sh "$RUNNER_TEMP/g16.0.apk" "$RUNNER_TEMP/g17.0.apk"
