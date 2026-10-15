@@ -1,0 +1,54 @@
+# Разбор «Приложение не установлено» на Android 16 (только в рабочей ветке, ничего не собирает и не выпускает):
+# выложенные APK 16.0 и 17.0 ставятся начисто на эмуляторы Android 16, adb печатает точную причину отказа.
+name: Разбор установки Android 16
+
+on:
+  push:
+    branches: [claude/gesture-combat-ui-fixes-7tjy3t]
+    paths: ['.github/workflows/android-diag.yml', '.github/diag/**']
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  diag:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    strategy:
+      fail-fast: false
+      matrix:
+        target: [google_apis, google_apis_playstore]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: .github
+      - name: Освободить место
+        run: |
+          sudo rm -rf /usr/share/dotnet /opt/ghc /usr/local/.ghcup /usr/local/share/boost /opt/hostedtoolcache/CodeQL /usr/local/share/powershell /usr/share/swift || true
+          df -h /
+      - name: Скачать выложенные APK 16.0 и 17.0
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          for P in 11840533816:16.0 11971460083:17.0; do
+            ID=${P%%:*}; V=${P##*:}
+            curl -fsSL --retry 3 -H "Authorization: Bearer $GH_TOKEN" -o "$RUNNER_TEMP/g$V.apk" \
+              "https://api.github.com/repos/$GITHUB_REPOSITORY/actions/artifacts/$ID/zip"
+            ls -la "$RUNNER_TEMP/g$V.apk"
+          done
+      - name: Эмулятор — включить KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+      - name: Установка на Android 16
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 36
+          target: ${{ matrix.target }}
+          arch: x86_64
+          disk-size: 20G
+          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
+          disable-animations: true
+          script: bash .github/diag/install-diag.sh "$RUNNER_TEMP/g16.0.apk" "$RUNNER_TEMP/g17.0.apk"
