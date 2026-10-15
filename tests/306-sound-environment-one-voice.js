@@ -102,6 +102,9 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
  const г=await p.evaluate(async()=>{const r={};const live=document.getElementById("liveRegion");const seen=[];
   const mo=new MutationObserver(()=>{if(live.textContent)seen.push(live.textContent);});mo.observe(live,{childList:true,characterData:true,subtree:true});
   const sp0=settings.speech,sr0=settings.srMode;settings.srMode="auto";
+  /* подсказка новичку («Если вы здесь впервые…») ждёт семь секунд после входа в мир и может попасть в окно
+     проверки; к одному голосу она отношения не имеет — на время проверки обучение считается пройденным */
+  const td0=G.tutorDone;G.tutorDone=true;
   /* встроенная говорит (подставной голос) */
   const a0=Speech._adapter;Speech._adapter=()=>({name:"fake",speak(t,o){setTimeout(()=>o.onend&&o.onend(),5);return true;},cancel(){},speaking(){return false;}});
   settings.speech=1;Speech.say("Проверка один.",{pri:2});await спим(150);r.приРечи=seen.slice();seen.length=0;
@@ -111,7 +114,7 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   G.inCombat=true;G.combat={m:{n:"Волк",hp:10},hp:10};const cb0=settings.cbSpeech;settings.cbSpeech=0;
   Speech.say("Волк крадётся слева.",{pri:2});await спим(150);r.тихийБой=seen.slice();
   settings.cbSpeech=cb0;G.inCombat=false;G.combat=null;
-  mo.disconnect();Speech._adapter=a0;settings.speech=sp0;settings.srMode=sr0;return r;});
+  mo.disconnect();Speech._adapter=a0;settings.speech=sp0;settings.srMode=sr0;G.tutorDone=td0;return r;});
  check('5. при встроенной речи чтец молчит; без неё чтец получает фразы, но не те, что игра в тихом бою не говорит',
   г.приРечи.length===0&&г.безРечи.length===1&&г.безРечи[0]==="Проверка два."&&г.тихийБой.length===0,г);
 
