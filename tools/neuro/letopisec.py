@@ -53,7 +53,7 @@ class Блок(nn.Module):
         return x + s.f(s.n2(x))
 
 class Летописец(nn.Module):
-    def __init__(s, V, d=int(os.environ.get("LET_D", "256")), L=int(os.environ.get("LET_L", "6")), h=8, p=0.1):
+    def __init__(s, V, d=int(os.environ.get("LET_D", "256")), L=int(os.environ.get("LET_L", "6")), h=8, p=float(os.environ.get("LET_P", "0.1"))):
         super().__init__(); s.e = nn.Embedding(V, d); s.pos = nn.Embedding(CTX, d); s.drop = nn.Dropout(p)
         s.b = nn.ModuleList([Блок(d, h, p) for _ in range(L)]); s.n = nn.LayerNorm(d); s.o = nn.Linear(d, V, bias=False)
         s.o.weight = s.e.weight
@@ -109,7 +109,8 @@ def учить(папка, шагов, этап):
     torch.set_num_threads(int(os.environ.get("LET_THREADS", "2"))); torch.manual_seed(1)
     сл, тп, тв, учз, прз, _ = готовить(папка); V = len(сл.т)
     м = Летописец(V); пут = os.path.join(папка, "letopisec.pt"); шаг0 = 0
-    опт = torch.optim.AdamW(м.parameters(), lr=float(os.environ.get("LET_LR", "6e-4")), weight_decay=0.05, betas=(0.9, 0.95))
+    опт = torch.optim.AdamW(м.parameters(), lr=float(os.environ.get("LET_LR", "6e-4")), weight_decay=float(os.environ.get("LET_WD", "0.05")), betas=(0.9, 0.95))
+    лучшая = float(json.load(open(пут + ".лучший"))["бит"]) if os.path.exists(пут + ".лучший") else 99.0
     if os.path.exists(пут):
         c = torch.load(пут); м.load_state_dict(c["м"]); опт.load_state_dict(c["опт"]); шаг0 = c["шаг"]
     print(f"Летописец: словарь {V}, весов {sum(p.numel() for p in м.parameters())/1e6:.2f} млн, с шага {шаг0}", flush=True)
@@ -125,9 +126,16 @@ def учить(папка, шагов, этап):
         if (ш + 1) % 50 == 0: print(f"шаг {ш+1}: потеря {ср:.3f} (записей {доля_записей:.2f}), {time.time()-t0:.0f} с", flush=True)
         if (ш + 1) % 250 == 0 or ш + 1 == шагов:
             torch.save({"м": м.state_dict(), "опт": опт.state_dict(), "шаг": ш + 1}, пут + ".tmp"); os.replace(пут + ".tmp", пут)
-            if (ш + 1) % 1000 == 0 or ш + 1 == шагов:
-                print("  проверка:", оценка_потери(м, сл, тв, прз, V), flush=True)
+            # (18) проверка на сущностях, которых сеть не видела, — чаще, когда идут записи; лучший снимок — отдельно:
+            # 6×256 к концу заучивала таблицы (проверка 1,80 → 2,15 бит) и копировала имена чужих видов
+            if (ш + 1) % 1000 == 0 or ш + 1 == шагов or (доля_записей > 0 and (ш + 1) % 500 == 0):
+                пр = оценка_потери(м, сл, тв, прз, V); print("  проверка:", пр, flush=True)
+                if доля_записей > 0 and пр["сущности_бит_на_знак"] < лучшая:
+                    лучшая = пр["сущности_бит_на_знак"]; torch.save({"м": м.state_dict(), "шаг": ш + 1}, os.path.join(папка, "letopisec_best.pt"))
+                    json.dump({"бит": лучшая, "шаг": ш + 1}, open(пут + ".лучший", "w")); print(f"  лучший снимок: шаг {ш + 1}, {лучшая:.3f} бит", flush=True)
                 for в in random.sample(ВИДЫ, 3): print("  образец", в, "→", "; ".join(n for n, _ in писать(м, сл, в, 2, известные=set())), flush=True)
+        if доля_записей > 0 and not os.path.exists(os.path.join(папка, "letopisec_язык.pt")):  # снимок конца языкового этапа — для новых попыток
+            torch.save({"м": м.state_dict(), "опт": опт.state_dict(), "шаг": ш + 1}, os.path.join(папка, "letopisec_язык.pt"))
 
 @torch.no_grad()
 def оценка_потери(м, сл, тв, прз, V):
@@ -174,7 +182,8 @@ def загрузить(папка):
     сл.и = {t: i for i, t in enumerate(сл.т)}; сл.спец = sorted([t for t in сл.т if len(t) > 1], key=len, reverse=True)
     # ширина, число слоёв и окно — по самому снимку (192×4 и 256×6 лежат в разных папках)
     global CTX
-    z = torch.load(os.path.join(папка, "letopisec.pt"))["м"]
+    лучший = os.path.join(папка, "letopisec_best.pt")  # лучший по проверке на незнакомых сущностях, если есть
+    z = torch.load(лучший if os.path.exists(лучший) and os.environ.get("LET_LAST") != "1" else os.path.join(папка, "letopisec.pt"))["м"]
     d = z["n.weight"].shape[0]; L = 1 + max(int(k.split(".")[1]) for k in z if k.startswith("b."))
     CTX = z["pos.weight"].shape[0]
     м = Летописец(len(сл.т), d=d, L=L); м.load_state_dict(z); return м, сл
