@@ -26,11 +26,9 @@ import android.widget.FrameLayout;
 import androidx.webkit.WebViewAssetLoader;
 import androidx.webkit.WebViewClientCompat;
 
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.zip.ZipEntry;
@@ -68,14 +66,7 @@ import java.util.Set;
    отдельным файлом, удаляется при запуске — он занимал гигабайты в данных
    приложения и подменял свежие записи старыми. «Сохранить в файл» кладёт файл
    в «Загрузки» телефона (saveDownload), «Загрузить из файла» открывает выбор
-   файла (WebChromeClient).
-
-   (17.0) Записи в полном APK лежат не по одной, а в нескольких больших
-   связках assets/www/snd/p*.pak с описью index.tsv (android/full-apk.py):
-   подпись v1 перечисляет каждую запись архива, и при 72 тысячах записей её
-   списки переросли 8 000 000 байт — Android 16 такую сборку не ставил. Адреса
-   у страницы прежние (sounds/…): приложение находит запись по описи и читает
-   её прямо из связки внутри APK. */
+   файла (WebChromeClient). */
 public class MainActivity extends Activity {
     private static final String START = "https://appassets.androidplatform.net/assets/www/index.html";
 
@@ -133,13 +124,6 @@ public class MainActivity extends Activity {
         });
 
         final WebViewAssetLoader loader = new WebViewAssetLoader.Builder()
-                // Записи игры — из связок внутри APK (по описи); прежний путь assets — запасной.
-                .addPathHandler("/assets/www/sounds/", path -> {
-                    InputStream in = pakOpen(path);
-                    if (in == null) return null;
-                    String t = mime(path);
-                    return new WebResourceResponse(t, t.startsWith("text/") || t.endsWith("json") ? "utf-8" : null, in);
-                })
                 // Голосовой пакет — из установленного файла, раньше записей самой игры.
                 .addPathHandler("/assets/www/sounds/gvoice_pack/", path -> {
                     ZipFile z = pack();
@@ -241,8 +225,7 @@ public class MainActivity extends Activity {
         final String probe = getIntent() != null ? getIntent().getStringExtra("grani_probe") : null;
         if (probe != null) new Thread(() -> {
             long n = 0;
-            try (InputStream in = probe.startsWith("pak:") ? pakOpen(probe.substring(4)) : getAssets().open(probe)) {
-                if (in == null) throw new java.io.FileNotFoundException(probe);
+            try (InputStream in = getAssets().open(probe)) {
                 byte[] b = new byte[1 << 16]; int k;
                 while ((k = in.read(b)) > 0) n += k;
                 android.util.Log.i("GraniProbe", "ok " + probe + " " + n);
@@ -290,108 +273,14 @@ public class MainActivity extends Activity {
     private boolean builtinPack() {
         Boolean b = builtin;
         if (b == null) {
-            b = pakHas("gvoice_pack/m/bank.js") || pakHas("gvoice_pack/f/bank.js");
-            if (!b) for (String v : new String[]{"m", "f"}) {
+            b = false;
+            for (String v : new String[]{"m", "f"}) {
                 try (InputStream in = getAssets().open("www/sounds/gvoice_pack/" + v + "/bank.js")) { b = true; break; }
                 catch (Exception ignored) { }
             }
             builtin = b;
         }
         return b;
-    }
-
-    /* ── Связки записей (17.0) ── */
-    private final Object pakLock = new Object();
-    private java.util.HashMap<String, long[]> pakIndex;
-    private android.content.res.AssetFileDescriptor[] pakFd;
-    private java.nio.channels.FileChannel[] pakCh;
-    private long[] pakStart;
-
-    /* Опись читается один раз, при первой записи; связки открываются как участки самого APK. */
-    private boolean pakLoad() {
-        synchronized (pakLock) {
-            if (pakIndex != null) return !pakIndex.isEmpty();
-            java.util.HashMap<String, long[]> m = new java.util.HashMap<>(1 << 17);
-            int packs = 0;
-            try (BufferedReader r = new BufferedReader(new InputStreamReader(getAssets().open("www/snd/index.tsv"), StandardCharsets.UTF_8), 1 << 16)) {
-                String line;
-                while ((line = r.readLine()) != null) {
-                    int a = line.indexOf('\t'), b = line.indexOf('\t', a + 1), c = line.indexOf('\t', b + 1);
-                    if (a <= 0 || b < 0 || c < 0) continue;
-                    long k = Long.parseLong(line.substring(a + 1, b));
-                    m.put(line.substring(0, a), new long[]{k, Long.parseLong(line.substring(b + 1, c)), Long.parseLong(line.substring(c + 1))});
-                    packs = (int) Math.max(packs, k + 1);
-                }
-                android.content.res.AssetFileDescriptor[] fd = new android.content.res.AssetFileDescriptor[packs];
-                java.nio.channels.FileChannel[] ch = new java.nio.channels.FileChannel[packs];
-                long[] st = new long[packs];
-                for (int i = 0; i < packs; i++) {
-                    fd[i] = getAssets().openFd("www/snd/p" + i + ".pak");
-                    st[i] = fd[i].getStartOffset();
-                    ch[i] = new java.io.FileInputStream(fd[i].getFileDescriptor()).getChannel();
-                }
-                pakFd = fd; pakCh = ch; pakStart = st;
-            } catch (Exception e) {
-                android.util.Log.i("Grani", "связок записей нет: " + e);
-                m.clear();
-            }
-            pakIndex = m;
-            return !m.isEmpty();
-        }
-    }
-
-    private boolean pakHas(String path) {
-        return pakLoad() && pakIndex.containsKey(path);
-    }
-
-    private InputStream pakOpen(String path) {
-        if (path == null || !pakLoad()) return null;
-        long[] e = pakIndex.get(path);
-        if (e == null) return null;
-        int k = (int) e[0];
-        return new PakStream(pakCh[k], pakStart[k] + e[1], e[2]);
-    }
-
-    /* Участок связки: чтение по смещению (pread), потоки друг другу не мешают. */
-    private static final class PakStream extends InputStream {
-        private final java.nio.channels.FileChannel ch;
-        private long pos;
-        private final long end;
-        PakStream(java.nio.channels.FileChannel ch, long start, long len) { this.ch = ch; this.pos = start; this.end = start + len; }
-        @Override public int read(byte[] b, int off, int len) throws java.io.IOException {
-            if (len == 0) return 0;
-            if (pos >= end) return -1;
-            int n = (int) Math.min(len, end - pos);
-            int k = ch.read(java.nio.ByteBuffer.wrap(b, off, n), pos);
-            if (k <= 0) return -1;
-            pos += k;
-            return k;
-        }
-        @Override public int read() throws java.io.IOException {
-            byte[] one = new byte[1];
-            return read(one, 0, 1) <= 0 ? -1 : one[0] & 0xff;
-        }
-        @Override public long skip(long n) {
-            long k = Math.max(0, Math.min(n, end - pos));
-            pos += k;
-            return k;
-        }
-        @Override public int available() { return (int) Math.min(Integer.MAX_VALUE, end - pos); }
-    }
-
-    private static String mime(String path) {
-        String p = path.toLowerCase(Locale.ROOT);
-        if (p.endsWith(".flac")) return "audio/flac";
-        if (p.endsWith(".ogg") || p.endsWith(".oga") || p.endsWith(".opus")) return "audio/ogg";
-        if (p.endsWith(".mp3")) return "audio/mpeg";
-        if (p.endsWith(".wav")) return "audio/wav";
-        if (p.endsWith(".m4a")) return "audio/mp4";
-        if (p.endsWith(".webm")) return "audio/webm";
-        if (p.endsWith(".js") || p.endsWith(".mjs")) return "text/javascript";
-        if (p.endsWith(".json")) return "application/json";
-        if (p.endsWith(".wasm")) return "application/wasm";
-        if (p.endsWith(".txt") || p.endsWith(".md")) return "text/plain";
-        return "application/octet-stream";
     }
 
     private synchronized ZipFile pack() {
