@@ -1,7 +1,8 @@
 #!/bin/bash
 # Проверка полного APK на эмуляторе (рабочий процесс android.yml): APK
 # ставится, приложение запускается и читает запись из самого конца архива —
-# за пределом 4 ГиБ, где у ZIP64 свои поля.
+# за пределом 4 ГиБ, где у ZIP64 свои поля. (17.0) Записи лежат в связках:
+# запись читается тем же путём, что у страницы, — по описи из связки.
 #   bash android/install-check.sh <APK>
 set -e
 APK=$1
@@ -9,8 +10,16 @@ PKG=io.github.granimirov
 read -r LAST SIZE OFF < <(python3 - "$APK" <<'PY'
 import sys, zipfile
 z = zipfile.ZipFile(sys.argv[1])
-i = max(z.infolist(), key=lambda x: x.header_offset)
-print(i.filename[len("assets/"):], i.file_size, i.header_offset)
+names = z.namelist()
+if "assets/www/snd/index.tsv" in names:
+    # (17.0) записи в связках: последняя запись последней связки — дальше всех от начала APK
+    rows = [l.split("\t") for l in z.read("assets/www/snd/index.tsv").decode("utf-8").splitlines()]
+    rel, k, off, n = max(rows, key=lambda r: (int(r[1]), int(r[2])))
+    base = z.getinfo(f"assets/www/snd/p{k}.pak").header_offset
+    print("pak:" + rel, n, base + int(off))
+else:
+    i = max(z.infolist(), key=lambda x: x.header_offset)
+    print(i.filename[len("assets/"):], i.file_size, i.header_offset)
 PY
 )
 echo "Android $(adb shell getprop ro.build.version.release | tr -d '\r'); последняя запись: $LAST ($SIZE байт, смещение $OFF)"

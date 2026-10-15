@@ -6,10 +6,13 @@
 # сеть не нужна, докачивать и ставить отдельно нечего.
 #
 # Записей больше 4 ГиБ, поэтому APK — архив ZIP64 (android/full-apk.py).
+# Записи лежат в нескольких связках по 256 МиБ с описью (17.0): подпись v1
+# перечисляет каждую запись архива, и при 72 тысячах записей её списки
+# переросли 8 000 000 байт — Android 16 сборку 17.0 не ставил.
 # Android читает такие APK с Android 12, но подписи v2/v3 у ZIP64 не принимает,
 # и apksigner их не ставит: полный APK подписан подписью v1 (jarsigner), а его
 # целевой API — 29 (подпись v1 без v2 Android принимает у целевого API ниже 30).
-# Перед выпуском APK ставится и запускается на эмуляторах Android 12 и 15.
+# Перед выпуском APK ставится и запускается на эмуляторах Android 12, 15 и 16.
 # На Android 12 он ставится поверх прежней сборки (последней удачной из main),
 # как у игрока: подпись та же, данные игры на месте; иначе выпуска нет.
 # APK больше предела выпуска (2 ГиБ) и лежит на странице сборки (Artifacts),
@@ -173,6 +176,17 @@ jobs:
           rm -f "$RUNNER_TEMP/full-unsigned.apk"
           ls -la grani-mirov-17.0-full.apk
           jarsigner -J-Xmx8g -verify grani-mirov-17.0-full.apk | grep "jar verified"
+          # Списки подписи v1 (MANIFEST.MF, .SF) — малые: проверка подписи Java не
+          # принимает больше 8 000 000 байт (Android 16 не ставил такую сборку).
+          python3 - grani-mirov-17.0-full.apk <<'PY'
+          import sys, zipfile
+          z = zipfile.ZipFile(sys.argv[1])
+          meta = [(i.filename, i.file_size) for i in z.infolist() if i.filename.startswith("META-INF/")]
+          print("записей в архиве:", len(z.infolist()), "; подпись:", ", ".join(f"{n} {s} байт" for n, s in meta))
+          big = [(n, s) for n, s in meta if s > 1_000_000]
+          if big:
+              sys.exit(f"списки подписи слишком велики: {big}")
+          PY
           # Разбор тем же кодом ZIP, что у Android (libziparchive в aapt2).
           "$ANDROID_HOME/build-tools/36.0.0/aapt2" dump badging grani-mirov-17.0-full.apk | head -4
           df -h /
@@ -245,7 +259,7 @@ jobs:
           PY
 
       # Проверка до выпуска: полный APK ставится и запускается на эмуляторах —
-      # Android 12 (первая версия, читающая ZIP64; поверх прежней сборки) и Android 15 (начисто).
+      # Android 12 (первая версия, читающая ZIP64; поверх прежней сборки), Android 15 и 16 (начисто).
       - name: Эмулятор — включить KVM
         run: |
           echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
@@ -275,6 +289,18 @@ jobs:
           disable-animations: true
           script: bash android/install-check.sh grani-mirov-17.0-full.apk
 
+      # Android 16 — с Google Play, как у игроков.
+      - name: Установка на Android 16
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 36
+          target: google_apis_playstore
+          arch: x86_64
+          disk-size: 16G
+          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
+          disable-animations: true
+          script: bash android/install-check.sh grani-mirov-17.0-full.apk
+
       # Выпуск «android-latest» несёт ссылку на полный APK (он больше предела
       # выпуска в 2 ГиБ). Пробная сборка из ветки (Run workflow) выпуск не трогает.
       - name: Ссылка на полный APK в выпуске «android-latest»
@@ -288,7 +314,7 @@ jobs:
           SIZE=$(stat -c %s grani-mirov-17.0-full.apk)
           read -r GB NEED TOTAL < <(python3 -c "import math,sys; s=int(sys.argv[1])/1e9; print(f'{s:.2f}'.replace('.',','), math.ceil(2*s+1), math.ceil(3*s+1))" "$SIZE")
           UPD="Ставится поверх прежней версии, сохранения остаются."
-          [ -n "${PREV_RUN:-}" ] && UPD="Ставится поверх прежней версии, сохранения остаются (проверено на Android 12: обновление со сборки ${PREV_RUN})."
+          [ -n "${PREV_RUN:-}" ] && UPD="Ставится поверх прежней версии, сохранения остаются (проверено на Android 12: обновление со сборки ${PREV_RUN}); ставится и запускается на Android 12, 15 и 16."
           cat > "$RUNNER_TEMP/notes.md" <<EOF
           Свежая сборка из main ($GITHUB_SHA); ${KEY_NOTE}.
 
