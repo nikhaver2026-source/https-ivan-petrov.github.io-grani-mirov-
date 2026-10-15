@@ -508,7 +508,8 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
    await wait(30);
    шаг.очистка={снято:Speech.flush(),осталось:Speech.queue.length,текущее:Speech.current&&Speech.current.text};
    шаг.микшер={речьИдёт:Speech.isSpeaking(),музыка0,музыкаВРечи:Bank.vol("music"),мир0,мирВРечи:Bank.vol("fx")};
-   fake.end();await wait(30);
+   /* (17.5) приглушение отпускается через 0,45 с тишины — без «дыхания» между фразами подряд */
+   fake.end();await wait(30);for(let i=0;i<30&&Speech.ducking;i++)await wait(50);
    шаг.микшер.музыкаПосле=Bank.vol("music");
    narrate("Старое.");await wait(30);const старый=fake.cur;Speech.stop();narrate("Новое.");await wait(30);
    try{старый.onend();}catch(e){}await wait(20);

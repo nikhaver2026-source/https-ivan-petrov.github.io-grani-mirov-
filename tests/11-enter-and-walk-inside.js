@@ -8,7 +8,9 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
  page.on('console',m=>{if(m.type()==='error')errors.push('console: '+m.text());});
  await page.goto(process.argv[2]);await page.waitForTimeout(700);
  const cdp=await ctx.newCDPSession(page);
- await page.evaluate(()=>enterGame());await page.waitForTimeout(200);
+ /* Случайные события мира (ярмарка на площади и прочие) открывают окно прямо при входе — и свайп листал окно,
+    а не шагал: набор проверяет жесты, поэтому события мира на время проверки молчат (как в большинстве наборов). */
+ await page.evaluate(()=>{enterGame();window.maybeEvent=()=>{};});await page.waitForTimeout(200);
 
  async function multi(n,dir){ // dir: null = тап, 'S'/'N'/'E' = свайп
   const pts=[];

@@ -46,7 +46,9 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
  check('неизвестный вид источника считается миром, а не тишиной',!каналы.чужие.length,каналы.чужие);
 
  /* ── 2. Громкости независимы ── */
- const громко=await page.evaluate(()=>{
+ const громко=await page.evaluate(async()=>{
+  /* (17.5) приглушение фона под речь отпускается через 0,45 с тишины: громкости каналов меряются в тишине */
+  try{Speech.stop();}catch(_){}for(let i=0;i<40&&Speech.ducking;i++)await new Promise(r=>setTimeout(r,50));
   const было={e:settings.effects,m:settings.music,f:settings.fxVol,
    a:settings.ambVol,mv:settings.musicVol,u:settings.uiVol};
   settings.effects=1;settings.music=1;

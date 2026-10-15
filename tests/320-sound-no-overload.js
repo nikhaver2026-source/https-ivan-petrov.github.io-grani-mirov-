@@ -22,7 +22,11 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   window.__said=[];const rec=t=>{window.__said.push(String(t));return true;};Speech.say=rec;Speech.request=rec;
   window.maybeEvent=()=>{};window.meetCaravan=()=>false;window.maybeGuardPatrol=()=>{};window.maybeWildlife=()=>{};
   window.__тесн=null;const т0=Гул155.теснота.bind(Гул155);Гул155.теснота=function(){return window.__тесн||т0();};
-  window.__vol=el=>el&&typeof el.volume==="number"?+el.volume.toFixed(4):null;
+  /* (17.5) у вариантов записи своя поправка громкости по замеру (ПОПРАВКА_ГРОМКОСТИ) — здесь проверяется
+     теснота и громкость героя, поэтому поправка файла вынимается */
+  window.__vol=el=>{if(!el||typeof el.volume!=="number")return null;let k=1;
+   try{const f=decodeURIComponent(String(el.src||el.currentSrc||"")).split("/sounds/").pop();k=(typeof ПОПРАВКА_ГРОМКОСТИ==="object"&&ПОПРАВКА_ГРОМКОСТИ[f])||1;}catch(_){}
+   return +(el.volume/k).toFixed(4);};
   window.__канал=()=>{let b=null;for(const к of ЗвукСреда.каналы)if(к.занят&&(!b||к.n>b.n))b=к;return b;};
   window.__стоп=()=>{safeFn(()=>Bank.stopAll());safeFn(()=>ЗвукСреда.стопВсе());};});
 

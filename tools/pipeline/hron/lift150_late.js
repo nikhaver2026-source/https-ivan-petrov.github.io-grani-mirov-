@@ -88,7 +88,7 @@ const Лифт150={
   s.бодр[k]=true;
   narrate("Вы налегли на ворот. Он поддался со скрежетом, и где-то в толще камня отозвались противовесы: подъёмник проснулся. Двойное касание — выбрать ярус.",{interrupt:true});
   safeFn(()=>saveGame(true));return true;},
- ехать(n){const p=G.place;if(!p||!this.здесь())return false;if(G.inCombat){narrate("Сначала завершите бой!",{cat:"result"});return false;}
+ ехать(n){const p=G.place;if(!p||!this.здесь())return false;if(G.inCombat)return false;
   /* пока клеть идёт, вторая поездка не начинается: ярус меняется на месте (changeDepth правит depth того же места),
      и поездка, заказанная с прежнего яруса, увезла бы мимо пройденного */
   if(this._едет){narrate("Клеть ещё идёт.",{interrupt:true});return false;}

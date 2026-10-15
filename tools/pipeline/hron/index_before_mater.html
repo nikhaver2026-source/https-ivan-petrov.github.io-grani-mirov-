@@ -4077,7 +4077,10 @@ const Такт={дела:[],т:null,проснулся:0,ДОПУСК:40,
  каждые(мс,fn,имя,о){const п=Math.max(16,Number(мс)||0);
   const д={мс:п,fn,имя:String(имя||"дело"),след:Date.now()+п,вФоне:!!(о&&о.вФоне),снят:false};
   this.дела.push(д);this.завести();const self=this;
-  return function снять(){if(д.снят)return;д.снят=true;self.дела=self.дела.filter(x=>x!==д);self.завести();};},
+  const снять=function снять(){if(д.снят)return;д.снят=true;self.дела=self.дела.filter(x=>x!==д);self.завести();};
+  снять.такт=true;return снять;},
+ /* снять дело по ручке: ручка такта или число обычного таймера */
+ снять(h){if(typeof h==="function"&&h.такт)h();else if(h!=null)clearInterval(h);},
  скрыто(){try{return typeof document!=="undefined"&&!!document.hidden;}catch(_){return false;}},
  завести(){if(this.т){clearTimeout(this.т);this.т=null;}
   const скр=this.скрыто();let след=Infinity;
@@ -4093,6 +4096,8 @@ const Такт={дела:[],т:null,проснулся:0,ДОПУСК:40,
 try{document.addEventListener("visibilitychange",()=>{
  if(!document.hidden){const now=Date.now();Такт.проснулся=now;for(const д of Такт.дела)if(д.след<now)д.след=now;}
  Такт.завести();});}catch(_){}
+/* clearInterval(ручка такта) снимает дело такта — как снимал свой таймер прежде */
+try{const ci0=window.clearInterval;window.clearInterval=function(h){if(typeof h==="function"&&h.такт){h();return;}return ci0.apply(this,arguments);};}catch(_){}
 const Speech={voice:null,keepAlive:null,
  queue:[],current:null,speaking:false,gen:0,seq:0,
  history:[],last:null,ducking:false,adapter:null,_ctx:null,_ctxTimer:null,
@@ -20823,7 +20828,7 @@ function rollCatch(spot,tackle){
 }
 /* ── Заброс: игра ждёт поклёвки, игрок подсекает на слух ── */
 function startFishing(){
- if(G.inCombat){narrate("Не время: сначала закончите бой.");return false;}
+ if(G.inCombat)return false;
  const spot=fishingSpot();
  if(!spot){narrate("Здесь не рыбачат. Нужен берег, причал, топи или борт судна в море.");return false;}
  const tackle=bestTackle();
@@ -31398,7 +31403,7 @@ function secretRoomLevel(p){
 /* Войти в открытый ход. */
 function enterSecret(x,y,propId,поМесту){
  const p=G.place;if(!p||p.тайник)return false;
- if(G.inCombat){narrate("Сначала завершите бой: в лаз с тварью за спиной не лезут.");return false;}
+ if(G.inCombat)return false;
  const v=secretVault(p.bx,p.by,x,y);
  if(!secretFound(v.ключ))return false;
  if(secretTaken(v.ключ)){narrate("Тайная палата за этим ходом уже пуста: вы здесь были.",{interrupt:false});return true;}
@@ -41997,7 +42002,7 @@ function passageCues(){
 function moveInside(dir){
  const lvl=curLevel();if(!lvl)return false;
  if(!DIRV[dir])return false;
- if(G.inCombat){narrate("Сначала завершите бой!",{cat:"result"});return false;}
+ if(G.inCombat)return false;
  const p=G.place;
  /* Подтверждение шагом: стоя на ступенях или в воротах, второй шаг в ту же
     сторону уводит вниз, наверх или наружу — игрок спускается и поднимается
@@ -42687,7 +42692,7 @@ const ACTOR_LEATHER=/^(village|tavern|market|school|smugglers|den|burg|warcamp)$
 const ACTOR_HARD_FLOOR=/^(stone|marble|plank|wood|metal|bridge|bone|crystal|cobble|tile|stairs)$/;
 const Actors={
  key:null,list:[],iv:null,lastSay:0,lastStep:null,
- stop(){if(this.iv){this.iv();this.iv=null;}this.key=null;this.list=[];},
+ stop(){if(this.iv){Такт.снять(this.iv);this.iv=null;}this.key=null;this.list=[];},
  /* Набор жителей уровня выводится из тех же чисел, что и сам уровень. */
  ensure(){
   if(!G.place||G.place.тайник){this.stop();return;}
@@ -42699,7 +42704,7 @@ const Actors={
   return ACTOR_WALK.has(tileAt(lvl,x,y));},
  spawn(k){
   const lvl=curLevel();if(!lvl)return;
-  if(this.iv){this.iv();this.iv=null;}
+  if(this.iv){Такт.снять(this.iv);this.iv=null;}
   this.key=k;this.list=[];
   const p=G.place,R=i=>H(p.bx*13+i*7,p.by*19+p.depth*11,930+i);
   const spots=[];
@@ -45062,7 +45067,7 @@ function move(dir){
  if(G.ship)return sailLeg();
  /* Внутри здания, города или подземелья ходьба идёт по клеткам уровня. */
  if(G.place)return moveInside(dir);
- if(G.inCombat){narrate("Сначала завершите бой!",{cat:"result"});return;}
+ if(G.inCombat)return;
  /* На лестнице к чертогу шаг тратится на ступень. */
  if(G.chStair&&safeFn(()=>Chertog.stairStep(dir),false))return true;
  /* Вход своим ходом: игрок стоит у ворот или двери и делает ещё один шаг в
@@ -62458,7 +62463,7 @@ const Chertog={
  stairN(s){return 8+2*Math.max(0,Math.min(6,Number(s.rank)||0));},
  stairKind(s){return ({catacombs:"bone",necropolis:"bone",mine:"wood",sunken:"wet",temple:"marble",academy:"marble",undercity:"marble",
   lab:"metal",biomech:"metal",warsite:"metal",fortress:"metal",caves:"earth",living:"earth",hive:"earth"})[s.cat.id]||"stone";},
- stairStart(e){if(G.inCombat)return "Сначала завершите бой.";e=e||this.here();if(!e)return "Входа в чертог рядом нет. Чертоги отмечены в «Книге искателя»: там же сторона и шаги до входа.";
+ stairStart(e){if(G.inCombat)return "";e=e||this.here();if(!e)return "Входа в чертог рядом нет. Чертоги отмечены в «Книге искателя»: там же сторона и шаги до входа.";
   const s=this.spec(e.i);const why=this.access(s);if(why.length)return `«${s.n}» не открывается: ${why.join("; ")}.`;
   const st=this.st();if(st.run&&st.run.i===s.i){this.view();return true;}
   const k=this.entryKind(s),n=this.stairN(s);G.chStair={i:e.i,x:G.x,y:G.y,ex:e.x,ey:e.y,n,s:0,k,md:null,set:this.stairKind(s)};
@@ -63432,7 +63437,7 @@ const InstanceAudioEngine=Inst.module("InstanceAudioEngine",{iv:null,
  from(d){return ({север:"севера",восток:"востока",юг:"юга",запад:"запада"})[d]||"стороны";},
  stepRole(c,p){const f=InstanceGenerator.fauna(c.s).find(x=>x.id===p.sp);return f&&/golem/.test(f.base)?"golem_step":f&&/troll/.test(f.base)?"brute_step":c.s.cat.шаг;},
  start(){this.stop();this.iv=Такт.каждые(9000,()=>safeFn(()=>this.amb()),"фон чертога");},
- stop(){if(this.iv){this.iv();this.iv=null;}},
+ stop(){if(this.iv){Такт.снять(this.iv);this.iv=null;}},
  /* Фон места звучит со сторон, а не голосом: капель, ветер, гул машин. */
  amb(){if(!Chertog.run()){this.stop();return;}if(!Chertog.inside()||G.inCombat||Math.random()<0.35)return;const c=Chertog.cur();const f=c.s.cat.фон;const role=f[Math.floor(Math.random()*f.length)];
   const a=Math.random()*Math.PI*2,d=3+Math.random()*5;safeFn(()=>Spatial.role(role,Math.cos(a)*d,Math.sin(a)*d,{gain:0.22+Math.random()*0.15,maxSec:4}));
@@ -76528,7 +76533,7 @@ const Grani={
   for(const [m,v] of Object.entries(w)){r-=v;if(r<=0)return m;}return "сосед";},
  transit(n,opts){opts=opts||{};const s=this.st();
   if(!n){narrate("Здесь нет узла Сети.");return false;}
-  if(G.inCombat){narrate("Сначала закончите бой.");return false;}
+  if(G.inCombat)return false;
   const why=this.need(n);if(why){narrate(why);safeFn(()=>Bank.play("gr_deny",{gain:0.55,maxSec:2})||Bank.play("hero_nomana",{gain:0.4,maxSec:2}));return false;}
   this.pay(n);const k=GRAN_NODE_BY_ID[n.kind];
   safeFn(()=>Bank.play(k&&k.звук||"portal",{gain:0.7,maxSec:3.5}));

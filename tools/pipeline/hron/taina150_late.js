@@ -30,7 +30,7 @@ const Тайна150={
  где(dx,dy){const d=Math.max(Math.abs(dx),Math.abs(dy));return `${safeFn(()=>dirBetween(dx,dy),"")||"рядом"}${d>1?`, ${d} ${plural(d,"шаг","шага","шагов")}`:""}`;},
  /* войти в палату, которую уже выбрали, — лаз открыт заново */
  войтиПусто(x,y,v,propId,поМесту){const p=G.place;if(!p||p.тайник)return false;
-  if(G.inCombat){narrate("Сначала завершите бой: в лаз с тварью за спиной не лезут.");return false;}
+  if(G.inCombat)return false;
   const запись=passageNote(x,y,propId,поМесту);G.flight=null;
   p.тайник={ключ:v.ключ,sx:x,sy:y,от:{x:p.x,y:p.y},prop:propId||(запись&&запись.prop)||null,поМесту:!!(поМесту||(запись&&запись.поМесту))};
   const lvl=secretRoomLevel(p);p.x=lvl.entry.x;p.y=lvl.entry.y;p.arm=null;

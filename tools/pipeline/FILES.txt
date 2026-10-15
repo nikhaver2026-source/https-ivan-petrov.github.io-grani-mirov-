@@ -81,3 +81,4 @@ hron/lufs175.json
 hron/patch_guide_put165.py
 hron/patch_guide_r170.py
 hron/patch_guide_p170.py
+hron/patch_guide_e175.py
