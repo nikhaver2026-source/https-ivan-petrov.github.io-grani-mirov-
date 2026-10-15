@@ -40,7 +40,7 @@ def прогон(папка, лет=100, зерно=7, вывод=None):
     torch.set_num_threads(2); R = random.Random(зерно)
     T = json.load(open(os.path.join(папка, "world_tables.json"), encoding="utf-8"))
     f, опись = имена(папка, R)
-    c = torch.load(os.path.join(папка, "serdce.pt")); сеть = S.Сердце(c["вход"]); сеть.load_state_dict(c["сеть"]); сеть.eval()
+    c = torch.load(os.path.join(папка, "serdce.pt")); сеть = S.Сердце(c["вход"]); S.загрузить_веса(сеть, c); сеть.eval()
     мастер = None
     try:
         import master as МС; мастер = МС.загрузить(папка)
@@ -54,7 +54,7 @@ def прогон(папка, лет=100, зерно=7, вывод=None):
             x = torch.tensor(мир.признаки() + игрок + [S.напряжение(мир)], dtype=torch.float32)
             h, логиты, _ = сеть(x.unsqueeze(0)); p = torch.softmax(логиты[0] + маска, -1); ei = int(torch.multinomial(p, 1)); e = M.СОБЫТИЯ[ei]
             цели = возм[e] if len(возм[e]) <= 24 else R.sample(возм[e], 24)
-            чц = torch.tensor([S.черты_цели(ц) for ц in цели], dtype=torch.float32)
+            чц = torch.tensor([S.черты_цели(ц, мир, ei) for ц in цели], dtype=torch.float32)
             ц = цели[int(torch.multinomial(torch.softmax(сеть.оценка_целей(h, ei, чц), -1), 1))]
             мир.шаг(e, ц)
             след = мир.летопись[-1]["след"]
