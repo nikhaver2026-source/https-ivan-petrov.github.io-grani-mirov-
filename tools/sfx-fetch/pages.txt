@@ -6,93 +6,104 @@
 # «Подземная лаборатория» (lab/), заход 1: OpenGameArt, только CC0 (поиск сайта
 # с отбором «CC0»). Для лаборатории годятся и ogg/mp3 — в её папку lab/sounds.
 # Научная фантастика, терминалы, бластеры, лазеры
-lab_scifi50 https://opengameart.org/content/50-cc0-sci-fi-sfx
-lab_scifi60 https://opengameart.org/content/60-cc0-sci-fi-sfx
-lab_scifi_k https://opengameart.org/content/sci-fi-sounds
-lab_digital63 https://opengameart.org/content/63-digital-sound-effects-lasers-phasers-space-etc
-lab_platformer https://opengameart.org/content/platformer-sounds-terminal-interaction-door-shots-bang-and-footsteps
-lab_retrocomp https://opengameart.org/content/retro-computer-noise
-lab_ibeeps https://opengameart.org/content/interface-beeps
-lab_beeptone https://opengameart.org/content/beep-tone-sound-sfx
-lab_mechclick https://opengameart.org/content/7-mechanical-clicks-and-buzzes
-lab_shield https://opengameart.org/content/space-ship-shield-sounds
-lab_energy https://opengameart.org/content/seamless-energy-emission-loop
-lab_laserburst https://opengameart.org/content/laser-weapon-burst-fire
-lab_lasershoot https://opengameart.org/content/lasershootingsx
-lab_laserfire https://opengameart.org/content/laser-fire-0
-lab_spaceshoot https://opengameart.org/content/space-shoot-sounds
-lab_lasersfx https://opengameart.org/content/laser-sound-effects
-lab_laserbeam https://opengameart.org/content/laser-beam
-lab_spacelaser https://opengameart.org/content/space-laser
-lab_doomsday https://opengameart.org/content/doomsday-laser-cannon-sound-effect
-lab_warp https://opengameart.org/content/warp-engine-engage-sound
-lab_portal4 https://opengameart.org/content/4-space-portal-sounds
-lab_spacesfx https://opengameart.org/content/space-sound-effects
-lab_danger https://opengameart.org/content/space-impending-danger-sfx
-lab_sabre https://opengameart.org/content/light-sabre-sounds
-lab_reload2 https://opengameart.org/content/2-gun-reloads
+# (заход 1 скачан) lab_scifi50 https://opengameart.org/content/50-cc0-sci-fi-sfx
+# (заход 1 скачан) lab_scifi60 https://opengameart.org/content/60-cc0-sci-fi-sfx
+# (заход 1 скачан) lab_scifi_k https://opengameart.org/content/sci-fi-sounds
+# (заход 1 скачан) lab_digital63 https://opengameart.org/content/63-digital-sound-effects-lasers-phasers-space-etc
+# (заход 1 скачан) lab_platformer https://opengameart.org/content/platformer-sounds-terminal-interaction-door-shots-bang-and-footsteps
+# (заход 1 скачан) lab_retrocomp https://opengameart.org/content/retro-computer-noise
+# (заход 1 скачан) lab_ibeeps https://opengameart.org/content/interface-beeps
+# (заход 1 скачан) lab_beeptone https://opengameart.org/content/beep-tone-sound-sfx
+# (заход 1 скачан) lab_mechclick https://opengameart.org/content/7-mechanical-clicks-and-buzzes
+# (заход 1 скачан) lab_shield https://opengameart.org/content/space-ship-shield-sounds
+# (заход 1 скачан) lab_energy https://opengameart.org/content/seamless-energy-emission-loop
+# (заход 1 скачан) lab_laserburst https://opengameart.org/content/laser-weapon-burst-fire
+# (заход 1 скачан) lab_lasershoot https://opengameart.org/content/lasershootingsx
+# (заход 1 скачан) lab_laserfire https://opengameart.org/content/laser-fire-0
+# (заход 1 скачан) lab_spaceshoot https://opengameart.org/content/space-shoot-sounds
+# (заход 1 скачан) lab_lasersfx https://opengameart.org/content/laser-sound-effects
+# (заход 1 скачан) lab_laserbeam https://opengameart.org/content/laser-beam
+# (заход 1 скачан) lab_spacelaser https://opengameart.org/content/space-laser
+# (заход 1 скачан) lab_doomsday https://opengameart.org/content/doomsday-laser-cannon-sound-effect
+# (заход 1 скачан) lab_warp https://opengameart.org/content/warp-engine-engage-sound
+# (заход 1 скачан) lab_portal4 https://opengameart.org/content/4-space-portal-sounds
+# (заход 1 скачан) lab_spacesfx https://opengameart.org/content/space-sound-effects
+# (заход 1 скачан) lab_danger https://opengameart.org/content/space-impending-danger-sfx
+# (заход 1 скачан) lab_sabre https://opengameart.org/content/light-sabre-sounds
+# (заход 1 скачан) lab_reload2 https://opengameart.org/content/2-gun-reloads
 # Роботы, машины, электричество
-lab_robot1 https://opengameart.org/content/robot-1
-lab_droid https://opengameart.org/content/droid-speech-37-phrases-fire-madness
-lab_robotbird https://opengameart.org/content/angry-robot-bird
-lab_cyberlaugh https://opengameart.org/content/evil-cyber-laugh
-lab_machoff https://opengameart.org/content/machine-shutting-down
-lab_rts https://opengameart.org/content/sci-fi-rts-war-unit-sounds
-lab_metalsteps https://opengameart.org/content/metal-footsteps-on-concrete
-lab_electric https://opengameart.org/content/electricity-game-sound-pack
-lab_breaker https://opengameart.org/content/sfx-circuit-breaker
-lab_buzz https://opengameart.org/content/electric-buzz
-lab_generator https://opengameart.org/content/generator-loop
-lab_overload https://opengameart.org/content/overloading-sound
-lab_device https://opengameart.org/content/electronic-device-loop
-lab_mechanical https://opengameart.org/content/mechanical-sounds
-lab_engine2 https://opengameart.org/content/engine-sounds2
-lab_steam https://opengameart.org/content/steam-boiler-sound-loop
-lab_winch https://opengameart.org/content/chain-winch-sounds
-lab_flare https://opengameart.org/content/flare-ignition
+# (заход 1 скачан) lab_robot1 https://opengameart.org/content/robot-1
+# (заход 1 скачан) lab_droid https://opengameart.org/content/droid-speech-37-phrases-fire-madness
+# (заход 1 скачан) lab_robotbird https://opengameart.org/content/angry-robot-bird
+# (заход 1 скачан) lab_cyberlaugh https://opengameart.org/content/evil-cyber-laugh
+# (заход 1 скачан) lab_machoff https://opengameart.org/content/machine-shutting-down
+# (заход 1 скачан) lab_rts https://opengameart.org/content/sci-fi-rts-war-unit-sounds
+# (заход 1 скачан) lab_metalsteps https://opengameart.org/content/metal-footsteps-on-concrete
+# (заход 1 скачан) lab_electric https://opengameart.org/content/electricity-game-sound-pack
+# (заход 1 скачан) lab_breaker https://opengameart.org/content/sfx-circuit-breaker
+# (заход 1 скачан) lab_buzz https://opengameart.org/content/electric-buzz
+# (заход 1 скачан) lab_generator https://opengameart.org/content/generator-loop
+# (заход 1 скачан) lab_overload https://opengameart.org/content/overloading-sound
+# (заход 1 скачан) lab_device https://opengameart.org/content/electronic-device-loop
+# (заход 1 скачан) lab_mechanical https://opengameart.org/content/mechanical-sounds
+# (заход 1 скачан) lab_engine2 https://opengameart.org/content/engine-sounds2
+# (заход 1 скачан) lab_steam https://opengameart.org/content/steam-boiler-sound-loop
+# (заход 1 скачан) lab_winch https://opengameart.org/content/chain-winch-sounds
+# (заход 1 скачан) lab_flare https://opengameart.org/content/flare-ignition
 # Двери, лифты, замки, металл
-lab_eldoor https://opengameart.org/content/elevatordoor
-lab_eldoor_old https://opengameart.org/content/old-elevator-door
-lab_elding https://opengameart.org/content/elevator-ding
-lab_doorset https://opengameart.org/content/door-open-door-close-set
-lab_irondoor https://opengameart.org/content/iron-door
-lab_doorlock https://opengameart.org/content/door-lock-sounds
-lab_lockdoor https://opengameart.org/content/opening-lock-and-door
-lab_doorclose4 https://opengameart.org/content/4-door-closes
-lab_metalint https://opengameart.org/content/metal-interactions
-lab_metalwood https://opengameart.org/content/100-cc0-metal-and-wood-sfx
-lab_pings https://opengameart.org/content/31-pings-and-metal-filing-sounds
-lab_sfx100 https://opengameart.org/content/100-cc0-sfx
-lab_sfx100b https://opengameart.org/content/100-cc0-sfx-2
-lab_hits37 https://opengameart.org/content/37-hitspunches
-lab_interface https://opengameart.org/content/interface-sounds
-lab_clicks16 https://opengameart.org/content/16-button-clicks
-lab_alarm https://opengameart.org/content/short-alarm
+# (заход 1 скачан) lab_eldoor https://opengameart.org/content/elevatordoor
+# (заход 1 скачан) lab_eldoor_old https://opengameart.org/content/old-elevator-door
+# (заход 1 скачан) lab_elding https://opengameart.org/content/elevator-ding
+# (заход 1 скачан) lab_doorset https://opengameart.org/content/door-open-door-close-set
+# (заход 1 скачан) lab_irondoor https://opengameart.org/content/iron-door
+# (заход 1 скачан) lab_doorlock https://opengameart.org/content/door-lock-sounds
+# (заход 1 скачан) lab_lockdoor https://opengameart.org/content/opening-lock-and-door
+# (заход 1 скачан) lab_doorclose4 https://opengameart.org/content/4-door-closes
+# (заход 1 скачан) lab_metalint https://opengameart.org/content/metal-interactions
+# (заход 1 скачан) lab_metalwood https://opengameart.org/content/100-cc0-metal-and-wood-sfx
+# (заход 1 скачан) lab_pings https://opengameart.org/content/31-pings-and-metal-filing-sounds
+# (заход 1 скачан) lab_sfx100 https://opengameart.org/content/100-cc0-sfx
+# (заход 1 скачан) lab_sfx100b https://opengameart.org/content/100-cc0-sfx-2
+# (заход 1 скачан) lab_hits37 https://opengameart.org/content/37-hitspunches
+# (заход 1 скачан) lab_interface https://opengameart.org/content/interface-sounds
+# (заход 1 скачан) lab_clicks16 https://opengameart.org/content/16-button-clicks
+# (заход 1 скачан) lab_alarm https://opengameart.org/content/short-alarm
 # Фоны: капли, гул, тьма
-lab_drip https://opengameart.org/content/dripping-water-loop
-lab_darkamb https://opengameart.org/content/dark-ambiences
-lab_horroramb https://opengameart.org/content/ambient-horror
-lab_heart https://opengameart.org/content/heartbeat-single-sound
-lab_farboom https://opengameart.org/content/explosion-somewhere-far
+# (заход 1 скачан) lab_drip https://opengameart.org/content/dripping-water-loop
+# (заход 1 скачан) lab_darkamb https://opengameart.org/content/dark-ambiences
+# (заход 1 скачан) lab_horroramb https://opengameart.org/content/ambient-horror
+# (заход 1 скачан) lab_heart https://opengameart.org/content/heartbeat-single-sound
+# (заход 1 скачан) lab_farboom https://opengameart.org/content/explosion-somewhere-far
 # Мутанты: рык, шипение, слизь
-lab_creat80 https://opengameart.org/content/80-cc0-creature-sfx
-lab_creat80b https://opengameart.org/content/80-cc0-creture-sfx-2
-lab_monpack1 https://opengameart.org/content/monster-sound-pack-volume-1
-lab_monfx https://opengameart.org/content/monster-sound-effects-pack
-lab_monfx2 https://opengameart.org/content/monster-sound-effects-2
-lab_snarls https://opengameart.org/content/monster-snarls
-lab_growls16 https://opengameart.org/content/16-monster-growls
-lab_deeproar https://opengameart.org/content/cc0-deep-monster-roar
-lab_mutfrog https://opengameart.org/content/mutant-frog
-lab_slimy9 https://opengameart.org/content/slimy-monster-or-murder-sounds9
-lab_slime10 https://opengameart.org/content/10-slimewater-monsterwater
-lab_water40 https://opengameart.org/content/40-cc0-water-splash-slime-sfx
-lab_squish8 https://opengameart.org/content/8-wet-squish-slurp-impacts
-lab_alien https://opengameart.org/content/alien-sounds
-lab_pest https://opengameart.org/content/small-pest-aliencreature
-lab_rat https://opengameart.org/content/squeaky-rat
-lab_ghoul https://opengameart.org/content/hungry-ghoul
-lab_troll https://opengameart.org/content/big-scary-troll-sounds
-lab_enemy https://opengameart.org/content/enemy-sounds
-lab_beings7 https://opengameart.org/content/some-kind-of-beings-sounds7
-lab_beast https://opengameart.org/content/monster-or-beast-sounds
+# (заход 1 скачан) lab_creat80 https://opengameart.org/content/80-cc0-creature-sfx
+# (заход 1 скачан) lab_creat80b https://opengameart.org/content/80-cc0-creture-sfx-2
+# (заход 1 скачан) lab_monpack1 https://opengameart.org/content/monster-sound-pack-volume-1
+# (заход 1 скачан) lab_monfx https://opengameart.org/content/monster-sound-effects-pack
+# (заход 1 скачан) lab_monfx2 https://opengameart.org/content/monster-sound-effects-2
+# (заход 1 скачан) lab_snarls https://opengameart.org/content/monster-snarls
+# (заход 1 скачан) lab_growls16 https://opengameart.org/content/16-monster-growls
+# (заход 1 скачан) lab_deeproar https://opengameart.org/content/cc0-deep-monster-roar
+# (заход 1 скачан) lab_mutfrog https://opengameart.org/content/mutant-frog
+# (заход 1 скачан) lab_slimy9 https://opengameart.org/content/slimy-monster-or-murder-sounds9
+# (заход 1 скачан) lab_slime10 https://opengameart.org/content/10-slimewater-monsterwater
+# (заход 1 скачан) lab_water40 https://opengameart.org/content/40-cc0-water-splash-slime-sfx
+# (заход 1 скачан) lab_squish8 https://opengameart.org/content/8-wet-squish-slurp-impacts
+# (заход 1 скачан) lab_alien https://opengameart.org/content/alien-sounds
+# (заход 1 скачан) lab_pest https://opengameart.org/content/small-pest-aliencreature
+# (заход 1 скачан) lab_rat https://opengameart.org/content/squeaky-rat
+# (заход 1 скачан) lab_ghoul https://opengameart.org/content/hungry-ghoul
+# (заход 1 скачан) lab_troll https://opengameart.org/content/big-scary-troll-sounds
+# (заход 1 скачан) lab_enemy https://opengameart.org/content/enemy-sounds
+# (заход 1 скачан) lab_beings7 https://opengameart.org/content/some-kind-of-beings-sounds7
+# (заход 1 скачан) lab_beast https://opengameart.org/content/monster-or-beast-sounds
+# «Подземная лаборатория», заход 2: маяки и подбор вещей (CC0).
+lab_sonar https://opengameart.org/content/sonar-ping
+lab_itemkey https://opengameart.org/content/item-pickup-key
+lab_gem https://opengameart.org/content/gem-collect-sfx
+lab_assorted7 https://opengameart.org/content/7-assorted-sound-effects-menu-level-up
+lab_mini16 https://opengameart.org/content/sfx-the-ultimate-2017-16-bit-mini-pack
+lab_rpg80 https://opengameart.org/content/80-cc0-rpg-sfx
+lab_secretcoin https://opengameart.org/content/secret-coin
+lab_coins8 https://opengameart.org/content/10-8bit-coin-sounds
+lab_blinker https://opengameart.org/content/car-blinker-sfx
+lab_pingpong https://opengameart.org/content/3-ping-pong-sounds-8-bit-style

@@ -2,4 +2,4 @@
 # Третье поле — отбор файлов набора по имени (регулярное выражение, без пробелов).
 # (14.6) Прежние наборы сведены в игру; этот заход — звери и верховая езда (bsb_q.txt).
 # «Подземная лаборатория» (lab/), заход 1: выстрелы бластеров и лазеров (CC0).
-lab_lentikula https://lentikula.itch.io/sci-fi-weapon-shots-sfx-freecc0
+# (заход 1 скачан) lab_lentikula https://lentikula.itch.io/sci-fi-weapon-shots-sfx-freecc0

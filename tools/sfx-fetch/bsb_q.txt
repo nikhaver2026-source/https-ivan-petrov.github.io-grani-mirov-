@@ -23,3 +23,57 @@
 # (сведено в sounds/adv) bsb_adv_dig shovel ~ (shovel|dig|spade|earth|soil) ~ 2
 # (сведено в sounds/adv) bsb_adv_coins coins ~ (coin|purse|money|pouch) ~ 2
 # (сведено в sounds/adv) bsb_adv_wax candle ~ (candle|wax|blow) ~ 2
+# «Подземная лаборатория» (lab/), заход 2: живые записи BigSoundBank (CC0) —
+# машины комплекса, двери, лифт, терминалы, аптечки, батареи, твари.
+bsb_lab_elevator elevator ~ (elevator|lift) ~ 4
+bsb_lab_vent ventilation ~ (ventil|air|fan|duct|condition|blow) ~ 3
+bsb_lab_server server ~ (server|computer|pc|hard|disk|fan) ~ 2
+bsb_lab_generator generator ~ (generator|engine|motor|hum|power) ~ 3
+bsb_lab_transformer transformer ~ (transformer|hum|electric|buzz) ~ 2
+bsb_lab_neon neon ~ (neon|fluorescent|light|tube|buzz) ~ 2
+bsb_lab_electric electric ~ (electric|spark|arc|zap|shock|short|discharge) ~ 4
+bsb_lab_microwave microwave ~ (microwave|oven) ~ 3
+bsb_lab_steam steam ~ (steam|hiss|leak|valve|pressure) ~ 3
+bsb_lab_drip drip ~ (drip|drop|water|leak) ~ 2
+bsb_lab_pipe pipe ~ (pipe|plumbing|water|tube|radiator) ~ 2
+bsb_lab_compressor compressor ~ (compressor|fridge|refrigerator|freezer|cold) ~ 2
+bsb_lab_bubble bubble ~ (bubbl|boil|liquid|aquarium) ~ 2
+bsb_lab_stepmetal footsteps metal ~ (metal|iron|steel|grating|footstep|step|walk) ~ 3
+bsb_lab_stepconcrete footsteps concrete ~ (concrete|footstep|step|walk|stone) ~ 3
+bsb_lab_stairs stairs ~ (stair|step|ladder) ~ 3
+bsb_lab_keyboard keyboard ~ (keyboard|typing|type|keys) ~ 3
+bsb_lab_printer printer ~ (print) ~ 2
+bsb_lab_beep beep ~ (beep|bip|signal|tone|electronic) ~ 4
+bsb_lab_alarm alarm ~ (alarm|siren|klaxon|warning|bell) ~ 4
+bsb_lab_siren siren ~ (siren|alarm) ~ 2
+bsb_lab_door_auto automatic door ~ (automatic|sliding|door|slide) ~ 3
+bsb_lab_door_metal metal door ~ (metal|iron|steel|door|gate|shutter) ~ 3
+bsb_lab_hydraulic hydraulic ~ (hydraul|piston|press|jack) ~ 2
+bsb_lab_pneumatic pneumatic ~ (pneumat|compress|air|hiss|blow) ~ 2
+bsb_lab_servo servo ~ (servo|motor|robot|mechan|actuator) ~ 3
+bsb_lab_robot robot ~ (robot|android|droid|mechan|toy|machine) ~ 4
+bsb_lab_drone drone ~ (drone|quadcopter|buzz|hover|helicopter) ~ 2
+bsb_lab_radio radio ~ (radio|static|noise|walkie|talkie|interference|crackl) ~ 3
+bsb_lab_geiger geiger ~ (geiger|radiation|counter|click) ~ 1
+bsb_lab_breath breathing ~ (breath|pant|gasp|respir|wheez) ~ 2
+bsb_lab_syringe syringe ~ (syringe|injection|needle|medical|spray) ~ 2
+bsb_lab_spray spray ~ (spray|aerosol|hiss|bomb) ~ 2
+bsb_lab_velcro velcro ~ (velcro|zip|bag|tear|tape) ~ 2
+bsb_lab_battery battery ~ (battery|charger|insert|click|plug) ~ 2
+bsb_lab_card card ~ (card|plastic|badge|credit) ~ 2
+bsb_lab_gun weapon ~ (gun|rifle|pistol|cock|reload|magazine|weapon|load) ~ 3
+bsb_lab_glass glass ~ (glass|bottle|vial|tube|break|shatter) ~ 3
+bsb_lab_crash metal crash ~ (crash|fall|metal|debris|collapse|clatter) ~ 3
+bsb_lab_rumble rumble ~ (rumble|earthquake|thunder|quake|tremor|rolling) ~ 2
+bsb_lab_laser laser ~ (laser|blaster|ray|zap|sci|space) ~ 4
+bsb_lab_scifi science fiction ~ (sci|science|fiction|space|alien|futur|ufo|robot) ~ 6
+bsb_lab_power power ~ (power|charge|start|shutdown|switch|turbine|spin) ~ 3
+bsb_lab_growl growl ~ (growl|snarl|dog|lion|bear|tiger|grunt|wolf) ~ 4
+bsb_lab_roar roar ~ (roar|lion|tiger|bear|beast|monster|elephant) ~ 3
+bsb_lab_hiss hiss ~ (hiss|snake|cat|serpent|goose) ~ 2
+bsb_lab_pig pig ~ (pig|hog|boar|grunt|squeal) ~ 2
+bsb_lab_insect insect ~ (insect|fly|flies|bee|wasp|cricket|cicada|swarm|buzz) ~ 3
+bsb_lab_rat rat ~ (rat|mouse|rodent|squeak|guinea) ~ 2
+bsb_lab_squelch squelch ~ (squelch|slime|squish|wet|gore|flesh|mud) ~ 2
+bsb_lab_scream scream ~ (scream|shout|cry|yell|howl) ~ 2
+bsb_lab_ping ping ~ (ping|ding|chime|bell|triangle|glass) ~ 3
