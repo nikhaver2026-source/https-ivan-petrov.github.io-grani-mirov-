@@ -78183,8 +78183,17 @@ function deskWatch(){
     на настоящем http(s)-хостинге (GitHub Pages) он кэширует страницу и записи,
     поэтому игра запускается без сети, а маяки звучат мгновенно. Раньше рядом не
     было ни sw.js, ни manifest.json, и браузер на каждой загрузке получал 404. */
- if("serviceWorker" in navigator && location.protocol.startsWith("http")){
+ /* (17.0) В приложении Android страница и записи лежат внутри APK: работнику нечего кэшировать, а каждая
+    сыгранная запись легла бы второй копией в данные приложения. Там он не ставится, прежний снимается,
+    его кэш удаляется. */
+ const вAPK=location.hostname==="appassets.androidplatform.net";
+ if("serviceWorker" in navigator && location.protocol.startsWith("http") && !вAPK){
   navigator.serviceWorker.register("sw.js").catch(()=>{});
+ }
+ if(вAPK){
+  try{if(navigator.serviceWorker&&navigator.serviceWorker.getRegistrations)
+   navigator.serviceWorker.getRegistrations().then(rs=>rs.forEach(r=>{try{r.unregister();}catch(_){}})).catch(()=>{});}catch(_){}
+  try{if(window.caches&&caches.keys)caches.keys().then(ks=>ks.forEach(k=>caches.delete(k).catch(()=>{}))).catch(()=>{});}catch(_){}
  }
  /* Манифест подключается на ходу и только на хостинге: у автономного html-файла
     внешних зависимостей по-прежнему нет. */

@@ -1,15 +1,20 @@
 package io.github.granimirov;
 
 import android.app.Activity;
+import android.content.ContentValues;
 import android.content.Intent;
 import android.media.AudioManager;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Environment;
+import android.provider.MediaStore;
 import android.speech.tts.TextToSpeech;
 import android.speech.tts.UtteranceProgressListener;
 import android.speech.tts.Voice;
 import android.webkit.JavascriptInterface;
+import android.webkit.ValueCallback;
+import android.webkit.WebChromeClient;
 import android.webkit.WebResourceRequest;
 import android.webkit.WebResourceResponse;
 import android.webkit.WebSettings;
@@ -25,6 +30,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
@@ -54,7 +60,13 @@ import java.util.Set;
    installVoicePack() открывает выбор файла, приложение проверяет его и кладёт
    копию в свою папку, а записи отдаёт странице по тому же адресу
    sounds/gvoice_pack/, что и на сайте. О конце установки — вызов
-   GraniVoicePackDone(true | false | "cancel"). */
+   GraniVoicePackDone(true | false | "cancel").
+
+   (17.0) Полный APK несёт голосовой пакет в себе: пакет, поставленный когда-то
+   отдельным файлом, удаляется при запуске — он занимал гигабайты в данных
+   приложения и подменял свежие записи старыми. «Сохранить в файл» кладёт файл
+   в «Загрузки» телефона (saveDownload), «Загрузить из файла» открывает выбор
+   файла (WebChromeClient). */
 public class MainActivity extends Activity {
     private static final String START = "https://appassets.androidplatform.net/assets/www/index.html";
 
@@ -77,7 +89,10 @@ public class MainActivity extends Activity {
     private volatile boolean ready = false;
     private final List<String[]> pending = new ArrayList<>();
     private static final int REQ_PACK = 7101;
+    private static final int REQ_FILE = 7102;
     private ZipFile pack;
+    private Boolean builtin;
+    private ValueCallback<Uri[]> fileCb;
 
     @Override
     protected void onCreate(Bundle state) {
@@ -147,6 +162,21 @@ public class MainActivity extends Activity {
                 return true;
             }
         });
+        /* (17.0) «Загрузить из файла»: поле выбора файла открывает выбор файла
+           телефона. Без WebChromeClient WebView молча пропускал нажатие. */
+        web.setWebChromeClient(new WebChromeClient() {
+            @Override
+            public boolean onShowFileChooser(WebView view, ValueCallback<Uri[]> cb, FileChooserParams params) {
+                if (fileCb != null) fileCb.onReceiveValue(null);
+                Intent i = new Intent(Intent.ACTION_OPEN_DOCUMENT);
+                i.addCategory(Intent.CATEGORY_OPENABLE);
+                i.setType("*/*");
+                try { startActivityForResult(i, REQ_FILE); }
+                catch (Exception e) { fileCb = null; return false; }
+                fileCb = cb;
+                return true;
+            }
+        });
         web.addJavascriptInterface(new Bridge(), "GraniTTS");
         /* С целевым API 35 и выше окно всегда рисуется от края до края:
            поля под строку состояния и панель жестов ставим сами, иначе
@@ -175,6 +205,19 @@ public class MainActivity extends Activity {
         }
         if (state != null) web.restoreState(state);
         else web.loadUrl(START);
+
+        /* (17.0) Голосовой пакет, поставленный отдельным файлом до полного APK,
+           больше не нужен: голоса внутри приложения, и они новее. Пакет занимал
+           в данных приложения гигабайты — их не хватало, когда новая версия
+           ставилась поверх прежней, — и подменял свежие записи старыми. */
+        new Thread(() -> {
+            if (!builtinPack()) return;
+            for (String n : new String[]{"voicepack.zip", "voicepack.part"}) {
+                File f = new File(getFilesDir(), n);
+                long len = f.length();
+                if (f.exists() && f.delete()) android.util.Log.i("Grani", "удалён прежний " + n + ": " + len + " байт");
+            }
+        }).start();
 
         /* (14.5) Проверка полного APK на эмуляторе (android/install-check.sh):
            прочесть запись из конца архива ZIP64 — за пределом 4 ГиБ — тем же
@@ -226,7 +269,23 @@ public class MainActivity extends Activity {
         super.onDestroy();
     }
 
+    /* Полный APK: голосовой пакет уже внутри приложения (assets). */
+    private boolean builtinPack() {
+        Boolean b = builtin;
+        if (b == null) {
+            b = false;
+            for (String v : new String[]{"m", "f"}) {
+                try (InputStream in = getAssets().open("www/sounds/gvoice_pack/" + v + "/bank.js")) { b = true; break; }
+                catch (Exception ignored) { }
+            }
+            builtin = b;
+        }
+        return b;
+    }
+
     private synchronized ZipFile pack() {
+        /* Встроенные записи новее любого отдельного пакета — пакет не читаем. */
+        if (builtinPack()) return null;
         if (pack == null) {
             File f = new File(getFilesDir(), "voicepack.zip");
             if (f.exists()) { try { pack = new ZipFile(f); } catch (Exception ignored) { } }
@@ -242,6 +301,12 @@ public class MainActivity extends Activity {
     @Override
     protected void onActivityResult(int req, int res, Intent data) {
         super.onActivityResult(req, res, data);
+        if (req == REQ_FILE) {
+            ValueCallback<Uri[]> cb = fileCb;
+            fileCb = null;
+            if (cb != null) cb.onReceiveValue(res == RESULT_OK && data != null && data.getData() != null ? new Uri[]{data.getData()} : null);
+            return;
+        }
         if (req != REQ_PACK) return;
         if (res != RESULT_OK || data == null || data.getData() == null) { packDone("\"cancel\""); return; }
         final Uri u = data.getData();
@@ -410,11 +475,42 @@ public class MainActivity extends Activity {
         /* Полный APK: голосовой пакет уже внутри приложения (assets) — ставить нечего. */
         @JavascriptInterface
         public boolean voicePackBuiltin() {
-            for (String v : new String[]{"m", "f"}) {
-                try (java.io.InputStream in = getAssets().open("www/sounds/gvoice_pack/" + v + "/bank.js")) { return true; }
-                catch (Exception ignored) { }
-            }
-            return false;
+            return builtinPack();
+        }
+
+        /* (17.0) «Сохранить в файл» (сохранение игры, журнал речи и звука):
+           файл — в папку «Загрузки» телефона, как и говорит игра. Ссылку blob:
+           со скачиванием WebView молча пропускал, и файла не было. */
+        @JavascriptInterface
+        public boolean saveDownload(String name, String mime, String text) {
+            if (name == null || text == null) return false;
+            String safe = name.replaceAll("[\\\\/:*?\"<>|]", "_").trim();
+            if (safe.isEmpty()) safe = "grani-mirov.txt";
+            String type = mime != null && !mime.trim().isEmpty() ? mime.split(";")[0].trim() : "application/octet-stream";
+            byte[] bytes = text.getBytes(StandardCharsets.UTF_8);
+            try {
+                if (Build.VERSION.SDK_INT >= 29) {
+                    ContentValues cv = new ContentValues();
+                    cv.put(MediaStore.MediaColumns.DISPLAY_NAME, safe);
+                    cv.put(MediaStore.MediaColumns.MIME_TYPE, type);
+                    cv.put(MediaStore.MediaColumns.RELATIVE_PATH, Environment.DIRECTORY_DOWNLOADS);
+                    cv.put(MediaStore.MediaColumns.IS_PENDING, 1);
+                    Uri u = getContentResolver().insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, cv);
+                    if (u == null) return false;
+                    try (OutputStream out = getContentResolver().openOutputStream(u)) {
+                        if (out == null) throw new java.io.IOException("нет потока");
+                        out.write(bytes);
+                    } catch (Exception e) { getContentResolver().delete(u, null, null); return false; }
+                    cv.clear();
+                    cv.put(MediaStore.MediaColumns.IS_PENDING, 0);
+                    getContentResolver().update(u, cv, null, null);
+                    return true;
+                }
+                File d = getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS);
+                if (d == null || (!d.isDirectory() && !d.mkdirs())) return false;
+                try (OutputStream out = new FileOutputStream(new File(d, safe))) { out.write(bytes); }
+                return true;
+            } catch (Exception e) { return false; }
         }
 
         /* «Выход» в меню действий: игра уже сохранилась — закрываем приложение. */

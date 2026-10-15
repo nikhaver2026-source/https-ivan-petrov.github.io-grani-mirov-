@@ -1,5 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Сеть игре не нужна: всё лежит внутри приложения. Разрешения INTERNET нет. -->
+<!-- Сеть игре не нужна: всё лежит внутри приложения. Разрешения INTERNET нет.
+     hasFragileUserData (17.0): при удалении игры Android спрашивает, оставить ли
+     её данные, — сохранения переживают удаление и возвращаются с новой
+     установкой (та же подпись), если для обновления не хватило места. -->
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
     <!-- Android 11+: без этого приложение не видит установленные синтезаторы речи. -->
@@ -13,6 +16,7 @@
         android:label="Грань Миров"
         android:icon="@mipmap/ic_launcher"
         android:allowBackup="true"
+        android:hasFragileUserData="true"
         android:enableOnBackInvokedCallback="true"
         android:hardwareAccelerated="true"
         android:theme="@style/Grani">

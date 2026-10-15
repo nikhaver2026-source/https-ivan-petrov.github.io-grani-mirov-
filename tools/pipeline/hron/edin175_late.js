@@ -297,3 +297,23 @@ const Телефон={ctx:null,_вход:null,_c:null,_mk:null,
 safeFn(()=>{if(settings.phoneSpeaker!==0&&settings.phoneSpeaker!==1)settings.phoneSpeaker=Телефон.телефон()?1:0;
  Телефон.флажок();setTimeout(()=>safeFn(()=>Телефон.флажок()),0);
  document.addEventListener("change",e=>{if(e.target&&e.target.id==="setPhoneSpk")setTimeout(()=>safeFn(()=>Телефон.применить()),0);},true);});
+
+/* ── (17.0) Android: «Сохранить в файл» — в папку «Загрузки» телефона ──
+   В приложении Android ссылка blob: со скачиванием молча пропускалась: игра говорила «выгружено в файл», а файла не
+   было. Теперь сохранение игры и журнал речи и звука уходят в «Загрузки» через мост приложения
+   (GraniTTS.saveDownload). Содержимое берётся из самого Blob (адрес blob: страница прочесть не может — его не
+   пускают правила безопасности страницы). В браузере и на компьютере моста нет — всё как прежде. */
+safeFn(()=>{const м=window.GraniTTS;if(!(м&&typeof м.saveDownload==="function"))return;
+ const блобы=new Map();const с0=URL.createObjectURL,о0=URL.revokeObjectURL;
+ /* адрес blob: держит свой Blob и так, пока его не отпустят, — запись в таблице памяти не прибавляет */
+ URL.createObjectURL=function(o){const u=с0.apply(URL,arguments);try{if(o instanceof Blob)блобы.set(u,o);}catch(_){}return u;};
+ URL.revokeObjectURL=function(u){блобы.delete(u);return о0.apply(URL,arguments);};
+ const клик0=HTMLAnchorElement.prototype.click;
+ HTMLAnchorElement.prototype.click=function(){
+  const b=this.download?блобы.get(String(this.href||"")):null;
+  if(b){const имя=String(this.download);
+   b.text().then(t=>{let ok=false;try{ok=!!м.saveDownload(имя,String(b.type||"text/plain"),t);}catch(_){ok=false;}
+    if(!ok)narrate("Файл в папку «Загрузки» записать не удалось: в памяти телефона мало места или нет доступа.",{interrupt:false});})
+    .catch(()=>narrate("Файл в папку «Загрузки» записать не удалось.",{interrupt:false}));
+   return;}
+  return клик0.apply(this,arguments);};});
