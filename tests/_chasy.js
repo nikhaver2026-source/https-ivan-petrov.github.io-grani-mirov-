@@ -24,13 +24,14 @@ const ЧАСЫ={
  async шаг(page,мс){if(мс>0)await page.clock.runFor(мс);},
  /* касание одним пальцем: ms — сколько палец лежит, после — сколько ждать после отрыва;
     пустойОтрыв — отрыв без точек (как в части наборов), иначе — с точкой отрыва */
- async касание(page,cdp,x,y,{ms=40,после=140,id=0,пустойОтрыв=false}={}){
-  await this.стоп(page);
+ async касание(page,cdp,x,y,{ms=40,после=140,id=0,пустойОтрыв=false,часыСтоят=false}={}){
+  /* часыСтоят — часы уже остановлены вызывающим (он сам их пустит): касание только двигает их */
+  if(!часыСтоят)await this.стоп(page);
   try{await cdp.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[{x,y,id}]});
    await this.шаг(page,ms);
    await cdp.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:пустойОтрыв?[]:[{x,y,id}]});
    await this.шаг(page,после);}
-  finally{await this.идти(page);}},
+  finally{if(!часыСтоят)await this.идти(page);}},
  /* свайп: от (fx,fy) к (tx,ty) за steps шагов по stepMs */
  async свайп(page,cdp,fx,fy,tx,ty,{steps=6,stepMs=14,после=150,id=0,пустойОтрыв=false}={}){
   await this.стоп(page);

@@ -1,4 +1,5 @@
 const {chromium}=require('playwright');
+const ЧАСЫ=require('./_chasy.js');
 const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(e!==undefined?' :: '+JSON.stringify(e):''));
 (async()=>{
  const browser=await chromium.launch({args:['--autoplay-policy=no-user-gesture-required']});
@@ -6,6 +7,8 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
  const page=await ctx.newPage();
  const errors=[];page.on('pageerror',e=>errors.push(String(e)));
  page.on('console',m=>{if(m.type()==='error'&&!/fetching the script|ServiceWorker/i.test(m.text()))errors.push('console: '+m.text());});
+ /* О1: касания и свайпы — по управляемым часам: их длина не зависит от нагрузки машины */
+ await ЧАСЫ.поставить(page);
  await page.goto(process.argv[2]);await page.waitForTimeout(700);
  const cdp=await ctx.newCDPSession(page);
  await page.evaluate(()=>enterGame());await page.waitForTimeout(300);
@@ -15,13 +18,13 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
  const said=()=>page.evaluate(()=>window.__said.slice());
  const clearSaid=()=>page.evaluate(()=>{window.__said=[];});
 
- async function tap(x,y,ms=30){await cdp.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[{x,y,id:0}]});
-  await page.waitForTimeout(ms);
-  await cdp.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[{x,y,id:0}]});await page.waitForTimeout(70);}
- async function swipe(fx,fy,tx,ty,steps,stepMs){ // быстрый свайп
-  await cdp.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[{x:fx,y:fy,id:0}]});
-  for(let i=1;i<=steps;i++){await cdp.send('Input.dispatchTouchEvent',{type:'touchMove',touchPoints:[{x:fx+(tx-fx)*i/steps,y:fy+(ty-fy)*i/steps,id:0}]});await page.waitForTimeout(stepMs);}
-  await cdp.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[{x:tx,y:ty,id:0}]});await page.waitForTimeout(140);}
+ async function tap(x,y,ms=30){await ЧАСЫ.касание(page,cdp,x,y,{ms,после:70});}
+ async function swipe(fx,fy,tx,ty,steps,stepMs){ // быстрый свайп (медленный — ощупывание — тем же путём)
+  await ЧАСЫ.стоп(page);
+  try{await cdp.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[{x:fx,y:fy,id:0}]});
+   for(let i=1;i<=steps;i++){await cdp.send('Input.dispatchTouchEvent',{type:'touchMove',touchPoints:[{x:fx+(tx-fx)*i/steps,y:fy+(ty-fy)*i/steps,id:0}]});await ЧАСЫ.шаг(page,stepMs);}
+   await cdp.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[{x:tx,y:ty,id:0}]});await ЧАСЫ.шаг(page,140);}
+  finally{await ЧАСЫ.идти(page);}}
 
  // открываем длинное окно со списком
  await page.evaluate(()=>{CMD.races();raceFilterRank=0;renderRaces();});

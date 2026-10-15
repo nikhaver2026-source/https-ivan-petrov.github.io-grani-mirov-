@@ -55,7 +55,7 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
   п1.mode==="real"&&п1.шаги===0&&Math.abs(п1.минута-1)<0.05&&Math.abs(п1.быстро-6)<0.2&&п1.пошагам,п1);
 
  /* ── 2 ── */
- const п2=await p.evaluate(()=>{G.needs={};G.food=0;G.water=0;settings.autoDrink=0;settings.autoEat=0;Body.warned={};Body.hitAt={};__said.length=0;
+ const п2=await p.evaluate(()=>{/* в зной жажда вдвое быстрее (так задумано) — погода спокойная */G.weather="Ясно";G.needs={};G.food=0;G.water=0;settings.autoDrink=0;settings.autoEat=0;Body.warned={};Body.hitAt={};__said.length=0;
   Body.tick(1.5);const пред=__said.join(" | ");const v=Math.round(Survival.state().thirst);
   const hp=G.hp;Body.tick(0.6);const бьёт=__said.slice(-1)[0]||"";const урон=hp-G.hp;
   const hp2=G.hp;Body.tick(0.01);const сразу=hp2-G.hp;

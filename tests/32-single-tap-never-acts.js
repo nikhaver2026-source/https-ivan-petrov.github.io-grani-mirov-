@@ -104,13 +104,16 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
    /* Ждём, пока истечёт окно двойного касания: иначе следующее касание
       окажется вторым и по праву что-нибудь выполнит. */
    await ЧАСЫ.ждать(page,900);
-   const до=await snap();
-   await page.evaluate(()=>{window.__acts=[];window.__cmds=[];window.__said=[];});
-   await tap(т.x,т.y);
-   касаний++;
-   const после=await snap();
-   const r=await page.evaluate(()=>({акт:window.__acts.slice(),кмд:window.__cmds.slice(),
-    сказано:window.__said.slice()}));
+   /* слепок «до», касание и слепок «после» — при остановленных часах: между ними проходит ровно длина касания */
+   await ЧАСЫ.стоп(page);let до,после,r;
+   try{до=await snap();
+    await page.evaluate(()=>{window.__acts=[];window.__cmds=[];window.__said=[];});
+    await ЧАСЫ.касание(page,cdp,т.x,т.y,{ms:40,после:140,часыСтоят:true});
+    касаний++;
+    после=await snap();
+    r=await page.evaluate(()=>({акт:window.__acts.slice(),кмд:window.__cmds.slice(),
+     сказано:window.__said.slice()}));}
+   finally{await ЧАСЫ.идти(page);}
    if(до!==после||r.акт.length||r.кмд.length)
     нарушения.push({окно:имя,пункт:т.что,активировано:r.акт,команды:r.кмд,
      изменилось:до!==после});
