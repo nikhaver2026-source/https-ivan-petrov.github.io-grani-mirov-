@@ -73,7 +73,12 @@ def данные(папка):
     текст = open(os.path.join(папка, "text.txt"), encoding="utf-8").read()
     корпус = [json.loads(l) for l in open(os.path.join(папка, "corpus.jsonl"), encoding="utf-8")]
     знаки = set(текст) | set("".join(z["имя"] + z["о"] + json.dumps(z.get("черты", {}), ensure_ascii=False) for z in корпус))
-    знаки -= set("".join(СЛУЖ)) - {"\n"}; знаки.discard("\n")
+    # служебные метки разбираются целиком (сл.спец) раньше отдельных знаков, поэтому их буквы остаются в алфавите;
+    # прежде отсюда вычитались все буквы меток — строчные «о», «и», «к», «ч» (и латинские a, d, p) становились
+    # пустым местом, и сеть училась на тексте без самых частых букв
+    знаки -= {"⟨", "⟩", "⟦", "⟧"}; знаки.discard("\n")
+    нет = [б for б in "абвгдежзийклмнопрстуфхцчшщъыьэюяё" if б not in знаки]
+    if нет: raise SystemExit(f"в алфавите Летописца нет букв: {''.join(нет)}")
     return текст, корпус, знаки
 
 def готовить(папка):
@@ -166,7 +171,12 @@ def писать(м, сл, вид, сколько, черты=None, извест
 def загрузить(папка):
     сл = Словарь([]); сл.т = json.load(open(os.path.join(папка, "letopisec_vocab.json"), encoding="utf-8"))
     сл.и = {t: i for i, t in enumerate(сл.т)}; сл.спец = sorted([t for t in сл.т if len(t) > 1], key=len, reverse=True)
-    м = Летописец(len(сл.т)); м.load_state_dict(torch.load(os.path.join(папка, "letopisec.pt"))["м"]); return м, сл
+    # ширина, число слоёв и окно — по самому снимку (192×4 и 256×6 лежат в разных папках)
+    global CTX
+    z = torch.load(os.path.join(папка, "letopisec.pt"))["м"]
+    d = z["n.weight"].shape[0]; L = 1 + max(int(k.split(".")[1]) for k in z if k.startswith("b."))
+    CTX = z["pos.weight"].shape[0]
+    м = Летописец(len(сл.т), d=d, L=L); м.load_state_dict(z); return м, сл
 
 if __name__ == "__main__":
     cmd, папка = sys.argv[1], sys.argv[2]
