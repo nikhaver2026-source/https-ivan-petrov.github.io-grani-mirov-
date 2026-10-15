@@ -10,6 +10,7 @@
   python3 letopisec.py train <папка данных> [шагов] [этап: язык|сущности|оба]
   python3 letopisec.py write <папка данных> <вид> [сколько] [черты: ключ=значение;…]
   python3 letopisec.py eval  <папка данных>       — потеря на проверке, доля нового, образцы по всем видам
+  python3 letopisec.py dump  <папка данных> [на вид] [файл] — выдумки всех видов «вид\tимя\tо» (для Учителя и Судьи)
 Потоки — LET_THREADS (по умолчанию 2). Снимок — <папка>/letopisec.pt (каждые 250 шагов; обучение продолжает с него).
 """
 import sys, os, json, math, time, random, re, collections
@@ -187,6 +188,17 @@ if __name__ == "__main__":
         изв = {z["имя"] for z in корпус if z["вид"] == sys.argv[3]}
         for имя, о in писать(м, сл, sys.argv[3], int(sys.argv[4]) if len(sys.argv) > 4 else 8, sys.argv[5] if len(sys.argv) > 5 else None, изв):
             print(f"{имя} — {о}" if о else имя)
+    elif cmd == "dump":  # выдумки всех видов в файл «вид\tимя\tо» — для оценок Учителя и обучения Судьи
+        torch.set_num_threads(int(os.environ.get("LET_THREADS", "2"))); torch.manual_seed(int(os.environ.get("LET_SEED", "3"))); м, сл = загрузить(папка)
+        корпус = [json.loads(l) for l in open(os.path.join(папка, "corpus.jsonl"), encoding="utf-8")]
+        n = int(sys.argv[3]) if len(sys.argv) > 3 else 60; вых = sys.argv[4] if len(sys.argv) > 4 else os.path.join(папка, "vydumki.tsv")
+        with open(вых, "w", encoding="utf-8") as f:
+            for в in ВИДЫ:
+                изв = {z["имя"] for z in корпус if z["вид"] == в}
+                for T_ in (0.7, 0.85, 1.0):  # разная смелость — Судье нужны и хорошие, и плохие выдумки
+                    for имя, о in писать(м, сл, в, max(1, n // 3), известные=изв, T=T_):
+                        f.write(f"{в}\t{имя}\t{о}\n")
+                f.flush(); print(в, flush=True)
     elif cmd == "eval":
         torch.set_num_threads(2); м, сл = загрузить(папка); сл2, тп, тв, учз, прз, корпус = готовить(папка)
         print(оценка_потери(м, сл, тв, прз, len(сл.т)))
