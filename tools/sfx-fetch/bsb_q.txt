@@ -5,21 +5,21 @@
 # Имя набора — обязательно с «bsb_»: иначе сборщик его не упакует.
 # имя запрос ~ шаблон имени страницы ~ сколько
 # Заход 2 из 2: стук, перо, страницы, песочные часы, верёвка, лом, долото, шкатулка, толпа, трясина, лёд, факел.
-bsb_adv_knock knock ~ (knock|door|wood|tap) ~ 2
-bsb_adv_quill writing ~ (writ|pen|quill|pencil|scratch) ~ 2
-bsb_adv_page page ~ (page|book|paper|leaf) ~ 2
-bsb_adv_sand hourglass ~ . ~ 2
-bsb_adv_sand2 sand ~ (sand|trickl|pour|grain) ~ 2
-bsb_adv_rope rope ~ (rope|cord|tension|creak|knot) ~ 2
-bsb_adv_pry crowbar ~ . ~ 2
-bsb_adv_chisel chisel ~ . ~ 2
-bsb_adv_musicbox music box ~ (music|box) ~ 2
-bsb_adv_crowd crowd ~ (crowd|applau|cheer|people) ~ 2
-bsb_adv_applause applause ~ . ~ 1
-bsb_adv_bubble bubbling ~ (bubbl|boil|simmer) ~ 2
-bsb_adv_mud mud ~ (mud|squelch|bog|wet) ~ 2
-bsb_adv_ice ice ~ (ice|crack|frozen) ~ 2
-bsb_adv_torch torch ~ (torch|fire|flame|ignit|match|burn) ~ 2
-bsb_adv_dig shovel ~ (shovel|dig|spade|earth|soil) ~ 2
-bsb_adv_coins coins ~ (coin|purse|money|pouch) ~ 2
-bsb_adv_wax candle ~ (candle|wax|blow) ~ 2
+# (сведено в sounds/adv) bsb_adv_knock knock ~ (knock|door|wood|tap) ~ 2
+# (сведено в sounds/adv) bsb_adv_quill writing ~ (writ|pen|quill|pencil|scratch) ~ 2
+# (сведено в sounds/adv) bsb_adv_page page ~ (page|book|paper|leaf) ~ 2
+# (сведено в sounds/adv) bsb_adv_sand hourglass ~ . ~ 2
+# (сведено в sounds/adv) bsb_adv_sand2 sand ~ (sand|trickl|pour|grain) ~ 2
+# (сведено в sounds/adv) bsb_adv_rope rope ~ (rope|cord|tension|creak|knot) ~ 2
+# (сведено в sounds/adv) bsb_adv_pry crowbar ~ . ~ 2
+# (сведено в sounds/adv) bsb_adv_chisel chisel ~ . ~ 2
+# (сведено в sounds/adv) bsb_adv_musicbox music box ~ (music|box) ~ 2
+# (сведено в sounds/adv) bsb_adv_crowd crowd ~ (crowd|applau|cheer|people) ~ 2
+# (сведено в sounds/adv) bsb_adv_applause applause ~ . ~ 1
+# (сведено в sounds/adv) bsb_adv_bubble bubbling ~ (bubbl|boil|simmer) ~ 2
+# (сведено в sounds/adv) bsb_adv_mud mud ~ (mud|squelch|bog|wet) ~ 2
+# (сведено в sounds/adv) bsb_adv_ice ice ~ (ice|crack|frozen) ~ 2
+# (сведено в sounds/adv) bsb_adv_torch torch ~ (torch|fire|flame|ignit|match|burn) ~ 2
+# (сведено в sounds/adv) bsb_adv_dig shovel ~ (shovel|dig|spade|earth|soil) ~ 2
+# (сведено в sounds/adv) bsb_adv_coins coins ~ (coin|purse|money|pouch) ~ 2
+# (сведено в sounds/adv) bsb_adv_wax candle ~ (candle|wax|blow) ~ 2

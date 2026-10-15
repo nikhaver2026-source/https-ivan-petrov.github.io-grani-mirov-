@@ -18,7 +18,7 @@ permissions:
 jobs:
   fetch:
     runs-on: ubuntu-latest
-    timeout-minutes: 40
+    timeout-minutes: 90
     steps:
       - uses: actions/checkout@v4
         with:
@@ -65,6 +65,26 @@ jobs:
               python3 tools/sfx-fetch/itch.py "$name" "$page" x $only 2>&1 | tee -a itch.log || echo "!! itch: $name"
               grep "^LICENSE $name " itch.log | tail -1 | cut -d' ' -f2- >> licenses.txt || true
               process "$name"
+            done
+          fi
+          # («Подземная лаборатория») Записи свободных игр с GitHub (git.txt):
+          # частичное клонирование — только папка звуков и файл лицензии.
+          if [ -f tools/sfx-fetch/git.txt ]; then
+            grep -v '^#' tools/sfx-fetch/git.txt | while read -r name repo path pat lic; do
+              [ -n "$name" ] || continue
+              echo "== git $name"
+              rm -rf "g/$name"; mkdir -p g "x/$name"
+              if git clone -q --depth 1 --filter=blob:none --sparse "$repo" "g/$name" < /dev/null; then
+                git -C "g/$name" sparse-checkout set --no-cone "/$path/" "/$lic" < /dev/null || echo "!! sparse: $name"
+                (find "g/$name/$path" -type f | grep -E -i -- "$pat" || true) | while read -r f; do cp "$f" "x/$name/"; done
+                if [ -n "$lic" ] && [ -f "g/$name/$lic" ]; then cp "g/$name/$lic" "x/$name/LICENSE_$(basename "$lic").txt"; fi
+                echo "$name $repo /$path (лицензия: файл $lic)" >> licenses.txt
+                echo "   файлов: $(ls "x/$name" | wc -l)"
+                process "$name"
+              else
+                echo "!! git: не склонировалось $repo"
+              fi
+              rm -rf "g/$name"
             done
           fi
           # BigSoundBank (CC0): форма «Download» сайта (bsb.py, по номерам).
