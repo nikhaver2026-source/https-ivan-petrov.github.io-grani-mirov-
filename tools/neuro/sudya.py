@@ -22,12 +22,12 @@ def текст(имя, о=""): return (f"{имя}⟨о⟩{о}")[:L]
 
 class Судья(nn.Module):
     """свёртки по буквам (ширина 2–7) → максимум и среднее по строке; решение — по признакам и виду вместе"""
-    def __init__(s, V, NV, d=64, c=128):
+    def __init__(s, V, NV, d=64, c=int(os.environ.get("SUD_C", "96"))):
         super().__init__(); s.e = nn.Embedding(V, d); s.ев = nn.Embedding(NV, 32)
         s.c = nn.ModuleList([nn.Conv1d(d, c, k, padding=k // 2) for k in (2, 3, 5, 7)])
         H = 2 * 4 * c
-        s.o = nn.Sequential(nn.Linear(H + 32, 192), nn.GELU(), nn.Dropout(0.2), nn.Linear(192, 1))
-        s.вид = nn.Sequential(nn.Dropout(0.2), nn.Linear(H, NV))
+        s.o = nn.Sequential(nn.Dropout(0.3), nn.Linear(H + 32, 128), nn.GELU(), nn.Dropout(0.3), nn.Linear(128, 1))
+        s.вид = nn.Sequential(nn.Dropout(0.3), nn.Linear(H, NV))
     def признаки(s, x):
         м = (x > 0).float().unsqueeze(1); h = s.e(x).transpose(1, 2); out = []
         for c in s.c:
@@ -79,7 +79,20 @@ def учить(папка, шагов=6000, порождённое=None):
     виды = sorted(по_виду); ви = {в: i for i, в in enumerate(виды)}
     сл = Буквы(set("".join(текст(z["имя"], z["о"]) for z in все))); R.shuffle(все)
     пров = все[: len(все) // 10]; учз = все[len(все) // 10:]
-    м = Судья(len(сл.т), len(виды)); опт = torch.optim.AdamW(м.parameters(), lr=2e-3, weight_decay=1e-4)
+    м = Судья(len(сл.т), len(виды)); опт = torch.optim.AdamW(м.parameters(), lr=2e-3, weight_decay=float(os.environ.get("SUD_WD", "5e-4")))
+    def порча(v):
+        """случайная порча букв (каждая десятая — «не знаю»): Судья не должен узнавать запись по заученному имени"""
+        return [1 if c > 1 and R.random() < 0.1 else c for c in v]
+    def сбалансированная():
+        """средняя точность по настоящим и по браку на отложенных записях — по ней выбирается лучший снимок"""
+        м.eval(); Rv = random.Random(9); да = нет = 0; n = min(300, len(пров))
+        with torch.no_grad():
+            for z in пров[:n]:
+                да += torch.sigmoid(м(torch.tensor([сл.код(текст(z["имя"], z["о"]))]), torch.tensor([ви[z["вид"]]])))[0].item() > 0.5
+                t0 = брак(z, все, по_виду, Rv, двуграммы); имя, _, о = t0[t0.index("⟧") + 1:].partition("⟨о⟩")
+                нет += torch.sigmoid(м(torch.tensor([сл.код(текст(имя, о))]), torch.tensor([ви[z["вид"]]])))[0].item() < 0.5
+        м.train(); return (да / n + нет / n) / 2, да / n, нет / n
+    лучшая = (-1, None)
     def брак2(z):
         """брак как тройка (вид, имя, описание) — из прежнего брака (строка с меткой вида)"""
         t = брак(z, все, по_виду, R, двуграммы); имя_о = t[t.index("⟧") + 1:]
@@ -88,23 +101,18 @@ def учить(папка, шагов=6000, порождённое=None):
         for g in опт.param_groups: g["lr"] = 2e-3 * min(1.0, (ш + 1) / 200) * (0.05 + 0.95 * 0.5 * (1 + math.cos(math.pi * ш / шагов)))
         x, в, y, вн = [], [], [], []
         for _ in range(48):
-            z = R.choice(учз); x.append(сл.код(текст(z["имя"], z["о"] if R.random() < 0.6 else ""))); в.append(ви[z["вид"]]); y.append(1.0)  # судить и по одному имени
+            z = R.choice(учз); x.append(порча(сл.код(текст(z["имя"], z["о"] if R.random() < 0.6 else "")))); в.append(ви[z["вид"]]); y.append(1.0)  # судить и по одному имени
             б = R.choice(плохие) if плохие and R.random() < 0.3 else брак2(z)
-            x.append(сл.код(текст(б[1], б[2]))); в.append(ви.get(б[0], ви[z["вид"]])); y.append(0.0)
+            x.append(порча(сл.код(текст(б[1], б[2])))); в.append(ви.get(б[0], ви[z["вид"]])); y.append(0.0)
         X = torch.tensor(x); В = torch.tensor(в); Y = torch.tensor(y)
         r, лв = м(X, В, с_видом=True); настоящие = Y > 0.5
         п = F.binary_cross_entropy_with_logits(r, Y) + 0.5 * F.cross_entropy(лв[настоящие], В[настоящие])
         опт.zero_grad(); п.backward(); torch.nn.utils.clip_grad_norm_(м.parameters(), 1.0); опт.step()
-        if (ш + 1) % 500 == 0:
-            м.eval()
-            with torch.no_grad():
-                Rv = random.Random(9); ок = 0; n = 0
-                for z in пров[:300]:
-                    p1 = torch.sigmoid(м(torch.tensor([сл.код(текст(z["имя"], z["о"]))]), torch.tensor([ви[z["вид"]]])))[0].item()
-                    t0 = брак(z, все, по_виду, Rv, двуграммы); имя, _, о = t0[t0.index("⟧") + 1:].partition("⟨о⟩")
-                    p0 = torch.sigmoid(м(torch.tensor([сл.код(текст(имя, о))]), torch.tensor([ви[z["вид"]]])))[0].item()
-                    ок += (p1 > 0.5) + (p0 < 0.5); n += 2
-            м.train(); print(f"шаг {ш+1}: потеря {п.item():.3f}, точность на проверке {ок/n:.3f}", flush=True)
+        if (ш + 1) % 250 == 0:
+            б_, да_, нет_ = сбалансированная()
+            if б_ > лучшая[0]: лучшая = (б_, {k: v.clone() for k, v in м.state_dict().items()}, ш + 1)
+            print(f"шаг {ш+1}: потеря {п.item():.3f}, на проверке: средняя {б_:.3f} (настоящие {да_:.3f}, брак {нет_:.3f})", flush=True)
+    if лучшая[1] is not None: м.load_state_dict(лучшая[1]); print(f"лучший снимок — шаг {лучшая[2]}, средняя точность {лучшая[0]:.3f}", flush=True)
     torch.save({"м": м.state_dict(), "т": сл.т, "виды": виды, "версия": 2}, os.path.join(папка, "sudya.pt"))
 
 def загрузить(папка):
