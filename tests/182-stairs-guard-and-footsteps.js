@@ -22,6 +22,7 @@
    4. У дна шахта отвечает сразу, без марша.
    ═══════════════════════════════════════════════════════════════════════ */
 const {chromium}=require('playwright');
+const ЧАСЫ=require('./_chasy.js');
 const results=[];
 const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(e!==undefined?' :: '+JSON.stringify(e):''));
 
@@ -35,17 +36,13 @@ const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(e!==undefined?' :
   window.__tts=[];
   window.GraniTTS={speak(t,r,v,id){window.__tts.push(String(t));setTimeout(()=>window.GraniTTSDone&&window.GraniTTSDone(id),120);},
    stop(){},isSpeaking(){return false;},getVoices(){return "[]";},setVoice(){}};});
+ /* О1: касания и свайпы — по управляемым часам: их длина не зависит от нагрузки машины */
+ await ЧАСЫ.поставить(page);
  await page.goto(process.argv[2]);await page.waitForTimeout(900);
  const cdp=await ctx.newCDPSession(page);
- const tap=async()=>{await cdp.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[{x:195,y:420,id:0}]});
-  await page.waitForTimeout(40);await cdp.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});};
- const dtap=async()=>{await page.waitForTimeout(400);await page.evaluate(()=>{while(activeLayer())closeTopUI();});await tap();await page.waitForTimeout(90);await tap();await page.waitForTimeout(600);};
- const swipe=async()=>{const x=195,y=420;
-  await cdp.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[{x,y,id:0}]});
-  for(let i=1;i<=5;i++){await page.waitForTimeout(20);
-   await cdp.send('Input.dispatchTouchEvent',{type:'touchMove',touchPoints:[{x,y:y-24*i,id:0}]});}
-  await page.waitForTimeout(20);await cdp.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});
-  await page.waitForTimeout(350);};
+ const tap=(после=0)=>ЧАСЫ.касание(page,cdp,195,420,{ms:40,после,пустойОтрыв:true});
+ const dtap=async()=>{await page.waitForTimeout(400);await page.evaluate(()=>{while(activeLayer())closeTopUI();});await tap(90);await tap(600);};
+ const swipe=()=>ЧАСЫ.свайп(page,cdp,195,420,195,420-24*5,{steps:5,stepMs:20,после:350,пустойОтрыв:true});
 
  /* Подземелье, клетка спуска. */
  const стать=async(страж)=>page.evaluate(страж=>{

@@ -30,6 +30,7 @@
    10. Руководство, самопроверка, README, docs.
    ═══════════════════════════════════════════════════════════════════════ */
 const {chromium}=require('playwright');
+const ЧАСЫ=require('./_chasy.js');
 const fs=require('fs'),path=require('path');
 const results=[];
 const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(e!==undefined?' :: '+JSON.stringify(e):''));
@@ -42,6 +43,8 @@ const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(e!==undefined?' :
  const errors=[];
  page.on('pageerror',e=>errors.push(String(e)));
  page.on('console',m=>{if(m.type()==='error'&&!/fetching the script|ServiceWorker/i.test(m.text()))errors.push('console: '+m.text());});
+ /* О1: касания и свайпы — по управляемым часам: их длина не зависит от нагрузки машины */
+ await ЧАСЫ.поставить(page);
  await page.goto(process.argv[2]);await page.waitForTimeout(800);
  const cdp=await ctx.newCDPSession(page);
  await page.evaluate(()=>enterGame());await page.waitForTimeout(400);
@@ -49,20 +52,18 @@ const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(e!==undefined?' :
   settings.fastTap=0;while(activeLayer())closeTopUI();});
  const said=()=>page.evaluate(()=>window.__said.slice());
  const clr=()=>page.evaluate(()=>{window.__said.length=0;});
- async function tap(x=195,y=430){
-  await cdp.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[{x,y,id:0}]});
-  await page.waitForTimeout(50);
-  await cdp.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});
-  await page.waitForTimeout(110);}
+ async function tap(x=195,y=430){await ЧАСЫ.касание(page,cdp,x,y,{ms:50,после:110,пустойОтрыв:true});}
  async function dbl(x=195,y=430){await tap(x,y);await tap(x,y);await page.waitForTimeout(250);}
  async function swipe(dx,dy,fingers=1,steps=6){
   const x=150,y=430;
   const pts=k=>Array.from({length:fingers},(_,i)=>({x:x+i*45+Math.round(dx*k/steps),y:y+Math.round(dy*k/steps),id:i}));
-  await cdp.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:pts(0)});
-  await page.waitForTimeout(16);
-  for(let k=1;k<=steps;k++){await cdp.send('Input.dispatchTouchEvent',{type:'touchMove',touchPoints:pts(k)});await page.waitForTimeout(16);}
-  await cdp.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});
-  await page.waitForTimeout(260);}
+  await ЧАСЫ.стоп(page);
+  try{await cdp.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:pts(0)});
+   await ЧАСЫ.шаг(page,16);
+   for(let k=1;k<=steps;k++){await cdp.send('Input.dispatchTouchEvent',{type:'touchMove',touchPoints:pts(k)});await ЧАСЫ.шаг(page,16);}
+   await cdp.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});
+   await ЧАСЫ.шаг(page,260);}
+  finally{await ЧАСЫ.идти(page);}}
 
  /* ── 1. Двойное касание по полю — вход в постройку ── */
  const вход=await page.evaluate(()=>{

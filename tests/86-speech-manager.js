@@ -276,11 +276,16 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
  await fresh();
  const дак=await page.evaluate(async()=>{
   settings.music=1;settings.musicVol=1;settings.duck=0.5;
+  /* (17.5) приглушение от прошлой фразы держится ещё 0,45 с — исходную громкость берём, когда оно отпущено */
+  for(let i=0;i<30&&Speech.ducking;i++)await new Promise(r=>setTimeout(r,50));
   const quiet=Bank.vol("music");
   Speech.say("Говорю, и музыка тише.",{pri:2});await new Promise(r=>setTimeout(r,30));
   const during=Bank.vol("music"),amb=Bank.vol("ambient"),world=Bank.vol("fx");
-  FAKE.end();await new Promise(r=>setTimeout(r,30));
-  return {quiet,during,amb,world,after:Bank.vol("music"),ducking:Speech.ducking};});
+  /* (17.5) приглушение отпускается через 0,45 с тишины (без «дыхания» между фразами подряд): сразу после конца
+     речи музыка ещё тише, через 0,6 с — прежняя */
+  FAKE.end();await new Promise(r=>setTimeout(r,30));const сразу=Bank.vol("music");
+  await new Promise(r=>setTimeout(r,600));
+  return {quiet,during,amb,world,сразу,after:Bank.vol("music"),ducking:Speech.ducking};});
  check('при речи музыка вдвое тише, мир не тише, после речи громкость возвращается',дак.during<дак.quiet&&Math.abs(дак.during-дак.quiet*0.5)<0.01&&дак.after===дак.quiet&&дак.world===Bank_fx(дак)&&!дак.ducking,дак);
  function Bank_fx(d){return d.world;}
 

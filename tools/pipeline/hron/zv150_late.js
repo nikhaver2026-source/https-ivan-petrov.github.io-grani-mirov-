@@ -13,21 +13,21 @@
 const ZV_PAUSE={feed:900,feedall:900,growdo:950,care:800,docare:800,ride:850,off:700,call:1100,equip:650,lequip:650,putart:650,give:600,train:800,task:450,recall:450,role:450,follow:600,release:450};
 const ZvSay={тихо:0,
  /* первая фраза дела — через ms (звук успевает прозвучать); окно в это время не перечитывается */
- run(ms,fn,self,args){const s0=Speech.say;let первая=true;this.тихо++;
-  Speech.say=function(t,o){if(первая&&!(o&&o.cat==="ui")){первая=false;const a=arguments,me=this;
-    if(ms>0){setTimeout(()=>safeFn(()=>s0.apply(me,a)),ms);return true;}}return s0.apply(this,arguments);};
-  try{return fn.apply(self,args||[]);}finally{Speech.say=s0;this.tihoOff();}},
+ run(ms,fn,self,args){let первая=true;this.тихо++;
+  try{return Speech.на_время(()=>fn.apply(self,args||[]),function(t,o,дальше){if(первая&&!(o&&o.cat==="ui")){первая=false;
+    if(ms>0){setTimeout(()=>safeFn(()=>дальше(t,o)),ms);return true;}}return дальше(t,o);},"звук прежде слов");}
+  finally{this.tihoOff();}},
  tihoOff(){this.тихо=Math.max(0,this.тихо-1);}};
 /* Окно, обновлённое после дела, молчит: курсор встаёт на первую строку без слов. */
 safeFn(()=>{const sh0=Stable.show;Stable.show=function(modal,title,html){if(!ZvSay.тихо)return sh0.apply(this,arguments);
- const s0=Speech.say;Speech.say=function(t,o){if(o&&o.cat==="ui")return true;return s0.apply(this,arguments);};
- try{return sh0.apply(this,arguments);}finally{Speech.say=s0;}};});
+ const me=this,a=arguments;
+ return Speech.на_время(()=>sh0.apply(me,a),(t,o,дальше)=>{if(o&&o.cat==="ui")return true;return дальше(t,o);},"окно обновляется молча");};});
 /* Слова о посадке и спешивании из «Действия здесь», из окна объектов и по главному действию скакуна —
    тоже после звука: следующая фраза с тем же текстом откладывается. */
 const ZvLater={t:0,text:"",ms:0};
-safeFn(()=>{const s0=Speech.say;Speech.say=function(t,o){
- if(ZvLater.text&&Date.now()-ZvLater.t<150&&String(t)===ZvLater.text){const ms=ZvLater.ms;ZvLater.text="";const a=arguments,me=this;setTimeout(()=>safeFn(()=>s0.apply(me,a)),ms);return true;}
- return s0.apply(this,arguments);};});
+safeFn(()=>{Speech.use("посадка — звук прежде слов",function(t,o,дальше){
+ if(ZvLater.text&&Date.now()-ZvLater.t<150&&String(t)===ZvLater.text){const ms=ZvLater.ms;ZvLater.text="";setTimeout(()=>safeFn(()=>дальше(t,o)),ms);return true;}
+ return дальше(t,o);},20);});
 safeFn(()=>{const m0=Stable.mountUp;Stable.mountUp=function(k){const до=safeFn(()=>this.riding(),null);const t=m0.apply(this,arguments);
  if(safeFn(()=>this.riding(),null)===k&&до!==k){ZvLater.t=Date.now();ZvLater.text=String(t);ZvLater.ms=ZV_PAUSE.ride;}return t;};});
 safeFn(()=>{const d0=Stable.dismountHere;Stable.dismountHere=function(){const до=safeFn(()=>this.riding(),null);const t=d0.apply(this,arguments);

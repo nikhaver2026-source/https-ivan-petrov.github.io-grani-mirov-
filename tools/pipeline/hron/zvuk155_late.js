@@ -103,4 +103,4 @@ safeFn(()=>{const m0=Bank.make;Bank.make=function(file,volume,loop,rate){const �
 safeFn(()=>{const i0=ЗвукСреда.играть;ЗвукСреда.играть=function(url,о){о=о||{};const кл=Гул155.кл||(о.voice?"голос":"мир");
  if(кл!=="музыка"){о=Object.assign({},о,{gain:(Number(о.gain)||0)*Гул155.множ(кл)});}
  return i0.call(this,url,о);};});
-safeFn(()=>{setInterval(()=>safeFn(()=>Гул155.тик()),350);});
+safeFn(()=>{Такт.каждые(350,()=>safeFn(()=>Гул155.тик()),"гул места");});

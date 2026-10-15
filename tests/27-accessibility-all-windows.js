@@ -1,28 +1,21 @@
 const {chromium}=require('playwright');
+const ЧАСЫ=require('./_chasy.js');
 const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(e!==undefined?' :: '+JSON.stringify(e):''));
 (async()=>{
  const browser=await chromium.launch({args:['--autoplay-policy=no-user-gesture-required']});
  const ctx=await browser.newContext({hasTouch:true,isMobile:true,viewport:{width:390,height:780}});
  const page=await ctx.newPage();
  const errors=[];page.on('pageerror',e=>errors.push(String(e)));
+ /* О1: касания и свайпы — по управляемым часам: их длина не зависит от нагрузки машины */
+ await ЧАСЫ.поставить(page);
  await page.goto(process.argv[2]);await page.waitForTimeout(700);
  const cdp=await ctx.newCDPSession(page);
  await page.evaluate(()=>enterGame());await page.waitForTimeout(300);
 
  /* ── Живые касания: ровно те события, что шлёт палец ── */
- const tap=async(x,y,ms=40)=>{
-  await cdp.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[{x,y,id:0}]});
-  await page.waitForTimeout(ms);
-  await cdp.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[{x,y,id:0}]});
-  await page.waitForTimeout(90);};
- const swipe=async(fx,fy,tx,ty,steps=6,stepMs=14)=>{   /* быстрый — перелистывание */
-  await cdp.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[{x:fx,y:fy,id:0}]});
-  await page.waitForTimeout(stepMs);   /* живой палец не улетает через треть экрана мгновенно */
-  for(let i=1;i<=steps;i++){
-   await cdp.send('Input.dispatchTouchEvent',{type:'touchMove',touchPoints:[{x:fx+(tx-fx)*i/steps,y:fy+(ty-fy)*i/steps,id:0}]});
-   await page.waitForTimeout(stepMs);}
-  await cdp.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[{x:tx,y:ty,id:0}]});
-  await page.waitForTimeout(140);};
+ const tap=(x,y,ms=40)=>ЧАСЫ.касание(page,cdp,x,y,{ms,после:90});
+ /* быстрый — перелистывание; живой палец не улетает через треть экрана мгновенно */
+ const swipe=(fx,fy,tx,ty,steps=6,stepMs=14)=>ЧАСЫ.свайп(page,cdp,fx,fy,tx,ty,{steps,stepMs,после:140});
  const drag=async(fx,fy,tx,ty,steps=10,stepMs=70)=>swipe(fx,fy,tx,ty,steps,stepMs); /* медленный — ощупывание */
  const fwd=()=>swipe(120,420,330,420);
  const back=()=>swipe(330,420,120,420);

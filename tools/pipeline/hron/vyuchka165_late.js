@@ -180,14 +180,14 @@ safeFn(()=>{const m0=move;move=обёртка165v(function(dir){
  if(!DIRV[dir]||activeLayer()||!Верхом165.можно())return m0.apply(this,arguments);
  const n=Верхом165.клеток();if(n<=1)return m0.apply(this,arguments);
  let r;
- for(let i=0;i<n;i++){const x0=G.x,y0=G.y;const последний=i===n-1;const захват=[];const n0=Speech.say;
-  if(!последний)Speech.say=function(){захват.push(Array.prototype.slice.call(arguments));return true;};
-  Верхом165.i=i;try{r=m0.call(this,dir);}finally{Speech.say=n0;Верхом165.i=0;}
+ for(let i=0;i<n;i++){const x0=G.x,y0=G.y;const последний=i===n-1;const захват=[];const me=this;
+  Верхом165.i=i;try{r=последний?m0.call(me,dir):Speech.на_время(()=>m0.call(me,dir),(t,o)=>{захват.push([t,o]);return true;},"верхом — слова промежуточных клеток");}
+  finally{Верхом165.i=0;}
   if(i===0)Выучка165.опыт("езда",0.2,true);
   if(последний)break;
   const сдвиг=G.x!==x0||G.y!==y0;
   const стоп=!сдвиг||!Верхом165.можно()||!!activeLayer()||(G.atDoor&&G.atDoor.x===G.x&&G.atDoor.y===G.y)||Верхом165.стоять(G.x,G.y);
-  if(стоп){захват.forEach(a=>{try{n0.apply(Speech,a);}catch(_){}});break;}}
+  if(стоп){захват.forEach(a=>{try{Speech.say(a[0],a[1]);}catch(_){}});break;}}
  return r;},m0);});
 
 /* ── Полёт: быстрее и своим крылом (просьба игрока) ──

@@ -402,7 +402,7 @@ victory=matKeep(victory,(vi7=>function(){const m=G.combat&&G.combat.m;const r=vi
 /* «Осмотреться»: признаки порчи слышны; проклятые руины выдают себя знаками на кладке. */
 {const lk7=look;look=matKeep(lk7,function(){const r=lk7.apply(this,arguments);safeFn(()=>{if(G.dark)return;const з=Magia.signs();if(з.length)narrate(`Признаки порчи: ${з.join("; ")}.`,{interrupt:false});
   const вРуинах=G.place?G.place.stype==="ruins":!!safeFn(()=>{const c=cellContent(G.x,G.y);return c.structure&&c.structure.type==="ruins";},false);
-  if(вРуинах&&Magia.cursedRuin(G.place?G.place.bx:G.x,G.place?G.place.by:G.y))narrate("На кладке руин — недобрые знаки: место проклято. Взятое отсюда потянет назад.",{interrupt:false});});return r;});}
+  if(вРуинах&&Magia.cursedRuin(G.place?G.place.bx:G.x,G.place?G.place.by:G.y))narrate("На кладке руин — недобрые знаки: место проклято. Взятое отсюда потянет назад.",{cat:"context",interrupt:false});});return r;});}
 /* Сглаз: слишком удачная сделка — и торговец провожает недобрым взглядом. Ковен бережёт своих. */
 {const ns7=noteSale;noteSale=matKeep(ns7,function(npc,золота){const r=ns7.apply(this,arguments);safeFn(()=>{const M=Magia;if((Number(золота)||0)<400||M.st().ков||M.curses().some(c=>c.id==="sglaz"))return;
   if(hashName(M.day(),Math.round(Number(золота)),9609)<0.25){M.curse("sglaz",`завистливый глаз торговца${npc&&npc.name?" "+npc.name:""}: слишком удачная сделка`);narrate("Торговец проводил вас недобрым взглядом: сделка вышла слишком удачной.",{interrupt:false});}});return r;});}

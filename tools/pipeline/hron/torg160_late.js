@@ -362,7 +362,7 @@ const TORG_CRAFT=[
 TORG_CRAFT.forEach(r=>CRAFT_RECIPES.push({n:r.n,из:r.из,торг:true,сколько:r.сколько||1}));
 safeFn(()=>{const c0=CMD.craftdo;CMD.craftdo=function(i){const r=CRAFT_RECIPES[Number(i)];
  /* Одиночная вещь, что уже есть, не делается — и сырьё не тратится. */
- if(r&&(r.n==="Удочка"||r.n==="Рыболовная сеть"||(r.торг&&Torg.one(r.n)))&&Torg.has(r.n)){narrate(`${r.n} у вас уже есть — вторая не нужна. Сырьё цело.`);return;}
+ if(r&&(r.n==="Удочка"||r.n==="Рыболовная сеть"||(r.торг&&Torg.one(r.n)))&&Torg.has(r.n)){narrate(`${r.n} у вас уже есть — вторая не нужна. Сырьё цело.`,{cat:"result"});return;}
  if(!r||!r.торг)return c0.apply(this,arguments);
  for(const k in r.из)if((Number(G.inv[k])||0)<r.из[k]){narrate(`Не хватает: ${k}. Нужно: ${Object.entries(r.из).map(([a,b])=>`${a} ×${b}`).join(", ")}.`);return;}
  for(const k in r.из){G.inv[k]-=r.из[k];if(G.inv[k]<=0)delete G.inv[k];}

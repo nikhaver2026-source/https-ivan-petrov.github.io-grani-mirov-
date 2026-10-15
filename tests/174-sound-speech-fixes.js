@@ -29,6 +29,7 @@
       и docs.
    ═══════════════════════════════════════════════════════════════════════ */
 const {chromium}=require('playwright');
+const ЧАСЫ=require('./_chasy.js');
 const fs=require('fs'),path=require('path');
 const results=[];
 const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(e!==undefined?' :: '+JSON.stringify(e):''));
@@ -40,6 +41,8 @@ const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(e!==undefined?' :
  const errors=[];
  page.on('pageerror',e=>errors.push(String(e)));
  page.on('console',m=>{if(m.type()==='error'&&!/fetching the script|ServiceWorker/i.test(m.text()))errors.push('console: '+m.text());});
+ /* О1: касания, свайпы и удержание пальца — по управляемым часам: их длина не зависит от нагрузки машины */
+ await ЧАСЫ.поставить(page);
  await page.goto(process.argv[2]);await page.waitForTimeout(800);
  const cdp=await ctx.newCDPSession(page);
  await page.evaluate(()=>enterGame());await page.waitForTimeout(300);
@@ -48,16 +51,14 @@ const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(e!==undefined?' :
  async function swipe(dx,dy,fingers=1,steps=6){
   const x=150,y=430;
   const pts=k=>Array.from({length:fingers},(_,i)=>({x:x+i*45+Math.round(dx*k/steps),y:y+Math.round(dy*k/steps),id:i}));
-  await cdp.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:pts(0)});
-  await page.waitForTimeout(16);
-  for(let k=1;k<=steps;k++){await cdp.send('Input.dispatchTouchEvent',{type:'touchMove',touchPoints:pts(k)});await page.waitForTimeout(16);}
-  await cdp.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});
-  await page.waitForTimeout(250);}
- async function tap(x=195,y=430){
-  await cdp.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[{x,y,id:0}]});
-  await page.waitForTimeout(60);
-  await cdp.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});
-  await page.waitForTimeout(250);}
+  await ЧАСЫ.стоп(page);
+  try{await cdp.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:pts(0)});
+   await ЧАСЫ.шаг(page,16);
+   for(let k=1;k<=steps;k++){await cdp.send('Input.dispatchTouchEvent',{type:'touchMove',touchPoints:pts(k)});await ЧАСЫ.шаг(page,16);}
+   await cdp.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});
+   await ЧАСЫ.шаг(page,250);}
+  finally{await ЧАСЫ.идти(page);}}
+ async function tap(x=195,y=430){await ЧАСЫ.касание(page,cdp,x,y,{ms:60,после:250,пустойОтрыв:true});}
 
  /* ── 1. Возрождение ── */
  const смерть=await page.evaluate(()=>{
@@ -239,12 +240,15 @@ const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(e!==undefined?' :
   const b=[...activeLayer().querySelectorAll('button')].find(x=>x.offsetParent);
   const rc=b.getBoundingClientRect();return {x:rc.x+rc.width/2,y:rc.y+rc.height/2};});
  await page.evaluate(()=>{Speech.stop();FAKE.reset();Speech.recent.clear();});
- await cdp.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[{x:ощуп.x,y:ощуп.y,id:0}]});
- await page.waitForTimeout(700);
- const имя=await page.evaluate(()=>({говорит:Speech.isSpeaking(),текст:(Speech.current||{}).text||""}));
- await cdp.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});
- await page.waitForTimeout(200);
- const послеОтрыва=await page.evaluate(()=>({говорит:Speech.isSpeaking(),текст:(Speech.current||{}).text||""}));
+ /* палец лежит 0,7 с по часам страницы, затем отрыв */
+ await ЧАСЫ.стоп(page);let имя,послеОтрыва;
+ try{await cdp.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[{x:ощуп.x,y:ощуп.y,id:0}]});
+  await ЧАСЫ.шаг(page,700);
+  имя=await page.evaluate(()=>({говорит:Speech.isSpeaking(),текст:(Speech.current||{}).text||""}));
+  await cdp.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});
+  await ЧАСЫ.шаг(page,200);
+  послеОтрыва=await page.evaluate(()=>({говорит:Speech.isSpeaking(),текст:(Speech.current||{}).text||""}));}
+ finally{await ЧАСЫ.идти(page);}
  await page.evaluate(()=>{while(activeLayer())closeTopUI();});
  check('5. ощупывание не обрывает только что названное имя',
   имя.говорит&&послеОтрыва.говорит&&послеОтрыва.текст===имя.текст,{имя,послеОтрыва});

@@ -16,12 +16,15 @@
    элемент не активировался, ни одно поле состояния не изменилось.
    ════════════════════════════════════════════════════════════════════════ */
 const {chromium}=require('playwright');
+const ЧАСЫ=require('./_chasy.js');
 const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(e!==undefined?' :: '+JSON.stringify(e):''));
 (async()=>{
  const browser=await chromium.launch({args:['--autoplay-policy=no-user-gesture-required']});
  const ctx=await browser.newContext({hasTouch:true,isMobile:true,viewport:{width:390,height:780}});
  const page=await ctx.newPage();
  const errors=[];page.on('pageerror',e=>errors.push(String(e)));
+ /* О1: касания — по управляемым часам: 40 мс касания остаются 40 мс при любой нагрузке машины */
+ await ЧАСЫ.поставить(page);
  await page.goto(process.argv[2]);await page.waitForTimeout(700);
  const cdp=await ctx.newCDPSession(page);
  await page.evaluate(()=>enterGame());await page.waitForTimeout(300);
@@ -35,19 +38,8 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
    return origAct(el);};
   Object.keys(CMD).forEach(k=>{const f=CMD[k];CMD[k]=function(...a){window.__cmds.push(k);return f.apply(this,a);};});
  });
- const tap=async(x,y,ms=40)=>{
-  await cdp.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[{x,y,id:0}]});
-  await page.waitForTimeout(ms);
-  await cdp.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[{x,y,id:0}]});
-  await page.waitForTimeout(140);};
- const swipe=async(fx,fy,tx,ty,steps=6,stepMs=14)=>{
-  await cdp.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[{x:fx,y:fy,id:0}]});
-  await page.waitForTimeout(stepMs);
-  for(let i=1;i<=steps;i++){
-   await cdp.send('Input.dispatchTouchEvent',{type:'touchMove',touchPoints:[{x:Math.round(fx+(tx-fx)*i/steps),y:fy,id:0}]});
-   await page.waitForTimeout(stepMs);}
-  await cdp.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[{x:tx,y:ty,id:0}]});
-  await page.waitForTimeout(150);};
+ const tap=(x,y,ms=40)=>ЧАСЫ.касание(page,cdp,x,y,{ms,после:140});
+ const swipe=(fx,fy,tx,ty,steps=6,stepMs=14)=>ЧАСЫ.свайп(page,cdp,fx,fy,tx,fy,{steps,stepMs,после:150});
  const fwd=()=>swipe(120,430,330,430);
  /* Слепок всего, что игрок мог бы нечаянно изменить. */
  const snap=()=>page.evaluate(()=>JSON.stringify({x:G.x,y:G.y,hp:G.hp,gold:G.gold,mana:G.mana,
@@ -111,7 +103,7 @@ const results=[];const check=(n,c,e)=>results.push((c?'PASS':'FAIL')+' — '+n+(
    if(!т)continue;
    /* Ждём, пока истечёт окно двойного касания: иначе следующее касание
       окажется вторым и по праву что-нибудь выполнит. */
-   await page.waitForTimeout(900);
+   await ЧАСЫ.ждать(page,900);
    const до=await snap();
    await page.evaluate(()=>{window.__acts=[];window.__cmds=[];window.__said=[];});
    await tap(т.x,т.y);

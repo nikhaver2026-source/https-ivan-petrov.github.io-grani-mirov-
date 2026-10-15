@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <!-- Внешний слой защиты: жёсткая CSP запрещает любые внешние скрипты/подключения,
      eval и вставку кода извне; игра полностью самодостаточна и не обращается в сеть. -->
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; media-src 'self' data: blob:; connect-src 'none'; frame-src 'none'; object-src 'none'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; media-src 'self' data: blob:; connect-src 'self'; frame-src 'none'; object-src 'none'; form-action 'none'">
 <meta http-equiv="X-Content-Type-Options" content="nosniff">
 <meta http-equiv="Referrer-Policy" content="no-referrer">
 <meta http-equiv="Permissions-Policy" content="geolocation=(), camera=(), microphone=(), usb=(), payment=(), interest-cohort=()">
@@ -188,6 +188,7 @@ h3{color:var(--acc2);margin:14px 0 6px;font-size:1.05rem;}
  <label class="opt">Громкость чар <input type="range" id="setMagicVol" min="0" max="100" value="100"><span id="vMagic">100%</span></label>
  <label class="opt">Громкость голосов людей <input type="range" id="setNpcVol" min="0" max="100" value="100"><span id="vNpc">100%</span></label>
  <label class="opt">Приглушение музыки при речи <input type="range" id="setDuck" min="0" max="100" value="50"><span id="vDuck">50%</span></label>
+ <label class="opt"><input type="checkbox" id="setPhoneSpk"><span><b>Динамик телефона</b><small>Тихие звуки мира — шаги, дальние твари, капель — подняты, громкие чуть сжаты: на маленьком динамике слышно всё. Речь, музыка и фон не меняются. На телефоне включено само; в наушниках можно выключить.</small></span></label>
  <h3 class="sec-head" tabindex="0" data-cmd="secjump" data-sec-title="Объёмный звук и живой мир">Объёмный звук и живой мир</h3>
  <p class="hint">Сторона, даль и высота источника; живые голоса народов, весёлые случаи и звуковая картина. Пространственный эмбиент, многослойная реверберация, динамический ветер, дождь, толпа, стерео-маяки объектов и акустика локации. Аудио генерируется в реальном времени.</p>
  <label class="opt"><input type="checkbox" id="setHrtf" checked><span><b>Объёмный звук</b><small>Слышно сторону, расстояние и высоту источника: тварь слева и сзади, ступени под ногами. Лучше всего в наушниках. Выключите, если одно ухо слышит хуже другого — тогда останется простая панорама</small></span></label>
@@ -4067,6 +4068,31 @@ const ESpeak={st:"off",w:null,
   dv.setUint32(24,sr,true);dv.setUint32(28,sr*2,true);dv.setUint16(32,2,true);dv.setUint16(34,16,true);str(36,"data");dv.setUint32(40,n*2,true);
   let o=44;for(const к of куски)for(let i=0;i<к.length;i++){let v=к[i]*g;v=v>32767?32767:v<-32768?-32768:v;dv.setInt16(o,v,true);o+=2;}
   return new Blob([buf],{type:"audio/wav"});}};
+/* ── ОДНИ ЧАСЫ (17.5) ──
+   Общий такт для дел звука, речи и живого мира вместо отдельного таймера у каждого: Такт.каждые(мс, дело, имя)
+   ставит дело и возвращает «снять». Таймер один и заводится на ближайшее дело; дела, подошедшие почти вместе
+   (в пределах 40 мс), выполняются за одно пробуждение. Пока игра свёрнута, такт замирает (кроме дел с вФоне):
+   звук и так притушен, а батарея телефона цела; вернулась игра — просроченные дела идут сразу. */
+const Такт={дела:[],т:null,проснулся:0,ДОПУСК:40,
+ каждые(мс,fn,имя,о){const п=Math.max(16,Number(мс)||0);
+  const д={мс:п,fn,имя:String(имя||"дело"),след:Date.now()+п,вФоне:!!(о&&о.вФоне),снят:false};
+  this.дела.push(д);this.завести();const self=this;
+  return function снять(){if(д.снят)return;д.снят=true;self.дела=self.дела.filter(x=>x!==д);self.завести();};},
+ скрыто(){try{return typeof document!=="undefined"&&!!document.hidden;}catch(_){return false;}},
+ завести(){if(this.т){clearTimeout(this.т);this.т=null;}
+  const скр=this.скрыто();let след=Infinity;
+  for(const д of this.дела)if(!скр||д.вФоне)след=Math.min(след,д.след);
+  if(след===Infinity)return;
+  this.т=setTimeout(()=>{this.т=null;this.тик();},Math.max(0,след-Date.now()));},
+ тик(){const now=Date.now(),скр=this.скрыто();
+  for(const д of this.дела.slice()){if(д.снят||(скр&&!д.вФоне)||д.след>now+this.ДОПУСК)continue;
+   д.след+=д.мс;if(д.след<=now)д.след=now+д.мс;
+   try{д.fn();}catch(e){try{console.warn("[Такт] "+д.имя,e);}catch(_){}}}
+  this.завести();},
+ список(){return this.дела.map(д=>({имя:д.имя,мс:д.мс,вФоне:д.вФоне}));}};
+try{document.addEventListener("visibilitychange",()=>{
+ if(!document.hidden){const now=Date.now();Такт.проснулся=now;for(const д of Такт.дела)if(д.след<now)д.след=now;}
+ Такт.завести();});}catch(_){}
 const Speech={voice:null,keepAlive:null,
  queue:[],current:null,speaking:false,gen:0,seq:0,
  history:[],last:null,ducking:false,adapter:null,_ctx:null,_ctxTimer:null,
@@ -4813,7 +4839,25 @@ const Speech={voice:null,keepAlive:null,
     места после шага — «desc», и его можно выключить одной настройкой. */
  ctxTag(cat){this._ctx=cat;clearTimeout(this._ctxTimer);this._ctxTimer=setTimeout(()=>{this._ctx=null;},0);},
  /* ── вход ── */
- say(text,o){return this.enqueue(text,o);},
+ /* ── ЦЕПОЧКА РЕЧИ (17.5) ──
+    Фраза проходит обработчики цепочки по порядку (временные — первыми), каждый передаёт её дальше или оставляет
+    у себя; последним — очередь речи. Модули больше не подменяют Speech.say. */
+ _цепь:[],_цепьN:0,
+ say:Object.assign(function(text,o){const ц=this._цепь;if(!ц.length)return this.enqueue(text,o);
+  const список=ц.slice();let i=0;const self=this;
+  const дальше=function(t,oo){while(i<список.length){const з=список[i++];if(з.снят)continue;
+    return з.fn.call(self,t,oo,дальше);}return self.enqueue(t,oo);};
+  return дальше(text,o);},{цепьРечи:true}),
+ use(имя,fn,порядок){const з={имя:String(имя||"обработчик"),fn,порядок:Number(порядок)||0,n:++this._цепьN,снят:false};
+  this._цепь.push(з);this._цепь.sort((a,b)=>b.порядок-a.порядок||b.n-a.n);
+  return ()=>{з.снят=true;this._цепь=this._цепь.filter(x=>x!==з);};},
+ /* Speech.say подменили снаружи (прослушка проверочного набора, чужая обёртка) — временный обработчик ложится
+    поверх подмены, как прежде; сама игра Speech.say больше не подменяет. */
+ на_время(fn,обработчик,имя){const self=this;
+  if(!(this.say&&this.say.цепьРечи)){const s0=this.say;
+   this.say=function(t,o){return обработчик.call(self,t,o,(tt,oo)=>s0.call(self,tt,oo));};
+   try{return fn();}finally{this.say=s0;}}
+  const снять=this.use(имя||"на время",обработчик,1e9);try{return fn();}finally{снять();}},
  request(text,o={}){return this.say(text,Object.assign({pri:1,user:true,interrupt:true},o));},
  /* Пространственное событие: по умолчанию его передаёт звук, а не слово. */
  spatial(text,o={}){if(settings.soundFirst!==0||settings.saySpatial===0)return null;return this.say(text,Object.assign({pri:3,cat:"spatial",ttl:1500},o));},
@@ -4839,9 +4883,8 @@ const Speech={voice:null,keepAlive:null,
      о чём игрок спросил сам (здоровье — два пальца вправо), и смертельная
      опасность. Вернуть слова в бою — флажок «Озвучка во время боя». */
   /* (9.5.2) Урон вслух — по своим флажкам, и тихий бой его не глушит. */
-  if(урон==="foe"&&settings.cbDmgFoe===0)return drop();
-  if(урон==="me"&&settings.cbDmgMe===0)return drop();
-  if(!user&&!речь&&!урон&&cls.pri>0&&settings.cbSpeech!==1&&safeFn(()=>G.inCombat&&!!G.combat,false))return drop();
+  const о={user,речь,урон};
+  for(const [имя,когда] of this._фильтры.до)if(когда(m,о)){m.причина=имя;return drop();}
   /* Пункт меню — не достижение, даже если в нём слово «достижения» или «уровень». */
   if(m.nav&&m.cat==="achieve")m.cat="result";
   if(!user&&m.cat==="achieve"){
@@ -4851,7 +4894,7 @@ const Speech={voice:null,keepAlive:null,
       по сроку; выключен — только звук и журнал. При стандартной и
       подробной — как всегда. */
    const скупо=settings.verbosity==="min"||settings.verbosity==="brief";
-   if(скупо&&settings.sayAchieve===0)return drop();
+   if(скупо&&settings.sayAchieve===0){m.причина="достижения при краткой подробности выключены";return drop();}
    /* ── ВЕСТНИК ПОСЛЕ ДЕЛА (6.0, просьба игрока) ──
       Прежде достижение, ступень Грани или открытие вставали в очередь
       первыми, и игрок, подобравший добычу, ждал, пока отзвучит повышение, —
@@ -4860,18 +4903,12 @@ const Speech={voice:null,keepAlive:null,
       умолкает, звучит дело, а весть договаривается следом. Мелочь (что
       рядом, описание) весть по-прежнему не перебивает. */
    m.herald=true;m.pri=1;m.interrupt=false;m.ttl=0;m.persistent=true;}
-  if(!user){
-   if(settings.autoSpeech===0&&m.pri>=2&&!(m.cat==="achieve"&&settings.sayAchieve!==0))return drop();
-   if(m.cat==="desc"&&settings.autoDescribe===0)return drop();
-   /* Подсказки выключены: мир — только звуками; описания места и вещей идут лишь по запросу. */
-   if((m.cat==="desc"||m.cat==="object")&&settings.hints===0&&!m.user)return drop();
-   if(m.cat==="object"&&settings.describeObjects===0)return drop();
-   if(settings.verbosity==="min"&&m.pri>=3)return drop();}
+  if(!user)for(const [имя,когда] of this._фильтры.после)if(когда(m,о)){m.причина=имя;return drop();}
   /* Встроенная озвучка выключена или говорить нечем — фразу читает чтец экрана
      (живая область). Встроенная говорит — чтецу не дублируем: два голоса
      вместе не звучат (15.0). */
   if(!settings.speech||!this._adapter()){this._live(m);this._finish(m,"COMPLETED",true);return m;}
-  if(typeof AudioLife!=="undefined"&&AudioLife.hushed)return drop();
+  if(typeof AudioLife!=="undefined"&&AudioLife.hushed){m.причина="игра притихла";return drop();}
   m.text=this._shape(text,m);
   /* дубли и замена. Листание (nav) дублем не бывает никогда: игрок, вернувшийся
      свайпом на тот же пункт через секунду, должен услышать его снова. Прежде
@@ -4897,6 +4934,7 @@ const Speech={voice:null,keepAlive:null,
    if(key){const q=this.queue.find(x=>x.key===key);if(q){q.state="REPLACED";this.queue=this.queue.filter(x=>x!==q);this.stats.replaced++;done(q.onDone);}}
    this._push(m);this._later(m.notBefore);return m;}
   if(key){const q=this.queue.find(x=>x.key===key);if(q){q.state="REPLACED";this.queue=this.queue.filter(x=>x!==q);this.stats.replaced++;done(q.onDone);}}
+  /* Кто кого перебивает — по таблице правил ниже (_правила), первое подошедшее; в тишине — сразу. */
   const cur=this.current;
   /* ── ИТОГ ДЕЛА ДОГОВАРИВАЕТСЯ (14.6, просьба игрока) ──
      Задание яруса, чертога или Сводов говорит итог («Загадка решена! 40
@@ -4911,30 +4949,61 @@ const Speech={voice:null,keepAlive:null,
    if(m.interrupt){const keep=[],gone=[];this.queue.forEach(x=>(x.task!==m.task&&x.pri>=2&&!x.persistent?gone:keep).push(x));this.queue=keep;
     gone.forEach(x=>{x.state="CANCELLED";this.stats.dropped++;if(x.onDone)setTimeout(()=>{try{x.onDone();}catch(e){}},10);});}
    this._push(m);this._pump();return m;}
-  if(cur&&this.speaking&&cur.herald&&!m.herald&&m.pri<=2&&!m.nav){this._cut(cur,"CANCELLED");this._pushFront(m);this._pump();return m;}
-  if(cur&&this.speaking&&m.nav&&cur.pri>=1){
-   /* ── ЛИСТАНИЕ ГЛАВНЕЕ (9.5.1, просьба игрока) ──
-      Свайп по меню обрывает всё, кроме тревоги, как в TalkBack. Прежде пункт,
-      пролистанный, пока звучало имя окна или важное сообщение, вставал в
-      очередь за ним — и при быстром листании промежуточные пункты пропадали,
-      а нужный звучал с опозданием. Оборванная весть сама вернётся в очередь. */
-   this._cut(cur,"CANCELLED");this._dropQueued(2,"CANCELLED");this.queue=this.queue.filter(x=>!x.nav);this._pushFront(m);this._pump();return m;}
-  if(cur&&this.speaking){
-   /* Игрок листает или сам спросил — мир не перебивает его на полуслове:
-      обычная весть мира ждёт, пока пункт договорён (важное и тревога — нет).
-      Прежде случайная подсказка обрывала имя пункта, и при листании меню
-      голос то и дело пропадал. */
-   if((cur.nav||cur.user)&&!m.user&&!m.nav&&m.pri>=2){this._push(m);return m;}
-   if(m.pri<cur.pri){this._cut(cur,"CANCELLED");this._pushFront(m);this._pump();return m;}
-   if(m.pri>=2&&cur.pri<=1){if(m.interrupt)this._dropQueued(2,"CANCELLED");this._push(m);return m;}
-   if(m.interrupt&&m.pri>=2&&cur.pri>=2){this._cut(cur,"CANCELLED");this._dropQueued(2,"CANCELLED");this._pushFront(m);this._pump();return m;}
-   /* (15.5) Книга главнее речи окон: страница, которую игрок открыл, обрывает имя закрытого или открытого окна
-      и «выбрано», а не ждёт их конца (тревогу, итог дела и вести — не трогает). */
-   if(m.interrupt&&m.cat==="read"&&cur.pri>=1&&!cur.keep&&!cur.herald&&(cur.cat==="ui"||cur.cat==="menu"||cur.nav)){
-    this._cut(cur,"CANCELLED");this._dropQueued(2,"CANCELLED");this._pushFront(m);this._pump();return m;}
-   if(m.interrupt&&m.pri<=1){this._dropQueued(2,"CANCELLED");this._push(m);return m;}
-   this._push(m);return m;}
-  this._pushFront(m);this._pump();return m;},
+  const п=cur&&this.speaking?this._правила.find(r=>r.когда(m,cur)):this._правилоТишины;
+  m.правило=п.имя;this._решает=п.имя;
+  try{this._действия[п.делать].call(this,m,cur);}finally{this._решает=null;}
+  return m;},
+ /* ── ПРАВИЛА ОЧЕРЕДИ (17.5) ──
+    Прежде — каскад условий внутри enqueue; теперь те же условия, в том же порядке, таблицей: у каждого
+    правила имя (видно в журнале речи и звука) и своя проверка в наборе 339. */
+ /* почему фраза не звучит: до разбора достижений (по важности, которую фразе дали) */
+ _фильтры:{
+  до:[
+   /* (9.5.2) Урон вслух — по своим флажкам, и тихий бой его не глушит. */
+   ["урон по твари не озвучивать",(m,о)=>о.урон==="foe"&&settings.cbDmgFoe===0],
+   ["урон по вам не озвучивать",(m,о)=>о.урон==="me"&&settings.cbDmgMe===0],
+   /* ТИХИЙ БОЙ (8.0): пока идёт бой — только то, о чём игрок спросил сам, слова твари и смертельная опасность */
+   ["тихий бой",(m,о)=>!о.user&&!о.речь&&!о.урон&&m.pri>0&&settings.cbSpeech!==1&&safeFn(()=>G.inCombat&&!!G.combat,false)]],
+  /* после разбора достижений, только для того, о чём игрок не просил */
+  после:[
+   ["автоозвучка выключена",(m,о)=>settings.autoSpeech===0&&m.pri>=2&&!(m.cat==="achieve"&&settings.sayAchieve!==0)],
+   ["описания выключены",(m,о)=>m.cat==="desc"&&settings.autoDescribe===0],
+   /* Подсказки выключены: мир — только звуками; описания места и вещей идут лишь по запросу. */
+   ["подсказки выключены",(m,о)=>(m.cat==="desc"||m.cat==="object")&&settings.hints===0&&!m.user],
+   ["описания предметов выключены",(m,о)=>m.cat==="object"&&settings.describeObjects===0],
+   ["минимальная подробность",(m,о)=>settings.verbosity==="min"&&m.pri>=3]]},
+ /* сейчас звучит фраза cur, пришла m: первое подошедшее правило решает */
+ _правила:[
+  /* ВЕСТНИК ПОСЛЕ ДЕЛА (6.0): весть уступает сведению о деле (до 2-й важности) и договорится следом */
+  {имя:"весть уступает делу",когда:(m,cur)=>cur.herald&&!m.herald&&m.pri<=2&&!m.nav,делать:"оборвать"},
+  /* ── ЛИСТАНИЕ ГЛАВНЕЕ (9.5.1, просьба игрока) ──
+     Свайп по меню обрывает всё, кроме тревоги, как в TalkBack. Прежде пункт,
+     пролистанный, пока звучало имя окна или важное сообщение, вставал в
+     очередь за ним — и при быстром листании промежуточные пункты пропадали,
+     а нужный звучал с опозданием. Оборванная весть сама вернётся в очередь. */
+  {имя:"листание главнее",когда:(m,cur)=>m.nav&&cur.pri>=1,делать:"листание"},
+  /* Игрок листает или сам спросил — мир не перебивает его на полуслове:
+     обычная весть мира ждёт, пока пункт договорён (важное и тревога — нет).
+     Прежде случайная подсказка обрывала имя пункта, и при листании меню
+     голос то и дело пропадал. */
+  {имя:"мир ждёт листания и просьбы",когда:(m,cur)=>(cur.nav||cur.user)&&!m.user&&!m.nav&&m.pri>=2,делать:"в очередь"},
+  {имя:"важнее звучащего",когда:(m,cur)=>m.pri<cur.pri,делать:"оборвать"},
+  {имя:"мелочь после важного",когда:(m,cur)=>m.pri>=2&&cur.pri<=1,делать:"в очередь, сняв мелочь, если перебивает"},
+  {имя:"мелочь сменяет мелочь",когда:(m,cur)=>m.interrupt&&m.pri>=2&&cur.pri>=2,делать:"сменить"},
+  /* (15.5) Книга главнее речи окон: страница, которую игрок открыл, обрывает имя закрытого или открытого окна
+     и «выбрано», а не ждёт их конца (тревогу, итог дела и вести — не трогает). */
+  {имя:"книга главнее окон",когда:(m,cur)=>m.interrupt&&m.cat==="read"&&cur.pri>=1&&!cur.keep&&!cur.herald&&(cur.cat==="ui"||cur.cat==="menu"||cur.nav),делать:"сменить"},
+  {имя:"важное — следом, мелочь снять",когда:(m,cur)=>m.interrupt&&m.pri<=1,делать:"снять мелочь и в очередь"},
+  {имя:"по порядку",когда:()=>true,делать:"в очередь"}],
+ _правилоТишины:{имя:"в тишине — сразу",делать:"сразу"},
+ _действия:{
+  "оборвать"(m,cur){this._cut(cur,"CANCELLED");this._pushFront(m);this._pump();},
+  "листание"(m,cur){this._cut(cur,"CANCELLED");this._dropQueued(2,"CANCELLED");this.queue=this.queue.filter(x=>!x.nav);this._pushFront(m);this._pump();},
+  "сменить"(m,cur){this._cut(cur,"CANCELLED");this._dropQueued(2,"CANCELLED");this._pushFront(m);this._pump();},
+  "в очередь"(m){this._push(m);},
+  "в очередь, сняв мелочь, если перебивает"(m){if(m.interrupt)this._dropQueued(2,"CANCELLED");this._push(m);},
+  "снять мелочь и в очередь"(m){this._dropQueued(2,"CANCELLED");this._push(m);},
+  "сразу"(m){this._pushFront(m);this._pump();}},
  /* весть ждёт после сведений о деле (до 2-й важности), но раньше мелочи */
  /* (14.6) Одно действие — один такт речи: реплики, сказанные в нём, узнают друг друга. */
  _task(){if(!this._taskOpen){this._taskOpen=true;this._taskId=(this._taskId||0)+1;const f=()=>{this._taskOpen=false;};try{queueMicrotask(f);}catch(_){Promise.resolve().then(f);}}return this._taskId;},
@@ -21626,7 +21695,7 @@ function addRep(raceName,n){const r=RACE_BY_NAME[raceName];if(!r)return;if(!G.re
   const п1=порог(было),п2=порог(стало);
   if(п1===п2)return;
   if(п2>п1){eventCue(["spell_light","oc_laugh"],0.5);
-   narrate(`Народ «${raceName}» стал к вам теплее: ${attitudeOf(raceName).n||"отношение изменилось"}.`,{interrupt:false});}
+   narrate(`Народ «${raceName}» стал к вам теплее: ${attitudeOf(raceName).n||"отношение изменилось"}.`,{cat:"context",interrupt:false});}
   else{eventCue(["spell_dark","wraith_die"],0.5);
    narrate(`Народ «${raceName}» вас невзлюбил: ${attitudeOf(raceName).n||"отношение изменилось"}.`,{interrupt:false});}});}
 function godOfRace(name){const r=raceInfo(name);return GOD_BY_ID[r.god]||PANTHEON[0];}
@@ -25967,7 +26036,7 @@ function addStand(scope,id,n,тихо){
    const w1=standWord(было),w2=standWord(стало);
    if(w1.n!==w2.n){
     safeFn(()=>Bank.play(стало>было?"throng_hail_m":"wild_raven",{gain:0.5,maxSec:4}));
-    safeFn(()=>narrate(`${(STAND_SCOPE_BY_ID[scope]||{}).n||scope}${id?` («${id}»)`:""}: теперь ${w2.n}. ${w2.о}`,{interrupt:false}));}}
+    safeFn(()=>narrate(`${(STAND_SCOPE_BY_ID[scope]||{}).n||scope}${id?` («${id}»)`:""}: теперь ${w2.n}. ${w2.о}`,{cat:"context",interrupt:false}));}}
   return стало;
  }catch(_){return 0;}}
 function axisOf(id){
@@ -30641,10 +30710,8 @@ function studyKnowledge(x,y){
  /* Сначала игрок слышит, что изучил, и только потом — что из этого вышло:
     часть карты или дело называют себя сами, и раньше они звучали прежде
     главного «Изучено». Их речь откладывается до конца главной фразы. */
- const отложено=[];const прежнееSay=Speech.say;
- Speech.say=(t,o)=>{отложено.push([t,Object.assign({},o||{},{interrupt:false})]);};
- let награда="";
- try{награда=knowGrant(k.n,k.reward);}finally{Speech.say=прежнееSay;}
+ const отложено=[];let награда="";
+ Speech.на_время(()=>{награда=knowGrant(k.n,k.reward);},(t,o)=>{отложено.push([t,Object.assign({},o||{},{interrupt:false})]);},"изучено — сначала главное");
  /* Книга у чтения теперь есть имя, вид, редкость и цена: одна и та же
     полка в двух разных башнях держит разные книги, и слышно это сразу. */
  const том=safeFn(()=>tomeAt(x,y),null);
@@ -37393,7 +37460,7 @@ function equipWeaponIndex(i){
   safeFn(()=>{Bank.play(itemVoice(w),{seed:1,gain:0.6,maxSec:3});const k=weaponKind();setTimeout(()=>safeFn(()=>Bank.play(k==="bow"?"oc_bow_arrow":k==="javelin"?"oc_javelin_draw":"lug_knife_draw",{seed:2,gain:0.5,maxSec:2})),220);});
   saveGame(true); refresh();
   safeFn(()=>UI.open());safeFn(()=>renderInventory());
-  narrate(`Экипировано оружие: ${w.name}.`); return true;
+  narrate(`Экипировано оружие: ${w.name}.`,{cat:"result"}); return true;
  }catch(e){try{console.error("equipWeaponIndex",e);narrate("Не удалось экипировать оружие.");}catch(_){}return false;}
 }
 
@@ -41597,7 +41664,7 @@ function artLearnRecipe(id,откуда,тихо){
   safeFn(()=>{Bank.play("arte_page",{gain:0.55,maxSec:4});
    setTimeout(()=>safeFn(()=>Bank.play("oc_cracker",{gain:0.5,maxSec:4})),320);});
   if(!тихо)safeFn(()=>narrate(`Записан рецепт: «${r.n}». ${r.о} Ремесло: ${
-   (ART_CRAFT_BY_ID[r.ремесло]||{}).n||r.ремесло}.`,{interrupt:false}));
+   (ART_CRAFT_BY_ID[r.ремесло]||{}).n||r.ремесло}.`,{cat:"context",interrupt:false}));
   safeFn(()=>journal(`Рецепт: ${r.n}.`));
   return true;
  }catch(_){return false;}}
@@ -41953,7 +42020,7 @@ function enterPlace(c){safeFn(()=>deed("places"));
  journal(`Вход: ${c.structure.name}.`);
  /* §14: у рода подземелья своя примета — то, по чему его узнают на слух. */
  const примета=safeFn(()=>{const р=dungeonKindHere();return р?` ${р.примета}`:"";},"");
- narrate(`Вы вошли: ${placeTitle()}.${примета} ${describeHere(true)}`);
+ narrate(`Вы вошли: ${placeTitle()}.${примета} ${describeHere(true)}`,{cat:"result"});
  enterAnnounce(stype,c.x,c.y,доп);
  safeFn(()=>{const р=dungeonKindHere();
   if(р)setTimeout(()=>safeFn(()=>Bank.play(р.звук,{gain:0.5,maxSec:5})),900);});
@@ -41997,7 +42064,7 @@ function leavePlace(){
  safeFn(()=>{Play.stopKey("amb0");Play.stopKey("amb1");
   if(settings.effects)Play.start("amb0",(AMB[c.terrain[0]]||["wind"])[0],{loop:true});
   Weather.resume();Music.start(c.terrain[0]);bankUpdateAmbient();});
- narrate(`Вы вышли наружу: ${name} остаётся позади. ${c.terrain[1]}, ${c.empire.name}.`);
+ narrate(`Вы вышли наружу: ${name} остаётся позади. ${c.terrain[1]}, ${c.empire.name}.`,{cat:"result"});
  refresh();saveGame(true);
  return true;
 }
@@ -42424,7 +42491,7 @@ function startFlight(delta,dir){
  safeFn(()=>beacon(delta>0?"stairs_down":"stairs_up",0,0));
  /* Шахта вертикальна, и это стоит сказать: игрок должен знать, что вернётся
     ровно сюда же, а не «куда-нибудь». */
- narrate(`Марш лестницы: ${n} ${plural(n,"ступень","ступени","ступеней")} ${delta>0?"вниз":"вверх"}. Шахта идёт отвесно: выйдете ровно под этой клеткой${delta>0?"":", то есть там, откуда спускались"}. Идите ${dirWhither(dir)}; шаг в обратную сторону вернёт вас обратно.`);
+ narrate(`Марш лестницы: ${n} ${plural(n,"ступень","ступени","ступеней")} ${delta>0?"вниз":"вверх"}. Шахта идёт отвесно: выйдете ровно под этой клеткой${delta>0?"":", то есть там, откуда спускались"}. Идите ${dirWhither(dir)}; шаг в обратную сторону вернёт вас обратно.`,{cat:"result"});
  return true;}
 /* Шаг по ступени — настоящая запись шага по камню, по очереди из двух
    наборов, чтобы соседние ступени не звучали одним щелчком; ставится чуть
@@ -42520,7 +42587,7 @@ function passageCues(){
 function moveInside(dir){
  const lvl=curLevel();if(!lvl)return false;
  if(!DIRV[dir])return false;
- if(G.inCombat){narrate("Сначала завершите бой!");return false;}
+ if(G.inCombat){narrate("Сначала завершите бой!",{cat:"result"});return false;}
  const p=G.place;
  /* Подтверждение шагом: стоя на ступенях или в воротах, второй шаг в ту же
     сторону уводит вниз, наверх или наружу — игрок спускается и поднимается
@@ -43177,7 +43244,7 @@ const Scape={
    const ночь=safeFn(()=>isNight(),false);
    const role=
     kind==="deep"?"amb_abyss":
-    kind==="cave"||kind==="dungeon"?"deep_drip":
+    kind==="cave"||kind==="dungeon"?"cave_leak":
     kind==="desert"?"amb_desert":
     kind==="forest"?(ночь?"amb_night":"amb_day"):
     kind==="water"||kind==="ship"?"amb_water":
@@ -43195,12 +43262,12 @@ const Scape={
     у самого частого голоса срок больше трёх секунд. */
  timer:null,
  start(){if(this.timer)return;
-  this.timer=setInterval(()=>safeFn(()=>{
+  this.timer=Такт.каждые(1500,()=>safeFn(()=>{
    /* (10.0) Мир звучит, только пока на экране сам мир: в заглавном меню и
       в прологе обоз не подъезжает и стража не марширует — иначе игрок,
       вернувшийся в меню, слышал бы «Слышен обоз…» поверх пунктов. */
    const мир=document.getElementById("screen-game");if(!мир||мир.hidden)return;
-   this.tick();this.bed();safeFn(()=>Ambience.tick());safeFn(()=>PlaceVoice.tick());safeFn(()=>PatrolMarch.tick());safeFn(()=>CaravanRoll.tick());}),1500);},
+   this.tick();this.bed();safeFn(()=>Ambience.tick());safeFn(()=>PlaceVoice.tick());safeFn(()=>PatrolMarch.tick());safeFn(()=>CaravanRoll.tick());}),"звуковая картина");},
 };
 
 /* Как далеко слышно шаги живых и где стража ходит в коже, а не в железе. */
@@ -43210,7 +43277,7 @@ const ACTOR_LEATHER=/^(village|tavern|market|school|smugglers|den|burg|warcamp)$
 const ACTOR_HARD_FLOOR=/^(stone|marble|plank|wood|metal|bridge|bone|crystal|cobble|tile|stairs)$/;
 const Actors={
  key:null,list:[],iv:null,lastSay:0,lastStep:null,
- stop(){if(this.iv){clearInterval(this.iv);this.iv=null;}this.key=null;this.list=[];},
+ stop(){if(this.iv){this.iv();this.iv=null;}this.key=null;this.list=[];},
  /* Набор жителей уровня выводится из тех же чисел, что и сам уровень. */
  ensure(){
   if(!G.place||G.place.тайник){this.stop();return;}
@@ -43222,7 +43289,7 @@ const Actors={
   return ACTOR_WALK.has(tileAt(lvl,x,y));},
  spawn(k){
   const lvl=curLevel();if(!lvl)return;
-  if(this.iv){clearInterval(this.iv);this.iv=null;}
+  if(this.iv){this.iv();this.iv=null;}
   this.key=k;this.list=[];
   const p=G.place,R=i=>H(p.bx*13+i*7,p.by*19+p.depth*11,930+i);
   const spots=[];
@@ -43258,7 +43325,7 @@ const Actors={
    for(let i=0;i<folk;i++){const sp=take(50+i);if(!sp)continue;
     this.list.push({id:100+i,kind:"folk",x:sp.x,y:sp.y,
      name:тьма?"Житель посада":"Горожанин",тьма,seen:false});}}
-  this.iv=setInterval(()=>safeFn(()=>Actors.tick()),1500);},
+  this.iv=Такт.каждые(1500,()=>safeFn(()=>Actors.tick()),"живые вокруг");},
  /* Один ход всех живых: шаг, звук, встреча. */
  tick(){
   if(!G.place){this.stop();return;}
@@ -43642,7 +43709,7 @@ function useHere(){
   /* У входа в чертог «действие здесь» ставит на его лестницу, а на лестнице — ведёт до конца. */
   if(G.chStair)return !!safeFn(()=>Chertog.stairFinish(),false);
   if(safeFn(()=>Chertog.here(),null)){const t=Chertog.stairStart();if(t!==true)narrate(t,{interrupt:true});return true;}
-  narrate("Здесь нет ни входа, ни постройки, ни ресурса.");
+  narrate("Здесь нет ни входа, ни постройки, ни ресурса.",{cat:"result"});
   return false;}
  const lvl=curLevel(),p=G.place,t=tileAt(lvl,p.x,p.y);
  /* (9.5) Кузнец стоит рядом с горном: на его клетке — разговор с ним. */
@@ -43687,7 +43754,7 @@ function useHere(){
   default:{
    if(safeFn(()=>Deep.useHere(),false))return true;
    const near=nearFeatures(1);
-   if(near.length){narrate(`Под ногами пусто. Рядом: ${near.map(o=>`${o.name} на ${o.dir}е`).join("; ")}.`);pingSurroundings(1,3);return false;}
+   if(near.length){narrate(`Под ногами пусто. Рядом: ${near.map(o=>`${o.name} на ${o.dir}е`).join("; ")}.`,{cat:"result"});pingSurroundings(1,3);return false;}
    /* Пусто под ногами и рядом — тогда подсказка, где спуск: ступени вниз
       слышны из-под ног с их стороны, как и прежний жест «вниз». */
    const спуск=nearFeatures(6).filter(o=>o.t===">");
@@ -45581,7 +45648,7 @@ function move(dir){
     понимал, отчего герой стоит. Теперь она называет то, что держит шаг. */
  const слой=activeLayer();
  if(слой){
-  narrate(`Шаг не проходит: сверху ${layerName(слой)}. Свайп вниз двумя пальцами — закрыть, и шаг снова пойдёт по миру.`);
+  narrate(`Шаг не проходит: сверху ${layerName(слой)}. Свайп вниз двумя пальцами — закрыть, и шаг снова пойдёт по миру.`,{cat:"result"});
   return false;}
  if(!DIRV[dir])return false;
  /* В бою шаг идёт по полю схватки, где бы она ни шла: в поле, в подземелье, на палубе. */
@@ -45591,7 +45658,7 @@ function move(dir){
  if(G.ship)return sailLeg();
  /* Внутри здания, города или подземелья ходьба идёт по клеткам уровня. */
  if(G.place)return moveInside(dir);
- if(G.inCombat){narrate("Сначала завершите бой!");return;}
+ if(G.inCombat){narrate("Сначала завершите бой!",{cat:"result"});return;}
  /* На лестнице к чертогу шаг тратится на ступень. */
  if(G.chStair&&safeFn(()=>Chertog.stairStep(dir),false))return true;
  /* Вход своим ходом: игрок стоит у ворот или двери и делает ещё один шаг в
@@ -48439,7 +48506,7 @@ function gatherCurrent(source="tap"){
    if(source==="tap"){
     if(safeFn(()=>Arena.report(),false))return false;
     safeFn(()=>resourceEmptyFeedback());
-    narrate("Идёт бой — не до сбора. Свайп тремя пальцами вверх — меню действий, там же попытка побега.");}
+    narrate("Идёт бой — не до сбора. Свайп тремя пальцами вверх — меню действий, там же попытка побега.",{cat:"result"});}
    return false;}
   /* С палубы траву не рвут. Под килем идёт вода, а клетка мира под судном —
      это берег где-то далеко внизу: собирая с борта, игрок набивал трюм сверх
@@ -48472,7 +48539,7 @@ function gatherCurrent(source="tap"){
    narrate(`Больше не унести: в котомке ${safeFn(()=>carryNow(),0)} при пределе ${Math.round(safeFn(()=>derived("carry"),0))}. Продайте или бросьте лишнее — предел растёт от силы и выносливости.`);
    return false;}
   const c=cellContent(G.x,G.y);
-  if(!c||!c.res){if(source==="tap"){resourceEmptyFeedback(); narrate("На этой клетке ресурсов нет.");}return false;}
+  if(!c||!c.res){if(source==="tap"){resourceEmptyFeedback(); narrate("На этой клетке ресурсов нет.",{cat:"result"});}return false;}
   const key=G.x+","+G.y;
   const d=G.depleted[key];
   if(d&&d.left<=0){resourceEmptyFeedback(); narrate("Ресурс на этой клетке уже собран. Здесь больше ничего нет.");return false;}
@@ -49321,7 +49388,7 @@ function interactHere(){
  if(c.structure){openBuilding(c);return;}
  if(c.res){gatherCurrent();return;}
  if(c.находка){useFind(G.x,G.y);return;}
- narrate("Здесь нечего делать. Осмотритесь или идите дальше.");}
+ narrate("Здесь нечего делать. Осмотритесь или идите дальше.",{cat:"result"});}
 /* ════════ ОСМОТР: ЧТО ВОКРУГ ПО СТОРОНАМ ОТ ВАС, ВЫБОР ЦЕЛИ ════════
    Осмотр учитывает, куда вы смотрите: сторона последнего шага — «перед
    вами». Он находит объекты, жителей, двери, проходы, лестницы, ресурсы,
@@ -49462,7 +49529,7 @@ function look(){
  if(G.place){
   const near=nearFeatures(6);
   narrate(`${placeTitle()}. ${describeHere(true)} `+
-   (near.length?`Всего поблизости объектов: ${near.length}.`:"Вокруг только стены и пол."));
+   (near.length?`Всего поблизости объектов: ${near.length}.`:"Вокруг только стены и пол."),{cat:"result"});
   pingSurroundings(4,4);
   return;}
  const c=cellContent(G.x,G.y);
@@ -49478,7 +49545,7 @@ function look(){
    const cc=cellContent(x,y);
    if(cc.structure)objs.push(`${cc.structure.name}, ${Math.max(Math.abs(dx),Math.abs(dy))} шагов, ${dirBetween(dx,dy)}`);}
   extra=objs.length?"Поблизости: "+objs.slice(0,4).join("; ")+".":"Вокруг тихо.";}
- narrate(`${c.terrain[1]}. ${c.terrain[2]} ${extra}`);}
+ narrate(`${c.terrain[1]}. ${c.terrain[2]} ${extra}`,{cat:"result"});}
 
 /* ════════════════════════════════════════════════════════════════════════
    МАЯК ЦЕЛИ
@@ -50891,7 +50958,7 @@ const Gods=Modules.register("GODS",{
    if(!this.canPrayHere()){narrate(`Малым богам молятся в храме: ${g.святое} тоже подходит, но храм ближе.`);return false;}
    const key=G.x+","+G.y+":"+id;
    if(!G.prayedSmall||typeof G.prayedSmall!=="object")G.prayedSmall={};
-   if(G.prayedSmall[key]===G.day){narrate(`Сегодня вы уже молились здесь: ${g.n}.`);return false;}
+   if(G.prayedSmall[key]===G.day){narrate(`Сегодня вы уже молились здесь: ${g.n}.`,{cat:"result"});return false;}
    G.prayedSmall[key]=G.day;
    const праздник=this.isFestival(g);
    /* табу соперника: молитва врагу в его праздник стоит благосклонности */
@@ -56395,13 +56462,13 @@ Object.assign(CMD,{dirquests(){Director.questsView();},dirmodel(){Director.model
 const CH_VOICE_POOLS=["ch_boss","ch_open","ch_role","ch_chain"];
 function chVoiceLine(q){const k=String(q||"").trim();if(!k)return null;
  for(const p of CH_VOICE_POOLS){const P=VOICE_NPC[p];if(!P)continue;const r=P[k]||P[k.replace(/[.!?…]+$/,"")]||P[k.replace(/[.!?…]+$/,"")+"."];if(r)return r[0];}return null;}
-{const s0=Speech.say.bind(Speech);Speech.say=function(t,o){
+Speech.use("голоса чертогов в кавычках",function(t,o,дальше){
   try{if(typeof t==="string"&&t.indexOf("«")>=0&&safeFn(()=>Folk.on(),false)){let сыграно=false;
    const t2=t.replace(/\s*[:—]?\s*«([^»]+)»([.!?…]?)/g,(m,q)=>{if(сыграно)return m;const f=chVoiceLine(q);if(!f)return m;
     if(safeFn(()=>Folk.сказать(f+VOICE_GEN,null,{dir:VOICE_NPC_DIR,всегда:true}),false)){сыграно=true;return " ";}return m;});
    if(сыграно){const r=t2.replace(/\s+([.,!?…])/g,"$1").replace(/\s{2,}/g," ").replace(/[:,—]\s*$/,".").trim();
-    if(!r||/^[.!?…]+$/.test(r))return "VOICED";return s0(r,o);}}}catch(_){}
-  return s0(t,o);};}
+    if(!r||/^[.!?…]+$/.test(r))return "VOICED";return дальше(r,o);}}}catch(_){}
+  return дальше(t,o);},10);
 /* ════════════════════════════════════════════════════════════════════════
    12.5: РЕЖИССЁР ГРАНИ 3 — РАСТУЩИЙ НЕЙРОДВИЖОК И КУЗНИЦА НОВОГО
    Просьба игрока: «в игре постоянно должны появляться — за счёт игроков или
@@ -59020,7 +59087,7 @@ const Tavern=Modules.register("TAVERN",{
   safeFn(()=>journal(`В таверне: ${e.n}.`));
   /* Случай в таверне встаёт в очередь после встречающего и вестей входа —
      и ждёт их, а не истекает, пока они звучат. */
-  narrate(`${e.n[0].toUpperCase()+e.n.slice(1)}. ${т}`,{interrupt:false,ttl:30000});
+  narrate(`${e.n[0].toUpperCase()+e.n.slice(1)}. ${т}`,{cat:"context",interrupt:false,ttl:30000});
   return т;}catch(_){return "";}},
  text(){if(!this.in())return "Таверны вокруг нет: её слышно по гулу, смеху и кружкам.";
   const вещи=this.objects().map(id=>(PROP_BY_ID[id]||{}).n).filter(Boolean);
@@ -59682,7 +59749,7 @@ function prayToGod(id){
  if(!g){narrate("Такого бога нет в пантеоне двенадцати.");return false;}
  const key=G.x+","+G.y+":"+id;
  if(!G.prayed)G.prayed={};
- if(G.prayed[key]===G.day){narrate(`Сегодня вы уже молились здесь: ${g.n}. Приходите завтра или найдите другой храм.`);return false;}
+ if(G.prayed[key]===G.day){narrate(`Сегодня вы уже молились здесь: ${g.n}. Приходите завтра или найдите другой храм.`,{cat:"result"});return false;}
  G.prayed[key]=G.day;
  if(!G.faith)G.faith={};
  G.faith[id]=(Number(G.faith[id])||0)+1+(G.patron===id?1:0);
@@ -59701,7 +59768,7 @@ function prayToGod(id){
     «перезвон» через звуки интерфейса, где такой записи нет, и он молчал. */
  safeFn(()=>{const ф=Bank.pick("bell_small",0);if(ф)Bank.file(ф,{gain:0.55,maxSec:3,
   rate:0.86+Math.max(0,PANTHEON.findIndex(x=>x.id===id))*0.035});});
- narrate(`Молитва услышана. ${g.n}, ${g.ep}. Здоровье +${heal}.${extra} Благосклонность: ${G.faith[id]}, вы для него — ${faithTitle(id)}.`);
+ narrate(`Молитва услышана. ${g.n}, ${g.ep}. Здоровье +${heal}.${extra} Благосклонность: ${G.faith[id]}, вы для него — ${faithTitle(id)}.`,{cat:"result"});
  journal(`Молитва: ${g.n}.`);
  refresh();saveGame(true);
  return true;
@@ -61690,7 +61757,7 @@ function weaveAct(sp,sc,f,c,el,md,k){
  const удар=d=>{
   d=Math.max(1,Math.round(d*safeFn(()=>bossDamageK("spell",sp.school),1)));
   G.combat.hp-=d;safeFn(()=>updateCombat());safeFn(()=>bossPhaseCheck());
-  if(G.combat.hp<=0){narrate(`Заклинание «${sp.n}» сотворено. −${d} твари: она пала.`);victory();return " ";}
+  if(G.combat.hp<=0){narrate(`Заклинание «${sp.n}» сотворено. −${d} твари: она пала.`,{cat:"result"});victory();return " ";}
   return ` −${d} твари.`;};
  const ч=n=>Math.max(1,Math.round(n));
  /* Заклинание никогда не возвращает больше маны, чем стоило само: иначе из
@@ -64120,8 +64187,8 @@ const InstanceAudioEngine=Inst.module("InstanceAudioEngine",{iv:null,
  vec(d){return d==="север"?[0,-1]:d==="восток"?[1,0]:d==="юг"?[0,1]:d==="запад"?[-1,0]:[0,-1];},
  from(d){return ({север:"севера",восток:"востока",юг:"юга",запад:"запада"})[d]||"стороны";},
  stepRole(c,p){const f=InstanceGenerator.fauna(c.s).find(x=>x.id===p.sp);return f&&/golem/.test(f.base)?"golem_step":f&&/troll/.test(f.base)?"brute_step":c.s.cat.шаг;},
- start(){this.stop();this.iv=setInterval(()=>safeFn(()=>this.amb()),9000);},
- stop(){if(this.iv){clearInterval(this.iv);this.iv=null;}},
+ start(){this.stop();this.iv=Такт.каждые(9000,()=>safeFn(()=>this.amb()),"фон чертога");},
+ stop(){if(this.iv){this.iv();this.iv=null;}},
  /* Фон места звучит со сторон, а не голосом: капель, ветер, гул машин. */
  amb(){if(!Chertog.run()){this.stop();return;}if(!Chertog.inside()||G.inCombat||Math.random()<0.35)return;const c=Chertog.cur();const f=c.s.cat.фон;const role=f[Math.floor(Math.random()*f.length)];
   const a=Math.random()*Math.PI*2,d=3+Math.random()*5;safeFn(()=>Spatial.role(role,Math.cos(a)*d,Math.sin(a)*d,{gain:0.22+Math.random()*0.15,maxSec:4}));
@@ -64617,7 +64684,7 @@ function spellAudio(sp,opts){
  return seq.length>0;}
 function castSpell(i){const sp=SPELLS[i];
  if(!sp){narrate(`Слот ${i+1} пока пуст.`);return;}
- if(!G.spells.includes(sp.n)){narrate("Заклинание не изучено.");return;}
+ if(!G.spells.includes(sp.n)){narrate("Заклинание не изучено.",{cat:"result"});return;}
  if(sp.custom){const ч=spellCooling(sp);if(ч){safeFn(()=>Bank.play("hero_nomana",{kind:"magic",gain:0.5,maxSec:2}));narrate(`«${sp.n}» ещё перезаряжается: ${ч} ч.`);return;}}
  {const з=safeFn(()=>Oversight.forbids(sp),null);if(з){safeFn(()=>Bank.play("guard_shout",{gain:0.45,maxSec:2}));narrate(з);return;}}
  if(G.mana<sp.cost){safeFn(()=>Bank.play("hero_nomana",{kind:"magic",gain:0.6,maxSec:3}));
@@ -64649,14 +64716,14 @@ function castSpell(i){const sp=SPELLS[i];
   const sc=safeFn(()=>spellSchool(sp),null);const k=safeFn(()=>bossDamageK("spell",sc&&sc.id),1);
   const d=Math.round((8+G.level*2)*k*safeFn(()=>heroBuffK("чары"),1)*safeFn(()=>Director.spellK(sc&&sc.id),1));G.combat.hp-=d;safeFn(()=>{updateCombat();bossPhaseCheck();});
   итог=k>1?` −${d} твари: ${(BOSS_BY_ID[G.combat.m.boss.id]||{}).откликСлова}.`:k===0?" Чары ушли впустую: он этим кормится.":` −${d} твари.`;
-  if(G.combat.hp<=0){narrate(`Заклинание «${sp.n}» сотворено.${итог}`);victory();return;}}
+  if(G.combat.hp<=0){narrate(`Заклинание «${sp.n}» сотворено.${итог}`,{cat:"result"});victory();return;}}
  /* Искра и огненный шар бьют и рядовую тварь: прежде их урон был заведён
     только для владык, и в обычном бою чара звучала, а твари не доставалось. */
  else if(G.inCombat&&G.combat&&G.combat.m&&(sp.n==="Искра"||sp.n==="Огненный шар")){
   const d=Math.max(1,Math.round((sp.n==="Искра"?6+(Number(G.level)||1)*2+Math.floor((Number(G.mind)||0)/2):14+(Number(G.level)||1)*3+Math.floor((Number(G.mind)||0)/2))*safeFn(()=>heroBuffK("чары"),1)*safeFn(()=>Director.spellK((spellSchool(sp)||{}).id),1)));
   G.lastDamageKind="magic";G.combat.hp-=d;safeFn(()=>updateCombat());
   итог=sp.n==="Искра"?` Искра ударила в цель: −${d} твари.`:` Огонь накрыл цель: −${d} твари.`;
-  if(G.combat.hp<=0){narrate(`Заклинание «${sp.n}» сотворено.${итог}`);victory();return;}}
+  if(G.combat.hp<=0){narrate(`Заклинание «${sp.n}» сотворено.${итог}`,{cat:"result"});victory();return;}}
  else switch(sp.n){
   case "Исцеление":G.hp=Math.min(G.hpMax,G.hp+25);UI.drink();
    safeFn(()=>Bank.play("cast_potion",{kind:"magic",gain:0.6,maxSec:3}));итог=" Раны затянулись.";break;
@@ -64668,13 +64735,13 @@ function castSpell(i){const sp=SPELLS[i];
   case "Ледяная игла":
    if(G.inCombat&&G.combat){const d=10+G.level*2;G.combat.hp-=d;
     итог=` Игла вошла точно: −${d} твари.`;safeFn(()=>updateCombat());
-    if(G.combat.hp<=0){narrate(`Заклинание «${sp.n}» сотворено.${итог}`);victory();return;}}
+    if(G.combat.hp<=0){narrate(`Заклинание «${sp.n}» сотворено.${итог}`,{cat:"result"});victory();return;}}
    else итог=" Игла ушла в пустоту.";break;
   case "Искра глубин":
    safeFn(()=>Bank.play("cast_spikes",{kind:"magic",gain:0.55,maxSec:4}));
    if(G.inCombat&&G.combat){const d=16+G.level*3;G.combat.hp-=d;
     итог=` Разряд из-под земли: −${d} твари.`;safeFn(()=>updateCombat());
-    if(G.combat.hp<=0){narrate(`Заклинание «${sp.n}» сотворено.${итог}`);victory();return;}}
+    if(G.combat.hp<=0){narrate(`Заклинание «${sp.n}» сотворено.${итог}`,{cat:"result"});victory();return;}}
    else итог=" Земля отозвалась глухо: бить было некого.";break;
   case "Покров тени":
    if(G.inCombat){endCombat();итог=" Вы ушли из чужого внимания: бой прекратился.";
@@ -64690,7 +64757,7 @@ function castSpell(i){const sp=SPELLS[i];
     у каждой стихии своё. Бросок делается ПОСЛЕ действия чары: сорвалась
     отдача, а не само заклинание. */
  итог+=safeFn(()=>Resonance.бросок(sp),"");
- narrate(`Заклинание «${sp.n}» сотворено.${итог}`);journal("Заклинание: "+sp.n);
+ narrate(`Заклинание «${sp.n}» сотворено.${итог}`,{cat:"result"});journal("Заклинание: "+sp.n);
  /* В пошаговом бою чара — ваш ход, и тварь отвечает своим. */
  safeFn(()=>{if(G.inCombat&&G.combat&&G.combat.arena&&!Arena.live())Arena.foeTurn();});
  refresh();renderCharacter();}
@@ -64749,7 +64816,7 @@ function buyItem(key,i){const n=getNPCByKey(key);
   setTimeout(()=>safeFn(()=>Bank.play("arte_coins",{seed:item.price,gain:0.5,maxSec:3})),180);});
  const слово=safeFn(()=>merchDeal(n,"buy",item.price),"");
  const вСлот=item.зелье?qsAutoAdd({kind:"potion",id:item.зелье}):item.n==="Зелье здоровья"?qsAutoAdd({kind:"item",name:"Зелье здоровья"}):"";
- narrate(`Куплено: ${item.gear?lootDesc(item.gear):item.n}. Осталось золота: ${G.gold}.${вСлот}${слово}`);
+ narrate(`Куплено: ${item.gear?lootDesc(item.gear):item.n}. Осталось золота: ${G.gold}.${вСлот}${слово}`,{cat:"result"});
  afterTrade(key);}
 /* ════════ ПРОДАЖА РЕСУРСОВ ════════
    Цена зависит от державы (что она вывозит — дёшево, что ввозит — дорого),
@@ -64802,7 +64869,7 @@ function sellResource(key,res,all){
   setTimeout(()=>safeFn(()=>Bank.play("trade_m",{seed:total,gain:0.4,maxSec:3})),260);});
  const почему=safeFn(()=>priceWhy(res,empireIndexAt(G.x,G.y),null),"");
  const контра=safeFn(()=>smuggleCheck(res,total),"")||"";
- narrate(`Продано: ${res} — ${qty} шт. по ${unit} золота. Получено ${total}. Всего золота: ${G.gold}. Цена сложилась так: ${почему}.${контра}${словоПродажи}`);
+ narrate(`Продано: ${res} — ${qty} шт. по ${unit} золота. Получено ${total}. Всего золота: ${G.gold}. Цена сложилась так: ${почему}.${контра}${словоПродажи}`,{cat:"result"});
  journal(`Продажа: ${res} ×${qty} за ${total} золота.`);
  saveGame(true);refresh();afterTrade(key);}
 /* Надбавка за глубину: под землю всё приходится нести на себе. */
@@ -65629,7 +65696,7 @@ function shopSellRes(n,res,qty){
  const unit=sellUnit(n,res);const total=unit*qty;
  G.inv[res]=have-qty;if(G.inv[res]<=0)delete G.inv[res];G.gold+=total;safeFn(()=>deed("deals"));safeFn(()=>addRep(n.race,1));safeFn(()=>merchSpend(n,total));safeFn(()=>noteSale(n,total));
  safeFn(()=>{UI.pickup();Bank.play("treasure",{seed:total,gain:0.8});Bank.play("od_gold",{seed:total,gain:0.45,maxSec:3});});
- narrate(`Продано: ${res} — ${qty} шт. по ${unit} золота. Получено ${total}. Всего золота: ${G.gold}.${safeFn(()=>merchDeal(n,"sell",total),"")}`);journal(`Продажа: ${res} ×${qty} за ${total} золота.`);return true;}
+ narrate(`Продано: ${res} — ${qty} шт. по ${unit} золота. Получено ${total}. Всего золота: ${G.gold}.${safeFn(()=>merchDeal(n,"sell",total),"")}`,{cat:"result"});journal(`Продажа: ${res} ×${qty} за ${total} золота.`);return true;}
 /* После сделки перерисовывается то окно, что открыто: лавка или карточка жителя. */
 function afterTrade(key){
  safeFn(()=>Gods.taboo("trade"));
@@ -67175,7 +67242,7 @@ function takeNPCQuest(n){
   safeFn(()=>npcSay(n,"quest_full"));
   narrate(`У вас уже ${openQuests().length} незакрытых дел — больше человек не удержит в голове. Закончите начатое или откажитесь от чего-нибудь в списке заданий.`);
   return;}
- if(mainQuestOf(n)){narrate(`Этот квест уже у вас.${npcSayText(n,"quest_have")}`);return;}
+ if(mainQuestOf(n)){narrate(`Этот квест уже у вас.${npcSayText(n,"quest_have")}`,{cat:"result"});return;}
  /* У жреца, клановых, служилых и торговых людей дело начинается цепочкой:
     первый шаг — обычное задание, но у него будет продолжение. То же самое
     дело показывает и «Основное задание: что за дело» — до того, как взять. */
@@ -67464,7 +67531,7 @@ function completeQuest(id){
  else if(q.type==="escort"){
   if(!q.done){narrate(`Обоз ещё не доведён: идите к городу «${q.city}» на клетке (${q.tx}; ${q.ty}).`);return;}}
  else if(q.type==="god_altar"){
-  if(!q.doneFlag){narrate("Паломничество не исполнено: нужно помолиться у алтаря в подземелье, на втором уровне или глубже.");return;}}
+  if(!q.doneFlag){narrate("Паломничество не исполнено: нужно помолиться у алтаря в подземелье, на втором уровне или глубже.",{cat:"result"});return;}}
  else if(q.type==="god_relic"){
   const g=GOD_BY_ID[q.godId],rel=`Реликвия: ${g?g.n:""}`;
   const i=(G.items||[]).indexOf(rel);
@@ -71554,7 +71621,7 @@ const Lore=Modules.register("LORE",{
   safeFn(()=>{Bank.play(k.звук,{gain:0.45,maxSec:3});
    journal(`Знание: ${k.n} — ${n||id}.`);
    Ledger.add("знание",`${k.n}: ${n||id}${откуда?` (${откуда})`:""}`,"знание");});
-  narrate(`Узнано: ${k.n} — ${n||id}. Знаний ${this.count()}.`,{interrupt:false});
+  narrate(`Узнано: ${k.n} — ${n||id}. Знаний ${this.count()}.`,{cat:"context",interrupt:false});
   return true;}catch(_){return false;}},
  /* Отдать знание как плату. Дар остаётся при вас — вы его не забыли, —
     но второй раз то же самое уже не продать. */
@@ -73300,7 +73367,7 @@ CMD.craftdo=i=>{
  const ряд=safeFn(()=>invAll().filter(r=>String(r.name).toLowerCase()===имя.toLowerCase()).pop(),null);
  const раздел=ряд&&INV_SECTION_BY_ID[ряд.раздел];
  if(раздел)куда=` Лежит в котомке, раздел «${раздел.n}».`;
- narrate(`Создано: ${names[i]}.${куда}`);safeFn(()=>saveGame(true));refresh();renderCraft();};
+ narrate(`Создано: ${names[i]}.${куда}`,{cat:"result"});safeFn(()=>saveGame(true));refresh();renderCraft();};
 function renderGestures(){
  /* Единая логика: число пальцев = область игры.
     1 — движение и предметы, 2 — места и меню, 3 — бой и сведения, 4 — магия.
@@ -73654,6 +73721,7 @@ function bindSpeechSettings($){
  chk("setCompass","compass","Стороны света: север, юг, запад, восток.","Стороны как свайпы: впереди, позади, справа, слева — без сторон света.");
  chk("setCbSpeech","cbSpeech","В бою игра снова говорит: сторону, замах, удары.","Бой тихий: слышно тварь и её слова; здоровье — два пальца вправо.");
  chk("setCbDmgFoe","cbDmgFoe","Урон по твари озвучивается после каждого удара.","Урон по твари не озвучивается.");
+ chk("setPhoneSpk","phoneSpeaker","Динамик телефона: тихие звуки мира подняты.","Динамик телефона выключен: звуки мира как записаны.");
  chk("setCbDmgMe","cbDmgMe","Урон по вам озвучивается после каждого удара твари.","Урон по вам не озвучивается.");
  chk("setCbSide","cbSide","В бою игра называет сторону твари.","В бою игра не называет сторону твари: слушайте, откуда звучат её шаги, замах и голос.");
  chk("setIntro","intro","Заставка при запуске включена.","Заставка при запуске выключена.");
@@ -79108,7 +79176,7 @@ victory=matKeep(victory,(vi7=>function(){const m=G.combat&&G.combat.m;const r=vi
 /* «Осмотреться»: признаки порчи слышны; проклятые руины выдают себя знаками на кладке. */
 {const lk7=look;look=matKeep(lk7,function(){const r=lk7.apply(this,arguments);safeFn(()=>{if(G.dark)return;const з=Magia.signs();if(з.length)narrate(`Признаки порчи: ${з.join("; ")}.`,{interrupt:false});
   const вРуинах=G.place?G.place.stype==="ruins":!!safeFn(()=>{const c=cellContent(G.x,G.y);return c.structure&&c.structure.type==="ruins";},false);
-  if(вРуинах&&Magia.cursedRuin(G.place?G.place.bx:G.x,G.place?G.place.by:G.y))narrate("На кладке руин — недобрые знаки: место проклято. Взятое отсюда потянет назад.",{interrupt:false});});return r;});}
+  if(вРуинах&&Magia.cursedRuin(G.place?G.place.bx:G.x,G.place?G.place.by:G.y))narrate("На кладке руин — недобрые знаки: место проклято. Взятое отсюда потянет назад.",{cat:"context",interrupt:false});});return r;});}
 /* Сглаз: слишком удачная сделка — и торговец провожает недобрым взглядом. Ковен бережёт своих. */
 {const ns7=noteSale;noteSale=matKeep(ns7,function(npc,золота){const r=ns7.apply(this,arguments);safeFn(()=>{const M=Magia;if((Number(золота)||0)<400||M.st().ков||M.curses().some(c=>c.id==="sglaz"))return;
   if(hashName(M.day(),Math.round(Number(золота)),9609)<0.25){M.curse("sglaz",`завистливый глаз торговца${npc&&npc.name?" "+npc.name:""}: слишком удачная сделка`);narrate("Торговец проводил вас недобрым взглядом: сделка вышла слишком удачной.",{interrupt:false});}});return r;});}
@@ -81149,21 +81217,21 @@ safeFn(()=>{
 const ZV_PAUSE={feed:900,feedall:900,growdo:950,care:800,docare:800,ride:850,off:700,call:1100,equip:650,lequip:650,putart:650,give:600,train:800,task:450,recall:450,role:450,follow:600,release:450};
 const ZvSay={тихо:0,
  /* первая фраза дела — через ms (звук успевает прозвучать); окно в это время не перечитывается */
- run(ms,fn,self,args){const s0=Speech.say;let первая=true;this.тихо++;
-  Speech.say=function(t,o){if(первая&&!(o&&o.cat==="ui")){первая=false;const a=arguments,me=this;
-    if(ms>0){setTimeout(()=>safeFn(()=>s0.apply(me,a)),ms);return true;}}return s0.apply(this,arguments);};
-  try{return fn.apply(self,args||[]);}finally{Speech.say=s0;this.tihoOff();}},
+ run(ms,fn,self,args){let первая=true;this.тихо++;
+  try{return Speech.на_время(()=>fn.apply(self,args||[]),function(t,o,дальше){if(первая&&!(o&&o.cat==="ui")){первая=false;
+    if(ms>0){setTimeout(()=>safeFn(()=>дальше(t,o)),ms);return true;}}return дальше(t,o);},"звук прежде слов");}
+  finally{this.tihoOff();}},
  tihoOff(){this.тихо=Math.max(0,this.тихо-1);}};
 /* Окно, обновлённое после дела, молчит: курсор встаёт на первую строку без слов. */
 safeFn(()=>{const sh0=Stable.show;Stable.show=function(modal,title,html){if(!ZvSay.тихо)return sh0.apply(this,arguments);
- const s0=Speech.say;Speech.say=function(t,o){if(o&&o.cat==="ui")return true;return s0.apply(this,arguments);};
- try{return sh0.apply(this,arguments);}finally{Speech.say=s0;}};});
+ const me=this,a=arguments;
+ return Speech.на_время(()=>sh0.apply(me,a),(t,o,дальше)=>{if(o&&o.cat==="ui")return true;return дальше(t,o);},"окно обновляется молча");};});
 /* Слова о посадке и спешивании из «Действия здесь», из окна объектов и по главному действию скакуна —
    тоже после звука: следующая фраза с тем же текстом откладывается. */
 const ZvLater={t:0,text:"",ms:0};
-safeFn(()=>{const s0=Speech.say;Speech.say=function(t,o){
- if(ZvLater.text&&Date.now()-ZvLater.t<150&&String(t)===ZvLater.text){const ms=ZvLater.ms;ZvLater.text="";const a=arguments,me=this;setTimeout(()=>safeFn(()=>s0.apply(me,a)),ms);return true;}
- return s0.apply(this,arguments);};});
+safeFn(()=>{Speech.use("посадка — звук прежде слов",function(t,o,дальше){
+ if(ZvLater.text&&Date.now()-ZvLater.t<150&&String(t)===ZvLater.text){const ms=ZvLater.ms;ZvLater.text="";setTimeout(()=>safeFn(()=>дальше(t,o)),ms);return true;}
+ return дальше(t,o);},20);});
 safeFn(()=>{const m0=Stable.mountUp;Stable.mountUp=function(k){const до=safeFn(()=>this.riding(),null);const t=m0.apply(this,arguments);
  if(safeFn(()=>this.riding(),null)===k&&до!==k){ZvLater.t=Date.now();ZvLater.text=String(t);ZvLater.ms=ZV_PAUSE.ride;}return t;};});
 safeFn(()=>{const d0=Stable.dismountHere;Stable.dismountHere=function(){const до=safeFn(()=>this.riding(),null);const t=d0.apply(this,arguments);
@@ -82131,14 +82199,12 @@ safeFn(()=>{const mv0=move;move=function(dir){
  if(!G.inCombat&&G.atDoor&&G.atDoor.x===G.x&&G.atDoor.y===G.y&&G.atDoor.dir===dir&&!safeFn(()=>activeLayer(),null)){
   const c=safeFn(()=>cellContent(G.x,G.y),null);
   if(c&&c.structure&&(ВОРОТА147[c.structure.type]||ДОМА147[c.structure.type])){G.atDoor=null;safeFn(()=>stopRun());return Вход147.туда(c);}}
- const sy0=Speech.say;let r;
- Speech.say=function(t,o){
+ const me=this,a=arguments;
+ return Speech.на_время(()=>mv0.apply(me,a),function(t,o,дальше){
   if(typeof t==="string"){const m=t.match(ПОРОГ147);if(m){const c=safeFn(()=>cellContent(G.x,G.y),null);const тип=c&&c.structure&&c.structure.type;
    if(ВОРОТА147[тип])t=`${m[1]}: вы у ворот, тут стража. Шагните ещё раз ${m[2]} или коснитесь дважды — подойдёте к страже.`;
    else if(ДОМА147[тип])t=`${m[1]}: вы у двери. Шагните ещё раз ${m[2]} или коснитесь дважды — постучаться или открыть.`;}}
-  return sy0.apply(Speech,[t,o].concat(Array.prototype.slice.call(arguments,2)));};
- try{r=mv0.apply(this,arguments);}finally{Speech.say=sy0;}
- return r;};});
+  return дальше(t,o);},"у ворот и дверей");};});
 /* «Услуги и люди» поселения на карте (таверна, рынок, кузница деревни, аудиенция у правителя) — тоже за воротами:
    без пропуска сначала стража, после платы — те же услуги */
 safeFn(()=>{const ob0=openBuilding;openBuilding=function(c){const s=c&&c.structure;
@@ -82254,7 +82320,7 @@ const Лифт150={
   s.бодр[k]=true;
   narrate("Вы налегли на ворот. Он поддался со скрежетом, и где-то в толще камня отозвались противовесы: подъёмник проснулся. Двойное касание — выбрать ярус.",{interrupt:true});
   safeFn(()=>saveGame(true));return true;},
- ехать(n){const p=G.place;if(!p||!this.здесь())return false;if(G.inCombat){narrate("Сначала завершите бой!");return false;}
+ ехать(n){const p=G.place;if(!p||!this.здесь())return false;if(G.inCombat){narrate("Сначала завершите бой!",{cat:"result"});return false;}
   /* пока клеть идёт, вторая поездка не начинается: ярус меняется на месте (changeDepth правит depth того же места),
      и поездка, заказанная с прежнего яруса, увезла бы мимо пройденного */
   if(this._едет){narrate("Клеть ещё идёт.",{interrupt:true});return false;}
@@ -82832,7 +82898,7 @@ safeFn(()=>{const t0=Тишь.сделать.bind(Тишь);Тишь.сдела�
 safeFn(()=>{const e0=castCustomEffect;castCustomEffect=function(sp){const cb=G.combat;
  if(sp&&sp.тихое&&sp.ядро==="dispel"&&G.inCombat&&cb&&cb.m&&cb.m.нем==="swarm"){const d=Math.max(12,Math.round((18+(Number(G.level)||1)*5)*Тишь.сила(sp)));
   cb.hp=Math.max(0,(Number(cb.hp)||0)-d);safeFn(()=>{Bank.play("oc_gust",{kind:"magic",gain:0.55,maxSec:2});updateCombat();});
-  if(cb.hp<=0){narrate(`Заклинание «${sp.n}» сотворено. Рой рассыпался в пыль: −${d}.`);victory();return " ";}
+  if(cb.hp<=0){narrate(`Заклинание «${sp.n}» сотворено. Рой рассыпался в пыль: −${d}.`,{cat:"result"});victory();return " ";}
   return ` Рой рассыпается клочьями: −${d}.`;}
  return e0.apply(this,arguments);};});
 /* перемены по ходу боя: Владыка вбирает тишину, выгоревший опускает руки */
@@ -84429,8 +84495,9 @@ safeFn(()=>{const d0=Stable.dismountHere;Stable.dismountHere=function(){const k=
  return t;};});
 safeFn(()=>{const d0=Zver.dismount;Zver.dismount=function(){const a=this.mount();const r=d0.apply(this,arguments);if(a)safeFn(()=>Маунт155.рядом("zv:"+a.uid));return r;};});
 safeFn(()=>{const dm0=dismissMount;dismissMount=function(){const id=G.mount;if(!id)return dm0.apply(this,arguments);
- const sv=Speech.say;Speech.say=function(t,o){return sv.call(Speech,String(t).replace("отходит в сторону и ждёт","идёт рядом с вами"),o);};
- let r;try{r=dm0.apply(this,arguments);}finally{Speech.say=sv;}safeFn(()=>Маунт155.рядом("leg:"+id));return r;};});
+ const me=this,a=arguments;
+ const r=Speech.на_время(()=>dm0.apply(me,a),(t,o,дальше)=>дальше(String(t).replace("отходит в сторону и ждёт","идёт рядом с вами"),o),"скакун идёт рядом");
+ safeFn(()=>Маунт155.рядом("leg:"+id));return r;};});
 /* пересел: прежний — домой; позвать — идёт рядом; запомнить, на ком ехали */
 safeFn(()=>{const u0=Stable.mountUp;Stable.mountUp=function(k){const prev=safeFn(()=>this.riding(),null);const t=u0.apply(this,arguments);
  if(this.riding()===k){const b=this.st();b.last155=k;delete b.pos[k];
@@ -84521,11 +84588,11 @@ const ОкноЗвери155={очередь:[],
   return !/на исходе|критическ|смертельн|вы пали|вы погиб|умира|новый уровень/i.test(String(t||""));},
  сброс(){if(!this.очередь.length||this.открыто())return;const q=this.очередь.splice(0);const now=Date.now();
   const t=[...new Set(q.filter(x=>now-x.t<90000).map(x=>x.s))];if(t.length)setTimeout(()=>safeFn(()=>Speech.say(t.join(" "),{interrupt:false})),450);}};
-safeFn(()=>{const s0=Speech.say;Speech.say=function(t,o){
+safeFn(()=>{Speech.use("окно зверей — фон после",function(t,o,дальше){
  try{if(ОкноЗвери155.открыто()&&ОкноЗвери155.фон(t,o)){
    ОкноЗвери155.очередь.push({s:String(t),t:Date.now()});if(ОкноЗвери155.очередь.length>12)ОкноЗвери155.очередь.shift();return true;}}catch(_){}
- return s0.apply(Speech,arguments);};});
-safeFn(()=>{setInterval(()=>safeFn(()=>ОкноЗвери155.сброс()),1000);});
+ return дальше(t,o);},30);});
+safeFn(()=>{Такт.каждые(1000,()=>safeFn(()=>ОкноЗвери155.сброс()),"окно зверей — вести после");});
 
 /* ════════════════════════════════════════════════════════════════════════
    ЗВУК БЕЗ ПЕРЕГРУЗА (15.5)
@@ -84632,7 +84699,7 @@ safeFn(()=>{const m0=Bank.make;Bank.make=function(file,volume,loop,rate){const �
 safeFn(()=>{const i0=ЗвукСреда.играть;ЗвукСреда.играть=function(url,о){о=о||{};const кл=Гул155.кл||(о.voice?"голос":"мир");
  if(кл!=="музыка"){о=Object.assign({},о,{gain:(Number(о.gain)||0)*Гул155.множ(кл)});}
  return i0.call(this,url,о);};});
-safeFn(()=>{setInterval(()=>safeFn(()=>Гул155.тик()),350);});
+safeFn(()=>{Такт.каждые(350,()=>safeFn(()=>Гул155.тик()),"гул места");});
 
 /* ════════════════════════════════════════════════════════════════════════
    ПРОЛОГ: ЗВУКИ КО ВРЕМЕНИ И ПОЛНАЯ ПАЛИТРА (15.5)
@@ -86530,7 +86597,7 @@ const TORG_CRAFT=[
 TORG_CRAFT.forEach(r=>CRAFT_RECIPES.push({n:r.n,из:r.из,торг:true,сколько:r.сколько||1}));
 safeFn(()=>{const c0=CMD.craftdo;CMD.craftdo=function(i){const r=CRAFT_RECIPES[Number(i)];
  /* Одиночная вещь, что уже есть, не делается — и сырьё не тратится. */
- if(r&&(r.n==="Удочка"||r.n==="Рыболовная сеть"||(r.торг&&Torg.one(r.n)))&&Torg.has(r.n)){narrate(`${r.n} у вас уже есть — вторая не нужна. Сырьё цело.`);return;}
+ if(r&&(r.n==="Удочка"||r.n==="Рыболовная сеть"||(r.торг&&Torg.one(r.n)))&&Torg.has(r.n)){narrate(`${r.n} у вас уже есть — вторая не нужна. Сырьё цело.`,{cat:"result"});return;}
  if(!r||!r.торг)return c0.apply(this,arguments);
  for(const k in r.из)if((Number(G.inv[k])||0)<r.из[k]){narrate(`Не хватает: ${k}. Нужно: ${Object.entries(r.из).map(([a,b])=>`${a} ×${b}`).join(", ")}.`);return;}
  for(const k in r.из){G.inv[k]-=r.из[k];if(G.inv[k]<=0)delete G.inv[k];}
@@ -86655,12 +86722,11 @@ const Возрождение165={
 safeFn(()=>{const d0=defeat;defeat=обёртка165(function(){
  const ц=safeFn(()=>Возрождение165.цель(),null);
  if(!ц)return d0.apply(this,arguments);
- const n0=Speech.say;let сказано=false;
- Speech.say=function(t){
+ let сказано=false;const me=this,аргументы=arguments;
+ const r=Speech.на_время(()=>d0.apply(me,аргументы),function(t,o,дальше){
   if(typeof t==="string"&&/^Поражение\.\.\. Вы очнулись у стен столицы/.test(t)){сказано=true;
    t=t.replace(/Вы очнулись у стен столицы «[^»]*», под открытым небом\./,Возрождение165.слова(ц));}
-  const a=Array.prototype.slice.call(arguments);a[0]=t;return n0.apply(Speech,a);};
- let r;try{r=d0.apply(this,arguments);}finally{Speech.say=n0;}
+  return дальше(t,o);},"очнулись у ближнего поселения");
  if(сказано&&!G.place){
   /* дальний путь: поражение — не дорога; поручения «в путь» сдвигаются вместе с героем (как при переносе к столице) */
   safeFn(()=>{const dx=ц.x-G.x,dy=ц.y-G.y;(Director.st2().q||[]).forEach(q=>{if(q&&q.type==="travel"&&Number.isFinite(q.x)){q.x+=dx;q.y+=dy;}});});
@@ -86702,9 +86768,9 @@ const ДверьE165={
    .replace(/Коснитесь дважды/g,"Нажмите E").replace(/коснитесь дважды/g,"нажмите E")
    .replace(/по двойному касанию/g,"по клавише E").replace(/двойным касанием/g,"клавишей E")
    .replace(/Двойное касание/g,"Клавиша E").replace(/двойное касание/g,"клавиша E");}};
-safeFn(()=>{const n0=Speech.say;Speech.say=function(t){
- if(typeof t==="string"&&safeFn(()=>isDesktopApp(),false)){const a=Array.prototype.slice.call(arguments);a[0]=ДверьE165.слова(t);return n0.apply(Speech,a);}
- return n0.apply(Speech,arguments);};});
+safeFn(()=>{Speech.use("клавиша E вместо касаний",function(t,o,дальше){
+ if(typeof t==="string"&&safeFn(()=>isDesktopApp(),false))return дальше(ДверьE165.слова(t),o);
+ return дальше(t,o);},40);});
 
 /* ── 4. Двери без тупиков: проверка и починка каждого уровня ── */
 const ДвериПорядок165={
@@ -87896,14 +87962,14 @@ safeFn(()=>{const m0=move;move=обёртка165v(function(dir){
  if(!DIRV[dir]||activeLayer()||!Верхом165.можно())return m0.apply(this,arguments);
  const n=Верхом165.клеток();if(n<=1)return m0.apply(this,arguments);
  let r;
- for(let i=0;i<n;i++){const x0=G.x,y0=G.y;const последний=i===n-1;const захват=[];const n0=Speech.say;
-  if(!последний)Speech.say=function(){захват.push(Array.prototype.slice.call(arguments));return true;};
-  Верхом165.i=i;try{r=m0.call(this,dir);}finally{Speech.say=n0;Верхом165.i=0;}
+ for(let i=0;i<n;i++){const x0=G.x,y0=G.y;const последний=i===n-1;const захват=[];const me=this;
+  Верхом165.i=i;try{r=последний?m0.call(me,dir):Speech.на_время(()=>m0.call(me,dir),(t,o)=>{захват.push([t,o]);return true;},"верхом — слова промежуточных клеток");}
+  finally{Верхом165.i=0;}
   if(i===0)Выучка165.опыт("езда",0.2,true);
   if(последний)break;
   const сдвиг=G.x!==x0||G.y!==y0;
   const стоп=!сдвиг||!Верхом165.можно()||!!activeLayer()||(G.atDoor&&G.atDoor.x===G.x&&G.atDoor.y===G.y)||Верхом165.стоять(G.x,G.y);
-  if(стоп){захват.forEach(a=>{try{n0.apply(Speech,a);}catch(_){}});break;}}
+  if(стоп){захват.forEach(a=>{try{Speech.say(a[0],a[1]);}catch(_){}});break;}}
  return r;},m0);});
 
 /* ── Полёт: быстрее и своим крылом (просьба игрока) ──
@@ -89250,7 +89316,11 @@ const Цепи170={
  подсказка(cid,key){const c=this.ст().список.find(x=>x.id===cid);const ш=c&&this.текущий(c);const n=getNPCByKey(key);if(!c||!ш||!ш.слухи||!n)return false;
   const д=c.данные;if(!д.слухи||typeof д.слухи!=="object")д.слухи={};if(!Array.isArray(д.слыхано))д.слыхано=[];
   const v=safeFn(()=>Хозяйство170.отношение(ш.ключ||ш.куда),0)||0;let текст="",новое=false;
-  if(д.слухи[key]===undefined&&this.h(cid,"молчун|"+key)<0.22)д.слухи[key]=-1;
+  /* (17.5) Молчун — примерно каждый пятый житель. Прежде имя жителя стояло в конце строки хеша, а хеш почти не
+     различает строки, разнящиеся последним знаком, — и вся деревня разом либо молчала, либо говорила: в каждой
+     пятой цепочке слухов не давал никто, и шаг не проходился. Теперь имя жителя — в начале строки. Уже решённое
+     (кто молчит, кто рассказал) хранится в данных цепочки и не меняется. */
+  if(д.слухи[key]===undefined&&this.h(key+"|молчун",cid)<0.22)д.слухи[key]=-1;
   if(д.слухи[key]===-1)текст=ш.отказ||"Житель молчит.";
   else{const можно=ш.слухи.map((х,i)=>({х,i})).filter(o=>o.х.мин<=v&&!д.слыхано.includes(o.i));
    const свой=можно.find(o=>o.х.проф===n.prof)||можно[0];
@@ -92926,6 +92996,306 @@ safeFn(()=>{const P=Приключения170;const б0=P.бой;P.бой=functi
  const о0=P.открыть;P.открыть=function(sid,o){if(o&&o.тип==="работа"){const и=((o.данные||{}).инстр||[]).join(" ");const зв=(o.данные||{}).звук||(/Верёвк/.test(и)?"adv_rope":/Лопат|Кирк/.test(и)&&/завал|Разобрать|откоп/i.test((o.данные||{}).действие||"")?"adv_dig":ПРК170_ЗВУК.работа);safeFn(()=>this.звук(зв,o.dx,o.dy,0.55));}else if(o&&(o.тип==="рычаги"||o.тип==="плиты"))safeFn(()=>this.звук("adv_chain",o.dx,o.dy,0.5));return о0.apply(this,arguments);};
  const с0=P.срокМеста;P.срокМеста=function(s){const t=с0.apply(this,arguments);safeFn(()=>{const S=this.шаблон(s);if(t&&S&&S.срок&&!s.цели[S.срок.провал]&&s.срокС+S.срок.часов-this.час()<0.75)Bank.play(ПРК170_ЗВУК.срок,{gain:0.45,maxSec:3});});return t;};});
 
+/* ════════════════════════════════════════════════════════════════════════
+   ЕДИНЫЕ ОБРАБОТЧИКИ РЕЧИ И ЗВУКА (после 17.0)
+   Разбор обработчиков в сборке 17.0 и решение игрока: «делай всё по тому
+   порядку, который ты указал… чтобы игроку ничего не приходилось проверять,
+   и всё работало у него на устройстве корректно — как на телефоне, так и на
+   компьютере».
+   З2. Фон места меняется сразу при смене места: часы звуковой картины тикают
+       раз в полторы секунды, и до тика фон поверхности мог звучать в ярусе.
+   Р2. Предложение — одним голосом: если в предложении записана только часть,
+       а незаписанный остаток длиннее короткого значения (четыре слова и
+       больше, без чисел), всё предложение звучит синтезатором, а не запись и
+       синтезатор попеременно. Шаблоны «метка: значение» («Погода: туман»,
+       «Здоровье: 40 из 50») звучат как прежде.
+   З3. У каждого звука — итог: звучит, вокруг (ушёл в звуки вокруг героя),
+       выключено, нет записи, не дано (теснота, правило места), не зазвучал,
+       ошибка плеера. Итог виден на самом плеере (__итог) и попадает в журнал.
+   З6. Журнал речи и звука: что сказано, снято, устарело, сведено; какие звуки
+       не прозвучали и почему. Раздел «Звук» меню действий — «Журнал речи и
+       звука»: сводка, последние сбои, сохранение в файл.
+   Р1. Свежая речь мира: фоновые вести (событие, окружение, описание, предмет,
+       приближение), пришедшие из разных моментов, не копятся хвостом — в
+       очереди не больше двух новейших; фоновая весть, прождавшая дольше пяти
+       секунд, снимается. Мысль, сказанная в одном такте (несколько фраз
+       подряд), режется только целиком; ответы на действия игрока, итоги,
+       опасность, книги и разговоры не трогаются.
+   ════════════════════════════════════════════════════════════════════════ */
+const ЖурналРЗ={N:120,речь:[],звук:[],счёт:{речь:{},звук:{}},
+ /* вид: «речь» или «звук»; итог — короткое слово; что — фраза или роль звука */
+ добавить(вид,итог,что,всегда){
+  try{const с=this.счёт[вид];с[итог]=(с[итог]||0)+1;
+   /* «сказано» и «звучит» — только счётом: иначе шаги и щелчки вытеснят сбои из журнала */
+   if(!всегда&&(итог==="сказано"||итог==="звучит"))return;
+   const сп=this[вид];сп.push({t:Date.now(),итог:String(итог),что:String(что||"").slice(0,80)});
+   if(сп.length>this.N)сп.splice(0,сп.length-this.N);}catch(_){}},
+ очистить(){this.речь=[];this.звук=[];this.счёт={речь:{},звук:{}};},
+ сводка(вид){const с=this.счёт[вид];const к=Object.keys(с);if(!к.length)return "пока пусто";
+  return к.sort((a,b)=>с[b]-с[a]).map(x=>`${x} — ${с[x]}`).join(", ");},
+ текст(){
+  const время=t=>{const d=new Date(t);return d.toTimeString().slice(0,8);};
+  const L=[`Грань Миров ${typeof GAME_VERSION!=="undefined"?GAME_VERSION:""} — журнал речи и звука, ${new Date().toLocaleString("ru-RU")}`,
+   `Устройство: ${navigator.userAgent}`,"",`Речь: ${this.сводка("речь")}.`,`Звук: ${this.сводка("звук")}.`,"","Речь, последние события:"];
+  this.речь.forEach(z=>L.push(`${время(z.t)}  ${z.итог}: ${z.что}`));
+  L.push("","Звук, последние сбои и перенаправления:");this.звук.forEach(z=>L.push(`${время(z.t)}  ${z.итог}: ${z.что}`));
+  return L.join("\n");}};
+
+/* ── З2. Фон места — сразу при смене места ── */
+safeFn(()=>{if(typeof bankUpdateAmbient!=="function")return;const b0=bankUpdateAmbient;
+ bankUpdateAmbient=function(){const r=b0.apply(this,arguments);
+  safeFn(()=>{if(typeof Scape!=="undefined"&&Scape.bed&&!safeFn(()=>Prologue.active(),false))Scape.bed();});return r;};});
+
+/* ── Р2. Предложение — одним голосом ── */
+safeFn(()=>{const S=Speech;if(!S||typeof S.gvParts!=="function")return;const g0=S.gvParts;
+ S.gvPartsRaw=function(){return g0.apply(this,arguments);};
+ const конец=t=>/[.!?…]["»”)]*\s*$/.test(String(t));
+ /* незаписанный остаток «длинный», если в нём четыре слова и больше и нет чисел: число или имя — значение шаблона */
+ const длинно=t=>{const s=String(t).trim();if(/\d/.test(s))return false;return s.split(/\s+/).filter(w=>/[а-яёa-z]/i.test(w)).length>=4;};
+ S.gvParts=function(text){const ч=g0.apply(this,arguments);
+  if(!Array.isArray(ч)||ч.length<2||!ч.some(x=>x&&x.url))return ч;
+  const out=[];let пр=[];
+  const сброс=()=>{if(!пр.length)return;const синт=пр.filter(x=>!x.url);
+   if(синт.length&&синт.length<пр.length&&длинно(синт.map(x=>x.t).join(" "))){out.push({t:пр.map(x=>x.t).join(" ").replace(/\s+/g," ").trim(),url:null,одним:true});
+    safeFn(()=>ЖурналРЗ.добавить("речь","одним голосом",пр.map(x=>x.t).join(" ")));}
+   else out.push(...пр);пр=[];};
+  for(const x of ч){пр.push(x);if(конец(x.t))сброс();}
+  сброс();
+  /* соседние куски синтезатора — одним куском */
+  const сл=[];for(const x of out){const l=сл[сл.length-1];if(l&&!l.url&&!x.url)l.t=(l.t+" "+x.t).replace(/\s+/g," ").trim();else сл.push(Object.assign({},x));}
+  return сл;};});
+
+/* ── З3. Итог каждого звука ── */
+const СторожЗвука={ждут:[],т:null,
+ ждать(el,роль){
+  try{if(!el||!el.addEventListener||el.__сторож)return;el.__сторож=1;const з={el,роль,t:Date.now(),ok:false};
+   el.addEventListener("playing",()=>{з.ok=true;},{once:true});
+   el.addEventListener("error",()=>{if(!з.ok){з.ok=true;el.__итог="ошибка плеера";ЖурналРЗ.добавить("звук","ошибка плеера",роль);}},{once:true});
+   this.ждут.push(з);if(this.ждут.length>64)this.ждут.shift();
+   if(!this.т)this.т=Такт.каждые(1000,()=>this.обход(),"сторож звука");}catch(_){}},
+ обход(){const now=Date.now();const ост=[];
+  for(const з of this.ждут){if(з.ok)continue;const el=з.el;
+   /* звук, поставленный до сворачивания игры, не судим: свёрнутая игра притушила его сама */
+   if(з.t<(Такт.проснулся||0))continue;
+   if(el.__stopped||(el.paused&&el.currentTime>0)||el.ended)continue;
+   if(now-з.t<2500){ост.push(з);continue;}
+   /* игра свёрнута: звук не идёт не по своей вине */
+   if(document.hidden)continue;
+   el.__итог="не зазвучал";ЖурналРЗ.добавить("звук","не зазвучал",з.роль);}
+  this.ждут=ост;if(!ост.length&&this.т){this.т();this.т=null;}}};
+safeFn(()=>{if(typeof Bank==="undefined"||typeof Bank.play!=="function")return;const p0=Bank.play;
+ Bank.play=function(role){let r;
+  try{r=p0.apply(this,arguments);}catch(e){safeFn(()=>ЖурналРЗ.добавить("звук","ошибка",role));throw e;}
+  safeFn(()=>{let итог;
+   if(r&&(r.__around||(typeof AROUND_STUB!=="undefined"&&r===AROUND_STUB)))итог="вокруг";
+   else if(r&&r.tagName){итог="звучит";try{r.__итог="звучит";}catch(_){}СторожЗвука.ждать(r,role);}
+   else if(r)итог="звучит";
+   else итог=!Bank.enabled||settings.effects===0?"выключено":!safeFn(()=>Bank.has(role),true)?"нет записи":"не дано";
+   ЖурналРЗ.добавить("звук",итог,role);
+   Bank.итог={роль:role,итог,t:Date.now()};});
+  return r;};});
+
+/* ── З6. Речь — в журнал ── */
+safeFn(()=>{const S=Speech;if(!S)return;
+ const ИТОГ={COMPLETED:"сказано",FAILED:"не сказано",CANCELLED:"снято",REPLACED:"заменено",DEDUPED:"повтор снят",DROPPED:"не сказано по настройкам",EXPIRED:"устарело"};
+ const f0=S._finish;S._finish=function(m,state){safeFn(()=>ЖурналРЗ.добавить("речь",ИТОГ[state]||String(state),m&&m.text));return f0.apply(this,arguments);};
+ /* Р3: снятое новой фразой — с именем правила очереди, не сказанное — с именем фильтра */
+ const c0=S._cut;S._cut=function(m,state){if(m)safeFn(()=>ЖурналРЗ.добавить("речь",(ИТОГ[state]||String(state))+(this._решает&&state==="CANCELLED"?` (${this._решает})`:""),m.text));return c0.apply(this,arguments);};
+ const e0=S.enqueue;S.enqueue=function(){const m=e0.apply(this,arguments);
+  safeFn(()=>{if(m&&(m.state==="DROPPED"||m.state==="DEDUPED"))ЖурналРЗ.добавить("речь",m.state==="DROPPED"&&m.причина?`не сказано: ${m.причина}`:ИТОГ[m.state],m.text);});return m;};
+ const dq0=S._dropQueued;S._dropQueued=function(minPri,state){const до=this.queue.slice();const n=dq0.apply(this,arguments);
+  if(n)safeFn(()=>{for(const x of до)if(!this.queue.includes(x))ЖурналРЗ.добавить("речь",(ИТОГ[state]||String(state))+" из очереди"+(this._решает?` (${this._решает})`:""),x.text);});return n;};
+ const p0=S._pump;S._pump=function(){const было=this.queue.slice();const r=p0.apply(this,arguments);
+  safeFn(()=>{for(const m of было)if(m.state==="EXPIRED"&&!m.__вЖурнале){m.__вЖурнале=1;ЖурналРЗ.добавить("речь","устарело",m.text);}});return r;};});
+
+/* ── Р1. Свежая речь мира ── */
+const СвежаяРечь={ФОН:new Set(["event","context","spatial","desc","object","approach"]),ПРЕДЕЛ:2,СРОК:5000,
+ фон(m){return !!m&&!m.user&&!m.nav&&!m.keep&&!m.persistent&&!m.herald&&!(m.notBefore>0)&&m.pri>=3&&this.ФОН.has(m.cat);},
+ /* очередь: фоновые вести из разных тактов — не больше двух новейших тактов */
+ проредить(S,m){
+  const ф=S.queue.filter(x=>x.state==="QUEUED"&&this.фон(x));if(!ф.length)return;
+  const такты=[...new Set(ф.map(x=>x.task))].sort((a,b)=>b-a);
+  if(такты.length<=this.ПРЕДЕЛ)return;
+  const оставить=new Set(такты.slice(0,this.ПРЕДЕЛ));
+  const снять=ф.filter(x=>!оставить.has(x.task));
+  if(!снять.length)return;
+  S.queue=S.queue.filter(x=>!снять.includes(x));
+  for(const x of снять){x.state="EXPIRED";S.stats.expired++;safeFn(()=>ЖурналРЗ.добавить("речь","сведено к свежему",x.text));
+   if(x.onDone)setTimeout(()=>{try{x.onDone();}catch(_){}},10);}}};
+safeFn(()=>{const S=Speech;if(!S)return;const e0=S.enqueue;
+ S.enqueue=function(){const m=e0.apply(this,arguments);
+  safeFn(()=>{if(!m||m.state!=="QUEUED"||!СвежаяРечь.фон(m))return;
+   if(!(m.ttl>0)||m.ttl>СвежаяРечь.СРОК)m.ttl=СвежаяРечь.СРОК;
+   СвежаяРечь.проредить(this,m);});
+  return m;};});
+
+/* ── З6. Окно журнала ── */
+safeFn(()=>{if(typeof CMD==="undefined")return;
+ Object.assign(CMD,{rzjournal(){
+  const Ж=ЖурналРЗ;const сбои=Ж.звук.slice(-6).reverse().map(z=>`${z.итог}: ${z.что}`).join("; ");
+  const речь=Ж.речь.slice(-4).reverse().map(z=>`${z.итог}: «${z.что}»`).join("; ");
+  const t=`Речь: ${Ж.сводка("речь")}. Звук: ${Ж.сводка("звук")}.${сбои?` Последние сбои звука: ${сбои}.`:" Сбоев звука нет."}${речь?` Последнее в речи: ${речь}.`:""}`;
+  return выбор147("Журнал речи и звука",t,[
+   {l:"Сохранить журнал в файл",run:()=>{safeFn(()=>{const blob=new Blob([Ж.текст()],{type:"text/plain;charset=utf-8"});const url=URL.createObjectURL(blob);
+     const a=document.createElement("a");a.href=url;a.download=`grani-zhurnal-rechi-i-zvuka-${Date.now()}.txt`;a.style.display="none";document.body.appendChild(a);a.click();
+     setTimeout(()=>{try{document.body.removeChild(a);URL.revokeObjectURL(url);}catch(_){}},4000);});
+    narrate("Журнал речи и звука сохранён в файл.",{key:"rzj"});}},
+   {l:"Очистить журнал",run:()=>{Ж.очистить();narrate("Журнал речи и звука очищен.",{key:"rzj"});}},
+   {l:"Назад",run:()=>{}}]);}});
+ safeFn(()=>{const g=AM_GROUPS.find(x=>x[2]&&x[2].id==="sound")||AM_GROUPS.find(x=>x[0]==="Звук");
+  if(g&&!g[1].some(z=>z[0]==="rzjournal")){const i=g[1].findIndex(z=>z[0]==="encyc");g[1].splice(i>=0?i:g[1].length,0,["rzjournal","Журнал речи и звука"]);}});});
+
+/* ── З1. Короткие одиночные звуки — из памяти ──
+   Одиночный звук (шаг, щелчок, удар, находка) прежде заводил на каждый раз свой медиаплеер; на телефоне плееров
+   у страницы ограниченно, и в тесноте новые не открывались — в том числе запись голоса. Теперь звук, прозвучавший
+   однажды, раскодируется в память (кэш последних, на телефоне до 40 МБ, на компьютере до 64 МБ) и дальше звучит из
+   неё — без плеера, сразу и точно по времени. Первый раз, петли, эхо подземелья, небесный отклик, звуки пролога и
+   всё, что не раскодировалось, — прежним плеером. Запись голоса Gemini остаётся на плеере: ускоренную речь
+   (по умолчанию в 2,8 раза) браузер сжимает без смены высоты лучше, чем это можно сделать в памяти. */
+const ПамятьЗвука={кэш:new Map(),ждут:new Map(),плохо:new Set(),байт:0,сбоев:0,выключено:false,раз:0,
+ /* постоянные усилители (как каналы среды): звук из памяти берёт свободный и отдаёт, отыграв; узлы движка не копятся */
+ усилители:[],ЗАПАС:16,
+ усилитель(ctx){let у=this.усилители.find(x=>!x.занят&&x.ctx===ctx);
+  const выход=()=>safeFn(()=>Телефон.выход(ctx),null)||ctx.destination;
+  if(!у&&this.усилители.length<this.ЗАПАС){const g=ctx.createGain();g.gain.value=0;g.connect(выход());у={g,ctx,занят:false};this.усилители.push(у);}
+  if(!у){const g=ctx.createGain();g.connect(выход());у={g,ctx,занят:false,разовый:true};}
+  у.занят=true;return у;},
+ отпустить(у){if(!у)return;if(у.разовый){try{у.g.disconnect();}catch(_){}return;}try{у.g.gain.value=0;}catch(_){}у.занят=false;},
+ ПРЕДЕЛ:(/Android|Mobile|iPhone|iPad/i.test(navigator.userAgent||"")?40:64)*1e6,ДЛИНА:8,
+ вкл(){try{return !this.выключено&&typeof fetch==="function"&&location.protocol!=="file:"&&!!(AE.ctx&&AE.ctx.state==="running");}catch(_){return false;}},
+ взять(url){const z=this.кэш.get(url);if(!z)return null;this.кэш.delete(url);this.кэш.set(url,z);return z.buf;},
+ загрузить(url){
+  if(!url||this.кэш.has(url)||this.ждут.has(url)||this.плохо.has(url)||this.ждут.size>=6)return;
+  const ctx=AE.ctx;if(!ctx)return;
+  const p=fetch(url).then(r=>{if(!r.ok)throw new Error("нет файла");return r.arrayBuffer();})
+   .then(ab=>new Promise((res,rej)=>{try{const q=ctx.decodeAudioData(ab,res,rej);if(q&&q.then)q.then(res,rej);}catch(e){rej(e);}}))
+   .then(buf=>{if(!buf||!(buf.duration>0)||buf.duration>this.ДЛИНА){this.плохо.add(url);return;}
+    const b=buf.length*buf.numberOfChannels*4;this.кэш.set(url,{buf,b});this.байт+=b;this.ужать();})
+   .catch(()=>{this.плохо.add(url);if(++this.сбоев>=20&&!this.кэш.size){this.выключено=true;safeFn(()=>ЖурналРЗ.добавить("звук","память выключена: файлы не читаются","",true));}})
+   .finally(()=>this.ждут.delete(url));
+  this.ждут.set(url,p);},
+ ужать(){while(this.байт>this.ПРЕДЕЛ&&this.кэш.size){const [k,v]=this.кэш.entries().next().value;this.кэш.delete(k);this.байт-=v.b;}}};
+
+/* Звук из памяти с повадками плеера: громкость, скорость, пауза, «закончился», «зазвучал» — всё, чем игра управляет
+   одиночным звуком, работает так же. Звучит напрямую в выход, как и плеер одиночного звука. */
+class ЗвукИзПамяти extends EventTarget{
+ constructor(url,buf){super();this.tagName="AUDIO";this.__память=true;this._buf=buf;this.src=url;this.currentSrc=url;this._vol=1;this._rate=1;
+  this.loop=false;this._muted=false;this.paused=true;this.ended=false;this.readyState=4;this.networkState=1;this.error=null;this.preload="auto";
+  this.duration=buf.duration;this._off=0;this._t0=0;this._s=null;this._g=null;this._у=null;this.preservesPitch=true;this.mozPreservesPitch=true;this.defaultPlaybackRate=1;
+  this.onended=null;this.onerror=null;this.onplaying=null;this.onpause=null;}
+ get volume(){return this._vol;}
+ set volume(v){this._vol=Math.max(0,Math.min(1,Number(v)||0));this._усилить();}
+ get muted(){return this._muted;}
+ set muted(v){this._muted=!!v;this._усилить();}
+ get playbackRate(){return this._rate;}
+ set playbackRate(v){const r=Math.max(0.25,Math.min(4,Number(v)||1));if(this._s&&!this.paused){this._off=this.currentTime;this._t0=AE.ctx.currentTime;}
+  this._rate=r;try{if(this._s)this._s.playbackRate.value=r;}catch(_){}}
+ get currentTime(){if(this.paused||!this._s)return this._off;let t=this._off+(AE.ctx.currentTime-this._t0)*this._rate;
+  if(this.loop&&this.duration>0)t%=this.duration;return Math.min(this.duration,t);}
+ set currentTime(v){const t=Math.max(0,Math.min(this.duration,Number(v)||0));const шло=!this.paused;if(шло)this._стоп();this._off=t;if(шло){this.paused=true;this._пуск();}}
+ _усилить(){try{if(this._g)this._g.gain.value=this._muted?0:this._vol;}catch(_){}}
+ _стоп(){const s=this._s;this._s=null;if(s){try{s.onended=null;s.stop();}catch(_){}try{s.disconnect();}catch(_){}}
+  if(this._у){ПамятьЗвука.отпустить(this._у);this._у=null;}this._g=null;}
+ _событие(t){const e=new Event(t);try{this.dispatchEvent(e);}catch(_){}const h=this["on"+t];if(typeof h==="function")try{h.call(this,e);}catch(_){}}
+ /* запуск — только через Звук.играть (он зовёт play); перемотка звучащей записи перезапускает её сама (_пуск) */
+ play(){return this._пуск();}
+ _пуск(){
+  if(!this._buf||!this.src)return Promise.reject(new DOMException("нет записи","NotSupportedError"));
+  if(!this.paused)return Promise.resolve();
+  try{const ctx=AE.ctx;if(this._off>=this.duration)this._off=0;
+   const s=ctx.createBufferSource();s.buffer=this._buf;s.loop=!!this.loop;s.playbackRate.value=this._rate;
+   const у=ПамятьЗвука.усилитель(ctx);const g=у.g;g.gain.value=this._muted?0:this._vol;s.connect(g);
+   this._s=s;this._у=у;this._g=g;this._t0=ctx.currentTime;this.paused=false;this.ended=false;
+   s.onended=()=>{if(this._s!==s)return;this._стоп();this.paused=true;if(!this.loop){this.ended=true;this._off=0;this._событие("ended");}};
+   s.start(0,this._off);
+   Promise.resolve().then(()=>{if(this._s===s){this._событие("play");this._событие("playing");}});
+   return Promise.resolve();}
+  catch(e){this._стоп();this.paused=true;return Promise.reject(e);}}
+ pause(){if(this.paused)return;this._off=this.currentTime;this._стоп();this.paused=true;this._событие("pause");}
+ load(){if(!this.src){this._стоп();this.paused=true;this._buf=null;}}
+ removeAttribute(n){if(n==="src"){this.src="";this.currentSrc="";}}
+ getAttribute(n){return n==="src"?this.src:null;}
+ setAttribute(n,v){if(n==="src"){this.src=String(v);this.currentSrc=this.src;}}
+ hasAttribute(n){return n==="src"&&!!this.src;}
+ canPlayType(){return "probably";}}
+
+safeFn(()=>{if(typeof Bank==="undefined"||typeof Bank.make!=="function")return;const m1=Bank.make;
+ Bank.make=function(file,volume,loop,rate){
+  /* З5: варианты одной роли — одной громкости (поправка по замеру; петли — без поправки: их громкость ведёт Bank) */
+  if(!loop)try{const k=ПОПРАВКА_ГРОМКОСТИ[file];if(k>0)volume=(Number(volume)||0)*k;}catch(_){}
+  try{
+   const особо=loop||safeFn(()=>typeof Небо165!=="undefined"&&Небо165.на,false)||safeFn(()=>typeof Эхо165!=="undefined"&&Эхо165.надо(),false)||safeFn(()=>Prologue.active(),false);
+   if(!особо&&ПамятьЗвука.вкл()){
+    const url=this.url(file);const buf=ПамятьЗвука.взять(url);
+    if(buf){
+     /* громкость по тесноте — как у прежнего плеера одиночного звука (Гул155) */
+     const кл=safeFn(()=>Гул155.кл,null);if(кл&&кл!=="музыка")volume=Math.min(0.95,(Number(volume)||0)*safeFn(()=>Гул155.множ(кл),1));
+     const a=new ЗвукИзПамяти(url,buf);a.volume=volume;if(rate&&rate!==1)a.playbackRate=Math.max(0.5,Math.min(2,rate));
+     this.plays++;this.fails=0;ПамятьЗвука.раз++;
+     try{Звук.играть(a,"запись");}catch(_){return m1.apply(this,arguments);}
+     return a;}
+    ПамятьЗвука.загрузить(url);}}
+  catch(_){}
+  return m1.call(this,file,volume,loop,rate);};});
+
+/* ── Р6. Общий распорядитель голосов и приглушение без «дыхания» ──
+   Диктор, жители, герой, боги и твари уже не говорят друг поверх друга (житель ждёт диктора, диктор — жителя,
+   герой и тварь — по очереди); здесь — одна точка, где видно, кто говорит и когда станет тихо (Пол), и
+   приглушение фона без «дыхания»: прежде между двумя фразами подряд музыка и фон на миг поднимались и тут же
+   снова приглушались. Теперь приглушение отпускается только через 0,45 с тишины. */
+const Пол={УДЕРЖАНИЕ:450,
+ кто(){return safeFn(()=>Речь.кто(),[]);},
+ /* через сколько миллисекунд замолчат все голоса (0 — тихо уже) */
+ свободенЧерез(){let d=0;
+  if(safeFn(()=>Speech.speaking&&!!Speech.current,false))d=Math.max(d,this.УДЕРЖАНИЕ);
+  d=Math.max(d,safeFn(()=>Folk.послеВсех(),0)||0);
+  if(safeFn(()=>Intro.playing,false))d=Math.max(d,1000);
+  return d;},
+ тихо(){return this.свободенЧерез()===0;}};
+safeFn(()=>{const S=Speech;if(!S||typeof S._duck!=="function")return;const d0=S._duck;let т=null;
+ S._duck=function(on){
+  if(on){if(т){clearTimeout(т);т=null;}return d0.call(this,true);}
+  if(!this.ducking||т)return;
+  т=setTimeout(()=>{т=null;if(!(this.speaking&&this.current))d0.call(this,false);},Пол.УДЕРЖАНИЕ);};});
+
+/* ── З4. Одни часы: события вместо опроса ──
+   Дела звука и речи идут по общему такту (Такт в основе): звуковая картина, живые вокруг, фон чертога, гул места,
+   вести окна зверей, сторож звука. Смена места уже меняет фон сразу (З2); здесь — смена дня и ночи: фон поля
+   и леса меняется в ту же минуту, а не на ближайшем ударе часов звуковой картины. */
+safeFn(()=>{if(typeof Clock==="undefined"||typeof Clock.tick!=="function")return;const t0=Clock.tick;
+ Clock.tick=function(){const н0=safeFn(()=>isNight(),null);const r=t0.apply(this,arguments);
+  safeFn(()=>{if(safeFn(()=>isNight(),null)!==н0&&typeof Scape!=="undefined"&&Scape.bed&&!safeFn(()=>Prologue.active(),false))Scape.bed();});
+  return r;};});
+
+/* ── З5. Громкость записей — по замеру; режим «динамик телефона» ──
+   Громкость каждой записи звуков, у роли которых несколько вариантов, один раз измерена по стандарту громкости
+   (BS.1770, взвешивание K, наибольшая мгновенная громкость; hron/zvuk_lufs.py). Поправка выравнивает варианты
+   одной роли к средней громкости этой роли (не больше чем на 6 дБ): шаг, удар или крик больше не прыгают по
+   громкости от варианта к варианту, а сама роль звучит так же громко, как была настроена на слух.
+   «Динамик телефона»: одиночные звуки мира (шаги, дальние твари, капель, щелчки меню) идут через мягкое сжатие —
+   тихое поднято примерно на 7 дБ, громкое почти не меняется. Речь, музыка и фон не трогаются, чтобы фон не
+   заглушал голос. На телефоне режим включён сам, на компьютере выключен; флажок — в настройках громкости. */
+const ПОПРАВКА_ГРОМКОСТИ={"ab/ab_mus_incoming_siege.ogg":0.915,"ab/ab_mus_road_to_victory.ogg":0.891,"ab/ab_mus_tale_of_the_ruins.ogg":0.906,"ab/ab_mus_wind_run.ogg":0.875,"ad/ad_collapse_01.ogg":1.208,"ad/ad_collapse_02.ogg":0.828,"ad/ad_day_01.ogg":1.568,"ad/ad_day_02.ogg":1.564,"ad/ad_day_03_n.flac":0.501,"ad/ad_fire_crackle_01.ogg":1.079,"ad/ad_fire_crackle_02.ogg":0.866,"ad/ad_fire_crackle_03.ogg":1.134,"ad/ad_fire_crackle_04.ogg":0.944,"ad/ad_fire_sizzle_01.ogg":0.847,"ad/ad_fire_sizzle_02.ogg":1.194,"ad/ad_gate_close_01.ogg":0.822,"ad/ad_gate_close_02.ogg":1.217,"ad/ad_gate_open_01.ogg":0.925,"ad/ad_gate_open_02.ogg":1.081,"ad/ad_hoe_01.ogg":0.858,"ad/ad_hoe_02.ogg":1.515,"ad/ad_hoe_03.ogg":0.778,"ad/ad_leaves_01_n.flac":1.148,"ad/ad_leaves_02_n.flac":0.744,"ad/ad_leaves_03_n.flac":1.345,"ad/ad_leaves_04.ogg":0.935,"ad/ad_leaves_05_n.flac":1.183,"ad/ad_leaves_06_n.flac":0.788,"ad/ad_trade_01.ogg":0.666,"ad/ad_trade_02.ogg":1.502,"arcana/arcane_breath_02.flac":0.94,"arcana/arcane_charge_02.flac":0.936,"arcana/arcane_charge_03.flac":1.085,"arcana/arcane_hit_02.flac":0.798,"arcana/arcane_hit_03.flac":1.319,"arcana/arcane_rise_01.flac":0.906,"arcana/arcane_rise_03.flac":1.153,"arcana/arcane_slap_02.flac":0.877,"arcana/arcane_slap_03.flac":1.1,"arcana/bolt_burst_02.flac":0.84,"arcana/bolt_burst_03.flac":1.182,"arcana/chant_ether_01.flac":0.902,"arcana/chant_ether_02.flac":1.071,"arcana/crystal_shatter_01.flac":0.894,"arcana/crystal_shatter_02.flac":0.932,"arcana/crystal_shatter_03.flac":1.2,"arcana/dark_spell_02.flac":1.077,"arcana/dark_spell_03.flac":0.881,"arcana/earth_burst_02.flac":1.177,"arcana/earth_burst_03.flac":0.916,"arcana/earth_burst_04.flac":0.852,"arcana/earth_burst_05.flac":1.101,"arcana/ember_crackle_03.flac":0.942,"arcana/fire_burst_02.flac":0.865,"arcana/fire_burst_04.flac":1.438,"arcana/fire_burst_05.flac":0.87,"arcana/flame_cast_01.flac":0.937,"arcana/flame_cast_02.flac":1.075,"arcana/flame_hit_02.flac":0.931,"arcana/flame_whoosh_01.flac":0.894,"arcana/frost_cast_01.flac":1.087,"arcana/frost_cast_03.flac":0.921,"arcana/frost_hit_01.flac":1.333,"arcana/frost_hit_02.flac":1.528,"arcana/frost_hit_03.flac":1.94,"arcana/gale_hit_01.flac":0.886,"arcana/gale_hit_02.flac":0.842,"arcana/gale_hit_03.flac":0.889,"arcana/heal_bloom_01.flac":1.08,"arcana/heal_bloom_02.flac":0.907,"arcana/heal_bloom_04.flac":0.763,"arcana/heal_bloom_06.flac":1.32,"arcana/ice_burst_01.flac":0.686,"arcana/ice_burst_02.flac":0.673,"arcana/ice_burst_03.flac":0.902,"arcana/ice_burst_04.flac":0.744,"arcana/ice_burst_05.flac":0.817,"arcana/ooze_cast_01.flac":1.064,"arcana/ooze_splat_01.flac":1.197,"arcana/ooze_splat_02.flac":0.87,"arcana/plant_burst_01.flac":1.068,"arcana/plant_burst_02.flac":0.822,"arcana/plant_burst_05.flac":1.136,"arcana/power_hum_01.flac":1.326,"arcana/power_hum_02.flac":0.83,"arcana/power_hum_03.flac":0.862,"arcana/torch_whoosh_01.flac":1.133,"arcana/ward_hum_03.flac":1.064,"arcana/water_burst_01.flac":1.092,"arcana/water_burst_03.flac":0.856,"arcana/water_burst_04.flac":1.102,"arcana/wind_burst_01.flac":1.064,"arcana/wind_burst_02.flac":1.197,"arcana/wind_burst_03.flac":1.111,"arcana/wind_burst_04.flac":0.878,"arcana/wind_burst_05.flac":1.212,"battle/battle_arrowfly_01.ogg":0.76,"battle/battle_arrowfly_02.ogg":0.733,"battle/battle_arrowfly_03.ogg":1.794,"battle/battle_arrowhit_01.ogg":1.091,"battle/battle_arrowhit_02.ogg":1.161,"battle/battle_arrowhit_03.ogg":0.79,"battle/battle_bow_02.ogg":1.12,"battle/battle_bow_04.ogg":0.887,"battle/battle_jav_01.ogg":0.748,"battle/battle_jav_02.ogg":1.16,"battle/battle_jav_03.ogg":1.153,"battle/battle_pike_01.ogg":0.94,"battle/battle_pike_02.ogg":0.91,"battle/battle_pike_03.ogg":1.06,"battle/battle_pike_04.ogg":1.102,"battle/battle_shield_01.ogg":0.738,"battle/battle_shield_02.ogg":1.355,"battle/battle_sling_01.ogg":1.117,"battle/battle_sling_02.ogg":0.849,"battle/battle_stab_01.ogg":1.114,"battle/battle_stab_02.ogg":0.897,"battle/battle_stone_01.ogg":0.852,"battle/battle_stone_02.ogg":0.92,"battle/battle_stone_03.ogg":1.275,"battle/battle_sword_01.ogg":1.164,"battle/battle_sword_03.ogg":0.837,"battle/battle_wood_01.ogg":0.884,"battle/battle_wood_02.ogg":0.903,"battle/battle_wood_03.ogg":1.253,"beasts/beasts_giant_01.ogg":1.376,"beasts/beasts_giant_02.ogg":0.727,"beasts/beasts_horse_01.ogg":1.4,"beasts/beasts_horse_02.ogg":0.813,"beasts/beasts_horse_03.ogg":0.878,"beasts/beasts_pig_01.ogg":1.843,"beasts/beasts_pig_02.ogg":0.543,"bed/pv_camp_band_01.mp3":1.06,"bed/pv_camp_band_03.mp3":0.932,"bed/pv_camp_exil_01.mp3":1.071,"bed/pv_camp_exil_02.mp3":1.093,"bed/pv_camp_exil_03.mp3":0.854,"bed/pv_camp_pilg_01.mp3":1.157,"bed/pv_camp_pilg_02.mp3":0.935,"bed/pv_camp_pilg_03.mp3":0.925,"bed/pv_camp_wood_01_2.mp3":1.065,"bed/pv_camp_wood_03_2.mp3":0.919,"bed/pv_castle_03.mp3":0.93,"bed/pv_castle_05.mp3":1.084,"bed/pv_den_01.mp3":0.869,"bed/pv_den_03.mp3":1.064,"bed/pv_forge_01_2.mp3":0.882,"bed/pv_forge_02.mp3":0.935,"bed/pv_forge_03.mp3":1.074,"bed/pv_forge_05.mp3":1.075,"bed/pv_forge_07.mp3":1.119,"bed/pv_forge_08.mp3":0.938,"bed/pv_fortress_01.mp3":0.868,"bed/pv_fortress_04.mp3":1.088,"bed/pv_hold_01.mp3":1.064,"bed/pv_hold_03.mp3":0.911,"bed/pv_market_01.mp3":1.07,"bed/pv_market_02_2.mp3":1.129,"bed/pv_market_03.mp3":1.107,"bed/pv_market_04.mp3":0.918,"bed/pv_market_05_2.mp3":0.918,"bed/pv_market_06.mp3":0.901,"bed/pv_pit_02.mp3":1.096,"bed/pv_port_01.mp3":1.099,"bed/pv_port_02_2.mp3":1.08,"bed/pv_port_04_2.mp3":0.915,"bed/pv_port_05_2.mp3":0.913,"bed/pv_school_01.mp3":0.933,"bed/pv_school_04.mp3":0.884,"bed/pv_school_05_2.mp3":1.194,"bed/pv_smugglers_01.mp3":0.93,"bed/pv_tavern_01.mp3":0.914,"bed/pv_tavern_02.mp3":0.866,"bed/pv_tavern_04_2.mp3":1.102,"bed/pv_tavern_06_2.mp3":1.107,"bed/pv_tavern_08_2.mp3":0.869,"bed/pv_tavern_10_2.mp3":1.097,"bed/pv_tower_04.mp3":0.941,"bed/pv_village_03.mp3":1.102,"bed/pv_warcamp_02_2.mp3":1.086,"bed/pv_warcamp_03_2.mp3":1.112,"bed/pv_warcamp_04.mp3":0.893,"bed/pv_warcamp_06.mp3":0.893,"bed/temple_hall_01.flac":0.787,"bed/temple_hall_02.flac":1.271,"blade/axe_chop_01.flac":1.279,"blade/axe_chop_02.flac":0.735,"blade/axe_chop_03.flac":0.88,"blade/axe_chop_04.flac":1.412,"blade/axe_chop_05.flac":0.749,"blade/axe_chop_06.flac":1.144,"blade/blade_armor_01.flac":1.207,"blade/blade_armor_02.flac":0.932,"blade/blade_armor_03.flac":0.737,"blade/blade_armor_04.flac":1.089,"blade/blade_armor_06.flac":1.221,"blade/blade_armor_07.flac":0.799,"blade/blade_armor_08.flac":1.137,"blade/blade_clash_01.flac":1.091,"blade/blade_clash_02.flac":0.924,"blade/blade_clash_03.flac":1.492,"blade/blade_clash_04.flac":0.695,"blade/blade_clash_05.flac":0.924,"blade/blade_flesh_01.flac":0.594,"blade/blade_flesh_02.flac":0.722,"blade/blade_flesh_05.flac":1.363,"blade/blade_flesh_06.flac":1.22,"blade/blade_flesh_07.flac":1.585,"blade/blade_flesh_08.flac":0.849,"blade/blunt_flesh_01.flac":0.856,"blade/blunt_flesh_02.flac":1.174,"blade/blunt_flesh_03.flac":1.287,"blade/blunt_flesh_05.flac":0.899,"blade/blunt_flesh_06.flac":0.819,"blade/dagger_stab_02.flac":0.927,"blade/dagger_stab_03.flac":0.896,"blade/dagger_stab_04.flac":1.158,"blade/dagger_stab_05.flac":1.174,"blade/dagger_stab_06.flac":0.869,"blade/draw_knife_01.flac":0.76,"blade/draw_knife_02.flac":0.661,"blade/draw_knife_03.flac":1.99,"blade/shield_metal_01.flac":1.467,"blade/shield_metal_03.flac":0.713,"blade/shield_metal_04.flac":0.93,"blade/shield_metal_05.flac":1.116,"blade/shield_metal_06.flac":0.918,"blade/shield_wood_04.flac":1.06,"blade/shield_wood_05.flac":1.089,"blade/shield_wood_06.flac":0.893,"blade/spear_thrust_02.flac":1.06,"blade/spear_thrust_03.flac":0.87,"blade/spear_thrust_04.flac":0.815,"blade/spear_thrust_05.flac":1.258,"blade/swing_blade_01.flac":1.157,"blade/swing_blade_02.flac":0.714,"blade/swing_blade_03.flac":1.211,"blade/swing_blunt_01.flac":1.108,"blade/swing_blunt_02.flac":0.749,"blade/swing_blunt_04.flac":1.131,"blade/swing_stab_01.flac":0.919,"blade/swing_stab_02.flac":1.129,"blade/swing_stab_03.flac":0.932,"blade/swing_stab_05.flac":1.078,"craft/craft_axe_01.ogg":0.925,"craft/craft_axe_02.ogg":1.09,"craft/craft_berry_01_n.flac":1.189,"craft/craft_berry_02_n.flac":0.701,"craft/craft_berry_03_n.flac":1.199,"craft/craft_field_01.ogg":0.678,"craft/craft_field_02.ogg":1.504,"craft/craft_ore_01.ogg":0.77,"craft/craft_ore_02.ogg":0.636,"craft/craft_ore_03.ogg":1.516,"craft/craft_ore_04.ogg":1.346,"craft/craft_quarry_01.ogg":0.801,"craft/craft_quarry_02.ogg":0.88,"craft/craft_quarry_03.ogg":1.188,"craft/craft_quarry_04.ogg":1.195,"craft/craft_saw_01.ogg":1.274,"craft/craft_saw_03.ogg":0.823,"craft/craft_stone_01.ogg":0.944,"craft/craft_stone_02.ogg":1.147,"craft/craft_stone_03.ogg":0.924,"craft/craft_wood_01.ogg":1.138,"craft/craft_wood_02.ogg":0.879,"cry/cry_algieba_pain_0.flac":0.893,"cry/cry_algieba_pain_1.flac":1.163,"cry/cry_algieba_pain_4.flac":0.92,"cry/cry_aoede_die_0.flac":0.666,"cry/cry_aoede_die_1.flac":1.502,"cry/cry_aoede_pain_0.flac":1.074,"cry/cry_aoede_pain_1.flac":1.079,"cry/cry_aoede_pain_4.flac":0.875,"cry/cry_autonoe_pain_0.flac":1.079,"cry/cry_autonoe_pain_1.flac":1.249,"cry/cry_autonoe_pain_3.flac":0.902,"cry/cry_autonoe_pain_5.flac":0.833,"cry/cry_bandit_0_pain_0.flac":0.914,"cry/cry_bandit_0_pain_1.flac":0.943,"cry/cry_bandit_0_pain_2.flac":1.088,"cry/cry_bandit_0_pain_3.flac":1.228,"cry/cry_bandit_0_pain_4.flac":0.778,"cry/cry_bandit_0_pain_5.flac":1.115,"cry/cry_bandit_1_die_0.flac":0.861,"cry/cry_bandit_1_die_1.flac":1.161,"cry/cry_bandit_1_pain_0.flac":0.805,"cry/cry_bandit_1_pain_1.flac":0.873,"cry/cry_bandit_1_pain_4.flac":1.271,"cry/cry_bandit_2_pain_1.flac":1.192,"cry/cry_bandit_2_pain_2.flac":1.234,"cry/cry_bandit_2_pain_3.flac":1.112,"cry/cry_bandit_2_pain_4.flac":0.81,"cry/cry_bandit_2_pain_5.flac":0.784,"cry/cry_fenrir_die_0.flac":1.183,"cry/cry_fenrir_die_1.flac":0.845,"cry/cry_fenrir_pain_1.flac":0.829,"cry/cry_fenrir_pain_2.flac":1.556,"cry/cry_fenrir_pain_4.flac":0.905,"cry/cry_fenrir_pain_5.flac":0.9,"cry/cry_kore_pain_0.flac":0.873,"cry/cry_kore_pain_2.flac":1.12,"cry/cry_kore_pain_5.flac":1.139,"cry/cry_laomedeia_die_0.flac":0.758,"cry/cry_laomedeia_die_1.flac":1.319,"cry/cry_laomedeia_pain_0.flac":1.192,"cry/cry_laomedeia_pain_1.flac":0.918,"cry/cry_laomedeia_pain_3.flac":0.784,"cry/cry_pirate_0_die_0.flac":0.838,"cry/cry_pirate_0_die_1.flac":1.193,"cry/cry_pirate_0_pain_0.flac":1.196,"cry/cry_pirate_0_pain_2.flac":0.833,"cry/cry_pirate_0_pain_3.flac":1.319,"cry/cry_pirate_0_pain_4.flac":0.768,"cry/cry_pirate_1_pain_0.flac":1.28,"cry/cry_pirate_1_pain_2.flac":0.813,"cry/cry_pirate_1_pain_4.flac":1.113,"cry/cry_pirate_1_pain_5.flac":0.928,"cry/cry_pulcherrima_die_0.flac":0.859,"cry/cry_pulcherrima_die_1.flac":1.165,"cry/cry_pulcherrima_pain_1.flac":1.128,"cry/cry_pulcherrima_pain_2.flac":1.173,"cry/cry_pulcherrima_pain_3.flac":1.099,"cry/cry_pulcherrima_pain_4.flac":0.77,"cry/cry_pulcherrima_pain_5.flac":0.856,"cry/cry_rasalgethi_pain_0.flac":0.934,"cry/cry_rasalgethi_pain_1.flac":1.127,"cry/cry_rasalgethi_pain_2.flac":0.909,"cry/cry_rasalgethi_pain_3.flac":1.084,"cry/cry_sadachbia_pain_0.flac":1.09,"cry/cry_sadachbia_pain_1.flac":1.089,"cry/cry_sadachbia_pain_2.flac":0.925,"cry/cry_sadachbia_pain_3.flac":1.089,"cry/cry_sadachbia_pain_4.flac":0.901,"cry/cry_sadachbia_pain_5.flac":0.929,"cry/cry_schedar_pain_1.flac":1.127,"cry/cry_schedar_pain_5.flac":0.922,"cry/cry_vindemiatrix_die_0.flac":0.916,"cry/cry_vindemiatrix_die_1.flac":1.092,"cry/cry_vindemiatrix_pain_2.flac":1.216,"cry/cry_vindemiatrix_pain_3.flac":0.88,"cry/cry_zubenelgenubi_pain_2.flac":0.879,"cry/cry_zubenelgenubi_pain_4.flac":1.42,"cry/cry_zubenelgenubi_pain_5.flac":0.89,"equip/equip_belt_off_01.flac":0.671,"equip/equip_belt_off_02.flac":1.365,"equip/equip_belt_off_03.flac":1.091,"equip/equip_belt_on_01.flac":1.113,"equip/equip_belt_on_02.flac":1.085,"equip/equip_belt_on_03.flac":0.829,"equip/equip_blade_off_01.flac":1.794,"equip/equip_blade_off_02.flac":0.558,"equip/equip_blade_on_01.flac":1.392,"equip/equip_blade_on_02.flac":0.719,"equip/equip_boots_off_01.flac":1.066,"equip/equip_boots_on_03.flac":1.104,"equip/equip_cloak_on_01.flac":0.921,"equip/equip_cloak_on_02.flac":1.086,"equip/equip_cloth_off_03.flac":0.923,"equip/equip_cloth_on_01.flac":1.127,"equip/equip_cloth_on_02.flac":0.839,"equip/equip_gloves_on_01.flac":0.796,"equip/equip_gloves_on_03.flac":1.287,"equip/equip_helm_on_01.flac":1.174,"equip/equip_helm_on_02.flac":0.852,"equip/equip_leather_off_01.flac":0.876,"equip/equip_leather_off_02.flac":0.805,"equip/equip_leather_off_03.flac":1.417,"equip/equip_leather_on_01.flac":0.77,"equip/equip_leather_on_03.flac":1.242,"equip/equip_quiver_off_01.flac":1.42,"equip/equip_quiver_off_02.flac":0.85,"equip/equip_quiver_off_03.flac":0.829,"equip/equip_quiver_on_01.flac":0.834,"equip/equip_quiver_on_02.flac":1.071,"equip/equip_quiver_on_03.flac":1.12,"es/acuit.ogg":0.738,"es/alarm.ogg":0.681,"es/archonteleport.ogg":0.759,"es/asteroid_crunch_large.ogg":0.501,"es/asteroid_crunch_medium.ogg":0.501,"es/asteroid_crunch_small.ogg":0.813,"es/astral_attack.ogg":0.519,"es/astral_cetacean.ogg":0.576,"es/astuit.ogg":1.738,"es/bounce.ogg":1.516,"es/buzzer_am.ogg":1.609,"es/clink.ogg":1.995,"es/crunch.ogg":1.995,"es/dragonflame.ogg":0.537,"es/drill.ogg":1.458,"es/ember_tear_hit.ogg":1.512,"es/excavator.ogg":1.105,"es/explosion_huge.ogg":0.571,"es/explosion_small.ogg":0.742,"es/final_explosion_large.ogg":0.558,"es/final_explosion_medium.ogg":1.515,"es/final_explosion_small.ogg":1.183,"es/firestorm_hit.ogg":0.518,"es/gravity_well.ogg":1.995,"es/harmonic_jump.ogg":0.501,"es/heaver_shard_hit.ogg":1.311,"es/ion_huge.ogg":0.699,"es/ion_medium.ogg":1.606,"es/ion_rain.ogg":1.124,"es/ion_small.ogg":0.896,"es/ion_tiny.ogg":0.871,"es/korath_digger.ogg":0.621,"es/magic_am.ogg":1.544,"es/magic_weapon.ogg":1.15,"es/meteor.ogg":0.618,"es/moonbeam.ogg":1.12,"es/nucleolysis.ogg":1.533,"es/nuke_alarm.ogg":0.711,"es/plankton_bite.ogg":1.106,"es/plasma_huge.ogg":0.663,"es/plasma_large.ogg":0.806,"es/plasma_small.ogg":1.252,"es/pwave.ogg":0.803,"es/scan.ogg":1.33,"es/speckle.ogg":0.711,"es/stagnation_beam.ogg":1.066,"es/star_tail.ogg":0.654,"es/sunbeam.ogg":0.887,"foe/foe_bone_die_02.ogg":0.94,"foe/foe_bone_die_03.flac":1.064,"foe/foe_bone_pain_01.ogg":1.944,"foe/foe_bone_pain_02.flac":0.514,"foe/foe_burrow_die_01.ogg":1.265,"foe/foe_burrow_die_02.ogg":0.791,"fon/fon_amb_city_01.flac":1.446,"fon/fon_amb_city_02.flac":0.691,"fon/fon_amb_desert_01.ogg":1.105,"fon/fon_amb_desert_02.ogg":0.905,"fon/fon_amb_forest_02.ogg":0.519,"fon/fon_amb_forest_03.ogg":1.995,"fon/fon_amb_mountain_01.flac":1.497,"fon/fon_amb_mountain_02.ogg":0.59,"fon/fon_amb_mountain_03.ogg":1.132,"fon/fon_amb_plains_01.ogg":0.769,"fon/fon_amb_plains_02.ogg":1.301,"fon/fon_amb_swamp_01.ogg":0.586,"fon/fon_amb_swamp_02.ogg":1.595,"fon/fon_amb_swamp_03.ogg":1.071,"fon/fon_caravan_01.flac":0.874,"fon/fon_caravan_02.flac":1.144,"fon/fon_deep_3_01.flac":1.228,"fon/fon_deep_3_02.flac":0.814,"fon/fon_deep_4_01.flac":0.91,"fon/fon_deep_4_02.flac":1.099,"fon/fon_deep_5_01.ogg":1.151,"fon/fon_deep_5_02.flac":0.868,"fon/fon_forge_01.flac":1.139,"fon/fon_forge_02.flac":0.878,"fon/fon_lair_01.flac":0.501,"fon/fon_lair_02.flac":0.753,"fon/fon_lair_03.flac":1.995,"fon/fon_port_01.flac":1.338,"fon/fon_port_02.flac":0.747,"fon/fon_sea_storm_01.flac":0.836,"fon/fon_sea_storm_02.flac":1.452,"fon/fon_sea_storm_03.flac":0.824,"fon/fon_ship_arrive_01.flac":1.138,"fon/fon_ship_arrive_02.flac":0.879,"fon/fon_ship_depart_01.flac":0.76,"fon/fon_ship_depart_02.flac":1.316,"fon/fon_tavern_01.flac":0.643,"fon/fon_tavern_02.flac":0.501,"fon/fon_tavern_03.flac":1.995,"fon/fon_tavern_04.flac":1.473,"gamefx/fx_goblin_voice_01.flac":0.665,"gamefx/fx_goblin_voice_02.flac":1.106,"gamefx/fx_goblin_voice_03.flac":1.175,"gamefx/fx_goblin_voice_04.flac":1.063,"gamefx/fx_goblin_voice_05.flac":1.089,"gamefx/fx_spell_arcane_01.flac":1.124,"gamefx/fx_spell_arcane_03.flac":0.922,"gamefx/fx_spell_arcane_04.flac":1.077,"gamefx/fx_spell_arcane_05.flac":0.895,"gamefx/fx_trap_01.flac":1.171,"gamefx/fx_trap_02.flac":1.078,"gamefx/fx_trap_03.flac":0.793,"gear/gear_blade_01.flac":0.782,"gear/gear_blade_02.flac":1.087,"gear/gear_blade_03.flac":0.501,"gear/gear_blade_04.flac":1.837,"gear/gear_blade_05.flac":1.3,"gear/gear_chain_02.flac":1.32,"gear/gear_chain_03.flac":1.203,"gear/gear_chain_04.flac":0.756,"gear/gear_chain_05.flac":0.91,"gear/gear_chain_06.flac":0.934,"gear/gear_chain_07.flac":0.768,"gear/gear_chain_08.flac":1.349,"gear/gear_cloth_01.flac":1.101,"gear/gear_cloth_02.flac":1.177,"gear/gear_cloth_03.flac":0.87,"gear/gear_cloth_04.flac":0.887,"gear/gear_leather_01.flac":1.079,"gear/gear_leather_02.flac":1.257,"gear/gear_leather_03.flac":1.105,"gear/gear_leather_05.flac":1.084,"gear/gear_leather_06.flac":0.603,"gear/gear_plate_01.flac":0.832,"gear/gear_plate_03.flac":1.509,"gear/gear_plate_04.flac":0.713,"gear/gear_plate_05.flac":1.334,"gear/gear_plate_06.flac":0.807,"gear/guard_mail_02.flac":1.105,"gear/guard_mail_03.flac":1.206,"gear/guard_mail_04.flac":0.835,"gear/guard_mail_05.flac":0.931,"gear/guard_mail_07.flac":0.832,"gear/guard_mail_08.flac":1.098,"gear/guard_plate_01.flac":0.784,"gear/guard_plate_03.flac":1.746,"gear/guard_plate_04.flac":0.743,"gear/guard_plate_05.flac":1.298,"gear/guard_plate_06.flac":0.769,"gear/guard_sword_02.flac":1.122,"gear/guard_sword_03.flac":1.106,"gear/guard_sword_04.flac":0.924,"gear/guard_sword_05.flac":0.896,"gear/guard_thud_01.flac":0.931,"gear/guard_thud_02.flac":0.854,"gear/guard_thud_04.flac":1.319,"hall/hall_farm_01.ogg":1.18,"hall/hall_farm_02.ogg":0.848,"hall/hall_market_01.ogg":0.934,"hall/hall_market_02.ogg":1.357,"hall/hall_market_03.ogg":0.728,"hall/hall_market_04.ogg":1.084,"hall/hall_port_01.ogg":1.266,"hall/hall_port_02.ogg":0.79,"hero/hero_step_echo_01.ogg":0.922,"hero/hero_step_echo_02.ogg":1.085,"hron/gr_gather_01.flac":0.791,"hron/gr_gather_02.flac":1.264,"hron/gr_native_01.flac":0.928,"hron/gr_native_02.flac":1.078,"hron/gr_sense_01.flac":1.353,"hron/gr_sense_02.flac":0.739,"hron/gr_warden_01.flac":0.924,"hron/gr_warden_02.flac":1.083,"jcfx/impact_03.flac":1.097,"jcfx/power_hum_01.flac":1.152,"jcfx/power_hum_02.flac":1.293,"jcfx/teleport_in.flac":1.318,"jcfx/teleport_out.flac":1.995,"jcfx/trap_tick_01.flac":0.937,"jcfx/trap_tick_02.flac":1.067,"lang/lang_brush_01.flac":1.069,"lang/lang_brush_03.flac":0.898,"lang/lang_page_01.flac":0.931,"lang/lang_page_02.flac":1.11,"lang/lang_pen_02.flac":0.943,"lang/lang_pen_03.flac":1.162,"lang/lang_pen_04.flac":0.921,"lug/lug_clank_01.ogg":1.207,"lug/lug_clank_02.ogg":0.905,"lug/lug_clank_03.ogg":1.09,"lug/lug_clank_04.ogg":0.84,"lug/lug_flesh_01.ogg":0.893,"lug/lug_flesh_02.ogg":1.12,"lug/lug_land_01.ogg":1.076,"lug/lug_land_03.ogg":0.923,"lug/lug_snarl_01.ogg":1.237,"lug/lug_snarl_02.ogg":0.809,"lug/lug_staff_01.ogg":1.119,"lug/lug_staff_02.ogg":0.893,"lug/lug_step_grass_01.ogg":1.117,"lug/lug_step_grass_02.ogg":0.895,"lug/lug_sword_01.ogg":1.076,"lug/lug_sword_02.ogg":0.929,"lug/lug_whoosh_02.ogg":1.125,"lug/lug_whoosh_03.ogg":0.941,"mg/amb_day_01.ogg":0.501,"mg/amb_day_02.ogg":1.995,"mg/amb_night_01.ogg":0.872,"mg/amb_night_02.ogg":1.147,"mg/amb_water_01.ogg":0.662,"mg/amb_water_02.ogg":1.995,"mg/amb_water_03.ogg":0.634,"mg/amb_water_04.ogg":0.711,"mg/amb_water_05.ogg":1.624,"mg/amb_water_06.ogg":0.941,"mg/anvil_02.ogg":1.501,"mg/anvil_03.ogg":0.704,"mg/anvil_04.ogg":0.895,"mg/beast_bees_01.ogg":0.872,"mg/beast_bees_02.ogg":1.627,"mg/beast_bees_03.ogg":0.871,"mg/beast_bees_04.ogg":0.81,"mg/beast_bull_01.ogg":0.921,"mg/beast_bull_02.ogg":1.995,"mg/beast_bull_03.ogg":0.729,"mg/beast_bull_04.ogg":0.69,"mg/beast_cow_01.ogg":0.891,"mg/beast_cow_02.ogg":1.318,"mg/beast_cow_03.ogg":0.851,"mg/beast_fowl_01.ogg":0.501,"mg/beast_fowl_02.ogg":1.995,"mg/beast_fowl_03.ogg":1.974,"mg/beast_pig_01.ogg":0.552,"mg/beast_pig_03.ogg":1.245,"mg/beast_pig_04.ogg":1.502,"mg/beast_sheep_01.ogg":0.725,"mg/beast_sheep_02.ogg":1.215,"mg/beast_sheep_03.ogg":0.572,"mg/beast_sheep_04.ogg":1.491,"mg/beast_sheep_05.ogg":1.329,"mg/blade_die_03.ogg":1.118,"mg/blade_die_04.ogg":1.107,"mg/blade_die_06.ogg":0.802,"mg/blade_swing_01.ogg":1.124,"mg/blade_swing_02.ogg":0.854,"mg/blade_swing_03.ogg":1.331,"mg/blade_swing_04.ogg":0.825,"mg/blade_swing_05.ogg":0.882,"mg/blade_swing_06.ogg":0.824,"mg/blade_swing_07.ogg":1.201,"mg/blade_swing_08.ogg":1.085,"mg/brute_die_02.ogg":1.076,"mg/brute_roar_01.ogg":1.098,"mg/brute_roar_02.ogg":1.129,"mg/brute_roar_04.ogg":0.879,"mg/brute_roar_05.ogg":0.906,"mg/build_magic_01.flac":0.901,"mg/build_magic_02.flac":1.11,"mg/fiend_die_03.ogg":1.084,"mg/fiend_die_04.ogg":0.893,"mg/fiend_roar_01.ogg":0.938,"mg/fiend_roar_03.ogg":0.923,"mg/fiend_roar_06.ogg":1.166,"mg/golem_die_01.ogg":0.764,"mg/golem_die_02.ogg":1.16,"mg/golem_die_03.ogg":1.128,"mg/golem_hit_01.ogg":0.908,"mg/golem_hit_02.ogg":1.101,"mg/guard_shout_01.ogg":1.593,"mg/guard_shout_02.ogg":0.903,"mg/guard_shout_03.ogg":1.166,"mg/guard_shout_04.ogg":0.737,"mg/guard_shout_06.ogg":0.735,"mg/guard_shout_07.ogg":0.8,"mg/guard_shout_08.ogg":1.367,"mg/hall_fall_01.ogg":1.198,"mg/hall_fall_02.ogg":0.731,"mg/hall_fall_03.ogg":1.263,"mg/hall_fall_05.ogg":0.937,"mg/harvest_02_n.flac":0.819,"mg/harvest_04.ogg":1.221,"mg/hit_air_03.ogg":1.105,"mg/hit_arrow_01.ogg":0.629,"mg/hit_arrow_02.ogg":1.392,"mg/hit_arrow_03.ogg":1.061,"mg/hit_arrow_05.ogg":1.097,"mg/hit_firearrow_01.ogg":0.755,"mg/hit_firearrow_02.ogg":1.546,"mg/hit_firearrow_03.ogg":1.127,"mg/hit_firearrow_04.ogg":0.761,"mg/hit_ground_02.ogg":0.52,"mg/hit_ground_03.ogg":1.272,"mg/hit_ground_04.ogg":1.489,"mg/hit_knife_03.ogg":0.695,"mg/hit_knife_04.ogg":1.426,"mg/horse_step_01.ogg":0.748,"mg/horse_step_02.ogg":0.714,"mg/horse_step_03.ogg":1.871,"mg/mg_spell_cast_01.flac":0.842,"mg/mg_spell_cast_03.flac":1.092,"mg/mg_spell_cast_05.flac":0.855,"mg/mg_spell_cast_06.flac":1.325,"mg/mg_spell_dark_01.flac":1.377,"mg/mg_spell_dark_02.flac":0.726,"mg/mine_pick_01.ogg":0.784,"mg/mine_pick_02_n.flac":0.753,"mg/mine_pick_03.ogg":1.621,"mg/mine_pick_04.ogg":1.267,"mg/mine_pick_05_n.flac":0.698,"mg/mine_pick_06.ogg":1.181,"mg/mummy_die_01.ogg":0.86,"mg/mummy_die_02.ogg":1.834,"mg/mummy_die_03.ogg":0.911,"mg/mummy_die_04.ogg":0.696,"mg/mummy_hit_01.ogg":1.8,"mg/mummy_hit_03.ogg":0.789,"mg/mummy_hit_04.ogg":0.755,"mg/raptor_cry_01.ogg":0.903,"mg/raptor_cry_02.ogg":0.674,"mg/raptor_cry_03.ogg":1.386,"mg/raptor_cry_04.ogg":1.184,"mg/serpent_hiss_02.ogg":0.707,"mg/serpent_hiss_03.ogg":1.225,"mg/serpent_hiss_04.ogg":0.863,"mg/serpent_hiss_05.ogg":1.269,"mg/siege_roll_01.ogg":0.703,"mg/siege_roll_02.ogg":1.995,"mg/siege_roll_03.ogg":0.713,"mg/spear_thrust_01.ogg":1.179,"mg/spear_thrust_04.ogg":0.836,"mg/spell_arch_01.ogg":1.453,"mg/spell_arch_03.ogg":0.929,"mg/spell_arch_04.ogg":0.87,"mg/spell_arch_05.ogg":0.771,"mg/spell_arch_07.ogg":1.231,"mg/spell_arch_08.ogg":0.931,"mg/spell_battle_01.ogg":1.115,"mg/spell_battle_02.ogg":1.163,"mg/spell_battle_05.ogg":0.88,"mg/spell_battle_06.ogg":0.907,"mg/spell_genie_01.ogg":1.387,"mg/spell_genie_03.ogg":0.89,"mg/spell_genie_04.ogg":0.846,"mg/spell_initiate_03.ogg":1.105,"mg/spell_initiate_04.ogg":1.086,"mg/spell_initiate_05.ogg":0.899,"mg/spell_initiate_06.ogg":0.858,"mg/spell_summon_01.ogg":0.892,"mg/spell_summon_02.ogg":1.146,"mg/spell_summon_03.ogg":1.109,"mg/spell_summon_04.ogg":0.883,"mg/tower_fall_01.ogg":1.163,"mg/tower_fall_02.ogg":0.734,"mg/tower_fall_03.ogg":0.911,"mg/tower_fall_04.ogg":0.914,"mg/tower_fall_05.ogg":1.406,"mg/tower_shot_01.ogg":0.855,"mg/tower_shot_02.ogg":1.203,"mg/tower_shot_03.ogg":0.819,"mg/tower_shot_04.ogg":1.176,"mg/tower_shot_05.ogg":0.929,"mg/tower_shot_06.ogg":1.086,"mg/warrior_shout_01.ogg":1.253,"mg/warrior_shout_03.ogg":0.852,"mg/warrior_shout_04.ogg":0.821,"mg/warrior_shout_05.ogg":0.823,"mg/warrior_shout_06.ogg":1.173,"mg/warrior_shout_08.ogg":1.206,"mg/wraith_die_01.flac":0.888,"mg/wraith_die_02.flac":0.866,"mg/wraith_die_03.flac":1.141,"mg/wraith_die_04.flac":1.124,"mg/wyrm_dark_01.ogg":0.769,"mg/wyrm_dark_02.ogg":1.336,"mg/wyrm_dark_03.ogg":0.887,"mg/wyrm_dark_04.ogg":1.098,"mg/wyrm_die_01.ogg":0.886,"mg/wyrm_die_02.ogg":1.129,"mg/wyrm_pain_03.ogg":1.105,"mg/wyrm_roar_01.ogg":0.769,"mg/wyrm_roar_02.ogg":1.336,"mg/wyrm_roar_03.ogg":0.887,"mg/wyrm_roar_04.ogg":1.098,"mtg/break_glass_2.ogg":0.517,"mtg/break_glass_3.ogg":1.995,"mtg/cart_moving_2.ogg":1.164,"mtg/cart_moving_3.ogg":0.831,"mtg/cool_lava_1.ogg":0.931,"mtg/cool_lava_2.ogg":0.922,"mtg/cool_lava_3.ogg":1.165,"mtg/dig_cracky_1.ogg":1.271,"mtg/dig_cracky_3.ogg":0.794,"mtg/dig_crumbly.ogg":0.822,"mtg/dig_dig_immediate.ogg":0.911,"mtg/dig_metal.ogg":1.576,"mtg/dig_oddly_breakable_by_hand.ogg":1.398,"mtg/door_close.ogg":0.701,"mtg/door_open.ogg":0.501,"mtg/dug_metal_1.ogg":0.788,"mtg/dug_metal_2.ogg":0.805,"mtg/dug_node_2.ogg":0.876,"mtg/fencegate_close.ogg":0.799,"mtg/fencegate_open.ogg":1.252,"mtg/fire_2.ogg":0.89,"mtg/fire_3.ogg":0.908,"mtg/glass_door_close.ogg":1.427,"mtg/glass_door_open.ogg":1.995,"mtg/grass_footstep_1.ogg":1.157,"mtg/grass_footstep_2.ogg":0.849,"mtg/gravel_dig_1.ogg":1.11,"mtg/gravel_dig_2.ogg":0.901,"mtg/gravel_dug_1.ogg":1.592,"mtg/gravel_dug_2.ogg":0.657,"mtg/gravel_dug_3.ogg":1.126,"mtg/gravel_footstep_1.ogg":0.89,"mtg/gravel_footstep_4.ogg":1.145,"mtg/hard_footstep_2.ogg":0.866,"mtg/hard_footstep_3.ogg":1.101,"mtg/ice_dig_3.ogg":1.524,"mtg/ice_dug.ogg":0.654,"mtg/ice_footstep_1.ogg":1.301,"mtg/ice_footstep_2.ogg":0.897,"mtg/ice_footstep_3.ogg":0.857,"mtg/large.ogg":0.78,"mtg/metal_footstep_1.ogg":0.938,"mtg/place_node_1.ogg":1.672,"mtg/place_node_2.ogg":1.417,"mtg/place_node_hard_1.ogg":1.127,"mtg/place_node_hard_2.ogg":1.561,"mtg/place_node_metal_1.ogg":0.501,"mtg/place_node_metal_2.ogg":0.501,"mtg/small.ogg":1.556,"mtg/snow_footstep_4.ogg":1.31,"mtg/snow_footstep_5.ogg":0.776,"mtg/steel_door_close.ogg":0.759,"mtg/steel_door_open.ogg":1.318,"mtg/tool_breaks_1.ogg":0.737,"mtg/tool_breaks_2.ogg":1.547,"mtg/tool_breaks_3.ogg":0.877,"mtg/water_footstep_2.ogg":0.913,"mtg/water_footstep_3.ogg":1.11,"mtg/wood_footstep_1.ogg":1.229,"mtg/wood_footstep_2.ogg":0.814,"oc/oc_arrow_shoot_01.ogg":1.257,"oc/oc_arrow_shoot_02.ogg":0.885,"oc/oc_arrow_shoot_03.ogg":0.899,"oc/oc_bat_flutter_01.ogg":1.098,"oc/oc_bat_flutter_02_n.flac":0.93,"oc/oc_bat_noise_01.ogg":1.217,"oc/oc_bat_noise_02.ogg":0.777,"oc/oc_blast_01.ogg":1.249,"oc/oc_blast_02.ogg":0.89,"oc/oc_blast_03.flac":1.197,"oc/oc_blast_04.ogg":0.752,"oc/oc_blast_05.flac":1.218,"oc/oc_blast_06.flac":1.943,"oc/oc_bow_shoot_02.ogg":1.171,"oc/oc_bow_shoot_03.ogg":0.818,"oc/oc_bubble_01.ogg":0.91,"oc/oc_bubble_03.ogg":1.105,"oc/oc_cattle_snort_01.ogg":1.219,"oc/oc_cattle_snort_02.ogg":1.302,"oc/oc_cattle_snort_03.ogg":0.63,"oc/oc_chirp_01.ogg":1.274,"oc/oc_chirp_02.ogg":1.197,"oc/oc_chirp_03.ogg":0.656,"oc/oc_chop_02.ogg":0.836,"oc/oc_chop_03.ogg":1.192,"oc/oc_coin_lost_01.ogg":1.403,"oc/oc_coin_lost_02.ogg":0.751,"oc/oc_crystal_comm_02.ogg":0.501,"oc/oc_crystal_comm_03.ogg":0.785,"oc/oc_crystal_comm_04.ogg":1.995,"oc/oc_dig_02.ogg":0.908,"oc/oc_dig_03.ogg":1.424,"oc/oc_dig_05.ogg":0.784,"oc/oc_dive_01.ogg":0.935,"oc/oc_dive_02.ogg":1.062,"oc/oc_dog_snuff_01.ogg":1.33,"oc/oc_dog_snuff_03.ogg":0.723,"oc/oc_door_open_01.ogg":0.746,"oc/oc_door_open_02.ogg":1.341,"oc/oc_find_probe_01.ogg":0.86,"oc/oc_find_probe_02.ogg":1.162,"oc/oc_find_tool_01.ogg":0.89,"oc/oc_find_tool_02.ogg":1.176,"oc/oc_find_track_01.ogg":1.062,"oc/oc_find_track_02.ogg":0.941,"oc/oc_general_hit_01.ogg":0.939,"oc/oc_general_hit_02.ogg":1.065,"oc/oc_glass_break_01.ogg":1.995,"oc/oc_glass_break_02.ogg":0.501,"oc/oc_glass_hit_01.ogg":0.608,"oc/oc_glass_hit_02.ogg":1.645,"oc/oc_grab_01.ogg":1.361,"oc/oc_grab_02.ogg":0.735,"oc/oc_growl_01.ogg":1.243,"oc/oc_growl_02.ogg":0.842,"oc/oc_hinge_03.ogg":0.933,"oc/oc_hurt_01.ogg":0.809,"oc/oc_hurt_02.ogg":1.236,"oc/oc_ice_hit_01.ogg":0.793,"oc/oc_ice_hit_02.ogg":1.26,"oc/oc_javelin_throw_01.ogg":0.808,"oc/oc_javelin_throw_03.ogg":1.237,"oc/oc_metal_dull_02.ogg":0.883,"oc/oc_metal_dull_03.ogg":1.099,"oc/oc_metal_light_01.ogg":0.745,"oc/oc_metal_light_02.ogg":1.342,"oc/oc_organic_hit_01.ogg":1.113,"oc/oc_organic_hit_02.ogg":0.898,"oc/oc_projectile_hit_01.ogg":0.91,"oc/oc_projectile_hit_02.ogg":1.098,"oc/oc_res_blood_01.ogg":0.689,"oc/oc_res_blood_02.ogg":1.451,"oc/oc_res_hide_01.ogg":0.808,"oc/oc_res_hide_02.ogg":1.237,"oc/oc_res_organ_01.ogg":0.796,"oc/oc_res_organ_02.ogg":1.314,"oc/oc_res_venom_01.ogg":0.826,"oc/oc_res_venom_02.ogg":1.211,"oc/oc_rock_hit_02.ogg":0.82,"oc/oc_rock_hit_03.ogg":1.253,"oc/oc_rockfall_01.ogg":1.086,"oc/oc_rockfall_02.ogg":0.92,"oc/oc_rustle_01.ogg":0.665,"oc/oc_rustle_02.ogg":0.775,"oc/oc_rustle_03.ogg":1.343,"oc/oc_rustle_04.ogg":1.445,"oc/oc_shield_metal_01.ogg":0.922,"oc/oc_sizzle_01.ogg":0.56,"oc/oc_sizzle_02.ogg":1.786,"oc/oc_soft_hit_01.ogg":0.609,"oc/oc_soft_hit_02.ogg":1.642,"oc/oc_soft_touch_01.ogg":0.716,"oc/oc_soft_touch_02.ogg":1.397,"oc/oc_spark_01.ogg":0.796,"oc/oc_spark_02.ogg":0.917,"oc/oc_spark_03.ogg":1.37,"oc/oc_splash_01.ogg":1.276,"oc/oc_splash_02.ogg":0.881,"oc/oc_splash_03.ogg":0.889,"oc/oc_step_hard_01.ogg":0.881,"oc/oc_step_hard_02.ogg":0.835,"oc/oc_step_hard_03.ogg":0.829,"oc/oc_step_hard_04.ogg":1.311,"oc/oc_step_hard_05.ogg":1.251,"oc/oc_step_soft_01.ogg":1.093,"oc/oc_step_soft_02.ogg":0.887,"oc/oc_step_soft_03.ogg":0.876,"oc/oc_step_soft_04.ogg":1.293,"oc/oc_step_soft_05.ogg":0.93,"oc/oc_swim_01.ogg":0.809,"oc/oc_swim_03.ogg":1.299,"oc/oc_swing_01.ogg":0.655,"oc/oc_swing_02.ogg":0.862,"oc/oc_swing_03.ogg":1.772,"oc/oc_thunder_01.ogg":0.818,"oc/oc_thunder_02.ogg":1.172,"oc/oc_thunder_03.ogg":1.342,"oc/oc_thunder_04.ogg":0.911,"oc/oc_thunder_05.ogg":0.854,"oc/oc_trap_grav_01.ogg":0.839,"oc/oc_trap_grav_02.ogg":1.191,"oc/oc_trap_illusion_01.ogg":0.883,"oc/oc_trap_illusion_02.ogg":1.133,"oc/oc_trap_living_01.ogg":0.941,"oc/oc_trap_living_02.ogg":1.063,"oc/oc_trap_magic_01.ogg":0.912,"oc/oc_trap_magic_02.ogg":1.096,"oc/oc_trap_mech_01.ogg":0.582,"oc/oc_trap_mech_02.ogg":1.717,"oc/oc_ui_select_01.ogg":0.71,"oc/oc_ui_select_02.ogg":1.408,"oc/oc_waterdrop_01.ogg":0.703,"oc/oc_waterdrop_02.ogg":1.422,"oc/oc_weapon_hit_01.ogg":1.142,"oc/oc_weapon_hit_02.ogg":0.891,"oc/oc_wood_creak_01.ogg":0.716,"oc/oc_wood_creak_02.ogg":1.132,"oc/oc_wood_creak_03.ogg":1.233,"oc/oc_wood_dull_01.ogg":0.68,"oc/oc_wood_dull_02.ogg":1.471,"oc/oc_wood_hit_01.ogg":0.597,"oc/oc_wood_hit_02.ogg":0.918,"oc/oc_wood_hit_03.ogg":1.825,"od/default_build_room.ogg":0.726,"od/default_build_trap.ogg":1.377,"od/depositgold1.ogg":1.274,"od/depositgold2.ogg":0.902,"od/depositgold3.ogg":0.866,"od/depositgold4.ogg":0.894,"od/depositgold5.ogg":1.125,"od/die1.ogg":1.532,"od/die1_2.ogg":0.653,"od/digging01.ogg":1.167,"od/digging04.ogg":1.201,"od/digging05.ogg":0.651,"od/digging06.ogg":0.828,"od/digging07.ogg":0.821,"od/digging08.ogg":0.778,"od/digging09.ogg":1.122,"od/digging12.ogg":1.127,"od/digging16.ogg":1.383,"od/digging18.ogg":1.186,"od/inventory1.ogg":0.778,"od/inventory2.ogg":0.83,"od/keeper_growl_01.flac":1.289,"od/keeper_growl_02.flac":1.275,"od/keeper_growl_03.flac":1.144,"od/keeper_laugh_01.flac":0.908,"od/keeper_laugh_02.flac":0.784,"od/keeper_laugh_03.flac":0.747,"od/pickselector.ogg":1.548,"od/rocksfalling01.ogg":0.807,"od/rocksfalling03.ogg":1.823,"od/rocksfalling04.ogg":0.598,"od/rocksfalling05.ogg":1.132,"od/rocksfalling07.ogg":1.081,"od/swordblock04.ogg":0.793,"od/swordblock05.ogg":1.268,"od/zombie_10.ogg":0.709,"od/zombie_11.ogg":1.078,"od/zombie_12.ogg":0.934,"od/zombie_13.ogg":1.169,"od/zombie_14.ogg":0.884,"od/zombie_16.ogg":1.116,"od/zombie_17.ogg":1.123,"od/zombie_18.ogg":0.943,"od/zombie_19.ogg":1.242,"od/zombie_22.ogg":1.07,"od/zombie_23.ogg":1.092,"od/zombie_24.ogg":1.247,"od/zombie_4.ogg":0.798,"od/zombie_6.ogg":0.888,"od/zombie_7.ogg":0.86,"od/zombie_8.ogg":0.853,"od/zombie_9.ogg":1.283,"prop/prop_barrel_01.flac":0.558,"prop/prop_barrel_02.flac":1.792,"prop/prop_bed_01.flac":0.835,"prop/prop_bed_02.flac":0.923,"prop/prop_bed_03.flac":1.172,"prop/prop_bed_04.flac":1.106,"prop/prop_bookflip_01.flac":1.298,"prop/prop_bookflip_02.flac":0.867,"prop/prop_bookflip_03.flac":0.889,"prop/prop_bookplace_01.flac":0.936,"prop/prop_bookplace_02.flac":1.16,"prop/prop_bookplace_03.flac":0.921,"prop/prop_coins_01.flac":1.208,"prop/prop_coins_02.flac":0.828,"prop/prop_pigeon_01.flac":0.884,"prop/prop_pigeon_02.flac":1.132,"prop/prop_pot_01.flac":0.836,"prop/prop_pot_02.flac":1.063,"prop/prop_pot_03.flac":1.126,"prop/prop_table_01.flac":1.065,"prop/prop_table_02.flac":0.939,"score/score_battle_01.ogg":1.122,"score/score_boss_01.ogg":0.933,"score/score_road_01.ogg":1.142,"score/score_town_01.ogg":0.843,"siege/siege_alarm_ambush_01.flac":0.891,"siege/siege_alarm_wild_01.flac":0.642,"siege/siege_catapult_01.flac":1.081,"siege/siege_catapult_02.flac":0.869,"siege/siege_catapult_03.flac":1.064,"siege/siege_fire_01.ogg":1.883,"siege/siege_fire_02.ogg":0.531,"siege/siege_ram_01.ogg":0.641,"siege/siege_ram_02.ogg":1.56,"siege/siege_tower_hit_01.flac":0.927,"siege/siege_tower_hit_03.flac":1.114,"sky/sky_day_01.ogg":1.995,"sky/sky_day_02.ogg":0.501,"sky/sky_river_01.ogg":1.829,"sky/sky_river_02.ogg":0.547,"sky/sky_thunder_01.ogg":0.773,"sky/sky_thunder_02.ogg":1.294,"sky/sky_wave_01.ogg":0.852,"sky/sky_wave_02.ogg":1.174,"stendhal/st_market_day.ogg":1.098,"stendhal/st_old_tower_inn.ogg":1.118,"stendhal/st_rejoicing.ogg":0.911,"stendhal/st_spinning_tavern.ogg":0.894,"stendhal/st_town_1.ogg":1.164,"stendhal/st_town_2.ogg":1.168,"stendhal/st_town_3.ogg":0.872,"stendhal/st_treasure_hunter.ogg":1.103,"stendhalfx/st_danger_growl.flac":1.69,"stendhalfx/st_danger_orc.flac":0.693,"stendhalfx/st_danger_troll.flac":1.491,"stendhalfx/st_ghost_1.flac":1.232,"stendhalfx/st_ghost_2.flac":0.811,"stendhalfx/st_god_ash.flac":0.746,"stendhalfx/st_god_dawn.flac":0.501,"stendhalfx/st_god_deep.flac":1.492,"stendhalfx/st_god_moon.flac":0.501,"stendhalfx/st_god_road.flac":0.501,"stendhalfx/st_god_shadow.flac":1.995,"stendhalfx/st_god_stone.flac":1.995,"stendhalfx/st_god_storm.flac":1.175,"stendhalfx/st_god_time.flac":1.995,"stendhalfx/st_heal.flac":0.534,"stendhalfx/st_holy_water.flac":1.873,"stendhalfx/st_omen_raven.flac":0.555,"stendhalfx/st_omen_wings.flac":1.803,"steps/fx_step_dirt_01.flac":1.423,"steps/fx_step_dirt_02.flac":1.568,"steps/fx_step_dirt_03.flac":1.455,"steps/fx_step_dirt_04.flac":1.623,"steps/fx_step_dirt_05.flac":0.547,"steps/fx_step_dirt_06.flac":0.501,"steps/fx_step_dirt_07.flac":0.799,"stk/stk_birds_01.ogg":0.886,"stk/stk_birds_02.ogg":1.129,"stk/stk_crash_01.ogg":0.769,"stk/stk_crash_03.ogg":1.37,"throng/throng_cry_02.flac":0.785,"throng/throng_cry_03.flac":1.295,"throng/throng_die_f_01.ogg":1.067,"throng/throng_die_f_02.ogg":1.174,"throng/throng_die_f_03.ogg":0.798,"throng/throng_die_m_01.ogg":1.241,"throng/throng_die_m_02.ogg":0.901,"throng/throng_die_m_03.ogg":1.11,"throng/throng_die_m_04.ogg":0.805,"throng/throng_retreat_01.flac":0.751,"throng/throng_retreat_02.flac":1.331,"tmw/tmw_dramatic.ogg":1.093,"trade/trade_f_01.flac":0.734,"trade/trade_f_02.flac":1.089,"trade/trade_f_03.flac":1.251,"tread/tread_grass_02.ogg":1.173,"tread/tread_grass_03.ogg":0.881,"tread/tread_gravel_01.ogg":0.886,"tread/tread_gravel_02.ogg":1.08,"tread/tread_hoof_01.ogg":1.454,"tread/tread_hoof_02.ogg":0.833,"tread/tread_hoof_03.ogg":0.826,"tread/tread_sand_01.ogg":0.742,"tread/tread_sand_02.ogg":1.118,"tread/tread_sand_03.ogg":1.205,"tread/tread_snow_01.ogg":0.898,"tread/tread_snow_02.ogg":1.099,"tread/tread_wood_01.ogg":0.883,"tread/tread_wood_02.ogg":1.265,"tread/tread_wood_03.ogg":0.895,"weapons/arrow_fly_t0_01.flac":0.83,"weapons/arrow_fly_t0_03.flac":1.453,"weapons/arrow_fly_t0_04.flac":0.837,"weapons/arrow_fly_t3_01.flac":1.12,"weapons/arrow_fly_t3_02.flac":1.074,"weapons/arrow_fly_t3_03.flac":0.84,"weapons/arrow_hit_t3_01.flac":0.927,"weapons/arrow_hit_t3_02.flac":1.079,"weapons/blade_parry_t1_01.flac":0.926,"weapons/blade_parry_t1_02.flac":1.129,"weapons/blade_parry_t1_03.flac":0.931,"weapons/blade_parry_t2_02.flac":0.884,"weapons/blade_parry_t2_03.flac":0.733,"weapons/blade_parry_t2_04.flac":0.861,"weapons/blade_parry_t2_05.flac":1.291,"weapons/blade_parry_t2_06.flac":0.867,"weapons/blade_parry_t2_07.flac":1.072,"weapons/blade_parry_t2_08.flac":1.188,"weapons/blade_parry_t2_09.flac":1.322,"weapons/blade_parry_t2_10.flac":0.805,"weapons/blade_parry_t2_11.flac":1.129,"weapons/blade_parry_t3_01.flac":0.732,"weapons/blade_parry_t3_02.flac":1.361,"weapons/blade_parry_t3_03.flac":0.927,"weapons/blade_parry_t3_04.flac":1.34,"weapons/blade_parry_t3_06.flac":0.793,"weapons/blade_parry_t4_01.flac":0.924,"weapons/blade_parry_t4_02.flac":1.334,"weapons/blade_parry_t4_04.flac":0.818,"weapons/bow_draw_t0_01.flac":1.897,"weapons/bow_draw_t0_03.flac":0.536,"weapons/bow_draw_t2_01.flac":1.566,"weapons/bow_draw_t2_02.flac":0.652,"weapons/bow_shoot_t0_02.flac":1.137,"weapons/bow_shoot_t0_03.flac":0.893,"weapons/bow_shoot_t1_01.flac":0.919,"weapons/bow_shoot_t1_03.flac":1.242,"weapons/bow_shoot_t1_04.flac":0.885,"weapons/bow_shoot_t2_01.flac":0.94,"weapons/bow_shoot_t2_02.flac":0.826,"weapons/bow_shoot_t2_03.flac":1.288,"weapons/bow_shoot_t4_01.flac":0.935,"weapons/bow_shoot_t4_02.flac":1.069,"weapons/dagger_draw_t0_01.flac":1.312,"weapons/dagger_draw_t0_02.flac":0.762,"weapons/dagger_draw_t2_01.flac":1.352,"weapons/dagger_draw_t2_02.flac":0.655,"weapons/dagger_draw_t2_03.flac":1.13,"weapons/dagger_sheathe_t0_01.flac":0.927,"weapons/dagger_sheathe_t0_02.flac":1.079,"weapons/dagger_swing_t0_01.flac":0.942,"weapons/dagger_swing_t0_02.flac":1.083,"weapons/dagger_swing_t1_01.flac":0.899,"weapons/dagger_swing_t1_04.flac":1.071,"weapons/dagger_swing_t1_05.flac":0.909,"weapons/dagger_swing_t1_06.flac":1.176,"weapons/dagger_swing_t3_03.flac":1.061,"weapons/heavy_swing_t2_01.flac":1.269,"weapons/heavy_swing_t2_02.flac":0.913,"weapons/heavy_swing_t2_03.flac":0.862,"weapons/heavy_swing_t2_04.flac":0.773,"weapons/heavy_swing_t2_05.flac":1.139,"weapons/heavy_swing_t2_06.flac":1.137,"weapons/heavy_swing_t3_03.flac":0.934,"weapons/spear_swing_t0_02.flac":0.886,"weapons/spear_swing_t0_03.flac":1.088,"weapons/staff_parry_01.flac":0.693,"weapons/staff_parry_02.flac":0.852,"weapons/staff_parry_03.flac":1.181,"weapons/staff_parry_04.flac":1.152,"weapons/staff_parry_06.flac":1.277,"weapons/sword_armor_t3_03.flac":1.082,"weapons/sword_draw_t0_01.flac":1.354,"weapons/sword_draw_t0_02.flac":0.739,"weapons/sword_draw_t2_01.flac":0.756,"weapons/sword_draw_t2_02.flac":1.325,"weapons/sword_draw_t2_03.flac":0.845,"weapons/sword_draw_t2_05.flac":1.209,"weapons/sword_draw_t4_01.flac":0.696,"weapons/sword_draw_t4_02.flac":1.437,"weapons/sword_sheathe_t0_02.flac":1.175,"weapons/sword_sheathe_t0_03.flac":0.912,"weapons/sword_sheathe_t0_04.flac":0.842,"weapons/sword_sheathe_t0_05.flac":1.11,"weapons/sword_sheathe_t2_01.flac":1.242,"weapons/sword_sheathe_t2_02.flac":0.872,"weapons/sword_sheathe_t2_03.flac":0.924,"weapons/sword_swing_t1_01.flac":0.913,"weapons/sword_swing_t1_02.flac":0.847,"weapons/sword_swing_t1_03.flac":1.074,"weapons/sword_swing_t1_06.flac":1.205,"weapons/sword_swing_t2_03.flac":0.901,"weapons/sword_swing_t2_04.flac":1.296,"weapons/sword_swing_t2_05.flac":0.855,"weapons/sword_swing_t2_06.flac":1.351,"weapons/sword_swing_t2_07.flac":1.232,"weapons/sword_swing_t2_08.flac":0.786,"weapons/sword_swing_t2_09.flac":0.891,"weapons/sword_swing_t2_10.flac":0.94,"weapons/sword_swing_t2_11.flac":0.915,"weapons/sword_swing_t3_01.flac":0.783,"weapons/sword_swing_t3_02.flac":0.764,"weapons/sword_swing_t3_03.flac":1.673,"weapons/sword_swing_t4_01.flac":1.374,"weapons/sword_swing_t4_02.flac":0.711,"weapons/voice_heavy_hit_01.flac":0.889,"weapons/voice_heavy_hit_04.flac":1.154,"weapons/voice_heavy_hit_05.flac":0.93,"weapons/voice_heavy_parry_02.flac":1.078,"weapons/voice_heavy_parry_03.flac":1.093,"weapons/voice_heavy_parry_05.flac":0.838,"weapons/voice_heavy_swing_01.flac":0.875,"weapons/voice_heavy_swing_02.flac":1.137,"weapons/voice_heavy_swing_03.flac":1.137,"weapons/voice_heavy_swing_04.flac":0.884,"weapons/voice_knife_draw_01.flac":0.771,"weapons/voice_knife_draw_02.flac":1.073,"weapons/voice_knife_draw_03.flac":1.208,"weapons/voice_knife_hit_03.flac":1.096,"weapons/voice_knife_parry_02.flac":0.897,"weapons/voice_knife_parry_03.flac":1.116,"weapons/voice_ring_draw_02.flac":0.93,"weapons/voice_ring_draw_03.flac":1.103,"weapons/voice_ring_hit_01.flac":0.75,"weapons/voice_ring_hit_02.flac":0.85,"weapons/voice_ring_hit_03.flac":1.316,"weapons/voice_ring_hit_04.flac":1.458,"weapons/voice_ring_hit_05.flac":0.818,"weapons/voice_ring_parry_01.flac":1.779,"weapons/voice_ring_parry_02.flac":1.328,"weapons/voice_ring_parry_04.flac":0.825,"weapons/voice_ring_parry_05.flac":0.695,"weapons/voice_ring_parry_06.flac":0.712,"weapons/voice_stiletto_hit_01.flac":1.134,"weapons/voice_stiletto_hit_02.flac":0.921,"weapons/voice_stiletto_parry_01.flac":1.333,"weapons/voice_stiletto_parry_02.flac":0.75,"weapons/voice_thin_draw_01.flac":0.907,"weapons/voice_thin_draw_03.flac":1.116,"weapons/voice_thin_hit_01.flac":0.937,"weapons/voice_thin_hit_02.flac":0.937,"weapons/voice_thin_hit_03.flac":1.221,"weapons/voice_thin_hit_04.flac":0.934,"weapons/voice_thin_parry_01.flac":1.14,"weapons/voice_thin_parry_02.flac":1.131,"weapons/voice_thin_parry_04.flac":0.936,"weapons/voice_thin_parry_05.flac":0.823,"weapons/voice_thin_swing_03.flac":1.071,"weapons/xbow_fly_01.flac":1.196,"weapons/xbow_fly_03.flac":0.84,"zm/bone_01.flac":0.725,"zm/bone_02.flac":1.285,"zm/bone_03.flac":1.111,"zm/breath_01.flac":0.868,"zm/breath_02.flac":1.151,"zm/chew_01.flac":0.924,"zm/chew_02.flac":1.083,"zm/dead_01.flac":0.855,"zm/dead_02.flac":1.401,"zm/dead_03.flac":0.835,"zm/growl_01.flac":1.182,"zm/growl_02.flac":0.846,"zm/growl_wet_01.flac":0.583,"zm/growl_wet_02.flac":1.232,"zm/growl_wet_03.flac":1.392,"zm/laugh_01.flac":1.096,"zm/laugh_02.flac":0.912,"zm/moan_01.flac":0.924,"zm/moan_02.flac":1.083,"zm/nightmare_01.flac":0.811,"zm/nightmare_02.flac":1.232,"zm/scream_01.flac":1.077,"zm/whisper_01.flac":1.12,"zm/whisper_02.flac":0.893};
+const Телефон={ctx:null,_вход:null,_c:null,_mk:null,
+ /* телефон: Android или iOS по строке браузера, либо главный указатель — палец (а не мышь, как у ноутбука с сенсором) */
+ телефон(){if(safeFn(()=>isDesktopApp(),false))return false;
+  if(/Android|iPhone|iPad|iPod/i.test(String(navigator.userAgent||"")))return true;
+  return (Number(navigator.maxTouchPoints)||0)>0&&!!safeFn(()=>matchMedia("(pointer: coarse)").matches,false);},
+ вкл(){return settings.phoneSpeaker===1;},
+ /* точка, куда звучат одиночные звуки из памяти: сжатие или прямо в выход */
+ выход(ctx){if(!ctx)return null;
+  if(this.ctx!==ctx||!this._вход){this.ctx=ctx;this._вход=ctx.createGain();
+   const c=ctx.createDynamicsCompressor();c.threshold.value=-24;c.knee.value=10;c.ratio.value=2;c.attack.value=0.004;c.release.value=0.18;
+   const mk=ctx.createGain();mk.gain.value=2.24;c.connect(mk);mk.connect(ctx.destination);this._c=c;this._mk=mk;this.применить();}
+  return this._вход;},
+ применить(){const ctx=this.ctx;if(!ctx||!this._вход)return;try{this._вход.disconnect();}catch(_){}
+  try{this._вход.connect(this.вкл()?this._c:ctx.destination);}catch(_){}},
+ флажок(){const el=document.getElementById("setPhoneSpk");if(el)el.checked=settings.phoneSpeaker===1;}};
+/* по умолчанию: на телефоне включено, на компьютере выключено; выбор игрока сохраняется */
+safeFn(()=>{if(settings.phoneSpeaker!==0&&settings.phoneSpeaker!==1)settings.phoneSpeaker=Телефон.телефон()?1:0;
+ Телефон.флажок();setTimeout(()=>safeFn(()=>Телефон.флажок()),0);
+ document.addEventListener("change",e=>{if(e.target&&e.target.id==="setPhoneSpk")setTimeout(()=>safeFn(()=>Телефон.применить()),0);},true);});
+
 /* ── последний из поздних модулей: обёртки показывают текст прежнего правила (см. ДО150 в начале подъёмников) ──
    Наборы проверок читают исходник правила (учтены ли удача, бафф и т. п.); прежнее правило работает внутри обёрток. */
 safeFn(()=>{if(typeof ДО150==="undefined")return;for(const [k,f] of Object.entries(ДО150)){const тек=window[k];
@@ -93556,7 +93926,7 @@ function enterGame(){if(entered){showScreen("screen-game");normalizeWeaponState(
     просто называет пункт, чтобы новичок не искал его вслепую. */
  /* §10: с чего начать. Говорится один раз, при первом входе в мир. */
  if(safeFn(()=>startCraftOpen(),false))
-  setTimeout(()=>safeFn(()=>narrate(startCraftText(),{interrupt:false})),2600);
+  setTimeout(()=>safeFn(()=>narrate(startCraftText(),{cat:"context",interrupt:false})),2600);
  if(!G.tutorDone&&!store.get(SAVE_KEY)){
   /* Подсказка ждёт семь секунд — и говорится только если игрок всё ещё стоит
      там, где вошёл, ничего не открыл и ни с кем не дерётся. Тот, кто уже

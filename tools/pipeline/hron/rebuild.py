@@ -54,9 +54,13 @@ if PHASE>=9:
         late+="\n"+open(H+'door147_late.js',encoding='utf-8').read()
     # (15.0) древние подъёмники и Немота — Нулевой Предел: ядро, твари, вещи и люди, «Немая штольня»;
     # поиск под рукой, тайные ходы (лаз назван, вход шагом и касанием, после находки закрыт), завал не зря
-    for f in ('lift150_late.js','nem150_late.js','nem150b_late.js','nem150c_late.js','nem150d_late.js','poisk150_late.js','taina150_late.js','zagadki150_late.js','zaval150_late.js','nem155_late.js','glub155_late.js','zver155_late.js','zvuk155_late.js','prolog155_late.js','svod155_late.js','zhivye155_late.js','torg160_late.js','put165_late.js','zhivoe165_late.js','tayny165_late.js','dom165_late.js','zvuk165_late.js','vyuchka165_late.js','zagadki165_late.js','golos165_late.js','rudy170_late.js','zelya170_late.js','hozyain170_late.js','rabota170_late.js','dela170_late.js','slava170_late.js','molva170_late.js','lavka170_late.js','masterstvo170_late.js','priklyuch170_late.js','konec155_late.js'):
+    for f in ('lift150_late.js','nem150_late.js','nem150b_late.js','nem150c_late.js','nem150d_late.js','poisk150_late.js','taina150_late.js','zagadki150_late.js','zaval150_late.js','nem155_late.js','glub155_late.js','zver155_late.js','zvuk155_late.js','prolog155_late.js','svod155_late.js','zhivye155_late.js','torg160_late.js','put165_late.js','zhivoe165_late.js','tayny165_late.js','dom165_late.js','zvuk165_late.js','vyuchka165_late.js','zagadki165_late.js','golos165_late.js','rudy170_late.js','zelya170_late.js','hozyain170_late.js','rabota170_late.js','dela170_late.js','slava170_late.js','molva170_late.js','lavka170_late.js','masterstvo170_late.js','priklyuch170_late.js','edin175_late.js','konec155_late.js'):
         if os.path.exists(H+f):
-            late+="\n"+open(H+f,encoding='utf-8').read()
+            _t=open(H+f,encoding='utf-8').read()
+            # 17.5: поправки громкости записей по замеру (zvuk_lufs.py → lufs175.json) — в модуль единых обработчиков
+            if f=='edin175_late.js' and '/*@LUFS175@*/{}' in _t and os.path.exists(H+'lufs175.json'):
+                _t=_t.replace('/*@LUFS175@*/{}',_json.dumps(_json.load(open(H+'lufs175.json',encoding='utf-8')),ensure_ascii=False,separators=(",",":"),sort_keys=True))
+            late+="\n"+_t
 open(H+'mater_late.js','w',encoding='utf-8').write(late)
 R='/home/user/https-ivan-petrov.github.io-grani-mirov-/'
 s=open(H+'index_before_mater.html',encoding='utf-8').read()
@@ -146,7 +150,8 @@ if PHASE>=9:
         "enqueue(text,{interrupt=true,onDone=null,pri=null,cat=null,key=null,ttl=null,user=false,persistent=false,ждать=0,nav=false,речь=false,урон=null,итог=false}={}){")
     rep("   interrupt:interrupt!==false,createdAt:Date.now(),ttl:ttl!=null?Number(ttl):(this.TTL[cls.pri]||0),onDone,state:\"QUEUED\",parts:null};\n  /* (15.0) Живая область для чтеца экрана",
         "   interrupt:interrupt!==false,createdAt:Date.now(),ttl:ttl!=null?Number(ttl):(this.TTL[cls.pri]||0),onDone,state:\"QUEUED\",parts:null};\n  m.task=this._task();m.keep=!!итог;\n  /* (15.0) Живая область для чтеца экрана")
-    rep("  const cur=this.current;\n  if(cur&&this.speaking&&cur.herald",
+    # (17.5) каскад перебиваний стал таблицей (_правила): правило 14.6 стоит перед ней, как прежде перед каскадом
+    rep("  const cur=this.current;\n  const п=cur&&this.speaking?",
         "  const cur=this.current;\n"
         "  /* ── ИТОГ ДЕЛА ДОГОВАРИВАЕТСЯ (14.6, просьба игрока) ──\n"
         "     Задание яруса, чертога или Сводов говорит итог («Загадка решена! 40\n"
@@ -161,7 +166,7 @@ if PHASE>=9:
         "   if(m.interrupt){const keep=[],gone=[];this.queue.forEach(x=>(x.task!==m.task&&x.pri>=2&&!x.persistent?gone:keep).push(x));this.queue=keep;\n"
         "    gone.forEach(x=>{x.state=\"CANCELLED\";this.stats.dropped++;if(x.onDone)setTimeout(()=>{try{x.onDone();}catch(e){}},10);});}\n"
         "   this._push(m);this._pump();return m;}\n"
-        "  if(cur&&this.speaking&&cur.herald")
+        "  const п=cur&&this.speaking?")
     rep(" _push(m){m.state=\"QUEUED\";",
         " /* (14.6) Одно действие — один такт речи: реплики, сказанные в нём, узнают друг друга. */\n"
         " _task(){if(!this._taskOpen){this._taskOpen=true;this._taskId=(this._taskId||0)+1;const f=()=>{this._taskOpen=false;};try{queueMicrotask(f);}catch(_){Promise.resolve().then(f);}}return this._taskId;},\n"

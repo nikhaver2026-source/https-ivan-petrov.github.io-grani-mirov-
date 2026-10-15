@@ -224,7 +224,7 @@ safeFn(()=>{const t0=Тишь.сделать.bind(Тишь);Тишь.сдела�
 safeFn(()=>{const e0=castCustomEffect;castCustomEffect=function(sp){const cb=G.combat;
  if(sp&&sp.тихое&&sp.ядро==="dispel"&&G.inCombat&&cb&&cb.m&&cb.m.нем==="swarm"){const d=Math.max(12,Math.round((18+(Number(G.level)||1)*5)*Тишь.сила(sp)));
   cb.hp=Math.max(0,(Number(cb.hp)||0)-d);safeFn(()=>{Bank.play("oc_gust",{kind:"magic",gain:0.55,maxSec:2});updateCombat();});
-  if(cb.hp<=0){narrate(`Заклинание «${sp.n}» сотворено. Рой рассыпался в пыль: −${d}.`);victory();return " ";}
+  if(cb.hp<=0){narrate(`Заклинание «${sp.n}» сотворено. Рой рассыпался в пыль: −${d}.`,{cat:"result"});victory();return " ";}
   return ` Рой рассыпается клочьями: −${d}.`;}
  return e0.apply(this,arguments);};});
 /* перемены по ходу боя: Владыка вбирает тишину, выгоревший опускает руки */

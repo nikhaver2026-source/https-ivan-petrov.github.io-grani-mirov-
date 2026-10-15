@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <!-- Внешний слой защиты: жёсткая CSP запрещает любые внешние скрипты/подключения,
      eval и вставку кода извне; игра полностью самодостаточна и не обращается в сеть. -->
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; media-src 'self' data: blob:; connect-src 'none'; frame-src 'none'; object-src 'none'; form-action 'none'">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; media-src 'self' data: blob:; connect-src 'self'; frame-src 'none'; object-src 'none'; form-action 'none'">
 <meta http-equiv="X-Content-Type-Options" content="nosniff">
 <meta http-equiv="Referrer-Policy" content="no-referrer">
 <meta http-equiv="Permissions-Policy" content="geolocation=(), camera=(), microphone=(), usb=(), payment=(), interest-cohort=()">
@@ -188,6 +188,7 @@ h3{color:var(--acc2);margin:14px 0 6px;font-size:1.05rem;}
  <label class="opt">Громкость чар <input type="range" id="setMagicVol" min="0" max="100" value="100"><span id="vMagic">100%</span></label>
  <label class="opt">Громкость голосов людей <input type="range" id="setNpcVol" min="0" max="100" value="100"><span id="vNpc">100%</span></label>
  <label class="opt">Приглушение музыки при речи <input type="range" id="setDuck" min="0" max="100" value="50"><span id="vDuck">50%</span></label>
+ <label class="opt"><input type="checkbox" id="setPhoneSpk"><span><b>Динамик телефона</b><small>Тихие звуки мира — шаги, дальние твари, капель — подняты, громкие чуть сжаты: на маленьком динамике слышно всё. Речь, музыка и фон не меняются. На телефоне включено само; в наушниках можно выключить.</small></span></label>
  <h3 class="sec-head" tabindex="0" data-cmd="secjump" data-sec-title="Объёмный звук и живой мир">Объёмный звук и живой мир</h3>
  <p class="hint">Сторона, даль и высота источника; живые голоса народов, весёлые случаи и звуковая картина. Пространственный эмбиент, многослойная реверберация, динамический ветер, дождь, толпа, стерео-маяки объектов и акустика локации. Аудио генерируется в реальном времени.</p>
  <label class="opt"><input type="checkbox" id="setHrtf" checked><span><b>Объёмный звук</b><small>Слышно сторону, расстояние и высоту источника: тварь слева и сзади, ступени под ногами. Лучше всего в наушниках. Выключите, если одно ухо слышит хуже другого — тогда останется простая панорама</small></span></label>
@@ -4067,6 +4068,31 @@ const ESpeak={st:"off",w:null,
   dv.setUint32(24,sr,true);dv.setUint32(28,sr*2,true);dv.setUint16(32,2,true);dv.setUint16(34,16,true);str(36,"data");dv.setUint32(40,n*2,true);
   let o=44;for(const к of куски)for(let i=0;i<к.length;i++){let v=к[i]*g;v=v>32767?32767:v<-32768?-32768:v;dv.setInt16(o,v,true);o+=2;}
   return new Blob([buf],{type:"audio/wav"});}};
+/* ── ОДНИ ЧАСЫ (17.5) ──
+   Общий такт для дел звука, речи и живого мира вместо отдельного таймера у каждого: Такт.каждые(мс, дело, имя)
+   ставит дело и возвращает «снять». Таймер один и заводится на ближайшее дело; дела, подошедшие почти вместе
+   (в пределах 40 мс), выполняются за одно пробуждение. Пока игра свёрнута, такт замирает (кроме дел с вФоне):
+   звук и так притушен, а батарея телефона цела; вернулась игра — просроченные дела идут сразу. */
+const Такт={дела:[],т:null,проснулся:0,ДОПУСК:40,
+ каждые(мс,fn,имя,о){const п=Math.max(16,Number(мс)||0);
+  const д={мс:п,fn,имя:String(имя||"дело"),след:Date.now()+п,вФоне:!!(о&&о.вФоне),снят:false};
+  this.дела.push(д);this.завести();const self=this;
+  return function снять(){if(д.снят)return;д.снят=true;self.дела=self.дела.filter(x=>x!==д);self.завести();};},
+ скрыто(){try{return typeof document!=="undefined"&&!!document.hidden;}catch(_){return false;}},
+ завести(){if(this.т){clearTimeout(this.т);this.т=null;}
+  const скр=this.скрыто();let след=Infinity;
+  for(const д of this.дела)if(!скр||д.вФоне)след=Math.min(след,д.след);
+  if(след===Infinity)return;
+  this.т=setTimeout(()=>{this.т=null;this.тик();},Math.max(0,след-Date.now()));},
+ тик(){const now=Date.now(),скр=this.скрыто();
+  for(const д of this.дела.slice()){if(д.снят||(скр&&!д.вФоне)||д.след>now+this.ДОПУСК)continue;
+   д.след+=д.мс;if(д.след<=now)д.след=now+д.мс;
+   try{д.fn();}catch(e){try{console.warn("[Такт] "+д.имя,e);}catch(_){}}}
+  this.завести();},
+ список(){return this.дела.map(д=>({имя:д.имя,мс:д.мс,вФоне:д.вФоне}));}};
+try{document.addEventListener("visibilitychange",()=>{
+ if(!document.hidden){const now=Date.now();Такт.проснулся=now;for(const д of Такт.дела)if(д.след<now)д.след=now;}
+ Такт.завести();});}catch(_){}
 const Speech={voice:null,keepAlive:null,
  queue:[],current:null,speaking:false,gen:0,seq:0,
  history:[],last:null,ducking:false,adapter:null,_ctx:null,_ctxTimer:null,
@@ -4813,7 +4839,25 @@ const Speech={voice:null,keepAlive:null,
     места после шага — «desc», и его можно выключить одной настройкой. */
  ctxTag(cat){this._ctx=cat;clearTimeout(this._ctxTimer);this._ctxTimer=setTimeout(()=>{this._ctx=null;},0);},
  /* ── вход ── */
- say(text,o){return this.enqueue(text,o);},
+ /* ── ЦЕПОЧКА РЕЧИ (17.5) ──
+    Фраза проходит обработчики цепочки по порядку (временные — первыми), каждый передаёт её дальше или оставляет
+    у себя; последним — очередь речи. Модули больше не подменяют Speech.say. */
+ _цепь:[],_цепьN:0,
+ say:Object.assign(function(text,o){const ц=this._цепь;if(!ц.length)return this.enqueue(text,o);
+  const список=ц.slice();let i=0;const self=this;
+  const дальше=function(t,oo){while(i<список.length){const з=список[i++];if(з.снят)continue;
+    return з.fn.call(self,t,oo,дальше);}return self.enqueue(t,oo);};
+  return дальше(text,o);},{цепьРечи:true}),
+ use(имя,fn,порядок){const з={имя:String(имя||"обработчик"),fn,порядок:Number(порядок)||0,n:++this._цепьN,снят:false};
+  this._цепь.push(з);this._цепь.sort((a,b)=>b.порядок-a.порядок||b.n-a.n);
+  return ()=>{з.снят=true;this._цепь=this._цепь.filter(x=>x!==з);};},
+ /* Speech.say подменили снаружи (прослушка проверочного набора, чужая обёртка) — временный обработчик ложится
+    поверх подмены, как прежде; сама игра Speech.say больше не подменяет. */
+ на_время(fn,обработчик,имя){const self=this;
+  if(!(this.say&&this.say.цепьРечи)){const s0=this.say;
+   this.say=function(t,o){return обработчик.call(self,t,o,(tt,oo)=>s0.call(self,tt,oo));};
+   try{return fn();}finally{this.say=s0;}}
+  const снять=this.use(имя||"на время",обработчик,1e9);try{return fn();}finally{снять();}},
  request(text,o={}){return this.say(text,Object.assign({pri:1,user:true,interrupt:true},o));},
  /* Пространственное событие: по умолчанию его передаёт звук, а не слово. */
  spatial(text,o={}){if(settings.soundFirst!==0||settings.saySpatial===0)return null;return this.say(text,Object.assign({pri:3,cat:"spatial",ttl:1500},o));},
@@ -4838,9 +4882,8 @@ const Speech={voice:null,keepAlive:null,
      о чём игрок спросил сам (здоровье — два пальца вправо), и смертельная
      опасность. Вернуть слова в бою — флажок «Озвучка во время боя». */
   /* (9.5.2) Урон вслух — по своим флажкам, и тихий бой его не глушит. */
-  if(урон==="foe"&&settings.cbDmgFoe===0)return drop();
-  if(урон==="me"&&settings.cbDmgMe===0)return drop();
-  if(!user&&!речь&&!урон&&cls.pri>0&&settings.cbSpeech!==1&&safeFn(()=>G.inCombat&&!!G.combat,false))return drop();
+  const о={user,речь,урон};
+  for(const [имя,когда] of this._фильтры.до)if(когда(m,о)){m.причина=имя;return drop();}
   /* Пункт меню — не достижение, даже если в нём слово «достижения» или «уровень». */
   if(m.nav&&m.cat==="achieve")m.cat="result";
   if(!user&&m.cat==="achieve"){
@@ -4850,7 +4893,7 @@ const Speech={voice:null,keepAlive:null,
       по сроку; выключен — только звук и журнал. При стандартной и
       подробной — как всегда. */
    const скупо=settings.verbosity==="min"||settings.verbosity==="brief";
-   if(скупо&&settings.sayAchieve===0)return drop();
+   if(скупо&&settings.sayAchieve===0){m.причина="достижения при краткой подробности выключены";return drop();}
    /* ── ВЕСТНИК ПОСЛЕ ДЕЛА (6.0, просьба игрока) ──
       Прежде достижение, ступень Грани или открытие вставали в очередь
       первыми, и игрок, подобравший добычу, ждал, пока отзвучит повышение, —
@@ -4859,18 +4902,12 @@ const Speech={voice:null,keepAlive:null,
       умолкает, звучит дело, а весть договаривается следом. Мелочь (что
       рядом, описание) весть по-прежнему не перебивает. */
    m.herald=true;m.pri=1;m.interrupt=false;m.ttl=0;m.persistent=true;}
-  if(!user){
-   if(settings.autoSpeech===0&&m.pri>=2&&!(m.cat==="achieve"&&settings.sayAchieve!==0))return drop();
-   if(m.cat==="desc"&&settings.autoDescribe===0)return drop();
-   /* Подсказки выключены: мир — только звуками; описания места и вещей идут лишь по запросу. */
-   if((m.cat==="desc"||m.cat==="object")&&settings.hints===0&&!m.user)return drop();
-   if(m.cat==="object"&&settings.describeObjects===0)return drop();
-   if(settings.verbosity==="min"&&m.pri>=3)return drop();}
+  if(!user)for(const [имя,когда] of this._фильтры.после)if(когда(m,о)){m.причина=имя;return drop();}
   /* Встроенная озвучка выключена или говорить нечем — фразу читает чтец экрана
      (живая область). Встроенная говорит — чтецу не дублируем: два голоса
      вместе не звучат (15.0). */
   if(!settings.speech||!this._adapter()){this._live(m);this._finish(m,"COMPLETED",true);return m;}
-  if(typeof AudioLife!=="undefined"&&AudioLife.hushed)return drop();
+  if(typeof AudioLife!=="undefined"&&AudioLife.hushed){m.причина="игра притихла";return drop();}
   m.text=this._shape(text,m);
   /* дубли и замена. Листание (nav) дублем не бывает никогда: игрок, вернувшийся
      свайпом на тот же пункт через секунду, должен услышать его снова. Прежде
@@ -4896,31 +4933,63 @@ const Speech={voice:null,keepAlive:null,
    if(key){const q=this.queue.find(x=>x.key===key);if(q){q.state="REPLACED";this.queue=this.queue.filter(x=>x!==q);this.stats.replaced++;done(q.onDone);}}
    this._push(m);this._later(m.notBefore);return m;}
   if(key){const q=this.queue.find(x=>x.key===key);if(q){q.state="REPLACED";this.queue=this.queue.filter(x=>x!==q);this.stats.replaced++;done(q.onDone);}}
+  /* Кто кого перебивает — по таблице правил ниже (_правила), первое подошедшее; в тишине — сразу. */
   const cur=this.current;
-  if(cur&&this.speaking&&cur.herald&&!m.herald&&m.pri<=2&&!m.nav){this._cut(cur,"CANCELLED");this._pushFront(m);this._pump();return m;}
-  if(cur&&this.speaking&&m.nav&&cur.pri>=1){
-   /* ── ЛИСТАНИЕ ГЛАВНЕЕ (9.5.1, просьба игрока) ──
-      Свайп по меню обрывает всё, кроме тревоги, как в TalkBack. Прежде пункт,
-      пролистанный, пока звучало имя окна или важное сообщение, вставал в
-      очередь за ним — и при быстром листании промежуточные пункты пропадали,
-      а нужный звучал с опозданием. Оборванная весть сама вернётся в очередь. */
-   this._cut(cur,"CANCELLED");this._dropQueued(2,"CANCELLED");this.queue=this.queue.filter(x=>!x.nav);this._pushFront(m);this._pump();return m;}
-  if(cur&&this.speaking){
-   /* Игрок листает или сам спросил — мир не перебивает его на полуслове:
-      обычная весть мира ждёт, пока пункт договорён (важное и тревога — нет).
-      Прежде случайная подсказка обрывала имя пункта, и при листании меню
-      голос то и дело пропадал. */
-   if((cur.nav||cur.user)&&!m.user&&!m.nav&&m.pri>=2){this._push(m);return m;}
-   if(m.pri<cur.pri){this._cut(cur,"CANCELLED");this._pushFront(m);this._pump();return m;}
-   if(m.pri>=2&&cur.pri<=1){if(m.interrupt)this._dropQueued(2,"CANCELLED");this._push(m);return m;}
-   if(m.interrupt&&m.pri>=2&&cur.pri>=2){this._cut(cur,"CANCELLED");this._dropQueued(2,"CANCELLED");this._pushFront(m);this._pump();return m;}
-   /* (15.5) Книга главнее речи окон: страница, которую игрок открыл, обрывает имя закрытого или открытого окна
-      и «выбрано», а не ждёт их конца (тревогу, итог дела и вести — не трогает). */
-   if(m.interrupt&&m.cat==="read"&&cur.pri>=1&&!cur.keep&&!cur.herald&&(cur.cat==="ui"||cur.cat==="menu"||cur.nav)){
-    this._cut(cur,"CANCELLED");this._dropQueued(2,"CANCELLED");this._pushFront(m);this._pump();return m;}
-   if(m.interrupt&&m.pri<=1){this._dropQueued(2,"CANCELLED");this._push(m);return m;}
-   this._push(m);return m;}
-  this._pushFront(m);this._pump();return m;},
+  const п=cur&&this.speaking?this._правила.find(r=>r.когда(m,cur)):this._правилоТишины;
+  m.правило=п.имя;this._решает=п.имя;
+  try{this._действия[п.делать].call(this,m,cur);}finally{this._решает=null;}
+  return m;},
+ /* ── ПРАВИЛА ОЧЕРЕДИ (17.5) ──
+    Прежде — каскад условий внутри enqueue; теперь те же условия, в том же порядке, таблицей: у каждого
+    правила имя (видно в журнале речи и звука) и своя проверка в наборе 339. */
+ /* почему фраза не звучит: до разбора достижений (по важности, которую фразе дали) */
+ _фильтры:{
+  до:[
+   /* (9.5.2) Урон вслух — по своим флажкам, и тихий бой его не глушит. */
+   ["урон по твари не озвучивать",(m,о)=>о.урон==="foe"&&settings.cbDmgFoe===0],
+   ["урон по вам не озвучивать",(m,о)=>о.урон==="me"&&settings.cbDmgMe===0],
+   /* ТИХИЙ БОЙ (8.0): пока идёт бой — только то, о чём игрок спросил сам, слова твари и смертельная опасность */
+   ["тихий бой",(m,о)=>!о.user&&!о.речь&&!о.урон&&m.pri>0&&settings.cbSpeech!==1&&safeFn(()=>G.inCombat&&!!G.combat,false)]],
+  /* после разбора достижений, только для того, о чём игрок не просил */
+  после:[
+   ["автоозвучка выключена",(m,о)=>settings.autoSpeech===0&&m.pri>=2&&!(m.cat==="achieve"&&settings.sayAchieve!==0)],
+   ["описания выключены",(m,о)=>m.cat==="desc"&&settings.autoDescribe===0],
+   /* Подсказки выключены: мир — только звуками; описания места и вещей идут лишь по запросу. */
+   ["подсказки выключены",(m,о)=>(m.cat==="desc"||m.cat==="object")&&settings.hints===0&&!m.user],
+   ["описания предметов выключены",(m,о)=>m.cat==="object"&&settings.describeObjects===0],
+   ["минимальная подробность",(m,о)=>settings.verbosity==="min"&&m.pri>=3]]},
+ /* сейчас звучит фраза cur, пришла m: первое подошедшее правило решает */
+ _правила:[
+  /* ВЕСТНИК ПОСЛЕ ДЕЛА (6.0): весть уступает сведению о деле (до 2-й важности) и договорится следом */
+  {имя:"весть уступает делу",когда:(m,cur)=>cur.herald&&!m.herald&&m.pri<=2&&!m.nav,делать:"оборвать"},
+  /* ── ЛИСТАНИЕ ГЛАВНЕЕ (9.5.1, просьба игрока) ──
+     Свайп по меню обрывает всё, кроме тревоги, как в TalkBack. Прежде пункт,
+     пролистанный, пока звучало имя окна или важное сообщение, вставал в
+     очередь за ним — и при быстром листании промежуточные пункты пропадали,
+     а нужный звучал с опозданием. Оборванная весть сама вернётся в очередь. */
+  {имя:"листание главнее",когда:(m,cur)=>m.nav&&cur.pri>=1,делать:"листание"},
+  /* Игрок листает или сам спросил — мир не перебивает его на полуслове:
+     обычная весть мира ждёт, пока пункт договорён (важное и тревога — нет).
+     Прежде случайная подсказка обрывала имя пункта, и при листании меню
+     голос то и дело пропадал. */
+  {имя:"мир ждёт листания и просьбы",когда:(m,cur)=>(cur.nav||cur.user)&&!m.user&&!m.nav&&m.pri>=2,делать:"в очередь"},
+  {имя:"важнее звучащего",когда:(m,cur)=>m.pri<cur.pri,делать:"оборвать"},
+  {имя:"мелочь после важного",когда:(m,cur)=>m.pri>=2&&cur.pri<=1,делать:"в очередь, сняв мелочь, если перебивает"},
+  {имя:"мелочь сменяет мелочь",когда:(m,cur)=>m.interrupt&&m.pri>=2&&cur.pri>=2,делать:"сменить"},
+  /* (15.5) Книга главнее речи окон: страница, которую игрок открыл, обрывает имя закрытого или открытого окна
+     и «выбрано», а не ждёт их конца (тревогу, итог дела и вести — не трогает). */
+  {имя:"книга главнее окон",когда:(m,cur)=>m.interrupt&&m.cat==="read"&&cur.pri>=1&&!cur.keep&&!cur.herald&&(cur.cat==="ui"||cur.cat==="menu"||cur.nav),делать:"сменить"},
+  {имя:"важное — следом, мелочь снять",когда:(m,cur)=>m.interrupt&&m.pri<=1,делать:"снять мелочь и в очередь"},
+  {имя:"по порядку",когда:()=>true,делать:"в очередь"}],
+ _правилоТишины:{имя:"в тишине — сразу",делать:"сразу"},
+ _действия:{
+  "оборвать"(m,cur){this._cut(cur,"CANCELLED");this._pushFront(m);this._pump();},
+  "листание"(m,cur){this._cut(cur,"CANCELLED");this._dropQueued(2,"CANCELLED");this.queue=this.queue.filter(x=>!x.nav);this._pushFront(m);this._pump();},
+  "сменить"(m,cur){this._cut(cur,"CANCELLED");this._dropQueued(2,"CANCELLED");this._pushFront(m);this._pump();},
+  "в очередь"(m){this._push(m);},
+  "в очередь, сняв мелочь, если перебивает"(m){if(m.interrupt)this._dropQueued(2,"CANCELLED");this._push(m);},
+  "снять мелочь и в очередь"(m){this._dropQueued(2,"CANCELLED");this._push(m);},
+  "сразу"(m){this._pushFront(m);this._pump();}},
  /* весть ждёт после сведений о деле (до 2-й важности), но раньше мелочи */
  _push(m){m.state="QUEUED";this.queue.push(m);const в=x=>x.herald?2.5:x.pri;this.queue.sort((a,b)=>в(a)-в(b)||a.id-b.id);this.stats.queued++;},
  _pushFront(m){m.state="QUEUED";this.queue.unshift(m);},
@@ -21442,7 +21511,7 @@ function addRep(raceName,n){const r=RACE_BY_NAME[raceName];if(!r)return;if(!G.re
   const п1=порог(было),п2=порог(стало);
   if(п1===п2)return;
   if(п2>п1){eventCue(["spell_light","oc_laugh"],0.5);
-   narrate(`Народ «${raceName}» стал к вам теплее: ${attitudeOf(raceName).n||"отношение изменилось"}.`,{interrupt:false});}
+   narrate(`Народ «${raceName}» стал к вам теплее: ${attitudeOf(raceName).n||"отношение изменилось"}.`,{cat:"context",interrupt:false});}
   else{eventCue(["spell_dark","wraith_die"],0.5);
    narrate(`Народ «${raceName}» вас невзлюбил: ${attitudeOf(raceName).n||"отношение изменилось"}.`,{interrupt:false});}});}
 function godOfRace(name){const r=raceInfo(name);return GOD_BY_ID[r.god]||PANTHEON[0];}
@@ -25377,7 +25446,7 @@ function addStand(scope,id,n,тихо){
    const w1=standWord(было),w2=standWord(стало);
    if(w1.n!==w2.n){
     safeFn(()=>Bank.play(стало>было?"throng_hail_m":"wild_raven",{gain:0.5,maxSec:4}));
-    safeFn(()=>narrate(`${(STAND_SCOPE_BY_ID[scope]||{}).n||scope}${id?` («${id}»)`:""}: теперь ${w2.n}. ${w2.о}`,{interrupt:false}));}}
+    safeFn(()=>narrate(`${(STAND_SCOPE_BY_ID[scope]||{}).n||scope}${id?` («${id}»)`:""}: теперь ${w2.n}. ${w2.о}`,{cat:"context",interrupt:false}));}}
   return стало;
  }catch(_){return 0;}}
 function axisOf(id){
@@ -30051,10 +30120,8 @@ function studyKnowledge(x,y){
  /* Сначала игрок слышит, что изучил, и только потом — что из этого вышло:
     часть карты или дело называют себя сами, и раньше они звучали прежде
     главного «Изучено». Их речь откладывается до конца главной фразы. */
- const отложено=[];const прежнееSay=Speech.say;
- Speech.say=(t,o)=>{отложено.push([t,Object.assign({},o||{},{interrupt:false})]);};
- let награда="";
- try{награда=knowGrant(k.n,k.reward);}finally{Speech.say=прежнееSay;}
+ const отложено=[];let награда="";
+ Speech.на_время(()=>{награда=knowGrant(k.n,k.reward);},(t,o)=>{отложено.push([t,Object.assign({},o||{},{interrupt:false})]);},"изучено — сначала главное");
  /* Книга у чтения теперь есть имя, вид, редкость и цена: одна и та же
     полка в двух разных башнях держит разные книги, и слышно это сразу. */
  const том=safeFn(()=>tomeAt(x,y),null);
@@ -36803,7 +36870,7 @@ function equipWeaponIndex(i){
   safeFn(()=>{Bank.play(itemVoice(w),{seed:1,gain:0.6,maxSec:3});const k=weaponKind();setTimeout(()=>safeFn(()=>Bank.play(k==="bow"?"oc_bow_arrow":k==="javelin"?"oc_javelin_draw":"lug_knife_draw",{seed:2,gain:0.5,maxSec:2})),220);});
   saveGame(true); refresh();
   safeFn(()=>UI.open());safeFn(()=>renderInventory());
-  narrate(`Экипировано оружие: ${w.name}.`); return true;
+  narrate(`Экипировано оружие: ${w.name}.`,{cat:"result"}); return true;
  }catch(e){try{console.error("equipWeaponIndex",e);narrate("Не удалось экипировать оружие.");}catch(_){}return false;}
 }
 
@@ -41007,7 +41074,7 @@ function artLearnRecipe(id,откуда,тихо){
   safeFn(()=>{Bank.play("arte_page",{gain:0.55,maxSec:4});
    setTimeout(()=>safeFn(()=>Bank.play("oc_cracker",{gain:0.5,maxSec:4})),320);});
   if(!тихо)safeFn(()=>narrate(`Записан рецепт: «${r.n}». ${r.о} Ремесло: ${
-   (ART_CRAFT_BY_ID[r.ремесло]||{}).n||r.ремесло}.`,{interrupt:false}));
+   (ART_CRAFT_BY_ID[r.ремесло]||{}).n||r.ремесло}.`,{cat:"context",interrupt:false}));
   safeFn(()=>journal(`Рецепт: ${r.n}.`));
   return true;
  }catch(_){return false;}}
@@ -41363,7 +41430,7 @@ function enterPlace(c){safeFn(()=>deed("places"));
  journal(`Вход: ${c.structure.name}.`);
  /* §14: у рода подземелья своя примета — то, по чему его узнают на слух. */
  const примета=safeFn(()=>{const р=dungeonKindHere();return р?` ${р.примета}`:"";},"");
- narrate(`Вы вошли: ${placeTitle()}.${примета} ${describeHere(true)}`);
+ narrate(`Вы вошли: ${placeTitle()}.${примета} ${describeHere(true)}`,{cat:"result"});
  enterAnnounce(stype,c.x,c.y,доп);
  safeFn(()=>{const р=dungeonKindHere();
   if(р)setTimeout(()=>safeFn(()=>Bank.play(р.звук,{gain:0.5,maxSec:5})),900);});
@@ -41407,7 +41474,7 @@ function leavePlace(){
  safeFn(()=>{Play.stopKey("amb0");Play.stopKey("amb1");
   if(settings.effects)Play.start("amb0",(AMB[c.terrain[0]]||["wind"])[0],{loop:true});
   Weather.resume();Music.start(c.terrain[0]);bankUpdateAmbient();});
- narrate(`Вы вышли наружу: ${name} остаётся позади. ${c.terrain[1]}, ${c.empire.name}.`);
+ narrate(`Вы вышли наружу: ${name} остаётся позади. ${c.terrain[1]}, ${c.empire.name}.`,{cat:"result"});
  refresh();saveGame(true);
  return true;
 }
@@ -41834,7 +41901,7 @@ function startFlight(delta,dir){
  safeFn(()=>beacon(delta>0?"stairs_down":"stairs_up",0,0));
  /* Шахта вертикальна, и это стоит сказать: игрок должен знать, что вернётся
     ровно сюда же, а не «куда-нибудь». */
- narrate(`Марш лестницы: ${n} ${plural(n,"ступень","ступени","ступеней")} ${delta>0?"вниз":"вверх"}. Шахта идёт отвесно: выйдете ровно под этой клеткой${delta>0?"":", то есть там, откуда спускались"}. Идите ${dirWhither(dir)}; шаг в обратную сторону вернёт вас обратно.`);
+ narrate(`Марш лестницы: ${n} ${plural(n,"ступень","ступени","ступеней")} ${delta>0?"вниз":"вверх"}. Шахта идёт отвесно: выйдете ровно под этой клеткой${delta>0?"":", то есть там, откуда спускались"}. Идите ${dirWhither(dir)}; шаг в обратную сторону вернёт вас обратно.`,{cat:"result"});
  return true;}
 /* Шаг по ступени — настоящая запись шага по камню, по очереди из двух
    наборов, чтобы соседние ступени не звучали одним щелчком; ставится чуть
@@ -41930,7 +41997,7 @@ function passageCues(){
 function moveInside(dir){
  const lvl=curLevel();if(!lvl)return false;
  if(!DIRV[dir])return false;
- if(G.inCombat){narrate("Сначала завершите бой!");return false;}
+ if(G.inCombat){narrate("Сначала завершите бой!",{cat:"result"});return false;}
  const p=G.place;
  /* Подтверждение шагом: стоя на ступенях или в воротах, второй шаг в ту же
     сторону уводит вниз, наверх или наружу — игрок спускается и поднимается
@@ -42587,7 +42654,7 @@ const Scape={
    const ночь=safeFn(()=>isNight(),false);
    const role=
     kind==="deep"?"amb_abyss":
-    kind==="cave"||kind==="dungeon"?"deep_drip":
+    kind==="cave"||kind==="dungeon"?"cave_leak":
     kind==="desert"?"amb_desert":
     kind==="forest"?(ночь?"amb_night":"amb_day"):
     kind==="water"||kind==="ship"?"amb_water":
@@ -42605,12 +42672,12 @@ const Scape={
     у самого частого голоса срок больше трёх секунд. */
  timer:null,
  start(){if(this.timer)return;
-  this.timer=setInterval(()=>safeFn(()=>{
+  this.timer=Такт.каждые(1500,()=>safeFn(()=>{
    /* (10.0) Мир звучит, только пока на экране сам мир: в заглавном меню и
       в прологе обоз не подъезжает и стража не марширует — иначе игрок,
       вернувшийся в меню, слышал бы «Слышен обоз…» поверх пунктов. */
    const мир=document.getElementById("screen-game");if(!мир||мир.hidden)return;
-   this.tick();this.bed();safeFn(()=>Ambience.tick());safeFn(()=>PlaceVoice.tick());safeFn(()=>PatrolMarch.tick());safeFn(()=>CaravanRoll.tick());}),1500);},
+   this.tick();this.bed();safeFn(()=>Ambience.tick());safeFn(()=>PlaceVoice.tick());safeFn(()=>PatrolMarch.tick());safeFn(()=>CaravanRoll.tick());}),"звуковая картина");},
 };
 
 /* Как далеко слышно шаги живых и где стража ходит в коже, а не в железе. */
@@ -42620,7 +42687,7 @@ const ACTOR_LEATHER=/^(village|tavern|market|school|smugglers|den|burg|warcamp)$
 const ACTOR_HARD_FLOOR=/^(stone|marble|plank|wood|metal|bridge|bone|crystal|cobble|tile|stairs)$/;
 const Actors={
  key:null,list:[],iv:null,lastSay:0,lastStep:null,
- stop(){if(this.iv){clearInterval(this.iv);this.iv=null;}this.key=null;this.list=[];},
+ stop(){if(this.iv){this.iv();this.iv=null;}this.key=null;this.list=[];},
  /* Набор жителей уровня выводится из тех же чисел, что и сам уровень. */
  ensure(){
   if(!G.place||G.place.тайник){this.stop();return;}
@@ -42632,7 +42699,7 @@ const Actors={
   return ACTOR_WALK.has(tileAt(lvl,x,y));},
  spawn(k){
   const lvl=curLevel();if(!lvl)return;
-  if(this.iv){clearInterval(this.iv);this.iv=null;}
+  if(this.iv){this.iv();this.iv=null;}
   this.key=k;this.list=[];
   const p=G.place,R=i=>H(p.bx*13+i*7,p.by*19+p.depth*11,930+i);
   const spots=[];
@@ -42668,7 +42735,7 @@ const Actors={
    for(let i=0;i<folk;i++){const sp=take(50+i);if(!sp)continue;
     this.list.push({id:100+i,kind:"folk",x:sp.x,y:sp.y,
      name:тьма?"Житель посада":"Горожанин",тьма,seen:false});}}
-  this.iv=setInterval(()=>safeFn(()=>Actors.tick()),1500);},
+  this.iv=Такт.каждые(1500,()=>safeFn(()=>Actors.tick()),"живые вокруг");},
  /* Один ход всех живых: шаг, звук, встреча. */
  tick(){
   if(!G.place){this.stop();return;}
@@ -43046,7 +43113,7 @@ function useHere(){
   /* У входа в чертог «действие здесь» ставит на его лестницу, а на лестнице — ведёт до конца. */
   if(G.chStair)return !!safeFn(()=>Chertog.stairFinish(),false);
   if(safeFn(()=>Chertog.here(),null)){const t=Chertog.stairStart();if(t!==true)narrate(t,{interrupt:true});return true;}
-  narrate("Здесь нет ни входа, ни постройки, ни ресурса.");
+  narrate("Здесь нет ни входа, ни постройки, ни ресурса.",{cat:"result"});
   return false;}
  const lvl=curLevel(),p=G.place,t=tileAt(lvl,p.x,p.y);
  /* (9.5) Кузнец стоит рядом с горном: на его клетке — разговор с ним. */
@@ -43091,7 +43158,7 @@ function useHere(){
   default:{
    if(safeFn(()=>Deep.useHere(),false))return true;
    const near=nearFeatures(1);
-   if(near.length){narrate(`Под ногами пусто. Рядом: ${near.map(o=>`${o.name} на ${o.dir}е`).join("; ")}.`);pingSurroundings(1,3);return false;}
+   if(near.length){narrate(`Под ногами пусто. Рядом: ${near.map(o=>`${o.name} на ${o.dir}е`).join("; ")}.`,{cat:"result"});pingSurroundings(1,3);return false;}
    /* Пусто под ногами и рядом — тогда подсказка, где спуск: ступени вниз
       слышны из-под ног с их стороны, как и прежний жест «вниз». */
    const спуск=nearFeatures(6).filter(o=>o.t===">");
@@ -44985,7 +45052,7 @@ function move(dir){
     понимал, отчего герой стоит. Теперь она называет то, что держит шаг. */
  const слой=activeLayer();
  if(слой){
-  narrate(`Шаг не проходит: сверху ${layerName(слой)}. Свайп вниз двумя пальцами — закрыть, и шаг снова пойдёт по миру.`);
+  narrate(`Шаг не проходит: сверху ${layerName(слой)}. Свайп вниз двумя пальцами — закрыть, и шаг снова пойдёт по миру.`,{cat:"result"});
   return false;}
  if(!DIRV[dir])return false;
  /* В бою шаг идёт по полю схватки, где бы она ни шла: в поле, в подземелье, на палубе. */
@@ -44995,7 +45062,7 @@ function move(dir){
  if(G.ship)return sailLeg();
  /* Внутри здания, города или подземелья ходьба идёт по клеткам уровня. */
  if(G.place)return moveInside(dir);
- if(G.inCombat){narrate("Сначала завершите бой!");return;}
+ if(G.inCombat){narrate("Сначала завершите бой!",{cat:"result"});return;}
  /* На лестнице к чертогу шаг тратится на ступень. */
  if(G.chStair&&safeFn(()=>Chertog.stairStep(dir),false))return true;
  /* Вход своим ходом: игрок стоит у ворот или двери и делает ещё один шаг в
@@ -47837,7 +47904,7 @@ function gatherCurrent(source="tap"){
    if(source==="tap"){
     if(safeFn(()=>Arena.report(),false))return false;
     safeFn(()=>resourceEmptyFeedback());
-    narrate("Идёт бой — не до сбора. Свайп тремя пальцами вверх — меню действий, там же попытка побега.");}
+    narrate("Идёт бой — не до сбора. Свайп тремя пальцами вверх — меню действий, там же попытка побега.",{cat:"result"});}
    return false;}
   /* С палубы траву не рвут. Под килем идёт вода, а клетка мира под судном —
      это берег где-то далеко внизу: собирая с борта, игрок набивал трюм сверх
@@ -47870,7 +47937,7 @@ function gatherCurrent(source="tap"){
    narrate(`Больше не унести: в котомке ${safeFn(()=>carryNow(),0)} при пределе ${Math.round(safeFn(()=>derived("carry"),0))}. Продайте или бросьте лишнее — предел растёт от силы и выносливости.`);
    return false;}
   const c=cellContent(G.x,G.y);
-  if(!c||!c.res){if(source==="tap"){resourceEmptyFeedback(); narrate("На этой клетке ресурсов нет.");}return false;}
+  if(!c||!c.res){if(source==="tap"){resourceEmptyFeedback(); narrate("На этой клетке ресурсов нет.",{cat:"result"});}return false;}
   const key=G.x+","+G.y;
   const d=G.depleted[key];
   if(d&&d.left<=0){resourceEmptyFeedback(); narrate("Ресурс на этой клетке уже собран. Здесь больше ничего нет.");return false;}
@@ -48719,7 +48786,7 @@ function interactHere(){
  if(c.structure){openBuilding(c);return;}
  if(c.res){gatherCurrent();return;}
  if(c.находка){useFind(G.x,G.y);return;}
- narrate("Здесь нечего делать. Осмотритесь или идите дальше.");}
+ narrate("Здесь нечего делать. Осмотритесь или идите дальше.",{cat:"result"});}
 /* ════════ ОСМОТР: ЧТО ВОКРУГ ПО СТОРОНАМ ОТ ВАС, ВЫБОР ЦЕЛИ ════════
    Осмотр учитывает, куда вы смотрите: сторона последнего шага — «перед
    вами». Он находит объекты, жителей, двери, проходы, лестницы, ресурсы,
@@ -48860,7 +48927,7 @@ function look(){
  if(G.place){
   const near=nearFeatures(6);
   narrate(`${placeTitle()}. ${describeHere(true)} `+
-   (near.length?`Всего поблизости объектов: ${near.length}.`:"Вокруг только стены и пол."));
+   (near.length?`Всего поблизости объектов: ${near.length}.`:"Вокруг только стены и пол."),{cat:"result"});
   pingSurroundings(4,4);
   return;}
  const c=cellContent(G.x,G.y);
@@ -48876,7 +48943,7 @@ function look(){
    const cc=cellContent(x,y);
    if(cc.structure)objs.push(`${cc.structure.name}, ${Math.max(Math.abs(dx),Math.abs(dy))} шагов, ${dirBetween(dx,dy)}`);}
   extra=objs.length?"Поблизости: "+objs.slice(0,4).join("; ")+".":"Вокруг тихо.";}
- narrate(`${c.terrain[1]}. ${c.terrain[2]} ${extra}`);}
+ narrate(`${c.terrain[1]}. ${c.terrain[2]} ${extra}`,{cat:"result"});}
 
 /* ════════════════════════════════════════════════════════════════════════
    МАЯК ЦЕЛИ
@@ -50289,7 +50356,7 @@ const Gods=Modules.register("GODS",{
    if(!this.canPrayHere()){narrate(`Малым богам молятся в храме: ${g.святое} тоже подходит, но храм ближе.`);return false;}
    const key=G.x+","+G.y+":"+id;
    if(!G.prayedSmall||typeof G.prayedSmall!=="object")G.prayedSmall={};
-   if(G.prayedSmall[key]===G.day){narrate(`Сегодня вы уже молились здесь: ${g.n}.`);return false;}
+   if(G.prayedSmall[key]===G.day){narrate(`Сегодня вы уже молились здесь: ${g.n}.`,{cat:"result"});return false;}
    G.prayedSmall[key]=G.day;
    const праздник=this.isFestival(g);
    /* табу соперника: молитва врагу в его праздник стоит благосклонности */
@@ -55793,13 +55860,13 @@ Object.assign(CMD,{dirquests(){Director.questsView();},dirmodel(){Director.model
 const CH_VOICE_POOLS=["ch_boss","ch_open","ch_role","ch_chain"];
 function chVoiceLine(q){const k=String(q||"").trim();if(!k)return null;
  for(const p of CH_VOICE_POOLS){const P=VOICE_NPC[p];if(!P)continue;const r=P[k]||P[k.replace(/[.!?…]+$/,"")]||P[k.replace(/[.!?…]+$/,"")+"."];if(r)return r[0];}return null;}
-{const s0=Speech.say.bind(Speech);Speech.say=function(t,o){
+Speech.use("голоса чертогов в кавычках",function(t,o,дальше){
   try{if(typeof t==="string"&&t.indexOf("«")>=0&&safeFn(()=>Folk.on(),false)){let сыграно=false;
    const t2=t.replace(/\s*[:—]?\s*«([^»]+)»([.!?…]?)/g,(m,q)=>{if(сыграно)return m;const f=chVoiceLine(q);if(!f)return m;
     if(safeFn(()=>Folk.сказать(f+VOICE_GEN,null,{dir:VOICE_NPC_DIR,всегда:true}),false)){сыграно=true;return " ";}return m;});
    if(сыграно){const r=t2.replace(/\s+([.,!?…])/g,"$1").replace(/\s{2,}/g," ").replace(/[:,—]\s*$/,".").trim();
-    if(!r||/^[.!?…]+$/.test(r))return "VOICED";return s0(r,o);}}}catch(_){}
-  return s0(t,o);};}
+    if(!r||/^[.!?…]+$/.test(r))return "VOICED";return дальше(r,o);}}}catch(_){}
+  return дальше(t,o);},10);
 /* ════════════════════════════════════════════════════════════════════════
    12.5: РЕЖИССЁР ГРАНИ 3 — РАСТУЩИЙ НЕЙРОДВИЖОК И КУЗНИЦА НОВОГО
    Просьба игрока: «в игре постоянно должны появляться — за счёт игроков или
@@ -58418,7 +58485,7 @@ const Tavern=Modules.register("TAVERN",{
   safeFn(()=>journal(`В таверне: ${e.n}.`));
   /* Случай в таверне встаёт в очередь после встречающего и вестей входа —
      и ждёт их, а не истекает, пока они звучат. */
-  narrate(`${e.n[0].toUpperCase()+e.n.slice(1)}. ${т}`,{interrupt:false,ttl:30000});
+  narrate(`${e.n[0].toUpperCase()+e.n.slice(1)}. ${т}`,{cat:"context",interrupt:false,ttl:30000});
   return т;}catch(_){return "";}},
  text(){if(!this.in())return "Таверны вокруг нет: её слышно по гулу, смеху и кружкам.";
   const вещи=this.objects().map(id=>(PROP_BY_ID[id]||{}).n).filter(Boolean);
@@ -59080,7 +59147,7 @@ function prayToGod(id){
  if(!g){narrate("Такого бога нет в пантеоне двенадцати.");return false;}
  const key=G.x+","+G.y+":"+id;
  if(!G.prayed)G.prayed={};
- if(G.prayed[key]===G.day){narrate(`Сегодня вы уже молились здесь: ${g.n}. Приходите завтра или найдите другой храм.`);return false;}
+ if(G.prayed[key]===G.day){narrate(`Сегодня вы уже молились здесь: ${g.n}. Приходите завтра или найдите другой храм.`,{cat:"result"});return false;}
  G.prayed[key]=G.day;
  if(!G.faith)G.faith={};
  G.faith[id]=(Number(G.faith[id])||0)+1+(G.patron===id?1:0);
@@ -59099,7 +59166,7 @@ function prayToGod(id){
     «перезвон» через звуки интерфейса, где такой записи нет, и он молчал. */
  safeFn(()=>{const ф=Bank.pick("bell_small",0);if(ф)Bank.file(ф,{gain:0.55,maxSec:3,
   rate:0.86+Math.max(0,PANTHEON.findIndex(x=>x.id===id))*0.035});});
- narrate(`Молитва услышана. ${g.n}, ${g.ep}. Здоровье +${heal}.${extra} Благосклонность: ${G.faith[id]}, вы для него — ${faithTitle(id)}.`);
+ narrate(`Молитва услышана. ${g.n}, ${g.ep}. Здоровье +${heal}.${extra} Благосклонность: ${G.faith[id]}, вы для него — ${faithTitle(id)}.`,{cat:"result"});
  journal(`Молитва: ${g.n}.`);
  refresh();saveGame(true);
  return true;
@@ -60996,7 +61063,7 @@ function weaveAct(sp,sc,f,c,el,md,k){
  const удар=d=>{
   d=Math.max(1,Math.round(d*safeFn(()=>bossDamageK("spell",sp.school),1)));
   G.combat.hp-=d;safeFn(()=>updateCombat());safeFn(()=>bossPhaseCheck());
-  if(G.combat.hp<=0){narrate(`Заклинание «${sp.n}» сотворено. −${d} твари: она пала.`);victory();return " ";}
+  if(G.combat.hp<=0){narrate(`Заклинание «${sp.n}» сотворено. −${d} твари: она пала.`,{cat:"result"});victory();return " ";}
   return ` −${d} твари.`;};
  const ч=n=>Math.max(1,Math.round(n));
  /* Заклинание никогда не возвращает больше маны, чем стоило само: иначе из
@@ -63364,8 +63431,8 @@ const InstanceAudioEngine=Inst.module("InstanceAudioEngine",{iv:null,
  vec(d){return d==="север"?[0,-1]:d==="восток"?[1,0]:d==="юг"?[0,1]:d==="запад"?[-1,0]:[0,-1];},
  from(d){return ({север:"севера",восток:"востока",юг:"юга",запад:"запада"})[d]||"стороны";},
  stepRole(c,p){const f=InstanceGenerator.fauna(c.s).find(x=>x.id===p.sp);return f&&/golem/.test(f.base)?"golem_step":f&&/troll/.test(f.base)?"brute_step":c.s.cat.шаг;},
- start(){this.stop();this.iv=setInterval(()=>safeFn(()=>this.amb()),9000);},
- stop(){if(this.iv){clearInterval(this.iv);this.iv=null;}},
+ start(){this.stop();this.iv=Такт.каждые(9000,()=>safeFn(()=>this.amb()),"фон чертога");},
+ stop(){if(this.iv){this.iv();this.iv=null;}},
  /* Фон места звучит со сторон, а не голосом: капель, ветер, гул машин. */
  amb(){if(!Chertog.run()){this.stop();return;}if(!Chertog.inside()||G.inCombat||Math.random()<0.35)return;const c=Chertog.cur();const f=c.s.cat.фон;const role=f[Math.floor(Math.random()*f.length)];
   const a=Math.random()*Math.PI*2,d=3+Math.random()*5;safeFn(()=>Spatial.role(role,Math.cos(a)*d,Math.sin(a)*d,{gain:0.22+Math.random()*0.15,maxSec:4}));
@@ -63850,7 +63917,7 @@ function spellAudio(sp,opts){
  return seq.length>0;}
 function castSpell(i){const sp=SPELLS[i];
  if(!sp){narrate(`Слот ${i+1} пока пуст.`);return;}
- if(!G.spells.includes(sp.n)){narrate("Заклинание не изучено.");return;}
+ if(!G.spells.includes(sp.n)){narrate("Заклинание не изучено.",{cat:"result"});return;}
  if(sp.custom){const ч=spellCooling(sp);if(ч){safeFn(()=>Bank.play("hero_nomana",{kind:"magic",gain:0.5,maxSec:2}));narrate(`«${sp.n}» ещё перезаряжается: ${ч} ч.`);return;}}
  {const з=safeFn(()=>Oversight.forbids(sp),null);if(з){safeFn(()=>Bank.play("guard_shout",{gain:0.45,maxSec:2}));narrate(з);return;}}
  if(G.mana<sp.cost){safeFn(()=>Bank.play("hero_nomana",{kind:"magic",gain:0.6,maxSec:3}));
@@ -63882,14 +63949,14 @@ function castSpell(i){const sp=SPELLS[i];
   const sc=safeFn(()=>spellSchool(sp),null);const k=safeFn(()=>bossDamageK("spell",sc&&sc.id),1);
   const d=Math.round((8+G.level*2)*k*safeFn(()=>heroBuffK("чары"),1)*safeFn(()=>Director.spellK(sc&&sc.id),1));G.combat.hp-=d;safeFn(()=>{updateCombat();bossPhaseCheck();});
   итог=k>1?` −${d} твари: ${(BOSS_BY_ID[G.combat.m.boss.id]||{}).откликСлова}.`:k===0?" Чары ушли впустую: он этим кормится.":` −${d} твари.`;
-  if(G.combat.hp<=0){narrate(`Заклинание «${sp.n}» сотворено.${итог}`);victory();return;}}
+  if(G.combat.hp<=0){narrate(`Заклинание «${sp.n}» сотворено.${итог}`,{cat:"result"});victory();return;}}
  /* Искра и огненный шар бьют и рядовую тварь: прежде их урон был заведён
     только для владык, и в обычном бою чара звучала, а твари не доставалось. */
  else if(G.inCombat&&G.combat&&G.combat.m&&(sp.n==="Искра"||sp.n==="Огненный шар")){
   const d=Math.max(1,Math.round((sp.n==="Искра"?6+(Number(G.level)||1)*2+Math.floor((Number(G.mind)||0)/2):14+(Number(G.level)||1)*3+Math.floor((Number(G.mind)||0)/2))*safeFn(()=>heroBuffK("чары"),1)*safeFn(()=>Director.spellK((spellSchool(sp)||{}).id),1)));
   G.lastDamageKind="magic";G.combat.hp-=d;safeFn(()=>updateCombat());
   итог=sp.n==="Искра"?` Искра ударила в цель: −${d} твари.`:` Огонь накрыл цель: −${d} твари.`;
-  if(G.combat.hp<=0){narrate(`Заклинание «${sp.n}» сотворено.${итог}`);victory();return;}}
+  if(G.combat.hp<=0){narrate(`Заклинание «${sp.n}» сотворено.${итог}`,{cat:"result"});victory();return;}}
  else switch(sp.n){
   case "Исцеление":G.hp=Math.min(G.hpMax,G.hp+25);UI.drink();
    safeFn(()=>Bank.play("cast_potion",{kind:"magic",gain:0.6,maxSec:3}));итог=" Раны затянулись.";break;
@@ -63901,13 +63968,13 @@ function castSpell(i){const sp=SPELLS[i];
   case "Ледяная игла":
    if(G.inCombat&&G.combat){const d=10+G.level*2;G.combat.hp-=d;
     итог=` Игла вошла точно: −${d} твари.`;safeFn(()=>updateCombat());
-    if(G.combat.hp<=0){narrate(`Заклинание «${sp.n}» сотворено.${итог}`);victory();return;}}
+    if(G.combat.hp<=0){narrate(`Заклинание «${sp.n}» сотворено.${итог}`,{cat:"result"});victory();return;}}
    else итог=" Игла ушла в пустоту.";break;
   case "Искра глубин":
    safeFn(()=>Bank.play("cast_spikes",{kind:"magic",gain:0.55,maxSec:4}));
    if(G.inCombat&&G.combat){const d=16+G.level*3;G.combat.hp-=d;
     итог=` Разряд из-под земли: −${d} твари.`;safeFn(()=>updateCombat());
-    if(G.combat.hp<=0){narrate(`Заклинание «${sp.n}» сотворено.${итог}`);victory();return;}}
+    if(G.combat.hp<=0){narrate(`Заклинание «${sp.n}» сотворено.${итог}`,{cat:"result"});victory();return;}}
    else итог=" Земля отозвалась глухо: бить было некого.";break;
   case "Покров тени":
    if(G.inCombat){endCombat();итог=" Вы ушли из чужого внимания: бой прекратился.";
@@ -63923,7 +63990,7 @@ function castSpell(i){const sp=SPELLS[i];
     у каждой стихии своё. Бросок делается ПОСЛЕ действия чары: сорвалась
     отдача, а не само заклинание. */
  итог+=safeFn(()=>Resonance.бросок(sp),"");
- narrate(`Заклинание «${sp.n}» сотворено.${итог}`);journal("Заклинание: "+sp.n);
+ narrate(`Заклинание «${sp.n}» сотворено.${итог}`,{cat:"result"});journal("Заклинание: "+sp.n);
  /* В пошаговом бою чара — ваш ход, и тварь отвечает своим. */
  safeFn(()=>{if(G.inCombat&&G.combat&&G.combat.arena&&!Arena.live())Arena.foeTurn();});
  refresh();renderCharacter();}
@@ -63982,7 +64049,7 @@ function buyItem(key,i){const n=getNPCByKey(key);
   setTimeout(()=>safeFn(()=>Bank.play("arte_coins",{seed:item.price,gain:0.5,maxSec:3})),180);});
  const слово=safeFn(()=>merchDeal(n,"buy",item.price),"");
  const вСлот=item.зелье?qsAutoAdd({kind:"potion",id:item.зелье}):item.n==="Зелье здоровья"?qsAutoAdd({kind:"item",name:"Зелье здоровья"}):"";
- narrate(`Куплено: ${item.gear?lootDesc(item.gear):item.n}. Осталось золота: ${G.gold}.${вСлот}${слово}`);
+ narrate(`Куплено: ${item.gear?lootDesc(item.gear):item.n}. Осталось золота: ${G.gold}.${вСлот}${слово}`,{cat:"result"});
  afterTrade(key);}
 /* ════════ ПРОДАЖА РЕСУРСОВ ════════
    Цена зависит от державы (что она вывозит — дёшево, что ввозит — дорого),
@@ -64035,7 +64102,7 @@ function sellResource(key,res,all){
   setTimeout(()=>safeFn(()=>Bank.play("trade_m",{seed:total,gain:0.4,maxSec:3})),260);});
  const почему=safeFn(()=>priceWhy(res,empireIndexAt(G.x,G.y),null),"");
  const контра=safeFn(()=>smuggleCheck(res,total),"")||"";
- narrate(`Продано: ${res} — ${qty} шт. по ${unit} золота. Получено ${total}. Всего золота: ${G.gold}. Цена сложилась так: ${почему}.${контра}${словоПродажи}`);
+ narrate(`Продано: ${res} — ${qty} шт. по ${unit} золота. Получено ${total}. Всего золота: ${G.gold}. Цена сложилась так: ${почему}.${контра}${словоПродажи}`,{cat:"result"});
  journal(`Продажа: ${res} ×${qty} за ${total} золота.`);
  saveGame(true);refresh();afterTrade(key);}
 /* Надбавка за глубину: под землю всё приходится нести на себе. */
@@ -64862,7 +64929,7 @@ function shopSellRes(n,res,qty){
  const unit=sellUnit(n,res);const total=unit*qty;
  G.inv[res]=have-qty;if(G.inv[res]<=0)delete G.inv[res];G.gold+=total;safeFn(()=>deed("deals"));safeFn(()=>addRep(n.race,1));safeFn(()=>merchSpend(n,total));safeFn(()=>noteSale(n,total));
  safeFn(()=>{UI.pickup();Bank.play("treasure",{seed:total,gain:0.8});Bank.play("od_gold",{seed:total,gain:0.45,maxSec:3});});
- narrate(`Продано: ${res} — ${qty} шт. по ${unit} золота. Получено ${total}. Всего золота: ${G.gold}.${safeFn(()=>merchDeal(n,"sell",total),"")}`);journal(`Продажа: ${res} ×${qty} за ${total} золота.`);return true;}
+ narrate(`Продано: ${res} — ${qty} шт. по ${unit} золота. Получено ${total}. Всего золота: ${G.gold}.${safeFn(()=>merchDeal(n,"sell",total),"")}`,{cat:"result"});journal(`Продажа: ${res} ×${qty} за ${total} золота.`);return true;}
 /* После сделки перерисовывается то окно, что открыто: лавка или карточка жителя. */
 function afterTrade(key){
  safeFn(()=>Gods.taboo("trade"));
@@ -66408,7 +66475,7 @@ function takeNPCQuest(n){
   safeFn(()=>npcSay(n,"quest_full"));
   narrate(`У вас уже ${openQuests().length} незакрытых дел — больше человек не удержит в голове. Закончите начатое или откажитесь от чего-нибудь в списке заданий.`);
   return;}
- if(mainQuestOf(n)){narrate(`Этот квест уже у вас.${npcSayText(n,"quest_have")}`);return;}
+ if(mainQuestOf(n)){narrate(`Этот квест уже у вас.${npcSayText(n,"quest_have")}`,{cat:"result"});return;}
  /* У жреца, клановых, служилых и торговых людей дело начинается цепочкой:
     первый шаг — обычное задание, но у него будет продолжение. То же самое
     дело показывает и «Основное задание: что за дело» — до того, как взять. */
@@ -66697,7 +66764,7 @@ function completeQuest(id){
  else if(q.type==="escort"){
   if(!q.done){narrate(`Обоз ещё не доведён: идите к городу «${q.city}» на клетке (${q.tx}; ${q.ty}).`);return;}}
  else if(q.type==="god_altar"){
-  if(!q.doneFlag){narrate("Паломничество не исполнено: нужно помолиться у алтаря в подземелье, на втором уровне или глубже.");return;}}
+  if(!q.doneFlag){narrate("Паломничество не исполнено: нужно помолиться у алтаря в подземелье, на втором уровне или глубже.",{cat:"result"});return;}}
  else if(q.type==="god_relic"){
   const g=GOD_BY_ID[q.godId],rel=`Реликвия: ${g?g.n:""}`;
   const i=(G.items||[]).indexOf(rel);
@@ -70787,7 +70854,7 @@ const Lore=Modules.register("LORE",{
   safeFn(()=>{Bank.play(k.звук,{gain:0.45,maxSec:3});
    journal(`Знание: ${k.n} — ${n||id}.`);
    Ledger.add("знание",`${k.n}: ${n||id}${откуда?` (${откуда})`:""}`,"знание");});
-  narrate(`Узнано: ${k.n} — ${n||id}. Знаний ${this.count()}.`,{interrupt:false});
+  narrate(`Узнано: ${k.n} — ${n||id}. Знаний ${this.count()}.`,{cat:"context",interrupt:false});
   return true;}catch(_){return false;}},
  /* Отдать знание как плату. Дар остаётся при вас — вы его не забыли, —
     но второй раз то же самое уже не продать. */
@@ -72532,7 +72599,7 @@ CMD.craftdo=i=>{
  const ряд=safeFn(()=>invAll().filter(r=>String(r.name).toLowerCase()===имя.toLowerCase()).pop(),null);
  const раздел=ряд&&INV_SECTION_BY_ID[ряд.раздел];
  if(раздел)куда=` Лежит в котомке, раздел «${раздел.n}».`;
- narrate(`Создано: ${names[i]}.${куда}`);safeFn(()=>saveGame(true));refresh();renderCraft();};
+ narrate(`Создано: ${names[i]}.${куда}`,{cat:"result"});safeFn(()=>saveGame(true));refresh();renderCraft();};
 function renderGestures(){
  /* Единая логика: число пальцев = область игры.
     1 — движение и предметы, 2 — места и меню, 3 — бой и сведения, 4 — магия.
@@ -72886,6 +72953,7 @@ function bindSpeechSettings($){
  chk("setCompass","compass","Стороны света: север, юг, запад, восток.","Стороны как свайпы: впереди, позади, справа, слева — без сторон света.");
  chk("setCbSpeech","cbSpeech","В бою игра снова говорит: сторону, замах, удары.","Бой тихий: слышно тварь и её слова; здоровье — два пальца вправо.");
  chk("setCbDmgFoe","cbDmgFoe","Урон по твари озвучивается после каждого удара.","Урон по твари не озвучивается.");
+ chk("setPhoneSpk","phoneSpeaker","Динамик телефона: тихие звуки мира подняты.","Динамик телефона выключен: звуки мира как записаны.");
  chk("setCbDmgMe","cbDmgMe","Урон по вам озвучивается после каждого удара твари.","Урон по вам не озвучивается.");
  chk("setCbSide","cbSide","В бою игра называет сторону твари.","В бою игра не называет сторону твари: слушайте, откуда звучат её шаги, замах и голос.");
  chk("setIntro","intro","Заставка при запуске включена.","Заставка при запуске выключена.");
@@ -77474,7 +77542,7 @@ function enterGame(){if(entered){showScreen("screen-game");normalizeWeaponState(
     просто называет пункт, чтобы новичок не искал его вслепую. */
  /* §10: с чего начать. Говорится один раз, при первом входе в мир. */
  if(safeFn(()=>startCraftOpen(),false))
-  setTimeout(()=>safeFn(()=>narrate(startCraftText(),{interrupt:false})),2600);
+  setTimeout(()=>safeFn(()=>narrate(startCraftText(),{cat:"context",interrupt:false})),2600);
  if(!G.tutorDone&&!store.get(SAVE_KEY)){
   /* Подсказка ждёт семь секунд — и говорится только если игрок всё ещё стоит
      там, где вошёл, ничего не открыл и ни с кем не дерётся. Тот, кто уже

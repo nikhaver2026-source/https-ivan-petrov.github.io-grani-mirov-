@@ -83,12 +83,11 @@ const Возрождение165={
 safeFn(()=>{const d0=defeat;defeat=обёртка165(function(){
  const ц=safeFn(()=>Возрождение165.цель(),null);
  if(!ц)return d0.apply(this,arguments);
- const n0=Speech.say;let сказано=false;
- Speech.say=function(t){
+ let сказано=false;const me=this,аргументы=arguments;
+ const r=Speech.на_время(()=>d0.apply(me,аргументы),function(t,o,дальше){
   if(typeof t==="string"&&/^Поражение\.\.\. Вы очнулись у стен столицы/.test(t)){сказано=true;
    t=t.replace(/Вы очнулись у стен столицы «[^»]*», под открытым небом\./,Возрождение165.слова(ц));}
-  const a=Array.prototype.slice.call(arguments);a[0]=t;return n0.apply(Speech,a);};
- let r;try{r=d0.apply(this,arguments);}finally{Speech.say=n0;}
+  return дальше(t,o);},"очнулись у ближнего поселения");
  if(сказано&&!G.place){
   /* дальний путь: поражение — не дорога; поручения «в путь» сдвигаются вместе с героем (как при переносе к столице) */
   safeFn(()=>{const dx=ц.x-G.x,dy=ц.y-G.y;(Director.st2().q||[]).forEach(q=>{if(q&&q.type==="travel"&&Number.isFinite(q.x)){q.x+=dx;q.y+=dy;}});});
@@ -130,9 +129,9 @@ const ДверьE165={
    .replace(/Коснитесь дважды/g,"Нажмите E").replace(/коснитесь дважды/g,"нажмите E")
    .replace(/по двойному касанию/g,"по клавише E").replace(/двойным касанием/g,"клавишей E")
    .replace(/Двойное касание/g,"Клавиша E").replace(/двойное касание/g,"клавиша E");}};
-safeFn(()=>{const n0=Speech.say;Speech.say=function(t){
- if(typeof t==="string"&&safeFn(()=>isDesktopApp(),false)){const a=Array.prototype.slice.call(arguments);a[0]=ДверьE165.слова(t);return n0.apply(Speech,a);}
- return n0.apply(Speech,arguments);};});
+safeFn(()=>{Speech.use("клавиша E вместо касаний",function(t,o,дальше){
+ if(typeof t==="string"&&safeFn(()=>isDesktopApp(),false))return дальше(ДверьE165.слова(t),o);
+ return дальше(t,o);},40);});
 
 /* ── 4. Двери без тупиков: проверка и починка каждого уровня ── */
 const ДвериПорядок165={

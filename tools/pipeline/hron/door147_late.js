@@ -318,14 +318,12 @@ safeFn(()=>{const mv0=move;move=function(dir){
  if(!G.inCombat&&G.atDoor&&G.atDoor.x===G.x&&G.atDoor.y===G.y&&G.atDoor.dir===dir&&!safeFn(()=>activeLayer(),null)){
   const c=safeFn(()=>cellContent(G.x,G.y),null);
   if(c&&c.structure&&(ВОРОТА147[c.structure.type]||ДОМА147[c.structure.type])){G.atDoor=null;safeFn(()=>stopRun());return Вход147.туда(c);}}
- const sy0=Speech.say;let r;
- Speech.say=function(t,o){
+ const me=this,a=arguments;
+ return Speech.на_время(()=>mv0.apply(me,a),function(t,o,дальше){
   if(typeof t==="string"){const m=t.match(ПОРОГ147);if(m){const c=safeFn(()=>cellContent(G.x,G.y),null);const тип=c&&c.structure&&c.structure.type;
    if(ВОРОТА147[тип])t=`${m[1]}: вы у ворот, тут стража. Шагните ещё раз ${m[2]} или коснитесь дважды — подойдёте к страже.`;
    else if(ДОМА147[тип])t=`${m[1]}: вы у двери. Шагните ещё раз ${m[2]} или коснитесь дважды — постучаться или открыть.`;}}
-  return sy0.apply(Speech,[t,o].concat(Array.prototype.slice.call(arguments,2)));};
- try{r=mv0.apply(this,arguments);}finally{Speech.say=sy0;}
- return r;};});
+  return дальше(t,o);},"у ворот и дверей");};});
 /* «Услуги и люди» поселения на карте (таверна, рынок, кузница деревни, аудиенция у правителя) — тоже за воротами:
    без пропуска сначала стража, после платы — те же услуги */
 safeFn(()=>{const ob0=openBuilding;openBuilding=function(c){const s=c&&c.structure;

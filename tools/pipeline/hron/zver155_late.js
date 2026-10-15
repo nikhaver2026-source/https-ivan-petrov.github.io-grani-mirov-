@@ -129,8 +129,9 @@ safeFn(()=>{const d0=Stable.dismountHere;Stable.dismountHere=function(){const k=
  return t;};});
 safeFn(()=>{const d0=Zver.dismount;Zver.dismount=function(){const a=this.mount();const r=d0.apply(this,arguments);if(a)safeFn(()=>Маунт155.рядом("zv:"+a.uid));return r;};});
 safeFn(()=>{const dm0=dismissMount;dismissMount=function(){const id=G.mount;if(!id)return dm0.apply(this,arguments);
- const sv=Speech.say;Speech.say=function(t,o){return sv.call(Speech,String(t).replace("отходит в сторону и ждёт","идёт рядом с вами"),o);};
- let r;try{r=dm0.apply(this,arguments);}finally{Speech.say=sv;}safeFn(()=>Маунт155.рядом("leg:"+id));return r;};});
+ const me=this,a=arguments;
+ const r=Speech.на_время(()=>dm0.apply(me,a),(t,o,дальше)=>дальше(String(t).replace("отходит в сторону и ждёт","идёт рядом с вами"),o),"скакун идёт рядом");
+ safeFn(()=>Маунт155.рядом("leg:"+id));return r;};});
 /* пересел: прежний — домой; позвать — идёт рядом; запомнить, на ком ехали */
 safeFn(()=>{const u0=Stable.mountUp;Stable.mountUp=function(k){const prev=safeFn(()=>this.riding(),null);const t=u0.apply(this,arguments);
  if(this.riding()===k){const b=this.st();b.last155=k;delete b.pos[k];
@@ -221,8 +222,8 @@ const ОкноЗвери155={очередь:[],
   return !/на исходе|критическ|смертельн|вы пали|вы погиб|умира|новый уровень/i.test(String(t||""));},
  сброс(){if(!this.очередь.length||this.открыто())return;const q=this.очередь.splice(0);const now=Date.now();
   const t=[...new Set(q.filter(x=>now-x.t<90000).map(x=>x.s))];if(t.length)setTimeout(()=>safeFn(()=>Speech.say(t.join(" "),{interrupt:false})),450);}};
-safeFn(()=>{const s0=Speech.say;Speech.say=function(t,o){
+safeFn(()=>{Speech.use("окно зверей — фон после",function(t,o,дальше){
  try{if(ОкноЗвери155.открыто()&&ОкноЗвери155.фон(t,o)){
    ОкноЗвери155.очередь.push({s:String(t),t:Date.now()});if(ОкноЗвери155.очередь.length>12)ОкноЗвери155.очередь.shift();return true;}}catch(_){}
- return s0.apply(Speech,arguments);};});
-safeFn(()=>{setInterval(()=>safeFn(()=>ОкноЗвери155.сброс()),1000);});
+ return дальше(t,o);},30);});
+safeFn(()=>{Такт.каждые(1000,()=>safeFn(()=>ОкноЗвери155.сброс()),"окно зверей — вести после");});
