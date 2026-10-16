@@ -97,13 +97,51 @@
 # (заход 1 скачан) lab_beings7 https://opengameart.org/content/some-kind-of-beings-sounds7
 # (заход 1 скачан) lab_beast https://opengameart.org/content/monster-or-beast-sounds
 # «Подземная лаборатория», заход 2: маяки и подбор вещей (CC0).
-lab_sonar https://opengameart.org/content/sonar-ping
-lab_itemkey https://opengameart.org/content/item-pickup-key
-lab_gem https://opengameart.org/content/gem-collect-sfx
-lab_assorted7 https://opengameart.org/content/7-assorted-sound-effects-menu-level-up
-lab_mini16 https://opengameart.org/content/sfx-the-ultimate-2017-16-bit-mini-pack
-lab_rpg80 https://opengameart.org/content/80-cc0-rpg-sfx
-lab_secretcoin https://opengameart.org/content/secret-coin
-lab_coins8 https://opengameart.org/content/10-8bit-coin-sounds
-lab_blinker https://opengameart.org/content/car-blinker-sfx
-lab_pingpong https://opengameart.org/content/3-ping-pong-sounds-8-bit-style
+# (заход 2 скачан) lab_sonar https://opengameart.org/content/sonar-ping
+# (заход 2 скачан) lab_itemkey https://opengameart.org/content/item-pickup-key
+# (заход 2 скачан) lab_gem https://opengameart.org/content/gem-collect-sfx
+# (заход 2 скачан) lab_assorted7 https://opengameart.org/content/7-assorted-sound-effects-menu-level-up
+# (заход 2 скачан) lab_mini16 https://opengameart.org/content/sfx-the-ultimate-2017-16-bit-mini-pack
+# (заход 2 скачан) lab_rpg80 https://opengameart.org/content/80-cc0-rpg-sfx
+# (заход 2 скачан) lab_secretcoin https://opengameart.org/content/secret-coin
+# (заход 2 скачан) lab_coins8 https://opengameart.org/content/10-8bit-coin-sounds
+# (заход 2 скачан) lab_blinker https://opengameart.org/content/car-blinker-sfx
+# (заход 2 скачан) lab_pingpong https://opengameart.org/content/3-ping-pong-sounds-8-bit-style
+# «Подземная лаборатория», заход 3: подавляющая музыка и атмосфера, шаги по
+# снегу, гравию, камню и бетону, шаги роботов, поля магнетронов, голоса машин.
+# Лицензия каждой страницы — в licenses.txt; CC BY-SA и GPL в игру не идут.
+lab_snowgravel https://opengameart.org/content/42-snow-and-gravel-footsteps
+lab_metalconc https://opengameart.org/content/metal-footsteps-on-concrete
+lab_foot0 https://opengameart.org/content/footsteps-0
+lab_stonesteps https://opengameart.org/content/fantozzis-footsteps-grasssand-stone
+lab_snowwalk https://opengameart.org/content/walking-on-snow-sound
+lab_robosteps https://opengameart.org/content/robotic-mechanic-step-sounds
+lab_emfields https://opengameart.org/content/em-fields-pack-1
+lab_comp9 https://opengameart.org/content/9-sci-fi-computer-sounds-and-beeps
+lab_horrorlib https://opengameart.org/content/horror-sound-effects-library
+lab_ambpack https://opengameart.org/content/ambience-pack-1-sci-fi-horror
+lab_horratm https://opengameart.org/content/horror-atmosphere
+lab_factory https://opengameart.org/content/factory-ambiance
+lab_elevreactor https://opengameart.org/content/elevator-to-reactor-loop
+lab_heartmach https://opengameart.org/content/heart-of-machine
+lab_bleakterm https://opengameart.org/content/bleak-terminal
+lab_ghostsmach https://opengameart.org/content/ghosts-in-the-machine
+lab_creep https://opengameart.org/content/the-creep
+lab_menacing https://opengameart.org/content/menacing-otherworld
+lab_desolate https://opengameart.org/content/desolate
+lab_searching https://opengameart.org/content/searching
+lab_insistent https://opengameart.org/content/insistent-background-loop
+lab_discord https://opengameart.org/content/discordance
+lab_werelost https://opengameart.org/content/were-lost
+lab_lethal https://opengameart.org/content/lethal-injection
+lab_shadows https://opengameart.org/content/shadows-awaken-within
+lab_silent https://opengameart.org/content/the-world-fell-silent
+lab_bleeding https://opengameart.org/content/bleeding-out
+lab_tomb https://opengameart.org/content/forgoten-tomb-ambience
+lab_torment https://opengameart.org/content/realm-of-torment
+lab_emptycity https://opengameart.org/content/emptycity-background-music
+lab_ghostvoice https://opengameart.org/content/ghost-monster-voice-moaning-growling
+lab_bitvoice https://opengameart.org/content/bitcrushed-voice-one-shots
+lab_atmoint https://opengameart.org/content/atmospheric-interaction-sound-pack
+lab_elevding https://opengameart.org/content/elevator-ding
+lab_energy2 https://opengameart.org/content/energy

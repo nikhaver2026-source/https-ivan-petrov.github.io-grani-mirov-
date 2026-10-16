@@ -1,0 +1,3 @@
+# «Подземная лаборатория», заход 3: Kenney Impact Sounds (CC0): шаги по
+# ковролину, бетону, снегу, удары по металлу и пластинам.
+lab_kimpact https://kenney.nl/media/pages/assets/impact-sounds/87b4ddecda-1677589768/kenney_impact-sounds.zip
