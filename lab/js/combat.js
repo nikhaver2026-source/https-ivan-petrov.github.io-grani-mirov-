@@ -869,6 +869,8 @@ function foeTick(f, spotted) {
   if (f.type === "repairbot" && f.state !== "idle") foes.forEach(function (o) { if (o !== f && !o.dead && o.kind === "mech" && cheb(o, f) <= 1 && o.hp < o.maxhp) { o.hp = Math.min(o.maxhp, o.hp + Math.round(o.maxhp * 0.05)); if (Math.random() < 0.3) A("foeSound", f, "repair"); } });
   var see = sees(f);
   var hear = hears(f);
+  /* к звуку из-за стены прохода не нашлось — какое-то время машина его не слушает */
+  if (hear && f.wallDeaf > tickN && !see && !losTo(f)) hear = false;
   /* слепые и ищейки охотятся на слух */
   var sense = see || (hear && (has(f, "deaf") || has(f, "tracker")));
   if (see || hear) f.lastKnown = heroPos();
@@ -1006,7 +1008,7 @@ function foeTick(f, spotted) {
         var fc = flankCell(f);
         if (fc && stepToward(f, fc[0], fc[1])) { if (!f.flank) { f.flank = 1; sayOnce("flk" + f.id, f.name.split(",")[0] + " заходит с фланга, " + gm().relDir(f.x, f.y) + "!", 9000); } return; }
       }
-      if (!stepToward(f, tgt.x, tgt.y, { adjacent: true })) wander(f);
+      if (!stepToward(f, tgt.x, tgt.y, { adjacent: true })) { if (noPath(f)) return; wander(f); } else f.noPath = 0;
       if (punish && f.spd > 0) stepToward(f, G().x, G().y, { adjacent: true });
     }
     return;
@@ -1030,8 +1032,19 @@ function foeTick(f, spotted) {
   if (canMove) {
     f.mv = 0;
     var t2 = f.lastKnown || heroPos();
-    if (!stepToward(f, t2.x, t2.y, { adjacent: true })) wander(f);
+    if (!stepToward(f, t2.x, t2.y, { adjacent: true })) { if (!noPath(f)) wander(f); } else f.noPath = 0;
   }
+}
+/* До героя нет прохода — он за стеной, за запертой дверью: машина не бьётся
+   о стену вечно. Несколько ходов подряд без пути и без прямой видимости —
+   бросает погоню, а звук из-за стены какое-то время её снова не поднимает. */
+function noPath(f) {
+  if (f.pathLen < 9999 || losTo(f)) { f.noPath = 0; return false; }
+  f.noPath = (f.noPath || 0) + 1;
+  if (f.noPath < 6) return false;
+  f.noPath = 0; f.state = "idle"; f.lastKnown = null; f.lost = 0; f.aim = false; f.wallDeaf = tickN + 40;
+  if (dist(f, heroPos()) <= 9) sayOnce("nop" + f.id, f.name.split(",")[0] + " не находит к вам прохода и отстаёт.", 20000);
+  return true;
 }
 function wander(f) {
   var ks = ["N", "S", "W", "E"];

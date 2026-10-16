@@ -1583,9 +1583,11 @@ LAB.ui.closeAll();
     out.decoy = !!bot && bot.state === "alert" && !!bot.lastKnown && /электронной приманки/.test(LAB.oko.logText(10));
     if (!out.decoy) out.decoyDiag = (bot ? bot.state + " " + JSON.stringify(bot.lastKnown) + " до героя " + (Math.abs(bot.x - G.x) + Math.abs(bot.y - G.y)) + ", бросок " + best + " шагов" : "нет робота") + " | " + LAB.oko.logText(3);
     /* сенсорная помеха: камера рядом ослепла */
-    const cCam = C.freeCellNear(G.x, G.y + 2, null), cam = cCam ? C.spawnFoe("cam", cCam[0], cCam[1], {}) : null;
+    /* камера — в паре шагов от героя, с той стороны, где есть место; помеху бросаем в её сторону */
+    const cCam = [[G.x, G.y + 2], [G.x + 2, G.y], [G.x - 2, G.y], [G.x, G.y - 2], [G.x, G.y]].map(a => C.freeCellNear(a[0], a[1], null)).find(Boolean), cam = cCam ? C.spawnFoe("cam", cCam[0], cCam[1], {}) : null;
     if (cam) { cam.ally = false; cam.calm = false; }
-    G.face = "S"; G.inv.disruptor = 1; g.useItem("disruptor"); await wait(800);
+    const cdx = cCam ? cCam[0] - G.x : 0, cdy = cCam ? cCam[1] - G.y : 1;
+    G.face = Math.abs(cdy) >= Math.abs(cdx) ? (cdy < 0 ? "N" : "S") : (cdx < 0 ? "W" : "E"); G.inv.disruptor = 1; g.useItem("disruptor"); await wait(800);
     out.blind = !!cam && cam.blindT > 0;
     if (!out.blind) out.blindDiag = cam ? "камера в " + Math.max(Math.abs(cam.x - G.x), Math.abs(cam.y - G.y)) + " " + cam.kind + " " + JSON.stringify(cam.beh) : "нет камеры";
     /* ЭМ-подавитель останавливает робота; игла пробивает броню */
@@ -1822,19 +1824,159 @@ LAB.ui.closeAll();
     const heap = () => (performance.memory ? performance.memory.usedJSHeapSize : 0);
     const tour = n => { for (let i = 0; i < n; i++) { const Lv = 1 + (i % 10), Fv = 1 + (i * 7) % 20; LAB.getFloor(G.seed, Lv, Fv); } };
     tour(100); await wait(200); const h1 = heap(); tour(200); await wait(200); const h2 = heap();
-    out.memory = performance.memory ? { mb: Math.round((h2 - h1) / 1048576), ok: h2 - h1 < 64 * 1048576 } : { mb: "нет данных", ok: true, na: true };
+    out.memory = performance.memory ? { mb: Math.round((h2 - h1) / 1048576), ok: h2 - h1 < 64 * 1048576 } : { mb: "нет данных", ok: false, na: true };
     LAB.ui.closeAll();
     return out;
   });
-  ok(tp.settings, "A, H: настройки речи и доступности записываются и переживают перезапуск");
+  ok(tp.settings, "A, H: настройки речи и доступности записываются в хранилище");
   ok(tp.spatial, "B: стороны и расстояние на слух — слева и справа, ближе и дальше, глуше за спиной и за стеной");
   ok(tp.doorSound, "B: проход через дверь звучит — порог двери под ногой" + (tp.doorDiag ? " (" + tp.doorDiag + ")" : ""));
   ok(tp.duck, "E: речь приглушает музыку, но не звуки боя и сигналы" + (tp.duckDiag ? " (" + tp.duckDiag + ")" : ""));
-  ok(tp.giveUp !== false, "E: враг, который героя не видит и не слышит, не гонится вечно — переходит к поиску");
+  ok(tp.giveUp === true, "E: враг, который героя не видит и не слышит, не гонится вечно — переходит к поиску" + (tp.giveUp == null ? " (не нашлось клетки вне видимости)" : ""));
   ok(tp.turrets && tp.terminal && tp.deadStays, "D, H: турели, взломанный терминал и павший враг — те же после загрузки");
   ok(tp.noDup && tp.docOnce, "F, H: после загрузки вещей и документов столько же, документ не дублируется" + (tp.dupDiag ? " (" + tp.dupDiag + ")" : ""));
   ok(tp.depths, "G: у каждой глубины свои полы, фон и враги");
   ok(tp.memory && tp.memory.ok, "I: обход двухсот этажей не раздувает память (прирост " + (tp.memory && tp.memory.mb) + (tp.memory && tp.memory.na ? "" : " МБ") + ")");
+  /* A4, H5: настройки переживают перезапуск — игра, открытая заново с тем же хранилищем, читает их при запуске */
+  const keepS = await page.evaluate(() => {
+    const S = LAB.settings, k = {};
+    ["ratePct", "navMode", "hints", "tutor", "saveNote", "weapVol", "bass", "drc"].forEach(n => { k[n] = S[n]; });
+    Object.assign(S, { ratePct: 65, navMode: "beacon", hints: 3, tutor: 0, saveNote: 2, weapVol: 0.7, bass: 3, drc: 2 }); LAB.saveSettings();
+    return k;
+  });
+  let restart = false, restartDiag = "";
+  /* перезапуск: новый сеанс браузера с тем же сохранённым хранилищем, что у игры сейчас */
+  const ctx2 = await browser.newContext({ storageState: await page.context().storageState() });
+  const page2 = await ctx2.newPage();
+  page2.on("pageerror", e => errors.push("pageerror (после перезапуска): " + e.message));
+  page2.on("request", r => { const u = r.url(); if (!/^(http:\/\/127\.0\.0\.1:|data:|blob:)/.test(u)) external.push(u); });
+  try {
+    await page2.goto(url); await page2.waitForFunction(() => window.LAB_READY === true, null, { timeout: 60000 });
+    const s2 = await page2.evaluate(() => { const S = LAB.settings; return { ratePct: S.ratePct, rate: S.rate, want: LAB.rateFromPct(65), navMode: S.navMode, hints: S.hints, tutor: S.tutor, saveNote: S.saveNote, weapVol: S.weapVol, bass: S.bass, drc: S.drc }; });
+    restart = s2.ratePct === 65 && Math.abs(s2.rate - s2.want) < 1e-9 && s2.navMode === "beacon" && s2.hints === 3 && s2.tutor === 0 && s2.saveNote === 2 && s2.weapVol === 0.7 && s2.bass === 3 && s2.drc === 2;
+    if (!restart) restartDiag = JSON.stringify(s2);
+  } catch (e) { restartDiag = String(e && e.message || e).slice(0, 200); }
+  await ctx2.close();
+  await page.evaluate(k => { Object.assign(LAB.settings, k); LAB.saveSettings(); }, keepS);
+  ok(restart, "A, H: после перезапуска игры настройки речи и доступности — те же" + (restartDiag ? " (" + restartDiag + ")" : ""));
+  const tp2 = await page.evaluate(() => {
+    const g = LAB.game, C = LAB.combat, out = {}, W = LAB.W, H = LAB.H;
+    let G = g.G;
+    C.stop(); LAB.ui.closeAll();
+    const pass = (x, y) => x >= 0 && y >= 0 && x < W && y < H && g.passable(x, y);
+    const los = (a, b) => LAB.los(g.CUR.fl, g.CUR.fs, a[0], a[1], b[0], b[1]);
+    /* C1: камера видит в пределах своего конуса — впереди и недалеко; на краю обзора только «повернулась»;
+       за спиной, сбоку вне конуса, дальше дальности, за стеной и под маскировкой — нет */
+    let spot = null;
+    for (let F = 1; F <= 6 && !spot; F++) {
+      g.enterFloor(1, F, "down", true); G = g.G;
+      for (let y = 0; y < H && !spot; y++) for (let x = 0; x < W && !spot; x++) {
+        if (!pass(x, y)) continue;
+        const P = [x, y], line = [], back = [x - 2, y], side = [x + 2, y + 3];
+        for (let k = 1; k <= 12; k++) line.push([x + k, y]);
+        if (![back, side].concat(line).every(c => pass(c[0], c[1]) && los(P, c))) continue;
+        let wall = null;
+        for (let a = 2; a <= 6 && !wall; a++) for (let p = -1; p <= 1 && !wall; p++) { const c = [x + a, y + p]; if (pass(c[0], c[1]) && !los(P, c)) wall = c; }
+        if (wall) spot = { P, line, back, side, wall };
+      }
+    }
+    if (spot) {
+      C.foes().forEach(f => { f.dead = true; });
+      const cam = C.spawnFoe("cam", spot.P[0], spot.P[1], {});
+      cam.camDirs = ["E"]; cam.camI = 0; cam.camSw = 0;
+      const ev0 = LAB.oko.event, evs = []; LAB.oko.event = (t, o) => { evs.push(t + (o && o.glimpse ? ":край" : "")); };
+      const keepEv = G.event; G.event = null; G.st.jam = 0; G.st.cloak = 0; g.CUR.fs.okoBlind = false;
+      const at = (c, cloak) => {
+        cam.camT = 0; cam.glimT = 0; cam.blindT = 0; G.st.cloak = cloak ? 50 : 0; evs.length = 0;
+        G.x = c[0]; G.y = c[1]; G.noise = 0; C.tick(); G.st.cloak = 0;
+        return (cam.camT > 0 ? "З" : cam.glimT > 0 ? "к" : "-") + (evs.length ? "!" : "");
+      };
+      out.camLine = spot.line.map(c => at(c)).join("");
+      const rest = [at(spot.back), at(spot.side), at(spot.wall), at(spot.line[2], true)];
+      LAB.oko.event = ev0; G.event = keepEv; cam.dead = true;
+      out.cam = /^(З!)+(к!)+-+$/.test(out.camLine) && rest.every(s => s === "-");
+      if (!out.cam) out.camDiag = out.camLine + " / " + rest.join(" ");
+    }
+    /* E6: тварь слышит героя за стеной, а прохода нет (двери закрыты, открывать она не умеет) — погоню бросает и не возвращается на звук */
+    let setup = null;
+    for (let F = 1; F <= 8 && !setup; F++) {
+      g.enterFloor(1, F, "down", true); G = g.G;
+      const fl = g.CUR.fl, fs = g.CUR.fs;
+      for (const r of fl.rooms) {
+        if (setup) break;
+        const doors = fl.doors.filter(d => d.room === r.id || d.other === r.id);
+        if (!doors.length || doors.some(d => d.lock && d.lock.type === "secret")) continue;
+        const keep = doors.map(d => [d.id, fs.doors[d.id]]);
+        doors.forEach(d => { fs.doors[d.id] = 0; });
+        let pair = null;
+        for (let y = 0; y < H && !pair; y++) for (let x = 0; x < W && !pair; x++) {
+          if (!pass(x, y) || fl.room[y * W + x] !== r.id) continue;
+          for (let dy = -4; dy <= 4 && !pair; dy++) for (let dx = -4; dx <= 4 && !pair; dx++) {
+            const fx = x + dx, fy = y + dy;
+            if (Math.abs(dx) + Math.abs(dy) > 4 || !pass(fx, fy) || fl.room[fy * W + fx] === r.id || g.doorAt(fx, fy)) continue;
+            if (LAB.los(fl, fs, fx, fy, x, y)) continue;
+            if (!LAB.bfs(fl, fs, fx, fy, (a, b) => Math.abs(a - x) + Math.abs(b - y) <= 1, { passDoor: () => false, maxLen: 6000 })) pair = { hx: x, hy: y, fx, fy };
+          }
+        }
+        if (pair) setup = pair; else keep.forEach(k => { fs.doors[k[0]] = k[1]; });
+      }
+    }
+    if (setup) {
+      C.foes().forEach(f => { f.dead = true; });
+      G.x = setup.hx; G.y = setup.hy; const hp0 = G.hp; G.hp = G.hpMax;
+      const f = C.spawnFoe("blind", setup.fx, setup.fy, {});
+      f.state = "hunt"; f.lastKnown = { x: G.x, y: G.y }; SPOKEN.length = 0;
+      let st = "";
+      for (let k = 0; k < 40; k++) { G.noise = 8; C.tick(); G.hp = G.hpMax; st += f.state === "hunt" ? "h" : f.state === "alert" ? "a" : "i"; }
+      out.wallStates = st;
+      C.foes().forEach(o => { if (o !== f) o.dead = true; }); /* опасность считаем только от этой твари */
+      out.wall = /^h{1,8}[ai]+$/.test(st) && !C.danger() && SPOKEN.some(t => /не находит к вам прохода/.test(t));
+      f.dead = true; G.hp = hp0;
+    }
+    LAB.ui.closeAll();
+    return out;
+  });
+  ok(tp2.cam, "C: камера видит только в своём конусе — впереди до дальности, на краю обзора «повернулась», а за спиной, сбоку, дальше, за стеной и под маскировкой — нет" + (tp2.camDiag ? " (" + tp2.camDiag + ")" : tp2.camLine == null ? " (не нашлось места для проверки)" : ""));
+  ok(tp2.wall, "E: тварь слышит героя за стеной, а прохода нет — погоню бросает и на звук из-за стены не возвращается" + (tp2.wallStates ? " (" + tp2.wallStates + ")" : " (не нашлось места для проверки)"));
+  /* H: запись прежней версии загружается. Образец — настоящая запись «Альфы 1.1», сделанная её кодом:
+     уровень 1, этаж 3, клетка 79·32, здоровье 100, вещей 8, оружие с двумя модулями усиления прежнего вида,
+     одна записка, 321 кредит, открытая дверь d0, взломанный терминал o16, уничтоженный враг e0 */
+  const oldRaw = fs.readFileSync(path.join(__dirname, "fixtures", "alfa-1.1-save.json"), "utf8");
+  const old = await page.evaluate(async raw => {
+    const g = LAB.game, C = LAB.combat, out = {};
+    const wait = ms => new Promise(r => setTimeout(r, ms));
+    C.stop(); LAB.ui.closeAll();
+    const keep = localStorage.getItem("lab_slot2");
+    localStorage.setItem("lab_slot2", raw);
+    let err = "";
+    try { g.loadSlot(2); } catch (e) { err = String(e && e.message || e); }
+    await wait(500); C.stop();
+    const G = g.G, sum = { inv: Object.keys(G.inv).reduce((a, k) => a + (G.inv[k] || 0), 0), weapons: G.weapons.length, armors: G.armors.length, notes: G.noteList.length, credits: G.credits };
+    out.loaded = !err && g.entered && G.L === 1 && G.F === 3 && G.x === 79 && G.y === 32 && G.hp === 100;
+    out.same = JSON.stringify(sum) === JSON.stringify({ inv: 8, weapons: 1, armors: 0, notes: 1, credits: 321 });
+    const term = g.CUR.fl.objs.find(o => o.id === "o16");
+    /* дверь за ушедшим героем закрылась сама, но осталась отпертой (1) */
+    out.world = g.CUR.fs.doors.d0 >= 1 && !!term && g.objState(term).hacked === true && !C.foes().some(f => f.id === "e0" && !f.dead);
+    out.mod = !!(G.weapons[0].mod && G.weapons[0].mod.power === 2);
+    out.fresh = typeof G.bp === "object" && typeof G.bpNpc === "object" && G.st.navjam === 0;
+    let e2 = "";
+    try {
+      LAB.tutor.ev("door");
+      LAB.oko.event("camera", { x: G.x, y: G.y });
+      const wb = g.CUR.fl.objs.find(o => o.type === "workbench") || { id: "x", x: G.x, y: G.y };
+      LAB.ui.craft(wb); LAB.ui.closeAll();
+      for (let k = 0; k < 10; k++) C.tick();
+      G.hp = G.hpMax; g.lookAround();
+    } catch (e) { e2 = String(e && e.message || e); }
+    out.systems = !e2 && !!(G.tutor && G.tutor.done.door);
+    g.saveSlot(3); out.resave = !!g.validSave(localStorage.getItem("lab_slot3"));
+    if (!(out.loaded && out.same && out.world && out.mod && out.fresh && out.systems && out.resave)) out.diag = JSON.stringify({ err, e2, pos: [G.L, G.F, G.x, G.y, G.hp], sum, d0: g.CUR.fs.doors.d0 });
+    if (keep) localStorage.setItem("lab_slot2", keep); else localStorage.removeItem("lab_slot2");
+    LAB.ui.closeAll();
+    return out;
+  }, oldRaw);
+  ok(old.loaded && old.same && old.world, "H: запись «Альфы 1.1» загружается — место, здоровье, вещи, кредиты, отпертая дверь, взломанный терминал и павший враг те же" + (old.diag ? " (" + old.diag + ")" : ""));
+  ok(old.mod && old.fresh && old.systems && old.resave, "H: в записи «Альфы 1.1» модули оружия переходят в новый вид; схемы, обучение, ОКО и мастерская работают; запись сохраняется заново");
 
   console.log("Лифт: возит только на этажи, где вы уже были");
   const lift = await page.evaluate(async () => {

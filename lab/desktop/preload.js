@@ -12,7 +12,7 @@ const log = m => ipcRenderer.send('lab-log', String(m));
 const quit = () => ipcRenderer.send('lab-quit');
 
 contextBridge.exposeInMainWorld('LabDesktop', {
-  version: 'Альфа 1.1', platform: process.platform,
+  version: 'Альфа 1.2', platform: process.platform,
   exit: quit, log: log,
   // Голоса компьютера: почему не видно голосов и повторная попытка.
   ttsDiag: () => { try { return String(ipcRenderer.sendSync('lab-tts-diag') || ''); } catch (_) { return ''; } },
