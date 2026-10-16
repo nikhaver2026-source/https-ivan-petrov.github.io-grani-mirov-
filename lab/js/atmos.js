@@ -259,20 +259,24 @@ function enterFloor(L, F) {
   }
   if (!beaconT) beaconT = setInterval(function () { LAB.safe(beaconTick); }, 220);
   if (!evTimer) scheduleEvent();
-  AE.setReverb(1.4 + L * 0.08, 0.3 + L * 0.015);
+  var Ld = depthL(L);
+  AE.setReverb(1.4 + Ld * 0.08, 0.3 + Ld * 0.015);
   music("game");
 }
+/* «Глубина» уровня для синтеза: до Ядра — сам уровень (1–10), глубже — от
+   середины к низу внутри блока, чтобы гул и отзвук не уходили за пределы слуха. */
+function depthL(L) { return L <= 10 ? L : 5 + ((L - 1) % 20) / 4; }
 var synthBedS = null;
 function synthBed(L) {
   if (synthBedS) { synthBedS.stop(2); synthBedS = null; }
   if (!AE.ensure()) return;
   /* синтезированный гул уровня: низкий шум, гул вентиляции, ниже с глубиной */
-  var s = new LAB.SFX(AE.amb);
-  var n = s.noise("brown", 4, true), f = s.filter("lowpass", 180 - L * 8, 0.7), gN = s.gain(0.0001);
+  var s = new LAB.SFX(AE.amb), Ld = depthL(L);
+  var n = s.noise("brown", 4, true), f = s.filter("lowpass", 180 - Ld * 8, 0.7), gN = s.gain(0.0001);
   n.connect(f); f.connect(gN); gN.connect(s.out()); n.start();
   gN.gain.setTargetAtTime(0.35, s.ctx.currentTime, 2);
-  var o = s.osc("sine", 38 + (10 - L) * 2), go = s.gain(0.0001); o.connect(go); go.connect(s.out()); o.start();
-  go.gain.setTargetAtTime(0.05 + L * 0.006, s.ctx.currentTime, 3);
+  var o = s.osc("sine", 38 + (10 - Ld) * 2), go = s.gain(0.0001); o.connect(go); go.connect(s.out()); o.start();
+  go.gain.setTargetAtTime(0.05 + Ld * 0.006, s.ctx.currentTime, 3);
   s.lfo(0.07, 60, f.frequency);
   synthBedS = s;
 }
@@ -286,7 +290,7 @@ function setRoom(r) {
   roomLid = lid;
   /* гул прошлого помещения — из памяти (коридор остаётся: в него выходят часто) */
   if (prevLid && prevLid !== lid && prevLid !== "room_corridor") releaseLater(prevLid, 3000);
-  if (!id) { AE.setReverb(1.2 + (G() ? G().L : 1) * 0.08, 0.28); return; }
+  if (!id) { AE.setReverb(1.2 + depthL(G() ? G().L : 1) * 0.08, 0.28); return; }
   roomLoop = loop(lid, { bus: "amb", gain: 0.55, fadeIn: 1.2, reverb: 0.1 });
   /* отзвук: коридор — длинный, большие залы — гулкие, тесные — сухие */
   if (r) {
@@ -297,7 +301,7 @@ function setRoom(r) {
 function scheduleEvent() {
   clearTimeout(evTimer);
   var g = G();
-  var gap = 7000 + Math.random() * 14000 - (g ? g.L * 400 : 0);
+  var gap = 7000 + Math.random() * 14000 - (g ? depthL(g.L) * 400 : 0);
   evTimer = setTimeout(function () {
     evTimer = null;
     if (!worldOn) return;
@@ -350,7 +354,7 @@ function startTension() {
   if (!AE.ensure() || !S.music) return;
   var s = new LAB.SFX(AE.music);
   var g = s.gain(0.0001); g.connect(s.out());
-  var root = 55 * Math.pow(2, -((G() ? G().L : 1) - 1) / 24);
+  var root = 55 * Math.pow(2, -(depthL(G() ? G().L : 1) - 1) / 24);
   var o1 = s.osc("sawtooth", root), o2 = s.osc("sawtooth", root * 1.059), f = s.filter("lowpass", 220, 2);
   o1.connect(f); o2.connect(f); f.connect(g); o1.start(); o2.start();
   s.lfo(0.25, 120, f.frequency);
@@ -495,8 +499,10 @@ function genMusic(theme, L) {
   var s = new LAB.SFX(AE.music);
   mus.s = s;
   var c = s.ctx, t0 = c.currentTime;
-  var deep = theme === "game" ? (L - 1) / 9 : theme === "menu" ? 0.6 : 0.4;
+  var deep = theme === "game" ? (depthL(L) - 1) / 9 : theme === "menu" ? 0.6 : 0.4;
   var root = theme === "game" ? LAB.LEVELS[L].root / 4 : theme === "menu" ? 41.2 : theme === "ending" ? 55 : 46.25;
+  /* глубже Ядра основной тон уходит под слух — поднимаем его октавами */
+  while (root < 20) root *= 2;
   /* 1. Инфранизкий гул: два тона, разнесённые на полутон, — биения давят на уши */
   var g1 = s.gain(0.0001); g1.connect(s.out());
   var lp = s.filter("lowpass", 140 + deep * 40, 0.9); lp.connect(g1);

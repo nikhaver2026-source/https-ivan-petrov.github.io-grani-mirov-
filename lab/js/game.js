@@ -159,6 +159,7 @@ function enterFloor(L, F, how, silent) {
   G.maxF[L] = Math.max(G.maxF[L] || 0, F);
   markSeen();
   A("enterFloor", L, F);
+  if (how === "gatedown" && LAB.oko) LAB.oko.event("enter");
   if (!silent) {
     var lev = LAB.LEVELS[L];
     var head = (how === "gatedown" || how === "start") ? "Уровень " + L + ", " + lev.name + ". " + lev.desc + " Этаж " + F + "." : "Уровень " + L + ", этаж " + F + ".";
@@ -319,8 +320,9 @@ function noteText(it) {
 game.noteText = noteText;
 /* Загадка для замка или панели ОКО: из загадок блока, иначе из общих. */
 function riddleFor(rid, L) {
-  var b = LAB.blockOf(L || G.L);
-  var pool = (LAB.RIDDLES || []).filter(function (r) { return r.b === b; });
+  L = L || G.L;
+  var b = LAB.blockOf(L);
+  var pool = L <= 10 ? (LAB.RIDDLES_BASE || []) : (LAB.RIDDLES || []).filter(function (r) { return r.b === b; });
   if (!pool.length) pool = LAB.RIDDLES_BASE || [];
   if (!pool.length) pool = LAB.RIDDLES || [];
   return pool[(rid >>> 0) % pool.length] || { q: "Что слышно лучше всего в полной тишине?", a: ["своё сердце", "ветер", "шаги", "море"], hint: "Оно стучит у вас в груди." };
@@ -434,8 +436,9 @@ function gainXP(n, why) {
   var lv = false;
   while (G.xp >= LAB.xpNeed(G.lvl)) {
     G.xp -= LAB.xpNeed(G.lvl); G.lvl++; lv = true;
-    G.hpMax += 10; G.hp = G.hpMax; G.enMax += 3; G.en = G.enMax;
-    G.str++; G.agi++; G.mind++; G.cha++;
+    G.hpMax += 10; G.hp = G.hpMax; G.enMax += G.enMax < 240 ? 3 : 1; G.en = G.enMax;
+    /* характеристики растут до сорока: дальше сила героя — в оружии и броне */
+    if (G.str < 40) G.str++; if (G.agi < 40) G.agi++; if (G.mind < 40) G.mind++; if (G.cha < 40) G.cha++;
   }
   if (lv) {
     LAB.UI.fanfare(); LAB.vib([60, 80, 60]);
@@ -1677,7 +1680,7 @@ function openContainer(o) {
 }
 
 /* ── МАГАЗИНЫ И СЛУЖБЫ ── */
-function priceK() { var k = 0.88 + 0.12 * LAB.wealth(G.L, G.F) * (G.L <= 10 ? 1 : 1); if (G.L <= 10) k = 1 + G.L * 0.12; if (G.faction === "res") k *= 0.8; return k; }
+function priceK() { var k = G.L <= 10 ? 1 + G.L * 0.12 : 1 + 0.15 * (LAB.wealth(G.L, G.F) - 1); if (G.faction === "res") k *= 0.8; return k; }
 /* Торговый терминал: расходники, броня своей глубины, скупка деталей. */
 function vendingMenu(o) {
   A("play", "vend");
@@ -1879,7 +1882,10 @@ function npcMenu(n) {
       n.talk = ((n.talk || 0) + 1) % lines.length;
       say(n.n + ": " + lines[n.talk]);
     } });
-    items.push({ label: "Спросить о себе", fn: function () { say(n.n + ", " + n.prof.toLowerCase() + ". " + capital(LAB.LIFE[n.life % LAB.LIFE.length]) + ". «" + LAB.VIEW[n.view % LAB.VIEW.length] + "»"); } });
+    items.push({ label: "Спросить о себе", fn: function () {
+      var Bk = G.L > 10 ? LAB.blockData(G.L) : null, life = Bk && Bk.life && Bk.life.length ? Bk.life : LAB.LIFE, view = Bk && Bk.view && Bk.view.length ? Bk.view : LAB.VIEW;
+      say(n.n + ", " + n.prof.toLowerCase() + ". " + capital(life[n.life % life.length]) + ". «" + view[n.view % view.length] + "»");
+    } });
     var q = G.quests.filter(function (qq) { return qq.giver === n.key && !qq.done; })[0];
     if (!q) items.push({ label: "Спросить о задании", fn: function () { takeQuest(n); } });
     else items.push({ label: "Сдать задание: " + q.short, fn: function () { completeQuest(q, n); } });

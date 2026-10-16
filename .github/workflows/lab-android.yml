@@ -5,7 +5,7 @@
 # и всё уже внутри: сеть не нужна, докачивать и ставить отдельно нечего.
 #
 # До выпуска: проверка синтаксиса (не новее ES2018 — WebView Android 9),
-# проверка генератора всех 200 этажей, проверка игры в Chromium, затем APK
+# проверка файлов блоков и генератора всех этажей, проверка игры в Chromium, затем APK
 # ставится и запускается на эмуляторах Android 9 (API 28) и Android 15
 # (API 35): страница грузится без ошибок, самопроверка игры проходит.
 # Выпуск «lab-android-latest» несёт APK.
@@ -73,6 +73,7 @@ jobs:
               catch (e) { bad++; console.log("FAIL", f, e.message); }
             }
             process.exit(bad ? 1 : 0);'
+          ACORN="$RUNNER_TEMP/n/node_modules/acorn" node lab/tools/check_blocks.js
           node lab/tests/world.test.js 6
 
       - name: Проверка игры в Chromium
