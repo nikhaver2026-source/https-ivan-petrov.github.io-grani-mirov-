@@ -121,7 +121,8 @@ jobs:
             [ -n "$name" ] || continue
             echo "== $name"
             mkdir -p "x/$name"
-            curl -fsSL --retry 4 -o "x/$name/$(basename "$url" | sed 's/%20/_/g')" "$url" || { echo "!! не скачалось: $url"; continue; }
+            # Wikimedia Commons пускает только загрузчики с понятным User-Agent.
+            curl -fsSL --retry 4 -A "lab-sfx-fetch/1.0 (https://github.com/$GITHUB_REPOSITORY)" -o "x/$name/$(basename "$url" | sed 's/%20/_/g')" "$url" || { echo "!! не скачалось: $url"; continue; }
             process "$name"
           done
           mkdir -p out && cd out
