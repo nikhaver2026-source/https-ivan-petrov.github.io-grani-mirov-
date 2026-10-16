@@ -70,13 +70,21 @@ LAB.selftest = function () {
   step("navigate", function () { LAB.game.navigate(false); LAB.game.navigate(true); LAB.game.lookAround(); });
   step("oko", function () { if (LAB.oko) { LAB.oko.event("camera"); LAB.oko.event("turret_off"); LAB.oko.tick(); } });
   var floors = 0;
-  /* Обход этажей: первый уровень целиком, дальше — три этажа каждого уровня
-     (первый, один из средних и последний, со стражем и шлюзом). */
+  /* Обход этажей: первый уровень целиком, дальше — три этажа уровня (первый,
+     один из средних и последний, со стражем и шлюзом). На компьютере и в
+     браузере — каждый уровень; на телефоне — до Ядра каждый, глубже — первый
+     и последний уровень каждого блока и каждый пятый (все уровни целиком
+     проверяет генератор при сборке, tests/world.test.js). */
+  var phone = !!window.LabTTS && !LAB.desktop;
+  var deepPick = function (L) { return L <= 11 || !phone || L === LAB.LEVELS_N || L % 5 === 0 || L % 20 === 1; };
   step("tour", function () {
     /* обход — без звука: сотни этажей подряд, иначе игра закажет музыку и
        голоса каждого уровня разом (памяти телефона не хватит) */
     LAB.Sound.setQuiet(true);
+    var heap = function () { try { return performance.memory ? Math.round(performance.memory.usedJSHeapSize / 1e6) + " МБ" : "?"; } catch (e) { return "?"; } };
     for (var L = 1; L <= LAB.LEVELS_N; L++) {
+      if (!deepPick(L)) continue;
+      if (L % 10 === 1) log("selftest tour: уровень " + L + ", этажей " + floors + ", память " + heap());
       var list = L === 1 ? [] : [1, (L % 18) + 2, LAB.FLOORS_N];
       if (L === 1) for (var f0 = 1; f0 <= LAB.FLOORS_N; f0++) list.push(f0);
       for (var i = 0; i < list.length; i++) {

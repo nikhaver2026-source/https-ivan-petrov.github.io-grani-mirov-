@@ -21,6 +21,12 @@ RES=""
 for i in $(seq 1 150); do
   RES=$(adb logcat -d -s LabJS:* | grep -E "selftest (ok|FAIL)" || true)
   [ -n "$RES" ] && break
+  # раз в минуту — жив ли процесс игры и сколько он занимает
+  if [ $((i % 30)) -eq 0 ]; then
+    P=$(adb shell pidof $PKG | tr -d '\r' || true)
+    echo "… $((i * 2)) с: процесс ${P:-нет}; $(adb shell dumpsys meminfo $PKG 2>/dev/null | grep -m1 -E 'TOTAL' | tr -s ' ' | cut -c1-80)"
+    [ -z "$P" ] && break
+  fi
   sleep 2
 done
 echo "== журнал страницы"
@@ -31,6 +37,13 @@ echo "$RES"
 PID=$(adb shell pidof $PKG | tr -d '\r' || true)
 adb logcat -d | grep -E "AndroidRuntime|FATAL EXCEPTION" | tail -20 || true
 echo "процесс игры: ${PID:-нет}"
+if [ -z "$PID" ] || ! echo "$RES" | grep -q "selftest ok"; then
+  echo "== почему процесс игры закрылся"
+  adb logcat -d | grep -i -E "lowmemorykiller|lmkd|Killing .*$PKG|$PKG.*(died|killed)|has died|renderer|render process|chromium.*(crash|fatal|OOM|out of memory)|signal (6|11)|SIGSEGV|SIGABRT|tombstone|Abort message" | tail -40 || true
+  adb logcat -d -b crash 2>/dev/null | tail -30 || true
+  adb logcat -d -b events 2>/dev/null | grep -E "am_kill|am_proc_died|am_low_memory|am_anr|am_crash" | tail -20 || true
+  echo "== память устройства"; adb shell cat /proc/meminfo 2>/dev/null | head -3 || true
+fi
 ERR=$(adb logcat -d -s LabJS:* | grep -E "^.*LabJS.*error " || true)
 [ -n "$PID" ]
 echo "$RES" | grep -q "selftest ok"

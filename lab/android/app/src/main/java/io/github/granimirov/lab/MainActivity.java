@@ -116,6 +116,8 @@ public class MainActivity extends Activity {
         s.setAllowContentAccess(false);
         s.setTextZoom(100);
 
+        /* Процесс страницы закрылся (нехватка памяти, сбой): страница
+           загружается заново из автозаписи, приложение не падает целиком. */
         web.setWebViewClient(new WebViewClientCompat() {
             @Override
             public WebResourceResponse shouldInterceptRequest(WebView view, WebResourceRequest req) {
@@ -123,7 +125,6 @@ public class MainActivity extends Activity {
             }
             @Override
             public void onPageFinished(WebView view, String url) {
-                /* Проверка на эмуляторе: ключ запуска lab_selftest — самопроверка страницы. */
                 if (getIntent() != null && getIntent().getBooleanExtra("lab_selftest", false)) {
                     view.postDelayed(() -> view.evaluateJavascript("try{LAB.selftest()}catch(e){window.LabTTS&&LabTTS.log('selftest FAIL '+e.message)}", null), 2500);
                 }
@@ -133,6 +134,13 @@ public class MainActivity extends Activity {
                 Uri u = req.getUrl();
                 if ("appassets.androidplatform.net".equals(u.getHost())) return false;
                 try { startActivity(new Intent(Intent.ACTION_VIEW, u)); } catch (Exception ignored) { }
+                return true;
+            }
+            @Override
+            public boolean onRenderProcessGone(WebView view, android.webkit.RenderProcessGoneDetail detail) {
+                boolean crashed = Build.VERSION.SDK_INT >= 26 && detail != null && detail.didCrash();
+                Log.e(TAG, "renderer gone: " + (crashed ? "сбой" : "закрыт системой (память)"));
+                recreate();
                 return true;
             }
         });
@@ -167,8 +175,8 @@ public class MainActivity extends Activity {
         if (Build.VERSION.SDK_INT >= 33) {
             getOnBackInvokedDispatcher().registerOnBackInvokedCallback(OnBackInvokedDispatcher.PRIORITY_DEFAULT, this::goBack);
         }
-        if (saved != null) web.restoreState(saved);
-        else web.loadUrl(START);
+        /* после сбоя страницы состояния может не быть — тогда загрузить заново */
+        if (saved == null || web.restoreState(saved) == null) web.loadUrl(START);
     }
 
     @Override
