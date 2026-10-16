@@ -708,6 +708,8 @@ var Speech = {
     text = String(text == null ? "" : text);
     if (!text.replace(/\s+/g, "")) return;
     var P = this.PRIO, prio = this._prio(opts), user = this.isUser();
+    /* важное — в историю объявлений (точка и запятая на клавиатуре) */
+    if (!opts.hist && (opts.keep || prio >= P.urgent) && LAB.history) LAB.history.add(text);
     var noteOn = this.noteBusy() && !opts.note;
     var readOn = this.reading && (this.speaking || this.queue.length > 0) && !user && prio < P.urgent && !opts.note;
     if (noteOn || readOn) {
@@ -1044,6 +1046,49 @@ var Speech = {
 };
 LAB.Speech = Speech;
 LAB.say = function (t, o) { Speech.say(t, o); };
+
+/* ════════ ИСТОРИЯ ОБЪЯВЛЕНИЙ ════════
+   Объявление ОКО прозвучало, пока вы бежали, — его можно переслушать.
+   В историю попадает важное: громкая связь ОКО, кто вышел и откуда,
+   срочные предупреждения. Точка — назад, к прошлым объявлениям (первое
+   нажатие — самое свежее), запятая — вперёд; на телефоне — четыре пальца
+   влево и вправо. */
+var History = {
+  list: [], pos: -1, MAX: 40,
+  add: function (text) {
+    text = String(text == null ? "" : text).replace(/\s+/g, " ").trim();
+    if (!text) return;
+    var last = this.list[this.list.length - 1];
+    if (last && last.text === text && Date.now() - last.t < 4000) return;
+    this.list.push({ text: text, t: Date.now() });
+    if (this.list.length > this.MAX) this.list.shift();
+    this.pos = -1;
+  },
+  ago: function (t) {
+    var s = Math.round((Date.now() - t) / 1000);
+    if (s < 15) return "Только что";
+    if (s < 60) return (Math.round(s / 5) * 5) + " секунд назад";
+    var m = Math.round(s / 60);
+    if (m === 1) return "Минуту назад";
+    var n10 = m % 10, n100 = m % 100;
+    return m + (n10 === 1 && n100 !== 11 ? " минуту" : n10 >= 2 && n10 <= 4 && (n100 < 12 || n100 > 14) ? " минуты" : " минут") + " назад";
+  },
+  show: function (dir) {
+    var n = this.list.length;
+    if (!n) { Speech.say("Объявлений пока не было.", { hist: true }); return; }
+    if (this.pos < 0) this.pos = n - 1;
+    else {
+      var to = this.pos + (dir < 0 ? -1 : 1);
+      if (to < 0) { if (LAB.UI) LAB.UI.error(); Speech.say("Это самое раннее объявление. Всего " + n + ".", { hist: true }); return; }
+      if (to >= n) { if (LAB.UI) LAB.UI.error(); Speech.say("Это последнее объявление.", { hist: true }); return; }
+      this.pos = to;
+    }
+    var it = this.list[this.pos];
+    Speech.say(it.text + " " + this.ago(it.t) + ", " + (this.pos + 1) + " из " + n + ".", { hist: true });
+  },
+  clear: function () { this.list = []; this.pos = -1; }
+};
+LAB.history = History;
 
 /* ════════ ИНТЕРФЕЙСНЫЕ СИГНАЛЫ ════════ */
 /* Сигналы интерфейса звучат через единый обработчик (LAB.Sound, sound.js). */

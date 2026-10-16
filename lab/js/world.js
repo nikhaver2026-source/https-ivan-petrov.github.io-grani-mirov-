@@ -995,6 +995,16 @@ function genFloor(seed, L, F, attempt) {
   if (!hasObj("puzzle") && r.chance(0.28)) { var pz = addSvc("puzzle", { kind: r.pick(["sort", "relays", "bulls", "riddle"]), seed: r.int(1, 99999) }); if (pz) pz.loot = genLoot(r, L, F, "safe", "tech"); }
   if (!hasObj("radio") && r.chance(0.25)) addSvc("radio", { band: r.int(0, 999) });
 
+  /* 17б. Автомат с едой — чаще в столовой, на кухне, в комнате отдыха;
+     и немного еды на этаже (галеты в шкафчике, забытый батончик). Ставится
+     последним: прежняя обстановка этажа от этого не меняется. */
+  var foodRooms = svcRooms.filter(function (s5) { return ["canteen", "kitchen", "lounge", "cafeteria"].indexOf(rooms[s5].type) >= 0; });
+  if (!hasObj("snacks") && svcRooms.length && r.chance(foodRooms.length ? 0.7 : 0.4)) addObj("snacks", r.pick(foodRooms.length ? foodRooms : svcRooms), { broken: r.chance(0.08) });
+  var rf = Rng(seed, "food:" + L + ":" + F + ":" + attempt);
+  var snackIds = ["crackers", "crackers", "choco", "protein", "nuts", "ration", "stew", "glucose"];
+  for (var nf = rf.int(0, 2); nf > 0; nf--) addItem({ kind: "item", item: rf.pick(snackIds), n: 1 }, rf.pick(mainRooms));
+  if (rf.chance(0.35)) addItem({ kind: "item", item: rf.pick(["bandage", "bandage", "sorbent"]), n: 1 }, rf.pick(mainRooms));
+
   /* 18. Посты ОКО. Перед лифтом и у лестницы вниз стоят стражи — роботы
      или твари: держат пост, отходят от него недалеко и возвращаются.
      В пустом кабинете с компьютером или терминалом — охранник; терминал
@@ -1074,12 +1084,12 @@ function genLoot(r, L, F, ot, tag) {
   for (var i = 0; i < n; i++) {
     var roll = r.next();
     if (tag === "arms" && roll < 0.35) out.push({ kind: "ammo", ammo: ammoAt(), n: 1 });
-    else if (tag === "med" && roll < 0.45) out.push({ kind: "item", item: r.chance(0.75) ? "medkit_s" : "medkit_l", n: 1 });
+    else if (tag === "med" && roll < 0.45) out.push({ kind: "item", item: (function (q) { return q < 0.42 ? "medkit_s" : q < 0.58 ? "bandage" : q < 0.7 ? "sorbent" : q < 0.79 ? "neuroblock" : q < 0.86 ? "antidote" : "medkit_l"; })(r.next()), n: 1 });
     else if (tag === "parts" && roll < 0.5) out.push({ kind: "item", item: L >= 3 && r.chance(0.2) ? "ceramic" : partAt(r, L), n: 1 });
     else if (tag === "tech" && roll < 0.45) out.push({ kind: "item", item: L >= 5 && r.chance(0.15) ? "supercond" : r.chance(0.5) ? r.pick(["chip", "cap", "lens", "wire"]) : partAt(r, L), n: 1 });
     else if (tag === "bio" && roll < 0.45) out.push({ kind: "item", item: r.chance(0.6) ? r.pick(["gel", "reagent", "gel"]) : partAt(r, L), n: 1 });
-    else if (tag === "chem" && roll < 0.45) out.push({ kind: "item", item: r.pick(["reagent", "gel", "antidote"]), n: 1 });
-    else if (tag === "food" && roll < 0.4) out.push({ kind: "item", item: r.pick(["stim", "medkit_s"]), n: 1 });
+    else if (tag === "chem" && roll < 0.45) out.push({ kind: "item", item: r.pick(["reagent", "gel", "antidote", "sorbent", "reagent"]), n: 1 });
+    else if (tag === "food" && roll < 0.4) out.push({ kind: "item", item: r.pick(["ration", "stew", "crackers", "crackers", "choco", "protein", "nuts", "noodles", "glucose", "stim", "medkit_s"]), n: 1 });
     else if (tag === "paper" && roll < 0.4) out.push({ kind: "note", note: "staff", n: r.int(0, 999) });
     else if (tag === "armor" && roll < 0.2) out.push({ kind: "armor", a: LAB.genArmor(r, L, F) });
     else if (tag === "armor" && roll < 0.45) out.push({ kind: "item", item: r.chance(0.5) ? "plate" : (L >= 3 ? "ceramic" : "scrap"), n: 1 });

@@ -423,7 +423,8 @@ function inventory(focus) {
   var items = [
     { label: "Оружие: " + g.weapons.length, fn: weaponsMenu },
     { label: "Батареи и боеприпасы: " + ammoN, fn: ammoMenu },
-    { label: "Аптечки и стимуляторы: " + cnt(["medkit_s", "medkit_l", "stim", "antidote", "energy_d"]), fn: medsMenu },
+    { label: "Аптечки и лекарства: " + cnt(MEDS), fn: medsMenu },
+    { label: "Еда: " + cnt(foodIds()), fn: foodMenu },
     { label: "Броня: " + g.armors.length + (g.armor ? ", надета" : ", не надета"), fn: armorMenu },
     { label: "Гранаты, пластины и устройства: " + cnt(gadgetIds()), fn: gadgetsMenu },
     { label: "Детали: " + cnt(LAB.PARTS), fn: partsMenu },
@@ -466,12 +467,23 @@ function ammoMenu() {
   items.push(back());
   menu("Батареи и боеприпасы", items, { intro: w && w.ammo !== "none" ? LAB.K("Двойное касание на нужной батарее — перезарядить оружие в руках.", "Enter на нужной батарее — перезарядить оружие в руках.") : "" });
 }
+var MEDS = ["medkit_s", "medkit_l", "bandage", "antidote", "sorbent", "stim", "energy_d", "neuroblock"];
 function medsMenu() {
   var g = G();
-  var ids = ["medkit_s", "medkit_l", "stim", "antidote", "energy_d"];
-  menu("Аптечки и стимуляторы", ids.map(function (k) {
+  menu("Аптечки и лекарства", MEDS.map(function (k) {
     return { label: LAB.ITEMS[k].n + ": " + (g.inv[k] || 0) + ". " + LAB.ITEMS[k].desc, fn: function () { if (gm().useItem(k)) {} } };
-  }).concat([back()]));
+  }).concat([{ label: "Состояние тела", keep: true, fn: function () { gm().bodyStatus(); } }, back()]));
+}
+function foodIds() { return Object.keys(LAB.ITEMS).filter(function (k) { return LAB.ITEMS[k].kind === "food"; }); }
+/* Еда в рюкзаке: съесть; вверху — сколько сытости и энергии. */
+function foodMenu() {
+  var g = G(), b = g.body || { food: 0 };
+  var items = foodIds().filter(function (k) { return g.inv[k] > 0; }).map(function (k) {
+    return { label: LAB.ITEMS[k].n + ": " + g.inv[k] + ". " + LAB.ITEMS[k].desc, fn: function () { gm().useItem(k); } };
+  });
+  if (!items.length) items.push({ label: "Еды нет. Её продают автоматы с едой и повара; бывает она на кухнях и в столовых.", info: true, keep: true, fn: function () {} });
+  items.push(back());
+  menu("Еда", items, { intro: "Сытость " + Math.round(b.food) + " из 100, энергия имплантов " + g.en + " из " + g.enMax + "." });
 }
 function armorMenu() {
   var g = G();
@@ -590,7 +602,7 @@ function recipeGroup(rc) {
   if (o.indexOf("ammo:") === 0) return "Батареи и боеприпасы";
   if (o === "plate" || o === "wmod" || o === "repairkit") return "Улучшения";
   var d = LAB.ITEMS[o];
-  if (d && (d.heal || (d.fx && (d.fx.heal || d.fx.en || d.fx.cure)) || d.en || d.cure)) return "Лечение и стимуляторы";
+  if (d && (d.heal || (d.fx && (d.fx.heal || d.fx.en || d.fx.cure)) || d.en || d.cure || d.detox || d.neuro || d.stopBleed)) return "Лечение и стимуляторы";
   return "Гранаты и устройства";
 }
 function craft() {
@@ -732,6 +744,8 @@ function key(act) {
     case "repeat": if (!quiet) say(where()); return true;
     case "all": readAll(); return true;
     case "hush": LAB.Speech.hush(); return true;
+    case "histBack": LAB.history.show(-1); return true;
+    case "histFwd": LAB.history.show(1); return true;
     case "back":
       if (!closeTop()) { if (screen === "menu") say("Главное меню. " + itemText(w.items[w.i])); else LAB.UI.error(); }
       return true;

@@ -132,8 +132,8 @@ var beaconT = null, nextPing = {};
 var OBJ_BEACON = { stairs_down: "bcn_stairs", stairs_up: "bcn_stairs_up", elevator: "bcn_elevator", gate_down: "bcn_gate", reactor: "bcn_reactor",
   terminal: "bcn_terminal", magnetron: "bcn_magnetron", positron: "bcn_positron", capsule: "bcn_capsule", vending: "bcn_vending", workbench: "bcn_workbench",
   medst: "bcn_medst", charger: "bcn_charger", implantlab: "bcn_implantlab", hq: "bcn_hq", safe: "bcn_safe",
-  pc: "bcn_pc", coffee: "bcn_coffee", drinks: "bcn_drinks", radio: "bcn_radio", okoterm: "bcn_oko", puzzle: "bcn_puzzle" };
-var OBJ_BEACON_FB = { bcn_radio: ["bcn_pc", 0.75], bcn_oko: ["bcn_terminal", 1.35], bcn_puzzle: ["bcn_vending", 1.25] };
+  pc: "bcn_pc", coffee: "bcn_coffee", drinks: "bcn_drinks", snacks: "bcn_snacks", radio: "bcn_radio", okoterm: "bcn_oko", puzzle: "bcn_puzzle" };
+var OBJ_BEACON_FB = { bcn_radio: ["bcn_pc", 0.75], bcn_oko: ["bcn_terminal", 1.35], bcn_puzzle: ["bcn_vending", 1.25], bcn_snacks: ["bcn_drinks", 0.82] };
 var OBJ_RANGE = { stairs_down: 16, stairs_up: 10, gate_down: 18, elevator: 12, reactor: 20 };
 function beaconTick() {
   var g = G(), cur = CUR();
@@ -211,6 +211,8 @@ function idsFor(L) {
   var foes = lev.foes.slice();
   if (L < LAB.LEVELS_N && LAB.LEVELS[L + 1]) LAB.LEVELS[L + 1].foes.forEach(function (f) { if (LAB.FOES[f] && LAB.FOES[f].kind === "mech") foes.push(f); });
   foes.push("cam", "cleaner", "miniturret", "turret", "okodrone", "repairbot", "patrolbot");
+  /* еда и лекарства — на каждом уровне */
+  ["eat_crunch", "eat_chew", "food_wrapper", "pills_rattle", "bandage_tear", "stomach_growl", "cough", "yawn", "snack_drop", "water_pour", "bcn_snacks"].forEach(function (id) { if (LAB.SND && LAB.SND[id]) out.push(id); });
   foes.forEach(function (f) { if (LAB.FOES[f]) sets[LAB.FOES[f].snd] = 1; });
   if (lev.boss && LAB.BOSSES[lev.boss]) sets[LAB.BOSSES[lev.boss].snd] = 1;
   if (sets.labmut || sets.roach) sets.rat = 1;
@@ -610,7 +612,19 @@ var FB = {
   w_shock_crack: function (s) { s.zap(); },
   oko_chime: function (s) { s.note(784, 0, 0.35, "sine", 0.09); s.note(523, 0.32, 0.5, "sine", 0.09); },
   power_off: function (s) { s.servo(false); s.note(120, 0, 0.6, "sawtooth", 0.05); },
-  deaf_ring: function (s) { s.note(3900, 0, 2.2, "sine", 0.03); }
+  deaf_ring: function (s) { s.note(3900, 0, 2.2, "sine", 0.03); },
+  /* еда, лекарства, тело — пока нет записи */
+  eat_crunch: function (s) { s.crackle(); s.after(180, function () { s.crackle(); }); s.after(420, function () { s.crackle(); }); },
+  eat_chew: function (s) { s.thump(0, 0.18); s.after(260, function () { s.thump(0, 0.15); }); s.after(520, function () { s.thump(0, 0.15); }); },
+  food_wrapper: function (s) { s.crackle(); s.after(120, function () { s.crackle(); }); },
+  pills_rattle: function (s) { s.tink(3200); s.after(70, function () { s.tink(2800); }); s.after(150, function () { s.tink(3400); }); s.after(240, function () { s.tink(3000); }); },
+  bandage_tear: function (s) { s.hiss(); },
+  stomach_growl: function (s) { s.growl(); },
+  cough: function (s) { s.thump(0, 0.3); s.hiss(); },
+  yawn: function (s) { s.hum(180, 1.2, 0.05); },
+  spray: function (s) { s.hiss(); },
+  water_pour: function (s) { s.hiss(); s.after(300, function () { s.hiss(); }); },
+  snack_drop: function (s) { s.servo(true); s.after(600, function () { s.thump(0, 0.5); }); }
 };
 
 /* Звуковое устройство пересоздано (единый обработчик сам запустил петли

@@ -37,7 +37,9 @@ function newState(seed) {
     notes: {}, noteList: [], samples: {}, implants: ["scan", "echo"], faction: null, crafted: 0,
     quests: [], journal: [], fs: {}, maxF: { 1: 1 }, visited: { "1-1": 1 },
     checkpoint: null, day: 1, min: 8 * 60, event: "norm", eventUntil: 8 * 60 + 90,
-    st: { poison: 0, slow: 0, shield: 0, haste: 0, cloak: 0, web: 0, jam: 0, deaf: 0, antitox: 0 },
+    st: { poison: 0, slow: 0, shield: 0, haste: 0, cloak: 0, web: 0, jam: 0, deaf: 0, antitox: 0, bleed: 0 },
+    /* тело героя: сытость, бодрость, токсины, нейронагрузка (0–100) */
+    body: { food: 65, wake: 85, tox: 0, neuro: 0, lv: {} },
     stats: { kills: 0, steps: 0, secrets: 0, deaths: 0, shots: 0, hits: 0, notes: 0, ms: 0, saves: 0 },
     tut: {}, done: false, noise: 0
   };
@@ -411,11 +413,175 @@ function journal(t) {
 }
 game.journal = journal;
 function advanceTime(min) {
+  bodyMinutes(min);
   G.min += min;
   while (G.min >= 24 * 60) { G.min -= 24 * 60; G.day++; G.eventUntil -= 24 * 60; }
   if (G.min >= G.eventUntil) rollEvent();
 }
 game.advanceTime = advanceTime;
+
+/* ════════ ТЕЛО ГЕРОЯ ════════
+   Сытость падает со временем (каждый шаг — минута): голодному импланты
+   не восстанавливают энергию, истощение отнимает здоровье. Бодрость падает
+   без сна: уставшему труднее целиться; капсула, кофе и стимуляторы бодрят.
+   Токсины копятся от ядов, химии, несвежей еды и стимуляторов и понемногу
+   выводятся сами; антидот, сорбент и большая аптечка выводят их сразу:
+   при сильной интоксикации подташнивает (точность ниже), при тяжёлой —
+   токсины отнимают здоровье. Нейронагрузка растёт от нейростимуляторов и
+   имплантов и спадает за секунды: при перегрузке импланты дороже, при
+   критической — отключаются, пока нагрузка не спадёт. */
+function body() {
+  var b = G.body;
+  if (!b) b = G.body = { food: 65, wake: 85, tox: 0, neuro: 0, lv: {} };
+  if (!b.lv) b.lv = {};
+  return b;
+}
+function clampBody(b) {
+  b.food = Math.max(0, Math.min(100, b.food)); b.wake = Math.max(0, Math.min(100, b.wake));
+  b.tox = Math.max(0, Math.min(100, b.tox)); b.neuro = Math.max(0, Math.min(100, b.neuro));
+}
+/* Ступени: [порог, слово, предупреждение при переходе вниз (к худшему)]. */
+var BODY_STEPS = {
+  food: [[80, "сыты"], [50, "сытость в норме"], [25, "проголодались", "Вы проголодались: энергия имплантов восстанавливается медленнее. Поешьте: еда — в автоматах с едой, на кухнях и в столовых."], [10, "голод", "Голод: энергия имплантов почти не восстанавливается."], [1, "сильный голод", "Сильный голод: энергия имплантов не восстанавливается, скоро голод начнёт отнимать здоровье."], [0, "истощение", "Истощение: голод отнимает здоровье. Срочно поешьте."]],
+  wake: [[70, "бодры"], [40, "бодрость в норме"], [20, "устали", "Вы устали: руки дрожат, целиться труднее. Отдохните в капсуле восстановления или выпейте кофе."], [5, "сильная усталость", "Сильная усталость: точность заметно ниже. Нужен сон или стимулятор."], [0, "валитесь с ног", "Вы валитесь с ног от усталости."]],
+  tox: [[80, "тяжёлая интоксикация", "Тяжёлая интоксикация: токсины отнимают здоровье. Антидот, сорбент или большая аптечка!"], [50, "интоксикация", "Интоксикация: подташнивает, целиться труднее. Антидот или энтеросорбент выведут токсины."], [20, "лёгкая интоксикация"], [0, "токсинов нет"]],
+  neuro: [[85, "критическая нейронагрузка", "Нейроперегрузка: импланты отключились, пока нагрузка не спадёт. Поможет нейроблокатор."], [60, "нейроперегрузка", "Нейронагрузка высокая: импланты тратят больше энергии."], [30, "нейронагрузка повышена"], [0, "нейронагрузка в норме"]]
+};
+/* Ступень параметра: для сытости и бодрости — чем выше, тем лучше; для
+   токсинов и нейронагрузки — наоборот (ступени идут от худшей). */
+function bodyStep(k) {
+  var b = body(), v = Math.round(b[k]), arr = BODY_STEPS[k];
+  for (var i = 0; i < arr.length; i++) if (v >= arr[i][0]) return i;
+  return arr.length - 1;
+}
+function bodyWord(k) { return BODY_STEPS[k][bodyStep(k)][1]; }
+function bodyBad(k) { var i = bodyStep(k); return k === "food" || k === "wake" ? i >= 2 : i <= 1; }
+/* Предупредить, если параметр перешёл на ступень хуже. */
+function bodyWarn() {
+  var b = body();
+  ["food", "wake", "tox", "neuro"].forEach(function (k) {
+    var i = bodyStep(k), was = b.lv[k];
+    b.lv[k] = i;
+    if (was == null || was === i) return;
+    var worse = k === "food" || k === "wake" ? i > was : i < was, msg = BODY_STEPS[k][i][2];
+    if (worse && msg) { LAB.say(msg, { prio: "event", keep: true }); if (k === "food" && i >= 3) A("play", "stomach_growl"); if (k === "tox" && i <= 1) A("play", "cough"); if (k === "wake" && i >= 3) A("play", "yawn"); }
+  });
+}
+game.bodyWarn = bodyWarn;
+var starve = 0;
+function bodyMinutes(min) {
+  var b = body();
+  b.food -= min / 9;
+  b.wake -= min / 12;
+  if (b.tox > 0) b.tox -= min / (b.food >= 50 ? 4 : 6);
+  clampBody(b);
+  /* истощение: голод отнимает здоровье, но не убивает */
+  if (b.food <= 0) { starve += min; while (starve >= 6) { starve -= 6; if (G.hp > 1) { G.hp--; UIx("refresh"); } } } else starve = 0;
+  bodyWarn();
+}
+/* Такт боя (полсекунды; по ходам — ход): нейронагрузка спадает, тяжёлая
+   интоксикация отнимает здоровье. */
+var bodyTickN = 0;
+function bodyTick() {
+  var b = body();
+  bodyTickN++;
+  if (bodyTickN % 4 === 0 && b.neuro > 0) b.neuro = Math.max(0, b.neuro - 1);
+  if (b.tox >= 80 && bodyTickN % 6 === 0) {
+    G.hp -= b.tox >= 100 ? 2 : 1;
+    A("play", "poison_tick");
+    if (G.hp <= 0) { G.hp = 0; UIx("refresh"); die(); return; }
+  }
+  if (bodyTickN % 4 === 0) bodyWarn();
+}
+game.bodyTick = bodyTick;
+/* Сколько тактов на единицу энергии имплантов (0 — не восстанавливается). */
+function enRegen() {
+  var b = body();
+  if (b.food < 10 || b.neuro >= 85) return 0;
+  if (b.food < 25) return 16;
+  if (b.food < 50) return 9;
+  return b.food >= 80 ? 5 : 6;
+}
+game.enRegen = enRegen;
+/* Насколько хуже точность: усталость, тошнота, нейроперегрузка. */
+function aimPenalty() {
+  var b = body(), p = 0;
+  if (b.wake < 5) p += 0.12; else if (b.wake < 20) p += 0.06;
+  if (b.tox >= 80) p += 0.1; else if (b.tox >= 50) p += 0.06;
+  if (b.neuro >= 85) p += 0.05;
+  return p;
+}
+game.aimPenalty = aimPenalty;
+/* Применить к телу: еда, питьё, лекарства. Возвращает фразы итога. */
+function bodyApply(d, msg) {
+  var b = body(), v;
+  if (d.overdose && b.tox >= 70) {
+    G.hp = Math.max(1, G.hp - 15); G.st.slow = Math.max(G.st.slow || 0, 6);
+    A("play", "heartbeat");
+    msg.push("Передозировка: сердце колотится, в глазах темнеет. Минус 15 здоровья, вы замедлены.");
+  }
+  if (d.shock && b.neuro >= 75) {
+    G.hp = Math.max(1, G.hp - 10); G.st.deaf = Math.max(G.st.deaf || 0, 6); b.neuro = 100;
+    A("deafen", 3000);
+    msg.push("Нейрошок: в ушах звенит, импланты отключились. Минус 10 здоровья.");
+  }
+  if (d.food) { v = b.food; b.food += d.food; clampBody(b); if (b.food > v) msg.push("Сытость " + Math.round(b.food) + "."); }
+  if (d.wake) { v = b.wake; b.wake += d.wake; clampBody(b); if (Math.round(b.wake) !== Math.round(v)) msg.push("Бодрость " + Math.round(b.wake) + "."); }
+  if (d.detox && b.tox > 0) { b.tox -= d.detox; clampBody(b); msg.push(b.tox > 0 ? "Токсины " + Math.round(b.tox) + "." : "Токсины выведены."); }
+  if (d.tox) {
+    if (G.st.antitox > 0 && !d.overdose) msg.push("Фильтр не пропустил токсины.");
+    else { b.tox += d.tox; clampBody(b); msg.push("Токсины " + Math.round(b.tox) + "."); }
+  }
+  if (d.neuro) { v = b.neuro; b.neuro += d.neuro; clampBody(b); if (Math.round(b.neuro) !== Math.round(v)) msg.push("Нейронагрузка " + Math.round(b.neuro) + "."); }
+  if (d.stopBleed && G.st.bleed) { G.st.bleed = 0; msg.push("Кровотечение остановлено."); }
+  if (d.halfPoison && G.st.poison) { G.st.poison = Math.floor(G.st.poison / 2); msg.push("Яд слабеет."); }
+  if (d.undeaf && G.st.deaf) { G.st.deaf = 0; msg.push("Звон в ушах стих."); }
+  bodyWarn();
+  return msg;
+}
+game.bodyApply = bodyApply;
+/* Кратко о теле: только то, что требует внимания (для окна состояния и T). */
+function bodyAlerts() {
+  var out = [];
+  ["food", "wake", "tox", "neuro"].forEach(function (k) { if (bodyBad(k)) out.push(bodyWord(k)); });
+  if (G.st.bleed) out.push("кровотечение");
+  return out;
+}
+game.bodyAlerts = bodyAlerts;
+/* Полное состояние тела: K на клавиатуре, четыре пальца вверх. */
+function bodyStatus() {
+  if (!game.entered) return;
+  var b = body(), st = [];
+  if (G.st.poison) st.push("отравление"); if (G.st.bleed) st.push("кровотечение"); if (G.st.slow) st.push("замедление"); if (G.st.deaf) st.push("звон в ушах"); if (G.st.antitox) st.push("фильтр противогаза действует");
+  say("Здоровье " + G.hp + " из " + G.hpMax + ". Энергия имплантов " + G.en + " из " + G.enMax + ". Сытость " + Math.round(b.food) + ": " + bodyWord("food") + ". Бодрость " + Math.round(b.wake) + ": " + bodyWord("wake") + ". Токсины " + Math.round(b.tox) + ": " + bodyWord("tox") + ". Нейронагрузка " + Math.round(b.neuro) + ": " + bodyWord("neuro") + "." + (st.length ? " Состояние: " + st.join(", ") + "." : ""));
+}
+game.bodyStatus = bodyStatus;
+/* Поесть (G на клавиатуре): еда из рюкзака, которая лучше утолит голод. */
+function FOODS() { return Object.keys(LAB.ITEMS).filter(function (k) { return LAB.ITEMS[k].kind === "food"; }); }
+function eatBest() {
+  if (!game.entered) return;
+  var b = body(), have = FOODS().filter(function (k) { return G.inv[k] > 0; });
+  if (!have.length) { LAB.UI.error(); say("Еды нет. Еду продают автоматы с едой и повара среди выживших; бывает она в ящиках на кухнях и в столовых."); return; }
+  if (b.food >= 90 && G.en >= G.enMax) { say("Вы сыты: сытость " + Math.round(b.food) + "."); return; }
+  var need = 100 - b.food, best = null, bs = -1e9;
+  have.forEach(function (k) {
+    var d = LAB.ITEMS[k], f = d.food || 0;
+    /* лучше то, что утолит голод почти без остатка; при полной сытости — то, что даёт энергию */
+    var sc = need > 8 ? -Math.abs(need - f) + (d.stale ? -6 : 0) : (d.en || 0) - f;
+    if (sc > bs) { bs = sc; best = k; }
+  });
+  useItem(best);
+}
+game.eatBest = eatBest;
+/* Звук еды: обёртка, хруст, жевание, банка, таблетки. */
+function eatSound(kind) {
+  if (kind === "wrap") { A("play", "food_wrapper"); setTimeout(function () { A("play", "eat_crunch"); }, 650); }
+  else if (kind === "crunch") A("play", "eat_crunch");
+  else if (kind === "can") { A("play", "can_open"); setTimeout(function () { A("play", "eat_chew"); }, 700); }
+  else if (kind === "pills") A("play", "pills_rattle");
+  else A("play", "eat_chew");
+}
+game.eatSound = eatSound;
 function eventList() { var b = LAB.blockOf(G.L); return LAB.EVENTS.concat(G.L > 10 && LAB.EVENTS_B[b] ? LAB.EVENTS_B[b] : []); }
 game.eventLike = function (id) { var e = eventList().filter(function (q) { return q.id === id; })[0]; return e ? (e.like || e.id) : id; };
 function rollEvent() {
@@ -1141,6 +1307,7 @@ function objMenu(o) {
     case "okoterm": okoMenu(o); return;
     case "puzzle": puzzleMenu(o); return;
     case "coffee": case "drinks": if (LAB.office) { LAB.office.drinkMenu(o); return; } break;
+    case "snacks": if (LAB.office) { LAB.office.snackMenu(o); return; } break;
   }
   items.push({ label: "Осмотреть", fn: function () { say(name + ". " + (LAB.OBJ[o.type] ? LAB.OBJ[o.type].desc : "")); } });
   UIx("menu", name, items);
@@ -1379,11 +1546,14 @@ function rest(o) {
   say("Вы ложитесь в капсулу. Гул стихает...");
   setTimeout(function () {
     game.paused = false;
+    /* капсула кормит раствором: во сне голод не растёт; бодрость — полная, токсины выводятся */
+    var bd = body(), f0 = bd.food;
     advanceTime(240);
-    G.hp = G.hpMax; G.en = G.enMax; G.st.poison = 0; G.st.slow = 0;
+    bd.food = Math.min(100, f0 + 10); bd.wake = 100; bd.tox = Math.max(0, bd.tox - 60); bd.neuro = 0; bd.lv = {};
+    G.hp = G.hpMax; G.en = G.enMax; G.st.poison = 0; G.st.slow = 0; G.st.bleed = 0; G.st.deaf = 0;
     var c = freeNear(o);
     G.checkpoint = { L: G.L, F: G.F, x: c[0], y: c[1] };
-    say("Вы проснулись. Здоровье и энергия полностью восстановлены. «Эхо» запомнило эту капсулу: если погибнете, вернётесь сюда.");
+    say("Вы проснулись. Здоровье, энергия и бодрость полностью восстановлены, токсины выведены, раствор капсулы немного утолил голод. «Эхо» запомнило эту капсулу: если погибнете, вернётесь сюда.");
     journal("Отдых в капсуле: уровень " + G.L + ", этаж " + G.F + ".");
     UIx("refresh");
     autosave();
@@ -1685,13 +1855,14 @@ function openContainer(o) {
 
 /* ── МАГАЗИНЫ И СЛУЖБЫ ── */
 function priceK() { var k = G.L <= 10 ? 1 + G.L * 0.12 : 1 + 0.15 * (LAB.wealth(G.L, G.F) - 1); if (G.faction === "res") k *= 0.8; return k; }
+game.priceK = priceK;
 /* Торговый терминал: расходники, броня своей глубины, скупка деталей. */
 function vendingMenu(o) {
   A("play", "vend");
   UIx("menu", "Торговый терминал", vendingItems(o), { keep: true, rebuild: function () { return vendingItems(o); } });
 }
 function vendingItems(o) {
-  var goods = [["medkit_s", 1], ["ammo:energy", 1], ["stim", 1], ["antidote", 1], ["energy_d", 1], ["ammo:magnetron", 1], ["emp", 1], ["plate", 1], ["noise", 1], ["filter", 1]];
+  var goods = [["medkit_s", 1], ["bandage", 1], ["ammo:energy", 1], ["stim", 1], ["antidote", 1], ["sorbent", 1], ["energy_d", 1], ["neuroblock", 1], ["ration", 1], ["glucose", 1], ["ammo:magnetron", 1], ["emp", 1], ["plate", 1], ["noise", 1], ["filter", 1]];
   if (G.L >= 3) goods.push(["decoder", 1], ["lockpick", 1]);
   if (G.L >= 4) goods.push(["jammer", 1]);
   if (G.L >= 6) goods.push(["ammo:positron", 1], ["medkit_l", 1], ["turret_kit", 1]);
@@ -1764,7 +1935,12 @@ function medMenu(o) {
     { label: miss > 0 ? "Лечение до полного — " + p + " кредитов" : "Вы здоровы", fn: function () {
       if (miss <= 0) { say("Сканер: повреждений нет."); return; }
       if (G.credits < p) { LAB.UI.error(); say("Не хватает кредитов: нужно " + p + "."); return; }
-      G.credits -= p; G.hp = G.hpMax; G.st.poison = 0; A("play", "heal"); say("Лечение завершено. Здоровье полное."); UIx("refresh");
+      G.credits -= p; G.hp = G.hpMax; G.st.poison = 0; G.st.bleed = 0; A("play", "heal"); say("Лечение завершено. Здоровье полное, кровотечение остановлено."); UIx("refresh");
+    } },
+    { label: "Очистка крови от токсинов — 20 кредитов (токсинов " + Math.round(body().tox) + ")", fn: function () {
+      if (body().tox < 1) { say("Токсинов нет."); return; }
+      if (G.credits < 20) { say("Не хватает кредитов."); return; }
+      G.credits -= 20; body().tox = 0; body().lv = {}; A("play", "heal"); say("Кровь очищена: токсинов нет.");
     } },
     { label: "Снять отравление — 15 кредитов", fn: function () {
       if (!G.st.poison) { say("Отравления нет."); return; }
@@ -1789,9 +1965,15 @@ function chargerMenu(o) {
 function implantCost(id) { var c = implantDef(id).cost; if (G.faction === "sci") c = Math.round(c * 0.8); return c; }
 game.implantCost = implantCost;
 function spendEnergy(id) {
-  var c = implantCost(id);
-  if (G.en < c) { LAB.UI.error(); say("Не хватает энергии: нужно " + c + ", есть " + G.en + "."); return false; }
-  G.en -= c; UIx("refresh"); return true;
+  var c = implantCost(id), b = body();
+  if (b.neuro >= 85) { LAB.UI.error(); A("play", "jam"); say("Нейроперегрузка: импланты не отвечают. Нагрузка " + Math.round(b.neuro) + " — подождите, пока спадёт ниже 85, или примите нейроблокатор."); return false; }
+  if (b.neuro >= 60) c = Math.round(c * 1.5);
+  if (G.en < c) { LAB.UI.error(); say("Не хватает энергии: нужно " + c + ", есть " + G.en + "." + (b.neuro >= 60 ? " При нейроперегрузке импланты тратят больше." : "")); return false; }
+  G.en -= c;
+  /* каждый имплант нагружает нервы */
+  b.neuro = Math.min(100, b.neuro + Math.max(2, Math.round(implantDef(id).cost / 2)));
+  bodyWarn();
+  UIx("refresh"); return true;
 }
 game.spendEnergy = spendEnergy;
 function implantMenu(o) {
@@ -1902,7 +2084,7 @@ function npcMenu(n) {
 }
 function capital(s) { return s.charAt(0).toUpperCase() + s.slice(1); }
 function tradeMenu(n, kind) {
-  var goods = kind === "med" ? ["medkit_s", "medkit_l", "antidote", "stim"] : kind === "parts" ? ["scrap", "wire", "chip", "cap", "lens", "magnet"] : kind === "ammo" ? ["ammo:energy", "ammo:magnetron", "emp"] : ["medkit_s", "ammo:energy", "chip", "gel", "reagent", "cap"];
+  var goods = kind === "med" ? ["medkit_s", "medkit_l", "bandage", "antidote", "sorbent", "stim", "neuroblock"] : kind === "food" ? ["stew", "ration", "noodles", "crackers", "nuts", "choco", "glucose", "medkit_s"] : kind === "parts" ? ["scrap", "wire", "chip", "cap", "lens", "magnet"] : kind === "ammo" ? ["ammo:energy", "ammo:magnetron", "emp"] : ["medkit_s", "bandage", "ration", "ammo:energy", "chip", "gel", "reagent", "cap"];
   var k = priceK() * (n.robot ? 1 : 0.9);
   var items = goods.map(function (id) {
     var isAmmo = id.indexOf("ammo:") === 0, name = isAmmo ? LAB.AMMO[id.slice(5)].n : LAB.ITEMS[id].n;
@@ -2001,6 +2183,7 @@ function navTargets() {
   var gc = floorItems().filter(function (it) { return it.kind === "gatepass" && CUR.seen && CUR.seen[idx(it.x, it.y)]; })[0];
   if (gc) list.push({ n: itemName(gc).toLowerCase(), cell: [gc.x, gc.y] });
   var vend = nearestObj(["vending"], true); if (vend) list.push({ n: "торговый терминал", o: vend });
+  var sn = nearestObj(["snacks"], true); if (sn && body().food < 60) list.push({ n: "автомат с едой", o: sn });
   var wb = nearestObj(["workbench"], true); if (wb) list.push({ n: "мастерская", o: wb });
   var cap = findObj("capsule"); if (cap && known(cap)) list.push({ n: "капсула восстановления", o: cap });
   var t = nearestObj(["terminal"], true); if (t) list.push({ n: "ближайший терминал", o: t });
@@ -2105,15 +2288,19 @@ function describePath(path) {
 /* ════════ АПТЕЧКА, ОРУЖИЕ ════════ */
 function useMedkit() {
   if (!game.entered) return;
+  /* кровотечение — сначала бинт; тяжёлая интоксикация — антидот или сорбент */
+  if (G.st.bleed && (G.inv.bandage || 0) > 0 && G.hp > G.hpMax * 0.3) return useItem("bandage");
   if (G.st.poison && (G.inv.antidote || 0) > 0 && G.hp > G.hpMax * 0.35) return useItem("antidote");
+  if (body().tox >= 50 && G.hp > G.hpMax * 0.35) { if ((G.inv.antidote || 0) > 0) return useItem("antidote"); if ((G.inv.sorbent || 0) > 0) return useItem("sorbent"); }
   var miss = G.hpMax - G.hp;
-  if (miss <= 0 && !G.st.poison) { say("Здоровье полное: " + G.hp + " из " + G.hpMax + "."); return; }
+  if (miss <= 0 && !G.st.poison && !G.st.bleed) { say("Здоровье полное: " + G.hp + " из " + G.hpMax + "." + (body().neuro >= 60 && (G.inv.neuroblock || 0) > 0 ? " Нейронагрузку снимет нейроблокатор: инвентарь, «Аптечки и лекарства»." : "")); return; }
   var pick = null;
   if ((G.inv.medkit_s || 0) > 0 && (miss <= 50 || !(G.inv.medkit_l > 0)) && !G.st.poison) pick = "medkit_s";
   else if ((G.inv.medkit_l || 0) > 0) pick = "medkit_l";
   else if ((G.inv.medkit_s || 0) > 0) pick = "medkit_s";
   else if ((G.inv.stim || 0) > 0) pick = "stim";
   else if (G.st.poison && (G.inv.antidote || 0) > 0) pick = "antidote";
+  else if (G.st.bleed && (G.inv.bandage || 0) > 0) pick = "bandage";
   if (!pick) { LAB.UI.error(); say("Аптечек нет. Ищите их в медпунктах и шкафах или соберите в мастерской из биогеля и реагента."); return; }
   useItem(pick);
 }
@@ -2133,19 +2320,27 @@ function useItem(id) {
     say(d.n + " раскрылась " + relDir(at.x, at.y) + " и ищет цели на своей линии. Выстрелов — " + (d.fx.deploy || 30) + ".");
     UIx("refresh"); return true;
   }
-  if (d.fx && (d.fx.pick || d.fx.mend || d.fx.map || d.fx.jam || d.fx.antitox || d.fx.scan || d.fx.shield || d.fx.haste || d.fx.cloak || d.fx.heal || d.fx.en || d.fx.cure || d.fx.unslow)) return useFx(id, d);
+  if (d.fx && (d.fx.pick || d.fx.mend || d.fx.map || d.fx.jam || d.fx.antitox || d.fx.scan || d.fx.shield || d.fx.haste || d.fx.cloak || d.fx.heal || d.fx.en || d.fx.cure || d.fx.unslow || d.fx.food || d.fx.wake || d.fx.detox || d.fx.neuro || d.fx.stopBleed)) return useFx(id, d);
   if (id === "plate") return installPlate();
   if (id === "decoder") { say("Декодер применяется у двери с картридером: " + LAB.K("двойное касание у двери.", "Enter у двери.")); return false; }
   if (d.kind === "part") { say("Это деталь для мастерской."); return false; }
+  var food = d.kind === "food";
+  if (food && body().food >= 100 && !d.en) { say("Вы сыты: больше не лезет."); return false; }
   G.inv[id]--;
   var msg = [];
-  if (d.heal) { var before = G.hp; G.hp = Math.min(G.hpMax, G.hp + d.heal); msg.push("Здоровье плюс " + (G.hp - before) + ", теперь " + G.hp + " из " + G.hpMax + "."); }
-  if (d.en) { G.en = Math.min(G.enMax, G.en + d.en); msg.push("Энергия " + G.en + "."); }
+  /* несвежая еда — токсины */
+  if (food && d.stale && Math.random() < d.stale) { msg.push("Несвежее: подташнивает."); bodyApply({ tox: 15 }, msg); }
+  var od = d.overdose && body().tox >= 70; /* передозировка: стимулятор не лечит, а бьёт по сердцу */
+  if (d.heal && !od) { var before = G.hp; G.hp = Math.min(G.hpMax, G.hp + d.heal); if (G.hp > before || !food) msg.push("Здоровье плюс " + (G.hp - before) + ", теперь " + G.hp + " из " + G.hpMax + "."); }
+  if (d.en) { var e0 = G.en; G.en = Math.min(G.enMax, G.en + d.en); msg.push("Энергия имплантов " + G.en + (G.en > e0 ? "" : ", и так полная") + "."); }
   if (d.cure && G.st.poison) { G.st.poison = 0; msg.push("Отравление снято."); }
   if (d.unslow) { G.st.slow = 0; G.st.web = 0; }
-  A("play", id === "antidote" ? "inject" : id === "stim" || id === "energy_d" ? "inject" : "heal");
-  say(d.n + ". " + msg.join(" ") + " Осталось: " + (G.inv[id] || 0) + ".");
+  bodyApply(d, msg);
+  if (food) eatSound(d.eat);
+  else A("play", id === "bandage" ? "bandage_tear" : id === "sorbent" || id === "neuroblock" ? "pills_rattle" : id === "antidote" || id === "stim" || id === "energy_d" ? "inject" : "heal");
+  say((food ? "Вы съели: " + d.n.charAt(0).toLowerCase() + d.n.slice(1) + ". " : d.n + ". ") + msg.join(" ") + " Осталось: " + (G.inv[id] || 0) + ".");
   UIx("refresh");
+  if (food) autosaveSoon();
   if (LAB.combat && S.turnBased) LAB.combat.tick();
   return true;
 }
@@ -2170,6 +2365,9 @@ function useFx(id, d) {
   if (fx.cure && G.st.poison) { G.st.poison = 0; msg.push("Отравление снято."); }
   if (fx.unslow) { G.st.slow = 0; G.st.web = 0; }
   if (fx.scan && LAB.combat) { LAB.combat.useImplantFree && LAB.combat.useImplantFree("scan"); }
+  if (fx.heal >= 30 && G.st.bleed) { G.st.bleed = 0; msg.push("Кровотечение остановлено."); }
+  if (fx.cure) bodyApply({ detox: 25 }, msg);
+  bodyApply(fx, msg);
   G.inv[id]--;
   A("play", fx.heal ? "heal" : fx.map ? "scan" : "inject");
   say(d.n + ". " + msg.join(" ") + " Осталось: " + (G.inv[id] || 0) + ".");
@@ -2203,7 +2401,8 @@ game.toggleDraw = toggleDraw;
 function quickStatus() {
   if (!game.entered) return;
   var w = curWeapon();
-  say("Здоровье " + G.hp + " из " + G.hpMax + (G.st.shield ? ", щит " + G.st.shield : "") + ". " + weaponLine(w) + "." + ammoTail(w) + (G.st.poison ? " Отравление." : ""));
+  var al = bodyAlerts();
+  say("Здоровье " + G.hp + " из " + G.hpMax + (G.st.shield ? ", щит " + G.st.shield : "") + ". " + weaponLine(w) + "." + ammoTail(w) + (G.st.poison ? " Отравление." : "") + (al.length ? " Тело: " + al.join(", ") + "." : ""));
 }
 game.quickStatus = quickStatus;
 /* Три пальца вправо: окно целей навигатора. */
@@ -2323,7 +2522,8 @@ function die() {
   game.paused = true;
   setTimeout(function () {
     G.dead = false; game.paused = false;
-    G.hp = Math.round(G.hpMax * 0.6); G.st = { poison: 0, slow: 0, shield: 0, haste: 0, cloak: 0, web: 0 };
+    G.hp = Math.round(G.hpMax * 0.6); G.st = { poison: 0, slow: 0, shield: 0, haste: 0, cloak: 0, web: 0, jam: 0, deaf: 0, antitox: 0, bleed: 0 };
+    var bd = body(); bd.tox = 0; bd.neuro = 0; bd.food = Math.max(bd.food, 35); bd.wake = Math.max(bd.wake, 50); bd.lv = {};
     var cp = G.checkpoint;
     if (cp && cp.L === G.L) enterFloor(cp.L, cp.F, "respawn");
     else enterFloor(G.L, G.F, G.F === 1 && G.L === 1 ? "start" : G.F === 1 ? "gatedown" : "down");
@@ -2391,6 +2591,8 @@ function migrate(g) {
   for (var k in base) if (g[k] === undefined) g[k] = base[k];
   if (!g.st) g.st = base.st;
   for (var k2 in base.st) if (g.st[k2] === undefined) g.st[k2] = 0;
+  if (!g.body) g.body = base.body;
+  for (var k3 in base.body) if (g.body[k3] === undefined) g.body[k3] = base.body[k3];
   g.dead = false;
   g.stair = null; /* запись на лестнице — снова у лестницы */
   if (!g.cores) g.cores = {};
@@ -2435,9 +2637,11 @@ function characterText() {
   lines.push("Оружие" + (G.drawn ? " в руках" : " убрано") + ": " + weaponLine(w) + "." + ammoTail(w));
   lines.push("Броня: " + (G.armor ? armorLine(G.armor) : "нет") + ". Общая защита " + armorValue() + ".");
   lines.push("Батареи: энергобатареи " + (G.ammo.energy || 0) + ", магнетронные ячейки " + (G.ammo.magnetron || 0) + ", позитронные заряды " + (G.ammo.positron || 0) + ".");
-  lines.push("Аптечки " + (G.inv.medkit_s || 0) + ", большие аптечки " + (G.inv.medkit_l || 0) + ", стимуляторы " + (G.inv.stim || 0) + ", антидоты " + (G.inv.antidote || 0) + ".");
+  var bb = body();
+  lines.push("Сытость " + Math.round(bb.food) + " из 100: " + bodyWord("food") + ". Бодрость " + Math.round(bb.wake) + ": " + bodyWord("wake") + ". Токсины " + Math.round(bb.tox) + ": " + bodyWord("tox") + ". Нейронагрузка " + Math.round(bb.neuro) + ": " + bodyWord("neuro") + ".");
+  lines.push("Аптечки " + (G.inv.medkit_s || 0) + ", большие аптечки " + (G.inv.medkit_l || 0) + ", бинты " + (G.inv.bandage || 0) + ", стимуляторы " + (G.inv.stim || 0) + ", антидоты " + (G.inv.antidote || 0) + ", сорбенты " + (G.inv.sorbent || 0) + ", еды " + FOODS().reduce(function (a, k) { return a + (G.inv[k] || 0); }, 0) + ".");
   var st = [];
-  if (G.st.poison) st.push("отравление"); if (G.st.slow) st.push("замедление"); if (G.st.shield) st.push("силовой щит " + G.st.shield); if (G.st.haste) st.push("ускорение"); if (G.st.cloak) st.push("маскировка");
+  if (G.st.poison) st.push("отравление"); if (G.st.bleed) st.push("кровотечение"); if (G.st.slow) st.push("замедление"); if (G.st.deaf) st.push("звон в ушах"); if (G.st.antitox) st.push("фильтр противогаза"); if (G.st.shield) st.push("силовой щит " + G.st.shield); if (G.st.haste) st.push("ускорение"); if (G.st.cloak) st.push("маскировка");
   if (st.length) lines.push("Состояние: " + st.join(", ") + ".");
   lines.push("Энергия имплантов " + G.en + " из " + G.enMax + ". Уровень героя " + G.lvl + ", опыт " + G.xp + " из " + LAB.xpNeed(G.lvl) + ". Сила " + G.str + ", ловкость " + G.agi + ", интеллект " + G.mind + ", харизма " + G.cha + ". Кредиты " + G.credits + ".");
   lines.push("Комплекс: уровень " + G.L + " «" + LAB.LEVELS[G.L].name + "», этаж " + G.F + ". Пропуск: " + (G.tier ? LAB.TIERS[G.tier].n.toLowerCase() : "нет") + ". Лифт этажей: " + (G.elev[G.L] ? "есть пропуск" : "нет пропуска") + ". " + (!LAB.isReactorLevel(G.L) ? "Шлюзовая ключ-карта уровня " + G.L + ": " + (G.gate[G.L] ? "есть" : "нет") : "Ключ доступа к «Истоку»: " + (hasCore(G.L) ? "есть" : "нет")) + ".");

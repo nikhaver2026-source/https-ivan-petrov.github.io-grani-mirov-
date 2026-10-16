@@ -235,6 +235,10 @@ function gameGesture(g) {
   if (g.n >= 4) {
     if (g.kind === "dtap") { LAB.ui.implants(); return; }
     if (g.kind === "tap") { game.quickStatus(); return; }
+    /* четыре пальца влево и вправо — история объявлений ОКО, вверх — состояние тела */
+    if (g.kind === "swipe" && g.dir === "L") { LAB.history.show(-1); return; }
+    if (g.kind === "swipe" && g.dir === "R") { LAB.history.show(1); return; }
+    if (g.kind === "swipe" && g.dir === "U") { game.bodyStatus(); return; }
   }
 }
 /* Повторить последнюю фразу. */
@@ -251,14 +255,16 @@ function repeatLast() {
    Enter — действие (дверь, терминал, ящик, выживший), пробел — что рядом,
    Tab — осмотреться, N — навигатор, M — список целей, V — сканер,
    H — аптечка, C — персонаж, I — инвентарь, J — задания и журнал,
-   U — импланты, T — здоровье и заряд, Z — повторить фразу, X или Ctrl —
-   тишина, Escape — окно персонажа, F1 — руководство.
+   U — импланты, T — здоровье и заряд, K — состояние тела, G — поесть,
+   точка и запятая — история объявлений ОКО (назад и вперёд), Z — повторить
+   фразу, X или Ctrl — тишина, Escape — окно персонажа, F1 — руководство.
    В окнах: стрелки вверх и вниз — пункты, влево и вправо — значение,
    Enter — выбрать, пробел — повторить пункт, Tab — прочитать всё окно,
    Home и End — первый и последний пункт, Escape или Backspace — назад,
    C и I — персонаж и инвентарь.
    Буквы работают и в русской раскладке (Ц Ф Ы В, К, Й, У, А…). */
-var KEY_LAT = { "ц": "w", "ф": "a", "ы": "s", "в": "d", "к": "r", "й": "q", "у": "e", "а": "f", "т": "n", "ь": "m", "м": "v", "р": "h", "с": "c", "ш": "i", "о": "j", "г": "u", "е": "t", "я": "z", "ч": "x" };
+var KEY_LAT = { "ц": "w", "ф": "a", "ы": "s", "в": "d", "к": "r", "й": "q", "у": "e", "а": "f", "т": "n", "ь": "m", "м": "v", "р": "h", "с": "c", "ш": "i", "о": "j", "г": "u", "е": "t", "я": "z", "ч": "x",
+  "п": "g", "л": "k", "ю": ".", "б": "," };
 var WASD = { w: "N", a: "W", s: "S", d: "E" };
 var ARROW = { ArrowUp: "N", ArrowDown: "S", ArrowLeft: "W", ArrowRight: "E" };
 var GAME2SCR = { N: "U", S: "D", W: "L", E: "R" };
@@ -333,6 +339,11 @@ function gameKey(e, k) {
     case "u": LAB.ui.implants(); return true;
     case "t": game.quickStatus(); return true;
     case "z": repeatLast(); return true;
+    /* история объявлений ОКО: точка — назад, запятая — вперёд */
+    case ".": LAB.history.show(-1); return true;
+    case ",": LAB.history.show(1); return true;
+    case "g": game.eatBest(); return true;
+    case "k": game.bodyStatus(); return true;
     case "Escape": case "Backspace": if (window.labBack) window.labBack(); return true;
     case "F1": if (LAB.guide) LAB.guide.open(); return true;
   }
@@ -366,7 +377,7 @@ function uiKey(e, k) {
   }
   var act = { ArrowDown: "next", s: "next", ArrowUp: "prev", w: "prev", ArrowRight: "inc", d: "inc", ArrowLeft: "dec", a: "dec",
     Enter: "select", " ": "repeat", Tab: "all", Home: "first", End: "last", Escape: "back", Backspace: "back", x: "hush", z: "repeat",
-    c: "char", i: "inv", F1: "guide" }[k];
+    c: "char", i: "inv", F1: "guide", ".": "histBack", ",": "histFwd" }[k];
   if (!act) return false;
   if (ui.key) ui.key(act); else ui.gesture({ kind: act === "back" ? "back" : "tap", n: 1 });
   return true;

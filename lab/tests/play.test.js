@@ -674,6 +674,63 @@ function ok(cond, msg) { if (cond) console.log("  ✓ " + msg); else { fails++; 
   ok(misc.deploy && misc.ally, "переносная турель встаёт и бьёт на нашей стороне");
   ok(/ОКО по громкой связи/.test(misc.oko), "камера заметила — ОКО объявляет тревогу: " + misc.oko.slice(0, 120));
 
+  console.log("Тело героя: голод и еда, яд и антидот, кровь и бинт, нервы; история объявлений ОКО");
+  const bod = await page.evaluate(async () => {
+    const g = LAB.game, G = g.G, C = LAB.combat, out = {};
+    C.stop();
+    const wait = ms => new Promise(r => setTimeout(r, ms));
+    G.body.food = 30; G.body.lv = {}; g.bodyWarn(); SPOKEN.length = 0;
+    g.advanceTime(60);
+    out.hunger = { food: Math.round(G.body.food), said: SPOKEN.join(" | ") };
+    let snack = null, sf = 0;
+    for (let F = 1; F <= 20 && !snack; F++) { const fl = LAB.getFloor(G.seed, 2, F); snack = fl.objs.find(o => o.type === "snacks"); if (snack) sf = F; }
+    out.snack = !!snack;
+    if (snack) {
+      g.enterFloor(2, sf, "down", true);
+      G.credits = 500; G.en = 3; G.body.food = 20; const en0 = G.en;
+      LAB.ui.closeAll(); g.objMenu(snack);
+      const w = LAB.ui.top();
+      out.title = w.title;
+      w.i = w.items.findIndex(i => /Сухпаёк/.test(typeof i.label === "function" ? i.label() : i.label)); LAB.ui.activate();
+      await wait(1300);
+      out.ate = { food: Math.round(G.body.food), en: G.en, en0 };
+      const w2 = LAB.ui.top(); w2.i = 0; LAB.ui.activate();
+      w2.i = w2.items.findIndex(i => /Галеты/.test(typeof i.label === "function" ? i.label() : i.label)); LAB.ui.activate();
+      await wait(100);
+      out.took = G.inv.crackers || 0;
+      LAB.ui.closeAll();
+    }
+    G.hp = G.hpMax = 400; G.inv.antidote = 1; G.st.poison = 10; G.body.tox = 60; G.body.lv = {};
+    g.useMedkit();
+    out.antidote = { poison: G.st.poison, tox: Math.round(G.body.tox) };
+    G.st.bleed = 12; G.inv.bandage = 1; g.useMedkit();
+    out.bleed = G.st.bleed;
+    G.st.bleed = 6; const hb = G.hp; for (let i = 0; i < 6; i++) C.tick(); out.bleedHurt = hb - G.hp;
+    G.body.neuro = 90; G.en = 200; if (G.implants.indexOf("regen") < 0) G.implants.push("regen");
+    SPOKEN.length = 0; C.useImplant("regen"); out.neuroBlock = /Нейроперегрузка/.test(SPOKEN.join(" "));
+    G.inv.neuroblock = 1; g.useItem("neuroblock"); out.neuro = Math.round(G.body.neuro);
+    LAB.history.clear();
+    ["Первое", "Второе", "Третье"].forEach(t => LAB.history.add("ОКО по громкой связи: «" + t + ".»"));
+    const said = [], orig = LAB.Speech.say;
+    LAB.Speech.say = function (t) { said.push(String(t)); };
+    LAB.ui.closeAll();
+    const key = k => document.dispatchEvent(new KeyboardEvent("keydown", { key: k, bubbles: true }));
+    key("."); key("ю"); key("."); key("."); key(",");
+    LAB.Speech.say = orig;
+    out.hist = said.join(" | ");
+    G.hp = G.hpMax = 100;
+    SPOKEN.length = 0; g.bodyStatus(); out.status = SPOKEN.join(" ");
+    return out;
+  });
+  ok(bod.hunger.food < 30 && /Голод/.test(bod.hunger.said), "сытость падает со временем, «Эхо» предупреждает о голоде: " + bod.hunger.said);
+  ok(!bod.snack || (/Автомат с едой/.test(bod.title) && bod.ate.food >= 60 && bod.ate.en > bod.ate.en0), "автомат с едой: сухпаёк утолил голод и пополнил энергию (" + JSON.stringify(bod.ate) + ")");
+  ok(!bod.snack || bod.took === 1, "автомат с едой: «взять с собой» — галеты в рюкзаке");
+  ok(bod.antidote.poison === 0 && bod.antidote.tox <= 25, "антидот снял отравление и вывел токсины (" + bod.antidote.tox + ")");
+  ok(bod.bleed === 0 && bod.bleedHurt > 0, "кровотечение отнимает здоровье, бинт его останавливает");
+  ok(bod.neuroBlock && bod.neuro <= 45, "нейроперегрузка отключает импланты, нейроблокатор снимает нагрузку (" + bod.neuro + ")");
+  ok(/Третье.*Второе.*Первое.*самое раннее.*Второе/.test(bod.hist), "точка листает объявления ОКО назад, запятая — вперёд: " + bod.hist.slice(0, 160));
+  ok(/Сытость/.test(bod.status) && /Токсины/.test(bod.status) && /Нейронагрузка/.test(bod.status), "состояние тела: " + bod.status.slice(0, 140));
+
   console.log("ОКО сопротивляется: ремонтники, отряды, дрон слежения, патрули смены, посты");
   const oko = await page.evaluate(async () => {
     const g = LAB.game, G = g.G, out = {}, C = LAB.combat;
@@ -698,8 +755,16 @@ function ok(cond, msg) { if (cond) console.log("  ✓ " + msg); else { fails++; 
       for (let i = 0; i < 200 && t1 < 0; i++) { C.tick(); if (C.repairers().length) t1 = i; }
       if (t1 >= 0) { C.repairers().forEach(f => C.despawn(f)); LAB.oko.event("kill", { task: "repair" }); }
       for (let i = 0; i < 300 && again < 0; i++) { C.tick(); if (C.repairers().length) again = i; }
-      for (let i = 0; i < 900 && t2 < 0; i++) { C.tick(); if (g.CUR.fs.turretMode === "on") t2 = i; }
+      let last = null;
+      for (let i = 0; i < 900 && t2 < 0; i++) { C.tick(); const rp = C.repairers()[0]; if (rp) last = rp; if (g.CUR.fs.turretMode === "on") t2 = i; }
       out.repair = { t1, again, t2 };
+      if (t2 < 0) {
+        const tur = live().filter(f => LAB.FOES[f.type].beh.indexOf("turret") >= 0 && !f.shots);
+        out.repair.diag = "этаж " + found.L + "-" + found.F + ", турели " + tur.map(t => t.x + "," + t.y + (t.calm ? " спит" : "")).join("; ") + ", режим " + g.CUR.fs.turretMode +
+          ", ремонтник " + (last ? last.id + " " + last.x + "," + last.y + " stuck " + last.stuck + (last.dead ? " снят" : "") + " " + last.state : "нет") +
+          ", рядом с турелью: " + tur.map(t => live().filter(f => f !== t && Math.max(Math.abs(f.x - t.x), Math.abs(f.y - t.y)) <= 1).map(f => f.type + "@" + f.x + "," + f.y).join(" ")).join(" | ") +
+          ", герой " + G.x + "," + G.y + ", такт ОКО " + g.CUR.fs.okoT + ", repairAt " + g.CUR.fs.repairAt + ", repairN " + g.CUR.fs.repairN + ", heat " + LAB.oko.state().heat;
+      }
     }
     /* перепрошивка: новые машины с другого этажа идут на вас */
     g.enterFloor(2, 8, "down", true); god();
@@ -750,7 +815,7 @@ function ok(cond, msg) { if (cond) console.log("  ✓ " + msg); else { fails++; 
   ok(oko.posts.lift > 20 && oko.posts.stairs > 20 && oko.posts.inRoom, "посты ОКО: стражи у лифта (" + oko.posts.lift + "), у лестницы (" + oko.posts.stairs + "), в кабинетах (" + oko.posts.office + ")");
   ok(!oko.repair || (oko.repair.t1 >= 0 && oko.repair.t1 <= 40), "отключили турели — ремонтник выходит через несколько секунд (тактов: " + (oko.repair && oko.repair.t1) + ")");
   ok(!oko.repair || oko.repair.again >= 0, "ремонтника уничтожили — ОКО шлёт следующего (тактов: " + (oko.repair && oko.repair.again) + ")");
-  ok(!oko.repair || oko.repair.t2 >= 0, "ремонтник дошёл и починил: сеть снова у ОКО (тактов: " + (oko.repair && oko.repair.t2) + ")");
+  ok(!oko.repair || oko.repair.t2 >= 0, "ремонтник дошёл и починил: сеть снова у ОКО (тактов: " + (oko.repair && oko.repair.t2) + ")" + (oko.repair && oko.repair.diag ? " — " + oko.repair.diag : ""));
   ok(oko.fresh.n >= 1 && oko.fresh.d1 < oko.fresh.d0, "перепрошили роботов — новые машины ОКО идут к вам (" + oko.fresh.n + ", " + oko.fresh.d0 + " → " + oko.fresh.d1 + " шагов)");
   ok(oko.check.n >= 1 && oko.check.c1 < oko.check.c0, "неудачный взлом — проверка идёт к терминалу (" + oko.check.c0 + " → " + oko.check.c1 + ")");
   ok(oko.drone.n === 1 && oko.drone.far <= 8 && oko.drone.near >= 2 && oko.drone.hurt > 0, "дрон слежения догнал, держится рядом (" + oko.drone.near + "–" + oko.drone.far + " шагов) и стреляет");

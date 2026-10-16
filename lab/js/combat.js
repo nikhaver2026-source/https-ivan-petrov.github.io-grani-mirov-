@@ -203,6 +203,7 @@ function stepToward(f, tx, ty, opts) {
   opts = opts || {};
   var fl = CUR().fl, fs = CUR().fs;
   var path = LAB.bfs(fl, fs, f.x, f.y, function (x, y) {
+    if (opts.near) return Math.max(Math.abs(x - tx), Math.abs(y - ty)) === 1; /* любая из восьми соседних клеток */
     if (opts.adjacent) return Math.abs(x - tx) + Math.abs(y - ty) === 1;
     return x === tx && y === ty;
   }, {
@@ -210,6 +211,7 @@ function stepToward(f, tx, ty, opts) {
     block: function (x, y) { return occupied(x, y, f) || (x === G().x && y === G().y); },
     maxLen: 6000
   });
+  f.pathLen = path ? path.length : 9999;
   if (!path || !path.length) return false;
   var nx = path[0][0], ny = path[0][1];
   var t = fl.t[idx(nx, ny)];
@@ -386,8 +388,9 @@ function patrolStep(f) {
   if (!stepToward(f, tx, ty)) f.pdir = -f.pdir;
 }
 /* Ремонтник ОКО идёт к отключённой турели и чинит её — три такта у
-   щитка, слышно, как он работает; починил — сеть этажа оживает. Застрял
-   надолго — ОКО отзывает его и пришлёт другого. */
+   щитка, слышно, как он работает; починил — сеть этажа оживает. Путь
+   перекрыт и ремонтник долго не приближается — ОКО выводит его служебным
+   ходом ближе к турели (дважды), а потом отзывает и пришлёт другого. */
 function repairTask(f, canMove) {
   var t = null, bd = 1e9;
   foes.forEach(function (o) { if (isNetTurret(o) && o.calm) { var d = dist(o, f); if (d < bd) { bd = d; t = o; } } });
@@ -406,8 +409,15 @@ function repairTask(f, canMove) {
   f.fixT = 0;
   if (canMove) {
     f.mv = 0;
-    if (stepToward(f, t.x, t.y, { adjacent: true })) f.stuck = 0;
-    else if (++f.stuck > 24) { despawn(f); if (LAB.oko) LAB.oko.event("repair_lost", { quiet: true }); }
+    stepToward(f, t.x, t.y, { near: true });
+    var dt = f.pathLen;
+    if (f.repBest == null || dt < f.repBest) { f.repBest = dt; f.stuck = 0; }
+    else if (++f.stuck > 16) {
+      f.stuck = 0; f.repBest = null;
+      var p = (f.hops || 0) < 2 ? okoPoint({ to: t, minHero: 8, dmin: 2, dmax: 16 }) : null;
+      if (p) { f.hops = (f.hops || 0) + 1; f.x = p[0]; f.y = p[1]; f.room = CUR().fl.room[idx(p[0], p[1])]; A("foeSound", f, "radio"); }
+      else { despawn(f); if (LAB.oko) LAB.oko.event("repair_lost", { quiet: true }); }
+    }
   }
   return true;
 }
@@ -791,6 +801,8 @@ function attack(f, seen) {
   if (has(f, "drain") && g.en > 0) { var dr = 6 + Math.floor(g.L / 3); g.en = Math.max(0, g.en - dr); sayOnce("drain", "Энергия имплантов утекает: минус " + dr + "."); }
   if (!ranged && gm().armorSpecial("thorns") && !f.dead) damageFoe(f, Math.max(1, Math.round(dmg * 0.3)), "kinetic", { quiet: true });
   if (has(f, "poison") && Math.random() < 0.5) poison(6 + Math.floor(G().L / 2));
+  if (!ranged) bleed(f, fin);
+  if (f.adt === "chem" && fin > 0) toxins(2 + Math.round(fin / 6));
   if ((has(f, "slow") || f.adt === "therm" && f.kind === "bio") && Math.random() < 0.5 && !gm().armorSpecial("frost")) { if (!g.st.slow) sayq("Холод сковывает: вы замедлены."); g.st.slow = 6; }
   if (has(f, "web") && ranged && Math.random() < 0.4) { g.st.web = 2; A("play", "web_hit"); sayq(LAB.K("Паутина! Свайп — рвать её.", "Паутина! Шаг в любую сторону — рвать её.")); }
 }
@@ -798,8 +810,28 @@ function poison(t) {
   var g = G();
   if (g.st.antitox > 0) { sayOnce("atox", "Фильтр не пропустил яд."); return; }
   if (gm().armorSpecial("antitox")) t = Math.ceil(t / 2);
-  if (!g.st.poison) { sayq("Вы отравлены. Антидот или большая аптечка снимут яд."); A("play", "poisoned"); }
+  if (!g.st.poison) { sayq("Вы отравлены. Антидот или большая аптечка снимут яд, сорбент ослабит его."); A("play", "poisoned"); }
   g.st.poison = Math.max(g.st.poison, t);
+  /* яд копится в крови токсинами */
+  toxins(3 + Math.round(t / 3));
+}
+function toxins(n) {
+  var g = G();
+  if (!g.body || g.st.antitox > 0 || n <= 0) return;
+  if (gm().armorSpecial("antitox")) n = Math.ceil(n / 2);
+  g.body.tox = Math.min(100, g.body.tox + n);
+  if (gm().bodyWarn) gm().bodyWarn();
+}
+/* Кровотечение: когти, лезвия, пилы. Бинт, аптечка — останавливают. */
+var BLEEDERS = { chimera: 1, lizard: 1, proto: 1, weaver: 1, labmut: 1, blind: 1, rat: 1, spiderbot: 1, micro: 1, repairbot: 1, gardenbot: 1, b_hydra: 1, b_omega: 1 };
+function bleed(f, fin) {
+  var g = G();
+  if (!g.body || fin <= 0) return;
+  var p = (BLEEDERS[f.type] || (f.boss && BLEEDERS[f.boss]) ? 0.3 : f.kind === "bio" ? 0.1 : 0.05) + Math.min(0.15, fin / g.hpMax);
+  if (Math.random() > p) return;
+  var t = 10 + Math.floor(Math.random() * 10) + Math.floor(g.L / 10);
+  if (!g.st.bleed) { sayq("Кровотечение: рана кровит. Бинт или аптечка остановят кровь."); A("play", "hurt_phys"); }
+  g.st.bleed = Math.max(g.st.bleed || 0, t);
 }
 var lastSayOnce = {};
 /* prio "urgent" — опасность: звучит раньше ждущих событий (единый обработчик речи) */
@@ -869,6 +901,12 @@ function statusTick(onlyTimers) {
     if (st.poison % 2 === 0) { var pd = 1 + Math.ceil(g.L / 2); g.hp -= pd; A("play", "poison_tick"); if (g.hp <= 0) { g.hp = 0; gm().die(); return; } }
     if (!st.poison) sayq("Яд выветрился.");
   }
+  if (st.bleed > 0) {
+    st.bleed--;
+    if (st.bleed % 2 === 0) { var bdm = 1 + Math.floor(g.L / 4); g.hp -= bdm; if (g.hp <= 0) { g.hp = 0; gm().die(); return; } }
+    if (!st.bleed) sayq("Кровотечение остановилось само.");
+  }
+  if (gm().bodyTick) { gm().bodyTick(); if (G().dead) return; }
   if (st.slow > 0) st.slow--;
   if (st.deaf > 0) st.deaf--;
   if (st.antitox > 0) { st.antitox--; if (!st.antitox) sayq("Фильтр противогаза отработал."); }
@@ -880,8 +918,9 @@ function statusTick(onlyTimers) {
     var cap = 10 + Math.round(LAB.armorDef(g.armor) * 0.6);
     if (st.shield < cap) { st.shield = Math.min(cap, st.shield + 2); if (st.shield === cap) A("play", "shield_full"); }
   }
-  /* понемногу набирается энергия имплантов */
-  if (tickN % 6 === 0 && g.en < g.enMax) g.en++;
+  /* понемногу набирается энергия имплантов — если герой не голоден и нервы не перегружены */
+  var rg0 = gm().enRegen ? gm().enRegen() : 6;
+  if (rg0 && tickN % rg0 === 0 && g.en < g.enMax) g.en++;
   if (onlyTimers) return;
 }
 
@@ -971,7 +1010,7 @@ function fire(dir, burst) {
 function foeAtCell(x, y) { for (var i = 0; i < foes.length; i++) if (!foes[i].dead && !foes[i].burrowed && foes[i].x === x && foes[i].y === y) return foes[i]; return null; }
 function shoot(w, f, perp, along, burst, melee) {
   var g = G();
-  var acc = (melee ? 0.92 : 0.9) - 0.13 * perp - 0.012 * along + (g.agi - 10) * 0.01 + (w.spread ? 0.08 * perp : 0) - (burst ? 0.1 : 0);
+  var acc = (melee ? 0.92 : 0.9) - 0.13 * perp - 0.012 * along + (g.agi - 10) * 0.01 + (w.spread ? 0.08 * perp : 0) - (burst ? 0.1 : 0) - (gm().aimPenalty ? gm().aimPenalty() : 0);
   /* умный робот уходит с линии огня */
   var iq = iqOf(f);
   if (!melee && f.kind === "mech" && iq >= 5 && !has(f, "stationary") && f.frozen <= 0) {
@@ -1267,7 +1306,8 @@ function dispatch(n, mode, at) {
     sp.route = [];
     if (mode === "post") { sp.state = "idle"; sp.route = null; }
     else if (mode === "patrol") { sp.state = "idle"; sp.route = makeRoute(sp, at || null) || []; }
-    else if (mode === "check" || (mode === "repair" && i > 0)) { sp.state = "alert"; sp.lastKnown = { x: to.x, y: to.y }; }
+    else if (mode === "repair" && i > 0) { sp.state = "idle"; sp.route = makeRoute(sp, { x: to.x, y: to.y }) || []; }
+    else if (mode === "check") { sp.state = "alert"; sp.lastKnown = { x: to.x, y: to.y }; }
     else if (mode === "repair") { sp.state = "alert"; sp.lastKnown = { x: to.x, y: to.y }; }
     else { sp.state = "hunt"; sp.lastKnown = { x: to.x, y: to.y }; }
     sp.lost = 0;
@@ -1392,7 +1432,7 @@ function useImplant(id) {
       say(parts.join(" "));
       break;
     }
-    case "regen": { var b = g.hp; g.hp = Math.min(g.hpMax, g.hp + 30 + L * 4); say("Регенерация: плюс " + (g.hp - b) + ". Здоровье " + g.hp + "."); hpMark = Math.round(100 * g.hp / g.hpMax); break; }
+    case "regen": { var b = g.hp; g.hp = Math.min(g.hpMax, g.hp + 30 + L * 4); var bl = g.st.bleed > 0; g.st.bleed = 0; say("Регенерация: плюс " + (g.hp - b) + ". Здоровье " + g.hp + "." + (bl ? " Кровотечение остановлено." : "")); hpMark = Math.round(100 * g.hp / g.hpMax); break; }
     case "empulse": n = areaDamage(g.x, g.y, 3, 40 + L * 12, "emp"); foes.forEach(function (f) { if (!f.dead && f.kind === "mech" && cheb(f, heroPos()) <= 3 && !aff(f, "hardened")) f.shield = 0; }); say("ЭМИ-импульс. Задето роботов: " + n + "."); break;
     case "shield": g.st.shield = Math.max(g.st.shield, 40 + L * 6); g.st.shieldT = 30; say("Силовой щит: " + g.st.shield + "."); break;
     case "haste": g.st.haste = 20; say("Ускорение: десять секунд."); break;
