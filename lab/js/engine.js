@@ -22,9 +22,9 @@ LAB.store = store;
 /* ── НАСТРОЙКИ ── */
 var DEF = {
   speech: 1, effects: 1, music: 1, ambience: 1, subtitles: 1, explore: 1, haptics: 1,
-  rate: 1, ratePct: 50, voiceVol: 1, fxVol: 1, musicVol: 0.5, ambVol: 0.8, beaconVol: 1,
+  rate: 1, ratePct: 50, voiceVol: 1, fxVol: 1, musicVol: 0.6, ambVol: 0.8, beaconVol: 1,
   voice: "", tts: "auto", robotVoice: 1,
-  difficulty: 1, turnBased: 0, autoDoors: 0, autoRead: 1, beacons: 1, verbose: 1, doorsV: 2
+  difficulty: 1, turnBased: 0, autoDoors: 0, autoRead: 1, beacons: 1, verbose: 1, doorsV: 2, musV: 2
 };
 var saved = {};
 try { saved = JSON.parse(store.get("lab_settings") || "{}") || {}; } catch (e) { saved = {}; }
@@ -39,6 +39,9 @@ LAB.pctFromRate = function (r) { r = +r || 1; return Math.max(0, Math.min(100, M
 if (saved.ratePct == null && saved.rate != null) settings.ratePct = LAB.pctFromRate(saved.rate);
 /* Альфа 1.0: двери закрыты, пока игрок их не откроет (прежде открывались сами). */
 if (saved.doorsV !== 2) { settings.autoDoors = 0; settings.doorsV = 2; }
+/* Новая музыка (её слышно и на динамике телефона): прежняя громкость по
+   умолчанию — 50 % — поднимается до новой; выбранную игроком не трогаем. */
+if (saved.musV !== 2) { if (saved.musicVol == null || +saved.musicVol === 0.5) settings.musicVol = DEF.musicVol; settings.musV = 2; }
 settings.rate = LAB.rateFromPct(settings.ratePct);
 LAB.settings = settings;
 LAB.saveSettings = function () { store.set("lab_settings", JSON.stringify(settings)); };
@@ -92,7 +95,8 @@ var AE = {
     this.ui.gain.setTargetAtTime(settings.effects ? Math.max(0.3, settings.fxVol) : 0, t, 0.05);
     this.beacon.gain.setTargetAtTime(settings.effects && settings.beacons ? settings.beaconVol : 0, t, 0.05);
     this.amb.gain.setTargetAtTime(settings.effects && settings.ambience ? settings.ambVol * (0.55 + 0.45 * d) : 0, t, 0.25);
-    this.music.gain.setTargetAtTime(settings.music ? settings.musicVol * (0.5 + 0.5 * d) : 0, t, 0.25);
+    /* под речь музыка тише, но не пропадает: речь звучит почти всё время */
+    this.music.gain.setTargetAtTime(settings.music ? settings.musicVol * (0.7 + 0.3 * d) : 0, t, 0.25);
     this.voice.gain.setTargetAtTime(settings.voiceVol, t, 0.05);
   },
   setDuck: function (on) { this.duck = on ? 0 : 1; this.applyVolumes(); },

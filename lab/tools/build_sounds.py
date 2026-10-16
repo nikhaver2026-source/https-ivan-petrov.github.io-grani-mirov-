@@ -139,6 +139,19 @@ PACKS = {
   "lab_bleeding": ("Bleeding Out", "OpenGameArt", CC0, "https://opengameart.org/content/bleeding-out"),
   "lab_tomb": ("Forgotten tomb ambience", "OpenGameArt", CC0, "https://opengameart.org/content/forgoten-tomb-ambience"),
   "lab_torment": ("Realm of Torment", "OpenGameArt", CC0, "https://opengameart.org/content/realm-of-torment"),
+  # (заход F) Музыка, которую слышно и на динамике телефона: прежние треки
+  # почти целиком лежали ниже 400 Гц. Kevin MacLeod, файлы с Wikimedia Commons.
+  "lab_km_shadow1": ("Shadowlands 1 - Horizon", "Kevin MacLeod (incompetech.com)", "CC BY 3.0", "https://commons.wikimedia.org/wiki/File:Shadowlands_1_-_Horizon_(ISRC_USUAN1700034).mp3"),
+  "lab_km_scp5": ("SCP-x5x (Outer Thoughts)", "Kevin MacLeod (incompetech.com)", "CC BY 4.0", "https://commons.wikimedia.org/wiki/File:SCP-x5x_(Outer_Thoughts)_by_Kevin_MacLeod.ogg"),
+  "lab_km_sanctum": ("Inner Sanctum", "Kevin MacLeod (incompetech.com)", "CC BY 3.0", "https://commons.wikimedia.org/wiki/File:Inner_Sanctum_(ISRC_USUAN1100196).mp3"),
+  "lab_km_hive": ("The Hive", "Kevin MacLeod (incompetech.com)", "CC BY 3.0", "https://commons.wikimedia.org/wiki/File:The_Hive_(ISRC_USUAN1100711).mp3"),
+  "lab_km_metaphysik": ("Metaphysik", "Kevin MacLeod (incompetech.com)", "CC BY 3.0", "https://commons.wikimedia.org/wiki/File:Metaphysik_(ISRC_USUAN1400056).mp3"),
+  "lab_km_beast": ("Heart of the Beast", "Kevin MacLeod (incompetech.com)", "CC BY 3.0", "https://commons.wikimedia.org/wiki/File:Heart_of_the_Beast_(ISRC_USUAN1100209).mp3"),
+  "lab_km_chaosnp": ("Controlled Chaos - no percussion", "Kevin MacLeod (incompetech.com)", "CC BY 3.0", "https://commons.wikimedia.org/wiki/File:Controlled_Chaos_-_no_percussion_(ISRC_USUAN1200060).mp3"),
+  "lab_km_icedemon": ("Ice Demon", "Kevin MacLeod (incompetech.com)", "CC BY 3.0", "https://commons.wikimedia.org/wiki/File:Ice_Demon_(ISRC_USUAN1200061).mp3"),
+  "lab_km_lazarus": ("Return of Lazarus", "Kevin MacLeod (incompetech.com)", "CC BY 3.0", "https://commons.wikimedia.org/wiki/File:Return_of_Lazarus_(ISRC_USUAN1200090).mp3"),
+  "lab_km_shadow6": ("Shadowlands 6 - The Pit", "Kevin MacLeod (incompetech.com)", "CC BY 3.0", "https://commons.wikimedia.org/wiki/File:Shadowlands_6_-_The_Pit_(ISRC_USUAN1700039).mp3"),
+  "lab_km_shadow7": ("Shadowlands 7 - Codex", "Kevin MacLeod (incompetech.com)", "CC BY 3.0", "https://commons.wikimedia.org/wiki/File:Shadowlands_7_-_Codex_(ISRC_USUAN1700040).mp3"),
   "lab_emptycity": ("Empty City", "OpenGameArt", CC0, "https://opengameart.org/content/emptycity-background-music"),
   "lab_ghostvoice": ("Ghost monster voice", "qubodup", CC0, "https://opengameart.org/content/ghost-monster-voice-moaning-growling"),
   "lab_bitvoice": ("Bitcrushed voice one-shots", "DavidW", "CC BY 3.0", "https://opengameart.org/content/bitcrushed-voice-one-shots"),
@@ -282,6 +295,14 @@ def loudnorm(a, target_db, peak_db=-2.0):
         # мягкий ограничитель: громкие пики сжимаем, остальное не трогаем
         a = np.tanh(a / lim * 1.2) / np.tanh(1.2) * lim
     return a.astype(np.float32)
+
+# Слышимость на динамике телефона: доля энергии выше 350 Гц, дБ.
+AUDIBLE_MIN = -9.0
+def audible_db(a):
+    m = a if a.ndim == 1 else a.mean(axis=1)
+    P = np.abs(np.fft.rfft(m.astype(np.float64))) ** 2
+    fr = np.fft.rfftfreq(len(m), 1.0 / SR)
+    return float(10 * np.log10(max(1e-12, P[fr >= 350].sum()) / max(1e-12, P.sum())))
 
 def loopify(a, xf):
     n = int(xf * SR)
@@ -775,20 +796,23 @@ E("evl_surge", "loop", [S(C, "lab_emfields*", "EM Fields 06.flac")], seg=(1, 16)
 E("evl_steam", "loop", [S(B, "bsb_lab_steam", "3016*")], seg=(20, 16), xf=2.0, v=0.4)
 E("evl_quake", "loop", [S(B, "bsb_lab_rumble", "3114*")], seg=(0, 10), xf=2.0, v=0.4)
 
-# ═════ МУЗЫКА (петли в памяти: моно, до 110 секунд; в памяти — только звучащая) ═════
-E("mus_menu", "music", [S(C, "lab_menacing*", "*.mp3")], v=1.0)
-E("mus_prologue", "music", [S(C, "lab_bleakterm*", "*.mp3")], v=1.0)
-E("mus_l1", "music", [S(C, "lab_searching*", "*.ogg")], v=1.0)
-E("mus_l2", "music", [S(C, "lab_emptycity*", "*.ogg")], v=1.0)
-E("mus_l3", "music", [S(C, "lab_silent_dirty_rain_loop*", "*.flac")], v=1.0)
-E("mus_l4", "music", [S(C, "lab_creep*", "*.mp3")], v=1.0)
-E("mus_l5", "music", [S(C, "lab_insistent*", "*.ogg")], v=1.0)
+# ═════ МУЗЫКА (петли в памяти: моно, до 170 секунд; в памяти — только звучащая) ═════
+# Каждая запись должна звучать и на динамике телефона: заметная доля звука —
+# выше 350 Гц (проверка в сборке). Гул ниже динамик не играет — такой музыки
+# игрок не слышит вовсе.
+E("mus_menu", "music", [S(C, "lab_km_shadow1", "*.mp3", start=30)], v=1.0, max=170)
+E("mus_prologue", "music", [S(C, "lab_km_scp5", "*.ogg", start=10)], v=1.0, max=170)
+E("mus_l1", "music", [S(C, "lab_km_sanctum", "*.mp3", start=40)], v=1.0, max=170)
+E("mus_l2", "music", [S(C, "lab_km_hive", "*.mp3", start=15)], v=1.0, max=170)
+E("mus_l3", "music", [S(C, "lab_km_metaphysik", "*.mp3", start=90)], v=1.0, max=170)
+E("mus_l4", "music", [S(C, "lab_km_beast", "*.mp3", start=125)], v=1.0, max=170)
+E("mus_l5", "music", [S(C, "lab_km_chaosnp", "*.mp3", start=155)], v=1.0, max=170)
 E("mus_l6", "music", [S(C, "lab_heartmach*", "*.ogg")], v=1.0)
-E("mus_l7", "music", [S(C, "lab_silent_the_world*", "*.flac")], v=1.0)
-E("mus_l8", "music", [S(C, "lab_elevreactor*", "*.mp3")], v=1.0)
-E("mus_l9", "music", [S(C, "lab_ghostsmach*", "*.mp3")], v=1.0)
+E("mus_l7", "music", [S(C, "lab_km_icedemon", "*.mp3", start=65)], v=1.0, max=170)
+E("mus_l8", "music", [S(C, "lab_km_lazarus", "*.mp3", start=60)], v=1.0, max=170)
+E("mus_l9", "music", [S(C, "lab_km_shadow6", "*.mp3", start=30)], v=1.0, max=170)
 E("mus_l10", "music", [S(C, "lab_torment_realm_of_torment_1.flac", "*.flac")], v=1.0)
-E("mus_ending", "music", [S(C, "lab_desolate*", "Desolate Part I.mp3")], v=1.0)
+E("mus_ending", "music", [S(C, "lab_km_shadow7", "*.mp3", start=15)], v=1.0, max=170)
 
 # ═════ СИНТЕЗ: звуки, которых нет в наборах ═════
 def gen(name):
@@ -936,7 +960,8 @@ def build():
                     elif kind == "music":
                         # Музыка — петля в памяти (не поток: поток в WebView молчит):
                         # моно, не длиннее 110 секунд, конец сведён в начало.
-                        a = process_one(path, lo, kind, None, ch=1)
+                        lo2 = dict(lo); lo2.setdefault("af", "highpass=f=55")
+                        a = process_one(path, lo2, kind, None, ch=1)
                         mx_s = o.get("max", 110)
                         a = a[: int((mx_s + 4.0) * SR)]
                         a = loopify(a, 4.0)
@@ -944,6 +969,10 @@ def build():
                         a = process_one(path, lo, kind, sp["mx"])
                 if len(a) < int(0.02 * SR): continue
                 a = loudnorm(a, TARGET.get(kind, -16))
+                if kind == "music":
+                    hear = audible_db(a)
+                    print("   %s: на динамике телефона (выше 350 Гц) %.1f дБ" % (id_, hear))
+                    if hear < AUDIBLE_MIN: MISSING.append("ТИХО НА ТЕЛЕФОНЕ %s: %.1f дБ выше 350 Гц (нужно не ниже %.0f)" % (id_, hear, AUDIBLE_MIN))
                 outs.append(a)
         if not outs:
             MISSING.append("ПУСТО " + id_); continue
@@ -981,7 +1010,7 @@ def write_js(defs):
 def write_credits(used):
     lines = ["# Звуки «Подземной лаборатории»", "",
              "Все записи — свободные: CC0 (общественное достояние, в том числе записи Freesound —",
-             "у каждой указан автор и страница), CC BY 3.0 (с указанием автора),",
+             "у каждой указан автор и страница), CC BY 3.0 и CC BY 4.0 (с указанием автора),",
              "BSD 3-Clause (Freedoom) и общественное достояние (часть записей Endless Sky).",
              "Записи под CC BY-SA и GPL не используются. Звуки обрезаны, выровнены по громкости,",
              "часть — замедлена или ускорена, петли сведены с перекрёстным затуханием;",
@@ -998,6 +1027,7 @@ def write_credits(used):
     lines += ["## Лицензии", "",
               "- CC0 1.0: https://creativecommons.org/publicdomain/zero/1.0/",
               "- CC BY 3.0: https://creativecommons.org/licenses/by/3.0/",
+              "- CC BY 4.0: https://creativecommons.org/licenses/by/4.0/",
               "- Freedoom (BSD 3-Clause): Copyright © 2001–2024 Contributors to the Freedoom project. All rights reserved. Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met: redistributions must retain the above copyright notice, this list of conditions and the disclaimer; neither the name of the Freedoom project nor the names of its contributors may be used to endorse or promote products derived from this software without specific prior written permission. THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS \"AS IS\" AND ANY EXPRESS OR IMPLIED WARRANTIES ARE DISCLAIMED.",
               "- Endless Sky: используются только записи, которые файл copyright проекта относит к общественному достоянию.", ""]
     with open(os.path.join(OUT, "CREDITS.md"), "w", encoding="utf-8") as f:

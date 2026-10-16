@@ -1,7 +1,7 @@
 # Звуки «Подземной лаборатории»
 
 Все записи — свободные: CC0 (общественное достояние, в том числе записи Freesound —
-у каждой указан автор и страница), CC BY 3.0 (с указанием автора),
+у каждой указан автор и страница), CC BY 3.0 и CC BY 4.0 (с указанием автора),
 BSD 3-Clause (Freedoom) и общественное достояние (часть записей Endless Sky).
 Записи под CC BY-SA и GPL не используются. Звуки обрезаны, выровнены по громкости,
 часть — замедлена или ускорена, петли сведены с перекрёстным затуханием;
@@ -259,12 +259,6 @@ BSD 3-Clause (Freedoom) и общественное достояние (част
 
 Файлы: `447941_9159316-hq.ogg`
 
-## Bleak Terminal
-
-Автор: ruskerdax. Лицензия: CC0 1.0. Источник: https://opengameart.org/content/bleak-terminal
-
-Файлы: `ruskerdax_-_bleak_terminal_theme.mp3`
-
 ## bullet impacts
 
 Автор: pushkin. Лицензия: CC0 1.0. Источник: https://freesound.org/s/144444/
@@ -379,6 +373,12 @@ BSD 3-Clause (Freedoom) и общественное достояние (част
 
 Файлы: `52050_533680-hq.ogg`
 
+## Controlled Chaos - no percussion
+
+Автор: Kevin MacLeod (incompetech.com). Лицензия: CC BY 3.0. Источник: https://commons.wikimedia.org/wiki/File:Controlled_Chaos_-_no_percussion_(ISRC_USUAN1200060).mp3
+
+Файлы: `Controlled_Chaos_-_no_percussion_(ISRC_USUAN1200060).mp3` (музыка)
+
 ## Creature - Rat - Vocalizations
 
 Автор: LandeAudio. Лицензия: CC0 1.0. Источник: https://freesound.org/s/574107/
@@ -408,12 +408,6 @@ BSD 3-Clause (Freedoom) и общественное достояние (част
 Автор: corkob. Лицензия: CC0 1.0. Источник: https://freesound.org/s/415594/
 
 Файлы: `415594_4043130-hq.ogg`
-
-## Desolate
-
-Автор: Matthew Pablo. Лицензия: CC BY 3.0. Источник: https://opengameart.org/content/desolate
-
-Файлы: `Desolate Part I.mp3`
 
 ## Dog Growl - Beast / Creature
 
@@ -481,23 +475,11 @@ BSD 3-Clause (Freedoom) и общественное достояние (част
 
 Файлы: `elevatording_0.ogg`
 
-## Elevator to reactor
-
-Автор: OpenGameArt. Лицензия: CC0 1.0. Источник: https://opengameart.org/content/elevator-to-reactor-loop
-
-Файлы: `elevator_to_reactor_0.mp3`
-
 ## EM Fields Pack 1
 
 Автор: dklon. Лицензия: CC BY 3.0. Источник: https://opengameart.org/content/em-fields-pack-1
 
 Файлы: `EM Fields 01.flac`, `EM Fields 03.flac`, `EM Fields 04.flac`, `EM Fields 06.flac`, `EM Fields 07.flac`
-
-## Empty City
-
-Автор: OpenGameArt. Лицензия: CC0 1.0. Источник: https://opengameart.org/content/emptycity-background-music
-
-Файлы: `EmptyCity.ogg`
 
 ## Endless Sky (только записи в общественном достоянии)
 
@@ -619,12 +601,6 @@ BSD 3-Clause (Freedoom) и общественное достояние (част
 
 Файлы: `qubodup-GhostMoan01.flac`, `qubodup-GhostMoan03.flac`, `qubodup-GhostMoan04.flac`, `qubodup-GhostMoan05.flac`
 
-## Ghosts in the Machine
-
-Автор: ruskerdax. Лицензия: CC0 1.0. Источник: https://opengameart.org/content/ghosts-in-the-machine
-
-Файлы: `ruskerdax_-_ghosts_in_the_machine.mp3`
-
 ## Glock 17 Trigger Pull
 
 Автор: qubodup. Лицензия: CC0 1.0. Источник: https://freesound.org/s/842748/
@@ -672,6 +648,12 @@ BSD 3-Clause (Freedoom) и общественное достояние (част
 Автор: Alexandr Zhelanov. Лицензия: CC BY 3.0. Источник: https://opengameart.org/content/heart-of-machine
 
 Файлы: `Heart_of_Machine.ogg`
+
+## Heart of the Beast
+
+Автор: Kevin MacLeod (incompetech.com). Лицензия: CC BY 3.0. Источник: https://commons.wikimedia.org/wiki/File:Heart_of_the_Beast_(ISRC_USUAN1100209).mp3
+
+Файлы: `Heart_of_the_Beast_(ISRC_USUAN1100209).mp3` (музыка)
 
 ## Heartbeat
 
@@ -727,6 +709,12 @@ BSD 3-Clause (Freedoom) и общественное достояние (част
 
 Файлы: `146558_831330-hq.ogg`
 
+## Ice Demon
+
+Автор: Kevin MacLeod (incompetech.com). Лицензия: CC BY 3.0. Источник: https://commons.wikimedia.org/wiki/File:Ice_Demon_(ISRC_USUAN1200061).mp3
+
+Файлы: `Ice_Demon_(ISRC_USUAN1200061).mp3` (музыка)
+
 ## Impact Sounds
 
 Автор: Kenney. Лицензия: CC0 1.0. Источник: https://kenney.nl/assets/impact-sounds
@@ -739,11 +727,11 @@ BSD 3-Clause (Freedoom) и общественное достояние (част
 
 Файлы: `612699_11113354-hq.ogg`
 
-## Insistent
+## Inner Sanctum
 
-Автор: OpenGameArt. Лицензия: CC0 1.0. Источник: https://opengameart.org/content/insistent-background-loop
+Автор: Kevin MacLeod (incompetech.com). Лицензия: CC BY 3.0. Источник: https://commons.wikimedia.org/wiki/File:Inner_Sanctum_(ISRC_USUAN1100196).mp3
 
-Файлы: `Insistent.ogg`
+Файлы: `Inner_Sanctum_(ISRC_USUAN1100196).mp3` (музыка)
 
 ## Interface beeps
 
@@ -865,12 +853,6 @@ BSD 3-Clause (Freedoom) и общественное достояние (част
 
 Файлы: `clank1.flac`, `mechanical1.flac`, `mechanical2.flac`
 
-## Menacing Otherworld
-
-Автор: ruskerdax. Лицензия: CC0 1.0. Источник: https://opengameart.org/content/menacing-otherworld
-
-Файлы: `ruskerdax_-_menacing_otherworld.mp3`
-
 ## metal catwalk footsteps
 
 Автор: vestibule-door. Лицензия: CC0 1.0. Источник: https://freesound.org/s/669095/
@@ -912,6 +894,12 @@ BSD 3-Clause (Freedoom) и общественное достояние (част
 Автор: DDT197. Лицензия: CC0 1.0. Источник: https://freesound.org/s/445775/
 
 Файлы: `445775_8292592-hq.ogg`
+
+## Metaphysik
+
+Автор: Kevin MacLeod (incompetech.com). Лицензия: CC BY 3.0. Источник: https://commons.wikimedia.org/wiki/File:Metaphysik_(ISRC_USUAN1400056).mp3
+
+Файлы: `Metaphysik_(ISRC_USUAN1400056).mp3` (музыка)
 
 ## Minigun Burst Audio
 
@@ -1111,6 +1099,12 @@ BSD 3-Clause (Freedoom) и общественное достояние (част
 
 Файлы: `computer-noise_0.mp3`
 
+## Return of Lazarus
+
+Автор: Kevin MacLeod (incompetech.com). Лицензия: CC BY 3.0. Источник: https://commons.wikimedia.org/wiki/File:Return_of_Lazarus_(ISRC_USUAN1200090).mp3
+
+Файлы: `Return_of_Lazarus_(ISRC_USUAN1200090).mp3` (музыка)
+
 ## Rifle Gun Shot 02
 
 Автор: LilMati. Лицензия: CC0 1.0. Источник: https://freesound.org/s/484036/
@@ -1243,11 +1237,11 @@ BSD 3-Clause (Freedoom) и общественное достояние (част
 
 Файлы: `490266_8311588-hq.ogg`
 
-## Searching
+## SCP-x5x (Outer Thoughts)
 
-Автор: OpenGameArt. Лицензия: CC0 1.0. Источник: https://opengameart.org/content/searching
+Автор: Kevin MacLeod (incompetech.com). Лицензия: CC BY 4.0. Источник: https://commons.wikimedia.org/wiki/File:SCP-x5x_(Outer_Thoughts)_by_Kevin_MacLeod.ogg
 
-Файлы: `Searching.ogg`
+Файлы: `SCP-x5x_(Outer_Thoughts)_by_Kevin_MacLeod.ogg` (музыка)
 
 ## Secret coin
 
@@ -1278,6 +1272,24 @@ BSD 3-Clause (Freedoom) и общественное достояние (част
 Автор: derjuli. Лицензия: CC0 1.0. Источник: https://freesound.org/s/824121/
 
 Файлы: `824121_2573247-hq.ogg`
+
+## Shadowlands 1 - Horizon
+
+Автор: Kevin MacLeod (incompetech.com). Лицензия: CC BY 3.0. Источник: https://commons.wikimedia.org/wiki/File:Shadowlands_1_-_Horizon_(ISRC_USUAN1700034).mp3
+
+Файлы: `Shadowlands_1_-_Horizon_(ISRC_USUAN1700034).mp3` (музыка)
+
+## Shadowlands 6 - The Pit
+
+Автор: Kevin MacLeod (incompetech.com). Лицензия: CC BY 3.0. Источник: https://commons.wikimedia.org/wiki/File:Shadowlands_6_-_The_Pit_(ISRC_USUAN1700039).mp3
+
+Файлы: `Shadowlands_6_-_The_Pit_(ISRC_USUAN1700039).mp3` (музыка)
+
+## Shadowlands 7 - Codex
+
+Автор: Kevin MacLeod (incompetech.com). Лицензия: CC BY 3.0. Источник: https://commons.wikimedia.org/wiki/File:Shadowlands_7_-_Codex_(ISRC_USUAN1700040).mp3
+
+Файлы: `Shadowlands_7_-_Codex_(ISRC_USUAN1700040).mp3` (музыка)
 
 ## Sharp Explosion 4 (of 5)
 
@@ -1411,17 +1423,11 @@ BSD 3-Clause (Freedoom) и общественное достояние (част
 
 Файлы: `403253_7809148-hq.ogg`
 
-## The Creep
+## The Hive
 
-Автор: ruskerdax. Лицензия: CC0 1.0. Источник: https://opengameart.org/content/the-creep
+Автор: Kevin MacLeod (incompetech.com). Лицензия: CC BY 3.0. Источник: https://commons.wikimedia.org/wiki/File:The_Hive_(ISRC_USUAN1100711).mp3
 
-Файлы: `ruskerdax_-_the_creep.mp3`
-
-## The World Fell Silent
-
-Автор: OpenGameArt. Лицензия: CC0 1.0. Источник: https://opengameart.org/content/the-world-fell-silent
-
-Файлы: `dirty_rain_loop.flac`, `the_world_fell_silent.flac`
+Файлы: `The_Hive_(ISRC_USUAN1100711).mp3` (музыка)
 
 ## trexroar
 
@@ -1541,5 +1547,6 @@ BSD 3-Clause (Freedoom) и общественное достояние (част
 
 - CC0 1.0: https://creativecommons.org/publicdomain/zero/1.0/
 - CC BY 3.0: https://creativecommons.org/licenses/by/3.0/
+- CC BY 4.0: https://creativecommons.org/licenses/by/4.0/
 - Freedoom (BSD 3-Clause): Copyright © 2001–2024 Contributors to the Freedoom project. All rights reserved. Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met: redistributions must retain the above copyright notice, this list of conditions and the disclaimer; neither the name of the Freedoom project nor the names of its contributors may be used to endorse or promote products derived from this software without specific prior written permission. THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES ARE DISCLAIMED.
 - Endless Sky: используются только записи, которые файл copyright проекта относит к общественному достоянию.

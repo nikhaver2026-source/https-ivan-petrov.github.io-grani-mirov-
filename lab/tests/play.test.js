@@ -57,10 +57,16 @@ function ok(cond, msg) { if (cond) console.log("  ✓ " + msg); else { fails++; 
   await gest({ kind: "swipe", n: 1, dir: "U" });
   ok(await page.evaluate(() => LAB.ui.screen()) === "menu", "свайп вверх — пропуск пролога, главное меню");
   const items = await page.evaluate(() => LAB.ui.top().items.map(i => typeof i.label === "function" ? i.label() : i.label));
-  ok(JSON.stringify(items) === JSON.stringify(["Начать игру", "Пролог", "Загрузить игру", "Настройки"]), "в меню ровно четыре пункта: " + items.join(", "));
+  ok(JSON.stringify(items) === JSON.stringify(["Начать игру", "Пролог", "Загрузить игру", "Руководство", "Настройки"]), "в меню пять пунктов, среди них руководство: " + items.join(", "));
+  await gest({ kind: "swipe", n: 1, dir: "R" }); await gest({ kind: "swipe", n: 1, dir: "R" }); await gest({ kind: "swipe", n: 1, dir: "R" });
+  await gest({ kind: "dtap", n: 1 });
+  ok(await page.evaluate(() => LAB.ui.top().title) === "Руководство", "главное меню → «Руководство» открывает руководство");
+  await gest({ kind: "back", n: 1 });
+  ok(await page.evaluate(() => LAB.ui.top().title === LAB.TITLE + ". Главное меню"), "из руководства — назад в главное меню");
 
   console.log("Настройки");
-  await gest({ kind: "swipe", n: 1, dir: "R" }); await gest({ kind: "swipe", n: 1, dir: "R" }); await gest({ kind: "swipe", n: 1, dir: "R" });
+  await page.evaluate(() => { LAB.ui.top().i = 0; });
+  for (let i = 0; i < 4; i++) await gest({ kind: "swipe", n: 1, dir: "R" });
   await gest({ kind: "dtap", n: 1 });
   ok(await page.evaluate(() => LAB.ui.top().title) === "Настройки", "открыты настройки");
   const labels = await page.evaluate(() => LAB.ui.top().items.map(i => typeof i.label === "function" ? i.label() : i.label));

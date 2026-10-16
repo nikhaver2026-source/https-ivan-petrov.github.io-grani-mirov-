@@ -429,6 +429,8 @@ function stopMusic() {
   mus.timers = [];
   mus.theme = ""; mus.key = "";
 }
+/* Что играет сейчас: запись и звучит ли она (для самопроверки). */
+function musicNow() { var h = mus.h && (mus.h.src ? mus.h : mus.h.h); return { id: mus.tid, on: !!(h && h.src && !h.stopped), synth: !!mus.s }; }
 function musicVolume() { AE.applyVolumes(); if (!S.music) stopMusic(); else if (!mus.theme) music(LAB.ui && LAB.ui.screen() === "game" ? "game" : "menu"); }
 
 function genMusic(theme, L) {
@@ -534,6 +536,6 @@ LAB.atmos = {
   foeSound: foeSound, foeStep: foeStep, foeHit: foeHit, foeDeath: foeDeath, foeMiss: foeMiss, hurt: hurt,
   shot: shot, shotWall: shotWall, shotMiss: shotMiss, swingMiss: swingMiss, explosion: explosion, grenade: grenade, shellIncoming: shellIncoming,
   mineBeep: mineBeep, dropLoot: dropLoot, implant: implant, combatLevel: combatLevel,
-  music: music, stopMusic: stopMusic, musicVolume: musicVolume, preloadLevel: preloadLevel, idsFor: idsFor
+  music: music, stopMusic: stopMusic, musicVolume: musicVolume, musicNow: musicNow, preloadLevel: preloadLevel, idsFor: idsFor
 };
 })();
