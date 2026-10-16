@@ -1,0 +1,611 @@
+/* ════════════════════════════════════════════════════════════════════
+   «Подземная лаборатория» — экраны и окна.
+   Пролог (вправо — дальше, влево — назад, вверх — пропустить), главное
+   меню (Начать игру, Пролог, Загрузить игру, Настройки), настройки
+   (синтезатор, сложность, громкость музыки — свайп вверх и вниз), окно
+   персонажа (три пальца вверх: здоровье, заряд, «Сохранить игру» на три
+   слота, «Выход»), инвентарь (три пальца вниз, по разделам), мастерская,
+   импланты, записки, финал. В окнах: свайп вправо и влево — пункты,
+   двойное касание — выбрать, вверх и вниз — значение у ползунка,
+   два пальца вниз — закрыть окно.
+   ════════════════════════════════════════════════════════════════════ */
+(function () {
+"use strict";
+var LAB = window.LAB, S = LAB.settings;
+function say(t, o) { LAB.say(t, o); }
+function sayq(t) { LAB.say(t, { interrupt: false }); }
+function gm() { return LAB.game; }
+function G() { return LAB.game.G; }
+function $(id) { return document.getElementById(id); }
+function A(name) { var a = LAB.atmos; if (a && typeof a[name] === "function") { var args = Array.prototype.slice.call(arguments, 1); try { return a[name].apply(a, args); } catch (e) { console.warn(e); } } return null; }
+
+var screen = "boot";
+var stack = [];
+var page = null; /* листаемые страницы: пролог, финал */
+
+/* ════════ ОКНА ════════ */
+function itemText(it) {
+  var l = typeof it.label === "function" ? it.label() : it.label;
+  if (it.kind === "slider" || it.kind === "choice" || it.kind === "toggle") l += ": " + valueText(it);
+  if (it.disabled && !it.info) l += " — недоступно";
+  return l;
+}
+function valueText(it) {
+  var v = it.get();
+  if (it.kind === "toggle") return v ? "включено" : "выключено";
+  if (it.kind === "choice") { var o = it.options.filter(function (x) { return x.v === v; })[0]; return o ? o.label : String(v); }
+  if (it.fmt) return it.fmt(v);
+  return String(v);
+}
+function top() { return stack.length ? stack[stack.length - 1] : null; }
+function menu(title, items, opts) {
+  opts = opts || {};
+  items = (items || []).filter(Boolean);
+  if (!items.length) return;
+  if (opts.closeFirst !== false && opts.replace) stack.pop();
+  var w = { title: title, items: items, i: Math.max(0, Math.min(items.length - 1, opts.focus || 0)), keep: !!opts.keep, root: !!opts.root, rebuild: opts.rebuild || null, onClose: opts.onClose || null, silentOpen: !!opts.silent, intro: opts.intro || "" };
+  stack.push(w);
+  LAB.UI.open();
+  render();
+  if (!w.silentOpen) say(title + ". " + (w.intro ? w.intro + " " : "") + itemText(w.items[w.i]) + (S.verbose && !G().tut.win ? ". Свайп вправо и влево — пункты, двойное касание — выбрать, два пальца вниз — закрыть." : ""));
+  if (gm() && gm().entered) G().tut.win = 1;
+  return w;
+}
+function closeTop(silent) {
+  var w = top();
+  if (!w || w.root) return false;
+  stack.pop();
+  if (w.onClose) LAB.safe(w.onClose);
+  if (!silent) LAB.UI.close();
+  render();
+  var t = top();
+  if (t && !silent) {
+    if (t.rebuild) { t.items = t.rebuild(); t.i = Math.min(t.i, t.items.length - 1); render(); }
+    say(t.title + ". " + itemText(t.items[t.i]));
+  } else if (!t && !silent && screen === "game") say("Игра.");
+  return true;
+}
+function closeAll() {
+  while (stack.length && !top().root) { var w = stack.pop(); if (w.onClose) LAB.safe(w.onClose); }
+  render();
+}
+function layer() {
+  if (screen !== "game") return "screen";
+  return stack.length ? top() : null;
+}
+function activate() {
+  var w = top(); if (!w) return;
+  var it = w.items[w.i];
+  if (!it) return;
+  if (it.kind === "toggle") { it.set(!it.get()); LAB.UI.click(); say(itemText(it)); render(); return; }
+  if (it.kind === "choice") { cycle(it, 1); return; }
+  if (it.kind === "slider") { say(itemText(it) + ". Свайп вверх — больше, вниз — меньше."); return; }
+  if (it.disabled) { LAB.UI.error(); say(it.why || "Недоступно."); return; }
+  LAB.UI.click();
+  var keep = w.keep || it.keep;
+  if (!keep && !w.root) { stack.splice(stack.indexOf(w), 1); render(); }
+  LAB.safe(function () { it.fn(); });
+  if (keep && top() === w && w.rebuild) { var old = w.i; w.items = w.rebuild(); w.i = Math.min(old, w.items.length - 1); render(); }
+}
+function move(step) {
+  var w = top(); if (!w) return;
+  var n = w.items.length;
+  w.i = (w.i + step + n) % n;
+  LAB.UI.move();
+  render();
+  say(itemText(w.items[w.i]));
+}
+function cycle(it, step) {
+  var opts = it.options, cur = it.get(), k = 0;
+  for (var i = 0; i < opts.length; i++) if (opts[i].v === cur) k = i;
+  k = (k + step + opts.length) % opts.length;
+  it.set(opts[k].v);
+  LAB.UI.click();
+  say(valueText(it));
+  render();
+}
+function adjust(it, dir) {
+  if (it.kind === "slider") {
+    var v = it.get() + (dir > 0 ? it.step : -it.step);
+    v = Math.max(it.min, Math.min(it.max, Math.round(v * 100) / 100));
+    it.set(v);
+    LAB.UI.move();
+    say(valueText(it));
+    render();
+    return true;
+  }
+  if (it.kind === "choice") { cycle(it, dir > 0 ? 1 : -1); return true; }
+  if (it.kind === "toggle") { it.set(dir > 0); LAB.UI.click(); say(itemText(it)); render(); return true; }
+  return false;
+}
+function readAll() {
+  var w = top(); if (!w) return;
+  say(w.title + ". " + w.items.map(function (it, i) { return (i + 1) + ". " + itemText(it); }).join(". "));
+}
+
+/* ════════ ОТРИСОВКА (для зрячих помощников) ════════ */
+function render() {
+  var box = $("win"), list = $("winList"), tt = $("winTitle");
+  if (!box) return;
+  var w = top();
+  if (!w) { box.hidden = true; return; }
+  box.hidden = false;
+  tt.textContent = w.title;
+  list.innerHTML = "";
+  w.items.forEach(function (it, i) {
+    var li = document.createElement("li");
+    li.textContent = itemText(it);
+    if (i === w.i) li.className = "cur";
+    if (it.disabled) li.className += " off";
+    li.addEventListener("click", function () { w.i = i; render(); activate(); });
+    list.appendChild(li);
+  });
+  var cur = list.children[w.i];
+  if (cur && cur.scrollIntoView) { try { cur.scrollIntoView({ block: "nearest" }); } catch (e) { /* */ } }
+}
+function refresh() {
+  if (screen !== "game" || !gm() || !gm().entered || !gm().CUR.fl) return;
+  var g = G(), w = gm().curWeapon();
+  var hp = $("hudHp"), wp = $("hudWeapon"), pl = $("hudPlace");
+  if (hp) { hp.textContent = "❤ " + g.hp + "/" + g.hpMax + (g.st.shield ? " 🛡" + g.st.shield : ""); hp.style.color = g.hp < g.hpMax * 0.3 ? "#ff6b6b" : ""; }
+  if (wp) wp.textContent = (g.drawn ? "⚔ " : "") + (w ? (w.ammo === "none" ? w.name : w.name + " " + w.charge + "/" + w.cap) : "—");
+  if (pl) pl.textContent = "Ур. " + g.L + " · эт. " + g.F + " · " + (gm().roomAt(g.x, g.y) ? gm().roomAt(g.x, g.y).name : "коридор");
+  drawMap();
+  if (top()) render();
+}
+function drawMap() {
+  var cv = $("map");
+  if (!cv || !cv.getContext || !gm().CUR.fl) return;
+  var CUR = gm().CUR, fl = CUR.fl, W = LAB.W, H = LAB.H;
+  var cs = Math.max(4, Math.floor(Math.min(cv.clientWidth || 340, 520) / W));
+  cv.width = W * cs; cv.height = H * cs;
+  var c = cv.getContext("2d");
+  c.fillStyle = "#06070c"; c.fillRect(0, 0, cv.width, cv.height);
+  for (var y = 0; y < H; y++) for (var x = 0; x < W; x++) {
+    var i = y * W + x;
+    if (!CUR.seen || !CUR.seen[i]) continue;
+    var t = fl.t[i];
+    if (t === LAB.T.WALL) continue;
+    c.fillStyle = t === LAB.T.DOOR ? (CUR.fs.doors[fl.doorAt[i].id] === 2 ? "#3d7" : "#c84") : t === LAB.T.CORR ? "#2a3040" : "#39415a";
+    c.fillRect(x * cs, y * cs, cs - 1, cs - 1);
+  }
+  fl.objs.forEach(function (o) { if (CUR.seen && CUR.seen[o.y * W + o.x]) { c.fillStyle = "#8ab"; c.fillRect(o.x * cs + 1, o.y * cs + 1, cs - 3, cs - 3); } });
+  if (LAB.combat) LAB.combat.visibleFoes(12).forEach(function (f) { c.fillStyle = f.calm ? "#999" : "#f44"; c.fillRect(f.x * cs + 1, f.y * cs + 1, cs - 3, cs - 3); });
+  c.fillStyle = "#ffd84a"; c.fillRect(G().x * cs, G().y * cs, cs - 1, cs - 1);
+}
+LAB.showCaption = function (text) {
+  var el = $("caption");
+  if (!el) return;
+  el.textContent = text;
+};
+
+/* ════════ ЭКРАНЫ ════════ */
+function setScreen(s) {
+  screen = s;
+  document.body.setAttribute("data-screen", s);
+  var hud = $("hud"); if (hud) hud.hidden = s !== "game";
+  var pv = $("pageView"); if (pv) pv.hidden = !(s === "prologue" || s === "ending" || s === "boot");
+}
+function showGame() {
+  stack = [];
+  page = null;
+  setScreen("game");
+  render();
+  A("music", "game");
+  if (LAB.combat) LAB.combat.start();
+  refresh();
+}
+
+/* Листаемые страницы. */
+function showPage(pages, i, opts) {
+  page = { pages: pages, i: i, opts: opts || {} };
+  var p = pages[i];
+  $("pageTitle").textContent = page.opts.title || "";
+  $("pageText").textContent = p;
+  $("pageHint").textContent = page.opts.hint || "";
+  say((i === 0 && page.opts.title ? page.opts.title + ". " : "") + p + (i === pages.length - 1 && page.opts.lastHint ? " " + page.opts.lastHint : ""));
+}
+function pageGesture(g) {
+  if (!page) return false;
+  if (g.kind === "swipe" && g.n === 1) {
+    if (g.dir === "R") {
+      if (page.i < page.pages.length - 1) { LAB.UI.move(); showPage(page.pages, page.i + 1, page.opts); }
+      else { var d = page.opts.done; page = null; if (d) d(); }
+      return true;
+    }
+    if (g.dir === "L") { if (page.i > 0) { LAB.UI.move(); showPage(page.pages, page.i - 1, page.opts); } else LAB.UI.error(); return true; }
+    if (g.dir === "U" && page.opts.skip !== false) { var d2 = page.opts.done; page = null; LAB.UI.close(); if (d2) d2(); return true; }
+  }
+  if (g.kind === "tap" || g.kind === "dtap") { showPage(page.pages, page.i, page.opts); return true; }
+  if (g.kind === "back") { var d3 = page.opts.done; page = null; if (d3) d3(); return true; }
+  return true;
+}
+
+function prologue(fromMenu) {
+  stack = [];
+  render();
+  setScreen("prologue");
+  A("music", "prologue");
+  showPage(LAB.PROLOGUE, 0, {
+    title: LAB.TITLE + ". Пролог",
+    hint: "Свайп вправо — дальше, влево — назад, вверх — пропустить.",
+    lastHint: "Свайп вправо — в главное меню.",
+    done: function () { LAB.store.set("lab_prologue_seen", "1"); mainMenu(); }
+  });
+  if (!fromMenu) sayq("Свайп вправо — дальше, влево — назад, вверх — пропустить пролог.");
+}
+
+function mainMenu(silentIntro) {
+  if (gm() && gm().entered) { gm().autosave(); gm().entered = false; }
+  if (LAB.combat) LAB.combat.stop();
+  A("stopWorld");
+  stack = [];
+  page = null;
+  setScreen("menu");
+  A("music", "menu");
+  $("pageTitle").textContent = LAB.TITLE;
+  $("pageText").textContent = LAB.SUBTITLE;
+  menu(LAB.TITLE + ". Главное меню", [
+    { label: "Начать игру", fn: startGame },
+    { label: "Пролог", fn: function () { prologue(true); } },
+    { label: "Загрузить игру", fn: function () { loadMenu(); } },
+    { label: "Настройки", fn: function () { settingsMenu(); } }
+  ], { root: true, intro: silentIntro ? "" : "", keep: false });
+}
+function startGame() {
+  var hasAuto = !!gm().slotInfo("auto");
+  if (hasAuto) {
+    menu("Начать новую игру?", [
+      { label: "Да, начать сначала. Автозапись заменится, слоты 1, 2 и 3 останутся", fn: function () { gm().newGame(); } },
+      { label: "Продолжить с автозаписи: " + gm().slotText("auto").replace("Автозапись: ", ""), fn: function () { gm().loadSlot("auto"); } },
+      { label: "Отмена", fn: function () { reopenMain(); } }
+    ]);
+    return;
+  }
+  gm().newGame();
+}
+function reopenMain() { if (screen === "menu" && !top()) mainMenu(true); else if (top()) say(top().title + ". " + itemText(top().items[top().i])); }
+
+function loadMenu() {
+  var keys = ["auto", 1, 2, 3];
+  menu("Загрузить игру", keys.map(function (k) {
+    var info = gm().slotInfo(k);
+    return { label: gm().slotText(k), disabled: !info, why: "Слот пуст.", fn: function () { if (!gm().loadSlot(k)) reopenMain(); } };
+  }).concat([{ label: "Назад", fn: function () { reopenMain(); } }]));
+}
+function saveMenu() {
+  menu("Сохранить игру", [1, 2, 3].map(function (k) {
+    return { label: gm().slotText(k), fn: function () {
+      if (gm().slotInfo(k)) {
+        menu("Перезаписать слот " + k + "?", [
+          { label: "Да, записать поверх", fn: function () { gm().saveSlot(k); } },
+          { label: "Нет", fn: function () { saveMenu(); } }
+        ]);
+      } else gm().saveSlot(k);
+    } };
+  }).concat([{ label: "Назад", fn: function () {} }]));
+}
+
+/* ════════ НАСТРОЙКИ ════════ */
+function settingsMenu() {
+  var Sp = LAB.Speech;
+  var ttsOpts = [{ v: "auto", label: "Автоматически: голос телефона, если он говорит по-русски" }, { v: "system", label: "Системный синтезатор телефона" }, { v: "espeak", label: "Встроенный eSpeak" }];
+  var items = [
+    { kind: "choice", label: "Синтезатор речи", options: ttsOpts, get: function () { return S.tts; }, set: function (v) { S.tts = v; LAB.saveSettings(); Sp.choose(); } },
+    { label: function () { return "Голос синтезатора: " + (S.voice || "по умолчанию"); }, fn: voiceMenu },
+    { kind: "slider", label: "Скорость речи", min: 0.5, max: 3, step: 0.1, get: function () { return +S.rate || 1; }, set: function (v) { S.rate = v; LAB.saveSettings(); }, fmt: function (v) { return v.toFixed(1).replace(".", ","); } },
+    { kind: "choice", label: "Уровень сложности", options: [1, 2, 3].map(function (k) { return { v: k, label: LAB.DIFF[k].n }; }), get: function () { return S.difficulty || 1; }, set: function (v) { S.difficulty = v; LAB.saveSettings(); sayq(LAB.DIFF[v].desc); } },
+    vol("Громкость музыки", "musicVol"),
+    vol("Громкость звуков", "fxVol"),
+    vol("Громкость атмосферы", "ambVol"),
+    vol("Громкость маяков", "beaconVol"),
+    vol("Громкость речи", "voiceVol"),
+    tog("Вибрация", "haptics"),
+    tog("Пошаговый режим: враги ходят только после вас", "turnBased"),
+    tog("Двери без замка открываются сами", "autoDoors"),
+    tog("Читать записки сразу", "autoRead"),
+    tog("Голос робота у машин", "robotVoice"),
+    tog("Подсказки", "verbose"),
+    tog("Субтитры звуков на экране", "subtitles"),
+    { label: "Назад", fn: function () { if (screen === "menu") reopenMain(); } }
+  ];
+  menu("Настройки", items, { intro: "Свайп вверх и вниз меняет значение." });
+}
+function vol(label, key) {
+  return { kind: "slider", label: label, min: 0, max: 1, step: 0.05, get: function () { return +S[key]; }, set: function (v) { S[key] = v; LAB.saveSettings(); LAB.AE.applyVolumes(); if (key === "fxVol") LAB.UI.blip(700, 0.06, 0.1); if (key === "musicVol" && LAB.atmos) A("musicVolume"); }, fmt: function (v) { return Math.round(v * 100) + " процентов"; } };
+}
+function tog(label, key) {
+  return { kind: "toggle", label: label, get: function () { return !!S[key]; }, set: function (v) { S[key] = v ? 1 : 0; LAB.saveSettings(); LAB.AE.applyVolumes(); } };
+}
+function voiceMenu() {
+  var vs = LAB.Speech.listVoices();
+  var ru = vs.filter(function (v) { return /^ru/i.test(v.lang); });
+  var list = (ru.length ? ru : vs).slice(0, 60);
+  if (!list.length) { say("Голосов телефона не найдено. Игра говорит встроенным eSpeak."); settingsMenu(); return; }
+  menu("Голос синтезатора", list.map(function (v) {
+    return { label: v.name, fn: function () { LAB.Speech.setVoice(v.id); setTimeout(function () { say("Так звучит этот голос. Подземная лаборатория."); settingsMenu(); }, 200); } };
+  }).concat([{ label: "Назад", fn: settingsMenu }]));
+}
+
+/* ════════ ОКНО ПЕРСОНАЖА (три пальца вверх) ════════ */
+function character() {
+  if (!gm().entered) return;
+  var lines = gm().characterText();
+  var items = lines.map(function (t) { return { label: t, keep: true, fn: function () { say(t); } }; });
+  items.push({ label: "Сохранить игру", fn: saveMenu });
+  items.push({ label: "Настройки", fn: settingsMenu });
+  items.push({ label: "Руководство", fn: function () { if (LAB.guide) LAB.guide.open(); } });
+  items.push({ label: "Выход", fn: exitMenu });
+  menu("Персонаж", items);
+}
+function exitMenu() {
+  var items = [{ label: "Выйти в главное меню. Игра сохранится в автозапись", fn: function () { gm().autosave(); mainMenu(); } }];
+  if (window.LabTTS && window.LabTTS.exitApp) items.push({ label: "Закрыть приложение. Игра сохранится в автозапись", fn: function () { gm().autosave(); try { window.LabTTS.exitApp(); } catch (e) { /* */ } } });
+  items.push({ label: "Отмена", fn: function () {} });
+  menu("Выход", items);
+}
+
+/* ════════ ИНВЕНТАРЬ (три пальца вниз) ════════ */
+function inventory(focus) {
+  if (!gm().entered) return;
+  var g = G();
+  var cnt = function (ids) { return ids.reduce(function (a, k) { return a + (g.inv[k] || 0); }, 0); };
+  var ammoN = (g.ammo.energy || 0) + (g.ammo.magnetron || 0) + (g.ammo.positron || 0);
+  var items = [
+    { label: "Оружие: " + g.weapons.length, fn: weaponsMenu },
+    { label: "Батареи и боеприпасы: " + ammoN, fn: ammoMenu },
+    { label: "Аптечки и стимуляторы: " + cnt(["medkit_s", "medkit_l", "stim", "antidote", "energy_d"]), fn: medsMenu },
+    { label: "Броня: " + g.armors.length + (g.armor ? ", надета" : ", не надета"), fn: armorMenu },
+    { label: "Гранаты, пластины и устройства: " + cnt(["emp", "plate", "decoder"]), fn: gadgetsMenu },
+    { label: "Детали: " + cnt(LAB.PARTS), fn: partsMenu },
+    { label: "Пропуска и ключи", fn: passesMenu },
+    { label: "Записки: " + g.noteList.length, fn: notesMenu },
+    { label: "Задания: " + g.quests.filter(function (q) { return !q.done; }).length, fn: questsMenu },
+    { label: "Журнал", fn: journalMenu },
+    { label: "Импланты: " + g.implants.length + ", образцы: " + Object.keys(g.samples).length + " из 200", fn: implants },
+    { label: "Кредиты: " + g.credits, info: true, keep: true, fn: function () { say("Кредиты: " + g.credits + ". Тратятся в торговых терминалах и у выживших."); } }
+  ];
+  menu("Инвентарь", items, { focus: focus || 0 });
+}
+function back(fn) { return { label: "Назад", fn: fn || function () { inventory(); } }; }
+function weaponsMenu() {
+  var g = G();
+  menu("Оружие", g.weapons.map(function (w, i) {
+    return { label: gm().weaponLine(w) + (i === g.wi ? " — в руках" : ""), fn: function () { weaponMenu(i); } };
+  }).concat([back()]));
+}
+function weaponMenu(i) {
+  var g = G(), w = g.weapons[i];
+  if (!w) return;
+  var d = LAB.WEAPONS[w.base];
+  menu(w.name, [
+    { label: i === g.wi ? "Уже в руках" : "Взять в руки", fn: function () { gm().equipWeapon(i); } },
+    { label: "Осмотреть", fn: function () { say(w.name + ". " + d.desc + " Урон " + w.dmg + " (" + LAB.DTYPE_N[w.dt] + "), дальность " + w.rng + (w.cap ? ", заряд " + w.charge + " из " + w.cap + ", питание: " + LAB.AMMO[w.ammo].n.toLowerCase() : "") + (w.mods ? ", модулей усиления " + w.mods : "") + ". " + LAB.RANKS[w.rank] + "."); weaponMenu(i); } },
+    { label: "Разобрать на детали", fn: function () { gm().scrapWeapon(i); weaponsMenu(); } },
+    back(weaponsMenu)
+  ]);
+}
+function ammoMenu() {
+  var g = G(), w = gm().curWeapon();
+  var items = ["energy", "magnetron", "positron"].map(function (k) {
+    return { label: LAB.AMMO[k].n + ": " + (g.ammo[k] || 0), fn: function () {
+      if (w && w.ammo === k) gm().reload(); else say(LAB.AMMO[k].desc);
+    } };
+  });
+  items.push(back());
+  menu("Батареи и боеприпасы", items, { intro: w && w.ammo !== "none" ? "Двойное касание на нужной батарее — перезарядить оружие в руках." : "" });
+}
+function medsMenu() {
+  var g = G();
+  var ids = ["medkit_s", "medkit_l", "stim", "antidote", "energy_d"];
+  menu("Аптечки и стимуляторы", ids.map(function (k) {
+    return { label: LAB.ITEMS[k].n + ": " + (g.inv[k] || 0) + ". " + LAB.ITEMS[k].desc, fn: function () { if (gm().useItem(k)) {} } };
+  }).concat([back()]));
+}
+function armorMenu() {
+  var g = G();
+  var items = g.armors.map(function (a, i) {
+    var on = g.armor && g.armor.id === a.id;
+    return { label: gm().armorLine(a) + (on ? " — надета" : ""), fn: function () { armorItem(i); } };
+  });
+  if (!items.length) items.push({ label: "Брони нет. Её находят, покупают в торговых терминалах и собирают в мастерской.", info: true, keep: true, fn: function () {} });
+  if (g.armor) items.push({ label: "Вставить бронепластину в надетую броню: пластин " + (g.inv.plate || 0), fn: function () { gm().installPlate(); armorMenu(); } });
+  items.push(back());
+  menu("Броня", items);
+}
+function armorItem(i) {
+  var g = G(), a = g.armors[i];
+  if (!a) return;
+  var on = g.armor && g.armor.id === a.id;
+  var d = LAB.ARMORS[a.base];
+  menu(a.name, [
+    on ? { label: "Снять", fn: function () { gm().removeArmor(); armorMenu(); } } : { label: "Надеть", fn: function () { gm().equipArmor(i); armorMenu(); } },
+    { label: "Осмотреть", fn: function () { say(gm().armorLine(a) + ". " + d.desc); armorItem(i); } },
+    { label: "Разобрать на детали", fn: function () { gm().scrapArmor(i); armorMenu(); } },
+    back(armorMenu)
+  ]);
+}
+function gadgetsMenu() {
+  var g = G();
+  menu("Гранаты, пластины и устройства", [
+    { label: "ЭМИ-граната: " + (g.inv.emp || 0) + ". Бросить вперёд по последнему направлению", fn: function () { if (LAB.combat) LAB.combat.throwEmp(); } },
+    { label: "Бронепластина: " + (g.inv.plate || 0) + ". Вставить в надетую броню", fn: function () { gm().installPlate(); } },
+    { label: "Декодер пропусков: " + (g.inv.decoder || 0), keep: true, fn: function () { say(LAB.ITEMS.decoder.desc + " Применяется у двери: двойное касание у двери."); } },
+    back()
+  ]);
+}
+function partsMenu() {
+  var g = G();
+  var items = LAB.PARTS.filter(function (k) { return g.inv[k] > 0; }).map(function (k) {
+    return { label: LAB.ITEMS[k].n + ": " + g.inv[k], keep: true, fn: function () { say(LAB.ITEMS[k].desc + " Детали собирают в мастерской — у верстака."); } };
+  });
+  if (!items.length) items.push({ label: "Деталей нет. Ищите в ящиках, у роботов и на полу.", keep: true, fn: function () {} });
+  items.push(back());
+  menu("Детали", items);
+}
+function passesMenu() {
+  var g = G(), items = [];
+  items.push({ label: "Пропуск доступа: " + (g.tier ? LAB.TIERS[g.tier].n : "нет"), keep: true, fn: function () { say(g.tier ? LAB.TIERS[g.tier].n + ": открывает двери с картридером этого цвета и ниже." : "Пропуска нет."); } });
+  items.push({ label: "Пропуск лифта этажей уровня " + g.L + ": " + (g.elev[g.L] ? "есть" : "нет"), keep: true, fn: function () { say(g.elev[g.L] ? "Лифт этажей уровня " + g.L + " вас повезёт." : "Пропуск лифта лежит на втором этаже уровня."); } });
+  if (g.L < LAB.LEVELS_N) items.push({ label: "Шлюзовая ключ-карта уровня " + g.L + ": " + (g.gate[g.L] ? "есть" : "нет"), keep: true, fn: function () { say(g.gate[g.L] ? "Гермошлюз на двадцатом этаже откроется. Пройти можно только вниз." : "Ключ-карта — на двадцатом этаже уровня: у стража или спрятана."); } });
+  else items.push({ label: "Ключ доступа к реактору «Исток»: " + (g.core ? "есть" : "нет"), keep: true, fn: function () {} });
+  Object.keys(g.keys).forEach(function (k) { items.push({ label: g.keys[k], keep: true, fn: function () { say(g.keys[k] + "."); } }); });
+  var codes = Object.keys(g.codes);
+  if (codes.length) items.push({ label: "Известные коды: " + codes.length, keep: true, fn: function () { say(codes.map(function (c) { return "«" + g.codes[c] + "» — " + c.split("").join(" "); }).join("; ") + "."); } });
+  items.push(back());
+  menu("Пропуска и ключи", items);
+}
+function notesMenu() {
+  var g = G();
+  var items = g.noteList.slice().reverse().map(function (n) {
+    return { label: "«" + n.t + "»" + (n.a ? ", " + n.a : "") + ", уровень " + n.L + ", этаж " + n.F, fn: function () { note(n.t, (n.a ? n.a + ". " : "") + n.x, notesMenu); } };
+  });
+  if (!items.length) items.push({ label: "Записок пока нет.", keep: true, fn: function () {} });
+  items.push(back());
+  menu("Записки", items);
+}
+function questsMenu() {
+  var g = G();
+  var items = g.quests.filter(function (q) { return !q.done; }).map(function (q) {
+    return { label: (q.type === "main" ? "Главное: " + q.text : q.short + " — " + gm().questProgress(q) + ". Заказчик: " + q.giverName + ", уровень " + q.L + ", этаж " + q.F), keep: true, fn: function () { say(q.text || q.short); } };
+  });
+  if (!items.length) items.push({ label: "Заданий нет.", keep: true, fn: function () {} });
+  items.push(back());
+  menu("Задания", items);
+}
+function journalMenu() {
+  var g = G();
+  var items = g.journal.slice(0, 40).map(function (t) { return { label: t, keep: true, fn: function () { say(t); } }; });
+  if (!items.length) items.push({ label: "Журнал пуст.", keep: true, fn: function () {} });
+  items.push(back());
+  menu("Журнал", items);
+}
+function note(title, text, after) {
+  var parts = String(text).match(/[^.!?…]+[.!?…»]*/g) || [text];
+  var paras = [], curp = "";
+  parts.forEach(function (p) { if ((curp + p).length > 220 && curp) { paras.push(curp.trim()); curp = p; } else curp += p; });
+  if (curp.trim()) paras.push(curp.trim());
+  var items = paras.map(function (p) { return { label: p, keep: true, fn: function () { say(p); } }; });
+  items.push({ label: "Закрыть", fn: function () { if (after) after(); } });
+  A("play", "paper");
+  menu(title, items, { silent: true });
+  say(title + ". " + text, { interrupt: true });
+}
+
+/* ════════ МАСТЕРСКАЯ ════════ */
+function craft() {
+  var g = G();
+  var groups = [["Лечение", ["medkit_s", "medkit_l", "antidote", "stim", "energy_d"]], ["Батареи и гранаты", ["bat_e", "bat_m", "emp", "decoder"]], ["Броня", null], ["Улучшения", ["plate", "wmod"]]];
+  var items = groups.map(function (gr) {
+    var list = LAB.RECIPES.filter(function (rc) { return gr[1] ? gr[1].indexOf(rc.id) >= 0 : rc.out.indexOf("armor:") === 0; });
+    var ready = list.filter(function (rc) { return gm().canCraft(rc); }).length;
+    return { label: gr[0] + ": можно собрать " + ready + " из " + list.length, fn: function () { craftList(gr[0], list); } };
+  });
+  items.push({ label: "Уйти от верстака", fn: function () { A("play", "craft_off"); } });
+  A("play", "workbench");
+  menu("Мастерская", items, { intro: "Деталей у вас: " + LAB.PARTS.reduce(function (a, k) { return a + (g.inv[k] || 0); }, 0) + "." });
+}
+function craftList(title, list) {
+  var g = G();
+  var items = list.map(function (rc) {
+    var ok = gm().canCraft(rc);
+    var lab = rc.n + (ok ? " — можно собрать" : rc.minL && g.L < rc.minL ? " — с уровня " + rc.minL : " — нужно: " + gm().needText(rc));
+    if (rc.out.indexOf("armor:") === 0) { var d = LAB.ARMORS[rc.out.slice(6)]; lab += ". " + d.desc; }
+    else if (rc.desc) lab += ". " + rc.desc;
+    return { label: lab, keep: true, fn: function () { gm().craft(rc); } };
+  });
+  items.push({ label: "Назад", fn: craft });
+  menu(title, items, { keep: true, rebuild: function () { return craftListItems(list); } });
+}
+function craftListItems(list) {
+  var g = G();
+  var items = list.map(function (rc) {
+    var ok = gm().canCraft(rc);
+    var lab = rc.n + (ok ? " — можно собрать" : rc.minL && g.L < rc.minL ? " — с уровня " + rc.minL : " — нужно: " + gm().needText(rc));
+    return { label: lab, keep: true, fn: function () { gm().craft(rc); } };
+  });
+  items.push({ label: "Назад", fn: craft });
+  return items;
+}
+
+/* ════════ ИМПЛАНТЫ (четыре пальца, двойное касание) ════════ */
+function implants() {
+  if (!gm().entered) return;
+  var g = G();
+  var items = g.implants.map(function (id) {
+    var d = gm().implantDef(id);
+    return { label: d.n + ", " + gm().implantCost(id) + " энергии. " + d.desc, fn: function () { if (LAB.combat) LAB.combat.useImplant(id); } };
+  });
+  items.push({ label: "Энергия: " + g.en + " из " + g.enMax, keep: true, fn: function () { say("Энергия имплантов " + g.en + " из " + g.enMax + ". Понемногу восстанавливается сама, полностью — в капсуле."); } });
+  menu("Импланты", items);
+}
+
+/* ════════ НАВИГАТОР: список целей (три пальца вправо) ════════ */
+function navMenu() { if (gm().entered) gm().navigate(false); }
+
+/* ════════ ФИНАЛ ════════ */
+function ending(win) {
+  stack = [];
+  render();
+  setScreen("ending");
+  if (LAB.combat) LAB.combat.stop();
+  A("stopWorld");
+  A("music", "ending");
+  var g = G();
+  var mins = Math.round((g.stats.ms + Date.now() - (gm().t0 || Date.now())) / 60000);
+  var stats = "Итоги. В игре " + Math.floor(mins / 60) + " ч " + (mins % 60) + " мин. Уровень героя " + g.lvl + ". Побеждено врагов " + g.stats.kills + ". Тайников " + g.stats.secrets + ". Записок " + g.stats.notes + ". Образцов " + Object.keys(g.samples).length + " из 200. Гибелей " + g.stats.deaths + ". Сложность: " + LAB.DIFF[S.difficulty || 1].n.toLowerCase() + ".";
+  var pages = LAB.ENDING.concat([stats, LAB.CREDITS_TEXT || "Конец. Спасибо, что слушали."]);
+  showPage(pages, 0, {
+    title: "Финал", skip: false,
+    hint: "Свайп вправо — дальше, влево — назад.",
+    lastHint: "Свайп вправо — в главное меню.",
+    done: function () { mainMenu(); }
+  });
+}
+
+/* ════════ БАННЕР УРОВНЯ ════════ */
+function levelBanner() {
+  var b = $("banner"); if (!b) return;
+  var lev = LAB.LEVELS[G().L];
+  b.textContent = "Уровень " + G().L + " · " + lev.name;
+  b.hidden = false;
+  setTimeout(function () { b.hidden = true; }, 4000);
+}
+
+/* ════════ ЖЕСТЫ В ОКНАХ И НА ЭКРАНАХ ════════ */
+function gesture(g) {
+  if (screen === "boot") return true;
+  if (page) return pageGesture(g);
+  var w = top();
+  if (!w) return false;
+  if (g.kind === "back") { if (!closeTop()) { if (screen === "menu") say("Главное меню. " + itemText(w.items[w.i])); } return true; }
+  if (g.n === 1) {
+    if (g.kind === "swipe") {
+      if (g.dir === "R") { move(1); return true; }
+      if (g.dir === "L") { move(-1); return true; }
+      var it = w.items[w.i];
+      if (g.dir === "U") { if (!adjust(it, 1)) say(w.title + ". Пункт " + (w.i + 1) + " из " + w.items.length + ": " + itemText(it)); return true; }
+      if (g.dir === "D") { if (!adjust(it, -1)) { if (!closeTop()) LAB.UI.error(); } return true; }
+    }
+    if (g.kind === "dtap") { activate(); return true; }
+    if (g.kind === "tap") { say(itemText(w.items[w.i])); return true; }
+    return true;
+  }
+  if (g.n === 2 && g.kind === "swipe" && g.dir === "D") { if (!closeTop()) LAB.UI.error(); return true; }
+  if (g.n === 2 && g.kind === "swipe" && g.dir === "U") { readAll(); return true; }
+  if (g.n === 2 && g.kind === "tap") { LAB.Speech.stop(); return true; }
+  if (screen === "game" && g.n === 3 && g.kind === "swipe" && (g.dir === "U" || g.dir === "D")) {
+    var want = g.dir === "U" ? "Персонаж" : "Инвентарь";
+    if (w.title === want) closeTop(); else { closeAll(); if (g.dir === "U") character(); else inventory(); }
+    return true;
+  }
+  return true;
+}
+
+LAB.ui = {
+  menu: menu, closeTop: closeTop, closeAll: closeAll, layer: layer, gesture: gesture, refresh: refresh, render: render,
+  note: note, craft: craft, ending: ending, levelBanner: levelBanner, showGame: showGame, mainMenu: mainMenu, prologue: prologue,
+  character: character, inventory: inventory, implants: implants, settings: settingsMenu, loadMenu: loadMenu, saveMenu: saveMenu,
+  navMenu: navMenu, screen: function () { return screen; }, setScreen: setScreen, top: top, activate: activate, move: move
+};
+})();

@@ -1,0 +1,544 @@
+/* ════════════════════════════════════════════════════════════════════
+   «Подземная лаборатория» — данные мира.
+   Уровни, помещения, мутанты, роботы, оружие, предметы, импланты,
+   фракции, рецепты. Чистые таблицы без DOM: этот файл читают и игра,
+   и проверки в Node.
+   Синтаксис — не новее ES2017: игра должна работать в WebView Android 9.
+   ════════════════════════════════════════════════════════════════════ */
+var LAB = (typeof window !== "undefined" ? (window.LAB = window.LAB || {}) : (globalThis.LAB = globalThis.LAB || {}));
+
+LAB.VERSION = "1.0";
+LAB.LEVELS_N = 10;
+LAB.FLOORS_N = 20;
+
+/* Поверхности пола — у каждого уровня своя: по шагам слышно, где вы. */
+LAB.SURF = {
+  tile:     { n: "кафель" },
+  carpet:   { n: "ковролин" },
+  water:    { n: "вода по щиколотку" },
+  vinyl:    { n: "медицинский линолеум" },
+  metal:    { n: "стальные плиты" },
+  grate:    { n: "решётчатый настил" },
+  ice:      { n: "иней и лёд" },
+  concrete: { n: "бетон" },
+  gravel:   { n: "каменная крошка" },
+  flesh:    { n: "живая плёнка" }
+};
+
+/* Сложность: от обычной до очень тяжёлой. */
+LAB.DIFF = [
+  null,
+  { n: "Обычная", hp: 1, dmg: 1, iq: 0, loot: 1, desc: "Враги в полную силу, но без жестокости." },
+  { n: "Тяжёлая", hp: 1.25, dmg: 1.35, iq: 1, loot: 0.85, desc: "Враги крепче и больнее бьют, роботы на шаг умнее, батарей и аптечек меньше." },
+  { n: "Очень тяжёлая", hp: 1.5, dmg: 1.75, iq: 2, loot: 0.7, desc: "Каждый бой может стать последним: враги вдвое опаснее, роботы хитрее, запасов мало." }
+];
+
+/* Уровни доступа: пропуска. */
+LAB.TIERS = [
+  null,
+  { n: "Зелёный пропуск", color: "зелёный", short: "зелёного" },
+  { n: "Синий пропуск", color: "синий", short: "синего" },
+  { n: "Жёлтый пропуск", color: "жёлтый", short: "жёлтого" },
+  { n: "Красный пропуск", color: "красный", short: "красного" },
+  { n: "Чёрный пропуск «Омега»", color: "чёрный", short: "чёрного" }
+];
+
+/* ── 10 УРОВНЕЙ ── */
+LAB.LEVELS = [
+  null,
+  { n: 1, name: "Приёмный шлюз", gen: "Приёмного шлюза", tier: 1, root: 220, surf: "tile", card: "boss", amb: "amb_l1",
+    desc: "Проходная, офисы и посты охраны у самой поверхности. Отсюда начиналась каждая смена. Под ногами — кафель проходной.",
+    rooms: ["entry", "guard", "office", "canteen", "lounge", "archive", "storage", "server", "medpost", "locker", "meeting", "comms"],
+    foes: ["rat", "roach", "labmut", "drone"], boss: "b_grachev" },
+  { n: 2, name: "Жилой сектор", gen: "Жилого сектора", tier: 1, root: 196, surf: "carpet", card: "hidden", amb: "amb_l2",
+    desc: "Каюты, столовые и медблок. Здесь персонал жил годами, не поднимаясь наверх. Под ногами — мягкий ковролин кают и коридоров.",
+    rooms: ["cabin", "dorm", "laundry", "gym", "kitchen", "library", "medbay", "quiet", "wintergarden", "showers", "office", "storage"],
+    foes: ["labmut", "roach", "slug", "drone", "spiderbot"], boss: "b_brood" },
+  { n: 3, name: "Гидропоника", gen: "Гидропоники", tier: 2, root: 174.6, surf: "water", card: "boss", amb: "amb_l3",
+    desc: "Теплицы, баки с раствором и грибницы. Влажно, капает, шелестит то, что не должно шелестеть. Пол залит водой по щиколотку.",
+    rooms: ["greenhouse", "tankfarm", "mycelium", "pumps", "seedbank", "soillab", "compost", "storage", "lounge", "server"],
+    foes: ["vine", "spore", "slug", "swamp", "gardenbot", "drone"], boss: "b_root" },
+  { n: 4, name: "Генетические лаборатории", gen: "Генетических лабораторий", tier: 2, root: 164.8, surf: "vinyl", card: "boss", amb: "amb_l4",
+    desc: "Виварии, инкубаторы и операционные программы «Химера». Сердце катастрофы. Под ногами — скрипучий медицинский линолеум.",
+    rooms: ["vivarium", "incubator", "sequencer", "surgery", "embryo", "isolator", "genelab", "medbay", "archive", "storage"],
+    foes: ["chimera", "lizard", "weaver", "blind", "labmut", "spiderbot", "repairbot"], boss: "b_hydra" },
+  { n: 5, name: "Робототехника", gen: "Робототехники", tier: 3, root: 146.8, surf: "metal", card: "hidden", amb: "amb_l5",
+    desc: "Сборочные цеха, склады деталей и полигоны. Здесь собирали тех, кто теперь охотится на людей. Под ногами — гулкие стальные плиты цехов.",
+    rooms: ["assembly", "parts", "range", "ailab", "charging", "repair", "storage", "server", "office"],
+    foes: ["spiderbot", "guardbot", "turret", "drone", "repairbot", "shieldbot", "sapper"], boss: "b_goliath" },
+  { n: 6, name: "Энергоблок", gen: "Энергоблока", tier: 3, root: 130.8, surf: "grate", card: "boss", amb: "amb_l6",
+    desc: "Генераторы, трансформаторы и магнетронные залы. Всё гудит и пахнет озоном. Под ногами — решётчатый настил над кабелями.",
+    rooms: ["genhall", "transformer", "magnetron_hall", "switchboard", "cable", "powerdesk", "storage", "repair"],
+    foes: ["spark", "pturret", "repairbot", "guardbot", "blind", "hunter", "shieldbot"], boss: "b_leviathan" },
+  { n: 7, name: "Криохранилище", gen: "Криохранилища", tier: 4, root: 123.5, surf: "ice", card: "boss", amb: "amb_l7",
+    desc: "Криокамеры и морозильники образцов. Иней на стенах и тишина, в которой слышно своё дыхание. Пол покрыт инеем и льдом.",
+    rooms: ["cryohall", "freezer", "samples", "compressor", "thaw", "storage", "medbay", "server"],
+    foes: ["frozen", "thawed", "weaver", "watcher", "drone", "hunter", "mortar"], boss: "b_colossus" },
+  { n: 8, name: "Оружейные лаборатории", gen: "Оружейных лабораторий", tier: 4, root: 110, surf: "concrete", card: "hidden", amb: "amb_l8",
+    desc: "Испытательные стенды, тир и арсенал. Здесь создавали бластеры, магнетроны и позитронные пушки. Под ногами — голый бетон стендов и бункеров.",
+    rooms: ["testbench", "shooting", "arsenal", "ballistics", "armorlab", "bunker", "storage", "office"],
+    foes: ["android", "hturret", "soldier", "guardbot", "spiderbot", "mortar", "relay", "sapper"], boss: "b_alpha" },
+  { n: 9, name: "Магнетронный ускоритель", gen: "Магнетронного ускорителя", tier: 5, root: 98, surf: "gravel", card: "hidden", amb: "amb_l9",
+    desc: "Кольцо ускорителя проходит сквозь все этажи. Поле здесь нестабильно, и воздух звенит. Пол усыпан каменной крошкой: кольцо осыпается.",
+    rooms: ["ring", "detector", "accdesk", "targetroom", "vacuum", "magnetron_hall", "storage", "server"],
+    foes: ["phase", "interceptor", "spark", "android", "soldier", "micro", "relay", "titan"], boss: "b_phantom" },
+  { n: 10, name: "Ядро", gen: "Ядра", tier: 5, root: 82.4, surf: "flesh", card: "boss", amb: "amb_l10",
+    desc: "Позитронный реактор «Исток» и бастион ОКО. Отсюда начался Разлом — здесь он и должен закончиться. Пол затянут живой плёнкой: Разлом прорастает в вещество.",
+    rooms: ["reactorhall", "containment", "chiefdesk", "bastion", "annihilation", "magnetron_hall", "storage"],
+    foes: ["proto", "coreguard", "phase", "hturret", "interceptor", "titan", "micro", "relay"], boss: "b_omega" }
+];
+
+/* ── ПОМЕЩЕНИЯ ──
+   obj — вероятности предметов обстановки, loot — склонность к добыче. */
+LAB.ROOMS = {
+  /* особые */
+  wake:   { n: "Палата пробуждения", desc: "Криокапсула с откинутой крышкой, холодный пар стелется по полу. Здесь вы очнулись.", special: true },
+  stair:  { n: "Лестничная клетка", desc: "Бетонный колодец, металлические пролёты уходят вверх и вниз.", special: true },
+  lift:   { n: "Лифтовой холл", desc: "Широкие двери шахты и панель вызова. Пахнет машинным маслом.", special: true },
+  gate:   { n: "Гермошлюз уровня", desc: "Массивные створки шлюза на уровень ниже, считыватель шлюзовой ключ-карты и пост досмотра. Пройти можно только вниз.", special: true },
+  gatein: { n: "Шлюзовая камера", desc: "Камера под гермошлюзом. Створки наверх сведены намертво: пути назад нет.", special: true },
+  secret: { n: "Тайная комната", desc: "Тесное помещение, о котором нет ни слова на схемах этажа.", special: true },
+  reactor:{ n: "Позитронный реактор «Исток»", desc: "Огромный зал, в центре — кольцо реактора. Его низкий гул чувствуется всем телом.", special: true },
+
+  /* уровень 1 */
+  entry:   { n: "Проходная", desc: "Турникеты, рамка досмотра и стойка дежурного.", obj: { terminal: .5, desk: .5, crate: .2 } },
+  guard:   { n: "Пост охраны", desc: "Пульт наблюдения, оружейная стойка, сейф начальника смены.", obj: { terminal: .7, locker: .7, safe: .4, corpse: .3 }, loot: "arms" },
+  office:  { n: "Офис", desc: "Столы, перевёрнутые кресла и рассыпанные бумаги.", obj: { desk: .9, terminal: .4, locker: .3 }, loot: "paper" },
+  canteen: { n: "Столовая", desc: "Длинные столы, раздача и запах остывшей еды.", obj: { vending: .6, crate: .3 }, loot: "food" },
+  lounge:  { n: "Комната отдыха", desc: "Диваны, кофейный автомат и забытая гитара.", obj: { vending: .5, capsule: .3, desk: .3 }, safe: true },
+  archive: { n: "Архив", desc: "Стеллажи с папками до потолка, пыль и тишина.", obj: { desk: .6, terminal: .4, locker: .4 }, loot: "paper" },
+  storage: { n: "Склад", desc: "Ящики, стеллажи и погрузчик в углу.", obj: { crate: 1, locker: .5 }, loot: "parts" },
+  server:  { n: "Серверная", desc: "Ряды серверных шкафов гудят вентиляторами, мигают огоньки.", obj: { terminal: 1, crate: .2 }, loot: "tech" },
+  medpost: { n: "Медпункт", desc: "Кушетка, шкаф с лекарствами и запах антисептика.", obj: { medst: .8, locker: .6 }, loot: "med", safe: true },
+  locker:  { n: "Раздевалка", desc: "Ряды шкафчиков с именами сотрудников на дверцах.", obj: { locker: 1, corpse: .3 } },
+  meeting: { n: "Переговорная", desc: "Овальный стол, проектор и схема объекта на стене.", obj: { terminal: .6, desk: .5 }, loot: "paper" },
+  comms:   { n: "Узел связи", desc: "Стойки радиоаппаратуры, из динамиков шипит эфир.", obj: { terminal: .9, crate: .3 }, loot: "tech" },
+
+  /* уровень 2 */
+  cabin:   { n: "Жилая каюта", desc: "Две койки, тумбочка и фотография на стене.", obj: { desk: .6, locker: .5, capsule: .2 }, loot: "paper", safe: true },
+  dorm:    { n: "Общежитие", desc: "Двухъярусные кровати в несколько рядов, разбросанные вещи.", obj: { locker: .8, corpse: .3 } },
+  laundry: { n: "Прачечная", desc: "Стиральные машины с открытыми люками, по полу течёт вода.", obj: { crate: .4 } },
+  gym:     { n: "Спортзал", desc: "Тренажёры, маты и баскетбольное кольцо.", obj: { locker: .5 } },
+  kitchen: { n: "Кухня", desc: "Плиты, котлы и холодильная камера с приоткрытой дверью.", obj: { crate: .5, vending: .3 }, loot: "food" },
+  library: { n: "Библиотека", desc: "Книжные полки и читальный зал с лампами под зелёными абажурами.", obj: { desk: .8, terminal: .5 }, loot: "paper", safe: true },
+  medbay:  { n: "Медблок", desc: "Операционный стол, мониторы и стеклянные шкафы с препаратами.", obj: { medst: 1, locker: .6, terminal: .4 }, loot: "med", safe: true },
+  quiet:   { n: "Комната тишины", desc: "Мягкий свет, кресла и звукоизоляция. Здесь можно перевести дух.", obj: { capsule: .5 }, safe: true },
+  wintergarden: { n: "Зимний сад", desc: "Пальмы в кадках под лампами дневного света, фонтанчик журчит.", obj: { desk: .3 }, safe: true },
+  showers: { n: "Душевые", desc: "Кафель, кабинки и капающая вода.", obj: { locker: .5 } },
+
+  /* уровень 3 */
+  greenhouse: { n: "Теплица", desc: "Грядки под лампами, сплетённые стебли тянутся к потолку.", obj: { crate: .4 }, loot: "bio" },
+  tankfarm: { n: "Бак-ферма", desc: "Прозрачные баки с мутным питательным раствором, в них что-то шевелится.", obj: { terminal: .4, crate: .3 }, loot: "bio" },
+  mycelium: { n: "Грибница", desc: "Полки с субстратом, светящиеся шляпки и споры в воздухе.", obj: { crate: .3 }, loot: "bio" },
+  pumps:   { n: "Насосная", desc: "Насосы, вентили и трубы толщиной в руку.", obj: { terminal: .5, crate: .4, magnetron: .15 }, loot: "parts" },
+  seedbank:{ n: "Семенной банк", desc: "Ячейки хранилища семян и сейф с особыми образцами.", obj: { safe: .6, terminal: .5 }, loot: "tech" },
+  soillab: { n: "Лаборатория почв", desc: "Колбы, центрифуги и пробирки с грунтом.", obj: { workbench: .5, desk: .5, terminal: .4 }, loot: "chem" },
+  compost: { n: "Компостная", desc: "Тёплые кучи перегноя, пар и тяжёлый запах.", obj: { crate: .3 } },
+
+  /* уровень 4 */
+  vivarium: { n: "Виварий", desc: "Вольеры с разбитыми стёклами и следы когтей на стенах.", obj: { corpse: .5, terminal: .3 }, loot: "bio" },
+  incubator:{ n: "Инкубаторная", desc: "Тёплые камеры с овальными капсулами, в некоторых пульсирует жизнь.", obj: { terminal: .6, crate: .3 }, loot: "bio" },
+  sequencer:{ n: "Секвенаторная", desc: "Белые аппараты секвенирования и экраны с цепочками генов.", obj: { terminal: 1, workbench: .3 }, loot: "tech" },
+  surgery: { n: "Операционная", desc: "Стол под бестеневой лампой и поднос с инструментами.", obj: { medst: .7, locker: .5 }, loot: "med" },
+  embryo:  { n: "Хранилище эмбрионов", desc: "Криоячейки с пробирками, табличка «Химера — не размораживать».", obj: { safe: .5, terminal: .5 }, loot: "bio" },
+  isolator:{ n: "Изолятор", desc: "Палаты за толстым стеклом и шлюзовые двери.", obj: { medst: .4, capsule: .3, terminal: .4 }, safe: true },
+  genelab: { n: "Лаборатория генетики", desc: "Микроскопы, термостаты и журнал опытов на столе.", obj: { workbench: .5, desk: .6, terminal: .5, implantlab: .12 }, loot: "chem" },
+
+  /* уровень 5 */
+  assembly:{ n: "Сборочный цех", desc: "Конвейер, роботизированные руки и недособранные корпуса.", obj: { workbench: .6, crate: .6 }, loot: "parts" },
+  parts:   { n: "Склад деталей", desc: "Стеллажи с микросхемами, сервоприводами и мотками провода.", obj: { crate: 1, locker: .5 }, loot: "parts" },
+  range:   { n: "Испытательный полигон", desc: "Мишени, бронещиты и следы выстрелов на стенах.", obj: { terminal: .4, crate: .3 }, loot: "arms" },
+  ailab:   { n: "Лаборатория ИИ", desc: "Стойки нейровычислителей и пустое кресло оператора.", obj: { terminal: 1, implantlab: .15 }, loot: "tech" },
+  charging:{ n: "Зарядная станция", desc: "Ряды зарядных разъёмов, на некоторых висят неподвижные роботы.", obj: { charger: 1, capsule: .3 }, safe: true },
+  repair:  { n: "Ремонтный бокс", desc: "Подъёмник, инструменты и разобранный робот на столе.", obj: { workbench: .8, crate: .4 }, loot: "parts" },
+
+  /* уровень 6 */
+  genhall: { n: "Генераторный зал", desc: "Гигантские генераторы, пол дрожит под ногами.", obj: { magnetron: .25, terminal: .4 }, loot: "parts" },
+  transformer: { n: "Трансформаторная", desc: "Трансформаторы в клетках, над ними трещат разряды.", obj: { crate: .3 } },
+  magnetron_hall: { n: "Магнетронный зал", desc: "Медные волноводы и резонаторные камеры, воздух дрожит от поля.", obj: { magnetron: .9, terminal: .5 }, loot: "tech" },
+  switchboard: { n: "Щитовая", desc: "Шкафы рубильников, предохранители и схемы на стенах.", obj: { terminal: .7, locker: .4 }, loot: "parts" },
+  cable:   { n: "Кабельный коллектор", desc: "Пучки кабелей вдоль стен, тесно и жарко.", obj: { crate: .3 } },
+  powerdesk: { n: "Пульт энергетика", desc: "Панели с приборами и журнал смены.", obj: { terminal: 1, desk: .5 }, loot: "paper" },
+
+  /* уровень 7 */
+  cryohall:{ n: "Криозал", desc: "Ряды криокамер, на стекле иней, внутри — силуэты.", obj: { terminal: .5, corpse: .3 }, loot: "bio" },
+  freezer: { n: "Морозильная камера", desc: "Стеллажи с контейнерами, всё покрыто инеем.", obj: { crate: .6, locker: .4 }, loot: "bio" },
+  samples: { n: "Хранилище образцов", desc: "Сейфы-ячейки с номерами и бирками.", obj: { safe: .7, terminal: .5 }, loot: "tech" },
+  compressor: { n: "Компрессорная", desc: "Компрессоры холода, трубы и манометры.", obj: { terminal: .4, crate: .4, magnetron: .15 }, loot: "parts" },
+  thaw:    { n: "Лаборатория разморозки", desc: "Камеры оттаивания, лужи на полу.", obj: { workbench: .5, medst: .4 }, loot: "chem" },
+
+  /* уровень 8 */
+  testbench: { n: "Испытательный стенд", desc: "Закреплённые на станинах образцы оружия и датчики.", obj: { terminal: .6, crate: .5 }, loot: "arms" },
+  shooting:{ n: "Тир", desc: "Длинный зал с мишенями и бронестеклом.", obj: { crate: .5, locker: .4 }, loot: "arms" },
+  arsenal: { n: "Арсенал", desc: "Оружейные шкафы, большинство взломано.", obj: { locker: 1, safe: .5, crate: .6 }, loot: "arms" },
+  ballistics: { n: "Баллистическая лаборатория", desc: "Пробитые плиты брони и графики на экранах.", obj: { terminal: .6, workbench: .4 }, loot: "tech" },
+  armorlab:{ n: "Лаборатория брони", desc: "Манекены в защитных костюмах и пресс для пластин.", obj: { workbench: .7, locker: .5 }, loot: "armor" },
+  bunker:  { n: "Бункер", desc: "Толстые стены, нары и запас пайков.", obj: { capsule: .5, crate: .6 }, safe: true },
+
+  /* уровень 9 */
+  ring:    { n: "Кольцо ускорителя", desc: "Изогнутая труба ускорителя уходит в обе стороны, всё звенит.", obj: { terminal: .4 } },
+  detector:{ n: "Детекторный зал", desc: "Слоистая громада детектора и кабели к ней.", obj: { terminal: .8 }, loot: "tech" },
+  accdesk: { n: "Пульт ускорителя", desc: "Пульт с сотней индикаторов, половина мигает красным.", obj: { terminal: 1, desk: .4 }, loot: "paper" },
+  targetroom: { n: "Камера мишени", desc: "Мишень ускорителя за свинцовой дверью, предупреждающие знаки.", obj: { positron: .35, crate: .3 }, loot: "tech" },
+  vacuum:  { n: "Вакуумный насосный зал", desc: "Насосы откачки свистят, трубы покрыты конденсатом.", obj: { crate: .4, terminal: .3 }, loot: "parts" },
+
+  /* уровень 10 */
+  reactorhall: { n: "Зал реакторных контуров", desc: "Трубы теплоносителя и щиты биологической защиты.", obj: { terminal: .5, positron: .3 }, loot: "tech" },
+  containment: { n: "Контур удержания", desc: "Магнитные катушки в человеческий рост, их гул давит на уши.", obj: { magnetron: .6, terminal: .5 }, loot: "tech" },
+  chiefdesk:   { n: "Пульт главного инженера", desc: "Главный пульт ядра и кресло, в котором никто не сидит.", obj: { terminal: 1, desk: .5 }, loot: "paper" },
+  bastion:     { n: "Бастион ОКО", desc: "Бронированные стены, бойницы турелей и серверы искусственного интеллекта.", obj: { terminal: .7, crate: .5 }, loot: "arms" },
+  annihilation:{ n: "Аннигиляционная камера", desc: "Камера, где позитроны встречают вещество. Стены оплавлены.", obj: { positron: .5 }, loot: "tech" }
+};
+
+/* ── ПРЕДМЕТЫ ОБСТАНОВКИ ── */
+LAB.OBJ = {
+  terminal:  { n: "Терминал", icon: "🖥️", desc: "Компьютерный терминал: журналы, двери, турели, карта этажа." },
+  workbench: { n: "Верстак мастерской", icon: "🛠️", desc: "Мастерская: инструменты, тиски и пресс. Здесь из деталей собирают аптечки, батареи, гранаты и броню." },
+  vending:   { n: "Торговый терминал", icon: "🏧", desc: "Терминал снабжения: продаёт аптечки, батареи, броню и детали за кредиты, покупает детали." },
+  medst:     { n: "Медицинская станция", icon: "⚕️", desc: "Автоматический медик: лечит за кредиты." },
+  capsule:   { n: "Капсула восстановления", icon: "🛏️", desc: "Капсула запоминает вас и лечит во сне. Сюда «Эхо» вернёт вас после гибели." },
+  charger:   { n: "Зарядная станция", icon: "🔋", desc: "Заряжает энергобатареи и оружие." },
+  crate:     { n: "Ящик", icon: "📦", desc: "Ящик с маркировкой объекта." },
+  locker:    { n: "Шкафчик", icon: "🗄️", desc: "Металлический шкафчик сотрудника." },
+  safe:      { n: "Сейф", icon: "🔐", desc: "Сейф с кодовым замком." },
+  desk:      { n: "Рабочий стол", icon: "🗂️", desc: "Стол с ящиками и бумагами." },
+  corpse:    { n: "Тело сотрудника", icon: "⚰️", desc: "Тело в форме сотрудника объекта." },
+  magnetron: { n: "Магнетронная установка", icon: "🧲", desc: "Генератор сверхвысоких частот: питание этажа, заряд магнетронных ячеек, перегрузка-импульс." },
+  positron:  { n: "Позитронная установка", icon: "⚛️", desc: "Ловушка антивещества: позитронные заряды, аннигиляционный импульс, томография этажа." },
+  implantlab:{ n: "Станция имплантов", icon: "🧠", desc: "Хирургический автомат: устанавливает импланты за кредиты." },
+  stairs_up: { n: "Лестница вверх", icon: "⬆️", desc: "Пролёт на этаж выше." },
+  stairs_down:{ n: "Лестница вниз", icon: "⬇️", desc: "Пролёт на этаж ниже." },
+  elevator:  { n: "Лифт", icon: "🛗", desc: "Лифт уровня: ходит по всем двадцати этажам, нужен пропуск лифта." },
+  gate_down: { n: "Гермошлюз вниз", icon: "🚪", desc: "Шлюз на следующий уровень комплекса. Открывается шлюзовой ключ-картой этого уровня. За спиной он запечатается: назад пути не будет." },
+  gate_sealed: { n: "Запечатанный шлюз наверх", icon: "🚪", desc: "Створки шлюза наверх сведены и заблокированы. Вернуться на прошлый уровень нельзя." },
+  wake:      { n: "Криокапсула", icon: "🧊", desc: "Капсула, в которой вы спали. Выход на поверхность закрыт карантином." },
+  reactor:   { n: "Пульт реактора", icon: "☢️", desc: "Пульт управления позитронным реактором «Исток»." },
+  express:   { n: "Скоростной лифт на поверхность", icon: "🛗", desc: "Лифт наверх. Открылся после глушения реактора." },
+  hq:        { n: "Штаб фракции", icon: "🛡️", desc: "Место сбора одной из группировок выживших." }
+};
+
+/* ── ВРАГИ ──
+   kind: bio — мутант, mech — робот. g — род для глаголов (m, f, n).
+   hp, dmg, arm — на первом уровне врага; рост — в LAB.scaleFoe.
+   spd — сколько тактов уходит на шаг (меньше — быстрее), rng — дальность атаки
+   (1 — в упор), acd — тактов между атаками, det — радиус обнаружения.
+   beh: chase — преследует; ranged — держит дистанцию и стреляет; stationary —
+   стоит на месте; ambush — ждёт рядом; deaf — не видит, только слышит; swarm —
+   ходит стаей; blink — переносится; regen — заживает; poison/slow/web — эффекты удара;
+   explode — взрывается при гибели; dooropen — открывает простые двери. */
+LAB.FOES = {
+  rat:     { n: "Крысолак", g: "m", kind: "bio", desc: "Крыса размером с собаку, с голой кожей и жёлтыми резцами. Нападает стаей.", hp: 14, dmg: 3, arm: 0, spd: 1, rng: 1, acd: 2, det: 6, beh: ["chase", "swarm"], adt: "phys", snd: "rat", xp: 8, min: 1 },
+  roach:   { n: "Тараканище", g: "m", kind: "bio", desc: "Таракан с кошку, в хитиновой спине светится мутаген.", hp: 18, dmg: 4, arm: 2, spd: 1, rng: 1, acd: 2, det: 5, beh: ["chase", "swarm"], adt: "phys", snd: "roach", xp: 10, min: 1 },
+  labmut:  { n: "Мутант-лаборант", g: "m", kind: "bio", desc: "Бывший сотрудник в разорванном халате. Иногда при нём остаются пропуска и ключи.", hp: 30, dmg: 6, arm: 1, spd: 2, rng: 1, acd: 2, det: 6, beh: ["chase", "dooropen"], adt: "phys", snd: "labmut", xp: 14, min: 1, carrier: true },
+  slug:    { n: "Кислотный слизень", g: "m", kind: "bio", desc: "Медленная масса слизи, разъедает металл и кожу.", hp: 36, dmg: 7, arm: 0, spd: 3, rng: 1, acd: 2, det: 4, beh: ["chase", "poison"], adt: "chem", snd: "slug", xp: 15, min: 1 },
+  vine:    { n: "Хищная лиана", g: "f", kind: "bio", desc: "Растение программы «Зелёный щит». Неподвижна, но бьёт хлёстко, стоит подойти.", hp: 40, dmg: 8, arm: 1, spd: 99, rng: 1, acd: 2, det: 2, beh: ["stationary", "ambush"], adt: "phys", snd: "vine", xp: 16, min: 1 },
+  spore:   { n: "Споровик", g: "m", kind: "bio", desc: "Грибной нарост на ножках. Плюётся ядовитым облаком спор.", hp: 26, dmg: 6, arm: 0, spd: 3, rng: 4, acd: 3, det: 6, beh: ["ranged", "poison"], adt: "chem", snd: "spore", xp: 15, min: 1 },
+  swamp:   { n: "Болотник", g: "m", kind: "bio", desc: "Бывший оператор бак-фермы, раздутый от раствора. Хватает и тянет под воду.", hp: 44, dmg: 8, arm: 1, spd: 2, rng: 1, acd: 2, det: 5, beh: ["chase"], adt: "phys", snd: "swamp", xp: 18, min: 1, carrier: true },
+  chimera: { n: "Химера", g: "f", kind: "bio", desc: "Помесь хищников в одном теле: когти, шипы, пасть. Быстрая и злая.", hp: 52, dmg: 10, arm: 2, spd: 1, rng: 1, acd: 2, det: 7, beh: ["chase"], adt: "phys", snd: "chimera", xp: 22, min: 1 },
+  lizard:  { n: "Ящер-мутант", g: "m", kind: "bio", desc: "Чешуйчатый мутант, раны на нём затягиваются на глазах.", hp: 46, dmg: 9, arm: 3, spd: 2, rng: 1, acd: 2, det: 6, beh: ["chase", "regen"], adt: "phys", snd: "lizard", xp: 20, min: 1 },
+  weaver:  { n: "Паук-ткач", g: "m", kind: "bio", desc: "Паук с размахом лап в два метра. Плюёт липкой паутиной и кусает.", hp: 38, dmg: 8, arm: 1, spd: 1, rng: 3, acd: 3, det: 6, beh: ["ranged", "web", "poison"], adt: "chem", snd: "weaver", xp: 20, min: 1 },
+  blind:   { n: "Безглазый охотник", g: "m", kind: "bio", desc: "Без глаз, но с огромными ушами. Находит добычу по звуку шагов и выстрелов.", hp: 60, dmg: 12, arm: 2, spd: 1, rng: 1, acd: 2, det: 7, beh: ["chase", "deaf"], adt: "phys", snd: "blind", xp: 26, min: 1 },
+  spark:   { n: "Искровик", g: "m", kind: "bio", desc: "Бывший электрик, ставший живым конденсатором. Бьёт молнией на расстоянии.", hp: 42, dmg: 10, arm: 1, spd: 2, rng: 4, acd: 3, det: 6, beh: ["ranged"], adt: "shock", snd: "spark", xp: 24, min: 1, res: { ion: 0.3, energy: 0.8, cryo: 1.6 } },
+  frozen:  { n: "Ледяной мутант", g: "m", kind: "bio", desc: "Покрыт ледяной коркой. Медленный, но его удар замедляет.", hp: 58, dmg: 11, arm: 4, spd: 3, rng: 1, acd: 2, det: 5, beh: ["chase", "slow"], adt: "therm", snd: "frozen", xp: 25, min: 1, res: { cryo: 0.2, plasma: 1.7, thermo: 1.8 } },
+  thawed:  { n: "Размороженный образец", g: "m", kind: "bio", desc: "Нестабильный организм из криокамеры. Взрывается кислотой, когда умирает.", hp: 34, dmg: 9, arm: 0, spd: 1, rng: 1, acd: 2, det: 6, beh: ["chase", "explode"], adt: "chem", snd: "thawed", xp: 22, min: 1 },
+  soldier: { n: "Суперсолдат", g: "m", kind: "bio", desc: "Генетически усиленный боец в броне, стреляет из бластера.", hp: 70, dmg: 12, arm: 6, spd: 2, rng: 5, acd: 2, det: 7, beh: ["ranged", "dooropen"], adt: "energy", snd: "soldier", xp: 30, min: 1, carrier: true },
+  phase:   { n: "Фазовая тварь", g: "f", kind: "bio", desc: "Существо, размазанное по полю ускорителя. Исчезает и возникает рядом.", hp: 50, dmg: 13, arm: 0, spd: 2, rng: 1, acd: 2, det: 8, beh: ["chase", "blink"], adt: "field", snd: "phase", xp: 30, min: 1, res: { kinetic: 0.6, positron: 1.5 } },
+  proto:   { n: "Прототип", g: "m", kind: "bio", desc: "Неудавшаяся копия «Омеги». Огромный, быстрый и почти не чувствует боли.", hp: 90, dmg: 15, arm: 5, spd: 1, rng: 1, acd: 2, det: 8, beh: ["chase", "regen"], adt: "phys", snd: "proto", xp: 40, min: 1 },
+  /* роботы */
+  drone:   { n: "Охранный дрон", g: "m", kind: "mech", desc: "Летающий дрон с лазером. Хрупкий, но быстрый и меткий.", hp: 16, dmg: 4, arm: 1, spd: 1, rng: 5, acd: 3, det: 7, beh: ["ranged"], adt: "energy", snd: "drone", xp: 10, min: 1 },
+  spiderbot:{ n: "Паукобот", g: "m", kind: "mech", desc: "Робот на восьми лапах. Ходит по трое и режет манипуляторами.", hp: 24, dmg: 6, arm: 3, spd: 1, rng: 1, acd: 2, det: 6, beh: ["chase", "swarm"], adt: "phys", snd: "spiderbot", xp: 14, min: 1 },
+  gardenbot:{ n: "Садовый робот-берсерк", g: "m", kind: "mech", desc: "Робот-садовник с секатором. Сбой программы сделал его опасным.", hp: 32, dmg: 7, arm: 3, spd: 2, rng: 1, acd: 2, det: 5, beh: ["chase"], adt: "phys", snd: "repairbot", xp: 15, min: 1 },
+  repairbot:{ n: "Ремонтный робот-берсерк", g: "m", kind: "mech", desc: "Ремонтник с циркулярной пилой. Чинит других роботов, если успеет.", hp: 40, dmg: 9, arm: 4, spd: 2, rng: 1, acd: 2, det: 5, beh: ["chase"], adt: "phys", snd: "repairbot", xp: 18, min: 1 },
+  turret:  { n: "Турель", g: "f", kind: "mech", desc: "Неподвижная турель охраны: бьёт вдоль линии. Отключается с терминала безопасности.", hp: 30, dmg: 6, arm: 5, spd: 99, rng: 6, acd: 2, det: 6, beh: ["stationary", "ranged", "turret"], adt: "phys", snd: "turret", xp: 14, min: 1 },
+  pturret: { n: "Плазменная турель", g: "f", kind: "mech", desc: "Турель с плазменным излучателем. Отключается с терминала безопасности.", hp: 44, dmg: 10, arm: 7, spd: 99, rng: 6, acd: 2, det: 6, beh: ["stationary", "ranged", "turret"], adt: "energy", snd: "turret", xp: 22, min: 1 },
+  hturret: { n: "Тяжёлая турель", g: "f", kind: "mech", desc: "Бронированная турель с двумя стволами. Отключается с терминала безопасности.", hp: 64, dmg: 14, arm: 10, spd: 99, rng: 7, acd: 2, det: 7, beh: ["stationary", "ranged", "turret"], adt: "phys", snd: "turret", xp: 30, min: 1 },
+  guardbot:{ n: "Боевой робот «Страж»", g: "m", kind: "mech", desc: "Двуногий робот с бластером и бронированным корпусом.", hp: 60, dmg: 11, arm: 8, spd: 2, rng: 5, acd: 2, det: 7, beh: ["ranged"], adt: "energy", snd: "guardbot", xp: 26, min: 1, carrier: true },
+  android: { n: "Охранный андроид", g: "m", kind: "mech", desc: "Человекоподобный робот охраны. Открывает двери и обходит с фланга.", hp: 66, dmg: 12, arm: 7, spd: 1, rng: 5, acd: 2, det: 8, beh: ["ranged", "dooropen"], adt: "energy", snd: "android", xp: 30, min: 1, carrier: true },
+  watcher: { n: "Робот-смотритель", g: "m", kind: "mech", desc: "Тяжёлый робот криохранилища: медленный, почти непробиваемый.", hp: 90, dmg: 13, arm: 14, spd: 3, rng: 1, acd: 2, det: 5, beh: ["chase"], adt: "phys", snd: "watcher", xp: 32, min: 1 },
+  interceptor:{ n: "Дрон-перехватчик", g: "m", kind: "mech", desc: "Скоростной дрон с импульсной пушкой. Стреляет на ходу.", hp: 36, dmg: 11, arm: 3, spd: 1, rng: 6, acd: 2, det: 8, beh: ["ranged"], adt: "shock", snd: "drone", xp: 26, min: 1 },
+  coreguard:{ n: "Страж ядра", g: "m", kind: "mech", desc: "Элитный робот бастиона ОКО: силовой щит и тяжёлый бластер.", hp: 110, dmg: 16, arm: 12, spd: 2, rng: 6, acd: 2, det: 8, beh: ["ranged", "dooropen"], adt: "energy", snd: "guardbot", xp: 44, min: 1, carrier: true },
+  /* роботы глубоких уровней */
+  shieldbot:{ n: "Робот-щитоносец", g: "m", kind: "mech", desc: "Тяжёлый робот с генератором поля: прикрывает щитом всех роботов рядом с собой. Начинайте с него.", hp: 70, dmg: 8, arm: 9, spd: 2, rng: 1, acd: 2, det: 6, beh: ["chase", "shieldally"], adt: "phys", snd: "shieldbot", xp: 30, min: 1 },
+  sapper:  { n: "Робот-сапёр", g: "m", kind: "mech", desc: "Низкий гусеничный робот: ставит мины в проходах, а раненый бросается под ноги и взрывается.", hp: 34, dmg: 14, arm: 4, spd: 2, rng: 1, acd: 3, det: 6, beh: ["chase", "mines", "kamikaze"], adt: "phys", snd: "sapper", xp: 24, min: 1 },
+  hunter:  { n: "Робот-ищейка", g: "f", kind: "mech", desc: "Быстрая четвероногая машина с чутким микрофоном: идёт на звук шагов через весь этаж.", hp: 48, dmg: 11, arm: 5, spd: 1, rng: 1, acd: 2, det: 9, beh: ["chase", "tracker"], adt: "phys", snd: "hunter", xp: 28, min: 1 },
+  mortar:  { n: "Миномётный робот", g: "m", kind: "mech", desc: "Робот с мортирой: бьёт навесом через стены туда, где вас слышал. Свист снаряда — значит, пора сойти с места.", hp: 60, dmg: 18, arm: 8, spd: 3, rng: 9, acd: 4, det: 8, beh: ["ranged", "indirect"], adt: "phys", snd: "mortar", xp: 32, min: 1 },
+  relay:   { n: "Узел ОКО", g: "m", kind: "mech", desc: "Неподвижный ретранслятор искусственного интеллекта. Пока он цел, роботы вокруг умнее и зовут подмогу.", hp: 80, dmg: 0, arm: 10, spd: 99, rng: 0, acd: 99, det: 10, beh: ["stationary", "relay"], adt: "shock", snd: "relay", xp: 40, min: 1 },
+  micro:   { n: "Рой микродронов", g: "m", kind: "mech", desc: "Облако крошечных дронов с лезвиями. Каждый слаб, но их много, и они не отстают.", hp: 12, dmg: 5, arm: 0, spd: 1, rng: 1, acd: 1, det: 7, beh: ["chase", "swarm"], adt: "phys", snd: "micro", xp: 9, min: 1 },
+  titan:   { n: "Шагающий танк «Титан»", g: "m", kind: "mech", desc: "Четырёхногая боевая машина с плазменной пушкой. Пол дрожит от его шагов, залп задевает и соседние клетки.", hp: 160, dmg: 22, arm: 16, spd: 3, rng: 7, acd: 3, det: 8, beh: ["ranged", "splash"], adt: "energy", snd: "titan", xp: 60, min: 1 }
+};
+
+/* Слабости и стойкости: множитель урона по виду. */
+LAB.DMG_VS = {
+  bio:  { kinetic: 1, shock: 0.8, energy: 1, laser: 1, ion: 0.5, plasma: 1.4, magnetron: 1.8, positron: 1.6, gauss: 1.1, cryo: 1, thermo: 1.5, emp: 0.15 },
+  mech: { kinetic: 0.8, shock: 1.6, energy: 1, laser: 1.1, ion: 2, plasma: 0.9, magnetron: 1.2, positron: 1.6, gauss: 1.2, cryo: 0.8, thermo: 0.7, emp: 2.5 }
+};
+
+/* Виды урона по игроку: против них — стойкость брони. */
+LAB.ATK_T = { phys: "удар", energy: "энергия", shock: "разряд", chem: "химия", therm: "холод и жар", field: "поле" };
+
+LAB.DTYPE_N = { kinetic: "удар", shock: "электрошок", energy: "энергия", laser: "лазер", ion: "ионы", plasma: "плазма",
+  magnetron: "магнетрон", positron: "позитроны", gauss: "гаусс", cryo: "холод", thermo: "жар", emp: "ЭМИ" };
+
+/* Стражи двадцатых этажей: охраняют шлюз; на части уровней шлюзовая ключ-карта при них. */
+LAB.BOSSES = {
+  b_grachev:   { base: "labmut", n: "Майор Грачёв", g: "m", desc: "Начальник охраны, мутировавший сквозь имплант. В руке — табельный бластер, в кармане — шлюзовая ключ-карта.", mult: 4, beh: ["chase", "dooropen", "ranged"], rng: 4, snd: "labmut" },
+  b_brood:     { base: "roach", n: "Матка", g: "f", desc: "Самка тараканищ размером с машину. Вокруг неё всегда рой.", mult: 5, beh: ["chase", "summon"], snd: "roach" },
+  b_root:      { base: "vine", n: "Корень", g: "m", desc: "Сердцевина всех лиан, светится изнутри. Шлюзовая ключ-карта оплетена его стеблями.", mult: 6, beh: ["stationary", "ranged", "summon"], rng: 4, snd: "vine" },
+  b_hydra:     { base: "chimera", n: "Химера «Гидра»", g: "f", desc: "Трёхголовая химера доктора Лаптевой. Головы бьют по очереди.", mult: 5, beh: ["chase", "regen"], snd: "chimera" },
+  b_goliath:   { base: "guardbot", n: "Боевой робот «Голиаф»", g: "m", desc: "Броня из керамики и стали, два тяжёлых бластера. После залпа открывает радиаторы.", mult: 5, beh: ["ranged"], snd: "guardbot" },
+  b_leviathan: { base: "spark", n: "Электрический левиафан", g: "m", desc: "Существо, ползущее по кабелям. Каждый удар — разряд на весь коридор.", mult: 6, beh: ["ranged", "chase"], snd: "spark" },
+  b_colossus:  { base: "frozen", n: "Ледяной колосс", g: "m", desc: "Вмёрзший в стену гигант. Оттаял, когда отключилось охлаждение.", mult: 6, beh: ["chase", "slow"], snd: "frozen" },
+  b_alpha:     { base: "soldier", n: "Суперсолдат «Альфа»", g: "m", desc: "Командир отряда суперсолдат. Броня пятого класса и бластер с подствольником.", mult: 5, beh: ["ranged", "dooropen"], snd: "soldier" },
+  b_phantom:   { base: "phase", n: "Фазовый призрак", g: "m", desc: "Бывший оператор кольца, размазанный по полю ускорителя.", mult: 6, beh: ["chase", "blink"], snd: "phase" },
+  b_omega:     { base: "proto", n: "Прототип «Омега»", g: "m", desc: "Испытуемый номер один программы «Химера». Сторож ядра. В нём — то, что осталось от профессора Ветрова.", mult: 7, beh: ["chase", "regen", "blink"], snd: "proto" }
+};
+
+/* ── ОРУЖИЕ ──
+   cls — класс; ammo — род батарей (none — без батарей); dt — вид урона;
+   dmg — урон на 1-м уровне, rng — дальность, spread — разлёт (0 — точно по линии,
+   1 — и соседняя линия), cap — выстрелов в заряде, cd — перезарядка выстрела, мс;
+   pierce — бьёт всех в линии; area — задевает соседей цели. g — род. */
+LAB.WEAPONS = {
+  crowbar:   { n: "монтировка", g: "f", cls: "melee", ammo: "none", dt: "kinetic", dmg: 7, rng: 1, spread: 1, cap: 0, cd: 500, snd: "w_melee", desc: "Тяжёлая стальная монтировка. Годится и для ящиков, и для черепов." },
+  baton:     { n: "электрошоковая дубинка", g: "f", cls: "melee", ammo: "none", dt: "shock", dmg: 8, rng: 1, spread: 1, cap: 0, cd: 550, snd: "w_shock", desc: "Дубинка охраны с разрядником. Особенно хороша против роботов." },
+  vibro:     { n: "виброклинок", g: "m", cls: "melee", ammo: "none", dt: "kinetic", dmg: 12, rng: 1, spread: 1, cap: 0, cd: 450, snd: "w_vibro", desc: "Клинок, дрожащий с ультразвуковой частотой." },
+  cutter:    { n: "плазменный резак", g: "m", cls: "melee", ammo: "energy", dt: "plasma", dmg: 15, rng: 1, spread: 1, cap: 20, cd: 500, snd: "w_cutter", desc: "Инструмент сварщика. Режет металл, плоть и паутину." },
+  spark:     { n: "лёгкий бластер «Искра»", g: "m", cls: "blaster", ammo: "energy", dt: "energy", dmg: 9, rng: 6, spread: 0, cap: 12, cd: 420, snd: "w_blaster_s", desc: "Табельный бластер охраны. Лёгкий и надёжный." },
+  pulse:     { n: "импульсный бластер", g: "m", cls: "blaster", ammo: "energy", dt: "energy", dmg: 7, rng: 6, spread: 0, cap: 18, cd: 300, snd: "w_blaster_p", burst: 2, desc: "Стреляет очередью из двух импульсов." },
+  heavy:     { n: "тяжёлый бластер", g: "m", cls: "blaster", ammo: "energy", dt: "energy", dmg: 18, rng: 7, spread: 0, cap: 8, cd: 700, snd: "w_blaster_h", desc: "Мощный бластер с длинным стволом." },
+  laser:     { n: "лазерная винтовка", g: "f", cls: "laser", ammo: "energy", dt: "laser", dmg: 14, rng: 10, spread: 0, cap: 10, cd: 520, snd: "w_laser", desc: "Точный луч на большую дальность." },
+  ion:       { n: "ионный бластер", g: "m", cls: "ion", ammo: "energy", dt: "ion", dmg: 12, rng: 6, spread: 0, cap: 12, cd: 480, snd: "w_ion", desc: "Ионный поток выжигает электронику: вдвое сильнее против роботов." },
+  plasma:    { n: "плазменная винтовка", g: "f", cls: "plasma", ammo: "energy", dt: "plasma", dmg: 15, rng: 7, spread: 1, cap: 10, cd: 560, snd: "w_plasma", desc: "Сгусток плазмы задевает и соседнюю линию. Жжёт живое." },
+  mpistol:   { n: "магнетронный пистолет МП-1", g: "m", cls: "magnetron", ammo: "magnetron", dt: "magnetron", dmg: 16, rng: 4, spread: 1, cap: 8, cd: 520, snd: "w_magnetron", desc: "Конус сверхвысокой частоты: живое закипает изнутри." },
+  mrifle:    { n: "магнетронный излучатель", g: "m", cls: "magnetron", ammo: "magnetron", dt: "magnetron", dmg: 20, rng: 6, spread: 1, cap: 12, cd: 600, snd: "w_magnetron", desc: "Длинный волновод и мощный магнетрон." },
+  mresonator:{ n: "магнетронный резонатор", g: "m", cls: "magnetron", ammo: "magnetron", dt: "magnetron", dmg: 22, rng: 6, spread: 0, cap: 6, cd: 800, snd: "w_resonator", pierce: true, desc: "Резонансный луч бьёт всех на линии разом." },
+  ppistol:   { n: "позитронный пистолет", g: "m", cls: "positron", ammo: "positron", dt: "positron", dmg: 34, rng: 8, spread: 0, cap: 4, cd: 900, snd: "w_positron", noarmor: true, desc: "Пучок антивещества: броня не помогает." },
+  pcannon:   { n: "позитронная пушка", g: "f", cls: "positron", ammo: "positron", dt: "positron", dmg: 55, rng: 9, spread: 0, cap: 2, cd: 1400, snd: "w_pcannon", noarmor: true, area: true, desc: "Аннигиляционный заряд: цель и всё рядом с ней." },
+  gauss:     { n: "гаусс-винтовка", g: "f", cls: "gauss", ammo: "energy", dt: "gauss", dmg: 26, rng: 12, spread: 0, cap: 5, cd: 950, snd: "w_gauss", pierce: true, desc: "Магнитный ускоритель снаряда: прошивает насквозь и бьёт дальше всех." },
+  cryo:      { n: "криопушка", g: "f", cls: "cryo", ammo: "energy", dt: "cryo", dmg: 9, rng: 5, spread: 1, cap: 10, cd: 600, snd: "w_cryo", freeze: 3, desc: "Струя переохлаждённого газа замораживает цель на несколько тактов." },
+  thermo:    { n: "термоизлучатель", g: "m", cls: "thermo", ammo: "energy", dt: "thermo", dmg: 11, rng: 3, spread: 1, cap: 24, cd: 300, snd: "w_thermo", desc: "Короткий конус жара. Прожигает паутину и лианы." }
+};
+
+/* Где какое оружие встречается: минимальный уровень комплекса. */
+LAB.WEAPON_DEPTH = {
+  crowbar: 1, baton: 1, spark: 1, pulse: 2, cutter: 2, vibro: 3, heavy: 3, ion: 3, laser: 4, plasma: 4,
+  mpistol: 3, cryo: 5, thermo: 5, mrifle: 6, gauss: 7, mresonator: 8, ppistol: 7, pcannon: 9
+};
+
+LAB.MODEL = { crowbar: "МН", baton: "ЭД", vibro: "ВК", cutter: "ПР", spark: "Б", pulse: "ИБ", heavy: "ТБ", laser: "ЛВ", ion: "ИонБ",
+  plasma: "ПВ", mpistol: "МП", mrifle: "МИ", mresonator: "МР", ppistol: "ПП", pcannon: "ПЗ", gauss: "ГВ", cryo: "КП", thermo: "ТИ" };
+
+LAB.QUAL = {
+  m: ["Изношенный", "Рабочий", "Добротный", "Отличный", "Превосходный", "Экспериментальный"],
+  f: ["Изношенная", "Рабочая", "Добротная", "Отличная", "Превосходная", "Экспериментальная"],
+  n: ["Изношенное", "Рабочее", "Добротное", "Отличное", "Превосходное", "Экспериментальное"]
+};
+LAB.QUAL_MULT = [0.85, 1, 1.1, 1.22, 1.35, 1.5];
+LAB.RANKS = ["Обычный", "Необычный", "Редкий", "Эпический", "Легендарный", "Прототип"];
+LAB.RANK_MULT = [1, 1.2, 1.45, 1.75, 2.1, 2.6];
+
+LAB.AMMO = {
+  energy:    { n: "Энергобатарея", icon: "🔋", desc: "Батарея для бластеров, лазеров, ионного и плазменного оружия, гаусс-винтовки, крио и резака." },
+  magnetron: { n: "Магнетронная ячейка", icon: "🧲", desc: "Ячейка для магнетронного оружия. Её заряжает магнетронная установка." },
+  positron:  { n: "Позитронный заряд", icon: "⚛️", desc: "Магнитная ловушка с антивеществом для позитронного оружия. Делается на позитронной установке." }
+};
+
+/* ── ПРЕДМЕТЫ ── */
+LAB.ITEMS = {
+  medkit_s: { n: "Аптечка", icon: "🩹", kind: "use", desc: "Восстанавливает 35 здоровья.", heal: 35, price: 25 },
+  medkit_l: { n: "Большая аптечка", icon: "🧰", kind: "use", desc: "Восстанавливает 90 здоровья и снимает отравление.", heal: 90, cure: true, price: 70 },
+  stim:     { n: "Стимулятор", icon: "💉", kind: "use", desc: "Плюс 15 здоровья и 20 энергии, снимает замедление.", heal: 15, en: 20, unslow: true, price: 40 },
+  antidote: { n: "Антидот", icon: "🧪", kind: "use", desc: "Снимает отравление.", cure: true, price: 20 },
+  energy_d: { n: "Нейростимулятор", icon: "⚡", kind: "use", desc: "Восстанавливает 40 энергии имплантов.", en: 40, price: 35 },
+  emp:      { n: "ЭМИ-граната", icon: "💣", kind: "throw", desc: "Электромагнитный импульс: тяжёлые повреждения всем роботам в радиусе двух шагов от места падения.", price: 60 },
+  plate:    { n: "Бронепластина", icon: "🛡️", kind: "use", desc: "Вставляется в надетую броню: плюс десять процентов к её защите, не больше пяти пластин в одну броню.", price: 90 },
+  decoder:  { n: "Декодер пропусков", icon: "📟", kind: "use", desc: "Одноразово открывает дверь с картридером любого уровня доступа.", price: 150 },
+  /* детали */
+  scrap:    { n: "Металлолом", icon: "🔩", kind: "part", desc: "Обрезки металла.", price: 4 },
+  wire:     { n: "Провода", icon: "〰️", kind: "part", desc: "Моток медного провода.", price: 6 },
+  chip:     { n: "Микросхема", icon: "💾", kind: "part", desc: "Плата с процессором.", price: 14 },
+  cap:      { n: "Конденсатор", icon: "🔌", kind: "part", desc: "Высоковольтный конденсатор.", price: 10 },
+  gel:      { n: "Биогель", icon: "🧫", kind: "part", desc: "Заживляющий гель.", price: 9 },
+  reagent:  { n: "Реагент", icon: "⚗️", kind: "part", desc: "Химический реагент.", price: 8 },
+  lens:     { n: "Линза", icon: "🔍", kind: "part", desc: "Фокусирующая линза излучателя.", price: 16 },
+  magnet:   { n: "Магнит", icon: "🧲", kind: "part", desc: "Неодимовый магнит.", price: 12 },
+  ceramic:  { n: "Керамокомпозит", icon: "🧱", kind: "part", desc: "Лёгкая бронекерамика: основа хорошей брони.", price: 22 },
+  supercond:{ n: "Сверхпроводник", icon: "🌀", kind: "part", desc: "Сверхпроводящая катушка из глубоких уровней: сердце силовой брони.", price: 45 }
+};
+LAB.PARTS = ["scrap", "wire", "chip", "cap", "gel", "reagent", "lens", "magnet", "ceramic", "supercond"];
+/* С какого уровня деталь попадается. */
+LAB.PART_DEPTH = { scrap: 1, wire: 1, chip: 1, cap: 1, gel: 1, reagent: 1, lens: 2, magnet: 2, ceramic: 3, supercond: 5 };
+
+/* ── МАСТЕРСКАЯ ── */
+LAB.RECIPES = [
+  { id: "medkit_s", out: "medkit_s", n: "Аптечка", need: { gel: 2, reagent: 1 } },
+  { id: "medkit_l", out: "medkit_l", n: "Большая аптечка", need: { gel: 3, reagent: 2, chip: 1 } },
+  { id: "antidote", out: "antidote", n: "Антидот", need: { reagent: 2 } },
+  { id: "stim", out: "stim", n: "Стимулятор", need: { reagent: 1, gel: 1, cap: 1 } },
+  { id: "energy_d", out: "energy_d", n: "Нейростимулятор", need: { reagent: 2, chip: 1 } },
+  { id: "bat_e", out: "ammo:energy", n: "Энергобатарея", need: { cap: 1, wire: 1, scrap: 1 } },
+  { id: "bat_m", out: "ammo:magnetron", n: "Магнетронная ячейка", need: { magnet: 1, cap: 1, wire: 1 } },
+  { id: "emp", out: "emp", n: "ЭМИ-граната", need: { cap: 2, chip: 1, scrap: 1 } },
+  { id: "plate", out: "plate", n: "Бронепластина", need: { scrap: 4, ceramic: 1 }, desc: "Вставляется в надетую броню: плюс десять процентов к защите." },
+  { id: "decoder", out: "decoder", n: "Декодер пропусков", need: { chip: 3, wire: 2 } },
+  { id: "wmod", out: "wmod", n: "Модуль усиления оружия", need: { chip: 2, lens: 1, cap: 1 }, desc: "Плюс 15 процентов к урону оружия в руках, не больше трёх модулей." },
+  /* броня: собирается под глубину, на которой вы её делаете */
+  { id: "a_vest", out: "armor:vest", n: "Бронежилет охраны", need: { scrap: 5, wire: 2 } },
+  { id: "a_bio", out: "armor:bio", n: "Скафандр «Карантин»", need: { gel: 2, reagent: 3, wire: 2, scrap: 2 } },
+  { id: "a_ablative", out: "armor:ablative", n: "Абляционная броня «Зеркало»", need: { lens: 2, ceramic: 2, scrap: 3 } },
+  { id: "a_composite", out: "armor:composite", n: "Композитная кираса", need: { ceramic: 3, scrap: 6, plate: 1 } },
+  { id: "a_magnetic", out: "armor:magnetic", n: "Магнитный экран «Щит-М»", need: { magnet: 4, wire: 3, chip: 2 } },
+  { id: "a_stealth", out: "armor:stealth", n: "Нанофибра «Тень»", need: { chip: 3, lens: 2, gel: 2, wire: 2 } },
+  { id: "a_thermal", out: "armor:thermal", n: "Термокостюм «Полюс»", need: { wire: 4, reagent: 2, cap: 2, scrap: 3 } },
+  { id: "a_insulated", out: "armor:insulated", n: "Диэлектрический доспех «Изолятор»", need: { ceramic: 3, wire: 3, scrap: 3 } },
+  { id: "a_exo", out: "armor:exo", n: "Экзоскелет «Атлант»", need: { scrap: 10, supercond: 2, cap: 4, magnet: 2, chip: 2 }, minL: 5 },
+  { id: "a_bastion", out: "armor:bastion", n: "Силовой каркас «Бастион»", need: { supercond: 3, cap: 5, chip: 3, ceramic: 3 }, minL: 7 },
+  { id: "a_positron", out: "armor:positron", n: "Позитронный контур «Аннигилятор»", need: { supercond: 4, magnet: 5, lens: 3, chip: 3 }, minL: 8 },
+  { id: "a_ark", out: "armor:ark", n: "Кокон «Исток»", need: { supercond: 6, ceramic: 6, chip: 5, lens: 4, magnet: 4 }, minL: 9 }
+];
+
+/* ── БРОНЯ ──
+   def — защита на первом уровне (вычитается из каждого удара), res — доля
+   урона, которую броня гасит по видам (LAB.ATK_T), special — особенность:
+   antitox — яды действуют вдвое короче; deflect — часть выстрелов уходит в
+   сторону; stealth — враги замечают на три шага позже, шаги тише; frost —
+   холод не замедляет; strength — удар в ближнем бою сильнее, но шаги громче;
+   regshield — свой щит, который сам восстанавливается вне боя. depth — с
+   какого уровня броня попадается в комплексе. */
+LAB.ARMORS = {
+  suit:      { n: "защитный комбинезон «Ковчег»", g: "m", def: 2, res: { chem: 0.1 }, depth: 1, price: 50, desc: "Рабочий комбинезон персонала с кевларовыми вставками." },
+  vest:      { n: "бронежилет охраны", g: "m", def: 4, res: { phys: 0.2 }, depth: 1, price: 90, desc: "Табельный жилет постовой охраны: держит когти и пули, но не лучи." },
+  bio:       { n: "биоизолирующий скафандр «Карантин»", g: "m", def: 3, res: { chem: 0.5, phys: 0.05 }, special: "antitox", depth: 2, price: 140, desc: "Герметичный скафандр с фильтрами: яды, кислота и споры почти не страшны." },
+  ablative:  { n: "абляционная броня «Зеркало»", g: "f", def: 4, res: { energy: 0.35, therm: 0.15 }, depth: 3, price: 180, desc: "Слоистое покрытие испаряется под лучом и уносит жар: против бластеров и лазеров." },
+  composite: { n: "композитная кираса", g: "f", def: 7, res: { phys: 0.3 }, depth: 4, price: 240, desc: "Керамика и сталь: держит когти, клыки, лезвия и пули." },
+  magnetic:  { n: "магнитный экран «Щит-М»", g: "m", def: 5, res: { field: 0.35, energy: 0.2, shock: 0.1 }, special: "deflect", depth: 5, price: 300, desc: "Катушки отклоняют заряженные частицы и снаряды: часть выстрелов уходит в сторону." },
+  stealth:   { n: "нанофибра «Тень»", g: "f", def: 4, res: { phys: 0.1 }, special: "stealth", depth: 5, price: 320, desc: "Костюм глушит шаги и тепло тела: враги замечают вас на три шага позже." },
+  thermal:   { n: "термокостюм «Полюс»", g: "m", def: 6, res: { therm: 0.55, chem: 0.15 }, special: "frost", depth: 6, price: 340, desc: "Подогрев и терморегуляция: холод и жар почти не страшны, лёд не замедляет." },
+  insulated: { n: "диэлектрический доспех «Изолятор»", g: "m", def: 6, res: { shock: 0.6, energy: 0.15 }, depth: 6, price: 350, desc: "Резина, керамика и заземляющая сетка: разряды уходят в пол." },
+  exo:       { n: "экзоскелет «Атлант»", g: "m", def: 10, res: { phys: 0.3 }, special: "strength", depth: 7, price: 480, desc: "Силовая рама: удар в ближнем бою сильнее, броня толще, но шаги громче." },
+  bastion:   { n: "силовой каркас «Бастион»", g: "m", def: 9, res: { energy: 0.3, phys: 0.2 }, special: "regshield", depth: 8, price: 560, desc: "Генератор поля под бронёй: щит сам восстанавливается, если вас какое-то время не бьют." },
+  positron:  { n: "позитронный контур «Аннигилятор»", g: "m", def: 8, res: { field: 0.5, energy: 0.25 }, depth: 9, price: 620, desc: "Ловушка антивещества в нагруднике гасит поля и аннигиляционные удары." },
+  ark:       { n: "кокон «Исток»", g: "m", def: 13, res: { phys: 0.25, energy: 0.25, shock: 0.25, chem: 0.25, therm: 0.25, field: 0.25 }, special: "regshield", depth: 10, price: 900, desc: "Экспериментальная броня из сердца Ядра: защищает от всего понемногу и от многого сразу." }
+};
+LAB.ARMOR_SPECIAL = {
+  antitox: "яды действуют вдвое короче", deflect: "часть выстрелов уходит в сторону", stealth: "враги замечают позже, шаги тише",
+  frost: "холод не замедляет", strength: "удар в ближнем бою сильнее, шаги громче", regshield: "свой восстанавливающийся щит"
+};
+var armorSeq = 0;
+LAB.makeArmor = function (base, lvl, qual, idHint) {
+  var b = LAB.ARMORS[base];
+  qual = qual == null ? 1 : qual;
+  var a = { id: idHint || ("a" + (++armorSeq) + "_" + Math.floor(Math.random() * 1e6).toString(36) + "_" + base), base: base, lvl: lvl, qual: qual, up: 0,
+    def: Math.max(1, Math.round(b.def * (1 + 0.12 * (lvl - 1)) * LAB.QUAL_MULT[qual])) };
+  a.name = LAB.QUAL[b.g][qual] + " " + b.n;
+  return a;
+};
+/* Защита брони с учётом вставленных пластин. */
+LAB.armorDef = function (a) { return a ? Math.round(a.def * (1 + 0.1 * (a.up || 0))) : 0; };
+LAB.genArmor = function (r, L, F, opts) {
+  opts = opts || {};
+  var pool = [], k;
+  for (k in LAB.ARMORS) if (LAB.ARMORS[k].depth <= L && (opts.min == null || LAB.ARMORS[k].depth >= opts.min)) pool.push(k);
+  /* чаще попадается броня своей глубины */
+  var near = pool.filter(function (x) { return LAB.ARMORS[x].depth >= L - 2; });
+  var base = opts.base || (near.length && r.chance(0.65) ? r.pick(near) : r.pick(pool));
+  var q = r.next() + L * 0.02 + (opts.bonus || 0) * 0.5;
+  var qual = q < 0.2 ? 0 : q < 0.55 ? 1 : q < 0.8 ? 2 : q < 0.93 ? 3 : q < 0.99 ? 4 : 5;
+  return LAB.makeArmor(base, LAB.foeLevel(L, F), Math.min(5, qual), opts.id);
+};
+
+/* ── МОДИФИКАЦИИ РОБОТОВ ──
+   Чем глубже, тем чаще роботы выходят с модификациями, и тем их больше.
+   min — с какой глубины (номер этажа в комплексе от 0 до 199) встречается. */
+LAB.AFFIX = {
+  armored:   { m: "бронированный", f: "бронированная", min: 8, desc: "броня толще" },
+  overclock: { m: "форсированный", f: "форсированная", min: 16, desc: "бьёт сильнее" },
+  fast:      { m: "разогнанный", f: "разогнанная", min: 24, desc: "ходит и бьёт быстрее" },
+  repair:    { m: "самовосстанавливающийся", f: "самовосстанавливающаяся", min: 30, desc: "чинит себя, если его не бьют" },
+  shielded:  { m: "с энергощитом", f: "с энергощитом", min: 40, desc: "энергощит гасит первые попадания; ЭМИ, ионы и электрошок снимают его быстрее" },
+  linked:    { m: "сетевой", f: "сетевая", min: 50, desc: "увидев вас, зовёт всех роботов этажа" },
+  sniper:    { m: "снайперский", f: "снайперская", min: 60, ranged: true, desc: "бьёт дальше и точнее" },
+  volatile:  { m: "взрывной", f: "взрывная", min: 70, desc: "взрывается, когда погибает: не стойте рядом" },
+  cloak:     { m: "маскированный", f: "маскированная", min: 90, desc: "не слышен, пока не подойдёт на три шага" },
+  adaptive:  { m: "адаптивный", f: "адаптивная", min: 110, desc: "привыкает к вашему оружию: меняйте оружие" },
+  hardened:  { m: "экранированный", f: "экранированная", min: 130, desc: "не боится ЭМИ" },
+  jammer:    { m: "с глушилкой", f: "с глушилкой", min: 150, desc: "рядом с ним глохнут навигатор и сканер" }
+};
+/* Насколько враг умён: от 0 до 10. Роботы умнеют с каждым этажом. */
+LAB.foeIQ = function (kind, depth, nAffix) {
+  var q = kind === "mech" ? Math.floor(depth / 18) + (nAffix ? 1 : 0) : Math.floor(depth / 40);
+  return Math.max(0, Math.min(10, q));
+};
+
+/* ── ИМПЛАНТЫ (12 ячеек — бывшая панель магии) ── */
+LAB.IMPLANTS = [
+  { id: "scan",   n: "Сканер", cost: 5, price: 0, desc: "Называет врагов и вещи в радиусе восьми шагов и находит тайники рядом." },
+  { id: "regen",  n: "Регенерация", cost: 12, price: 120, desc: "Плюс 30 здоровья." },
+  { id: "empulse",n: "ЭМИ-импульс", cost: 14, price: 180, desc: "Бьёт всех роботов в радиусе трёх шагов." },
+  { id: "shield", n: "Силовой щит", cost: 12, price: 160, desc: "Поглощает следующие 40 урона в течение пятнадцати секунд." },
+  { id: "haste",  n: "Ускорение", cost: 10, price: 140, desc: "Десять секунд: бег вдвое быстрее, оружие стреляет чаще." },
+  { id: "thermal",n: "Термоимпульс", cost: 14, price: 180, desc: "Обжигает всех мутантов в радиусе двух шагов." },
+  { id: "cloak",  n: "Маскировка", cost: 16, price: 220, desc: "Восемь секунд враги теряют вас из виду." },
+  { id: "echo",   n: "Эхолокация", cost: 3, price: 0, desc: "Подробно описывает стены, двери и проходы во все четыре стороны." },
+  { id: "tk",     n: "Телекинез", cost: 6, price: 120, desc: "Притягивает вещи с клетки впереди, до пяти шагов." },
+  { id: "hack",   n: "Дистанционный взлом", cost: 10, price: 200, desc: "Открывает запертую дверь рядом без ключа: код, пропуск или блокировка. Не действует на шлюзы уровней." },
+  { id: "freeze", n: "Криостаз", cost: 15, price: 220, desc: "Замораживает врагов в радиусе трёх шагов на четыре такта." },
+  { id: "pbolt",  n: "Позитронный разряд", cost: 28, price: 400, desc: "Разряд антивещества по линии взгляда: огромный урон всем на линии." }
+];
+
+/* ── ФРАКЦИИ ── */
+LAB.FACTIONS = {
+  sec:  { n: "Служба безопасности", perk: "Броня плюс 15 процентов, батареи в автоматах дешевле.", desc: "Остатки охраны, не подчинившиеся ОКО." },
+  sci:  { n: "Научный совет", perk: "Интеллект плюс 2, импланты тратят на 20 процентов меньше энергии.", desc: "Учёные, которые хотят понять, что случилось, прежде чем всё закрыть." },
+  eng:  { n: "Инженерный корпус", perk: "Мастерская даёт лишнюю вещь каждые три сборки, взлом легче.", desc: "Техники и инженеры, которые держат комплекс на плаву." },
+  res:  { n: "Сопротивление", perk: "Выжившие продают на 20 процентов дешевле и делятся аптечками.", desc: "Отряд Зои Кравец: прорываются вниз, чтобы остановить Разлом." },
+  free: { n: "Свободные машины", perk: "Роботы замечают вас на два шага позже.", desc: "Роботы, вышедшие из-под власти ОКО. Да, такие тоже есть." }
+};
+
+/* ── СОБЫТИЯ КОМПЛЕКСА (бывшая погода) ── */
+LAB.EVENTS = [
+  { id: "norm",  n: "Штатный режим", w: 40 },
+  { id: "alarm", n: "Тревога", w: 14, desc: "Воют сирены, роботы настороже." },
+  { id: "dark",  n: "Аварийное освещение", w: 14, desc: "Основной свет погас, мутанты бродят смелее." },
+  { id: "surge", n: "Скачки напряжения", w: 14, desc: "По проводке бегут разряды, трещат щиты." },
+  { id: "steam", n: "Утечка пара", w: 10, desc: "Где-то лопнула магистраль: шипит пар." },
+  { id: "quake", n: "Толчки", w: 8, desc: "Комплекс вздрагивает: Разлом пульсирует." }
+];
+
+/* ── ВЫЖИВШИЕ ── */
+LAB.NAMES = {
+  m: ["Алексей", "Андрей", "Борис", "Вадим", "Виктор", "Глеб", "Григорий", "Денис", "Дмитрий", "Егор", "Игорь", "Илья", "Кирилл", "Константин", "Лев", "Максим", "Михаил", "Никита", "Олег", "Павел", "Роман", "Семён", "Станислав", "Тимур", "Фёдор", "Юрий", "Ярослав"],
+  f: ["Алина", "Анна", "Валентина", "Вера", "Дарья", "Евгения", "Елена", "Инна", "Ирина", "Ксения", "Лариса", "Людмила", "Марина", "Мария", "Надежда", "Нина", "Ольга", "Полина", "Светлана", "Таисия", "Ульяна", "Юлия"],
+  sm: ["Беляев", "Горин", "Зуев", "Климов", "Комаров", "Лебедев", "Миронов", "Назаров", "Орлов", "Панин", "Рябов", "Соколов", "Тарасов", "Уваров", "Фролов", "Чернов", "Шилов", "Яковлев", "Дронов", "Ершов"],
+  sf: ["Беляева", "Горина", "Зуева", "Климова", "Комарова", "Лебедева", "Миронова", "Назарова", "Орлова", "Панина", "Рябова", "Соколова", "Тарасова", "Уварова", "Фролова", "Чернова", "Шилова", "Яковлева", "Дронова", "Ершова"]
+};
+
+LAB.PROFS = {
+  "Инженер": { trade: "parts", beacon: "npc_eng" },
+  "Техник": { trade: "ammo", beacon: "npc_eng" },
+  "Генетик": { trade: null, beacon: "npc_sci" },
+  "Лаборант": { trade: null, beacon: "npc_sci" },
+  "Охранник": { trade: "ammo", beacon: "npc_guard" },
+  "Медик": { trade: "med", beacon: "npc_med" },
+  "Программист": { trade: null, beacon: "npc_sci" },
+  "Кладовщик": { trade: "all", beacon: "npc_trade" },
+  "Повар": { trade: "med", beacon: "npc_trade" },
+  "Оператор ускорителя": { trade: null, beacon: "npc_sci" }
+};
+
+LAB.ROBOT_NPC = {
+  helper: { n: "Сервисный робот «Помощник»", trade: "ammo", beacon: "npc_robot", desc: "Невысокий робот на колёсах. Его прошивку ОКО не успело переписать." },
+  meddroid: { n: "Медицинский дроид", trade: "med", beacon: "npc_robot", desc: "Парящий дроид с манипуляторами и красным крестом." },
+  archivist: { n: "Робот-архивариус", trade: null, beacon: "npc_robot", desc: "Старый робот библиотеки. Помнит всё, что видел, и любит рассказывать." }
+};
+
+/* Оценки уровней врагов и предметов по глубине комплекса. */
+LAB.depth = function (L, F) { return (L - 1) * LAB.FLOORS_N + (F - 1); };
+LAB.foeLevel = function (L, F) { return 1 + Math.floor(LAB.depth(L, F) / 4); };
+LAB.scaleFoe = function (base, lvl) {
+  /* роботы растут быстрее мутантов: их собирают под новые угрозы */
+  var mech = base.kind === "mech";
+  var k = 1 + (mech ? 0.18 : 0.16) * (lvl - 1);
+  return { hp: Math.round(base.hp * k), dmg: Math.round(base.dmg * (1 + (mech ? 0.12 : 0.11) * (lvl - 1))), arm: Math.round(base.arm * (1 + (mech ? 0.08 : 0.06) * (lvl - 1))) };
+};
+LAB.xpNeed = function (l) { return 60 + 90 * l; };

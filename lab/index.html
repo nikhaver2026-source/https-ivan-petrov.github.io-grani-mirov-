@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#05060a">
+<meta name="description" content="Подземная лаборатория — звуковая игра для незрячих: десять уровней объекта «Ковчег», роботы, мутанты, терминалы и шлюзы.">
+<title>Подземная лаборатория</title>
+<link rel="icon" href="icon-192.png">
+<style>
+  :root { --bg: #05060a; --fg: #d7dbe6; --dim: #7d8496; --acc: #ffd84a; --red: #ff6b6b; --panel: #0d1018; --line: #222838; }
+  html, body { margin: 0; padding: 0; height: 100%; background: var(--bg); color: var(--fg); font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; overflow: hidden; -webkit-user-select: none; user-select: none; -webkit-tap-highlight-color: transparent; }
+  #app { position: absolute; left: 0; top: 0; right: 0; bottom: 0; overflow: hidden; }
+  #pageView { position: absolute; left: 0; right: 0; top: 0; bottom: 0; display: block; padding: 8vh 7vw 0; text-align: center; }
+  #pageView[hidden] { display: none; }
+  #pageTitle { font-size: 7vmin; letter-spacing: 0.06em; margin: 0 0 3vh; color: var(--acc); font-weight: 600; }
+  #pageText { font-size: 4.2vmin; line-height: 1.5; margin: 0 auto; max-width: 900px; }
+  #pageHint { position: absolute; left: 0; right: 0; bottom: 6vh; color: var(--dim); font-size: 3.4vmin; }
+  #win { position: absolute; left: 4vw; right: 4vw; top: 10vh; bottom: 14vh; background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 12px 16px; overflow-y: auto; z-index: 3; }
+  #win[hidden] { display: none; }
+  #winTitle { margin: 0 0 8px; font-size: 4.4vmin; color: var(--acc); }
+  #winList { margin: 0; padding-left: 1.4em; font-size: 3.6vmin; line-height: 1.45; }
+  #winList li { padding: 3px 6px; border-radius: 6px; }
+  #winList li.cur { background: #24304d; color: #fff; outline: 2px solid var(--acc); }
+  #winList li.off { color: var(--dim); }
+  #hud { position: absolute; left: 0; right: 0; top: 0; bottom: 0; z-index: 1; }
+  #hud[hidden] { display: none; }
+  #hudTop { position: absolute; left: 0; right: 0; top: 0; padding: 8px 12px; background: rgba(5, 6, 10, 0.85); border-bottom: 1px solid var(--line); font-size: 3.6vmin; white-space: nowrap; overflow: hidden; }
+  #hudTop span { margin-right: 4vw; }
+  #map { position: absolute; left: 50%; top: 52%; width: 92vmin; max-width: 560px; -webkit-transform: translate(-50%, -50%); transform: translate(-50%, -50%); image-rendering: pixelated; opacity: 0.9; }
+  #caption { position: absolute; left: 3vw; right: 3vw; bottom: 2vh; min-height: 2em; color: var(--fg); font-size: 3.4vmin; line-height: 1.4; text-align: center; z-index: 4; text-shadow: 0 0 4px #000; max-height: 12vh; overflow: hidden; }
+  #subText { position: absolute; left: 0; right: 0; top: 7vh; text-align: center; color: var(--acc); font-size: 3.2vmin; z-index: 4; }
+  #subText[hidden], #banner[hidden] { display: none; }
+  #banner { position: absolute; left: 0; right: 0; top: 40vh; text-align: center; font-size: 7vmin; color: var(--acc); text-shadow: 0 0 12px #000; z-index: 5; }
+  #pad { position: absolute; left: 0; top: 0; right: 0; bottom: 0; z-index: 10; touch-action: none; -ms-touch-action: none; background: transparent; outline: none; }
+  .sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+</style>
+</head>
+<body data-screen="boot">
+<div id="app">
+  <div id="pageView"><h1 id="pageTitle">Подземная лаборатория</h1><p id="pageText">Загрузка…</p><p id="pageHint"></p></div>
+  <div id="hud" hidden>
+    <div id="hudTop"><span id="hudHp"></span><span id="hudWeapon"></span><span id="hudPlace"></span></div>
+    <canvas id="map" width="340" height="260"></canvas>
+  </div>
+  <div id="win" hidden><h2 id="winTitle"></h2><ol id="winList"></ol></div>
+  <div id="subText" hidden></div>
+  <div id="banner" hidden></div>
+  <div id="caption" aria-hidden="true"></div>
+</div>
+<div id="pad" tabindex="0" aria-label="Игровое поле: жесты и клавиши"></div>
+<div id="liveRegion" class="sr" aria-live="polite"></div>
+<script src="js/data.js"></script>
+<script src="js/texts.js"></script>
+<script src="js/world.js"></script>
+<script src="js/engine.js"></script>
+<script src="js/sounds.js"></script>
+<script src="js/atmos.js"></script>
+<script src="js/game.js"></script>
+<script src="js/combat.js"></script>
+<script src="js/minigames.js"></script>
+<script src="js/ui.js"></script>
+<script src="js/guide.js"></script>
+<script src="js/input.js"></script>
+<script src="js/main.js"></script>
+</body>
+</html>

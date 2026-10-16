@@ -1,0 +1,194 @@
+# Сборка «Подземной лаборатории» для Android 9 и новее на серверах GitHub.
+#
+# Полная сборка: один APK, в нём вся игра — страница, код, встроенный голос
+# eSpeak NG, все записи звука и музыки (lab/sounds). Игрок ставит один файл —
+# и всё уже внутри: сеть не нужна, докачивать и ставить отдельно нечего.
+#
+# До выпуска: проверка синтаксиса (не новее ES2018 — WebView Android 9),
+# проверка генератора всех 200 этажей, проверка игры в Chromium, затем APK
+# ставится и запускается на эмуляторах Android 9 (API 28) и Android 15
+# (API 35): страница грузится без ошибок, самопроверка игры проходит.
+# Выпуск «lab-android-latest» несёт APK.
+#
+# Подпись. Ключей в репозитории нет. Сборка сама заводит свой ключ и хранит
+# его в кэше Actions (задача keepkey раз в пять дней не даёт кэшу устареть):
+# все сборки подписаны одним ключом и ставятся поверх прежних.
+name: Подземная лаборатория — Android
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '41 4 */5 * *'
+  push:
+    branches: ['main', 'claude/**']
+    paths:
+      - 'lab/**'
+      - '.github/workflows/lab-android.yml'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: lab-android-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  keepkey:
+    if: ${{ github.event_name == 'schedule' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Освежить ключ сборки в кэше
+        uses: actions/cache/restore@v4
+        with:
+          path: ~/.lab-signing
+          key: lab-signing-v1
+
+  build:
+    if: ${{ github.event_name != 'schedule' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    steps:
+      - name: Забрать репозиторий
+        uses: actions/checkout@v4
+        with:
+          sparse-checkout: |
+            lab
+            .github
+
+      - name: Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Синтаксис (не новее ES2018) и генератор этажей
+        run: |
+          npm i --no-save --prefix "$RUNNER_TEMP/n" acorn@8.12.1 > /dev/null
+          node -e '
+            const acorn = require(process.env.RUNNER_TEMP + "/n/node_modules/acorn");
+            const fs = require("fs"); let bad = 0;
+            for (const f of fs.readdirSync("lab/js")) {
+              if (!f.endsWith(".js")) continue;
+              try { acorn.parse(fs.readFileSync("lab/js/" + f, "utf8"), { ecmaVersion: 2018 }); console.log("ok", f); }
+              catch (e) { bad++; console.log("FAIL", f, e.message); }
+            }
+            process.exit(bad ? 1 : 0);'
+          node lab/tests/world.test.js 6
+
+      - name: Проверка игры в Chromium
+        run: |
+          npm i --no-save --prefix "$RUNNER_TEMP/pw" playwright@1.48.2 > /dev/null
+          (cd "$RUNNER_TEMP/pw" && npx playwright install --with-deps chromium > /dev/null)
+          NODE_PATH="$RUNNER_TEMP/pw/node_modules" node lab/tests/play.test.js
+
+      - name: Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.14.3'
+
+      - name: Платформа Android 36
+        run: |
+          SDKM="$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager"
+          yes | "$SDKM" --licenses > /dev/null || true
+          "$SDKM" "platforms;android-36" "build-tools;36.0.0" > /dev/null
+
+      - name: Сложить игру внутрь приложения
+        run: |
+          W=lab/android/app/src/main/assets/www
+          rm -rf "$W" && mkdir -p "$W"
+          cp lab/index.html lab/icon-192.png lab/icon-512.png "$W"/
+          cp -r lab/js lab/espeak lab/sounds "$W"/
+          du -sh "$W" "$W"/sounds
+          find "$W" -type f | wc -l
+
+      - name: Ключ сборки из кэша
+        uses: actions/cache@v4
+        with:
+          path: ~/.lab-signing
+          key: lab-signing-v1
+
+      - name: Ключ подписи
+        run: |
+          D="$HOME/.lab-signing"; mkdir -p "$D"; chmod 700 "$D"
+          if [ ! -f "$D/lab.keystore" ]; then
+            openssl rand -hex 24 > "$D/pass"
+            keytool -genkeypair -keystore "$D/lab.keystore" -storetype PKCS12 \
+              -alias lab -keyalg RSA -keysize 4096 -validity 12000 \
+              -storepass "$(cat "$D/pass")" -keypass "$(cat "$D/pass")" \
+              -dname "CN=Podzemnaya Laboratoriya, O=Grani Mirov, C=RU"
+          fi
+          P="$(cat "$D/pass")"; echo "::add-mask::$P"
+          {
+            echo "KS_FILE=$D/lab.keystore"
+            echo "KS_PASS=$P"
+            echo "KS_ALIAS=lab"
+            echo "KS_KEY_PASS=$P"
+          } >> "$GITHUB_ENV"
+
+      - name: APK
+        env:
+          BUILD_NUMBER: ${{ github.run_number }}
+        run: |
+          (cd lab/android && gradle --no-daemon :app:assembleRelease)
+          cp lab/android/app/build/outputs/apk/release/app-release.apk podzemnaya-laboratoriya.apk
+          "$ANDROID_HOME/build-tools/36.0.0/apksigner" verify --print-certs podzemnaya-laboratoriya.apk | head -4
+          "$ANDROID_HOME/build-tools/36.0.0/aapt2" dump badging podzemnaya-laboratoriya.apk | head -4
+          ls -la podzemnaya-laboratoriya.apk
+
+      - name: APK — на страницу сборки
+        uses: actions/upload-artifact@v4
+        with:
+          name: podzemnaya-laboratoriya-apk
+          path: podzemnaya-laboratoriya.apk
+          compression-level: 0
+          retention-days: 90
+
+      - name: Эмулятор — включить KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+
+      - name: Установка и самопроверка на Android 9
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 28
+          target: google_apis
+          arch: x86_64
+          disk-size: 6G
+          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
+          disable-animations: true
+          script: bash lab/android/install-check.sh podzemnaya-laboratoriya.apk
+
+      - name: Установка и самопроверка на Android 15
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 35
+          target: google_apis
+          arch: x86_64
+          disk-size: 6G
+          emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
+          disable-animations: true
+          script: bash lab/android/install-check.sh podzemnaya-laboratoriya.apk
+
+      - name: Выпуск «lab-android-latest»
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release delete lab-android-latest --cleanup-tag -y || true
+          SIZE=$(stat -c %s podzemnaya-laboratoriya.apk)
+          cat > "$RUNNER_TEMP/notes.md" <<EOF
+          «Подземная лаборатория» — звуковая игра для Android 9 и новее. Сборка ${GITHUB_RUN_NUMBER} из ${GITHUB_REF_NAME} (${GITHUB_SHA}).
+
+          Полная сборка: вся игра внутри одного файла podzemnaya-laboratoriya.apk (${SIZE} байт) — речь, звуки, музыка. Сеть не нужна, докачивать ничего не надо.
+
+          Проверено: ставится и запускается на эмуляторах Android 9 и Android 15, самопроверка игры пройдена.
+          EOF
+          gh release create lab-android-latest podzemnaya-laboratoriya.apk --prerelease --target "$GITHUB_SHA" \
+            --title "Подземная лаборатория для Android (сборка ${GITHUB_RUN_NUMBER})" \
+            --notes-file "$RUNNER_TEMP/notes.md"

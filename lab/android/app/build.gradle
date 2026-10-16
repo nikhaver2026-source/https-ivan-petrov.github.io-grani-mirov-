@@ -1,0 +1,57 @@
+/* «Подземная лаборатория» для Android 9 и новее: вся игра — страница,
+   код, голос eSpeak, все записи звука и музыки — лежит внутри приложения,
+   в assets/www, и открывается в WebView без сети. Папку www собирает
+   рабочий процесс .github/workflows/lab-android.yml из папки lab — в git
+   её нет. */
+plugins {
+    id 'com.android.application'
+}
+
+android {
+    namespace 'io.github.granimirov.lab'
+    compileSdk 36
+
+    defaultConfig {
+        applicationId 'io.github.granimirov.lab'
+        minSdk 28            // Android 9
+        targetSdk 36
+        /* Номер сборки растёт с каждым запуском рабочего процесса: новая
+           версия ставится поверх прежней, сохранения остаются. */
+        versionCode(1000 + ((System.getenv('BUILD_NUMBER') ?: '0') as int))
+        versionName '1.0'
+    }
+
+    /* Ключ подписи — только из окружения сборки: в репозитории ключей нет. */
+    signingConfigs {
+        release {
+            if (System.getenv('KS_FILE')) {
+                storeFile file(System.getenv('KS_FILE'))
+                storePassword System.getenv('KS_PASS')
+                keyAlias System.getenv('KS_ALIAS')
+                keyPassword System.getenv('KS_KEY_PASS')
+            }
+        }
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            signingConfig signingConfigs.release
+        }
+    }
+
+    androidResources {
+        /* Записи уже сжаты (OGG): жать их ещё раз — только время. */
+        noCompress += ['ogg', 'mp3', 'flac', 'wav']
+        ignoreAssetsPattern = '!.svn:!.git:!.ds_store'
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+}
+
+dependencies {
+    implementation 'androidx.webkit:webkit:1.11.0'
+}
