@@ -77,23 +77,33 @@ LAB.selftest = function () {
       floors++;
     }
   });
-  step("audio", function () { LAB.Bank.preload(["step_plate", "bump_wall", "bcn_gatecard", "mus_l1", "amb_l1"]); });
-  setTimeout(function () {
+  step("audio", function () { LAB.Bank.preload(["step_plate", "bump_wall", "bcn_gatecard"]); });
+  /* Музыка и фон уровня — из памяти. Проверяется уровень, где стоит герой:
+     музыку прошлых уровней игра сама выгружает. Ждём декодирования до 40 с. */
+  var cur = LAB.game.G.L, musId = "mus_l" + cur, ambId = "amb_l" + cur, t0 = Date.now();
+  var allBad = function (id) { var d = LAB.Bank.defs[id]; return !!d && d.f.every(function (f) { return LAB.Bank.bad[f]; }); };
+  var finish = function () {
     var audio = LAB.Bank.ready("step_plate") && LAB.Bank.ready("bump_wall");
-    /* музыка и фон уровня — из памяти: запись декодирована и петля запускается */
-    var musicOk = false;
-    try { var h = LAB.Bank.ready("mus_l1") && LAB.Bank.play("mus_l1", { bus: "music", loop: true, gain: 0.01 }); musicOk = !!h && h.dur > 60; if (h) h.stop(0.05); } catch (e) { musicOk = false; }
-    var ambOk = LAB.Bank.ready("amb_l1");
-    if (!musicOk) fails.push("музыка не играет");
-    if (!ambOk) fails.push("фон уровня не декодировался");
+    var musicOk = false, secs = Math.round((Date.now() - t0) / 100) / 10;
+    try { var h = LAB.Bank.ready(musId) && LAB.Bank.play(musId, { bus: "music", loop: true, gain: 0.01 }); musicOk = !!h && h.dur > 30; if (h) h.stop(0.05); } catch (e) { musicOk = false; }
+    var ambOk = LAB.Bank.ready(ambId);
+    if (!musicOk) fails.push("музыка не играет" + (allBad(musId) ? " (ошибка декодирования)" : " (не успела за " + secs + " с)"));
+    if (!ambOk) fails.push("фон уровня не декодировался" + (allBad(ambId) ? " (ошибка декодирования)" : ""));
     var tts = "";
     try { tts = window.LabTTS ? window.LabTTS.status() + (window.LabTTS.hasRussian() ? ", русский есть" : ", русского нет") : "нет моста"; } catch (e) { tts = "?"; }
     if (!audio) fails.push("звук не декодировался");
     /* компьютер: голосов Microsoft нет — без голосов игрока говорит встроенный eSpeak */
     if (LAB.desktop && LAB.Speech.backend === "espeak" && LAB.Speech.espSt !== "ready") fails.push("встроенный eSpeak не поднялся");
-    log((fails.length ? "selftest FAIL: " + fails.join(" | ") : "selftest ok") + "; этажей: " + floors + "; звук: " + (audio ? "да" : "нет") + "; музыка: " + (musicOk ? "да" : "нет") + "; речь: " + tts + "; движок речи: " + LAB.Speech.backend + (LAB.Speech.backend === "espeak" ? " (" + LAB.Speech.espSt + ")" : ""));
+    log((fails.length ? "selftest FAIL: " + fails.join(" | ") : "selftest ok") + "; этажей: " + floors + "; звук: " + (audio ? "да" : "нет") + "; музыка: " + (musicOk ? "да, " + musId + " за " + secs + " с" : "нет") + "; речь: " + tts + "; движок речи: " + LAB.Speech.backend + (LAB.Speech.backend === "espeak" ? " (" + LAB.Speech.espSt + ")" : ""));
     LAB.ui.mainMenu();
-  }, 9000);
+  };
+  var poll = function () {
+    var ok = LAB.Bank.ready(musId) && LAB.Bank.ready(ambId) && LAB.Bank.ready("step_plate") && LAB.Bank.ready("bump_wall");
+    var espWait = LAB.desktop && LAB.Speech.backend === "espeak" && LAB.Speech.espSt === "loading";
+    if ((ok && !espWait) || allBad(musId) || Date.now() - t0 > 40000) { finish(); return; }
+    setTimeout(poll, 500);
+  };
+  setTimeout(poll, 3000);
 };
 
 if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", boot);

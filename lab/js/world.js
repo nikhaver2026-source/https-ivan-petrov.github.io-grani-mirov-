@@ -408,6 +408,18 @@ function genFloor(seed, L, F, attempt) {
     rmm.name = LAB.ROOMS[type].n;
     rmm.surf = lev.surf; /* у каждого уровня свой пол */
   }
+  /* Таблички на дверях: номер помещения на этаже и название; у некоторых —
+     ещё строка («Идёт испытание», «Посторонним вход воспрещён»). */
+  var rn = 0;
+  for (s = 0; s < NS; s++) {
+    var rq = rooms[s];
+    if (!rq) continue;
+    if (rq.type === "secret") { rq.sign = ""; continue; }
+    var rdef = LAB.ROOMS[rq.type];
+    rn++;
+    rq.num = rn;
+    rq.sign = (rdef.special ? "" : "Помещение " + rn + ". ") + rq.name + (rdef.sign ? ". " + (typeof rdef.sign === "string" ? rdef.sign : r.pick(rdef.sign)) : "");
+  }
 
   var fl = {
     seed: seed, L: L, F: F, W: W, H: H, t: t, room: room, rooms: rooms, doors: doors, doorAt: doorAt,
@@ -544,9 +556,12 @@ function genFloor(seed, L, F, attempt) {
     } else if (lock.type === "code") {
       var code = String(r.int(1000, 9999));
       door2.lock.code = code;
-      var sp = pickSpot();
-      if (r.chance(0.3)) {
+      var sp = pickSpot(), cw = r.next();
+      /* код — на терминале безопасности, в почте сотрудника на компьютере или в записке */
+      if (cw < 0.25) {
         addObj("terminal", sp, { sub: "sec", codeFor: door2.id, codeRoom: roomName, code: code }) || addItem({ kind: "note", note: "code", code: code, room: roomName }, sp);
+      } else if (cw < 0.55) {
+        addObj("pc", sp, { own: r.int(0, 99999), codeFor: door2.id, codeRoom: roomName, code: code }) || addItem({ kind: "note", note: "code", code: code, room: roomName }, sp);
       } else addItem({ kind: "note", note: "code", code: code, room: roomName }, sp);
       codeSeq++;
     } else if (lock.type === "card") {
@@ -613,19 +628,25 @@ function genFloor(seed, L, F, attempt) {
     if (def.special && rm4.type !== "secret") continue;
     var obj = def.obj || {};
     for (var ot in obj) {
-      if (!r.chance(obj[ot])) continue;
+      /* компьютеров — один-два на этаж: почта сотрудников не повторяется */
+      if (!r.chance(ot === "pc" ? obj[ot] * 0.42 : obj[ot])) continue;
       if ((ot === "magnetron" || ot === "positron") && L < 2) continue;
       if (ot === "positron" && L < 3) continue;
       var extra2 = null;
       if (ot === "terminal") extra2 = { sub: r.pick(["sec", "sci", "eng", "sci"]) };
       if (ot === "safe") extra2 = { code: String(r.int(1000, 9999)), locked: true };
       if (ot === "locker") extra2 = { locked: r.chance(0.25) };
+      if (ot === "pc") extra2 = { own: r.int(0, 99999), locked: r.chance(0.18) };
+      if (ot === "coffee" || ot === "drinks") extra2 = { broken: r.chance(0.12) };
       var o2 = addObj(ot, s, extra2);
       if (o2 && (ot === "crate" || ot === "locker" || ot === "safe" || ot === "desk" || ot === "corpse")) o2.loot = genLoot(r, L, F, ot, def.loot);
+      if (o2 && ot === "pc") o2.loot = genLoot(r, L, F, "desk", def.loot);
       if (o2 && ot === "safe") {
         /* код сейфа — в записке где-то на этаже, достижимой без замков после сейфа */
-        var ss = keySpotsForRoom(s);
-        addItem({ kind: "note", note: "safe", code: o2.code, room: rm4.name }, r.pick(ss));
+        var ss = keySpotsForRoom(s), sPick = r.pick(ss);
+        /* иногда код сейфа — в письме на компьютере, а не на бумаге */
+        var spc = r.chance(0.35) ? addObj("pc", sPick, { own: r.int(0, 99999), safeCode: o2.code, safeRoom: rm4.name }) : null;
+        if (!spc) addItem({ kind: "note", note: "safe", code: o2.code, room: rm4.name }, sPick);
       }
     }
   }
@@ -789,6 +810,9 @@ function genFloor(seed, L, F, attempt) {
   function hasObj(t2) { return fl.objs.some(function (o) { return o.type === t2; }); }
   if ([1, 5, 10, 15, 19].indexOf(F) >= 0 && !hasObj("vending") && svcRooms.length) addObj("vending", r.pick(svcRooms));
   if ([3, 8, 13, 18].indexOf(F) >= 0 && !hasObj("workbench") && svcRooms.length) addObj("workbench", r.pick(svcRooms));
+  /* компьютер с почтой сотрудников — почти на каждом этаже; кофе или напитки — на многих */
+  if (!hasObj("pc") && svcRooms.length && r.chance(0.85)) addObj("pc", r.pick(svcRooms), { own: r.int(0, 99999), locked: r.chance(0.15) });
+  if (!hasObj("coffee") && !hasObj("drinks") && svcRooms.length && r.chance(0.6)) addObj(r.chance(0.55) ? "coffee" : "drinks", r.pick(svcRooms), { broken: r.chance(0.1) });
 
   /* турели в коридорах (с 2-го уровня) */
   if (L >= 2) {
@@ -1064,7 +1088,8 @@ LAB.solve = function (fl, have) {
       if (o.type === "magnetron" && !power) { power = true; changed = true; }
       if (o.type === "positron" && !rubble) { rubble = true; changed = true; }
       if (o.type === "terminal" && o.lockdown && !lockdown) { lockdown = true; changed = true; }
-      if (o.type === "terminal" && o.code && !codes[o.code]) { codes[o.code] = 1; changed = true; }
+      if ((o.type === "terminal" || o.type === "pc") && o.code && !codes[o.code]) { codes[o.code] = 1; changed = true; }
+      if (o.type === "pc" && o.safeCode && !codes[o.safeCode]) { codes[o.safeCode] = 1; changed = true; }
       if (o.loot) o.loot.forEach(take);
     });
   }

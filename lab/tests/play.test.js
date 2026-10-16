@@ -180,7 +180,7 @@ function ok(cond, msg) { if (cond) console.log("  ✓ " + msg); else { fails++; 
     return { ticks, hp: G.hp, dead: G.dead };
   });
   ok(fight.none || fight.ticks > 0, "такты врагов идут без ошибок");
-  const dmg = await page.evaluate(() => { const G = LAB.game.G; const before = G.hp; LAB.combat.hurtPlayer(10, "energy", null); return before - G.hp; });
+  const dmg = await page.evaluate(() => { const G = LAB.game.G; G.dead = false; G.hp = G.hpMax; G.st.shield = 0; const before = G.hp; LAB.combat.hurtPlayer(10, "energy", null); return before - G.hp; });
   ok(dmg >= 1, "урон герою проходит через броню: " + dmg);
 
   console.log("Мини-игра: кодовый замок");
@@ -245,6 +245,8 @@ function ok(cond, msg) { if (cond) console.log("  ✓ " + msg); else { fails++; 
   const nw = await page.evaluate(() => {
     const g = LAB.game, G = g.G;
     LAB.ui.closeAll();
+    G.dead = false; G.hp = G.hpMax;
+    LAB.combat.foes().forEach(f => { f.dead = true; }); /* вокруг тихо: записка открывается окном */
     g.CUR.fl.items.push({ id: "tnote1", kind: "note", note: "staff", n: 7, x: G.x, y: G.y });
     g.autoPickup();
     const t = LAB.ui.top() && LAB.ui.top().title;

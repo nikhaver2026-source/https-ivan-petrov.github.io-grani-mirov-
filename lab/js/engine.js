@@ -24,7 +24,7 @@ var DEF = {
   speech: 1, effects: 1, music: 1, ambience: 1, subtitles: 1, explore: 1, haptics: 1,
   rate: 1, ratePct: 50, voiceVol: 1, fxVol: 1, musicVol: 0.5, ambVol: 0.8, beaconVol: 1,
   voice: "", tts: "auto", robotVoice: 1,
-  difficulty: 1, turnBased: 0, autoDoors: 1, autoRead: 1, beacons: 1, verbose: 1
+  difficulty: 1, turnBased: 0, autoDoors: 0, autoRead: 1, beacons: 1, verbose: 1, doorsV: 2
 };
 var saved = {};
 try { saved = JSON.parse(store.get("lab_settings") || "{}") || {}; } catch (e) { saved = {}; }
@@ -37,6 +37,8 @@ for (k0 in saved) if (Object.prototype.hasOwnProperty.call(DEF, k0)) settings[k0
 LAB.rateFromPct = function (p) { p = Math.max(0, Math.min(100, +p || 0)); return p <= 50 ? 0.5 + p / 100 : 1 + (p - 50) / 25; };
 LAB.pctFromRate = function (r) { r = +r || 1; return Math.max(0, Math.min(100, Math.round((r <= 1 ? (r - 0.5) * 100 : 50 + (r - 1) * 25) / 5) * 5)); };
 if (saved.ratePct == null && saved.rate != null) settings.ratePct = LAB.pctFromRate(saved.rate);
+/* Альфа 1.0: двери закрыты, пока игрок их не откроет (прежде открывались сами). */
+if (saved.doorsV !== 2) { settings.autoDoors = 0; settings.doorsV = 2; }
 settings.rate = LAB.rateFromPct(settings.ratePct);
 LAB.settings = settings;
 LAB.saveSettings = function () { store.set("lab_settings", JSON.stringify(settings)); };

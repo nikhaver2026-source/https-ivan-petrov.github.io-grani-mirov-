@@ -137,6 +137,7 @@ function findObj(type) { var o = CUR.fl.objs; for (var i = 0; i < o.length; i++)
 /* Вход на этаж. how: start, down (сверху по лестнице), up (снизу), elev, gatedown (через шлюз), load, respawn. */
 function enterFloor(L, F, how, silent) {
   if (CUR.fs) syncFloorState();
+  G.stair = null;
   G.L = L; G.F = F;
   var fl = LAB.getFloor(G.seed, L, F), fs = fsFor(L, F);
   CUR.fl = fl; CUR.fs = fs; CUR.key = L + "-" + F; CUR.room = -9; CUR.focus = null;
@@ -468,6 +469,7 @@ function tryMove(dir, run) {
   if (now - lastMove < minGap) return false;
   if (G.st.web > 0) { A("play", "web_stuck"); sayq("Вы в паутине. Рвёте её..."); G.st.web = Math.max(0, G.st.web - 1); return false; }
   var d = DIRS[dir]; if (!d) return false;
+  if (G.stair) return stairStep(dir, run);
   G.face = dir;
   var nx = G.x + d[0], ny = G.y + d[1];
   var tt = cellType(nx, ny);
@@ -488,9 +490,9 @@ function tryMove(dir, run) {
       if (!door.lock && S.autoDoors) { openDoor(door, true); }
       else {
         A("play", door.lock ? "door_locked" : "door_knock");
-        var txt;
-        if (!door.lock) txt = "Закрытая дверь. " + LAB.K("Двойное касание — открыть.", "Enter — открыть.");
-        else txt = "Дверь: " + lockText(door) + "." + (why ? " " + why + LAB.K(" Двойное касание — действия.", " Enter — действия.") : LAB.K(" Пропуск есть: двойное касание — открыть.", " Пропуск есть: Enter — открыть."));
+        var txt, sg = doorSign(door);
+        if (!door.lock) txt = "Закрытая дверь." + sg + " " + LAB.K("Двойное касание — открыть.", "Enter — открыть.");
+        else txt = "Дверь: " + lockText(door) + "." + sg + (why ? " " + why + LAB.K(" Двойное касание — действия.", " Enter — действия.") : LAB.K(" Пропуск есть: двойное касание — открыть.", " Пропуск есть: Enter — открыть."));
         sayOnce("door" + door.id, txt);
         if (!G.tut.door && door.lock) { G.tut.door = 1; sayq(LAB.K("У запертой двери коснитесь экрана одним пальцем дважды: появятся действия.", "У запертой двери нажмите Enter: появятся действия.")); }
         return false;
@@ -526,6 +528,8 @@ function tryMove(dir, run) {
   autoPickup();
   roomCheck(false, run);
   announceNear();
+  corridorTurn(dir);
+  doorAutoClose();
   checkQuests();
   if (LAB.combat) LAB.combat.afterPlayerMove(from);
   UIx("refresh");
@@ -541,6 +545,23 @@ function sayOnce(key, text, gap) {
   say(text);
 }
 function bumpFocus(f) { CUR.focus = f; CUR.lastBump = Date.now(); }
+
+/* Коридор поворачивает: впереди стена, а проход уходит в сторону — сказать
+   куда (вперёд, назад, влево, вправо — как свайпы и клавиши). */
+function corridorTurn(dir) {
+  var tt = cellType(G.x, G.y);
+  if (tt !== T.CORR && tt !== T.DOOR) return;
+  var d = DIRS[dir], ahead = cellType(G.x + d[0], G.y + d[1]);
+  if (ahead !== T.WALL || hiddenSecretAt(G.x + d[0], G.y + d[1])) return;
+  var back = LAB.OPP[dir], ways = [];
+  ["N", "E", "S", "W"].forEach(function (k) {
+    if (k === dir || k === back) return;
+    var q = DIRS[k], t2 = cellType(G.x + q[0], G.y + q[1]);
+    if (t2 === T.CORR || t2 === T.DOOR || t2 === T.ROOM) ways.push(k);
+  });
+  if (ways.length === 1) sayOnce("turn" + G.x + "," + G.y + dir, "Коридор уходит " + LAB.DIRTO[ways[0]] + ".", 6000);
+  else if (ways.length > 1) sayOnce("turn" + G.x + "," + G.y + dir, "Развилка: " + ways.map(function (k) { return LAB.DIRTO[k]; }).join(" и ") + ".", 6000);
+}
 
 /* Подошли вплотную к предмету или выжившему — назвать его один раз.
    У лифта, лестницы, терминала, установки — сразу подсказка про действия. */
@@ -562,6 +583,14 @@ function announceNear() {
       if (nearSaid[keyn] && now2 - nearSaid[keyn] < 20000) return;
       nearSaid[keyn] = now2;
       out.push(npcName(n) + " " + LAB.DIRN[k]);
+    }
+    /* дверь рядом, а вы в коридоре — прочитать табличку */
+    var dr = doorAt(x, y);
+    if (dr && !hiddenSecretAt(x, y) && cellType(G.x, G.y) === T.CORR) {
+      var rm = CUR.fl.rooms[dr.room], keyd = CUR.key + ":sign:" + dr.id, now3 = Date.now();
+      if (!rm || !rm.sign || (nearSaid[keyd] && now3 - nearSaid[keyd] < 20000)) return;
+      nearSaid[keyd] = now3;
+      out.push("Дверь " + LAB.DIRN[k] + (doorOpen(dr) ? ", открыта" : "") + ". Табличка: «" + rm.sign + "»");
     }
   });
   if (!out.length) return;
@@ -649,6 +678,7 @@ game.relDir = relDir;
 
 /* ════════ ОСМОТРЕТЬСЯ (два пальца вверх) ════════ */
 function lookAround() {
+  if (G.stair) { stairsInfo(); return; }
   if (!game.entered) return;
   var r = roomAt(G.x, G.y), parts = [];
   parts.push("Уровень " + G.L + ", этаж " + G.F + ".");
@@ -718,6 +748,7 @@ function targetName(t) {
   return "";
 }
 function nearbyInfo() {
+  if (G.stair) { stairsInfo(); return; }
   var t = adjacentTargets();
   if (!t.length) {
     var r = roomAt(G.x, G.y);
@@ -730,6 +761,7 @@ game.nearbyInfo = nearbyInfo;
 
 /* ════════ ДЕЙСТВИЯ (двойное касание одним пальцем) ════════ */
 function interact() {
+  if (G.stair) { stairsInfo(); return; }
   if (!game.entered || G.done && !findObj("express")) { if (G.done) { /* после финала */ } }
   var targets = adjacentTargets();
   var f = CUR.focus;
@@ -762,9 +794,37 @@ function openTarget(q) {
 }
 game.openTarget = openTarget;
 
-/* ── ДВЕРИ ── */
+/* ── ДВЕРИ ──
+   Все двери закрыты, пока игрок их не откроет. Открытая дверь закрывается
+   сама, когда в проёме никого нет и игрок отошёл от неё. На двери со
+   стороны коридора — табличка: номер помещения и название. */
+function doorSign(d) {
+  var r = CUR.fl.rooms[d.room];
+  if (!r || !r.sign) return "";
+  if (roomAt(G.x, G.y) === r) return " Дверь в коридор.";
+  return " Табличка: «" + r.sign + "».";
+}
+game.doorSign = doorSign;
+function doorOpened(d) { CUR.openT = CUR.openT || {}; CUR.openT[d.id] = Date.now(); }
+game.doorOpened = doorOpened;
+function doorAutoClose() {
+  var fl = CUR.fl, fs = CUR.fs;
+  if (!fl || !fs || !game.entered) return;
+  var now = Date.now(), ot = CUR.openT || {};
+  for (var i = 0; i < fl.doors.length; i++) {
+    var d = fl.doors[i];
+    if (fs.doors[d.id] !== 2 || d.kind === "secret" || d.kind === "rubble" || (d.lock && (d.lock.type === "secret" || d.lock.type === "rubble"))) continue;
+    if (now - (ot[d.id] || 0) < 3000) continue;
+    if (Math.abs(G.x - d.x) + Math.abs(G.y - d.y) < 2) continue;
+    if (foeAt(d.x, d.y) || npcAt(d.x, d.y)) continue;
+    fs.doors[d.id] = 1;
+    A("doorClose", d);
+  }
+}
+game.doorAutoClose = doorAutoClose;
 function openDoor(d, auto) {
   CUR.fs.doors[d.id] = 2;
+  doorOpened(d);
   A("doorOpen", d);
   if (!auto) say("Дверь открыта.");
   if (d.lock && d.lock.type === "card" && !auto) gainXP(2);
@@ -828,6 +888,11 @@ function hackDoor(d) {
     else { A("play", "alarm_short"); say("Взлом не удался. Сработала тревога — враги рядом насторожились."); if (LAB.combat) LAB.combat.noise(10); }
   });
 }
+game.plural = plural;
+game.roomAt = function (x, y) { return roomAt(x, y); };
+game.hackLength = function (lv) { return hackLength(lv); };
+game.autosaveSoon = function () { autosaveSoon(); };
+game.openContainer = function (o) { openContainer(o); };
 function hackLength(lv) {
   var n = 3 + lv;
   if (G.mind >= 16) n--;
@@ -862,7 +927,7 @@ function objMenu(o) {
   switch (o.type) {
     case "stairs_down": case "stairs_up": {
       var down = o.type === "stairs_down";
-      items.push({ label: down ? "Спуститься на этаж " + (G.F + 1) : "Подняться на этаж " + (G.F - 1), fn: function () { useStairs(o); } });
+      items.push({ label: down ? "Спуститься по лестнице на этаж " + (G.F + 1) : "Подняться по лестнице на этаж " + (G.F - 1), fn: function () { useStairs(o); } });
       items.push({ label: "Прислушаться к пролёту", fn: function () { listenStairs(o); } });
       break;
     }
@@ -898,6 +963,8 @@ function objMenu(o) {
     case "hq": hqMenu(o); return;
     case "crate": case "locker": case "desk": case "corpse": case "safe":
       containerMenu(o); return;
+    case "pc": if (LAB.office) { LAB.office.pcMenu(o); return; } break;
+    case "coffee": case "drinks": if (LAB.office) { LAB.office.drinkMenu(o); return; } break;
   }
   items.push({ label: "Осмотреть", fn: function () { say(name + ". " + (LAB.OBJ[o.type] ? LAB.OBJ[o.type].desc : "")); } });
   UIx("menu", name, items);
@@ -916,19 +983,50 @@ function listenStairs(o) {
   say(txt);
 }
 
+/* ════════ ЛЕСТНИЦА: спуск и подъём шагами ════════
+   Игрок сам идёт по ступеням: вперёд — дальше по лестнице, назад — обратно
+   на этаж. Два пролёта и площадка между ними; сколько ступеней — не
+   говорится. Пока игрок на лестнице, этажи ждут: враги не ходят. */
 function useStairs(o) {
   if (o.blocked) { A("play", "rubble_hit"); say("Лестница завалена: обломки не сдвинуть. Воспользуйтесь лифтом уровня" + (G.elev[G.L] ? "." : " — пропуск лифта лежит на втором этаже уровня.")); return; }
   if (LAB.combat && LAB.combat.hunted()) { say("За вами гонятся — на лестнице вас догонят. Сначала оторвитесь или отбейтесь."); return; }
   var down = o.type === "stairs_down";
   UIx("closeAll");
-  A("stairs", down);
-  game.paused = true;
-  setTimeout(function () {
-    game.paused = false;
+  /* один и тот же пролёт сверху и снизу — одинаковой длины */
+  var r = LAB.Rng(G.seed, "stair:" + G.L + ":" + (down ? G.F : G.F - 1));
+  var f1 = r.int(5, 7), f2 = r.int(5, 7);
+  G.stair = { down: down, k: 0, n: f1 + f2, land: f1, x: G.x, y: G.y };
+  A("stairEnter", down);
+  say((down ? "Вы ступаете на лестницу вниз." : "Вы ступаете на лестницу вверх.") + (G.tut.stairWalk ? "" : LAB.K(" Свайп вверх — дальше по ступеням, вниз — обратно. Держите палец — идёте без остановки.", " W — дальше по ступеням, S — обратно. Держите клавишу — идёте без остановки.")));
+  G.tut.stairWalk = 1;
+}
+game.useStairs = useStairs;
+function stairStep(dir, run) {
+  var s = G.stair, now = Date.now();
+  if (now - lastMove < (run ? 240 : 110)) return false;
+  if (dir === "W" || dir === "E") { A("bumpRail"); sayOnce("rail", "Перила.", 3000); return false; }
+  lastMove = now;
+  s.k += dir === "N" ? 1 : -1;
+  if (s.k < 0) {
+    G.stair = null;
+    A("step", surfaceAt(G.x, G.y), run, false);
+    say("Вы сошли с лестницы.");
+    return false;
+  }
+  A("stairStep", s.down, s.k, s.n);
+  G.stats.steps++;
+  if (s.k === s.land && dir === "N") sayOnce("landing", "Площадка. Лестница поворачивает.", 4000);
+  if (s.k >= s.n) {
+    var down = s.down;
+    G.stair = null;
     enterFloor(G.L, down ? G.F + 1 : G.F - 1, down ? "down" : "up");
     if (down && G.F > 1 && !G.tut.stairs) { G.tut.stairs = 1; sayq("Лестницы на каждом этаже — в разных концах. Навигатор — " + LAB.K("два пальца вправо", "клавиша N") + " — подскажет путь."); }
-  }, 1300);
+    return false;
+  }
+  return true;
 }
+game.onStairs = function () { return !!G.stair; };
+function stairsInfo() { say("Вы на лестнице " + (G.stair.down ? "вниз" : "вверх") + (G.stair.k >= G.stair.land ? ", за площадкой" : "") + ". " + LAB.K("Свайп вверх — дальше, вниз — обратно.", "W — дальше, S — обратно.")); }
 /* Шлюз вниз: только с шлюзовой ключ-картой этого уровня, назад — никогда. */
 function useGate(o) {
   if (!G.gate[G.L]) {
@@ -1550,6 +1648,7 @@ function routeTo(cell, goalObj) {
   return path;
 }
 function navigate(cycle, fromNpc) {
+  if (G.stair) { stairsInfo(); return; }
   if (!game.entered) return;
   var list = navTargets();
   if (!list.length) { say("Навигатору не на что указать."); return; }
@@ -1825,6 +1924,7 @@ function migrate(g) {
   if (!g.st) g.st = base.st;
   for (var k2 in base.st) if (g.st[k2] === undefined) g.st[k2] = 0;
   g.dead = false;
+  g.stair = null; /* запись на лестнице — снова у лестницы */
   return g;
 }
 var autoTimer = null;

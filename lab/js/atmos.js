@@ -89,6 +89,13 @@ function doorPass(d) { /* порог двери под ногой — уже в 
 function objUse(o) { /* звук конкретного действия — в меню предметов */ }
 function container(type) { play({ crate: "open_crate", locker: "open_locker", safe: "open_safe", desk: "open_desk", corpse: "search_body" }[type] || "open_crate"); }
 function stairs(down) { play(down ? "stairs_down" : "stairs_up", { gain: 1 }); }
+/* Ступени лестничной клетки: гулко, вниз чуть ниже тоном, вверх — выше. */
+function stairEnter(down) { play(has("stair_step") ? "stair_step" : "step_plate", { gain: 0.9, rate: down ? 0.95 : 1.05, reverb: 0.55 }); }
+function stairStep(down, k, n) {
+  var id = has("stair_step") ? "stair_step" : "step_plate";
+  play(id, { gain: 0.85 + Math.random() * 0.15, rate: (down ? 0.96 : 1.04) * (1 + (Math.random() - 0.5) * 0.06), reverb: 0.5, pan: k % 2 ? 0.12 : -0.12 });
+}
+function bumpRail() { play(has("bump_rail") ? "bump_rail" : "bump_device", { gain: 0.8, reverb: 0.4 }); LAB.vib(15); }
 function gate(down) { play("gate_open", { gain: 1 }); setTimeout(function () { play("gate_ride", { gain: 0.9, bus: "fx" }); }, 1800); }
 function gateSeal() { play("gate_seal", { gain: 1 }); LAB.vib([120, 60, 220]); }
 function elevRide(ms) { play("elev_ride", { gain: 0.9 }); setTimeout(function () { play("elev_ding"); }, Math.max(800, ms - 400)); }
@@ -115,11 +122,12 @@ function setEvent(id) {
 var beaconT = null, nextPing = {};
 var OBJ_BEACON = { stairs_down: "bcn_stairs", stairs_up: "bcn_stairs_up", elevator: "bcn_elevator", gate_down: "bcn_gate", reactor: "bcn_reactor",
   terminal: "bcn_terminal", magnetron: "bcn_magnetron", positron: "bcn_positron", capsule: "bcn_capsule", vending: "bcn_vending", workbench: "bcn_workbench",
-  medst: "bcn_medst", charger: "bcn_charger", implantlab: "bcn_implantlab", hq: "bcn_hq", safe: "bcn_safe" };
+  medst: "bcn_medst", charger: "bcn_charger", implantlab: "bcn_implantlab", hq: "bcn_hq", safe: "bcn_safe",
+  pc: "bcn_pc", coffee: "bcn_coffee", drinks: "bcn_drinks" };
 var OBJ_RANGE = { stairs_down: 16, stairs_up: 10, gate_down: 18, elevator: 12, reactor: 20 };
 function beaconTick() {
   var g = G(), cur = CUR();
-  if (!g || !LAB.game.entered || LAB.game.paused || !cur || !cur.fl || !S.beacons || !S.effects) return;
+  if (!g || !LAB.game.entered || LAB.game.paused || g.stair || !cur || !cur.fl || !S.beacons || !S.effects) return;
   if (LAB.ui && LAB.ui.layer()) return;
   var jam = LAB.combat && LAB.combat.jammed();
   var now = Date.now(), src = [];
@@ -161,7 +169,14 @@ var ROOM_LOOP = {
   repair: "room_factory", ring: "room_ring", detector: "room_ring", accdesk: "room_server", targetroom: "room_ring", vacuum: "room_compressor", reactorhall: "room_reactor",
   containment: "room_magnetron", chiefdesk: "room_server", bastion: "room_server", annihilation: "room_reactor", reactor: "room_reactor", kitchen: "room_fridge", canteen: "room_fridge",
   laundry: "room_drip", showers: "room_drip", wintergarden: "room_fountain", medbay: "room_medical", medpost: "room_medical", surgery: "room_medical", isolator: "room_medical",
-  lift: "room_elevator", gate: "room_gate", gatein: "room_gate", stair: "room_stairwell", testbench: "room_hum", arsenal: "room_hum", ballistics: "room_server", armorlab: "room_factory"
+  lift: "room_elevator", gate: "room_gate", gatein: "room_gate", stair: "room_stairwell", testbench: "room_hum", arsenal: "room_hum", ballistics: "room_server", armorlab: "room_factory",
+  /* общие помещения и испытательные залы */
+  cafeteria: "room_fridge", workroom: "room_server", headoffice: "room_hum", testing: "room_hum", psych: "room_hum", decon: "room_drip",
+  sleeplab: "room_medical", isolation: "room_hum", classroom: "room_hum", darkfarm: "room_drip", climate: "room_drip", aeroponics: "room_bubbles",
+  geneeng: "room_bubbles", cloning: "room_incubator", maze: "room_creatures", regen: "room_medical", acoustic: "room_hum", navtrack: "room_factory",
+  neuro: "room_server", hvlab: "room_electric", faraday: "room_hum", supercond: "room_compressor", coldtest: "room_cryo", cryosleep: "room_cryo",
+  barochamber: "room_compressor", armortest: "room_factory", sonicrange: "room_hum", emplab: "room_electric", phaselab: "room_ring",
+  gravlab: "room_ring", riftobs: "room_reactor", expedition: "room_hum", cradlelab: "room_incubator"
 };
 var EVENTS_L = {
   1: ["ev_metal_groan", "ev_vent_rattle", "ev_far_door", "ev_far_scream", "ev_pipe_knock", "ev_robot_far", "ev_drip"],
@@ -514,7 +529,7 @@ LAB.atmos = {
   play: play, at: at, has: has,
   enterFloor: enterFloor, setRoom: setRoom, setEvent: setEvent, stopWorld: stopWorld,
   step: step, bump: bump, bumpWall: bumpWall, bumpSoft: bumpSoft, near: near, doorOpen: doorOpen, doorClose: doorClose, doorPass: doorPass, objUse: objUse,
-  container: container, stairs: stairs, gate: gate, gateSeal: gateSeal, elevRide: elevRide, rest: rest, death: death, npcHello: npcHello,
+  container: container, stairs: stairs, stairEnter: stairEnter, stairStep: stairStep, bumpRail: bumpRail, gate: gate, gateSeal: gateSeal, elevRide: elevRide, rest: rest, death: death, npcHello: npcHello,
   navPing: navPing, navStart: navStart, pickup: pickup,
   foeSound: foeSound, foeStep: foeStep, foeHit: foeHit, foeDeath: foeDeath, foeMiss: foeMiss, hurt: hurt,
   shot: shot, shotWall: shotWall, shotMiss: shotMiss, swingMiss: swingMiss, explosion: explosion, grenade: grenade, shellIncoming: shellIncoming,

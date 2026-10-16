@@ -185,6 +185,7 @@ function stepToward(f, tx, ty, opts) {
     if (fs.doors[d.id] !== 2) {
       if (!foeOpens(f, d)) return false;
       fs.doors[d.id] = 2;
+      if (LAB.game.doorOpened) LAB.game.doorOpened(d);
       A("doorOpen", d, true);
       return true; /* дверь открыта — шаг в следующий такт */
     }
@@ -256,6 +257,7 @@ function realTick() {
 }
 /* Один такт мира. В пошаговом режиме зовётся после каждого действия героя. */
 function tick() {
+  if (G().stair) return; /* игрок на лестнице: этаж ждёт */
   tickN++;
   statusTick(false);
   var fs = CUR().fs;
@@ -267,6 +269,7 @@ function tick() {
     if (G().dead) return;
   }
   shellsTick();
+  if (LAB.game.doorAutoClose) LAB.safe(LAB.game.doorAutoClose); /* двери закрываются за прошедшими */
   if (spotted.length) announceSpotted(spotted);
   G().noise = Math.max(0, G().noise - 2);
   A("combatLevel", danger() ? (hunted() ? 2 : 1) : 0);
