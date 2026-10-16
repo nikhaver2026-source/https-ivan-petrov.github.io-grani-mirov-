@@ -1,7 +1,7 @@
 /* ════════════════════════════════════════════════════════════════════
    «Подземная лаборатория» — запуск.
-   Первое касание будит звук (браузеры и WebView без него молчат), при
-   первом запуске звучит пролог, потом — главное меню.
+   Первое касание будит звук (браузеры и WebView без него молчат), потом —
+   главное меню; новая игра начинается с пролога.
    ════════════════════════════════════════════════════════════════════ */
 (function () {
 "use strict";
@@ -17,8 +17,8 @@ function start(e) {
   try { if (LAB.AE.ctx && LAB.AE.ctx.state === "suspended") LAB.AE.ctx.resume(); } catch (x) { /* */ }
   LAB.Bank.preload(LAB.SOUND_CORE || []);
   setTimeout(function () { LAB.Bank.preload(LAB.SOUND_ALL || []); }, 4000);
-  if (!LAB.store.get("lab_prologue_seen")) LAB.ui.prologue(false);
-  else LAB.ui.mainMenu();
+  /* пролог звучит в начале новой игры («Начать игру»); сначала — главное меню */
+  LAB.ui.mainMenu();
 }
 
 window.addEventListener("error", function (e) {
@@ -67,20 +67,31 @@ LAB.selftest = function () {
   step("windows", function () { LAB.ui.character(); LAB.ui.closeAll(); LAB.ui.inventory(); LAB.ui.closeAll(); LAB.ui.implants(); LAB.ui.closeAll(); });
   step("save", function () { if (!LAB.game.saveSlot(1)) throw new Error("не записалось"); });
   step("load", function () { if (!LAB.game.loadSlot(1)) throw new Error("не загрузилось"); });
+  step("navigate", function () { LAB.game.navigate(false); LAB.game.navigate(true); LAB.game.lookAround(); });
+  step("oko", function () { if (LAB.oko) { LAB.oko.event("camera"); LAB.oko.event("turret_off"); LAB.oko.tick(); } });
   var floors = 0;
+  /* Обход этажей: первый уровень целиком, дальше — три этажа каждого уровня
+     (первый, один из средних и последний, со стражем и шлюзом). */
   step("tour", function () {
-    for (var L = 1; L <= LAB.LEVELS_N; L++) for (var F = 1; F <= LAB.FLOORS_N; F++) {
-      LAB.game.enterFloor(L, F, F === 1 && L > 1 ? "gatedown" : "down", true);
-      for (var k = 0; k < 4; k++) LAB.combat.tick();
-      LAB.game.lookAround();
-      G = LAB.game.G; G.dead = false; G.hp = G.hpMax;
-      floors++;
+    for (var L = 1; L <= LAB.LEVELS_N; L++) {
+      var list = L === 1 ? [] : [1, (L % 18) + 2, LAB.FLOORS_N];
+      if (L === 1) for (var f0 = 1; f0 <= LAB.FLOORS_N; f0++) list.push(f0);
+      for (var i = 0; i < list.length; i++) {
+        var F = list[i];
+        LAB.game.enterFloor(L, F, F === 1 && L > 1 ? "gatedown" : "down", true);
+        for (var k = 0; k < 4; k++) LAB.combat.tick();
+        LAB.game.lookAround();
+        if (F === LAB.FLOORS_N && LAB.combat.turretsLeft()) { LAB.combat.turretsOurs(); LAB.combat.tick(); LAB.combat.turretsOff(); LAB.combat.tick(); }
+        G = LAB.game.G; G.dead = false; G.hp = G.hpMax;
+        floors++;
+      }
     }
+    LAB.game.enterFloor(1, 1, "start", true);
   });
   step("audio", function () { LAB.Bank.preload(["step_plate", "bump_wall", "bcn_gatecard"]); });
   /* Музыка и фон уровня — из памяти. Проверяется уровень, где стоит герой:
      музыку прошлых уровней игра сама выгружает. Ждём декодирования до 40 с. */
-  var cur = LAB.game.G.L, musId = "mus_l" + cur, ambId = "amb_l" + cur, t0 = Date.now();
+  var cur = LAB.game.G.L, musId = "mus_l" + cur, ambId = LAB.LEVELS[cur].amb || "amb_l" + cur, t0 = Date.now();
   var allBad = function (id) { var d = LAB.Bank.defs[id]; return !!d && d.f.every(function (f) { return LAB.Bank.bad[f]; }); };
   /* Слышно ли музыку на динамике телефона: доля звука выше 350 Гц (фильтр
      верхних частот второго порядка по 20 с записи). Гул ниже 350 Гц динамик

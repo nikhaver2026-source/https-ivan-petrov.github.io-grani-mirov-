@@ -1,9 +1,12 @@
 /* ════════════════════════════════════════════════════════════════════
-   «Подземная лаборатория» — мини-игры на слух.
+   «Подземная лаборатория» — мини-игры и головоломки на слух.
    Взлом (повторить сигналы свайпами), настройка магнетронного резонатора
    (убрать биения двух тонов), стабилизация позитронной ловушки (касаться
-   в такт пульсу), кодовый замок (четыре диска). Пока идёт мини-игра,
-   жесты получает она. Отмена — два пальца вниз или «Назад».
+   в такт пульсу), кодовый замок (четыре диска), схема реле (погасить все
+   реле, переключая и соседей), подбор ключа ОКО (быки и коровы на слух),
+   настройка частот (расставить тона по высоте), звуковой замок (сыграть
+   услышанную мелодию). Пока идёт мини-игра, жесты получает она. Отмена —
+   два пальца вниз или «Назад».
    ════════════════════════════════════════════════════════════════════ */
 (function () {
 "use strict";
@@ -198,6 +201,170 @@ function codeGesture(g) {
   if (g.kind === "dtap" && g.n === 1) { var v = c.d.join(""); finish(true, v); }
 }
 
+/* ════════ СХЕМА РЕЛЕ: погасить все реле ════════
+   Реле стоят в ряд слева направо; у каждого свой тон и своя сторона.
+   Горящие реле звучат аккордом. Переключить реле — переключаются и оба
+   соседа (в кольце — по кругу). Нужно, чтобы все погасли: аккорд стих. */
+var REL_F = [262, 294, 330, 392, 440, 523, 587, 659];
+function relays(n, cb, opts) {
+  opts = opts || {};
+  n = Math.max(3, Math.min(8, n || 4));
+  var st = [], i, k, seed = opts.seed || Math.floor(Math.random() * 1e9);
+  var rnd = LAB.Rng ? LAB.Rng("relays", seed) : { int: function (a, b) { return a + Math.floor(Math.random() * (b - a + 1)); } };
+  for (i = 0; i < n; i++) st.push(false);
+  var c = { type: "relays", name: opts.title || "Схема реле", cb: cb, n: n, st: st, pos: 0, ring: !!opts.ring, moves: 0, limit: opts.limit || n * 3 + 2 };
+  /* от погашенной схемы — случайные нажатия: решение всегда есть */
+  var presses = 0;
+  while (presses < n + 2 || !st.some(function (v) { return v; })) { relayPress(c, rnd.int(0, n - 1)); presses++; if (presses > 40) break; }
+  if (!st.some(function (v) { return v; })) st[0] = st[1] = true;
+  c.moves = 0;
+  cur = c;
+  say((opts.title || "Схема реле") + ". Реле: " + n + (c.ring ? ", замкнуты в кольцо" : "") + ". Горящие реле звучат. Переключая реле, вы переключаете и соседей. Погасите все. " +
+    LAB.K("Свайп влево и вправо — выбрать реле, двойное касание — переключить, касание — послушать схему.", "Стрелки влево и вправо — выбрать реле, Enter — переключить, пробел — послушать схему, Escape — отойти.") + " Ходов не больше " + c.limit + ".", { interrupt: true });
+  waitSpeech(function () { if (cur === c) relayChord(c, true); });
+}
+function relayPress(c, i) {
+  var flip = [i, i - 1, i + 1];
+  flip.forEach(function (j) {
+    if (c.ring) j = (j + c.n) % c.n;
+    if (j >= 0 && j < c.n) c.st[j] = !c.st[j];
+  });
+}
+function relayPan(c, i) { return c.n > 1 ? -0.9 + 1.8 * i / (c.n - 1) : 0; }
+function relayChord(c, speak) {
+  var on = [];
+  c.st.forEach(function (v, i) { if (v) { on.push(i + 1); tone(REL_F[i], 0.9, relayPan(c, i), "triangle", 0.11, i * 0.07); } });
+  if (!on.length) tone(1700, 0.08, 0, "sine", 0.1);
+  if (speak) sayq(on.length ? "Горят: " + on.join(", ") + "." : "Все погашены.");
+}
+function relaysGesture(g) {
+  var c = cur;
+  if (g.kind === "swipe" && g.n === 1 && (g.dir === "L" || g.dir === "R")) {
+    c.pos = Math.max(0, Math.min(c.n - 1, c.pos + (g.dir === "R" ? 1 : -1)));
+    var v = c.st[c.pos];
+    if (v) tone(REL_F[c.pos], 0.25, relayPan(c, c.pos), "triangle", 0.15); else tone(180, 0.05, relayPan(c, c.pos), "square", 0.06);
+    say("Реле " + (c.pos + 1) + (v ? ", горит" : ", погашено"));
+    return;
+  }
+  if (g.kind === "tap" && g.n === 1) { relayChord(c, true); return; }
+  if (g.kind === "dtap" && g.n === 1) {
+    relayPress(c, c.pos); c.moves++;
+    tone(900, 0.04, relayPan(c, c.pos), "square", 0.08);
+    if (!c.st.some(function (v) { return v; })) { setTimeout(function () { tone(523, 0.15, 0, "sine", 0.14); tone(784, 0.3, 0, "sine", 0.14, 0.15); say("Схема погашена."); finish(true); }, 250); return; }
+    setTimeout(function () { if (cur === c) relayChord(c, false); }, 200);
+    if (c.moves >= c.limit) { setTimeout(function () { say("Ходы кончились: схема перегрелась."); finish(false); }, 900); }
+  }
+}
+
+/* ════════ ПОДБОР КЛЮЧА: быки и коровы на слух ════════
+   Ключ — несколько разных цифр от 1 до 6. После каждой попытки: сколько
+   цифр на своём месте (высокие сигналы) и сколько есть, но не на месте
+   (низкие сигналы). */
+function bulls(len, cb, opts) {
+  opts = opts || {};
+  len = Math.max(3, Math.min(5, len || 3));
+  var pool = [1, 2, 3, 4, 5, 6], key = [];
+  for (var i = pool.length - 1; i > 0; i--) { var j = Math.floor(Math.random() * (i + 1)); var t = pool[i]; pool[i] = pool[j]; pool[j] = t; }
+  key = pool.slice(0, len);
+  var c = { type: "bulls", name: opts.title || "Подбор ключа", cb: cb, key: key, len: len, d: [], i: 0, tries: 0, limit: opts.limit || (len === 3 ? 9 : len === 4 ? 11 : 13), hist: [] };
+  for (var k = 0; k < len; k++) c.d.push(k + 1);
+  cur = c;
+  say((opts.title || "Подбор ключа") + ". Ключ — " + len + " разные цифры от одной до шести. После каждой попытки высокий сигнал — цифра на своём месте, низкий — цифра есть, но не там. " +
+    LAB.K("Свайп вверх и вниз — цифра, влево и вправо — позиция, двойное касание — проверить, касание — что набрано и прошлые попытки.", "Стрелки вверх и вниз — цифра, влево и вправо — позиция, цифры от 1 до 6 — набрать сразу, Enter — проверить, пробел — что набрано, Escape — отойти.") + " Попыток: " + c.limit + ".", { interrupt: true });
+}
+function bullsGesture(g) {
+  var c = cur;
+  if (g.kind === "swipe" && g.n === 1) {
+    if (g.dir === "U" || g.dir === "D") { c.d[c.i] = ((c.d[c.i] - 1 + (g.dir === "U" ? 1 : 5)) % 6) + 1; tone(500 + c.d[c.i] * 80, 0.05, 0, "square", 0.05); say(String(c.d[c.i])); }
+    else { c.i = (c.i + (g.dir === "R" ? 1 : c.len - 1)) % c.len; tone(900, 0.04, 0, "sine", 0.08); say("Позиция " + (c.i + 1) + ": " + c.d[c.i]); }
+    return;
+  }
+  if (g.kind === "digit") { if (g.d >= 1 && g.d <= 6) { c.d[c.i] = g.d; tone(500 + g.d * 80, 0.05, 0, "square", 0.05); if (c.i < c.len - 1) { c.i++; say(String(g.d)); } else say(g.d + ". Набрано: " + c.d.join(" ") + "."); } return; }
+  if (g.kind === "tap" && g.n === 1) { say("Набрано: " + c.d.join(" ") + ". " + (c.hist.length ? "Было: " + c.hist.slice(-4).join("; ") + "." : "Попыток ещё не было.") + " Осталось попыток: " + (c.limit - c.tries) + "."); return; }
+  if (g.kind === "dtap" && g.n === 1) {
+    var uniq = c.d.filter(function (v, i, a) { return a.indexOf(v) === i; });
+    if (uniq.length < c.len) { say("Цифры ключа не повторяются. Наберите разные."); return; }
+    c.tries++;
+    var exact = 0, near = 0;
+    c.d.forEach(function (v, i) { if (c.key[i] === v) exact++; else if (c.key.indexOf(v) >= 0) near++; });
+    for (var a = 0; a < exact; a++) tone(1320, 0.12, 0, "sine", 0.14, a * 0.18);
+    for (var b = 0; b < near; b++) tone(330, 0.14, 0, "triangle", 0.14, (exact + b) * 0.18);
+    if (!exact && !near) tone(150, 0.25, 0, "sawtooth", 0.08);
+    c.hist.push(c.d.join(" ") + ": на месте " + exact + ", не на месте " + near);
+    if (exact === c.len) { setTimeout(function () { say("Ключ подобран: " + c.d.join(" ") + "."); finish(true); }, 300 + c.len * 180); return; }
+    var left = c.limit - c.tries;
+    setTimeout(function () {
+      if (cur !== c) return;
+      if (left <= 0) { say("На месте " + exact + ", не на месте " + near + ". Попытки кончились: ключ сменился."); finish(false); return; }
+      say("На месте " + exact + ", не на месте " + near + ". Осталось попыток: " + left + ".");
+    }, 250 + (exact + near) * 180);
+  }
+}
+
+/* ════════ НАСТРОЙКА ЧАСТОТ: расставить тона по высоте ════════
+   Тона перепутаны. Свайп вверх меняет тон под курсором местами с соседом
+   справа. Расставьте от низкого слева к высокому справа. */
+function sortTones(n, cb, opts) {
+  opts = opts || {};
+  n = Math.max(3, Math.min(7, n || 4));
+  var base = [220, 262, 311, 370, 440, 523, 622].slice(0, n), arr = base.slice();
+  do { for (var i = arr.length - 1; i > 0; i--) { var j = Math.floor(Math.random() * (i + 1)); var t = arr[i]; arr[i] = arr[j]; arr[j] = t; } } while (arr.every(function (v, k) { return v === base[k]; }));
+  var c = { type: "sort", name: opts.title || "Настройка частот", cb: cb, arr: arr, n: n, pos: 0, swaps: 0, limit: opts.limit || n * 3 };
+  cur = c;
+  say((opts.title || "Настройка частот") + ". Тонов: " + n + ", они перепутаны. Расставьте их от низкого слева к высокому справа. " +
+    LAB.K("Свайп влево и вправо — выбрать тон, свайп вверх — поменять его местами с соседом справа, касание — проиграть все, двойное касание — проверить.", "Стрелки влево и вправо — выбрать тон, стрелка вверх — поменять с соседом справа, пробел — проиграть все, Enter — проверить, Escape — отойти.") + " Перестановок не больше " + c.limit + ".", { interrupt: true });
+  waitSpeech(function () { if (cur === c) sortPlay(c); });
+}
+function sortPlay(c) { c.arr.forEach(function (f, i) { tone(f, 0.3, c.n > 1 ? -0.8 + 1.6 * i / (c.n - 1) : 0, "triangle", 0.15, i * 0.38); }); }
+function sortGesture(g) {
+  var c = cur;
+  if (g.kind === "swipe" && g.n === 1) {
+    if (g.dir === "L" || g.dir === "R") { c.pos = Math.max(0, Math.min(c.n - 1, c.pos + (g.dir === "R" ? 1 : -1))); tone(c.arr[c.pos], 0.3, 0, "triangle", 0.16); sayq("Тон " + (c.pos + 1)); return; }
+    if (g.dir === "U" || g.dir === "D") {
+      if (c.pos >= c.n - 1) { say("Справа соседа нет. Выберите тон левее."); return; }
+      var t = c.arr[c.pos]; c.arr[c.pos] = c.arr[c.pos + 1]; c.arr[c.pos + 1] = t; c.swaps++;
+      tone(c.arr[c.pos], 0.2, -0.3, "triangle", 0.15); tone(c.arr[c.pos + 1], 0.2, 0.3, "triangle", 0.15, 0.22);
+      if (c.swaps >= c.limit && !sorted(c)) setTimeout(function () { say("Перестановки кончились: настройка сбилась."); finish(false); }, 700);
+      return;
+    }
+  }
+  if (g.kind === "tap" && g.n === 1) { sortPlay(c); return; }
+  if (g.kind === "dtap" && g.n === 1) {
+    if (sorted(c)) { sortPlay(c); setTimeout(function () { say("Частоты выстроены."); finish(true); }, c.n * 380 + 200); }
+    else { tone(160, 0.25, 0, "sawtooth", 0.08); say("Ещё не по порядку. Послушайте все тона: касание."); }
+  }
+}
+function sorted(c) { for (var i = 1; i < c.n; i++) if (c.arr[i] < c.arr[i - 1]) return false; return true; }
+
+/* ════════ ЗВУКОВОЙ ЗАМОК: сыграть известную мелодию ════════
+   Мелодию игрок слышал на радиоприёмнике; «Эхо» может напомнить её раз. */
+function melody(seq, cb, opts) {
+  opts = opts || {};
+  var c = { type: "melody", name: opts.title || "Звуковой замок", cb: cb, seq: seq.split(""), pos: 0, replays: opts.replays == null ? 1 : opts.replays, busy: true, mirror: !!opts.mirror };
+  cur = c;
+  say((opts.title || "Звуковой замок") + ". Сыграйте мелодию: " + c.seq.length + " нот. " + (c.mirror ? "Замок зеркальный: левое и правое поменяны местами. " : "") +
+    LAB.K("Высокий — свайп вверх, низкий — вниз, слева — влево, справа — вправо. Касание — «Эхо» напомнит мелодию.", "Высокий — стрелка вверх, низкий — вниз, слева — влево, справа — вправо. Пробел — «Эхо» напомнит мелодию, Escape — отойти."), { interrupt: true });
+  waitSpeech(function () { if (cur === c) { c.busy = false; tone(1500, 0.06, 0, "sine", 0.1); } });
+}
+function melodyGesture(g) {
+  var c = cur;
+  if (g.kind === "tap" && g.n === 1) {
+    if (c.busy) return;
+    if (c.replays <= 0) { say("«Эхо» больше не напомнит. Вспоминайте."); return; }
+    c.replays--; c.busy = true; c.pos = 0;
+    c.seq.forEach(function (d, i) { playSig(d, 0.2 + i * 0.45); });
+    setTimeout(function () { if (cur === c) { c.busy = false; tone(1500, 0.06, 0, "sine", 0.1); } }, 300 + c.seq.length * 450);
+    return;
+  }
+  if (g.kind !== "swipe" || g.n !== 1 || c.busy) return;
+  var want = c.seq[c.pos];
+  if (c.mirror) want = want === "L" ? "R" : want === "R" ? "L" : want;
+  playSig(g.dir, 0);
+  if (g.dir !== want) { setTimeout(function () { say("Фальшь. Замок сбросил мелодию."); finish(false); }, 350); return; }
+  c.pos++;
+  if (c.pos >= c.seq.length) setTimeout(function () { finish(true); }, 300);
+}
+
 /* Подождать, пока «Эхо» договорит инструкцию (но не дольше 9 секунд). */
 function waitSpeech(fn) {
   var t0 = Date.now();
@@ -217,12 +384,29 @@ function gesture(g) {
   if (cur.type === "hack") hackGesture(g);
   else if (cur.type === "tune") tuneGesture(g);
   else if (cur.type === "code") codeGesture(g);
+  else if (cur.type === "relays") relaysGesture(g);
+  else if (cur.type === "bulls") bullsGesture(g);
+  else if (cur.type === "sort") sortGesture(g);
+  else if (cur.type === "melody") melodyGesture(g);
   return true;
 }
 
+/* Цепочка испытаний: каждое следующее — после удачи прошлого. */
+function chain(steps, cb) {
+  var i = 0;
+  var next = function (ok) {
+    if (!ok) { cb(false); return; }
+    if (i >= steps.length) { cb(true); return; }
+    var s = steps[i++];
+    if (i > 1) { LAB.UI.ok(); setTimeout(function () { s(next); }, 700); } else s(next);
+  };
+  next(true);
+}
+
 LAB.mini = {
-  hack: hack, tune: tune, rhythm: rhythm, code: code, gesture: gesture, cancel: cancel,
+  hack: hack, tune: tune, rhythm: rhythm, code: code, relays: relays, bulls: bulls, sortTones: sortTones, melody: melody, chain: chain, gesture: gesture, cancel: cancel,
   active: function () { return !!cur; },
+  _cur: function () { return cur; }, /* для проверок */
   raw: function () { return !!(cur && cur.raw); },
   name: function () { return cur ? cur.name : ""; }
 };

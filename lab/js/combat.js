@@ -56,7 +56,10 @@ function makeRuntime(def, st) {
     aff: def.aff || null, iq: Math.min(12, (def.iq || 0) + dk.iq), carry: def.carry || null, room: def.room,
     shieldMax: def.shieldMax ? Math.round(def.shieldMax * dk.hp) : 0,
     state: "idle", mv: 0, at: 0, hitT: 99, seenT: 99, lost: 0, aim: false, frozen: 0, adapt: {}, minesLeft: 3, summonT: 0, blinkT: 0,
-    lastKnown: null, ambush: false, calm: false, spawned: !!def.spawned
+    lastKnown: null, ambush: false, calm: false, spawned: !!def.spawned,
+    ally: !!def.ally, shots: def.shots || 0, corr: def.corr != null ? def.corr : null, patrol: !!def.patrol || (base.beh.indexOf("patrol") >= 0),
+    neutral: base.beh.indexOf("cleaner") >= 0, disguised: base.beh.indexOf("mimic") >= 0, bag: [], camT: 0, buildT: 0, built: 0, screamT: 0, phaseT: 0, phased: false,
+    burrowT: 0, burrowed: false, confused: 0, healT: 0, splitGen: def.splitGen || 0, from: def.from || null, task: def.task || null
   };
   f.hp = f.maxhp; f.shield = f.shieldMax;
   if (aff(f, "fast")) { f.spd = Math.max(1, f.spd - 1); f.acd = Math.max(1, f.acd - 1); }
@@ -68,6 +71,10 @@ function makeRuntime(def, st) {
     if (st.shield != null) f.shield = st.shield;
     if (st.minesLeft != null) f.minesLeft = st.minesLeft;
     if (st.adapt) f.adapt = st.adapt;
+    if (st.bag) f.bag = st.bag;
+    if (st.neutral === false) f.neutral = false;
+    if (st.disguised === false) f.disguised = false;
+    if (st.shots != null) f.shots = st.shots;
   }
   return f;
 }
@@ -89,8 +96,11 @@ function loadFoes() {
     foes.push(makeRuntime(def, st));
   });
   foes.forEach(function (f) {
-    if (fs.robots && f.kind === "mech") f.calm = true;
-    if (!fs.turrets && has(f, "turret")) f.calm = true;
+    if (fs.robots && f.kind === "mech" && !f.ally) f.calm = true;
+    if (has(f, "turret") && !f.shots) {
+      if (fs.turretMode === "off" || (!fs.turretMode && fs.turrets === false)) f.calm = true;
+      if (fs.turretMode === "ours") { f.ally = true; f.calm = false; }
+    }
   });
   hpMark = Math.round(100 * G().hp / G().hpMax);
 }
@@ -99,7 +109,7 @@ function syncFoes() {
   if (!fs) return;
   if (!fs.foes) fs.foes = {};
   foes.forEach(function (f) {
-    fs.foes[f.id] = { hp: f.hp, x: f.x, y: f.y, shield: f.shield, minesLeft: f.minesLeft, adapt: f.adapt };
+    fs.foes[f.id] = { hp: f.hp, x: f.x, y: f.y, shield: f.shield, minesLeft: f.minesLeft, adapt: f.adapt, bag: f.bag && f.bag.length ? f.bag : undefined, neutral: f.neutral ? undefined : false, disguised: f.disguised ? undefined : false, shots: f.shots || undefined };
   });
 }
 
@@ -111,13 +121,20 @@ function relayNear(f) {
   for (var i = 0; i < foes.length; i++) { var r = foes[i]; if (!r.dead && !r.calm && r !== f && has(r, "relay") && cheb(r, f) <= 6) return true; }
   return false;
 }
-function iqOf(f) { return f.iq + (relayNear(f) ? 2 : 0); }
+/* Начальник рядом: роботы умнее и злее. */
+function commanderNear(f) {
+  if (f.kind !== "mech") return false;
+  for (var i = 0; i < foes.length; i++) { var c = foes[i]; if (c !== f && !c.dead && !c.calm && !c.ally && has(c, "commander") && cheb(c, f) <= 5) return true; }
+  return false;
+}
+function iqOf(f) { return Math.max(0, f.iq + (relayNear(f) ? 2 : 0) + (commanderNear(f) ? 2 : 0) - (f.confused > 0 ? 3 : 0)); }
 function detOf(f) {
   var d = f.det;
   if (gm().armorSpecial("stealth")) d -= 3;
   if (G().faction === "free" && f.kind === "mech") d -= 2;
   if (G().event === "dark" && f.kind === "bio") d += 1;
   if (aff(f, "sniper")) d += 2;
+  if (has(f, "turret") && CUR().fs.turretAlert) d += 2;
   return Math.max(2, d);
 }
 function sees(f) {
@@ -175,7 +192,7 @@ function stepToward(f, tx, ty, opts) {
   }, {
     passDoor: function (d) { return foeOpens(f, d); },
     block: function (x, y) { return occupied(x, y, f) || (x === G().x && y === G().y); },
-    maxLen: 900
+    maxLen: 6000
   });
   if (!path || !path.length) return false;
   var nx = path[0][0], ny = path[0][1];
@@ -269,6 +286,7 @@ function tick() {
     if (G().dead) return;
   }
   shellsTick();
+  if (LAB.oko) LAB.safe(LAB.oko.tick);
   if (LAB.game.doorAutoClose) LAB.safe(LAB.game.doorAutoClose); /* двери закрываются за прошедшими */
   if (spotted.length) announceSpotted(spotted);
   G().noise = Math.max(0, G().noise - 2);
@@ -276,10 +294,146 @@ function tick() {
   if (tickN % 10 === 0) syncFoes();
 }
 
+/* ── особые машины и твари ── */
+function allyTick(f) {
+  f.at++;
+  if (f.at < f.acd) return;
+  var best = null, bd = 99;
+  foes.forEach(function (o) {
+    if (o === f || !hostile(o) || o.burrowed || o.phased) return;
+    if (has(f, "turret") && !(o.x === f.x || o.y === f.y)) return;
+    var d = dist(o, f);
+    if (d > f.rng || d >= bd) return;
+    if (!LAB.los(CUR().fl, CUR().fs, f.x, f.y, o.x, o.y)) return;
+    best = o; bd = d;
+  });
+  if (!best) return;
+  f.at = 0;
+  A("foeSound", f, "shoot");
+  damageFoe(best, f.dmg * (f.shots ? 1.4 : 1), f.adt === "energy" ? "energy" : "kinetic", { quiet: true, ally: true });
+  if (f.shots) {
+    f.shots--;
+    if (f.shots <= 0) { f.dead = true; CUR().fs.foes[f.id] = { dead: true }; A("play", "craft_off"); sayq("Переносная турель разрядилась и сложилась."); }
+  }
+}
+function cameraTick(f) {
+  if (f.camT > 0) f.camT--;
+  if (G().st.jam > 0 || gm().armorSpecial("okoghost") || CUR().fs.okoBlind) return;
+  if (sees(f)) {
+    if (f.camT <= 0) {
+      f.camT = 40;
+      A("foeSound", f, "alert");
+      sayOnce("cam", "Камера ОКО " + gm().relDir(f.x, f.y) + " заметила вас!", 5000);
+      if (LAB.oko) LAB.oko.event("camera");
+    }
+  } else if (Math.random() < 0.015) A("foeSound", f, "idle");
+}
+function unmask(f) {
+  f.disguised = false; f.state = "hunt"; f.lastKnown = heroPos(); f.at = f.acd;
+  A("foeSound", f, "alert");
+  say("Ящик рядом раскрылся — это " + f.name.split(",")[0].toLowerCase() + "!");
+}
+/* Уборщик: собирает вещи с пола, доложит ОКО, если увидит героя. */
+function cleanerTick(f) {
+  var fs = CUR().fs, here = gm().floorItems().filter(function (it) { return it.x === f.x && it.y === f.y && it.kind !== "note" && it.kind !== "sample"; });
+  here.forEach(function (it) { fs.taken[it.id] = 1; var c = JSON.parse(JSON.stringify(it)); delete c.x; delete c.y; f.bag.push(c); });
+  if (here.length) A("foeSound", f, "idle");
+  if (!f.reported && sees(f) && G().st.jam <= 0 && !gm().armorSpecial("okoghost")) {
+    f.reported = true;
+    A("foeSound", f, "radio");
+    sayOnce("cl" + f.id, f.name.split(",")[0] + " " + gm().relDir(f.x, f.y) + " заметил вас и докладывает ОКО.", 8000);
+    if (LAB.oko) LAB.oko.event("cleaner");
+  }
+  f.mv++;
+  if (f.mv < f.spd + 1) return;
+  f.mv = 0;
+  var near = gm().floorItems().filter(function (it) { return it.kind !== "note" && it.kind !== "sample" && Math.abs(it.x - f.x) + Math.abs(it.y - f.y) <= 6 && LAB.los(CUR().fl, CUR().fs, f.x, f.y, it.x, it.y); })[0];
+  if (near) stepToward(f, near.x, near.y);
+  else wander(f);
+}
+/* Патруль: ходит из конца в конец своего коридора. */
+function patrolStep(f) {
+  var fl = CUR().fl;
+  if (f.corr == null) {
+    var best = null, bd = 1e9;
+    (fl.corrs || []).forEach(function (c) { var cx = (c.x0 + c.x1) >> 1, cy = (c.y0 + c.y1) >> 1, d = Math.abs(cx - f.x) + Math.abs(cy - f.y); if (d < bd) { bd = d; best = c; } });
+    if (!best) { wander(f); return; }
+    f.corr = best.id;
+  }
+  var c = fl.corrs[f.corr];
+  if (!c) { wander(f); return; }
+  if (f.pdir == null) f.pdir = Math.random() < 0.5 ? 1 : -1;
+  var tx, ty;
+  if (c.axis === "h") { tx = f.pdir > 0 ? c.x1 : c.x0; ty = Math.max(c.y0, Math.min(c.y1, f.y)); }
+  else { ty = f.pdir > 0 ? c.y1 : c.y0; tx = Math.max(c.x0, Math.min(c.x1, f.x)); }
+  if (f.x === tx && f.y === ty) { f.pdir = -f.pdir; return; }
+  if (!stepToward(f, tx, ty)) f.pdir = -f.pdir;
+}
+/* Ремонтник ОКО идёт к отключённой турели и включает сеть заново. */
+function repairTask(f, canMove) {
+  var t = null, bd = 1e9;
+  foes.forEach(function (o) { if (isNetTurret(o) && o.calm) { var d = dist(o, f); if (d < bd) { bd = d; t = o; } } });
+  if (!t || CUR().fs.turretMode !== "off") { f.task = null; return false; }
+  if (cheb(f, t) <= 1) {
+    f.task = null;
+    A("foeSound", f, "repair");
+    turretsHostile();
+    if (LAB.oko) LAB.oko.speak("counter", true);
+    return true;
+  }
+  if (canMove) { f.mv = 0; stepToward(f, t.x, t.y, { adjacent: true }); }
+  return true;
+}
+function scream(f) {
+  A("foeSound", f, "alert");
+  if (gm().armorSpecial("sonicguard")) { sayOnce("scrG", "Визг — защита слуха гасит его.", 6000); return; }
+  G().st.deaf = 6;
+  A("deafen", 3000);
+  sayOnce("scr", "Визг! Слух «Эхо» заложило.", 5000);
+  hurtPlayer(Math.max(1, Math.round(f.dmg * 0.4)), "sonic", f, { quiet: true });
+}
+/* Разгон по прямой: до трёх клеток за такт, удар с разгона. */
+function chargeAt(f) {
+  var hp = heroPos(), v = f.x === hp.x ? [0, hp.y > f.y ? 1 : -1] : [hp.x > f.x ? 1 : -1, 0];
+  A("foeSound", f, "attack");
+  sayOnce("chg" + f.id, f.name.split(",")[0] + " разгоняется " + LAB.DIRFROM[v[0] > 0 ? "W" : v[0] < 0 ? "E" : v[1] > 0 ? "N" : "S"] + "!", 5000);
+  for (var i = 0; i < 3; i++) {
+    var nx = f.x + v[0], ny = f.y + v[1];
+    if (!canStand(f, nx, ny)) break;
+    moveFoe(f, nx, ny);
+  }
+  if (dist(f, hp) <= 1) { f.at = 0; f.chargeHit = true; attack(f, true); f.chargeHit = false; }
+}
+
 function foeTick(f, spotted) {
   f.hitT++; f.seenT++;
   if (f.frozen > 0) { f.frozen--; return; }
+  if (f.ally) { allyTick(f); return; }
   if (f.calm) { if (Math.random() < 0.02) A("foeSound", f, "idle"); return; }
+  if (has(f, "camera")) { cameraTick(f); return; }
+  if (f.disguised) { if (dist(f, heroPos()) <= 1) unmask(f); return; }
+  if (f.neutral) { cleanerTick(f); return; }
+  if (f.confused > 0) { f.confused--; if (Math.random() < 0.4 && !has(f, "stationary")) wander(f); return; }
+  if (f.lure > 0) f.lure--;
+  /* зарылся под настил — выныривает рядом с героем */
+  if (f.burrowed) {
+    f.burrowT++;
+    if (f.burrowT >= 3) {
+      var cb = freeCellNear(G().x, G().y, f);
+      if (cb) { f.x = cb[0]; f.y = cb[1]; f.room = CUR().fl.room[idx(cb[0], cb[1])]; }
+      f.burrowed = false; f.burrowT = 0; f.at = f.acd;
+      A("foeSound", f, "blink_in");
+      sayOnce("brw" + f.id, f.name.split(",")[0] + " вынырнул " + gm().relDir(f.x, f.y) + "!", 4000);
+    }
+    return;
+  }
+  /* фаза: на пару тактов неуязвим */
+  if (has(f, "phaseshift") && f.state === "hunt") {
+    f.phaseT++;
+    if (!f.phased && f.phaseT >= 6) { f.phased = true; f.phaseT = 0; A("foeSound", f, "blink_out"); }
+    else if (f.phased && f.phaseT >= 2) { f.phased = false; f.phaseT = 0; A("foeSound", f, "blink_in"); }
+  }
+  if (f.task === "repair") { f.mv++; if (repairTask(f, f.mv >= f.spd)) return; }
   var iq = iqOf(f);
   /* починка и щит */
   if ((has(f, "regen") || aff(f, "repair")) && f.hitT > 2 && f.hp < f.maxhp) f.hp = Math.min(f.maxhp, f.hp + Math.max(1, Math.round(f.maxhp * (f.state === "flee" ? 0.06 : 0.03))));
@@ -325,7 +479,30 @@ function foeTick(f, spotted) {
     return;
   }
 
+  if (has(f, "healer") && f.state !== "idle") {
+    f.healT++;
+    if (f.healT >= 3) {
+      f.healT = 0;
+      var healed = 0;
+      foes.forEach(function (o) { if (o !== f && hostile(o) && o.kind === f.kind && cheb(o, f) <= 2 && o.hp < o.maxhp) { o.hp = Math.min(o.maxhp, o.hp + Math.round(o.maxhp * 0.06)); healed++; } });
+      if (healed) A("foeSound", f, "repair");
+    }
+  }
+  if (has(f, "screamer") && f.state === "hunt" && d <= 6) { f.screamT++; if (f.screamT >= 10) { f.screamT = 0; scream(f); return; } }
+  if (has(f, "builder") && f.state === "hunt" && f.built < 2) {
+    f.buildT++;
+    if (f.buildT >= 10) {
+      f.buildT = 0;
+      var cbd = freeCellNear(f.x, f.y, f);
+      var tt = cbd && LAB.FOES.miniturret ? spawnFoe("miniturret", cbd[0], cbd[1], { from: f.id }) : null;
+      if (tt) { f.built++; tt.state = "hunt"; tt.lastKnown = heroPos(); A("foeSound", f, "summon"); sayOnce("bld" + f.id, f.name.split(",")[0] + " ставит турель " + gm().relDir(tt.x, tt.y) + "!", 8000); }
+    }
+  }
+  if (has(f, "burrow") && f.state === "hunt" && d >= 3) { f.burrowT++; if (f.burrowT >= 8) { f.burrowT = 0; f.burrowed = true; A("foeSound", f, "blink_out"); sayOnce("brd" + f.id, f.name.split(",")[0] + " ушёл под настил.", 6000); return; } }
+  if (has(f, "charge") && f.state === "hunt" && canMove && (f.x === G().x || f.y === G().y) && d >= 2 && d <= 5 && losTo(f)) { f.mv = 0; chargeAt(f); return; }
+
   if (f.state === "idle") {
+    if (f.patrol && canMove && !has(f, "stationary")) { f.mv = 0; patrolStep(f); if (Math.random() < 0.02) A("foeSound", f, "idle"); return; }
     if (canMove && !has(f, "ambush") && Math.random() < 0.15) { f.mv = 0; wander(f); }
     if (Math.random() < 0.03 && !aff(f, "cloak")) A("foeSound", f, "idle");
     return;
@@ -407,12 +584,14 @@ function relayCall(f) {
   if (spawned >= 3 || Math.random() < 0.6) return;
   var c = freeCellNear(f.x, f.y, f);
   if (!c) return;
-  var type = G().L >= 9 ? "micro" : "drone";
+  var lvF = LAB.LEVELS[G().L].foes.filter(function (id) { var b = LAB.FOES[id]; return b && b.kind === "mech" && (b.beh.indexOf("swarm") >= 0 || /drone|micro/.test(b.snd)); });
+  var type = lvF.length ? lvF[Math.floor(Math.random() * lvF.length)] : (G().L >= 9 ? "micro" : "drone");
   var sp = spawnFoe(type, c[0], c[1], { from: f.id });
   if (sp) { A("foeSound", f, "summon"); sp.state = "hunt"; sp.lastKnown = heroPos(); }
 }
 function summon(f) {
-  var minion = { b_brood: "roach", b_root: "vine" }[f.boss] || "rat";
+  var bd = f.boss && LAB.BOSSES[f.boss];
+  var minion = (bd && bd.minion && LAB.FOES[bd.minion]) ? bd.minion : ({ b_brood: "roach", b_root: "vine" }[f.boss] || "rat");
   var n = foes.filter(function (o) { return !o.dead && o.spawned && o.from === f.id; }).length;
   if (n >= 4) return;
   var c = freeCellNear(f.x, f.y, f);
@@ -426,6 +605,7 @@ function spawnFoe(type, x, y, extra) {
   var lvl = LAB.foeLevel(L, F), sc = LAB.scaleFoe(base, lvl);
   var fs = CUR().fs;
   var def = { id: "s" + (fs.sseq = (fs.sseq || 0) + 1), type: type, x: x, y: y, lvl: lvl, hp: sc.hp, maxhp: sc.hp, dmg: sc.dmg, arm: sc.arm, room: CUR().fl.room[idx(x, y)], iq: LAB.foeIQ(base.kind, d0, 0), spawned: true };
+  if (fs.spawned.length > 60) fs.spawned = fs.spawned.filter(function (sd) { return !(fs.foes[sd.id] && fs.foes[sd.id].dead); });
   if (extra) for (var k in extra) def[k] = extra[k];
   fs.spawned.push(def);
   var f = makeRuntime(def, null);
@@ -453,14 +633,21 @@ function attack(f, seen) {
   if (Math.random() > Math.max(0.2, Math.min(0.95, acc))) { A("foeMiss", f, ranged); return; }
   var dmg = f.dmg;
   if (has(f, "splash")) dmg = Math.round(dmg * 1.1);
-  hurtPlayer(dmg, f.adt, f);
+  if (commanderNear(f)) dmg = Math.round(dmg * 1.2);
+  if (f.chargeHit) dmg = Math.round(dmg * 1.5);
+  if (gm().armorSpecial("phaseveil") && Math.random() < 0.15) { A("play", "phase_out"); sayOnce("pveil", "Удар прошёл сквозь вас."); return; }
+  var fin = hurtPlayer(dmg, f.adt, f);
   if (G().dead) return;
+  if (has(f, "leech") && fin > 0) f.hp = Math.min(f.maxhp, f.hp + Math.round(fin * 0.5));
+  if (has(f, "drain") && g.en > 0) { var dr = 6 + Math.floor(g.L / 3); g.en = Math.max(0, g.en - dr); sayOnce("drain", "Энергия имплантов утекает: минус " + dr + "."); }
+  if (!ranged && gm().armorSpecial("thorns") && !f.dead) damageFoe(f, Math.max(1, Math.round(dmg * 0.3)), "kinetic", { quiet: true });
   if (has(f, "poison") && Math.random() < 0.5) poison(6 + Math.floor(G().L / 2));
   if ((has(f, "slow") || f.adt === "therm" && f.kind === "bio") && Math.random() < 0.5 && !gm().armorSpecial("frost")) { if (!g.st.slow) sayq("Холод сковывает: вы замедлены."); g.st.slow = 6; }
   if (has(f, "web") && ranged && Math.random() < 0.4) { g.st.web = 2; A("play", "web_hit"); sayq(LAB.K("Паутина! Свайп — рвать её.", "Паутина! Шаг в любую сторону — рвать её.")); }
 }
 function poison(t) {
   var g = G();
+  if (g.st.antitox > 0) { sayOnce("atox", "Фильтр не пропустил яд."); return; }
   if (gm().armorSpecial("antitox")) t = Math.ceil(t / 2);
   if (!g.st.poison) { sayq("Вы отравлены. Антидот или большая аптечка снимут яд."); A("play", "poisoned"); }
   g.st.poison = Math.max(g.st.poison, t);
@@ -533,6 +720,8 @@ function statusTick(onlyTimers) {
     if (!st.poison) sayq("Яд выветрился.");
   }
   if (st.slow > 0) st.slow--;
+  if (st.deaf > 0) st.deaf--;
+  if (st.antitox > 0) { st.antitox--; if (!st.antitox) sayq("Фильтр противогаза отработал."); }
   if (st.haste > 0) { st.haste--; if (!st.haste) sayq("Ускорение закончилось."); }
   if (st.cloak > 0) { st.cloak--; if (!st.cloak) { sayq("Маскировка спала."); A("play", "cloak_off"); } }
   if (st.shieldT > 0) { st.shieldT--; if (!st.shieldT && !gm().armorSpecial("regshield")) st.shield = 0; }
@@ -553,7 +742,7 @@ function shotGap(w) { var cd = w.cd; if (G().st.haste > 0) cd *= 0.6; return cd;
 function targetsIn(dir, w, exact) {
   var v = DIRV[dir], out = [];
   foes.forEach(function (f) {
-    if (f.dead || f.calm) return;
+    if (f.dead || f.calm || f.ally || f.burrowed) return;
     var dx = f.x - G().x, dy = f.y - G().y;
     var along = dx * v[0] + dy * v[1], perp = Math.abs(dx * v[1] - dy * v[0]);
     if (along < 1 || along > w.rng) return;
@@ -629,7 +818,7 @@ function fire(dir, burst) {
   UIx("refresh");
   return true;
 }
-function foeAtCell(x, y) { for (var i = 0; i < foes.length; i++) if (!foes[i].dead && foes[i].x === x && foes[i].y === y) return foes[i]; return null; }
+function foeAtCell(x, y) { for (var i = 0; i < foes.length; i++) if (!foes[i].dead && !foes[i].burrowed && foes[i].x === x && foes[i].y === y) return foes[i]; return null; }
 function shoot(w, f, perp, along, burst, melee) {
   var g = G();
   var acc = (melee ? 0.92 : 0.9) - 0.13 * perp - 0.012 * along + (g.agi - 10) * 0.01 + (w.spread ? 0.08 * perp : 0) - (burst ? 0.1 : 0);
@@ -653,12 +842,18 @@ function shoot(w, f, perp, along, burst, melee) {
   if (w.area) foes.forEach(function (o) { if (o !== f && !o.dead && !o.calm && cheb(o, f) <= 1) damageFoe(o, dmg * 0.6, dt, { noarmor: true, quiet: true }); });
   return 1;
 }
-function wake(f) { if (f.state !== "hunt" && !f.calm) { f.state = "hunt"; f.lastKnown = heroPos(); } }
+function wake(f) {
+  if (f.ally) return;
+  if (f.disguised) { unmask(f); return; }
+  if (f.neutral) { f.neutral = false; A("foeSound", f, "alert"); sayOnce("clh" + f.id, f.name.split(",")[0] + " больше не мирный!", 5000); if (LAB.oko && !f.reported) { f.reported = true; LAB.oko.event("cleaner"); } }
+  if (f.state !== "hunt" && !f.calm) { f.state = "hunt"; f.lastKnown = heroPos(); }
+}
 
 /* Урон врагу. */
 function damageFoe(f, raw, dt, o) {
   o = o || {};
-  if (f.dead) return false;
+  if (f.dead || f.burrowed) return false;
+  if (f.phased) { A("foeSound", f, "blink_out"); if (!o.quiet) sayOnce("ph" + f.id, f.name.split(",")[0] + " в фазе: удар проходит сквозь.", 4000); return false; }
   var vs = (LAB.DMG_VS[f.kind] || {})[dt]; if (vs == null) vs = 1;
   var res = f.base.res && f.base.res[dt] != null ? f.base.res[dt] : 1;
   if (aff(f, "hardened") && (dt === "emp" || dt === "ion")) vs *= dt === "emp" ? 0 : 0.5;
@@ -681,6 +876,7 @@ function damageFoe(f, raw, dt, o) {
     if (before < 0.36 && f.adapt[dt] >= 0.36 && !o.quiet) sayOnce("adapt" + f.id, f.name.split(",")[0] + " привыкает к этому оружию. Смените оружие.", 6000);
   }
   if (o.freeze) f.frozen = o.freeze;
+  if (has(f, "reflect") && !o.ally && dmg > 0 && Math.random() < 0.5) { var back = Math.max(1, Math.round(dmg * 0.2)); A("play", "deflect"); sayOnce("rfl" + f.id, f.name.split(",")[0] + " отражает часть удара!", 6000); hurtPlayer(back, "field", f, { quiet: true }); }
   f.hp -= dmg; f.hitT = 0;
   wake(f);
   if (f.hp <= 0) { kill(f); return true; }
@@ -704,19 +900,29 @@ function kill(f, quiet) {
   var xp = Math.round((f.base.xp || 10) * (1 + 0.1 * (f.lvl - 1)) * (f.aff ? 1 + 0.25 * f.aff.length : 1) * (f.boss ? 6 : 1));
   if (f.spawned) xp = Math.round(xp * 0.4);
   /* добыча падает на клетку врага */
-  var drops = (f.carry || []).slice();
+  var drops = (f.carry || []).slice().concat(f.bag || []);
+  if (LAB.oko && f.kind === "mech" && !f.ally) LAB.oko.event("kill");
+  if (LAB.oko && f.boss) LAB.oko.event("boss");
+  if (has(f, "commander")) {
+    var lost = 0;
+    foes.forEach(function (o) { if (o !== f && hostile(o) && o.kind === "mech" && cheb(o, f) <= 8) { o.confused = 10; lost++; } });
+    if (lost && !quiet) sayq("Роботы рядом потеряли начальника и растерялись.");
+  }
   var r = Math.random, L = g.L, dk = diff().loot;
   if (!f.spawned) {
     if (f.kind === "mech") {
-      if (r() < 0.6 * dk) drops.push({ kind: "item", item: LAB.partAt({ pick: function (a) { return a[Math.floor(r() * a.length)]; } }, L), n: 1 });
+      if (r() < 0.6 * dk) drops.push({ kind: "item", item: LAB.partAt({ pick: function (a) { return a[Math.floor(r() * a.length)]; }, chance: function (p) { return r() < p; } }, L), n: 1 });
       if (r() < 0.25 * dk) drops.push({ kind: "ammo", ammo: L >= 3 && r() < 0.3 ? "magnetron" : "energy", n: 1 });
       if (f.aff && r() < 0.35) drops.push({ kind: "item", item: L >= 5 && r() < 0.4 ? "supercond" : L >= 3 ? "ceramic" : "chip", n: 1 });
+    } else if (f.kind === "anom") {
+      if (r() < 0.45 * dk) drops.push({ kind: "item", item: LAB.partAt({ pick: function (a) { return a[Math.floor(r() * a.length)]; }, chance: function (p) { return r() < p; } }, L), n: 1 });
+      if (r() < 0.12 * dk) drops.push({ kind: "item", item: "energy_d", n: 1 });
     } else {
       if (r() < 0.35 * dk) drops.push({ kind: "item", item: r() < 0.6 ? "gel" : "reagent", n: 1 });
       if (r() < 0.12 * dk) drops.push({ kind: "item", item: "medkit_s", n: 1 });
       if (r() < 0.15 * dk) drops.push({ kind: "ammo", ammo: "energy", n: 1 }); /* батарея из кармана бывшего сотрудника */
     }
-    if (r() < 0.3) drops.push({ kind: "credits", n: Math.round((4 + r() * 12) * (1 + LAB.depth(L, g.F) / 25)) });
+    if (r() < 0.3) drops.push({ kind: "credits", n: LAB.credits(4 + r() * 12, L, g.F) });
   }
   if (drops.length) {
     var cx = f.x, cy = f.y;
@@ -724,8 +930,17 @@ function kill(f, quiet) {
     drops.forEach(function (it) { it.id = "d" + (fs.dseq = (fs.dseq || 0) + 1); it.x = cx; it.y = cy; fs.drops.push(it); });
     A("dropLoot", cx, cy);
   }
+  if (has(f, "split") && !f.splitGen && !quiet) {
+    for (var si = 0; si < 2; si++) {
+      var sc = freeCellNear(f.x, f.y, null);
+      if (!sc) break;
+      var half = spawnFoe(f.type, sc[0], sc[1], { splitGen: 1, from: f.id });
+      if (half) { half.hp = half.maxhp = Math.max(4, Math.round(half.maxhp * 0.45)); half.state = "hunt"; half.lastKnown = heroPos(); }
+    }
+    sayq(f.name.split(",")[0] + " распадается надвое!");
+  }
   if (!quiet) {
-    var verb = f.kind === "mech" ? (f.g === "f" ? "уничтожена" : "уничтожен") : (f.g === "f" ? "убита" : "убит");
+    var verb = f.kind === "mech" ? (f.g === "f" ? "уничтожена" : "уничтожен") : f.kind === "anom" ? (f.g === "f" ? "развеяна" : "развеян") : (f.g === "f" ? "убита" : "убит");
     sayq(f.name.split(",")[0] + " " + verb + "." + (drops.length ? " Что-то упало." : ""));
   }
   if (f.boss) {
@@ -765,15 +980,29 @@ function startFire(dir) {
 function stopFire() { if (hold) { clearTimeout(hold.t); hold = null; } }
 
 /* ════════ ПРОЧЕЕ ════════ */
+function hostile(f) { return !f.dead && !f.calm && !f.ally && !f.neutral && !f.disguised; }
 function danger() {
-  return foes.some(function (f) { return !f.dead && !f.calm && f.state === "hunt" && dist(f, heroPos()) <= 9; });
+  return foes.some(function (f) { return hostile(f) && !has(f, "camera") && f.state === "hunt" && dist(f, heroPos()) <= 9; });
 }
-function hunted() {
-  return foes.some(function (f) { return !f.dead && !f.calm && f.state === "hunt" && dist(f, heroPos()) <= 6; });
+/* Кто гонится вплотную: подвижный враг, которому до героя по настоящему
+   пути (с дверями, которые он умеет открывать) не больше четырёх шагов.
+   Турели, камеры и враги за стеной без прохода — не в счёт. */
+function chaser() {
+  var hp = heroPos(), fl = CUR().fl, fs = CUR().fs, best = null;
+  foes.forEach(function (f) {
+    if (best || !hostile(f) || f.burrowed || f.state !== "hunt" || has(f, "stationary") || f.frozen > 0) return;
+    var d = dist(f, hp);
+    if (d > 5) return;
+    if (d <= 1) { best = f; return; }
+    var p = LAB.bfs(fl, fs, f.x, f.y, function (x, y) { return Math.abs(x - hp.x) + Math.abs(y - hp.y) <= 1; }, { passDoor: function (dd) { return foeOpens(f, dd); }, maxDist: 4 });
+    if (p && p.length <= 4) best = f;
+  });
+  return best;
 }
+function hunted() { return !!chaser(); }
 function visibleFoes(r) {
   return foes.filter(function (f) {
-    if (f.dead) return false;
+    if (f.dead || f.disguised || f.burrowed) return false;
     var d = dist(f, heroPos());
     if (d > r) return false;
     if (aff(f, "cloak") && d > 3) return false;
@@ -785,11 +1014,88 @@ function nearestFoe(r) {
   v.sort(function (a, b) { return dist(a, heroPos()) - dist(b, heroPos()); });
   return v[0] || null;
 }
-function aliveCount() { return foes.filter(function (f) { return !f.dead && !f.calm; }).length; }
+function aliveCount() { return foes.filter(function (f) { return hostile(f); }).length; }
 function jammed() { return foes.some(function (f) { return !f.dead && !f.calm && aff(f, "jammer") && cheb(f, heroPos()) <= 6; }); }
 function noise(n) { G().noise = Math.max(G().noise, n); }
-function turretsOff() { foes.forEach(function (f) { if (has(f, "turret")) { f.calm = true; f.state = "idle"; } }); }
-function robotsCalm() { foes.forEach(function (f) { if (f.kind === "mech") { f.calm = true; f.state = "idle"; } }); }
+/* Турели этажа: отключить, перехватить, вернуть ОКО. Переносные — не трогаются. */
+function isNetTurret(f) { return !f.dead && has(f, "turret") && !f.shots; }
+function turretsLeft() { return foes.filter(isNetTurret).length; }
+function turretsOff() { CUR().fs.turretMode = "off"; foes.forEach(function (f) { if (isNetTurret(f)) { f.calm = true; f.ally = false; f.state = "idle"; f.aim = false; } }); }
+function turretsOurs() { CUR().fs.turretMode = "ours"; foes.forEach(function (f) { if (isNetTurret(f)) { f.calm = false; f.ally = true; f.state = "idle"; f.aim = false; f.at = 0; } }); }
+function turretsHostile() { CUR().fs.turretMode = "on"; foes.forEach(function (f) { if (isNetTurret(f)) { f.calm = false; f.ally = false; f.state = "alert"; f.lastKnown = heroPos(); } }); }
+function robotsCalm() { foes.forEach(function (f) { if (f.kind === "mech" && !f.ally) { f.calm = true; f.state = "idle"; } }); }
+/* Тревога: роботы этажа идут на след. */
+function alertMech(x, y, radius) {
+  foes.forEach(function (f) {
+    if (!hostile(f) || f.kind !== "mech" || has(f, "stationary")) return;
+    if (Math.abs(f.x - x) + Math.abs(f.y - y) > radius) return;
+    if (f.state === "idle" || f.state === "alert") { f.state = "alert"; f.lastKnown = { x: x, y: y }; f.lost = 0; }
+  });
+}
+/* Ответная группа ОКО — от дальней двери этажа: охотники или ремонтник. */
+function sendSquad(n, mode) {
+  var fl = CUR().fl, hp = heroPos(), lev = LAB.LEVELS[G().L], got = 0;
+  var pool;
+  if (mode === "repair") {
+    pool = lev.foes.filter(function (id) { return /repair/.test(id) && LAB.FOES[id] && LAB.FOES[id].kind === "mech"; });
+    if (!pool.length) pool = ["repairbot"];
+  } else {
+    pool = lev.foes.filter(function (id) { var b = LAB.FOES[id]; return b && b.kind === "mech" && b.beh.indexOf("stationary") < 0 && b.beh.indexOf("cleaner") < 0 && b.beh.indexOf("mimic") < 0 && b.beh.indexOf("camera") < 0; });
+    if (!pool.length) pool = ["patrolbot"];
+  }
+  var cands = fl.doors.filter(function (d) { return !(d.lock && d.lock.type === "secret"); }).map(function (d) { return { d: d, k: dist(d, hp) }; }).filter(function (q) { return q.k >= 12; });
+  cands.sort(function (a, b) { return b.k - a.k; });
+  if (!cands.length) return 0;
+  var door = cands[Math.floor(Math.random() * Math.min(3, cands.length))].d;
+  for (var i = 0; i < n; i++) {
+    var c = freeCellNear(door.x, door.y, null);
+    if (!c) break;
+    var sp = spawnFoe(pool[Math.floor(Math.random() * pool.length)], c[0], c[1], { squad: true, task: mode === "repair" ? "repair" : null });
+    if (!sp) break;
+    sp.task = mode === "repair" ? "repair" : null;
+    sp.state = mode === "repair" ? "alert" : "hunt"; sp.lastKnown = hp;
+    got++;
+  }
+  if (got) A("foeSound", { x: door.x, y: door.y, id: "squad", snd: "robot", kind: "mech" }, "radio");
+  return got;
+}
+/* Переносная турель игрока: встаёт впереди и бьёт врагов на своей линии. */
+function deployTurret(shots) {
+  var g = G(), v = DIRV[g.face] || DIRV.N, x = g.x + v[0], y = g.y + v[1];
+  if (!canStand(null, x, y) || CUR().fl.t[idx(x, y)] === LAB.T.DOOR) { var c = freeCellNear(g.x, g.y, null); if (!c) return false; x = c[0]; y = c[1]; }
+  var t = spawnFoe("miniturret", x, y, { ally: true, shots: shots || 30 });
+  if (!t) return false;
+  t.ally = true; t.shots = shots || 30; t.state = "hunt";
+  A("play", "craft");
+  return { x: x, y: y };
+}
+/* Шумовая приманка: враги рядом идут на звук. */
+function noiseLure(x, y) {
+  var n = 0;
+  foes.forEach(function (f) {
+    if (!hostile(f) || has(f, "stationary")) return;
+    if (Math.abs(f.x - x) + Math.abs(f.y - y) > 14) return;
+    if (f.state === "hunt" && sees(f)) return;
+    f.state = "alert"; f.lastKnown = { x: x, y: y }; f.lost = 0; f.lure = 14; n++;
+  });
+  A("noiseLure", x, y);
+  return n;
+}
+function throwNoise() {
+  var g = G();
+  if (!(g.inv.noise > 0)) { say("Приманок нет."); return; }
+  g.inv.noise--;
+  var v = DIRV[g.face] || DIRV.N, x = g.x, y = g.y;
+  for (var i = 1; i <= 6; i++) {
+    var nx = x + v[0], ny = y + v[1];
+    if (!LAB.inb(nx, ny)) break;
+    var t = CUR().fl.t[idx(nx, ny)];
+    if (t === LAB.T.WALL || (t === LAB.T.DOOR && CUR().fs.doors[CUR().fl.doorAt[idx(nx, ny)].id] !== 2)) break;
+    x = nx; y = ny;
+  }
+  A("grenade", x, y);
+  setTimeout(function () { var n = noiseLure(x, y); say("Приманка " + LAB.DIRTO[g.face] + " лязгает и пищит." + (n ? " Слышно, как враги идут к ней: " + n + "." : "")); UIx("refresh"); }, 600);
+}
 function calmAll() { foes.forEach(function (f) { if (f.state !== "idle") { f.state = "idle"; f.lastKnown = null; f.aim = false; } }); shells = []; hpMark = 100; }
 function areaDamage(x, y, r, dmg, dt) {
   var n = 0;
@@ -941,7 +1247,8 @@ function announceSpotted(list) {
 LAB.combat = {
   loadFoes: loadFoes, syncFoes: syncFoes, wake: start, start: start, stop: stop, tick: tick,
   danger: danger, hunted: hunted, visibleFoes: visibleFoes, nearestFoe: nearestFoe, aliveCount: aliveCount, jammed: jammed,
-  afterPlayerMove: afterPlayerMove, noise: noise, turretsOff: turretsOff, robotsCalm: robotsCalm, calmAll: calmAll,
+  afterPlayerMove: afterPlayerMove, noise: noise, turretsOff: turretsOff, turretsOurs: turretsOurs, turretsHostile: turretsHostile, turretsLeft: turretsLeft,
+  robotsCalm: robotsCalm, calmAll: calmAll, chaser: chaser, alertMech: alertMech, sendSquad: sendSquad, deployTurret: deployTurret, noiseLure: noiseLure, throwNoise: throwNoise,
   areaDamage: areaDamage, throwEmp: throwEmp, reloadPause: reloadPause, fire: fire, startFire: startFire, stopFire: stopFire,
   useImplant: useImplant, describe: describe, hurtPlayer: hurtPlayer, foes: function () { return foes; }
 };

@@ -1,52 +1,104 @@
 #!/usr/bin/env node
-/* Проверка генератора комплекса: все 10 уровней × 20 этажей строятся,
-   каждый этаж проходим от прибытия до выхода вниз, лифт в начальной зоне,
-   пропуска уровней доступа и пропуск лифта лежат там, где нужны; шлюзовая
-   ключ-карта добывается на двадцатом этаже (у стража или спрятана), шлюз
-   наверх на первом этаже запечатан; у роботов модификации растут с глубиной.
-   Запуск: node lab/tests/world.test.js [число зёрен] */
+/* Проверка генератора комплекса: все уровни × 20 этажей строятся, каждый
+   этаж проходим от прибытия до выхода вниз, лифт в начальной зоне, пропуска
+   уровней доступа и пропуск лифта лежат там, где нужны; шлюзовая ключ-карта
+   добывается на последнем этаже (у стража или спрятана), шлюз наверх на
+   первом этаже запечатан; у роботов модификации растут с глубиной.
+   Коридоры — прямые, в четыре шага шириной и от десяти в длину; у тайной
+   комнаты — два потайных выхода в разные коридоры; на каждом третьем этаже
+   — верстак, до которого можно дойти; если на этаже есть турели — есть и
+   терминал безопасности, а у звукового замка — радиоприёмник с мелодией.
+   Запуск: node lab/tests/world.test.js [число зёрен] [шаг по уровням] */
 "use strict";
 const fs = require("fs"), path = require("path"), vm = require("vm");
 const ROOT = path.resolve(__dirname, "..");
-const ctx = { console, Math, JSON, Object, Array, String, Number, Uint8Array, Int8Array, Int32Array, Error };
+const ctx = { console, Math, JSON, Object, Array, String, Number, Uint8Array, Int8Array, Int16Array, Int32Array, Float64Array, Error, Date, RegExp };
 ctx.globalThis = ctx;
 vm.createContext(ctx);
-for (const f of ["js/data.js", "js/world.js"]) vm.runInContext(fs.readFileSync(path.join(ROOT, f), "utf8"), ctx, { filename: f });
+for (const f of ["js/data.js", "js/texts.js", "js/lore.js", "js/b1.js", "js/b2.js", "js/b3.js", "js/b4.js", "js/b5.js", "js/world.js"]) {
+  const p = path.join(ROOT, f);
+  if (fs.existsSync(p)) vm.runInContext(fs.readFileSync(p, "utf8"), ctx, { filename: f });
+}
 const LAB = ctx.LAB;
 
 const seeds = Number(process.argv[2] || 6);
+const stepL = Math.max(1, Number(process.argv[3] || 1));
 let fails = 0, floors = 0, t0 = Date.now();
-const stat = { locks: {}, foes: 0, items: 0, secrets: 0, blocked: 0, npcs: 0, objs: {}, armor: 0, aff: {}, affByL: {}, mechByL: {}, iqByL: {} };
+const stat = { locks: {}, foes: 0, items: 0, secrets: 0, blocked: 0, npcs: 0, objs: {}, armor: 0, aff: {}, affByL: {}, mechByL: {}, iqByL: {}, turrets: 0, cams: 0, corrMin: 99, corrMax: 0 };
+function err(m) { console.error("✗ " + m); fails++; }
 for (let si = 0; si < seeds; si++) {
   const seed = "test" + si;
   let tier = 0, elevpass = {};
   for (let L = 1; L <= LAB.LEVELS_N; L++) {
+    /* при шаге по уровням проверяются первый, десятый, последний и каждый stepL-й */
+    const full = stepL === 1 || L === 1 || L === 10 || L === LAB.LEVELS_N || L % stepL === 0;
     for (let F = 1; F <= LAB.FLOORS_N; F++) {
+      if (!full) { if (F === 1) tier = Math.max(tier, LAB.LEVELS[L].tier); continue; }
       floors++;
       let fl;
       try { fl = LAB.getFloor(seed, L, F); }
-      catch (e) { console.error(`✗ ${seed} ${L}-${F}: ${e.message}`); fails++; continue; }
+      catch (e) { err(`${seed} ${L}-${F}: ${e.message}`); continue; }
       const res = LAB.solve(fl, { tier });
-      if (!res.down) { console.error(`✗ ${seed} ${L}-${F}: выход вниз недостижим`); fails++; }
-      if (!res.elev) { console.error(`✗ ${seed} ${L}-${F}: лифт недостижим`); fails++; }
+      const at = `${seed} ${L}-${F}`;
+      if (!res.down) err(`${at}: выход вниз недостижим`);
+      if (!res.elev) err(`${at}: лифт недостижим`);
       if (res.elevpass) elevpass[L] = true;
-      if (fl.downBlocked && !elevpass[L]) { console.error(`✗ ${seed} ${L}-${F}: лестница завалена, а пропуска лифта уровня ${L} ещё нет`); fails++; }
+      if (fl.downBlocked && !elevpass[L]) err(`${at}: лестница завалена, а пропуска лифта уровня ${L} ещё нет`);
       tier = Math.max(tier, res.tier);
-      if (tier < LAB.LEVELS[L].tier) { console.error(`✗ ${seed} ${L}-${F}: уровень доступа ${tier} ниже уровня ${LAB.LEVELS[L].tier}`); fails++; }
-      if (F === LAB.FLOORS_N && !res.gatepass) { console.error(`✗ ${seed} ${L}-${F}: шлюзовую ключ-карту не добыть`); fails++; }
-      if (F === LAB.FLOORS_N && L < LAB.LEVELS_N) {
+      if (tier < LAB.LEVELS[L].tier) err(`${at}: уровень доступа ${tier} ниже уровня ${LAB.LEVELS[L].tier}`);
+      if (F === LAB.FLOORS_N && !res.gatepass) err(`${at}: шлюзовую ключ-карту не добыть`);
+      if (F === LAB.FLOORS_N) {
         const boss = fl.foes.find(f => f.boss);
-        const bossCard = boss && (boss.carry || []).some(i => i.kind === "gatepass");
-        const hidden = LAB.LEVELS[L].card === "hidden";
-        if (!boss) { console.error(`✗ ${seed} ${L}-${F}: нет стража`); fails++; }
-        else if (hidden === bossCard) { console.error(`✗ ${seed} ${L}-${F}: ключ-карта ${hidden ? "должна быть спрятана" : "должна быть у стража"}`); fails++; }
+        const reactor = LAB.isReactorLevel(L);
+        if (!boss) err(`${at}: нет стража`);
+        if (reactor) {
+          if (!fl.objs.some(o => o.type === "reactor")) err(`${at}: нет пульта «Истока»`);
+          if (boss && !(boss.carry || []).some(i => i.kind === "gatepass" && i.core)) err(`${at}: у стража нет ключа «Истока»`);
+        } else {
+          const bossCard = boss && (boss.carry || []).some(i => i.kind === "gatepass");
+          const hidden = LAB.LEVELS[L].card === "hidden";
+          if (boss && hidden === bossCard) err(`${at}: ключ-карта ${hidden ? "должна быть спрятана" : "должна быть у стража"}`);
+        }
       }
-      if (F === 1 && L > 1) {
-        if (!fl.objs.some(o => o.type === "gate_sealed")) { console.error(`✗ ${seed} ${L}-${F}: нет запечатанного шлюза наверх`); fails++; }
+      if (F === 1 && L > 1 && !fl.objs.some(o => o.type === "gate_sealed")) err(`${at}: нет запечатанного шлюза наверх`);
+      /* коридоры: прямые, ширина 4, длина от 10 */
+      for (const c of fl.corrs) {
+        const wdt = c.axis === "h" ? c.y1 - c.y0 + 1 : c.x1 - c.x0 + 1;
+        if (wdt !== LAB.CORR_W) err(`${at}: коридор ${c.id} шириной ${wdt}`);
+        if (c.len < 10) err(`${at}: коридор ${c.id} длиной ${c.len}`);
+        stat.corrMin = Math.min(stat.corrMin, c.len); stat.corrMax = Math.max(stat.corrMax, c.len);
       }
-      if (fl.objs.some(o => o.type === "gate_up")) { console.error(`✗ ${seed} ${L}-${F}: остался шлюз наверх`); fails++; }
+      /* тайная комната — два потайных выхода в разные помещения */
+      if (fl.secret >= 0) {
+        const sd = fl.doors.filter(d => d.lock && d.lock.type === "secret" && d.other === fl.secret);
+        if (sd.length !== 2) err(`${at}: у тайной комнаты выходов ${sd.length}`);
+        else if (sd[0].room === sd[1].room) err(`${at}: оба выхода тайной комнаты — в одно помещение`);
+        stat.secrets++;
+      }
+      /* верстак — на каждом третьем этаже, достижим */
+      const nearReach = (o) => [[1, 0], [-1, 0], [0, 1], [0, -1]].some(d => res.reach[(o.y + d[1]) * LAB.W + o.x + d[0]]);
+      if (F % 3 === 0) {
+        const wb = fl.objs.filter(o => o.type === "workbench");
+        if (!wb.length) err(`${at}: нет верстака`);
+        else if (!wb.some(nearReach)) err(`${at}: до верстака не дойти`);
+      }
+      /* турели — значит, есть терминал безопасности, до которого можно дойти */
+      const tur = fl.foes.filter(f => LAB.FOES[f.type].beh.indexOf("turret") >= 0);
+      stat.turrets += tur.length;
+      stat.cams += fl.foes.filter(f => LAB.FOES[f.type].beh.indexOf("camera") >= 0).length;
+      if (tur.length && !fl.objs.some(o => o.type === "terminal" && o.sub === "sec" && nearReach(o))) err(`${at}: турели есть, а терминала безопасности не достать`);
+      /* звуковой замок — радиоприёмник с мелодией */
+      for (const d of fl.doors) {
+        if (!d.lock) continue;
+        stat.locks[d.lock.type] = (stat.locks[d.lock.type] || 0) + 1;
+        if (d.lock.type === "key") {
+          const has = fl.items.some(i => i.kind === "key" && i.key === d.lock.key) || fl.foes.some(f => (f.carry || []).some(i => i.kind === "key" && i.key === d.lock.key));
+          if (!has) err(`${at}: нет ключа ${d.lock.key}`);
+        }
+        if (d.lock.type === "melody" && !fl.objs.some(o => o.type === "radio" && o.melodyFor === d.id)) err(`${at}: у звукового замка нет радиоприёмника`);
+      }
       for (const f of fl.foes) {
-        if (!(f.iq >= 0)) { console.error(`✗ ${seed} ${L}-${F}: у врага ${f.type} нет ума`); fails++; }
+        if (!(f.iq >= 0)) err(`${at}: у врага ${f.type} нет ума`);
         if (LAB.FOES[f.type].kind === "mech") {
           stat.mechByL[L] = (stat.mechByL[L] || 0) + 1;
           stat.iqByL[L] = (stat.iqByL[L] || 0) + f.iq;
@@ -54,30 +106,18 @@ for (let si = 0; si < seeds; si++) {
         }
       }
       stat.armor += fl.items.filter(i => i.kind === "armor").length;
-      /* у каждой двери с ключом — ключ на этаже */
-      for (const d of fl.doors) {
-        if (!d.lock) continue;
-        stat.locks[d.lock.type] = (stat.locks[d.lock.type] || 0) + 1;
-        if (d.lock.type === "key") {
-          const has = fl.items.some(i => i.kind === "key" && i.key === d.lock.key) || fl.foes.some(f => (f.carry || []).some(i => i.kind === "key" && i.key === d.lock.key));
-          if (!has) { console.error(`✗ ${seed} ${L}-${F}: нет ключа ${d.lock.key}`); fails++; }
-        }
-      }
-      if (fl.secret >= 0) stat.secrets++;
       if (fl.downBlocked) stat.blocked++;
       stat.foes += fl.foes.length; stat.items += fl.items.length; stat.npcs += fl.npcs.length;
       for (const o of fl.objs) stat.objs[o.type] = (stat.objs[o.type] || 0) + 1;
-      /* образец этажа есть */
-      const sample = fl.items.some(i => i.kind === "sample");
-      if (!sample) { console.error(`✗ ${seed} ${L}-${F}: нет образца`); fails++; }
+      if (!fl.items.some(i => i.kind === "sample")) err(`${at}: нет образца`);
     }
+    LAB.clearFloorCache();
   }
-  LAB.clearFloorCache();
 }
 const ms = Date.now() - t0;
-console.log(`этажей: ${floors}, ошибок: ${fails}, время: ${ms} мс (${(ms / floors).toFixed(1)} мс на этаж)`);
+console.log(`уровней: ${LAB.LEVELS_N}, этажей: ${floors}, ошибок: ${fails}, время: ${ms} мс (${(ms / floors).toFixed(1)} мс на этаж)`);
 console.log("замки:", JSON.stringify(stat.locks));
-console.log(`на этаж: врагов ${(stat.foes / floors).toFixed(1)}, вещей ${(stat.items / floors).toFixed(1)}, выживших ${(stat.npcs / floors).toFixed(2)}, тайных комнат ${(stat.secrets / floors).toFixed(2)}, заваленных лестниц ${stat.blocked}`);
+console.log(`на этаж: врагов ${(stat.foes / floors).toFixed(1)}, турелей ${(stat.turrets / floors).toFixed(2)}, камер ${(stat.cams / floors).toFixed(2)}, вещей ${(stat.items / floors).toFixed(1)}, выживших ${(stat.npcs / floors).toFixed(2)}, тайных комнат ${(stat.secrets / floors).toFixed(2)}, заваленных лестниц ${stat.blocked}; коридоры от ${stat.corrMin} до ${stat.corrMax} шагов`);
 console.log("обстановка:", JSON.stringify(stat.objs));
 console.log(`броня на полу: ${(stat.armor / floors).toFixed(2)} на этаж; модификации роботов:`, JSON.stringify(stat.aff));
 console.log("роботы по уровням (доля с модификациями, средний ум):", Object.keys(stat.mechByL).map(L => `${L}: ${(100 * (stat.affByL[L] || 0) / stat.mechByL[L]).toFixed(0)}%, ${(stat.iqByL[L] / stat.mechByL[L]).toFixed(1)}`).join("; "));

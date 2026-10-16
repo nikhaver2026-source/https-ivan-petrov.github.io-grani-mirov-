@@ -187,7 +187,7 @@ function setScreen(s) {
   screen = s;
   document.body.setAttribute("data-screen", s);
   var hud = $("hud"); if (hud) hud.hidden = s !== "game";
-  var pv = $("pageView"); if (pv) pv.hidden = !(s === "prologue" || s === "ending" || s === "boot");
+  var pv = $("pageView"); if (pv) pv.hidden = !(s === "prologue" || s === "ending" || s === "boot" || s === "story");
 }
 function showGame() {
   stack = [];
@@ -224,7 +224,10 @@ function pageGesture(g) {
   return true;
 }
 
-function prologue(fromMenu) {
+/* Пролог. Новая игра всегда начинается с него (newGame — после последней
+   страницы или пропуска); из главного меню его можно послушать ещё раз. */
+function prologue(mode) {
+  var startNew = mode === "new";
   stack = [];
   render();
   setScreen("prologue");
@@ -232,10 +235,24 @@ function prologue(fromMenu) {
   showPage(LAB.PROLOGUE, 0, {
     title: LAB.TITLE + ". Пролог",
     hint: LAB.K("Свайп вправо — дальше, влево — назад, вверх — пропустить.", "Стрелка вправо или Enter — дальше, влево — назад, Escape — пропустить."),
-    lastHint: LAB.K("Свайп вправо — в главное меню.", "Стрелка вправо или Enter — в главное меню."),
-    done: function () { LAB.store.set("lab_prologue_seen", "1"); mainMenu(); }
+    lastHint: startNew ? LAB.K("Свайп вправо — начать игру.", "Стрелка вправо или Enter — начать игру.") : LAB.K("Свайп вправо — в главное меню.", "Стрелка вправо или Enter — в главное меню."),
+    done: function () { LAB.store.set("lab_prologue_seen", "1"); if (startNew) gm().newGame(); else mainMenu(); }
   });
-  if (!fromMenu) sayq(LAB.K("Свайп вправо — дальше, влево — назад, вверх — пропустить пролог.", "Стрелка вправо или Enter — дальше, влево — назад, Escape — пропустить пролог."));
+  sayq(LAB.K("Свайп вправо — дальше, влево — назад, вверх — пропустить пролог.", "Стрелка вправо или Enter — дальше, влево — назад, Escape — пропустить пролог."));
+}
+/* Страницы истории посреди игры: конец и начало блока, сцена у пульта. Мир ждёт. */
+function pages(list, opts) {
+  opts = opts || {};
+  stack = [];
+  render();
+  setScreen("story");
+  if (gm()) gm().paused = true;
+  showPage(list, 0, {
+    title: opts.title || "",
+    hint: LAB.K("Свайп вправо — дальше, влево — назад, вверх — пропустить.", "Стрелка вправо или Enter — дальше, влево — назад, Escape — пропустить."),
+    lastHint: LAB.K("Свайп вправо — дальше в игру.", "Стрелка вправо или Enter — дальше в игру."),
+    done: function () { if (gm()) gm().paused = false; if (opts.done) opts.done(); else showGame(); }
+  });
 }
 
 function mainMenu(silentIntro) {
@@ -250,7 +267,7 @@ function mainMenu(silentIntro) {
   $("pageText").textContent = LAB.SUBTITLE;
   menu(LAB.TITLE + ". Главное меню", [
     { label: "Начать игру", fn: startGame },
-    { label: "Пролог", fn: function () { prologue(true); } },
+    { label: "Пролог", fn: function () { prologue("menu"); } },
     { label: "Загрузить игру", fn: function () { loadMenu(); } },
     { label: "Руководство", fn: function () { if (LAB.guide) LAB.guide.open(); } },
     { label: "Настройки", fn: function () { settingsMenu(); } }
@@ -260,13 +277,13 @@ function startGame() {
   var hasAuto = !!gm().slotInfo("auto");
   if (hasAuto) {
     menu("Начать новую игру?", [
-      { label: "Да, начать сначала. Автозапись заменится, слоты 1, 2 и 3 останутся", fn: function () { gm().newGame(); } },
+      { label: "Да, начать сначала. Автозапись заменится, слоты 1, 2 и 3 останутся", fn: function () { prologue("new"); } },
       { label: "Продолжить с автозаписи: " + gm().slotText("auto").replace("Автозапись: ", ""), fn: function () { gm().loadSlot("auto"); } },
       { label: "Отмена", fn: function () { reopenMain(); } }
     ]);
     return;
   }
-  gm().newGame();
+  prologue("new");
 }
 function reopenMain() { if (screen === "menu" && !top()) mainMenu(true); else if (top()) say(top().title + ". " + itemText(top().items[top().i])); }
 
@@ -399,13 +416,13 @@ function inventory(focus) {
   if (!gm().entered) return;
   var g = G();
   var cnt = function (ids) { return ids.reduce(function (a, k) { return a + (g.inv[k] || 0); }, 0); };
-  var ammoN = (g.ammo.energy || 0) + (g.ammo.magnetron || 0) + (g.ammo.positron || 0);
+  var ammoN = Object.keys(g.ammo).reduce(function (a, k) { return a + (g.ammo[k] || 0); }, 0);
   var items = [
     { label: "Оружие: " + g.weapons.length, fn: weaponsMenu },
     { label: "Батареи и боеприпасы: " + ammoN, fn: ammoMenu },
     { label: "Аптечки и стимуляторы: " + cnt(["medkit_s", "medkit_l", "stim", "antidote", "energy_d"]), fn: medsMenu },
     { label: "Броня: " + g.armors.length + (g.armor ? ", надета" : ", не надета"), fn: armorMenu },
-    { label: "Гранаты, пластины и устройства: " + cnt(["emp", "plate", "decoder"]), fn: gadgetsMenu },
+    { label: "Гранаты, пластины и устройства: " + cnt(gadgetIds()), fn: gadgetsMenu },
     { label: "Детали: " + cnt(LAB.PARTS), fn: partsMenu },
     { label: "Пропуска и ключи", fn: passesMenu },
     { label: "Записки: " + g.noteList.length, fn: notesMenu },
@@ -436,7 +453,9 @@ function weaponMenu(i) {
 }
 function ammoMenu() {
   var g = G(), w = gm().curWeapon();
-  var items = ["energy", "magnetron", "positron"].map(function (k) {
+  var kinds = ["energy", "magnetron", "positron"];
+  Object.keys(g.ammo).forEach(function (k) { if (kinds.indexOf(k) < 0 && LAB.AMMO[k] && (g.ammo[k] > 0 || (w && w.ammo === k))) kinds.push(k); });
+  var items = kinds.map(function (k) {
     return { label: LAB.AMMO[k].n + ": " + (g.ammo[k] || 0), fn: function () {
       if (w && w.ammo === k) gm().reload(); else say(LAB.AMMO[k].desc);
     } };
@@ -474,14 +493,27 @@ function armorItem(i) {
     back(armorMenu)
   ]);
 }
+/* Устройства: гранаты, пластины, самоделки мастерской и вещи блоков. */
+function gadgetIds() {
+  var ids = ["emp", "plate", "decoder", "noise", "turret_kit", "jammer", "lockpick", "filter", "sonar", "repairkit"];
+  for (var k in LAB.ITEMS) { var d = LAB.ITEMS[k]; if (d.kind !== "part" && d.depth && ids.indexOf(k) < 0) ids.push(k); }
+  return ids;
+}
 function gadgetsMenu() {
   var g = G();
-  menu("Гранаты, пластины и устройства", [
+  var items = [
     { label: "ЭМИ-граната: " + (g.inv.emp || 0) + ". Бросить вперёд по последнему направлению", fn: function () { if (LAB.combat) LAB.combat.throwEmp(); } },
     { label: "Бронепластина: " + (g.inv.plate || 0) + ". Вставить в надетую броню", fn: function () { gm().installPlate(); } },
-    { label: "Декодер пропусков: " + (g.inv.decoder || 0), keep: true, fn: function () { say(LAB.ITEMS.decoder.desc + LAB.K(" Применяется у двери: двойное касание у двери.", " Применяется у двери: Enter у двери.")); } },
-    back()
-  ]);
+    { label: "Декодер пропусков: " + (g.inv.decoder || 0), keep: true, fn: function () { say(LAB.ITEMS.decoder.desc + LAB.K(" Применяется у двери: двойное касание у двери.", " Применяется у двери: Enter у двери.")); } }
+  ];
+  gadgetIds().slice(3).forEach(function (k) {
+    var d = LAB.ITEMS[k];
+    if (!d || !(g.inv[k] > 0)) return;
+    var verb = d.kind === "throw" ? "Бросить вперёд" : d.kind === "deploy" ? "Поставить впереди" : d.fx && d.fx.pick ? "Применяется у двери" : "Применить";
+    items.push({ label: d.n + ": " + g.inv[k] + ". " + verb + ". " + d.desc, fn: function () { gm().useItem(k); } });
+  });
+  items.push(back());
+  menu("Гранаты, пластины и устройства", items);
 }
 function partsMenu() {
   var g = G();
@@ -496,8 +528,8 @@ function passesMenu() {
   var g = G(), items = [];
   items.push({ label: "Пропуск доступа: " + (g.tier ? LAB.TIERS[g.tier].n : "нет"), keep: true, fn: function () { say(g.tier ? LAB.TIERS[g.tier].n + ": открывает двери с картридером этого цвета и ниже." : "Пропуска нет."); } });
   items.push({ label: "Пропуск лифта этажей уровня " + g.L + ": " + (g.elev[g.L] ? "есть" : "нет"), keep: true, fn: function () { say(g.elev[g.L] ? "Лифт этажей уровня " + g.L + " вас повезёт." : "Пропуск лифта лежит на втором этаже уровня."); } });
-  if (g.L < LAB.LEVELS_N) items.push({ label: "Шлюзовая ключ-карта уровня " + g.L + ": " + (g.gate[g.L] ? "есть" : "нет"), keep: true, fn: function () { say(g.gate[g.L] ? "Гермошлюз на последнем этаже уровня откроется. Пройти можно только вниз." : "Ключ-карта — на последнем этаже уровня, у шлюза: у стража или спрятана."); } });
-  else items.push({ label: "Ключ доступа к реактору «Исток»: " + (g.core ? "есть" : "нет"), keep: true, fn: function () {} });
+  if (!LAB.isReactorLevel(g.L)) items.push({ label: "Шлюзовая ключ-карта уровня " + g.L + ": " + (g.gate[g.L] ? "есть" : "нет"), keep: true, fn: function () { say(g.gate[g.L] ? "Гермошлюз на последнем этаже уровня откроется. Пройти можно только вниз." : "Ключ-карта — на последнем этаже уровня, у шлюза: у стража или спрятана."); } });
+  else items.push({ label: "Ключ доступа к реактору «Исток»: " + (gm().hasCore(g.L) ? "есть" : "нет"), keep: true, fn: function () {} });
   Object.keys(g.keys).forEach(function (k) { items.push({ label: g.keys[k], keep: true, fn: function () { say(g.keys[k] + "."); } }); });
   var codes = Object.keys(g.codes);
   if (codes.length) items.push({ label: "Известные коды: " + codes.length, keep: true, fn: function () { say(codes.map(function (c) { return "«" + g.codes[c] + "» — " + c.split("").join(" "); }).join("; ") + "."); } });
@@ -546,14 +578,27 @@ function note(title, text, after, opts) {
 }
 
 /* ════════ МАСТЕРСКАЯ ════════ */
+/* Рецепты — по разделам; рецепты глубже текущего уровня не показываются. */
+function recipeGroup(rc) {
+  var o = String(rc.out);
+  if (o.indexOf("armor:") === 0) return "Броня";
+  if (o.indexOf("weapon:") === 0) return "Оружие";
+  if (o.indexOf("ammo:") === 0) return "Батареи и боеприпасы";
+  if (o === "plate" || o === "wmod" || o === "repairkit") return "Улучшения";
+  var d = LAB.ITEMS[o];
+  if (d && (d.heal || (d.fx && (d.fx.heal || d.fx.en || d.fx.cure)) || d.en || d.cure)) return "Лечение и стимуляторы";
+  return "Гранаты и устройства";
+}
 function craft() {
   var g = G();
-  var groups = [["Лечение", ["medkit_s", "medkit_l", "antidote", "stim", "energy_d"]], ["Батареи и гранаты", ["bat_e", "bat_m", "emp", "decoder"]], ["Броня", null], ["Улучшения", ["plate", "wmod"]]];
-  var items = groups.map(function (gr) {
-    var list = LAB.RECIPES.filter(function (rc) { return gr[1] ? gr[1].indexOf(rc.id) >= 0 : rc.out.indexOf("armor:") === 0; });
+  var names = ["Лечение и стимуляторы", "Батареи и боеприпасы", "Гранаты и устройства", "Оружие", "Броня", "Улучшения"];
+  var avail = LAB.RECIPES.filter(function (rc) { return !rc.minL || rc.minL <= g.L; });
+  var items = names.map(function (nm) {
+    var list = avail.filter(function (rc) { return recipeGroup(rc) === nm; });
+    if (!list.length) return null;
     var ready = list.filter(function (rc) { return gm().canCraft(rc); }).length;
-    return { label: gr[0] + ": можно собрать " + ready + " из " + list.length, fn: function () { craftList(gr[0], list); } };
-  });
+    return { label: nm + ": можно собрать " + ready + " из " + list.length, fn: function () { craftList(nm, list); } };
+  }).filter(function (x) { return x; });
   items.push({ label: "Уйти от верстака", fn: function () { A("play", "craft_off"); } });
   A("play", "workbench");
   menu("Мастерская", items, { intro: "Деталей у вас: " + LAB.PARTS.reduce(function (a, k) { return a + (g.inv[k] || 0); }, 0) + "." });
@@ -564,7 +609,9 @@ function craftList(title, list) {
     var ok = gm().canCraft(rc);
     var lab = rc.n + (ok ? " — можно собрать" : rc.minL && g.L < rc.minL ? " — с уровня " + rc.minL : " — нужно: " + gm().needText(rc));
     if (rc.out.indexOf("armor:") === 0) { var d = LAB.ARMORS[rc.out.slice(6)]; lab += ". " + d.desc; }
+    else if (rc.out.indexOf("weapon:") === 0) { var wd = LAB.WEAPONS[rc.out.slice(7)]; if (wd) lab += ". " + wd.desc; }
     else if (rc.desc) lab += ". " + rc.desc;
+    else if (LAB.ITEMS[rc.out] && LAB.ITEMS[rc.out].desc) lab += ". " + LAB.ITEMS[rc.out].desc;
     return { label: lab, keep: true, fn: function () { gm().craft(rc); } };
   });
   items.push({ label: "Назад", fn: craft });
@@ -619,8 +666,8 @@ function ending(win) {
 /* ════════ БАННЕР УРОВНЯ ════════ */
 function levelBanner() {
   var b = $("banner"); if (!b) return;
-  var lev = LAB.LEVELS[G().L];
-  b.textContent = "Уровень " + G().L + " · " + lev.name;
+  var lev = LAB.LEVELS[G().L], B = G().L > 10 ? LAB.BLOCKS[LAB.blockOf(G().L)] : null;
+  b.textContent = (B && B.name ? B.name + " · " : "") + "Уровень " + G().L + " · " + lev.name;
   b.hidden = false;
   setTimeout(function () { b.hidden = true; }, 4000);
 }
@@ -700,7 +747,7 @@ function pageOpen() { return !!page; }
 LAB.ui = {
   key: key, pageOpen: pageOpen,
   menu: menu, closeTop: closeTop, closeAll: closeAll, layer: layer, gesture: gesture, refresh: refresh, render: render,
-  note: note, craft: craft, ending: ending, levelBanner: levelBanner, showGame: showGame, mainMenu: mainMenu, prologue: prologue,
+  note: note, craft: craft, ending: ending, levelBanner: levelBanner, showGame: showGame, mainMenu: mainMenu, prologue: prologue, pages: pages,
   character: character, inventory: inventory, implants: implants, settings: settingsMenu, loadMenu: loadMenu, saveMenu: saveMenu,
   navMenu: navMenu, screen: function () { return screen; }, setScreen: setScreen, top: top, activate: activate, move: move
 };

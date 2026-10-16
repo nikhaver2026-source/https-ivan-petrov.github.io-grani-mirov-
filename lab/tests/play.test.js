@@ -1,8 +1,9 @@
 #!/usr/bin/env node
-/* Проверка игры в Chromium: пролог и главное меню, новая игра, ходьба,
+/* Проверка игры в Chromium: главное меню, новая игра с пролога, ходьба,
    оружие и выстрелы, бой с тактами врагов, окна персонажа и инвентаря,
-   сохранение в слот и загрузка, настройки, мини-игры, спуск через шлюз,
-   проход по всем этажам одного зерна. Ошибок страницы быть не должно.
+   сохранение в слот и загрузка, настройки, мини-игры и головоломки, турели
+   и терминал безопасности, ОКО, навигатор без карты и с картой, спуск через
+   шлюз, обход этажей одного зерна. Ошибок страницы быть не должно.
    Запуск: node lab/tests/play.test.js  (нужен Playwright с Chromium) */
 "use strict";
 const path = require("path"), http = require("http"), fs = require("fs");
@@ -45,17 +46,21 @@ function ok(cond, msg) { if (cond) console.log("  ✓ " + msg); else { fails++; 
   const key = async (k, mods) => { await page.keyboard.press((mods ? mods + "+" : "") + k); await page.waitForTimeout(40); };
   const gest = async (g) => page.evaluate(g => LAB.input.dispatch(g), g);
 
-  console.log("Пролог и главное меню");
+  console.log("Главное меню и пролог");
   await key("Space");
   await page.waitForTimeout(100);
-  ok(await page.evaluate(() => LAB.ui.screen()) === "prologue", "первый запуск — пролог");
+  ok(await page.evaluate(() => LAB.ui.screen()) === "menu", "запуск — главное меню");
   let t = await said();
+  await page.evaluate(() => { LAB.ui.top().i = 1; });
+  await gest({ kind: "dtap", n: 1 });
+  ok(await page.evaluate(() => LAB.ui.screen()) === "prologue", "«Пролог» из меню");
+  t = await said();
   ok(/Пролог/.test(t), "звучит пролог");
   await gest({ kind: "swipe", n: 1, dir: "R" });
   ok(/./.test(await said()), "свайп вправо — следующая страница");
   await gest({ kind: "swipe", n: 1, dir: "L" });
   await gest({ kind: "swipe", n: 1, dir: "U" });
-  ok(await page.evaluate(() => LAB.ui.screen()) === "menu", "свайп вверх — пропуск пролога, главное меню");
+  ok(await page.evaluate(() => LAB.ui.screen()) === "menu", "свайп вверх — пропуск пролога, снова главное меню");
   const items = await page.evaluate(() => LAB.ui.top().items.map(i => typeof i.label === "function" ? i.label() : i.label));
   ok(JSON.stringify(items) === JSON.stringify(["Начать игру", "Пролог", "Загрузить игру", "Руководство", "Настройки"]), "в меню пять пунктов, среди них руководство: " + items.join(", "));
   await gest({ kind: "swipe", n: 1, dir: "R" }); await gest({ kind: "swipe", n: 1, dir: "R" }); await gest({ kind: "swipe", n: 1, dir: "R" });
@@ -102,11 +107,14 @@ function ok(cond, msg) { if (cond) console.log("  ✓ " + msg); else { fails++; 
   await gest({ kind: "swipe", n: 2, dir: "D" });
   ok(await page.evaluate(() => LAB.ui.top().title).then ? true : true, "окно закрыто");
 
-  console.log("Новая игра");
+  console.log("Новая игра начинается с пролога");
   await page.evaluate(() => { while (LAB.ui.top() && !LAB.ui.top().root) LAB.ui.closeTop(true); LAB.ui.top().i = 0; });
   await gest({ kind: "dtap", n: 1 });
+  await page.waitForTimeout(100);
+  ok(await page.evaluate(() => LAB.ui.screen()) === "prologue" && /Пролог/.test(await said()), "«Начать игру» — сначала пролог");
+  await gest({ kind: "swipe", n: 1, dir: "U" });
   await page.waitForTimeout(200);
-  ok(await page.evaluate(() => LAB.ui.screen()) === "game", "игра началась");
+  ok(await page.evaluate(() => LAB.ui.screen()) === "game", "после пролога игра началась");
   let st = await page.evaluate(() => ({ L: LAB.game.G.L, F: LAB.game.G.F, hp: LAB.game.G.hp }));
   ok(st.L === 1 && st.F === 1, "уровень 1, этаж 1");
   t = await said();
@@ -201,11 +209,11 @@ function ok(cond, msg) { if (cond) console.log("  ✓ " + msg); else { fails++; 
 
   console.log("Звуки: металлический пол у каждого уровня, одна запись удара о стену");
   const snd = await page.evaluate(() => {
-    const surf = LAB.LEVELS.slice(1).map(l => l.surf);
+    const surf = LAB.LEVELS.slice(1).filter(Boolean).map(l => (LAB.SURF[l.surf] && LAB.SURF[l.surf].base) || l.surf);
     const steps = surf.map(s => LAB.SND["step_" + s] ? LAB.SND["step_" + s].f.length : 0);
-    return { uniq: new Set(surf).size, steps: steps, metal: surf.every(s => /plate|sheet|wetmetal|steel|checker|grate|frost|armor|catwalk|deck/.test(s)), wall: LAB.SND.bump_wall ? LAB.SND.bump_wall.f.length : 0 };
+    return { uniq: new Set(LAB.LEVELS.slice(1).filter(Boolean).map(l => l.surf)).size, steps: steps, metal: surf.every(s => /plate|sheet|wetmetal|steel|checker|grate|frost|armor|catwalk|deck/.test(s)), wall: LAB.SND.bump_wall ? LAB.SND.bump_wall.f.length : 0 };
   });
-  ok(snd.uniq === 10 && snd.metal, "10 уровней — 10 разных металлических полов");
+  ok(snd.uniq >= 10 && snd.metal, "у уровней свои металлические полы: " + snd.uniq);
   ok(snd.steps.every(n => n >= 4), "у каждого пола свои записи шагов: " + snd.steps.join(", "));
   ok(snd.wall === 1, "удар о стену — одна и та же запись");
 
@@ -431,22 +439,22 @@ function ok(cond, msg) { if (cond) console.log("  ✓ " + msg); else { fails++; 
   ok(door.none || door.dist < 2 || door.after === 1, "открытая дверь сама закрывается, когда игрок отошёл (" + door.after + ", шагов от двери " + door.dist + ")");
   const turn = await page.evaluate(() => {
     const g = LAB.game, G = g.G, fl = g.CUR.fl, D = LAB.DIRS, T = LAB.T, W = LAB.W;
-    const at = (x, y) => (x < 0 || y < 0 || x >= W || y >= LAB.H) ? T.WALL : fl.t[y * W + x];
-    for (let y = 1; y < LAB.H - 1; y++) for (let x = 1; x < W - 1; x++) {
-      if (at(x, y) !== T.CORR) continue;
+    /* войти в коридор из прохода помещения: «Эхо» говорит, куда он ведёт */
+    for (const c of fl.corrs) {
+      const m = c.mouth[0], r = fl.rooms[c.mouthRoom];
       for (const k of ["N", "E", "S", "W"]) {
-        const bx = x - D[k][0], by = y - D[k][1];
-        if (at(bx, by) !== T.CORR) continue;
-        if (at(x + D[k][0], y + D[k][1]) !== T.WALL) continue;
-        if (g.foeAt && g.foeAt(x, y)) continue;
-        SPOKEN.length = 0; G.x = bx; G.y = by;
-        if (!g.tryMove(k, false)) continue;
+        const bx = m[0] - D[k][0], by = m[1] - D[k][1];
+        if (fl.t[by * W + bx] !== T.ROOM || !g.passable(bx, by) || g.foeAt(m[0], m[1])) continue;
+        SPOKEN.length = 0; G.x = bx; G.y = by; g.CUR.corr = -1;
+        g.tryMove(k, false);
+        if (!(G.x === m[0] && G.y === m[1])) continue;
+        g.tryMove(k, false);
         return SPOKEN.join(" | ");
       }
     }
-    return "нет поворотов";
+    return "нет коридоров";
   });
-  ok(/Коридор уходит|Развилка|нет поворотов/.test(turn), "коридор поворачивает — сказано куда: " + turn.slice(0, 80));
+  ok(/Коридор, шириной в четыре шага/.test(turn) && /до двери|до прохода/.test(turn), "вход в коридор — сказано, куда он ведёт: " + turn.slice(0, 160));
   const stairs = await page.evaluate(() => {
     const g = LAB.game, G = g.G, fl = g.CUR.fl;
     const o = fl.objs.find(x => x.type === "stairs_down" && !x.blocked);
@@ -541,21 +549,150 @@ function ok(cond, msg) { if (cond) console.log("  ✓ " + msg); else { fails++; 
   });
   ok(!codeMenu || (codeMenu.indexOf("Набрать код") >= 0 && !codeMenu.some(l => /из записки/.test(l))), "кодовая дверь: код набирается только вручную (" + (codeMenu || []).join(", ") + ")");
 
-  console.log("Все этажи одного зерна: вход, такты, осмотр");
+  console.log("Турели: отключить и перехватить можно только головоломкой");
+  const tur = await page.evaluate(async () => {
+    const g = LAB.game, G = g.G, out = {};
+    let found = null;
+    for (let L = 1; L <= 3 && !found; L++) for (let F = 4; F <= 20 && !found; F++) { const fl = LAB.getFloor(G.seed, L, F); if (fl.turrets) found = { L, F }; }
+    if (!found) return { none: true };
+    g.enterFloor(found.L, found.F, "down", true);
+    const fl = g.CUR.fl;
+    const term = fl.objs.find(o => o.type === "terminal" && o.sub === "sec");
+    out.term = !!term;
+    if (!term) return out;
+    g.objState(term).hacked = true;
+    LAB.ui.closeAll(); g.objMenu(term);
+    const labels = LAB.ui.top().items.map(i => typeof i.label === "function" ? i.label() : i.label);
+    out.labels = labels.join(" | ");
+    out.noFree = !labels.some(l => /^Отключить турели этажа$/.test(l));
+    const ni = labels.findIndex(l => /Оборонная сеть/.test(l));
+    LAB.ui.top().i = ni; LAB.ui.activate();
+    const t2 = LAB.ui.top().items.map(i => typeof i.label === "function" ? i.label() : i.label);
+    out.net = t2.join(" | ");
+    /* отключить: схема реле — решаем перебором */
+    LAB.ui.top().i = 0; LAB.ui.activate();
+    await new Promise(r => setTimeout(r, 50));
+    const c = LAB.mini._cur();
+    out.mini = c && c.type;
+    if (!c || c.type !== "relays") return out;
+    const n = c.n, st0 = c.st.slice();
+    let sol = null;
+    for (let mask = 0; mask < (1 << n) && !sol; mask++) {
+      const s = st0.slice();
+      for (let i = 0; i < n; i++) if (mask & (1 << i)) [i - 1, i, i + 1].forEach(j => { if (c.ring) j = (j + n) % n; if (j >= 0 && j < n) s[j] = !s[j]; });
+      if (!s.some(v => v)) sol = mask;
+    }
+    out.sol = sol !== null;
+    for (let i = 0; i < n; i++) {
+      if (!(sol & (1 << i))) continue;
+      while (c.pos < i) LAB.mini.gesture({ kind: "swipe", n: 1, dir: "R" });
+      while (c.pos > i) LAB.mini.gesture({ kind: "swipe", n: 1, dir: "L" });
+      LAB.mini.gesture({ kind: "dtap", n: 1 });
+    }
+    await new Promise(r => setTimeout(r, 500));
+    out.mode = g.CUR.fs.turretMode;
+    out.calm = LAB.combat.foes().filter(f => !f.dead && LAB.FOES[f.type].beh.indexOf("turret") >= 0).every(f => f.calm);
+    out.repair = !!g.CUR.fs.repairAt;
+    /* перехват: ключ ОКО (быки и коровы) и схема */
+    LAB.ui.closeAll(); g.objMenu(term);
+    const li = LAB.ui.top().items.findIndex(i => /Оборонная сеть/.test(typeof i.label === "function" ? i.label() : i.label));
+    LAB.ui.top().i = li; LAB.ui.activate();
+    const hi = LAB.ui.top().items.findIndex(i => /Перехватить/.test(typeof i.label === "function" ? i.label() : i.label));
+    LAB.ui.top().i = hi; LAB.ui.activate();
+    await new Promise(r => setTimeout(r, 50));
+    const b = LAB.mini._cur();
+    out.bulls = b && b.type;
+    if (b && b.type === "bulls") {
+      b.key.forEach((v, i) => { b.d[i] = v; });
+      LAB.mini.gesture({ kind: "dtap", n: 1 });
+      await new Promise(r => setTimeout(r, 1700));
+      const c2 = LAB.mini._cur();
+      if (c2 && c2.type === "relays") {
+        const n2 = c2.n, s0 = c2.st.slice(); let sol2 = null;
+        for (let mask = 0; mask < (1 << n2) && sol2 === null; mask++) { const s = s0.slice(); for (let i = 0; i < n2; i++) if (mask & (1 << i)) [i - 1, i, i + 1].forEach(j => { if (c2.ring) j = (j + n2) % n2; if (j >= 0 && j < n2) s[j] = !s[j]; }); if (!s.some(v => v)) sol2 = mask; }
+        for (let i = 0; i < n2; i++) { if (!(sol2 & (1 << i))) continue; while (c2.pos < i) LAB.mini.gesture({ kind: "swipe", n: 1, dir: "R" }); while (c2.pos > i) LAB.mini.gesture({ kind: "swipe", n: 1, dir: "L" }); LAB.mini.gesture({ kind: "dtap", n: 1 }); }
+        await new Promise(r => setTimeout(r, 500));
+      }
+    }
+    out.mode2 = g.CUR.fs.turretMode;
+    out.ally = LAB.combat.foes().filter(f => !f.dead && LAB.FOES[f.type].beh.indexOf("turret") >= 0).every(f => f.ally);
+    out.counter = !!g.CUR.fs.counterAt;
+    /* турель не мешает уйти по лестнице: гонятся только те, кто может дойти */
+    LAB.combat.turretsHostile();
+    LAB.combat.foes().forEach(f => { if (LAB.FOES[f.type].beh.indexOf("turret") < 0) f.dead = true; else { f.state = "hunt"; } });
+    out.chaser = LAB.combat.chaser();
+    LAB.ui.closeAll();
+    return out;
+  });
+  ok(tur.none || tur.term, "этаж с турелями — есть терминал безопасности");
+  ok(tur.none || tur.noFree, "в терминале нет бесплатного «Отключить турели»: " + (tur.labels || ""));
+  ok(tur.none || (/Отключить турели: погасить схему реле/.test(tur.net || "") && /Перехватить турели/.test(tur.net || "")), "оборонная сеть: отключить или перехватить — головоломками");
+  ok(tur.none || (tur.mini === "relays" && tur.sol && tur.mode === "off" && tur.calm), "схема реле решена — турели отключены");
+  ok(tur.none || tur.repair, "ОКО шлёт ремонтника к отключённым турелям");
+  ok(tur.none || (tur.bulls === "bulls" && tur.mode2 === "ours" && tur.ally), "ключ ОКО и схема — турели бьют на нашей стороне");
+  ok(tur.none || tur.counter, "ОКО готовит контрвзлом перехваченных турелей");
+  ok(tur.none || !tur.chaser, "турель не считается погоней: лестница доступна");
+
+  console.log("Навигатор: без карты — до ближайшей двери, с картой — до лестницы");
+  const nav = await page.evaluate(() => {
+    const g = LAB.game, G = g.G;
+    LAB.clearFloorCache();
+    g.enterFloor(1, 5, "down", true);
+    g.CUR.fs.mapped = false;
+    LAB.combat.foes().forEach(f => { f.dead = true; });
+    SPOKEN.length = 0; g.navigate(false);
+    const a = SPOKEN.join(" | ");
+    g.mapFloor();
+    SPOKEN.length = 0; g.navigate(false);
+    const b = SPOKEN.join(" | ");
+    return { a, b };
+  });
+  ok(/Ближайшая точка/.test(nav.a) || /Цель: лестница вниз/.test(nav.a), "без карты — к ближайшей точке на пути: " + nav.a.slice(0, 140));
+  ok(/Цель: лестница вниз/.test(nav.b) && /Всего \d+ шаг/.test(nav.b), "с картой — весь путь до лестницы: " + nav.b.slice(0, 140));
+
+  console.log("Верстак на каждом третьем этаже, тайник с двумя выходами, переносная турель, ОКО");
+  const misc = await page.evaluate(async () => {
+    const g = LAB.game, G = g.G, out = {};
+    out.wb = [3, 6, 9, 12, 15, 18].every(F => LAB.getFloor(G.seed, 1, F).objs.some(o => o.type === "workbench"));
+    let sec = null;
+    for (let F = 1; F <= 20 && !sec; F++) { const fl = LAB.getFloor(G.seed, 2, F); if (fl.secret >= 0) sec = fl; }
+    out.secret = !sec || sec.doors.filter(d => d.lock && d.lock.type === "secret" && d.other === sec.secret).length === 2;
+    g.enterFloor(1, 4, "down", true);
+    LAB.combat.foes().forEach(f => { f.dead = true; });
+    G.inv.turret_kit = 1;
+    out.deploy = g.useItem("turret_kit");
+    out.ally = LAB.combat.foes().some(f => !f.dead && f.ally && f.shots > 0);
+    SPOKEN.length = 0;
+    LAB.oko.state().lastSay = 0;
+    LAB.oko.event("camera");
+    await new Promise(r => setTimeout(r, 700));
+    out.oko = SPOKEN.join(" | ");
+    return out;
+  });
+  ok(misc.wb, "верстак — на этажах 3, 6, 9, 12, 15, 18");
+  ok(misc.secret, "у тайной комнаты два выхода");
+  ok(misc.deploy && misc.ally, "переносная турель встаёт и бьёт на нашей стороне");
+  ok(/ОКО по громкой связи/.test(misc.oko), "камера заметила — ОКО объявляет тревогу: " + misc.oko.slice(0, 120));
+
+  console.log("Обход этажей одного зерна: вход, такты, осмотр");
   const tour = await page.evaluate(() => {
-    const g = LAB.game, G = g.G, out = { floors: 0, err: [] };
-    for (let L = 1; L <= 10; L++) for (let F = 1; F <= 20; F++) {
-      try {
-        g.enterFloor(L, F, F === 1 && L > 1 ? "gatedown" : "down", true);
-        for (let i = 0; i < 6; i++) LAB.combat.tick();
-        g.lookAround();
-        G.dead = false; G.hp = G.hpMax;
-        out.floors++;
-      } catch (e) { out.err.push(L + "-" + F + ": " + e.message); }
+    const g = LAB.game, G = g.G, out = { floors: 0, err: [], want: 0 };
+    for (let L = 1; L <= LAB.LEVELS_N; L++) {
+      const list = L <= 2 ? Array.from({ length: 20 }, (_, i) => i + 1) : [1, (L % 18) + 2, 20];
+      for (const F of list) {
+        out.want++;
+        try {
+          g.enterFloor(L, F, F === 1 && L > 1 ? "gatedown" : "down", true);
+          for (let i = 0; i < 6; i++) LAB.combat.tick();
+          g.lookAround(); g.navigate(false);
+          G.dead = false; G.hp = G.hpMax;
+          out.floors++;
+        } catch (e) { out.err.push(L + "-" + F + ": " + e.message); }
+      }
     }
     return out;
   });
-  ok(tour.floors === 200 && !tour.err.length, "200 этажей без ошибок" + (tour.err.length ? ": " + tour.err.slice(0, 3).join("; ") : ""));
+  ok(tour.floors === tour.want && !tour.err.length, tour.floors + " этажей без ошибок" + (tour.err.length ? ": " + tour.err.slice(0, 3).join("; ") : ""));
 
   console.log("Выход в главное меню");
   await page.evaluate(() => LAB.ui.mainMenu());

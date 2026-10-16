@@ -782,6 +782,17 @@ var UI = {
     g.gain.setValueAtTime(0.0001, t); g.gain.linearRampToValueAtTime(v, t + 0.01); g.gain.exponentialRampToValueAtTime(0.0001, t + d);
     o.start(t); o.stop(t + d + 0.05);
   },
+  /* тон с панорамой и задержкой: мелодии звуковых замков */
+  tone: function (f, d, pan, v, when) {
+    if (!AE.ensure()) return;
+    var c = AE.ctx, t = c.currentTime + (when || 0), o = c.createOscillator(), g = c.createGain(), out = g;
+    o.type = "triangle"; o.frequency.value = f; o.connect(g);
+    if (pan && c.createStereoPanner) { var p = c.createStereoPanner(); p.pan.value = pan; g.connect(p); out = p; }
+    out.connect(AE.ui);
+    v = v == null ? 0.2 : v;
+    g.gain.setValueAtTime(0.0001, t); g.gain.linearRampToValueAtTime(v, t + 0.015); g.gain.setValueAtTime(v, t + d * 0.7); g.gain.exponentialRampToValueAtTime(0.0001, t + d);
+    o.start(t); o.stop(t + d + 0.05);
+  },
   rec: function (id, fb) { var h = Bank.play(id, { bus: "ui" }); if (!h && fb) fb(); return h; },
   click: function () { var self = this; this.rec("ui_click", function () { self.blip(700, 0.06, 0.06); }); },
   move: function () { var self = this; this.rec("ui_move", function () { self.blip(760, 0.05, 0.08); }); },

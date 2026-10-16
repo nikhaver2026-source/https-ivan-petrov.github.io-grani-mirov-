@@ -30,14 +30,18 @@ function play(id, o) {
   return null;
 }
 /* Сыграть в точке этажа: панорама, громкость, глушение за стеной и за спиной. */
+var deafUntil = 0;
 function at(id, x, y, o) {
   o = o || {};
   var g = G(); if (!g) return play(id, o);
   var occ = false;
   try { occ = !LAB.los(CUR().fl, CUR().fs, g.x, g.y, x, y); } catch (e) { occ = false; }
   o.at = { dx: x - g.x, dy: y - g.y, occ: occ };
+  if (Date.now() < deafUntil) { o.lp = Math.min(o.lp || 18000, 650); o.gain = (o.gain == null ? 1 : o.gain) * 0.6; }
   return play(id, o);
 }
+/* Визг оглушил: на время звуки вокруг глохнут, будто уши заложило. */
+function deafen(ms) { deafUntil = Date.now() + (ms || 3000); play("deaf_ring", { gain: 0.5, bus: "fx", fb: function (s) { s.note(3900, 0, 2.2, "sine", 0.03); } }); }
 function sub(t) { if (S.subtitles) LAB.sub(t); }
 
 /* Длинные записи (музыка, фон уровня) — тоже из памяти, как все звуки: поток
@@ -69,16 +73,34 @@ function loop(id, o) {
 var stepN = 0;
 function step(surf, run, door) {
   stepN++;
-  var id = "step_" + (surf || "plate");
-  play(has(id) ? id : "step_plate", { gain: run ? 0.95 : 0.8, rate: run ? 1.04 : 1, pan: stepN % 2 ? -0.12 : 0.12, reverb: 0.18, bus: "fx" });
+  var sd = LAB.SURF[surf] || {}, base = sd.base || surf || "plate", rate = sd.rate || 1;
+  var id = "step_" + base;
+  play(has(id) ? id : "step_plate", { gain: run ? 1 : 0.88, rate: (run ? 1.04 : 1) * rate, pan: stepN % 2 ? -0.12 : 0.12, reverb: 0.16, bus: "fx" });
   if (door) play("door_threshold", { gain: 0.5 });
+  wallEcho(id, rate);
+}
+/* Отзвук стены: если стена вплотную слева или справа, шаг отдаётся от неё
+   тихим коротким эхом с той стороны — в широком коридоре так слышно, у какой
+   вы стены. */
+function wallEcho(id, rate) {
+  var g = G(), cur = CUR();
+  if (!g || !cur || !cur.fl) return;
+  var sides = [["W", -1, 0], ["E", 1, 0], ["N", 0, -1], ["S", 0, 1]];
+  sides.forEach(function (q) {
+    var x = g.x + q[1], y = g.y + q[2];
+    if (!LAB.inb(x, y) || cur.fl.t[idx(x, y)] !== LAB.T.WALL) return;
+    var pan = q[1] * 0.85, lp = q[2] > 0 ? 1800 : 5200;
+    play(has("step_echo") ? "step_echo" : id, { gain: q[2] ? 0.14 : 0.22, rate: (rate || 1) * 1.08, pan: pan, lp: lp, delay: 0.035 + Math.random() * 0.01, reverb: 0, bus: "fx", vary: 0 });
+  });
 }
 function bump() { play("bump_body", { gain: 0.8 }); }
 /* Удар о стену: стены везде стальные, и звук всегда один и тот же — одна
    запись, без случайной высоты и без фильтра; только сторона (слева, справа). */
 function bumpWall(dir) {
   var v = DIRV[dir] || [0, -1];
-  play("bump_wall", { pan: v[0] * 0.5, gain: 0.95, variant: 0, vary: 0, reverb: 0.3 });
+  /* стена спереди — звонко, сзади — глуше, слева и справа — с той стороны */
+  play("bump_wall", { pan: v[0] * 0.75, gain: 1, variant: 0, vary: 0, reverb: 0.35, lp: v[1] > 0 ? 2200 : null });
+  play("bump_wall_thud", { pan: v[0] * 0.6, gain: 0.9, reverb: 0.1, fb: FB.bump_wall_thud });
 }
 function bumpSoft(o) { play(o && (o.type === "terminal" || o.type === "vending" || o.type === "medst" || o.type === "charger" || o.type === "magnetron" || o.type === "positron") ? "bump_device" : "bump_furniture", { gain: 0.8 }); }
 function near() { play("near_tick", { gain: 0.6, bus: "ui" }); }
@@ -123,7 +145,8 @@ var beaconT = null, nextPing = {};
 var OBJ_BEACON = { stairs_down: "bcn_stairs", stairs_up: "bcn_stairs_up", elevator: "bcn_elevator", gate_down: "bcn_gate", reactor: "bcn_reactor",
   terminal: "bcn_terminal", magnetron: "bcn_magnetron", positron: "bcn_positron", capsule: "bcn_capsule", vending: "bcn_vending", workbench: "bcn_workbench",
   medst: "bcn_medst", charger: "bcn_charger", implantlab: "bcn_implantlab", hq: "bcn_hq", safe: "bcn_safe",
-  pc: "bcn_pc", coffee: "bcn_coffee", drinks: "bcn_drinks" };
+  pc: "bcn_pc", coffee: "bcn_coffee", drinks: "bcn_drinks", radio: "bcn_radio", okoterm: "bcn_oko", puzzle: "bcn_puzzle" };
+var OBJ_BEACON_FB = { bcn_radio: ["bcn_pc", 0.75], bcn_oko: ["bcn_terminal", 1.35], bcn_puzzle: ["bcn_vending", 1.25] };
 var OBJ_RANGE = { stairs_down: 16, stairs_up: 10, gate_down: 18, elevator: 12, reactor: 20 };
 function beaconTick() {
   var g = G(), cur = CUR();
@@ -155,7 +178,9 @@ function beaconTick() {
     var k = s.d / s.max;
     var gap = 700 + k * 2600 + (s.obj ? 600 : 0);
     nextPing[s.key] = now + gap * (0.9 + Math.random() * 0.2);
-    at(has(s.id) ? s.id : "bcn_default", s.x, s.y, { bus: "beacon", gain: (jam ? 0.35 : 1) * (1.1 - k * 0.55), lp: jam ? 1200 : null, reverb: 0.12 });
+    var bid = s.id, brate = 1;
+    if (!has(bid) && OBJ_BEACON_FB[bid]) { brate = OBJ_BEACON_FB[bid][1]; bid = OBJ_BEACON_FB[bid][0]; }
+    at(has(bid) ? bid : "bcn_default", s.x, s.y, { bus: "beacon", gain: (jam ? 0.35 : 1) * (1.1 - k * 0.55), lp: jam ? 1200 : null, reverb: 0.12, rate: brate });
   });
 }
 
@@ -190,14 +215,16 @@ var EVENTS_L = {
   9: ["ev_ring_whine", "ev_electric", "ev_phase", "ev_far_boom", "ev_metal_groan"],
   10: ["ev_rift_pulse", "ev_phase", "ev_far_roar", "ev_metal_groan", "ev_far_boom", "ev_whisper"]
 };
+function levelEvents(L) { var lv = LAB.LEVELS[L]; return (lv && lv.ev && lv.ev.length) ? lv.ev : (EVENTS_L[L] || EVENTS_L[((L - 1) % 10) + 1] || EVENTS_L[1]); }
 /* Записи уровня: голоса его врагов, его пол, его далёкие события.
    Записи прошлого уровня выгружаются — память телефона не резиновая. */
 var levelIds = [], levelL = 0;
 function idsFor(L) {
   var lev = LAB.LEVELS[L], out = [], sets = {};
   var foes = lev.foes.slice();
-  if (L < LAB.LEVELS_N) LAB.LEVELS[L + 1].foes.forEach(function (f) { if (LAB.FOES[f].kind === "mech") foes.push(f); });
-  foes.forEach(function (f) { sets[LAB.FOES[f].snd] = 1; });
+  if (L < LAB.LEVELS_N && LAB.LEVELS[L + 1]) LAB.LEVELS[L + 1].foes.forEach(function (f) { if (LAB.FOES[f] && LAB.FOES[f].kind === "mech") foes.push(f); });
+  foes.push("cam", "cleaner", "miniturret", "turret");
+  foes.forEach(function (f) { if (LAB.FOES[f]) sets[LAB.FOES[f].snd] = 1; });
   if (lev.boss && LAB.BOSSES[lev.boss]) sets[LAB.BOSSES[lev.boss].snd] = 1;
   if (sets.labmut || sets.roach) sets.rat = 1;
   var all = Object.keys(LAB.SND || {});
@@ -205,8 +232,9 @@ function idsFor(L) {
     var m = id.match(/^([a-z]+)_(idle|alert|attack|hurt|death|step)$/);
     if (m && sets[m[1]]) out.push(id);
   });
-  out.push("step_" + lev.surf);
-  (EVENTS_L[L] || []).forEach(function (id) { out.push(id); });
+  var sf = LAB.SURF[lev.surf] || {};
+  out.push("step_" + (sf.base || lev.surf));
+  levelEvents(L).forEach(function (id) { out.push(id); });
   return out;
 }
 function preloadLevel(L) {
@@ -275,7 +303,7 @@ function scheduleEvent() {
     if (!worldOn) return;
     var g2 = G();
     if (g2 && LAB.game.entered && !LAB.game.paused && !(LAB.ui && LAB.ui.layer())) {
-      var pool = EVENTS_L[g2.L] || EVENTS_L[1];
+      var pool = levelEvents(g2.L);
       var id = pool[Math.floor(Math.random() * pool.length)];
       var ang = Math.random() * Math.PI * 2, dist = 6 + Math.random() * 10;
       play(id, { at: { dx: Math.cos(ang) * dist, dy: Math.sin(ang) * dist, occ: true }, bus: "amb", gain: 0.8 + Math.random() * 0.4, reverb: 0.5, rate: 0.9 + Math.random() * 0.2 });
@@ -355,18 +383,22 @@ function foeSound(f, kind) {
     summon: f.kind === "mech" ? "robot_summon" : "mutant_summon", blink_out: "phase_out", blink_in: "phase_in", mine_set: "mine_set", mortar_fire: "mortar_fire", hurt: f.kind === "mech" ? "robot_hurt" : "mutant_hurt"
   };
   if (!has(id)) id = generic[kind] || id;
-  at(id, f.x, f.y, { gain: kind === "idle" ? 0.7 : 1, rate: f.boss ? 0.85 : 1 });
+  var br = (f.base && f.base.sndRate) || 1;
+  if (f.boss && LAB.BOSSES[f.boss] && LAB.BOSSES[f.boss].sndRate) br = LAB.BOSSES[f.boss].sndRate;
+  at(id, f.x, f.y, { gain: kind === "idle" ? 0.7 : 1, rate: br * (f.boss ? 0.85 : 1) });
+  /* турель: перед наведением слышно, как поворачивается сервопривод */
+  if (f.base && f.base.beh && f.base.beh.indexOf("turret") >= 0 && (kind === "alert" || kind === "aim")) at("turret_servo", f.x, f.y, { gain: 0.8, rate: br, fb: FB.turret_servo, delay: kind === "aim" ? 0 : 0.15 });
   if (kind === "alert") sub((f.name || "Враг").split(",")[0] + " заметил вас");
 }
 function foeStep(f) {
   if (Math.random() < 0.35 && f.kind === "bio" && !/rat|roach|micro/.test(f.type)) return;
   var id = f.kind === "mech" ? (has(f.snd + "_step") ? f.snd + "_step" : "robot_step") : (has(f.snd + "_step") ? f.snd + "_step" : "mutant_step");
-  at(id, f.x, f.y, { gain: f.boss ? 1 : 0.65, rate: f.boss ? 0.8 : 1 });
+  at(id, f.x, f.y, { gain: f.boss ? 1 : 0.65, rate: ((f.base && f.base.sndRate) || 1) * (f.boss ? 0.8 : 1) });
 }
 function foeHit(f, dt, dmg, crit) { at(f.kind === "mech" ? "hit_metal" : "hit_flesh", f.x, f.y, { gain: crit ? 1.2 : 0.9 }); if (Math.random() < 0.5) foeSound(f, "hurt"); }
 function foeDeath(f) {
   var id = foeSet(f) + "_death";
-  at(has(id) ? id : (f.kind === "mech" ? "robot_death" : "mutant_death"), f.x, f.y, { gain: 1.1, rate: f.boss ? 0.8 : 1 });
+  at(has(id) ? id : (f.kind === "mech" ? "robot_death" : "mutant_death"), f.x, f.y, { gain: 1.1, rate: ((f.base && f.base.sndRate) || 1) * (f.boss ? 0.8 : 1) });
   if (f.kind === "mech") at("debris", f.x, f.y, { gain: 0.7, delay: 0.25 });
   sub((f.name || "").split(",")[0] + " — повержен");
 }
@@ -378,11 +410,18 @@ function hurt(adt, dmg, src) {
 }
 
 /* ════════ ВЫСТРЕЛЫ ГЕРОЯ ════════ */
+/* Выстрел: запись оружия, а у мощного — ещё низкий удар и треск разряда:
+   чем круче оружие (редкость, качество, класс), тем мощнее звук. */
+var HEAVY_CLS = { positron: 2, gauss: 2, plasma: 1, magnetron: 1, grav: 2, phase: 1, sonic: 1 };
 function shot(w, dir, burst) {
-  var v = DIRV[dir] || [0, -1];
-  var id = LAB.WEAPONS[w.base].snd || "w_blaster_s";
-  if (!has(id)) id = LAB.WEAPONS[w.base].cls === "magnetron" ? "w_magnetron" : "w_blaster_s";
-  play(id, { pan: v[0] * 0.35, gain: burst ? 0.85 : 1, rate: burst ? 1.03 : 1, reverb: 0.3 });
+  var v = DIRV[dir] || [0, -1], b = LAB.WEAPONS[w.base] || {};
+  var id = b.snd || "w_blaster_s";
+  if (!has(id)) id = b.cls === "magnetron" ? "w_magnetron" : "w_blaster_s";
+  var power = (w.rank || 0) + Math.max(0, (w.qual || 1) - 2) * 0.5 + (HEAVY_CLS[b.cls] || 0) + (b.dmg >= 30 ? 1 : 0) + (b.area || b.pierce ? 1 : 0);
+  play(id, { pan: v[0] * 0.35, gain: burst ? 0.9 : 1.05, rate: (b.sndRate || 1) * (burst ? 1.03 : 1), reverb: 0.3 });
+  if (b.cls === "melee") { if (b.dt === "shock") play("w_shock_crack", { pan: v[0] * 0.3, gain: 0.8, fb: FB.w_shock_crack }); return; }
+  if (power >= 2) play("w_power_low", { pan: v[0] * 0.2, gain: Math.min(1, 0.35 + power * 0.12) * (burst ? 0.7 : 1), rate: 1 - Math.min(0.15, power * 0.02), reverb: 0.4, fb: FB.w_power_low });
+  if (power >= 4) play("w_power_crack", { pan: v[0] * 0.4, gain: Math.min(0.9, 0.25 + power * 0.08), delay: 0.04, reverb: 0.5, fb: FB.w_power_crack });
 }
 function shotWall(w, x, y) { var cls = LAB.WEAPONS[w.base].cls; at(cls === "positron" ? "impact_positron" : cls === "magnetron" ? "impact_wave" : "impact_wall", x, y, { gain: 0.8 }); }
 function shotMiss(w, f) { at("impact_wall", f.x + (Math.random() < 0.5 ? 1 : -1), f.y, { gain: 0.7 }); }
@@ -398,6 +437,13 @@ function shellIncoming(x, y) { at("shell_whistle", x, y, { gain: 1.1 }); sub("С
 function mineBeep(x, y) { at("mine_beep", x, y, { gain: 0.8, bus: "ui" }); }
 function dropLoot(x, y) { at("loot_drop", x, y, { gain: 0.7 }); }
 function implant(id) { play("implant_" + id, { fb: FB.implant }); }
+/* ОКО: позывной громкой связи, тревога, приманка. */
+function okoChime() { play("oko_chime", { gain: 0.9, bus: "fx", reverb: 0.6, fb: FB.oko_chime }); }
+function okoAlarm() { play("ev_alarm_start", { gain: 0.8, reverb: 0.5 }); play("alarm_short", { gain: 0.6, delay: 0.3 }); }
+function noiseLure(x, y) {
+  for (var i = 0; i < 6; i++) at("mine_beep", x, y, { gain: 0.9, delay: i * 0.45, rate: i % 2 ? 1.2 : 1 });
+  at("impact_wall", x, y, { gain: 0.8, delay: 0.1 });
+}
 
 /* ════════ МУЗЫКА ════════
    Записи, если есть (mus_menu, mus_game, mus_ending), иначе — давящий
@@ -408,11 +454,13 @@ function music(theme) {
   var L = G() ? G().L : 1;
   var key = theme === "game" ? "game" + L : theme;
   if (key === mus.key && (mus.h || mus.s)) return;
+  /* тот же трек на соседнем уровне — играет дальше, не начинается заново */
+  if (theme === "game" && mus.theme === "game" && mus.h && mus.tid && mus.tid === levelMusic(L) && has(mus.tid)) { mus.key = key; return; }
   stopMusic();
   mus.theme = theme; mus.key = key;
   if (!S.music || !AE.ensure()) return;
-  var tid = theme === "game" ? "mus_l" + L : "mus_" + theme;
-  if (theme === "game" && !has(tid)) tid = "mus_game";
+  var tid = theme === "game" ? levelMusic(L) : "mus_" + theme;
+  if (theme === "game" && !has(tid)) tid = "mus_l" + (((L - 1) % 10) + 1);
   if (has(tid)) {
     mus.tid = tid;
     mus.h = loop(tid, { bus: "music", gain: 1, fadeIn: 4, reverb: 0 });
@@ -428,6 +476,16 @@ function stopMusic() {
   mus.timers.forEach(function (t) { clearInterval(t); clearTimeout(t); });
   mus.timers = [];
   mus.theme = ""; mus.key = "";
+}
+/* Музыка уровня: до Ядра — своя у каждого уровня; глубже — набор блока
+   (mus_b<блок>_<n>), трек меняется каждые несколько уровней. */
+function levelMusic(L) {
+  if (L <= 10) return "mus_l" + L;
+  var b = LAB.blockOf(L), set = [];
+  for (var i = 1; i <= 8; i++) if (has("mus_b" + b + "_" + i)) set.push("mus_b" + b + "_" + i);
+  if (!set.length) return "mus_l" + (((L - 1) % 10) + 1);
+  var k = Math.floor(((L - 1) % 20) / Math.max(1, Math.ceil(20 / set.length)));
+  return set[Math.min(set.length - 1, k)];
 }
 /* Что играет сейчас: запись и звучит ли она (для самопроверки). */
 function musicNow() { var h = mus.h && (mus.h.src ? mus.h : mus.h.h); return { id: mus.tid, on: !!(h && h.src && !h.stopped), synth: !!mus.s }; }
@@ -524,7 +582,15 @@ var FB = {
   robot_death: function (s) { s.zap(); s.clang(200); }, mutant_death: function (s) { s.screech(); }, robot_step: function (s) { s.servo(Math.random() < 0.5); }, mutant_step: function (s) { s.footstep(0); },
   foe_aim: function (s) { s.charge(0.4); }, hurt_phys: function (s) { s.thump(0, 0.6); }, implant: function (s) { s.charge(0.5); },
   heartbeat: function (s) { s.thump(0, 0.5); }, gate_open: function (s) { s.servo(true); s.hum(60, 3, 0.1); }, gate_seal: function (s) { s.boom(0.8); s.clang(70); },
-  shell_whistle: function (s) { s.whoosh(false); }, mine_beep: function (s) { s.note(2400, 0, 0.05, "square", 0.04); }
+  shell_whistle: function (s) { s.whoosh(false); }, mine_beep: function (s) { s.note(2400, 0, 0.05, "square", 0.04); },
+  bump_wall_thud: function (s) { s.thump(0, 0.55); },
+  turret_servo: function (s) { s.servo(true); },
+  w_power_low: function (s) { s.thump(0, 0.7); },
+  w_power_crack: function (s) { s.zap(); },
+  w_shock_crack: function (s) { s.zap(); },
+  oko_chime: function (s) { s.note(784, 0, 0.35, "sine", 0.09); s.note(523, 0.32, 0.5, "sine", 0.09); },
+  power_off: function (s) { s.servo(false); s.note(120, 0, 0.6, "sawtooth", 0.05); },
+  deaf_ring: function (s) { s.note(3900, 0, 2.2, "sine", 0.03); }
 };
 
 LAB.atmos = {
@@ -535,7 +601,7 @@ LAB.atmos = {
   navPing: navPing, navStart: navStart, pickup: pickup,
   foeSound: foeSound, foeStep: foeStep, foeHit: foeHit, foeDeath: foeDeath, foeMiss: foeMiss, hurt: hurt,
   shot: shot, shotWall: shotWall, shotMiss: shotMiss, swingMiss: swingMiss, explosion: explosion, grenade: grenade, shellIncoming: shellIncoming,
-  mineBeep: mineBeep, dropLoot: dropLoot, implant: implant, combatLevel: combatLevel,
+  mineBeep: mineBeep, dropLoot: dropLoot, implant: implant, combatLevel: combatLevel, okoChime: okoChime, okoAlarm: okoAlarm, noiseLure: noiseLure, deafen: deafen,
   music: music, stopMusic: stopMusic, musicVolume: musicVolume, musicNow: musicNow, preloadLevel: preloadLevel, idsFor: idsFor
 };
 })();

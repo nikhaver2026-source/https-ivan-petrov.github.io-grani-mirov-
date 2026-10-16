@@ -45,11 +45,11 @@ LAB.DIFF = [
 /* Уровни доступа: пропуска. */
 LAB.TIERS = [
   null,
-  { n: "Зелёный пропуск", color: "зелёный", short: "зелёного" },
-  { n: "Синий пропуск", color: "синий", short: "синего" },
-  { n: "Жёлтый пропуск", color: "жёлтый", short: "жёлтого" },
-  { n: "Красный пропуск", color: "красный", short: "красного" },
-  { n: "Чёрный пропуск «Омега»", color: "чёрный", short: "чёрного" }
+  { n: "Зелёный пропуск", color: "зелёный", short: "зелёного уровня" },
+  { n: "Синий пропуск", color: "синий", short: "синего уровня" },
+  { n: "Жёлтый пропуск", color: "жёлтый", short: "жёлтого уровня" },
+  { n: "Красный пропуск", color: "красный", short: "красного уровня" },
+  { n: "Чёрный пропуск «Омега»", color: "чёрный", short: "чёрного уровня «Омега»" }
 ];
 
 /* ── 10 УРОВНЕЙ ── */
@@ -58,43 +58,43 @@ LAB.LEVELS = [
   { n: 1, name: "Приёмный шлюз", gen: "Приёмного шлюза", tier: 1, root: 220, surf: "plate", card: "boss", amb: "amb_l1",
     desc: "Проходная, офисы и посты охраны у самой поверхности. Отсюда начиналась каждая смена. Под ногами — стальные плиты проходной: каждый шаг отдаётся звоном.",
     rooms: ["entry", "guard", "office", "canteen", "lounge", "archive", "storage", "server", "medpost", "locker", "meeting", "comms", "testing", "psych", "decon", "cafeteria", "workroom", "headoffice"],
-    foes: ["rat", "roach", "labmut", "drone"], boss: "b_grachev" },
+    foes: ["rat", "roach", "labmut", "drone", "courier"], boss: "b_grachev" },
   { n: 2, name: "Жилой сектор", gen: "Жилого сектора", tier: 1, root: 196, surf: "sheet", card: "hidden", amb: "amb_l2",
     desc: "Каюты, столовые и медблок. Здесь персонал жил годами, не поднимаясь наверх. Под ногами — тонкая листовая сталь кают и коридоров, шаг глухой и короткий.",
     rooms: ["cabin", "dorm", "laundry", "gym", "kitchen", "library", "medbay", "quiet", "wintergarden", "showers", "office", "storage", "sleeplab", "isolation", "classroom", "cafeteria", "workroom"],
-    foes: ["labmut", "roach", "slug", "drone", "spiderbot"], boss: "b_brood" },
+    foes: ["labmut", "roach", "slug", "drone", "spiderbot", "patrolbot"], boss: "b_brood" },
   { n: 3, name: "Гидропоника", gen: "Гидропоники", tier: 2, root: 174.6, surf: "wetmetal", card: "boss", amb: "amb_l3",
     desc: "Теплицы, баки с раствором и грибницы. Влажно, капает, шелестит то, что не должно шелестеть. Под ногами — мокрый металл: раствор сочится на стальные плиты.",
     rooms: ["greenhouse", "tankfarm", "mycelium", "pumps", "seedbank", "soillab", "compost", "storage", "lounge", "server", "darkfarm", "climate", "aeroponics", "cafeteria", "workroom", "headoffice"],
-    foes: ["vine", "spore", "slug", "swamp", "gardenbot", "drone"], boss: "b_root" },
+    foes: ["vine", "spore", "slug", "swamp", "gardenbot", "drone", "welder", "installer"], boss: "b_root" },
   { n: 4, name: "Генетические лаборатории", gen: "Генетических лабораторий", tier: 2, root: 164.8, surf: "steel", card: "boss", amb: "amb_l4",
     desc: "Виварии, инкубаторы и операционные программы «Химера». Сердце катастрофы. Под ногами — гладкая нержавеющая сталь операционных.",
     rooms: ["vivarium", "incubator", "sequencer", "surgery", "embryo", "isolator", "genelab", "medbay", "archive", "storage", "geneeng", "cloning", "maze", "regen", "cafeteria", "workroom"],
-    foes: ["chimera", "lizard", "weaver", "blind", "labmut", "spiderbot", "repairbot"], boss: "b_hydra" },
+    foes: ["chimera", "lizard", "weaver", "blind", "labmut", "spiderbot", "repairbot", "mimicbox"], boss: "b_hydra" },
   { n: 5, name: "Робототехника", gen: "Робототехники", tier: 3, root: 146.8, surf: "checker", card: "hidden", amb: "amb_l5",
     desc: "Сборочные цеха, склады деталей и полигоны. Здесь собирали тех, кто теперь охотится на людей. Под ногами — рифлёные стальные листы цехов.",
     rooms: ["assembly", "parts", "range", "ailab", "charging", "repair", "storage", "server", "office", "acoustic", "navtrack", "neuro", "cafeteria", "workroom", "headoffice"],
-    foes: ["spiderbot", "guardbot", "turret", "drone", "repairbot", "shieldbot", "sapper"], boss: "b_goliath" },
+    foes: ["spiderbot", "guardbot", "turret", "drone", "repairbot", "shieldbot", "sapper", "foreman", "loader", "installer", "patrolbot"], boss: "b_goliath" },
   { n: 6, name: "Энергоблок", gen: "Энергоблока", tier: 3, root: 130.8, surf: "grate", card: "boss", amb: "amb_l6",
     desc: "Генераторы, трансформаторы и магнетронные залы. Всё гудит и пахнет озоном. Под ногами — стальной решётчатый настил над кабелями.",
     rooms: ["genhall", "transformer", "magnetron_hall", "switchboard", "cable", "powerdesk", "storage", "repair", "hvlab", "faraday", "supercond", "cafeteria", "workroom"],
-    foes: ["spark", "pturret", "repairbot", "guardbot", "blind", "hunter", "shieldbot"], boss: "b_leviathan" },
+    foes: ["spark", "pturret", "repairbot", "guardbot", "blind", "hunter", "shieldbot", "welder", "foreman"], boss: "b_leviathan" },
   { n: 7, name: "Криохранилище", gen: "Криохранилища", tier: 4, root: 123.5, surf: "frost", card: "boss", amb: "amb_l7",
     desc: "Криокамеры и морозильники образцов. Иней на стенах и тишина, в которой слышно своё дыхание. Под ногами — обледенелые стальные плиты.",
     rooms: ["cryohall", "freezer", "samples", "compressor", "thaw", "storage", "medbay", "server", "coldtest", "cryosleep", "barochamber", "cafeteria", "workroom"],
-    foes: ["frozen", "thawed", "weaver", "watcher", "drone", "hunter", "mortar"], boss: "b_colossus" },
+    foes: ["frozen", "thawed", "weaver", "watcher", "drone", "hunter", "mortar", "loader", "mimicbox"], boss: "b_colossus" },
   { n: 8, name: "Оружейные лаборатории", gen: "Оружейных лабораторий", tier: 4, root: 110, surf: "armor", card: "hidden", amb: "amb_l8",
     desc: "Испытательные стенды, тир и арсенал. Здесь создавали бластеры, магнетроны и позитронные пушки. Под ногами — толстые бронеплиты стендов и бункеров.",
     rooms: ["testbench", "shooting", "arsenal", "ballistics", "armorlab", "bunker", "storage", "office", "armortest", "sonicrange", "emplab", "cafeteria", "headoffice"],
-    foes: ["android", "hturret", "soldier", "guardbot", "spiderbot", "mortar", "relay", "sapper"], boss: "b_alpha" },
+    foes: ["android", "hturret", "soldier", "guardbot", "spiderbot", "mortar", "relay", "sapper", "foreman", "installer", "patrolbot"], boss: "b_alpha" },
   { n: 9, name: "Магнетронный ускоритель", gen: "Магнетронного ускорителя", tier: 5, root: 98, surf: "catwalk", card: "hidden", amb: "amb_l9",
     desc: "Кольцо ускорителя проходит сквозь все этажи. Поле здесь нестабильно, и воздух звенит. Под ногами — подвесные стальные мостки над кольцом.",
     rooms: ["ring", "detector", "accdesk", "targetroom", "vacuum", "magnetron_hall", "storage", "server", "anechoic", "phaselab", "gravlab", "cafeteria", "workroom"],
-    foes: ["phase", "interceptor", "spark", "android", "soldier", "micro", "relay", "titan"], boss: "b_phantom" },
+    foes: ["phase", "interceptor", "spark", "android", "soldier", "micro", "relay", "titan", "foreman", "courier"], boss: "b_phantom" },
   { n: 10, name: "Ядро", gen: "Ядра", tier: 5, root: 82.4, surf: "deck", card: "boss", amb: "amb_l10",
     desc: "Позитронный реактор «Исток» и бастион ОКО. Отсюда начался Разлом — здесь он и должен закончиться. Под ногами — гулкий стальной настил реакторного зала.",
     rooms: ["reactorhall", "containment", "chiefdesk", "bastion", "annihilation", "magnetron_hall", "storage", "riftobs", "expedition", "cradlelab", "cafeteria"],
-    foes: ["proto", "coreguard", "phase", "hturret", "interceptor", "titan", "micro", "relay"], boss: "b_omega" }
+    foes: ["proto", "coreguard", "phase", "hturret", "interceptor", "titan", "micro", "relay", "foreman", "installer"], boss: "b_omega" }
 ];
 
 /* ── ПОМЕЩЕНИЯ ──
@@ -264,7 +264,10 @@ LAB.OBJ = {
   wake:      { n: "Криокапсула", icon: "🧊", desc: "Капсула, в которой вы спали. Выход на поверхность закрыт карантином." },
   reactor:   { n: "Пульт реактора", icon: "☢️", desc: "Пульт управления позитронным реактором «Исток»." },
   express:   { n: "Скоростной лифт на поверхность", icon: "🛗", desc: "Лифт наверх. Открылся после глушения реактора." },
-  hq:        { n: "Штаб фракции", icon: "🛡️", desc: "Место сбора одной из группировок выживших." }
+  hq:        { n: "Штаб фракции", icon: "🛡️", desc: "Место сбора одной из группировок выживших." },
+  radio:     { n: "Радиоприёмник", icon: "📻", desc: "Старый приёмник с катушкой плёнки: ловит переговоры выживших и ОКО, а на плёнке бывают записаны мелодии звуковых замков." },
+  okoterm:   { n: "Панель ОКО", icon: "👁️", desc: "Говорящая панель искусственного интеллекта: ОКО слушает через неё этаж, задаёт вопросы и иногда отвечает. Панель можно заглушить." },
+  puzzle:    { n: "Стенд испытаний", icon: "🧩", desc: "Испытательный стенд для проверки слуха и смекалки сотрудников: решите задачу — откроется лоток с наградой." }
 };
 
 /* ── ВРАГИ ──
@@ -314,20 +317,34 @@ LAB.FOES = {
   mortar:  { n: "Миномётный робот", g: "m", kind: "mech", desc: "Робот с мортирой: бьёт навесом через стены туда, где вас слышал. Свист снаряда — значит, пора сойти с места.", hp: 60, dmg: 18, arm: 8, spd: 3, rng: 9, acd: 4, det: 8, beh: ["ranged", "indirect"], adt: "phys", snd: "mortar", xp: 32, min: 1 },
   relay:   { n: "Узел ОКО", g: "m", kind: "mech", desc: "Неподвижный ретранслятор искусственного интеллекта. Пока он цел, роботы вокруг умнее и зовут подмогу.", hp: 80, dmg: 0, arm: 10, spd: 99, rng: 0, acd: 99, det: 10, beh: ["stationary", "relay"], adt: "shock", snd: "relay", xp: 40, min: 1 },
   micro:   { n: "Рой микродронов", g: "m", kind: "mech", desc: "Облако крошечных дронов с лезвиями. Каждый слаб, но их много, и они не отстают.", hp: 12, dmg: 5, arm: 0, spd: 1, rng: 1, acd: 1, det: 7, beh: ["chase", "swarm"], adt: "phys", snd: "micro", xp: 9, min: 1 },
-  titan:   { n: "Шагающий танк «Титан»", g: "m", kind: "mech", desc: "Четырёхногая боевая машина с плазменной пушкой. Пол дрожит от его шагов, залп задевает и соседние клетки.", hp: 160, dmg: 22, arm: 16, spd: 3, rng: 7, acd: 3, det: 8, beh: ["ranged", "splash"], adt: "energy", snd: "titan", xp: 60, min: 1 }
+  titan:   { n: "Шагающий танк «Титан»", g: "m", kind: "mech", desc: "Четырёхногая боевая машина с плазменной пушкой. Пол дрожит от его шагов, залп задевает и соседние клетки.", hp: 160, dmg: 22, arm: 16, spd: 3, rng: 7, acd: 3, det: 8, beh: ["ranged", "splash"], adt: "energy", snd: "titan", xp: 60, min: 1 },
+  /* машины ОКО, которые есть везде: камеры, уборщики, курьеры, начальники */
+  cam:     { n: "Камера ОКО", g: "f", kind: "mech", desc: "Камера под потолком коридора, с микрофоном и красным огоньком. Не стреляет — видит. Заметит вас — ОКО поднимет тревогу и пошлёт роботов. Поворачиваясь, тихо пищит сервоприводом.", hp: 10, dmg: 0, arm: 2, spd: 99, rng: 0, acd: 99, det: 7, beh: ["stationary", "camera"], adt: "shock", snd: "relay", sndRate: 1.45, xp: 6, min: 1 },
+  cleaner: { n: "Робот-уборщик РУ", g: "m", kind: "mech", desc: "Низкий робот с щётками и баком моющего раствора. Людей не трогает, пока его не тронуть, но подбирает с пола всё подряд и докладывает ОКО, кого видел. Разбитый уборщик вываливает собранное.", hp: 26, dmg: 4, arm: 3, spd: 2, rng: 1, acd: 2, det: 5, beh: ["chase", "cleaner"], adt: "chem", snd: "repairbot", sndRate: 1.25, xp: 8, min: 1 },
+  courier: { n: "Дрон-курьер", g: "m", kind: "mech", desc: "Лёгкий дрон с контейнером: носит посылки ОКО по коридорам. Стреляет слабо и норовит улететь; в контейнере бывают детали и батареи.", hp: 14, dmg: 3, arm: 1, spd: 1, rng: 4, acd: 3, det: 6, beh: ["ranged", "patrol"], adt: "energy", snd: "drone", sndRate: 1.3, xp: 9, min: 1, carrier: true },
+  patrolbot:{ n: "Патрульный робот «Дозор»", g: "m", kind: "mech", desc: "Двуногий патрульный: ходит по коридорам, открывает двери, стреляет из лёгкого бластера и вызывает подмогу.", hp: 50, dmg: 8, arm: 6, spd: 2, rng: 5, acd: 2, det: 7, beh: ["ranged", "patrol", "dooropen"], adt: "energy", snd: "android", sndRate: 1.1, xp: 22, min: 1, carrier: true },
+  foreman: { n: "Робот-начальник смены", g: "m", kind: "mech", desc: "Робот с громкоговорителем и антеннами связи. Сам стреляет нечасто, но рядом с ним другие роботы умнее и злее. Уничтожьте его первым — остальные растеряются.", hp: 64, dmg: 8, arm: 7, spd: 2, rng: 5, acd: 3, det: 8, beh: ["ranged", "commander", "dooropen"], adt: "energy", snd: "guardbot", sndRate: 0.9, xp: 30, min: 1, carrier: true },
+  loader:  { n: "Робот-погрузчик", g: "m", kind: "mech", desc: "Тяжёлый погрузчик с вилами-захватами. Разгоняется по прямой и бьёт с разгона; поворачивает медленно — уходите в сторону.", hp: 78, dmg: 12, arm: 9, spd: 2, rng: 1, acd: 2, det: 6, beh: ["chase", "charge"], adt: "phys", snd: "watcher", sndRate: 1.1, xp: 26, min: 1 },
+  welder:  { n: "Робот-сварщик", g: "m", kind: "mech", desc: "Манипулятор на гусеницах со сварочной горелкой. Жжёт в упор; шипение горелки слышно издалека.", hp: 40, dmg: 9, arm: 5, spd: 2, rng: 1, acd: 2, det: 5, beh: ["chase"], adt: "therm", snd: "repairbot", sndRate: 0.9, xp: 18, min: 1 },
+  installer:{ n: "Робот-монтажник", g: "m", kind: "mech", desc: "Робот с ящиком деталей за спиной: в бою ставит рядом лёгкие турели. Пока он цел, турели будут появляться снова.", hp: 44, dmg: 6, arm: 5, spd: 2, rng: 4, acd: 3, det: 6, beh: ["ranged", "builder"], adt: "energy", snd: "spiderbot", sndRate: 0.85, xp: 24, min: 1 },
+  mimicbox:{ n: "Ящик-ловушка", g: "m", kind: "mech", desc: "Робот-охранник склада в корпусе ящика. Стоит смирно, пока вы не подойдёте вплотную, — тогда раскрывается и режет.", hp: 42, dmg: 12, arm: 6, spd: 2, rng: 1, acd: 2, det: 2, beh: ["chase", "mimic"], adt: "phys", snd: "spiderbot", sndRate: 0.8, xp: 22, min: 1 },
+  miniturret:{ n: "Лёгкая турель", g: "f", kind: "mech", desc: "Складная турель робота-монтажника: хрупкая, но меткая.", hp: 16, dmg: 5, arm: 3, spd: 99, rng: 6, acd: 2, det: 6, beh: ["stationary", "ranged", "turret"], adt: "phys", snd: "turret", sndRate: 1.2, xp: 6, min: 1 }
 };
 
 /* Слабости и стойкости: множитель урона по виду. */
 LAB.DMG_VS = {
-  bio:  { kinetic: 1, shock: 0.8, energy: 1, laser: 1, ion: 0.5, plasma: 1.4, magnetron: 1.8, positron: 1.6, gauss: 1.1, cryo: 1, thermo: 1.5, emp: 0.15 },
-  mech: { kinetic: 0.8, shock: 1.6, energy: 1, laser: 1.1, ion: 2, plasma: 0.9, magnetron: 1.2, positron: 1.6, gauss: 1.2, cryo: 0.8, thermo: 0.7, emp: 2.5 }
+  bio:  { kinetic: 1, shock: 0.8, energy: 1, laser: 1, ion: 0.5, plasma: 1.4, magnetron: 1.8, positron: 1.6, gauss: 1.1, cryo: 1, thermo: 1.5, emp: 0.15, sonic: 1.2, bio: 1.5, phase: 0.8, nano: 0.6, grav: 1.2 },
+  mech: { kinetic: 0.8, shock: 1.6, energy: 1, laser: 1.1, ion: 2, plasma: 0.9, magnetron: 1.2, positron: 1.6, gauss: 1.2, cryo: 0.8, thermo: 0.7, emp: 2.5, sonic: 0.9, bio: 0.3, phase: 0.8, nano: 2, grav: 1.2 },
+  /* аномалии: отражения, тени, фазовые сущности — обычное оружие их почти не берёт */
+  anom: { kinetic: 0.6, shock: 0.8, energy: 0.9, laser: 1, ion: 0.7, plasma: 1, magnetron: 1.3, positron: 1.8, gauss: 0.9, cryo: 0.8, thermo: 0.8, emp: 0.3, sonic: 1.8, bio: 0.4, phase: 2.2, nano: 0.4, grav: 1.6 }
 };
 
 /* Виды урона по игроку: против них — стойкость брони. */
-LAB.ATK_T = { phys: "удар", energy: "энергия", shock: "разряд", chem: "химия", therm: "холод и жар", field: "поле" };
+LAB.ATK_T = { phys: "удар", energy: "энергия", shock: "разряд", chem: "химия", therm: "холод и жар", field: "поле", sonic: "звук" };
 
 LAB.DTYPE_N = { kinetic: "удар", shock: "электрошок", energy: "энергия", laser: "лазер", ion: "ионы", plasma: "плазма",
-  magnetron: "магнетрон", positron: "позитроны", gauss: "гаусс", cryo: "холод", thermo: "жар", emp: "ЭМИ" };
+  magnetron: "магнетрон", positron: "позитроны", gauss: "гаусс", cryo: "холод", thermo: "жар", emp: "ЭМИ",
+  sonic: "звук", bio: "биотоксин", phase: "фаза", nano: "наночастицы", grav: "гравитация" };
 
 /* Стражи двадцатых этажей: охраняют шлюз; на части уровней шлюзовая ключ-карта при них. */
 LAB.BOSSES = {
@@ -388,9 +405,9 @@ LAB.RANKS = ["Обычный", "Необычный", "Редкий", "Эпиче
 LAB.RANK_MULT = [1, 1.2, 1.45, 1.75, 2.1, 2.6];
 
 LAB.AMMO = {
-  energy:    { n: "Энергобатарея", icon: "🔋", desc: "Батарея для бластеров, лазеров, ионного и плазменного оружия, гаусс-винтовки, крио и резака." },
-  magnetron: { n: "Магнетронная ячейка", icon: "🧲", desc: "Ячейка для магнетронного оружия. Её заряжает магнетронная установка." },
-  positron:  { n: "Позитронный заряд", icon: "⚛️", desc: "Магнитная ловушка с антивеществом для позитронного оружия. Делается на позитронной установке." }
+  energy:    { n: "Энергобатарея", icon: "🔋", desc: "Батарея для бластеров, лазеров, ионного и плазменного оружия, гаусс-винтовки, крио и резака.", price: 30, depth: 1 },
+  magnetron: { n: "Магнетронная ячейка", icon: "🧲", desc: "Ячейка для магнетронного оружия. Её заряжает магнетронная установка.", price: 55, depth: 2 },
+  positron:  { n: "Позитронный заряд", icon: "⚛️", desc: "Магнитная ловушка с антивеществом для позитронного оружия. Делается на позитронной установке.", price: 140, depth: 5 }
 };
 
 /* ── ПРЕДМЕТЫ ── */
@@ -403,6 +420,14 @@ LAB.ITEMS = {
   emp:      { n: "ЭМИ-граната", icon: "💣", kind: "throw", desc: "Электромагнитный импульс: тяжёлые повреждения всем роботам в радиусе двух шагов от места падения.", price: 60 },
   plate:    { n: "Бронепластина", icon: "🛡️", kind: "use", desc: "Вставляется в надетую броню: плюс десять процентов к её защите, не больше пяти пластин в одну броню.", price: 90 },
   decoder:  { n: "Декодер пропусков", icon: "📟", kind: "use", desc: "Одноразово открывает дверь с картридером любого уровня доступа.", price: 150 },
+  /* самоделки мастерской */
+  turret_kit:{ n: "Переносная турель", icon: "🔫", kind: "deploy", desc: "Складная турель: поставьте перед собой — она бьёт врагов на своей линии, пока не кончится заряд.", price: 120, fx: { deploy: 30 } },
+  noise:    { n: "Шумовая приманка", icon: "📣", kind: "throw", desc: "Бросьте — она пищит и лязгает на месте падения: враги идут на звук, а вы — в другую сторону.", price: 30, fx: { noise: 1 } },
+  jammer:   { n: "Глушилка ОКО", icon: "📡", kind: "use", desc: "Минуту камеры и датчики ОКО на этаже вас не видят, тревога не поднимается.", price: 90, fx: { jam: 120 } },
+  lockpick: { n: "Отмычка", icon: "🗝️", kind: "use", desc: "Набор отмычек: один раз открывает дверь под ключ.", price: 45, fx: { pick: 1 } },
+  filter:   { n: "Фильтр противогаза", icon: "😷", kind: "use", desc: "Полторы минуты яды и споры не действуют.", price: 35, fx: { antitox: 180 } },
+  sonar:    { n: "Звуковой зонд", icon: "🔔", kind: "use", desc: "Одноразовый зонд: щёлкает на весь этаж, и «Эхо» строит карту этажа по отзвукам.", price: 140, fx: { map: 1 } },
+  repairkit:{ n: "Ремкомплект брони", icon: "🧵", kind: "use", desc: "Латает надетую броню: плюс пять процентов к её защите, не больше трёх раз на одну броню.", price: 80, fx: { mend: 1 } },
   /* детали */
   scrap:    { n: "Металлолом", icon: "🔩", kind: "part", desc: "Обрезки металла.", price: 4 },
   wire:     { n: "Провода", icon: "〰️", kind: "part", desc: "Моток медного провода.", price: 6 },
@@ -432,6 +457,19 @@ LAB.RECIPES = [
   { id: "plate", out: "plate", n: "Бронепластина", need: { scrap: 4, ceramic: 1 }, desc: "Вставляется в надетую броню: плюс десять процентов к защите." },
   { id: "decoder", out: "decoder", n: "Декодер пропусков", need: { chip: 3, wire: 2 } },
   { id: "wmod", out: "wmod", n: "Модуль усиления оружия", need: { chip: 2, lens: 1, cap: 1 }, desc: "Плюс 15 процентов к урону оружия в руках, не больше трёх модулей." },
+  /* самоделки: турель, приманка, глушилка ОКО, отмычка, фильтр, зонд, ремкомплект */
+  { id: "turret_kit", out: "turret_kit", n: "Переносная турель", need: { scrap: 3, chip: 1, cap: 1, lens: 1 } },
+  { id: "noise", out: "noise", n: "Шумовая приманка", need: { scrap: 1, wire: 1, cap: 1 } },
+  { id: "jammer", out: "jammer", n: "Глушилка ОКО", need: { chip: 2, wire: 1, magnet: 1 } },
+  { id: "lockpick", out: "lockpick", n: "Отмычка", need: { scrap: 2, wire: 1 } },
+  { id: "filter", out: "filter", n: "Фильтр противогаза", need: { gel: 1, reagent: 1, scrap: 1 } },
+  { id: "sonar", out: "sonar", n: "Звуковой зонд", need: { chip: 1, cap: 2, magnet: 1, lens: 1 }, minL: 2 },
+  { id: "repairkit", out: "repairkit", n: "Ремкомплект брони", need: { scrap: 3, ceramic: 1, wire: 1 }, minL: 3 },
+  /* оружие из деталей: собирается под глубину, на которой вы его делаете */
+  { id: "w_baton", out: "weapon:baton", n: "Электрошоковая дубинка", need: { scrap: 2, cap: 2, wire: 1 } },
+  { id: "w_cutter", out: "weapon:cutter", n: "Плазменный резак", need: { scrap: 3, cap: 2, lens: 1, chip: 1 }, minL: 2 },
+  { id: "w_ion", out: "weapon:ion", n: "Ионный бластер", need: { chip: 2, magnet: 2, cap: 2, wire: 2 }, minL: 3 },
+  { id: "w_cryo", out: "weapon:cryo", n: "Криопушка", need: { cap: 3, reagent: 2, magnet: 1, scrap: 3 }, minL: 5 },
   /* броня: собирается под глубину, на которой вы её делаете */
   { id: "a_vest", out: "armor:vest", n: "Бронежилет охраны", need: { scrap: 5, wire: 2 } },
   { id: "a_bio", out: "armor:bio", n: "Скафандр «Карантин»", need: { gel: 2, reagent: 3, wire: 2, scrap: 2 } },
@@ -472,7 +510,8 @@ LAB.ARMORS = {
 };
 LAB.ARMOR_SPECIAL = {
   antitox: "яды действуют вдвое короче", deflect: "часть выстрелов уходит в сторону", stealth: "враги замечают позже, шаги тише",
-  frost: "холод не замедляет", strength: "удар в ближнем бою сильнее, шаги громче", regshield: "свой восстанавливающийся щит"
+  frost: "холод не замедляет", strength: "удар в ближнем бою сильнее, шаги громче", regshield: "свой восстанавливающийся щит",
+  sonicguard: "визги не глушат слух", okoghost: "камеры ОКО не замечают", thorns: "бьёт в ответ, когда бьют вплотную", phaseveil: "часть ударов проходит сквозь"
 };
 var armorSeq = 0;
 LAB.makeArmor = function (base, lvl, qual, idHint) {
@@ -490,9 +529,9 @@ LAB.genArmor = function (r, L, F, opts) {
   var pool = [], k;
   for (k in LAB.ARMORS) if (LAB.ARMORS[k].depth <= L && (opts.min == null || LAB.ARMORS[k].depth >= opts.min)) pool.push(k);
   /* чаще попадается броня своей глубины */
-  var near = pool.filter(function (x) { return LAB.ARMORS[x].depth >= L - 2; });
+  var near = pool.filter(function (x) { return LAB.ARMORS[x].depth >= L - (L > 10 ? 12 : 2); });
   var base = opts.base || (near.length && r.chance(0.65) ? r.pick(near) : r.pick(pool));
-  var q = r.next() + L * 0.02 + (opts.bonus || 0) * 0.5;
+  var q = r.next() + Math.min(0.4, L * 0.02) + (opts.bonus || 0) * 0.5;
   var qual = q < 0.2 ? 0 : q < 0.55 ? 1 : q < 0.8 ? 2 : q < 0.93 ? 3 : q < 0.99 ? 4 : 5;
   return LAB.makeArmor(base, LAB.foeLevel(L, F), Math.min(5, qual), opts.id);
 };
@@ -584,7 +623,11 @@ LAB.ROBOT_NPC = {
 
 /* Оценки уровней врагов и предметов по глубине комплекса. */
 LAB.depth = function (L, F) { return (L - 1) * LAB.FLOORS_N + (F - 1); };
-LAB.foeLevel = function (L, F) { return 1 + Math.floor(LAB.depth(L, F) / 4); };
+/* До Ядра враги растут быстро, ниже — медленнее: путь вниз долгий. */
+LAB.foeLevel = function (L, F) { var d = LAB.depth(L, F); return d < 200 ? 1 + Math.floor(d / 4) : 51 + Math.floor((d - 200) / 6); };
+/* Сколько стоят вещи и сколько кредитов попадается на этой глубине. */
+LAB.wealth = function (L, F) { var d = LAB.depth(L, F || 1); return d < 200 ? 1 + d / 25 : 9 + (d - 200) / 60; };
+LAB.credits = function (base, L, F) { return Math.round(base * LAB.wealth(L, F)); };
 LAB.scaleFoe = function (base, lvl) {
   /* роботы растут быстрее мутантов: их собирают под новые угрозы */
   var mech = base.kind === "mech";
@@ -592,3 +635,91 @@ LAB.scaleFoe = function (base, lvl) {
   return { hp: Math.round(base.hp * k), dmg: Math.round(base.dmg * (1 + (mech ? 0.12 : 0.11) * (lvl - 1))), arm: Math.round(base.arm * (1 + (mech ? 0.08 : 0.06) * (lvl - 1))) };
 };
 LAB.xpNeed = function (l) { return 60 + 90 * l; };
+
+/* ── БЛОКИ ──
+   Уровни 11 и глубже приходят из файлов блоков (js/b1.js … js/b5.js),
+   формат — lab/tools/blocks/SPEC.md. Каждый вызов LAB.addBlock(n, часть)
+   вливает часть блока в общие таблицы; вызовов может быть сколько угодно.
+   Блок I — уровни 1–20, II — 21–40, III — 41–60, IV — 61–80, V — 81–100. */
+LAB.BLOCKS = {};
+LAB.blockOf = function (L) { return Math.max(1, Math.ceil(L / 20)); };
+LAB.STORY_FLOORS_B = [1, 4, 8, 12, 16, 20];
+LAB.RIDDLES = [];
+LAB.EVENTS_B = {};
+LAB.addBlock = function (n, part) {
+  var B = LAB.BLOCKS[n] = LAB.BLOCKS[n] || { n: n, name: "", from: 0, to: 0, intro: [], outro: [], interlude: {}, staff: [], riddles: [], rumors: [], oko: {},
+    profs: {}, life: [], view: [], events: [], notices: [], mailG: [], rooms: [], foes: [], weapons: [], items: [] };
+  var k, i;
+  function put(table, src, kind, list) {
+    for (var id in src) {
+      if (table[id] && !(B._own && B._own[kind + ":" + id])) { if (typeof console !== "undefined") console.warn("блок " + n + ": " + kind + " «" + id + "» уже есть"); }
+      table[id] = src[id];
+      B._own = B._own || {}; B._own[kind + ":" + id] = 1;
+      if (list && list.indexOf(id) < 0) list.push(id);
+    }
+  }
+  if (part.meta) {
+    var m = part.meta;
+    if (m.name) B.name = m.name;
+    if (m.from) B.from = m.from;
+    if (m.to) B.to = m.to;
+    if (m.intro) B.intro = m.intro;
+    if (m.outro) B.outro = m.outro;
+    if (m.interlude) for (k in m.interlude) B.interlude[k] = m.interlude[k];
+  }
+  if (part.tiers) for (k in part.tiers) LAB.TIERS[+k] = part.tiers[k];
+  if (part.surfaces) put(LAB.SURF, part.surfaces, "surface");
+  if (part.rooms) put(LAB.ROOMS, part.rooms, "room", B.rooms);
+  if (part.foes) put(LAB.FOES, part.foes, "foe", B.foes);
+  if (part.bosses) put(LAB.BOSSES, part.bosses, "boss");
+  if (part.levels) for (k in part.levels) {
+    var L = +k, lv = part.levels[k];
+    lv.n = L;
+    if (!lv.tier) lv.tier = Math.ceil(L / 2);
+    if (!lv.root) lv.root = Math.round(220 * Math.pow(2, -(L - 1) / 30) * 10) / 10;
+    if (!lv.amb) lv.amb = "amb_l" + (((L - 1) % 10) + 1);
+    LAB.LEVELS[L] = lv;
+  }
+
+  if (part.weapons) {
+    put(LAB.WEAPONS, part.weapons, "weapon", B.weapons);
+    for (k in part.weapons) { LAB.WEAPON_DEPTH[k] = part.weapons[k].depth || B.from || 1; LAB.MODEL[k] = part.weapons[k].model || "Х"; }
+  }
+  if (part.ammo) put(LAB.AMMO, part.ammo, "ammo");
+  if (part.parts) {
+    for (k in part.parts) { part.parts[k].kind = "part"; if (LAB.PARTS.indexOf(k) < 0) LAB.PARTS.push(k); LAB.PART_DEPTH[k] = part.parts[k].depth || B.from || 1; }
+    put(LAB.ITEMS, part.parts, "item", B.items);
+  }
+  if (part.items) put(LAB.ITEMS, part.items, "item", B.items);
+  if (part.recipes) for (i = 0; i < part.recipes.length; i++) { var rc = part.recipes[i]; if (!rc.minL && B.from > 1) rc.minL = B.from; LAB.RECIPES.push(rc); }
+  if (part.armors) put(LAB.ARMORS, part.armors, "armor");
+  if (part.story) { LAB.STORY = LAB.STORY || {}; for (k in part.story) LAB.STORY[k] = part.story[k]; }
+  if (part.notes) { LAB.NOTES_L = LAB.NOTES_L || {}; for (k in part.notes) LAB.NOTES_L[k] = part.notes[k]; }
+  if (part.staff) B.staff = B.staff.concat(part.staff);
+  var LORE = LAB.LORE = LAB.LORE || { mail: {}, notices: [], logs: {}, docs: {}, cams: {}, posts: {} };
+  if (part.mail) for (k in part.mail) { if (k === "g") B.mailG = B.mailG.concat(part.mail.g); else LORE.mail[k] = (LORE.mail[k] || []).concat(part.mail[k]); }
+  if (part.docs) for (k in part.docs) LORE.docs[k] = part.docs[k];
+  if (part.cams) for (k in part.cams) LORE.cams[k] = part.cams[k];
+  if (part.posts) for (k in part.posts) LORE.posts[k] = part.posts[k];
+  if (part.logs) for (k in part.logs) LORE.logs[k] = part.logs[k];
+  if (part.notices) B.notices = B.notices.concat(part.notices);
+  if (part.riddles) { B.riddles = B.riddles.concat(part.riddles); part.riddles.forEach(function (r) { r.b = n; LAB.RIDDLES.push(r); }); }
+  if (part.rumors) B.rumors = B.rumors.concat(part.rumors);
+  if (part.oko) for (k in part.oko) B.oko[k] = (B.oko[k] || []).concat(part.oko[k]);
+  if (part.profs) for (k in part.profs) { B.profs[k] = part.profs[k]; LAB.PROFS[k] = { trade: part.profs[k].trade || null, beacon: part.profs[k].beacon || "npc_sci", block: n }; LAB.STORIES = LAB.STORIES || {}; LAB.STORIES[k] = part.profs[k].stories || []; }
+  if (part.life) B.life = B.life.concat(part.life);
+  if (part.view) B.view = B.view.concat(part.view);
+  if (part.robotNpc) for (k in part.robotNpc) { var rn = part.robotNpc[k]; LAB.ROBOT_NPC[k] = { n: rn.n, trade: rn.trade || null, beacon: "npc_robot", desc: rn.desc || "", block: n }; LAB.ROBOT_LINES = LAB.ROBOT_LINES || {}; LAB.ROBOT_LINES[k] = rn.lines || []; }
+  if (part.events) { B.events = B.events.concat(part.events); LAB.EVENTS_B[n] = B.events; }
+  /* уровней столько, сколько их готово подряд от первого: недописанный блок не ломает игру */
+  var nL = 10;
+  while (LAB.LEVELS[nL + 1] && LAB.LEVELS[nL + 1].rooms && LAB.LEVELS[nL + 1].foes && LAB.BOSSES[LAB.LEVELS[nL + 1].boss] &&
+    LAB.LEVELS[nL + 1].rooms.every(function (r) { return LAB.ROOMS[r]; }) && LAB.LEVELS[nL + 1].foes.every(function (f) { return LAB.FOES[f]; })) nL++;
+  LAB.LEVELS_N = nL;
+  return B;
+};
+/* Блок уровня (данные блока или пустая заготовка). */
+LAB.blockData = function (L) { return LAB.BLOCKS[LAB.blockOf(L)] || { n: LAB.blockOf(L), staff: [], riddles: [], rumors: [], oko: {}, profs: {}, life: [], view: [], events: [], notices: [], mailG: [], interlude: {}, intro: [], outro: [] }; };
+/* Уровень с пультом «Истока»: на 10-м — интерлюдия и Шов, на самом нижнем — финал. */
+LAB.isReactorLevel = function (L) { return L === LAB.LEVELS_N || (L === 10 && LAB.LEVELS_N > 10); };
+LAB.isFinalLevel = function (L) { return L === LAB.LEVELS_N; };
