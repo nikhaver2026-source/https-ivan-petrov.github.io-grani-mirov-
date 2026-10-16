@@ -135,7 +135,11 @@ function pcData(o) {
   if (th) {
     d.owner = th.o || "";
     var me = (d.owner || "").split(",")[0];
-    d.mails = th.m.map(function (m) { return { f: m[0] === "*" ? me + " (отправлено)" : m[0], s: m[1] || th.s, x: m[2] }; });
+    var other = (th.m.filter(function (m) { return m[0] !== "*"; })[0] || [""])[0];
+    d.mails = th.m.map(function (m) {
+      var sent = m[0] === "*", sub = m[1] || th.s;
+      return { f: sent ? me : m[0], to: sent ? (other || (/^Себе/.test(sub) ? "себе" : "всем")) : me, sent: sent, s: sub, x: m[2] };
+    });
     d.subj = th.s;
   }
   if (!d.owner) d.owner = randomOwner(L, h);
@@ -214,7 +218,8 @@ function mailList(o) {
   var st = gm().objState(o), d = pcData(o);
   st.read = st.read || {};
   var items = d.mails.map(function (m, i) {
-    return { label: (st.read[i] ? "" : "Новое. ") + "От: " + m.f + ". Тема: «" + m.s + "»", fn: function () { openMail(o, i); } };
+    var head = m.sent ? "Отправлено, кому: " + m.to : "От: " + m.f;
+    return { label: (st.read[i] ? "" : "Новое. ") + head + ". Тема: «" + m.s + "»", fn: function () { openMail(o, i); } };
   });
   items.push({ label: "Назад", fn: function () { desk(o); } });
   snd("pc_click");
@@ -229,7 +234,7 @@ function openMail(o, i) {
     var nid = "mail:" + CUR().key + ":" + o.id + ":" + i;
     if (!g.notes[nid]) { g.notes[nid] = 1; g.noteList.push({ id: nid, t: "Письмо: " + m.s, x: m.x, a: m.f, L: g.L, F: g.F, code: m.safe ? m.code : undefined }); }
   }
-  UIx("note", "Письмо: «" + m.s + "»", "От: " + m.f + ". Кому: " + (d.owner.split(",")[0]) + ". " + m.x + (m.code ? " Код запомнен." : ""), function () { mailList(o); });
+  UIx("note", "Письмо: «" + m.s + "»", "От: " + m.f + ". Кому: " + (m.to || d.owner.split(",")[0]) + ". " + m.x + (m.code ? " Код запомнен." : ""), function () { mailList(o); });
 }
 function readList(o, title, list) {
   UIx("note", title, list.join(" "), function () { desk(o); });
