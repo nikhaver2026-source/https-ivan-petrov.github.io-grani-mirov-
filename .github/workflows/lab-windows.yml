@@ -274,6 +274,12 @@ jobs:
         run: |
           ls -la
           gh release delete lab-windows-latest --cleanup-tag -y --repo "$GITHUB_REPOSITORY" || true
+          # Гонка GitHub: тег удалённого выпуска может исчезнуть позже и снять
+          # тег нового — выпуск откатится в черновик. Черновики прошлых сбоев
+          # убираем, ждём, пока прежний тег пропадёт; после выпуска минуту
+          # проверяем, что он опубликован, и если нет — публикуем снова.
+          for ID in $(gh api "repos/$GITHUB_REPOSITORY/releases?per_page=50" --jq '.[] | select(.tag_name=="lab-windows-latest") | select(.draft) | .id'); do gh api -X DELETE "repos/$GITHUB_REPOSITORY/releases/$ID" > /dev/null || true; done
+          for i in $(seq 1 12); do git ls-remote --exit-code --tags "https://github.com/$GITHUB_REPOSITORY" "refs/tags/lab-windows-latest" > /dev/null 2>&1 || break; sleep 5; done
           S64=$(stat -c %s "$Z64"); S32=$(stat -c %s "$Z32")
           cat > "$RUNNER_TEMP/notes.md" <<EOF
           «Подземная лаборатория» Альфа 1.1 для Windows — звуковая игра. Сборка ${GITHUB_RUN_NUMBER} из ${GITHUB_REF_NAME} (${GITHUB_SHA}).
@@ -293,3 +299,12 @@ jobs:
           gh release create lab-windows-latest "$Z64" "$Z32" --prerelease --target "$GITHUB_SHA" --repo "$GITHUB_REPOSITORY" \
             --title "Подземная лаборатория Альфа 1.1 для Windows (сборка ${GITHUB_RUN_NUMBER})" \
             --notes-file "$RUNNER_TEMP/notes.md"
+          for i in $(seq 1 6); do
+            sleep 10
+            gh api "repos/$GITHUB_REPOSITORY/releases/tags/lab-windows-latest" > /dev/null 2>&1 && continue
+            ID=$(gh api "repos/$GITHUB_REPOSITORY/releases?per_page=50" --jq '[.[] | select(.tag_name=="lab-windows-latest") | select(.draft) | .id] | max // empty')
+            [ -z "$ID" ] && continue
+            echo "выпуск lab-windows-latest откатился в черновик — публикую снова"
+            gh api -X PATCH "repos/$GITHUB_REPOSITORY/releases/$ID" -F draft=false -f tag_name=lab-windows-latest -f target_commitish="$GITHUB_SHA" > /dev/null
+          done
+          gh api "repos/$GITHUB_REPOSITORY/releases/tags/lab-windows-latest" --jq '{tag: .tag_name, draft: .draft, files: [.assets[].name]}'
