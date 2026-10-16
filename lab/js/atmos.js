@@ -40,44 +40,21 @@ function at(id, x, y, o) {
 }
 function sub(t) { if (S.subtitles) LAB.sub(t); }
 
-/* Длинные записи (музыка, фоны уровней) идут потоком через <audio>:
-   целиком в память их не декодируем — на телефоне это сотни мегабайт. */
-function isStream(id) { var d = LAB.SND && LAB.SND[id]; return !!(d && d.o && d.o.stream); }
-function stream(id, o) {
-  o = o || {};
-  var d = Bank.defs[id];
-  if (!d || !AE.ensure()) return null;
-  try {
-    var file = d.f[Math.floor(Math.random() * d.f.length)];
-    var el = new Audio();
-    el.src = Bank.root + file;
-    el.loop = o.loop !== false;
-    el.preload = "auto";
-    var c = AE.ctx, src = c.createMediaElementSource(el), g = c.createGain();
-    var vol = d.v * (o.gain == null ? 1 : o.gain);
-    g.gain.value = 0.0001;
-    src.connect(g); g.connect(AE[o.bus || d.bus] || AE.music);
-    var t = c.currentTime;
-    g.gain.setValueAtTime(0.0001, t); g.gain.linearRampToValueAtTime(vol, t + (o.fadeIn || 2));
-    var pr = el.play(); if (pr && pr.catch) pr.catch(function () { /* без жеста не играет — сыграет позже */ });
-    var h = {
-      el: el, stopped: false,
-      stop: function (fade) {
-        if (h.stopped) return; h.stopped = true;
-        var tt = c.currentTime; fade = fade == null ? 1 : fade;
-        try { g.gain.cancelScheduledValues(tt); g.gain.setValueAtTime(g.gain.value, tt); g.gain.linearRampToValueAtTime(0.0001, tt + fade); } catch (e) { /* */ }
-        setTimeout(function () { try { el.pause(); el.removeAttribute("src"); el.load(); src.disconnect(); g.disconnect(); } catch (e) { /* */ } }, fade * 1000 + 80);
-      },
-      setGain: function (v) { try { g.gain.setTargetAtTime(d.v * v, c.currentTime, 0.3); } catch (e) { /* */ } }
-    };
-    return h;
-  } catch (e) { return null; }
+/* Длинные записи (музыка, фон уровня) — тоже из памяти, как все звуки: поток
+   через <audio> в WebView Android молчит. Чтобы память не росла, длинная
+   петля выгружается, когда её сменила другая (isLong — признак из sounds.js). */
+function isLong(id) { var d = LAB.SND && LAB.SND[id]; return !!(d && d.o && d.o.long); }
+function releaseLater(id, ms) {
+  if (!id || !isLong(id)) return;
+  setTimeout(function () {
+    if ((mus.tid === id) || (bed && bed.id === id) || roomLid === id || evLayerId === id) return; /* снова нужна */
+    Bank.release([id]);
+  }, ms || 4000);
 }
-/* Петля: короткая — из памяти, длинная — потоком. */
+/* Петля из памяти; если запись ещё не загружена — загрузить и начать. */
 function loop(id, o) {
   if (!has(id)) return null;
   o = o || {};
-  if (isStream(id)) return stream(id, o);
   o.loop = true;
   if (Bank.ready(id)) return Bank.play(id, o);
   /* запись ещё не в памяти: загрузить и начать, если петля всё ещё нужна */
@@ -175,7 +152,7 @@ function beaconTick() {
 }
 
 /* ════════ ФОН: уровень, помещения, события ════════ */
-var bed = null, roomLoop = null, roomLoopId = "", corrLoop = null, evTimer = null, evLayer = null, evLayerId = "", hbLoop = null, tension = null, worldOn = false;
+var bed = null, roomLoop = null, roomLoopId = "", roomLid = "", corrLoop = null, evTimer = null, evLayer = null, evLayerId = "", hbLoop = null, tension = null, worldOn = false;
 var ROOM_LOOP = {
   server: "room_server", comms: "room_radio", genhall: "room_generator", transformer: "room_transformer", magnetron_hall: "room_magnetron", switchboard: "room_electric",
   cable: "room_electric", powerdesk: "room_hum", cryohall: "room_cryo", freezer: "room_cryo", samples: "room_cryo", compressor: "room_compressor", thaw: "room_drip",
@@ -230,9 +207,11 @@ function enterFloor(L, F) {
   var lev = LAB.LEVELS[L];
   preloadLevel(L);
   if (!bed || bed.L !== L) {
+    var oldBed = bed && bed.id;
     if (bed && bed.h) bed.h.stop(2.5);
     var bid = lev.amb;
-    bed = { L: L, h: loop(bid, { bus: "amb", gain: 0.9, fadeIn: 3, reverb: 0 }) };
+    bed = { L: L, id: bid, h: loop(bid, { bus: "amb", gain: 0.9, fadeIn: 3, reverb: 0 }) };
+    if (oldBed && oldBed !== bid) releaseLater(oldBed, 3500);
     if (!bed.h) synthBed(L);
   }
   if (!beaconT) beaconT = setInterval(function () { LAB.safe(beaconTick); }, 220);
@@ -258,9 +237,13 @@ function setRoom(r) {
   var id = r ? (ROOM_LOOP[r.type] || "") : "corridor";
   if (id === roomLoopId) return;
   roomLoopId = id;
+  var prevLid = roomLid;
   if (roomLoop) { roomLoop.stop(1.2); roomLoop = null; }
+  var lid = !id ? "" : id === "corridor" ? "room_corridor" : id;
+  roomLid = lid;
+  /* гул прошлого помещения — из памяти (коридор остаётся: в него выходят часто) */
+  if (prevLid && prevLid !== lid && prevLid !== "room_corridor") releaseLater(prevLid, 3000);
   if (!id) { AE.setReverb(1.2 + (G() ? G().L : 1) * 0.08, 0.28); return; }
-  var lid = id === "corridor" ? "room_corridor" : id;
   roomLoop = loop(lid, { bus: "amb", gain: 0.55, fadeIn: 1.2, reverb: 0.1 });
   /* отзвук: коридор — длинный, большие залы — гулкие, тесные — сухие */
   if (r) {
@@ -288,17 +271,21 @@ function scheduleEvent() {
 function eventLayer(id) {
   var want = { alarm: "evl_alarm", dark: "evl_dark", surge: "evl_surge", steam: "evl_steam", quake: "evl_quake" }[id] || "";
   if (want === evLayerId) return;
+  var prevEv = evLayerId;
   evLayerId = want;
   if (evLayer) { evLayer.stop(2); evLayer = null; }
+  if (prevEv && prevEv !== want) releaseLater(prevEv, 3500);
   if (want) evLayer = loop(want, { bus: "amb", gain: 0.5, fadeIn: 2 });
 }
 function stopWorld() {
   worldOn = false;
+  var bedId = bed && bed.id;
   if (bed && bed.h) bed.h.stop(1.5);
   bed = null;
+  if (bedId) releaseLater(bedId, 2500);
   if (synthBedS) { synthBedS.stop(1.5); synthBedS = null; }
   if (roomLoop) { roomLoop.stop(1); roomLoop = null; }
-  roomLoopId = "";
+  roomLoopId = ""; roomLid = "";
   if (evLayer) { evLayer.stop(1); evLayer = null; } evLayerId = "";
   clearInterval(beaconT); beaconT = null;
   clearTimeout(evTimer); evTimer = null;
@@ -401,7 +388,7 @@ function implant(id) { play("implant_" + id, { fb: FB.implant }); }
    Записи, если есть (mus_menu, mus_game, mus_ending), иначе — давящий
    генеративный фон: инфранизкий гул с биениями, тритоны, скрежет металла
    в глубине, редкий тяжёлый удар — сердце комплекса. */
-var mus = { theme: "", key: "", h: null, s: null, timers: [] };
+var mus = { theme: "", key: "", tid: "", h: null, s: null, timers: [] };
 function music(theme) {
   var L = G() ? G().L : 1;
   var key = theme === "game" ? "game" + L : theme;
@@ -412,13 +399,16 @@ function music(theme) {
   var tid = theme === "game" ? "mus_l" + L : "mus_" + theme;
   if (theme === "game" && !has(tid)) tid = "mus_game";
   if (has(tid)) {
+    mus.tid = tid;
     mus.h = loop(tid, { bus: "music", gain: 1, fadeIn: 4, reverb: 0 });
     if (mus.h) return;
   }
+  mus.tid = "";
   genMusic(theme, L);
 }
 function stopMusic() {
   if (mus.h) { mus.h.stop(2.5); mus.h = null; }
+  if (mus.tid) { var old = mus.tid; mus.tid = ""; releaseLater(old, 3500); }
   if (mus.s) { mus.s.stop(2.5); mus.s = null; }
   mus.timers.forEach(function (t) { clearInterval(t); clearTimeout(t); });
   mus.timers = [];

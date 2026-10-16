@@ -403,7 +403,7 @@ function giveItem(it, quiet) {
     case "credits": G.credits += it.n; break;
     case "weapon":
       G.weapons.push(it.w);
-      if (!G.tut.weapon) { G.tut.weapon = 1; extra = " Выбрать оружие — свайп одним пальцем вверх и сразу вниз. Вынуть — касание тремя пальцами."; }
+      if (!G.tut.weapon) { G.tut.weapon = 1; extra = LAB.K(" Выбрать оружие — свайп одним пальцем вверх и сразу вниз. Вынуть — касание тремя пальцами.", " Выбрать оружие — Q и E или цифры от 1 до 9. Достать — R."); }
       break;
     case "pass":
       if (it.tier > G.tier) { G.tier = it.tier; extra = " Теперь открываются двери с картридером " + LAB.TIERS[it.tier].short + " уровня" + (it.tier > 1 ? " и ниже." : "."); }
@@ -421,7 +421,7 @@ function giveItem(it, quiet) {
       if (!G.samples[it.sid]) { G.samples[it.sid] = 1; G.enMax += 2; G.en = Math.min(G.enMax, G.en + 10); gainXP(20); extra = " Собрано образцов: " + Object.keys(G.samples).length + " из 200. Энергия имплантов выросла."; }
       break;
     case "chip":
-      if (G.implants.indexOf(it.implant) < 0) { G.implants.push(it.implant); extra = " Имплант установлен сам: «" + implantDef(it.implant).n + "». Панель имплантов — двойное касание четырьмя пальцами."; }
+      if (G.implants.indexOf(it.implant) < 0) { G.implants.push(it.implant); extra = " Имплант установлен сам: «" + implantDef(it.implant).n + "». Панель имплантов — " + LAB.K("двойное касание четырьмя пальцами.", "клавиша U."); }
       else { G.credits += 60; extra = " Такой имплант уже есть — чип продан за 60 кредитов."; }
       break;
   }
@@ -472,16 +472,16 @@ function tryMove(dir, run) {
   var nx = G.x + d[0], ny = G.y + d[1];
   var tt = cellType(nx, ny);
   var f = foeAt(nx, ny);
-  if (f) { bumpFocus({ type: "foe", ref: f, dir: dir }); A("bump"); sayOnce("foe" + f.id, f.name + " вплотную! Выньте оружие — касание тремя пальцами."); return false; }
+  if (f) { bumpFocus({ type: "foe", ref: f, dir: dir }); A("bump"); sayOnce("foe" + f.id, f.name + " вплотную! " + LAB.K("Выньте оружие — касание тремя пальцами.", "Достаньте оружие — R, бейте стрелками.")); return false; }
   if (tt === T.WALL) {
     var sd = hiddenSecretAt(nx, ny);
     A("bumpWall", dir); LAB.vib(25);
-    if (sd) { bumpFocus({ type: "secret", ref: sd, dir: dir }); sayOnce("wall" + nx + "," + ny, "Из щели у пола тянет сквозняком. Двойное касание — простучать стену."); }
+    if (sd) { bumpFocus({ type: "secret", ref: sd, dir: dir }); sayOnce("wall" + nx + "," + ny, "Из щели у пола тянет сквозняком. " + LAB.K("Двойное касание — простучать стену.", "Enter — простучать стену.")); }
     return false;
   }
   if (tt === T.DOOR) {
     var door = CUR.fl.doorAt[idx(nx, ny)];
-    if (door.lock && door.lock.type === "secret" && !secretFound(door)) { A("bumpWall", dir); LAB.vib(25); bumpFocus({ type: "secret", ref: door, dir: dir }); sayOnce("wall" + nx + "," + ny, "Из щели у пола тянет сквозняком. Двойное касание — простучать стену."); return false; }
+    if (door.lock && door.lock.type === "secret" && !secretFound(door)) { A("bumpWall", dir); LAB.vib(25); bumpFocus({ type: "secret", ref: door, dir: dir }); sayOnce("wall" + nx + "," + ny, "Из щели у пола тянет сквозняком. " + LAB.K("Двойное касание — простучать стену.", "Enter — простучать стену.")); return false; }
     if (!doorOpen(door)) {
       var why = doorBlock(door);
       bumpFocus({ type: "door", ref: door, dir: dir });
@@ -489,10 +489,10 @@ function tryMove(dir, run) {
       else {
         A("play", door.lock ? "door_locked" : "door_knock");
         var txt;
-        if (!door.lock) txt = "Закрытая дверь. Двойное касание — открыть.";
-        else txt = "Дверь: " + lockText(door) + "." + (why ? " " + why + " Двойное касание — действия." : " Пропуск есть: двойное касание — открыть.");
+        if (!door.lock) txt = "Закрытая дверь. " + LAB.K("Двойное касание — открыть.", "Enter — открыть.");
+        else txt = "Дверь: " + lockText(door) + "." + (why ? " " + why + LAB.K(" Двойное касание — действия.", " Enter — действия.") : LAB.K(" Пропуск есть: двойное касание — открыть.", " Пропуск есть: Enter — открыть."));
         sayOnce("door" + door.id, txt);
-        if (!G.tut.door && door.lock) { G.tut.door = 1; sayq("У запертой двери коснитесь экрана одним пальцем дважды: появятся действия."); }
+        if (!G.tut.door && door.lock) { G.tut.door = 1; sayq(LAB.K("У запертой двери коснитесь экрана одним пальцем дважды: появятся действия.", "У запертой двери нажмите Enter: появятся действия.")); }
         return false;
       }
     }
@@ -501,14 +501,14 @@ function tryMove(dir, run) {
   if (o) {
     bumpFocus({ type: "obj", ref: o, dir: dir });
     A("bumpSoft", o);
-    sayOnce("obj" + o.id, objName(o) + ". Двойное касание — действия.");
-    if (!G.tut.obj) { G.tut.obj = 1; sayq("К предметам подходят вплотную. Двойное касание одним пальцем — список действий."); }
+    sayOnce("obj" + o.id, objName(o) + LAB.K(". Двойное касание — действия.", ". Enter — действия."));
+    if (!G.tut.obj) { G.tut.obj = 1; sayq("К предметам подходят вплотную. " + LAB.K("Двойное касание одним пальцем — список действий.", "Enter — список действий.")); }
     return false;
   }
   if (n) {
     bumpFocus({ type: "npc", ref: n, dir: dir });
     A("npcHello", n);
-    sayOnce("npc" + n.id, npcName(n) + ". Двойное касание — поговорить.");
+    sayOnce("npc" + n.id, npcName(n) + LAB.K(". Двойное касание — поговорить.", ". Enter — поговорить."));
     return false;
   }
   /* шаг */
@@ -566,7 +566,7 @@ function announceNear() {
   });
   if (!out.length) return;
   A("near");
-  sayq(out.join(". ") + "." + (G.tut.near ? "" : " Двойное касание — действия."));
+  sayq(out.join(". ") + "." + (G.tut.near ? "" : LAB.K(" Двойное касание — действия.", " Enter — действия.")));
   G.tut.near = 1;
 }
 game.announceNear = announceNear;
@@ -721,10 +721,10 @@ function nearbyInfo() {
   var t = adjacentTargets();
   if (!t.length) {
     var r = roomAt(G.x, G.y);
-    say((r ? r.name : "Коридор") + ". Рядом пусто. Осмотреться — два пальца вверх.");
+    say((r ? r.name : "Коридор") + ". Рядом пусто. Осмотреться — " + LAB.K("два пальца вверх.", "Tab."));
     return;
   }
-  say(t.map(function (q) { return targetName(q) + ", " + LAB.DIRN[q.dir]; }).join(". ") + ". Двойное касание — действия.");
+  say(t.map(function (q) { return targetName(q) + ", " + LAB.DIRN[q.dir]; }).join(". ") + LAB.K(". Двойное касание — действия.", ". Enter — действия."));
 }
 game.nearbyInfo = nearbyInfo;
 
@@ -926,7 +926,7 @@ function useStairs(o) {
   setTimeout(function () {
     game.paused = false;
     enterFloor(G.L, down ? G.F + 1 : G.F - 1, down ? "down" : "up");
-    if (down && G.F > 1 && !G.tut.stairs) { G.tut.stairs = 1; sayq("Лестницы на каждом этаже — в разных концах. Навигатор — два пальца вправо — подскажет путь."); }
+    if (down && G.F > 1 && !G.tut.stairs) { G.tut.stairs = 1; sayq("Лестницы на каждом этаже — в разных концах. Навигатор — " + LAB.K("два пальца вправо", "клавиша N") + " — подскажет путь."); }
   }, 1300);
 }
 /* Шлюз вниз: только с шлюзовой ключ-картой этого уровня, назад — никогда. */
@@ -970,7 +970,8 @@ function descend(o) {
 function elevatorMenu() {
   if (!G.elev[G.L]) { A("play", "card_fail"); say("Панель лифта мигает: «Нужен пропуск лифта уровня " + G.L + "». Пропуск лифта лежит на втором этаже уровня — у кого-то из сотрудников или на полу."); return; }
   var items = [], maxF = Math.min(LAB.FLOORS_N, (G.maxF[G.L] || 1) + 1);
-  for (var F = 1; F <= LAB.FLOORS_N; F++) {
+  /* в списке — только этажи, куда лифт поедет: сколько их всего, игрок узнаёт сам */
+  for (var F = 1; F <= maxF; F++) {
     (function (FF) {
       var here = FF === G.F, ok = FF <= maxF;
       var lab = "Этаж " + FF + (here ? " — вы здесь" : ok ? (G.visited[G.L + "-" + FF] ? "" : " — ещё не были") : " — нет доступа");
@@ -978,8 +979,8 @@ function elevatorMenu() {
     })(F);
   }
   A("play", "elev_call");
-  UIx("menu", "Лифт уровня " + G.L + " — выберите этаж", items, { focus: Math.min(LAB.FLOORS_N - 1, G.F) });
-  if (!G.tut.elev) { G.tut.elev = 1; sayq("Лифт везёт на этажи, где вы уже были, и на этаж ниже самого нижнего. Свайп вправо или влево — выбрать этаж, двойное касание — ехать."); }
+  UIx("menu", "Лифт уровня " + G.L + " — выберите этаж", items, { focus: Math.max(0, Math.min(maxF - 1, G.F)) });
+  if (!G.tut.elev) { G.tut.elev = 1; sayq("Лифт везёт на этажи, где вы уже были, и на этаж ниже самого нижнего. " + LAB.K("Свайп вправо или влево — выбрать этаж, двойное касание — ехать.", "Стрелки вверх и вниз — выбрать этаж, Enter — ехать.")); }
 }
 game.elevatorMenu = elevatorMenu;
 function ride(F) {
@@ -1344,7 +1345,7 @@ function implantMenu(o) {
     var p = Math.round(im.price * priceK());
     return { label: im.n + " — " + p + " кредитов. " + im.desc, fn: function () {
       if (G.credits < p) { LAB.UI.error(); say("Не хватает кредитов: нужно " + p + "."); return; }
-      G.credits -= p; G.implants.push(im.id); A("play", "implant"); say("Имплант «" + im.n + "» установлен. Панель имплантов — двойное касание четырьмя пальцами."); journal("Установлен имплант: " + im.n + "."); UIx("refresh");
+      G.credits -= p; G.implants.push(im.id); A("play", "implant"); say("Имплант «" + im.n + "» установлен. Панель имплантов — " + LAB.K("двойное касание четырьмя пальцами.", "клавиша U.")); journal("Установлен имплант: " + im.n + "."); UIx("refresh");
     } };
   });
   if (!items.length) { say("Все импланты уже установлены."); return; }
@@ -1570,7 +1571,7 @@ function navigate(cycle, fromNpc) {
     } else say("Цель: " + tgt.n + ". Пути не видно: возможно, за тайной дверью.");
     return;
   }
-  say((fromNpc ? "«Иди так»: " : "") + "Цель: " + tgt.n + ". " + describePath(path) + (list.length > 1 && !fromNpc ? " Ещё раз два пальца вправо — следующая цель." : ""));
+  say((fromNpc ? "«Иди так»: " : "") + "Цель: " + tgt.n + ". " + describePath(path) + (list.length > 1 && !fromNpc ? LAB.K(" Ещё раз два пальца вправо — следующая цель.", " Ещё раз N — следующая цель.") : ""));
   A("navStart", path);
 }
 game.navigate = navigate;
@@ -1608,7 +1609,7 @@ function useItem(id) {
   if (!d || !(G.inv[id] > 0)) { say("Нет: " + (d ? d.n : id) + "."); return false; }
   if (d.kind === "throw") { if (LAB.combat) LAB.combat.throwEmp(); return true; }
   if (id === "plate") return installPlate();
-  if (id === "decoder") { say("Декодер применяется у двери с картридером: двойное касание у двери."); return false; }
+  if (id === "decoder") { say("Декодер применяется у двери с картридером: " + LAB.K("двойное касание у двери.", "Enter у двери.")); return false; }
   if (d.kind === "part") { say("Это деталь для мастерской."); return false; }
   G.inv[id]--;
   var msg = [];
@@ -1631,8 +1632,9 @@ function toggleDraw() {
   G.drawn = !G.drawn;
   A("play", G.drawn ? "w_draw" : "w_holster");
   LAB.vib(G.drawn ? [20, 30, 20] : 15);
-  if (G.drawn) say("Оружие наготове: " + weaponLine(w) + "." + ammoTail(w) + (G.tut.draw ? "" : (w.rng <= 1 ? " Свайп одним пальцем — удар в ту сторону, свайп с удержанием — серия ударов." : " Свайп одним пальцем — выстрел в ту сторону, свайп с удержанием — очередь.") + " Ходить — уберите оружие тем же касанием тремя пальцами."));
-  else say("Оружие убрано. Свайп — шаг.");
+  if (G.drawn) say("Оружие наготове: " + weaponLine(w) + "." + ammoTail(w) + (G.tut.draw ? "" : LAB.K((w.rng <= 1 ? " Свайп одним пальцем — удар в ту сторону, свайп с удержанием — серия ударов." : " Свайп одним пальцем — выстрел в ту сторону, свайп с удержанием — очередь.") + " Ходить — уберите оружие тем же касанием тремя пальцами.",
+    (w.rng <= 1 ? " Стрелки — удар в ту сторону, удержание стрелки — серия ударов." : " Стрелки — выстрел в ту сторону, удержание стрелки — очередь.") + " Ходить можно и с оружием: W A S D. Убрать оружие — снова R.")));
+  else say("Оружие убрано. " + LAB.K("Свайп — шаг.", "W A S D — шаг, R — достать оружие."));
   G.tut.draw = 1;
   if (LAB.input) LAB.input.stopAll();
   UIx("refresh");
@@ -1839,7 +1841,7 @@ function newGame() {
   game.entered = true;
   UIx("showGame");
   enterFloor(1, 1, "start", true);
-  say("Вы просыпаетесь в криокапсуле. Холод отпускает. «Эхо» включается: «Носитель номер семь, слышите меня? Зрение не восстановлено. Я буду вашими глазами. Шагайте свайпами. Осмотреться — два пальца вверх. Двойное касание у предмета — действия»." );
+  say("Вы просыпаетесь в криокапсуле. Холод отпускает. «Эхо» включается: «Носитель номер семь, слышите меня? Зрение не восстановлено. Я буду вашими глазами. " + LAB.K("Шагайте свайпами. Осмотреться — два пальца вверх. Двойное касание у предмета — действия", "Шагайте клавишами W A S D. Осмотреться — Tab. Enter у предмета — действия. Все клавиши — в руководстве, F1") + "»." );
   roomCheck(true);
   journal("Пробуждение. Уровень 1, этаж 1.");
   G.quests.push({ id: "main", giver: "main", giverName: "Эхо", L: 10, F: 20, type: "main", done: false, short: "спуститься в Ядро и остановить Разлом", text: "Спуститься на десятый уровень, в Ядро, и остановить Разлом у пульта реактора «Исток»." });

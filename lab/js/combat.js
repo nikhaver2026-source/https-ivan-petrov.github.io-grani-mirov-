@@ -454,7 +454,7 @@ function attack(f, seen) {
   if (G().dead) return;
   if (has(f, "poison") && Math.random() < 0.5) poison(6 + Math.floor(G().L / 2));
   if ((has(f, "slow") || f.adt === "therm" && f.kind === "bio") && Math.random() < 0.5 && !gm().armorSpecial("frost")) { if (!g.st.slow) sayq("Холод сковывает: вы замедлены."); g.st.slow = 6; }
-  if (has(f, "web") && ranged && Math.random() < 0.4) { g.st.web = 2; A("play", "web_hit"); sayq("Паутина! Свайп — рвать её."); }
+  if (has(f, "web") && ranged && Math.random() < 0.4) { g.st.web = 2; A("play", "web_hit"); sayq(LAB.K("Паутина! Свайп — рвать её.", "Паутина! Шаг в любую сторону — рвать её.")); }
 }
 function poison(t) {
   var g = G();
@@ -823,7 +823,7 @@ function describe(f) {
 function useImplant(id) {
   var g = G();
   if (g.implants.indexOf(id) < 0) { say("Такого импланта нет."); return; }
-  if (id === "hack") { say("Дистанционный взлом применяется у запертой двери: двойное касание у двери."); return; }
+  if (id === "hack") { say("Дистанционный взлом применяется у запертой двери: " + LAB.K("двойное касание у двери.", "Enter у двери.")); return; }
   if ((id === "scan" || id === "echo") && jammed()) { A("play", "jam"); say("Помехи: глушилка робота рядом забивает сканер."); return; }
   if (!gm().spendEnergy(id)) return;
   A("implant", id);
@@ -932,7 +932,7 @@ function announceSpotted(list) {
   if (now - lastSpot < 2500 && list.length === 1) { sayq(names[0] + "."); lastSpot = now; return; }
   lastSpot = now;
   say(names.join(", ") + " — " + verb + "!", { interrupt: false });
-  if (!G().drawn && !G().tut.drawHint) { G().tut.drawHint = 1; sayq("Выньте оружие: одно касание тремя пальцами. Затем свайп в сторону врага — выстрел."); }
+  if (!G().drawn && !G().tut.drawHint) { G().tut.drawHint = 1; sayq(LAB.K("Выньте оружие: одно касание тремя пальцами. Затем свайп в сторону врага — выстрел.", "Достаньте оружие: R. Затем стрелка в сторону врага — выстрел.")); }
 }
 
 LAB.combat = {

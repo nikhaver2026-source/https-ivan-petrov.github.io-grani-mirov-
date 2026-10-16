@@ -22,7 +22,7 @@ LAB.store = store;
 /* ── НАСТРОЙКИ ── */
 var DEF = {
   speech: 1, effects: 1, music: 1, ambience: 1, subtitles: 1, explore: 1, haptics: 1,
-  rate: 1, voiceVol: 1, fxVol: 1, musicVol: 0.5, ambVol: 0.8, beaconVol: 1,
+  rate: 1, ratePct: 50, voiceVol: 1, fxVol: 1, musicVol: 0.5, ambVol: 0.8, beaconVol: 1,
   voice: "", tts: "auto", robotVoice: 1,
   difficulty: 1, turnBased: 0, autoDoors: 1, autoRead: 1, beacons: 1, verbose: 1
 };
@@ -32,6 +32,12 @@ var settings = {};
 var k0;
 for (k0 in DEF) settings[k0] = DEF[k0];
 for (k0 in saved) if (Object.prototype.hasOwnProperty.call(DEF, k0)) settings[k0] = saved[k0];
+/* Скорость речи — в процентах от 0 до 100: 0 — вдвое медленнее обычного,
+   50 — обычная, 100 — втрое быстрее. Темп синтезатора считается из процентов. */
+LAB.rateFromPct = function (p) { p = Math.max(0, Math.min(100, +p || 0)); return p <= 50 ? 0.5 + p / 100 : 1 + (p - 50) / 25; };
+LAB.pctFromRate = function (r) { r = +r || 1; return Math.max(0, Math.min(100, Math.round((r <= 1 ? (r - 0.5) * 100 : 50 + (r - 1) * 25) / 5) * 5)); };
+if (saved.ratePct == null && saved.rate != null) settings.ratePct = LAB.pctFromRate(saved.rate);
+settings.rate = LAB.rateFromPct(settings.ratePct);
 LAB.settings = settings;
 LAB.saveSettings = function () { store.set("lab_settings", JSON.stringify(settings)); };
 
@@ -447,9 +453,19 @@ var Bank = {
 LAB.Bank = Bank;
 
 /* ════════ РЕЧЬ ════════ */
+/* Имена клавиш в подсказках (сборка для компьютера) — так, как их говорят
+   вслух: «Enter» — «Энтер», одиночная латинская буква «W» — «дабл ю».
+   На экране подсказка остаётся как есть. */
+var KEY_SAY = { Enter: "Энтер", Tab: "Таб", Escape: "Эскейп", Backspace: "Бэкспейс", Home: "Хоум", End: "Энд", Ctrl: "Контрол", Shift: "Шифт", Alt: "Альт", F1: "Эф один", F11: "Эф одиннадцать" };
+var LAT_SAY = { A: "эй", B: "би", C: "си", D: "ди", E: "и", F: "эф", G: "джи", H: "эйч", I: "ай", J: "джей", K: "кей", L: "эл", M: "эм", N: "эн", O: "оу", P: "пи", Q: "кью", R: "ар", S: "эс", T: "ти", U: "ю", V: "ви", W: "дабл ю", X: "экс", Y: "уай", Z: "зед" };
+function keysSpoken(t) {
+  return t.replace(/\b(Enter|Tab|Escape|Backspace|Home|End|Ctrl|Shift|Alt|F11|F1)\b/g, function (m) { return KEY_SAY[m]; })
+    .replace(/(^|[^A-Za-z0-9])([A-Z])(?![A-Za-z0-9])/g, function (m, a, b) { return a + LAT_SAY[b]; });
+}
+LAB.keysSpoken = keysSpoken;
 var Speech = {
   backend: "none", queue: [], speaking: false, cur: null, seq: 0, timer: null, keepAlive: null,
-  reading: false, later: [], userUntil: 0,
+  reading: false, noteReading: false, later: [], userUntil: 0,
   webVoice: null, webVoices: [], androidVoices: [], ready: false, esp: null, espSt: "off", espSrc: null, onState: null,
   hasBridge: function () { return !!(window.LabTTS && typeof window.LabTTS.speak === "function"); },
   hasWeb: function () { return typeof window.speechSynthesis !== "undefined" && typeof window.SpeechSynthesisUtterance !== "undefined"; },
@@ -475,16 +491,24 @@ var Speech = {
         var st = "";
         try { st = window.LabTTS.status(); } catch (e) { st = "ready"; }
         if (st === "init" && poll++ < 40) { setTimeout(check, 250); return; }
-        try { self.androidVoices = JSON.parse(window.LabTTS.getVoices() || "[]"); } catch (e) { self.androidVoices = []; }
-        self.bridgeState = st;
-        self.choose();
+        self.refreshBridge(st);
         if (settings.voice && self.backend === "android") { try { window.LabTTS.setVoice(settings.voice); } catch (e) { /* */ } }
         if (self.onState) self.onState();
       };
       check();
+      /* компьютер: мост голосов поднялся позже или голоса перечитаны */
+      window.addEventListener("lab-tts-ready", function () { poll = 0; check(); });
     }
     this.choose();
     if (settings.robotVoice) setTimeout(function () { self.loadESpeak(); }, 2500);
+  },
+  /* Голоса моста заново: телефон или компьютер (голоса перечитаны). */
+  refreshBridge: function (st) {
+    if (!this.hasBridge()) return;
+    if (st == null) { try { st = window.LabTTS.status(); } catch (e) { st = "ready"; } }
+    try { this.androidVoices = JSON.parse(window.LabTTS.getVoices() || "[]"); } catch (e) { this.androidVoices = []; }
+    this.bridgeState = st;
+    this.choose();
   },
   /* Кто говорит: выбранный игроком синтезатор, иначе телефон, иначе браузер, иначе eSpeak. */
   choose: function () {
@@ -492,6 +516,9 @@ var Speech = {
     var b = "none";
     if (pref === "espeak") b = "espeak";
     else if (this.hasBridge() && this.bridgeState !== "failed" && (pref === "system" || this.bridgeHasRu())) b = "android";
+    /* на компьютере голосов Windows (Microsoft) нет: говорит мост — NVDA, JAWS,
+       установленные синтезаторы, — а без них встроенный eSpeak NG */
+    else if (LAB.desktop) b = "espeak";
     else if (this.hasWeb() && (pref === "system" || this.webVoice || (this.webVoices.length === 0 && !this.hasBridge()))) b = "web";
     else b = "espeak";
     if (b === "espeak") this.loadESpeak();
@@ -505,7 +532,7 @@ var Speech = {
   },
   listVoices: function () {
     var out = [];
-    if (this.hasBridge()) this.androidVoices.forEach(function (v) { out.push({ id: v.id, name: v.name + (v.local === false ? " · сеть" : ""), lang: v.lang, src: "android" }); });
+    if (this.hasBridge()) this.androidVoices.forEach(function (v) { out.push({ id: v.id, name: v.name + (v.local === false ? " · сеть" : ""), lang: v.lang, src: "android", engine: v.engine || "", auto: !!v.auto }); });
     else this.webVoices.forEach(function (v) { out.push({ id: v.name, name: v.name + " (" + v.lang + ")", lang: v.lang, src: "web" }); });
     return out;
   },
@@ -557,7 +584,7 @@ var Speech = {
   espBuffer: function (text, robot) {
     var w = this.esp; if (!w || !AE.ensure()) return null;
     try {
-      w.set_rate(Math.max(80, Math.min(450, Math.round(175 * (+settings.rate || 1)))));
+      w.set_rate(Math.max(80, Math.min(530, Math.round(175 * (+settings.rate || 1)))));
       try { w.set_pitch(robot ? 30 : 50); } catch (e) { /* */ }
       var parts = [], n = 0;
       w.synthesize(this.espClean(text), function (s) { if (s && s.length) { parts.push(s); n += s.length; } });
@@ -569,7 +596,7 @@ var Speech = {
     } catch (e) { return null; }
   },
   _chunk: function (text) {
-    text = String(text == null ? "" : text).replace(/\s+/g, " ").trim();
+    text = keysSpoken(String(text == null ? "" : text)).replace(/\s+/g, " ").trim();
     if (!text) return [];
     var sents = text.match(/[^.!?…]+[.!?…]*/g) || [text], out = [];
     sents.forEach(function (s) {
@@ -588,24 +615,37 @@ var Speech = {
   /* Жест игрока: то, что скажется в ответ на него, может перебить чтение. */
   user: function () { this.userUntil = Date.now() + 450; },
   isUser: function () { return Date.now() <= this.userUntil; },
+  /* Записка читается: её не обрывает ни событие, ни действие игрока —
+     только тишина (четыре пальца вниз) или явное «замолчать». */
+  noteBusy: function () { return this.noteReading && (this.speaking || this.queue.length > 0); },
+  /* Любое действие игрока сразу обрывает речь — кроме записки. */
+  userAct: function () {
+    this.user();
+    if (this.noteBusy()) return;
+    if (this.speaking || this.queue.length) this.stop();
+    this.later = [];
+  },
   /* Длинный текст (записка, глава руководства, пролог) дочитывается до конца:
      фразы игры, сказанные без жеста игрока, ждут конца чтения. Перебить
      чтение может только сам игрок — любым жестом; четыре пальца вниз — тишина. */
   say: function (text, opts) {
     opts = opts || {};
     text = String(text == null ? "" : text);
-    if (this.reading && (this.speaking || this.queue.length) && !opts.urgent && !this.isUser()) {
+    var noteOn = this.noteBusy() && !opts.note;
+    var readOn = this.reading && (this.speaking || this.queue.length > 0) && !this.isUser() && !opts.urgent;
+    if (noteOn || readOn) {
       this.later.push({ text: text, robot: !!opts.robot });
       if (this.later.length > 3) this.later.shift();
       return;
     }
-    var live = document.getElementById("liveRegion");
+    var live = LAB.desktop ? null : document.getElementById("liveRegion"); /* на компьютере чтец экрана не дублирует речь игры */
     if (live) { live.textContent = ""; var tt = text; requestAnimationFrame(function () { live.textContent = tt; }); }
     if (LAB.showCaption) LAB.showCaption(text);
     if (!settings.speech) return;
     if (opts.interrupt !== false) { this.stop(true); this.later = []; }
     var parts = this._chunk(text), self = this;
-    if (opts.read || text.length > 230) this.reading = true;
+    if (opts.note) { this.noteReading = true; this.reading = true; }
+    else if (opts.read || text.length > 230) this.reading = true;
     parts.forEach(function (p) { self.queue.push({ text: p, robot: !!opts.robot }); });
     this._pump();
   },
@@ -635,8 +675,8 @@ var Speech = {
     this._stopKeepAlive();
     if (!this.queue.length) {
       AE.setDuck(false);
-      if (this.reading) {
-        this.reading = false;
+      if (this.reading || this.noteReading) {
+        this.reading = false; this.noteReading = false;
         var later = this.later, self = this; this.later = [];
         later.forEach(function (l) { self._chunk(l.text).forEach(function (p) { self.queue.push({ text: p, robot: l.robot }); }); });
         if (later.length && LAB.showCaption) LAB.showCaption(later[later.length - 1].text);
@@ -709,7 +749,7 @@ var Speech = {
   _stopKeepAlive: function () { if (this.keepAlive) { clearInterval(this.keepAlive); this.keepAlive = null; } },
   stop: function (keepDuck) {
     this.queue = [];
-    this.reading = false;
+    this.reading = false; this.noteReading = false;
     var was = this.speaking;
     this.speaking = false; this.cur = null;
     clearTimeout(this.timer); this.timer = null;

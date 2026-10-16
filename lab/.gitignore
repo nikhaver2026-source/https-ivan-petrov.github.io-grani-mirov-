@@ -5,3 +5,12 @@ android/build/
 android/.gradle/
 android/local.properties
 *.apk
+# Сборка для Windows: мост голосов и библиотека NVDA кладутся при сборке.
+desktop/node_modules/
+desktop/package-lock.json
+desktop/out/
+desktop/sapi/
+desktop/sr/
+desktop/icon.ico
+desktop/sapi.js
+desktop/sapi-build.js

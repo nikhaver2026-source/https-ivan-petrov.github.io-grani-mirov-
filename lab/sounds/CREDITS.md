@@ -1,16 +1,11 @@
 # Звуки «Подземной лаборатории»
 
-Все записи — свободные: CC0 (общественное достояние), CC BY 3.0 (с указанием автора),
+Все записи — свободные: CC0 (общественное достояние, в том числе записи Freesound —
+у каждой указан автор и страница), CC BY 3.0 (с указанием автора),
 BSD 3-Clause (Freedoom) и общественное достояние (часть записей Endless Sky).
 Записи под CC BY-SA и GPL не используются. Звуки обрезаны, выровнены по громкости,
 часть — замедлена или ускорена, петли сведены с перекрёстным затуханием;
 сборщик — lab/tools/build_sounds.py.
-
-## None
-
-Автор: ?. Лицензия: ?. Источник: 
-
-Файлы: `robot_0.mp3`
 
 ## 10 8bit coin sounds
 
@@ -22,25 +17,25 @@ BSD 3-Clause (Freedoom) и общественное достояние (част
 
 Автор: starninjas. Лицензия: CC0 1.0. Источник: https://opengameart.org/content/10-slimewater-monsterwater
 
-Файлы: `slime.1.ogg`, `slime.2.ogg`, `slime.3.ogg`, `slime.4.ogg`, `slime.5.ogg`, `slime.6.ogg`
+Файлы: `slime.2.ogg`, `slime.3.ogg`
 
 ## 100 CC0 metal and wood SFX
 
 Автор: rubberduck. Лицензия: CC0 1.0. Источник: https://opengameart.org/content/100-cc0-metal-and-wood-sfx
 
-Файлы: `hammer_01.ogg`, `hammer_02.ogg`, `hammer_03.ogg`, `hammer_04.ogg`, `keys_01.ogg`, `keys_02.ogg`, `keys_03.ogg`, `keys_04.ogg`, `lock_open_01.ogg`, `metal_close_01.ogg`, `metal_falling_02.ogg`, `metal_hit_01.ogg`, `metal_hit_02.ogg`, `metal_hit_04.ogg`, `metal_hit_05.ogg`, `metal_open_01.ogg`, `metal_sheet_01.ogg`, `metal_sheet_03.ogg`, `metal_sheet_04.ogg`, `metal_sheet_06.ogg`, `metal_slam_01.ogg`, `metal_spring_01.ogg`, `metal_spring_02.ogg`, `misc_01.ogg`, `misc_03.ogg`, `tools_01.ogg`, `tools_02.ogg`, `tools_03.ogg`, `tools_04.ogg`, `tools_07.ogg`, `tools_09.ogg`, `tools_10.ogg`, `tools_11.ogg`, `tools_12.ogg`, `wood_breaking_01.ogg`, `wood_breaking_02.ogg`, `wood_cracking_01.ogg`, `wood_cracking_02.ogg`, `wood_cracking_03.ogg`, `wood_cracking_04.ogg`
+Файлы: `hammer_01.ogg`, `hammer_02.ogg`, `hammer_03.ogg`, `hammer_04.ogg`, `keys_01.ogg`, `keys_02.ogg`, `keys_03.ogg`, `keys_04.ogg`, `lock_open_01.ogg`, `metal_close_01.ogg`, `metal_falling_02.ogg`, `metal_hit_04.ogg`, `metal_open_01.ogg`, `metal_sheet_01.ogg`, `metal_sheet_03.ogg`, `metal_sheet_04.ogg`, `metal_sheet_06.ogg`, `metal_slam_01.ogg`, `metal_spring_01.ogg`, `metal_spring_02.ogg`, `misc_01.ogg`, `misc_03.ogg`, `tools_01.ogg`, `tools_02.ogg`, `tools_03.ogg`, `tools_04.ogg`, `tools_07.ogg`, `tools_09.ogg`, `tools_10.ogg`, `tools_11.ogg`, `tools_12.ogg`, `wood_breaking_01.ogg`, `wood_breaking_02.ogg`, `wood_cracking_01.ogg`, `wood_cracking_02.ogg`, `wood_cracking_03.ogg`, `wood_cracking_04.ogg`
 
 ## 100 CC0 SFX
 
 Автор: rubberduck. Лицензия: CC0 1.0. Источник: https://opengameart.org/content/100-cc0-sfx
 
-Файлы: `door_close_01.ogg`, `door_close_02.ogg`, `door_close_04.ogg`, `glass_02.ogg`, `glass_04.ogg`, `glass_05.ogg`, `hit_01.ogg`, `hit_02.ogg`, `key_open_02.ogg`, `machine_01.ogg`, `machine_02.ogg`, `machine_03.ogg`, `microwave_door_close.ogg`, `paper_01.ogg`, `paper_02.ogg`, `paper_03.ogg`, `paper_04.ogg`, `wooded_box_open.ogg`
+Файлы: `door_close_01.ogg`, `door_close_02.ogg`, `door_close_04.ogg`, `glass_02.ogg`, `glass_04.ogg`, `glass_05.ogg`, `key_open_02.ogg`, `machine_01.ogg`, `machine_02.ogg`, `machine_03.ogg`, `microwave_door_close.ogg`, `paper_01.ogg`, `paper_02.ogg`, `paper_03.ogg`, `paper_04.ogg`, `wooded_box_open.ogg`
 
 ## 100 CC0 SFX #2
 
 Автор: rubberduck. Лицензия: CC0 1.0. Источник: https://opengameart.org/content/100-cc0-sfx-2
 
-Файлы: `sfx100v2_air_01.ogg`, `sfx100v2_air_02.ogg`, `sfx100v2_air_03.ogg`, `sfx100v2_door_01.ogg`, `sfx100v2_door_03.ogg`, `sfx100v2_footstep_01.ogg`, `sfx100v2_footstep_02.ogg`, `sfx100v2_footstep_wet_01.ogg`, `sfx100v2_footstep_wet_02.ogg`, `sfx100v2_footstep_wet_03.ogg`, `sfx100v2_footstep_wood_01.ogg`, `sfx100v2_footstep_wood_03.ogg`, `sfx100v2_loop_ambient_02.ogg`, `sfx100v2_loop_machine_01.ogg`, `sfx100v2_metal_hit_02.ogg`, `sfx100v2_stones_01.ogg`, `sfx100v2_stones_02.ogg`, `sfx100v2_stones_03.ogg`, `sfx100v2_wood_03.ogg`
+Файлы: `sfx100v2_air_01.ogg`, `sfx100v2_air_02.ogg`, `sfx100v2_air_03.ogg`, `sfx100v2_door_01.ogg`, `sfx100v2_door_03.ogg`, `sfx100v2_footstep_wood_01.ogg`, `sfx100v2_footstep_wood_03.ogg`, `sfx100v2_loop_ambient_02.ogg`, `sfx100v2_loop_machine_01.ogg`, `sfx100v2_stones_01.ogg`, `sfx100v2_stones_02.ogg`, `sfx100v2_stones_03.ogg`, `sfx100v2_wood_03.ogg`
 
 ## 16 button clicks
 
@@ -48,17 +43,11 @@ BSD 3-Clause (Freedoom) и общественное достояние (част
 
 Файлы: `button01.mp3.flac`, `button02.mp3.flac`, `button03.mp3.flac`
 
-## 16 monster growls
+## 2016-04-18 drone A
 
-Автор: starninjas. Лицензия: CC0 1.0. Источник: https://opengameart.org/content/16-monster-growls
+Автор: pushkin. Лицензия: CC0 1.0. Источник: https://freesound.org/s/343366/
 
-Файлы: `monster.1.ogg`, `monster.2.ogg`, `monster.3.ogg`, `monster.4.ogg`, `monster.5.ogg`, `monster.6.ogg`, `monster.7.ogg`, `monster.9.ogg`
-
-## 2 gun reloads
-
-Автор: starninjas. Лицензия: CC0 1.0. Источник: https://opengameart.org/content/2-gun-reloads
-
-Файлы: `gun_reload.1.ogg`, `gun_reload.2.ogg`
+Файлы: `343366_336074-hq.ogg`
 
 ## 3 ping pong sounds 8-bit
 
@@ -82,13 +71,13 @@ BSD 3-Clause (Freedoom) и общественное достояние (част
 
 Автор: rubberduck. Лицензия: CC0 1.0. Источник: https://opengameart.org/content/40-cc0-water-splash-slime-sfx
 
-Файлы: `bubble_01.ogg`, `bubble_02.ogg`, `bubble_03.ogg`, `loop_bubbles_02.ogg`, `loop_water_02.ogg`, `slime_01.ogg`, `slime_02.ogg`, `slime_03.ogg`, `slime_04.ogg`, `slime_05.ogg`, `slime_06.ogg`, `slime_07.ogg`, `slime_08.ogg`, `slime_09.ogg`, `slime_10.ogg`, `slime_11.ogg`, `slime_12.ogg`, `splash_09.ogg`, `splash_10.ogg`, `splash_15.ogg`
+Файлы: `bubble_01.ogg`, `bubble_02.ogg`, `bubble_03.ogg`, `loop_bubbles_02.ogg`, `loop_water_02.ogg`, `slime_09.ogg`
 
-## 42 snow and gravel footsteps
+## 50 Cal MG
 
-Автор: Corsica_S. Лицензия: CC0 1.0. Источник: https://opengameart.org/content/42-snow-and-gravel-footsteps
+Автор: qubodup. Лицензия: CC0 1.0. Источник: https://freesound.org/s/239138/
 
-Файлы: `Corsica_S-Walking_on_snow_covered_gravel_01.flac`, `Corsica_S-Walking_on_snow_covered_gravel_02.flac`, `Corsica_S-Walking_on_snow_covered_gravel_03.flac`, `Corsica_S-Walking_on_snow_covered_gravel_04.flac`, `Corsica_S-Walking_on_snow_covered_gravel_05.flac`, `Corsica_S-Walking_on_snow_covered_gravel_06.flac`, `Corsica_S-Walking_on_snow_covered_gravel_08.flac`, `Corsica_S-Walking_on_snow_covered_gravel_and_ice_01.flac`, `Corsica_S-Walking_on_snow_covered_gravel_and_ice_02.flac`, `Corsica_S-Walking_on_snow_covered_gravel_and_ice_04.flac`
+Файлы: `239138_71257-hq.ogg`
 
 ## 50 CC0 Sci-Fi SFX
 
@@ -100,7 +89,7 @@ BSD 3-Clause (Freedoom) и общественное достояние (част
 
 Автор: Kenney. Лицензия: CC0 1.0. Источник: https://opengameart.org/content/63-digital-sound-effects-lasers-phasers-space-etc
 
-Файлы: `highUp.mp3`, `laser1.mp3`, `laser2.mp3`, `laser3.mp3`, `laser8.mp3`, `laser9.mp3`, `lowDown.mp3`, `lowThreeTone.mp3`, `pepSound1.mp3`, `pepSound3.mp3`, `phaseJump1.mp3`, `phaseJump2.mp3`, `phaseJump3.mp3`, `phaseJump4.mp3`, `phaseJump5.mp3`, `phaserDown1.mp3`, `phaserDown2.mp3`, `phaserDown3.mp3`, `phaserUp1.mp3`, `phaserUp3.mp3`, `phaserUp5.mp3`, `phaserUp6.mp3`, `phaserUp7.mp3`, `powerUp1.mp3`, `powerUp2.mp3`, `powerUp3.mp3`, `powerUp4.mp3`, `powerUp5.mp3`, `powerUp8.mp3`, `spaceTrash1.mp3`, `spaceTrash2.mp3`, `threeTone1.mp3`, `twoTone2.mp3`, `zap1.mp3`, `zap2.mp3`, `zapThreeToneUp.mp3`, `zapTwoTone.mp3`
+Файлы: `highUp.mp3`, `laser8.mp3`, `laser9.mp3`, `lowDown.mp3`, `lowThreeTone.mp3`, `pepSound1.mp3`, `pepSound3.mp3`, `phaseJump1.mp3`, `phaseJump2.mp3`, `phaseJump3.mp3`, `phaseJump4.mp3`, `phaseJump5.mp3`, `phaserDown1.mp3`, `phaserDown3.mp3`, `phaserUp1.mp3`, `phaserUp3.mp3`, `phaserUp5.mp3`, `phaserUp6.mp3`, `phaserUp7.mp3`, `powerUp1.mp3`, `powerUp2.mp3`, `powerUp3.mp3`, `powerUp4.mp3`, `powerUp5.mp3`, `powerUp8.mp3`, `spaceTrash1.mp3`, `spaceTrash2.mp3`, `threeTone1.mp3`, `twoTone2.mp3`, `zap1.mp3`, `zap2.mp3`, `zapThreeToneUp.mp3`, `zapTwoTone.mp3`
 
 ## 7 assorted sound effects
 
@@ -118,31 +107,61 @@ BSD 3-Clause (Freedoom) и общественное достояние (част
 
 Автор: independent.nu. Лицензия: CC0 1.0. Источник: https://opengameart.org/content/8-wet-squish-slurp-impacts
 
-Файлы: `impactsplat01.mp3.flac`, `impactsplat02.mp3.flac`, `impactsplat03.mp3.flac`, `impactsplat04.mp3.flac`, `impactsplat05.mp3.flac`, `impactsplat06.mp3.flac`, `impactsplat07.mp3.flac`, `impactsplat08.mp3.flac`
+Файлы: `impactsplat03.mp3.flac`, `impactsplat04.mp3.flac`, `impactsplat05.mp3.flac`, `impactsplat07.mp3.flac`, `impactsplat08.mp3.flac`
 
 ## 80 CC0 creature SFX
 
 Автор: rubberduck. Лицензия: CC0 1.0. Источник: https://opengameart.org/content/80-cc0-creature-sfx
 
-Файлы: `alien_01.ogg`, `alien_02.ogg`, `alien_03.ogg`, `bug_01.ogg`, `bug_02.ogg`, `bug_03.ogg`, `bug_04.ogg`, `burble_01.ogg`, `burble_02.ogg`, `burp_01.ogg`, `burp_02.ogg`, `cough_01.ogg`, `cough_02.ogg`, `cough_03.ogg`, `cute_01.ogg`, `cute_02.ogg`, `cute_03.ogg`, `cute_04.ogg`, `grunt_01.ogg`, `grunt_02.ogg`, `grunt_03.ogg`, `grunt_04.ogg`, `grunt_05.ogg`, `howl.ogg`, `hurt_01.ogg`, `hurt_02.ogg`, `hurt_03.ogg`, `hurt_04.ogg`, `hurt_05.ogg`, `monster_01.ogg`, `monster_02.ogg`, `monster_03.ogg`, `monster_04.ogg`, `monster_05.ogg`, `monster_06.ogg`, `monster_07.ogg`, `roar_02.ogg`, `scream_01.ogg`, `scream_02.ogg`, `spit_01.ogg`, `spit_02.ogg`, `spit_03.ogg`, `troll_01.ogg`, `troll_02.ogg`, `troll_03.ogg`, `weird_01.ogg`, `weird_02.ogg`, `weird_03.ogg`, `weird_04.ogg`, `weird_05.ogg`
+Файлы: `cough_01.ogg`, `cough_02.ogg`, `cough_03.ogg`, `spit_01.ogg`, `spit_02.ogg`, `spit_03.ogg`
 
 ## 80 CC0 creature SFX #2
 
 Автор: rubberduck. Лицензия: CC0 1.0. Источник: https://opengameart.org/content/80-cc0-creture-sfx-2
 
-Файлы: `attack_01.ogg`, `attack_02.ogg`, `attack_03.ogg`, `attack_04.ogg`, `attack_05.ogg`, `bug_05.ogg`, `bug_06.ogg`, `bug_07.ogg`, `bug_08.ogg`, `bug_09.ogg`, `bug_10.ogg`, `bug_11.ogg`, `bug_12.ogg`, `bug_13.ogg`, `die_01.ogg`, `die_02.ogg`, `die_03.ogg`, `die_04.ogg`, `human_01.ogg`, `human_02.ogg`, `human_03.ogg`, `human_04.ogg`, `roar_04.ogg`, `roar_05.ogg`, `stomp_01.ogg`
+Файлы: `bug_05.ogg`, `bug_06.ogg`, `bug_07.ogg`, `human_01.ogg`, `human_02.ogg`, `human_03.ogg`, `human_04.ogg`, `stomp_01.ogg`
 
 ## 80 CC0 RPG SFX
 
 Автор: rubberduck. Лицензия: CC0 1.0. Источник: https://opengameart.org/content/80-cc0-rpg-sfx
 
-Файлы: `blade_01.ogg`, `blade_02.ogg`, `blade_03.ogg`, `chain_01.ogg`, `chain_02.ogg`, `chain_03.ogg`, `item_coins_01.ogg`, `item_coins_02.ogg`, `item_coins_03.ogg`, `item_misc_01.ogg`, `item_misc_02.ogg`, `item_misc_04.ogg`, `item_misc_05.ogg`, `item_misc_06.ogg`, `item_wood_01.ogg`, `metal_01.ogg`, `metal_02.ogg`, `metal_03.ogg`, `stones_04.ogg`
+Файлы: `blade_01.ogg`, `chain_01.ogg`, `chain_02.ogg`, `chain_03.ogg`, `item_coins_01.ogg`, `item_coins_02.ogg`, `item_coins_03.ogg`, `item_misc_01.ogg`, `item_misc_02.ogg`, `item_misc_04.ogg`, `item_misc_05.ogg`, `item_misc_06.ogg`, `item_wood_01.ogg`, `metal_01.ogg`, `metal_02.ogg`, `metal_03.ogg`, `stones_04.ogg`
 
 ## 9 sci-fi computer sounds and beeps
 
 Автор: Michel Baradari (via qubodup). Лицензия: CC BY 3.0. Источник: https://opengameart.org/content/9-sci-fi-computer-sounds-and-beeps
 
 Файлы: `acid6.flac`, `itemback.flac`, `itempick1.flac`, `teleport.flac`, `tick.flac`
+
+## 9mm Handgun Being Dry Fired
+
+Автор: serøutōnin--deprivəd. Лицензия: CC0 1.0. Источник: https://freesound.org/s/674568/
+
+Файлы: `674568_7157894-hq.ogg`
+
+## A Glock handgun having its magazine removed and re-inserted
+
+Автор: serøutōnin--deprivəd. Лицензия: CC0 1.0. Источник: https://freesound.org/s/854460/
+
+Файлы: `854460_7157894-hq.ogg`
+
+## A pistol being moved around and handled w/ foley
+
+Автор: serøutōnin--deprivəd. Лицензия: CC0 1.0. Источник: https://freesound.org/s/725400/
+
+Файлы: `725400_7157894-hq.ogg`
+
+## A rifle being dry fired once
+
+Автор: serøutōnin--deprivəd. Лицензия: CC0 1.0. Источник: https://freesound.org/s/725402/
+
+Файлы: `725402_7157894-hq.ogg`
+
+## AK-47 Assault Rifle being unloaded and reloaded
+
+Автор: serøutōnin--deprivəd. Лицензия: CC0 1.0. Источник: https://freesound.org/s/674742/
+
+Файлы: `674742_7157894-hq.ogg`
 
 ## Ambience Pack 1: Sci-Fi Horror
 
@@ -156,11 +175,23 @@ BSD 3-Clause (Freedoom) и общественное достояние (част
 
 Файлы: `ambient_horror.flac`
 
-## Angry robot bird
+## An M16 Rifle being reloaded while empty
 
-Автор: OpenGameArt. Лицензия: CC0 1.0. Источник: https://opengameart.org/content/angry-robot-bird
+Автор: serøutōnin--deprivəd. Лицензия: CC0 1.0. Источник: https://freesound.org/s/725397/
 
-Файлы: `Angry_Robot_Bird_0.flac`
+Файлы: `725397_7157894-hq.ogg`
+
+## Angry Pig Oinking
+
+Автор: Jofae. Лицензия: CC0 1.0. Источник: https://freesound.org/s/352698/
+
+Файлы: `352698_6512973-hq.ogg`
+
+## ANI Big Pipe Hit
+
+Автор: ani_music. Лицензия: CC0 1.0. Источник: https://freesound.org/s/244983/
+
+Файлы: `244983_3008343-hq.ogg`
 
 ## Atmospheric interaction sound pack
 
@@ -168,23 +199,65 @@ BSD 3-Clause (Freedoom) и общественное достояние (част
 
 Файлы: `anchor_action.flac`, `magnet_on.flac`, `magnet_start.flac`, `magnet_on.flac`, `anchor_action.flac`, `magnet_start.flac`
 
-## Big scary troll sounds
+## big metallic robot footsteps
 
-Автор: OpenGameArt. Лицензия: CC0 1.0. Источник: https://opengameart.org/content/big-scary-troll-sounds
+Автор: gladkiy. Лицензия: CC0 1.0. Источник: https://freesound.org/s/342235/
 
-Файлы: `troll-idle-noises_0.ogg`, `troll-roars_0.ogg`
+Файлы: `342235_2364707-hq.ogg`
+
+## Big robot footstep
+
+Автор: AudioPapkin. Лицензия: CC0 1.0. Источник: https://freesound.org/s/813056/
+
+Файлы: `813056_8698658-hq.ogg`
+
+## Big robot footstep 002
+
+Автор: AudioPapkin. Лицензия: CC0 1.0. Источник: https://freesound.org/s/813053/
+
+Файлы: `813053_8698658-hq.ogg`
+
+## Big robot footstep 003
+
+Автор: AudioPapkin. Лицензия: CC0 1.0. Источник: https://freesound.org/s/813054/
+
+Файлы: `813054_8698658-hq.ogg`
+
+## Big robot footstep 004
+
+Автор: AudioPapkin. Лицензия: CC0 1.0. Источник: https://freesound.org/s/813055/
+
+Файлы: `813055_8698658-hq.ogg`
+
+## Big robot footstep 005
+
+Автор: AudioPapkin. Лицензия: CC0 1.0. Источник: https://freesound.org/s/815039/
+
+Файлы: `815039_8698658-hq.ogg`
+
+## Big Slow Heavy Drone Hovering Idle Loop
+
+Автор: qubodup. Лицензия: CC0 1.0. Источник: https://freesound.org/s/854382/
+
+Файлы: `854382_71257-hq.ogg`
 
 ## BigSoundBank
 
 Автор: Joseph Sardin. Лицензия: CC0 1.0. Источник: https://bigsoundbank.com
 
-Файлы: `1487_air-compressor.flac`, `3092_beer-compressor-2.flac`, `1803_automatic-hatch-opening.flac`, `1804_automatic-hatch-closing.flac`, `1092_electric-circuit-breaker.flac`, `3442_electric-strike-1.flac`, `1711_elevator-3-floors.flac`, `1712_elevator-6-floors.flac`, `1591_broken-glass-of-champagne.flac`, `1987_pistol-cocking-4.flac`, `3011_hiss-of-steam-train-3.flac`, `3019_hiss-of-steam-train-7.flac`, `1000_bumblebee-1.flac`, `1759_star-wars-blaster-3.flac`, `1761_star-wars-blaster-5.flac`, `2376_microwave-oven-3.flac`, `2143_flashing-light-bulb-1.flac`, `2146_flashing-light-bulb-4.flac`, `2618_radio-frequency-sweep-2.flac`, `1973_robot-1.flac`, `1975_robot-3.flac`, `1981_robot-9.flac`, `3114_thunder-3.flac`, `1976_robot-4.flac`, `1980_robot-8.flac`, `1662_howling-of-a-girl-1.flac`, `3411_evacuation-alarm-1.flac`, `3016_steam-locomotive-1.flac`, `1318_fast-steps-on-concrete.flac`, `2118_neon-or-transformer-1.flac`, `2119_neon-or-transformer-2.flac`, `1032_air-extractor.flac`, `1233_air-water-heat-pump-back.flac`, `3598_ventilation-5.flac`
+Файлы: `1487_air-compressor.flac`, `3092_beer-compressor-2.flac`, `1803_automatic-hatch-opening.flac`, `1804_automatic-hatch-closing.flac`, `1092_electric-circuit-breaker.flac`, `3442_electric-strike-1.flac`, `1711_elevator-3-floors.flac`, `1712_elevator-6-floors.flac`, `1591_broken-glass-of-champagne.flac`, `1987_pistol-cocking-4.flac`, `3011_hiss-of-steam-train-3.flac`, `3019_hiss-of-steam-train-7.flac`, `2376_microwave-oven-3.flac`, `2143_flashing-light-bulb-1.flac`, `2146_flashing-light-bulb-4.flac`, `2618_radio-frequency-sweep-2.flac`, `1973_robot-1.flac`, `1981_robot-9.flac`, `3114_thunder-3.flac`, `1662_howling-of-a-girl-1.flac`, `3411_evacuation-alarm-1.flac`, `3016_steam-locomotive-1.flac`, `2118_neon-or-transformer-1.flac`, `2119_neon-or-transformer-2.flac`, `1032_air-extractor.flac`, `1233_air-water-heat-pump-back.flac`, `3598_ventilation-5.flac`
 
 ## Bitcrushed voice one-shots
 
 Автор: DavidW. Лицензия: CC BY 3.0. Источник: https://opengameart.org/content/bitcrushed-voice-one-shots
 
-Файлы: `frenjam_enemy_aggro-001.mp3`, `frenjam_enemy_aggro-002.mp3`, `frenjam_enemy_aggro-003.mp3`, `frenjam_enemy_aggro-004.mp3`, `frenjam_enemy_aggro-005.mp3`, `frenjam_enemy_aggro-006.mp3`
+Файлы: `frenjam_enemy_aggro-001.mp3`, `frenjam_enemy_aggro-002.mp3`, `frenjam_enemy_aggro-006.mp3`
+
+## Blast + Flamethrower cooldown
+
+Автор: Breviceps. Лицензия: CC0 1.0. Источник: https://freesound.org/s/447941/
+
+Файлы: `447941_9159316-hq.ogg`
 
 ## Bleak Terminal
 
@@ -192,11 +265,41 @@ BSD 3-Clause (Freedoom) и общественное достояние (част
 
 Файлы: `ruskerdax_-_bleak_terminal_theme.mp3`
 
+## bullet impacts
+
+Автор: pushkin. Лицензия: CC0 1.0. Источник: https://freesound.org/s/144444/
+
+Файлы: `144444_336074-hq.ogg`
+
+## Cat Growling and Hissing
+
+Автор: dinoroki. Лицензия: CC0 1.0. Источник: https://freesound.org/s/679954/
+
+Файлы: `679954_14816633-hq.ogg`
+
+## Cat Hissing
+
+Автор: aunrea. Лицензия: CC0 1.0. Источник: https://freesound.org/s/485952/
+
+Файлы: `485952_7932944-hq.ogg`
+
+## catHisses1
+
+Автор: Zabuhailo. Лицензия: CC0 1.0. Источник: https://freesound.org/s/146963/
+
+Файлы: `146963_2580450-hq.ogg`
+
+## Centerfire Rifle Gun Shot 02
+
+Автор: LilMati. Лицензия: CC0 1.0. Источник: https://freesound.org/s/483536/
+
+Файлы: `483536_6142149-hq.ogg`
+
 ## Chain winch sounds
 
 Автор: OpenGameArt. Лицензия: CC0 1.0. Источник: https://opengameart.org/content/chain-winch-sounds
 
-Файлы: `winch - Marker #2.flac`, `winch - Marker #3.flac`, `winch - Marker #5.flac`, `winch - Marker #6.flac`
+Файлы: `winch - Marker #2.flac`, `winch - Marker #3.flac`
 
 ## Circuit breaker
 
@@ -204,11 +307,53 @@ BSD 3-Clause (Freedoom) и общественное достояние (част
 
 Файлы: `switch on.flac`
 
-## Deep monster roar
+## Civilian Stun Gun 1/10s zap
 
-Автор: OpenGameArt. Лицензия: CC0 1.0. Источник: https://opengameart.org/content/cc0-deep-monster-roar
+Автор: AnthonyChan0. Лицензия: CC0 1.0. Источник: https://freesound.org/s/264779/
 
-Файлы: `monster_roar.flac`
+Файлы: `264779_2886479-hq.ogg`
+
+## Civilian Stun Gun 1/2 second zap
+
+Автор: AnthonyChan0. Лицензия: CC0 1.0. Источник: https://freesound.org/s/265247/
+
+Файлы: `265247_2886479-hq.ogg`
+
+## Clean fast Swoosh
+
+Автор: Danjocross. Лицензия: CC0 1.0. Источник: https://freesound.org/s/507466/
+
+Файлы: `507466_2977885-hq.ogg`
+
+## Clean Machine Gun Burst
+
+Автор: qubodup. Лицензия: CC0 1.0. Источник: https://freesound.org/s/482122/
+
+Файлы: `482122_71257-hq.ogg`
+
+## Creature - Rat - Vocalizations
+
+Автор: LandeAudio. Лицензия: CC0 1.0. Источник: https://freesound.org/s/574107/
+
+Файлы: `574107_4767358-hq.ogg`
+
+## Creature Roar
+
+Автор: Jofae. Лицензия: CC0 1.0. Источник: https://freesound.org/s/354182/
+
+Файлы: `354182_6512973-hq.ogg`
+
+## Creature's Last Breath
+
+Автор: qubodup. Лицензия: CC0 1.0. Источник: https://freesound.org/s/813270/
+
+Файлы: `813270_71257-hq.ogg`
+
+## Creepy Evil Demon Monster Growl
+
+Автор: Voices_Of_Marz. Лицензия: CC0 1.0. Источник: https://freesound.org/s/444444/
+
+Файлы: `444444_6670544-hq.ogg`
 
 ## Desolate
 
@@ -216,11 +361,29 @@ BSD 3-Clause (Freedoom) и общественное достояние (част
 
 Файлы: `Desolate Part I.mp3`
 
+## Dog Growl - Beast / Creature
+
+Автор: coldvet. Лицензия: CC0 1.0. Источник: https://freesound.org/s/404920/
+
+Файлы: `404920_5965692-hq.ogg`
+
 ## Door lock sounds
 
 Автор: OpenGameArt. Лицензия: CC0 1.0. Источник: https://opengameart.org/content/door-lock-sounds
 
 Файлы: `LockedDoorHandleJiggle.flac`, `UnlockDoor.flac`
+
+## Dragon Death
+
+Автор: bevibeldesign. Лицензия: CC0 1.0. Источник: https://freesound.org/s/366096/
+
+Файлы: `366096_4557960-hq.ogg`
+
+## Dragon: Several roars, growls and snarls
+
+Автор: Breviceps. Лицензия: CC0 1.0. Источник: https://freesound.org/s/479380/
+
+Файлы: `479380_9159316-hq.ogg`
 
 ## Dripping water loop
 
@@ -228,11 +391,17 @@ BSD 3-Clause (Freedoom) и общественное достояние (част
 
 Файлы: `atmosbasement.mp3_.flac`
 
+## dyingBeast
+
+Автор: QuantumFellow. Лицензия: CC0 1.0. Источник: https://freesound.org/s/734841/
+
+Файлы: `734841_14713973-hq.ogg`
+
 ## Electricity game sound pack
 
 Автор: OpenGameArt. Лицензия: CC0 1.0. Источник: https://opengameart.org/content/electricity-game-sound-pack
 
-Файлы: `charge.flac`, `crackleelectricityloop.flac`, `death_1.flac`, `deathboom.flac`, `groundhit.flac`
+Файлы: `charge.flac`, `death_1.flac`, `deathboom.flac`, `groundhit.flac`
 
 ## Electronic device loop
 
@@ -268,7 +437,13 @@ BSD 3-Clause (Freedoom) и общественное достояние (част
 
 Автор: Endless Sky contributors. Лицензия: Public domain. Источник: https://github.com/endless-sky/endless-sky
 
-Файлы: `alarm.flac`, `blaster.flac`, `disruptor~.flac`, `explosion large.flac`, `explosion medium.flac`, `explosion small.flac`, `explosion tiny.flac`, `final explosion small.flac`, `flamethrower~.flac`, `fusion blast.flac`, `gatling.flac`, `gravity well~.flac`, `harmonic jump.flac`, `heavy blaster.flac`, `ion impact.flac`, `ion medium~.flac`, `ion small~.flac`, `javelin.flac`, `locust blaster.flac`, `mine deploy.flac`, `mining laser~.flac`, `mod blaster.flac`, `neutron bolt.flac`, `particle.flac`, `piercer.flac`, `plasma discharger.flac`, `plasma.flac`, `proton.flac`, `pulse.flac`, `repeater.flac`, `rocket.flac`, `scan~.flac`, `slicer~.flac`, `stagnation beam~.flac`
+Файлы: `alarm.flac`, `explosion large.flac`, `explosion medium.flac`, `explosion small.flac`, `explosion tiny.flac`, `flamethrower~.flac`, `gravity well~.flac`, `harmonic jump.flac`, `ion impact.flac`, `mine deploy.flac`, `neutron bolt.flac`, `particle.flac`, `proton.flac`, `rocket.flac`, `scan~.flac`, `stagnation beam~.flac`
+
+## Evil Screech
+
+Автор: zombieallen. Лицензия: CC0 1.0. Источник: https://freesound.org/s/725210/
+
+Файлы: `725210_985232-hq.ogg`
 
 ## Explosion somewhere far
 
@@ -282,23 +457,89 @@ BSD 3-Clause (Freedoom) и общественное достояние (част
 
 Файлы: `Factory.ogg`
 
-## Fantozzi's footsteps (grass/sand/stone)
+## Fast whoosh, bamboo swoosh through air, version 1
 
-Автор: Fantozzi. Лицензия: CC0 1.0. Источник: https://opengameart.org/content/fantozzis-footsteps-grasssand-stone
+Автор: zapsplat.com. Лицензия: CC0 1.0. Источник: https://freesound.org/s/719636/
 
-Файлы: `Fantozzi-SandL1.flac`, `Fantozzi-SandL2.flac`, `Fantozzi-SandL3.flac`, `Fantozzi-SandR1.flac`, `Fantozzi-SandR3.flac`, `Fantozzi-StoneL1.flac`, `Fantozzi-StoneL2.flac`, `Fantozzi-StoneL3.flac`, `Fantozzi-StoneR1.flac`, `Fantozzi-StoneR2.flac`, `Fantozzi-StoneR3.flac`
+Файлы: `719636_15601358-hq.ogg`
 
-## Footsteps
+## Fire Extinguisher
 
-Автор: OpenGameArt. Лицензия: CC0 1.0. Источник: https://opengameart.org/content/footsteps-0
+Автор: tranzfusion. Лицензия: CC0 1.0. Источник: https://freesound.org/s/642961/
 
-Файлы: `01-footstep_0.ogg`, `02-footstep.ogg`, `03-footstep.ogg`, `04-footstep.ogg`, `05-footstep.ogg`, `06-footstep.ogg`
+Файлы: `642961_13654584-hq.ogg`
+
+## Flamethrower_Weapon_Short_Medium_Bursts
+
+Автор: AslakHostaker. Лицензия: CC0 1.0. Источник: https://freesound.org/s/395038/
+
+Файлы: `395038_7487276-hq.ogg`
+
+## Foley bullet hit metal pipe
+
+Автор: martian. Лицензия: CC0 1.0. Источник: https://freesound.org/s/182262/
+
+Файлы: `182262_84709-hq.ogg`
+
+## FOLEY_Footsteps_Metal_001
+
+Автор: conleec. Лицензия: CC0 1.0. Источник: https://freesound.org/s/148462/
+
+Файлы: `148462_221578-hq.ogg`
+
+## FOLEY_Footsteps_Metal_002
+
+Автор: conleec. Лицензия: CC0 1.0. Источник: https://freesound.org/s/149454/
+
+Файлы: `149454_221578-hq.ogg`
+
+## Footsteps Metallic Muffled
+
+Автор: RutgerMuller. Лицензия: CC0 1.0. Источник: https://freesound.org/s/50723/
+
+Файлы: `50723_179538-hq.ogg`
+
+## Footsteps Metallic Muffled Louder
+
+Автор: RutgerMuller. Лицензия: CC0 1.0. Источник: https://freesound.org/s/50724/
+
+Файлы: `50724_179538-hq.ogg`
+
+## Footsteps on Metal
+
+Автор: IENBA. Лицензия: CC0 1.0. Источник: https://freesound.org/s/698697/
+
+Файлы: `698697_9616576-hq.ogg`
+
+## Footsteps On Metal (single steps)
+
+Автор: IENBA. Лицензия: CC0 1.0. Источник: https://freesound.org/s/834029/
+
+Файлы: `834029_9616576-hq.ogg`
+
+## footsteps-metal-surfaces-various
+
+Автор: audioninja001. Лицензия: CC0 1.0. Источник: https://freesound.org/s/455058/
+
+Файлы: `455058_2699264-hq.ogg`
 
 ## Freedoom
 
 Автор: Freedoom contributors. Лицензия: BSD 3-Clause. Источник: https://github.com/freedoom/freedoom
 
-Файлы: `dsbdcls.flac`, `dsbdopn.flac`, `dsbfg.flac`, `dsbrsdth.flac`, `dsbrssit.flac`, `dsbspact.flac`, `dsbspdth.flac`, `dsbspsit.flac`, `dsbspwlk.flac`, `dscacdth.flac`, `dscacsit.flac`, `dsclaw.flac`, `dscybdth.flac`, `dscybsit.flac`, `dsdmact.flac`, `dsdmpain.flac`, `dsdorcls.flac`, `dsdoropn.flac`, `dshoof.flac`, `dskntdth.flac`, `dskntsit.flac`, `dsmanatk.flac`, `dsoof.flac`, `dsplasma.flac`, `dspldeth.flac`, `dsplpain.flac`, `dspodth1.flac`, `dspodth3.flac`, `dspopain.flac`, `dsposact.flac`, `dsposit1.flac`, `dsposit2.flac`, `dsposit3.flac`, `dsradio.flac`, `dssawful.flac`, `dssawhit.flac`, `dssawidl.flac`, `dssawup.flac`, `dssgcock.flac`, `dssgtatk.flac`, `dssgtdth.flac`, `dssgtsit.flac`, `dsspidth.flac`, `dsspisit.flac`, `dsssdth.flac`, `dssssit.flac`, `dstelept.flac`, `dswpnup.flac`
+Файлы: `dsbdcls.flac`, `dsbdopn.flac`, `dsdorcls.flac`, `dsdoropn.flac`, `dsoof.flac`, `dspldeth.flac`, `dsplpain.flac`, `dsradio.flac`, `dstelept.flac`, `dswpnup.flac`
+
+## Futuristic Drill Machine
+
+Автор: IENBA. Лицензия: CC0 1.0. Источник: https://freesound.org/s/611356/
+
+Файлы: `611356_9616576-hq.ogg`
+
+## Gas Torch Burn
+
+Автор: SyntaxSeed. Лицензия: CC0 1.0. Источник: https://freesound.org/s/244230/
+
+Файлы: `244230_4465058-hq.ogg`
 
 ## Gem collect SFX
 
@@ -310,13 +551,49 @@ BSD 3-Clause (Freedoom) и общественное достояние (част
 
 Автор: qubodup. Лицензия: CC0 1.0. Источник: https://opengameart.org/content/ghost-monster-voice-moaning-growling
 
-Файлы: `qubodup-GhostMoan01.flac`, `qubodup-GhostMoan02.flac`, `qubodup-GhostMoan03.flac`, `qubodup-GhostMoan04.flac`, `qubodup-GhostMoan05.flac`
+Файлы: `qubodup-GhostMoan01.flac`, `qubodup-GhostMoan03.flac`, `qubodup-GhostMoan04.flac`, `qubodup-GhostMoan05.flac`
 
 ## Ghosts in the Machine
 
 Автор: ruskerdax. Лицензия: CC0 1.0. Источник: https://opengameart.org/content/ghosts-in-the-machine
 
 Файлы: `ruskerdax_-_ghosts_in_the_machine.mp3`
+
+## Glock 17 Trigger Pull
+
+Автор: qubodup. Лицензия: CC0 1.0. Источник: https://freesound.org/s/842748/
+
+Файлы: `842748_71257-hq.ogg`
+
+## Gromphadorhina_portentosa_hissing
+
+Автор: nicotep. Лицензия: CC0 1.0. Источник: https://freesound.org/s/547898/
+
+Файлы: `547898_7529214-hq.ogg`
+
+## Growl and Roar
+
+Автор: Jofae. Лицензия: CC0 1.0. Источник: https://freesound.org/s/366837/
+
+Файлы: `366837_6512973-hq.ogg`
+
+## gun lee enfield 303 rifle fire shot
+
+Автор: kyles. Лицензия: CC0 1.0. Источник: https://freesound.org/s/450852/
+
+Файлы: `450852_612689-hq.ogg`
+
+## Gunshot, stage pistol
+
+Автор: TRP. Лицензия: CC0 1.0. Источник: https://freesound.org/s/717584/
+
+Файлы: `717584_97550-hq.ogg`
+
+## Gunshot2, stage pistol
+
+Автор: TRP. Лицензия: CC0 1.0. Источник: https://freesound.org/s/717585/
+
+Файлы: `717585_97550-hq.ogg`
 
 ## Heart of Machine
 
@@ -330,11 +607,41 @@ BSD 3-Clause (Freedoom) и общественное достояние (част
 
 Файлы: `heartbeat.mp3_.flac`
 
+## Heavy blaster shot 05
+
+Автор: xkeril. Лицензия: CC0 1.0. Источник: https://freesound.org/s/702000/
+
+Файлы: `702000_13504080-hq.ogg`
+
+## Heavy Robot Footsteps
+
+Автор: Artem_Zaitsev. Лицензия: CC0 1.0. Источник: https://freesound.org/s/837389/
+
+Файлы: `837389_15618458-hq.ogg`
+
+## High Quality Monster Screech
+
+Автор: NaturesTemper. Лицензия: CC0 1.0. Источник: https://freesound.org/s/518297/
+
+Файлы: `518297_3862281-hq.ogg`
+
+## highvoltagearc
+
+Автор: Sclolex. Лицензия: CC0 1.0. Источник: https://freesound.org/s/210878/
+
+Файлы: `210878_985466-hq.ogg`
+
+## hit - metallic - metal gate
+
+Автор: Anthousai. Лицензия: CC0 1.0. Источник: https://freesound.org/s/406557/
+
+Файлы: `406557_5923045-hq.ogg`
+
 ## Horror Sound Effects Library
 
 Автор: Little Robot Sound Factory. Лицензия: CC BY 3.0. Источник: https://opengameart.org/content/horror-sound-effects-library
 
-Файлы: `Ambience_MonstersBelly_00.mp3`, `Blood_Dripping_Loop_00.mp3`, `Blood_Drip_00.mp3`, `Blood_Drip_01.mp3`, `Blood_Drip_02.mp3`, `Blood_Drip_03.mp3`, `Blood_Drip_04.mp3`, `Blood_Drip_06.mp3`, `Breath_Scared_01.mp3`, `Breath_Scared_02.mp3`, `Breath_Scared_03.mp3`, `Breath_Scared_04.mp3`, `Breath_Scared_05.mp3`, `Breath_Scared_06.mp3`, `Breath_Scared_07.mp3`, `Breath_Scared_09.mp3`, `Evil_Machine_Loop_00.mp3`, `Gate_Open_00.mp3`, `Monster_01.mp3`, `Monster_03.mp3`, `Monster_06.mp3`, `Scream_Male_01.mp3`, `Scream_Male_02.mp3`, `Scream_Male_03.mp3`, `Scream_Male_04.mp3`, `Zombie_01.mp3`, `Zombie_03.mp3`
+Файлы: `Ambience_MonstersBelly_00.mp3`, `Blood_Dripping_Loop_00.mp3`, `Blood_Drip_00.mp3`, `Blood_Drip_01.mp3`, `Blood_Drip_02.mp3`, `Blood_Drip_03.mp3`, `Blood_Drip_04.mp3`, `Blood_Drip_06.mp3`, `Breath_Scared_01.mp3`, `Breath_Scared_02.mp3`, `Breath_Scared_03.mp3`, `Breath_Scared_04.mp3`, `Breath_Scared_05.mp3`, `Breath_Scared_06.mp3`, `Breath_Scared_07.mp3`, `Breath_Scared_09.mp3`, `Evil_Machine_Loop_00.mp3`, `Gate_Open_00.mp3`, `Scream_Male_01.mp3`, `Scream_Male_02.mp3`, `Scream_Male_03.mp3`, `Scream_Male_04.mp3`
 
 ## Hungry ghoul
 
@@ -342,11 +649,23 @@ BSD 3-Clause (Freedoom) и общественное достояние (част
 
 Файлы: `hungry-ghoul_0.ogg`
 
+## Hybrid Monster Growl
+
+Автор: john129pats. Лицензия: CC0 1.0. Источник: https://freesound.org/s/146558/
+
+Файлы: `146558_831330-hq.ogg`
+
 ## Impact Sounds
 
 Автор: Kenney. Лицензия: CC0 1.0. Источник: https://kenney.nl/assets/impact-sounds
 
-Файлы: `footstep_carpet_000.ogg`, `footstep_carpet_001.ogg`, `footstep_carpet_002.ogg`, `footstep_carpet_003.ogg`, `footstep_carpet_004.ogg`, `footstep_concrete_000.ogg`, `footstep_concrete_001.ogg`, `footstep_concrete_002.ogg`, `footstep_concrete_003.ogg`, `footstep_concrete_004.ogg`, `footstep_snow_000.ogg`, `footstep_snow_001.ogg`, `footstep_snow_002.ogg`, `footstep_snow_003.ogg`, `footstep_snow_004.ogg`, `impactBell_heavy_001.ogg`, `impactGlass_heavy_000.ogg`, `impactGlass_heavy_001.ogg`, `impactGlass_light_001.ogg`, `impactGlass_light_002.ogg`, `impactGlass_light_003.ogg`, `impactGlass_light_004.ogg`, `impactGlass_medium_000.ogg`, `impactGlass_medium_001.ogg`, `impactMetal_heavy_000.ogg`, `impactMetal_heavy_001.ogg`, `impactMetal_heavy_002.ogg`, `impactMetal_heavy_003.ogg`, `impactMetal_heavy_004.ogg`, `impactMetal_light_000.ogg`, `impactMetal_light_001.ogg`, `impactMetal_light_002.ogg`, `impactMetal_medium_000.ogg`, `impactMetal_medium_001.ogg`, `impactMetal_medium_002.ogg`, `impactMetal_medium_004.ogg`, `impactMining_000.ogg`, `impactMining_002.ogg`, `impactPlank_medium_000.ogg`, `impactPlank_medium_001.ogg`, `impactPlank_medium_003.ogg`, `impactPlate_heavy_000.ogg`, `impactPlate_heavy_002.ogg`, `impactPlate_light_000.ogg`, `impactPlate_light_001.ogg`, `impactPlate_light_003.ogg`, `impactPlate_light_004.ogg`, `impactPunch_heavy_000.ogg`, `impactPunch_heavy_001.ogg`, `impactPunch_heavy_002.ogg`, `impactPunch_heavy_004.ogg`, `impactPunch_medium_000.ogg`, `impactPunch_medium_001.ogg`, `impactPunch_medium_002.ogg`, `impactPunch_medium_004.ogg`, `impactTin_medium_000.ogg`, `impactTin_medium_002.ogg`, `impactTin_medium_004.ogg`
+Файлы: `impactBell_heavy_001.ogg`, `impactGlass_heavy_000.ogg`, `impactGlass_heavy_001.ogg`, `impactGlass_light_001.ogg`, `impactGlass_light_002.ogg`, `impactGlass_light_003.ogg`, `impactGlass_light_004.ogg`, `impactGlass_medium_000.ogg`, `impactGlass_medium_001.ogg`, `impactMetal_heavy_001.ogg`, `impactMetal_heavy_003.ogg`, `impactMetal_medium_000.ogg`, `impactMetal_medium_001.ogg`, `impactMetal_medium_002.ogg`, `impactMetal_medium_004.ogg`, `impactMining_000.ogg`, `impactMining_002.ogg`, `impactPlank_medium_000.ogg`, `impactPlank_medium_001.ogg`, `impactPlank_medium_003.ogg`, `impactPlate_light_000.ogg`, `impactPlate_light_001.ogg`, `impactPlate_light_003.ogg`, `impactPlate_light_004.ogg`, `impactPunch_heavy_000.ogg`, `impactPunch_heavy_001.ogg`, `impactPunch_heavy_002.ogg`, `impactPunch_medium_000.ogg`, `impactPunch_medium_001.ogg`, `impactPunch_medium_002.ogg`, `impactPunch_medium_004.ogg`, `impactTin_medium_000.ogg`, `impactTin_medium_002.ogg`, `impactTin_medium_004.ogg`
+
+## INFECTED ZOMBIE MAN DYING GROWL
+
+Автор: spootyskater. Лицензия: CC0 1.0. Источник: https://freesound.org/s/612699/
+
+Файлы: `612699_11113354-hq.ogg`
 
 ## Insistent
 
@@ -364,7 +683,7 @@ BSD 3-Clause (Freedoom) и общественное достояние (част
 
 Автор: Kenney. Лицензия: CC0 1.0. Источник: https://opengameart.org/content/interface-sounds
 
-Файлы: `bong_001.ogg`, `click_001.ogg`, `click_005.ogg`, `close_001.ogg`, `close_002.ogg`, `confirmation_001.ogg`, `confirmation_003.ogg`, `drop_002.ogg`, `drop_003.ogg`, `error_004.ogg`, `error_006.ogg`, `glass_002.ogg`, `glitch_001.ogg`, `glitch_002.ogg`, `glitch_003.ogg`, `maximize_002.ogg`, `maximize_003.ogg`, `minimize_002.ogg`, `open_001.ogg`, `open_002.ogg`, `pluck_001.ogg`, `pluck_002.ogg`, `question_002.ogg`, `select_001.ogg`, `select_002.ogg`, `select_007.ogg`, `select_008.ogg`, `tick_001.ogg`, `tick_002.ogg`, `tick_004.ogg`
+Файлы: `bong_001.ogg`, `click_001.ogg`, `close_001.ogg`, `close_002.ogg`, `confirmation_001.ogg`, `confirmation_003.ogg`, `drop_002.ogg`, `drop_003.ogg`, `error_004.ogg`, `error_006.ogg`, `glass_002.ogg`, `glitch_001.ogg`, `glitch_002.ogg`, `glitch_003.ogg`, `maximize_002.ogg`, `maximize_003.ogg`, `minimize_002.ogg`, `open_001.ogg`, `open_002.ogg`, `pluck_001.ogg`, `pluck_002.ogg`, `question_002.ogg`, `select_001.ogg`, `select_002.ogg`, `select_007.ogg`, `select_008.ogg`, `tick_001.ogg`, `tick_002.ogg`, `tick_004.ogg`
 
 ## Iron door
 
@@ -378,11 +697,77 @@ BSD 3-Clause (Freedoom) и общественное достояние (част
 
 Файлы: `key-176034.mp3`
 
+## J7_fire extinguisher
+
+Автор: Iamgiorgio. Лицензия: CC0 1.0. Источник: https://freesound.org/s/371839/
+
+Файлы: `371839_5302340-hq.ogg`
+
+## Kitten Growl and Hiss
+
+Автор: TheWoodlandNomad. Лицензия: CC0 1.0. Источник: https://freesound.org/s/363105/
+
+Файлы: `363105_6612464-hq.ogg`
+
 ## Laser weapon burst fire
 
 Автор: OpenGameArt. Лицензия: CC0 1.0. Источник: https://opengameart.org/content/laser-weapon-burst-fire
 
 Файлы: `burst_fire_1.mp3`
+
+## LASRGun_Blast01-10
+
+Автор: InMotionAudio. Лицензия: CC0 1.0. Источник: https://freesound.org/s/660270/
+
+Файлы: `660270_14083205-hq.ogg`
+
+## Lion
+
+Автор: GJ55GB. Лицензия: CC0 1.0. Источник: https://freesound.org/s/488348/
+
+Файлы: `488348_10507382-hq.ogg`
+
+## Lion loud
+
+Автор: Bidone. Лицензия: CC0 1.0. Источник: https://freesound.org/s/69570/
+
+Файлы: `69570_706955-hq.ogg`
+
+## Lion roaring
+
+Автор: Bidone. Лицензия: CC0 1.0. Источник: https://freesound.org/s/69572/
+
+Файлы: `69572_706955-hq.ogg`
+
+## Lions two
+
+Автор: Bidone. Лицензия: CC0 1.0. Источник: https://freesound.org/s/69571/
+
+Файлы: `69571_706955-hq.ogg`
+
+## LONG_Pig_Grunt_01
+
+Автор: wwstudioswastaken. Лицензия: CC0 1.0. Источник: https://freesound.org/s/620080/
+
+Файлы: `620080_13582756-hq.ogg`
+
+## Madagascar Hissing Cockroach
+
+Автор: TheKingOfGeeks360. Лицензия: CC0 1.0. Источник: https://freesound.org/s/811205/
+
+Файлы: `811205_15895934-hq.ogg`
+
+## Mag reload
+
+Автор: SamsterBirdies. Лицензия: CC0 1.0. Источник: https://freesound.org/s/363167/
+
+Файлы: `363167_5487341-hq.ogg`
+
+## mech_step_001
+
+Автор: pgi. Лицензия: CC0 1.0. Источник: https://freesound.org/s/211957/
+
+Файлы: `211957_1654571-hq.ogg`
 
 ## Mechanical sounds
 
@@ -396,29 +781,137 @@ BSD 3-Clause (Freedoom) и общественное достояние (част
 
 Файлы: `ruskerdax_-_menacing_otherworld.mp3`
 
+## metal catwalk footsteps
+
+Автор: vestibule-door. Лицензия: CC0 1.0. Источник: https://freesound.org/s/669095/
+
+Файлы: `669095_14100561-hq.ogg`
+
+## Metal Footsteps (grate)
+
+Автор: SoftDistortionFX. Лицензия: CC0 1.0. Источник: https://freesound.org/s/398937/
+
+Файлы: `398937_5993580-hq.ogg`
+
 ## Metal footsteps on concrete
 
 Автор: OpenGameArt. Лицензия: CC0 1.0. Источник: https://opengameart.org/content/metal-footsteps-on-concrete
 
-Файлы: `metal_steps_01.flac`, `metal_steps_02.flac`, `metal_steps_03.flac`, `metal_steps_04.flac`, `metal_steps_05.flac`, `metal_steps_06.flac`, `metal_steps_07.flac`, `metal_steps_08.flac`, `metal_steps_09.flac`, `metal_steps_10.flac`, `metal_steps_12.flac`, `metal_steps_13.flac`, `metal_steps_14.flac`, `metal_steps_15.flac`, `metal_steps_16.flac`, `metal_steps_17.flac`, `metal_steps_19.flac`, `metal_steps_20.flac`, `metal_steps_22.flac`, `metal_steps_23.flac`, `metal_steps_25.flac`
+Файлы: `metal_steps_03.flac`, `metal_steps_04.flac`, `metal_steps_05.flac`, `metal_steps_06.flac`, `metal_steps_09.flac`, `metal_steps_10.flac`, `metal_steps_12.flac`, `metal_steps_13.flac`, `metal_steps_14.flac`, `metal_steps_16.flac`
 
 ## Metal interactions
 
 Автор: OpenGameArt. Лицензия: CC0 1.0. Источник: https://opengameart.org/content/metal-interactions
 
-Файлы: `metal_button_press1.flac`, `metal_interaction2.flac`, `metal_swing1.flac`
+Файлы: `metal_button_press1.flac`, `metal_interaction2.flac`
+
+## Metal Staircase Steps
+
+Автор: Arcorias. Лицензия: CC0 1.0. Источник: https://freesound.org/s/770804/
+
+Файлы: `770804_4982778-hq.ogg`
+
+## Metal thud
+
+Автор: DDT197. Лицензия: CC0 1.0. Источник: https://freesound.org/s/445775/
+
+Файлы: `445775_8292592-hq.ogg`
+
+## Minigun Burst Audio
+
+Автор: rob762x51. Лицензия: CC0 1.0. Источник: https://freesound.org/s/165042/
+
+Файлы: `165042_1190141-hq.ogg`
+
+## Monster Growl Ashtur
+
+Автор: FK_Prod. Лицензия: CC0 1.0. Источник: https://freesound.org/s/188949/
+
+Файлы: `188949_3517340-hq.ogg`
 
 ## Monster or beast sounds
 
 Автор: OpenGameArt. Лицензия: CC0 1.0. Источник: https://opengameart.org/content/monster-or-beast-sounds
 
-Файлы: `Beast Growl 1.flac`, `Beast Growl 2.flac`, `Beast Growl 3.flac`, `Beast Growl 4.flac`, `Beast Growl 5.flac`, `Children Spirit Sounds.flac`, `Demon Growl.flac`, `Dieing Beast.flac`, `Yucky Beast 1.flac`, `Yucky Beast 2.flac`, `Yucky Beast 3.flac`
+Файлы: `Children Spirit Sounds.flac`
 
-## Monster sound effects 2
+## Monster screech
 
-Автор: OpenGameArt. Лицензия: CC0 1.0. Источник: https://opengameart.org/content/monster-sound-effects-2
+Автор: Khrinx. Лицензия: CC0 1.0. Источник: https://freesound.org/s/565024/
 
-Файлы: `monster-1.flac`, `monster-2.flac`, `monster-3.flac`, `monster-4.flac`, `monster-6.flac`
+Файлы: `565024_1187042-hq.ogg`
+
+## Monster Snarl 2
+
+Автор: pikachu09. Лицензия: CC0 1.0. Источник: https://freesound.org/s/204609/
+
+Файлы: `204609_3439254-hq.ogg`
+
+## Monster snarl 3
+
+Автор: pikachu09. Лицензия: CC0 1.0. Источник: https://freesound.org/s/204610/
+
+Файлы: `204610_3439254-hq.ogg`
+
+## Monster Snarl 4
+
+Автор: pikachu09. Лицензия: CC0 1.0. Источник: https://freesound.org/s/204611/
+
+Файлы: `204611_3439254-hq.ogg`
+
+## Monster Zombie Scream
+
+Автор: lolamadeus. Лицензия: CC0 1.0. Источник: https://freesound.org/s/179345/
+
+Файлы: `179345_544580-hq.ogg`
+
+## Monster-Growls
+
+Автор: DMDoom. Лицензия: CC0 1.0. Источник: https://freesound.org/s/393518/
+
+Файлы: `393518_2824308-hq.ogg`
+
+## monster_sound_big_death
+
+Автор: Leadstarson. Лицензия: CC0 1.0. Источник: https://freesound.org/s/568000/
+
+Файлы: `568000_8216881-hq.ogg`
+
+## monster_sound_medium_death
+
+Автор: Leadstarson. Лицензия: CC0 1.0. Источник: https://freesound.org/s/559621/
+
+Файлы: `559621_8216881-hq.ogg`
+
+## monster_sound_medium_pain
+
+Автор: Leadstarson. Лицензия: CC0 1.0. Источник: https://freesound.org/s/567998/
+
+Файлы: `567998_8216881-hq.ogg`
+
+## Mouse Squeaks
+
+Автор: shyguy014. Лицензия: CC0 1.0. Источник: https://freesound.org/s/463789/
+
+Файлы: `463789_7805928-hq.ogg`
+
+## Multiple Pipe Banging Metal Hit Sound Effects
+
+Автор: DanJFilms. Лицензия: CC0 1.0. Источник: https://freesound.org/s/687242/
+
+Файлы: `687242_11030713-hq.ogg`
+
+## Mutant Scream
+
+Автор: scorpion67890. Лицензия: CC0 1.0. Источник: https://freesound.org/s/396797/
+
+Файлы: `396797_2389125-hq.ogg`
+
+## Nemean Roar
+
+Автор: rifthead. Лицензия: CC0 1.0. Источник: https://freesound.org/s/240311/
+
+Файлы: `240311_864571-hq.ogg`
 
 ## Overloading sound
 
@@ -426,11 +919,65 @@ BSD 3-Clause (Freedoom) и общественное достояние (част
 
 Файлы: `overloading.flac`
 
-## Platformer sounds
+## Pig in slop squealing
 
-Автор: yd. Лицензия: CC0 1.0. Источник: https://opengameart.org/content/platformer-sounds-terminal-interaction-door-shots-bang-and-footsteps
+Автор: mrmunk. Лицензия: CC0 1.0. Источник: https://freesound.org/s/344972/
 
-Файлы: `steps_chain.ogg`, `steps_platform.ogg`, `steps_platform2.ogg`, `steps_stairs1.ogg`
+Файлы: `344972_1255966-hq.ogg`
+
+## Plasma Rifle Gun Shots - Various
+
+Автор: synthy95. Лицензия: CC0 1.0. Источник: https://freesound.org/s/331240/
+
+Файлы: `331240_5789802-hq.ogg`
+
+## Pocket Pistol gunshot 2
+
+Автор: mahecic. Лицензия: CC0 1.0. Источник: https://freesound.org/s/803497/
+
+Файлы: `803497_16571147-hq.ogg`
+
+## Rail1A
+
+Автор: svoxx. Лицензия: CC0 1.0. Источник: https://freesound.org/s/394672/
+
+Файлы: `394672_7466680-hq.ogg`
+
+## Railgun - Extremely LOUD Cannon
+
+Автор: qubodup. Лицензия: CC0 1.0. Источник: https://freesound.org/s/162260/
+
+Файлы: `162260_71257-hq.ogg`
+
+## Railgun X
+
+Автор: steaq. Лицензия: CC0 1.0. Источник: https://freesound.org/s/699655/
+
+Файлы: `699655_1474204-hq.ogg`
+
+## Rat
+
+Автор: egomassive. Лицензия: CC0 1.0. Источник: https://freesound.org/s/536753/
+
+Файлы: `536753_1415754-hq.ogg`
+
+## Rats
+
+Автор: Sycoraxi. Лицензия: CC0 1.0. Источник: https://freesound.org/s/134791/
+
+Файлы: `134791_2460522-hq.ogg`
+
+## ratty squeaks
+
+Автор: Reitanna. Лицензия: CC0 1.0. Источник: https://freesound.org/s/217767/
+
+Файлы: `217767_950925-hq.ogg`
+
+## Real Bullet Flyby Sound
+
+Автор: qubodup. Лицензия: CC0 1.0. Источник: https://freesound.org/s/855248/
+
+Файлы: `855248_71257-hq.ogg`
 
 ## Realm of Torment
 
@@ -444,29 +991,137 @@ BSD 3-Clause (Freedoom) и общественное достояние (част
 
 Файлы: `computer-noise_0.mp3`
 
+## Rifle Gun Shot 02
+
+Автор: LilMati. Лицензия: CC0 1.0. Источник: https://freesound.org/s/484036/
+
+Файлы: `484036_6142149-hq.ogg`
+
+## Rifle gunshot, one shot
+
+Автор: felix.blume. Лицензия: CC0 1.0. Источник: https://freesound.org/s/710084/
+
+Файлы: `710084_1661766-hq.ogg`
+
+## Rifle Shots
+
+Автор: bananplyte. Лицензия: CC0 1.0. Источник: https://freesound.org/s/452154/
+
+Файлы: `452154_6175868-hq.ogg`
+
+## rip_tear FLESH!
+
+Автор: aust_paul. Лицензия: CC0 1.0. Источник: https://freesound.org/s/30931/
+
+Файлы: `30931_15696-hq.ogg`
+
+## Robot / Mech movement
+
+Автор: Breviceps. Лицензия: CC0 1.0. Источник: https://freesound.org/s/505670/
+
+Файлы: `505670_9159316-hq.ogg`
+
+## Robot Footsteps
+
+Автор: IENBA. Лицензия: CC0 1.0. Источник: https://freesound.org/s/611355/
+
+Файлы: `611355_9616576-hq.ogg`
+
+## Robot mechanism-003
+
+Автор: AudioPapkin. Лицензия: CC0 1.0. Источник: https://freesound.org/s/813062/
+
+Файлы: `813062_8698658-hq.ogg`
+
+## Robot mechanism-007
+
+Автор: AudioPapkin. Лицензия: CC0 1.0. Источник: https://freesound.org/s/813066/
+
+Файлы: `813066_8698658-hq.ogg`
+
+## Robot mechanism-008
+
+Автор: AudioPapkin. Лицензия: CC0 1.0. Источник: https://freesound.org/s/813067/
+
+Файлы: `813067_8698658-hq.ogg`
+
+## Robot mechanism-010
+
+Автор: AudioPapkin. Лицензия: CC0 1.0. Источник: https://freesound.org/s/813069/
+
+Файлы: `813069_8698658-hq.ogg`
+
+## Robot mechanism-012
+
+Автор: AudioPapkin. Лицензия: CC0 1.0. Источник: https://freesound.org/s/813071/
+
+Файлы: `813071_8698658-hq.ogg`
+
+## Robot mechanism-013
+
+Автор: AudioPapkin. Лицензия: CC0 1.0. Источник: https://freesound.org/s/813072/
+
+Файлы: `813072_8698658-hq.ogg`
+
+## Robot mechanism-015
+
+Автор: AudioPapkin. Лицензия: CC0 1.0. Источник: https://freesound.org/s/813074/
+
+Файлы: `813074_8698658-hq.ogg`
+
+## Robot mechanism-016
+
+Автор: AudioPapkin. Лицензия: CC0 1.0. Источник: https://freesound.org/s/813075/
+
+Файлы: `813075_8698658-hq.ogg`
+
+## Robot mechanism-018
+
+Автор: AudioPapkin. Лицензия: CC0 1.0. Источник: https://freesound.org/s/813077/
+
+Файлы: `813077_8698658-hq.ogg`
+
 ## Robotic mechanic step sounds
 
 Автор: Lee Barkovich (via qubodup). Лицензия: CC BY 3.0. Источник: https://opengameart.org/content/robotic-mechanic-step-sounds
 
-Файлы: `robot1.flac`, `robot2.flac`, `robot3.flac`, `robotstand.flac`, `robotstep1.flac`, `robotstep2.flac`, `robotstep3.flac`, `robotstep4.flac`, `robotstomp.flac`
+Файлы: `robot1.flac`, `robot3.flac`
+
+## S23-10 Electrical arcing and sparking
+
+Автор: craigsmith. Лицензия: CC0 1.0. Источник: https://freesound.org/s/675752/
+
+Файлы: `675752_2524442-hq.ogg`
+
+## S31-15 Shooting gallery; hitting metal targets
+
+Автор: craigsmith. Лицензия: CC0 1.0. Источник: https://freesound.org/s/675951/
+
+Файлы: `675951_2524442-hq.ogg`
+
+## Sci-Fi Mechanical Door
+
+Автор: CheatinSloth. Лицензия: CC0 1.0. Источник: https://freesound.org/s/739197/
+
+Файлы: `739197_13230621-hq.ogg`
 
 ## Sci-fi RTS war unit sounds
 
 Автор: qubodup. Лицензия: CC0 1.0. Источник: https://opengameart.org/content/sci-fi-rts-war-unit-sounds
 
-Файлы: `aircraftfactory.select.flac`, `artil.action.flac`, `artil.die.flac`, `artil.ready.flac`, `artil.select.flac`, `destroyer.die.flac`, `destroyer.ready.flac`, `destroyer.select.flac`, `destroyer.underattack.flac`
+Файлы: `aircraftfactory.select.flac`, `artil.action.flac`, `artil.die.flac`, `artil.ready.flac`, `artil.select.flac`, `destroyer.select.flac`, `destroyer.underattack.flac`
 
 ## Sci-fi Sounds
 
 Автор: Kenney. Лицензия: CC0 1.0. Источник: https://opengameart.org/content/sci-fi-sounds
 
-Файлы: `computerNoise_000.ogg`, `computerNoise_002.ogg`, `computerNoise_003.ogg`, `doorClose_000.ogg`, `doorClose_001.ogg`, `doorClose_002.ogg`, `doorOpen_000.ogg`, `doorOpen_001.ogg`, `doorOpen_002.ogg`, `engineCircular_000.ogg`, `engineCircular_001.ogg`, `engineCircular_003.ogg`, `forceField_000.ogg`, `forceField_002.ogg`, `forceField_003.ogg`, `impactMetal_000.ogg`, `impactMetal_001.ogg`, `impactMetal_002.ogg`, `impactMetal_003.ogg`, `impactMetal_004.ogg`, `laserSmall_000.ogg`, `laserSmall_001.ogg`, `laserSmall_002.ogg`, `spaceEngineLarge_000.ogg`, `spaceEngineLarge_001.ogg`, `spaceEngineLarge_002.ogg`, `spaceEngineLow_000.ogg`, `spaceEngineLow_001.ogg`, `spaceEngineLow_002.ogg`
+Файлы: `computerNoise_000.ogg`, `computerNoise_002.ogg`, `computerNoise_003.ogg`, `doorClose_000.ogg`, `doorClose_001.ogg`, `doorClose_002.ogg`, `doorOpen_000.ogg`, `doorOpen_001.ogg`, `doorOpen_002.ogg`, `engineCircular_000.ogg`, `engineCircular_001.ogg`, `engineCircular_003.ogg`, `forceField_000.ogg`, `forceField_002.ogg`, `forceField_003.ogg`, `spaceEngineLarge_000.ogg`, `spaceEngineLarge_001.ogg`, `spaceEngineLarge_002.ogg`, `spaceEngineLow_000.ogg`, `spaceEngineLow_001.ogg`, `spaceEngineLow_002.ogg`
 
-## Sci-Fi Weapon Shots SFX
+## Sci-Fi_Explosion_2
 
-Автор: Lentikula. Лицензия: CC0 1.0. Источник: https://lentikula.itch.io/sci-fi-weapon-shots-sfx-freecc0
+Автор: Anomaex. Лицензия: CC0 1.0. Источник: https://freesound.org/s/490266/
 
-Файлы: `Laser Rifle 1.flac`, `Laser Rifle 2.flac`, `Laser Rifle 3.flac`
+Файлы: `490266_8311588-hq.ogg`
 
 ## Searching
 
@@ -480,17 +1135,107 @@ BSD 3-Clause (Freedoom) и общественное достояние (част
 
 Файлы: `odd_coin.flac`
 
+## Servo 7
+
+Автор: JoontheFloof. Лицензия: CC0 1.0. Источник: https://freesound.org/s/740245/
+
+Файлы: `740245_16085440-hq.ogg`
+
+## Servo motor
+
+Автор: Burningmonkey. Лицензия: CC0 1.0. Источник: https://freesound.org/s/322021/
+
+Файлы: `322021_813260-hq.ogg`
+
+## Servo motor working
+
+Автор: D31V228. Лицензия: CC0 1.0. Источник: https://freesound.org/s/723999/
+
+Файлы: `723999_15639698-hq.ogg`
+
+## ServoMotor
+
+Автор: derjuli. Лицензия: CC0 1.0. Источник: https://freesound.org/s/824121/
+
+Файлы: `824121_2573247-hq.ogg`
+
+## Sharp Explosion 4 (of 5)
+
+Автор: Rudmer_Rotteveel. Лицензия: CC0 1.0. Источник: https://freesound.org/s/336011/
+
+Файлы: `336011_4921277-hq.ogg`
+
+## shipboard_railgun
+
+Автор: deleted_user_1941307. Лицензия: CC0 1.0. Источник: https://freesound.org/s/155790/
+
+Файлы: `155790_1941307-hq.ogg`
+
 ## Short alarm
 
 Автор: OpenGameArt. Лицензия: CC0 1.0. Источник: https://opengameart.org/content/short-alarm
 
 Файлы: `alarm_0.ogg`
 
-## Slimy monster sounds
+## Short Whoosh, 13x
 
-Автор: OpenGameArt. Лицензия: CC0 1.0. Источник: https://opengameart.org/content/slimy-monster-or-murder-sounds9
+Автор: Kinoton. Лицензия: CC0 1.0. Источник: https://freesound.org/s/427979/
 
-Файлы: `slimy_monster_or_murderd_sound.mp3`, `slimy_monster_or_murderd_sound_1.mp3`, `slimy_monster_or_murderd_sound_2.mp3`, `slimy_monster_or_murderd_sound_4.mp3`
+Файлы: `427979_2247456-hq.ogg`
+
+## Single Pistol Gunshot 2
+
+Автор: morganpurkis. Лицензия: CC0 1.0. Источник: https://freesound.org/s/371440/
+
+Файлы: `371440_5937039-hq.ogg`
+
+## Single Pistol Gunshot 3.3
+
+Автор: morganpurkis. Лицензия: CC0 1.0. Источник: https://freesound.org/s/392229/
+
+Файлы: `392229_5937039-hq.ogg`
+
+## slime - squishing sounds
+
+Автор: rubberduck9999. Лицензия: CC0 1.0. Источник: https://freesound.org/s/680447/
+
+Файлы: `680447_14687392-hq.ogg`
+
+## Slime Death
+
+Автор: qubodup. Лицензия: CC0 1.0. Источник: https://freesound.org/s/751340/
+
+Файлы: `751340_71257-hq.ogg`
+
+## Slime slapping
+
+Автор: greenlinker. Лицензия: CC0 1.0. Источник: https://freesound.org/s/794272/
+
+Файлы: `794272_6812548-hq.ogg`
+
+## snarl
+
+Автор: SmallQuadruped. Лицензия: CC0 1.0. Источник: https://freesound.org/s/42201/
+
+Файлы: `42201_424069-hq.ogg`
+
+## snd_footsteps_metal_floor_inside
+
+Автор: gristi. Лицензия: CC0 1.0. Источник: https://freesound.org/s/562195/
+
+Файлы: `562195_12618935-hq.ogg`
+
+## snd_swing_whoosh
+
+Автор: gristi. Лицензия: CC0 1.0. Источник: https://freesound.org/s/562191/
+
+Файлы: `562191_12618935-hq.ogg`
+
+## Space monster Roar
+
+Автор: XfiXy8. Лицензия: CC0 1.0. Источник: https://freesound.org/s/467287/
+
+Файлы: `467287_9895957-hq.ogg`
 
 ## Space ship shield sounds
 
@@ -498,17 +1243,41 @@ BSD 3-Clause (Freedoom) и общественное достояние (част
 
 Файлы: `space shield sounds - 1.flac`, `space shield sounds - 2.flac`, `space shield sounds - 3.flac`, `space shield sounds - 4.flac`, `space shield sounds - 5.flac`, `space shield sounds - 6.flac`, `space shield sounds - 7.flac`, `space shield sounds - 8.flac`, `space shield sounds - 9.flac`
 
-## Squeaky rat
+## Squeezing a Slime Ball
 
-Автор: qubodup. Лицензия: CC0 1.0. Источник: https://opengameart.org/content/squeaky-rat
+Автор: niittymaa. Лицензия: CC0 1.0. Источник: https://freesound.org/s/666969/
 
-Файлы: `qubodupSqueakyRatAttack.flac`, `qubodupSqueakyRatDeath.flac`, `qubodupSqueakyRatPain.flac`
+Файлы: `666969_2812583-hq.ogg`
+
+## Squelch
+
+Автор: LucasDuff. Лицензия: CC0 1.0. Источник: https://freesound.org/s/516643/
+
+Файлы: `516643_8272463-hq.ogg`
+
+## squelching
+
+Автор: tiddles451. Лицензия: CC0 1.0. Источник: https://freesound.org/s/547446/
+
+Файлы: `547446_9912277-hq.ogg`
 
 ## Steam boiler loop
 
 Автор: OpenGameArt. Лицензия: CC0 1.0. Источник: https://opengameart.org/content/steam-boiler-sound-loop
 
 Файлы: `generator_loop.flac`
+
+## Swarm of roaches
+
+Автор: szczur_banshee. Лицензия: CC0 1.0. Источник: https://freesound.org/s/380769/
+
+Файлы: `380769_1732954-hq.ogg`
+
+## Taser/High Voltage discharge in glass tube
+
+Автор: The_Chemical_Workshop. Лицензия: CC0 1.0. Источник: https://freesound.org/s/403253/
+
+Файлы: `403253_7809148-hq.ogg`
 
 ## The Creep
 
@@ -522,11 +1291,95 @@ BSD 3-Clause (Freedoom) и общественное достояние (част
 
 Файлы: `dirty_rain_loop.flac`, `the_world_fell_silent.flac`
 
-## Walking on snow
+## trexroar
 
-Автор: OpenGameArt. Лицензия: CC0 1.0. Источник: https://opengameart.org/content/walking-on-snow-sound
+Автор: Opticreep. Лицензия: CC0 1.0. Источник: https://freesound.org/s/255405/
 
-Файлы: `SnowWalk.ogg`, `SnowWalk2.ogg`
+Файлы: `255405_4731953-hq.ogg`
+
+## UAS Drone Hover 01
+
+Автор: DCPoke. Лицензия: CC0 1.0. Источник: https://freesound.org/s/387985/
+
+Файлы: `387985_6221013-hq.ogg`
+
+## Velociraptor_Snarls
+
+Автор: crcavol. Лицензия: CC0 1.0. Источник: https://freesound.org/s/154641/
+
+Файлы: `154641_2592500-hq.ogg`
+
+## Walking and running on a steel floor
+
+Автор: SoundsofTheMachine. Лицензия: CC0 1.0. Источник: https://freesound.org/s/809440/
+
+Файлы: `809440_7602203-hq.ogg`
+
+## Walking on metal
+
+Автор: Sanderboah. Лицензия: CC0 1.0. Источник: https://freesound.org/s/696374/
+
+Файлы: `696374_13017680-hq.ogg`
+
+## Wet Metal Footsteps
+
+Автор: Kodack. Лицензия: CC0 1.0. Источник: https://freesound.org/s/253735/
+
+Файлы: `253735_2276808-hq.ogg`
+
+## zombie growl
+
+Автор: adharca. Лицензия: CC0 1.0. Источник: https://freesound.org/s/323819/
+
+Файлы: `323819_4366671-hq.ogg`
+
+## Zombie Growl 02
+
+Автор: Ezcah. Лицензия: CC0 1.0. Источник: https://freesound.org/s/204820/
+
+Файлы: `204820_1900515-hq.ogg`
+
+## Zombie growling
+
+Автор: deathmasterwa. Лицензия: CC0 1.0. Источник: https://freesound.org/s/130627/
+
+Файлы: `130627_2375324-hq.ogg`
+
+## zombie noises-Dvrb_01
+
+Автор: EzraRed37. Лицензия: CC0 1.0. Источник: https://freesound.org/s/108445/
+
+Файлы: `108445_1587243-hq.ogg`
+
+## Zombie Pain 5
+
+Автор: tonsil5. Лицензия: CC0 1.0. Источник: https://freesound.org/s/555426/
+
+Файлы: `555426_8247784-hq.ogg`
+
+## zombie pains
+
+Автор: VHBC. Лицензия: CC0 1.0. Источник: https://freesound.org/s/633193/
+
+Файлы: `633193_6310708-hq.ogg`
+
+## Zombie Vocals - Grunts
+
+Автор: lolamadeus. Лицензия: CC0 1.0. Источник: https://freesound.org/s/181068/
+
+Файлы: `181068_544580-hq.ogg`
+
+## zombie-growls
+
+Автор: Xfrtrex. Лицензия: CC0 1.0. Источник: https://freesound.org/s/769200/
+
+Файлы: `769200_16391898-hq.ogg`
+
+## Zombies
+
+Автор: JossuTossu. Лицензия: CC0 1.0. Источник: https://freesound.org/s/483592/
+
+Файлы: `483592_6714439-hq.ogg`
 
 ## Лицензии
 

@@ -47,13 +47,14 @@ function menu(title, items, opts) {
   stack.push(w);
   LAB.UI.open();
   render();
-  if (!w.silentOpen) say(title + ". " + (w.intro ? w.intro + " " : "") + itemText(w.items[w.i]) + (S.verbose && !G().tut.win ? ". Свайп вправо и влево — пункты, двойное касание — выбрать, два пальца вниз — закрыть." : ""));
+  if (!w.silentOpen) say(title + ". " + (w.intro ? w.intro + " " : "") + itemText(w.items[w.i]) + (S.verbose && !G().tut.win ? LAB.K(". Свайп вправо и влево — пункты, двойное касание — выбрать, два пальца вниз — закрыть.", ". Стрелки вверх и вниз — пункты, Enter — выбрать, Escape — закрыть.") : ""));
   if (gm() && gm().entered) G().tut.win = 1;
   return w;
 }
 function closeTop(silent) {
   var w = top();
   if (!w || w.root) return false;
+  var quiet = LAB.Speech.noteBusy(); /* записка ещё читается — без объявлений */
   stack.pop();
   if (w.onClose) LAB.safe(w.onClose);
   if (!silent) LAB.UI.close();
@@ -61,8 +62,8 @@ function closeTop(silent) {
   var t = top();
   if (t && !silent) {
     if (t.rebuild) { t.items = t.rebuild(); t.i = Math.min(t.i, t.items.length - 1); render(); }
-    say(t.title + ". " + itemText(t.items[t.i]));
-  } else if (!t && !silent && screen === "game") say("Игра.");
+    if (!quiet) say(t.title + ". " + itemText(t.items[t.i]));
+  } else if (!t && !silent && !quiet && screen === "game") say("Игра.");
   return true;
 }
 function closeAll() {
@@ -79,7 +80,7 @@ function activate() {
   if (!it) return;
   if (it.kind === "toggle") { it.set(!it.get()); LAB.UI.click(); say(itemText(it)); render(); return; }
   if (it.kind === "choice") { cycle(it, 1); return; }
-  if (it.kind === "slider") { say(itemText(it) + ". Свайп вверх — больше, вниз — меньше."); return; }
+  if (it.kind === "slider") { say(itemText(it) + LAB.K(". Свайп вверх — больше, вниз — меньше.", ". Стрелка вправо — больше, влево — меньше.")); return; }
   if (it.disabled) { LAB.UI.error(); say(it.why || "Недоступно."); return; }
   LAB.UI.click();
   var keep = w.keep || it.keep;
@@ -93,6 +94,8 @@ function move(step) {
   w.i = (w.i + step + n) % n;
   LAB.UI.move();
   render();
+  /* пока записка читается, по её абзацам ходят молча — чтение не обрывается */
+  if (w.note && LAB.Speech.noteBusy()) return;
   say(itemText(w.items[w.i]));
 }
 function cycle(it, step) {
@@ -228,11 +231,11 @@ function prologue(fromMenu) {
   A("music", "prologue");
   showPage(LAB.PROLOGUE, 0, {
     title: LAB.TITLE + ". Пролог",
-    hint: "Свайп вправо — дальше, влево — назад, вверх — пропустить.",
-    lastHint: "Свайп вправо — в главное меню.",
+    hint: LAB.K("Свайп вправо — дальше, влево — назад, вверх — пропустить.", "Стрелка вправо или Enter — дальше, влево — назад, Escape — пропустить."),
+    lastHint: LAB.K("Свайп вправо — в главное меню.", "Стрелка вправо или Enter — в главное меню."),
     done: function () { LAB.store.set("lab_prologue_seen", "1"); mainMenu(); }
   });
-  if (!fromMenu) sayq("Свайп вправо — дальше, влево — назад, вверх — пропустить пролог.");
+  if (!fromMenu) sayq(LAB.K("Свайп вправо — дальше, влево — назад, вверх — пропустить пролог.", "Стрелка вправо или Enter — дальше, влево — назад, Escape — пропустить пролог."));
 }
 
 function mainMenu(silentIntro) {
@@ -289,11 +292,13 @@ function saveMenu() {
 /* ════════ НАСТРОЙКИ ════════ */
 function settingsMenu() {
   var Sp = LAB.Speech;
-  var ttsOpts = [{ v: "auto", label: "Автоматически: голос телефона, если он говорит по-русски" }, { v: "system", label: "Системный синтезатор телефона" }, { v: "espeak", label: "Встроенный eSpeak" }];
+  var ttsOpts = LAB.desktop ?
+    [{ v: "auto", label: "Автоматически: голос чтеца экрана или установленный русский синтезатор" }, { v: "system", label: "Голос компьютера, выбранный в списке голосов" }, { v: "espeak", label: "Встроенный eSpeak" }] :
+    [{ v: "auto", label: "Автоматически: голос телефона, если он говорит по-русски" }, { v: "system", label: "Системный синтезатор телефона" }, { v: "espeak", label: "Встроенный eSpeak" }];
   var items = [
     { kind: "choice", label: "Синтезатор речи", options: ttsOpts, get: function () { return S.tts; }, set: function (v) { S.tts = v; LAB.saveSettings(); Sp.choose(); } },
-    { label: function () { return "Голос синтезатора: " + (S.voice || "по умолчанию"); }, fn: voiceMenu },
-    { kind: "slider", label: "Скорость речи", min: 0.5, max: 3, step: 0.1, get: function () { return +S.rate || 1; }, set: function (v) { S.rate = v; LAB.saveSettings(); }, fmt: function (v) { return v.toFixed(1).replace(".", ","); } },
+    { label: function () { return "Голос синтезатора: " + (S.tts === "espeak" ? "встроенный eSpeak" : S.voice || autoVoiceName()); }, fn: voiceMenu },
+    { kind: "slider", label: "Скорость речи", min: 0, max: 100, step: 5, get: function () { return S.ratePct == null ? 50 : +S.ratePct; }, set: function (v) { S.ratePct = v; S.rate = LAB.rateFromPct(v); LAB.saveSettings(); }, fmt: function (v) { return Math.round(v) + " процентов" + (v === 50 ? ", обычная" : ""); } },
     { kind: "choice", label: "Уровень сложности", options: [1, 2, 3].map(function (k) { return { v: k, label: LAB.DIFF[k].n }; }), get: function () { return S.difficulty || 1; }, set: function (v) { S.difficulty = v; LAB.saveSettings(); sayq(LAB.DIFF[v].desc); } },
     vol("Громкость музыки", "musicVol"),
     vol("Громкость звуков", "fxVol"),
@@ -309,7 +314,7 @@ function settingsMenu() {
     tog("Субтитры звуков на экране", "subtitles"),
     { label: "Назад", fn: function () { if (screen === "menu") reopenMain(); } }
   ];
-  menu("Настройки", items, { intro: "Свайп вверх и вниз меняет значение." });
+  menu("Настройки", items, { intro: LAB.K("Свайп вверх и вниз меняет значение.", "Стрелки вправо и влево меняют значение.") });
 }
 function vol(label, key) {
   return { kind: "slider", label: label, min: 0, max: 1, step: 0.05, get: function () { return +S[key]; }, set: function (v) { S[key] = v; LAB.saveSettings(); LAB.AE.applyVolumes(); if (key === "fxVol") LAB.UI.blip(700, 0.06, 0.1); if (key === "musicVol" && LAB.atmos) A("musicVolume"); }, fmt: function (v) { return Math.round(v * 100) + " процентов"; } };
@@ -317,14 +322,57 @@ function vol(label, key) {
 function tog(label, key) {
   return { kind: "toggle", label: label, get: function () { return !!S[key]; }, set: function (v) { S[key] = v ? 1 : 0; LAB.saveSettings(); LAB.AE.applyVolumes(); } };
 }
+function autoVoiceName() {
+  var a = LAB.Speech.listVoices().filter(function (v) { return v.auto; })[0];
+  return a ? "сам выбирается — " + a.name : "по умолчанию";
+}
 function voiceMenu() {
   var vs = LAB.Speech.listVoices();
+  if (LAB.desktop) { desktopVoiceMenu(vs); return; }
   var ru = vs.filter(function (v) { return /^ru/i.test(v.lang); });
   var list = (ru.length ? ru : vs).slice(0, 60);
   if (!list.length) { say("Голосов телефона не найдено. Игра говорит встроенным eSpeak."); settingsMenu(); return; }
   menu("Голос синтезатора", list.map(function (v) {
     return { label: v.name, fn: function () { LAB.Speech.setVoice(v.id); setTimeout(function () { say("Так звучит этот голос. Подземная лаборатория."); settingsMenu(); }, 200); } };
   }).concat([{ label: "Назад", fn: settingsMenu }]));
+}
+/* Компьютер: все голоса, что стоят у игрока, — голос NVDA, голос JAWS,
+   RHVoice и eSpeak NG из NVDA, сторонние голоса SAPI 5. Голосов Microsoft
+   нет. Сначала русские, потом остальные; в конце — встроенный eSpeak и
+   «Перечитать голоса компьютера» (запустили NVDA или поставили синтезатор). */
+function desktopVoiceMenu(vs, focus) {
+  var ru = vs.filter(function (v) { return /^ru/i.test(v.lang); }), other = vs.filter(function (v) { return !/^ru/i.test(v.lang); });
+  var pick = function (v) {
+    S.tts = "system"; LAB.saveSettings();
+    LAB.Speech.setVoice(v.id);
+    setTimeout(function () { say("Так звучит этот голос. Подземная лаборатория."); settingsMenu(); }, 250);
+  };
+  var items = ru.concat(other).slice(0, 300).map(function (v) {
+    var cur = S.tts !== "espeak" && (S.voice ? S.voice === v.id : v.auto);
+    return { label: v.name + (v.engine ? ", " + v.engine : "") + (/^ru/i.test(v.lang) ? "" : ", язык " + v.lang) + (cur ? " — сейчас говорит" : ""), fn: function () { pick(v); } };
+  });
+  if (!vs.length) items.push({ label: "Голосов компьютера не найдено: нет NVDA, JAWS и сторонних синтезаторов. Игра говорит встроенным eSpeak.", info: true, keep: true, fn: function () { say(LAB.desktop && window.LabDesktop && window.LabDesktop.ttsDiag ? "Почему: " + window.LabDesktop.ttsDiag() : "Голосов нет."); } });
+  items.push({ label: "Встроенный eSpeak NG — идёт вместе с игрой" + (S.tts === "espeak" ? " — сейчас говорит" : ""), fn: function () { S.tts = "espeak"; LAB.saveSettings(); LAB.Speech.choose(); setTimeout(function () { say("Так звучит встроенный eSpeak. Подземная лаборатория."); settingsMenu(); }, 250); } });
+  items.push({ label: "Выбирать голос самому: сначала голос запущенного чтеца экрана, NVDA или JAWS", fn: function () {
+    S.tts = "auto"; S.voice = ""; LAB.saveSettings();
+    var a = LAB.Speech.listVoices().filter(function (v) { return v.auto; })[0];
+    if (a && window.LabTTS && window.LabTTS.setVoice) { try { window.LabTTS.setVoice(a.id); } catch (e) { /* */ } }
+    LAB.Speech.choose(); setTimeout(function () { say("Голос выбирается сам. Сейчас: " + autoVoiceName().replace("сам выбирается — ", "") + "."); settingsMenu(); }, 250); } });
+  items.push({ label: "Перечитать голоса компьютера", fn: function () {
+    var D = window.LabDesktop;
+    if (!D || !D.ttsRestart) { desktopVoiceMenu(LAB.Speech.listVoices()); return; }
+    say("Ищу голоса компьютера…");
+    D.ttsRestart().then(function (r) {
+      setTimeout(function () {
+        LAB.Speech.refreshBridge();
+        var list = LAB.Speech.listVoices();
+        say("Голосов найдено: " + list.length + "." + (r && r.ready ? "" : " Почему мало: " + (r && r.diag || "")));
+        desktopVoiceMenu(list);
+      }, 600);
+    }).catch(function () { desktopVoiceMenu(LAB.Speech.listVoices()); });
+  } });
+  items.push({ label: "Назад", fn: settingsMenu });
+  menu("Голоса компьютера: " + vs.length, items, { focus: focus || 0 });
 }
 
 /* ════════ ОКНО ПЕРСОНАЖА (три пальца вверх) ════════ */
@@ -393,7 +441,7 @@ function ammoMenu() {
     } };
   });
   items.push(back());
-  menu("Батареи и боеприпасы", items, { intro: w && w.ammo !== "none" ? "Двойное касание на нужной батарее — перезарядить оружие в руках." : "" });
+  menu("Батареи и боеприпасы", items, { intro: w && w.ammo !== "none" ? LAB.K("Двойное касание на нужной батарее — перезарядить оружие в руках.", "Enter на нужной батарее — перезарядить оружие в руках.") : "" });
 }
 function medsMenu() {
   var g = G();
@@ -430,7 +478,7 @@ function gadgetsMenu() {
   menu("Гранаты, пластины и устройства", [
     { label: "ЭМИ-граната: " + (g.inv.emp || 0) + ". Бросить вперёд по последнему направлению", fn: function () { if (LAB.combat) LAB.combat.throwEmp(); } },
     { label: "Бронепластина: " + (g.inv.plate || 0) + ". Вставить в надетую броню", fn: function () { gm().installPlate(); } },
-    { label: "Декодер пропусков: " + (g.inv.decoder || 0), keep: true, fn: function () { say(LAB.ITEMS.decoder.desc + " Применяется у двери: двойное касание у двери."); } },
+    { label: "Декодер пропусков: " + (g.inv.decoder || 0), keep: true, fn: function () { say(LAB.ITEMS.decoder.desc + LAB.K(" Применяется у двери: двойное касание у двери.", " Применяется у двери: Enter у двери.")); } },
     back()
   ]);
 }
@@ -491,8 +539,9 @@ function note(title, text, after, opts) {
   var items = paras.map(function (p) { return { label: p, keep: true, fn: function () { say(p); } }; });
   items.push({ label: "Закрыть", fn: function () { if (after) after(); } });
   A("play", "paper");
-  menu(title, items, { silent: true });
-  say(title + ". " + text, { interrupt: !opts.queue, read: true });
+  var w = menu(title, items, { silent: true });
+  if (w) w.note = true;
+  say(title + ". " + text, { interrupt: !opts.queue, read: true, note: true });
 }
 
 /* ════════ МАСТЕРСКАЯ ════════ */
@@ -560,8 +609,8 @@ function ending(win) {
   var pages = LAB.ENDING.concat([stats, LAB.CREDITS_TEXT || "Конец. Спасибо, что слушали."]);
   showPage(pages, 0, {
     title: "Финал", skip: false,
-    hint: "Свайп вправо — дальше, влево — назад.",
-    lastHint: "Свайп вправо — в главное меню.",
+    hint: LAB.K("Свайп вправо — дальше, влево — назад.", "Стрелка вправо или Enter — дальше, влево — назад."),
+    lastHint: LAB.K("Свайп вправо — в главное меню.", "Стрелка вправо или Enter — в главное меню."),
     done: function () { mainMenu(); }
   });
 }
@@ -591,12 +640,12 @@ function gesture(g) {
       if (g.dir === "D") { if (!adjust(it, -1)) { if (!closeTop()) LAB.UI.error(); } return true; }
     }
     if (g.kind === "dtap") { activate(); return true; }
-    if (g.kind === "tap") { say(itemText(w.items[w.i])); return true; }
+    if (g.kind === "tap") { if (!(w.note && LAB.Speech.noteBusy())) say(itemText(w.items[w.i])); return true; }
     return true;
   }
   if (g.n === 2 && g.kind === "swipe" && g.dir === "D") { if (!closeTop()) LAB.UI.error(); return true; }
   if (g.n === 2 && g.kind === "swipe" && g.dir === "U") { readAll(); return true; }
-  if (g.n === 2 && g.kind === "tap") { LAB.Speech.stop(); return true; }
+  if (g.n === 2 && g.kind === "tap") { LAB.Speech.hush(); return true; }
   if (screen === "game" && g.n === 3 && g.kind === "swipe" && (g.dir === "U" || g.dir === "D")) {
     var want = g.dir === "U" ? "Персонаж" : "Инвентарь";
     if (w.title === want) closeTop(); else { closeAll(); if (g.dir === "U") character(); else inventory(); }
@@ -605,7 +654,50 @@ function gesture(g) {
   return true;
 }
 
+/* ════════ КЛАВИАТУРА В ОКНАХ ════════
+   Стрелки вверх и вниз — пункты, вправо и влево — значение, Enter — выбрать,
+   пробел — повторить пункт, Tab — прочитать всё окно, Home и End — первый и
+   последний пункт, Escape или Backspace — назад, C и I — персонаж и
+   инвентарь (как три пальца вверх и вниз), F1 — руководство. */
+function key(act) {
+  if (screen === "boot") return true;
+  var w = top();
+  if (!w) return false;
+  var it = w.items[w.i], n = w.items.length;
+  var quiet = w.note && LAB.Speech.noteBusy();
+  var where = function () { return w.title + ". Пункт " + (w.i + 1) + " из " + n + ": " + itemText(w.items[w.i]); };
+  switch (act) {
+    case "next": move(1); return true;
+    case "prev": move(-1); return true;
+    case "first": case "last":
+      w.i = act === "first" ? 0 : n - 1; LAB.UI.move(); render();
+      if (!quiet) say(itemText(w.items[w.i]));
+      return true;
+    case "inc": case "dec":
+      if (!adjust(it, act === "inc" ? 1 : -1) && !quiet) say(where());
+      return true;
+    case "select": activate(); return true;
+    case "repeat": if (!quiet) say(where()); return true;
+    case "all": readAll(); return true;
+    case "hush": LAB.Speech.hush(); return true;
+    case "back":
+      if (!closeTop()) { if (screen === "menu") say("Главное меню. " + itemText(w.items[w.i])); else LAB.UI.error(); }
+      return true;
+    case "char": case "inv":
+      if (screen !== "game") return true;
+      var want = act === "char" ? "Персонаж" : "Инвентарь";
+      if (w.title === want) closeTop(); else { closeAll(); if (act === "char") character(); else inventory(); }
+      return true;
+    case "guide":
+      if (LAB.guide && w.title !== "Руководство") LAB.guide.open();
+      return true;
+  }
+  return false;
+}
+function pageOpen() { return !!page; }
+
 LAB.ui = {
+  key: key, pageOpen: pageOpen,
   menu: menu, closeTop: closeTop, closeAll: closeAll, layer: layer, gesture: gesture, refresh: refresh, render: render,
   note: note, craft: craft, ending: ending, levelBanner: levelBanner, showGame: showGame, mainMenu: mainMenu, prologue: prologue,
   character: character, inventory: inventory, implants: implants, settings: settingsMenu, loadMenu: loadMenu, saveMenu: saveMenu,

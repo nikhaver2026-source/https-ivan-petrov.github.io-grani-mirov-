@@ -209,9 +209,9 @@ public class MainActivity extends Activity {
 
     private void say(String text, float rate, float volume, String id) {
         final TextToSpeech t = speaker != null ? speaker : this.tts;
+        /* темп приходит из ползунка «Скорость речи» (0–100 %): 0,5 … 3 */
         float r = rate > 0 ? rate : 1f;
-        float tempo = r <= 1f ? r : 1f + (r - 1f) * 0.6f;
-        t.setSpeechRate(Math.max(0.1f, Math.min(4f, tempo)));
+        t.setSpeechRate(Math.max(0.3f, Math.min(4f, r)));
         Bundle p = new Bundle();
         p.putFloat(TextToSpeech.Engine.KEY_PARAM_VOLUME, Math.max(0f, Math.min(1f, volume >= 0 ? volume : 1f)));
         /* Очередь ведёт игра: по одной фразе, QUEUE_FLUSH снимает недосказанное. */

@@ -1,0 +1,14 @@
+{
+  "name": "podzemnaya-laboratoriya",
+  "productName": "Подземная лаборатория",
+  "version": "1.0.0",
+  "description": "Подземная лаборатория Альфа 1.0 — звуковая игра для компьютера: управление с клавиатуры, голоса NVDA, JAWS и установленных синтезаторов",
+  "main": "main.js",
+  "author": "Грани Миров",
+  "license": "SEE LICENSE IN ../README.md",
+  "private": true,
+  "devDependencies": {
+    "@electron/packager": "20.3.0",
+    "electron": "44.5.1"
+  }
+}

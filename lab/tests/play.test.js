@@ -81,6 +81,18 @@ function ok(cond, msg) { if (cond) console.log("  ✓ " + msg); else { fails++; 
   ok(await page.evaluate(() => LAB.settings.difficulty) === 3, "очень тяжёлая");
   await gest({ kind: "swipe", n: 1, dir: "U" });
   ok(await page.evaluate(() => LAB.settings.difficulty) === 1, "и снова обычная");
+  const ri = labels.findIndex(l => /Скорость речи/.test(l));
+  const rs = await page.evaluate((ri) => {
+    const w = LAB.ui.top(); w.i = ri;
+    SPOKEN.length = 0;
+    LAB.input.dispatch({ kind: "swipe", n: 1, dir: "U" });
+    const up = [LAB.settings.ratePct, LAB.settings.rate];
+    LAB.input.dispatch({ kind: "swipe", n: 1, dir: "D" }); LAB.input.dispatch({ kind: "swipe", n: 1, dir: "D" });
+    const dn = [LAB.settings.ratePct, LAB.settings.rate];
+    LAB.input.dispatch({ kind: "swipe", n: 1, dir: "U" });
+    return { up: up, dn: dn, back: LAB.settings.ratePct, said: SPOKEN.join(" | ") };
+  }, ri);
+  ok(ri >= 0 && rs.up[0] === 55 && rs.dn[0] === 45 && rs.back === 50 && rs.up[1] > 1 && rs.dn[1] < 1, "скорость речи в процентах: 55 % — быстрее, 45 % — медленнее (" + rs.said + ")");
   await gest({ kind: "swipe", n: 2, dir: "D" });
   ok(await page.evaluate(() => LAB.ui.top().title).then ? true : true, "окно закрыто");
 
@@ -93,6 +105,8 @@ function ok(cond, msg) { if (cond) console.log("  ✓ " + msg); else { fails++; 
   ok(st.L === 1 && st.F === 1, "уровень 1, этаж 1");
   t = await said();
   ok(/криокапсуле/.test(t), "вступление «Эхо»");
+  await page.waitForFunction(() => LAB.Bank.ready("mus_l1") && LAB.Bank.ready("amb_l1") && !LAB.Bank.ready("mus_menu"), null, { timeout: 15000 }).catch(() => {});
+  ok(await page.evaluate(() => LAB.Bank.ready("mus_l1") && LAB.Bank.ready("amb_l1") && !LAB.Bank.ready("mus_menu")), "музыка уровня и фон — в памяти и играют; музыка меню выгружена");
 
   console.log("Ходьба без сторон света");
   await page.evaluate(() => { SPOKEN.length = 0; });
@@ -179,6 +193,16 @@ function ok(cond, msg) { if (cond) console.log("  ✓ " + msg); else { fails++; 
   }));
   ok(code === "1290", "код набирается дисками: " + code);
 
+  console.log("Звуки: металлический пол у каждого уровня, одна запись удара о стену");
+  const snd = await page.evaluate(() => {
+    const surf = LAB.LEVELS.slice(1).map(l => l.surf);
+    const steps = surf.map(s => LAB.SND["step_" + s] ? LAB.SND["step_" + s].f.length : 0);
+    return { uniq: new Set(surf).size, steps: steps, metal: surf.every(s => /plate|sheet|wetmetal|steel|checker|grate|frost|armor|catwalk|deck/.test(s)), wall: LAB.SND.bump_wall ? LAB.SND.bump_wall.f.length : 0 };
+  });
+  ok(snd.uniq === 10 && snd.metal, "10 уровней — 10 разных металлических полов");
+  ok(snd.steps.every(n => n >= 4), "у каждого пола свои записи шагов: " + snd.steps.join(", "));
+  ok(snd.wall === 1, "удар о стену — одна и та же запись");
+
   console.log("Речь: длинный текст дочитывается, четыре пальца вниз — тишина");
   const sp = await page.evaluate(() => {
     const S = LAB.Speech, pump = S._pump, out = {};
@@ -198,6 +222,15 @@ function ok(cond, msg) { if (cond) console.log("  ✓ " + msg); else { fails++; 
     out.hushed = !S.speaking && !S.queue.length && !S.reading;
     S.say(long); S.user(); S.say("Пункт меню");
     out.userCut = spoken[spoken.length - 1] === "Пункт меню";
+    /* любое действие обрывает обычную речь, но не записку */
+    S.stop(); S.say("Длинное описание помещения, выходы и вещи. ".repeat(3));
+    const wasOn = S.speaking;
+    LAB.input.dispatch({ kind: "tap", n: 4 });
+    out.actCut = wasOn && !S.speaking && !S.queue.length;
+    S.stop(); S.say("Записка. " + long, { note: true });
+    const n0 = spoken.length;
+    S.userAct(); S.say("Коридор.");
+    out.noteKept = S.speaking && spoken.length === n0 && S.later.length === 1;
     S.stop(); S._pump = pump; S.userUntil = 0;
     return out;
   });
@@ -205,6 +238,8 @@ function ok(cond, msg) { if (cond) console.log("  ✓ " + msg); else { fails++; 
   ok(sp.tail && sp.tail.indexOf("заметил вас") >= 0 && sp.chunks > 3, "записка дочитана, затем сказана отложенная фраза (" + sp.chunks + " частей)");
   ok(sp.hushed, "четыре пальца вниз — речь прервана");
   ok(sp.userCut, "жест игрока перебивает чтение");
+  ok(sp.actCut, "любое действие игрока обрывает речь");
+  ok(sp.noteKept, "записку действие не обрывает — она дочитывается, ответ ждёт её конца");
 
   console.log("Записка: подобрал — окно, мир ждёт");
   const nw = await page.evaluate(() => {
@@ -282,6 +317,84 @@ function ok(cond, msg) { if (cond) console.log("  ✓ " + msg); else { fails++; 
   await page.evaluate(() => LAB.game.loadSlot(1));
   st = await page.evaluate(() => ({ L: LAB.game.G.L, F: LAB.game.G.F, scr: LAB.ui.screen() }));
   ok(st.L === 1 && st.F === 1 && st.scr === "game", "загружено: уровень 1, этаж 1");
+
+  console.log("Клавиатура: W A S D, R, стрелки, окна, руководство");
+  await page.evaluate(() => { LAB.ui.closeAll(); LAB.game.G.drawn = false; SPOKEN.length = 0; });
+  const pos = () => page.evaluate(() => LAB.game.G.x + "," + LAB.game.G.y);
+  let kmoved = 0;
+  for (const k of ["w", "d", "s", "a", "w", "d", "s", "a"]) { const p0 = await pos(); await key(k); if ((await pos()) !== p0) kmoved++; }
+  ok(kmoved > 0, "W A S D — шаги: " + kmoved);
+  const rdirs = await page.evaluate(() => {
+    const g = LAB.game, orig = g.tryMove, rec = [];
+    g.tryMove = function (d) { rec.push(d); return orig.apply(this, arguments); };
+    for (const k of ["ц", "ф", "ы", "в"]) { document.dispatchEvent(new KeyboardEvent("keydown", { key: k })); document.dispatchEvent(new KeyboardEvent("keyup", { key: k })); }
+    g.tryMove = orig;
+    return rec.join("");
+  });
+  ok(rdirs === "NWSE", "русская раскладка: Ц Ф Ы В — те же W A S D (" + rdirs + ")");
+  await page.evaluate(() => { SPOKEN.length = 0; });
+  await key("ArrowUp");
+  ok(/R — достать оружие/.test(await said()), "стрелка без оружия — подсказка: R — достать оружие");
+  await page.evaluate(() => { const G = LAB.game.G; G.weapons.push(LAB.makeWeapon("spark", 1, 0, 1, "w_kb")); G.wi = G.weapons.length - 1; G.ammo.energy = 9; });
+  await key("r");
+  ok(await page.evaluate(() => LAB.game.G.drawn), "R — оружие в руках");
+  const kc0 = await page.evaluate(() => LAB.game.curWeapon().charge);
+  await key("ArrowUp");
+  await page.waitForTimeout(400);
+  const kc1 = await page.evaluate(() => LAB.game.curWeapon().charge);
+  ok(kc1 === kc0 - 1, "стрелка вверх — выстрел (заряд " + kc0 + "→" + kc1 + ")");
+  const wp0 = await pos();
+  await key("s"); await key("w");
+  ok(await page.evaluate(() => LAB.game.G.drawn), "с оружием в руках W A S D — ходьба, оружие не убирается (" + wp0 + "→" + (await pos()) + ")");
+  await page.keyboard.down("ArrowLeft"); await page.waitForTimeout(1300); await page.keyboard.up("ArrowLeft");
+  await page.waitForTimeout(200);
+  const kc2 = await page.evaluate(() => LAB.game.curWeapon().charge);
+  ok(kc2 < kc1 - 1, "удержание стрелки — очередь (заряд " + kc1 + "→" + kc2 + ")");
+  await key("f");
+  ok(await page.evaluate(() => LAB.game.curWeapon().charge === LAB.game.curWeapon().cap), "F — перезарядка");
+  const wi0 = await page.evaluate(() => LAB.game.G.wi);
+  await key("q");
+  ok(await page.evaluate(() => LAB.game.G.wi) !== wi0, "Q — другое оружие");
+  await key("1");
+  ok(await page.evaluate(() => LAB.game.G.wi) === 0, "1 — оружие номер один");
+  await key("r");
+  ok(await page.evaluate(() => !LAB.game.G.drawn), "ещё раз R — оружие убрано");
+  await key("c");
+  ok(await page.evaluate(() => LAB.ui.top() && LAB.ui.top().title) === "Персонаж", "C — окно персонажа");
+  await key("ArrowDown");
+  ok(await page.evaluate(() => LAB.ui.top().i) === 1, "стрелка вниз — следующий пункт");
+  await key("End");
+  ok(await page.evaluate(() => LAB.ui.top().i === LAB.ui.top().items.length - 1), "End — последний пункт");
+  await key("Escape");
+  ok(await page.evaluate(() => !LAB.ui.top()), "Escape — окно закрыто");
+  await key("i");
+  ok(await page.evaluate(() => LAB.ui.top() && LAB.ui.top().title) === "Инвентарь", "I — инвентарь");
+  await key("Enter");
+  ok(await page.evaluate(() => LAB.ui.top().title) === "Оружие", "Enter — раздел «Оружие»");
+  await key("Escape");
+  ok(await page.evaluate(() => !LAB.ui.top()), "Escape — раздел закрыт, снова игра");
+  await key("i");
+  await key("c");
+  ok(await page.evaluate(() => LAB.ui.top() && LAB.ui.top().title) === "Персонаж", "C из инвентаря — окно персонажа");
+  await page.evaluate(() => LAB.ui.closeAll());
+  await key("F1");
+  const gl = await page.evaluate(() => LAB.ui.top() && LAB.ui.top().items.map(i => typeof i.label === "function" ? i.label() : i.label));
+  ok(gl && gl.indexOf("Клавиатура") >= 0 && !gl.some(l => /^Жесты/.test(l)), "F1 — руководство: пункт «Клавиатура» вместо жестов");
+  await page.evaluate(() => { const w = LAB.ui.top(); w.i = w.items.findIndex(i => i.label === "Клавиатура"); });
+  await key("Enter");
+  const kbl = await page.evaluate(() => LAB.ui.top() && LAB.ui.top().items.map(i => i.label));
+  ok(kbl && kbl[0] === "Ходьба и осмотр" && kbl.indexOf("Оружие и бой") >= 0 && kbl.indexOf("Окна и меню") >= 0, "«Клавиатура»: " + (kbl || []).join(", "));
+  await key("Enter");
+  const kbt = await said();
+  ok(/W, A, S, D — шаг/.test(kbt), "глава о ходьбе с клавиатуры читается");
+  const ksp = await page.evaluate(() => LAB.keysSpoken("W, A, S, D — шаг. Enter — действия. R — оружие."));
+  ok(ksp === "дабл ю, эй, эс, ди — шаг. Энтер — действия. ар — оружие.", "имена клавиш звучат по-русски: " + ksp);
+  await page.evaluate(() => { LAB.ui.closeAll(); window.HUSHED = 0; const h = LAB.Speech.hush; LAB.Speech.hush = function () { window.HUSHED++; return h.apply(this, arguments); }; });
+  await key("Control"); await key("x");
+  ok(await page.evaluate(() => window.HUSHED) === 2, "Ctrl и X — тишина");
+  await page.evaluate(() => { window.KCODE = null; LAB.mini.code(v => { window.KCODE = v; }); });
+  for (const k of ["4", "0", "7", "1", "Enter"]) await key(k);
+  ok(await page.evaluate(() => window.KCODE) === "4071", "кодовый замок: цифры с клавиатуры и Enter — " + (await page.evaluate(() => window.KCODE)));
 
   console.log("Все этажи одного зерна: вход, такты, осмотр");
   const tour = await page.evaluate(() => {

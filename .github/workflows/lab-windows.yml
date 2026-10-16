@@ -1,0 +1,201 @@
+# Сборка «Подземной лаборатории» для Windows на серверах GitHub.
+#
+# Приложение — Electron: вся игра (страница, код, встроенный eSpeak NG, все
+# записи звука и музыки lab/sounds) лежит рядом, в resources/game, и
+# открывается по своему адресу app://lab — сеть не нужна. Полная сборка:
+# распаковал архив, открыл «Подземная лаборатория.exe» — и всё уже внутри.
+# Управление целиком с клавиатуры.
+#
+# Голоса — все синтезаторы, что стоят у игрока: голос NVDA и JAWS, RHVoice и
+# eSpeak NG из NVDA, сторонние голоса SAPI 5; голосов Microsoft нет. Мост
+# голосов общий с «Гранью Миров» (desktop/sapi.js) и собирается здесь, у игрока
+# ничего не компилируется.
+#
+# До выпуска собранное приложение проходит самопроверку дважды: без голосов
+# игрока (говорит встроенный eSpeak) и с голосами, поставленными так же, как
+# у игрока (RHVoice из дополнения NVDA и eSpeak NG), — мост должен их найти.
+# Выпуск «lab-windows-latest» несёт архив.
+name: Подземная лаборатория — Windows
+
+on:
+  workflow_dispatch:
+  push:
+    branches: ['main', 'claude/**']
+    paths:
+      - 'lab/**'
+      - 'desktop/sapi.js'
+      - 'desktop/sapi-build.js'
+      - '.github/workflows/lab-windows.yml'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: lab-windows-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: windows-latest
+    timeout-minutes: 60
+    defaults:
+      run:
+        shell: bash
+    env:
+      APPDIR: Подземная лаборатория Альфа 1.0
+      EXE: Подземная лаборатория.exe
+      ZIP: Podzemnaya-laboratoriya-Alfa-1.0-windows.zip
+    steps:
+      - name: Забрать репозиторий
+        uses: actions/checkout@v4
+        with:
+          sparse-checkout: |
+            lab
+            desktop
+            .github
+
+      - name: Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Мост голосов — общий с «Гранью Миров»
+        run: cp desktop/sapi.js desktop/sapi-build.js lab/desktop/
+
+      - name: Electron и упаковщик
+        working-directory: lab/desktop
+        run: npm install --no-audit --no-fund
+
+      # Готовой библиотекой: у игрока мост не собирается и отвечает за секунду.
+      - name: Готовый мост голосов Windows
+        working-directory: lab/desktop
+        run: node sapi-build.js
+
+      # Голос чтеца экрана: синтезаторы, поставленные дополнениями NVDA, — не
+      # голоса Windows; игра говорит ими через NVDA (nvdaControllerClient, LGPL 2.1).
+      - name: Библиотека NVDA для голоса чтеца экрана
+        shell: pwsh
+        run: |
+          $v = '2024.4.2'
+          $z = "$env:RUNNER_TEMP\nvcc.zip"; $d = "$env:RUNNER_TEMP\nvcc"
+          for ($i = 1; $i -le 4; $i++) {
+            try { Invoke-WebRequest "https://download.nvaccess.org/releases/$v/nvda_${v}_controllerClient.zip" -OutFile $z; break }
+            catch { Write-Host "попытка $i не удалась: $_"; Start-Sleep -Seconds (10 * $i) }
+          }
+          Expand-Archive $z -DestinationPath $d -Force
+          foreach ($a in 'x64','x86') {
+            $f = Get-ChildItem $d -Recurse -Filter 'nvdaControllerClient*.dll' | Where-Object { $_.FullName -match "[\\/]$a[\\/]" -or $_.Name -match ($(if ($a -eq 'x64') {'64'} else {'32'})) } | Select-Object -First 1
+            if ($f) { New-Item -ItemType Directory -Force "lab\desktop\sr\$a" | Out-Null; Copy-Item $f.FullName "lab\desktop\sr\$a\nvdaControllerClient.dll"; Write-Host "$a -> $($f.FullName)" }
+          }
+          if (-not (Test-Path 'lab\desktop\sr\x64\nvdaControllerClient.dll')) { throw 'нет библиотеки NVDA на 64 бита' }
+
+      - name: Значок приложения
+        working-directory: lab/desktop
+        run: |
+          magick ../icon-512.png -define icon:auto-resize=256,128,64,48,32,16 icon.ico && echo "ICON=icon.ico" >> "$GITHUB_ENV" || echo "значок не собран — приложение будет со значком Electron"
+
+      - name: Упаковать приложение
+        working-directory: lab/desktop
+        run: |
+          ICONARG=""; [ -n "$ICON" ] && ICONARG="--icon=$ICON"
+          npx @electron/packager . lab --platform=win32 --arch=x64 --out=out --overwrite \
+            --executable-name="${EXE%.exe}" --app-version=1.0.0 --build-version=1.0.0.${GITHUB_RUN_NUMBER} \
+            --win32metadata.ProductName="Подземная лаборатория" --win32metadata.FileDescription="Подземная лаборатория Альфа 1.0" \
+            --win32metadata.CompanyName="Грани Миров" \
+            --extra-resource=sapi --extra-resource=sr \
+            --ignore='^/out(/|$)' --ignore='icon\.ico' --ignore='sapi-build\.js' --ignore='^/sapi(/|$)' --ignore='^/sr(/|$)' $ICONARG
+          D=out/lab-win32-x64
+          ls "$D"
+          ls "$D"/resources/sapi/grani-sapi-*.dll "$D"/resources/sr/x64/nvdaControllerClient.dll
+          # Вся игра — рядом с приложением, в resources/game: страница, код, eSpeak, все записи.
+          G="$D/resources/game"; mkdir -p "$G"
+          cp ../index.html ../icon-192.png ../icon-512.png "$G"/
+          cp -r ../js ../espeak ../sounds "$G"/
+          # Языки интерфейса Chromium: русский и английский.
+          find "$D/locales" -name '*.pak' ! -name 'ru.pak' ! -name 'en-US.pak' -delete
+          cp README.txt "$D/Прочти меня.txt"
+          mv "$D" "out/$APPDIR"
+          du -sh "out/$APPDIR" "out/$APPDIR/resources"/*
+          find "out/$APPDIR/resources/game" -type f | wc -l
+
+      - name: Самопроверка — без голосов игрока (встроенный eSpeak)
+        working-directory: lab/desktop/out
+        run: |
+          export LAB_LOG="$RUNNER_TEMP/selftest1.log"
+          set +e
+          timeout 240 "./$APPDIR/$EXE" --lab-selftest
+          code=$?
+          set -e
+          cat "$LAB_LOG" || true
+          echo "код выхода: $code"
+          grep -q "selftest ok" "$LAB_LOG"
+          grep "selftest ok" "$LAB_LOG" | grep -q "движок речи: espeak (ready)"
+
+      # Голоса, поставленные так же, как у игрока: RHVoice — дополнением NVDA
+      # (движок и голос Aleksandr), eSpeak NG — обычной установкой. Мост должен
+      # найти их сам, и игра должна заговорить ими (движок речи — мост).
+      - name: Голоса игрока — RHVoice из дополнения NVDA и eSpeak NG
+        id: voices
+        continue-on-error: true
+        shell: pwsh
+        run: |
+          $ad = Join-Path $env:APPDATA 'nvda\addons'
+          New-Item -ItemType Directory -Force $ad | Out-Null
+          $t = $env:RUNNER_TEMP
+          Invoke-WebRequest 'https://github.com/RHVoice/RHVoice/releases/download/1.18.2/RHVoice-1.18.201.nvda-addon' -OutFile "$t\rh.zip"
+          Invoke-WebRequest 'https://github.com/RHVoice/aleksandr-rus/releases/download/4.2/RHVoice-voice-Russian-Aleksandr-4.2.2017.12.nvda-addon' -OutFile "$t\al.zip"
+          Expand-Archive "$t\rh.zip" -DestinationPath "$ad\RHVoice" -Force
+          Expand-Archive "$t\al.zip" -DestinationPath "$ad\RHVoice-voice-Russian-Aleksandr" -Force
+          Invoke-WebRequest 'https://github.com/espeak-ng/espeak-ng/releases/download/1.52.0/espeak-ng.msi' -OutFile "$t\espeak.msi"
+          Start-Process msiexec.exe -Wait -ArgumentList '/i', "$t\espeak.msi", '/qn'
+          Get-ChildItem "$env:ProgramFiles\eSpeak NG" -ErrorAction SilentlyContinue | Select-Object -First 3
+
+      - name: Самопроверка — с голосами игрока (мост голосов)
+        if: steps.voices.outcome == 'success'
+        working-directory: lab/desktop/out
+        run: |
+          export LAB_LOG="$RUNNER_TEMP/selftest2.log"
+          set +e
+          timeout 240 "./$APPDIR/$EXE" --lab-selftest
+          code=$?
+          set -e
+          cat "$LAB_LOG" || true
+          echo "код выхода: $code"
+          grep -q "selftest ok" "$LAB_LOG"
+          grep "selftest ok" "$LAB_LOG" | grep -q "движок речи: android"
+          grep -E "голоса: ready, [1-9]" "$LAB_LOG"
+
+      - name: Архив
+        working-directory: lab/desktop/out
+        run: |
+          7z a -tzip -mx=5 "../../../$ZIP" "$APPDIR" > /dev/null
+          ls -la "../../../$ZIP"
+
+      - name: Архив — на страницу сборки
+        uses: actions/upload-artifact@v4
+        with:
+          name: podzemnaya-laboratoriya-windows
+          path: ${{ env.ZIP }}
+          compression-level: 0
+          retention-days: 90
+
+      - name: Выпуск «lab-windows-latest»
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release delete lab-windows-latest --cleanup-tag -y || true
+          SIZE=$(stat -c %s "$ZIP")
+          cat > "$RUNNER_TEMP/notes.md" <<EOF
+          «Подземная лаборатория» Альфа 1.0 для Windows 10 и 11 — звуковая игра. Сборка ${GITHUB_RUN_NUMBER} из ${GITHUB_REF_NAME} (${GITHUB_SHA}).
+
+          Полная сборка: вся игра внутри одного архива $ZIP (${SIZE} байт) — речь, звуки, музыка. Распакуйте архив и откройте «Подземная лаборатория.exe» в папке «${APPDIR}». Сеть не нужна, ставить ничего не надо.
+
+          Управление — клавиатура: W A S D — шаг, R — оружие, стрелки — выстрел, Enter — действие, пробел — что рядом, Tab — осмотреться, C — персонаж, I — инвентарь, F1 — руководство, X или Ctrl — тишина.
+
+          Голоса — все синтезаторы компьютера: голос NVDA и JAWS, RHVoice и eSpeak NG из NVDA, сторонние голоса SAPI 5; голосов Microsoft нет. Без них говорит встроенный eSpeak NG.
+
+          Проверено: приложение запускается и проходит самопроверку на Windows — со встроенным eSpeak и с голосами, поставленными как у игрока.
+          EOF
+          gh release create lab-windows-latest "$ZIP" --prerelease --target "$GITHUB_SHA" \
+            --title "Подземная лаборатория Альфа 1.0 для Windows (сборка ${GITHUB_RUN_NUMBER})" \
+            --notes-file "$RUNNER_TEMP/notes.md"

@@ -29,6 +29,7 @@ function thr() { var m = Math.min(window.innerWidth || 360, window.innerHeight |
 /* ── КАСАНИЯ ── */
 function down(e) {
   if (e.pointerType === "mouse" && e.button !== 0) return;
+  if (e.pointerType === "touch") LAB.keysMode = false; /* подсказки — о жестах */
   try { pad.setPointerCapture(e.pointerId); } catch (x) { /* */ }
   e.preventDefault();
   LAB.AE.ensure();
@@ -183,8 +184,8 @@ function dispatch(g) {
   if (swallowN > 0 && g.kind !== "down") { swallowN--; return; }
   /* Четыре пальца вниз — прервать речь, где бы ни был игрок. */
   if (g.kind === "swipe" && g.n >= 4 && g.dir === "D") { LAB.Speech.hush(); LAB.vib(20); return; }
-  /* жест игрока: ответ на него может перебить чтение длинного текста */
-  if (g.kind !== "down") LAB.Speech.user();
+  /* любое действие игрока сразу обрывает речь (записку — нет: она дочитывается) */
+  if (g.kind !== "down") LAB.Speech.userAct();
   var r = route();
   if (g.kind === "down") { if (r === "mini") LAB.mini.gesture(g); return; }
   if (r === "mini") { LAB.mini.gesture(g); return; }
@@ -219,7 +220,7 @@ function gameGesture(g) {
       return;
     }
     if (g.kind === "tap") { repeatLast(); return; }
-    if (g.kind === "dtap") { LAB.Speech.stop(); return; }
+    if (g.kind === "dtap") { LAB.Speech.hush(); return; }
   }
   if (g.n === 3) {
     if (g.kind === "tap" || g.kind === "dtap") { game.toggleDraw(); return; }
@@ -243,38 +244,149 @@ function repeatLast() {
   if (t) LAB.say(t); else LAB.say("Нечего повторять.");
 }
 
-/* ── КЛАВИАТУРА (для компьютера и проверок) ── */
-var KEYS = { ArrowUp: "U", ArrowDown: "D", ArrowLeft: "L", ArrowRight: "R" };
+/* ── КЛАВИАТУРА (компьютер, сборка для Windows) ──
+   В игре: W A S D — ходьба (удержание — идти дальше), стрелки — выстрел в ту
+   сторону (удержание — очередь), R — достать или убрать оружие, Q и E —
+   предыдущее и следующее оружие, 1–9 — оружие по номеру, F — перезарядка,
+   Enter — действие (дверь, терминал, ящик, выживший), пробел — что рядом,
+   Tab — осмотреться, N — навигатор, M — список целей, V — сканер,
+   H — аптечка, C — персонаж, I — инвентарь, J — задания и журнал,
+   U — импланты, T — здоровье и заряд, Z — повторить фразу, X или Ctrl —
+   тишина, Escape — окно персонажа, F1 — руководство.
+   В окнах: стрелки вверх и вниз — пункты, влево и вправо — значение,
+   Enter — выбрать, пробел — повторить пункт, Tab — прочитать всё окно,
+   Home и End — первый и последний пункт, Escape или Backspace — назад,
+   C и I — персонаж и инвентарь.
+   Буквы работают и в русской раскладке (Ц Ф Ы В, К, Й, У, А…). */
+var KEY_LAT = { "ц": "w", "ф": "a", "ы": "s", "в": "d", "к": "r", "й": "q", "у": "e", "а": "f", "т": "n", "ь": "m", "м": "v", "р": "h", "с": "c", "ш": "i", "о": "j", "г": "u", "е": "t", "я": "z", "ч": "x" };
+var WASD = { w: "N", a: "W", s: "S", d: "E" };
+var ARROW = { ArrowUp: "N", ArrowDown: "S", ArrowLeft: "W", ArrowRight: "E" };
+var GAME2SCR = { N: "U", S: "D", W: "L", E: "R" };
+var keyHold = null; /* клавиша, которую держат: ходьба или очередь */
+function keyName(e) {
+  var k = e.key || "";
+  if (k.length === 1) { k = k.toLowerCase(); if (KEY_LAT[k]) k = KEY_LAT[k]; }
+  return k;
+}
 function key(e) {
   if (e.target && (e.target.tagName === "INPUT" || e.target.tagName === "TEXTAREA")) return;
-  var k = e.key, g = null;
-  if (KEYS[k]) {
-    if (e.shiftKey) g = { kind: "swipe", n: 2, dir: KEYS[k] };
-    else if (e.altKey) g = { kind: "swipe", n: 3, dir: KEYS[k] };
-    else g = { kind: "swipe", n: 1, dir: KEYS[k] };
-  }
-  else if (k === "Enter") g = { kind: "dtap", n: 1 };
-  else if (k === " ") g = { kind: "tap", n: 1 };
-  else if (k === "Escape" || k === "Backspace") g = { kind: "back", n: 1 };
-  else if (k === "f" || k === "F" || k === "а" || k === "А") g = { kind: "tap", n: 3 };
-  else if (k === "r" || k === "R" || k === "к" || k === "К") g = { kind: "zig", n: 1, dir: "L", dir2: "R" };
-  else if (k === "q" || k === "Q" || k === "й" || k === "Й") g = { kind: "zig", n: 1, dir: "U", dir2: "D" };
-  else if (k === "h" || k === "H" || k === "р" || k === "Р") g = { kind: "swipe", n: 2, dir: "L" };
-  else if (k === "i" || k === "I" || k === "ш" || k === "Ш") g = { kind: "swipe", n: 3, dir: "D" };
-  else if (k === "c" || k === "C" || k === "с" || k === "С") g = { kind: "swipe", n: 3, dir: "U" };
-  else if (k === "l" || k === "L" || k === "д" || k === "Д") g = { kind: "swipe", n: 2, dir: "U" };
-  else if (k === "n" || k === "N" || k === "т" || k === "Т") g = { kind: "swipe", n: 2, dir: "R" };
-  else if (k === "m" || k === "M" || k === "ь" || k === "Ь") g = { kind: "dtap", n: 4 };
-  else if (k === "s" || k === "S" || k === "ы" || k === "Ы") g = { kind: "tap", n: 4 };
-  else if (k === "x" || k === "X" || k === "ч" || k === "Ч") g = { kind: "swipe", n: 4, dir: "D" };
-  if (!g) return;
-  e.preventDefault();
+  var k = keyName(e);
+  LAB.keysMode = true; /* подсказки — о клавишах */
+  /* Ctrl — замолчать, как у чтецов экрана (NVDA, JAWS) */
+  if (e.key === "Control") { if (!e.repeat) LAB.Speech.hush(); return; }
+  if (e.ctrlKey || e.metaKey) return; /* сочетания системы не трогаем */
+  if (e.repeat) { if (ARROW[e.key] || WASD[k] || k === "Tab" || k === " ") e.preventDefault(); return; }
   LAB.AE.ensure();
-  /* Ctrl + стрелка — удержание (очередь или ходьба), отпуск — стоп */
-  if (e.ctrlKey && g.kind === "swipe" && g.n === 1) { if (!walk) startHold(g.dir); return; }
-  dispatch(g);
+  var r = route();
+  var done = true;
+  if (k === "x") { dispatch({ kind: "swipe", n: 4, dir: "D" }); }
+  else if (r === "game") done = gameKey(e, k);
+  else if (r === "ui") done = uiKey(e, k);
+  else if (r === "mini") done = miniKey(e, k);
+  else done = false;
+  if (done) e.preventDefault();
 }
-function keyUp(e) { if (KEYS[e.key] && walk) stopHold(); }
+/* Ходьба и очередь по удержанию: шаг сразу, через треть секунды — дальше, пока держат. */
+function holdKey(code, fn, holdFn) {
+  if (keyHold) stopKeyHold();
+  fn();
+  var h = keyHold = { code: code };
+  h.t = setTimeout(function () { if (keyHold === h) { h.on = true; holdFn(); } }, 320);
+}
+function stopKeyHold() {
+  if (!keyHold) return;
+  clearTimeout(keyHold.t);
+  if (keyHold.on) stopHold();
+  keyHold = null;
+}
+function gameKey(e, k) {
+  var game = LAB.game, G = game.G;
+  if (!game.entered || G.dead) return false;
+  LAB.Speech.userAct();
+  if (WASD[k]) {
+    var gd = WASD[k];
+    holdKey(e.code || k, function () { game.tryMove(gd, false); }, function () { startWalk(gd); });
+    return true;
+  }
+  if (ARROW[e.key]) {
+    var fd = ARROW[e.key];
+    if (!G.drawn) { LAB.UI.error(); LAB.say("Оружие убрано. R — достать оружие."); return true; }
+    holdKey(e.code || e.key, function () { LAB.combat.fire(fd, false); }, function () { LAB.combat.startFire(fd); walk = { fire: true }; });
+    return true;
+  }
+  if (/^[1-9]$/.test(k)) { var wi = +k - 1; if (G.weapons[wi]) game.equipWeapon(wi); else LAB.say("Оружия под номером " + k + " нет. Всего — " + G.weapons.length + "."); return true; }
+  switch (k) {
+    case "r": game.toggleDraw(); return true;
+    case "q": game.switchWeapon(-1); return true;
+    case "e": game.switchWeapon(1); return true;
+    case "f": game.reload(); return true;
+    case "Enter": game.interact(); return true;
+    case " ": game.nearbyInfo(); return true;
+    case "Tab": game.lookAround(); return true;
+    case "n": game.navigate(true); return true;
+    case "m": if (game.navMenu) game.navMenu(); else game.navigate(true); return true;
+    case "v": if (G.implants.indexOf("scan") >= 0) LAB.combat.useImplant("scan"); else game.lookAround(); return true;
+    case "h": game.useMedkit(); return true;
+    case "c": LAB.ui.character(); return true;
+    case "i": LAB.ui.inventory(); return true;
+    case "j": LAB.ui.inventory(8); return true;
+    case "u": LAB.ui.implants(); return true;
+    case "t": game.quickStatus(); return true;
+    case "z": repeatLast(); return true;
+    case "Escape": case "Backspace": if (window.labBack) window.labBack(); return true;
+    case "F1": if (LAB.guide) LAB.guide.open(); return true;
+  }
+  return false;
+}
+/* Идти, пока держат клавишу (как свайп с удержанием). */
+function startWalk(gdir) {
+  stopHold();
+  var game = LAB.game, G = game.G;
+  walk = { dir: gdir };
+  var w = walk;
+  var stepFn = function () {
+    if (walk !== w) return;
+    if (route() !== "game") { stopHold(); return; }
+    var ok = game.tryMove(gdir, true);
+    if (!ok) { stopHold(); return; }
+    w.t = setTimeout(stepFn, G.st.haste > 0 ? 200 : 300);
+  };
+  w.t = setTimeout(stepFn, 300);
+}
+function uiKey(e, k) {
+  var ui = LAB.ui;
+  LAB.Speech.userAct();
+  if (ui.screen && ui.screen() !== "game" && ui.pageOpen && ui.pageOpen()) {
+    /* пролог и финал: вправо, Enter, пробел — дальше; влево — назад; Escape или вверх — пропустить */
+    var pg = { ArrowRight: "R", Enter: "R", " ": "R", d: "R", ArrowLeft: "L", a: "L", ArrowUp: "U", Escape: "U", w: "U" }[k] || { ArrowRight: "R", ArrowLeft: "L", ArrowUp: "U" }[e.key];
+    if (pg) { ui.gesture({ kind: "swipe", n: 1, dir: pg }); return true; }
+    if (k === "ArrowDown" || k === "s") { ui.gesture({ kind: "tap", n: 1 }); return true; }
+    if (k === "Backspace") { ui.gesture({ kind: "back", n: 1 }); return true; }
+    return false;
+  }
+  var act = { ArrowDown: "next", s: "next", ArrowUp: "prev", w: "prev", ArrowRight: "inc", d: "inc", ArrowLeft: "dec", a: "dec",
+    Enter: "select", " ": "repeat", Tab: "all", Home: "first", End: "last", Escape: "back", Backspace: "back", x: "hush", z: "repeat",
+    c: "char", i: "inv", F1: "guide" }[k];
+  if (!act) return false;
+  if (ui.key) ui.key(act); else ui.gesture({ kind: act === "back" ? "back" : "tap", n: 1 });
+  return true;
+}
+function miniKey(e, k) {
+  var m = LAB.mini;
+  LAB.Speech.userAct();
+  var dir = { ArrowUp: "U", ArrowDown: "D", ArrowLeft: "L", ArrowRight: "R", w: "U", s: "D", a: "L", d: "R" }[k] || { ArrowUp: "U", ArrowDown: "D", ArrowLeft: "L", ArrowRight: "R" }[e.key];
+  if (dir) { m.gesture({ kind: "swipe", n: 1, dir: dir }); return true; }
+  if (/^[0-9]$/.test(k)) { m.gesture({ kind: "digit", n: 1, d: +k }); return true; }
+  if (k === " ") { if (m.raw && m.raw()) m.gesture({ kind: "down", n: 1, t: performance.now() }); else m.gesture({ kind: "tap", n: 1 }); return true; }
+  if (k === "Enter") { m.gesture({ kind: "dtap", n: 1 }); return true; }
+  if (k === "Escape" || k === "Backspace") { m.gesture({ kind: "back", n: 1 }); return true; }
+  return false;
+}
+function keyUp(e) {
+  var k = keyName(e);
+  if (keyHold && (keyHold.code === (e.code || k) || keyHold.code === (e.code || e.key))) stopKeyHold();
+  else if (!keyHold && walk && (WASD[k] || ARROW[e.key])) stopHold();
+}
 
 function init() {
   pad = document.getElementById("pad");
@@ -288,9 +400,18 @@ function init() {
   pad.addEventListener("contextmenu", function (e) { e.preventDefault(); });
   document.addEventListener("keydown", key);
   document.addEventListener("keyup", keyUp);
+  window.addEventListener("blur", function () { stopKeyHold(); stopHold(); });
+  /* Компьютер: окно игры — приложение для чтеца экрана (NVDA, JAWS), клавиши
+     идут прямо в игру, а не в режим просмотра чтеца. */
+  if (LAB.desktop) {
+    pad.setAttribute("role", "application");
+    pad.setAttribute("aria-label", LAB.TITLE);
+    try { pad.focus(); } catch (x) { /* */ }
+    window.addEventListener("focus", function () { try { pad.focus(); } catch (x) { /* */ } });
+  }
   /* «Назад» на Android */
   window.labBack = function () {
-    LAB.Speech.user();
+    LAB.Speech.userAct();
     if (LAB.mini && LAB.mini.active()) { LAB.mini.gesture({ kind: "back", n: 1 }); return 1; }
     var ui = LAB.ui;
     if (!ui) return 0;

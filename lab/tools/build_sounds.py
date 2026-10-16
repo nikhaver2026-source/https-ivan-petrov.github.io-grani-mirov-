@@ -164,6 +164,22 @@ if os.path.exists(_fs_tsv):
 def FS(i, **o):
     return S("D", "lab_fsD", "%s_*" % i, **o)
 
+def PITCH(f):
+    """Высота (и темп) в f раз — независимо от частоты исходника."""
+    return "aresample=44100,asetrate=%d,aresample=44100" % int(round(44100 * f))
+
+def SPL(i, k, af=None, start=0, dur=None, **so):
+    """Запись Freesound, поделённая по паузам: k самых громких частей."""
+    o = {}
+    if af: o["af"] = af
+    if start: o["start"] = start
+    if dur: o["dur"] = dur
+    return ("split", FS(i, **o), k, so)
+
+def L(src, off=0.0, g=1.0):
+    """Слой сведения: источник, сдвиг (с), громкость."""
+    return (src, off, g)
+
 def pack_of(path):
     rel = path
     for k, root in ROOTS.items():
@@ -354,21 +370,21 @@ E("ui_levelup", "ui", [S(B, "lab_assorted7*", "Level Up.mp3")], v=0.8, bus="ui",
 E("near_tick", "ui", [S(A, "lab_interface*", "tick_002.ogg"), S(A, "lab_interface*", "pluck_002.ogg")], v=0.45, bus="ui")
 E("nav_ping", "gen", "sonar", v=0.9, bus="ui")
 
-# ═════ ШАГИ: у каждого уровня свой пол ═════
-E("step_tile", "step", [S(C, "lab_stonesteps*", "Fantozzi-Stone*.flac", af="highpass=f=180,treble=g=3")], n=6)
-E("step_carpet", "step", [S(C, "lab_kimpact", "footstep_carpet_*.ogg")], n=5)
-E("step_water", "step", [S(A, "lab_sfx100b*", "*footstep_wet_*.ogg"), S(A, "lab_water40*", "splash_1[05].ogg"), S(A, "lab_water40*", "splash_09.ogg")], n=6, mx=0.55)
-E("step_vinyl", "step", [S(C, "lab_foot0*", "0[1-6]-footstep*.ogg", af="highpass=f=150,equalizer=f=2600:t=q:w=1.2:g=4")], n=6)
-E("step_metal", "step", [S(A, "lab_metalsteps*", "metal_steps_0[1-9].flac"), S(A, "lab_metalsteps*", "metal_steps_1[0-2].flac")], n=10)
-E("step_grate", "step", [S(A, "lab_platformer*", "steps_*.ogg"), S(A, "lab_metalsteps*", "metal_steps_2[0-5].flac", af="asetrate=44100*0.82,aresample=44100,equalizer=f=900:t=q:w=2:g=6")], n=8, mx=0.5)
-E("step_ice", "step", [S(C, "lab_kimpact", "footstep_snow_*.ogg"), S(C, "lab_snowwalk*", "SnowWalk*.ogg"), S(C, "lab_snowgravel*", "*gravel_and_ice_0[1-4].flac")], n=10, mx=0.5)
-E("step_concrete", "step", [S(C, "lab_kimpact", "footstep_concrete_*.ogg"), ("slice", S(B, "bsb_lab_stepconcrete", "1318*"), 6)], n=11)
-E("step_gravel", "step", [S(C, "lab_snowgravel*", "*snow_covered_gravel_0[1-8].flac"), S(C, "lab_stonesteps*", "Fantozzi-Sand*.flac")], n=12, mx=0.55)
-E("step_flesh", "step", [S(A, "lab_water40*", "slime_0[1-8].ogg"), S(A, "lab_slime10*", "slime.[16].ogg")], n=10, mx=0.45, v=0.9)
+# ═════ ШАГИ: пол везде металлический, у каждого уровня свой ═════
+E("step_plate", "step", [SPL(698697, 7, min_len=0.2), ("slice", FS(562195), 3)], n=9, mx=0.45)
+E("step_sheet", "step", [("slice", FS(50724), 5), ("slice", FS(50723), 4)], n=8, mx=0.45)
+E("step_wetmetal", "step", [SPL(253735, 9, min_len=0.15)], n=8, mx=0.5)
+E("step_steel", "step", [SPL(696374, 10, min_len=0.15)], n=8, mx=0.45)
+E("step_checker", "step", [SPL(455058, 10, min_len=0.06)], n=8, mx=0.4)
+E("step_frost", "step", [SPL(834029, 10, af="highpass=f=250,treble=g=3", min_len=0.06)], n=8, mx=0.35)
+E("step_armor", "step", [SPL(809440, 10, min_len=0.08)], n=8, mx=0.45)
+E("step_catwalk", "step", [SPL(669095, 10, min_len=0.05), SPL(770804, 4, min_len=0.05)], n=9, mx=0.4)
+E("step_deck", "step", [("slice", FS(148462, af=PITCH(0.92)), 5), ("slice", FS(149454, af=PITCH(0.92)), 4)], n=8, mx=0.5)
+E("step_grate", "step", [SPL(398937, 10, min_len=0.08)], n=8, mx=0.4)
 E("door_threshold", "step", [S(A, "lab_metalsteps*", "metal_steps_1[3-6].flac", af="asetrate=44100*0.7,aresample=44100")], n=3, v=0.6)
 
 # ═════ СТЕНЫ И СТОЛКНОВЕНИЯ ═════
-E("bump_wall", "sfx", [S(C, "lab_kimpact", "impactMetal_heavy_*.ogg"), S(A, "lab_metalwood*", "metal_hit_0[1-5].ogg"), S(C, "lab_kimpact", "impactPlate_heavy_00[0-2].ogg")], n=10, mx=0.8, v=0.95)
+E("bump_wall", "sfx", [SPL(445775, 1)], n=1, mx=0.6, v=0.95)
 E("bump_body", "sfx", [S(C, "lab_kimpact", "impactPunch_medium_*.ogg")], n=4, v=0.8)
 E("bump_furniture", "sfx", [S(C, "lab_kimpact", "impactPlank_medium_*.ogg"), S(C, "lab_kimpact", "impactTin_medium_*.ogg")], n=6, v=0.75)
 E("bump_device", "sfx", [S(C, "lab_kimpact", "impactPlate_light_*.ogg"), S(C, "lab_kimpact", "impactGlass_light_00[0-1].ogg")], n=5, v=0.75)
@@ -530,42 +546,42 @@ E("bcn_survivor", "bcn", [S(A, "lab_creat80_*", "cough_02.ogg")], bus="beacon")
 E("bcn_default", "bcn", [S(A, "lab_interface*", "tick_001.ogg")], bus="beacon")
 
 # ═════ ОРУЖИЕ ГЕРОЯ ═════
-E("w_melee", "sfx", [S(A, "lab_metalint*", "metal_swing1.flac"), S(B, "lab_rpg80*", "blade_0[23].ogg")], n=3)
-E("w_shock", "sfx", [S(A, "lab_electric_groundhit*", "*.flac"), S(B, "bsb_lab_electric", "3442*")], n=2)
-E("w_vibro", "sfx", [S(A, "lab_git_es", "slicer~.flac")], mx=0.7)
-E("w_cutter", "sfx", [S(A, "lab_git_es", "mining laser~.flac")], mx=0.7)
-E("w_blaster_s", "sfx", [S(A, "lab_git_es", "blaster.flac"), S(B, "bsb_lab_laser", "17[56]*")], n=3)
-E("w_blaster_p", "sfx", [S(A, "lab_git_es", "pulse.flac"), S(A, "lab_git_es", "mod blaster.flac")], n=2)
-E("w_blaster_h", "sfx", [S(A, "lab_git_es", "heavy blaster.flac"), S(B, "bsb_lab_laser", "1761*")], n=2)
-E("w_laser", "sfx", [S(A, "lab_lentikula", "Laser Rifle [1-3].flac")], n=3, mx=0.9)
-E("w_ion", "sfx", [S(A, "lab_git_es", "ion small~.flac"), S(A, "lab_git_es", "ion medium~.flac")], n=2, mx=0.8)
-E("w_plasma", "sfx", [S(A, "lab_git_es", "plasma.flac"), S(A, "lab_git_freedoom", "dsplasma.flac")], n=2, mx=1.0)
-E("w_magnetron", "sfx", [S(A, "lab_digital63*", "laser[123].mp3")], n=3, mx=0.9)
-E("w_resonator", "sfx", [S(A, "lab_git_es", "disruptor~.flac")], mx=1.2)
-E("w_positron", "sfx", [S(A, "lab_git_es", "neutron bolt.flac"), S(A, "lab_git_es", "proton.flac")], n=2, mx=1.1)
-E("w_pcannon", "sfx", [S(A, "lab_git_freedoom", "dsbfg.flac"), S(A, "lab_git_es", "fusion blast.flac")], n=2, mx=2.2)
-E("w_gauss", "sfx", [S(A, "lab_git_es", "javelin.flac"), S(A, "lab_git_es", "piercer.flac")], n=2, mx=1.0)
-E("w_cryo", "sfx", [S(B, "bsb_lab_hiss", "3019*")], mx=0.8)
-E("w_thermo", "sfx", [S(A, "lab_git_es", "flamethrower~.flac")], mx=0.8)
-E("w_empty", "sfx", [S(A, "lab_mechclick*", "buzzerr-01.flac"), S(A, "lab_interface*", "click_005.ogg")], n=2, v=0.8)
-E("w_reload_e", "sfx", [S(A, "lab_reload2*", "gun_reload.1.ogg")])
-E("w_reload_m", "sfx", [S(A, "lab_reload2*", "gun_reload.2.ogg")])
-E("w_reload_p", "sfx", [S(A, "lab_digital63*", "powerUp1.mp3")])
-E("w_draw", "sfx", [S(A, "lab_git_freedoom", "dswpnup.flac")])
-E("w_holster", "sfx", [S(B, "lab_rpg80*", "metal_03.ogg")])
-E("w_switch", "sfx", [S(A, "lab_git_freedoom", "dssgcock.flac")])
+E("w_melee", "sfx", [SPL(427979, 6, min_len=0.08), FS(422513), FS(719636)], n=5, mx=0.5)
+E("w_shock", "sfx", [FS(264779), SPL(265247, 3, min_len=0.3)], n=3, mx=0.9)
+E("w_vibro", "mixv", [[L(FS(427979, start=1.2, dur=0.5)), L(FS(210878, start=1.0, dur=0.5), 0.0, 0.6)], [L(FS(427979, start=3.4, dur=0.5)), L(FS(210878, start=2.5, dur=0.5), 0.0, 0.6)]], mx=0.7)
+E("w_cutter", "mixv", [[L(FS(244230, start=3.0, dur=0.7)), L(FS(675752, start=7.2, dur=0.6), 0.0, 0.5)], [L(FS(244230, start=8.0, dur=0.7)), L(FS(675752, start=11.4, dur=0.6), 0.0, 0.5)]], mx=0.8)
+E("w_blaster_s", "mixv", [[L(FS(803497)), L(FS(331240, start=0.0, dur=0.45, af="highpass=f=500"), 0.0, 0.55)], [L(FS(717584, start=0.25, dur=0.8)), L(FS(331240, start=1.6, dur=0.45, af="highpass=f=500"), 0.0, 0.55)], [L(FS(371440)), L(FS(331240, start=3.2, dur=0.45, af="highpass=f=500"), 0.0, 0.5)]], mx=0.9)
+E("w_blaster_p", "mixv", [[L(FS(331240, start=4.8, dur=0.45)), L(FS(392229, af="lowpass=f=900"), 0.0, 0.45)], [L(FS(331240, start=6.4, dur=0.45)), L(FS(392229, af="lowpass=f=900"), 0.0, 0.45)], [L(FS(331240, start=8.0, dur=0.45)), L(FS(371440, af="lowpass=f=900"), 0.0, 0.45)]], mx=0.8)
+E("w_blaster_h", "mixv", [[L(FS(702000)), L(FS(484036), 0.0, 0.6)], [L(FS(702000, af=PITCH(0.93))), L(FS(483536), 0.0, 0.55)]], mx=1.2)
+E("w_laser", "mixv", [[L(FS(660270, start=5.65, dur=0.7)), L(FS(710084, start=0.8, dur=0.4), 0.0, 0.35)], [L(FS(660270, start=6.5, dur=0.8)), L(FS(710084, start=0.8, dur=0.4), 0.0, 0.35)], [L(FS(660270, start=10.8, dur=0.55)), L(FS(450852), 0.0, 0.3)]], mx=0.9)
+E("w_ion", "mixv", [[L(FS(403253, start=0.9, dur=0.4)), L(FS(392229, af="lowpass=f=700"), 0.0, 0.5)], [L(FS(403253, start=3.05, dur=0.5)), L(FS(371440, af="lowpass=f=700"), 0.0, 0.5)], [L(FS(403253, start=5.98, dur=0.6)), L(FS(392229, af="lowpass=f=700"), 0.0, 0.5)]], mx=0.8)
+E("w_plasma", "mixv", [[L(FS(331240, start=9.6, dur=0.45)), L(FS(447941, dur=0.9), 0.02, 0.7)], [L(FS(331240, start=11.2, dur=0.45)), L(FS(447941, dur=0.9, af=PITCH(1.1)), 0.02, 0.7)]], mx=1.0)
+E("w_magnetron", "mixv", [[L(FS(264779)), L(FS(394672), 0.0, 0.7)], [L(FS(265247, start=1.3, dur=0.5)), L(FS(394672, af=PITCH(1.08)), 0.0, 0.7)]], mx=1.0)
+E("w_resonator", "mixv", [[L(FS(244983)), L(FS(699655, af="lowpass=f=600"), 0.0, 0.5)], [L(FS(244983, af=PITCH(0.9))), L(FS(699655, af="lowpass=f=600"), 0.0, 0.5)]], mx=1.2)
+E("w_positron", "sfx", [FS(155790), FS(155790, af=PITCH(1.08))], n=2, mx=1.4)
+E("w_pcannon", "mixv", [[L(FS(162260, dur=2.5)), L(FS(490266, dur=2.0), 0.05, 0.45)], [L(FS(162260, start=2.9, dur=2.6)), L(FS(490266, dur=2.0), 0.05, 0.45)]], mx=2.2)
+E("w_gauss", "mixv", [[L(FS(394672, af=PITCH(1.12))), L(FS(483536), 0.0, 0.6)], [L(FS(394672, af=PITCH(1.2))), L(FS(484036), 0.0, 0.6)]], mx=1.1)
+E("w_cryo", "sfx", [SPL(642961, 2, min_len=0.4), SPL(371839, 3, min_len=0.3)], n=4, mx=0.8)
+E("w_thermo", "sfx", [FS(395038, start=7.35, dur=0.8), FS(395038, start=5.85, dur=0.9), FS(447941)], n=3, mx=0.9)
+E("w_empty", "sfx", [FS(674568), FS(842748), FS(725402)], n=3, v=0.9, mx=0.4)
+E("w_reload_e", "sfx", [FS(363167, start=1.3, dur=1.2), FS(854460, start=1.6, dur=0.6)], n=2, mx=1.4)
+E("w_reload_m", "sfx", [FS(674742)], mx=1.8)
+E("w_reload_p", "mixv", [[L(FS(725397, start=2.0, dur=1.6)), L(FS(210878, start=3.0, dur=0.5), 1.1, 0.35)]], mx=2.0)
+E("w_draw", "sfx", [FS(725400, start=1.35, dur=0.65)], mx=0.8)
+E("w_holster", "sfx", [FS(725400, start=2.1, dur=0.35), FS(725400, start=0.0, dur=0.3)], n=2, mx=0.6)
+E("w_switch", "sfx", [FS(725400, start=6.2, dur=0.5)], mx=0.6)
 
 # ═════ ПОПАДАНИЯ, ВЗРЫВЫ ═════
-E("hit_metal", "sfx", [S(A, "lab_scifi_k*", "impactMetal_00*.ogg"), S(C, "lab_kimpact", "impactMetal_light_00[0-2].ogg")], n=8, mx=0.7)
-E("hit_flesh", "sfx", [S(A, "lab_squish8*", "impactsplat0[78]*"), S(C, "lab_kimpact", "impactPunch_heavy_00[0-2].ogg")], n=5, mx=0.7)
-E("impact_wall", "sfx", [S(A, "lab_sfx100b*", "*metal_hit_02.ogg"), S(A, "lab_sfx100_*", "hit_0[12].ogg")], n=3, mx=0.5)
+E("hit_metal", "sfx", [SPL(144444, 6, min_len=0.1), SPL(675951, 4, min_len=0.3)], n=8, mx=0.7)
+E("hit_flesh", "sfx", [S(A, "lab_squish8*", "impactsplat0[78]*"), S(C, "lab_kimpact", "impactPunch_heavy_00[0-2].ogg"), FS(30931)], n=6, mx=0.7)
+E("impact_wall", "sfx", [SPL(182262, 5, min_len=0.5)], n=4, mx=0.6)
 E("impact_positron", "sfx", [S(A, "lab_git_es", "explosion tiny.flac")])
 E("impact_wave", "sfx", [S(A, "lab_git_es", "ion impact.flac")], mx=0.9)
-E("swing_miss", "sfx", [S(B, "lab_rpg80*", "blade_02.ogg")])
-E("swing_by", "sfx", [S(B, "lab_rpg80*", "blade_03.ogg")])
-E("bullet_by", "sfx", [S(A, "lab_digital63*", "phaserDown2.mp3")])
-E("explosion_small", "sfx", [S(A, "lab_git_es", "explosion small.flac"), S(A, "lab_git_es", "explosion medium.flac")], n=2, mx=1.5)
-E("explosion_big", "sfx", [S(A, "lab_git_es", "explosion large.flac"), S(A, "lab_git_es", "final explosion small.flac")], n=2, mx=2.6)
+E("swing_miss", "sfx", [SPL(427979, 3, start=6.0, dur=8.0, min_len=0.08)], n=3, mx=0.5)
+E("swing_by", "sfx", [FS(507466), FS(562191)], n=2, mx=0.5)
+E("bullet_by", "mixv", [[L(FS(855248)), L(FS(507466), 0.0, 0.35)]], mx=0.5)
+E("explosion_small", "sfx", [FS(336011), S(A, "lab_git_es", "explosion small.flac")], n=2, mx=1.5)
+E("explosion_big", "sfx", [FS(490266), S(A, "lab_git_es", "explosion large.flac")], n=2, mx=2.6)
 E("emp_blast", "sfx", [S(A, "lab_git_es", "ion impact.flac"), S(A, "lab_electric_deathboom*", "*.flac")], n=2, mx=2.0)
 E("acid_burst", "sfx", [S(A, "lab_squish8*", "impactsplat05*")], mx=1.5)
 E("grenade_throw", "sfx", [S(B, "lab_rpg80*", "blade_01.ogg")])
@@ -595,73 +611,75 @@ def foe(name, idle, alert, attack, hurt, death, step=None, **o):
     E(name + "_hurt", "sfx", hurt, n=3, mx=1.0, v=o.get("v", 1))
     E(name + "_death", "sfx", death, n=2, mx=2.6, v=o.get("v", 1))
     if step: E(name + "_step", "step", step, n=4, mx=0.7, v=o.get("sv", 0.9))
-foe("rat", [S(A, "lab_creat80_*", "cute_0[1-4].ogg", af="asetrate=44100*1.3,aresample=44100")], [S(A, "lab_rat*", "*Pain.flac")], [S(A, "lab_rat*", "*Attack.flac")], [S(A, "lab_rat*", "*Pain.flac")], [S(A, "lab_rat*", "*Death.flac")])
-foe("roach", [S(A, "lab_creat80_*", "bug_0[1-4].ogg")], [S(A, "lab_creat80b*", "bug_0[5-7].ogg")], [S(A, "lab_creat80b*", "bug_0[89].ogg"), S(A, "lab_creat80b*", "bug_10.ogg")], [S(A, "lab_creat80b*", "bug_1[1-3].ogg")], [S(A, "lab_creat80b*", "die_01.ogg")])
-foe("labmut", [S(A, "lab_git_freedoom", "dsposact.flac"), S(C, "lab_horrorlib*", "Zombie_0[13].mp3")], [S(A, "lab_git_freedoom", "dsposit[1-3].flac")], [S(A, "lab_creat80_*", "grunt_0[1-3].ogg")], [S(A, "lab_git_freedoom", "dspopain.flac")], [S(A, "lab_git_freedoom", "dspodth[1-3].flac")])
-foe("slug", [S(A, "lab_slimy9*", "*.mp3")], [S(A, "lab_water40*", "slime_1[0-2].ogg")], [S(A, "lab_squish8*", "impactsplat0[12]*")], [S(A, "lab_slime10*", "slime.[45].ogg")], [S(A, "lab_squish8*", "impactsplat06*")])
-foe("vine", [S(A, "lab_creat80_*", "weird_0[1-3].ogg")], [S(A, "lab_creat80_*", "weird_0[45].ogg")], [S(B, "lab_rpg80*", "blade_03.ogg"), S(A, "lab_metalwood*", "wood_cracking_0[1-2].ogg")], [S(A, "lab_metalwood*", "wood_cracking_0[34].ogg")], [S(A, "lab_metalwood*", "wood_breaking_0[12].ogg")])
-foe("spore", [S(A, "lab_creat80_*", "burble_0[12].ogg")], [S(A, "lab_creat80_*", "burp_0[12].ogg")], [S(A, "lab_creat80_*", "spit_0[1-3].ogg")], [S(A, "lab_creat80_*", "cough_0[13].ogg")], [S(A, "lab_squish8*", "impactsplat0[45]*")])
-foe("swamp", [S(A, "lab_troll*", "troll-idle*", start=2, dur=2)], [S(A, "lab_creat80_*", "troll_0[1-3].ogg")], [S(A, "lab_creat80_*", "grunt_0[45].ogg")], [S(A, "lab_creat80_*", "hurt_0[12].ogg")], [S(A, "lab_creat80b*", "die_04.ogg")])
-foe("chimera", [S(A, "lab_git_freedoom", "dsdmact.flac")], [S(A, "lab_git_freedoom", "dssgtsit.flac"), S(A, "lab_creat80_*", "roar_02.ogg")], [S(A, "lab_git_freedoom", "dssgtatk.flac"), S(A, "lab_git_freedoom", "dsclaw.flac")], [S(A, "lab_git_freedoom", "dsdmpain.flac")], [S(A, "lab_git_freedoom", "dssgtdth.flac")])
-foe("lizard", [S(A, "lab_growls16*", "monster.[1-4].ogg")], [S(A, "lab_creat80_*", "monster_0[1-3].ogg")], [S(A, "lab_creat80b*", "attack_0[2-4].ogg")], [S(A, "lab_creat80_*", "hurt_0[3-5].ogg")], [S(A, "lab_creat80b*", "die_0[23].ogg")])
-foe("weaver", [S(A, "lab_creat80b*", "bug_0[5-7].ogg", af="asetrate=44100*0.75,aresample=44100")], [S(A, "lab_creat80_*", "alien_0[1-3].ogg")], [S(A, "lab_creat80_*", "spit_0[12].ogg")], [S(A, "lab_creat80b*", "bug_1[23].ogg")], [S(A, "lab_creat80b*", "die_01.ogg", af="asetrate=44100*0.8,aresample=44100")])
-foe("blind", [S(A, "lab_beast*", "Beast Growl [12].flac")], [S(A, "lab_beast*", "Beast Growl [345].flac")], [S(A, "lab_beast*", "Demon Growl.flac")], [S(A, "lab_beast*", "Yucky Beast [1-3].flac")], [S(A, "lab_beast*", "Dieing Beast.flac")])
-foe("spark", [S(A, "lab_electric_crackle*", "*.flac")], [S(A, "lab_creat80_*", "monster_0[45].ogg")], [S(A, "lab_electric_groundhit*", "*.flac"), S(B, "bsb_lab_electric", "3442*")], [S(A, "lab_creat80_*", "hurt_0[34].ogg")], [S(A, "lab_electric_death_1*", "*.flac")])
-foe("frozen", [S(A, "lab_creat80_*", "monster_0[67].ogg", af="asetrate=44100*0.8,aresample=44100")], [S(A, "lab_creat80b*", "roar_0[45].ogg", af="asetrate=44100*0.8,aresample=44100")], [S(A, "lab_creat80b*", "stomp_01.ogg")], [S(C, "lab_kimpact", "impactGlass_medium_00[0-1].ogg")], [S(B, "bsb_lab_glass", "1591*"), S(C, "lab_kimpact", "impactGlass_heavy_00[0-1].ogg")])
-foe("thawed", [S(A, "lab_creat80_*", "weird_0[1-3].ogg", af="asetrate=44100*0.9,aresample=44100")], [S(A, "lab_creat80_*", "scream_0[12].ogg")], [S(A, "lab_creat80b*", "attack_0[34].ogg")], [S(A, "lab_creat80_*", "hurt_0[12].ogg")], [S(A, "lab_squish8*", "impactsplat05*")])
-foe("soldier", [S(A, "lab_git_freedoom", "dsposact.flac", af="asetrate=44100*0.85,aresample=44100")], [S(A, "lab_git_freedoom", "dssssit.flac"), S(A, "lab_git_freedoom", "dsposit2.flac", af="asetrate=44100*0.85,aresample=44100")], [S(A, "lab_git_es", "blaster.flac", af="asetrate=44100*0.85,aresample=44100")], [S(A, "lab_git_freedoom", "dspopain.flac", af="asetrate=44100*0.85,aresample=44100")], [S(A, "lab_git_freedoom", "dsssdth.flac")], step=[S(C, "lab_kimpact", "footstep_concrete_*.ogg", af="asetrate=44100*0.85,aresample=44100")])
-foe("phase", [S(C, "lab_ghostvoice*", "*GhostMoan0[15].flac")], [S(A, "lab_git_freedoom", "dscacsit.flac")], [S(A, "lab_digital63*", "phaseJump[45].mp3")], [S(C, "lab_ghostvoice*", "*GhostMoan02.flac")], [S(A, "lab_git_freedoom", "dscacdth.flac")])
-foe("proto", [S(C, "lab_horrorlib*", "Monster_0[13].mp3")], [S(A, "lab_git_freedoom", "dsbrssit.flac"), S(A, "lab_git_freedoom", "dskntsit.flac")], [S(A, "lab_git_freedoom", "dsclaw.flac", af="asetrate=44100*0.8,aresample=44100")], [S(C, "lab_horrorlib*", "Monster_06.mp3")], [S(A, "lab_git_freedoom", "dsbrsdth.flac"), S(A, "lab_git_freedoom", "dskntdth.flac")], step=[S(A, "lab_creat80b*", "stomp_01.ogg")])
+foe("rat", [SPL(217767, 4), SPL(574107, 3, af=PITCH(0.85))], [SPL(134791, 2, min_len=0.4), SPL(463789, 2, af=PITCH(0.8))], [SPL(536753, 2), SPL(485952, 1, af=PITCH(1.3))], [SPL(536753, 2, af=PITCH(0.9)), SPL(217767, 2, start=8.0, dur=8.0, af=PITCH(1.1))], [SPL(134791, 1, af=PITCH(0.8), min_len=0.4), SPL(574107, 1, af=PITCH(0.7), min_len=0.6)])
+foe("roach", [SPL(811205, 3)], [SPL(811205, 2, af=PITCH(0.85)), SPL(547898, 2, start=1.0, dur=8.0)], [FS(380769, start=5.0, dur=1.0), SPL(811205, 1, af=PITCH(1.2))], [SPL(811205, 2, af=PITCH(1.25))], [SPL(547446, 2), FS(751340)])
+foe("labmut", [SPL(769200, 4, af=PITCH(0.95)), SPL(130627, 2)], [FS(179345), FS(323819), FS(204820)], [SPL(181068, 4)], [FS(555426), SPL(633193, 2)], [FS(612699, start=1.3, dur=3.0), FS(108445)])
+foe("slug", [SPL(680447, 3, start=6.0, dur=20.0, min_len=0.3), SPL(666969, 2, min_len=0.3)], [SPL(794272, 2, min_len=0.4), FS(516643)], [SPL(547446, 3)], [SPL(666969, 2, start=10.0, dur=10.0)], [FS(751340), SPL(680447, 1, af=PITCH(0.8), min_len=0.8)])
+foe("vine", [SPL(666969, 3, start=4.0, dur=30.0, min_len=0.4), S(A, "lab_metalwood*", "wood_cracking_0[1-4].ogg", af="lowpass=f=2500")], [SPL(794272, 2, min_len=0.5)], [SPL(427979, 2, min_len=0.08), S(A, "lab_metalwood*", "wood_cracking_0[1-2].ogg")], [S(A, "lab_metalwood*", "wood_cracking_0[34].ogg")], [S(A, "lab_metalwood*", "wood_breaking_0[12].ogg")])
+foe("spore", [SPL(680447, 3, start=8.0, dur=40.0, min_len=0.35, af=PITCH(0.8))], [FS(146963, af=PITCH(0.75))], [FS(485952, af=PITCH(0.7)), S(A, "lab_creat80_*", "spit_0[1-3].ogg")], [SPL(547446, 2, af=PITCH(0.8))], [SPL(680447, 1, min_len=1.0), FS(30931)])
+foe("swamp", [FS(620080, af=PITCH(0.72)), SPL(352698, 2, af=PITCH(0.7))], [SPL(352698, 2, af=PITCH(0.78), min_len=0.4)], [SPL(404920, 2, start=5.0, dur=12.0, af=PITCH(0.85))], [SPL(344972, 2, af=PITCH(0.75))], [FS(344972, start=2.6, dur=2.0, af=PITCH(0.7))])
+foe("chimera", [SPL(488348, 3, af=PITCH(0.95), min_len=0.8)], [SPL(69570, 2, start=11.0, dur=12.0)], [SPL(204609, 2), FS(204611)], [SPL(69571, 2)], [FS(366096, dur=4.0)])
+foe("lizard", [FS(679954, af=PITCH(0.8)), SPL(363105, 2, af=PITCH(0.75))], [FS(255405)], [SPL(154641, 3)], [SPL(154641, 2, start=10.0, dur=10.0, af=PITCH(1.1))], [FS(734841)])
+foe("weaver", [SPL(547898, 3, start=1.0, dur=10.0, af=PITCH(0.8))], [FS(146558)], [S(A, "lab_creat80_*", "spit_0[12].ogg"), SPL(811205, 1, af=PITCH(0.9))], [SPL(811205, 2, af=PITCH(1.1))], [FS(30931), SPL(547446, 1)])
+foe("blind", [SPL(393518, 3, min_len=1.0)], [SPL(366837, 2)], [SPL(479380, 3)], [FS(354182, af=PITCH(1.15))], [FS(568000)])
+foe("spark", [SPL(675752, 3, min_len=0.6)], [FS(188949, dur=2.0)], [SPL(403253, 2)], [FS(264779)], [FS(559621), FS(210878, dur=1.0)])
+foe("frozen", [SPL(444444, 3, start=1.0, dur=20.0, min_len=0.8, af=PITCH(0.85))], [FS(467287, dur=3.0)], [S(A, "lab_creat80b*", "stomp_01.ogg"), FS(42201, dur=1.4)], [S(C, "lab_kimpact", "impactGlass_medium_00[0-1].ogg"), FS(567998)], [S(B, "bsb_lab_glass", "1591*"), FS(568000)])
+foe("thawed", [FS(483592, start=2.0, dur=2.0), FS(483592, start=9.0, dur=2.0)], [FS(396797)], [SPL(181068, 2, start=12.0, dur=12.0)], [FS(567998, af=PITCH(1.05))], [S(A, "lab_squish8*", "impactsplat05*"), FS(30931)])
+foe("soldier", [SPL(181068, 3, af=PITCH(0.82))], [FS(323819, af=PITCH(0.85))], [SPL(452154, 3)], [SPL(633193, 2, af=PITCH(0.85))], [FS(555426, af=PITCH(0.8)), FS(612699, start=1.4, dur=2.5, af=PITCH(0.85))], step=[SPL(698697, 4, af=PITCH(0.9), min_len=0.2)])
+foe("phase", [S(C, "lab_ghostvoice*", "*GhostMoan0[15].flac")], [SPL(518297, 1, min_len=2.0)], [FS(565024, start=2.4, dur=2.3)], [FS(725210, dur=1.0)], [FS(813270, start=12.2, dur=2.6)])
+foe("proto", [FS(240311, start=0.0, dur=2.0), FS(240311, start=6.0, dur=2.0)], [SPL(479380, 3, start=15.0, dur=20.0)], [SPL(479380, 2, start=0.0, dur=12.0)], [FS(354182)], [FS(366096, dur=5.0)], step=[SPL(809440, 3, af=PITCH(0.7), min_len=0.08)])
 # общие голоса тварей
-E("mutant_alert", "sfx", [S(A, "lab_growls16*", "monster.[5-9].ogg")], n=4, mx=1.8)
-E("mutant_attack", "sfx", [S(A, "lab_creat80b*", "attack_0[1-5].ogg")], n=4, mx=1.2)
-E("mutant_idle", "sfx", [S(A, "lab_monfx2*", "monster-[1-6].flac")], n=5, mx=1.4)
-E("mutant_hurt", "sfx", [S(A, "lab_creat80_*", "hurt_0[1-5].ogg")], n=4)
-E("mutant_death", "sfx", [S(A, "lab_creat80b*", "die_0[1-4].ogg")], n=4)
-E("mutant_step", "step", [S(A, "lab_sfx100b*", "*footstep_0[12].ogg", af="asetrate=44100*0.8,aresample=44100,lowpass=f=2500")], n=2, v=0.8)
-E("mutant_summon", "sfx", [S(A, "lab_creat80_*", "howl.ogg")])
+E("mutant_alert", "sfx", [SPL(769200, 3), FS(179345), FS(204820)], n=4, mx=1.8)
+E("mutant_attack", "sfx", [SPL(204609, 1), FS(204610), FS(204611), SPL(154641, 2)], n=4, mx=1.2)
+E("mutant_idle", "sfx", [SPL(393518, 2, min_len=1.0), SPL(769200, 2, start=14.0, dur=17.0)], n=4, mx=1.6)
+E("mutant_hurt", "sfx", [FS(567998), FS(555426), SPL(633193, 2)], n=4, mx=1.0)
+E("mutant_death", "sfx", [FS(559621), FS(568000), FS(734841)], n=3, mx=2.6)
+E("mutant_step", "step", [("slice", FS(50724, af=PITCH(0.78)), 3), SPL(696374, 2, af=PITCH(0.75), min_len=0.15)], n=4, v=0.8)
+E("mutant_summon", "sfx", [FS(240311, start=0.0, dur=3.0)], mx=3.0)
 
 # ═════ РОБОТЫ ═════
-foe("drone", [S(B, "bsb_lab_robot", "19[78][13]*")], [S(C, "lab_bitvoice*", "*aggro-00[1-3].mp3")], [S(A, "lab_git_es", "locust blaster.flac"), S(A, "lab_git_es", "pulse.flac", af="asetrate=44100*1.15,aresample=44100")], [S(A, "lab_scifi_k*", "impactMetal_00[34].ogg")], [S(A, "lab_git_es", "explosion tiny.flac")])
-foe("spiderbot", [S(A, "lab_git_freedoom", "dsbspact.flac")], [S(A, "lab_git_freedoom", "dsbspsit.flac")], [S(A, "lab_metalwood*", "metal_spring_0[12].ogg"), S(B, "lab_rpg80*", "blade_01.ogg")], [S(A, "lab_scifi_k*", "impactMetal_00[12].ogg")], [S(A, "lab_git_freedoom", "dsbspdth.flac")], step=[S(A, "lab_git_freedoom", "dsbspwlk.flac")], sv=0.8)
-foe("repairbot", [S(A, "lab_git_freedoom", "dssawidl.flac")], [S(A, "lab_git_freedoom", "dssawup.flac")], [S(A, "lab_git_freedoom", "dssawful.flac"), S(A, "lab_git_freedoom", "dssawhit.flac")], [S(A, "lab_scifi_k*", "impactMetal_00[01].ogg")], [S(A, "lab_git_es", "explosion small.flac")], step=[S(C, "lab_robosteps*", "robot[13].flac")])
-foe("turret", [S(A, "lab_mechanical_mech*", "*.flac")], [S(A, "lab_digital63*", "pepSound3.mp3"), S(C, "lab_bitvoice*", "*aggro-00[45].mp3")], [S(A, "lab_git_es", "gatling.flac"), S(A, "lab_git_es", "repeater.flac")], [S(C, "lab_kimpact", "impactMetal_medium_00[1-2].ogg")], [S(A, "lab_git_es", "explosion small.flac")])
-foe("guardbot", [S(A, "lab_rts*", "destroyer.select.flac")], [S(A, "lab_rts*", "destroyer.ready.flac"), S(B, "bsb_lab_robot", "1973*")], [S(A, "lab_git_es", "heavy blaster.flac")], [S(A, "lab_scifi_k*", "impactMetal_00[03].ogg")], [S(A, "lab_rts*", "destroyer.die.flac")], step=[S(C, "lab_robosteps*", "robotstep[1-4].flac")], sv=0.9)
-foe("android", [S(B, "bsb_lab_scifi", "1976*"), S(B, "bsb_lab_robot", "1975*")], [S(B, "bsb_lab_scifi", "1980*"), S(A, "lab_robot1*", "*.mp3")], [S(A, "lab_git_es", "mod blaster.flac")], [S(A, "lab_scifi_k*", "impactMetal_00[24].ogg")], [S(A, "lab_electric_death_1*", "*.flac")], step=[S(A, "lab_metalsteps*", "metal_steps_1[5-9].flac", af="asetrate=44100*0.9,aresample=44100")], sv=0.7)
-foe("watcher", [S(A, "lab_mechanical_mech*", "*.flac", af="asetrate=44100*0.7,aresample=44100")], [S(A, "lab_git_freedoom", "dscybsit.flac")], [S(C, "lab_kimpact", "impactMetal_heavy_00[0-2].ogg", af="asetrate=44100*0.6,aresample=44100")], [S(A, "lab_scifi_k*", "impactMetal_00[13].ogg")], [S(A, "lab_git_freedoom", "dscybdth.flac")], step=[S(A, "lab_git_freedoom", "dshoof.flac")])
-foe("shieldbot", [S(A, "lab_shield*", "*- 4.flac")], [S(A, "lab_rts*", "artil.select.flac")], [S(C, "lab_kimpact", "impactMetal_heavy_00[34].ogg")], [S(A, "lab_shield*", "*- 7.flac")], [S(A, "lab_git_es", "explosion medium.flac")], step=[S(C, "lab_robosteps*", "robotstep[34].flac")])
-foe("sapper", [S(A, "lab_ibeeps*", "beep-1[0-3].flac")], [S(C, "lab_bitvoice*", "*aggro-006.mp3")], [S(A, "lab_metalwood*", "metal_spring_02.ogg")], [S(A, "lab_scifi_k*", "impactMetal_004.ogg")], [S(A, "lab_git_es", "explosion medium.flac")], step=[S(A, "lab_winch*", "*Marker #[56].flac")], sv=0.5)
-foe("hunter", [S(A, "lab_robotbird*", "*.flac", start=0.0, dur=1.2)], [S(A, "lab_robotbird*", "*.flac", start=1.2, dur=1.4)], [S(B, "lab_rpg80*", "blade_0[12].ogg"), S(C, "lab_kimpact", "impactPunch_heavy_00[3-4].ogg")], [S(A, "lab_scifi_k*", "impactMetal_00[23].ogg")], [S(A, "lab_electric_death*", "*.flac", af="asetrate=44100*1.2,aresample=44100")], step=[S(A, "lab_git_freedoom", "dsbspwlk.flac", af="asetrate=44100*1.35,aresample=44100")], sv=0.6)
-foe("mortar", [S(A, "lab_rts*", "artil.ready.flac")], [S(A, "lab_rts*", "artil.select.flac")], [S(A, "lab_rts*", "artil.action.flac")], [S(A, "lab_scifi_k*", "impactMetal_00[01].ogg")], [S(A, "lab_rts*", "artil.die.flac")], step=[S(C, "lab_robosteps*", "robot2.flac")])
+foe("drone", [FS(387985, start=5.0, dur=1.8), FS(387985, start=20.0, dur=1.8), FS(854382, start=1.0, dur=1.8)], [FS(343366, start=0.0, dur=1.6), S(C, "lab_bitvoice*", "*aggro-00[12].mp3")], [FS(343366, start=2.0, dur=1.0)], [SPL(144444, 2, min_len=0.1)], [FS(675752, start=5.7, dur=1.0), S(A, "lab_git_es", "explosion tiny.flac")])
+foe("spiderbot", [FS(723999, start=10.1, dur=0.8), FS(723999, start=11.6, dur=0.75), FS(740245)], [FS(740245, af=PITCH(1.2)), FS(505670)], [FS(406557, dur=0.6), SPL(687242, 2)], [SPL(144444, 2, min_len=0.1)], [FS(675752, start=7.0, dur=1.2)], step=[SPL(611355, 6, af=PITCH(1.25), min_len=0.06)], sv=0.8)
+foe("repairbot", [FS(611356, start=4.0, dur=1.8)], [FS(611356, start=16.6, dur=1.2)], [FS(611356, start=19.8, dur=1.4)], [SPL(144444, 2, min_len=0.1)], [FS(675752, start=11.2, dur=1.5), S(A, "lab_git_es", "explosion small.flac")], step=[S(C, "lab_robosteps*", "robot[13].flac")])
+foe("turret", [SPL(322021, 3, min_len=0.4)], [FS(322021, start=7.5, dur=1.2), S(A, "lab_digital63*", "pepSound3.mp3")], [FS(165042, start=1.0, dur=0.7), FS(165042, start=8.0, dur=0.7), FS(165042, start=15.0, dur=0.9)], [SPL(144444, 2, min_len=0.1)], [S(A, "lab_git_es", "explosion small.flac"), FS(336011)])
+foe("guardbot", [FS(813066, dur=2.0), FS(813071, dur=2.0)], [FS(813062, dur=1.6), FS(813069, dur=1.6)], [FS(483536), FS(484036)], [SPL(675951, 2, min_len=0.3)], [FS(490266, dur=2.5)], step=[FS(813053), FS(813054)], sv=0.9)
+foe("android", [SPL(824121, 3, start=8.9, dur=8.0, min_len=0.15)], [FS(813075), FS(813077, dur=1.8)], [FS(717584, start=0.25, dur=0.8), FS(803497)], [SPL(144444, 2, min_len=0.1)], [FS(210878, dur=1.5), FS(675752, start=14.4, dur=2.0)], step=[SPL(698697, 4, af=PITCH(0.95), min_len=0.2)], sv=0.7)
+foe("watcher", [FS(813072, dur=2.2)], [FS(813067, dur=2.0)], [FS(244983)], [SPL(675951, 2, min_len=0.3)], [FS(490266, dur=2.0)], step=[SPL(342235, 4)])
+foe("shieldbot", [S(A, "lab_shield*", "*- 4.flac")], [FS(813077, dur=1.6)], [FS(406557, dur=0.6)], [S(A, "lab_shield*", "*- 7.flac")], [S(A, "lab_git_es", "explosion medium.flac")], step=[FS(813055), FS(813056)])
+foe("sapper", [S(A, "lab_ibeeps*", "beep-1[0-3].flac")], [S(C, "lab_bitvoice*", "*aggro-006.mp3")], [S(A, "lab_metalwood*", "metal_spring_02.ogg")], [SPL(144444, 1, min_len=0.1)], [S(A, "lab_git_es", "explosion medium.flac"), FS(336011)], step=[SPL(611355, 4, af=PITCH(1.5), min_len=0.06)], sv=0.5)
+foe("hunter", [FS(505670), FS(740245, af=PITCH(0.9))], [FS(813074, dur=2.0)], [FS(406557, dur=0.5, af=PITCH(1.2)), SPL(687242, 1)], [SPL(144444, 2, min_len=0.1)], [FS(675752, start=16.7, dur=1.3)], step=[SPL(611355, 5, af=PITCH(1.1), min_len=0.06)], sv=0.6)
+foe("mortar", [S(A, "lab_rts*", "artil.ready.flac")], [S(A, "lab_rts*", "artil.select.flac")], [S(A, "lab_rts*", "artil.action.flac")], [SPL(675951, 1, min_len=0.3)], [S(A, "lab_rts*", "artil.die.flac"), FS(490266, dur=2.0)], step=[FS(815039)])
 E("mortar_fire", "sfx", [S(A, "lab_rts*", "artil.action.flac")], mx=1.6)
 foe("relay", [S(A, "lab_scifi_k*", "computerNoise_003.ogg", dur=1.6)], [S(B, "bsb_lab_radio", "2618*", start=3.0, dur=1.8)], [S(A, "lab_git_freedoom", "dsradio.flac")], [S(A, "lab_scifi_k*", "forceField_00[23].ogg")], [S(A, "lab_electric_deathboom*", "*.flac")])
-foe("micro", [S(B, "bsb_lab_insect", "1000*", start=1.0, dur=1.4)], [S(A, "lab_creat80b*", "bug_0[5-7].ogg", af="asetrate=44100*1.5,aresample=44100")], [S(A, "lab_scifi_k*", "laserSmall_00[0-2].ogg")], [S(A, "lab_interface*", "glitch_00[1-3].ogg")], [S(A, "lab_git_es", "explosion tiny.flac", af="asetrate=44100*1.4,aresample=44100")])
-foe("titan", [S(C, "lab_robosteps*", "robotstand.flac")], [S(A, "lab_git_freedoom", "dsspisit.flac")], [S(A, "lab_git_freedoom", "dsmanatk.flac"), S(A, "lab_git_es", "plasma discharger.flac")], [S(C, "lab_kimpact", "impactMetal_heavy_00[0-2].ogg")], [S(A, "lab_git_freedoom", "dsspidth.flac")], step=[S(C, "lab_robosteps*", "robotstomp.flac"), S(A, "lab_git_freedoom", "dshoof.flac", af="asetrate=44100*0.75,aresample=44100")], sv=1.0)
+foe("micro", [FS(387985, start=30.0, dur=1.5, af=PITCH(1.6))], [S(A, "lab_creat80b*", "bug_0[5-7].ogg", af="asetrate=44100*1.5,aresample=44100")], [FS(264779, af=PITCH(1.4))], [S(A, "lab_interface*", "glitch_00[1-3].ogg")], [S(A, "lab_git_es", "explosion tiny.flac", af="asetrate=44100*1.4,aresample=44100")])
+foe("titan", [FS(739197, start=0.4, dur=1.7, af=PITCH(0.8)), FS(813072, dur=2.0, af=PITCH(0.8))], [FS(813066, dur=2.0, af=PITCH(0.85))], [FS(162260, start=2.9, dur=2.0), FS(239138, dur=1.0)], [SPL(675951, 2, af=PITCH(0.8), min_len=0.3)], [FS(490266)], step=[SPL(837389, 4), SPL(342235, 2, af=PITCH(0.85))], sv=1.0)
 # общие голоса роботов
-E("robot_alert", "sfx", [S(C, "lab_bitvoice*", "*aggro-00[1-6].mp3"), S(A, "lab_digital63*", "pepSound[23].mp3")], n=6)
-E("robot_attack", "sfx", [S(A, "lab_git_es", "blaster.flac", af="asetrate=44100*0.9,aresample=44100")])
-E("robot_idle", "sfx", [S(B, "bsb_lab_robot", "19*"), S(A, "lab_mechanical_mech*", "*.flac")], n=5, mx=1.2)
-E("robot_hurt", "sfx", [S(A, "lab_scifi_k*", "impactMetal_00*.ogg")], n=4, mx=0.7)
-E("robot_death", "sfx", [S(A, "lab_git_es", "explosion small.flac"), S(A, "lab_electric_death_1*", "*.flac")], n=2, mx=2.0)
-E("robot_step", "step", [S(C, "lab_robosteps*", "robotstep[1-4].flac"), S(A, "lab_mechanical_mech*", "*.flac")], n=6, mx=0.7, v=0.85)
+E("robot_alert", "sfx", [FS(813062, dur=1.5), FS(813069, dur=1.5), FS(813075), S(C, "lab_bitvoice*", "*aggro-00[1-2].mp3")], n=5)
+E("robot_attack", "sfx", [FS(717584, start=0.25, dur=0.8)])
+E("robot_idle", "sfx", [SPL(824121, 2, start=8.9, dur=8.0, min_len=0.15), FS(723999, start=10.1, dur=0.8), FS(740245)], n=4, mx=1.2)
+E("robot_hurt", "sfx", [SPL(144444, 4, min_len=0.1)], n=4, mx=0.7)
+E("robot_death", "sfx", [FS(210878, dur=1.6), FS(490266, dur=2.0)], n=2, mx=2.0)
+E("robot_step", "step", [SPL(611355, 4, min_len=0.06), FS(211957)], n=5, mx=0.7, v=0.85)
 E("robot_radio", "sfx", [S(A, "lab_git_freedoom", "dsradio.flac"), S(C, "lab_comp9*", "tick.flac")], n=2)
-E("robot_dodge", "sfx", [S(A, "lab_mechanical_mech*", "*.flac", af="asetrate=44100*1.3,aresample=44100")], n=2)
+E("robot_dodge", "sfx", [FS(740245, af=PITCH(1.3)), FS(505670, af=PITCH(1.2))], n=2)
 E("robot_retreat", "sfx", [S(A, "lab_rts*", "destroyer.underattack.flac")])
 E("robot_repair", "sfx", [S(A, "lab_metalwood*", "tools_1[0-2].ogg")], n=3)
 E("robot_summon", "sfx", [S(A, "lab_digital63*", "powerUp8.mp3"), S(C, "lab_comp9*", "teleport.flac")], n=2)
 E("robot_hello", "sfx", [S(B, "bsb_lab_robot", "1973*")])
 E("npc_hello", "sfx", [S(A, "lab_creat80b*", "human_0[1-4].ogg")], n=4, v=0.7)
 E("foe_aim", "sfx", [S(A, "lab_electric_charge.wav", "*.flac", start=0.0, dur=0.7)], v=0.9, mx=0.7)
-E("foe_shot_energy", "sfx", [S(A, "lab_git_es", "blaster.flac", af="asetrate=44100*0.8,aresample=44100")])
-E("foe_shot_shock", "sfx", [S(A, "lab_electric_groundhit*", "*.flac")])
+E("foe_shot_energy", "mixv", [[L(FS(717585, start=0.6, dur=0.8)), L(FS(331240, start=6.4, dur=0.4), 0.0, 0.5)], [L(FS(392229)), L(FS(331240, start=8.0, dur=0.4), 0.0, 0.5)]], mx=0.9)
+E("foe_shot_shock", "sfx", [FS(403253, start=7.05, dur=0.5), FS(403253, start=9.65, dur=0.5)], n=2, mx=0.7)
 E("foe_shot_spit", "sfx", [S(A, "lab_creat80_*", "spit_0[1-3].ogg")], n=3)
-E("foe_shot_cold", "sfx", [S(B, "bsb_lab_hiss", "3019*")], mx=0.8)
-E("foe_shot_phys", "sfx", [S(A, "lab_git_es", "gatling.flac")])
+E("foe_shot_cold", "sfx", [FS(371839, start=3.55, dur=0.6), FS(371839, start=7.6, dur=0.9)], n=2, mx=0.8)
+E("foe_shot_phys", "sfx", [FS(482122), FS(239138, dur=1.0)], n=2, mx=1.2)
 E("shield_up", "sfx", [S(A, "lab_shield*", "*- 4.flac")], mx=1.2)
 E("shield_break", "sfx", [S(C, "lab_kimpact", "impactGlass_heavy_00[0-2].ogg"), S(A, "lab_shield*", "*- 9.flac")], n=3, mx=1.2)
 E("shield_hit_foe", "sfx", [S(A, "lab_shield*", "*- 8.flac")], mx=0.8)
 E("phase_out", "sfx", [S(A, "lab_digital63*", "phaseJump4.mp3")])
 E("phase_in", "sfx", [S(A, "lab_git_freedoom", "dstelept.flac")])
+
+E("w_magnetron_r", "mixv", [[L(FS(699655)), L(FS(210878, start=0.5, dur=0.6), 0.0, 0.45)], [L(FS(699655, af=PITCH(1.06))), L(FS(210878, start=2.0, dur=0.6), 0.0, 0.45)]], mx=1.3)
 
 # ═════ ФОН: уровни, помещения, события ═════
 E("amb_l1", "loop", [S(B, "bsb_lab_vent", "3598*")], seg=(5, 36), xf=3.0, ch=2, v=0.8)
@@ -706,11 +724,11 @@ E("ev_far_scream", "sfx", [S(C, "lab_horrorlib*", "Scream_Male_0[1-4].mp3", af="
 E("ev_pipe_knock", "sfx", [S(A, "lab_metalwood*", "hammer_0[1-4].ogg", af="lowpass=f=1600")], n=4)
 E("ev_robot_far", "sfx", [S(A, "lab_rts*", "*.select.flac", af="lowpass=f=1800"), S(B, "bsb_lab_robot", "19[78]*", af="lowpass=f=1800")], n=4)
 E("ev_drip", "sfx", [S(C, "lab_horrorlib*", "Blood_Drip_0[0-6].mp3")], n=6)
-E("ev_skitter", "sfx", [S(A, "lab_creat80b*", "bug_0[5-9].ogg", af="lowpass=f=2500")], n=4)
+E("ev_skitter", "sfx", [FS(380769, start=10.0, dur=1.5, af="lowpass=f=2500"), FS(380769, start=20.0, dur=1.5, af="lowpass=f=2500")], n=2)
 E("ev_cry", "sfx", [S(C, "lab_horrorlib*", "Breath_Scared_0[5-9].mp3", af="lowpass=f=2400")], n=4)
 E("ev_bubbles", "sfx", [S(A, "lab_water40*", "bubble_0[1-3].ogg")], n=3)
 E("ev_rustle", "sfx", [S(A, "lab_metalwood*", "wood_cracking_0[1-4].ogg", af="lowpass=f=2000")], n=4)
-E("ev_far_roar", "sfx", [S(A, "lab_deeproar*", "*.flac", af="lowpass=f=1200"), S(A, "lab_troll*", "troll-roars*", start=0, dur=3, af="lowpass=f=1100")], n=2, mx=4.0)
+E("ev_far_roar", "sfx", [SPL(69572, 2, start=10.0, dur=10.0, af="lowpass=f=1200"), FS(240311, start=0.0, dur=3.5, af="lowpass=f=900")], n=3, mx=4.0)
 E("ev_steam", "sfx", [S(B, "bsb_lab_hiss", "30*")], n=2, mx=2.5)
 E("ev_glass", "sfx", [S(A, "lab_sfx100_*", "glass_0[45].ogg")], n=2)
 E("ev_heart", "sfx", [S(A, "lab_heart*", "*.flac")], mx=2.2)
@@ -735,7 +753,7 @@ E("evl_surge", "loop", [S(C, "lab_emfields*", "EM Fields 06.flac")], seg=(1, 16)
 E("evl_steam", "loop", [S(B, "bsb_lab_steam", "3016*")], seg=(20, 16), xf=2.0, v=0.4)
 E("evl_quake", "loop", [S(B, "bsb_lab_rumble", "3114*")], seg=(0, 10), xf=2.0, v=0.4)
 
-# ═════ МУЗЫКА (идёт потоком, не грузится в память целиком) ═════
+# ═════ МУЗЫКА (петли в памяти: моно, до 110 секунд; в памяти — только звучащая) ═════
 E("mus_menu", "music", [S(C, "lab_menacing*", "*.mp3")], v=1.0)
 E("mus_prologue", "music", [S(C, "lab_bleakterm*", "*.mp3")], v=1.0)
 E("mus_l1", "music", [S(C, "lab_searching*", "*.ogg")], v=1.0)
@@ -767,7 +785,7 @@ def gen(name):
     raise SystemExit("нет синтеза " + name)
 
 # ═════ СБОРКА ═════
-GROUP = {"ui": "ui", "step": "step", "bcn": "bcn", "loop": "amb", "music": "mus", "voice": "fx", "sfx": "fx", "mix": "fx", "seq": "fx", "gen": "fx"}
+GROUP = {"ui": "ui", "step": "step", "bcn": "bcn", "loop": "amb", "music": "mus", "voice": "fx", "sfx": "fx", "mix": "fx", "mixv": "fx", "seq": "fx", "gen": "fx"}
 MISSING = []
 def resolve(src):
     _, R, pack, pat, o = src
@@ -803,6 +821,25 @@ def build():
             credits_used.setdefault(pk, set()).add(rel)
         if kind == "gen":
             outs.append(loudnorm(gen(sp["srcs"]), TARGET["sfx"]))
+        elif kind == "mixv":
+            # несколько вариантов, каждый — сведение слоёв (выстрел + разряд и т. п.)
+            for var in sp["srcs"]:
+                mix = None
+                for layer, off, g in var:
+                    fs = resolve(layer)
+                    if not fs: MISSING.append(id_ + ": " + str(layer[1:4])); continue
+                    path, lo = fs[0]
+                    use(path)
+                    a = process_one(path, lo, "sfx", 6.0)
+                    a = loudnorm(a, -18) * g
+                    pad = int(off * SR)
+                    need = pad + len(a)
+                    if mix is None: mix = np.zeros(need, dtype=np.float32)
+                    if len(mix) < need: mix = np.concatenate([mix, np.zeros(need - len(mix), dtype=np.float32)])
+                    mix[pad: pad + len(a)] += a
+                if mix is None: continue
+                if sp["mx"]: mix = cap(mix, sp["mx"])
+                outs.append(fade(loudnorm(mix, TARGET["sfx"]), 0.003, 0.2))
         elif kind == "mix":
             mix = None
             for layer, off, g in sp["srcs"]:
@@ -854,7 +891,7 @@ def build():
                     if not fs: MISSING.append(id_ + " (slice)"); continue
                     path, lo = fs[0]
                     use(path)
-                    a = decode(path, 0, 30, ch=1)
+                    a = decode(path, lo.get("start", 0), lo.get("dur", 30), ch=1, af=lo.get("af"))
                     for seg in onsets(a, k): items.append(("arr", seg))
                     continue
                 fs = resolve(s)
@@ -875,8 +912,12 @@ def build():
                         a = process_one(path, lo2, kind, None, ch=o.get("ch", 1))
                         a = loopify(a, o.get("xf", 1.0))
                     elif kind == "music":
-                        a = process_one(path, lo, kind, None, ch=2)
-                        a = fade(a, 0.5, 3.0)
+                        # Музыка — петля в памяти (не поток: поток в WebView молчит):
+                        # моно, не длиннее 110 секунд, конец сведён в начало.
+                        a = process_one(path, lo, kind, None, ch=1)
+                        mx_s = o.get("max", 110)
+                        a = a[: int((mx_s + 4.0) * SR)]
+                        a = loopify(a, 4.0)
                     else:
                         a = process_one(path, lo, kind, sp["mx"])
                 if len(a) < int(0.02 * SR): continue
@@ -887,13 +928,14 @@ def build():
         files = []
         for k, a in enumerate(outs):
             rel = "%s/%s_%d.ogg" % (grp, id_, k + 1)
-            q = 2 if kind == "music" else (3 if kind == "loop" else 4)
+            q = 3 if kind in ("music", "loop") else 4
             encode(a, os.path.join(OUT, rel), q)
             files.append(rel)
             total += os.path.getsize(os.path.join(OUT, rel))
         bus = sp["bus"] or {"ui": "ui", "bcn": "beacon", "loop": "amb", "music": "music"}.get(kind, "fx")
         out_defs[id_] = {"f": files, "o": {"v": round(sp["v"], 2), "bus": bus}}
-        if kind in ("loop", "music"): out_defs[id_]["o"]["stream"] = kind == "music" or len(outs[0]) > 12 * SR
+        # длинные петли (музыка, фон уровня) держатся в памяти, только пока звучат
+        if kind in ("loop", "music") and (kind == "music" or len(outs[0]) > 12 * SR): out_defs[id_]["o"]["long"] = True
         print("%-22s %d вар., %s" % (id_, len(files), kind))
     return out_defs, credits_used, total
 
@@ -901,7 +943,7 @@ def write_js(defs):
     # сразу — общее для всех уровней; голоса врагов, пол и события уровня грузит atmos.js
     core = [k for k in defs if re.match(r"^(ui_|bump_|door_|bcn_|pick_|near_|nav_|w_|hit_|impact_|card_|keypad|code_)", k)]
     lvl = re.compile(r"^(step_|amb_|room_|evl_|ev_|mus_)|_(idle|alert|attack|hurt|death|step)$")
-    allids = [k for k, d in defs.items() if not d["o"].get("stream") and not lvl.search(k)]
+    allids = [k for k, d in defs.items() if not d["o"].get("long") and not lvl.search(k)]
     js = ["/* Записи «Подземной лаборатории»: что звучит и откуда. Файл собран",
           "   lab/tools/build_sounds.py — правьте сборщик, а не этот файл. */",
           "(function () {", "\"use strict\";", "var LAB = window.LAB;",

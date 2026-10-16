@@ -7,7 +7,14 @@
    ════════════════════════════════════════════════════════════════════ */
 var LAB = (typeof window !== "undefined" ? (window.LAB = window.LAB || {}) : (globalThis.LAB = globalThis.LAB || {}));
 
-LAB.VERSION = "1.0";
+LAB.VERSION = "Альфа 1.0";
+/* Компьютер (сборка для Windows) или телефон: подсказки говорят о клавишах
+   или о жестах. На телефоне с подключённой клавиатурой подсказки сами
+   переходят на клавиши после первого нажатия, а после касания — обратно. */
+LAB.desktop = typeof window !== "undefined" && !!window.LabDesktop;
+LAB.keysMode = LAB.desktop || (typeof window !== "undefined" && typeof navigator !== "undefined" && !("ontouchstart" in window) && !(navigator.maxTouchPoints > 0));
+LAB.kb = function () { return !!(LAB.desktop || LAB.keysMode); };
+LAB.K = function (touch, keys) { return LAB.kb() ? keys : touch; };
 LAB.LEVELS_N = 10;
 LAB.FLOORS_N = 20;
 

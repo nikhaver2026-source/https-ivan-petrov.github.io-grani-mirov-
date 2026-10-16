@@ -135,16 +135,16 @@ jobs:
           BUILD_NUMBER: ${{ github.run_number }}
         run: |
           (cd lab/android && gradle --no-daemon :app:assembleRelease)
-          cp lab/android/app/build/outputs/apk/release/app-release.apk podzemnaya-laboratoriya.apk
-          "$ANDROID_HOME/build-tools/36.0.0/apksigner" verify --print-certs podzemnaya-laboratoriya.apk | head -4
-          "$ANDROID_HOME/build-tools/36.0.0/aapt2" dump badging podzemnaya-laboratoriya.apk | head -4
-          ls -la podzemnaya-laboratoriya.apk
+          cp lab/android/app/build/outputs/apk/release/app-release.apk Podzemnaya-laboratoriya-Alfa-1.0.apk
+          "$ANDROID_HOME/build-tools/36.0.0/apksigner" verify --print-certs Podzemnaya-laboratoriya-Alfa-1.0.apk | head -4
+          "$ANDROID_HOME/build-tools/36.0.0/aapt2" dump badging Podzemnaya-laboratoriya-Alfa-1.0.apk | head -4
+          ls -la Podzemnaya-laboratoriya-Alfa-1.0.apk
 
       - name: APK — на страницу сборки
         uses: actions/upload-artifact@v4
         with:
-          name: podzemnaya-laboratoriya-apk
-          path: podzemnaya-laboratoriya.apk
+          name: podzemnaya-laboratoriya-alfa-1.0-apk
+          path: Podzemnaya-laboratoriya-Alfa-1.0.apk
           compression-level: 0
           retention-days: 90
 
@@ -179,7 +179,7 @@ jobs:
           disk-size: 6G
           emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
           disable-animations: true
-          script: bash lab/android/install-check.sh podzemnaya-laboratoriya.apk
+          script: bash lab/android/install-check.sh Podzemnaya-laboratoriya-Alfa-1.0.apk
 
       - name: Установка и самопроверка на Android 15
         uses: reactivecircus/android-emulator-runner@v2
@@ -190,21 +190,21 @@ jobs:
           disk-size: 6G
           emulator-options: -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim -camera-back none
           disable-animations: true
-          script: bash lab/android/install-check.sh podzemnaya-laboratoriya.apk
+          script: bash lab/android/install-check.sh Podzemnaya-laboratoriya-Alfa-1.0.apk
 
       - name: Выпуск «lab-android-latest»
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           gh release delete lab-android-latest --cleanup-tag -y || true
-          SIZE=$(stat -c %s podzemnaya-laboratoriya.apk)
+          SIZE=$(stat -c %s Podzemnaya-laboratoriya-Alfa-1.0.apk)
           cat > "$RUNNER_TEMP/notes.md" <<EOF
-          «Подземная лаборатория» — звуковая игра для Android 9 и новее. Сборка ${GITHUB_RUN_NUMBER} из ${GITHUB_REF_NAME} (${GITHUB_SHA}).
+          «Подземная лаборатория» Альфа 1.0 — звуковая игра для Android 9 и новее. Сборка ${GITHUB_RUN_NUMBER} из ${GITHUB_REF_NAME} (${GITHUB_SHA}).
 
-          Полная сборка: вся игра внутри одного файла podzemnaya-laboratoriya.apk (${SIZE} байт) — речь, звуки, музыка. Сеть не нужна, докачивать ничего не надо.
+          Полная сборка: вся игра внутри одного файла Podzemnaya-laboratoriya-Alfa-1.0.apk (${SIZE} байт) — речь, звуки, музыка. Сеть не нужна, докачивать ничего не надо. Подключённая клавиатура тоже работает: W A S D — шаг, R — оружие, стрелки — выстрел.
 
           Проверено: ставится и запускается на эмуляторах Android 9 и Android 15, самопроверка игры пройдена.
           EOF
-          gh release create lab-android-latest podzemnaya-laboratoriya.apk --prerelease --target "$GITHUB_SHA" \
-            --title "Подземная лаборатория для Android (сборка ${GITHUB_RUN_NUMBER})" \
+          gh release create lab-android-latest Podzemnaya-laboratoriya-Alfa-1.0.apk --prerelease --target "$GITHUB_SHA" \
+            --title "Подземная лаборатория Альфа 1.0 для Android (сборка ${GITHUB_RUN_NUMBER})" \
             --notes-file "$RUNNER_TEMP/notes.md"

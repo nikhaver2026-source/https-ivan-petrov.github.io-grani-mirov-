@@ -32,12 +32,14 @@ function boot() {
   var t = document.getElementById("pageTitle"), x = document.getElementById("pageText"), h = document.getElementById("pageHint");
   if (t) t.textContent = LAB.TITLE;
   if (x) x.textContent = LAB.SUBTITLE + ". Игра для незрячих и для тех, кто играет на слух.";
-  if (h) h.textContent = "Коснитесь экрана, чтобы начать.";
+  if (h) h.textContent = LAB.K("Коснитесь экрана, чтобы начать.", "Нажмите любую клавишу, чтобы начать.");
   var pad = document.getElementById("pad");
   if (pad) pad.addEventListener("pointerdown", start, { once: true });
   document.addEventListener("keydown", function kd(e) { document.removeEventListener("keydown", kd); start(e); });
   /* телефон говорит и без касания — подскажем, что делать */
-  setTimeout(function () { if (!started) LAB.say(LAB.TITLE + ". Коснитесь экрана, чтобы начать."); }, 900);
+  setTimeout(function () { if (!started) LAB.say(LAB.TITLE + ". " + LAB.K("Коснитесь экрана, чтобы начать.", "Нажмите любую клавишу, чтобы начать.")); }, 900);
+  /* компьютер: звук разрешён приложением — игра начинается сама */
+  if (LAB.desktop) setTimeout(function () { start(null); }, 500);
   /* уход в фон: записать игру и приглушить звук */
   document.addEventListener("visibilitychange", function () {
     var hidden = document.hidden;
@@ -75,15 +77,23 @@ LAB.selftest = function () {
       floors++;
     }
   });
-  step("audio", function () { LAB.Bank.preload(["step_tile", "bump_wall", "bcn_gatecard"]); });
+  step("audio", function () { LAB.Bank.preload(["step_plate", "bump_wall", "bcn_gatecard", "mus_l1", "amb_l1"]); });
   setTimeout(function () {
-    var audio = LAB.Bank.ready("step_tile") && LAB.Bank.ready("bump_wall");
+    var audio = LAB.Bank.ready("step_plate") && LAB.Bank.ready("bump_wall");
+    /* музыка и фон уровня — из памяти: запись декодирована и петля запускается */
+    var musicOk = false;
+    try { var h = LAB.Bank.ready("mus_l1") && LAB.Bank.play("mus_l1", { bus: "music", loop: true, gain: 0.01 }); musicOk = !!h && h.dur > 60; if (h) h.stop(0.05); } catch (e) { musicOk = false; }
+    var ambOk = LAB.Bank.ready("amb_l1");
+    if (!musicOk) fails.push("музыка не играет");
+    if (!ambOk) fails.push("фон уровня не декодировался");
     var tts = "";
     try { tts = window.LabTTS ? window.LabTTS.status() + (window.LabTTS.hasRussian() ? ", русский есть" : ", русского нет") : "нет моста"; } catch (e) { tts = "?"; }
     if (!audio) fails.push("звук не декодировался");
-    log((fails.length ? "selftest FAIL: " + fails.join(" | ") : "selftest ok") + "; этажей: " + floors + "; звук: " + (audio ? "да" : "нет") + "; речь: " + tts + "; движок речи: " + LAB.Speech.backend);
+    /* компьютер: голосов Microsoft нет — без голосов игрока говорит встроенный eSpeak */
+    if (LAB.desktop && LAB.Speech.backend === "espeak" && LAB.Speech.espSt !== "ready") fails.push("встроенный eSpeak не поднялся");
+    log((fails.length ? "selftest FAIL: " + fails.join(" | ") : "selftest ok") + "; этажей: " + floors + "; звук: " + (audio ? "да" : "нет") + "; музыка: " + (musicOk ? "да" : "нет") + "; речь: " + tts + "; движок речи: " + LAB.Speech.backend + (LAB.Speech.backend === "espeak" ? " (" + LAB.Speech.espSt + ")" : ""));
     LAB.ui.mainMenu();
-  }, 6000);
+  }, 9000);
 };
 
 if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", boot);
