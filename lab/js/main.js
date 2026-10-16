@@ -15,8 +15,8 @@ function start(e) {
   if (e && e.type === "pointerdown" && LAB.input && LAB.input.swallow) LAB.input.swallow();
   LAB.AE.ensure();
   try { if (LAB.AE.ctx && LAB.AE.ctx.state === "suspended") LAB.AE.ctx.resume(); } catch (x) { /* */ }
-  LAB.Bank.preload(LAB.SOUND_CORE || []);
-  setTimeout(function () { LAB.Bank.preload(LAB.SOUND_ALL || []); }, 4000);
+  LAB.Sound.preload(LAB.SOUND_CORE || []);
+  setTimeout(function () { LAB.Sound.preload(LAB.SOUND_ALL || []); }, 4000);
   /* пролог звучит в начале новой игры («Начать игру»); сначала — главное меню */
   LAB.ui.mainMenu();
 }
@@ -88,7 +88,7 @@ LAB.selftest = function () {
     }
     LAB.game.enterFloor(1, 1, "start", true);
   });
-  step("audio", function () { LAB.Bank.preload(["step_plate", "bump_wall", "bcn_gatecard"]); });
+  step("audio", function () { LAB.Sound.preload(["step_plate", "bump_wall", "bcn_gatecard"]); });
   /* Музыка и фон уровня — из памяти. Проверяется уровень, где стоит герой:
      музыку прошлых уровней игра сама выгружает. Ждём декодирования до 40 с. */
   var cur = LAB.game.G.L, musId = "mus_l" + cur, ambId = LAB.LEVELS[cur].amb || "amb_l" + cur, t0 = Date.now();

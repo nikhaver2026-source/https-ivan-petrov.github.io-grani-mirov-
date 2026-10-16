@@ -188,6 +188,14 @@ public class MainActivity extends Activity {
         if (web != null) web.evaluateJavascript("try{window.labPause&&window.labPause();}catch(e){}", null);
     }
 
+    /* Возврат на экран: единые обработчики звука и речи будят звук и повторяют
+       фразу, оборванную уходом в фон (labResume). */
+    @Override
+    protected void onResume() {
+        super.onResume();
+        if (web != null) web.evaluateJavascript("try{window.labResume&&window.labResume();}catch(e){}", null);
+    }
+
     @Override
     protected void onSaveInstanceState(Bundle out) {
         super.onSaveInstanceState(out);

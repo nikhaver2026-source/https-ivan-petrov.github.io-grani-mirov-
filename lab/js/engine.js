@@ -88,6 +88,14 @@ var AE = {
     this.applyVolumes();
     return c;
   },
+  /* Устройство сломалось — новое: шины, отзвук, шум заново. Записи в памяти
+     (AudioBuffer) годятся и новому устройству. */
+  rebuild: function () {
+    var old = this.ctx;
+    this.ctx = null; this.cache = {};
+    if (old && old.state !== "closed") { try { var p = old.close(); if (p && p.catch) p.catch(function () { /* */ }); } catch (e) { /* */ } }
+    return this.ensure();
+  },
   applyVolumes: function () {
     if (!this.ctx) return;
     var t = this.ctx.currentTime, d = this.duck;
@@ -407,7 +415,8 @@ var Bank = {
      Если записи ещё нет — o.fb (синтез) или тишина; запись при этом начинает грузиться. */
   play: function (id, o) {
     o = o || {};
-    if (!settings.effects && (o.bus || (this.defs[id] && this.defs[id].bus)) !== "voice") return null;
+    var bus0 = o.bus || (this.defs[id] && this.defs[id].bus);
+    if (!settings.effects && bus0 !== "voice" && bus0 !== "music") return null;
     var d = this.defs[id];
     if (!d || !AE.ensure()) { if (o.fb) LAB.synth(o.fb, o.fbms || 1500, AE[o.bus || "fx"], o.pan, o.gain); return null; }
     var ready = [];
@@ -489,7 +498,7 @@ var Speech = {
       try { window.speechSynthesis.onvoiceschanged = pick; } catch (e) { /* */ }
     }
     if (this.hasBridge()) {
-      window.LabTTSStart = function (id) { if (self.cur && self.cur.id === id) self._arm(id, self.cur.text); };
+      window.LabTTSStart = function (id) { self._started(id); };
       window.LabTTSDone = function (id) { if (self.cur && self.cur.id === id) self._done(); };
       window.LabTTSError = function (id) { if (self.cur && self.cur.id === id) self._done(true); };
       var poll = 0;
@@ -507,6 +516,7 @@ var Speech = {
     }
     this.choose();
     if (settings.robotVoice) setTimeout(function () { self.loadESpeak(); }, 2500);
+    try { document.addEventListener("visibilitychange", function () { if (!document.hidden) self.resume(); }); } catch (e) { /* */ }
   },
   /* Голоса моста заново: телефон или компьютер (голоса перечитаны). */
   refreshBridge: function (st) {
@@ -521,11 +531,11 @@ var Speech = {
     var pref = settings.tts;
     var b = "none";
     if (pref === "espeak") b = "espeak";
-    else if (this.hasBridge() && this.bridgeState !== "failed" && (pref === "system" || this.bridgeHasRu())) b = "android";
+    else if (this.hasBridge() && !this.bridgeBad && this.bridgeState !== "failed" && (pref === "system" || this.bridgeHasRu())) b = "android";
     /* на компьютере голосов Windows (Microsoft) нет: говорит мост — NVDA, JAWS,
        установленные синтезаторы, — а без них встроенный eSpeak NG */
     else if (LAB.desktop) b = "espeak";
-    else if (this.hasWeb() && (pref === "system" || this.webVoice || (this.webVoices.length === 0 && !this.hasBridge()))) b = "web";
+    else if (this.hasWeb() && !this.webBad && (pref === "system" || this.webVoice || (this.webVoices.length === 0 && !this.hasBridge()))) b = "web";
     else b = "espeak";
     if (b === "espeak") this.loadESpeak();
     this.backend = b;
@@ -618,6 +628,22 @@ var Speech = {
     out.forEach(function (p) { if (merged.length && (merged[merged.length - 1] + " " + p).length < 160) merged[merged.length - 1] += " " + p; else merged.push(p); });
     return merged;
   },
+  /* ════ ЕДИНЫЙ ОБРАБОТЧИК РЕЧИ ════
+     Всё, что игра говорит, идёт через одну очередь — с какого бы синтезатора
+     ни звучало (телефон, браузер, мост компьютера: NVDA, JAWS, синтезаторы;
+     встроенный eSpeak NG):
+     • важность: срочное (опасность) перебивает событие, но очередь событий
+       не теряет; ответ на действие игрока перебивает и отменяет недосказанное
+       (игрок уже дальше); событие ждёт своей очереди; подсказка — если тихо;
+     • одно и то же подряд не повторяется, устаревшее событие не звучит;
+     • записка и длинный текст дочитываются до конца: фразы игры ждут;
+     • зависшая фраза не держит очередь: сторож ждёт начала и конца фразы,
+       при сбое повторяет её, при повторном — говорит её eSpeak; синтезатор,
+       который сбоит раз за разом, сменяется другим;
+     • фраза, оборванная уходом игры в фон, повторяется, когда игра вернулась. */
+  PRIO: { info: 0, event: 1, action: 2, urgent: 3 },
+  TTL: { 0: 4000, 1: 9000 },
+  fails: {}, hangs: 0, dropped: 0, estScale: 1, testEngine: null,
   /* Жест игрока: то, что скажется в ответ на него, может перебить чтение. */
   user: function () { this.userUntil = Date.now() + 450; },
   isUser: function () { return Date.now() <= this.userUntil; },
@@ -631,82 +657,177 @@ var Speech = {
     if (this.speaking || this.queue.length) this.stop();
     this.later = [];
   },
+  _prio: function (opts) {
+    var P = this.PRIO;
+    if (typeof opts.prio === "string") return P[opts.prio] != null ? P[opts.prio] : P.event;
+    if (typeof opts.prio === "number") return opts.prio;
+    if (opts.urgent) return P.urgent;
+    return opts.interrupt === false ? P.event : P.action;
+  },
   /* Длинный текст (записка, глава руководства, пролог) дочитывается до конца:
      фразы игры, сказанные без жеста игрока, ждут конца чтения. Перебить
-     чтение может только сам игрок — любым жестом; четыре пальца вниз — тишина. */
+     чтение может только сам игрок — любым жестом; четыре пальца вниз — тишина.
+     opts: interrupt (false — в очередь), prio ("info" | "event" | "action" |
+     "urgent"), urgent, key (новая фраза с тем же ключом заменяет ждущую),
+     note, read, robot. */
   say: function (text, opts) {
     opts = opts || {};
     text = String(text == null ? "" : text);
+    if (!text.replace(/\s+/g, "")) return;
+    var P = this.PRIO, prio = this._prio(opts), user = this.isUser();
     var noteOn = this.noteBusy() && !opts.note;
-    var readOn = this.reading && (this.speaking || this.queue.length > 0) && !this.isUser() && !opts.urgent;
+    var readOn = this.reading && (this.speaking || this.queue.length > 0) && !user && prio < P.urgent && !opts.note;
     if (noteOn || readOn) {
-      this.later.push({ text: text, robot: !!opts.robot });
-      if (this.later.length > 3) this.later.shift();
+      /* ждёт конца чтения; из отложенного остаются самые важные и свежие */
+      this.later.push({ text: text, robot: !!opts.robot, prio: prio });
+      while (this.later.length > 4) {
+        var lo = 0; for (var i = 1; i < this.later.length; i++) if (this.later[i].prio < this.later[lo].prio) lo = i;
+        this.later.splice(lo, 1);
+      }
       return;
     }
     var live = LAB.desktop ? null : document.getElementById("liveRegion"); /* на компьютере чтец экрана не дублирует речь игры */
     if (live) { live.textContent = ""; var tt = text; requestAnimationFrame(function () { live.textContent = tt; }); }
     if (LAB.showCaption) LAB.showCaption(text);
     if (!settings.speech) return;
-    if (opts.interrupt !== false) { this.stop(true); this.later = []; }
-    var parts = this._chunk(text), self = this;
+    var now = Date.now(), full = text.replace(/\s+/g, " ").trim(), self = this;
+    /* то же самое уже звучит или ждёт — второй раз не нужно */
+    if (prio < P.action) {
+      if (this.cur && this.cur.full === full && now - this.cur.t0 < 2500) return;
+      for (var q = 0; q < this.queue.length; q++) if (this.queue[q].full === full) return;
+    }
+    if (opts.key) this.queue = this.queue.filter(function (it) { return it.key !== opts.key; });
+    var front = false;
+    if (prio >= P.action && opts.interrupt !== false) {
+      if (prio === P.urgent && !user && !opts.note) {
+        /* срочное: перебить фразу события, очередь событий оставить */
+        if (this.cur && this.cur.prio < P.urgent && !this.noteReading) this._cut();
+        front = true;
+      } else { this.stop(true); this.later = []; }
+    }
+    var parts = this._chunk(text);
     if (opts.note) { this.noteReading = true; this.reading = true; }
     else if (opts.read || text.length > 230) this.reading = true;
-    parts.forEach(function (p) { self.queue.push({ text: p, robot: !!opts.robot }); });
+    /* срок годности — у событий без жеста игрока: опоздавшее не звучит */
+    var ttl = prio <= P.event && !user && !opts.note && !opts.read ? (this.TTL[prio] || 9000) : 0;
+    var items = parts.map(function (p) { return { text: p, full: full, robot: !!opts.robot, prio: prio, key: opts.key || "", t: now, ttl: ttl, tries: 0 }; });
+    if (front) { var k = 0; while (k < this.queue.length && this.queue[k].prio >= P.urgent) k++; Array.prototype.splice.apply(this.queue, [k, 0].concat(items)); }
+    else Array.prototype.push.apply(this.queue, items);
+    /* длинная очередь событий: старые события уступают */
+    while (this.queue.length > 14) {
+      var drop = -1;
+      for (var j = 0; j < this.queue.length; j++) if (this.queue[j].prio <= P.event && this.queue[j].ttl) { drop = j; break; }
+      if (drop < 0) break;
+      this.queue.splice(drop, 1); this.dropped++;
+    }
     this._pump();
   },
-  /* Страховочный таймер: если движок не сообщил о конце фразы. Пока движок
-     ещё говорит — ждём дальше, а не перебиваем недосказанное. */
-  _arm: function (id, text) {
-    var self = this;
+  /* Сторож фразы. До начала: синтезатор молчит дольше четырёх секунд — фраза
+     не пошла (повторим). После начала: синтезатор замолчал, а о конце не
+     сообщил — фраза сказана; говорит втрое дольше ожидаемого — завис. */
+  _arm: function (id, text, started) {
+    var self = this, sc = this.estScale || 1;
     clearTimeout(this.timer);
-    var est = 4000 + String(text).length * 150 / Math.max(0.5, +settings.rate || 1), waited = 0;
+    if (!started) {
+      this.timer = setTimeout(function () {
+        if (!self.cur || self.cur.id !== id || self.cur.started) return;
+        if (self._engineBusy()) { self._started(id); return; }
+        var b = self.cur.backend;
+        /* синтезатор телефона ещё просыпается — ждём дальше, не повторяя фразу */
+        if (b === "android") { var st = ""; try { st = window.LabTTS.status(); } catch (e) { /* */ } if (st === "init" && Date.now() - self.cur.t0 < 20000) { self._arm(id, text, false); return; } }
+        /* мост компьютера о начале фразы не сообщает: ждём конца по времени */
+        if (!(b === "web" || b === "test" || (b === "android" && !LAB.desktop))) { self._started(id); return; }
+        self.hangs++; self._done(true);
+      }, 4000 * sc);
+      return;
+    }
+    var est = (4000 + String(text).length * 150 / Math.max(0.5, +settings.rate || 1)) * sc, waited = 0, step = 1500 * sc;
     var check = function () {
       if (!self.cur || self.cur.id !== id) return;
-      if (self._engineBusy() && waited < est * 3) { waited += 1500; self.timer = setTimeout(check, 1500); return; }
-      self._done(true);
+      if (self._engineBusy()) {
+        if (waited < est * 3) { waited += step; self.timer = setTimeout(check, step); return; }
+        self.hangs++; self._done(true); return;
+      }
+      self._done(false);
     };
     this.timer = setTimeout(check, est);
   },
+  _started: function (id) {
+    if (!this.cur || this.cur.id !== id || this.cur.started) return;
+    this.cur.started = true;
+    this._arm(id, this.cur.text, true);
+  },
   _engineBusy: function () {
     if (this.espSrc) return true;
+    if (this.backend === "test" && this.testEngine) return !!this.testEngine.busy();
     if (this.backend === "android" && this.hasBridge()) { try { if (window.LabTTS.isSpeaking) return !!window.LabTTS.isSpeaking(); } catch (e) { /* */ } return false; }
     if (this.backend === "web" && this.hasWeb()) { try { return !!window.speechSynthesis.speaking; } catch (e) { /* */ } }
     return false;
   },
+  /* Фраза кончилась (err — сбой): дальше по очереди; сбойную — ещё раз, потом eSpeak. */
   _done: function (err) {
     clearTimeout(this.timer); this.timer = null;
     if (this.espSrc) { try { this.espSrc.onended = null; } catch (e) { /* */ } this.espSrc = null; }
+    var cur = this.cur;
     this.cur = null; this.speaking = false;
     this._stopKeepAlive();
-    if (!this.queue.length) {
-      AE.setDuck(false);
-      if (this.reading || this.noteReading) {
-        this.reading = false; this.noteReading = false;
-        var later = this.later, self = this; this.later = [];
-        later.forEach(function (l) { self._chunk(l.text).forEach(function (p) { self.queue.push({ text: p, robot: l.robot }); }); });
-        if (later.length && LAB.showCaption) LAB.showCaption(later[later.length - 1].text);
-      }
+    if (cur) {
+      var b = cur.backend;
+      if (err) {
+        this.fails[b] = (this.fails[b] || 0) + 1;
+        var it = cur.item;
+        if (it && it.tries < 1) { it.tries++; this.queue.unshift(it); }
+        else if (it && it.tries < 2 && b !== "espeak" && this.espSt !== "failed" && this.backend !== "test") { it.tries++; it.viaEsp = true; this.queue.unshift(it); }
+        if (this.fails[b] >= 3 && b === this.backend) this._fallback(b);
+      } else this.fails[b] = 0;
     }
-    this._pump();
+    if (!this.queue.length) this._idle();
+    var self = this;
+    if (err) setTimeout(function () { self._pump(); }, 150); else this._pump();
+  },
+  /* Очередь пуста: музыка громче; отложенное на время чтения — теперь. */
+  _idle: function () {
+    AE.setDuck(false);
+    if (this.reading || this.noteReading) {
+      this.reading = false; this.noteReading = false;
+      var later = this.later, self = this; this.later = [];
+      later.forEach(function (l) { self._chunk(l.text).forEach(function (p) { self.queue.push({ text: p, full: l.text, robot: l.robot, prio: l.prio || 1, key: "", t: Date.now(), ttl: 0, tries: 0 }); }); });
+      if (later.length && LAB.showCaption) LAB.showCaption(later[later.length - 1].text);
+    }
+  },
+  /* Синтезатор сбоит раз за разом — говорит другой. */
+  _fallback: function (b) {
+    if (b === "android") this.bridgeBad = true;
+    else if (b === "web") this.webBad = true;
+    else return;
+    this.fails[b] = 0;
+    this.choose();
+    try { console.warn("[Лаборатория] речь: синтезатор " + b + " сбоит, теперь — " + this.backend); } catch (e) { /* */ }
   },
   _pump: function () {
     if (this.speaking || !this.queue.length) return;
+    var now = Date.now();
+    while (this.queue.length && this.queue[0].ttl && now - this.queue[0].t > this.queue[0].ttl) { this.queue.shift(); this.dropped++; }
+    if (!this.queue.length) { this._idle(); if (!this.queue.length) return; }
     var item = this.queue[0], self = this;
-    var useEsp = this.backend === "espeak" || (item.robot && settings.robotVoice && this.espSt === "ready");
+    var useEsp = this.backend === "espeak" || (item.robot && settings.robotVoice && this.espSt === "ready") || (item.viaEsp && this.backend !== "test");
     if (useEsp && this.espSt !== "ready") {
-      if (this.espSt === "failed") { if (this.backend === "espeak") { this.backend = this.hasWeb() ? "web" : "none"; } useEsp = false; }
-      else { this.loadESpeak(); return; } /* ждём загрузки — _pump позовут снова */
+      if (this.espSt === "failed") {
+        if (this.backend === "espeak") { this.backend = this.hasWeb() && !this.webBad ? "web" : this.hasBridge() && !this.bridgeBad ? "android" : "none"; }
+        if (item.viaEsp) { this.queue.shift(); this.dropped++; this._pump(); return; }
+        useEsp = false;
+      } else { this.loadESpeak(); return; } /* ждём загрузки — _pump позовут снова */
     }
     this.queue.shift();
     this.speaking = true;
     AE.setDuck(true);
-    var id = "u" + (++this.seq);
-    this.cur = { id: id, text: item.text };
-    this._arm(id, item.text);
+    var id = "u" + (++this.seq), backend = useEsp ? "espeak" : this.backend;
+    this.cur = { id: id, text: item.text, full: item.full, prio: item.prio, item: item, t0: now, started: false, backend: backend };
+    this._arm(id, item.text, false);
     if (useEsp) {
       var buf = this.espBuffer(item.text, item.robot);
       if (!buf) { this._done(true); return; }
+      this.cur.started = true;
       clearTimeout(this.timer);
       this.timer = setTimeout(function () { if (self.cur && self.cur.id === id) self._done(true); }, buf.duration * 1000 + 2500);
       var src = AE.ctx.createBufferSource(); src.buffer = buf;
@@ -726,18 +847,24 @@ var Speech = {
       try { src.start(); } catch (e) { this._done(true); }
       return;
     }
-    if (this.backend === "android") {
+    if (backend === "test" && this.testEngine) { try { this.testEngine.speak(item.text, id); } catch (e) { this._done(true); } return; }
+    if (backend === "android") {
       try { window.LabTTS.speak(item.text, +settings.rate || 1, +settings.voiceVol, id); } catch (e) { this._done(true); }
       return;
     }
-    if (this.backend === "web") {
+    if (backend === "web") {
       try {
         var u = new SpeechSynthesisUtterance(item.text);
         if (this.webVoice) { u.voice = this.webVoice; u.lang = this.webVoice.lang; } else u.lang = "ru-RU";
         u.rate = +settings.rate || 1; u.volume = Math.min(1, +settings.voiceVol);
-        u.onstart = function () { self._keepAliveOn(); };
+        u.onstart = function () { self._keepAliveOn(); self._started(id); };
         u.onend = function () { if (self.cur && self.cur.id === id) self._done(); };
-        u.onerror = function () { if (self.cur && self.cur.id === id) self._done(true); };
+        u.onerror = function (ev) {
+          if (!self.cur || self.cur.id !== id) return;
+          /* «перебито»/«отменено» — это мы сами остановили; иначе сбой */
+          var er = ev && ev.error;
+          self._done(!(er === "interrupted" || er === "canceled"));
+        };
         setTimeout(function () { try { window.speechSynthesis.speak(u); } catch (e) { self._done(true); } }, 20);
       } catch (e) { this._done(true); }
       return;
@@ -753,47 +880,136 @@ var Speech = {
     }, 9000);
   },
   _stopKeepAlive: function () { if (this.keepAlive) { clearInterval(this.keepAlive); this.keepAlive = null; } },
+  /* заглушить синтезатор (очередь при этом не трогается) */
+  _silence: function () {
+    if (this.espSrc) { try { this.espSrc.onended = null; this.espSrc.stop(); } catch (e) { /* */ } this.espSrc = null; }
+    if (this.backend === "test" && this.testEngine) { try { this.testEngine.stop(); } catch (e) { /* */ } }
+    if (this.hasBridge()) { try { window.LabTTS.stop(); } catch (e) { /* */ } }
+    if (this.hasWeb()) { try { window.speechSynthesis.cancel(); } catch (e) { /* */ } }
+  },
+  /* оборвать текущую фразу, очередь оставить (перед срочным) */
+  _cut: function () {
+    this.speaking = false; this.cur = null;
+    clearTimeout(this.timer); this.timer = null;
+    this._stopKeepAlive();
+    this._silence();
+  },
   stop: function (keepDuck) {
     this.queue = [];
     this.reading = false; this.noteReading = false;
     var was = this.speaking;
-    this.speaking = false; this.cur = null;
-    clearTimeout(this.timer); this.timer = null;
-    this._stopKeepAlive();
-    if (this.espSrc) { try { this.espSrc.onended = null; this.espSrc.stop(); } catch (e) { /* */ } this.espSrc = null; }
-    if (this.hasBridge()) { try { window.LabTTS.stop(); } catch (e) { /* */ } }
-    if (this.hasWeb()) { try { window.speechSynthesis.cancel(); } catch (e) { /* */ } }
+    this._cut();
     if (!keepDuck || !was) AE.setDuck(false);
+  },
+  /* Игра вернулась на экран: фраза, оборванная фоном, — ещё раз; очередь — дальше. */
+  resume: function () {
+    var self = this, cur = this.cur;
+    if (!cur) { this._pump(); return; }
+    setTimeout(function () {
+      if (self.cur !== cur || !self.speaking) return;
+      if (!self._engineBusy() && Date.now() - cur.t0 > 1500) {
+        var it = cur.item;
+        self._cut();
+        if (it) self.queue.unshift(it);
+        self._pump();
+      }
+    }, 700);
   },
   /* Тишина: четыре пальца вниз. Отложенное тоже забывается. */
   hush: function () { this.later = []; this.stop(); },
-  busy: function () { return this.speaking || this.queue.length > 0; }
+  busy: function () { return this.speaking || this.queue.length > 0; },
+  /* Самопроверка очереди (tests/sound.test.js): поддельный синтезатор — порядок
+     по важности, повторы, устаревшее, повтор после сбоя, сторож зависания,
+     записка и ответ на действие игрока. */
+  selfTest: function () {
+    var self = this, out = [], spoken = [], mode = { fail: 0, hang: false };
+    var saved = { backend: this.backend, speech: settings.speech, eng: this.testEngine, esp: this.espSt, ttl: this.TTL, user: this.userUntil };
+    settings.speech = true; this.hush(); this.userUntil = 0;
+    this.testEngine = {
+      speak: function (text, id) {
+        if (mode.fail > 0) { mode.fail--; setTimeout(function () { if (self.cur && self.cur.id === id) self._done(true); }, 5); return; }
+        spoken.push(text); self._started(id);
+        if (mode.hang) return;
+        setTimeout(function () { if (self.cur && self.cur.id === id) self._done(); }, 15);
+      },
+      stop: function () { }, busy: function () { return mode.hang; }
+    };
+    this.backend = "test"; this.estScale = 0.02; this.espSt = "failed";
+    var wait = function (ms) { return new Promise(function (r) { setTimeout(r, ms); }); };
+    var has = function (t) { return spoken.some(function (s) { return s.indexOf(t) >= 0; }); };
+    var at = function (t) { for (var i = 0; i < spoken.length; i++) if (spoken[i].indexOf(t) >= 0) return i; return -1; };
+    var reset = function () { self.hush(); spoken.length = 0; mode.fail = 0; mode.hang = false; };
+    return Promise.resolve().then(function () {
+      reset();
+      self.say("Событие один.", { interrupt: false }); self.say("Событие два.", { interrupt: false }); self.say("Опасность!", { prio: "urgent" });
+      return wait(250);
+    }).then(function () {
+      out.push([has("Опасность") && has("Событие два") && at("Опасность") < at("Событие два"), "речь: срочное — раньше ждущих событий, события не потеряны"]);
+      reset();
+      self.say("Повтор.", { interrupt: false }); self.say("Повтор.", { interrupt: false }); self.say("Повтор.", { interrupt: false });
+      return wait(200);
+    }).then(function () {
+      out.push([spoken.filter(function (s) { return s.indexOf("Повтор") >= 0; }).length === 1, "речь: одно и то же подряд не повторяется"]);
+      reset(); self.TTL = { 0: 40, 1: 40 }; mode.hang = true;
+      self.say("Длинная фраза.", { interrupt: false }); self.say("Старое событие.", { interrupt: false });
+      return wait(120);
+    }).then(function () {
+      mode.hang = false; if (self.cur) self._done(); self.TTL = saved.ttl;
+      return wait(100);
+    }).then(function () {
+      out.push([!has("Старое событие"), "речь: устаревшее событие не звучит"]);
+      reset(); mode.fail = 1;
+      self.say("Со второго раза.");
+      return wait(500);
+    }).then(function () {
+      out.push([has("Со второго раза"), "речь: фраза после сбоя синтезатора повторена"]);
+      reset(); mode.hang = true; var h0 = self.hangs;
+      self.say("Зависшая фраза."); self.say("Следом.", { interrupt: false });
+      return wait(600).then(function () { mode.hang = false; return wait(500); }).then(function () {
+        out.push([self.hangs > h0 && has("Следом"), "речь: зависшая фраза не держит очередь (сторож сработал " + (self.hangs - h0) + " раз)"]);
+      });
+    }).then(function () {
+      reset();
+      self.say("Записка. Текст записки до конца.", { note: true }); self.say("Событие во время записки.", { interrupt: false });
+      return wait(400);
+    }).then(function () {
+      out.push([has("Текст записки") && has("Событие во время записки") && at("Текст записки") < at("Событие во время записки"), "речь: записка дочитывается, событие звучит после неё"]);
+      reset(); mode.hang = true;
+      self.say("Ответ один."); self.say("Хвост.", { interrupt: false }); mode.hang = false; self.say("Ответ два.");
+      return wait(250);
+    }).then(function () {
+      out.push([has("Ответ два") && !has("Хвост"), "речь: ответ на новое действие отменяет недосказанное"]);
+    }).then(function () {
+      self.hush();
+      self.testEngine = saved.eng; self.backend = saved.backend; self.espSt = saved.esp; self.estScale = 1; self.TTL = saved.ttl;
+      settings.speech = saved.speech; self.userUntil = saved.user;
+      return { checks: out };
+    });
+  }
 };
 LAB.Speech = Speech;
 LAB.say = function (t, o) { Speech.say(t, o); };
 
 /* ════════ ИНТЕРФЕЙСНЫЕ СИГНАЛЫ ════════ */
+/* Сигналы интерфейса звучат через единый обработчик (LAB.Sound, sound.js). */
 var UI = {
   blip: function (f, d, v) {
-    if (!AE.ensure() || !settings.effects) return;
-    f = f || 880; d = d || 0.08; v = v == null ? 0.12 : v;
-    var c = AE.ctx, t = c.currentTime, o = c.createOscillator(), g = c.createGain();
-    o.type = "sine"; o.frequency.value = f; o.connect(g); g.connect(AE.ui);
-    g.gain.setValueAtTime(0.0001, t); g.gain.linearRampToValueAtTime(v, t + 0.01); g.gain.exponentialRampToValueAtTime(0.0001, t + d);
-    o.start(t); o.stop(t + d + 0.05);
+    if (!LAB.Sound) return;
+    LAB.Sound.tone(f || 880, d || 0.08, { vol: v == null ? 0.12 : v, attack: 0.01 });
   },
-  /* тон с панорамой и задержкой: мелодии звуковых замков */
+  /* тон с панорамой и задержкой: мелодии звуковых замков (звучат и при выключенных эффектах — это головоломка) */
   tone: function (f, d, pan, v, when) {
-    if (!AE.ensure()) return;
-    var c = AE.ctx, t = c.currentTime + (when || 0), o = c.createOscillator(), g = c.createGain(), out = g;
-    o.type = "triangle"; o.frequency.value = f; o.connect(g);
-    if (pan && c.createStereoPanner) { var p = c.createStereoPanner(); p.pan.value = pan; g.connect(p); out = p; }
-    out.connect(AE.ui);
-    v = v == null ? 0.2 : v;
-    g.gain.setValueAtTime(0.0001, t); g.gain.linearRampToValueAtTime(v, t + 0.015); g.gain.setValueAtTime(v, t + d * 0.7); g.gain.exponentialRampToValueAtTime(0.0001, t + d);
-    o.start(t); o.stop(t + d + 0.05);
+    if (!LAB.Sound) return;
+    LAB.Sound.tone(f, d, { type: "triangle", pan: pan, vol: v == null ? 0.2 : v, when: when, attack: 0.015, hold: true, force: true });
   },
-  rec: function (id, fb) { var h = Bank.play(id, { bus: "ui" }); if (!h && fb) fb(); return h; },
+  /* запись сигнала, а пока её нет в памяти — тон (запись тем временем грузится) */
+  rec: function (id, fb) {
+    var Snd = LAB.Sound;
+    if (Snd && Snd.has(id) && Snd.ready(id)) return Snd.play(id, { bus: "ui" });
+    if (Snd && Snd.has(id)) Snd.preload([id]);
+    if (fb) fb();
+    return null;
+  },
   click: function () { var self = this; this.rec("ui_click", function () { self.blip(700, 0.06, 0.06); }); },
   move: function () { var self = this; this.rec("ui_move", function () { self.blip(760, 0.05, 0.08); }); },
   open: function () { var self = this; this.rec("ui_open", function () { self.blip(520, 0.1, 0.1); setTimeout(function () { self.blip(780, 0.1, 0.1); }, 90); }); },

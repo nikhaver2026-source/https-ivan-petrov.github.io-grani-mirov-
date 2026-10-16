@@ -10,23 +10,19 @@
    ════════════════════════════════════════════════════════════════════ */
 (function () {
 "use strict";
-var LAB = window.LAB, S = LAB.settings, AE = LAB.AE, Bank = LAB.Bank;
+var LAB = window.LAB, S = LAB.settings, AE = LAB.AE, Bank = LAB.Bank, Snd = LAB.Sound;
 function G() { return LAB.game && LAB.game.G; }
 function CUR() { return LAB.game && LAB.game.CUR; }
 function idx(x, y) { return y * LAB.W + x; }
 var DIRV = { N: [0, -1], S: [0, 1], W: [-1, 0], E: [1, 0] };
 
-/* ── базовое: сыграть запись (или синтез) ── */
+/* ── базовое: сыграть запись (или синтез) — всё через единый обработчик звука ── */
 function has(id) { return Bank.has(id); }
 function play(id, o) {
   o = o || {};
-  if (!AE.ensure()) return null;
-  if (has(id)) {
-    var h = Bank.play(id, o);
-    if (h) return h;
-  }
   var fb = FB[id] || FB[id.replace(/_\d+$/, "")] || o.fb;
-  if (fb) LAB.synth(fb, o.fbms || 1600, AE[o.bus || "fx"], o.pan || (o.at ? LAB.spatial(o.at.dx, o.at.dy, o.at.occ).pan : 0), o.gain == null ? 1 : o.gain);
+  if (has(id)) { if (fb && !o.fb) o.fb = fb; return Snd.play(id, o); }
+  if (fb) Snd.synth(fb, o.fbms || 1600, o.bus || "fx", o.pan || (o.at ? LAB.spatial(o.at.dx, o.at.dy, o.at.occ).pan : 0), o.gain == null ? 1 : o.gain);
   return null;
 }
 /* Сыграть в точке этажа: панорама, громкость, глушение за стеной и за спиной. */
@@ -50,23 +46,14 @@ function sub(t) { if (S.subtitles) LAB.sub(t); }
 function isLong(id) { var d = LAB.SND && LAB.SND[id]; return !!(d && d.o && d.o.long); }
 function releaseLater(id, ms) {
   if (!id || !isLong(id)) return;
-  setTimeout(function () {
-    if ((mus.tid === id) || (bed && bed.id === id) || roomLid === id || evLayerId === id) return; /* снова нужна */
-    Bank.release([id]);
-  }, ms || 4000);
+  if ((mus.tid === id) || (bed && bed.id === id) || roomLid === id || evLayerId === id) return; /* снова нужна */
+  Snd.release(id, ms || 4000); /* обработчик выгрузит, только если запись точно не звучит и не нужна */
 }
-/* Петля из памяти; если запись ещё не загружена — загрузить и начать. */
-function loop(id, o) {
+/* Петля из памяти в именованной ячейке единого обработчика: если запись ещё
+   не загружена — загрузится и начнётся; замолчит сама — сторож запустит снова. */
+function loop(id, o, slot) {
   if (!has(id)) return null;
-  o = o || {};
-  o.loop = true;
-  if (Bank.ready(id)) return Bank.play(id, o);
-  /* запись ещё не в памяти: загрузить и начать, если петля всё ещё нужна */
-  var px = { stopped: false, h: null,
-    stop: function (f) { px.stopped = true; if (px.h) px.h.stop(f); },
-    setGain: function (v) { if (px.h && px.h.setGain) px.h.setGain(v); } };
-  Bank.preload([id], function () { if (!px.stopped) px.h = Bank.play(id, o); });
-  return px;
+  return Snd.loop(slot || id, id, o || {});
 }
 
 /* ════════ ШАГИ, СТЕНЫ, ДВЕРИ ════════ */
@@ -233,7 +220,7 @@ function idsFor(L) {
     if (m && sets[m[1]]) out.push(id);
   });
   var sf = LAB.SURF[lev.surf] || {};
-  out.push("step_" + (sf.base || lev.surf));
+  out.push("step_" + (sf.base || lev.surf), "step_echo");
   levelEvents(L).forEach(function (id) { out.push(id); });
   return out;
 }
@@ -241,9 +228,9 @@ function preloadLevel(L) {
   if (L === levelL) return;
   var need = idsFor(L);
   var drop = levelIds.filter(function (id) { return need.indexOf(id) < 0; });
-  if (drop.length) Bank.release(drop);
+  drop.forEach(function (id) { Snd.release(id, 1500); });
   levelIds = need; levelL = L;
-  Bank.preload(need);
+  Snd.preload(need);
 }
 function enterFloor(L, F) {
   worldOn = true;
@@ -253,7 +240,7 @@ function enterFloor(L, F) {
     var oldBed = bed && bed.id;
     if (bed && bed.h) bed.h.stop(2.5);
     var bid = lev.amb;
-    bed = { L: L, id: bid, h: loop(bid, { bus: "amb", gain: 0.9, fadeIn: 3, reverb: 0 }) };
+    bed = { L: L, id: bid, h: loop(bid, { bus: "amb", gain: 0.9, fadeIn: 3, reverb: 0 }, "bed") };
     if (oldBed && oldBed !== bid) releaseLater(oldBed, 3500);
     if (!bed.h) synthBed(L);
   }
@@ -291,7 +278,7 @@ function setRoom(r) {
   /* гул прошлого помещения — из памяти (коридор остаётся: в него выходят часто) */
   if (prevLid && prevLid !== lid && prevLid !== "room_corridor") releaseLater(prevLid, 3000);
   if (!id) { AE.setReverb(1.2 + depthL(G() ? G().L : 1) * 0.08, 0.28); return; }
-  roomLoop = loop(lid, { bus: "amb", gain: 0.55, fadeIn: 1.2, reverb: 0.1 });
+  roomLoop = loop(lid, { bus: "amb", gain: 0.55, fadeIn: 1.2, reverb: 0.1 }, "room");
   /* отзвук: коридор — длинный, большие залы — гулкие, тесные — сухие */
   if (r) {
     var size = (r.x1 - r.x0 + 1) * (r.y1 - r.y0 + 1);
@@ -322,7 +309,7 @@ function eventLayer(id) {
   evLayerId = want;
   if (evLayer) { evLayer.stop(2); evLayer = null; }
   if (prevEv && prevEv !== want) releaseLater(prevEv, 3500);
-  if (want) evLayer = loop(want, { bus: "amb", gain: 0.5, fadeIn: 2 });
+  if (want) evLayer = loop(want, { bus: "amb", gain: 0.5, fadeIn: 2 }, "layer");
 }
 function stopWorld() {
   worldOn = false;
@@ -367,7 +354,7 @@ function stopTension() { if (tension) { tension.s.stop(1.6); tension = null; } c
 function heartCheck() {
   var g = G(); if (!g) return;
   var low = g.hp > 0 && g.hp < g.hpMax * 0.3;
-  if (low && !hbLoop) hbLoop = loop("heartbeat", { bus: "fx", gain: 0.6, reverb: 0 });
+  if (low && !hbLoop) hbLoop = loop("heartbeat", { bus: "fx", gain: 0.6, reverb: 0, prio: 3 }, "heart");
   if (!low && hbLoop) { hbLoop.stop(1); hbLoop = null; }
 }
 
@@ -391,7 +378,14 @@ function foeSound(f, kind) {
   if (f.boss && LAB.BOSSES[f.boss] && LAB.BOSSES[f.boss].sndRate) br = LAB.BOSSES[f.boss].sndRate;
   at(id, f.x, f.y, { gain: kind === "idle" ? 0.7 : 1, rate: br * (f.boss ? 0.85 : 1) });
   /* турель: перед наведением слышно, как поворачивается сервопривод */
-  if (f.base && f.base.beh && f.base.beh.indexOf("turret") >= 0 && (kind === "alert" || kind === "aim")) at("turret_servo", f.x, f.y, { gain: 0.8, rate: br, fb: FB.turret_servo, delay: kind === "aim" ? 0 : 0.15 });
+  var beh = (f.base && f.base.beh) || [];
+  if (beh.indexOf("turret") >= 0 && (kind === "alert" || kind === "aim")) {
+    at("turret_servo", f.x, f.y, { gain: 0.8, rate: br, fb: FB.turret_servo, delay: kind === "aim" ? 0 : 0.15 });
+    /* наведение — короткий писк захвата цели: сейчас выстрелит */
+    if (kind === "aim" && has("turret_lock")) at("turret_lock", f.x, f.y, { gain: 0.7, delay: 0.1 });
+  }
+  /* камера заметила — писк сканера и жужжание объектива */
+  if (beh.indexOf("camera") >= 0 && kind === "alert" && has("cam_spot")) at("cam_spot", f.x, f.y, { gain: 0.9 });
   if (kind === "alert") sub((f.name || "Враг").split(",")[0] + " заметил вас");
 }
 function foeStep(f) {
@@ -426,6 +420,8 @@ function shot(w, dir, burst) {
   if (b.cls === "melee") { if (b.dt === "shock") play("w_shock_crack", { pan: v[0] * 0.3, gain: 0.8, fb: FB.w_shock_crack }); return; }
   if (power >= 2) play("w_power_low", { pan: v[0] * 0.2, gain: Math.min(1, 0.35 + power * 0.12) * (burst ? 0.7 : 1), rate: 1 - Math.min(0.15, power * 0.02), reverb: 0.4, fb: FB.w_power_low });
   if (power >= 4) play("w_power_crack", { pan: v[0] * 0.4, gain: Math.min(0.9, 0.25 + power * 0.08), delay: 0.04, reverb: 0.5, fb: FB.w_power_crack });
+  /* самое мощное — ещё и раскат под сводами */
+  if (power >= 6 && !burst && has("w_power_tail")) play("w_power_tail", { pan: v[0] * 0.2, gain: Math.min(0.9, 0.3 + (power - 6) * 0.1), delay: 0.08, reverb: 0.7 });
 }
 function shotWall(w, x, y) { var cls = LAB.WEAPONS[w.base].cls; at(cls === "positron" ? "impact_positron" : cls === "magnetron" ? "impact_wave" : "impact_wall", x, y, { gain: 0.8 }); }
 function shotMiss(w, f) { at("impact_wall", f.x + (Math.random() < 0.5 ? 1 : -1), f.y, { gain: 0.7 }); }
@@ -443,7 +439,11 @@ function dropLoot(x, y) { at("loot_drop", x, y, { gain: 0.7 }); }
 function implant(id) { play("implant_" + id, { fb: FB.implant }); }
 /* ОКО: позывной громкой связи, тревога, приманка. */
 function okoChime() { play("oko_chime", { gain: 0.9, bus: "fx", reverb: 0.6, fb: FB.oko_chime }); }
-function okoAlarm() { play("ev_alarm_start", { gain: 0.8, reverb: 0.5 }); play("alarm_short", { gain: 0.6, delay: 0.3 }); }
+function okoAlarm() {
+  if (has("oko_alarm")) play("oko_alarm", { gain: 0.8, reverb: 0.5 });
+  else play("ev_alarm_start", { gain: 0.8, reverb: 0.5 });
+  play("alarm_short", { gain: 0.6, delay: 0.3 });
+}
 function noiseLure(x, y) {
   for (var i = 0; i < 6; i++) at("mine_beep", x, y, { gain: 0.9, delay: i * 0.45, rate: i % 2 ? 1.2 : 1 });
   at("impact_wall", x, y, { gain: 0.8, delay: 0.1 });
@@ -467,7 +467,7 @@ function music(theme) {
   if (theme === "game" && !has(tid)) tid = "mus_l" + (((L - 1) % 10) + 1);
   if (has(tid)) {
     mus.tid = tid;
-    mus.h = loop(tid, { bus: "music", gain: 1, fadeIn: 4, reverb: 0 });
+    mus.h = loop(tid, { bus: "music", gain: 1, fadeIn: 4, reverb: 0 }, "music");
     if (mus.h) return;
   }
   mus.tid = "";
@@ -488,11 +488,13 @@ function levelMusic(L) {
   var b = LAB.blockOf(L), set = [];
   for (var i = 1; i <= 8; i++) if (has("mus_b" + b + "_" + i)) set.push("mus_b" + b + "_" + i);
   if (!set.length) return "mus_l" + (((L - 1) % 10) + 1);
-  var k = Math.floor(((L - 1) % 20) / Math.max(1, Math.ceil(20 / set.length)));
-  return set[Math.min(set.length - 1, k)];
+  /* у первого блока свои треки — только ниже Ядра (уровни 11–20) */
+  var first = b === 1 ? 11 : (b - 1) * 20 + 1, span = b === 1 ? 10 : 20;
+  var k = Math.floor((L - first) * set.length / span);
+  return set[Math.max(0, Math.min(set.length - 1, k))];
 }
 /* Что играет сейчас: запись и звучит ли она (для самопроверки). */
-function musicNow() { var h = mus.h && (mus.h.src ? mus.h : mus.h.h); return { id: mus.tid, on: !!(h && h.src && !h.stopped), synth: !!mus.s }; }
+function musicNow() { var sl = Snd.state().slots.music; return { id: mus.tid, on: !!(sl && sl.on && sl.id === mus.tid), synth: !!mus.s }; }
 function musicVolume() { AE.applyVolumes(); if (!S.music) stopMusic(); else if (!mus.theme) music(LAB.ui && LAB.ui.screen() === "game" ? "game" : "menu"); }
 
 function genMusic(theme, L) {
@@ -598,6 +600,16 @@ var FB = {
   power_off: function (s) { s.servo(false); s.note(120, 0, 0.6, "sawtooth", 0.05); },
   deaf_ring: function (s) { s.note(3900, 0, 2.2, "sine", 0.03); }
 };
+
+/* Звуковое устройство пересоздано (единый обработчик сам запустил петли
+   записей): синтез — гул уровня без записи, напряжение боя и синтезированная
+   музыка — запускается заново. */
+Snd.onRebuild(function () {
+  var g = G();
+  if (synthBedS) { synthBedS = null; if (worldOn && g) synthBed(g.L); }
+  if (tension) { tension = null; startTension(); }
+  if (mus.s) { var th = mus.theme; mus.s = null; mus.key = ""; mus.timers.forEach(function (t) { clearInterval(t); clearTimeout(t); }); mus.timers = []; if (th) music(th); }
+});
 
 LAB.atmos = {
   play: play, at: at, has: has,

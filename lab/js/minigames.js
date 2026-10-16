@@ -16,20 +16,10 @@ function sayq(t) { LAB.say(t, { interrupt: false }); }
 var cur = null;
 
 /* Короткий тон: частота, длительность, панорама, тембр. */
+/* (звучит через единый обработчик звука; тоны головоломок слышны и при выключенных эффектах) */
 function tone(f, dur, pan, type, vol, when) {
-  var AE = LAB.AE;
-  if (!AE.ensure()) return;
-  var c = AE.ctx, t = c.currentTime + (when || 0);
-  var o = c.createOscillator(), g = c.createGain();
-  o.type = type || "sine"; o.frequency.value = f;
-  o.connect(g);
-  var out = g;
-  if (pan && c.createStereoPanner) { var p = c.createStereoPanner(); p.pan.value = pan; g.connect(p); out = p; }
-  out.connect(AE.ui);
-  var v = vol == null ? 0.16 : vol;
-  g.gain.setValueAtTime(0.0001, t); g.gain.linearRampToValueAtTime(v, t + 0.015);
-  g.gain.setValueAtTime(v, t + dur * 0.7); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
-  o.start(t); o.stop(t + dur + 0.05);
+  if (!LAB.Sound) return;
+  LAB.Sound.tone(f, dur, { type: type || "sine", pan: pan, vol: vol == null ? 0.16 : vol, when: when, attack: 0.015, hold: true, force: true });
 }
 function finish(ok, val) {
   var c = cur;
@@ -91,16 +81,18 @@ function tune(cb, opts) {
   var delta = sign * (opts.hard ? 9 + Math.random() * 7 : 5 + Math.random() * 6);
   var c = { type: "tune", name: "Настройка резонатора", cb: cb, f0: f0, delta: delta, step: opts.hard ? 0.5 : 1, tries: 0 };
   cur = c;
-  if (AE.ctx) {
-    var x = AE.ctx, g = x.createGain(); g.gain.value = 0; g.connect(AE.ui);
+  /* два тона с биениями — особый звук единого обработчика */
+  var hv = LAB.Sound && LAB.Sound.custom("tune", "ui", function (x, bus) {
+    var g = x.createGain(); g.gain.value = 0; g.connect(bus);
     var o1 = x.createOscillator(), o2 = x.createOscillator();
     o1.type = "sine"; o2.type = "sine";
     o1.frequency.value = f0; o2.frequency.value = f0 + delta;
     o1.connect(g); o2.connect(g); o1.start(); o2.start();
     g.gain.linearRampToValueAtTime(0.09, x.currentTime + 0.6);
     c.o2 = o2; c.g = g;
-    c.cleanup = function () { try { g.gain.setTargetAtTime(0, x.currentTime, 0.1); o1.stop(x.currentTime + 0.5); o2.stop(x.currentTime + 0.5); } catch (e) { /* */ } };
-  }
+    return function () { try { g.gain.setTargetAtTime(0, x.currentTime, 0.1); o1.stop(x.currentTime + 0.5); o2.stop(x.currentTime + 0.5); } catch (e) { /* */ } };
+  });
+  if (hv) c.cleanup = function () { hv.stop(); };
   say("Настройка резонатора. Слышите, как звук дрожит? Это биения двух тонов. " + LAB.K("Свайп вверх или вниз — подстроить второй тон, влево или вправо — грубо. Когда дрожь исчезнет, коснитесь дважды. Касание — подсказка.", "Стрелки вверх и вниз — подстроить второй тон, влево и вправо — грубо. Когда дрожь исчезнет, нажмите Enter. Пробел — подсказка."), { interrupt: true });
 }
 function tuneSet() {

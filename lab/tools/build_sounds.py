@@ -152,6 +152,27 @@ PACKS = {
   "lab_km_lazarus": ("Return of Lazarus", "Kevin MacLeod (incompetech.com)", "CC BY 3.0", "https://commons.wikimedia.org/wiki/File:Return_of_Lazarus_(ISRC_USUAN1200090).mp3"),
   "lab_km_shadow6": ("Shadowlands 6 - The Pit", "Kevin MacLeod (incompetech.com)", "CC BY 3.0", "https://commons.wikimedia.org/wiki/File:Shadowlands_6_-_The_Pit_(ISRC_USUAN1700039).mp3"),
   "lab_km_shadow7": ("Shadowlands 7 - Codex", "Kevin MacLeod (incompetech.com)", "CC BY 3.0", "https://commons.wikimedia.org/wiki/File:Shadowlands_7_-_Codex_(ISRC_USUAN1700040).mp3"),
+  # (заход H и запас захода F) Музыка глубоких блоков: по четыре трека на блок.
+  "lab_km_celeste": ("Mary Celeste", "Kevin MacLeod (incompetech.com)", "CC BY 3.0", "https://commons.wikimedia.org/wiki/File:Mary_Celeste_(ISRC_USUAN1500016).mp3"),
+  "lab_km_scp3": ("SCP-x3x (I Am Not OK)", "Kevin MacLeod (incompetech.com)", "CC BY 4.0", "https://commons.wikimedia.org/wiki/File:Scp_X3x_(I_Am_Not_OK)_by_Kevin_MacLeod.ogg"),
+  "lab_km_gathering": ("Gathering Darkness", "Kevin MacLeod (incompetech.com)", "CC BY 3.0", "https://commons.wikimedia.org/wiki/File:Gathering_Darkness_(ISRC_USUAN1100849).mp3"),
+  "lab_km_scp4": ("SCP-x4x (Mind Leech)", "Kevin MacLeod (incompetech.com)", "CC BY 4.0", "https://commons.wikimedia.org/wiki/File:SCP-x4x_(Mind_Leech)_by_Kevin_MacLeod.ogg"),
+  "lab_km_magicforest": ("Magic Forest", "Kevin MacLeod (incompetech.com)", "CC BY 3.0", "https://commons.wikimedia.org/wiki/File:Magic_Forest_(ISRC_USUAN1600044).mp3"),
+  "lab_km_ascendingtheva": ("Ascending the Vale", "Kevin MacLeod (incompetech.com)", "CC BY 3.0", "https://commons.wikimedia.org/wiki/File:Ascending_the_Vale_(ISRC_USUAN1600064).mp3"),
+  "lab_km_lightlessdawn": ("Lightless Dawn", "Kevin MacLeod (incompetech.com)", "CC BY 3.0", "https://commons.wikimedia.org/wiki/File:Lightless_Dawn_(ISRC_USUAN1100655).mp3"),
+  "lab_km_shadow4": ("Shadowlands 4 - Breath", "Kevin MacLeod (incompetech.com)", "CC BY 3.0", "https://commons.wikimedia.org/wiki/File:Shadowlands_4_-_Breath_(ISRC_USUAN1700037).mp3"),
+  "lab_km_frostwaltz": ("Frost Waltz", "Kevin MacLeod (incompetech.com)", "CC BY 3.0", "https://commons.wikimedia.org/wiki/File:Frost_Waltz_(ISRC_USUAN1100516).mp3"),
+  "lab_km_ghoststory": ("Ghost Story", "Kevin MacLeod (incompetech.com)", "CC BY 3.0", "https://commons.wikimedia.org/wiki/File:Ghost_Story_(ISRC_USUAN1300034).mp3"),
+  "lab_km_satiate": ("Satiate - only strings", "Kevin MacLeod (incompetech.com)", "CC BY 3.0", "https://commons.wikimedia.org/wiki/File:Satiate_-_only_strings_(ISRC_USUAN1200056).mp3"),
+  "lab_km_darkestchild": ("Darkest Child", "Kevin MacLeod (incompetech.com)", "CC BY 3.0", "https://commons.wikimedia.org/wiki/File:Darkest_Child_(ISRC_USUAN1100783).mp3"),
+  "lab_km_industrialmusi": ("Industrial Music Box", "Kevin MacLeod (incompetech.com)", "CC BY 3.0", "https://commons.wikimedia.org/wiki/File:Industrial_Music_Box_(ISRC_USUAN1100812).mp3"),
+  "lab_km_klockworx": ("Klockworx", "Kevin MacLeod (incompetech.com)", "CC BY 3.0", "https://commons.wikimedia.org/wiki/File:Klockworx_(ISRC_USUAN1100392).mp3"),
+  "lab_km_unrelenting": ("Unrelenting", "Kevin MacLeod (incompetech.com)", "CC BY 3.0", "https://commons.wikimedia.org/wiki/File:Unrelenting_(ISRC_USUAN1100029).mp3"),
+  "lab_km_static": ("Static Motion", "Kevin MacLeod (incompetech.com)", "CC BY 3.0", "https://commons.wikimedia.org/wiki/File:Static_Motion_(ISRC_USUAN1200062).mp3"),
+  "lab_km_numinousshine": ("Numinous Shine", "Kevin MacLeod (incompetech.com)", "CC BY 3.0", "https://commons.wikimedia.org/wiki/File:Numinous_Shine_(ISRC_USUAN1100129).mp3"),
+  "lab_km_infiniteperspe": ("Infinite Perspective", "Kevin MacLeod (incompetech.com)", "CC BY 3.0", "https://commons.wikimedia.org/wiki/File:Infinite_Perspective_(ISRC_USUAN1500024).mp3"),
+  "lab_km_bathedinthelig": ("Bathed in the Light", "Kevin MacLeod (incompetech.com)", "CC BY 3.0", "https://commons.wikimedia.org/wiki/File:Bathed_in_the_Light_(ISRC_USUAN1100308).mp3"),
+  "lab_km_spacial": ("Spacial Winds", "Kevin MacLeod (incompetech.com)", "CC BY 3.0", "https://commons.wikimedia.org/wiki/File:Spacial_Winds_(ISRC_USUAN1100203).mp3"),
   "lab_emptycity": ("Empty City", "OpenGameArt", CC0, "https://opengameart.org/content/emptycity-background-music"),
   "lab_ghostvoice": ("Ghost monster voice", "qubodup", CC0, "https://opengameart.org/content/ghost-monster-voice-moaning-growling"),
   "lab_bitvoice": ("Bitcrushed voice one-shots", "DavidW", "CC BY 3.0", "https://opengameart.org/content/bitcrushed-voice-one-shots"),
@@ -368,6 +389,16 @@ def segments(a, need, min_len=0.12, max_len=2.4, gap=0.10, thr_db=-30.0, skip=0)
     segs = sorted(segs[:need], key=lambda t: t[1])
     return [fade(a[s0:e0], 0.003, 0.06) for _, s0, e0 in segs]
 
+def ffx(a, af):
+    """Готовый звук через фильтр ffmpeg (яркость, насыщение) — без смены длины."""
+    if not af: return a
+    ch = 1 if a.ndim == 1 else 2
+    cmd = ["ffmpeg", "-nostdin", "-loglevel", "error", "-f", "f32le", "-ar", str(SR), "-ac", str(ch), "-i", "-",
+           "-af", af, "-ac", str(ch), "-ar", str(SR), "-f", "f32le", "-"]
+    raw = subprocess.run(cmd, input=a.astype(np.float32).tobytes(), capture_output=True, check=True).stdout
+    out = np.frombuffer(raw, dtype=np.float32).copy()
+    return out.reshape(-1, 2) if ch == 2 else out
+
 def encode(a, path, q):
     os.makedirs(os.path.dirname(path), exist_ok=True)
     ch = 1 if a.ndim == 1 else 2
@@ -395,21 +426,33 @@ E("ui_levelup", "ui", [S(B, "lab_assorted7*", "Level Up.mp3")], v=0.8, bus="ui",
 E("near_tick", "ui", [S(A, "lab_interface*", "tick_002.ogg"), S(A, "lab_interface*", "pluck_002.ogg")], v=0.45, bus="ui")
 E("nav_ping", "gen", "sonar", v=0.9, bus="ui")
 
-# ═════ ШАГИ: пол везде металлический, у каждого уровня свой ═════
-E("step_plate", "step", [SPL(698697, 7, min_len=0.2), ("slice", FS(562195), 3)], n=9, mx=0.45)
-E("step_sheet", "step", [("slice", FS(50724), 5), ("slice", FS(50723), 4)], n=8, mx=0.45)
-E("step_wetmetal", "step", [SPL(253735, 9, min_len=0.15)], n=8, mx=0.5)
-E("step_steel", "step", [SPL(696374, 10, min_len=0.15)], n=8, mx=0.45)
-E("step_checker", "step", [SPL(455058, 10, min_len=0.06)], n=8, mx=0.4)
-E("step_frost", "step", [SPL(834029, 10, af="highpass=f=250,treble=g=3", min_len=0.06)], n=8, mx=0.35)
-E("step_armor", "step", [SPL(809440, 10, min_len=0.08)], n=8, mx=0.45)
-E("step_catwalk", "step", [SPL(669095, 10, min_len=0.05), SPL(770804, 4, min_len=0.05)], n=9, mx=0.4)
-E("step_deck", "step", [("slice", FS(148462, af=PITCH(0.92)), 5), ("slice", FS(149454, af=PITCH(0.92)), 4)], n=8, mx=0.5)
-E("step_grate", "step", [SPL(398937, 10, min_len=0.08)], n=8, mx=0.4)
+# ═════ ШАГИ: пол везде металлический, у каждого уровня свой; звонко и ярко ═════
+# (заход G) Прежние шаги звучали глухо — почти вся энергия ниже 200 Гц. Теперь
+# подъём середины и верха и возбудитель гармоник: шаг слышно чётко и на
+# динамике телефона, и он ясно отличается от удара о стену. Низ не срезается
+# (в наушниках у шага остаётся вес) — убирается только гул ниже 50 Гц, а
+# гулкая середина низа у глухих записей лишь чуть приглушается.
+BRIGHT = "highpass=f=50,equalizer=f=2600:t=q:w=1.1:g=6,treble=g=5:f=5000,aexciter=amount=2:drive=7:freq=2500"
+BRIGHT2 = "highpass=f=50,lowshelf=f=160:g=-4,equalizer=f=1800:t=q:w=1.0:g=7,equalizer=f=3600:t=q:w=1.2:g=6,treble=g=6:f=6000,aexciter=amount=3:drive=8:freq=2200"
+E("step_plate", "step", [SPL(208101, 10, af=BRIGHT, min_len=0.05), FS(144103, af=BRIGHT), SPL(698697, 3, af=BRIGHT2, min_len=0.2)], n=10, mx=0.4)
+E("step_sheet", "step", [SPL(462598, 10, af=BRIGHT, min_len=0.05)], n=8, mx=0.4)
+E("step_wetmetal", "step", [SPL(253735, 9, af=BRIGHT2, min_len=0.15)], n=8, mx=0.45)
+E("step_steel", "step", [SPL(696374, 8, af=BRIGHT2, min_len=0.15), FS(384656, af=BRIGHT)], n=8, mx=0.4)
+E("step_checker", "step", [SPL(455058, 10, af=BRIGHT, min_len=0.06)], n=8, mx=0.35)
+E("step_frost", "step", [SPL(834029, 10, af="highpass=f=60,treble=g=4,aexciter=amount=1.5:drive=6:freq=3000", min_len=0.06)], n=8, mx=0.35)
+E("step_armor", "step", [SPL(809440, 7, af=BRIGHT2, min_len=0.08), SPL(215308, 3, af=BRIGHT, start=3.2, min_len=0.06)], n=8, mx=0.4)
+E("step_catwalk", "step", [SPL(669095, 10, min_len=0.05, af="aexciter=amount=1:drive=5:freq=3000"), SPL(770804, 4, min_len=0.05)], n=9, mx=0.4)
+E("step_deck", "step", [("slice", FS(148462, af=PITCH(0.96) + "," + BRIGHT2), 5), ("slice", FS(149454, af=PITCH(0.96) + "," + BRIGHT2), 4)], n=8, mx=0.45)
+E("step_grate", "step", [SPL(398937, 10, min_len=0.08, af="highpass=f=50,treble=g=3:f=4000")], n=8, mx=0.4)
+# Отзвук шага от стены рядом: короткий высокий щелчок — тише и выше самого шага.
+E("step_echo", "step", [SPL(208101, 4, af="highpass=f=1100,treble=g=4:f=5000", min_len=0.05)], n=4, mx=0.18, v=0.8)
 E("door_threshold", "step", [S(A, "lab_metalsteps*", "metal_steps_1[3-6].flac", af="asetrate=44100*0.7,aresample=44100")], n=3, v=0.6)
 
 # ═════ СТЕНЫ И СТОЛКНОВЕНИЯ ═════
-E("bump_wall", "sfx", [SPL(445775, 1)], n=1, mx=0.6, v=0.95)
+# Удар о стену — один и тот же звук: звонкий удар по стальному листу с
+# гулом корпуса (заход G). Ниже — отдельный глухой слой, «тело» стены.
+E("bump_wall", "mixv", [[L(FS(334680, start=0.5, dur=0.9)), L(FS(209772, start=0.2, dur=0.9), 0.0, 0.55), L(FS(42729, dur=0.6), 0.0, 0.25)]], mx=0.9, v=0.95, tgt=-15.0)
+E("bump_wall_thud", "sfx", [FS(445775, start=0.6, dur=0.35)], n=1, mx=0.35, v=0.8)
 E("bump_body", "sfx", [S(C, "lab_kimpact", "impactPunch_medium_*.ogg")], n=4, v=0.8)
 E("bump_furniture", "sfx", [S(C, "lab_kimpact", "impactPlank_medium_*.ogg"), S(C, "lab_kimpact", "impactTin_medium_*.ogg")], n=6, v=0.75)
 E("bump_device", "sfx", [S(C, "lab_kimpact", "impactPlate_light_*.ogg"), S(C, "lab_kimpact", "impactGlass_light_00[0-1].ogg")], n=5, v=0.75)
@@ -593,30 +636,83 @@ E("bcn_survivor", "bcn", [S(A, "lab_creat80_*", "cough_02.ogg")], bus="beacon")
 E("bcn_default", "bcn", [S(A, "lab_interface*", "tick_001.ogg")], bus="beacon")
 
 # ═════ ОРУЖИЕ ГЕРОЯ ═════
-E("w_melee", "sfx", [SPL(427979, 6, min_len=0.08), FS(422513), FS(719636)], n=5, mx=0.5)
-E("w_shock", "sfx", [FS(264779), SPL(265247, 3, min_len=0.3)], n=3, mx=0.9)
-E("w_vibro", "mixv", [[L(FS(427979, start=1.2, dur=0.5)), L(FS(210878, start=1.0, dur=0.5), 0.0, 0.6)], [L(FS(427979, start=3.4, dur=0.5)), L(FS(210878, start=2.5, dur=0.5), 0.0, 0.6)]], mx=0.7)
-E("w_cutter", "mixv", [[L(FS(244230, start=3.0, dur=0.7)), L(FS(675752, start=7.2, dur=0.6), 0.0, 0.5)], [L(FS(244230, start=8.0, dur=0.7)), L(FS(675752, start=11.4, dur=0.6), 0.0, 0.5)]], mx=0.8)
-E("w_blaster_s", "mixv", [[L(FS(803497)), L(FS(331240, start=0.0, dur=0.45, af="highpass=f=500"), 0.0, 0.55)], [L(FS(717584, start=0.25, dur=0.8)), L(FS(331240, start=1.6, dur=0.45, af="highpass=f=500"), 0.0, 0.55)], [L(FS(371440)), L(FS(331240, start=3.2, dur=0.45, af="highpass=f=500"), 0.0, 0.5)]], mx=0.9)
-E("w_blaster_p", "mixv", [[L(FS(331240, start=4.8, dur=0.45)), L(FS(392229, af="lowpass=f=900"), 0.0, 0.45)], [L(FS(331240, start=6.4, dur=0.45)), L(FS(392229, af="lowpass=f=900"), 0.0, 0.45)], [L(FS(331240, start=8.0, dur=0.45)), L(FS(371440, af="lowpass=f=900"), 0.0, 0.45)]], mx=0.8)
-E("w_blaster_h", "mixv", [[L(FS(702000)), L(FS(484036), 0.0, 0.6)], [L(FS(702000, af=PITCH(0.93))), L(FS(483536), 0.0, 0.55)]], mx=1.2)
-E("w_laser", "mixv", [[L(FS(660270, start=5.65, dur=0.7)), L(FS(710084, start=0.8, dur=0.4), 0.0, 0.35)], [L(FS(660270, start=6.5, dur=0.8)), L(FS(710084, start=0.8, dur=0.4), 0.0, 0.35)], [L(FS(660270, start=10.8, dur=0.55)), L(FS(450852), 0.0, 0.3)]], mx=0.9)
-E("w_ion", "mixv", [[L(FS(403253, start=0.9, dur=0.4)), L(FS(392229, af="lowpass=f=700"), 0.0, 0.5)], [L(FS(403253, start=3.05, dur=0.5)), L(FS(371440, af="lowpass=f=700"), 0.0, 0.5)], [L(FS(403253, start=5.98, dur=0.6)), L(FS(392229, af="lowpass=f=700"), 0.0, 0.5)]], mx=0.8)
-E("w_plasma", "mixv", [[L(FS(331240, start=9.6, dur=0.45)), L(FS(447941, dur=0.9), 0.02, 0.7)], [L(FS(331240, start=11.2, dur=0.45)), L(FS(447941, dur=0.9, af=PITCH(1.1)), 0.02, 0.7)]], mx=1.0)
-E("w_magnetron", "mixv", [[L(FS(264779)), L(FS(394672), 0.0, 0.7)], [L(FS(265247, start=1.3, dur=0.5)), L(FS(394672, af=PITCH(1.08)), 0.0, 0.7)]], mx=1.0)
-E("w_resonator", "mixv", [[L(FS(244983)), L(FS(699655, af="lowpass=f=600"), 0.0, 0.5)], [L(FS(244983, af=PITCH(0.9))), L(FS(699655, af="lowpass=f=600"), 0.0, 0.5)]], mx=1.2)
-E("w_positron", "sfx", [FS(155790), FS(155790, af=PITCH(1.08))], n=2, mx=1.4)
-E("w_pcannon", "mixv", [[L(FS(162260, dur=2.5)), L(FS(490266, dur=2.0), 0.05, 0.45)], [L(FS(162260, start=2.9, dur=2.6)), L(FS(490266, dur=2.0), 0.05, 0.45)]], mx=2.2)
-E("w_gauss", "mixv", [[L(FS(394672, af=PITCH(1.12))), L(FS(483536), 0.0, 0.6)], [L(FS(394672, af=PITCH(1.2))), L(FS(484036), 0.0, 0.6)]], mx=1.1)
-E("w_cryo", "sfx", [SPL(642961, 2, min_len=0.4), SPL(371839, 3, min_len=0.3)], n=4, mx=0.8)
-E("w_thermo", "sfx", [FS(395038, start=7.35, dur=0.8), FS(395038, start=5.85, dur=0.9), FS(447941)], n=3, mx=0.9)
+# (заход G) Мощнее и чище: у каждого выстрела — яркая атака (её слышно и на
+# телефоне), тело выстрела и, у тяжёлых, низкий удар. Чем круче оружие, тем
+# тяжелее звук: лёгкий бластер — хлёсткий «пиу», импульсный — сдвоенный,
+# тяжёлый — с раскатом; глубже — слои мощи (w_power_*), их добавляет игра.
+SAT = "volume=8dB,asoftclip=type=tanh,lowpass=f=2400"
+E("w_melee", "mixv", [[L(FS(427979, start=0.25, dur=0.3)), L(FS(422513), 0.0, 0.8)],
+                      [L(FS(427979, start=1.30, dur=0.3)), L(FS(422513, af=PITCH(0.9)), 0.0, 0.8)],
+                      [L(FS(422513)), L(FS(427979, start=0.25, dur=0.3, af=PITCH(0.9)), 0.0, 0.6)],
+                      [L(FS(427979, start=1.30, dur=0.3, af=PITCH(1.1))), L(FS(719636), 0.0, 0.5)]], mx=0.5,
+  post="highpass=f=45,equalizer=f=1400:t=q:w=1.0:g=4,treble=g=3:f=4000")
+# Дубинка с разрядником: тяжёлый замах и злой треск высокого напряжения с гулом тока.
+E("w_shock", "mixv", [[L(FS(422513), 0.0, 0.7), L(FS(403252, start=0.70, dur=0.62), 0.04), L(FS(30933, start=0.0, dur=0.5, af="highpass=f=40"), 0.06, 0.55), L(FS(512471), 0.04, 0.8)],
+                      [L(FS(719636), 0.0, 0.7), L(FS(403252, start=1.62, dur=0.55), 0.04), L(FS(19487, start=0.03, dur=0.6), 0.06, 0.6), L(FS(30933, start=1.6, dur=0.45, af="highpass=f=40"), 0.06, 0.5)],
+                      [L(FS(427979, start=0.25, dur=0.3), 0.0, 0.7), L(FS(403252, start=2.20, dur=0.6), 0.04), L(FS(136542, dur=0.45), 0.08, 0.55), L(FS(30933, start=0.5, dur=0.45, af="highpass=f=40"), 0.06, 0.5)]], mx=1.0, tgt=-14.0)
+E("w_shock_crack", "sfx", [SPL(556717, 2, min_len=0.1), FS(512471), FS(582631, start=0.1, dur=0.6), FS(19487, start=0.04, dur=0.4)], n=4, mx=0.6)
+E("w_vibro", "mixv", [[L(FS(47125, start=0.06, dur=0.7)), L(FS(557194, start=0.06, dur=0.5), 0.0, 0.7), L(FS(427979, start=0.25, dur=0.3), 0.04, 0.5)],
+                      [L(FS(47125, start=0.06, dur=0.7, af=PITCH(1.12))), L(FS(557194, start=0.1, dur=0.5, af=PITCH(1.1)), 0.0, 0.7), L(FS(422513), 0.03, 0.5)]], mx=0.75)
+E("w_cutter", "mixv", [[L(FS(62925, start=0.17, dur=0.6)), L(FS(569901), 0.0, 0.6), L(FS(675752, start=7.2, dur=0.5), 0.05, 0.5)],
+                       [L(FS(62925, start=1.20, dur=0.6)), L(FS(450768, dur=0.5), 0.0, 0.5), L(FS(244230, start=3.0, dur=0.5), 0.05, 0.5)]], mx=0.8)
+# Бластеры — по нарастанию мощи.
+E("w_blaster_s", "mixv", [[L(FS(466867, dur=0.5))], [L(FS(466834, dur=0.7))], [L(FS(77087, start=0.125, dur=0.6))],
+                          [L(FS(466867, dur=0.5, af=PITCH(1.06))), L(FS(512471), 0.0, 0.25)]], mx=0.7)
+E("w_blaster_p", "mixv", [[L(FS(214990, start=0.30, dur=0.6)), L(FS(39023, dur=0.35), 0.0, 0.45)],
+                          [L(FS(214990, start=2.15, dur=0.6)), L(FS(39023, dur=0.35, af=PITCH(1.08)), 0.0, 0.45)],
+                          [L(FS(214990, start=4.43, dur=0.6)), L(FS(569901, dur=0.3), 0.0, 0.35)],
+                          [L(FS(620848, dur=0.62))], [L(FS(620848, start=0.72, dur=0.6))]], mx=0.75)
+E("w_blaster_h", "mixv", [[L(FS(531861, start=0.1, dur=1.1)), L(FS(553418, start=0.04, dur=0.9, af=SAT), 0.02, 0.45)],
+                          [L(FS(378185, dur=1.2)), L(FS(512471), 0.0, 0.3)],
+                          [L(FS(420687, dur=1.3)), L(FS(222517, dur=0.9, af=SAT), 0.0, 0.3), L(FS(512471), 0.0, 0.35)]], mx=1.3, tgt=-14.0)
+E("w_laser", "mixv", [[L(FS(376694, start=0.205, dur=0.8))],
+                      [L(FS(234083, dur=0.7)), L(FS(376694, start=0.18, dur=0.5, af="highpass=f=800"), 0.0, 0.5)],
+                      [L(FS(196914, dur=0.9)), L(FS(376694, start=0.18, dur=0.5, af="highpass=f=800," + PITCH(1.1)), 0.0, 0.45)]], mx=0.9)
+E("w_ion", "mixv", [[L(FS(403253, start=0.9, dur=0.4), 0.0, 0.9), L(FS(814049, dur=0.6), 0.0, 0.7), L(FS(512471), 0.0, 0.4)],
+                    [L(FS(403253, start=3.05, dur=0.5), 0.0, 0.9), L(FS(814049, start=0.6, dur=0.6), 0.0, 0.7)],
+                    [L(FS(403253, start=5.98, dur=0.6), 0.0, 0.9), L(FS(110564, start=1.3, dur=0.5, af="highpass=f=40"), 0.0, 0.5), L(FS(556717, start=0.15, dur=0.45), 0.02, 0.5)]], mx=0.9)
+E("w_plasma", "mixv", [[L(FS(450768, dur=0.8)), L(FS(175267, dur=0.5, af="highpass=f=300"), 0.0, 0.5)],
+                       [L(FS(175267, dur=1.0)), L(FS(569901), 0.0, 0.5)],
+                       [L(FS(15350, start=0.42, dur=0.8)), L(FS(450768, dur=0.4, af="highpass=f=400"), 0.0, 0.5)]], mx=1.0)
+E("w_magnetron", "mixv", [[L(FS(330629, dur=0.9)), L(FS(264779), 0.0, 0.6), L(FS(209860, dur=0.5, af="highpass=f=200"), 0.0, 0.5)],
+                          [L(FS(330629, dur=0.9, af=PITCH(1.1))), L(FS(265247, start=1.3, dur=0.4), 0.0, 0.5), L(FS(209860, start=0.5, dur=0.5, af="highpass=f=200"), 0.0, 0.5)]], mx=1.0)
+E("w_resonator", "mixv", [[L(FS(244983), 0.0, 0.8), L(FS(66091, dur=1.0), 0.0, 0.6), L(FS(330629, dur=1.0, af=PITCH(0.75)), 0.0, 0.7)],
+                          [L(FS(244983, af=PITCH(0.9)), 0.0, 0.8), L(FS(66091, start=2.0, dur=1.0, af=PITCH(1.12)), 0.0, 0.6), L(FS(330629, dur=1.0, af=PITCH(0.7)), 0.0, 0.7)]], mx=1.3)
+# Позитрон: короткий втягивающий вдох — и удар аннигиляции.
+E("w_positron", "mixv", [[L(FS(75329, start=1.0, dur=0.31), 0.0, 0.7), L(FS(155790), 0.26), L(FS(512471), 0.26, 0.4)],
+                         [L(FS(121942, start=0.2, dur=0.4), 0.0, 0.6), L(FS(155790, af=PITCH(1.08))), L(FS(512471), 0.0, 0.4)]], mx=1.5, tgt=-14.0)
+E("w_pcannon", "mixv", [[L(FS(160880, dur=2.2)), L(FS(553418, start=0.04, dur=1.6, af=SAT), 0.03, 0.6)],
+                        [L(FS(807665, start=0.95, dur=1.0)), L(FS(39020, dur=1.7), 0.05, 0.8), L(FS(512471), 0.0, 0.4)],
+                        [L(FS(807665, dur=0.95)), L(FS(104397, start=0.05, dur=1.7), 0.05, 0.7), L(FS(500546, start=0.62, dur=0.9), 0.0, 0.45)]], mx=2.2, tgt=-13.0)
+E("w_gauss", "mixv", [[L(FS(767161, dur=1.2)), L(FS(394672, af=PITCH(1.12)), 0.0, 0.45)],
+                      [L(FS(557515, start=0.5, dur=1.3))],
+                      [L(FS(767161, dur=1.2, af=PITCH(0.92))), L(FS(553418, start=0.04, dur=1.0, af=SAT), 0.02, 0.45)]], mx=1.3, tgt=-14.0)
+E("w_cryo", "mixv", [[L(FS(174436, dur=0.7)), L(FS(452645, start=0.6, dur=0.6), 0.05, 0.5)],
+                     [L(FS(550267, dur=1.1)), L(FS(396447, start=0.4, dur=0.6), 0.0, 0.5)],
+                     [L(FS(174436, dur=0.7, af=PITCH(0.9))), L(FS(550267, start=0.4, dur=0.7), 0.1, 0.5)]], mx=1.0)
+E("w_thermo", "mixv", [[L(FS(459884, dur=0.8)), L(FS(472688, dur=0.6), 0.0, 0.6)],
+                       [L(FS(395038, start=7.35, dur=0.8)), L(FS(472688, dur=0.6, af=PITCH(1.1)), 0.0, 0.5)],
+                       [L(FS(459884, start=0.6, dur=0.8)), L(FS(260554, start=0.1, dur=0.6, af="highpass=f=40"), 0.0, 0.5)]], mx=0.9)
+# Слои мощи: низкий удар (от второй ступени), треск разряда (от четвёртой),
+# раскат (от шестой) — их добавляет atmos.js по силе оружия.
+E("w_power_low", "sfx", [FS(553418, start=0.04, dur=1.3, af=SAT), FS(222517, dur=1.3, af=SAT), FS(39020, dur=1.2, af="lowpass=f=900," + SAT)], n=3, mx=1.4)
+E("w_power_crack", "sfx", [FS(19487, start=0.03, dur=0.5), FS(556717, start=0.14, dur=0.5), FS(187363, start=1.05, dur=0.45), FS(512471)], n=4, mx=0.6)
+E("w_power_tail", "sfx", [FS(222517, start=0.6, dur=2.2, af="lowpass=f=3000"), FS(553418, start=0.7, dur=2.0, af="lowpass=f=3000")], n=2, mx=2.2, v=0.9)
 E("w_empty", "sfx", [FS(674568), FS(842748), FS(725402)], n=3, v=0.9, mx=0.4)
-E("w_reload_e", "sfx", [FS(363167, start=1.3, dur=1.2), FS(854460, start=1.6, dur=0.6)], n=2, mx=1.4)
+E("w_reload_e", "mixv", [[L(FS(679546, dur=1.0)), L(FS(196907, dur=1.0), 0.3, 0.4)],
+                         [L(FS(645778, dur=0.9)), L(FS(213607, dur=0.4), 0.45, 0.6)]], mx=1.4)
 E("w_reload_m", "sfx", [FS(674742)], mx=1.8)
 E("w_reload_p", "mixv", [[L(FS(725397, start=2.0, dur=1.6)), L(FS(210878, start=3.0, dur=0.5), 1.1, 0.35)]], mx=2.0)
 E("w_draw", "sfx", [FS(725400, start=1.35, dur=0.65)], mx=0.8)
 E("w_holster", "sfx", [FS(725400, start=2.1, dur=0.35), FS(725400, start=0.0, dur=0.3)], n=2, mx=0.6)
 E("w_switch", "sfx", [FS(725400, start=6.2, dur=0.5)], mx=0.6)
+
+# ═════ ТУРЕЛИ, КАМЕРЫ, ОКО (заход G) ═════
+E("turret_servo", "sfx", [FS(418881, dur=0.8), FS(264592, dur=0.9)], n=2, mx=0.9, v=0.8)
+E("turret_lock", "sfx", [FS(189327, dur=1.3)], n=1, mx=1.3, v=0.7)
+E("cam_spot", "mixv", [[L(FS(202530, start=0.08)), L(FS(18726), 0.05, 0.6)], [L(FS(202530, start=0.08, af=PITCH(1.12))), L(FS(18725, dur=0.6), 0.05, 0.6)]], mx=0.9, v=0.8)
+E("oko_chime", "sfx", [FS(238428, dur=1.9), FS(244583, dur=2.9)], n=2, mx=3.0, v=0.85)
+E("oko_alarm", "sfx", [FS(32088, dur=2.95), FS(54047)], n=2, mx=3.0, v=0.75)
 
 # ═════ ПОПАДАНИЯ, ВЗРЫВЫ ═════
 E("hit_metal", "sfx", [SPL(144444, 6, min_len=0.1), SPL(675951, 4, min_len=0.3)], n=8, mx=0.7)
@@ -726,7 +822,7 @@ E("shield_hit_foe", "sfx", [S(A, "lab_shield*", "*- 8.flac")], mx=0.8)
 E("phase_out", "sfx", [S(A, "lab_digital63*", "phaseJump4.mp3")])
 E("phase_in", "sfx", [S(A, "lab_git_freedoom", "dstelept.flac")])
 
-E("w_magnetron_r", "mixv", [[L(FS(699655)), L(FS(210878, start=0.5, dur=0.6), 0.0, 0.45)], [L(FS(699655, af=PITCH(1.06))), L(FS(210878, start=2.0, dur=0.6), 0.0, 0.45)]], mx=1.3)
+E("w_magnetron_r", "mixv", [[L(FS(699655), 0.0, 0.8), L(FS(330629, dur=1.1, af=PITCH(0.85)), 0.0, 0.9), L(FS(209860, dur=0.8, af="highpass=f=150"), 0.05, 0.5)], [L(FS(699655, af=PITCH(1.06)), 0.0, 0.8), L(FS(330629, dur=1.1, af=PITCH(0.8)), 0.0, 0.9), L(FS(210878, start=0.5, dur=0.6), 0.0, 0.4)]], mx=1.3, tgt=-14.5)
 
 # ═════ ФОН: уровни, помещения, события ═════
 E("amb_l1", "loop", [S(B, "bsb_lab_vent", "3598*")], seg=(5, 36), xf=3.0, ch=2, v=0.8)
@@ -817,6 +913,28 @@ E("mus_l8", "music", [S(C, "lab_km_lazarus", "*.mp3", start=60)], v=1.0, max=170
 E("mus_l9", "music", [S(C, "lab_km_shadow6", "*.mp3", start=30)], v=1.0, max=170)
 E("mus_l10", "music", [S(C, "lab_torment_realm_of_torment_1.flac", "*.flac")], v=1.0)
 E("mus_ending", "music", [S(C, "lab_km_shadow7", "*.mp3", start=15)], v=1.0, max=170)
+# Музыка глубоких блоков (mus_b<блок>_<n>): блок I — гул земли и эхо, II — живой
+# тёплый мир «Колыбели», III — холодное «Отражение», IV — ритм «Механизма», V — «Исток».
+E("mus_b1_1", "music", [S(C, "lab_km_celeste", "*.mp3")], v=1.0, max=170)
+E("mus_b1_2", "music", [S(C, "lab_km_scp3", "*.ogg", start=20)], v=1.0, max=170)
+E("mus_b1_3", "music", [S(C, "lab_km_gathering", "*.mp3")], v=1.0, max=170)
+E("mus_b1_4", "music", [S(C, "lab_km_scp4", "*.ogg", start=30)], v=1.0, max=170)
+E("mus_b2_1", "music", [S(C, "lab_km_magicforest", "*.mp3", start=70)], v=1.0, max=170)
+E("mus_b2_2", "music", [S(C, "lab_km_ascendingtheva", "*.mp3", start=25)], v=1.0, max=170)
+E("mus_b2_3", "music", [S(C, "lab_km_lightlessdawn", "*.mp3", start=5)], v=1.0, max=170)
+E("mus_b2_4", "music", [S(C, "lab_km_shadow4", "*.mp3", start=35)], v=1.0, max=170)
+E("mus_b3_1", "music", [S(C, "lab_km_frostwaltz", "*.mp3")], v=1.0, max=170)
+E("mus_b3_2", "music", [S(C, "lab_km_ghoststory", "*.mp3", start=5)], v=1.0, max=170)
+E("mus_b3_3", "music", [S(C, "lab_km_satiate", "*.mp3")], v=1.0, max=170)
+E("mus_b3_4", "music", [S(C, "lab_km_darkestchild", "*.mp3", start=45)], v=1.0, max=170)
+E("mus_b4_1", "music", [S(C, "lab_km_industrialmusi", "*.mp3")], v=1.0, max=170)
+E("mus_b4_2", "music", [S(C, "lab_km_klockworx", "*.mp3", start=65)], v=1.0, max=170)
+E("mus_b4_3", "music", [S(C, "lab_km_unrelenting", "*.mp3")], v=1.0, max=170)
+E("mus_b4_4", "music", [S(C, "lab_km_static", "*.mp3")], v=1.0, max=170)
+E("mus_b5_1", "music", [S(C, "lab_km_numinousshine", "*.mp3", start=85)], v=1.0, max=170)
+E("mus_b5_2", "music", [S(C, "lab_km_infiniteperspe", "*.mp3", start=45)], v=1.0, max=170)
+E("mus_b5_3", "music", [S(C, "lab_km_bathedinthelig", "*.mp3")], v=1.0, max=170)
+E("mus_b5_4", "music", [S(C, "lab_km_spacial", "*.mp3")], v=1.0, max=170)
 
 # ═════ СИНТЕЗ: звуки, которых нет в наборах ═════
 def gen(name):
@@ -889,7 +1007,8 @@ def build():
                     mix[pad: pad + len(a)] += a
                 if mix is None: continue
                 if sp["mx"]: mix = cap(mix, sp["mx"])
-                outs.append(fade(loudnorm(mix, TARGET["sfx"]), 0.003, 0.2))
+                mix = ffx(mix, o.get("post"))
+                outs.append(fade(loudnorm(mix, o.get("tgt", TARGET["sfx"])), 0.003, 0.2))
         elif kind == "mix":
             mix = None
             for layer, off, g in sp["srcs"]:
@@ -972,7 +1091,8 @@ def build():
                     else:
                         a = process_one(path, lo, kind, sp["mx"])
                 if len(a) < int(0.02 * SR): continue
-                a = loudnorm(a, TARGET.get(kind, -16))
+                if kind not in ("music", "loop"): a = ffx(a, o.get("post"))
+                a = loudnorm(a, o.get("tgt", TARGET.get(kind, -16)))
                 if kind == "music":
                     hear = audible_db(a)
                     print("   %s: на динамике телефона (выше 350 Гц) %.1f дБ" % (id_, hear))
@@ -980,6 +1100,10 @@ def build():
                 outs.append(a)
         if not outs:
             MISSING.append("ПУСТО " + id_); continue
+        if re.match(r"^(w_|step_|bump_wall)", id_) and not re.search(r"(_thud|_power_low|_power_tail)$", id_):
+            hs = [audible_db(x) for x in outs]
+            print("   %s: выше 350 Гц %.1f дБ (худший вариант %.1f)" % (id_, sum(hs) / len(hs), min(hs)))
+            if min(hs) < -9.0: MISSING.append("ГЛУХО НА ТЕЛЕФОНЕ %s: %.1f дБ выше 350 Гц" % (id_, min(hs)))
         files = []
         for k, a in enumerate(outs):
             rel = "%s/%s_%d.ogg" % (grp, id_, k + 1)
