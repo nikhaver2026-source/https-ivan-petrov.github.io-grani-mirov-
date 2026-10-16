@@ -110,38 +110,38 @@
 # «Подземная лаборатория», заход 3: подавляющая музыка и атмосфера, шаги по
 # снегу, гравию, камню и бетону, шаги роботов, поля магнетронов, голоса машин.
 # Лицензия каждой страницы — в licenses.txt; CC BY-SA и GPL в игру не идут.
-lab_snowgravel https://opengameart.org/content/42-snow-and-gravel-footsteps
-lab_metalconc https://opengameart.org/content/metal-footsteps-on-concrete
-lab_foot0 https://opengameart.org/content/footsteps-0
-lab_stonesteps https://opengameart.org/content/fantozzis-footsteps-grasssand-stone
-lab_snowwalk https://opengameart.org/content/walking-on-snow-sound
-lab_robosteps https://opengameart.org/content/robotic-mechanic-step-sounds
-lab_emfields https://opengameart.org/content/em-fields-pack-1
-lab_comp9 https://opengameart.org/content/9-sci-fi-computer-sounds-and-beeps
-lab_horrorlib https://opengameart.org/content/horror-sound-effects-library
-lab_ambpack https://opengameart.org/content/ambience-pack-1-sci-fi-horror
-lab_horratm https://opengameart.org/content/horror-atmosphere
-lab_factory https://opengameart.org/content/factory-ambiance
-lab_elevreactor https://opengameart.org/content/elevator-to-reactor-loop
-lab_heartmach https://opengameart.org/content/heart-of-machine
-lab_bleakterm https://opengameart.org/content/bleak-terminal
-lab_ghostsmach https://opengameart.org/content/ghosts-in-the-machine
-lab_creep https://opengameart.org/content/the-creep
-lab_menacing https://opengameart.org/content/menacing-otherworld
-lab_desolate https://opengameart.org/content/desolate
-lab_searching https://opengameart.org/content/searching
-lab_insistent https://opengameart.org/content/insistent-background-loop
-lab_discord https://opengameart.org/content/discordance
-lab_werelost https://opengameart.org/content/were-lost
-lab_lethal https://opengameart.org/content/lethal-injection
-lab_shadows https://opengameart.org/content/shadows-awaken-within
-lab_silent https://opengameart.org/content/the-world-fell-silent
-lab_bleeding https://opengameart.org/content/bleeding-out
-lab_tomb https://opengameart.org/content/forgoten-tomb-ambience
-lab_torment https://opengameart.org/content/realm-of-torment
-lab_emptycity https://opengameart.org/content/emptycity-background-music
-lab_ghostvoice https://opengameart.org/content/ghost-monster-voice-moaning-growling
-lab_bitvoice https://opengameart.org/content/bitcrushed-voice-one-shots
-lab_atmoint https://opengameart.org/content/atmospheric-interaction-sound-pack
-lab_elevding https://opengameart.org/content/elevator-ding
-lab_energy2 https://opengameart.org/content/energy
+# (заход 3 скачан) lab_snowgravel https://opengameart.org/content/42-snow-and-gravel-footsteps
+# (заход 3 скачан) lab_metalconc https://opengameart.org/content/metal-footsteps-on-concrete
+# (заход 3 скачан) lab_foot0 https://opengameart.org/content/footsteps-0
+# (заход 3 скачан) lab_stonesteps https://opengameart.org/content/fantozzis-footsteps-grasssand-stone
+# (заход 3 скачан) lab_snowwalk https://opengameart.org/content/walking-on-snow-sound
+# (заход 3 скачан) lab_robosteps https://opengameart.org/content/robotic-mechanic-step-sounds
+# (заход 3 скачан) lab_emfields https://opengameart.org/content/em-fields-pack-1
+# (заход 3 скачан) lab_comp9 https://opengameart.org/content/9-sci-fi-computer-sounds-and-beeps
+# (заход 3 скачан) lab_horrorlib https://opengameart.org/content/horror-sound-effects-library
+# (заход 3 скачан) lab_ambpack https://opengameart.org/content/ambience-pack-1-sci-fi-horror
+# (заход 3 скачан) lab_horratm https://opengameart.org/content/horror-atmosphere
+# (заход 3 скачан) lab_factory https://opengameart.org/content/factory-ambiance
+# (заход 3 скачан) lab_elevreactor https://opengameart.org/content/elevator-to-reactor-loop
+# (заход 3 скачан) lab_heartmach https://opengameart.org/content/heart-of-machine
+# (заход 3 скачан) lab_bleakterm https://opengameart.org/content/bleak-terminal
+# (заход 3 скачан) lab_ghostsmach https://opengameart.org/content/ghosts-in-the-machine
+# (заход 3 скачан) lab_creep https://opengameart.org/content/the-creep
+# (заход 3 скачан) lab_menacing https://opengameart.org/content/menacing-otherworld
+# (заход 3 скачан) lab_desolate https://opengameart.org/content/desolate
+# (заход 3 скачан) lab_searching https://opengameart.org/content/searching
+# (заход 3 скачан) lab_insistent https://opengameart.org/content/insistent-background-loop
+# (заход 3 скачан) lab_discord https://opengameart.org/content/discordance
+# (заход 3 скачан) lab_werelost https://opengameart.org/content/were-lost
+# (заход 3 скачан) lab_lethal https://opengameart.org/content/lethal-injection
+# (заход 3 скачан) lab_shadows https://opengameart.org/content/shadows-awaken-within
+# (заход 3 скачан) lab_silent https://opengameart.org/content/the-world-fell-silent
+# (заход 3 скачан) lab_bleeding https://opengameart.org/content/bleeding-out
+# (заход 3 скачан) lab_tomb https://opengameart.org/content/forgoten-tomb-ambience
+# (заход 3 скачан) lab_torment https://opengameart.org/content/realm-of-torment
+# (заход 3 скачан) lab_emptycity https://opengameart.org/content/emptycity-background-music
+# (заход 3 скачан) lab_ghostvoice https://opengameart.org/content/ghost-monster-voice-moaning-growling
+# (заход 3 скачан) lab_bitvoice https://opengameart.org/content/bitcrushed-voice-one-shots
+# (заход 3 скачан) lab_atmoint https://opengameart.org/content/atmospheric-interaction-sound-pack
+# (заход 3 скачан) lab_elevding https://opengameart.org/content/elevator-ding
+# (заход 3 скачан) lab_energy2 https://opengameart.org/content/energy
