@@ -834,6 +834,15 @@ function interact() {
 }
 game.interact = interact;
 function openTarget(q) {
+  /* закрытая дверь, которую можно открыть, — открывается сразу, без меню */
+  if (q.type === "door" && !doorOpen(q.ref) && !doorBlock(q.ref)) {
+    var lk = q.ref.lock;
+    if (lk && lk.type === "card") A("play", "card_ok");
+    if (lk && lk.type === "key") A("play", "door_unlock");
+    if (lk && lk.type === "gate") A("play", "gate_card");
+    openDoor(q.ref);
+    return;
+  }
   if (q.type === "door") doorMenu(q.ref, q.dir);
   else if (q.type === "secret") secretMenu(q.ref);
   else if (q.type === "obj") objMenu(q.ref);
