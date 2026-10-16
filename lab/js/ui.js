@@ -54,6 +54,9 @@ function menu(title, items, opts) {
 function closeTop(silent) {
   var w = top();
   if (!w || w.root) return false;
+  /* окно записки закрыли (Escape, «назад», два пальца вниз) — чтение
+     обрывается и больше не продолжается */
+  if (w.note) LAB.Speech.endNote();
   var quiet = LAB.Speech.noteBusy(); /* записка ещё читается — без объявлений */
   stack.pop();
   if (w.onClose) LAB.safe(w.onClose);
@@ -67,7 +70,7 @@ function closeTop(silent) {
   return true;
 }
 function closeAll() {
-  while (stack.length && !top().root) { var w = stack.pop(); if (w.onClose) LAB.safe(w.onClose); }
+  while (stack.length && !top().root) { var w = stack.pop(); if (w.note) LAB.Speech.endNote(); if (w.onClose) LAB.safe(w.onClose); }
   render();
 }
 function layer() {
@@ -562,7 +565,8 @@ function journalMenu() {
   menu("Журнал", items);
 }
 /* Окно записки: пока оно открыто, мир ждёт, и текст дочитывается до конца.
-   Свайп вправо и влево — по абзацам, «Закрыть» или два пальца вниз — назад. */
+   Свайп вправо и влево — по абзацам, «Закрыть» или два пальца вниз — назад.
+   На компьютере — окно-диалог: Escape закрывает его, и чтение обрывается. */
 function note(title, text, after, opts) {
   opts = opts || {};
   var parts = String(text).match(/[^.!?…]+[.!?…»]*/g) || [text];
@@ -570,7 +574,7 @@ function note(title, text, after, opts) {
   parts.forEach(function (p) { if ((curp + p).length > 220 && curp) { paras.push(curp.trim()); curp = p; } else curp += p; });
   if (curp.trim()) paras.push(curp.trim());
   var items = paras.map(function (p) { return { label: p, keep: true, fn: function () { say(p); } }; });
-  items.push({ label: "Закрыть", fn: function () { if (after) after(); } });
+  items.push({ label: "Закрыть", fn: function () { LAB.Speech.endNote(); if (after) after(); else if (!top() && screen === "game") say("Игра."); } });
   A("play", "paper");
   var w = menu(title, items, { silent: true });
   if (w) w.note = true;

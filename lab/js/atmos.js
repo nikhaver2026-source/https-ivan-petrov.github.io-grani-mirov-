@@ -210,7 +210,7 @@ function idsFor(L) {
   var lev = LAB.LEVELS[L], out = [], sets = {};
   var foes = lev.foes.slice();
   if (L < LAB.LEVELS_N && LAB.LEVELS[L + 1]) LAB.LEVELS[L + 1].foes.forEach(function (f) { if (LAB.FOES[f] && LAB.FOES[f].kind === "mech") foes.push(f); });
-  foes.push("cam", "cleaner", "miniturret", "turret");
+  foes.push("cam", "cleaner", "miniturret", "turret", "okodrone", "repairbot", "patrolbot");
   foes.forEach(function (f) { if (LAB.FOES[f]) sets[LAB.FOES[f].snd] = 1; });
   if (lev.boss && LAB.BOSSES[lev.boss]) sets[LAB.BOSSES[lev.boss].snd] = 1;
   if (sets.labmut || sets.roach) sets.rat = 1;
@@ -390,7 +390,17 @@ function foeSound(f, kind) {
   if (beh.indexOf("camera") >= 0 && kind === "alert" && has("cam_spot")) at("cam_spot", f.x, f.y, { gain: 0.9 });
   if (kind === "alert") sub((f.name || "Враг").split(",")[0] + " заметил вас");
 }
+var hoverT = {};
 function foeStep(f) {
+  /* летающая машина не шагает — слышно, как она жужжит */
+  var beh0 = (f.base && f.base.beh) || [];
+  if (beh0.indexOf("fly") >= 0) {
+    var now0 = Date.now();
+    if (hoverT[f.id] && now0 - hoverT[f.id] < 1500) return;
+    hoverT[f.id] = now0;
+    at(has(f.snd + "_idle") ? f.snd + "_idle" : "robot_idle", f.x, f.y, { gain: 0.6, rate: (f.base && f.base.sndRate) || 1 });
+    return;
+  }
   if (Math.random() < 0.35 && f.kind === "bio" && !/rat|roach|micro/.test(f.type)) return;
   var id = f.kind === "mech" ? (has(f.snd + "_step") ? f.snd + "_step" : "robot_step") : (has(f.snd + "_step") ? f.snd + "_step" : "mutant_step");
   at(id, f.x, f.y, { gain: f.boss ? 1 : 0.65, rate: ((f.base && f.base.sndRate) || 1) * (f.boss ? 0.8 : 1) });

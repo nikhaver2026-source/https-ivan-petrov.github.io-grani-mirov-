@@ -159,6 +159,7 @@ function enterFloor(L, F, how, silent) {
   G.maxF[L] = Math.max(G.maxF[L] || 0, F);
   markSeen();
   A("enterFloor", L, F);
+  if (LAB.oko) LAB.oko.event("floor", { how: how });
   if (how === "gatedown" && LAB.oko) LAB.oko.event("enter");
   if (!silent) {
     var lev = LAB.LEVELS[L];
@@ -958,6 +959,8 @@ game.doorAutoClose = doorAutoClose;
 function openDoor(d, auto) {
   CUR.fs.doors[d.id] = 2;
   doorOpened(d);
+  /* запертую дверь открыли впервые — ОКО это отмечает */
+  if (d.lock && d.lock.type !== "secret" && LAB.oko) { var od = CUR.fs.okoDoor || (CUR.fs.okoDoor = {}); if (!od[d.id]) { od[d.id] = 1; LAB.oko.event("door", { x: d.x, y: d.y }); } }
   A("doorOpen", d);
   if (!auto) say("Дверь открыта.");
   if (d.lock && d.lock.type === "card" && !auto) gainXP(2);
@@ -1401,7 +1404,7 @@ function terminalMenu(o) {
       { label: "Взломать (повторите сигналы жестами)", fn: function () {
         UIx("closeAll");
         LAB.mini.hack(hackLength(1 + Math.floor(Math.min(G.L, 20) / 2) + okoDiff()), function (ok) {
-          if (ok) { st.hacked = true; A("play", "term_ok"); gainXP(10); sayq("Доступ получен."); if (LAB.oko) LAB.oko.event("terminal_hack"); terminalMenu(o); }
+          if (ok) { st.hacked = true; A("play", "term_ok"); gainXP(10); sayq("Доступ получен."); if (LAB.oko) LAB.oko.event("terminal_hack", { x: o.x, y: o.y }); terminalMenu(o); }
           else termFail(o, st, "Доступ запрещён.");
         });
       } },
@@ -1472,7 +1475,8 @@ function termFail(o, st, why) {
 }
 function turretStatus() {
   var m = CUR.fs.turretMode;
-  return m === "off" ? "отключены" + (CUR.fs.repairAt ? ", ОКО шлёт ремонтника" : "") : m === "ours" ? "перехвачены, бьют по врагам" + (CUR.fs.counterAt ? ", ОКО готовит контрвзлом" : "") : "под контролем ОКО";
+  var fixing = CUR.fs.repairAt || (LAB.combat && LAB.combat.repairers && LAB.combat.repairers().length);
+  return m === "off" ? "отключены" + (fixing ? ", ОКО шлёт ремонтника" : "") : m === "ours" ? "перехвачены, бьют по врагам" + (CUR.fs.counterAt ? ", ОКО готовит контрвзлом" : "") : "под контролем ОКО";
 }
 /* Оборонная сеть: отключить (схема реле питания) или перехватить (подбор
    ключа ОКО и схема реле). Сложность растёт с глубиной и с тем, как часто

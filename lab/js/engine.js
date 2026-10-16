@@ -480,7 +480,7 @@ function keysSpoken(t) {
 LAB.keysSpoken = keysSpoken;
 var Speech = {
   backend: "none", queue: [], speaking: false, cur: null, seq: 0, timer: null, keepAlive: null,
-  reading: false, noteReading: false, later: [], userUntil: 0,
+  reading: false, noteReading: false, later: [], userUntil: 0, held: [], heldTimer: null, lastUser: 0,
   webVoice: null, webVoices: [], androidVoices: [], ready: false, esp: null, espSt: "off", espSrc: null, onState: null,
   hasBridge: function () { return !!(window.LabTTS && typeof window.LabTTS.speak === "function"); },
   hasWeb: function () { return typeof window.speechSynthesis !== "undefined" && typeof window.SpeechSynthesisUtterance !== "undefined"; },
@@ -650,12 +650,44 @@ var Speech = {
   /* Записка читается: её не обрывает ни событие, ни действие игрока —
      только тишина (четыре пальца вниз) или явное «замолчать». */
   noteBusy: function () { return this.noteReading && (this.speaking || this.queue.length > 0); },
-  /* Любое действие игрока сразу обрывает речь — кроме записки. */
+  /* Любое действие игрока сразу обрывает речь — кроме записки. Важное
+     сообщение (keep: громкая связь ОКО, кто вышел и откуда) не теряется:
+     оно отложено и прозвучит, как только игрок замрёт. */
   userAct: function () {
     this.user();
+    this.lastUser = Date.now();
     if (this.noteBusy()) return;
+    this._hold();
     if (this.speaking || this.queue.length) this.stop();
     this.later = [];
+  },
+  /* Отложить важное (keep), которое сейчас обрывается: недосказанную фразу
+     и ждущие в очереди. */
+  _hold: function () {
+    var self = this, got = [], cur = this.cur;
+    if (cur && cur.item && cur.item.keep) {
+      var need = String(cur.text).length * 55 / Math.max(0.5, +settings.rate || 1);
+      if (!cur.started || Date.now() - cur.t0 < need) got.push(cur.item);
+    }
+    this.queue.forEach(function (it) { if (it.keep) got.push(it); });
+    got.forEach(function (it) { if (!self.held.some(function (h) { return h.text === it.text; })) self.held.push(it); });
+    if (this.held.length > 6) this.held = this.held.slice(-6);
+    if (this.held.length) this._armHeld();
+  },
+  _armHeld: function () {
+    var self = this;
+    clearTimeout(this.heldTimer);
+    this.heldTimer = setTimeout(function () { self._release(); }, 1300);
+  },
+  /* Игрок замер — отложенное важное звучит (что устарело — уже нет). */
+  _release: function () {
+    this.heldTimer = null;
+    if (!this.held.length) return;
+    if (Date.now() - this.lastUser < 1100 || this.noteBusy()) { this._armHeld(); return; }
+    var now = Date.now(), self = this, items = this.held;
+    this.held = [];
+    items.forEach(function (it) { if (now - it.t < 30000 && !self.queue.some(function (q) { return q.text === it.text; })) self.queue.push(it); });
+    this._pump();
   },
   _prio: function (opts) {
     var P = this.PRIO;
@@ -669,7 +701,8 @@ var Speech = {
      чтение может только сам игрок — любым жестом; четыре пальца вниз — тишина.
      opts: interrupt (false — в очередь), prio ("info" | "event" | "action" |
      "urgent"), urgent, key (новая фраза с тем же ключом заменяет ждущую),
-     note, read, robot. */
+     keep (важное: действие игрока его не отменяет — оно прозвучит, когда
+     игрок замрёт), note, read, robot. */
   say: function (text, opts) {
     opts = opts || {};
     text = String(text == null ? "" : text);
@@ -679,7 +712,7 @@ var Speech = {
     var readOn = this.reading && (this.speaking || this.queue.length > 0) && !user && prio < P.urgent && !opts.note;
     if (noteOn || readOn) {
       /* ждёт конца чтения; из отложенного остаются самые важные и свежие */
-      this.later.push({ text: text, robot: !!opts.robot, prio: prio });
+      this.later.push({ text: text, robot: !!opts.robot, prio: prio, keep: !!opts.keep });
       while (this.later.length > 4) {
         var lo = 0; for (var i = 1; i < this.later.length; i++) if (this.later[i].prio < this.later[lo].prio) lo = i;
         this.later.splice(lo, 1);
@@ -695,6 +728,7 @@ var Speech = {
     if (prio < P.action) {
       if (this.cur && this.cur.full === full && now - this.cur.t0 < 2500) return;
       for (var q = 0; q < this.queue.length; q++) if (this.queue[q].full === full) return;
+      for (var hq = 0; hq < this.held.length; hq++) if (this.held[hq].full === full) return;
     }
     if (opts.key) this.queue = this.queue.filter(function (it) { return it.key !== opts.key; });
     var front = false;
@@ -704,14 +738,14 @@ var Speech = {
            фраза прозвучит ещё раз — сразу после срочного */
         if (this.cur && this.cur.prio < P.urgent && !this.noteReading) { var was = this.cur.item; this._cut(); if (was) this.queue.unshift(was); }
         front = true;
-      } else { this.stop(true); this.later = []; }
+      } else { this._hold(); this.stop(true); this.later = []; }
     }
     var parts = this._chunk(text);
     if (opts.note) { this.noteReading = true; this.reading = true; }
     else if (opts.read || text.length > 230) this.reading = true;
     /* срок годности — у событий без жеста игрока: опоздавшее не звучит */
-    var ttl = prio <= P.event && !user && !opts.note && !opts.read ? (this.TTL[prio] || 9000) : 0;
-    var items = parts.map(function (p) { return { text: p, full: full, robot: !!opts.robot, prio: prio, key: opts.key || "", t: now, ttl: ttl, tries: 0 }; });
+    var ttl = opts.keep ? 30000 : prio <= P.event && !user && !opts.note && !opts.read ? (this.TTL[prio] || 9000) : 0;
+    var items = parts.map(function (p) { return { text: p, full: full, robot: !!opts.robot, prio: prio, key: opts.key || "", t: now, ttl: ttl, tries: 0, keep: !!opts.keep }; });
     if (front) { var k = 0; while (k < this.queue.length && this.queue[k].prio >= P.urgent) k++; Array.prototype.splice.apply(this.queue, [k, 0].concat(items)); }
     else Array.prototype.push.apply(this.queue, items);
     /* длинная очередь событий: старые события уступают */
@@ -792,7 +826,7 @@ var Speech = {
     if (this.reading || this.noteReading) {
       this.reading = false; this.noteReading = false;
       var later = this.later, self = this; this.later = [];
-      later.forEach(function (l) { self._chunk(l.text).forEach(function (p) { self.queue.push({ text: p, full: l.text, robot: l.robot, prio: l.prio || 1, key: "", t: Date.now(), ttl: 0, tries: 0 }); }); });
+      later.forEach(function (l) { self._chunk(l.text).forEach(function (p) { self.queue.push({ text: p, full: l.text, robot: l.robot, prio: l.prio || 1, key: "", t: Date.now(), ttl: l.keep ? 30000 : 0, tries: 0, keep: !!l.keep }); }); });
       if (later.length && LAB.showCaption) LAB.showCaption(later[later.length - 1].text);
     }
   },
@@ -916,8 +950,20 @@ var Speech = {
       }
     }, 700);
   },
+  /* Окно записки закрыли: чтение обрывается и не продолжается; отложенное
+     на время чтения забывается — кроме важного (keep): оно прозвучит, когда
+     игрок замрёт. */
+  endNote: function () {
+    var self = this, now = Date.now(), keepL = this.later.filter(function (l) { return l.keep; });
+    this.later = [];
+    this.stop();
+    keepL.forEach(function (l) {
+      self._chunk(l.text).forEach(function (p) { if (!self.held.some(function (h) { return h.text === p; })) self.held.push({ text: p, full: l.text, robot: l.robot, prio: l.prio || 1, key: "", t: now, ttl: 30000, tries: 0, keep: true }); });
+    });
+    if (this.held.length) this._armHeld();
+  },
   /* Тишина: четыре пальца вниз. Отложенное тоже забывается. */
-  hush: function () { this.later = []; this.stop(); },
+  hush: function () { this.later = []; this.held = []; clearTimeout(this.heldTimer); this.heldTimer = null; this.stop(); },
   busy: function () { return this.speaking || this.queue.length > 0; },
   /* Самопроверка очереди (tests/sound.test.js): поддельный синтезатор — порядок
      по важности, повторы, устаревшее, повтор после сбоя, сторож зависания,
@@ -980,6 +1026,14 @@ var Speech = {
       return wait(250);
     }).then(function () {
       out.push([has("Ответ два") && !has("Хвост"), "речь: ответ на новое действие отменяет недосказанное"]);
+      reset(); mode.hang = true;
+      self.say("Длинный ответ.");
+      self.say("ОКО: высылаю ремонтника.", { prio: "event", keep: true });
+      self.say("Простое событие.", { interrupt: false });
+      self.userAct(); mode.hang = false;
+      return wait(1800);
+    }).then(function () {
+      out.push([has("высылаю ремонтника") && !has("Простое событие"), "речь: сообщение ОКО, оборванное действием игрока, прозвучало, когда игрок замер"]);
     }).then(function () {
       self.hush();
       self.testEngine = saved.eng; self.backend = saved.backend; self.espSt = saved.esp; self.estScale = 1; self.TTL = saved.ttl;

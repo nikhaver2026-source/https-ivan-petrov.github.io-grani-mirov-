@@ -674,6 +674,90 @@ function ok(cond, msg) { if (cond) console.log("  ✓ " + msg); else { fails++; 
   ok(misc.deploy && misc.ally, "переносная турель встаёт и бьёт на нашей стороне");
   ok(/ОКО по громкой связи/.test(misc.oko), "камера заметила — ОКО объявляет тревогу: " + misc.oko.slice(0, 120));
 
+  console.log("ОКО сопротивляется: ремонтники, отряды, дрон слежения, патрули смены, посты");
+  const oko = await page.evaluate(async () => {
+    const g = LAB.game, G = g.G, out = {}, C = LAB.combat;
+    C.stop();
+    const live = () => C.foes().filter(f => !f.dead);
+    const dH = f => Math.abs(f.x - G.x) + Math.abs(f.y - G.y);
+    const god = () => { G.hp = G.hpMax = 99999; G.dead = false; };
+    const posts = { lift: 0, stairs: 0, office: 0, inRoom: true };
+    for (let L = 1; L <= 12; L++) for (let F = 3; F <= 19; F += 4) {
+      const fl = LAB.getFloor(G.seed, L, F);
+      fl.foes.forEach(f => { if (!f.guard) return; posts[f.guard]++; if (f.guard === "lift" && f.room !== fl.E) posts.inRoom = false; if (f.guard === "stairs" && f.room !== fl.D) posts.inRoom = false; });
+    }
+    out.posts = posts;
+    /* ремонтник: выходит, доходит, чинит; уничтожили — идёт следующий */
+    let found = null;
+    for (let L = 1; L <= 3 && !found; L++) for (let F = 4; F <= 20 && !found; F++) { const fl = LAB.getFloor(G.seed, L, F); if (fl.turrets && !G.visited[L + "-" + F]) found = { L, F }; }
+    if (found) {
+      g.enterFloor(found.L, found.F, "down", true); god();
+      live().forEach(f => { if (LAB.FOES[f.type].beh.indexOf("turret") < 0) f.dead = true; });
+      C.turretsOff(); LAB.oko.event("turret_off");
+      let t1 = -1, t2 = -1, again = -1;
+      for (let i = 0; i < 200 && t1 < 0; i++) { C.tick(); if (C.repairers().length) t1 = i; }
+      if (t1 >= 0) { C.repairers().forEach(f => C.despawn(f)); LAB.oko.event("kill", { task: "repair" }); }
+      for (let i = 0; i < 300 && again < 0; i++) { C.tick(); if (C.repairers().length) again = i; }
+      for (let i = 0; i < 900 && t2 < 0; i++) { C.tick(); if (g.CUR.fs.turretMode === "on") t2 = i; }
+      out.repair = { t1, again, t2 };
+    }
+    /* перепрошивка: новые машины с другого этажа идут на вас */
+    g.enterFloor(2, 8, "down", true); god();
+    g.CUR.fs.robots = true; C.robotsCalm();
+    LAB.oko.event("robots");
+    let fresh = [];
+    for (let i = 0; i < 80 && !fresh.length; i++) { C.tick(); fresh = live().filter(f => f.fresh && !f.calm); }
+    const fd0 = Math.min.apply(null, fresh.map(dH).concat([999]));
+    for (let i = 0; i < 40; i++) C.tick();
+    out.fresh = { n: fresh.length, d0: fd0, d1: Math.min.apply(null, fresh.filter(f => !f.dead).map(dH).concat([999])) };
+    /* неудачный взлом: проверка идёт к терминалу */
+    g.enterFloor(2, 9, "down", true); god();
+    live().forEach(f => { f.dead = true; });
+    const term = g.CUR.fl.objs.find(o => o.type === "terminal") || { x: G.x, y: G.y };
+    LAB.oko.event("hack_fail", { x: term.x, y: term.y });
+    let sq = [];
+    for (let i = 0; i < 40 && !sq.length; i++) { C.tick(); sq = live().filter(f => f.squad); }
+    const toT = () => Math.min.apply(null, sq.filter(f => !f.dead).map(f => Math.abs(f.x - term.x) + Math.abs(f.y - term.y)).concat([999]));
+    const c0 = toT(); for (let i = 0; i < 60; i++) C.tick();
+    out.check = { n: sq.length, c0, c1: toT() };
+    /* дрон слежения: догоняет, держит дистанцию, стреляет */
+    g.enterFloor(3, 5, "down", true); god();
+    live().forEach(f => { f.dead = true; });
+    const dr = C.dispatch(1, "drone"), hp0 = G.hp, dd = [];
+    for (let i = 0; i < 160; i++) { C.tick(); if (i >= 100 && dr[0]) dd.push(dH(dr[0])); }
+    out.drone = { n: dr.length, far: dr[0] ? Math.max.apply(null, dd) : 99, near: dr[0] ? Math.min.apply(null, dd) : 0, hurt: hp0 - G.hp };
+    /* патрули смены: маршруты меняются, патрульных хватает */
+    g.enterFloor(3, 9, "down", true); god();
+    live().forEach(f => { f.dead = true; });
+    LAB.oko.state().heat = 60;
+    LAB.oko.shift(); for (let i = 0; i < 40; i++) C.tick();
+    const r1 = C.patrols().map(f => JSON.stringify(f.route));
+    LAB.oko.shift(); for (let i = 0; i < 40; i++) C.tick();
+    out.patrol = { n: C.patrols().length, changed: C.patrols().some(f => r1.indexOf(JSON.stringify(f.route)) < 0) };
+    LAB.oko.state().heat = 0;
+    /* страж у лифта: погнался — и вернулся на пост */
+    g.enterFloor(2, 6, "down", true); god();
+    const lg = C.guards().find(f => f.guard === "lift");
+    if (lg) { lg.state = "hunt"; lg.lastKnown = { x: G.x, y: G.y }; lg.lost = 0; for (let i = 0; i < 160; i++) C.tick(); out.guard = { back: lg.x === lg.post.x && lg.y === lg.post.y, state: lg.state }; }
+    /* павший враг не встаёт, когда вы вернулись на этаж */
+    const v = live().find(f => !f.guard && LAB.FOES[f.type].beh.indexOf("turret") < 0);
+    if (v) { const id = v.id; C.areaDamage(v.x, v.y, 0, 99999, "kinetic"); g.enterFloor(2, 7, "down", true); g.enterFloor(2, 6, "down", true); out.dead = !C.foes().some(f => f.id === id && !f.dead); }
+    await new Promise(r => setTimeout(r, 700));
+    out.said = SPOKEN.filter(t => /ОКО/.test(t)).slice(-6).join(" | ");
+    G.hp = G.hpMax = 100;
+    return out;
+  });
+  ok(oko.posts.lift > 20 && oko.posts.stairs > 20 && oko.posts.inRoom, "посты ОКО: стражи у лифта (" + oko.posts.lift + "), у лестницы (" + oko.posts.stairs + "), в кабинетах (" + oko.posts.office + ")");
+  ok(!oko.repair || (oko.repair.t1 >= 0 && oko.repair.t1 <= 40), "отключили турели — ремонтник выходит через несколько секунд (тактов: " + (oko.repair && oko.repair.t1) + ")");
+  ok(!oko.repair || oko.repair.again >= 0, "ремонтника уничтожили — ОКО шлёт следующего (тактов: " + (oko.repair && oko.repair.again) + ")");
+  ok(!oko.repair || oko.repair.t2 >= 0, "ремонтник дошёл и починил: сеть снова у ОКО (тактов: " + (oko.repair && oko.repair.t2) + ")");
+  ok(oko.fresh.n >= 1 && oko.fresh.d1 < oko.fresh.d0, "перепрошили роботов — новые машины ОКО идут к вам (" + oko.fresh.n + ", " + oko.fresh.d0 + " → " + oko.fresh.d1 + " шагов)");
+  ok(oko.check.n >= 1 && oko.check.c1 < oko.check.c0, "неудачный взлом — проверка идёт к терминалу (" + oko.check.c0 + " → " + oko.check.c1 + ")");
+  ok(oko.drone.n === 1 && oko.drone.far <= 8 && oko.drone.near >= 2 && oko.drone.hurt > 0, "дрон слежения догнал, держится рядом (" + oko.drone.near + "–" + oko.drone.far + " шагов) и стреляет");
+  ok(oko.patrol.n >= 2 && oko.patrol.changed, "патрули смены: " + oko.patrol.n + ", маршруты меняются");
+  ok(!oko.guard || (oko.guard.back && oko.guard.state === "idle"), "страж у лифта вернулся на пост");
+  ok(oko.dead !== false, "павший враг не встаёт, когда вы вернулись на этаж");
+
   console.log("Обход этажей одного зерна: вход, такты, осмотр");
   const tour = await page.evaluate(() => {
     const g = LAB.game, G = g.G, out = { floors: 0, err: [], want: 0 };

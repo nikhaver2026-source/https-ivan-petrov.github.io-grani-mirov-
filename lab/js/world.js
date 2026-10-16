@@ -201,7 +201,7 @@ function turretPool(lev, d0) {
 }
 
 function genFloor(seed, L, F, attempt) {
-  var r = Rng(seed, "floor:" + L + ":" + F + ":" + attempt);
+  var r = Rng(seed, "floor:" + L + ":" + F + ":" + attempt), rMain = r;
   var NF = LAB.FLOORS_N, lev = LAB.LEVELS[L];
   var sl = LAB.floorSlots(seed, L, F);
   var U = sl.U, D = sl.D, E = sl.E;
@@ -801,7 +801,8 @@ function genFloor(seed, L, F, attempt) {
     });
   }
   if (!foePool.length) foePool = ["rat"];
-  function makeFoe(fid, x, y, s2, extra) {
+  function makeFoe(fid, x, y, s2, extra, rr) {
+    var r = rr || rMain; /* у стражей ОКО — свой поток случайностей */
     var base = LAB.FOES[fid];
     var lvl = Math.max(1, LAB.foeLevel(L, F) + r.int(-1, 1));
     var sc2 = LAB.scaleFoe(base, lvl);
@@ -993,6 +994,55 @@ function genFloor(seed, L, F, attempt) {
   if (L >= 2 && !hasObj("okoterm") && r.chance(0.3)) addSvc("okoterm", { seed: r.int(1, 99999) });
   if (!hasObj("puzzle") && r.chance(0.28)) { var pz = addSvc("puzzle", { kind: r.pick(["sort", "relays", "bulls", "riddle"]), seed: r.int(1, 99999) }); if (pz) pz.loot = genLoot(r, L, F, "safe", "tech"); }
   if (!hasObj("radio") && r.chance(0.25)) addSvc("radio", { band: r.int(0, 999) });
+
+  /* 18. Посты ОКО. Перед лифтом и у лестницы вниз стоят стражи — роботы
+     или твари: держат пост, отходят от него недалеко и возвращаются.
+     В пустом кабинете с компьютером или терминалом — охранник; терминал
+     безопасности часто стерегут. Свой поток случайностей: всё остальное
+     на этаже от постов не меняется. */
+  var rg = Rng(seed, "posts:" + L + ":" + F + ":" + attempt), gN = 0;
+  var guardPool = foePool.filter(function (fid) {
+    var b3 = LAB.FOES[fid];
+    return b3 && ["stationary", "swarm", "mimic", "cleaner", "camera", "burrow", "blink", "indirect"].every(function (b) { return b3.beh.indexOf(b) < 0; });
+  });
+  if (!guardPool.length) guardPool = foePool.slice();
+  var mechG = guardPool.filter(function (fid) { return LAB.FOES[fid].kind === "mech"; });
+  function postCells(s2, ox, oy, d1, d2) {
+    var rm7 = rooms[s2], out = [];
+    for (var y7 = rm7.y0; y7 <= rm7.y1; y7++) for (var x7 = rm7.x0; x7 <= rm7.x1; x7++) {
+      var dd7 = Math.max(Math.abs(x7 - ox), Math.abs(y7 - oy));
+      if (dd7 < d1 || dd7 > d2 || !cellFree(x7, y7)) continue;
+      /* не в самом входе: проход в помещение остаётся свободным */
+      var edge = [[1, 0], [-1, 0], [0, 1], [0, -1]].some(function (v) { var tt7 = t[idx(x7 + v[0], y7 + v[1])]; return tt7 === T_DOOR || tt7 === T_CORR; });
+      if (!edge) out.push([x7, y7]);
+    }
+    return out;
+  }
+  function addGuard(s2, obj, kind) {
+    if (!obj || s2 < 0 || !rooms[s2]) return null;
+    var cells = postCells(s2, obj.x, obj.y, 2, 3);
+    if (!cells.length) cells = postCells(s2, obj.x, obj.y, 1, 4);
+    if (!cells.length) return null;
+    var c9 = rg.pick(cells);
+    var pool = mechG.length && (kind === "office" || rg.chance(0.6)) ? mechG : guardPool;
+    return makeFoe(rg.pick(pool), c9[0], c9[1], s2, { id: "g" + (gN++), guard: kind, post: [c9[0], c9[1]] }, rg);
+  }
+  if (!(L === 1 && F <= 2)) {
+    var nPost = function () { return 1 + (rg.chance(Math.min(0.75, 0.2 + d0 * 0.004)) ? 1 : 0) + (d0 >= 120 && rg.chance(0.4) ? 1 : 0); };
+    var objOf = function (tp) { return fl.objs.filter(function (o) { return o.type === tp; })[0]; };
+    for (var g1 = nPost(); g1 > 0; g1--) addGuard(E, objOf("elevator"), "lift");
+    if (F < NF) for (var g2 = nPost(); g2 > 0; g2--) addGuard(D, objOf("stairs_down"), "stairs");
+    for (s = 0; s < NS; s++) {
+      if (!rooms[s] || !main[s] || s === U || s === D || s === E || s === secret || s === bossSlot) continue;
+      var key9 = fl.objs.filter(function (o) { return o.room === s && o.type === "terminal" && o.sub === "sec"; })[0];
+      var busy9 = fl.foes.some(function (q) { return q.room === s; });
+      if (key9 && rg.chance(Math.min(0.8, 0.4 + d0 * 0.002))) { addGuard(s, key9, "office"); continue; }
+      if (busy9) continue;
+      key9 = fl.objs.filter(function (o) { return o.room === s && (o.type === "terminal" || o.type === "pc" || o.type === "safe"); })[0];
+      if (key9 && rg.chance(0.6)) addGuard(s, key9, "office");
+    }
+  }
+  fl.posts = gN;
 
   fl.sample = d0;
   fl.turrets = turrets;

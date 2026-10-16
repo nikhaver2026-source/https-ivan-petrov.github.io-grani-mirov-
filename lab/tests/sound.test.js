@@ -118,6 +118,30 @@ function ok(c, m) { console.log((c ? "  ✓ " : "  ✗ ") + m); if (!c) fails++;
   if (s.skip) ok(false, "у речи нет самопроверки");
   else (s.checks || []).forEach(c => ok(c[0], c[1]));
 
+  console.log("Записка: Escape закрывает окно и обрывает чтение");
+  s = await page.evaluate(async () => {
+    const Sp = LAB.Speech, spoken = [];
+    const saved = { backend: Sp.backend, eng: Sp.testEngine, speech: LAB.settings.speech, est: Sp.estScale };
+    LAB.settings.speech = true; Sp.hush();
+    Sp.testEngine = { speak: function (t, id) { spoken.push(t); Sp._started(id); setTimeout(function () { if (Sp.cur && Sp.cur.id === id) Sp._done(); }, 120); }, stop: function () {}, busy: function () { return !!Sp.cur; } };
+    Sp.backend = "test"; Sp.estScale = 0.05;
+    if (LAB.ui.screen() === "boot") LAB.ui.mainMenu();
+    const long = Array.from({ length: 12 }, (_, i) => "Абзац номер " + (i + 1) + " длинной записки, которую читают вслух до конца.").join(" ");
+    LAB.ui.note("Проверочная записка", long);
+    await new Promise(r => setTimeout(r, 300));
+    const before = spoken.filter(t => /Абзац номер/.test(t)).length, open = !!(LAB.ui.top() && LAB.ui.top().note);
+    document.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true }));
+    const closed = !(LAB.ui.top() && LAB.ui.top().note);
+    const n1 = spoken.length;
+    await new Promise(r => setTimeout(r, 1500));
+    const after = spoken.slice(n1).filter(t => /Абзац номер/.test(t)).length;
+    const reading = Sp.noteReading;
+    Sp.hush(); Sp.testEngine = saved.eng; Sp.backend = saved.backend; LAB.settings.speech = saved.speech; Sp.estScale = saved.est;
+    return { before, open, closed, after, reading };
+  });
+  ok(s.open && s.before >= 1, "записка открылась окном и читается");
+  ok(s.closed && s.after === 0 && !s.reading, "Escape закрыл окно записки — чтение оборвалось и дальше не идёт (после закрытия прозвучало: " + s.after + ")");
+
   ok(!errs.length, "ошибок страницы нет" + (errs.length ? ": " + errs.join(" | ") : ""));
   await browser.close(); server.close();
   console.log(fails ? "ЕСТЬ ОШИБКИ: " + fails : "ВСЁ ХОРОШО");
