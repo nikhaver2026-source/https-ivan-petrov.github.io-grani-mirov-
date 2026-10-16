@@ -9,6 +9,10 @@
 // Microsoft в игре нет. Мост голосов — общий с «Гранью Миров» (desktop/sapi.js
 // в корне репозитория): при сборке он кладётся рядом с этим файлом.
 // Если у игрока нет ни одного такого голоса, игра говорит встроенным eSpeak NG.
+//
+// Сборок две: 64-битная (Electron 44, Windows 10 и 11) и 32-битная (Electron 22 —
+// последний с 32-битной Windows, Windows 7 и 8; идёт и на 64-битной Windows).
+// Этот файл работает в обеих.
 const { app, BrowserWindow, protocol, Menu, shell, ipcMain } = require('electron');
 const path = require('path');
 const fs = require('fs');
@@ -29,8 +33,12 @@ const TITLE = 'Подземная лаборатория ' + VERSION;
 // итог в журнал и закрывается с кодом 0 (всё хорошо) или 1.
 const SELFTEST = process.argv.includes('--lab-selftest');
 const ROOT = app.isPackaged ? path.join(process.resourcesPath, 'game') : path.join(__dirname, '..');
+// 32-битная сборка держит сохранения в своей папке: её Chromium старше и не
+// читает хранилище 64-битной сборки — стёр бы его, а с ним и сохранения.
+if (process.arch === 'ia32') app.setPath('userData', path.join(app.getPath('appData'), 'Подземная лаборатория (32 бит)'));
 
-// ── ЖУРНАЛ ── (папка данных игры: %APPDATA%\Подземная лаборатория\lab.log)
+// ── ЖУРНАЛ ── (папка данных игры: %APPDATA%\Подземная лаборатория\lab.log;
+// у 32-битной сборки — %APPDATA%\Подземная лаборатория (32 бит)\lab.log)
 let logFile = '';
 function log(m) {
   const line = new Date().toISOString().slice(11, 23) + ' ' + String(m);
@@ -54,12 +62,17 @@ const MIME = {
   '.mp3': 'audio/mpeg', '.wav': 'audio/wav', '.m4a': 'audio/mp4', '.webm': 'audio/webm', '.wasm': 'application/wasm',
   '.txt': 'text/plain; charset=utf-8', '.md': 'text/plain; charset=utf-8'
 };
-async function serve(request) {
-  const u = new URL(request.url);
-  let rel = decodeURIComponent(u.pathname);
+// Файл игры по адресу app://lab/…; пусто — адрес ведёт за пределы игры.
+function gameFile(url) {
+  let rel;
+  try { rel = decodeURIComponent(new URL(url).pathname); } catch (_) { return ''; }
   if (!rel || rel === '/') rel = '/index.html';
   const file = path.normalize(path.join(ROOT, rel));
-  if (!file.startsWith(ROOT)) return new Response('forbidden', { status: 403 });
+  return file.startsWith(ROOT) ? file : '';
+}
+async function serve(request) {
+  const file = gameFile(request.url);
+  if (!file) return new Response('forbidden', { status: 403 });
   let st;
   try { st = await fs.promises.stat(file); } catch (_) { return new Response('not found', { status: 404 }); }
   if (!st.isFile()) return new Response('not found', { status: 404 });
@@ -111,8 +124,11 @@ function createWindow() {
     return { action: 'deny' };
   });
   win.webContents.on('will-navigate', (e, url) => { if (!url.startsWith('app://')) e.preventDefault(); });
-  win.webContents.on('console-message', e => {
-    if (SELFTEST || (e && e.level === 'error')) log('console: ' + (e && e.message));
+  // Electron 44: уровень и текст — в самом событии; Electron 22 (32-битная
+  // сборка): отдельными значениями, уровень — числом (3 — ошибка).
+  win.webContents.on('console-message', (e, level, message) => {
+    const lv = e && e.level !== undefined ? e.level : level, msg = e && e.message !== undefined ? e.message : message;
+    if (SELFTEST || lv === 'error' || lv === 3) log('console: ' + msg);
   });
   win.webContents.on('render-process-gone', (e, d) => { log('render-process-gone ' + (d && d.reason)); if (SELFTEST) app.exit(3); });
   win.on('page-title-updated', e => e.preventDefault());
@@ -174,8 +190,11 @@ else {
   app.whenReady().then(() => {
     logFile = process.env.LAB_LOG || path.join(app.getPath('userData'), 'lab.log');
     try { fs.mkdirSync(path.dirname(logFile), { recursive: true }); fs.writeFileSync(logFile, '', 'utf8'); } catch (_) { logFile = ''; }
-    log(TITLE + '; Electron ' + process.versions.electron + '; игра: ' + ROOT + (SELFTEST ? '; самопроверка' : ''));
-    protocol.handle('app', serve);
+    log(TITLE + '; Electron ' + process.versions.electron + ', ' + process.arch + '; игра: ' + ROOT + (SELFTEST ? '; самопроверка' : ''));
+    // Electron 25 и новее — protocol.handle. В Electron 22 (32-битная сборка) его
+    // нет: там файлы отдаёт обработчик Chromium, он сам отдаёт и части файла (Range).
+    if (typeof protocol.handle === 'function') protocol.handle('app', serve);
+    else protocol.registerFileProtocol('app', (request, cb) => { const f = gameFile(request.url); cb(f ? { path: f } : { error: -10 }); });
     Menu.setApplicationMenu(null);
     createWindow();
     if (SELFTEST) setTimeout(() => { log('selftest FAIL: нет итога за 150 с'); app.exit(2); }, 150000);

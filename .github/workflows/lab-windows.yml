@@ -6,15 +6,21 @@
 # распаковал архив, открыл «Подземная лаборатория.exe» — и всё уже внутри.
 # Управление целиком с клавиатуры.
 #
+# Сборок две, обе полные:
+#   • 64 бит — Electron 44, Windows 10 и 11 (64-битные);
+#   • 32 бит — Electron 22, последний с 32-битной Windows: Windows 7, 8, 8.1,
+#     10 и 11, и 32-, и 64-битные. Имена в её архиве — в кодировке DOS (866):
+#     встроенная распаковка Windows 7 не понимает имён в UTF-8.
+#
 # Голоса — все синтезаторы, что стоят у игрока: голос NVDA и JAWS, RHVoice и
 # eSpeak NG из NVDA, сторонние голоса SAPI 5; голосов Microsoft нет. Мост
 # голосов общий с «Гранью Миров» (desktop/sapi.js) и собирается здесь, у игрока
 # ничего не компилируется.
 #
-# До выпуска собранное приложение проходит самопроверку дважды: без голосов
-# игрока (говорит встроенный eSpeak) и с голосами, поставленными так же, как
-# у игрока (RHVoice из дополнения NVDA и eSpeak NG), — мост должен их найти.
-# Выпуск «lab-windows-latest» несёт архив.
+# До выпуска каждая сборка проходит самопроверку дважды: без голосов игрока
+# (говорит встроенный eSpeak) и с голосами, поставленными так же, как у игрока
+# (RHVoice из дополнения NVDA и eSpeak NG), — мост должен их найти. Выпуск
+# «lab-windows-latest» несёт оба архива.
 name: Подземная лаборатория — Windows
 
 on:
@@ -36,15 +42,32 @@ concurrency:
 
 jobs:
   build:
+    name: Сборка ${{ matrix.bits }} бит
     runs-on: windows-latest
     timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - bits: '64'
+            arch: x64
+            electron: '44.5.1'
+            appdir: Подземная лаборатория Альфа 1.0
+            zip: Podzemnaya-laboratoriya-Alfa-1.0-windows.zip
+          - bits: '32'
+            arch: ia32
+            electron: '22.3.27'
+            appdir: Подземная лаборатория Альфа 1.0 (32 бит)
+            zip: Podzemnaya-laboratoriya-Alfa-1.0-windows-32bit.zip
     defaults:
       run:
         shell: bash
     env:
-      APPDIR: Подземная лаборатория Альфа 1.0
+      APPDIR: ${{ matrix.appdir }}
       EXE: Подземная лаборатория.exe
-      ZIP: Podzemnaya-laboratoriya-Alfa-1.0-windows.zip
+      ZIP: ${{ matrix.zip }}
+      ARCH: ${{ matrix.arch }}
+      ELECTRON: ${{ matrix.electron }}
     steps:
       - name: Забрать репозиторий
         uses: actions/checkout@v4
@@ -62,8 +85,11 @@ jobs:
       - name: Мост голосов — общий с «Гранью Миров»
         run: cp desktop/sapi.js desktop/sapi-build.js lab/desktop/
 
-      - name: Electron и упаковщик
+      # Сам Electron упаковщик скачивает нужной версии и разрядности.
+      - name: Упаковщик
         working-directory: lab/desktop
+        env:
+          ELECTRON_SKIP_BINARY_DOWNLOAD: '1'
         run: npm install --no-audit --no-fund
 
       # Готовой библиотекой: у игрока мост не собирается и отвечает за секунду.
@@ -88,6 +114,7 @@ jobs:
             if ($f) { New-Item -ItemType Directory -Force "lab\desktop\sr\$a" | Out-Null; Copy-Item $f.FullName "lab\desktop\sr\$a\nvdaControllerClient.dll"; Write-Host "$a -> $($f.FullName)" }
           }
           if (-not (Test-Path 'lab\desktop\sr\x64\nvdaControllerClient.dll')) { throw 'нет библиотеки NVDA на 64 бита' }
+          if (-not (Test-Path 'lab\desktop\sr\x86\nvdaControllerClient.dll')) { throw 'нет библиотеки NVDA на 32 бита' }
 
       - name: Значок приложения
         working-directory: lab/desktop
@@ -98,25 +125,48 @@ jobs:
         working-directory: lab/desktop
         run: |
           ICONARG=""; [ -n "$ICON" ] && ICONARG="--icon=$ICON"
-          npx @electron/packager . lab --platform=win32 --arch=x64 --out=out --overwrite \
+          npx @electron/packager . lab --platform=win32 --arch=$ARCH --electron-version=$ELECTRON --out=out --overwrite \
             --executable-name="${EXE%.exe}" --app-version=1.0.0 --build-version=1.0.0.${GITHUB_RUN_NUMBER} \
             --win32metadata.ProductName="Подземная лаборатория" --win32metadata.FileDescription="Подземная лаборатория Альфа 1.0" \
             --win32metadata.CompanyName="Грани Миров" \
             --extra-resource=sapi --extra-resource=sr \
             --ignore='^/out(/|$)' --ignore='icon\.ico' --ignore='sapi-build\.js' --ignore='^/sapi(/|$)' --ignore='^/sr(/|$)' $ICONARG
-          D=out/lab-win32-x64
+          D=out/lab-win32-$ARCH
           ls "$D"
-          ls "$D"/resources/sapi/grani-sapi-*.dll "$D"/resources/sr/x64/nvdaControllerClient.dll
+          ls "$D"/resources/sapi/grani-sapi-*.dll "$D"/resources/sr/x64/nvdaControllerClient.dll "$D"/resources/sr/x86/nvdaControllerClient.dll
           # Вся игра — рядом с приложением, в resources/game: страница, код, eSpeak, все записи.
           G="$D/resources/game"; mkdir -p "$G"
           cp ../index.html ../icon-192.png ../icon-512.png "$G"/
           cp -r ../js ../espeak ../sounds "$G"/
           # Языки интерфейса Chromium: русский и английский.
           find "$D/locales" -name '*.pak' ! -name 'ru.pak' ! -name 'en-US.pak' -delete
-          cp README.txt "$D/Прочти меня.txt"
+          # «Прочти меня» — с меткой UTF-8: её понимает и Блокнот Windows 7.
+          { printf '\xEF\xBB\xBF'; cat README.txt; } > "$D/Прочти меня.txt"
           mv "$D" "out/$APPDIR"
           du -sh "out/$APPDIR" "out/$APPDIR/resources"/*
           find "out/$APPDIR/resources/game" -type f | wc -l
+
+      # Разрядность: все программы и библиотеки рядом с игрой — нужной
+      # разрядности; 32-битная сборка должна открываться и в Windows 7 (6.1).
+      - name: Разрядность программ
+        working-directory: lab/desktop/out
+        run: |
+          node - "$APPDIR" <<'EOF'
+          const fs = require('fs'), path = require('path');
+          const dir = process.argv[2], arch = process.env.ARCH;
+          const want = arch === 'ia32' ? 0x14c : 0x8664;
+          let bad = 0;
+          for (const f of fs.readdirSync(dir).filter(n => /\.(exe|dll)$/i.test(n))) {
+            const b = Buffer.alloc(4096), fd = fs.openSync(path.join(dir, f), 'r');
+            fs.readSync(fd, b, 0, 4096, 0); fs.closeSync(fd);
+            const pe = b.readUInt32LE(0x3c), m = b.readUInt16LE(pe + 4);
+            const sub = [b.readUInt16LE(pe + 24 + 48), b.readUInt16LE(pe + 24 + 50)];
+            console.log(f, '— машина 0x' + m.toString(16) + ', подсистема ' + sub.join('.'));
+            if (m !== want) { console.log('  не та разрядность'); bad++; }
+            if (arch === 'ia32' && /\.exe$/i.test(f) && (sub[0] > 6 || (sub[0] === 6 && sub[1] > 1))) { console.log('  не откроется в Windows 7'); bad++; }
+          }
+          if (bad) process.exit(1);
+          EOF
 
       - name: Самопроверка — без голосов игрока (встроенный eSpeak)
         working-directory: lab/desktop/out
@@ -128,6 +178,7 @@ jobs:
           set -e
           cat "$LAB_LOG" || true
           echo "код выхода: $code"
+          grep -q "Electron $ELECTRON, $ARCH" "$LAB_LOG"
           grep -q "selftest ok" "$LAB_LOG"
           grep "selftest ok" "$LAB_LOG" | grep -q "движок речи: espeak (ready)"
 
@@ -168,34 +219,74 @@ jobs:
       - name: Архив
         working-directory: lab/desktop/out
         run: |
-          7z a -tzip -mx=5 "../../../$ZIP" "$APPDIR" > /dev/null
+          if [ "$ARCH" = "ia32" ]; then CP="-mcp=866"; else CP=""; fi
+          7z a -tzip -mx=5 $CP "../../../$ZIP" "$APPDIR" > /dev/null
           ls -la "../../../$ZIP"
+
+      # Имена в 32-битном архиве — в кодировке 866, без метки UTF-8: так их
+      # верно показывает и встроенная распаковка Windows 7, и 7-Zip, и WinRAR.
+      - name: Имена в архиве
+        if: matrix.arch == 'ia32'
+        run: |
+          python - "$ZIP" "$APPDIR" "$EXE" <<'EOF'
+          import sys, zipfile
+          zf, appdir, exe = sys.argv[1], sys.argv[2], sys.argv[3]
+          z = zipfile.ZipFile(zf)
+          items = z.infolist()
+          utf = [i.filename for i in items if i.flag_bits & 0x800]
+          names = [i.filename.encode('cp437').decode('cp866') for i in items if not i.flag_bits & 0x800]
+          print('записей', len(items), 'в UTF-8', len(utf))
+          need = [appdir + '/' + exe, appdir + '/Прочти меня.txt']
+          miss = [n for n in need if n not in names]
+          print('нет имён:', miss) if miss else print('имена верны:', need)
+          sys.exit(1 if utf or miss else 0)
+          EOF
 
       - name: Архив — на страницу сборки
         uses: actions/upload-artifact@v4
         with:
-          name: podzemnaya-laboratoriya-windows
+          name: podzemnaya-laboratoriya-windows-${{ matrix.bits }}
           path: ${{ env.ZIP }}
           compression-level: 0
           retention-days: 90
 
-      - name: Выпуск «lab-windows-latest»
+  release:
+    name: Выпуск «lab-windows-latest»
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Оба архива
+        uses: actions/download-artifact@v4
+        with:
+          pattern: podzemnaya-laboratoriya-windows-*
+          merge-multiple: true
+          path: dist
+
+      - name: Выпуск
+        working-directory: dist
         env:
           GH_TOKEN: ${{ github.token }}
+          Z64: Podzemnaya-laboratoriya-Alfa-1.0-windows.zip
+          Z32: Podzemnaya-laboratoriya-Alfa-1.0-windows-32bit.zip
         run: |
-          gh release delete lab-windows-latest --cleanup-tag -y || true
-          SIZE=$(stat -c %s "$ZIP")
+          ls -la
+          gh release delete lab-windows-latest --cleanup-tag -y --repo "$GITHUB_REPOSITORY" || true
+          S64=$(stat -c %s "$Z64"); S32=$(stat -c %s "$Z32")
           cat > "$RUNNER_TEMP/notes.md" <<EOF
-          «Подземная лаборатория» Альфа 1.0 для Windows 10 и 11 — звуковая игра. Сборка ${GITHUB_RUN_NUMBER} из ${GITHUB_REF_NAME} (${GITHUB_SHA}).
+          «Подземная лаборатория» Альфа 1.0 для Windows — звуковая игра. Сборка ${GITHUB_RUN_NUMBER} из ${GITHUB_REF_NAME} (${GITHUB_SHA}).
 
-          Полная сборка: вся игра внутри одного архива $ZIP (${SIZE} байт) — речь, звуки, музыка. Распакуйте архив и откройте «Подземная лаборатория.exe» в папке «${APPDIR}». Сеть не нужна, ставить ничего не надо.
+          Две полные сборки — выберите свою:
+          - $Z64 (${S64} байт) — 64 бит: Windows 10 и 11, 64-битные.
+          - $Z32 (${S32} байт) — 32 бит: Windows 7, 8, 8.1, 10 и 11, и 32-, и 64-битные. Не знаете, какая у вас Windows, — берите эту.
+
+          Вся игра внутри архива — речь, звуки, музыка. Распакуйте архив и откройте «Подземная лаборатория.exe» в распакованной папке. Сеть не нужна, ставить ничего не надо.
 
           Управление — клавиатура: W A S D — шаг, R — оружие, стрелки — выстрел, Enter — действие, пробел — что рядом, Tab — осмотреться, C — персонаж, I — инвентарь, F1 — руководство, X или Ctrl — тишина.
 
           Голоса — все синтезаторы компьютера: голос NVDA и JAWS, RHVoice и eSpeak NG из NVDA, сторонние голоса SAPI 5; голосов Microsoft нет. Без них говорит встроенный eSpeak NG.
 
-          Проверено: приложение запускается и проходит самопроверку на Windows — со встроенным eSpeak и с голосами, поставленными как у игрока.
+          Проверено: обе сборки запускаются и проходят самопроверку на Windows — со встроенным eSpeak и с голосами, поставленными как у игрока.
           EOF
-          gh release create lab-windows-latest "$ZIP" --prerelease --target "$GITHUB_SHA" \
+          gh release create lab-windows-latest "$Z64" "$Z32" --prerelease --target "$GITHUB_SHA" --repo "$GITHUB_REPOSITORY" \
             --title "Подземная лаборатория Альфа 1.0 для Windows (сборка ${GITHUB_RUN_NUMBER})" \
             --notes-file "$RUNNER_TEMP/notes.md"

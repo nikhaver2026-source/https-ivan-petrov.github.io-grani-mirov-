@@ -142,9 +142,12 @@
   `.github/workflows/lab-android.yml`; готовый APK — в выпуске
   `lab-android-latest`.
 - `desktop/` — приложение для Windows (Electron): вся игра внутри, голоса —
-  мост «Грани Миров» (`desktop/sapi.js` в корне репозитория). Собирает и
-  проверяет его рабочий процесс `.github/workflows/lab-windows.yml`; готовый
-  архив — в выпуске `lab-windows-latest`.
+  мост «Грани Миров» (`desktop/sapi.js` в корне репозитория). Сборок две:
+  64-битная (Electron 44; Windows 10 и 11) и 32-битная (Electron 22 —
+  последний с 32-битной Windows; Windows 7, 8, 8.1, 10 и 11, и 32-, и
+  64-битные; сохранения — в своей папке). Собирает и проверяет обе рабочий
+  процесс `.github/workflows/lab-windows.yml`; готовые архивы — в выпуске
+  `lab-windows-latest`.
 - `tests/` — проверки: `world.test.js` (все этажи проходимы при любом
   зерне) и `play.test.js` (игра в Chromium).
 

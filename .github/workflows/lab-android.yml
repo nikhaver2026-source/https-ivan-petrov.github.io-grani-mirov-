@@ -23,6 +23,7 @@ on:
     branches: ['main', 'claude/**']
     paths:
       - 'lab/**'
+      - '!lab/desktop/**'
       - '.github/workflows/lab-android.yml'
 
 permissions:

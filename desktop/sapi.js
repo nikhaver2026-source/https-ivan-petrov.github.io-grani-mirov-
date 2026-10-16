@@ -486,14 +486,16 @@ public static class GraniSapi {
       rhMap[name] = "es:" + w.Id; Add(sb, name, w.Lang, w.Gender, "espeak", "", false);
     }
     // Чтец экрана — только если он запущен: его голосом говорит то, что в нём выбрано.
-    if (IntPtr.Size == 8) {
+    // Голос чтеца даёт один процесс: 64-битный, а на 32-битной Windows — единственный, 32-битный.
+    bool srHere = IntPtr.Size == 8 || !Environment.Is64BitOperatingSystem;
+    if (srHere) {
       LoadNvda();
       if (NvdaUp()) Add(sb, NVDA, "ru-RU", "", "sr", "NVDA", false);
       if (JawsUp()) Add(sb, JAWS, "ru-RU", "", "sr", "JAWS", false);
     }
     Say(sb.ToString());
     // Состояние голоса чтеца экрана — для отчёта «почему не видно голосов».
-    Say("sr " + (IntPtr.Size == 8 ? (nvTest != null ? "lib" : "nolib") + " " + (NvdaUp() ? "up" : "down") : "x86"));
+    Say("sr " + (srHere ? (nvTest != null ? "lib" : "nolib") + " " + (NvdaUp() ? "up" : "down") : "x86"));
     Say("rh " + Clean(GraniRh.Why) + "; eSpeak NG: " + Clean(GraniEs.Why));
   }
   // Сколько примерно звучит фраза у чтеца экрана: конца речи он не сообщает.
@@ -625,9 +627,14 @@ ${CS}
 [GraniSapi]::Run()
 `;
 
-// Один процесс PowerShell с его голосами (64- или 32-битный).
+// 64-битная ли Windows. 32-битное приложение (сборка для 32-битной Windows) на
+// 64-битной Windows узнаёт её по PROCESSOR_ARCHITEW6432.
+const OS64 = process.arch !== 'ia32' || !!process.env.PROCESSOR_ARCHITEW6432;
+
+// Один процесс PowerShell с его голосами (64- или 32-битный). Родной (native) —
+// той же разрядности, что Windows: он даёт и голос чтеца экрана.
 class Proc {
-  constructor(exe, bits) { this.exe = exe; this.bits = bits; this.proc = null; this.ready = false; this.voices = []; this.buf = ''; this.waiters = []; this.onDone = null; }
+  constructor(exe, bits, native) { this.exe = exe; this.bits = bits; this.native = native === undefined ? bits === 64 : !!native; this.proc = null; this.ready = false; this.voices = []; this.buf = ''; this.waiters = []; this.onDone = null; }
   start(file, timeoutMs, dll, env) {
     return new Promise(resolve => {
       let settled = false; const done = ok => { if (!settled) { settled = true; resolve(ok); } };
@@ -658,7 +665,7 @@ class Proc {
     if (l.startsWith('voices\t')) {
       this.voices = l.slice(7).split(';').filter(Boolean).map(x => {
         const [name, lang, gender, kind, def, vendor] = x.split('|');
-        return { name, lang, gender, kind: kind === 'sapi' && this.bits === 32 ? 'sapi32' : kind, default: def === '1', vendor: vendor || '' };
+        return { name, lang, gender, kind: kind === 'sapi' && this.bits === 32 && !this.native ? 'sapi32' : kind, default: def === '1', vendor: vendor || '' };
       });
       return;
     }
@@ -888,11 +895,11 @@ class Sapi {
   diag() {
     if (process.platform !== 'win32') return 'не Windows';
     const parts = this.procs.map(p => p.bits + ' бит: ' + (p.ready ? 'голосов ' + p.voices.length : (p.why || 'поднимается')));
-    const p64 = this.procs.find(p => p.bits === 64), p32 = this.procs.find(p => p.bits === 32);
-    const sr = p64 && p64.sr ? (/^nolib/.test(p64.sr) ? '; голос NVDA: нет библиотеки NVDA' : /up$/.test(p64.sr) ? '; голос NVDA: доступен' : '; голос NVDA: NVDA не запущен — запустите NVDA и перечитайте голоса') : '';
+    const pn = this.procs.find(p => p.native), p32 = this.procs.find(p => !p.native);
+    const sr = pn && pn.sr ? (/^nolib/.test(pn.sr) ? '; голос NVDA: нет библиотеки NVDA' : /up$/.test(pn.sr) ? '; голос NVDA: доступен' : '; голос NVDA: NVDA не запущен — запустите NVDA и перечитайте голоса') : '';
     return (this.ready ? 'голоса Windows подключены, голосов ' + this.voices.length : 'голоса Windows не подключены' + (this.why ? ' (' + this.why + ')' : '')) +
       (parts.length ? '; ' + parts.join('; ') : '') + (shippedDll() ? '; мост готовый' : '; мост собирается на месте') + sr +
-      (p64 && p64.rh ? '; RHVoice из NVDA: ' + p64.rh : '') + (p32 && p32.rh && !/64-битный/.test(p32.rh) ? '; 32 бит — RHVoice: ' + p32.rh : '');
+      (pn && pn.rh ? '; RHVoice из NVDA: ' + pn.rh : '') + (p32 && p32.rh && !/64-битный/.test(p32.rh) ? '; 32 бит — RHVoice: ' + p32.rh : '');
   }
   // «Перечитать голоса»: мост, который не поднялся, запускается заново.
   restart(timeoutMs = 15000) {
@@ -912,12 +919,24 @@ class Sapi {
     const ed = espeakDll(); if (ed && !env.GRANI_ESPEAK_DLL) env.GRANI_ESPEAK_DLL = ed;
     const rd = rhvoiceDir(); if (rd) env.GRANI_NVDA_ADDONS = [env.GRANI_NVDA_ADDONS, rd].filter(Boolean).join(';');
     const root = process.env.SystemRoot || 'C:\\Windows';
-    const ps64 = path.join(root, process.arch === 'ia32' ? 'Sysnative' : 'System32', 'WindowsPowerShell', 'v1.0', 'powershell.exe');
-    const ps32 = path.join(root, 'SysWOW64', 'WindowsPowerShell', 'v1.0', 'powershell.exe');
+    const psIn = d => path.join(root, d, 'WindowsPowerShell', 'v1.0', 'powershell.exe');
+    // Windows 7: PowerShell 2.0 работает на .NET 2.0 и мост (.NET 4) не поднимает.
+    // Если .NET 4 стоит, PowerShell 2.0 запускается на нём — переменной COMPLUS_Version;
+    // PowerShell 3 и новее (Windows 8 и новее, Windows 7 с WMF) и так на .NET 4.
+    if (/^6\.1\./.test(os.release()) && !env.COMPLUS_Version && !env.COMPLUS_VERSION &&
+        fs.existsSync(path.join(root, 'Microsoft.NET', 'Framework', 'v4.0.30319', 'clr.dll'))) env.COMPLUS_Version = 'v4.0.30319';
     const keepBits = new Set((keep || []).map(p => p.bits));
     const fresh = [];
-    if (!keepBits.has(64)) fresh.push(new Proc(fs.existsSync(ps64) ? ps64 : 'powershell.exe', 64));
-    if (!keepBits.has(32) && fs.existsSync(ps32)) fresh.push(new Proc(ps32, 32));
+    if (OS64) {
+      // 64-битный PowerShell; из 32-битного приложения он виден через Sysnative.
+      const ps64 = psIn(process.arch === 'ia32' ? 'Sysnative' : 'System32'), ps32 = psIn('SysWOW64');
+      if (!keepBits.has(64)) fresh.push(new Proc(fs.existsSync(ps64) ? ps64 : 'powershell.exe', 64));
+      if (!keepBits.has(32) && fs.existsSync(ps32)) fresh.push(new Proc(ps32, 32));
+    } else {
+      // 32-битная Windows: PowerShell один, 32-битный, — у него все голоса и голос чтеца экрана.
+      const ps = psIn('System32');
+      if (!keepBits.has(32)) fresh.push(new Proc(fs.existsSync(ps) ? ps : 'powershell.exe', 32, true));
+    }
     this.procs = (keep || []).concat(fresh).sort((a, b) => b.bits - a.bits);
     fresh.forEach(p => { p.onDone = (kind, id) => { this.speaking.delete(id); if (this.onDone) this.onDone(kind, id); }; });
     // Процесс, ответивший позже срока, всё равно добавляет свои голоса — и
