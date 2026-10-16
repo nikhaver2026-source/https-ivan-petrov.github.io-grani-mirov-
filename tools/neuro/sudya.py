@@ -16,7 +16,8 @@
 
   python3 sudya.py train <папка данных> [шагов] [файл порождённого Летописцем, по строке «вид\tимя\tо», или оценки .jsonl]
   python3 sudya.py score <папка данных> <вид> <имя> [описание]
-  python3 sudya.py meta  <папка данных> <оценки Учителя .jsonl>   — Мета-судья поверх Судьи и Словника
+  python3 sudya.py meta  <папка данных> <оценки Учителя .jsonl[,…]> [наборы .jsonl] — Мета-судья поверх Судьи, Словника и Определителя вида
+  python3 sudya.py vnutr <папка данных> <оценки Учителя .jsonl[,…]> [наборы .jsonl] — Внутренний судья на представлении Летописца
 """
 import sys, os, json, random, collections, math
 import torch, torch.nn as nn, torch.nn.functional as F
@@ -156,9 +157,11 @@ def оценка(м, сл, вид, имя, о=""):
 # чем без оценок, 0,63). Мета-судья — логистическая модель на дюжине признаков: оценка Судьи, вероятность нужного вида
 # по второй голове Судьи («не тот вид» — главная беда выдумок), выдуманные слова и несогласие по Словнику, копия имени
 # другого вида, длина имени, есть ли описание. Параметров мало — тысячи оценок хватает.
-МЕТА_ПРИЗНАКИ = ["судья", "вид", "вид_лучший", "выдумано_имя", "выдумано_о", "несогласие", "копия", "слов", "букв", "есть_о", "о_букв", "заглавная"]
+МЕТА_ПРИЗНАКИ = ["судья", "вид", "вид_лучший", "выдумано_имя", "выдумано_о", "несогласие", "копия", "слов", "букв", "есть_о", "о_букв", "заглавная",
+                 "похож_на_вид", "похож_имена"]  # (2) похожесть по Определителю вида (vid.py) — вообще и у людей и городов
+ИМЕННЫЕ_ВИДЫ = {"персонаж", "поселение"}
 
-def мета_признаки(м, сл, сн, корпус_по_имени, вид, имя, о=""):
+def мета_признаки(м, сл, сн, корпус_по_имени, вид, имя, о="", вд=None):
     import slovnik as СН
     в = сл.ви.get(вид)
     with torch.no_grad():
@@ -168,7 +171,8 @@ def мета_признаки(м, сл, сн, корпус_по_имени, ви
     return [torch.sigmoid(r[0]).item(), pв[в].item() if в is not None else 0.0, float(pв.argmax().item() == в) if в is not None else 0.0,
             сн.доля(имя), сн.доля(о), float(СН.несогласие(имя)),
             float(any(v != вид for v in корпус_по_имени.get(имя.lower(), ()))), min(len(ws), 8) / 8, min(len(имя), 60) / 60,
-            float(bool(о)), min(len(о), 200) / 200, float(имя[:1].isupper())]
+            float(bool(о)), min(len(о), 200) / 200, float(имя[:1].isupper())] + (
+            lambda pv: [pv, pv if вид in ИМЕННЫЕ_ВИДЫ else 0.0])(вд(вид, имя) if вд else 0.5)
 
 def мета_загрузить(папка):
     """Мета-судья, если обучен: функция (вид, имя, о) → оценка 0..1, иначе None"""
@@ -176,24 +180,57 @@ def мета_загрузить(папка):
     if not os.path.exists(пут): return None
     import slovnik as СН
     z = json.load(open(пут, encoding="utf-8")); w = torch.tensor(z["w"]); b = z["b"]; м, сл = загрузить(папка); сн = СН.построить(папка)
+    if len(w) < len(МЕТА_ПРИЗНАКИ): w = torch.cat([w, torch.zeros(len(МЕТА_ПРИЗНАКИ) - len(w))])  # снимок первой версии
+    вд = None
+    try:
+        import vid as ВД; вд = ВД.загрузить(папка)
+    except Exception: pass
     по_имени = collections.defaultdict(set)
     for l in open(os.path.join(папка, "corpus.jsonl"), encoding="utf-8"):
         x = json.loads(l); по_имени[x["имя"].lower()].add(x["вид"])
-    return lambda вид, имя, о="": torch.sigmoid(torch.tensor(мета_признаки(м, сл, сн, по_имени, вид, имя, о)) @ w + b).item()
+    return lambda вид, имя, о="": torch.sigmoid(torch.tensor(мета_признаки(м, сл, сн, по_имени, вид, имя, о, вд)) @ w + b).item()
 
-def мета_учить(папка, оценки):
+def мета_учить(папка, оценки, наборы=None):
+    """оценки — файл(ы) оценок Учителя (через запятую); наборы — наборы вариантов (nabory.py) с оценками в тех же файлах:
+    по ним — главное мерило, средний балл выбранного варианта (две половины наборов: учимся на одной, проверяем на другой)"""
     import slovnik as СН
     torch.manual_seed(5); м, сл = загрузить(папка); сн = СН.построить(папка)
+    try:
+        import vid as ВД; вд = ВД.загрузить(папка)
+    except Exception: вд = None
     корпус = [json.loads(l) for l in open(os.path.join(папка, "corpus.jsonl"), encoding="utf-8")]
     по_имени = collections.defaultdict(set)
     for z in корпус: по_имени[z["имя"].lower()].add(z["вид"])
-    оц = [json.loads(l) for l in open(оценки, encoding="utf-8") if l.strip()]; random.Random(8).shuffle(оц)
+    оц = []
+    for пут in оценки.split(","): оц += [json.loads(l) for l in open(пут, encoding="utf-8") if l.strip()]
+    балл = {(z["вид"], z["имя"]): z["балл"] for z in оц}
+    X = lambda зз: torch.tensor([мета_признаки(м, сл, сн, по_имени, z["вид"], z["имя"], z.get("о", ""), вд) for z in зз])
+    def обучить(учз):
+        Xу = X(учз); Yу = torch.tensor([(z["балл"] - 1) / 4 for z in учз])
+        w = torch.zeros(len(МЕТА_ПРИЗНАКИ), requires_grad=True); b = torch.zeros(1, requires_grad=True); опт = torch.optim.Adam([w, b], lr=0.05)
+        for _ in range(2000):
+            п = F.binary_cross_entropy_with_logits(Xу @ w + b, Yу) + 1e-3 * (w ** 2).sum(); опт.zero_grad(); п.backward(); опт.step()
+        return w.detach(), b.detach()
+    if наборы:
+        нб = []
+        for l in open(наборы, encoding="utf-8"):
+            н = json.loads(l); x = [v for v in н["набор"] if (н["вид"], v["имя"]) in балл]
+            if len(x) >= 2: нб.append((н["вид"], x))
+        random.Random(3).shuffle(нб); пол = [нб[0::2], нб[1::2]]; в_наборах = {(в, v["имя"]) for в, x in нб for v in x}
+        прочие = [z for z in оц if (z["вид"], z["имя"]) not in в_наборах]
+        выб = collections.defaultdict(list)
+        for k in (0, 1):
+            учз = прочие + [{"вид": в, "имя": v["имя"], "о": v["о"], "балл": балл[(в, v["имя"])]} for в, x in пол[1 - k] for v in x]
+            w, b = обучить(учз)
+            for в, x in пол[k]:
+                Xн = X([{"вид": в, "имя": v["имя"], "о": v["о"]} for v in x]); оц_н = (Xн @ w + b).tolist()
+                выб["новый"].append(балл[(в, x[max(range(len(x)), key=lambda i: оц_н[i])]["имя"])])
+                выб["прежний"].append(балл[(в, max(x, key=lambda v: v["мета"] + {"персонаж": 1.5, "поселение": 0.5}.get(в, 0.1) * v["вид_p"])["имя"])])
+                выб["случайно"].append(sum(балл[(в, v["имя"])] for v in x) / len(x)); выб["лучший"].append(max(балл[(в, v["имя"])] for v in x))
+        print("средний балл выбранного варианта (две половины наборов):", {k: round(sum(v) / len(v), 2) for k, v in выб.items()})
+    random.Random(8).shuffle(оц)
     пров, учз = оц[: len(оц) // 6], оц[len(оц) // 6:]
-    X = lambda зз: torch.tensor([мета_признаки(м, сл, сн, по_имени, z["вид"], z["имя"], z.get("о", "")) for z in зз])
-    Xу, Xп = X(учз), X(пров); Yу = torch.tensor([(z["балл"] - 1) / 4 for z in учз])
-    w = torch.zeros(len(МЕТА_ПРИЗНАКИ), requires_grad=True); b = torch.zeros(1, requires_grad=True); опт = torch.optim.Adam([w, b], lr=0.05)
-    for _ in range(2000):
-        п = F.binary_cross_entropy_with_logits(Xу @ w + b, Yу) + 1e-3 * (w ** 2).sum(); опт.zero_grad(); п.backward(); опт.step()
+    Xп = X(пров); w, b = обучить(учз)
     def согласие(оценка, зз):
         о = list(zip([z["балл"] for z in зз], оценка.tolist())); пары = [(a, c) for a in о for c in о if a[0] > c[0]]
         return sum(1 for a, c in пары if a[1] > c[1]) / max(1, len(пары))
@@ -201,11 +238,65 @@ def мета_учить(папка, оценки):
                                   "Судья v2 − Словник": согласие(Xп[:, 0] - (0.6 * Xп[:, 3] + 0.3 * Xп[:, 4] + 0.3 * Xп[:, 5]), пров)}
     print("согласие с Учителем на отложенных:", {k: round(v, 3) for k, v in итог.items()})
     print("веса:", {k: round(v, 2) for k, v in zip(МЕТА_ПРИЗНАКИ, w.tolist())})
+    w, b = обучить(оц)  # итоговый — на всех оценках
     json.dump({"признаки": МЕТА_ПРИЗНАКИ, "w": w.tolist(), "b": b.item(), "согласие": итог}, open(os.path.join(папка, "sudya_meta.json"), "w"), ensure_ascii=False)
+
+# ── Внутренний судья: внутреннее представление имени у самого Летописца (letopisec.вектор) → гребневая регрессия на
+# оценки Учителя. Один он отбирает хуже Мета-судьи (3,1 против 3,27 в наборах), но вместе с ним — лучше (3,40):
+# Летописец «знает», насколько имя похоже на то, что он видел, а Мета-судья — форму, вид и копии.
+def внутр_учить(папка, оценки, наборы=None, лам=300.0):
+    import letopisec as Л
+    torch.set_num_threads(int(os.environ.get("SUD_THREADS", "2"))); м, сл = Л.загрузить(папка); м.eval()
+    оц = collections.defaultdict(list)
+    for пут in оценки.split(","):
+        for l in open(пут, encoding="utf-8"):
+            z = json.loads(l); оц[(z["вид"], z["имя"])].append(z["балл"])
+    ключи = list(оц); X = torch.stack([Л.вектор(м, сл, в, и) for в, и in ключи]); Y = torch.tensor([sum(оц[k]) / len(оц[k]) for k in ключи])
+    def гребень(Xa, Ya):
+        mu, sd = Xa.mean(0), Xa.std(0) + 1e-6; Z = (Xa - mu) / sd; ym = Ya.mean()
+        return mu, sd, torch.linalg.solve(Z.T @ Z + лам * torch.eye(Z.shape[1]), Z.T @ (Ya - ym)), ym.item()
+    print(f"Внутренний судья: оценённых {len(ключи)}, признаков {X.shape[1]}", flush=True)
+    if наборы:  # проверка по наборам: учимся без половины наборов, выбираем в ней
+        import random as _r
+        нб = []
+        for l in open(наборы, encoding="utf-8"):
+            н = json.loads(l); в = н["вид"]; x = [dict(v, балл=sum(оц[(в, v["имя"])]) / len(оц[(в, v["имя"])])) for v in н["набор"] if (в, v["имя"]) in оц]
+            if len(x) >= 2: нб.append((в, x))
+        инд = {k: i for i, k in enumerate(ключи)}; пор = list(range(len(нб))); _r.Random(3).shuffle(пор)
+        вв = {"персонаж": 1.5, "поселение": 0.5}; итог = collections.defaultdict(list)
+        for пол in (пор[::2], пор[1::2]):
+            искл = {(нб[j][0], v["имя"]) for j in пол for v in нб[j][1]}
+            уч = [i for i, k in enumerate(ключи) if k not in искл]; mu, sd, w, ym = гребень(X[уч], Y[уч])
+            for j in пол:
+                в, x = нб[j]; п = (((torch.stack([X[инд[(в, v["имя"])]] for v in x]) - mu) / sd) @ w + ym).tolist()
+                итог["случайно"].append(sum(v["балл"] for v in x) / len(x)); итог["лучший"].append(max(v["балл"] for v in x))
+                итог["внутренний"].append(x[max(range(len(x)), key=lambda i: п[i])]["балл"])
+                if "мета" in x[0]:
+                    итог["мета+вид"].append(max(x, key=lambda v: v["мета"] + вв.get(в, 0.1) * v["вид_p"])["балл"])
+                    итог["мета+вид+внутр"].append(x[max(range(len(x)), key=lambda i: x[i]["мета"] + вв.get(в, 0.1) * x[i]["вид_p"] + ВЕС_ВНУТР * п[i] / 5)]["балл"])
+        print("выбор в наборах (средний балл Учителя):", ", ".join(f"{k} {sum(v) / len(v):.2f}" for k, v in итог.items()), flush=True)
+    mu, sd, w, ym = гребень(X, Y)
+    torch.save({"mu": mu, "sd": sd, "w": w, "ym": ym, "лам": лам, "оценённых": len(ключи)}, os.path.join(папка, "sudya_vnutr.pt"))
+    print("сохранён sudya_vnutr.pt", flush=True)
+
+ВЕС_ВНУТР = 1.5  # вес Внутреннего судьи при отборе («Живой мир»): мета + вес_вида × вид + 1,5 × балл/5
+
+def внутр_загрузить(папка, м=None, сл=None):
+    """Внутренний судья, если обучен: функция (вид, имя) → ожидаемый балл Учителя (1..5), иначе None. Признаки — от
+    Летописца этой папки: новый Летописец — и судью учить заново (sudya.py vnutr)"""
+    пут = os.path.join(папка, "sudya_vnutr.pt")
+    if not os.path.exists(пут): return None
+    import letopisec as Л
+    z = torch.load(пут)
+    if м is None: м, сл = Л.загрузить(папка)
+    def балл(вид, имя):
+        м.eval(); return (((Л.вектор(м, сл, вид, имя) - z["mu"]) / z["sd"]) @ z["w"] + z["ym"]).item()
+    return балл
 
 if __name__ == "__main__":
     cmd, папка = sys.argv[1], sys.argv[2]
     if cmd == "train": учить(папка, int(sys.argv[3]) if len(sys.argv) > 3 else 6000, sys.argv[4] if len(sys.argv) > 4 else None)
-    elif cmd == "meta": мета_учить(папка, sys.argv[3])
+    elif cmd == "meta": мета_учить(папка, sys.argv[3], sys.argv[4] if len(sys.argv) > 4 else None)
+    elif cmd == "vnutr": внутр_учить(папка, sys.argv[3], sys.argv[4] if len(sys.argv) > 4 else None)
     else:
         м, сл = загрузить(папка); print(round(оценка(м, сл, sys.argv[3], sys.argv[4], sys.argv[5] if len(sys.argv) > 5 else ""), 3))

@@ -16,6 +16,7 @@
   python3 uchitel.py letopisi <папка данных> <снимок А> <снимок Б> [миров] [лет]   — попарное сравнение кругов
   python3 uchitel.py imena <файл выдумок вид\\tимя\\tо> <файл оценок .jsonl>          — оценки выдумкам
   python3 uchitel.py kritika <папка данных> <снимок> [миров] [лет]                  — слабые места летописей круга
+  python3 uchitel.py obrazcy <корпус .jsonl> <выход .jsonl> <виды через запятую> [на вид] [зерно] — учебные образцы для Летописца
 """
 import sys, os, json, random, time, urllib.request, urllib.error
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -179,8 +180,36 @@ def оценить_имена(вход, выход, пачка=40):
                 if j + 1 in оц: f.write(json.dumps({"вид": с[0], "имя": с[1], "о": с[2] if len(с) > 2 else "", "балл": оц[j + 1]}, ensure_ascii=False) + "\n")
             f.flush(); print(f"оценено {min(i + пачка, len(стр))} из {len(стр)}", flush=True)
 
+# ── образцы: Учитель пишет новые имена в духе игры — учебные примеры для Летописца (сам движок остаётся своим) ──
+ВОПРОС_ОБРАЗЦЫ = """Ты — автор русскоязычной игры в жанре тёмного фэнтези «Грани миров». Вот настоящие примеры сущностей вида
+«<<ВИД>>» из игры (имя — и, если есть, суть):
+<<П>>
+
+Придумай <<N>> НОВЫХ сущностей этого же вида в том же духе: грамотный русский, звучит как имя из этого мира, не
+повторяй примеры и не делай вариаций одного слова. У каждой — имя (как в примерах: если там имена собственные —
+имя собственное, если описательные — описательное) и короткая суть до 12 слов.
+
+Ответ — только JSON: {"сущности": [{"имя": "...", "о": "..."}, ...]}"""
+
+def образцы(корпус, выход, виды, n=40, примеров=20, зерно=17):
+    import random as _r
+    R = _r.Random(зерно); z = [json.loads(l) for l in open(корпус, encoding="utf-8")]
+    готово = set()
+    if os.path.exists(выход): готово = {json.loads(l)["вид"] for l in open(выход, encoding="utf-8")}
+    with open(выход, "a", encoding="utf-8") as f:
+        for в in виды:
+            if в in готово: continue
+            пр = [x for x in z if x["вид"] == в]; R.shuffle(пр)
+            п = "\n".join(f"- {x['имя']}" + (f" — {x['о'][:90]}" if x.get("о") else "") for x in пр[:примеров])
+            о = спросить(ВОПРОС_ОБРАЗЦЫ.replace("<<ВИД>>", в).replace("<<П>>", п).replace("<<N>>", str(n)), t=0.9)
+            сп = (о.get("сущности") or []) if isinstance(о, dict) else []
+            for x in сп:
+                if isinstance(x, dict) and x.get("имя"): f.write(json.dumps({"вид": в, "имя": x["имя"].strip(), "о": (x.get("о") or "").strip()}, ensure_ascii=False) + "\n")
+            f.flush(); print(в, len(сп), flush=True)
+
 if __name__ == "__main__":
     if sys.argv[1] == "letopisi":
         сравнить_летописи(sys.argv[2], sys.argv[3], sys.argv[4], int(sys.argv[5]) if len(sys.argv) > 5 else 8, int(sys.argv[6]) if len(sys.argv) > 6 else 80)
     elif sys.argv[1] == "imena": оценить_имена(sys.argv[2], sys.argv[3])
+    elif sys.argv[1] == "obrazcy": образцы(sys.argv[2], sys.argv[3], sys.argv[4].split(","), int(sys.argv[5]) if len(sys.argv) > 5 else 40, зерно=int(sys.argv[6]) if len(sys.argv) > 6 else 17)
     elif sys.argv[1] == "kritika": критика(sys.argv[2], sys.argv[3], int(sys.argv[4]) if len(sys.argv) > 4 else 8, int(sys.argv[5]) if len(sys.argv) > 5 else 80)

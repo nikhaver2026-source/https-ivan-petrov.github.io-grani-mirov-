@@ -13,7 +13,7 @@
   python3 letopisec.py dump  <папка данных> [на вид] [файл] — выдумки всех видов «вид\tимя\tо» (для Учителя и Судьи)
 Потоки — LET_THREADS (по умолчанию 2). Снимок — <папка>/letopisec.pt (каждые 250 шагов; обучение продолжает с него).
 """
-import sys, os, json, math, time, random, re, collections
+import sys, os, json, math, time, random, re, collections, itertools
 import torch, torch.nn as nn, torch.nn.functional as F
 
 СЛУЖ = ["<pad>", "⟨и⟩", "⟨о⟩", "⟨к⟩", "⟨ч⟩", "⟨/ч⟩", "\n"]
@@ -95,13 +95,14 @@ def готовить(папка):
 def пачка_текст(т, B):
     i = torch.randint(0, len(т) - CTX - 1, (B,)); x = torch.stack([т[j:j + CTX + 1] for j in i]); return x[:, :-1], x[:, 1:]
 
-def пачка_записи(сл, записи, B):
+def пачка_записи(сл, записи, B, накоп=None):
     xs = []
     for _ in range(B):
         # несколько записей подряд в одно окно — сеть видит много сущностей сразу
         к = []
         while len(к) < CTX + 1:
-            z = random.choice(записи); к += сл.код(запись(z, random.random() < 0.7)) + [сл.и["\n"]]
+            z = random.choices(записи, cum_weights=накоп)[0] if накоп else random.choice(записи)
+            к += сл.код(запись(z, random.random() < 0.7)) + [сл.и["\n"]]
         xs.append(torch.tensor(к[:CTX + 1]))
     x = torch.stack(xs); y = x[:, 1:].clone(); y[y == 0] = -100; return x[:, :-1], y
 
@@ -112,14 +113,18 @@ def учить(папка, шагов, этап):
     опт = torch.optim.AdamW(м.parameters(), lr=float(os.environ.get("LET_LR", "6e-4")), weight_decay=float(os.environ.get("LET_WD", "0.05")), betas=(0.9, 0.95))
     лучшая = float(json.load(open(пут + ".лучший"))["бит"]) if os.path.exists(пут + ".лучший") else 99.0
     if os.path.exists(пут):
-        c = torch.load(пут); м.load_state_dict(c["м"]); опт.load_state_dict(c["опт"]); шаг0 = c["шаг"]
+        c = torch.load(пут); м.load_state_dict(c["м"]); шаг0 = c["шаг"]
+        if "опт" in c: опт.load_state_dict(c["опт"])  # снимок без состояния оптимизатора (лучший) — начинается с чистого
     print(f"Летописец: словарь {V}, весов {sum(p.numel() for p in м.parameters())/1e6:.2f} млн, с шага {шаг0}", flush=True)
     B = int(os.environ.get("LET_B", "24")); t0 = time.time(); ср = None
+    # LET_VES — вес образцов Учителя и отобранных выдумок (из: УЧИТЕЛЬ, ОТБОР) в пачках записей (корпус третьей версии)
+    вес = float(os.environ.get("LET_VES", "1")); накоп = None
+    if вес != 1: накоп = list(itertools.accumulate(вес if z.get("из") in ("УЧИТЕЛЬ", "ОТБОР") else 1.0 for z in учз))
     for ш in range(шаг0, шагов):
         доля_записей = 0.0 if этап == "язык" else (0.75 if этап == "сущности" else min(0.75, max(0.0, (ш - шагов * 0.45) / (шагов * 0.2)) * 0.75))
         lr = float(os.environ.get("LET_LR", "6e-4")) * min(1.0, (ш + 1) / 300) * (0.1 + 0.9 * 0.5 * (1 + math.cos(math.pi * ш / шагов)))
         for g in опт.param_groups: g["lr"] = lr
-        x, y = пачка_записи(сл, учз, B) if random.random() < доля_записей else пачка_текст(тп, B)
+        x, y = пачка_записи(сл, учз, B, накоп) if random.random() < доля_записей else пачка_текст(тп, B)
         м.train(); п = F.cross_entropy(м(x).reshape(-1, V), y.reshape(-1), ignore_index=-100)
         опт.zero_grad(); п.backward(); torch.nn.utils.clip_grad_norm_(м.parameters(), 1.0); опт.step()
         ср = п.item() if ср is None else 0.98 * ср + 0.02 * п.item()
@@ -176,6 +181,17 @@ def писать(м, сл, вид, сколько, черты=None, извест
         вывод.append((имя, о.strip()))
         if len(вывод) >= сколько: break
     return вывод
+
+@torch.no_grad()
+def вектор(м, сл, вид, имя):
+    """внутреннее представление имени у Летописца (для Внутреннего судьи, sudya.py vnutr): среднее скрытое состояние по
+    буквам имени, состояние на знаке конца и уверенность (средний и худший лог-вероятность букв)"""
+    нач = сл.код(f"⟦{вид}⟧⟨и⟩"); тело = сл.код(имя) + [сл.и["⟨к⟩"]]
+    x = torch.tensor([(нач + тело)[:CTX]]); T = x.shape[1]
+    h = м.e(x) + м.pos(torch.arange(T))
+    for б in м.b: h = б(h, м.маска[:T, :T])
+    h = м.n(h)[0]; л = F.log_softmax(м.o(h[:-1]), -1); ц = x[0, 1:]; лп = л[torch.arange(len(ц)), ц][len(нач) - 1:]
+    return torch.cat([h[len(нач):T - 1].mean(0), h[-1], torch.tensor([лп.mean().item(), лп.min().item()])])
 
 def загрузить(папка):
     сл = Словарь([]); сл.т = json.load(open(os.path.join(папка, "letopisec_vocab.json"), encoding="utf-8"))
