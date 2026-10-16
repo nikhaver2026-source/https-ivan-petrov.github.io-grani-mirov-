@@ -446,7 +446,10 @@ function shot(w, dir, burst) {
   var id = b.snd || "w_blaster_s";
   if (!has(id)) id = b.cls === "magnetron" ? "w_magnetron" : "w_blaster_s";
   var power = (w.rank || 0) + Math.max(0, (w.qual || 1) - 2) * 0.5 + (HEAVY_CLS[b.cls] || 0) + (b.dmg >= 30 ? 1 : 0) + (b.area || b.pierce ? 1 : 0);
-  play(id, { pan: v[0] * 0.35, gain: burst ? 0.9 : 1.05, rate: (b.sndRate || 1) * (burst ? 1.03 : 1), reverb: 0.3 });
+  /* глушитель: выстрел тише и глуше — без раската и треска разряда */
+  var q = (w.mod && w.mod.quiet) || 0;
+  if (q) power -= 2 * q;
+  play(id, { pan: v[0] * 0.35, gain: (burst ? 0.9 : 1.05) * (1 - 0.28 * q), rate: (b.sndRate || 1) * (burst ? 1.03 : 1) * (1 - 0.05 * q), reverb: q ? 0.15 : 0.3 });
   if (b.cls === "melee") { if (b.dt === "shock") play("w_shock_crack", { pan: v[0] * 0.3, gain: 0.8, fb: FB.w_shock_crack }); return; }
   if (power >= 2) play("w_power_low", { pan: v[0] * 0.2, gain: Math.min(1, 0.35 + power * 0.12) * (burst ? 0.7 : 1), rate: 1 - Math.min(0.15, power * 0.02), reverb: 0.4, fb: FB.w_power_low });
   if (power >= 4) play("w_power_crack", { pan: v[0] * 0.4, gain: Math.min(0.9, 0.25 + power * 0.08), delay: 0.04, reverb: 0.5, fb: FB.w_power_crack });

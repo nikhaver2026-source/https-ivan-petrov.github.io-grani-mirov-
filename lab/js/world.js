@@ -1081,7 +1081,7 @@ function genLoot(r, L, F, ot, tag) {
   var n = ot === "safe" ? 3 : ot === "crate" ? r.int(1, 3) : r.int(0, 2);
   var ammoAt = function () {
     var pool = [];
-    for (var k in LAB.AMMO) if ((LAB.AMMO[k].depth || 1) <= L) pool.push(k);
+    for (var k in LAB.AMMO) if ((LAB.AMMO[k].depth || 1) <= L && LAB.AMMO[k].loot !== false) pool.push(k);
     var recent = pool.filter(function (k) { return (LAB.AMMO[k].depth || 1) > L - 20 && k !== "energy"; });
     return recent.length && r.chance(0.5) ? r.pick(recent) : r.chance(0.7) ? "energy" : r.pick(pool);
   };
@@ -1107,6 +1107,8 @@ function genLoot(r, L, F, ot, tag) {
     else out.push({ kind: "credits", n: LAB.credits(40, L, F) * 2 });
     /* служебный ключ ОКО в сейфе — без лишних бросков генератора: этаж не меняется */
     if (LAB.depth(L, F) >= 4 && LAB.hash32("okokey:" + L + "-" + F + "-" + tag) % 100 < 22) out.push({ kind: "item", item: "okokey", n: 1 });
+    /* экспериментальный компонент мастерской — в сейфах глубоких уровней, тоже без бросков генератора */
+    if (LAB.ITEMS.proto && L >= 5 && LAB.hash32("proto:" + L + "-" + F + "-" + tag) % 100 < 14) out.push({ kind: "item", item: "proto", n: 1 });
   }
   return out;
 }

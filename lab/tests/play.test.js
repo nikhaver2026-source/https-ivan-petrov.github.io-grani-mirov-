@@ -1459,6 +1459,135 @@ LAB.ui.closeAll();
   ok(arc.link && arc.linkOpen && arc.linkBack, "архив: перекрёстные ссылки — из приказа к журналу, чьего автора он упоминает, и обратно");
   ok(arc.epi && arc.epiForced, "финал: страница о пяти глубинах собирается из решений игрока");
 
+  console.log("Мастерская: уровни верстака, схемы, модули, износ и ремонт, перегрев, разбор, исследование, приманки, детали");
+  const ws = await page.evaluate(async () => {
+    const g = LAB.game, W = LAB.workshop, C = LAB.combat, out = {};
+    let G = g.G;
+    const label = i => typeof i.label === "function" ? i.label() : i.label;
+    const pick = re => { const w = LAB.ui.top(); const k = w ? w.items.findIndex(i => re.test(label(i))) : -1; if (k < 0) return false; w.i = k; LAB.ui.activate(); return true; };
+    const wait = ms => new Promise(r => setTimeout(r, ms));
+    const rec = id => LAB.RECIPES.find(r => r.id === id);
+    C.stop(); LAB.ui.closeAll();
+    g.enterFloor(2, 3, "down", true);
+    C.foes().forEach(f => { f.dead = true; });
+    const wb = g.CUR.fl.objs.find(o => o.type === "workbench");
+    if (!wb) return { noBench: true };
+    G.x = wb.x; G.y = wb.y; G.hp = G.hpMax = 9999;
+    for (const k of LAB.PARTS) G.inv[k] = 8;
+    /* уровень и состояние верстака постоянны для этажа */
+    const b = W.bench(wb); out.det = W.bench(wb) === b && [1, 2, 3].indexOf(b.tier) >= 0;
+    b.tier = 1; b.dmg = false;
+    LAB.ui.craft(wb);
+    out.root = !!LAB.ui.top() && LAB.ui.top().title === "Мастерская" && /Базовый верстак/.test(LAB.ui.top().intro || "");
+    out.tierMsg = W.check(rec("emp"));
+    out.baseOk = W.check(rec("medkit_s")) === "";
+    /* повреждённый — только ручной инструмент, пока не починить; при аварийном свете станки стоят */
+    b.tier = 2; b.dmg = true;
+    out.dmgMsg = /разбиты/.test(W.check(rec("emp")));
+    out.fix = W.fixBench(b) && !b.dmg && W.check(rec("emp")) === "";
+    const ev0 = G.event; G.event = "dark"; out.dark = /резервном питании/.test(W.check(rec("emp"))); G.event = ev0;
+    /* схемы: неизвестная не собирается; открывают инженер (один раз), документ, разбор устройства, исследование */
+    G.bp = {};
+    out.unknown = /Схема неизвестна/.test(W.check(rec("m_acc")));
+    const n0 = () => Object.keys(G.bp).length;
+    const npc = { key: "T-ws-eng", n: "Проверочный инженер", prof: "Инженер" };
+    let k0 = n0(); W.npcTip(npc); out.npcLearn = W.isEng(npc) && n0() === k0 + 1;
+    W.npcTip(npc); out.npcOnce = n0() === k0 + 1;
+    let docOk = false; for (let i = 0; i < 60 && !docOk; i++) { k0 = n0(); W.fromDoc("T-doc-" + i, "Технические журналы"); docOk = n0() > k0; }
+    out.docLearn = docOk && W.fromDoc("T-doc-x", "Личные записи") === "";
+    delete G.bp.decoy_e; G.inv.noise = 1; W.salvage("noise", b); out.salvLearn = W.known(rec("decoy_e"));
+    k0 = n0(); out.research = W.research("spec", b) && n0() === k0 + 1;
+    out.expNo = !W.research("exp", b);
+    /* модуль: сборка — шаг 2 — установка; несовместимость; гнёзда; снятие в запас */
+    ["m_range", "m_cap", "m_quiet", "m_acc"].forEach(id => W.learn(id, "", true));
+    G.weapons = G.weapons.slice(0, 1);
+    G.weapons.push(LAB.makeWeapon("spark", 2, 0, 1, "w_ws")); G.wi = 1;
+    const w = G.weapons[1], r0 = w.rng, c0 = w.cap;
+    LAB.ui.closeAll(); LAB.ui.craft(wb);
+    g.craft(rec("m_range"));
+    out.step2 = !!LAB.ui.top() && /шаг 2 из 2/.test(LAB.ui.top().title);
+    out.meleeNo = !!LAB.ui.top() && LAB.ui.top().items.some(i => /монтировка.*нельзя: ближнему бою дальность не нужна/i.test(label(i)) && i.disabled);
+    pick(/в руках/);
+    out.range = w.rng === r0 + 2 && !!LAB.ui.top() && LAB.ui.top().title === "Мастерская";
+    g.craft(rec("m_cap")); pick(/в руках/);
+    out.cap = w.cap > c0;
+    g.craft(rec("m_quiet")); pick(/в руках/);
+    out.slots = W.used(w) === 3 && /гнёзда заняты/.test(W.compat(w, "acc"));
+    W.uninstall(w, "range"); out.unmod = w.rng === r0 && (G.inv.m_range || 0) >= 1;
+    out.compat = /аннигиляцию/.test(W.compat(LAB.makeWeapon("ppistol", 5, 0, 1), "quiet")) && /не греется/.test(W.compat(LAB.makeWeapon("kpistol", 2, 0, 1), "cool"));
+    /* глушитель: выстрел тише; выстрел изнашивает оружие */
+    LAB.ui.closeAll(); G.drawn = true; w.charge = w.cap; G.noise = 0;
+    await wait(600);
+    const fired = C.fire("N");
+    out.quiet = { fired, noise: G.noise, cond: W.cond(w) };
+    /* сильно изношенное оружие даёт осечку */
+    w.cond = 5; const s0 = G.stats.shots, ch0 = w.charge, rnd = Math.random; Math.random = () => 0.001;
+    await wait(600); const mf = C.fire("N"); Math.random = rnd;
+    out.misfire = mf === true && G.stats.shots === s0 && w.charge === ch0 - 1;
+    /* ремонт у верстака: станки — до 100; ремнабор в поле — плюс 35 */
+    LAB.workshop._at(wb);
+    for (const k of LAB.PARTS) G.inv[k] = 8; /* модули выше съели металлолом */
+    const sc0 = G.inv.scrap; out.repair = W.repairWeapon(1, b) && W.cond(w) === 100 && G.inv.scrap < sc0;
+    w.cond = 40; G.inv.wrepair = 1; g.useItem("wrepair"); out.field = W.cond(w) === 75 && !G.inv.wrepair;
+    /* перегрев: долгая очередь — ствол остывает, выстрела нет */
+    w.heat = 0; w.hotUntil = 0;
+    const t0 = Date.now(); let hot = -1;
+    for (let i = 0; i < 40 && hot < 0; i++) { W.afterShot(w, false, t0 + i * 100); if (w.hotUntil) hot = i; }
+    await wait(500); w.charge = w.cap;
+    out.heat = { at: hot, blocked: C.fire("N") === false };
+    w.hotUntil = 0; w.heat = 0;
+    /* разбор оружия: модули возвращаются в запас */
+    const mq0 = G.inv.m_quiet || 0; g.scrapWeapon(1); out.scrapMods = (G.inv.m_quiet || 0) === mq0 + 1;
+    /* электронная приманка: робот идёт к ней, ОКО отмечает подозрение (этаж — без перепрошивки и глушилки прежних проверок) */
+    g.CUR.fs.robots = false; g.CUR.fs.okoBlind = false; g.CUR.fs.netCut = false; G.st.jam = 0; G.st.cloak = 0;
+    const cRob = C.freeCellNear(G.x + 4, G.y, null), bot = cRob ? C.spawnFoe("patrolbot", cRob[0], cRob[1], {}) : null;
+    if (bot) { bot.ally = false; bot.calm = false; bot.state = "idle"; bot.lastKnown = null; }
+    G.face = "E"; G.inv.decoy_e = 1; g.useItem("decoy_e"); await wait(800);
+    out.decoy = !!bot && bot.state === "alert" && !!bot.lastKnown && /электронной приманки/.test(LAB.oko.logText(10));
+    if (!out.decoy) out.decoyDiag = (bot ? bot.state + " " + JSON.stringify(bot.lastKnown) + " " + (Math.abs(bot.x - G.x) + Math.abs(bot.y - G.y)) : "нет робота") + " | " + LAB.oko.logText(3);
+    /* сенсорная помеха: камера рядом ослепла */
+    const cCam = C.freeCellNear(G.x, G.y + 2, null), cam = cCam ? C.spawnFoe("cam", cCam[0], cCam[1], {}) : null;
+    if (cam) { cam.ally = false; cam.calm = false; }
+    G.face = "S"; G.inv.disruptor = 1; g.useItem("disruptor"); await wait(800);
+    out.blind = !!cam && cam.blindT > 0;
+    if (!out.blind) out.blindDiag = cam ? "камера в " + Math.max(Math.abs(cam.x - G.x), Math.abs(cam.y - G.y)) + " " + cam.kind + " " + JSON.stringify(cam.beh) : "нет камеры";
+    /* ЭМ-подавитель останавливает робота; игла пробивает броню */
+    if (bot) {
+      bot.hp = bot.maxhp = 5000; bot.frozen = 0;
+      C.damageFoe(bot, 3, "emp", { stunMech: 3, quiet: true }); out.stun = bot.frozen === 3;
+      bot.arm = 12; bot.shield = 0; bot.nodeT = 0;
+      let h0 = bot.hp; C.damageFoe(bot, 20, "kinetic", { quiet: true }); const dPlain = h0 - bot.hp;
+      h0 = bot.hp; C.damageFoe(bot, 20, "kinetic", { quiet: true, apierce: 0.7 }); const dPierce = h0 - bot.hp;
+      out.pierce = dPierce > dPlain;
+      bot.dead = true;
+    }
+    if (cam) cam.dead = true;
+    out.profile = /останавливает роботов/.test(W.profile(LAB.makeWeapon("suppressor", 3, 0, 1))) && /не греется/.test(W.profile(LAB.makeWeapon("kpistol", 2, 0, 1)));
+    /* экономика: у каждой детали — где найти и для чего; рецепты из существующих предметов; у каждого — класс */
+    out.parts = LAB.PARTS.filter(k => !(W.srcOf(k) && (W.uses(k).kn.length + W.uses(k).unk) > 0));
+    out.recipes = LAB.RECIPES.filter(rc => !Object.keys(rc.need).every(k => LAB.ITEMS[k]) || ["base", "spec", "exp"].indexOf(W.clsOf(rc)) < 0).map(rc => rc.id);
+    LAB.ui.closeAll(); LAB.ui.craft(wb); out.guide = pick(/Детали: где найти/) && LAB.ui.top().items.some(i => /Реле: у вас .*Где найти: щитовые/.test(label(i)));
+    /* схемы и модули переживают запись и загрузку */
+    G.weapons.push(LAB.makeWeapon("spark", 2, 0, 1, "w_ws2")); W.install(G.weapons[G.weapons.length - 1], "quiet");
+    LAB.ui.closeAll(); g.saveSlot(3); g.loadSlot(3); G = g.G;
+    out.saved = G.weapons.some(x => x.mod && x.mod.quiet) && !!G.bp.m_acc;
+    LAB.workshop._at(null); LAB.ui.closeAll();
+    return out;
+  });
+  ok(!ws.noBench && ws.det && ws.root, "верстак: уровень и состояние постоянны для этажа, окно мастерской называет оснастку");
+  ok(/специализированный верстак/.test(ws.tierMsg || "") && ws.baseOk, "базовый верстак: базовое собирает, специализированное — нет, и говорит, где искать: " + (ws.tierMsg || "").slice(0, 90));
+  ok(ws.dmgMsg && ws.fix && ws.dark, "повреждённый верстак чинится из деталей; при аварийном свете станки стоят");
+  ok(ws.unknown && ws.npcLearn && ws.npcOnce && ws.docLearn && ws.salvLearn && ws.research && ws.expNo, "схемы: неизвестная не собирается; открывают инженер (один раз), технический документ, разбор устройства, исследование на верстаке");
+  ok(ws.step2 && ws.meleeNo && ws.range && ws.cap && ws.slots && ws.unmod && ws.compat, "модули: сборка — шаг 2 — выбор оружия; несовместимые не ставятся и объясняют почему; гнёзда; снятый модуль — в запасе");
+  ok(ws.quiet && ws.quiet.fired && ws.quiet.noise > 0 && ws.quiet.noise <= 5 && ws.quiet.cond < 100, "глушитель: выстрел тише (шум " + (ws.quiet && ws.quiet.noise) + " вместо 8); выстрел изнашивает оружие");
+  ok(ws.misfire && ws.repair && ws.field, "изношенное оружие даёт осечку; ремонт у верстака — до 100, ремнабор в поле — плюс 35");
+  ok(ws.heat && ws.heat.at > 0 && ws.heat.blocked, "перегрев: после долгой очереди ствол остывает и не стреляет (выстрел " + (ws.heat && ws.heat.at) + ")");
+  ok(ws.scrapMods, "разбор оружия: модули возвращаются в запас");
+  ok(ws.decoy && ws.blind, "электронная приманка уводит робота и сбивает ОКО; сенсорная помеха ослепляет камеру" + (ws.decoyDiag ? "; приманка: " + ws.decoyDiag : "") + (ws.blindDiag ? "; помеха: " + ws.blindDiag : ""));
+  ok(ws.stun && ws.pierce && ws.profile, "ЭМ-подавитель останавливает робота, бронебойный выстрел сильнее по броне; у оружия — свой профиль");
+  ok(ws.parts && !ws.parts.length && ws.recipes && !ws.recipes.length && ws.guide, "экономика: у каждой детали — где найти и для чего; рецепты собраны из существующих предметов" + (ws.parts && ws.parts.length ? "; без пользы: " + ws.parts.join(", ") : "") + (ws.recipes && ws.recipes.length ? "; рецепты: " + ws.recipes.join(", ") : ""));
+  ok(ws.saved, "схемы и модули оружия сохраняются в записи");
+
   console.log("Обход этажей одного зерна: вход, такты, осмотр");
   const tour = await page.evaluate(() => {
     const g = LAB.game, G = g.G, out = { floors: 0, err: [], want: 0 };

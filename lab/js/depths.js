@@ -229,6 +229,7 @@ function setGrid(o, k) {
   var msg = { press: "Прессовый цех обесточен: прессы встали. Вентиляция нижних глубин получила питание.", sens: "Вибродатчики ОКО обесточены: выстрелы и шаги на этаже ОКО больше не слышит. Вентиляция нижних глубин получила питание.", vent: "Вентиляция нижних глубин обесточена: прессы и датчики снова под током." }[k];
   say("Рубильник с лязгом встал на место. " + msg);
   gm().gainXP(5);
+  if (LAB.workshop) LAB.workshop.depthFind("grid"); /* в шкафу щита — схема подавителя */
 }
 /* Вибродатчики обесточены — акустических донесений с этажа нет. */
 function sensorsDeaf() { var fs = CUR().fs; return !!(fs && fs.grid === "sens"); }
@@ -313,6 +314,7 @@ function openIncub(o, st) {
   }
   gm().gainXP(12);
   gm().journal("«Колыбель»: инкубатор " + o.spec + " вскрыт, образец не тронут.");
+  if (LAB.workshop) LAB.workshop.depthFind("incub");
 }
 function sterilize(o, st) {
   var w = W();
@@ -380,6 +382,7 @@ function checkMirror(o, st, pz) {
     say("Журнал сверен: настоящие события встали по порядку. Отражённый контур замолк." + (opened ? " В журнале нашлась заявка на ремонт стены — «Эхо» отметило тайный проход этажа." : "") + " В лотке терминала — распечатка: записка в инвентаре.");
     gm().gainXP(20);
     gm().journal("«Отражение»: журнал событий этажа сверен.");
+    if (LAB.workshop) LAB.workshop.depthFind("mirror");
     return;
   }
   st.lockT = T() + 120;
@@ -469,6 +472,7 @@ function openGate(o, st) {
   say("Затвор с грохотом расходится. Питание силовых дверей этажа восстановлено, блокировка охраны снята. За затвором — хранилище.");
   gm().gainXP(30);
   gm().journal("«Механизм»: синхронный затвор открыт.");
+  if (LAB.workshop) LAB.workshop.depthFind("gate");
   setTimeout(function () { if (LAB.ui.top && !LAB.ui.top()) gateMenu(o); }, 900);
 }
 
@@ -527,6 +531,7 @@ function nodeResult(o, st, ok, how) {
     say("Узел отвечает — долгим аккордом, который чувствуешь грудью. Перед «Эхо» разворачивается фрагмент памяти комплекса: записка в инвентаре. В нише — сверхпроводник.");
     gm().gainXP(35);
     gm().journal("«Исток»: древний узел ответил" + (how === "rhythm" ? " на ритм «Механизма»" : "") + ".");
+    if (LAB.workshop) LAB.workshop.depthFind("node");
     return;
   }
   if (LAB.mini.wasCancelled && LAB.mini.wasCancelled()) { say("Вы отступили от узла. Он ждёт."); return; }

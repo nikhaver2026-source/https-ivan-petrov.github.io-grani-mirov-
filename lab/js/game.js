@@ -34,7 +34,7 @@ function newState(seed) {
     armor: null, armors: [],
     ammo: { energy: 0, magnetron: 0, positron: 0 },
     inv: {}, keys: {}, tier: 0, elev: {}, gate: {}, core: false, cores: {}, codes: {}, melodies: {}, blockSeen: {},
-    notes: {}, noteList: [], samples: {}, implants: ["scan", "echo"], faction: null, crafted: 0,
+    notes: {}, noteList: [], samples: {}, implants: ["scan", "echo"], faction: null, crafted: 0, bp: {}, bpNpc: {},
     quests: [], journal: [], fs: {}, maxF: { 1: 1 }, visited: { "1-1": 1 },
     checkpoint: null, day: 1, min: 8 * 60, event: "norm", eventUntil: 8 * 60 + 90,
     st: { poison: 0, slow: 0, shield: 0, haste: 0, cloak: 0, web: 0, jam: 0, deaf: 0, antitox: 0, bleed: 0, navjam: 0 },
@@ -397,8 +397,9 @@ function curWeapon() { return G.weapons[G.wi] || G.weapons[0] || null; }
 game.curWeapon = curWeapon;
 function weaponLine(w) {
   if (!w) return "без оружия";
-  if (w.ammo === "none") return w.name;
-  return w.name + ", заряд " + w.charge + " из " + w.cap;
+  var c = w.cond != null && w.cond < 70 ? ", состояние " + Math.round(w.cond) + " из 100" : "";
+  if (w.ammo === "none") return w.name + c;
+  return w.name + ", заряд " + w.charge + " из " + w.cap + c;
 }
 game.weaponLine = weaponLine;
 
@@ -712,8 +713,10 @@ function giveItem(it, quiet) {
         G.notes[nid] = 1;
         /* ссылка на текст — само описание записки (без места на полу): по нему текст собирается заново */
         var src = JSON.parse(JSON.stringify(it)); delete src.x; delete src.y; delete src.kind;
-        G.noteList.push({ id: nid, src: src, t: nt.t, a: nt.a || "", story: !!nt.story, L: G.L, F: G.F, code: it.note === "safe" ? it.code : undefined, pl: placeName(G.x, G.y), cat: docCat(src, nt) });
+        var dcat = docCat(src, nt);
+        G.noteList.push({ id: nid, src: src, t: nt.t, a: nt.a || "", story: !!nt.story, L: G.L, F: G.F, code: it.note === "safe" ? it.code : undefined, pl: placeName(G.x, G.y), cat: dcat });
         G.stats.notes++; gainXP(4);
+        if (LAB.workshop) LAB.workshop.fromDoc(nid, dcat);
       }
       if (it.code) G.codes[it.code] = it.room;
       break;
@@ -1437,7 +1440,7 @@ function objMenu(o) {
     case "express":
       items.push({ label: "Подняться на поверхность", fn: function () { UIx("ending", true); } });
       break;
-    case "workbench": UIx("craft"); return;
+    case "workbench": UIx("craft", o); return;
     case "vending": vendingMenu(o); return;
     case "medst": medMenu(o); return;
     case "charger": chargerMenu(o); return;
@@ -2288,6 +2291,7 @@ function npcMenu(n) {
     else items.push({ label: "Сдать задание: " + q.short, fn: function () { completeQuest(q, n); } });
     var tr2 = LAB.PROFS[n.prof] && LAB.PROFS[n.prof].trade;
     if (tr2) items.push({ label: "Торговля", fn: function () { tradeMenu(n, tr2); } });
+    if (LAB.workshop && LAB.workshop.isEng(n)) items.push({ label: "Спросить о мастерской", fn: function () { LAB.workshop.npcTip(n); } });
     items.push({ label: "Спросить дорогу", fn: function () { navigate(false, true); } });
   }
   items.push({ label: "Попрощаться", fn: function () { say(n.robot ? "До свидания. Протокол помощи ожидает." : "Береги себя, седьмой.", { robot: !!n.robot }); } });
@@ -2295,7 +2299,8 @@ function npcMenu(n) {
 }
 function capital(s) { return s.charAt(0).toUpperCase() + s.slice(1); }
 function tradeMenu(n, kind) {
-  var goods = kind === "med" ? ["medkit_s", "medkit_l", "bandage", "antidote", "sorbent", "stim", "neuroblock"] : kind === "food" ? ["stew", "ration", "noodles", "crackers", "nuts", "choco", "glucose", "medkit_s"] : kind === "parts" ? ["scrap", "wire", "chip", "cap", "lens", "magnet"] : kind === "ammo" ? ["ammo:energy", "ammo:magnetron", "emp"] : ["medkit_s", "bandage", "ration", "ammo:energy", "chip", "gel", "reagent", "cap"];
+  var goods = kind === "med" ? ["medkit_s", "medkit_l", "bandage", "antidote", "sorbent", "stim", "neuroblock"] : kind === "food" ? ["stew", "ration", "noodles", "crackers", "nuts", "choco", "glucose", "medkit_s"] : kind === "parts" ? ["scrap", "wire", "chip", "cap", "lens", "magnet", "relay", "cell", "servo", "optic"] : kind === "ammo" ? ["ammo:energy", "ammo:magnetron", "ammo:slug", "emp", "wrepair"] : ["medkit_s", "bandage", "ration", "ammo:energy", "chip", "gel", "reagent", "cap", "relay", "wrepair"];
+  goods = goods.filter(function (id) { return id.indexOf("ammo:") === 0 ? !!LAB.AMMO[id.slice(5)] : !!LAB.ITEMS[id]; });
   var k = priceK() * (n.robot ? 1 : 0.9);
   var items = goods.map(function (id) {
     var isAmmo = id.indexOf("ammo:") === 0, name = isAmmo ? LAB.AMMO[id.slice(5)].n : LAB.ITEMS[id].n;
@@ -2325,7 +2330,8 @@ function takeQuest(n) {
   var h = LAB.hash32(n.key + ":" + stg);
   var t = h % 3, q = { id: n.key + ":" + stg, giver: n.key, giverName: n.n, L: G.L, F: G.F, done: false, stage: stg };
   if (t === 0) {
-    var part = LAB.PARTS[h % LAB.PARTS.length], need = 2 + (h % 3);
+    var pparts = LAB.PARTS.filter(function (p) { return (LAB.PART_DEPTH[p] || 1) <= Math.max(G.L, 1); });
+    var part = pparts[h % pparts.length], need = 2 + (h % 3);
     q.type = "fetch"; q.item = part; q.need = need;
     q.text = n.n + " просит принести " + need + " шт.: «" + LAB.ITEMS[part].n + "». Детали попадаются в ящиках и у роботов.";
     q.short = "принести " + LAB.ITEMS[part].n.toLowerCase() + " (" + need + ")";
@@ -2526,16 +2532,18 @@ game.useMedkit = useMedkit;
 function useItem(id) {
   var d = LAB.ITEMS[id];
   if (!d || !(G.inv[id] > 0)) { say("Нет: " + (d ? d.n : id) + "."); return false; }
+  if (id === "wrepair" && LAB.workshop) return LAB.workshop.fieldRepair();
   if (d.kind === "throw") {
     if (id === "emp") { if (LAB.combat) LAB.combat.throwEmp(); return true; }
+    if (d.fx && (d.fx.decoy || d.fx.blind) && LAB.workshop) return LAB.workshop.throwDevice(id);
     return throwItem(id, d.fx && d.fx.emp ? "emp" : "noise");
   }
   if (d.kind === "deploy" || (d.fx && d.fx.deploy)) {
     if (!LAB.combat) return false;
-    var at = LAB.combat.deployTurret(d.fx && d.fx.deploy || 30);
+    var at = LAB.combat.deployTurret(d.fx && d.fx.deploy || 30, d.fx && d.fx.dmgK);
     if (!at) { say("Здесь турель не встанет: впереди занято."); return false; }
     G.inv[id]--;
-    say(d.n + " раскрылась " + relDir(at.x, at.y) + " и ищет цели на своей линии. Выстрелов — " + (d.fx.deploy || 30) + ".");
+    say(d.n + " раскрылась " + relDir(at.x, at.y) + " и ищет цели на своей линии. Выстрелов — " + (d.fx.deploy || 30) + "." + (d.fx.dmgK > 1 ? " Бьёт сильнее обычной." : ""));
     UIx("refresh"); return true;
   }
   if (d.fx && (d.fx.pick || d.fx.mend || d.fx.map || d.fx.jam || d.fx.antitox || d.fx.scan || d.fx.shield || d.fx.haste || d.fx.cloak || d.fx.heal || d.fx.en || d.fx.cure || d.fx.unslow || d.fx.food || d.fx.wake || d.fx.detox || d.fx.neuro || d.fx.stopBleed)) return useFx(id, d);
@@ -2677,8 +2685,9 @@ function scrapWeapon(i) {
   G.inv.scrap = (G.inv.scrap || 0) + 2 + w.rank;
   G.inv.chip = (G.inv.chip || 0) + Math.floor(gainP / 2);
   if (w.ammo !== "none" && w.charge > 0 && w.charge >= w.cap / 2) G.ammo[w.ammo] = (G.ammo[w.ammo] || 0) + 1;
+  var more = LAB.workshop ? LAB.workshop.onScrap(w) : "";
   A("play", "pry");
-  say("Разобрано: " + w.name + ". Получены детали.");
+  say("Разобрано: " + w.name + ". Получены детали: металлолом " + (2 + w.rank) + (Math.floor(gainP / 2) ? ", микросхемы " + Math.floor(gainP / 2) : "") + "." + (more ? " " + more : ""));
   UIx("refresh");
 }
 game.scrapWeapon = scrapWeapon;
@@ -2692,7 +2701,7 @@ function reload() {
   G.ammo[w.ammo]--;
   w.charge = w.cap;
   A("play", w.ammo === "energy" ? "w_reload_e" : w.ammo === "magnetron" ? "w_reload_m" : "w_reload_p");
-  if (LAB.combat) LAB.combat.reloadPause(w.ammo === "positron" ? 1400 : 900);
+  if (LAB.combat) LAB.combat.reloadPause(Math.round((w.ammo === "positron" ? 1400 : 900) * (LAB.workshop ? LAB.workshop.reloadK(w) : 1)));
   say("Перезаряжено: " + w.cap + " выстрелов. Осталось: " + LAB.AMMO[w.ammo].n.toLowerCase() + " — " + G.ammo[w.ammo] + ".");
   UIx("refresh");
 }
@@ -2702,31 +2711,31 @@ game.reload = reload;
 function canCraft(rc) { if (rc.minL && G.L < rc.minL) return false; for (var k in rc.need) if ((G.inv[k] || 0) < rc.need[k]) return false; return true; }
 game.canCraft = canCraft;
 function craft(rc) {
-  if (rc.minL && G.L < rc.minL) { LAB.UI.error(); say("Это здесь не собрать: чертежей и оснастки на этой глубине нет."); return; }
-  if (!canCraft(rc)) { LAB.UI.error(); say("Не хватает деталей: " + needText(rc) + "."); return; }
-  if (rc.out === "wmod") {
-    var w = curWeapon();
-    if (!w || w.mods >= 3) { say("Оружие в руках уже несёт три модуля."); return; }
-  }
+  var why = LAB.workshop ? LAB.workshop.check(rc) : "";
+  if (!why && rc.minL && G.L < rc.minL) why = "Это здесь не собрать: чертежей и оснастки на этой глубине нет.";
+  if (!why && !canCraft(rc)) why = "Не хватает деталей: " + needText(rc) + ".";
+  if (why) { LAB.UI.error(); say(why); return false; }
+  var out = rc.out === "wmod" ? "m_power" : rc.out; /* прежний модуль усиления */
   for (var k in rc.need) G.inv[k] -= rc.need[k];
   G.crafted++;
   var armorMsg = "";
   var bonus = G.faction === "eng" && G.crafted % 3 === 0;
   var times = bonus ? 2 : 1;
   for (var i = 0; i < times; i++) {
-    if (rc.out.indexOf("ammo:") === 0) G.ammo[rc.out.slice(5)] = (G.ammo[rc.out.slice(5)] || 0) + 1;
-    else if (rc.out === "wmod") { curWeapon().mods++; curWeapon().dmg = Math.round(curWeapon().dmg * 1.15); }
-    else if (rc.out.indexOf("armor:") === 0) { var na = LAB.makeArmor(rc.out.slice(6), LAB.foeLevel(G.L, G.F), 2); armorMsg = giveItem({ kind: "armor", a: na }, true); }
-    else if (rc.out.indexOf("weapon:") === 0) { var nw = LAB.makeWeapon(rc.out.slice(7), LAB.foeLevel(G.L, G.F), 1, 2); armorMsg = giveItem({ kind: "weapon", w: nw }, true); }
-    else G.inv[rc.out] = (G.inv[rc.out] || 0) + 1;
+    if (out.indexOf("ammo:") === 0) G.ammo[out.slice(5)] = (G.ammo[out.slice(5)] || 0) + 1;
+    else if (out.indexOf("armor:") === 0) { var na = LAB.makeArmor(out.slice(6), LAB.foeLevel(G.L, G.F), 2); armorMsg = giveItem({ kind: "armor", a: na }, true); }
+    else if (out.indexOf("weapon:") === 0) { var nw = LAB.makeWeapon(out.slice(7), LAB.foeLevel(G.L, G.F), 1, 2); armorMsg = giveItem({ kind: "weapon", w: nw }, true); }
+    else G.inv[out] = (G.inv[out] || 0) + 1;
   }
-  A("play", rc.out.indexOf("armor:") === 0 || rc.out.indexOf("weapon:") === 0 ? "craft_armor" : "craft");
-  say("Собрано: " + rc.n + (bonus ? " — и ещё одно, инженерная смекалка!" : "") + "." + (armorMsg ? " " + armorMsg : ""));
+  A("play", out.indexOf("armor:") === 0 || out.indexOf("weapon:") === 0 ? "craft_armor" : "craft");
+  var msg = "Собрано: " + rc.n + (bonus ? " — и ещё одно, инженерная смекалка!" : "") + "." + (armorMsg ? " " + armorMsg : "");
+  if (LAB.workshop) LAB.workshop.afterCraft(rc, msg); else say(msg);
   gainXP(3);
   UIx("refresh");
+  return true;
 }
 game.craft = craft;
-function needText(rc) { var s = []; for (var k in rc.need) s.push((LAB.ITEMS[k] ? LAB.ITEMS[k].n : k) + " " + (G.inv[k] || 0) + " из " + rc.need[k]); return s.join(", "); }
+function needText(rc) { if (LAB.workshop) return LAB.workshop.needText(rc); var s = []; for (var k in rc.need) s.push((LAB.ITEMS[k] ? LAB.ITEMS[k].n : k) + " " + (G.inv[k] || 0) + " из " + rc.need[k]); return s.join(", "); }
 game.needText = needText;
 
 /* ════════ СМЕРТЬ ════════ */
@@ -2862,6 +2871,8 @@ function migrate(g) {
   if (!g.melodies) g.melodies = {};
   for (var mk in g.melodies) if (!/^\d+-\d+-/.test(mk)) delete g.melodies[mk];
   if (!g.blockSeen) g.blockSeen = {};
+  /* модули усиления прежних версий — модули мощности */
+  (g.weapons || []).forEach(function (w) { if (w && w.mods > 0 && !w.mod) w.mod = { power: w.mods }; });
   /* надетая броня — та же запись, что в списке брони (после загрузки это были копии) */
   if (g.armor && g.armors) {
     var am = g.armors.filter(function (a) { return a && a.id === g.armor.id; })[0];

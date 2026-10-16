@@ -452,6 +452,7 @@ function inventory(focus) {
     { label: "Броня: " + g.armors.length + (g.armor ? ", надета" : ", не надета"), fn: armorMenu },
     { label: "Гранаты, пластины и устройства: " + cnt(gadgetIds()), fn: gadgetsMenu },
     { label: "Детали: " + cnt(LAB.PARTS), fn: partsMenu },
+    { label: "Модули оружия в запасе: " + cnt(modIds()), fn: modsMenu },
     { label: "Пропуска и ключи", fn: passesMenu },
     { label: "Архив документов: " + g.noteList.length, fn: notesMenu },
     { label: "Задания: " + g.quests.filter(function (q) { return !q.done; }).length, fn: questsMenu },
@@ -474,7 +475,11 @@ function weaponMenu(i) {
   var d = LAB.WEAPONS[w.base];
   menu(w.name, [
     { label: i === g.wi ? "Уже в руках" : "Взять в руки", fn: function () { gm().equipWeapon(i); } },
-    { label: "Осмотреть", fn: function () { say(w.name + ". " + d.desc + " Урон " + w.dmg + " (" + LAB.DTYPE_N[w.dt] + "), дальность " + w.rng + (w.cap ? ", заряд " + w.charge + " из " + w.cap + ", питание: " + LAB.AMMO[w.ammo].n.toLowerCase() : "") + (w.mods ? ", модулей усиления " + w.mods : "") + ". " + LAB.RANKS[w.rank] + "."); weaponMenu(i); } },
+    { label: "Осмотреть", fn: function () {
+      var Wk = LAB.workshop, ml = Wk ? Wk.modsLine(w) : "";
+      var pf = Wk ? Wk.profile(w) : "";
+      say(w.name + ". " + d.desc + " Урон " + w.dmg + " (" + LAB.DTYPE_N[w.dt] + ")" + (w.cap ? ", заряд " + w.charge + " из " + w.cap : "") + ". " + (Wk ? pf.charAt(0).toUpperCase() + pf.slice(1) + " Состояние " + Math.round(Wk.cond(w)) + " из 100. " + (ml ? "Модули: " + ml + ". " : "") + "Гнёзд для модулей: " + Wk.slots(w) + ", занято " + Wk.used(w) + ". " : "Дальность " + w.rng + ". ") + LAB.RANKS[w.rank] + ".");
+      weaponMenu(i); } },
     { label: "Разобрать на детали", fn: function () { gm().scrapWeapon(i); weaponsMenu(); } },
     back(weaponsMenu)
   ]);
@@ -534,7 +539,7 @@ function armorItem(i) {
 }
 /* Устройства: гранаты, пластины, самоделки мастерской и вещи блоков. */
 function gadgetIds() {
-  var ids = ["emp", "plate", "decoder", "noise", "turret_kit", "jammer", "lockpick", "filter", "sonar", "repairkit", "okokey"];
+  var ids = ["emp", "plate", "decoder", "noise", "turret_kit", "jammer", "lockpick", "filter", "sonar", "repairkit", "okokey", "decoy_e", "disruptor", "turret_kit2", "wrepair"];
   for (var k in LAB.ITEMS) { var d = LAB.ITEMS[k]; if (d.kind !== "part" && d.depth && ids.indexOf(k) < 0) ids.push(k); }
   return ids;
 }
@@ -557,11 +562,24 @@ function gadgetsMenu() {
 function partsMenu() {
   var g = G();
   var items = LAB.PARTS.filter(function (k) { return g.inv[k] > 0; }).map(function (k) {
-    return { label: LAB.ITEMS[k].n + ": " + g.inv[k], keep: true, fn: function () { say(LAB.ITEMS[k].desc + " Детали собирают в мастерской — у верстака."); } };
+    var line = LAB.workshop ? LAB.workshop.partLine(k) : LAB.ITEMS[k].n + ": " + g.inv[k];
+    return { label: line, keep: true, fn: function () { say(LAB.ITEMS[k].desc + " " + line); } };
   });
   if (!items.length) items.push({ label: "Деталей нет. Ищите в ящиках, у роботов и на полу.", keep: true, fn: function () {} });
+  if (LAB.workshop) items.push({ label: "Все детали этой глубины: где найти и для чего", fn: function () { LAB.workshop.partsGuide(partsMenu); } });
   items.push(back());
   menu("Детали", items);
+}
+/* Запасные модули оружия: ставятся у верстака. */
+function modIds() { return Object.keys(LAB.ITEMS).filter(function (k) { return LAB.ITEMS[k].kind === "wmodule"; }); }
+function modsMenu() {
+  var g = G();
+  var items = modIds().filter(function (k) { return g.inv[k] > 0; }).map(function (k) {
+    return { label: LAB.ITEMS[k].n + ": " + g.inv[k] + ". " + LAB.ITEMS[k].desc, keep: true, fn: function () { say(LAB.ITEMS[k].desc); } };
+  });
+  if (!items.length) items.push({ label: "Запасных модулей нет. Их собирают у верстака, раздел «Модули оружия», и снимают с оружия.", info: true, keep: true, fn: function () {} });
+  items.push(back());
+  menu("Модули оружия в запасе", items);
 }
 function passesMenu() {
   var g = G(), items = [];
@@ -686,7 +704,8 @@ function recipeGroup(rc) {
   if (d && (d.heal || (d.fx && (d.fx.heal || d.fx.en || d.fx.cure)) || d.en || d.cure || d.detox || d.neuro || d.stopBleed)) return "Лечение и стимуляторы";
   return "Гранаты и устройства";
 }
-function craft() {
+function craft(o) {
+  if (LAB.workshop) { LAB.workshop.open(o); return; } /* мастерская: верстаки по уровням, схемы, модули, ремонт, разбор */
   var g = G();
   var names = ["Лечение и стимуляторы", "Батареи и боеприпасы", "Гранаты и устройства", "Оружие", "Броня", "Улучшения"];
   var avail = LAB.RECIPES.filter(function (rc) { return !rc.minL || rc.minL <= g.L; });

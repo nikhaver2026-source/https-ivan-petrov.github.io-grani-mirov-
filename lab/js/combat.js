@@ -153,6 +153,7 @@ function detOf(f) {
   return Math.max(2, d);
 }
 function sees(f) {
+  if (f.blindT > 0) return false; /* сенсорная помеха ослепила */
   /* «тепло»: твари «Колыбели» чуют тепло тела — маскировка их не обманывает, а слепые видят его вблизи */
   if (G().st.cloak > 0 && !has(f, "heat")) return false;
   if (has(f, "deaf") && !(has(f, "heat") && dist(f, heroPos()) <= 3)) return false;
@@ -392,6 +393,7 @@ function camFacing(f) { var g = G(), v = DIRV[camDirs(f)[f.camI]]; return (g.x -
 function cameraTick(f) {
   if (f.camT > 0) f.camT--;
   if (f.glimT > 0) f.glimT--;
+  if (f.blindT > 0) return; /* сенсорная помеха: объектив засвечен */
   if (G().st.jam > 0 || gm().armorSpecial("okoghost") || CUR().fs.okoBlind) return;
   camDirs(f);
   var per = LAB.oko && LAB.oko.level() >= 1 ? 4 : 8;
@@ -768,6 +770,8 @@ function stalkerTick(f) {
   if (!see && f.searchR && f.searchR.length) { var sp0 = f.searchR[0]; if (Math.abs(f.x - sp0[0]) + Math.abs(f.y - sp0[1]) <= 1 || !stepToward(f, sp0[0], sp0[1])) f.searchR.shift(); return; }
   if (!f.lastKnown) { wander(f); return; }
   if (see && d < 3) { stepAway(f); return; }
+  /* за углом дрон не лезет вплотную: зависает в паре шагов и ждёт, пока цель покажется */
+  if (!see && d <= 2) return;
   if (d > 4 || !see) { if (!stepToward(f, f.lastKnown.x, f.lastKnown.y, { adjacent: true })) wander(f); return; }
   if (Math.random() < 0.3) sidestep(f);
 }
@@ -810,6 +814,7 @@ function chargeAt(f) {
 
 function foeTick(f, spotted) {
   f.hitT++; f.seenT++; f.hearT = (f.hearT == null ? 99 : f.hearT) + 1;
+  if (f.blindT > 0) f.blindT--;
   if (f.frozen > 0) { f.frozen--; return; }
   if (f.ally) { allyTick(f); return; }
   if (f.calm) { if (Math.random() < 0.02) A("foeSound", f, "idle"); return; }
@@ -1231,7 +1236,7 @@ function statusTick(onlyTimers) {
 
 /* ════════ ВЫСТРЕЛЫ ГЕРОЯ ════════ */
 function weapon() { return gm().curWeapon(); }
-function shotGap(w) { var cd = w.cd; if (G().st.haste > 0) cd *= 0.6; return cd; }
+function shotGap(w) { var cd = w.cd; if (G().st.haste > 0) cd *= 0.6; if (LAB.workshop) cd *= LAB.workshop.gapK(w); return cd; }
 /* Кто на линии выстрела: конус вдоль направления. */
 function targetsIn(dir, w, exact) {
   var v = DIRV[dir], out = [];
@@ -1269,6 +1274,9 @@ function fire(dir, burst) {
   if (now - lastShot < shotGap(w) * (burst ? 0.6 : 1)) return false;
   if (now < reloadUntil) { sayOnce("reloading", "Перезарядка..."); return false; }
   g.face = dir;
+  /* мастерская: ствол перегрет — ждём; изношенное оружие даёт осечки */
+  var wk = LAB.workshop ? LAB.workshop.beforeShot(w, now) : null;
+  if (wk === "hot") { stopFire(); return false; }
   if (w.ammo !== "none" || w.cap) {
     if (w.charge <= 0) {
       A("play", "w_empty");
@@ -1279,10 +1287,12 @@ function fire(dir, burst) {
     w.charge--;
   }
   lastShot = now;
+  if (wk === "misfire") { A("play", "w_empty"); if (S.turnBased) tick(); UIx("refresh"); return true; }
   g.stats.shots++;
   var melee = w.rng <= 1;
   var loud = { melee: 2, laser: 6, cryo: 5, thermo: 6, gauss: 10, positron: 12, magnetron: 8 }[LAB.WEAPONS[w.base].cls] || 8;
   if (w.base === "pcannon") loud = 14;
+  if (LAB.workshop) loud = LAB.workshop.loud(w, loud);
   g.noise = Math.max(g.noise, loud);
   A("shot", w, dir, burst);
   var hits = 0;
@@ -1309,6 +1319,7 @@ function fire(dir, burst) {
     }
   }
   if (hits) g.stats.hits++;
+  if (LAB.workshop) LAB.workshop.afterShot(w, burst, now);
   /* шум выстрела будит этаж */
   if (S.turnBased) tick();
   UIx("refresh");
@@ -1317,7 +1328,7 @@ function fire(dir, burst) {
 function foeAtCell(x, y) { for (var i = 0; i < foes.length; i++) if (!foes[i].dead && !foes[i].burrowed && foes[i].x === x && foes[i].y === y) return foes[i]; return null; }
 function shoot(w, f, perp, along, burst, melee) {
   var g = G();
-  var acc = (melee ? 0.92 : 0.9) - 0.13 * perp - 0.012 * along + (g.agi - 10) * 0.01 + (w.spread ? 0.08 * perp : 0) - (burst ? 0.1 : 0) - (gm().aimPenalty ? gm().aimPenalty() : 0);
+  var acc = (melee ? 0.92 : 0.9) - 0.13 * perp - 0.012 * along + (g.agi - 10) * 0.01 + (w.spread ? 0.08 * perp : 0) - (burst ? 0.1 : 0) - (gm().aimPenalty ? gm().aimPenalty() : 0) + (LAB.workshop ? LAB.workshop.accBonus(w, burst) : 0);
   /* умный робот уходит с линии огня */
   var iq = iqOf(f);
   if (!melee && f.kind === "mech" && iq >= 5 && !has(f, "stationary") && f.frozen <= 0) {
@@ -1334,7 +1345,9 @@ function shoot(w, f, perp, along, burst, melee) {
   if (melee) { dmg *= 1 + (g.str - 10) * 0.03; if (gm().armorSpecial("strength")) dmg *= 1.6; }
   var crit = Math.random() < 0.05 + (g.agi - 10) * 0.008;
   if (crit) dmg *= 1.75;
-  var done = damageFoe(f, dmg, dt, { noarmor: !!w.noarmor, crit: crit, melee: melee, burst: burst, freeze: w.freeze });
+  if (LAB.workshop) dmg *= LAB.workshop.dmgK(w, f);
+  var wb = LAB.WEAPONS[w.base] || {};
+  var done = damageFoe(f, dmg, dt, { noarmor: !!w.noarmor, crit: crit, melee: melee, burst: burst, freeze: w.freeze, apierce: LAB.workshop ? LAB.workshop.pierce(w) : 0, stunMech: wb.stunMech || 0 });
   if (w.area) foes.forEach(function (o) { if (o !== f && !o.dead && !o.calm && cheb(o, f) <= 1) damageFoe(o, dmg * 0.6, dt, { noarmor: true, quiet: true }); });
   return 1;
 }
@@ -1362,7 +1375,7 @@ function damageFoe(f, raw, dt, o) {
     A("foeSound", f, "hurt"); A("play", "w_shock_crack");
     if (!o.quiet) sayOnce("node" + f.id, "Энергоузел " + (f.name.split(",")[0]).toLowerCase() + " перегружен: броня не держит!", 6000);
   }
-  if (!o.noarmor && !(f.nodeT > 0)) dmg -= f.arm * 0.5;
+  if (!o.noarmor && !(f.nodeT > 0)) dmg -= f.arm * 0.5 * (1 - Math.min(0.9, o.apierce || 0));
   dmg = Math.max(1, dmg);
   if (f.shield > 0) {
     var mult = (dt === "shock" || dt === "ion" || dt === "emp") ? 2.5 : 1;
@@ -1378,6 +1391,8 @@ function damageFoe(f, raw, dt, o) {
     if (before < 0.36 && f.adapt[dt] >= 0.36 && !o.quiet) sayOnce("adapt" + f.id, f.name.split(",")[0] + " привыкает к этому оружию. Смените оружие.", 6000);
   }
   if (o.freeze) f.frozen = o.freeze;
+  /* ЭМ-подавитель: машина замирает на несколько тактов (экранированную и босса не берёт) */
+  if (o.stunMech && f.kind === "mech" && !f.boss && !aff(f, "hardened") && !f.dead) { f.frozen = Math.max(f.frozen || 0, o.stunMech); if (!o.quiet) sayOnce("stun" + f.id, f.name.split(",")[0] + " замер: импульс сбил ему контур.", 5000); }
   if (has(f, "reflect") && !o.ally && dmg > 0 && Math.random() < 0.5) { var back = Math.max(1, Math.round(dmg * 0.2)); A("play", "deflect"); sayOnce("rfl" + f.id, f.name.split(",")[0] + " отражает часть удара!", 6000); hurtPlayer(back, "field", f, { quiet: true }); }
   f.hp -= dmg; f.hitT = 0;
   wake(f);
@@ -1431,6 +1446,7 @@ function kill(f, quiet) {
       if (r() < 0.12 * dk) drops.push({ kind: "item", item: "medkit_s", n: 1 });
       if (r() < 0.15 * dk) drops.push({ kind: "ammo", ammo: "energy", n: 1 }); /* батарея из кармана бывшего сотрудника */
     }
+    if (LAB.workshop) LAB.workshop.drops(f, drops, r, dk);
     if (r() < 0.3) drops.push({ kind: "credits", n: LAB.credits(4 + r() * 12, L, g.F) });
     /* служебный ключ ОКО: у начальника смены, изредка — у стража поста */
     if (f.kind === "mech" && (has(f, "commander") ? r() < 0.45 * dk : f.guard && LAB.depth(L, g.F) >= 6 && r() < 0.08 * dk)) drops.push({ kind: "item", item: "okokey", n: 1 });
@@ -1677,12 +1693,13 @@ function sendCheck(x, y, n) {
 }
 function dismiss(f) { if (!f || f.dead || f.boss || (f.carry && f.carry.length) || (f.bag && f.bag.length)) return false; f.task = "leave"; f.exit = null; f.stuck = 0; if (f.state === "alert") f.state = "idle"; return true; }
 /* Переносная турель игрока: встаёт впереди и бьёт врагов на своей линии. */
-function deployTurret(shots) {
+function deployTurret(shots, k) {
   var g = G(), v = DIRV[g.face] || DIRV.N, x = g.x + v[0], y = g.y + v[1];
   if (!canStand(null, x, y) || CUR().fl.t[idx(x, y)] === LAB.T.DOOR) { var c = freeCellNear(g.x, g.y, null); if (!c) return false; x = c[0]; y = c[1]; }
   var t = spawnFoe("miniturret", x, y, { ally: true, shots: shots || 30 });
   if (!t) return false;
   t.ally = true; t.shots = shots || 30; t.state = "hunt";
+  if (k && k !== 1) t.dmg = Math.round(t.dmg * k);
   A("play", "craft");
   return { x: x, y: y };
 }
