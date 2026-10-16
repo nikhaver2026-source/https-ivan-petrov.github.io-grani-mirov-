@@ -40,9 +40,15 @@ var lastReq = {};     /* когда звук просили в последни�
 var wakeHooks = [];   /* кому сказать, что устройство пересоздано */
 var st = { played: 0, dropped: 0, stolen: 0, late: 0, queued: 0, revived: 0, wakes: 0, rebuilt: 0, errors: 0 };
 var asleepSince = 0, wakeTries = 0, timer = null;
+/* пересоздавать устройство — только если оно уже работало и сломалось, не чаще
+   раза в минуту и не больше трёх раз: устройство, которое не заводится вовсе
+   (нет вывода звука), пересоздание не лечит, а частое — губит память */
+var everRan = false, rebuilds = 0, lastRebuild = 0;
+var quiet = false; /* тишина без загрузок — для самопроверки обхода этажей */
+function isLong(id) { var d = LAB.SND && LAB.SND[id]; return !!(d && d.o && d.o.long); }
 
 function now() { return Date.now(); }
-function ctxOk() { return !!(AE.ctx && AE.ctx.state === "running"); }
+function ctxOk() { var ok = !!(AE.ctx && AE.ctx.state === "running"); if (ok) everRan = true; return ok; }
 function busOf(id, o) { var d = Bank.defs[id]; return o.bus || (d && d.bus) || "fx"; }
 
 /* Важность звука: 3 — ответ на действие игрока и интерфейс, 2 — враг рядом,
@@ -107,7 +113,8 @@ function wake() {
 /* Устройство сломалось (закрыто или не просыпается) — новое, и всё, что
    должно звучать, звучит снова. Записи в памяти годятся и новому устройству. */
 function rebuild() {
-  if (!AE.rebuild) return;
+  if (!AE.rebuild || !everRan || rebuilds >= 3 || now() - lastRebuild < 60000) return;
+  rebuilds++; lastRebuild = now();
   st.rebuilt++;
   voices = [];
   AE.rebuild();
@@ -149,6 +156,7 @@ function start(id, o) {
    fb (синтез, если записи нет или она ещё не в памяти). */
 function play(id, o) {
   o = o || {};
+  if (quiet) return null;
   var bus = busOf(id, o);
   if (!S.effects && bus !== "voice") return null;
   if (!Bank.has(id)) { if (o.fb) synth(o.fb, o.fbms || 1600, bus, o.pan, o.gain); return null; }
@@ -174,6 +182,7 @@ function play(id, o) {
    (stop, setGain) остаётся верной, даже если петлю пришлось запустить
    заново. Нет такой записи — null (звучит синтез). */
 function loop(name, id, o) {
+  if (quiet) return null;
   o = copy(o || {});
   o.loop = true;
   if (!Bank.has(id)) return null;
@@ -210,7 +219,7 @@ function runSlot(s, revive) {
   s.loading = true;
   Bank.preload([s.id], function () {
     s.loading = false;
-    if (slots[s.name] !== s || !s.want) return;
+    if (slots[s.name] !== s || !s.want) { if (isLong(s.id)) release(s.id, 500); return; }
     if (ctxOk() && Bank.ready(s.id)) { s.h = start(s.id, o); if (revive && s.h) st.revived++; }
   });
 }
@@ -277,16 +286,20 @@ function custom(id, bus, build) {
 /* ════ Память ════
    Выгрузить запись, когда она точно не нужна: не звучит, не стоит в петле
    и её не просили последние несколько секунд. */
-function release(id, ms) {
+function release(id, ms, tries) {
   if (!id) return;
+  var t0 = now();
   setTimeout(function () {
-    if (now() - (lastReq[id] || 0) < (ms || 4000) - 50) return;
+    if ((lastReq[id] || 0) > t0 - 50) return; /* снова просили — нужна */
     for (var k in slots) if (slots[k] && slots[k].id === id && slots[k].want) return;
     gc();
     for (var i = 0; i < voices.length; i++) if (voices[i].id === id) return;
     for (var j = 0; j < pend.length; j++) if (pend[j].id === id) return;
+    /* запись ещё грузится — выгрузить, когда догрузится, иначе она останется в памяти */
+    var d = Bank.defs[id], loading = !!(d && d.f.some(function (f) { return Bank.pend[f]; }));
+    if (loading && (tries || 0) < 30) { release(id, 1000, (tries || 0) + 1); return; }
     Bank.release([id]);
-  }, ms || 4000);
+  }, ms == null ? 4000 : ms);
 }
 
 /* ════ Сторож ════ раз в секунду: разбудить уснувшее устройство (если игра
@@ -332,6 +345,9 @@ LAB.Sound = {
   has: function (id) { return Bank.has(id); }, ready: function (id) { return Bank.ready(id); },
   preload: function (ids, done) { Bank.preload(ids, done); },
   wake: wake, tick: tick,
+  /* тишина без загрузок (самопроверка обходит сотни этажей подряд) */
+  setQuiet: function (q) { quiet = !!q; if (quiet) stopAll(0.05); },
+  isQuiet: function () { return quiet; },
   onRebuild: function (fn) { wakeHooks.push(fn); },
   slot: function (name) { return slots[name] ? slots[name].handle : null; },
   /* что творится со звуком — для самопроверки и отладки */

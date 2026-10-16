@@ -73,6 +73,9 @@ LAB.selftest = function () {
   /* Обход этажей: первый уровень целиком, дальше — три этажа каждого уровня
      (первый, один из средних и последний, со стражем и шлюзом). */
   step("tour", function () {
+    /* обход — без звука: сотни этажей подряд, иначе игра закажет музыку и
+       голоса каждого уровня разом (памяти телефона не хватит) */
+    LAB.Sound.setQuiet(true);
     for (var L = 1; L <= LAB.LEVELS_N; L++) {
       var list = L === 1 ? [] : [1, (L % 18) + 2, LAB.FLOORS_N];
       if (L === 1) for (var f0 = 1; f0 <= LAB.FLOORS_N; f0++) list.push(f0);
@@ -86,8 +89,10 @@ LAB.selftest = function () {
         floors++;
       }
     }
+    LAB.Sound.setQuiet(false);
     LAB.game.enterFloor(1, 1, "start", true);
   });
+  LAB.Sound.setQuiet(false);
   step("audio", function () { LAB.Sound.preload(["step_plate", "bump_wall", "bcn_gatecard"]); });
   /* Музыка и фон уровня — из памяти. Проверяется уровень, где стоит герой:
      музыку прошлых уровней игра сама выгружает. Ждём декодирования до 40 с. */

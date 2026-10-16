@@ -233,6 +233,8 @@ function preloadLevel(L) {
   Snd.preload(need);
 }
 function enterFloor(L, F) {
+  /* самопроверка: обход этажей без звука и загрузок; после него мир звучит заново */
+  if (Snd.isQuiet()) { if (worldOn || mus.theme) { stopWorld(); stopMusic(); } return; }
   worldOn = true;
   var lev = LAB.LEVELS[L];
   preloadLevel(L);
