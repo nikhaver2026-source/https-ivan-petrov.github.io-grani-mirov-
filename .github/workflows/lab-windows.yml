@@ -224,18 +224,21 @@ jobs:
           ls -la "../../../$ZIP"
 
       # Имена в 32-битном архиве — в кодировке 866, без метки UTF-8: так их
-      # верно показывает и встроенная распаковка Windows 7, и 7-Zip, и WinRAR.
+      # верно показывает встроенная распаковка Windows 7. Рядом 7-Zip кладёт
+      # те же имена в Юникоде (поле Info-ZIP) — их берут 7-Zip, WinRAR и
+      # новые Windows. Проверяется основное имя: его видит распаковка Windows.
       - name: Имена в архиве
         if: matrix.arch == 'ia32'
         run: |
-          python - "$ZIP" "$APPDIR" "$EXE" <<'EOF'
+          python -X utf8 - "$ZIP" "$APPDIR" "$EXE" <<'EOF'
           import sys, zipfile
           zf, appdir, exe = sys.argv[1], sys.argv[2], sys.argv[3]
-          z = zipfile.ZipFile(zf)
-          items = z.infolist()
-          utf = [i.filename for i in items if i.flag_bits & 0x800]
-          names = [i.filename.encode('cp437').decode('cp866') for i in items if not i.flag_bits & 0x800]
-          print('записей', len(items), 'в UTF-8', len(utf))
+          items = zipfile.ZipFile(zf).infolist()
+          utf = [i for i in items if i.flag_bits & 0x800]
+          # orig_filename — основное имя записи (zipfile читает его как cp437).
+          names = [i.orig_filename.encode('cp437').decode('cp866') for i in items if not i.flag_bits & 0x800]
+          uni = sum(1 for i in items if b'\x75\x70' in i.extra)
+          print('записей', len(items), '— с меткой UTF-8:', len(utf), '— с юникодным именем рядом:', uni)
           need = [appdir + '/' + exe, appdir + '/Прочти меня.txt']
           miss = [n for n in need if n not in names]
           print('нет имён:', miss) if miss else print('имена верны:', need)
