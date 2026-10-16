@@ -77,7 +77,53 @@ var CH = [
 function open() {
   LAB.ui.menu("Руководство", CH.map(function (c) {
     return { label: c.t, fn: function () { LAB.ui.note(c.t, c.x.join(" "), open); } };
-  }).concat([{ label: "Назад", fn: function () {} }]));
+  }).concat([
+    { label: "Бестиарий: мутанты и роботы", fn: bestiary },
+    { label: "Оружие", fn: weapons },
+    { label: "Броня", fn: armors },
+    { label: "Назад", fn: function () {} }
+  ]));
+}
+function bestiary() {
+  var items = [];
+  ["bio", "mech"].forEach(function (kind) {
+    for (var id in LAB.FOES) {
+      var f = LAB.FOES[id];
+      if (f.kind !== kind) continue;
+      items.push({ label: (kind === "mech" ? "Робот: " : "Мутант: ") + f.n, fn: (function (ff) { return function () { LAB.ui.note(ff.n, ff.desc + " Удар: " + LAB.ATK_T[ff.adt || "phys"] + ". " + (ff.kind === "mech" ? "Ионы, электрошок и ЭМИ — лучшее против него." : "Магнетрон, плазма и жар — лучшее против него."), bestiary); }; })(f) });
+    }
+  });
+  items.push({ label: "Модификации роботов", fn: function () {
+    var t = []; for (var k in LAB.AFFIX) t.push(LAB.AFFIX[k].m + " — " + LAB.AFFIX[k].desc);
+    LAB.ui.note("Модификации роботов", "Чем глубже, тем чаще роботы выходят с модификациями. " + t.join(". ") + ".", bestiary);
+  } });
+  items.push({ label: "Стражи двадцатых этажей", fn: function () {
+    var t = []; for (var k in LAB.BOSSES) t.push(LAB.BOSSES[k].n + ": " + LAB.BOSSES[k].desc);
+    LAB.ui.note("Стражи", t.join(" "), bestiary);
+  } });
+  items.push({ label: "Назад", fn: open });
+  LAB.ui.menu("Бестиарий", items);
+}
+function weapons() {
+  var items = [];
+  for (var id in LAB.WEAPONS) {
+    var w = LAB.WEAPONS[id];
+    items.push({ label: w.n.charAt(0).toUpperCase() + w.n.slice(1) + ", с уровня " + (LAB.WEAPON_DEPTH[id] || 1), fn: (function (ww) { return function () { LAB.ui.note(ww.n, ww.desc + " Урон — " + LAB.DTYPE_N[ww.dt] + ", дальность " + ww.rng + (ww.ammo !== "none" ? ", питание — " + LAB.AMMO[ww.ammo].n.toLowerCase() : ", без батарей") + ".", weapons); }; })(w) });
+  }
+  items.push({ label: "Назад", fn: open });
+  LAB.ui.menu("Оружие", items);
+}
+function armors() {
+  var items = [];
+  for (var id in LAB.ARMORS) {
+    var a = LAB.ARMORS[id];
+    items.push({ label: a.n.charAt(0).toUpperCase() + a.n.slice(1) + ", с уровня " + a.depth, fn: (function (aa) { return function () {
+      var r = []; for (var t in aa.res) r.push(LAB.ATK_T[t] + " " + Math.round(aa.res[t] * 100) + "%");
+      LAB.ui.note(aa.n, aa.desc + " Защита " + aa.def + " на первом уровне, глубже — больше. Стойкость: " + (r.join(", ") || "нет") + "." + (aa.special ? " Особенность: " + LAB.ARMOR_SPECIAL[aa.special] + "." : ""), armors);
+    }; })(a) });
+  }
+  items.push({ label: "Назад", fn: open });
+  LAB.ui.menu("Броня", items);
 }
 
 LAB.guide = { open: open, chapters: CH };

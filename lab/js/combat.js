@@ -646,7 +646,7 @@ function shoot(w, f, perp, along, burst, melee) {
   if (melee) { dmg *= 1 + (g.str - 10) * 0.03; if (gm().armorSpecial("strength")) dmg *= 1.6; }
   var crit = Math.random() < 0.05 + (g.agi - 10) * 0.008;
   if (crit) dmg *= 1.75;
-  var done = damageFoe(f, dmg, dt, { noarmor: !!w.noarmor, crit: crit, burst: burst, freeze: w.freeze });
+  var done = damageFoe(f, dmg, dt, { noarmor: !!w.noarmor, crit: crit, melee: melee, burst: burst, freeze: w.freeze });
   if (w.area) foes.forEach(function (o) { if (o !== f && !o.dead && !o.calm && cheb(o, f) <= 1) damageFoe(o, dmg * 0.6, dt, { noarmor: true, quiet: true }); });
   return 1;
 }
@@ -684,7 +684,7 @@ function damageFoe(f, raw, dt, o) {
   A("foeHit", f, dt, dmg, o.crit);
   if (!o.burst && !o.quiet) {
     var pct = f.hp / f.maxhp;
-    if (o.crit) sayOnce("crit", "Точно в цель!", 1500);
+    if (o.crit) sayOnce("crit", o.melee ? "Сокрушительный удар!" : "Точно в цель!", 1500);
     else if (pct < 0.25) sayOnce("hp" + f.id + "a", f.name.split(",")[0] + " едва держится.", 5000);
     else if (pct < 0.55) sayOnce("hp" + f.id + "b", f.name.split(",")[0] + " " + (f.kind === "mech" ? (f.g === "f" ? "повреждена" : "повреждён") : (f.g === "f" ? "ранена" : "ранен")) + ".", 5000);
   }

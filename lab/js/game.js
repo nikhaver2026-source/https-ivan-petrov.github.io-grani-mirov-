@@ -161,7 +161,7 @@ function enterFloor(L, F, how, silent) {
     if (how === "respawn") head = "«Эхо» вернуло вас в капсулу восстановления. Уровень " + L + ", этаж " + F + ".";
     say(head);
     roomCheck(true);
-  } else roomCheck(false);
+  } else roomCheck(false, false, true);
   if (LAB.combat) LAB.combat.wake();
   UIx("refresh");
   autosave();
@@ -406,7 +406,7 @@ function giveItem(it, quiet) {
       if (!G.tut.weapon) { G.tut.weapon = 1; extra = " Выбрать оружие — свайп одним пальцем вверх и сразу вниз. Вынуть — касание тремя пальцами."; }
       break;
     case "pass":
-      if (it.tier > G.tier) { G.tier = it.tier; extra = " Теперь открываются двери с " + LAB.TIERS[it.tier].short + " картридером."; }
+      if (it.tier > G.tier) { G.tier = it.tier; extra = " Теперь открываются двери с картридером " + LAB.TIERS[it.tier].short + " уровня" + (it.tier > 1 ? " и ниже." : "."); }
       break;
     case "elevpass": G.elev[it.L] = true; extra = " Лифт уровня " + it.L + " теперь ваш."; break;
     case "gatepass": if (it.core) G.core = true; else G.gate[it.L] = true; extra = it.core ? " Гермодверь реактора «Исток» откроется." : " Гермошлюз на уровень ниже теперь откроется. Помните: назад пути не будет."; break;
@@ -426,7 +426,7 @@ function giveItem(it, quiet) {
       break;
   }
   if (!quiet) A("pickup", itemKind(it));
-  return phrase + "." + extra;
+  return phrase + (/[.!?…]$/.test(phrase) ? "" : ".") + extra;
 }
 game.giveItem = giveItem;
 
@@ -582,11 +582,12 @@ function hiddenSecretAt(x, y) {
 }
 
 /* Смена помещения: рассказать, куда пришли. */
-function roomCheck(full, run) {
+function roomCheck(full, run, mute) {
   var r = roomAt(G.x, G.y), id = r ? r.id : (cellType(G.x, G.y) === T.DOOR ? -2 : -1);
   if (id === CUR.room && !full) return;
   var prev = CUR.room;
   CUR.room = id;
+  if (mute) { A("setRoom", id >= 0 ? r : null); CUR.room = -9; return; }
   if (id === -2) return; /* в дверном проёме */
   if (id === -1) { if (prev !== -1) A("setRoom", null); return; }
   A("setRoom", r);
@@ -1537,7 +1538,8 @@ function navigate(cycle, fromNpc) {
     if (p2) for (var i = 0; i < p2.length; i++) { var dd = doorAt(p2[i][0], p2[i][1]); if (dd && doorBlock(dd)) { blockDoor = dd; break; } }
     if (blockDoor) {
       var pd = LAB.bfs(CUR.fl, CUR.fs, G.x, G.y, function (x, y) { return x === blockDoor.x && y === blockDoor.y; }, { goalDoors: true, passDoor: function (d) { return !doorBlock(d) && !(d.lock && d.lock.type === "secret"); } });
-      say("Цель: " + tgt.n + ". Путь перекрыт: " + lockText(blockDoor) + ". " + doorBlock(blockDoor) + (pd ? " До этой двери: " + describePath(pd) : ""));
+      var plain = blockDoor.lock && /^(card|key|code)$/.test(blockDoor.lock.type);
+      say("Цель: " + tgt.n + ". Путь перекрыт: " + lockText(blockDoor) + "." + (plain ? "" : " " + doorBlock(blockDoor)) + (pd ? " До этой двери: " + describePath(pd) : ""));
       A("navPing", blockDoor.x, blockDoor.y);
     } else say("Цель: " + tgt.n + ". Пути не видно: возможно, за тайной дверью.");
     return;
@@ -1603,7 +1605,7 @@ function toggleDraw() {
   G.drawn = !G.drawn;
   A("play", G.drawn ? "w_draw" : "w_holster");
   LAB.vib(G.drawn ? [20, 30, 20] : 15);
-  if (G.drawn) say("Оружие наготове: " + weaponLine(w) + "." + ammoTail(w) + (G.tut.draw ? "" : " Свайп одним пальцем — выстрел в ту сторону, свайп с удержанием — очередь. Ходить — уберите оружие тем же касанием тремя пальцами."));
+  if (G.drawn) say("Оружие наготове: " + weaponLine(w) + "." + ammoTail(w) + (G.tut.draw ? "" : (w.rng <= 1 ? " Свайп одним пальцем — удар в ту сторону, свайп с удержанием — серия ударов." : " Свайп одним пальцем — выстрел в ту сторону, свайп с удержанием — очередь.") + " Ходить — уберите оружие тем же касанием тремя пальцами."));
   else say("Оружие убрано. Свайп — шаг.");
   G.tut.draw = 1;
   if (LAB.input) LAB.input.stopAll();
