@@ -301,6 +301,12 @@ BSD 3-Clause (Freedoom) и общественное достояние (част
 
 Файлы: `winch - Marker #2.flac`, `winch - Marker #3.flac`
 
+## Chair Squeak
+
+Автор: bewareofkites20. Лицензия: CC0 1.0. Источник: https://freesound.org/s/147759/
+
+Файлы: `147759_2610233-hq.ogg`
+
 ## Circuit breaker
 
 Автор: OpenGameArt. Лицензия: CC0 1.0. Источник: https://opengameart.org/content/sfx-circuit-breaker
@@ -331,6 +337,48 @@ BSD 3-Clause (Freedoom) и общественное достояние (част
 
 Файлы: `482122_71257-hq.ogg`
 
+## Coffee Espresso Machine Wave 44100hz
+
+Автор: Cafezz. Лицензия: CC0 1.0. Источник: https://freesound.org/s/333948/
+
+Файлы: `333948_5415212-hq.ogg`
+
+## Coffee machine steam
+
+Автор: gerardcatala. Лицензия: CC0 1.0. Источник: https://freesound.org/s/153290/
+
+Файлы: `153290_2358240-hq.ogg`
+
+## Coffee sip
+
+Автор: giddster. Лицензия: CC0 1.0. Источник: https://freesound.org/s/360475/
+
+Файлы: `360475_1738686-hq.ogg`
+
+## Coffee Vending Machine
+
+Автор: lolamadeus. Лицензия: CC0 1.0. Источник: https://freesound.org/s/161216/
+
+Файлы: `161216_544580-hq.ogg`
+
+## coins insert
+
+Автор: jeicob22. Лицензия: CC0 1.0. Источник: https://freesound.org/s/186391/
+
+Файлы: `186391_3049713-hq.ogg`
+
+## Computer Beep
+
+Автор: phatcorns. Лицензия: CC0 1.0. Источник: https://freesound.org/s/250104/
+
+Файлы: `250104_2772007-hq.ogg`
+
+## computerstartup
+
+Автор: guitarguy1985. Лицензия: CC0 1.0. Источник: https://freesound.org/s/52050/
+
+Файлы: `52050_533680-hq.ogg`
+
 ## Creature - Rat - Vocalizations
 
 Автор: LandeAudio. Лицензия: CC0 1.0. Источник: https://freesound.org/s/574107/
@@ -354,6 +402,12 @@ BSD 3-Clause (Freedoom) и общественное достояние (част
 Автор: Voices_Of_Marz. Лицензия: CC0 1.0. Источник: https://freesound.org/s/444444/
 
 Файлы: `444444_6670544-hq.ogg`
+
+## CRT computer monitor startup
+
+Автор: corkob. Лицензия: CC0 1.0. Источник: https://freesound.org/s/415594/
+
+Файлы: `415594_4043130-hq.ogg`
 
 ## Desolate
 
@@ -384,6 +438,18 @@ BSD 3-Clause (Freedoom) и общественное достояние (част
 Автор: Breviceps. Лицензия: CC0 1.0. Источник: https://freesound.org/s/479380/
 
 Файлы: `479380_9159316-hq.ogg`
+
+## Drink gulp
+
+Автор: ZacMakesLOUDNoises. Лицензия: CC0 1.0. Источник: https://freesound.org/s/187951/
+
+Файлы: `187951_2656785-hq.ogg`
+
+## Drink Sip and Swallow
+
+Автор: OwlStorm. Лицензия: CC0 1.0. Источник: https://freesound.org/s/320139/
+
+Файлы: `320139_140737-hq.ogg`
 
 ## Dripping water loop
 
@@ -577,6 +643,12 @@ BSD 3-Clause (Freedoom) и общественное достояние (част
 
 Файлы: `366837_6512973-hq.ogg`
 
+## Gulping
+
+Автор: swordofkings128. Лицензия: CC0 1.0. Источник: https://freesound.org/s/397611/
+
+Файлы: `397611_7586736-hq.ogg`
+
 ## gun lee enfield 303 rifle fire shot
 
 Автор: kyles. Лицензия: CC0 1.0. Источник: https://freesound.org/s/450852/
@@ -703,6 +775,24 @@ BSD 3-Clause (Freedoom) и общественное достояние (част
 
 Файлы: `371839_5302340-hq.ogg`
 
+## Japan_Matsudo_Hotel_Stairwell_Footsteps
+
+Автор: RutgerMuller. Лицензия: CC0 1.0. Источник: https://freesound.org/s/365412/
+
+Файлы: `365412_179538-hq.ogg`
+
+## Keyboard Typing
+
+Автор: Trollarch2. Лицензия: CC0 1.0. Источник: https://freesound.org/s/331656/
+
+Файлы: `331656_5825863-hq.ogg`
+
+## keyboard_typing
+
+Автор: j1987. Лицензия: CC0 1.0. Источник: https://freesound.org/s/79388/
+
+Файлы: `79388_367313-hq.ogg`
+
 ## Kitten Growl and Hiss
 
 Автор: TheWoodlandNomad. Лицензия: CC0 1.0. Источник: https://freesound.org/s/363105/
@@ -811,6 +901,12 @@ BSD 3-Clause (Freedoom) и общественное достояние (част
 
 Файлы: `770804_4982778-hq.ogg`
 
+## Metal Stairs Foot Steps
+
+Автор: sagamusix. Лицензия: CC0 1.0. Источник: https://freesound.org/s/452421/
+
+Файлы: `452421_9398458-hq.ogg`
+
 ## Metal thud
 
 Автор: DDT197. Лицензия: CC0 1.0. Источник: https://freesound.org/s/445775/
@@ -889,6 +985,12 @@ BSD 3-Clause (Freedoom) и общественное достояние (част
 
 Файлы: `567998_8216881-hq.ogg`
 
+## Mouse click sounds
+
+Автор: Masgame. Лицензия: CC0 1.0. Источник: https://freesound.org/s/347544/
+
+Файлы: `347544_5662401-hq.ogg`
+
 ## Mouse Squeaks
 
 Автор: shyguy014. Лицензия: CC0 1.0. Источник: https://freesound.org/s/463789/
@@ -912,6 +1014,24 @@ BSD 3-Clause (Freedoom) и общественное достояние (част
 Автор: rifthead. Лицензия: CC0 1.0. Источник: https://freesound.org/s/240311/
 
 Файлы: `240311_864571-hq.ogg`
+
+## Office chair - slip in to office table
+
+Автор: 16HPanskaBenda_Jonas. Лицензия: CC0 1.0. Источник: https://freesound.org/s/503634/
+
+Файлы: `503634_10769558-hq.ogg`
+
+## Open Soda can
+
+Автор: Robotter112. Лицензия: CC0 1.0. Источник: https://freesound.org/s/418988/
+
+Файлы: `418988_5486071-hq.ogg`
+
+## Opening a can of soda
+
+Автор: michorvath. Лицензия: CC0 1.0. Источник: https://freesound.org/s/386887/
+
+Файлы: `386887_3094998-hq.ogg`
 
 ## Overloading sound
 
@@ -1213,6 +1333,12 @@ BSD 3-Clause (Freedoom) и общественное достояние (част
 
 Файлы: `794272_6812548-hq.ogg`
 
+## slot machine vending hits angry punches thud
+
+Автор: kyles. Лицензия: CC0 1.0. Источник: https://freesound.org/s/637820/
+
+Файлы: `637820_612689-hq.ogg`
+
 ## snarl
 
 Автор: SmallQuadruped. Лицензия: CC0 1.0. Источник: https://freesound.org/s/42201/
@@ -1242,6 +1368,12 @@ BSD 3-Clause (Freedoom) и общественное достояние (част
 Автор: OpenGameArt. Лицензия: CC0 1.0. Источник: https://opengameart.org/content/space-ship-shield-sounds
 
 Файлы: `space shield sounds - 1.flac`, `space shield sounds - 2.flac`, `space shield sounds - 3.flac`, `space shield sounds - 4.flac`, `space shield sounds - 5.flac`, `space shield sounds - 6.flac`, `space shield sounds - 7.flac`, `space shield sounds - 8.flac`, `space shield sounds - 9.flac`
+
+## Squeaky office chair
+
+Автор: jvmorello. Лицензия: CC0 1.0. Источник: https://freesound.org/s/431857/
+
+Файлы: `431857_2480355-hq.ogg`
 
 ## Squeezing a Slime Ball
 
@@ -1308,6 +1440,30 @@ BSD 3-Clause (Freedoom) и общественное достояние (част
 Автор: crcavol. Лицензия: CC0 1.0. Источник: https://freesound.org/s/154641/
 
 Файлы: `154641_2592500-hq.ogg`
+
+## Vending machine
+
+Автор: Emma7073. Лицензия: CC0 1.0. Источник: https://freesound.org/s/250194/
+
+Файлы: `250194_4593301-hq.ogg`
+
+## Vending machine
+
+Автор: Simply_Marta. Лицензия: CC0 1.0. Источник: https://freesound.org/s/191457/
+
+Файлы: `191457_3052001-hq.ogg`
+
+## Vending Machine
+
+Автор: Grokowsky. Лицензия: CC0 1.0. Источник: https://freesound.org/s/377633/
+
+Файлы: `377633_2677526-hq.ogg`
+
+## vending_machine_coin_insert
+
+Автор: Krokulator. Лицензия: CC0 1.0. Источник: https://freesound.org/s/696745/
+
+Файлы: `696745_13579627-hq.ogg`
 
 ## Walking and running on a steel floor
 

@@ -22,9 +22,12 @@ LAB.plural = plural; LAB.stepsW = stepsW; LAB.gv = gv;
 var DIRS = LAB.DIRS;
 
 /* ════════ СОСТОЯНИЕ ════════ */
+/* Версия мира: в Альфе 1.0 этажи обставлены заново (испытательные комнаты,
+   компьютеры, автоматы, таблички) — старые записи этажей к ним не подходят. */
+var WORLD_V = 2;
 function newState(seed) {
   return {
-    v: 1, seed: seed, L: 1, F: 1, x: 0, y: 0, face: "N",
+    v: 1, worldV: WORLD_V, seed: seed, L: 1, F: 1, x: 0, y: 0, face: "N",
     hp: 100, hpMax: 100, str: 10, agi: 10, mind: 10, cha: 10,
     en: 30, enMax: 30, lvl: 1, xp: 0, credits: 20,
     weapons: [LAB.makeWeapon("crowbar", 1, 0, 1, "w_start_crowbar")], wi: 0, drawn: false,
@@ -251,15 +254,44 @@ game.itemKind = itemKind;
 function implantDef(id) { for (var i = 0; i < LAB.IMPLANTS.length; i++) if (LAB.IMPLANTS[i].id === id) return LAB.IMPLANTS[i]; return LAB.IMPLANTS[0]; }
 game.implantDef = implantDef;
 
+/* Колода текстов: записки и почтовые ящики — без повторов, пока колода не
+   кончится; порядок тасуется от зерна игры. */
+function deckDraw(key, n) {
+  G.decks = G.decks || {};
+  var d = G.decks[key];
+  if (!d || d.n !== n || d.i >= d.order.length) {
+    var round = d && d.n === n ? d.round + 1 : 0, order = [];
+    for (var i = 0; i < n; i++) order.push(i);
+    LAB.Rng(G.seed, "deck:" + key + ":" + round).shuffle(order);
+    d = G.decks[key] = { n: n, i: 0, order: order, round: round };
+  }
+  return d.order[d.i++];
+}
+function deckLeft(key, n) { var d = G.decks && G.decks[key]; return !d || d.n !== n ? n : d.order.length - d.i; }
+game.deckDraw = deckDraw;
+game.deckLeft = deckLeft;
+/* Записка персонала: своя для уровня или общая для комплекса — из колоды. */
+function staffNote(it, h) {
+  var nid = G.L + "-" + G.F + "-" + it.id;
+  G.noteIdx = G.noteIdx || {};
+  var own = (LAB.NOTES_L && LAB.NOTES_L[G.L]) || [], gl = LAB.STAFF_NOTES;
+  if (!G.noteIdx[nid]) {
+    var useOwn = own.length && deckLeft("note:" + G.L, own.length) > 0 && (h % 3 !== 0 || deckLeft("note:g", gl.length) <= 0);
+    G.noteIdx[nid] = useOwn ? ["L", G.L, deckDraw("note:" + G.L, own.length)] : ["g", 0, deckDraw("note:g", gl.length)];
+  }
+  var ref = G.noteIdx[nid];
+  var n = ref[0] === "L" ? ((LAB.NOTES_L[ref[1]] || [])[ref[2]]) : gl[ref[2]];
+  if (!n) n = gl[h % gl.length];
+  return { t: n.t, x: n.x, a: n.a || "" };
+}
 function noteText(it) {
   var h = LAB.hash32(it.id + ":" + G.L + ":" + G.F);
   if (it.note === "story") {
     var s = LAB.STORY[(it.L || G.L) + "-" + (it.F || G.F)];
     if (s) return { t: s.t, x: s.x, a: s.a, story: true };
-    var sn = LAB.STAFF_NOTES[h % LAB.STAFF_NOTES.length];
-    return { t: sn.t, x: sn.x };
+    return staffNote(it, h);
   }
-  if (it.note === "staff") { var n2 = LAB.STAFF_NOTES[(it.n + h) % LAB.STAFF_NOTES.length]; return { t: n2.t, x: n2.x }; }
+  if (it.note === "staff") return staffNote(it, h);
   if (it.note === "code") return LAB.codeNote(it.code, it.room, h);
   if (it.note === "safe") return LAB.safeNote(it.code, it.room, h);
   if (it.note === "secret") return LAB.secretNote(it.room, it.side, h);
@@ -419,7 +451,7 @@ function giveItem(it, quiet) {
       break;
     }
     case "sample":
-      if (!G.samples[it.sid]) { G.samples[it.sid] = 1; G.enMax += 2; G.en = Math.min(G.enMax, G.en + 10); gainXP(20); extra = " Собрано образцов: " + Object.keys(G.samples).length + " из 200. Энергия имплантов выросла."; }
+      if (!G.samples[it.sid]) { G.samples[it.sid] = 1; G.enMax += 2; G.en = Math.min(G.enMax, G.en + 10); gainXP(20); extra = " Собрано образцов: " + Object.keys(G.samples).length + ". Энергия имплантов выросла."; }
       break;
     case "chip":
       if (G.implants.indexOf(it.implant) < 0) { G.implants.push(it.implant); extra = " Имплант установлен сам: «" + implantDef(it.implant).n + "». Панель имплантов — " + LAB.K("двойное касание четырьмя пальцами.", "клавиша U."); }
@@ -479,6 +511,7 @@ function tryMove(dir, run) {
     var sd = hiddenSecretAt(nx, ny);
     A("bumpWall", dir); LAB.vib(25);
     if (sd) { bumpFocus({ type: "secret", ref: sd, dir: dir }); sayOnce("wall" + nx + "," + ny, "Из щели у пола тянет сквозняком. " + LAB.K("Двойное касание — простучать стену.", "Enter — простучать стену.")); }
+    else wallDoorHint(dir, nx, ny);
     return false;
   }
   if (tt === T.DOOR) {
@@ -546,6 +579,20 @@ function sayOnce(key, text, gap) {
 }
 function bumpFocus(f) { CUR.focus = f; CUR.lastBump = Date.now(); }
 
+/* Стена, а дверь в этой же стене рядом: сказать, на сколько шагов она в стороне. */
+function wallDoorHint(dir, nx, ny) {
+  var d = DIRS[dir], side = d[0] ? ["N", "S"] : ["W", "E"];
+  for (var k = 1; k <= 2; k++) {
+    for (var j = 0; j < 2; j++) {
+      var q = DIRS[side[j]], wx = nx + q[0] * k, wy = ny + q[1] * k;
+      var dr = doorAt(wx, wy);
+      if (dr && !hiddenSecretAt(wx, wy) && passable(G.x + q[0] * k, G.y + q[1] * k)) {
+        sayOnce("walldoor" + nx + "," + ny, "Стена. Дверь — " + (k === 1 ? "на шаг " : "на два шага ") + LAB.DIRTO[side[j]] + ".", 5000);
+        return;
+      }
+    }
+  }
+}
 /* Коридор поворачивает: впереди стена, а проход уходит в сторону — сказать
    куда (вперёд, назад, влево, вправо — как свайпы и клавиши). */
 function corridorTurn(dir) {
@@ -642,9 +689,9 @@ function roomExits(r) {
   r.doors.forEach(function (did) {
     var d = CUR.fl.doors[parseInt(did.slice(1), 10)];
     if (d.lock && d.lock.type === "secret" && !secretFound(d)) return;
-    var side = sideOfDoor(r, d);
     var st = doorOpen(d) ? "открытая" : d.lock && doorBlock(d) ? "заперта" : "закрыта";
-    out.push(LAB.DIRN[side] + " — дверь, " + st);
+    /* где дверь относительно игрока: сторона и шаги — чтобы идти прямо к ней, а не в стену */
+    out.push("дверь " + relDir(d.x, d.y) + ", " + st);
   });
   /* коридоры без двери у этой комнаты */
   var seenC = {};
@@ -1322,6 +1369,7 @@ function openContainer(o) {
   st.open = true;
   A("container", o.type);
   var loot = (o.loot || []).slice();
+  loot.forEach(function (it, k) { if (!it.id) it.id = o.id + "-" + k; }); /* у каждой вещи свой номер: записки из ящиков не сливаются */
   if (o.type === "safe") gainXP(10);
   if (!loot.length) { say(objName(o) + ": ничего полезного."); return; }
   var parts = loot.map(function (it) { return giveItem(it); });
@@ -1911,7 +1959,9 @@ function loadSlot(n) {
   game.t0 = Date.now();
   game.entered = true;
   UIx("showGame");
-  enterFloor(G.L, G.F, "load", true);
+  var how = G.relocate ? (G.L === 1 && G.F === 1 ? "start" : (G.F === 1 ? "gatedown" : "down")) : "load";
+  G.relocate = false;
+  enterFloor(G.L, G.F, how, true);
   var lev = LAB.LEVELS[G.L];
   say("Игра загружена. Уровень " + G.L + ", " + lev.name + ", этаж " + G.F + ". Здоровье " + G.hp + " из " + G.hpMax + ". " + weaponLine(curWeapon()) + ".");
   roomCheck(true);
@@ -1925,6 +1975,13 @@ function migrate(g) {
   for (var k2 in base.st) if (g.st[k2] === undefined) g.st[k2] = 0;
   g.dead = false;
   g.stair = null; /* запись на лестнице — снова у лестницы */
+  if (g.worldV !== WORLD_V) {
+    /* запись прежней версии: этажи построены заново — их состояние, ключи и коды
+       сбрасываются, герой встаёт у входа на свой этаж; пропуска, оружие,
+       броня, кредиты и прочитанные записки остаются */
+    g.fs = {}; g.keys = {}; g.codes = {}; g.decks = {}; g.noteIdx = {};
+    g.worldV = WORLD_V; g.relocate = true;
+  }
   return g;
 }
 var autoTimer = null;
@@ -1944,7 +2001,7 @@ function newGame() {
   say("Вы просыпаетесь в криокапсуле. Холод отпускает. «Эхо» включается: «Носитель номер семь, слышите меня? Зрение не восстановлено. Я буду вашими глазами. " + LAB.K("Шагайте свайпами. Осмотреться — два пальца вверх. Двойное касание у предмета — действия", "Шагайте клавишами W A S D. Осмотреться — Tab. Enter у предмета — действия. Все клавиши — в руководстве, F1") + "»." );
   roomCheck(true);
   journal("Пробуждение. Уровень 1, этаж 1.");
-  G.quests.push({ id: "main", giver: "main", giverName: "Эхо", L: 10, F: 20, type: "main", done: false, short: "спуститься в Ядро и остановить Разлом", text: "Спуститься на десятый уровень, в Ядро, и остановить Разлом у пульта реактора «Исток»." });
+  G.quests.push({ id: "main", giver: "main", giverName: "Эхо", L: 10, F: 20, type: "main", done: false, short: "спуститься в Ядро и остановить Разлом", text: "Спуститься в Ядро, на самый нижний уровень «Ковчега», и остановить Разлом у пульта реактора «Исток»." });
 }
 game.newGame = newGame;
 
@@ -1962,7 +2019,7 @@ function characterText() {
   if (st.length) lines.push("Состояние: " + st.join(", ") + ".");
   lines.push("Энергия имплантов " + G.en + " из " + G.enMax + ". Уровень героя " + G.lvl + ", опыт " + G.xp + " из " + LAB.xpNeed(G.lvl) + ". Сила " + G.str + ", ловкость " + G.agi + ", интеллект " + G.mind + ", харизма " + G.cha + ". Кредиты " + G.credits + ".");
   lines.push("Комплекс: уровень " + G.L + " «" + LAB.LEVELS[G.L].name + "», этаж " + G.F + ". Пропуск: " + (G.tier ? LAB.TIERS[G.tier].n.toLowerCase() : "нет") + ". Лифт этажей: " + (G.elev[G.L] ? "есть пропуск" : "нет пропуска") + ". " + (G.L < LAB.LEVELS_N ? "Шлюзовая ключ-карта уровня " + G.L + ": " + (G.gate[G.L] ? "есть" : "нет") : "Ключ доступа к «Истоку»: " + (G.core ? "есть" : "нет")) + ".");
-  lines.push("Образцов " + Object.keys(G.samples).length + " из 200, тайников " + G.stats.secrets + ", записок " + G.stats.notes + ", побеждено врагов " + G.stats.kills + ". Сложность: " + LAB.DIFF[S.difficulty || 1].n.toLowerCase() + ".");
+  lines.push("Образцов " + Object.keys(G.samples).length + ", тайников " + G.stats.secrets + ", записок " + G.stats.notes + ", побеждено врагов " + G.stats.kills + ". Сложность: " + LAB.DIFF[S.difficulty || 1].n.toLowerCase() + ".");
   if (G.faction) lines.push("Фракция: " + LAB.FACTIONS[G.faction].n + ".");
   return lines;
 }

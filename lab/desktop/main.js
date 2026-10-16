@@ -111,9 +111,8 @@ function createWindow() {
     return { action: 'deny' };
   });
   win.webContents.on('will-navigate', (e, url) => { if (!url.startsWith('app://')) e.preventDefault(); });
-  win.webContents.on('console-message', (e, level, message) => {
-    const lv = e && typeof e.level !== 'undefined' ? e.level : level, msg = e && e.message ? e.message : message;
-    if (SELFTEST || lv === 'error' || lv === 3) log('console: ' + msg);
+  win.webContents.on('console-message', e => {
+    if (SELFTEST || (e && e.level === 'error')) log('console: ' + (e && e.message));
   });
   win.webContents.on('render-process-gone', (e, d) => { log('render-process-gone ' + (d && d.reason)); if (SELFTEST) app.exit(3); });
   win.on('page-title-updated', e => e.preventDefault());

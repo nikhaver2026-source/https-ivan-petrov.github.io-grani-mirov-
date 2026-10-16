@@ -110,19 +110,20 @@ function pcIndex(o) {
   var list = CUR().fl.objs.filter(function (q) { return q.type === "pc"; });
   return Math.max(0, list.indexOf(o));
 }
-/* Ящики уровня: свои переписки уровня и общая почта комплекса, по очереди. */
-function levelPool(L) {
-  var Lr = lore(), own = (Lr.mail && Lr.mail[L]) || [], gl = (Lr.mail && Lr.mail.g) || [];
-  var seed = G().seed, out = own.slice();
-  var perm = gl.map(function (m, i) { return i; });
-  var r = LAB.Rng(seed, "mailg");
-  r.shuffle(perm);
-  perm.forEach(function (gi, k) { if (k % LAB.LEVELS_N === L - 1) out.push(gl[gi]); });
-  var r2 = LAB.Rng(seed, "mail:" + L);
-  r2.shuffle(out);
-  return out;
-}
 var poolCache = {};
+/* Почтовый ящик компьютера: переписка уровня или общая почта комплекса — из
+   колоды, без повторов, пока колода не кончится. Выбор запоминается. */
+function thread(o, h) {
+  var st = gm().objState(o), Lr = lore(), L = G().L;
+  var own = (Lr.mail && Lr.mail[L]) || [], gl = (Lr.mail && Lr.mail.g) || [];
+  if (!st.th) {
+    var useOwn = own.length && gm().deckLeft("mail:" + L, own.length) > 0 && (h % 3 !== 0 || !gl.length || gm().deckLeft("mail:g", gl.length) <= 0);
+    if (useOwn) st.th = { L: L, i: gm().deckDraw("mail:" + L, own.length) };
+    else if (gl.length) st.th = { L: "g", i: gm().deckDraw("mail:g", gl.length) };
+    else return null;
+  }
+  return (st.th.L === "g" ? gl : ((Lr.mail && Lr.mail[st.th.L]) || []))[st.th.i] || null;
+}
 function pcData(o) {
   var key = G().seed + ":" + CUR().key + ":" + o.id;
   if (poolCache[key]) return poolCache[key];
@@ -130,33 +131,36 @@ function pcData(o) {
   var hasCode = !!(o.code || o.safeCode);
   var roll = h % 100;
   var d = { state: hasCode ? "ok" : roll < 12 ? "broken" : roll < 22 ? "wiped" : "ok", mails: [], logs: [], docs: [], cams: [] };
-  var pool = levelPool(L);
-  var idx = ((F - 1) * 2 + pcIndex(o)) % Math.max(1, pool.length);
-  var th = pool[idx];
-  if (th) { d.owner = th.o || ""; d.mails = th.m.map(function (m) { return { f: m[0], s: m[1] || th.s, x: m[2] }; }); d.subj = th.s; }
+  var th = d.state === "ok" ? thread(o, h) : null;
+  if (th) {
+    d.owner = th.o || "";
+    var me = (d.owner || "").split(",")[0];
+    d.mails = th.m.map(function (m) { return { f: m[0] === "*" ? me + " (отправлено)" : m[0], s: m[1] || th.s, x: m[2] }; });
+    d.subj = th.s;
+  }
   if (!d.owner) d.owner = randomOwner(L, h);
   /* объявление для всех — иногда */
   var notes = Lr.notices || [];
-  if (notes.length && (h >> 3) % 3 === 0) { var nn = notes[(h >> 5) % notes.length]; d.mails.push({ f: nn[0], s: nn[1], x: nn[2] }); }
+  if (notes.length && d.state === "ok" && (h >>> 3) % 3 === 0) { var nn = notes[(h >>> 5) % notes.length]; d.mails.push({ f: nn[0], s: nn[1], x: nn[2] }); }
   /* код двери или сейфа — в письме */
   if (o.code) d.mails.unshift({ f: "Служба безопасности", s: "Код двери: " + o.codeRoom, x: "Новый код двери помещения «" + o.codeRoom + "»: " + digits(o.code) + ". Никому не пересылать и не записывать на бумаге.", code: o.code, room: o.codeRoom });
   if (o.safeCode) d.mails.unshift({ f: "Бухгалтерия", s: "Сейф, помещение «" + o.safeRoom + "»", x: "Напоминаю комбинацию сейфа в помещении «" + o.safeRoom + "»: " + digits(o.safeCode) + ". Сменить её после инвентаризации — так и не сменили.", code: o.safeCode, safe: true, room: o.safeRoom });
   /* журнал испытаний помещения */
   var rm = gm().roomAt(o.x, o.y);
   var lg = rm && Lr.logs && Lr.logs[rm.type];
-  if (lg && lg.length) { d.logTitle = "Журнал испытаний: " + rm.name; var k0 = (h >> 7) % lg.length; d.logs = [lg[k0], lg[(k0 + 1) % lg.length]].filter(function (x, i, a) { return a.indexOf(x) === i; }); }
+  if (lg && lg.length && d.state === "ok") { d.logTitle = "Журнал испытаний: " + rm.name; var k0 = (h >>> 7) % lg.length; d.logs = [lg[k0], lg[(k0 + 1) % lg.length]].filter(function (x, i, a) { return a.indexOf(x) === i; }); }
   var docs = Lr.docs && Lr.docs[L];
-  if (docs && docs.length) d.docs = [docs[(h >> 9) % docs.length]];
+  if (docs && docs.length && d.state === "ok" && (h >>> 9) % 2 === 0) d.docs = [docs[(h >>> 10) % docs.length]];
   var cams = Lr.cams && Lr.cams[L];
-  if (cams && cams.length && (h >> 11) % 2 === 0) d.cams = [cams[(F + pcIndex(o)) % cams.length]];
+  if (cams && cams.length && (h >>> 11) % 2 === 0) d.cams = [cams[(F + pcIndex(o)) % cams.length]];
   poolCache[key] = d;
   return d;
 }
 function randomOwner(L, h) {
   var N = LAB.NAMES || { m: ["Иван"], f: ["Анна"], sm: ["Петров"], sf: ["Петрова"] };
-  var fem = h % 2 === 0, first = (fem ? N.f : N.m)[(h >> 2) % (fem ? N.f : N.m).length], last = (fem ? N.sf : N.sm)[(h >> 4) % (fem ? N.sf : N.sm).length];
+  var fem = h % 2 === 0, first = (fem ? N.f : N.m)[(h >>> 2) % (fem ? N.f : N.m).length], last = (fem ? N.sf : N.sm)[(h >>> 4) % (fem ? N.sf : N.sm).length];
   var pos = (lore().posts && lore().posts[L]) || ["сотрудник"];
-  return first + " " + last + ", " + pos[(h >> 6) % pos.length];
+  return first + " " + last + ", " + pos[(h >>> 6) % pos.length];
 }
 
 function pcMenu(o) {

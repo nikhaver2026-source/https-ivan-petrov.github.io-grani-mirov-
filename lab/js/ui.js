@@ -410,7 +410,7 @@ function inventory(focus) {
     { label: "Записки: " + g.noteList.length, fn: notesMenu },
     { label: "Задания: " + g.quests.filter(function (q) { return !q.done; }).length, fn: questsMenu },
     { label: "Журнал", fn: journalMenu },
-    { label: "Импланты: " + g.implants.length + ", образцы: " + Object.keys(g.samples).length + " из 200", fn: implants },
+    { label: "Импланты: " + g.implants.length + ", образцы: " + Object.keys(g.samples).length, fn: implants },
     { label: "Кредиты: " + g.credits, info: true, keep: true, fn: function () { say("Кредиты: " + g.credits + ". Тратятся в торговых терминалах и у выживших."); } }
   ];
   menu("Инвентарь", items, { focus: focus || 0 });
@@ -495,7 +495,7 @@ function passesMenu() {
   var g = G(), items = [];
   items.push({ label: "Пропуск доступа: " + (g.tier ? LAB.TIERS[g.tier].n : "нет"), keep: true, fn: function () { say(g.tier ? LAB.TIERS[g.tier].n + ": открывает двери с картридером этого цвета и ниже." : "Пропуска нет."); } });
   items.push({ label: "Пропуск лифта этажей уровня " + g.L + ": " + (g.elev[g.L] ? "есть" : "нет"), keep: true, fn: function () { say(g.elev[g.L] ? "Лифт этажей уровня " + g.L + " вас повезёт." : "Пропуск лифта лежит на втором этаже уровня."); } });
-  if (g.L < LAB.LEVELS_N) items.push({ label: "Шлюзовая ключ-карта уровня " + g.L + ": " + (g.gate[g.L] ? "есть" : "нет"), keep: true, fn: function () { say(g.gate[g.L] ? "Гермошлюз на двадцатом этаже откроется. Пройти можно только вниз." : "Ключ-карта — на двадцатом этаже уровня: у стража или спрятана."); } });
+  if (g.L < LAB.LEVELS_N) items.push({ label: "Шлюзовая ключ-карта уровня " + g.L + ": " + (g.gate[g.L] ? "есть" : "нет"), keep: true, fn: function () { say(g.gate[g.L] ? "Гермошлюз на последнем этаже уровня откроется. Пройти можно только вниз." : "Ключ-карта — на последнем этаже уровня, у шлюза: у стража или спрятана."); } });
   else items.push({ label: "Ключ доступа к реактору «Исток»: " + (g.core ? "есть" : "нет"), keep: true, fn: function () {} });
   Object.keys(g.keys).forEach(function (k) { items.push({ label: g.keys[k], keep: true, fn: function () { say(g.keys[k] + "."); } }); });
   var codes = Object.keys(g.codes);
@@ -605,7 +605,7 @@ function ending(win) {
   A("music", "ending");
   var g = G();
   var mins = Math.round((g.stats.ms + Date.now() - (gm().t0 || Date.now())) / 60000);
-  var stats = "Итоги. В игре " + Math.floor(mins / 60) + " ч " + (mins % 60) + " мин. Уровень героя " + g.lvl + ". Побеждено врагов " + g.stats.kills + ". Тайников " + g.stats.secrets + ". Записок " + g.stats.notes + ". Образцов " + Object.keys(g.samples).length + " из 200. Гибелей " + g.stats.deaths + ". Сложность: " + LAB.DIFF[S.difficulty || 1].n.toLowerCase() + ".";
+  var stats = "Итоги. В игре " + Math.floor(mins / 60) + " ч " + (mins % 60) + " мин. Уровень героя " + g.lvl + ". Побеждено врагов " + g.stats.kills + ". Тайников " + g.stats.secrets + ". Записок " + g.stats.notes + ". Образцов " + Object.keys(g.samples).length + ". Гибелей " + g.stats.deaths + ". Сложность: " + LAB.DIFF[S.difficulty || 1].n.toLowerCase() + ".";
   var pages = LAB.ENDING.concat([stats, LAB.CREDITS_TEXT || "Конец. Спасибо, что слушали."]);
   showPage(pages, 0, {
     title: "Финал", skip: false,

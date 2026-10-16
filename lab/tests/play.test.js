@@ -398,6 +398,125 @@ function ok(cond, msg) { if (cond) console.log("  ✓ " + msg); else { fails++; 
   for (const k of ["4", "0", "7", "1", "Enter"]) await key(k);
   ok(await page.evaluate(() => window.KCODE) === "4071", "кодовый замок: цифры с клавиатуры и Enter — " + (await page.evaluate(() => window.KCODE)));
 
+  console.log("Мир: двери, таблички, лестницы, компьютеры, автоматы, записки");
+  await page.evaluate(() => { LAB.ui.closeAll(); const G = LAB.game.G; G.dead = false; G.hp = G.hpMax; G.drawn = false; LAB.combat.foes().forEach(f => { f.dead = true; }); });
+  const signs = await page.evaluate(() => LAB.game.CUR.fl.rooms.filter(r => r && r.sign).map(r => r.sign));
+  ok(signs.length > 2 && signs.some(t => /^Помещение \d+\. /.test(t)), "таблички на дверях: " + signs.slice(0, 3).join(" | "));
+  const door = await page.evaluate(async () => {
+    const g = LAB.game, G = g.G, fl = g.CUR.fl, D = LAB.DIRS;
+    const d = fl.doors.find(x => !x.lock && fl.t[(x.y + D[x.side][1]) * LAB.W + x.x + D[x.side][0]] === LAB.T.CORR && !g.CUR.fs.doors[x.id]);
+    if (!d) return { none: true };
+    SPOKEN.length = 0;
+    G.x = d.x + D[d.side][0]; G.y = d.y + D[d.side][1];
+    g.tryMove(LAB.OPP[d.side], false);
+    const closed = g.CUR.fs.doors[d.id] !== 2, at = G.x + "," + G.y, said = SPOKEN.join(" | ");
+    g.openDoor(d);
+    const opened = g.CUR.fs.doors[d.id] === 2;
+    /* отойти подальше: любая свободная клетка комнаты в трёх шагах от двери */
+    let spot = null;
+    fl.rooms.forEach(r => { if (!r || spot) return; for (let y = r.y0; y <= r.y1 && !spot; y++) for (let x = r.x0; x <= r.x1; x++) if (Math.abs(x - d.x) + Math.abs(y - d.y) >= 3 && g.passable(x, y)) { spot = [x, y]; break; } });
+    if (spot) { G.x = spot[0]; G.y = spot[1]; }
+    g.CUR.openT[d.id] = Date.now() - 4000;
+    g.doorAutoClose();
+    return { closed, said, opened, after: g.CUR.fs.doors[d.id], dist: Math.abs(G.x - d.x) + Math.abs(G.y - d.y) };
+  });
+  ok(door.none || (door.closed && /Закрытая дверь/.test(door.said) && /Табличка: «/.test(door.said)), "дверь закрыта, пока её не открыть; на двери — табличка (" + (door.said || "").slice(0, 120) + ")");
+  ok(door.none || door.opened, "дверь открывается действием");
+  ok(door.none || door.dist < 2 || door.after === 1, "открытая дверь сама закрывается, когда игрок отошёл (" + door.after + ", шагов от двери " + door.dist + ")");
+  const turn = await page.evaluate(() => {
+    const g = LAB.game, G = g.G, fl = g.CUR.fl, D = LAB.DIRS, T = LAB.T, W = LAB.W;
+    const at = (x, y) => (x < 0 || y < 0 || x >= W || y >= LAB.H) ? T.WALL : fl.t[y * W + x];
+    for (let y = 1; y < LAB.H - 1; y++) for (let x = 1; x < W - 1; x++) {
+      if (at(x, y) !== T.CORR) continue;
+      for (const k of ["N", "E", "S", "W"]) {
+        const bx = x - D[k][0], by = y - D[k][1];
+        if (at(bx, by) !== T.CORR) continue;
+        if (at(x + D[k][0], y + D[k][1]) !== T.WALL) continue;
+        if (g.foeAt && g.foeAt(x, y)) continue;
+        SPOKEN.length = 0; G.x = bx; G.y = by;
+        if (!g.tryMove(k, false)) continue;
+        return SPOKEN.join(" | ");
+      }
+    }
+    return "нет поворотов";
+  });
+  ok(/Коридор уходит|Развилка|нет поворотов/.test(turn), "коридор поворачивает — сказано куда: " + turn.slice(0, 80));
+  const stairs = await page.evaluate(() => {
+    const g = LAB.game, G = g.G, fl = g.CUR.fl;
+    const o = fl.objs.find(x => x.type === "stairs_down" && !x.blocked);
+    if (!o) return { none: true };
+    const F0 = G.F;
+    SPOKEN.length = 0;
+    g.useStairs(o);
+    const on = !!G.stair;
+    let steps = 0, said = [];
+    for (let i = 0; i < 40 && G.F === F0; i++) { g.lastMoveReset && g.lastMoveReset(); const t0 = Date.now(); while (Date.now() - t0 < 130) { /* шаг не чаще раза в 0,11 с */ } g.tryMove("N", false); steps++; }
+    said = SPOKEN.join(" | ");
+    return { on, steps, F: G.F, F0, said };
+  });
+  ok(stairs.none || (stairs.on && stairs.F === stairs.F0 + 1 && stairs.steps >= 10 && stairs.steps <= 16), "лестница: спуск шагами по ступеням, шагов " + stairs.steps + ", этаж " + stairs.F0 + " → " + stairs.F);
+  ok(stairs.none || (/Площадка/.test(stairs.said) && !/\d+ ступен/.test(stairs.said)), "на лестнице — площадка, число ступеней не называется");
+  const back = await page.evaluate(() => {
+    const g = LAB.game, G = g.G, fl = g.CUR.fl;
+    const o = fl.objs.find(x => x.type === "stairs_up" && !x.blocked);
+    if (!o) return { none: true };
+    const F0 = G.F;
+    g.useStairs(o);
+    const t0 = Date.now(); while (Date.now() - t0 < 130) { }
+    g.tryMove("N", false);
+    const t1 = Date.now(); while (Date.now() - t1 < 130) { }
+    g.tryMove("S", false);
+    const t2 = Date.now(); while (Date.now() - t2 < 130) { }
+    SPOKEN.length = 0;
+    g.tryMove("S", false);
+    return { F: G.F, F0, stair: !!G.stair, said: SPOKEN.join(" | ") };
+  });
+  ok(back.none || (back.F === back.F0 && !back.stair && /сошли с лестницы/.test(back.said)), "шаг назад с первой ступени — снова на этаже");
+  const pc = await page.evaluate(() => {
+    const g = LAB.game, G = g.G, fl = g.CUR.fl;
+    const o = { id: "tpc1", type: "pc", x: G.x, y: G.y, room: -1, code: "4821", codeFor: "dX", codeRoom: "Проверочная" };
+    fl.objs.push(o);
+    LAB.ui.closeAll();
+    LAB.office.pcMenu(o);
+    const t1 = LAB.ui.top() && LAB.ui.top().title;
+    const sit = LAB.ui.top().items.findIndex(i => i.label === "Сесть за компьютер");
+    LAB.ui.top().i = sit; LAB.ui.activate();
+    const t2 = LAB.ui.top() && LAB.ui.top().title;
+    const mi = LAB.ui.top().items.findIndex(i => /^Почта/.test(typeof i.label === "function" ? i.label() : i.label));
+    LAB.ui.top().i = mi; LAB.ui.activate();
+    const t3 = LAB.ui.top() && LAB.ui.top().title;
+    const mails = LAB.ui.top().items.map(i => i.label);
+    LAB.ui.top().i = 0; LAB.ui.activate();
+    const t4 = LAB.ui.top() && LAB.ui.top().title;
+    LAB.ui.closeAll();
+    fl.objs.pop();
+    return { t1, t2, t3, t4, mails, code: G.codes["4821"] || null };
+  });
+  ok(pc.t1 === "Компьютерный стол" && /^Компьютер: /.test(pc.t2 || "") && /^Почта: /.test(pc.t3 || ""), "компьютерный стол: сесть за компьютер, почта (" + pc.t2 + ")");
+  ok(pc.code === "Проверочная" && /Код двери/.test(pc.mails[0] || "") && /^Письмо/.test(pc.t4 || ""), "в почте — код двери, прочитан и запомнен: " + (pc.mails[0] || ""));
+  const drink = await page.evaluate(async () => {
+    const g = LAB.game, G = g.G, fl = g.CUR.fl;
+    const o = { id: "tcof1", type: "coffee", x: G.x, y: G.y, room: -1 };
+    fl.objs.push(o);
+    G.credits = 100; G.hp = Math.round(G.hpMax / 2);
+    const hp0 = G.hp, cr0 = G.credits;
+    LAB.ui.closeAll();
+    LAB.office.drinkMenu(o);
+    const title = LAB.ui.top() && LAB.ui.top().title;
+    LAB.ui.top().i = 2; LAB.ui.activate(); /* капучино */
+    await new Promise(r => setTimeout(r, 3200));
+    LAB.ui.closeAll();
+    fl.objs.pop();
+    return { title, hp0, hp: G.hp, cr0, cr: G.credits, said: SPOKEN.slice(-2).join(" | ") };
+  });
+  ok(/^Кофейный автомат/.test(drink.title || "") && drink.hp > drink.hp0 && drink.cr < drink.cr0, "кофейный автомат: капучино за кредиты, здоровье " + drink.hp0 + " → " + drink.hp + ", кредиты " + drink.cr0 + " → " + drink.cr);
+  const notes = await page.evaluate(() => {
+    const g = LAB.game, G = g.G, fl = g.CUR.fl, out = [];
+    for (let i = 0; i < 6; i++) { const it = { id: "tn" + i, kind: "note", note: "staff", n: i, x: G.x, y: G.y }; out.push(g.noteText(it).t + ": " + g.noteText(it).x.slice(0, 30)); }
+    return out;
+  });
+  ok(new Set(notes).size === notes.length, "записки персонала не повторяются: " + notes.slice(0, 3).join(" | "));
+
   console.log("Все этажи одного зерна: вход, такты, осмотр");
   const tour = await page.evaluate(() => {
     const g = LAB.game, G = g.G, out = { floors: 0, err: [] };
