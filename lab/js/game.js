@@ -157,8 +157,11 @@ function enterFloor(L, F, how, silent) {
   else if (how === "load") { spot = [G.x, G.y]; if (!passable(spot[0], spot[1])) { o = findObj("stairs_up") || findObj("elevator") || findObj("wake") || findObj("gate_sealed"); spot = freeNear(o); } }
   if (!spot) { o = findObj("elevator"); spot = freeNear(o); }
   G.x = spot[0]; G.y = spot[1];
+  var firstVisit = !G.visited[L + "-" + F];
   G.visited[L + "-" + F] = 1;
   G.maxF[L] = Math.max(G.maxF[L] || 0, F);
+  navStop(); /* навигатор ведёт только по своему этажу */
+  if (firstVisit) { if (L > 10) tutor("seam"); else if (how === "down" || how === "gatedown") tutor("sector"); }
   markSeen();
   A("enterFloor", L, F);
   if (LAB.oko) LAB.oko.event("floor", { how: how });
@@ -686,7 +689,7 @@ function giveItem(it, quiet) {
     case "ammo": G.ammo[it.ammo] = (G.ammo[it.ammo] || 0) + (it.n || 1); break;
     case "item":
       G.inv[it.item] = (G.inv[it.item] || 0) + (it.n || 1);
-      if (it.item === "plate" && !G.tut.plate) { G.tut.plate = 1; extra = " Пластину вставляют в надетую броню: инвентарь, раздел «Броня»."; }
+      if (it.item === "plate" && !G.tut.plate && hintsOn()) { G.tut.plate = 1; extra = " Пластину вставляют в надетую броню: инвентарь, раздел «Броня»."; }
       break;
     case "armor":
       G.armors.push(it.a);
@@ -699,7 +702,7 @@ function giveItem(it, quiet) {
     case "credits": G.credits += it.n; break;
     case "weapon":
       G.weapons.push(it.w);
-      if (!G.tut.weapon) { G.tut.weapon = 1; extra = LAB.K(" Выбрать оружие — свайп одним пальцем вверх и сразу вниз. Вынуть — касание тремя пальцами.", " Выбрать оружие — Q и E или цифры от 1 до 9. Достать — R."); }
+      if (!G.tut.weapon && hintsOn()) { G.tut.weapon = 1; extra = LAB.K(" Выбрать оружие — свайп одним пальцем вверх и сразу вниз. Вынуть — касание тремя пальцами.", " Выбрать оружие — Q и E или цифры от 1 до 9. Достать — R."); }
       break;
     case "pass":
       if (it.tier > G.tier) { G.tier = it.tier; extra = " Теперь открываются двери с картридером " + LAB.TIERS[it.tier].short + (it.tier > 1 ? " и ниже." : "."); }
@@ -729,7 +732,7 @@ function giveItem(it, quiet) {
       else { G.credits += 60; extra = " Такой имплант уже есть — чип продан за 60 кредитов."; }
       break;
   }
-  if (!quiet) A("pickup", itemKind(it));
+  if (!quiet) { A("pickup", itemKind(it)); if (it.kind !== "note") tutor("pickup"); }
   return phrase + (/[.!?…]$/.test(phrase) ? "" : ".") + extra;
 }
 game.giveItem = giveItem;
@@ -811,7 +814,8 @@ function tryMove(dir, run) {
         if (!door.lock) txt = "Закрытая дверь." + sg + " " + LAB.K("Двойное касание — открыть.", "Enter — открыть.");
         else txt = "Дверь: " + lockText(door) + "." + sg + (why ? " " + why + LAB.K(" Двойное касание — действия.", " Enter — действия.") : LAB.K(" Пропуск есть: двойное касание — открыть.", " Пропуск есть: Enter — открыть."));
         sayOnce("door" + door.id, txt);
-        if (!G.tut.door && door.lock) { G.tut.door = 1; sayq(LAB.K("У запертой двери коснитесь экрана одним пальцем дважды: появятся действия.", "У запертой двери нажмите Enter: появятся действия.")); }
+        tutor("door");
+        if (!G.tut.door && door.lock && hintsOn()) { G.tut.door = 1; sayq(LAB.K("У запертой двери коснитесь экрана одним пальцем дважды: появятся действия.", "У запертой двери нажмите Enter: появятся действия.")); }
         return false;
       }
     }
@@ -821,7 +825,7 @@ function tryMove(dir, run) {
     bumpFocus({ type: "obj", ref: o, dir: dir });
     A("bumpSoft", o);
     sayOnce("obj" + o.id, objName(o) + LAB.K(". Двойное касание — действия.", ". Enter — действия."));
-    if (!G.tut.obj) { G.tut.obj = 1; sayq("К предметам подходят вплотную. " + LAB.K("Двойное касание одним пальцем — список действий.", "Enter — список действий.")); }
+    if (!G.tut.obj && hintsOn()) { G.tut.obj = 1; sayq("К предметам подходят вплотную. " + LAB.K("Двойное касание одним пальцем — список действий.", "Enter — список действий.")); }
     return false;
   }
   if (n) {
@@ -840,6 +844,7 @@ function tryMove(dir, run) {
   advanceTime(run ? 0.6 : 1);
   CUR.focus = null;
   A("step", surfaceAt(nx, ny), run, tt === T.DOOR);
+  if (tt === T.DOOR) tutor("door");
   if (tt === T.DOOR) A("doorPass", CUR.fl.doorAt[idx(nx, ny)]);
   markSeen();
   autoPickup();
@@ -848,6 +853,7 @@ function tryMove(dir, run) {
   corridorTurn(dir);
   doorAutoClose();
   checkQuests();
+  navFollowStep();
   if (LAB.combat) LAB.combat.afterPlayerMove(from);
   UIx("refresh");
   return true;
@@ -855,6 +861,10 @@ function tryMove(dir, run) {
 game.tryMove = tryMove;
 
 var lastSay = {};
+/* Подсказки звучат, если в настройках не выбрано «только по запросу». */
+function hintsOn() { return LAB.tutor ? LAB.tutor.hintsOn() : true; }
+game.hintsOn = hintsOn;
+function tutor(id) { if (LAB.tutor) LAB.tutor.ev(id); }
 function sayOnce(key, text, gap) {
   var now = Date.now();
   if (lastSay[key] && now - lastSay[key] < (gap || 2500)) { return; }
@@ -955,8 +965,9 @@ function announceNear() {
   });
   if (!out.length) return;
   A("near");
-  sayq(out.join(". ") + "." + (G.tut.near ? "" : LAB.K(" Двойное касание — действия.", " Enter — действия.")));
+  sayq(out.join(". ") + "." + (G.tut.near || !hintsOn() ? "" : LAB.K(" Двойное касание — действия.", " Enter — действия.")));
   G.tut.near = 1;
+  tutor("object");
 }
 game.announceNear = announceNear;
 
@@ -980,7 +991,7 @@ function roomCheck(full, run, mute) {
   CUR.room = id;
   if (mute) { A("setRoom", id >= 0 ? r : null); CUR.room = -9; return; }
   if (id === -2) return; /* в дверном проёме */
-  if (id === -1) { if (prev !== -1) A("setRoom", null); return; }
+  if (id === -1) { if (prev !== -1) { A("setRoom", null); tutor("corridor"); } return; }
   A("setRoom", r);
   if (r.type === "secret") CUR.fl.doors.forEach(function (d) { if (d.lock && d.lock.type === "secret" && (d.other === r.id || d.room === r.id)) CUR.fs.secrets[d.id] = 1; });
   var first = !CUR.fs.objs["room" + r.id];
@@ -1020,15 +1031,17 @@ function roomExits(r) {
   return out.length ? "Выходы: " + out.join("; ") + "." : "";
 }
 function sideOfDoor(r, d) { return d.x > r.x1 ? "E" : d.x < r.x0 ? "W" : d.y > r.y1 ? "S" : "N"; }
-function roomStuff(r, brief) {
+function roomStuff(r, brief, itemsFirst) {
   var objs = brief ? [] : CUR.fl.objs.filter(function (o) { return o.room === r.id; }).map(function (o) { return objName(o) + " " + relDir(o.x, o.y); });
   var npcs = CUR.fl.npcs.filter(function (n) { return n.room === r.id; }).map(function (n) { return npcName(n) + " " + relDir(n.x, n.y); });
   var foes = LAB.combat ? LAB.combat.visibleFoes(8).map(function (f) { return f.name + " " + relDir(f.x, f.y); }) : [];
   var items = floorItems().filter(function (it) { var rr = roomAt(it.x, it.y); return rr && rr.id === r.id; }).map(function (it) { return itemName(it) + " " + relDir(it.x, it.y); });
-  var s = [];
+  var s = [], floor = items.length ? "На полу: " + items.slice(0, 5).join(", ") + (items.length > 5 ? " и ещё " + (items.length - 5) : "") + "." : "";
+  /* «Осмотреться»: сначала что лежит на полу, потом что стоит в помещении */
+  if (itemsFirst && floor) s.push(floor);
   if (objs.length) s.push("Здесь: " + objs.join(", ") + ".");
   if (npcs.length) s.push("Живые: " + npcs.join(", ") + ".");
-  if (items.length) s.push("На полу: " + items.slice(0, 5).join(", ") + (items.length > 5 ? " и ещё " + (items.length - 5) : "") + ".");
+  if (!itemsFirst && floor) s.push(floor);
   if (foes.length) s.push("Опасность: " + foes.join(", ") + "!");
   return s.join(" ");
 }
@@ -1052,12 +1065,12 @@ game.placeName = placeName;
 function lookAround() {
   if (G.stair) { stairsInfo(); return; }
   if (!game.entered) return;
+  /* порядок: что лежит и что стоит рядом — потом само место и двери — и только в конце уровень и этаж */
   var r = roomAt(G.x, G.y), parts = [];
-  parts.push("Уровень " + G.L + ", этаж " + G.F + ".");
   if (r) {
+    var st = roomStuff(r, false, true); if (st) parts.push(st);
     parts.push(r.name + ". " + LAB.ROOMS[r.type].desc);
     var ex = roomExits(r); if (ex) parts.push(ex);
-    var st = roomStuff(r); if (st) parts.push(st);
   } else if (LAB.corrOf(CUR.fl, G.x, G.y) && cellType(G.x, G.y) !== T.DOOR) {
     parts.push(corridorText(LAB.corrOf(CUR.fl, G.x, G.y), false));
     var foesC = LAB.combat ? LAB.combat.visibleFoes(12) : [];
@@ -1079,6 +1092,7 @@ function lookAround() {
   var sd = nearSecret(2);
   if (sd) parts.push("Тянет сквозняком " + LAB.DIRFROM[sd.dir] + ".");
   if (G.event !== "norm") { var ev = eventList().filter(function (e) { return e.id === G.event; })[0]; if (ev) parts.push("Обстановка: " + ev.n.toLowerCase() + "."); }
+  parts.push("Уровень " + G.L + ", этаж " + G.F + ".");
   say(parts.join(" "));
   A("play", "scan_soft");
 }
@@ -1564,7 +1578,7 @@ function useStairs(o) {
   var f1 = r.int(5, 7), f2 = r.int(5, 7);
   G.stair = { down: down, k: 0, n: f1 + f2, land: f1, x: G.x, y: G.y };
   A("stairEnter", down);
-  say((down ? "Вы ступаете на лестницу вниз." : "Вы ступаете на лестницу вверх.") + (G.tut.stairWalk ? "" : LAB.K(" Свайп вверх — дальше по ступеням, вниз — обратно. Держите палец — идёте без остановки.", " W — дальше по ступеням, S — обратно. Держите клавишу — идёте без остановки.")));
+  say((down ? "Вы ступаете на лестницу вниз." : "Вы ступаете на лестницу вверх.") + (G.tut.stairWalk || !hintsOn() ? "" : LAB.K(" Свайп вверх — дальше по ступеням, вниз — обратно. Держите палец — идёте без остановки.", " W — дальше по ступеням, S — обратно. Держите клавишу — идёте без остановки.")));
   G.tut.stairWalk = 1;
 }
 game.useStairs = useStairs;
@@ -1587,7 +1601,7 @@ function stairStep(dir, run) {
     var down = s.down;
     G.stair = null;
     enterFloor(G.L, down ? G.F + 1 : G.F - 1, down ? "down" : "up");
-    if (down && G.F > 1 && !G.tut.stairs) { G.tut.stairs = 1; sayq("Лестницы на каждом этаже — в разных концах. Навигатор — " + LAB.K("два пальца вправо", "клавиша N") + " — подскажет путь."); }
+    if (down && G.F > 1 && !G.tut.stairs && hintsOn()) { G.tut.stairs = 1; sayq("Лестницы на каждом этаже — в разных концах. Навигатор — " + LAB.K("два пальца вправо", "клавиша N") + " — подскажет путь."); }
     return false;
   }
   return true;
@@ -1686,7 +1700,7 @@ function elevatorMenu() {
   items.push({ label: "Другие этажи — недоступно: лифт возит только туда, где вы уже были", info: true, keep: true, fn: function () { LAB.UI.error(); say("Недоступно. На этажах, где вы ещё не были, лифт не останавливается: туда спускаются по лестнице."); } });
   A("play", "elev_call");
   UIx("menu", "Лифт уровня " + G.L + " — выберите этаж", items, { focus: focus });
-  if (!G.tut.elev) { G.tut.elev = 1; sayq("Лифт везёт только на этажи, где вы уже были. Остальные для него недоступны: туда — по лестнице. " + LAB.K("Свайп вправо или влево — выбрать этаж, двойное касание — ехать.", "Стрелки вверх и вниз — выбрать этаж, Enter — ехать.")); }
+  if (!G.tut.elev && hintsOn()) { G.tut.elev = 1; sayq("Лифт везёт только на этажи, где вы уже были. Остальные для него недоступны: туда — по лестнице. " + LAB.K("Свайп вправо или влево — выбрать этаж, двойное касание — ехать.", "Стрелки вверх и вниз — выбрать этаж, Enter — ехать.")); }
 }
 /* Лифт едет только на этаж, где герой уже был. */
 function liftOk(L, F) { return !!G.visited[L + "-" + F]; }
@@ -1735,6 +1749,7 @@ function terminalProtected(o) {
   return (LAB.hash32(o.id + CUR.key) % 3) === 0;
 }
 function terminalMenu(o) {
+  tutor("terminal");
   var st = objState(o);
   A("play", "term_on");
   if (st.lockUntil && st.lockUntil > Date.now()) { A("play", "term_err"); say(objName(o) + " заблокирован ОКО после неудачного взлома. Экран мигает: «Повторите позже»."); return; }
@@ -2482,23 +2497,97 @@ function navigate(cycle, fromNpc) {
       var plain = blockDoor.lock && /^(card|key|code)$/.test(blockDoor.lock.type);
       var full = CUR.fs.mapped || fromNpc;
       var wp = !full && pd ? waypoint(pd) : null;
-      if (wp && wp.k < pd.length) { say("Цель: " + tgt.n + ". Дальше путь перекрыт запертой дверью. Ближайшая точка — " + wpName(wp) + ": " + describePath(pd.slice(0, wp.k)) + more); A("navStart", pd.slice(0, wp.k)); return; }
-      say("Цель: " + tgt.n + ". Путь перекрыт: " + lockText(blockDoor) + "." + (plain ? "" : " " + doorBlock(blockDoor)) + (pd ? " До этой двери: " + describePath(pd) : ""));
+      if (wp && wp.k < pd.length) { var sub2 = pd.slice(0, wp.k); say("Цель: " + tgt.n + ". Дальше путь перекрыт запертой дверью. Ближайшая точка — " + wpName(wp) + ": " + navText(sub2) + more); A("navStart", sub2); navFollowStart(sub2[sub2.length - 1], null, wpName(wp)); return; }
+      say("Цель: " + tgt.n + ". Путь перекрыт: " + lockText(blockDoor) + "." + (plain ? "" : " " + doorBlock(blockDoor)) + (pd ? " До этой двери: " + navText(pd) : ""));
       A("navPing", blockDoor.x, blockDoor.y);
+      if (pd && pd.length >= 2) navFollowStart(pd[pd.length - 2], null, "запертая дверь"); /* ведём до клетки перед дверью */
     } else say("Цель: " + tgt.n + ". Пути не видно: возможно, за тайной дверью.");
     return;
   }
   if (!CUR.fs.mapped && !fromNpc && tgt.main) {
     var w = waypoint(path);
     if (w && w.k < path.length) {
-      say((fromNpc ? "«Иди так»: " : "") + "«Эхо» слышит " + tgt.n + " — дальше. Ближайшая точка — " + wpName(w) + ": " + describePath(path.slice(0, w.k)) + " Дойдёте — спросите снова. Всю дорогу покажет карта этажа: терминал безопасности или научный." + more);
-      A("navStart", path.slice(0, w.k));
+      var sub = path.slice(0, w.k);
+      say((fromNpc ? "«Иди так»: " : "") + "«Эхо» слышит " + tgt.n + " — дальше. Ближайшая точка — " + wpName(w) + ": " + navText(sub) + " Дойдёте — спросите снова. Всю дорогу покажет карта этажа: терминал безопасности или научный." + more);
+      A("navStart", sub);
+      navFollowStart(sub[sub.length - 1], null, wpName(w));
       return;
     }
   }
-  say((fromNpc ? "«Иди так»: " : "") + "Цель: " + tgt.n + ". " + describePath(path) + more);
+  say((fromNpc ? "«Иди так»: " : "") + "Цель: " + tgt.n + ". " + navText(path) + more);
   A("navStart", path);
+  navFollowStart(tgt.cell, tgt.o, tgt.n);
 }
+/* ── Режимы навигатора ──
+   full — подробно: весь путь, потом по шагам — повороты и «цель близко»;
+   brief — кратко: сколько шагов и куда сначала, потом только «цель рядом»;
+   beacon — по звуку: маяк навигатора звучит впереди на пути, пока не дойдёте;
+   free — свободно: путь только по запросу, без ведения. В бою подсказки
+   короче. Ведение снимается у цели, на другом этаже и через три минуты. */
+function navMode() { var m = S.navMode; return m === "brief" || m === "beacon" || m === "free" ? m : "full"; }
+game.navMode = navMode;
+function stepDir(c, px, py) { return c[0] > px ? "E" : c[0] < px ? "W" : c[1] > py ? "S" : "N"; }
+function firstSeg(path) {
+  var d0 = null, n = 0, px = G.x, py = G.y;
+  for (var i = 0; i < path.length; i++) { var d = stepDir(path[i], px, py); if (d0 && d !== d0) break; d0 = d; n++; px = path[i][0]; py = path[i][1]; }
+  return [d0, n];
+}
+function navText(path) {
+  if (!path || !path.length) return "Вы на месте.";
+  var mode = navMode();
+  if (mode === "brief") { var sg = firstSeg(path); return "Всего " + stepsW(path.length) + ", сначала " + stepsW(sg[1]) + " " + LAB.DIRTO[sg[0]] + "."; }
+  if (mode === "beacon") return "Всего " + stepsW(path.length) + ". Идите на звук маяка навигатора: он звучит впереди на пути.";
+  return describePath(path);
+}
+var navFollow = null, navBeaconT = null;
+function navStop() { navFollow = null; if (navBeaconT) { clearInterval(navBeaconT); navBeaconT = null; } }
+function navFollowStart(cell, o, name) {
+  navStop();
+  var mode = navMode();
+  if (mode === "free" || (!cell && !o)) return;
+  navFollow = { cell: cell || null, o: o || null, name: name, mode: mode, key: CUR.key, t0: Date.now(), dir: firstSeg(routeTo(cell, o) || [])[0], near: false };
+  if (mode === "beacon") navBeaconT = setInterval(function () { LAB.safe(navBeaconTick); }, 1300);
+}
+/* Герой уже у цели: рядом с вещью или на самой точке пути. */
+function navAt(nf) {
+  if (nf.o) return Math.abs(G.x - nf.o.x) + Math.abs(G.y - nf.o.y) <= 1;
+  return !!nf.cell && G.x === nf.cell[0] && G.y === nf.cell[1];
+}
+function navLive() {
+  var nf = navFollow;
+  if (!nf || !game.entered || nf.key !== CUR.key || Date.now() - nf.t0 > 180000) { navStop(); return null; }
+  return nf;
+}
+function navBeaconTick() {
+  var nf = navLive(); if (!nf) return;
+  if (game.paused || G.stair || (LAB.ui && LAB.ui.layer())) return;
+  if (navAt(nf)) return;
+  var p = routeTo(nf.cell, nf.o);
+  if (!p) { navStop(); return; }
+  if (!p.length) return;
+  var c = p[Math.min(p.length - 1, 4)];
+  A("navPing", c[0], c[1]);
+}
+/* После каждого шага: у цели — сказать; в подробном режиме — повороты. */
+function navFollowStep() {
+  var nf = navLive(); if (!nf) return;
+  if (navAt(nf)) { navStop(); A("navPing", G.x, G.y); sayq("Вы у цели: " + nf.name + "."); return; }
+  var p = routeTo(nf.cell, nf.o);
+  if (!p) { navStop(); sayq("Путь к цели перекрыт. Спросите навигатор снова."); return; }
+  if (!p.length) { navStop(); A("navPing", G.x, G.y); sayq("Вы у цели: " + nf.name + "."); return; }
+  if (nf.mode !== "full") { if (p.length <= 2 && !nf.near) { nf.near = true; sayq("Цель рядом."); } return; }
+  var sg = firstSeg(p), d0 = sg[0];
+  if (d0 !== nf.dir) {
+    var fight = LAB.combat && LAB.combat.danger && LAB.combat.danger();
+    sayq(fight ? capital(LAB.DIRTO[d0]) + "." : "Теперь " + LAB.DIRTO[d0] + ", " + stepsW(sg[1]) + ".");
+    nf.dir = d0;
+  } else if (p.length === 3 && !nf.near) { nf.near = true; sayq("Цель близко: " + stepsW(3) + "."); }
+}
+game.navStop = navStop;
+game.navFollow = function () { return navFollow; };
+game._routeTo = function (cell, o) { return routeTo(cell, o); };
+game.navigateTo = function (t) { return navigateTo(t); };
+game._navPath = function () { return navFollow ? routeTo(navFollow.cell, navFollow.o) : null; };
 function wpName(w) {
   if (w.what === "door") { var r = w.d && CUR.fl.rooms[w.d.room]; return "дверь" + (r && r.sign && roomAt(G.x, G.y) !== r ? " «" + r.sign + "»" : ""); }
   if (w.what === "corr") return "проход в коридор";
@@ -2625,7 +2714,7 @@ function toggleDraw() {
   G.drawn = !G.drawn;
   A("play", G.drawn ? "w_draw" : "w_holster");
   LAB.vib(G.drawn ? [20, 30, 20] : 15);
-  if (G.drawn) say("Оружие наготове: " + weaponLine(w) + "." + ammoTail(w) + (G.tut.draw ? "" : LAB.K((w.rng <= 1 ? " Свайп одним пальцем — удар в ту сторону, свайп с удержанием — серия ударов." : " Свайп одним пальцем — выстрел в ту сторону, свайп с удержанием — очередь.") + " Ходить — уберите оружие тем же касанием тремя пальцами.",
+  if (G.drawn) say("Оружие наготове: " + weaponLine(w) + "." + ammoTail(w) + (G.tut.draw || !hintsOn() ? "" : LAB.K((w.rng <= 1 ? " Свайп одним пальцем — удар в ту сторону, свайп с удержанием — серия ударов." : " Свайп одним пальцем — выстрел в ту сторону, свайп с удержанием — очередь.") + " Ходить — уберите оружие тем же касанием тремя пальцами.",
     (w.rng <= 1 ? " Стрелки — удар в ту сторону, удержание стрелки — серия ударов." : " Стрелки — выстрел в ту сторону, удержание стрелки — очередь.") + " Ходить можно и с оружием: W A S D. Убрать оружие — снова R.")));
   else say("Оружие убрано. " + LAB.K("Свайп — шаг.", "W A S D — шаг, R — достать оружие."));
   G.tut.draw = 1;
@@ -2902,7 +2991,19 @@ function migrate(g) {
   return g;
 }
 var autoTimer = null;
-function autosave() { if (game.entered && !G.dead && !game.descending) saveSlot("auto"); }
+var autoNoteAt = 0;
+function autosave() {
+  if (!game.entered || G.dead || game.descending) return;
+  var ok = saveSlot("auto");
+  /* понятное уведомление: мягкий двойной сигнал, а если выбрано — и голосом; не чаще раза в двадцать секунд */
+  var mode = S.saveNote == null ? 1 : +S.saveNote, now = Date.now();
+  if (ok && mode > 0 && now - autoNoteAt > 20000) {
+    autoNoteAt = now;
+    LAB.UI.blip(880, 0.05, 0.035); setTimeout(function () { LAB.UI.blip(1175, 0.07, 0.035); }, 90);
+    if (mode >= 2) sayq("Игра сохранена.");
+  }
+  return ok;
+}
 function autosaveSoon() { clearTimeout(autoTimer); autoTimer = setTimeout(autosave, 1500); }
 game.autosave = autosave;
 
@@ -2919,6 +3020,7 @@ function newGame() {
   UIx("showGame");
   enterFloor(1, 1, "start", true);
   say("Вы просыпаетесь в криокапсуле. Холод отпускает. «Эхо» включается: «Носитель номер семь, слышите меня? Зрение не восстановлено. Я буду вашими глазами. " + LAB.K("Шагайте свайпами. Осмотреться — два пальца вверх. Двойное касание у предмета — действия", "Шагайте клавишами W A S D. Осмотреться — Tab. Enter у предмета — действия. Все клавиши — в руководстве, F1") + "»." );
+  tutor("start");
   roomCheck(true);
   journal("Пробуждение. Уровень 1, этаж 1.");
   mainQuest();

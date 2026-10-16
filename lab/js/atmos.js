@@ -18,8 +18,18 @@ var DIRV = { N: [0, -1], S: [0, 1], W: [-1, 0], E: [1, 0] };
 
 /* ── базовое: сыграть запись (или синтез) — всё через единый обработчик звука ── */
 function has(id) { return Bank.has(id); }
+/* Канал микшера внутри эффектов: оружие и тревоги — по имени записи,
+   противники — их звуки сами говорят «foe» (foeSound и соседи). */
+function chOf(id, o) {
+  if (o.bus && o.bus !== "fx" && o.bus !== "amb") return null; /* интерфейс, маяки, музыка, речь — свои шины */
+  if (/alarm|siren/.test(id)) return "alarm";
+  if (o.bus === "amb") return null;
+  if (/^(w_|impact_|explosion_|grenade_|emp_blast|shell_whistle|swing_miss)/.test(id)) return "weap";
+  return null;
+}
 function play(id, o) {
   o = o || {};
+  if (!o.ch) { var ch0 = chOf(id, o); if (ch0) o.ch = ch0; }
   var fb = FB[id] || FB[id.replace(/_\d+$/, "")] || o.fb;
   if (has(id)) { if (fb && !o.fb) o.fb = fb; return Snd.play(id, o); }
   if (fb) Snd.synth(fb, o.fbms || 1600, o.bus || "fx", o.pan || (o.at ? LAB.spatial(o.at.dx, o.at.dy, o.at.occ).pan : 0), o.gain == null ? 1 : o.gain);
@@ -36,6 +46,7 @@ function at(id, x, y, o) {
   if (Date.now() < deafUntil) { o.lp = Math.min(o.lp || 18000, 650); o.gain = (o.gain == null ? 1 : o.gain) * 0.6; }
   return play(id, o);
 }
+function atFoe(id, x, y, o) { o = o || {}; o.ch = "foe"; return at(id, x, y, o); }
 /* Визг оглушил: на время звуки вокруг глохнут, будто уши заложило. */
 function deafen(ms) { deafUntil = Date.now() + (ms || 3000); play("deaf_ring", { gain: 0.5, bus: "fx", fb: function (s) { s.note(3900, 0, 2.2, "sine", 0.03); } }); }
 function sub(t) { if (S.subtitles) LAB.sub(t); }
@@ -324,7 +335,7 @@ function eventLayer(id) {
   evLayerId = want;
   if (evLayer) { evLayer.stop(2); evLayer = null; }
   if (prevEv && prevEv !== want) releaseLater(prevEv, 3500);
-  if (want) evLayer = loop(want, { bus: "amb", gain: 0.5, fadeIn: 2 }, "layer");
+  if (want) evLayer = loop(want, { bus: "amb", ch: want === "evl_alarm" ? "alarm" : null, gain: 0.5, fadeIn: 2 }, "layer");
 }
 function stopWorld() {
   worldOn = false;
@@ -396,16 +407,16 @@ function foeSound(f, kind) {
   if (!has(id)) id = generic[kind] || id;
   var br = (f.base && f.base.sndRate) || 1;
   if (f.boss && LAB.BOSSES[f.boss] && LAB.BOSSES[f.boss].sndRate) br = LAB.BOSSES[f.boss].sndRate;
-  at(id, f.x, f.y, { gain: kind === "idle" ? 0.7 : 1, rate: br * (f.boss ? 0.85 : 1) });
+  atFoe(id, f.x, f.y, { gain: kind === "idle" ? 0.7 : 1, rate: br * (f.boss ? 0.85 : 1) });
   /* турель: перед наведением слышно, как поворачивается сервопривод */
   var beh = (f.base && f.base.beh) || [];
   if (beh.indexOf("turret") >= 0 && (kind === "alert" || kind === "aim")) {
-    at("turret_servo", f.x, f.y, { gain: 0.8, rate: br, fb: FB.turret_servo, delay: kind === "aim" ? 0 : 0.15 });
+    atFoe("turret_servo", f.x, f.y, { gain: 0.8, rate: br, fb: FB.turret_servo, delay: kind === "aim" ? 0 : 0.15 });
     /* наведение — короткий писк захвата цели: сейчас выстрелит */
-    if (kind === "aim" && has("turret_lock")) at("turret_lock", f.x, f.y, { gain: 0.7, delay: 0.1 });
+    if (kind === "aim" && has("turret_lock")) atFoe("turret_lock", f.x, f.y, { gain: 0.7, delay: 0.1 });
   }
   /* камера заметила — писк сканера и жужжание объектива */
-  if (beh.indexOf("camera") >= 0 && kind === "alert" && has("cam_spot")) at("cam_spot", f.x, f.y, { gain: 0.9 });
+  if (beh.indexOf("camera") >= 0 && kind === "alert" && has("cam_spot")) atFoe("cam_spot", f.x, f.y, { gain: 0.9 });
   if (kind === "alert") sub((f.name || "Враг").split(",")[0] + " заметил вас");
 }
 var hoverT = {};
@@ -416,21 +427,21 @@ function foeStep(f) {
     var now0 = Date.now();
     if (hoverT[f.id] && now0 - hoverT[f.id] < 1500) return;
     hoverT[f.id] = now0;
-    at(has(f.snd + "_idle") ? f.snd + "_idle" : "robot_idle", f.x, f.y, { gain: 0.6, rate: (f.base && f.base.sndRate) || 1 });
+    atFoe(has(f.snd + "_idle") ? f.snd + "_idle" : "robot_idle", f.x, f.y, { gain: 0.6, rate: (f.base && f.base.sndRate) || 1 });
     return;
   }
   if (Math.random() < 0.35 && f.kind === "bio" && !/rat|roach|micro/.test(f.type)) return;
   var id = f.kind === "mech" ? (has(f.snd + "_step") ? f.snd + "_step" : "robot_step") : (has(f.snd + "_step") ? f.snd + "_step" : "mutant_step");
-  at(id, f.x, f.y, { gain: f.boss ? 1 : 0.65, rate: ((f.base && f.base.sndRate) || 1) * (f.boss ? 0.8 : 1) });
+  atFoe(id, f.x, f.y, { gain: f.boss ? 1 : 0.65, rate: ((f.base && f.base.sndRate) || 1) * (f.boss ? 0.8 : 1) });
 }
-function foeHit(f, dt, dmg, crit) { at(f.kind === "mech" ? "hit_metal" : "hit_flesh", f.x, f.y, { gain: crit ? 1.2 : 0.9 }); if (Math.random() < 0.5) foeSound(f, "hurt"); }
+function foeHit(f, dt, dmg, crit) { atFoe(f.kind === "mech" ? "hit_metal" : "hit_flesh", f.x, f.y, { gain: crit ? 1.2 : 0.9 }); if (Math.random() < 0.5) foeSound(f, "hurt"); }
 function foeDeath(f) {
   var id = foeSet(f) + "_death";
-  at(has(id) ? id : (f.kind === "mech" ? "robot_death" : "mutant_death"), f.x, f.y, { gain: 1.1, rate: ((f.base && f.base.sndRate) || 1) * (f.boss ? 0.8 : 1) });
-  if (f.kind === "mech") at("debris", f.x, f.y, { gain: 0.7, delay: 0.25 });
+  atFoe(has(id) ? id : (f.kind === "mech" ? "robot_death" : "mutant_death"), f.x, f.y, { gain: 1.1, rate: ((f.base && f.base.sndRate) || 1) * (f.boss ? 0.8 : 1) });
+  if (f.kind === "mech") atFoe("debris", f.x, f.y, { gain: 0.7, delay: 0.25 });
   sub((f.name || "").split(",")[0] + " — повержен");
 }
-function foeMiss(f, ranged) { play(ranged ? "bullet_by" : "swing_by", { gain: 0.8, pan: (f.x - G().x) > 0 ? 0.5 : (f.x - G().x) < 0 ? -0.5 : 0 }); }
+function foeMiss(f, ranged) { play(ranged ? "bullet_by" : "swing_by", { ch: "foe", gain: 0.8, pan: (f.x - G().x) > 0 ? 0.5 : (f.x - G().x) < 0 ? -0.5 : 0 }); }
 function hurt(adt, dmg, src) {
   play("hurt_" + (adt || "phys"), { gain: 0.9 });
   if (dmg > (G() ? G().hpMax * 0.12 : 20)) play("player_pain", { gain: 0.8, delay: 0.05 });
@@ -449,12 +460,12 @@ function shot(w, dir, burst) {
   /* глушитель: выстрел тише и глуше — без раската и треска разряда */
   var q = (w.mod && w.mod.quiet) || 0;
   if (q) power -= 2 * q;
-  play(id, { pan: v[0] * 0.35, gain: (burst ? 0.9 : 1.05) * (1 - 0.28 * q), rate: (b.sndRate || 1) * (burst ? 1.03 : 1) * (1 - 0.05 * q), reverb: q ? 0.15 : 0.3 });
-  if (b.cls === "melee") { if (b.dt === "shock") play("w_shock_crack", { pan: v[0] * 0.3, gain: 0.8, fb: FB.w_shock_crack }); return; }
-  if (power >= 2) play("w_power_low", { pan: v[0] * 0.2, gain: Math.min(1, 0.35 + power * 0.12) * (burst ? 0.7 : 1), rate: 1 - Math.min(0.15, power * 0.02), reverb: 0.4, fb: FB.w_power_low });
-  if (power >= 4) play("w_power_crack", { pan: v[0] * 0.4, gain: Math.min(0.9, 0.25 + power * 0.08), delay: 0.04, reverb: 0.5, fb: FB.w_power_crack });
+  play(id, { ch: "weap", pan: v[0] * 0.35, gain: (burst ? 0.9 : 1.05) * (1 - 0.28 * q), rate: (b.sndRate || 1) * (burst ? 1.03 : 1) * (1 - 0.05 * q), reverb: q ? 0.15 : 0.3 });
+  if (b.cls === "melee") { if (b.dt === "shock") play("w_shock_crack", { ch: "weap", pan: v[0] * 0.3, gain: 0.8, fb: FB.w_shock_crack }); return; }
+  if (power >= 2) play("w_power_low", { ch: "weap", pan: v[0] * 0.2, gain: Math.min(1, 0.35 + power * 0.12) * (burst ? 0.7 : 1), rate: 1 - Math.min(0.15, power * 0.02), reverb: 0.4, fb: FB.w_power_low });
+  if (power >= 4) play("w_power_crack", { ch: "weap", pan: v[0] * 0.4, gain: Math.min(0.9, 0.25 + power * 0.08), delay: 0.04, reverb: 0.5, fb: FB.w_power_crack });
   /* самое мощное — ещё и раскат под сводами */
-  if (power >= 6 && !burst && has("w_power_tail")) play("w_power_tail", { pan: v[0] * 0.2, gain: Math.min(0.9, 0.3 + (power - 6) * 0.1), delay: 0.08, reverb: 0.7 });
+  if (power >= 6 && !burst && has("w_power_tail")) play("w_power_tail", { ch: "weap", pan: v[0] * 0.2, gain: Math.min(0.9, 0.3 + (power - 6) * 0.1), delay: 0.08, reverb: 0.7 });
 }
 function shotWall(w, x, y) { var cls = LAB.WEAPONS[w.base].cls; at(cls === "positron" ? "impact_positron" : cls === "magnetron" ? "impact_wave" : "impact_wall", x, y, { gain: 0.8 }); }
 function shotMiss(w, f) { at("impact_wall", f.x + (Math.random() < 0.5 ? 1 : -1), f.y, { gain: 0.7 }); }
@@ -480,18 +491,18 @@ function okoAlarm() {
 /* Сирена комплексной тревоги и аварийной блокировки ОКО — своя ячейка. */
 var sirenOn = null;
 function alarmLayer(on) {
-  if (on && !sirenOn) sirenOn = loop("evl_alarm", { bus: "amb", gain: 0.32, fadeIn: 1.5 }, "siren");
+  if (on && !sirenOn) sirenOn = loop("evl_alarm", { bus: "amb", ch: "alarm", gain: 0.32, fadeIn: 1.5 }, "siren");
   else if (!on && sirenOn) { sirenOn.stop(2); sirenOn = null; }
 }
 /* Камера ОКО переводит взгляд: тихий сервопривод под потолком. */
-function camTurn(f) { at("turret_servo", f.x, f.y, { gain: 0.3, rate: 1.6, fb: FB.turret_servo }); }
+function camTurn(f) { atFoe("turret_servo", f.x, f.y, { gain: 0.3, rate: 1.6, fb: FB.turret_servo }); }
 /* Мимик выдаёт себя: «прибор» гудит с биением, чуть ниже и неровнее настоящих. */
-function mimicHum(f) { at("ev_transformer", f.x, f.y, { gain: 0.32, rate: 0.78 + Math.random() * 0.08, fb: FB.mimic_hum }); }
+function mimicHum(f) { atFoe("ev_transformer", f.x, f.y, { gain: 0.32, rate: 0.78 + Math.random() * 0.08, fb: FB.mimic_hum }); }
 /* Перегретая турель шипит и потрескивает, остывая. */
-function turretHot(f) { at("ev_steam", f.x, f.y, { gain: 0.5, rate: 1.3, fb: FB.turret_hot }); at("turret_servo", f.x, f.y, { gain: 0.25, rate: 0.6, delay: 0.4, fb: FB.turret_servo }); }
+function turretHot(f) { atFoe("ev_steam", f.x, f.y, { gain: 0.5, rate: 1.3, fb: FB.turret_hot }); atFoe("turret_servo", f.x, f.y, { gain: 0.25, rate: 0.6, delay: 0.4, fb: FB.turret_servo }); }
 function noiseLure(x, y) {
-  for (var i = 0; i < 6; i++) at("mine_beep", x, y, { gain: 0.9, delay: i * 0.45, rate: i % 2 ? 1.2 : 1 });
-  at("impact_wall", x, y, { gain: 0.8, delay: 0.1 });
+  for (var i = 0; i < 6; i++) atFoe("mine_beep", x, y, { gain: 0.9, delay: i * 0.45, rate: i % 2 ? 1.2 : 1 });
+  atFoe("impact_wall", x, y, { gain: 0.8, delay: 0.1 });
 }
 
 /* ════════ МУЗЫКА ════════
@@ -673,6 +684,7 @@ Snd.onRebuild(function () {
 });
 
 LAB.atmos = {
+  _chOf: function (id, o) { return chOf(id, o || {}); },
   play: play, at: at, has: has,
   enterFloor: enterFloor, setRoom: setRoom, setEvent: setEvent, stopWorld: stopWorld,
   step: step, bump: bump, bumpWall: bumpWall, bumpSoft: bumpSoft, near: near, doorOpen: doorOpen, doorClose: doorClose, doorPass: doorPass, objUse: objUse,

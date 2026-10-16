@@ -621,6 +621,7 @@ function seq(lines, done) {
 /* После сборки: опытные изделия — по этапам; модуль — сразу предложить, куда поставить. */
 function afterCraft(rc, msg) {
   var it = LAB.ITEMS[String(rc.out)];
+  if (LAB.tutor && (rc.out === "noise" || rc.out === "decoy_e")) LAB.tutor.ev("decoy");
   if (it && it.kind === "wmodule") { pickWeapon(it.mod, msg + " Шаг 2 из 2: выберите оружие для установки или оставьте модуль в запасе."); return; }
   if (clsOf(rc) === "exp") {
     seq([
@@ -738,6 +739,7 @@ function open(o) {
   items.push({ label: "Детали: где найти и для чего", fn: function () { partsGuide(open); } });
   items.push({ label: "Уйти от верстака", fn: function () { A("play", "craft_off"); } });
   A("play", "workbench");
+  if (LAB.tutor) LAB.tutor.ev("workbench");
   menu("Мастерская", items, { intro: benchLine(b) + " Деталей у вас: " + partsTotal() + ". Рецептов: " + kn.length + (unk ? ", неизвестных схем: " + unk : "") + "." });
 }
 function recLabel(rc, b) {

@@ -283,12 +283,14 @@ function stepAway(f) {
   return false;
 }
 /* Шаг вбок с линии огня героя. */
-function sidestep(f) {
+function sidestep(f, minD) {
   var v = DIRV[G().face] || DIRV.N;
   var opts = [[v[1], v[0]], [-v[1], -v[0]]];
   if (Math.random() < 0.5) opts.reverse();
   for (var i = 0; i < opts.length; i++) {
     var x = f.x + opts[i][0], y = f.y + opts[i][1];
+    /* minD: шаг вбок не ближе этого к герою (дрон держит дистанцию) */
+    if (minD && Math.abs(x - G().x) + Math.abs(y - G().y) < minD) continue;
     if (canStand(f, x, y)) { moveFoe(f, x, y); return true; }
   }
   return false;
@@ -470,8 +472,14 @@ function imitateTick(f) {
 function blockCell(f) {
   var fl = CUR().fl, r = fl.room[idx(G().x, G().y)];
   if (r == null || r < 0 || !fl.rooms[r]) return null;
-  var best = null, bd = 1e9;
-  fl.doors.forEach(function (d) { if ((d.room === r || d.other === r) && !(d.lock && d.lock.type === "secret")) { var dd = dist(d, f); if (dd < bd) { bd = dd; best = d; } } });
+  /* выход, который можно перекрыть: открытый проём — первым, запертая дверь — последней */
+  var best = null, bd = 1e9, fs = CUR().fs;
+  fl.doors.forEach(function (d) {
+    if ((d.room === r || d.other === r) && !(d.lock && d.lock.type === "secret")) {
+      var dd = dist(d, f) + (fs.doors[d.id] === 2 ? 0 : 6) + (d.lock && gm().doorBlock && gm().doorBlock(d) ? 100 : 0);
+      if (dd < bd) { bd = dd; best = d; }
+    }
+  });
   return best ? [best.x, best.y] : null;
 }
 /* Уборщик: собирает вещи с пола, доложит ОКО, если увидит героя. */
@@ -762,7 +770,7 @@ function stalkerTick(f) {
     f.aim = false; f.at = 0;
     attack(f, true);
     if (f.dead) return;
-    if (canMove && Math.random() < 0.5) { f.mv = 0; if (!sidestep(f)) stepAway(f); }
+    if (canMove && Math.random() < 0.5) { f.mv = 0; if (!sidestep(f, 2)) stepAway(f); }
     return;
   }
   if (!canMove) return;
@@ -773,7 +781,7 @@ function stalkerTick(f) {
   /* за углом дрон не лезет вплотную: зависает в паре шагов и ждёт, пока цель покажется */
   if (!see && d <= 2) return;
   if (d > 4 || !see) { if (!stepToward(f, f.lastKnown.x, f.lastKnown.y, { adjacent: true })) wander(f); return; }
-  if (Math.random() < 0.3) sidestep(f);
+  if (Math.random() < 0.3) sidestep(f, 2);
 }
 /* Есть ли у машин связь с ОКО: глушилка и разбитые узлы связи этажа её рвут. */
 function netUp() { return !(G().st.jam > 0) && !CUR().fs.netCut && !CUR().fs.okoBlind; }
@@ -1320,6 +1328,7 @@ function fire(dir, burst) {
   }
   if (hits) g.stats.hits++;
   if (LAB.workshop) LAB.workshop.afterShot(w, burst, now);
+  if (LAB.tutor && !melee) LAB.tutor.ev("weapon");
   /* шум выстрела будит этаж */
   if (S.turnBased) tick();
   UIx("refresh");
@@ -1880,7 +1889,8 @@ function announceSpotted(list) {
   if (now - lastSpot < 2500 && list.length === 1) { sayq(names[0] + "."); lastSpot = now; return; }
   lastSpot = now;
   say(names.join(", ") + " — " + verb + "!", { interrupt: false });
-  if (!G().drawn && !G().tut.drawHint) { G().tut.drawHint = 1; sayq(LAB.K("Выньте оружие: одно касание тремя пальцами. Затем свайп в сторону врага — выстрел.", "Достаньте оружие: R. Затем стрелка в сторону врага — выстрел.")); }
+  if (LAB.tutor && list.some(function (f) { return f.kind === "mech"; })) LAB.tutor.ev("robot");
+  if (!G().drawn && !G().tut.drawHint && (!LAB.tutor || LAB.tutor.hintsOn())) { G().tut.drawHint = 1; sayq(LAB.K("Выньте оружие: одно касание тремя пальцами. Затем свайп в сторону врага — выстрел.", "Достаньте оружие: R. Затем стрелка в сторону врага — выстрел.")); }
 }
 
 LAB.combat = {

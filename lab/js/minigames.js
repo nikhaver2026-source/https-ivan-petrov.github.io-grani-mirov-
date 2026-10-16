@@ -29,6 +29,7 @@ function finish(ok, val) {
   if (LAB.ui && LAB.ui.refresh) LAB.ui.refresh();
   LAB.UI[ok ? "ok" : "error"]();
   if (c.cb) setTimeout(function () { c.cb(val !== undefined ? val : ok); }, 30);
+  if (ok && LAB.tutor) LAB.tutor.ev("puzzle");
 }
 var lastCancel = 0;
 function cancel(silent) {

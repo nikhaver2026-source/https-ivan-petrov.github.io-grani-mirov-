@@ -51,7 +51,8 @@ function menu(title, items, opts) {
   if (LAB.input && LAB.input.stopAll) LAB.input.stopAll(); /* ходьба и очередь с удержания — стоп */
   LAB.UI.open();
   render();
-  if (!w.silentOpen) say(title + ". " + (w.intro ? w.intro + " " : "") + itemText(w.items[w.i]) + (S.verbose && !G().tut.win ? LAB.K(". Свайп вправо и влево — пункты, двойное касание — выбрать, два пальца вниз — закрыть.", ". Стрелки вверх и вниз — пункты, Enter — выбрать, Escape — закрыть.") : ""));
+  var hl = LAB.tutor ? LAB.tutor.level() : 2;
+  if (!w.silentOpen) say(title + ". " + (w.intro ? w.intro + " " : "") + itemText(w.items[w.i]) + (S.verbose && hl >= 1 && (hl >= 3 || !G().tut.win) ? LAB.K(". Свайп вправо и влево — пункты, двойное касание — выбрать, два пальца вниз — закрыть.", ". Стрелки вверх и вниз — пункты, Enter — выбрать, Escape — закрыть.") : ""));
   if (gm() && gm().entered) G().tut.win = 1;
   return w;
 }
@@ -357,12 +358,45 @@ function settingsMenu() {
     tog("Голос робота у машин", "robotVoice"),
     tog("Подсказки", "verbose"),
     tog("Субтитры звуков на экране", "subtitles"),
+    { label: "Микшер: каналы звука, низкие частоты, диапазон громкости", fn: mixerMenu },
+    { kind: "choice", label: "Режим навигатора", options: [
+        { v: "full", label: "подробный: путь и повороты по шагам" }, { v: "brief", label: "краткий: сколько шагов и куда сначала" },
+        { v: "beacon", label: "по звуку: маяк навигатора впереди на пути" }, { v: "free", label: "свободный: путь только по запросу" }],
+      get: function () { return S.navMode || "full"; }, set: function (v) { S.navMode = v; LAB.saveSettings(); if (gm() && gm().navStop) gm().navStop(); } },
+    { kind: "choice", label: "Частота подсказок", options: [{ v: 0, label: "только по запросу" }, { v: 1, label: "редко" }, { v: 2, label: "обычно" }, { v: 3, label: "часто" }],
+      get: function () { return S.hints == null ? 2 : +S.hints; }, set: function (v) { S.hints = v; LAB.saveSettings(); },
+      descOf: function (v) { return ["Сами подсказки молчат: всё — по запросу и в руководстве.", "Подсказки — только о новом, напоминаний почти нет.", "Подсказки о новом и редкие напоминания, если вы долго стоите.", "Подсказки о новом, о том, как пользоваться окнами, и частые напоминания."][v] || ""; } },
+    tog("Обучение: подсказки шагов", "tutor"),
+    { label: "Обучение: повторить последнюю подсказку", keep: true, fn: function () { if (LAB.tutor && gm() && gm().entered) LAB.tutor.repeat(); else say("Обучение идёт в игре: подсказки звучат, когда встречаете новое."); } },
+    { label: "Обучение: начать заново", keep: true, fn: function () { if (LAB.tutor && gm() && gm().entered) LAB.tutor.reset(); else say("Начните игру: обучение идёт в ней."); } },
+    { kind: "choice", label: "Уведомление об автозаписи", options: [{ v: 0, label: "без уведомления" }, { v: 1, label: "мягкий звук" }, { v: 2, label: "звук и голос" }],
+      get: function () { return S.saveNote == null ? 1 : +S.saveNote; }, set: function (v) { S.saveNote = v; LAB.saveSettings(); } },
     { label: "Назад", fn: function () { if (screen === "menu") reopenMain(); } }
   ];
   menu("Настройки", items, { intro: LAB.K("Свайп вверх и вниз меняет значение.", "Стрелки вправо и влево меняют значение.") });
 }
+/* Микшер: каналы громкости, низкие частоты, динамический диапазон. */
+function mixerMenu() {
+  var items = [
+    vol("Речь", "voiceVol"),
+    vol("Окружение: фон уровня и помещений", "ambVol"),
+    vol("Интерфейс: окна и сигналы", "uiVol"),
+    vol("Оружие: ваши выстрелы и удары", "weapVol"),
+    vol("Противники: роботы, твари, турели, камеры", "foeVol"),
+    vol("Музыка", "musicVol"),
+    vol("Тревоги и сирены", "alarmVol"),
+    vol("Маяки предметов", "beaconVol"),
+    { kind: "slider", label: "Пространственные эффекты: отзвук помещений", min: 0, max: 1.5, step: 0.1, get: function () { return S.spaceVol == null ? 1 : +S.spaceVol; }, set: function (v) { S.spaceVol = Math.round(v * 10) / 10; LAB.saveSettings(); LAB.AE.applyVolumes(); }, fmt: function (v) { return Math.round(v * 100) + " процентов" + (Math.round(v * 10) === 10 ? ", как задумано" : v === 0 ? ", сухо" : ""); } },
+    vol("Все звуковые эффекты вместе", "fxVol"),
+    { kind: "slider", label: "Низкие частоты", min: -12, max: 9, step: 3, get: function () { return +S.bass || 0; }, set: function (v) { S.bass = v; LAB.saveSettings(); if (LAB.AE.applyMix) LAB.AE.applyMix(); }, fmt: function (v) { return v === 0 ? "как записано" : (v > 0 ? "плюс " : "минус ") + Math.abs(v) + " децибел"; } },
+    { kind: "choice", label: "Динамический диапазон", options: [{ v: 0, label: "широкий: громкое громче, тихое тише" }, { v: 1, label: "обычный" }, { v: 2, label: "сжатый: тихое слышно, громкое не оглушает — для наушников и тихой игры" }],
+      get: function () { return S.drc == null ? 1 : +S.drc; }, set: function (v) { S.drc = v; LAB.saveSettings(); if (LAB.AE.applyMix) LAB.AE.applyMix(); } },
+    { label: "Назад", fn: settingsMenu }
+  ];
+  menu("Микшер", items, { intro: "Речь, интерфейс и маяки идут мимо низких частот: бас не закрывает слова и сигналы. " + LAB.K("Свайп вверх и вниз меняет значение.", "Стрелки вправо и влево меняют значение.") });
+}
 function vol(label, key) {
-  return { kind: "slider", label: label, min: 0, max: 1, step: 0.05, get: function () { return +S[key]; }, set: function (v) { S[key] = v; LAB.saveSettings(); LAB.AE.applyVolumes(); if (key === "fxVol") LAB.UI.blip(700, 0.06, 0.1); if (key === "musicVol" && LAB.atmos) A("musicVolume"); }, fmt: function (v) { return Math.round(v * 100) + " процентов"; } };
+  return { kind: "slider", label: label, min: 0, max: 1, step: 0.05, get: function () { return S[key] == null ? 1 : +S[key]; }, set: function (v) { S[key] = v; LAB.saveSettings(); LAB.AE.applyVolumes(); if (key === "fxVol" || key === "uiVol") LAB.UI.blip(700, 0.06, 0.1); if (key === "musicVol" && LAB.atmos) A("musicVolume"); }, fmt: function (v) { return Math.round(v * 100) + " процентов"; } };
 }
 function tog(label, key) {
   return { kind: "toggle", label: label, get: function () { return !!S[key]; }, set: function (v) { S[key] = v ? 1 : 0; LAB.saveSettings(); LAB.AE.applyVolumes(); } };
@@ -428,6 +462,7 @@ function character() {
   items.push({ label: "Сохранить игру", fn: saveMenu });
   items.push({ label: "Настройки", fn: settingsMenu });
   items.push({ label: "Руководство", fn: function () { if (LAB.guide) LAB.guide.open(); } });
+  if (LAB.tutor) items.push({ label: "Обучение: повторить подсказку. " + LAB.tutor.progress(), keep: true, fn: function () { LAB.tutor.repeat(); } });
   items.push({ label: "Выход", fn: exitMenu });
   menu("Персонаж", items);
 }

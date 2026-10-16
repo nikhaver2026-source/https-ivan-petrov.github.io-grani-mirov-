@@ -34,6 +34,9 @@ function ok(cond, msg) { if (cond) console.log("  ✓ " + msg); else { fails++; 
   const page = await browser.newPage({ viewport: { width: 412, height: 860 } });
   const errors = [];
   page.on("pageerror", e => errors.push("pageerror: " + e.message));
+  /* игра ничего не докачивает из сети: все запросы — к своему серверу (или data:/blob:) */
+  const external = [];
+  page.on("request", r => { const u = r.url(); if (!/^(http:\/\/127\.0\.0\.1:|data:|blob:)/.test(u)) external.push(u); });
   page.on("console", m => { if (m.type() === "error") errors.push("console: " + m.text()); });
   await page.goto(url);
   await page.waitForFunction(() => window.LAB_READY === true);
@@ -1358,9 +1361,11 @@ LAB.ui.closeAll();
     if (hc) { const ht = C.spawnFoe("k_glowbug", hc[0], hc[1], {}); g.G.st.cloak = 20; ht.state = "idle"; C.tick(); out.heat = ht.state === "hunt"; g.G.st.cloak = 0; ht.dead = true; }
     g.enterFloor(65, 6, "down", true); god(); C.foes().forEach(f => { f.dead = true; });
     const rmb = g.CUR.fl.room[g.G.y * LAB.W + g.G.x];
-    const exits = g.CUR.fl.doors.filter(d => (d.room === rmb || d.other === rmb) && !(d.lock && d.lock.type === "secret"));
+    /* выход без замка (у запертой двери привратнику встать некуда — это верно), проём открыт */
+    const exits = g.CUR.fl.doors.filter(d => (d.room === rmb || d.other === rmb) && !d.lock);
     if (rmb >= 0 && exits.length) {
       const ex = exits[0], bcell = freeAround(ex.x, ex.y, 2, 4)[0], acell = freeAround(g.G.x, g.G.y, 1, 1)[0];
+      g.CUR.fs.doors[ex.id] = 2;
       if (bcell && acell) {
         const a = C.spawnFoe("m_patrol", acell[0], acell[1], {}), b = C.spawnFoe("m_gatekeeper", bcell[0], bcell[1], {});
         let onDoor = false;
@@ -1408,14 +1413,36 @@ LAB.ui.closeAll();
     out.memCat = g.docInfo(added[1]).cat;
     out.sum = g.docInfo(added[0]).sum.length > 10;
     /* письмо и документ компьютера — в архив */
-    let pc = null, pf = 0;
-    for (let F = 1; F <= 20 && !pc; F++) { const fl = LAB.getFloor(g.G.seed, 2, F); const o = fl.objs.find(q => q.type === "pc"); if (o) { pc = o; pf = F; } }
-    if (pc) {
-      g.enterFloor(2, pf, "down", true);
-      const d = LAB.office.pcData(pc), m0 = g.G.noteList.length;
-      if (d.mails && d.mails.length) LAB.office._openMail(pc, 0);
-      if (d.docs && d.docs.length) { LAB.ui.closeAll(); LAB.office._docList(pc); pick(/^«/); }
-      out.pcArchived = g.G.noteList.length > m0;
+    /* письмо без кода (код ложится в «Известные коды», а не в архив), которое ещё не в архиве */
+    let found = null;
+    for (let L = 2; L <= 4 && !found; L++) for (let F = 1; F <= 20 && !found; F++) {
+      const fl = LAB.getFloor(g.G.seed, L, F); if (!fl.objs.some(q => q.type === "pc")) continue;
+      g.enterFloor(L, F, "down", true);
+      for (const pc of g.CUR.fl.objs.filter(q => q.type === "pc")) {
+        const d = LAB.office.pcData(pc), mi = (d.mails || []).findIndex((m, i) => !m.code && !g.G.notes["mail:" + g.CUR.key + ":" + pc.id + ":" + i]);
+        if (mi >= 0) { found = { pc, mi }; break; }
+      }
+    }
+    if (found) {
+      const m0 = g.G.noteList.length;
+      LAB.office._openMail(found.pc, found.mi);
+      out.pcArchived = g.G.noteList.length === m0 + 1 && /^Письмо: /.test(g.G.noteList[g.G.noteList.length - 1].t);
+      LAB.ui.closeAll();
+    }
+    /* документ компьютера, ещё не прочитанный, — тоже в архив */
+    let fdoc = null;
+    for (let L = 2; L <= 6 && !fdoc; L++) for (let F = 1; F <= 20 && !fdoc; F++) {
+      const fl = LAB.getFloor(g.G.seed, L, F); if (!fl.objs.some(q => q.type === "pc")) continue;
+      g.enterFloor(L, F, "down", true);
+      for (const pc of g.CUR.fl.objs.filter(q => q.type === "pc")) {
+        const d = LAB.office.pcData(pc);
+        if ((d.docs || []).length && !(d.docs || []).some((dc, i) => g.G.notes["doc:" + g.CUR.key + ":" + pc.id + ":" + i])) { fdoc = pc; break; }
+      }
+    }
+    if (fdoc) {
+      const m1 = g.G.noteList.length;
+      LAB.ui.closeAll(); LAB.office._docList(fdoc); pick(/^«/);
+      out.pcDoc = g.G.noteList.length === m1 + 1;
       LAB.ui.closeAll();
     }
     /* окно архива: поиск по категории и глубине, первая буква, «прослушать снова» */
@@ -1453,7 +1480,7 @@ LAB.ui.closeAll();
   });
   ok(arc.added === 3 && arc.meta && arc.sum, "архив: у каждого документа — категория, место находки, уровень и краткое описание");
   ok(arc.memCat === "Фрагменты памяти комплекса" && !!arc.docCat, "архив: документы глубин со своими категориями (" + arc.docCat + ")");
-  ok(arc.pcArchived !== false, "архив: прочитанные письма и документы компьютеров попадают в архив");
+  ok(arc.pcArchived !== false && arc.pcDoc !== false, "архив: прочитанные письма и документы компьютеров попадают в архив");
   ok(arc.inv && arc.byCat && arc.catHasMem && arc.docOpen, "архив: поиск по категории — документ открывается и звучит снова");
   ok(arc.byDepth && arc.byLetter && arc.again, "архив: поиск по глубине и по первой букве; «прослушать снова»");
   ok(arc.link && arc.linkOpen && arc.linkBack, "архив: перекрёстные ссылки — из приказа к журналу, чьего автора он упоминает, и обратно");
@@ -1540,11 +1567,21 @@ LAB.ui.closeAll();
     const mq0 = G.inv.m_quiet || 0; g.scrapWeapon(1); out.scrapMods = (G.inv.m_quiet || 0) === mq0 + 1;
     /* электронная приманка: робот идёт к ней, ОКО отмечает подозрение (этаж — без перепрошивки и глушилки прежних проверок) */
     g.CUR.fs.robots = false; g.CUR.fs.okoBlind = false; g.CUR.fs.netCut = false; G.st.jam = 0; G.st.cloak = 0;
-    const cRob = C.freeCellNear(G.x + 4, G.y, null), bot = cRob ? C.spawnFoe("patrolbot", cRob[0], cRob[1], {}) : null;
+    C.stop(); /* такты не идут: робот не успеет увидеть героя сам */
+    /* бросаем туда, где приманка улетит хотя бы на четыре шага; робот — вне прямой видимости героя */
+    const DV = { N: [0, -1], S: [0, 1], W: [-1, 0], E: [1, 0] };
+    let face = "E", land = [G.x, G.y], best = -1;
+    for (const k of ["E", "W", "N", "S"]) { let x = G.x, y = G.y, n = 0; while (n < 6 && g.passable(x + DV[k][0], y + DV[k][1])) { x += DV[k][0]; y += DV[k][1]; n++; } if (n > best) { best = n; face = k; land = [x, y]; } }
+    let cRob = null;
+    for (let y = 0; y < LAB.H && !cRob; y++) for (let x = 0; x < LAB.W && !cRob; x++) {
+      const dl = Math.abs(x - land[0]) + Math.abs(y - land[1]);
+      if (dl >= 3 && dl <= 12 && g.passable(x, y) && !LAB.los(g.CUR.fl, g.CUR.fs, x, y, G.x, G.y)) cRob = [x, y];
+    }
+    const bot = cRob ? C.spawnFoe("patrolbot", cRob[0], cRob[1], {}) : null;
     if (bot) { bot.ally = false; bot.calm = false; bot.state = "idle"; bot.lastKnown = null; }
-    G.face = "E"; G.inv.decoy_e = 1; g.useItem("decoy_e"); await wait(800);
+    G.face = face; G.inv.decoy_e = 1; g.useItem("decoy_e"); await wait(800);
     out.decoy = !!bot && bot.state === "alert" && !!bot.lastKnown && /электронной приманки/.test(LAB.oko.logText(10));
-    if (!out.decoy) out.decoyDiag = (bot ? bot.state + " " + JSON.stringify(bot.lastKnown) + " " + (Math.abs(bot.x - G.x) + Math.abs(bot.y - G.y)) : "нет робота") + " | " + LAB.oko.logText(3);
+    if (!out.decoy) out.decoyDiag = (bot ? bot.state + " " + JSON.stringify(bot.lastKnown) + " до героя " + (Math.abs(bot.x - G.x) + Math.abs(bot.y - G.y)) + ", бросок " + best + " шагов" : "нет робота") + " | " + LAB.oko.logText(3);
     /* сенсорная помеха: камера рядом ослепла */
     const cCam = C.freeCellNear(G.x, G.y + 2, null), cam = cCam ? C.spawnFoe("cam", cCam[0], cCam[1], {}) : null;
     if (cam) { cam.ally = false; cam.calm = false; }
@@ -1587,6 +1624,217 @@ LAB.ui.closeAll();
   ok(ws.stun && ws.pierce && ws.profile, "ЭМ-подавитель останавливает робота, бронебойный выстрел сильнее по броне; у оружия — свой профиль");
   ok(ws.parts && !ws.parts.length && ws.recipes && !ws.recipes.length && ws.guide, "экономика: у каждой детали — где найти и для чего; рецепты собраны из существующих предметов" + (ws.parts && ws.parts.length ? "; без пользы: " + ws.parts.join(", ") : "") + (ws.recipes && ws.recipes.length ? "; рецепты: " + ws.recipes.join(", ") : ""));
   ok(ws.saved, "схемы и модули оружия сохраняются в записи");
+
+  console.log("Звук и доступность: каналы микшера, низкие частоты, диапазон, режимы навигатора, подсказки, обучение, уведомление о записи");
+  const acc = await page.evaluate(async () => {
+    const g = LAB.game, G = g.G, S = LAB.settings, AE = LAB.AE, out = {};
+    const wait = ms => new Promise(r => setTimeout(r, ms));
+    const near = (a, b) => Math.abs(a - b) < 0.05;
+    LAB.combat.stop(); LAB.ui.closeAll();
+    LAB.bg = false; AE.ensure();
+    try { await AE.ctx.resume(); } catch (e) { /* */ } /* после проверки «игра в фоне» устройство могло уснуть */
+    /* каналы микшера: свои ручки громкости у оружия, противников, тревог, интерфейса и отзвука */
+    const keep = { weapVol: S.weapVol, foeVol: S.foeVol, alarmVol: S.alarmVol, uiVol: S.uiVol, spaceVol: S.spaceVol, bass: S.bass, drc: S.drc };
+    /* в канал, где сейчас ничего не звучит, Chromium не заглядывает — и .value у него прежнее;
+       беззвучный постоянный источник держит каналы в обработке на время проверки */
+    const probes = [AE.weap, AE.foe, AE.alarm, AE.wet].map(n => { const cs = AE.ctx.createConstantSource(); cs.offset.value = 0; cs.connect(n); cs.start(); return cs; });
+    S.weapVol = 0.3; S.foeVol = 0.4; S.alarmVol = 0.5; S.spaceVol = 0; S.bass = 6; S.drc = 2;
+    let mixErr = "";
+    try { AE.applyVolumes(); AE.applyMix(); } catch (e) { mixErr = String(e && e.message || e); }
+    await wait(600);
+    out.chans = !!(AE.weap && AE.foe && AE.alarm) && near(AE.weap.gain.value, 0.3) && near(AE.foe.gain.value, 0.4) && near(AE.alarm.gain.value, 0.5) && AE.wet.gain.value < 0.02;
+    out.bass = AE.bass && AE.bass.type === "lowshelf" && Math.abs(AE.bass.gain.value - 6) < 0.3;
+    out.drc = Math.abs(AE.comp.threshold.value + 26) < 0.5 && AE.makeup.gain.value > 1.3;
+    if (!(out.chans && out.bass && out.drc)) out.mixDiag = (mixErr ? "ошибка: " + mixErr + "; " : "") + "alarmVol=" + JSON.stringify(S.alarmVol) + " " + typeof S.alarmVol + "; " + AE.ctx.state + ": оружие " + AE.weap.gain.value.toFixed(2) + ", противники " + AE.foe.gain.value.toFixed(2) + ", тревоги " + AE.alarm.gain.value.toFixed(2) + ", отзвук " + AE.wet.gain.value.toFixed(2) + ", бас " + AE.bass.gain.value.toFixed(1) + ", порог " + AE.comp.threshold.value.toFixed(1);
+    probes.forEach(cs => { try { cs.stop(); cs.disconnect(); } catch (e) { /* */ } });
+    /* какой звук в какой канал */
+    const ch = LAB.atmos._chOf;
+    out.route = ch("w_blaster_s") === "weap" && ch("impact_wall") === "weap" && ch("oko_alarm") === "alarm" && ch("evl_alarm", { bus: "amb" }) === "alarm" && ch("bcn_stairs", { bus: "beacon" }) === null && ch("step_plate") === null;
+    /* звук врага уходит в канал противников: перехватываем подключение узла */
+    const id = "robot_alert"; await new Promise(r => LAB.Bank.preload([id], r)); await wait(300);
+    const AN = AudioNode.prototype, conn = AN.connect; let toFoe = false;
+    AN.connect = function (dst) { if (dst === AE.foe) toFoe = true; return conn.apply(this, arguments); };
+    LAB.atmos.foeSound({ id: "tfoe", x: G.x + 2, y: G.y, kind: "mech", snd: "robot", base: { beh: [] }, name: "Проверочный робот" }, "alert");
+    await wait(300); AN.connect = conn;
+    out.foeBus = toFoe; if (!toFoe) out.foeDiag = "запись " + id + (LAB.Bank.ready(id) ? " в памяти" : " не загрузилась");
+    Object.assign(S, keep); AE.applyVolumes(); AE.applyMix();
+    /* режимы навигатора */
+    g.enterFloor(1, 2, "down", true);
+    LAB.combat.foes().forEach(f => { f.dead = true; });
+    const say = () => SPOKEN.slice();
+    /* цель, до которой путь открыт и с поворотом: так видно и описание, и ведение */
+    let tgt = null;
+    const turnsOf = p => { let t = 0, px = G.x, py = G.y, pd = null; for (const c of p) { const d = c[0] > px ? "E" : c[0] < px ? "W" : c[1] > py ? "S" : "N"; if (pd && d !== pd) t++; pd = d; px = c[0]; py = c[1]; } return t; };
+    for (const o of g.CUR.fl.objs) { if (tgt) break; const p = g._routeTo(null, o); if (p && p.length >= 8 && turnsOf(p) >= 1) tgt = { n: "проверочная цель", o }; }
+    out.tgt = !!tgt;
+    const navWith = m => { S.navMode = m; SPOKEN.length = 0; if (tgt) g.navigateTo(tgt); return SPOKEN.join(" | "); };
+    out.brief = /Всего .*сначала/.test(navWith("brief")) && !!g.navFollow();
+    out.beacon = /звук маяка/.test(navWith("beacon")) && !!g.navFollow();
+    out.free = !!navWith("free") && !g.navFollow();
+    /* подробный: ведёт по шагам — повороты, потом «у цели» */
+    const ad = S.autoDoors; S.autoDoors = 1;
+    navWith("full"); SPOKEN.length = 0;
+    let steps = 0;
+    for (; steps < 300; steps++) {
+      if (!g.navFollow()) break;
+      if (LAB.ui.layer()) LAB.ui.closeAll(); /* подобранная по пути записка открылась окном — закрыть и идти дальше */
+      const p = g._navPath(); if (!p || !p.length) break;
+      const c = p[0], d = c[0] > G.x ? "E" : c[0] < G.x ? "W" : c[1] > G.y ? "S" : "N";
+      if (!g.tryMove(d)) { const d2 = g.doorAt(c[0], c[1]); if (d2) g.CUR.fs.doors[d2.id] = 2; if (!g.tryMove(d)) break; }
+    }
+    S.autoDoors = ad;
+    out.follow = { steps, turn: say().some(t => /^Теперь /.test(t)), arrive: say().some(t => /Вы у цели/.test(t)), off: !g.navFollow() };
+    S.navMode = "full";
+    /* обучение: четырнадцать шагов, каждый — один раз; выключено — молчит; повторить */
+    LAB.tutor.reset(); S.tutor = 1; S.hints = 2;
+    out.steps = LAB.tutor.steps.length;
+    out.once = LAB.tutor.ev("terminal") === true && LAB.tutor.ev("terminal") === false && !!G.tutor.done.terminal;
+    await wait(900);
+    out.spoken = SPOKEN.some(t => /Обучение, шаг 5 из 14/.test(t));
+    SPOKEN.length = 0; out.repeat = LAB.tutor.repeat() && SPOKEN.some(t => /шаг 5 из 14/.test(t));
+    S.tutor = 0; out.offSilent = LAB.tutor.ev("door") === false; S.tutor = 1;
+    S.hints = 0; out.hintsOff = LAB.tutor.ev("door") === false && g.hintsOn() === false; S.hints = 2;
+    /* события игры сами отмечают шаги: мастерская, головоломка */
+    const wb = g.CUR.fl.objs.find(o => o.type === "workbench");
+    LAB.ui.craft(wb || { id: "x", x: G.x, y: G.y }); out.wbStep = !!G.tutor.done.workbench; LAB.ui.closeAll();
+    let res = null; LAB.mini.hack(3, ok => { res = ok; });
+    for (let k = 0; k < 300; k++) { const c = LAB.mini._cur(); if (!c || c.type !== "hack") break; if (!c.busy) { LAB.mini.gesture({ kind: "swipe", n: 1, dir: c.seq[c.pos] }); } await wait(40); }
+    await wait(400); out.puzzleStep = res === true && !!G.tutor.done.puzzle;
+    /* напоминание, если игрок долго стоит: «часто» — да, «только по запросу» — нет */
+    const now0 = Date.now, t0 = Date.now() + 600000; LAB.ui.closeAll();
+    Date.now = () => t0; S.hints = 3; LAB.tutor._lastIdle(0); SPOKEN.length = 0; LAB.tutor._idle(); out.idle = SPOKEN.length === 1;
+    S.hints = 0; LAB.tutor._lastIdle(0); SPOKEN.length = 0; LAB.tutor._idle(); out.idleOff = SPOKEN.length === 0;
+    /* уведомление об автозаписи: голосом — если выбрано */
+    S.hints = 2; S.saveNote = 2; SPOKEN.length = 0; g.autosave(); out.saveVoice = SPOKEN.some(t => /Игра сохранена/.test(t));
+    Date.now = () => t0 + 60000; S.saveNote = 0; SPOKEN.length = 0; g.autosave(); out.saveQuiet = !SPOKEN.some(t => /Игра сохранена/.test(t));
+    Date.now = now0; S.saveNote = 1;
+    /* «Осмотреться»: сначала вещи на полу и что стоит в помещении, потом само помещение и двери, в конце — уровень и этаж */
+    LAB.ui.closeAll();
+    const rm = g.CUR.fl.rooms.find(r => g.CUR.fl.objs.some(o => o.room === r.id) && r.doors && r.doors.length);
+    if (rm) {
+      const ob = g.CUR.fl.objs.find(o => o.room === rm.id);
+      let cell = null;
+      for (let y = 0; y < LAB.H && !cell; y++) for (let x = 0; x < LAB.W && !cell; x++) if (g.CUR.fl.room[y * LAB.W + x] === rm.id && g.passable(x, y) && Math.abs(x - ob.x) + Math.abs(y - ob.y) > 1) cell = [x, y];
+      if (cell) {
+        G.x = cell[0]; G.y = cell[1];
+        const fs = g.CUR.fs; fs.drops.push({ kind: "item", item: "scrap", n: 1, id: "dlook" + Date.now(), x: cell[0], y: cell[1] + 0 });
+        SPOKEN.length = 0; g.lookAround();
+        const t = SPOKEN.join(" "), iFloor = t.indexOf("На полу"), iHere = t.indexOf("Здесь:"), iRoom = t.indexOf(rm.name + "."), iLevel = t.lastIndexOf("Уровень " + G.L + ", этаж " + G.F);
+        out.look = iFloor === 0 && iHere > iFloor && iRoom > iHere && iLevel > iRoom && iLevel + ("Уровень " + G.L + ", этаж " + G.F + ".").length >= t.trim().length;
+        if (!out.look) out.lookT = t.slice(0, 260);
+      }
+    }
+    /* настройки этапа — в окне «Настройки» и «Микшер» */
+    LAB.ui.settings(); const lb = LAB.ui.top().items.map(i => typeof i.label === "function" ? i.label() : i.label);
+    out.settings = ["Микшер", "Режим навигатора", "Частота подсказок", "Обучение: подсказки шагов", "Уведомление об автозаписи"].every(k => lb.some(l => l.indexOf(k) === 0));
+    const mi = LAB.ui.top().items.findIndex(i => /^Микшер/.test(typeof i.label === "function" ? i.label() : i.label)); LAB.ui.top().i = mi; LAB.ui.activate();
+    const ml = LAB.ui.top().items.map(i => typeof i.label === "function" ? i.label() : i.label);
+    out.mixer = LAB.ui.top().title === "Микшер" && ["Речь", "Окружение", "Интерфейс", "Оружие", "Противники", "Музыка", "Тревоги", "Пространственные эффекты", "Низкие частоты", "Динамический диапазон"].every(k => ml.some(l => l.indexOf(k) === 0));
+    LAB.ui.closeAll();
+    return out;
+  });
+  ok(acc.chans && acc.bass && acc.drc, "микшер: каналы оружия, противников, тревог и отзвука — свои громкости; полка низких частот; сжатый диапазон" + (acc.mixDiag ? " (" + acc.mixDiag + ")" : ""));
+  ok(acc.route && acc.foeBus, "звуки идут по своим каналам: выстрелы — «оружие», сирены — «тревоги», голоса машин — «противники»; маяки и шаги — мимо" + (acc.foeDiag ? " (" + acc.foeDiag + ")" : ""));
+  ok(acc.tgt && acc.brief && acc.beacon && acc.free, "режимы навигатора: краткий, по маяку и свободный (без ведения)");
+  ok(acc.follow && acc.follow.turn && acc.follow.arrive && acc.follow.off, "подробный навигатор ведёт по шагам: повороты и «Вы у цели» (шагов " + (acc.follow && acc.follow.steps) + ")");
+  ok(acc.steps === 14 && acc.once && acc.spoken && acc.repeat && acc.offSilent && acc.hintsOff, "обучение: четырнадцать шагов, каждый — один раз; повторить; выключенное и «только по запросу» молчат");
+  ok(acc.wbStep && acc.puzzleStep, "шаги обучения отмечают сами события: верстак, решённая головоломка");
+  ok(acc.idle && acc.idleOff, "напоминание, если игрок долго стоит: при «часто» звучит, при «только по запросу» — нет");
+  ok(acc.saveVoice && acc.saveQuiet, "уведомление об автозаписи: голосом — если выбрано, без уведомления — молча");
+  ok(acc.look, "«Осмотреться»: сначала вещи на полу и что стоит в помещении, потом помещение и двери, в конце — уровень и этаж" + (acc.lookT ? ": " + acc.lookT : ""));
+  ok(acc.settings && acc.mixer,"настройки: микшер (речь, окружение, интерфейс, оружие, противники, музыка, тревоги, отзвук, низкие частоты, диапазон), навигатор, подсказки, обучение, уведомление");
+
+  console.log("План проверок A–I: настройки речи и доступности, звук дверей и стороны, турели и враги после загрузки, крафт без дублей, документы, память");
+  const tp = await page.evaluate(async () => {
+    const g = LAB.game, C = LAB.combat, S = LAB.settings, AE = LAB.AE, W = LAB.workshop, out = {};
+    let G = g.G;
+    const wait = ms => new Promise(r => setTimeout(r, ms));
+    C.stop(); LAB.ui.closeAll();
+    /* A4, H5: настройки речи и доступности записываются */
+    const keep = { ratePct: S.ratePct, navMode: S.navMode, hints: S.hints, tutor: S.tutor, saveNote: S.saveNote, weapVol: S.weapVol, bass: S.bass, drc: S.drc };
+    S.ratePct = 65; S.navMode = "beacon"; S.hints = 3; S.tutor = 0; S.saveNote = 2; S.weapVol = 0.7; S.bass = 3; S.drc = 2; LAB.saveSettings();
+    const st = JSON.parse(localStorage.getItem("lab_settings") || "{}");
+    out.settings = st.ratePct === 65 && st.navMode === "beacon" && st.hints === 3 && st.tutor === 0 && st.saveNote === 2 && st.weapVol === 0.7 && st.bass === 3 && st.drc === 2;
+    Object.assign(S, keep); LAB.saveSettings();
+    /* B3: стороны и расстояние на слух — панорама, громкость, глушение за спиной и за стеной */
+    const sp = LAB.spatial, L1 = sp(-3, 0), R1 = sp(3, 0), N1 = sp(0, -1), F1 = sp(0, -8), Bk = sp(0, 4), Oc = sp(0, -4, true), Op = sp(0, -4, false);
+    out.spatial = L1.pan < 0 && R1.pan > 0 && N1.gain > F1.gain && Bk.lp < sp(0, -4).lp && Oc.lp < Op.lp && Oc.gain < Op.gain;
+    /* B2: проход через дверь звучит */
+    g.enterFloor(1, 4, "down", true); G.hp = G.hpMax = 9999;
+    C.foes().forEach(f => { f.dead = true; });
+    const ids = [], sp0 = LAB.Sound.play; LAB.Sound.play = function (id) { ids.push(id); return sp0.apply(this, arguments); };
+    const DV = { N: [0, -1], S: [0, 1], W: [-1, 0], E: [1, 0] };
+    let done = false;
+    for (const d of g.CUR.fl.doors) {
+      if (done || (d.lock && d.lock.type)) continue;
+      for (const k of ["N", "S", "W", "E"]) {
+        const fx = d.x - DV[k][0], fy = d.y - DV[k][1];
+        if (!g.passable(fx, fy) || g.doorAt(fx, fy)) continue;
+        g.CUR.fs.doors[d.id] = 2; G.x = fx; G.y = fy;
+        if (g.tryMove(k)) { done = true; break; }
+      }
+    }
+    LAB.Sound.play = sp0;
+    out.doorSound = done && ids.indexOf("door_threshold") >= 0;
+    if (!out.doorSound) out.doorDiag = (done ? "прошли дверь, звуки: " + ids.slice(0, 8).join(", ") : "нет незапертой двери");
+    /* E5: речь приглушает музыку и фон, но не звуки боя и сигналы */
+    LAB.bg = false; AE.ensure(); try { await AE.ctx.resume(); } catch (e) { /* */ }
+    AE.setDuck(true); await wait(700);
+    const duck = { fx: AE.fx.gain.value, music: AE.music.gain.value, weap: AE.weap.gain.value, ui: AE.ui.gain.value };
+    AE.setDuck(false); await wait(700);
+    const free = { fx: AE.fx.gain.value, music: AE.music.gain.value, weap: AE.weap.gain.value, ui: AE.ui.gain.value };
+    out.duck = Math.abs(duck.fx - free.fx) < 0.02 && Math.abs(duck.weap - free.weap) < 0.02 && Math.abs(duck.ui - free.ui) < 0.02 && (S.music ? duck.music < free.music - 0.01 : true);
+    if (!out.duck) out.duckDiag = AE.ctx.state + " " + JSON.stringify({ duck, free });
+    /* E3, E6: враг, который не видит и не слышит, не гонится вечно — переходит к поиску */
+    const far = (() => { for (let y = 0; y < LAB.H; y++) for (let x = 0; x < LAB.W; x++) if (g.passable(x, y) && Math.abs(x - G.x) + Math.abs(y - G.y) > 24 && !LAB.los(g.CUR.fl, g.CUR.fs, x, y, G.x, G.y)) return [x, y]; return null; })();
+    if (far) {
+      const hunter = C.spawnFoe("patrolbot", far[0], far[1], {});
+      hunter.state = "hunt"; hunter.lastKnown = { x: G.x, y: G.y }; hunter.lost = 0;
+      G.noise = 0; let k = 0; for (; k < 40 && hunter.state === "hunt"; k++) { C.tick(); G.noise = 0; G.hp = G.hpMax; }
+      out.giveUp = hunter.state !== "hunt";
+      hunter.dead = true;
+    }
+    /* D5, H2, H4, F5, H3: турели, взломанный терминал, павший враг, вещи и документы — те же после загрузки */
+    g.CUR.fs.turretMode = "off";
+    const term = g.CUR.fl.objs.find(o => o.type === "terminal");
+    if (term) g.objState(term).hacked = true;
+    const victim = C.foes().find(f => !f.dead) || C.spawnFoe("patrolbot", G.x + 3, G.y, {});
+    const vid = victim && victim.id; if (victim) C.damageFoe(victim, 99999, "kinetic", { quiet: true });
+    G.inv.scrap = (G.inv.scrap || 0) + 4; G.inv.wire = (G.inv.wire || 0) + 2; G.inv.gel = (G.inv.gel || 0) + 2; G.inv.reagent = (G.inv.reagent || 0) + 2;
+    g.craft(LAB.RECIPES.find(r => r.id === "medkit_s")); LAB.ui.closeAll();
+    g.giveItem({ kind: "note", note: "staff", id: "tp-note" }, true);
+    const sum = gg => ({ inv: Object.keys(gg.inv).reduce((a, k2) => a + (gg.inv[k2] || 0), 0), med: gg.inv.medkit_s || 0, weapons: gg.weapons.length, armors: gg.armors.length, notes: gg.noteList.length, ammo: Object.keys(gg.ammo).reduce((a, k2) => a + (gg.ammo[k2] || 0), 0) });
+    const before = sum(G), key = g.CUR.key;
+    g.saveSlot(3); g.loadSlot(3); await wait(300); C.stop(); G = g.G;
+    const after = sum(G);
+    out.noDup = JSON.stringify(before) === JSON.stringify(after);
+    if (!out.noDup) out.dupDiag = JSON.stringify({ before, after });
+    out.turrets = g.CUR.key === key && g.CUR.fs.turretMode === "off";
+    out.terminal = !term || g.objState(g.CUR.fl.objs.find(o => o.type === "terminal")).hacked === true;
+    out.deadStays = !vid || !C.foes().some(f => f.id === vid && !f.dead);
+    const n0 = G.noteList.length; g.giveItem({ kind: "note", note: "staff", id: "tp-note" }, true);
+    out.docOnce = G.noteList.length === n0;
+    /* G: у каждой глубины свои полы, фон и враги */
+    const lv = [0, 1, 2, 3, 4, 5].map(d => { for (let Lv = 1; Lv <= 100; Lv++) if (LAB.LEVELS[Lv] && LAB.depths.depthOf(Lv) === d) return LAB.LEVELS[Lv]; return null; }).filter(Boolean);
+    const sig = x => [x.surf, x.amb, (x.foes || []).slice().sort().join("+")].join("|");
+    out.depths = lv.length === 6 && new Set(lv.map(sig)).size === 6 && new Set(lv.map(x => x.amb)).size >= 5;
+    /* I4: память не растёт без предела — кэш этажей ограничен, обход двухсот этажей не раздувает кучу */
+    const heap = () => (performance.memory ? performance.memory.usedJSHeapSize : 0);
+    const tour = n => { for (let i = 0; i < n; i++) { const Lv = 1 + (i % 10), Fv = 1 + (i * 7) % 20; LAB.getFloor(G.seed, Lv, Fv); } };
+    tour(100); await wait(200); const h1 = heap(); tour(200); await wait(200); const h2 = heap();
+    out.memory = performance.memory ? { mb: Math.round((h2 - h1) / 1048576), ok: h2 - h1 < 64 * 1048576 } : { mb: "нет данных", ok: true, na: true };
+    LAB.ui.closeAll();
+    return out;
+  });
+  ok(tp.settings, "A, H: настройки речи и доступности записываются и переживают перезапуск");
+  ok(tp.spatial, "B: стороны и расстояние на слух — слева и справа, ближе и дальше, глуше за спиной и за стеной");
+  ok(tp.doorSound, "B: проход через дверь звучит — порог двери под ногой" + (tp.doorDiag ? " (" + tp.doorDiag + ")" : ""));
+  ok(tp.duck, "E: речь приглушает музыку, но не звуки боя и сигналы" + (tp.duckDiag ? " (" + tp.duckDiag + ")" : ""));
+  ok(tp.giveUp !== false, "E: враг, который героя не видит и не слышит, не гонится вечно — переходит к поиску");
+  ok(tp.turrets && tp.terminal && tp.deadStays, "D, H: турели, взломанный терминал и павший враг — те же после загрузки");
+  ok(tp.noDup && tp.docOnce, "F, H: после загрузки вещей и документов столько же, документ не дублируется" + (tp.dupDiag ? " (" + tp.dupDiag + ")" : ""));
+  ok(tp.depths, "G: у каждой глубины свои полы, фон и враги");
+  ok(tp.memory && tp.memory.ok, "I: обход двухсот этажей не раздувает память (прирост " + (tp.memory && tp.memory.mb) + (tp.memory && tp.memory.na ? "" : " МБ") + ")");
 
   console.log("Лифт: возит только на этажи, где вы уже были");
   const lift = await page.evaluate(async () => {
@@ -1645,6 +1893,7 @@ LAB.ui.closeAll();
 
   const real = errors.filter(e => !/favicon|sounds\/|Failed to load resource/.test(e));
   ok(!real.length, "ошибок страницы нет" + (real.length ? ": " + real.slice(0, 5).join(" || ") : ""));
+  ok(!external.length, "I: игра ничего не загружает из сети — все запросы к своим файлам" + (external.length ? ": " + external.slice(0, 3).join(", ") : ""));
   await browser.close();
   server.close();
   console.log(fails ? `ПРОВАЛЕНО: ${fails}` : "ВСЁ ХОРОШО");

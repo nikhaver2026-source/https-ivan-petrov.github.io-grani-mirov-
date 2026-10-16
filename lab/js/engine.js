@@ -24,7 +24,16 @@ var DEF = {
   speech: 1, effects: 1, music: 1, ambience: 1, subtitles: 1, explore: 1, haptics: 1,
   rate: 1, ratePct: 50, voiceVol: 1, fxVol: 1, musicVol: 0.6, ambVol: 0.8, beaconVol: 1,
   voice: "", tts: "auto", robotVoice: 1,
-  difficulty: 1, turnBased: 0, autoDoors: 0, autoRead: 1, beacons: 1, verbose: 1, doorsV: 2, musV: 2
+  difficulty: 1, turnBased: 0, autoDoors: 0, autoRead: 1, beacons: 1, verbose: 1, doorsV: 2, musV: 2,
+  /* микшер: каналы интерфейса, оружия, противников, тревог, пространственных
+     эффектов (отзвук); низкие частоты в дБ (0 — как записано); динамический
+     диапазон: 0 — широкий, 1 — обычный, 2 — сжатый (тихая игра, наушники) */
+  uiVol: 1, weapVol: 1, foeVol: 1, alarmVol: 1, spaceVol: 1, bass: 0, drc: 1,
+  /* навигатор: full — подробно и по шагам, brief — кратко, beacon — по звуку
+     маяка, free — только по запросу; подсказки: 0 — только по запросу,
+     1 — редко, 2 — обычно, 3 — часто; обучение; уведомление о записи:
+     0 — нет, 1 — звук, 2 — звук и голос */
+  navMode: "full", hints: 2, tutor: 1, saveNote: 1
 };
 var saved = {};
 try { saved = JSON.parse(store.get("lab_settings") || "{}") || {}; } catch (e) { saved = {}; }
@@ -57,8 +66,12 @@ LAB.vib = function (p) {
 LAB.safe = function (fn, fb) { try { return fn(); } catch (e) { try { console.warn("[Лаборатория]", e); } catch (_) { /* */ } return fb; } };
 
 /* ════════ АУДИО-ДВИЖОК ════════ */
+function vol01(v) { return v == null ? 1 : Math.max(0, Math.min(1, +v)); }
+/* пространственные эффекты (отзвук помещений): 0 — сухо, 1 — как задумано, до 1,5 — гуще */
+function spaceK() { return settings.spaceVol == null ? 1 : Math.max(0, Math.min(1.5, +settings.spaceVol)); }
 var AE = {
   ctx: null, master: null, fx: null, music: null, amb: null, beacon: null, ui: null, voice: null, conv: null, wet: null, cache: {}, irc: {}, duck: 1,
+  weap: null, foe: null, alarm: null, bed: null, bass: null, comp: null, makeup: null, wetBase: 0.35,
   ensure: function () {
     if (this.ctx) {
       /* в фоне звук не будим: его разбудит возврат на экран */
@@ -72,21 +85,32 @@ var AE = {
     catch (e) { try { this.ctx = new C({ latencyHint: "interactive" }); } catch (e1) { try { this.ctx = new C(); } catch (e2) { return null; } } }
     var c = this.ctx;
     this.master = c.createGain(); this.master.gain.value = 0.95;
-    /* мягкий ограничитель на выходе: громкие сцены не хрипят */
+    /* мягкий ограничитель на выходе: громкие сцены не хрипят; за ним — подъём
+       громкости для сжатого диапазона */
     var comp = c.createDynamicsCompressor();
     comp.threshold.value = -10; comp.knee.value = 8; comp.ratio.value = 6; comp.attack.value = 0.004; comp.release.value = 0.2;
-    this.master.connect(comp); comp.connect(c.destination);
-    this.fx = c.createGain(); this.fx.connect(this.master);
-    this.music = c.createGain(); this.music.connect(this.master);
-    this.amb = c.createGain(); this.amb.connect(this.master);
+    this.comp = comp; this.makeup = c.createGain();
+    this.master.connect(comp); comp.connect(this.makeup); this.makeup.connect(c.destination);
+    /* «подложка» — эффекты, музыка, окружение — идёт через полку низких частот;
+       речь, интерфейс и маяки — мимо неё: бас не закрывает слова и сигналы */
+    this.bass = c.createBiquadFilter(); this.bass.type = "lowshelf"; this.bass.frequency.value = 160;
+    this.bed = c.createGain(); this.bed.connect(this.bass); this.bass.connect(this.master);
+    this.fx = c.createGain(); this.fx.connect(this.bed);
+    /* каналы внутри эффектов: оружие, противники, тревоги */
+    this.weap = c.createGain(); this.weap.connect(this.fx);
+    this.foe = c.createGain(); this.foe.connect(this.fx);
+    this.alarm = c.createGain(); this.alarm.connect(this.fx);
+    this.music = c.createGain(); this.music.connect(this.bed);
+    this.amb = c.createGain(); this.amb.connect(this.bed);
     this.beacon = c.createGain(); this.beacon.connect(this.master);
     this.ui = c.createGain(); this.ui.connect(this.master);
     this.voice = c.createGain(); this.voice.connect(this.master);
     this.conv = c.createConvolver();
     this.conv.buffer = this.impulse(1.6, 3.2);
-    this.wet = c.createGain(); this.wet.gain.value = 0.35;
+    this.wet = c.createGain(); this.wet.gain.value = 0.35 * spaceK();
     this.conv.connect(this.wet); this.wet.connect(this.fx);
     this.applyVolumes();
+    this.applyMix();
     return c;
   },
   /* Устройство сломалось — новое: шины, отзвук, шум заново. Записи в памяти
@@ -102,12 +126,27 @@ var AE = {
     if (!this.ctx) return;
     var t = this.ctx.currentTime, d = this.duck;
     this.fx.gain.setTargetAtTime(settings.effects ? settings.fxVol : 0, t, 0.05);
-    this.ui.gain.setTargetAtTime(settings.effects ? Math.max(0.3, settings.fxVol) : 0, t, 0.05);
+    this.ui.gain.setTargetAtTime(settings.effects ? Math.max(0.3, settings.fxVol) * vol01(settings.uiVol) : 0, t, 0.05);
     this.beacon.gain.setTargetAtTime(settings.effects && settings.beacons ? settings.beaconVol : 0, t, 0.05);
     this.amb.gain.setTargetAtTime(settings.effects && settings.ambience ? settings.ambVol * (0.55 + 0.45 * d) : 0, t, 0.25);
     /* под речь музыка тише, но не пропадает: речь звучит почти всё время */
     this.music.gain.setTargetAtTime(settings.music ? settings.musicVol * (0.7 + 0.3 * d) : 0, t, 0.25);
     this.voice.gain.setTargetAtTime(settings.voiceVol, t, 0.05);
+    if (this.weap) {
+      this.weap.gain.setTargetAtTime(vol01(settings.weapVol), t, 0.05);
+      this.foe.gain.setTargetAtTime(vol01(settings.foeVol), t, 0.05);
+      this.alarm.gain.setTargetAtTime(vol01(settings.alarmVol), t, 0.05);
+      this.wet.gain.setTargetAtTime(this.wetBase * spaceK(), t, 0.1);
+    }
+  },
+  /* Низкие частоты и динамический диапазон. */
+  applyMix: function () {
+    if (!this.ctx || !this.bass) return;
+    var t = this.ctx.currentTime, c = this.comp;
+    this.bass.gain.setTargetAtTime(Math.max(-12, Math.min(9, +settings.bass || 0)), t, 0.1);
+    var P = [{ th: -4, kn: 6, ra: 2.5, mk: 1 }, { th: -10, kn: 8, ra: 6, mk: 1 }, { th: -26, kn: 12, ra: 12, mk: 1.6 }][+settings.drc] || { th: -10, kn: 8, ra: 6, mk: 1 };
+    c.threshold.setTargetAtTime(P.th, t, 0.05); c.knee.setTargetAtTime(P.kn, t, 0.05); c.ratio.setTargetAtTime(P.ra, t, 0.05);
+    this.makeup.gain.setTargetAtTime(P.mk, t, 0.1);
   },
   setDuck: function (on) { this.duck = on ? 0 : 1; this.applyVolumes(); },
   /* Отзвук помещения: отклики заготовлены по длине (шаг четверть секунды,
@@ -118,7 +157,8 @@ var AE = {
       var key = Math.max(0.5, Math.round(Math.min(3, sec) * 4) / 4);
       if (!this.irc[key]) this.irc[key] = this.impulse(key, 3);
       if (this.conv.buffer !== this.irc[key]) this.conv.buffer = this.irc[key];
-      this.wet.gain.setTargetAtTime(wet, this.ctx.currentTime, 0.3);
+      this.wetBase = wet;
+      this.wet.gain.setTargetAtTime(wet * spaceK(), this.ctx.currentTime, 0.3);
     } catch (e) { /* */ }
   },
   impulse: function (sec, decay) {
@@ -462,7 +502,8 @@ var Bank = {
     var out = g;
     var pan = sp ? sp.pan : o.pan;
     if (pan && c.createStereoPanner) { var p = c.createStereoPanner(); p.pan.value = Math.max(-1, Math.min(1, pan)); g.connect(p); out = p; }
-    out.connect(AE[o.bus || d.bus] || AE.fx);
+    /* канал внутри шины: оружие, противники, тревоги (o.ch) — своя громкость */
+    out.connect((o.ch && AE[o.ch]) || AE[o.bus || d.bus] || AE.fx);
     var rv = o.reverb == null ? (o.bus === "ui" || d.bus === "ui" || d.bus === "beacon" ? 0 : 0.25) : o.reverb;
     if (rv > 0) { var sg = c.createGain(); sg.gain.value = rv; g.connect(sg); sg.connect(AE.conv); }
     if (o.fadeIn) { g.gain.setValueAtTime(0.0001, t); g.gain.linearRampToValueAtTime(vol, t + o.fadeIn); }

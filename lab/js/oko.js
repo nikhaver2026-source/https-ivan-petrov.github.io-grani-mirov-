@@ -103,6 +103,7 @@ function speak(kind, force) {
   var t = arr[i].replace(/\{L\}/g, String(G().L));
   o.lastSay = now;
   A("okoChime");
+  if (LAB.tutor) LAB.tutor.ev("oko");
   setTimeout(function () { LAB.say("ОКО по громкой связи: «" + t + "»", { prio: "event", keep: true }); }, 450);
   if (LAB.game.journal && (kind === "turret_hack" || kind === "robots" || kind === "boss")) LAB.game.journal("ОКО: «" + t + "»");
   return true;
