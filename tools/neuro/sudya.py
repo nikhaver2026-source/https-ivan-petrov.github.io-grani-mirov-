@@ -16,6 +16,7 @@
 
   python3 sudya.py train <папка данных> [шагов] [файл порождённого Летописцем, по строке «вид\tимя\tо», или оценки .jsonl]
   python3 sudya.py score <папка данных> <вид> <имя> [описание]
+  python3 sudya.py meta  <папка данных> <оценки Учителя .jsonl>   — Мета-судья поверх Судьи и Словника
 """
 import sys, os, json, random, collections, math
 import torch, torch.nn as nn, torch.nn.functional as F
@@ -150,8 +151,61 @@ def оценка(м, сл, вид, имя, о=""):
     if в is None: return 0.5
     return torch.sigmoid(м(torch.tensor([сл.код(текст(имя, о))]), torch.tensor([в])))[0].item()
 
+# ── Мета-судья: маленькая модель поверх готовых признаков, учится на оценках Учителя ──
+# Свёрточный Судья, дообученный на тысяче оценок, заучивал сами имена (согласие с Учителем на отложенных 0,54 — хуже,
+# чем без оценок, 0,63). Мета-судья — логистическая модель на дюжине признаков: оценка Судьи, вероятность нужного вида
+# по второй голове Судьи («не тот вид» — главная беда выдумок), выдуманные слова и несогласие по Словнику, копия имени
+# другого вида, длина имени, есть ли описание. Параметров мало — тысячи оценок хватает.
+МЕТА_ПРИЗНАКИ = ["судья", "вид", "вид_лучший", "выдумано_имя", "выдумано_о", "несогласие", "копия", "слов", "букв", "есть_о", "о_букв", "заглавная"]
+
+def мета_признаки(м, сл, сн, корпус_по_имени, вид, имя, о=""):
+    import slovnik as СН
+    в = сл.ви.get(вид)
+    with torch.no_grad():
+        r, лв = м(torch.tensor([сл.код(текст(имя, о))]), torch.tensor([в if в is not None else 0]), с_видом=True)
+        pв = torch.softmax(лв[0], -1)
+    ws = имя.split()
+    return [torch.sigmoid(r[0]).item(), pв[в].item() if в is not None else 0.0, float(pв.argmax().item() == в) if в is not None else 0.0,
+            сн.доля(имя), сн.доля(о), float(СН.несогласие(имя)),
+            float(any(v != вид for v in корпус_по_имени.get(имя.lower(), ()))), min(len(ws), 8) / 8, min(len(имя), 60) / 60,
+            float(bool(о)), min(len(о), 200) / 200, float(имя[:1].isupper())]
+
+def мета_загрузить(папка):
+    """Мета-судья, если обучен: функция (вид, имя, о) → оценка 0..1, иначе None"""
+    пут = os.path.join(папка, "sudya_meta.json")
+    if not os.path.exists(пут): return None
+    import slovnik as СН
+    z = json.load(open(пут, encoding="utf-8")); w = torch.tensor(z["w"]); b = z["b"]; м, сл = загрузить(папка); сн = СН.построить(папка)
+    по_имени = collections.defaultdict(set)
+    for l in open(os.path.join(папка, "corpus.jsonl"), encoding="utf-8"):
+        x = json.loads(l); по_имени[x["имя"].lower()].add(x["вид"])
+    return lambda вид, имя, о="": torch.sigmoid(torch.tensor(мета_признаки(м, сл, сн, по_имени, вид, имя, о)) @ w + b).item()
+
+def мета_учить(папка, оценки):
+    import slovnik as СН
+    torch.manual_seed(5); м, сл = загрузить(папка); сн = СН.построить(папка)
+    корпус = [json.loads(l) for l in open(os.path.join(папка, "corpus.jsonl"), encoding="utf-8")]
+    по_имени = collections.defaultdict(set)
+    for z in корпус: по_имени[z["имя"].lower()].add(z["вид"])
+    оц = [json.loads(l) for l in open(оценки, encoding="utf-8") if l.strip()]; random.Random(8).shuffle(оц)
+    пров, учз = оц[: len(оц) // 6], оц[len(оц) // 6:]
+    X = lambda зз: torch.tensor([мета_признаки(м, сл, сн, по_имени, z["вид"], z["имя"], z.get("о", "")) for z in зз])
+    Xу, Xп = X(учз), X(пров); Yу = torch.tensor([(z["балл"] - 1) / 4 for z in учз])
+    w = torch.zeros(len(МЕТА_ПРИЗНАКИ), requires_grad=True); b = torch.zeros(1, requires_grad=True); опт = torch.optim.Adam([w, b], lr=0.05)
+    for _ in range(2000):
+        п = F.binary_cross_entropy_with_logits(Xу @ w + b, Yу) + 1e-3 * (w ** 2).sum(); опт.zero_grad(); п.backward(); опт.step()
+    def согласие(оценка, зз):
+        о = list(zip([z["балл"] for z in зз], оценка.tolist())); пары = [(a, c) for a in о for c in о if a[0] > c[0]]
+        return sum(1 for a, c in пары if a[1] > c[1]) / max(1, len(пары))
+    with torch.no_grad(): итог = {"мета-судья": согласие(Xп @ w + b, пров), "Судья v2": согласие(Xп[:, 0], пров),
+                                  "Судья v2 − Словник": согласие(Xп[:, 0] - (0.6 * Xп[:, 3] + 0.3 * Xп[:, 4] + 0.3 * Xп[:, 5]), пров)}
+    print("согласие с Учителем на отложенных:", {k: round(v, 3) for k, v in итог.items()})
+    print("веса:", {k: round(v, 2) for k, v in zip(МЕТА_ПРИЗНАКИ, w.tolist())})
+    json.dump({"признаки": МЕТА_ПРИЗНАКИ, "w": w.tolist(), "b": b.item(), "согласие": итог}, open(os.path.join(папка, "sudya_meta.json"), "w"), ensure_ascii=False)
+
 if __name__ == "__main__":
     cmd, папка = sys.argv[1], sys.argv[2]
     if cmd == "train": учить(папка, int(sys.argv[3]) if len(sys.argv) > 3 else 6000, sys.argv[4] if len(sys.argv) > 4 else None)
+    elif cmd == "meta": мета_учить(папка, sys.argv[3])
     else:
         м, сл = загрузить(папка); print(round(оценка(м, сл, sys.argv[3], sys.argv[4], sys.argv[5] if len(sys.argv) > 5 else ""), 3))
