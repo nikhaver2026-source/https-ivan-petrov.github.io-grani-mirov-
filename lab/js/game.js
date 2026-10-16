@@ -1672,21 +1672,30 @@ game.mainQuest = mainQuest;
 
 function elevatorMenu() {
   if (!G.elev[G.L]) { A("play", "card_fail"); say("Панель лифта мигает: «Нужен пропуск лифта уровня " + G.L + "». Пропуск лифта лежит на втором этаже уровня — у кого-то из сотрудников или на полу."); return; }
-  var items = [], maxF = Math.min(LAB.FLOORS_N, (G.maxF[G.L] || 1) + 1);
-  /* в списке — только этажи, куда лифт поедет: сколько их всего, игрок узнаёт сам */
-  for (var F = 1; F <= maxF; F++) {
+  /* лифт возит только на этажи, где вы уже были: остальные для него закрыты —
+     туда спускаются по лестнице; сколько этажей всего, игрок узнаёт сам */
+  var items = [], focus = 0;
+  for (var F = 1; F <= LAB.FLOORS_N; F++) {
     (function (FF) {
-      var here = FF === G.F, ok = FF <= maxF;
-      var lab = "Этаж " + FF + (here ? " — вы здесь" : ok ? (G.visited[G.L + "-" + FF] ? "" : " — ещё не были") : " — нет доступа");
-      items.push({ label: lab, disabled: !ok || here, fn: function () { if (!ok) { say("Лифт не поедет: вы ещё не спустились выше этого этажа."); return; } if (here) { say("Вы на этом этаже."); return; } ride(FF); } });
+      if (!liftOk(G.L, FF)) return;
+      var here = FF === G.F;
+      if (here) focus = items.length;
+      items.push({ label: "Этаж " + FF + (here ? " — вы здесь" : ""), disabled: here, why: "Вы на этом этаже.", fn: function () { ride(FF); } });
     })(F);
   }
+  items.push({ label: "Другие этажи — недоступно: лифт возит только туда, где вы уже были", info: true, keep: true, fn: function () { LAB.UI.error(); say("Недоступно. На этажах, где вы ещё не были, лифт не останавливается: туда спускаются по лестнице."); } });
   A("play", "elev_call");
-  UIx("menu", "Лифт уровня " + G.L + " — выберите этаж", items, { focus: Math.max(0, Math.min(maxF - 1, G.F)) });
-  if (!G.tut.elev) { G.tut.elev = 1; sayq("Лифт везёт на этажи, где вы уже были, и на этаж ниже самого нижнего. " + LAB.K("Свайп вправо или влево — выбрать этаж, двойное касание — ехать.", "Стрелки вверх и вниз — выбрать этаж, Enter — ехать.")); }
+  UIx("menu", "Лифт уровня " + G.L + " — выберите этаж", items, { focus: focus });
+  if (!G.tut.elev) { G.tut.elev = 1; sayq("Лифт везёт только на этажи, где вы уже были. Остальные для него недоступны: туда — по лестнице. " + LAB.K("Свайп вправо или влево — выбрать этаж, двойное касание — ехать.", "Стрелки вверх и вниз — выбрать этаж, Enter — ехать.")); }
 }
+/* Лифт едет только на этаж, где герой уже был. */
+function liftOk(L, F) { return !!G.visited[L + "-" + F]; }
+game.liftOk = liftOk;
 game.elevatorMenu = elevatorMenu;
+game.ride = function (F) { return ride(F); };
 function ride(F) {
+  if (!liftOk(G.L, F)) { LAB.UI.error(); say("Недоступно: на этаже " + F + " вы ещё не были. Лифт туда не поедет — спускайтесь по лестнице."); return false; }
+  if (F === G.F) { say("Вы на этом этаже."); return false; }
   var che = LAB.combat && LAB.combat.chaser();
   if (che) { say("Двери лифта не закроются: вплотную " + che.name.split(",")[0].toLowerCase() + " " + relDir(che.x, che.y) + "."); return; }
   UIx("closeAll");

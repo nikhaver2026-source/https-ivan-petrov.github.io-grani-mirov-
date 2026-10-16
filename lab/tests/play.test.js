@@ -1588,6 +1588,37 @@ LAB.ui.closeAll();
   ok(ws.parts && !ws.parts.length && ws.recipes && !ws.recipes.length && ws.guide, "экономика: у каждой детали — где найти и для чего; рецепты собраны из существующих предметов" + (ws.parts && ws.parts.length ? "; без пользы: " + ws.parts.join(", ") : "") + (ws.recipes && ws.recipes.length ? "; рецепты: " + ws.recipes.join(", ") : ""));
   ok(ws.saved, "схемы и модули оружия сохраняются в записи");
 
+  console.log("Лифт: возит только на этажи, где вы уже были");
+  const lift = await page.evaluate(async () => {
+    const g = LAB.game, G = g.G, out = {}, L = 6;
+    const label = i => typeof i.label === "function" ? i.label() : i.label;
+    const pick = re => { const w = LAB.ui.top(); const k = w ? w.items.findIndex(i => re.test(label(i))) : -1; if (k < 0) return false; w.i = k; LAB.ui.activate(); return true; };
+    LAB.combat.stop(); LAB.ui.closeAll();
+    /* на уровне побывали только на этажах 1–3 */
+    Object.keys(G.visited).forEach(k => { if (k.indexOf(L + "-") === 0) delete G.visited[k]; });
+    g.enterFloor(L, 1, "down", true); g.enterFloor(L, 2, "down", true); g.enterFloor(L, 3, "down", true);
+    G.maxF[L] = 3; G.elev[L] = true;
+    LAB.combat.foes().forEach(f => { f.dead = true; });
+    g.elevatorMenu();
+    const labels = LAB.ui.top() ? LAB.ui.top().items.map(label) : [];
+    out.floors = labels.filter(l => /^Этаж \d+/.test(l)).map(l => +l.match(/^Этаж (\d+)/)[1]);
+    out.onlyVisited = out.floors.every(F => G.visited[L + "-" + F]) && out.floors.indexOf(4) < 0;
+    out.hasNA = labels.some(l => /недоступно/.test(l));
+    SPOKEN.length = 0; pick(/недоступно/); out.naSaid = SPOKEN.some(t => /Недоступно/.test(t));
+    /* поездка на этаж, где не были, — отказ, герой остаётся на месте */
+    LAB.ui.closeAll(); SPOKEN.length = 0;
+    out.rideNo = g.ride(4) === false && SPOKEN.some(t => /Недоступно/.test(t)) && G.F === 3 && !g.paused;
+    /* на этаж, где были, — едет */
+    g.elevatorMenu(); pick(/^Этаж 1$/);
+    await new Promise(r => setTimeout(r, 2700));
+    out.rideOk = g.G.L === L && g.G.F === 1;
+    LAB.ui.closeAll();
+    return out;
+  });
+  ok(lift.floors && lift.floors.join(",") === "1,2,3" && lift.onlyVisited && lift.hasNA, "лифт: в списке только этажи, где вы были (" + (lift.floors || []).join(", ") + "), остальные — «недоступно»");
+  ok(lift.naSaid && lift.rideNo, "лифт: на этаж, где вы не были, не едет и говорит «Недоступно»");
+  ok(lift.rideOk, "лифт: на этаж, где вы были, едет");
+
   console.log("Обход этажей одного зерна: вход, такты, осмотр");
   const tour = await page.evaluate(() => {
     const g = LAB.game, G = g.G, out = { floors: 0, err: [], want: 0 };
