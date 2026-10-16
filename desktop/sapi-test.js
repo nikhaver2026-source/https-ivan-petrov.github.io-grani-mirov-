@@ -26,6 +26,24 @@ const fs = require('fs'), path = require('path'), os = require('os');
     setTimeout(() => r('нет ответа'), 15000);
   });
   console.log('живая фраза:', конец);
+  // Быстрые действия игрока: пятнадцать раз подряд «stop» и новая длинная
+  // фраза, потом короткая — она должна прозвучать сразу, а не после хвоста
+  // фраз, которые уже не нужны.
+  const длинная = 'Проверка речи: длинная фраза, которую игрок обрывает, не дослушав, потому что уже идёт дальше по коридору.';
+  let сек = -1;
+  const после = await new Promise(r => {
+    let t0 = 0, n = 0;
+    s.onDone = (kind, id) => { if (id === 'b-last') { сек = (Date.now() - t0) / 1000; r(kind + ' за ' + сек.toFixed(1) + ' с'); } };
+    const step = () => {
+      if (n++ < 15) { s.stop(); s.speak(длинная + ' Номер ' + n + '.', 1.5, 1, 'b' + n, { queue: true }); setTimeout(step, 40); return; }
+      s.stop(); t0 = Date.now(); s.speak('Готово.', 1.5, 1, 'b-last', { queue: true });
+      setTimeout(() => r('нет ответа за 12 с'), 12000);
+    };
+    step();
+  });
+  console.log('речь после быстрых действий:', после);
+  // если живая речь на сервере вообще звучит — после серии перебиваний она не отстаёт
+  const быстро = конец !== 'done' || (/^done/.test(после) && сек >= 0 && сек <= 8);
   console.log('голосов с записью:', good, 'из', s.voices.length);
   console.log('состояние моста:', s.diag());
   // Движки без NVDA (RHVoice из дополнения, eSpeak NG): сервер сборки ставит их
@@ -43,5 +61,5 @@ const fs = require('fs'), path = require('path'), os = require('os');
     console.log('движок', k + ':', vs.length, 'голосов', vs.map(v => v.name + ' (' + v.lang + ')').join(', '), '| запись:', w === true ? size + ' байт' : w, годен ? 'ГОДЕН' : 'НЕ ГОДЕН');
   }
   s.quit();
-  process.exit(ok && good > 0 && движки ? 0 : 1);
+  process.exit(ok && good > 0 && движки && быстро ? 0 : 1);
 })();

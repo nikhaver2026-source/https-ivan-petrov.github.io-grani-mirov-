@@ -159,13 +159,38 @@ LAB.selftest = function () {
       if (!audio) fails.push("звук не декодировался");
       /* компьютер: голосов Microsoft нет — без голосов игрока говорит встроенный eSpeak */
       if (LAB.desktop && LAB.Speech.backend === "espeak" && LAB.Speech.espSt !== "ready") fails.push("встроенный eSpeak не поднялся");
-      log((fails.length ? "selftest FAIL: " + fails.join(" | ") : "selftest ok") + "; этажей: " + floors + "; звук: " + (audio ? "да" : "нет") + "; музыка: " + (musicOk ? "да, " + musId + " за " + secs + " с, на динамике " + hear + " дБ выше 350 Гц" : "нет") + "; речь: " + tts + "; движок речи: " + LAB.Speech.backend + (LAB.Speech.backend === "espeak" ? " (" + LAB.Speech.espSt + ")" : ""));
+      log((fails.length ? "selftest FAIL: " + fails.join(" | ") : "selftest ok") + "; этажей: " + floors + "; звук: " + (audio ? "да" : "нет") + "; музыка: " + (musicOk ? "да, " + musId + " за " + secs + " с, на динамике " + hear + " дБ выше 350 Гц" : "нет") + "; речь: " + tts + "; движок речи: " + LAB.Speech.backend + (LAB.Speech.backend === "espeak" ? " (" + LAB.Speech.espSt + ")" : "") + (burstRes ? "; " + burstRes : ""));
       LAB.ui.mainMenu();
+    };
+    /* Компьютер, голос моста (голоса игрока): серия быстрых действий — каждое
+       обрывает речь и начинает новую длинную фразу, — потом короткая фраза. Она
+       должна прозвучать сразу, а не после хвоста фраз, которые уже не нужны
+       (прежде мост синтезировал их все по очереди, и речь отставала на секунды). */
+    var burstRes = "";
+    var burst = function (next) {
+      var Sp = LAB.Speech, st = "";
+      try { st = window.LabTTS ? window.LabTTS.status() : ""; } catch (e) { st = ""; }
+      if (!(LAB.desktop && Sp.backend === "android" && st === "ready")) { next(); return; }
+      var long = "Проверка речи: длинная фраза, которую игрок обрывает, не дослушав, потому что уже идёт дальше по коридору к лестнице";
+      var n = 0, t0b = 0, lastId = null, fin = false, D0 = window.LabTTSDone, E0 = window.LabTTSError;
+      var end = function (res, bad) {
+        if (fin) return; fin = true; window.LabTTSDone = D0; window.LabTTSError = E0;
+        burstRes = res; if (bad) fails.push(res); next();
+      };
+      window.LabTTSDone = function (id) { if (D0) D0(id); if (lastId && id === lastId) { var s = (Date.now() - t0b) / 1000; end("речь после быстрых действий: " + s.toFixed(1) + " с", s > 8); } };
+      window.LabTTSError = function (id) { if (E0) E0(id); if (lastId && id === lastId) end("речь после быстрых действий: сбой фразы", true); };
+      var step = function () {
+        if (n++ < 15) { Sp.userAct(); LAB.say(long + ", номер " + n + "."); setTimeout(step, 40); return; }
+        Sp.userAct(); LAB.say("Готово."); t0b = Date.now(); lastId = Sp.cur && Sp.cur.id;
+        if (!lastId) { end("речь после быстрых действий: фраза не пошла", true); return; }
+        setTimeout(function () { end("речь после быстрых действий: нет конца фразы за 12 с", true); }, 12000);
+      };
+      step();
     };
     var poll = function () {
       var ok = LAB.Bank.ready(musId) && LAB.Bank.ready(ambId) && LAB.Bank.ready("step_plate") && LAB.Bank.ready("bump_wall");
       var espWait = LAB.desktop && LAB.Speech.backend === "espeak" && LAB.Speech.espSt === "loading";
-      if ((ok && !espWait) || allBad(musId) || Date.now() - t0 > 40000) { finish(); return; }
+      if ((ok && !espWait) || allBad(musId) || Date.now() - t0 > 40000) { burst(finish); return; }
       setTimeout(poll, 500);
     };
     setTimeout(poll, 3000);

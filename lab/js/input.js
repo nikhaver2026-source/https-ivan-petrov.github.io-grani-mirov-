@@ -429,6 +429,11 @@ function init() {
   if (LAB.desktop) {
     pad.setAttribute("role", "application");
     pad.setAttribute("aria-label", LAB.TITLE);
+    /* Картинка для зрячих (табло, карта, окно меню) чтецу не показывается: игра
+       говорит сама, а их обновления на каждом шаге заваливали бы NVDA и JAWS
+       событиями — чтец и игра тормозили бы при быстрых действиях. */
+    var view = document.getElementById("app");
+    if (view) view.setAttribute("aria-hidden", "true");
     try { pad.focus(); } catch (x) { /* */ }
     window.addEventListener("focus", function () { try { pad.focus(); } catch (x) { /* */ } });
   }

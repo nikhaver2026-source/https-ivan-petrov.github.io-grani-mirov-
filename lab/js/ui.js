@@ -434,8 +434,8 @@ function desktopVoiceMenu(vs, focus) {
   items.push({ label: "Встроенный eSpeak NG — идёт вместе с игрой" + (S.tts === "espeak" ? " — сейчас говорит" : ""), fn: function () { S.tts = "espeak"; LAB.saveSettings(); LAB.Speech.choose(); setTimeout(function () { say("Так звучит встроенный eSpeak. Подземная лаборатория."); settingsMenu(); }, 250); } });
   items.push({ label: "Выбирать голос самому: сначала голос запущенного чтеца экрана, NVDA или JAWS", fn: function () {
     S.tts = "auto"; S.voice = ""; LAB.saveSettings();
-    var a = LAB.Speech.listVoices().filter(function (v) { return v.auto; })[0];
-    if (a && window.LabTTS && window.LabTTS.setVoice) { try { window.LabTTS.setVoice(a.id); } catch (e) { /* */ } }
+    /* пустое имя — голос выбирается сам и дальше: запустят NVDA или JAWS — заговорит он */
+    if (window.LabTTS && window.LabTTS.setVoice) { try { window.LabTTS.setVoice(""); } catch (e) { /* */ } }
     LAB.Speech.choose(); setTimeout(function () { say("Голос выбирается сам. Сейчас: " + autoVoiceName().replace("сам выбирается — ", "") + "."); settingsMenu(); }, 250); } });
   items.push({ label: "Перечитать голоса компьютера", fn: function () {
     var D = window.LabDesktop;

@@ -571,7 +571,9 @@ var Speech = {
       };
       check();
       /* компьютер: мост голосов поднялся позже или голоса перечитаны */
-      window.addEventListener("lab-tts-ready", function () { poll = 0; check(); });
+      /* Голоса поднялись заново, появились или пропали (запустили или закрыли NVDA,
+         JAWS): мост снова в деле, даже если прежде сбоил и игра ушла на eSpeak. */
+      window.addEventListener("lab-tts-ready", function () { poll = 0; self.bridgeBad = false; self.fails.android = 0; check(); });
     }
     this.choose();
     if (settings.robotVoice) setTimeout(function () { self.loadESpeak(); }, 2500);
@@ -962,6 +964,7 @@ var Speech = {
     }
     if (backend === "web") {
       try {
+        this.webUsed = true;
         var u = new SpeechSynthesisUtterance(item.text);
         if (this.webVoice) { u.voice = this.webVoice; u.lang = this.webVoice.lang; } else u.lang = "ru-RU";
         u.rate = +settings.rate || 1; u.volume = Math.min(1, +settings.voiceVol);
@@ -993,7 +996,9 @@ var Speech = {
     if (this.espSrc) { try { this.espSrc.onended = null; this.espSrc.stop(); } catch (e) { /* */ } this.espSrc = null; }
     if (this.backend === "test" && this.testEngine) { try { this.testEngine.stop(); } catch (e) { /* */ } }
     if (this.hasBridge()) { try { window.LabTTS.stop(); } catch (e) { /* */ } }
-    if (this.hasWeb()) { try { window.speechSynthesis.cancel(); } catch (e) { /* */ } }
+    /* голос браузера трогаем, только если он говорил: на компьютере за ним стоит
+       SAPI Windows, и лишний «стоп» на каждом действии игрока ему ни к чему */
+    if (this.hasWeb() && (this.webUsed || this.backend === "web")) { try { window.speechSynthesis.cancel(); } catch (e) { /* */ } }
   },
   /* оборвать текущую фразу, очередь оставить (перед срочным) */
   _cut: function () {

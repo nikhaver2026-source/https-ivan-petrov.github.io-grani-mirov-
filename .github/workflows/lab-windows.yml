@@ -85,6 +85,11 @@ jobs:
       - name: Мост голосов — общий с «Гранью Миров»
         run: cp desktop/sapi.js desktop/sapi-build.js lab/desktop/
 
+      # Единый обработчик речи: какой голос говорит, очередь чтеца, NVDA и JAWS,
+      # запущенные или закрытые посреди игры, — без живых голосов, за секунды.
+      - name: Единый обработчик речи — логика
+        run: node desktop/sapi-logic.test.js
+
       # Сам Electron упаковщик скачивает нужной версии и разрядности.
       - name: Упаковщик
         working-directory: lab/desktop

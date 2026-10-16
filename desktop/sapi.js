@@ -45,6 +45,7 @@ public static class GraniRh {
   static IntPtr eng = IntPtr.Zero; static FMsg fMsg; static FSpeak fSpeak; static FDel fDel;
   static CbRate cbRate; static CbSpeech cbSpeech; static CbDone cbDone;   // держим, пока жив движок
   static int rate = 24000; static List<short> buf; static volatile bool cancel; static Action<short[], int> sink;
+  static volatile Func<bool> stale;
   static object synthLock = new object();
   static IntPtr U8(string s){ byte[] b = Encoding.UTF8.GetBytes(s ?? ""); IntPtr p = Marshal.AllocHGlobal(b.Length + 1); Marshal.Copy(b, 0, p, b.Length); Marshal.WriteByte(p, b.Length, 0); return p; }
   static string S8(IntPtr p){ if (p == IntPtr.Zero) return ""; int n = 0; while (Marshal.ReadByte(p, n) != 0 && n < 4096) n++; byte[] b = new byte[n]; Marshal.Copy(p, b, 0, n); return Encoding.UTF8.GetString(b); }
@@ -150,7 +151,7 @@ public static class GraniRh {
   // Темп игры (r) — в настоящий множитель: тот же, с каким звучат записи Gemini.
   public static double Tempo(double r){ if (r <= 0) r = 1; return r <= 1 ? r : 1 + (r - 1) * 0.45; }
   static int OnSpeech(IntPtr s, uint c, IntPtr ud){
-    if (cancel) return 0; var a = new short[c]; Marshal.Copy(s, a, 0, (int)c);
+    if (cancel || (stale != null && stale())) return 0; var a = new short[c]; Marshal.Copy(s, a, 0, (int)c);
     if (sink != null) { try { sink(a, rate); } catch (Exception) { } } else if (buf != null) buf.AddRange(a);
     return 1;
   }
@@ -158,16 +159,23 @@ public static class GraniRh {
   public static void Cancel(){ cancel = true; }
   // PCM 16 бит. С приёмником (snk) звук отдаётся кусками по мере синтеза и
   // начинает звучать сразу, не дожидаясь конца фразы; без него — фраза целиком.
+  public static short[] Synth(string profile, string text, double r, int vol, Action<short[], int> snk, out int sr){ return Synth(profile, text, r, vol, snk, null, out sr); }
+  // st — «фраза устарела»: игрок уже дальше. Устаревшая, пока ждала своей
+  // очереди, не синтезируется вовсе, начатая — обрывается. Прежде каждый поток
+  // сбрасывал общий флаг отмены, и при быстрых действиях фразы, которые уже не
+  // прозвучат, синтезировались одна за другой: новая ждала их всех.
   [HandleProcessCorruptedStateExceptions, SecurityCritical]
-  public static short[] Synth(string profile, string text, double r, int vol, Action<short[], int> snk, out int sr){
+  public static short[] Synth(string profile, string text, double r, int vol, Action<short[], int> snk, Func<bool> st, out int sr){
     sr = rate;
-    try { return SynthRaw(profile, text, r, vol, snk, out sr); }
+    try { return SynthRaw(profile, text, r, vol, snk, st, out sr); }
     catch (Exception ex) { eng = IntPtr.Zero; Voices = new List<V>(); Why = "сбой RHVoice: " + ex.GetType().Name; return null; }
   }
-  static short[] SynthRaw(string profile, string text, double r, int vol, Action<short[], int> snk, out int sr){
+  static short[] SynthRaw(string profile, string text, double r, int vol, Action<short[], int> snk, Func<bool> st, out int sr){
     lock (synthLock) {
-      buf = new List<short>(); sink = snk; cancel = false; sr = rate;
-      if (eng == IntPtr.Zero) return null;
+      sr = rate;
+      if (st != null && st()) return null;
+      buf = new List<short>(); sink = snk; cancel = false; stale = st;
+      if (eng == IntPtr.Zero) { stale = null; return null; }
       var sp = new SynthParams(); sp.profile = U8(profile);
       // r — во сколько раз быстрее обычного (как у записей Gemini). Обычный темп
       // RHVoice — 1, предел — 5 (см. RHVoice.ini выше); громкость 100 — обычная, 200 — вдвое.
@@ -177,7 +185,8 @@ public static class GraniRh {
       IntPtr t = U8(text); uint len = (uint)Encoding.UTF8.GetByteCount(text ?? "");
       try { IntPtr m = fMsg(eng, t, len, 0, ref sp, IntPtr.Zero); if (m != IntPtr.Zero) { fSpeak(m); fDel(m); } }
       finally { Marshal.FreeHGlobal(t); Marshal.FreeHGlobal(sp.profile); }
-      sr = rate; short[] o = cancel ? null : buf.ToArray(); buf = null; sink = null; return o;
+      bool gone = cancel || (stale != null && stale()); stale = null;
+      sr = rate; short[] o = gone ? null : buf.ToArray(); buf = null; sink = null; return o;
     }
   }
   public static byte[] Wav(short[] s, int sr){
@@ -207,6 +216,7 @@ public static class GraniEs {
   public static string Why = "нет eSpeak";
   static bool up = false; static Cb cb; static FVoice fVoice; static FParam fParam; static FSynth fSynth; static FSync fSync;
   static int rate = 22050; static List<short> buf; static volatile bool cancel; static Action<short[], int> sink; static object lk = new object();
+  static volatile Func<bool> stale;
   static IntPtr U8(string s){ byte[] b = Encoding.UTF8.GetBytes(s ?? ""); IntPtr p = Marshal.AllocHGlobal(b.Length + 1); Marshal.Copy(b, 0, p, b.Length); Marshal.WriteByte(p, b.Length, 0); return p; }
   static string S8(IntPtr p){ if (p == IntPtr.Zero) return ""; int n = 0; while (Marshal.ReadByte(p, n) != 0 && n < 4096) n++; byte[] b = new byte[n]; Marshal.Copy(p, b, 0, n); return Encoding.UTF8.GetString(b); }
   static T D<T>(IntPtr h, string n){ IntPtr a = GetProcAddress(h, n); if (a == IntPtr.Zero) throw new Exception("нет " + n); return (T)(object)Marshal.GetDelegateForFunctionPointer(a, typeof(T)); }
@@ -261,7 +271,7 @@ public static class GraniEs {
     } catch (Exception ex) { Why = "ошибка: " + ex.Message; Voices = new List<V>(); }
   }
   static int OnWav(IntPtr wav, int n, IntPtr ev){
-    if (cancel) return 1;
+    if (cancel || (stale != null && stale())) return 1;
     if (wav != IntPtr.Zero && n > 0) {
       var a = new short[n]; Marshal.Copy(wav, a, 0, n);
       if (sink != null) { try { sink(a, rate); } catch (Exception) { } } else if (buf != null) buf.AddRange(a);
@@ -271,16 +281,20 @@ public static class GraniEs {
   public static void Cancel(){ cancel = true; }
   // Сбой внутри чужой библиотеки (нарушение доступа) не роняет мост: движок
   // помечается неисправным, остальные голоса говорят дальше.
+  public static short[] Synth(string voice, string text, double r, int vol, Action<short[], int> snk, out int sr){ return Synth(voice, text, r, vol, snk, null, out sr); }
+  // st — «фраза устарела» (как у RHVoice): устаревшая не синтезируется, начатая обрывается.
   [HandleProcessCorruptedStateExceptions, SecurityCritical]
-  public static short[] Synth(string voice, string text, double r, int vol, Action<short[], int> snk, out int sr){
+  public static short[] Synth(string voice, string text, double r, int vol, Action<short[], int> snk, Func<bool> st, out int sr){
     sr = rate;
-    try { return SynthRaw(voice, text, r, vol, snk, out sr); }
+    try { return SynthRaw(voice, text, r, vol, snk, st, out sr); }
     catch (Exception ex) { up = false; Voices = new List<V>(); Why = "сбой eSpeak: " + ex.GetType().Name; return null; }
   }
-  static short[] SynthRaw(string voice, string text, double r, int vol, Action<short[], int> snk, out int sr){
+  static short[] SynthRaw(string voice, string text, double r, int vol, Action<short[], int> snk, Func<bool> st, out int sr){
     lock (lk) {
-      buf = new List<short>(); sink = snk; cancel = false; sr = rate;
-      if (!up) return null;
+      sr = rate;
+      if (st != null && st()) return null;
+      buf = new List<short>(); sink = snk; cancel = false; stale = st;
+      if (!up) { stale = null; return null; }
       IntPtr vn = U8(voice); try { fVoice(vn); } finally { Marshal.FreeHGlobal(vn); }
       // Темп игры — в слова в минуту eSpeak (175 — обычный); выше 450 eSpeak NG
       // ускоряет речь библиотекой Sonic.
@@ -289,7 +303,8 @@ public static class GraniEs {
       byte[] b = Encoding.UTF8.GetBytes(text ?? ""); IntPtr t = U8(text);
       try { fSynth(t, new UIntPtr((uint)b.Length + 1), 0, 1, 0, 1, IntPtr.Zero, IntPtr.Zero); fSync(); }
       finally { Marshal.FreeHGlobal(t); }
-      short[] o = cancel ? null : buf.ToArray(); buf = null; sink = null; return o;
+      bool gone = cancel || (stale != null && stale()); stale = null;
+      short[] o = gone ? null : buf.ToArray(); buf = null; sink = null; return o;
     }
   }
 }
@@ -357,9 +372,9 @@ public static class GraniSapi {
   // с фразой целиком.
   static object rk = new object(); static System.Media.SoundPlayer rhPlayer = null; static GraniWave rhWave = null;
   static volatile int rhGen = 0; static long rhEnd = long.MaxValue;
-  static short[] EngSynth(string key, string text, double rate, int vol, Action<short[], int> snk, out int sr){
-    if (key.StartsWith("es:")) return GraniEs.Synth(key.Substring(3), text, rate, vol, snk, out sr);
-    return GraniRh.Synth(key.Substring(3), text, rate, vol, snk, out sr);
+  static short[] EngSynth(string key, string text, double rate, int vol, Action<short[], int> snk, Func<bool> st, out int sr){
+    if (key.StartsWith("es:")) return GraniEs.Synth(key.Substring(3), text, rate, vol, snk, st, out sr);
+    return GraniRh.Synth(key.Substring(3), text, rate, vol, snk, st, out sr);
   }
   static void RhPlayerStop(){
     try { if (rhPlayer != null) rhPlayer.Stop(); } catch (Exception) { } rhPlayer = null;
@@ -367,9 +382,11 @@ public static class GraniSapi {
   }
   static void RhSpeak(string profile, string text, double rate, int vol){
     int gen = ++rhGen; GraniRh.Cancel(); GraniEs.Cancel(); Interlocked.Exchange(ref rhEnd, long.MaxValue);
+    Func<bool> stale = () => gen != rhGen;
     var th = new Thread(() => {
       GraniWave w = null; bool noWave = false; var rest = new List<short>(); int wsr = 0;
       try {
+        if (stale()) return;
         Action<short[], int> snk = (a, r) => {
           if (gen != rhGen) return;
           if (w == null && !noWave) {
@@ -379,7 +396,7 @@ public static class GraniSapi {
           }
           if (w != null) w.Add(a); else { rest.AddRange(a); wsr = r; }
         };
-        int sr; short[] s = EngSynth(profile, text, rate, vol, snk, out sr);
+        int sr; short[] s = EngSynth(profile, text, rate, vol, snk, stale, out sr);
         if (gen != rhGen) return;
         if (w != null) {
           w.End();
@@ -500,7 +517,35 @@ public static class GraniSapi {
   }
   // Сколько примерно звучит фраза у чтеца экрана: конца речи он не сообщает.
   static int SrMs(string t, int rate){ double cps = 14.0 * Math.Pow(3.0, rate / 10.0); return 350 + (int)(1000.0 * (t ?? "").Length / Math.Max(6.0, cps)); }
+  // Фраза в очереди чтеца (speakq): чтец сам договорит её до конца, а следующая
+  // встанет за ней — поэтому срок считаем по быстрому темпу чтеца (30 знаков в
+  // секунду), чтобы игра не ждала в тишине; обрывает речь только «stop».
+  static int SrMsQ(string t){ return 250 + (int)(1000.0 * (t ?? "").Length / 30.0); }
   static void SrStop(){ try { if (nvCancel != null) nvCancel(); } catch (Exception) { } try { if (jaws != null) jaws.StopSpeech(); } catch (Exception) { } }
+  // Запущены ли чтецы экрана: «srstate NVDA JAWS» (1 — да, 0 — нет); у
+  // 32-битного процесса на 64-битной Windows голоса чтеца нет — «srstate x».
+  static string SrState(){
+    bool here = IntPtr.Size == 8 || !Environment.Is64BitOperatingSystem;
+    if (!here) return "srstate x";
+    return "srstate " + (NvdaUp() ? "1" : "0") + " " + (JawsUp() ? "1" : "0");
+  }
+  // ── Очередь команд ──
+  // Команды, уже пришедшие следом, — в «задел», по порядку. Фраза или «stop»,
+  // за которыми в очереди уже стоит новая фраза с обрывом, «stop» или «quit»,
+  // снимаются сразу: при быстрых действиях игрока мост не говорит то, что
+  // через миг всё равно оборвётся, и не копит хвост команд.
+  static Queue<string[]> back = new Queue<string[]>();
+  static bool Take(out string[] p, int ms){
+    if (back.Count > 0) { p = back.Dequeue(); return true; }
+    return q.TryTake(out p, ms);
+  }
+  static bool Superseded(string[] p){
+    if (p[0] != "speak" && p[0] != "speakq" && p[0] != "stop") return false;
+    string[] nx;
+    while (q.TryTake(out nx, 0)) back.Enqueue(nx);
+    foreach (var x in back) if (x != null && x.Length > 0 && (x[0] == "speak" || x[0] == "stop" || x[0] == "quit")) return true;
+    return false;
+  }
   static void Worker(){
     dynamic v = null; string cur = null; dynamic prompt = null; bool onPlatform = false; string sr = null; string rh = null; DateTime srEnd = DateTime.MinValue;
     try { v = Com("SAPI.SpVoice"); } catch (Exception ex) { Say("fatal " + Clean(ex.Message)); return; }
@@ -508,10 +553,12 @@ public static class GraniSapi {
     Say("ready");
     while (true) {
       string[] p;
-      if (q.TryTake(out p, 25)) {
+      if (Take(out p, 25)) {
         if (p == null || p.Length == 0) continue;
+        if (Superseded(p)) { if (p[0] != "stop" && p.Length > 1) Say("cancel " + p[1]); continue; }
         try {
           if (p[0] == "quit") return;
+          if (p[0] == "srcheck") { Say(SrState()); continue; }
           // «Перечитать голоса»: движок, поставленный или запущенный после
           // открытия игры (новый голос SAPI, NVDA), появляется без перезапуска.
           if (p[0] == "enum") { tokens.Clear(); platform.Clear(); Enumerate(v); Say("ready"); continue; }
@@ -522,7 +569,11 @@ public static class GraniSapi {
             else if (tokens.TryGetValue(p[1], out t)) { v.Voice = (dynamic)t; onPlatform = false; sr = null; rh = null; }
             else if (msp != null && platform.Contains(p[1])) { msp.SelectVoice(p[1]); onPlatform = true; sr = null; rh = null; }
           }
-          else if (p[0] == "speak" && p.Length > 4) {
+          else if ((p[0] == "speak" || p[0] == "speakq") && p.Length > 4) {
+            // speakq — фраза следом за прежней: у чтеца экрана она встаёт в его
+            // очередь, а не обрывает прежнюю (её обрывает только «stop»).
+            bool queue = p[0] == "speakq";
+            if (cur != null) { Say((queue && sr != null ? "done " : "cancel ") + cur); cur = null; }
             // Темп приходит числом ползунка «Скорость синтезатора» (единица — обычный);
             // голоса SAPI получают его в своей шкале (−10…10), RHVoice и eSpeak —
             // настоящим множителем, все через Tempo — одинаково. Громкость — до 200 (выше обычной
@@ -540,12 +591,25 @@ public static class GraniSapi {
             }
             else if (sr != null) {
               RhStop();
-              // Голос чтеца экрана: прежняя фраза снимается, новая звучит тем, что выбрано в NVDA или JAWS.
-              try { v.Speak("", 1 | 2); } catch (Exception) { }
-              SrStop(); prompt = null;
-              if (sr == NVDA && nvSpeak != null) nvSpeak(p[4]);
-              else if (sr == JAWS && jaws != null) jaws.SayString(p[4], false);
-              cur = p[1]; srEnd = DateTime.UtcNow.AddMilliseconds(SrMs(p[4], rate));
+              // Голос чтеца экрана: звучит тем, что выбрано в NVDA или JAWS. Фраза с
+              // обрывом (speak) снимает прежнюю; фраза следом (speakq) встаёт в очередь чтеца.
+              if (!queue) { try { v.Speak("", 1 | 2); } catch (Exception) { } SrStop(); }
+              prompt = null;
+              // Чтец закрылся или перезапускается — не молчим: сообщаем, что его нет,
+              // и фраза уходит другому голосу (это решает приложение).
+              if (sr == NVDA) {
+                int r = nvSpeak != null ? nvSpeak(p[4]) : -1;
+                if (r != 0) { Say(SrState()); throw new Exception("NVDA не отвечает (" + r + ")"); }
+              } else {
+                bool ok = false;
+                if (jaws == null) JawsUp();
+                if (jaws != null) {
+                  try { object res = jaws.SayString(p[4], false); ok = !(res is bool) || (bool)res; }
+                  catch (Exception ex) { ok = ex.GetType().Name == "RuntimeBinderException"; if (!ok) jaws = null; }
+                }
+                if (!ok) { Say(SrState()); throw new Exception("JAWS не отвечает"); }
+              }
+              cur = p[1]; srEnd = DateTime.UtcNow.AddMilliseconds(queue ? SrMsQ(p[4]) : SrMs(p[4], rate));
             }
             else if (onPlatform && msp != null) {
               RhStop();
@@ -568,7 +632,7 @@ public static class GraniSapi {
           else if (p[0] == "wav" && p.Length > 3) {
             object t;
             if (rhMap.ContainsKey(p[2])) {
-              int srate; short[] snd = EngSynth(rhMap[p[2]], p[3], 0, 100, null, out srate);
+              int srate; short[] snd = EngSynth(rhMap[p[2]], p[3], 0, 100, null, null, out srate);
               if (snd == null || snd.Length == 0) throw new Exception("движок молчит");
               File.WriteAllBytes(p[1], GraniRh.Wav(snd, srate)); Say("wav ok");
             }
@@ -583,7 +647,7 @@ public static class GraniSapi {
               Say("wav ok");
             }
           }
-        } catch (Exception ex) { if (p[0] == "wav") Say("wav fail " + Clean(ex.Message)); else Say("error " + (p.Length > 1 ? p[1] : "") + " " + Clean(ex.Message)); if (p[0] == "speak") { cur = null; prompt = null; } }
+        } catch (Exception ex) { if (p[0] == "wav") Say("wav fail " + Clean(ex.Message)); else Say("error " + (p.Length > 1 ? p[1] : "") + " " + Clean(ex.Message)); if (p[0] == "speak" || p[0] == "speakq") { cur = null; prompt = null; } }
       }
       if (cur != null) {
         try {
@@ -669,6 +733,8 @@ class Proc {
       });
       return;
     }
+    // Запущены ли NVDA и JAWS сейчас (ответ на srcheck и отказ чтеца посреди фразы).
+    if (l.startsWith('srstate ')) { const m = /^srstate (\d) (\d)/.exec(l); if (m && this.onSr) this.onSr(m[1] === '1', m[2] === '1'); return; }
     if (l.startsWith('sr ')) { this.sr = l.slice(3); return; }
     if (l.startsWith('rh ')) { this.rh = l.slice(3); return; }
     if (l === 'ready') { this.ready = true; this.wasReady = true; if (done) done(this.voices.length > 0); if (this.onReady) this.onReady(); return; }
@@ -691,6 +757,10 @@ class Proc {
 }
 
 const ENGINE = { sapi: 'SAPI 5', sapi32: 'SAPI 5, 32 бит', onecore: 'Windows', platform: 'Speech Platform', sr: 'чтец экрана', rhvoice: 'RHVoice из дополнения NVDA, без NVDA', espeak: 'eSpeak NG, без NVDA' };
+// Имена голосов чтецов экрана — те же, что в коде моста.
+const SR_NAMES = (() => { const m = /const string NVDA = "([^"]+)", JAWS = "([^"]+)"/.exec(CS); return m ? { nvda: m[1], jaws: m[2] } : { nvda: 'NVDA — голос чтеца экрана', jaws: 'JAWS — голос чтеца экрана' }; })();
+// Как часто узнавать, не запустили ли (не закрыли ли) NVDA или JAWS.
+const SR_POLL_MS = 4000;
 // Папка для временных файлов моста без кириллицы и пробелов: сборщик C#
 // (csc), которым PowerShell собирает мост, на пути вида
 // C:\Users\Никита\AppData\Local\Temp иногда спотыкается, и мост не поднимался.
@@ -889,8 +959,21 @@ function autoVoiceName(voices, ini, jaws) {
   return d ? d.name : '';
 }
 
+// ── ЕДИНЫЙ ОБРАБОТЧИК РЕЧИ WINDOWS ──
+// Голос чтеца экрана (NVDA, JAWS), голоса, которые мост поднимает сам (RHVoice
+// и eSpeak NG из NVDA, сторонние SAPI 5), — одним путём:
+//   • голос «сам выбирается»: запущенный NVDA, запущенный JAWS, голос из их
+//     настроек, русский RHVoice, eSpeak NG; считается при смене голосов, а не
+//     при каждом вопросе игры (он читает настройки NVDA и JAWS с диска);
+//   • NVDA или JAWS запустили посреди игры — их голос появляется сам и, если
+//     игрок не выбрал другой, сразу говорит; закрыли — фраза, которую чтец не
+//     принял, тут же звучит другим голосом, игра сбоя не замечает;
+//   • голос, выбранный игроком, запоминается: пропал — говорит голос «сам
+//     выбирается», вернулся — снова выбранный;
+//   • фраза следом за прежней (speak с queue) у чтеца экрана встаёт в его
+//     очередь, а не обрывает прежнюю; обрывает речь только stop.
 class Sapi {
-  constructor() { this.procs = []; this.ready = false; this.voices = []; this.owner = new Map(); this.speaking = new Set(); this.onDone = null; this.onChange = null; this.cur = null; this.why = ''; }
+  constructor() { this.procs = []; this.ready = false; this.voices = []; this.owner = new Map(); this.speaking = new Set(); this.onDone = null; this.onChange = null; this.cur = null; this.curProc = null; this.why = ''; this.auto = ''; this.want = ''; this.last = null; this.srTimer = null; }
   // Почему голоса Windows не подключились — игрок слышит это в настройках.
   diag() {
     if (process.platform !== 'win32') return 'не Windows';
@@ -938,7 +1021,8 @@ class Sapi {
       if (!keepBits.has(32)) fresh.push(new Proc(fs.existsSync(ps) ? ps : 'powershell.exe', 32, true));
     }
     this.procs = (keep || []).concat(fresh).sort((a, b) => b.bits - a.bits);
-    fresh.forEach(p => { p.onDone = (kind, id) => { this.speaking.delete(id); if (this.onDone) this.onDone(kind, id); }; });
+    fresh.forEach(p => { p.onDone = (kind, id) => this.end(kind, id); });
+    fresh.forEach(p => { p.onSr = (nv, jw) => this.srState(p, nv, jw); });
     // Процесс, ответивший позже срока, всё равно добавляет свои голоса — и
     // игра узнаёт об этом сразу (onChange), а не со следующего запуска.
     fresh.forEach(p => { p.onReady = () => { const was = this.voices.length; this.merge(); if (this.onChange && this.voices.length !== was) this.onChange(); }; });
@@ -954,8 +1038,42 @@ class Sapi {
     return Promise.all(fresh.map(p => p.start(file, wait, this.dll(p.bits), env).catch(() => false))).then(() => {
       const ok = this.merge();
       if (!ok) this.why = fresh.map(p => p.why).filter(Boolean).join('; ') || this.why;
+      this.pollSr();
       return ok;
     });
+  }
+  // NVDA или JAWS запустили (закрыли) посреди игры: мост раз в несколько
+  // секунд спрашивает родной процесс, запущены ли они (это быстро).
+  pollSr() {
+    if (this.srTimer || process.platform !== 'win32') return;
+    this.srTimer = setInterval(() => { const pn = this.procs.find(p => p.native && p.ready); if (pn) pn.send('srcheck'); }, SR_POLL_MS);
+    if (this.srTimer.unref) this.srTimer.unref();
+  }
+  // Ответ моста о чтецах: голос чтеца появляется или пропадает.
+  srState(p, nv, jw) {
+    if (!p.native) return;
+    p.sr = /^nolib/.test(p.sr || '') ? p.sr : 'lib ' + (nv ? 'up' : 'down');
+    let changed = false;
+    for (const [name, up, vendor] of [[SR_NAMES.nvda, nv, 'NVDA'], [SR_NAMES.jaws, jw, 'JAWS']]) {
+      const has = p.voices.some(v => v.name === name);
+      if (up && !has) { p.voices.push({ name, lang: 'ru-RU', gender: '', kind: 'sr', default: false, vendor }); changed = true; }
+      else if (!up && has) { p.voices = p.voices.filter(v => v.name !== name); changed = true; }
+    }
+    if (changed) { this.merge(); if (this.onChange) this.onChange(); }
+    return changed;
+  }
+  // Конец фразы. Фраза голосом чтеца не прозвучала (NVDA или JAWS закрыли,
+  // перезапускают) — та же фраза сразу звучит голосом «сам выбирается».
+  end(kind, id) {
+    const ls = this.last;
+    if (kind === 'error' && ls && ls.id === id && !ls.retried && (ls.voice === SR_NAMES.nvda || ls.voice === SR_NAMES.jaws) && this.speaking.has(id)) {
+      ls.retried = true;
+      const pn = this.procs.find(p => p.native);
+      if (pn && pn.voices.some(v => v.name === ls.voice)) { pn.voices = pn.voices.filter(v => v.name !== ls.voice); this.merge(); if (this.onChange) this.onChange(); }
+      if (this.cur && this.cur !== ls.voice) { this.send(ls); return; }
+    }
+    this.speaking.delete(id);
+    if (this.onDone) this.onDone(kind, id);
   }
   dll(bits) { return shippedDll() || path.join(asciiTmp(), 'grani-sapi-' + TAG + '-' + bits + '.dll'); }
   merge() {
@@ -967,33 +1085,61 @@ class Sapi {
     }
     this.ready = this.voices.length > 0;
     if (this.ready) this.why = '';
-    if (!this.cur || !this.owner.has(this.cur)) { const a = autoVoiceName(this.voices); this.cur = a || (this.voices[0] ? this.voices[0].name : null); if (this.cur) this.proc(this.cur).send('voice', this.cur); }
+    // Голос «сам выбирается» — здесь, при смене голосов (читает настройки NVDA и JAWS).
+    this.auto = autoVoiceName(this.voices);
+    const next = this.want && this.owner.has(this.want) ? this.want : (this.auto || (this.voices[0] ? this.voices[0].name : null));
+    if (next) this.use(next, true); else { this.cur = null; this.curProc = null; }
     return this.ready;
   }
   proc(name) { return this.owner.get(name || this.cur) || this.procs[0]; }
+  // Говорить этим голосом: процессу, который его держит, — «voice» (и после
+  // подъёма моста заново: новый процесс голоса ещё не знает).
+  use(name, force) {
+    if (!name || !this.owner.has(name)) return false;
+    const p = this.owner.get(name);
+    if (force || name !== this.cur || p !== this.curProc) { this.cur = name; this.curProc = p; p.send('voice', name); }
+    return true;
+  }
   // Темп игры (шкала Web Speech: единица — обычный) уходит мосту как есть;
   // мост сам переводит его в шкалу SAPI (−10…10, как Chromium: десять — втрое
   // быстрее обычного), а RHVoice и eSpeak — в тот же темп, что у записей Gemini.
   static rate(r) { r = Number(r) || 1; return Math.max(0.1, Math.min(10, r)).toFixed(2); }
-  speak(text, rate, volume, id) {
-    this.speaking.clear(); this.speaking.add(String(id));
+  // opts.queue — фраза следом за прежней (игра сама шлёт stop, когда надо
+  // оборвать): у чтеца экрана она встаёт в очередь, а не обрывает прежнюю.
+  speak(text, rate, volume, id, opts) {
+    id = String(id);
+    this.speaking.clear(); this.speaking.add(id);
+    this.last = { id, text, rate, volume, queue: !!(opts && opts.queue), voice: this.cur, retried: false };
+    this.send(this.last);
+  }
+  send(u) {
     const p = this.proc();
+    u.voice = this.cur;
     this.procs.forEach(o => { if (o !== p) o.send('stop'); });
-    p.send('speak', id, Sapi.rate(rate), Math.round(Math.max(0, Math.min(2, volume >= 0 ? volume : 1)) * 100), text);
+    p.send(u.queue ? 'speakq' : 'speak', u.id, Sapi.rate(u.rate), Math.round(Math.max(0, Math.min(2, u.volume >= 0 ? u.volume : 1)) * 100), u.text);
   }
   stop() { this.speaking.clear(); this.procs.forEach(p => p.send('stop')); }
-  setVoice(name) { if (!this.owner.has(name)) return; this.cur = name; this.proc(name).send('voice', name); }
+  // Голос, выбранный игроком, запоминается, даже если его сейчас нет (NVDA ещё
+  // не запущен): появится — заговорит он. Пустое имя — голос выбирается сам.
+  setVoice(name) {
+    name = String(name || '');
+    this.want = name;
+    if (name && this.use(name)) return;
+    const a = this.auto || (this.voices[0] ? this.voices[0].name : null);
+    if (!name && a) this.use(a);
+  }
   wav(file, text, voice) {
     const p = this.proc(voice);
     return new Promise(r => { p.waiters.push(r); p.send('wav', file, voice || '', text); setTimeout(() => r(false), 20000); });
   }
-  // Чей голос игра возьмёт сама: NVDA, JAWS, настройки NVDA или голос Windows.
-  autoVoice() { return autoVoiceName(this.voices); }
+  // Чей голос игра возьмёт сама: NVDA, JAWS, настройки NVDA или голос Windows
+  // (считан при смене голосов — вопрос игры не читает файлы с диска).
+  autoVoice() { return this.auto; }
   list() {
-    const auto = this.autoVoice();
+    const auto = this.auto;
     return this.voices.map(v => ({ id: v.name, name: v.name, lang: v.lang, gender: v.gender, local: true, default: v.name === this.cur && !!v.default, auto: v.name === auto,
       engine: (ENGINE[v.kind] || 'SAPI 5') + (v.vendor && !/^microsoft/i.test(v.vendor) ? ', ' + v.vendor : '') }));
   }
-  quit() { this.procs.forEach(p => p.quit()); }
+  quit() { if (this.srTimer) { clearInterval(this.srTimer); this.srTimer = null; } this.procs.forEach(p => p.quit()); }
 }
-module.exports = { Sapi, CS_SOURCE: CS, TAG, autoVoiceName, nvdaIni, jawsText, isMsVoice, espeakDll, rhvoiceDir };
+module.exports = { Sapi, Proc, CS_SOURCE: CS, TAG, SR_NAMES, autoVoiceName, nvdaIni, jawsText, isMsVoice, espeakDll, rhvoiceDir };

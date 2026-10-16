@@ -39,11 +39,18 @@ if (process.arch === 'ia32') app.setPath('userData', path.join(app.getPath('appD
 
 // ── ЖУРНАЛ ── (папка данных игры: %APPDATA%\Подземная лаборатория\lab.log;
 // у 32-битной сборки — %APPDATA%\Подземная лаборатория (32 бит)\lab.log)
-let logFile = '';
+// В игре журнал пишется в фоне: запись на диск (антивирус проверяет каждую)
+// не держит главный процесс, а с ним — клавиши и речь.
+let logFile = '', logStream = null;
 function log(m) {
   const line = new Date().toISOString().slice(11, 23) + ' ' + String(m);
   try { console.log(line); } catch (_) { }
-  if (logFile) { try { fs.appendFileSync(logFile, line + '\n', 'utf8'); } catch (_) { } }
+  if (logFile) {
+    if (SELFTEST) { try { fs.appendFileSync(logFile, line + '\n', 'utf8'); } catch (_) { } }
+    else {
+      try { if (!logStream) { logStream = fs.createWriteStream(logFile, { flags: 'a', encoding: 'utf8' }); logStream.on('error', () => { logFile = ''; }); } logStream.write(line + '\n'); } catch (_) { }
+    }
+  }
   if (SELFTEST) {
     const r = /^selftest (ok|FAIL)/.exec(String(m));
     if (r) setTimeout(() => app.exit(r[1] === 'ok' ? 0 : 1), 400);
@@ -55,6 +62,11 @@ const sapi = SapiMod && process.platform === 'win32' ? new SapiMod.Sapi() : null
 let ttsState = sapi ? 'init' : 'failed';
 const sapiReady = sapi ? sapi.start(12000).then(ok => { ttsState = sapi.ready ? 'ready' : 'failed'; return ok; }).catch(() => { ttsState = 'failed'; return false; }) : Promise.resolve(false);
 function voices() { try { return sapi && sapi.ready ? sapi.list() : []; } catch (_) { return []; } }
+// Состояние голосов — в окно игры сразу, как только оно меняется: окно
+// держит его у себя и на вопросы игры отвечает мгновенно, не спрашивая
+// главный процесс и не дожидаясь его.
+function ttsInfo() { return { state: ttsState, voices: voices(), diag: sapi ? sapi.diag() : (process.platform === 'win32' ? 'мост голосов не найден' : 'не Windows') }; }
+function pushTts() { if (win && !win.isDestroyed()) win.webContents.send('lab-tts-state', ttsInfo()); }
 
 const MIME = {
   '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.json': 'application/json', '.css': 'text/css',
@@ -142,42 +154,50 @@ function createWindow() {
     win.webContents.executeJavaScript('try{window.labPause&&window.labPause()}catch(e){}').catch(() => { }).then(done);
     setTimeout(done, 1500);
   });
-  // Конец фразы голосом компьютера — в игру, тем же вызовом, что на Android.
+  // Конец фразы голосом компьютера — в игру, тем же вызовом, что на Android,
+  // и в окно (оно знает, говорит ли мост сейчас, — не спрашивая главный процесс).
   if (sapi) {
     sapi.onDone = (kind, id) => {
+      if (win && !win.isDestroyed()) win.webContents.send('lab-tts-end', kind, String(id));
       if (kind === 'cancel') return;
       js(`window.${kind === 'done' ? 'LabTTSDone' : 'LabTTSError'}&&window.${kind === 'done' ? 'LabTTSDone' : 'LabTTSError'}(${JSON.stringify(String(id))})`);
     };
-    // Голоса, появившиеся позже (мост поднялся после открытия игры, запущен NVDA
-    // и «Перечитать голоса»), уходят в игру без перезапуска.
-    sapi.onChange = () => { ttsState = sapi.ready ? 'ready' : ttsState; if (win && !win.isDestroyed()) win.webContents.send('lab-tts-ready'); };
+    // Голоса, появившиеся позже (мост поднялся после открытия игры, запустили
+    // или закрыли NVDA и JAWS, «Перечитать голоса»), уходят в игру без перезапуска.
+    sapi.onChange = () => { ttsState = sapi.ready ? 'ready' : ttsState; pushTts(); };
   }
   // Игру открываем, когда мост голосов ответил, но не ждём его дольше шести секунд.
   let loaded = false;
   const open = () => { if (loaded || win.isDestroyed()) return; loaded = true; win.loadURL('app://lab/index.html'); };
   sapiReady.then(open); setTimeout(open, 6000);
-  sapiReady.then(() => { if (win && !win.isDestroyed()) win.webContents.send('lab-tts-ready'); });
+  sapiReady.then(pushTts);
   win.webContents.on('did-finish-load', () => {
+    pushTts();
     log('страница открыта; голоса: ' + ttsState + ', ' + voices().length + (sapi ? '; ' + sapi.diag() : ''));
     if (SELFTEST) setTimeout(() => js('LAB.selftest&&LAB.selftest()'), 1500);
   });
 }
 
 // ── МОСТ ДЛЯ ОКНА ИГРЫ (window.LabTTS и window.LabDesktop в preload.js) ──
-ipcMain.on('lab-tts-info', e => { e.returnValue = { state: ttsState, voices: voices() }; });
+// Окно спрашивает синхронно только раз, при открытии; дальше состояние
+// приходит само (lab-tts-state, lab-tts-end).
+ipcMain.on('lab-tts-info', e => { e.returnValue = ttsInfo(); });
 ipcMain.on('lab-tts-speaking', e => { e.returnValue = !!(sapi && sapi.speaking.size > 0); });
+// Фраза игры — следом за прежней: обрывает речь игра сама (lab-tts-stop), а у
+// чтеца экрана фраза встаёт в его очередь, не обрезая недосказанное.
 ipcMain.on('lab-tts-speak', (e, text, rate, volume, id) => {
-  if (sapi && sapi.ready) sapi.speak(String(text || ''), rate, volume, String(id));
-  else js(`window.LabTTSError&&window.LabTTSError(${JSON.stringify(String(id))})`);
+  if (sapi && sapi.ready) sapi.speak(String(text || ''), rate, volume, String(id), { queue: true });
+  else { if (win && !win.isDestroyed()) win.webContents.send('lab-tts-end', 'error', String(id)); js(`window.LabTTSError&&window.LabTTSError(${JSON.stringify(String(id))})`); }
 });
 ipcMain.on('lab-tts-stop', () => { if (sapi) sapi.stop(); });
-ipcMain.on('lab-tts-voice', (e, name) => { if (sapi) sapi.setVoice(String(name || '')); });
-ipcMain.on('lab-tts-diag', e => { e.returnValue = sapi ? sapi.diag() : (process.platform === 'win32' ? 'мост голосов не найден' : 'не Windows'); });
-// «Перечитать голоса компьютера»: запущенный позже NVDA или JAWS, новый синтезатор.
+ipcMain.on('lab-tts-voice', (e, name) => { if (sapi) { sapi.setVoice(String(name || '')); pushTts(); } });
+ipcMain.on('lab-tts-diag', e => { e.returnValue = ttsInfo().diag; });
+// «Перечитать голоса компьютера»: новый синтезатор (NVDA и JAWS игра замечает и сама).
 ipcMain.handle('lab-tts-restart', async () => {
   if (!sapi) return { ready: false, count: 0, diag: 'мост голосов недоступен' };
   await sapi.restart(15000).catch(() => false);
   ttsState = sapi.ready ? 'ready' : 'failed';
+  pushTts();
   return { ready: !!sapi.ready, count: voices().length, diag: sapi.diag() };
 });
 ipcMain.on('lab-log', (e, m) => log(m));

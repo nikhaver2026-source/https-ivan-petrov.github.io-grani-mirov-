@@ -67,6 +67,9 @@ jobs:
             if ($f) { New-Item -ItemType Directory -Force "desktop\sr\$a" | Out-Null; Copy-Item $f.FullName "desktop\sr\$a\nvdaControllerClient.dll" }
           }
           Get-ChildItem -Recurse desktop\sr
+      - name: Единый обработчик речи — логика
+        working-directory: desktop
+        run: node sapi-logic.test.js
       - name: Голоса Windows через мост SAPI
         working-directory: desktop
         run: node sapi-test.js
