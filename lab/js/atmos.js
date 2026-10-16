@@ -92,15 +92,16 @@ function loop(id, o) {
 var stepN = 0;
 function step(surf, run, door) {
   stepN++;
-  var id = "step_" + (surf || "concrete");
-  play(has(id) ? id : "step_concrete", { gain: run ? 0.95 : 0.8, rate: run ? 1.04 : 1, pan: stepN % 2 ? -0.12 : 0.12, reverb: 0.18, bus: "fx" });
+  var id = "step_" + (surf || "plate");
+  play(has(id) ? id : "step_plate", { gain: run ? 0.95 : 0.8, rate: run ? 1.04 : 1, pan: stepN % 2 ? -0.12 : 0.12, reverb: 0.18, bus: "fx" });
   if (door) play("door_threshold", { gain: 0.5 });
 }
 function bump() { play("bump_body", { gain: 0.8 }); }
-/* Удар о стену: стены везде металлические. */
+/* Удар о стену: стены везде стальные, и звук всегда один и тот же — одна
+   запись, без случайной высоты и без фильтра; только сторона (слева, справа). */
 function bumpWall(dir) {
   var v = DIRV[dir] || [0, -1];
-  play("bump_wall", { pan: v[0] * 0.6, gain: 0.95, lp: v[1] > 0 ? 3500 : null, reverb: 0.35 });
+  play("bump_wall", { pan: v[0] * 0.5, gain: 0.95, variant: 0, vary: 0, reverb: 0.3 });
 }
 function bumpSoft(o) { play(o && (o.type === "terminal" || o.type === "vending" || o.type === "medst" || o.type === "charger" || o.type === "magnetron" || o.type === "positron") ? "bump_device" : "bump_furniture", { gain: 0.8 }); }
 function near() { play("near_tick", { gain: 0.6, bus: "ui" }); }
@@ -378,6 +379,7 @@ function hurt(adt, dmg, src) {
 function shot(w, dir, burst) {
   var v = DIRV[dir] || [0, -1];
   var id = LAB.WEAPONS[w.base].snd || "w_blaster_s";
+  if (!has(id)) id = LAB.WEAPONS[w.base].cls === "magnetron" ? "w_magnetron" : "w_blaster_s";
   play(id, { pan: v[0] * 0.35, gain: burst ? 0.85 : 1, rate: burst ? 1.03 : 1, reverb: 0.3 });
 }
 function shotWall(w, x, y) { var cls = LAB.WEAPONS[w.base].cls; at(cls === "positron" ? "impact_positron" : cls === "magnetron" ? "impact_wave" : "impact_wall", x, y, { gain: 0.8 }); }
@@ -497,7 +499,7 @@ function pad(s, freq, when, dur, vol, cut) {
 /* ════════ ЗАПАСНОЙ СИНТЕЗ (если записи нет) ════════ */
 var FB = {
   bump_wall: function (s) { s.clang(180); }, bump_body: function (s) { s.thump(0, 0.4); }, bump_furniture: function (s) { s.thump(0, 0.3); }, bump_device: function (s) { s.clang(420); },
-  step_concrete: function (s) { s.footstep(0); }, step_metal: function (s) { s.metalstep(0); },
+  step_plate: function (s) { s.metalstep(0); },
   near_tick: function (s) { s.note(1300, 0, 0.05, "sine", 0.05); },
   door_auto_open: function (s) { s.whoosh(true); }, door_auto_close: function (s) { s.whoosh(false); }, door_heavy_open: function (s) { s.servo(true); s.clang(90); }, door_heavy_close: function (s) { s.clang(80); },
   door_hatch_open: function (s) { s.servo(true); }, door_hatch_close: function (s) { s.servo(false); }, door_locked: function (s) { s.note(220, 0, 0.12, "square", 0.08); s.note(180, 0.13, 0.15, "square", 0.08); },

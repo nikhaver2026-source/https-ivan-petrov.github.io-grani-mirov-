@@ -711,6 +711,7 @@ function kill(f, quiet) {
     } else {
       if (r() < 0.35 * dk) drops.push({ kind: "item", item: r() < 0.6 ? "gel" : "reagent", n: 1 });
       if (r() < 0.12 * dk) drops.push({ kind: "item", item: "medkit_s", n: 1 });
+      if (r() < 0.15 * dk) drops.push({ kind: "ammo", ammo: "energy", n: 1 }); /* батарея из кармана бывшего сотрудника */
     }
     if (r() < 0.3) drops.push({ kind: "credits", n: Math.round((4 + r() * 12) * (1 + LAB.depth(L, g.F) / 25)) });
   }

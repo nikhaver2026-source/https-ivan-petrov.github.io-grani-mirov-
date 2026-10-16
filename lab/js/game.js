@@ -413,7 +413,7 @@ function giveItem(it, quiet) {
     case "key": G.keys[it.key] = it.n; break;
     case "note": {
       var nt = noteText(it), nid = G.L + "-" + G.F + "-" + it.id;
-      if (!G.notes[nid]) { G.notes[nid] = 1; G.noteList.push({ id: nid, t: nt.t, x: nt.x, a: nt.a || "", story: !!nt.story, L: G.L, F: G.F }); G.stats.notes++; gainXP(4); }
+      if (!G.notes[nid]) { G.notes[nid] = 1; G.noteList.push({ id: nid, t: nt.t, x: nt.x, a: nt.a || "", story: !!nt.story, L: G.L, F: G.F, code: it.note === "safe" ? it.code : undefined }); G.stats.notes++; gainXP(4); }
       if (it.code) G.codes[it.code] = it.room;
       break;
     }
@@ -443,8 +443,10 @@ function autoPickup() {
   });
   say("Подобрано: " + parts.join(" "), { interrupt: false });
   LAB.vib(15);
+  /* Записка открывается окном: мир ждёт, текст дочитывается до конца. */
   if (notes.length && S.autoRead && !(LAB.combat && LAB.combat.danger())) {
-    notes.forEach(function (it) { var nt = noteText(it); sayq("«" + nt.t + "»" + (nt.a ? ", " + nt.a : "") + ". " + nt.x); });
+    var nt = noteText(notes[0]);
+    UIx("note", "«" + nt.t + "»", (nt.a ? nt.a + ". " : "") + nt.x + (notes.length > 1 ? " Остальные записки — в инвентаре, раздел «Записки»." : ""), null, { queue: true });
   } else if (notes.length) sayq("Прочитать записку — инвентарь, раздел «Записки».");
   checkQuests();
   UIx("refresh");
@@ -1174,11 +1176,11 @@ function containerMenu(o) {
   var st = objState(o), name = objName(o), items = [];
   if (st.open) { say(name + ": пусто."); return; }
   if (o.type === "safe") {
-    items.push({ label: G.codes[o.code] ? "Набрать код из записки (" + o.code.split("").join(" ") + ")" : "Набрать код", fn: function () {
-      if (G.codes[o.code]) { A("play", "keypad"); openContainer(o); }
-      else { UIx("closeAll"); LAB.mini.code(function (c) { if (!c) return; A("play", "keypad"); if (c === o.code) openContainer(o); else { A("play", "code_fail"); say("Неверный код."); } }); }
-    } });
-    items.push({ label: "Взломать сейф (мини-игра)", fn: function () { UIx("closeAll"); LAB.mini.hack(hackLength(3 + Math.floor(G.L / 3)), function (ok) { if (ok) openContainer(o); else { A("play", "alarm_short"); say("Сейф не поддался. Шум разнёсся по этажу."); if (LAB.combat) LAB.combat.noise(10); } }); } });
+    /* Сейф открывается только кодом, который игрок набирает сам; код — в записке. */
+    items.push({ label: "Набрать код", fn: function () { safeCode(o); } });
+    var sn = safeNoteFor(o.code);
+    if (sn) items.push({ label: "Перечитать записку с кодом: «" + sn.t + "»", keep: true, fn: function () { say(sn.x, { read: true }); } });
+    else items.push({ label: "Код неизвестен", keep: true, fn: function () { say("Код сейфа хозяин обычно записывает. Ищите записку на этом этаже: в ней помещение и четыре цифры."); } });
   } else if (o.type === "locker" && o.locked && !st.forced) {
     items.push({ label: "Вскрыть шкафчик силой", fn: function () {
       var hasBar = G.weapons.some(function (w) { return w.base === "crowbar"; });
@@ -1191,6 +1193,30 @@ function containerMenu(o) {
   }
   items.push({ label: "Осмотреть", fn: function () { say(name + ". " + LAB.OBJ[o.type].desc); } });
   UIx("menu", name, items);
+}
+/* Набор кода сейфа: четыре диска, свайпы вверх и вниз — цифра. */
+function safeCode(o) {
+  UIx("closeAll");
+  if (!LAB.mini) return;
+  LAB.mini.code(function (c) {
+    if (!c) return;
+    A("play", "keypad");
+    if (c === o.code) { A("play", "code_ok"); openContainer(o); return; }
+    var st = objState(o);
+    st.fails = (st.fails || 0) + 1;
+    A("play", "code_fail");
+    say("Неверный код." + (st.fails >= 3 ? " Замок громко пищит — шум слышно по этажу." : " Проверьте записку."));
+    if (LAB.combat) LAB.combat.noise(st.fails >= 3 ? 8 : 3);
+  }, { title: "Сейф" });
+}
+/* Записка с кодом этого сейфа, если игрок её подобрал. */
+function safeNoteFor(code) {
+  var sp = String(code).split("").join(" ");
+  for (var i = G.noteList.length - 1; i >= 0; i--) {
+    var n = G.noteList[i];
+    if (n.code === code || (n.x && (n.x.indexOf(sp) >= 0 || n.x.indexOf(code) >= 0))) return n;
+  }
+  return null;
 }
 function openContainer(o) {
   var st = objState(o);

@@ -9,7 +9,8 @@
    вниз — сканер; касание — повторить фразу, двойное — тишина.
    Три пальца: касание — вынуть или убрать оружие, вверх — персонаж,
    вниз — инвентарь, влево — задания и журнал, вправо — навигатор целей.
-   Четыре пальца: касание — здоровье и заряд, двойное касание — импланты.
+   Четыре пальца: касание — здоровье и заряд, двойное касание — импланты,
+   свайп вниз — замолчать (везде: в игре, в окнах, в прологе).
    ════════════════════════════════════════════════════════════════════ */
 (function () {
 "use strict";
@@ -152,6 +153,7 @@ function startHold(dir) {
   var w = walk;
   var stepFn = function () {
     if (walk !== w) return;
+    if (route() !== "game") { stopHold(); return; } /* открылось окно (записка) — стоим */
     var ok = game.tryMove(gdir, true);
     if (!ok) { stopHold(); return; }
     w.t = setTimeout(stepFn, G.st.haste > 0 ? 200 : 300);
@@ -179,6 +181,10 @@ function route() {
 function dispatch(g) {
   LAB.AE.ensure();
   if (swallowN > 0 && g.kind !== "down") { swallowN--; return; }
+  /* Четыре пальца вниз — прервать речь, где бы ни был игрок. */
+  if (g.kind === "swipe" && g.n >= 4 && g.dir === "D") { LAB.Speech.hush(); LAB.vib(20); return; }
+  /* жест игрока: ответ на него может перебить чтение длинного текста */
+  if (g.kind !== "down") LAB.Speech.user();
   var r = route();
   if (g.kind === "down") { if (r === "mini") LAB.mini.gesture(g); return; }
   if (r === "mini") { LAB.mini.gesture(g); return; }
@@ -260,6 +266,7 @@ function key(e) {
   else if (k === "n" || k === "N" || k === "т" || k === "Т") g = { kind: "swipe", n: 2, dir: "R" };
   else if (k === "m" || k === "M" || k === "ь" || k === "Ь") g = { kind: "dtap", n: 4 };
   else if (k === "s" || k === "S" || k === "ы" || k === "Ы") g = { kind: "tap", n: 4 };
+  else if (k === "x" || k === "X" || k === "ч" || k === "Ч") g = { kind: "swipe", n: 4, dir: "D" };
   if (!g) return;
   e.preventDefault();
   LAB.AE.ensure();
@@ -283,6 +290,7 @@ function init() {
   document.addEventListener("keyup", keyUp);
   /* «Назад» на Android */
   window.labBack = function () {
+    LAB.Speech.user();
     if (LAB.mini && LAB.mini.active()) { LAB.mini.gesture({ kind: "back", n: 1 }); return 1; }
     var ui = LAB.ui;
     if (!ui) return 0;

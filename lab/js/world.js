@@ -733,12 +733,14 @@ function genFloor(seed, L, F, attempt) {
     var rm6 = rooms[s];
     if (!rm6 || s === U || s === secret) continue;
     if (L === 1 && F === 1 && zone[s] === -1 && r.chance(0.6)) continue; /* мягкое начало */
-    var p6 = Math.min(0.7, 0.35 + 0.03 * L + (F === NF ? 0.1 : 0));
-    if (s === E) p6 *= 0.4;
+    /* тварей и роботов много: почти в каждом помещении, глубже — стаями */
+    var p6 = Math.min(0.95, 0.62 + 0.03 * L + (F === NF ? 0.1 : 0));
+    if (s === E) p6 *= 0.5;
+    if (L === 1 && F <= 2) p6 *= 0.75; /* первые шаги после пробуждения */
     if (!r.chance(p6)) continue;
     var fid2 = r.pick(foePool);
     var beh = LAB.FOES[fid2].beh;
-    var cnt = beh.indexOf("swarm") >= 0 ? r.int(2, 3) : (r.chance(0.2 + L * 0.02) ? 2 : 1);
+    var cnt = beh.indexOf("swarm") >= 0 ? r.int(3, 4) : 1 + (r.chance(0.45 + L * 0.03) ? 1 : 0) + (r.chance(0.1 + L * 0.025) ? 1 : 0);
     for (var q = 0; q < cnt; q++) addFoe(q === 0 ? fid2 : (r.chance(0.6) ? fid2 : r.pick(foePool)), s);
   }
   /* страж двадцатого этажа: шлюзовая ключ-карта при нём, если не спрятана */
@@ -791,10 +793,11 @@ function genFloor(seed, L, F, attempt) {
   /* турели в коридорах (с 2-го уровня) */
   if (L >= 2) {
     var tur = lev.foes.filter(function (fid3) { return LAB.FOES[fid3].beh.indexOf("turret") >= 0; });
-    if (tur.length && r.chance(0.5)) {
+    if (tur.length && r.chance(0.7)) {
       var cand7 = [];
       for (s = 0; s < NS; s++) if (rooms[s] && s !== U && s !== E && main[s] && zone[s] !== -1) cand7.push(s);
-      if (cand7.length) addFoe(r.pick(tur), r.pick(cand7));
+      var nT = 1 + (L >= 5 && r.chance(0.5) ? 1 : 0);
+      for (var t7 = 0; t7 < nT && cand7.length; t7++) addFoe(r.pick(tur), r.pick(cand7));
     }
   }
 

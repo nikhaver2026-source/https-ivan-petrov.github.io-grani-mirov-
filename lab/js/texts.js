@@ -165,6 +165,7 @@ LAB.codeNote = function (code, room, n) {
   return v[(n || 0) % v.length];
 };
 LAB.safeNote = function (code, room, n) {
+  code = String(code).split("").join(" "); /* по цифрам: «четыре восемь два один» */
   var v = [
     { t: "Код сейфа", x: "Сейф в помещении «" + room + "»: " + code + ". Если меня нет — забирайте всё." },
     { t: "Бухгалтерия", x: "Наличные кредиты — в сейфе, помещение «" + room + "». Комбинация: " + code + "." }

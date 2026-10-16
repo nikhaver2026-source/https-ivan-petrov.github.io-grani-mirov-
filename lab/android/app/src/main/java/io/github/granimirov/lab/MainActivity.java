@@ -47,7 +47,7 @@ import java.util.Set;
 
    Мост LabTTS отдаёт странице синтезатор речи телефона — тот же, что у
    TalkBack: speak(текст, темп, громкость, номер), stop(), status()
-   ("init" | "ready" | "failed"), hasRussian(), getVoices(), setVoice(имя),
+   ("init" | "ready" | "failed"), isSpeaking(), hasRussian(), getVoices(), setVoice(имя),
    vibrate(узор), exitApp(), log(строка). О начале, конце и ошибке фразы
    приложение сообщает вызовами LabTTSStart(номер), LabTTSDone(номер),
    LabTTSError(номер). Кнопка «Назад» закрывает окно игры (labBack). */
@@ -241,6 +241,13 @@ public class MainActivity extends Activity {
 
         @JavascriptInterface
         public String status() { return state; }
+
+        /* Говорит ли ещё синтезатор: игра не перебивает недосказанную фразу. */
+        @JavascriptInterface
+        public boolean isSpeaking() {
+            if (!"ready".equals(state)) return false;
+            try { TextToSpeech sp = speaker != null ? speaker : tts; return sp.isSpeaking(); } catch (Exception e) { return false; }
+        }
 
         @JavascriptInterface
         public boolean hasRussian() {

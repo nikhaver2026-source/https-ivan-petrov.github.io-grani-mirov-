@@ -2,13 +2,14 @@
 """Сборка звуков «Подземной лаборатории».
 
 Из свободных записей, скачанных сборщиком (.github/workflows/sfx-fetch.yml,
-выпуск sfx-inbox, заходы 1–3), собирает папку lab/sounds: режет, обрезает
+выпуск sfx-inbox, заходы 1–4), собирает папку lab/sounds: режет, обрезает
 тишину, выравнивает громкость, делает петли, переводит в OGG Vorbis; пишет
 lab/js/sounds.js (что звучит и откуда) и lab/sounds/CREDITS.md (авторы и
 лицензии каждой записи). Записи под CC BY-SA и GPL не берутся.
 
-Запуск: python3 lab/tools/build_sounds.py <папка exA> <папка exB> <папка exC>
-(распакованные архивы заходов 1, 2 и 3). Нужны ffmpeg (libvorbis) и numpy.
+Запуск: python3 lab/tools/build_sounds.py <exA> <exB> <exC> <exD> [шаблоны id]
+(распакованные архивы заходов 1–4; заход 4 — живые записи Freesound, CC0,
+авторы и названия — tools/sfx-fetch/fs_lab.tsv). Нужны ffmpeg (libvorbis) и numpy.
 """
 import sys, os, glob, fnmatch, subprocess, json, re, hashlib
 import numpy as np
@@ -150,11 +151,27 @@ ES_BAN = ["heavy rocket hit", "meteor", "explosion huge", "thrasher", "point def
           "speckle", "atomic", "moonbeam", "ionic blast", "bimodal", "drag cannon", "overcharged pulse laser", "successor pulse laser",
           "asteroid crunch large", "hion", "archonteleport"]
 
+# Заход 4: записи Freesound (CC0) — у каждой свой автор и своя страница.
+FS_META = {}
+_fs_tsv = os.path.join(os.path.dirname(LAB), "tools", "sfx-fetch", "fs_lab.tsv")
+if os.path.exists(_fs_tsv):
+    for _l in open(_fs_tsv, encoding="utf-8"):
+        if not _l.strip() or _l.startswith("#"): continue
+        _c = _l.rstrip("\n").split("\t")
+        FS_META[_c[0]] = (_c[3], _c[2])
+        PACKS["fs:" + _c[0]] = (_c[3], _c[2], CC0, "https://freesound.org/s/%s/" % _c[0])
+
+def FS(i, **o):
+    return S("D", "lab_fsD", "%s_*" % i, **o)
+
 def pack_of(path):
     rel = path
     for k, root in ROOTS.items():
         if path.startswith(root):
             rel = os.path.relpath(path, root)
+    m = re.match(r"^(\d+)_\d+-hq\.(ogg|mp3)$", os.path.basename(path))
+    if m and "fs:" + m.group(1) in PACKS:
+        return "fs:" + m.group(1), rel
     top = rel.split(os.sep)[0]
     best = None
     for k in PACKS:
@@ -280,6 +297,35 @@ def onsets(a, need, min_gap=0.22, length=0.38):
         seg = a[s0: s0 + int(length * SR)]
         res.append(fade(seg, 0.002, 0.08))
     return res
+
+def segments(a, need, min_len=0.12, max_len=2.4, gap=0.10, thr_db=-30.0, skip=0):
+    """Части записи между паузами: рык, выстрел, шаг — каждый отдельно.
+    Берутся самые громкие, затем по порядку во времени."""
+    m = np.abs(a if a.ndim == 1 else a.mean(axis=1))
+    w = max(1, int(0.01 * SR))
+    env = np.sqrt(np.convolve(m ** 2, np.ones(w) / w, mode="same"))
+    pk = env.max() if env.size else 0
+    if pk <= 0: return []
+    on = env > pk * 10 ** (thr_db / 20)
+    segs, i, n = [], 0, len(on)
+    g = int(gap * SR)
+    while i < n:
+        if not on[i]: i += 1; continue
+        j = i
+        quiet = 0
+        while j < n and quiet < g:
+            quiet = quiet + 1 if not on[j] else 0
+            j += 1
+        e = j - quiet
+        if (e - i) >= min_len * SR:
+            s0 = max(0, i - int(0.006 * SR)); e0 = min(n, e + int(0.05 * SR))
+            if e0 - s0 > max_len * SR: e0 = s0 + int(max_len * SR)
+            segs.append((float(env[i:e].max()), s0, e0))
+        i = j
+    segs = segs[skip:]
+    segs.sort(key=lambda t: -t[0])
+    segs = sorted(segs[:need], key=lambda t: t[1])
+    return [fade(a[s0:e0], 0.003, 0.06) for _, s0, e0 in segs]
 
 def encode(a, path, q):
     os.makedirs(os.path.dirname(path), exist_ok=True)
@@ -792,6 +838,16 @@ def build():
         else:
             items = []
             for s in sp["srcs"]:
+                if isinstance(s, tuple) and s[0] == "split":
+                    _, src, k = s[:3]
+                    so = s[3] if len(s) > 3 else {}
+                    fs = resolve(src)
+                    if not fs: MISSING.append(id_ + " (split) " + str(src[1:4])); continue
+                    path, lo = fs[0]
+                    use(path)
+                    a = decode(path, lo.get("start", 0), lo.get("dur", 60), ch=1, af=lo.get("af"))
+                    for seg in segments(a, k, **so): items.append(("arr", cap(seg, sp["mx"] if sp["mx"] is not None else DEF_MAX.get(kind))))
+                    continue
                 if isinstance(s, tuple) and s[0] == "slice":
                     _, src, k = s
                     fs = resolve(src)
@@ -860,7 +916,8 @@ def write_js(defs):
 
 def write_credits(used):
     lines = ["# Звуки «Подземной лаборатории»", "",
-             "Все записи — свободные: CC0 (общественное достояние), CC BY 3.0 (с указанием автора),",
+             "Все записи — свободные: CC0 (общественное достояние, в том числе записи Freesound —",
+             "у каждой указан автор и страница), CC BY 3.0 (с указанием автора),",
              "BSD 3-Clause (Freedoom) и общественное достояние (часть записей Endless Sky).",
              "Записи под CC BY-SA и GPL не используются. Звуки обрезаны, выровнены по громкости,",
              "часть — замедлена или ускорена, петли сведены с перекрёстным затуханием;",
@@ -883,10 +940,10 @@ def write_credits(used):
         f.write("\n".join(lines))
 
 if __name__ == "__main__":
-    if len(sys.argv) < 4:
+    if len(sys.argv) < 5:
         print(__doc__); sys.exit(2)
-    ROOTS.update({"A": os.path.abspath(sys.argv[1]), "B": os.path.abspath(sys.argv[2]), "C": os.path.abspath(sys.argv[3])})
-    only = sys.argv[4:] if len(sys.argv) > 4 else None
+    ROOTS.update({"A": os.path.abspath(sys.argv[1]), "B": os.path.abspath(sys.argv[2]), "C": os.path.abspath(sys.argv[3]), "D": os.path.abspath(sys.argv[4])})
+    only = sys.argv[5:] if len(sys.argv) > 5 else None
     if only:
         for k in list(SPEC):
             if not any(fnmatch.fnmatch(k, p) for p in only): del SPEC[k]

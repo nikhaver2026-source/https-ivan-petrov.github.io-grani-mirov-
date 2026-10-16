@@ -480,7 +480,10 @@ function journalMenu() {
   items.push(back());
   menu("Журнал", items);
 }
-function note(title, text, after) {
+/* Окно записки: пока оно открыто, мир ждёт, и текст дочитывается до конца.
+   Свайп вправо и влево — по абзацам, «Закрыть» или два пальца вниз — назад. */
+function note(title, text, after, opts) {
+  opts = opts || {};
   var parts = String(text).match(/[^.!?…]+[.!?…»]*/g) || [text];
   var paras = [], curp = "";
   parts.forEach(function (p) { if ((curp + p).length > 220 && curp) { paras.push(curp.trim()); curp = p; } else curp += p; });
@@ -489,7 +492,7 @@ function note(title, text, after) {
   items.push({ label: "Закрыть", fn: function () { if (after) after(); } });
   A("play", "paper");
   menu(title, items, { silent: true });
-  say(title + ". " + text, { interrupt: true });
+  say(title + ". " + text, { interrupt: !opts.queue, read: true });
 }
 
 /* ════════ МАСТЕРСКАЯ ════════ */

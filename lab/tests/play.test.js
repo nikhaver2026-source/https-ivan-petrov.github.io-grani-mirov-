@@ -179,6 +179,80 @@ function ok(cond, msg) { if (cond) console.log("  ✓ " + msg); else { fails++; 
   }));
   ok(code === "1290", "код набирается дисками: " + code);
 
+  console.log("Речь: длинный текст дочитывается, четыре пальца вниз — тишина");
+  const sp = await page.evaluate(() => {
+    const S = LAB.Speech, pump = S._pump, out = {};
+    const spoken = [];
+    LAB.settings.speech = true;
+    S._pump = function () { if (this.speaking || !this.queue.length) return; const it = this.queue.shift(); this.speaking = true; this.cur = { id: "t" + (++this.seq), text: it.text }; spoken.push(it.text); };
+    const long = "Записка. " + "Это длинная строка записки, её нужно дочитать до конца без перерыва. ".repeat(8);
+    S.userUntil = 0;
+    S.say(long);
+    S.say("Мутант-лаборант справа, 3 шага — заметил вас!");
+    out.deferred = S.later.length === 1 && spoken.length === 1;
+    let guard = 0; while ((S.speaking || S.queue.length) && guard++ < 50) S._done();
+    out.tail = spoken[spoken.length - 1];
+    out.chunks = spoken.length;
+    S.say(long);
+    LAB.input.dispatch({ kind: "swipe", n: 4, dir: "D" });
+    out.hushed = !S.speaking && !S.queue.length && !S.reading;
+    S.say(long); S.user(); S.say("Пункт меню");
+    out.userCut = spoken[spoken.length - 1] === "Пункт меню";
+    S.stop(); S._pump = pump; S.userUntil = 0;
+    return out;
+  });
+  ok(sp.deferred, "фраза игры во время чтения ждёт конца записки");
+  ok(sp.tail && sp.tail.indexOf("заметил вас") >= 0 && sp.chunks > 3, "записка дочитана, затем сказана отложенная фраза (" + sp.chunks + " частей)");
+  ok(sp.hushed, "четыре пальца вниз — речь прервана");
+  ok(sp.userCut, "жест игрока перебивает чтение");
+
+  console.log("Записка: подобрал — окно, мир ждёт");
+  const nw = await page.evaluate(() => {
+    const g = LAB.game, G = g.G;
+    LAB.ui.closeAll();
+    g.CUR.fl.items.push({ id: "tnote1", kind: "note", note: "staff", n: 7, x: G.x, y: G.y });
+    g.autoPickup();
+    const t = LAB.ui.top() && LAB.ui.top().title;
+    const layer = LAB.ui.layer();
+    LAB.ui.closeAll();
+    return { t: t, layer: !!layer };
+  });
+  ok(nw.layer && /^«/.test(nw.t || ""), "записка открылась окном: " + nw.t);
+
+  console.log("Сейф: код набирает сам игрок");
+  const sf = await page.evaluate(async () => {
+    const g = LAB.game, G = g.G;
+    let found = null;
+    for (let F = 1; F <= 20 && !found; F++) { const fl = LAB.getFloor(G.seed, G.L, F); const o = fl.objs.find(x => x.type === "safe"); if (o) found = { F: F, id: o.id }; }
+    if (!found) return { err: "нет сейфа" };
+    g.enterFloor(G.L, found.F, "down", true);
+    const o = g.CUR.fl.objs.find(x => x.id === found.id);
+    LAB.ui.closeAll();
+    g.objMenu(o);
+    const labels = LAB.ui.top().items.map(i => typeof i.label === "function" ? i.label() : i.label);
+    const out = { labels: labels.join(" | ") };
+    const enter = (code) => new Promise(res => {
+      LAB.ui.closeAll(); g.objMenu(o);
+      const it = LAB.ui.top().items.findIndex(i => /Набрать код/.test(typeof i.label === "function" ? i.label() : i.label));
+      LAB.ui.top().i = it; LAB.ui.activate();
+      setTimeout(() => {
+        const m = d => LAB.mini.gesture(d);
+        String(code).split("").forEach((c, k) => { for (let q = 0; q < +c; q++) m({ kind: "swipe", n: 1, dir: "U" }); if (k < 3) m({ kind: "swipe", n: 1, dir: "R" }); });
+        m({ kind: "dtap", n: 1 });
+        setTimeout(res, 120);
+      }, 60);
+    });
+    SPOKEN.length = 0;
+    await enter(o.code === "1111" ? "2222" : "1111");
+    out.wrong = SPOKEN.join(" ").indexOf("Неверный код") >= 0 && !g.objState(o).open;
+    await enter(o.code);
+    out.opened = !!g.objState(o).open;
+    return out;
+  });
+  ok(!sf.err && sf.labels.indexOf("Набрать код") >= 0 && sf.labels.indexOf("Взлом") < 0, "у сейфа — только набор кода: " + (sf.err || sf.labels));
+  ok(sf.wrong, "неверный код — сейф закрыт");
+  ok(sf.opened, "верный код, набранный дисками, открывает сейф");
+
   console.log("Спуск через шлюз");
   const desc = await page.evaluate(async () => {
     const g = LAB.game, G = g.G;

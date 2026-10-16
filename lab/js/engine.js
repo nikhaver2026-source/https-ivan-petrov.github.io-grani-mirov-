@@ -406,7 +406,7 @@ var Bank = {
       return null;
     }
     var file = o.variant != null ? ready[o.variant % ready.length] : ready[Math.floor(Math.random() * ready.length)];
-    if (ready.length > 1 && file === d.last) file = ready[(ready.indexOf(file) + 1) % ready.length];
+    if (o.variant == null && ready.length > 1 && file === d.last) file = ready[(ready.indexOf(file) + 1) % ready.length];
     d.last = file;
     var c = AE.ctx, t = c.currentTime + (o.delay || 0);
     var src = c.createBufferSource();
@@ -449,6 +449,7 @@ LAB.Bank = Bank;
 /* ════════ РЕЧЬ ════════ */
 var Speech = {
   backend: "none", queue: [], speaking: false, cur: null, seq: 0, timer: null, keepAlive: null,
+  reading: false, later: [], userUntil: 0,
   webVoice: null, webVoices: [], androidVoices: [], ready: false, esp: null, espSt: "off", espSrc: null, onState: null,
   hasBridge: function () { return !!(window.LabTTS && typeof window.LabTTS.speak === "function"); },
   hasWeb: function () { return typeof window.speechSynthesis !== "undefined" && typeof window.SpeechSynthesisUtterance !== "undefined"; },
@@ -466,7 +467,7 @@ var Speech = {
       try { window.speechSynthesis.onvoiceschanged = pick; } catch (e) { /* */ }
     }
     if (this.hasBridge()) {
-      window.LabTTSStart = function (id) { /* начало фразы */ };
+      window.LabTTSStart = function (id) { if (self.cur && self.cur.id === id) self._arm(id, self.cur.text); };
       window.LabTTSDone = function (id) { if (self.cur && self.cur.id === id) self._done(); };
       window.LabTTSError = function (id) { if (self.cur && self.cur.id === id) self._done(true); };
       var poll = 0;
@@ -584,23 +585,63 @@ var Speech = {
     out.forEach(function (p) { if (merged.length && (merged[merged.length - 1] + " " + p).length < 160) merged[merged.length - 1] += " " + p; else merged.push(p); });
     return merged;
   },
+  /* Жест игрока: то, что скажется в ответ на него, может перебить чтение. */
+  user: function () { this.userUntil = Date.now() + 450; },
+  isUser: function () { return Date.now() <= this.userUntil; },
+  /* Длинный текст (записка, глава руководства, пролог) дочитывается до конца:
+     фразы игры, сказанные без жеста игрока, ждут конца чтения. Перебить
+     чтение может только сам игрок — любым жестом; четыре пальца вниз — тишина. */
   say: function (text, opts) {
     opts = opts || {};
+    text = String(text == null ? "" : text);
+    if (this.reading && (this.speaking || this.queue.length) && !opts.urgent && !this.isUser()) {
+      this.later.push({ text: text, robot: !!opts.robot });
+      if (this.later.length > 3) this.later.shift();
+      return;
+    }
     var live = document.getElementById("liveRegion");
     if (live) { live.textContent = ""; var tt = text; requestAnimationFrame(function () { live.textContent = tt; }); }
     if (LAB.showCaption) LAB.showCaption(text);
     if (!settings.speech) return;
-    if (opts.interrupt !== false) this.stop(true);
+    if (opts.interrupt !== false) { this.stop(true); this.later = []; }
     var parts = this._chunk(text), self = this;
+    if (opts.read || text.length > 230) this.reading = true;
     parts.forEach(function (p) { self.queue.push({ text: p, robot: !!opts.robot }); });
     this._pump();
+  },
+  /* Страховочный таймер: если движок не сообщил о конце фразы. Пока движок
+     ещё говорит — ждём дальше, а не перебиваем недосказанное. */
+  _arm: function (id, text) {
+    var self = this;
+    clearTimeout(this.timer);
+    var est = 4000 + String(text).length * 150 / Math.max(0.5, +settings.rate || 1), waited = 0;
+    var check = function () {
+      if (!self.cur || self.cur.id !== id) return;
+      if (self._engineBusy() && waited < est * 3) { waited += 1500; self.timer = setTimeout(check, 1500); return; }
+      self._done(true);
+    };
+    this.timer = setTimeout(check, est);
+  },
+  _engineBusy: function () {
+    if (this.espSrc) return true;
+    if (this.backend === "android" && this.hasBridge()) { try { if (window.LabTTS.isSpeaking) return !!window.LabTTS.isSpeaking(); } catch (e) { /* */ } return false; }
+    if (this.backend === "web" && this.hasWeb()) { try { return !!window.speechSynthesis.speaking; } catch (e) { /* */ } }
+    return false;
   },
   _done: function (err) {
     clearTimeout(this.timer); this.timer = null;
     if (this.espSrc) { try { this.espSrc.onended = null; } catch (e) { /* */ } this.espSrc = null; }
     this.cur = null; this.speaking = false;
     this._stopKeepAlive();
-    if (!this.queue.length) AE.setDuck(false);
+    if (!this.queue.length) {
+      AE.setDuck(false);
+      if (this.reading) {
+        this.reading = false;
+        var later = this.later, self = this; this.later = [];
+        later.forEach(function (l) { self._chunk(l.text).forEach(function (p) { self.queue.push({ text: p, robot: l.robot }); }); });
+        if (later.length && LAB.showCaption) LAB.showCaption(later[later.length - 1].text);
+      }
+    }
     this._pump();
   },
   _pump: function () {
@@ -616,11 +657,12 @@ var Speech = {
     AE.setDuck(true);
     var id = "u" + (++this.seq);
     this.cur = { id: id, text: item.text };
-    var est = 2500 + item.text.length * 95 / Math.max(0.5, +settings.rate || 1);
-    this.timer = setTimeout(function () { if (self.cur && self.cur.id === id) self._done(true); }, est);
+    this._arm(id, item.text);
     if (useEsp) {
       var buf = this.espBuffer(item.text, item.robot);
       if (!buf) { this._done(true); return; }
+      clearTimeout(this.timer);
+      this.timer = setTimeout(function () { if (self.cur && self.cur.id === id) self._done(true); }, buf.duration * 1000 + 2500);
       var src = AE.ctx.createBufferSource(); src.buffer = buf;
       var node = src;
       if (item.robot) {
@@ -667,6 +709,7 @@ var Speech = {
   _stopKeepAlive: function () { if (this.keepAlive) { clearInterval(this.keepAlive); this.keepAlive = null; } },
   stop: function (keepDuck) {
     this.queue = [];
+    this.reading = false;
     var was = this.speaking;
     this.speaking = false; this.cur = null;
     clearTimeout(this.timer); this.timer = null;
@@ -676,6 +719,8 @@ var Speech = {
     if (this.hasWeb()) { try { window.speechSynthesis.cancel(); } catch (e) { /* */ } }
     if (!keepDuck || !was) AE.setDuck(false);
   },
+  /* Тишина: четыре пальца вниз. Отложенное тоже забывается. */
+  hush: function () { this.later = []; this.stop(); },
   busy: function () { return this.speaking || this.queue.length > 0; }
 };
 LAB.Speech = Speech;
