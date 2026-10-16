@@ -344,6 +344,44 @@ function noteFull(n) {
   return r;
 }
 game.noteFull = noteFull;
+/* ── АРХИВ ДОКУМЕНТОВ ──
+   Всё найденное — записки, письма, документы и журналы компьютеров,
+   фрагменты памяти — заносится в архив: название, автор, место, глубина,
+   категория. Поиск — по глубине, категории, автору, первой букве. */
+var DOC_CATS = ["Личные записи", "Свидетельства", "Технические журналы", "Отчёты безопасности", "Исследовательские заметки", "Протоколы экспериментов", "Приказы", "Служебные записки", "Сообщения о поломках", "Переписка", "Записи переговоров", "Архивы персонала", "Секретные документы", "Противоречащие официальной версии", "Документы", "Журналы терминалов", "Загадки и испытания", "Повреждённые записи", "Фрагменты памяти комплекса", "Записи последовательностей"];
+game.DOC_CATS = DOC_CATS;
+function docCat(src, nt) {
+  var k = src && src.note, a = String((nt && nt.a) || "").toLowerCase(), dk = src && src.dk;
+  if (k === "depth" && nt && nt.cat) return nt.cat;
+  if (k === "depth") return { cradle: "Протоколы экспериментов", node: "Записи последовательностей", memory: "Фрагменты памяти комплекса", mirror: "Повреждённые записи" }[dk] || "Документы";
+  if (k === "story") return "Свидетельства";
+  if (k === "code" || k === "safe") return "Служебные записки";
+  if (k === "secret") return "Сообщения о поломках";
+  if (k === "riddle") return "Загадки и испытания";
+  if (/инженер|техник|механик|энергетик|наладчик|монтаж|смен/.test(a)) return "Технические журналы";
+  if (/охран|безопасн|пост|караул|вахт/.test(a)) return "Отчёты безопасности";
+  if (/директор|руковод|комендант|начальник|приказ/.test(a)) return "Приказы";
+  if (/учён|лаборант|биолог|химик|физик|исследов|научн|профессор|доктор|академик|генетик/.test(a)) return "Исследовательские заметки";
+  return "Личные записи";
+}
+game.docCat = docCat;
+/* Записать в архив документ с готовым текстом (письмо, документ компьютера, журнал). */
+function archiveAdd(id, t, x, a, cat) {
+  if (G.notes[id]) return false;
+  G.notes[id] = 1;
+  G.noteList.push({ id: id, t: t, x: x, a: a || "", L: G.L, F: G.F, pl: placeName(G.x, G.y), cat: cat || "Документы" });
+  return true;
+}
+game.archiveAdd = archiveAdd;
+/* Сведения документа для архива: категория (у старых записей — по виду), место, глубина, кратко. */
+function docInfo(n) {
+  var nf = noteFull(n), cat = n.cat || (n.id && n.id.indexOf("mail:") === 0 ? "Переписка" : docCat(n.src, nf));
+  var dpt = LAB.depths ? LAB.depths.depthOf(n.L || 1) : 0, dname = LAB.depths ? LAB.depths.names[dpt] : "";
+  var mm = String(nf.x || "").match(/^[\s\S]*?[.!?…](\s|$)/), first = (mm ? mm[0] : String(nf.x || "")).trim();
+  if (first.length > 110) first = first.slice(0, 107).replace(/\s+\S*$/, "") + "…";
+  return { t: nf.t || n.t, a: nf.a || n.a || "", x: nf.x || "", cat: cat, depth: dpt, dname: dname, pl: n.pl || "", sum: first };
+}
+game.docInfo = docInfo;
 /* Загадка для замка или панели ОКО: из загадок блока, иначе из общих. */
 function riddleFor(rid, L) {
   L = L || G.L;
@@ -674,7 +712,7 @@ function giveItem(it, quiet) {
         G.notes[nid] = 1;
         /* ссылка на текст — само описание записки (без места на полу): по нему текст собирается заново */
         var src = JSON.parse(JSON.stringify(it)); delete src.x; delete src.y; delete src.kind;
-        G.noteList.push({ id: nid, src: src, t: nt.t, a: nt.a || "", story: !!nt.story, L: G.L, F: G.F, code: it.note === "safe" ? it.code : undefined });
+        G.noteList.push({ id: nid, src: src, t: nt.t, a: nt.a || "", story: !!nt.story, L: G.L, F: G.F, code: it.note === "safe" ? it.code : undefined, pl: placeName(G.x, G.y), cat: docCat(src, nt) });
         G.stats.notes++; gainXP(4);
       }
       if (it.code) G.codes[it.code] = it.room;
@@ -709,8 +747,8 @@ function autoPickup() {
   /* Записка открывается окном: мир ждёт, текст дочитывается до конца. */
   if (notes.length && S.autoRead && !(LAB.combat && LAB.combat.danger())) {
     var nt = noteText(notes[0]);
-    UIx("note", "«" + nt.t + "»", (nt.a ? nt.a + ". " : "") + nt.x + (notes.length > 1 ? " Остальные записки — в инвентаре, раздел «Записки»." : ""), null, { queue: true });
-  } else if (notes.length) sayq("Прочитать записку — инвентарь, раздел «Записки».");
+    UIx("note", "«" + nt.t + "»", (nt.a ? nt.a + ". " : "") + nt.x + (notes.length > 1 ? " Остальные записки — в инвентаре, «Архив документов»." : ""), null, { queue: true });
+  } else if (notes.length) sayq("Прочитать записку — инвентарь, «Архив документов».");
   checkQuests();
   UIx("refresh");
   autosaveSoon();
@@ -1258,7 +1296,7 @@ function doorMenu(d, dir) {
         if (lk && lk.type === "code") codeEntry(d);
       }
     } });
-    /* Код игрок набирает сам: прочитать его можно в записке (инвентарь, «Записки»). */
+    /* Код игрок набирает сам: прочитать его можно в записке (инвентарь, «Архив документов»). */
     if (okoLockLeft(d) > 0) items.push({ label: "Взломать аварийную блокировку ОКО (повторите сигналы)", fn: function () {
       UIx("closeAll");
       LAB.mini.hack(hackLength(2 + Math.floor(Math.min(G.L, 20) / 5)), function (ok) {
@@ -1876,6 +1914,7 @@ function terminalLogs(o) {
   if (sec && LAB.hash32(o.id) % 2 === 0) t.push("Заявка на ремонт: «В помещении " + CUR.fl.rooms[sec.room].name + " сквозит из стены. Проверить». Заявка не выполнена.");
   if (!t.length) { var sp = staffPool(); t.push(sp[LAB.hash32(o.id + key) % sp.length].x); }
   A("play", "term_beep");
+  archiveAdd("term:" + key + ":" + o.id, "Журналы терминала, уровень " + G.L + ", этаж " + G.F, t.join(" "), objName(o), "Журналы терминалов");
   UIx("note", "Журналы терминала", t.join(" "));
 }
 function rumor() {

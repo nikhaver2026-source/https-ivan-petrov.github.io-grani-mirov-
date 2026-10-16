@@ -852,8 +852,16 @@ function ok(cond, msg) { if (cond) console.log("  ✓ " + msg); else { fails++; 
     for (let i = 0; i < 8; i++) { C.tick(); hush(); } O.report("camera", G.x, G.y, "seen"); out.l3 = O.level();
     O.state().heat = 85;
     for (let i = 0; i < 8; i++) { C.tick(); hush(); } O.report("camera", G.x, G.y, "seen"); out.l4 = O.level();
-    for (let i = 0; i < 8; i++) { C.tick(); hush(); } O.report("camera", G.x, G.y, "seen"); out.l5 = O.level();
-    if (out.l5 !== 5) out.diag = "жар " + O.state().heat + ", комната " + g.CUR.fl.room[G.y * LAB.W + G.x] + ", блокировок " + (g.CUR.fs.sealUsed || 0) + ", глушилка " + G.st.jam + ", слепое " + !!g.CUR.fs.okoBlind + ", такт " + g.CUR.fs.okoT + ", пауза " + g.paused + ", сложность " + LAB.settings.difficulty + ", этаж " + g.CUR.key;
+    /* донесения чаще раза в три секунды ОКО склеивает: если между ними
+       пришло чужое подтверждение, ждём следующего свежего */
+    const seenWas = [];
+    for (let k = 0; k < 3 && O.level() !== 5; k++) {
+      for (let i = 0; i < 8; i++) { C.tick(); hush(); }
+      const sw = g.CUR.fs.sec.seen; seenWas.push(sw ? sw.src + "@" + sw.t + "/" + O.T() : "-");
+      O.report("camera", G.x, G.y, "seen");
+    }
+    out.l5 = O.level();
+    if (out.l5 !== 5 || seenWas.length > 1) out.diag = "жар " + O.state().heat + ", комната " + g.CUR.fl.room[G.y * LAB.W + G.x] + ", блокировок " + (g.CUR.fs.sealUsed || 0) + ", глушилка " + G.st.jam + ", слепое " + !!g.CUR.fs.okoBlind + ", такт " + g.CUR.fs.okoT + ", пауза " + g.paused + ", сложность " + LAB.settings.difficulty + ", этаж " + g.CUR.key + ", до донесений: " + seenWas.join(" ");
     out.sealed = Object.keys(g.CUR.fs.okoLock || {}).length;
     out.blocked = g.CUR.fl.doors.filter(d => g.okoLockLeft(d) > 0 && /Аварийная блокировка/.test(g.doorBlock(d))).length;
     /* носитель ушёл: машины этажа выбыли, отряды и дрон не вылетели */
@@ -958,9 +966,13 @@ function ok(cond, msg) { if (cond) console.log("  ✓ " + msg); else { fails++; 
     /* фланг: второй робот заходит с другой стороны */
     g.enterFloor(2, 7, "down", true); god();
     live().forEach(f => { f.dead = true; });
+    /* у лестницы бывает тесно: герой встаёт на ближайшую клетку, открытую на все четыре стороны */
+    const open4 = (x, y) => [[1, 0], [-1, 0], [0, 1], [0, -1]].every(v => g.passable(x + v[0], y + v[1]));
+    if (!open4(G.x, G.y)) { const x0 = G.x, y0 = G.y; seek: for (let r = 1; r < 14; r++) for (let dx = -r; dx <= r; dx++) for (let dy = -r; dy <= r; dy++) { const x = x0 + dx, y = y0 + dy; if (g.passable(x, y) && open4(x, y)) { G.x = x; G.y = y; break seek; } } }
     const h = { x: G.x, y: G.y }, free = [];
     for (let dx = -4; dx <= 4; dx++) for (let dy = -4; dy <= 4; dy++) { const x = h.x + dx, y = h.y + dy; if ((dx || dy) && g.passable(x, y)) free.push([x, y, Math.abs(dx) + Math.abs(dy)]); }
-    const adj = free.filter(c => c[2] === 1), far = free.filter(c => c[2] >= 3);
+    /* первый — вплотную, и так, чтобы за героем напротив него было куда встать (иначе фланг законно сбоку) */
+    const adj = free.filter(c => c[2] === 1 && g.passable(2 * h.x - c[0], 2 * h.y - c[1])), far = free.filter(c => c[2] >= 3);
     if (adj.length && far.length) {
       const a = C.spawnFoe("guardbot", adj[0][0], adj[0][1], {}), b = C.spawnFoe("guardbot", far[0][0], far[0][1], {});
       a.state = b.state = "hunt"; a.lastKnown = b.lastKnown = h;
@@ -1377,6 +1389,75 @@ LAB.ui.closeAll();
   ok(dep.fixer === true, "«Подножие»: ремонтный автомат принял носителя за неисправный узел — обесточивает");
   ok(dep.vibro === true && dep.heat === true, "«Колыбель»: твари чуют шаги по вибрации и тепло тела сквозь маскировку");
   ok(dep.blocker === true, "«Механизм»: привратник перекрывает выход, пока другой гонит носителя");
+
+  console.log("Архив документов: категории, глубины, авторы, первая буква, письма и документы компьютеров; финал помнит глубины");
+  const arc = await page.evaluate(async () => {
+    const g = LAB.game, D = LAB.depths, out = {};
+    const label = i => typeof i.label === "function" ? i.label() : i.label;
+    const pick = re => { const w = LAB.ui.top(); const k = w ? w.items.findIndex(i => re.test(label(i))) : -1; if (k < 0) return false; w.i = k; LAB.ui.activate(); return true; };
+    LAB.ui.closeAll();
+    g.enterFloor(12, 4, "down", true);
+    const n0 = g.G.noteList.length;
+    g.giveItem({ kind: "note", note: "depth", dk: "doc", dep: 1, id: "tdoc1" }, true);
+    g.giveItem({ kind: "note", note: "depth", dk: "memory", n: 2, id: "tmem1" }, true);
+    g.giveItem({ kind: "note", note: "staff", id: "tstaff1" }, true);
+    const added = g.G.noteList.slice(n0);
+    out.added = added.length;
+    out.meta = added.every(n => n.cat && typeof n.pl === "string" && n.L === 12);
+    out.docCat = g.docInfo(added[0]).cat;
+    out.memCat = g.docInfo(added[1]).cat;
+    out.sum = g.docInfo(added[0]).sum.length > 10;
+    /* письмо и документ компьютера — в архив */
+    let pc = null, pf = 0;
+    for (let F = 1; F <= 20 && !pc; F++) { const fl = LAB.getFloor(g.G.seed, 2, F); const o = fl.objs.find(q => q.type === "pc"); if (o) { pc = o; pf = F; } }
+    if (pc) {
+      g.enterFloor(2, pf, "down", true);
+      const d = LAB.office.pcData(pc), m0 = g.G.noteList.length;
+      if (d.mails && d.mails.length) LAB.office._openMail(pc, 0);
+      if (d.docs && d.docs.length) { LAB.ui.closeAll(); LAB.office._docList(pc); pick(/^«/); }
+      out.pcArchived = g.G.noteList.length > m0;
+      LAB.ui.closeAll();
+    }
+    /* окно архива: поиск по категории и глубине, первая буква, «прослушать снова» */
+    LAB.ui.closeAll(); LAB.ui.inventory();
+    out.inv = pick(/Архив документов/);
+    out.byCat = pick(/По категории/);
+    const cats = LAB.ui.top() ? LAB.ui.top().items.map(label) : [];
+    out.catHasMem = cats.some(l => /Фрагменты памяти комплекса/.test(l));
+    pick(/Фрагменты памяти комплекса/);
+    out.docOpen = pick(/«Фрагмент памяти комплекса»/) && !!LAB.ui.top() && !!LAB.ui.top().note;
+    LAB.ui.closeAll(); LAB.ui.inventory(); pick(/Архив документов/);
+    out.byDepth = pick(/По глубине/) && LAB.ui.top().items.some(i => /«Подножие»/.test(label(i)));
+    LAB.ui.closeAll(); LAB.ui.inventory(); pick(/Архив документов/);
+    out.byLetter = pick(/По первой букве/) && LAB.ui.top().items.some(i => /^на «/.test(label(i)));
+    LAB.ui.closeAll(); LAB.ui.inventory(); pick(/Архив документов/);
+    out.again = LAB.ui.top().items.some(i => /Прослушать снова/.test(label(i)));
+    LAB.ui.closeAll();
+    /* перекрёстные ссылки: приказ коменданта упоминает геодезиста Лыкова */
+    g.archiveAdd("tlink1", "Журнал геодезической съёмки, участок «Глубина»", "Отметки опор не сходятся с проектом.", "инженер-геодезист Лыков", "Технические журналы");
+    g.archiveAdd("tlink2", "Приказ по участку № 14", "Журналы геодезиста Лыкова изъять.", "комендант участка Сафронов", "Приказы");
+    LAB.ui.inventory(); pick(/Архив документов/); pick(/Все документы/); pick(/«Приказ по участку № 14»/);
+    const lw = LAB.ui.top();
+    out.link = !!lw && !!lw.note && lw.items.some(i => /^Связано: «Журнал геодезической съёмки/.test(label(i)));
+    out.linkOpen = pick(/^Связано: «Журнал геодезической/) && /^Журнал геодезической/.test(LAB.ui.top().title);
+    out.linkBack = pick(/^Связано: «Приказ по участку/) && /^Приказ по участку/.test(LAB.ui.top().title);
+    LAB.ui.closeAll();
+    /* финал помнит, как пройдены глубины */
+    const W = D.world();
+    W.vent = { t: 1 }; W.saved = 3; W.killed = 1; W.mirror = 2; W.synced = 1; W.nodes = 3; W.forced = 0;
+    const ep = D.epilogue();
+    out.epi = /Пять глубин помнят/.test(ep) && /выпущено живыми — 3/.test(ep) && /Исток узнал вас/.test(ep);
+    W.nodes = 1; W.forced = 3;
+    out.epiForced = /погашенные силой/.test(D.epilogue());
+    return out;
+  });
+  ok(arc.added === 3 && arc.meta && arc.sum, "архив: у каждого документа — категория, место находки, уровень и краткое описание");
+  ok(arc.memCat === "Фрагменты памяти комплекса" && !!arc.docCat, "архив: документы глубин со своими категориями (" + arc.docCat + ")");
+  ok(arc.pcArchived !== false, "архив: прочитанные письма и документы компьютеров попадают в архив");
+  ok(arc.inv && arc.byCat && arc.catHasMem && arc.docOpen, "архив: поиск по категории — документ открывается и звучит снова");
+  ok(arc.byDepth && arc.byLetter && arc.again, "архив: поиск по глубине и по первой букве; «прослушать снова»");
+  ok(arc.link && arc.linkOpen && arc.linkBack, "архив: перекрёстные ссылки — из приказа к журналу, чьего автора он упоминает, и обратно");
+  ok(arc.epi && arc.epiForced, "финал: страница о пяти глубинах собирается из решений игрока");
 
   console.log("Обход этажей одного зерна: вход, такты, осмотр");
   const tour = await page.evaluate(() => {

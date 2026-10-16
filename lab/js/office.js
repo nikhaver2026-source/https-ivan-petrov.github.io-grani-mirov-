@@ -281,7 +281,7 @@ function desk(o, first) {
     var unread = d.mails.filter(function (m, i) { return !st.read[i]; }).length;
     items.push({ label: "Почта: " + d.mails.length + " " + gm().plural(d.mails.length, "письмо", "письма", "писем") + (unread ? ", новых " + unread : ""), fn: function () { mailList(o); } });
     if (d.logs.length) items.push({ label: d.logTitle, fn: function () { readList(o, d.logTitle, d.logs); } });
-    if (d.docs.length) items.push({ label: "Документы: " + d.docs.length, fn: function () { UIx("note", d.docs[0].t, d.docs[0].x, function () { desk(o); }); } });
+    if (d.docs.length) items.push({ label: "Документы: " + d.docs.length, fn: function () { docList(o); } });
   }
   if (d.cams.length) items.push({ label: "Записи камер этажа", fn: function () { snd("pc_click"); UIx("note", "Запись камеры", "«Эхо» описывает запись: " + d.cams[0], function () { desk(o); }); } });
   items.push({ label: "Встать из-за стола", fn: function () { snd("chair_up", "bump_furniture"); say("Вы встаёте из-за стола."); } });
@@ -301,6 +301,7 @@ function mailList(o) {
 }
 function openMail(o, i) {
   var st = gm().objState(o), d = pcData(o), m = d.mails[i], g = G();
+  st.read = st.read || {};
   st.read[i] = 1;
   snd("pc_click");
   if (m.code) {
@@ -308,11 +309,25 @@ function openMail(o, i) {
     var nid = "mail:" + CUR().key + ":" + o.id + ":" + i;
     if (!g.notes[nid]) { g.notes[nid] = 1; g.noteList.push({ id: nid, t: "Письмо: " + m.s, x: m.x, a: m.f, L: g.L, F: g.F, code: m.safe ? m.code : undefined }); }
   }
+  /* каждое прочитанное письмо — в архив документов */
+  if (!m.code) gm().archiveAdd("mail:" + CUR().key + ":" + o.id + ":" + i, "Письмо: " + m.s, "От: " + m.f + ". Кому: " + (m.to || d.owner.split(",")[0]) + ". " + m.x, m.f, "Переписка");
   UIx("note", "Письмо: «" + m.s + "»", "От: " + m.f + ". Кому: " + (m.to || d.owner.split(",")[0]) + ". " + m.x + (m.code ? " Код записан в инвентарь: «Пропуска и ключи», «Известные коды». Набирать его — самому." : ""), function () { mailList(o); });
 }
+/* Документы компьютера: все, по одному; прочитанное — в архив. */
+function docList(o) {
+  var d = pcData(o);
+  snd("pc_click");
+  UIx("menu", "Документы: " + d.owner, d.docs.map(function (dc, i) {
+    return { label: "«" + dc.t + "»", fn: function () {
+      gm().archiveAdd("doc:" + CUR().key + ":" + o.id + ":" + i, dc.t, dc.x, (d.owner || "").split(",")[0], "Документы");
+      UIx("note", dc.t, dc.x, function () { docList(o); });
+    } };
+  }).concat([{ label: "Назад", fn: function () { desk(o); } }]));
+}
 function readList(o, title, list) {
+  gm().archiveAdd("log:" + CUR().key + ":" + o.id, title, list.join(" "), (pcData(o).owner || "").split(",")[0], "Журналы терминалов");
   UIx("note", title, list.join(" "), function () { desk(o); });
 }
 
-LAB.office = { pcMenu: pcMenu, drinkMenu: drinkMenu, snackMenu: snackMenu, SNACKS: SNACKS, pcData: pcData, DRINKS: DRINKS, clear: function () { poolCache = {}; } };
+LAB.office = { _openMail: function (o, i) { openMail(o, i); }, _docList: function (o) { docList(o); }, pcMenu: pcMenu, drinkMenu: drinkMenu, snackMenu: snackMenu, SNACKS: SNACKS, pcData: pcData, DRINKS: DRINKS, clear: function () { poolCache = {}; } };
 })();

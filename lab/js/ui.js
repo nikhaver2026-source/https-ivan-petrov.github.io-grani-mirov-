@@ -453,7 +453,7 @@ function inventory(focus) {
     { label: "Гранаты, пластины и устройства: " + cnt(gadgetIds()), fn: gadgetsMenu },
     { label: "Детали: " + cnt(LAB.PARTS), fn: partsMenu },
     { label: "Пропуска и ключи", fn: passesMenu },
-    { label: "Записки: " + g.noteList.length, fn: notesMenu },
+    { label: "Архив документов: " + g.noteList.length, fn: notesMenu },
     { label: "Задания: " + g.quests.filter(function (q) { return !q.done; }).length, fn: questsMenu },
     { label: "Журнал", fn: journalMenu },
     { label: "Импланты: " + g.implants.length + ", образцы: " + Object.keys(g.samples).length, fn: implants },
@@ -575,14 +575,70 @@ function passesMenu() {
   items.push(back());
   menu("Пропуска и ключи", items);
 }
-function notesMenu() {
-  var g = G();
-  var items = g.noteList.slice().reverse().map(function (n) {
-    return { label: "«" + n.t + "»" + (n.a ? ", " + n.a : "") + ", уровень " + n.L + ", этаж " + n.F, fn: function () { var nf = gm().noteFull(n); note(nf.t, (nf.a ? nf.a + ". " : "") + nf.x, notesMenu); } };
+/* ── АРХИВ ДОКУМЕНТОВ: всё найденное, с поиском ── */
+function docLabel(n, d) {
+  return "«" + d.t + "»" + (d.a ? ", " + d.a : "") + ". " + d.cat + ". " + (d.dname ? d.dname + ", " : "") + "уровень " + n.L + ", этаж " + n.F + (d.pl ? ", " + d.pl : "");
+}
+function openDoc(n, back) {
+  var d = gm().docInfo(n), links = docLinks(n, d);
+  G().lastDoc = n.id;
+  note(d.t, (d.a ? d.a.charAt(0).toUpperCase() + d.a.slice(1) + ". " : "") + d.x + (links.length ? " Связанных документов в архиве: " + links.length + "." : ""), back, {
+    extra: links.map(function (l) { return { label: "Связано: «" + l.d.t + "»" + (l.d.a ? ", " + l.d.a : ""), fn: function () { LAB.Speech.endNote(); openDoc(l.n, back); } }; })
   });
-  if (!items.length) items.push({ label: "Записок пока нет.", keep: true, fn: function () {} });
+}
+/* Перекрёстные ссылки: документы архива, чьих авторов упоминает этот,
+   и те, где упомянут его автор (по основе фамилии: «Лыков» — «Лыкова»). */
+function surStem(a) {
+  var w = String(a || "").trim().split(/\s+/).pop() || "";
+  if (!/^[А-ЯЁ][а-яё]{3,}$/.test(w)) return "";
+  return w.slice(0, Math.max(4, w.length - 2));
+}
+function mentions(text, stem) { return !!stem && new RegExp("(^|[^А-Яа-яЁё])" + stem).test(String(text || "")); }
+function docLinks(n, d) {
+  var my = surStem(d.a), out = [];
+  G().noteList.forEach(function (m) {
+    if (m === n || m.id === n.id || out.length >= 4) return;
+    var e = gm().docInfo(m), st = surStem(e.a);
+    if (st === my) return; /* того же автора ищут «по автору» */
+    if ((st && mentions(d.x, st)) || (my && mentions(e.x, my))) out.push({ n: m, d: e });
+  });
+  return out;
+}
+function docListMenu(title, list, back) {
+  var items = list.slice().reverse().map(function (n) {
+    var d = gm().docInfo(n);
+    return { label: docLabel(n, d), fn: function () { openDoc(n, function () { docListMenu(title, list, back); }); } };
+  });
+  if (!items.length) items.push({ label: "Документов нет.", keep: true, fn: function () {} });
+  items.push({ label: "Назад", fn: function () { (back || notesMenu)(); } });
+  menu(title + ": " + list.length, items);
+}
+/* Сгруппировать по признаку: глубина, категория, автор, первая буква. */
+function docGroups(title, keyOf) {
+  var g = G(), groups = {}, order = [];
+  g.noteList.forEach(function (n) {
+    var k = keyOf(n, gm().docInfo(n)) || "без пометки";
+    if (!groups[k]) { groups[k] = []; order.push(k); }
+    groups[k].push(n);
+  });
+  order.sort(function (a, b) { return a.localeCompare(b, "ru"); });
+  menu(title, order.map(function (k) {
+    return { label: k + ": " + groups[k].length, fn: function () { docListMenu(k, groups[k], function () { docGroups(title, keyOf); }); } };
+  }).concat([{ label: "Назад", fn: function () { notesMenu(); } }]));
+}
+function notesMenu() {
+  var g = G(), last = g.lastDoc && g.noteList.filter(function (n) { return n.id === g.lastDoc; })[0];
+  var items = [
+    { label: "Все документы, новые сверху: " + g.noteList.length, fn: function () { docListMenu("Все документы", g.noteList, notesMenu); } },
+    { label: "По глубине", fn: function () { docGroups("Документы по глубине", function (n, d) { return d.dname || "«Ковчег»"; }); } },
+    { label: "По категории", fn: function () { docGroups("Документы по категории", function (n, d) { return d.cat; }); } },
+    { label: "По автору", fn: function () { docGroups("Документы по автору", function (n, d) { return d.a ? d.a.split(",")[0] : "без подписи"; }); } },
+    { label: "По первой букве названия", fn: function () { docGroups("Документы по первой букве", function (n, d) { var c = String(d.t || "").replace(/^[«"„\s]+/, "").charAt(0).toUpperCase(); return c ? "на «" + c + "»" : ""; }); } }
+  ];
+  if (last) items.push({ label: "Прослушать снова: «" + gm().docInfo(last).t + "»", fn: function () { openDoc(last, notesMenu); } });
+  if (!g.noteList.length) items = [{ label: "Документов пока нет. Записки, письма и журналы, которые вы найдёте, попадут сюда.", keep: true, fn: function () {} }];
   items.push(back());
-  menu("Записки", items);
+  menu("Архив документов", items);
 }
 function questsMenu() {
   var g = G();
@@ -610,6 +666,7 @@ function note(title, text, after, opts) {
   parts.forEach(function (p) { if ((curp + p).length > 220 && curp) { paras.push(curp.trim()); curp = p; } else curp += p; });
   if (curp.trim()) paras.push(curp.trim());
   var items = paras.map(function (p) { return { label: p, keep: true, fn: function () { say(p); } }; });
+  if (opts.extra) items = items.concat(opts.extra);
   items.push({ label: "Закрыть", fn: function () { LAB.Speech.endNote(); if (after) after(); else if (!top() && screen === "game") say("Игра."); } });
   A("play", "paper");
   var w = menu(title, items, { silent: true });
@@ -694,7 +751,9 @@ function ending(win) {
   var g = G();
   var mins = Math.round((g.stats.ms + Date.now() - (gm().t0 || Date.now())) / 60000);
   var stats = "Итоги. В игре " + Math.floor(mins / 60) + " ч " + (mins % 60) + " мин. Уровень героя " + g.lvl + ". Побеждено врагов " + g.stats.kills + ". Тайников " + g.stats.secrets + ". Записок " + g.stats.notes + ". Образцов " + Object.keys(g.samples).length + ". Гибелей " + g.stats.deaths + ". Сложность: " + LAB.DIFF[S.difficulty || 1].n.toLowerCase() + ".";
-  var pages = LAB.ENDING.concat([stats, LAB.CREDITS_TEXT || "Конец. Спасибо, что слушали."]);
+  /* как вы прошли пять глубин — страница перед итогами */
+  var epi = LAB.depths && LAB.depths.epilogue ? LAB.depths.epilogue() : "";
+  var pages = LAB.ENDING.concat(epi ? [epi] : [], [stats, LAB.CREDITS_TEXT || "Конец. Спасибо, что слушали."]);
   showPage(pages, 0, {
     title: "Финал", skip: false,
     hint: LAB.K("Свайп вправо — дальше, влево — назад.", "Стрелка вправо или Enter — дальше, влево — назад."),
