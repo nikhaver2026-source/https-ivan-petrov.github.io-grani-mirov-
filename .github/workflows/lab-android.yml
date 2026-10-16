@@ -154,6 +154,22 @@ jobs:
           sudo udevadm control --reload-rules
           sudo udevadm trigger --name-match=kvm
 
+      # Эмулятор и образы Android скачиваются заранее, с повтором: архив с
+      # серверов Google иногда приходит битым, и без повтора сборка падает,
+      # не дойдя до проверки игры.
+      - name: Эмулятор и образы Android 9 и 15 — скачать
+        run: |
+          SDKM="$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager"
+          for i in 1 2 3 4; do
+            if "$SDKM" --install emulator --channel=0 \
+                 "system-images;android-28;google_apis;x86_64" \
+                 "system-images;android-35;google_apis;x86_64" > "$RUNNER_TEMP/sdk.log" 2>&1; then
+              echo "скачано с попытки $i"; break
+            fi
+            tail -3 "$RUNNER_TEMP/sdk.log"; echo "попытка $i не удалась"; sleep $((i * 15))
+          done
+          "$ANDROID_HOME/emulator/emulator" -version | head -1
+
       - name: Установка и самопроверка на Android 9
         uses: reactivecircus/android-emulator-runner@v2
         with:
