@@ -247,35 +247,152 @@
 # «Подземная лаборатория», заход F: музыка, которую слышно и на динамике
 # телефона (прежние треки — гул ниже 400 Гц). Кевин Маклауд (incompetech.com),
 # CC BY 3.0 и CC BY 4.0 — лицензии и авторство по страницам Wikimedia Commons.
-lab_km_scp1 https://upload.wikimedia.org/wikipedia/commons/0/0c/Scp_x1x_%28Gateway_to_Hell%29_by_Kevin_MacLeod.ogg
-lab_km_scp2 https://upload.wikimedia.org/wikipedia/commons/e/ec/Spc_X2x_%28Unseen_Presence%29_by_Kevin_MacLeod.ogg
-lab_km_scp3 https://upload.wikimedia.org/wikipedia/commons/2/21/Scp_X3x_%28I_Am_Not_OK%29_by_Kevin_MacLeod.ogg
-lab_km_scp4 https://upload.wikimedia.org/wikipedia/commons/9/98/SCP-x4x_%28Mind_Leech%29_by_Kevin_MacLeod.ogg
-lab_km_scp5 https://upload.wikimedia.org/wikipedia/commons/4/4e/SCP-x5x_%28Outer_Thoughts%29_by_Kevin_MacLeod.ogg
-lab_km_scp6 https://upload.wikimedia.org/wikipedia/commons/6/61/SCP-x6x_%28Hopes%29_by_Kevin_MacLeod.ogg
-lab_km_scp7 https://upload.wikimedia.org/wikipedia/commons/7/7e/SCP-x7x_%286th_Floor%29_by_Kevin_MacLeod.ogg
-lab_km_shadow1 https://upload.wikimedia.org/wikipedia/commons/0/0b/Shadowlands_1_-_Horizon_%28ISRC_USUAN1700034%29.mp3
-lab_km_shadow2 https://upload.wikimedia.org/wikipedia/commons/d/d6/Shadowlands_2_-_Bridge_%28ISRC_USUAN1700035%29.mp3
-lab_km_shadow3 https://upload.wikimedia.org/wikipedia/commons/c/cc/Shadowlands_3_-_Machine_%28ISRC_USUAN1700036%29.mp3
-lab_km_shadow4 https://upload.wikimedia.org/wikipedia/commons/8/81/Shadowlands_4_-_Breath_%28ISRC_USUAN1700037%29.mp3
-lab_km_shadow5 https://upload.wikimedia.org/wikipedia/commons/0/07/Shadowlands_5_-_Antechamber_%28ISRC_USUAN1700038%29.mp3
-lab_km_shadow6 https://upload.wikimedia.org/wikipedia/commons/b/b5/Shadowlands_6_-_The_Pit_%28ISRC_USUAN1700039%29.mp3
-lab_km_shadow7 https://upload.wikimedia.org/wikipedia/commons/2/2e/Shadowlands_7_-_Codex_%28ISRC_USUAN1700040%29.mp3
-lab_km_static https://upload.wikimedia.org/wikipedia/commons/d/d9/Static_Motion_%28ISRC_USUAN1200062%29.mp3
-lab_km_echoes https://upload.wikimedia.org/wikipedia/commons/a/a8/Echoes_of_Time_v2_%28ISRC_USUAN1300030%29.mp3
-lab_km_spacial https://upload.wikimedia.org/wikipedia/commons/e/e0/Spacial_Winds_%28ISRC_USUAN1100203%29.mp3
-lab_km_hive https://upload.wikimedia.org/wikipedia/commons/5/5e/The_Hive_%28ISRC_USUAN1100711%29.mp3
-lab_km_distant https://upload.wikimedia.org/wikipedia/commons/c/c5/Distant_Tension_%28ISRC_USUAN1100257%29.mp3
-lab_km_unrelenting https://upload.wikimedia.org/wikipedia/commons/9/9c/Unrelenting_%28ISRC_USUAN1100029%29.mp3
-lab_km_gloom https://upload.wikimedia.org/wikipedia/commons/f/f8/Gloom_Horizon_%28ISRC_USUAN1100813%29.mp3
-lab_km_sanctum https://upload.wikimedia.org/wikipedia/commons/9/91/Inner_Sanctum_%28ISRC_USUAN1100196%29.mp3
-lab_km_celeste https://upload.wikimedia.org/wikipedia/commons/6/62/Mary_Celeste_%28ISRC_USUAN1500016%29.mp3
-lab_km_icedemon https://upload.wikimedia.org/wikipedia/commons/0/01/Ice_Demon_%28ISRC_USUAN1200061%29.mp3
-lab_km_metaphysik https://upload.wikimedia.org/wikipedia/commons/d/d6/Metaphysik_%28ISRC_USUAN1400056%29.mp3
-lab_km_penumbra https://upload.wikimedia.org/wikipedia/commons/a/a5/Penumbra_%28ISRC_USUAN1200105%29.mp3
-lab_km_nightbreak https://upload.wikimedia.org/wikipedia/commons/d/d4/Night_Break_%28ISRC_USUAN1100380%29.mp3
-lab_km_chaosnp https://upload.wikimedia.org/wikipedia/commons/a/a4/Controlled_Chaos_-_no_percussion_%28ISRC_USUAN1200060%29.mp3
-lab_km_lazarus https://upload.wikimedia.org/wikipedia/commons/4/40/Return_of_Lazarus_%28ISRC_USUAN1200090%29.mp3
-lab_km_gathering https://upload.wikimedia.org/wikipedia/commons/c/cf/Gathering_Darkness_%28ISRC_USUAN1100849%29.mp3
-lab_km_beast https://upload.wikimedia.org/wikipedia/commons/b/bd/Heart_of_the_Beast_%28ISRC_USUAN1100209%29.mp3
-lab_km_thunder https://upload.wikimedia.org/wikipedia/commons/1/1e/Thunder_Dreams_%28ISRC_USUAN1200063%29.mp3
+# (заход F скачан) lab_km_scp1 https://upload.wikimedia.org/wikipedia/commons/0/0c/Scp_x1x_%28Gateway_to_Hell%29_by_Kevin_MacLeod.ogg
+# (заход F скачан) lab_km_scp2 https://upload.wikimedia.org/wikipedia/commons/e/ec/Spc_X2x_%28Unseen_Presence%29_by_Kevin_MacLeod.ogg
+# (заход F скачан) lab_km_scp3 https://upload.wikimedia.org/wikipedia/commons/2/21/Scp_X3x_%28I_Am_Not_OK%29_by_Kevin_MacLeod.ogg
+# (заход F скачан) lab_km_scp4 https://upload.wikimedia.org/wikipedia/commons/9/98/SCP-x4x_%28Mind_Leech%29_by_Kevin_MacLeod.ogg
+# (заход F скачан) lab_km_scp5 https://upload.wikimedia.org/wikipedia/commons/4/4e/SCP-x5x_%28Outer_Thoughts%29_by_Kevin_MacLeod.ogg
+# (заход F скачан) lab_km_scp6 https://upload.wikimedia.org/wikipedia/commons/6/61/SCP-x6x_%28Hopes%29_by_Kevin_MacLeod.ogg
+# (заход F скачан) lab_km_scp7 https://upload.wikimedia.org/wikipedia/commons/7/7e/SCP-x7x_%286th_Floor%29_by_Kevin_MacLeod.ogg
+# (заход F скачан) lab_km_shadow1 https://upload.wikimedia.org/wikipedia/commons/0/0b/Shadowlands_1_-_Horizon_%28ISRC_USUAN1700034%29.mp3
+# (заход F скачан) lab_km_shadow2 https://upload.wikimedia.org/wikipedia/commons/d/d6/Shadowlands_2_-_Bridge_%28ISRC_USUAN1700035%29.mp3
+# (заход F скачан) lab_km_shadow3 https://upload.wikimedia.org/wikipedia/commons/c/cc/Shadowlands_3_-_Machine_%28ISRC_USUAN1700036%29.mp3
+# (заход F скачан) lab_km_shadow4 https://upload.wikimedia.org/wikipedia/commons/8/81/Shadowlands_4_-_Breath_%28ISRC_USUAN1700037%29.mp3
+# (заход F скачан) lab_km_shadow5 https://upload.wikimedia.org/wikipedia/commons/0/07/Shadowlands_5_-_Antechamber_%28ISRC_USUAN1700038%29.mp3
+# (заход F скачан) lab_km_shadow6 https://upload.wikimedia.org/wikipedia/commons/b/b5/Shadowlands_6_-_The_Pit_%28ISRC_USUAN1700039%29.mp3
+# (заход F скачан) lab_km_shadow7 https://upload.wikimedia.org/wikipedia/commons/2/2e/Shadowlands_7_-_Codex_%28ISRC_USUAN1700040%29.mp3
+# (заход F скачан) lab_km_static https://upload.wikimedia.org/wikipedia/commons/d/d9/Static_Motion_%28ISRC_USUAN1200062%29.mp3
+# (заход F скачан) lab_km_echoes https://upload.wikimedia.org/wikipedia/commons/a/a8/Echoes_of_Time_v2_%28ISRC_USUAN1300030%29.mp3
+# (заход F скачан) lab_km_spacial https://upload.wikimedia.org/wikipedia/commons/e/e0/Spacial_Winds_%28ISRC_USUAN1100203%29.mp3
+# (заход F скачан) lab_km_hive https://upload.wikimedia.org/wikipedia/commons/5/5e/The_Hive_%28ISRC_USUAN1100711%29.mp3
+# (заход F скачан) lab_km_distant https://upload.wikimedia.org/wikipedia/commons/c/c5/Distant_Tension_%28ISRC_USUAN1100257%29.mp3
+# (заход F скачан) lab_km_unrelenting https://upload.wikimedia.org/wikipedia/commons/9/9c/Unrelenting_%28ISRC_USUAN1100029%29.mp3
+# (заход F скачан) lab_km_gloom https://upload.wikimedia.org/wikipedia/commons/f/f8/Gloom_Horizon_%28ISRC_USUAN1100813%29.mp3
+# (заход F скачан) lab_km_sanctum https://upload.wikimedia.org/wikipedia/commons/9/91/Inner_Sanctum_%28ISRC_USUAN1100196%29.mp3
+# (заход F скачан) lab_km_celeste https://upload.wikimedia.org/wikipedia/commons/6/62/Mary_Celeste_%28ISRC_USUAN1500016%29.mp3
+# (заход F скачан) lab_km_icedemon https://upload.wikimedia.org/wikipedia/commons/0/01/Ice_Demon_%28ISRC_USUAN1200061%29.mp3
+# (заход F скачан) lab_km_metaphysik https://upload.wikimedia.org/wikipedia/commons/d/d6/Metaphysik_%28ISRC_USUAN1400056%29.mp3
+# (заход F скачан) lab_km_penumbra https://upload.wikimedia.org/wikipedia/commons/a/a5/Penumbra_%28ISRC_USUAN1200105%29.mp3
+# (заход F скачан) lab_km_nightbreak https://upload.wikimedia.org/wikipedia/commons/d/d4/Night_Break_%28ISRC_USUAN1100380%29.mp3
+# (заход F скачан) lab_km_chaosnp https://upload.wikimedia.org/wikipedia/commons/a/a4/Controlled_Chaos_-_no_percussion_%28ISRC_USUAN1200060%29.mp3
+# (заход F скачан) lab_km_lazarus https://upload.wikimedia.org/wikipedia/commons/4/40/Return_of_Lazarus_%28ISRC_USUAN1200090%29.mp3
+# (заход F скачан) lab_km_gathering https://upload.wikimedia.org/wikipedia/commons/c/cf/Gathering_Darkness_%28ISRC_USUAN1100849%29.mp3
+# (заход F скачан) lab_km_beast https://upload.wikimedia.org/wikipedia/commons/b/bd/Heart_of_the_Beast_%28ISRC_USUAN1100209%29.mp3
+# (заход F скачан) lab_km_thunder https://upload.wikimedia.org/wikipedia/commons/1/1e/Thunder_Dreams_%28ISRC_USUAN1200063%29.mp3
+# «Подземная лаборатория», заход G: мощное оружие и яркий пол (Freesound, CC0 и CC BY):
+# дубинка-шокер и треск разрядов, бластеры от лёгкого до тяжёлого, пушки, лазеры,
+# ионное, плазма, магнетрон, позитрон, гаусс, крио, огнемёт, низкие удары, яркие
+# металлические шаги, удары о стену, турели, камеры, сирены, сигналы громкой связи,
+# перезарядка. Авторы, названия и лицензии — в fs_lab.tsv.
+lab_fsG https://cdn.freesound.org/previews/136/136542_1206321-hq.ogg
+lab_fsG https://cdn.freesound.org/previews/160/160421_2643065-hq.ogg
+lab_fsG https://cdn.freesound.org/previews/30/30933_15696-hq.ogg
+lab_fsG https://cdn.freesound.org/previews/403/403252_7809148-hq.ogg
+lab_fsG https://cdn.freesound.org/previews/19/19487_6281-hq.ogg
+lab_fsG https://cdn.freesound.org/previews/315/315918_4557960-hq.ogg
+lab_fsG https://cdn.freesound.org/previews/466/466867_8430571-hq.ogg
+lab_fsG https://cdn.freesound.org/previews/77/77087_1023453-hq.ogg
+lab_fsG https://cdn.freesound.org/previews/317/317136_4745081-hq.ogg
+lab_fsG https://cdn.freesound.org/previews/466/466834_8430571-hq.ogg
+lab_fsG https://cdn.freesound.org/previews/257/257232_2836758-hq.ogg
+lab_fsG https://cdn.freesound.org/previews/214/214990_2737063-hq.ogg
+lab_fsG https://cdn.freesound.org/previews/423/423214_3577171-hq.ogg
+lab_fsG https://cdn.freesound.org/previews/39/39023_54676-hq.ogg
+lab_fsG https://cdn.freesound.org/previews/620/620848_9047165-hq.ogg
+lab_fsG https://cdn.freesound.org/previews/531/531861_7542558-hq.ogg
+lab_fsG https://cdn.freesound.org/previews/378/378185_932959-hq.ogg
+lab_fsG https://cdn.freesound.org/previews/420/420687_5523662-hq.ogg
+lab_fsG https://cdn.freesound.org/previews/160/160880_2220466-hq.ogg
+lab_fsG https://cdn.freesound.org/previews/500/500546_1766049-hq.ogg
+lab_fsG https://cdn.freesound.org/previews/567/567308_7705347-hq.ogg
+lab_fsG https://cdn.freesound.org/previews/807/807665_17304967-hq.ogg
+lab_fsG https://cdn.freesound.org/previews/104/104397_1752241-hq.ogg
+lab_fsG https://cdn.freesound.org/previews/39/39020_54676-hq.ogg
+lab_fsG https://cdn.freesound.org/previews/376/376694_150886-hq.ogg
+lab_fsG https://cdn.freesound.org/previews/152/152322_1941307-hq.ogg
+lab_fsG https://cdn.freesound.org/previews/127/127847_1931452-hq.ogg
+lab_fsG https://cdn.freesound.org/previews/196/196914_3660887-hq.ogg
+lab_fsG https://cdn.freesound.org/previews/41/41525_108319-hq.ogg
+lab_fsG https://cdn.freesound.org/previews/234/234083_827509-hq.ogg
+lab_fsG https://cdn.freesound.org/previews/110/110564_1605388-hq.ogg
+lab_fsG https://cdn.freesound.org/previews/108/108859_1631474-hq.ogg
+lab_fsG https://cdn.freesound.org/previews/814/814049_71257-hq.ogg
+lab_fsG https://cdn.freesound.org/previews/673/673556_7395592-hq.ogg
+lab_fsG https://cdn.freesound.org/previews/450/450768_8231265-hq.ogg
+lab_fsG https://cdn.freesound.org/previews/569/569901_7705347-hq.ogg
+lab_fsG https://cdn.freesound.org/previews/15/15350_33253-hq.ogg
+lab_fsG https://cdn.freesound.org/previews/251/251431_3971441-hq.ogg
+lab_fsG https://cdn.freesound.org/previews/175/175267_3261532-hq.ogg
+lab_fsG https://cdn.freesound.org/previews/323/323137_57789-hq.ogg
+lab_fsG https://cdn.freesound.org/previews/209/209860_1038806-hq.ogg
+lab_fsG https://cdn.freesound.org/previews/330/330629_3594951-hq.ogg
+lab_fsG https://cdn.freesound.org/previews/66/66091_902303-hq.ogg
+lab_fsG https://cdn.freesound.org/previews/121/121942_2015227-hq.ogg
+lab_fsG https://cdn.freesound.org/previews/75/75329_339378-hq.ogg
+lab_fsG https://cdn.freesound.org/previews/814/814053_71257-hq.ogg
+lab_fsG https://cdn.freesound.org/previews/814/814047_71257-hq.ogg
+lab_fsG https://cdn.freesound.org/previews/518/518739_2492921-hq.ogg
+lab_fsG https://cdn.freesound.org/previews/557/557515_5828667-hq.ogg
+lab_fsG https://cdn.freesound.org/previews/843/843729_4369435-hq.ogg
+lab_fsG https://cdn.freesound.org/previews/767/767161_16544389-hq.ogg
+lab_fsG https://cdn.freesound.org/previews/452/452645_612689-hq.ogg
+lab_fsG https://cdn.freesound.org/previews/396/396447_123355-hq.ogg
+lab_fsG https://cdn.freesound.org/previews/685/685253_5175373-hq.ogg
+lab_fsG https://cdn.freesound.org/previews/550/550267_10912485-hq.ogg
+lab_fsG https://cdn.freesound.org/previews/174/174436_3034894-hq.ogg
+lab_fsG https://cdn.freesound.org/previews/353/353099_2462-hq.ogg
+lab_fsG https://cdn.freesound.org/previews/260/260554_3968707-hq.ogg
+lab_fsG https://cdn.freesound.org/previews/459/459884_6142149-hq.ogg
+lab_fsG https://cdn.freesound.org/previews/472/472688_7395592-hq.ogg
+lab_fsG https://cdn.freesound.org/previews/481/481084_6362703-hq.ogg
+lab_fsG https://cdn.freesound.org/previews/177/177242_3277771-hq.ogg
+lab_fsG https://cdn.freesound.org/previews/222/222517_71257-hq.ogg
+lab_fsG https://cdn.freesound.org/previews/241/241944_4409240-hq.ogg
+lab_fsG https://cdn.freesound.org/previews/166/166515_1799601-hq.ogg
+lab_fsG https://cdn.freesound.org/previews/553/553418_10912485-hq.ogg
+lab_fsG https://cdn.freesound.org/previews/512/512471_7372230-hq.ogg
+lab_fsG https://cdn.freesound.org/previews/398/398274_2351866-hq.ogg
+lab_fsG https://cdn.freesound.org/previews/187/187363_1675920-hq.ogg
+lab_fsG https://cdn.freesound.org/previews/556/556717_5620304-hq.ogg
+lab_fsG https://cdn.freesound.org/previews/582/582631_5965684-hq.ogg
+lab_fsG https://cdn.freesound.org/previews/47/47125_383523-hq.ogg
+lab_fsG https://cdn.freesound.org/previews/557/557194_6737463-hq.ogg
+lab_fsG https://cdn.freesound.org/previews/475/475135_2927958-hq.ogg
+lab_fsG https://cdn.freesound.org/previews/96/96137_1554918-hq.ogg
+lab_fsG https://cdn.freesound.org/previews/62/62925_6479-hq.ogg
+lab_fsG https://cdn.freesound.org/previews/421/421094_5701973-hq.ogg
+lab_fsG https://cdn.freesound.org/previews/208/208101_2943165-hq.ogg
+lab_fsG https://cdn.freesound.org/previews/144/144103_16776-hq.ogg
+lab_fsG https://cdn.freesound.org/previews/215/215308_4027076-hq.ogg
+lab_fsG https://cdn.freesound.org/previews/194/194978_1160789-hq.ogg
+lab_fsG https://cdn.freesound.org/previews/462/462598_670687-hq.ogg
+lab_fsG https://cdn.freesound.org/previews/384/384656_5937039-hq.ogg
+lab_fsG https://cdn.freesound.org/previews/209/209772_2012390-hq.ogg
+lab_fsG https://cdn.freesound.org/previews/334/334679_2792951-hq.ogg
+lab_fsG https://cdn.freesound.org/previews/334/334680_2792951-hq.ogg
+lab_fsG https://cdn.freesound.org/previews/330/330799_3908308-hq.ogg
+lab_fsG https://cdn.freesound.org/previews/42/42729_454894-hq.ogg
+lab_fsG https://cdn.freesound.org/previews/189/189327_3524188-hq.ogg
+lab_fsG https://cdn.freesound.org/previews/418/418881_6616210-hq.ogg
+lab_fsG https://cdn.freesound.org/previews/505/505407_9159316-hq.ogg
+lab_fsG https://cdn.freesound.org/previews/572/572393_7341217-hq.ogg
+lab_fsG https://cdn.freesound.org/previews/321/321215_5436764-hq.ogg
+lab_fsG https://cdn.freesound.org/previews/202/202530_3770352-hq.ogg
+lab_fsG https://cdn.freesound.org/previews/196/196979_2747497-hq.ogg
+lab_fsG https://cdn.freesound.org/previews/264/264592_2884593-hq.ogg
+lab_fsG https://cdn.freesound.org/previews/18/18726_36188-hq.ogg
+lab_fsG https://cdn.freesound.org/previews/18/18725_36188-hq.ogg
+lab_fsG https://cdn.freesound.org/previews/54/54047_533680-hq.ogg
+lab_fsG https://cdn.freesound.org/previews/420/420661_2247456-hq.ogg
+lab_fsG https://cdn.freesound.org/previews/32/32088_114160-hq.ogg
+lab_fsG https://cdn.freesound.org/previews/407/407240_7237186-hq.ogg
+lab_fsG https://cdn.freesound.org/previews/263/263621_2906614-hq.ogg
+lab_fsG https://cdn.freesound.org/previews/670/670297_2247456-hq.ogg
+lab_fsG https://cdn.freesound.org/previews/244/244583_3212048-hq.ogg
+lab_fsG https://cdn.freesound.org/previews/238/238428_1088850-hq.ogg
+lab_fsG https://cdn.freesound.org/previews/493/493698_470543-hq.ogg
+lab_fsG https://cdn.freesound.org/previews/645/645778_3371712-hq.ogg
+lab_fsG https://cdn.freesound.org/previews/196/196907_3660887-hq.ogg
+lab_fsG https://cdn.freesound.org/previews/213/213607_3660887-hq.ogg
+lab_fsG https://cdn.freesound.org/previews/39/39627_99469-hq.ogg
+lab_fsG https://cdn.freesound.org/previews/679/679546_14263543-hq.ogg

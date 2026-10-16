@@ -1,4 +1,4 @@
-# id	user	author	title	group
+# id	user	author	title	group	license (пусто — CC0)
 562195	12618935	gristi	snd_footsteps_metal_floor_inside	floor
 253735	2276808	Kodack	Wet Metal Footsteps	floor
 698697	9616576	IENBA	Footsteps on Metal	floor
@@ -234,3 +234,115 @@
 210430	71257	qubodup	Walking Up Stairs	stairs
 365412	179538	RutgerMuller	Japan_Matsudo_Hotel_Stairwell_Footsteps	stairs
 383661	7146007	deleted_user_7146007	Footsteps Walking Down Stairs	stairs
+136542	1206321	JoelAudio	ELECTRIC_ZAP_001.wav	g_baton	
+160421	2643065	BigKahuna360	Electrical Shock (Zap).wav	g_baton	
+30933	15696	aust_paul	electrocute.wav	g_baton	
+403252	7809148	The_Chemical_Workshop	Taser/High Voltage discharge	g_baton	
+19487	6281	Halleck	JacobsLadderSingle2.flac	g_baton	CC BY 4.0
+315918	4557960	bevibeldesign	electric zap.aiff	g_baton	CC BY 4.0
+466867	8430571	MikeE63	blaster shot single 5.wav	g_blaster_light	
+77087	1023453	Defunct3	Laser short.wav	g_blaster_light	
+317136	4745081	Bird_man	Sci Fi Gun Shot.wav	g_blaster_light	
+466834	8430571	MikeE63	enhanced blaster.wav	g_blaster_light	
+257232	2836758	JavierZumer	retro shot blaster	g_blaster_light	CC BY 4.0
+214990	2737063	peridactyloptrix	Laser blast x3	g_blaster_pulse	
+423214	3577171	gerainsan	SCI-FI Weapon Burs (Dry).wav	g_blaster_pulse	
+39023	54676	wildweasel	Dual Neutron Disruptor.wav	g_blaster_pulse	CC BY 4.0
+620848	9047165	nlux	Ray Gun A-13-A	g_blaster_pulse	CC BY 4.0
+531861	7542558	SuperPhat	ScifiHeavyBlasterShot.wav	g_blaster_heavy	
+378185	932959	nioczkus	LAPD 2049 PKD Blaster (Blade Runner)	g_blaster_heavy	
+420687	5523662	Aris621	Blade Runner Blaster Sound.wav	g_blaster_heavy	CC BY 4.0
+160880	2220466	deleted_user_2220466	BFG Laser	g_cannon	
+500546	1766049	waxsocks	Heavy Laser Cannon.wav	g_cannon	
+567308	7705347	BigDino1995	PlasmaCannon.wav	g_cannon	
+807665	17304967	Snoops_Audio1	08 - Weaponry - Ultra-Heavy Cannon B	g_cannon	
+104397	1752241	kantouth	Dark Energy_exp.wav	g_cannon	CC BY 4.0
+39020	54676	wildweasel	DSRXPLOD.WAV	g_cannon	CC BY 4.0
+376694	150886	Daleonfire	Laser	g_laser	
+152322	1941307	deleted_user_1941307	heavy beam weapon	g_laser	
+127847	1931452	GaryQ	Jelly Beam.wav	g_laser	
+196914	3660887	Dpoggioli	Laser Gun	g_laser	CC BY 4.0
+41525	108319	Jamius	BigLaser.wav	g_laser	CC BY 4.0
+234083	827509	211redman112	Lasgun fire	g_laser	CC BY 4.0
+110564	1605388	2887679652	EMP Blast.wav	g_ion	
+108859	1631474	FireSail_Labs	Electro_Static.mp3	g_ion	
+814049	71257	qubodup	Ion Cannon	g_ion	
+673556	7395592	SilverIllusionist	Energy Pulse 3	g_ion	CC BY 4.0
+450768	8231265	Tycoh	plasmapistol_shot.wav	g_plasma	
+569901	7705347	BigDino1995	PlasmaBlaster.wav	g_plasma	
+15350	33253	Ch0cchi	PLASMA RIFLE ROUND.wav	g_plasma	CC BY 3.0
+251431	3971441	OnlyTheGhosts	fusion-gun_flash0_by_OnlyTheGhosts.wav	g_plasma	CC BY 4.0
+175267	3261532	jonccox	Gun_Plasma.wav	g_plasma	CC BY 3.0
+323137	57789	cognito perceptu	Atari style vibration 1.wav	g_magnetron	
+209860	1038806	unfa	Energy Field Loop 4	g_magnetron	
+330629	3594951	StormwaveAudio	Sci-Fi Force Field Impact 15.wav	g_magnetron	CC BY 4.0
+66091	902303	Calmarius	shieldgenerator.wav	g_magnetron	CC BY 4.0
+121942	2015227	Klerrp	implosion_near.WAV	g_positron	
+75329	339378	Oddworld	oddworld_ReverseBang.wav	g_positron	
+814053	71257	qubodup	Shockwave	g_positron	
+814047	71257	qubodup	Fantasy Implosion	g_positron	
+518739	2492921	Teh_Bucket	Electric Charge + Shot	g_gauss	CC BY 3.0
+557515	5828667	newlocknew	Sci-fi rifle weapon shot. With charging sweep_3 (23lrs,mltprcssng).wav	g_gauss	CC BY 4.0
+843729	4369435	TannerSound	Scifi Laser Gun Shooting	g_gauss	CC BY 4.0
+767161	16544389	Sabacky	SciFi Futuristic Rail Gun Shot	g_gauss	CC BY 4.0
+452645	612689	kyles	ice grinding cracking freezing designed.wav	g_cryo	
+396447	123355	hz37	Freezing HZA	g_cryo	
+685253	5175373	antonsoederberg	Freeze sound effect FX	g_cryo	
+550267	10912485	EminYILDIRIM	Magic Ice Impact Skill Spell	g_cryo	CC BY 4.0
+174436	3034894	DrMinky	Laser Gun Ice Beam	g_cryo	CC BY 4.0
+353099	2462	urupin	Steam hisses	g_cryo	CC BY 4.0
+260554	3968707	LookIMadeAThing	Basic Fire whoosh	g_thermo	
+459884	6142149	LilMati	Flamethrower	g_thermo	
+472688	7395592	SilverIllusionist	Fire Burst.wav	g_thermo	CC BY 4.0
+481084	6362703	GreenFireSound	Flamеthrower.wav	g_thermo	CC BY 3.0
+177242	3277771	deleted_user_3277771	Cinematic Impact	g_subboom	
+222517	71257	qubodup	Dramatic Hit	g_subboom	
+241944	4409240	draganov89	Cinematic impact 01.wav	g_subboom	CC BY 4.0
+166515	1799601	StephenSaldanha	SRS_Cinematic_Hit	g_subboom	CC BY 4.0
+553418	10912485	EminYILDIRIM	Cinematic Boom Impact Hit 2021	g_subboom	CC BY 4.0
+512471	7372230	michael_grinnell	Electric zap.wav	g_crackle	
+398274	2351866	FlashTrauma	Electricity	g_crackle	
+187363	1675920	ihitokage	Electricity crackling	g_crackle	
+556717	5620304	NachtmahrTV	Electricity Sound	g_crackle	
+582631	5965684	ironcross32	Long Crackle 04.wav	g_crackle	
+47125	383523	gyzhor	lightsaber3.mp3	g_melee	
+557194	6737463	pip_	Lightsaber Ignition	g_melee	
+475135	2927958	bolkmar	FX - Swoosh - Low Pitch	g_melee	
+96137	1554918	BMacZero	Thud2.wav	g_melee	
+62925	6479	SpeedY	welder 4.wav	g_melee	
+421094	5701973	Deathscyp	Metal pipe Swing-1.wav	g_melee	
+208101	2943165	Phil25	Metal Steps	g_step_bright	
+144103	16776	elgronbo	FootstepsOnMetal-07.wav	g_step_bright	
+215308	4027076	jaredi	Footsteps_Metal.wav	g_step_bright	CC BY 3.0
+194978	1160789	soundmary	footsteps on metal .mp3	g_step_bright	CC BY 4.0
+462598	670687	Eelke	boots on aluminum ladder 01	g_step_bright	CC BY 4.0
+384656	5937039	morganpurkis	Metal Footstep 3.wav	g_step_bright	CC BY 4.0
+209772	2012390	Johnnyfarmer	Metal Boom	g_wall	
+334679	2792951	Yoyodaman234	Metal Impact 2	g_wall	
+334680	2792951	Yoyodaman234	Metal Impact 1	g_wall	
+330799	3908308	Czarcazas	Locker Door Bashing	g_wall	CC BY 3.0
+42729	454894	decembered	iron_boom.wav	g_wall	CC BY 4.0
+189327	3524188	Alxy	missile lock on sound	g_turret	
+418881	6616210	KieranKeegan	Tank Turret Rotate	g_turret	
+505407	9159316	Breviceps	RTS Game - Machine Gun Turret	g_turret	
+572393	7341217	lgnsip	Device Beeping	g_turret	
+321215	5436764	Hybrid_V	Sci-Fi Weapons Deploy	g_turret	CC BY 4.0
+202530	3770352	kalisemorrison	scanner beep.wav	g_camera	
+196979	2747497	peepholecircus	Sci Fi button beep	g_camera	
+264592	2884593	vacuumfan7072	servomotor.wav	g_camera	
+18726	36188	LG	Servo04.wav	g_camera	CC BY 4.0
+18725	36188	LG	Servo03.wav	g_camera	CC BY 4.0
+54047	533680	guitarguy1985	buzzer.wav	g_alarm	
+420661	2247456	Kinoton	Alarm Siren, Fast Oscillations	g_alarm	
+32088	114160	jbum	jsyd_klaxon.wav	g_alarm	
+407240	7237186	pointparkcinema	Alarms.wav	g_alarm	
+263621	2906614	deleted_user_2906614	Permission to panic?	g_alarm	CC BY 3.0
+670297	2247456	Kinoton	Airplane, Seatbelt Sign Beep	g_chime	
+244583	3212048	nachosose	A320 tritone chime.wav	g_chime	
+238428	1088850	nigelcoop	Store Public Addess Chimes2.wav	g_chime	
+493698	470543	stib	Arpeg.wav	g_chime	
+645778	3371712	jackolous	Arming a Sci-Fi Gun	g_reload	
+196907	3660887	Dpoggioli	Laser Gun Recharge	g_reload	CC BY 4.0
+213607	3660887	Dpoggioli	Ammo Pick-Up	g_reload	CC BY 4.0
+39627	99469	AniCator	smg5_reload.wav	g_reload	CC BY 4.0
+679546	14263543	SonoFxAudio	SFX_scifi_rifle_reload.wav	g_reload	CC BY 4.0
