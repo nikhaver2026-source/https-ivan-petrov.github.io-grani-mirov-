@@ -4,6 +4,14 @@
 // который игра показывает в списке, фраза произносится так, как её говорит
 // игра, и ждётся конец фразы. Запуск: electron voicecheck.js.
 const { app, BrowserWindow } = require('electron');
+// Журнал моста голосов (что ушло мосту и что он ответил) — печатается, если
+// проверка не прошла: видно, какая команда сняла фразу.
+const { Proc } = require('./sapi.js');
+const t0 = Date.now(), журнал = [];
+const пиши = s => { журнал.push(((Date.now() - t0) / 1000).toFixed(2) + ' ' + s); if (журнал.length > 300) журнал.shift(); };
+const send0 = Proc.prototype.send, line0 = Proc.prototype.line;
+Proc.prototype.send = function (...a) { if (a[0] !== 'srcheck') пиши(this.bits + ' бит ← ' + a.map(x => String(x).slice(0, 48)).join(' ')); return send0.apply(this, a); };
+Proc.prototype.line = function (l, d) { if (/^(done|cancel|error|ready|fatal)/.test(l)) пиши(this.bits + ' бит → ' + l.slice(0, 80)); return line0.call(this, l, d); };
 require('./main.js');
 const wait = ms => new Promise(r => setTimeout(r, ms));
 app.whenReady().then(() => setTimeout(async () => {
@@ -13,13 +21,20 @@ app.whenReady().then(() => setTimeout(async () => {
   await js(`(()=>{try{enterGame();}catch(e){}while(activeLayer())closeTopUI();return 1;})()`);
   await wait(1500);
   // Одна фраза тем адаптером, который игра выбрала сейчас; ждём конец.
-  const скажи = (text) => js(`new Promise(res=>{const t0=Date.now();let a=null;
+  // Фраза идёт мимо очереди речи игры, поэтому своя речь игры (подсказка
+  // «Если вы здесь впервые…», объявление синтезатора, голоса, поднявшиеся
+  // позже) пока звучит проверка, адаптер не трогает: иначе она снимала
+  // фразу проверки, и та «не кончалась» — проверка падала то на одном, то
+  // на другом синтезаторе. Своя речь игры в это время считается сказанной.
+  const скажи = (text) => (пиши('— проверка: ' + text), js(`new Promise(res=>{const t0=Date.now();let a=null;
     try{Speech.stop&&Speech.stop();a=Speech._adapter();}catch(e){return res({ok:false,why:String(e)});}
     if(!a)return res({ok:false,why:"нет синтезатора"});
-    const готово=(ok,why)=>res({ok,why,адаптер:a.name,мс:Date.now()-t0});
+    const sp=a.speak,cn=a.cancel;let свои=0,итог=false;
+    a.speak=function(t,o){свои++;if(o&&o.onend)setTimeout(()=>{try{o.onend();}catch(_){}},0);return true;};a.cancel=function(){};
+    const готово=(ok,why)=>{if(итог)return;итог=true;a.speak=sp;a.cancel=cn;res({ok,why,адаптер:a.name,мс:Date.now()-t0,своейРечиИгры:свои});};
     setTimeout(()=>готово(false,"нет конца фразы за 20 с"),20000);
-    const r=a.speak(${JSON.stringify(text)},{rate:1.5,volume:1,onend:()=>готово(true,""),onerror:()=>готово(false,"ошибка синтезатора")});
-    if(r===false)готово(false,"не принял фразу");})`);
+    const r=sp.call(a,${JSON.stringify(text)},{rate:1.5,volume:1,onend:()=>готово(true,""),onerror:()=>готово(false,"ошибка синтезатора")});
+    if(r===false)готово(false,"не принял фразу");})`));
   const out = { мост: await js('!!(window.GraniTTS&&GraniTTS.speak)'), синтезаторы: {}, голоса: [] };
   out.причина = await js('window.graniDesktop&&graniDesktop.ttsDiag?graniDesktop.ttsDiag():""');
   out.список = await js(`Speech.allVoices().map(v=>({ключ:Speech.voiceKey(v),имя:v.name,язык:v.lang,мост:!!v.native,движок:v.engine||""}))`);
@@ -52,6 +67,8 @@ app.whenReady().then(() => setTimeout(async () => {
   const голосОк = out.голоса.filter(x => x.ok).length;
   const мостОк = out.мостом.filter(x => x.итог === 'конец').length;
   console.log(`VOICECHECK итог: синтезаторов говорят ${synthLine(out)}; голосов в списке игры говорят ${голосОк} из ${out.голоса.length}; мостом Windows говорят ${мостОк} из ${out.мостом.length}`);
-  app.exit(синтОк === 2 && (out.голоса.length === 0 || голосОк > 0) ? 0 : 1);
+  const прошла = синтОк === 2 && (out.голоса.length === 0 || голосОк > 0);
+  if (!прошла) console.log('VOICECHECK мост:\n' + журнал.join('\n'));
+  app.exit(прошла ? 0 : 1);
 }, 3000));
 function synthLine(out) { return Object.entries(out.синтезаторы).map(([k, v]) => k + (v.ok ? '✓' : '✗(' + v.why + ')')).join(', '); }
