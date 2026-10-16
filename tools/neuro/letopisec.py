@@ -193,13 +193,14 @@ def вектор(м, сл, вид, имя):
     h = м.n(h)[0]; л = F.log_softmax(м.o(h[:-1]), -1); ц = x[0, 1:]; лп = л[torch.arange(len(ц)), ц][len(нач) - 1:]
     return torch.cat([h[len(нач):T - 1].mean(0), h[-1], torch.tensor([лп.mean().item(), лп.min().item()])])
 
-def загрузить(папка):
+def загрузить(папка, снимок=None):
     сл = Словарь([]); сл.т = json.load(open(os.path.join(папка, "letopisec_vocab.json"), encoding="utf-8"))
     сл.и = {t: i for i, t in enumerate(сл.т)}; сл.спец = sorted([t for t in сл.т if len(t) > 1], key=len, reverse=True)
     # ширина, число слоёв и окно — по самому снимку (192×4 и 256×6 лежат в разных папках)
     global CTX
     лучший = os.path.join(папка, "letopisec_best.pt")  # лучший по проверке на незнакомых сущностях, если есть
-    z = torch.load(лучший if os.path.exists(лучший) and os.environ.get("LET_LAST") != "1" else os.path.join(папка, "letopisec.pt"))["м"]
+    if снимок is None: снимок = лучший if os.path.exists(лучший) and os.environ.get("LET_LAST") != "1" else os.path.join(папка, "letopisec.pt")
+    z = torch.load(снимок)["м"]
     d = z["n.weight"].shape[0]; L = 1 + max(int(k.split(".")[1]) for k in z if k.startswith("b."))
     CTX = z["pos.weight"].shape[0]
     м = Летописец(len(сл.т), d=d, L=L); м.load_state_dict(z); return м, сл
