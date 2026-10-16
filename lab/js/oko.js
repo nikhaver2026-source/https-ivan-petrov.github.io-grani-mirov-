@@ -142,7 +142,7 @@ function wave(delay, n, mode, at, tag) {
    потеряна: проверка последнего места и маршрутов рядом, затем — снова
    штатный режим. Глушилка и заглушенная панель ОКО сообщения не пускают. */
 var SEC = ["штатное наблюдение", "подозрение", "подтверждённое нарушение", "локальная тревога", "комплексная тревога", "аварийная блокировка", "восстановление"];
-var SRCN = { camera: "Камера", robot: "Охранный робот", cleaner: "Робот-уборщик", drone: "Дрон слежения", noise: "Акустический датчик", terminal: "Терминал", door: "Датчик двери", lift: "Камера лифта", wreck: "Робот-уборщик", lost: "Связь с единицей", relay: "Узел связи" };
+var SRCN = { observer: "Скрытый наблюдатель", camera: "Камера", robot: "Охранный робот", cleaner: "Робот-уборщик", drone: "Дрон слежения", noise: "Акустический датчик", terminal: "Терминал", door: "Датчик двери", lift: "Камера лифта", wreck: "Робот-уборщик", lost: "Связь с единицей", relay: "Узел связи" };
 function sec() {
   var f = fs();
   if (!f.sec) f.sec = { lv: 0, t: 0, seen: null, sus: null, conf: [], loss: 0 };
@@ -227,6 +227,7 @@ function report(src, x, y, kind, what) {
   var f = fs(), o = st(), cb = C();
   if (!f || !cb) return false;
   if (f.okoBlind || G().st.jam > 0) return false;
+  if (src === "noise" && LAB.depths && LAB.depths.sensorsDeaf()) return false; /* вибродатчики обесточены на щите «Подножия» */
   var s = sec(), now = T();
   if (kind === "seen") {
     o.seenAt = { x: x, y: y, L: G().L, F: G().F, t: now };

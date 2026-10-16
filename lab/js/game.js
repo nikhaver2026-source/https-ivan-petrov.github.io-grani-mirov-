@@ -37,7 +37,7 @@ function newState(seed) {
     notes: {}, noteList: [], samples: {}, implants: ["scan", "echo"], faction: null, crafted: 0,
     quests: [], journal: [], fs: {}, maxF: { 1: 1 }, visited: { "1-1": 1 },
     checkpoint: null, day: 1, min: 8 * 60, event: "norm", eventUntil: 8 * 60 + 90,
-    st: { poison: 0, slow: 0, shield: 0, haste: 0, cloak: 0, web: 0, jam: 0, deaf: 0, antitox: 0, bleed: 0 },
+    st: { poison: 0, slow: 0, shield: 0, haste: 0, cloak: 0, web: 0, jam: 0, deaf: 0, antitox: 0, bleed: 0, navjam: 0 },
     /* тело героя: сытость, бодрость, токсины, нейронагрузка (0–100) */
     body: { food: 65, wake: 85, tox: 0, neuro: 0, lv: {} },
     stats: { kills: 0, steps: 0, secrets: 0, deaths: 0, shots: 0, hits: 0, notes: 0, ms: 0, saves: 0 },
@@ -325,6 +325,7 @@ function noteText(it, L, F) {
   if (it.note === "code") return LAB.codeNote(it.code, it.room, h);
   if (it.note === "safe") return LAB.safeNote(it.code, it.room, h);
   if (it.note === "secret") return LAB.secretNote(it.room, it.side, h);
+  if (it.note === "depth" && LAB.depths) return LAB.depths.noteText(it, L, F);
   if (it.note === "riddle") { var rd = riddleFor(it.rid, it.L || L); return LAB.riddleNote ? LAB.riddleNote(rd, it.room, h) : { t: "Отгадка", x: "Замок помещения «" + it.room + "»: ответ — «" + rd.a[0] + "»." }; }
   return { t: "Записка", x: "Неразборчиво." };
 }
@@ -671,7 +672,9 @@ function giveItem(it, quiet) {
       var nt = noteText(it), nid = G.L + "-" + G.F + "-" + it.id;
       if (!G.notes[nid]) {
         G.notes[nid] = 1;
-        G.noteList.push({ id: nid, src: { id: it.id, note: it.note, code: it.code, room: it.room, side: it.side, rid: it.rid, L: it.L, F: it.F }, t: nt.t, a: nt.a || "", story: !!nt.story, L: G.L, F: G.F, code: it.note === "safe" ? it.code : undefined });
+        /* ссылка на текст — само описание записки (без места на полу): по нему текст собирается заново */
+        var src = JSON.parse(JSON.stringify(it)); delete src.x; delete src.y; delete src.kind;
+        G.noteList.push({ id: nid, src: src, t: nt.t, a: nt.a || "", story: !!nt.story, L: G.L, F: G.F, code: it.note === "safe" ? it.code : undefined });
         G.stats.notes++; gainXP(4);
       }
       if (it.code) G.codes[it.code] = it.room;
@@ -719,6 +722,7 @@ game.autoPickup = autoPickup;
    удар о стену (металл), скрип двери. Речь — только когда есть что сказать:
    дверь заперта, впереди враг, рядом предмет. */
 var lastMove = 0;
+game.lastMoveAt = function () { return lastMove; };
 function tryMove(dir, run) {
   if (!game.entered || game.paused || G.done) return false;
   if (LAB.ui && LAB.ui.layer()) return false;
@@ -1114,6 +1118,20 @@ function turretSabotage(f) {
   UIx("menu", f.name, items);
 }
 game.turretSabotage = turretSabotage;
+/* Навигатор не ведёт: отражённый сигнал «Отражения» или глушилка робота рядом.
+   Всегда с признаками — откуда помеха и как восстановить ориентацию. */
+function navJammed() {
+  var nj = LAB.depths ? LAB.depths.navJam() : 0;
+  if (nj > 0) { A("play", "jam"); say("Навигатор сбит отражённым сигналом: в его сигнале эхо. Ещё " + Math.ceil(nj / 2) + " " + plural(Math.ceil(nj / 2), "секунда", "секунды", "секунд") + ". Маяки и стены не врут — ориентируйтесь по ним."); return true; }
+  if (LAB.combat && LAB.combat.jammed()) {
+    var jm = LAB.combat.jammer ? LAB.combat.jammer() : null;
+    A("play", "jam");
+    say("Навигатор глохнет: рядом робот с глушилкой" + (jm ? " — " + relDir(jm.x, jm.y) : "") + ". Отойдите от него дальше шести шагов или разбейте его — навигатор вернётся.");
+    return true;
+  }
+  return false;
+}
+game.navJammed = navJammed;
 function nearbyInfo() {
   if (G.stair) { stairsInfo(); return; }
   var t = adjacentTargets();
@@ -1349,6 +1367,7 @@ game.objState = objState;
 function objMenu(o) {
   var st = objState(o), name = objName(o), items = [];
   A("objUse", o);
+  if (LAB.depths && LAB.depths.objMenu(o)) return; /* установки глубин под Ядром */
   switch (o.type) {
     case "stairs_down": case "stairs_up": {
       var down = o.type === "stairs_down";
@@ -2390,7 +2409,7 @@ function spaceAt(x, y) { var r = roomAt(x, y); if (r) return "r" + r.id; var c =
 function navigate(cycle, fromNpc) {
   if (G.stair) { stairsInfo(); return; }
   if (!game.entered) return;
-  if (LAB.combat && LAB.combat.jammed()) { A("play", "jam"); say("Навигатор глохнет: рядом робот с глушилкой."); return; }
+  if (navJammed()) return;
   var list = navTargets();
   if (!list.length) { say("Навигатору не на что указать."); return; }
   var now = Date.now();
@@ -2572,7 +2591,7 @@ game.quickStatus = quickStatus;
 /* Три пальца вправо: окно целей навигатора. */
 function navMenu() {
   if (!game.entered) return;
-  if (LAB.combat && LAB.combat.jammed()) { A("play", "jam"); say("Навигатор глохнет: рядом робот с глушилкой."); return; }
+  if (navJammed()) return;
   var list = navTargets();
   if (!list.length) { say("Навигатору не на что указать."); return; }
   UIx("menu", "Навигатор", list.map(function (t) {
@@ -2687,7 +2706,7 @@ function die() {
   game.paused = true;
   later(function () {
     G.dead = false; game.paused = false;
-    G.hp = Math.round(G.hpMax * 0.6); G.st = { poison: 0, slow: 0, shield: 0, haste: 0, cloak: 0, web: 0, jam: 0, deaf: 0, antitox: 0, bleed: 0 };
+    G.hp = Math.round(G.hpMax * 0.6); G.st = { poison: 0, slow: 0, shield: 0, haste: 0, cloak: 0, web: 0, jam: 0, deaf: 0, antitox: 0, bleed: 0, navjam: 0 };
     var bd = body(); bd.tox = 0; bd.neuro = 0; bd.food = Math.max(bd.food, 35); bd.wake = Math.max(bd.wake, 50); bd.lv = {};
     var cp = G.checkpoint;
     if (cp && cp.L === G.L) enterFloor(cp.L, cp.F, "respawn");

@@ -367,6 +367,61 @@ function melodyGesture(g) {
   if (c.pos >= c.seq.length) { c.done = true; setTimeout(function () { if (cur === c) finish(true); }, 300); }
 }
 
+/* ════════ СИНХРОНИЗАЦИЯ: два механизма в такт ════════
+   Слева бьёт ведущий механизм — ровно; справа ведомый — быстрее или
+   медленнее. Свайп вверх — ведомый быстрее, вниз — медленнее. Когда такты
+   сходятся, зубья сами входят в зацепление: оба удара звучат как один,
+   сдвоенный. Тогда — двойное касание: сцепить. Сцепили вразнобой —
+   зубья скрежещут, ведомый сбивается; три раза — механизмы встали. Касание —
+   «Эхо» подскажет, спешит ведомый или отстаёт (дважды). */
+function sync(cb, opts) {
+  opts = opts || {};
+  var pA = 900, off = (Math.random() < 0.5 ? -1 : 1) * (120 + Math.floor(Math.random() * 4) * 40);
+  var c = { type: "sync", name: opts.title || "Синхронизация", cb: cb, pA: pA, pB: pA + off, step: 40, tries: 0, limit: opts.limit || 3, hints: 2, ready: false, aligned: false, tA: 0 };
+  cur = c;
+  say((opts.title || "Синхронизация") + ". Слева — ведущий механизм, справа — ведомый. " + LAB.K("Свайп вверх — ведомый быстрее, вниз — медленнее. Когда удары сольются в один, двойное касание — сцепить. Касание — подсказка.", "Стрелка вверх — ведомый быстрее, вниз — медленнее. Когда удары сольются в один, Enter — сцепить. Пробел — подсказка, Escape — отойти."), { interrupt: true });
+  waitSpeech(function () {
+    if (cur !== c) return;
+    c.ready = true;
+    var a = function () { if (cur !== c) return; c.tA = performance.now(); tone(147, 0.14, -0.85, "square", 0.17); c.timerA = setTimeout(a, c.pA); };
+    var b = function () {
+      if (cur !== c) return;
+      tone(c.aligned ? 147 : 294, 0.12, c.aligned ? 0.85 : 0.85, "triangle", 0.16);
+      var next = c.pB;
+      /* такты сошлись — ведомый подтягивается к удару ведущего */
+      if (!c.aligned && Math.abs(c.pB - c.pA) <= 20) { c.aligned = true; c.pB = c.pA; next = Math.max(30, c.pA - ((performance.now() - c.tA) % c.pA)); }
+      c.timerB = setTimeout(b, next);
+    };
+    c.cleanup = function () { clearTimeout(c.timerA); clearTimeout(c.timerB); };
+    a(); c.timerB = setTimeout(b, 260 + Math.floor(Math.random() * 300));
+  });
+}
+function syncGesture(g) {
+  var c = cur;
+  if (!c.ready) return;
+  if (g.kind === "swipe" && g.n === 1 && (g.dir === "U" || g.dir === "D")) {
+    if (c.aligned) { tone(1500, 0.05, 0, "sine", 0.08); return; } /* в зацеплении — не трогать */
+    c.pB = Math.max(450, Math.min(1500, c.pB + (g.dir === "U" ? -c.step : c.step)));
+    tone(g.dir === "U" ? 880 : 440, 0.04, 0.6, "sine", 0.06);
+    return;
+  }
+  if (g.kind === "tap" && g.n === 1) {
+    if (c.hints <= 0) { say("Подсказок больше нет: слушайте удары."); return; }
+    c.hints--;
+    var d = c.pB - c.pA;
+    say(c.aligned ? "Удары слились: можно сцеплять." : Math.abs(d) <= 60 ? (d > 0 ? "Ведомый чуть отстаёт." : "Ведомый чуть спешит.") : d > 0 ? "Ведомый отстаёт." : "Ведомый спешит.");
+    return;
+  }
+  if (g.kind === "dtap" && g.n === 1) {
+    if (c.aligned) { c.done = true; tone(523, 0.15, 0, "sine", 0.14); tone(784, 0.3, 0, "sine", 0.14, 0.15); setTimeout(function () { if (cur !== c) return; say("Механизмы сцеплены: идут в такт."); finish(true); }, 300); return; }
+    c.tries++;
+    tone(110, 0.35, 0, "sawtooth", 0.12);
+    if (c.tries >= c.limit) { c.done = true; setTimeout(function () { if (cur !== c) return; say("Зубья скрежещут: механизмы встали."); finish(false); }, 400); return; }
+    c.pB = c.pA + (Math.random() < 0.5 ? -1 : 1) * (120 + Math.floor(Math.random() * 3) * 40);
+    say("Скрежет: зубья не в зацеплении, ведомый сбился. Попыток осталось: " + (c.limit - c.tries) + ".");
+  }
+}
+
 /* Подождать, пока «Эхо» договорит инструкцию (но не дольше 9 секунд). */
 function waitSpeech(fn) {
   var t0 = Date.now();
@@ -396,6 +451,7 @@ function gesture(g) {
   else if (cur.type === "bulls") bullsGesture(g);
   else if (cur.type === "sort") sortGesture(g);
   else if (cur.type === "melody") melodyGesture(g);
+  else if (cur.type === "sync") syncGesture(g);
   return true;
 }
 
@@ -412,7 +468,7 @@ function chain(steps, cb) {
 }
 
 LAB.mini = {
-  hack: hack, tune: tune, rhythm: rhythm, code: code, relays: relays, bulls: bulls, sortTones: sortTones, melody: melody, chain: chain, gesture: gesture, cancel: cancel,
+  hack: hack, tune: tune, rhythm: rhythm, sync: sync, code: code, relays: relays, bulls: bulls, sortTones: sortTones, melody: melody, chain: chain, gesture: gesture, cancel: cancel,
   active: function () { return !!cur || Date.now() < gapUntil; },
   wasCancelled: function () { return Date.now() - lastCancel < 1500; },
   _cur: function () { return cur; }, /* для проверок */

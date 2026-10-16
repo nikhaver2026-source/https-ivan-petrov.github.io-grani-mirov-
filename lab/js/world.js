@@ -1054,6 +1054,10 @@ function genFloor(seed, L, F, attempt) {
   }
   fl.posts = gN;
 
+  /* 19. Установки глубин под Ядром (прессы, щиты, инкубаторы, журналы,
+     затворы, древние узлы) — последними и своим потоком случайностей. */
+  if (LAB.depths && LAB.depths.place) LAB.depths.place({ fl: fl, L: L, F: F, seed: seed, attempt: attempt, svcRooms: svcRooms, mainRooms: mainRooms, addObj: addObj, addItem: addItem, makeFoe: makeFoe, freeCell: freeCell });
+
   fl.sample = d0;
   fl.turrets = turrets;
   return fl;

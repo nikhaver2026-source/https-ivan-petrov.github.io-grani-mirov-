@@ -132,8 +132,11 @@ var beaconT = null, nextPing = {};
 var OBJ_BEACON = { stairs_down: "bcn_stairs", stairs_up: "bcn_stairs_up", elevator: "bcn_elevator", gate_down: "bcn_gate", reactor: "bcn_reactor",
   terminal: "bcn_terminal", magnetron: "bcn_magnetron", positron: "bcn_positron", capsule: "bcn_capsule", vending: "bcn_vending", workbench: "bcn_workbench",
   medst: "bcn_medst", charger: "bcn_charger", implantlab: "bcn_implantlab", hq: "bcn_hq", safe: "bcn_safe",
-  pc: "bcn_pc", coffee: "bcn_coffee", drinks: "bcn_drinks", snacks: "bcn_snacks", radio: "bcn_radio", okoterm: "bcn_oko", puzzle: "bcn_puzzle" };
-var OBJ_BEACON_FB = { bcn_radio: ["bcn_pc", 0.75], bcn_oko: ["bcn_terminal", 1.35], bcn_puzzle: ["bcn_vending", 1.25], bcn_snacks: ["bcn_drinks", 0.82] };
+  pc: "bcn_pc", coffee: "bcn_coffee", drinks: "bcn_drinks", snacks: "bcn_snacks", radio: "bcn_radio", okoterm: "bcn_oko", puzzle: "bcn_puzzle",
+  powergrid: "bcn_powergrid", incubator: "bcn_incubator", mirrorterm: "bcn_mirrorterm", syncgate: "bcn_syncgate", ancient: "bcn_ancient" };
+var OBJ_BEACON_FB = { bcn_radio: ["bcn_pc", 0.75], bcn_oko: ["bcn_terminal", 1.35], bcn_puzzle: ["bcn_vending", 1.25], bcn_snacks: ["bcn_drinks", 0.82],
+  /* установки глубин: свои маяки, пока нет записей — знакомые маяки на другой высоте */
+  bcn_powergrid: ["bcn_magnetron", 0.7], bcn_incubator: ["bcn_capsule", 1.3], bcn_mirrorterm: ["bcn_terminal", 0.8], bcn_syncgate: ["bcn_gate", 1.2], bcn_ancient: ["bcn_reactor", 0.6] };
 var OBJ_RANGE = { stairs_down: 16, stairs_up: 10, gate_down: 18, elevator: 12, reactor: 20 };
 function beaconTick() {
   var g = G(), cur = CUR();

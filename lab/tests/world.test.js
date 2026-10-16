@@ -15,7 +15,7 @@ const ROOT = path.resolve(__dirname, "..");
 const ctx = { console, Math, JSON, Object, Array, String, Number, Uint8Array, Int8Array, Int16Array, Int32Array, Float64Array, Error, Date, RegExp };
 ctx.globalThis = ctx;
 vm.createContext(ctx);
-for (const f of ["js/data.js", "js/texts.js", "js/lore.js", "js/b1.js", "js/b2.js", "js/b3.js", "js/b4.js", "js/b5.js", "js/world.js"]) {
+for (const f of ["js/data.js", "js/texts.js", "js/lore.js", "js/b1.js", "js/b2.js", "js/b3.js", "js/b4.js", "js/b5.js", "js/world.js", "js/depths.js"]) {
   const p = path.join(ROOT, f);
   if (fs.existsSync(p)) vm.runInContext(fs.readFileSync(p, "utf8"), ctx, { filename: f });
 }
@@ -109,6 +109,9 @@ for (let si = 0; si < seeds; si++) {
       if (fl.downBlocked) stat.blocked++;
       stat.foes += fl.foes.length; stat.items += fl.items.length; stat.npcs += fl.npcs.length;
       for (const o of fl.objs) stat.objs[o.type] = (stat.objs[o.type] || 0) + 1;
+      /* установки глубин: до каждой можно дойти; пресс — поперёк коридора */
+      for (const o of fl.objs) if (["powergrid", "incubator", "mirrorterm", "syncgate", "ancient"].indexOf(o.type) >= 0 && !nearReach(o)) err(`${at}: до установки «${o.type}» не дойти`);
+      for (const h of (fl.hazards || [])) { stat.press = (stat.press || 0) + 1; if (!h.cells.every(c => fl.t[c[1] * LAB.W + c[0]] === LAB.T.CORR)) err(`${at}: пресс не на клетках коридора`); }
       if (!fl.items.some(i => i.kind === "sample")) err(`${at}: нет образца`);
     }
     LAB.clearFloorCache();
@@ -119,6 +122,7 @@ console.log(`уровней: ${LAB.LEVELS_N}, этажей: ${floors}, ошиб�
 console.log("замки:", JSON.stringify(stat.locks));
 console.log(`на этаж: врагов ${(stat.foes / floors).toFixed(1)}, турелей ${(stat.turrets / floors).toFixed(2)}, камер ${(stat.cams / floors).toFixed(2)}, вещей ${(stat.items / floors).toFixed(1)}, выживших ${(stat.npcs / floors).toFixed(2)}, тайных комнат ${(stat.secrets / floors).toFixed(2)}, заваленных лестниц ${stat.blocked}; коридоры от ${stat.corrMin} до ${stat.corrMax} шагов`);
 console.log("обстановка:", JSON.stringify(stat.objs));
+console.log("прессов «Подножия»:", stat.press || 0);
 console.log(`броня на полу: ${(stat.armor / floors).toFixed(2)} на этаж; модификации роботов:`, JSON.stringify(stat.aff));
 console.log("роботы по уровням (доля с модификациями, средний ум):", Object.keys(stat.mechByL).map(L => `${L}: ${(100 * (stat.affByL[L] || 0) / stat.mechByL[L]).toFixed(0)}%, ${(stat.iqByL[L] / stat.mechByL[L]).toFixed(1)}`).join("; "));
 process.exit(fails ? 1 : 0);

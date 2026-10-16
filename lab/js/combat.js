@@ -153,8 +153,9 @@ function detOf(f) {
   return Math.max(2, d);
 }
 function sees(f) {
-  if (G().st.cloak > 0) return false;
-  if (has(f, "deaf")) return false;
+  /* «тепло»: твари «Колыбели» чуют тепло тела — маскировка их не обманывает, а слепые видят его вблизи */
+  if (G().st.cloak > 0 && !has(f, "heat")) return false;
+  if (has(f, "deaf") && !(has(f, "heat") && dist(f, heroPos()) <= 3)) return false;
   var d = dist(f, heroPos());
   if (d > detOf(f)) return false;
   return losTo(f);
@@ -165,6 +166,8 @@ function hears(f) {
   if (G().st.cloak > 0) n = Math.round(n * 0.3);
   var d = dist(f, heroPos());
   var bonus = has(f, "deaf") ? 3 : has(f, "tracker") ? 5 : 0;
+  /* «вибрация»: шаги по настилу чувствуются издалека, даже тихие — но только пока вы идёте */
+  if (has(f, "vibro") && gm().lastMoveAt && Date.now() - gm().lastMoveAt() < 900 && d <= 9) return true;
   if (!losTo(f)) n -= 2; /* за стеной хуже слышно */
   return d <= n + bonus;
 }
@@ -316,6 +319,9 @@ function realTick() {
 /* Один такт мира. В пошаговом режиме зовётся после каждого действия героя. */
 function tick() {
   if (G().stair) return; /* игрок на лестнице: этаж ждёт */
+  /* установки глубин: прессы «Подножия»; навигатор, сбитый «Отражением», оживает */
+  if (G().st.navjam > 0 && --G().st.navjam === 0) say("Навигатор снова видит этаж.");
+  if (LAB.depths) LAB.safe(function () { LAB.depths.tick(); });
   tickN++;
   statusTick(false);
   var fs = CUR().fs;
@@ -412,6 +418,60 @@ function unmask(f) {
 /* Что уборщик подбирает: мусор и мелочь — но не записки, образцы, ключи,
    пропуска и ключ-карты (без них этаж не пройти). */
 function cleanable(it) { return ["note", "sample", "key", "pass", "elevpass", "gatepass", "chip"].indexOf(it.kind) < 0; }
+/* Скрытый наблюдатель «Подножия»: не нападает — увидев носителя, щёлкает
+   реле и передаёт ОКО, где он, потом отходит из виду. Его выдаёт сухой
+   щелчок передатчика. */
+function observerTick(f) {
+  f.mv++;
+  var see = sees(f);
+  if (see) {
+    if (!f.obsT || tickN - f.obsT > 30) {
+      f.obsT = tickN;
+      A("foeSound", f, "radio");
+      if (netUp() && LAB.oko) LAB.oko.report("observer", G().x, G().y, "seen");
+      sayOnce("obs" + f.id, "Сухой щелчок передатчика " + gm().relDir(f.x, f.y) + ": кто-то следит за вами и докладывает ОКО.", 12000);
+    }
+    if (f.mv >= f.spd) { f.mv = 0; stepAway(f); }
+    return;
+  }
+  if (f.mv >= f.spd + 1) { f.mv = 0; if (f.route) routeStep(f); else if (f.patrol) patrolStep(f); else wander(f); }
+}
+/* Ремонтный автомат принимает носителя за неисправный узел: подходит,
+   сканирует и пытается обесточить — разряд и онемение. Ударили его или
+   ОКО подняло тревогу — понимает, кто перед ним, и бьёт уже всерьёз. */
+function fixerTick(f) {
+  if (f.hitT <= 12 || (LAB.oko && LAB.oko.level() >= 2) || !sees(f)) return false;
+  var d = dist(f, heroPos());
+  f.mv++; f.at++;
+  if (d > 1) { if (f.mv >= f.spd) { f.mv = 0; stepToward(f, G().x, G().y, { adjacent: true }); } if (d <= 4 && Math.random() < 0.3) A("foeSound", f, "idle"); return true; }
+  if (f.at >= 3) {
+    f.at = 0;
+    A("foeSound", f, "repair"); A("play", "w_shock_crack");
+    G().st.slow = Math.max(G().st.slow || 0, 3);
+    hurtPlayer(Math.max(2, Math.round(G().hpMax * 0.04)), "shock", f);
+    sayOnce("fix" + f.id, f.name.split(",")[0] + " принял вас за неисправный узел: сканирует и пытается обесточить. Отойдите или разбейте его.", 10000, "urgent");
+  }
+  return true;
+}
+/* Акустический имитатор «Отражения»: повторяет голоса чужих машин — наводку
+   турели, тревогу робота, лязг двери. Выдаёт его отзвук: копия звучит с
+   задержкой и глуше настоящего. */
+var IMIT = ["turret", "robot", "guardbot", "drone", "spiderbot"];
+function imitateTick(f) {
+  if (f.state === "hunt" || dist(f, heroPos()) > 12 || Math.random() > 0.08) return;
+  var snd = IMIT[Math.floor(Math.random() * IMIT.length)];
+  A("foeSound", { x: f.x, y: f.y, id: "im" + f.id, snd: snd, kind: "mech" }, Math.random() < 0.5 ? "aim" : "alert");
+  setTimeout(function () { A("foeSound", { x: f.x, y: f.y, id: "im2" + f.id, snd: snd, kind: "mech", gain: 0.4 }, "alert"); }, 400);
+}
+/* Робот «Механизма», перекрывающий путь: пока другие гонят носителя, он
+   встаёт в проём двери того помещения, где носитель, — ближайшей к нему. */
+function blockCell(f) {
+  var fl = CUR().fl, r = fl.room[idx(G().x, G().y)];
+  if (r == null || r < 0 || !fl.rooms[r]) return null;
+  var best = null, bd = 1e9;
+  fl.doors.forEach(function (d) { if ((d.room === r || d.other === r) && !(d.lock && d.lock.type === "secret")) { var dd = dist(d, f); if (dd < bd) { bd = dd; best = d; } } });
+  return best ? [best.x, best.y] : null;
+}
 /* Уборщик: собирает вещи с пола, доложит ОКО, если увидит героя. */
 function cleanerTick(f) {
   var fs = CUR().fs, here = gm().floorItems().filter(function (it) { return it.x === f.x && it.y === f.y && cleanable(it); });
@@ -763,6 +823,9 @@ function foeTick(f, spotted) {
   }
   if (f.nodeT > 0) f.nodeT--;
   if (f.neutral) { cleanerTick(f); return; }
+  if (has(f, "observer")) { observerTick(f); return; }
+  if (has(f, "fixer") && fixerTick(f)) return;
+  if (has(f, "mimicsnd")) imitateTick(f);
   if (f.confused > 0) { f.confused--; if (Math.random() < 0.4 && !has(f, "stationary")) wander(f); return; }
   if (f.lure > 0) f.lure--;
   if (has(f, "stalker")) { stalkerTick(f); return; }
@@ -893,6 +956,22 @@ function foeTick(f, spotted) {
     return;
   }
   /* ── охота ── */
+  if (has(f, "blocker") && (f.blockOff || 0) <= tickN && foes.some(function (o) { return o !== f && hostile(o) && o.kind === "mech" && o.state === "hunt" && dist(o, heroPos()) < d; })) {
+    var bc = blockCell(f);
+    if (bc && (f.x !== bc[0] || f.y !== bc[1])) {
+      if (canMove) {
+        f.mv = 0;
+        var bd0 = Math.abs(f.x - bc[0]) + Math.abs(f.y - bc[1]);
+        stepToward(f, bc[0], bc[1]);
+        if (f.x === bc[0] && f.y === bc[1]) sayOnce("blk" + f.id, f.name.split(",")[0] + " перекрыл выход " + gm().relDir(f.x, f.y) + "!", 9000);
+        /* к выходу не пробиться (носитель или другие машины на пути) — гонит носителя, как все */
+        if (Math.abs(f.x - bc[0]) + Math.abs(f.y - bc[1]) >= bd0) { if (++f.blkStuck > 5) { f.blkStuck = 0; f.blockOff = tickN + 40; } } else f.blkStuck = 0;
+      }
+      return;
+    }
+    if (bc && canAct && see && d <= Math.max(1, f.rng)) { f.at = 0; attack(f, true); }
+    return;
+  }
   var ranged = f.rng > 1;
   var punish = iq >= 7 && Date.now() < reloadUntil;
   if (has(f, "indirect")) {
@@ -1448,6 +1527,7 @@ function nearestFoe(r) {
 }
 function aliveCount() { return foes.filter(function (f) { return hostile(f); }).length; }
 function jammed() { return foes.some(function (f) { return !f.dead && !f.calm && aff(f, "jammer") && cheb(f, heroPos()) <= 6; }); }
+function jammer() { var b = null, bd = 99; foes.forEach(function (f) { if (!f.dead && !f.calm && aff(f, "jammer") && cheb(f, heroPos()) <= 6 && cheb(f, heroPos()) < bd) { bd = cheb(f, heroPos()); b = f; } }); return b; }
 function noise(n) { G().noise = Math.max(G().noise, n); }
 /* Турели этажа: отключить, перехватить, вернуть ОКО. Переносные — не трогаются. */
 function isNetTurret(f) { return !f.dead && has(f, "turret") && !f.shots; }
@@ -1663,6 +1743,7 @@ function describe(f) {
   var hp = f.hp / f.maxhp, fem = f.g === "f";
   var st = hp > 0.75 ? (fem ? "цела" : "цел") : hp > 0.4 ? (f.kind === "mech" ? (fem ? "повреждена" : "повреждён") : (fem ? "ранена" : "ранен")) : "едва держится";
   if (has(f, "camera")) return f.name + ", " + gm().relDir(f.x, f.y) + ", " + (camDirs(f) && camFacing(f) ? "смотрит в вашу сторону" : "смотрит в другую сторону");
+  if (has(f, "observer")) return f.name + ", " + gm().relDir(f.x, f.y) + ", не нападает — следит и докладывает ОКО";
   if (isNetTurret(f) && (f.cut || f.mine)) return f.name + ", " + gm().relDir(f.x, f.y) + ", " + (f.cut ? "кабель перерезан, молчит" : "признала вас по ключу ОКО, бьёт по врагам");
   return f.name + ", " + gm().relDir(f.x, f.y) + ", " + st + (f.shield > 0 ? ", под щитом" : "") + (f.calm ? ", не враждебен" : f.state === "hunt" ? ", охотится" : f.state === "alert" ? ", насторожен" : "") + (f.guard ? ", на посту" : f.task === "repair" ? ", идёт чинить турели" : f.route ? ", патрулирует" : "");
 }
@@ -1792,7 +1873,7 @@ LAB.combat = {
   robotsCalm: robotsCalm, calmAll: calmAll, chaser: chaser, alertMech: alertMech, sendSquad: sendSquad, deployTurret: deployTurret, noiseLure: noiseLure, throwNoise: throwNoise,
   dispatch: dispatch, okoPoint: okoPoint, patrols: patrols, drones: drones, repairers: repairers, guards: guards, sendCheck: sendCheck, reroute: reroute, dismiss: dismiss, despawn: despawn,
   lastSquad: function () { return lastSquad; }, tickN: function () { return tickN; }, search: search, netUp: netUp, camFacing: camFacing,
-  quietTurret: quietTurret, spawnFoe: spawnFoe, damageFoe: damageFoe, unmask: unmask, dropCarry: dropCarry, _relayCall: function (f) { relayCall(f); }, _cleanerTick: function (f) { cleanerTick(f); }, isTurret: isTurret, cutTurret: cutTurret, mineTurret: mineTurret, unmineTurrets: unmineTurrets, flankCell: flankCell,
+  quietTurret: quietTurret, jammer: jammer, freeCellNear: freeCellNear, spawnFoe: spawnFoe, damageFoe: damageFoe, unmask: unmask, dropCarry: dropCarry, _relayCall: function (f) { relayCall(f); }, _cleanerTick: function (f) { cleanerTick(f); }, isTurret: isTurret, cutTurret: cutTurret, mineTurret: mineTurret, unmineTurrets: unmineTurrets, flankCell: flankCell,
   mineCount: function () { return foes.filter(function (f) { return isNetTurret(f) && f.mine; }).length; }, cutCount: function () { return foes.filter(function (f) { return isNetTurret(f) && f.cut; }).length; },
   areaDamage: areaDamage, throwEmp: throwEmp, reloadPause: reloadPause, fire: fire, startFire: startFire, stopFire: stopFire,
   useImplant: useImplant, useImplantFree: function (id) { useImplant(id, true); }, describe: describe, hurtPlayer: hurtPlayer, foes: function () { return foes; }

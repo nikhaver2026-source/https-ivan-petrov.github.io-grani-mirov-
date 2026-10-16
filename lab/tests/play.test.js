@@ -1180,6 +1180,204 @@ function ok(cond, msg) { if (cond) console.log("  ✓ " + msg); else { fails++; 
   ok(!stab.cleaner || (!stab.cleaner.key && stab.cleaner.scrap), "уборщик не подбирает ключ, а металлолом подбирает");
   ok(stab.relayPb && stab.relayStale && stab.relayFresh, "узел ОКО поднимает машины только по свежему контакту");
 
+  console.log("Глубины под Ядром: прессы и щит, инкубаторы, журналы «Отражения», затвор, древние узлы, враги глубин");
+  const dep = await page.evaluate(async () => {
+const g = LAB.game, C = LAB.combat, D = LAB.depths, O = LAB.oko, out = {};
+const wait = ms => new Promise(r => setTimeout(r, ms));
+const god = () => { g.G.hp = g.G.hpMax = 400; g.G.dead = false; };
+const label = i => typeof i.label === "function" ? i.label() : i.label;
+C.stop(); LAB.ui.closeAll();
+const findFloor = (L0, L1, pred) => { for (let L = L0; L <= L1; L++) for (let F = 1; F <= 20; F++) { const fl = LAB.getFloor(g.G.seed, L, F); if (pred(fl)) return { L, F }; } return null; };
+/* I. Подножие: пресс бьёт, щит его останавливает */
+const fp = findFloor(11, 20, fl => (fl.hazards || []).length && fl.objs.some(o => o.type === "powergrid"));
+out.press = !!fp;
+if (fp) {
+  g.enterFloor(fp.L, fp.F, "down", true); god();
+  C.foes().forEach(f => { f.dead = true; });
+  const h = g.CUR.fl.hazards[0];
+  g.G.x = h.cells[0][0]; g.G.y = h.cells[0][1]; g.G.face = "N";
+  const hp0 = g.G.hp; let hit = -1;
+  for (let i = 0; i < 12 && hit < 0; i++) { C.tick(); if (g.G.hp < hp0) hit = i; }
+  out.pressHit = { hit, dmg: hp0 - g.G.hp, off: !D.hazardAt(g.G.x, g.G.y) };
+  const grid = g.CUR.fl.objs.find(o => o.type === "powergrid");
+  D._setGrid(grid, "press");
+  god(); g.G.x = h.cells[0][0]; g.G.y = h.cells[0][1];
+  const hp1 = g.G.hp; for (let i = 0; i < 12; i++) C.tick();
+  out.pressOff = g.G.hp === hp1 && D.ventOn();
+  D._setGrid(grid, "sens");
+  out.deaf = O.report("noise", g.G.x, g.G.y, "suspect", "выстрелы") === false;
+  D._setGrid(grid, "vent");
+  out.ventOffNow = !D.ventOn();
+  D._setGrid(grid, "press");
+}
+/* II. Колыбель: правила инкубатора */
+const fc = findFloor(21, 40, fl => fl.objs.some(o => o.type === "incubator"));
+out.cradle = !!fc;
+if (fc) {
+  g.enterFloor(fc.L, fc.F, "down", true); god();
+  C.foes().forEach(f => { f.dead = true; });
+  const base = g.CUR.fl.objs.find(o => o.type === "incubator");
+  let mkN = 0;
+  const mk = (kind, temp) => ({ id: "ti" + kind + temp + "_" + (mkN++), type: "incubator", x: base.x, y: base.y, room: base.room, spec: "К-99", kind, temp0: temp });
+  const W = D.world();
+  /* условный образец в тепле — движение; охладили (вентиляция есть) — покой; открыли — жив, награда */
+  const oc = mk("conditional", 2), sc = g.objState(oc); if (sc.temp == null) sc.temp = 2;
+  out.condHot = D.activity(oc, sc);
+  sc.temp = 1; out.condCool = D.activity(oc, sc);
+  const s0 = W.saved; D._openIncub(oc, sc); out.condOpen = W.saved === s0 + 1;
+  /* опасный — бьётся о стекло; открыли — вырвался */
+  const od = mk("dangerous", 1), sd = g.objState(od); sd.temp = 1;
+  out.dangAct = D.activity(od, sd);
+  const n0 = C.foes().filter(f => !f.dead).length; D._openIncub(od, sd);
+  out.dangBeast = C.foes().filter(f => !f.dead).length === n0 + 1;
+  C.foes().forEach(f => { f.dead = true; });
+  /* полезный — стерилизовали: погиб */
+  const ou = mk("useful", 1), su = g.objState(ou); su.temp = 1;
+  const k0 = W.killed; D._sterilize(ou, su); out.useKilled = W.killed === k0 + 1;
+  /* меню: охлаждение без вентиляции не работает */
+  const v0 = JSON.stringify(W.vent); W.vent = {};
+  const oh = mk("conditional", 2); LAB.ui.closeAll(); g.objMenu(oh);
+  const wi = LAB.ui.top(); wi.i = wi.items.findIndex(i => /Охладить/.test(label(i))); SPOKEN.length = 0; LAB.ui.activate();
+  out.noVent = SPOKEN.some(t => /вентиляция нижних глубин обесточена/.test(t));
+  W.vent = JSON.parse(v0); if (!D.ventOn()) W.vent["t"] = 1;
+  SPOKEN.length = 0; wi.i = wi.items.findIndex(i => /Охладить/.test(label(i))); LAB.ui.activate();
+  out.cooled = g.objState(oh).temp === 1;
+  LAB.ui.closeAll();
+  /* журнал смены читается */
+  const jn = g.noteText({ note: "depth", dk: "cradle", specs: [{ code: "К-12", kind: "dangerous", lie: true }], id: "x" });
+  out.journal = /К-12/.test(jn.x) && /Табло камер — нет/.test(jn.x);
+}
+/* III. Отражение: журнал сверен — тайный проход; ошибка — навигатор сбит */
+const fm = findFloor(41, 60, fl => fl.objs.some(o => o.type === "mirrorterm"));
+out.mirror = !!fm;
+if (fm) {
+  g.enterFloor(fm.L, fm.F, "down", true); god();
+  const mt = g.CUR.fl.objs.find(o => o.type === "mirrorterm");
+  const pz = D.mirrorPuzzle(mt), st = g.objState(mt);
+  out.mz = { n: pz.list.length, kinds: pz.list.map(e => e.cls).sort().join("") };
+  st.cls = pz.list.map(() => 0);
+  D._checkMirror(mt, st, pz);
+  out.wrongJam = g.G.st.navjam > 0 && !st.done;
+  SPOKEN.length = 0; g.navigate(true); out.navSays = SPOKEN.some(t => /Навигатор сбит отражённым сигналом/.test(t));
+  g.G.st.navjam = 0; st.lockT = 0;
+  st.cls = pz.list.map(e => e.cls);
+  const m0 = D.world().mirror; D._checkMirror(mt, st, pz);
+  out.solved = st.done && D.world().mirror === m0 + 1;
+}
+/* IV. Механизм: синхронизация и затвор */
+let syncOk = null;
+LAB.mini.sync(ok => { syncOk = ok; });
+for (let k = 0; k < 60; k++) { const c = LAB.mini._cur(); if (c && c.type === "sync" && c.ready) { c.pB = c.pA; break; } await wait(100); }
+await wait(2200);
+LAB.mini.gesture({ kind: "dtap", n: 1 });
+await wait(600);
+out.syncOk = syncOk;
+const fg = findFloor(61, 80, fl => fl.objs.some(o => o.type === "syncgate"));
+out.gate = !!fg;
+if (fg) {
+  g.enterFloor(fg.L, fg.F, "down", true); god();
+  const og = g.CUR.fl.objs.find(o => o.type === "syncgate"), sg = g.objState(og);
+  LAB.ui.closeAll(); g.objMenu(og);
+  out.gateStage1 = LAB.ui.top() && LAB.ui.top().items.some(i => /Ступень 1/.test(label(i)));
+  LAB.ui.closeAll();
+  sg.stage = 4; const s1 = D.world().synced; D._openGate(og, sg);
+  out.gateOpen = g.CUR.fs.power && g.CUR.fs.lockdown && D.world().synced === s1 + 1;
+  await wait(1000);
+  const tw = LAB.ui.top(); const ti = tw ? tw.items.findIndex(i => /Забрать/.test(label(i))) : -1;
+  if (ti >= 0) { tw.i = ti; LAB.ui.activate(); }
+  out.gateLoot = (og.loot || []).every(it => it.taken);
+  LAB.ui.closeAll();
+}
+/* V. Исток: подсказки узла зависят от глубин выше; ответ — фрагмент памяти */
+const fn = findFloor(81, 100, fl => fl.objs.some(o => o.type === "ancient"));
+out.node = !!fn;
+if (fn) {
+  g.enterFloor(fn.L, fn.F, "down", true); god();
+  const on = g.CUR.fl.objs.find(o => o.type === "ancient"), sn = g.objState(on);
+  const W = D.world(), keep = JSON.stringify(W);
+  W.vent = {}; W.saved = 0; W.killed = 0; W.mirror = 0;
+  out.hint0 = D.nodeHints().n;
+  W.vent = { t: 1 }; W.saved = 2; W.killed = 1; W.mirror = 1;
+  out.hint4 = D.nodeHints().n;
+  const nl = g.G.noteList.length, n0 = W.nodes;
+  D._nodeResult(on, sn, true, "seq");
+  out.nodeOk = W.nodes === n0 + 1 && g.G.noteList.length === nl + 1 && /Фрагмент памяти/.test(g.noteFull(g.G.noteList[g.G.noteList.length - 1]).x);
+  /* мелодия узла: ответить последовательностью */
+  const on2 = { id: "tn2", type: "ancient", x: on.x, y: on.y, seed: 12345 }, sn2 = g.objState(on2);
+  let mres = null; const seq = D.nodeSeq(on2);
+  LAB.mini.melody(seq, ok => { mres = ok; });
+  for (let k = 0; k < 200; k++) { const c = LAB.mini._cur(); if (!c || c.type !== "melody") break; if (!c.busy && !c.done) LAB.mini.gesture({ kind: "swipe", n: 1, dir: c.seq[c.pos] }); await wait(60); }
+  await wait(500);
+  out.melody = mres === true && seq.length === 5;
+  const nt = g.noteText({ note: "depth", dk: "node", seq: seq, id: "y" });
+  out.nodeNote = nt.x.split(",").length >= 5;
+}
+LAB.ui.closeAll();
+
+    /* враги глубин */
+    const freeAround = (cx, cy, r0, r1) => { const o2 = []; for (let dx = -r1; dx <= r1; dx++) for (let dy = -r1; dy <= r1; dy++) { const x = cx + dx, y = cy + dy, dd = Math.abs(dx) + Math.abs(dy); if (dd >= r0 && dd <= r1 && g.passable(x, y) && !g.foeAt(x, y) && !(x === g.G.x && y === g.G.y)) o2.push([x, y, dd]); } return o2; };
+    const inLos = c => LAB.los(g.CUR.fl, g.CUR.fs, c[0], c[1], g.G.x, g.G.y);
+    g.enterFloor(12, 5, "down", true); god(); C.foes().forEach(f => { f.dead = true; }); O.state().heat = 0; O.setLevel(0);
+    const oc3 = freeAround(g.G.x, g.G.y, 2, 3).filter(inLos)[0];
+    if (oc3) {
+      const ob = C.spawnFoe("g_listener", oc3[0], oc3[1], {});
+      const hpb = g.G.hp;
+      for (let i = 0; i < 6; i++) C.tick();
+      out.observer = O.level() >= 2 && /Скрытый наблюдатель/.test(O.logText(8)) && g.G.hp === hpb;
+      ob.dead = true; O.setLevel(0);
+    }
+    const fc2 = freeAround(g.G.x, g.G.y, 1, 2).filter(inLos)[0];
+    if (fc2) {
+      const fx = C.spawnFoe("g_welder", fc2[0], fc2[1], {});
+      let drained = false;
+      for (let i = 0; i < 24 && !drained; i++) { const h0 = g.G.hp; C.tick(); if (g.G.hp < h0) drained = true; }
+      out.fixer = drained && g.G.st.slow > 0;
+      fx.dead = true; g.G.st.slow = 0; god();
+    }
+    g.enterFloor(25, 5, "down", true); god(); C.foes().forEach(f => { f.dead = true; });
+    const vfar = freeAround(g.G.x, g.G.y, 5, 7)[0];
+    const sdir = Object.keys(LAB.DIRS).find(k => g.passable(g.G.x + LAB.DIRS[k][0], g.G.y + LAB.DIRS[k][1]) && !g.foeAt(g.G.x + LAB.DIRS[k][0], g.G.y + LAB.DIRS[k][1]));
+    if (vfar && sdir) {
+      const vb = C.spawnFoe("k_catfish", vfar[0], vfar[1], {}); vb.state = "idle"; g.G.noise = 0;
+      g.tryMove(sdir, false); g.G.noise = 0; C.tick();
+      out.vibro = vb.state !== "idle"; vb.dead = true;
+    }
+    const hc = freeAround(g.G.x, g.G.y, 2, 2).filter(inLos)[0];
+    if (hc) { const ht = C.spawnFoe("k_glowbug", hc[0], hc[1], {}); g.G.st.cloak = 20; ht.state = "idle"; C.tick(); out.heat = ht.state === "hunt"; g.G.st.cloak = 0; ht.dead = true; }
+    g.enterFloor(65, 6, "down", true); god(); C.foes().forEach(f => { f.dead = true; });
+    const rmb = g.CUR.fl.room[g.G.y * LAB.W + g.G.x];
+    const exits = g.CUR.fl.doors.filter(d => (d.room === rmb || d.other === rmb) && !(d.lock && d.lock.type === "secret"));
+    if (rmb >= 0 && exits.length) {
+      const ex = exits[0], bcell = freeAround(ex.x, ex.y, 2, 4)[0], acell = freeAround(g.G.x, g.G.y, 1, 1)[0];
+      if (bcell && acell) {
+        const a = C.spawnFoe("m_patrol", acell[0], acell[1], {}), b = C.spawnFoe("m_gatekeeper", bcell[0], bcell[1], {});
+        let onDoor = false;
+        for (let i = 0; i < 40 && !onDoor; i++) { a.state = "hunt"; a.lastKnown = { x: g.G.x, y: g.G.y }; b.state = "hunt"; b.lastKnown = { x: g.G.x, y: g.G.y }; C.tick(); god(); onDoor = exits.some(d => d.x === b.x && d.y === b.y); }
+        out.blocker = onDoor;
+        a.dead = true; b.dead = true;
+      }
+    }
+    LAB.ui.closeAll();
+    return out;
+  });
+  ok(dep.press && dep.pressHit.hit >= 0 && dep.pressHit.dmg > 0 && dep.pressHit.off, "«Подножие»: пресс бьёт по ритму и отбрасывает с линии (такт " + (dep.pressHit && dep.pressHit.hit) + ", урон " + (dep.pressHit && dep.pressHit.dmg) + ")");
+  ok(dep.press && dep.pressOff && dep.deaf && dep.ventOffNow, "«Подножие»: щит — две линии из трёх: прессы встали, вентиляция ожила; вибродатчики обесточены — ОКО не слышит выстрелов");
+  ok(dep.cradle && dep.condHot === "движение" && dep.condCool === "покой" && dep.condOpen, "«Колыбель»: в тепле образец в движении, охладили — покой, открыли — жив и даёт награду");
+  ok(dep.cradle && dep.dangBeast && dep.useKilled, "«Колыбель»: бьётся о стекло — вскрыли и выпустили тварь; стерилизация губит полезный образец");
+  ok(dep.cradle && dep.noVent && dep.cooled, "«Колыбель»: без вентиляции нижних глубин («Подножие») охлаждение не работает, с ней — работает");
+  ok(dep.cradle && dep.journal, "«Колыбель»: журнал смены читается; табло правдивее журнала");
+  ok(dep.mirror && dep.mz.n === 5 && dep.mz.kinds === "00012", "«Отражение»: в журнале три настоящих записи, повтор и запись другого состояния");
+  ok(dep.mirror && dep.wrongJam && dep.navSays, "«Отражение»: ошибка сверки сбивает навигатор — с признаками и сроком");
+  ok(dep.mirror && dep.solved, "«Отражение»: журнал сверен — отражённый контур замолк, проход отмечен");
+  ok(dep.syncOk === true, "синхронизация: такты свели — механизмы сцеплены");
+  ok(dep.gate && dep.gateStage1 && dep.gateOpen && dep.gateLoot, "«Механизм»: затвор в четыре ступени — открыт, питание и блокировки этажа сняты, хранилище взято");
+  ok(dep.node && dep.hint0 === 0 && dep.hint4 === 4, "«Исток»: узел подсказывает тем больше, чем бережнее пройдены глубины выше (" + dep.hint0 + " → " + dep.hint4 + ")");
+  ok(dep.node && dep.nodeOk && dep.melody && dep.nodeNote, "«Исток»: узел ответил — фрагмент памяти комплекса; последовательность играется и записана словами");
+  ok(dep.observer === true, "«Подножие»: скрытый наблюдатель не нападает — докладывает ОКО");
+  ok(dep.fixer === true, "«Подножие»: ремонтный автомат принял носителя за неисправный узел — обесточивает");
+  ok(dep.vibro === true && dep.heat === true, "«Колыбель»: твари чуют шаги по вибрации и тепло тела сквозь маскировку");
+  ok(dep.blocker === true, "«Механизм»: привратник перекрывает выход, пока другой гонит носителя");
+
   console.log("Обход этажей одного зерна: вход, такты, осмотр");
   const tour = await page.evaluate(() => {
     const g = LAB.game, G = g.G, out = { floors: 0, err: [], want: 0 };
