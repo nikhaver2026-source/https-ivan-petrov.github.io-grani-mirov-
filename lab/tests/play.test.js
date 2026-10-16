@@ -517,6 +517,24 @@ function ok(cond, msg) { if (cond) console.log("  ✓ " + msg); else { fails++; 
   });
   ok(new Set(notes).size === notes.length, "записки персонала не повторяются: " + notes.slice(0, 3).join(" | "));
 
+  const codeMenu = await page.evaluate(() => {
+    const g = LAB.game, G = g.G;
+    for (let L = 1; L <= 3; L++) for (let F = 1; F <= 20; F++) {
+      const fl = LAB.getFloor(G.seed, L, F), d = fl.doors.find(x => x.lock && x.lock.type === "code");
+      if (!d) continue;
+      g.enterFloor(L, F, "down", true);
+      const dd = g.CUR.fl.doors.find(x => x.id === d.id);
+      G.codes[dd.lock.code] = "проверка";
+      LAB.ui.closeAll();
+      g.openTarget({ type: "door", ref: dd, dir: "N" });
+      const labels = LAB.ui.top().items.map(i => typeof i.label === "function" ? i.label() : i.label);
+      LAB.ui.closeAll();
+      return labels;
+    }
+    return null;
+  });
+  ok(!codeMenu || (codeMenu.indexOf("Набрать код") >= 0 && !codeMenu.some(l => /из записки/.test(l))), "кодовая дверь: код набирается только вручную (" + (codeMenu || []).join(", ") + ")");
+
   console.log("Все этажи одного зерна: вход, такты, осмотр");
   const tour = await page.evaluate(() => {
     const g = LAB.game, G = g.G, out = { floors: 0, err: [] };

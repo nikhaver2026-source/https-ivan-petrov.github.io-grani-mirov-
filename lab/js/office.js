@@ -234,7 +234,7 @@ function openMail(o, i) {
     var nid = "mail:" + CUR().key + ":" + o.id + ":" + i;
     if (!g.notes[nid]) { g.notes[nid] = 1; g.noteList.push({ id: nid, t: "Письмо: " + m.s, x: m.x, a: m.f, L: g.L, F: g.F, code: m.safe ? m.code : undefined }); }
   }
-  UIx("note", "Письмо: «" + m.s + "»", "От: " + m.f + ". Кому: " + (m.to || d.owner.split(",")[0]) + ". " + m.x + (m.code ? " Код запомнен." : ""), function () { mailList(o); });
+  UIx("note", "Письмо: «" + m.s + "»", "От: " + m.f + ". Кому: " + (m.to || d.owner.split(",")[0]) + ". " + m.x + (m.code ? " Код записан в инвентарь: «Пропуска и ключи», «Известные коды». Набирать его — самому." : ""), function () { mailList(o); });
 }
 function readList(o, title, list) {
   UIx("note", title, list.join(" "), function () { desk(o); });

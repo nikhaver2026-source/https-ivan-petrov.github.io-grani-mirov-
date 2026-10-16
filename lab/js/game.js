@@ -906,10 +906,8 @@ function doorMenu(d, dir) {
         if (lk && lk.type === "code") codeEntry(d);
       }
     } });
-    if (lk && lk.type === "code") {
-      if (G.codes[lk.code]) items.push({ label: "Набрать код из записки (" + lk.code.split("").join(" ") + ")", fn: function () { tryCode(d, lk.code); } });
-      items.push({ label: "Ввести код вручную", fn: function () { codeEntry(d); } });
-    }
+    /* Код игрок набирает сам: прочитать его можно в записке (инвентарь, «Записки»). */
+    if (lk && lk.type === "code") items.push({ label: "Набрать код", fn: function () { codeEntry(d); } });
     if (lk && (lk.type === "card" || lk.type === "code") && why) items.push({ label: "Взломать замок (мини-игра)", fn: function () { hackDoor(d); } });
     if (lk && lk.type === "card" && why && (G.inv.decoder || 0) > 0) items.push({ label: "Использовать декодер пропусков (" + G.inv.decoder + " шт.)", fn: function () { G.inv.decoder--; A("play", "card_ok"); openDoor(d); sayq("Декодер подобрал ключ. Дверь открыта."); } });
     if (lk && why && G.implants.indexOf("hack") >= 0 && ["card", "code", "lockdown", "key"].indexOf(lk.type) >= 0) items.push({ label: "Дистанционный взлом — имплант, " + implantCost("hack") + " энергии", fn: function () { if (spendEnergy("hack")) { A("play", "implant"); openDoor(d); sayq("Имплант открыл замок."); } } });
@@ -925,7 +923,7 @@ function tryCode(d, code) {
 function codeEntry(d) {
   UIx("closeAll");
   if (!LAB.mini) return;
-  LAB.mini.code(function (code) { if (code) tryCode(d, code); });
+  LAB.mini.code(function (code) { if (code) tryCode(d, code); }, { title: "Дверь" });
 }
 function hackDoor(d) {
   var lv = d.lock.type === "card" ? d.lock.tier + 1 : 2 + Math.floor(G.L / 3);
@@ -1208,7 +1206,7 @@ function terminalMenu(o) {
       });
     } });
   }
-  if (o.codeFor) items.push({ label: "Коды доступа этажа", fn: function () { G.codes[o.code] = o.codeRoom; A("play", "term_beep"); say("В базе кодов: дверь «" + o.codeRoom + "» — код " + o.code.split("").join(" ") + ". Код запомнен."); } });
+  if (o.codeFor) items.push({ label: "Коды доступа этажа", fn: function () { G.codes[o.code] = o.codeRoom; A("play", "term_beep"); say("В базе кодов: дверь «" + o.codeRoom + "» — код " + o.code.split("").join(" ") + ". Код записан в инвентарь: «Пропуска и ключи», «Известные коды». Набирать его у двери — самому."); } });
   if (o.sub === "sci") items.push({ label: objState(o).data ? "Данные уже скачаны" : "Скачать исследовательские данные", fn: function () {
     if (st.data) { say("Данные уже скачаны."); return; }
     st.data = true; var cr = 15 + G.L * 5; G.credits += cr; A("play", "term_ok"); say("Данные проекта скопированы в «Эхо». За них дадут " + cr + " кредитов — уже начислено."); gainXP(8);
