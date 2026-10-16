@@ -323,7 +323,7 @@ function cameraTick(f) {
     if (f.camT <= 0) {
       f.camT = 40;
       A("foeSound", f, "alert");
-      sayOnce("cam", "Камера ОКО " + gm().relDir(f.x, f.y) + " заметила вас!", 5000);
+      sayOnce("cam", "Камера ОКО " + gm().relDir(f.x, f.y) + " заметила вас!", 5000, "urgent");
       if (LAB.oko) LAB.oko.event("camera");
     }
   } else if (Math.random() < 0.015) A("foeSound", f, "idle");
@@ -653,7 +653,8 @@ function poison(t) {
   g.st.poison = Math.max(g.st.poison, t);
 }
 var lastSayOnce = {};
-function sayOnce(k, t, gap) { var n = Date.now(); if (lastSayOnce[k] && n - lastSayOnce[k] < (gap || 4000)) return; lastSayOnce[k] = n; sayq(t); }
+/* prio "urgent" — опасность: звучит раньше ждущих событий (единый обработчик речи) */
+function sayOnce(k, t, gap, prio) { var n = Date.now(); if (lastSayOnce[k] && n - lastSayOnce[k] < (gap || 4000)) return; lastSayOnce[k] = n; if (prio) LAB.say(t, { prio: prio }); else sayq(t); }
 
 /* Урон герою: щит, броня, стойкость к виду урона. */
 function hurtPlayer(dmg, adt, src, opts) {

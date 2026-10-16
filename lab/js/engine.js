@@ -700,8 +700,9 @@ var Speech = {
     var front = false;
     if (prio >= P.action && opts.interrupt !== false) {
       if (prio === P.urgent && !user && !opts.note) {
-        /* срочное: перебить фразу события, очередь событий оставить */
-        if (this.cur && this.cur.prio < P.urgent && !this.noteReading) this._cut();
+        /* срочное: перебить фразу события, очередь событий оставить; перебитая
+           фраза прозвучит ещё раз — сразу после срочного */
+        if (this.cur && this.cur.prio < P.urgent && !this.noteReading) { var was = this.cur.item; this._cut(); if (was) this.queue.unshift(was); }
         front = true;
       } else { this.stop(true); this.later = []; }
     }
