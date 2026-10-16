@@ -548,6 +548,10 @@ public static class GraniSapi {
   }
   static void Worker(){
     dynamic v = null; string cur = null; dynamic prompt = null; bool onPlatform = false; string sr = null; string rh = null; DateTime srEnd = DateTime.MinValue;
+    // Голос SAPI, выбранный посреди фразы SAPI, ставится перед следующей фразой:
+    // смена голоса во время речи у части движков снимает сообщение о конце
+    // фразы, и игра ждала её в тишине.
+    string sapiName = null; object pend = null; string pendName = null;
     try { v = Com("SAPI.SpVoice"); } catch (Exception ex) { Say("fatal " + Clean(ex.Message)); return; }
     Enumerate(v);
     Say("ready");
@@ -564,9 +568,14 @@ public static class GraniSapi {
           if (p[0] == "enum") { tokens.Clear(); platform.Clear(); Enumerate(v); Say("ready"); continue; }
           if (p[0] == "voice" && p.Length > 1) {
             object t;
+            pend = null; pendName = null;
             if (p[1] == NVDA || p[1] == JAWS) { sr = p[1]; rh = null; }
             else if (rhMap.ContainsKey(p[1])) { rh = rhMap[p[1]]; onPlatform = false; sr = null; }
-            else if (tokens.TryGetValue(p[1], out t)) { v.Voice = (dynamic)t; onPlatform = false; sr = null; rh = null; }
+            else if (tokens.TryGetValue(p[1], out t)) {
+              bool busy = cur != null && sr == null && rh == null && !onPlatform;
+              if (p[1] != sapiName) { if (busy) { pend = t; pendName = p[1]; } else { v.Voice = (dynamic)t; sapiName = p[1]; } }
+              onPlatform = false; sr = null; rh = null;
+            }
             else if (msp != null && platform.Contains(p[1])) { msp.SelectVoice(p[1]); onPlatform = true; sr = null; rh = null; }
           }
           else if ((p[0] == "speak" || p[0] == "speakq") && p.Length > 4) {
@@ -618,7 +627,9 @@ public static class GraniSapi {
             } else {
               if (msp != null) { try { msp.SpeakAsyncCancelAll(); } catch (Exception) { } }
               RhStop();
-              prompt = null; v.Rate = rate; v.Volume = vol;
+              prompt = null;
+              if (pend != null) { try { v.Speak("", 1 | 2); } catch (Exception) { } v.Voice = (dynamic)pend; sapiName = pendName; pend = null; pendName = null; }
+              v.Rate = rate; v.Volume = vol;
               // 1 — не ждать, 2 — снять недосказанное (как QUEUE_FLUSH на Android), 16 — текст не разметка.
               v.Speak(p[4], 1 | 2 | 16); cur = p[1];
             }
@@ -1088,16 +1099,18 @@ class Sapi {
     // Голос «сам выбирается» — здесь, при смене голосов (читает настройки NVDA и JAWS).
     this.auto = autoVoiceName(this.voices);
     const next = this.want && this.owner.has(this.want) ? this.want : (this.auto || (this.voices[0] ? this.voices[0].name : null));
-    if (next) this.use(next, true); else { this.cur = null; this.curProc = null; }
+    // Тот же голос заново не шлётся: «voice» посреди фразы SAPI снимал её конец
+    // (32-битный мост, поднявшийся позже, обрывал так фразу 64-битного).
+    if (next) this.use(next); else { this.cur = null; this.curProc = null; }
     return this.ready;
   }
   proc(name) { return this.owner.get(name || this.cur) || this.procs[0]; }
   // Говорить этим голосом: процессу, который его держит, — «voice» (и после
   // подъёма моста заново: новый процесс голоса ещё не знает).
-  use(name, force) {
+  use(name) {
     if (!name || !this.owner.has(name)) return false;
     const p = this.owner.get(name);
-    if (force || name !== this.cur || p !== this.curProc) { this.cur = name; this.curProc = p; p.send('voice', name); }
+    if (name !== this.cur || p !== this.curProc) { this.cur = name; this.curProc = p; p.send('voice', name); }
     return true;
   }
   // Темп игры (шкала Web Speech: единица — обычный) уходит мосту как есть;

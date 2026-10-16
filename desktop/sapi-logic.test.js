@@ -42,6 +42,11 @@ ok(last(p64)[0] === 'speakq' && last(p64)[1] === 'u1' && last(p64)[4] === 'Дв�
 ok(last(p32)[0] === 'stop', 'другому процессу — «stop»');
 s.speak('Тревога!', 1, 0.5, 'u2');
 ok(last(p64)[0] === 'speak' && last(p64)[3] === '50', 'фраза без очереди — «speak» (как у «Грани Миров»), громкость 50');
+// 32-битный мост ответил позже срока, голоса перечитаны — фраза 64-битного
+// звучит дальше: тот же голос заново не шлётся (прежде «voice» посреди фразы
+// SAPI снимал её конец, и игра ждала его в тишине).
+const n0 = p64.sent.length; s.merge(); s.merge();
+ok(p64.sent.length === n0, 'мост, ответивший позже, не шлёт «voice» посреди фразы');
 s.stop();
 ok(last(p64)[0] === 'stop' && last(p32)[0] === 'stop' && s.speaking.size === 0, '«stop» — обоим процессам, мост молчит');
 
@@ -83,6 +88,13 @@ ok(s.want === '' && s.cur === SR_NAMES.nvda, '«выбирать самому» 
 s.setVoice(OLD);
 s.speak('Проверка.', 1, 1, 'u5', { queue: true });
 ok(s.cur === OLD && last(p32)[0] === 'speakq' && last(p64)[0] === 'stop', '32-битный голос — фраза его процессу, 64-битному — «stop»');
+
+console.log('Мост поднят заново');
+s.setVoice(RH);
+const p64b = fake(64, true, p64.voices.filter(v => v.kind !== 'sr'));
+for (const p of [p64b]) { p.onDone = (k, id) => s.end(k, id); p.onSr = (nv, jw) => s.srState(p, nv, jw); }
+s.procs = [p64b, p32]; s.merge();
+ok(s.cur === RH && last(p64b)[0] === 'voice' && last(p64b)[1] === RH, 'новый процесс моста получает «voice» с тем же голосом');
 
 console.log('Строки моста');
 const pr = new Proc('x', 64, true); const got = [];
