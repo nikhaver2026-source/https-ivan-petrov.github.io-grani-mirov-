@@ -164,7 +164,8 @@ ES_BAN = ["heavy rocket hit", "meteor", "explosion huge", "thrasher", "point def
           "speckle", "atomic", "moonbeam", "ionic blast", "bimodal", "drag cannon", "overcharged pulse laser", "successor pulse laser",
           "asteroid crunch large", "hion", "archonteleport"]
 
-# Заход 4: записи Freesound (CC0) — у каждой свой автор и своя страница.
+# Заходы 4, E и G: записи Freesound (CC0 и CC BY) — у каждой свой автор,
+# своя страница и своя лицензия.
 FS_META = {}
 _fs_tsv = os.path.join(os.path.dirname(LAB), "tools", "sfx-fetch", "fs_lab.tsv")
 if os.path.exists(_fs_tsv):
@@ -172,7 +173,10 @@ if os.path.exists(_fs_tsv):
         if not _l.strip() or _l.startswith("#"): continue
         _c = _l.rstrip("\n").split("\t")
         FS_META[_c[0]] = (_c[3], _c[2])
-        PACKS["fs:" + _c[0]] = (_c[3], _c[2], CC0, "https://freesound.org/s/%s/" % _c[0])
+        # шестой столбец — лицензия записи (CC BY 3.0/4.0); пусто — CC0
+        _lic = _c[5].strip() if len(_c) > 5 and _c[5].strip() else CC0
+        if "SA" in _lic or "NC" in _lic: continue
+        PACKS["fs:" + _c[0]] = (_c[3], _c[2], _lic, "https://freesound.org/s/%s/" % _c[0])
 
 def FS(i, **o):
     return S("D", "lab_fsD", "%s_*" % i, **o)
