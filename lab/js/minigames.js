@@ -30,8 +30,10 @@ function finish(ok, val) {
   LAB.UI[ok ? "ok" : "error"]();
   if (c.cb) setTimeout(function () { c.cb(val !== undefined ? val : ok); }, 30);
 }
+var lastCancel = 0;
 function cancel(silent) {
   if (!cur) return;
+  lastCancel = Date.now();
   if (!silent) say(cur.name + ": прервано.");
   finish(false, cur.type === "code" ? null : false);
 }
@@ -65,10 +67,10 @@ function hackGesture(g) {
   if (g.kind !== "swipe" || g.n !== 1 || c.busy) return;
   var want = c.seq[c.pos];
   playSig(g.dir, 0);
-  if (g.dir !== want) { setTimeout(function () { say("Неверно. Защита сработала."); finish(false); }, 350); return; }
+  if (g.dir !== want) { c.busy = c.done = true; setTimeout(function () { if (cur !== c) return; say("Неверно. Защита сработала."); finish(false); }, 350); return; }
   c.pos++;
   if (c.pos < c.round) return;
-  if (c.round >= c.seq.length) { setTimeout(function () { finish(true); }, 300); return; }
+  if (c.round >= c.seq.length) { c.busy = c.done = true; setTimeout(function () { if (cur === c) finish(true); }, 300); return; }
   c.round++; c.replays = 1; c.busy = true;
   setTimeout(function () { tone(1320, 0.08, 0, "sine", 0.12); setTimeout(playRound, 400); }, 300);
 }
@@ -142,13 +144,20 @@ function rhythm(n, cb) {
     beat();
   });
 }
+/* Задержка вывода звука (у Bluetooth-наушников — до трёхсот миллисекунд):
+   удар слышен позже, чем запланирован, — меряем от того, когда он прозвучал. */
+function outLatency() {
+  var cx = LAB.AE && LAB.AE.ctx;
+  var l = cx ? (cx.outputLatency || 0) + (cx.baseLatency || 0) : 0;
+  return Math.max(0, Math.min(0.4, l)) * 1000;
+}
 function rhythmDown(t) {
   var c = cur;
   if (!c.ready) return;
-  var now = t || performance.now();
-  var since = now - c.last, to = c.period - since;
+  var now = t || performance.now(), lat = outLatency();
+  var since = now - (c.last + lat), to = c.period - since;
   var off = Math.min(Math.abs(since), Math.abs(to));
-  if (off <= 140) {
+  if (off <= 140 + Math.min(60, lat * 0.25)) {
     c.streak++;
     tone(1320 + c.streak * 80, 0.07, 0, "sine", 0.14);
     if (c.streak >= c.need) { clearTimeout(c.timer); setTimeout(function () { say("Ловушка стабильна."); finish(true); }, 250); return; }
@@ -157,7 +166,7 @@ function rhythmDown(t) {
     c.streak = 0; c.misses++;
     tone(180, 0.18, 0, "sawtooth", 0.1);
     if (c.misses >= 3) { clearTimeout(c.timer); finish(false); return; }
-    sayq(since < c.period / 2 ? "Поздно." : "Рано.");
+    sayq(since >= 0 && since < c.period / 2 ? "Поздно." : "Рано.");
   }
 }
 
@@ -242,9 +251,9 @@ function relaysGesture(g) {
   if (g.kind === "dtap" && g.n === 1) {
     relayPress(c, c.pos); c.moves++;
     tone(900, 0.04, relayPan(c, c.pos), "square", 0.08);
-    if (!c.st.some(function (v) { return v; })) { setTimeout(function () { tone(523, 0.15, 0, "sine", 0.14); tone(784, 0.3, 0, "sine", 0.14, 0.15); say("Схема погашена."); finish(true); }, 250); return; }
+    if (!c.st.some(function (v) { return v; })) { c.done = true; setTimeout(function () { if (cur !== c) return; tone(523, 0.15, 0, "sine", 0.14); tone(784, 0.3, 0, "sine", 0.14, 0.15); say("Схема погашена."); finish(true); }, 250); return; }
     setTimeout(function () { if (cur === c) relayChord(c, false); }, 200);
-    if (c.moves >= c.limit) { setTimeout(function () { say("Ходы кончились: схема перегрелась."); finish(false); }, 900); }
+    if (c.moves >= c.limit) { c.done = true; setTimeout(function () { if (cur !== c) return; say("Ходы кончились: схема перегрелась."); finish(false); }, 900); }
   }
 }
 
@@ -283,8 +292,9 @@ function bullsGesture(g) {
     for (var b = 0; b < near; b++) tone(330, 0.14, 0, "triangle", 0.14, (exact + b) * 0.18);
     if (!exact && !near) tone(150, 0.25, 0, "sawtooth", 0.08);
     c.hist.push(c.d.join(" ") + ": на месте " + exact + ", не на месте " + near);
-    if (exact === c.len) { setTimeout(function () { say("Ключ подобран: " + c.d.join(" ") + "."); finish(true); }, 300 + c.len * 180); return; }
+    if (exact === c.len) { c.done = true; setTimeout(function () { if (cur !== c) return; say("Ключ подобран: " + c.d.join(" ") + "."); finish(true); }, 300 + c.len * 180); return; }
     var left = c.limit - c.tries;
+    if (left <= 0) c.done = true;
     setTimeout(function () {
       if (cur !== c) return;
       if (left <= 0) { say("На месте " + exact + ", не на месте " + near + ". Попытки кончились: ключ сменился."); finish(false); return; }
@@ -316,13 +326,13 @@ function sortGesture(g) {
       if (c.pos >= c.n - 1) { say("Справа соседа нет. Выберите тон левее."); return; }
       var t = c.arr[c.pos]; c.arr[c.pos] = c.arr[c.pos + 1]; c.arr[c.pos + 1] = t; c.swaps++;
       tone(c.arr[c.pos], 0.2, -0.3, "triangle", 0.15); tone(c.arr[c.pos + 1], 0.2, 0.3, "triangle", 0.15, 0.22);
-      if (c.swaps >= c.limit && !sorted(c)) setTimeout(function () { say("Перестановки кончились: настройка сбилась."); finish(false); }, 700);
+      if (c.swaps >= c.limit && !sorted(c)) { c.done = true; setTimeout(function () { if (cur !== c) return; say("Перестановки кончились: настройка сбилась."); finish(false); }, 700); }
       return;
     }
   }
   if (g.kind === "tap" && g.n === 1) { sortPlay(c); return; }
   if (g.kind === "dtap" && g.n === 1) {
-    if (sorted(c)) { sortPlay(c); setTimeout(function () { say("Частоты выстроены."); finish(true); }, c.n * 380 + 200); }
+    if (sorted(c)) { c.done = true; sortPlay(c); setTimeout(function () { if (cur !== c) return; say("Частоты выстроены."); finish(true); }, c.n * 380 + 200); }
     else { tone(160, 0.25, 0, "sawtooth", 0.08); say("Ещё не по порядку. Послушайте все тона: касание."); }
   }
 }
@@ -352,9 +362,9 @@ function melodyGesture(g) {
   var want = c.seq[c.pos];
   if (c.mirror) want = want === "L" ? "R" : want === "R" ? "L" : want;
   playSig(g.dir, 0);
-  if (g.dir !== want) { setTimeout(function () { say("Фальшь. Замок сбросил мелодию."); finish(false); }, 350); return; }
+  if (g.dir !== want) { c.done = true; setTimeout(function () { if (cur !== c) return; say("Фальшь. Замок сбросил мелодию."); finish(false); }, 350); return; }
   c.pos++;
-  if (c.pos >= c.seq.length) setTimeout(function () { finish(true); }, 300);
+  if (c.pos >= c.seq.length) { c.done = true; setTimeout(function () { if (cur === c) finish(true); }, 300); }
 }
 
 /* Подождать, пока «Эхо» договорит инструкцию (но не дольше 9 секунд). */
@@ -368,8 +378,14 @@ function waitSpeech(fn) {
 }
 
 /* Жесты — мини-игре. */
+var gapUntil = 0, gapCancel = false;
 function gesture(g) {
-  if (!cur) return false;
+  if (!cur) {
+    /* пауза между шагами цепочки: жесты не уходят в игру */
+    if (Date.now() < gapUntil) { if ((g.kind === "swipe" && g.n === 2 && g.dir === "D") || g.kind === "back") { gapCancel = true; lastCancel = Date.now(); } return true; }
+    return false;
+  }
+  if (cur.done) return true; /* итог уже решён — лишний жест его не перебьёт */
   if ((g.kind === "swipe" && g.n === 2 && g.dir === "D") || g.kind === "back") { cancel(); return true; }
   if (g.kind === "down") { if (cur.type === "rhythm") rhythmDown(g.t); return true; }
   if (cur.type === "rhythm") return true;
@@ -390,14 +406,15 @@ function chain(steps, cb) {
     if (!ok) { cb(false); return; }
     if (i >= steps.length) { cb(true); return; }
     var s = steps[i++];
-    if (i > 1) { LAB.UI.ok(); setTimeout(function () { s(next); }, 700); } else s(next);
+    if (i > 1) { LAB.UI.ok(); gapUntil = Date.now() + 800; gapCancel = false; setTimeout(function () { gapUntil = 0; if (gapCancel) { gapCancel = false; say("Прервано."); cb(false); return; } s(next); }, 700); } else s(next);
   };
   next(true);
 }
 
 LAB.mini = {
   hack: hack, tune: tune, rhythm: rhythm, code: code, relays: relays, bulls: bulls, sortTones: sortTones, melody: melody, chain: chain, gesture: gesture, cancel: cancel,
-  active: function () { return !!cur; },
+  active: function () { return !!cur || Date.now() < gapUntil; },
+  wasCancelled: function () { return Date.now() - lastCancel < 1500; },
   _cur: function () { return cur; }, /* для проверок */
   raw: function () { return !!(cur && cur.raw); },
   name: function () { return cur ? cur.name : ""; }

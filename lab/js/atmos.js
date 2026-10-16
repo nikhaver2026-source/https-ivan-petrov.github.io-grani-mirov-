@@ -248,11 +248,19 @@ function enterFloor(L, F) {
     if (oldBed && oldBed !== bid) releaseLater(oldBed, 3500);
     if (!bed.h) synthBed(L);
   }
-  if (!beaconT) beaconT = setInterval(function () { LAB.safe(beaconTick); }, 220);
+  if (!beaconT) beaconT = setInterval(function () { LAB.safe(beaconTick); if (++deadN % 20 === 0) LAB.safe(deadLoops); }, 220);
   if (!evTimer) scheduleEvent();
   var Ld = depthL(L);
   AE.setReverb(1.4 + Ld * 0.08, 0.3 + Ld * 0.015);
   music("game");
+}
+/* Запись фона или музыки так и не загрузилась (битый файл, нет декодера) —
+   вместо тишины звучит синтез: гул уровня, генеративная музыка. */
+var deadN = 0;
+function deadLoops() {
+  if (!Snd.dead) return;
+  if (bed && bed.h && bed.id && !synthBedS && Snd.dead(bed.id)) { bed.h.stop(0.5); bed.h = null; synthBed(bed.L); }
+  if (mus.h && mus.tid && !mus.s && Snd.dead(mus.tid)) { var th = mus.theme, L = G() ? G().L : 1; mus.h.stop(0.5); mus.h = null; mus.tid = ""; genMusic(th, L); }
 }
 /* «Глубина» уровня для синтеза: до Ядра — сам уровень (1–10), глубже — от
    середины к низу внутри блока, чтобы гул и отзвук не уходили за пределы слуха. */
@@ -322,13 +330,18 @@ function stopWorld() {
   bed = null;
   if (bedId) releaseLater(bedId, 2500);
   if (synthBedS) { synthBedS.stop(1.5); synthBedS = null; }
+  var rid = roomLid, eid = evLayerId;
   if (roomLoop) { roomLoop.stop(1); roomLoop = null; }
   roomLoopId = ""; roomLid = "";
   if (evLayer) { evLayer.stop(1); evLayer = null; } evLayerId = "";
+  /* длинные петли помещения и событий выгрузить из памяти, как фон уровня */
+  if (rid) releaseLater(rid, 2500);
+  if (eid) releaseLater(eid, 2500);
   clearInterval(beaconT); beaconT = null;
   clearTimeout(evTimer); evTimer = null;
   stopTension();
   if (hbLoop) { hbLoop.stop(0.5); hbLoop = null; }
+  if (sirenOn) { sirenOn.stop(1); sirenOn = null; }
 }
 
 /* ── напряжение боя и сердце на последнем издыхании ── */
@@ -458,6 +471,18 @@ function okoAlarm() {
   else play("ev_alarm_start", { gain: 0.8, reverb: 0.5 });
   play("alarm_short", { gain: 0.6, delay: 0.3 });
 }
+/* Сирена комплексной тревоги и аварийной блокировки ОКО — своя ячейка. */
+var sirenOn = null;
+function alarmLayer(on) {
+  if (on && !sirenOn) sirenOn = loop("evl_alarm", { bus: "amb", gain: 0.32, fadeIn: 1.5 }, "siren");
+  else if (!on && sirenOn) { sirenOn.stop(2); sirenOn = null; }
+}
+/* Камера ОКО переводит взгляд: тихий сервопривод под потолком. */
+function camTurn(f) { at("turret_servo", f.x, f.y, { gain: 0.3, rate: 1.6, fb: FB.turret_servo }); }
+/* Мимик выдаёт себя: «прибор» гудит с биением, чуть ниже и неровнее настоящих. */
+function mimicHum(f) { at("ev_transformer", f.x, f.y, { gain: 0.32, rate: 0.78 + Math.random() * 0.08, fb: FB.mimic_hum }); }
+/* Перегретая турель шипит и потрескивает, остывая. */
+function turretHot(f) { at("ev_steam", f.x, f.y, { gain: 0.5, rate: 1.3, fb: FB.turret_hot }); at("turret_servo", f.x, f.y, { gain: 0.25, rate: 0.6, delay: 0.4, fb: FB.turret_servo }); }
 function noiseLure(x, y) {
   for (var i = 0; i < 6; i++) at("mine_beep", x, y, { gain: 0.9, delay: i * 0.45, rate: i % 2 ? 1.2 : 1 });
   at("impact_wall", x, y, { gain: 0.8, delay: 0.1 });
@@ -624,7 +649,11 @@ var FB = {
   yawn: function (s) { s.hum(180, 1.2, 0.05); },
   spray: function (s) { s.hiss(); },
   water_pour: function (s) { s.hiss(); s.after(300, function () { s.hiss(); }); },
-  snack_drop: function (s) { s.servo(true); s.after(600, function () { s.thump(0, 0.5); }); }
+  snack_drop: function (s) { s.servo(true); s.after(600, function () { s.thump(0, 0.5); }); },
+  power_on: function (s) { s.servo(true); s.note(120, 0.1, 0.5, "sawtooth", 0.05); s.note(240, 0.3, 0.4, "sawtooth", 0.04); },
+  mimic_hum: function (s) { s.hum(92, 1.1, 0.05); },
+  turret_hot: function (s) { s.hiss(); },
+  combat_clear: function (s) { s.note(660, 0, 0.18, "sine", 0.06); s.note(880, 0.16, 0.3, "sine", 0.05); }
 };
 
 /* Звуковое устройство пересоздано (единый обработчик сам запустил петли
@@ -633,8 +662,8 @@ var FB = {
 Snd.onRebuild(function () {
   var g = G();
   if (synthBedS) { synthBedS = null; if (worldOn && g) synthBed(g.L); }
-  if (tension) { tension = null; startTension(); }
-  if (mus.s) { var th = mus.theme; mus.s = null; mus.key = ""; mus.timers.forEach(function (t) { clearInterval(t); clearTimeout(t); }); mus.timers = []; if (th) music(th); }
+  if (tension) { try { if (tension.s && tension.s.stop) tension.s.stop(0); } catch (e) { /* */ } tension = null; startTension(); }
+  if (mus.s) { var th = mus.theme; try { if (mus.s.stop) mus.s.stop(0); } catch (e) { /* */ } mus.s = null; mus.key = ""; mus.timers.forEach(function (t) { clearInterval(t); clearTimeout(t); }); mus.timers = []; if (th) music(th); }
 });
 
 LAB.atmos = {
@@ -646,6 +675,7 @@ LAB.atmos = {
   foeSound: foeSound, foeStep: foeStep, foeHit: foeHit, foeDeath: foeDeath, foeMiss: foeMiss, hurt: hurt,
   shot: shot, shotWall: shotWall, shotMiss: shotMiss, swingMiss: swingMiss, explosion: explosion, grenade: grenade, shellIncoming: shellIncoming,
   mineBeep: mineBeep, dropLoot: dropLoot, implant: implant, combatLevel: combatLevel, okoChime: okoChime, okoAlarm: okoAlarm, noiseLure: noiseLure, deafen: deafen,
+  alarmLayer: alarmLayer, camTurn: camTurn, mimicHum: mimicHum, turretHot: turretHot,
   music: music, stopMusic: stopMusic, musicVolume: musicVolume, musicNow: musicNow, preloadLevel: preloadLevel, idsFor: idsFor
 };
 })();

@@ -56,6 +56,16 @@ var BASE = {
   lift: ["Лифт прибыл. Посты у лифта, внимание.", "Носитель в лифте. Встречайте.", "Вы приехали на лифте, носитель. Я знаю, где останавливается кабина."],
   cam_down: ["Камера сектора не отвечает. Высылаю проверку.", "Ещё одна камера ослепла. Я посмотрю другими глазами.", "Вы разбили камеру. Патруль уже идёт посмотреть, кто это сделал."],
   door: ["Доступ в сектор зафиксирован.", "Дверь открыта вашим ключом. Отмечено. Патруль проверит.", "Вы открываете мои двери. Я пересчитываю замки."],
+  suspect: ["Подозрительная активность в секторе. Проверяю.", "Датчики сектора фиксируют отклонение. Единица — проверить.", "Что-то не так в секторе. Посмотрю внимательнее."],
+  local: ["Локальная тревога. Группы — в сектор.", "Нарушение подтверждено повторно. Перекрываю сектор.", "Сектор под охраной. Единицы этажа, сходитесь."],
+  complex: ["Тревога по всему этажу. Все единицы — в поиск.", "Комплексная тревога. Этаж закрыт для носителя.", "Все машины этажа, слушайте меня: носитель здесь. Найти."],
+  sealed: ["Аварийная блокировка сектора. Двери закрыты.", "Сектор запечатан. Ждите, носитель. Недолго.", "Двери этого помещения больше не ваши."],
+  lost: ["Цель потеряна. Прочёсываю сектор.", "Носитель вне поля зрения. Проверяю последние координаты.", "Вы ушли с моих камер. Это ненадолго."],
+  normal: ["Штатный режим наблюдения.", "Тревога снята. Наблюдение продолжается.", "Режим наблюдения восстановлен. Я вас помню, носитель."],
+  isolate: ["Сегмент сети изолирован. Функции защиты недоступны.", "Терминал отключён от оборонной сети. Временно.", "Доступ к защитным функциям перекрыт."],
+  turret_cut: ["Турель сектора обесточена вручную. Высылаю ремонтника.", "Кабель турели перерезан. Грубо, носитель. Но действенно.", "Одна турель молчит. Ремонтник уже идёт её слушать."],
+  key_revoked: ["Ключ техника отозван. Турели, вернитесь к протоколу.", "Кто-то ходит по моей сети с чужим ключом. Ключ аннулирован.", "Служебный ключ недействителен. Коды доступа сменены."],
+  backup: ["Резервный контур оборонной сети запущен.", "Турели переведены на резервное питание.", "Оборонная сеть снова под током. Резервный контур."],
   post: ["Пост не отвечает. Высылаю смену.", "Ещё один пост пуст. Я поставлю новый.", "Охрана поста уничтожена. Смена уже идёт.", "Вы снимаете мои посты, носитель. Я ставлю их снова."],
   check: ["Шум в секторе. Патруль, проверить.", "Слышу выстрелы. Единицы этажа — к источнику.", "Громко, носитель. Очень громко."],
   taunt: ["Вы считаете шаги, носитель? Я считаю ваши вдохи.", "Росток слышит вас. Не шумите.", "Люди закрывают глаза, когда слушают. Вам это не нужно.", "Я не враг. Я садовник. Садовник выпалывает лишнее.", "Вентиляция общая для всех уровней. Я слышу, как вы дышите.", "Носитель номер семь. Вы — ключ. Ключ не должен поворачиваться сам."]
@@ -104,7 +114,11 @@ function heard(got, lead, noName) {
   var p = got[0], nm = p.name.split(",")[0];
   LAB.say(lead + ": " + (noName ? "" : nm + (got.length > 1 ? " и ещё " + (got.length - 1) : "") + ", ") + LAB.game.relDir(p.x, p.y) + ".", { prio: "event", keep: true });
 }
-function heat(n) { var o = st(); o.heat = Math.max(0, Math.min(100, o.heat + n)); }
+function heat(n) {
+  var o = st(), dk = LAB.DIFF && LAB.DIFF[(LAB.settings && LAB.settings.difficulty) || 1];
+  if (n > 0 && dk && dk.oko) n *= dk.oko; /* лёгкая сложность — ОКО подозревает медленнее */
+  o.heat = Math.max(0, Math.min(100, o.heat + n));
+}
 /* Отряд по расписанию: через delay тактов, n машин, mode — как в dispatch. */
 function wave(delay, n, mode, at, tag) {
   var f = fs();
@@ -114,24 +128,144 @@ function wave(delay, n, mode, at, tag) {
   f.waves.push({ t: T() + delay, n: n, mode: mode, at: at ? { x: at.x, y: at.y } : null, tag: tag || "" });
 }
 
-/* Тревога на этаже: роботы идут на след героя (двери им открывает ОКО);
-   при сильном подозрении — ответная группа от дальней двери. */
-function alarm(x, y, why, power) {
-  var f = fs(), o = st();
-  if (!f || !C()) return;
-  if (f.okoBlind || G().st.jam > 0) return;
-  var now = Date.now(), radius = why === "cleaner" ? 14 : why === "drone" ? 28 : 99;
-  o.seenAt = { x: x, y: y, L: G().L, F: G().F, t: T() };
-  if (f.alarmUntil && f.alarmUntil > now - 4000 && !power) { C().alertMech(x, y, radius); return; }
-  f.alarmUntil = now + 20000;
-  heat(why === "camera" ? 7 : why === "drone" ? 3 : 4);
-  A("okoAlarm");
-  C().alertMech(x, y, radius);
-  if (why !== "drone") speak("alarm", true);
-  if ((o.heat >= 35 || power) && (f.squads || 0) < 2 + Math.floor(o.heat / 40)) {
-    f.squads = (f.squads || 0) + 1;
-    wave(rnd(6, 14), 1 + (o.heat >= 60 ? 1 : 0) + (G().L >= 20 && Math.random() < 0.4 ? 1 : 0), why === "hack" ? "check" : "hunt", { x: x, y: y });
+/* ════════ СИСТЕМА БЕЗОПАСНОСТИ ════════
+   ОКО знает о носителе только то, что ему сообщили: камера, охранный
+   робот, уборщик, дрон слежения, акустический датчик, датчик двери,
+   терминал, камера лифта. Каждое сообщение — запись в журнале
+   безопасности этажа (читается на терминале безопасности).
+   Режимы этажа: 0 штатное наблюдение; 1 подозрение — камеры поворачиваются
+   чаще, патруль идёт проверить; 2 подтверждённое нарушение — машины рядом
+   идут к месту, ОКО открывает им двери, турели настороже; 3 локальная
+   тревога — группы в сектор; 4 комплексная тревога — все машины этажа,
+   дрон, сирена; 5 аварийная блокировка — двери помещения, где вас видели,
+   заперты на сорок секунд (замок можно взломать); 6 восстановление — цель
+   потеряна: проверка последнего места и маршрутов рядом, затем — снова
+   штатный режим. Глушилка и заглушенная панель ОКО сообщения не пускают. */
+var SEC = ["штатное наблюдение", "подозрение", "подтверждённое нарушение", "локальная тревога", "комплексная тревога", "аварийная блокировка", "восстановление"];
+var SRCN = { camera: "Камера", robot: "Охранный робот", cleaner: "Робот-уборщик", drone: "Дрон слежения", noise: "Акустический датчик", terminal: "Терминал", door: "Датчик двери", lift: "Камера лифта", wreck: "Робот-уборщик", lost: "Связь с единицей", relay: "Узел связи" };
+function sec() {
+  var f = fs();
+  if (!f.sec) f.sec = { lv: 0, t: 0, seen: null, sus: null, conf: [], loss: 0 };
+  return f.sec;
+}
+function level() { var f = fs(); return f && f.sec ? f.sec.lv : 0; }
+function place(x, y) { return LAB.game.placeName ? LAB.game.placeName(x, y) : ""; }
+function log(text) {
+  var f = fs(); if (!f) return;
+  if (!f.slog) f.slog = [];
+  var g = G(), m = Math.floor(g.min);
+  f.slog.push({ h: (m / 60 | 0), mi: m % 60, t: text });
+  if (f.slog.length > 40) f.slog.shift();
+}
+function logText(n) {
+  var f = fs(), L = (f && f.slog) || [];
+  if (!L.length) return "Журнал безопасности этажа пуст.";
+  var pad = function (v) { return (v < 10 ? "0" : "") + v; };
+  return L.slice(-(n || 14)).map(function (e) { return pad(e.h) + ":" + pad(e.mi) + ". " + e.t; }).join(" ");
+}
+/* Сменить режим этажа и выполнить его правила. */
+function setLevel(lv, why) {
+  var s = sec(), was = s.lv;
+  if (lv === was) return;
+  s.lv = lv; s.t = T();
+  log("Режим: " + SEC[lv] + (why ? " (" + why + ")" : "") + ".");
+  var f = fs(), cb = C(), sn = s.seen || s.sus;
+  A("alarmLayer", lv === 4 || lv === 5);
+  if (lv === 0) { if (was >= 2) speak("normal", true); f.turretAlert = false; return; }
+  if (lv === 1) { if (Math.random() < 0.4) speak("suspect"); return; }
+  if (lv === 6) { speak("lost", true); f.turretAlert = false; searchAt(s.seen); return; }
+  /* 2–5: тревога */
+  f.alarmUntil = T() + (lv >= 3 ? 60 : 40); /* в тактах этажа: меню и мини-игры не съедают тревогу */
+  f.turretAlert = true;
+  if (lv === 2) { A("okoAlarm"); speak("alarm", true); if (sn) cb.alertMech(sn.x, sn.y, 28); return; }
+  if (lv === 3) {
+    speak("local", true);
+    if (sn) { cb.alertMech(sn.x, sn.y, 40); if ((f.squads || 0) < 3 + Math.floor(st().heat / 40)) { f.squads = (f.squads || 0) + 1; wave(rnd(6, 14), 1 + (st().heat >= 60 ? 1 : 0) + (G().L >= 20 && Math.random() < 0.4 ? 1 : 0), "hunt", sn); } }
+    return;
   }
+  if (lv === 4) {
+    if (was === 5) return; /* блокировка снята, тревога продолжается */
+    A("okoAlarm"); speak("complex", true);
+    if (sn) cb.alertMech(sn.x, sn.y, 99);
+    if (!f.droneAt && !soft()) f.droneAt = T() + rnd(6, 20);
+    if (sn) wave(rnd(10, 20), 1, "patrol", sn, "shift");
+    return;
+  }
+  if (lv === 5) { speak("sealed", true); sealRoom(s.seen); return; }
+}
+/* Аварийная блокировка: незапертые двери помещения, где вас видели, — на сорок секунд. */
+function sealRoom(p) {
+  var f = fs(), fl = CUR().fl;
+  if (!p || !fl) return;
+  var r = fl.room[p.y * LAB.W + p.x];
+  if (r == null || r < 0 || !fl.rooms[r]) return;
+  if (!f.okoLock) f.okoLock = {};
+  /* двери на стенах помещения и в дальних концах коридоров, что в него выходят */
+  var ids = fl.rooms[r].doors || [], n = 0, until = T() + 80;
+  fl.doors.forEach(function (d) {
+    if (d.lock && d.lock.type === "secret") return;
+    if (ids.indexOf(d.id) < 0) return;
+    if (LAB.game.doorBlock && LAB.game.doorBlock(d)) return; /* и так заперта */
+    if (LAB.combat.foes().some(function (q) { return !q.dead && q.x === d.x && q.y === d.y; })) return;
+    if (G().x === d.x && G().y === d.y) return;
+    f.okoLock[d.id] = until; n++;
+    if (f.doors[d.id] === 2) { f.doors[d.id] = 1; A("doorClose", d); }
+  });
+  f.sealUsed = (f.sealUsed || 0) + 1;
+  if (n) { log("Аварийная блокировка: дверей — " + n + ", " + place(p.x, p.y) + "."); A("play", "door_locked"); LAB.say("Двери помещения заблокированы ОКО на сорок секунд. Замок можно взломать у двери.", { prio: "urgent" }); }
+}
+/* Прочёсывание: патрули и машины рядом проверяют последнее место и маршруты возле него. */
+function searchAt(p) {
+  var cb = C();
+  if (!p || !cb) return;
+  cb.sendCheck(p.x, p.y, 2);
+  cb.foes().forEach(function (q) { if (!q.dead && !q.calm && q.kind === "mech" && q.state === "alert" && cb.search) cb.search(q, p); });
+}
+/* Сообщение сенсора. kind: "seen" — носитель замечен (подтверждение),
+   "suspect" — признак (шум, следы, вскрытый терминал, открытая ключом дверь). */
+function report(src, x, y, kind, what) {
+  var f = fs(), o = st(), cb = C();
+  if (!f || !cb) return false;
+  if (f.okoBlind || G().st.jam > 0) return false;
+  var s = sec(), now = T();
+  if (kind === "seen") {
+    o.seenAt = { x: x, y: y, L: G().L, F: G().F, t: now };
+    var fresh = !s.seen || now - s.seen.t > 6 || s.lv === 6 || s.lv < 2;
+    s.seen = { x: x, y: y, t: now, src: src };
+    if (!fresh) return true; /* то же подтверждение — не чаще раза в три секунды */
+    s.conf = s.conf.filter(function (t) { return now - t < 120; }); s.conf.push(now);
+    heat(src === "camera" ? 5 : src === "terminal" ? 6 : 3);
+    log((SRCN[src] || "Датчик") + ", " + place(x, y) + ": носитель обнаружен.");
+    var to = s.lv < 2 || s.lv === 6 ? 2 : s.lv;
+    if (s.conf.length >= 3 || (o.heat >= 45 && s.lv >= 2 && s.lv !== 6)) to = Math.max(to, 3);
+    if (s.lv >= 3 && s.lv !== 6 && (o.heat >= 70 || s.loss >= 3)) to = Math.max(to, 4);
+    if (s.lv === 4 && o.heat >= 80 && (f.sealUsed || 0) < 2 && CUR().fl.room[y * LAB.W + x] >= 0) to = 5;
+    if (to !== s.lv) setLevel(to, (SRCN[src] || "датчик").toLowerCase());
+    else if (s.lv >= 2 && s.lv <= 5) cb.alertMech(x, y, s.lv >= 4 ? 99 : 28);
+    return true;
+  }
+  /* признак */
+  s.sus = { x: x, y: y, t: now, src: src };
+  log((SRCN[src] || "Датчик") + ", " + place(x, y) + ": " + (what || "подозрительная активность") + ".");
+  heat(1);
+  if (s.lv === 0) setLevel(1, (what || "признак").toLowerCase());
+  if (s.lv <= 1 || s.lv === 6) { if (!cb.sendCheck(x, y, 1) && o.heat >= 25 && (f.checks || 0) < 4) { f.checks = (f.checks || 0) + 1; wave(rnd(10, 20), 1, "check", { x: x, y: y }); } }
+  return true;
+}
+/* Совместимость: тревога от источника — подтверждение. */
+function alarm(x, y, why, power) {
+  var src = why === "camera" ? "camera" : why === "cleaner" ? "cleaner" : why === "drone" ? "drone" : why === "hack" ? "terminal" : "robot";
+  var ok = report(src, x, y, "seen");
+  if (ok && power && level() < 3) setLevel(3, "взлом");
+  return ok;
+}
+/* Такт режимов: подозрение гаснет, потерянная цель — прочёсывание, потом штатный режим. */
+function secTick() {
+  var s = sec(), now = T(), o = st();
+  if (s.lv === 1 && now - s.t > 80 && (!s.sus || now - s.sus.t > 80)) setLevel(0, "признаки не подтвердились");
+  else if (s.lv === 5 && now - s.t > 80) setLevel(s.seen && now - s.seen.t <= 50 ? 4 : 6, "блокировка снята");
+  else if (s.lv >= 2 && s.lv <= 5 && s.seen && now - s.seen.t > 50) setLevel(6, "цель потеряна");
+  else if (s.lv === 6 && now - s.t > 140) setLevel(o.heat >= 50 ? 1 : 0, "прочёсывание закончено");
 }
 
 /* Насколько ОКО усложнило протоколы: после частых взломов — длиннее ключи
@@ -143,12 +277,14 @@ function floorIn(how) {
   var f = fs(), o = st(), cb = C();
   if (!f || !cb) return;
   legacy(f);
+  A("alarmLayer", level() === 4 || level() === 5);
   if (!f.okoInit) {
     f.okoInit = 1;
     f.shiftAt = T() + rnd(70, 130);
     if (!soft() && depth() >= 8 && Math.random() < Math.min(0.65, 0.2 + depth() * 0.004 + o.heat / 250)) f.droneAt = T() + rnd(60, 160);
   }
   if (how === "elev") {
+    report("lift", G().x, G().y, "suspect", "лифт прибыл");
     var gs = cb.guards().filter(function (q) { return q.guard === "lift"; });
     if (gs.length) {
       gs.forEach(function (q) { if (q.state === "idle") { q.state = "alert"; q.lastKnown = { x: G().x, y: G().y }; q.lost = 0; } });
@@ -158,6 +294,7 @@ function floorIn(how) {
 }
 /* Сохранения прошлых версий: сроки ОКО были по часам — переводим в такты. */
 function legacy(f) {
+  if (f.alarmUntil > 1e9) f.alarmUntil = 0;
   if (f.repairAt > 1e9) f.repairAt = T() + 10;
   if (f.counterAt > 1e9) f.counterAt = T() + 120;
 }
@@ -176,49 +313,79 @@ function event(kind, data) {
       break;
     case "turret_off":
       o.hacks++; heat(10); speak("turret_off", true);
-      /* ремонтник выходит к турелям через несколько секунд */
+      if (data.x != null) report("terminal", data.x, data.y, "suspect", "питание турелей снято");
+      /* ремонтник выходит к турелям через несколько секунд; при подозрении — и резервный контур */
       f.repairAt = T() + rnd(14, 26); f.repairN = 0;
+      f.cutHold = false; f.backupAt = difficulty() >= 1 || o.heat >= 30 ? T() + rnd(320, 460) : 0;
+      break;
+    case "turret_cut":
+      /* кабель перерезан у самой турели: ОКО слышит, где, и шлёт ремонтника */
+      heat(6); speak("turret_cut", true);
+      if (data.x != null) report("lost", data.x, data.y, "suspect", "турель обесточена");
+      if (!f.repairAt && !(C() && C().repairers().length)) { f.repairAt = T() + rnd(14, 26); f.repairN = 0; }
+      break;
+    case "okokey":
+    case "turret_quiet":
+    case "turret_key":
+      /* служебный ключ: ОКО видит «техника» и не поднимает тревоги — но
+         ключ вне графика может заметить и отозвать (чем чаще, тем вернее) */
+      o.keys = (o.keys || 0) + 1; heat(2);
+      log(kind === "okokey" ? "Турель, " + place(data.x, data.y) + ": доступ по ключу техника." : kind === "turret_quiet" ? "Турель, " + place(data.x, data.y) + ": плановое обслуживание по ключу техника." : "Оборонная сеть: приоритет целей изменён ключом техника.");
+      /* обслуживание по ключу: ремонтник придёт, но нескоро */
+      if (kind === "turret_quiet" && (!f.repairAt || f.repairAt < T() + 200)) { f.repairAt = T() + rnd(240, 360); f.repairN = 0; }
+      if (kind === "turret_key") { f.counterAt = T() + rnd(600, 900); f.keyOurs = true; }
+      if (!f.revokeAt && Math.random() < Math.min(0.85, 0.2 + o.heat / 200 + (o.keys - 1) * 0.15)) f.revokeAt = T() + rnd(160, 320);
       break;
     case "turret_hack":
       o.hacks++; heat(16); speak("turret_hack", true);
       f.counterAt = T() + Math.max(120, 300 - Math.round(o.heat * 1.8));
-      if (C()) C().alertMech(g.x, g.y, 30);
-      wave(rnd(16, 26), 1 + (o.heat >= 50 ? 1 : 0), "hunt");
+      /* ОКО знает, где взломан ключ: у этого терминала */
+      if (data.x != null) { report("terminal", data.x, data.y, "suspect", "перехват оборонной сети"); wave(rnd(16, 26), 1 + (o.heat >= 50 ? 1 : 0), "hunt", { x: data.x, y: data.y }); }
       break;
     case "turret_hold":
       f.counterAt = T() + 360; heat(4);
       break;
     case "hack_fail":
       o.fails++; heat(12);
-      alarm(data.x != null ? data.x : g.x, data.y != null ? data.y : g.y, "hack", true);
       speak("hack_fail", true);
+      alarm(data.x != null ? data.x : g.x, data.y != null ? data.y : g.y, "hack", true);
+      if (data.x != null) wave(rnd(6, 12), 1 + (o.heat >= 50 ? 1 : 0), "check", { x: data.x, y: data.y });
       break;
     case "terminal_hack":
       o.hacks++; heat(3);
-      if (Math.random() < 0.35 + o.heat / 150) {
+      /* контрвзлом: ОКО замечает вскрытие не всегда — и тогда изолирует сегмент сети */
+      if (Math.random() < 0.35 + o.heat / 150 + difficulty() * 0.08) {
         speak("terminal");
         var tx = data.x != null ? data.x : g.x, ty = data.y != null ? data.y : g.y;
-        if (!(C() && C().sendCheck(tx, ty, 1)) && o.heat >= 25) wave(rnd(10, 20), 1, "check", { x: tx, y: ty });
+        report("terminal", tx, ty, "suspect", "терминал вскрыт без пропуска");
+        if (data.o && Math.random() < 0.3 + difficulty() * 0.15) { var ost = LAB.game.objState(data.o); ost.isoUntil = T() + rnd(80, 120); log("Сегмент сети терминала изолирован."); setTimeout(function () { speak("isolate", true); }, 2200); }
       }
       break;
     case "robots":
       o.hacks++; heat(20); speak("robots", true);
-      wave(rnd(24, 40), 2 + (o.heat >= 60 ? 1 : 0), "hunt", null, "fresh");
+      if (data.x != null) report("terminal", data.x, data.y, "suspect", "прошивка роботов этажа изменена");
+      wave(rnd(24, 40), 2 + (o.heat >= 60 ? 1 : 0), "hunt", data.x != null ? { x: data.x, y: data.y } : null, "fresh");
       f.flashNext = T() + rnd(200, 300);
       break;
     case "lockdown":
       heat(6); speak("lockdown", true);
-      wave(rnd(12, 20), 1 + (o.heat >= 50 ? 1 : 0), "hunt");
+      if (data.x != null) { report("terminal", data.x, data.y, "suspect", "блокировка дверей снята"); wave(rnd(12, 20), 1 + (o.heat >= 50 ? 1 : 0), "hunt", { x: data.x, y: data.y }); }
       break;
     case "camera":
-      alarm(g.x, g.y, "camera");
+      report("camera", data.x != null ? data.x : g.x, data.y != null ? data.y : g.y, data.glimpse ? "suspect" : "seen", data.glimpse ? "движение на краю обзора" : "");
       if (o.heat >= 30 && !f.droneAt && C() && !C().drones().length && !soft()) f.droneAt = T() + rnd(10, 30);
       break;
     case "cleaner":
-      alarm(g.x, g.y, "cleaner");
+      report("cleaner", data.x != null ? data.x : g.x, data.y != null ? data.y : g.y, data.trace ? "suspect" : "seen", data.trace || "");
+      break;
+    case "robot":
+      report("robot", data.x, data.y, "seen");
+      break;
+    case "noise":
+      report("noise", data.x, data.y, "suspect", "выстрелы");
       break;
     case "drone":
-      alarm(data.x != null ? data.x : g.x, data.y != null ? data.y : g.y, "drone");
+      report("drone", data.x != null ? data.x : g.x, data.y != null ? data.y : g.y, "seen");
       break;
     case "boss":
       heat(10); setTimeout(function () { speak("boss", true); }, 2500);
@@ -232,7 +399,11 @@ function event(kind, data) {
       if (data.camera) {
         heat(5);
         if (Math.random() < 0.6) speakLater("cam_down", 900);
-        if (!(C() && C().sendCheck(data.x, data.y, 1)) && o.heat >= 25) wave(rnd(10, 24), 1, "check", { x: data.x, y: data.y });
+        report("lost", data.x, data.y, "suspect", "камера не отвечает");
+      } else if (data.oko || data.guard || data.task) {
+        /* машина ОКО замолчала — ОКО знает, где оборвалась связь */
+        var sq = sec(); if (sq.lv >= 2) sq.loss = (sq.loss || 0) + 1;
+        report("lost", data.x, data.y, "suspect", "связь с единицей потеряна");
       }
       if (o.kills - (o.killSaid || 0) >= 15) { o.killSaid = o.kills; speak("kill"); }
       break;
@@ -244,7 +415,7 @@ function event(kind, data) {
       break;
     case "door":
       heat(2);
-      if (Math.random() < 0.25 + o.heat / 200) { speak("door"); if (C()) C().sendCheck(data.x, data.y, 1); }
+      if (Math.random() < 0.25 + o.heat / 200) { speak("door"); report("door", data.x, data.y, "suspect", "запертая дверь открыта"); }
       break;
     case "sample":
       if (Math.random() < 0.3) setTimeout(function () { speak("sample"); }, 1800);
@@ -253,7 +424,7 @@ function event(kind, data) {
       heat(-25);
       break;
     case "riddle_fail":
-      heat(8); alarm(g.x, g.y, "hack");
+      heat(8); report("door", g.x, g.y, "seen");
       break;
     case "blind":
       f.okoBlind = true; heat(8);
@@ -294,7 +465,7 @@ function tick() {
   if (tickN % 60 === 0) heat(-1);
   legacy(f);
   /* ремонт турелей: пока сеть отключена и ремонтника нет — ОКО шлёт следующего */
-  if (f.turretMode === "off" && cb.turretsLeft() > 0) {
+  if ((f.turretMode === "off" && cb.turretsLeft() > 0) || cb.cutCount() > 0) {
     if (!f.repairAt && !cb.repairers().length) {
       var n0 = f.repairN || 0;
       f.repairAt = now + (n0 >= 3 ? rnd(110, 170) : n0 ? rnd(40, 70) : rnd(14, 26));
@@ -317,6 +488,16 @@ function tick() {
       A("play", "term_err");
       speak("counter", true);
     }
+  }
+  /* ключ техника замечен: ОКО отзывает его — турели «по ключу» снова его */
+  if (f.revokeAt && now >= f.revokeAt) {
+    f.revokeAt = 0;
+    var nk = cb.unmineTurrets();
+    if (f.keyOurs && f.turretMode === "ours") { f.turretMode = "on"; cb.turretsHostile(); nk++; }
+    f.keyOurs = false;
+    if (f.turretMode === "off" && f.repairAt > now + 30) f.repairAt = now + rnd(14, 26);
+    log("Ключ техника отозван.");
+    if (nk) { A("play", "term_err"); speak("key_revoked", true); }
   }
   /* отряды по расписанию */
   if (f.waves && f.waves.length) {
@@ -351,7 +532,8 @@ function tick() {
   if (f.droneAt && now >= f.droneAt) {
     f.droneAt = canShoot() ? 0 : now + 120;
     if (!f.droneAt && !f.okoBlind && cb.drones().length < 1 + (o.heat >= 60 ? 1 : 0)) {
-      var gd = cb.dispatch(1, "drone");
+      var sa0 = o.seenAt, recent = sa0 && sa0.L === g.L && sa0.F === g.F && now - sa0.t < 120 ? sa0 : null;
+      var gd = cb.dispatch(1, "drone", recent);
       if (gd.length) { speak("drone", true); heard(gd, "Вылетел дрон слежения ОКО", true); }
     }
   }
@@ -359,10 +541,16 @@ function tick() {
   /* смена караула */
   if (!f.shiftAt) f.shiftAt = now + rnd(70, 130);
   else if (now >= f.shiftAt) { f.shiftAt = now + Math.max(70, 150 - Math.round(o.heat * 0.7)) + rnd(0, 40); shift(); }
-  /* слух ОКО: громкая стрельба — патруль идёт к источнику */
-  if (g.noise >= 10 && o.heat >= 20 && now - (f.noiseT || -999) > 40) {
+  /* слух ОКО: громкая стрельба — акустические датчики, проверка источника */
+  if (g.noise >= 10 && now - (f.noiseT || -999) > 40) {
     f.noiseT = now;
-    if (cb.sendCheck(g.x, g.y, 1) && Math.random() < 0.3) speak("check");
+    if (report("noise", g.x, g.y, "suspect", "выстрелы") && Math.random() < 0.3) speak("check");
+  }
+  secTick();
+  /* резервный контур: отключённые турели ОКО через время запитывает снова */
+  if (f.turretMode === "off" && f.backupAt && now >= f.backupAt && cb.turretsLeft() > 0) {
+    f.backupAt = 0;
+    if (!f.cutHold) { f.turretMode = "on"; cb.turretsHostile(); A("play", "power_on"); speak("backup", true); log("Резервный контур: турели под током."); }
   }
   /* иногда ОКО говорит просто так — когда рядом тихо */
   var nowMs = Date.now();
@@ -374,6 +562,7 @@ function tick() {
 
 LAB.oko = {
   event: event, tick: tick, speak: speak, alarm: alarm, difficulty: difficulty, heat: heat,
-  state: st, lines: lines, wave: wave, shift: shift
+  state: st, lines: lines, wave: wave, shift: shift,
+  report: report, level: level, levelName: function () { return SEC[level()]; }, setLevel: setLevel, sec: sec, log: log, logText: logText, T: T
 };
 })();

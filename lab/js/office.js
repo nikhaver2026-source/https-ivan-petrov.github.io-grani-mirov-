@@ -68,7 +68,7 @@ function drink(o, d, wait, pre) {
   var g = G();
   gm().paused = true;
   say(pre + (o.type === "coffee" ? " Автомат варит…" : " Банка падает в лоток."), { interrupt: false });
-  setTimeout(function () {
+  gm().later(function () {
     gm().paused = false;
     if (o.type === "drinks") snd("can_open");
     setTimeout(function () { snd(d.s); }, o.type === "drinks" ? 450 : 0);
@@ -150,7 +150,7 @@ function buySnack(o, id) {
   setTimeout(function () { snd("snack_drop", "can_drop"); }, 350);
   if (takeAlong) { say("Куплено: " + d.n + " — в рюкзаке, раздел «Еда». Съесть — " + LAB.K("инвентарь, «Еда».", "клавиша G или инвентарь, «Еда».") + " Кредитов " + g.credits + "."); gm().autosaveSoon(); return; }
   gm().paused = true;
-  setTimeout(function () {
+  gm().later(function () {
     gm().paused = false;
     if (id === "noodles") { snd("water_pour", "drink_sip"); setTimeout(function () { gm().useItem(id); }, 900); }
     else gm().useItem(id);

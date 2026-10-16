@@ -1101,6 +1101,8 @@ function genLoot(r, L, F, ot, tag) {
   if (ot === "safe") {
     if (r.chance(0.5)) out.push({ kind: "weapon", w: LAB.genWeapon(r, L, F, { bonus: 0.1 }) });
     else out.push({ kind: "credits", n: LAB.credits(40, L, F) * 2 });
+    /* служебный ключ ОКО в сейфе — без лишних бросков генератора: этаж не меняется */
+    if (LAB.depth(L, F) >= 4 && LAB.hash32("okokey:" + L + "-" + F + "-" + tag) % 100 < 22) out.push({ kind: "item", item: "okokey", n: 1 });
   }
   return out;
 }
@@ -1198,17 +1200,24 @@ LAB.walkable = function (fl, st, x, y, who) {
 };
 
 /* Поиск пути в ширину; doorsAsOpen — считать закрытые незапертые двери проходимыми. */
+/* Буферы поиска пути — одни на все вызовы (враги ищут путь каждый такт):
+   «посещено» отмечается номером поиска, без заливки всего массива. */
+var bfsPrev = null, bfsSeen = null, bfsDepA = null, bfsQ = null, bfsGen = 0;
 LAB.bfs = function (fl, st, sx, sy, goal, opts) {
   opts = opts || {};
-  var prev = new Int32Array(W * H).fill(-2);
+  if (!bfsPrev || bfsPrev.length !== W * H) { bfsPrev = new Int32Array(W * H); bfsSeen = new Int32Array(W * H); bfsDepA = new Int16Array(W * H); bfsQ = new Int32Array(W * H); bfsGen = 0; }
+  if (++bfsGen > 2000000000) { bfsSeen.fill(0); bfsGen = 1; }
+  var prev = bfsPrev, seen = bfsSeen, gen = bfsGen;
   var s0 = idx(sx, sy);
-  prev[s0] = -1;
-  var q = [s0], qi = 0;
+  prev[s0] = -1; seen[s0] = gen;
+  var q = bfsQ, qn = 1, qi = 0;
+  q[0] = s0;
   var isGoal = typeof goal === "function" ? goal : function (x, y) { return x === goal[0] && y === goal[1]; };
   var dirs = [[1, 0], [-1, 0], [0, 1], [0, -1]];
   /* maxDist — искать не дальше стольких шагов */
-  var dep = opts.maxDist ? new Int16Array(W * H) : null;
-  while (qi < q.length) {
+  var dep = opts.maxDist ? bfsDepA : null;
+  if (dep) dep[s0] = 0;
+  while (qi < qn) {
     var u = q[qi++];
     var x = u % W, y = (u / W) | 0;
     if (u !== s0 && isGoal(x, y)) {
@@ -1221,7 +1230,7 @@ LAB.bfs = function (fl, st, sx, sy, goal, opts) {
       var nx = x + dirs[k][0], ny = y + dirs[k][1];
       if (!LAB.inb(nx, ny)) continue;
       var j = idx(nx, ny);
-      if (prev[j] !== -2) continue;
+      if (seen[j] === gen) continue;
       var tt = fl.t[j];
       if (tt === T_WALL) continue;
       if (tt === T_DOOR) {
@@ -1235,9 +1244,9 @@ LAB.bfs = function (fl, st, sx, sy, goal, opts) {
       }
       if (!isGoal(nx, ny) && (fl.objAt[j] || (opts.npcs !== false && LAB.solidAt(fl, nx, ny)))) continue;
       if (opts.block && opts.block(nx, ny) && !isGoal(nx, ny)) continue;
-      prev[j] = u; q.push(j);
+      prev[j] = u; seen[j] = gen; q[qn++] = j;
       if (dep) dep[j] = dep[u] + 1;
-      if (opts.maxLen && q.length > opts.maxLen) return null;
+      if (opts.maxLen && qn > opts.maxLen) return null;
     }
   }
   return null;

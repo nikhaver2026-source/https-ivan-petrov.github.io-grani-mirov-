@@ -112,8 +112,11 @@ function wake() {
 }
 /* Устройство сломалось (закрыто или не просыпается) — новое, и всё, что
    должно звучать, звучит снова. Записи в памяти годятся и новому устройству. */
-function rebuild() {
-  if (!AE.rebuild || !everRan || rebuilds >= 3 || now() - lastRebuild < 60000) return;
+function rebuild(closed) {
+  if (!AE.rebuild || !everRan) return;
+  /* закрытое устройство пересоздаём всегда (не чаще раза в две секунды);
+     «не просыпается» — не больше трёх раз и не чаще раза в минуту */
+  if (closed ? now() - lastRebuild < 2000 : (rebuilds >= 3 || now() - lastRebuild < 60000)) return;
   rebuilds++; lastRebuild = now();
   st.rebuilt++;
   voices = [];
@@ -308,7 +311,7 @@ function release(id, ms, tries) {
 function tick() {
   if (!AE.ctx) return;
   var c = AE.ctx, hidden = typeof document !== "undefined" && document.hidden;
-  if (c.state === "closed") { rebuild(); return; }
+  if (c.state === "closed") { rebuild(true); return; }
   if (c.state !== "running") {
     if (!hidden) {
       wake();
@@ -348,6 +351,8 @@ LAB.Sound = {
   /* тишина без загрузок (самопроверка обходит сотни этажей подряд) */
   setQuiet: function (q) { quiet = !!q; if (quiet) stopAll(0.05); },
   isQuiet: function () { return quiet; },
+  /* все файлы записи не загрузились насовсем — у петли пора включать синтез */
+  dead: function (id) { var d = Bank.defs[id]; return !!(d && d.f.length && d.f.every(function (f) { return Bank.bad[f]; })); },
   onRebuild: function (fn) { wakeHooks.push(fn); },
   slot: function (name) { return slots[name] ? slots[name].handle : null; },
   /* что творится со звуком — для самопроверки и отладки */

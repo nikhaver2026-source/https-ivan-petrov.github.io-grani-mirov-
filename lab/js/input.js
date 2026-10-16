@@ -37,7 +37,7 @@ function down(e) {
   if (!gest) {
     gest = { t0: now, max: 0, ids: {}, ended: false, fin: [], held: false, dirAt: 0, firstDir: null, maxDisp: 0 };
     /* сырое касание — мини-игре на ритм */
-    if (LAB.mini && LAB.mini.raw && LAB.mini.raw()) dispatch({ kind: "down", n: 1, t: now });
+    if (LAB.mini && LAB.mini.raw && LAB.mini.raw()) { gest.rawMini = true; dispatch({ kind: "down", n: 1, t: now }); }
   }
   pts[e.pointerId] = { x0: e.clientX, y0: e.clientY, x: e.clientX, y: e.clientY, t0: now, lastMove: now, ext: { x: e.clientX, y: e.clientY } };
   gest.ids[e.pointerId] = 1;
@@ -121,6 +121,9 @@ function finishGesture(g, last) {
     dispatch({ kind: "swipe", n: n, dir: dir });
     return;
   }
+  /* касание уже ушло ритм-головоломке как «down»: касания и удержания из него не делаем —
+     иначе оно дойдёт до игры и оборвёт итог головоломки */
+  if (g.rawMini) return;
   if (performance.now() - g.t0 > 900 && n === 1) { dispatch({ kind: "press", n: 1 }); return; }
   tap(n);
 }
@@ -157,10 +160,12 @@ function startHold(dir) {
     if (route() !== "game") { stopHold(); return; } /* открылось окно (записка) — стоим */
     var ok = game.tryMove(gdir, true);
     if (!ok) { stopHold(); return; }
-    w.t = setTimeout(stepFn, G.st.haste > 0 ? 200 : 300);
+    w.t = setTimeout(stepFn, stepGap(G));
   };
   stepFn();
 }
+/* Шаг удержания: под замедлением — реже (иначе шаг «рано» обрывал ходьбу). */
+function stepGap(G) { return G.st.slow > 0 ? 440 : G.st.haste > 0 ? 200 : 300; }
 function stopHold() {
   if (!walk) return;
   if (walk.fire && LAB.combat) LAB.combat.stopFire();
@@ -192,9 +197,13 @@ function dispatch(g) {
   if (r === "ui") { LAB.ui.gesture(g); return; }
   if (r === "game") { gameGesture(g); return; }
 }
+/* Пока идёт лифт, шлюз, капсула или «Эхо» удерживает сознание — действия ждут. */
+var pauseSaid = 0;
+function pausedHint() { var t = Date.now(); if (t - pauseSaid > 2500) { pauseSaid = t; LAB.say("Подождите.", { prio: "info" }); } }
 function gameGesture(g) {
   var game = LAB.game, G = game.G;
   if (!game.entered || G.dead) return;
+  if (game.paused) { pausedHint(); return; }
   if (g.n === 1) {
     if (g.kind === "swipe") {
       var gd = SCR2GAME[g.dir];
@@ -281,6 +290,8 @@ function key(e) {
   /* Ctrl — замолчать, как у чтецов экрана (NVDA, JAWS) */
   if (e.key === "Control") { if (!e.repeat) LAB.Speech.hush(); return; }
   if (e.ctrlKey || e.metaKey) return; /* сочетания системы не трогаем */
+  /* одиночные служебные клавиши (Shift, Alt, Insert чтеца экрана, Caps Lock) речь не обрывают */
+  if (/^(Shift|Alt|AltGraph|Meta|OS|CapsLock|NumLock|ScrollLock|Insert|ContextMenu|Unidentified|Dead)$/.test(e.key) || e.altKey) return;
   if (e.repeat) { if (ARROW[e.key] || WASD[k] || k === "Tab" || k === " ") e.preventDefault(); return; }
   LAB.AE.ensure();
   var r = route();
@@ -308,6 +319,7 @@ function stopKeyHold() {
 function gameKey(e, k) {
   var game = LAB.game, G = game.G;
   if (!game.entered || G.dead) return false;
+  if (game.paused) { pausedHint(); return true; }
   LAB.Speech.userAct();
   if (WASD[k]) {
     var gd = WASD[k];
@@ -360,7 +372,7 @@ function startWalk(gdir) {
     if (route() !== "game") { stopHold(); return; }
     var ok = game.tryMove(gdir, true);
     if (!ok) { stopHold(); return; }
-    w.t = setTimeout(stepFn, G.st.haste > 0 ? 200 : 300);
+    w.t = setTimeout(stepFn, stepGap(G));
   };
   w.t = setTimeout(stepFn, 300);
 }
@@ -426,7 +438,10 @@ function init() {
     if (LAB.mini && LAB.mini.active()) { LAB.mini.gesture({ kind: "back", n: 1 }); return 1; }
     var ui = LAB.ui;
     if (!ui) return 0;
+    /* главное меню: «Назад» сворачивает приложение, как в других программах */
+    if (ui.screen() === "menu" && ui.top && ui.top() && ui.top().root) return 0;
     if (ui.screen() !== "game" || ui.layer()) { LAB.ui.gesture({ kind: "back", n: 1 }); return 1; }
+    if (LAB.game.paused || LAB.game.G.dead) { pausedHint(); return 1; }
     LAB.ui.character();
     return 1;
   };

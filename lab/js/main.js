@@ -40,13 +40,24 @@ function boot() {
   setTimeout(function () { if (!started) LAB.say(LAB.TITLE + ". " + LAB.K("Коснитесь экрана, чтобы начать.", "Нажмите любую клавишу, чтобы начать.")); }, 900);
   /* компьютер: звук разрешён приложением — игра начинается сама */
   if (LAB.desktop) setTimeout(function () { start(null); }, 500);
-  /* уход в фон: записать игру и приглушить звук */
-  document.addEventListener("visibilitychange", function () {
-    var hidden = document.hidden;
-    if (hidden && LAB.game && LAB.game.entered) LAB.game.autosave();
-    try { if (LAB.AE.ctx) { if (hidden) LAB.AE.ctx.suspend(); else LAB.AE.ctx.resume(); } } catch (e) { /* */ }
-  });
-  window.labPause = function () { if (LAB.game && LAB.game.entered) LAB.game.autosave(); };
+  /* уход в фон (звонок, свёрнутое окно): игра записывает себя, мир стоит,
+     речь молчит, звук приглушён; вернулись — всё продолжается */
+  var toBg = function (on) {
+    LAB.bg = on;
+    if (on) {
+      if (LAB.game && LAB.game.entered) LAB.game.autosave();
+      LAB.safe(function () { if (LAB.input) LAB.input.stopAll(); });
+      LAB.safe(function () { if (LAB.combat && LAB.combat.stopFire) LAB.combat.stopFire(); });
+      LAB.safe(function () { if (LAB.Speech && LAB.Speech.hush) LAB.Speech.hush(); });
+      try { if (LAB.AE.ctx) LAB.AE.ctx.suspend(); } catch (e) { /* */ }
+    } else {
+      try { if (LAB.AE.ctx) LAB.AE.ctx.resume(); } catch (e) { /* */ }
+    }
+  };
+  document.addEventListener("visibilitychange", function () { toBg(document.hidden); });
+  window.labPause = function () { toBg(true); };
+  var resume0 = window.labResume;
+  window.labResume = function () { toBg(false); if (resume0) resume0(); };
   /* для проверок: в приложении — отметка в журнале устройства */
   window.LAB_READY = true;
   try { if (window.LabTTS && window.LabTTS.log) window.LabTTS.log("ready " + LAB.TITLE + " " + LAB.VERSION + ", звуков: " + Object.keys(LAB.SND || {}).length); } catch (e) { /* */ }

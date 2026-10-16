@@ -58,10 +58,11 @@ LAB.safe = function (fn, fb) { try { return fn(); } catch (e) { try { console.wa
 
 /* ════════ АУДИО-ДВИЖОК ════════ */
 var AE = {
-  ctx: null, master: null, fx: null, music: null, amb: null, beacon: null, ui: null, voice: null, conv: null, wet: null, cache: {}, duck: 1,
+  ctx: null, master: null, fx: null, music: null, amb: null, beacon: null, ui: null, voice: null, conv: null, wet: null, cache: {}, irc: {}, duck: 1,
   ensure: function () {
     if (this.ctx) {
-      if (this.ctx.state === "suspended") { try { this.ctx.resume(); } catch (e) { /* */ } }
+      /* в фоне звук не будим: его разбудит возврат на экран */
+      if (this.ctx.state === "suspended" && !LAB.bg && !document.hidden) { try { this.ctx.resume(); } catch (e) { /* */ } }
       return this.ctx;
     }
     var C = window.AudioContext || window.webkitAudioContext;
@@ -92,7 +93,8 @@ var AE = {
      (AudioBuffer) годятся и новому устройству. */
   rebuild: function () {
     var old = this.ctx;
-    this.ctx = null; this.cache = {};
+    this.ctx = null; this.cache = {}; this.irc = {};
+    Bank.retry = {}; /* временные сбои загрузки — пробовать снова */
     if (old && old.state !== "closed") { try { var p = old.close(); if (p && p.catch) p.catch(function () { /* */ }); } catch (e) { /* */ } }
     return this.ensure();
   },
@@ -108,9 +110,16 @@ var AE = {
     this.voice.gain.setTargetAtTime(settings.voiceVol, t, 0.05);
   },
   setDuck: function (on) { this.duck = on ? 0 : 1; this.applyVolumes(); },
+  /* Отзвук помещения: отклики заготовлены по длине (шаг четверть секунды,
+     не длиннее трёх) — переход комната↔коридор не пересчитывает их заново. */
   setReverb: function (sec, wet) {
     if (!this.ctx) return;
-    try { this.conv.buffer = this.impulse(sec, 3); this.wet.gain.setTargetAtTime(wet, this.ctx.currentTime, 0.3); } catch (e) { /* */ }
+    try {
+      var key = Math.max(0.5, Math.round(Math.min(3, sec) * 4) / 4);
+      if (!this.irc[key]) this.irc[key] = this.impulse(key, 3);
+      if (this.conv.buffer !== this.irc[key]) this.conv.buffer = this.irc[key];
+      this.wet.gain.setTargetAtTime(wet, this.ctx.currentTime, 0.3);
+    } catch (e) { /* */ }
   },
   impulse: function (sec, decay) {
     var rate = this.ctx.sampleRate, len = Math.floor(rate * sec), buf = this.ctx.createBuffer(2, len, rate);
@@ -358,7 +367,7 @@ LAB.synth = function (fn, ms, bus, pan, gain) {
    Каждая запись — id и несколько вариантов; при игре берётся случайный
    вариант, слегка меняется высота: одинаковых звуков подряд не бывает. */
 var Bank = {
-  root: "sounds/", defs: {}, bufs: {}, pend: {}, bad: {}, loaded: 0, total: 0,
+  root: "sounds/", defs: {}, bufs: {}, pend: {}, bad: {}, retry: {}, loaded: 0, total: 0,
   def: function (id, files, opt) {
     opt = opt || {};
     this.defs[id] = { f: files, v: opt.v == null ? 1 : opt.v, bus: opt.bus || "fx", vary: opt.vary == null ? 0.04 : opt.vary, desc: opt.desc || "", cat: opt.cat || "" };
@@ -368,20 +377,26 @@ var Bank = {
     var self = this;
     if (this.bufs[file]) return Promise.resolve(this.bufs[file]);
     if (this.pend[file]) return this.pend[file];
-    if (this.bad[file] || !AE.ensure() || typeof fetch !== "function" || location.protocol === "file:") return Promise.resolve(null);
-    var p = fetch(this.root + file).then(function (r) {
-      if (!r.ok) throw new Error(r.status);
+    if (this.bad[file] || (this.retry[file] && Date.now() < this.retry[file]) || !AE.ensure() || typeof fetch !== "function" || location.protocol === "file:") return Promise.resolve(null);
+    /* битой запись считается только при «нет файла» (404) или если её не
+       раскодировало работающее устройство; обрыв, тайм-аут — повторим позже */
+    var hard = false, ctl = typeof AbortController === "function" ? new AbortController() : null;
+    var to = ctl ? setTimeout(function () { try { ctl.abort(); } catch (e) { /* */ } }, 20000) : 0;
+    var decErr = function (rej) { return function (e) { if (AE.ctx && AE.ctx.state === "running") hard = true; rej(e); }; };
+    var p = fetch(this.root + file, ctl ? { signal: ctl.signal } : undefined).then(function (r) {
+      if (!r.ok) { if (r.status === 404 || r.status === 410) hard = true; throw new Error(r.status); }
       return r.arrayBuffer();
     }).then(function (ab) {
+      clearTimeout(to);
       return new Promise(function (res, rej) {
         try {
-          var pr = AE.ctx.decodeAudioData(ab, res, rej);
-          if (pr && pr.then) pr.then(res, rej);
+          var pr = AE.ctx.decodeAudioData(ab, res, decErr(rej));
+          if (pr && pr.then) pr.then(res, decErr(rej));
         } catch (e) { rej(e); }
       });
     }).then(function (buf) {
       self.bufs[file] = buf; delete self.pend[file]; self.loaded++; return buf;
-    }).catch(function () { self.bad[file] = 1; delete self.pend[file]; return null; });
+    }).catch(function () { clearTimeout(to); if (hard) self.bad[file] = 1; else self.retry[file] = Date.now() + 15000; delete self.pend[file]; return null; });
     this.pend[file] = p;
     return p;
   },
@@ -473,7 +488,10 @@ LAB.Bank = Bank;
    На экране подсказка остаётся как есть. */
 var KEY_SAY = { Enter: "Энтер", Tab: "Таб", Escape: "Эскейп", Backspace: "Бэкспейс", Home: "Хоум", End: "Энд", Ctrl: "Контрол", Shift: "Шифт", Alt: "Альт", F1: "Эф один", F11: "Эф одиннадцать" };
 var LAT_SAY = { A: "эй", B: "би", C: "си", D: "ди", E: "и", F: "эф", G: "джи", H: "эйч", I: "ай", J: "джей", K: "кей", L: "эл", M: "эм", N: "эн", O: "оу", P: "пи", Q: "кью", R: "ар", S: "эс", T: "ти", U: "ю", V: "ви", W: "дабл ю", X: "экс", Y: "уай", Z: "зед" };
+var ROMAN_W = { I: "первый", II: "второй", III: "третий", IV: "четвёртый", V: "пятый" };
 function keysSpoken(t) {
+  /* «Блок I» — «Блок первый», а не «Блок ай» */
+  t = t.replace(/(^|[^А-Яа-яЁё])([Бб]лок)\s+(I{1,3}|IV|V)(?![A-Za-z])/g, function (m, a, w, r) { return a + w + " " + ROMAN_W[r]; });
   return t.replace(/\b(Enter|Tab|Escape|Backspace|Home|End|Ctrl|Shift|Alt|F11|F1)\b/g, function (m) { return KEY_SAY[m]; })
     .replace(/(^|[^A-Za-z0-9])([A-Z])(?![A-Za-z0-9])/g, function (m, a, b) { return a + LAT_SAY[b]; });
 }
@@ -566,9 +584,9 @@ var Speech = {
     var add = function (src, ok) {
       try {
         var s = document.createElement("script"); s.src = src; s.async = true;
-        s.onload = ok; s.onerror = function () { self.espSt = "failed"; };
+        s.onload = ok; s.onerror = function () { self.espSt = "failed"; self._pump(); };
         (document.head || document.documentElement).appendChild(s);
-      } catch (e) { self.espSt = "failed"; }
+      } catch (e) { self.espSt = "failed"; self._pump(); }
     };
     add("espeak/espeak-ru-data.js", function () {
       add("espeak/espeak-ng.js", function () {
@@ -581,9 +599,9 @@ var Speech = {
           try { D.b64 = ""; } catch (e) { /* */ }
           window.GraniESpeakModule({ getPreloadedPackage: function () { return buf.buffer; } }).then(function (M) {
             var w = new M.eSpeakNGWorker(); w.set_voice("ru"); self.esp = w; self.espSt = "ready";
-            if (self.backend === "espeak") self._pump();
-          }).catch(function () { self.espSt = "failed"; });
-        } catch (e) { self.espSt = "failed"; }
+            self._pump();
+          }).catch(function () { self.espSt = "failed"; self._pump(); });
+        } catch (e) { self.espSt = "failed"; self._pump(); }
       });
     });
   },
@@ -645,7 +663,7 @@ var Speech = {
   TTL: { 0: 4000, 1: 9000 },
   fails: {}, hangs: 0, dropped: 0, estScale: 1, testEngine: null,
   /* Жест игрока: то, что скажется в ответ на него, может перебить чтение. */
-  user: function () { this.userUntil = Date.now() + 450; },
+  user: function () { this.userUntil = Date.now() + 450; this.userTok = (this.userTok || 0) + 1; },
   isUser: function () { return Date.now() <= this.userUntil; },
   /* Записка читается: её не обрывает ни событие, ни действие игрока —
      только тишина (четыре пальца вниз) или явное «замолчать». */
@@ -670,6 +688,8 @@ var Speech = {
       if (!cur.started || Date.now() - cur.t0 < need) got.push(cur.item);
     }
     this.queue.forEach(function (it) { if (it.keep) got.push(it); });
+    /* важное, что ждало конца чтения, тоже не пропадает */
+    this.later.forEach(function (l) { if (l.keep) self._chunk(l.text).forEach(function (p) { got.push({ text: p, full: l.text, robot: l.robot, prio: l.prio || 1, key: "", t: Date.now(), ttl: 30000, tries: 0, keep: true }); }); });
     got.forEach(function (it) { if (!self.held.some(function (h) { return h.text === it.text; })) self.held.push(it); });
     if (this.held.length > 6) this.held = this.held.slice(-6);
     if (this.held.length) this._armHeld();
@@ -707,6 +727,7 @@ var Speech = {
     opts = opts || {};
     text = String(text == null ? "" : text);
     if (!text.replace(/\s+/g, "")) return;
+    this.sayN = (this.sayN || 0) + 1;
     var P = this.PRIO, prio = this._prio(opts), user = this.isUser();
     /* важное — в историю объявлений (точка и запятая на клавиатуре) */
     if (!opts.hist && (opts.keep || prio >= P.urgent) && LAB.history) LAB.history.add(text);
@@ -716,8 +737,8 @@ var Speech = {
       /* ждёт конца чтения; из отложенного остаются самые важные и свежие */
       this.later.push({ text: text, robot: !!opts.robot, prio: prio, keep: !!opts.keep });
       while (this.later.length > 4) {
-        var lo = 0; for (var i = 1; i < this.later.length; i++) if (this.later[i].prio < this.later[lo].prio) lo = i;
-        this.later.splice(lo, 1);
+        var lo = -1; for (var i = 0; i < this.later.length; i++) if (!this.later[i].keep && (lo < 0 || this.later[i].prio < this.later[lo].prio)) lo = i;
+        this.later.splice(lo < 0 ? 0 : lo, 1);
       }
       return;
     }
@@ -740,7 +761,11 @@ var Speech = {
            фраза прозвучит ещё раз — сразу после срочного */
         if (this.cur && this.cur.prio < P.urgent && !this.noteReading) { var was = this.cur.item; this._cut(); if (was) this.queue.unshift(was); }
         front = true;
+      } else if (this.glueTok === (this.userTok || 0) && now - this.glueAt < 450 && (this.speaking || this.queue.length)) {
+        /* та же реакция на тот же жест (итог действия, а следом — меню):
+           не обрываем сказанное, а дополняем */
       } else { this._hold(); this.stop(true); this.later = []; }
+      if (prio !== P.urgent) { this.glueAt = now; this.glueTok = this.userTok || 0; }
     }
     var parts = this._chunk(text);
     if (opts.note) { this.noteReading = true; this.reading = true; }
@@ -753,7 +778,7 @@ var Speech = {
     /* длинная очередь событий: старые события уступают */
     while (this.queue.length > 14) {
       var drop = -1;
-      for (var j = 0; j < this.queue.length; j++) if (this.queue[j].prio <= P.event && this.queue[j].ttl) { drop = j; break; }
+      for (var j = 0; j < this.queue.length; j++) if (this.queue[j].prio <= P.event && this.queue[j].ttl && !this.queue[j].keep) { drop = j; break; }
       if (drop < 0) break;
       this.queue.splice(drop, 1); this.dropped++;
     }
@@ -853,7 +878,12 @@ var Speech = {
         if (this.backend === "espeak") { this.backend = this.hasWeb() && !this.webBad ? "web" : this.hasBridge() && !this.bridgeBad ? "android" : "none"; }
         if (item.viaEsp) { this.queue.shift(); this.dropped++; this._pump(); return; }
         useEsp = false;
-      } else { this.loadESpeak(); return; } /* ждём загрузки — _pump позовут снова */
+      } else {
+        this.loadESpeak();
+        /* голос робота, пока eSpeak грузится, — обычным голосом; остальное ждёт загрузки (и проверяем снова) */
+        if (this.backend !== "espeak" && !item.viaEsp) useEsp = false;
+        else { clearTimeout(this.espWait); this.espWait = setTimeout(function () { self._pump(); }, 600); return; }
+      }
     }
     this.queue.shift();
     this.speaking = true;
@@ -1024,10 +1054,19 @@ var Speech = {
     }).then(function () {
       out.push([has("Текст записки") && has("Событие во время записки") && at("Текст записки") < at("Событие во время записки"), "речь: записка дочитывается, событие звучит после неё"]);
       reset(); mode.hang = true;
-      self.say("Ответ один."); self.say("Хвост.", { interrupt: false }); mode.hang = false; self.say("Ответ два.");
+      /* новое действие — это новый жест игрока */
+      self.user();
+      self.say("Ответ один."); self.say("Хвост.", { interrupt: false }); mode.hang = false; self.user(); self.say("Ответ два.");
       return wait(250);
     }).then(function () {
       out.push([has("Ответ два") && !has("Хвост"), "речь: ответ на новое действие отменяет недосказанное"]);
+      reset();
+      /* одна реакция на один жест: итог действия, а следом меню — звучат оба, по порядку */
+      self.user();
+      self.say("Итог действия."); self.say("Меню. Пункт первый.");
+      return wait(400);
+    }).then(function () {
+      out.push([has("Итог действия") && has("Меню. Пункт первый") && at("Итог действия") < at("Меню. Пункт первый"), "речь: итог действия не обрывается меню, открытым тем же жестом"]);
       reset(); mode.hang = true;
       self.say("Длинный ответ.");
       self.say("ОКО: высылаю ремонтника.", { prio: "event", keep: true });

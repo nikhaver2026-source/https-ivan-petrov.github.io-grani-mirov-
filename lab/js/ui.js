@@ -43,8 +43,12 @@ function menu(title, items, opts) {
   items = (items || []).filter(Boolean);
   if (!items.length) return;
   if (opts.closeFirst !== false && opts.replace) stack.pop();
+  /* то же окно уже открыто ниже (пункт «Назад» открывает родителя заново) —
+     заменяем его, а не копим: «назад» и пункт «Назад» ведут в одно место */
+  for (var si = stack.length - 1; si >= 0; si--) if (stack[si].title === title && !stack[si].root) { stack.splice(si); break; }
   var w = { title: title, items: items, i: Math.max(0, Math.min(items.length - 1, opts.focus || 0)), keep: !!opts.keep, root: !!opts.root, rebuild: opts.rebuild || null, onClose: opts.onClose || null, silentOpen: !!opts.silent, intro: opts.intro || "" };
   stack.push(w);
+  if (LAB.input && LAB.input.stopAll) LAB.input.stopAll(); /* ходьба и очередь с удержания — стоп */
   LAB.UI.open();
   render();
   if (!w.silentOpen) say(title + ". " + (w.intro ? w.intro + " " : "") + itemText(w.items[w.i]) + (S.verbose && !G().tut.win ? LAB.K(". Свайп вправо и влево — пункты, двойное касание — выбрать, два пальца вниз — закрыть.", ". Стрелки вверх и вниз — пункты, Enter — выбрать, Escape — закрыть.") : ""));
@@ -85,10 +89,21 @@ function activate() {
   if (it.kind === "choice") { cycle(it, 1); return; }
   if (it.kind === "slider") { say(itemText(it) + LAB.K(". Свайп вверх — больше, вниз — меньше.", ". Стрелка вправо — больше, влево — меньше.")); return; }
   if (it.disabled) { LAB.UI.error(); say(it.why || "Недоступно."); return; }
+  /* «Отойти», «Назад», «Отмена» без действия — закрыть окно и сказать, где вы */
+  if (it.close || (/^(Отойти|Назад|Отмена)$/.test(String(it.label)) && String(it.fn).replace(/\s+/g, "") === "function(){}")) { if (!closeTop()) LAB.UI.error(); return; }
   LAB.UI.click();
-  var keep = w.keep || it.keep;
-  if (!keep && !w.root) { stack.splice(stack.indexOf(w), 1); render(); }
+  var keep = w.keep || it.keep, n0 = LAB.Speech.sayN || 0;
+  /* пункт выполняется, пока его окно ещё открыто: открыл новое окно — это
+     остаётся под ним (жест «назад» вернёт сюда); не открыл — окно закрывается */
   LAB.safe(function () { it.fn(); });
+  var wi = stack.indexOf(w);
+  if (!keep && !w.root && wi >= 0 && top() === w) {
+    stack.splice(wi, 1); render();
+    if ((LAB.Speech.sayN || 0) === n0 && !(LAB.mini && LAB.mini.active())) {
+      var t = top();
+      if (t) say(t.title + ". " + itemText(t.items[t.i])); else if (screen === "game") say("Игра.");
+    }
+  }
   if (keep && top() === w && w.rebuild) { var old = w.i; w.items = w.rebuild(); w.i = Math.min(old, w.items.length - 1); render(); }
 }
 function move(step) {
@@ -107,7 +122,8 @@ function cycle(it, step) {
   k = (k + step + opts.length) % opts.length;
   it.set(opts[k].v);
   LAB.UI.click();
-  say(valueText(it));
+  /* значение и его описание — одной фразой: описание не теряется */
+  say(valueText(it) + (it.descOf ? ". " + it.descOf(it.get()) : ""));
   render();
 }
 function adjust(it, dir) {
@@ -260,6 +276,8 @@ function pages(list, opts) {
 
 function mainMenu(silentIntro) {
   if (gm() && gm().entered) { gm().autosave(); gm().entered = false; }
+  if (gm()) { gm().session = (gm().session || 0) + 1; gm().paused = false; gm().descending = false; }
+  LAB.safe(function () { LAB.Speech.later = []; LAB.Speech.held = []; clearTimeout(LAB.Speech.heldTimer); LAB.Speech.heldTimer = null; });
   if (LAB.combat) LAB.combat.stop();
   A("stopWorld");
   stack = [];
@@ -292,10 +310,16 @@ function reopenMain() { if (screen === "menu" && !top()) mainMenu(true); else if
 
 function loadMenu() {
   var keys = ["auto", 1, 2, 3];
-  menu("Загрузить игру", keys.map(function (k) {
+  var items = keys.map(function (k) {
     var info = gm().slotInfo(k);
     return { label: gm().slotText(k), disabled: !info, why: "Слот пуст.", fn: function () { if (!gm().loadSlot(k)) reopenMain(); } };
-  }).concat([{ label: "Назад", fn: function () { reopenMain(); } }]));
+  });
+  /* резервные копии: прежнее содержимое слота до последней записи */
+  keys.forEach(function (k) {
+    var t = gm().slotText(k, true);
+    if (t) items.push({ label: t, fn: function () { if (!gm().loadSlot(k, true)) reopenMain(); } });
+  });
+  menu("Загрузить игру", items.concat([{ label: "Назад", fn: function () { reopenMain(); } }]));
 }
 function saveMenu() {
   menu("Сохранить игру", [1, 2, 3].map(function (k) {
@@ -320,7 +344,7 @@ function settingsMenu() {
     { kind: "choice", label: "Синтезатор речи", options: ttsOpts, get: function () { return S.tts; }, set: function (v) { S.tts = v; LAB.saveSettings(); Sp.choose(); } },
     { label: function () { return "Голос синтезатора: " + (S.tts === "espeak" ? "встроенный eSpeak" : S.voice || autoVoiceName()); }, fn: voiceMenu },
     { kind: "slider", label: "Скорость речи", min: 0, max: 100, step: 5, get: function () { return S.ratePct == null ? 50 : +S.ratePct; }, set: function (v) { S.ratePct = v; S.rate = LAB.rateFromPct(v); LAB.saveSettings(); }, fmt: function (v) { return Math.round(v) + " процентов" + (v === 50 ? ", обычная" : ""); } },
-    { kind: "choice", label: "Уровень сложности", options: [1, 2, 3].map(function (k) { return { v: k, label: LAB.DIFF[k].n }; }), get: function () { return S.difficulty || 1; }, set: function (v) { S.difficulty = v; LAB.saveSettings(); sayq(LAB.DIFF[v].desc); } },
+    { kind: "choice", label: "Уровень сложности", options: (LAB.DIFF_ORDER || [1, 2, 3]).map(function (k) { return { v: k, label: LAB.DIFF[k].n }; }), get: function () { return S.difficulty || 1; }, set: function (v) { S.difficulty = v; LAB.saveSettings(); }, descOf: function (v) { return LAB.DIFF[v] ? LAB.DIFF[v].desc : ""; } },
     vol("Громкость музыки", "musicVol"),
     vol("Громкость звуков", "fxVol"),
     vol("Громкость атмосферы", "ambVol"),
@@ -510,7 +534,7 @@ function armorItem(i) {
 }
 /* Устройства: гранаты, пластины, самоделки мастерской и вещи блоков. */
 function gadgetIds() {
-  var ids = ["emp", "plate", "decoder", "noise", "turret_kit", "jammer", "lockpick", "filter", "sonar", "repairkit"];
+  var ids = ["emp", "plate", "decoder", "noise", "turret_kit", "jammer", "lockpick", "filter", "sonar", "repairkit", "okokey"];
   for (var k in LAB.ITEMS) { var d = LAB.ITEMS[k]; if (d.kind !== "part" && d.depth && ids.indexOf(k) < 0) ids.push(k); }
   return ids;
 }
@@ -524,7 +548,7 @@ function gadgetsMenu() {
   gadgetIds().slice(3).forEach(function (k) {
     var d = LAB.ITEMS[k];
     if (!d || !(g.inv[k] > 0)) return;
-    var verb = d.kind === "throw" ? "Бросить вперёд" : d.kind === "deploy" ? "Поставить впереди" : d.fx && d.fx.pick ? "Применяется у двери" : "Применить";
+    var verb = d.kind === "throw" ? "Бросить вперёд" : d.kind === "deploy" ? "Поставить впереди" : d.fx && d.fx.pick ? "Применяется у двери" : k === "okokey" ? "Применяется у турели и на терминале безопасности" : "Применить";
     items.push({ label: d.n + ": " + g.inv[k] + ". " + verb + ". " + d.desc, fn: function () { gm().useItem(k); } });
   });
   items.push(back());
@@ -554,7 +578,7 @@ function passesMenu() {
 function notesMenu() {
   var g = G();
   var items = g.noteList.slice().reverse().map(function (n) {
-    return { label: "«" + n.t + "»" + (n.a ? ", " + n.a : "") + ", уровень " + n.L + ", этаж " + n.F, fn: function () { note(n.t, (n.a ? n.a + ". " : "") + n.x, notesMenu); } };
+    return { label: "«" + n.t + "»" + (n.a ? ", " + n.a : "") + ", уровень " + n.L + ", этаж " + n.F, fn: function () { var nf = gm().noteFull(n); note(nf.t, (nf.a ? nf.a + ". " : "") + nf.x, notesMenu); } };
   });
   if (!items.length) items.push({ label: "Записок пока нет.", keep: true, fn: function () {} });
   items.push(back());

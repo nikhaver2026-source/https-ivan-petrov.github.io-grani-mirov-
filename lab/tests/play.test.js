@@ -91,6 +91,8 @@ function ok(cond, msg) { if (cond) console.log("  ✓ " + msg); else { fails++; 
   await gest({ kind: "swipe", n: 1, dir: "U" });
   ok(await page.evaluate(() => LAB.settings.difficulty) === 3, "очень тяжёлая");
   await gest({ kind: "swipe", n: 1, dir: "U" });
+  ok(await page.evaluate(() => LAB.settings.difficulty) === 4, "лёгкая");
+  await gest({ kind: "swipe", n: 1, dir: "U" });
   ok(await page.evaluate(() => LAB.settings.difficulty) === 1, "и снова обычная");
   const ri = labels.findIndex(l => /Скорость речи/.test(l));
   const rs = await page.evaluate((ri) => {
@@ -388,7 +390,9 @@ function ok(cond, msg) { if (cond) console.log("  ✓ " + msg); else { fails++; 
   await key("Enter");
   ok(await page.evaluate(() => LAB.ui.top().title) === "Оружие", "Enter — раздел «Оружие»");
   await key("Escape");
-  ok(await page.evaluate(() => !LAB.ui.top()), "Escape — раздел закрыт, снова игра");
+  ok(await page.evaluate(() => LAB.ui.top() && LAB.ui.top().title) === "Инвентарь", "Escape — раздел закрыт, снова инвентарь (как пункт «Назад»)");
+  await key("Escape");
+  ok(await page.evaluate(() => !LAB.ui.top()), "Escape ещё раз — снова игра");
   await key("i");
   await key("c");
   ok(await page.evaluate(() => LAB.ui.top() && LAB.ui.top().title) === "Персонаж", "C из инвентаря — окно персонажа");
@@ -683,7 +687,7 @@ function ok(cond, msg) { if (cond) console.log("  ✓ " + msg); else { fails++; 
     g.advanceTime(60);
     out.hunger = { food: Math.round(G.body.food), said: SPOKEN.join(" | ") };
     let snack = null, sf = 0;
-    for (let F = 1; F <= 20 && !snack; F++) { const fl = LAB.getFloor(G.seed, 2, F); snack = fl.objs.find(o => o.type === "snacks"); if (snack) sf = F; }
+    for (let F = 1; F <= 20 && !snack; F++) { const fl = LAB.getFloor(G.seed, 2, F); snack = fl.objs.find(o => o.type === "snacks" && !o.broken); if (snack) sf = F; } /* сломанный автомат — другая проверка */
     out.snack = !!snack;
     if (snack) {
       g.enterFloor(2, sf, "down", true);
@@ -769,7 +773,7 @@ function ok(cond, msg) { if (cond) console.log("  ✓ " + msg); else { fails++; 
     /* перепрошивка: новые машины с другого этажа идут на вас */
     g.enterFloor(2, 8, "down", true); god();
     g.CUR.fs.robots = true; C.robotsCalm();
-    LAB.oko.event("robots");
+    LAB.oko.event("robots", { x: G.x, y: G.y }); /* в игре — с координатами терминала, у которого стоит герой */
     let fresh = [];
     for (let i = 0; i < 80 && !fresh.length; i++) { C.tick(); fresh = live().filter(f => f.fresh && !f.calm); }
     const fd0 = Math.min.apply(null, fresh.map(dH).concat([999]));
@@ -788,17 +792,24 @@ function ok(cond, msg) { if (cond) console.log("  ✓ " + msg); else { fails++; 
     /* дрон слежения: догоняет, держит дистанцию, стреляет */
     g.enterFloor(3, 5, "down", true); god();
     live().forEach(f => { f.dead = true; });
-    const dr = C.dispatch(1, "drone"), hp0 = G.hp, dd = [];
-    for (let i = 0; i < 160; i++) { C.tick(); if (i >= 100 && dr[0]) dd.push(dH(dr[0])); }
-    out.drone = { n: dr.length, far: dr[0] ? Math.max.apply(null, dd) : 99, near: dr[0] ? Math.min.apply(null, dd) : 0, hurt: hp0 - G.hp };
+    /* дрон вылетает туда, где вас видела камера, дальше ищет сам */
+    LAB.oko.report("camera", G.x, G.y, "seen");
+    const dr = C.dispatch(1, "drone", { x: G.x, y: G.y }), hp0 = G.hp, dd = [];
+    for (let i = 0; i < 200; i++) { C.tick(); if (dr[0]) dd.push(dH(dr[0])); }
+    out.drone = { n: dr.length, near: dr[0] ? Math.min.apply(null, dd) : 0, close: dd.filter(v => v <= 6).length, hurt: hp0 - G.hp };
     /* патрули смены: маршруты меняются, патрульных хватает */
     g.enterFloor(3, 9, "down", true); god();
     live().forEach(f => { f.dead = true; });
     LAB.oko.state().heat = 60;
     LAB.oko.shift(); for (let i = 0; i < 40; i++) C.tick();
-    const r1 = C.patrols().map(f => JSON.stringify(f.route));
-    LAB.oko.shift(); for (let i = 0; i < 40; i++) C.tick();
-    out.patrol = { n: C.patrols().length, changed: C.patrols().some(f => r1.indexOf(JSON.stringify(f.route)) < 0) };
+    let r1 = C.patrols().map(f => JSON.stringify(f.route)), changed = false;
+    /* смена за сменой: патрульных набирается сколько нужно, маршруты новые */
+    for (let k = 0; k < 4 && (!changed || C.patrols().length < 2); k++) {
+      LAB.oko.shift(); for (let i = 0; i < 40; i++) C.tick();
+      if (C.patrols().some(f => r1.indexOf(JSON.stringify(f.route)) < 0)) changed = true;
+      r1 = C.patrols().map(f => JSON.stringify(f.route));
+    }
+    out.patrol = { n: C.patrols().length, changed };
     LAB.oko.state().heat = 0;
     /* страж у лифта: погнался — и вернулся на пост */
     g.enterFloor(2, 6, "down", true); god();
@@ -818,10 +829,356 @@ function ok(cond, msg) { if (cond) console.log("  ✓ " + msg); else { fails++; 
   ok(!oko.repair || oko.repair.t2 >= 0, "ремонтник дошёл и починил: сеть снова у ОКО (тактов: " + (oko.repair && oko.repair.t2) + ")" + (oko.repair && oko.repair.diag ? " — " + oko.repair.diag : ""));
   ok(oko.fresh.n >= 1 && oko.fresh.d1 < oko.fresh.d0, "перепрошили роботов — новые машины ОКО идут к вам (" + oko.fresh.n + ", " + oko.fresh.d0 + " → " + oko.fresh.d1 + " шагов)");
   ok(oko.check.n >= 1 && oko.check.c1 < oko.check.c0, "неудачный взлом — проверка идёт к терминалу (" + oko.check.c0 + " → " + oko.check.c1 + ")");
-  ok(oko.drone.n === 1 && oko.drone.far <= 8 && oko.drone.near >= 2 && oko.drone.hurt > 0, "дрон слежения догнал, держится рядом (" + oko.drone.near + "–" + oko.drone.far + " шагов) и стреляет");
+  ok(oko.drone.n === 1 && oko.drone.close >= 20 && oko.drone.near >= 2 && oko.drone.hurt > 0, "дрон слежения вылетел к месту, где вас видела камера, нашёл вас, держится на расстоянии (не ближе " + oko.drone.near + " шагов) и стреляет");
   ok(oko.patrol.n >= 2 && oko.patrol.changed, "патрули смены: " + oko.patrol.n + ", маршруты меняются");
   ok(!oko.guard || (oko.guard.back && oko.guard.state === "idle"), "страж у лифта вернулся на пост");
   ok(oko.dead !== false, "павший враг не встаёт, когда вы вернулись на этаж");
+
+  console.log("Система безопасности ОКО: режимы, источники, журнал, блокировка, глушилка");
+  const secr = await page.evaluate(() => {
+    const g = LAB.game, G = g.G, C = LAB.combat, O = LAB.oko, out = {};
+    C.stop();
+    g.enterFloor(3, 7, "down", true);
+    G.hp = G.hpMax = 99999;
+    C.foes().forEach(f => { f.dead = true; });
+    O.state().heat = 0;
+    /* между донесениями этаж пуст: отряды по тревоге не выходят и сами не докладывают */
+    const hush = () => { C.foes().forEach(f => { f.dead = true; }); g.CUR.fs.waves = []; g.CUR.fs.droneAt = 0; };
+    out.l0 = O.level();
+    O.report("noise", G.x, G.y, "suspect", "выстрелы"); out.l1 = O.level();
+    for (let i = 0; i < 100; i++) C.tick(); out.decay = O.level();
+    O.report("camera", G.x, G.y, "seen"); out.l2 = O.level();
+    for (let i = 0; i < 8; i++) { C.tick(); hush(); } O.report("robot", G.x, G.y, "seen");
+    for (let i = 0; i < 8; i++) { C.tick(); hush(); } O.report("camera", G.x, G.y, "seen"); out.l3 = O.level();
+    O.state().heat = 85;
+    for (let i = 0; i < 8; i++) { C.tick(); hush(); } O.report("camera", G.x, G.y, "seen"); out.l4 = O.level();
+    for (let i = 0; i < 8; i++) { C.tick(); hush(); } O.report("camera", G.x, G.y, "seen"); out.l5 = O.level();
+    if (out.l5 !== 5) out.diag = "жар " + O.state().heat + ", комната " + g.CUR.fl.room[G.y * LAB.W + G.x] + ", блокировок " + (g.CUR.fs.sealUsed || 0) + ", глушилка " + G.st.jam + ", слепое " + !!g.CUR.fs.okoBlind + ", такт " + g.CUR.fs.okoT + ", пауза " + g.paused + ", сложность " + LAB.settings.difficulty + ", этаж " + g.CUR.key;
+    out.sealed = Object.keys(g.CUR.fs.okoLock || {}).length;
+    out.blocked = g.CUR.fl.doors.filter(d => g.okoLockLeft(d) > 0 && /Аварийная блокировка/.test(g.doorBlock(d))).length;
+    /* носитель ушёл: машины этажа выбыли, отряды и дрон не вылетели */
+    const gone = () => { C.foes().forEach(f => { f.dead = true; }); g.CUR.fs.waves = []; g.CUR.fs.droneAt = 0; };
+    gone();
+    for (let i = 0; i < 70; i++) { C.tick(); gone(); } out.l6 = O.level();
+    for (let i = 0; i < 160; i++) { C.tick(); gone(); } out.end = O.level();
+    out.log = O.logText(30);
+    G.st.jam = 60; out.jam = O.report("camera", G.x, G.y, "seen"); G.st.jam = 0;
+    O.state().heat = 0;
+    return out;
+  });
+  ok(secr.l0 === 0 && secr.l1 === 1 && secr.decay === 0, "подозрение от акустического датчика и затухание, если признак не подтвердился");
+  ok(secr.l2 === 2 && secr.l3 === 3 && secr.l4 === 4 && secr.l5 === 5, "камера — подтверждённое нарушение, повторы — локальная, при высоком подозрении — комплексная тревога и аварийная блокировка (" + [secr.l2, secr.l3, secr.l4, secr.l5].join(" → ") + (secr.diag ? "; " + secr.diag : "") + ")");
+  ok(secr.sealed >= 1 && secr.blocked >= 1, "аварийная блокировка заперла двери помещения (" + secr.sealed + ", закрыто: " + secr.blocked + ")");
+  ok(secr.l6 === 6 && (secr.end === 0 || secr.end === 1), "цель потеряна — восстановление и прочёсывание, потом штатный режим (" + secr.l6 + " → " + secr.end + ")");
+  ok(/Камера, .*носитель обнаружен/.test(secr.log) && /Акустический датчик/.test(secr.log), "журнал безопасности: у каждого события — источник: " + secr.log.slice(0, 120));
+  ok(secr.jam === false, "глушилка: датчики ОКО молчат");
+
+  console.log("Роботы и турели: подход наискосок, кабель, ремонт, ключ ОКО, перегрев, фланг, слабое место, мимик");
+  const rob = await page.evaluate(async () => {
+    const g = LAB.game, G = g.G, C = LAB.combat, O = LAB.oko, out = {};
+    C.stop();
+    const live = () => C.foes().filter(f => !f.dead);
+    const god = () => { G.hp = G.hpMax = 99999; G.dead = false; };
+    const wait = ms => new Promise(r => setTimeout(r, ms));
+    const label = i => typeof i.label === "function" ? i.label() : i.label;
+    let found = null;
+    for (let L = 1; L <= 6 && !found; L++) for (let F = 4; F <= 20 && !found; F++) { const fl = LAB.getFloor(G.seed, L, F); if (fl.turrets && !G.visited[L + "-" + F]) found = { L, F }; }
+    if (!found) return { none: true };
+    g.enterFloor(found.L, found.F, "down", true); god();
+    O.state().heat = 0;
+    live().forEach(f => { if (!C.isTurret(f)) f.dead = true; });
+    const tur = live().filter(f => C.isTurret(f));
+    const t = tur[0];
+    const diag = [[1, 1], [1, -1], [-1, 1], [-1, -1]].map(d => [t.x + d[0], t.y + d[1]]).filter(c => g.passable(c[0], c[1]));
+    if (!diag.length) return { none: true, why: "нет клетки наискосок" };
+    G.x = diag[0][0]; G.y = diag[0][1];
+    /* Enter у турели: меню турели (или выбор, если рядом ещё что-то) */
+    LAB.ui.closeAll(); g.interact();
+    let top = LAB.ui.top();
+    if (top && /Что рядом/.test(top.title || "")) { const ti = top.items.findIndex(i => /Турель|турель/.test(label(i))); if (ti >= 0) { top.i = ti; LAB.ui.activate(); top = LAB.ui.top(); } }
+    out.menu = top ? top.items.map(label) : [];
+    const ci = top ? top.items.findIndex(i => /перерезать кабель/.test(label(i))) : -1;
+    if (ci >= 0) {
+      top.i = ci; LAB.ui.activate();
+      for (let k = 0; k < 300; k++) { const c = LAB.mini._cur(); if (!c || c.type !== "hack") break; if (!c.busy) LAB.mini.gesture({ kind: "swipe", n: 1, dir: c.seq[c.pos] }); await wait(60); }
+      await wait(400);
+    }
+    out.cut = t.cut; out.cutRec = !!(g.CUR.fs.cutT && g.CUR.fs.cutT[t.id]);
+    out.cutLog = /турель обесточена/.test(O.logText(6));
+    /* ремонтник ОКО сращивает кабель */
+    let r1 = -1, r2 = -1;
+    for (let i = 0; i < 240 && r1 < 0; i++) { C.tick(); god(); if (C.repairers().length) r1 = i; }
+    let lastR = null;
+    for (let i = 0; i < 900 && r2 < 0; i++) { C.tick(); god(); const rp = C.repairers()[0]; if (rp) lastR = rp; if (!t.cut) r2 = i; }
+    out.rep = { r1, r2 };
+    if (r2 < 0) out.rep.diag = "этаж " + g.CUR.key + ", турель " + t.x + "," + t.y + (t.dead ? " разбита" : "") + ", ремонтник " + (lastR ? lastR.type + " " + lastR.x + "," + lastR.y + " задача " + lastR.task + " состояние " + lastR.state + (lastR.dead ? " снят" : "") + " шагов до цели " + lastR.pathLen + " застрял " + lastR.stuck : "нет") + ", ремонтников сейчас " + C.repairers().length + ", repairAt " + g.CUR.fs.repairAt + ", такт " + g.CUR.fs.okoT + ", режим " + g.CUR.fs.turretMode + ", перерезано " + C.cutCount();
+    LAB.ui.closeAll();
+    /* ключ ОКО: турель на нашей стороне, контрвзлом её не трогает; отзыв ключа — снова у ОКО */
+    live().forEach(f => { if (!C.isTurret(f)) C.despawn(f); });
+    G.inv.okokey = 1;
+    G.x = diag[0][0]; G.y = diag[0][1];
+    g.turretSabotage(t);
+    top = LAB.ui.top();
+    const ki = top ? top.items.findIndex(i => /служебный ключ ОКО/.test(label(i))) : -1;
+    if (ki >= 0) { top.i = ki; LAB.ui.activate(); }
+    out.key = { used: G.inv.okokey === 0, mine: t.mine, ally: t.ally };
+    C.turretsHostile(); out.key.afterCounter = t.ally;
+    g.CUR.fs.revokeAt = g.CUR.fs.okoT + 1; for (let i = 0; i < 3; i++) { C.tick(); god(); }
+    out.key.revoked = !t.mine && !t.ally;
+    /* ключ ОКО на терминале — команда одной турели, а не всей обороне этажа */
+    const termS = g.CUR.fl.objs.find(o => o.type === "terminal" && o.sub === "sec");
+    if (termS) {
+      tur.forEach(f => { f.cut = false; f.quiet = false; f.mine = false; f.calm = false; f.ally = false; });
+      g.CUR.fs.cutT = {}; g.CUR.fs.mineT = {}; g.CUR.fs.turretMode = "on";
+      G.inv.okokey = 1; g.objState(termS).hacked = true;
+      const lv0 = O.level();
+      LAB.ui.closeAll(); g.objMenu(termS);
+      const pick = re => { const w = LAB.ui.top(); const k = w ? w.items.findIndex(i => re.test(label(i))) : -1; if (k < 0) return false; w.i = k; LAB.ui.activate(); return true; };
+      const step = pick(/Оборонная сеть/) && pick(/команда одной турели/);
+      const lw = LAB.ui.top(); if (step && lw) { lw.i = 0; LAB.ui.activate(); }
+      const ok2 = step && pick(/Тихо снять/);
+      out.keyTerm = { step: ok2, quiet: tur.filter(f => f.cut && f.quiet).length, live: tur.filter(f => !f.cut && !f.calm).length, n: tur.length, used: G.inv.okokey === 0, noAlarm: O.level() <= Math.max(1, lv0) };
+      LAB.ui.closeAll();
+      tur.forEach(f => { f.cut = false; f.quiet = false; f.calm = false; }); g.CUR.fs.cutT = {};
+    }
+    /* перегрев: после серии выстрелов турель молчит пару тактов */
+    t.cut = false; t.calm = false; t.ally = false; t.state = "hunt";
+    let lineCell = null;
+    for (const d of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+      for (let k = 2; k <= 3 && !lineCell; k++) { let ok = true; for (let j = 1; j <= k; j++) if (!g.passable(t.x + d[0] * j, t.y + d[1] * j)) ok = false; if (ok) lineCell = [t.x + d[0] * k, t.y + d[1] * k]; }
+      if (lineCell) break;
+    }
+    out.over = -1; out.shots = 0;
+    if (lineCell) {
+      G.x = lineCell[0]; G.y = lineCell[1]; god();
+      const hp0 = G.hp;
+      for (let i = 0; i < 40 && out.over < 0; i++) { t.lastKnown = { x: G.x, y: G.y }; C.tick(); god(); if (t.over > 0) out.over = i; }
+      out.shots = t.heatN;
+    } else out.over = "нет линии";
+    /* фланг: второй робот заходит с другой стороны */
+    g.enterFloor(2, 7, "down", true); god();
+    live().forEach(f => { f.dead = true; });
+    const h = { x: G.x, y: G.y }, free = [];
+    for (let dx = -4; dx <= 4; dx++) for (let dy = -4; dy <= 4; dy++) { const x = h.x + dx, y = h.y + dy; if ((dx || dy) && g.passable(x, y)) free.push([x, y, Math.abs(dx) + Math.abs(dy)]); }
+    const adj = free.filter(c => c[2] === 1), far = free.filter(c => c[2] >= 3);
+    if (adj.length && far.length) {
+      const a = C.spawnFoe("guardbot", adj[0][0], adj[0][1], {}), b = C.spawnFoe("guardbot", far[0][0], far[0][1], {});
+      a.state = b.state = "hunt"; a.lastKnown = b.lastKnown = h;
+      const fc = C.flankCell(b);
+      out.flank = fc ? (fc[0] - h.x) === -(a.x - h.x) && (fc[1] - h.y) === -(a.y - h.y) : false;
+      /* слабое место: шок по бронированному роботу без щита — броня не держит */
+      a.shield = 0; a.hp = a.maxhp = 1000;
+      const hpA = a.hp; C.damageFoe(a, 20, "phys", {}); const dPhys = hpA - a.hp;
+      const hpB = a.hp; C.damageFoe(a, 20, "shock", {}); const dShock = hpB - a.hp;
+      out.node = { nodeT: a.nodeT, dPhys, dShock };
+      a.dead = true; b.dead = true;
+    }
+    /* мимик: «прибор» гудит неровно, когда вы рядом */
+    let hum = 0; const ah = LAB.atmos.mimicHum; LAB.atmos.mimicHum = function () { hum++; };
+    const mc = free.filter(c => c[2] === 2)[0];
+    if (mc) { const m = C.spawnFoe("mimicbox", mc[0], mc[1], {}); for (let i = 0; i < 60; i++) { C.tick(); god(); } out.mimic = { hum, still: m.disguised }; m.dead = true; }
+    LAB.atmos.mimicHum = ah;
+    LAB.ui.closeAll();
+    return out;
+  });
+  ok(rob.none || rob.menu.some(l => /перерезать кабель/.test(l)), "у турели наискосок — меню: перерезать кабель питания, осмотреть" + (rob.why ? " (" + rob.why + ")" : ""));
+  ok(rob.none || (rob.cut && rob.cutRec && rob.cutLog), "кабель перерезан повтором сигналов — турель молчит, ОКО записало в журнал");
+  ok(rob.none || (rob.rep.r1 >= 0 && rob.rep.r2 >= 0), "ремонтник ОКО вышел и срастил кабель (тактов: " + (rob.rep && rob.rep.r1) + " → " + (rob.rep && rob.rep.r2) + ")" + (rob.rep && rob.rep.diag ? " — " + rob.rep.diag : ""));
+  ok(rob.none || (rob.key.used && rob.key.mine && rob.key.ally && rob.key.afterCounter && rob.key.revoked), "служебный ключ ОКО: турель наша, контрвзлом не возвращает, отзыв ключа — снова у ОКО");
+  ok(rob.none || !rob.keyTerm || (rob.keyTerm.step && rob.keyTerm.quiet === 1 && rob.keyTerm.live === rob.keyTerm.n - 1 && rob.keyTerm.used && rob.keyTerm.noAlarm), "ключ ОКО на терминале: команда одной турели — тихо обесточена одна, остальные под током, тревоги нет (" + JSON.stringify(rob.keyTerm) + ")");
+  ok(rob.none || (typeof rob.over === "number" && rob.over >= 0), "турель перегревается после серии выстрелов (такт " + rob.over + ")");
+  ok(rob.flank === true, "второй робот заходит с фланга — с другой стороны от первого");
+  ok(rob.node && rob.node.nodeT > 0 && rob.node.dShock > rob.node.dPhys, "слабое место: шок по энергоузлу бронированного робота проходит сквозь броню (" + (rob.node && rob.node.dPhys) + " → " + (rob.node && rob.node.dShock) + ")");
+  ok(rob.mimic && rob.mimic.hum > 0 && rob.mimic.still, "ящик-ловушка выдаёт себя неровным гулом, пока вы рядом (" + (rob.mimic && rob.mimic.hum) + ")");
+
+  console.log("Стабилизация по аудиту: боссы и носители, перепрошивка, враг на клетке, броня, задания, таймеры, пауза, записи, записки, фон");
+  const stab = await page.evaluate(async () => {
+    const g = LAB.game, C = LAB.combat, out = {};
+    const wait = ms => new Promise(r => setTimeout(r, ms));
+    const god = () => { g.G.hp = g.G.hpMax = 99999; g.G.dead = false; };
+    C.stop(); LAB.ui.closeAll();
+    /* К1: босс на патрульной основе (уровень 17) и носители — не патрули, их не уводят; уведённый носитель роняет ношу */
+    g.enterFloor(17, 20, "down", true); god();
+    const boss = C.foes().find(f => !f.dead && f.boss);
+    out.boss = !!boss;
+    if (boss) {
+      out.bossNotPatrol = C.patrols().indexOf(boss) < 0;
+      out.bossNoDismiss = C.dismiss(boss) === false;
+      for (let i = 0; i < 6; i++) LAB.oko.shift();
+      out.bossStays = !boss.dead && boss.task !== "leave";
+      /* К2: перепрошивка — страж уровня остаётся врагом */
+      const rc = C.robotsCalm();
+      out.bossHostile = !boss.calm && rc.boss >= 1;
+    }
+    let car = null;
+    for (let L = 1; L <= 4 && !car; L++) for (let F = 2; F <= 19 && !car; F++) {
+      const fl = LAB.getFloor(g.G.seed, L, F);
+      if (fl.foes.some(f => f.carry && f.carry.length && !f.boss && LAB.FOES[f.type].kind === "mech")) { g.enterFloor(L, F, "down", true); god(); car = C.foes().find(f => !f.dead && f.carry && f.carry.length && !f.boss && f.kind === "mech"); }
+    }
+    out.car = !!car;
+    if (car) {
+      out.carNotPatrol = C.patrols().indexOf(car) < 0;
+      const want = car.carry.length, d0 = g.CUR.fs.drops.length;
+      C.robotsCalm();
+      out.carDropped = g.CUR.fs.drops.length - d0 >= want && car.calm && !car.carry;
+      /* после перезагрузки этажа ноша не возвращается к роботу */
+      C.syncFoes(); C.loadFoes();
+      const again = C.foes().find(f => f.id === car.id);
+      out.carNoRecarry = !!again && !again.carry;
+      g.CUR.fs.robots = false;
+    }
+    /* враг на клетке: враждебный не пускает, спокойный уступает дорогу */
+    g.enterFloor(2, 6, "down", true); god();
+    C.foes().forEach(f => { f.dead = true; });
+    const dirs = { N: [0, -1], S: [0, 1], W: [-1, 0], E: [1, 0] };
+    let free = null;
+    for (const k in dirs) { const x = g.G.x + dirs[k][0], y = g.G.y + dirs[k][1]; if (!free && g.passable(x, y) && !g.foeAt(x, y)) free = { k, x, y }; }
+    if (free) {
+      const h = C.spawnFoe("patrolbot", free.x, free.y, {});
+      h.state = "idle";
+      const x0 = g.G.x, y0 = g.G.y;
+      out.foeAt = g.foeAt(free.x, free.y) === h;
+      g.tryMove(free.k, false);
+      out.hostileBlocks = g.G.x === x0 && g.G.y === y0;
+      h.calm = true;
+      g.tryMove(free.k, false);
+      out.calmSwaps = g.G.x === free.x && g.G.y === free.y && h.x === x0 && h.y === y0;
+      h.dead = true;
+      LAB.ui.closeAll();
+    }
+    /* пауза: Enter у терминала ничего не открывает */
+    const term = ["vending", "coffee", "drinks", "snacks", "pc", "terminal"].map(t => g.CUR.fl.objs.find(o => o.type === t)).find(Boolean);
+    if (term) {
+      const nb = [[0, 1], [0, -1], [1, 0], [-1, 0]].map(d => [term.x + d[0], term.y + d[1]]).find(c => g.passable(c[0], c[1]));
+      if (nb) {
+        g.G.x = nb[0]; g.G.y = nb[1]; LAB.ui.closeAll();
+        g.paused = true; g.interact(); out.pausedNoMenu = !LAB.ui.top(); g.paused = false;
+        g.interact(); out.unpausedMenu = !!LAB.ui.top(); LAB.ui.closeAll();
+      }
+    }
+    /* отложенное действие прежней игры не срабатывает */
+    let hit = 0;
+    g.later(() => { hit++; }, 50); g.session++; await wait(150); out.laterDropped = hit === 0;
+    g.later(() => { hit++; }, 50); await wait(150); out.laterRan = hit === 1;
+    /* боеприпасы блока из мастерской — число, а не NaN */
+    const rcA = (LAB.RECIPES || []).find(r => /^ammo:/.test(r.out) && !(r.out.slice(5) in g.G.ammo));
+    if (rcA) {
+      const L0 = g.G.L; g.G.L = Math.max(g.G.L, rcA.minL || 1);
+      for (const k in rcA.need) g.G.inv[k] = (g.G.inv[k] || 0) + rcA.need[k];
+      g.craft(rcA); out.ammoN = g.G.ammo[rcA.out.slice(5)]; g.G.L = L0;
+    }
+    /* задание выжившего не повторяется после перестройки этажа */
+    const npc = { key: "T-1-s", n: "Проверочный выживший" };
+    g.takeQuest(npc);
+    const q0 = g.G.quests.find(q => q.id === "T-1-s:0"); if (q0) q0.done = true;
+    const npc2 = { key: "T-1-s", n: "Проверочный выживший" }; /* этаж из кэша: этапа на объекте нет */
+    out.questStage = g.questStage(npc2);
+    g.takeQuest(npc2);
+    out.questNext = !!g.G.quests.find(q => q.id === "T-1-s:1");
+    /* записка — ссылкой, текст собирается */
+    g.giveItem({ kind: "note", note: "staff", id: "tnote1" }, true);
+    const ne = g.G.noteList[g.G.noteList.length - 1];
+    out.noteRef = !!ne && ne.x == null && !!ne.src && (g.noteFull(ne).x || "").length > 20;
+    /* броня после загрузки: надетая — та же запись, что в списке */
+    if (!g.G.armors.length) g.giveItem({ kind: "armor", a: LAB.makeArmor(Object.keys(LAB.ARMORS)[0], 1, 1) }, true);
+    g.equipArmor(0);
+    g.saveSlot(3);
+    g.loadSlot(3);
+    const G2 = g.G;
+    out.armorSame = !!G2.armor && G2.armors.indexOf(G2.armor) >= 0;
+    out.noteAfterLoad = (g.noteFull(G2.noteList[G2.noteList.length - 1]).x || "").length > 20;
+    /* резервная копия слота и загрузка из неё */
+    g.saveSlot(3);
+    out.bak = !!localStorage.getItem("lab_slot3_bak");
+    out.bakLoad = g.loadSlot(3, true) === true;
+    /* битая запись: не загружается, текущая игра остаётся */
+    const seed0 = g.G.seed;
+    localStorage.setItem("lab_slot2", JSON.stringify({ meta: { L: 150, F: 1 }, g: { L: 150, F: 1, seed: "битая", weapons: [], hp: 1, hpMax: 1 } }));
+    out.badRefused = g.loadSlot(2) === false && g.G.seed === seed0 && g.entered;
+    localStorage.removeItem("lab_slot2");
+    /* автозапись во время спуска ждёт */
+    const a0 = localStorage.getItem("lab_auto");
+    g.descending = true; g.autosave(); out.descNoAuto = localStorage.getItem("lab_auto") === a0; g.descending = false;
+    /* лёгкая сложность: при гибели почти ничего не теряется */
+    const d0 = LAB.settings.difficulty; LAB.settings.difficulty = 4;
+    g.G.credits = 1000; g.G.dead = false; g.die(); out.easyLoss = 1000 - g.G.credits; g.session++; g.G.dead = false; g.paused = false;
+    LAB.settings.difficulty = d0;
+    /* фон: мир стоит, вернулись — идёт */
+    LAB.ui.closeAll(); god(); g.enterFloor(2, 6, "down", true); god();
+    C.start();
+    const T = () => g.CUR.fs.okoT || 0;
+    const t0 = T(); LAB.bg = true; await wait(1300); const t1 = T(); LAB.bg = false; await wait(1300); const t2 = T();
+    C.stop();
+    out.bg = { t0, t1, t2 };
+    /* уборщик не подбирает ключ, а мелочь подбирает */
+    const cc = [[1, 0], [-1, 0], [0, 1], [0, -1]].map(d => [g.G.x + d[0] * 2, g.G.y + d[1] * 2]).find(c => g.passable(c[0], c[1]) && !g.foeAt(c[0], c[1]));
+    if (cc) {
+      const cl = C.spawnFoe("cleaner", cc[0], cc[1], {});
+      g.CUR.fs.drops.push({ id: "tkey1", kind: "key", key: "tk", keyName: "Ключ от двери: проверка", n: "Ключ", x: cc[0], y: cc[1] });
+      g.CUR.fs.drops.push({ id: "tscr1", kind: "item", item: "scrap", n: 1, x: cc[0], y: cc[1] });
+      C._cleanerTick(cl);
+      out.cleaner = { key: !!g.CUR.fs.taken.tkey1, scrap: !!g.CUR.fs.taken.tscr1 };
+      cl.dead = true;
+    }
+    /* узел ОКО без свежего контакта не поднимает этаж */
+    const cells = [];
+    for (let dx = -5; dx <= 5; dx++) for (let dy = -5; dy <= 5; dy++) { const x = g.G.x + dx, y = g.G.y + dy; if (Math.abs(dx) + Math.abs(dy) >= 2 && g.passable(x, y) && !g.foeAt(x, y)) cells.push([x, y]); }
+    if (cells.length >= 2) {
+      const rl = C.spawnFoe("relay", cells[0][0], cells[0][1], {});
+      const pb = C.spawnFoe("patrolbot", cells[cells.length - 1][0], cells[cells.length - 1][1], {});
+      out.relayPb = !!pb;
+      if (pb) { pb.state = "idle"; pb.calm = false; }
+      rl.state = "alert"; rl.seenT = 99; rl.hearT = 99; rl.lastKnown = { x: g.G.x, y: g.G.y };
+      C._relayCall(rl); out.relayStale = !pb || pb.state === "idle";
+      rl.seenT = 0; C._relayCall(rl); out.relayFresh = !pb || pb.state === "alert";
+      rl.dead = true; if (pb) pb.dead = true;
+    }
+    /* «Отойти» закрывает окно автомата (оно открыто «с удержанием») */
+    let auto = null;
+    for (let F = 1; F <= 20 && !auto; F++) { const fl = LAB.getFloor(g.G.seed, 2, F); const o = fl.objs.find(q => q.type === "snacks" && !q.broken); if (o) { g.enterFloor(2, F, "down", true); god(); auto = o; } }
+    if (auto) {
+      LAB.ui.closeAll(); g.objMenu(auto);
+      const wa = LAB.ui.top();
+      wa.i = wa.items.findIndex(i => i.label === "Отойти"); LAB.ui.activate();
+      out.leaveCloses = LAB.ui.top() !== wa;
+    }
+    /* лишний жест после удачного взлома не перебивает итог */
+    SPOKEN.length = 0;
+    let hres = null;
+    LAB.mini.hack(3, ok => { hres = ok; });
+    for (let k = 0; k < 300; k++) { const c = LAB.mini._cur(); if (!c || c.type !== "hack") break; if (!c.busy) { const want = c.seq[c.pos]; LAB.mini.gesture({ kind: "swipe", n: 1, dir: want }); if (c.done) { LAB.mini.gesture({ kind: "swipe", n: 1, dir: want === "U" ? "D" : "U" }); } } await wait(60); }
+    await wait(500);
+    out.hackClean = hres === true && !SPOKEN.some(t => /Неверно/.test(t));
+    /* «Блок I» читается словом */
+    out.roman = LAB.keysSpoken("Блок I. Подножие. Блок IV.") === "Блок первый. Подножие. Блок четвёртый.";
+    /* разбор оружия не меняет оружие в руках */
+    while (g.G.weapons.length < 3) g.G.weapons.push(LAB.makeWeapon("baton", 1, 0, 1));
+    g.G.wi = 2; const inHand = g.G.weapons[2].id;
+    if (g.scrapWeapon) { g.scrapWeapon(1); out.scrapKeeps = g.G.weapons[g.G.wi] && g.G.weapons[g.G.wi].id === inHand; }
+    LAB.ui.closeAll();
+    return out;
+  });
+  ok(stab.leaveCloses, "«Отойти» закрывает окно автомата");
+  ok(stab.hackClean, "лишний жест после удачного взлома не перебивает итог");
+  ok(stab.roman, "«Блок I» читается как «Блок первый»");
+  ok(stab.scrapKeeps !== false, "разбор оружия не меняет оружие в руках");
+  ok(stab.boss && stab.bossNotPatrol && stab.bossNoDismiss && stab.bossStays, "босс на патрульной основе — не патруль: смена караула его не уводит (уровень 17)");
+  ok(stab.boss && stab.bossHostile, "перепрошивка: страж уровня чужую прошивку не принимает — остаётся врагом");
+  ok(!stab.car || (stab.carNotPatrol && stab.carDropped && stab.carNoRecarry), "носитель ключей не патрулирует; перепрошитый — выкладывает ношу, после перезагрузки этажа она к нему не возвращается");
+  ok(stab.foeAt && stab.hostileBlocks && stab.calmSwaps, "враг на клетке: враждебный не пускает, спокойная машина уступает дорогу");
+  ok(stab.pausedNoMenu && stab.unpausedMenu, "во время паузы Enter ничего не открывает, после — открывает");
+  ok(stab.laterDropped && stab.laterRan, "отложенное действие прежней игры не срабатывает, текущей — срабатывает");
+  ok(typeof stab.ammoN === "number" && stab.ammoN >= 1, "боеприпасы блока из мастерской — число (" + stab.ammoN + ")");
+  ok(stab.questStage === 1 && stab.questNext, "задание выжившего не повторяется: следующий этап после перестройки этажа");
+  ok(stab.noteRef && stab.noteAfterLoad, "записка хранится ссылкой, текст собирается и после загрузки");
+  ok(stab.armorSame, "после загрузки надетая броня — та же запись, что в списке брони");
+  ok(stab.bak && stab.bakLoad, "резервная копия слота есть и загружается");
+  ok(stab.badRefused, "битая запись не загружается, текущая игра остаётся");
+  ok(stab.descNoAuto, "во время спуска автозапись ждёт");
+  ok(stab.easyLoss === 50, "лёгкая сложность: при гибели теряется 5 % кредитов (" + stab.easyLoss + ")");
+  ok(stab.bg.t1 === stab.bg.t0 && stab.bg.t2 > stab.bg.t1, "игра в фоне: мир стоит, вернулись — идёт (" + stab.bg.t0 + " → " + stab.bg.t1 + " → " + stab.bg.t2 + ")");
+  ok(!stab.cleaner || (!stab.cleaner.key && stab.cleaner.scrap), "уборщик не подбирает ключ, а металлолом подбирает");
+  ok(stab.relayPb && stab.relayStale && stab.relayFresh, "узел ОКО поднимает машины только по свежему контакту");
 
   console.log("Обход этажей одного зерна: вход, такты, осмотр");
   const tour = await page.evaluate(() => {
