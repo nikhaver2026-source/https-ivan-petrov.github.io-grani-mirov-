@@ -399,19 +399,46 @@
 # «Подземная лаборатория», заход H: музыка блоков — Kevin MacLeod (CC BY 3.0),
 # файлы Wikimedia Commons: тёплый живой мир, холодное отражение, ритм механизма,
 # космический финал.
-lab_km_magicforest https://upload.wikimedia.org/wikipedia/commons/0/0f/Magic_Forest_%28ISRC_USUAN1600044%29.mp3
-lab_km_ascendingtheva https://upload.wikimedia.org/wikipedia/commons/c/cd/Ascending_the_Vale_%28ISRC_USUAN1600064%29.mp3
-lab_km_lightlessdawn https://upload.wikimedia.org/wikipedia/commons/5/5b/Lightless_Dawn_%28ISRC_USUAN1100655%29.mp3
-lab_km_frostwaltz https://upload.wikimedia.org/wikipedia/commons/6/62/Frost_Waltz_%28ISRC_USUAN1100516%29.mp3
-lab_km_iceflow https://upload.wikimedia.org/wikipedia/commons/c/c3/Ice_Flow_%28ISRC_USUAN1200088%29.mp3
-lab_km_ghoststory https://upload.wikimedia.org/wikipedia/commons/a/a5/Ghost_Story_%28ISRC_USUAN1300034%29.mp3
-lab_km_darkestchild https://upload.wikimedia.org/wikipedia/commons/f/fe/Darkest_Child_%28ISRC_USUAN1100783%29.mp3
-lab_km_satiate https://upload.wikimedia.org/wikipedia/commons/8/82/Satiate_-_only_strings_%28ISRC_USUAN1200056%29.mp3
-lab_km_industrialmusi https://upload.wikimedia.org/wikipedia/commons/c/c4/Industrial_Music_Box_%28ISRC_USUAN1100812%29.mp3
-lab_km_klockworx https://upload.wikimedia.org/wikipedia/commons/2/27/Klockworx_%28ISRC_USUAN1100392%29.mp3
-lab_km_mechanolith https://upload.wikimedia.org/wikipedia/commons/6/63/Mechanolith_%28ISRC_USUAN1100879%29.mp3
-lab_km_junkyardtribe https://upload.wikimedia.org/wikipedia/commons/9/96/Junkyard_Tribe_%28ISRC_USUAN1200021%29.mp3
-lab_km_riverofio https://upload.wikimedia.org/wikipedia/commons/9/96/River_of_Io_%28ISRC_USUAN1600065%29.mp3
-lab_km_infiniteperspe https://upload.wikimedia.org/wikipedia/commons/9/90/Infinite_Perspective_%28ISRC_USUAN1500024%29.mp3
-lab_km_bathedinthelig https://upload.wikimedia.org/wikipedia/commons/7/75/Bathed_in_the_Light_%28ISRC_USUAN1100308%29.mp3
-lab_km_numinousshine https://upload.wikimedia.org/wikipedia/commons/f/fc/Numinous_Shine_%28ISRC_USUAN1100129%29.mp3
+# (заход H скачан) lab_km_magicforest https://upload.wikimedia.org/wikipedia/commons/0/0f/Magic_Forest_%28ISRC_USUAN1600044%29.mp3
+# (заход H скачан) lab_km_ascendingtheva https://upload.wikimedia.org/wikipedia/commons/c/cd/Ascending_the_Vale_%28ISRC_USUAN1600064%29.mp3
+# (заход H скачан) lab_km_lightlessdawn https://upload.wikimedia.org/wikipedia/commons/5/5b/Lightless_Dawn_%28ISRC_USUAN1100655%29.mp3
+# (заход H скачан) lab_km_frostwaltz https://upload.wikimedia.org/wikipedia/commons/6/62/Frost_Waltz_%28ISRC_USUAN1100516%29.mp3
+# (заход H скачан) lab_km_iceflow https://upload.wikimedia.org/wikipedia/commons/c/c3/Ice_Flow_%28ISRC_USUAN1200088%29.mp3
+# (заход H скачан) lab_km_ghoststory https://upload.wikimedia.org/wikipedia/commons/a/a5/Ghost_Story_%28ISRC_USUAN1300034%29.mp3
+# (заход H скачан) lab_km_darkestchild https://upload.wikimedia.org/wikipedia/commons/f/fe/Darkest_Child_%28ISRC_USUAN1100783%29.mp3
+# (заход H скачан) lab_km_satiate https://upload.wikimedia.org/wikipedia/commons/8/82/Satiate_-_only_strings_%28ISRC_USUAN1200056%29.mp3
+# (заход H скачан) lab_km_industrialmusi https://upload.wikimedia.org/wikipedia/commons/c/c4/Industrial_Music_Box_%28ISRC_USUAN1100812%29.mp3
+# (заход H скачан) lab_km_klockworx https://upload.wikimedia.org/wikipedia/commons/2/27/Klockworx_%28ISRC_USUAN1100392%29.mp3
+# (заход H скачан) lab_km_mechanolith https://upload.wikimedia.org/wikipedia/commons/6/63/Mechanolith_%28ISRC_USUAN1100879%29.mp3
+# (заход H скачан) lab_km_junkyardtribe https://upload.wikimedia.org/wikipedia/commons/9/96/Junkyard_Tribe_%28ISRC_USUAN1200021%29.mp3
+# (заход H скачан) lab_km_riverofio https://upload.wikimedia.org/wikipedia/commons/9/96/River_of_Io_%28ISRC_USUAN1600065%29.mp3
+# (заход H скачан) lab_km_infiniteperspe https://upload.wikimedia.org/wikipedia/commons/9/90/Infinite_Perspective_%28ISRC_USUAN1500024%29.mp3
+# (заход H скачан) lab_km_bathedinthelig https://upload.wikimedia.org/wikipedia/commons/7/75/Bathed_in_the_Light_%28ISRC_USUAN1100308%29.mp3
+# (заход H скачан) lab_km_numinousshine https://upload.wikimedia.org/wikipedia/commons/f/fc/Numinous_Shine_%28ISRC_USUAN1100129%29.mp3
+# «Подземная лаборатория», заход I: еда, лекарства и тело героя (Freesound, CC0 и CC BY 3.0).
+lab_fsI https://cdn.freesound.org/previews/316/316926_4972784-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/334/334210_4290188-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/723/723601_15636637-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/842/842099_12872294-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/118/118808_1990688-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/477/477368_9996727-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/120/120005_1990691-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/85/85307_289925-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/315/315836_5370566-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/215/215347_950925-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/591/591195_4921277-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/800/800275_16752880-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/447/447911_9159316-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/52/52293_627019-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/151/151217_140737-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/87/87411_485650-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/272/272030_5165013-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/240/240139_729251-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/245/245855_4451798-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/240/240899_2385105-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/121/121211_2016643-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/60/60394_564398-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/456/456697_9482149-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/758/758149_8908475-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/447/447916_9159316-hq.ogg
+lab_fsI https://cdn.freesound.org/previews/344/344598_5144331-hq.ogg
