@@ -102,7 +102,7 @@ def пачка_записи(сл, записи, B, накоп=None):
         к = []
         while len(к) < CTX + 1:
             z = random.choices(записи, cum_weights=накоп)[0] if накоп else random.choice(записи)
-            к += сл.код(запись(z, random.random() < 0.7)) + [сл.и["\n"]]
+            к += сл.код(запись(z, random.random() < float(os.environ.get("LET_PCH", "0.7")))) + [сл.и["\n"]]
         xs.append(torch.tensor(к[:CTX + 1]))
     x = torch.stack(xs); y = x[:, 1:].clone(); y[y == 0] = -100; return x[:, :-1], y
 
@@ -113,7 +113,11 @@ def учить(папка, шагов, этап):
     опт = torch.optim.AdamW(м.parameters(), lr=float(os.environ.get("LET_LR", "6e-4")), weight_decay=float(os.environ.get("LET_WD", "0.05")), betas=(0.9, 0.95))
     лучшая = float(json.load(open(пут + ".лучший"))["бит"]) if os.path.exists(пут + ".лучший") else 99.0
     if os.path.exists(пут):
-        c = torch.load(пут); м.load_state_dict(c["м"]); шаг0 = c["шаг"]
+        c = torch.load(пут); сс = c["м"]
+        if сс["pos.weight"].shape[0] < м.pos.weight.shape[0]:  # окно шире снимка (Описатель: 160 → 256): прежние места — как были,
+            ст = сс["pos.weight"]; н = м.pos.weight.shape[0]  # новые — копией последних прежних
+            сс["pos.weight"] = torch.cat([ст, ст[-(н - ст.shape[0]):]]); c.pop("опт", None)
+        м.load_state_dict(сс); шаг0 = c["шаг"]
         if "опт" in c: опт.load_state_dict(c["опт"])  # снимок без состояния оптимизатора (лучший) — начинается с чистого
     print(f"Летописец: словарь {V}, весов {sum(p.numel() for p in м.parameters())/1e6:.2f} млн, с шага {шаг0}", flush=True)
     B = int(os.environ.get("LET_B", "24")); t0 = time.time(); ср = None
@@ -161,26 +165,87 @@ def близко(a, b):
 
 @torch.no_grad()
 def писать(м, сл, вид, сколько, черты=None, известные=None, T=0.85, top_p=0.92, попыток=None):
+    """имена (и описания) вида: варианты пишутся пачками с кэшем внимания; известные и почти одинаковые отсеиваются"""
     м.eval(); вывод = []; попыток = попыток or сколько * 6
-    нач = f"⟦{вид}⟧" + (("⟨ч⟩" + черты + "⟨/ч⟩") if черты else "") + "⟨и⟩"
-    к_конец, к_о = сл.и["⟨к⟩"], сл.и["⟨о⟩"]
-    for _ in range(попыток):
-        x = torch.tensor([сл.код(нач)])
-        for _ in range(CTX - x.shape[1] - 1):
-            p = F.softmax(м(x[:, -CTX:])[0, -1] / T, -1)
-            sp, si = torch.sort(p, descending=True); cs = torch.cumsum(sp, 0); sp[cs - sp > top_p] = 0
-            c = si[torch.multinomial(sp / sp.sum(), 1)]
-            x = torch.cat([x, c.view(1, 1)], 1)
-            if c.item() in (к_конец, сл.и["\n"]): break
-        t = сл.текст(x[0].tolist())[len(нач):].replace("⟨к⟩", "").strip()
-        имя, _, о = t.partition("⟨о⟩")
-        имя = имя.strip()
-        if not (2 <= len(имя) <= 60) or "⟦" in имя or "⟨" in имя: continue
-        if известные is not None and any(близко(имя, k) for k in известные): continue
-        if any(близко(имя, n) for n, _ in вывод): continue
-        вывод.append((имя, о.strip()))
-        if len(вывод) >= сколько: break
+    нач = сл.код(f"⟦{вид}⟧" + (("⟨ч⟩" + черты + "⟨/ч⟩") if черты else "") + "⟨и⟩")
+    к_конец = сл.и["⟨к⟩"]; сделано = 0
+    while сделано < попыток and len(вывод) < сколько:
+        B = min(попыток - сделано, max(4, (сколько - len(вывод)) * 3)); сделано += B
+        with torch.no_grad():
+            x = torch.tensor([нач] * B); жив = torch.ones(B, dtype=torch.bool); длина = torch.full((B,), -1)
+            л, кэш = вперёд_кэш(м, x[:1]); кэш = [(k.expand(B, -1, -1, -1), v.expand(B, -1, -1, -1)) for k, v in кэш]; л = л[:, -1].expand(B, -1)
+            for _ in range(CTX - x.shape[1] - 1):
+                p = F.softmax(л / T, -1)
+                sp, si = torch.sort(p, descending=True, dim=-1); cs = torch.cumsum(sp, -1); sp[cs - sp > top_p] = 0
+                c = si.gather(1, torch.multinomial(sp / sp.sum(-1, keepdim=True), 1))
+                конец = жив & ((c[:, 0] == к_конец) | (c[:, 0] == сл.и["\n"])); длина[конец] = x.shape[1]; жив &= ~конец
+                x = torch.cat([x, c], 1)
+                if not жив.any() or x.shape[1] >= CTX: break
+                л, кэш = вперёд_кэш(м, c, кэш, x.shape[1] - 1); л = л[:, -1]
+        for i in range(B):
+            if длина[i] < 0: continue
+            t = сл.текст(x[i, len(нач):длина[i]].tolist()).strip()
+            имя, _, о = t.partition("⟨о⟩"); имя = имя.strip()
+            if not (2 <= len(имя) <= 60) or "⟦" in имя or "⟨" in имя: continue
+            if известные is not None and any(близко(имя, k) for k in известные): continue
+            if any(близко(имя, n) for n, _ in вывод): continue
+            вывод.append((имя, о.strip()))
+            if len(вывод) >= сколько: break
     return вывод
+
+@torch.no_grad()
+def вперёд_кэш(м, x, кэш=None, поз0=0):
+    """прямой проход только по новым знакам x [B, t] с кэшем ключей и значений прежних (по слою) — для порождения:
+    шаг стоит как один знак, а не как вся строка. → (логиты [B, t, V], кэш)"""
+    кэш = кэш or [None] * len(м.b); B, t = x.shape
+    h = м.e(x) + м.pos(torch.arange(поз0, поз0 + t))
+    for li, б in enumerate(м.b):
+        y = б.n1(h); H = б.a.num_heads; d = y.shape[-1]; dh = d // H
+        q, k, v = F.linear(y, б.a.in_proj_weight, б.a.in_proj_bias).chunk(3, -1)
+        q, k, v = (z.view(B, t, H, dh).transpose(1, 2) for z in (q, k, v))
+        if кэш[li] is not None: k = torch.cat([кэш[li][0], k], 2); v = torch.cat([кэш[li][1], v], 2)
+        кэш[li] = (k, v); Tk = k.shape[2]
+        маска = torch.ones(t, Tk, dtype=torch.bool).tril(diagonal=Tk - t)
+        а = ((q @ k.transpose(-1, -2)) / math.sqrt(dh)).masked_fill(~маска, float("-inf")).softmax(-1)
+        h = h + б.a.out_proj((а @ v).transpose(1, 2).reshape(B, t, d))
+        h = h + б.f(б.n2(h))
+    return м.o(м.n(h)), кэш
+
+@torch.no_grad()
+def описать(м, сл, вид, имя, сколько=1, черты=None, T=0.8, top_p=0.9, пачка=None):
+    """описание к уже выбранному имени: начало записи «⟦вид⟧⟨ч⟩черты⟨/ч⟩⟨и⟩имя⟨о⟩» — сеть дописывает суть до ⟨к⟩;
+    варианты пишутся одной пачкой (по цене почти одного). → список разных описаний (без пустых и оборванных)"""
+    м.eval(); B = пачка or max(сколько, 1) + 2
+    нач = сл.код(f"⟦{вид}⟧" + (("⟨ч⟩" + черты + "⟨/ч⟩") if черты else "") + "⟨и⟩" + имя + "⟨о⟩")[-(CTX - 24):]
+    к_конец, к_н = сл.и["⟨к⟩"], сл.и["\n"]
+    x = torch.tensor([нач] * B); жив = torch.ones(B, dtype=torch.bool); длина = torch.full((B,), -1)
+    л, кэш = вперёд_кэш(м, x[:1]); кэш = [(k.expand(B, -1, -1, -1), v.expand(B, -1, -1, -1)) for k, v in кэш]; л = л[:, -1].expand(B, -1)
+    for t in range(CTX - x.shape[1]):
+        p = F.softmax(л / T, -1)
+        sp, si = torch.sort(p, descending=True, dim=-1); cs = torch.cumsum(sp, -1); sp[cs - sp > top_p] = 0
+        c = si.gather(1, torch.multinomial(sp / sp.sum(-1, keepdim=True), 1))
+        конец = жив & ((c[:, 0] == к_конец) | (c[:, 0] == к_н)); длина[конец] = x.shape[1]; жив &= ~конец
+        x = torch.cat([x, c], 1)
+        if not жив.any() or x.shape[1] >= CTX: break
+        л, кэш = вперёд_кэш(м, c, кэш, x.shape[1] - 1); л = л[:, -1]
+    вывод = []
+    for i in range(B):
+        if длина[i] < 0: continue
+        о = сл.текст(x[i, len(нач):длина[i]].tolist()).strip()
+        if len(о) < 8 or "⟨" in о or "⟦" in о or о in вывод: continue
+        вывод.append(о)
+    return вывод[:сколько] if сколько else вывод
+
+@torch.no_grad()
+def уверенность_описаний(м, сл, вид, имя, описания, черты=None):
+    """средняя лог-вероятность букв каждого описания (и знака конца) при этом имени и чертах — для отбора лучшего
+    варианта (у описаний, в отличие от имён, гладкость текста и есть первое мерило)"""
+    м.eval(); нач = сл.код(f"⟦{вид}⟧" + (("⟨ч⟩" + черты + "⟨/ч⟩") if черты else "") + "⟨и⟩" + имя + "⟨о⟩")[-(CTX - 24):]
+    итог = []
+    for о in описания:
+        x = torch.tensor([(нач + сл.код(о) + [сл.и["⟨к⟩"]])[:CTX]]); л = F.log_softmax(м(x[:, :-1])[0], -1)
+        ц = x[0, 1:]; лп = л[torch.arange(len(ц)), ц][len(нач) - 1:]; итог.append(лп.mean().item())
+    return итог
 
 @torch.no_grad()
 def вектор(м, сл, вид, имя):
