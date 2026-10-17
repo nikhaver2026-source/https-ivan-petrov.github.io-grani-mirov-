@@ -173,6 +173,19 @@ PACKS = {
   "lab_km_infiniteperspe": ("Infinite Perspective", "Kevin MacLeod (incompetech.com)", "CC BY 3.0", "https://commons.wikimedia.org/wiki/File:Infinite_Perspective_(ISRC_USUAN1500024).mp3"),
   "lab_km_bathedinthelig": ("Bathed in the Light", "Kevin MacLeod (incompetech.com)", "CC BY 3.0", "https://commons.wikimedia.org/wiki/File:Bathed_in_the_Light_(ISRC_USUAN1100308).mp3"),
   "lab_km_spacial": ("Spacial Winds", "Kevin MacLeod (incompetech.com)", "CC BY 3.0", "https://commons.wikimedia.org/wiki/File:Spacial_Winds_(ISRC_USUAN1100203).mp3"),
+  # Заход J: спокойная музыка для капсул восстановления (1.3)
+  "lab_cap_clair": ("Clair de lune", "Claude Debussy; исполняет Laurens Goedhart", "CC BY 3.0", "https://commons.wikimedia.org/wiki/File:Clair_de_lune_(Claude_Debussy)_Suite_bergamasque.ogg"),
+  "lab_cap_gymno": ("Gymnopédie No. 1", "Erik Satie; исполняет Robin Alciatore (Musopen)", "общественное достояние", "https://commons.wikimedia.org/wiki/File:Erik_Satie_-_gymnopedies_-_la_1_ere._lent_et_douloureux.ogg"),
+  "lab_cap_remin": ("Reminiscing", "Kevin MacLeod (incompetech.com)", "CC BY 3.0", "https://commons.wikimedia.org/wiki/File:Reminiscing_(ISRC_USUAN1100097).mp3"),
+  "lab_cap_medit": ("Meditation Impromptu 02", "Kevin MacLeod (incompetech.com)", "CC BY 3.0", "https://commons.wikimedia.org/wiki/File:Meditation_Impromptu_02_(ISRC_USUAN1100162).mp3"),
+  "lab_cap_guitar": ("Guitar Gentle", "PeriTune (peritune.com)", "CC BY 4.0", "https://peritune.com/music/PerituneMaterial_Guitar_Gentle_an.mp3"),
+  "lab_cap_canon": ("Canon in D Major", "Johann Pachelbel; исполняет Kevin MacLeod (incompetech.com)", "CC BY 3.0", "https://commons.wikimedia.org/wiki/File:Canon_in_D_Major_(ISRC_USUAN1100301).mp3"),
+  "lab_cap_musicbox": ("Music-box Gentle2", "PeriTune (peritune.com)", "CC BY 4.0", "https://peritune.com/wp-content/uploads/2017/09/PerituneMaterial_Music-box_Gentle2.mp3"),
+  "lab_cap_silver": ("Silver Blue Light", "Kevin MacLeod (incompetech.com)", "CC BY 3.0", "https://commons.wikimedia.org/wiki/File:Silver_Blue_Light_(ISRC_USUAN1100718).mp3"),
+  "lab_cap_wholesome": ("Wholesome", "Kevin MacLeod (incompetech.com)", "CC BY 4.0", "https://commons.wikimedia.org/wiki/File:Wholesome_by_Kevin_MacLeod.ogg"),
+  "lab_cap_teddy": ("Teddy Bear Waltz", "Kevin MacLeod (incompetech.com)", "CC BY 3.0", "https://commons.wikimedia.org/wiki/File:Teddy_Bear_Waltz_(ISRC_USUAN1700064).mp3"),
+  "lab_cap_dreamer": ("Dreamer", "Kevin MacLeod (incompetech.com)", "CC BY 3.0", "https://commons.wikimedia.org/wiki/File:Dreamer_(ISRC_USUAN1600043).mp3"),
+  "lab_cap_avec": ("Avec Soin", "Kevin MacLeod (incompetech.com)", "CC BY 3.0", "https://commons.wikimedia.org/wiki/File:Avec_Soin_(ISRC_USUAN1100860).mp3"),
   "lab_emptycity": ("Empty City", "OpenGameArt", CC0, "https://opengameart.org/content/emptycity-background-music"),
   "lab_ghostvoice": ("Ghost monster voice", "qubodup", CC0, "https://opengameart.org/content/ghost-monster-voice-moaning-growling"),
   "lab_bitvoice": ("Bitcrushed voice one-shots", "DavidW", "CC BY 3.0", "https://opengameart.org/content/bitcrushed-voice-one-shots"),
@@ -913,6 +926,20 @@ E("mus_l8", "music", [S(C, "lab_km_lazarus", "*.mp3", start=60)], v=1.0, max=170
 E("mus_l9", "music", [S(C, "lab_km_shadow6", "*.mp3", start=30)], v=1.0, max=170)
 E("mus_l10", "music", [S(C, "lab_torment_realm_of_torment_1.flac", "*.flac")], v=1.0)
 E("mus_ending", "music", [S(C, "lab_km_shadow7", "*.mp3", start=15)], v=1.0, max=170)
+
+# капсулы восстановления: спокойная музыка, по одной дорожке (1.3)
+E("cap_mus_1", "music", [S(C, "lab_cap_clair", "*")], v=1.0, max=170)
+E("cap_mus_2", "music", [S(C, "lab_cap_gymno", "*")], v=1.0, max=170)
+E("cap_mus_3", "music", [S(C, "lab_cap_remin", "*")], v=1.0, max=170)
+E("cap_mus_4", "music", [S(C, "lab_cap_medit", "*")], v=1.0, max=170)
+E("cap_mus_5", "music", [S(C, "lab_cap_guitar", "*")], v=1.0, max=170)
+E("cap_mus_6", "music", [S(C, "lab_cap_canon", "*")], v=1.0, max=170)
+E("cap_mus_7", "music", [S(C, "lab_cap_musicbox", "*")], v=1.0, max=170)
+E("cap_mus_8", "music", [S(C, "lab_cap_silver", "*")], v=1.0, max=170)
+E("cap_mus_9", "music", [S(C, "lab_cap_wholesome", "*")], v=1.0, max=170)
+E("cap_mus_10", "music", [S(C, "lab_cap_teddy", "*")], v=1.0, max=170)
+E("cap_mus_11", "music", [S(C, "lab_cap_dreamer", "*")], v=1.0, max=170)
+E("cap_mus_12", "music", [S(C, "lab_cap_avec", "*")], v=1.0, max=170)
 # Музыка глубоких блоков (mus_b<блок>_<n>): блок I — гул земли и эхо, II — живой
 # тёплый мир «Колыбели», III — холодное «Отражение», IV — ритм «Механизма», V — «Исток».
 E("mus_b1_1", "music", [S(C, "lab_km_celeste", "*.mp3")], v=1.0, max=170)

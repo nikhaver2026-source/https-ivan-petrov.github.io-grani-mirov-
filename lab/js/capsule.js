@@ -1,0 +1,302 @@
+/* ════════════════════════════════════════════════════════════════════
+   «Подземная лаборатория» — капсула восстановления (1.3).
+   Вы ложитесь в капсулу, крышка опускается, и дальше — меню капсулы:
+   спать (вздремнуть, поспать, выспаться, лечебный сон — каждый сон
+   рассказывается историей), слушать музыку из фонотеки капсулы, читать
+   рассказы с поверхности о том, что творится наверху, и рассказы из
+   «Библиотеки проектов» (задуманных и воплощённых — к истории объекта они
+   не относятся), слушать радио поверхности, смотреть видеоархив («Эхо»
+   описывает, что на экране). Рассказы листаются свайпами по страницам,
+   «Закрыть» возвращает в меню капсулы. Пока вы слушаете, читаете или
+   спите, идёт время и вы восстанавливаетесь. «Откинуть крышку и выйти» —
+   выход. Капсула запоминает вас: погибнете — «Эхо» вернёт вас сюда.
+   В разных капсулах на разных этажах — свои рассказы и передачи.
+   Тексты — capsule_texts.js.
+   ════════════════════════════════════════════════════════════════════ */
+(function () {
+"use strict";
+var LAB = window.LAB;
+function gm() { return LAB.game; }
+function G() { return LAB.game.G; }
+function CUR() { return LAB.game.CUR; }
+function say(t, o) { LAB.say(t, o); }
+function sayq(t) { LAB.say(t, { interrupt: false }); }
+function A(name) { var a = LAB.atmos; if (a && typeof a[name] === "function") { var args = Array.prototype.slice.call(arguments, 1); try { return a[name].apply(a, args); } catch (e) { console.warn(e); } } return null; }
+function UIx(name) { var u = LAB.ui; if (u && typeof u[name] === "function") { var args = Array.prototype.slice.call(arguments, 1); try { return u[name].apply(u, args); } catch (e) { console.warn(e); } } return null; }
+function pl(n, a, b, c) { return gm().plural(n, a, b, c); }
+function TX() { return LAB.CAPSULE_T || {}; }
+function ev(name, n) { if (LAB.ach) LAB.ach.ev(name, n == null ? 1 : n); }
+function hm(min) {
+  var h = Math.floor(min / 60), m = Math.round(min % 60);
+  return (h ? h + " " + pl(h, "час", "часа", "часов") : "") + (h && m ? " " : "") + (m || !h ? m + " " + pl(m, "минута", "минуты", "минут") : "");
+}
+
+/* ════════ ФОНОТЕКА ════════
+   Записи — свободные (CC BY и общественное достояние), авторы — в
+   sounds/CREDITS.md и в пункте «Об этих записях». sec — длина записи в
+   секундах, min — сколько минут по часам комплекса проходит, пока она звучит. */
+LAB.CAP_TRACKS = [
+  { id: "cap_mus_1", n: "Лунный свет", mood: "фортепиано: лунная ночь, тихая мечтательность", cr: "«Clair de lune», Клод Дебюсси; исполняет Laurens Goedhart, лицензия CC BY 3.0" },
+  { id: "cap_mus_2", n: "Медленный танец", mood: "фортепиано: светлая задумчивая тишина", cr: "«Gymnopédie No. 1», Эрик Сати; исполняет Robin Alciatore (Musopen), общественное достояние" },
+  { id: "cap_mus_3", n: "Воспоминание", mood: "фортепиано: простое тёплое воспоминание о доме", cr: "«Reminiscing», Kevin MacLeod (incompetech.com), CC BY 3.0" },
+  { id: "cap_mus_4", n: "Тихий экспромт", mood: "фортепиано: очень тихо, чтобы уснуть", cr: "«Meditation Impromptu 02», Kevin MacLeod (incompetech.com), CC BY 3.0" },
+  { id: "cap_mus_5", n: "Ласковая гитара", mood: "гитара: тёплый вальс-воспоминание", cr: "«Guitar Gentle», PeriTune (peritune.com), CC BY 4.0" },
+  { id: "cap_mus_6", n: "Канон", mood: "скрипки и арфы: светлые неспешные струнные", cr: "«Canon in D Major», Иоганн Пахельбель; исполняет Kevin MacLeod (incompetech.com), CC BY 3.0" },
+  { id: "cap_mus_7", n: "Шкатулка", mood: "музыкальная шкатулка: нежная колыбельная", cr: "«Music-box Gentle2», PeriTune (peritune.com), CC BY 4.0" },
+  { id: "cap_mus_8", n: "Серебристый свет", mood: "гитара и тихий фон: медленный покой", cr: "«Silver Blue Light», Kevin MacLeod (incompetech.com), CC BY 3.0" },
+  { id: "cap_mus_9", n: "Дом", mood: "акустические инструменты: ровный уютный покой", cr: "«Wholesome», Kevin MacLeod (incompetech.com), CC BY 4.0" },
+  { id: "cap_mus_10", n: "Вальс плюшевого медведя", mood: "флейта и колокольчики: колыбельная", cr: "«Teddy Bear Waltz», Kevin MacLeod (incompetech.com), CC BY 3.0" },
+  { id: "cap_mus_11", n: "Мечтатель", mood: "фортепиано: мягкая мечта", cr: "«Dreamer», Kevin MacLeod (incompetech.com), CC BY 3.0" },
+  { id: "cap_mus_12", n: "С заботой", mood: "фортепиано: бережно и тихо", cr: "«Avec Soin», Kevin MacLeod (incompetech.com), CC BY 3.0" }
+];
+var TRACK_SEC = 170, TRACK_MIN = 35;
+function bank(id) { return LAB.Bank && LAB.Bank.has && LAB.Bank.has(id); }
+function tracks() { return LAB.CAP_TRACKS.filter(function (t) { return bank(t.id); }); }
+
+/* ════════ ВОССТАНОВЛЕНИЕ ════════
+   В капсуле раствор кормит, и голод не растёт. Спите — восстанавливается
+   всё (четыре часа — полностью); слушаете или читаете — здоровье и
+   энергия так же, бодрость втрое медленнее, нервы успокаиваются. */
+function recover(min, asleep) {
+  var g = G(), b = g.body;
+  if (!b) return;
+  var f0 = b.food;
+  gm().advanceTime(min, true);
+  b.food = Math.min(100, f0 + min / 40);
+  var deep = LAB.ach && LAB.ach.has("sleeper") ? 1.25 : 1; /* умение «Глубокий сон» */
+  g.hp = Math.min(g.hpMax, g.hp + Math.ceil(g.hpMax * min * deep / 240));
+  g.en = Math.min(g.enMax, g.en + Math.ceil(g.enMax * min * deep / 240));
+  b.wake = Math.min(100, b.wake + min / (asleep ? 2.4 : 7));
+  b.neuro = Math.max(0, b.neuro - min * (asleep ? 1 : 0.6));
+  b.tox = Math.max(0, b.tox - min / (asleep ? 6 : 10)); /* и ещё — сам сон (bodyMinutes) */
+  if (asleep) { b.rad = Math.max(0, (b.rad || 0) - min / 30); g.st.slow = 0; g.st.deaf = 0; }
+  b.lv = {};
+  inCap.min += min;
+  UIx("refresh");
+}
+function statusLine() {
+  var g = G(), b = g.body || {};
+  return "Здоровье " + g.hp + " из " + g.hpMax + ", энергия " + g.en + " из " + g.enMax + ", бодрость " + Math.round(b.wake) + (b.rad >= 1 ? ", облучение " + Math.round(b.rad) : "") + (b.tox >= 5 ? ", токсины " + Math.round(b.tox) : "") + ". На часах комплекса " + gm().clock() + ".";
+}
+
+/* ════════ В КАПСУЛЕ ════════ */
+var inCap = { o: null, min: 0, t0: 0 };
+function enter(o) {
+  if (LAB.combat && LAB.combat.danger()) { say("Нельзя ложиться: рядом враги."); return; }
+  UIx("closeAll");
+  inCap = { o: o, min: 0, t0: Date.now(), hpIn: G().hp };
+  gm().paused = true;
+  A("rest");
+  /* капсула запоминает вас: точка возвращения */
+  var c = gm().freeNear ? gm().freeNear(o) : [G().x, G().y];
+  G().checkpoint = { L: G().L, F: G().F, x: c[0], y: c[1] };
+  G().stats.capsules = (G().stats.capsules || 0) + 1;
+  ev("capsule", 1);
+  say("Вы ложитесь в капсулу. Крышка мягко опускается, гул коридора стихает, внутри пахнет тёплым пластиком и мятой. «Эхо» запомнило эту капсулу: если погибнете, вернётесь сюда.", { interrupt: true });
+  setTimeout(function () { if (inCap.o === o) menu(); }, 1200);
+}
+function menu(focus, intro) {
+  var o = inCap.o;
+  if (!o) return;
+  var build = function () { return menuItems(); };
+  UIx("menu", "Капсула восстановления", build(), { keep: true, rebuild: build, focus: focus || 0, intro: intro || statusLine(), onClose: function () { if (inCap.o) leave(true); } });
+}
+/* Окно сверху — заново по своему списку (новые пункты, например «Остановить музыку»). */
+function refreshTop() {
+  var w = LAB.ui && LAB.ui.layer ? LAB.ui.layer() : null;
+  if (w && w !== "screen" && w.rebuild) { w.items = w.rebuild(); w.i = Math.min(w.i, w.items.length - 1); if (LAB.ui.render) LAB.ui.render(); }
+}
+/* Сказать после того, как окно объявит себя. */
+function later(t) { setTimeout(function () { LAB.safe(function () { sayq(t); }); }, 40); }
+function menuItems() {
+  var items = [];
+  items.push({ label: "Спать", fn: sleepMenu });
+  if (playing) items.push({ label: "Остановить музыку: «" + playing.t.n + "»", keep: true, fn: function () { stopTrack(false); } });
+  items.push({ label: "Послушать музыку", fn: musicMenu });
+  items.push({ label: "Почитать рассказы с поверхности", fn: function () { shelf("surface"); } });
+  items.push({ label: "Почитать «Библиотеку проектов»", fn: function () { shelf("projects"); } });
+  items.push({ label: "Включить радио поверхности", fn: function () { shelf("radio"); } });
+  items.push({ label: "Видеоархив капсулы", fn: function () { shelf("video"); } });
+  items.push({ label: "Полежать с закрытыми глазами: полчаса", keep: true, fn: function () { recover(30, false); A("play", "capsule_hum", { gain: 0.5 }); say("Вы лежите, слушая ровный гул капсулы. Прошло полчаса. " + statusLine()); } });
+  items.push({ label: "Состояние тела", keep: true, fn: function () { gm().bodyStatus(); } });
+  items.push({ label: "Откинуть крышку и выйти", fn: function () { leave(false); } });
+  return items;
+}
+function leave(byClose) {
+  var o = inCap.o; if (!o) return;
+  stopTrack(true);
+  inCap.o = null;
+  gm().paused = false;
+  if (!byClose) UIx("closeAll");
+  A("play", "capsule_close", { rate: 1.15, gain: 0.8 });
+  var t = inCap.min;
+  say("Вы откидываете крышку и выбираетесь наружу. " + (t ? "В капсуле прошло " + hm(t) + ". " : "") + statusLine(), { interrupt: true });
+  gm().journal("Капсула восстановления: уровень " + G().L + ", этаж " + G().F + (t ? ", " + hm(t) : "") + ".");
+  if (LAB.atmos && LAB.atmos.music) LAB.atmos.music("game");
+  gm().autosave();
+  UIx("refresh");
+}
+
+/* ── сон: варианты и сны-истории ── */
+var SLEEP = [
+  { min: 60, n: "Вздремнуть: час", d: "Восстановится четверть здоровья и энергии, бодрость заметно прибавится." },
+  { min: 240, n: "Поспать: четыре часа", d: "Здоровье, энергия и бодрость — полностью." },
+  { min: 480, n: "Выспаться: восемь часов", d: "Всё полностью, и следующие шесть часов бодрость падает вдвое медленнее." },
+  { min: 720, n: "Лечебный сон: двенадцать часов", d: "Всё полностью; капсула выводит токсины, облучение — заметно, снимает отравление и кровотечение." }
+];
+function sleepMenu() {
+  var items = SLEEP.map(function (s) { return { label: s.n + ". " + s.d, fn: function () { sleep(s); } }; });
+  items.push({ label: "Назад", fn: function () {} });
+  UIx("menu", "Сон", items);
+}
+function sleep(s) {
+  UIx("closeTop", true);
+  stopTrack(true);
+  var g = G(), b = g.body;
+  var dream = pickDream();
+  recover(s.min, true);
+  if (s.min >= 240) { g.hp = g.hpMax; g.en = g.enMax; b.wake = 100; b.neuro = 0; g.st.poison = 0; g.st.bleed = 0; }
+  if (s.min >= 480) g.st.restedMin = 360;
+  if (s.min >= 720) { b.tox = 0; b.rad = Math.max(0, (b.rad || 0) - 30); }
+  gm().bodyWarn();
+  G().stats.sleeps = (G().stats.sleeps || 0) + 1;
+  ev("sleep", s.min);
+  A("play", "capsule_hum", { gain: 0.45 });
+  var wake = "Вы просыпаетесь. Прошло " + hm(s.min) + ". " + statusLine();
+  if (!dream) { refreshTop(); say("Вы засыпаете без снов. " + wake); return; }
+  (G().dreams = G().dreams || {})[dream.id] = 1;
+  ev("dream", 1);
+  var title = "Сон: «" + dream.t + "»";
+  reader(title, dream.x, { closeLabel: "Проснуться", intro: "Вы засыпаете. Вам снится сон.", onClose: function () { later(wake); } });
+}
+/* Какой сон приснится: кошмар — если облучены, отравлены или на этаже тревога; странный — глубже; спокойный — чаще. */
+function pickDream() {
+  var list = (TX().dreams || []).filter(function (d) { return (d.minL || 1) <= G().L; });
+  if (!list.length) return null;
+  var b = G().body || {}, lv = LAB.oko ? LAB.oko.level() : 0;
+  var mood = (b.rad >= 45 || b.tox >= 50 || lv >= 3 || Math.random() < 0.15) ? "nightmare" : (Math.random() < (G().L > 10 ? 0.4 : 0.2) ? "strange" : "calm");
+  var pool = list.filter(function (d) { return d.mood === mood; });
+  if (!pool.length) pool = list;
+  var seen = G().dreams || {}, fresh = pool.filter(function (d) { return !seen[d.id]; });
+  var from = fresh.length ? fresh : pool;
+  return from[Math.floor(Math.random() * from.length)];
+}
+
+/* ── музыка ── */
+var playing = null;
+function musicMenu() {
+  var list = tracks(), items = [];
+  if (!list.length) { items.push({ label: "Фонотека капсулы пуста", info: true, keep: true, fn: function () {} }); }
+  if (LAB.S && !LAB.S.music) items.push({ label: "Музыка выключена в настройках: громкость музыки — в разделе «Настройки», «Громкость»", info: true, keep: true, fn: function () {} });
+  list.forEach(function (t) { items.push({ label: "«" + t.n + "» — " + t.mood + (playing && playing.t === t ? " — играет" : ""), fn: function () { playTrack(t); } }); });
+  if (list.length > 1) items.push({ label: "Всё подряд: вся фонотека, одна запись за другой", fn: function () { playAll(list); } });
+  items.push({ label: "Об этих записях: авторы и лицензии", keep: true, fn: function () { say("Записи фонотеки — свободные. " + list.map(function (t) { return "«" + t.n + "»: " + t.cr; }).join(". ") + "."); } });
+  items.push({ label: "Назад", fn: function () {} });
+  UIx("menu", "Фонотека капсулы", items);
+}
+function playTrack(t, queue) {
+  stopTrack(true);
+  if (LAB.atmos && LAB.atmos.stopMusic) LAB.atmos.stopMusic();
+  var h = LAB.Sound && LAB.Sound.loop ? LAB.Sound.loop("capmus", t.id, { bus: "music", gain: 1, fadeIn: 1.2, xfade: 1 }) : null;
+  playing = { t: t, h: h, t0: Date.now(), q: queue || null };
+  playing.timer = setTimeout(function () { LAB.safe(trackEnd); }, TRACK_SEC * 1000);
+  ev("music", 1);
+  (G().heard = G().heard || {})[t.id] = 1;
+  if (Object.keys(G().heard).length >= tracks().length) ev("allmusic", 1);
+  if (!queue || queue.first) {
+    /* из фонотеки — обратно в меню капсулы: под музыку можно читать и спать */
+    var w = LAB.ui && LAB.ui.layer ? LAB.ui.layer() : null;
+    if (w && w !== "screen" && w.title === "Фонотека капсулы") UIx("closeTop", true);
+    refreshTop();
+    say("Играет «" + t.n + "». Вы в меню капсулы: под музыку можно читать, слушать радио или просто лежать." + (LAB.S && !LAB.S.music ? " Но музыка выключена в настройках — включите громкость музыки." : ""));
+  } else refreshTop();
+}
+function playAll(list) { var q = { list: list.slice(), i: 0, first: true }; playTrack(q.list[0], q); q.first = false; }
+/* Запись доиграла: время в капсуле прошло, отдых засчитан; во «Всё подряд» — следующая. */
+function trackEnd() {
+  if (!playing) return;
+  var p = playing;
+  stopTrack(false, true);
+  if (p.q && p.q.i + 1 < p.q.list.length && inCap.o) { p.q.i++; playTrack(p.q.list[p.q.i], p.q); sayq("Следующая запись: «" + p.q.list[p.q.i].n + "»."); }
+}
+/* Остановить: засчитать прослушанное (минуты по доле прослушанного). */
+function stopTrack(silent, ended) {
+  if (!playing) return;
+  var p = playing; playing = null;
+  clearTimeout(p.timer);
+  if (p.h && p.h.stop) p.h.stop(ended ? 2 : 1);
+  var part = Math.min(1, (Date.now() - p.t0) / (TRACK_SEC * 1000));
+  var min = Math.round(TRACK_MIN * part);
+  if (min > 0 && inCap.o) recover(min, false);
+  if (!silent) say((ended ? "Запись «" + p.t.n + "» доиграла." : "Музыка остановлена.") + (min > 0 ? " Прошло " + hm(min) + ". " + statusLine() : ""));
+  if (!inCap.o && LAB.atmos && LAB.atmos.music) LAB.atmos.music("game");
+}
+
+/* ── полки рассказов, радио и видео ── */
+var SHELF = {
+  surface: { title: "Рассказы с поверхности", k: "surface", per: 3, page: 5, intro: "Подборка в памяти капсулы: что пишут и рассказывают наверху." },
+  projects: { title: "Библиотека проектов", k: "projects", per: 3, page: 5, intro: "Рассказы о проектах — задуманных и воплощённых. Отдых для головы: к объекту они не относятся." },
+  radio: { title: "Радио поверхности", k: "radio", per: 3, page: 6, intro: "Приёмник капсулы ловит поверхность по кабелю магистрали снабжения." },
+  video: { title: "Видеоархив капсулы", k: "video", per: 2, page: 6, intro: "Экран капсулы показывает записи, «Эхо» описывает, что на экране, и передаёт голоса." }
+};
+/* Что лежит в этой капсуле: своё у каждой капсулы каждого этажа; непрочитанное — вперёд. */
+function selection(kind) {
+  var S = SHELF[kind], all = (TX()[S.k] || []).filter(function (q) { return (q.minL || 1) <= G().L; });
+  if (!all.length) return [];
+  var o = inCap.o, r = LAB.Rng(G().seed, "cap:" + kind + ":" + G().L + "-" + G().F + ":" + (o ? o.id : ""));
+  var order = all.slice(); r.shuffle(order);
+  var read = G().capRead || {};
+  /* свежие (глубже — те, что ближе по времени) чуть вперёд */
+  order.sort(function (a, b) { return (read[a.id] ? 1 : 0) - (read[b.id] ? 1 : 0) || ((b.minL || 1) > G().L - 20 ? 1 : 0) - ((a.minL || 1) > G().L - 20 ? 1 : 0); });
+  return order.slice(0, Math.min(S.per, order.length));
+}
+function shelf(kind) {
+  var S = SHELF[kind], list = selection(kind), read = G().capRead || {}, items = [];
+  if (kind === "radio") A("play", "radio", { gain: 0.6 });
+  if (!list.length) items.push({ label: "Здесь пока пусто", info: true, keep: true, fn: function () {} });
+  list.forEach(function (q) {
+    items.push({ label: (kind === "radio" ? "Передача " : kind === "video" ? "Запись " : "") + "«" + q.t + "»" + (q.a ? ", " + q.a : "") + (read[q.id] ? " — уже слышали" : ""), fn: function () { open(kind, q); } });
+  });
+  items.push({ label: "Назад", fn: function () {} });
+  UIx("menu", S.title, items, { intro: S.intro });
+}
+function open(kind, q) {
+  var S = SHELF[kind];
+  var w = LAB.ui && LAB.ui.layer ? LAB.ui.layer() : null;
+  if (w && w !== "screen" && w.title === S.title) UIx("closeTop", true);
+  (G().capRead = G().capRead || {})[q.id] = 1;
+  ev(kind === "projects" ? "project" : kind, 1);
+  if (kind === "radio") A("play", "radio", { gain: 0.5 });
+  var title = (kind === "video" ? "Видеозапись" : kind === "radio" ? "Радио" : "Рассказ") + ": «" + q.t + "»";
+  reader(title, q.x, { intro: q.a ? q.a + "." : "", perPage: S.page, onClose: function () { later("Вы откладываете " + (kind === "video" ? "экран" : kind === "radio" ? "приёмник" : "чтение") + ". " + statusLine()); } });
+}
+/* Читалка: по странице на пункт, свайп вправо — дальше, влево — назад; за
+   каждую новую страницу — несколько минут отдыха; «Закрыть» — в меню капсулы. */
+function reader(title, text, opts) {
+  opts = opts || {};
+  var pages = String(text || "").split(/\n\n+/).map(function (p) { return p.trim(); }).filter(Boolean);
+  if (!pages.length) pages = [String(text || "")];
+  var n = pages.length, seen = {};
+  var items = pages.map(function (p, i) { return { label: "Страница " + (i + 1) + " из " + n + ". " + p, keep: true, fn: function () { say(p, { read: true }); } }; });
+  items.push({ label: opts.closeLabel || "Закрыть", close: true, fn: function () {} });
+  A("play", "paper_turn", { gain: 0.6 });
+  UIx("menu", title, items, {
+    intro: (opts.intro ? opts.intro + " " : "") + (n > 1 ? LAB.K("Свайп вправо — следующая страница, влево — предыдущая.", "Стрелка вниз — следующая страница, вверх — предыдущая.") : ""),
+    onFocus: function (i) {
+      if (i >= n || seen[i]) return;
+      seen[i] = 1;
+      if (i > 0) A("play", "paper_turn", { gain: 0.45 });
+      if (opts.perPage && inCap.o) recover(opts.perPage, false);
+      if (i === n - 1) ev("readend", 1);
+    },
+    onClose: function () { LAB.safe(function () { if (opts.onClose) opts.onClose(); }); }
+  });
+}
+
+/* Игра закончилась или ушли в главное меню — музыка капсулы стихает. */
+function reset() { stopTrack(true); inCap.o = null; }
+LAB.capsule = {
+  menu: enter, inside: function () { return !!inCap.o; }, leave: function () { leave(false); }, reset: reset,
+  _sleep: function (i) { sleep(SLEEP[i]); }, _shelf: shelf, _open: open, _selection: selection, _tracks: tracks, _playing: function () { return playing; }, _state: function () { return inCap; }
+};
+})();

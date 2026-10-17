@@ -58,89 +58,8 @@ LAB.COMPS = {
   main:      { n: "Главный компьютер режимного отдела", rank: 3, desc: "ЭВМ с грифом «Особой важности»: схемы, протоколы ОКО, допуски этажа." }
 };
 
-/* ── ПОМЕЩЕНИЯ У КОРИДОРОВ ──
-   era — на каких глубинах встречается; w — вес при выборе; obj — что
-   стоит (вероятности; comp:вид — компьютер); loot — склонность добычи;
-   kind: secret — тайник за потайной дверью; locked — режимное (замок);
-   rad — радиоактивное (фон 1–5); gas — загазованное (сила 1–3);
-   hazard — «горячая» камера: санпропускник пускает только в защите;
-   supply — пункт снабжения; trial — стенд допуска; decon — пост
-   дезактивации. size — [ширина вдоль коридора, глубина]: от и до. */
-var ROOMS = {
-  /* для всех глубин */
-  x_store:    { n: "Кладовая", era: "KPCOMI", w: 4, desc: "Тесная кладовая: стеллажи до потолка, коробки, свёртки, пахнет пылью и картоном.", obj: { shelf: 1, crate: .6 }, loot: "store", sign: ["Кладовая", "Хозяйственный инвентарь"] },
-  x_stash:    { n: "Тайник", era: "KPCOMI", w: 0, kind: "secret", desc: "Каморка за фальшивой панелью: кто-то устроил здесь схрон и не вернулся за ним.", obj: { crate: 1, safe: .35 }, loot: "stash", size: [3, 3, 3, 4] },
-  x_supply:   { n: "Пункт снабжения", era: "KPCOMI", w: 0, kind: "supply", desc: "Прилавок, приёмник капсул с поверхности и возвратный лоток. Над прилавком — табло заказов.", obj: {}, size: [4, 5, 4, 5] },
-  x_decon:    { n: "Пост дезактивации", era: "KPCOMI", w: 0.8, kind: "decon", desc: "Кабинка дезактивационного душа, шкаф с защитными костюмами и стойка дозиметров. На полу — жёлтая разметка «Чистая зона».", obj: { decon: 1, suitlocker: .8, sink: .5 }, loot: "protect", sign: "Пост дезактивации. Чистая зона", safe: true },
-  x_trial:    { n: "Камера испытаний допуска", era: "KPCOMI", w: 0, kind: "trial", desc: "Белая камера со стендом: три замка-задачи и лоток с наградой. Так когда-то проверяли тех, кому выдавали допуск в горячие зоны.", obj: {}, sign: "Аттестация на допуск. Испытание", size: [4, 5, 4, 5] },
-  x_hotcell:  { n: "Горячая камера", era: "KPCOMI", w: 0, kind: "hazard", rad: 5, desc: "Камера за санпропускником: свинцовые стены, манипуляторы, контейнеры с отработанными источниками. Здесь фонит так, что без костюма долго не протянуть.", obj: { crate: 1, safe: .45, comp: .3 }, comp: "main", loot: "hot", sign: "Горячая камера. Вход только в защите", size: [4, 5, 4, 5] },
-  x_isotope:  { n: "Хранилище изотопов", era: "KPCOMI", w: 0, kind: "locked", rad: 3, desc: "Свинцовые ячейки в стене, тележка для контейнеров, знак радиационной опасности на каждой дверце.", obj: { safe: .6, crate: .7 }, loot: "isotope", sign: "Радиационная опасность. Хранилище источников" },
-  x_classified: { n: "Режимный кабинет", era: "KPCOMI", w: 0, kind: "locked", desc: "Кабинет с грифом «Особой важности»: стальная дверь, сейф и компьютер, который не подключён к общей сети.", obj: { desk: .8, safe: .6, cabinet: .7, comp: .6 }, comp: "main", loot: "classified", sign: ["Режимное помещение. Вход по допуску", "Особый отдел. Посторонним вход воспрещён"] },
-  x_armory:   { n: "Оружейная комната", era: "KPCOMI", w: 0, kind: "locked", desc: "Оружейная комната: стойки со стволами, ящики с батареями, верстак оружейника под чехлом.", obj: { rack: 1, locker: .6, crate: .5 }, loot: "armory", sign: "Оружейная. Вход по допуску" },
-
-  /* «Ковчег» и Подножие; в Отражении — их отражения */
-  x_engoffice:{ n: "Кабинет инженера", era: "KPO", w: 5, desc: "Чертёжный стол, лампа на гибкой ножке, рулоны схем в углу и кружка с засохшим чаем.", obj: { desk: .9, cabinet: .6, comp: .3, bookshelf: .3 }, comp: "archive", loot: "paper", sign: ["Инженер смены", "Конструкторское бюро", "Главный механик"] },
-  x_laboffice:{ n: "Кабинет лаборанта", era: "KPO", w: 4, desc: "Стол с журналом проб, штативы с пробирками, вытяжной шкаф с приоткрытой створкой.", obj: { desk: .8, cabinet: .5, fridge: .4, sink: .4 }, loot: "chem", sign: ["Лаборант", "Препараторская"] },
-  x_janitor:  { n: "Подсобка уборщика", era: "KPO", w: 4, desc: "Вёдра, швабры, бутыли с хлоркой и тележка. На крючке — чей-то халат с именем на кармане.", obj: { locker: .8, shelf: .6, sink: .6 }, loot: "janitor", sign: "Хозблок" },
-  x_tearoom:  { n: "Чайная комната", era: "KPO", w: 4, desc: "Стол под клеёнкой, чайник, чашки с надписями. На стене — календарь, на котором никто не зачёркивает дни.", obj: { fridge: .8, board: .7, coffee: .35, sink: .4 }, loot: "food", sign: ["Комната приёма пищи", "Чайная. Не курить"], safe: true },
-  x_smoke:    { n: "Курилка", era: "KPO", w: 3, desc: "Скамья, жестяная пепельница из консервной банки и стены, исписанные шутками и номерами телефонов.", obj: { board: .6, locker: .3 }, loot: "smoke", sign: "Место для курения" },
-  x_shiftboss:{ n: "Кабинет начальника смены", era: "KPO", w: 4, desc: "Тяжёлый стол, график смен под стеклом, сейф в углу и журнал, который начальник заполнял каждый вечер.", obj: { desk: 1, logbook: .9, safe: .45, comp: .4 }, comp: "dispatch", loot: "paper", sign: ["Начальник смены", "Без стука не входить"] },
-  x_copy:     { n: "Копировальная", era: "KPO", w: 3, desc: "Копировальный аппарат с застрявшим листом, стопки бумаги и шкаф с папками.", obj: { cabinet: .9, desk: .4, board: .4 }, loot: "paper", sign: "Множительная техника" },
-  x_firstaid: { n: "Пункт первой помощи", era: "KPCO", w: 4, desc: "Кушетка, аптечный шкафчик и плакат «Помоги себе сам». Пахнет спиртом и бинтами.", obj: { firstaid: 1, sink: .6, capsule: .12 }, loot: "med", sign: "Первая помощь", safe: true },
-  x_guardbooth:{ n: "Будка охраны", era: "KPO", w: 3, desc: "Стеклянная будка поста: стул, шкафчик, мониторы коридора и журнал проходов.", obj: { locker: .8, comp: .6, logbook: .6 }, comp: "cams", loot: "arms", sign: "Пост охраны" },
-  x_reading:  { n: "Читальный уголок", era: "KPO", w: 3, desc: "Кресло, торшер и полка книг. Кто-то принёс их сюда из дома, чтобы было что почитать между сменами.", obj: { bookshelf: 1, board: .4, desk: .3 }, loot: "paper", sign: "Библиотека отдела", safe: true },
-  x_photolab: { n: "Фотолаборатория", era: "KPO", w: 2, desc: "Красная лампа, ванночки с проявителем и бельевая верёвка с прищепками. На стене — снимки, развешанные сушиться.", obj: { photos: 1, sink: .7, cabinet: .5 }, loot: "chem", sign: ["Фотолаборатория. Не открывать — идёт проявка", "Фотолаборатория"] },
-  x_elec:     { n: "Электрощитовая", era: "KPO", w: 3, desc: "Щит с рубильниками, гудящий трансформатор и схема коридоров на стене.", obj: { fusebox: 1, locker: .4 }, loot: "parts", sign: ["Электрощитовая. Опасно", "Не включать — работают люди"] },
-  x_archive2: { n: "Архивная кладовая", era: "KPO", w: 3, desc: "Картотечные шкафы в три ряда, коробки с делами и стремянка.", obj: { cabinet: 1, comp: .45, shelf: .5 }, comp: "archive", loot: "paper", sign: "Архив отдела" },
-  x_serverniche:{ n: "Серверная ниша", era: "KPO", w: 3, desc: "Стойка сервера гудит вентиляторами, мигают зелёные огоньки, тянет теплом.", obj: { comp: 1, crate: .3 }, comp: "server", loot: "tech", sign: "Серверная. Посторонним вход воспрещён" },
-  x_chemstore:{ n: "Склад химреактивов", era: "KPO", w: 3, gas: 1, desc: "Полки с бутылями и канистрами. Несколько разбито: в воздухе едко щиплет глаза.", obj: { shelf: .9, crate: .5 }, loot: "chem", sign: "Химреактивы. Вход в средствах защиты" },
-  x_xray:     { n: "Рентгенкабинет", era: "KPO", w: 2, rad: 1, desc: "Рентгеновский аппарат на штативе, свинцовая ширма, фартуки на вешалке. Знак излучения над дверью.", obj: { suitlocker: .5, comp: .5, cabinet: .4 }, comp: "medrec", loot: "rad", sign: "Рентгеновский кабинет. Не входить при горящем табло" },
-  x_radchem:  { n: "Радиохимическая лаборатория", era: "KPO", w: 2, rad: 2, desc: "Перчаточный бокс, свинцовые кирпичи, мерные колбы за стеклом. Где-то здесь фонит.", obj: { shelf: .6, desk: .5, comp: .45 }, comp: "dosimetry", loot: "rad", sign: "Радиохимия. Радиационная опасность" },
-  x_dispatch: { n: "Диспетчерская этажа", era: "KPO", w: 2, desc: "Пульт с лампами дверей, телефоны без гудка и журнал дежурного диспетчера.", obj: { comp: 1, logbook: .7, board: .5 }, comp: "dispatch", loot: "paper", sign: "Диспетчер этажа" },
-  x_medrec:   { n: "Регистратура медблока", era: "KPO", w: 2, desc: "Стойка регистратуры, картотека пациентов и компьютер с медицинскими картами.", obj: { comp: 1, cabinet: .8 }, comp: "medrec", loot: "med", sign: "Регистратура" },
-  x_dosimetry:{ n: "Пост радиационного контроля", era: "KPO", w: 2, desc: "Стойка дозиметров, табло фона по этажу и шкаф со спецодеждой.", obj: { comp: 1, suitlocker: .6, shelf: .4 }, comp: "dosimetry", loot: "protect", sign: "Дозиметрический контроль" },
-  x_stock:    { n: "Кабинет кладовщика", era: "KPO", w: 3, desc: "Стол с накладными, счёты, полки с образцами и компьютер учёта.", obj: { comp: 1, desk: .6, shelf: .6 }, comp: "stock", loot: "parts", sign: "Кладовщик. Выдача по накладным" },
-  x_suitstore:{ n: "Склад спецодежды", era: "KPO", w: 2, desc: "Ряды защитных костюмов на вешалках, коробки респираторов и фильтров.", obj: { suitlocker: 1, shelf: .6 }, loot: "protect", sign: "Спецодежда и СИЗ" },
-  x_gaslab:   { n: "Камера газовых испытаний", era: "KPO", w: 1, gas: 3, desc: "Герметичная камера с вентилями. Клапан сорван, и газ всё ещё сочится из трубы с тихим шипением.", obj: { crate: .6, comp: .35 }, comp: "archive", loot: "chem", sign: "Газовые испытания. Без противогаза не входить" },
-
-  /* Подножие (11–20): буровая «Глубины», Шов */
-  x_drillhut: { n: "Каморка буровика", era: "P", w: 5, desc: "Нары, железная печка, промасленные рукавицы и календарь шестидесятилетней давности.", obj: { locker: .8, desk: .5, board: .5 }, loot: "parts", sign: ["Буровая бригада", "Каморка мастера"] },
-  x_coreshed: { n: "Кернохранилище", era: "P", w: 3, rad: 2, desc: "Ящики с кернами — столбиками породы из скважины. Некоторые поют, если к ним прислониться ухом, а некоторые фонят.", obj: { shelf: 1, crate: .5 }, loot: "rad", sign: "Керновый склад. Образцы руками не брать" },
-  x_winchbooth:{ n: "Будка лебёдчика", era: "P", w: 3, desc: "Пульт лебёдки, наушники и журнал спусков. Через окошко видно, как гудит трос.", obj: { logbook: .9, locker: .5, radio: .3 }, loot: "tech", sign: "Лебёдчик" },
-
-  /* Колыбель (21–40): поселение в складке */
-  x_pantry:   { n: "Кладовая модуля", era: "C", w: 6, desc: "Полки с банками солений, связки сушёных грибов, мешки с зерном. Всё подписано от руки.", obj: { shelf: .9, fridge: .6 }, loot: "food", sign: ["Кладовая. Брать по нужде", "Общая кладовая"] },
-  x_herbdry:  { n: "Сушильня трав", era: "C", w: 4, desc: "Пучки трав под потолком, тёплый воздух и запах мяты и полыни.", obj: { shelf: 1, sink: .3 }, loot: "herbs", sign: "Сушильня" },
-  x_craftnook:{ n: "Мастерская жителя", era: "C", w: 4, desc: "Верстачок, ящики с болтами и проводами, недоделанная игрушка из жести на полке.", obj: { crate: .7, locker: .5, bookshelf: .3 }, loot: "parts", sign: "Мастерская" },
-  x_listen:   { n: "Комната слушания", era: "C", w: 3, desc: "Мягкие подушки на полу, раковины-рупоры в стенах: сюда приходили слушать песню складки.", obj: { bookshelf: .6, board: .6, photos: .4 }, loot: "paper", sign: "Тише: слушают", safe: true },
-  x_sporevault:{ n: "Споровое хранилище", era: "C", w: 2, gas: 2, desc: "Стеллажи с банками спор. Одна лопнула: в воздухе висит сладковатая пыль, от которой першит в горле.", obj: { crate: .8, shelf: .5 }, loot: "bio", sign: "Споры. Без маски не входить" },
-  x_school:   { n: "Класс поселения", era: "C", w: 3, desc: "Низкие столы, доска с нарисованными мелом нотами и полка самодельных книжек: детей здесь учили слушать.", obj: { bookshelf: .8, board: .7, desk: .5 }, loot: "paper", sign: "Класс. Тихо: идёт урок", safe: true },
-  x_bathhouse:{ n: "Баня модуля", era: "C", w: 3, desc: "Деревянные полки, бочка с водой и запах берёзового веника. Печка ещё тёплая.", obj: { sink: 1, locker: .5 }, loot: "home", sign: "Баня. По четвергам — общий день", safe: true },
-  x_settlerroom:{ n: "Комната поселенца", era: "C", w: 5, desc: "Кровать, сундук, вышитая подушка и рисунки на стене: дома без окон и солнце, которого здесь никто не видел.", obj: { locker: .7, photos: .6, bookshelf: .4 }, loot: "home", sign: ["Здесь живут", "Стучите"], safe: true },
-
-  /* Отражение (41–60): зеркальная копия «Ковчега» */
-  x_mirrorcloset:{ n: "Зеркальная кладовая", era: "O", w: 4, desc: "Кладовая, где всё повёрнуто наоборот: надписи на коробках задом наперёд, ручки дверц — с другой стороны.", obj: { shelf: 1, crate: .6 }, loot: "store", sign: "Яаводалк" },
-  x_echoroom: { n: "Комната эха", era: "O", w: 3, desc: "Пустая комната, где каждый звук возвращается дважды: ваш шаг — и ещё чей-то, чуть позже.", obj: { board: .5, bookshelf: .5 }, loot: "paper", sign: "Комната эха" },
-
-  /* Механизм (61–80): город машин */
-  x_registry: { n: "Ячейка картотеки", era: "M", w: 6, desc: "Ящики картотеки в человеческий рост, латунные таблички, запах машинного масла и бумаги.", obj: { cabinet: 1, comp: .5 }, comp: "archive", loot: "paper", sign: ["Картотека. Ячейка", "Учётная ячейка"] },
-  x_tubestation:{ n: "Станция пневмопочты", era: "M", w: 5, desc: "Латунные трубы уходят в потолок, окно выдачи посылок, стопки квитанций.", obj: { tubepost: 1, shelf: .5 }, loot: "parts", sign: "Пневмопочта. Выдача" },
-  x_stampery: { n: "Штемпельная", era: "M", w: 4, desc: "Столы с печатями и штемпельными подушками, гроздья пломб, журнал выдачи бланков.", obj: { desk: .8, cabinet: .6, logbook: .5 }, loot: "paper", sign: "Штемпельная. Бланки строгой отчётности" },
-  x_oilroom:  { n: "Маслостанция", era: "M", w: 3, gas: 1, desc: "Бочки с маслом, насос и лужи на полу. От паров кружится голова.", obj: { shelf: .8, crate: .5 }, loot: "parts", sign: "Смазочная станция. Огнеопасно" },
-  x_gearroom: { n: "Шестерёночная", era: "M", w: 4, desc: "Ящики с шестернями, валами и пружинами, рассортированными по размеру. Каждый ящик опломбирован.", obj: { shelf: 1, crate: .6 }, loot: "parts", sign: "Запасные части. Выдача по накладным" },
-  x_inspect:  { n: "Кабинет инспектора", era: "M", w: 3, desc: "Стол инспектора, штамп «Принято» и штамп «Отклонено». Второй стёрт сильнее.", obj: { desk: .9, logbook: .7, comp: .4 }, comp: "dispatch", loot: "paper", sign: "Инспектор приёмки" },
-  x_clerkcell:{ n: "Кабинет делопроизводителя", era: "M", w: 4, desc: "Стол, счётная машина, лоток «Входящие» и лоток «Исходящие». Оба полны.", obj: { desk: .9, cabinet: .6, comp: .4 }, comp: "stock", loot: "paper", sign: ["Делопроизводитель", "Приём документов"] },
-
-  /* Исток (81+): мир садовника */
-  x_gardennook:{ n: "Ниша садовника", era: "I", w: 4, desc: "Лейки, секаторы, мешочки с семенами и тихо жужжащий маленький дрон-садовник на зарядке.", obj: { shelf: .7, fridge: .3, board: .4 }, loot: "bio", sign: "Садовник" },
-  x_seedvault:{ n: "Семенное хранилище", era: "I", w: 0, kind: "locked", desc: "Ячейки с семенами под стеклом, ровный холод и табличка: «Для того, что будет после».", obj: { safe: .6, shelf: .8 }, loot: "bio", sign: "Семенное хранилище. Доступ ограничен" },
-  x_quietcell:{ n: "Тихая келья", era: "I", w: 3, desc: "Каменная келья: лежанка, полка книг и тишина, в которой слышно собственное сердце.", obj: { bookshelf: .7, capsule: .25 }, loot: "paper", sign: "Тишина", safe: true },
-  x_wateryard:{ n: "Водяной дворик", era: "I", w: 3, desc: "Каменная чаша, в которую с потолка капает вода, мох на стенах и тихий плеск.", obj: { sink: 1, board: .4 }, loot: "food", sign: "Вода. Пейте", safe: true },
-  x_memoryhall:{ n: "Зал памяти", era: "I", w: 3, desc: "Портреты тех, кто спускался сюда до вас, и подписи: имена, даты, иногда одна фраза.", obj: { photos: 1, bookshelf: .4 }, loot: "paper", sign: "Помним", safe: true },
-  x_toolshed: { n: "Сарай садовника", era: "I", w: 4, desc: "Грабли, лопаты, мотки проволоки и ящик с запчастями для дронов.", obj: { locker: .7, shelf: .7 }, loot: "parts", sign: "Инвентарь" },
-  x_hive:     { n: "Пасека машин", era: "I", w: 3, desc: "Ульи из жести, в которых гудят крошечные механические пчёлы. На полке — соты с настоящим мёдом.", obj: { shelf: .8, crate: .4 }, loot: "food", sign: "Пасека. Не шуметь" },
-  x_machgarden:{ n: "Сад машин", era: "I", w: 3, desc: "Механические цветы на медных стеблях раскрываются, когда вы проходите мимо, и тихо звенят.", obj: { crate: .6, comp: .4 }, comp: "server", loot: "tech", sign: "Сад машин" }
-};
+/* ── ПОМЕЩЕНИЯ У КОРИДОРОВ ── таблица — annex_rooms.js (LAB.ANNEX_ROOMS). */
+var ROOMS = LAB.ANNEX_ROOMS || {};
 for (var rk in ROOMS) { ROOMS[rk].annex = true; if (!LAB.ROOMS[rk]) LAB.ROOMS[rk] = ROOMS[rk]; }
 
 /* ── ДОБЫЧА КАБИНЕТОВ ── Товары своей глубины: ценности, еда, лекарства,
@@ -159,8 +78,8 @@ function catPick(r, L, cat) {
 }
 function partPick(r, L) { return LAB.partAt ? LAB.partAt(r, L) : "scrap"; }
 function it(item, n) { return { kind: "item", item: item, n: n || 1 }; }
-function annexLoot(r, L, F, tag, ot) {
-  var out = [], n = ot === "safe" ? 3 : ot === "crate" || ot === "shelf" ? r.int(1, 3) : r.int(1, 2);
+function annexLoot(r, L, F, tag, ot, lean) {
+  var out = [], n = ot === "safe" ? 3 : lean ? r.int(1, ot === "crate" || ot === "shelf" ? 2 : 1) : ot === "crate" || ot === "shelf" ? r.int(1, 3) : r.int(1, 2);
   var add = function (x) { if (x) out.push(x); };
   var cr = function (b) { return { kind: "credits", n: LAB.credits(b + r.int(0, 12), L, F) }; };
   for (var i = 0; i < n; i++) {
@@ -194,159 +113,263 @@ function annexLoot(r, L, F, tag, ot) {
 }
 LAB.annexLoot = annexLoot;
 
-/* ════════ ПОСТРОЕНИЕ ════════ */
+/* ════════ ПОСТРОЕНИЕ ════════
+   Вдоль каждой стены каждого коридора — ряд помещений: где больше, где
+   меньше (у каждого уровня своя плотность, у каждой стены — своё число,
+   чаще около десяти), шириной от трёх шагов, иногда — большой зал на
+   полстены; между соседями — стена в клетку; глубина — от двух до семи.
+   Дверь — в стене коридора, не ближе двух шагов к его концам и не там,
+   где у стены стоит турель или камера. Двери есть и в коридоре к тайной
+   комнате: забытое крыло, куда никто давно не заходил. Типы в одном
+   коридоре не повторяются, а пара «тип и вариант» — на всём этаже
+   (annex_gen.js). */
 var T = LAB.T;
-/* Где можно вырезать помещение у коридора c: сторона side (0 — меньшие
-   координаты поперёк, 1 — большие), дверь на шаге along вдоль коридора.
-   Вокруг помещения — сплошная стена толщиной в клетку, кроме двери. */
-function carveSpot(fl, c, side, along, w, h, off) {
-  var W = LAB.W, H = LAB.H, t = fl.t;
-  var hz = c.axis === "h";
-  var wallA = hz ? (side ? c.y1 + 1 : c.y0 - 1) : (side ? c.x1 + 1 : c.x0 - 1); /* линия стены с дверью */
-  var dir = side ? 1 : -1;
-  var a0 = along - off, a1 = a0 + w - 1;                 /* вдоль коридора */
-  var b0 = wallA + dir, b1 = wallA + dir * h;            /* вглубь от коридора */
+/* Помещение вдоль коридора c на стороне side (0 — у меньших координат
+   поперёк, 1 — у больших): клетки a0..a1 вдоль, глубина h. Вокруг —
+   сплошная стена в клетку (и внутри карты). */
+function fits(fl, c, side, a0, a1, h) {
+  var W = LAB.W, H = LAB.H, t = fl.t, hz = c.axis === "h";
+  var wallA = hz ? (side ? c.y1 + 1 : c.y0 - 1) : (side ? c.x1 + 1 : c.x0 - 1);
+  var dir = side ? 1 : -1, b0 = wallA + dir, b1 = wallA + dir * h;
   var lo = Math.min(b0, b1), hi = Math.max(b0, b1);
-  var cell = function (a, b) { return hz ? [a, b] : [b, a]; };
-  /* помещение и стена вокруг — только стена, внутри карты */
   for (var a = a0 - 1; a <= a1 + 1; a++) for (var b = lo - 1; b <= hi + 1; b++) {
-    var p = cell(a, b), x = p[0], y = p[1];
+    var x = hz ? a : b, y = hz ? b : a;
     if (x < 0 || y < 0 || x >= W || y >= H) return null;
     var inside = a >= a0 && a <= a1 && b >= lo && b <= hi;
     if (inside && (x < 1 || y < 1 || x > W - 2 || y > H - 2)) return null;
     if (t[y * W + x] !== T.WALL) return null;
   }
-  var d = cell(along, wallA), front = cell(along, hz ? (side ? c.y1 : c.y0) : (side ? c.x1 : c.x0));
-  return { x0: hz ? a0 : lo, x1: hz ? a1 : hi, y0: hz ? lo : a0, y1: hz ? hi : a1, door: d, front: front, side: hz ? (side ? "N" : "S") : (side ? "W" : "E") };
+  return { x0: hz ? a0 : lo, x1: hz ? a1 : hi, y0: hz ? lo : a0, y1: hz ? hi : a1, wallA: wallA, side: hz ? (side ? "N" : "S") : (side ? "W" : "E") };
 }
-function blockedFront(fl, x, y) {
+/* Перед дверью нельзя: турель, камера (стоят у стен намертво), пресс «Подножия». */
+function frontBlocked(fl, x, y, still) {
   var i = y * LAB.W + x;
   if (fl.t[i] !== T.CORR) return true;
-  if (fl.foes.some(function (f) { return f.x === x && f.y === y; })) return true;
-  if ((fl.hazards || []).some(function (h) { return (h.cells || []).some(function (q) { return q[0] === x && q[1] === y; }); })) return true;
-  return false;
+  if (still[i]) return true;
+  return (fl.hazards || []).some(function (h) { return (h.cells || []).some(function (q) { return q[0] === x && q[1] === y; }); });
 }
-function pickType(r, era, L) {
-  var pool = [], tot = 0;
-  for (var k in ROOMS) { var d = ROOMS[k]; if (!d.w || d.era.indexOf(era) < 0) continue; pool.push(k); tot += d.w; }
-  var x = r.next() * tot;
-  for (var i = 0; i < pool.length; i++) { x -= ROOMS[pool[i]].w; if (x <= 0) return pool[i]; }
-  return pool[pool.length - 1] || "x_store";
+function stillMap(fl) {
+  var m = {};
+  fl.foes.forEach(function (f) { var b = LAB.FOES[f.type]; if (b && (b.beh.indexOf("turret") >= 0 || b.beh.indexOf("camera") >= 0 || b.beh.indexOf("stationary") >= 0)) m[f.y * LAB.W + f.x] = 1; });
+  return m;
 }
-/* Особые зоны этажа: сколько и каких. Глубже — больше. */
-function specialsFor(r, L, F) {
-  var d0 = LAB.depth(L, F), out = [];
-  out.push("x_supply");
-  if (r.chance(Math.min(0.55, 0.3 + d0 * 0.002))) out.push("x_stash");
-  if (!(L === 1 && F <= 2) && r.chance(Math.min(0.75, 0.35 + d0 * 0.003))) out.push(eraOf(L) === "I" && r.chance(0.5) ? "x_seedvault" : r.pick(["x_classified", "x_classified", "x_armory"]));
-  if (!(L === 1 && F <= 3) && r.chance(Math.min(0.6, 0.2 + d0 * 0.003))) out.push("x_isotope");
-  if ((L >= 2 || F >= 6) && r.chance(Math.min(0.5, 0.18 + d0 * 0.002))) out.push("x_hotcell");
-  if (!(L === 1 && F <= 2) && r.chance(0.3)) out.push("x_trial");
+/* Обычные (не особые) типы глубины. */
+function plainPool(era) {
+  var out = [];
+  for (var k in ROOMS) { var d = ROOMS[k]; if (d.kind || d.era.indexOf(era) < 0) continue; out.push(k); }
   return out;
 }
-/* Номер следующего помещения на табличках этажа. */
+/* Особые зоны этажа: число растёт с размером этажа и с глубиной. */
+function specialsFor(r, L, F, n) {
+  var d0 = LAB.depth(L, F), e = eraOf(L), out = [], k;
+  out.push("x_supply");
+  var lockedT = e === "P" ? ["x_classified", "x_armory", "x_blasting"] : e === "C" ? ["x_armory", "x_songvault"] : e === "I" ? ["x_classified", "x_seedvault", "x_armory"] : ["x_classified", "x_armory"];
+  var nStash = (L === 1 && F === 1) ? 0 : 1 + (n > 120 && r.chance(0.5) ? 1 : 0) + (r.chance(Math.min(0.5, d0 * 0.003)) ? 1 : 0);
+  for (k = 0; k < nStash; k++) out.push("x_stash");
+  var nLock = (L === 1 && F <= 2) ? 1 : 2 + (n > 150 ? 1 : 0) + (r.chance(Math.min(0.6, 0.2 + d0 * 0.003)) ? 1 : 0);
+  for (k = 0; k < nLock; k++) out.push(r.pick(lockedT));
+  if (!(L === 1 && F <= 3)) { var nIso = 1 + (r.chance(Math.min(0.5, d0 * 0.003)) ? 1 : 0); for (k = 0; k < nIso; k++) out.push("x_isotope"); }
+  if (L >= 2 || F >= 6) { out.push("x_hotcell"); if (r.chance(Math.min(0.4, d0 * 0.002))) out.push("x_hotcell"); }
+  if (!(L === 1 && F <= 2) && r.chance(0.65)) out.push("x_trial");
+  return out;
+}
 function maxNum(fl) { var m = 0; fl.rooms.forEach(function (q) { if (q && q.num > m) m = q.num; }); return m; }
 
-LAB.annex = { ROOMS: ROOMS, eraOf: eraOf, loot: annexLoot };
+/* Подробности — у каждого помещения свои: в каком оно виде, чем пахнет,
+   что звучит, что забыто. */
+var DETAIL = {
+  K: ["Свет мигает: лампа под потолком вот-вот перегорит.", "На полу — рассыпанные скрепки и чей-то пропуск без фотографии.", "Пахнет остывшим кофе и озоном.", "На стене — календарь, где обведён день отпуска на поверхности.", "В углу — мокрое пятно: где-то наверху течёт труба.", "На двери изнутри нацарапано: «Не открывать, пока не стихнет».", "Стул опрокинут, будто отсюда уходили бегом.", "На подоконнике фальшивого окна — засохший цветок в банке.", "Где-то за стеной ровно гудит вентилятор.", "Всё стоит на своих местах, аккуратно, будто хозяин вышел на минуту.", "Пахнет хлоркой и пластиком.", "На полке — детский рисунок: солнце, дом и подпись «Папе на работу».", "Под ногами хрустит стекло от разбитой лампы.", "На столе — недопитый стакан чая с ложкой.", "Слышно, как в стене щёлкает реле.", "К двери изнутри придвинута тумбочка, но её потом отодвинули.", "Стены здесь светлее: недавно красили, пахнет краской.", "На крючке — забытый белый халат.", "В воздухе висит пыль, луч фонаря имплантов её не видит, а нос чует.", "На стене — график дежурств, где последние клетки так и не заполнены."],
+  P: ["Пахнет мазутом и холодной глиной.", "На стене — пожелтевший плакат: «Даёшь глубину!».", "С потолка капает: где-то сочится вода из породы.", "Половицы скрипят, под ними — пустота.", "На гвозде висит каска с треснувшим козырьком.", "Тянет тёплым воздухом снизу, из Шва.", "Кто-то вырезал на столе: «Седьмая смена здесь была».", "Пахнет табаком, который давно выветрился.", "Слышен далёкий гул лебёдок.", "Пол засыпан мелкой рудой.", "На стене — карта выработок, исчерканная карандашом.", "Порода за стеной тихо поёт, если приложить ухо."],
+  C: ["Пахнет хлебом, травами и дымом.", "Пол деревянный, тёплый, чисто выметен.", "Над дверью — оберег из ракушек и перьев.", "Кто-то оставил на столе чашку с недопитым травяным чаем.", "Тихо звенят колокольчики на сквозняке.", "Стены расписаны узорами, которые можно прочесть пальцами.", "Слышно, как далеко за стеной поёт складка.", "Здесь пахнет мокрым деревом и мёдом.", "В углу — вязанка дров для печки.", "На полу — вышитый коврик, по нему мягко ступать.", "На гвоздике — связка сушёных яблок.", "Над столом висит самодельный абажур из бересты."],
+  O: ["Надписи читаются задом наперёд.", "Ваши шаги возвращаются чуть позже, чем должны.", "Всё зеркально: ручка двери не с той стороны.", "Запах здесь тот же, что наверху, только холоднее.", "Часы на стене идут назад.", "Где-то рядом кто-то повторяет ваши движения.", "Вещи стоят так же, как в настоящем «Ковчеге», но чуть сдвинуты.", "Воздух звенит, как стекло после удара.", "В углу — отражение двери, которой нет."],
+  M: ["Щёлкают реле, стрекочет счётная машинка за стеной.", "Пахнет машинным маслом и бумагой.", "Под потолком проходит латунная труба пневмопочты: в ней иногда шуршит капсула.", "На каждой вещи — бирка с номером накладной.", "На полу ни пылинки: уборщик проходит здесь по графику.", "На стене — табличка «Режим работы: всегда».", "Слышно, как где-то печатает машинка.", "Здесь всё опломбировано, даже мусорная корзина.", "На столе — талон очереди с номером девятьсот девяносто девять.", "Шестерёнки в стене тихо тикают."],
+  I: ["Пахнет землёй и тёплым железом.", "По стене вьётся плющ, и в нём жужжат механические пчёлы.", "Мох глушит шаги.", "С потолка капает тёплая вода.", "Где-то совсем рядом тихо гудит реактор, и стены от этого тёплые.", "Тишина здесь живая: в ней шуршат листья.", "На полу — следы маленьких колёс: здесь ездит дрон-садовник.", "Пахнет яблоками.", "Корни пробили стену и спокойно растут дальше.", "На стене — табличка от руки: «Для тех, кто придёт после»."]
+};
+function detailDeck(r, era) { var d = (DETAIL[era] || DETAIL.K).slice(); r.shuffle(d); return d; }
+
+LAB.annex = { ROOMS: ROOMS, eraOf: eraOf, loot: annexLoot, DETAIL: DETAIL };
+/* Сколько помещений вдоль одной стены: чаще около десяти, бывает шесть, бывает тринадцать. */
+var COUNT_W = { 5: 1, 6: 3, 7: 5, 8: 8, 9: 12, 10: 15, 11: 12, 12: 8, 13: 4 };
 LAB.annex.place = function (ctx) {
-  var fl = ctx.fl, L = ctx.L, F = ctx.F, W = LAB.W;
+  var fl = ctx.fl, L = ctx.L, F = ctx.F;
   var r = LAB.Rng(ctx.seed, "annex:" + L + ":" + F + ":" + ctx.attempt);
-  var era = eraOf(L), lev = LAB.LEVELS[L];
-  var secret = fl.secret;
-  /* 1. Места у коридоров: от одного до трёх у каждого (кроме тайного хода). */
-  var cors = r.shuffle(fl.corrs.filter(function (c) { return c.a !== secret && c.b !== secret; }));
-  var spots = [], used = {};
-  cors.forEach(function (c) {
-    var want = 1 + (r.chance(0.6) ? 1 : 0) + (c.len >= 15 && r.chance(0.45) ? 1 : 0);
-    var got = 0;
-    for (var tries = 0; tries < 14 && got < want; tries++) {
-      var side = r.int(0, 1), w = r.int(3, 5), h = r.int(3, 5);
-      var lo = (c.axis === "h" ? c.x0 : c.y0) + 2, hi = (c.axis === "h" ? c.x1 : c.y1) - 2;
-      if (hi < lo) break;
-      var along = r.int(lo, hi), off = r.int(0, w - 1);
-      var sp = carveSpot(fl, c, side, along, w, h, off);
-      if (!sp) continue;
-      if (blockedFront(fl, sp.front[0], sp.front[1])) continue;
-      /* не вплотную к другой двери этого коридора */
-      var key = c.id + ":" + side;
-      if ((used[key] || []).some(function (a2) { return Math.abs(a2 - along) < 3; })) continue;
-      (used[key] = used[key] || []).push(along);
-      /* занять сразу: следующие места проверяются уже с этим помещением */
-      sp.c = c; sp.zone = fl.zone[c.mouthRoom] != null ? fl.zone[c.mouthRoom] : -1;
-      sp.id = fl.rooms.length;
-      reserve(fl, sp);
-      spots.push(sp); got++;
-    }
+  var era = eraOf(L), lev = LAB.LEVELS[L], secret = fl.secret, still = stillMap(fl);
+  /* плотность уровня: где-то кабинеты теснятся, где-то стоят реже */
+  var dens = 0.82 + 0.36 * LAB.Rng(ctx.seed, "adens:" + L).next();
+  /* 1. Ряды помещений вдоль стен коридоров */
+  var spots = [], byCorr = {};
+  fl.corrs.forEach(function (c) {
+    var wing = c.a === secret || c.b === secret;
+    var hz = c.axis === "h", end0 = hz ? c.x0 : c.y0, end1 = hz ? c.x1 : c.y1;
+    [0, 1].forEach(function (side) {
+      var lo = end0 + 1, hi = end1 - 1, sp0 = hi - lo + 1;
+      var capN = Math.floor((sp0 + 1) / 4);
+      var want = wing ? r.int(1, 3) : Math.round(parseInt(r.weighted(COUNT_W), 10) * dens);
+      var n = Math.max(0, Math.min(capN, want));
+      if (n <= 0) return;
+      var widths = [], k;
+      for (k = 0; k < n; k++) widths.push(3);
+      var extra = sp0 - (3 * n + (n - 1)), guard = 0;
+      /* большой зал на полстены — если вдоль стены есть запас */
+      if (extra >= 5 && !wing && r.chance(0.4)) { var q0 = r.int(0, n - 1), add = Math.min(extra - 1, r.int(3, 5)); widths[q0] += add; extra -= add; }
+      while (extra > 1 && guard++ < 60) { var q = r.int(0, n - 1); if (widths[q] < 5) { widths[q]++; extra--; } }
+      var pos = lo + r.int(0, Math.max(0, extra));
+      for (k = 0; k < n; k++) {
+        var a0 = pos, a1 = pos + widths[k] - 1;
+        pos = a1 + 2;
+        if (a1 > hi) break;
+        var big = widths[k] >= 6, h = big ? r.int(5, 7) : r.int(2, 6), g = null;
+        if (h === 2 && widths[k] > 3) h = 3;
+        for (var hh = h; hh >= 2 && !g; hh--) g = fits(fl, c, side, a0, a1, hh);
+        if (!g) continue;
+        /* дверь: где-нибудь по ширине помещения, не у концов коридора, перед ней свободно */
+        var cand = [];
+        for (var a = Math.max(a0, end0 + 2); a <= Math.min(a1, end1 - 2); a++) cand.push(a);
+        r.shuffle(cand);
+        var door = null;
+        for (var ci = 0; ci < cand.length && !door; ci++) {
+          var al = cand[ci], dx = hz ? al : g.wallA, dy = hz ? g.wallA : al;
+          var fx = hz ? al : (side ? c.x1 : c.x0), fy = hz ? (side ? c.y1 : c.y0) : al;
+          if (!frontBlocked(fl, fx, fy, still)) door = [dx, dy];
+        }
+        if (!door) continue;
+        var sp = { c: c, side: side, door: door, x0: g.x0, x1: g.x1, y0: g.y0, y1: g.y1, dside: g.side, zone: fl.zone[c.mouthRoom] != null ? fl.zone[c.mouthRoom] : -1, id: fl.rooms.length, wing: wing, big: big };
+        reserve(fl, sp);
+        spots.push(sp);
+        (byCorr[c.id] = byCorr[c.id] || []).push(sp);
+      }
+    });
   });
-  if (!spots.length) { fallbackSupply(ctx, r); return; }
-  /* 2. Особые зоны: пункт снабжения — у начальной зоны, если можно;
-     тайник и режимные — подальше от начала; горячая камера — с постом
-     дезактивации поблизости. */
-  var free = spots.slice();
-  var takeSpot = function (pref) {
+  var gen = LAB.agen ? new LAB.agen.Gen(ctx.seed, L, F, spots.length) : null;
+  if (!spots.length) { fallbackSupply(ctx, r); placeMainFixtures(ctx, r, gen); return; }
+  /* 2. Особые зоны: пункт снабжения — у начальной зоны; тайники, режимные
+     и горячие — подальше от начала; у радиоактивных — пост дезактивации
+     в том же коридоре. В забытом крыле особых зон нет. */
+  var free = spots.filter(function (q) { return !q.wing; }), types = {};
+  var take = function (pref) {
     var list = free.filter(pref || function () { return true; });
     if (!list.length) list = free;
     if (!list.length) return null;
-    var s = r.pick(list);
-    free.splice(free.indexOf(s), 1);
-    return s;
+    var sp2 = r.pick(list); free.splice(free.indexOf(sp2), 1); return sp2;
   };
-  var types = {};
-  specialsFor(r, L, F).forEach(function (ty) {
-    var def = ROOMS[ty], s = null;
-    if (ty === "x_supply") s = takeSpot(function (q) { return q.zone === -1; });
-    else if (def.kind === "secret" || def.kind === "locked" || def.kind === "hazard") s = takeSpot(function (q) { return q.zone !== -1 || q.c.doorRoom === fl.D; });
-    else s = takeSpot();
-    if (s) types[s.id] = ty;
+  specialsFor(r, L, F, spots.length).forEach(function (ty) {
+    var def = ROOMS[ty]; if (!def) return;
+    var big = def.size && def.size[0] >= 4;
+    var sp2 = ty === "x_supply" ? take(function (q) { return q.zone === -1 && span(q) >= 4; }) || take(function (q) { return q.zone === -1; })
+      : (def.kind === "secret" || def.kind === "locked" || def.kind === "hazard") ? take(function (q) { return (q.zone !== -1 || q.c.doorRoom === fl.D) && (!big || span(q) >= 4); })
+      : take(function (q) { return !big || span(q) >= 4; });
+    if (!sp2) return;
+    types[sp2.id] = ty;
+    if (def.rad >= 3) {
+      var near = free.filter(function (q) { return q.c === sp2.c; })[0];
+      if (near && r.chance(0.75)) { free.splice(free.indexOf(near), 1); types[near.id] = "x_decon"; }
+    }
   });
-  var hasHot = Object.keys(types).some(function (k) { var d = ROOMS[types[k]]; return d.rad >= 3; });
-  if (hasHot && free.length && r.chance(0.7)) { var dc = takeSpot(); if (dc) types[dc.id] = "x_decon"; }
-  free.forEach(function (s) { types[s.id] = pickType(r, era, L); });
-  /* 3. Помещения, двери, обстановка. */
-  var num = maxNum(fl);
-  spots.forEach(function (s) {
-    var ty = types[s.id] || "x_store", def = ROOMS[ty];
-    var rm = fl.rooms[s.id];
-    rm.type = ty; rm.name = def.n; rm.surf = lev.surf;
-    if (def.rad) rm.rad = def.rad === 3 ? 3 + (r.chance(0.35) ? 1 : 0) : def.rad === 2 ? 2 + (r.chance(0.25) ? 1 : 0) : def.rad;
-    if (def.gas) rm.gas = def.gas + (def.gas < 3 && r.chance(0.25) ? 1 : 0);
-    /* дверь */
-    var d = fl.doorAt[s.door[1] * W + s.door[0]];
+  /* 3. Остальное: колода пар «тип + вариант» своей глубины — без повторов на этаже,
+     тип в одном коридоре не повторяется */
+  var pool = plainPool(era), picks = {};
+  Object.keys(byCorr).forEach(function (cid) {
+    var used = {};
+    byCorr[cid].forEach(function (sp2) {
+      if (types[sp2.id]) { used[types[sp2.id]] = 1; return; }
+      var it2 = gen ? gen.nextType(pool, used) : null;
+      if (!it2) it2 = { t: r.pick(pool), vi: -1 };
+      types[sp2.id] = it2.t; picks[sp2.id] = it2; used[it2.t] = 1;
+    });
+  });
+  /* 4. Помещения, двери, хозяева, описания, обстановка */
+  var num = maxNum(fl), details = detailDeck(r, era), dk = 0;
+  spots.forEach(function (sp2) {
+    var ty = types[sp2.id] || "x_store", def = ROOMS[ty] || ROOMS.x_store, it2 = picks[sp2.id] || null;
+    var v = it2 && it2.vi >= 0 && LAB.ANNEX_V && LAB.ANNEX_V[ty] ? LAB.ANNEX_V[ty][it2.vi] : null;
+    var rm = fl.rooms[sp2.id];
+    rm.type = ty; rm.name = v ? v.n : def.n; rm.surf = lev.surf; rm.vi = it2 ? it2.vi : -1;
+    if (it2 && it2.sewn) rm.sewn = it2.sewn;
+    if (sp2.wing) rm.wing = true;
+    if (def.rad) rm.rad = Math.min(5, def.rad + (def.rad >= 3 && r.chance(0.35) ? 1 : 0) + (L > 40 && def.rad < 3 && r.chance(0.3) ? 1 : 0));
+    if (def.gas) rm.gas = Math.min(3, def.gas + (def.gas < 3 && r.chance(0.25) ? 1 : 0));
+    var d = fl.doorAt[sp2.door[1] * LAB.W + sp2.door[0]];
+    var post = v && v.post ? v.post : def.owner, owner = null;
+    if (post && gen) {
+      owner = gen.person(sp2.id, post, null);
+      if (!owner.m && v && v.postf && owner.f) owner.post = v.postf;
+      rm.owner = { n: owner.fio, short: owner.sign, f: owner.f, post: owner.post, g: owner.g, m: !!owner.m };
+      gen.people.push({ p: owner, rm: rm });
+    } else if (post) {
+      var fem = r.chance(0.5), fn = r.pick(fem ? LAB.NAMES.f : LAB.NAMES.m), sn = r.pick(fem ? LAB.NAMES.sf : LAB.NAMES.sm);
+      rm.owner = { n: fn + " " + sn, short: fn.charAt(0) + ". " + sn, f: fem, post: post };
+    }
+    if (gen) rm.desc = gen.describe(rm, def, it2, owner, { secret: sp2.wing });
+    else {
+      if (dk >= details.length) { details = detailDeck(r, era); dk = 0; }
+      rm.desc = def.desc + (rm.owner ? " На двери изнутри — табличка: «" + cap(rm.owner.post) + " " + rm.owner.short + "»." : "") + " " + details[dk++];
+    }
     if (def.kind === "secret") { d.kind = "secret"; d.lock = { type: "secret", inner: false }; rm.hidden = true; rm.sign = ""; }
     else {
       num++; rm.num = num;
-      var sg = def.sign ? (typeof def.sign === "string" ? def.sign : r.pick(def.sign)) : "";
-      rm.sign = "Помещение " + num + ". " + def.n + (sg && sg !== def.n ? ". " + sg : "");
+      /* у варианта своя надпись; от надписи типа остаётся только предупреждение («Тишина!», «Не входить при горящем табло») */
+      var sg0 = v && v.sign ? v.sign : def.sign, sg = sg0 ? (typeof sg0 === "string" ? sg0 : r.pick(sg0)) : "";
+      if (v && !v.sign && sg) { var sgp = sg.split(/\.\s+/); sg = sgp.length > 1 ? sgp.slice(1).join(". ") : ""; }
+      rm.sign = "Помещение " + num + ". " + rm.name + (rm.owner ? ", " + rm.owner.short : "") + (sg && sg !== rm.name ? ". " + sg : "");
       if (rm.rad) rm.sign += ". Знак радиационной опасности";
       if (rm.gas) rm.sign += ". Знак химической опасности";
-      d.kind = def.kind === "hazard" ? "heavy" : def.kind === "locked" ? "heavy" : r.chance(0.7) ? "auto" : "hatch";
+      d.kind = def.kind === "hazard" || def.kind === "locked" ? "heavy" : r.chance(0.7) ? "auto" : "hatch";
       if (def.kind === "hazard") d.lock = { type: "hazard", need: "rad", min: 0.5 };
-      if (def.kind === "locked") d.lock = lockFor(ctx, r, s, rm);
+      if (def.kind === "locked") d.lock = lockFor(ctx, r, sp2, rm);
     }
-    /* обстановка */
-    furnish(ctx, r, s, rm, def);
+    furnish(ctx, r, sp2, rm, def, v, gen);
   });
-  /* 4. Пункт снабжения обязателен: если места у коридоров не нашлось — в помещении начальной зоны. */
+  /* 4б. «Ковчег»: тела тех, кто не успел уйти три недели назад — чаще там, где держали
+     оборону, бежали или горело; при них — вещи, жетон и, бывает, записка */
+  if (era === "K" && !(L === 1 && F <= 2)) {
+    var bodyRooms = spots.filter(function (q) { var m = fl.rooms[q.id]; return m && m.num && !(ROOMS[m.type] || {}).kind; });
+    var pref = bodyRooms.filter(function (q) { var stt = fl.rooms[q.id].state; return stt === "barricade" || stt === "hurry" || stt === "burnt" || stt === "lived" || stt === "dark"; });
+    var nb = r.int(1, 3) + (L >= 5 && r.chance(0.5) ? 1 : 0);
+    for (var bi = 0; bi < nb && bodyRooms.length; bi++) {
+      var bq = pref.length && r.chance(0.7) ? pref.splice(r.int(0, pref.length - 1), 1)[0] : bodyRooms[r.int(0, bodyRooms.length - 1)];
+      var bo = ctx.addObj("corpse", bq.id, null);
+      if (bo) bo.loot = annexLoot(r, L, F, r.pick(["home", "smoke", "med", "paper"]), "desk", true);
+    }
+  }
+  /* 5. Записки: в ящиках, карманах и на полу — из частей, с людьми и помещениями этажа */
+  if (gen) placeNotes(ctx, r, gen, spots);
+  /* 6. Пункт снабжения обязателен; обстановка и подробности основных помещений, люди на телах */
   if (!fl.objs.some(function (o) { return o.type === "supply"; })) fallbackSupply(ctx, r);
+  placeMainFixtures(ctx, r, gen);
+  var kc = 0;
+  /* номера людей на этаже: помещения — до 360, тела — 360–419, прочие — с 420 */
+  var notedRooms = spots.map(function (q) { return fl.rooms[q.id]; }).filter(function (m) { return m && m.num; });
+  fl.objs.forEach(function (o) {
+    if (o.type !== "corpse") return;
+    o.who = 360 + (kc++ % 60);
+    /* в карманах — записка, которую этот человек так и не отдал */
+    if (gen && LAB.agen.corpse && r.chance(0.55)) {
+      var who = LAB.agen.corpse(ctx.seed, L, F, o).p, to = gen.people.length ? r.pick(gen.people).p : null;
+      var src = gen.noteSrc(who, to, null, notedRooms, 0);
+      if (src) o.notes = [src];
+    }
+  });
   fl.annexN = spots.length;
 };
-/* Вырезать помещение и дверь сразу (до выбора типа). */
+function span(sp) { return sp.c.axis === "h" ? sp.x1 - sp.x0 + 1 : sp.y1 - sp.y0 + 1; }
+function cap(s) { s = String(s || ""); return s.charAt(0).toUpperCase() + s.slice(1); }
+/* Вырезать помещение и дверь (тип — потом). */
 function reserve(fl, s) {
   var W = LAB.W, id = s.id;
-  var rm = { id: id, x0: s.x0, y0: s.y0, x1: s.x1, y1: s.y1, zone: s.zone, doors: [], mouths: [], annex: true, corr: s.c.id, type: "x_store", name: ROOMS.x_store.n };
+  var rm = { id: id, x0: s.x0, y0: s.y0, x1: s.x1, y1: s.y1, zone: s.zone, doors: [], mouths: [], annex: true, corr: s.c.id, type: "x_store", name: "Кладовая" };
   rm.cx = Math.floor((rm.x0 + rm.x1) / 2); rm.cy = Math.floor((rm.y0 + rm.y1) / 2);
   fl.rooms[id] = rm;
   for (var y = rm.y0; y <= rm.y1; y++) for (var x = rm.x0; x <= rm.x1; x++) { fl.t[y * W + x] = T.ROOM; fl.room[y * W + x] = id; }
   var di = s.door[1] * W + s.door[0];
-  var door = { id: "d" + fl.doors.length, x: s.door[0], y: s.door[1], a: s.c.a, b: s.c.b, room: id, side: s.side, other: -1, corr: -1, acorr: s.c.id, annex: true, kind: "auto", lock: null, tree: false, lockChild: -1 };
+  var door = { id: "d" + fl.doors.length, x: s.door[0], y: s.door[1], a: s.c.a, b: s.c.b, room: id, side: s.dside, other: -1, corr: -1, acorr: s.c.id, annex: true, kind: "auto", lock: null, tree: false, lockChild: -1 };
   fl.t[di] = T.DOOR; fl.corrAt[di] = s.c.id;
   fl.doors.push(door); fl.doorAt[di] = door;
   rm.doors.push(door.id);
   (s.c.annex = s.c.annex || []).push(door.id);
 }
-/* Замок режимного помещения: код (в записке, письме или журнале смены
-   на этаже), ключ (у кого-то на этаже) или пропуск на ступень старше
-   вашего — его не найти, но замок взламывают, а декодер открывает. */
+/* Замок режимного помещения: код (в записке или письме на этаже), ключ
+   (у кого-то на этаже) или пропуск на ступень старше вашего — его не
+   найти, но замок взламывают, а декодер открывает. */
 function lockFor(ctx, r, s, rm) {
   var fl = ctx.fl, L = ctx.L, F = ctx.F, lev = LAB.LEVELS[L];
   var q = r.next();
@@ -363,7 +386,6 @@ function lockFor(ctx, r, s, rm) {
     var keyId = "ka" + L + "_" + F + "_" + rm.id;
     var kname = "Ключ «" + rm.name + "»";
     var spot = r.pick(mains), done = false;
-    /* иногда ключ носит охранник или тварь этажа */
     if (r.chance(0.35)) {
       var f = fl.foes.filter(function (q2) { return !q2.boss && q2.room === spot && !(q2.carry && q2.carry.length); })[0];
       if (f) { f.carry = [{ kind: "key", key: keyId, n: kname }]; done = true; }
@@ -375,13 +397,30 @@ function lockFor(ctx, r, s, rm) {
   if (!LAB.TIERS[tier]) tier = lev.tier;
   return { type: "card", tier: tier, over: true };
 }
-function furnish(ctx, r, s, rm, def) {
-  var fl = ctx.fl, L = ctx.L, F = ctx.F;
+/* Обстановка кабинета: хранилища, устройства, вещи обстановки (fixtures),
+   мелочь на полу; в горячих и режимных — твари или охрана. В обычных
+   кабинетах добычи немного: их сотни на этаже. */
+/* Вещи, которые встречаются где угодно: часы, плакат, телефон, цветок… — у каждой глубины свои. */
+var GENERIC = {
+  K: ["clock", "poster", "phone", "plants", "kettle", "chair", "armchair", "hangers", "nightstand", "globe", "drawings", "awards", "graffiti", "thermometer", "scales", "aquarium", "guitar"],
+  P: ["clock", "poster", "phone", "abacus", "bench", "stove", "lamprack", "hangers", "awards", "graffiti", "samovar", "accordion", "thermometer", "chess"],
+  C: ["pillows", "bench", "plants", "drawings", "samovar", "rocking", "lanterns", "metronome", "barrels"],
+  O: ["clock", "poster", "phone", "chair", "graffiti", "drawings", "globe", "metronome", "thermometer", "armchair"],
+  M: ["stamps", "queue", "clock", "typewriter", "abacus", "scales", "poster", "speaker", "metronome", "counting"],
+  I: ["moss", "plants", "roots", "beehive", "mechflowers", "birdcage", "drone", "bench", "lanterns", "appletree"]
+};
+function furnish(ctx, r, s, rm, def, v, gen) {
+  var fl = ctx.fl, L = ctx.L, F = ctx.F, special = !!def.kind, era = eraOf(L);
   if (def.kind === "supply") { ctx.addObj("supply", rm.id, { prof: null }); return; }
   if (def.kind === "trial") { ctx.addObj("trial", rm.id, { seed: r.int(1, 99999), prize: r.pick(["suit", "suit", "bp", "kit"]) }); return; }
-  var placed = 0;
-  for (var ot in def.obj) {
-    if (!r.chance(def.obj[ot])) continue;
+  var area = (rm.x1 - rm.x0 + 1) * (rm.y1 - rm.y0 + 1), maxObj = Math.max(2, Math.floor(area / 3)), placed = 0;
+  var lootTag = (v && v.loot) || def.loot || "store";
+  var objs = {}, k0;
+  for (k0 in def.obj) objs[k0] = def.obj[k0];
+  if (v && v.obj) for (k0 in v.obj) objs[k0] = v.obj[k0];
+  for (var ot in objs) {
+    if (placed >= maxObj) break;
+    if (!r.chance(objs[ot])) continue;
     var extra = null;
     if (ot === "comp") extra = { kind: def.comp || r.pick(["archive", "medrec", "stock"]), seed: r.int(1, 99999), locked: r.chance((LAB.COMPS[def.comp] || {}).rank >= 2 ? 0.5 : 0.15) };
     if (ot === "safe") extra = { code: String(r.int(1000, 9999)), locked: true };
@@ -393,19 +432,36 @@ function furnish(ctx, r, s, rm, def) {
     var o = ctx.addObj(ot, rm.id, extra);
     if (!o) continue;
     placed++;
-    if (LAB.CONTAINERS.indexOf(ot) >= 0) o.loot = annexLoot(r, L, F, def.loot || "store", ot);
+    if (LAB.CONTAINERS.indexOf(ot) >= 0) o.loot = special || ot === "safe" || r.chance(0.55) ? annexLoot(r, L, F, lootTag, ot, !special) : [];
     if (ot === "safe") {
-      /* код сейфа — в записке где-то на этаже */
       var mains = fl.rooms.filter(function (m, i) { return m && i < 12 && i !== fl.secret; }).map(function (m) { return m.id; });
       ctx.addItem({ kind: "note", note: "safe", code: o.code, room: rm.name }, r.pick(mains));
     }
     if (ot === "comp" && extra.kind === "main") o.loot = annexLoot(r, L, F, "classified", "desk");
   }
-  /* пустой кабинет — хотя бы стеллаж */
-  if (!placed) { var o2 = ctx.addObj(def.kind === "hazard" ? "crate" : "shelf", rm.id, null); if (o2) o2.loot = annexLoot(r, L, F, def.loot || "store", "shelf"); }
-  /* на полу — мелочь своей глубины */
-  if (r.chance(0.35)) { var x = annexLoot(r, L, F, def.loot || "store", "floor")[0]; if (x && x.kind !== "weapon" && x.kind !== "armor") ctx.addItem(x, rm.id); }
-  /* в радиоактивных и горячих зонах — твари, которых изменило излучение; у режимных — охрана */
+  /* вещи обстановки, с которыми можно что-то сделать: свои у типа, у варианта и у состояния */
+  var fxs = {}, fk;
+  if (def.fx) for (fk in def.fx) fxs[fk] = def.fx[fk];
+  if (v && v.fx) for (fk in v.fx) fxs[fk] = v.fx[fk];
+  if (rm.state === "lived" && !fxs.bunk) fxs.bunk = 0.8;
+  if (rm.state === "barricade") fxs.barricade = 1;
+  var have = {};
+  if (LAB.FIX) for (fk in fxs) {
+    if (placed >= maxObj + 1) break;
+    if (LAB.FIX.T[fk] && r.chance(fxs[fk])) { if (ctx.addObj("fx", rm.id, { fx: fk, seed: r.int(1, 99999) })) { placed++; have[fk] = 1; } }
+  }
+  /* одна-две вещи «откуда угодно» — у каждого помещения своя мелочь */
+  var gl = (GENERIC[era] || GENERIC.K).filter(function (q) { return LAB.FIX && LAB.FIX.T[q] && !have[q]; });
+  var nG = special ? 0 : (r.chance(0.6) ? 1 : 0) + (s.big && r.chance(0.6) ? 1 : 0);
+  for (var gi = 0; gi < nG && gl.length && placed < maxObj + 1; gi++) {
+    var gq = gl.splice(r.int(0, gl.length - 1), 1)[0];
+    if (ctx.addObj("fx", rm.id, { fx: gq, seed: r.int(1, 99999) })) placed++;
+  }
+  if (!placed) { var o2 = ctx.addObj(def.kind === "hazard" ? "crate" : "shelf", rm.id, null); if (o2) o2.loot = annexLoot(r, L, F, lootTag, "shelf", !special); }
+  /* состояние: обысканное — почти пустое; брошенное в спешке — с забытыми вещами */
+  if (rm.state === "ransacked") fl.objs.forEach(function (q) { if (q.room === rm.id && q.loot && q.loot.length) q.loot = q.loot.filter(function () { return r.chance(0.35); }); });
+  if (rm.state === "hurry" && r.chance(0.7)) { var hv = annexLoot(r, L, F, r.pick(["home", "smoke", "food", "paper"]), "floor", true)[0]; if (hv && hv.kind !== "weapon" && hv.kind !== "armor") ctx.addItem(hv, rm.id); }
+  if (r.chance(special ? 0.4 : 0.15)) { var x = annexLoot(r, L, F, lootTag, "floor", !special)[0]; if (x && x.kind !== "weapon" && x.kind !== "armor") ctx.addItem(x, rm.id); }
   var lev = LAB.LEVELS[L];
   if ((rm.rad >= 3 || def.kind === "locked") && r.chance(def.kind === "hazard" ? 0.7 : 0.4)) {
     var pool = (lev.foes || []).filter(function (fid) {
@@ -416,13 +472,63 @@ function furnish(ctx, r, s, rm, def) {
     if (pool.length && c) ctx.makeFoe(r.pick(pool), c[0], c[1], rm.id, { annex: true }, r);
   }
 }
+/* Записки помещений: у хозяина кабинета — чаще; лежат в ящиках и шкафах,
+   в карманах одежды на вешалке, под подушками и просто на полу. */
+var NOTE_FX = { table: 1, nightstand: 1, dutydesk: 1, hangers: 1, mailbag: 1, sofa: 1, bunk: 1, counter: 1, ledger: 1 };
+function placeNotes(ctx, r, gen, spots) {
+  var fl = ctx.fl, rooms = spots.map(function (q) { return fl.rooms[q.id]; }).filter(function (m) { return m && m.num; });
+  var people = gen.people, extraK = 0;
+  var anyone = function (not) {
+    var list = people.filter(function (q) { return q.p !== not; });
+    if (list.length && r.chance(0.8)) return r.pick(list).p;
+    return gen.person(420 + (extraK++ % 90), r.pick(["инженер", "лаборант", "техник", "оператор", "охранник", "диспетчер"]));
+  };
+  spots.forEach(function (sp) {
+    var rm = fl.rooms[sp.id], def = ROOMS[rm.type] || {};
+    if (!rm || def.kind === "supply" || def.kind === "trial" || def.kind === "decon") return;
+    var own = people.filter(function (q) { return q.rm === rm; })[0];
+    var n = own ? (r.chance(0.35) ? 0 : r.chance(0.7) ? 1 : 2) : (r.chance(0.78) ? 0 : 1);
+    if (rm.state === "lived" && n < 2) n++;
+    for (var i = 0; i < n; i++) {
+      var au = own && (i === 0 || r.chance(0.5)) ? own.p : anyone(null);
+      var to = anyone(au), s3 = anyone(au);
+      var others = rooms.filter(function (m) { return m !== rm; });
+      var src = gen.noteSrc(au, to, s3, others, rm.num || 0);
+      if (!src) return;
+      /* куда положить: ящик, шкаф, карман, под подушку — или на пол */
+      var holders = fl.objs.filter(function (o) { return o.room === rm.id && ((o.loot && o.type !== "safe" && o.type !== "rack") || (o.type === "fx" && NOTE_FX[o.fx])); });
+      if (holders.length && r.chance(0.75)) {
+        var hd = r.pick(holders);
+        if (hd.type === "fx") (hd.notes = hd.notes || []).push(src);
+        else hd.loot.push(Object.assign({ kind: "note" }, src));
+      } else ctx.addItem(Object.assign({ kind: "note" }, src), rm.id);
+    }
+  });
+}
+/* Обстановка основных помещений этажа — по словам их описаний (fixtures_data.js);
+   и у каждого основного помещения своя подробность. */
+function placeMainFixtures(ctx, r, gen) {
+  var fl = ctx.fl;
+  for (var s = 0; s < fl.rooms.length; s++) {
+    var rm = fl.rooms[s];
+    if (!rm || rm.annex) continue;
+    if (LAB.FIX && LAB.FIX.forRoom) {
+      var list = LAB.FIX.forRoom(rm.type, r);
+      for (var i = 0; i < list.length; i++) ctx.addObj("fx", rm.id, { fx: list[i], seed: r.int(1, 99999) });
+    }
+    if (gen && rm.type !== "secret" && LAB.ROOMS[rm.type]) {
+      var dt = gen.mainDetail(rm);
+      rm.desc = LAB.ROOMS[rm.type].desc + (dt ? " " + dt : "");
+    }
+  }
+}
 function standIn(fl, rm) {
-  var cand = [], W = LAB.W;
+  var cand = [], W = LAB.W, busy = {};
+  fl.items.forEach(function (q) { if (q.x >= rm.x0 && q.x <= rm.x1 && q.y >= rm.y0 && q.y <= rm.y1) busy[q.y * W + q.x] = 1; });
+  fl.foes.forEach(function (q) { if (q.x >= rm.x0 && q.x <= rm.x1 && q.y >= rm.y0 && q.y <= rm.y1) busy[q.y * W + q.x] = 1; });
   for (var y = rm.y0; y <= rm.y1; y++) for (var x = rm.x0; x <= rm.x1; x++) {
-    if (fl.objAt[y * W + x]) continue;
-    if (fl.items.some(function (q) { return q.x === x && q.y === y; })) continue;
-    if (fl.foes.some(function (q) { return q.x === x && q.y === y; })) continue;
-    /* не у самой двери */
+    var i = y * W + x;
+    if (fl.objAt[i] || busy[i]) continue;
     var nearDoor = [[1, 0], [-1, 0], [0, 1], [0, -1]].some(function (v) { return fl.t[(y + v[1]) * W + x + v[0]] === T.DOOR; });
     if (!nearDoor) cand.push([x, y]);
   }

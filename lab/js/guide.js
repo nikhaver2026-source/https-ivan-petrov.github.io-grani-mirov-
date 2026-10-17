@@ -274,5 +274,5 @@ function armors() {
 }
 
 LAB.guide = { open: open, keyboard: keyboard, chapters: CH, keys: KB };
-LAB.CREDITS_TEXT = "Подземная лаборатория. Звуки — свободные записи авторов Freesound, OpenGameArt, Kenney, BigSoundBank, Freedoom и Endless Sky (CC0 и CC BY; список — в файле sounds/CREDITS.md). Речь — " + (LAB.desktop ? "голос вашего чтеца экрана или синтезатора компьютера" : "синтезатор вашего телефона") + " или встроенный eSpeak NG. Спасибо, что слушали.";
+LAB.CREDITS_TEXT = "Подземная лаборатория. Звуки — свободные записи авторов Freesound, OpenGameArt, Kenney, BigSoundBank, Freedoom и Endless Sky (CC0 и CC BY; список — в файле sounds/CREDITS.md). Музыка — Кевин Маклауд (incompetech.com), PeriTune, Лоренс Гудхарт и Робин Альчиаторе (Musopen): Дебюсси, Сати и Пахельбель в капсулах восстановления. Речь — " + (LAB.desktop ? "голос вашего чтеца экрана или синтезатора компьютера" : "синтезатор вашего телефона") + " или встроенный eSpeak NG. Спасибо, что слушали.";
 })();

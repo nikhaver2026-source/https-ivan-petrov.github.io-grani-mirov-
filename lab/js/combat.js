@@ -166,6 +166,7 @@ function sees(f) {
 function hears(f) {
   var n = G().noise;
   if (gm().armorSpecial("stealth")) n = Math.round(n * 0.6);
+  if (LAB.ach && LAB.ach.has("quiet")) n -= 1;
   if (G().st.cloak > 0) n = Math.round(n * 0.3);
   var d = dist(f, heroPos());
   var bonus = has(f, "deaf") ? 3 : has(f, "tracker") ? 5 : 0;
@@ -1524,6 +1525,7 @@ function kill(f, quiet) {
   var g = G(), fs = CUR().fs;
   fs.foes[f.id] = { dead: true };
   g.stats.kills++;
+  if (LAB.ach) { LAB.ach.ev("kill", 1); if (f.kind === "mech") LAB.ach.ev("kill_mech", 1); if (f.boss) LAB.ach.ev("boss", 1); }
   A("foeDeath", f);
   LAB.vib(30);
   var xp = Math.round((f.base.xp || 10) * (1 + 0.1 * (f.lvl - 1)) * (f.aff ? 1 + 0.25 * f.aff.length : 1) * (f.boss ? 6 : 1));

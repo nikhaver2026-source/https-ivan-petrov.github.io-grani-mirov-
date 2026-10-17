@@ -48,7 +48,8 @@ function depthSellK() { var k = gm().priceK ? gm().priceK() : 1; return 1 + (k -
 function profBuy(prof, cat) { var p = LAB.SUPPLY_PROFILES[prof]; return p && p.buy && p.buy[cat] ? p.buy[cat] : 1; }
 /* Торговец-выживший скупает своё дороже: медик — лекарства, инженер — детали, повар — еду. */
 var NPC_BUY = { med: { med: 1.25, protect: 1.15 }, food: { food: 1.25 }, parts: { part: 1.25, tool: 1.15 }, ammo: { ammo: 1.25, weapon: 1.15 }, all: { valuable: 1.15 } };
-function ctxK(ctx, cat) {
+function ctxK(ctx, cat) { return ctxK0(ctx, cat) * (LAB.ach && LAB.ach.has("trader") ? 1.1 : 1); }
+function ctxK0(ctx, cat) {
   if (!ctx) return 1;
   if (ctx.prof) return profBuy(ctx.prof, cat);
   if (ctx.npc && NPC_BUY[ctx.npc] && NPC_BUY[ctx.npc][cat]) return NPC_BUY[ctx.npc][cat];

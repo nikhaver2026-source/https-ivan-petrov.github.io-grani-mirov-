@@ -46,7 +46,7 @@ function menu(title, items, opts) {
   /* то же окно уже открыто ниже (пункт «Назад» открывает родителя заново) —
      заменяем его, а не копим: «назад» и пункт «Назад» ведут в одно место */
   for (var si = stack.length - 1; si >= 0; si--) if (stack[si].title === title && !stack[si].root) { stack.splice(si); break; }
-  var w = { title: title, items: items, i: Math.max(0, Math.min(items.length - 1, opts.focus || 0)), keep: !!opts.keep, root: !!opts.root, rebuild: opts.rebuild || null, onClose: opts.onClose || null, silentOpen: !!opts.silent, intro: opts.intro || "" };
+  var w = { title: title, items: items, i: Math.max(0, Math.min(items.length - 1, opts.focus || 0)), keep: !!opts.keep, root: !!opts.root, rebuild: opts.rebuild || null, onClose: opts.onClose || null, onFocus: opts.onFocus || null, silentOpen: !!opts.silent, intro: opts.intro || "" };
   stack.push(w);
   if (LAB.input && LAB.input.stopAll) LAB.input.stopAll(); /* ходьба и очередь с удержания — стоп */
   LAB.UI.open();
@@ -54,6 +54,8 @@ function menu(title, items, opts) {
   var hl = LAB.tutor ? LAB.tutor.level() : 2;
   if (!w.silentOpen) say(title + ". " + (w.intro ? w.intro + " " : "") + itemText(w.items[w.i]) + (S.verbose && hl >= 1 && (hl >= 3 || !G().tut.win) ? LAB.K(". Свайп вправо и влево — пункты, двойное касание — выбрать, два пальца вниз — закрыть.", ". Стрелки вверх и вниз — пункты, Enter — выбрать, Escape — закрыть.") : ""));
   if (gm() && gm().entered) G().tut.win = 1;
+  /* (1.3) окну важно, какой пункт перед игроком: книги капсулы считают прочитанные страницы */
+  if (w.onFocus) LAB.safe(function () { w.onFocus(w.i); });
   return w;
 }
 function closeTop(silent) {
@@ -113,6 +115,7 @@ function move(step) {
   w.i = (w.i + step + n) % n;
   LAB.UI.move();
   render();
+  if (w.onFocus) LAB.safe(function () { w.onFocus(w.i); });
   /* пока записка читается, по её абзацам ходят молча — чтение не обрывается */
   if (w.note && LAB.Speech.noteBusy()) return;
   say(itemText(w.items[w.i]));
@@ -276,6 +279,7 @@ function pages(list, opts) {
 }
 
 function mainMenu(silentIntro) {
+  if (LAB.capsule && LAB.capsule.reset) LAB.safe(LAB.capsule.reset); /* музыка капсулы стихает */
   if (gm() && gm().entered) { gm().autosave(); gm().entered = false; }
   if (gm()) { gm().session = (gm().session || 0) + 1; gm().paused = false; gm().descending = false; }
   LAB.safe(function () { LAB.Speech.later = []; LAB.Speech.held = []; clearTimeout(LAB.Speech.heldTimer); LAB.Speech.heldTimer = null; });
@@ -502,6 +506,7 @@ function inventory(focus) {
     { label: "Архив документов: " + g.noteList.length, fn: notesMenu },
     { label: "Задания: " + g.quests.filter(function (q) { return !q.done; }).length, fn: questsMenu },
     { label: "Журнал", fn: journalMenu },
+    { label: "Достижения" + (LAB.ach && g.ach ? ": " + Object.keys(g.ach.d || {}).length + " из " + LAB.ach.LIST.length : ""), fn: function () { if (LAB.ach) LAB.ach.menu(); } },
     { label: "Импланты: " + g.implants.length + ", образцы: " + Object.keys(g.samples).length, fn: implants },
     { label: "Кредиты: " + g.credits, info: true, keep: true, fn: function () { say("Кредиты: " + g.credits + ". Тратятся в торговых терминалах и у выживших."); } }
   ];
@@ -757,7 +762,7 @@ function note(title, text, after, opts) {
   if (curp.trim()) paras.push(curp.trim());
   var items = paras.map(function (p) { return { label: p, keep: true, fn: function () { say(p); } }; });
   if (opts.extra) items = items.concat(opts.extra);
-  items.push({ label: "Закрыть", fn: function () { LAB.Speech.endNote(); if (after) after(); else if (!top() && screen === "game") say("Игра."); } });
+  items.push({ label: opts.closeLabel || "Закрыть", fn: function () { LAB.Speech.endNote(); if (after) after(); else if (!top() && screen === "game") say("Игра."); } });
   A("play", "paper");
   var w = menu(title, items, { silent: true });
   if (w) w.note = true;

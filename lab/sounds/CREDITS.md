@@ -223,6 +223,12 @@ BSD 3-Clause (Freedoom) и общественное достояние (част
 
 Файлы: `anchor_action.flac`, `magnet_on.flac`, `magnet_start.flac`, `magnet_on.flac`, `anchor_action.flac`, `magnet_start.flac`
 
+## Avec Soin
+
+Автор: Kevin MacLeod (incompetech.com). Лицензия: CC BY 3.0. Источник: https://commons.wikimedia.org/wiki/File:Avec_Soin_(ISRC_USUAN1100860).mp3
+
+Файлы: `Avec_Soin_%28ISRC_USUAN1100860%29.mp3`
+
 ## Basic Fire whoosh
 
 Автор: LookIMadeAThing. Лицензия: CC0 1.0. Источник: https://freesound.org/s/260554/
@@ -325,6 +331,12 @@ BSD 3-Clause (Freedoom) и общественное достояние (част
 
 Файлы: `54047_533680-hq.ogg`
 
+## Canon in D Major
+
+Автор: Johann Pachelbel; исполняет Kevin MacLeod (incompetech.com). Лицензия: CC BY 3.0. Источник: https://commons.wikimedia.org/wiki/File:Canon_in_D_Major_(ISRC_USUAN1100301).mp3
+
+Файлы: `Canon_in_D_Major_%28ISRC_USUAN1100301%29.mp3`
+
 ## Cat Growling and Hissing
 
 Автор: dinoroki. Лицензия: CC0 1.0. Источник: https://freesound.org/s/679954/
@@ -384,6 +396,12 @@ BSD 3-Clause (Freedoom) и общественное достояние (част
 Автор: AnthonyChan0. Лицензия: CC0 1.0. Источник: https://freesound.org/s/265247/
 
 Файлы: `265247_2886479-hq.ogg`
+
+## Clair de lune
+
+Автор: Claude Debussy; исполняет Laurens Goedhart. Лицензия: CC BY 3.0. Источник: https://commons.wikimedia.org/wiki/File:Clair_de_lune_(Claude_Debussy)_Suite_bergamasque.ogg
+
+Файлы: `Clair_de_lune_%28Claude_Debussy%29_Suite_bergamasque.ogg`
 
 ## Clean fast Swoosh
 
@@ -516,6 +534,12 @@ BSD 3-Clause (Freedoom) и общественное достояние (част
 Автор: qubodup. Лицензия: CC0 1.0. Источник: https://freesound.org/s/222517/
 
 Файлы: `222517_71257-hq.ogg`
+
+## Dreamer
+
+Автор: Kevin MacLeod (incompetech.com). Лицензия: CC BY 3.0. Источник: https://commons.wikimedia.org/wiki/File:Dreamer_(ISRC_USUAN1600043).mp3
+
+Файлы: `Dreamer_%28ISRC_USUAN1600043%29.mp3`
 
 ## Drink gulp
 
@@ -799,6 +823,12 @@ BSD 3-Clause (Freedoom) и общественное достояние (част
 
 Файлы: `366837_6512973-hq.ogg`
 
+## Guitar Gentle
+
+Автор: PeriTune (peritune.com). Лицензия: CC BY 4.0. Источник: https://peritune.com/music/PerituneMaterial_Guitar_Gentle_an.mp3
+
+Файлы: `PerituneMaterial_Guitar_Gentle_an.mp3`
+
 ## Gulping
 
 Автор: swordofkings128. Лицензия: CC0 1.0. Источник: https://freesound.org/s/397611/
@@ -822,6 +852,12 @@ BSD 3-Clause (Freedoom) и общественное достояние (част
 Автор: TRP. Лицензия: CC0 1.0. Источник: https://freesound.org/s/717585/
 
 Файлы: `717585_97550-hq.ogg`
+
+## Gymnopédie No. 1
+
+Автор: Erik Satie; исполняет Robin Alciatore (Musopen). Лицензия: общественное достояние. Источник: https://commons.wikimedia.org/wiki/File:Erik_Satie_-_gymnopedies_-_la_1_ere._lent_et_douloureux.ogg
+
+Файлы: `Erik_Satie_-_gymnopedies_-_la_1_ere._lent_et_douloureux.ogg`
 
 ## Heart of Machine
 
@@ -1159,6 +1195,12 @@ BSD 3-Clause (Freedoom) и общественное достояние (част
 
 Файлы: `clank1.flac`, `mechanical1.flac`, `mechanical2.flac`
 
+## Meditation Impromptu 02
+
+Автор: Kevin MacLeod (incompetech.com). Лицензия: CC BY 3.0. Источник: https://commons.wikimedia.org/wiki/File:Meditation_Impromptu_02_(ISRC_USUAN1100162).mp3
+
+Файлы: `Meditation_Impromptu_02_%28ISRC_USUAN1100162%29.mp3`
+
 ## Metal Boom
 
 Автор: Johnnyfarmer. Лицензия: CC0 1.0. Источник: https://freesound.org/s/209772/
@@ -1327,6 +1369,12 @@ BSD 3-Clause (Freedoom) и общественное достояние (част
 
 Файлы: `687242_11030713-hq.ogg`
 
+## Music-box Gentle2
+
+Автор: PeriTune (peritune.com). Лицензия: CC BY 4.0. Источник: https://peritune.com/wp-content/uploads/2017/09/PerituneMaterial_Music-box_Gentle2.mp3
+
+Файлы: `PerituneMaterial_Music-box_Gentle2.mp3`
+
 ## Mutant Scream
 
 Автор: scorpion67890. Лицензия: CC0 1.0. Источник: https://freesound.org/s/396797/
@@ -1464,6 +1512,12 @@ BSD 3-Clause (Freedoom) и общественное достояние (част
 Автор: OpenGameArt. Лицензия: CC0 1.0. Источник: https://opengameart.org/content/realm-of-torment
 
 Файлы: `realm_of_torment_1.flac`
+
+## Reminiscing
+
+Автор: Kevin MacLeod (incompetech.com). Лицензия: CC BY 3.0. Источник: https://commons.wikimedia.org/wiki/File:Reminiscing_(ISRC_USUAN1100097).mp3
+
+Файлы: `Reminiscing_%28ISRC_USUAN1100097%29.mp3`
 
 ## Retro computer noise
 
@@ -1765,6 +1819,12 @@ BSD 3-Clause (Freedoom) и общественное достояние (част
 
 Файлы: `427979_2247456-hq.ogg`
 
+## Silver Blue Light
+
+Автор: Kevin MacLeod (incompetech.com). Лицензия: CC BY 3.0. Источник: https://commons.wikimedia.org/wiki/File:Silver_Blue_Light_(ISRC_USUAN1100718).mp3
+
+Файлы: `Silver_Blue_Light_%28ISRC_USUAN1100718%29.mp3`
+
 ## Single Pistol Gunshot 3.3
 
 Автор: morganpurkis. Лицензия: CC0 1.0. Источник: https://freesound.org/s/392229/
@@ -1897,6 +1957,12 @@ BSD 3-Clause (Freedoom) и общественное достояние (част
 
 Файлы: `403253_7809148-hq.ogg`
 
+## Teddy Bear Waltz
+
+Автор: Kevin MacLeod (incompetech.com). Лицензия: CC BY 3.0. Источник: https://commons.wikimedia.org/wiki/File:Teddy_Bear_Waltz_(ISRC_USUAN1700064).mp3
+
+Файлы: `Teddy_Bear_Waltz_%28ISRC_USUAN1700064%29.mp3`
+
 ## The Hive
 
 Автор: Kevin MacLeod (incompetech.com). Лицензия: CC BY 3.0. Источник: https://commons.wikimedia.org/wiki/File:The_Hive_(ISRC_USUAN1100711).mp3
@@ -1974,6 +2040,12 @@ BSD 3-Clause (Freedoom) и общественное достояние (част
 Автор: Kodack. Лицензия: CC0 1.0. Источник: https://freesound.org/s/253735/
 
 Файлы: `253735_2276808-hq.ogg`
+
+## Wholesome
+
+Автор: Kevin MacLeod (incompetech.com). Лицензия: CC BY 4.0. Источник: https://commons.wikimedia.org/wiki/File:Wholesome_by_Kevin_MacLeod.ogg
+
+Файлы: `Wholesome_by_Kevin_MacLeod.ogg`
 
 ## zombie growl
 

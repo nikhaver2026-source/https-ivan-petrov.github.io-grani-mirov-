@@ -145,6 +145,9 @@ function enterFloor(L, F, how, silent) {
   if (CUR.fs) syncFloorState();
   G.stair = null;
   G.L = L; G.F = F;
+  /* (1.3) достижения: новые этажи и уровни */
+  G.visited = G.visited || {};
+  if (!G.visited[L + "-" + F]) { G.visited[L + "-" + F] = 1; if (LAB.ach) { LAB.ach.ev("floor", 1); LAB.ach.ev("level", L); } }
   var fl = LAB.getFloor(G.seed, L, F), fs = fsFor(L, F);
   CUR.fl = fl; CUR.fs = fs; CUR.key = L + "-" + F; CUR.room = -9; CUR.focus = null; CUR.corr = -1;
   CUR.seen = decodeSeen(fs.seen);
@@ -186,6 +189,7 @@ function objName(o) {
   if (o.type === "terminal") return { sec: "Терминал безопасности", sci: "Научный терминал", eng: "Инженерный терминал" }[o.sub] || "Терминал";
   if (o.type === "hq") return "Штаб: " + LAB.FACTIONS[o.faction].n;
   if (o.type === "comp" && LAB.COMPS) return (LAB.COMPS[o.kind] || LAB.COMPS.archive).n;
+  if (o.type === "fx" && LAB.FIX && LAB.FIX.T[o.fx]) return LAB.FIX.T[o.fx].n;
   if (o.type === "stairs_down" && o.blocked) return "Лестница вниз (завалена)";
   if (o.type === "stairs_up" && o.blocked) return "Лестница вверх (завалена)";
   if (o.type === "reactor" && (G.done || (!o.final && G.cores && G.cores["used" + G.L]))) return "Пульт реактора (ключ повёрнут)";
@@ -334,6 +338,7 @@ function noteText(it, L, F) {
   if (it.note === "safe") return LAB.safeNote(it.code, it.room, h);
   if (it.note === "secret") return LAB.secretNote(it.room, it.side, h);
   if (it.note === "depth" && LAB.depths) return LAB.depths.noteText(it, L, F);
+  if (it.note === "agen" && LAB.agen) return LAB.agen.noteText(it); /* записки кабинетов: из частей, с людьми этажа (1.3) */
   if (it.note === "riddle") { var rd = riddleFor(it.rid, it.L || L); return LAB.riddleNote ? LAB.riddleNote(rd, it.room, h) : { t: "Отгадка", x: "Замок помещения «" + it.room + "»: ответ — «" + rd.a[0] + "»." }; }
   return { t: "Записка", x: "Неразборчиво." };
 }
@@ -560,7 +565,9 @@ function bodyMinutes(min, asleep) {
   var b = body();
   if (asleep) { b.tox = Math.max(0, b.tox - min / 4); b.rad = Math.max(0, b.rad - min / 40); return; } /* сон в капсуле: раствор кормит и выводит, предупреждений нет */
   b.food -= min / HUNGER_MIN;
-  b.wake -= min / 12;
+  /* выспались в капсуле (восемь часов и больше) — бодрость какое-то время падает вдвое медленнее */
+  b.wake -= min / 12 * (G.st.restedMin > 0 ? 0.5 : 1);
+  if (G.st.restedMin > 0) G.st.restedMin = Math.max(0, G.st.restedMin - min);
   if (b.tox > 0) b.tox -= min / (b.food >= 50 ? 4 : 6);
   if (b.rad > 0) b.rad -= min / 180; /* радионуклиды выводятся сами очень медленно */
   clampBody(b);
@@ -606,7 +613,10 @@ function aimPenalty() {
   if (b.tox >= 80) p += 0.1; else if (b.tox >= 50) p += 0.06;
   if (b.neuro >= 85) p += 0.05;
   if (b.rad >= 70) p += 0.08; else if (b.rad >= 45) p += 0.04;
-  return p;
+  /* тренировки на стрельбище и умение «Твёрдая рука» (1.3) */
+  var tr = G.train && G.train.aim ? Math.min(5, Math.floor(G.train.aim / 3)) * 0.01 : 0;
+  if (LAB.ach && LAB.ach.has("sharp")) p *= 0.6;
+  return p - tr;
 }
 game.aimPenalty = aimPenalty;
 /* Применить к телу: еда, питьё, лекарства. Возвращает фразы итога. */
@@ -758,7 +768,12 @@ function giveItem(it, quiet) {
         var dcat = docCat(src, nt);
         G.noteList.push({ id: nid, src: src, t: nt.t, a: nt.a || "", story: !!nt.story, L: G.L, F: G.F, code: it.note === "safe" ? it.code : undefined, pl: placeName(G.x, G.y), cat: dcat });
         G.stats.notes++; gainXP(4);
+        if (LAB.ach) LAB.ach.ev("note", 1);
         if (LAB.workshop) LAB.workshop.fromDoc(nid, dcat);
+        /* записок из кабинетов — тысячи: в архиве хранятся последние шестьсот, чтобы запись игры не разрасталась */
+        if (it.note === "agen") {
+          var agn = 0; for (var qi = G.noteList.length - 1; qi >= 0; qi--) if (G.noteList[qi].src && G.noteList[qi].src.note === "agen" && ++agn > 600) G.noteList.splice(qi, 1);
+        }
       }
       if (it.code) G.codes[it.code] = it.room;
       break;
@@ -1037,9 +1052,10 @@ function roomCheck(full, run, mute) {
   if (r.type === "secret") CUR.fl.doors.forEach(function (d) { if (d.lock && d.lock.type === "secret" && (d.other === r.id || d.room === r.id)) CUR.fs.secrets[d.id] = 1; });
   var first = !CUR.fs.objs["room" + r.id];
   CUR.fs.objs["room" + r.id] = 1;
+  if (first && r.annex && LAB.ach) LAB.ach.ev("room", 1);
   var parts = [r.name + "."];
   if (first || full) {
-    parts.push(LAB.ROOMS[r.type].desc);
+    parts.push(r.desc || LAB.ROOMS[r.type].desc);
     var ex = roomExits(r);
     if (ex) parts.push(ex);
   }
@@ -1110,7 +1126,7 @@ function lookAround() {
   var r = roomAt(G.x, G.y), parts = [];
   if (r) {
     var st = roomStuff(r, false, true); if (st) parts.push(st);
-    parts.push(r.name + ". " + LAB.ROOMS[r.type].desc);
+    parts.push(r.name + ". " + (r.desc || LAB.ROOMS[r.type].desc));
     var ex = roomExits(r); if (ex) parts.push(ex);
   } else if (LAB.corrOf(CUR.fl, G.x, G.y) && cellType(G.x, G.y) !== T.DOOR) {
     parts.push(corridorText(LAB.corrOf(CUR.fl, G.x, G.y), false));
@@ -1500,6 +1516,7 @@ function secretMenu(d) {
 function revealSecret(d) {
   CUR.fs.secrets[d.id] = 1; CUR.fs.doors[d.id] = 2;
   G.stats.secrets++;
+  if (LAB.ach) LAB.ach.ev("secret", 1);
   A("play", "secret_open");
   LAB.UI.fanfare();
   say("Панель поддалась — за ней тайный проход! Найдено тайников: " + G.stats.secrets + ".");
@@ -1517,6 +1534,8 @@ function objMenu(o) {
   A("objUse", o);
   if (LAB.depths && LAB.depths.objMenu(o)) return; /* установки глубин под Ядром */
   if (LAB.zones && LAB.zones.objMenu(o)) return; /* кабинеты у коридоров: полки, доски, компьютеры, щиты (1.3) */
+  if (o.type === "fx" && LAB.fixtures && LAB.fixtures.menu(o)) return; /* обстановка: диваны, турникеты, плиты… (1.3) */
+  if (o.type === "corpse" && LAB.fixtures) { LAB.fixtures.corpseMenu(o); return; } /* тело: осмотреть, карманы, одежда, жетон */
   switch (o.type) {
     case "stairs_down": case "stairs_up": {
       var down = o.type === "stairs_down";
@@ -1536,7 +1555,7 @@ function objMenu(o) {
       break;
     case "wake":
       items.push({ label: "Ощупать капсулу", fn: function () { say("Ваша криокапсула. Крышка откинута, внутри ещё держится холод. На табличке выбито: «Испытуемый номер семь». Выход на поверхность закрыт карантином: путь один — вниз."); } });
-      items.push({ label: "Отдохнуть в капсуле", fn: function () { rest(o); } });
+      items.push({ label: "Отдохнуть в капсуле", fn: function () { if (LAB.capsule) LAB.capsule.menu(o); else rest(o); } });
       break;
     case "capsule":
       if (LAB.capsule) { LAB.capsule.menu(o); return; } /* музыка, чтение, сны (1.3) */
@@ -1565,7 +1584,7 @@ function objMenu(o) {
     case "coffee": case "drinks": if (LAB.office) { LAB.office.drinkMenu(o); return; } break;
     case "snacks": if (LAB.office) { LAB.office.snackMenu(o); return; } break;
   }
-  items.push({ label: "Осмотреть", fn: function () { say(name + ". " + (LAB.OBJ[o.type] ? LAB.OBJ[o.type].desc : "")); } });
+  items.push({ label: "Осмотреть", fn: function () { say(LAB.fixtures ? LAB.fixtures.examine(o) : name + ". " + (LAB.OBJ[o.type] ? LAB.OBJ[o.type].desc : "")); } });
   UIx("menu", name, items);
 }
 game.objMenu = objMenu;
@@ -2290,7 +2309,7 @@ function containerMenu(o) {
   } else {
     items.push({ label: o.type === "corpse" ? "Обыскать тело" : "Обыскать", fn: function () { openContainer(o); } });
   }
-  items.push({ label: "Осмотреть", fn: function () { say(name + ". " + LAB.OBJ[o.type].desc); } });
+  items.push({ label: "Осмотреть", fn: function () { say(LAB.fixtures ? LAB.fixtures.examine(o) : name + ". " + LAB.OBJ[o.type].desc); } });
   UIx("menu", name, items);
 }
 /* Набор кода сейфа: четыре диска, свайпы вверх и вниз — цифра. */
@@ -2324,7 +2343,7 @@ function openContainer(o) {
   A("container", o.type);
   var loot = (o.loot || []).slice();
   loot.forEach(function (it, k) { if (!it.id) it.id = o.id + "-" + k; }); /* у каждой вещи свой номер: записки из ящиков не сливаются */
-  if (o.type === "safe") gainXP(10);
+  if (o.type === "safe") { gainXP(10); if (LAB.ach) LAB.ach.ev("safe", 1); }
   if (!loot.length) { say(objName(o) + ": ничего полезного."); return; }
   var parts = loot.map(function (it) { return giveItem(it); });
   say("Найдено: " + parts.join(" "));
@@ -2559,6 +2578,7 @@ function npcMenu(n) {
     var tr2 = LAB.PROFS[n.prof] && LAB.PROFS[n.prof].trade;
     if (tr2) items.push({ label: "Торговля", fn: function () { tradeMenu(n, tr2); } });
     if (LAB.workshop && LAB.workshop.isEng(n)) items.push({ label: "Спросить о мастерской", fn: function () { LAB.workshop.npcTip(n); } });
+    var bdg = LAB.fixtures && LAB.fixtures.badgeItem ? LAB.fixtures.badgeItem(n) : null; if (bdg) items.push(bdg);
     items.push({ label: "Спросить дорогу", fn: function () { navigate(false, true); } });
   }
   items.push({ label: "Попрощаться", fn: function () { say(n.robot ? "До свидания. Протокол помощи ожидает." : "Береги себя, седьмой.", { robot: !!n.robot }); } });
@@ -2641,6 +2661,7 @@ function completeQuest(q, n) {
   if (q.type === "fetch") G.inv[q.item] -= q.need;
   q.done = true;
   n.stage = (n.stage || 0) + 1;
+  if (LAB.ach) LAB.ach.ev("quest", 1);
   G.credits += q.reward.cr;
   LAB.UI.fanfare();
   say("Задание выполнено! " + q.giverName + " благодарит. Кредитов: плюс " + q.reward.cr + ".");
@@ -2684,7 +2705,22 @@ function navTargets() {
   var p = nearestObj(["positron"], true); if (p && CUR.fl.needRubble && !CUR.fs.rubble) list.push({ n: "позитронная установка", o: p });
   var rd = nearestObj(["radio"], true); if (rd && rd.melodyFor && !G.melodies[melKey(rd.melodyFor)]) list.push({ n: "радиоприёмник с мелодией", o: rd });
   var it = nearestItem(); if (it) list.push({ n: "ближайшая вещь: " + itemName(it).toLowerCase(), cell: [it.x, it.y] });
+  var sup = nearestObj(["supply"], true); if (sup) list.push({ n: "пункт снабжения", o: sup });
+  /* (1.3) в коридоре — его двери: кабинетов у стен бывает больше двадцати */
+  var cr = LAB.corrOf(CUR.fl, G.x, G.y), cds = cr ? corridorDoors(cr) : [];
+  if (cds.length) list.push({ n: "двери этого коридора: " + cds.length, doors: cds });
   return list;
+}
+/* Двери кабинетов в стенах коридора — ближние первыми; тайные — только найденные. */
+function corridorDoors(cr) {
+  return (cr.annex || []).map(function (id) { return CUR.fl.doors[parseInt(id.slice(1), 10)]; }).filter(function (d) {
+    return d && !(d.lock && d.lock.type === "secret" && !secretFound(d));
+  }).sort(function (a, b) { return (Math.abs(a.x - G.x) + Math.abs(a.y - G.y)) - (Math.abs(b.x - G.x) + Math.abs(b.y - G.y)); });
+}
+function doorFront(d) {
+  var v = [[1, 0], [-1, 0], [0, 1], [0, -1]];
+  for (var i = 0; i < 4; i++) { var x = d.x + v[i][0], y = d.y + v[i][1]; if (cellType(x, y) === T.CORR) return [x, y]; }
+  return [d.x, d.y];
 }
 function nearestObj(types, onlyKnown) {
   var best = null, bd = 1e9;
@@ -2903,7 +2939,7 @@ function useItem(id) {
   /* несвежая еда — токсины */
   if (food && d.stale && Math.random() < d.stale) { msg.push("Несвежее: подташнивает."); bodyApply({ tox: 15 }, msg); }
   var od = d.overdose && body().tox >= 70; /* передозировка: стимулятор не лечит, а бьёт по сердцу */
-  if (d.heal && !od) { var before = G.hp; G.hp = Math.min(G.hpMax, G.hp + d.heal); if (G.hp > before || !food) msg.push("Здоровье плюс " + (G.hp - before) + ", теперь " + G.hp + " из " + G.hpMax + "."); }
+  if (d.heal && !od) { var before = G.hp; G.hp = Math.min(G.hpMax, G.hp + (/^medkit|^bandage/.test(id) && LAB.ach && LAB.ach.has("medic") ? Math.round(d.heal * 1.17) : d.heal)); if (G.hp > before || !food) msg.push("Здоровье плюс " + (G.hp - before) + ", теперь " + G.hp + " из " + G.hpMax + "."); }
   if (d.en) { var e0 = G.en; G.en = Math.min(G.enMax, G.en + d.en); msg.push("Энергия имплантов " + G.en + (G.en > e0 ? "" : ", и так полная") + "."); }
   if (d.cure && G.st.poison) { G.st.poison = 0; msg.push("Отравление снято."); }
   if (d.unslow) { G.st.slow = 0; G.st.web = 0; }
@@ -2987,6 +3023,13 @@ function navMenu() {
   var list = navTargets();
   if (!list.length) { say("Навигатору не на что указать."); return; }
   UIx("menu", "Навигатор", list.map(function (t) {
+    if (t.doors) return { label: t.n, fn: function () {
+      UIx("menu", "Двери коридора", t.doors.map(function (d) {
+        var rm = CUR.fl.rooms[d.room], fc = doorFront(d), n = Math.abs(fc[0] - G.x) + Math.abs(fc[1] - G.y);
+        var nm = rm && rm.sign ? rm.sign : "дверь кабинета";
+        return { label: nm + " — " + relDir(d.x, d.y) + ", " + n + " " + plural(n, "шаг", "шага", "шагов") + (CUR.fs.objs["room" + d.room] ? ", вы там были" : ""), fn: function () { navigateTo({ n: nm, cell: fc }); } };
+      }));
+    } };
     return { label: t.n, fn: function () {
       var path = routeTo(t.cell, t.o);
       if (path && (CUR.fs.mapped || !t.main)) { say("Цель: " + t.n + ". " + describePath(path)); A("navStart", path); }
@@ -3063,6 +3106,7 @@ function craft(rc) {
   var out = rc.out === "wmod" ? "m_power" : rc.out; /* прежний модуль усиления */
   for (var k in rc.need) G.inv[k] -= rc.need[k];
   G.crafted++;
+  if (LAB.ach) LAB.ach.ev("craft", 1);
   var armorMsg = "";
   var bonus = G.faction === "eng" && G.crafted % 3 === 0;
   var times = bonus ? 2 : 1;

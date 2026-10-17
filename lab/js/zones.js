@@ -58,11 +58,12 @@ function armorDef() { var a = G().armor; return a ? LAB.ARMORS[a.base] : null; }
 function protRad() { var d = armorDef(); return (d && d.res && d.res.rad) || 0; }
 function protChem() { var d = armorDef(); return (d && d.res && d.res.chem) || 0; }
 function hasDosimeter() { return (G().inv.dosimeter || 0) > 0; }
-function radDose(level, k) { return (RAD[level] || 0) * k * (1 - protRad()) * (G().st.radBlock > 0 ? 0.5 : 1); }
+function radDose(level, k) { return (RAD[level] || 0) * k * (1 - protRad()) * (G().st.radBlock > 0 ? 0.5 : 1) * (LAB.ach && LAB.ach.has("lead") ? 0.9 : 1); }
 function gasDose(level, k) {
   if (G().st.antitox > 0) return 0;
   var m = 1 - protChem();
   if (gm().armorSpecial && gm().armorSpecial("antitox")) m *= 0.5;
+  if (LAB.ach && LAB.ach.has("lungs")) m *= 0.75;
   return (GAS[level] || 0) * k * m;
 }
 function addRad(x) {
@@ -85,9 +86,11 @@ function minutes(min) {
   var rm = roomHere();
   zoneCheck(rm);
   if (rm && rm.rad) addRad(radDose(rm.rad, min));
-  if (rm && rm.gas) addTox(gasDose(rm.gas, min));
+  if (rm && rm.gas && !vented(rm)) addTox(gasDose(rm.gas, min));
   var c = carried(); if (c) addRad(c * min);
 }
+/* Вытяжка, включённая на пару часов, выгоняет газ из помещения (fixtures.js). */
+function vented(rm) { var v = CUR().fs.vented; return !!(v && v[rm.id] > (G().day || 0) * 1440 + (G().min || 0)); }
 var tickN = 0;
 function tick() {
   if (!G() || !CUR() || !CUR().fl || G().dead) return;
@@ -95,7 +98,7 @@ function tick() {
   var rm = roomHere();
   zoneCheck(rm);
   if (rm && rm.rad) addRad(radDose(rm.rad, 0.12));
-  if (rm && rm.gas) { addTox(gasDose(rm.gas, 0.12)); if (tickN % 12 === 0) A("play", "ev_steam", { gain: 0.25 + 0.1 * rm.gas }); }
+  if (rm && rm.gas && !vented(rm)) { addTox(gasDose(rm.gas, 0.12)); if (tickN % 12 === 0) A("play", "ev_steam", { gain: 0.25 + 0.1 * rm.gas }); }
   /* дозиметр щёлкает: в зоне — по фону, у двери в неё — редко */
   if (hasDosimeter() && LAB.S && LAB.S.effects !== 0) {
     var lv = rm && rm.rad ? rm.rad : nearRad();
@@ -187,7 +190,7 @@ function boxMenu(o) {
   else items.push({ label: SEARCH[o.type] || "Обыскать", fn: function () { search(o); } });
   if (o.type === "cabinet") items.push({ label: "Пролистать папки", fn: function () { readFiles(o); } });
   if (o.type === "tubepost") items.push({ label: "Прочитать квитанции", fn: function () { readReceipts(o); } });
-  items.push({ label: "Осмотреть", fn: function () { say(name + ". " + LAB.OBJ[o.type].desc); } });
+  items.push({ label: "Осмотреть", fn: function () { say(LAB.fixtures ? LAB.fixtures.examine(o) : name + ". " + LAB.OBJ[o.type].desc); } });
   UIx("menu", name, items);
 }
 function search(o) {
@@ -220,8 +223,19 @@ function readReceipts(o) {
 }
 
 /* ── книги, объявления, журнал, фотографии ── */
+/* Книги — колодой этажа: на одном этаже одна и та же книга не стоит на двух полках, пока не кончатся все. */
+var shelfDeal = {};
+function dealt(kind, list, o, n) {
+  var e = era(), all = (list || []).filter(function (q) { return !q.era || q.era.indexOf(e) >= 0; });
+  if (!all.length) all = (list || []).slice();
+  if (!all.length) return [];
+  var k = CUR().key + "|" + kind, d = shelfDeal[k];
+  if (!d) { var p = all.map(function (q, i) { return i; }); LAB.Rng(G().seed, "deal:" + k).shuffle(p); d = shelfDeal[k] = { p: p, i: 0, by: {} }; }
+  if (!d.by[o.id]) { var out = []; for (var j = 0; j < n; j++) out.push(all[d.p[(d.i++) % all.length]]); d.by[o.id] = out; }
+  return d.by[o.id];
+}
 function bookshelfMenu(o) {
-  var books = poolFor(TX().books, "bk:" + CUR().key + ":" + o.id, 3 + (o.seed || 0) % 2), s = st(o), items = [];
+  var books = dealt("books", TX().books, o, 2 + (o.seed || 0) % 3), s = st(o), items = [];
   books.forEach(function (b) {
     items.push({ label: "«" + b.t + "»" + (b.a ? ", " + b.a : "") + (s["b_" + b.id] ? " — прочитано" : ""), fn: function () { readBook(o, b); } });
   });
@@ -247,7 +261,13 @@ function readBook(o, b) {
   if (first) { G().stats.books = (G().stats.books || 0) + 1; ev("book", 1); }
 }
 function boardMenu(o) {
-  var list = poolFor(TX().notices, "bd:" + CUR().key + ":" + o.id, 3), items = [];
+  var list = dealt("notices", TX().notices, o, 1).slice(), items = [];
+  /* записки и заявки этого этажа: свои у каждой доски */
+  if (LAB.fixtures && LAB.fixtures.read) {
+    var rg = LAB.Rng(G().seed, "board:" + CUR().key + ":" + o.id);
+    for (var bi = 0; bi < 2; bi++) { var gn = LAB.fixtures.read("letters", o, rg, bi); list.push({ id: "g" + bi, a: "", t: gn.t, x: gn.x }); }
+    var rq = LAB.fixtures.read("complaints", o, rg, 2); list.push({ id: "rq", a: "", t: rq.t, x: rq.x });
+  }
   /* и одно объявление из почты объекта своей глубины */
   var bk = LAB.blockData ? LAB.blockData(G().L) : null, lore = LAB.LORE && LAB.LORE.notices ? LAB.LORE.notices : [];
   var extra = bk && bk.notices && bk.notices.length && G().L > 10 ? bk.notices : lore;
@@ -257,14 +277,19 @@ function boardMenu(o) {
   UIx("menu", "Доска объявлений", items);
 }
 function logbookMenu(o) {
-  var list = poolFor(TX().logs, "lg:" + CUR().key + ":" + o.id, 3);
+  var list = dealt("logs", TX().logs, o, 1).slice();
+  if (LAB.fixtures && LAB.fixtures._logText) {
+    var rl = LAB.Rng(G().seed, "logb:" + CUR().key + ":" + o.id), days = ["понедельник", "вторник", "среда", "четверг", "пятница", "суббота", "воскресенье"], d0w = rl.int(0, 6);
+    for (var li = 2; li >= 0; li--) { var tx = LAB.fixtures._logText(rl, 4 + rl.int(0, 3), o, li); if (tx) list.unshift({ a: days[(d0w + li) % 7], x: tx }); }
+  }
   var d0 = G().day, items = [];
   list.forEach(function (g, i) { items.push({ label: "Запись " + (i + 1) + (g.a ? ": " + g.a : ""), fn: function () { spend(1); snd("paper_turn", "paper"); UIx("note", "Журнал смены", (g.a ? g.a + ". " : "") + g.x, function () { logbookMenu(o); }); ev("read", 1); } }); });
   items.push({ label: "Осмотреть журнал", fn: function () { say(LAB.OBJ.logbook.desc + " Последняя запись сделана за несколько дней до карантина. Сегодня — день " + d0 + " вашего пути."); } });
   UIx("menu", "Журнал смены", items);
 }
 function photosMenu(o) {
-  var list = poolFor(TX().photos, "ph:" + CUR().key + ":" + o.id, 3), items = [];
+  var list = dealt("photos", TX().photos, o, 1).slice(), items = [];
+  if (LAB.fixtures && LAB.fixtures.read) { var rp = LAB.Rng(G().seed, "phot:" + CUR().key + ":" + o.id); for (var pi = 0; pi < 2; pi++) { var ph = LAB.fixtures.read("photos", o, rp, pi); list.push({ x: ph.x.replace(/^«Эхо» описывает снимок: /, "") }); } }
   list.forEach(function (p, i) { items.push({ label: "Снимок " + (i + 1), fn: function () { spend(1); say("«Эхо» описывает снимок. " + p.x, { read: true }); ev("photo", 1); } }); });
   items.push({ label: "Осмотреть стену", fn: function () { say(LAB.OBJ.photos.desc + " «Эхо» различает " + list.length + " " + pl(list.length, "снимок", "снимка", "снимков") + ": камера импланта видит их как пятна света и тени, а подписи читает."); } });
   UIx("menu", "Стена с фотографиями", items);
