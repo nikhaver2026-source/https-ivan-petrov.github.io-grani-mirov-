@@ -34,7 +34,8 @@ const опись=f=>{const t=fs.readFileSync(f,'utf8');return JSON.parse(t.slice
  await page.goto(process.argv[2]);await page.waitForTimeout(900);
  const загрузка=await page.evaluate(async()=>{try{enterGame();}catch(_){}while(activeLayer())closeTopUI();
   for(const v of ["m","f"]){settings.gvVoice=v;Speech.gvLoad();}settings.gvVoice="m";
-  for(let i=0;i<80&&!(Speech.GVOICES.m.pack.state==="ready"&&Speech.GVOICES.f.pack.state==="ready");i++)await new Promise(z=>setTimeout(z,100));
+  /* ждём и описи сборки: с 17 октября опись сборки (21 тыс. фраз) догружается позже пакета */
+  for(let i=0;i<80&&!(Speech.GVOICES.m.pack.state==="ready"&&Speech.GVOICES.f.pack.state==="ready"&&Speech.GVOICES.m.state==="ready"&&Speech.GVOICES.f.state==="ready");i++)await new Promise(z=>setTimeout(z,100));
   return {m:Speech.GVOICES.m.pack.state,f:Speech.GVOICES.f.pack.state,nm:Speech.GVOICES.m.pack.n,nf:Speech.GVOICES.f.pack.n};});
  const безФайла=v=>Object.values(P[v].p).filter(id=>!fs.existsSync(path.join(ROOT,'sounds/gvoice_pack',v,id+'.flac'))).length;
  const пересеч=v=>Object.keys(P[v].p).filter(k=>k in B[v]).length;
