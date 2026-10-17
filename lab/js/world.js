@@ -756,7 +756,8 @@ function genFloor(seed, L, F, attempt) {
   if (r.chance(0.12)) addItem({ kind: "item", item: "plate", n: 1 }, anyRoom());
   /* предметы блоков: что встречается на этой глубине */
   var bItems = [];
-  for (var ik in LAB.ITEMS) { var idf = LAB.ITEMS[ik]; if (idf.kind !== "part" && idf.depth && idf.depth <= L && idf.depth > L - 25) bItems.push(ik); }
+  /* товары пунктов снабжения (с разделом cat) раскладывает по кабинетам annex.js — здесь их нет */
+  for (var ik in LAB.ITEMS) { var idf = LAB.ITEMS[ik]; if (idf.kind !== "part" && !idf.cat && idf.depth && idf.depth <= L && idf.depth > L - 25) bItems.push(ik); }
   for (nb2 = bItems.length ? r.int(0, 2) : 0; nb2 > 0; nb2--) addItem({ kind: "item", item: r.pick(bItems), n: 1 }, anyRoom());
   for (nb2 = r.int(3, 6); nb2 > 0; nb2--) addItem({ kind: "item", item: partAt(r, L), n: 1 + (r.chance(0.3) ? 1 : 0) }, anyRoom());
   if (r.chance(Math.min(0.2, 0.07 + L * 0.006))) addItem({ kind: "armor", a: LAB.genArmor(r, L, F) }, anyRoom());
@@ -1057,6 +1058,10 @@ function genFloor(seed, L, F, attempt) {
   /* 19. Установки глубин под Ядром (прессы, щиты, инкубаторы, журналы,
      затворы, древние узлы) — последними и своим потоком случайностей. */
   if (LAB.depths && LAB.depths.place) LAB.depths.place({ fl: fl, L: L, F: F, seed: seed, attempt: attempt, svcRooms: svcRooms, mainRooms: mainRooms, addObj: addObj, addItem: addItem, makeFoe: makeFoe, freeCell: freeCell });
+
+  /* 20. (1.3) Кабинеты у коридоров, особые зоны и пункт снабжения —
+     самыми последними и своим потоком случайностей (annex.js). */
+  if (LAB.annex && LAB.annex.place) LAB.annex.place({ fl: fl, L: L, F: F, seed: seed, attempt: attempt, addObj: addObj, addItem: addItem, makeFoe: makeFoe, freeCell: freeCell });
 
   fl.sample = d0;
   fl.turrets = turrets;

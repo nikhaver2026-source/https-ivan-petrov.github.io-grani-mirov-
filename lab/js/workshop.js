@@ -65,7 +65,7 @@ for (pk in PARTS_NEW) {
   if (LAB.PARTS.indexOf(pk) < 0) LAB.PARTS.push(pk);
   LAB.PART_DEPTH[pk] = pd.depth;
 }
-function srcOf(k) { return SRC[k] || (LAB.ITEMS[k] && LAB.ITEMS[k].kind === "part" ? "попадается на своей глубине: ящики, склады, обломки машин" : "собирают в мастерской или покупают"); }
+function srcOf(k) { return SRC[k] || (LAB.ITEMS[k] && LAB.ITEMS[k].src) || (LAB.ITEMS[k] && LAB.ITEMS[k].kind === "part" ? "попадается на своей глубине: ящики, склады, обломки машин" : "собирают в мастерской или покупают"); }
 
 /* ════════ ПАТРОНЫ, ОРУЖИЕ, УСТРОЙСТВА ════════ */
 /* стальные пули — только из мастерской и у торговцев: в случайной добыче их нет (этажи не меняются) */

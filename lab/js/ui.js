@@ -490,10 +490,12 @@ function inventory(focus) {
   var items = [
     { label: "Оружие: " + g.weapons.length, fn: weaponsMenu },
     { label: "Батареи и боеприпасы: " + ammoN, fn: ammoMenu },
-    { label: "Аптечки и лекарства: " + cnt(MEDS), fn: medsMenu },
-    { label: "Еда: " + cnt(foodIds()), fn: foodMenu },
-    { label: "Броня: " + g.armors.length + (g.armor ? ", надета" : ", не надета"), fn: armorMenu },
+    { label: "Аптечки и лекарства: " + cnt(medIds()), fn: medsMenu },
+    { label: "Еда и напитки: " + cnt(foodIds()), fn: foodMenu },
+    { label: "Броня и комбинезоны: " + g.armors.length + (g.armor ? ", надета" : ", не надета"), fn: armorMenu },
     { label: "Гранаты, пластины и устройства: " + cnt(gadgetIds()), fn: gadgetsMenu },
+    { label: "Защита и инструменты: " + cnt(catIds("protect").concat(catIds("tool"))), fn: toolsMenu },
+    { label: "Ценности: " + cnt(catIds("valuable")), fn: valuablesMenu },
     { label: "Детали: " + cnt(LAB.PARTS), fn: partsMenu },
     { label: "Модули оружия в запасе: " + cnt(modIds()), fn: modsMenu },
     { label: "Пропуска и ключи", fn: passesMenu },
@@ -540,11 +542,38 @@ function ammoMenu() {
   menu("Батареи и боеприпасы", items, { intro: w && w.ammo !== "none" ? LAB.K("Двойное касание на нужной батарее — перезарядить оружие в руках.", "Enter на нужной батарее — перезарядить оружие в руках.") : "" });
 }
 var MEDS = ["medkit_s", "medkit_l", "bandage", "antidote", "sorbent", "stim", "energy_d", "neuroblock"];
+/* Вещи одного раздела (1.3): лекарства, защита, инструменты, ценности — по полю cat. */
+function catIds(cat) { return Object.keys(LAB.ITEMS).filter(function (k) { return LAB.ITEMS[k].cat === cat; }); }
+/* Лекарства: прежние — всегда в списке, новые — только те, что есть с собой. */
+function medIds() { var g = G(); return MEDS.concat(catIds("med").filter(function (k) { return MEDS.indexOf(k) < 0 && g.inv[k] > 0; })); }
 function medsMenu() {
   var g = G();
-  menu("Аптечки и лекарства", MEDS.map(function (k) {
+  menu("Аптечки и лекарства", medIds().map(function (k) {
     return { label: LAB.ITEMS[k].n + ": " + (g.inv[k] || 0) + ". " + LAB.ITEMS[k].desc, fn: function () { if (gm().useItem(k)) {} } };
   }).concat([{ label: "Состояние тела", keep: true, fn: function () { gm().bodyStatus(); } }, back()]));
+}
+/* Защита (респираторы, изолента) и инструменты (дозиметр, кусачки, набор): инструменты не тратятся. */
+function toolsMenu() {
+  var g = G();
+  var items = catIds("protect").concat(catIds("tool")).filter(function (k) { return g.inv[k] > 0; }).map(function (k) {
+    var d = LAB.ITEMS[k];
+    return { label: d.n + ": " + g.inv[k] + ". " + d.desc, fn: function () { gm().useItem(k); } };
+  });
+  if (!items.length) items.push({ label: "Ничего нет. Респираторы, изоленту, дозиметры и инструменты продают пункты снабжения; их собирают у верстака и находят в кабинетах.", info: true, keep: true, fn: function () {} });
+  items.push(back());
+  menu("Защита и инструменты", items);
+}
+/* Ценности: часы, кольца, слитки, носители — их скупают пункты снабжения, торговые терминалы и выжившие. */
+function valuablesMenu() {
+  var g = G(), tot = 0;
+  var items = catIds("valuable").filter(function (k) { return g.inv[k] > 0; }).map(function (k) {
+    var d = LAB.ITEMS[k], p = LAB.sellPrice ? LAB.sellPrice.item(k, { who: "supply" }) : Math.round(d.price * 0.7);
+    tot += p * g.inv[k];
+    return { label: d.n + ": " + g.inv[k] + ". Скупка — около " + p + " за штуку. " + d.desc, keep: true, fn: function () { gm().useItem(k); } };
+  });
+  if (!items.length) items.push({ label: "Ценностей нет. Их находят в кабинетах, сейфах и тайниках, а продают в пунктах снабжения.", info: true, keep: true, fn: function () {} });
+  items.push(back());
+  menu("Ценности", items, { intro: tot ? "Всё вместе стоит около " + tot + " кредитов." : "" });
 }
 function foodIds() { return Object.keys(LAB.ITEMS).filter(function (k) { return LAB.ITEMS[k].kind === "food"; }); }
 /* Еда в рюкзаке: съесть; вверху — сколько сытости и энергии. */
@@ -555,7 +584,7 @@ function foodMenu() {
   });
   if (!items.length) items.push({ label: "Еды нет. Её продают автоматы с едой и повара; бывает она на кухнях и в столовых.", info: true, keep: true, fn: function () {} });
   items.push(back());
-  menu("Еда", items, { intro: "Сытость " + Math.round(b.food) + " из 100, энергия имплантов " + g.en + " из " + g.enMax + "." });
+  menu("Еда и напитки", items, { intro: "Сытость " + Math.round(b.food) + " из 100, энергия имплантов " + g.en + " из " + g.enMax + "." });
 }
 function armorMenu() {
   var g = G();
@@ -583,7 +612,7 @@ function armorItem(i) {
 /* Устройства: гранаты, пластины, самоделки мастерской и вещи блоков. */
 function gadgetIds() {
   var ids = ["emp", "plate", "decoder", "noise", "turret_kit", "jammer", "lockpick", "filter", "sonar", "repairkit", "okokey", "decoy_e", "disruptor", "turret_kit2", "wrepair"];
-  for (var k in LAB.ITEMS) { var d = LAB.ITEMS[k]; if (d.kind !== "part" && d.depth && ids.indexOf(k) < 0) ids.push(k); }
+  for (var k in LAB.ITEMS) { var d = LAB.ITEMS[k]; if (d.kind !== "part" && !d.cat && d.depth && ids.indexOf(k) < 0) ids.push(k); }
   return ids;
 }
 function gadgetsMenu() {

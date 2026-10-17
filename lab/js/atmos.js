@@ -107,7 +107,7 @@ function doorOpen(d, byFoe) { at("door_" + doorKind(d) + "_open", d.x, d.y, { ga
 function doorClose(d) { at("door_" + doorKind(d) + "_close", d.x, d.y); }
 function doorPass(d) { /* порог двери под ногой — уже в step */ }
 function objUse(o) { /* звук конкретного действия — в меню предметов */ }
-function container(type) { play({ crate: "open_crate", locker: "open_locker", safe: "open_safe", desk: "open_desk", corpse: "search_body" }[type] || "open_crate"); }
+function container(type) { play({ crate: "open_crate", locker: "open_locker", safe: "open_safe", desk: "open_desk", corpse: "search_body", shelf: "open_crate", cabinet: "open_desk", fridge: "open_locker", firstaid: "open_locker", suitlocker: "open_locker", rack: "open_locker", tubepost: "open_crate", comp: "open_desk" }[type] || "open_crate"); }
 function stairs(down) { play(down ? "stairs_down" : "stairs_up", { gain: 1 }); }
 /* Ступени лестничной клетки: гулко, вниз чуть ниже тоном, вверх — выше. */
 function stairEnter(down) { play(has("stair_step") ? "stair_step" : "step_plate", { gain: 0.9, rate: down ? 0.95 : 1.05, reverb: 0.55 }); }

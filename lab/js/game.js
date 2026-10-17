@@ -185,6 +185,7 @@ function objName(o) {
   if (!o) return "";
   if (o.type === "terminal") return { sec: "Терминал безопасности", sci: "Научный терминал", eng: "Инженерный терминал" }[o.sub] || "Терминал";
   if (o.type === "hq") return "Штаб: " + LAB.FACTIONS[o.faction].n;
+  if (o.type === "comp" && LAB.COMPS) return (LAB.COMPS[o.kind] || LAB.COMPS.archive).n;
   if (o.type === "stairs_down" && o.blocked) return "Лестница вниз (завалена)";
   if (o.type === "stairs_up" && o.blocked) return "Лестница вверх (завалена)";
   if (o.type === "reactor" && (G.done || (!o.final && G.cores && G.cores["used" + G.L]))) return "Пульт реактора (ключ повёрнут)";
@@ -207,6 +208,7 @@ function lockText(d) {
   if (lk.type === "riddle") return "голосовой замок с загадкой";
   if (lk.type === "circuit") return "электронный замок: схема реле";
   if (lk.type === "melody") return "звуковой замок: открывается мелодией";
+  if (lk.type === "hazard") return "санпропускник горячей камеры: пускает только в защитном костюме";
   return "заперто";
 }
 game.lockText = lockText;
@@ -220,6 +222,8 @@ function doorBlock(d) {
   var lk = d.lock, fs = CUR.fs;
   var ol = okoLockLeft(d);
   if (ol > 0 && fs.doors[d.id] !== 2) return "Аварийная блокировка ОКО: ещё " + ol + " " + plural(ol, "секунда", "секунды", "секунд") + ". Замок можно взломать.";
+  /* санпропускник проверяет костюм каждый раз, пока дверь закрыта (1.3) */
+  if (lk && lk.type === "hazard" && fs.doors[d.id] !== 2) return LAB.zones ? LAB.zones.hazardBlock(d) : "Нужен защитный костюм.";
   if (!lk || fs.doors[d.id] === 1 || fs.doors[d.id] === 2) return "";
   if (lk.type === "secret") return secretFound(d) ? "" : "стена";
   if (lk.type === "card") return G.tier >= lk.tier ? "" : "Нужен " + LAB.TIERS[lk.tier].n.toLowerCase() + ".";
@@ -483,6 +487,9 @@ function advanceTime(min, asleep) {
   G.min += min;
   while (G.min >= 24 * 60) { G.min -= 24 * 60; G.day++; G.eventUntil -= 24 * 60; }
   if (G.min >= G.eventUntil) rollEvent();
+  /* доставка заказов с поверхности и облучение в особых зонах (1.3) */
+  if (LAB.supply) LAB.supply.tick();
+  if (LAB.zones && !asleep) LAB.zones.minutes(min);
 }
 game.advanceTime = advanceTime;
 
@@ -498,23 +505,31 @@ game.advanceTime = advanceTime;
    при сильной интоксикации подташнивает (точность ниже), при тяжёлой —
    токсины отнимают здоровье. Нейронагрузка растёт от нейростимуляторов и
    имплантов и спадает за секунды: при перегрузке импланты дороже, при
-   критической — отключаются, пока нагрузка не спадёт. */
+   критической — отключаются, пока нагрузка не спадёт.
+   Облучение (1.3) копится в радиоактивных помещениях (zones.js), само
+   почти не спадает — его выводят антирадин, раствор «Чистота»,
+   наноаптечка, дезактивационный душ и сон в капсуле; при лучевой болезни
+   мутит и импланты восстанавливаются медленнее, при тяжёлой — облучение
+   отнимает здоровье. */
 function body() {
   var b = G.body;
-  if (!b) b = G.body = { food: 85, wake: 85, tox: 0, neuro: 0, lv: {} };
+  if (!b) b = G.body = { food: 85, wake: 85, tox: 0, neuro: 0, rad: 0, lv: {} };
   if (!b.lv) b.lv = {};
+  if (b.rad == null) b.rad = 0;
   return b;
 }
 function clampBody(b) {
   b.food = Math.max(0, Math.min(100, b.food)); b.wake = Math.max(0, Math.min(100, b.wake));
   b.tox = Math.max(0, Math.min(100, b.tox)); b.neuro = Math.max(0, Math.min(100, b.neuro));
+  b.rad = Math.max(0, Math.min(100, b.rad || 0));
 }
 /* Ступени: [порог, слово, предупреждение при переходе вниз (к худшему)]. */
 var BODY_STEPS = {
   food: [[80, "сыты"], [50, "сытость в норме"], [25, "проголодались", "Вы проголодались: энергия имплантов восстанавливается медленнее. Поешьте: еда — в автоматах с едой, на кухнях и в столовых."], [10, "голод", "Голод: энергия имплантов почти не восстанавливается."], [1, "сильный голод", "Сильный голод: энергия имплантов не восстанавливается, скоро голод начнёт отнимать здоровье."], [0, "истощение", "Истощение: голод отнимает здоровье. Срочно поешьте."]],
   wake: [[70, "бодры"], [40, "бодрость в норме"], [20, "устали", "Вы устали: руки дрожат, целиться труднее. Отдохните в капсуле восстановления или выпейте кофе."], [5, "сильная усталость", "Сильная усталость: точность заметно ниже. Нужен сон или стимулятор."], [0, "валитесь с ног", "Вы валитесь с ног от усталости."]],
   tox: [[80, "тяжёлая интоксикация", "Тяжёлая интоксикация: токсины отнимают здоровье. Антидот, сорбент или большая аптечка!"], [50, "интоксикация", "Интоксикация: подташнивает, целиться труднее. Антидот или энтеросорбент выведут токсины."], [20, "лёгкая интоксикация"], [0, "токсинов нет"]],
-  neuro: [[85, "критическая нейронагрузка", "Нейроперегрузка: импланты отключились, пока нагрузка не спадёт. Поможет нейроблокатор."], [60, "нейроперегрузка", "Нейронагрузка высокая: импланты тратят больше энергии."], [30, "нейронагрузка повышена"], [0, "нейронагрузка в норме"]]
+  neuro: [[85, "критическая нейронагрузка", "Нейроперегрузка: импланты отключились, пока нагрузка не спадёт. Поможет нейроблокатор."], [60, "нейроперегрузка", "Нейронагрузка высокая: импланты тратят больше энергии."], [30, "нейронагрузка повышена"], [0, "нейронагрузка в норме"]],
+  rad: [[90, "смертельная доза", "Смертельная доза облучения: здоровье тает. Немедленно антирадин или раствор «Чистота» — и прочь из зоны!"], [70, "тяжёлая лучевая болезнь", "Тяжёлая лучевая болезнь: облучение отнимает здоровье. Выведите его: антирадин, раствор «Чистота», дезактивационный душ."], [45, "лучевая болезнь", "Лучевая болезнь: мутит, руки дрожат, импланты восстанавливаются медленнее. Уходите из зоны облучения."], [20, "лёгкое облучение", "Во рту металлический привкус: лёгкое облучение. В зоне излучения долго не стойте."], [0, "облучения нет"]]
 };
 /* Ступень параметра: для сытости и бодрости — чем выше, тем лучше; для
    токсинов и нейронагрузки — наоборот (ступени идут от худшей). */
@@ -524,16 +539,16 @@ function bodyStep(k) {
   return arr.length - 1;
 }
 function bodyWord(k) { return BODY_STEPS[k][bodyStep(k)][1]; }
-function bodyBad(k) { var i = bodyStep(k); return k === "food" || k === "wake" ? i >= 2 : i <= 1; }
+function bodyBad(k) { var i = bodyStep(k); return k === "food" || k === "wake" ? i >= 2 : k === "rad" ? i <= 2 : i <= 1; }
 /* Предупредить, если параметр перешёл на ступень хуже. */
 function bodyWarn() {
   var b = body();
-  ["food", "wake", "tox", "neuro"].forEach(function (k) {
+  ["food", "wake", "tox", "neuro", "rad"].forEach(function (k) {
     var i = bodyStep(k), was = b.lv[k];
     b.lv[k] = i;
     if (was == null || was === i) return;
     var worse = k === "food" || k === "wake" ? i > was : i < was, msg = BODY_STEPS[k][i][2];
-    if (worse && msg) { LAB.say(msg, { prio: "event", keep: true }); if (k === "food" && i >= 3) A("play", "stomach_growl"); if (k === "tox" && i <= 1) A("play", "cough"); if (k === "wake" && i >= 3) A("play", "yawn"); }
+    if (worse && msg) { LAB.say(msg, { prio: "event", keep: true }); if (k === "food" && i >= 3) A("play", "stomach_growl"); if ((k === "tox" && i <= 1) || (k === "rad" && i <= 2)) A("play", "cough"); if (k === "wake" && i >= 3) A("play", "yawn"); }
   });
 }
 game.bodyWarn = bodyWarn;
@@ -543,10 +558,11 @@ var HUNGER_MIN = 30;
 game.HUNGER_MIN = HUNGER_MIN;
 function bodyMinutes(min, asleep) {
   var b = body();
-  if (asleep) { b.tox = Math.max(0, b.tox - min / 4); return; } /* сон в капсуле: раствор кормит, предупреждений нет */
+  if (asleep) { b.tox = Math.max(0, b.tox - min / 4); b.rad = Math.max(0, b.rad - min / 40); return; } /* сон в капсуле: раствор кормит и выводит, предупреждений нет */
   b.food -= min / HUNGER_MIN;
   b.wake -= min / 12;
   if (b.tox > 0) b.tox -= min / (b.food >= 50 ? 4 : 6);
+  if (b.rad > 0) b.rad -= min / 180; /* радионуклиды выводятся сами очень медленно */
   clampBody(b);
   /* истощение: голод отнимает здоровье, но не убивает */
   if (b.food <= 0) { starve += min; while (starve >= 6) { starve -= 6; if (G.hp > 1) { G.hp--; UIx("refresh"); } } } else starve = 0;
@@ -564,6 +580,12 @@ function bodyTick() {
     A("play", "poison_tick");
     if (G.hp <= 0) { G.hp = 0; UIx("refresh"); die(); return; }
   }
+  /* тяжёлая лучевая болезнь отнимает здоровье, смертельная доза — вдвое быстрее */
+  if (b.rad >= 70 && bodyTickN % (b.rad >= 90 ? 4 : 8) === 0) {
+    G.hp -= b.rad >= 90 ? 2 : 1;
+    A("play", "poison_tick");
+    if (G.hp <= 0) { G.hp = 0; UIx("refresh"); die(); return; }
+  }
   if (bodyTickN % 4 === 0) bodyWarn();
 }
 game.bodyTick = bodyTick;
@@ -571,9 +593,10 @@ game.bodyTick = bodyTick;
 function enRegen() {
   var b = body();
   if (b.food < 10 || b.neuro >= 85) return 0;
-  if (b.food < 25) return 16;
-  if (b.food < 50) return 9;
-  return b.food >= 80 ? 5 : 6;
+  var k = b.rad >= 45 ? 2 : 1; /* лучевая болезнь: импланты восстанавливаются вдвое медленнее */
+  if (b.food < 25) return 16 * k;
+  if (b.food < 50) return 9 * k;
+  return (b.food >= 80 ? 5 : 6) * k;
 }
 game.enRegen = enRegen;
 /* Насколько хуже точность: усталость, тошнота, нейроперегрузка. */
@@ -582,6 +605,7 @@ function aimPenalty() {
   if (b.wake < 5) p += 0.12; else if (b.wake < 20) p += 0.06;
   if (b.tox >= 80) p += 0.1; else if (b.tox >= 50) p += 0.06;
   if (b.neuro >= 85) p += 0.05;
+  if (b.rad >= 70) p += 0.08; else if (b.rad >= 45) p += 0.04;
   return p;
 }
 game.aimPenalty = aimPenalty;
@@ -609,6 +633,13 @@ function bodyApply(d, msg) {
   if (d.stopBleed && G.st.bleed) { G.st.bleed = 0; msg.push("Кровотечение остановлено."); }
   if (d.halfPoison && G.st.poison) { G.st.poison = Math.floor(G.st.poison / 2); msg.push("Яд слабеет."); }
   if (d.undeaf && G.st.deaf) { G.st.deaf = 0; msg.push("Звон в ушах стих."); }
+  /* облучение: лекарства выводят (rad меньше нуля), фонящие вещи добавляют; йодид калия — защита на время */
+  if (d.rad) {
+    v = b.rad; b.rad += d.rad; clampBody(b);
+    if (d.rad < 0) msg.push(v > 0 ? (b.rad > 0 ? "Облучение " + Math.round(b.rad) + "." : "Облучение выведено.") : "Облучения не было.");
+    else msg.push("Облучение " + Math.round(b.rad) + ".");
+  }
+  if (d.radBlock) { G.st.radBlock = Math.max(G.st.radBlock || 0, d.radBlock); msg.push("Щитовидная железа защищена: облучение вдвое слабее на " + Math.round(d.radBlock / 120) + " " + plural(Math.round(d.radBlock / 120), "минуту", "минуты", "минут") + "."); }
   bodyWarn();
   return msg;
 }
@@ -616,7 +647,7 @@ game.bodyApply = bodyApply;
 /* Кратко о теле: только то, что требует внимания (для окна состояния и T). */
 function bodyAlerts() {
   var out = [];
-  ["food", "wake", "tox", "neuro"].forEach(function (k) { if (bodyBad(k)) out.push(bodyWord(k)); });
+  ["food", "wake", "tox", "neuro", "rad"].forEach(function (k) { if (bodyBad(k)) out.push(bodyWord(k)); });
   if (G.st.bleed) out.push("кровотечение");
   return out;
 }
@@ -625,8 +656,8 @@ game.bodyAlerts = bodyAlerts;
 function bodyStatus() {
   if (!game.entered) return;
   var b = body(), st = [];
-  if (G.st.poison) st.push("отравление"); if (G.st.bleed) st.push("кровотечение"); if (G.st.slow) st.push("замедление"); if (G.st.deaf) st.push("звон в ушах"); if (G.st.antitox) st.push("фильтр противогаза действует");
-  say("Здоровье " + G.hp + " из " + G.hpMax + ". Энергия имплантов " + G.en + " из " + G.enMax + ". Сытость " + Math.round(b.food) + ": " + bodyWord("food") + ". Бодрость " + Math.round(b.wake) + ": " + bodyWord("wake") + ". Токсины " + Math.round(b.tox) + ": " + bodyWord("tox") + ". Нейронагрузка " + Math.round(b.neuro) + ": " + bodyWord("neuro") + "." + (st.length ? " Состояние: " + st.join(", ") + "." : ""));
+  if (G.st.poison) st.push("отравление"); if (G.st.bleed) st.push("кровотечение"); if (G.st.slow) st.push("замедление"); if (G.st.deaf) st.push("звон в ушах"); if (G.st.antitox) st.push("фильтр противогаза действует"); if (G.st.radBlock) st.push("йодид калия защищает");
+  say("Здоровье " + G.hp + " из " + G.hpMax + ". Энергия имплантов " + G.en + " из " + G.enMax + ". Сытость " + Math.round(b.food) + ": " + bodyWord("food") + ". Бодрость " + Math.round(b.wake) + ": " + bodyWord("wake") + ". Токсины " + Math.round(b.tox) + ": " + bodyWord("tox") + ". Нейронагрузка " + Math.round(b.neuro) + ": " + bodyWord("neuro") + ". Облучение " + Math.round(b.rad) + ": " + bodyWord("rad") + "." + (st.length ? " Состояние: " + st.join(", ") + "." : ""));
 }
 game.bodyStatus = bodyStatus;
 /* Поесть (G на клавиатуре): еда из рюкзака, которая лучше утолит голод. */
@@ -652,6 +683,7 @@ function eatSound(kind) {
   else if (kind === "crunch") A("play", "eat_crunch");
   else if (kind === "can") { A("play", "can_open"); setTimeout(function () { A("play", "eat_chew"); }, 700); }
   else if (kind === "pills") A("play", "pills_rattle");
+  else if (kind === "gulp" || kind === "sip") A("play", kind === "gulp" ? "drink_gulp" : "drink_sip");
   else A("play", "eat_chew");
 }
 game.eatSound = eatSound;
@@ -935,6 +967,8 @@ function corridorText(cor, entering) {
     var md = ms === 0 ? (doorDir ? LAB.OPP[doorDir] : null) : hdir(e.mouth[0], e.mouth[1]);
     parts.push(ms <= 1 ? (md ? cap(LAB.DIRN[md]) + " — " : "Рядом — ") + "проход в помещение «" + mr.name + "»." : cap(LAB.DIRTO[md]) + " — " + stepsW(ms) + " до прохода в помещение «" + mr.name + "».");
   }
+  /* (1.3) двери кабинетов в стенах коридора */
+  if (cor.annex && cor.annex.length && LAB.zones) { var an = LAB.zones.corridorNote(cor); if (an) parts.push(an); }
   if (!entering) parts.push(across === 0 ? "Вы у стены " + LAB.DIRN[sideA] + "." : across === LAB.CORR_W - 1 ? "Вы у стены " + LAB.DIRN[sideB] + "." : "Вы посередине.");
   return parts.join(" ");
 }
@@ -952,7 +986,7 @@ function announceNear() {
       var key = CUR.key + ":" + o.id, now = Date.now();
       if (nearSaid[key] && now - nearSaid[key] < 20000) return;
       nearSaid[key] = now;
-      var opened = (o.type === "crate" || o.type === "locker" || o.type === "desk" || o.type === "corpse" || o.type === "safe") && objState(o).open;
+      var opened = (LAB.CONTAINERS || ["crate", "locker", "desk", "corpse", "safe"]).indexOf(o.type) >= 0 && objState(o).open;
       out.push(objName(o) + (opened ? ", пусто" : "") + " " + LAB.DIRN[k]);
     }
     if (n) {
@@ -1363,6 +1397,7 @@ function doorMenu(d, dir) {
         if (lk && lk.type === "card") A("play", "card_ok");
         if (lk && lk.type === "key") A("play", "door_unlock");
         if (lk && lk.type === "gate") A("play", "gate_card");
+        if (lk && lk.type === "hazard") { A("play", "ev_steam"); sayq("Рама санпропускника проверила костюм: зелёный свет."); }
         openDoor(d);
         if (lk && lk.type === "card") sayq("Пропуск принят.");
       } else {
@@ -1481,6 +1516,7 @@ function objMenu(o) {
   var st = objState(o), name = objName(o), items = [];
   A("objUse", o);
   if (LAB.depths && LAB.depths.objMenu(o)) return; /* установки глубин под Ядром */
+  if (LAB.zones && LAB.zones.objMenu(o)) return; /* кабинеты у коридоров: полки, доски, компьютеры, щиты (1.3) */
   switch (o.type) {
     case "stairs_down": case "stairs_up": {
       var down = o.type === "stairs_down";
@@ -1503,8 +1539,10 @@ function objMenu(o) {
       items.push({ label: "Отдохнуть в капсуле", fn: function () { rest(o); } });
       break;
     case "capsule":
+      if (LAB.capsule) { LAB.capsule.menu(o); return; } /* музыка, чтение, сны (1.3) */
       items.push({ label: "Отдохнуть четыре часа (здоровье и энергия полностью, точка возвращения)", fn: function () { rest(o); } });
       break;
+    case "supply": if (LAB.supply) { LAB.supply.postMenu(o); return; } break;
     case "terminal": terminalMenu(o); return;
     case "magnetron": magnetronMenu(o); return;
     case "positron": positronMenu(o); return;
@@ -2310,7 +2348,8 @@ function vendingItems(o) {
   if (G.L >= 6) goods.push(["ammo:positron", 1], ["medkit_l", 1], ["turret_kit", 1]);
   /* батареи и расходники своей глубины */
   for (var ak in LAB.AMMO) if (["energy", "magnetron", "positron"].indexOf(ak) < 0 && (LAB.AMMO[ak].depth || 1) <= G.L && (LAB.AMMO[ak].depth || 1) > G.L - 25) goods.push(["ammo:" + ak, 1]);
-  for (var ik in LAB.ITEMS) { var idf = LAB.ITEMS[ik]; if (idf.kind !== "part" && idf.depth && idf.depth <= G.L && idf.depth > G.L - 20) goods.push([ik, 1]); }
+  /* (1.3) товары с разделом cat — еда, лекарства, защита, инструменты, ценности — у пунктов снабжения */
+  for (var ik in LAB.ITEMS) { var idf = LAB.ITEMS[ik]; if (idf.kind !== "part" && !idf.cat && idf.depth && idf.depth <= G.L && idf.depth > G.L - 20) goods.push([ik, 1]); }
   var items = goods.map(function (g) {
     var id = g[0], isAmmo = id.indexOf("ammo:") === 0, name = isAmmo ? LAB.AMMO[id.slice(5)].n : LAB.ITEMS[id].n;
     var base = isAmmo ? (LAB.AMMO[id.slice(5)].price || 40) : LAB.ITEMS[id].price;
@@ -2335,8 +2374,8 @@ function vendingItems(o) {
       UIx("refresh"); autosaveSoon();
     } });
   });
-  /* скупка: детали и лишняя броня */
-  items.push({ label: "Продать детали и лишнюю броню", keep: false, fn: function () { UIx("closeTop", true); sellMenu(); } });
+  /* скупка (1.3): всё, что несёте, — оружие, броня и комбинезоны, модули, детали, ценности, лекарства, еда */
+  items.push({ label: "Продать: оружие, броню, детали, ценности и всё остальное", keep: false, fn: function () { UIx("closeTop", true); if (LAB.supply) LAB.supply.sellMenu({ who: "terminal", name: "Скупка торгового терминала" }, function () { vendingMenu(o); }); else sellMenu(); } });
   items.unshift({ label: "У вас " + G.credits + " кредитов", disabled: true, fn: function () {} });
   return items;
 }
@@ -2527,8 +2566,12 @@ function npcMenu(n) {
 }
 function capital(s) { return s.charAt(0).toUpperCase() + s.slice(1); }
 function tradeMenu(n, kind) {
-  var goods = kind === "med" ? ["medkit_s", "medkit_l", "bandage", "antidote", "sorbent", "stim", "neuroblock"] : kind === "food" ? ["stew", "ration", "noodles", "crackers", "nuts", "choco", "glucose", "medkit_s"] : kind === "parts" ? ["scrap", "wire", "chip", "cap", "lens", "magnet", "relay", "cell", "servo", "optic"] : kind === "ammo" ? ["ammo:energy", "ammo:magnetron", "ammo:slug", "emp", "wrepair"] : ["medkit_s", "bandage", "ration", "ammo:energy", "chip", "gel", "reagent", "cap", "relay", "wrepair"];
-  goods = goods.filter(function (id) { return id.indexOf("ammo:") === 0 ? !!LAB.AMMO[id.slice(5)] : !!LAB.ITEMS[id]; });
+  var build = function () { return tradeItems(n, kind); };
+  UIx("menu", "Торговля: " + npcName(n), build(), { keep: true, rebuild: build });
+}
+function tradeItems(n, kind) {
+  var goods = kind === "med" ? ["medkit_s", "medkit_l", "bandage", "antidote", "sorbent", "stim", "neuroblock", "painkiller", "coagulant", "antirad", "iodine"] : kind === "food" ? ["stew", "ration", "noodles", "crackers", "nuts", "choco", "glucose", "medkit_s", "bread", "porridge", "fishcan", "water"] : kind === "parts" ? ["scrap", "wire", "chip", "cap", "lens", "magnet", "relay", "cell", "servo", "optic", "lead", "rubber"] : kind === "ammo" ? ["ammo:energy", "ammo:magnetron", "ammo:slug", "emp", "wrepair", "tape"] : ["medkit_s", "bandage", "ration", "ammo:energy", "chip", "gel", "reagent", "cap", "relay", "wrepair", "respirator", "water"];
+  goods = goods.filter(function (id) { return id.indexOf("ammo:") === 0 ? !!LAB.AMMO[id.slice(5)] : !!LAB.ITEMS[id] && (LAB.ITEMS[id].depth || 1) <= Math.max(G.L, 1); });
   var k = priceK() * (n.robot ? 1 : 0.9);
   var items = goods.map(function (id) {
     var isAmmo = id.indexOf("ammo:") === 0, name = isAmmo ? LAB.AMMO[id.slice(5)].n : LAB.ITEMS[id].n;
@@ -2536,14 +2579,12 @@ function tradeMenu(n, kind) {
     var p = Math.max(2, Math.round(base * k));
     return { label: "Купить: " + name + " — " + p, fn: function () { buy(id, p); } };
   });
-  /* продать детали */
-  LAB.PARTS.forEach(function (pid) {
-    var have = G.inv[pid] || 0; if (!have) return;
-    var sp = Math.max(1, Math.round(LAB.ITEMS[pid].price * 0.5));
-    items.push({ label: "Продать: " + LAB.ITEMS[pid].n + " (" + have + ") — " + sp, fn: function () { if (!(G.inv[pid] > 0)) return; G.inv[pid]--; G.credits += sp; A("play", "buy"); say("Продано. Кредитов: " + G.credits + "."); } });
-  });
+  /* (1.3) продать можно всё: выживший своё берёт дороже */
+  items.push({ label: "Продать: оружие, броню, детали, ценности и всё остальное", fn: function () {
+    if (LAB.supply) LAB.supply.sellMenu({ who: "npc", npc: kind, name: "Скупка: " + npcName(n) }, function () { tradeMenu(n, kind); });
+  } });
   items.unshift({ label: "У вас " + G.credits + " кредитов", disabled: true, fn: function () {} });
-  UIx("menu", "Торговля: " + npcName(n), items, { keep: true });
+  return items;
 }
 
 /* ════════ ЗАДАНИЯ ════════ */
@@ -2853,6 +2894,8 @@ function useItem(id) {
   if (id === "decoder") { say("Декодер применяется у двери с картридером: " + LAB.K("двойное касание у двери.", "Enter у двери.")); return false; }
   if (id === "okokey") { say("Служебный ключ ОКО прикладывают к турели вплотную — подходите наискосок, вне её линии огня — или к терминалу безопасности, раздел «Оборонная сеть»: " + LAB.K("двойное касание рядом.", "Enter рядом.")); return false; }
   if (d.kind === "part") { say("Это деталь для мастерской."); return false; }
+  /* (1.3) инструменты не тратятся, ценности — на продажу, изолента — на камеру ОКО */
+  if (d.kind === "tool" || d.kind === "valuable" || id === "tape") { if (LAB.zones && LAB.zones.useItem) return LAB.zones.useItem(id, d); say(d.n + ". " + d.desc); return false; }
   var food = d.kind === "food";
   if (food && body().food >= 100 && !d.en) { say("Вы сыты: больше не лезет."); return false; }
   G.inv[id]--;

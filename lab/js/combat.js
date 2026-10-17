@@ -1314,6 +1314,8 @@ function statusTick(onlyTimers) {
   if (st.slow > 0) st.slow--;
   if (st.deaf > 0) st.deaf--;
   if (st.antitox > 0) { st.antitox--; if (!st.antitox) sayq("Фильтр противогаза отработал."); }
+  if (st.radBlock > 0) { st.radBlock--; if (!st.radBlock) sayq("Йодид калия больше не защищает от облучения."); }
+  if (LAB.zones && LAB.zones.tick) LAB.zones.tick(); /* облучение и газ, пока стоите в особой зоне (1.3) */
   if (st.haste > 0) { st.haste--; if (!st.haste) sayq("Ускорение закончилось."); }
   if (st.cloak > 0) { st.cloak--; if (!st.cloak) { sayq("Маскировка спала."); A("play", "cloak_off"); } }
   if (st.shieldT > 0) { st.shieldT--; if (!st.shieldT && !gm().armorSpecial("regshield")) st.shield = 0; }
