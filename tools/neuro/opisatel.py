@@ -88,3 +88,110 @@ def загрузить(папка, вариантов=6, T=0.7):
         ув = Л.уверенность_описаний(м, сл, вид, имя, вар, черты_ or None)
         return вар[max(range(len(вар)), key=lambda i: ув[i])]
     return описать
+
+# ── (2) сеть по частям слов. Сеть по буквам при таком объёме данных не удерживала ни согласования, ни смысла
+# («Бледный мир сплетает под сводом над бурей…»), а черты пропускала. Здесь текст режется на части слов (BPE, 6000
+# частей: частые слова целиком, редкие — основой и окончанием): предложение в 3–4 раза короче, правописание решено
+# словарём, и сеть учит только порядок слов, согласование и смысл. Устройство — то же, что у Летописца (трансформер
+# с кэшем внимания), шире: 384 × 6.
+СЛУЖ_Ч = ["<pad>", "<и>", "<о>", "<к>", "<ч>", "</ч>"]
+ВИДЫ_Ч = ["бог", "тварь", "вещь", "ресурс", "подземелье", "земля", "поселение", "персонаж", "находка", "миф", "грань",
+          "держава", "народ", "чары", "зверь", "растение", "зелье", "здание", "история", "вера", "слух"]
+
+def запись_ч(вид, имя, черты_="", о=None):
+    return f"⟦{вид}⟧" + (f"<ч>{черты_}</ч>" if черты_ else "") + f"<и>{имя}<о>" + ((о + "<к>") if о is not None else "")
+
+def словарь_учить(тексты, путь, размер=6000):
+    from tokenizers import Tokenizer, models, trainers, pre_tokenizers, decoders
+    т = Tokenizer(models.BPE(unk_token="<unk>"))
+    т.pre_tokenizer = pre_tokenizers.Metaspace(); т.decoder = decoders.Metaspace()
+    особые = СЛУЖ_Ч + ["<unk>"] + [f"⟦{в}⟧" for в in ВИДЫ_Ч]
+    т.train_from_iterator(тексты, trainers.BpeTrainer(vocab_size=размер, special_tokens=особые, min_frequency=2))
+    т.save(путь); return т
+
+def _ч_текст(z):
+    ч = z.get("черты") or {}
+    return "; ".join(f"{k}={v}" for k, v in list(ч.items())[:4]) if isinstance(ч, dict) else str(ч)
+
+def сеть_учить(папка, шагов=4000, d=384, L=6, ctx=96, B=32, lr=1e-3):
+    """учит сеть описаний по частям слов на corpus.jsonl папки (вид, имя, черты, о); лучший снимок — по проверке"""
+    import os, json, math, random, time, torch, torch.nn.functional as F
+    from tokenizers import Tokenizer
+    import letopisec as Л
+    torch.set_num_threads(int(os.environ.get("OP_THREADS", "3"))); torch.manual_seed(1); random.seed(7)
+    зап = [json.loads(l) for l in open(os.path.join(папка, "corpus.jsonl"), encoding="utf-8")]
+    random.shuffle(зап); пр, уч = зап[: max(200, len(зап) // 20)], зап[max(200, len(зап) // 20):]
+    пс = os.path.join(папка, "opisatel_bpe.json")
+    т = Tokenizer.from_file(пс) if os.path.exists(пс) else словарь_учить([запись_ч(z["вид"], z["имя"], _ч_текст(z), z["о"]) for z in уч], пс)
+    V = т.get_vocab_size(); к = т.token_to_id("<к>")
+    код = lambda z, ч=True: т.encode(запись_ч(z["вид"], z["имя"], _ч_текст(z) if ч else "", z["о"])).ids
+    Л.CTX = ctx; м = Л.Летописец(V, d=d, L=L, p=float(os.environ.get("OP_P", "0.1")))
+    опт = torch.optim.AdamW(м.parameters(), lr=lr, weight_decay=0.1, betas=(0.9, 0.95))
+    пут = os.path.join(папка, "opisatel.pt"); шаг0 = 0; лучшая = 99.0
+    if os.path.exists(пут):
+        c = torch.load(пут); м.load_state_dict(c["м"]); опт.load_state_dict(c["опт"]); шаг0 = c["шаг"]; лучшая = c.get("лучшая", 99.0)
+    def пачка():
+        xs = []
+        for _ in range(B):
+            q = []
+            while len(q) < ctx + 1: q += код(random.choice(уч), random.random() < 0.9)
+            xs.append(torch.tensor(q[: ctx + 1]))
+        x = torch.stack(xs); return x[:, :-1], x[:, 1:]
+    @torch.no_grad()
+    def проверка():
+        м.eval(); нат = 0.0; зн = 0
+        for z in пр[:400]:
+            ids = код(z); x = torch.tensor([ids[:ctx]]); л = F.log_softmax(м(x[:, :-1])[0], -1); ц = x[0, 1:]
+            о_нач = ids.index(т.token_to_id("<о>")) if т.token_to_id("<о>") in ids else 0
+            нат -= л[torch.arange(len(ц)), ц][о_нач:].sum().item(); зн += len(z["о"]) + 1
+        м.train(); return нат / зн / math.log(2)
+    print(f"Описатель (части слов): словарь {V}, весов {sum(p.numel() for p in м.parameters()) / 1e6:.1f} млн, с шага {шаг0}", flush=True)
+    t0 = time.time(); ср = None
+    for ш in range(шаг0, шагов):
+        for g in опт.param_groups: g["lr"] = lr * min(1, (ш + 1) / 200) * (0.1 + 0.9 * 0.5 * (1 + math.cos(math.pi * ш / шагов)))
+        x, y = пачка(); м.train(); п = F.cross_entropy(м(x).reshape(-1, V), y.reshape(-1))
+        опт.zero_grad(); п.backward(); torch.nn.utils.clip_grad_norm_(м.parameters(), 1.0); опт.step()
+        ср = п.item() if ср is None else 0.98 * ср + 0.02 * п.item()
+        if (ш + 1) % 100 == 0: print(f"шаг {ш + 1}: потеря {ср:.3f}, {time.time() - t0:.0f} с", flush=True)
+        if (ш + 1) % 500 == 0 or ш + 1 == шагов:
+            б = проверка(); print(f"  проверка: описание {б:.3f} бит на знак", flush=True)
+            if б < лучшая:
+                лучшая = б; torch.save({"м": м.state_dict(), "V": V, "d": d, "L": L, "ctx": ctx, "шаг": ш + 1, "бит": б}, os.path.join(папка, "opisatel_best.pt"))
+                print(f"  лучший снимок: шаг {ш + 1}", flush=True)
+            torch.save({"м": м.state_dict(), "опт": опт.state_dict(), "шаг": ш + 1, "лучшая": лучшая}, пут + ".tmp"); os.replace(пут + ".tmp", пут)
+
+def сеть_загрузить(папка):
+    """сеть описаний по частям слов → (сеть, словарь частей) или None"""
+    import os, torch
+    from tokenizers import Tokenizer
+    import letopisec as Л
+    пут = os.path.join(папка, "opisatel_best.pt")
+    if not os.path.exists(пут): return None
+    z = torch.load(пут); Л.CTX = z["ctx"]; м = Л.Летописец(z["V"], d=z["d"], L=z["L"]); м.load_state_dict(z["м"]); м.eval()
+    return м, Tokenizer.from_file(os.path.join(папка, "opisatel_bpe.json"))
+
+def сеть_описать(м, т, вид, имя, черты_="", сколько=6, T=0.7, top_p=0.9):
+    """варианты описания одной пачкой с кэшем внимания → [(описание, средняя лог-вероятность части)]"""
+    import torch, torch.nn.functional as F
+    import letopisec as Л
+    ctx = м.pos.weight.shape[0]; нач = т.encode(запись_ч(вид, имя, черты_)).ids[-(ctx - 40):]; к = т.token_to_id("<к>")
+    B = сколько + 2
+    with torch.no_grad():
+        x = torch.tensor([нач] * B); жив = torch.ones(B, dtype=torch.bool); длина = torch.full((B,), -1); лп = torch.zeros(B)
+        л, кэш = Л.вперёд_кэш(м, x[:1]); кэш = [(a.expand(B, -1, -1, -1), b.expand(B, -1, -1, -1)) for a, b in кэш]; л = л[:, -1].expand(B, -1)
+        for _ in range(ctx - x.shape[1]):
+            лс = F.log_softmax(л, -1); p = F.softmax(л / T, -1)
+            sp, si = torch.sort(p, descending=True, dim=-1); cs = torch.cumsum(sp, -1); sp[cs - sp > top_p] = 0
+            c = si.gather(1, torch.multinomial(sp / sp.sum(-1, keepdim=True), 1))
+            лп += torch.where(жив, лс.gather(1, c)[:, 0], torch.zeros(B))
+            конец = жив & (c[:, 0] == к); длина[конец] = x.shape[1]; жив &= ~конец
+            x = torch.cat([x, c], 1)
+            if not жив.any() or x.shape[1] >= ctx: break
+            л, кэш = Л.вперёд_кэш(м, c, кэш, x.shape[1] - 1); л = л[:, -1]
+    вывод, было = [], set()
+    for i in range(B):
+        if длина[i] < 0: continue
+        о = т.decode(x[i, len(нач):длина[i]].tolist()).strip()
+        if len(о) < 8 or о in было or "<" in о or "⟦" in о: continue
+        было.add(о); вывод.append((о, лп[i].item() / max(1, длина[i].item() - len(нач) + 1)))
+    return вывод[:сколько]

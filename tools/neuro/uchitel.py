@@ -257,10 +257,20 @@ def написать_описания(вход, выход, корпус, пач
             ч = зап[i:i + пачка]; п = "\n".join(f"- {z['вид']}: {z['имя']} — {z['о']}" for z in R.sample(прим, 16))
             з = "\n".join(f"{j + 1}. вид: {z['вид']}; имя: {z['имя']}" + (f"; черты: {z['черты']}" if z.get("черты") else "") for j, z in enumerate(ч))
             вопрос = ВОПРОС_НАПИСАТЬ_ПРОСТО if os.environ.get("UCH_STYLE") == "просто" else ВОПРОС_НАПИСАТЬ  # «просто» — короче и проще
+            вар = int(os.environ.get("UCH_VAR", "1"))  # вариантов на сущность: запросов втрое меньше на то же число описаний
+            if вар > 1:
+                вопрос = вопрос.replace("Ответ — только JSON: {\"описания\": [{\"н\": номер, \"о\": \"описание\"}, ...]} — по одному на каждую сущность",
+                                        f"Для каждой сущности — {вар} разных описания (разные детали и обороты). Ответ — только JSON: "
+                                        "{\"описания\": [{\"н\": номер, \"о\": [\"описание 1\", \"описание 2\", ...]}, ...]} — по одному элементу на каждую сущность")
             о = спросить(вопрос.replace("<<П>>", п).replace("<<З>>", з), t=0.8)
-            оп = {int(x["н"]): x["о"] for x in (о.get("описания") or []) if isinstance(x, dict) and "н" in x and isinstance(x.get("о"), str)} if isinstance(о, dict) else {}
+            оп = {}
+            for x in ((о.get("описания") or []) if isinstance(о, dict) else []):
+                if not isinstance(x, dict) or "н" not in x: continue
+                v = x.get("о"); v = [v] if isinstance(v, str) else (v if isinstance(v, list) else [])
+                v = [t.strip() for t in v if isinstance(t, str) and t.strip()]
+                if v: оп[int(x["н"])] = v
             for j, z in enumerate(ч):
-                if оп.get(j + 1, "").strip(): f.write(json.dumps(dict(z, о=оп[j + 1].strip()), ensure_ascii=False) + "\n")
+                for t in оп.get(j + 1, []): f.write(json.dumps(dict(z, о=t), ensure_ascii=False) + "\n")
             f.flush(); print(f"написано {min(i + пачка, len(зап))} из {len(зап)} (в пачке {len(оп)})" + ("" if оп else f" — {str(о)[:120]}"), flush=True)
             if not оп: time.sleep(20)  # лимит запросов — передышка, недописанное допишет повторный запуск
 
