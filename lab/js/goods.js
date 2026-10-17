@@ -1,5 +1,5 @@
 /* ════════════════════════════════════════════════════════════════════
-   «Подземная лаборатория» — товары, защита и снабжение (Альфа 1.3).
+   «Подземная лаборатория» — товары, защита и снабжение (Альфа 1.5).
    Новая еда и напитки, лекарства (и от облучения), защита и инструменты,
    ценности, которые находят в кабинетах и продают; костюмы от радиации и
    химии, детали и рецепты к ним; каталог пунктов снабжения — свой на
@@ -130,7 +130,7 @@ LAB.weaponPrice = function (w) {
   var p = 30 + w.dmg * 4 + (w.rng || 1) * 3 + (w.cap || 0) * 0.8 + (b.pierce ? 25 : 0) + (b.noarmor ? 30 : 0) + (b.area ? 25 : 0);
   return Math.max(10, Math.round(p * (LAB.RANK_MULT[w.rank] || 1)));
 };
-LAB.SELL_K = { part: 0.5, valuable: 0.7, food: 0.35, med: 0.4, protect: 0.4, tool: 0.45, use: 0.4, throw: 0.4, deploy: 0.4, wmodule: 0.45, ammo: 0.4, weapon: 0.45, armor: 0.42 };
+LAB.SELL_K = { part: 0.5, valuable: 0.7, food: 0.35, med: 0.4, protect: 0.4, tool: 0.45, use: 0.4, throw: 0.4, deploy: 0.4, trap: 0.4, wmodule: 0.45, ammo: 0.4, weapon: 0.45, armor: 0.42 };
 
 /* ── СНАБЖЕНИЕ ──
    На каждом этаже — пункт снабжения: прилавок с товаром своего этажа,
@@ -170,10 +170,10 @@ LAB.SUPPLY = [
 LAB.SUPPLY_PROFILES = {
   food:  { n: "продовольственный", desc: "больше еды и напитков, еду скупает дороже", want: { food: 3, med: 1 }, buy: { food: 1.3 } },
   med:   { n: "медицинский", desc: "больше лекарств, лекарства скупает дороже", want: { med: 3, protect: 1 }, buy: { med: 1.3, protect: 1.2 } },
-  tech:  { n: "технический", desc: "детали, батареи и устройства, детали скупает дороже", want: { part: 3, ammo: 2, gadget: 2, tool: 1 }, buy: { part: 1.3, tool: 1.2 } },
-  arms:  { n: "оружейный", desc: "батареи, оружие и модули, оружие скупает дороже", want: { ammo: 3, weapon: 2, gadget: 1 }, buy: { weapon: 1.3, wmodule: 1.2, ammo: 1.2 } },
-  guard: { n: "защитный", desc: "защитные костюмы, респираторы и средства от облучения", want: { protect: 3, med: 2, armor: 2 }, buy: { armor: 1.3, protect: 1.2 } },
-  all:   { n: "общий", desc: "понемногу всего, скупает ценности дороже", want: { food: 1, med: 1, part: 1, ammo: 1, gadget: 1, protect: 1 }, buy: { valuable: 1.25 } }
+  tech:  { n: "технический", desc: "детали, батареи, устройства и ловушки, детали скупает дороже", want: { part: 3, ammo: 2, gadget: 2, trap: 2, tool: 1 }, buy: { part: 1.3, tool: 1.2, trap: 1.15 } },
+  arms:  { n: "оружейный", desc: "батареи, оружие, модули и мины, оружие скупает дороже", want: { ammo: 3, weapon: 2, gadget: 1, trap: 2 }, buy: { weapon: 1.3, wmodule: 1.2, ammo: 1.2, trap: 1.2 } },
+  guard: { n: "защитный", desc: "защитные костюмы, респираторы и средства от облучения", want: { protect: 3, med: 2, armor: 2, trap: 1 }, buy: { armor: 1.3, protect: 1.2 } },
+  all:   { n: "общий", desc: "понемногу всего, скупает ценности дороже", want: { food: 1, med: 1, part: 1, ammo: 1, gadget: 1, trap: 1, protect: 1 }, buy: { valuable: 1.25 } }
 };
 LAB.SUPPLY_PROFILE_IDS = ["food", "med", "tech", "arms", "guard", "all"];
 })();

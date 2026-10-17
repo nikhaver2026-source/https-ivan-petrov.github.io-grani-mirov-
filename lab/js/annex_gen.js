@@ -1,5 +1,5 @@
 /* ════════════════════════════════════════════════════════════════════
-   «Подземная лаборатория» — лица помещений (1.3).
+   «Подземная лаборатория» — лица помещений (1.5).
    У каждого коридора — до дюжины дверей с каждой стороны, на этаже —
    сотни кабинетов, на всех глубинах — сотни тысяч. Ни один не должен
    повторять другой: ни табличкой, ни описанием, ни хозяином, ни тем, что
@@ -238,6 +238,21 @@ GP.nextType = function (pool, usedInCorr) {
   }
   return spare >= 0 ? this._take(spare) : null;
 };
+/* Вариант особого помещения (тайник, режимный кабинет, пост дезактивации, горячая
+   камера…): у каждого типа своя колода по уровню — на этаже без повторов. */
+GP.variantFor = function (t) {
+  this._vd = this._vd || {};
+  var vd = this._vd[t];
+  if (!vd) {
+    var vs = VR(t), era = this.era, idxs = [];
+    vs.forEach(function (v, vi) { if (v && v.e && v.e.indexOf(era) >= 0) idxs.push(vi); });
+    if (!idxs.length && era === "O") vs.forEach(function (v, vi) { if (v && v.e && v.e.indexOf("K") >= 0) idxs.push(vi); });
+    if (!idxs.length) return null;
+    vd = this._vd[t] = { idxs: idxs, perm: levelPerm(this.seed, "spec|" + t + "|" + era + "|L" + this.L, idxs.length), pos: ((this.F - 1) * 3) % idxs.length };
+  }
+  var j = vd.perm[vd.pos % vd.idxs.length]; vd.pos++;
+  return { t: t, vi: vd.idxs[j] };
+};
 GP._take = function (j) {
   var td = this._td, n = td.items.length;
   td.taken[j] = 1; td.cnt++;
@@ -245,31 +260,65 @@ GP._take = function (j) {
   return td.items[j];
 };
 
-/* ── Описание помещения ── */
+/* ── Описание помещения ──
+   Подробность, которая говорит о мебели (стол, полка, шкаф, койка, диван…),
+   берётся, только если такая вещь в помещении есть. */
+var NEEDS = [
+  [/(^|[^а-яё])стол(?!б|иц|ь|ет|овая|овой|овую|овые|овых)/i, ["desk", "table", "labbench", "counter", "dutydesk", "serving", "comp", "pc", "typewriter"]],
+  [/(^|[^а-яё])(полк|полоч|стеллаж)/i, ["shelf", "bookshelf", "cabinet", "seedjars", "toolwall", "barrels"]],
+  [/(^|[^а-яё])ящик/i, ["desk", "cabinet", "crate", "locker", "nightstand", "table", "counter", "dutydesk"]],
+  [/(^|[^а-яё])шкаф/i, ["cabinet", "locker", "suitlocker", "firstaid", "fridge", "coldroom", "rack"]],
+  [/(^|[^а-яё])(кроват|койк|матрас|постел|нар[ыа])/i, ["bunk", "couch", "sensorbed", "cradle", "optable"]],
+  [/(^|[^а-яё])диван/i, ["sofa"]], [/(^|[^а-яё])кресл/i, ["armchair", "rocking", "neurochair"]], [/(^|[^а-яё])стул/i, ["chair", "table", "desk", "dutydesk"]],
+  [/(^|[^а-яё])раковин/i, ["sink"]], [/(^|[^а-яё])чайник/i, ["kettle", "samovar", "stove"]], [/(^|[^а-яё])холодильник/i, ["fridge", "coldroom"]],
+  [/(^|[^а-яё])(компьютер|монитор)/i, ["comp", "pc", "screens", "monitors"]], [/(^|[^а-яё])вешалк/i, ["hangers", "suitlocker", "locker"]],
+  [/(^|[^а-яё])тумбочк/i, ["nightstand"]], [/(^|[^а-яё])(прилавк|стойк)/i, ["counter", "dutydesk", "serving", "rack", "supply"]]
+];
+function fitsRoom(text, have) {
+  if (!have || !text) return true;
+  for (var i = 0; i < NEEDS.length; i++) if (NEEDS[i][0].test(text) && !NEEDS[i][1].some(function (k) { return have[k]; })) return false;
+  return true;
+}
+/* Следующая подходящая к обстановке строка колоды (не больше шести попыток). */
+GP.fromFit = function (key, arr, per, have, bad) {
+  if (!arr || !arr.length) return null;
+  var d = this.deck(key, arr.length, per);
+  for (var t = 0; t < 6; t++) {
+    if (d.left() <= 0) return null; /* колода этажа кончилась — второго круга нет: лучше без подробности, чем повтор */
+    var v = arr[d.next()];
+    if (v && fitsRoom(v, have) && !(bad && bad.test(v))) return v;
+  }
+  return null;
+};
+/* Сколько строк ещё осталось в колоде этажа. */
+GP.left = function (key, arr, per) { return arr && arr.length ? this.deck(key, arr.length, per).left() : 0; };
 var STATES = ["tidy", "hurry", "ransacked", "barricade", "flooded", "burnt", "lived", "sealed", "dust", "fresh", "dark"];
 var CATS = ["smell", "sound", "touch", "floor", "thing", "wall"];
 var SEWN = ["Эта комната будто вшита сюда из {era}: стык виден по шву в полу, где один настил переходит в другой.", "«Эхо» говорит, что эта комната — из {era}: её сюда принесло, как приносит река.", "Здесь кончается «Исток» и начинается кусок {era}: даже воздух за порогом другой.", "Стены этой комнаты помнят {era}: под ладонью — их прежняя кладка, сквозь неё проросли корни.", "Комната пришла сюда из {era} целиком, вместе с запахом и тишиной, и ещё не привыкла к новому месту."];
 var MIRROR = ["Всё как в настоящем «Ковчеге», только надписи читаются задом наперёд.", "Это отражение кабинета «Ковчега»: «Эхо» переворачивает надписи, прежде чем прочитать.", "Комната повторяет свою копию наверху, но зеркально: дверь открывается не в ту сторону.", "Здесь всё стоит наоборот, как в зеркале, и холоднее, чем должно быть.", "Отражение держится крепко, но шаги в нём возвращаются на полсекунды раньше."];
 GP.stateFor = function (rm, def, opt) {
-  var r = this.r;
-  if (opt && opt.secret) return r.chance(0.7) ? "dust" : "sealed";
-  if (def.kind === "locked") return r.chance(0.5) ? "sealed" : r.chance(0.5) ? "tidy" : null;
-  if (def.kind === "hazard" || rm.rad >= 3) return r.chance(0.6) ? (r.chance(0.5) ? "sealed" : "dust") : null;
+  var r = this.r, fr = FR(this.era), self = this;
+  /* состояние берётся, только пока у него на этаже остались свои фразы */
+  var ok = function (k) { return !!(fr && fr.state && fr.state[k] && self.left("st:" + self.era + ":" + k, fr.state[k], 3) > 0); };
+  var pick = function (w) { for (var k in w) if (!ok(k)) delete w[k]; var any = false; for (var q in w) { any = true; break; } return any ? r.weighted(w) : null; };
+  if (opt && opt.secret) return pick({ dust: 7, sealed: 3 });
+  if (def.kind === "locked") return r.chance(0.75) ? pick({ sealed: 1, tidy: 1 }) : null;
+  if (def.kind === "hazard" || rm.rad >= 3) return r.chance(0.6) ? pick({ sealed: 1, dust: 1 }) : null;
   if (!r.chance(0.32)) return null;
   var w = { tidy: 2, hurry: 3, ransacked: 2, barricade: 1, flooded: 0.7, burnt: 0.7, lived: 1, sealed: 0.6, dust: 1.4, fresh: 0.8, dark: 1 };
   if (rm.zone === -1) { w.hurry += 1; w.fresh += 0.5; }
   if (this.F > 14) { w.dust += 1; w.dark += 0.5; }
-  return r.weighted(w);
+  return pick(w);
 };
 GP.describe = function (rm, def, it, owner, opt) {
   opt = opt || {};
-  var fr = FR(this.era), r = this.r, parts = [], v = it && it.vi >= 0 ? VR(it.t)[it.vi] : null;
+  var fr = FR(this.era), r = this.r, parts = [], v = it && it.vi >= 0 ? VR(it.t)[it.vi] : null, have = opt.have || null;
   parts.push(v ? v.d : def.desc);
   if (owner) parts.push(owner.m ? "На двери — бирка: «" + cap(owner.post) + ", " + owner.sign + "»." : "На двери изнутри — табличка: «" + cap(owner.post) + " " + owner.sign + "».");
-  var stt = this.stateFor(rm, def, opt);
+  var stt = opt.state !== undefined ? opt.state : this.stateFor(rm, def, opt);
   if (stt && fr && fr.state && fr.state[stt] && fr.state[stt].length) {
-    var sp = this.from("st:" + this.era + ":" + stt, fr.state[stt], 3);
-    if (sp) { parts.push(sp); rm.state = stt; }
+    var sp = this.fromFit("st:" + this.era + ":" + stt, fr.state[stt], 3, have);
+    if (sp) parts.push(sp);
   }
   if (fr) {
     /* одна-две подробности разных видов; вид — по размеру набора: чем больше, тем чаще */
@@ -281,33 +330,30 @@ GP.describe = function (rm, def, it, owner, opt) {
       if (!cat) break;
       used[cat] = 1;
       if (stt === "flooded" && cat === "floor") continue;
-      var ph = this.from("fr:" + this.era + ":" + cat, fr[cat], Math.ceil(this.n * 1.6 * fr[cat].length / Math.max(1, tot)));
       /* без света и вентиляции — не про лампы и тёплый воздух из решётки */
-      if (ph && stt === "dark" && /вентиляц|решётк|ламп|светит|гудит/i.test(ph)) ph = this.from("fr:" + this.era + ":" + cat, fr[cat], 1);
-      if (ph && !(stt === "dark" && /вентиляц|решётк|ламп|светит|гудит/i.test(ph))) { parts.push(ph); got++; }
+      var ph = this.fromFit("fr:" + this.era + ":" + cat, fr[cat], Math.ceil(this.n * 1.6 * fr[cat].length / Math.max(1, tot)), have, stt === "dark" ? /вентиляц|решётк|ламп|светит|гудит/i : null);
+      if (ph) { parts.push(ph); got++; }
     }
-    if (owner && !owner.m && fr.trace && fr.trace.length && r.chance(0.45)) {
-      var tr = this.from("tr:" + this.era, fr.trace, Math.ceil(this.n * 0.2));
+    if (owner && fr.trace && fr.trace.length && r.chance(0.45)) {
+      var tr = this.fromFit("tr:" + this.era, fr.trace, Math.ceil(this.n * 0.2), have);
       if (tr) parts.push(render(tr, { au: owner }));
-    } else if (owner && owner.m && fr.trace && fr.trace.length && r.chance(0.45)) {
-      var tm = this.from("tr:" + this.era, fr.trace, Math.ceil(this.n * 0.2));
-      if (tm) parts.push(render(tm, { au: owner }));
     }
   } else if (LAB.annex && LAB.annex.DETAIL) {
     var dl = LAB.annex.DETAIL[this.era] || LAB.annex.DETAIL.K;
     parts.push(this.from("dt:" + this.era, dl, 30));
   }
-  if (it && it.sewn) parts.push(SEWN[r.int(0, SEWN.length - 1)].replace("{era}", ERA_NAME[it.sewn] || "прошлых глубин"));
-  if (this.era === "O" && def.era && def.era.indexOf("K") >= 0 && r.chance(0.3)) parts.push(MIRROR[r.int(0, MIRROR.length - 1)]);
+  /* фразы о «вшитых» комнатах и об отражении — каждая не больше раза на этаже */
+  if (it && it.sewn && this.deck("sewn", SEWN.length, SEWN.length).left() > 0 && r.chance(0.5)) parts.push(this.from("sewn", SEWN, SEWN.length).replace("{era}", ERA_NAME[it.sewn] || "прошлых глубин"));
+  if (this.era === "O" && def.era && def.era.indexOf("K") >= 0 && this.deck("mirror", MIRROR.length, MIRROR.length).left() > 0 && r.chance(0.1)) parts.push(this.from("mirror", MIRROR, MIRROR.length));
   return parts.filter(Boolean).join(" ");
 };
 /* Подробность для основного помещения уровня: состояние или одна деталь. */
-GP.mainDetail = function (rm) {
+GP.mainDetail = function (rm, have) {
   var fr = FR(this.era), r = this.r;
   if (!fr) return "";
-  if (r.chance(0.3) && fr.state) { var k = r.pick(["tidy", "hurry", "ransacked", "dust", "fresh", "dark"]); if (fr.state[k] && fr.state[k].length) { rm.state = k; return this.from("st:" + this.era + ":" + k, fr.state[k], 3) || ""; } }
+  if (r.chance(0.3) && fr.state) { var k = r.pick(["tidy", "hurry", "ransacked", "dust", "fresh", "dark"]); if (fr.state[k] && fr.state[k].length) { var sv = this.fromFit("st:" + this.era + ":" + k, fr.state[k], 3, have); if (sv) { rm.state = k; return sv; } } }
   var cat = r.pick(CATS.filter(function (c) { return fr[c] && fr[c].length; }));
-  return cat ? this.from("fr:" + this.era + ":" + cat, fr[cat], Math.ceil(this.n * 1.6 / 6)) || "" : "";
+  return cat ? this.fromFit("fr:" + this.era + ":" + cat, fr[cat], Math.ceil(this.n * 1.6 / 6), have) || "" : "";
 };
 /* Износ вещи обстановки: по классу вещи и номеру предмета (без колоды — вещей на этаже сотни). */
 GP.wear = function (cls, salt) {
@@ -395,6 +441,6 @@ function corpse(seed, L, F, o) {
 
 LAB.agen = {
   Gen: Gen, person: person, personByG: personByG, render: render, noteText: noteText, timeWords: timeWords,
-  eraOf: eraOf, postFor: postFor, corpse: corpse, tagsOf: tagsOf, feistel20: feistel20, NAMES: NM, femSur: femSur, DAYS: DAYS
+  eraOf: eraOf, postFor: postFor, corpse: corpse, fitsRoom: fitsRoom, tagsOf: tagsOf, feistel20: feistel20, NAMES: NM, femSur: femSur, DAYS: DAYS
 };
 })();

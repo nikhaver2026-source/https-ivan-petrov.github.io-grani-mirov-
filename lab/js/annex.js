@@ -1,5 +1,5 @@
 /* ════════════════════════════════════════════════════════════════════
-   «Подземная лаборатория» — кабинеты у коридоров и особые зоны (1.3).
+   «Подземная лаборатория» — кабинеты у коридоров и особые зоны (1.5).
    В стенах каждого коридора — двери в небольшие помещения: кабинеты,
    кладовые, подсобки, читальни, посты и склады; что в них стоит и что
    можно посмотреть, обыскать и прочитать — своё на каждой глубине.
@@ -252,6 +252,7 @@ LAB.annex.place = function (ctx) {
     if (!list.length) return null;
     var sp2 = r.pick(list); free.splice(free.indexOf(sp2), 1); return sp2;
   };
+  var picks = {};
   specialsFor(r, L, F, spots.length).forEach(function (ty) {
     var def = ROOMS[ty]; if (!def) return;
     var big = def.size && def.size[0] >= 4;
@@ -260,14 +261,16 @@ LAB.annex.place = function (ctx) {
       : take(function (q) { return !big || span(q) >= 4; });
     if (!sp2) return;
     types[sp2.id] = ty;
+    /* (1.5) у особых помещений — свои варианты, на этаже без повторов */
+    if (gen && gen.variantFor) { var sv = gen.variantFor(ty); if (sv) picks[sp2.id] = sv; }
     if (def.rad >= 3) {
       var near = free.filter(function (q) { return q.c === sp2.c; })[0];
-      if (near && r.chance(0.75)) { free.splice(free.indexOf(near), 1); types[near.id] = "x_decon"; }
+      if (near && r.chance(0.75)) { free.splice(free.indexOf(near), 1); types[near.id] = "x_decon"; if (gen && gen.variantFor) { var dv = gen.variantFor("x_decon"); if (dv) picks[near.id] = dv; } }
     }
   });
   /* 3. Остальное: колода пар «тип + вариант» своей глубины — без повторов на этаже,
      тип в одном коридоре не повторяется */
-  var pool = plainPool(era), picks = {};
+  var pool = plainPool(era);
   Object.keys(byCorr).forEach(function (cid) {
     var used = {};
     byCorr[cid].forEach(function (sp2) {
@@ -299,7 +302,8 @@ LAB.annex.place = function (ctx) {
       var fem = r.chance(0.5), fn = r.pick(fem ? LAB.NAMES.f : LAB.NAMES.m), sn = r.pick(fem ? LAB.NAMES.sf : LAB.NAMES.sm);
       rm.owner = { n: fn + " " + sn, short: fn.charAt(0) + ". " + sn, f: fem, post: post };
     }
-    if (gen) rm.desc = gen.describe(rm, def, it2, owner, { secret: sp2.wing });
+    /* состояние — до обстановки (баррикада, жилая койка), описание — после: подробности по тому, что стоит */
+    if (gen) { var stt0 = gen.stateFor(rm, def, { secret: sp2.wing }); if (stt0) rm.state = stt0; }
     else {
       if (dk >= details.length) { details = detailDeck(r, era); dk = 0; }
       rm.desc = def.desc + (rm.owner ? " На двери изнутри — табличка: «" + cap(rm.owner.post) + " " + rm.owner.short + "»." : "") + " " + details[dk++];
@@ -318,6 +322,7 @@ LAB.annex.place = function (ctx) {
       if (def.kind === "locked") d.lock = lockFor(ctx, r, sp2, rm);
     }
     furnish(ctx, r, sp2, rm, def, v, gen);
+    if (gen) rm.desc = gen.describe(rm, def, it2, owner, { secret: sp2.wing, state: rm.state || null, have: holds(fl, rm) });
   });
   /* 4б. «Ковчег»: тела тех, кто не успел уйти три недели назад — чаще там, где держали
      оборону, бежали или горело; при них — вещи, жетон и, бывает, записка */
@@ -351,6 +356,12 @@ LAB.annex.place = function (ctx) {
   });
   fl.annexN = spots.length;
 };
+/* Что стоит в помещении: виды предметов и вещей обстановки. */
+function holds(fl, rm) {
+  var h = {};
+  fl.objs.forEach(function (o) { if (o.room === rm.id) { h[o.type] = 1; if (o.fx) h[o.fx] = 1; } });
+  return h;
+}
 function span(sp) { return sp.c.axis === "h" ? sp.x1 - sp.x0 + 1 : sp.y1 - sp.y0 + 1; }
 function cap(s) { s = String(s || ""); return s.charAt(0).toUpperCase() + s.slice(1); }
 /* Вырезать помещение и дверь (тип — потом). */
@@ -487,7 +498,7 @@ function placeNotes(ctx, r, gen, spots) {
     var rm = fl.rooms[sp.id], def = ROOMS[rm.type] || {};
     if (!rm || def.kind === "supply" || def.kind === "trial" || def.kind === "decon") return;
     var own = people.filter(function (q) { return q.rm === rm; })[0];
-    var n = own ? (r.chance(0.35) ? 0 : r.chance(0.7) ? 1 : 2) : (r.chance(0.78) ? 0 : 1);
+    var n = own ? (r.chance(0.5) ? 0 : r.chance(0.8) ? 1 : 2) : (r.chance(0.88) ? 0 : 1);
     if (rm.state === "lived" && n < 2) n++;
     for (var i = 0; i < n; i++) {
       var au = own && (i === 0 || r.chance(0.5)) ? own.p : anyone(null);
@@ -517,7 +528,7 @@ function placeMainFixtures(ctx, r, gen) {
       for (var i = 0; i < list.length; i++) ctx.addObj("fx", rm.id, { fx: list[i], seed: r.int(1, 99999) });
     }
     if (gen && rm.type !== "secret" && LAB.ROOMS[rm.type]) {
-      var dt = gen.mainDetail(rm);
+      var dt = gen.mainDetail(rm, holds(fl, rm));
       rm.desc = LAB.ROOMS[rm.type].desc + (dt ? " " + dt : "");
     }
   }

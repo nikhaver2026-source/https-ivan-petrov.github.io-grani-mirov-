@@ -236,18 +236,19 @@ function gameGesture(g) {
     if (g.kind === "swipe") {
       if (g.dir === "U") LAB.ui.character();
       else if (g.dir === "D") LAB.ui.inventory();
-      else if (g.dir === "L") LAB.ui.inventory(8);
-      else if (g.dir === "R") game.navMenu ? game.navMenu() : game.navigate(true);
+      /* (1.5) влево — кредиты, вправо — здоровье, бодрость, сытость и всё тело */
+      else if (g.dir === "L") game.creditsStatus();
+      else if (g.dir === "R") game.bodyStatus();
       return;
     }
   }
   if (g.n >= 4) {
     if (g.kind === "dtap") { LAB.ui.implants(); return; }
     if (g.kind === "tap") { game.quickStatus(); return; }
-    /* четыре пальца влево и вправо — история объявлений ОКО, вверх — состояние тела */
+    /* четыре пальца влево и вправо — история объявлений ОКО, вверх — список целей навигатора */
     if (g.kind === "swipe" && g.dir === "L") { LAB.history.show(-1); return; }
     if (g.kind === "swipe" && g.dir === "R") { LAB.history.show(1); return; }
-    if (g.kind === "swipe" && g.dir === "U") { game.bodyStatus(); return; }
+    if (g.kind === "swipe" && g.dir === "U") { if (game.navMenu) game.navMenu(); else game.navigate(true); return; }
   }
 }
 /* Повторить последнюю фразу. */
@@ -264,7 +265,8 @@ function repeatLast() {
    Enter — действие (дверь, терминал, ящик, выживший), пробел — что рядом,
    Tab — осмотреться, N — навигатор, M — список целей, V — сканер,
    H — аптечка, C — персонаж, I — инвентарь, J — задания и журнал,
-   U — импланты, T — здоровье и заряд, K — состояние тела, G — поесть,
+   U — импланты, T — здоровье и заряд, K — здоровье и состояние тела,
+   B — кредиты, G — поесть, L — ловушки (поставить, снять),
    точка и запятая — история объявлений ОКО (назад и вперёд), Z — повторить
    фразу, X или Ctrl — тишина, Escape — окно персонажа, F1 — руководство.
    В окнах: стрелки вверх и вниз — пункты, влево и вправо — значение,
@@ -273,7 +275,7 @@ function repeatLast() {
    C и I — персонаж и инвентарь.
    Буквы работают и в русской раскладке (Ц Ф Ы В, К, Й, У, А…). */
 var KEY_LAT = { "ц": "w", "ф": "a", "ы": "s", "в": "d", "к": "r", "й": "q", "у": "e", "а": "f", "т": "n", "ь": "m", "м": "v", "р": "h", "с": "c", "ш": "i", "о": "j", "г": "u", "е": "t", "я": "z", "ч": "x",
-  "п": "g", "л": "k", "ю": ".", "б": "," };
+  "п": "g", "л": "k", "ю": ".", "б": ",", "и": "b", "д": "l" };
 var WASD = { w: "N", a: "W", s: "S", d: "E" };
 var ARROW = { ArrowUp: "N", ArrowDown: "S", ArrowLeft: "W", ArrowRight: "E" };
 var GAME2SCR = { N: "U", S: "D", W: "L", E: "R" };
@@ -347,7 +349,7 @@ function gameKey(e, k) {
     case "h": game.useMedkit(); return true;
     case "c": LAB.ui.character(); return true;
     case "i": LAB.ui.inventory(); return true;
-    case "j": LAB.ui.inventory(8); return true;
+    case "j": LAB.ui.inventory("Задания"); return true;
     case "u": LAB.ui.implants(); return true;
     case "t": game.quickStatus(); return true;
     case "z": repeatLast(); return true;
@@ -356,6 +358,8 @@ function gameKey(e, k) {
     case ",": LAB.history.show(1); return true;
     case "g": game.eatBest(); return true;
     case "k": game.bodyStatus(); return true;
+    case "b": game.creditsStatus(); return true;
+    case "l": if (LAB.traps) LAB.traps.menu(); return true;
     case "Escape": case "Backspace": if (window.labBack) window.labBack(); return true;
     case "F1": if (LAB.guide) LAB.guide.open(); return true;
   }

@@ -447,8 +447,17 @@ function profile(w) {
   if (b.area) s.push("задевает соседей цели");
   if (b.freeze) s.push("замораживает");
   if (b.spread) s.push("задевает соседнюю линию");
+  /* (1.5) свойства нового оружия */
+  if (b.bleed) s.push("живое истекает после удара");
+  if (b.chain) s.push("разряд перескакивает на соседей: до " + b.chain + " " + gm().plural(b.chain, "цели", "целей", "целей"));
+  if (b.knock) s.push("отбрасывает на шаг");
+  if (b.slow) s.push("замедляет");
+  if (b.mark) s.push("метит цель: по ней бьют на четверть сильнее");
+  if (b.drain) s.push("часть урона по живому возвращается здоровьем");
+  if (b.crit) s.push("чаще бьёт точно в цель");
+  if (b.burst) s.push("очередь из " + b.burst);
   s.push(heats(w) ? "греется при долгой стрельбе" : "не греется");
-  var l = loud(w, ({ melee: 2, laser: 6, cryo: 5, thermo: 6, gauss: 10, positron: 12, magnetron: 8 })[b.cls] || 8);
+  var l = b.silent ? 2 : loud(w, ({ melee: 2, laser: 6, cryo: 5, thermo: 6, gauss: 10, positron: 12, magnetron: 8 })[b.cls] || 8);
   s.push(l <= 3 ? "звучит тихо" : l <= 7 ? "звучит умеренно" : "звучит громко, слышно далеко");
   return s.join(", ") + ".";
 }
@@ -702,11 +711,12 @@ function drops(f, list, r, dk) {
 }
 
 /* ════════ ОКНА МАСТЕРСКОЙ ════════ */
-var GROUPS = ["Лечение и стимуляторы", "Батареи и боеприпасы", "Гранаты и устройства", "Оружие", "Броня", "Улучшения", "Модули оружия", "Восстановление деталей"];
+var GROUPS = ["Лечение и стимуляторы", "Батареи и боеприпасы", "Гранаты и устройства", "Ловушки и мины", "Оружие", "Броня", "Улучшения", "Модули оружия", "Восстановление деталей"];
 function groupOf(rc) {
   var o = String(rc.out), d = LAB.ITEMS[o];
   if (rc.group === "restore") return "Восстановление деталей";
   if (d && d.kind === "wmodule") return "Модули оружия";
+  if (d && d.kind === "trap") return "Ловушки и мины";
   if (o.indexOf("armor:") === 0) return "Броня";
   if (o.indexOf("weapon:") === 0) return "Оружие";
   if (o.indexOf("ammo:") === 0) return "Батареи и боеприпасы";

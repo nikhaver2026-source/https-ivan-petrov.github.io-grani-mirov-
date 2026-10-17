@@ -1,5 +1,5 @@
 /* ════════════════════════════════════════════════════════════════════
-   «Подземная лаборатория» — капсула восстановления (1.3).
+   «Подземная лаборатория» — капсула восстановления (1.5).
    Вы ложитесь в капсулу, крышка опускается, и дальше — меню капсулы:
    спать (вздремнуть, поспать, выспаться, лечебный сон — каждый сон
    рассказывается историей), слушать музыку из фонотеки капсулы, читать
@@ -9,7 +9,10 @@
    описывает, что на экране). Рассказы листаются свайпами по страницам,
    «Закрыть» возвращает в меню капсулы. Пока вы слушаете, читаете или
    спите, идёт время и вы восстанавливаетесь. «Откинуть крышку и выйти» —
-   выход. Капсула запоминает вас: погибнете — «Эхо» вернёт вас сюда.
+   выход. Привязаться к капсуле — возрождаться у неё, если погибнете, —
+   стоит кредиты: на этажах 1–10 первого уровня 4 кредита, и каждые
+   следующие десять этажей вглубь — на 4 дороже. Без привязки «Эхо»
+   возвращает к началу уровня.
    В разных капсулах на разных этажах — свои рассказы и передачи.
    Тексты — capsule_texts.js.
    ════════════════════════════════════════════════════════════════════ */
@@ -87,13 +90,33 @@ function enter(o) {
   inCap = { o: o, min: 0, t0: Date.now(), hpIn: G().hp };
   gm().paused = true;
   A("rest");
-  /* капсула запоминает вас: точка возвращения */
-  var c = gm().freeNear ? gm().freeNear(o) : [G().x, G().y];
-  G().checkpoint = { L: G().L, F: G().F, x: c[0], y: c[1] };
   G().stats.capsules = (G().stats.capsules || 0) + 1;
   ev("capsule", 1);
-  say("Вы ложитесь в капсулу. Крышка мягко опускается, гул коридора стихает, внутри пахнет тёплым пластиком и мятой. «Эхо» запомнило эту капсулу: если погибнете, вернётесь сюда.", { interrupt: true });
+  var p = bindPrice(G().L, G().F);
+  say("Вы ложитесь в капсулу. Крышка мягко опускается, гул коридора стихает, внутри пахнет тёплым пластиком и мятой. " + (boundHere(o) ? "Вы привязаны к этой капсуле: если погибнете, вернётесь сюда." : "Привязаться к ней, чтобы возрождаться здесь, стоит " + p + " " + pl(p, "кредит", "кредита", "кредитов") + ": первый пункт меню."), { interrupt: true });
   setTimeout(function () { if (inCap.o === o) menu(); }, 1200);
+}
+/* ── привязка (1.5): возрождение у этой капсулы — за кредиты ──
+   Цена растёт каждые десять этажей вглубь: этажи 1–10 первого уровня —
+   4 кредита, 11–20 — 8, на втором уровне — 12 и 16 и так далее. */
+function bindPrice(L, F) { return 4 * (Math.floor(LAB.depth(L, F) / 10) + 1); }
+function boundHere(o) {
+  var cp = G().checkpoint;
+  return !!(cp && cp.cap && cp.L === G().L && cp.F === G().F && cp.cap === o.id);
+}
+function bind() {
+  var o = inCap.o, g = G(); if (!o) return;
+  if (boundHere(o)) { say("Вы уже привязаны к этой капсуле."); return; }
+  var p = bindPrice(g.L, g.F);
+  if ((g.credits || 0) < p) { LAB.UI.error(); say("Не хватает кредитов: привязка здесь стоит " + p + ", у вас " + (g.credits || 0) + ". Без привязки, если погибнете, «Эхо» вернёт вас к началу уровня."); return; }
+  g.credits -= p;
+  var c = gm().freeNear ? gm().freeNear(o) : [g.x, g.y];
+  g.checkpoint = { L: g.L, F: g.F, x: c[0], y: c[1], cap: o.id };
+  A("play", "term_ok");
+  ev("bind", 1);
+  say("Капсула считала ваш браслет и запомнила вас. Списано " + p + " " + pl(p, "кредит", "кредита", "кредитов") + ", осталось " + g.credits + ". Если погибнете на этом уровне, «Эхо» вернёт вас сюда. Прежняя привязка снята.");
+  gm().journal("Привязка к капсуле восстановления: уровень " + g.L + ", этаж " + g.F + ", " + p + " " + pl(p, "кредит", "кредита", "кредитов") + ".");
+  refreshTop();
 }
 function menu(focus, intro) {
   var o = inCap.o;
@@ -109,7 +132,8 @@ function refreshTop() {
 /* Сказать после того, как окно объявит себя. */
 function later(t) { setTimeout(function () { LAB.safe(function () { sayq(t); }); }, 40); }
 function menuItems() {
-  var items = [];
+  var items = [], o = inCap.o, bp = bindPrice(G().L, G().F);
+  if (o && !boundHere(o)) items.push({ label: "Привязаться к капсуле, чтобы возрождаться здесь: " + bp + " " + pl(bp, "кредит", "кредита", "кредитов") + " (у вас " + (G().credits || 0) + ")", keep: true, fn: bind });
   items.push({ label: "Спать", fn: sleepMenu });
   if (playing) items.push({ label: "Остановить музыку: «" + playing.t.n + "»", keep: true, fn: function () { stopTrack(false); } });
   items.push({ label: "Послушать музыку", fn: musicMenu });
@@ -119,6 +143,7 @@ function menuItems() {
   items.push({ label: "Видеоархив капсулы", fn: function () { shelf("video"); } });
   items.push({ label: "Полежать с закрытыми глазами: полчаса", keep: true, fn: function () { recover(30, false); A("play", "capsule_hum", { gain: 0.5 }); say("Вы лежите, слушая ровный гул капсулы. Прошло полчаса. " + statusLine()); } });
   items.push({ label: "Состояние тела", keep: true, fn: function () { gm().bodyStatus(); } });
+  if (o && boundHere(o)) items.push({ label: "Вы привязаны к этой капсуле: если погибнете, вернётесь сюда", info: true, keep: true, fn: function () { say("Вы привязаны к этой капсуле. Погибнете на этом уровне — «Эхо» вернёт вас сюда. Привязка к другой капсуле снимет эту."); } });
   items.push({ label: "Откинуть крышку и выйти", fn: function () { leave(false); } });
   return items;
 }
@@ -296,7 +321,7 @@ function reader(title, text, opts) {
 /* Игра закончилась или ушли в главное меню — музыка капсулы стихает. */
 function reset() { stopTrack(true); inCap.o = null; }
 LAB.capsule = {
-  menu: enter, inside: function () { return !!inCap.o; }, leave: function () { leave(false); }, reset: reset,
+  menu: enter, inside: function () { return !!inCap.o; }, leave: function () { leave(false); }, reset: reset, bindPrice: bindPrice, boundHere: boundHere, bind: bind,
   _sleep: function (i) { sleep(SLEEP[i]); }, _shelf: shelf, _open: open, _selection: selection, _tracks: tracks, _playing: function () { return playing; }, _state: function () { return inCap; }
 };
 })();

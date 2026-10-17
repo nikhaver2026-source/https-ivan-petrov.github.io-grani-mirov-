@@ -65,16 +65,31 @@ function ok(cond, msg) { if (cond) console.log("  ✓ " + msg); else { fails++; 
   await gest({ kind: "swipe", n: 1, dir: "U" });
   ok(await page.evaluate(() => LAB.ui.screen()) === "menu", "свайп вверх — пропуск пролога, снова главное меню");
   const items = await page.evaluate(() => LAB.ui.top().items.map(i => typeof i.label === "function" ? i.label() : i.label));
-  ok(JSON.stringify(items) === JSON.stringify(["Начать игру", "Пролог", "Загрузить игру", "Руководство", "Настройки"]), "в меню пять пунктов, среди них руководство: " + items.join(", "));
+  ok(JSON.stringify(items) === JSON.stringify(["Начать игру", "Пролог", "Загрузить игру", "Руководство", "Что нового?", "Настройки"]), "в меню шесть пунктов, среди них руководство и «Что нового?»: " + items.join(", "));
   await gest({ kind: "swipe", n: 1, dir: "R" }); await gest({ kind: "swipe", n: 1, dir: "R" }); await gest({ kind: "swipe", n: 1, dir: "R" });
   await gest({ kind: "dtap", n: 1 });
   ok(await page.evaluate(() => LAB.ui.top().title) === "Руководство", "главное меню → «Руководство» открывает руководство");
   await gest({ kind: "back", n: 1 });
   ok(await page.evaluate(() => LAB.ui.top().title === LAB.TITLE + ". Главное меню"), "из руководства — назад в главное меню");
 
+  console.log("Что нового?");
+  const news = await page.evaluate(() => {
+    const out = {}, lb = () => LAB.ui.top().items.map(i => typeof i.label === "function" ? i.label() : i.label);
+    const mi = LAB.ui.top().items.findIndex(i => (typeof i.label === "function" ? i.label() : i.label) === "Что нового?");
+    LAB.ui.top().i = mi; LAB.ui.activate();
+    out.title = LAB.ui.top().title; out.items = lb(); out.ver = LAB.VERSION;
+    SPOKEN.length = 0; LAB.ui.top().i = 0; LAB.ui.activate();
+    out.note = LAB.ui.top().title; out.text = SPOKEN.join(" ");
+    out.tech = /WebView|Playwright|JSON|ES2018|обработчик|сборщик/.test(out.text);
+    LAB.ui.closeTop(true); LAB.ui.closeAll(); LAB.ui.mainMenu(true);
+    return out;
+  });
+  ok(news.title === "Что нового?" && news.items[0] === news.ver + " — эта версия" && news.items.some(l => /^Альфа 1\.2$/.test(l)) && news.items.some(l => /^Альфа 1\.0$/.test(l)), "«Что нового?»: эта версия и прежние — " + news.items.join(", "));
+  ok(/Что нового: /.test(news.note) && /Ловушки и мины/.test(news.text) && !news.tech, "что нового в этой версии — коротко и без технических подробностей");
+
   console.log("Настройки");
   await page.evaluate(() => { LAB.ui.top().i = 0; });
-  for (let i = 0; i < 4; i++) await gest({ kind: "swipe", n: 1, dir: "R" });
+  for (let i = 0; i < 5; i++) await gest({ kind: "swipe", n: 1, dir: "R" });
   await gest({ kind: "dtap", n: 1 });
   ok(await page.evaluate(() => LAB.ui.top().title) === "Настройки", "открыты настройки");
   const labels = await page.evaluate(() => LAB.ui.top().items.map(i => typeof i.label === "function" ? i.label() : i.label));
@@ -1639,6 +1654,8 @@ LAB.ui.closeAll();
     C.stop(); LAB.ui.closeAll();
     g.enterFloor(2, 3, "down", true);
     C.foes().forEach(f => { f.dead = true; });
+    /* событие этажа (аварийный свет и прочее) выпадает случайно: проверка — при обычном */
+    G.event = "norm"; G.eventUntil = G.min + 100000;
     const wb = g.CUR.fl.objs.find(o => o.type === "workbench");
     if (!wb) return { noBench: true };
     G.x = wb.x; G.y = wb.y; G.hp = G.hpMax = 9999;
@@ -1871,7 +1888,7 @@ LAB.ui.closeAll();
     Date.now = now0; S.saveNote = 1;
     /* «Осмотреться»: сначала вещи на полу и что стоит в помещении, потом само помещение и двери, в конце — уровень и этаж */
     LAB.ui.closeAll();
-    const rm = g.CUR.fl.rooms.find(r => g.CUR.fl.objs.some(o => o.room === r.id) && r.doors && r.doors.length);
+    const rm = g.CUR.fl.rooms.find(r => r && g.CUR.fl.objs.some(o => o.room === r.id) && r.doors && r.doors.length);
     if (rm) {
       const ob = g.CUR.fl.objs.find(o => o.room === rm.id);
       let cell = null;
@@ -2175,6 +2192,296 @@ LAB.ui.closeAll();
   ok(lift.floors && lift.floors.join(",") === "1,2,3" && lift.onlyVisited && lift.hasNA, "лифт: в списке только этажи, где вы были (" + (lift.floors || []).join(", ") + "), остальные — «недоступно»");
   ok(lift.naSaid && lift.rideNo, "лифт: на этаж, где вы не были, не едет и говорит «Недоступно»");
   ok(lift.rideOk, "лифт: на этаж, где вы были, едет");
+
+  console.log("Кабинеты у коридоров, обстановка, тела, записки, капсула, достижения, новое оружие (1.5)");
+  const v13 = await page.evaluate(async () => {
+    const g = LAB.game, G = g.G, out = {};
+    const label = i => typeof i.label === "function" ? i.label() : i.label;
+    const labels = () => LAB.ui.top() ? LAB.ui.top().items.map(label) : [];
+    LAB.combat.stop(); LAB.ui.closeAll();
+    g.enterFloor(3, 5, "down", true);
+    LAB.combat.foes().forEach(f => { f.dead = true; });
+    const fl = g.CUR.fl;
+    /* двери кабинетов — в каждом коридоре, число у стен разное */
+    out.corrs = fl.corrs.length; out.withDoors = fl.corrs.filter(c => (c.annex || []).length > 0).length;
+    const ann = fl.rooms.filter(r => r && r.annex);
+    out.annex = ann.length;
+    const names = {}; ann.forEach(r => { names[r.name] = (names[r.name] || 0) + 1; });
+    out.distinct = Object.keys(names).length;
+    const per = fl.corrs.map(c => (c.annex || []).length); out.perMin = Math.min.apply(null, per); out.perMax = Math.max.apply(null, per);
+    /* описание при входе — своё у помещения */
+    const rm = ann.find(r => r.owner && r.desc);
+    out.ownerDesc = !!rm;
+    if (rm) {
+      let cell = null;
+      for (let y = rm.y0; y <= rm.y1 && !cell; y++) for (let x = rm.x0; x <= rm.x1 && !cell; x++) if (!fl.objAt[y * LAB.W + x]) cell = [x, y];
+      if (cell) { G.x = cell[0]; G.y = cell[1]; SPOKEN.length = 0; g.roomCheck(true); out.descSaid = SPOKEN.some(t => t.indexOf(rm.desc.slice(0, 40)) >= 0); }
+    }
+    /* вещь обстановки: меню действий и подробный осмотр */
+    const fx = fl.objs.find(o => o.type === "fx" && LAB.FIX.T[o.fx] && LAB.FIX.T[o.fx].a.some(a => a[0] === "rest"));
+    if (fx) {
+      g.objMenu(fx); const ls = labels();
+      out.fxMenu = ls.some(l => /Осмотреть/.test(l)) && ls.length >= 2 && LAB.ui.top().title === LAB.FIX.T[fx.o ? fx.o : fx.fx].n;
+      LAB.ui.closeAll();
+      out.fxExam = LAB.fixtures.examine(fx).length > LAB.FIX.T[fx.fx].d.length;
+      const restLabel = LAB.FIX.T[fx.fx].a.find(a => a[0] === "rest")[1];
+      const w0 = G.body.wake, t0 = G.min; LAB.fixtures.menu(fx); const k = LAB.ui.top().items.findIndex(i => label(i) === restLabel);
+      if (k >= 0) { LAB.ui.top().i = k; LAB.ui.activate(); }
+      out.restOk = k >= 0 && (G.min !== t0 || G.body.wake >= w0);
+      LAB.ui.closeAll();
+    }
+    /* тело: осмотреть, карманы, жетон */
+    g.enterFloor(5, 6, "down", true);
+    LAB.combat.foes().forEach(f => { f.dead = true; });
+    const body = g.CUR.fl.objs.find(o => o.type === "corpse");
+    out.hasBody = !!body;
+    if (body) {
+      g.objMenu(body); const bl = labels();
+      out.bodyMenu = bl.some(l => /Осмотреть тело/.test(l)) && bl.some(l => /Обшарить карманы/.test(l)) && bl.some(l => /Снять жетон/.test(l));
+      const bi = LAB.ui.top().items.findIndex(i => /Снять жетон/.test(label(i))); LAB.ui.top().i = bi; LAB.ui.activate();
+      out.badge = G.inv.badge > 0;
+      LAB.ui.closeAll();
+      out.bodyText = /жетон/.test(LAB.fixtures.examine(body));
+    }
+    /* записки из частей: без подстановок в тексте */
+    let note = null;
+    g.CUR.fl.objs.forEach(o => (o.loot || []).forEach(x => { if (!note && x.kind === "note" && x.note === "agen") note = x; }));
+    if (!note) g.CUR.fl.items.forEach(x => { if (!note && x.kind === "note" && x.note === "agen") note = x; });
+    out.hasNote = !!note;
+    if (note) { const nt = g.noteText(note); out.noteOk = nt.x.length > 60 && !/[{}\[\]]/.test(nt.x + nt.t); }
+    /* достижения */
+    LAB.ach.ev("floor", 5); out.ach = !!(G.ach && G.ach.d.floor5);
+    LAB.ach.menu(); out.achMenu = LAB.ui.top() && LAB.ui.top().title === "Достижения"; LAB.ui.closeAll();
+    /* капсула: меню, сон, музыка, выход */
+    const cap = g.CUR.fl.objs.find(o => o.type === "capsule");
+    if (cap) { LAB.capsule.menu(cap); await new Promise(r => setTimeout(r, 1500)); const cl = labels(); out.capMenu = cl.some(l => /^Спать/.test(l)) && cl.some(l => /музыку/.test(l)) && cl.some(l => /Откинуть крышку и выйти/.test(l)); LAB.capsule.leave(true); LAB.ui.closeAll(); }
+    else out.capMenu = true;
+    /* новое оружие: создаётся, описывается, стреляет */
+    const ids = ["nailgun", "stunrod", "silencer_p", "g_pickaxe", "k_eeljar", "o_twin", "m_stamper", "i_sourcebeam"];
+    out.wOk = ids.every(id => { const w = LAB.makeWeapon(id, 5, 1, 2); return w && w.dmg > 0 && LAB.WEAPONS[id].desc; });
+    const nw = LAB.makeWeapon("stunrod", 5, 1, 2); G.weapons.push(nw); G.wi = G.weapons.length - 1; G.drawn = true;
+    try { LAB.combat.fire("N"); out.fireOk = true; } catch (e) { out.fireOk = false; out.fireErr = e.message; }
+    G.drawn = false;
+    /* пункт снабжения: прилавок, заказ с поверхности, скупка */
+    const sup = g.CUR.fl.objs.find(o => o.type === "supply");
+    out.hasSupply = !!sup;
+    if (sup) {
+      LAB.supply.postMenu(sup); const sl = labels();
+      out.supplyMenu = sl.some(l => /^Прилавок/.test(l)) && sl.some(l => /Заказать с поверхности/.test(l)) && sl.some(l => /^Продать/.test(l));
+      const si = LAB.ui.top().items.findIndex(i => /^Продать/.test(label(i))); LAB.ui.top().i = si; LAB.ui.activate();
+      out.sellMenu = /Скупка|Продать/.test(LAB.ui.top() ? LAB.ui.top().title : "") || labels().some(l => /Продать|Оружие|Броня/.test(l));
+      LAB.ui.closeAll();
+    }
+    /* навигатор знает двери коридора */
+    const c0 = g.CUR.fl.corrs.find(c => (c.annex || []).length > 2);
+    if (c0) { G.x = Math.floor((c0.x0 + c0.x1) / 2); G.y = Math.floor((c0.y0 + c0.y1) / 2); g.navMenu(); const nl = labels(); out.navDoors = nl.some(l => /двери этого коридора/.test(l)); LAB.ui.closeAll(); }
+    return out;
+  });
+  ok(v13.withDoors === v13.corrs, "двери кабинетов — в каждом коридоре: " + v13.withDoors + " из " + v13.corrs + ", у коридора от " + v13.perMin + " до " + v13.perMax);
+  ok(v13.annex > 60 && v13.distinct >= v13.annex * 0.85, "кабинеты разные: " + v13.distinct + " разных табличек на " + v13.annex + " кабинетов");
+  ok(v13.ownerDesc && v13.descSaid, "при входе в кабинет звучит его собственное описание с табличкой хозяина");
+  ok(v13.fxMenu && v13.fxExam && v13.restOk, "обстановка: у вещи меню действий, подробный «Осмотреть», отдых тратит время и бодрит");
+  ok(!v13.hasBody || (v13.bodyMenu && v13.badge && v13.bodyText), "тело: осмотреть, обшарить карманы, снять жетон" + (v13.hasBody ? "" : " (на этаже тел нет)"));
+  ok(!v13.hasNote || v13.noteOk, "записка из частей собирается без пропусков подстановок" + (v13.hasNote ? "" : " (записок глубины пока нет)"));
+  ok(v13.ach && v13.achMenu, "достижения: веха засчитывается, окно «Достижения» открывается");
+  ok(v13.capMenu, "капсула: «Спать», музыка, «Откинуть крышку и выйти»");
+  ok(v13.wOk && v13.fireOk, "новое оружие создаётся, описано и стреляет" + (v13.fireErr ? ": " + v13.fireErr : ""));
+  ok(v13.navDoors, "навигатор: в коридоре есть список его дверей");
+  ok(v13.hasSupply && v13.supplyMenu && v13.sellMenu, "пункт снабжения на этаже: прилавок, заказ с поверхности, скупка");
+
+  console.log("Осмотр и жесты состояния, привязка к капсуле за кредиты, ловушки и мины (1.5)");
+  const tr = await page.evaluate(async () => {
+    const g = LAB.game, G = g.G, out = {};
+    const wait = ms => new Promise(r => setTimeout(r, ms));
+    const label = i => typeof i.label === "function" ? i.label() : i.label;
+    const labels = () => LAB.ui.top() ? LAB.ui.top().items.map(label) : [];
+    const C = LAB.combat;
+    C.stop(); LAB.ui.closeAll();
+    g.enterFloor(3, 5, "down", true);
+    C.foes().forEach(f => { f.dead = true; });
+    G.dead = false; G.hp = G.hpMax; G.st = { poison: 0, slow: 0, shield: 0, haste: 0, cloak: 0, web: 0, jam: 0, deaf: 0, antitox: 0, bleed: 0, navjam: 0 };
+    let fl = g.CUR.fl;
+    const free = (x, y) => LAB.inb(x, y) && (fl.t[y * LAB.W + x] === LAB.T.ROOM || fl.t[y * LAB.W + x] === LAB.T.CORR) && !fl.objAt[y * LAB.W + x];
+    /* два пальца вверх: сначала что в помещении и где, потом выходы, потом само помещение */
+    const rm = fl.rooms.find(r => r && r.desc && fl.objs.some(o => o.room === r.id));
+    if (rm) {
+      let cell = null;
+      for (let y = rm.y0; y <= rm.y1 && !cell; y++) for (let x = rm.x0; x <= rm.x1 && !cell; x++) if (free(x, y)) cell = [x, y];
+      G.x = cell[0]; G.y = cell[1]; g.CUR.room = -9;
+      SPOKEN.length = 0; LAB.input.dispatch({ kind: "swipe", n: 2, dir: "U" });
+      const t = SPOKEN.join(" "), iHere = t.indexOf("Здесь:"), iEx = t.indexOf("Выходы:"), iRoom = t.indexOf("Помещение: ");
+      out.look = iHere >= 0 && iEx > iHere && iRoom > iEx;
+      out.lookText = t.slice(0, 120);
+    }
+    /* три пальца вправо — здоровье и тело, влево — кредиты; четыре вверх — цели навигатора */
+    SPOKEN.length = 0; LAB.input.dispatch({ kind: "swipe", n: 3, dir: "R" });
+    const bs = SPOKEN.join(" ");
+    out.body = /^Здоровье \d+ из \d+/.test(bs) && /Бодрость/.test(bs) && /Сытость/.test(bs) && bs.indexOf("Бодрость") < bs.indexOf("Сытость") && /Токсины/.test(bs);
+    G.credits = 57; SPOKEN.length = 0; LAB.input.dispatch({ kind: "swipe", n: 3, dir: "L" });
+    out.cred = /^Кредиты: 57\./.test(SPOKEN.join(" ")) && /Привязка к капсуле/.test(SPOKEN.join(" "));
+    SPOKEN.length = 0; LAB.input.dispatch({ kind: "swipe", n: 4, dir: "U" });
+    out.navMenu = (!!LAB.ui.top() && LAB.ui.top().title === "Навигатор") || SPOKEN.some(t => /Навигатору не на что/.test(t));
+    LAB.ui.closeAll();
+    /* привязка к капсуле: цена растёт каждые десять этажей; без кредитов — нельзя */
+    const bp = LAB.capsule.bindPrice;
+    out.prices = [bp(1, 1), bp(1, 10), bp(1, 11), bp(1, 20), bp(2, 1), bp(3, 5)].join(",");
+    const cap = fl.objs.find(o => o.type === "capsule");
+    out.hasCap = !!cap;
+    if (cap) {
+      G.checkpoint = null; G.credits = 2;
+      LAB.capsule.menu(cap); await wait(1500);
+      let cl = labels(); out.bindItem = /^Привязаться к капсуле.*\d+ кредит/.test(cl[0] || "");
+      LAB.ui.top().i = 0; LAB.ui.activate();
+      out.bindPoor = !G.checkpoint && G.credits === 2;
+      G.credits = 100;
+      LAB.ui.top().i = 0; LAB.ui.activate();
+      out.bindOk = !!(G.checkpoint && G.checkpoint.cap === cap.id) && G.credits === 100 - bp(3, 5);
+      cl = labels(); out.boundInfo = cl.some(l => /Вы привязаны к этой капсуле/.test(l)) && !/^Привязаться/.test(cl[0] || "");
+      LAB.capsule.leave(true); LAB.ui.closeAll();
+      /* гибель: к привязанной капсуле */
+      const cp0 = G.checkpoint;
+      G.x = cap.x; G.y = cap.y + 3; g.die(); await wait(4600);
+      out.respawnCap = G.L === 3 && G.F === 5 && G.x === cp0.x && G.y === cp0.y;
+      /* без привязки — к началу уровня */
+      G.checkpoint = null; g.die(); await wait(4600);
+      out.respawnStart = G.L === 3 && G.F === 1;
+      C.stop();
+    }
+    /* ловушки: вещи, схемы, полки */
+    const T = LAB.traps;
+    out.nTypes = T.ids.length;
+    out.items = T.ids.every(k => LAB.ITEMS["tr_" + k] && LAB.ITEMS["tr_" + k].kind === "trap" && LAB.ITEMS["tr_" + k].desc.length > 60);
+    out.recipes = T.ids.every(k => LAB.RECIPES.some(rc => rc.out === "tr_" + k));
+    out.cat = LAB.supply.catOf("tr_jaw") === "trap" && LAB.CAT_N.trap === "Ловушки и мины";
+    g.enterFloor(3, 5, "down", true); C.stop();
+    C.foes().forEach(f => { f.dead = true; });
+    fl = g.CUR.fl;
+    G.dead = false; G.hp = G.hpMax; G.st.trapHeld = 0; G.st.slow = 0;
+    /* коридор: место для опытов */
+    const cor = fl.corrs.find(c => c.len >= 14 && !(c.annex || []).length) || fl.corrs.find(c => c.len >= 14) || fl.corrs[0];
+    const h = cor.axis === "h";
+    const put = (k) => { const x = h ? cor.x0 + k : cor.x0 + 1, y = h ? cor.y0 + 1 : cor.y0 + k; G.x = x; G.y = y; G.face = h ? "E" : "S"; return [x, y]; };
+    const step = (d) => { g.tryMove(d, false); };
+    const fwd = () => G.face, bwd = () => ({ N: "S", S: "N", E: "W", W: "E" })[G.face];
+    T.list().length = 0;
+    /* капкан под ногами: ждёт, пока отойдёте; взводится; враг попадается */
+    put(3);
+    G.inv.tr_jaw = 2;
+    out.placed = T.place("jaw", "here");
+    const jaw = T.list().find(t => t.own && t.t === "jaw");
+    out.wait = !!jaw && jaw.st === "wait";
+    step(bwd());
+    for (let i = 0; i < 6; i++) C.tick();
+    out.armed = !!jaw && jaw.st === "on";
+    const bot = C.spawnFoe("guardbot", jaw.x, jaw.y);
+    T.foeStep(bot);
+    out.caught = bot.frozen > 0 && bot.hp < bot.maxhp && jaw.st === "held";
+    bot.dead = true; bot.frozen = 0; C.tick();
+    out.sprung = jaw.st === "sprung" && jaw.uses === 5;
+    /* «Осмотреться» называет свою ловушку */
+    SPOKEN.length = 0; g.lookAround(); out.lookTrap = SPOKEN.some(t => /Ловушки: ваш капкан/.test(t));
+    /* снять и забрать */
+    G.x = jaw.x + (h ? -1 : 0); G.y = jaw.y + (h ? 0 : -1);
+    const adj = g.adjacentTargets().find(q => q.type === "trap");
+    out.adjacent = !!adj;
+    T.trapMenu(jaw); const tl = labels(); out.trapMenu = tl.some(l => /Взвести снова/.test(l)) && tl.some(l => /Снять и забрать/.test(l)); LAB.ui.closeAll();
+    const inv0 = G.inv.tr_jaw || 0; T.pickUp(jaw);
+    out.picked = T.list().indexOf(jaw) < 0 && ((G.inv.tr_jaw || 0) > inv0 || (G.inv.scrap || 0) > 0);
+    /* мина впереди: игрок наступает сам — и получает своё */
+    put(6); G.hp = G.hpMax; G.inv.tr_mine = 1;
+    T.place("mine", "front");
+    for (let i = 0; i < 6; i++) C.tick();
+    const mine = T.list().find(t => t.t === "mine" && t.own);
+    out.mineOn = !!mine && mine.st === "on";
+    /* ходьба с удержанием останавливается перед ней */
+    await wait(250); SPOKEN.length = 0; const ranX = G.x, ranY = G.y; g.tryMove(fwd(), true);
+    out.runStop = G.x === ranX && G.y === ranY && SPOKEN.some(t => /Стоп: впереди ваша противопехотная мина/.test(t));
+    const hp0 = G.hp; await wait(200); step(fwd());
+    out.selfHit = G.hp < hp0 && T.list().indexOf(mine) < 0;
+    /* капкан держит и вас; каждый шаг ослабляет хватку */
+    G.hp = G.hpMax; put(9); G.inv.tr_jaw = (G.inv.tr_jaw || 0) + 1;
+    T.place("jaw", "front"); for (let i = 0; i < 6; i++) C.tick();
+    await wait(200); step(fwd());
+    out.held = G.st.trapHeld > 0;
+    const h0 = G.st.trapHeld, px = G.x, py = G.y; await wait(200); step(fwd());
+    out.struggle = G.st.trapHeld < h0 && G.x === px && G.y === py;
+    G.st.trapHeld = 0;
+    T.list().length = 0;
+    /* растяжка с гранатой: поперёк коридора, на все четыре шага */
+    put(4); G.inv.tr_wire = 1; T.place("wire", "front");
+    const wr = T.list().find(t => t.t === "wire");
+    out.wireAcross = !!wr && wr.cells.length === LAB.CORR_W;
+    T.list().length = 0;
+    /* заряд на радиосигнале: подрыв по команде задевает врага рядом */
+    put(4); G.inv.tr_remote = 1; T.place("remote", "front");
+    for (let i = 0; i < 4; i++) C.tick();
+    const rem = T.list().find(t => t.t === "remote");
+    const v = h ? [1, 0] : [0, 1];
+    const bot2 = C.spawnFoe("guardbot", rem.x + v[0], rem.y + v[1]);
+    put(12); G.hp = G.hpMax; const hp1 = G.hp;
+    T.detonate(rem); await wait(500);
+    out.remote = bot2.hp < bot2.maxhp && T.list().indexOf(rem) < 0 && G.hp === hp1;
+    bot2.dead = true;
+    /* ЭМИ-мина: робот рядом — щит снят, машина стоит */
+    put(4); G.inv.tr_emp = 1; T.place("emp", "front");
+    const em = T.list().find(t => t.t === "emp");
+    put(12); for (let i = 0; i < 6; i++) C.tick();
+    const bot3 = C.spawnFoe("shieldbot", em.x + v[0], em.y + v[1]); bot3.shield = 30;
+    C.tick();
+    out.emp = bot3.shield === 0 && (bot3.frozen > 0 || bot3.dead) && T.list().indexOf(em) < 0;
+    bot3.dead = true;
+    /* логическая мина: робот бьёт своих */
+    put(4); G.inv.tr_logic = 1; T.place("logic", "front"); put(12); for (let i = 0; i < 6; i++) C.tick();
+    const lg = T.list().find(t => t.t === "logic");
+    const bot4 = C.spawnFoe("guardbot", lg.x, lg.y); T.foeStep(bot4);
+    out.logic = bot4.ally === true && bot4.allyT > 0;
+    bot4.dead = true;
+    T.list().length = 0;
+    /* мина робота-сапёра: слышно за два шага, обезвреживается, становится вашей */
+    put(4);
+    const mx = G.x + v[0] * 2, my = G.y + v[1] * 2;
+    T.enemyMine(mx, my, 20);
+    SPOKEN.length = 0; T.playerStep();
+    const em2 = T.list().find(t => t.by === "sapper");
+    out.heard = !!em2 && em2.known === 1 && SPOKEN.some(t => /Осторожно: мина робота-сапёра/.test(t));
+    G.x = mx - v[0]; G.y = my - v[1];
+    const inv1 = G.inv.tr_mine || 0;
+    T.disarm(em2);
+    for (let k = 0; k < 300; k++) { const c = LAB.mini._cur(); if (!c || c.type !== "hack") break; if (!c.busy) LAB.mini.gesture({ kind: "swipe", n: 1, dir: c.seq[c.pos] }); await wait(60); }
+    await wait(400);
+    out.disarm = T.list().indexOf(em2) < 0 && (G.inv.tr_mine || 0) === inv1 + 1;
+    /* окно «Ловушки и мины» в инвентаре */
+    LAB.ui.inventory(); const il = labels(); out.invItem = il.some(l => /^Ловушки и мины: \d+/.test(l)); LAB.ui.closeAll();
+    T.menu(); const ml = labels(); out.menu = ml.some(l => /Ваши ловушки на этом этаже/.test(l)) && ml.some(l => /Противопехотная мина: \d+/.test(l)); LAB.ui.closeAll();
+    /* мастерская: свой раздел */
+    out.wsGroup = LAB.RECIPES.filter(rc => /^tr_/.test(rc.out)).length === T.ids.length;
+    /* старые ловушки этажей: на глубине есть, в «Ковчеге» у баррикад */
+    let old = 0;
+    for (const [L, F] of [[2, 6], [4, 9], [7, 3], [9, 14], [15, 4], [33, 8], [55, 2], [66, 11], [90, 7]]) { g.enterFloor(L, F, "down", true); C.stop(); old += T.list().filter(t => !t.own).length; }
+    out.oldTraps = old;
+    G.dead = false; G.hp = G.hpMax; G.st.trapHeld = 0;
+    return out;
+  });
+  ok(tr.look, "два пальца вверх: сначала что в помещении и где, потом выходы, потом само помещение — " + (tr.lookText || ""));
+  ok(tr.body, "три пальца вправо: здоровье, бодрость, сытость и всё тело");
+  ok(tr.cred, "три пальца влево: кредиты и цена привязки к капсуле");
+  ok(tr.navMenu, "четыре пальца вверх: список целей навигатора");
+  ok(tr.prices === "4,4,8,8,12,20", "привязка к капсуле: этажи 1–10 — 4 кредита, каждые десять этажей — дороже: " + tr.prices);
+  ok(!tr.hasCap || (tr.bindItem && tr.bindPoor && tr.bindOk && tr.boundInfo), "капсула: привязка — первым пунктом, без кредитов — нельзя, с кредитами — списывает цену");
+  ok(!tr.hasCap || (tr.respawnCap && tr.respawnStart), "гибель: к привязанной капсуле, без привязки — к началу уровня");
+  ok(tr.nTypes >= 25 && tr.items && tr.recipes && tr.cat && tr.wsGroup, "ловушки и мины: " + tr.nTypes + " видов, у всех вещь, описание и схема сборки, своя полка снабжения");
+  ok(tr.placed && tr.wait && tr.armed, "капкан ставится под ноги и взводится, когда герой отойдёт");
+  ok(tr.caught && tr.sprung, "робот попадается в капкан: ранен и стоит; капкан можно взвести снова");
+  ok(tr.lookTrap && tr.adjacent && tr.trapMenu && tr.picked, "свою ловушку видно при осмотре, рядом — окно действий, её можно снять");
+  ok(tr.mineOn && tr.runStop && tr.selfHit, "своя мина: ходьба с удержанием стоит перед ней, отдельный шаг — и мина бьёт по герою");
+  ok(tr.held && tr.struggle, "капкан держит и героя, рывки ослабляют хватку");
+  ok(tr.wireAcross, "растяжка в коридоре — от стены до стены");
+  ok(tr.remote, "заряд на радиосигнале подрывается по команде и задевает врага рядом");
+  ok(tr.emp, "ЭМИ-мина: у робота снят щит, машина стоит");
+  ok(tr.logic, "логическая мина перепрошивает робота на вашу сторону");
+  ok(tr.heard && tr.disarm, "мину робота-сапёра слышно за два шага, её можно обезвредить и забрать");
+  ok(tr.invItem && tr.menu, "инвентарь: раздел «Ловушки и мины», окно с вашими ловушками на этаже");
+  ok(tr.oldTraps > 0, "старые ловушки прежних жителей на этажах: " + tr.oldTraps);
 
   console.log("Обход этажей одного зерна: вход, такты, осмотр");
   const tour = await page.evaluate(() => {

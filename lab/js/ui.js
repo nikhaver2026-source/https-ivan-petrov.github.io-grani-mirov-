@@ -54,7 +54,7 @@ function menu(title, items, opts) {
   var hl = LAB.tutor ? LAB.tutor.level() : 2;
   if (!w.silentOpen) say(title + ". " + (w.intro ? w.intro + " " : "") + itemText(w.items[w.i]) + (S.verbose && hl >= 1 && (hl >= 3 || !G().tut.win) ? LAB.K(". Свайп вправо и влево — пункты, двойное касание — выбрать, два пальца вниз — закрыть.", ". Стрелки вверх и вниз — пункты, Enter — выбрать, Escape — закрыть.") : ""));
   if (gm() && gm().entered) G().tut.win = 1;
-  /* (1.3) окну важно, какой пункт перед игроком: книги капсулы считают прочитанные страницы */
+  /* (1.5) окну важно, какой пункт перед игроком: книги капсулы считают прочитанные страницы */
   if (w.onFocus) LAB.safe(function () { w.onFocus(w.i); });
   return w;
 }
@@ -296,6 +296,7 @@ function mainMenu(silentIntro) {
     { label: "Пролог", fn: function () { prologue("menu"); } },
     { label: "Загрузить игру", fn: function () { loadMenu(); } },
     { label: "Руководство", fn: function () { if (LAB.guide) LAB.guide.open(); } },
+    { label: "Что нового?", fn: function () { if (LAB.news) LAB.news.open(); } },
     { label: "Настройки", fn: function () { settingsMenu(); } }
   ], { root: true, intro: freshNote(), keep: false });
 }
@@ -304,7 +305,7 @@ function freshNote() {
   var fs0 = LAB.freshStart;
   if (!fs0 || !fs0.wiped || fs0.said) return "";
   fs0.said = true;
-  return "Это новая версия игры — " + LAB.VERSION + ". Сохранения и настройки прежних версий сброшены: в игре много нового, и её проходят заново, с самого начала.";
+  return "Это новая версия игры — " + LAB.VERSION + ". Сохранения и настройки прежних версий сброшены: в игре много нового, и её проходят заново, с самого начала. Что изменилось — пункт «Что нового?».";
 }
 function startGame() {
   var hasAuto = !!gm().slotInfo("auto");
@@ -498,6 +499,7 @@ function inventory(focus) {
     { label: "Еда и напитки: " + cnt(foodIds()), fn: foodMenu },
     { label: "Броня и комбинезоны: " + g.armors.length + (g.armor ? ", надета" : ", не надета"), fn: armorMenu },
     { label: "Гранаты, пластины и устройства: " + cnt(gadgetIds()), fn: gadgetsMenu },
+    { label: "Ловушки и мины: " + (LAB.traps ? LAB.traps.count() : 0), fn: function () { if (LAB.traps) LAB.traps.menu(); } },
     { label: "Защита и инструменты: " + cnt(catIds("protect").concat(catIds("tool"))), fn: toolsMenu },
     { label: "Ценности: " + cnt(catIds("valuable")), fn: valuablesMenu },
     { label: "Детали: " + cnt(LAB.PARTS), fn: partsMenu },
@@ -510,6 +512,8 @@ function inventory(focus) {
     { label: "Импланты: " + g.implants.length + ", образцы: " + Object.keys(g.samples).length, fn: implants },
     { label: "Кредиты: " + g.credits, info: true, keep: true, fn: function () { say("Кредиты: " + g.credits + ". Тратятся в торговых терминалах и у выживших."); } }
   ];
+  /* focus — номер пункта или начало его названия («Задания») */
+  if (typeof focus === "string") { var fi = -1; items.forEach(function (it, i) { if (fi < 0 && it.label.indexOf(focus) === 0) fi = i; }); focus = fi < 0 ? 0 : fi; }
   menu("Инвентарь", items, { focus: focus || 0 });
 }
 function back(fn) { return { label: "Назад", fn: fn || function () { inventory(); } }; }
@@ -547,7 +551,7 @@ function ammoMenu() {
   menu("Батареи и боеприпасы", items, { intro: w && w.ammo !== "none" ? LAB.K("Двойное касание на нужной батарее — перезарядить оружие в руках.", "Enter на нужной батарее — перезарядить оружие в руках.") : "" });
 }
 var MEDS = ["medkit_s", "medkit_l", "bandage", "antidote", "sorbent", "stim", "energy_d", "neuroblock"];
-/* Вещи одного раздела (1.3): лекарства, защита, инструменты, ценности — по полю cat. */
+/* Вещи одного раздела (1.5): лекарства, защита, инструменты, ценности — по полю cat. */
 function catIds(cat) { return Object.keys(LAB.ITEMS).filter(function (k) { return LAB.ITEMS[k].cat === cat; }); }
 /* Лекарства: прежние — всегда в списке, новые — только те, что есть с собой. */
 function medIds() { var g = G(); return MEDS.concat(catIds("med").filter(function (k) { return MEDS.indexOf(k) < 0 && g.inv[k] > 0; })); }

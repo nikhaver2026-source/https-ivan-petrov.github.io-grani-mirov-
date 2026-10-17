@@ -173,7 +173,7 @@ PACKS = {
   "lab_km_infiniteperspe": ("Infinite Perspective", "Kevin MacLeod (incompetech.com)", "CC BY 3.0", "https://commons.wikimedia.org/wiki/File:Infinite_Perspective_(ISRC_USUAN1500024).mp3"),
   "lab_km_bathedinthelig": ("Bathed in the Light", "Kevin MacLeod (incompetech.com)", "CC BY 3.0", "https://commons.wikimedia.org/wiki/File:Bathed_in_the_Light_(ISRC_USUAN1100308).mp3"),
   "lab_km_spacial": ("Spacial Winds", "Kevin MacLeod (incompetech.com)", "CC BY 3.0", "https://commons.wikimedia.org/wiki/File:Spacial_Winds_(ISRC_USUAN1100203).mp3"),
-  # Заход J: спокойная музыка для капсул восстановления (1.3)
+  # Заход J: спокойная музыка для капсул восстановления (1.5)
   "lab_cap_clair": ("Clair de lune", "Claude Debussy; исполняет Laurens Goedhart", "CC BY 3.0", "https://commons.wikimedia.org/wiki/File:Clair_de_lune_(Claude_Debussy)_Suite_bergamasque.ogg"),
   "lab_cap_gymno": ("Gymnopédie No. 1", "Erik Satie; исполняет Robin Alciatore (Musopen)", "общественное достояние", "https://commons.wikimedia.org/wiki/File:Erik_Satie_-_gymnopedies_-_la_1_ere._lent_et_douloureux.ogg"),
   "lab_cap_remin": ("Reminiscing", "Kevin MacLeod (incompetech.com)", "CC BY 3.0", "https://commons.wikimedia.org/wiki/File:Reminiscing_(ISRC_USUAN1100097).mp3"),
@@ -927,7 +927,7 @@ E("mus_l9", "music", [S(C, "lab_km_shadow6", "*.mp3", start=30)], v=1.0, max=170
 E("mus_l10", "music", [S(C, "lab_torment_realm_of_torment_1.flac", "*.flac")], v=1.0)
 E("mus_ending", "music", [S(C, "lab_km_shadow7", "*.mp3", start=15)], v=1.0, max=170)
 
-# капсулы восстановления: спокойная музыка, по одной дорожке (1.3)
+# капсулы восстановления: спокойная музыка, по одной дорожке (1.5)
 E("cap_mus_1", "music", [S(C, "lab_cap_clair", "*")], v=1.0, max=170)
 E("cap_mus_2", "music", [S(C, "lab_cap_gymno", "*")], v=1.0, max=170)
 E("cap_mus_3", "music", [S(C, "lab_cap_remin", "*")], v=1.0, max=170)

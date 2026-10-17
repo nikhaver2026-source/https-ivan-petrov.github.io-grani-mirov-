@@ -1,5 +1,5 @@
 /* ════════════════════════════════════════════════════════════════════
-   «Подземная лаборатория» — снабжение и торговля (Альфа 1.3).
+   «Подземная лаборатория» — снабжение и торговля (Альфа 1.5).
    Пункт снабжения на каждом этаже: прилавок с товаром этого этажа (свой
    профиль у каждого этажа, свой набор на каждой глубине), заказ с
    поверхности с доставкой — кто и как везёт, зависит от глубины (см.
@@ -37,7 +37,7 @@ function catOf(id) {
   return "gadget";
 }
 LAB.itemCat = catOf;
-var CAT_N = { food: "Еда и напитки", med: "Лекарства", protect: "Защита", tool: "Инструменты", valuable: "Ценности", part: "Детали", wmodule: "Модули оружия", gadget: "Устройства и гранаты", ammo: "Батареи и боеприпасы", weapon: "Оружие", armor: "Броня и комбинезоны" };
+var CAT_N = { food: "Еда и напитки", med: "Лекарства", protect: "Защита", tool: "Инструменты", valuable: "Ценности", part: "Детали", wmodule: "Модули оружия", gadget: "Устройства и гранаты", trap: "Ловушки и мины", ammo: "Батареи и боеприпасы", weapon: "Оружие", armor: "Броня и комбинезоны" };
 LAB.CAT_N = CAT_N;
 /* Не продаются: то, без чего не пройти (ключи, пропуска — не вещи рюкзака), и образцы «Колыбели». */
 function sellable(id) { var d = LAB.ITEMS[id]; return !!d && d.price > 0 && !d.nosell; }
@@ -90,7 +90,7 @@ function sellCats(ctx, back) {
   Object.keys(g.inv).forEach(function (id) { if (g.inv[id] > 0 && sellable(id)) { var c = catOf(id); (inv[c] = inv[c] || []).push(id); } });
   if (g.weapons.length) items.push({ label: "Оружие: " + g.weapons.length + (g.weapons.length < 2 ? " — последнее не продаётся" : ""), fn: function () { sellWeapons(ctx, back); } });
   if (g.armors.length) items.push({ label: "Броня и комбинезоны: " + g.armors.length + (g.armor ? ", одна надета" : ""), fn: function () { sellArmors(ctx, back); } });
-  ["wmodule", "part", "valuable", "med", "protect", "food", "gadget", "tool"].forEach(function (c) {
+  ["wmodule", "part", "valuable", "med", "protect", "food", "gadget", "trap", "tool"].forEach(function (c) {
     var ids = inv[c]; if (!ids || !ids.length) return;
     var n = ids.reduce(function (a, k) { return a + (g.inv[k] || 0); }, 0);
     items.push({ label: CAT_N[c] + ": " + n + (ctxK(ctx, c) > 1.05 ? " — здесь платят дороже" : ""), fn: function () { sellItems(ctx, c, back); } });
@@ -215,7 +215,7 @@ function shelfPool(L) {
   for (var id in LAB.ITEMS) {
     var d = LAB.ITEMS[id];
     if (!d.price || d.surf || d.nosell || d.kind === "valuable" || id === "proto" || id === "okokey") continue;
-    if (["food", "use", "throw", "deploy", "tool", "part", "wmodule"].indexOf(d.kind) < 0) continue;
+    if (["food", "use", "throw", "deploy", "tool", "part", "wmodule", "trap"].indexOf(d.kind) < 0) continue;
     var dep = d.depth || (d.kind === "part" ? LAB.PART_DEPTH[id] || 1 : 1);
     if (dep > L || dep >= 99) continue;
     var c = catOf(id);

@@ -164,6 +164,7 @@ function sees(f) {
   return losTo(f);
 }
 function hears(f) {
+  if (f.deafT > 0) return false; /* (1.5) оглушён ловушкой */
   var n = G().noise;
   if (gm().armorSpecial("stealth")) n = Math.round(n * 0.6);
   if (LAB.ach && LAB.ach.has("quiet")) n -= 1;
@@ -208,6 +209,8 @@ function canStand(f, x, y) {
   if (LAB.solidAt(fl, x, y)) return false;
   if (occupied(x, y, f)) return false;
   if (x === G().x && y === G().y) return false;
+  /* (1.5) ловушку, о которой знает, враг обходит */
+  if (f && LAB.traps && LAB.traps.avoid(f, x, y)) return false;
   return true;
 }
 /* Машинам ОКО двери открывает само ОКО: отрядам, ремонтникам, стражам,
@@ -266,12 +269,12 @@ function moveFoe(f, nx, ny) {
   if (!aff(f, "cloak") || dist(f, heroPos()) <= 3) A("foeStep", f);
   /* сапёр оставляет мины в проходах */
   if (has(f, "mines") && f.minesLeft > 0 && f.state === "hunt" && CUR().fl.room[idx(px, py)] < 0 && Math.random() < 0.25) {
-    if (!CUR().fs.mines.some(function (m) { return m.x === px && m.y === py; })) {
-      CUR().fs.mines.push({ x: px, y: py, dmg: Math.round(f.dmg * 1.2) });
-      f.minesLeft--;
-      A("foeSound", f, "mine_set");
-    }
+    /* (1.5) мина сапёра — среди ловушек этажа: её слышно, её можно обезвредить */
+    var put = LAB.traps ? LAB.traps.enemyMine(px, py, Math.round(f.dmg * 1.2)) : !CUR().fs.mines.some(function (m) { return m.x === px && m.y === py; }) && CUR().fs.mines.push({ x: px, y: py, dmg: Math.round(f.dmg * 1.2) });
+    if (put) { f.minesLeft--; A("foeSound", f, "mine_set"); }
   }
+  /* (1.5) наступил на ловушку */
+  if (LAB.traps) LAB.traps.foeStep(f);
 }
 /* Отойти от героя (держать дистанцию, отступать). */
 function stepAway(f) {
@@ -339,6 +342,7 @@ function tick() {
     if (G().dead) return;
   }
   shellsTick();
+  if (LAB.traps) { LAB.safe(LAB.traps.tick); if (G().dead) return; }
   if (LAB.oko) LAB.safe(LAB.oko.tick);
   if (LAB.game.doorAutoClose) LAB.safe(LAB.game.doorAutoClose); /* двери закрываются за прошедшими */
   if (spotted.length) announceSpotted(spotted);
@@ -897,6 +901,10 @@ function chargeAt(f) {
 function foeTick(f, spotted) {
   f.hitT++; f.seenT++; f.hearT = (f.hearT == null ? 99 : f.hearT) + 1;
   if (f.blindT > 0) f.blindT--;
+  /* (1.5) раны, метка, вязкость от нового оружия */
+  if (f.bleedT > 0) { f.bleedT--; damageFoe(f, f.bleedD || 2, "kinetic", { noarmor: true, quiet: true }); if (f.dead) return; }
+  if (f.markT > 0) f.markT--;
+  if (f.slowT > 0) { f.slowT--; if (f.slowT % 2 === 1) return; }
   if (f.frozen > 0) { f.frozen--; return; }
   if (f.ally) { allyTick(f); return; }
   if (f.calm) { if (Math.random() < 0.02) A("foeSound", f, "idle"); return; }
@@ -1316,7 +1324,7 @@ function statusTick(onlyTimers) {
   if (st.deaf > 0) st.deaf--;
   if (st.antitox > 0) { st.antitox--; if (!st.antitox) sayq("Фильтр противогаза отработал."); }
   if (st.radBlock > 0) { st.radBlock--; if (!st.radBlock) sayq("Йодид калия больше не защищает от облучения."); }
-  if (LAB.zones && LAB.zones.tick) LAB.zones.tick(); /* облучение и газ, пока стоите в особой зоне (1.3) */
+  if (LAB.zones && LAB.zones.tick) LAB.zones.tick(); /* облучение и газ, пока стоите в особой зоне (1.5) */
   if (st.haste > 0) { st.haste--; if (!st.haste) sayq("Ускорение закончилось."); }
   if (st.cloak > 0) { st.cloak--; if (!st.cloak) { sayq("Маскировка спала."); A("play", "cloak_off"); } }
   if (st.shieldT > 0) { st.shieldT--; if (!st.shieldT && !gm().armorSpecial("regshield")) st.shield = 0; }
@@ -1390,6 +1398,7 @@ function fire(dir, burst) {
   var loud = { melee: 2, laser: 6, cryo: 5, thermo: 6, gauss: 10, positron: 12, magnetron: 8 }[LAB.WEAPONS[w.base].cls] || 8;
   if (w.base === "pcannon") loud = 14;
   if (LAB.workshop) loud = LAB.workshop.loud(w, loud);
+  if (wf(w, "silent")) loud = Math.min(loud, 2); /* (1.5) бесшумное оружие */
   g.noise = Math.max(g.noise, loud);
   A("shot", w, dir, burst);
   var hits = 0;
@@ -1433,7 +1442,7 @@ function fire(dir, burst) {
   UIx("refresh");
   return true;
 }
-/* Свойство оружия: у самого экземпляра или у его вида. (1.3) Прежде бой
+/* Свойство оружия: у самого экземпляра или у его вида. (1.5) Прежде бой
    читал «прошивает всех на линии», «броня не помогает», заморозку и урон
    по соседям только у экземпляра, а makeWeapon их туда не переносил —
    у найденного и собранного оружия эти свойства не работали. */
@@ -1456,13 +1465,45 @@ function shoot(w, f, perp, along, burst, melee) {
   var dt = w.dt;
   var dmg = w.dmg;
   if (melee) { dmg *= 1 + (g.str - 10) * 0.03; if (gm().armorSpecial("strength")) dmg *= 1.6; }
-  var crit = Math.random() < 0.05 + (g.agi - 10) * 0.008;
+  var crit = Math.random() < 0.05 + (g.agi - 10) * 0.008 + (wf(w, "crit") || 0);
   if (crit) dmg *= 1.75;
   if (LAB.workshop) dmg *= LAB.workshop.dmgK(w, f);
   var wb = LAB.WEAPONS[w.base] || {};
   var done = damageFoe(f, dmg, dt, { noarmor: !!wf(w, "noarmor"), crit: crit, melee: melee, burst: burst, freeze: wf(w, "freeze"), apierce: LAB.workshop ? LAB.workshop.pierce(w) : 0, stunMech: wb.stunMech || 0 });
   if (wf(w, "area")) foes.forEach(function (o) { if (o !== f && !o.dead && !o.calm && cheb(o, f) <= 1) damageFoe(o, dmg * 0.6, dt, { noarmor: true, quiet: true }); });
+  afterHit(w, f, dmg, dt);
   return 1;
+}
+/* (1.5) Свойства нового оружия (arms.js): кровотечение, метка, замедление,
+   отбрасывание, цепной разряд, вытягивание здоровья. */
+function afterHit(w, f, dmg, dt) {
+  var g = G(), bl = wf(w, "bleed"), mk = wf(w, "mark"), sl = wf(w, "slow"), ch = wf(w, "chain"), dr = wf(w, "drain");
+  if (bl && !f.dead && f.kind === "bio") { f.bleedT = Math.max(f.bleedT || 0, bl); f.bleedD = Math.max(1, Math.round(dmg * 0.15)); sayOnce("bleed" + f.id, f.name.split(",")[0] + " истекает: раны не закрываются.", 6000); }
+  if (mk && !f.dead) { if (!(f.markT > 0)) sayOnce("mark" + f.id, f.name.split(",")[0] + " помечен: по нему бьют сильнее.", 6000); f.markT = Math.max(f.markT || 0, mk); }
+  if (sl && !f.dead && !f.boss) { f.slowT = Math.max(f.slowT || 0, sl); sayOnce("slow" + f.id, f.name.split(",")[0] + " вязнет и движется медленнее.", 6000); }
+  if (wf(w, "knock") && !f.dead && !f.boss && !has(f, "stationary") && !has(f, "turret")) knockBack(f);
+  if (ch) chainArc(f, dmg * 0.5, dt, ch);
+  if (dr && f.kind === "bio" && dmg > 0) { var hv = Math.max(1, Math.round(dmg * dr)); g.hp = Math.min(g.hpMax, g.hp + hv); sayOnce("drain", "Часть силы возвращается вам: плюс " + hv + " здоровья.", 4000); }
+}
+function knockBack(f) {
+  var hp = heroPos(), dx = Math.sign(f.x - hp.x), dy = Math.sign(f.y - hp.y);
+  if (Math.abs(f.x - hp.x) >= Math.abs(f.y - hp.y)) dy = 0; else dx = 0;
+  var nx = f.x + dx, ny = f.y + dy;
+  if ((dx || dy) && canStand(f, nx, ny)) { moveFoe(f, nx, ny); f.frozen = Math.max(f.frozen || 0, 1); A("foeSound", f, "hurt"); sayOnce("knock" + f.id, f.name.split(",")[0] + " отлетает на шаг.", 4000); }
+}
+/* Разряд перескакивает на ближних — до n раз, каждый слабее. */
+function chainArc(f0, d, dt, n) {
+  var hit = [f0], cur = f0;
+  for (var i = 0; i < n; i++) {
+    var nb = null, bd = 99;
+    foes.forEach(function (o) { if (hit.indexOf(o) >= 0 || o.dead || o.calm || o.ally || o.burrowed) return; var c = cheb(o, cur); if (c <= 3 && c < bd) { bd = c; nb = o; } });
+    if (!nb) break;
+    hit.push(nb);
+    A("play", "w_shock_crack");
+    damageFoe(nb, d, dt, { quiet: true });
+    if (i === 0) sayOnce("chain", "Разряд перескакивает дальше!", 4000);
+    cur = nb; d *= 0.75;
+  }
 }
 function wake(f) {
   if (f.ally) return;
@@ -1479,7 +1520,7 @@ function damageFoe(f, raw, dt, o) {
   var vs = (LAB.DMG_VS[f.kind] || {})[dt]; if (vs == null) vs = 1;
   var res = f.base.res && f.base.res[dt] != null ? f.base.res[dt] : 1;
   if (aff(f, "hardened") && (dt === "emp" || dt === "ion")) vs *= dt === "emp" ? 0 : 0.5;
-  var dmg = raw * vs * res * (1 - (f.adapt[dt] || 0));
+  var dmg = raw * vs * res * (1 - (f.adapt[dt] || 0)) * (f.markT > 0 ? 1.25 : 1);
   /* щитоносец прикрывает соседей */
   if (foes.some(function (s) { return s !== f && !s.dead && !s.calm && has(s, "shieldally") && cheb(s, f) <= 2; })) dmg *= 0.6;
   /* тяжёлая машина: разряд по снятому щиту перегружает энергоузел — броня на время не держит */
@@ -1866,6 +1907,8 @@ function afterPlayerMove(from) {
   }
   /* мина рядом пищит */
   fs.mines.forEach(function (m2) { if (Math.abs(m2.x - g.x) + Math.abs(m2.y - g.y) <= 2) A("mineBeep", m2.x, m2.y); });
+  /* (1.5) ловушки: свои и чужие */
+  if (LAB.traps) LAB.safe(LAB.traps.playerStep);
   if (S.turnBased) tick();
 }
 /* Описание врага для сканера и окна персонажа. */
@@ -1899,6 +1942,7 @@ function useImplant(id, free) {
       if (sec) parts.push("Пустота за стеной " + LAB.DIRN[sec.dir] + ": тайник.");
       var mines = CUR().fs.mines.filter(function (m) { return Math.abs(m.x - g.x) + Math.abs(m.y - g.y) <= 8; });
       if (mines.length) parts.push("Мины: " + mines.map(function (m) { return gm().relDir(m.x, m.y); }).join(", ") + ".");
+      if (LAB.traps) { var tsx = LAB.traps.scanText(8); if (tsx) parts.push(tsx); }
       say(parts.join(" "));
       break;
     }

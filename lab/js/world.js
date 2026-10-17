@@ -1064,7 +1064,7 @@ function genFloor(seed, L, F, attempt) {
      затворы, древние узлы) — последними и своим потоком случайностей. */
   if (LAB.depths && LAB.depths.place) LAB.depths.place({ fl: fl, L: L, F: F, seed: seed, attempt: attempt, svcRooms: svcRooms, mainRooms: mainRooms, addObj: addObj, addItem: addItem, makeFoe: makeFoe, freeCell: freeCell });
 
-  /* 20. (1.3) Кабинеты у коридоров, особые зоны и пункт снабжения —
+  /* 20. (1.5) Кабинеты у коридоров, особые зоны и пункт снабжения —
      самыми последними и своим потоком случайностей (annex.js). */
   if (LAB.annex && LAB.annex.place) LAB.annex.place({ fl: fl, L: L, F: F, seed: seed, attempt: attempt, addObj: addObj, addItem: addItem, makeFoe: makeFoe, freeCell: freeCell });
 
@@ -1120,6 +1120,8 @@ function genLoot(r, L, F, ot, tag) {
     /* экспериментальный компонент мастерской — в сейфах глубоких уровней, тоже без бросков генератора */
     if (LAB.ITEMS.proto && L >= 5 && LAB.hash32("proto:" + L + "-" + F + "-" + tag) % 100 < 14) out.push({ kind: "item", item: "proto", n: 1 });
   }
+  /* (1.5) ловушка в оружейном, техническом ящике или на складе деталей — изредка, без бросков генератора */
+  if (LAB.trapLoot) { var tl = LAB.trapLoot(L, F, ot, tag); if (tl) out.push(tl); }
   return out;
 }
 LAB.genLoot = genLoot;

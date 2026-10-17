@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /* ════════════════════════════════════════════════════════════════════
-   «Подземная лаборатория» — сборка текстовых данных (1.3).
+   «Подземная лаборатория» — сборка текстовых данных (1.5).
    Исходники — JSON в lab/tools/texts_src: рассказы, сны, радио и видео
    капсул; книги, объявления, журналы и фото кабинетов; варианты типов
    помещений; подробности, следы хозяев, состояния и износ вещей; части
@@ -37,7 +37,7 @@ function write(file, head, body) {
   fs.writeFileSync(path.join(ROOT, "js", file), out);
   console.log(file, (out.length / 1024).toFixed(0) + " КБ");
 }
-const HDR = (what) => "/* «Подземная лаборатория» — " + what + " (1.3).\n   Файл собран из lab/tools/texts_src сборщиком lab/tools/build_texts.js — правьте исходники. */";
+const HDR = (what) => "/* «Подземная лаборатория» — " + what + " (1.5).\n   Файл собран из lab/tools/texts_src сборщиком lab/tools/build_texts.js — правьте исходники. */";
 
 /* ── капсулы ── */
 const cap = { surface: [], projects: [], dreams: [], radio: [], video: [] };
