@@ -416,29 +416,47 @@
 # (заход H скачан) lab_km_bathedinthelig https://upload.wikimedia.org/wikipedia/commons/7/75/Bathed_in_the_Light_%28ISRC_USUAN1100308%29.mp3
 # (заход H скачан) lab_km_numinousshine https://upload.wikimedia.org/wikipedia/commons/f/fc/Numinous_Shine_%28ISRC_USUAN1100129%29.mp3
 # «Подземная лаборатория», заход I: еда, лекарства и тело героя (Freesound, CC0 и CC BY 3.0).
-lab_fsI https://cdn.freesound.org/previews/316/316926_4972784-hq.ogg
-lab_fsI https://cdn.freesound.org/previews/334/334210_4290188-hq.ogg
-lab_fsI https://cdn.freesound.org/previews/723/723601_15636637-hq.ogg
-lab_fsI https://cdn.freesound.org/previews/842/842099_12872294-hq.ogg
-lab_fsI https://cdn.freesound.org/previews/118/118808_1990688-hq.ogg
-lab_fsI https://cdn.freesound.org/previews/477/477368_9996727-hq.ogg
-lab_fsI https://cdn.freesound.org/previews/120/120005_1990691-hq.ogg
-lab_fsI https://cdn.freesound.org/previews/85/85307_289925-hq.ogg
-lab_fsI https://cdn.freesound.org/previews/315/315836_5370566-hq.ogg
-lab_fsI https://cdn.freesound.org/previews/215/215347_950925-hq.ogg
-lab_fsI https://cdn.freesound.org/previews/591/591195_4921277-hq.ogg
-lab_fsI https://cdn.freesound.org/previews/800/800275_16752880-hq.ogg
-lab_fsI https://cdn.freesound.org/previews/447/447911_9159316-hq.ogg
-lab_fsI https://cdn.freesound.org/previews/52/52293_627019-hq.ogg
-lab_fsI https://cdn.freesound.org/previews/151/151217_140737-hq.ogg
-lab_fsI https://cdn.freesound.org/previews/87/87411_485650-hq.ogg
-lab_fsI https://cdn.freesound.org/previews/272/272030_5165013-hq.ogg
-lab_fsI https://cdn.freesound.org/previews/240/240139_729251-hq.ogg
-lab_fsI https://cdn.freesound.org/previews/245/245855_4451798-hq.ogg
-lab_fsI https://cdn.freesound.org/previews/240/240899_2385105-hq.ogg
-lab_fsI https://cdn.freesound.org/previews/121/121211_2016643-hq.ogg
-lab_fsI https://cdn.freesound.org/previews/60/60394_564398-hq.ogg
-lab_fsI https://cdn.freesound.org/previews/456/456697_9482149-hq.ogg
-lab_fsI https://cdn.freesound.org/previews/758/758149_8908475-hq.ogg
-lab_fsI https://cdn.freesound.org/previews/447/447916_9159316-hq.ogg
-lab_fsI https://cdn.freesound.org/previews/344/344598_5144331-hq.ogg
+# (заход I скачан) lab_fsI https://cdn.freesound.org/previews/316/316926_4972784-hq.ogg
+# (заход I скачан) lab_fsI https://cdn.freesound.org/previews/334/334210_4290188-hq.ogg
+# (заход I скачан) lab_fsI https://cdn.freesound.org/previews/723/723601_15636637-hq.ogg
+# (заход I скачан) lab_fsI https://cdn.freesound.org/previews/842/842099_12872294-hq.ogg
+# (заход I скачан) lab_fsI https://cdn.freesound.org/previews/118/118808_1990688-hq.ogg
+# (заход I скачан) lab_fsI https://cdn.freesound.org/previews/477/477368_9996727-hq.ogg
+# (заход I скачан) lab_fsI https://cdn.freesound.org/previews/120/120005_1990691-hq.ogg
+# (заход I скачан) lab_fsI https://cdn.freesound.org/previews/85/85307_289925-hq.ogg
+# (заход I скачан) lab_fsI https://cdn.freesound.org/previews/315/315836_5370566-hq.ogg
+# (заход I скачан) lab_fsI https://cdn.freesound.org/previews/215/215347_950925-hq.ogg
+# (заход I скачан) lab_fsI https://cdn.freesound.org/previews/591/591195_4921277-hq.ogg
+# (заход I скачан) lab_fsI https://cdn.freesound.org/previews/800/800275_16752880-hq.ogg
+# (заход I скачан) lab_fsI https://cdn.freesound.org/previews/447/447911_9159316-hq.ogg
+# (заход I скачан) lab_fsI https://cdn.freesound.org/previews/52/52293_627019-hq.ogg
+# (заход I скачан) lab_fsI https://cdn.freesound.org/previews/151/151217_140737-hq.ogg
+# (заход I скачан) lab_fsI https://cdn.freesound.org/previews/87/87411_485650-hq.ogg
+# (заход I скачан) lab_fsI https://cdn.freesound.org/previews/272/272030_5165013-hq.ogg
+# (заход I скачан) lab_fsI https://cdn.freesound.org/previews/240/240139_729251-hq.ogg
+# (заход I скачан) lab_fsI https://cdn.freesound.org/previews/245/245855_4451798-hq.ogg
+# (заход I скачан) lab_fsI https://cdn.freesound.org/previews/240/240899_2385105-hq.ogg
+# (заход I скачан) lab_fsI https://cdn.freesound.org/previews/121/121211_2016643-hq.ogg
+# (заход I скачан) lab_fsI https://cdn.freesound.org/previews/60/60394_564398-hq.ogg
+# (заход I скачан) lab_fsI https://cdn.freesound.org/previews/456/456697_9482149-hq.ogg
+# (заход I скачан) lab_fsI https://cdn.freesound.org/previews/758/758149_8908475-hq.ogg
+# (заход I скачан) lab_fsI https://cdn.freesound.org/previews/447/447916_9159316-hq.ogg
+# (заход I скачан) lab_fsI https://cdn.freesound.org/previews/344/344598_5144331-hq.ogg
+# «Подземная лаборатория», заход J (1.3): спокойная музыка для капсул
+# восстановления — фортепиано, гитара, струнные, шкатулка. Лицензии
+# проверены на страницах: Kevin MacLeod (incompetech.com) — CC BY 3.0
+# (Wholesome — CC BY 4.0), PeriTune — CC BY 4.0, «Clair de lune» в
+# исполнении Laurens Goedhart — CC BY 3.0, «Gymnopédie No. 1» в
+# исполнении Robin Alciatore (Musopen) — общественное достояние.
+lab_cap_clair https://upload.wikimedia.org/wikipedia/commons/b/be/Clair_de_lune_%28Claude_Debussy%29_Suite_bergamasque.ogg
+lab_cap_gymno https://upload.wikimedia.org/wikipedia/commons/9/90/Erik_Satie_-_gymnopedies_-_la_1_ere._lent_et_douloureux.ogg
+lab_cap_remin https://upload.wikimedia.org/wikipedia/commons/3/3d/Reminiscing_%28ISRC_USUAN1100097%29.mp3
+lab_cap_medit https://upload.wikimedia.org/wikipedia/commons/0/09/Meditation_Impromptu_02_%28ISRC_USUAN1100162%29.mp3
+lab_cap_guitar https://peritune.com/music/PerituneMaterial_Guitar_Gentle_an.mp3
+lab_cap_canon https://upload.wikimedia.org/wikipedia/commons/c/c6/Canon_in_D_Major_%28ISRC_USUAN1100301%29.mp3
+lab_cap_musicbox https://peritune.com/wp-content/uploads/2017/09/PerituneMaterial_Music-box_Gentle2.mp3
+lab_cap_silver https://upload.wikimedia.org/wikipedia/commons/c/c2/Silver_Blue_Light_%28ISRC_USUAN1100718%29.mp3
+lab_cap_wholesome https://upload.wikimedia.org/wikipedia/commons/f/f2/Wholesome_by_Kevin_MacLeod.ogg
+lab_cap_teddy https://upload.wikimedia.org/wikipedia/commons/e/e5/Teddy_Bear_Waltz_%28ISRC_USUAN1700064%29.mp3
+lab_cap_dreamer https://upload.wikimedia.org/wikipedia/commons/d/d5/Dreamer_%28ISRC_USUAN1600043%29.mp3
+lab_cap_avec https://upload.wikimedia.org/wikipedia/commons/2/26/Avec_Soin_%28ISRC_USUAN1100860%29.mp3
