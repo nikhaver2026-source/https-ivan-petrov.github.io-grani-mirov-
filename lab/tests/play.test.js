@@ -388,6 +388,10 @@ function ok(cond, msg) { if (cond) console.log("  ✓ " + msg); else { fails++; 
   ok(kc2 < kc1 - 1, "удержание стрелки — очередь (заряд " + kc1 + "→" + kc2 + ")");
   await key("f");
   ok(await page.evaluate(() => LAB.game.curWeapon().charge === LAB.game.curWeapon().cap), "F — перезарядка");
+  await page.waitForTimeout(1200); await key("ArrowUp"); await page.waitForTimeout(400);
+  const kc3 = await page.evaluate(() => LAB.game.curWeapon().charge);
+  await key("r", "Alt");
+  ok(kc3 < (await page.evaluate(() => LAB.game.curWeapon().cap)) && await page.evaluate(() => LAB.game.curWeapon().charge === LAB.game.curWeapon().cap && LAB.game.G.drawn), "Alt+R — перезарядка, оружие остаётся в руках (заряд " + kc3 + "→полный)");
   const wi0 = await page.evaluate(() => LAB.game.G.wi);
   await key("q");
   ok(await page.evaluate(() => LAB.game.G.wi) !== wi0, "Q — другое оружие");
@@ -1843,7 +1847,7 @@ LAB.ui.closeAll();
     /* цель, до которой путь открыт и с поворотом: так видно и описание, и ведение */
     let tgt = null;
     const turnsOf = p => { let t = 0, px = G.x, py = G.y, pd = null; for (const c of p) { const d = c[0] > px ? "E" : c[0] < px ? "W" : c[1] > py ? "S" : "N"; if (pd && d !== pd) t++; pd = d; px = c[0]; py = c[1]; } return t; };
-    for (const o of g.CUR.fl.objs) { if (tgt) break; const p = g._routeTo(null, o); if (p && p.length >= 8 && turnsOf(p) >= 1) tgt = { n: "проверочная цель", o }; }
+    for (const o of g.CUR.fl.objs) { if (tgt) break; const p = g._routeTo(null, o); if (p && p.length >= 8 && p.length <= 90 && turnsOf(p) >= 1) tgt = { n: "проверочная цель", o }; }
     out.tgt = !!tgt;
     const navWith = m => { S.navMode = m; SPOKEN.length = 0; if (tgt) g.navigateTo(tgt); return SPOKEN.join(" | "); };
     out.brief = /Всего .*сначала/.test(navWith("brief")) && !!g.navFollow();
@@ -2347,6 +2351,14 @@ LAB.ui.closeAll();
       out.respawnStart = G.L === 3 && G.F === 1;
       C.stop();
     }
+    /* бластер: чем выше ступень, тем больше зарядов — по восемь; ёмкие энергобатареи с верстака */
+    const mk = (b, lvl, rank) => LAB.makeWeapon(b, lvl, rank, 1);
+    out.blaster = [mk("spark", 1, 0).cap, mk("spark", 1, 1).cap, mk("spark", 25, 0).cap, mk("pulse", 1, 2).cap].join(",");
+    out.blName = / Б-3$/.test(mk("spark", 25, 0).name);
+    const bw = mk("spark", 1, 0), W5 = LAB.workshop;
+    out.big = W5.install(bw, "bigcell") === "" && bw.cap === 20 && W5.install(bw, "hugecell") === "" && bw.cap === 36;
+    out.bigNo = /не от энергобатарей/.test(W5.compat(LAB.makeWeapon("kpistol", 2, 0, 1), "bigcell"));
+    out.bigRec = ["m_bigcell", "m_hugecell"].every(id => LAB.RECIPES.some(rc => rc.out === id)) && LAB.RECIPES.find(rc => rc.out === "m_bigcell").cls === "base";
     /* ловушки: вещи, схемы, полки */
     const T = LAB.traps;
     out.nTypes = T.ids.length;
@@ -2469,6 +2481,8 @@ LAB.ui.closeAll();
   ok(tr.prices === "4,4,8,8,12,20", "привязка к капсуле: этажи 1–10 — 4 кредита, каждые десять этажей — дороже: " + tr.prices);
   ok(!tr.hasCap || (tr.bindItem && tr.bindPoor && tr.bindOk && tr.boundInfo), "капсула: привязка — первым пунктом, без кредитов — нельзя, с кредитами — списывает цену");
   ok(!tr.hasCap || (tr.respawnCap && tr.respawnStart), "гибель: к привязанной капсуле, без привязки — к началу уровня");
+  ok(tr.blaster === "12,20,28,34" && tr.blName, "бластер: «Искра» первой ступени — 12 зарядов, дальше по восемь за ступень (" + tr.blaster + ")");
+  ok(tr.big && tr.bigNo && tr.bigRec, "ёмкая и сверхъёмкая энергобатареи собираются у верстака и добавляют бластеру зарядов");
   ok(tr.nTypes >= 25 && tr.items && tr.recipes && tr.cat && tr.wsGroup, "ловушки и мины: " + tr.nTypes + " видов, у всех вещь, описание и схема сборки, своя полка снабжения");
   ok(tr.placed && tr.wait && tr.armed, "капкан ставится под ноги и взводится, когда герой отойдёт");
   ok(tr.caught && tr.sprung, "робот попадается в капкан: ранен и стоит; капкан можно взвести снова");

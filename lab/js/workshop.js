@@ -100,12 +100,15 @@ var MODS = {
   reload: { item: "m_reload", n: "модуль быстрой перезарядки", max: 2, price: 50, desc: "Перезарядка на треть быстрее, выстрелы чуть чаще." },
   cool:   { item: "m_cool", n: "радиатор", max: 2, price: 45, desc: "Ствол греется медленнее: больше выстрелов подряд без перегрева." },
   cap:    { item: "m_cap", n: "модуль ёмкости", max: 2, price: 55, desc: "Батарея держит на треть больше выстрелов." },
+  /* (1.5) ёмкие энергобатареи для бластера и другого оружия на энергобатареях */
+  bigcell: { item: "m_bigcell", n: "ёмкая энергобатарея", max: 2, price: 70, desc: "Штатный аккумулятор бластера — на побольше: зарядов в полтора раза больше, не меньше восьми сверху. Одна энергобатарея по-прежнему заряжает оружие целиком. Для бластеров и всего оружия на энергобатареях." },
+  hugecell: { item: "m_hugecell", n: "сверхъёмкая энергобатарея", max: 1, price: 160, desc: "Накопитель на сверхпроводнике: зарядов вдвое больше, не меньше шестнадцати сверху. Для бластеров и всего оружия на энергобатареях." },
   pierce: { item: "m_pierce", n: "бронебойный модуль", max: 2, price: 60, desc: "Броня роботов гасит удар заметно меньше." },
   emp:    { item: "m_emp", n: "модуль подавления электроники", max: 2, price: 60, desc: "Плюс четверть урона по роботам, турелям и камерам." },
   quiet:  { item: "m_quiet", n: "глушитель", max: 2, price: 50, desc: "Выстрел тише и глуше: враги слышат его только вблизи." },
   stab:   { item: "m_stab", n: "стабилизатор", max: 1, price: 120, desc: "Оружие меньше изнашивается, реже даёт осечки, очередь точнее." }
 };
-var MOD_ORDER = ["power", "acc", "range", "reload", "cool", "cap", "pierce", "emp", "quiet", "stab"];
+var MOD_ORDER = ["power", "acc", "range", "reload", "cool", "cap", "bigcell", "hugecell", "pierce", "emp", "quiet", "stab"];
 MOD_ORDER.forEach(function (k) { var m = MODS[k]; LAB.ITEMS[m.item] = { n: cap1(m.n), icon: "🔩", kind: "wmodule", mod: k, desc: m.desc + " Ставится у верстака: пункт «Установить модуль».", price: m.price }; });
 
 /* ════════ РЕЦЕПТЫ ════════ */
@@ -122,6 +125,8 @@ var R_NEW = [
   { id: "m_reload", out: "m_reload", n: "Модуль быстрой перезарядки", need: { servo: 1, cap: 1, wire: 1 }, cls: "spec", bp: true, minL: 2 },
   { id: "m_cool", out: "m_cool", n: "Радиатор", need: { scrap: 2, wire: 1, ceramic: 1 }, cls: "spec", bp: true, minL: 3 },
   { id: "m_cap", out: "m_cap", n: "Модуль ёмкости", need: { cell: 2, wire: 1 }, cls: "spec", bp: true },
+  { id: "m_bigcell", out: "m_bigcell", n: "Ёмкая энергобатарея", need: { cell: 2, cap: 2, wire: 1 }, cls: "base", desc: "Две аккумуляторные ячейки и конденсаторы в одном корпусе: бластер держит в полтора раза больше зарядов." },
+  { id: "m_hugecell", out: "m_hugecell", n: "Сверхъёмкая энергобатарея", need: { cell: 3, supercond: 1, cap: 2, chip: 1 }, cls: "spec", minL: 5, desc: "Накопитель на сверхпроводнике: зарядов вдвое больше." },
   { id: "m_pierce", out: "m_pierce", n: "Бронебойный модуль", need: { magnet: 1, panel: 1, scrap: 1 }, cls: "spec", bp: true, minL: 3 },
   { id: "m_emp", out: "m_emp", n: "Модуль подавления электроники", need: { relay: 1, chip: 1, magnet: 1 }, cls: "spec", bp: true, minL: 2 },
   { id: "m_quiet", out: "m_quiet", n: "Глушитель", need: { scrap: 2, gel: 1, wire: 1 }, cls: "spec", bp: true },
@@ -384,7 +389,7 @@ function recalc(w) {
   var m = w.mod || {};
   w.dmg = Math.max(1, Math.round(w.dmg0 * Math.pow(1.15, m.power || 0)));
   w.rng = w.rng0 + (w.rng0 > 1 ? 2 * (m.range || 0) : 0);
-  if (w.cap0) { w.cap = w.cap0 + Math.ceil(w.cap0 * 0.3) * (m.cap || 0); if (w.charge > w.cap) w.charge = w.cap; }
+  if (w.cap0) { w.cap = w.cap0 + Math.ceil(w.cap0 * 0.3) * (m.cap || 0) + Math.max(8, Math.ceil(w.cap0 * 0.5)) * (m.bigcell || 0) + Math.max(16, w.cap0) * (m.hugecell || 0); if (w.charge > w.cap) w.charge = w.cap; }
   w.mods = used(w);
 }
 /* Почему модуль не встаёт: "" — встаёт. */
@@ -398,6 +403,7 @@ function compat(w, mk) {
     case "range": if (melee(w)) return "ближнему бою дальность не нужна"; break;
     case "acc": if (melee(w)) return "удар вплотную и так точен"; break;
     case "reload": case "cap": if (!battery(w)) return "у этого оружия нет батареи"; break;
+    case "bigcell": case "hugecell": if (w.ammo !== "energy") return "это оружие питается не от энергобатарей"; break;
     case "cool": if (!heats(w)) return "это оружие не греется"; break;
     case "quiet": if (b.cls === "positron") return "аннигиляцию не заглушить"; if (melee(w) && w.dt !== "shock") return "удар и так тихий"; break;
     case "pierce": if (b.noarmor) return "позитронному пучку броня и так не помеха"; break;
@@ -715,6 +721,7 @@ var GROUPS = ["Лечение и стимуляторы", "Батареи и б�
 function groupOf(rc) {
   var o = String(rc.out), d = LAB.ITEMS[o];
   if (rc.group === "restore") return "Восстановление деталей";
+  if (o === "m_bigcell" || o === "m_hugecell") return "Батареи и боеприпасы"; /* ёмкие энергобатареи бластера */
   if (d && d.kind === "wmodule") return "Модули оружия";
   if (d && d.kind === "trap") return "Ловушки и мины";
   if (o.indexOf("armor:") === 0) return "Броня";

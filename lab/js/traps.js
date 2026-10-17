@@ -699,7 +699,7 @@ function disarm(tp) {
   LAB.mini.hack(len, function (ok) {
     if (list().indexOf(tp) < 0) return;
     if (!ok && LAB.mini.wasCancelled && LAB.mini.wasCancelled()) { say("Вы осторожно убираете руки. " + cap1(nameOf(tp)) + " на месте."); return; }
-    if (!ok) { A("play", "term_err"); fire(tp, { hero: true }, [g.x, g.y]); return; }
+    if (!ok) { A("play", "term_err"); fire(tp, { hero: true }, [tp.x, tp.y]); return; }
     remove(tp);
     A("play", "term_ok");
     g.inv[d.item] = (g.inv[d.item] || 0) + 1;

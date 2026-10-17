@@ -127,18 +127,22 @@ LAB.floorSlots = function (seed, L, F) {
 
 /* ── ОРУЖИЕ ── */
 var weaponSeq = 0;
+/* Ступень оружия — число после модели в названии («Искра» Б-3): растёт с редкостью и глубиной. */
+LAB.weaponMark = function (rank, lvl) { return 1 + (rank || 0) + Math.floor((lvl || 1) / 10); };
+/* (1.5) Бластер чем круче, тем больше зарядов: каждая ступень — плюс восемь. */
+LAB.isBlaster = function (b) { return !!b && (b.cls === "blaster" || /бластер/.test(b.n || "")); };
 LAB.makeWeapon = function (base, lvl, rank, qual, idHint) {
   var b = LAB.WEAPONS[base];
-  var k = (1 + 0.14 * (lvl - 1)) * LAB.RANK_MULT[rank] * LAB.QUAL_MULT[qual];
+  var k = (1 + 0.14 * (lvl - 1)) * LAB.RANK_MULT[rank] * LAB.QUAL_MULT[qual], mark = LAB.weaponMark(rank, lvl);
   var w = {
     id: idHint || ("w" + (++weaponSeq) + "_" + base),
     base: base, g: b.g, rank: rank, qual: qual, lvl: lvl,
     dmg: Math.max(1, Math.round(b.dmg * k)),
-    rng: b.rng, spread: b.spread, cap: b.cap ? b.cap + (rank >= 3 ? Math.ceil(b.cap * 0.25) : 0) : 0,
+    rng: b.rng, spread: b.spread, cap: b.cap ? (LAB.isBlaster(b) ? b.cap + 8 * (mark - 1) : b.cap + (rank >= 3 ? Math.ceil(b.cap * 0.25) : 0)) : 0,
     cd: b.cd, ammo: b.ammo, dt: b.dt, mods: 0
   };
   w.charge = w.cap;
-  w.name = LAB.QUAL[b.g][qual] + " " + b.n + (b.cls === "melee" && base !== "cutter" ? "" : " " + LAB.MODEL[base] + "-" + (1 + rank + Math.floor(lvl / 10)));
+  w.name = LAB.QUAL[b.g][qual] + " " + b.n + (b.cls === "melee" && base !== "cutter" ? "" : " " + LAB.MODEL[base] + "-" + mark);
   return w;
 };
 /* Что встречается на этой глубине: чаще — вещи своего блока. */

@@ -261,7 +261,7 @@ function repeatLast() {
 /* ── КЛАВИАТУРА (компьютер, сборка для Windows) ──
    В игре: W A S D — ходьба (удержание — идти дальше), стрелки — выстрел в ту
    сторону (удержание — очередь), R — достать или убрать оружие, Q и E —
-   предыдущее и следующее оружие, 1–9 — оружие по номеру, F — перезарядка,
+   предыдущее и следующее оружие, 1–9 — оружие по номеру, Alt+R или F — перезарядка,
    Enter — действие (дверь, терминал, ящик, выживший), пробел — что рядом,
    Tab — осмотреться, N — навигатор, M — список целей, V — сканер,
    H — аптечка, C — персонаж, I — инвентарь, J — задания и журнал,
@@ -292,6 +292,16 @@ function key(e) {
   /* Ctrl — замолчать, как у чтецов экрана (NVDA, JAWS) */
   if (e.key === "Control") { if (!e.repeat) LAB.Speech.hush(); return; }
   if (e.ctrlKey || e.metaKey) return; /* сочетания системы не трогаем */
+  /* (1.5) Alt+R — перезарядка (и в русской раскладке: Alt+К) */
+  if (e.altKey && (e.code === "KeyR" || k === "r")) {
+    e.preventDefault();
+    if (e.repeat || route() !== "game") return;
+    var gr = LAB.game;
+    if (!gr.entered || gr.G.dead) return;
+    if (gr.paused) { pausedHint(); return; }
+    LAB.AE.ensure(); LAB.Speech.userAct(); gr.reload();
+    return;
+  }
   /* одиночные служебные клавиши (Shift, Alt, Insert чтеца экрана, Caps Lock) речь не обрывают */
   if (/^(Shift|Alt|AltGraph|Meta|OS|CapsLock|NumLock|ScrollLock|Insert|ContextMenu|Unidentified|Dead)$/.test(e.key) || e.altKey) return;
   if (e.repeat) { if (ARROW[e.key] || WASD[k] || k === "Tab" || k === " ") e.preventDefault(); return; }
