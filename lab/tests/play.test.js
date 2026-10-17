@@ -574,6 +574,9 @@ function ok(cond, msg) { if (cond) console.log("  ✓ " + msg); else { fails++; 
     out.noFree = !labels.some(l => /^Отключить турели этажа$/.test(l));
     const ni = labels.findIndex(l => /Оборонная сеть/.test(l));
     LAB.ui.top().i = ni; LAB.ui.activate();
+    /* оборонная сеть: камеры, турели, тревога — турели отдельным пунктом */
+    const ti = LAB.ui.top().items.findIndex(i => /^Турели этажа/.test(typeof i.label === "function" ? i.label() : i.label));
+    LAB.ui.top().i = ti; LAB.ui.activate();
     const t2 = LAB.ui.top().items.map(i => typeof i.label === "function" ? i.label() : i.label);
     out.net = t2.join(" | ");
     /* отключить: схема реле — решаем перебором */
@@ -604,6 +607,8 @@ function ok(cond, msg) { if (cond) console.log("  ✓ " + msg); else { fails++; 
     LAB.ui.closeAll(); g.objMenu(term);
     const li = LAB.ui.top().items.findIndex(i => /Оборонная сеть/.test(typeof i.label === "function" ? i.label() : i.label));
     LAB.ui.top().i = li; LAB.ui.activate();
+    const ti2 = LAB.ui.top().items.findIndex(i => /^Турели этажа/.test(typeof i.label === "function" ? i.label() : i.label));
+    LAB.ui.top().i = ti2; LAB.ui.activate();
     const hi = LAB.ui.top().items.findIndex(i => /Перехватить/.test(typeof i.label === "function" ? i.label() : i.label));
     LAB.ui.top().i = hi; LAB.ui.activate();
     await new Promise(r => setTimeout(r, 50));
@@ -639,6 +644,138 @@ function ok(cond, msg) { if (cond) console.log("  ✓ " + msg); else { fails++; 
   ok(tur.none || (tur.bulls === "bulls" && tur.mode2 === "ours" && tur.ally), "ключ ОКО и схема — турели бьют на нашей стороне");
   ok(tur.none || tur.counter, "ОКО готовит контрвзлом перехваченных турелей");
   ok(tur.none || !tur.chaser, "турель не считается погоней: лестница доступна");
+
+  console.log("Оборонная сеть: доступна всегда; камеры — петля, питание, прошивка; изоляцию ОКО можно обойти");
+  const dnet = await page.evaluate(async () => {
+    const g = LAB.game, G = g.G, C = LAB.combat, O = LAB.oko, out = {};
+    const wait = ms => new Promise(r => setTimeout(r, ms));
+    const label = i => typeof i.label === "function" ? i.label() : i.label;
+    const pick = re => { const w = LAB.ui.top(); const k = w ? w.items.findIndex(i => re.test(label(i))) : -1; if (k < 0) return false; w.i = k; LAB.ui.activate(); return true; };
+    /* решатель головоломок для проверки: взлом, настройка частот, схема реле, подбор ключа */
+    const solve = async () => {
+      for (let k = 0; k < 900; k++) {
+        const c = LAB.mini._cur();
+        if (!c) { if (!LAB.mini.active()) return true; await wait(80); continue; }
+        if (c.done) { await wait(80); continue; }
+        if (c.type === "hack") { if (!c.busy) LAB.mini.gesture({ kind: "swipe", n: 1, dir: c.seq[c.pos] }); await wait(40); continue; }
+        if (c.type === "sort") {
+          let i = 0; while (i < c.n - 1 && c.arr[i] <= c.arr[i + 1]) i++;
+          if (i >= c.n - 1) { LAB.mini.gesture({ kind: "dtap", n: 1 }); await wait(100); continue; }
+          while (c.pos < i) LAB.mini.gesture({ kind: "swipe", n: 1, dir: "R" });
+          while (c.pos > i) LAB.mini.gesture({ kind: "swipe", n: 1, dir: "L" });
+          LAB.mini.gesture({ kind: "swipe", n: 1, dir: "U" }); await wait(20); continue;
+        }
+        if (c.type === "relays") {
+          const n = c.n, s0 = c.st.slice(); let sol = null;
+          for (let m = 0; m < (1 << n) && sol === null; m++) { const q = s0.slice(); for (let i = 0; i < n; i++) if (m & (1 << i)) [i - 1, i, i + 1].forEach(j => { if (c.ring) j = (j + n) % n; if (j >= 0 && j < n) q[j] = !q[j]; }); if (!q.some(v => v)) sol = m; }
+          for (let i = 0; i < n; i++) { if (!(sol & (1 << i))) continue; while (c.pos < i) LAB.mini.gesture({ kind: "swipe", n: 1, dir: "R" }); while (c.pos > i) LAB.mini.gesture({ kind: "swipe", n: 1, dir: "L" }); LAB.mini.gesture({ kind: "dtap", n: 1 }); }
+          await wait(500); continue;
+        }
+        if (c.type === "bulls") { c.key.forEach((v, i) => { c.d[i] = v; }); LAB.mini.gesture({ kind: "dtap", n: 1 }); await wait(1800); continue; }
+        return false;
+      }
+      return false;
+    };
+    let found = null, any = null;
+    for (let L = 1; L <= 4 && !found; L++) for (let F = 3; F <= 20 && !found; F++) {
+      const fl = LAB.getFloor(G.seed, L, F);
+      const cams = fl.foes.filter(d => LAB.FOES[d.type] && LAB.FOES[d.type].beh.indexOf("camera") >= 0).length;
+      const term = fl.objs.some(o => o.type === "terminal" && o.sub === "sec");
+      if (cams && term && !fl.turrets) found = { L, F };
+      else if (cams && term && !any) any = { L, F };
+    }
+    found = found || any;
+    if (!found) return { none: true };
+    out.noTurrets = !LAB.getFloor(G.seed, found.L, found.F).turrets;
+    g.enterFloor(found.L, found.F, "down", true);
+    C.stop(); LAB.ui.closeAll();
+    C.foes().forEach(f => { if (!C.isCam(f)) f.dead = true; });
+    const term = g.CUR.fl.objs.find(o => o.type === "terminal" && o.sub === "sec");
+    const st = g.objState(term); st.hacked = true; st.isoUntil = 0;
+    g.objMenu(term);
+    const netIt = LAB.ui.top().items.find(i => /^Оборонная сеть этажа/.test(label(i)));
+    out.netItem = !!netIt && !netIt.disabled;
+    pick(/^Оборонная сеть этажа/);
+    out.defense = LAB.ui.top().items.map(label).join(" | ");
+    /* все камеры — на петлю */
+    out.camMenu = pick(/^Камеры этажа/) && pick(/Закольцевать запись всех камер/);
+    out.loopSolved = await solve();
+    const cams = C.cams();
+    out.nCams = cams.length;
+    out.allLoop = cams.length > 0 && cams.every(f => C.camState(f) === "loop");
+    /* камера на петле не видит героя: встаём у неё на линии взгляда */
+    const cam = cams[0];
+    const fl = g.CUR.fl, T = LAB.T;
+    const walk = (x, y) => x >= 0 && y >= 0 && x < LAB.W && y < LAB.H && (fl.t[y * LAB.W + x] === T.CORR || fl.t[y * LAB.W + x] === T.ROOM);
+    const DV = { N: [0, -1], S: [0, 1], W: [-1, 0], E: [1, 0] };
+    let spot = null;
+    for (const d of (cam.camDirs || ["N", "E", "S", "W"])) { const v = DV[d]; for (let k = 2; k <= 3 && !spot; k++) { const x = cam.x + v[0] * k, y = cam.y + v[1] * k; if (walk(x, y)) spot = { x, y, d }; } if (spot) break; }
+    out.spot = !!spot;
+    if (spot) {
+      cam.camDirs = cam.camDirs || ["N", "E", "S", "W"]; cam.camI = cam.camDirs.indexOf(spot.d); cam.camSw = -999;
+      G.x = spot.x; G.y = spot.y;
+      const lv0 = O.level();
+      for (let i = 0; i < 4; i++) C.tick();
+      out.blindLoop = O.level() === lv0 && !(O.sec().seen && O.sec().seen.x === spot.x && O.sec().seen.y === spot.y);
+      /* петля кончилась: ОКО находит её и снова видит */
+      cams.forEach(f => { if (f.camLoop) f.camLoop = O.T() + 1; });
+      for (let i = 0; i < 4; i++) C.tick();
+      out.loopFound = /Петля видеозаписи найдена/.test(O.logText(30)) && C.camState(cam) === "on";
+      cam.camI = cam.camDirs.indexOf(spot.d); cam.camSw = -999; cam.camT = 0;
+      for (let i = 0; i < 3; i++) C.tick();
+      out.seenAgain = O.level() > lv0 || !!O.sec().seen;
+    }
+    /* у самой камеры: снять питание под кожухом */
+    LAB.ui.closeAll();
+    const nb = [[1, 0], [-1, 0], [0, 1], [0, -1], [1, 1], [-1, -1], [1, -1], [-1, 1]].map(v => ({ x: cam.x + v[0], y: cam.y + v[1] })).find(p => walk(p.x, p.y) && !C.foes().some(f => !f.dead && f.x === p.x && f.y === p.y));
+    out.near = !!nb;
+    if (nb) {
+      G.x = nb.x; G.y = nb.y;
+      out.inReach = g.camsNear().indexOf(cam) >= 0;
+      g.cameraSabotage(cam);
+      out.cutMenu = pick(/Вскрыть кожух и снять питание/);
+      out.cutSolved = await solve();
+      out.off = C.camState(cam) === "off" && !!(g.CUR.fs.camS && g.CUR.fs.camS[cam.id] && g.CUR.fs.camS[cam.id].off);
+      out.toRepair = C.cutCount() >= 1;
+      C.tick(); out.repairPlanned = !!g.CUR.fs.repairAt || C.repairers().length > 0;
+      /* питание снято и после возвращения на этаж */
+      g.enterFloor(found.L, found.F, "down", true); C.stop();
+      const cam2 = C.cams().find(f => f.id === cam.id);
+      out.kept = !!cam2 && C.camState(cam2) === "off";
+    }
+    /* перепрошить камеру с терминала */
+    LAB.ui.closeAll();
+    C.foes().forEach(f => { if (!C.isCam(f)) f.dead = true; });
+    /* обесточенную камеру «чинит» проверка, чтобы было что перепрошивать */
+    C.cams().forEach(f => { f.camOff = false; f.camLoop = 0; f.camOurs = 0; }); g.CUR.fs.camS = {};
+    const live = C.cams().find(f => C.camState(f) !== "off");
+    out.flashTested = !!live;
+    if (live) {
+      g.objMenu(term); pick(/^Оборонная сеть этажа/); pick(/^Камеры этажа/);
+      const k = LAB.ui.top().items.findIndex(i => label(i).indexOf(live.name.split(",")[0]) === 0 && /смотрит для ОКО/.test(label(i)));
+      if (k >= 0) { LAB.ui.top().i = k; LAB.ui.activate(); }
+      out.flashMenu = k >= 0 && pick(/Перепрошить камеру/);
+      out.flashSolved = await solve();
+      out.ours = C.camState(live) === "ours";
+    } else out.ours = true;
+    /* изоляция сегмента: пункт не серый, взлом маршрутизации снимает её */
+    LAB.ui.closeAll();
+    st.isoUntil = O.T() + 300; st.lockUntil = 0;
+    g.objMenu(term);
+    const isoIt = LAB.ui.top().items.find(i => /Обойти изоляцию/.test(label(i)));
+    out.isoItem = !!isoIt && !isoIt.disabled;
+    out.isoMenu = pick(/Обойти изоляцию/) && pick(/Обойти изоляцию: перехватить/);
+    out.isoSolved = await solve();
+    out.isoGone = !st.isoUntil;
+    LAB.ui.closeAll();
+    return out;
+  });
+  ok(dnet.none || (dnet.netItem && /Камеры этажа/.test(dnet.defense) && /Турели/.test(dnet.defense)), "оборонная сеть в терминале безопасности доступна всегда" + (dnet.noTurrets ? ", и на этаже без турелей" : "") + ": " + (dnet.defense || ""));
+  ok(dnet.none || (dnet.camMenu && dnet.loopSolved && dnet.allLoop), "камеры этажа: запись всех закольцована — головоломкой (камер " + dnet.nCams + ")");
+  ok(dnet.none || !dnet.spot || (dnet.blindLoop && dnet.loopFound && dnet.seenAgain), "камера на петле героя не видит; петля кончилась — ОКО находит её и снова видит (" + [dnet.blindLoop, dnet.loopFound, dnet.seenAgain].join(", ") + ")");
+  ok(dnet.none || !dnet.near || (dnet.inReach && dnet.cutMenu && dnet.cutSolved && dnet.off && dnet.toRepair && dnet.repairPlanned && dnet.kept), "у самой камеры: питание снято, ОКО шлёт ремонтника, состояние помнится на этаже (" + [dnet.inReach, dnet.cutMenu, dnet.cutSolved, dnet.off, dnet.toRepair, dnet.repairPlanned, dnet.kept].join(", ") + ")");
+  ok(dnet.none || (dnet.flashTested && dnet.flashMenu && dnet.flashSolved && dnet.ours), "камера перепрошита с терминала: докладывает ОКО «чисто»" + (dnet.flashMenu === false ? " (пункт не найден)" : ""));
+  ok(dnet.none || (dnet.isoItem && dnet.isoMenu && dnet.isoSolved && dnet.isoGone), "изоляция сегмента ОКО: пункт доступен, взлом маршрутизации её снимает");
 
   console.log("Навигатор: без карты — до ближайшей двери, с картой — до лестницы");
   const nav = await page.evaluate(() => {
@@ -689,10 +826,10 @@ function ok(cond, msg) { if (cond) console.log("  ✓ " + msg); else { fails++; 
     G.body.food = 26; G.body.lv = {}; g.bodyWarn(); SPOKEN.length = 0;
     g.advanceTime(90);
     out.hunger = { food: Math.round(G.body.food), said: SPOKEN.join(" | ") };
-    /* голод не приходит быстро: от полной сытости до «проголодались» — больше двух тысяч шагов */
+    /* голод не приходит быстро: от полной сытости до «проголодались» — полторы тысячи шагов, до голода — больше двух тысяч */
     G.body.food = 100; G.body.lv = {}; g.bodyWarn();
-    let steps = 0; while (G.body.food >= 25 && steps < 20000) { g.advanceTime(1); steps++; }
-    out.hungerSteps = steps; G.body.food = 26; G.body.lv = {}; g.bodyWarn();
+    let steps = 0, peckish = 0; while (G.body.food >= 25 && steps < 20000) { g.advanceTime(1); steps++; if (!peckish && G.body.food < 50) peckish = steps; }
+    out.hungerSteps = steps; out.peckishSteps = peckish; G.body.food = 26; G.body.lv = {}; g.bodyWarn();
     let snack = null, sf = 0;
     for (let F = 1; F <= 20 && !snack; F++) { const fl = LAB.getFloor(G.seed, 2, F); snack = fl.objs.find(o => o.type === "snacks" && !o.broken); if (snack) sf = F; } /* сломанный автомат — другая проверка */
     out.snack = !!snack;
@@ -734,7 +871,7 @@ function ok(cond, msg) { if (cond) console.log("  ✓ " + msg); else { fails++; 
     return out;
   });
   ok(bod.hunger.food < 26 && /Голод/.test(bod.hunger.said), "сытость падает со временем, «Эхо» предупреждает о голоде: " + bod.hunger.said);
-  ok(bod.hungerSteps >= 2000, "голод приходит не быстро: от полной сытости до «проголодались» — " + bod.hungerSteps + " шагов");
+  ok(bod.hungerSteps >= 2000 && bod.peckishSteps >= 1400, "голод приходит не быстро: от полной сытости до «проголодались» — " + bod.peckishSteps + " шагов, до голода — " + bod.hungerSteps);
   ok(!bod.snack || (/Автомат с едой/.test(bod.title) && bod.ate.food >= 60 && bod.ate.en > bod.ate.en0), "автомат с едой: сухпаёк утолил голод и пополнил энергию (" + JSON.stringify(bod.ate) + ")");
   ok(!bod.snack || bod.took === 1, "автомат с едой: «взять с собой» — галеты в рюкзаке");
   ok(bod.antidote.poison === 0 && bod.antidote.tox <= 25, "антидот снял отравление и вывел токсины (" + bod.antidote.tox + ")");
@@ -950,7 +1087,7 @@ function ok(cond, msg) { if (cond) console.log("  ✓ " + msg); else { fails++; 
       const lv0 = O.level();
       LAB.ui.closeAll(); g.objMenu(termS);
       const pick = re => { const w = LAB.ui.top(); const k = w ? w.items.findIndex(i => re.test(label(i))) : -1; if (k < 0) return false; w.i = k; LAB.ui.activate(); return true; };
-      const step = pick(/Оборонная сеть/) && pick(/команда одной турели/);
+      const step = pick(/Оборонная сеть/) && pick(/^Турели этажа/) && pick(/команда одной турели/);
       const lw = LAB.ui.top(); if (step && lw) { lw.i = 0; LAB.ui.activate(); }
       const ok2 = step && pick(/Тихо снять/);
       out.keyTerm = { step: ok2, quiet: tur.filter(f => f.cut && f.quiet).length, live: tur.filter(f => !f.cut && !f.calm).length, n: tur.length, used: G.inv.okokey === 0, noAlarm: O.level() <= Math.max(1, lv0) };

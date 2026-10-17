@@ -150,7 +150,7 @@ function rhythm(n, cb) {
     var beat = function () {
       if (cur !== c) return;
       c.last = performance.now();
-      tone(70, 0.22, 0, "sine", 0.35); tone(140, 0.12, 0, "triangle", 0.12);
+      tone(70, 0.22, 0, "sine", 0.24); tone(140, 0.12, 0, "triangle", 0.09);
       c.timer = setTimeout(beat, c.period);
     };
     c.cleanup = function () { clearTimeout(c.timer); };
@@ -247,7 +247,9 @@ function relayPress(c, i) {
 function relayPan(c, i) { return c.n > 1 ? -0.9 + 1.8 * i / (c.n - 1) : 0; }
 function relayChord(c, speak) {
   var on = [];
-  c.st.forEach(function (v, i) { if (v) { on.push(i + 1); tone(REL_F[i], 0.9, relayPan(c, i), "triangle", 0.11, i * 0.07); } });
+  /* аккорд горящих реле: чем больше голосов, тем тише каждый — канал головоломок громкий, аккорд не хрипит */
+  var nOn = c.st.filter(function (v) { return v; }).length, rv = 0.11 * Math.min(1, 3 / Math.max(1, nOn));
+  c.st.forEach(function (v, i) { if (v) { on.push(i + 1); tone(REL_F[i], 0.9, relayPan(c, i), "triangle", rv, i * 0.07); } });
   if (!on.length) tone(1700, 0.08, 0, "sine", 0.1);
   if (speak) sayq(on.length ? "Горят: " + on.join(", ") + "." : "Все погашены.");
 }

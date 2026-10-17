@@ -1198,6 +1198,12 @@ var UI = {
   /* тон с панорамой и задержкой: мелодии звуковых замков (звучат и при выключенных эффектах — это головоломка) */
   tone: function (f, d, pan, v, when) {
     if (!LAB.Sound) return;
+    /* мелодия звукового замка с приёмника — тоже головоломка: музыка и фон на время стихают */
+    if (LAB.AE && LAB.AE.setPuzzle) {
+      LAB.AE.setPuzzle(true);
+      clearTimeout(UI._pzT);
+      UI._pzT = setTimeout(function () { if (!(LAB.mini && LAB.mini.active && LAB.mini.active())) LAB.AE.setPuzzle(false); }, ((when || 0) + (d || 0.1)) * 1000 + 700);
+    }
     LAB.Sound.tone(f, d, { type: "triangle", pan: pan, vol: v == null ? 0.2 : v, when: when, attack: 0.015, hold: true, force: true, bus: "puzzle" });
   },
   /* запись сигнала, а пока её нет в памяти — тон (запись тем временем грузится) */

@@ -113,6 +113,8 @@ function loadFoes() {
       if (fs.cutT && fs.cutT[f.id]) { f.cut = true; f.calm = true; f.ally = false; }
       if (fs.mineT && fs.mineT[f.id]) { f.mine = true; f.ally = true; f.calm = false; }
     }
+    /* камеры: петля записи, снятое питание, чужая прошивка — помнятся на этаже */
+    if (has(f, "camera") && fs.camS && fs.camS[f.id]) { var cs0 = fs.camS[f.id]; f.camOff = !!cs0.off; f.camLoop = cs0.loop || 0; f.camOurs = cs0.ours || 0; }
   });
   hpMark = Math.round(100 * G().hp / G().hpMax);
   graceT = tickN + 6; /* три секунды после входа на этаж враги не бьют: осмотреться */
@@ -395,11 +397,17 @@ function camFacing(f) { var g = G(), v = DIRV[camDirs(f)[f.camI]]; return (g.x -
 function cameraTick(f) {
   if (f.camT > 0) f.camT--;
   if (f.glimT > 0) f.glimT--;
+  if (f.camOff) return; /* питание снято: камера мертва, сервопривод молчит, пока ремонтник ОКО не придёт */
   if (f.blindT > 0) return; /* сенсорная помеха: объектив засвечен */
-  if (G().st.jam > 0 || gm().armorSpecial("okoghost") || CUR().fs.okoBlind) return;
   camDirs(f);
   var per = LAB.oko && LAB.oko.level() >= 1 ? 4 : 8;
   if (++f.camSw >= per) { f.camSw = 0; f.camI = (f.camI + 1) % f.camDirs.length; if (dist(f, heroPos()) <= 8) A("camTurn", f); }
+  var T0 = LAB.oko ? LAB.oko.T() : 0;
+  /* петля записи: камера крутится как прежде, но ОКО смотрит на пустой коридор */
+  if (f.camLoop && f.camLoop > T0) return;
+  /* перепрошитая камера докладывает «чисто» — и подсказывает вам, кто в её обзоре */
+  if (f.camOurs && f.camOurs > T0) { camWarn(f); return; }
+  if (G().st.jam > 0 || gm().armorSpecial("okoghost") || CUR().fs.okoBlind) return;
   if (camSees(f)) {
     if (f.camT <= 0) {
       f.camT = 40;
@@ -414,6 +422,62 @@ function cameraTick(f) {
     if (LAB.oko) LAB.oko.event("camera", { x: G().x, y: G().y, glimpse: true });
   } else if (Math.random() < 0.015) A("foeSound", f, "idle");
 }
+/* Перепрошитая камера: машина или тварь в её обзоре — «Эхо» говорит, где. */
+function camWarn(f) {
+  if (f.warnT > 0) { f.warnT--; return; }
+  var v = DIRV[camDirs(f)[f.camI]], range = detOf(f);
+  for (var i = 0; i < foes.length; i++) {
+    var o = foes[i];
+    if (o === f || !hostile(o) || has(o, "camera") || isNetTurret(o)) continue;
+    var dx = o.x - f.x, dy = o.y - f.y, along = dx * v[0] + dy * v[1], perp = Math.abs(dx * v[1] - dy * v[0]);
+    if (along < 1 || along > range || perp > Math.max(1, Math.ceil(along * 0.6))) continue;
+    if (!LAB.los(CUR().fl, CUR().fs, f.x, f.y, o.x, o.y)) continue;
+    f.warnT = 24;
+    sayOnce("camw" + o.id, "Ваша камера " + gm().relDir(f.x, f.y) + " видит: " + o.name.split(",")[0].toLowerCase() + " " + gm().relDir(o.x, o.y) + ".", 9000);
+    return;
+  }
+}
+/* ── Камеры для взлома: петля записи, снятое питание, перепрошивка ──
+   Состояние — у камеры и в записи этажа (fs.camS). ОКО всё возвращает:
+   петлю замечает, когда она кончается, чужую прошивку стирает проверкой
+   целостности, к обесточенной камере шлёт ремонтника. */
+function isCam(f) { return !f.dead && has(f, "camera"); }
+function cams() { return foes.filter(isCam); }
+function camState(f) {
+  var T0 = LAB.oko ? LAB.oko.T() : 0;
+  if (f.camOff) return "off";
+  if (f.camOurs && f.camOurs > T0) return "ours";
+  if (f.camLoop && f.camLoop > T0) return "loop";
+  return "on";
+}
+function camSave(f) {
+  var fs = CUR().fs;
+  if (!fs.camS) fs.camS = {};
+  if (f.camOff || f.camLoop || f.camOurs) fs.camS[f.id] = { off: f.camOff ? 1 : undefined, loop: f.camLoop || undefined, ours: f.camOurs || undefined };
+  else delete fs.camS[f.id];
+}
+function camSet(f, kind, ticks) {
+  if (!isCam(f)) return false;
+  var T0 = LAB.oko ? LAB.oko.T() : 0;
+  if (kind === "loop") { f.camLoop = T0 + ticks; f.camT = 0; f.glimT = 0; f.loopWarned = false; }
+  else if (kind === "ours") { f.camOurs = T0 + ticks; f.camLoop = 0; f.camT = 0; f.glimT = 0; f.oursWarned = false; }
+  else if (kind === "off") { f.camOff = true; f.camLoop = 0; f.camOurs = 0; }
+  camSave(f);
+  return true;
+}
+/* Срок петли или прошивки вышел — камера снова смотрит для ОКО. Возвращает, сколько каких. */
+function camExpire() {
+  var T0 = LAB.oko ? LAB.oko.T() : 0, out = { loop: 0, ours: 0, loopSoon: 0, oursSoon: 0 };
+  foes.forEach(function (f) {
+    if (!isCam(f)) return;
+    if (f.camLoop && f.camLoop <= T0) { f.camLoop = 0; out.loop++; camSave(f); }
+    else if (f.camLoop && !f.loopWarned && f.camLoop - T0 <= 20) { f.loopWarned = true; out.loopSoon++; }
+    if (f.camOurs && f.camOurs <= T0) { f.camOurs = 0; out.ours++; camSave(f); }
+    else if (f.camOurs && !f.oursWarned && f.camOurs - T0 <= 20) { f.oursWarned = true; out.oursSoon++; }
+  });
+  return out;
+}
+function camCount(kind) { return cams().filter(function (f) { return camState(f) === kind; }).length; }
 function unmask(f) {
   f.disguised = false; f.state = "hunt"; f.lastKnown = heroPos(); f.at = f.acd;
   A("foeSound", f, "alert");
@@ -533,16 +597,25 @@ function patrolStep(f) {
    щитка, слышно, как он работает; починил — сеть этажа оживает. Путь
    перекрыт и ремонтник долго не приближается — ОКО выводит его служебным
    ходом ближе к турели (дважды), а потом отзывает и пришлёт другого. */
+function needsFix(o, off) { return (isNetTurret(o) && (o.cut || (o.calm && off))) || (isCam(o) && o.camOff); }
 function repairTask(f, canMove) {
   var t = null, bd = 1e9, off = CUR().fs.turretMode === "off";
-  foes.forEach(function (o) { if (isNetTurret(o) && (o.cut || (o.calm && off))) { var d = dist(o, f); if (d < bd) { bd = d; t = o; } } });
+  foes.forEach(function (o) { if (needsFix(o, off)) { var d = dist(o, f); if (d < bd) { bd = d; t = o; } } });
   if (!t) { f.task = null; f.fixT = 0; return false; }
   if (cheb(f, t) <= 1) {
     f.fixT++;
     A("foeSound", f, "repair");
-    if (f.fixT === 1) sayOnce("fix" + f.id, f.name.split(",")[0] + " чинит турель " + gm().relDir(t.x, t.y) + "!", 6000, "urgent");
+    if (f.fixT === 1) sayOnce("fix" + f.id, f.name.split(",")[0] + (isCam(t) ? " чинит камеру " : " чинит турель ") + gm().relDir(t.x, t.y) + "!", 6000, "urgent");
     if (f.fixT < 4) return true;
     f.task = null; f.fixT = 0;
+    if (isCam(t)) {
+      /* питание камеры подано — она снова смотрит для ОКО */
+      t.camOff = false; t.camLoop = 0; t.camOurs = 0; camSave(t);
+      A("play", "power_on");
+      if (LAB.oko) LAB.oko.event("cam_fixed", { x: t.x, y: t.y });
+      if (foes.some(function (o) { return needsFix(o, off); })) f.task = "repair";
+      return true;
+    }
     if (t.cut) {
       /* перерезанный кабель сращен — турель возвращается в режим сети этажа */
       t.cut = false; if (CUR().fs.cutT) delete CUR().fs.cutT[t.id];
@@ -550,7 +623,7 @@ function repairTask(f, canMove) {
       t.calm = m === "off"; t.ally = m === "ours"; if (!t.calm && !t.ally) { t.state = "alert"; t.lastKnown = null; }
       A("play", "power_on");
       if (LAB.oko) LAB.oko.event("repaired", { cut: true });
-      if (foes.some(function (o) { return isNetTurret(o) && (o.cut || (o.calm && off)); })) f.task = "repair";
+      if (foes.some(function (o) { return needsFix(o, off); })) f.task = "repair";
       return true;
     }
     turretsHostile();
@@ -1330,7 +1403,7 @@ function fire(dir, burst) {
       var wh = wallHit(dir, w.rng);
       A("shotWall", w, wh[0], wh[1]);
       if (!burst) sayOnce("nobody", "Мимо: там никого.", 2500);
-    } else if (w.pierce) {
+    } else if (wf(w, "pierce")) {
       targetsIn(dir, w, true).forEach(function (t) { hits += shoot(w, t.f, t.perp, t.along, burst, false); });
       if (!hits) { var wh2 = wallHit(dir, w.rng); A("shotWall", w, wh2[0], wh2[1]); }
     } else {
@@ -1340,6 +1413,16 @@ function fire(dir, burst) {
     }
   }
   if (hits) g.stats.hits++;
+  /* очередь: оружие с burst стреляет несколькими импульсами за спуск — следующие чуть слабее */
+  var nb = !melee ? (wf(w, "burst") || 0) : 0;
+  for (var bi = 1; bi < nb; bi++) (function (k) {
+    setTimeout(function () { LAB.safe(function () {
+      if (G().dead || G().weapons[G().wi] !== w || !G().drawn) return;
+      var l2 = targetsIn(dir, w, false);
+      A("shot", w, dir, true);
+      if (l2.length) { var w2 = Object.create(w); w2.dmg = Math.max(1, Math.round(w.dmg * 0.7)); if (shoot(w2, l2[0].f, l2[0].perp, l2[0].along, true, false)) g.stats.hits++; }
+    }); }, 110 * k);
+  })(bi);
   if (LAB.workshop) LAB.workshop.afterShot(w, burst, now);
   if (LAB.tutor && !melee) LAB.tutor.ev("weapon");
   /* шум выстрела будит этаж */
@@ -1347,6 +1430,11 @@ function fire(dir, burst) {
   UIx("refresh");
   return true;
 }
+/* Свойство оружия: у самого экземпляра или у его вида. (1.3) Прежде бой
+   читал «прошивает всех на линии», «броня не помогает», заморозку и урон
+   по соседям только у экземпляра, а makeWeapon их туда не переносил —
+   у найденного и собранного оружия эти свойства не работали. */
+function wf(w, k) { if (w && w[k] != null) return w[k]; var b = w && LAB.WEAPONS[w.base]; return b ? b[k] : undefined; }
 function foeAtCell(x, y) { for (var i = 0; i < foes.length; i++) if (!foes[i].dead && !foes[i].burrowed && foes[i].x === x && foes[i].y === y) return foes[i]; return null; }
 function shoot(w, f, perp, along, burst, melee) {
   var g = G();
@@ -1369,8 +1457,8 @@ function shoot(w, f, perp, along, burst, melee) {
   if (crit) dmg *= 1.75;
   if (LAB.workshop) dmg *= LAB.workshop.dmgK(w, f);
   var wb = LAB.WEAPONS[w.base] || {};
-  var done = damageFoe(f, dmg, dt, { noarmor: !!w.noarmor, crit: crit, melee: melee, burst: burst, freeze: w.freeze, apierce: LAB.workshop ? LAB.workshop.pierce(w) : 0, stunMech: wb.stunMech || 0 });
-  if (w.area) foes.forEach(function (o) { if (o !== f && !o.dead && !o.calm && cheb(o, f) <= 1) damageFoe(o, dmg * 0.6, dt, { noarmor: true, quiet: true }); });
+  var done = damageFoe(f, dmg, dt, { noarmor: !!wf(w, "noarmor"), crit: crit, melee: melee, burst: burst, freeze: wf(w, "freeze"), apierce: LAB.workshop ? LAB.workshop.pierce(w) : 0, stunMech: wb.stunMech || 0 });
+  if (wf(w, "area")) foes.forEach(function (o) { if (o !== f && !o.dead && !o.calm && cheb(o, f) <= 1) damageFoe(o, dmg * 0.6, dt, { noarmor: true, quiet: true }); });
   return 1;
 }
 function wake(f) {
@@ -1914,7 +2002,8 @@ LAB.combat = {
   dispatch: dispatch, okoPoint: okoPoint, patrols: patrols, drones: drones, repairers: repairers, guards: guards, sendCheck: sendCheck, reroute: reroute, dismiss: dismiss, despawn: despawn,
   lastSquad: function () { return lastSquad; }, tickN: function () { return tickN; }, search: search, netUp: netUp, camFacing: camFacing,
   quietTurret: quietTurret, jammer: jammer, freeCellNear: freeCellNear, spawnFoe: spawnFoe, damageFoe: damageFoe, unmask: unmask, dropCarry: dropCarry, _relayCall: function (f) { relayCall(f); }, _cleanerTick: function (f) { cleanerTick(f); }, isTurret: isTurret, cutTurret: cutTurret, mineTurret: mineTurret, unmineTurrets: unmineTurrets, flankCell: flankCell,
-  mineCount: function () { return foes.filter(function (f) { return isNetTurret(f) && f.mine; }).length; }, cutCount: function () { return foes.filter(function (f) { return isNetTurret(f) && f.cut; }).length; },
+  mineCount: function () { return foes.filter(function (f) { return isNetTurret(f) && f.mine; }).length; }, cutCount: function () { return foes.filter(function (f) { return (isNetTurret(f) && f.cut) || (isCam(f) && f.camOff); }).length; },
+  cams: cams, camState: camState, camSet: camSet, camExpire: camExpire, camCount: camCount, isCam: isCam,
   areaDamage: areaDamage, throwEmp: throwEmp, reloadPause: reloadPause, fire: fire, startFire: startFire, stopFire: stopFire,
   useImplant: useImplant, useImplantFree: function (id) { useImplant(id, true); }, describe: describe, hurtPlayer: hurtPlayer, foes: function () { return foes; }
 };

@@ -39,7 +39,8 @@ function newState(seed) {
     checkpoint: null, day: 1, min: 8 * 60, event: "norm", eventUntil: 8 * 60 + 90,
     st: { poison: 0, slow: 0, shield: 0, haste: 0, cloak: 0, web: 0, jam: 0, deaf: 0, antitox: 0, bleed: 0, navjam: 0 },
     /* тело героя: сытость, бодрость, токсины, нейронагрузка (0–100) */
-    body: { food: 65, wake: 85, tox: 0, neuro: 0, lv: {} },
+    /* раствор криокапсулы кормил спящего: герой просыпается сытым (1.3) */
+    body: { food: 85, wake: 85, tox: 0, neuro: 0, lv: {} },
     stats: { kills: 0, steps: 0, secrets: 0, deaths: 0, shots: 0, hits: 0, notes: 0, ms: 0, saves: 0 },
     tut: {}, done: false, noise: 0
   };
@@ -486,10 +487,11 @@ function advanceTime(min, asleep) {
 game.advanceTime = advanceTime;
 
 /* ════════ ТЕЛО ГЕРОЯ ════════
-   Сытость падает со временем (каждый шаг — минута), но медленно: от
-   сытости до «проголодались» — больше двух тысяч шагов, несколько этажей
-   (1.3, просьба игрока: прежде голод приходил за этаж-другой). Голодному
-   импланты не восстанавливают энергию, истощение отнимает здоровье. Бодрость падает
+   Сытость падает со временем (каждый шаг — минута), но медленно (1.3,
+   просьба игрока: прежде голод приходил за этаж-другой): от полной
+   сытости до «проголодались» — полторы тысячи шагов, до голода — больше
+   двух тысяч; герой просыпается сытым. Голодному импланты не
+   восстанавливают энергию, истощение отнимает здоровье. Бодрость падает
    без сна: уставшему труднее целиться; капсула, кофе и стимуляторы бодрят.
    Токсины копятся от ядов, химии, несвежей еды и стимуляторов и понемногу
    выводятся сами; антидот, сорбент и большая аптечка выводят их сразу:
@@ -499,7 +501,7 @@ game.advanceTime = advanceTime;
    критической — отключаются, пока нагрузка не спадёт. */
 function body() {
   var b = G.body;
-  if (!b) b = G.body = { food: 65, wake: 85, tox: 0, neuro: 0, lv: {} };
+  if (!b) b = G.body = { food: 85, wake: 85, tox: 0, neuro: 0, lv: {} };
   if (!b.lv) b.lv = {};
   return b;
 }
@@ -1141,6 +1143,7 @@ function targetName(t) {
   if (t.type === "secret") return "Стена со сквозняком";
   if (t.type === "foe") return t.ref.name;
   if (t.type === "turret") return t.ref.name + (t.ref.cut ? ", кабель перерезан" : t.ref.mine ? ", признала вас по ключу" : t.ref.ally ? ", перехвачена" : t.ref.calm ? ", обесточена" : ", под током");
+  if (t.type === "camera") return t.ref.name.split(",")[0] + ", " + camWord(LAB.combat.camState(t.ref));
   return "";
 }
 /* Турели вплотную — и наискосок: к турели подходят по диагонали, вне её линии огня. */
@@ -1150,6 +1153,54 @@ function turretsNear() {
   return cb.foes().filter(function (f) { return cb.isTurret(f) && Math.max(Math.abs(f.x - G.x), Math.abs(f.y - G.y)) <= 1; });
 }
 game.turretsNear = turretsNear;
+/* Камеры вплотную (и наискосок): кожух и сервисный разъём под рукой. */
+function camsNear() {
+  var cb = LAB.combat;
+  if (!cb || !cb.cams) return [];
+  return cb.cams().filter(function (f) { return Math.max(Math.abs(f.x - G.x), Math.abs(f.y - G.y)) <= 1; });
+}
+game.camsNear = camsNear;
+/* У самой камеры: петля через сервисный разъём, снять питание под кожухом,
+   перепрошить. Быстрее, чем с терминала, но камеру надо обойти так, чтобы
+   она смотрела в другую сторону. */
+function cameraSabotage(f) {
+  var cb = LAB.combat, k = cb.camState(f), dif = okoDiff(), items = [];
+  var spotted = function () { if (LAB.oko) LAB.oko.event("camera", { x: G.x, y: G.y }); if (LAB.combat) LAB.combat.noise(6); };
+  if (k !== "off") items.push({ label: "Закольцевать запись: подключить петлю к сервисному разъёму (повторите сигналы)", fn: function () {
+    UIx("closeAll");
+    LAB.mini.hack(hackLength(1 + Math.floor(Math.min(G.L, 20) / 6) + dif), function (ok) {
+      if (!ok && LAB.mini.wasCancelled && LAB.mini.wasCancelled()) { say("Вы отняли руки от разъёма. Камера ничего не заметила."); return; }
+      if (!ok) { A("play", "term_err"); say("Разъём щёлкнул и сбросил петлю: камера доложила о вмешательстве."); spotted(); return; }
+      var t = camTicks(150); cb.camSet(f, "loop", t); A("play", "term_ok"); gainXP(5);
+      say("Петля подключена: примерно " + secs(t) + " эта камера показывает ОКО пустой коридор.");
+      if (LAB.oko) LAB.oko.event("cam_loop", { x: f.x, y: f.y });
+    }, { title: "Петля камеры" });
+  } });
+  if (k !== "off") items.push({ label: "Вскрыть кожух и снять питание: камера ослепнет, пока не придёт ремонтник", fn: function () {
+    UIx("closeAll");
+    LAB.mini.hack(hackLength(2 + Math.floor(Math.min(G.L, 20) / 5) + dif), function (ok) {
+      if (!ok && LAB.mini.wasCancelled && LAB.mini.wasCancelled()) { say("Вы оставили кожух. Камера цела."); return; }
+      if (!ok) { A("play", "w_shock_crack"); say("Искра из кожуха — камера дёрнулась и доложила о вмешательстве."); spotted(); return; }
+      cb.camSet(f, "off"); A("play", "power_off"); gainXP(6); if (LAB.combat) LAB.combat.noise(4);
+      say("Питание снято: камера " + relDir(f.x, f.y) + " ослепла. ОКО это заметит и пришлёт ремонтника.");
+      if (LAB.oko) LAB.oko.event("cam_cut", { x: f.x, y: f.y });
+    }, { title: "Кожух камеры" });
+  } });
+  if (k !== "off" && k !== "ours") items.push({ label: "Перепрошить через сервисный разъём: камера будет докладывать «чисто» и подсказывать вам (настройка частот)", fn: function () {
+    UIx("closeAll");
+    LAB.mini.sortTones(4 + Math.min(2, dif + Math.floor(G.L / 30)), function (ok) {
+      if (!ok && LAB.mini.wasCancelled && LAB.mini.wasCancelled()) { say("Вы отключились от разъёма."); return; }
+      if (!ok) { A("play", "term_err"); say("Прошивка не встала: камера доложила о сбое."); spotted(); return; }
+      var t = camTicks(360); cb.camSet(f, "ours", t); A("play", "term_ok"); gainXP(10);
+      say("Камера " + relDir(f.x, f.y) + " перепрошита: примерно " + secs(t) + " она докладывает ОКО «чисто», а вам говорит, кого видит.");
+      if (LAB.oko) LAB.oko.event("cam_flash", { x: f.x, y: f.y });
+    }, { title: "Прошивка камеры" });
+  } });
+  items.push({ label: "Осмотреть камеру", keep: true, fn: function () { say(cb.describe(f) + ". Сейчас она " + camWord(cb.camState(f)) + ". Подходить к камере лучше, пока она смотрит в другую сторону: поворот слышно по писку сервопривода."); } });
+  items.push({ label: "Отойти", fn: function () {} });
+  UIx("menu", f.name.split(",")[0], items);
+}
+game.cameraSabotage = cameraSabotage;
 /* У самой турели: перерезать кабель питания (быстро, шумно — ОКО пришлёт
    ремонтника) или приложить служебный ключ ОКО. */
 function turretSabotage(f) {
@@ -1217,6 +1268,7 @@ function interact() {
   }
   targets = targets.filter(function (q) { return q.type !== "foe"; });
   turretsNear().forEach(function (t) { targets.push({ type: "turret", ref: t, dir: null }); });
+  camsNear().forEach(function (c) { targets.push({ type: "camera", ref: c, dir: null }); });
   if (!targets.length) {
     var sec = nearSecret(1);
     if (sec) { secretMenu(sec.d); return; }
@@ -1248,6 +1300,7 @@ function openTarget(q) {
   else if (q.type === "obj") objMenu(q.ref);
   else if (q.type === "npc") npcMenu(q.ref);
   else if (q.type === "turret") turretSabotage(q.ref);
+  else if (q.type === "camera") cameraSabotage(q.ref);
 }
 game.openTarget = openTarget;
 
@@ -1794,10 +1847,11 @@ function terminalMenu(o) {
           if (LAB.oko) LAB.oko.event("lockdown", { x: o.x, y: o.y });
         }, { title: "Протокол охраны" });
       } });
-    var nT = LAB.combat ? LAB.combat.turretsLeft() : 0;
-    if (iso) items.push({ label: "Защитные функции: сегмент сети изолирован ОКО, ещё " + iso + " секунд", disabled: true, why: "ОКО отрезало этот терминал от оборонной сети. Подождите или найдите другой терминал безопасности.", fn: function () {} });
-    else if (nT) items.push({ label: "Оборонная сеть этажа: турелей — " + nT + ", " + turretStatus(), fn: function () { turretMenu(o, st); } });
-    else items.push({ label: "Оборонная сеть: турелей на этаже не осталось", disabled: true, fn: function () {} });
+    /* (1.3) Оборонная сеть доступна всегда: камеры, турели, тревога. Прежде
+       без турелей на этаже пункт был серым, а изоляция сегмента ОКО
+       выключала все защитные функции — и казалось, что сеть не работает. */
+    if (iso) items.push({ label: "Защитные функции: ОКО изолировало сегмент сети, вернёт его примерно через " + iso + " " + plural(iso, "секунду", "секунды", "секунд") + " игры. Обойти изоляцию", fn: function () { isoMenu(o, st); } });
+    else items.push({ label: "Оборонная сеть этажа: " + defenseLine(), fn: function () { defenseMenu(o, st); } });
     if (!iso) items.push({ label: CUR.fs.robots ? "Роботы перепрошиты" : "Перепрошить роботов этажа (настройка частот и взлом)", fn: function () {
       if (CUR.fs.robots) { say("Роботы этажа уже не враждебны."); return; }
       UIx("closeAll");
@@ -1895,8 +1949,153 @@ function turretMenu(o, st) {
     });
   } });
   items.push({ label: "Состояние сети", keep: true, fn: function () { say("Турелей на этаже: " + (LAB.combat ? LAB.combat.turretsLeft() : 0) + ". Сейчас: " + turretStatus() + ". " + (dif ? "ОКО усложнило протоколы после прошлых взломов." : "Протоколы обычные.")); } });
+  items.push({ label: "Назад", fn: function () { defenseMenu(o, st); } });
+  UIx("menu", "Турели этажа", items);
+}
+/* ── ОБОРОННАЯ СЕТЬ ЭТАЖА (1.3) ──
+   Камеры (петля записи, снятое питание, перепрошивка), турели, тревога.
+   Всё, что вы делаете с сетью, ОКО потом возвращает: петлю замечает,
+   когда она кончается, чужую прошивку стирает проверкой целостности,
+   к обесточенной камере шлёт ремонтника, сброшенную тревогу поднимает
+   снова, если вас увидят. */
+function camWord(k) { return k === "off" ? "обесточена" : k === "ours" ? "перепрошита, докладывает «чисто»" : k === "loop" ? "на петле записи" : "смотрит для ОКО"; }
+function camLine() {
+  var cb = LAB.combat, cs = cb && cb.cams ? cb.cams() : [];
+  if (!cs.length) return "камер нет";
+  var by = { on: 0, loop: 0, ours: 0, off: 0 };
+  cs.forEach(function (f) { by[cb.camState(f)]++; });
+  var p = [];
+  if (by.on) p.push("смотрят " + by.on); if (by.loop) p.push("на петле " + by.loop); if (by.ours) p.push("ваших " + by.ours); if (by.off) p.push("обесточено " + by.off);
+  return cs.length + " " + plural(cs.length, "камера", "камеры", "камер") + " (" + p.join(", ") + ")";
+}
+function defenseLine() {
+  var nT = LAB.combat ? LAB.combat.turretsLeft() : 0;
+  return camLine() + "; " + (nT ? nT + " " + plural(nT, "турель", "турели", "турелей") + ", " + turretStatus() : "турелей нет") + (LAB.oko ? "; режим — " + LAB.oko.levelName() : "");
+}
+/* Сколько тактов ОКО (полсекунды) держится петля или прошивка: глубже и после частых взломов — меньше. */
+function camTicks(base) { var dif = okoDiff(), blk = LAB.blockOf(G.L); return Math.max(40, Math.round(base * (1 - 0.08 * dif - 0.03 * (blk - 1)) + Math.random() * base * 0.25)); }
+function secs(t) { var s = Math.round(t / 2); return s + " " + plural(s, "секунду", "секунды", "секунд"); }
+function defenseMenu(o, st) {
+  var cb = LAB.combat, items = [], nT = cb ? cb.turretsLeft() : 0, cs = cb && cb.cams ? cb.cams() : [];
+  if (cs.length) items.push({ label: "Камеры этажа: " + camLine(), fn: function () { camerasMenu(o, st); } });
+  else items.push({ label: "Камеры: на этаже их нет", disabled: true, why: "На этом этаже ОКО не повесило камер — или их уже разбили.", fn: function () {} });
+  if (nT) items.push({ label: "Турели этажа: " + nT + ", " + turretStatus(), fn: function () { turretMenu(o, st); } });
+  else items.push({ label: "Турели: на этаже их нет", disabled: true, why: "Турелей на этом этаже нет — ни отключать, ни перехватывать нечего. Камеры и тревога — здесь же.", fn: function () {} });
+  var lv = LAB.oko ? LAB.oko.level() : 0;
+  if (lv >= 2 && lv <= 5) items.push({ label: "Сбросить тревогу: подменить доклады сенсоров (подбор ключа и взлом)", fn: function () {
+    UIx("closeAll");
+    var dif = okoDiff();
+    LAB.mini.chain([
+      function (next) { LAB.mini.bulls(Math.min(5, 3 + (dif >= 2 ? 1 : 0)), next, { title: "Ключ сенсоров" }); },
+      function (next) { LAB.mini.hack(hackLength(2 + Math.floor(Math.min(G.L, 20) / 4) + dif), next, { title: "Подмена докладов" }); }
+    ], function (ok) {
+      if (!ok) { termFail(o, st, "Сенсоры отвергли подмену."); return; }
+      if (LAB.oko) { LAB.oko.setLevel(6, "доклады сенсоров подменены с терминала"); LAB.oko.event("alarm_reset", { x: o.x, y: o.y }); }
+      A("play", "term_ok"); say("Доклады сенсоров подменены: ОКО потеряло вас и проверяет последнее место, где видело. Уходите оттуда — увидят снова, тревога вернётся."); gainXP(12);
+    });
+  } });
+  items.push({ label: "Состояние сети", keep: true, fn: function () { say("Оборонная сеть этажа: " + defenseLine() + ". " + (okoDiff() ? "ОКО усложнило протоколы после прошлых взломов." : "Протоколы обычные.")); } });
   items.push({ label: "Назад", fn: function () { terminalMenu(o); } });
   UIx("menu", "Оборонная сеть этажа", items);
+}
+/* Изоляция сегмента: подождать или обойти (взлом маршрутизации). */
+function isoMenu(o, st) {
+  var iso = st.isoUntil && st.isoUntil > (CUR.fs.okoT || 0) ? Math.ceil((st.isoUntil - (CUR.fs.okoT || 0)) / 2) : 0;
+  if (!iso) { defenseMenu(o, st); return; }
+  UIx("menu", "Сегмент изолирован", [
+    { label: "Обойти изоляцию: перехватить маршрутизацию (взлом)", fn: function () {
+      UIx("closeAll");
+      LAB.mini.hack(hackLength(3 + Math.floor(Math.min(G.L, 20) / 3) + okoDiff()), function (ok) {
+        if (!ok) { termFail(o, st, "Маршрутизатор отверг подмену."); return; }
+        st.isoUntil = 0; A("play", "term_ok"); gainXP(8);
+        if (LAB.oko) LAB.oko.event("iso_bypass", { x: o.x, y: o.y });
+        say("Изоляция обойдена: терминал снова в оборонной сети. ОКО это заметило.");
+        defenseMenu(o, st);
+      }, { title: "Маршрутизация" });
+    } },
+    { label: "Подождать: ОКО вернёт сегмент примерно через " + iso + " " + plural(iso, "секунду", "секунды", "секунд") + " игры", keep: true, fn: function () { say("Пока открыто окно, время в игре стоит. Отойдите от терминала и вернитесь позже — или найдите другой терминал безопасности."); } },
+    { label: "Назад", fn: function () { terminalMenu(o); } }
+  ]);
+}
+/* Камеры этажа с терминала: все сразу или каждая по отдельности. */
+function camerasMenu(o, st) {
+  var cb = LAB.combat, cs = cb.cams().slice(), dif = okoDiff();
+  cs.sort(function (a, b) { return (Math.abs(a.x - G.x) + Math.abs(a.y - G.y)) - (Math.abs(b.x - G.x) + Math.abs(b.y - G.y)); });
+  var items = [];
+  var live = cs.filter(function (f) { return cb.camState(f) !== "off"; });
+  if (live.length) items.push({ label: "Закольцевать запись всех камер: ОКО на время видит пустые коридоры (частоты и взлом)", fn: function () {
+    UIx("closeAll");
+    LAB.mini.chain([
+      function (next) { LAB.mini.sortTones(4 + Math.min(2, dif + Math.floor(G.L / 30)), next, { title: "Частоты видеопотока" }); },
+      function (next) { LAB.mini.hack(hackLength(2 + Math.floor(Math.min(G.L, 20) / 3) + dif), next, { title: "Петля записи" }); }
+    ], function (ok) {
+      if (!ok) { termFail(o, st, "Видеосервер заметил подмену."); return; }
+      var t = camTicks(110);
+      cb.cams().forEach(function (f) { if (cb.camState(f) !== "off") cb.camSet(f, "loop", t); });
+      A("play", "term_ok"); gainXP(12);
+      say("Запись всех камер этажа закольцована: примерно " + secs(t) + " ОКО видит пустые коридоры. Потом заметит петлю и перезапустит камеры.");
+      if (LAB.oko) LAB.oko.event("cam_loop", { all: true, x: o.x, y: o.y });
+    });
+  } });
+  if (live.length) items.push({ label: "Перепрошить все камеры этажа: докладывают «чисто» и подсказывают вам о машинах (ключ, частоты и взлом)", fn: function () {
+    UIx("closeAll");
+    LAB.mini.chain([
+      function (next) { LAB.mini.bulls(Math.min(5, 3 + (dif >= 2 ? 1 : 0) + (G.L >= 40 ? 1 : 0)), next, { title: "Ключ видеосервера" }); },
+      function (next) { LAB.mini.sortTones(5 + Math.min(2, dif), next, { title: "Частоты прошивки камер" }); },
+      function (next) { LAB.mini.hack(hackLength(3 + Math.floor(Math.min(G.L, 20) / 2) + dif), next, { title: "Прошивка камер" }); }
+    ], function (ok) {
+      if (!ok) { termFail(o, st, "Прошивка камер сорвалась."); return; }
+      var t = camTicks(300);
+      cb.cams().forEach(function (f) { if (cb.camState(f) !== "off") cb.camSet(f, "ours", t); });
+      A("play", "term_ok"); gainXP(20);
+      say("Камеры этажа перепрошиты: примерно " + secs(t) + " они докладывают «чисто», а вам говорят, кого видят. Потом проверка целостности ОКО сотрёт прошивку.");
+      if (LAB.oko) LAB.oko.event("cam_flash", { all: true, x: o.x, y: o.y });
+    });
+  } });
+  cs.forEach(function (f) {
+    items.push({ label: f.name.split(",")[0] + " " + relDir(f.x, f.y) + ": " + camWord(cb.camState(f)), fn: function () { cameraRemote(o, st, f); } });
+  });
+  items.push({ label: "Назад", fn: function () { defenseMenu(o, st); } });
+  UIx("menu", "Камеры этажа", items);
+}
+/* Одна камера с терминала. */
+function cameraRemote(o, st, f) {
+  var cb = LAB.combat, dif = okoDiff(), k = cb.camState(f), items = [];
+  if (k !== "off") {
+    items.push({ label: "Закольцевать её запись (взлом)", fn: function () {
+      UIx("closeAll");
+      LAB.mini.hack(hackLength(1 + Math.floor(Math.min(G.L, 20) / 4) + dif), function (ok) {
+        if (!ok) { termFail(o, st, "Камера сбросила подключение."); return; }
+        var t = camTicks(120); cb.camSet(f, "loop", t); A("play", "term_ok"); gainXP(5);
+        say("Камера " + relDir(f.x, f.y) + " на петле: примерно " + secs(t) + " ОКО видит через неё пустой коридор.");
+        if (LAB.oko) LAB.oko.event("cam_loop", { x: f.x, y: f.y });
+      }, { title: "Петля камеры" });
+    } });
+    items.push({ label: "Снять питание камеры (схема реле): ослепнет, пока не придёт ремонтник", fn: function () {
+      UIx("closeAll");
+      LAB.mini.relays(Math.min(7, 4 + Math.floor(LAB.blockOf(G.L) / 2) + (dif > 1 ? 1 : 0)), function (ok) {
+        if (!ok) { termFail(o, st, "Щиток камеры перегрелся."); return; }
+        cb.camSet(f, "off"); A("play", "power_off"); A("play", "term_ok"); gainXP(6);
+        say("Питание камеры " + relDir(f.x, f.y) + " снято: она ослепла. ОКО пришлёт ремонтника — его можно встретить.");
+        if (LAB.oko) LAB.oko.event("cam_cut", { x: f.x, y: f.y });
+      }, { title: "Питание камеры" });
+    } });
+    if (k !== "ours") items.push({ label: "Перепрошить камеру: докладывает «чисто» и подсказывает вам (частоты и взлом)", fn: function () {
+      UIx("closeAll");
+      LAB.mini.chain([
+        function (next) { LAB.mini.sortTones(4 + Math.min(2, dif), next, { title: "Частоты камеры" }); },
+        function (next) { LAB.mini.hack(hackLength(2 + Math.floor(Math.min(G.L, 20) / 3) + dif), next, { title: "Прошивка камеры" }); }
+      ], function (ok) {
+        if (!ok) { termFail(o, st, "Прошивка камеры сорвалась."); return; }
+        var t = camTicks(320); cb.camSet(f, "ours", t); A("play", "term_ok"); gainXP(10);
+        say("Камера " + relDir(f.x, f.y) + " перепрошита: примерно " + secs(t) + " она докладывает ОКО «чисто», а вам говорит, кого видит.");
+        if (LAB.oko) LAB.oko.event("cam_flash", { x: f.x, y: f.y });
+      });
+    } });
+  }
+  items.push({ label: "Состояние", keep: true, fn: function () { say(f.name.split(",")[0] + " " + relDir(f.x, f.y) + ": " + camWord(cb.camState(f)) + "."); } });
+  items.push({ label: "Назад", fn: function () { camerasMenu(o, st); } });
+  UIx("menu", f.name.split(",")[0] + " " + relDir(f.x, f.y), items);
 }
 /* Ключ ОКО на терминале: список турелей этажа — выбрать одну и дать ей команду. */
 function keyTurretList(o) {
@@ -2858,7 +3057,7 @@ function die() {
   later(function () {
     G.dead = false; game.paused = false;
     G.hp = Math.round(G.hpMax * 0.6); G.st = { poison: 0, slow: 0, shield: 0, haste: 0, cloak: 0, web: 0, jam: 0, deaf: 0, antitox: 0, bleed: 0, navjam: 0 };
-    var bd = body(); bd.tox = 0; bd.neuro = 0; bd.food = Math.max(bd.food, 35); bd.wake = Math.max(bd.wake, 50); bd.lv = {};
+    var bd = body(); bd.tox = 0; bd.neuro = 0; bd.food = Math.max(bd.food, 60); bd.wake = Math.max(bd.wake, 50); bd.lv = {};
     var cp = G.checkpoint;
     if (cp && cp.L === G.L) enterFloor(cp.L, cp.F, "respawn");
     else enterFloor(G.L, G.F, G.F === 1 && G.L === 1 ? "start" : G.F === 1 ? "gatedown" : "down");
