@@ -170,8 +170,22 @@ def сеть_загрузить(папка):
     z = torch.load(пут); Л.CTX = z["ctx"]; м = Л.Летописец(z["V"], d=z["d"], L=z["L"]); м.load_state_dict(z["м"]); м.eval()
     return м, Tokenizer.from_file(os.path.join(папка, "opisatel_bpe.json"))
 
-def сеть_описать(м, т, вид, имя, черты_="", сколько=6, T=0.7, top_p=0.9):
-    """варианты описания одной пачкой с кэшем внимания → [(описание, средняя лог-вероятность части)]"""
+_НАЧАЛА = {}
+
+def _начала_слов(т, V):
+    """части, с которых начинается слово из четырёх и больше букв (основы) — их повтор штрафуется"""
+    import torch
+    if id(т) not in _НАЧАЛА:
+        м = torch.zeros(V)
+        for i in range(V):
+            ч = т.id_to_token(i) or ""
+            if ч.startswith("▁") and len(ч) > 4 and ч[1:].isalpha(): м[i] = 1.0
+        _НАЧАЛА[id(т)] = м
+    return _НАЧАЛА[id(т)]
+
+def сеть_описать(м, т, вид, имя, черты_="", сколько=6, T=0.7, top_p=0.9, пен=0.0):
+    """варианты описания одной пачкой с кэшем внимания → [(описание, средняя лог-вероятность части)];
+    пен — штраф (в логитах) за уже сказанную основу слова, только для выбора, не для оценки уверенности"""
     import torch, torch.nn.functional as F
     import letopisec as Л
     ctx = м.pos.weight.shape[0]; нач = т.encode(запись_ч(вид, имя, черты_)).ids[-(ctx - 40):]; к = т.token_to_id("<к>")
@@ -179,10 +193,12 @@ def сеть_описать(м, т, вид, имя, черты_="", скольк
     with torch.no_grad():
         x = torch.tensor([нач] * B); жив = torch.ones(B, dtype=torch.bool); длина = torch.full((B,), -1); лп = torch.zeros(B)
         л, кэш = Л.вперёд_кэш(м, x[:1]); кэш = [(a.expand(B, -1, -1, -1), b.expand(B, -1, -1, -1)) for a, b in кэш]; л = л[:, -1].expand(B, -1)
+        if пен: осн = _начала_слов(т, л.shape[-1]); был = torch.zeros(B, л.shape[-1])
         for _ in range(ctx - x.shape[1]):
-            лс = F.log_softmax(л, -1); p = F.softmax(л / T, -1)
+            лс = F.log_softmax(л, -1); p = F.softmax((л - пен * был if пен else л) / T, -1)
             sp, si = torch.sort(p, descending=True, dim=-1); cs = torch.cumsum(sp, -1); sp[cs - sp > top_p] = 0
             c = si.gather(1, torch.multinomial(sp / sp.sum(-1, keepdim=True), 1))
+            if пен: был.scatter_(1, c, torch.maximum(был.gather(1, c), осн[c]))
             лп += torch.where(жив, лс.gather(1, c)[:, 0], torch.zeros(B))
             конец = жив & (c[:, 0] == к); длина[конец] = x.shape[1]; жив &= ~конец
             x = torch.cat([x, c], 1)
@@ -195,3 +211,15 @@ def сеть_описать(м, т, вид, имя, черты_="", скольк
         if len(о) < 8 or о in было or "<" in о or "⟦" in о: continue
         было.add(о); вывод.append((о, лп[i].item() / max(1, длина[i].item() - len(нач) + 1)))
     return вывод[:сколько]
+
+def сеть_уверенность(м, т, вид, имя, черты_, описания):
+    """средняя лог-вероятность частей каждого готового описания (вместе с концом <к>) при данном входе → [float]"""
+    import torch, torch.nn.functional as F
+    ctx = м.pos.weight.shape[0]; н = len(т.encode(запись_ч(вид, имя, черты_)).ids); вых = []
+    with torch.no_grad():
+        for о in описания:
+            ids = т.encode(запись_ч(вид, имя, черты_, о)).ids; n = len(ids) - н; ids = ids[-ctx:]
+            лс = F.log_softmax(м(torch.tensor([ids[:-1]])), -1)[0]
+            цель = torch.tensor(ids[1:]); лп = лс[torch.arange(len(цель)), цель][-n:]
+            вых.append(лп.mean().item())
+    return вых
