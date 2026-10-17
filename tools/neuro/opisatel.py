@@ -130,11 +130,15 @@ def сеть_учить(папка, шагов=4000, d=384, L=6, ctx=96, B=32, l
     пут = os.path.join(папка, "opisatel.pt"); шаг0 = 0; лучшая = 99.0
     if os.path.exists(пут):
         c = torch.load(пут); м.load_state_dict(c["м"]); опт.load_state_dict(c["опт"]); шаг0 = c["шаг"]; лучшая = c.get("лучшая", 99.0)
+    # OP_TEXT — живой русский текст игры (строки), доля OP_TEXT_P пачки: грамматика и связность сверх описаний
+    тексты = [l.strip() for l in open(os.environ["OP_TEXT"], encoding="utf-8") if l.strip()] if os.environ.get("OP_TEXT") else []
+    доля_т = float(os.environ.get("OP_TEXT_P", "0.25"))
     def пачка():
         xs = []
         for _ in range(B):
             q = []
-            while len(q) < ctx + 1: q += код(random.choice(уч), random.random() < 0.9)
+            while len(q) < ctx + 1:
+                q += т.encode(random.choice(тексты) + "<к>").ids if тексты and random.random() < доля_т else код(random.choice(уч), random.random() < 0.9)
             xs.append(torch.tensor(q[: ctx + 1]))
         x = torch.stack(xs); return x[:, :-1], x[:, 1:]
     @torch.no_grad()
@@ -211,6 +215,33 @@ def сеть_описать(м, т, вид, имя, черты_="", скольк
         if len(о) < 8 or о in было or "<" in о or "⟦" in о: continue
         было.add(о); вывод.append((о, лп[i].item() / max(1, длина[i].item() - len(нач) + 1)))
     return вывод[:сколько]
+
+ВЕС_ОШИБКИ = 0.4  # «уверенность − 0,4 × ошибки грамоты»: связь с баллом Учителя 0,54 (одна уверенность — 0,42)
+
+def сеть_лучшее(м, т, вид, имя, черты_="", сколько=16, T=0.7, top_p=0.9, пен=0.0):
+    """лучшее из вариантов сети: средняя лог-вероятность частей минус ВЕС_ОШИБКИ за каждую ошибку грамоты
+    (gramota.py; без pymorphy3 — только уверенность) → (описание, оценка) или None"""
+    вар = сеть_описать(м, т, вид, имя, черты_, сколько, T=T, top_p=top_p, пен=пен)
+    if not вар: return None
+    try:
+        import gramota as Г
+        ош = lambda о: len(Г.ошибки(о, имя + " " + черты_))
+        Г.морф()
+    except ImportError:
+        ош = lambda о: 0
+    return max(((о, лп - ВЕС_ОШИБКИ * ош(о)) for о, лп in вар), key=lambda x: x[1])
+
+def сеть_вектор(м, т, вид, имя, черты_, о):
+    """внутреннее представление описания у Описателя (для судьи описаний): среднее скрытое состояние по частям
+    описания, состояние на конце и уверенность (средняя и худшая лог-вероятность частей)"""
+    import torch, torch.nn.functional as F
+    ctx = м.pos.weight.shape[0]; н = len(т.encode(запись_ч(вид, имя, черты_)).ids)
+    ids = т.encode(запись_ч(вид, имя, черты_, о)).ids; n = len(ids) - н; ids = ids[-ctx:]
+    with torch.no_grad():
+        x = torch.tensor([ids]); T = x.shape[1]; h = м.e(x) + м.pos(torch.arange(T))
+        for б in м.b: h = б(h, м.маска[:T, :T])
+        h = м.n(h)[0]; л = F.log_softmax(м.o(h[:-1]), -1); ц = x[0, 1:]; лп = л[torch.arange(len(ц)), ц][-n:]
+        return torch.cat([h[-n - 1:-1].mean(0), h[-1], torch.tensor([лп.mean().item(), лп.min().item()])])
 
 def сеть_уверенность(м, т, вид, имя, черты_, описания):
     """средняя лог-вероятность частей каждого готового описания (вместе с концом <к>) при данном входе → [float]"""
