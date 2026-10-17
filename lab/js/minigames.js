@@ -16,11 +16,23 @@ function sayq(t) { LAB.say(t, { interrupt: false }); }
 var cur = null;
 
 /* Короткий тон: частота, длительность, панорама, тембр. */
-/* (звучит через единый обработчик звука; тоны головоломок слышны и при выключенных эффектах) */
+/* (звучит через единый обработчик звука; тоны головоломок слышны и при
+   выключенных эффектах; с 1.3 — свой канал «Сигналы головоломок», громче
+   интерфейса, а музыка и фон на время головоломки стихают) */
 function tone(f, dur, pan, type, vol, when) {
   if (!LAB.Sound) return;
-  LAB.Sound.tone(f, dur, { type: type || "sine", pan: pan, vol: vol == null ? 0.16 : vol, when: when, attack: 0.015, hold: true, force: true });
+  puzzleDuck();
+  LAB.Sound.tone(f, dur, { type: type || "sine", pan: pan, vol: vol == null ? 0.16 : vol, when: when, attack: 0.015, hold: true, force: true, bus: "puzzle", prio: 4 });
 }
+/* Пока идёт головоломка (и паузы между её частями), мир звучит тише. */
+var duckOn = false;
+function puzzleDuck() {
+  var on = !!cur || Date.now() < gapUntil;
+  if (on === duckOn) return;
+  duckOn = on;
+  if (LAB.AE && LAB.AE.setPuzzle) LAB.AE.setPuzzle(on);
+}
+setInterval(function () { LAB.safe ? LAB.safe(puzzleDuck) : puzzleDuck(); }, 150);
 function finish(ok, val) {
   var c = cur;
   if (!c) return;
@@ -85,7 +97,7 @@ function tune(cb, opts) {
   var c = { type: "tune", name: "Настройка резонатора", cb: cb, f0: f0, delta: delta, step: opts.hard ? 0.5 : 1, tries: 0 };
   cur = c;
   /* два тона с биениями — особый звук единого обработчика */
-  var hv = LAB.Sound && LAB.Sound.custom("tune", "ui", function (x, bus) {
+  var hv = LAB.Sound && LAB.Sound.custom("tune", "puzzle", function (x, bus) {
     var g = x.createGain(); g.gain.value = 0; g.connect(bus);
     var o1 = x.createOscillator(), o2 = x.createOscillator();
     o1.type = "sine"; o2.type = "sine";

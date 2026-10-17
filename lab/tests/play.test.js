@@ -686,9 +686,13 @@ function ok(cond, msg) { if (cond) console.log("  ✓ " + msg); else { fails++; 
     const g = LAB.game, G = g.G, C = LAB.combat, out = {};
     C.stop();
     const wait = ms => new Promise(r => setTimeout(r, ms));
-    G.body.food = 30; G.body.lv = {}; g.bodyWarn(); SPOKEN.length = 0;
-    g.advanceTime(60);
+    G.body.food = 26; G.body.lv = {}; g.bodyWarn(); SPOKEN.length = 0;
+    g.advanceTime(90);
     out.hunger = { food: Math.round(G.body.food), said: SPOKEN.join(" | ") };
+    /* голод не приходит быстро: от полной сытости до «проголодались» — больше двух тысяч шагов */
+    G.body.food = 100; G.body.lv = {}; g.bodyWarn();
+    let steps = 0; while (G.body.food >= 25 && steps < 20000) { g.advanceTime(1); steps++; }
+    out.hungerSteps = steps; G.body.food = 26; G.body.lv = {}; g.bodyWarn();
     let snack = null, sf = 0;
     for (let F = 1; F <= 20 && !snack; F++) { const fl = LAB.getFloor(G.seed, 2, F); snack = fl.objs.find(o => o.type === "snacks" && !o.broken); if (snack) sf = F; } /* сломанный автомат — другая проверка */
     out.snack = !!snack;
@@ -729,7 +733,8 @@ function ok(cond, msg) { if (cond) console.log("  ✓ " + msg); else { fails++; 
     SPOKEN.length = 0; g.bodyStatus(); out.status = SPOKEN.join(" ");
     return out;
   });
-  ok(bod.hunger.food < 30 && /Голод/.test(bod.hunger.said), "сытость падает со временем, «Эхо» предупреждает о голоде: " + bod.hunger.said);
+  ok(bod.hunger.food < 26 && /Голод/.test(bod.hunger.said), "сытость падает со временем, «Эхо» предупреждает о голоде: " + bod.hunger.said);
+  ok(bod.hungerSteps >= 2000, "голод приходит не быстро: от полной сытости до «проголодались» — " + bod.hungerSteps + " шагов");
   ok(!bod.snack || (/Автомат с едой/.test(bod.title) && bod.ate.food >= 60 && bod.ate.en > bod.ate.en0), "автомат с едой: сухпаёк утолил голод и пополнил энергию (" + JSON.stringify(bod.ate) + ")");
   ok(!bod.snack || bod.took === 1, "автомат с едой: «взять с собой» — галеты в рюкзаке");
   ok(bod.antidote.poison === 0 && bod.antidote.tox <= 25, "антидот снял отравление и вывел токсины (" + bod.antidote.tox + ")");
@@ -1649,6 +1654,23 @@ LAB.ui.closeAll();
     out.drc = Math.abs(AE.comp.threshold.value + 26) < 0.5 && AE.makeup.gain.value > 1.3;
     if (!(out.chans && out.bass && out.drc)) out.mixDiag = (mixErr ? "ошибка: " + mixErr + "; " : "") + "alarmVol=" + JSON.stringify(S.alarmVol) + " " + typeof S.alarmVol + "; " + AE.ctx.state + ": оружие " + AE.weap.gain.value.toFixed(2) + ", противники " + AE.foe.gain.value.toFixed(2) + ", тревоги " + AE.alarm.gain.value.toFixed(2) + ", отзвук " + AE.wet.gain.value.toFixed(2) + ", бас " + AE.bass.gain.value.toFixed(1) + ", порог " + AE.comp.threshold.value.toFixed(1);
     probes.forEach(cs => { try { cs.stop(); cs.disconnect(); } catch (e) { /* */ } });
+    /* сигналы головоломок: свой канал громче интерфейса; пока идёт головоломка, музыка и фон стихают */
+    {
+      const pr2 = [AE.music, AE.amb, AE.puzzle, AE.ui].map(n => { const cs = AE.ctx.createConstantSource(); cs.offset.value = 0; cs.connect(n); cs.start(); return cs; });
+      const k2 = { music: S.music, musicVol: S.musicVol, ambience: S.ambience, ambVol: S.ambVol, puzzleVol: S.puzzleVol, uiVol: S.uiVol, effects: S.effects };
+      S.music = 1; S.musicVol = 0.6; S.ambience = 1; S.ambVol = 0.8; S.puzzleVol = 1; S.uiVol = 1; S.effects = 1; AE.applyVolumes();
+      await wait(700);
+      const m0 = AE.music.gain.value, a0 = AE.amb.gain.value;
+      LAB.mini.hack(4, () => {});
+      await wait(700);
+      const m1 = AE.music.gain.value, a1 = AE.amb.gain.value, p1 = AE.puzzle.gain.value, u1 = AE.ui.gain.value;
+      LAB.mini.cancel(true); await wait(1000);
+      const m2 = AE.music.gain.value;
+      out.puzzleMix = { m0: +m0.toFixed(3), m1: +m1.toFixed(3), m2: +m2.toFixed(3), a0: +a0.toFixed(3), a1: +a1.toFixed(3), p1: +p1.toFixed(2), u1: +u1.toFixed(2) };
+      out.puzzleOk = m0 > 0.1 && m1 <= m0 * 0.3 && a1 <= a0 * 0.45 && p1 >= u1 * 2 && m2 >= m0 * 0.85;
+      pr2.forEach(cs => { try { cs.stop(); cs.disconnect(); } catch (e) { /* */ } });
+      Object.assign(S, k2); AE.applyVolumes();
+    }
     /* какой звук в какой канал */
     const ch = LAB.atmos._chOf;
     out.route = ch("w_blaster_s") === "weap" && ch("impact_wall") === "weap" && ch("oko_alarm") === "alarm" && ch("evl_alarm", { bus: "amb" }) === "alarm" && ch("bcn_stairs", { bus: "beacon" }) === null && ch("step_plate") === null;
@@ -1736,6 +1758,7 @@ LAB.ui.closeAll();
     return out;
   });
   ok(acc.chans && acc.bass && acc.drc, "микшер: каналы оружия, противников, тревог и отзвука — свои громкости; полка низких частот; сжатый диапазон" + (acc.mixDiag ? " (" + acc.mixDiag + ")" : ""));
+  ok(acc.puzzleOk, "сигналы головоломок: свой канал вдвое с лишним громче интерфейса; пока идёт головоломка, музыка стихает до пятой части, фон — до трети, потом всё возвращается " + JSON.stringify(acc.puzzleMix));
   ok(acc.route && acc.foeBus, "звуки идут по своим каналам: выстрелы — «оружие», сирены — «тревоги», голоса машин — «противники»; маяки и шаги — мимо" + (acc.foeDiag ? " (" + acc.foeDiag + ")" : ""));
   ok(acc.tgt && acc.brief && acc.beacon && acc.free, "режимы навигатора: краткий, по маяку и свободный (без ведения)");
   ok(acc.follow && acc.follow.turn && acc.follow.arrive && acc.follow.off, "подробный навигатор ведёт по шагам: повороты и «Вы у цели» (шагов " + (acc.follow && acc.follow.steps) + ")");

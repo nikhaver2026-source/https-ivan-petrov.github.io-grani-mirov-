@@ -26,7 +26,7 @@ var LAB = window.LAB, AE = LAB.AE, Bank = LAB.Bank, S = LAB.settings;
 
 var MOBILE = /Android|iPhone|iPad|iPod/i.test((navigator && navigator.userAgent) || "");
 /* пределы голосов: на телефоне меньше — иначе треск и пропуски */
-var LIMIT = { total: MOBILE ? 40 : 64, fx: MOBILE ? 24 : 40, amb: 8, ui: 32, beacon: 8, music: 4, voice: 4 };
+var LIMIT = { total: MOBILE ? 40 : 64, fx: MOBILE ? 24 : 40, amb: 8, ui: 32, puzzle: 32, beacon: 8, music: 4, voice: 4 };
 /* одинаковых звуков сразу — не больше трёх; ноты мелодии (тоны) ставятся
    в расписание пачкой — им свой предел */
 var PER_ID = 3, PER_ID_OF = { tone: 32, synth: 8 };
@@ -254,7 +254,8 @@ function synth(fn, ms, bus, pan, gain) {
 function tone(f, d, o) {
   o = o || {};
   var bus = o.bus || "ui";
-  if (bus !== "ui" && !S.effects) return null;
+  /* сигналы головоломок звучат и при выключенных эффектах: без них не решить */
+  if (bus !== "ui" && bus !== "puzzle" && !S.effects) return null;
   if (bus === "ui" && !S.effects && !o.force) return null;
   if (!ctxOk() && !wake()) return null;
   if (!room("tone", bus, o.prio == null ? 3 : o.prio)) { st.dropped++; return null; }

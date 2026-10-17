@@ -29,6 +29,8 @@ var DEF = {
      эффектов (отзвук); низкие частоты в дБ (0 — как записано); динамический
      диапазон: 0 — широкий, 1 — обычный, 2 — сжатый (тихая игра, наушники) */
   uiVol: 1, weapVol: 1, foeVol: 1, alarmVol: 1, spaceVol: 1, bass: 0, drc: 1,
+  /* сигналы головоломок — свой канал (1.3): громче интерфейса, мимо низких частот */
+  puzzleVol: 1,
   /* навигатор: full — подробно и по шагам, brief — кратко, beacon — по звуку
      маяка, free — только по запросу; подсказки: 0 — только по запросу,
      1 — редко, 2 — обычно, 3 — часто; обучение; уведомление о записи:
@@ -69,9 +71,13 @@ LAB.safe = function (fn, fb) { try { return fn(); } catch (e) { try { console.wa
 function vol01(v) { return v == null ? 1 : Math.max(0, Math.min(1, +v)); }
 /* пространственные эффекты (отзвук помещений): 0 — сухо, 1 — как задумано, до 1,5 — гуще */
 function spaceK() { return settings.spaceVol == null ? 1 : Math.max(0, Math.min(1.5, +settings.spaceVol)); }
+/* Во сколько раз канал сигналов головоломок громче интерфейса (около +7 дБ). */
+var PUZZLE_GAIN = 2.2;
 var AE = {
   ctx: null, master: null, fx: null, music: null, amb: null, beacon: null, ui: null, voice: null, conv: null, wet: null, cache: {}, irc: {}, duck: 1,
   weap: null, foe: null, alarm: null, bed: null, bass: null, comp: null, makeup: null, wetBase: 0.35,
+  /* канал сигналов головоломок и приглушение мира, пока идёт головоломка */
+  puzzle: null, pduck: 0,
   ensure: function () {
     if (this.ctx) {
       /* в фоне звук не будим: его разбудит возврат на экран */
@@ -104,6 +110,7 @@ var AE = {
     this.amb = c.createGain(); this.amb.connect(this.bed);
     this.beacon = c.createGain(); this.beacon.connect(this.master);
     this.ui = c.createGain(); this.ui.connect(this.master);
+    this.puzzle = c.createGain(); this.puzzle.connect(this.master);
     this.voice = c.createGain(); this.voice.connect(this.master);
     this.conv = c.createConvolver();
     this.conv.buffer = this.impulse(1.6, 3.2);
@@ -124,13 +131,17 @@ var AE = {
   },
   applyVolumes: function () {
     if (!this.ctx) return;
-    var t = this.ctx.currentTime, d = this.duck;
-    this.fx.gain.setTargetAtTime(settings.effects ? settings.fxVol : 0, t, 0.05);
+    var t = this.ctx.currentTime, d = this.duck, pz = this.pduck ? 1 : 0;
+    /* (1.3, просьба игрока) Тоны головоломок тонули в музыке: пока идёт
+       головоломка, музыка стихает до пятой части, фон уровня — до трети,
+       прочие эффекты — вдвое, а сигналы звучат своим каналом громче. */
+    this.fx.gain.setTargetAtTime(settings.effects ? settings.fxVol * (pz ? 0.5 : 1) : 0, t, 0.05);
+    if (this.puzzle) this.puzzle.gain.setTargetAtTime(PUZZLE_GAIN * vol01(settings.puzzleVol), t, 0.03);
     this.ui.gain.setTargetAtTime(settings.effects ? Math.max(0.3, settings.fxVol) * vol01(settings.uiVol) : 0, t, 0.05);
     this.beacon.gain.setTargetAtTime(settings.effects && settings.beacons ? settings.beaconVol : 0, t, 0.05);
-    this.amb.gain.setTargetAtTime(settings.effects && settings.ambience ? settings.ambVol * (0.55 + 0.45 * d) : 0, t, 0.25);
+    this.amb.gain.setTargetAtTime(settings.effects && settings.ambience ? settings.ambVol * (0.55 + 0.45 * d) * (pz ? 0.33 : 1) : 0, t, pz ? 0.08 : 0.25);
     /* под речь музыка тише, но не пропадает: речь звучит почти всё время */
-    this.music.gain.setTargetAtTime(settings.music ? settings.musicVol * (0.7 + 0.3 * d) : 0, t, 0.25);
+    this.music.gain.setTargetAtTime(settings.music ? settings.musicVol * (0.7 + 0.3 * d) * (pz ? 0.2 : 1) : 0, t, pz ? 0.08 : 0.25);
     this.voice.gain.setTargetAtTime(settings.voiceVol, t, 0.05);
     if (this.weap) {
       this.weap.gain.setTargetAtTime(vol01(settings.weapVol), t, 0.05);
@@ -149,6 +160,8 @@ var AE = {
     this.makeup.gain.setTargetAtTime(P.mk, t, 0.1);
   },
   setDuck: function (on) { this.duck = on ? 0 : 1; this.applyVolumes(); },
+  /* головоломка началась или кончилась (зовёт minigames.js) */
+  setPuzzle: function (on) { on = on ? 1 : 0; if (this.pduck === on) return; this.pduck = on; this.applyVolumes(); },
   /* Отзвук помещения: отклики заготовлены по длине (шаг четверть секунды,
      не длиннее трёх) — переход комната↔коридор не пересчитывает их заново. */
   setReverb: function (sec, wet) {
@@ -1185,7 +1198,7 @@ var UI = {
   /* тон с панорамой и задержкой: мелодии звуковых замков (звучат и при выключенных эффектах — это головоломка) */
   tone: function (f, d, pan, v, when) {
     if (!LAB.Sound) return;
-    LAB.Sound.tone(f, d, { type: "triangle", pan: pan, vol: v == null ? 0.2 : v, when: when, attack: 0.015, hold: true, force: true });
+    LAB.Sound.tone(f, d, { type: "triangle", pan: pan, vol: v == null ? 0.2 : v, when: when, attack: 0.015, hold: true, force: true, bus: "puzzle" });
   },
   /* запись сигнала, а пока её нет в памяти — тон (запись тем временем грузится) */
   rec: function (id, fb) {
