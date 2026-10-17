@@ -14,10 +14,31 @@ var LAB = window.LAB;
 /* ── БЕЗОПАСНОЕ ХРАНИЛИЩЕ ── */
 var store = {
   get: function (k) { try { return localStorage.getItem(k); } catch (e) { return null; } },
-  set: function (k, v) { try { localStorage.setItem(k, v); return true; } catch (e) { return false; } },
+  /* всё, что игра записывает, — с меткой своей версии (см. ниже «С чистого листа») */
+  set: function (k, v) { try { localStorage.setItem(k, v); if (k !== "lab_ver" && String(k).indexOf("lab_") === 0 && localStorage.getItem("lab_ver") !== LAB.VERSION) localStorage.setItem("lab_ver", LAB.VERSION); return true; } catch (e) { return false; } },
   del: function (k) { try { localStorage.removeItem(k); } catch (e) { /* нет хранилища */ } }
 };
 LAB.store = store;
+
+/* ── НОВАЯ ВЕРСИЯ — С ЧИСТОГО ЛИСТА (1.3, просьба игрока) ──
+   Игра меняется, и каждую версию проходят заново: сохранения и
+   настройки прежних версий не переносятся — ни в браузере, ни в
+   приложениях для Android и Windows (у них то же хранилище страницы).
+   Метка версии — «lab_ver»: другая или её нет, а записи «lab_…» есть —
+   все они стираются до того, как игра прочтёт настройки. */
+var VER_KEY = "lab_ver";
+LAB.freshStart = (function () {
+  var was = store.get(VER_KEY), out = { from: was || "", wiped: 0 };
+  if (was === LAB.VERSION) return out;
+  try {
+    var keys = [];
+    for (var i = 0; i < localStorage.length; i++) { var k = localStorage.key(i); if (k && k.indexOf("lab_") === 0 && k !== VER_KEY) keys.push(k); }
+    keys.forEach(function (k) { localStorage.removeItem(k); });
+    out.wiped = keys.length;
+  } catch (e) { /* хранилища нет — и стирать нечего */ }
+  store.set(VER_KEY, LAB.VERSION);
+  return out;
+})();
 
 /* ── НАСТРОЙКИ ── */
 var DEF = {

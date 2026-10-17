@@ -293,7 +293,14 @@ function mainMenu(silentIntro) {
     { label: "Загрузить игру", fn: function () { loadMenu(); } },
     { label: "Руководство", fn: function () { if (LAB.guide) LAB.guide.open(); } },
     { label: "Настройки", fn: function () { settingsMenu(); } }
-  ], { root: true, intro: silentIntro ? "" : "", keep: false });
+  ], { root: true, intro: freshNote(), keep: false });
+}
+/* Первый запуск новой версии, после которой старые записи стёрты, — сказать об этом один раз. */
+function freshNote() {
+  var fs0 = LAB.freshStart;
+  if (!fs0 || !fs0.wiped || fs0.said) return "";
+  fs0.said = true;
+  return "Это новая версия игры — " + LAB.VERSION + ". Сохранения и настройки прежних версий сброшены: в игре много нового, и её проходят заново, с самого начала.";
 }
 function startGame() {
   var hasAuto = !!gm().slotInfo("auto");

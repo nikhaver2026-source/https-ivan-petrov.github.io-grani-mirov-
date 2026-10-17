@@ -3071,7 +3071,7 @@ var SLOT_KEYS = { 1: "lab_slot1", 2: "lab_slot2", 3: "lab_slot3", auto: "lab_aut
 function snapshot() {
   syncFloorState();
   G.stats.ms += Date.now() - (game.t0 || Date.now()); game.t0 = Date.now();
-  return JSON.stringify({ meta: { L: G.L, F: G.F, lvl: G.lvl, hp: G.hp, hpMax: G.hpMax, ms: G.stats.ms, date: Date.now(), samples: Object.keys(G.samples).length }, g: G });
+  return JSON.stringify({ meta: { ver: LAB.VERSION, L: G.L, F: G.F, lvl: G.lvl, hp: G.hp, hpMax: G.hpMax, ms: G.stats.ms, date: Date.now(), samples: Object.keys(G.samples).length }, g: G });
 }
 function saveSlot(n) {
   if (!game.entered || game.loading) return false;
@@ -3096,6 +3096,8 @@ function validSave(raw) {
   try { d = typeof raw === "string" ? JSON.parse(raw) : raw; } catch (e) { return null; }
   var g = d && d.g;
   if (!g || typeof g !== "object") return null;
+  /* сохранение другой версии игры не загружается: каждую версию проходят заново */
+  if (!d.meta || d.meta.ver !== LAB.VERSION) return null;
   if (!(g.L >= 1 && g.L <= LAB.LEVELS_N && g.F >= 1 && g.F <= LAB.FLOORS_N)) return null;
   if (!Array.isArray(g.weapons) || !g.weapons.length || typeof g.seed !== "string") return null;
   if (typeof g.hp !== "number" || typeof g.hpMax !== "number" || !(g.hpMax > 0)) return null;

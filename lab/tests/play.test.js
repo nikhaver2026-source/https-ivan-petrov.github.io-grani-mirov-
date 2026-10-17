@@ -2017,8 +2017,31 @@ LAB.ui.closeAll();
     if (!restart) restartDiag = JSON.stringify(s2);
   } catch (e) { restartDiag = String(e && e.message || e).slice(0, 200); }
   await ctx2.close();
+  /* новая версия — с чистого листа: хранилище прежней версии (своя метка версии, слот, изменённые
+     настройки) при запуске новой стирается целиком — в браузере, на Android и в Windows хранилище одно */
+  let fresh = null;
+  {
+    const stOld = await page.context().storageState();
+    const fixtureRaw = fs.readFileSync(path.join(__dirname, "fixtures", "alfa-1.1-save.json"), "utf8");
+    stOld.origins.forEach(o => {
+      const ls = o.localStorage, setK = (n, v) => { const e = ls.find(q => q.name === n); if (e) e.value = v; else ls.push({ name: n, value: v }); };
+      setK("lab_ver", "Альфа 1.1"); setK("lab_slot1", fixtureRaw); setK("lab_prologue_seen", "1");
+    });
+    const ctx3 = await browser.newContext({ storageState: stOld });
+    const page3 = await ctx3.newPage();
+    page3.on("pageerror", e => errors.push("pageerror (новая версия): " + e.message));
+    try {
+      await page3.goto(url); await page3.waitForFunction(() => window.LAB_READY === true, null, { timeout: 60000 });
+      await page3.evaluate(() => { window.SPOKEN = []; LAB.say = function (t) { SPOKEN.push(String(t)); }; });
+      await page3.keyboard.press("Space"); await page3.waitForTimeout(150);
+      fresh = await page3.evaluate(() => ({ ver: localStorage.getItem("lab_ver"), cur: LAB.VERSION, slot: localStorage.getItem("lab_slot1"), prologue: localStorage.getItem("lab_prologue_seen"), ratePct: LAB.settings.ratePct, navMode: LAB.settings.navMode, wiped: LAB.freshStart && LAB.freshStart.wiped, from: LAB.freshStart && LAB.freshStart.from, intro: LAB.ui.top() ? LAB.ui.top().intro : "" }));
+    } catch (e) { fresh = { err: String(e && e.message || e).slice(0, 200) }; }
+    await ctx3.close();
+  }
   await page.evaluate(k => { Object.assign(LAB.settings, k); LAB.saveSettings(); }, keepS);
   ok(restart, "A, H: после перезапуска игры настройки речи и доступности — те же" + (restartDiag ? " (" + restartDiag + ")" : ""));
+  ok(fresh && fresh.ver === fresh.cur && fresh.slot === null && fresh.prologue === null && fresh.ratePct === 50 && fresh.navMode === "full" && fresh.wiped >= 3 && fresh.from === "Альфа 1.1" && /новая версия/i.test(fresh.intro || ""),
+    "новая версия — с чистого листа: сохранения и настройки прежней версии при запуске стёрты, игрок слышит об этом в главном меню" + (fresh ? " (" + JSON.stringify(fresh).slice(0, 300) + ")" : ""));
   const tp2 = await page.evaluate(() => {
     const g = LAB.game, C = LAB.combat, out = {}, W = LAB.W, H = LAB.H;
     let G = g.G;
@@ -2098,9 +2121,8 @@ LAB.ui.closeAll();
   });
   ok(tp2.cam, "C: камера видит только в своём конусе — впереди до дальности, на краю обзора «повернулась», а за спиной, сбоку, дальше, за стеной и под маскировкой — нет" + (tp2.camDiag ? " (" + tp2.camDiag + ")" : tp2.camLine == null ? " (не нашлось места для проверки)" : ""));
   ok(tp2.wall, "E: тварь слышит героя за стеной, а прохода нет — погоню бросает и на звук из-за стены не возвращается" + (tp2.wallStates ? " (" + tp2.wallStates + ")" : " (не нашлось места для проверки)"));
-  /* H: запись прежней версии загружается. Образец — настоящая запись «Альфы 1.1», сделанная её кодом:
-     уровень 1, этаж 3, клетка 79·32, здоровье 100, вещей 8, оружие с двумя модулями усиления прежнего вида,
-     одна записка, 321 кредит, открытая дверь d0, взломанный терминал o16, уничтоженный враг e0 */
+  /* H: запись прежней версии не загружается — каждую версию проходят заново (просьба игрока: в новой
+     версии много нового, переносить прежний прогресс нельзя). Образец — настоящая запись «Альфы 1.1». */
   const oldRaw = fs.readFileSync(path.join(__dirname, "fixtures", "alfa-1.1-save.json"), "utf8");
   const old = await page.evaluate(async raw => {
     const g = LAB.game, C = LAB.combat, out = {};
@@ -2108,35 +2130,20 @@ LAB.ui.closeAll();
     C.stop(); LAB.ui.closeAll();
     const keep = localStorage.getItem("lab_slot2");
     localStorage.setItem("lab_slot2", raw);
-    let err = "";
-    try { g.loadSlot(2); } catch (e) { err = String(e && e.message || e); }
-    await wait(500); C.stop();
-    const G = g.G, sum = { inv: Object.keys(G.inv).reduce((a, k) => a + (G.inv[k] || 0), 0), weapons: G.weapons.length, armors: G.armors.length, notes: G.noteList.length, credits: G.credits };
-    out.loaded = !err && g.entered && G.L === 1 && G.F === 3 && G.x === 79 && G.y === 32 && G.hp === 100;
-    out.same = JSON.stringify(sum) === JSON.stringify({ inv: 8, weapons: 1, armors: 0, notes: 1, credits: 321 });
-    const term = g.CUR.fl.objs.find(o => o.id === "o16");
-    /* дверь за ушедшим героем закрылась сама, но осталась отпертой (1) */
-    out.world = g.CUR.fs.doors.d0 >= 1 && !!term && g.objState(term).hacked === true && !C.foes().some(f => f.id === "e0" && !f.dead);
-    out.mod = !!(G.weapons[0].mod && G.weapons[0].mod.power === 2);
-    out.fresh = typeof G.bp === "object" && typeof G.bpNpc === "object" && G.st.navjam === 0;
-    let e2 = "";
-    try {
-      LAB.tutor.ev("door");
-      LAB.oko.event("camera", { x: G.x, y: G.y });
-      const wb = g.CUR.fl.objs.find(o => o.type === "workbench") || { id: "x", x: G.x, y: G.y };
-      LAB.ui.craft(wb); LAB.ui.closeAll();
-      for (let k = 0; k < 10; k++) C.tick();
-      G.hp = G.hpMax; g.lookAround();
-    } catch (e) { e2 = String(e && e.message || e); }
-    out.systems = !e2 && !!(G.tutor && G.tutor.done.door);
-    g.saveSlot(3); out.resave = !!g.validSave(localStorage.getItem("lab_slot3"));
-    if (!(out.loaded && out.same && out.world && out.mod && out.fresh && out.systems && out.resave)) out.diag = JSON.stringify({ err, e2, pos: [G.L, G.F, G.x, G.y, G.hp], sum, d0: g.CUR.fs.doors.d0 });
+    out.rejected = !g.validSave(raw);
+    const was = JSON.stringify({ L: g.G.L, F: g.G.F, x: g.G.x, y: g.G.y, credits: g.G.credits });
+    let err = ""; SPOKEN.length = 0;
+    try { out.res = g.loadSlot(2); } catch (e) { err = String(e && e.message || e); }
+    await wait(200); C.stop();
+    out.kept = !err && out.res === false && JSON.stringify({ L: g.G.L, F: g.G.F, x: g.G.x, y: g.G.y, credits: g.G.credits }) === was;
+    out.said = SPOKEN.join(" | ");
     if (keep) localStorage.setItem("lab_slot2", keep); else localStorage.removeItem("lab_slot2");
+    g.saveSlot(3); const own = localStorage.getItem("lab_slot3"); out.ownOk = !!g.validSave(own) && JSON.parse(own).meta.ver === LAB.VERSION;
     LAB.ui.closeAll();
     return out;
   }, oldRaw);
-  ok(old.loaded && old.same && old.world, "H: запись «Альфы 1.1» загружается — место, здоровье, вещи, кредиты, отпертая дверь, взломанный терминал и павший враг те же" + (old.diag ? " (" + old.diag + ")" : ""));
-  ok(old.mod && old.fresh && old.systems && old.resave, "H: в записи «Альфы 1.1» модули оружия переходят в новый вид; схемы, обучение, ОКО и мастерская работают; запись сохраняется заново");
+  ok(old.rejected && old.kept && /не подходит этой версии/.test(old.said || ""), "H: запись прежней версии («Альфа 1.1») не загружается, игра остаётся как была: " + (old.said || ""));
+  ok(old.ownOk, "H: запись этой версии помечена номером версии и читается");
 
   console.log("Лифт: возит только на этажи, где вы уже были");
   const lift = await page.evaluate(async () => {
