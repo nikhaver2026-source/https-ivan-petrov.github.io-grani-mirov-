@@ -137,7 +137,8 @@ def сеть_учить(папка, шагов=4000, d=384, L=6, ctx=96, B=32, l
     опт = torch.optim.AdamW(м.parameters(), lr=lr, weight_decay=0.1, betas=(0.9, 0.95))
     пут = os.path.join(папка, "opisatel.pt"); шаг0 = 0; лучшая = 99.0
     if os.path.exists(пут):
-        c = torch.load(пут); м.load_state_dict(c["м"]); опт.load_state_dict(c["опт"]); шаг0 = c["шаг"]; лучшая = c.get("лучшая", 99.0)
+        c = torch.load(пут); м.load_state_dict(c["м"]); шаг0 = c["шаг"]; лучшая = c.get("лучшая", 99.0)
+        if "опт" in c: опт.load_state_dict(c["опт"])  # снимок лучшего (без состояния оптимизатора) — тоже годится
     # OP_TEXT — живой русский текст игры (строки), доля OP_TEXT_P пачки: грамматика и связность сверх описаний
     тексты = [l.strip() for l in open(os.environ["OP_TEXT"], encoding="utf-8") if l.strip()] if os.environ.get("OP_TEXT") else []
     доля_т = float(os.environ.get("OP_TEXT_P", "0.25"))
