@@ -2978,21 +2978,23 @@ function useItem(id) {
   if (d.kind === "part") { say("Это деталь для мастерской."); return false; }
   /* (1.5) инструменты не тратятся, ценности — на продажу, изолента — на камеру ОКО */
   if (d.kind === "tool" || d.kind === "valuable" || id === "tape") { if (LAB.zones && LAB.zones.useItem) return LAB.zones.useItem(id, d); say(d.n + ". " + d.desc); return false; }
-  var food = d.kind === "food";
-  if (food && body().food >= 100 && !d.en) { say("Вы сыты: больше не лезет."); return false; }
+  var food = d.kind === "food", sip = food && (d.eat === "gulp" || d.eat === "sip");
+  /* сытому еда не лезет, а питьё — всегда */
+  if (food && !sip && body().food >= 100 && !d.en) { say("Вы сыты: больше не лезет."); return false; }
   G.inv[id]--;
   var msg = [];
   /* несвежая еда — токсины */
   if (food && d.stale && Math.random() < d.stale) { msg.push("Несвежее: подташнивает."); bodyApply({ tox: 15 }, msg); }
   var od = d.overdose && body().tox >= 70; /* передозировка: стимулятор не лечит, а бьёт по сердцу */
-  if (d.heal && !od) { var before = G.hp; G.hp = Math.min(G.hpMax, G.hp + (/^medkit|^bandage/.test(id) && LAB.ach && LAB.ach.has("medic") ? Math.round(d.heal * 1.17) : d.heal)); if (G.hp > before || !food) msg.push("Здоровье плюс " + (G.hp - before) + ", теперь " + G.hp + " из " + G.hpMax + "."); }
+  var hv = d.cup ? Math.round(d.heal * (1 + (G.L - 1) * 0.15)) : d.heal; /* стакан из автомата лечит, как сам автомат: с глубиной больше */
+  if (d.heal && !od) { var before = G.hp; G.hp = Math.min(G.hpMax, G.hp + (/^medkit|^bandage/.test(id) && LAB.ach && LAB.ach.has("medic") ? Math.round(d.heal * 1.17) : hv)); if (G.hp > before || !food) msg.push("Здоровье плюс " + (G.hp - before) + ", теперь " + G.hp + " из " + G.hpMax + "."); }
   if (d.en) { var e0 = G.en; G.en = Math.min(G.enMax, G.en + d.en); msg.push("Энергия имплантов " + G.en + (G.en > e0 ? "" : ", и так полная") + "."); }
   if (d.cure && G.st.poison) { G.st.poison = 0; msg.push("Отравление снято."); }
   if (d.unslow) { G.st.slow = 0; G.st.web = 0; }
   bodyApply(d, msg);
   if (food) eatSound(d.eat);
   else A("play", id === "bandage" ? "bandage_tear" : id === "sorbent" || id === "neuroblock" ? "pills_rattle" : id === "antidote" || id === "stim" || id === "energy_d" ? "inject" : "heal");
-  say((food ? "Вы съели: " + d.n.charAt(0).toLowerCase() + d.n.slice(1) + ". " : d.n + ". ") + msg.join(" ") + " Осталось: " + (G.inv[id] || 0) + ".");
+  say((food ? (sip ? "Вы выпили: " : "Вы съели: ") + d.n.charAt(0).toLowerCase() + d.n.slice(1) + ". " : d.n + ". ") + (d.x ? d.x + " " : "") + msg.join(" ") + " Осталось: " + (G.inv[id] || 0) + ".");
   UIx("refresh");
   if (food) autosaveSoon();
   if (LAB.combat && S.turnBased) LAB.combat.tick();

@@ -41,8 +41,8 @@ function fxDef(o) { return LAB.FIX && LAB.FIX.T[o.fx]; }
 
 /* ── новые вещи: грибы, травяной сбор, жетоны погибших ── */
 var NEW_ITEMS = {
-  mushroom: { n: "Грибы с грибницы", icon: "🍄", kind: "food", cat: "food", desc: "Горсть плотных грибов, пахнущих лесом. Сытость плюс 8, немного здоровья. Разогретые на плите — сытнее.", food: 8, heal: 3, price: 4, eat: "crunch", depth: 3 },
-  herbtea: { n: "Травяной сбор", icon: "🌿", kind: "food", cat: "food", desc: "Пучок сушёных трав: мята, чабрец и что-то незнакомое, пахнущее мёдом. Если заварить — бодрит, успокаивает и выводит токсины.", food: 1, wake: 6, neuro: -10, detox: 6, price: 6, eat: "sip", depth: 1 },
+  mushroom: { n: "Грибы с грибницы", icon: "🍄", kind: "food", cat: "food", desc: "Горсть плотных грибов, пахнущих лесом. Сытость плюс 8, немного здоровья. Разогретые на плите — сытнее.", food: 8, heal: 5, price: 4, eat: "crunch", depth: 3 },
+  herbtea: { n: "Травяной сбор", icon: "🌿", kind: "food", cat: "food", desc: "Пучок сушёных трав: мята, чабрец и что-то незнакомое, пахнущее мёдом. Если заварить — бодрит, успокаивает и выводит токсины.", food: 5, wake: 6, neuro: -10, detox: 6, price: 6, eat: "sip", depth: 1 },
   badge: { n: "Жетон погибшего", icon: "🏷️", kind: "misc", cat: "valuable", nosell: true, price: 0, desc: "Металлический жетон с именем и должностью. Выжившие собирают жетоны погибших: отдайте им — родные наверху узнают, что случилось." }
 };
 for (var ik in NEW_ITEMS) if (!LAB.ITEMS[ik]) LAB.ITEMS[ik] = NEW_ITEMS[ik];
@@ -197,7 +197,7 @@ function menu(o) {
   var def = fxDef(o);
   if (!def) return false;
   var s = st(o), items = [];
-  def.a.forEach(function (a) { var it = actionItem(o, def, a, s); if (it) items.push(it); });
+  def.a.forEach(function (a) { var it = actionItem(o, def, a, s); if (!it) return; if (Array.isArray(it)) items.push.apply(items, it); else items.push(it); });
   if (o.notes && o.notes.length && !s.notes && !def.a.some(function (a) { return a[0] === "search"; })) items.push({ label: "Взять записку", fn: function () { takeNotes(o); } });
   items.push({ label: "Осмотреть", keep: true, fn: function () { say(examine(o)); } });
   UIx("menu", def.n, items);
@@ -217,11 +217,24 @@ function actionItem(o, def, a, s) {
     case "respect": return s.resp ? { label: "Вы уже почтили память", info: true, keep: true, fn: function () { say("Вы уже стояли здесь молча."); } } : { label: label, fn: function () { doRespect(o, s); } };
     case "strip": return s.strip ? null : { label: label, fn: function () { doStrip(o, def, s); } };
   }
-  return { label: label, fn: function () { run(o, def, kind, p, label); } };
+  var base = { label: label, fn: function () { run(o, def, kind, p, label); } };
+  if (kind === "rest" && REST_DRINK[o.fx]) { var combos = drinkCombos(o, def, p, label); if (combos.length) return [base].concat(combos); }
+  return base;
+}
+/* Где отдых сочетается с напитком из рюкзака: «Посидеть на диване и выпить эспрессо». */
+var REST_DRINK = { sofa: 1, armchair: 1, chair: 1, bench: 1, couch: 1, bunk: 1, pillows: 1, rocking: 1, moss: 1, sensorbed: 1, oven: 1, roots: 1, stars: 1, sauna: 1 };
+function drinkCombos(o, def, p, label) {
+  var g = G(), out = [], base = label.split(":")[0].replace(" и перевести дух", "");
+  Object.keys(LAB.ITEMS).forEach(function (k) {
+    var d = LAB.ITEMS[k];
+    if (out.length >= 4 || !(g.inv[k] > 0) || d.kind !== "food" || !d.acc) return;
+    out.push({ label: base + " и выпить " + d.acc, fn: function () { run(o, def, "rest", p, label, k); } });
+  });
+  return out;
 }
 /* После разборки прибор больше не работает. */
 var SALV_KILLS = { listen: 1, read: 1, scan: 1, cams: 1, play: 1, game: 1, vent: 1, map: 1, neuro: 1, clock: 1, mirror: 1 };
-function run(o, def, kind, p, label) {
+function run(o, def, kind, p, label, withId) {
   var s = st(o), cnt = (s["n_" + kind] = (s["n_" + kind] || 0) + 1), m = [], rm = roomOf(o);
   /* прочитанное при новом прочтении то же самое; эфир и экраны — каждый раз другие */
   var r = rng(o, kind + ":" + (kind === "read" && p.pool !== "ether" && p.pool !== "screens" ? 0 : cnt));
@@ -230,11 +243,20 @@ function run(o, def, kind, p, label) {
       if (danger()) { LAB.UI.error && LAB.UI.error(); say("Не до отдыха: рядом опасность."); return; }
       UIx("closeAll");
       spend(p.m || 10);
-      gm().bodyApply({ wake: p.wake || 0, neuro: p.neuro || 0, detox: p.tox < 0 ? -p.tox : 0, tox: p.tox > 0 ? p.tox : 0, rad: p.rad || 0 }, m);
-      if (p.hp) { var hv = Math.round(G().hpMax * p.hp); G().hp = Math.min(G().hpMax, G().hp + hv); m.push("Здоровье " + G().hp + "."); }
+      gm().bodyApply({ wake: p.wake || 0, neuro: p.neuro || 0, detox: p.tox < 0 ? -p.tox : 0, tox: p.tox > 0 ? p.tox : 0, rad: p.rad || 0, stopBleed: !!p.stopBleed }, m);
+      /* здоровье — доля от полного, но не меньше пяти единиц: даже стул и скамья дают передохнуть телу */
+      if (p.hp) { var hv = Math.max(5, Math.round(G().hpMax * p.hp)); G().hp = Math.min(G().hpMax, G().hp + hv); m.push("Здоровье " + G().hp + "."); }
       if (p.unslow && G().st.slow) { G().st.slow = 0; m.push("Ноги снова слушаются."); }
       snd("cloth", null);
-      say(restLine(o, r) + " " + m.join(" "));
+      if (withId && LAB.ITEMS[withId] && G().inv[withId] > 0) {
+        /* отдых с напитком: сначала глоток (своя фраза), потом покой — и в покое напиток действует лучше */
+        var dd = LAB.ITEMS[withId], bonus = { neuro: -5 }, bm = [];
+        if (dd.wake > 0) bonus.wake = Math.max(5, Math.ceil(dd.wake * 0.25));
+        gm().useItem(withId);
+        gm().bodyApply(bonus, bm);
+        sayq(restLine(o, r) + " " + m.join(" ") + (bm.length ? " В покое напиток действует лучше: " + bm.join(" ") : ""));
+        ev("rest_drink", 1);
+      } else say(restLine(o, r) + " " + m.join(" "));
       ev("rest_fx", 1);
       return;
     }

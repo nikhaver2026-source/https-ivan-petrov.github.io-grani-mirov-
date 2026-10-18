@@ -36,6 +36,7 @@ function minW(n) { return n + " " + pl(n, "минута", "минуты", "ми�
 function pct(x) { return Math.round(x * 100); }
 function ev(name, n) { if (LAB.ach) LAB.ach.ev(name, n == null ? 1 : n); }
 function spend(min) { if (min > 0) gm().advanceTime(min); }
+function nowMin() { return (G().day || 0) * 1440 + (G().min || 0); }
 /* Тексты по глубине: свои у каждой глубины, и чаще — у этого предмета свои. */
 function poolFor(list, salt, n) {
   var e = era(), all = (list || []).filter(function (q) { return !q.era || q.era.indexOf(e) >= 0; });
@@ -299,12 +300,18 @@ function photosMenu(o) {
 function sinkMenu(o) {
   UIx("menu", "Раковина", [
     { label: "Умыться холодной водой", fn: function () {
+      /* как у чайника и душа: не чаще раза в двадцать минут, иначе здоровье можно было бы накручивать */
+      var s = st(o), t = nowMin();
+      if (s.washAt != null && t - s.washAt < 20) { say("Вы только что умывались: подождите немного."); return; }
+      s.washAt = t;
       var b = G().body; spend(2); snd("drink_gulp", null); A("play", "ev_bubbles", { gain: 0.4 });
-      var msg = []; gm().bodyApply({ wake: 6, detox: 2 }, msg);
-      if (b && b.rad > 0) { b.rad = Math.max(0, b.rad - 1.5); msg.push("Радиоактивную пыль с лица и рук смыло."); }
-      say("Холодная вода обжигает лицо. " + msg.join(" "));
+      var msg = []; gm().bodyApply({ wake: 12, detox: 5 }, msg);
+      /* промытые ссадины меньше ноют: немного здоровья */
+      if (G().hp < G().hpMax) { G().hp = Math.min(G().hpMax, G().hp + 5); msg.push("Здоровье " + G().hp + "."); }
+      if (b && b.rad > 0) { b.rad = Math.max(0, b.rad - 5); msg.push("Радиоактивную пыль с лица и рук смыло."); }
+      say("Холодная вода обжигает лицо, ссадины промыты. " + msg.join(" "));
     } },
-    { label: "Попить воды из-под крана", fn: function () { spend(1); snd("drink_gulp", null); var msg = []; gm().bodyApply({ detox: 5, food: 1 }, msg); say("Вода чистая, с привкусом железа. " + msg.join(" ")); } },
+    { label: "Попить воды из-под крана", fn: function () { spend(1); snd("drink_gulp", null); var msg = []; gm().bodyApply({ detox: 8, food: 5, wake: 5 }, msg); say("Вода чистая, с привкусом железа. " + msg.join(" ")); } },
     { label: "Осмотреть", fn: function () { say(LAB.OBJ.sink.desc); } }
   ]);
 }

@@ -24,18 +24,18 @@ function lore() { return LAB.LORE || {}; }
 /* ════════ АВТОМАТЫ С НАПИТКАМИ ════════ */
 var DRINKS = {
   coffee: { n: "Кофейный автомат", list: [
-    { n: "Эспрессо", p: 6, hp: 8, wake: 25, x: "Маленькая чашка горького крепкого эспрессо. По телу разливается тепло, сон как рукой сняло.", s: "drink_sip" },
-    { n: "Американо", p: 5, hp: 6, wake: 18, x: "Большой стакан чёрного кофе. Пахнет почти как наверху.", s: "drink_sip" },
-    { n: "Капучино", p: 9, hp: 12, wake: 15, food: 6, x: "Капучино с густой пенкой. Кто-то когда-то мечтал о таком на поверхности.", s: "drink_sip" },
-    { n: "Горячий шоколад", p: 10, hp: 14, food: 10, en: 8, x: "Сладкий горячий шоколад. Руки перестают дрожать.", s: "drink_sip" },
-    { n: "Чай с лимоном", p: 4, hp: 5, wake: 8, detox: 5, x: "Чай с лимонной кислинкой. Лимон, конечно, ненастоящий.", s: "drink_sip" }
+    { n: "Эспрессо", id: "cup_espresso", p: 6, hp: 8, wake: 25, x: "Маленькая чашка горького крепкого эспрессо. По телу разливается тепло, сон как рукой сняло.", s: "drink_sip" },
+    { n: "Американо", id: "cup_americano", p: 5, hp: 6, wake: 18, x: "Большой стакан чёрного кофе. Пахнет почти как наверху.", s: "drink_sip" },
+    { n: "Капучино", id: "cup_cappuccino", p: 9, hp: 12, wake: 15, food: 6, x: "Капучино с густой пенкой. Кто-то когда-то мечтал о таком на поверхности.", s: "drink_sip" },
+    { n: "Горячий шоколад", id: "cup_hotchoc", p: 10, hp: 14, food: 10, en: 8, x: "Сладкий горячий шоколад. Руки перестают дрожать.", s: "drink_sip" },
+    { n: "Чай с лимоном", id: "cup_tea", p: 4, hp: 5, wake: 8, detox: 5, x: "Чай с лимонной кислинкой. Лимон, конечно, ненастоящий.", s: "drink_sip" }
   ] },
   drinks: { n: "Автомат с напитками", list: [
-    { n: "Вода «Глубинная»", p: 3, hp: 4, detox: 8, x: "Холодная вода. Простая, честная, почти без привкуса металла.", s: "drink_gulp" },
-    { n: "Газировка «Байкал»", p: 5, hp: 7, food: 3, wake: 5, x: "Шипучая газировка с травяным вкусом. Пузырьки щиплют язык.", s: "drink_gulp" },
-    { n: "Сок «Яблочный сад»", p: 7, hp: 10, food: 8, x: "Яблочный сок из пакета. Сад на картинке давно никто не видел.", s: "drink_gulp" },
-    { n: "Энергетик «Разряд»", p: 12, hp: 8, en: 15, wake: 22, tox: 4, x: "Едкий сладкий энергетик. Сердце стучит чаще, импланты отзываются гулом.", s: "drink_gulp" },
-    { n: "Изотоник «Марафон»", p: 9, hp: 12, cure: true, wake: 6, detox: 6, x: "Солоноватый изотоник. Тяжесть в ногах отступает.", s: "drink_gulp" }
+    { n: "Вода «Глубинная»", id: "water", p: 3, hp: 5, detox: 8, x: "Холодная вода. Простая, честная, почти без привкуса металла.", s: "drink_gulp" },
+    { n: "Газировка «Байкал»", id: "soda_baikal", p: 5, hp: 7, food: 5, wake: 5, x: "Шипучая газировка с травяным вкусом. Пузырьки щиплют язык.", s: "drink_gulp" },
+    { n: "Сок «Яблочный сад»", id: "juice_apple", p: 7, hp: 10, food: 8, x: "Яблочный сок из пакета. Сад на картинке давно никто не видел.", s: "drink_gulp" },
+    { n: "Энергетик «Разряд»", id: "energycan", p: 12, hp: 8, en: 15, wake: 22, tox: 4, x: "Едкий сладкий энергетик. Сердце стучит чаще, импланты отзываются гулом.", s: "drink_gulp" },
+    { n: "Изотоник «Марафон»", id: "isotonic", p: 9, hp: 12, cure: true, wake: 6, detox: 6, x: "Солоноватый изотоник. Тяжесть в ногах отступает.", s: "drink_gulp" }
   ] }
 };
 function priceOf(d) { return Math.round(d.p * (1 + (G().L - 1) * 0.12)); }
@@ -48,9 +48,11 @@ function drinkMenu(o) {
   UIx("menu", machineName(o) + ". Здоровье " + g.hp + " из " + g.hpMax + ", кредитов " + g.credits, drinkItems(o), { keep: true, rebuild: function () { return drinkItems(o); } });
 }
 function drinkItems(o) {
-  var items = DRINKS[o.type].list.map(function (d) {
+  /* как у автомата с едой: выпить сразу или унести с собой — стакан с крышкой, банку, пакет */
+  var items = [{ label: "Покупки", kind: "choice", options: [{ v: false, label: "выпить сразу" }, { v: true, label: "взять с собой" }], get: function () { return takeAlong; }, set: function (v) { takeAlong = v; } }];
+  DRINKS[o.type].list.forEach(function (d) {
     var p = priceOf(d), h = healOf(d);
-    return { label: d.n + " — " + p + " " + gm().plural(p, "кредит", "кредита", "кредитов") + ", здоровье плюс " + h + (d.en ? ", энергия плюс " + d.en : "") + (d.wake ? ", бодрость плюс " + d.wake : "") + (d.food ? ", сытость плюс " + d.food : "") + (d.detox ? ", выводит токсины" : "") + (d.cure ? ", снимает замедление" : ""), keep: true, fn: function () { buyDrink(o, d); } };
+    items.push({ label: d.n + " — " + p + " " + gm().plural(p, "кредит", "кредита", "кредитов") + ", здоровье плюс " + h + (d.en ? ", энергия плюс " + d.en : "") + (d.wake ? ", бодрость плюс " + d.wake : "") + (d.food ? ", сытость плюс " + d.food : "") + (d.detox ? ", выводит токсины" : "") + (d.cure ? ", снимает замедление" : ""), keep: true, fn: function () { buyDrink(o, d); } });
   });
   items.push({ label: "Осмотреть автомат", keep: true, fn: function () { say(machineName(o) + ". " + LAB.OBJ[o.type].desc + " " + (o.type === "coffee" ? "На корпусе наклейка: «Сахар — по желанию. Желание — по графику»." : "За стеклом ряды бутылок и банок, на табло — цены в кредитах объекта.")); } });
   items.push({ label: "Отойти", fn: function () {} });
@@ -62,7 +64,17 @@ function buyDrink(o, d) {
   g.credits -= p;
   snd("vend_coin", "buy");
   setTimeout(function () { snd(o.type === "coffee" ? "coffee_brew" : "can_drop", "vend"); }, 350);
+  if (takeAlong && d.id && LAB.ITEMS[d.id]) { takeDrink(o, d, "Куплено: " + d.n + "."); return; }
   drink(o, d, o.type === "coffee" ? 2600 : 1300, "Куплено: " + d.n + ".");
+}
+/* Напиток — в рюкзак: выпить потом из инвентаря или присев на диван, в кресло, на койку. */
+function takeDrink(o, d, pre) {
+  var g = G();
+  g.inv[d.id] = (g.inv[d.id] || 0) + 1;
+  say(pre + " " + LAB.ITEMS[d.id].n + " — в рюкзаке, раздел «Еда и напитки»" + (o.type === "coffee" ? ", под крышкой не остынет" : "") + ". Выпить — " + LAB.K("инвентарь, «Еда и напитки», или присев на диван, в кресло, на койку: там напиток действует лучше.", "клавиша G или инвентарь, «Еда и напитки», или присев на диван, в кресло, на койку: там напиток действует лучше.") + " Кредитов " + g.credits + ".");
+  gm().journal("Взят с собой напиток: " + d.n + ".");
+  UIx("refresh");
+  gm().autosaveSoon();
 }
 function drink(o, d, wait, pre) {
   var g = G();
@@ -98,7 +110,8 @@ function brokenMenu(o) {
         st.dropped = true;
         var list = DRINKS[o.type].list, d = list[Math.floor(Math.random() * list.length)];
         setTimeout(function () { snd(o.type === "coffee" ? "coffee_brew" : "can_drop", "vend"); }, 300);
-        drink(o, d, o.type === "coffee" ? 2200 : 1100, "Внутри что-то щёлкнуло — и автомат сам выдал: " + d.n.toLowerCase() + ".");
+        if (d.id && LAB.ITEMS[d.id]) takeDrink(o, d, "Внутри что-то щёлкнуло — и автомат сам выдал: " + d.n.toLowerCase() + ".");
+        else drink(o, d, o.type === "coffee" ? 2200 : 1100, "Внутри что-то щёлкнуло — и автомат сам выдал: " + d.n.toLowerCase() + ".");
       } else say(st.dropped ? "Больше ничего не выпадет: автомат пуст." : "Внутри что-то звякнуло, но ничего не выпало. Шум разнёсся по этажу.");
     } },
     { label: "Осмотреть", fn: function () { say(why); } },
@@ -148,7 +161,7 @@ function buySnack(o, id) {
   g.inv[id] = (g.inv[id] || 0) + 1;
   snd("vend_coin", "buy");
   setTimeout(function () { snd("snack_drop", "can_drop"); }, 350);
-  if (takeAlong) { say("Куплено: " + d.n + " — в рюкзаке, раздел «Еда». Съесть — " + LAB.K("инвентарь, «Еда».", "клавиша G или инвентарь, «Еда».") + " Кредитов " + g.credits + "."); gm().autosaveSoon(); return; }
+  if (takeAlong) { say("Куплено: " + d.n + " — в рюкзаке, раздел «Еда и напитки». Съесть — " + LAB.K("инвентарь, «Еда и напитки».", "клавиша G или инвентарь, «Еда и напитки».") + " Кредитов " + g.credits + "."); gm().autosaveSoon(); return; }
   gm().paused = true;
   gm().later(function () {
     gm().paused = false;

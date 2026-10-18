@@ -543,7 +543,7 @@ function ok(cond, msg) { if (cond) console.log("  ✓ " + msg); else { fails++; 
     LAB.ui.closeAll();
     LAB.office.drinkMenu(o);
     const title = LAB.ui.top() && LAB.ui.top().title;
-    LAB.ui.top().i = 2; LAB.ui.activate(); /* капучино */
+    LAB.ui.top().i = LAB.ui.top().items.findIndex(i => /^Капучино/.test(typeof i.label === "function" ? i.label() : i.label)); LAB.ui.activate(); /* капучино */
     await new Promise(r => setTimeout(r, 3200));
     LAB.ui.closeAll();
     fl.objs.pop();
@@ -2496,6 +2496,69 @@ LAB.ui.closeAll();
   ok(tr.heard && tr.disarm, "мину робота-сапёра слышно за два шага, её можно обезвредить и забрать");
   ok(tr.invItem && tr.menu, "инвентарь: раздел «Ловушки и мины», окно с вашими ловушками на этаже");
   ok(tr.oldTraps > 0, "старые ловушки прежних жителей на этажах: " + tr.oldTraps);
+
+  console.log("Отдых на обстановке восстанавливает больше: не меньше пяти единиц; напитки с собой и отдых с напитком");
+  const rsf = await page.evaluate(async () => {
+    const g = LAB.game, G = g.G, out = { low: [], n: 0 };
+    const label = i => typeof i.label === "function" ? i.label() : i.label;
+    /* данные: каждое восстановление — не меньше пяти единиц */
+    const T = LAB.FIX.T;
+    Object.keys(T).forEach(k => T[k].a.forEach(a => {
+      const p = a[2] || {}, fx = p.fx || {};
+      const vals = { hp: p.hp ? p.hp * 100 : 0, wake: p.wake || fx.wake || 0, neuro: -(p.neuro || fx.neuro || 0), heal: fx.heal || 0, detox: fx.detox || (p.tox < 0 ? -p.tox : 0), food: fx.food || 0, rad: -(p.rad || 0) };
+      Object.keys(vals).forEach(key => { if (vals[key] > 0) { out.n++; if (vals[key] < 5) out.low.push(k + "." + a[0] + "." + key + "=" + vals[key]); } });
+    }));
+    const hp = k => T[k].a.find(a => a[0] === "rest")[2].hp;
+    out.order = hp("bunk") > hp("sofa") && hp("couch") > hp("sofa") && hp("sofa") > hp("chair") && T.samovar.a[0][2].fx.heal > T.kettle.a[0][2].fx.heal && T.mats.a[0][2].wake >= 9;
+    /* стул: самый простой отдых — и тот ощутим */
+    LAB.combat.stop(); LAB.ui.closeAll();
+    g.enterFloor(2, 3, "down", true);
+    LAB.combat.foes().forEach(f => { f.dead = true; });
+    G.dead = false; G.hpMax = 100; G.hp = 40; G.body.wake = 50; G.body.neuro = 50; G.body.food = 80;
+    LAB.fixtures.menu({ id: "t_chair", type: "fx", fx: "chair", x: G.x, y: G.y, room: g.CUR.room });
+    const kc = LAB.ui.top() ? LAB.ui.top().items.findIndex(i => label(i) === "Присесть и перевести дух") : -1;
+    if (kc >= 0) { LAB.ui.top().i = kc; LAB.ui.activate(); }
+    out.chair = kc >= 0 && G.hp === 45 && G.body.wake >= 54.5 && G.body.neuro === 42;
+    out.chairDiag = G.hp + "/" + G.body.wake.toFixed(1) + "/" + G.body.neuro;
+    LAB.ui.closeAll();
+    /* раковина: умывание лечит, бодрит и выводит токсины */
+    G.hp = 40; G.body.wake = 50; G.body.tox = 10;
+    g.objMenu({ id: "t_sink", type: "sink", x: G.x, y: G.y });
+    const ks = LAB.ui.top() ? LAB.ui.top().items.findIndex(i => /Умыться холодной водой/.test(label(i))) : -1;
+    if (ks >= 0) { LAB.ui.top().i = ks; LAB.ui.activate(); }
+    out.sink = ks >= 0 && G.hp === 45 && G.body.wake >= 61 && G.body.tox <= 5.5;
+    out.sinkDiag = G.hp + "/" + G.body.wake.toFixed(1) + "/" + G.body.tox.toFixed(1);
+    LAB.ui.closeAll();
+    /* кофейный автомат: «взять с собой» кладёт стакан в рюкзак, кредиты списаны, ничего не выпито */
+    G.credits = 50; G.hp = 40; G.inv.cup_espresso = 0;
+    LAB.office.drinkMenu({ id: "t_cof", type: "coffee", x: G.x, y: G.y, room: g.CUR.room });
+    const top = LAB.ui.top(), sw = top && top.items[0];
+    out.switch = !!sw && sw.kind === "choice" && /Покупки/.test(label(sw));
+    if (sw) sw.set(true);
+    const ke = top ? top.items.findIndex(i => /^Эспрессо/.test(label(i))) : -1;
+    if (ke >= 0) { top.i = ke; LAB.ui.activate(); }
+    out.took = G.inv.cup_espresso === 1 && G.credits < 50 && G.hp === 40 && SPOKEN.some(t => /в рюкзаке, раздел «Еда и напитки»/.test(t));
+    if (sw) sw.set(false);
+    LAB.ui.closeAll();
+    /* диван и эспрессо: отдых и напиток вместе, в покое — ещё бодрее и спокойнее */
+    G.hp = 40; G.body.wake = 40; G.body.neuro = 60; G.body.food = 80;
+    LAB.fixtures.menu({ id: "t_sofa", type: "fx", fx: "sofa", x: G.x, y: G.y, room: g.CUR.room });
+    const kd = LAB.ui.top() ? LAB.ui.top().items.findIndex(i => /^Посидеть на диване и выпить эспрессо$/.test(label(i))) : -1;
+    SPOKEN.length = 0;
+    if (kd >= 0) { LAB.ui.top().i = kd; LAB.ui.activate(); }
+    const hpWant = 40 + 10 + Math.round(8 * (1 + (G.L - 1) * 0.15));
+    out.combo = kd >= 0 && G.inv.cup_espresso === 0 && G.hp === hpWant && G.body.wake >= 40 + 10 + 25 + 7 - 1.5 && G.body.neuro === 60 - 16 - 5;
+    out.comboSaid = SPOKEN.some(t => /^Вы выпили: стакан эспрессо/.test(t)) && SPOKEN.some(t => /В покое напиток действует лучше/.test(t));
+    out.comboDiag = G.hp + "/" + hpWant + "/" + G.body.wake.toFixed(1) + "/" + G.body.neuro + "/" + SPOKEN.join(" | ").slice(0, 160);
+    LAB.ui.closeAll();
+    return out;
+  });
+  ok(!rsf.low.length, "у обстановки каждое восстановление — не меньше пяти единиц (" + rsf.n + " значений)" + (rsf.low.length ? ": " + rsf.low.slice(0, 6).join(", ") : ""));
+  ok(rsf.order, "койка и кушетка лечат сильнее дивана, диван — сильнее стула, самовар — сильнее чайника, маты бодрят");
+  ok(rsf.chair, "стул: плюс пять здоровья и бодрости, минус восемь нейронагрузки за пять минут (" + rsf.chairDiag + ")");
+  ok(rsf.sink, "раковина: умывание — плюс пять здоровья и двенадцать бодрости, токсины ниже (" + rsf.sinkDiag + ")");
+  ok(rsf.switch && rsf.took, "кофейный автомат: переключатель «Покупки», «взять с собой» кладёт стакан эспрессо в рюкзак");
+  ok(rsf.combo && rsf.comboSaid, "диван и эспрессо: отдых и напиток вместе, в покое напиток действует лучше (" + rsf.comboDiag + ")");
 
   console.log("Обход этажей одного зерна: вход, такты, осмотр");
   const tour = await page.evaluate(() => {
