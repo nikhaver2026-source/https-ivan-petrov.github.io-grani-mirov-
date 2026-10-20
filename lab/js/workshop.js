@@ -145,7 +145,7 @@ LAB.RECIPES.forEach(function (rc) { if (rc.id === "wmod") { rc.out = "m_power"; 
 
 /* Классы рецептов: базовые — у любого верстака, специализированные — на
    паяльной станции, экспериментальные — на стенде опытной серии. */
-var BASE_IDS = ["medkit_s", "antidote", "stim", "bandage", "sorbent", "bat_e", "noise", "lockpick", "filter", "w_baton", "a_vest"];
+var BASE_IDS = ["medkit_s", "antidote", "stim", "bandage", "sorbent", "bat_e", "noise", "lockpick", "pick_b", "pick_g", "filter", "w_baton", "a_vest"];
 var EXP_IDS = ["w_cryo", "a_exo", "a_bastion", "a_positron", "a_ark"];
 function clsRule(rc) {
   if (BASE_IDS.indexOf(rc.id) >= 0) return "base";

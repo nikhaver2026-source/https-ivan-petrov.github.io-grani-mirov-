@@ -116,8 +116,10 @@ function move(step) {
   LAB.UI.move();
   render();
   if (w.onFocus) LAB.safe(function () { w.onFocus(w.i); });
-  /* пока записка читается, по её абзацам ходят молча — чтение не обрывается */
-  if (w.note && LAB.Speech.noteBusy()) return;
+  /* записка читается, а игрок сам пошёл по её абзацам: общее чтение обрывается,
+     и звучит выбранный абзац (прежде ходили молча, и на компьютере это выглядело
+     как зависание: стрелки нажимаются, а ответа нет, пока не нажать Ctrl) */
+  if (w.note && LAB.Speech.noteBusy()) LAB.Speech.endNote();
   say(itemText(w.items[w.i]));
 }
 function cycle(it, step) {
@@ -755,8 +757,10 @@ function journalMenu() {
   items.push(back());
   menu("Журнал", items);
 }
-/* Окно записки: пока оно открыто, мир ждёт, и текст дочитывается до конца.
-   Свайп вправо и влево — по абзацам, «Закрыть» или два пальца вниз — назад.
+/* Окно записки: пока оно открыто, мир ждёт, и текст дочитывается до конца,
+   если игрок его не трогает. Свайп вправо и влево (стрелки на компьютере) —
+   по абзацам: общее чтение обрывается, звучит выбранный абзац. «Закрыть» или
+   два пальца вниз — назад.
    На компьютере — окно-диалог: Escape закрывает его, и чтение обрывается. */
 function note(title, text, after, opts) {
   opts = opts || {};
@@ -887,7 +891,7 @@ function gesture(g) {
       if (g.dir === "D") { if (!adjust(it, -1)) { if (!closeTop()) LAB.UI.error(); } return true; }
     }
     if (g.kind === "dtap") { activate(); return true; }
-    if (g.kind === "tap") { if (!(w.note && LAB.Speech.noteBusy())) say(itemText(w.items[w.i])); return true; }
+    if (g.kind === "tap") { if (w.note && LAB.Speech.noteBusy()) LAB.Speech.endNote(); say(itemText(w.items[w.i])); return true; }
     return true;
   }
   if (g.n === 2 && g.kind === "swipe" && g.dir === "D") { if (!closeTop()) LAB.UI.error(); return true; }
@@ -911,7 +915,9 @@ function key(act) {
   var w = top();
   if (!w) return false;
   var it = w.items[w.i], n = w.items.length;
-  var quiet = w.note && LAB.Speech.noteBusy();
+  /* записка читается, а игрок ходит по ней клавишами — чтение целиком уступает выбранному абзацу */
+  if (w.note && LAB.Speech.noteBusy() && /^(next|prev|first|last|inc|dec|repeat)$/.test(act)) LAB.Speech.endNote();
+  var quiet = false;
   var where = function () { return w.title + ". Пункт " + (w.i + 1) + " из " + n + ": " + itemText(w.items[w.i]); };
   switch (act) {
     case "next": move(1); return true;

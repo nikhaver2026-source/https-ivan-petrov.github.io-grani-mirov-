@@ -407,14 +407,15 @@ function run(o, def, kind, p, label, withId) {
     }
     case "play": playInst(o, p, s, r); return;
     case "game": {
-      var mini = LAB.mini && LAB.mini[p.mini];
+      var mini = p.mini === "chess" ? (LAB.puzzles && LAB.puzzles.chess) : (LAB.mini && LAB.mini[p.mini]);
       if (!mini) { say("Фигуры перепутаны: партию не начать."); return; }
       UIx("closeAll");
       var done = function (ok) {
         if (ok && !s.won) { s.won = 1; gm().gainXP(12); var cr2 = LAB.credits(6, G().L, G().F); G().credits += cr2; say("Партия за вами. Под доской — забытая ставка: " + cr2 + " кредитов."); ev("game_win", 1); }
         else say(ok ? "Снова победа. Ставок больше нет — только удовольствие." : "Не вышло. Можно попробовать ещё раз.");
       };
-      if (p.mini === "bulls") mini(3 + Math.min(1, Math.floor(G().L / 30)), done, { title: def.n });
+      if (p.mini === "chess") mini(done, { title: def.n, seed: LAB.hash32(CUR().key + ":" + o.id + ":" + (s.won ? 1 : 0)) });
+      else if (p.mini === "bulls") mini(3 + Math.min(1, Math.floor(G().L / 30)), done, { title: def.n });
       else mini(4 + Math.min(2, Math.floor(G().L / 25)), done, { title: def.n });
       return;
     }
@@ -496,12 +497,30 @@ function boardCode(o, r) {
 }
 /* Сыграть: короткая мелодия на инструменте (синтез), шум зовёт тварей. */
 var TUNES = { lullaby: [392, 330, 294, 330, 262], bell: [523, 0, 523, 0, 659], piano: [262, 330, 392, 523, 392, 330], guitar: [196, 247, 294, 392, 294], accordion: [262, 330, 392, 349, 294, 262] };
+/* (1.6) У инструмента свой тембр и поле для игры: три ряда нот. Знакомая
+   мелодия — как прежде, своим голосом инструмента. */
 function playInst(o, p, s, r) {
+  var def = fxDef(o), I = LAB.instruments, inst = p.inst || "piano";
+  UIx("menu", def.n, [
+    { label: "Сыграть знакомую мелодию", fn: function () { tuneInst(o, p, s); } },
+    { label: "Играть самому: три ряда нот", fn: function () {
+      UIx("closeAll");
+      if (!I) { say("Инструмент молчит."); return; }
+      I.open(inst, { name: def.n, noise: p.noise }, function (played) {
+        if (played > 0) { var m = []; gm().bodyApply({ neuro: -Math.min(16, 6 + played) }, m); say("Вы отходите от инструмента. " + m.join(" ")); ev("play", 1); }
+        else say("Вы отходите от инструмента.");
+      });
+    } },
+    { label: "Осмотреть", keep: true, fn: function () { say(examine(o)); } }
+  ]);
+}
+function tuneInst(o, p, s) {
   if (s.playAt && nowMin() - s.playAt < 5) { say("Пальцы ещё помнят прошлую мелодию: дайте им отдохнуть минуту-другую."); return; }
   s.playAt = nowMin();
   UIx("closeAll");
-  var seq = TUNES[p.inst] || TUNES.piano, T0 = LAB.UI && LAB.UI.tone;
-  if (T0) seq.forEach(function (f, i) { if (f) T0(f, 0.36, 0, 0.18, 0.15 + i * 0.4); });
+  var seq = TUNES[p.inst] || TUNES.piano, T0 = LAB.UI && LAB.UI.tone, I = LAB.instruments;
+  if (I && I.tune) I.tune(p.inst || "piano", seq, 0.4);
+  else if (T0) seq.forEach(function (f, i) { if (f) T0(f, 0.36, 0, 0.18, 0.15 + i * 0.4); });
   var m = []; gm().bodyApply({ neuro: -12 }, m);
   if (p.noise) noise(p.noise);
   setTimeout(function () { say({ lullaby: "Колыбель качается, мелодия тянется сама.", bell: "Колокол гудит долго: звук уходит по коридорам.", piano: "Клавиши чуть расстроены, но мелодия узнаётся.", guitar: "Струны отзываются тепло, одна дребезжит.", accordion: "Меха вздыхают, аккорды плывут по комнате." }[p.inst] + " " + m.join(" ")); }, 600 + seq.length * 400);

@@ -212,8 +212,11 @@ function gameGesture(g) {
       return;
     }
     if (g.kind === "zig") {
-      if (g.dir === "U" || g.dir === "D") game.switchWeapon(g.dir === "U" ? 1 : -1);
-      else game.reload();
+      /* влево-вправо — перезарядка; вверх-вниз с оружием в руках — смена оружия,
+         с пустыми руками — поставить ловушку (вверх-вниз) или мину (вниз-вверх) (1.6) */
+      if (g.dir === "L" || g.dir === "R") { game.reload(); return; }
+      if (G.drawn) { game.switchWeapon(g.dir === "U" ? 1 : -1); return; }
+      if (LAB.traps && LAB.traps.quick) LAB.traps.quick(g.dir === "U" ? "trap" : "mine");
       return;
     }
     if (g.kind === "tap") { game.nearbyInfo(); return; }
@@ -275,7 +278,7 @@ function repeatLast() {
    C и I — персонаж и инвентарь.
    Буквы работают и в русской раскладке (Ц Ф Ы В, К, Й, У, А…). */
 var KEY_LAT = { "ц": "w", "ф": "a", "ы": "s", "в": "d", "к": "r", "й": "q", "у": "e", "а": "f", "т": "n", "ь": "m", "м": "v", "р": "h", "с": "c", "ш": "i", "о": "j", "г": "u", "е": "t", "я": "z", "ч": "x",
-  "п": "g", "л": "k", "ю": ".", "б": ",", "и": "b", "д": "l" };
+  "п": "g", "л": "k", "ю": ".", "б": ",", "и": "b", "д": "l", "з": "p", "щ": "o" };
 var WASD = { w: "N", a: "W", s: "S", d: "E" };
 var ARROW = { ArrowUp: "N", ArrowDown: "S", ArrowLeft: "W", ArrowRight: "E" };
 var GAME2SCR = { N: "U", S: "D", W: "L", E: "R" };
@@ -370,6 +373,8 @@ function gameKey(e, k) {
     case "k": game.bodyStatus(); return true;
     case "b": game.creditsStatus(); return true;
     case "l": if (LAB.traps) LAB.traps.menu(); return true;
+    case "p": if (LAB.traps && LAB.traps.quick) LAB.traps.quick("trap"); return true;
+    case "o": if (LAB.traps && LAB.traps.quick) LAB.traps.quick("mine"); return true;
     case "Escape": case "Backspace": if (window.labBack) window.labBack(); return true;
     case "F1": if (LAB.guide) LAB.guide.open(); return true;
   }

@@ -281,12 +281,22 @@ LAB.annex.place = function (ctx) {
     });
   });
   /* 4. Помещения, двери, хозяева, описания, обстановка */
-  var num = maxNum(fl), details = detailDeck(r, era), dk = 0;
+  var num = maxNum(fl), details = detailDeck(r, era), dk = 0, usedNames = {};
   spots.forEach(function (sp2) {
     var ty = types[sp2.id] || "x_store", def = ROOMS[ty] || ROOMS.x_store, it2 = picks[sp2.id] || null;
     var v = it2 && it2.vi >= 0 && LAB.ANNEX_V && LAB.ANNEX_V[ty] ? LAB.ANNEX_V[ty][it2.vi] : null;
     var rm = fl.rooms[sp2.id];
-    rm.type = ty; rm.name = v ? v.n : def.n; rm.surf = lev.surf; rm.vi = it2 ? it2.vi : -1;
+    /* табличка на этаже не повторяется (1.6): колода кончилась — берём другой
+       вариант того же типа, а если и они разобраны — номер на табличке */
+    var nm = v ? v.n : def.n;
+    if (usedNames[nm]) {
+      var alts = (LAB.ANNEX_V && LAB.ANNEX_V[ty]) || [], alt = -1;
+      for (var ai = 0; ai < alts.length; ai++) if (!usedNames[alts[ai].n]) { alt = ai; break; }
+      if (alt >= 0) { v = alts[alt]; it2 = { t: ty, vi: alt }; nm = v.n; }
+      else { usedNames[nm]++; nm = nm + " № " + usedNames[nm]; }
+    }
+    usedNames[nm] = (usedNames[nm] || 0) + 1;
+    rm.type = ty; rm.name = nm; rm.surf = lev.surf; rm.vi = it2 ? it2.vi : -1;
     if (it2 && it2.sewn) rm.sewn = it2.sewn;
     if (sp2.wing) rm.wing = true;
     if (def.rad) rm.rad = Math.min(5, def.rad + (def.rad >= 3 && r.chance(0.35) ? 1 : 0) + (L > 40 && def.rad < 3 && r.chance(0.3) ? 1 : 0));

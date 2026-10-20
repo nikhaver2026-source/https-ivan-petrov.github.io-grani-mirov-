@@ -1937,6 +1937,9 @@ function useImplant(id, free) {
       var items = gm().floorItems().filter(function (it) { return Math.abs(it.x - g.x) + Math.abs(it.y - g.y) <= 8; });
       var parts = [];
       parts.push(list.length ? "Враги: " + list.map(describe).join("; ") + "." : "Врагов рядом нет.");
+      /* (1.6) на каждого найденного — звуковой маяк: ползёт вместе с ним, пока не отстанет */
+      list.forEach(function (f) { f.mark = Date.now() + 45000; });
+      if (list.length) parts.push("На них повешены маяки: " + (list.length === 1 ? "он звучит, пока враг рядом." : "они звучат, пока враги рядом."));
       if (items.length) parts.push("Вещи: " + items.slice(0, 6).map(function (it) { return gm().itemName(it) + " " + gm().relDir(it.x, it.y); }).join(", ") + ".");
       var sec = gm().nearSecret(4);
       if (sec) parts.push("Пустота за стеной " + LAB.DIRN[sec.dir] + ": тайник.");

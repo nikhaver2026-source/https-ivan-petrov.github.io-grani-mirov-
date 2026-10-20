@@ -216,6 +216,7 @@ function lockText(d) {
   if (lk.type === "circuit") return "электронный замок: схема реле";
   if (lk.type === "melody") return "звуковой замок: открывается мелодией";
   if (lk.type === "hazard") return "санпропускник горячей камеры: пускает только в защитном костюме";
+  if (lk.type === "logic") return "логический замок: " + (LAB.puzzles ? LAB.puzzles.nameOf(lk.kind) : "задача");
   return "заперто";
 }
 game.lockText = lockText;
@@ -242,10 +243,12 @@ function doorBlock(d) {
   if (lk.type === "gate") return (LAB.isReactorLevel(G.L) ? hasCore(G.L) : G.gate[G.L]) ? "" : (LAB.isReactorLevel(G.L) ? "Нужен ключ доступа к реактору «Исток»: он у стража этого этажа." : "Нужна шлюзовая ключ-карта уровня " + G.L + ": " + (LAB.LEVELS[G.L].card === "hidden" ? "её спрятали где-то на этом этаже — слушайте маяк ключ-карты." : "её носит страж этого этажа."));
   if (lk.type === "riddle") return (fs.riddleWait && fs.riddleWait[d.id] > Date.now()) ? "Голосовой замок молчит после неверного ответа. Подождите." : "Голосовой замок задаёт загадку.";
   if (lk.type === "circuit") return "Схема реле горит. Погасите её.";
+  if (lk.type === "logic") return "Замок ждёт решения задачи: " + (LAB.puzzles ? LAB.puzzles.nameOf(lk.kind) : "головоломка") + ".";
   if (lk.type === "melody") return G.melodies[melKey(d.id)] ? "Замок ждёт мелодию. «Эхо» её помнит." : "Замок ждёт мелодию. Её проигрывает радиоприёмник где-то на этом этаже.";
   return "Заперто.";
 }
 game.doorBlock = doorBlock;
+game.doorOpen = doorOpen;
 /* Ключ «Истока» этого уровня (на 10-м — от стража Ядра, на самом нижнем — свой). */
 function hasCore(L) { return !!((G.cores && G.cores[L]) || (L === 10 && G.core)); }
 game.hasCore = hasCore;
@@ -276,7 +279,7 @@ function itemKind(it) {
     if (k === "stim" || k === "antidote" || k === "energy_d") return "stim";
     if (k === "emp" || k === "noise") return "gren";
     if (k === "plate" || k === "repairkit") return "plate";
-    if (k === "decoder" || k === "lockpick" || k === "jammer" || k === "sonar" || k === "okokey") return "decoder";
+    if (k === "decoder" || k === "lockpick" || /^pick_/.test(k) || k === "jammer" || k === "sonar" || k === "okokey") return "decoder";
     var dd = LAB.ITEMS[k];
     if (dd && dd.kind !== "part") return dd.fx && dd.fx.heal ? "med" : dd.kind === "throw" ? "gren" : "stim";
     return "part";
@@ -1480,8 +1483,14 @@ function doorMenu(d, dir) {
     if (lk && lk.type === "code") items.push({ label: "Набрать код", fn: function () { codeEntry(d); } });
     if (lk && lk.type === "riddle" && why) items.push({ label: "Выслушать загадку замка", fn: function () { riddleDoor(d); } });
     if (lk && lk.type === "circuit" && why) items.push({ label: "Погасить схему реле (головоломка)", fn: function () { circuitDoor(d); } });
+    if (lk && lk.type === "logic" && why) items.push({ label: "Решить задачу замка: " + (LAB.puzzles ? LAB.puzzles.nameOf(lk.kind) : "головоломка"), fn: function () { logicDoor(d); } });
     if (lk && lk.type === "melody" && why) items.push({ label: G.melodies[melKey(d.id)] ? "Сыграть мелодию" : "Сыграть мелодию — сначала найдите её на радиоприёмнике", fn: function () { melodyDoor(d); } });
-    if (lk && lk.type === "key" && why && (G.inv.lockpick || 0) > 0) items.push({ label: "Вскрыть отмычкой (" + G.inv.lockpick + " шт.)", fn: function () { G.inv.lockpick--; A("play", "pry"); CUR.fs.doors[d.id] = 1; openDoor(d); sayq("Отмычка провернулась в замке. Открыто."); } });
+    /* отмычка под цвет помещения (1.6): под ключ, код, пропуск и блокировку охраны */
+    if (lk && why && ["key", "card", "code", "lockdown"].indexOf(lk.type) >= 0) {
+      var pk0 = pickFor(d), havePk = G.inv[pk0] || 0;
+      if (havePk > 0) items.push({ label: "Открыть отмычкой — " + PICKS[pk0] + " (" + havePk + " шт.)", fn: function () { usePick(d, pk0); } });
+      else { var othersPk = Object.keys(PICKS).filter(function (k) { return (G.inv[k] || 0) > 0; }); if (othersPk.length) items.push({ label: "Отмычка не та: нужна " + PICKS[pk0] + ", у вас — " + othersPk.map(function (k) { return PICKS[k]; }).join(", "), info: true, keep: true, fn: function () { say("Для этой двери нужна " + PICKS[pk0] + " отмычка: " + lockText(d) + "."); } }); }
+    }
     if (lk && (lk.type === "card" || lk.type === "code") && why) items.push({ label: "Взломать замок (мини-игра)", fn: function () { hackDoor(d); } });
     if (lk && lk.type === "card" && why && (G.inv.decoder || 0) > 0) items.push({ label: "Использовать декодер пропусков (" + G.inv.decoder + " шт.)", fn: function () { G.inv.decoder--; A("play", "card_ok"); openDoor(d); sayq("Декодер подобрал ключ. Дверь открыта."); } });
     if (lk && why && G.implants.indexOf("hack") >= 0 && ["card", "code", "lockdown", "key"].indexOf(lk.type) >= 0) items.push({ label: "Дистанционный взлом — имплант, " + implantCost("hack") + " энергии", fn: function () { if (spendEnergy("hack")) { A("play", "implant"); openDoor(d); sayq("Имплант открыл замок."); } } });
@@ -1508,6 +1517,38 @@ function askRiddle(rd, title, cb) {
   UIx("menu", title + ": «" + rd.q + "»", opts.map(function (o) { return { label: o.a, fn: function () { cb(o.ok); } }; }).concat([{ label: "Отойти, не отвечая", fn: function () { say("Вы отходите. Замок ждёт."); } }]));
 }
 game.askRiddle = askRiddle;
+/* Логический замок (1.6): задача из жизни комплекса, у каждой двери своя. */
+function logicDoor(d) {
+  UIx("closeAll");
+  if (!LAB.puzzles) { say("Замок молчит."); return; }
+  LAB.puzzles.open(d.lock.kind, d.lock.seed, function (ok) {
+    if (ok) { A("play", "code_ok"); CUR.fs.doors[d.id] = 1; openDoor(d); sayq("Замок принял решение. Дверь открыта."); gainXP(14); }
+    else { A("play", "term_err"); sayq("Замок не принял решение: можно подойти снова."); if (LAB.combat) LAB.combat.noise(3); }
+  }, { title: "Логический замок" });
+}
+/* (1.6) Отмычки — по виду помещения за дверью: жёлтая — служебные, синяя —
+   серверные и узлы связи, красная — режимные и посты охраны, зелёная —
+   медицинские блоки и лаборатории. Открывают дверь под ключ, код, пропуск
+   или блокировку охраны без мини-игры; одна отмычка — одна дверь. */
+var PICKS = { lockpick: "жёлтая", pick_b: "синяя", pick_r: "красная", pick_g: "зелёная" };
+function pickFor(d) {
+  var ri = d.lockChild != null && d.lockChild >= 0 ? d.lockChild : d.room;
+  var rm = (CUR.fl.rooms && CUR.fl.rooms[ri]) || null;
+  var t = rm ? String(rm.type || "") : "", nm = rm ? String(rm.name || "") : "";
+  if (/server|comms|ailab|sequencer|switchboard|workroom|neuro|accdesk|chiefdesk|powerdesk|radio|telecom|x_serverniche|x_node|x_comms|x_switch|x_relay/.test(t) || /сервер|узел|узлов|связ|вычислит|данн|коммутац|радиорубк|телеметр|диспетч/i.test(nm)) return "pick_b";
+  if (/arsenal|bastion|hq|guard|armor|ballistics|security|bunker|range|testbench|x_guardbooth|x_armory|x_security/.test(t) || /охран|арсенал|оружейн|режимн|бункер|стрельбищ|ОКО|безопасност|караул|допуск/i.test(nm)) return "pick_r";
+  if (/med|surgery|isolator|genelab|incubator|vivarium|embryo|cloning|regen|sleeplab|lab|quarantine|decon|cryo|samples|x_medrec|x_lab|x_ward/.test(t) || /мед|лазарет|операц|изолятор|карантин|лаборатор|генет|инкубат|вивар|проб|реактив|крио|палат/i.test(nm)) return "pick_g";
+  return "lockpick";
+}
+game.pickFor = pickFor;
+game.PICKS = PICKS;
+function usePick(d, pk) {
+  if (!(G.inv[pk] > 0)) return;
+  G.inv[pk]--; if (G.inv[pk] <= 0) delete G.inv[pk];
+  A("play", "pry"); CUR.fs.doors[d.id] = 1; openDoor(d);
+  sayq("Отмычка " + PICKS[pk] + " сработала: замок открыт." + (G.inv[pk] ? "" : " Отмычек этого цвета больше нет."));
+  if (LAB.ach) LAB.ach.ev("pick", 1);
+}
 function circuitDoor(d) {
   UIx("closeAll");
   LAB.mini.relays(d.lock.n + (LAB.oko ? Math.min(1, LAB.oko.difficulty()) : 0), function (ok) {
@@ -1535,6 +1576,19 @@ function codeEntry(d) {
   LAB.mini.code(function (code) { if (code) tryCode(d, code); }, { title: "Дверь" });
 }
 function hackDoor(d) {
+  /* есть подходящая отмычка — предложить её вместо мини-игры (1.6) */
+  var pk = pickFor(d);
+  if ((G.inv[pk] || 0) > 0) {
+    UIx("menu", "Взлом замка", [
+      { label: "Открыть отмычкой — " + PICKS[pk] + " (" + G.inv[pk] + " шт.)", fn: function () { usePick(d, pk); } },
+      { label: "Взламывать вручную: повторить сигналы", fn: function () { hackDoorMini(d); } },
+      { label: "Назад", fn: function () {} }
+    ]);
+    return;
+  }
+  hackDoorMini(d);
+}
+function hackDoorMini(d) {
   var lv = d.lock.type === "card" ? d.lock.tier + 1 : 2 + Math.floor(G.L / 3);
   UIx("closeAll");
   LAB.mini.hack(hackLength(lv), function (ok) {
@@ -1543,6 +1597,8 @@ function hackDoor(d) {
   });
 }
 game.plural = plural;
+game.doorMenu = doorMenu;
+game.hackDoor = hackDoor;
 game.roomAt = function (x, y) { return roomAt(x, y); };
 game.hackLength = function (lv) { return hackLength(lv); };
 game.autosaveSoon = function () { autosaveSoon(); };
@@ -1693,6 +1749,7 @@ function puzzleMenu(o) {
   var st = objState(o);
   if (st.solved) { say("Стенд погашен: испытание пройдено."); return; }
   var kinds = { sort: "настройка частот", relays: "схема реле", bulls: "подбор ключа", riddle: "загадка" };
+  if (LAB.puzzles) for (var pk in LAB.puzzles.NAMES) kinds[pk] = LAB.puzzles.NAMES[pk];
   UIx("menu", "Стенд испытаний: " + (kinds[o.kind] || "головоломка"), [
     { label: "Пройти испытание", fn: function () {
       var done = function (ok) {
@@ -1707,6 +1764,7 @@ function puzzleMenu(o) {
       if (o.kind === "sort") LAB.mini.sortTones(4 + hard, done, { title: "Настройка частот" });
       else if (o.kind === "relays") LAB.mini.relays(4 + hard, done, { title: "Схема реле", seed: o.seed });
       else if (o.kind === "bulls") LAB.mini.bulls(3 + (hard >= 2 ? 1 : 0), done, { title: "Подбор ключа" });
+      else if (LAB.puzzles && LAB.puzzles.has(o.kind)) LAB.puzzles.open(o.kind, o.seed || 1, done, { title: "Стенд испытаний" });
       else askRiddle(riddleFor(o.seed || 1, G.L), "Загадка стенда", done);
     } },
     { label: "Осмотреть", fn: function () { say(LAB.OBJ.puzzle.desc); } }
@@ -2407,7 +2465,8 @@ function vendingMenu(o) {
 }
 function vendingItems(o) {
   var goods = [["medkit_s", 1], ["bandage", 1], ["ammo:energy", 1], ["stim", 1], ["antidote", 1], ["sorbent", 1], ["energy_d", 1], ["neuroblock", 1], ["ration", 1], ["glucose", 1], ["ammo:magnetron", 1], ["emp", 1], ["plate", 1], ["noise", 1], ["filter", 1]];
-  if (G.L >= 3) goods.push(["decoder", 1], ["lockpick", 1]);
+  if (G.L >= 3) goods.push(["decoder", 1], ["lockpick", 1], ["pick_b", 1], ["pick_g", 1]);
+  if (G.L >= 5) goods.push(["pick_r", 1]);
   if (G.L >= 4) goods.push(["jammer", 1]);
   if (G.L >= 6) goods.push(["ammo:positron", 1], ["medkit_l", 1], ["turret_kit", 1]);
   /* батареи и расходники своей глубины */

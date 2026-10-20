@@ -47,8 +47,14 @@ var lastCancel = 0;
 function cancel(silent) {
   if (!cur) return;
   lastCancel = Date.now();
-  if (!silent) say(cur.name + ": прервано.");
-  finish(false, cur.type === "code" ? null : false);
+  var quiet = cur.type === "ext" && cur.quiet; /* занятие без исхода (инструмент): уйти — не провал */
+  if (!silent && !quiet) say(cur.name + ": прервано.");
+  finish(quiet ? true : false, cur.type === "code" ? null : (quiet ? true : false));
+}
+/* Внешнее занятие с перехватом жестов (1.6): музыкальный инструмент и т. п.
+   ext: { name, handler(g), cleanup, cb, quiet } — quiet: уход не считается провалом. */
+function start(ext) {
+  cur = { type: "ext", name: ext.name || "Занятие", cb: ext.cb, handler: ext.handler, cleanup: ext.cleanup, quiet: !!ext.quiet };
 }
 
 /* ════════ ВЗЛОМ: повторить сигналы ════════ */
@@ -59,8 +65,9 @@ function hack(len, cb, opts) {
   len = Math.max(3, Math.min(9, len || 4));
   var seq = [], dirs = ["U", "D", "L", "R"];
   for (var i = 0; i < len; i++) seq.push(dirs[Math.floor(Math.random() * 4)]);
-  cur = { type: "hack", name: opts.title || "Взлом", cb: cb, seq: seq, round: Math.min(3, len), pos: 0, replays: 1, busy: true };
-  say((opts.title || "Взлом") + ". Сигналов: " + len + ". " + LAB.K("Высокий — свайп вверх, низкий — вниз, слева — влево, справа — вправо. Повторяйте свайпами. Касание — повторить сигналы.", "Высокий — стрелка вверх, низкий — вниз, слева — влево, справа — вправо. Повторяйте стрелками. Пробел — повторить сигналы, Escape — отойти."), { interrupt: true });
+  /* четыре попытки (1.6): ошибка не губит взлом сразу — раунд звучит заново; четвёртая ошибка — защита сработала, и ОКО шлёт проверку */
+  cur = { type: "hack", name: opts.title || "Взлом", cb: cb, seq: seq, round: Math.min(3, len), pos: 0, replays: 1, busy: true, tries: opts.tries || 4, noOko: !!opts.noOko };
+  say((opts.title || "Взлом") + ". Сигналов: " + len + ". Попыток: " + cur.tries + ". " + LAB.K("Высокий — свайп вверх, низкий — вниз, слева — влево, справа — вправо. Повторяйте свайпами. Касание — повторить сигналы.", "Высокий — стрелка вверх, низкий — вниз, слева — влево, справа — вправо. Повторяйте стрелками. Пробел — повторить сигналы, Escape — отойти."), { interrupt: true });
   waitSpeech(function () { playRound(); });
 }
 function playRound() {
@@ -80,12 +87,32 @@ function hackGesture(g) {
   if (g.kind !== "swipe" || g.n !== 1 || c.busy) return;
   var want = c.seq[c.pos];
   playSig(g.dir, 0);
-  if (g.dir !== want) { c.busy = c.done = true; setTimeout(function () { if (cur !== c) return; say("Неверно. Защита сработала."); finish(false); }, 350); return; }
+  if (g.dir !== want) {
+    c.tries--;
+    if (c.tries > 0) {
+      /* ошибка: раунд с начала, попыток меньше */
+      c.busy = true; c.pos = 0;
+      tone(180, 0.2, 0, "sawtooth", 0.1);
+      setTimeout(function () { if (cur !== c) return; say("Неверно. Осталось попыток: " + c.tries + ". Сигналы ещё раз."); setTimeout(function () { if (cur === c) playRound(); }, 900); }, 350);
+      return;
+    }
+    c.busy = c.done = true;
+    setTimeout(function () { if (cur !== c) return; say("Неверно. Попытки кончились: защита сработала."); hackFailed(c); finish(false); }, 350);
+    return;
+  }
   c.pos++;
   if (c.pos < c.round) return;
   if (c.round >= c.seq.length) { c.busy = c.done = true; setTimeout(function () { if (cur === c) finish(true); }, 300); return; }
   c.round++; c.replays = 1; c.busy = true;
   setTimeout(function () { tone(1320, 0.08, 0, "sine", 0.12); setTimeout(playRound, 400); }, 300);
+}
+
+/* Четыре ошибки подряд: ОКО пеленгует взлом и шлёт проверку — роботов или дрон (не всегда: иногда «Эхо» успевает оборвать сигнал). */
+function hackFailed(c) {
+  if (c.noOko || !LAB.oko || !LAB.game || !LAB.game.G) return;
+  var g = LAB.game.G;
+  if (Math.random() < 0.7) { LAB.safe(function () { LAB.oko.event("hack_fail", { x: g.x, y: g.y }); }); sayq("Канал запеленгован: к вам идёт проверка."); }
+  else sayq("«Эхо» оборвало канал до пеленга: проверки не будет.");
 }
 
 /* ════════ НАСТРОЙКА РЕЗОНАТОРА: убрать биения ════════ */
@@ -459,6 +486,7 @@ function gesture(g) {
   if ((g.kind === "swipe" && g.n === 2 && g.dir === "D") || g.kind === "back") { cancel(); return true; }
   if (g.kind === "down") { if (cur.type === "rhythm") rhythmDown(g.t); return true; }
   if (cur.type === "rhythm") return true;
+  if (cur.type === "ext") { if (cur.handler) LAB.safe(function () { cur.handler(g); }); return true; }
   if (cur.type === "hack") hackGesture(g);
   else if (cur.type === "tune") tuneGesture(g);
   else if (cur.type === "code") codeGesture(g);
@@ -483,7 +511,7 @@ function chain(steps, cb) {
 }
 
 LAB.mini = {
-  hack: hack, tune: tune, rhythm: rhythm, sync: sync, code: code, relays: relays, bulls: bulls, sortTones: sortTones, melody: melody, chain: chain, gesture: gesture, cancel: cancel,
+  hack: hack, tune: tune, rhythm: rhythm, sync: sync, code: code, relays: relays, bulls: bulls, sortTones: sortTones, melody: melody, chain: chain, gesture: gesture, cancel: cancel, start: start,
   active: function () { return !!cur || Date.now() < gapUntil; },
   wasCancelled: function () { return Date.now() - lastCancel < 1500; },
   _cur: function () { return cur; }, /* для проверок */

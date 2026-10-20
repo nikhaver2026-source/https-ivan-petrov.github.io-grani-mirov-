@@ -85,7 +85,7 @@ function ok(cond, msg) { if (cond) console.log("  ✓ " + msg); else { fails++; 
     return out;
   });
   ok(news.title === "Что нового?" && news.items[0] === news.ver + " — эта версия" && news.items.some(l => /^Альфа 1\.2$/.test(l)) && news.items.some(l => /^Альфа 1\.0$/.test(l)), "«Что нового?»: эта версия и прежние — " + news.items.join(", "));
-  ok(/Что нового: /.test(news.note) && /Ловушки и мины/.test(news.text) && !news.tech, "что нового в этой версии — коротко и без технических подробностей");
+  ok(/Что нового: /.test(news.note) && /Напитки — с собой/.test(news.text) && !news.tech, "что нового в этой версии — коротко и без технических подробностей");
 
   console.log("Настройки");
   await page.evaluate(() => { LAB.ui.top().i = 0; });
@@ -289,6 +289,28 @@ function ok(cond, msg) { if (cond) console.log("  ✓ " + msg); else { fails++; 
     return { t: t, layer: !!layer };
   });
   ok(nw.layer && /^«/.test(nw.t || ""), "записка открылась окном: " + nw.t);
+  /* стрелки в окне записки: общее чтение уступает выбранному абзацу (на компьютере прежде казалось, что игра зависла) */
+  const nk = await page.evaluate(() => {
+    const S = LAB.Speech, pump = S._pump, out = {};
+    LAB.ui.closeAll();
+    const text = "Первый абзац записки о смене и дежурстве. Второй абзац про карантин, склад и пропуска. ".repeat(6);
+    LAB.ui.note("Проверочная записка", text);
+    const w = LAB.ui.top();
+    /* речь игры в проверках — заглушка; чтение записки запускаем в движке речи, как в проверке речи выше */
+    LAB.settings.speech = true;
+    S._pump = function () { if (this.speaking || !this.queue.length) return; const it = this.queue.shift(); this.speaking = true; this.cur = { id: "t" + (++this.seq), text: it.text }; };
+    S.userUntil = 0; S.stop();
+    S.say("Проверочная записка. " + text, { note: true });
+    out.busy0 = S.noteBusy() && w.items.length >= 3;
+    SPOKEN.length = 0; LAB.ui.key("next");
+    const it = w.items[w.i], label = typeof it.label === "function" ? it.label() : it.label;
+    out.said = w.i === 1 && SPOKEN.join(" ").indexOf(label.slice(0, 30)) >= 0;
+    out.freed = !S.noteBusy() && !S.noteReading;
+    out.diag = w.i + "/" + SPOKEN.length + "/" + w.items.length;
+    LAB.ui.closeAll(); S.stop(); S._pump = pump;
+    return out;
+  });
+  ok(nk.busy0 && nk.said && nk.freed, "стрелка в окне записки обрывает общее чтение и читает выбранный абзац (" + [nk.busy0, nk.said, nk.freed].join(",") + " " + nk.diag + ")");
 
   console.log("Сейф: код набирает сам игрок");
   const sf = await page.evaluate(async () => {
@@ -672,7 +694,7 @@ function ok(cond, msg) { if (cond) console.log("  ✓ " + msg); else { fails++; 
     const pick = re => { const w = LAB.ui.top(); const k = w ? w.items.findIndex(i => re.test(label(i))) : -1; if (k < 0) return false; w.i = k; LAB.ui.activate(); return true; };
     /* решатель головоломок для проверки: взлом, настройка частот, схема реле, подбор ключа */
     const solve = async () => {
-      for (let k = 0; k < 900; k++) {
+      for (let k = 0; k < 2500; k++) { /* длинные взломы (девять сигналов, семь раундов) занимают до полуминуты */
         const c = LAB.mini._cur();
         if (!c) { if (!LAB.mini.active()) return true; await wait(80); continue; }
         if (c.done) { await wait(80); continue; }
@@ -722,6 +744,8 @@ function ok(cond, msg) { if (cond) console.log("  ✓ " + msg); else { fails++; 
     const cams = C.cams();
     out.nCams = cams.length;
     out.allLoop = cams.length > 0 && cams.every(f => C.camState(f) === "loop");
+    /* тёмный этаж укорачивает обзор камеры на три шага, маскировка слепит её: проверяем при штатном свете */
+    G.event = "norm"; G.eventUntil = G.min + 100000; G.st.cloak = 0; G.st.jam = 0;
     /* камера на петле не видит героя: встаём у неё на линии взгляда */
     const cam = cams[0];
     const fl = g.CUR.fl, T = LAB.T;
@@ -794,7 +818,7 @@ function ok(cond, msg) { if (cond) console.log("  ✓ " + msg); else { fails++; 
   ok(dnet.none || !dnet.spot || (dnet.blindLoop && dnet.loopFound && dnet.seenAgain), "камера на петле героя не видит; петля кончилась — ОКО находит её и снова видит (" + [dnet.blindLoop, dnet.loopFound, dnet.seenAgain].join(", ") + ")");
   ok(dnet.none || !dnet.near || (dnet.inReach && dnet.cutMenu && dnet.cutSolved && dnet.off && dnet.toRepair && dnet.repairPlanned && dnet.kept), "у самой камеры: питание снято, ОКО шлёт ремонтника, состояние помнится на этаже (" + [dnet.inReach, dnet.cutMenu, dnet.cutSolved, dnet.off, dnet.toRepair, dnet.repairPlanned, dnet.kept].join(", ") + ")");
   ok(dnet.none || (dnet.flashTested && dnet.flashMenu && dnet.flashSolved && dnet.ours), "камера перепрошита с терминала: докладывает ОКО «чисто»" + (dnet.flashMenu === false ? " (пункт не найден)" : ""));
-  ok(dnet.none || (dnet.isoItem && dnet.isoMenu && dnet.isoSolved && dnet.isoGone), "изоляция сегмента ОКО: пункт доступен, взлом маршрутизации её снимает");
+  ok(dnet.none || (dnet.isoItem && dnet.isoMenu && dnet.isoSolved && dnet.isoGone), "изоляция сегмента ОКО: пункт доступен, взлом маршрутизации её снимает (" + [dnet.isoItem, dnet.isoMenu, dnet.isoSolved, dnet.isoGone].join(",") + ")");
 
   console.log("Навигатор: без карты — до ближайшей двери, с картой — до лестницы");
   const nav = await page.evaluate(() => {
@@ -2108,6 +2132,7 @@ LAB.ui.closeAll();
       const fl = g.CUR.fl, fs = g.CUR.fs;
       for (const r of fl.rooms) {
         if (setup) break;
+        if (!r) continue; /* в списке комнат бывают пропуски */
         const doors = fl.doors.filter(d => d.room === r.id || d.other === r.id);
         if (!doors.length || doors.some(d => d.lock && d.lock.type === "secret")) continue;
         const keep = doors.map(d => [d.id, fs.doors[d.id]]);
@@ -2559,6 +2584,134 @@ LAB.ui.closeAll();
   ok(rsf.sink, "раковина: умывание — плюс пять здоровья и двенадцать бодрости, токсины ниже (" + rsf.sinkDiag + ")");
   ok(rsf.switch && rsf.took, "кофейный автомат: переключатель «Покупки», «взять с собой» кладёт стакан эспрессо в рюкзак");
   ok(rsf.combo && rsf.comboSaid, "диван и эспрессо: отдых и напиток вместе, в покое напиток действует лучше (" + rsf.comboDiag + ")");
+
+  console.log("Альфа 1.6: записки с кодами, взлом в четыре попытки, отмычки, логические замки, шахматы, инструменты, ловушки жестом, маяки, гул");
+  const v16 = await page.evaluate(async () => {
+    const g = LAB.game, G = g.G, out = {};
+    const wait = ms => new Promise(r => setTimeout(r, ms));
+    const label = i => typeof i.label === "function" ? i.label() : i.label;
+    const labels = () => LAB.ui.top() ? LAB.ui.top().items.map(label) : [];
+    const C = LAB.combat;
+    C.stop(); LAB.ui.closeAll(); if (LAB.mini.active()) LAB.mini.cancel(true);
+    /* записки с кодами: заголовок всегда называет дверь */
+    out.codeTitles = [0, 1, 2, 3].every(n => /Проверочная/.test(LAB.codeNote("4821", "Проверочная", n).t)) && [0, 1].every(n => /Проверочная/.test(LAB.safeNote("1234", "Проверочная", n).t));
+    /* взлом: четыре попытки, ошибка не губит сразу */
+    let hackRes = null;
+    LAB.mini.hack(4, ok => { hackRes = ok; }, { title: "Проверочный взлом", noOko: true });
+    const hc = LAB.mini._cur();
+    out.hackTries = !!hc && hc.tries === 4;
+    await wait(2600);
+    const want = hc.seq[0], wrong = want === "U" ? "D" : "U";
+    hc.busy = false; LAB.mini.gesture({ kind: "swipe", n: 1, dir: wrong });
+    await wait(50);
+    out.hackAlive = LAB.mini.active() && hc.tries === 3 && hackRes === null;
+    LAB.mini.cancel(true); await wait(80);
+    /* отмычки по виду помещения: пункт у двери, предложение при взломе, одна отмычка — одна дверь */
+    let dfl = null;
+    for (let L = 3; L <= 5 && !dfl; L++) for (let F = 1; F <= 20 && !dfl; F++) { if (LAB.getFloor(G.seed, L, F).doors.some(d => d.lock && ["key", "card", "code"].indexOf(d.lock.type) >= 0)) dfl = [L, F]; }
+    g.enterFloor(dfl[0], dfl[1], "down", true); C.foes().forEach(f => { f.dead = true; }); G.dead = false; G.hp = G.hpMax;
+    let fl = g.CUR.fl;
+    const door = fl.doors.find(d => d.lock && ["key", "card", "code"].indexOf(d.lock.type) >= 0 && g.CUR.fs.doors[d.id] !== 1 && g.doorBlock(d));
+    out.hasDoor = !!door;
+    if (door) {
+      const pk = g.pickFor(door);
+      out.pickKind = /^(lockpick|pick_[brg])$/.test(pk);
+      G.inv[pk] = (G.inv[pk] || 0) + 2;
+      g.doorMenu(door, "N");
+      out.pickItem = labels().some(l => /^Открыть отмычкой — (жёлтая|синяя|красная|зелёная)/.test(l));
+      LAB.ui.closeAll();
+      if (door.lock.type === "card" || door.lock.type === "code") { g.hackDoor(door); out.hackOffer = labels().some(l => /^Открыть отмычкой/.test(l)) && labels().some(l => /вручную/.test(l)); LAB.ui.closeAll(); }
+      else out.hackOffer = true;
+      const n0 = G.inv[pk];
+      g.doorMenu(door, "N");
+      const k = LAB.ui.top().items.findIndex(i => /^Открыть отмычкой/.test(label(i)));
+      if (k >= 0) { LAB.ui.top().i = k; LAB.ui.activate(); }
+      out.pickUsed = k >= 0 && (G.inv[pk] || 0) === n0 - 1 && g.doorOpen(door);
+      out.pickDiag = door.lock.type + "/" + pk + "/" + k;
+      LAB.ui.closeAll();
+    }
+    /* логический замок: есть на этажах, у двери — пункт решения, условие открывается окном */
+    let ld = null, lfloor = null;
+    for (let L = 3; L <= 6 && !ld; L++) for (let F = 1; F <= 20 && !ld; F++) { const f2 = LAB.getFloor(G.seed, L, F); const d2 = f2.doors.find(d => d.lock && d.lock.type === "logic"); if (d2) { ld = d2; lfloor = [L, F]; } }
+    out.logicDoor = !!ld && LAB.LOGIC_KINDS.indexOf(ld.lock.kind) >= 0;
+    if (ld) {
+      g.enterFloor(lfloor[0], lfloor[1], "down", true); C.foes().forEach(f => { f.dead = true; }); G.dead = false;
+      ld = g.CUR.fl.doors.find(d => d.id === ld.id);
+      out.logicText = /логический замок/.test(g.lockText(ld)) && /Замок ждёт решения/.test(g.doorBlock(ld));
+      g.doorMenu(ld, "N");
+      out.logicItem = labels().some(l => /^Решить задачу замка: /.test(l));
+      const k2 = LAB.ui.top().items.findIndex(i => /^Решить задачу замка/.test(label(i)));
+      if (k2 >= 0) { LAB.ui.top().i = k2; LAB.ui.activate(); }
+      const w = LAB.ui.top();
+      out.logicCond = !!w && w.note === true && /Карантинный шлюз|Щит автоматики|Пробы|Склад контейнеров|Журнал дежурств|Журнал смены/.test(labels().join(" "));
+      out.logicDiag = (ld.lock.kind || "") + "/" + (w ? w.title : "нет окна");
+      LAB.ui.closeAll(); LAB.Speech.stop();
+    }
+    /* задачи: решение единственное; шахматы — мат в один ход у каждой позиции; на столике — настоящая партия */
+    const P = LAB.puzzles;
+    out.chess = P._chessCheck().every(n => n >= 1);
+    let uniq = true;
+    for (const kind of ["decon", "labels", "shifts"]) for (let s = 1; s <= 10; s++) { P._last = null; P.open(kind, s, () => {}, {}); LAB.ui.closeAll(); if (!P._last || P._last.sol !== 1) uniq = false; }
+    out.uniq = uniq;
+    LAB.Speech.stop();
+    out.chessFx = LAB.FIX.T.chess.a[0][2].mini === "chess";
+    /* инструмент: поле из трёх рядов перехватывает жесты, уход — не провал */
+    let played = -1;
+    LAB.instruments.open("piano", { name: "Пианино" }, n => { played = n; });
+    out.instOn = LAB.mini.active() && LAB.mini.name() === "Пианино";
+    LAB.mini.gesture({ kind: "swipe", n: 1, dir: "R" }); LAB.mini.gesture({ kind: "swipe", n: 1, dir: "U" }); LAB.mini.gesture({ kind: "tap", n: 1 }); LAB.mini.gesture({ kind: "digit", n: 1, d: 5 });
+    LAB.mini.gesture({ kind: "back", n: 1 }); await wait(100);
+    out.instOff = !LAB.mini.active() && played >= 3;
+    out.voice = LAB.instruments.voice("bell", 440, 0.3, 0) === true && LAB.instruments.voice("accordion", 330, 0.5, 0.2) === true;
+    /* ловушка — жест вверх-вниз, мина — вниз-вверх, только с пустыми руками */
+    g.enterFloor(2, 4, "down", true); C.foes().forEach(f => { f.dead = true; }); G.dead = false; G.drawn = false; G.hp = G.hpMax;
+    fl = g.CUR.fl;
+    const free = (x, y) => LAB.inb(x, y) && (fl.t[y * LAB.W + x] === LAB.T.ROOM || fl.t[y * LAB.W + x] === LAB.T.CORR) && !fl.objAt[y * LAB.W + x];
+    const rm = fl.rooms.find(r => r && (r.x1 - r.x0) >= 4 && (r.y1 - r.y0) >= 3);
+    let cell = null; for (let y = rm.y0; y <= rm.y1 && !cell; y++) for (let x = rm.x0; x < rm.x1 - 1 && !cell; x++) if (free(x, y) && free(x + 1, y) && free(x + 2, y)) cell = [x, y];
+    G.x = cell[0]; G.y = cell[1]; g.CUR.room = -9;
+    LAB.traps.list().length = 0;
+    Object.keys(G.inv).forEach(k => { if (/^tr_/.test(k)) delete G.inv[k]; }); /* одна ловушка и одна мина: ставятся сразу, без выбора */
+    G.inv.tr_jaw = 1; G.inv.tr_mine = 1;
+    g.paused = false; SPOKEN.length = 0;
+    LAB.input.dispatch({ kind: "zig", n: 1, dir: "U", dir2: "D" });
+    const t1 = LAB.traps.list().length === 1 && LAB.traps.list()[0].t === "jaw" && !G.inv.tr_jaw;
+    const zigSaid = SPOKEN.slice(-1).join("").slice(0, 60);
+    G.x = cell[0] + 1;
+    LAB.input.dispatch({ kind: "zig", n: 1, dir: "D", dir2: "U" });
+    const t2 = LAB.traps.list().length === 2 && LAB.traps.list()[1].t === "mine" && !G.inv.tr_mine;
+    out.zig = t1 && t2; out.zigDiag = LAB.traps.list().map(tp => tp.t + ":" + tp.st).join(",") + " " + zigSaid;
+    out.mineFlag = LAB.traps.isMine("mine") && LAB.traps.isMine("claymore") && !LAB.traps.isMine("jaw");
+    G.inv.tr_jaw = 1; G.drawn = true; G.x = cell[0] + 2;
+    LAB.input.dispatch({ kind: "zig", n: 1, dir: "U", dir2: "D" });
+    out.zigArmed = LAB.traps.list().length === 2 && G.inv.tr_jaw === 1;
+    G.drawn = false; delete G.inv.tr_jaw;
+    LAB.ui.closeAll();
+    /* маяки: у известной ловушки — свой источник; после скана у врага — метка и источник, который движется с ним */
+    /* герой на третьей клетке, капкан и мина — на первых двух; враг — рядом, не на клетке героя (на нулевом расстоянии маяк не звучит) */
+    const f0 = C.foes()[0];
+    if (f0) { f0.dead = false; f0.hp = f0.maxhp; f0.x = cell[0] + 2; f0.y = cell[1] + 1; f0.state = "idle"; }
+    C.useImplantFree("scan");
+    out.mark = !!f0 && f0.mark > Date.now();
+    await wait(600);
+    const srcs = LAB.atmos._sources();
+    out.trapBeacon = srcs.some(s => s.trap === "jaw") && srcs.some(s => s.trap === "mine");
+    out.foeBeacon = !f0 || srcs.some(s => s.key === "f" + f0.id && s.x === f0.x && s.y === f0.y);
+    if (f0) { f0.x = cell[0] + 1; f0.y = cell[1] + 1; await wait(500); out.foeMoves = LAB.atmos._sources().some(s => s.key === "f" + f0.id && s.x === cell[0] + 1 && s.y === cell[1] + 1); f0.dead = true; } else out.foeMoves = true;
+    out.beaconDiag = [out.mark, out.trapBeacon, out.foeBeacon, out.foeMoves].join(",") + " " + srcs.map(s => s.key + (s.trap ? ":" + s.trap : "") + (s.foe ? ":" + s.foe : "")).join(" ");
+    out.hum = LAB.atmos._hum() || !LAB.AE.ctx;
+    LAB.traps.list().length = 0;
+    return out;
+  });
+  ok(v16.codeTitles, "записки с кодами и кодами сейфов подписаны: в заголовке — какая дверь");
+  ok(v16.hackTries && v16.hackAlive, "взлом: четыре попытки, ошибка не губит сразу — сигналы заново");
+  ok(v16.hasDoor && v16.pickKind && v16.pickItem && v16.hackOffer && v16.pickUsed, "отмычка под цвет помещения: пункт у двери, предложение при взломе, дверь открыта, отмычек меньше (" + v16.pickDiag + ")");
+  ok(v16.logicDoor && v16.logicText && v16.logicItem && v16.logicCond, "логический замок: есть на этажах, пункт решения, условие окном (" + v16.logicDiag + ")");
+  ok(v16.chess && v16.uniq && v16.chessFx, "задачи с единственным решением, у шахматных позиций есть мат в один ход, на столике — настоящая партия");
+  ok(v16.instOn && v16.instOff && v16.voice, "инструмент: поле из трёх рядов перехватывает жесты, ноты звучат, уход — не провал");
+  ok(v16.zig && v16.mineFlag && v16.zigArmed, "ловушка — жест вверх-вниз, мина — вниз-вверх с пустыми руками; с оружием — смена оружия (" + v16.zigDiag + ")");
+  ok(v16.mark && v16.trapBeacon && v16.foeBeacon && v16.foeMoves, "маяки: у ловушки и мины свои, скан вешает маяк на врага, и он движется с ним (" + v16.beaconDiag + ")");
+  ok(v16.hum, "фон лаборатории: низкий гул машин и электричества звучит");
 
   console.log("Обход этажей одного зерна: вход, такты, осмотр");
   const tour = await page.evaluate(() => {

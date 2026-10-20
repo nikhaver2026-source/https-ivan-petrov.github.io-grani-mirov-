@@ -173,17 +173,57 @@ function beaconTick() {
     if (d === 0 || d > 10) return;
     src.push({ key: "n" + n.id, id: n.robot ? "bcn_robot_npc" : "bcn_survivor", x: n.x, y: n.y, d: d, max: 10 });
   });
+  /* (1.6) известные ловушки и мины: у каждого вида свой маяк, чтобы не напороться */
+  if (LAB.traps && LAB.traps.list) LAB.traps.list().forEach(function (tp) {
+    if (!tp.known || tp.st === "gone" || tp.st === "sprung") return;
+    var d = Math.abs(tp.x - g.x) + Math.abs(tp.y - g.y);
+    if (d === 0 || d > 7) return;
+    src.push({ key: "t" + tp.id, id: "bcn_trap", x: tp.x, y: tp.y, d: d, max: 7, trap: tp.t });
+  });
+  /* (1.6) враги под маяком после скана: маяк ползёт вместе с ними */
+  if (LAB.combat && LAB.combat.foes) LAB.combat.foes().forEach(function (f) {
+    if (f.dead || !(f.mark > now)) return;
+    var d = Math.abs(f.x - g.x) + Math.abs(f.y - g.y);
+    if (d === 0 || d > 14) return;
+    src.push({ key: "f" + f.id, id: f.kind === "mech" ? "bcn_foe_mech" : "bcn_foe_bio", x: f.x, y: f.y, d: d, max: 14, foe: f.kind });
+  });
   src.sort(function (a, b) { return a.d - b.d; });
-  src.slice(0, 6).forEach(function (s) {
+  lastSources = src;
+  src.slice(0, 8).forEach(function (s) {
     if (nextPing[s.key] && nextPing[s.key] > now) return;
     var k = s.d / s.max;
-    var gap = 700 + k * 2600 + (s.obj ? 600 : 0);
+    var gap = (s.foe ? 500 + k * 900 : 700 + k * 2600) + (s.obj ? 600 : 0);
     nextPing[s.key] = now + gap * (0.9 + Math.random() * 0.2);
+    if (s.trap) { at("bcn_trap", s.x, s.y, { bus: "beacon", gain: (jam ? 0.5 : 1) * (1.1 - k * 0.5), reverb: 0.1, fb: trapBeacon(s.trap) }); return; }
+    if (s.foe) { at(s.id, s.x, s.y, { bus: "beacon", gain: 1.1 - k * 0.45, reverb: 0.15, fb: s.foe === "mech" ? FOE_BCN.mech : FOE_BCN.bio }); return; }
     var bid = s.id, brate = 1;
     if (!has(bid) && OBJ_BEACON_FB[bid]) { brate = OBJ_BEACON_FB[bid][1]; bid = OBJ_BEACON_FB[bid][0]; }
     at(has(bid) ? bid : "bcn_default", s.x, s.y, { bus: "beacon", gain: (jam ? 0.35 : 1) * (1.1 - k * 0.55), lp: jam ? 1200 : null, reverb: 0.12, rate: brate });
   });
 }
+var lastSources = [];
+/* Маяк ловушки: высота — своя у каждого вида, рисунок — по устройству:
+   мина — двойной писк, растяжка — три щелчка вверх, датчик приближения —
+   гудок, прочие — металлический тик. */
+var TRAP_PITCH = {};
+function trapPitch(k) {
+  if (TRAP_PITCH[k]) return TRAP_PITCH[k];
+  var keys = Object.keys(LAB.traps.T), i = Math.max(0, keys.indexOf(k));
+  var f = 440 * Math.pow(2, (i % 14) / 7 + Math.floor(i / 14) * 0.5);
+  TRAP_PITCH[k] = f;
+  return f;
+}
+function trapBeacon(k) {
+  var d = (LAB.traps && LAB.traps.T[k]) || {}, f = trapPitch(k);
+  if (d.mine) return function (s) { s.note(f, 0, 0.05, "square", 0.045); s.note(f, 0.1, 0.05, "square", 0.045); };
+  if (d.trig === "wire") return function (s) { s.note(f, 0, 0.03, "triangle", 0.05); s.note(f * 1.5, 0.06, 0.03, "triangle", 0.04); s.note(f * 2, 0.12, 0.03, "triangle", 0.035); };
+  if (d.trig === "prox" || d.trig === "lure") return function (s) { s.note(f, 0, 0.14, "sine", 0.045); };
+  return function (s) { s.tink(f); };
+}
+var FOE_BCN = {
+  mech: function (s) { s.note(1400, 0, 0.04, "square", 0.05); s.note(2100, 0.06, 0.05, "square", 0.045); },
+  bio: function (s) { s.note(190, 0, 0.1, "sawtooth", 0.05); s.note(150, 0.09, 0.12, "sawtooth", 0.045); }
+};
 
 /* ════════ ФОН: уровень, помещения, события ════════ */
 var bed = null, roomLoop = null, roomLoopId = "", roomLid = "", corrLoop = null, evTimer = null, evLayer = null, evLayerId = "", hbLoop = null, tension = null, worldOn = false;
@@ -258,10 +298,12 @@ function enterFloor(L, F) {
     var oldBed = bed && bed.id;
     if (bed && bed.h) bed.h.stop(2.5);
     var bid = lev.amb;
-    bed = { L: L, id: bid, h: loop(bid, { bus: "amb", gain: 0.9, fadeIn: 3, reverb: 0 }, "bed") };
+    /* (1.6) основа фона — низкий гул машин и электричества (синтез); запись уровня — лишь тихий оттенок */
+    bed = { L: L, id: bid, h: loop(bid, { bus: "amb", gain: 0.28, fadeIn: 3, reverb: 0 }, "bed") };
     if (oldBed && oldBed !== bid) releaseLater(oldBed, 3500);
     if (!bed.h) synthBed(L);
   }
+  startHum(L);
   if (!beaconT) beaconT = setInterval(function () { LAB.safe(beaconTick); if (++deadN % 20 === 0) LAB.safe(deadLoops); }, 220);
   if (!evTimer) scheduleEvent();
   var Ld = depthL(L);
@@ -293,6 +335,38 @@ function synthBed(L) {
   s.lfo(0.07, 60, f.frequency);
   synthBedS = s;
 }
+/* ── Гул лаборатории (1.6): низкий гул машин, сетевое электричество с
+   гармониками, трансформаторный зуд, редкие щелчки реле и разряды. Ниже и
+   гуще с глубиной. Это и есть атмосферный фон; записи уровня — оттенок. ── */
+var hum = null;
+function startHum(L) {
+  if (hum && hum.L === L) return;
+  stopHum(1.5);
+  if (!AE.ensure()) return;
+  var s = new LAB.SFX(AE.amb), Ld = depthL(L), c = s.ctx, t = c.currentTime;
+  try {
+    /* гул машин: коричневый шум через низкий фильтр, медленно дышит */
+    var n = s.noise("brown", 4, true), f = s.filter("lowpass", 115 - Ld * 4, 0.8), gN = s.gain(0.0001);
+    n.connect(f); f.connect(gN); gN.connect(s.out()); n.start();
+    gN.gain.setTargetAtTime(0.4, t, 2.5);
+    s.lfo(0.05, 22, f.frequency);
+    /* электричество: сетевой гул и гармоники, каждая дышит по-своему */
+    var base = 50 - Math.min(8, Ld * 0.8);
+    [[1, 0.07, "sine"], [2, 0.034, "triangle"], [3, 0.017, "triangle"], [4, 0.008, "sine"]].forEach(function (h) {
+      var o = s.osc(h[2], base * h[0]), go = s.gain(0.0001); o.connect(go); go.connect(s.out()); o.start();
+      go.gain.setTargetAtTime(h[1], t, 3);
+      s.lfo(0.09 + h[0] * 0.035, h[1] * 0.35, go.gain);
+    });
+    /* трансформаторный зуд: пила через узкую полосу */
+    var sw = s.osc("sawtooth", base * 2), bp = s.filter("bandpass", base * 6, 7), gs = s.gain(0.0001);
+    sw.connect(bp); bp.connect(gs); gs.connect(s.out()); sw.start();
+    gs.gain.setTargetAtTime(0.02, t, 4);
+    /* реле и разряды — изредка */
+    s.every(6000, 16000, function () { if (Math.random() < 0.55) s.tink(700 + Math.random() * 600); else s.crackle(); });
+  } catch (e) { s.stop(0); return; }
+  hum = { L: L, s: s };
+}
+function stopHum(fade) { if (hum) { try { hum.s.stop(fade == null ? 1.5 : fade); } catch (e) { /* */ } hum = null; } }
 function setRoom(r) {
   var id = r ? (ROOM_LOOP[r.type] || "") : "corridor";
   if (id === roomLoopId) return;
@@ -339,6 +413,7 @@ function eventLayer(id) {
 }
 function stopWorld() {
   worldOn = false;
+  stopHum(1.5);
   var bedId = bed && bed.id;
   if (bed && bed.h) bed.h.stop(1.5);
   bed = null;
@@ -435,10 +510,23 @@ function foeStep(f) {
   atFoe(id, f.x, f.y, { gain: f.boss ? 1 : 0.65, rate: ((f.base && f.base.sndRate) || 1) * (f.boss ? 0.8 : 1) });
 }
 function foeHit(f, dt, dmg, crit) { atFoe(f.kind === "mech" ? "hit_metal" : "hit_flesh", f.x, f.y, { gain: crit ? 1.2 : 0.9 }); if (Math.random() < 0.5) foeSound(f, "hurt"); }
+/* Гибель врага (1.6: ярче и слоистее): крик или треск самой машины, затем
+   у роботов — взрыв, разряд и осыпающиеся обломки, у тварей — удар тела
+   об пол и хрип; босс — тяжёлый взрыв. */
 function foeDeath(f) {
-  var id = foeSet(f) + "_death";
-  atFoe(has(id) ? id : (f.kind === "mech" ? "robot_death" : "mutant_death"), f.x, f.y, { gain: 1.1, rate: ((f.base && f.base.sndRate) || 1) * (f.boss ? 0.8 : 1) });
-  if (f.kind === "mech") atFoe("debris", f.x, f.y, { gain: 0.7, delay: 0.25 });
+  var id = foeSet(f) + "_death", mech = f.kind === "mech";
+  atFoe(has(id) ? id : (mech ? "robot_death" : "mutant_death"), f.x, f.y, { gain: 1.4, rate: ((f.base && f.base.sndRate) || 1) * (f.boss ? 0.8 : 1) });
+  if (mech) {
+    atFoe("explosion_small", f.x, f.y, { gain: 0.95, delay: 0.1 });
+    atFoe("ev_electric", f.x, f.y, { gain: 0.7, delay: 0.32, fb: function (s) { s.zap(); } });
+    atFoe("debris", f.x, f.y, { gain: 0.9, delay: 0.5 });
+    atFoe("debris", f.x, f.y, { gain: 0.5, delay: 0.95, rate: 1.2 });
+  } else {
+    atFoe("hit_flesh", f.x, f.y, { gain: 0.9, delay: 0.3 });
+    atFoe("bump_body", f.x, f.y, { gain: 0.8, delay: 0.55, rate: 0.8 });
+    atFoe("mutant_death", f.x, f.y, { gain: 0.35, delay: 0.7, rate: 0.6, fb: function (s) { s.growl(); } });
+  }
+  if (f.boss) atFoe("explosion_big", f.x, f.y, { gain: 1, delay: mech ? 0.6 : 0.9 });
   sub((f.name || "").split(",")[0] + " — повержен");
 }
 function foeMiss(f, ranged) { play(ranged ? "bullet_by" : "swing_by", { ch: "foe", gain: 0.8, pan: (f.x - G().x) > 0 ? 0.5 : (f.x - G().x) < 0 ? -0.5 : 0 }); }
@@ -679,6 +767,7 @@ var FB = {
 Snd.onRebuild(function () {
   var g = G();
   if (synthBedS) { synthBedS = null; if (worldOn && g) synthBed(g.L); }
+  if (hum) { hum = null; if (worldOn && g) startHum(g.L); }
   if (tension) { try { if (tension.s && tension.s.stop) tension.s.stop(0); } catch (e) { /* */ } tension = null; startTension(); }
   if (mus.s) { var th = mus.theme; try { if (mus.s.stop) mus.s.stop(0); } catch (e) { /* */ } mus.s = null; mus.key = ""; mus.timers.forEach(function (t) { clearInterval(t); clearTimeout(t); }); mus.timers = []; if (th) music(th); }
 });
@@ -686,6 +775,7 @@ Snd.onRebuild(function () {
 LAB.atmos = {
   _chOf: function (id, o) { return chOf(id, o || {}); },
   play: play, at: at, has: has,
+  _hum: function () { return !!hum; }, _sources: function () { return lastSources; },
   enterFloor: enterFloor, setRoom: setRoom, setEvent: setEvent, stopWorld: stopWorld,
   step: step, bump: bump, bumpWall: bumpWall, bumpSoft: bumpSoft, near: near, doorOpen: doorOpen, doorClose: doorClose, doorPass: doorPass, objUse: objUse,
   container: container, stairs: stairs, stairEnter: stairEnter, stairStep: stairStep, bumpRail: bumpRail, gate: gate, gateSeal: gateSeal, elevRide: elevRide, rest: rest, death: death, npcHello: npcHello,

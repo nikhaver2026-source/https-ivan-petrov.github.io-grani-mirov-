@@ -60,6 +60,9 @@ function Rng(seed, tag) {
   return r;
 }
 LAB.Rng = Rng;
+/* логические замки (1.6): виды задач — в puzzles.js */
+var LOGIC_KINDS = ["breaker", "decon", "labels", "dosim", "shifts", "tally"];
+LAB.LOGIC_KINDS = LOGIC_KINDS;
 LAB.hash32 = hash32;
 
 /* ── ячейки сетки ── */
@@ -307,8 +310,8 @@ function genFloor(seed, L, F, attempt) {
   while (want > 0 && (onPath.length || offPath.length)) {
     var c = (onPath.length && (r.chance(0.6) || !offPath.length)) ? onPath.shift() : offPath.shift();
     var wts = L === 1 ? { card: 35, key: 30, code: 25, lockdown: 10 }
-      : L === 2 ? { card: 30, key: 25, code: 25, lockdown: 10, power: 10, riddle: 8 }
-      : { card: 25, key: 20, code: 20, lockdown: 10, power: 15, rubble: 10, riddle: 9, circuit: 10 };
+      : L === 2 ? { card: 30, key: 25, code: 25, lockdown: 10, power: 10, riddle: 8, logic: 7 }
+      : { card: 25, key: 20, code: 20, lockdown: 10, power: 15, rubble: 10, riddle: 9, circuit: 10, logic: 10 };
     if (L >= 4) wts.melody = 9;
     if (usedPower) delete wts.power;
     if (usedRubble) delete wts.rubble;
@@ -658,6 +661,10 @@ function genFloor(seed, L, F, attempt) {
       door2.lock.melody = mel.join("");
       var radio = addObj("radio", pickSpot(), { melodyFor: door2.id, melody: door2.lock.melody, melodyRoom: roomName });
       if (!radio) { door2.lock = { type: "circuit", n: 5, seed: r.int(1, 99999) }; }
+    } else if (lock.type === "logic") {
+      /* логический замок: задача из жизни комплекса, своя у каждой двери */
+      door2.lock.kind = r.pick(LOGIC_KINDS);
+      door2.lock.seed = r.int(1, 99999);
     } else if (lock.type === "gate") {
       /* шлюзовая ключ-карта: у стража в зале перед шлюзом или спрятана на этаже */
       door2.lock.pass = "gate" + L;
@@ -718,7 +725,7 @@ function genFloor(seed, L, F, attempt) {
       if (ot === "locker") extra2 = { locked: r.chance(0.25) };
       if (ot === "pc") extra2 = { own: r.int(0, 99999), locked: r.chance(0.18) };
       if (ot === "coffee" || ot === "drinks") extra2 = { broken: r.chance(0.12) };
-      if (ot === "puzzle") extra2 = { kind: r.pick(["sort", "relays", "bulls", "riddle"]), seed: r.int(1, 99999) };
+      if (ot === "puzzle") extra2 = { kind: r.pick(["sort", "relays", "bulls", "riddle"].concat(LOGIC_KINDS, ["chess"])), seed: r.int(1, 99999) };
       if (ot === "radio") extra2 = { band: r.int(0, 999) };
       var o2 = addObj(ot, s, extra2);
       if (o2 && (ot === "crate" || ot === "locker" || ot === "safe" || ot === "desk" || ot === "corpse")) o2.loot = genLoot(r, L, F, ot, def.loot);
@@ -1002,7 +1009,7 @@ function genFloor(seed, L, F, attempt) {
   if (!fl.objs.some(function (o) { return o.type === "terminal" && (o.sub === "sec" || o.sub === "sci"); }) && r.chance(0.55)) addSvc("terminal", { sub: "sci" });
   /* говорящая панель ОКО, стенд с головоломкой, радиоприёмник */
   if (L >= 2 && !hasObj("okoterm") && r.chance(0.3)) addSvc("okoterm", { seed: r.int(1, 99999) });
-  if (!hasObj("puzzle") && r.chance(0.28)) { var pz = addSvc("puzzle", { kind: r.pick(["sort", "relays", "bulls", "riddle"]), seed: r.int(1, 99999) }); if (pz) pz.loot = genLoot(r, L, F, "safe", "tech"); }
+  if (!hasObj("puzzle") && r.chance(0.28)) { var pz = addSvc("puzzle", { kind: r.pick(["sort", "relays", "bulls", "riddle"].concat(LOGIC_KINDS, ["chess"])), seed: r.int(1, 99999) }); if (pz) pz.loot = genLoot(r, L, F, "safe", "tech"); }
   if (!hasObj("radio") && r.chance(0.25)) addSvc("radio", { band: r.int(0, 999) });
 
   /* 17б. Автомат с едой — чаще в столовой, на кухне, в комнате отдыха;
@@ -1372,7 +1379,7 @@ LAB.solve = function (fl, have) {
     if (lk.type === "rubble") return rubble;
     if (lk.type === "lockdown") return lockdown;
     if (lk.type === "gate") return gatepass;
-    if (lk.type === "riddle" || lk.type === "circuit") return true;
+    if (lk.type === "riddle" || lk.type === "circuit" || lk.type === "logic") return true;
     if (lk.type === "melody") return !!melodies[d.id];
     return false;
   }

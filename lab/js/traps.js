@@ -73,7 +73,7 @@ var T = {
     pd: 0.18, adt: "shock", ph: 2, need: { cap: 2, wire: 2, scrap: 1 }, cls: "base",
     d: "Резиновый коврик с медной сеткой и конденсаторами: наступивший получает разряд. Роботов замыкает и останавливает на несколько секунд, тварей бьёт и замедляет. Заряда хватает на четыре разряда.",
     hit: "Разряд от пола бьёт в ноги!" },
-  mine: { n: "противопехотная мина", g: "f", depth: 2, price: 60, trig: "step", who: "walk", dmg: 70, dt: "kinetic", r: 1, noarmor: true, boom: true, uses: 1, loud: 12, stealth: 0.6, cue: "beep", snd: "boom",
+  mine: { n: "противопехотная мина", g: "f", depth: 2, mine: true, price: 60, trig: "step", who: "walk", dmg: 70, dt: "kinetic", r: 1, noarmor: true, boom: true, uses: 1, loud: 12, stealth: 0.6, cue: "beep", snd: "boom",
     pd: 0.45, need: { reagent: 2, cap: 1, scrap: 2, chip: 1 }, cls: "spec",
     d: "Самодельная мина в стальном корпусе: прикрытая мусором у пола, взрывается под ногой и задевает всех в шаге вокруг. Громкая — на шум сбегутся.",
     hit: "Под ногой щёлкнуло — мина!" },
@@ -81,7 +81,7 @@ var T = {
     ph: 6, need: { wire: 3, scrap: 1, servo: 1 }, cls: "spec", minL: 2,
     d: "Сеть из стального троса на пружинном выбросе: кто наступит — того накрывает и спутывает. Выбрасывается вверх, поэтому ловит и дронов.",
     hit: "Сеть накрыла вас с головой!" },
-  emp: { n: "ЭМИ-мина", g: "f", depth: 2, price: 85, trig: "prox", pr: 1, who: "metal", dmg: 60, dt: "emp", r: 2, emp: true, stun: 8, noarmor: true, uses: 1, loud: 6, stealth: 0.2, cue: "beep", snd: "emp",
+  emp: { n: "ЭМИ-мина", g: "f", depth: 2, mine: true, price: 85, trig: "prox", pr: 1, who: "metal", dmg: 60, dt: "emp", r: 2, emp: true, stun: 8, noarmor: true, uses: 1, loud: 6, stealth: 0.2, cue: "beep", snd: "emp",
     pd: 0.05, adt: "shock", pemp: true, need: { emp: 1, chip: 1, magnet: 1 }, cls: "spec",
     d: "ЭМИ-граната в корпусе с магнитным датчиком: срабатывает, когда рядом металл и ток, — робот, дрон или вы с оружием. Импульс снимает щиты, бьёт по электронике и останавливает машины. Живых почти не трогает, но импланты рядом гасит.",
     hit: "ЭМИ-мина среагировала на ваше оружие: импланты гаснут!" },
@@ -100,11 +100,11 @@ var T = {
     ph: 3, need: { magnet: 3, cell: 1, wire: 1 }, cls: "spec", minL: 3,
     d: "Плита-электромагнит на аккумуляторе: когда рядом металл, она включается и притягивает робота намертво. Тварей не держит. Вас с оружием тоже прихватит — ненадолго. Аккумулятора хватает на три раза.",
     hit: "Магнитная плита притянула ваше оружие — и вас вместе с ним!" },
-  remote: { n: "заряд на радиосигнале", g: "m", depth: 3, price: 90, trig: "remote", who: "all", dmg: 85, dt: "kinetic", r: 2, noarmor: true, boom: true, uses: 1, loud: 12, stealth: 0.7, cue: "beep", snd: "boom_big",
+  remote: { n: "заряд на радиосигнале", g: "m", depth: 3, mine: true, price: 90, trig: "remote", who: "all", dmg: 85, dt: "kinetic", r: 2, noarmor: true, boom: true, uses: 1, loud: 12, stealth: 0.7, cue: "beep", snd: "boom_big",
     pd: 0.5, need: { reagent: 3, chip: 1, cell: 1, scrap: 2 }, cls: "spec", bp: true, minL: 3,
     d: "Заряд с радиодетонатором: молчит, пока вы не подорвёте его сами — из окна «Ловушки и мины», откуда угодно на этаже. Бьёт на два шага вокруг. Не стойте рядом.",
     hit: "Заряд рванул совсем рядом с вами!" },
-  claymore: { n: "направленная мина", g: "f", depth: 4, price: 95, trig: "cone", who: "walk", dmg: 90, dt: "kinetic", noarmor: true, boom: true, uses: 1, loud: 12, stealth: 0.4, cue: "beep", snd: "boom_big",
+  claymore: { n: "направленная мина", g: "f", depth: 4, mine: true, price: 95, trig: "cone", who: "walk", dmg: 90, dt: "kinetic", noarmor: true, boom: true, uses: 1, loud: 12, stealth: 0.4, cue: "beep", snd: "boom_big",
     pd: 0.55, need: { reagent: 3, scrap: 4, chip: 1, cap: 1 }, cls: "spec", bp: true, minL: 4,
     d: "Направленная мина: смотрит туда же, куда смотрели вы, когда ставили, и бьёт веером на три шага вперёд. Сзади неё безопасно. Срабатывает, как только кто-то войдёт в веер, — и вы тоже.",
     hit: "Вы вошли в веер направленной мины!" },
@@ -121,7 +121,7 @@ var T = {
     pd: 0.25, ph: 10, need: { g_hydrocyl: 1, scrap: 3, wire: 1 }, cls: "spec", minL: 11,
     d: "Капкан буровиков «Глубины» из старого гидроцилиндра: челюсти смыкаются с силой пресса. Держит даже тяжёлые машины, бьёт сильно, взводится снова.",
     hit: "Гидравлические челюсти сомкнулись на ноге!" },
-  drill: { n: "буровой заряд", g: "m", depth: 12, price: 220, trig: "remote", who: "all", dmg: 160, dt: "kinetic", r: 2, noarmor: true, boom: true, uses: 1, loud: 14, stealth: 0.7, cue: "beep", snd: "boom_big",
+  drill: { n: "буровой заряд", g: "m", depth: 12, mine: true, price: 220, trig: "remote", who: "all", dmg: 160, dt: "kinetic", r: 2, noarmor: true, boom: true, uses: 1, loud: 14, stealth: 0.7, cue: "beep", snd: "boom_big",
     pd: 0.6, need: { g_tube: 1, reagent: 3, cell: 1 }, cls: "spec", bp: true, minL: 12,
     d: "Заряд экспедиции с радиолампой-детонатором: им когда-то дробили породу. Подрывается по вашему сигналу и бьёт на два шага вокруг так, что гудит весь этаж.",
     hit: "Буровой заряд рванул рядом с вами!" },
@@ -156,7 +156,7 @@ var T = {
     pd: 0.12, ph: 4, pb: 6, need: { m_gear: 3, scrap: 2 }, cls: "spec", minL: 61,
     d: "Стопор из шестерён города машин: надолго заклинивает колёса и ноги роботов, а тварям рвёт лапы. Взводится снова.",
     hit: "Шестерни прихватили ногу!" },
-  logic: { n: "логическая мина", g: "f", depth: 62, price: 340, trig: "step", who: "mech", ally: 30, uses: 1, loud: 2, stealth: 0.9, cue: "beep", snd: "robot_hello",
+  logic: { n: "логическая мина", g: "f", depth: 62, mine: true, price: 340, trig: "step", who: "mech", ally: 30, uses: 1, loud: 2, stealth: 0.9, cue: "beep", snd: "robot_hello",
     need: { m_relay: 2, m_okochip: 1, chip: 1 }, cls: "exp", bp: true, minL: 62,
     d: "Реле с противоречивым приказом и чипом ОКО, похожее на сервисный люк: наступивший робот получает новую прошивку и пятнадцать секунд бьёт своих. Стража уровня не перепрошить — только оглушить. На живых не реагирует." },
   /* ── Исток: корни и время ── */
@@ -653,6 +653,19 @@ function place(k, where) {
   return true;
 }
 /* Забрать свою ловушку: целую — вещью, изношенную — на детали. */
+/* Быстрая установка жестом (1.6): вверх-вниз — ловушка, вниз-вверх — мина, под ноги, с пустыми руками.
+   Одна подходящая вещь в рюкзаке — ставится сразу, несколько — короткий выбор. */
+function quick(kind) {
+  var g = G(), want = kind === "mine";
+  var have = Object.keys(T).filter(function (k) { return !!T[k].mine === want && g.inv[itemOf(k)] > 0; });
+  if (!have.length) { LAB.UI.error(); say(want ? "Мин в рюкзаке нет: их продают пункты снабжения и собирают у верстака." : "Ловушек в рюкзаке нет: их продают пункты снабжения и собирают у верстака."); return false; }
+  if (have.length === 1) return place(have[0], "here");
+  UIx("menu", want ? "Поставить мину под ноги" : "Поставить ловушку под ноги", have.map(function (k) {
+    return { label: cap1(T[k].n) + " (" + g.inv[itemOf(k)] + ")", fn: function () { place(k, "here"); } };
+  }));
+  return true;
+}
+function isMine(k) { return !!(T[k] && T[k].mine); }
 function pickUp(tp) {
   var d = D(tp), g = G();
   if (!tp.own) return;
@@ -891,6 +904,7 @@ function enterFloor() {
 }
 
 LAB.traps = {
+  quick: quick, isMine: isMine,
   menu: menu, place: place, pickUp: pickUp, detonate: detonate, disarm: disarm, rearm: rearm,
   foeStep: foeStep, playerStep: playerStep, tick: tick, avoid: avoid, knownAt: knownAt,
   adjacent: adjacent, targetName: targetName, trapMenu: trapMenu, lookList: lookList, scanText: scanText,
