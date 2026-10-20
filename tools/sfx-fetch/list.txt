@@ -448,15 +448,45 @@
 # (Wholesome — CC BY 4.0), PeriTune — CC BY 4.0, «Clair de lune» в
 # исполнении Laurens Goedhart — CC BY 3.0, «Gymnopédie No. 1» в
 # исполнении Robin Alciatore (Musopen) — общественное достояние.
-lab_cap_clair https://upload.wikimedia.org/wikipedia/commons/b/be/Clair_de_lune_%28Claude_Debussy%29_Suite_bergamasque.ogg
-lab_cap_gymno https://upload.wikimedia.org/wikipedia/commons/9/90/Erik_Satie_-_gymnopedies_-_la_1_ere._lent_et_douloureux.ogg
-lab_cap_remin https://upload.wikimedia.org/wikipedia/commons/3/3d/Reminiscing_%28ISRC_USUAN1100097%29.mp3
-lab_cap_medit https://upload.wikimedia.org/wikipedia/commons/0/09/Meditation_Impromptu_02_%28ISRC_USUAN1100162%29.mp3
-lab_cap_guitar https://peritune.com/music/PerituneMaterial_Guitar_Gentle_an.mp3
-lab_cap_canon https://upload.wikimedia.org/wikipedia/commons/c/c6/Canon_in_D_Major_%28ISRC_USUAN1100301%29.mp3
-lab_cap_musicbox https://peritune.com/wp-content/uploads/2017/09/PerituneMaterial_Music-box_Gentle2.mp3
-lab_cap_silver https://upload.wikimedia.org/wikipedia/commons/c/c2/Silver_Blue_Light_%28ISRC_USUAN1100718%29.mp3
-lab_cap_wholesome https://upload.wikimedia.org/wikipedia/commons/f/f2/Wholesome_by_Kevin_MacLeod.ogg
-lab_cap_teddy https://upload.wikimedia.org/wikipedia/commons/e/e5/Teddy_Bear_Waltz_%28ISRC_USUAN1700064%29.mp3
-lab_cap_dreamer https://upload.wikimedia.org/wikipedia/commons/d/d5/Dreamer_%28ISRC_USUAN1600043%29.mp3
-lab_cap_avec https://upload.wikimedia.org/wikipedia/commons/2/26/Avec_Soin_%28ISRC_USUAN1100860%29.mp3
+# (заход F скачан) lab_cap_clair https://upload.wikimedia.org/wikipedia/commons/b/be/Clair_de_lune_%28Claude_Debussy%29_Suite_bergamasque.ogg
+# (заход F скачан) lab_cap_gymno https://upload.wikimedia.org/wikipedia/commons/9/90/Erik_Satie_-_gymnopedies_-_la_1_ere._lent_et_douloureux.ogg
+# (заход F скачан) lab_cap_remin https://upload.wikimedia.org/wikipedia/commons/3/3d/Reminiscing_%28ISRC_USUAN1100097%29.mp3
+# (заход F скачан) lab_cap_medit https://upload.wikimedia.org/wikipedia/commons/0/09/Meditation_Impromptu_02_%28ISRC_USUAN1100162%29.mp3
+# (заход F скачан) lab_cap_guitar https://peritune.com/music/PerituneMaterial_Guitar_Gentle_an.mp3
+# (заход F скачан) lab_cap_canon https://upload.wikimedia.org/wikipedia/commons/c/c6/Canon_in_D_Major_%28ISRC_USUAN1100301%29.mp3
+# (заход F скачан) lab_cap_musicbox https://peritune.com/wp-content/uploads/2017/09/PerituneMaterial_Music-box_Gentle2.mp3
+# (заход F скачан) lab_cap_silver https://upload.wikimedia.org/wikipedia/commons/c/c2/Silver_Blue_Light_%28ISRC_USUAN1100718%29.mp3
+# (заход F скачан) lab_cap_wholesome https://upload.wikimedia.org/wikipedia/commons/f/f2/Wholesome_by_Kevin_MacLeod.ogg
+# (заход F скачан) lab_cap_teddy https://upload.wikimedia.org/wikipedia/commons/e/e5/Teddy_Bear_Waltz_%28ISRC_USUAN1700064%29.mp3
+# (заход F скачан) lab_cap_dreamer https://upload.wikimedia.org/wikipedia/commons/d/d5/Dreamer_%28ISRC_USUAN1600043%29.mp3
+# (заход F скачан) lab_cap_avec https://upload.wikimedia.org/wikipedia/commons/2/26/Avec_Soin_%28ISRC_USUAN1100860%29.mp3
+# «Подземная лаборатория», заход 6 (1.7): новый фон — низкий гул машин.
+# Только CC0 (Freesound, отбор поиска сайта: машинные залы, серверные,
+# электрощитовые, вентиляция подвалов, машинные отделения судов). Берётся
+# предпросмотр высокого качества (OGG). Авторы и названия — в fs_lab.tsv.
+lab_fsH https://cdn.freesound.org/previews/353/353159_2247456-hq.ogg
+lab_fsH https://cdn.freesound.org/previews/474/474832_1481531-hq.ogg
+lab_fsH https://cdn.freesound.org/previews/349/349689_2205380-hq.ogg
+lab_fsH https://cdn.freesound.org/previews/536/536529_5546157-hq.ogg
+lab_fsH https://cdn.freesound.org/previews/536/536525_5546157-hq.ogg
+lab_fsH https://cdn.freesound.org/previews/646/646682_13085623-hq.ogg
+lab_fsH https://cdn.freesound.org/previews/329/329907_2472895-hq.ogg
+lab_fsH https://cdn.freesound.org/previews/144/144046_430339-hq.ogg
+lab_fsH https://cdn.freesound.org/previews/328/328364_2286319-hq.ogg
+lab_fsH https://cdn.freesound.org/previews/260/260815_4858376-hq.ogg
+lab_fsH https://cdn.freesound.org/previews/100/100403_336074-hq.ogg
+lab_fsH https://cdn.freesound.org/previews/74/74915_271213-hq.ogg
+lab_fsH https://cdn.freesound.org/previews/387/387340_4638708-hq.ogg
+lab_fsH https://cdn.freesound.org/previews/434/434507_1134415-hq.ogg
+lab_fsH https://cdn.freesound.org/previews/371/371598_3406193-hq.ogg
+lab_fsH https://cdn.freesound.org/previews/652/652471_537412-hq.ogg
+lab_fsH https://cdn.freesound.org/previews/652/652477_537412-hq.ogg
+lab_fsH https://cdn.freesound.org/previews/652/652474_537412-hq.ogg
+lab_fsH https://cdn.freesound.org/previews/652/652472_537412-hq.ogg
+lab_fsH https://cdn.freesound.org/previews/203/203297_658546-hq.ogg
+lab_fsH https://cdn.freesound.org/previews/203/203295_658546-hq.ogg
+lab_fsH https://cdn.freesound.org/previews/203/203301_658546-hq.ogg
+lab_fsH https://cdn.freesound.org/previews/203/203298_658546-hq.ogg
+lab_fsH https://cdn.freesound.org/previews/417/417553_7399650-hq.ogg
+lab_fsH https://cdn.freesound.org/previews/38/38970_107780-hq.ogg
+lab_fsH https://cdn.freesound.org/previews/520/520920_1391542-hq.ogg
