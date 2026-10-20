@@ -37,6 +37,46 @@ const ROOT = app.isPackaged ? path.join(process.resourcesPath, 'game') : path.jo
 // читает хранилище 64-битной сборки — стёр бы его, а с ним и сохранения.
 if (process.arch === 'ia32') app.setPath('userData', path.join(app.getPath('appData'), 'Подземная лаборатория (32 бит)'));
 
+// ── ПРОЦЕСС ГРАФИКИ ──
+// Игре графика не нужна, но Chromium без своего процесса графики не живёт.
+// На Windows с обновлениями осени 2026 года этот процесс в 32-битной сборке
+// (Electron 22) падает сразу при запуске; Chromium поднимает его девять раз
+// подряд и закрывает игру. Запасные ступени: без песочницы графики; графика
+// в главном процессе и без ускорения. Упал трижды за десять секунд — игра
+// перезапускается на следующей ступени, а ступень, на которой страница
+// открылась, запоминает (gpu-step.txt в папке данных). В самопроверке игра
+// себя не перезапускает: выходит с кодом 7, и сборка запускает её снова с
+// нужным --lab-gpu-step=N.
+const GPU_STEPS = [[], ['disable-gpu-sandbox'], ['in-process-gpu', 'disable-gpu', 'disable-gpu-compositing']];
+const gpuStepFile = path.join(app.getPath('userData'), 'gpu-step.txt');
+let gpuStep = 0, gpuCrashes = [];
+{
+  const m = /^--lab-gpu-step=(\d)$/.exec(process.argv.find(a => a.startsWith('--lab-gpu-step=')) || '');
+  if (m) gpuStep = Number(m[1]);
+  else { try { gpuStep = Number(fs.readFileSync(gpuStepFile, 'utf8').trim()) || 0; } catch (_) { } }
+  gpuStep = Math.max(0, Math.min(GPU_STEPS.length - 1, gpuStep));
+  for (const sw of GPU_STEPS[gpuStep]) app.commandLine.appendSwitch(sw);
+}
+function gpuNextStep(why) {
+  if (gpuStep >= GPU_STEPS.length - 1) { log('процесс графики: ' + why + '; ступени кончились'); return false; }
+  const next = gpuStep + 1;
+  log('процесс графики: ' + why + '; ступень ' + next + ' — ' + GPU_STEPS[next].map(sw => '--' + sw).join(' ') +
+    (SELFTEST ? '; самопроверка: выход с кодом 7, запуск снова с --lab-gpu-step=' + next : '; перезапуск игры'));
+  if (SELFTEST) { process.exit(7); return true; }
+  app.relaunch({ args: process.argv.slice(1).filter(a => !a.startsWith('--lab-gpu-step=')).concat(['--lab-gpu-step=' + next]) });
+  app.exit(0);
+  return true;
+}
+function gpuGone(d) {
+  if (!d || d.type !== 'GPU' || d.reason === 'clean-exit' || d.reason === 'killed') return;
+  const now = Date.now();
+  gpuCrashes = gpuCrashes.filter(t => now - t < 10000); gpuCrashes.push(now);
+  log('процесс графики упал: ' + d.reason + ', код ' + d.exitCode + ', ступень ' + gpuStep + ', раз ' + gpuCrashes.length);
+  if (gpuCrashes.length >= 3) gpuNextStep('упал трижды подряд');
+}
+// Окно погибло следом за процессом графики — тоже повод для следующей ступени.
+function gpuRecent() { return gpuCrashes.length > 0 && Date.now() - gpuCrashes[gpuCrashes.length - 1] < 10000; }
+
 // ── ЖУРНАЛ ── (папка данных игры: %APPDATA%\Подземная лаборатория\lab.log;
 // у 32-битной сборки — %APPDATA%\Подземная лаборатория (32 бит)\lab.log)
 // В игре журнал пишется в фоне: запись на диск (антивирус проверяет каждую)
@@ -142,7 +182,11 @@ function createWindow() {
     const lv = e && e.level !== undefined ? e.level : level, msg = e && e.message !== undefined ? e.message : message;
     if (SELFTEST || lv === 'error' || lv === 3) log('console: ' + msg);
   });
-  win.webContents.on('render-process-gone', (e, d) => { log('render-process-gone ' + (d && d.reason)); if (SELFTEST) app.exit(3); });
+  win.webContents.on('render-process-gone', (e, d) => {
+    log('render-process-gone ' + (d && d.reason));
+    if (gpuRecent() && gpuNextStep('окно погибло следом')) return;
+    if (SELFTEST) app.exit(3);
+  });
   win.on('page-title-updated', e => e.preventDefault());
   win.once('ready-to-show', () => { win.show(); win.focus(); win.webContents.focus(); });
   // Закрытие окна (Alt+F4, «Закрыть приложение»): игра сперва пишет автозапись.
@@ -173,6 +217,8 @@ function createWindow() {
   sapiReady.then(pushTts);
   win.webContents.on('did-finish-load', () => {
     pushTts();
+    // Страница открылась на запасной ступени — с неё и начинать в следующий раз.
+    if (gpuStep > 0) { try { fs.writeFileSync(gpuStepFile, String(gpuStep), 'utf8'); } catch (_) { } }
     log('страница открыта; голоса: ' + ttsState + ', ' + voices().length + (sapi ? '; ' + sapi.diag() : ''));
     if (SELFTEST) setTimeout(() => js('LAB.selftest&&LAB.selftest()'), 1500);
   });
@@ -207,6 +253,7 @@ const single = SELFTEST || app.requestSingleInstanceLock();
 if (!single) { if (sapi) sapi.quit(); app.quit(); }
 else {
   app.on('second-instance', () => { if (win) { if (win.isMinimized()) win.restore(); win.focus(); } });
+  app.on('child-process-gone', (e, d) => gpuGone(d));
   app.whenReady().then(() => {
     logFile = process.env.LAB_LOG || path.join(app.getPath('userData'), 'lab.log');
     try { fs.mkdirSync(path.dirname(logFile), { recursive: true }); fs.writeFileSync(logFile, '', 'utf8'); } catch (_) { logFile = ''; }

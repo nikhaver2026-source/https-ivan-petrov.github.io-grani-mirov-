@@ -177,12 +177,20 @@ jobs:
         working-directory: lab/desktop/out
         run: |
           export LAB_LOG="$RUNNER_TEMP/selftest1.log"
-          set +e
-          timeout 240 "./$APPDIR/$EXE" --lab-selftest
-          code=$?
-          set -e
-          cat "$LAB_LOG" || true
-          echo "код выхода: $code"
+          # Код выхода 7: процесс графики Chromium падает на этом образе Windows —
+          # игра просит запустить её снова со следующей ступенью (--lab-gpu-step=N).
+          STEP=""
+          for i in 1 2 3; do
+            set +e
+            timeout 240 "./$APPDIR/$EXE" --lab-selftest $STEP
+            code=$?
+            set -e
+            cat "$LAB_LOG" || true
+            echo "код выхода: $code"
+            [ "$code" = 7 ] || break
+            STEP="--$(grep -o 'lab-gpu-step=[0-9]' "$LAB_LOG" | tail -1)"
+            echo "запуск снова: $STEP"
+          done
           grep -q "Electron $ELECTRON, $ARCH" "$LAB_LOG"
           grep -q "selftest ok" "$LAB_LOG"
           grep "selftest ok" "$LAB_LOG" | grep -q "движок речи: espeak (ready)"
@@ -211,12 +219,18 @@ jobs:
         working-directory: lab/desktop/out
         run: |
           export LAB_LOG="$RUNNER_TEMP/selftest2.log"
-          set +e
-          timeout 240 "./$APPDIR/$EXE" --lab-selftest
-          code=$?
-          set -e
-          cat "$LAB_LOG" || true
-          echo "код выхода: $code"
+          STEP=""
+          for i in 1 2 3; do
+            set +e
+            timeout 240 "./$APPDIR/$EXE" --lab-selftest $STEP
+            code=$?
+            set -e
+            cat "$LAB_LOG" || true
+            echo "код выхода: $code"
+            [ "$code" = 7 ] || break
+            STEP="--$(grep -o 'lab-gpu-step=[0-9]' "$LAB_LOG" | tail -1)"
+            echo "запуск снова: $STEP"
+          done
           grep -q "selftest ok" "$LAB_LOG"
           grep "selftest ok" "$LAB_LOG" | grep -q "движок речи: android"
           grep -E "голоса: ready, [1-9]" "$LAB_LOG"

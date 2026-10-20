@@ -82,10 +82,13 @@ for (let si = 0; si < seeds; si++) {
         if (!wb.length) err(`${at}: нет верстака`);
         else if (!wb.some(nearReach)) err(`${at}: до верстака не дойти`);
       }
-      /* турели — значит, есть терминал безопасности, до которого можно дойти */
-      const tur = fl.foes.filter(f => LAB.FOES[f.type].beh.indexOf("turret") >= 0);
+      /* турели — значит, есть терминал безопасности, до которого можно дойти.
+         Поведение — как в бою (combat.js): у стража своё, даже если его
+         основа — турель (Метроном «Сначала» терминалом не отключается). */
+      const behOf = (f) => { const bd = f.boss && LAB.BOSSES[f.boss]; return bd && bd.beh ? bd.beh : LAB.FOES[f.type].beh; };
+      const tur = fl.foes.filter(f => behOf(f).indexOf("turret") >= 0);
       stat.turrets += tur.length;
-      stat.cams += fl.foes.filter(f => LAB.FOES[f.type].beh.indexOf("camera") >= 0).length;
+      stat.cams += fl.foes.filter(f => behOf(f).indexOf("camera") >= 0).length;
       if (tur.length && !fl.objs.some(o => o.type === "terminal" && o.sub === "sec" && nearReach(o))) err(`${at}: турели есть, а терминала безопасности не достать`);
       /* звуковой замок — радиоприёмник с мелодией */
       for (const d of fl.doors) {
