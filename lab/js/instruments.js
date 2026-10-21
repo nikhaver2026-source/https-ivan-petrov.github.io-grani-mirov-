@@ -13,8 +13,8 @@
    сразу. Пианино, баян, колокола и колыбель — три ряда клавиш: внизу
    низкие, вверху высокие, в ряду слева направо от «до» до «си». Гитара —
    шесть струн-рядов, внизу самая низкая; слева направо — аккорды, а после
-   касания двумя пальцами — лады. Два пальца вниз — отойти: экран снова
-   вертикальный.
+   касания двумя пальцами — лады. Касание четырьмя пальцами — отойти: экран
+   снова вертикальный.
    ════════════════════════════════════════════════════════════════════ */
 (function () {
 "use strict";
@@ -291,12 +291,12 @@ function lift(s, p, gone) {
   p.h = null;
 }
 function surfOn(inst, name, st) {
-  surf = { inst: inst, kind: inst === "guitar" ? "strings" : "keys", frets: false, ptrs: {}, str: [], live: [], log: [], two: null, st: st };
+  surf = { inst: inst, kind: inst === "guitar" ? "strings" : "keys", frets: false, ptrs: {}, str: [], live: [], log: [], two: null, quad: null, st: st };
   orient("landscape");
   var turn = canTurn() ? "Экран поворачивается горизонтально: держите телефон боком. " : "";
   say(name + ". " + turn + (surf.kind === "strings"
-    ? "Шесть струн — ряды, внизу самая низкая. Слева направо — аккорды: " + CHORDS.map(function (c) { return c.n; }).join(", ") + ". Проведите пальцем поперёк струн — перебор, вдоль струны — другой аккорд. Касание двумя пальцами — лады вместо аккордов. Два пальца вниз — отойти."
-    : "Весь экран — клавиши, три ряда: внизу низкие, вверху высокие, в каждом ряду слева направо от до до си. Касайтесь и ведите пальцем — звучит каждая клавиша под пальцем, можно несколькими пальцами сразу. Два пальца вниз — отойти."));
+    ? "Шесть струн — ряды, внизу самая низкая. Слева направо — аккорды: " + CHORDS.map(function (c) { return c.n; }).join(", ") + ". Проведите пальцем поперёк струн — перебор, вдоль струны — другой аккорд. Касание двумя пальцами — лады вместо аккордов. Отойти — коснуться экрана четырьмя пальцами сразу."
+    : "Весь экран — клавиши, три ряда: внизу низкие, вверху высокие, в каждом ряду слева направо от до до си. Касайтесь и ведите пальцем — звучит каждая клавиша под пальцем, можно несколькими пальцами сразу. Отойти — коснуться экрана четырьмя пальцами сразу."));
 }
 function surfOff() {
   var s = surf;
@@ -306,38 +306,55 @@ function surfOff() {
   orient("portrait");
 }
 function closeSurf() { if (LAB.mini && LAB.mini.active()) LAB.mini.cancel(); else surfOff(); }
+/* все звучащие ноты инструмента — затихнуть */
+function hush(s, fade) {
+  s.live.forEach(function (h) { h.stop(fade); });
+  s.live = []; s.str = [];
+  for (var k in s.ptrs) s.ptrs[k].h = null;
+}
 function toggleFrets(s) {
   s.frets = !s.frets;
   for (var k in s.ptrs) { var q = s.ptrs[k], c = cellAt(s, q.x, q.y); q.row = c.row; q.col = c.col; }
   say(s.frets ? "Лады: на каждой струне слева направо — открытая струна и одиннадцать ладов, по полутону." : "Аккорды: слева направо " + CHORDS.map(function (c) { return c.n; }).join(", ") + ".");
 }
-/* Два пальца: вниз — отойти от инструмента; короткое касание двумя — у гитары лады или аккорды. */
+/* Короткое касание двумя пальцами — у гитары лады или аккорды. */
 function pair(s, kind, id, p) {
   var ids = Object.keys(s.ptrs), now = performance.now(), tw = s.two;
   if (kind === "down") {
-    s.two = ids.length === 2 ? { t0: now, ids: ids, y0: ids.map(function (k) { return s.ptrs[k].y; }), x0: ids.map(function (k) { return s.ptrs[k].x; }), up: 0, moved: 0 } : null;
+    s.two = ids.length === 2 ? { t0: now, ids: ids, up: 0, moved: 0 } : null;
     return false;
   }
-  if (!tw) return false;
-  if (kind === "move") {
-    if (ids.length !== 2 || now - tw.t0 > 1000) return false;
-    var need = Math.max(50, (window.innerHeight || 400) * 0.3);
-    for (var i = 0; i < 2; i++) {
-      var q = s.ptrs[tw.ids[i]];
-      if (!q) return false;
-      var dy = q.y - tw.y0[i];
-      if (!(dy > need && Math.abs(q.x - tw.x0[i]) < dy * 0.75)) return false;
-    }
-    s.two = null;
-    closeSurf();
-    return true;
-  }
-  if (tw.ids.indexOf(id) < 0) return false;
+  if (!tw || kind !== "up" || tw.ids.indexOf(id) < 0) return false;
   tw.up++; tw.moved = Math.max(tw.moved, p.moved);
   if (tw.up < 2) return false;
   s.two = null;
   if (s.kind === "strings" && now - tw.t0 < 400 && tw.moved < 24) toggleFrets(s);
   return false;
+}
+/* Касание четырьмя пальцами — отойти от инструмента. Засчитывается только
+   касание: четыре пальца (или вся ладонь) легли почти разом — за 0,4 с — на
+   пустой экран, не скользили и все поднялись за 0,8 с. Аккорд, который
+   держат, скольжение и перебор несколькими пальцами инструмент не
+   закрывают; удар двумя пальцами по струнам — тоже. Ноты, прозвучавшие от
+   самого касания, тут же гаснут. */
+var QUAD_LAND = 400, QUAD_TAP = 800;
+function quadSlide() { var w = window.innerWidth || 800, h = window.innerHeight || 400; return Math.max(24, 0.05 * Math.sqrt(w * w + h * h)); }
+function quad(s, kind, id, p) {
+  var now = performance.now(), q = s.quad;
+  if (kind === "down") {
+    if (Object.keys(s.ptrs).length === 1) { s.quad = { t0: now, ids: [id], up: 0, ok: true }; return false; }
+    if (!q || !q.ok) return false;
+    if (q.up || now - q.t0 > QUAD_LAND) { q.ok = false; return false; }
+    q.ids.push(id);
+    return false;
+  }
+  if (!q || !q.ok || q.ids.indexOf(id) < 0) return false;
+  if (kind === "move") { if (p.moved > quadSlide()) q.ok = false; return false; }
+  q.up++;
+  if (q.ids.length < 4 || now - q.t0 > QUAD_TAP) { q.ok = false; return false; }
+  if (q.up < q.ids.length) return false;
+  s.quad = null;
+  return true;
 }
 /* Касания экрана — сюда, мимо жестов (input.js). */
 function surfPointer(e) {
@@ -350,13 +367,14 @@ function surfPointer(e) {
     p = s.ptrs[id] = { x0: e.clientX, y0: e.clientY, x: e.clientX, y: e.clientY, row: c0.row, col: c0.col, moved: 0, h: null };
     strike(s, p);
     pair(s, "down", id, p);
+    quad(s, "down", id, p);
     return;
   }
   if (!p) return;
   if (e.type === "pointermove") {
     p.x = e.clientX; p.y = e.clientY;
     p.moved = Math.max(p.moved, Math.abs(p.x - p.x0) + Math.abs(p.y - p.y0));
-    if (pair(s, "move", id, p)) return; /* два пальца вниз — отошли */
+    quad(s, "move", id, p);
     var c = cellAt(s, p.x, p.y);
     if (c.row === p.row && c.col === p.col) return;
     var rowCh = c.row !== p.row;
@@ -370,6 +388,8 @@ function surfPointer(e) {
   lift(s, p, true);
   delete s.ptrs[id];
   pair(s, "up", id, p);
+  /* касание четырьмя пальцами — отошли от инструмента */
+  if (quad(s, "up", id, p)) { hush(s, 0.08); LAB.vib(30); closeSurf(); }
 }
 LAB.surface = {
   active: function () { return !!surf; },

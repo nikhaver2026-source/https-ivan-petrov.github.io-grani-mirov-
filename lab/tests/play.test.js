@@ -2707,7 +2707,7 @@ LAB.ui.closeAll();
       out.samplesDiag = [insN.length, hp && hp.src ? hp.src.playbackRate.value : "синтез", ha && ha.src ? [ha.src.loop, ha.src.loopStart, ha.src.loopEnd].join("/") : "синтез", JSON.stringify(pk), JSON.stringify(pl)].join(" ");
       LAB.settings.effects = S0;
     }
-    /* (2.0) телефон боком: весь экран — инструмент, игра пальцами, два пальца вниз — отойти */
+    /* (2.0) телефон боком: весь экран — инструмент, игра пальцами, касание четырьмя пальцами — отойти */
     const kb0 = LAB.keysMode, W0 = window.innerWidth, H0 = window.innerHeight, I = LAB.instruments;
     const r2 = f => Math.round(f * 100) / 100;
     const pe = (type, id, x, y) => LAB.surface.pointer({ type, pointerId: id, clientX: x, clientY: y });
@@ -2721,12 +2721,30 @@ LAB.ui.closeAll();
     out.gliss = JSON.stringify(LAB.surface._state().log) === JSON.stringify([0, 1, 2, 3, 4, 5, 6].map(i => r2(I.freq(1, i))));
     slide(2, 3, H0 * 0.95, 3, H0 * 0.05, 30);
     out.rows = JSON.stringify(LAB.surface._state().log.slice(-3)) === JSON.stringify([0, 1, 2].map(r => r2(I.freq(r, 0))));
+    /* игра не закрывает инструмент: два пальца вниз по рядам, аккорд из четырёх нот, который держат, скольжение четырьмя пальцами */
     pe("pointerdown", 3, W0 * 0.3, H0 * 0.2); pe("pointerdown", 4, W0 * 0.6, H0 * 0.2);
     for (let k = 1; k <= 10; k++) { pe("pointermove", 3, W0 * 0.3, H0 * (0.2 + 0.06 * k)); pe("pointermove", 4, W0 * 0.6, H0 * (0.2 + 0.06 * k)); }
     pe("pointerup", 3, W0 * 0.3, H0 * 0.8); pe("pointerup", 4, W0 * 0.6, H0 * 0.8);
     await wait(100);
+    out.keep2 = LAB.surface.active() && LAB.mini.active();
+    const four = [0.15, 0.35, 0.55, 0.75];
+    four.forEach((x, k) => pe("pointerdown", 20 + k, W0 * x, H0 * 0.5));
+    await wait(900);
+    four.forEach((x, k) => pe("pointerup", 20 + k, W0 * x, H0 * 0.5));
+    out.keepChord = LAB.surface.active();
+    four.forEach((x, k) => pe("pointerdown", 30 + k, W0 * x, H0 * 0.8));
+    for (let j = 1; j <= 6; j++) four.forEach((x, k) => pe("pointermove", 30 + k, W0 * x, H0 * (0.8 - 0.1 * j)));
+    four.forEach((x, k) => pe("pointerup", 30 + k, W0 * x, H0 * 0.2));
+    out.keepSlide = LAB.surface.active();
+    /* касание четырьмя пальцами — отойти: экран снова вертикальный, ноты касания затихли */
+    const n0 = LAB.surface._state().log.length;
+    four.forEach((x, k) => pe("pointerdown", 40 + k, W0 * x, H0 * 0.3));
+    await wait(80);
+    four.forEach((x, k) => pe("pointerup", 40 + k, W0 * x, H0 * 0.3));
+    await wait(100);
     const s2 = LAB.surface._state();
     out.surfOff = !s2.on && s2.orient === "portrait" && !LAB.mini.active() && pl2 >= 10;
+    out.quadDiag = [out.keep2, out.keepChord, out.keepSlide, n0, s2.on, s2.orient, LAB.mini.active(), pl2].join(" ");
     let pl3 = -1;
     LAB.instruments.open("guitar", { name: "Гитара" }, n => { pl3 = n; });
     const s3 = LAB.surface._state();
@@ -2737,6 +2755,13 @@ LAB.ui.closeAll();
     out.frets = LAB.surface._state().frets;
     slide(8, 2, H0 * 0.97, W0 * 0.33, H0 * 0.97, 30);
     out.fretRun = JSON.stringify(LAB.surface._state().log.slice(-4)) === JSON.stringify([0, 1, 2, 3].map(k => r2(I.midiF(I.GTR_OPEN[0] + k))));
+    /* удар двумя пальцами вниз по струнам — это игра, а не выход */
+    const g0 = LAB.surface._state().log.length;
+    pe("pointerdown", 11, W0 * 0.2, H0 * 0.03); pe("pointerdown", 12, W0 * 0.45, H0 * 0.03);
+    for (let k = 1; k <= 12; k++) { pe("pointermove", 11, W0 * 0.2, H0 * (0.03 + 0.078 * k)); pe("pointermove", 12, W0 * 0.45, H0 * (0.03 + 0.078 * k)); }
+    pe("pointerup", 11, W0 * 0.2, H0 * 0.97); pe("pointerup", 12, W0 * 0.45, H0 * 0.97);
+    await wait(100);
+    out.gtrStrum2 = LAB.surface.active() && LAB.surface._state().log.length - g0 >= 10;
     LAB.mini.gesture({ kind: "back", n: 1 }); await wait(100);
     out.gtrOff = !LAB.surface.active() && LAB.surface._state().orient === "portrait" && pl3 > 0;
     LAB.keysMode = kb0;
@@ -2788,7 +2813,8 @@ LAB.ui.closeAll();
   ok(v16.chess && v16.uniq && v16.chessFx, "задачи с единственным решением, у шахматных позиций есть мат в один ход, на столике — настоящая партия");
   ok(v16.instOn && v16.instOff && v16.voice, "инструмент: поле из трёх рядов перехватывает жесты, ноты звучат, уход — не провал");
   ok(v16.samples, "инструменты — записи настоящих нот: до первой октавы звучит без сдвига, до-диез — из соседней записи на полутон, у баяна петля, шкатулка на две октавы выше, ноты не грузятся заранее (" + v16.samplesDiag + ")");
-  ok(v16.surfOn && v16.gliss && v16.rows && v16.surfOff, "пианино на весь экран: экран горизонтально, палец по ряду — семь нот подряд, по рядам снизу вверх — три октавы, два пальца вниз — отойти, экран снова вертикальный");
+  ok(v16.surfOn && v16.gliss && v16.rows && v16.surfOff, "пианино на весь экран: экран горизонтально, палец по ряду — семь нот подряд, по рядам снизу вверх — три октавы, касание четырьмя пальцами — отойти, экран снова вертикальный");
+  ok(v16.keep2 && v16.keepChord && v16.keepSlide && v16.gtrStrum2, "выход не мешает игре: два пальца вниз по рядам, аккорд из четырёх нот, который держат, скольжение четырьмя пальцами и удар двумя пальцами по струнам инструмент не закрывают (" + v16.quadDiag + ")");
   ok(v16.gtrOn && v16.strum && v16.frets && v16.fretRun && v16.gtrOff, "гитара на весь экран: перебор поперёк струн — аккорд до мажор, касание двумя пальцами — лады, вдоль струны — по полутону, «Назад» — отойти");
   ok(v16.zig && v16.mineFlag && v16.zigArmed, "ловушка — жест вверх-вниз, мина — вниз-вверх, и с оружием в руках тоже (" + v16.zigDiag + ")");
   ok(v16.mark && v16.trapBeacon && v16.foeBeacon && v16.foeMoves, "маяки: у ловушки и мины свои, скан вешает маяк на врага, и он движется с ним (" + v16.beaconDiag + ")");
