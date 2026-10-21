@@ -335,6 +335,18 @@ def loudnorm(a, target_db, peak_db=-2.0):
         a = np.tanh(a / lim * 1.2) / np.tanh(1.2) * lim
     return a.astype(np.float32)
 
+def note_norm(a, target_db, peak_db=-3.0, knee_db=-9.0):
+    """(2.0) Громкость ноты инструмента: ровная часть — точно по цели, острые
+    пики атаки мягко скруглены выше колена, а тихое звучание не поднимается —
+    все ноты по клавиатуре звучат вровень."""
+    a = a * (10 ** (target_db / 20) / max(rms_active(a), 1e-6))
+    lim, kn = 10 ** (peak_db / 20), 10 ** (knee_db / 20)
+    m = np.abs(a)
+    if m.max() > kn:
+        r = lim - kn
+        a = np.where(m > kn, np.sign(a) * (kn + r * np.tanh((m - kn) / r)), a)
+    return a.astype(np.float32)
+
 # Слышимость на динамике телефона: доля энергии выше 350 Гц, дБ.
 AUDIBLE_MIN = -9.0
 def audible_db(a):
@@ -436,9 +448,10 @@ def encode(a, path, q):
     subprocess.run(cmd, input=a.astype(np.float32).tobytes(), check=True)
 
 # ── что собирать ──
-# kind: sfx (короткий звук), step, bcn (маяк), ui, loop (петля), music (дорожка для потока)
-TARGET = {"sfx": -16.0, "step": -21.0, "bcn": -19.0, "ui": -20.0, "loop": -22.0, "music": -18.0, "voice": -16.0}
-DEF_MAX = {"sfx": 2.6, "step": 0.45, "bcn": 0.6, "ui": 0.9, "loop": None, "music": None, "voice": 2.0}
+# kind: sfx (короткий звук), step, bcn (маяк), ui, loop (петля), music (дорожка для потока),
+# note (нота инструмента)
+TARGET = {"sfx": -16.0, "step": -21.0, "bcn": -19.0, "ui": -20.0, "loop": -22.0, "music": -18.0, "voice": -16.0, "note": -18.0}
+DEF_MAX = {"sfx": 2.6, "step": 0.45, "bcn": 0.6, "ui": 0.9, "loop": None, "music": None, "voice": 2.0, "note": None}
 SPEC = {}
 def E(id_, kind, srcs, v=1.0, bus=None, n=None, mx=None, **o):
     SPEC[id_] = dict(kind=kind, srcs=srcs, v=v, bus=bus, n=n, mx=mx, o=o)
@@ -986,6 +999,34 @@ E("mus_b5_2", "music", [S(C, "lab_km_infiniteperspe", "*.mp3", start=45)], v=1.0
 E("mus_b5_3", "music", [S(C, "lab_km_bathedinthelig", "*.mp3")], v=1.0, max=170)
 E("mus_b5_4", "music", [S(C, "lab_km_spacial", "*.mp3")], v=1.0, max=170)
 
+# ═════ (2.0) ИНСТРУМЕНТЫ: записи настоящих нот (Freesound, CC0) ═════
+# Пианино — «88 piano keys, long reverb» (TEDAgame), гитара — «Nylon Guitar
+# Single notes» (SpeedY), баян — «Cellini Accordion» (Miles_Thompson),
+# колокола — трубчатые колокола VSCO 2 CE (sgossner), колыбель — «Musical
+# Box Single Notes» (rbnuser). Нота — midi: (запись, отклонение в центах).
+# Высота каждой записи измерена по спектру (основной тон и вторая гармоника)
+# и выровнена до точной: пианино в записи ниже строя на 15–30 центов. У баяна
+# в наборе есть ноты, где звучат сразу два голоса через октаву, — их нет:
+# взяты чистые. Колокола — по названиям: высоту колокола слух берёт из
+# четвёртого, пятого и шестого обертонов. Нужную ноту между записями
+# инструмент берёт из ближайшей, сдвигая высоту (lab/js/instruments.js);
+# баян тянется, пока держат клавишу: у его нот петля в ровной части звука.
+NOTES = {
+  "piano": dict(mx=4.5, v=0.85, n={48: (448546, -27), 50: (448608, -26), 52: (448614, -13), 53: (448589, -16), 55: (448559, -14), 57: (448562, -26), 59: (448568, -26),
+    60: (448549, -17), 62: (448609, 0), 64: (448613, -31), 65: (448595, -26), 67: (448552, -30), 69: (448561, -24), 71: (448536, -19),
+    72: (448548, -19), 74: (448619, -21), 76: (448612, -26), 77: (448594, -7), 79: (448553, -17), 81: (448560, -18), 83: (448537, -19), 84: (448551, -14)}),
+  "guitar": dict(mx=4.0, v=0.85, n={40: (8397, -6), 45: (8383, -4), 50: (8389, 0), 55: (8403, 0), 59: (8386, 0), 64: (8394, 0), 69: (8391, -5), 76: (8390, 4)}),
+  "accordion": dict(mx=None, v=0.7, loop=True, n={47: (560815, 3), 51: (560861, 6), 52: (560858, 4), 53: (560804, 2), 55: (560812, 3), 57: (560841, 2), 59: (560813, 5),
+    60: (560818, 4), 62: (560854, 5), 64: (560860, 5), 65: (560827, 7), 67: (560831, 7), 69: (560839, 4), 71: (560819, 5), 72: (560807, 7), 74: (560856, 10),
+    76: (560847, 4), 77: (560809, 7), 79: (560851, 6), 81: (560844, 10)}),
+  "bell": dict(mx=7.0, v=0.75, n={60: (374273, 0), 67: (374275, 0), 72: (374274, 0), 77: (374272, 0)}),
+  "lullaby": dict(mx=2.2, v=0.8, n={74: (347414, -9), 79: (347413, -5), 81: (347412, 0), 83: (347411, -3), 84: (347418, -7), 86: (347417, -15), 93: (347416, -4),
+    95: (347415, -6), 96: (347420, -10), 98: (347419, -12), 100: (347422, -11), 102: (347421, -6), 103: (347423, 0)}),
+}
+for _inst, _d in NOTES.items():
+    for _m, (_id, _c) in sorted(_d["n"].items()):
+        E("ins_%s_%d" % (_inst, _m), "note", [FS(_id, af=PITCH(2 ** (-_c / 1200.0)) if abs(_c) >= 3 else None)], v=_d["v"], mx=_d["mx"], bus="puzzle", loop=_d.get("loop", False))
+
 # ═════ СИНТЕЗ: звуки, которых нет в наборах ═════
 def gen(name):
     t = np.arange(int(1.6 * SR)) / SR
@@ -1003,7 +1044,7 @@ def gen(name):
     raise SystemExit("нет синтеза " + name)
 
 # ═════ СБОРКА ═════
-GROUP = {"ui": "ui", "step": "step", "bcn": "bcn", "loop": "amb", "music": "mus", "voice": "fx", "sfx": "fx", "mix": "fx", "mixv": "fx", "seq": "fx", "gen": "fx"}
+GROUP = {"ui": "ui", "step": "step", "bcn": "bcn", "loop": "amb", "music": "mus", "voice": "fx", "sfx": "fx", "mix": "fx", "mixv": "fx", "seq": "fx", "gen": "fx", "note": "inst"}
 MISSING = []
 def resolve(src):
     _, R, pack, pat, o = src
@@ -1015,9 +1056,40 @@ def process_one(path, o, kind, mx, ch=1):
     if kind in ("loop", "music"):
         return a
     a = trim(a)
+    if kind == "note":
+        # нота звенит долго: срезается мягким долгим затуханием, как отзвучавшая струна
+        if mx: a = cap(a, mx, fo=0.4 * mx)
+        return fade(a, 0.002, 0.02)
     a = cap(a, mx if mx is not None else DEF_MAX.get(kind))
     a = fade(a, 0.003, 0.04)
     return a
+
+def reed_loop(a, xf=0.06):
+    """(2.0) Петля тянущейся ноты (баян): ровная часть звука — от конца атаки
+    до начала затухания. Конец петли подобран так, чтобы волна перед ним
+    совпадала с волной перед началом петли, стык сведён перекрёстным
+    затуханием — щелчков нет. Пока держат клавишу, звучит петля; отпустили —
+    нота затихает. Возвращает звук и границы петли, с."""
+    fr = int(0.01 * SR)
+    n = len(a) // fr
+    env = np.sqrt(np.mean(a[: n * fr].reshape(n, fr) ** 2, axis=1))
+    on = np.where(env >= env.max() * 0.7)[0]
+    ls, le = (on[0] + 6) * fr, on[-1] * fr
+    if le - ls < int(0.25 * SR): ls, le = int(len(a) * 0.3), int(len(a) * 0.8)
+    xn = int(xf * SR)
+    ls = max(ls, xn + 1)
+    ref = a[ls - xn: ls]
+    best, bk = -2.0, le
+    for k in range(le - int(0.012 * SR), le + 1):
+        seg = a[k - xn: k]
+        c = float(np.dot(seg, ref) / (np.linalg.norm(seg) * np.linalg.norm(ref) + 1e-9))
+        if c > best: best, bk = c, k
+    le = bk
+    t = np.linspace(0, 1, xn, dtype=np.float32)
+    b = a.copy()
+    b[le - xn: le] = a[le - xn: le] * (1 - t) + a[ls - xn: ls] * t
+    # за петлёй — немного звука: на случай, если устройство чуть иначе отсчитает её конец
+    return np.concatenate([b[:le], a[le: le + int(0.08 * SR)]]).astype(np.float32), ls / SR, le / SR
 
 def resample(a, rate):
     if abs(rate - 1) < 1e-3: return a
@@ -1028,6 +1100,7 @@ def resample(a, rate):
 
 def build():
     out_defs, credits_used = {}, {}
+    loops = {}
     total = 0
     for id_, sp in SPEC.items():
         kind, v, n = sp["kind"], sp["v"], sp["n"]
@@ -1074,6 +1147,17 @@ def build():
                 if len(mix) < need: mix = np.concatenate([mix, np.zeros(need - len(mix), dtype=np.float32)])
                 mix[pad: pad + len(a)] += a
             outs.append(fade(loudnorm(mix, TARGET["sfx"]), 0.003, 0.3))
+        elif kind == "note":
+            # (2.0) нота инструмента: одна запись, высота выровнена; у баяна — петля
+            fs = resolve(sp["srcs"][0])
+            if not fs: MISSING.append(id_); continue
+            path, lo = fs[0]
+            use(path)
+            a = process_one(path, lo, kind, sp["mx"])
+            if o.get("loop"):
+                a, ls, le = reed_loop(a)
+                loops[id_] = (ls, le)
+            outs.append(note_norm(a, o.get("tgt", TARGET["note"])))
         elif kind == "seq":
             fs = []
             for s in sp["srcs"]: fs += resolve(s)
@@ -1168,15 +1252,20 @@ def build():
             total += os.path.getsize(os.path.join(OUT, rel))
         bus = sp["bus"] or {"ui": "ui", "bcn": "beacon", "loop": "amb", "music": "music"}.get(kind, "fx")
         out_defs[id_] = {"f": files, "o": {"v": round(sp["v"], 2), "bus": bus}}
+        if kind == "note":
+            # высота ноты — точная: без случайного сдвига; у баяна — границы петли
+            out_defs[id_]["o"]["vary"] = 0
+            if id_ in loops: out_defs[id_]["o"]["ls"], out_defs[id_]["o"]["le"] = round(loops[id_][0], 6), round(loops[id_][1], 6)
         # длинные петли (музыка, фон уровня) держатся в памяти, только пока звучат
         if kind in ("loop", "music") and (kind == "music" or len(outs[0]) > 12 * SR): out_defs[id_]["o"]["long"] = True
         print("%-22s %d вар., %s" % (id_, len(files), kind))
     return out_defs, credits_used, total
 
 def write_js(defs):
-    # сразу — общее для всех уровней; голоса врагов, пол и события уровня грузит atmos.js
+    # сразу — общее для всех уровней; голоса врагов, пол и события уровня грузит atmos.js,
+    # ноты инструмента — instruments.js, когда к нему подходят
     core = [k for k in defs if re.match(r"^(ui_|bump_|door_|bcn_|pick_|near_|nav_|w_|hit_|impact_|card_|keypad|code_)", k)]
-    lvl = re.compile(r"^(step_|amb_|room_|evl_|ev_|mus_)|_(idle|alert|attack|hurt|death|step)$")
+    lvl = re.compile(r"^(step_|amb_|room_|evl_|ev_|mus_|ins_)|_(idle|alert|attack|hurt|death|step)$")
     allids = [k for k, d in defs.items() if not d["o"].get("long") and not lvl.search(k)]
     js = ["/* Записи «Подземной лаборатории»: что звучит и откуда. Файл собран",
           "   lab/tools/build_sounds.py — правьте сборщик, а не этот файл. */",
@@ -1225,7 +1314,7 @@ if __name__ == "__main__":
         for k in list(SPEC):
             if not any(fnmatch.fnmatch(k, p) for p in only): del SPEC[k]
     else:
-        for d in ("ui", "step", "bcn", "amb", "mus", "fx"):
+        for d in ("ui", "step", "bcn", "amb", "mus", "fx", "inst"):
             for f in glob.glob(os.path.join(OUT, d, "*.ogg")): os.remove(f)
     defs, used, total = build()
     if not only:

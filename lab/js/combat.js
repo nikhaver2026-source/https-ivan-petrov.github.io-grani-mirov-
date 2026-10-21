@@ -370,6 +370,7 @@ function tick() {
   if (LAB.oko) LAB.safe(LAB.oko.tick);
   if (LAB.game.doorAutoClose) LAB.safe(LAB.game.doorAutoClose); /* двери закрываются за прошедшими */
   if (spotted.length) announceSpotted(spotted);
+  else LAB.safe(patrolCue);
   G().noise = Math.max(0, G().noise - 2);
   var dz = danger();
   A("combatLevel", dz ? (hunted() ? 2 : 1) : 0);
@@ -2157,6 +2158,28 @@ function throwEmp() {
 }
 
 /* Кто заметил героя: одна фраза на всех. */
+/* (2.0) Патруль поблизости — «Эхо» называет его, пока он вас не заметил: где
+   и сколько шагов. На каждого патрульного — раз в минуту; в бою — молчит. */
+var cueAt = 0;
+function patrolCue() {
+  if (tickN % 2) return;
+  var now = Date.now(), hero = heroPos(), best = null, bd = 99;
+  if (now - cueAt < 8000) return;
+  for (var i = 0; i < foes.length; i++) {
+    var f = foes[i];
+    if (f.dead || f.ally || f.calm || f.disguised || aff(f, "cloak")) continue;
+    if (f.state === "hunt" || f.state === "alert") { if (cheb(f, hero) <= 10) return; continue; }
+    if (!f.beat || f.kind !== "mech") continue;
+    var d = cheb(f, hero);
+    if (d > 12 || d < 2 || (f.cueT && now - f.cueT < 60000)) continue;
+    if (d < bd) { bd = d; best = f; }
+  }
+  if (!best) return;
+  best.cueT = now; cueAt = now;
+  /* летающая машина не шагает — гудит */
+  var fly = ((best.base && best.base.beh) || []).indexOf("fly") >= 0;
+  LAB.say((fly ? "Гул патруля: " : "Шаги патруля: ") + best.name.split(",")[0] + ", " + gm().relDir(best.x, best.y) + ".", { interrupt: false, prio: "info" });
+}
 function announceSpotted(list) {
   var now = Date.now();
   var names = list.map(function (f) { return f.name.split(",")[0] + " " + gm().relDir(f.x, f.y); });
@@ -2261,6 +2284,8 @@ function throwGrenade(id) {
 }
 
 LAB.combat = {
+  /* для проверок: подсказку о патруле — заново */
+  _cueReset: function () { cueAt = 0; foes.forEach(function (f) { f.cueT = 0; }); },
   throwQuick: throwQuick, pickGrenade: pickGrenade, throwGrenade: throwGrenade, throwables: throwables,
   loadFoes: loadFoes, syncFoes: syncFoes, wake: start, start: start, stop: stop, tick: tick,
   danger: danger, hunted: hunted, visibleFoes: visibleFoes, nearestFoe: nearestFoe, aliveCount: aliveCount, jammed: jammed,

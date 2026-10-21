@@ -7,17 +7,77 @@ BSD 3-Clause (Freedoom) и общественное достояние (част
 часть — замедлена или ускорена, петли сведены с перекрёстным затуханием;
 сборщик — lab/tools/build_sounds.py.
 
+## 00_d5.flac
+
+Автор: rbnuser. Лицензия: CC0 1.0. Источник: https://freesound.org/s/347414/
+
+Файлы: `347414_4551235-hq.ogg`
+
+## 01-g5.flac
+
+Автор: rbnuser. Лицензия: CC0 1.0. Источник: https://freesound.org/s/347413/
+
+Файлы: `347413_4551235-hq.ogg`
+
+## 02_a5.flac
+
+Автор: rbnuser. Лицензия: CC0 1.0. Источник: https://freesound.org/s/347412/
+
+Файлы: `347412_4551235-hq.ogg`
+
+## 03_b5.flac
+
+Автор: rbnuser. Лицензия: CC0 1.0. Источник: https://freesound.org/s/347411/
+
+Файлы: `347411_4551235-hq.ogg`
+
+## 04_c6.flac
+
+Автор: rbnuser. Лицензия: CC0 1.0. Источник: https://freesound.org/s/347418/
+
+Файлы: `347418_4551235-hq.ogg`
+
+## 05_d6.flac
+
+Автор: rbnuser. Лицензия: CC0 1.0. Источник: https://freesound.org/s/347417/
+
+Файлы: `347417_4551235-hq.ogg`
+
+## 06_a6.flac
+
+Автор: rbnuser. Лицензия: CC0 1.0. Источник: https://freesound.org/s/347416/
+
+Файлы: `347416_4551235-hq.ogg`
+
 ## 070916 Machine room server rack fans 3.wav
 
 Автор: thaighaudio. Лицензия: CC0 1.0. Источник: https://freesound.org/s/349689/
 
 Файлы: `349689_2205380-hq.ogg`
 
+## 07_b6.flac
+
+Автор: rbnuser. Лицензия: CC0 1.0. Источник: https://freesound.org/s/347415/
+
+Файлы: `347415_4551235-hq.ogg`
+
 ## 08 - Weaponry - Ultra-Heavy Cannon B
 
 Автор: Snoops_Audio1. Лицензия: CC0 1.0. Источник: https://freesound.org/s/807665/
 
 Файлы: `807665_17304967-hq.ogg`
+
+## 08_c7.flac
+
+Автор: rbnuser. Лицензия: CC0 1.0. Источник: https://freesound.org/s/347420/
+
+Файлы: `347420_4551235-hq.ogg`
+
+## 09_d7.flac
+
+Автор: rbnuser. Лицензия: CC0 1.0. Источник: https://freesound.org/s/347419/
+
+Файлы: `347419_4551235-hq.ogg`
 
 ## 10 8bit coin sounds
 
@@ -48,6 +108,24 @@ BSD 3-Clause (Freedoom) и общественное достояние (част
 Автор: rubberduck. Лицензия: CC0 1.0. Источник: https://opengameart.org/content/100-cc0-sfx-2
 
 Файлы: `sfx100v2_air_01.ogg`, `sfx100v2_air_02.ogg`, `sfx100v2_air_03.ogg`, `sfx100v2_door_01.ogg`, `sfx100v2_door_03.ogg`, `sfx100v2_footstep_wood_01.ogg`, `sfx100v2_footstep_wood_03.ogg`, `sfx100v2_loop_ambient_02.ogg`, `sfx100v2_loop_machine_01.ogg`, `sfx100v2_stones_01.ogg`, `sfx100v2_stones_02.ogg`, `sfx100v2_stones_03.ogg`, `sfx100v2_wood_03.ogg`
+
+## 10_e7.flac
+
+Автор: rbnuser. Лицензия: CC0 1.0. Источник: https://freesound.org/s/347422/
+
+Файлы: `347422_4551235-hq.ogg`
+
+## 11_fs7.flac
+
+Автор: rbnuser. Лицензия: CC0 1.0. Источник: https://freesound.org/s/347421/
+
+Файлы: `347421_4551235-hq.ogg`
+
+## 12_g7.flac
+
+Автор: rbnuser. Лицензия: CC0 1.0. Источник: https://freesound.org/s/347423/
+
+Файлы: `347423_4551235-hq.ogg`
 
 ## 16 button clicks
 
@@ -163,11 +241,149 @@ BSD 3-Clause (Freedoom) и общественное достояние (част
 
 Файлы: `725402_7157894-hq.ogg`
 
+## A3.ogg
+
+Автор: TEDAgame. Лицензия: CC0 1.0. Источник: https://freesound.org/s/448562/
+
+Файлы: `448562_9311684-hq.ogg`
+
 ## A320 tritone chime.wav
 
 Автор: nachosose. Лицензия: CC0 1.0. Источник: https://freesound.org/s/244583/
 
 Файлы: `244583_3212048-hq.ogg`
+
+## A4.ogg
+
+Автор: TEDAgame. Лицензия: CC0 1.0. Источник: https://freesound.org/s/448561/
+
+Файлы: `448561_9311684-hq.ogg`
+
+## A5.ogg
+
+Автор: TEDAgame. Лицензия: CC0 1.0. Источник: https://freesound.org/s/448560/
+
+Файлы: `448560_9311684-hq.ogg`
+
+## Accordion Keyboard Octave A3.m4a
+
+Автор: Miles_Thompson. Лицензия: CC0 1.0. Источник: https://freesound.org/s/560841/
+
+Файлы: `560841_12390108-hq.ogg`
+
+## Accordion Keyboard Octave A4.m4a
+
+Автор: Miles_Thompson. Лицензия: CC0 1.0. Источник: https://freesound.org/s/560839/
+
+Файлы: `560839_12390108-hq.ogg`
+
+## Accordion Keyboard Octave A5.m4a
+
+Автор: Miles_Thompson. Лицензия: CC0 1.0. Источник: https://freesound.org/s/560844/
+
+Файлы: `560844_12390108-hq.ogg`
+
+## Accordion Keyboard Octave B2.m4a
+
+Автор: Miles_Thompson. Лицензия: CC0 1.0. Источник: https://freesound.org/s/560815/
+
+Файлы: `560815_12390108-hq.ogg`
+
+## Accordion Keyboard Octave B3.m4a
+
+Автор: Miles_Thompson. Лицензия: CC0 1.0. Источник: https://freesound.org/s/560813/
+
+Файлы: `560813_12390108-hq.ogg`
+
+## Accordion Keyboard Octave B4.m4a
+
+Автор: Miles_Thompson. Лицензия: CC0 1.0. Источник: https://freesound.org/s/560819/
+
+Файлы: `560819_12390108-hq.ogg`
+
+## Accordion Keyboard Octave C4.m4a
+
+Автор: Miles_Thompson. Лицензия: CC0 1.0. Источник: https://freesound.org/s/560818/
+
+Файлы: `560818_12390108-hq.ogg`
+
+## Accordion Keyboard Octave C5.m4a
+
+Автор: Miles_Thompson. Лицензия: CC0 1.0. Источник: https://freesound.org/s/560807/
+
+Файлы: `560807_12390108-hq.ogg`
+
+## Accordion Keyboard Octave D4.m4a
+
+Автор: Miles_Thompson. Лицензия: CC0 1.0. Источник: https://freesound.org/s/560854/
+
+Файлы: `560854_12390108-hq.ogg`
+
+## Accordion Keyboard Octave D5.m4a
+
+Автор: Miles_Thompson. Лицензия: CC0 1.0. Источник: https://freesound.org/s/560856/
+
+Файлы: `560856_12390108-hq.ogg`
+
+## Accordion Keyboard Octave E3.m4a
+
+Автор: Miles_Thompson. Лицензия: CC0 1.0. Источник: https://freesound.org/s/560858/
+
+Файлы: `560858_12390108-hq.ogg`
+
+## Accordion Keyboard Octave E3b.m4a
+
+Автор: Miles_Thompson. Лицензия: CC0 1.0. Источник: https://freesound.org/s/560861/
+
+Файлы: `560861_12390108-hq.ogg`
+
+## Accordion Keyboard Octave E4.m4a
+
+Автор: Miles_Thompson. Лицензия: CC0 1.0. Источник: https://freesound.org/s/560860/
+
+Файлы: `560860_12390108-hq.ogg`
+
+## Accordion Keyboard Octave E5.m4a
+
+Автор: Miles_Thompson. Лицензия: CC0 1.0. Источник: https://freesound.org/s/560847/
+
+Файлы: `560847_12390108-hq.ogg`
+
+## Accordion Keyboard Octave F3.m4a
+
+Автор: Miles_Thompson. Лицензия: CC0 1.0. Источник: https://freesound.org/s/560804/
+
+Файлы: `560804_12390108-hq.ogg`
+
+## Accordion Keyboard Octave F4.m4a
+
+Автор: Miles_Thompson. Лицензия: CC0 1.0. Источник: https://freesound.org/s/560827/
+
+Файлы: `560827_12390108-hq.ogg`
+
+## Accordion Keyboard Octave F5.m4a
+
+Автор: Miles_Thompson. Лицензия: CC0 1.0. Источник: https://freesound.org/s/560809/
+
+Файлы: `560809_12390108-hq.ogg`
+
+## Accordion Keyboard Octave G3.m4a
+
+Автор: Miles_Thompson. Лицензия: CC0 1.0. Источник: https://freesound.org/s/560812/
+
+Файлы: `560812_12390108-hq.ogg`
+
+## Accordion Keyboard Octave G4.m4a
+
+Автор: Miles_Thompson. Лицензия: CC0 1.0. Источник: https://freesound.org/s/560831/
+
+Файлы: `560831_12390108-hq.ogg`
+
+## Accordion Keyboard Octave G5.m4a
+
+Автор: Miles_Thompson. Лицензия: CC0 1.0. Источник: https://freesound.org/s/560851/
+
+Файлы: `560851_12390108-hq.ogg`
 
 ## AK-47 Assault Rifle being unloaded and reloaded
 
@@ -228,6 +444,24 @@ BSD 3-Clause (Freedoom) и общественное достояние (част
 Автор: Kevin MacLeod (incompetech.com). Лицензия: CC BY 3.0. Источник: https://commons.wikimedia.org/wiki/File:Avec_Soin_(ISRC_USUAN1100860).mp3
 
 Файлы: `Avec_Soin_%28ISRC_USUAN1100860%29.mp3`
+
+## B3.ogg
+
+Автор: TEDAgame. Лицензия: CC0 1.0. Источник: https://freesound.org/s/448568/
+
+Файлы: `448568_9311684-hq.ogg`
+
+## B4.ogg
+
+Автор: TEDAgame. Лицензия: CC0 1.0. Источник: https://freesound.org/s/448536/
+
+Файлы: `448536_9311684-hq.ogg`
+
+## B5.ogg
+
+Автор: TEDAgame. Лицензия: CC0 1.0. Источник: https://freesound.org/s/448537/
+
+Файлы: `448537_9311684-hq.ogg`
 
 ## Basic Fire whoosh
 
@@ -331,6 +565,30 @@ BSD 3-Clause (Freedoom) и общественное достояние (част
 
 Файлы: `54047_533680-hq.ogg`
 
+## C3.ogg
+
+Автор: TEDAgame. Лицензия: CC0 1.0. Источник: https://freesound.org/s/448546/
+
+Файлы: `448546_9311684-hq.ogg`
+
+## C4.ogg
+
+Автор: TEDAgame. Лицензия: CC0 1.0. Источник: https://freesound.org/s/448549/
+
+Файлы: `448549_9311684-hq.ogg`
+
+## C5.ogg
+
+Автор: TEDAgame. Лицензия: CC0 1.0. Источник: https://freesound.org/s/448548/
+
+Файлы: `448548_9311684-hq.ogg`
+
+## C6.ogg
+
+Автор: TEDAgame. Лицензия: CC0 1.0. Источник: https://freesound.org/s/448551/
+
+Файлы: `448551_9311684-hq.ogg`
+
 ## Canon in D Major
 
 Автор: Johann Pachelbel; исполняет Kevin MacLeod (incompetech.com). Лицензия: CC BY 3.0. Источник: https://commons.wikimedia.org/wiki/File:Canon_in_D_Major_(ISRC_USUAN1100301).mp3
@@ -415,6 +673,54 @@ BSD 3-Clause (Freedoom) и общественное достояние (част
 
 Файлы: `482122_71257-hq.ogg`
 
+## Clean_A_str_pluck.wav
+
+Автор: SpeedY. Лицензия: CC0 1.0. Источник: https://freesound.org/s/8383/
+
+Файлы: `8383_6479-hq.ogg`
+
+## Clean_B_str_pluck.wav
+
+Автор: SpeedY. Лицензия: CC0 1.0. Источник: https://freesound.org/s/8386/
+
+Файлы: `8386_6479-hq.ogg`
+
+## Clean_D_str_pluck.wav
+
+Автор: SpeedY. Лицензия: CC0 1.0. Источник: https://freesound.org/s/8389/
+
+Файлы: `8389_6479-hq.ogg`
+
+## Clean_E1st_12th.wav
+
+Автор: SpeedY. Лицензия: CC0 1.0. Источник: https://freesound.org/s/8390/
+
+Файлы: `8390_6479-hq.ogg`
+
+## Clean_E1st_5th.wav
+
+Автор: SpeedY. Лицензия: CC0 1.0. Источник: https://freesound.org/s/8391/
+
+Файлы: `8391_6479-hq.ogg`
+
+## Clean_E1st_str_pluck.wav
+
+Автор: SpeedY. Лицензия: CC0 1.0. Источник: https://freesound.org/s/8394/
+
+Файлы: `8394_6479-hq.ogg`
+
+## Clean_E_str_pluck.wav
+
+Автор: SpeedY. Лицензия: CC0 1.0. Источник: https://freesound.org/s/8397/
+
+Файлы: `8397_6479-hq.ogg`
+
+## Clean_G_str_pluck.wav
+
+Автор: SpeedY. Лицензия: CC0 1.0. Источник: https://freesound.org/s/8403/
+
+Файлы: `8403_6479-hq.ogg`
+
 ## Coffee Espresso Machine Wave 44100hz
 
 Автор: Cafezz. Лицензия: CC0 1.0. Источник: https://freesound.org/s/333948/
@@ -493,6 +799,24 @@ BSD 3-Clause (Freedoom) и общественное достояние (част
 
 Файлы: `415594_4043130-hq.ogg`
 
+## D3.ogg
+
+Автор: TEDAgame. Лицензия: CC0 1.0. Источник: https://freesound.org/s/448608/
+
+Файлы: `448608_9311684-hq.ogg`
+
+## D4.ogg
+
+Автор: TEDAgame. Лицензия: CC0 1.0. Источник: https://freesound.org/s/448609/
+
+Файлы: `448609_9311684-hq.ogg`
+
+## D5.ogg
+
+Автор: TEDAgame. Лицензия: CC0 1.0. Источник: https://freesound.org/s/448619/
+
+Файлы: `448619_9311684-hq.ogg`
+
 ## Dark Energy_exp.wav
 
 Автор: kantouth. Лицензия: CC BY 4.0. Источник: https://freesound.org/s/104397/
@@ -570,6 +894,24 @@ BSD 3-Clause (Freedoom) и общественное достояние (част
 Автор: QuantumFellow. Лицензия: CC0 1.0. Источник: https://freesound.org/s/734841/
 
 Файлы: `734841_14713973-hq.ogg`
+
+## E3.ogg
+
+Автор: TEDAgame. Лицензия: CC0 1.0. Источник: https://freesound.org/s/448614/
+
+Файлы: `448614_9311684-hq.ogg`
+
+## E4.ogg
+
+Автор: TEDAgame. Лицензия: CC0 1.0. Источник: https://freesound.org/s/448613/
+
+Файлы: `448613_9311684-hq.ogg`
+
+## E5.ogg
+
+Автор: TEDAgame. Лицензия: CC0 1.0. Источник: https://freesound.org/s/448612/
+
+Файлы: `448612_9311684-hq.ogg`
 
 ## Electric zap.wav
 
@@ -654,6 +996,24 @@ BSD 3-Clause (Freedoom) и общественное достояние (част
 Автор: OpenGameArt. Лицензия: CC0 1.0. Источник: https://opengameart.org/content/explosion-somewhere-far
 
 Файлы: `explosion_somewhere_far.mp3`
+
+## F3.ogg
+
+Автор: TEDAgame. Лицензия: CC0 1.0. Источник: https://freesound.org/s/448589/
+
+Файлы: `448589_9311684-hq.ogg`
+
+## F4.ogg
+
+Автор: TEDAgame. Лицензия: CC0 1.0. Источник: https://freesound.org/s/448595/
+
+Файлы: `448595_9311684-hq.ogg`
+
+## F5.ogg
+
+Автор: TEDAgame. Лицензия: CC0 1.0. Источник: https://freesound.org/s/448594/
+
+Файлы: `448594_9311684-hq.ogg`
 
 ## Fast whoosh, bamboo swoosh through air, version 1
 
@@ -762,6 +1122,24 @@ BSD 3-Clause (Freedoom) и общественное достояние (част
 Автор: IENBA. Лицензия: CC0 1.0. Источник: https://freesound.org/s/611356/
 
 Файлы: `611356_9616576-hq.ogg`
+
+## G3.ogg
+
+Автор: TEDAgame. Лицензия: CC0 1.0. Источник: https://freesound.org/s/448559/
+
+Файлы: `448559_9311684-hq.ogg`
+
+## G4.ogg
+
+Автор: TEDAgame. Лицензия: CC0 1.0. Источник: https://freesound.org/s/448552/
+
+Файлы: `448552_9311684-hq.ogg`
+
+## G5.ogg
+
+Автор: TEDAgame. Лицензия: CC0 1.0. Источник: https://freesound.org/s/448553/
+
+Файлы: `448553_9311684-hq.ogg`
 
 ## Gas Torch Burn
 
@@ -2028,6 +2406,30 @@ BSD 3-Clause (Freedoom) и общественное достояние (част
 Автор: Opticreep. Лицензия: CC0 1.0. Источник: https://freesound.org/s/255405/
 
 Файлы: `255405_4731953-hq.ogg`
+
+## Tubular Bells - C4 (TB_hit_C4_v4_rr1.wav)
+
+Автор: sgossner. Лицензия: CC0 1.0. Источник: https://freesound.org/s/374273/
+
+Файлы: `374273_2475994-hq.ogg`
+
+## Tubular Bells - C5 (TB_hit_C5_v4_rr1.wav)
+
+Автор: sgossner. Лицензия: CC0 1.0. Источник: https://freesound.org/s/374274/
+
+Файлы: `374274_2475994-hq.ogg`
+
+## Tubular Bells - E#5 (TB_hit_F5_v3_rr1.wav)
+
+Автор: sgossner. Лицензия: CC0 1.0. Источник: https://freesound.org/s/374272/
+
+Файлы: `374272_2475994-hq.ogg`
+
+## Tubular Bells - F#4 (TB_hit_G4_v4_rr1.wav)
+
+Автор: sgossner. Лицензия: CC0 1.0. Источник: https://freesound.org/s/374275/
+
+Файлы: `374275_2475994-hq.ogg`
 
 ## UAS Drone Hover 01
 

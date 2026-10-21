@@ -1,7 +1,8 @@
 /* ════════════════════════════════════════════════════════════════════
    «Подземная лаборатория» — музыкальные инструменты (1.6, 2.0).
-   У каждого инструмента свой тембр (синтез: пианино, гитара, баян,
-   колокола, музыкальная шкатулка колыбели) и поле для игры: три ряда нот
+   У каждого инструмента свой голос — с 2.0 это записи настоящих
+   инструментов (пианино, гитара, баян, трубчатые колокола, музыкальная
+   шкатулка колыбели; lab/sounds/inst, CC0) — и поле для игры: три ряда нот
    (нижний, средний, верхний — три октавы), в каждом от «до» до «си».
    С клавиатуры: стрелки влево и вправо — ноты, вверх и вниз — ряды, пробел
    — сыграть ноту, Enter — подольше, цифры 1–7 — нота сразу, Escape —
@@ -26,7 +27,7 @@ var ROW_NAMES = ["нижний ряд", "средний ряд", "верхний
 var ROW_BASE = [130.81, 261.63, 523.25]; /* до малой, первой и второй октавы */
 function freq(row, i) { return ROW_BASE[row] * Math.pow(2, SEMI[i] / 12); }
 var INST = {
-  piano: { n: "Пианино", hold: 1.6 },
+  piano: { n: "Пианино", hold: 1.6, damp: true },
   guitar: { n: "Гитара", hold: 1.2 },
   accordion: { n: "Баян", hold: 0.9, sustain: true },
   bell: { n: "Колокола", hold: 3.2, ring: true },
@@ -35,9 +36,80 @@ var INST = {
 function ctx() { var AE = LAB.AE; if (!AE || !AE.ensure || !AE.ensure()) return null; return AE.ctx; }
 function dest() { var AE = LAB.AE; return AE.puzzle || AE.ui || AE.fx; }
 
-/* Голос инструмента: частота, длительность (для баяна — пока «держат»), панорама. */
-function voice(inst, f, dur, pan) {
+/* ── (2.0) записи настоящих нот ──
+   У каждого инструмента — набор записанных нот (ins_<инструмент>_<midi>,
+   высота каждой выверена по строю). Нужная нота берётся из ближайшей
+   записи со сдвигом высоты; пока записи грузятся или звуки выключены —
+   прежний синтез. Колыбель — музыкальная шкатулка: она звучит на две
+   октавы выше нот поля, как настоящая. Записи грузятся, когда подходят к
+   инструменту, и выгружаются, когда на нём давно не играют. */
+var OCT = { lullaby: 24 };
+var REVERB = { piano: 0, guitar: 0.1, accordion: 0.1, bell: 0.15, lullaby: 0.12 };
+var NOTES = {}, relT = {}, LIVE = [], MAX_ALL = 32;
+function notes(inst) {
+  if (NOTES[inst] && NOTES[inst].length) return NOTES[inst];
+  var out = [], re = new RegExp("^ins_" + inst + "_(\\d+)$");
+  for (var id in (LAB.SND || {})) { var m = re.exec(id); if (m) out.push(+m[1]); }
+  return (NOTES[inst] = out.sort(function (a, b) { return a - b; }));
+}
+function ids(inst, list) { return (list || notes(inst)).map(function (n) { return "ins_" + inst + "_" + n; }); }
+function nearest(list, m) {
+  var best = list[0];
+  for (var i = 1; i < list.length; i++) if (Math.abs(list[i] - m) < Math.abs(best - m)) best = list[i];
+  return best;
+}
+function midiOf(inst, f) { return 69 + 12 * Math.log(f / 440) / Math.LN2 + (OCT[inst] || 0); }
+/* выгрузить записи инструмента, когда на нём давно не играют */
+function keep(inst) {
+  clearTimeout(relT[inst]);
+  relT[inst] = setTimeout(function () {
+    var B = LAB.Bank;
+    if ((surf && surf.inst === inst) || (LAB.mini && LAB.mini.active && LAB.mini.active())) { keep(inst); return; }
+    if (B && B.release) B.release(ids(inst));
+  }, 90000);
+}
+/* Подготовить записи инструмента (у инструмента, перед игрой); done — когда готовы. */
+function preload(inst, done) {
+  var B = LAB.Bank;
+  if (!B || !B.preload || !notes(inst).length) { if (done) done(); return; }
+  keep(inst);
+  B.preload(ids(inst), done);
+}
+function sampled(inst, f, dur, pan, held) {
+  var B = LAB.Bank, list = notes(inst);
+  if (!B || !B.play || !list.length) return null;
+  var m = midiOf(inst, f), n = nearest(list, m), id = "ins_" + inst + "_" + n;
+  if (!B.ready(id)) { preload(inst); return null; }
+  var o = (LAB.SND[id] && LAB.SND[id].o) || {}, d = INST[inst];
+  var h = B.play(id, { rate: Math.pow(2, (m - n) / 12), vary: 0, pan: Math.max(-1, Math.min(1, pan || 0)), bus: "puzzle", reverb: REVERB[inst] || 0, loop: !!o.ls, loopStart: o.ls, loopEnd: o.le });
+  if (!h) return null;
+  keep(inst);
+  /* баян тянется, пока держат клавишу; у пианино отпущенная клавиша глушится —
+     с клавиатуры клавишу «держат» dur секунд, пальцем — пока он на клавише */
+  if (d.sustain) setTimeout(function () { h.stop(0.12); }, dur * 1000);
+  else if (d.damp && !held) setTimeout(function () { h.stop(0.4); }, dur * 1000);
+  return h;
+}
+
+/* Голос инструмента: частота, длительность (сколько «держат» клавишу), панорама;
+   held — клавишу держат пальцем: отпустит — заглушит сам (поле на весь экран). */
+function voice(inst, f, dur, pan, held) {
   var c = ctx(); if (!c) return null;
+  var d0 = INST[inst] ? INST[inst] : INST.piano;
+  if (!INST[inst]) inst = "piano";
+  var hs = sampled(inst, f, dur || d0.hold, pan, held);
+  if (hs) return live(hs);
+  return live(synth(c, inst, f * Math.pow(2, (OCT[inst] || 0) / 12), dur, pan));
+}
+/* не больше MAX_ALL голосов сразу: самый старый затихает */
+function live(h) {
+  if (!h) return h;
+  LIVE.push(h);
+  if (LIVE.length > MAX_ALL) LIVE.shift().stop(0.06);
+  return h;
+}
+/* Синтез — пока записей нет. */
+function synth(c, inst, f, dur, pan) {
   var t = c.currentTime, out = c.createGain(), d = INST[inst] ? INST[inst] : INST.piano;
   dur = dur || d.hold;
   out.gain.value = 1;
@@ -100,14 +172,24 @@ function voice(inst, f, dur, pan) {
     oscs.forEach(function (o) { try { o.stop(now + fade + 0.03); } catch (e) { /* уже отзвучала */ } });
   } };
 }
-/* Знакомая мелодия: последовательность частот (0 — пауза), шаг — 0.4 с. */
+/* Знакомая мелодия: последовательность частот (0 — пауза), шаг — 0.4 с.
+   (2.0) Сначала — записи нот мелодии (не дольше 0.8 с), чтобы вся мелодия
+   звучала одним голосом. */
 function tune(inst, seq, step) {
   var c = ctx(); if (!c) return false;
   step = step || 0.4;
-  seq.forEach(function (f, i) {
-    if (!f) return;
-    setTimeout(function () { voice(inst, f, Math.min(0.9, step * 1.6), -0.3 + 0.6 * (i % 3) / 2); }, 120 + i * step * 1000);
-  });
+  var started = false, go = function () {
+    if (started) return;
+    started = true;
+    seq.forEach(function (f, i) {
+      if (!f) return;
+      setTimeout(function () { voice(inst, f, Math.min(0.9, step * 1.6), -0.3 + 0.6 * (i % 3) / 2); }, 120 + i * step * 1000);
+    });
+  };
+  var B = LAB.Bank, list = notes(inst);
+  var need = list.length && B && B.ready ? ids(inst, seq.filter(Boolean).map(function (f) { return nearest(list, midiOf(inst, f)); })) : [];
+  if (!need.length || need.every(function (id) { return B.ready(id); })) go();
+  else { keep(inst); B.preload(need, go); setTimeout(go, 800); }
   return true;
 }
 
@@ -138,6 +220,7 @@ function open(inst, o, cb) {
     if (g.kind === "tap" && g.n === 1) { playAt(st, inst, false); return; }
     if (g.kind === "dtap" && g.n === 1) { playAt(st, inst, true); return; }
   };
+  preload(inst);
   LAB.mini.start({ name: name, handler: handler, quiet: true, cleanup: surfOff, cb: function () { if (cb) cb(st.played); } });
   /* (2.0) на телефоне — весь экран, телефон боком */
   if (touchy() && !o.field) { surfOn(inst, name, st); return true; }
@@ -194,8 +277,8 @@ function strike(s, p) {
   var g = grid(s), f = noteF(s, p.row, p.col), pan = g.C > 1 ? -0.7 + 1.4 * p.col / (g.C - 1) : 0, h;
   if (s.kind === "strings") {
     if (s.str[p.row]) s.str[p.row].stop(0.04); /* струну тронули снова */
-    h = s.str[p.row] = voice(s.inst, f, null, pan);
-  } else h = p.h = voice(s.inst, f, INST[s.inst].sustain ? 8 : null, pan);
+    h = s.str[p.row] = voice(s.inst, f, null, pan, true);
+  } else h = p.h = voice(s.inst, f, INST[s.inst].sustain ? 8 : null, pan, true);
   if (h) { s.live.push(h); if (s.live.length > MAX_VOICES) s.live.shift().stop(0.05); }
   s.log.push(Math.round(f * 100) / 100); if (s.log.length > 60) s.log.shift();
   s.st.played++;
@@ -295,5 +378,7 @@ LAB.surface = {
   _state: function () { return { on: !!surf, kind: surf && surf.kind, frets: !!(surf && surf.frets), log: surf ? surf.log.slice() : [], orient: lastOrient }; }
 };
 
-LAB.instruments = { INST: INST, voice: voice, tune: tune, open: open, freq: freq, NOTE_NAMES: NOTE_NAMES, ROW_NAMES: ROW_NAMES, CHORDS: CHORDS, GTR_OPEN: GTR_OPEN, midiF: midiF };
+LAB.instruments = { INST: INST, voice: voice, tune: tune, open: open, preload: preload, freq: freq, NOTE_NAMES: NOTE_NAMES, ROW_NAMES: ROW_NAMES, CHORDS: CHORDS, GTR_OPEN: GTR_OPEN, midiF: midiF,
+  /* для проверок: какая запись и с каким сдвигом сыграет ноту */
+  _pick: function (inst, f) { var l = notes(inst); if (!l.length) return null; var m = midiOf(inst, f), n = nearest(l, m); return { id: "ins_" + inst + "_" + n, rate: Math.pow(2, (m - n) / 12) }; } };
 })();

@@ -16,8 +16,9 @@
      ловушки (oko.js: приказ, combat.js: работа сапёра).
    Всё — своим потоком случайностей, после кабинетов (annex.js): прочее на
    этаже от охраны не меняется. Охрана — с самого первого этажа; у места
-   пробуждения, лестниц и лифта никого не ставим — осмотреться. На первом
-   этаже машин в кабинетах меньше.
+   пробуждения, лестниц и лифта никого не ставим — осмотреться. Наверху
+   патрулируют шагающие обходчики — их слышно издалека; на первых уровнях
+   охрану усиливает второй проход (reinforce).
    ════════════════════════════════════════════════════════════════════ */
 (function () {
 "use strict";
@@ -71,7 +72,7 @@ function rolePool(role, L, F) {
   var ranged = own.filter(function (id) { return has(LAB.FOES[id], "ranged") || has(LAB.FOES[id], "chase"); });
   switch (role) {
     case "guard":
-      out = d0 < 20 ? ["drone"] : d0 < 40 ? ["drone", "patrolbot"] : d0 < 100 ? ["patrolbot", "drone", "patrolbot"] : d0 < 140 ? ["patrolbot", "guardbot"] : ["guardbot", "patrolbot", "android"];
+      out = d0 < 20 ? ["drone", "walker"] : d0 < 40 ? ["drone", "patrolbot"] : d0 < 100 ? ["patrolbot", "drone", "patrolbot"] : d0 < 140 ? ["patrolbot", "guardbot"] : ["guardbot", "patrolbot", "android"];
       if (L > 10 && ranged.length) out = out.concat(ranged, ranged);
       break;
     case "tech":
@@ -98,8 +99,10 @@ function rolePool(role, L, F) {
 function patrolPool(L, F) {
   var d0 = LAB.depth(L, F), lev = LAB.LEVELS[L] || {}, out;
   var own = (lev.foes || []).filter(function (id) { return mobileMech(id) && (has(LAB.FOES[id], "patrol") || has(LAB.FOES[id], "ranged")); });
-  out = d0 < 8 ? ["drone", "courier"] : d0 < 20 ? ["drone", "courier", "patrolbot"] : d0 < 60 ? ["patrolbot", "drone"] : ["patrolbot"];
-  out = out.concat(own, own);
+  /* (2.0) наверху — шагающие обходчики: их шаги по коридору слышно издалека;
+     машины уровня здесь — реже, чтобы обход было слышно */
+  out = d0 < 8 ? ["walker", "walker", "walker", "courier", "drone"] : d0 < 20 ? ["walker", "walker", "patrolbot", "drone"] : d0 < 60 ? ["patrolbot", "drone", "walker"] : ["patrolbot"];
+  out = out.concat(d0 < 20 ? [] : own.concat(own));
   out = out.filter(ok);
   return out.length ? out : ["patrolbot"];
 }
@@ -204,6 +207,8 @@ function place(ctx) {
     var st = startOn(fl, pts, busy, r);
     if (!st || !farFrom(arr, st[0], st[1], 9)) continue;
     var fid = r.pick(pPool);
+    /* (2.0) наверху первый патруль этажа — всегда обходчик: обход слышно */
+    if (p === 0 && d0 < 20 && ok("walker")) fid = "walker";
     var f = ctx.makeFoe(fid, st[0], st[1], -1, { corr: c.id, patrol: true, beat: pts, oko: true }, r);
     if (!f) continue;
     mark(st[0], st[1]); stats.patrols++;
@@ -259,7 +264,52 @@ function place(ctx) {
     }
     stats.rooms++;
   }
-  fl.garrison = { patrols: stats.patrols, sappers: stats.sappers, rooms: stats.rooms, robots: placed };
+  var more = reinforce(ctx, corrs, busy, arr, stats);
+  fl.garrison = { patrols: stats.patrols, sappers: stats.sappers, rooms: stats.rooms, robots: placed + more };
+}
+/* 4. (2.0) Первые уровни: охраны больше — ещё патрули обходчиков и машины в
+   кабинетах. Своим потоком и после прежней охраны: прежние машины этажа на
+   своих местах — записи игры не сбиваются. */
+function reinforce(ctx, corrs, busy, arr, stats) {
+  var fl = ctx.fl, L = ctx.L, F = ctx.F, W = LAB.W;
+  var addP = L === 1 ? 2 : L <= 3 ? 1 : 0, addR = L === 1 ? (F === 1 ? 6 : 4) : 0, placed = 0;
+  if (!addP && !addR) return 0;
+  var r = LAB.Rng(ctx.seed, "garrison+:" + L + ":" + F + ":" + (ctx.attempt || 0));
+  var mark = function (x, y) { busy[y * W + x] = 1; };
+  /* патрули — в коридорах, где их ещё нет */
+  var used = {};
+  fl.foes.forEach(function (q) { if (q.beat && q.corr != null) used[q.corr] = 1; });
+  var free = corrs.filter(function (c) { return !used[c.id]; });
+  r.shuffle(free);
+  var pPool = patrolPool(L, F);
+  for (var p = 0, k = 0; p < addP && k < free.length; k++) {
+    var c = free[k], pts = beatFor(fl, r, c, p + 1, busy);
+    if (!pts) continue;
+    var st = startOn(fl, pts, busy, r);
+    if (!st || !farFrom(arr, st[0], st[1], 9)) continue;
+    if (ctx.makeFoe(r.pick(pPool), st[0], st[1], -1, { corr: c.id, patrol: true, beat: pts, oko: true }, r)) { mark(st[0], st[1]); stats.patrols++; p++; }
+  }
+  /* машины — в кабинетах, где пока никого: важные — первыми */
+  var rooms = [];
+  fl.rooms.forEach(function (rm, i) { if (rm && rm.annex && !rm.hidden && !fl.foes.some(function (q) { return q.room === i; })) rooms.push(i); });
+  r.shuffle(rooms);
+  rooms.sort(function (a, b) { return CAT[category(fl.rooms[b])].imp - CAT[category(fl.rooms[a])].imp; });
+  for (var ri = 0; ri < rooms.length && placed < addR; ri++) {
+    var id = rooms[ri], rm = fl.rooms[id], def = (LAB.ANNEX_ROOMS || {})[rm.type] || {};
+    if (SKIP_KIND[def.kind]) continue;
+    var dr = null; for (var di = 0; di < fl.doors.length; di++) if (fl.doors[di].room === id && fl.doors[di].annex) { dr = fl.doors[di]; break; }
+    if (dr && !farFrom(arr, dr.x, dr.y, 9)) continue;
+    var cat = CAT[category(rm)];
+    if (!r.chance(Math.min(0.9, cat.p + 0.25))) continue;
+    var cells = [];
+    for (var y = rm.y0; y <= rm.y1; y++) for (var x = rm.x0; x <= rm.x1; x++) if (freeCell(fl, x, y, busy) && !nearDoor(fl, x, y)) cells.push([x, y]);
+    if (!cells.length) continue;
+    var cc = r.pick(cells), role = cat.roles[0], fid = r.pick(rolePool(role, L, F)), base = LAB.FOES[fid];
+    var ex = { garrison: category(rm), oko: true };
+    if (!has(base, "cleaner") && !has(base, "mimic")) { ex.guard = "room"; ex.post = [cc[0], cc[1]]; if (role === "worker" || role === "tech" || role === "loader") ex.work = true; }
+    if (ctx.makeFoe(fid, cc[0], cc[1], id, ex, r)) { mark(cc[0], cc[1]); placed++; stats.rooms++; }
+  }
+  return placed;
 }
 
 LAB.garrison = { place: place, category: category, CAT: CAT, rolePool: rolePool, patrolPool: patrolPool };

@@ -470,18 +470,20 @@ function foeSound(f, kind) {
 }
 var hoverT = {};
 function foeStep(f) {
+  /* (2.0) патрульного слышно лучше: его шаги — знак, что по коридору идёт обход */
+  var pat = !!(f.beat || f.patrol);
   /* летающая машина не шагает — слышно, как она жужжит */
   var beh0 = (f.base && f.base.beh) || [];
   if (beh0.indexOf("fly") >= 0) {
     var now0 = Date.now();
-    if (hoverT[f.id] && now0 - hoverT[f.id] < 1500) return;
+    if (hoverT[f.id] && now0 - hoverT[f.id] < (pat ? 900 : 1500)) return;
     hoverT[f.id] = now0;
-    atFoe(has(f.snd + "_idle") ? f.snd + "_idle" : "robot_idle", f.x, f.y, { gain: 0.6, rate: (f.base && f.base.sndRate) || 1 });
+    atFoe(has(f.snd + "_idle") ? f.snd + "_idle" : "robot_idle", f.x, f.y, { gain: pat ? 0.85 : 0.6, rate: (f.base && f.base.sndRate) || 1 });
     return;
   }
   if (Math.random() < 0.35 && f.kind === "bio" && !/rat|roach|micro/.test(f.type)) return;
   var id = f.kind === "mech" ? (has(f.snd + "_step") ? f.snd + "_step" : "robot_step") : (has(f.snd + "_step") ? f.snd + "_step" : "mutant_step");
-  atFoe(id, f.x, f.y, { gain: f.boss ? 1 : 0.65, rate: ((f.base && f.base.sndRate) || 1) * (f.boss ? 0.8 : 1) });
+  atFoe(id, f.x, f.y, { gain: f.boss || pat ? 1 : 0.65, rate: ((f.base && f.base.sndRate) || 1) * (f.boss ? 0.8 : 1) });
 }
 function foeHit(f, dt, dmg, crit) { atFoe(f.kind === "mech" ? "hit_metal" : "hit_flesh", f.x, f.y, { gain: crit ? 1.2 : 0.9 }); if (Math.random() < 0.5) foeSound(f, "hurt"); }
 /* Гибель врага (1.6: ярче и слоистее): крик или треск самой машины, затем

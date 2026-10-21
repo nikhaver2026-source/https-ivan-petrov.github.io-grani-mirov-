@@ -2692,6 +2692,21 @@ LAB.ui.closeAll();
     LAB.mini.gesture({ kind: "back", n: 1 }); await wait(100);
     out.instOff = !LAB.mini.active() && played >= 3;
     out.voice = !!LAB.instruments.voice("bell", 440, 0.3, 0) && !!LAB.instruments.voice("accordion", 330, 0.5, 0.2);
+    /* (2.0) записи настоящих нот: высота точная, у баяна петля, шкатулка — на две октавы выше нот поля */
+    {
+      const IN = LAB.instruments, insN = Object.keys(LAB.SND).filter(k => /^ins_/.test(k)), S0 = LAB.settings.effects;
+      LAB.settings.effects = 1;
+      await new Promise(res => { let n = 0; ["piano", "accordion"].forEach(k => IN.preload(k, () => { if (++n === 2) res(); })); setTimeout(res, 15000); });
+      const hp = IN.voice("piano", IN.freq(1, 0), 0.4, 0), ha = IN.voice("accordion", IN.freq(1, 2), 0.4, 0);
+      const pk = IN._pick("piano", IN.freq(1, 0) * Math.pow(2, 1 / 12)), pl = IN._pick("lullaby", 392);
+      out.samples = insN.length >= 60 && ["piano", "guitar", "accordion", "bell", "lullaby"].every(k => insN.some(id => id.indexOf("ins_" + k + "_") === 0))
+        && !!(hp && hp.src) && Math.abs(hp.src.playbackRate.value - 1) < 0.002
+        && !!(ha && ha.src && ha.src.loop && ha.src.loopStart > 0 && ha.src.loopEnd > ha.src.loopStart)
+        && !!pk && Math.abs(Math.log(pk.rate) / Math.LN2 * 12) <= 1.01 && !!pl && pl.id === "ins_lullaby_93" && Math.abs(pl.rate - Math.pow(2, -2 / 12)) < 0.002
+        && !LAB.SOUND_ALL.some(k => /^ins_/.test(k));
+      out.samplesDiag = [insN.length, hp && hp.src ? hp.src.playbackRate.value : "синтез", ha && ha.src ? [ha.src.loop, ha.src.loopStart, ha.src.loopEnd].join("/") : "синтез", JSON.stringify(pk), JSON.stringify(pl)].join(" ");
+      LAB.settings.effects = S0;
+    }
     /* (2.0) телефон боком: весь экран — инструмент, игра пальцами, два пальца вниз — отойти */
     const kb0 = LAB.keysMode, W0 = window.innerWidth, H0 = window.innerHeight, I = LAB.instruments;
     const r2 = f => Math.round(f * 100) / 100;
@@ -2772,6 +2787,7 @@ LAB.ui.closeAll();
   ok(v16.logicDoor && v16.logicText && v16.logicItem && v16.logicCond, "логический замок: есть на этажах, пункт решения, условие окном (" + v16.logicDiag + ")");
   ok(v16.chess && v16.uniq && v16.chessFx, "задачи с единственным решением, у шахматных позиций есть мат в один ход, на столике — настоящая партия");
   ok(v16.instOn && v16.instOff && v16.voice, "инструмент: поле из трёх рядов перехватывает жесты, ноты звучат, уход — не провал");
+  ok(v16.samples, "инструменты — записи настоящих нот: до первой октавы звучит без сдвига, до-диез — из соседней записи на полутон, у баяна петля, шкатулка на две октавы выше, ноты не грузятся заранее (" + v16.samplesDiag + ")");
   ok(v16.surfOn && v16.gliss && v16.rows && v16.surfOff, "пианино на весь экран: экран горизонтально, палец по ряду — семь нот подряд, по рядам снизу вверх — три октавы, два пальца вниз — отойти, экран снова вертикальный");
   ok(v16.gtrOn && v16.strum && v16.frets && v16.fretRun && v16.gtrOff, "гитара на весь экран: перебор поперёк струн — аккорд до мажор, касание двумя пальцами — лады, вдоль струны — по полутону, «Назад» — отойти");
   ok(v16.zig && v16.mineFlag && v16.zigArmed, "ловушка — жест вверх-вниз, мина — вниз-вверх, и с оружием в руках тоже (" + v16.zigDiag + ")");
@@ -2832,9 +2848,27 @@ LAB.ui.closeAll();
       A.foeSound = orig; G.st.cloak = cl;
       out.near = near; out.far = far; out.type = bot.type + "/" + bot.garrison;
     }
+    /* (2.0) наверху патрулируют шагающие обходчики; патруль поблизости «Эхо» называет */
+    out.walkers = live().filter(f => f.beat && f.type === "walker").length;
+    const pat = live().find(f => f.beat && f.kind === "mech");
+    if (pat) {
+      const fl = g.CUR.fl, x0 = G.x, y0 = G.y, cl = G.st.cloak;
+      const ok2 = (x, y) => LAB.inb(x, y) && [LAB.T.CORR, LAB.T.ROOM].indexOf(fl.t[y * LAB.W + x]) >= 0 && !fl.objAt[y * LAB.W + x];
+      let cell = null;
+      for (let r = 4; r <= 7 && !cell; r++) for (let dx = -r; dx <= r && !cell; dx++) for (const dy of [-r, r]) if (!cell && ok2(pat.x + dx, pat.y + dy)) cell = [pat.x + dx, pat.y + dy];
+      if (cell) {
+        G.st.cloak = 999; C.foes().forEach(f => { if (f !== pat) f.dead = true; });
+        C._cueReset(); SPOKEN.length = 0;
+        G.x = cell[0]; G.y = cell[1];
+        for (let i = 0; i < 6; i++) { pat.state = "idle"; C.tick(); }
+        out.cue = SPOKEN.filter(t => /^(Шаги|Гул) патруля: /.test(t)).join(" | ");
+        G.x = x0; G.y = y0; G.st.cloak = cl;
+      }
+    }
     return out;
   });
-  ok(gar.patrols >= 1 && gar.rooms >= 1, "охрана с первого этажа: патрули в коридорах (" + gar.patrols + "), машины в кабинетах (" + gar.rooms + ")");
+  ok(gar.patrols >= 3 && gar.rooms >= 8, "охрана с первого этажа: патрули в коридорах (" + gar.patrols + "), машины в кабинетах (" + gar.rooms + ")");
+  ok(gar.walkers >= 1 && /^(Шаги|Гул) патруля: .+(шаг|шага|шагов)\.$/.test(gar.cue || ""), "наверху патрулируют обходчики (" + gar.walkers + "), патруль поблизости «Эхо» называет: " + (gar.cue || "молчит"));
   ok(gar.near >= 4 && gar.near > gar.far * 2, "машину в кабинете слышно, когда вы рядом (" + gar.type + "): в одном помещении — " + gar.near + " раз за 20 секунд, издалека — " + gar.far);
 
   console.log("Обход этажей одного зерна: вход, такты, осмотр");
