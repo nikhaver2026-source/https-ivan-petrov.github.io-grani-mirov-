@@ -2690,7 +2690,40 @@ LAB.ui.closeAll();
     LAB.mini.gesture({ kind: "swipe", n: 1, dir: "R" }); LAB.mini.gesture({ kind: "swipe", n: 1, dir: "U" }); LAB.mini.gesture({ kind: "tap", n: 1 }); LAB.mini.gesture({ kind: "digit", n: 1, d: 5 });
     LAB.mini.gesture({ kind: "back", n: 1 }); await wait(100);
     out.instOff = !LAB.mini.active() && played >= 3;
-    out.voice = LAB.instruments.voice("bell", 440, 0.3, 0) === true && LAB.instruments.voice("accordion", 330, 0.5, 0.2) === true;
+    out.voice = !!LAB.instruments.voice("bell", 440, 0.3, 0) && !!LAB.instruments.voice("accordion", 330, 0.5, 0.2);
+    /* (2.0) телефон боком: весь экран — инструмент, игра пальцами, два пальца вниз — отойти */
+    const kb0 = LAB.keysMode, W0 = window.innerWidth, H0 = window.innerHeight, I = LAB.instruments;
+    const r2 = f => Math.round(f * 100) / 100;
+    const pe = (type, id, x, y) => LAB.surface.pointer({ type, pointerId: id, clientX: x, clientY: y });
+    const slide = (id, x0, y0, x1, y1, n) => { pe("pointerdown", id, x0, y0); for (let k = 1; k <= n; k++) pe("pointermove", id, x0 + (x1 - x0) * k / n, y0 + (y1 - y0) * k / n); pe("pointerup", id, x1, y1); };
+    LAB.keysMode = false;
+    let pl2 = -1;
+    LAB.instruments.open("piano", { name: "Пианино" }, n => { pl2 = n; });
+    const s1 = LAB.surface._state();
+    out.surfOn = s1.on && s1.kind === "keys" && s1.orient === "landscape" && LAB.mini.active();
+    slide(1, 2, H0 * 0.5, W0 - 2, H0 * 0.5, 40);
+    out.gliss = JSON.stringify(LAB.surface._state().log) === JSON.stringify([0, 1, 2, 3, 4, 5, 6].map(i => r2(I.freq(1, i))));
+    slide(2, 3, H0 * 0.95, 3, H0 * 0.05, 30);
+    out.rows = JSON.stringify(LAB.surface._state().log.slice(-3)) === JSON.stringify([0, 1, 2].map(r => r2(I.freq(r, 0))));
+    pe("pointerdown", 3, W0 * 0.3, H0 * 0.2); pe("pointerdown", 4, W0 * 0.6, H0 * 0.2);
+    for (let k = 1; k <= 10; k++) { pe("pointermove", 3, W0 * 0.3, H0 * (0.2 + 0.06 * k)); pe("pointermove", 4, W0 * 0.6, H0 * (0.2 + 0.06 * k)); }
+    pe("pointerup", 3, W0 * 0.3, H0 * 0.8); pe("pointerup", 4, W0 * 0.6, H0 * 0.8);
+    await wait(100);
+    const s2 = LAB.surface._state();
+    out.surfOff = !s2.on && s2.orient === "portrait" && !LAB.mini.active() && pl2 >= 10;
+    let pl3 = -1;
+    LAB.instruments.open("guitar", { name: "Гитара" }, n => { pl3 = n; });
+    const s3 = LAB.surface._state();
+    out.gtrOn = s3.on && s3.kind === "strings" && !s3.frets;
+    slide(5, W0 * 0.05, H0 * 0.97, W0 * 0.05, H0 * 0.03, 40);
+    out.strum = JSON.stringify(LAB.surface._state().log.slice(-6)) === JSON.stringify(I.CHORDS[0].m.map(m => r2(I.midiF(m))));
+    pe("pointerdown", 6, W0 * 0.5, H0 * 0.5); pe("pointerdown", 7, W0 * 0.7, H0 * 0.5); pe("pointerup", 6, W0 * 0.5, H0 * 0.5); pe("pointerup", 7, W0 * 0.7, H0 * 0.5);
+    out.frets = LAB.surface._state().frets;
+    slide(8, 2, H0 * 0.97, W0 * 0.33, H0 * 0.97, 30);
+    out.fretRun = JSON.stringify(LAB.surface._state().log.slice(-4)) === JSON.stringify([0, 1, 2, 3].map(k => r2(I.midiF(I.GTR_OPEN[0] + k))));
+    LAB.mini.gesture({ kind: "back", n: 1 }); await wait(100);
+    out.gtrOff = !LAB.surface.active() && LAB.surface._state().orient === "portrait" && pl3 > 0;
+    LAB.keysMode = kb0;
     /* ловушка — жест вверх-вниз, мина — вниз-вверх; (2.0) и с оружием в руках */
     g.enterFloor(2, 4, "down", true); C.foes().forEach(f => { f.dead = true; }); G.dead = false; G.drawn = false; G.hp = G.hpMax;
     fl = g.CUR.fl;
@@ -2738,9 +2771,40 @@ LAB.ui.closeAll();
   ok(v16.logicDoor && v16.logicText && v16.logicItem && v16.logicCond, "логический замок: есть на этажах, пункт решения, условие окном (" + v16.logicDiag + ")");
   ok(v16.chess && v16.uniq && v16.chessFx, "задачи с единственным решением, у шахматных позиций есть мат в один ход, на столике — настоящая партия");
   ok(v16.instOn && v16.instOff && v16.voice, "инструмент: поле из трёх рядов перехватывает жесты, ноты звучат, уход — не провал");
+  ok(v16.surfOn && v16.gliss && v16.rows && v16.surfOff, "пианино на весь экран: экран горизонтально, палец по ряду — семь нот подряд, по рядам снизу вверх — три октавы, два пальца вниз — отойти, экран снова вертикальный");
+  ok(v16.gtrOn && v16.strum && v16.frets && v16.fretRun && v16.gtrOff, "гитара на весь экран: перебор поперёк струн — аккорд до мажор, касание двумя пальцами — лады, вдоль струны — по полутону, «Назад» — отойти");
   ok(v16.zig && v16.mineFlag && v16.zigArmed, "ловушка — жест вверх-вниз, мина — вниз-вверх, и с оружием в руках тоже (" + v16.zigDiag + ")");
   ok(v16.mark && v16.trapBeacon && v16.foeBeacon && v16.foeMoves, "маяки: у ловушки и мины свои, скан вешает маяк на врага, и он движется с ним (" + v16.beaconDiag + ")");
   ok(v16.hum, "фон лаборатории: запись низкого гула машин звучит");
+
+  console.log("Охрана с первого этажа: патрули в коридорах, машины в кабинетах, машину рядом слышно");
+  const gar = await page.evaluate(() => {
+    const g = LAB.game, G = g.G, C = LAB.combat, out = {};
+    g.enterFloor(1, 1, "down", true);
+    const live = () => C.foes().filter(f => !f.dead);
+    out.patrols = live().filter(f => f.beat).length;
+    out.rooms = live().filter(f => f.garrison).length;
+    /* машина в кабинете: вы в том же помещении — её слышно; издалека — почти нет */
+    const bot = live().find(f => f.garrison && f.kind === "mech" && !f.disguised);
+    if (bot) {
+      const A = LAB.atmos, orig = A.foeSound;
+      let near = 0, far = 0, where = "near";
+      A.foeSound = function (f, kind) { if (f === bot && kind === "idle") { if (where === "near") near++; else far++; } return orig.apply(this, arguments); };
+      const x0 = G.x, y0 = G.y, cl = G.st.cloak, fl = g.CUR.fl, rm = fl.rooms[bot.room];
+      G.st.cloak = 999;
+      let cell = null;
+      for (let y = rm.y0; y <= rm.y1 && !cell; y++) for (let x = rm.x0; x <= rm.x1 && !cell; x++) if ((x !== bot.x || y !== bot.y) && fl.t[y * LAB.W + x] === LAB.T.ROOM && !fl.objAt[y * LAB.W + x]) cell = [x, y];
+      if (cell) { G.x = cell[0]; G.y = cell[1]; }
+      for (let i = 0; i < 40; i++) { C.tick(); bot.state = "idle"; }
+      where = "far"; G.x = x0; G.y = y0;
+      for (let i = 0; i < 40; i++) { C.tick(); bot.state = "idle"; }
+      A.foeSound = orig; G.st.cloak = cl;
+      out.near = near; out.far = far; out.type = bot.type + "/" + bot.garrison;
+    }
+    return out;
+  });
+  ok(gar.patrols >= 1 && gar.rooms >= 1, "охрана с первого этажа: патрули в коридорах (" + gar.patrols + "), машины в кабинетах (" + gar.rooms + ")");
+  ok(gar.near >= 4 && gar.near > gar.far * 2, "машину в кабинете слышно, когда вы рядом (" + gar.type + "): в одном помещении — " + gar.near + " раз за 20 секунд, издалека — " + gar.far);
 
   console.log("Обход этажей одного зерна: вход, такты, осмотр");
   const tour = await page.evaluate(() => {

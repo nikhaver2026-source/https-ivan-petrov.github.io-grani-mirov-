@@ -151,6 +151,11 @@ function syncFoes() {
 
 /* ════════ ВОСПРИЯТИЕ ════════ */
 function heroPos() { return { x: G().x, y: G().y }; }
+/* (2.0) рядом с носителем: в одном с ним помещении или в пяти шагах */
+function nearHero(f) {
+  var rm = CUR().fl.room, fr = rm[idx(f.x, f.y)];
+  return (fr >= 0 && fr === rm[idx(G().x, G().y)]) || cheb(f, heroPos()) <= 5;
+}
 function losTo(f) { return LAB.los(CUR().fl, CUR().fs, f.x, f.y, G().x, G().y); }
 function relayNear(f) {
   if (f.kind !== "mech") return false;
@@ -1142,6 +1147,9 @@ function foeTick(f, spotted) {
   if (has(f, "charge") && f.state === "hunt" && canMove && (f.x === G().x || f.y === G().y) && d >= 2 && d <= 5 && losTo(f)) { f.mv = 0; chargeAt(f); return; }
 
   if (f.state === "idle") {
+    /* (2.0) машина рядом с носителем — в одном помещении или в нескольких
+       шагах — слышна: жужжит, щёлкает приводами (ящик-ловушка и засада молчат) */
+    if (f.kind === "mech" && !f.disguised && !f.ambush && !f.burrowed && !aff(f, "cloak") && Math.random() < 0.3 && nearHero(f)) A("foeSound", f, "idle");
     if (f.task === "leave") { if (canMove) { f.mv = 0; leaveStep(f); } return; }
     if (/repair/.test(f.type) && serviceStep(f, canMove)) return;
     if (f.task === "mine" && !has(f, "stationary")) { if (canMove) { f.mv = 0; mineTask(f); } return; }

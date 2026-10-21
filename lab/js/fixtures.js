@@ -503,7 +503,7 @@ function playInst(o, p, s, r) {
   var def = fxDef(o), I = LAB.instruments, inst = p.inst || "piano";
   UIx("menu", def.n, [
     { label: "Сыграть знакомую мелодию", fn: function () { tuneInst(o, p, s); } },
-    { label: "Играть самому: три ряда нот", fn: function () {
+    { label: LAB.K("Играть самому: весь экран — инструмент", "Играть самому: три ряда нот"), fn: function () {
       UIx("closeAll");
       if (!I) { say("Инструмент молчит."); return; }
       I.open(inst, { name: def.n, noise: p.noise }, function (played) {

@@ -61,11 +61,10 @@ for (let si = 0; si < seeds; si++) {
         }
       }
       if (F === 1 && L > 1 && !fl.objs.some(o => o.type === "gate_sealed")) err(`${at}: нет запечатанного шлюза наверх`);
-      /* (2.0) охрана этажа: патрули в коридорах (кроме самого первого этажа), машины в кабинетах (с третьего этажа) */
+      /* (2.0) охрана этажа — с самого первого этажа: патрули в коридорах, машины в кабинетах */
       const gar = fl.garrison || { patrols: 0, robots: 0, sappers: 0 };
-      if (!(L === 1 && F === 1) && gar.patrols < 1) err(`${at}: в коридорах нет патрулей`);
-      if (L === 1 && F === 1 && gar.patrols) err(`${at}: на первом этаже патрули`);
-      if ((L > 1 || F >= 3) && gar.robots < 1) err(`${at}: кабинеты без охраны`);
+      if (gar.patrols < 1) err(`${at}: в коридорах нет патрулей`);
+      if (gar.robots < 1) err(`${at}: кабинеты без охраны`);
       if (fl.foes.some(f => f.beat && (!f.beat.length || f.beat.some(p => fl.t[p[1] * LAB.W + p[0]] === LAB.T.WALL)))) err(`${at}: участок обхода патруля задевает стену`);
       stat.patrols = (stat.patrols || 0) + gar.patrols; stat.guards = (stat.guards || 0) + gar.robots; stat.sappers = (stat.sappers || 0) + gar.sappers;
       /* (2.0) головоломки: вид известен, ступень — 0, 1 или 2 */

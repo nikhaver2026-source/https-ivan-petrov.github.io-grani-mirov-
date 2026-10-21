@@ -28,8 +28,18 @@ var SCR2GAME = { U: "N", D: "S", L: "W", R: "E" };
 function thr() { var m = Math.min(window.innerWidth || 360, window.innerHeight || 640); return Math.max(24, Math.min(60, m * 0.07)); }
 
 /* ── КАСАНИЯ ── */
+/* (2.0) Инструмент на весь экран (instruments.js): касания — прямо ему, без жестов. */
+function surf(e) {
+  var s = LAB.surface;
+  if (!s || !s.active()) return false;
+  if (e.cancelable) e.preventDefault();
+  if (e.type === "pointerdown") { try { pad.setPointerCapture(e.pointerId); } catch (x) { /* */ } LAB.AE.ensure(); }
+  s.pointer(e);
+  return true;
+}
 function down(e) {
   if (e.pointerType === "mouse" && e.button !== 0) return;
+  if (surf(e)) return;
   if (e.pointerType === "touch") LAB.keysMode = false; /* подсказки — о жестах */
   try { pad.setPointerCapture(e.pointerId); } catch (x) { /* */ }
   e.preventDefault();
@@ -46,6 +56,7 @@ function down(e) {
   if (n > gest.max) gest.max = n;
 }
 function moveEv(e) {
+  if (surf(e)) return;
   var p = pts[e.pointerId];
   if (!p || !gest) return;
   e.preventDefault();
@@ -89,6 +100,7 @@ function armHold(p) {
   g.holdT = setTimeout(check, 300);
 }
 function up(e) {
+  if (surf(e)) return;
   var p = pts[e.pointerId];
   if (!p || !gest) return;
   e.preventDefault();
@@ -101,6 +113,7 @@ function up(e) {
   finishGesture(g, p);
 }
 function cancelEv(e) {
+  if (surf(e)) return;
   delete pts[e.pointerId];
   if (!Object.keys(pts).length && gest) { clearTimeout(gest.holdT); if (gest.held) stopHold(); gest = null; }
 }
@@ -444,7 +457,7 @@ function init() {
   pad.addEventListener("pointermove", moveEv, opt);
   pad.addEventListener("pointerup", up, opt);
   pad.addEventListener("pointercancel", cancelEv, opt);
-  pad.addEventListener("lostpointercapture", function (e) { if (pts[e.pointerId]) up(e); }, opt);
+  pad.addEventListener("lostpointercapture", function (e) { if (surf(e)) return; if (pts[e.pointerId]) up(e); }, opt);
   pad.addEventListener("contextmenu", function (e) { e.preventDefault(); });
   document.addEventListener("keydown", key);
   document.addEventListener("keyup", keyUp);

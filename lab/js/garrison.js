@@ -15,8 +15,9 @@
    • Сапёры ОКО: со второго уровня ходят обходом, по приказу ОКО ставят
      ловушки (oko.js: приказ, combat.js: работа сапёра).
    Всё — своим потоком случайностей, после кабинетов (annex.js): прочее на
-   этаже от охраны не меняется. Первый этаж — без патрулей и охраны
-   кабинетов: проснуться и осмотреться; на втором — один лёгкий патруль.
+   этаже от охраны не меняется. Охрана — с самого первого этажа; у места
+   пробуждения, лестниц и лифта никого не ставим — осмотреться. На первом
+   этаже машин в кабинетах меньше.
    ════════════════════════════════════════════════════════════════════ */
 (function () {
 "use strict";
@@ -181,7 +182,6 @@ function startOn(fl, pts, busy, r) {
 function place(ctx) {
   var fl = ctx.fl, L = ctx.L, F = ctx.F;
   if (!fl || !ctx.makeFoe) return;
-  if (L === 1 && F === 1) return; /* проснуться и осмотреться */
   var r = LAB.Rng(ctx.seed, "garrison:" + L + ":" + F + ":" + (ctx.attempt || 0));
   var d0 = LAB.depth(L, F), busy = busyMap(fl), arr = arrivals(fl), W = LAB.W;
   var mark = function (x, y) { busy[y * W + x] = 1; };
@@ -194,7 +194,7 @@ function place(ctx) {
     return !(d && d.lock && d.lock.type === "secret");
   });
   r.shuffle(corrs);
-  var nP = L === 1 ? (F === 2 ? 1 : F <= 10 ? 2 : 3) : L <= 4 ? 3 + (r.chance(0.5) ? 1 : 0) : L <= 9 ? 4 + (r.chance(0.5) ? 1 : 0) : L <= 30 ? 5 + (r.chance(0.5) ? 1 : 0) : 6 + (r.chance(0.5) ? 1 : 0);
+  var nP = L === 1 ? (F <= 10 ? 2 : 3) : L <= 4 ? 3 + (r.chance(0.5) ? 1 : 0) : L <= 9 ? 4 + (r.chance(0.5) ? 1 : 0) : L <= 30 ? 5 + (r.chance(0.5) ? 1 : 0) : 6 + (r.chance(0.5) ? 1 : 0);
   nP = Math.min(nP, Math.max(1, corrs.length - 1));
   var pPool = patrolPool(L, F);
   for (var p = 0; p < nP && corrs.length; p++) {
@@ -225,10 +225,9 @@ function place(ctx) {
       if (ctx.makeFoe("sapper", ss[0], ss[1], -1, { corr: cs.id, patrol: true, beat: ps, oko: true, sapper: true }, r)) { mark(ss[0], ss[1]); stats.sappers++; }
     }
   }
-  /* 3. Машины в кабинетах — по важности и назначению (на втором этаже — ещё нет) */
-  if (L === 1 && F === 2) { fl.garrison = { patrols: stats.patrols, sappers: 0, rooms: 0, robots: 0 }; return; }
-  var k = L === 1 ? Math.min(0.75, 0.35 + 0.02 * F) : L === 2 ? 0.6 : L === 3 ? 0.7 : L <= 6 ? 0.85 : 1;
-  var cap = 12 + 2 * Math.min(L, 10) + Math.min(10, Math.floor(L / 10));
+  /* 3. Машины в кабинетах — по важности и назначению (на самом первом этаже — пореже) */
+  var k = L === 1 ? (F === 1 ? 0.3 : Math.min(0.75, 0.35 + 0.02 * F)) : L === 2 ? 0.6 : L === 3 ? 0.7 : L <= 6 ? 0.85 : 1;
+  var cap = L === 1 && F === 1 ? 8 : 12 + 2 * Math.min(L, 10) + Math.min(10, Math.floor(L / 10));
   var rooms = [];
   fl.rooms.forEach(function (rm, i) { if (rm && rm.annex && !rm.hidden) rooms.push(i); });
   r.shuffle(rooms);

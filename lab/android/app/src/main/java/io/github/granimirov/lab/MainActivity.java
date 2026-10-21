@@ -3,6 +3,7 @@ package io.github.granimirov.lab;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.ActivityInfo;
 import android.media.AudioManager;
 import android.net.Uri;
 import android.os.Build;
@@ -48,7 +49,7 @@ import java.util.Set;
    Мост LabTTS отдаёт странице синтезатор речи телефона — тот же, что у
    TalkBack: speak(текст, темп, громкость, номер), stop(), status()
    ("init" | "ready" | "failed"), isSpeaking(), hasRussian(), getVoices(), setVoice(имя),
-   vibrate(узор), exitApp(), log(строка). О начале, конце и ошибке фразы
+   vibrate(узор), setOrientation("landscape" | "portrait"), exitApp(), log(строка). О начале, конце и ошибке фразы
    приложение сообщает вызовами LabTTSStart(номер), LabTTSDone(номер),
    LabTTSError(номер). Кнопка «Назад» закрывает окно игры (labBack). */
 public class MainActivity extends Activity {
@@ -346,6 +347,15 @@ public class MainActivity extends Activity {
 
         @JavascriptInterface
         public void log(String msg) { Log.i(TAG, msg == null ? "" : msg); }
+
+        /* Поворот экрана (2.0): на пианино и гитаре играют, держа телефон
+           боком — "landscape" (любой стороной, по датчику, даже если
+           автоповорот выключен); "portrait" — снова вертикально. */
+        @JavascriptInterface
+        public void setOrientation(String mode) {
+            final int o = "landscape".equals(mode) ? ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE : ActivityInfo.SCREEN_ORIENTATION_PORTRAIT;
+            runOnUiThread(() -> { try { setRequestedOrientation(o); } catch (Exception ignored) { } });
+        }
 
         /* «Выход» в окне персонажа: игра уже записана — закрываем приложение. */
         @JavascriptInterface
