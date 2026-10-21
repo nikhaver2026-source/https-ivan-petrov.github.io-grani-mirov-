@@ -2883,6 +2883,12 @@ function navigate(cycle, fromNpc) {
   if (cycle && now - navLast < 4000) navIdx = (navIdx + 1) % list.length; else if (!cycle || now - navLast >= 4000) navIdx = 0;
   navLast = now;
   var tgt = list[navIdx % list.length];
+  /* двери коридора — ведём к ближайшей; весь список — в окне навигатора */
+  if (tgt.doors) {
+    var dn = tgt.doors[0], rn = CUR.fl.rooms[dn.room];
+    var nd = tgt.doors.length;
+    tgt = { n: (rn && rn.sign ? rn.sign : "дверь кабинета") + (nd > 1 ? ", ближайшая из " + nd + " " + plural(nd, "двери", "дверей", "дверей") + " коридора" : ", единственная дверь коридора"), cell: doorFront(dn) };
+  }
   var path = routeTo(tgt.cell, tgt.o);
   var more = list.length > 1 && !fromNpc ? LAB.K(" Ещё раз два пальца вправо — следующая цель.", " Ещё раз N — следующая цель.") : "";
   if (!path) {

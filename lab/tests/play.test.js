@@ -2116,6 +2116,30 @@ LAB.ui.closeAll();
   ok(restart, "A, H: после перезапуска игры настройки речи и доступности — те же" + (restartDiag ? " (" + restartDiag + ")" : ""));
   ok(fresh && fresh.ver === fresh.cur && fresh.slot === null && fresh.prologue === null && fresh.ratePct === 50 && fresh.navMode === "full" && fresh.wiped >= 3 && fresh.from === "Альфа 1.1" && /новая версия/i.test(fresh.intro || ""),
     "новая версия — с чистого листа: сохранения и настройки прежней версии при запуске стёрты, игрок слышит об этом в главном меню" + (fresh ? " (" + JSON.stringify(fresh).slice(0, 300) + ")" : ""));
+  /* (2.0) прохождение заново: та же версия, прежнее прохождение — сохранения стёрты, настройки остались */
+  let run = null;
+  {
+    const stOld = await page.context().storageState();
+    const fixtureRaw = fs.readFileSync(path.join(__dirname, "fixtures", "alfa-1.1-save.json"), "utf8");
+    const cur = await page.evaluate(() => ({ v: LAB.VERSION, s: JSON.stringify(Object.assign({}, LAB.settings, { ratePct: 70 })) }));
+    stOld.origins.forEach(o => {
+      const ls = o.localStorage, setK = (n, v) => { const e = ls.find(q => q.name === n); if (e) e.value = v; else ls.push({ name: n, value: v }); };
+      const delK = n => { const i = ls.findIndex(q => q.name === n); if (i >= 0) ls.splice(i, 1); };
+      setK("lab_ver", cur.v); delK("lab_run"); setK("lab_slot1", fixtureRaw); setK("lab_auto", fixtureRaw); setK("lab_prologue_seen", "1"); setK("lab_settings", cur.s);
+    });
+    const ctx4 = await browser.newContext({ storageState: stOld });
+    const page4 = await ctx4.newPage();
+    page4.on("pageerror", e => errors.push("pageerror (прохождение заново): " + e.message));
+    try {
+      await page4.goto(url); await page4.waitForFunction(() => window.LAB_READY === true, null, { timeout: 60000 });
+      await page4.evaluate(() => { window.SPOKEN = []; LAB.say = function (t) { SPOKEN.push(String(t)); }; });
+      await page4.keyboard.press("Space"); await page4.waitForTimeout(150);
+      run = await page4.evaluate(() => ({ run: localStorage.getItem("lab_run"), slot: localStorage.getItem("lab_slot1"), auto: localStorage.getItem("lab_auto"), prologue: localStorage.getItem("lab_prologue_seen"), ratePct: LAB.settings.ratePct, wiped: LAB.restartRun && LAB.restartRun.wiped, verWiped: LAB.freshStart && LAB.freshStart.wiped, intro: LAB.ui.top() ? LAB.ui.top().intro : "" }));
+    } catch (e) { run = { err: String(e && e.message || e).slice(0, 200) }; }
+    await ctx4.close();
+  }
+  ok(run && run.run === String(2) && run.slot === null && run.auto === null && run.prologue === null && run.ratePct === 70 && run.wiped >= 3 && !run.verWiped && /начинается заново/.test(run.intro || ""),
+    "прохождение заново (та же версия): сохранения, автозапись и пролог сброшены, настройки остались, игрок слышит об этом в главном меню" + (run ? " (" + JSON.stringify(run).slice(0, 300) + ")" : ""));
   const tp2 = await page.evaluate(() => {
     const g = LAB.game, C = LAB.combat, out = {}, W = LAB.W, H = LAB.H;
     let G = g.G;
@@ -2333,6 +2357,15 @@ LAB.ui.closeAll();
     /* навигатор знает двери коридора */
     const c0 = g.CUR.fl.corrs.find(c => (c.annex || []).length > 2);
     if (c0) { G.x = Math.floor((c0.x0 + c0.x1) / 2); G.y = Math.floor((c0.y0 + c0.y1) / 2); g.navMenu(); const nl = labels(); out.navDoors = nl.some(l => /двери этого коридора/.test(l)); LAB.ui.closeAll(); }
+    /* перебор целей жестом доходит и до дверей коридора — навигатор ведёт к ближайшей, а не молчит */
+    if (c0) {
+      const n = 20;
+      let err = "";
+      SPOKEN.length = 0;
+      try { g.navigate(false); for (let i = 0; i < n; i++) g.navigate(true); } catch (e) { err = e.message; }
+      out.navCycle = !err && SPOKEN.some(t => /^Цель: .+(ближайшая из \d+ двер|единственная дверь коридора)/.test(t));
+      out.navCycleDiag = err || SPOKEN.filter(t => /^Цель:/.test(t)).map(t => t.slice(0, 60)).slice(0, 6).join(" | ");
+    }
     return out;
   });
   ok(v13.withDoors === v13.corrs, "двери кабинетов — в каждом коридоре: " + v13.withDoors + " из " + v13.corrs + ", у коридора от " + v13.perMin + " до " + v13.perMax);
@@ -2345,6 +2378,7 @@ LAB.ui.closeAll();
   ok(v13.capMenu, "капсула: «Спать», музыка, «Откинуть крышку и выйти»");
   ok(v13.wOk && v13.fireOk, "новое оружие создаётся, описано и стреляет" + (v13.fireErr ? ": " + v13.fireErr : ""));
   ok(v13.navDoors, "навигатор: в коридоре есть список его дверей");
+  ok(v13.navCycle, "навигатор: перебор целей доходит до дверей коридора и ведёт к ближайшей двери (" + v13.navCycleDiag + ")");
   ok(v13.hasSupply && v13.supplyMenu && v13.sellMenu, "пункт снабжения на этаже: прилавок, заказ с поверхности, скупка");
 
   console.log("Осмотр и жесты состояния, привязка к капсуле за кредиты, ловушки и мины (1.5)");

@@ -39,6 +39,25 @@ LAB.freshStart = (function () {
   store.set(VER_KEY, LAB.VERSION);
   return out;
 })();
+/* ── ПРОХОЖДЕНИЕ — ЗАНОВО (2.0, просьба игрока) ──
+   И внутри одной версии комплекс меняется — охрана, патрули, звуки, — и
+   игру иногда стоит начать сначала. Номер прохождения — LAB.RUN, метка —
+   «lab_run»: другая или её нет — стираются сохранения, автозапись и отметка
+   о прослушанном прологе; игра начинается с пролога. Настройки — речь,
+   громкость, навигатор — остаются. */
+var RUN_KEY = "lab_run";
+LAB.restartRun = (function () {
+  var was = store.get(RUN_KEY), out = { from: was || "", wiped: 0 };
+  if (was === String(LAB.RUN)) return out;
+  try {
+    var keys = [];
+    for (var i = 0; i < localStorage.length; i++) { var k = localStorage.key(i); if (k && /^lab_(slot\d|auto|prologue_seen)/.test(k)) keys.push(k); }
+    keys.forEach(function (k) { localStorage.removeItem(k); });
+    out.wiped = keys.length;
+  } catch (e) { /* хранилища нет — и стирать нечего */ }
+  store.set(RUN_KEY, String(LAB.RUN));
+  return out;
+})();
 
 /* ── НАСТРОЙКИ ── */
 var DEF = {
